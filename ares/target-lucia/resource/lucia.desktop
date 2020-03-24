@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=lucia
+Comment=Emulator
+Exec=lucia
+Icon=lucia
+Terminal=false
+Type=Application
+Categories=Game;Emulator;

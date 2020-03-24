@@ -1,1 +1,2 @@
-sourcery
+*
+!.gitignore

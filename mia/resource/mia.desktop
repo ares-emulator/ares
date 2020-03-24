@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=mia
+Comment=Emulator
+Exec=mia
+Icon=mia
+Terminal=false
+Type=Application
+Categories=Game;Emulator;
