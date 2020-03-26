@@ -161,7 +161,7 @@ nall.verbose:
 	$(foreach n,$(sort $(call unique,$(options))),$(if $(filter-out -l%,$n),$(info $([space]) $n)))
 
 %.o: $<
-	$(info Compiling $< ...)
+	$(info Compiling $(subst ../,,$<) ...)
 	@$(call compile)
 
 # function compile([arguments])

@@ -1,13 +1,13 @@
-components += sm83 m93lcx6
+ares.components += sm83 m93lcx6
 
-objects += gb-interface gb-system
-objects += gb-bus gb-cartridge
-objects += gb-cpu gb-ppu gb-apu
+ares.objects += ares-gb-interface ares-gb-system
+ares.objects += ares-gb-bus ares-gb-cartridge
+ares.objects += ares-gb-cpu ares-gb-ppu ares-gb-apu
 
-obj/gb-interface.o: gb/interface/interface.cpp
-obj/gb-system.o:    gb/system/system.cpp
-obj/gb-cartridge.o: gb/cartridge/cartridge.cpp
-obj/gb-bus.o:       gb/bus/bus.cpp
-obj/gb-cpu.o:       gb/cpu/cpu.cpp
-obj/gb-ppu.o:       gb/ppu/ppu.cpp
-obj/gb-apu.o:       gb/apu/apu.cpp
+$(object.path)/ares-gb-interface.o: $(ares.path)/gb/interface/interface.cpp
+$(object.path)/ares-gb-system.o:    $(ares.path)/gb/system/system.cpp
+$(object.path)/ares-gb-cartridge.o: $(ares.path)/gb/cartridge/cartridge.cpp
+$(object.path)/ares-gb-bus.o:       $(ares.path)/gb/bus/bus.cpp
+$(object.path)/ares-gb-cpu.o:       $(ares.path)/gb/cpu/cpu.cpp
+$(object.path)/ares-gb-ppu.o:       $(ares.path)/gb/ppu/ppu.cpp
+$(object.path)/ares-gb-apu.o:       $(ares.path)/gb/apu/apu.cpp

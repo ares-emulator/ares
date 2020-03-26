@@ -1,15 +1,13 @@
 #pragma once
-
-//license: GPLv3
 //started: 2010-12-27
 
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 
 #include <component/processor/sm83/sm83.hpp>
 #include <component/eeprom/m93lcx6/m93lcx6.hpp>
 
 namespace ares::GameBoy {
-  #include <emulator/inline.hpp>
+  #include <ares/inline.hpp>
 
   struct Model {
     inline static auto GameBoy() -> bool;

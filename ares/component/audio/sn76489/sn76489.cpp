@@ -1,4 +1,4 @@
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 #include "sn76489.hpp"
 
 namespace ares {

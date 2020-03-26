@@ -117,6 +117,8 @@ auto main(Arguments arguments) -> void {
 
 #if !defined(MIA_LIBRARY)
 
+#include <ares/resource/resource.cpp>
+
 #include <nall/main.hpp>
 auto nall::main(Arguments arguments) -> void {
   mia::main(arguments);

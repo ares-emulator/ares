@@ -1,14 +1,14 @@
-components += v30mz m93lcx6
+ares.components += v30mz m93lcx6
 
-objects += ws-interface ws-system
-objects += ws-memory ws-eeprom ws-cartridge
-objects += ws-cpu ws-ppu ws-apu
+ares.objects += ares-ws-interface ares-ws-system
+ares.objects += ares-ws-memory ares-ws-eeprom ares-ws-cartridge
+ares.objects += ares-ws-cpu ares-ws-ppu ares-ws-apu
 
-obj/ws-interface.o: ws/interface/interface.cpp
-obj/ws-system.o:    ws/system/system.cpp
-obj/ws-memory.o:    ws/memory/memory.cpp
-obj/ws-eeprom.o:    ws/eeprom/eeprom.cpp
-obj/ws-cartridge.o: ws/cartridge/cartridge.cpp
-obj/ws-cpu.o:       ws/cpu/cpu.cpp
-obj/ws-ppu.o:       ws/ppu/ppu.cpp
-obj/ws-apu.o:       ws/apu/apu.cpp
+$(object.path)/ares-ws-interface.o: $(ares.path)/ws/interface/interface.cpp
+$(object.path)/ares-ws-system.o:    $(ares.path)/ws/system/system.cpp
+$(object.path)/ares-ws-memory.o:    $(ares.path)/ws/memory/memory.cpp
+$(object.path)/ares-ws-eeprom.o:    $(ares.path)/ws/eeprom/eeprom.cpp
+$(object.path)/ares-ws-cartridge.o: $(ares.path)/ws/cartridge/cartridge.cpp
+$(object.path)/ares-ws-cpu.o:       $(ares.path)/ws/cpu/cpu.cpp
+$(object.path)/ares-ws-ppu.o:       $(ares.path)/ws/ppu/ppu.cpp
+$(object.path)/ares-ws-apu.o:       $(ares.path)/ws/apu/apu.cpp

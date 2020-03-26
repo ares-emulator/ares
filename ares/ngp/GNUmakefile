@@ -1,12 +1,12 @@
-components += tlcs900h z80 t6w28
+ares.components += tlcs900h z80 t6w28
 
-objects += ngp-interface ngp-system ngp-cartridge
-objects += ngp-cpu ngp-apu ngp-vpu ngp-psg
+ares.objects += ares-ngp-interface ares-ngp-system ares-ngp-cartridge
+ares.objects += ares-ngp-cpu ares-ngp-apu ares-ngp-vpu ares-ngp-psg
 
-obj/ngp-interface.o: ngp/interface/interface.cpp
-obj/ngp-system.o:    ngp/system/system.cpp
-obj/ngp-cartridge.o: ngp/cartridge/cartridge.cpp
-obj/ngp-cpu.o:       ngp/cpu/cpu.cpp
-obj/ngp-apu.o:       ngp/apu/apu.cpp
-obj/ngp-vpu.o:       ngp/vpu/vpu.cpp
-obj/ngp-psg.o:       ngp/psg/psg.cpp
+$(object.path)/ares-ngp-interface.o: $(ares.path)/ngp/interface/interface.cpp
+$(object.path)/ares-ngp-system.o:    $(ares.path)/ngp/system/system.cpp
+$(object.path)/ares-ngp-cartridge.o: $(ares.path)/ngp/cartridge/cartridge.cpp
+$(object.path)/ares-ngp-cpu.o:       $(ares.path)/ngp/cpu/cpu.cpp
+$(object.path)/ares-ngp-apu.o:       $(ares.path)/ngp/apu/apu.cpp
+$(object.path)/ares-ngp-vpu.o:       $(ares.path)/ngp/vpu/vpu.cpp
+$(object.path)/ares-ngp-psg.o:       $(ares.path)/ngp/psg/psg.cpp

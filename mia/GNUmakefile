@@ -1,6 +1,6 @@
 name := mia
 build := performance
-flags += -I..
+flags += -I. -I.. -I../ares
 
 nall.path := ../nall
 include $(nall.path)/GNUmakefile

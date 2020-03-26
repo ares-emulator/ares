@@ -1,9 +1,7 @@
 #pragma once
-
-//license: GPLv3
 //started: 2011-09-05
 
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 
 #include <component/processor/mos6502/mos6502.hpp>
 #include <component/audio/ym2149/ym2149.hpp>
@@ -11,7 +9,7 @@
 #include <component/eeprom/x24c01/x24c01.hpp>
 
 namespace ares::Famicom {
-  #include <emulator/inline.hpp>
+  #include <ares/inline.hpp>
 
   struct Region {
     static inline auto NTSCJ() -> bool;

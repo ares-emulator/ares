@@ -1,14 +1,14 @@
-components += z80 tms9918 sn76489
+ares.components += z80 tms9918 sn76489
 
-objects += sg-interface
-objects += sg-cpu sg-vdp sg-psg
-objects += sg-system sg-cartridge
-objects += sg-controller
+ares.objects += ares-sg-interface
+ares.objects += ares-sg-cpu ares-sg-vdp ares-sg-psg
+ares.objects += ares-sg-system ares-sg-cartridge
+ares.objects += ares-sg-controller
 
-obj/sg-interface.o:  sg/interface/interface.cpp
-obj/sg-cpu.o:        sg/cpu/cpu.cpp
-obj/sg-vdp.o:        sg/vdp/vdp.cpp
-obj/sg-psg.o:        sg/psg/psg.cpp
-obj/sg-system.o:     sg/system/system.cpp
-obj/sg-cartridge.o:  sg/cartridge/cartridge.cpp
-obj/sg-controller.o: sg/controller/controller.cpp
+$(object.path)/ares-sg-interface.o:  $(ares.path)/sg/interface/interface.cpp
+$(object.path)/ares-sg-cpu.o:        $(ares.path)/sg/cpu/cpu.cpp
+$(object.path)/ares-sg-vdp.o:        $(ares.path)/sg/vdp/vdp.cpp
+$(object.path)/ares-sg-psg.o:        $(ares.path)/sg/psg/psg.cpp
+$(object.path)/ares-sg-system.o:     $(ares.path)/sg/system/system.cpp
+$(object.path)/ares-sg-cartridge.o:  $(ares.path)/sg/cartridge/cartridge.cpp
+$(object.path)/ares-sg-controller.o: $(ares.path)/sg/controller/controller.cpp

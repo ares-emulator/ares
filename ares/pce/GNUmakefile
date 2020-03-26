@@ -1,15 +1,15 @@
-components += huc6280
+ares.components += huc6280
 
-objects += pce-interface
-objects += pce-cpu pce-vdp pce-psg pce-pcd
-objects += pce-system pce-cartridge
-objects += pce-controller
+ares.objects += ares-pce-interface
+ares.objects += ares-pce-cpu ares-pce-vdp ares-pce-psg ares-pce-pcd
+ares.objects += ares-pce-system ares-pce-cartridge
+ares.objects += ares-pce-controller
 
-obj/pce-interface.o:  pce/interface/interface.cpp
-obj/pce-cpu.o:        pce/cpu/cpu.cpp
-obj/pce-vdp.o:        pce/vdp/vdp.cpp
-obj/pce-psg.o:        pce/psg/psg.cpp
-obj/pce-pcd.o:        pce/pcd/pcd.cpp
-obj/pce-system.o:     pce/system/system.cpp
-obj/pce-cartridge.o:  pce/cartridge/cartridge.cpp
-obj/pce-controller.o: pce/controller/controller.cpp
+$(object.path)/ares-pce-interface.o:  $(ares.path)/pce/interface/interface.cpp
+$(object.path)/ares-pce-cpu.o:        $(ares.path)/pce/cpu/cpu.cpp
+$(object.path)/ares-pce-vdp.o:        $(ares.path)/pce/vdp/vdp.cpp
+$(object.path)/ares-pce-psg.o:        $(ares.path)/pce/psg/psg.cpp
+$(object.path)/ares-pce-pcd.o:        $(ares.path)/pce/pcd/pcd.cpp
+$(object.path)/ares-pce-system.o:     $(ares.path)/pce/system/system.cpp
+$(object.path)/ares-pce-cartridge.o:  $(ares.path)/pce/cartridge/cartridge.cpp
+$(object.path)/ares-pce-controller.o: $(ares.path)/pce/controller/controller.cpp

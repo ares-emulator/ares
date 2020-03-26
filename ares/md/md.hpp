@@ -1,16 +1,14 @@
 #pragma once
-
-//license: GPLv3
 //started: 2016-07-08
 
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 
 #include <component/processor/m68k/m68k.hpp>
 #include <component/processor/z80/z80.hpp>
 #include <component/audio/sn76489/sn76489.hpp>
 
 namespace ares::MegaDrive {
-  #include <emulator/inline.hpp>
+  #include <ares/inline.hpp>
 
   enum : uint {
     Byte = 0,

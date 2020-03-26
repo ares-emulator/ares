@@ -1,9 +1,7 @@
 #pragma once
-
-//license: GPLv3
 //started: 2004-10-14
 
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 
 #include <component/processor/arm7tdmi/arm7tdmi.hpp>
 #include <component/processor/gsu/gsu.hpp>
@@ -17,7 +15,7 @@
 #endif
 
 namespace ares::SuperFamicom {
-  #include <emulator/inline.hpp>
+  #include <ares/inline.hpp>
 
   struct Region {
     static inline auto NTSC() -> bool;

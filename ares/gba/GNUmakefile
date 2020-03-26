@@ -1,14 +1,14 @@
-components += arm7tdmi
+ares.components += arm7tdmi
 
-objects += gba-memory gba-interface gba-system
-objects += gba-cartridge gba-player
-objects += gba-cpu gba-ppu gba-apu
+ares.objects += ares-gba-memory ares-gba-interface ares-gba-system
+ares.objects += ares-gba-cartridge ares-gba-player
+ares.objects += ares-gba-cpu ares-gba-ppu ares-gba-apu
 
-obj/gba-memory.o:    gba/memory/memory.cpp
-obj/gba-interface.o: gba/interface/interface.cpp
-obj/gba-system.o:    gba/system/system.cpp
-obj/gba-cartridge.o: gba/cartridge/cartridge.cpp
-obj/gba-player.o:    gba/player/player.cpp
-obj/gba-cpu.o:       gba/cpu/cpu.cpp
-obj/gba-ppu.o:       gba/ppu/ppu.cpp
-obj/gba-apu.o:       gba/apu/apu.cpp
+$(object.path)/ares-gba-memory.o:    $(ares.path)/gba/memory/memory.cpp
+$(object.path)/ares-gba-interface.o: $(ares.path)/gba/interface/interface.cpp
+$(object.path)/ares-gba-system.o:    $(ares.path)/gba/system/system.cpp
+$(object.path)/ares-gba-cartridge.o: $(ares.path)/gba/cartridge/cartridge.cpp
+$(object.path)/ares-gba-player.o:    $(ares.path)/gba/player/player.cpp
+$(object.path)/ares-gba-cpu.o:       $(ares.path)/gba/cpu/cpu.cpp
+$(object.path)/ares-gba-ppu.o:       $(ares.path)/gba/ppu/ppu.cpp
+$(object.path)/ares-gba-apu.o:       $(ares.path)/gba/apu/apu.cpp

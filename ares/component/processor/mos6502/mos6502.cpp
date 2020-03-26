@@ -1,4 +1,4 @@
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 #include "mos6502.hpp"
 
 namespace ares {

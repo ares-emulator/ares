@@ -1,4 +1,4 @@
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 #include "spc700.hpp"
 
 namespace ares {

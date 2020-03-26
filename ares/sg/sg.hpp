@@ -1,16 +1,14 @@
 #pragma once
-
-//license: GPLv3
 //started: 2019-02-19
 
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 
 #include <component/processor/z80/z80.hpp>
 #include <component/video/tms9918/tms9918.hpp>
 #include <component/audio/sn76489/sn76489.hpp>
 
 namespace ares::SG1000 {
-  #include <emulator/inline.hpp>
+  #include <ares/inline.hpp>
 
   struct Model {
     inline static auto SG1000() -> bool;

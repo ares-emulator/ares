@@ -1,14 +1,14 @@
-components += z80 tms9918 v9938 ay38910 ym2413
+ares.components += z80 tms9918 v9938 ay38910 ym2413
 
-objects += msx-interface msx-system msx-keyboard
-objects += msx-cartridge msx-controller
-objects += msx-cpu msx-vdp msx-psg
+ares.objects += ares-msx-interface ares-msx-system ares-msx-keyboard
+ares.objects += ares-msx-cartridge ares-msx-controller
+ares.objects += ares-msx-cpu ares-msx-vdp ares-msx-psg
 
-obj/msx-interface.o:  msx/interface/interface.cpp
-obj/msx-system.o:     msx/system/system.cpp
-obj/msx-keyboard.o:   msx/keyboard/keyboard.cpp
-obj/msx-cartridge.o:  msx/cartridge/cartridge.cpp
-obj/msx-controller.o: msx/controller/controller.cpp
-obj/msx-cpu.o:        msx/cpu/cpu.cpp
-obj/msx-vdp.o:        msx/vdp/vdp.cpp
-obj/msx-psg.o:        msx/psg/psg.cpp
+$(object.path)/ares-msx-interface.o:  $(ares.path)/msx/interface/interface.cpp
+$(object.path)/ares-msx-system.o:     $(ares.path)/msx/system/system.cpp
+$(object.path)/ares-msx-keyboard.o:   $(ares.path)/msx/keyboard/keyboard.cpp
+$(object.path)/ares-msx-cartridge.o:  $(ares.path)/msx/cartridge/cartridge.cpp
+$(object.path)/ares-msx-controller.o: $(ares.path)/msx/controller/controller.cpp
+$(object.path)/ares-msx-cpu.o:        $(ares.path)/msx/cpu/cpu.cpp
+$(object.path)/ares-msx-vdp.o:        $(ares.path)/msx/vdp/vdp.cpp
+$(object.path)/ares-msx-psg.o:        $(ares.path)/msx/psg/psg.cpp

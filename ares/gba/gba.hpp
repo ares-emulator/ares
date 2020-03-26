@@ -1,14 +1,12 @@
 #pragma once
-
-//license: GPLv3
 //started: 2012-03-19
 
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 
 #include <component/processor/arm7tdmi/arm7tdmi.hpp>
 
 namespace ares::GameBoyAdvance {
-  #include <emulator/inline.hpp>
+  #include <ares/inline.hpp>
 
   enum : uint {           //mode flags for bus read, write:
     Nonsequential =   1,  //N cycle

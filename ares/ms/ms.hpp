@@ -1,16 +1,14 @@
 #pragma once
-
-//license: GPLv3
 //started: 2016-08-17
 
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 
 #include <component/processor/z80/z80.hpp>
 #include <component/audio/sn76489/sn76489.hpp>
 #include <component/audio/ym2413/ym2413.hpp>
 
 namespace ares::MasterSystem {
-  #include <emulator/inline.hpp>
+  #include <ares/inline.hpp>
 
   struct Model {
     inline static auto MasterSystem() -> bool;

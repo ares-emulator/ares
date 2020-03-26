@@ -1,4 +1,4 @@
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 #include "huc6280.hpp"
 
 namespace ares {

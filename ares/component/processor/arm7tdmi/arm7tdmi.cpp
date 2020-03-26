@@ -1,4 +1,4 @@
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 #include "arm7tdmi.hpp"
 
 namespace ares {

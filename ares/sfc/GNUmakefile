@@ -1,21 +1,21 @@
-components += wdc65816 spc700 arm7tdmi gsu hg51b upd96050
+ares.components += wdc65816 spc700 arm7tdmi gsu hg51b upd96050
 
-objects += sfc-interface sfc-system sfc-controller
-objects += sfc-cartridge sfc-memory
-objects += sfc-cpu sfc-smp sfc-dsp sfc-ppu
-objects += sfc-coprocessor sfc-expansion sfc-slot
+ares.objects += ares-sfc-interface ares-sfc-system ares-sfc-controller
+ares.objects += ares-sfc-cartridge ares-sfc-memory
+ares.objects += ares-sfc-cpu ares-sfc-smp ares-sfc-dsp ares-sfc-ppu
+ares.objects += ares-sfc-coprocessor ares-sfc-expansion ares-sfc-slot
 
-obj/sfc-interface.o:   sfc/interface/interface.cpp
-obj/sfc-system.o:      sfc/system/system.cpp
-obj/sfc-controller.o:  sfc/controller/controller.cpp
-obj/sfc-cartridge.o:   sfc/cartridge/cartridge.cpp
-obj/sfc-memory.o:      sfc/memory/memory.cpp
+$(object.path)/ares-sfc-interface.o:   $(ares.path)/sfc/interface/interface.cpp
+$(object.path)/ares-sfc-system.o:      $(ares.path)/sfc/system/system.cpp
+$(object.path)/ares-sfc-controller.o:  $(ares.path)/sfc/controller/controller.cpp
+$(object.path)/ares-sfc-cartridge.o:   $(ares.path)/sfc/cartridge/cartridge.cpp
+$(object.path)/ares-sfc-memory.o:      $(ares.path)/sfc/memory/memory.cpp
 
-obj/sfc-cpu.o:         sfc/cpu/cpu.cpp
-obj/sfc-smp.o:         sfc/smp/smp.cpp
-obj/sfc-dsp.o:         sfc/dsp/dsp.cpp
-obj/sfc-ppu.o:         sfc/ppu/ppu.cpp
+$(object.path)/ares-sfc-cpu.o:         $(ares.path)/sfc/cpu/cpu.cpp
+$(object.path)/ares-sfc-smp.o:         $(ares.path)/sfc/smp/smp.cpp
+$(object.path)/ares-sfc-dsp.o:         $(ares.path)/sfc/dsp/dsp.cpp
+$(object.path)/ares-sfc-ppu.o:         $(ares.path)/sfc/ppu/ppu.cpp
 
-obj/sfc-coprocessor.o: sfc/coprocessor/coprocessor.cpp
-obj/sfc-expansion.o:   sfc/expansion/expansion.cpp
-obj/sfc-slot.o:        sfc/slot/slot.cpp
+$(object.path)/ares-sfc-coprocessor.o: $(ares.path)/sfc/coprocessor/coprocessor.cpp
+$(object.path)/ares-sfc-expansion.o:   $(ares.path)/sfc/expansion/expansion.cpp
+$(object.path)/ares-sfc-slot.o:        $(ares.path)/sfc/slot/slot.cpp

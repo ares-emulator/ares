@@ -1,15 +1,15 @@
-components += mos6502 ym2149 ym2413 x24c01
+ares.components += mos6502 ym2149 ym2413 x24c01
 
-objects += fc-interface fc-system fc-controller
-objects += fc-memory fc-cartridge fc-cpu fc-apu fc-ppu
-objects += fc-fds
+ares.objects += ares-fc-interface ares-fc-system ares-fc-controller
+ares.objects += ares-fc-memory ares-fc-cartridge ares-fc-cpu ares-fc-apu ares-fc-ppu
+ares.objects += ares-fc-fds
 
-obj/fc-interface.o:  fc/interface/interface.cpp
-obj/fc-system.o:     fc/system/system.cpp
-obj/fc-controller.o: fc/controller/controller.cpp
-obj/fc-memory.o:     fc/memory/memory.cpp
-obj/fc-cartridge.o:  fc/cartridge/cartridge.cpp
-obj/fc-cpu.o:        fc/cpu/cpu.cpp
-obj/fc-apu.o:        fc/apu/apu.cpp
-obj/fc-ppu.o:        fc/ppu/ppu.cpp
-obj/fc-fds.o:        fc/fds/fds.cpp
+$(object.path)/ares-fc-interface.o:  $(ares.path)/fc/interface/interface.cpp
+$(object.path)/ares-fc-system.o:     $(ares.path)/fc/system/system.cpp
+$(object.path)/ares-fc-controller.o: $(ares.path)/fc/controller/controller.cpp
+$(object.path)/ares-fc-memory.o:     $(ares.path)/fc/memory/memory.cpp
+$(object.path)/ares-fc-cartridge.o:  $(ares.path)/fc/cartridge/cartridge.cpp
+$(object.path)/ares-fc-cpu.o:        $(ares.path)/fc/cpu/cpu.cpp
+$(object.path)/ares-fc-apu.o:        $(ares.path)/fc/apu/apu.cpp
+$(object.path)/ares-fc-ppu.o:        $(ares.path)/fc/ppu/ppu.cpp
+$(object.path)/ares-fc-fds.o:        $(ares.path)/fc/fds/fds.cpp

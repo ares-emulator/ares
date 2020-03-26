@@ -1,14 +1,12 @@
 #pragma once
-
-//license: GPLv3
 //started: 2017-01-11
 
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 
 #include <component/processor/huc6280/huc6280.hpp>
 
 namespace ares::PCEngine {
-  #include <emulator/inline.hpp>
+  #include <ares/inline.hpp>
 
   struct Model {
     inline static auto PCEngine() -> bool;

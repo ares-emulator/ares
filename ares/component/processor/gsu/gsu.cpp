@@ -1,4 +1,4 @@
-#include <emulator/emulator.hpp>
+#include <ares/ares.hpp>
 #include "gsu.hpp"
 
 //note: multiplication results *may* sometimes be invalid when both CLSR and MS0 are set

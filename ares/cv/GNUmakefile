@@ -1,14 +1,14 @@
-components += z80 tms9918 sn76489
+ares.components += z80 tms9918 sn76489
 
-objects += cv-interface
-objects += cv-cpu cv-vdp cv-psg
-objects += cv-system cv-cartridge
-objects += cv-controller
+ares.objects += ares-cv-interface
+ares.objects += ares-cv-cpu ares-cv-vdp ares-cv-psg
+ares.objects += ares-cv-system ares-cv-cartridge
+ares.objects += ares-cv-controller
 
-obj/cv-interface.o:  cv/interface/interface.cpp
-obj/cv-cpu.o:        cv/cpu/cpu.cpp
-obj/cv-vdp.o:        cv/vdp/vdp.cpp
-obj/cv-psg.o:        cv/psg/psg.cpp
-obj/cv-system.o:     cv/system/system.cpp
-obj/cv-cartridge.o:  cv/cartridge/cartridge.cpp
-obj/cv-controller.o: cv/controller/controller.cpp
+$(object.path)/ares-cv-interface.o:  $(ares.path)/cv/interface/interface.cpp
+$(object.path)/ares-cv-cpu.o:        $(ares.path)/cv/cpu/cpu.cpp
+$(object.path)/ares-cv-vdp.o:        $(ares.path)/cv/vdp/vdp.cpp
+$(object.path)/ares-cv-psg.o:        $(ares.path)/cv/psg/psg.cpp
+$(object.path)/ares-cv-system.o:     $(ares.path)/cv/system/system.cpp
+$(object.path)/ares-cv-cartridge.o:  $(ares.path)/cv/cartridge/cartridge.cpp
+$(object.path)/ares-cv-controller.o: $(ares.path)/cv/controller/controller.cpp

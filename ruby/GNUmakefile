@@ -72,7 +72,7 @@ endif
 ruby.objects := $(object.path)/ruby.o
 
 $(object.path)/ruby.o: $(ruby.path)/ruby.cpp $(call rwildcard,$(ruby.path))
-	$(info Compiling $< ...)
+	$(info Compiling $(subst ../,,$<) ...)
 	@$(compiler) $(ruby.flags) $(flags) $(flags.deps) -c $< -o $@
 
 ruby.verbose:
