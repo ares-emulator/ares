@@ -17,16 +17,26 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
   version = Node::append<Node::Natural>(parent, from, "Version", 2);
   version->setAllowedValues({1, 2});
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  eventInstruction->setAddressBits(24);
+  debugWRAM = Node::append<Node::Memory>(parent, from, "CPU WRAM");
+  debugWRAM->setSize(1 << 17);
+  debugWRAM->setRead([&](uint32 address) -> uint8 {
+    return wram[(uint17)address];
+  });
+  debugWRAM->setWrite([&](uint32 address, uint8 data) -> void {
+    wram[(uint17)address] = data;
+  });
 
-  eventInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
+  debugInstruction->setAddressBits(24);
+
+  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
 }
 
 auto CPU::unload() -> void {
   version = {};
-  eventInstruction = {};
-  eventInterrupt = {};
+  debugWRAM = {};
+  debugInstruction = {};
+  debugInterrupt = {};
   node = {};
 }
 
@@ -35,8 +45,8 @@ auto CPU::main() -> void {
   if(r.stp) return instructionStop();
 
   if(!status.interruptPending) {
-    if(eventInstruction->enabled() && eventInstruction->address(r.pc.d)) {
-      eventInstruction->notify(disassembleInstruction(), disassembleContext(), {
+    if(debugInstruction->enabled() && debugInstruction->address(r.pc.d)) {
+      debugInstruction->notify(disassembleInstruction(), disassembleContext(), {
         "V:", pad(vcounter(), 3L), " ", "H:", pad(hcounter(), 4L), " I:", (uint)field()
       });
     }
@@ -46,14 +56,14 @@ auto CPU::main() -> void {
   if(status.nmiPending) {
     status.nmiPending = 0;
     r.vector = r.e ? 0xfffa : 0xffea;
-    if(eventInterrupt->enabled()) eventInterrupt->notify("NMI");
+    if(debugInterrupt->enabled()) debugInterrupt->notify("NMI");
     return interrupt();
   }
 
   if(status.irqPending) {
     status.irqPending = 0;
     r.vector = r.e ? 0xfffe : 0xffee;
-    if(eventInterrupt->enabled()) eventInterrupt->notify("IRQ");
+    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
     return interrupt();
   }
 
@@ -61,7 +71,7 @@ auto CPU::main() -> void {
     status.resetPending = 0;
     step(132);
     r.vector = 0xfffc;
-    if(eventInterrupt->enabled()) eventInterrupt->notify("Reset");
+    if(debugInterrupt->enabled()) debugInterrupt->notify("Reset");
     return interrupt();  //H=186
   }
 

@@ -184,8 +184,8 @@ auto Emulator::setBoolean(const string& name, bool value) -> bool {
 
 auto Emulator::setOverscan(bool value) -> bool {
   if(auto screen = root->scan<ares::Node::Screen>("Screen")) {
-    if(auto region = screen->find<ares::Node::String>("Region")) {
-      region->setValue(!settings.video.overscan ? "NTSC" : "PAL");
+    if(auto overscan = screen->find<ares::Node::Boolean>("Overscan")) {
+      overscan->setValue(value);
       return true;
     }
   }

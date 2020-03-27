@@ -2,29 +2,31 @@ auto InputSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
 
-  inputLabel.setText("Virtual Gamepad Bindings (Xbox 360 Layout)").setFont(Font().setBold());
+  inputLabel.setText("Virtual Gamepad Bindings").setFont(Font().setBold());
   inputList.setBatchable();
   inputList.setHeadered();
   inputList.onChange([&] { eventChange(); });
-  inputList.onActivate([&](auto cell) { eventAssign(); });
+  inputList.onActivate([&](auto cell) { eventAssign(cell); });
 
   reload();
 
   assignLabel.setFont(Font().setBold());
   spacer.setFocusable();
-  assignButton.setText("Assign").onActivate([&] { eventAssign(); });
+  assignButton.setText("Assign").onActivate([&] { eventAssign(inputList.selected().cell(0)); });
   clearButton.setText("Clear").onActivate([&] { eventClear(); });
 }
 
 auto InputSettings::reload() -> void {
   inputList.reset();
   inputList.append(TableViewColumn().setText("Name"));
-  inputList.append(TableViewColumn().setText("Mapping").setExpandable());
+  for(uint binding : range(BindingLimit)) {
+    inputList.append(TableViewColumn().setText({"Mapping #", 1 + binding}).setExpandable());
+  }
 
   for(auto& mapping : virtualPad.mappings) {
     TableViewItem item{&inputList};
     item.append(TableViewCell().setText(mapping->name).setFont(Font().setBold()));
-    item.append(TableViewCell());
+    for(uint binding : range(BindingLimit)) item.append(TableViewCell());
   }
 
   refresh();
@@ -34,7 +36,12 @@ auto InputSettings::reload() -> void {
 auto InputSettings::refresh() -> void {
   uint index = 0;
   for(auto& mapping : virtualPad.mappings) {
-    inputList.item(index++).cell(1).setIcon(mapping->icon()).setText(mapping->text());
+    for(uint binding : range(BindingLimit)) {
+      inputList.item(index).cell(1 + binding)
+      .setIcon(mapping->bindings[binding].icon())
+      .setText(mapping->bindings[binding].text());
+    }
+    index++;
   }
 }
 
@@ -45,46 +52,52 @@ auto InputSettings::eventChange() -> void {
 
 auto InputSettings::eventClear() -> void {
   for(auto& item : inputList.batched()) {
-    activeMappingBeginTimestamp = chrono::millisecond() + 50;
-    activeMapping = *virtualPad.mappings[item.offset()];
-    shared_pointer<HID::Device> device{new HID::Null};
-    eventInput(device, 0, 0, 0, 0);
+    auto& mapping = *virtualPad.mappings[item.offset()];
+    mapping.unbind();
   }
+  refresh();
 }
 
-auto InputSettings::eventAssign() -> void {
+auto InputSettings::eventAssign(TableViewCell cell) -> void {
+  inputManager.poll(true);  //clear any pending events first
+
   if(ruby::input.driver() == "None") return (void)MessageDialog().setText(
     "Bindings cannot be set when no input driver has been loaded.\n"
     "Please go to driver settings and activate an input driver first."
   ).setAlignment(settingsWindow).error();
 
   if(auto item = inputList.selected()) {
-    activeMappingBeginTimestamp = chrono::millisecond();
+    if(activeMapping) refresh();  //clear any previous assign arrow prompts
     activeMapping = *virtualPad.mappings[item.offset()];
+    activeBinding = max(0, (int)cell.offset() - 1);
 
-    assignLabel.setText({"Press a key or button to assign to [", activeMapping->name, "] ..."});
+    item.cell(1 + activeBinding).setIcon(Icon::Go::Right).setText("(assign ...)");
+    assignLabel.setText({"Press a key or button for mapping #", 1 + activeBinding, " [", activeMapping->name, "] ..."});
     settingsWindow.setDismissable(false);
     Application::processEvents();
     spacer.setFocused();
   }
 }
 
-auto InputSettings::eventCancel() -> void {
-  if(activeMapping) {
-    activeMapping.reset();
-    assignLabel.setText();
-    settingsWindow.setDismissable(true);
-  }
-}
-
 auto InputSettings::eventInput(shared_pointer<HID::Device> device, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> void {
   if(!activeMapping) return;
   if(!settingsWindow.focused()) return;
-  if(chrono::millisecond() - activeMappingBeginTimestamp < 50) return;
 
-  if(activeMapping->bind(device, groupID, inputID, oldValue, newValue)) {
-    eventCancel();
+  if(activeMapping->bind(activeBinding, device, groupID, inputID, oldValue, newValue)) {
+    activeMapping.reset();
+    assignLabel.setText();
     refresh();
-    inputList.setFocused();
+    timer.onActivate([&] {
+      timer.setEnabled(false);
+      inputList.setFocused();
+      settingsWindow.setDismissable(true);
+    }).setInterval(200).setEnabled();
   }
+}
+
+auto InputSettings::setVisible(bool visible) -> InputSettings& {
+  if(visible == 1) refresh();
+  if(visible == 0) activeMapping.reset(), assignLabel.setText(), settingsWindow.setDismissable(true);
+  VerticalLayout::setVisible(visible);
+  return *this;
 }

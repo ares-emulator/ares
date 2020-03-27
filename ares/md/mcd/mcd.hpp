@@ -2,8 +2,8 @@
 
 struct MCD : M68K, Thread {
   Node::Component node;
-  Node::Instruction eventInstruction;
-  Node::Notification eventInterrupt;
+  Node::Instruction debugInstruction;
+  Node::Notification debugInterrupt;
   Node::Port tray;
   Node::Peripheral disc;
   Shared::File fd;

@@ -20,11 +20,21 @@ auto DSP::load(Node::Object parent, Node::Object from) -> void {
   stream = Node::append<Node::Stream>(parent, from, "Stream");
   stream->setChannels(2);
   stream->setFrequency(system.apuFrequency() / 768.0);
+
+  debugRAM = Node::append<Node::Memory>(parent, from, "APU RAM");
+  debugRAM->setSize(1 << 16);
+  debugRAM->setRead([&](uint32 address) -> uint8 {
+    return apuram[(uint16)address];
+  });
+  debugRAM->setWrite([&](uint32 address, uint8 data) -> void {
+    apuram[(uint16)address] = data;
+  });
 }
 
 auto DSP::unload() -> void {
   node = {};
   stream = {};
+  debugRAM = {};
 }
 
 auto DSP::main() -> void {

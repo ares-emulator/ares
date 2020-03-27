@@ -2,7 +2,7 @@ auto TraceLogger::construct() -> void {
   setCollapsible();
   setVisible(false);
 
-  tracerLabel.setText("Tracer").setFont(Font().setBold());
+  tracerLabel.setText("Trace Logger").setFont(Font().setBold());
   tracerList.onToggle([&](auto item) { eventToggle(item); });
 }
 

@@ -23,18 +23,17 @@ auto VDP::load(Node::Object parent, Node::Object from) -> void {
   screen->setAspect(1.0, 1.0);
   from = Node::scan(parent = screen, from);
 
-  region = Node::append<Node::String>(parent, from, "Region", "PAL", [&](auto region) {
-    if(region == "NTSC") screen->setSize(1280, 448);
-    if(region == "PAL" ) screen->setSize(1280, 480);
+  overscan = Node::append<Node::Boolean>(parent, from, "Overscan", true, [&](auto value) {
+    if(value == 0) screen->setSize(1280, 448);
+    if(value == 1) screen->setSize(1280, 480);
   });
-  region->setDynamic(true);
-  region->setAllowedValues({"NTSC", "PAL"});
+  overscan->setDynamic(true);
 }
 
 auto VDP::unload() -> void {
   node = {};
   screen = {};
-  region = {};
+  overscan = {};
 }
 
 auto VDP::main() -> void {
@@ -109,12 +108,12 @@ auto VDP::step(uint clocks) -> void {
 auto VDP::refresh() -> void {
   auto data = output;
 
-  if(region->value() == "NTSC") {
+  if(overscan->value() == 0) {
     if(latch.overscan) data += (8 << latch.interlace) * 320;
     screen->refresh(data, 320 * sizeof(uint32), screenWidth(), 224 << latch.interlace);
   }
 
-  if(region->value() == "PAL") {
+  if(overscan->value() == 1) {
     if(!latch.overscan) data -= (8 << latch.interlace) * 320;
     screen->refresh(data, 320 * sizeof(uint32), screenWidth(), 240 << latch.interlace);
   }

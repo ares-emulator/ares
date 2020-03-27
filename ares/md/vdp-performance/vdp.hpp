@@ -2,7 +2,7 @@
 struct VDP : Thread {
   Node::Component node;
   Node::Screen screen;
-  Node::String region;
+  Node::Boolean overscan;
 
   //vdp.cpp
   auto load(Node::Object, Node::Object) -> void;

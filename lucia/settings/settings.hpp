@@ -64,7 +64,7 @@ struct Settings : Markup::Node {
     string saves;
     string patches;
     string screenshots;
-    string traces;
+    string debugging;
     string firmware;
   } paths;
 
@@ -124,9 +124,9 @@ struct InputSettings : VerticalLayout {
   auto refresh() -> void;
   auto eventChange() -> void;
   auto eventClear() -> void;
-  auto eventAssign() -> void;
-  auto eventCancel() -> void;
+  auto eventAssign(TableViewCell) -> void;
   auto eventInput(shared_pointer<HID::Device>, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> void;
+  auto setVisible(bool visible = true) -> InputSettings&;
 
   Label inputLabel{this, Size{~0, 0}, 2};
   TableView inputList{this, Size{~0, ~0}};
@@ -137,7 +137,8 @@ struct InputSettings : VerticalLayout {
     Button clearButton{&controlLayout, Size{80, 0}};
 
   maybe<InputMapping&> activeMapping;
-  uint64_t activeMappingBeginTimestamp = 0;
+  uint activeBinding = 0;
+  Timer timer;
 };
 
 struct HotkeySettings : VerticalLayout {
@@ -146,9 +147,9 @@ struct HotkeySettings : VerticalLayout {
   auto refresh() -> void;
   auto eventChange() -> void;
   auto eventClear() -> void;
-  auto eventAssign() -> void;
-  auto eventCancel() -> void;
+  auto eventAssign(TableViewCell) -> void;
   auto eventInput(shared_pointer<HID::Device>, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> void;
+  auto setVisible(bool visible = true) -> HotkeySettings&;
 
   Label inputLabel{this, Size{~0, 0}, 2};
   TableView inputList{this, Size{~0, ~0}};
@@ -159,7 +160,8 @@ struct HotkeySettings : VerticalLayout {
     Button clearButton{&controlLayout, Size{80, 0}};
 
   maybe<InputMapping&> activeMapping;
-  uint64_t activeMappingBeginTimestamp = 0;
+  uint activeBinding = 0;
+  Timer timer;
 };
 
 struct EmulatorSettings : VerticalLayout {
@@ -218,11 +220,11 @@ struct PathSettings : VerticalLayout {
     LineEdit screenshotsPath{&screenshotsLayout, Size{~0, 0}};
     Button screenshotsAssign{&screenshotsLayout, Size{80, 0}};
     Button screenshotsReset{&screenshotsLayout, Size{80, 0}};
-  Label tracesLabel{this, Size{~0, 0}, 2};
-  HorizontalLayout tracesLayout{this, Size{~0, 0}};
-    LineEdit tracesPath{&tracesLayout, Size{~0, 0}};
-    Button tracesAssign{&tracesLayout, Size{80, 0}};
-    Button tracesReset{&tracesLayout, Size{80, 0}};
+  Label debuggingLabel{this, Size{~0, 0}, 2};
+  HorizontalLayout debuggingLayout{this, Size{~0, 0}};
+    LineEdit debuggingPath{&debuggingLayout, Size{~0, 0}};
+    Button debuggingAssign{&debuggingLayout, Size{80, 0}};
+    Button debuggingReset{&debuggingLayout, Size{80, 0}};
   Label firmwareLabel{this, Size{~0, 0}, 2};
   HorizontalLayout firmwareLayout{this, Size{~0, 0}};
     LineEdit firmwarePath{&firmwareLayout, Size{~0, 0}};

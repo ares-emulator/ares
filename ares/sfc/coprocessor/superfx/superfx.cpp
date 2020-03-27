@@ -10,12 +10,12 @@ auto SuperFX::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "SuperFX");
   from = Node::scan(parent = node, from);
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "GSU");
-  eventInstruction->setAddressBits(24);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "GSU");
+  debugInstruction->setAddressBits(24);
 }
 
 auto SuperFX::unload() -> void {
-  eventInstruction = {};
+  debugInstruction = {};
   node = {};
 
   rom.reset();
@@ -30,8 +30,8 @@ auto SuperFX::main() -> void {
   if(regs.sfr.g == 0) return step(6);
 
   auto opcode = peekpipe();
-  if(eventInstruction->enabled() && eventInstruction->address(regs.r[15])) {
-    eventInstruction->notify(disassembleInstruction(), disassembleContext());
+  if(debugInstruction->enabled() && debugInstruction->address(regs.r[15])) {
+    debugInstruction->notify(disassembleInstruction(), disassembleContext());
   }
   instruction(opcode);
 

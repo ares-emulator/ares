@@ -2,8 +2,8 @@
 
 struct CPU : M68K, Thread {
   Node::Component node;
-  Node::Instruction eventInstruction;
-  Node::Notification eventInterrupt;
+  Node::Instruction debugInstruction;
+  Node::Notification debugInterrupt;
 
   enum class Interrupt : uint {
     Reset,

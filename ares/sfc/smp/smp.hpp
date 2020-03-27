@@ -2,7 +2,7 @@
 
 struct SMP : SPC700, Thread {
   Node::Component node;
-  Node::Instruction eventInstruction;
+  Node::Instruction debugInstruction;
 
   inline auto synchronizing() const -> bool override { return scheduler.synchronizing(); }
 

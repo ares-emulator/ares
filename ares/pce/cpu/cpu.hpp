@@ -2,8 +2,8 @@
 
 struct CPU : HuC6280, Thread {
   Node::Component node;
-  Node::Instruction eventInstruction;
-  Node::Notification eventInterrupt;
+  Node::Instruction debugInstruction;
+  Node::Notification debugInterrupt;
   Memory::Writable<uint8> ram;  //PC Engine = 8KB, SuperGrafx = 32KB
 
   //cpu.cpp

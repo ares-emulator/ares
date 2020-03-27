@@ -44,6 +44,7 @@ struct Presentation : Window {
       MenuCheckItem pauseEmulation{&toolsMenu};
       MenuSeparator toolsMenuSeparatorB{&toolsMenu};
       MenuItem manifestViewerAction{&toolsMenu};
+      MenuItem memoryEditorAction{&toolsMenu};
       MenuItem traceLoggerAction{&toolsMenu};
     Menu helpMenu{&menuBar};
       MenuItem aboutAction{&helpMenu};

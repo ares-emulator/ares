@@ -6,7 +6,7 @@
 
 struct ArmDSP : ARM7TDMI, Thread {
   Node::Component node;
-  Node::Instruction eventInstruction;
+  Node::Instruction debugInstruction;
   uint Frequency;
   #include "registers.hpp"
 

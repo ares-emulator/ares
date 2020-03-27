@@ -2,8 +2,8 @@
 
 struct SA1 : WDC65816, Thread {
   Node::Component node;
-  Node::Instruction eventInstruction;
-  Node::Notification eventInterrupt;
+  Node::Instruction debugInstruction;
+  Node::Notification debugInterrupt;
 
   //sa1.cpp
   auto load(Node::Object, Node::Object) -> void;

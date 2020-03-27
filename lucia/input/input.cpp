@@ -4,156 +4,172 @@
 VirtualPad virtualPad;
 InputManager inputManager;
 
-auto InputMapping::bind(shared_pointer<HID::Device> device, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> bool {
+auto InputMapping::bind() -> void {
+  for(auto& binding : bindings) binding = {};
+
+  for(uint index : range(BindingLimit)) {
+    auto& assignment = assignments[index];
+    auto& binding = bindings[index];
+
+    auto token = assignment.split("/");
+    if(token.size() < 3) continue;  //ignore invalid mappings
+
+    uint64_t deviceID = token[0].natural();
+    uint groupID = token[1].natural();
+    uint inputID = token[2].natural();
+    string qualifier = token(3, "None");
+
+    for(auto& device : inputManager.devices) {
+      if(deviceID != device->id()) continue;
+
+      binding.device = device;
+      binding.deviceID = deviceID;
+      binding.groupID = groupID;
+      binding.inputID = inputID;
+      binding.qualifier = Qualifier::None;
+      if(qualifier == "Lo") binding.qualifier = Qualifier::Lo;
+      if(qualifier == "Hi") binding.qualifier = Qualifier::Hi;
+      if(qualifier == "Rumble") binding.qualifier = Qualifier::Rumble;
+      break;
+    }
+  }
+}
+
+auto InputMapping::bind(uint binding, string assignment) -> void {
+  if(binding >= BindingLimit) return;
+  assignments[binding] = assignment;
+  bind();
+}
+
+auto InputMapping::bind(uint binding, shared_pointer<HID::Device> device, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> bool {
+  string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
+
   if(device->isNull()) {
-    return unbind(), true;
+    return unbind(binding), true;
   }
 
   if(device->isKeyboard() && device->group(groupID).input(inputID).name() == "Escape") {
-    return unbind(), true;
+    return unbind(binding), true;
   }
 
   if(device->isKeyboard() && oldValue == 0 && newValue == 1) {
-    return setAssignment(device, groupID, inputID), true;
+    return bind(binding, assignment), true;
   }
 
   if(device->isJoypad() && groupID == HID::Joypad::GroupID::Button && oldValue == 0 && newValue == 1) {
-    return setAssignment(device, groupID, inputID), true;
+    return bind(binding, assignment), true;
   }
 
   if(device->isJoypad() && groupID == HID::Joypad::GroupID::Hat && newValue < -16384) {
-    return setAssignment(device, groupID, inputID, Qualifier::Lo), true;
+    return bind(binding, {assignment, "/Lo"}), true;
   }
 
   if(device->isJoypad() && groupID == HID::Joypad::GroupID::Hat && newValue > +16384) {
-    return setAssignment(device, groupID, inputID, Qualifier::Hi), true;
+    return bind(binding, {assignment, "/Hi"}), true;
   }
 
   if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && newValue < -16384) {
-    return setAssignment(device, groupID, inputID, Qualifier::Lo), true;
+    return bind(binding, {assignment, "/Lo"}), true;
   }
 
   if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && newValue > +16384) {
-    return setAssignment(device, groupID, inputID, Qualifier::Hi), true;
+    return bind(binding, {assignment, "/Hi"}), true;
   }
 
   if(device->isJoypad() && groupID == HID::Joypad::GroupID::Trigger && newValue < -16384) {
-    return setAssignment(device, groupID, inputID, Qualifier::Lo), true;
+    return bind(binding, {assignment, "/Lo"}), true;
   }
 
   if(device->isJoypad() && groupID == HID::Joypad::GroupID::Trigger && newValue > +16384) {
-    return setAssignment(device, groupID, inputID, Qualifier::Hi), true;
+    return bind(binding, {assignment, "/Hi"}), true;
   }
 
   return false;
 }
 
-auto InputMapping::bind() -> void {
-  device.reset();
-  deviceID = 0;
-  groupID = 0;
-  inputID = 0;
-  qualifier = Qualifier::None;
-
-  if(auto p = assignment.split("/"); p.size() >= 4) {
-    for(auto& device : inputManager.devices) {
-      if(device->name() == p[0]) {
-        if(device->id() == p[1].hex()) {
-          if(auto groupID = device->find(p[2])) {
-            if(auto inputID = device->group(*groupID).find(p[3])) {
-              this->device = device;
-              this->deviceID = device->id();
-              this->groupID = *groupID;
-              this->inputID = *inputID;
-              this->qualifier = Qualifier::None;
-              if(p.size() >= 5) {
-                if(p[4] == "Lo") this->qualifier = Qualifier::Lo;
-                if(p[4] == "Hi") this->qualifier = Qualifier::Hi;
-              }
-              break;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 auto InputMapping::unbind() -> void {
-  device.reset();
-  deviceID = 0;
-  groupID = 0;
-  inputID = 0;
-  qualifier = Qualifier::None;
-  assignment = "";
+  for(uint binding : range(BindingLimit)) unbind(binding);
 }
 
-auto InputMapping::icon() -> image {
-  if(assignment.beginsWith("Keyboard/")) return Icon::Device::Keyboard;
-  if(assignment.beginsWith("Mouse/")) return Icon::Device::Mouse;
-  if(assignment.beginsWith("Joypad/")) return Icon::Device::Joypad;
-  return {};
-}
-
-auto InputMapping::text() -> string {
-  string text = assignment;
-  auto part = text.split("/");
-  if(text.match("Keyboard/*/Button/*")) return {part[3]};
-  if(text.match("Joypad/*/Button/*")) return {part[1], ".Button.", part[3]};
-  if(text.match("Joypad/*/Hat/*/*")) return {part[1], ".Hat.", part[3], ".", part[4]};
-  if(text.match("Joypad/*/Axis/*/*")) return {part[1], ".Axis.", part[3], ".", part[4]};
-  if(text.match("Joypad/*/Trigger/*/*")) return {part[1], ".Trigger.", part[3], ".", part[4]};
-  return text;
+auto InputMapping::unbind(uint binding) -> void {
+  if(binding >= BindingLimit) return;
+  bindings[binding] = {};
+  assignments[binding] = {};
 }
 
 auto InputMapping::value() -> int16_t {
-  if(!device) return 0;
-  int16_t value = device->group(groupID).input(inputID).value();
+  int16_t result = 0;
 
-  if(device->isKeyboard() && groupID == HID::Keyboard::GroupID::Button) {
-    return value != 0;
+  for(auto& binding : bindings) {
+    if(!binding.device) continue;  //unbound
+
+    auto& device = binding.device;
+    auto& groupID = binding.groupID;
+    auto& inputID = binding.inputID;
+    auto& qualifier = binding.qualifier;
+    int16_t value = device->group(groupID).input(inputID).value();
+    int16_t output = 0;
+
+    if(device->isKeyboard() && groupID == HID::Keyboard::GroupID::Button) {
+      output = value != 0;
+    }
+
+    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Button) {
+      output = value != 0;
+    }
+
+    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Hat) {
+      if(qualifier == Qualifier::Lo) output = value < -16384;
+      if(qualifier == Qualifier::Hi) output = value > +16384;
+    }
+
+    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis) {
+      if(qualifier == Qualifier::Lo) output = value < -16384;
+      if(qualifier == Qualifier::Hi) output = value > +16384;
+    }
+
+    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Trigger) {
+      if(qualifier == Qualifier::Lo) output = value < -16384;
+      if(qualifier == Qualifier::Hi) output = value > +16384;
+    }
+
+    result |= output;
   }
 
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Button) {
-    return value != 0;
-  }
-
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Hat) {
-    if(qualifier == Qualifier::Lo) return value < -16384;
-    if(qualifier == Qualifier::Hi) return value > +16384;
-  }
-
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis) {
-    if(qualifier == Qualifier::Lo) return value < -16384;
-    if(qualifier == Qualifier::Hi) return value > +16384;
-  }
-
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Trigger) {
-    if(qualifier == Qualifier::Lo) return value < -16384;
-    if(qualifier == Qualifier::Hi) return value > +16384;
-  }
-
-  return 0;
+  return result;
 }
 
-auto InputMapping::resetAssignment() -> void {
-  device.reset();
-  deviceID = 0;
-  groupID = 0;
-  inputID = 0;
-  assignment = "";
+auto InputMapping::Binding::icon() -> image {
+  if(device && device->isKeyboard()) return Icon::Device::Keyboard;
+  if(device && device->isMouse()) return Icon::Device::Mouse;
+  if(device && device->isJoypad()) return Icon::Device::Joypad;
+  return {};
 }
 
-auto InputMapping::setAssignment(shared_pointer<HID::Device> device, uint groupID, uint inputID, Qualifier qualifier) -> void {
-  assignment = {device->name(), "/", hex(device->id()), "/", device->group(groupID).name(), "/", device->group(groupID).input(inputID).name()};
+auto InputMapping::Binding::text() -> string {
+  if(!device) return {};
+  if(groupID >= device->size()) return {};
+  if(inputID >= device->group(groupID).size()) return {};
 
-  this->device = device;
-  this->deviceID = device->id();
-  this->groupID = groupID;
-  this->inputID = inputID;
-  this->qualifier = Qualifier::None;
-  if(qualifier == Qualifier::Lo) this->qualifier = Qualifier::Lo, assignment.append("/Lo");
-  if(qualifier == Qualifier::Hi) this->qualifier = Qualifier::Hi, assignment.append("/Hi");
+  if(device->isKeyboard()) {
+    return device->group(groupID).input(inputID).name();
+  }
+
+  if(device->isMouse()) {
+    return device->group(groupID).input(inputID).name();
+  }
+
+  if(device->isJoypad()) {
+    string name{Hash::CRC16(string{device->id()}).digest().upcase()};
+    name.append(" ", device->group(groupID).name());
+    name.append(" ", device->group(groupID).input(inputID).name());
+    if(qualifier == Qualifier::Lo) name.append(" Lo");
+    if(qualifier == Qualifier::Hi) name.append(" Hi");
+    if(qualifier == Qualifier::Rumble) name.append(" Rumble");
+    return name;
+  }
+
+  return {};
 }
 
 //
@@ -184,10 +200,10 @@ auto InputManager::bind() -> void {
   for(auto& mapping : hotkeys) mapping.bind();
 }
 
-auto InputManager::poll() -> void {
+auto InputManager::poll(bool force) -> void {
   //polling actual hardware is very time-consuming; skip call if poll was called too recently
   auto thisPoll = chrono::millisecond();
-  if(thisPoll - lastPoll < pollFrequency) return;
+  if(thisPoll - lastPoll < pollFrequency && !force) return;
   lastPoll = thisPoll;
 
   auto devices = ruby::input.poll();

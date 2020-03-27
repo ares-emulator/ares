@@ -1,7 +1,7 @@
 struct PPU : Thread {
   Node::Component node;
   Node::Screen screen;
-  Node::String region;
+  Node::Boolean overscan;
   Node::Boolean colorEmulation;
 
   inline auto rate() const -> uint { return Region::PAL() ? 5 : 4; }

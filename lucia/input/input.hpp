@@ -1,27 +1,31 @@
+enum : uint { BindingLimit = 3 };
+
 struct InputMapping {
-  enum class Qualifier : uint { None, Lo, Hi };
+  enum class Qualifier : uint { None, Lo, Hi, Rumble };
 
   InputMapping(const string& name) : name(name) {}
 
-  auto bind(shared_pointer<HID::Device>, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> bool;
   auto bind() -> void;
+  auto bind(uint binding, string assignment) -> void;
+  auto bind(uint binding, shared_pointer<HID::Device>, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> bool;
   auto unbind() -> void;
-  auto icon() -> image;
-  auto text() -> string;
+  auto unbind(uint binding) -> void;
   auto value() -> int16_t;
 
-  auto resetAssignment() -> void;
-  auto setAssignment(shared_pointer<HID::Device>, uint groupID, uint inputID, Qualifier = Qualifier::None) -> void;
-
   const string name;
+  string assignments[BindingLimit];
 
-  shared_pointer<HID::Device> device;
-  uint64_t deviceID;
-  uint groupID;
-  uint inputID;
-  Qualifier qualifier = Qualifier::None;
+  struct Binding {
+    auto icon() -> image;
+    auto text() -> string;
 
-  string assignment;
+    shared_pointer<HID::Device> device;
+    uint64_t deviceID;
+    uint groupID;
+    uint inputID;
+    Qualifier qualifier = Qualifier::None;
+  };
+  Binding bindings[BindingLimit];
 };
 
 struct InputButton : InputMapping {
@@ -55,7 +59,7 @@ struct VirtualPad {
 struct InputManager {
   auto create() -> void;
   auto bind() -> void;
-  auto poll() -> void;
+  auto poll(bool force = false) -> void;
   auto eventInput(shared_pointer<HID::Device>, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> void;
 
   //hotkeys.cpp

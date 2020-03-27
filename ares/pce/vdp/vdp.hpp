@@ -8,6 +8,7 @@
 struct VDP : Thread {
   Node::Component node;
   Node::Screen screen;
+  Node::Boolean overscan;
 
   inline auto irqLine() const -> bool { return vdc0.irqLine() | vdc1.irqLine(); }
 

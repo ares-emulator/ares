@@ -1,6 +1,6 @@
 struct CPU : V30MZ, Thread, IO {
   Node::Component node;
-  Node::Instruction eventInstruction;
+  Node::Instruction debugInstruction;
 
   enum class Interrupt : uint {
     SerialSend,

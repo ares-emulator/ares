@@ -48,17 +48,17 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
 
   string origin = Model::SuperGameBoy() ? "SGB" : "CPU";
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", origin);
-  eventInstruction->setAddressBits(16);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", origin);
+  debugInstruction->setAddressBits(16);
 
-  eventInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", origin);
+  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", origin);
 }
 
 auto CPU::unload() -> void {
   node = {};
   version = {};
-  eventInstruction = {};
-  eventInterrupt = {};
+  debugInstruction = {};
+  debugInterrupt = {};
 }
 
 auto CPU::main() -> void {
@@ -71,7 +71,7 @@ auto CPU::main() -> void {
   if(r.ime) {
     //are any interrupts pending?
     if(status.interruptLatch) {
-      if(eventInterrupt->enabled()) eventInterrupt->notify("IRQ");
+      if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
 
       idle();
       idle();
@@ -91,8 +91,8 @@ auto CPU::main() -> void {
     }
   }
 
-  if(eventInstruction->enabled() && eventInstruction->address(PC)) {
-    eventInstruction->notify(disassembleInstruction(), disassembleContext());
+  if(debugInstruction->enabled() && debugInstruction->address(PC)) {
+    debugInstruction->notify(disassembleInstruction(), disassembleContext());
   }
   instruction();
 

@@ -17,10 +17,10 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  eventInstruction->setAddressBits(24);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
+  debugInstruction->setAddressBits(24);
 
-  eventInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
+  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
 
   ram.allocate(12_KiB, 0x00);
   if(auto fp = platform->open(system.node, "cpu.ram", File::Read)) {
@@ -63,13 +63,13 @@ auto CPU::unload() -> void {
   ram.reset();
 
   node = {};
-  eventInstruction = {};
-  eventInterrupt = {};
+  debugInstruction = {};
+  debugInterrupt = {};
 }
 
 auto CPU::main() -> void {
   if(interrupts.fire()) {
-    if(eventInterrupt->enabled()) eventInterrupt->notify("IRQ");
+    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
     r.halted = false;
   }
 
@@ -77,8 +77,8 @@ auto CPU::main() -> void {
     return step(16);
   }
 
-  if(eventInstruction->enabled() && eventInstruction->address(r.pc.l.l0)) {
-    eventInstruction->notify(disassembleInstruction(), disassembleContext());
+  if(debugInstruction->enabled() && debugInstruction->address(r.pc.l.l0)) {
+    debugInstruction->notify(disassembleInstruction(), disassembleContext());
   }
   instruction();
 }

@@ -7,9 +7,12 @@ struct PPU : Thread, PPUcounter {
   Node::Natural versionPPU2;
   Node::Natural vramSize;
   Node::Screen screen;
-  Node::String region;
+  Node::Boolean overscanEnable;
   Node::Boolean colorEmulation;
   Node::Boolean colorBleed;
+  Node::Memory debugVRAM;
+  Node::Memory debugOAM;
+  Node::Memory debugCGRAM;
 
   inline auto interlace() const -> bool { return self.interlace; }
   inline auto overscan() const -> bool { return self.overscan; }

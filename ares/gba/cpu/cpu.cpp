@@ -16,13 +16,13 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  eventInstruction->setAddressBits(32);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
+  debugInstruction->setAddressBits(32);
 }
 
 auto CPU::unload() -> void {
   node = {};
-  eventInstruction = {};
+  debugInstruction = {};
 }
 
 auto CPU::main() -> void {
@@ -43,8 +43,8 @@ auto CPU::main() -> void {
     context.halted = false;
   }
 
-  if(eventInstruction->enabled() && eventInstruction->address(pipeline.execute.address)) {
-    eventInstruction->notify(disassembleInstruction(), disassembleContext());
+  if(debugInstruction->enabled() && debugInstruction->address(pipeline.execute.address)) {
+    debugInstruction->notify(disassembleInstruction(), disassembleContext());
   }
   instruction();
 }

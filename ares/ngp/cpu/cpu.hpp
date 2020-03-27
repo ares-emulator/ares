@@ -5,8 +5,8 @@
 
 struct CPU : TLCS900H, Thread {
   Node::Component node;
-  Node::Instruction eventInstruction;
-  Node::Notification eventInterrupt;
+  Node::Instruction debugInstruction;
+  Node::Notification debugInterrupt;
   ares::Memory::Writable<uint8> ram;
 
   //Neo Geo Pocket Color: 0x87e2 (K2GE mode selection) is a privileged register.

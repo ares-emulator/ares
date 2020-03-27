@@ -93,7 +93,7 @@ auto Settings::process(bool load) -> void {
   bind(string,  "Paths/Saves", paths.saves);
   bind(string,  "Paths/Patches", paths.patches);
   bind(string,  "Paths/Screenshots", paths.screenshots);
-  bind(string,  "Paths/Traces", paths.traces);
+  bind(string,  "Paths/Debugging", paths.debugging);
   bind(string,  "Paths/Firmware", paths.firmware);
 
   for(uint index : range(9)) {
@@ -102,13 +102,19 @@ auto Settings::process(bool load) -> void {
   }
 
   for(auto& mapping : virtualPad.mappings) {
-    string name = {"VirtualPad/", mapping->name};
-    bind(string, name, mapping->assignment);
+    string name = {"VirtualPad/", mapping->name}, value;
+    if(load == 0) for(auto& assignment : mapping->assignments) value.append(assignment, ";");
+    if(load == 0) value.trimRight(";", 1L);
+    bind(string, name, value);
+    if(load == 1) for(uint binding : range(BindingLimit)) mapping->assignments[binding] = value.split(";")(binding);
   }
 
   for(auto& mapping : inputManager.hotkeys) {
-    string name = {"Hotkey/", string{mapping.name}.replace(" ", "")};
-    bind(string, name, mapping.assignment);
+    string name = {"Hotkey/", string{mapping.name}.replace(" ", "")}, value;
+    if(load == 0) for(auto& assignment : mapping.assignments) value.append(assignment, ";");
+    if(load == 0) value.trimRight(";", 1L);
+    bind(string, name, value);
+    if(load == 1) for(uint binding : range(BindingLimit)) mapping.assignments[binding] = value.split(";")(binding);
   }
 
   for(auto& emulator : emulators) {
@@ -132,8 +138,8 @@ SettingsWindow::SettingsWindow() {
   onClose([&] {
     setVisible(false);
     //cancel any pending input assignment requests, if any
-    inputSettings.eventCancel();
-    hotkeySettings.eventCancel();
+    inputSettings.setVisible(false);
+    hotkeySettings.setVisible(false);
   });
 
   layout.setPadding(5_sx, 5_sy);
@@ -170,7 +176,7 @@ SettingsWindow::SettingsWindow() {
 
   setDismissable();
   setTitle("Configuration");
-  setSize({720, 400});
+  setSize({690_sx, 405_sy});
   setAlignment({0.0, 1.0});
 }
 
@@ -188,10 +194,6 @@ auto SettingsWindow::show(const string& panel) -> void {
 }
 
 auto SettingsWindow::eventChange() -> void {
-  //cancel any pending input assignment requests, if any
-  inputSettings.eventCancel();
-  hotkeySettings.eventCancel();
-
   videoSettings.setVisible(false);
   audioSettings.setVisible(false);
   inputSettings.setVisible(false);

@@ -11,15 +11,15 @@ auto SA1::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "SA1");
   from = Node::scan(parent = node, from);
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "SA1");
-  eventInstruction->setAddressBits(24);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "SA1");
+  debugInstruction->setAddressBits(24);
 
-  eventInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "SA1");
+  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "SA1");
 }
 
 auto SA1::unload() -> void {
-  eventInstruction = {};
-  eventInterrupt = {};
+  debugInstruction = {};
+  debugInterrupt = {};
   node = {};
 
   rom.reset();
@@ -42,13 +42,13 @@ auto SA1::main() -> void {
 
   if(status.interruptPending) {
     status.interruptPending = false;
-    if(eventInterrupt->enabled()) eventInterrupt->notify("IRQ");
+    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
     interrupt();
     return;
   }
 
-  if(eventInstruction->enabled() && eventInstruction->address(r.pc.d)) {
-    eventInstruction->notify(disassembleInstruction(), disassembleContext());
+  if(debugInstruction->enabled() && debugInstruction->address(r.pc.d)) {
+    debugInstruction->notify(disassembleInstruction(), disassembleContext());
   }
   instruction();
 }

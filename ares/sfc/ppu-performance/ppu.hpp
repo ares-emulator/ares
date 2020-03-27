@@ -1,8 +1,11 @@
 struct PPU : Thread, PPUcounter {
   Node::Component node;
   Node::Screen screen;
-  Node::String region;
+  Node::Boolean overscanEnable;
   Node::Boolean colorEmulation;
+  Node::Memory debugVRAM;
+  Node::Memory debugOAM;
+  Node::Memory debugCGRAM;
 
   inline auto hires() const -> bool { return io.pseudoHires || io.bgMode == 5 || io.bgMode == 6; }
   inline auto interlace() const -> bool { return state.interlace; }

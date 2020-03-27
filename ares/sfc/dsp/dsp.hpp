@@ -3,6 +3,7 @@
 struct DSP : Thread {
   Node::Component node;
   Node::Stream stream;
+  Node::Memory debugRAM;
 
   uint8 apuram[64 * 1024];
   uint8 registers[128];

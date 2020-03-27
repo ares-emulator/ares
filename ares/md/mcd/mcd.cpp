@@ -23,10 +23,10 @@ auto MCD::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "Mega CD");
   from = Node::scan(parent = node, from);
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "MCD");
-  eventInstruction->setAddressBits(24);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "MCD");
+  debugInstruction->setAddressBits(24);
 
-  eventInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "MCD");
+  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "MCD");
 
   tray = Node::append<Node::Port>(parent, from, "Disc Tray");
   tray->setFamily("Mega CD");
@@ -72,8 +72,8 @@ auto MCD::unload() -> void {
   cdc.ram.reset();
 
   node = {};
-  eventInstruction = {};
-  eventInterrupt = {};
+  debugInstruction = {};
+  debugInterrupt = {};
   tray = {};
 }
 
@@ -109,31 +109,31 @@ auto MCD::main() -> void {
 
   if(irq.pending) {
     if(1 > r.i && gpu.irq.lower()) {
-      if(eventInterrupt->enabled()) eventInterrupt->notify("GPU");
+      if(debugInterrupt->enabled()) debugInterrupt->notify("GPU");
       return interrupt(Vector::Level1, 1);
     }
     if(2 > r.i && external.irq.lower()) {
-      if(eventInterrupt->enabled()) eventInterrupt->notify("External");
+      if(debugInterrupt->enabled()) debugInterrupt->notify("External");
       return interrupt(Vector::Level2, 2);
     }
     if(3 > r.i && timer.irq.lower()) {
-      if(eventInterrupt->enabled()) eventInterrupt->notify("Timer");
+      if(debugInterrupt->enabled()) debugInterrupt->notify("Timer");
       return interrupt(Vector::Level3, 3);
     }
     if(4 > r.i && cdd.irq.lower()) {
-      if(eventInterrupt->enabled()) eventInterrupt->notify("CDD");
+      if(debugInterrupt->enabled()) debugInterrupt->notify("CDD");
       return interrupt(Vector::Level4, 4);
     }
     if(5 > r.i && cdc.irq.lower()) {
-      if(eventInterrupt->enabled()) eventInterrupt->notify("CDC");
+      if(debugInterrupt->enabled()) debugInterrupt->notify("CDC");
       return interrupt(Vector::Level5, 5);
     }
     if(6 > r.i && irq.subcode.lower()) {
-      if(eventInterrupt->enabled()) eventInterrupt->notify("IRQ");
+      if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
       return interrupt(Vector::Level6, 6);
     }
     if(irq.reset.lower()) {
-      if(eventInterrupt->enabled()) eventInterrupt->notify("Reset");
+      if(debugInterrupt->enabled()) debugInterrupt->notify("Reset");
       r.a[7] = read(1, 1, 0) << 16 | read(1, 1, 2) << 0;
       r.pc   = read(1, 1, 4) << 16 | read(1, 1, 6) << 0;
       prefetch();
@@ -142,8 +142,8 @@ auto MCD::main() -> void {
     }
   }
 
-  if(eventInstruction->enabled() && eventInstruction->address(r.pc - 4)) {
-    eventInstruction->notify(disassembleInstruction(r.pc - 4), disassembleContext());
+  if(debugInstruction->enabled() && debugInstruction->address(r.pc - 4)) {
+    debugInstruction->notify(disassembleInstruction(r.pc - 4), disassembleContext());
   }
   instruction();
 }

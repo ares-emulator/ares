@@ -12,12 +12,12 @@ auto SMP::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "SMP");
   from = Node::scan(parent = node, from);
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "SMP");
-  eventInstruction->setAddressBits(16);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "SMP");
+  debugInstruction->setAddressBits(16);
 }
 
 auto SMP::unload() -> void {
-  eventInstruction = {};
+  debugInstruction = {};
   node = {};
 }
 
@@ -25,8 +25,8 @@ auto SMP::main() -> void {
   if(r.wait) return instructionWait();
   if(r.stop) return instructionStop();
 
-  if(eventInstruction->enabled() && eventInstruction->address(r.pc.w)) {
-    eventInstruction->notify(disassembleInstruction(), disassembleContext());
+  if(debugInstruction->enabled() && debugInstruction->address(r.pc.w)) {
+    debugInstruction->notify(disassembleInstruction(), disassembleContext());
   }
   instruction();
 }

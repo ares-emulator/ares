@@ -12,23 +12,23 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  eventInstruction->setAddressBits(20);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
+  debugInstruction->setAddressBits(20);
 }
 
 auto CPU::unload() -> void {
-  eventInstruction = {};
+  debugInstruction = {};
   node = {};
 }
 
 auto CPU::main() -> void {
   poll();
 
-  if(eventInstruction->enabled()
-  && eventInstruction->address(uint20(V30MZ::r.cs * 16 + V30MZ::r.ip))
+  if(debugInstruction->enabled()
+  && debugInstruction->address(uint20(V30MZ::r.cs * 16 + V30MZ::r.ip))
   ) {
     if(auto instruction = disassembleInstruction()) {
-      eventInstruction->notify(instruction, disassembleContext());
+      debugInstruction->notify(instruction, disassembleContext());
     }
   }
   exec();

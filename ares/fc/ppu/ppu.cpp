@@ -19,12 +19,11 @@ auto PPU::load(Node::Object parent, Node::Object from) -> void {
   screen->setAspect(8.0, 7.0);
   from = Node::scan(parent = screen, from);
 
-  region = Node::append<Node::String>(parent, from, "Region", "PAL", [&](auto region) {
-    if(region == "NTSC") screen->setSize(256, 224);
-    if(region == "PAL" ) screen->setSize(256, 240);
+  overscan = Node::append<Node::Boolean>(parent, from, "Overscan", true, [&](auto value) {
+    if(value == 0) screen->setSize(256, 224);
+    if(value == 1) screen->setSize(256, 240);
   });
-  region->setAllowedValues({"NTSC", "PAL"});
-  region->setDynamic(true);
+  overscan->setDynamic(true);
 
   colorEmulation = Node::append<Node::Boolean>(parent, from, "Color Emulation", true, [&](auto value) {
     screen->resetPalette();
@@ -35,7 +34,7 @@ auto PPU::load(Node::Object parent, Node::Object from) -> void {
 auto PPU::unload() -> void {
   node = {};
   screen = {};
-  region = {};
+  overscan = {};
   colorEmulation = {};
 }
 
@@ -79,11 +78,11 @@ auto PPU::frame() -> void {
 }
 
 auto PPU::refresh() -> void {
-  if(region->value() == "NTSC") {
+  if(overscan->value() == 0) {
     screen->refresh(buffer + 8 * 256, 256 * sizeof(uint32), 256, 224);
   }
 
-  if(region->value() == "PAL") {
+  if(overscan->value() == 1) {
     screen->refresh(buffer, 256 * sizeof(uint32), 256, 240);
   }
 }

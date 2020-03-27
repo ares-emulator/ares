@@ -68,6 +68,8 @@ auto Program::main() -> void {
       emulator->save();
     }
   }
+
+  memoryEditor.refresh();
 }
 
 auto Program::quit() -> void {

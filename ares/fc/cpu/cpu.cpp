@@ -11,28 +11,26 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  eventInstruction->setAddressBits(16);
-//eventInstruction->setEnabled(true);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
+  debugInstruction->setAddressBits(16);
 
-  eventInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
-//eventInterrupt->setEnabled(true);
+  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
 }
 
 auto CPU::unload() -> void {
-  eventInstruction = {};
-  eventInterrupt = {};
+  debugInstruction = {};
+  debugInterrupt = {};
   node = {};
 }
 
 auto CPU::main() -> void {
   if(io.interruptPending) {
-    if(eventInterrupt->enabled()) eventInterrupt->notify("IRQ");
+    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
     return interrupt();
   }
 
-  if(eventInstruction->enabled() && eventInstruction->address(r.pc)) {
-    eventInstruction->notify(disassembleInstruction(), disassembleContext());
+  if(debugInstruction->enabled() && debugInstruction->address(r.pc)) {
+    debugInstruction->notify(disassembleInstruction(), disassembleContext());
   }
   instruction();
 }

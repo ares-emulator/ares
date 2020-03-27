@@ -5,6 +5,7 @@ namespace ares::Core {
     struct RealTimeClock;
     struct Peripheral;
     struct Port;
+    struct Memory;
     struct Input;
       struct Button;
       struct Axis;
@@ -34,6 +35,7 @@ namespace ares::Node {
     using RealTimeClock  = shared_pointer<Core::RealTimeClock>;
     using Peripheral     = shared_pointer<Core::Peripheral>;
     using Port           = shared_pointer<Core::Port>;
+    using Memory         = shared_pointer<Core::Memory>;
     using Input          = shared_pointer<Core::Input>;
       using Button       = shared_pointer<Core::Button>;
       using Axis         = shared_pointer<Core::Axis>;
@@ -70,6 +72,7 @@ namespace ares::Core {
   #include <ares/node/real-time-clock.hpp>
   #include <ares/node/peripheral.hpp>
   #include <ares/node/port.hpp>
+  #include <ares/node/memory.hpp>
   #include <ares/node/input.hpp>
   #include <ares/node/setting.hpp>
   #include <ares/node/event/event.hpp>

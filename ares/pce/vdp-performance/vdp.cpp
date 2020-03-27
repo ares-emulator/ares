@@ -19,7 +19,7 @@ auto VDP::load(Node::Object parent, Node::Object from) -> void {
 
   screen = Node::append<Node::Screen>(parent, from, "Screen");
   screen->colors(1 << 10, {&VDP::color, this});
-  screen->setSize(1024, 239);
+  screen->setSize(1088, 239);
   screen->setScale(0.25, 1.0);
   screen->setAspect(8.0, 7.0);
   from = Node::scan(parent = screen, from);

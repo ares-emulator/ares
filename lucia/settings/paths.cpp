@@ -50,19 +50,19 @@ auto PathSettings::construct() -> void {
     refresh();
   });
 
-  tracesLabel.setText("Trace Logs").setFont(Font().setBold());
-  tracesPath.setEditable(false);
-  tracesAssign.setText("Assign ...").onActivate([&] {
+  debuggingLabel.setText("Debugging Files").setFont(Font().setBold());
+  debuggingPath.setEditable(false);
+  debuggingAssign.setText("Assign ...").onActivate([&] {
     BrowserDialog dialog;
-    dialog.setTitle("Select Traces Path");
+    dialog.setTitle("Select Debugging Path");
     dialog.setPath(Path::desktop());
     if(auto location = program.selectFolder(dialog)) {
-      settings.paths.traces = location;
+      settings.paths.debugging = location;
       refresh();
     }
   });
-  tracesReset.setText("Reset").onActivate([&] {
-    settings.paths.traces = "";
+  debuggingReset.setText("Reset").onActivate([&] {
+    settings.paths.debugging = "";
     refresh();
   });
 
@@ -104,10 +104,10 @@ auto PathSettings::refresh() -> void {
     screenshotsPath.setText("(same as game path)").setForegroundColor({80, 80, 80});
   }
 
-  if(settings.paths.traces) {
-    tracesPath.setText(settings.paths.traces).setForegroundColor();
+  if(settings.paths.debugging) {
+    debuggingPath.setText(settings.paths.debugging).setForegroundColor();
   } else {
-    tracesPath.setText("(same as game path)").setForegroundColor({80, 80, 80});
+    debuggingPath.setText("(same as game path)").setForegroundColor({80, 80, 80});
   }
 
   if(settings.paths.firmware) {

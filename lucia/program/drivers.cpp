@@ -107,4 +107,6 @@ auto Program::inputDriverUpdate() -> void {
     settings.input.driver = "None";
     driverSettings.inputDriverUpdate();
   }
+
+  inputManager.poll(true);
 }

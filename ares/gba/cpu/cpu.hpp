@@ -1,6 +1,6 @@
 struct CPU : ARM7TDMI, Thread, IO {
   Node::Component node;
-  Node::Instruction eventInstruction;
+  Node::Instruction debugInstruction;
 
   struct Interrupt { enum : uint {
     VBlank       = 0x0001,

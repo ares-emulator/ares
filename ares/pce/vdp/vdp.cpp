@@ -22,15 +22,22 @@ auto VDP::load(Node::Object parent, Node::Object from) -> void {
 
   screen = Node::append<Node::Screen>(parent, from, "Screen");
   screen->colors(1 << 10, {&VDP::color, this});
-  screen->setSize(1024, 239);
+  screen->setSize(1088, 239);
   screen->setScale(0.25, 1.0);
   screen->setAspect(8.0, 7.0);
   from = Node::scan(parent = screen, from);
+
+  overscan = Node::append<Node::Boolean>(parent, from, "Overscan", true, [&](auto value) {
+    if(value == 0) screen->setSize(1024, 239);
+    if(value == 1) screen->setSize(1088, 239);
+  });
+  overscan->setDynamic(true);
 }
 
 auto VDP::unload() -> void {
   node = {};
   screen = {};
+  overscan = {};
 }
 
 auto VDP::main() -> void {
@@ -82,7 +89,13 @@ auto VDP::step(uint clocks) -> void {
 }
 
 auto VDP::refresh() -> void {
-  screen->refresh(buffer + 1365 * 21 + 96, 1365 * sizeof(uint32), 1024, 239);
+  if(overscan->value() == 0) {
+    screen->refresh(buffer + 1365 * 21 + 96, 1365 * sizeof(uint32), 1024, 239);
+  }
+
+  if(overscan->value() == 1) {
+    screen->refresh(buffer + 1365 * 21 + 96, 1365 * sizeof(uint32), 1088, 239);
+  }
 }
 
 auto VDP::power() -> void {

@@ -2,7 +2,7 @@ auto ManifestViewer::construct() -> void {
   setCollapsible();
   setVisible(false);
 
-  manifestLabel.setText("Manifest").setFont(Font().setBold());
+  manifestLabel.setText("Manifest Viewer").setFont(Font().setBold());
   manifestView.setEditable(false).setFont(Font().setFamily(Font::Mono));
 };
 
@@ -16,4 +16,8 @@ auto ManifestViewer::reload() -> void {
   manifest.trimRight("\n").append("\n");  //ensure only one new line at the end of the manifest
 
   manifestView.setText(manifest);
+}
+
+auto ManifestViewer::unload() -> void {
+  manifestView.setText();
 }

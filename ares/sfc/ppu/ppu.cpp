@@ -39,12 +39,11 @@ auto PPU::load(Node::Object parent, Node::Object from) -> void {
   screen->setAspect(8.0, 7.0);
   from = Node::scan(parent = screen, from);
 
-  region = Node::append<Node::String>(parent, from, "Region", "PAL", [&](auto region) {
-    if(region == "NTSC") screen->setSize(512, 448);
-    if(region == "PAL" ) screen->setSize(512, 480);
+  overscanEnable = Node::append<Node::Boolean>(parent, from, "Overscan", true, [&](auto value) {
+    if(value == 0) screen->setSize(512, 448);
+    if(value == 1) screen->setSize(512, 480);
   });
-  region->setAllowedValues({"NTSC", "PAL"});
-  region->setDynamic(true);
+  overscanEnable->setDynamic(true);
 
   colorEmulation = Node::append<Node::Boolean>(parent, from, "Color Emulation", true, [&](auto value) {
     screen->resetPalette();
@@ -56,6 +55,30 @@ auto PPU::load(Node::Object parent, Node::Object from) -> void {
   });
   colorBleed->setDynamic(true);
 
+  debugVRAM = Node::append<Node::Memory>(parent, from, "PPU VRAM");
+  debugVRAM->setSize(vram.mask + 1 << 1);
+  debugVRAM->setRead([&](uint32 address) -> uint8 {
+    return vram.data[address >> 1 & vram.mask].byte(address & 1);
+  });
+
+  debugOAM = Node::append<Node::Memory>(parent, from, "PPU OAM");
+  debugOAM->setSize(512 + 32);
+  debugOAM->setRead([&](uint32 address) -> uint8 {
+    return obj.oam.read(address);
+  });
+  debugOAM->setWrite([&](uint32 address, uint8 data) -> void {
+    return obj.oam.write(address, data);
+  });
+
+  debugCGRAM = Node::append<Node::Memory>(parent, from, "PPU CGRAM");
+  debugCGRAM->setSize(256 << 1);
+  debugCGRAM->setRead([&](uint32 address) -> uint8 {
+    return dac.cgram[address >> 1 & 255].byte(address & 1);
+  });
+  debugCGRAM->setWrite([&](uint32 address, uint8 data) -> void {
+    dac.cgram[address >> 1 & 255].byte(address & 1) = data;
+  });
+
   output = new uint32[512 * 512];
   output += 16 * 512;  //overscan offset
 }
@@ -66,9 +89,12 @@ auto PPU::unload() -> void {
   versionPPU2 = {};
   vramSize = {};
   screen = {};
-  region = {};
+  overscanEnable = {};
   colorEmulation = {};
   colorBleed = {};
+  debugVRAM = {};
+  debugOAM = {};
+  debugCGRAM = {};
 
   output -= 16 * 512;
   delete[] output;
@@ -207,13 +233,13 @@ auto PPU::power(bool reset) -> void {
 auto PPU::refresh() -> void {
   auto data = output;
 
-  if(region->value() == "NTSC") {
+  if(overscanEnable->value() == 0) {
     data += 2 * 512;
     if(overscan()) data += 16 * 512;
     screen->refresh(data, 512 * sizeof(uint32), 512, 448);
   }
 
-  if(region->value() == "PAL") {
+  if(overscanEnable->value() == 1) {
     if(!overscan()) data -= 14 * 512;
     screen->refresh(data, 512 * sizeof(uint32), 512, 480);
   }

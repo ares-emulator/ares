@@ -6,12 +6,12 @@ auto NECDSP::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "NEC");
   from = Node::scan(parent = node, from);
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "NEC");
-  eventInstruction->setAddressBits(14);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "NEC");
+  debugInstruction->setAddressBits(14);
 }
 
 auto NECDSP::unload() -> void {
-  eventInstruction = {};
+  debugInstruction = {};
   node = {};
 
   cpu.coprocessors.removeByValue(this);
@@ -19,8 +19,8 @@ auto NECDSP::unload() -> void {
 }
 
 auto NECDSP::main() -> void {
-  if(eventInstruction->enabled() && eventInstruction->address(regs.pc)) {
-    eventInstruction->notify(disassembleInstruction(), disassembleContext());
+  if(debugInstruction->enabled() && debugInstruction->address(regs.pc)) {
+    debugInstruction->notify(disassembleInstruction(), disassembleContext());
   }
   exec();
 

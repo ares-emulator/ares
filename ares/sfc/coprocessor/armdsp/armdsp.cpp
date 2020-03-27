@@ -7,12 +7,12 @@ auto ArmDSP::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "ARM");
   from = Node::scan(parent = node, from);
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "ARM");
-  eventInstruction->setAddressBits(32);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "ARM");
+  debugInstruction->setAddressBits(32);
 }
 
 auto ArmDSP::unload() -> void {
-  eventInstruction = {};
+  debugInstruction = {};
   node = {};
 
   cpu.coprocessors.removeByValue(this);
@@ -35,8 +35,8 @@ auto ArmDSP::boot() -> void {
 
 auto ArmDSP::main() -> void {
   processor.cpsr.t = 0;  //force ARM mode
-  if(eventInstruction->enabled() && eventInstruction->address(pipeline.execute.address)) {
-    eventInstruction->notify(disassembleInstruction(), disassembleContext());
+  if(debugInstruction->enabled() && debugInstruction->address(pipeline.execute.address)) {
+    debugInstruction->notify(disassembleInstruction(), disassembleContext());
   }
   instruction();
 }

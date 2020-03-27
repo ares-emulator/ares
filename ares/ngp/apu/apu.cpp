@@ -10,10 +10,10 @@ auto APU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "APU");
   from = Node::scan(parent = node, from);
 
-  eventInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "APU");
-  eventInstruction->setAddressBits(16);
+  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "APU");
+  debugInstruction->setAddressBits(16);
 
-  eventInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "APU");
+  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "APU");
 
   ram.allocate(4_KiB, 0x00);
   if(auto fp = platform->open(system.node, "apu.ram", File::Read)) {
@@ -31,8 +31,8 @@ auto APU::unload() -> void {
   ram.reset();
 
   node = {};
-  eventInstruction = {};
-  eventInterrupt = {};
+  debugInstruction = {};
+  debugInterrupt = {};
 }
 
 auto APU::main() -> void {
@@ -40,18 +40,18 @@ auto APU::main() -> void {
 
   if(nmi.line) {
     nmi.line = 0;  //edge-sensitive
-    if(eventInterrupt->enabled()) eventInterrupt->notify("NMI");
+    if(debugInterrupt->enabled()) debugInterrupt->notify("NMI");
     Z80::irq(0, 0x0066, 0xff);
   }
 
   if(irq.line) {
     //level-sensitive
-    if(eventInterrupt->enabled()) eventInterrupt->notify("IRQ");
+    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
     Z80::irq(1, 0x0038, 0xff);
   }
 
-  if(eventInstruction->enabled() && eventInstruction->address(r.pc)) {
-    eventInstruction->notify(disassembleInstruction(), disassembleContext());
+  if(debugInstruction->enabled() && debugInstruction->address(r.pc)) {
+    debugInstruction->notify(disassembleInstruction(), disassembleContext());
   }
   instruction();
 }

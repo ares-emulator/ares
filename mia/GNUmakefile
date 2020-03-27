@@ -9,31 +9,34 @@ hiro.path := ../hiro
 hiro.resource := resource/$(name).rc
 include $(hiro.path)/GNUmakefile
 
-objects := obj/mia.o obj/resource.o
+mia.path := ../mia
 
-obj/mia.o: mia.cpp
-obj/resource.o: resource/resource.cpp
+objects := mia resource
+objects := $(objects:%=$(object.path)/%.o)
+
+$(object.path)/mia.o: $(mia.path)/mia.cpp
+$(object.path)/resource.o: $(mia.path)/resource/resource.cpp
 
 all: $(hiro.objects) $(objects)
-	$(info Linking out/$(name) ...)
-	+@$(compiler) -o out/$(name) $(hiro.objects) $(objects) $(hiro.options) $(options)
+	$(info Linking $(output.path)/$(name) ...)
+	+@$(compiler) -o $(output.path)/$(name) $(hiro.objects) $(objects) $(hiro.options) $(options)
 ifeq ($(platform),macos)
-	rm -rf out/$(name).app
-	mkdir -p out/$(name).app/Contents/MacOS/
-	mkdir -p out/$(name).app/Contents/Resources/
-	mv out/$(name) out/$(name).app/Contents/MacOS/$(name)
-	cp resource/$(name).plist out/$(name).app/Contents/Info.plist
-	sips -s format icns resource/$(name).png --out out/$(name).app/Contents/Resources/$(name).icns
+	rm -rf $(output.path)/$(name).app
+	mkdir -p $(output.path)/$(name).app/Contents/MacOS/
+	mkdir -p $(output.path)/$(name).app/Contents/Resources/
+	mv $(output.path)/$(name) $(output.path)/$(name).app/Contents/MacOS/$(name)
+	cp resource/$(name).plist $(output.path)/$(name).app/Contents/Info.plist
+	sips -s format icns resource/$(name).png --out $(output.path)/$(name).app/Contents/Resources/$(name).icns
 endif
 
 verbose: hiro.verbose nall.verbose all;
 
 clean:
 ifeq ($(platform),macos)
-	rm -rf out/$(name).app
+	rm -rf $(output.path)/$(name).app
 endif
-	$(call delete,obj/*)
-	$(call delete,out/*)
+	$(call delete,$(object.path)/*)
+	$(call delete,$(output.path)/*)
 
 install: all
 ifeq ($(platform),windows)
@@ -45,7 +48,7 @@ ifeq ($(platform),windows)
 else ifeq ($(shell id -un),root)
 	$(error "make install should not be run as root")
 else ifeq ($(platform),macos)
-	cp -R out/$(name).app /Applications/$(name).app
+	cp -R $(output.path)/$(name).app /Applications/$(name).app
 else ifneq ($(filter $(platform),linux bsd),)
 	mkdir -p $(prefix)/bin/
 	mkdir -p $(prefix)/share/applications/
@@ -53,7 +56,7 @@ else ifneq ($(filter $(platform),linux bsd),)
 	mkdir -p $(prefix)/share/$(name)/
 	mkdir -p $(prefix)/share/$(name)/Database/
 	mkdir -p $(prefix)/share/$(name)/Firmware/
-	cp out/$(name) $(prefix)/bin/$(name)
+	cp $(output.path)/$(name) $(prefix)/bin/$(name)
 	cp resource/$(name).desktop $(prefix)/share/applications/$(name).desktop
 	cp resource/$(name).png $(prefix)/share/icons/$(name).png
 	cp -R Database/* $(prefix)/share/$(name)/Database/
@@ -72,4 +75,4 @@ else ifneq ($(filter $(platform),linux bsd),)
 	rm -f $(prefix)/share/icons/$(name).png
 endif
 
--include obj/*.d
+-include $(object.path)/*.d

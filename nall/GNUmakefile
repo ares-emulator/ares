@@ -151,6 +151,10 @@ ifeq ($(object.path),)
   object.path := obj
 endif
 
+ifeq ($(output.path),)
+  output.path := out
+endif
+
 # rules
 default: all;
 

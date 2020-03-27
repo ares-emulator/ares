@@ -112,10 +112,13 @@ Presentation::Presentation() {
   pauseEmulation.setText("Pause Emulation").onToggle([&] {
     program.pause(!program.paused);
   });
-  manifestViewerAction.setText("Manifest").setIcon(Icon::Emblem::Text).onActivate([&] {
+  manifestViewerAction.setText("Manifest").setIcon(Icon::Emblem::Binary).onActivate([&] {
     toolsWindow.show("Manifest");
   });
-  traceLoggerAction.setText("Tracer").setIcon(Icon::Emblem::Script).onActivate([&] {
+  memoryEditorAction.setText("Memory").setIcon(Icon::Device::Storage).onActivate([&] {
+    toolsWindow.show("Memory");
+  });
+  traceLoggerAction.setText("Tracer").setIcon(Icon::Emblem::Text).onActivate([&] {
     toolsWindow.show("Tracer");
   });
 
