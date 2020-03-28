@@ -2,6 +2,7 @@
 
 struct CPU : M68K, Thread {
   Node::Component node;
+  Node::Memory debugRAM;
   Node::Instruction debugInstruction;
   Node::Notification debugInterrupt;
 

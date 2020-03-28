@@ -2,6 +2,9 @@
 
 struct MCD : M68K, Thread {
   Node::Component node;
+  Node::Memory debugPRAM;
+  Node::Memory debugWRAM;
+  Node::Memory debugBRAM;
   Node::Instruction debugInstruction;
   Node::Notification debugInterrupt;
   Node::Port tray;

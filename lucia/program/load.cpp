@@ -87,6 +87,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
   if(settings.video.adaptiveSizing) presentation.resizeWindow();
   manifestViewer.reload();
   memoryEditor.reload();
+  graphicsViewer.reload();
   traceLogger.reload();
   state = {};  //reset hotkey state slot to 1
   pause(false);
@@ -114,6 +115,7 @@ auto Program::unload() -> void {
   toolsWindow.setVisible(false);
   manifestViewer.unload();
   memoryEditor.unload();
+  graphicsViewer.unload();
   traceLogger.unload();
   message.text = "";
   ruby::video.clear();

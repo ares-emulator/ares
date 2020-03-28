@@ -22,7 +22,7 @@ auto DSP::load(Node::Object parent, Node::Object from) -> void {
   stream->setFrequency(system.apuFrequency() / 768.0);
 
   debugRAM = Node::append<Node::Memory>(parent, from, "APU RAM");
-  debugRAM->setSize(1 << 16);
+  debugRAM->setSize(64_KiB);
   debugRAM->setRead([&](uint32 address) -> uint8 {
     return apuram[(uint16)address];
   });

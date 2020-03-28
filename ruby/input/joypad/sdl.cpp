@@ -21,6 +21,22 @@ struct InputJoypadSDL {
 
   auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
     SDL_JoystickUpdate();
+    SDL_Event event;
+    while(SDL_PollEvent(&event)) {
+      if(event.type == SDL_JOYDEVICEADDED || event.type == SDL_JOYDEVICEREMOVED) {
+        enumerate();
+      }
+    }
+
+    #if defined(PLATFORM_BSD)
+    //SDL 2.0 on FreeBSD never sends SDL_JOYDEVICE(ADDED|REMOVED) events, nor updates SDL_NumJoysticks()
+    //the only way to support hotplugging here is to manually restart the SDL driver periodically to poll for new joypads
+    uint64_t thisInitialize = chrono::millisecond();
+    if(thisInitialize - lastInitialize > 5000) {
+      lastInitialize = thisInitialize;
+      initialize();
+    }
+    #endif
 
     for(auto& jp : joypads) {
       for(auto n : range(jp.hid->axes().size())) {
@@ -42,10 +58,31 @@ struct InputJoypadSDL {
   }
 
   auto initialize() -> bool {
+    terminate();
+    SDL_Init(SDL_INIT_EVENTS);
     SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-    SDL_JoystickEventState(SDL_IGNORE);
+    SDL_JoystickEventState(SDL_ENABLE);
+    enumerate();
+    lastInitialize = chrono::millisecond();
+    return true;
+  }
 
-    for(auto id : range(SDL_NumJoysticks())) {
+  auto terminate() -> void {
+    for(auto& jp : joypads) {
+      SDL_JoystickClose(jp.handle);
+    }
+    joypads.reset();
+    SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+  }
+
+private:
+  auto enumerate() -> void {
+    for(auto& joypad : joypads) {
+      SDL_JoystickClose(joypad.handle);
+    }
+    joypads.reset();
+
+    for(uint id : range(SDL_NumJoysticks())) {
       Joypad jp;
       jp.id = id;
       jp.handle = SDL_JoystickOpen(jp.id);
@@ -57,22 +94,17 @@ struct InputJoypadSDL {
       jp.hid->setVendorID(HID::Joypad::GenericVendorID);
       jp.hid->setProductID(HID::Joypad::GenericProductID);
       jp.hid->setPathID(jp.id);
-      for(auto n : range(axes)) jp.hid->axes().append(n);
-      for(auto n : range(hats)) jp.hid->hats().append(n);
-      for(auto n : range(buttons)) jp.hid->buttons().append(n);
+      for(uint n : range(axes)) jp.hid->axes().append(n);
+      for(uint n : range(hats)) jp.hid->hats().append(n);
+      for(uint n : range(buttons)) jp.hid->buttons().append(n);
       jp.hid->setRumble(false);
 
       joypads.append(jp);
     }
 
-    return true;
+    SDL_JoystickUpdate();
+    input.doHotplug();
   }
 
-  auto terminate() -> void {
-    for(auto& jp : joypads) {
-      SDL_JoystickClose(jp.handle);
-    }
-    joypads.reset();
-    SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-  }
+  uint64_t lastInitialize = 0;
 };

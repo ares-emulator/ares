@@ -18,7 +18,7 @@ auto MemoryEditor::construct() -> void {
     gotoAddress.setText();
   });
 
-  autoRefresh.setText("Auto Refresh");
+  liveOption.setText("Live");
 
   refreshButton.setText("Refresh").onActivate([&] {
     memoryEditor.update();
@@ -43,7 +43,11 @@ auto MemoryEditor::unload() -> void {
 }
 
 auto MemoryEditor::refresh() -> void {
-  if(visible() && autoRefresh.checked()) memoryEditor.update();
+  memoryEditor.update();
+}
+
+auto MemoryEditor::liveRefresh() -> void {
+  if(visible() && liveOption.checked()) refresh();
 }
 
 auto MemoryEditor::eventChange() -> void {
@@ -62,6 +66,7 @@ auto MemoryEditor::eventChange() -> void {
     memoryEditor.onRead();
     memoryEditor.onWrite();
   }
+  memoryEditor.setAddress(0);
   if(visible()) memoryEditor.update();
 }
 
@@ -81,7 +86,7 @@ auto MemoryEditor::eventExport() -> void {
 }
 
 auto MemoryEditor::setVisible(bool visible) -> MemoryEditor& {
-  if(visible) memoryEditor.update();
+  if(visible) refresh();
   VerticalLayout::setVisible(visible);
   return *this;
 }

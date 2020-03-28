@@ -18,7 +18,7 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
   version->setAllowedValues({1, 2});
 
   debugWRAM = Node::append<Node::Memory>(parent, from, "CPU WRAM");
-  debugWRAM->setSize(1 << 17);
+  debugWRAM->setSize(128_KiB);
   debugWRAM->setRead([&](uint32 address) -> uint8 {
     return wram[(uint17)address];
   });

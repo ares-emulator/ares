@@ -11,6 +11,17 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
+  debugRAM = Node::append<Node::Memory>(parent, from, "CPU RAM");
+  debugRAM->setSize(64_KiB);
+  debugRAM->setRead([&](uint32 address) -> uint8 {
+    return ram.read(address >> 1).byte(!address.bit(0));
+  });
+  debugRAM->setWrite([&](uint32 address, uint8 data) -> void {
+    auto value = ram.read(address >> 1);
+    value.byte(!address.bit(0)) = data;
+    return ram.write(address >> 1, value);
+  });
+
   debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
   debugInstruction->setAddressBits(24);
 
@@ -18,6 +29,7 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
 }
 
 auto CPU::unload() -> void {
+  debugRAM = {};
   debugInstruction = {};
   debugInterrupt = {};
   node = {};

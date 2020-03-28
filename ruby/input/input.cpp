@@ -63,6 +63,14 @@ auto Input::doChange(shared_pointer<HID::Device> device, uint group, uint input,
   if(change) change(device, group, input, oldValue, newValue);
 }
 
+auto Input::onHotplug(const function<void ()>& onHotplug) -> void {
+  hotplug = onHotplug;
+}
+
+auto Input::doHotplug() -> void {
+  if(hotplug) hotplug();
+}
+
 //
 
 auto Input::create(string driver) -> bool {

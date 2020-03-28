@@ -61,6 +61,7 @@ struct InputManager {
   auto bind() -> void;
   auto poll(bool force = false) -> void;
   auto eventInput(shared_pointer<HID::Device>, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> void;
+  auto eventHotplug() -> void;
 
   //hotkeys.cpp
   auto createHotkeys() -> void;

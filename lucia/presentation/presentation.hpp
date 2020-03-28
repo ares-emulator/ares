@@ -45,6 +45,7 @@ struct Presentation : Window {
       MenuSeparator toolsMenuSeparatorB{&toolsMenu};
       MenuItem manifestViewerAction{&toolsMenu};
       MenuItem memoryEditorAction{&toolsMenu};
+      MenuItem graphicsViewerAction{&toolsMenu};
       MenuItem traceLoggerAction{&toolsMenu};
     Menu helpMenu{&menuBar};
       MenuItem aboutAction{&helpMenu};

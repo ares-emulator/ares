@@ -69,7 +69,8 @@ auto Program::main() -> void {
     }
   }
 
-  memoryEditor.refresh();
+  memoryEditor.liveRefresh();
+  graphicsViewer.liveRefresh();
 }
 
 auto Program::quit() -> void {

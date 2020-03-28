@@ -2,6 +2,7 @@
 
 struct APU : Z80, Z80::Bus, Thread {
   Node::Component node;
+  Node::Memory debugRAM;
   Node::Instruction debugInstruction;
   Node::Notification debugInterrupt;
 

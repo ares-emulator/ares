@@ -10,6 +10,15 @@ auto APU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "APU");
   from = Node::scan(parent = node, from);
 
+  debugRAM = Node::append<Node::Memory>(parent, from, "APU RAM");
+  debugRAM->setSize(8_KiB);
+  debugRAM->setRead([&](uint32 address) -> uint8 {
+    return ram.read(address);
+  });
+  debugRAM->setWrite([&](uint32 address, uint8 data) -> void {
+    return ram.write(address, data);
+  });
+
   debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "APU");
   debugInstruction->setAddressBits(16);
 
@@ -17,6 +26,7 @@ auto APU::load(Node::Object parent, Node::Object from) -> void {
 }
 
 auto APU::unload() -> void {
+  debugRAM = {};
   debugInstruction = {};
   debugInterrupt = {};
   node = {};

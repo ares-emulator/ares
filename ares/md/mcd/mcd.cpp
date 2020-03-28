@@ -23,6 +23,37 @@ auto MCD::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "Mega CD");
   from = Node::scan(parent = node, from);
 
+  debugPRAM = Node::append<Node::Memory>(parent, from, "Mega CD PRAM");
+  debugPRAM->setSize(512_KiB);
+  debugPRAM->setRead([&](uint32 address) -> uint8 {
+    return pram.read(address >> 1).byte(!address.bit(0));
+  });
+  debugPRAM->setWrite([&](uint32 address, uint8 data) -> void {
+    auto value = pram.read(address >> 1);
+    value.byte(!address.bit(0)) = data;
+    return pram.write(address >> 1, value);
+  });
+
+  debugWRAM = Node::append<Node::Memory>(parent, from, "Mega CD WRAM");
+  debugWRAM->setSize(256_KiB);
+  debugWRAM->setRead([&](uint32 address) -> uint8 {
+    return wram.read(address >> 1).byte(!address.bit(0));
+  });
+  debugWRAM->setWrite([&](uint32 address, uint8 data) -> void {
+    auto value = wram.read(address >> 1);
+    value.byte(!address.bit(0)) = data;
+    return wram.write(address >> 1, value);
+  });
+
+  debugBRAM = Node::append<Node::Memory>(parent, from, "Mega CD BRAM");
+  debugBRAM->setSize(8_KiB);
+  debugBRAM->setRead([&](uint32 address) -> uint8 {
+    return bram.read(address);
+  });
+  debugBRAM->setWrite([&](uint32 address, uint8 data) -> void {
+    return bram.write(address, data);
+  });
+
   debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "MCD");
   debugInstruction->setAddressBits(24);
 
@@ -72,6 +103,9 @@ auto MCD::unload() -> void {
   cdc.ram.reset();
 
   node = {};
+  debugPRAM = {};
+  debugWRAM = {};
+  debugBRAM = {};
   debugInstruction = {};
   debugInterrupt = {};
   tray = {};

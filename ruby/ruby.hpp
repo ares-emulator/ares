@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nall/platform.hpp>
+#include <nall/chrono.hpp>
 #include <nall/directory.hpp>
 #include <nall/file.hpp>
 #include <nall/function.hpp>

@@ -10,16 +10,26 @@ struct PPU : Thread, PPUcounter {
   Node::Boolean overscanEnable;
   Node::Boolean colorEmulation;
   Node::Boolean colorBleed;
-  Node::Memory debugVRAM;
-  Node::Memory debugOAM;
-  Node::Memory debugCGRAM;
+  struct Debugger {
+    struct Memory {
+      Node::Memory vram;
+      Node::Memory oam;
+      Node::Memory cgram;
+    } memory;
+    struct Graphics {
+      Node::Graphics tiles2bpp;
+      Node::Graphics tiles4bpp;
+      Node::Graphics tiles8bpp;
+      Node::Graphics tilesMode7;
+    } graphics;
+  } debugger;
 
   inline auto interlace() const -> bool { return self.interlace; }
   inline auto overscan() const -> bool { return self.overscan; }
   inline auto vdisp() const -> uint { return self.vdisp; }
 
   //ppu.cpp
-  auto load(Node::Object parent, Node::Object from) -> void;
+  auto load(Node::Object, Node::Object) -> void;
   auto unload() -> void;
 
   auto map() -> void;
@@ -41,6 +51,9 @@ struct PPU : Thread, PPUcounter {
 
   //color.cpp
   auto color(uint32) -> uint64;
+
+  //debugger.cpp
+  auto loadDebugger(Node::Object, Node::Object) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

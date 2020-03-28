@@ -118,6 +118,9 @@ Presentation::Presentation() {
   memoryEditorAction.setText("Memory").setIcon(Icon::Device::Storage).onActivate([&] {
     toolsWindow.show("Memory");
   });
+  graphicsViewerAction.setText("Graphics").setIcon(Icon::Emblem::Image).onActivate([&] {
+    toolsWindow.show("Graphics");
+  });
   traceLoggerAction.setText("Tracer").setIcon(Icon::Emblem::Text).onActivate([&] {
     toolsWindow.show("Tracer");
   });

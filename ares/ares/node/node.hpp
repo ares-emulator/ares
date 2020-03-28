@@ -6,6 +6,7 @@ namespace ares::Core {
     struct Peripheral;
     struct Port;
     struct Memory;
+    struct Graphics;
     struct Input;
       struct Button;
       struct Axis;
@@ -36,6 +37,7 @@ namespace ares::Node {
     using Peripheral     = shared_pointer<Core::Peripheral>;
     using Port           = shared_pointer<Core::Port>;
     using Memory         = shared_pointer<Core::Memory>;
+    using Graphics       = shared_pointer<Core::Graphics>;
     using Input          = shared_pointer<Core::Input>;
       using Button       = shared_pointer<Core::Button>;
       using Axis         = shared_pointer<Core::Axis>;
@@ -73,6 +75,7 @@ namespace ares::Core {
   #include <ares/node/peripheral.hpp>
   #include <ares/node/port.hpp>
   #include <ares/node/memory.hpp>
+  #include <ares/node/graphics.hpp>
   #include <ares/node/input.hpp>
   #include <ares/node/setting.hpp>
   #include <ares/node/event/event.hpp>

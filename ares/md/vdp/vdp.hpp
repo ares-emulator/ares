@@ -6,6 +6,9 @@ struct VDP : Thread {
   Node::Component node;
   Node::Screen screen;
   Node::Boolean overscan;
+  Node::Memory debugVRAM;
+  Node::Memory debugVSRAM;
+  Node::Memory debugCRAM;
 
   //vdp.cpp
   auto load(Node::Object, Node::Object) -> void;

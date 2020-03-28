@@ -14,23 +14,19 @@ auto InputMapping::bind() -> void {
     auto token = assignment.split("/");
     if(token.size() < 3) continue;  //ignore invalid mappings
 
-    uint64_t deviceID = token[0].natural();
-    uint groupID = token[1].natural();
-    uint inputID = token[2].natural();
-    string qualifier = token(3, "None");
+    binding.deviceID = token[0].natural();
+    binding.groupID = token[1].natural();
+    binding.inputID = token[2].natural();
+    binding.qualifier = Qualifier::None;
+    if(token(3) == "Lo") binding.qualifier = Qualifier::Lo;
+    if(token(3) == "Hi") binding.qualifier = Qualifier::Hi;
+    if(token(3) == "Rumble") binding.qualifier = Qualifier::Rumble;
 
     for(auto& device : inputManager.devices) {
-      if(deviceID != device->id()) continue;
-
-      binding.device = device;
-      binding.deviceID = deviceID;
-      binding.groupID = groupID;
-      binding.inputID = inputID;
-      binding.qualifier = Qualifier::None;
-      if(qualifier == "Lo") binding.qualifier = Qualifier::Lo;
-      if(qualifier == "Hi") binding.qualifier = Qualifier::Hi;
-      if(qualifier == "Rumble") binding.qualifier = Qualifier::Rumble;
-      break;
+      if(binding.deviceID == device->id()) {
+        binding.device = device;
+        break;
+      }
     }
   }
 }
@@ -140,13 +136,16 @@ auto InputMapping::value() -> int16_t {
 }
 
 auto InputMapping::Binding::icon() -> image {
-  if(device && device->isKeyboard()) return Icon::Device::Keyboard;
-  if(device && device->isMouse()) return Icon::Device::Mouse;
-  if(device && device->isJoypad()) return Icon::Device::Joypad;
+  if(!device && deviceID) return Icon::Device::Joypad;
+  if(!device) return {};
+  if(device->isKeyboard()) return Icon::Device::Keyboard;
+  if(device->isMouse()) return Icon::Device::Mouse;
+  if(device->isJoypad()) return Icon::Device::Joypad;
   return {};
 }
 
 auto InputMapping::Binding::text() -> string {
+  if(!device && deviceID) return "(disconnected)";
   if(!device) return {};
   if(groupID >= device->size()) return {};
   if(inputID >= device->group(groupID).size()) return {};
@@ -223,4 +222,10 @@ auto InputManager::poll(bool force) -> void {
 auto InputManager::eventInput(shared_pointer<HID::Device> device, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> void {
   inputSettings.eventInput(device, groupID, inputID, oldValue, newValue);
   hotkeySettings.eventInput(device, groupID, inputID, oldValue, newValue);
+}
+
+auto InputManager::eventHotplug() -> void {
+  poll(true);
+  inputSettings.refresh();
+  hotkeySettings.refresh();
 }

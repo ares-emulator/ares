@@ -28,12 +28,50 @@ auto VDP::load(Node::Object parent, Node::Object from) -> void {
     if(value == 1) screen->setSize(1280, 480);
   });
   overscan->setDynamic(true);
+
+  debugVRAM = Node::append<Node::Memory>(parent, from, "VDP VRAM");
+  debugVRAM->setSize(32_KiB << 1);
+  debugVRAM->setRead([&](uint32 address) -> uint8 {
+    return vram.memory[uint15(address >> 1)].byte(!address.bit(0));
+  });
+  debugVRAM->setWrite([&](uint32 address, uint8 data) -> void {
+    auto value = vram.memory[uint15(address >> 1)];
+    value.byte(!address.bit(0)) = data;
+    vram.memory[uint15(address >> 1)] = value;
+  });
+
+  debugVSRAM = Node::append<Node::Memory>(parent, from, "VDP VSRAM");
+  debugVSRAM->setSize(40 << 1);
+  debugVSRAM->setRead([&](uint32 address) -> uint8 {
+    if(address >= 40 << 1) return 0x00;
+    return vsram.memory[address >> 1].byte(!address.bit(0));
+  });
+  debugVSRAM->setWrite([&](uint32 address, uint8 data) -> void {
+    if(address >= 40 << 1) return;
+    auto value = vsram.memory[address >> 1];
+    value.byte(!address.bit(0)) = data;
+    vsram.memory[address >> 1] = value;
+  });
+
+  debugCRAM = Node::append<Node::Memory>(parent, from, "VDP CRAM");
+  debugCRAM->setSize(64 << 1);
+  debugCRAM->setRead([&](uint32 address) -> uint8 {
+    return cram.memory[uint6(address >> 1)].byte(!address.bit(0));
+  });
+  debugCRAM->setWrite([&](uint32 address, uint8 data) -> void {
+    auto value = cram.memory[uint6(address >> 1)];
+    value.byte(!address.bit(0)) = data;
+    cram.memory[uint6(address >> 1)] = value;
+  });
 }
 
 auto VDP::unload() -> void {
   node = {};
   screen = {};
   overscan = {};
+  debugVRAM = {};
+  debugVSRAM = {};
+  debugCRAM = {};
 }
 
 auto VDP::main() -> void {
