@@ -1,6 +1,17 @@
 struct CPU : ARM7TDMI, Thread, IO {
   Node::Component node;
-  Node::Instruction debugInstruction;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+    auto instruction() -> void;
+    auto interrupt(string_view type) -> void;
+
+    struct Tracer {
+      Node::Instruction instruction;
+      Node::Notification interrupt;  //todo: ARM7TDMI needs to notify CPU when interrupts occur
+    } tracer;
+  } debugger;
 
   struct Interrupt { enum : uint {
     VBlank       = 0x0001,

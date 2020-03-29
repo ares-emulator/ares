@@ -1,25 +1,25 @@
-ArmDSP armdsp;
+ARMDSP armdsp;
 #include "memory.cpp"
 #include "io.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
-auto ArmDSP::load(Node::Object parent, Node::Object from) -> void {
+auto ARMDSP::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "ARM");
   from = Node::scan(parent = node, from);
 
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "ARM");
-  debugInstruction->setAddressBits(32);
+  debugger.load(parent, from);
 }
 
-auto ArmDSP::unload() -> void {
-  debugInstruction = {};
+auto ARMDSP::unload() -> void {
+  debugger = {};
   node = {};
 
   cpu.coprocessors.removeByValue(this);
   Thread::destroy();
 }
 
-auto ArmDSP::boot() -> void {
+auto ARMDSP::boot() -> void {
   //reset hold delay
   while(bridge.reset) {
     step(1);
@@ -33,27 +33,25 @@ auto ArmDSP::boot() -> void {
   }
 }
 
-auto ArmDSP::main() -> void {
+auto ARMDSP::main() -> void {
   processor.cpsr.t = 0;  //force ARM mode
-  if(debugInstruction->enabled() && debugInstruction->address(pipeline.execute.address)) {
-    debugInstruction->notify(disassembleInstruction(), disassembleContext());
-  }
+  debugger.instruction();
   instruction();
 }
 
-auto ArmDSP::step(uint clocks) -> void {
+auto ARMDSP::step(uint clocks) -> void {
   if(bridge.timer && --bridge.timer == 0);
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }
 
-auto ArmDSP::power() -> void {
+auto ARMDSP::power() -> void {
   random.array((uint8*)programRAM, sizeof(programRAM));
   bridge.reset = false;
   reset();
 }
 
-auto ArmDSP::reset() -> void {
+auto ARMDSP::reset() -> void {
   ARM7TDMI::power();
   Thread::create(Frequency, [&] {
     boot();

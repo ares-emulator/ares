@@ -5,9 +5,19 @@
 
 struct CPU : TLCS900H, Thread {
   Node::Component node;
-  Node::Instruction debugInstruction;
-  Node::Notification debugInterrupt;
   ares::Memory::Writable<uint8> ram;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+    auto instruction() -> void;
+    auto interrupt(string_view) -> void;
+
+    struct Tracer {
+      Node::Instruction instruction;
+      Node::Notification interrupt;
+    } tracer;
+  } debugger;
 
   //Neo Geo Pocket Color: 0x87e2 (K2GE mode selection) is a privileged register.
   //the development manual states user-mode code cannot change this value, and
@@ -45,8 +55,8 @@ struct CPU : TLCS900H, Thread {
   auto serialize(serializer&) -> void;
 
 //private:
-  //interrupts.cpp
   struct Interrupts {
+    //interrupts.cpp
     auto poll() -> void;
     auto fire() -> bool;
 
@@ -55,6 +65,7 @@ struct CPU : TLCS900H, Thread {
   } interrupts;
 
   struct Interrupt {
+    //interrupts.cpp
     auto power(uint8 vector) -> void;
     auto operator=(bool) -> void;
     auto poll(uint8& vector, uint3& priority) -> void;

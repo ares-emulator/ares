@@ -3,9 +3,17 @@ struct PPU : Thread, PPUcounter {
   Node::Screen screen;
   Node::Boolean overscanEnable;
   Node::Boolean colorEmulation;
-  Node::Memory debugVRAM;
-  Node::Memory debugOAM;
-  Node::Memory debugCGRAM;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+
+    struct Memory {
+      Node::Memory vram;
+      Node::Memory oam;
+      Node::Memory cgram;
+    } memory;
+  } debugger;
 
   inline auto hires() const -> bool { return io.pseudoHires || io.bgMode == 5 || io.bgMode == 6; }
   inline auto interlace() const -> bool { return state.interlace; }

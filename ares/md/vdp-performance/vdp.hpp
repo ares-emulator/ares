@@ -3,9 +3,17 @@ struct VDP : Thread {
   Node::Component node;
   Node::Screen screen;
   Node::Boolean overscan;
-  Node::Memory debugVRAM;
-  Node::Memory debugVSRAM;
-  Node::Memory debugCRAM;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+
+    struct Memory {
+      Node::Memory vram;
+      Node::Memory vsram;
+      Node::Memory cram;
+    } memory;
+  } debugger;
 
   //vdp.cpp
   auto load(Node::Object, Node::Object) -> void;

@@ -2,9 +2,23 @@
 
 struct CPU : HuC6280, Thread {
   Node::Component node;
-  Node::Instruction debugInstruction;
-  Node::Notification debugInterrupt;
   Memory::Writable<uint8> ram;  //PC Engine = 8KB, SuperGrafx = 32KB
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+    auto instruction() -> void;
+    auto interrupt(string_view) -> void;
+
+    struct Memory {
+      Node::Memory ram;
+    } memory;
+
+    struct Tracer {
+      Node::Instruction instruction;
+      Node::Notification interrupt;
+    } tracer;
+  } debugger;
 
   //cpu.cpp
   auto load(Node::Object, Node::Object) -> void;
@@ -51,7 +65,7 @@ private:
   } reset;
 
   struct Timer {
-    inline auto irqLine() const { return line; }
+    inline auto irqLine() const -> bool { return line; }
 
     uint1 line;
     uint1 enable;

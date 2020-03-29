@@ -1,7 +1,7 @@
-struct Event : Object {
-  DeclareClass(Event, "Event")
+struct Tracer : Object {
+  DeclareClass(Tracer, "Tracer")
 
-  Event(string name = {}, string component = {}) : Object(name) {
+  Tracer(string name = {}, string component = {}) : Object(name) {
     _component = component;
   }
 

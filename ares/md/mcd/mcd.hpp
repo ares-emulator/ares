@@ -2,11 +2,6 @@
 
 struct MCD : M68K, Thread {
   Node::Component node;
-  Node::Memory debugPRAM;
-  Node::Memory debugWRAM;
-  Node::Memory debugBRAM;
-  Node::Instruction debugInstruction;
-  Node::Notification debugInterrupt;
   Node::Port tray;
   Node::Peripheral disc;
   Shared::File fd;
@@ -14,6 +9,24 @@ struct MCD : M68K, Thread {
   Memory::Writable<uint16> pram;  //program RAM
   Memory::Writable<uint16> wram;  //work RAM
   Memory::Writable< uint8> bram;  //backup RAM
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+    auto instruction() -> void;
+    auto interrupt(string_view) -> void;
+
+    struct Memory {
+      Node::Memory pram;
+      Node::Memory wram;
+      Node::Memory bram;
+    } memory;
+
+    struct Tracer {
+      Node::Instruction instruction;
+      Node::Notification interrupt;
+    } tracer;
+  } debugger;
 
   inline auto manifest() const -> string { return information.manifest; }
   inline auto name() const -> string { return information.name; }

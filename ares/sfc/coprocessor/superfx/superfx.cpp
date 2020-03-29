@@ -4,18 +4,18 @@ SuperFX superfx;
 #include "memory.cpp"
 #include "io.cpp"
 #include "timing.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto SuperFX::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "SuperFX");
   from = Node::scan(parent = node, from);
 
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "GSU");
-  debugInstruction->setAddressBits(24);
+  debugger.load(parent, from);
 }
 
 auto SuperFX::unload() -> void {
-  debugInstruction = {};
+  debugger = {};
   node = {};
 
   rom.reset();
@@ -30,9 +30,7 @@ auto SuperFX::main() -> void {
   if(regs.sfr.g == 0) return step(6);
 
   auto opcode = peekpipe();
-  if(debugInstruction->enabled() && debugInstruction->address(regs.r[15])) {
-    debugInstruction->notify(disassembleInstruction(), disassembleContext());
-  }
+  debugger.instruction();
   instruction(opcode);
 
   if(regs.r[14].modified) {

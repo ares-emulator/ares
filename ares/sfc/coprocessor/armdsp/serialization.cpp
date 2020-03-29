@@ -1,4 +1,4 @@
-auto ArmDSP::firmware() const -> vector<uint8> {
+auto ARMDSP::firmware() const -> vector<uint8> {
   vector<uint8> buffer;
   if(!cartridge.has.ARMDSP) return buffer;
   buffer.reserve(128 * 1024 + 32 * 1024);
@@ -7,7 +7,7 @@ auto ArmDSP::firmware() const -> vector<uint8> {
   return buffer;
 }
 
-auto ArmDSP::serialize(serializer& s) -> void {
+auto ARMDSP::serialize(serializer& s) -> void {
   ARM7TDMI::serialize(s);
   Thread::serialize(s);
 

@@ -4,33 +4,28 @@ namespace ares::MSX {
 
 CPU cpu;
 #include "memory.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  debugInstruction->setAddressBits(16);
-
-  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
+  debugger.load(parent, from);
 }
 
 auto CPU::unload() -> void {
   node = {};
-  debugInstruction = {};
-  debugInterrupt = {};
+  debugger = {};
 }
 
 auto CPU::main() -> void {
   if(io.irqLine) {
-    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
+    debugger.interrupt("IRQ");
     irq(1, 0x0038, 0xff);
   }
 
-  if(debugInstruction->enabled() && debugInstruction->address(r.pc)) {
-    debugInstruction->notify(disassembleInstruction(), disassembleContext());
-  }
+  debugger.instruction();
   instruction();
 }
 

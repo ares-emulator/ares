@@ -56,7 +56,7 @@ auto PPU::load(Node::Object parent, Node::Object from) -> void {
   });
   colorBleed->setDynamic(true);
 
-  loadDebugger(parent, from);
+  debugger.load(parent, from);
 
   output = new uint32[512 * 512];
   output += 16 * 512;  //overscan offset

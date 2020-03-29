@@ -8,6 +8,7 @@ namespace ares::GameBoy {
 #include "io.cpp"
 #include "memory.cpp"
 #include "timing.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 CPU cpu;
 
@@ -46,19 +47,13 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
     });
   }
 
-  string origin = Model::SuperGameBoy() ? "SGB" : "CPU";
-
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", origin);
-  debugInstruction->setAddressBits(16);
-
-  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", origin);
+  debugger.load(parent, from);
 }
 
 auto CPU::unload() -> void {
   node = {};
   version = {};
-  debugInstruction = {};
-  debugInterrupt = {};
+  debugger = {};
 }
 
 auto CPU::main() -> void {
@@ -71,7 +66,7 @@ auto CPU::main() -> void {
   if(r.ime) {
     //are any interrupts pending?
     if(status.interruptLatch) {
-      if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
+      debugger.interrupt("IRQ");
 
       idle();
       idle();
@@ -91,9 +86,7 @@ auto CPU::main() -> void {
     }
   }
 
-  if(debugInstruction->enabled() && debugInstruction->address(PC)) {
-    debugInstruction->notify(disassembleInstruction(), disassembleContext());
-  }
+  debugger.instruction();
   instruction();
 
   if(Model::SuperGameBoy()) {

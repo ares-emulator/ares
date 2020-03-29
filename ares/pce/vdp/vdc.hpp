@@ -1,6 +1,16 @@
 //Hudson Soft HuC6270: Video Display Controller
 
 struct VDC {
+  struct Debugger {
+    //debugger.cpp
+    auto load(VDC&, Node::Object, Node::Object) -> void;
+
+    struct Memory {
+      Node::Memory vram;
+      Node::Memory satb;
+    } memory;
+  } debugger;
+
   inline auto bus() const -> uint9 { return output; }
   inline auto burstMode() const -> bool { return latch.burstMode || timing.vstate != VDW; }
   inline auto irqLine() const -> bool { return irq.line; }

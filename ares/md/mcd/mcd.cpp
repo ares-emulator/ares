@@ -17,47 +17,12 @@ MCD mcd;
 #include "timer.cpp"
 #include "gpu.cpp"
 #include "pcm.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto MCD::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "Mega CD");
   from = Node::scan(parent = node, from);
-
-  debugPRAM = Node::append<Node::Memory>(parent, from, "Mega CD PRAM");
-  debugPRAM->setSize(512_KiB);
-  debugPRAM->setRead([&](uint32 address) -> uint8 {
-    return pram.read(address >> 1).byte(!address.bit(0));
-  });
-  debugPRAM->setWrite([&](uint32 address, uint8 data) -> void {
-    auto value = pram.read(address >> 1);
-    value.byte(!address.bit(0)) = data;
-    return pram.write(address >> 1, value);
-  });
-
-  debugWRAM = Node::append<Node::Memory>(parent, from, "Mega CD WRAM");
-  debugWRAM->setSize(256_KiB);
-  debugWRAM->setRead([&](uint32 address) -> uint8 {
-    return wram.read(address >> 1).byte(!address.bit(0));
-  });
-  debugWRAM->setWrite([&](uint32 address, uint8 data) -> void {
-    auto value = wram.read(address >> 1);
-    value.byte(!address.bit(0)) = data;
-    return wram.write(address >> 1, value);
-  });
-
-  debugBRAM = Node::append<Node::Memory>(parent, from, "Mega CD BRAM");
-  debugBRAM->setSize(8_KiB);
-  debugBRAM->setRead([&](uint32 address) -> uint8 {
-    return bram.read(address);
-  });
-  debugBRAM->setWrite([&](uint32 address, uint8 data) -> void {
-    return bram.write(address, data);
-  });
-
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "MCD");
-  debugInstruction->setAddressBits(24);
-
-  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "MCD");
 
   tray = Node::append<Node::Port>(parent, from, "Disc Tray");
   tray->setFamily("Mega CD");
@@ -82,6 +47,7 @@ auto MCD::load(Node::Object parent, Node::Object from) -> void {
 
   cdd.load(parent, from);
   pcm.load(parent, from);
+  debugger.load(parent, from);
 }
 
 auto MCD::unload() -> void {
@@ -103,12 +69,8 @@ auto MCD::unload() -> void {
   cdc.ram.reset();
 
   node = {};
-  debugPRAM = {};
-  debugWRAM = {};
-  debugBRAM = {};
-  debugInstruction = {};
-  debugInterrupt = {};
   tray = {};
+  debugger = {};
 }
 
 auto MCD::connect(Node::Peripheral with) -> void {
@@ -143,31 +105,31 @@ auto MCD::main() -> void {
 
   if(irq.pending) {
     if(1 > r.i && gpu.irq.lower()) {
-      if(debugInterrupt->enabled()) debugInterrupt->notify("GPU");
+      debugger.interrupt("GPU");
       return interrupt(Vector::Level1, 1);
     }
     if(2 > r.i && external.irq.lower()) {
-      if(debugInterrupt->enabled()) debugInterrupt->notify("External");
+      debugger.interrupt("External");
       return interrupt(Vector::Level2, 2);
     }
     if(3 > r.i && timer.irq.lower()) {
-      if(debugInterrupt->enabled()) debugInterrupt->notify("Timer");
+      debugger.interrupt("Timer");
       return interrupt(Vector::Level3, 3);
     }
     if(4 > r.i && cdd.irq.lower()) {
-      if(debugInterrupt->enabled()) debugInterrupt->notify("CDD");
+      debugger.interrupt("CDD");
       return interrupt(Vector::Level4, 4);
     }
     if(5 > r.i && cdc.irq.lower()) {
-      if(debugInterrupt->enabled()) debugInterrupt->notify("CDC");
+      debugger.interrupt("CDC");
       return interrupt(Vector::Level5, 5);
     }
     if(6 > r.i && irq.subcode.lower()) {
-      if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
+      debugger.interrupt("IRQ");
       return interrupt(Vector::Level6, 6);
     }
     if(irq.reset.lower()) {
-      if(debugInterrupt->enabled()) debugInterrupt->notify("Reset");
+      debugger.interrupt("Reset");
       r.a[7] = read(1, 1, 0) << 16 | read(1, 1, 2) << 0;
       r.pc   = read(1, 1, 4) << 16 | read(1, 1, 6) << 0;
       prefetch();
@@ -176,9 +138,7 @@ auto MCD::main() -> void {
     }
   }
 
-  if(debugInstruction->enabled() && debugInstruction->address(r.pc - 4)) {
-    debugInstruction->notify(disassembleInstruction(r.pc - 4), disassembleContext());
-  }
+  debugger.instruction();
   instruction();
 }
 

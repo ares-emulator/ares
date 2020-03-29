@@ -1,6 +1,15 @@
 //Hudson Soft HuC6260: Video Color Encoder
 
 struct VCE {
+  struct Debugger {
+    //debugger.cpp
+    auto load(VCE&, Node::Object, Node::Object) -> void;
+
+    struct Memory {
+      Node::Memory cram;
+    } memory;
+  } debugger;
+
   inline auto clock() const -> uint { return io.clock; }
 
   //vce.cpp

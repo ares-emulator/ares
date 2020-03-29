@@ -10,19 +10,19 @@ CPU cpu;
 #include "dma.cpp"
 #include "timer.cpp"
 #include "keypad.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  debugInstruction->setAddressBits(32);
+  debugger.load(parent, from);
 }
 
 auto CPU::unload() -> void {
   node = {};
-  debugInstruction = {};
+  debugger = {};
 }
 
 auto CPU::main() -> void {
@@ -43,9 +43,7 @@ auto CPU::main() -> void {
     context.halted = false;
   }
 
-  if(debugInstruction->enabled() && debugInstruction->address(pipeline.execute.address)) {
-    debugInstruction->notify(disassembleInstruction(), disassembleContext());
-  }
+  debugger.instruction();
   instruction();
 }
 

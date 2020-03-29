@@ -8,11 +8,11 @@ auto TraceLogger::construct() -> void {
 
 auto TraceLogger::reload() -> void {
   tracerList.reset();
-  for(auto event : ares::Node::enumerate<ares::Node::Event>(emulator->root)) {
+  for(auto tracer : ares::Node::enumerate<ares::Node::Tracer>(emulator->root)) {
     ListViewItem item{&tracerList};
-    item.setAttribute<ares::Node::Event>("event", event);
+    item.setAttribute<ares::Node::Tracer>("tracer", tracer);
     item.setCheckable();
-    item.setText({event->component(), " ", event->name()});
+    item.setText({tracer->component(), " ", tracer->name()});
   }
 }
 
@@ -22,8 +22,7 @@ auto TraceLogger::unload() -> void {
 }
 
 auto TraceLogger::eventToggle(ListViewItem item) -> void {
-  if(auto event = item.attribute<ares::Node::Event>("event")) {
-    bool enabled = event->enabled();
-    event->setEnabled(!enabled);
+  if(auto tracer = item.attribute<ares::Node::Tracer>("tracer")) {
+    tracer->setEnabled(item.checked());
   }
 }

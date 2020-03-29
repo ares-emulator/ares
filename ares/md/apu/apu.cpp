@@ -4,31 +4,18 @@ namespace ares::MegaDrive {
 
 APU apu;
 #include "bus.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto APU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "APU");
   from = Node::scan(parent = node, from);
 
-  debugRAM = Node::append<Node::Memory>(parent, from, "APU RAM");
-  debugRAM->setSize(8_KiB);
-  debugRAM->setRead([&](uint32 address) -> uint8 {
-    return ram.read(address);
-  });
-  debugRAM->setWrite([&](uint32 address, uint8 data) -> void {
-    return ram.write(address, data);
-  });
-
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "APU");
-  debugInstruction->setAddressBits(16);
-
-  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "APU");
+  debugger.load(parent, from);
 }
 
 auto APU::unload() -> void {
-  debugRAM = {};
-  debugInstruction = {};
-  debugInterrupt = {};
+  debugger = {};
   node = {};
 }
 
@@ -39,19 +26,17 @@ auto APU::main() -> void {
 
   if(state.nmiLine) {
     state.nmiLine = 0;  //edge-sensitive
-    if(debugInterrupt->enabled()) debugInterrupt->notify("NMI");
+    debugger.interrupt("NMI");
     irq(0, 0x0066, 0xff);
   }
 
   if(state.intLine) {
     //level-sensitive
-    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
+    debugger.interrupt("IRQ");
     irq(1, 0x0038, 0xff);
   }
 
-  if(debugInstruction->enabled() && debugInstruction->address(r.pc)) {
-    debugInstruction->notify(disassembleInstruction(), disassembleContext());
-  }
+  debugger.instruction();
   instruction();
 }
 

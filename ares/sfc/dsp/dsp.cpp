@@ -11,6 +11,7 @@ DSP dsp;
 #include "misc.cpp"
 #include "voice.cpp"
 #include "echo.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto DSP::load(Node::Object parent, Node::Object from) -> void {
@@ -21,20 +22,13 @@ auto DSP::load(Node::Object parent, Node::Object from) -> void {
   stream->setChannels(2);
   stream->setFrequency(system.apuFrequency() / 768.0);
 
-  debugRAM = Node::append<Node::Memory>(parent, from, "APU RAM");
-  debugRAM->setSize(64_KiB);
-  debugRAM->setRead([&](uint32 address) -> uint8 {
-    return apuram[(uint16)address];
-  });
-  debugRAM->setWrite([&](uint32 address, uint8 data) -> void {
-    apuram[(uint16)address] = data;
-  });
+  debugger.load(parent, from);
 }
 
 auto DSP::unload() -> void {
   node = {};
   stream = {};
-  debugRAM = {};
+  debugger = {};
 }
 
 auto DSP::main() -> void {

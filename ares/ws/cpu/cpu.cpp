@@ -6,31 +6,25 @@ CPU cpu;
 #include "io.cpp"
 #include "interrupt.cpp"
 #include "dma.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  debugInstruction->setAddressBits(20);
+  debugger.load(parent, from);
 }
 
 auto CPU::unload() -> void {
-  debugInstruction = {};
+  debugger = {};
   node = {};
 }
 
 auto CPU::main() -> void {
   poll();
 
-  if(debugInstruction->enabled()
-  && debugInstruction->address(uint20(V30MZ::r.cs * 16 + V30MZ::r.ip))
-  ) {
-    if(auto instruction = disassembleInstruction()) {
-      debugInstruction->notify(instruction, disassembleContext());
-    }
-  }
+  debugger.instruction();
   exec();
 }
 

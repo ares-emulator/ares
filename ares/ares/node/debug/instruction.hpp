@@ -1,7 +1,7 @@
-struct Instruction : Event {
+struct Instruction : Tracer {
   DeclareClass(Instruction, "Instruction")
 
-  Instruction(string name = {}, string component = {}) : Event(name, component) {
+  Instruction(string name = {}, string component = {}) : Tracer(name, component) {
     setDepth(_depth);
   }
 
@@ -60,13 +60,13 @@ struct Instruction : Event {
   }
 
   auto serialize(string& output, string depth) -> void override {
-    Event::serialize(output, depth);
+    Tracer::serialize(output, depth);
     output.append(depth, "  depth: ", _depth, "\n");
     output.append(depth, "  addressBits: ", _addressBits, "\n");
   }
 
   auto unserialize(Markup::Node node) -> void override {
-    Event::unserialize(node);
+    Tracer::unserialize(node);
     _depth = node["depth"].natural();
     _addressBits = node["addressBits"].natural();
 

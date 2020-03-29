@@ -1,9 +1,18 @@
 struct SuperFX : GSU, Thread {
   Node::Component node;
-  Node::Instruction debugInstruction;
   ReadableMemory rom;
   WritableMemory ram;
   WritableMemory bram;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+    auto instruction() -> void;
+
+    struct Tracer {
+      Node::Instruction instruction;
+    } tracer;
+  } debugger;
 
   //superfx.cpp
   auto load(Node::Object, Node::Object) -> void;

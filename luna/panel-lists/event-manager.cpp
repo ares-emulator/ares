@@ -22,12 +22,12 @@ auto EventManager::refresh() -> void {
 }
 
 auto EventManager::refresh(ares::Node::Object node) -> void {
-  if(auto event = node->cast<ares::Node::Event>()) {
+  if(auto tracer = node->cast<ares::Node::Tracer>()) {
     ListViewItem item{&listView};
-    item.setAttribute<ares::Node::Event>("event", event);
+    item.setAttribute<ares::Node::Tracer>("tracer", tracer);
     item.setCheckable();
-    item.setChecked(event->enabled());
-    item.setText({event->component(), " ", event->name()});
+    item.setChecked(tracer->enabled());
+    item.setText({tracer->component(), " ", tracer->name()});
   }
 
   for(auto& node : *node) refresh(node);
@@ -37,8 +37,7 @@ auto EventManager::onChange() -> void {
 }
 
 auto EventManager::onToggle(ListViewItem item) -> void {
-  if(auto event = item.attribute<ares::Node::Event>("event")) {
-    bool enabled = event->enabled();
-    event->setEnabled(!enabled);
+  if(auto tracer = item.attribute<ares::Node::Tracer>("tracer")) {
+    tracer->setEnabled(item.checked());
   }
 }

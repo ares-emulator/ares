@@ -8,6 +8,7 @@ CPU cpu;
 #include "io.cpp"
 #include "timing.cpp"
 #include "irq.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
@@ -17,26 +18,12 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
   version = Node::append<Node::Natural>(parent, from, "Version", 2);
   version->setAllowedValues({1, 2});
 
-  debugWRAM = Node::append<Node::Memory>(parent, from, "CPU WRAM");
-  debugWRAM->setSize(128_KiB);
-  debugWRAM->setRead([&](uint32 address) -> uint8 {
-    return wram[(uint17)address];
-  });
-  debugWRAM->setWrite([&](uint32 address, uint8 data) -> void {
-    wram[(uint17)address] = data;
-  });
-
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  debugInstruction->setAddressBits(24);
-
-  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
+  debugger.load(parent, from);
 }
 
 auto CPU::unload() -> void {
   version = {};
-  debugWRAM = {};
-  debugInstruction = {};
-  debugInterrupt = {};
+  debugger = {};
   node = {};
 }
 
@@ -45,25 +32,21 @@ auto CPU::main() -> void {
   if(r.stp) return instructionStop();
 
   if(!status.interruptPending) {
-    if(debugInstruction->enabled() && debugInstruction->address(r.pc.d)) {
-      debugInstruction->notify(disassembleInstruction(), disassembleContext(), {
-        "V:", pad(vcounter(), 3L), " ", "H:", pad(hcounter(), 4L), " I:", (uint)field()
-      });
-    }
+    debugger.instruction();
     return instruction();
   }
 
   if(status.nmiPending) {
     status.nmiPending = 0;
     r.vector = r.e ? 0xfffa : 0xffea;
-    if(debugInterrupt->enabled()) debugInterrupt->notify("NMI");
+    debugger.interrupt("NMI");
     return interrupt();
   }
 
   if(status.irqPending) {
     status.irqPending = 0;
     r.vector = r.e ? 0xfffe : 0xffee;
-    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
+    debugger.interrupt("IRQ");
     return interrupt();
   }
 
@@ -71,7 +54,7 @@ auto CPU::main() -> void {
     status.resetPending = 0;
     step(132);
     r.vector = 0xfffc;
-    if(debugInterrupt->enabled()) debugInterrupt->notify("Reset");
+    debugger.interrupt("Reset");
     return interrupt();  //H=186
   }
 

@@ -1,8 +1,18 @@
 struct CPU : SM83, Thread {
   Node::Component node;
   Node::String version;
-  Node::Instruction debugInstruction;
-  Node::Notification debugInterrupt;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+    auto instruction() -> void;
+    auto interrupt(string_view) -> void;
+
+    struct Tracer {
+      Node::Instruction instruction;
+      Node::Notification interrupt;
+    } tracer;
+  } debugger;
 
   struct Interrupt { enum : uint {
     /* 0 */ VerticalBlank,

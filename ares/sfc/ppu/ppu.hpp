@@ -10,12 +10,17 @@ struct PPU : Thread, PPUcounter {
   Node::Boolean overscanEnable;
   Node::Boolean colorEmulation;
   Node::Boolean colorBleed;
+
   struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+
     struct Memory {
       Node::Memory vram;
       Node::Memory oam;
       Node::Memory cgram;
     } memory;
+
     struct Graphics {
       Node::Graphics tiles2bpp;
       Node::Graphics tiles4bpp;
@@ -51,9 +56,6 @@ struct PPU : Thread, PPUcounter {
 
   //color.cpp
   auto color(uint32) -> uint64;
-
-  //debugger.cpp
-  auto loadDebugger(Node::Object, Node::Object) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

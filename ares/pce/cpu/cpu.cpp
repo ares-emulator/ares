@@ -4,55 +4,43 @@ namespace ares::PCEngine {
 
 CPU cpu;
 #include "io.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  debugInstruction->setAddressBits(24);
-
-  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
-
   if(Model::PCEngine())   ram.allocate( 8_KiB, 0x00);
   if(Model::SuperGrafx()) ram.allocate(32_KiB, 0x00);
+
+  debugger.load(parent, from);
 }
 
 auto CPU::unload() -> void {
   ram.reset();
 
   node = {};
-  debugInstruction = {};
-  debugInterrupt = {};
+  debugger = {};
 }
 
 auto CPU::main() -> void {
   if(tiq.pending) {
-    if(debugInterrupt->enabled()) debugInterrupt->notify("TIQ");
+    debugger.interrupt("TIQ");
     return interrupt(tiq.vector);
   }
 
   if(irq1.pending) {
-    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ1");
+    debugger.interrupt("IRQ1");
     return interrupt(irq1.vector);
   }
 
   if(irq2.pending) {
-    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ2");
+    debugger.interrupt("IRQ2");
     return interrupt(irq2.vector);
   }
 
-  if(debugInstruction->enabled()) {
-    auto bank = r.mpr[r.pc >> 13];
-    auto address = (uint13)r.pc;
-    if(debugInstruction->address(bank << 16 | address)) {
-      debugInstruction->notify(disassembleInstruction(), disassembleContext(), {
-        "V:", pad(vdp.io.vcounter, 3L), " ", "H:", pad(vdp.io.hcounter, 4L)
-      });
-    }
-  }
-
+  debugger.instruction();
   instruction();
 }
 

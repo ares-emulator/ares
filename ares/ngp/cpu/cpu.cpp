@@ -11,16 +11,12 @@ CPU cpu;
 #include "adc.cpp"
 #include "rtc.cpp"
 #include "watchdog.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
-
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  debugInstruction->setAddressBits(24);
-
-  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
 
   ram.allocate(12_KiB, 0x00);
   if(auto fp = platform->open(system.node, "cpu.ram", File::Read)) {
@@ -51,6 +47,8 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
     ram[0x2f91] = Model::NeoGeoPocketColor() ? 0x10 : 0x00;
     ram[0x2f95] = ram[0x2f91];
   }
+
+  debugger.load(parent, from);
 }
 
 auto CPU::save() -> void {
@@ -63,13 +61,12 @@ auto CPU::unload() -> void {
   ram.reset();
 
   node = {};
-  debugInstruction = {};
-  debugInterrupt = {};
+  debugger = {};
 }
 
 auto CPU::main() -> void {
   if(interrupts.fire()) {
-    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
+    debugger.interrupt("IRQ");
     r.halted = false;
   }
 
@@ -77,9 +74,7 @@ auto CPU::main() -> void {
     return step(16);
   }
 
-  if(debugInstruction->enabled() && debugInstruction->address(r.pc.l.l0)) {
-    debugInstruction->notify(disassembleInstruction(), disassembleContext());
-  }
+  debugger.instruction();
   instruction();
 }
 

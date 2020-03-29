@@ -1,9 +1,22 @@
 struct CPU : WDC65816, Thread, PPUcounter {
   Node::Component node;
   Node::Natural version;
-  Node::Memory debugWRAM;
-  Node::Instruction debugInstruction;
-  Node::Notification debugInterrupt;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+    auto instruction() -> void;
+    auto interrupt(string_view) -> void;
+
+    struct Memory {
+      Node::Memory wram;
+    } memory;
+
+    struct Tracer {
+      Node::Instruction instruction;
+      Node::Notification interrupt;
+    } tracer;
+  } debugger;
 
   inline auto interruptPending() const -> bool override { return status.interruptPending; }
   inline auto pio() const -> uint8 { return io.pio; }

@@ -5,7 +5,13 @@ auto CPU::poll() -> void {
     if(!r.interruptEnable.bit(n)) continue;
     if(!r.interruptStatus.bit(n)) continue;
     state.halt = false;
-    if(V30MZ::r.f.i) interrupt(r.interruptBase + n);
+    if(!V30MZ::r.f.i) continue;
+    static const string type[8] = {
+      "SerialSend", "Input", "Cartridge", "SerialReceive",
+      "LineCompare", "VblankTimer", "Vblank", "HblankTimer"
+    };
+    debugger.interrupt(type[n]);
+    interrupt(r.interruptBase + n);
     return;
   }
 }

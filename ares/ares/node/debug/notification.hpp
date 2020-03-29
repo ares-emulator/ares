@@ -1,7 +1,7 @@
-struct Notification : Event {
+struct Notification : Tracer {
   DeclareClass(Notification, "Notification")
 
-  Notification(string name = {}, string component = {}) : Event(name, component) {
+  Notification(string name = {}, string component = {}) : Tracer(name, component) {
   }
 
   auto notify(string_view message = {}) -> void {

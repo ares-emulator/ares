@@ -6,18 +6,18 @@ SMP smp;
 #include "memory.cpp"
 #include "io.cpp"
 #include "timing.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto SMP::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "SMP");
   from = Node::scan(parent = node, from);
 
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "SMP");
-  debugInstruction->setAddressBits(16);
+  debugger.load(parent, from);
 }
 
 auto SMP::unload() -> void {
-  debugInstruction = {};
+  debugger = {};
   node = {};
 }
 
@@ -25,9 +25,7 @@ auto SMP::main() -> void {
   if(r.wait) return instructionWait();
   if(r.stop) return instructionStop();
 
-  if(debugInstruction->enabled() && debugInstruction->address(r.pc.w)) {
-    debugInstruction->notify(disassembleInstruction(), disassembleContext());
-  }
+  debugger.instruction();
   instruction();
 }
 

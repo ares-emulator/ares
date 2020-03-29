@@ -2,8 +2,18 @@
 
 struct SA1 : WDC65816, Thread {
   Node::Component node;
-  Node::Instruction debugInstruction;
-  Node::Notification debugInterrupt;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+    auto instruction() -> void;
+    auto interrupt(string_view) -> void;
+
+    struct Tracer {
+      Node::Instruction instruction;
+      Node::Notification interrupt;
+    } tracer;
+  } debugger;
 
   //sa1.cpp
   auto load(Node::Object, Node::Object) -> void;

@@ -5,21 +5,18 @@ SA1 sa1;
 #include "dma.cpp"
 #include "memory.cpp"
 #include "io.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto SA1::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "SA1");
   from = Node::scan(parent = node, from);
 
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "SA1");
-  debugInstruction->setAddressBits(24);
-
-  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "SA1");
+  debugger.load(parent, from);
 }
 
 auto SA1::unload() -> void {
-  debugInstruction = {};
-  debugInterrupt = {};
+  debugger = {};
   node = {};
 
   rom.reset();
@@ -42,14 +39,12 @@ auto SA1::main() -> void {
 
   if(status.interruptPending) {
     status.interruptPending = false;
-    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
+    debugger.interrupt("IRQ");
     interrupt();
     return;
   }
 
-  if(debugInstruction->enabled() && debugInstruction->address(r.pc.d)) {
-    debugInstruction->notify(disassembleInstruction(), disassembleContext());
-  }
+  debugger.instruction();
   instruction();
 }
 

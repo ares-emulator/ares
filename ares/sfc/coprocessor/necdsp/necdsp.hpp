@@ -1,7 +1,16 @@
 struct NECDSP : uPD96050, Thread {
   Node::Component node;
-  Node::Instruction debugInstruction;
   uint Frequency = 0;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+    auto instruction() -> void;
+
+    struct Tracer {
+      Node::Instruction instruction;
+    } tracer;
+  } debugger;
 
   //necdsp.cpp
   auto load(Node::Object, Node::Object) -> void;

@@ -35,7 +35,9 @@ auto NodeManager::refresh() -> void {
 }
 
 auto NodeManager::refresh(ares::Node::Object node, uint depth) -> void {
-  if(node->is<ares::Node::Event>()) return;
+  if(node->is<ares::Node::Memory>()) return;
+  if(node->is<ares::Node::Graphics>()) return;
+  if(node->is<ares::Node::Tracer>()) return;
   if(node->is<ares::Node::Input>()) return;
   if(node->is<ares::Node::Sprite>()) return;
 

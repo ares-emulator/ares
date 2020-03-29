@@ -4,11 +4,19 @@
 //instruction execution forces ARM mode to remove ARMv4 THUMB access
 //there is a possibility the ARMv3 supports 26-bit mode; but cannot be verified
 
-struct ArmDSP : ARM7TDMI, Thread {
+struct ARMDSP : ARM7TDMI, Thread {
   Node::Component node;
-  Node::Instruction debugInstruction;
   uint Frequency;
-  #include "registers.hpp"
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+    auto instruction() -> void;
+
+    struct Tracer {
+      Node::Instruction instruction;
+    } tracer;
+  } debugger;
 
   //armdsp.cpp
   auto load(Node::Object, Node::Object) -> void;
@@ -36,6 +44,29 @@ struct ArmDSP : ARM7TDMI, Thread {
   uint8 programROM[128 * 1024];
   uint8 dataROM[32 * 1024];
   uint8 programRAM[16 * 1024];
+
+  struct Bridge {
+    struct Buffer {
+      bool ready;
+      uint8 data;
+    };
+    Buffer cputoarm;
+    Buffer armtocpu;
+    uint32 timer;
+    uint32 timerlatch;
+    bool reset;
+    bool ready;
+    bool signal;
+
+    auto status() const -> uint8 {
+      uint8 data;
+      data.bit(0) = armtocpu.ready;
+      data.bit(2) = signal;
+      data.bit(3) = cputoarm.ready;
+      data.bit(7) = ready;
+      return data;
+    }
+  } bridge;
 };
 
-extern ArmDSP armdsp;
+extern ARMDSP armdsp;

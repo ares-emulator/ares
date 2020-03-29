@@ -5,33 +5,28 @@ namespace ares::Famicom {
 CPU cpu;
 #include "memory.cpp"
 #include "timing.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
-  debugInstruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
-  debugInstruction->setAddressBits(16);
-
-  debugInterrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
+  debugger.load(parent, from);
 }
 
 auto CPU::unload() -> void {
-  debugInstruction = {};
-  debugInterrupt = {};
+  debugger = {};
   node = {};
 }
 
 auto CPU::main() -> void {
   if(io.interruptPending) {
-    if(debugInterrupt->enabled()) debugInterrupt->notify("IRQ");
+    debugger.interrupt("IRQ");
     return interrupt();
   }
 
-  if(debugInstruction->enabled() && debugInstruction->address(r.pc)) {
-    debugInstruction->notify(disassembleInstruction(), disassembleContext());
-  }
+  debugger.instruction();
   instruction();
 }
 

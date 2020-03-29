@@ -12,6 +12,7 @@ PPU ppu;
 #include "object.cpp"
 #include "dac.cpp"
 #include "color.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 #include "../ppu/counter/serialization.cpp"
 
@@ -37,32 +38,7 @@ auto PPU::load(Node::Object parent, Node::Object from) -> void {
   });
   colorEmulation->setDynamic(true);
 
-  debugVRAM = Node::append<Node::Memory>(parent, from, "PPU VRAM");
-  debugVRAM->setSize(vram.mask + 1 << 1);
-  debugVRAM->setRead([&](uint32 address) -> uint8 {
-    return vram.data[address >> 1 & vram.mask].byte(address & 1);
-  });
-  debugVRAM->setWrite([&](uint32 address, uint8 data) -> void {
-    vram.data[address >> 1 & vram.mask].byte(address & 1) = data;
-  });
-
-  debugOAM = Node::append<Node::Memory>(parent, from, "PPU OAM");
-  debugOAM->setSize(512 + 32);
-  debugOAM->setRead([&](uint32 address) -> uint8 {
-    return obj.oam.read(address);
-  });
-  debugOAM->setWrite([&](uint32 address, uint8 data) -> void {
-    return obj.oam.write(address, data);
-  });
-
-  debugCGRAM = Node::append<Node::Memory>(parent, from, "PPU CGRAM");
-  debugCGRAM->setSize(256 << 1);
-  debugCGRAM->setRead([&](uint32 address) -> uint8 {
-    return dac.cgram[address >> 1 & 255].byte(address & 1);
-  });
-  debugCGRAM->setWrite([&](uint32 address, uint8 data) -> void {
-    dac.cgram[address >> 1 & 255].byte(address & 1) = data;
-  });
+  debugger.load(parent, from);
 
   output = new uint32[512 * 512];
   output += 16 * 512;  //overscan offset
@@ -72,9 +48,7 @@ auto PPU::unload() -> void {
   node = {};
   screen = {};
   colorEmulation = {};
-  debugVRAM = {};
-  debugOAM = {};
-  debugCGRAM = {};
+  debugger = {};
 
   output -= 16 * 512;
   delete[] output;

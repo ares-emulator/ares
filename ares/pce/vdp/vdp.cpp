@@ -14,6 +14,7 @@ VDP vdp;
 #include "background.cpp"
 #include "sprite.cpp"
 #include "color.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto VDP::load(Node::Object parent, Node::Object from) -> void {
@@ -32,12 +33,19 @@ auto VDP::load(Node::Object parent, Node::Object from) -> void {
     if(value == 1) screen->setSize(1088, 239);
   });
   overscan->setDynamic(true);
+
+  vce.debugger.load(vce, parent, from);
+  vdc0.debugger.load(vdc0, parent, from); if(Model::SuperGrafx())
+  vdc1.debugger.load(vdc1, parent, from);
 }
 
 auto VDP::unload() -> void {
   node = {};
   screen = {};
   overscan = {};
+  vce.debugger = {};
+  vdc0.debugger = {}; if(Model::SuperGrafx())
+  vdc1.debugger = {};
 }
 
 auto VDP::main() -> void {
