@@ -2,8 +2,8 @@ auto CPU::serialize(serializer& s) -> void {
   ARM7TDMI::serialize(s);
   Thread::serialize(s);
 
-  s.array(iwram);
-  s.array(ewram);
+  iwram.serialize(s);
+  ewram.serialize(s);
 
   for(auto& dma : this->dma) {
     s.integer(dma.id);

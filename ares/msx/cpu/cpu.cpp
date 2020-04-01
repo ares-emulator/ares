@@ -8,6 +8,9 @@ CPU cpu;
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
+  if(Model::MSX()) ram.allocate(64_KiB);
+  if(Model::MSX2()) ram.allocate(256_KiB);
+
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
@@ -15,6 +18,7 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
 }
 
 auto CPU::unload() -> void {
+  ram.reset();
   node = {};
   debugger = {};
 }
@@ -40,9 +44,6 @@ auto CPU::power() -> void {
   Thread::create(system.colorburst(), {&CPU::main, this});
 
   r.pc = 0x0000;  //reset vector address
-
-  if(Model::MSX() ) ram.allocate (64_KiB);
-  if(Model::MSX2()) ram.allocate(256_KiB);
 
   slot[0] = {3, 0, {0, 0, 0, 0}};
   slot[1] = {2, 1, {0, 0, 0, 0}};

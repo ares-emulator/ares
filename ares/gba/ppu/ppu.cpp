@@ -20,9 +20,13 @@ PPU ppu;
 #include "io.cpp"
 #include "memory.cpp"
 #include "color.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto PPU::load(Node::Object parent, Node::Object from) -> void {
+  vram.allocate(96_KiB);
+  pram.allocate(512);
+
   node = Node::append<Node::Component>(parent, from, "PPU");
   from = Node::scan(parent = node, from);
 
@@ -51,14 +55,19 @@ auto PPU::load(Node::Object parent, Node::Object from) -> void {
   });
   rotation->setDynamic(true);
   rotation->setAllowedValues({"0°", "90°", "180°", "270°"});
+
+  debugger.load(parent, from);
 }
 
 auto PPU::unload() -> void {
+  vram.reset();
+  pram.reset();
   node = {};
   screen = {};
   colorEmulation = {};
   interframeBlending = {};
   rotation = {};
+  debugger = {};
 }
 
 auto PPU::blank() -> bool {

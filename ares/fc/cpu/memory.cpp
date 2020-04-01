@@ -1,15 +1,15 @@
-auto CPU::readRAM(uint11 addr) -> uint8 {
-  return ram[addr];
+auto CPU::readRAM(uint11 address) -> uint8 {
+  return ram[address];
 }
 
-auto CPU::writeRAM(uint11 addr, uint8 data) -> void {
-  ram[addr] = data;
+auto CPU::writeRAM(uint11 address, uint8 data) -> void {
+  ram[address] = data;
 }
 
-auto CPU::readIO(uint16 addr) -> uint8 {
+auto CPU::readIO(uint16 address) -> uint8 {
   uint8 data = mdr();
 
-  switch(addr) {
+  switch(address) {
 
   case 0x4016: {
     auto poll = controllerPort1.data();
@@ -34,11 +34,11 @@ auto CPU::readIO(uint16 addr) -> uint8 {
 
   }
 
-  return apu.readIO(addr);
+  return apu.readIO(address);
 }
 
-auto CPU::writeIO(uint16 addr, uint8 data) -> void {
-  switch(addr) {
+auto CPU::writeIO(uint16 address, uint8 data) -> void {
+  switch(address) {
 
   case 0x4014: {
     io.oamdmaPage = data;
@@ -54,9 +54,9 @@ auto CPU::writeIO(uint16 addr, uint8 data) -> void {
 
   }
 
-  return apu.writeIO(addr, data);
+  return apu.writeIO(address, data);
 }
 
-auto CPU::readDebugger(uint16 addr) -> uint8 {
-  return bus.read(addr);
+auto CPU::readDebugger(uint16 address) -> uint8 {
+  return bus.read(address);
 }

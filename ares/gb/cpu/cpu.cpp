@@ -13,6 +13,9 @@ namespace ares::GameBoy {
 CPU cpu;
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
+  wram.allocate(!Model::GameBoyColor() ? 8_KiB : 32_KiB);
+  hram.allocate(128);
+
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
@@ -51,6 +54,8 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
 }
 
 auto CPU::unload() -> void {
+  wram.reset();
+  hram.reset();
   node = {};
   version = {};
   debugger = {};

@@ -1,14 +1,18 @@
 HitachiDSP hitachidsp;
 #include "memory.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto HitachiDSP::load(Node::Object parent, Node::Object from) -> void {
   node = Node::append<Node::Component>(parent, from, "Hitachi");
   from = Node::scan(parent = node, from);
+
+  debugger.load(parent, from);
 }
 
 auto HitachiDSP::unload() -> void {
   node = {};
+  debugger = {};
 
   rom.reset();
   ram.reset();

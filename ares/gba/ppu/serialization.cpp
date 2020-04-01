@@ -1,8 +1,8 @@
 auto PPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s.array(vram, 96 * 1024);
-  s.array(pram, 512);
+  vram.serialize(s);
+  pram.serialize(s);
 
   s.integer(io.gameBoyColorMode);
   s.integer(io.forceBlank);

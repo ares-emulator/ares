@@ -1,4 +1,13 @@
 auto APU::Debugger::load(Node::Object parent, Node::Object from) -> void {
+  memory.ram = Node::append<Node::Memory>(parent, from, "APU RAM");
+  memory.ram->setSize(apu.ram.size());
+  memory.ram->setRead([&](uint32 address) -> uint8 {
+    return apu.ram[address];
+  });
+  memory.ram->setWrite([&](uint32 address, uint8 data) -> void {
+    apu.ram[address] = data;
+  });
+
   tracer.instruction = Node::append<Node::Instruction>(parent, from, "Instruction", "APU");
   tracer.instruction->setAddressBits(16);
 

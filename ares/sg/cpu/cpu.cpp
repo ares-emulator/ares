@@ -8,6 +8,9 @@ CPU cpu;
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
+  if(Model::SG1000()) ram.allocate(1_KiB);
+  if(Model::SC3000()) ram.allocate(2_KiB);
+
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
@@ -15,6 +18,7 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
 }
 
 auto CPU::unload() -> void {
+  ram.reset();
   debugger = {};
   node = {};
 }
@@ -53,8 +57,6 @@ auto CPU::power() -> void {
   Z80::bus = this;
   Z80::power();
   Thread::create(system.colorburst(), {&CPU::main, this});
-  if(Model::SG1000()) ram.allocate(0x0400);
-  if(Model::SC3000()) ram.allocate(0x0800);
   r.pc = 0x0000;  //reset vector address
   state = {};
 }

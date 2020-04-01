@@ -15,10 +15,8 @@ CPU cpu;
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "CPU");
-  from = Node::scan(parent = node, from);
-
   ram.allocate(12_KiB, 0x00);
+
   if(auto fp = platform->open(system.node, "cpu.ram", File::Read)) {
     ram.load(fp);
 
@@ -48,6 +46,9 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
     ram[0x2f95] = ram[0x2f91];
   }
 
+  node = Node::append<Node::Component>(parent, from, "CPU");
+  from = Node::scan(parent = node, from);
+
   debugger.load(parent, from);
 }
 
@@ -59,7 +60,6 @@ auto CPU::save() -> void {
 
 auto CPU::unload() -> void {
   ram.reset();
-
   node = {};
   debugger = {};
 }

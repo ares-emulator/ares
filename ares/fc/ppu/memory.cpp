@@ -1,27 +1,27 @@
-auto PPU::readCIRAM(uint11 addr) -> uint8 {
-  return ciram[addr];
+auto PPU::readCIRAM(uint11 address) -> uint8 {
+  return ciram[address];
 }
 
-auto PPU::writeCIRAM(uint11 addr, uint8 data) -> void {
-  ciram[addr] = data;
+auto PPU::writeCIRAM(uint11 address, uint8 data) -> void {
+  ciram[address] = data;
 }
 
-auto PPU::readCGRAM(uint5 addr) -> uint8 {
-  if((addr & 0x13) == 0x10) addr &= ~0x10;
-  uint8 data = cgram[addr];
+auto PPU::readCGRAM(uint5 address) -> uint8 {
+  if((address & 0x13) == 0x10) address &= ~0x10;
+  uint8 data = cgram[address];
   if(io.grayscale) data &= 0x30;
   return data;
 }
 
-auto PPU::writeCGRAM(uint5 addr, uint8 data) -> void {
-  if((addr & 0x13) == 0x10) addr &= ~0x10;
-  cgram[addr] = data;
+auto PPU::writeCGRAM(uint5 address, uint8 data) -> void {
+  if((address & 0x13) == 0x10) address &= ~0x10;
+  cgram[address] = data;
 }
 
-auto PPU::readIO(uint16 addr) -> uint8 {
+auto PPU::readIO(uint16 address) -> uint8 {
   uint8 result = 0x00;
 
-  switch(addr.bit(0,2)) {
+  switch(address.bit(0,2)) {
 
   //PPUSTATUS
   case 2:
@@ -43,16 +43,16 @@ auto PPU::readIO(uint16 addr) -> uint8 {
   case 7:
     if(enable() && (io.ly <= 240 || io.ly == 261)) return 0x00;
 
-    addr = (uint14)io.v.address;
-    if(addr <= 0x1fff) {
+    address = (uint14)io.v.address;
+    if(address <= 0x1fff) {
       result = io.busData;
-      io.busData = cartridge.readCHR(addr);
-    } else if(addr <= 0x3eff) {
+      io.busData = cartridge.readCHR(address);
+    } else if(address <= 0x3eff) {
       result = io.busData;
-      io.busData = cartridge.readCHR(addr);
-    } else if(addr <= 0x3fff) {
-      result = readCGRAM(addr);
-      io.busData = cartridge.readCHR(addr);
+      io.busData = cartridge.readCHR(address);
+    } else if(address <= 0x3fff) {
+      result = readCGRAM(address);
+      io.busData = cartridge.readCHR(address);
     }
     io.v.address += io.vramIncrement;
     break;
@@ -62,10 +62,10 @@ auto PPU::readIO(uint16 addr) -> uint8 {
   return result;
 }
 
-auto PPU::writeIO(uint16 addr, uint8 data) -> void {
+auto PPU::writeIO(uint16 address, uint8 data) -> void {
   io.mdr = data;
 
-  switch(addr.bit(0,2)) {
+  switch(address.bit(0,2)) {
 
   //PPUCTRL
   case 0:
@@ -129,13 +129,13 @@ auto PPU::writeIO(uint16 addr, uint8 data) -> void {
   case 7:
     if(enable() && (io.ly <= 240 || io.ly == 261)) return;
 
-    addr = (uint14)io.v.address;
-    if(addr <= 0x1fff) {
-      cartridge.writeCHR(addr, data);
-    } else if(addr <= 0x3eff) {
-      cartridge.writeCHR(addr, data);
-    } else if(addr <= 0x3fff) {
-      writeCGRAM(addr, data);
+    address = (uint14)io.v.address;
+    if(address <= 0x1fff) {
+      cartridge.writeCHR(address, data);
+    } else if(address <= 0x3eff) {
+      cartridge.writeCHR(address, data);
+    } else if(address <= 0x3fff) {
+      writeCGRAM(address, data);
     }
     io.v.address += io.vramIncrement;
     break;

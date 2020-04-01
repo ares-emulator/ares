@@ -14,6 +14,9 @@ CPU cpu;
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
+  iwram.allocate( 32_KiB);
+  ewram.allocate(256_KiB);
+
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
@@ -21,6 +24,8 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
 }
 
 auto CPU::unload() -> void {
+  iwram.reset();
+  ewram.reset();
   node = {};
   debugger = {};
 }

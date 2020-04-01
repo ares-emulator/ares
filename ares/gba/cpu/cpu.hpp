@@ -1,11 +1,18 @@
 struct CPU : ARM7TDMI, Thread, IO {
   Node::Component node;
+  Memory::Writable<uint8> iwram;  // 32KB
+  Memory::Writable<uint8> ewram;  //256KB
 
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object, Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view type) -> void;
+
+    struct Memory {
+      Node::Memory iwram;
+      Node::Memory ewram;
+    } memory;
 
     struct Tracer {
       Node::Instruction instruction;
@@ -74,9 +81,6 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
-
-  uint8 iwram[ 32 * 1024];
-  uint8 ewram[256 * 1024];
 
 //private:
   struct uintVN {

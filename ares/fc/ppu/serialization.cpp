@@ -1,6 +1,10 @@
 auto PPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
+  ciram.serialize(s);
+  cgram.serialize(s);
+  oam.serialize(s);
+
   s.integer(io.mdr);
 
   s.integer(io.field);
@@ -44,12 +48,6 @@ auto PPU::serialize(serializer& s) -> void {
 
   for(auto& o : latch.oam) o.serialize(s);
   for(auto& o : latch.soam) o.serialize(s);
-
-  s.array(ciram);
-  s.array(cgram);
-  s.array(oam);
-
-  s.array(buffer);
 }
 
 auto PPU::OAM::serialize(serializer& s) -> void {

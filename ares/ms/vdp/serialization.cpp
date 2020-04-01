@@ -1,11 +1,11 @@
 auto VDP::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
+  vram.serialize(s);
+  cram.serialize(s);
+
   background.serialize(s);
   sprite.serialize(s);
-
-  s.array(vram);
-  s.array(cram);
 
   s.integer(io.vcounter);
   s.integer(io.hcounter);

@@ -1,4 +1,13 @@
 auto CPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
+  memory.ram = Node::append<Node::Memory>(parent, from, "CPU RAM");
+  memory.ram->setSize(SoC::ASWAN() ? 16_KiB : 64_KiB);
+  memory.ram->setRead([&](uint32 address) -> uint8 {
+    return iram.read(address);
+  });
+  memory.ram->setWrite([&](uint32 address, uint8 data) -> void {
+    return iram.write(address, data);
+  });
+
   tracer.instruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
   tracer.instruction->setAddressBits(20);
 

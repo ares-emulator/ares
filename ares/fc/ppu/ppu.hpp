@@ -3,6 +3,20 @@ struct PPU : Thread {
   Node::Screen screen;
   Node::Boolean overscan;
   Node::Boolean colorEmulation;
+  Memory::Writable<uint8> ciram;
+  Memory::Writable<uint8> cgram;
+  Memory::Writable<uint8> oam;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+
+    struct Memory {
+      Node::Memory ciram;
+      Node::Memory cgram;
+      Node::Memory oam;
+    } memory;
+  } debugger;
 
   inline auto rate() const -> uint { return Region::PAL() ? 5 : 4; }
   inline auto vlines() const -> uint { return Region::PAL() ? 312 : 262; }
@@ -21,18 +35,18 @@ struct PPU : Thread {
   auto power(bool reset) -> void;
 
   //memory.cpp
-  auto readCIRAM(uint11 addr) -> uint8;
-  auto writeCIRAM(uint11 addr, uint8 data) -> void;
+  auto readCIRAM(uint11 address) -> uint8;
+  auto writeCIRAM(uint11 address, uint8 data) -> void;
 
-  auto readCGRAM(uint5 addr) -> uint8;
-  auto writeCGRAM(uint5 addr, uint8 data) -> void;
+  auto readCGRAM(uint5 address) -> uint8;
+  auto writeCGRAM(uint5 address, uint8 data) -> void;
 
-  auto readIO(uint16 addr) -> uint8;
-  auto writeIO(uint16 addr, uint8 data) -> void;
+  auto readIO(uint16 address) -> uint8;
+  auto writeIO(uint16 address, uint8 data) -> void;
 
   //render.cpp
   auto enable() const -> bool;
-  auto loadCHR(uint16 addr) -> uint8;
+  auto loadCHR(uint16 address) -> uint8;
 
   auto renderPixel() -> void;
   auto renderSprite() -> void;
@@ -43,6 +57,8 @@ struct PPU : Thread {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  uint32 buffer[256 * 262];
 
   struct IO {
     //internal
@@ -122,12 +138,6 @@ struct PPU : Thread {
     OAM oam[8];   //primary
     OAM soam[8];  //secondary
   } latch;
-
-  uint8 ciram[2048];
-  uint8 cgram[32];
-  uint8 oam[256];
-
-  uint32 buffer[256 * 262];
 };
 
 extern PPU ppu;

@@ -12,19 +12,19 @@ Bus bus;
 //$4020-403f = FDS
 //$4018-ffff = Cartridge
 
-auto Bus::read(uint16 addr) -> uint8 {
-  uint8 data = cartridge.readPRG(addr);
-       if(addr <= 0x1fff) data = cpu.readRAM(addr);
-  else if(addr <= 0x3fff) data = ppu.readIO(addr);
-  else if(addr <= 0x4017) data = cpu.readIO(addr);
+auto Bus::read(uint16 address) -> uint8 {
+  uint8 data = cartridge.readPRG(address);
+       if(address <= 0x1fff) data = cpu.readRAM(address);
+  else if(address <= 0x3fff) data = ppu.readIO(address);
+  else if(address <= 0x4017) data = cpu.readIO(address);
   return data;
 }
 
-auto Bus::write(uint16 addr, uint8 data) -> void {
-  cartridge.writePRG(addr, data);
-  if(addr <= 0x1fff) return cpu.writeRAM(addr, data);
-  if(addr <= 0x3fff) return ppu.writeIO(addr, data);
-  if(addr <= 0x4017) return cpu.writeIO(addr, data);
+auto Bus::write(uint16 address, uint8 data) -> void {
+  cartridge.writePRG(address, data);
+  if(address <= 0x1fff) return cpu.writeRAM(address, data);
+  if(address <= 0x3fff) return ppu.writeIO(address, data);
+  if(address <= 0x4017) return cpu.writeIO(address, data);
 }
 
 }

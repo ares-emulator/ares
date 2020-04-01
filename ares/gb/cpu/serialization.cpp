@@ -2,8 +2,8 @@ auto CPU::serialize(serializer& s) -> void {
   SM83::serialize(s);
   Thread::serialize(s);
 
-  s.array(wram);
-  s.array(hram);
+  wram.serialize(s);
+  hram.serialize(s);
 
   s.integer(status.clock);
   s.integer(status.interruptLatch);

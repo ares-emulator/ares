@@ -110,6 +110,10 @@ struct HG51B {
   auto readRegister(uint7 address) -> uint24;
   auto writeRegister(uint7 address, uint24 data) -> void;
 
+  //disassembler.cpp
+  auto disassembleInstruction(maybe<uint15> pb = {}, maybe<uint8> pc = {}) -> string;
+  auto disassembleContext() -> string;
+
 protected:
   struct Registers {
     uint15 pb;  //program bank

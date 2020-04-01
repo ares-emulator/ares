@@ -22,7 +22,7 @@ auto SG1000::heuristics(vector<uint8_t>& data, string location) -> string {
   s += "      content: Program\n";
   s += "    memory\n";
   s += "      type: RAM\n";
-  s += "      size: 0x8000\n";
+  s += "      size: 0x4000\n";
   s += "      content: Save\n";
   return s;
 }

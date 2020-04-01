@@ -97,8 +97,8 @@ auto APU::power(bool reset) -> void {
   setIRQ();
 }
 
-auto APU::readIO(uint16 addr) -> uint8 {
-  switch(addr) {
+auto APU::readIO(uint16 address) -> uint8 {
+  switch(address) {
 
   case 0x4015: {
     uint8 result = 0x00;
@@ -121,10 +121,10 @@ auto APU::readIO(uint16 addr) -> uint8 {
   return cpu.mdr();
 }
 
-auto APU::writeIO(uint16 addr, uint8 data) -> void {
-  const uint n = (addr >> 2) & 1;  //pulse#
+auto APU::writeIO(uint16 address, uint8 data) -> void {
+  const uint n = (address >> 2) & 1;  //pulse#
 
-  switch(addr) {
+  switch(address) {
 
   case 0x4000: case 0x4004: {
     pulse[n].duty = data >> 6;

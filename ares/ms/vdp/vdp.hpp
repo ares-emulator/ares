@@ -4,6 +4,18 @@ struct VDP : Thread {
   Node::Component node;
   Node::Screen screen;
   Node::Boolean interframeBlending;  //Game Gear
+  Memory::Writable<uint8> vram;  //16KB
+  Memory::Writable<uint8> cram;  //SG + MS = 32, GG = 64
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+
+    struct Memory {
+      Node::Memory vram;
+      Node::Memory cram;
+    } memory;
+  } debugger;
 
   //vdp.cpp
   auto load(Node::Object, Node::Object) -> void;
@@ -86,8 +98,6 @@ private:
   auto palette(uint5 index) -> uint12;
 
   uint32 buffer[256 * 264];
-   uint8 vram[0x4000];
-   uint8 cram[0x40];  //SG + MS = 0x20, GG = 0x40
 
   struct IO {
     uint vcounter = 0;  //vertical counter

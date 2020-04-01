@@ -5,13 +5,17 @@
 
 struct CPU : TLCS900H, Thread {
   Node::Component node;
-  ares::Memory::Writable<uint8> ram;
+  ares::Memory::Writable<uint8> ram;  //12KB
 
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object, Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
+
+    struct Memory {
+      Node::Memory ram;
+    } memory;
 
     struct Tracer {
       Node::Instruction instruction;

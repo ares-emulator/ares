@@ -4,6 +4,22 @@ struct PPU : Thread {
   Node::String colorEmulationDMG;
   Node::Boolean colorEmulationCGB;
   Node::Boolean interframeBlending;
+  Memory::Writable<uint8> vram;  //GB = 8KB, GBC = 16KB
+  Memory::Writable<uint8> oam;
+  uint8 bgp[4];
+  uint8 obp[2][4];
+  uint8 bgpd[64];
+  uint8 obpd[64];
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object, Node::Object) -> void;
+
+    struct Memory {
+      Node::Memory vram;
+      Node::Memory oam;
+    } memory;
+  } debugger;
 
   //ppu.cpp
   auto load(Node::Object, Node::Object) -> void;
@@ -53,15 +69,10 @@ struct PPU : Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint8 vram[16384];  //GB = 8192, GBC = 16384
-  uint8 oam[160];
-  uint8 bgp[4];
-  uint8 obp[2][4];
-  uint8 bgpd[64];
-  uint8 obpd[64];
-
   function<void ()> scanline;
   function<void ()> run;
+
+  uint32 output[160 * 144];
 
   struct Status {
     uint1 irq;  //STAT IRQ line
@@ -129,8 +140,6 @@ struct PPU : Thread {
   struct History {
     uint10 mode;  //5 x 2-bit
   } history;
-
-  uint32 output[160 * 144];
 
   struct Pixel {
     uint16 color;

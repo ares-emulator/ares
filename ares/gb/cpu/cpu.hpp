@@ -1,12 +1,19 @@
 struct CPU : SM83, Thread {
   Node::Component node;
   Node::String version;
+  Memory::Writable<uint8> wram;  //GB = 8KB, GBC = 32KB
+  Memory::Writable<uint8> hram;
 
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object, Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
+
+    struct Memory {
+      Node::Memory wram;
+      Node::Memory hram;
+    } memory;
 
     struct Tracer {
       Node::Instruction instruction;
@@ -132,9 +139,6 @@ struct CPU : SM83, Thread {
     //$ffff  IE
     uint8 interruptEnable;
   } status;
-
-  uint8 wram[32768];  //GB=8192, GBC=32768
-  uint8 hram[128];
 };
 
 extern CPU cpu;

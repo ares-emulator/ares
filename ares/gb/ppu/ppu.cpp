@@ -8,9 +8,13 @@ PPU ppu;
 #include "dmg.cpp"
 #include "cgb.cpp"
 #include "color.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto PPU::load(Node::Object parent, Node::Object from) -> void {
+  vram.allocate(!Model::GameBoyColor() ? 8_KiB : 16_KiB);
+  oam.allocate(160);
+
   node = Node::append<Node::Component>(parent, from, "PPU");
   from = Node::scan(parent = node, from);
 
@@ -53,14 +57,19 @@ auto PPU::load(Node::Object parent, Node::Object from) -> void {
       interframeBlending->setDynamic(true);
     }
   }
+
+  debugger.load(parent, from);
 }
 
 auto PPU::unload() -> void {
+  vram.reset();
+  oam.reset();
   node = {};
   screen = {};
   colorEmulationDMG = {};
   colorEmulationCGB = {};
   interframeBlending = {};
+  debugger = {};
 }
 
 auto PPU::main() -> void {

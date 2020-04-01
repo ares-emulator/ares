@@ -8,6 +8,9 @@ CPU cpu;
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent, Node::Object from) -> void {
+  ram.allocate(0x0400);
+  expansion.allocate(0x1000);
+
   node = Node::append<Node::Component>(parent, from, "CPU");
   from = Node::scan(parent = node, from);
 
@@ -15,8 +18,10 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
 }
 
 auto CPU::unload() -> void {
-  debugger = {};
+  ram.reset();
+  expansion.reset();
   node = {};
+  debugger = {};
 }
 
 auto CPU::main() -> void {
@@ -53,9 +58,6 @@ auto CPU::power() -> void {
   Z80::bus = this;
   Z80::power();
   Thread::create(system.colorburst(), {&CPU::main, this});
-
-  if(Model::ColecoVision()) ram.allocate(0x0400), expansion.allocate(0x1000);
-  if(Model::ColecoAdam())   ram.allocate(0x0400), expansion.allocate(0x1000);
 
   r.pc = 0x0000;  //reset vector address
   state = {};

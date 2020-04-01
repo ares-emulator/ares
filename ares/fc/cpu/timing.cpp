@@ -1,22 +1,22 @@
-auto CPU::read(uint16 addr) -> uint8 {
+auto CPU::read(uint16 address) -> uint8 {
   if(io.oamdmaPending) {
     io.oamdmaPending = false;
-    read(addr);
+    read(address);
     oamdma();
   }
 
   while(io.rdyLine == 0) {
-    r.mdr = bus.read(io.rdyAddrValid ? io.rdyAddrValue : addr);
+    r.mdr = bus.read(io.rdyAddrValid ? io.rdyAddrValue : address);
     step(rate());
   }
 
-  r.mdr = bus.read(addr);
+  r.mdr = bus.read(address);
   step(rate());
   return r.mdr;
 }
 
-auto CPU::write(uint16 addr, uint8 data) -> void {
-  bus.write(addr, r.mdr = data);
+auto CPU::write(uint16 address, uint8 data) -> void {
+  bus.write(address, r.mdr = data);
   step(rate());
 }
 

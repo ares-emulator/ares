@@ -14,8 +14,8 @@ struct APU : Thread {
 
   auto power(bool reset) -> void;
 
-  auto readIO(uint16 addr) -> uint8;
-  auto writeIO(uint16 addr, uint8 data) -> void;
+  auto readIO(uint16 address) -> uint8;
+  auto writeIO(uint16 address, uint8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

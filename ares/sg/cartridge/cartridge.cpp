@@ -82,7 +82,7 @@ auto Cartridge::read(uint16 address) -> maybe<uint8> {
     return rom.read(address - 0x0000);
   }
 
-  if(address >= 0x8000 && address <= 0xffff) {
+  if(address >= 0x8000 && address <= 0xbfff) {
     return ram.read(address - 0x8000);
   }
 
@@ -96,7 +96,7 @@ auto Cartridge::write(uint16 address, uint8 data) -> bool {
     return rom.write(address - 0x0000, data), true;
   }
 
-  if(address >= 0x8000 && address <= 0xffff) {
+  if(address >= 0x8000 && address <= 0xbfff) {
     return ram.write(address - 0x8000, data), true;
   }
 

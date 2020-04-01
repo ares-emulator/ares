@@ -6,9 +6,14 @@ PPU ppu;
 #include "memory.cpp"
 #include "render.cpp"
 #include "color.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto PPU::load(Node::Object parent, Node::Object from) -> void {
+  ciram.allocate(2048);
+  cgram.allocate(32);
+  oam.allocate(256);
+
   node = Node::append<Node::Component>(parent, from, "PPU");
   from = Node::scan(parent = node, from);
 
@@ -29,13 +34,19 @@ auto PPU::load(Node::Object parent, Node::Object from) -> void {
     screen->resetPalette();
   });
   colorEmulation->setDynamic(true);
+
+  debugger.load(parent, from);
 }
 
 auto PPU::unload() -> void {
+  ciram.reset();
+  cgram.reset();
+  oam.reset();
   node = {};
   screen = {};
   overscan = {};
   colorEmulation = {};
+  debugger = {};
 }
 
 auto PPU::main() -> void {

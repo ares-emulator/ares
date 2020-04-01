@@ -1,8 +1,9 @@
 auto PPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s.array(vram);
-  s.array(oam);
+  vram.serialize(s);
+  oam.serialize(s);
+
   s.array(bgp);
   s.array(obp[0]);
   s.array(obp[1]);

@@ -1,11 +1,16 @@
 struct CPU : MOS6502, Thread {
   Node::Component node;
+  Memory::Writable<uint8> ram;
 
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object, Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
+
+    struct Memory {
+      Node::Memory ram;
+    } memory;
 
     struct Tracer {
       Node::Instruction instruction;
@@ -25,19 +30,19 @@ struct CPU : MOS6502, Thread {
   auto power(bool reset) -> void;
 
   //memory.cpp
-  auto readRAM(uint11 addr) -> uint8;
-  auto writeRAM(uint11 addr, uint8 data) -> void;
+  auto readRAM(uint11 address) -> uint8;
+  auto writeRAM(uint11 address, uint8 data) -> void;
 
-  auto readIO(uint16 addr) -> uint8;
-  auto writeIO(uint16 addr, uint8 data) -> void;
+  auto readIO(uint16 address) -> uint8;
+  auto writeIO(uint16 address, uint8 data) -> void;
 
-  auto readDebugger(uint16 addr) -> uint8 override;
+  auto readDebugger(uint16 address) -> uint8 override;
 
   auto serialize(serializer&) -> void;
 
   //timing.cpp
-  auto read(uint16 addr) -> uint8 override;
-  auto write(uint16 addr, uint8 data) -> void override;
+  auto read(uint16 address) -> uint8 override;
+  auto write(uint16 address, uint8 data) -> void override;
   auto lastCycle() -> void override;
   auto nmi(uint16& vector) -> void override;
 
@@ -51,8 +56,6 @@ struct CPU : MOS6502, Thread {
   auto rdyAddr(bool valid, uint16 value = 0) -> void;
 
 //protected:
-  uint8 ram[0x800];
-
   struct IO {
     bool interruptPending = 0;
     bool nmiPending = 0;

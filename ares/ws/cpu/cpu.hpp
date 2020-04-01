@@ -7,6 +7,10 @@ struct CPU : V30MZ, Thread, IO {
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
 
+    struct Memory {
+      Node::Memory ram;
+    } memory;
+
     struct Tracer {
       Node::Instruction instruction;
       Node::Notification interrupt;

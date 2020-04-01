@@ -7,6 +7,7 @@ namespace ares {
 #include "instruction.cpp"
 #include "instructions.cpp"
 #include "serialization.cpp"
+#include "disassembler.cpp"
 
 auto HG51B::lock() -> void {
   io.lock = 1;

@@ -7,9 +7,13 @@ VDP vdp;
 #include "background.cpp"
 #include "sprite.cpp"
 #include "color.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto VDP::load(Node::Object parent, Node::Object from) -> void {
+  vram.allocate(16_KiB);
+  cram.allocate(!Model::GameGear() ? 32 : 64);
+
   node = Node::append<Node::Component>(parent, from, "VDP");
   from = Node::scan(parent = node, from);
 
@@ -34,12 +38,17 @@ auto VDP::load(Node::Object parent, Node::Object from) -> void {
     });
     interframeBlending->setDynamic(true);
   }
+
+  debugger.load(parent, from);
 }
 
 auto VDP::unload() -> void {
+  vram.reset();
+  cram.reset();
   node = {};
   screen = {};
   interframeBlending = {};
+  debugger = {};
 }
 
 auto VDP::main() -> void {
