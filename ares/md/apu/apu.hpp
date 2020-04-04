@@ -19,7 +19,7 @@ struct APU : Z80, Z80::Bus, Thread {
     } tracer;
   } debugger;
 
-  inline auto synchronizing() const -> bool override { return scheduler.synchronizing(); }
+  auto synchronizing() const -> bool override { return scheduler.synchronizing(); }
 
   //z80.cpp
   auto load(Node::Object, Node::Object) -> void;

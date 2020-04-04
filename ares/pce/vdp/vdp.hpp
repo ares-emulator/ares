@@ -10,7 +10,7 @@ struct VDP : Thread {
   Node::Screen screen;
   Node::Boolean overscan;
 
-  inline auto irqLine() const -> bool { return vdc0.irqLine() | vdc1.irqLine(); }
+  auto irqLine() const -> bool { return vdc0.irqLine() | vdc1.irqLine(); }
 
   //vdp.cpp
   auto load(Node::Object, Node::Object) -> void;

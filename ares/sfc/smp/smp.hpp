@@ -13,7 +13,7 @@ struct SMP : SPC700, Thread {
     } tracer;
   } debugger;
 
-  inline auto synchronizing() const -> bool override { return scheduler.synchronizing(); }
+  auto synchronizing() const -> bool override { return scheduler.synchronizing(); }
 
   //smp.cpp
   auto load(Node::Object, Node::Object) -> void;

@@ -303,11 +303,11 @@ struct V30MZ {
       BitField<16,11> v{&data};  //overflow
       BitField<16,15> m{&data};  //mode
 
-      inline operator uint() const { return data & 0x8fd5 | 0x7002; }
-      inline auto& operator =(uint value) { return data  = value, *this; }
-      inline auto& operator&=(uint value) { return data &= value, *this; }
-      inline auto& operator^=(uint value) { return data ^= value, *this; }
-      inline auto& operator|=(uint value) { return data |= value, *this; }
+      operator uint() const { return data & 0x8fd5 | 0x7002; }
+      auto& operator =(uint value) { return data  = value, *this; }
+      auto& operator&=(uint value) { return data &= value, *this; }
+      auto& operator^=(uint value) { return data ^= value, *this; }
+      auto& operator|=(uint value) { return data |= value, *this; }
     } f;
   } r;
 };

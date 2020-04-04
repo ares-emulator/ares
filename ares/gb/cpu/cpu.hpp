@@ -29,8 +29,8 @@ struct CPU : SM83, Thread {
     /* 4 */ Joypad,
   };};
 
-  inline auto lowSpeed()  const -> bool { return status.speedDouble == 0; }
-  inline auto highSpeed() const -> bool { return status.speedDouble == 1; }
+  auto lowSpeed()  const -> bool { return status.speedDouble == 0; }
+  auto highSpeed() const -> bool { return status.speedDouble == 1; }
 
   //cpu.cpp
   auto load(Node::Object, Node::Object) -> void;

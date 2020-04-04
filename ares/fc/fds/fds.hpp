@@ -10,8 +10,8 @@ struct FDS {
   Node::String state;
   uint1 present;
 
-  inline auto manifest() const -> string { return information.manifest; }
-  inline auto name() const -> string { return information.name; }
+  auto manifest() const -> string { return information.manifest; }
+  auto name() const -> string { return information.name; }
 
   struct Disk {
     Memory::Writable<uint8> sideA;

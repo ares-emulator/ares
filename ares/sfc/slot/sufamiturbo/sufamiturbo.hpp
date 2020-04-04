@@ -2,8 +2,8 @@ struct SufamiTurboCartridge {
   Node::Port port;
   Node::Peripheral node;
 
-  inline auto manifest() const -> string { return information.manifest; }
-  inline auto name() const -> string { return information.name; }
+  auto manifest() const -> string { return information.manifest; }
+  auto name() const -> string { return information.name; }
 
   //sufamiturbo.cpp
   auto load(Node::Peripheral, Node::Peripheral) -> void;

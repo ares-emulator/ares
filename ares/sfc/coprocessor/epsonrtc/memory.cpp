@@ -7,8 +7,8 @@ auto EpsonRTC::rtcReset() -> void {
   test = 0;
 }
 
-auto EpsonRTC::rtcRead(uint4 addr) -> uint4 {
-  switch(addr) { default:
+auto EpsonRTC::rtcRead(uint4 address) -> uint4 {
+  switch(address) { default:
   case  0: return secondlo;
   case  1: return secondhi | batteryfailure << 3;
   case  2: return minutelo;
@@ -32,8 +32,8 @@ auto EpsonRTC::rtcRead(uint4 addr) -> uint4 {
   }
 }
 
-auto EpsonRTC::rtcWrite(uint4 addr, uint4 data) -> void {
-  switch(addr) {
+auto EpsonRTC::rtcWrite(uint4 address, uint4 data) -> void {
+  switch(address) {
   case 0:
     secondlo = data;
     break;

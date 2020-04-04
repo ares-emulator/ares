@@ -14,9 +14,9 @@ struct System {
   enum class Model : uint { SG1000, SC3000 };
   enum class Region : uint { NTSC, PAL };
 
-  inline auto model() const -> Model { return information.model; }
-  inline auto region() const -> Region { return information.region; }
-  inline auto colorburst() const -> double { return information.colorburst; }
+  auto model() const -> Model { return information.model; }
+  auto region() const -> Region { return information.region; }
+  auto colorburst() const -> double { return information.colorburst; }
 
   //system.cpp
   auto run() -> void;

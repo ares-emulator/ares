@@ -3,6 +3,7 @@ auto GraphicsViewer::construct() -> void {
   setVisible(false);
 
   graphicsLabel.setText("Graphics Viewer").setFont(Font().setBold());
+  graphicsList.onChange([&] { eventChange(); });
   graphicsView.setAlignment({0.0, 0.0});
   exportButton.setText("Export").onActivate([&] {
     eventExport();

@@ -31,8 +31,8 @@ struct System {
 
   enum class Model : uint { GameBoyAdvance, GameBoyPlayer };
 
-  inline auto model() const -> Model { return information.model; }
-  inline auto frequency() const -> double { return 16 * 1024 * 1024; }
+  auto model() const -> Model { return information.model; }
+  auto frequency() const -> double { return 16 * 1024 * 1024; }
 
   //system.cpp
   auto run() -> void;

@@ -125,15 +125,15 @@ struct HuC6280 {
     bool v;  //overflow
     bool n;  //negative
 
-    inline operator uint8() const {
+    operator uint8() const {
       return c << 0 | z << 1 | i << 2 | d << 3 | b << 4 | t << 5 | v << 6 | n << 7;
     }
 
-    inline auto operator()() const -> uint8 {
+    auto operator()() const -> uint8 {
       return operator uint8();
     }
 
-    inline auto& operator=(uint8 data) {
+    auto& operator=(uint8 data) {
       c = data.bit(0);
       z = data.bit(1);
       i = data.bit(2);

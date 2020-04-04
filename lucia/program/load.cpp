@@ -88,6 +88,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
   manifestViewer.reload();
   memoryEditor.reload();
   graphicsViewer.reload();
+  propertiesViewer.reload();
   traceLogger.reload();
   state = {};  //reset hotkey state slot to 1
   pause(false);
@@ -116,6 +117,7 @@ auto Program::unload() -> void {
   manifestViewer.unload();
   memoryEditor.unload();
   graphicsViewer.unload();
+  propertiesViewer.unload();
   traceLogger.unload();
   message.text = "";
   ruby::video.clear();

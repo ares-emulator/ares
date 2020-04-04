@@ -2,8 +2,12 @@ struct ManifestViewer : VerticalLayout {
   auto construct() -> void;
   auto reload() -> void;
   auto unload() -> void;
+  auto refresh() -> void;
+  auto eventChange() -> void;
+  auto setVisible(bool visible = true) -> ManifestViewer&;
 
   Label manifestLabel{this, Size{~0, 0}, 2};
+  ComboButton manifestList{this, Size{~0, 0}};
   TextEdit manifestView{this, Size{~0, ~0}};
 };
 
@@ -49,6 +53,24 @@ struct GraphicsViewer : VerticalLayout {
     Button refreshButton{&controlLayout, Size{80, 0}};
 };
 
+struct PropertiesViewer : VerticalLayout {
+  auto construct() -> void;
+  auto reload() -> void;
+  auto unload() -> void;
+  auto refresh() -> void;
+  auto liveRefresh() -> void;
+  auto eventChange() -> void;
+  auto setVisible(bool visible = true) -> PropertiesViewer&;
+
+  Label propertiesLabel{this, Size{~0, 0}, 2};
+  ComboButton propertiesList{this, Size{~0, 0}};
+  TextEdit propertiesView{this, Size{~0, ~0}};
+  HorizontalLayout controlLayout{this, Size{~0, 0}};
+    Widget spacer{&controlLayout, Size{~0, 0}};
+    CheckLabel liveOption{&controlLayout, Size{0, 0}, 2};
+    Button refreshButton{&controlLayout, Size{80, 0}};
+};
+
 struct TraceLogger : VerticalLayout {
   auto construct() -> void;
   auto reload() -> void;
@@ -72,6 +94,7 @@ struct ToolsWindow : Window {
       ManifestViewer manifestViewer;
       MemoryEditor memoryEditor;
       GraphicsViewer graphicsViewer;
+      PropertiesViewer propertiesViewer;
       TraceLogger traceLogger;
       HomePanel homePanel;
 };
@@ -81,4 +104,5 @@ extern ToolsWindow& toolsWindow;
 extern ManifestViewer& manifestViewer;
 extern MemoryEditor& memoryEditor;
 extern GraphicsViewer& graphicsViewer;
+extern PropertiesViewer& propertiesViewer;
 extern TraceLogger& traceLogger;

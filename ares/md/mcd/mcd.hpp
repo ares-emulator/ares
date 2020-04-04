@@ -28,8 +28,8 @@ struct MCD : M68K, Thread {
     } tracer;
   } debugger;
 
-  inline auto manifest() const -> string { return information.manifest; }
-  inline auto name() const -> string { return information.name; }
+  auto manifest() const -> string { return information.manifest; }
+  auto name() const -> string { return information.name; }
 
   //mcd.cpp
   auto load(Node::Object, Node::Object) -> void;

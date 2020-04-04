@@ -19,39 +19,39 @@ template<int Precision, int Index> struct BitField<Precision, Index> {
 
   BitField(const BitField&) = delete;
 
-  inline auto& operator=(const BitField& source) {
+  auto& operator=(const BitField& source) {
     target = target & ~mask | (bool)source << shift;
     return *this;
   }
 
-  template<typename T> inline BitField(T* source) : target((type&)*source) {
+  template<typename T> BitField(T* source) : target((type&)*source) {
     static_assert(sizeof(T) == sizeof(type));
   }
 
-  inline auto bit() const {
+  auto bit() const {
     return shift;
   }
 
-  inline operator bool() const {
+  operator bool() const {
     return target & mask;
   }
 
-  inline auto& operator=(bool source) {
+  auto& operator=(bool source) {
     target = target & ~mask | source << shift;
     return *this;
   }
 
-  inline auto& operator&=(bool source) {
+  auto& operator&=(bool source) {
     target = target & (~mask | source << shift);
     return *this;
   }
 
-  inline auto& operator^=(bool source) {
+  auto& operator^=(bool source) {
     target = target ^ source << shift;
     return *this;
   }
 
-  inline auto& operator|=(bool source) {
+  auto& operator|=(bool source) {
     target = target | source << shift;
     return *this;
   }
@@ -73,42 +73,42 @@ template<int Precision> struct BitField<Precision> {
 
   BitField(const BitField&) = delete;
 
-  inline auto& operator=(const BitField& source) {
+  auto& operator=(const BitField& source) {
     target = target & ~mask | (bool)source << shift;
     return *this;
   }
 
-  template<typename T> inline BitField(T* source, int index) : target((type&)*source) {
+  template<typename T> BitField(T* source, int index) : target((type&)*source) {
     static_assert(sizeof(T) == sizeof(type));
     if(index < 0) index = Precision + index;
     mask = 1ull << index;
     shift = index;
   }
 
-  inline auto bit() const {
+  auto bit() const {
     return shift;
   }
 
-  inline operator bool() const {
+  operator bool() const {
     return target & mask;
   }
 
-  inline auto& operator=(bool source) {
+  auto& operator=(bool source) {
     target = target & ~mask | source << shift;
     return *this;
   }
 
-  inline auto& operator&=(bool source) {
+  auto& operator&=(bool source) {
     target = target & (~mask | source << shift);
     return *this;
   }
 
-  inline auto& operator^=(bool source) {
+  auto& operator^=(bool source) {
     target = target ^ source << shift;
     return *this;
   }
 
-  inline auto& operator|=(bool source) {
+  auto& operator|=(bool source) {
     target = target | source << shift;
     return *this;
   }

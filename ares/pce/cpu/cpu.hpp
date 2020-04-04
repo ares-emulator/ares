@@ -65,7 +65,7 @@ private:
   } reset;
 
   struct Timer {
-    inline auto irqLine() const -> bool { return line; }
+    auto irqLine() const -> bool { return line; }
 
     uint1 line;
     uint1 enable;

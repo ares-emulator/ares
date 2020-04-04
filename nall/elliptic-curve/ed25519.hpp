@@ -53,19 +53,19 @@ private:
   const point B = *decompress((field(4) * reciprocal(field(5)))());
   const BarrettReduction<256> L = BarrettReduction<256>{EllipticCurve::L};
 
-  inline auto input(Hash::SHA512&) const -> void {}
+  auto input(Hash::SHA512&) const -> void {}
 
-  template<typename... P> inline auto input(Hash::SHA512& hash, uint256_t value, P&&... p) const -> void {
+  template<typename... P> auto input(Hash::SHA512& hash, uint256_t value, P&&... p) const -> void {
     for(uint byte : range(32)) hash.input(uint8_t(value >> byte * 8));
     input(hash, forward<P>(p)...);
   }
 
-  template<typename... P> inline auto input(Hash::SHA512& hash, array_view<uint8_t> value, P&&... p) const -> void {
+  template<typename... P> auto input(Hash::SHA512& hash, array_view<uint8_t> value, P&&... p) const -> void {
     hash.input(value);
     input(hash, forward<P>(p)...);
   }
 
-  template<typename... P> inline auto hash(P&&... p) const -> uint512_t {
+  template<typename... P> auto hash(P&&... p) const -> uint512_t {
     Hash::SHA512 hash;
     input(hash, forward<P>(p)...);
     uint512_t result;
@@ -73,20 +73,20 @@ private:
     return result;
   }
 
-  inline auto clamp(uint256_t p) const -> uint256_t {
+  auto clamp(uint256_t p) const -> uint256_t {
     p &= (1_u256 << 254) - 8;
     p |= (1_u256 << 254);
     return p;
   }
 
-  inline auto onCurve(point p) const -> bool {
+  auto onCurve(point p) const -> bool {
     if(!p.z) return false;
     if(p.x * p.y - p.z * p.t) return false;
     if(square(p.y) - square(p.x) - square(p.z) - square(p.t) * D) return false;
     return true;
   }
 
-  inline auto decompress(uint256_t c) const -> maybe<point> {
+  auto decompress(uint256_t c) const -> maybe<point> {
     field y = c & ~0_u256 >> 1;
     field x = squareRoot((square(y) - 1) * reciprocal(D * square(y) + 1));
     if(c >> 255) x = -x;
@@ -95,14 +95,14 @@ private:
     return p;
   }
 
-  inline auto compress(point p) const -> uint256_t {
+  auto compress(point p) const -> uint256_t {
     field r = reciprocal(p.z);
     field x = p.x * r;
     field y = p.y * r;
     return (x & 1) << 255 | (y & ~0_u256 >> 1);
   }
 
-  inline auto edwardsDouble(point p) const -> point {
+  auto edwardsDouble(point p) const -> point {
     field a = square(p.x);
     field b = square(p.y);
     field c = square(p.z);
@@ -114,7 +114,7 @@ private:
     return {e * f, g * h, f * g, e * h};
   }
 
-  inline auto edwardsAdd(point p, point q) const -> point {
+  auto edwardsAdd(point p, point q) const -> point {
     field a = (p.y - p.x) * (q.y - q.x);
     field b = (p.y + p.x) * (q.y + q.x);
     field c = (p.t + p.t) * q.t * D;
@@ -126,7 +126,7 @@ private:
     return {e * f, g * h, f * g, e * h};
   }
 
-  inline auto scalarMultiply(point q, uint256_t exponent) const -> point {
+  auto scalarMultiply(point q, uint256_t exponent) const -> point {
     point p{0, 1, 1, 0}, c;
     for(uint bit : reverse(range(253))) {
       p = edwardsDouble(p);

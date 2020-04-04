@@ -55,11 +55,11 @@ struct System : IO {
     bool rightLatch = 0;
   } controls;
 
-  inline auto abstract() const -> bool { return information.abstract; }
-  inline auto model() const -> Model { return information.model; }
-  inline auto soc() const -> SoC { return information.soc; }
-  inline auto mode() const -> uint3 { return io.mode; }
-  inline auto memory() const -> uint { return io.mode.bit(2) == 0 ? 16_KiB : 64_KiB; }
+  auto abstract() const -> bool { return information.abstract; }
+  auto model() const -> Model { return information.model; }
+  auto soc() const -> SoC { return information.soc; }
+  auto mode() const -> uint3 { return io.mode; }
+  auto memory() const -> uint { return io.mode.bit(2) == 0 ? 16_KiB : 64_KiB; }
 
   //mode:
   //xx0 => planar tiledata

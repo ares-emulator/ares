@@ -9,27 +9,27 @@ struct V9938 {
   virtual auto irq(bool line) -> void = 0;
   virtual auto frame() -> void = 0;
 
-  inline auto timing() const -> bool { return latch.timing; }
-  inline auto overscan() const -> bool { return latch.overscan; }
-  inline auto interlace() const -> bool { return latch.interlace; }
-  inline auto field() const -> bool { return latch.field; }
+  auto timing() const -> bool { return latch.timing; }
+  auto overscan() const -> bool { return latch.overscan; }
+  auto interlace() const -> bool { return latch.interlace; }
+  auto field() const -> bool { return latch.field; }
 
-  inline auto vtotal() const -> uint { return !latch.timing ? 262 : 313; }
-  inline auto vlines() const -> uint { return !latch.overscan ? 192 : 212; }
+  auto vtotal() const -> uint { return !latch.timing ? 262 : 313; }
+  auto vlines() const -> uint { return !latch.overscan ? 192 : 212; }
 
-  inline auto t1() const -> bool { return screen.mode == 0b00001; }
-  inline auto t2() const -> bool { return screen.mode == 0b01001; }
-  inline auto mc() const -> bool { return screen.mode == 0b00010; }
-  inline auto g1() const -> bool { return screen.mode == 0b00000; }
-  inline auto g2() const -> bool { return screen.mode == 0b00100; }
-  inline auto g3() const -> bool { return screen.mode == 0b01000; }
-  inline auto g4() const -> bool { return screen.mode == 0b01100; }
-  inline auto g5() const -> bool { return screen.mode == 0b10000; }
-  inline auto g6() const -> bool { return screen.mode == 0b10100; }
-  inline auto g7() const -> bool { return screen.mode == 0b11100; }
+  auto t1() const -> bool { return screen.mode == 0b00001; }
+  auto t2() const -> bool { return screen.mode == 0b01001; }
+  auto mc() const -> bool { return screen.mode == 0b00010; }
+  auto g1() const -> bool { return screen.mode == 0b00000; }
+  auto g2() const -> bool { return screen.mode == 0b00100; }
+  auto g3() const -> bool { return screen.mode == 0b01000; }
+  auto g4() const -> bool { return screen.mode == 0b01100; }
+  auto g5() const -> bool { return screen.mode == 0b10000; }
+  auto g6() const -> bool { return screen.mode == 0b10100; }
+  auto g7() const -> bool { return screen.mode == 0b11100; }
 
-  inline auto s1() const -> bool { return mc() || g1() || g2(); }
-  inline auto s2() const -> bool { return g3() || g4() || g5() || g6() || g7(); }
+  auto s1() const -> bool { return mc() || g1() || g2(); }
+  auto s2() const -> bool { return g3() || g4() || g5() || g6() || g7(); }
 
   //v9938.cpp
   auto main() -> void;

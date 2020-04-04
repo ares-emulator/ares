@@ -31,9 +31,9 @@ struct image {
       return !operator==(source);
     }
 
-    alwaysinline auto mask() const { return _mask; }
-    alwaysinline auto depth() const { return _depth; }
-    alwaysinline auto shift() const { return _shift; }
+    auto mask() const { return _mask; }
+    auto depth() const { return _depth; }
+    auto shift() const { return _shift; }
 
   private:
     uint64_t _mask;
@@ -99,22 +99,22 @@ struct image {
   static inline auto normalize(uint64_t color, uint sourceDepth, uint targetDepth) -> uint64_t;
 
   //access
-  alwaysinline auto data() { return _data; }
-  alwaysinline auto data() const { return _data; }
-  alwaysinline auto width() const { return _width; }
-  alwaysinline auto height() const { return _height; }
+  auto data() { return _data; }
+  auto data() const { return _data; }
+  auto width() const { return _width; }
+  auto height() const { return _height; }
 
-  alwaysinline auto endian() const { return _endian; }
-  alwaysinline auto depth() const { return _depth; }
-  alwaysinline auto stride() const { return (_depth + 7) >> 3; }
+  auto endian() const { return _endian; }
+  auto depth() const { return _depth; }
+  auto stride() const { return (_depth + 7) >> 3; }
 
-  alwaysinline auto pitch() const { return _width * stride(); }
-  alwaysinline auto size() const { return _height * pitch(); }
+  auto pitch() const { return _width * stride(); }
+  auto size() const { return _height * pitch(); }
 
-  alwaysinline auto alpha() const { return _alpha; }
-  alwaysinline auto red() const { return _red; }
-  alwaysinline auto green() const { return _green; }
-  alwaysinline auto blue() const { return _blue; }
+  auto alpha() const { return _alpha; }
+  auto red() const { return _red; }
+  auto green() const { return _green; }
+  auto blue() const { return _blue; }
 
 private:
   //core.hpp

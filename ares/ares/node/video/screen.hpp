@@ -2,21 +2,21 @@ struct Screen : Object {
   DeclareClass(Screen, "Screen")
   using Object::Object;
 
-  inline auto width() const -> uint { return _width; }
-  inline auto height() const -> uint { return _height; }
-  inline auto scaleX() const -> double { return _scaleX; }
-  inline auto scaleY() const -> double { return _scaleY; }
-  inline auto aspectX() const -> double { return _aspectX; }
-  inline auto aspectY() const -> double { return _aspectY; }
-  inline auto colors() const -> uint { return _colors; }
+  auto width() const -> uint { return _width; }
+  auto height() const -> uint { return _height; }
+  auto scaleX() const -> double { return _scaleX; }
+  auto scaleY() const -> double { return _scaleY; }
+  auto aspectX() const -> double { return _aspectX; }
+  auto aspectY() const -> double { return _aspectY; }
+  auto colors() const -> uint { return _colors; }
 
-  inline auto saturation() const -> double { return _saturation; }
-  inline auto gamma() const -> double { return _gamma; }
-  inline auto luminance() const -> double { return _luminance; }
+  auto saturation() const -> double { return _saturation; }
+  auto gamma() const -> double { return _gamma; }
+  auto luminance() const -> double { return _luminance; }
 
-  inline auto colorBleed() const -> bool { return _colorBleed; }
-  inline auto interframeBlending() const -> bool { return _interframeBlending; }
-  inline auto rotation() const -> uint { return _rotation; }
+  auto colorBleed() const -> bool { return _colorBleed; }
+  auto interframeBlending() const -> bool { return _interframeBlending; }
+  auto rotation() const -> uint { return _rotation; }
 
   auto resetPalette() -> void;
   auto resetSprites() -> void;

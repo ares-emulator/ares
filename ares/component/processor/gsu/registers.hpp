@@ -2,32 +2,32 @@ struct Register {
   uint16 data = 0;
   bool modified = false;
 
-  inline operator uint() const {
+  operator uint() const {
     return data;
   }
 
-  inline auto assign(uint value) -> uint16 {
+  auto assign(uint value) -> uint16 {
     modified = true;
     return data = value;
   }
 
-  inline auto operator++() { return assign(data + 1); }
-  inline auto operator--() { return assign(data - 1); }
-  inline auto operator++(int) { uint r = data; assign(data + 1); return r; }
-  inline auto operator--(int) { uint r = data; assign(data - 1); return r; }
-  inline auto operator   = (uint i) { return assign(i); }
-  inline auto operator  |= (uint i) { return assign(data | i); }
-  inline auto operator  ^= (uint i) { return assign(data ^ i); }
-  inline auto operator  &= (uint i) { return assign(data & i); }
-  inline auto operator <<= (uint i) { return assign(data << i); }
-  inline auto operator >>= (uint i) { return assign(data >> i); }
-  inline auto operator  += (uint i) { return assign(data + i); }
-  inline auto operator  -= (uint i) { return assign(data - i); }
-  inline auto operator  *= (uint i) { return assign(data * i); }
-  inline auto operator  /= (uint i) { return assign(data / i); }
-  inline auto operator  %= (uint i) { return assign(data % i); }
+  auto operator++() { return assign(data + 1); }
+  auto operator--() { return assign(data - 1); }
+  auto operator++(int) { uint r = data; assign(data + 1); return r; }
+  auto operator--(int) { uint r = data; assign(data - 1); return r; }
+  auto operator   = (uint i) { return assign(i); }
+  auto operator  |= (uint i) { return assign(data | i); }
+  auto operator  ^= (uint i) { return assign(data ^ i); }
+  auto operator  &= (uint i) { return assign(data & i); }
+  auto operator <<= (uint i) { return assign(data << i); }
+  auto operator >>= (uint i) { return assign(data >> i); }
+  auto operator  += (uint i) { return assign(data + i); }
+  auto operator  -= (uint i) { return assign(data - i); }
+  auto operator  *= (uint i) { return assign(data * i); }
+  auto operator  /= (uint i) { return assign(data / i); }
+  auto operator  %= (uint i) { return assign(data % i); }
 
-  inline auto operator   = (const Register& value) { return assign(value); }
+  auto operator   = (const Register& value) { return assign(value); }
 
   Register() = default;
   Register(const Register&) = delete;
@@ -54,8 +54,8 @@ struct SFR {
   SFR(const SFR&) = delete;
   auto operator=(const SFR&) = delete;
 
-  inline operator uint() const { return data & 0x9f7e; }
-  inline auto& operator=(const uint value) { return data = value, *this; }
+  operator uint() const { return data & 0x9f7e; }
+  auto& operator=(const uint value) { return data = value, *this; }
 };
 
 struct SCMR {

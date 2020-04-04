@@ -15,9 +15,9 @@ struct System {
 
   enum class Region : uint { NTSC, PAL };
 
-  inline auto region() const -> Region { return information.region; }
-  inline auto cpuFrequency() const -> double { return information.cpuFrequency; }
-  inline auto apuFrequency() const -> double { return information.apuFrequency; }
+  auto region() const -> Region { return information.region; }
+  auto cpuFrequency() const -> double { return information.cpuFrequency; }
+  auto apuFrequency() const -> double { return information.apuFrequency; }
 
   auto run() -> void;
 

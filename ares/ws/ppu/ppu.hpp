@@ -25,11 +25,11 @@ struct PPU : Thread, IO {
     Node::Sprite volumeB3;
   } icon;
 
-  inline auto planar() const -> bool { return system.mode().bit(0) == 0; }
-  inline auto packed() const -> bool { return system.mode().bit(0) == 1; }
-  inline auto depth() const -> uint { return system.mode().bit(1,2) != 3 ? 2 : 4; }
-  inline auto grayscale() const -> bool { return system.mode().bit(1,2) == 0; }
-  inline auto tilemask() const -> uint { return 1023 >> !system.mode().bit(2); }
+  auto planar() const -> bool { return system.mode().bit(0) == 0; }
+  auto packed() const -> bool { return system.mode().bit(0) == 1; }
+  auto depth() const -> uint { return system.mode().bit(1,2) != 3 ? 2 : 4; }
+  auto grayscale() const -> bool { return system.mode().bit(1,2) == 0; }
+  auto tilemask() const -> uint { return 1023 >> !system.mode().bit(2); }
 
   //ppu.cpp
   auto load(Node::Object, Node::Object) -> void;

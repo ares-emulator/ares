@@ -4,7 +4,7 @@ namespace nall {
 
 //launch a new process and inject specified DLL into it
 
-auto launch(const char* applicationName, const char* libraryName, uint32 entryPoint) -> bool {
+inline auto launch(const char* applicationName, const char* libraryName, uint32 entryPoint) -> bool {
   //if a launcher does not send at least one message, a wait cursor will appear
   PostThreadMessage(GetCurrentThreadId(), WM_USER, 0, 0);
   MSG msg;

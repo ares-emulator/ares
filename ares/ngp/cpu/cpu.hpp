@@ -30,7 +30,7 @@ struct CPU : TLCS900H, Thread {
   //palette, resulting in incorrect colors. . I am not certain how, but the NGPC
   //blocks this write command, so I attempt to simulate that here.
   //VPU::write(uint24, uint8) calls this function.
-  inline auto privilegedMode() const -> bool {
+  auto privilegedMode() const -> bool {
     return r.pc.l.l0 >= 0xff0000;  //may also be r.rfp == 3
   }
 
@@ -139,14 +139,14 @@ struct CPU : TLCS900H, Thread {
 
   //ports.cpp
   struct PortFlow {
-    inline auto readable() const { return flow == 0; }  //in
-    inline auto writable() const { return flow == 1; }  //out
+    auto readable() const { return flow == 0; }  //in
+    auto writable() const { return flow == 1; }  //out
     uint1 flow;
   };
 
   struct PortMode {
-    inline auto internal() const { return mode == 0; }  //port
-    inline auto external() const { return mode == 1; }  //timer, etc
+    auto internal() const { return mode == 0; }  //port
+    auto external() const { return mode == 1; }  //timer, etc
     uint1 mode;
   };
 

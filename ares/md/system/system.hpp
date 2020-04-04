@@ -16,9 +16,9 @@ struct System {
 
   enum class Region : uint { NTSCJ, NTSCU, PAL };
 
-  inline auto region() const -> Region { return information.region; }
-  inline auto megaCD() const -> bool { return information.megaCD; }
-  inline auto frequency() const -> double { return information.frequency; }
+  auto region() const -> Region { return information.region; }
+  auto megaCD() const -> bool { return information.megaCD; }
+  auto frequency() const -> double { return information.frequency; }
 
   auto run() -> void;
 

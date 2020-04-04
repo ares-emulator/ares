@@ -15,10 +15,10 @@ struct PPU : Thread, PPUcounter {
     } memory;
   } debugger;
 
-  inline auto hires() const -> bool { return io.pseudoHires || io.bgMode == 5 || io.bgMode == 6; }
-  inline auto interlace() const -> bool { return state.interlace; }
-  inline auto overscan() const -> bool { return state.overscan; }
-  inline auto vdisp() const -> uint { return state.vdisp; }
+  auto hires() const -> bool { return io.pseudoHires || io.bgMode == 5 || io.bgMode == 6; }
+  auto interlace() const -> bool { return state.interlace; }
+  auto overscan() const -> bool { return state.overscan; }
+  auto vdisp() const -> uint { return state.vdisp; }
 
   //ppu.cpp
   auto load(Node::Object parent, Node::Object from) -> void;
@@ -61,7 +61,7 @@ private:
   } ppu1, ppu2;
 
   struct VRAM {
-    inline auto& operator[](uint address) { return data[address & mask]; }
+    auto& operator[](uint address) { return data[address & mask]; }
     uint16 data[64_KiB];
     uint16 mask = 0x7fff;
     uint16 address;

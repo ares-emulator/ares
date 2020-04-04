@@ -37,9 +37,9 @@ struct CPU : ARM7TDMI, Thread, IO {
     Cartridge    = 0x2000,
   };};
 
-  inline auto clock() const -> uint { return context.clock; }
-  inline auto halted() const -> bool { return context.halted; }
-  inline auto stopped() const -> bool { return context.stopped; }
+  auto clock() const -> uint { return context.clock; }
+  auto halted() const -> bool { return context.halted; }
+  auto stopped() const -> bool { return context.stopped; }
 
   //cpu.cpp
   auto load(Node::Object, Node::Object) -> void;
@@ -84,8 +84,8 @@ struct CPU : ARM7TDMI, Thread, IO {
 
 //private:
   struct uintVN {
-    inline auto operator()() const -> uint32 { return data & mask; }
-    inline auto setBits(uint bits) -> void { mask = (1 << bits) - 1; }
+    auto operator()() const -> uint32 { return data & mask; }
+    auto setBits(uint bits) -> void { mask = (1 << bits) - 1; }
 
     uint32 data;
     uint32 mask;
@@ -210,8 +210,8 @@ struct CPU : ARM7TDMI, Thread, IO {
   } memory;
 
   struct {
-    inline auto empty() const { return addr == load; }
-    inline auto full() const { return load - addr == 16; }
+    auto empty() const { return addr == load; }
+    auto full() const { return load - addr == 16; }
 
     uint16 slot[8];
     uint32 addr;       //read location of slot buffer

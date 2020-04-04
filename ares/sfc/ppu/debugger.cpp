@@ -122,4 +122,16 @@ auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     }
     return output;
   });
+
+  properties.registers = Node::append<Node::Properties>(parent, from, "PPU Registers");
+  properties.registers->setQuery([&] { return registers(); });
+}
+
+auto PPU::Debugger::registers() -> string {
+  string output;
+  output.append("Display Disable: ", ppu.io.displayDisable, "\n");
+  output.append("Display Brightness: ", ppu.io.displayBrightness, "\n");
+  output.append("BG Mode: ", ppu.io.bgMode, "\n");
+  output.append("BG Priority: ", ppu.io.bgPriority, "\n");
+  return output;
 }

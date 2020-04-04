@@ -4,9 +4,9 @@ struct Graphics : Object {
   Graphics(string name = {}) : Object(name) {
   }
 
-  inline auto width() const -> uint { return _width; }
-  inline auto height() const -> uint { return _height; }
-  inline auto capture() const -> vector<uint32_t> { if(_capture) return _capture(); return {}; }
+  auto width() const -> uint { return _width; }
+  auto height() const -> uint { return _height; }
+  auto capture() const -> vector<uint32_t> { if(_capture) return _capture(); return {}; }
 
   auto setSize(uint width, uint height) -> void { _width = width, _height = height; }
   auto setCapture(function<vector<uint32_t> ()> capture) -> void { _capture = capture; }

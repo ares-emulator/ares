@@ -24,7 +24,7 @@ private:
   struct point { field x, z; };
   const BarrettReduction<256> P = BarrettReduction<256>{EllipticCurve::P};
 
-  inline auto montgomeryDouble(point p) const -> point {
+  auto montgomeryDouble(point p) const -> point {
     field a = square(p.x + p.z);
     field b = square(p.x - p.z);
     field c = a - b;
@@ -32,14 +32,14 @@ private:
     return {a * b, c * d};
   }
 
-  inline auto montgomeryAdd(point p, point q, field b) const -> point {
+  auto montgomeryAdd(point p, point q, field b) const -> point {
     return {
       square(p.x * q.x - p.z * q.z),
       square(p.x * q.z - p.z * q.x) * b
     };
   }
 
-  inline auto scalarMultiply(field b, uint256_t exponent) const -> point {
+  auto scalarMultiply(field b, uint256_t exponent) const -> point {
     point p{1, 0}, q{b, 1};
     for(uint bit : reverse(range(255))) {
       bool condition = exponent >> bit & 1;

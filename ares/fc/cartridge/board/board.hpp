@@ -1,8 +1,8 @@
 struct Board {
   struct Memory {
-    inline Memory(uint8_t* data, uint size) : data(data), size(size) {}
-    inline Memory() : data(nullptr), size(0u), writable(false) {}
-    inline ~Memory() { if(data) delete[] data; }
+    Memory(uint8_t* data, uint size) : data(data), size(size) {}
+    Memory() : data(nullptr), size(0u), writable(false) {}
+    ~Memory() { if(data) delete[] data; }
 
     inline auto read(uint addr) const -> uint8;
     inline auto write(uint addr, uint8 data) -> void;

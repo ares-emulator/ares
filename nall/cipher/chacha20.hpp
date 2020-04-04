@@ -49,7 +49,7 @@ struct ChaCha20 {
   }
 
 //protected:
-  inline auto rol(uint32_t value, uint bits) -> uint32_t {
+  auto rol(uint32_t value, uint bits) -> uint32_t {
     return value << bits | value >> 32 - bits;
   }
 

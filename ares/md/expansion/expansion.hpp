@@ -6,9 +6,9 @@ struct Expansion {
   Node::Port port;
   Node::Peripheral node;
 
-  inline auto manifest() const -> string { return information.manifest; }
-  inline auto name() const -> string { return information.name; }
-  inline auto regions() const -> vector<string> { return information.regions; }
+  auto manifest() const -> string { return information.manifest; }
+  auto name() const -> string { return information.name; }
+  auto regions() const -> vector<string> { return information.regions; }
 
   auto load(Node::Object, Node::Object) -> void;
   auto unload() -> void;

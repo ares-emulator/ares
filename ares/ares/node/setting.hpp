@@ -7,7 +7,7 @@ struct Setting : Object {
   DeclareClass(Setting, "Setting")
   using Object::Object;
 
-  inline auto dynamic() const -> bool { return _dynamic; }
+  auto dynamic() const -> bool { return _dynamic; }
 
   auto setDynamic(bool dynamic) -> void {
     _dynamic = dynamic;
@@ -44,9 +44,9 @@ template<typename Cast, typename Type> struct Abstract : Setting {
     _modify = modify;
   }
 
-  inline auto modify(Type value) const -> void { if(_modify) return _modify(value); }
-  inline auto value() const -> Type { return _currentValue; }
-  inline auto latch() const -> Type { return _latchedValue; }
+  auto modify(Type value) const -> void { if(_modify) return _modify(value); }
+  auto value() const -> Type { return _currentValue; }
+  auto latch() const -> Type { return _latchedValue; }
 
   auto setModify(function<void (Type)> modify) {
     _modify = modify;

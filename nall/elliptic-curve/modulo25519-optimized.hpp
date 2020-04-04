@@ -9,15 +9,15 @@ static const uint256_t P = (1_u256 << 255) - 19;
 #define Mask ((1ull << 51) - 1)
 
 struct Modulo25519 {
-  inline Modulo25519() = default;
-  inline Modulo25519(const Modulo25519&) = default;
-  inline Modulo25519(uint64_t a, uint64_t b = 0, uint64_t c = 0, uint64_t d = 0, uint64_t e = 0) : l{a, b, c, d, e} {}
-  inline Modulo25519(uint256_t n);
+  Modulo25519() = default;
+  Modulo25519(const Modulo25519&) = default;
+  Modulo25519(uint64_t a, uint64_t b = 0, uint64_t c = 0, uint64_t d = 0, uint64_t e = 0) : l{a, b, c, d, e} {}
+  Modulo25519(uint256_t n);
 
-  inline explicit operator bool() const { return (bool)operator()(); }
-  inline auto operator[](uint index) -> uint64_t& { return l[index]; }
-  inline auto operator[](uint index) const -> uint64_t { return l[index]; }
-  inline auto operator()() const -> uint256_t;
+  explicit operator bool() const { return (bool)operator()(); }
+  auto operator[](uint index) -> uint64_t& { return l[index]; }
+  auto operator[](uint index) const -> uint64_t { return l[index]; }
+  auto operator()() const -> uint256_t;
 
 private:
   uint64_t l[5];  //51-bits per limb; 255-bits total

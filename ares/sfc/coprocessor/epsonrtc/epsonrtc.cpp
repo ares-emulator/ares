@@ -128,15 +128,15 @@ auto EpsonRTC::synchronize(uint64 timestamp) -> void {
   resync = true;  //alert program that time has changed
 }
 
-auto EpsonRTC::read(uint24 addr, uint8 data) -> uint8 {
+auto EpsonRTC::read(uint24 address, uint8 data) -> uint8 {
   cpu.synchronize(*this);
-  addr &= 3;
+  address &= 3;
 
-  if(addr == 0) {
+  if(address == 0) {
     return chipselect;
   }
 
-  if(addr == 1) {
+  if(address == 1) {
     if(chipselect != 1) return 0;
     if(ready == 0) return 0;
     if(state == State::Write) return mdr;
@@ -146,24 +146,24 @@ auto EpsonRTC::read(uint24 addr, uint8 data) -> uint8 {
     return rtcRead(offset++);
   }
 
-  if(addr == 2) {
+  if(address == 2) {
     return ready << 7;
   }
 
   return data;
 }
 
-auto EpsonRTC::write(uint24 addr, uint8 data) -> void {
+auto EpsonRTC::write(uint24 address, uint8 data) -> void {
   cpu.synchronize(*this);
-  addr &= 3, data &= 15;
+  address &= 3, data &= 15;
 
-  if(addr == 0) {
+  if(address == 0) {
     chipselect = data;
     if(chipselect != 1) rtcReset();
     ready = 1;
   }
 
-  if(addr == 1) {
+  if(address == 1) {
     if(chipselect != 1) return;
     if(ready == 0) return;
 

@@ -25,6 +25,7 @@ namespace ares::Core {
   //struct Debug;
       struct Memory;
       struct Graphics;
+      struct Properties;
       struct Tracer;
         struct Notification;
         struct Instruction;
@@ -57,6 +58,7 @@ namespace ares::Node {
   //using Debug;
       using Memory         = shared_pointer<Core::Memory>;
       using Graphics       = shared_pointer<Core::Graphics>;
+      using Properties     = shared_pointer<Core::Properties>;
       using Tracer         = shared_pointer<Core::Tracer>;
         using Notification = shared_pointer<Core::Notification>;
         using Instruction  = shared_pointer<Core::Instruction>;
@@ -83,6 +85,7 @@ namespace ares::Core {
   #include <ares/node/audio/stream.hpp>
   #include <ares/node/debug/memory.hpp>
   #include <ares/node/debug/graphics.hpp>
+  #include <ares/node/debug/properties.hpp>
   #include <ares/node/debug/tracer.hpp>
   #include <ares/node/debug/notification.hpp>
   #include <ares/node/debug/instruction.hpp>

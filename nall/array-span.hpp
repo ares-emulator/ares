@@ -8,32 +8,32 @@ template<typename T> struct array_span : array_view<T> {
   using type = array_span;
   using super = array_view<T>;
 
-  inline array_span() {
+  array_span() {
     super::_data = nullptr;
     super::_size = 0;
   }
 
-  inline array_span(nullptr_t) {
+  array_span(nullptr_t) {
     super::_data = nullptr;
     super::_size = 0;
   }
 
-  inline array_span(void* data, uint64_t size) {
+  array_span(void* data, uint64_t size) {
     super::_data = (T*)data;
     super::_size = (int)size;
   }
 
-  inline operator T*() { return (T*)super::operator const T*(); }
+  operator T*() { return (T*)super::operator const T*(); }
 
-  inline auto operator[](uint index) -> T& { return (T&)super::operator[](index); }
+  auto operator[](uint index) -> T& { return (T&)super::operator[](index); }
 
-  template<typename U = T> inline auto data() -> U* { return (U*)super::_data; }
+  template<typename U = T> auto data() -> U* { return (U*)super::_data; }
 
-  inline auto begin() -> iterator<T> { return {(T*)super::_data, (uint)0}; }
-  inline auto end() -> iterator<T> { return {(T*)super::_data, (uint)super::_size}; }
+  auto begin() -> iterator<T> { return {(T*)super::_data, (uint)0}; }
+  auto end() -> iterator<T> { return {(T*)super::_data, (uint)super::_size}; }
 
-  inline auto rbegin() -> reverse_iterator<T> { return {(T*)super::_data, (uint)super::_size - 1}; }
-  inline auto rend() -> reverse_iterator<T> { return {(T*)super::_data, (uint)-1}; }
+  auto rbegin() -> reverse_iterator<T> { return {(T*)super::_data, (uint)super::_size - 1}; }
+  auto rend() -> reverse_iterator<T> { return {(T*)super::_data, (uint)-1}; }
 
   auto write(T value) -> void {
     operator[](0) = value;

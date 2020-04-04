@@ -4,7 +4,7 @@ namespace nall {
 
 template<uint Precision> struct Integer {
   static_assert(Precision >= 1 && Precision <= 64);
-  static inline constexpr auto bits() -> uint { return Precision; }
+  static constexpr auto bits() -> uint { return Precision; }
   using stype =
     conditional_t<Precision <=  8,  int8_t,
     conditional_t<Precision <= 16, int16_t,
@@ -12,71 +12,71 @@ template<uint Precision> struct Integer {
     conditional_t<Precision <= 64, int64_t,
     void>>>>;
   using utype = typename Natural<Precision>::utype;
-  static inline constexpr auto mask() -> utype { return ~0ull >> 64 - Precision; }
-  static inline constexpr auto sign() -> utype { return 1ull << Precision - 1; }
+  static constexpr auto mask() -> utype { return ~0ull >> 64 - Precision; }
+  static constexpr auto sign() -> utype { return 1ull << Precision - 1; }
 
-  inline Integer() : data(0) {}
-  template<uint Bits> inline Integer(Integer<Bits> value) { data = cast(value); }
-  template<typename T> inline Integer(const T& value) { data = cast(value); }
-  explicit inline Integer(const char* value) { data = cast(toInteger(value)); }
+  Integer() : data(0) {}
+  template<uint Bits> Integer(Integer<Bits> value) { data = cast(value); }
+  template<typename T> Integer(const T& value) { data = cast(value); }
+  explicit Integer(const char* value) { data = cast(toInteger(value)); }
 
-  inline operator stype() const { return data; }
+  operator stype() const { return data; }
 
-  inline auto operator++(int) { auto value = *this; data = cast(data + 1); return value; }
-  inline auto operator--(int) { auto value = *this; data = cast(data - 1); return value; }
+  auto operator++(int) { auto value = *this; data = cast(data + 1); return value; }
+  auto operator--(int) { auto value = *this; data = cast(data - 1); return value; }
 
-  inline auto& operator++() { data = cast(data + 1); return *this; }
-  inline auto& operator--() { data = cast(data - 1); return *this; }
+  auto& operator++() { data = cast(data + 1); return *this; }
+  auto& operator--() { data = cast(data - 1); return *this; }
 
-  template<typename T> inline auto& operator  =(const T& value) { data = cast(        value); return *this; }
-  template<typename T> inline auto& operator *=(const T& value) { data = cast(data  * value); return *this; }
-  template<typename T> inline auto& operator /=(const T& value) { data = cast(data  / value); return *this; }
-  template<typename T> inline auto& operator %=(const T& value) { data = cast(data  % value); return *this; }
-  template<typename T> inline auto& operator +=(const T& value) { data = cast(data  + value); return *this; }
-  template<typename T> inline auto& operator -=(const T& value) { data = cast(data  - value); return *this; }
-  template<typename T> inline auto& operator<<=(const T& value) { data = cast(data << value); return *this; }
-  template<typename T> inline auto& operator>>=(const T& value) { data = cast(data >> value); return *this; }
-  template<typename T> inline auto& operator &=(const T& value) { data = cast(data  & value); return *this; }
-  template<typename T> inline auto& operator ^=(const T& value) { data = cast(data  ^ value); return *this; }
-  template<typename T> inline auto& operator |=(const T& value) { data = cast(data  | value); return *this; }
+  template<typename T> auto& operator  =(const T& value) { data = cast(        value); return *this; }
+  template<typename T> auto& operator *=(const T& value) { data = cast(data  * value); return *this; }
+  template<typename T> auto& operator /=(const T& value) { data = cast(data  / value); return *this; }
+  template<typename T> auto& operator %=(const T& value) { data = cast(data  % value); return *this; }
+  template<typename T> auto& operator +=(const T& value) { data = cast(data  + value); return *this; }
+  template<typename T> auto& operator -=(const T& value) { data = cast(data  - value); return *this; }
+  template<typename T> auto& operator<<=(const T& value) { data = cast(data << value); return *this; }
+  template<typename T> auto& operator>>=(const T& value) { data = cast(data >> value); return *this; }
+  template<typename T> auto& operator &=(const T& value) { data = cast(data  & value); return *this; }
+  template<typename T> auto& operator ^=(const T& value) { data = cast(data  ^ value); return *this; }
+  template<typename T> auto& operator |=(const T& value) { data = cast(data  | value); return *this; }
 
-  inline auto bit(int index) -> DynamicBitRange<Integer> { return {*this, index}; }
-  inline auto bit(int index) const -> const DynamicBitRange<Integer> { return {(Integer&)*this, index}; }
+  auto bit(int index) -> DynamicBitRange<Integer> { return {*this, index}; }
+  auto bit(int index) const -> const DynamicBitRange<Integer> { return {(Integer&)*this, index}; }
 
-  inline auto bit(int lo, int hi) -> DynamicBitRange<Integer> { return {*this, lo, hi}; }
-  inline auto bit(int lo, int hi) const -> const DynamicBitRange<Integer> { return {(Integer&)*this, lo, hi}; }
+  auto bit(int lo, int hi) -> DynamicBitRange<Integer> { return {*this, lo, hi}; }
+  auto bit(int lo, int hi) const -> const DynamicBitRange<Integer> { return {(Integer&)*this, lo, hi}; }
 
-  inline auto byte(int index) -> DynamicBitRange<Integer> { return {*this, index * 8 + 0, index * 8 + 7}; }
-  inline auto byte(int index) const -> const DynamicBitRange<Integer> { return {(Integer&)*this, index * 8 + 0, index * 8 + 7}; }
+  auto byte(int index) -> DynamicBitRange<Integer> { return {*this, index * 8 + 0, index * 8 + 7}; }
+  auto byte(int index) const -> const DynamicBitRange<Integer> { return {(Integer&)*this, index * 8 + 0, index * 8 + 7}; }
 
-  inline auto mask(int index) const -> utype {
+  auto mask(int index) const -> utype {
     return data & 1 << index;
   }
 
-  inline auto mask(int lo, int hi) const -> utype {
+  auto mask(int lo, int hi) const -> utype {
     return data & (~0ull >> 64 - (hi - lo + 1) << lo);
   }
 
-  inline auto slice(int index) const { return Natural<>{bit(index)}; }
-  inline auto slice(int lo, int hi) const { return Natural<>{bit(lo, hi)}; }
+  auto slice(int index) const { return Natural<>{bit(index)}; }
+  auto slice(int lo, int hi) const { return Natural<>{bit(lo, hi)}; }
 
-  inline auto clamp(uint bits) -> stype {
+  auto clamp(uint bits) -> stype {
     const int64_t b = 1ull << bits - 1;
     const int64_t m = b - 1;
     return data > m ? m : data < -b ? -b : data;
   }
 
-  inline auto clip(uint bits) -> stype {
+  auto clip(uint bits) -> stype {
     const uint64_t b = 1ull << bits - 1;
     const uint64_t m = b * 2 - 1;
     return (data & m ^ b) - b;
   }
 
-  inline auto serialize(serializer& s) { s(data); }
-  inline auto natural() const -> Natural<Precision>;
+  auto serialize(serializer& s) { s(data); }
+  auto natural() const -> Natural<Precision>;
 
 private:
-  inline auto cast(stype value) const -> stype {
+  auto cast(stype value) const -> stype {
     return (value & mask() ^ sign()) - sign();
   }
 

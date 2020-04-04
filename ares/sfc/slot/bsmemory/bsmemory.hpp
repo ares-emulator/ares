@@ -20,11 +20,11 @@ struct BSMemory : Thread {
   Node::Peripheral node;
   uint ROM = 1;
 
-  inline auto manifest() const -> string { return information.manifest; }
-  inline auto name() const -> string { return information.name; }
-  inline auto size() const -> uint { return memory.size(); }
-  inline auto writable() const { return pin.writable; }
-  inline auto writable(bool writable) { pin.writable = !ROM && writable; }
+  auto manifest() const -> string { return information.manifest; }
+  auto name() const -> string { return information.name; }
+  auto size() const -> uint { return memory.size(); }
+  auto writable() const { return pin.writable; }
+  auto writable(bool writable) { pin.writable = !ROM && writable; }
 
   //bsmemory.cpp
   auto load(Node::Peripheral, Node::Peripheral) -> void;

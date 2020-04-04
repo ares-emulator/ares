@@ -121,7 +121,10 @@ Presentation::Presentation() {
   graphicsViewerAction.setText("Graphics").setIcon(Icon::Emblem::Image).onActivate([&] {
     toolsWindow.show("Graphics");
   });
-  traceLoggerAction.setText("Tracer").setIcon(Icon::Emblem::Text).onActivate([&] {
+  propertiesViewerAction.setText("Properties").setIcon(Icon::Emblem::Text).onActivate([&] {
+    toolsWindow.show("Properties");
+  });
+  traceLoggerAction.setText("Tracer").setIcon(Icon::Emblem::Script).onActivate([&] {
     toolsWindow.show("Tracer");
   });
 

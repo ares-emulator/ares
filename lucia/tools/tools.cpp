@@ -2,6 +2,7 @@
 #include "manifest.cpp"
 #include "memory.cpp"
 #include "graphics.cpp"
+#include "properties.cpp"
 #include "tracer.cpp"
 
 namespace Instances { Instance<ToolsWindow> toolsWindow; }
@@ -9,6 +10,7 @@ ToolsWindow& toolsWindow = Instances::toolsWindow();
 ManifestViewer& manifestViewer = toolsWindow.manifestViewer;
 MemoryEditor& memoryEditor = toolsWindow.memoryEditor;
 GraphicsViewer& graphicsViewer = toolsWindow.graphicsViewer;
+PropertiesViewer& propertiesViewer = toolsWindow.propertiesViewer;
 TraceLogger& traceLogger = toolsWindow.traceLogger;
 
 ToolsWindow::ToolsWindow() {
@@ -17,18 +19,21 @@ ToolsWindow::ToolsWindow() {
   panelList.append(ListViewItem().setText("Manifest").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Memory").setIcon(Icon::Device::Storage));
   panelList.append(ListViewItem().setText("Graphics").setIcon(Icon::Emblem::Image));
-  panelList.append(ListViewItem().setText("Tracer").setIcon(Icon::Emblem::Text));
+  panelList.append(ListViewItem().setText("Properties").setIcon(Icon::Emblem::Text));
+  panelList.append(ListViewItem().setText("Tracer").setIcon(Icon::Emblem::Script));
   panelList.onChange([&] { eventChange(); });
 
   panelContainer.append(manifestViewer, Size{~0, ~0});
   panelContainer.append(memoryEditor, Size{~0, ~0});
   panelContainer.append(graphicsViewer, Size{~0, ~0});
+  panelContainer.append(propertiesViewer, Size{~0, ~0});
   panelContainer.append(traceLogger, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
 
   manifestViewer.construct();
   memoryEditor.construct();
   graphicsViewer.construct();
+  propertiesViewer.construct();
   traceLogger.construct();
   homePanel.construct();
 
@@ -55,15 +60,17 @@ auto ToolsWindow::eventChange() -> void {
   manifestViewer.setVisible(false);
   memoryEditor.setVisible(false);
   graphicsViewer.setVisible(false);
+  propertiesViewer.setVisible(false);
   traceLogger.setVisible(false);
   homePanel.setVisible(false);
 
   bool found = false;
   if(auto item = panelList.selected()) {
-    if(item.text() == "Manifest") found = true, manifestViewer.setVisible();
-    if(item.text() == "Memory"  ) found = true, memoryEditor.setVisible();
-    if(item.text() == "Graphics") found = true, graphicsViewer.setVisible();
-    if(item.text() == "Tracer"  ) found = true, traceLogger.setVisible();
+    if(item.text() == "Manifest"  ) found = true, manifestViewer.setVisible();
+    if(item.text() == "Memory"    ) found = true, memoryEditor.setVisible();
+    if(item.text() == "Graphics"  ) found = true, graphicsViewer.setVisible();
+    if(item.text() == "Properties") found = true, propertiesViewer.setVisible();
+    if(item.text() == "Tracer"    ) found = true, traceLogger.setVisible();
   }
   if(!found) homePanel.setVisible();
 

@@ -71,6 +71,7 @@ auto Program::main() -> void {
 
   memoryEditor.liveRefresh();
   graphicsViewer.liveRefresh();
+  propertiesViewer.liveRefresh();
 }
 
 auto Program::quit() -> void {

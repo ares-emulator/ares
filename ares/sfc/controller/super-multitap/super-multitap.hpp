@@ -5,6 +5,7 @@ struct SuperMultitap : Controller {
   ControllerPort port4;
 
   SuperMultitap(Node::Port, Node::Peripheral);
+
   auto data() -> uint2;
   auto latch(bool data) -> void;
 

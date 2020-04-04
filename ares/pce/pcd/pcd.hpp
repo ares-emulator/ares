@@ -10,8 +10,8 @@ struct PCD : Thread {
 
   static auto Present() -> bool { return true; }
 
-  inline auto manifest() const -> string { return information.manifest; }
-  inline auto name() const -> string { return information.name; }
+  auto manifest() const -> string { return information.manifest; }
+  auto name() const -> string { return information.name; }
 
   //pcd.cpp
   auto load(Node::Object, Node::Object) -> void;

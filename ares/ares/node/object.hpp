@@ -13,8 +13,8 @@ struct Object : shared_pointer_this<Object> {
   Object(string name = {}) : _name(name) {}
   virtual ~Object() = default;
 
-  inline auto name() const -> string { return _name; }
-  inline auto parent() const -> shared_pointer_weak<Object> { return _parent; }
+  auto name() const -> string { return _name; }
+  auto parent() const -> shared_pointer_weak<Object> { return _parent; }
 
   auto setName(string_view name) -> void { _name = name; }
 

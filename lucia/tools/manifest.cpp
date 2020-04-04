@@ -3,21 +3,42 @@ auto ManifestViewer::construct() -> void {
   setVisible(false);
 
   manifestLabel.setText("Manifest Viewer").setFont(Font().setBold());
+  manifestList.onChange([&] { eventChange(); });
   manifestView.setEditable(false).setFont(Font().setFamily(Font::Mono));
-};
+}
 
 auto ManifestViewer::reload() -> void {
-  string manifest;
-
+  manifestList.reset();
   for(auto peripheral : ares::Node::enumerate<ares::Node::Peripheral>(emulator->root)) {
-    manifest.append("[", peripheral->name(), "]\n");
-    manifest.append(peripheral->manifest(), "\n");
+    if(!peripheral->manifest()) continue;  //ignore peripherals with no manifest available
+    ComboButtonItem item{&manifestList};
+    item.setAttribute<ares::Node::Peripheral>("node", peripheral);
+    item.setText(peripheral->name());
   }
-  manifest.trimRight("\n").append("\n");  //ensure only one new line at the end of the manifest
-
-  manifestView.setText(manifest);
+  eventChange();
 }
 
 auto ManifestViewer::unload() -> void {
-  manifestView.setText();
+  manifestList.reset();
+  eventChange();
+}
+
+auto ManifestViewer::refresh() -> void {
+  if(auto item = manifestList.selected()) {
+    if(auto peripheral = item.attribute<ares::Node::Peripheral>("node")) {
+      manifestView.setText(peripheral->manifest());
+    }
+  } else {
+    manifestView.setText();
+  }
+}
+
+auto ManifestViewer::eventChange() -> void {
+  refresh();
+}
+
+auto ManifestViewer::setVisible(bool visible) -> ManifestViewer& {
+  if(visible) refresh();
+  VerticalLayout::setVisible(visible);
+  return *this;
 }

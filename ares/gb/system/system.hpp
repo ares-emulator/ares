@@ -31,8 +31,8 @@ struct System {
   };
   Memory::Readable<uint8> bootROM;
 
-  inline auto model() const -> Model { return information.model; }
-  inline auto clocksExecuted() const -> uint { return information.clocksExecuted; }
+  auto model() const -> Model { return information.model; }
+  auto clocksExecuted() const -> uint { return information.clocksExecuted; }
 
   //system.cpp
   auto run() -> void;

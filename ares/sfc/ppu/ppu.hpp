@@ -14,6 +14,7 @@ struct PPU : Thread, PPUcounter {
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object, Node::Object) -> void;
+    auto registers() -> string;
 
     struct Memory {
       Node::Memory vram;
@@ -27,11 +28,15 @@ struct PPU : Thread, PPUcounter {
       Node::Graphics tiles8bpp;
       Node::Graphics tilesMode7;
     } graphics;
+
+    struct Properties {
+      Node::Properties registers;
+    } properties;
   } debugger;
 
-  inline auto interlace() const -> bool { return self.interlace; }
-  inline auto overscan() const -> bool { return self.overscan; }
-  inline auto vdisp() const -> uint { return self.vdisp; }
+  auto interlace() const -> bool { return self.interlace; }
+  auto overscan() const -> bool { return self.overscan; }
+  auto vdisp() const -> uint { return self.vdisp; }
 
   //ppu.cpp
   auto load(Node::Object, Node::Object) -> void;
@@ -80,7 +85,7 @@ private:
   uint32* output = nullptr;
 
   struct VRAM {
-    inline auto& operator[](uint address) { return data[address & mask]; }
+    auto& operator[](uint address) { return data[address & mask]; }
     uint16 data[64_KiB];
     uint16 mask = 0x7fff;
   } vram;

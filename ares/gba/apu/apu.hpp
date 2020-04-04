@@ -37,7 +37,7 @@ struct APU : Thread, IO {
   };
 
   struct Envelope {
-    inline auto dacEnable() const -> bool { return volume || direction; }
+    auto dacEnable() const -> bool { return volume || direction; }
 
     uint3 frequency;
     uint1 direction;

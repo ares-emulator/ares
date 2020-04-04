@@ -2,8 +2,8 @@ struct Cartridge : Thread {
   Node::Port port;
   Node::Peripheral node;
 
-  inline auto manifest() const -> string { return information.manifest; }
-  inline auto name() const -> string { return information.name; }
+  auto manifest() const -> string { return information.manifest; }
+  auto name() const -> string { return information.name; }
 
   //cartridge.cpp
   auto load(Node::Object, Node::Object) -> void;

@@ -13,6 +13,7 @@ struct Gamepad : Controller {
   Node::Button start;
 
   Gamepad(Node::Port, Node::Peripheral);
+
   auto data() -> uint2;
   auto latch(bool data) -> void;
 

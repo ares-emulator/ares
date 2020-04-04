@@ -17,7 +17,7 @@ struct Thread {
   auto operator=(const Thread&) = delete;
   inline virtual ~Thread();
 
-  inline explicit operator bool() const { return _handle; }
+  explicit operator bool() const { return _handle; }
   inline auto active() const -> bool;
   inline auto handle() const -> cothread_t;
   inline auto frequency() const -> uintmax;

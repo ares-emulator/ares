@@ -8,46 +8,46 @@ struct else_t {};
 
 template<typename T>
 struct maybe {
-  inline maybe() {}
-  inline maybe(nothing_t) {}
-  inline maybe(const T& source) { operator=(source); }
-  inline maybe(T&& source) { operator=(move(source)); }
-  inline maybe(const maybe& source) { operator=(source); }
-  inline maybe(maybe&& source) { operator=(move(source)); }
-  inline ~maybe() { reset(); }
+  maybe() {}
+  maybe(nothing_t) {}
+  maybe(const T& source) { operator=(source); }
+  maybe(T&& source) { operator=(move(source)); }
+  maybe(const maybe& source) { operator=(source); }
+  maybe(maybe&& source) { operator=(move(source)); }
+  ~maybe() { reset(); }
 
-  inline auto operator=(nothing_t) -> maybe& { reset(); return *this; }
-  inline auto operator=(const T& source) -> maybe& { reset(); _valid = true; new(&_value.t) T(source); return *this; }
-  inline auto operator=(T&& source) -> maybe& { reset(); _valid = true; new(&_value.t) T(move(source)); return *this; }
+  auto operator=(nothing_t) -> maybe& { reset(); return *this; }
+  auto operator=(const T& source) -> maybe& { reset(); _valid = true; new(&_value.t) T(source); return *this; }
+  auto operator=(T&& source) -> maybe& { reset(); _valid = true; new(&_value.t) T(move(source)); return *this; }
 
-  inline auto operator=(const maybe& source) -> maybe& {
+  auto operator=(const maybe& source) -> maybe& {
     if(this == &source) return *this;
     reset();
     if(_valid = source._valid) new(&_value.t) T(source.get());
     return *this;
   }
 
-  inline auto operator=(maybe&& source) -> maybe& {
+  auto operator=(maybe&& source) -> maybe& {
     if(this == &source) return *this;
     reset();
     if(_valid = source._valid) new(&_value.t) T(move(source.get()));
     return *this;
   }
 
-  inline explicit operator bool() const { return _valid; }
-  inline auto reset() -> void { if(_valid) { _value.t.~T(); _valid = false; } }
-  inline auto data() -> T* { return _valid ? &_value.t : nullptr; }
-  inline auto get() -> T& { assert(_valid); return _value.t; }
+  explicit operator bool() const { return _valid; }
+  auto reset() -> void { if(_valid) { _value.t.~T(); _valid = false; } }
+  auto data() -> T* { return _valid ? &_value.t : nullptr; }
+  auto get() -> T& { assert(_valid); return _value.t; }
 
-  inline auto data() const -> const T* { return ((maybe*)this)->data(); }
-  inline auto get() const -> const T& { return ((maybe*)this)->get(); }
-  inline auto operator->() -> T* { return data(); }
-  inline auto operator->() const -> const T* { return data(); }
-  inline auto operator*() -> T& { return get(); }
-  inline auto operator*() const -> const T& { return get(); }
-  inline auto operator()() -> T& { return get(); }
-  inline auto operator()() const -> const T& { return get(); }
-  inline auto operator()(const T& invalid) const -> const T& { return _valid ? get() : invalid; }
+  auto data() const -> const T* { return ((maybe*)this)->data(); }
+  auto get() const -> const T& { return ((maybe*)this)->get(); }
+  auto operator->() -> T* { return data(); }
+  auto operator->() const -> const T* { return data(); }
+  auto operator*() -> T& { return get(); }
+  auto operator*() const -> const T& { return get(); }
+  auto operator()() -> T& { return get(); }
+  auto operator()() const -> const T& { return get(); }
+  auto operator()(const T& invalid) const -> const T& { return _valid ? get() : invalid; }
 
 private:
   union U {
@@ -60,29 +60,29 @@ private:
 
 template<typename T>
 struct maybe<T&> {
-  inline maybe() : _value(nullptr) {}
-  inline maybe(nothing_t) : _value(nullptr) {}
-  inline maybe(const T& source) : _value((T*)&source) {}
-  inline maybe(const maybe& source) : _value(source._value) {}
+  maybe() : _value(nullptr) {}
+  maybe(nothing_t) : _value(nullptr) {}
+  maybe(const T& source) : _value((T*)&source) {}
+  maybe(const maybe& source) : _value(source._value) {}
 
-  inline auto operator=(nothing_t) -> maybe& { _value = nullptr; return *this; }
-  inline auto operator=(const T& source) -> maybe& { _value = (T*)&source; return *this; }
-  inline auto operator=(const maybe& source) -> maybe& { _value = source._value; return *this; }
+  auto operator=(nothing_t) -> maybe& { _value = nullptr; return *this; }
+  auto operator=(const T& source) -> maybe& { _value = (T*)&source; return *this; }
+  auto operator=(const maybe& source) -> maybe& { _value = source._value; return *this; }
 
-  inline explicit operator bool() const { return _value; }
-  inline auto reset() -> void { _value = nullptr; }
-  inline auto data() -> T* { return _value; }
-  inline auto get() -> T& { assert(_value); return *_value; }
+  explicit operator bool() const { return _value; }
+  auto reset() -> void { _value = nullptr; }
+  auto data() -> T* { return _value; }
+  auto get() -> T& { assert(_value); return *_value; }
 
-  inline auto data() const -> const T* { return ((maybe*)this)->data(); }
-  inline auto get() const -> const T& { return ((maybe*)this)->get(); }
-  inline auto operator->() -> T* { return data(); }
-  inline auto operator->() const -> const T* { return data(); }
-  inline auto operator*() -> T& { return get(); }
-  inline auto operator*() const -> const T& { return get(); }
-  inline auto operator()() -> T& { return get(); }
-  inline auto operator()() const -> const T& { return get(); }
-  inline auto operator()(const T& invalid) const -> const T& { return _value ? get() : invalid; }
+  auto data() const -> const T* { return ((maybe*)this)->data(); }
+  auto get() const -> const T& { return ((maybe*)this)->get(); }
+  auto operator->() -> T* { return data(); }
+  auto operator->() const -> const T* { return data(); }
+  auto operator*() -> T& { return get(); }
+  auto operator*() const -> const T& { return get(); }
+  auto operator()() -> T& { return get(); }
+  auto operator()() const -> const T& { return get(); }
+  auto operator()(const T& invalid) const -> const T& { return _value ? get() : invalid; }
 
 private:
   T* _value;

@@ -4,9 +4,9 @@ struct Memory : Object {
   Memory(string name = {}) : Object(name) {
   }
 
-  inline auto size() const -> uint { return _size; }
-  inline auto read(uint32 address) const -> uint8 { if(_read) return _read(address); return 0; }
-  inline auto write(uint32 address, uint8 data) const -> void { if(_write) return _write(address, data); }
+  auto size() const -> uint { return _size; }
+  auto read(uint32 address) const -> uint8 { if(_read) return _read(address); return 0; }
+  auto write(uint32 address, uint8 data) const -> void { if(_write) return _write(address, data); }
 
   auto setSize(uint size) -> void { _size = size; }
   auto setRead(function<uint8 (uint32)> read) -> void { _read = read; }

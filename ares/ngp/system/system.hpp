@@ -29,8 +29,8 @@ struct System {
   enum class Model : uint { NeoGeoPocket, NeoGeoPocketColor };
   Memory::Readable<uint8> bios;
 
-  inline auto model() const -> Model { return information.model; }
-  inline auto frequency() const -> double { return 6'144'000; }
+  auto model() const -> Model { return information.model; }
+  auto frequency() const -> double { return 6'144'000; }
 
   //system.cpp
   auto run() -> void;

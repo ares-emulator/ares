@@ -47,17 +47,17 @@ auto Competition::power() -> void {
   scoreSecondsRemaining = 0;
 }
 
-auto Competition::mcuRead(uint24 addr, uint8 data) -> uint8 {
+auto Competition::mcuRead(uint24 address, uint8 data) -> uint8 {
   if(board == Board::CampusChallenge92) {
     uint id = 0;
     if(select == 0x09) id = 1;
     if(select == 0x05) id = 2;
     if(select == 0x03) id = 3;
-    if((addr & 0x808000) == 0x808000) id = 0;
+    if((address & 0x808000) == 0x808000) id = 0;
 
-    if(addr & 0x008000) {
-      addr = ((addr & 0x7f0000) >> 1) | (addr & 0x7fff);
-      return rom[id].read(bus.mirror(addr, rom[id].size()), data);
+    if(address & 0x008000) {
+      address = ((address & 0x7f0000) >> 1) | (address & 0x7fff);
+      return rom[id].read(bus.mirror(address, rom[id].size()), data);
     }
   }
 
@@ -66,35 +66,35 @@ auto Competition::mcuRead(uint24 addr, uint8 data) -> uint8 {
     if(select == 0x09) id = 1;
     if(select == 0x0c) id = 2;
     if(select == 0x0a) id = 3;
-    if((addr & 0x208000) == 0x208000) id = 0;
+    if((address & 0x208000) == 0x208000) id = 0;
 
-    if(addr & 0x400000) {
-      addr &= 0x3fffff;
-      return rom[id].read(bus.mirror(addr, rom[id].size()), data);
+    if(address & 0x400000) {
+      address &= 0x3fffff;
+      return rom[id].read(bus.mirror(address, rom[id].size()), data);
     }
 
-    if(addr & 0x008000) {
-      addr &= 0x1fffff;
-      if(id != 2) addr = ((addr & 0x1f0000) >> 1) | (addr & 0x7fff);
-      return rom[id].read(bus.mirror(addr, rom[id].size()), data);
+    if(address & 0x008000) {
+      address &= 0x1fffff;
+      if(id != 2) address = ((address & 0x1f0000) >> 1) | (address & 0x7fff);
+      return rom[id].read(bus.mirror(address, rom[id].size()), data);
     }
   }
 
   return data;
 }
 
-auto Competition::mcuWrite(uint24 addr, uint8 data) -> void {
+auto Competition::mcuWrite(uint24 address, uint8 data) -> void {
 }
 
-auto Competition::read(uint24 addr, uint8 data) -> uint8 {
-  if(addr == 0x106000 || addr == 0xc00000) {
+auto Competition::read(uint24 address, uint8 data) -> uint8 {
+  if(address == 0x106000 || address == 0xc00000) {
     return status;
   }
   return data;
 }
 
-auto Competition::write(uint24 addr, uint8 data) -> void {
-  if(addr == 0x206000 || addr == 0xe00000) {
+auto Competition::write(uint24 address, uint8 data) -> void {
+  if(address == 0x206000 || address == 0xe00000) {
     select = data;
     if(timer && data == 0x09) {
       timerActive = true;

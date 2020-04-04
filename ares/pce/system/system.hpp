@@ -3,8 +3,8 @@ struct System {
 
   enum class Model : uint { PCEngine, SuperGrafx };
 
-  inline auto model() const -> Model { return information.model; }
-  inline auto colorburst() const -> double { return information.colorburst; }
+  auto model() const -> Model { return information.model; }
+  auto colorburst() const -> double { return information.colorburst; }
 
   //system.cpp
   auto run() -> void;

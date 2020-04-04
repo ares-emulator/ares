@@ -10,11 +10,11 @@ namespace nall::EllipticCurve {
 static const uint256_t P = (1_u256 << 255) - 19;
 
 struct Modulo25519 {
-  inline Modulo25519() = default;
-  inline Modulo25519(const Modulo25519& source) : value(source.value) {}
-  template<typename T> inline Modulo25519(const T& value) : value(value) {}
-  inline explicit operator bool() const { return (bool)value; }
-  inline auto operator()() const -> uint256_t { return value; }
+  Modulo25519() = default;
+  Modulo25519(const Modulo25519& source) : value(source.value) {}
+  template<typename T> Modulo25519(const T& value) : value(value) {}
+  explicit operator bool() const { return (bool)value; }
+  auto operator()() const -> uint256_t { return value; }
 
 private:
   uint256_t value;

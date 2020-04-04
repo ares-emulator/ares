@@ -34,11 +34,11 @@ struct uPD96050 {
   uint16 dataRAM[2048];
 
   struct Flag {
-    inline operator uint() const {
+    operator uint() const {
       return ov0 << 0 | ov1 << 1 | z << 2 | c << 3 | s0 << 4 | s1 << 5;
     }
 
-    inline auto operator=(uint16 data) -> Flag& {
+    auto operator=(uint16 data) -> Flag& {
       ov0 = data.bit(0);
       ov1 = data.bit(1);
       z   = data.bit(2);
@@ -59,13 +59,13 @@ struct uPD96050 {
   };
 
   struct Status {
-    inline operator uint() const {
+    operator uint() const {
       bool _drs = drs & !drc;  //when DRC=1, DRS=0
       return p0 << 0 | p1 << 1 | ei << 7 | sic << 8 | soc << 9 | drc << 10
            | dma << 11 | _drs << 12 | usf0 << 13 | usf1 << 14 | rqm << 15;
     }
 
-    inline auto operator=(uint16 data) -> Status& {
+    auto operator=(uint16 data) -> Status& {
       p0   = data.bit( 0);
       p1   = data.bit( 1);
       ei   = data.bit( 7);

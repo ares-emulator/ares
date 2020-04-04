@@ -5,8 +5,8 @@ struct Instruction : Tracer {
     setDepth(_depth);
   }
 
-  inline auto depth() const -> uint { return _depth; }
-  inline auto addressBits() const -> uint { return _addressBits; }
+  auto depth() const -> uint { return _depth; }
+  auto addressBits() const -> uint { return _addressBits; }
 
   auto setDepth(uint depth) -> void {
     _depth = depth;

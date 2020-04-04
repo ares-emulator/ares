@@ -19,17 +19,17 @@ struct WDC65816 {
 
   virtual auto readDisassembler(uint24 addr) -> uint8 { return 0; }
 
-  inline auto irq() const -> bool { return r.irq; }
-  inline auto irq(bool line) -> void { r.irq = line; }
+  auto irq() const -> bool { return r.irq; }
+  auto irq(bool line) -> void { r.irq = line; }
 
   using r8 = uint8;
 
   struct r16 {
-    inline r16() {}
-    inline r16(uint data) : w(data) {}
-    inline r16(const r16& data) : w(data.w) {}
-    inline auto& operator=(uint data) { w = data; return *this; }
-    inline auto& operator=(const r16& data) { w = data.w; return *this; }
+    r16() {}
+    r16(uint data) : w(data) {}
+    r16(const r16& data) : w(data.w) {}
+    auto& operator=(uint data) { w = data; return *this; }
+    auto& operator=(const r16& data) { w = data.w; return *this; }
 
     uint16 w;
     BitRange<16,0, 7> l{&w};
@@ -37,11 +37,11 @@ struct WDC65816 {
   };
 
   struct r24 {
-    inline r24() {}
-    inline r24(uint data) : d(data) {}
-    inline r24(const r24& data) : d(data.d) {}
-    inline auto& operator=(uint data) { d = data; return *this; }
-    inline auto& operator=(const r24& data) { d = data.d; return *this; }
+    r24() {}
+    r24(uint data) : d(data) {}
+    r24(const r24& data) : d(data.d) {}
+    auto& operator=(uint data) { d = data; return *this; }
+    auto& operator=(const r24& data) { d = data.d; return *this; }
 
     uint24 d;
     BitRange<24, 0, 7> l{&d};
@@ -248,11 +248,11 @@ struct WDC65816 {
     bool v = 0;  //overflow
     bool n = 0;  //negative
 
-    inline operator uint() const {
+    operator uint() const {
       return c << 0 | z << 1 | i << 2 | d << 3 | x << 4 | m << 5 | v << 6 | n << 7;
     }
 
-    inline auto& operator=(uint8 data) {
+    auto& operator=(uint8 data) {
       c = data.bit(0);
       z = data.bit(1);
       i = data.bit(2);

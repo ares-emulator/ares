@@ -5,10 +5,10 @@ struct Cartridge : Thread {
   Node::Port port;
   Node::Peripheral node;
 
-  inline auto rate() const -> uint { return Region::PAL() ? 16 : 12; }
-  inline auto manifest() const -> string { return information.manifest; }
-  inline auto name() const -> string { return information.name; }
-  inline auto region() const -> string { return information.region; }
+  auto rate() const -> uint { return Region::PAL() ? 16 : 12; }
+  auto manifest() const -> string { return information.manifest; }
+  auto name() const -> string { return information.name; }
+  auto region() const -> string { return information.region; }
 
   //cartridge.cpp
   auto load(Node::Object, Node::Object) -> void;

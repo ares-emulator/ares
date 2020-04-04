@@ -9,7 +9,7 @@ template<uint Bits> struct BarrettReduction {
   explicit BarrettReduction(type modulo) : modulo(modulo), factor(pair(1) + -pair(modulo) / modulo) {}
 
   //return => value % modulo
-  inline auto operator()(pair value) const -> type {
+  auto operator()(pair value) const -> type {
     pair hi, lo;
     mul(value, factor, hi, lo);
     pair remainder = value - hi * modulo;

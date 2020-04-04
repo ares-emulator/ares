@@ -50,8 +50,8 @@ struct string_view {
   inline auto data() const -> const char*;
   inline auto size() const -> uint;
 
-  inline auto begin() const { return &_data[0]; }
-  inline auto end() const { return &_data[size()]; }
+  auto begin() const { return &_data[0]; }
+  auto end() const { return &_data[size()]; }
 
 protected:
   string* _string;
@@ -135,9 +135,9 @@ protected:
 
 public:
   inline string();
-  inline string(string& source) : string() { operator=(source); }
-  inline string(const string& source) : string() { operator=(source); }
-  inline string(string&& source) : string() { operator=(move(source)); }
+  string(string& source) : string() { operator=(source); }
+  string(const string& source) : string() { operator=(source); }
+  string(string&& source) : string() { operator=(move(source)); }
   template<typename T = char> inline auto get() -> T*;
   template<typename T = char> inline auto data() const -> const T*;
   template<typename T = char> auto size() const -> uint { return _size / sizeof(T); }
@@ -303,9 +303,9 @@ template<> struct vector<string> : vector_base<string> {
   vector(vector&& source) { vector_base::operator=(move(source)); }
   template<typename... P> vector(P&&... p) { append(forward<P>(p)...); }
 
-  inline auto operator=(const vector& source) -> type& { return vector_base::operator=(source), *this; }
-  inline auto operator=(vector& source) -> type& { return vector_base::operator=(source), *this; }
-  inline auto operator=(vector&& source) -> type& { return vector_base::operator=(move(source)), *this; }
+  auto operator=(const vector& source) -> type& { return vector_base::operator=(source), *this; }
+  auto operator=(vector& source) -> type& { return vector_base::operator=(source), *this; }
+  auto operator=(vector&& source) -> type& { return vector_base::operator=(move(source)), *this; }
 
   //vector.hpp
   template<typename... P> inline auto append(const string&, P&&...) -> type&;

@@ -1,6 +1,6 @@
 struct AbstractMemory {
   virtual ~AbstractMemory() { reset(); }
-  inline explicit operator bool() const { return size() > 0; }
+  explicit operator bool() const { return size() > 0; }
 
   virtual auto reset() -> void {}
   virtual auto allocate(uint, uint8 = 0xff) -> void {}

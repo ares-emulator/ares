@@ -102,11 +102,11 @@ struct MOS6502 {
     bool v;  //overflow
     bool n;  //negative
 
-    inline operator uint() const {
+    operator uint() const {
       return c << 0 | z << 1 | i << 2 | d << 3 | v << 6 | n << 7;
     }
 
-    inline auto& operator=(uint8 data) {
+    auto& operator=(uint8 data) {
       c = data.bit(0);
       z = data.bit(1);
       i = data.bit(2);

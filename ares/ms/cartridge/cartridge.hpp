@@ -2,9 +2,9 @@ struct Cartridge {
   Node::Port port;
   Node::Peripheral node;
 
-  inline auto manifest() const -> string { return information.manifest; }
-  inline auto name() const -> string { return information.name; }
-  inline auto region() const -> string { return information.region; }
+  auto manifest() const -> string { return information.manifest; }
+  auto name() const -> string { return information.name; }
+  auto region() const -> string { return information.region; }
 
   //cartridge.cpp
   auto load(Node::Object, Node::Object) -> void;

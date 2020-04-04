@@ -2,9 +2,9 @@ struct Cartridge : Thread, IO {
   Node::Port port;
   Node::Peripheral node;
 
-  inline auto manifest() const { return information.manifest; }
-  inline auto name() const { return information.name; }
-  inline auto orientation() const { return information.orientation; }
+  auto manifest() const { return information.manifest; }
+  auto name() const { return information.name; }
+  auto orientation() const { return information.orientation; }
 
   //cartridge.cpp
   auto main() -> void;

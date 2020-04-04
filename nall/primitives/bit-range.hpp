@@ -21,99 +21,99 @@ template<int Precision, int Lo, int Hi> struct BitRange {
 
   BitRange(const BitRange& source) = delete;
 
-  inline auto& operator=(const BitRange& source) {
+  auto& operator=(const BitRange& source) {
     target = target & ~mask | ((source.target & source.mask) >> source.shift) << shift & mask;
     return *this;
   }
 
-  template<typename T> inline BitRange(T* source) : target((type&)*source) {
+  template<typename T> BitRange(T* source) : target((type&)*source) {
     static_assert(sizeof(T) == sizeof(type));
   }
 
-  inline operator type() const {
+  operator type() const {
     return (target & mask) >> shift;
   }
 
-  inline auto operator++(int) {
+  auto operator++(int) {
     auto value = (target & mask) >> shift;
     target = target & ~mask | target + (1 << shift) & mask;
     return value;
   }
 
-  inline auto operator--(int) {
+  auto operator--(int) {
     auto value = (target & mask) >> shift;
     target = target & ~mask | target - (1 << shift) & mask;
     return value;
   }
 
-  inline auto& operator++() {
+  auto& operator++() {
     target = target & ~mask | target + (1 << shift) & mask;
     return *this;
   }
 
-  inline auto& operator--() {
+  auto& operator--() {
     target = target & ~mask | target - (1 << shift) & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator=(const T& source) {
+  template<typename T> auto& operator=(const T& source) {
     target = target & ~mask | source << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator*=(const T& source) {
+  template<typename T> auto& operator*=(const T& source) {
     auto value = ((target & mask) >> shift) * source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator/=(const T& source) {
+  template<typename T> auto& operator/=(const T& source) {
     auto value = ((target & mask) >> shift) / source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator%=(const T& source) {
+  template<typename T> auto& operator%=(const T& source) {
     auto value = ((target & mask) >> shift) % source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator+=(const T& source) {
+  template<typename T> auto& operator+=(const T& source) {
     auto value = ((target & mask) >> shift) + source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator-=(const T& source) {
+  template<typename T> auto& operator-=(const T& source) {
     auto value = ((target & mask) >> shift) - source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator<<=(const T& source) {
+  template<typename T> auto& operator<<=(const T& source) {
     auto value = ((target & mask) >> shift) << source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator>>=(const T& source) {
+  template<typename T> auto& operator>>=(const T& source) {
     auto value = ((target & mask) >> shift) >> source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator&=(const T& source) {
+  template<typename T> auto& operator&=(const T& source) {
     target = target & (~mask | source << shift & mask);
     return *this;
   }
 
-  template<typename T> inline auto& operator^=(const T& source) {
+  template<typename T> auto& operator^=(const T& source) {
     target = target ^ source << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator|=(const T& source) {
+  template<typename T> auto& operator|=(const T& source) {
     target = target | source << shift & mask;
     return *this;
   }
@@ -135,18 +135,18 @@ template<typename Type, int Precision = Type::bits()> struct DynamicBitRange {
 
   DynamicBitRange(const DynamicBitRange& source) = delete;
 
-  inline auto& operator=(const DynamicBitRange& source) {
+  auto& operator=(const DynamicBitRange& source) {
     target = target & ~mask | ((source.target & source.mask) >> source.shift) << shift & mask;
     return *this;
   }
 
-  inline DynamicBitRange(Type& source, int index) : target(source) {
+  DynamicBitRange(Type& source, int index) : target(source) {
     if(index < 0) index = Precision + index;
     mask = 1ull << index;
     shift = index;
   }
 
-  inline DynamicBitRange(Type& source, int lo, int hi) : target(source) {
+  DynamicBitRange(Type& source, int lo, int hi) : target(source) {
     if(lo < 0) lo = Precision + lo;
     if(hi < 0) hi = Precision + hi;
     if(lo > hi) swap(lo, hi);
@@ -154,90 +154,90 @@ template<typename Type, int Precision = Type::bits()> struct DynamicBitRange {
     shift = lo;
   }
 
-  inline operator type() const {
+  operator type() const {
     return (target & mask) >> shift;
   }
 
-  inline auto operator++(int) {
+  auto operator++(int) {
     auto value = (target & mask) >> shift;
     target = target & ~mask | target + (1 << shift) & mask;
     return value;
   }
 
-  inline auto operator--(int) {
+  auto operator--(int) {
     auto value = (target & mask) >> shift;
     target = target & ~mask | target - (1 << shift) & mask;
     return value;
   }
 
-  inline auto& operator++() {
+  auto& operator++() {
     target = target & ~mask | target + (1 << shift) & mask;
     return *this;
   }
 
-  inline auto& operator--() {
+  auto& operator--() {
     target = target & ~mask | target - (1 << shift) & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator=(const T& source) {
+  template<typename T> auto& operator=(const T& source) {
     target = target & ~mask | source << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator*=(const T& source) {
+  template<typename T> auto& operator*=(const T& source) {
     auto value = ((target & mask) >> shift) * source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator/=(const T& source) {
+  template<typename T> auto& operator/=(const T& source) {
     auto value = ((target & mask) >> shift) / source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator%=(const T& source) {
+  template<typename T> auto& operator%=(const T& source) {
     auto value = ((target & mask) >> shift) % source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator+=(const T& source) {
+  template<typename T> auto& operator+=(const T& source) {
     auto value = ((target & mask) >> shift) + source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator-=(const T& source) {
+  template<typename T> auto& operator-=(const T& source) {
     auto value = ((target & mask) >> shift) - source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator<<=(const T& source) {
+  template<typename T> auto& operator<<=(const T& source) {
     auto value = ((target & mask) >> shift) << source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator>>=(const T& source) {
+  template<typename T> auto& operator>>=(const T& source) {
     auto value = ((target & mask) >> shift) >> source;
     target = target & ~mask | value << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator&=(const T& source) {
+  template<typename T> auto& operator&=(const T& source) {
     target = target & (~mask | source << shift & mask);
     return *this;
   }
 
-  template<typename T> inline auto& operator^=(const T& source) {
+  template<typename T> auto& operator^=(const T& source) {
     target = target ^ source << shift & mask;
     return *this;
   }
 
-  template<typename T> inline auto& operator|=(const T& source) {
+  template<typename T> auto& operator|=(const T& source) {
     target = target | source << shift & mask;
     return *this;
   }

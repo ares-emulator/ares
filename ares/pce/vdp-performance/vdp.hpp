@@ -6,7 +6,7 @@ struct VDP : Thread {
   Node::Component node;
   Node::Screen screen;
 
-  inline auto irqLine() const -> bool { return vdc0.irqLine() | vdc1.irqLine(); }
+  auto irqLine() const -> bool { return vdc0.irqLine() | vdc1.irqLine(); }
 
   //vdp.cpp
   auto load(Node::Object, Node::Object) -> void;

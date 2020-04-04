@@ -119,10 +119,10 @@ struct ARM7TDMI {
   auto disassembleContext() -> string;
 
   struct GPR {
-    inline operator uint32_t() const { return data; }
-    inline auto operator=(const GPR& value) -> GPR& { return operator=(value.data); }
+    operator uint32_t() const { return data; }
+    auto operator=(const GPR& value) -> GPR& { return operator=(value.data); }
 
-    inline auto operator=(uint32 value) -> GPR& {
+    auto operator=(uint32 value) -> GPR& {
       data = value;
       if(modify) modify();
       return *this;
@@ -143,11 +143,11 @@ struct ARM7TDMI {
       SYS = 0x1f,  //system
     };
 
-    inline operator uint32_t() const {
+    operator uint32_t() const {
       return m << 0 | t << 5 | f << 6 | i << 7 | v << 28 | c << 29 | z << 30 | n << 31;
     }
 
-    inline auto operator=(uint32 data) -> PSR& {
+    auto operator=(uint32 data) -> PSR& {
       m = data.bit(0,4);
       t = data.bit(5);
       f = data.bit(6);

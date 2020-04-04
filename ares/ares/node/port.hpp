@@ -7,12 +7,12 @@ struct Port : Object {
     });
   }
 
-  inline auto allocate() -> Node::Peripheral { if(_allocate) return _allocate(); return {}; }
-  inline auto attach(Node::Peripheral node) -> void { if(_attach) return _attach(node); }
-  inline auto detach(Node::Peripheral node) -> void { if(_detach) return _detach(node); }
-  inline auto type() const -> string { return _type; }
-  inline auto family() const -> string { return _family; }
-  inline auto hotSwappable() const -> bool { return _hotSwappable; }
+  auto allocate() -> Node::Peripheral { if(_allocate) return _allocate(); return {}; }
+  auto attach(Node::Peripheral node) -> void { if(_attach) return _attach(node); }
+  auto detach(Node::Peripheral node) -> void { if(_detach) return _detach(node); }
+  auto type() const -> string { return _type; }
+  auto family() const -> string { return _family; }
+  auto hotSwappable() const -> bool { return _hotSwappable; }
 
   auto setAllocate(function<Node::Peripheral ()> allocate) -> void { _allocate = allocate; }
   auto setAttach(function<void (Node::Peripheral)> attach) -> void { _attach = attach; }

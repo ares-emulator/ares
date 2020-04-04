@@ -18,7 +18,7 @@ struct shared_memory {
     return _mode != mode::inactive;
   }
 
-  auto size() const -> unsigned {
+  auto size() const -> uint {
     return _size;
   }
 
@@ -47,7 +47,7 @@ struct shared_memory {
     if(_mode == mode::client) return close();
   }
 
-  auto create(const string& name, unsigned size) -> bool {
+  auto create(const string& name, uint size) -> bool {
     reset();
 
     _name = {"/nall-", string{name}.transform("/:", "--")};
@@ -94,7 +94,7 @@ struct shared_memory {
     _size = 0;
   }
 
-  auto open(const string& name, unsigned size) -> bool {
+  auto open(const string& name, uint size) -> bool {
     reset();
 
     _name = {"/nall-", string{name}.transform("/:", "--")};
@@ -135,12 +135,12 @@ struct shared_memory {
   }
 
 private:
-  enum class mode : unsigned { server, client, inactive } _mode = mode::inactive;
+  enum class mode : uint { server, client, inactive } _mode = mode::inactive;
   string _name;
   sem_t* _semaphore = nullptr;
-  signed _descriptor = -1;
+  int _descriptor = -1;
   uint8_t* _data = nullptr;
-  unsigned _size = 0;
+  uint _size = 0;
   bool _acquired = false;
 };
 

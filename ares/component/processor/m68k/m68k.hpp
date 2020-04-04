@@ -10,7 +10,7 @@ struct M68K {
   virtual auto read(uint1 upper, uint1 lower, uint24 address, uint16 data = 0) -> uint16 = 0;
   virtual auto write(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void = 0;
 
-  inline auto ird() const -> uint16 { return r.ird; }
+  auto ird() const -> uint16 { return r.ird; }
 
   enum : bool { User, Supervisor };
   enum : uint { Byte, Word, Long };

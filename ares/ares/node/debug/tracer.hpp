@@ -5,8 +5,8 @@ struct Tracer : Object {
     _component = component;
   }
 
-  inline auto component() const -> string { return _component; }
-  inline auto enabled() const -> bool { return _enabled; }
+  auto component() const -> string { return _component; }
+  auto enabled() const -> bool { return _enabled; }
 
   auto setComponent(string component) -> void { _component = component; }
   auto setEnabled(bool enabled) -> void { _enabled = enabled; }

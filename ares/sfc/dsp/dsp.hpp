@@ -16,7 +16,7 @@ struct DSP : Thread {
   uint8 apuram[64 * 1024];
   uint8 registers[128];
 
-  inline auto mute() const -> bool { return master.mute; }
+  auto mute() const -> bool { return master.mute; }
 
   //dsp.cpp
   auto load(Node::Object, Node::Object) -> void;

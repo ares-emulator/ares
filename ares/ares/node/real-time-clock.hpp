@@ -2,8 +2,8 @@ struct RealTimeClock : Object {
   DeclareClass(RealTimeClock, "Real Time Clock")
   using Object::Object;
 
-  inline auto update() -> void { if(_update) return _update(); }
-  inline auto timestamp() const -> uint64 { return _timestamp; }
+  auto update() -> void { if(_update) return _update(); }
+  auto timestamp() const -> uint64 { return _timestamp; }
 
   auto setUpdate(function<void ()> update) { _update = update; }
   auto setTimestamp(uint64 timestamp) -> void { _timestamp = timestamp; }

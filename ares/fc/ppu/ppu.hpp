@@ -18,8 +18,8 @@ struct PPU : Thread {
     } memory;
   } debugger;
 
-  inline auto rate() const -> uint { return Region::PAL() ? 5 : 4; }
-  inline auto vlines() const -> uint { return Region::PAL() ? 312 : 262; }
+  auto rate() const -> uint { return Region::PAL() ? 5 : 4; }
+  auto vlines() const -> uint { return Region::PAL() ? 312 : 262; }
 
   //ppu.cpp
   auto load(Node::Object, Node::Object) -> void;
