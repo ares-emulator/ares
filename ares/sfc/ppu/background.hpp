@@ -3,9 +3,8 @@ struct Background {
   const uint id;
   Background(uint id) : id(id) {}
 
-  alwaysinline auto hires() const -> bool;
-
   //background.cpp
+  auto hires() const -> bool;
   auto frame() -> void;
   auto scanline() -> void;
   auto begin() -> void;

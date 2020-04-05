@@ -1,4 +1,4 @@
-auto PPU::Mosaic::enable() const -> bool {
+inline auto PPU::Mosaic::enable() const -> bool {
   if(ppu.bg1.io.mosaicEnable) return true;
   if(ppu.bg2.io.mosaicEnable) return true;
   if(ppu.bg3.io.mosaicEnable) return true;
@@ -6,7 +6,7 @@ auto PPU::Mosaic::enable() const -> bool {
   return false;
 }
 
-auto PPU::Mosaic::voffset() const -> uint {
+inline auto PPU::Mosaic::voffset() const -> uint {
   return size - vcounter;
 }
 

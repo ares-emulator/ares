@@ -1,7 +1,7 @@
 struct Object {
   //object.cpp
-  alwaysinline auto addressReset() -> void;
-  alwaysinline auto setFirstSprite() -> void;
+  auto addressReset() -> void;
+  auto setFirstSprite() -> void;
   auto render() -> void;
   auto power() -> void;
 

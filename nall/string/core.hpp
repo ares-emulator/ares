@@ -15,7 +15,7 @@
 
 namespace nall {
 
-auto string::operator[](uint position) const -> const char& {
+inline auto string::operator[](uint position) const -> const char& {
   #ifdef DEBUG
   struct out_of_bounds {};
   if(position >= size() + 1) throw out_of_bounds{};
@@ -23,52 +23,52 @@ auto string::operator[](uint position) const -> const char& {
   return data()[position];
 }
 
-auto string::operator()(uint position, char fallback) const -> char {
+inline auto string::operator()(uint position, char fallback) const -> char {
   if(position >= size() + 1) return fallback;
   return data()[position];
 }
 
-template<typename... P> auto string::assign(P&&... p) -> string& {
+template<typename... P> inline auto string::assign(P&&... p) -> string& {
   resize(0);
   return append(forward<P>(p)...);
 }
 
-template<typename T, typename... P> auto string::prepend(const T& value, P&&... p) -> string& {
+template<typename T, typename... P> inline auto string::prepend(const T& value, P&&... p) -> string& {
   if constexpr(sizeof...(p)) prepend(forward<P>(p)...);
   return _prepend(make_string(value));
 }
 
-template<typename... P> auto string::prepend(const nall::string_format& value, P&&... p) -> string& {
+template<typename... P> inline auto string::prepend(const nall::string_format& value, P&&... p) -> string& {
   if constexpr(sizeof...(p)) prepend(forward<P>(p)...);
   return format(value);
 }
 
-template<typename T> auto string::_prepend(const stringify<T>& source) -> string& {
+template<typename T> inline auto string::_prepend(const stringify<T>& source) -> string& {
   resize(source.size() + size());
   memory::move(get() + source.size(), get(), size() - source.size());
   memory::copy(get(), source.data(), source.size());
   return *this;
 }
 
-template<typename T, typename... P> auto string::append(const T& value, P&&... p) -> string& {
+template<typename T, typename... P> inline auto string::append(const T& value, P&&... p) -> string& {
   _append(make_string(value));
   if constexpr(sizeof...(p) > 0) append(forward<P>(p)...);
   return *this;
 }
 
-template<typename... P> auto string::append(const nall::string_format& value, P&&... p) -> string& {
+template<typename... P> inline auto string::append(const nall::string_format& value, P&&... p) -> string& {
   format(value);
   if constexpr(sizeof...(p)) append(forward<P>(p)...);
   return *this;
 }
 
-template<typename T> auto string::_append(const stringify<T>& source) -> string& {
+template<typename T> inline auto string::_append(const stringify<T>& source) -> string& {
   resize(size() + source.size());
   memory::copy(get() + size() - source.size(), source.data(), source.size());
   return *this;
 }
 
-auto string::length() const -> uint {
+inline auto string::length() const -> uint {
   return strlen(data());
 }
 

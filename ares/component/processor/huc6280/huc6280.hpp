@@ -15,10 +15,10 @@ struct HuC6280 {
   auto power() -> void;
 
   //memory.cpp
-  inline auto load8(uint8) -> uint8;
-  inline auto load16(uint16) -> uint8;
-  inline auto store8(uint8, uint8) -> void;
-  inline auto store16(uint16, uint8) -> void;
+  auto load8(uint8) -> uint8;
+  auto load16(uint16) -> uint8;
+  auto store8(uint8, uint8) -> void;
+  auto store16(uint16, uint8) -> void;
 
   auto idle() -> void;
   auto opcode() -> uint8;

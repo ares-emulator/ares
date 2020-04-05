@@ -6,10 +6,10 @@
 namespace nall::HTTP {
 
 struct Server : Role, service {
-  inline auto open(uint port = 8080, const string& serviceName = "", const string& command = "") -> bool;
-  inline auto main(const function<Response (Request&)>& function = {}) -> void;
-  inline auto scan() -> string;
-  inline auto close() -> void;
+  auto open(uint port = 8080, const string& serviceName = "", const string& command = "") -> bool;
+  auto main(const function<Response (Request&)>& function = {}) -> void;
+  auto scan() -> string;
+  auto close() -> void;
   ~Server() { close(); }
 
 private:
@@ -31,7 +31,7 @@ private:
   auto ipv6_scan() -> bool;
 };
 
-auto Server::open(uint port, const string& serviceName, const string& command) -> bool {
+inline auto Server::open(uint port, const string& serviceName, const string& command) -> bool {
   if(serviceName) {
     if(!service::command(serviceName, command)) return false;
   }
@@ -93,11 +93,11 @@ auto Server::open(uint port, const string& serviceName, const string& command) -
   return ipv4() || ipv6();
 }
 
-auto Server::main(const function<Response (Request&)>& function) -> void {
+inline auto Server::main(const function<Response (Request&)>& function) -> void {
   callback = function;
 }
 
-auto Server::scan() -> string {
+inline auto Server::scan() -> string {
   if(auto command = service::receive()) return command;
   if(connections >= settings.connectionLimit) return "busy";
   if(ipv4() && ipv4_scan()) return "ok";
@@ -105,7 +105,7 @@ auto Server::scan() -> string {
   return "idle";
 }
 
-auto Server::ipv4_scan() -> bool {
+inline auto Server::ipv4_scan() -> bool {
   struct pollfd query = {0};
   query.fd = fd4;
   query.events = POLLIN;
@@ -152,7 +152,7 @@ auto Server::ipv4_scan() -> bool {
   return false;
 }
 
-auto Server::ipv6_scan() -> bool {
+inline auto Server::ipv6_scan() -> bool {
   struct pollfd query = {0};
   query.fd = fd6;
   query.events = POLLIN;
@@ -218,7 +218,7 @@ auto Server::ipv6_scan() -> bool {
   return false;
 }
 
-auto Server::close() -> void {
+inline auto Server::close() -> void {
   ipv4_close();
   ipv6_close();
 }

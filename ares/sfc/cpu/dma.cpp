@@ -1,14 +1,14 @@
-auto CPU::dmaEnable() -> bool {
+inline auto CPU::dmaEnable() -> bool {
   for(auto& channel : channels) if(channel.dmaEnable) return true;
   return false;
 }
 
-auto CPU::hdmaEnable() -> bool {
+inline auto CPU::hdmaEnable() -> bool {
   for(auto& channel : channels) if(channel.hdmaEnable) return true;
   return false;
 }
 
-auto CPU::hdmaActive() -> bool {
+inline auto CPU::hdmaActive() -> bool {
   for(auto& channel : channels) if(channel.hdmaActive()) return true;
   return false;
 }
@@ -42,16 +42,16 @@ auto CPU::hdmaRun() -> void {
 
 //
 
-auto CPU::Channel::step(uint clocks) -> void {
+inline auto CPU::Channel::step(uint clocks) -> void {
   cpu.counter.dma += clocks;
   cpu.step(clocks);
 }
 
-auto CPU::Channel::edge() -> void {
+inline auto CPU::Channel::edge() -> void {
   cpu.dmaEdge();
 }
 
-auto CPU::Channel::validA(uint24 address) -> bool {
+inline auto CPU::Channel::validA(uint24 address) -> bool {
   //A-bus cannot access the B-bus or CPU I/O registers
   if((address & 0x40ff00) == 0x2100) return false;  //00-3f,80-bf:2100-21ff
   if((address & 0x40fe00) == 0x4000) return false;  //00-3f,80-bf:4000-41ff
@@ -60,29 +60,29 @@ auto CPU::Channel::validA(uint24 address) -> bool {
   return true;
 }
 
-auto CPU::Channel::readA(uint24 address) -> uint8 {
+inline auto CPU::Channel::readA(uint24 address) -> uint8 {
   step(4);
   cpu.r.mdr = validA(address) ? bus.read(address, cpu.r.mdr) : (uint8)0x00;
   step(4);
   return cpu.r.mdr;
 }
 
-auto CPU::Channel::readB(uint8 address, bool valid) -> uint8 {
+inline auto CPU::Channel::readB(uint8 address, bool valid) -> uint8 {
   step(4);
   cpu.r.mdr = valid ? bus.read(0x2100 | address, cpu.r.mdr) : (uint8)0x00;
   step(4);
   return cpu.r.mdr;
 }
 
-auto CPU::Channel::writeA(uint24 address, uint8 data) -> void {
+inline auto CPU::Channel::writeA(uint24 address, uint8 data) -> void {
   if(validA(address)) bus.write(address, data);
 }
 
-auto CPU::Channel::writeB(uint8 address, uint8 data, bool valid) -> void {
+inline auto CPU::Channel::writeB(uint8 address, uint8 data, bool valid) -> void {
   if(valid) bus.write(0x2100 | address, data);
 }
 
-auto CPU::Channel::transfer(uint24 addressA, uint2 index) -> void {
+inline auto CPU::Channel::transfer(uint24 addressA, uint2 index) -> void {
   uint8 addressB = targetAddress;
   switch(transferMode) {
   case 1: case 5: addressB += index.bit(0); break;
@@ -103,7 +103,7 @@ auto CPU::Channel::transfer(uint24 addressA, uint2 index) -> void {
   }
 }
 
-auto CPU::Channel::dmaRun() -> void {
+inline auto CPU::Channel::dmaRun() -> void {
   if(!dmaEnable) return;
 
   step(8);
@@ -119,11 +119,11 @@ auto CPU::Channel::dmaRun() -> void {
   dmaEnable = false;
 }
 
-auto CPU::Channel::hdmaActive() -> bool {
+inline auto CPU::Channel::hdmaActive() -> bool {
   return hdmaEnable && !hdmaCompleted;
 }
 
-auto CPU::Channel::hdmaFinished() -> bool {
+inline auto CPU::Channel::hdmaFinished() -> bool {
   auto channel = next;
   while(channel) {
     if(channel->hdmaActive()) return false;
@@ -132,12 +132,12 @@ auto CPU::Channel::hdmaFinished() -> bool {
   return true;
 }
 
-auto CPU::Channel::hdmaReset() -> void {
+inline auto CPU::Channel::hdmaReset() -> void {
   hdmaCompleted = false;
   hdmaDoTransfer = false;
 }
 
-auto CPU::Channel::hdmaSetup() -> void {
+inline auto CPU::Channel::hdmaSetup() -> void {
   hdmaDoTransfer = true;  //note: needs hardware verification
   if(!hdmaEnable) return;
 
@@ -147,7 +147,7 @@ auto CPU::Channel::hdmaSetup() -> void {
   hdmaReload();
 }
 
-auto CPU::Channel::hdmaReload() -> void {
+inline auto CPU::Channel::hdmaReload() -> void {
   auto data = readA(cpu.r.mar = sourceBank << 16 | hdmaAddress);
 
   if((uint7)lineCounter == 0) {
@@ -168,7 +168,7 @@ auto CPU::Channel::hdmaReload() -> void {
   }
 }
 
-auto CPU::Channel::hdmaTransfer() -> void {
+inline auto CPU::Channel::hdmaTransfer() -> void {
   if(!hdmaActive()) return;
   dmaEnable = false;  //HDMA will stop active DMA mid-transfer
   if(!hdmaDoTransfer) return;
@@ -180,7 +180,7 @@ auto CPU::Channel::hdmaTransfer() -> void {
   }
 }
 
-auto CPU::Channel::hdmaAdvance() -> void {
+inline auto CPU::Channel::hdmaAdvance() -> void {
   if(!hdmaActive()) return;
   lineCounter--;
   hdmaDoTransfer = lineCounter.bit(7);

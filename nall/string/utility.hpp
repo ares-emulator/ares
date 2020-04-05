@@ -2,7 +2,7 @@
 
 namespace nall {
 
-auto string::read(string_view filename) -> string {
+inline auto string::read(string_view filename) -> string {
   #if !defined(_WIN32)
   FILE* fp = fopen(filename, "rb");
   #else
@@ -22,18 +22,18 @@ auto string::read(string_view filename) -> string {
   return fclose(fp), result;
 }
 
-auto string::repeat(string_view pattern, uint times) -> string {
+inline auto string::repeat(string_view pattern, uint times) -> string {
   string result;
   while(times--) result.append(pattern.data());
   return result;
 }
 
-auto string::fill(char fill) -> string& {
+inline auto string::fill(char fill) -> string& {
   memory::fill(get(), size(), fill);
   return *this;
 }
 
-auto string::hash() const -> uint {
+inline auto string::hash() const -> uint {
   const char* p = data();
   uint length = size();
   uint result = 5381;
@@ -41,14 +41,14 @@ auto string::hash() const -> uint {
   return result;
 }
 
-auto string::remove(uint offset, uint length) -> string& {
+inline auto string::remove(uint offset, uint length) -> string& {
   char* p = get();
   length = min(length, size());
   memory::move(p + offset, p + offset + length, size() - length);
   return resize(size() - length);
 }
 
-auto string::reverse() -> string& {
+inline auto string::reverse() -> string& {
   char* p = get();
   uint length = size();
   uint pivot = length >> 1;
@@ -58,7 +58,7 @@ auto string::reverse() -> string& {
 
 //+length => insert/delete from start (right justify)
 //-length => insert/delete from end (left justify)
-auto string::size(int length, char fill) -> string& {
+inline auto string::size(int length, char fill) -> string& {
   uint size = this->size();
   if(size == length) return *this;
 
@@ -82,7 +82,7 @@ auto string::size(int length, char fill) -> string& {
   return *this;
 }
 
-auto slice(string_view self, int offset, int length) -> string {
+inline auto slice(string_view self, int offset, int length) -> string {
   string result;
   if(offset < 0) offset = self.size() - abs(offset);
   if(offset >= 0 && offset < self.size()) {
@@ -95,11 +95,11 @@ auto slice(string_view self, int offset, int length) -> string {
   return result;
 }
 
-auto string::slice(int offset, int length) const -> string {
+inline auto string::slice(int offset, int length) const -> string {
   return nall::slice(*this, offset, length);
 }
 
-template<typename T> auto fromInteger(char* result, T value) -> char* {
+template<typename T> inline auto fromInteger(char* result, T value) -> char* {
   bool negative = value < 0;
   if(!negative) value = -value;  //negate positive integers to support eg INT_MIN
 
@@ -118,7 +118,7 @@ template<typename T> auto fromInteger(char* result, T value) -> char* {
   return result;
 }
 
-template<typename T> auto fromNatural(char* result, T value) -> char* {
+template<typename T> inline auto fromNatural(char* result, T value) -> char* {
   char buffer[1 + sizeof(T) * 3];
   uint size = 0;
 
@@ -136,7 +136,7 @@ template<typename T> auto fromNatural(char* result, T value) -> char* {
 //using sprintf is certainly not the most ideal method to convert
 //a double to a string ... but attempting to parse a double by
 //hand, digit-by-digit, results in subtle rounding errors.
-template<typename T> auto fromReal(char* result, T value) -> uint {
+template<typename T> inline auto fromReal(char* result, T value) -> uint {
   char buffer[256];
   #ifdef _WIN32
   //Windows C-runtime does not support long double via sprintf()

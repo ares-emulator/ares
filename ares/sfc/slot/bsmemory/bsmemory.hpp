@@ -77,9 +77,9 @@ private:
   struct BlockInformation {
     BSMemory* self = nullptr;
 
-    inline auto bits() const -> uint;
-    inline auto bytes() const -> uint;
-    inline auto count() const -> uint;
+    auto bits() const -> uint;
+    auto bytes() const -> uint;
+    auto count() const -> uint;
   };
 
   struct Block : BlockInformation {

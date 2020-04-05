@@ -19,12 +19,12 @@ struct Role {
     int timeoutSend     =    15 * 1000;  //server
   } settings;
 
-  inline auto configure(const string& parameters) -> bool;
-  inline auto download(int fd, Message& message) -> bool;
-  inline auto upload(int fd, const Message& message) -> bool;
+  auto configure(const string& parameters) -> bool;
+  auto download(int fd, Message& message) -> bool;
+  auto upload(int fd, const Message& message) -> bool;
 };
 
-auto Role::configure(const string& parameters) -> bool {
+inline auto Role::configure(const string& parameters) -> bool {
   auto document = BML::unserialize(parameters);
   for(auto parameter : document) {
     auto name = parameter.name();
@@ -42,7 +42,7 @@ auto Role::configure(const string& parameters) -> bool {
   return true;
 }
 
-auto Role::download(int fd, Message& message) -> bool {
+inline auto Role::download(int fd, Message& message) -> bool {
   auto& head = message._head;
   auto& body = message._body;
   string chunk;
@@ -135,7 +135,7 @@ auto Role::download(int fd, Message& message) -> bool {
   return true;
 }
 
-auto Role::upload(int fd, const Message& message) -> bool {
+inline auto Role::upload(int fd, const Message& message) -> bool {
   auto transfer = [&](const uint8_t* data, uint size) -> bool {
     while(size) {
       int length = send(fd, data, min(size, settings.chunkSize), MSG_NOSIGNAL);

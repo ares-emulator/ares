@@ -70,14 +70,14 @@ auto SuperFX::readOpcode(uint16 address) -> uint8 {
   }
 }
 
-auto SuperFX::peekpipe() -> uint8 {
+inline auto SuperFX::peekpipe() -> uint8 {
   uint8 result = regs.pipeline;
   regs.pipeline = readOpcode(regs.r[15]);
   regs.r[15].modified = false;
   return result;
 }
 
-auto SuperFX::pipe() -> uint8 {
+inline auto SuperFX::pipe() -> uint8 {
   uint8 result = regs.pipeline;
   regs.pipeline = readOpcode(++regs.r[15]);
   regs.r[15].modified = false;

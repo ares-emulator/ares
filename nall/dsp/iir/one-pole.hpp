@@ -12,8 +12,8 @@ struct OnePole {
     HighPass,
   };
 
-  inline auto reset(Type type, double cutoffFrequency, double samplingFrequency) -> void;
-  inline auto process(double in) -> double;  //normalized sample (-1.0 to +1.0)
+  auto reset(Type type, double cutoffFrequency, double samplingFrequency) -> void;
+  auto process(double in) -> double;  //normalized sample (-1.0 to +1.0)
 
 private:
   Type type;
@@ -23,7 +23,7 @@ private:
   double z1;      //first-order IIR
 };
 
-auto OnePole::reset(Type type, double cutoffFrequency, double samplingFrequency) -> void {
+inline auto OnePole::reset(Type type, double cutoffFrequency, double samplingFrequency) -> void {
   this->type = type;
   this->cutoffFrequency = cutoffFrequency;
   this->samplingFrequency = samplingFrequency;
@@ -39,7 +39,7 @@ auto OnePole::reset(Type type, double cutoffFrequency, double samplingFrequency)
   }
 }
 
-auto OnePole::process(double in) -> double {
+inline auto OnePole::process(double in) -> double {
   return z1 = in * a0 + z1 * b1;
 }
 

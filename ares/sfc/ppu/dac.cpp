@@ -142,12 +142,12 @@ auto PPU::DAC::blend(uint x, uint y) const -> uint15 {
   }
 }
 
-auto PPU::DAC::paletteColor(uint8 palette) const -> uint15 {
+alwaysinline auto PPU::DAC::paletteColor(uint8 palette) const -> uint15 {
   ppu.latch.cgramAddress = palette;
   return cgram[palette];
 }
 
-auto PPU::DAC::directColor(uint8 palette, uint3 paletteGroup) const -> uint15 {
+alwaysinline auto PPU::DAC::directColor(uint8 palette, uint3 paletteGroup) const -> uint15 {
   //palette = -------- BBGGGRRR
   //group   = -------- -----bgr
   //output  = 0BBb00GG Gg0RRRr0
@@ -156,7 +156,7 @@ auto PPU::DAC::directColor(uint8 palette, uint3 paletteGroup) const -> uint15 {
        + (palette << 2 & 0x001c) + (paletteGroup <<  1 & 0x0002);
 }
 
-auto PPU::DAC::fixedColor() const -> uint15 {
+alwaysinline auto PPU::DAC::fixedColor() const -> uint15 {
   return io.colorRed << 0 | io.colorGreen << 5 | io.colorBlue << 10;
 }
 

@@ -34,7 +34,7 @@ struct timeinfo {
       hour(hour), minute(minute), second(second), weekday(weekday) {
   }
 
-  inline explicit operator bool() const { return month; }
+  explicit operator bool() const { return month; }
 
   uint year;     //...
   uint month;    //1 - 12

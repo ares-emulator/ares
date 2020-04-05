@@ -28,6 +28,7 @@ Board::Board(Markup::Node document) {
 
 auto Board::load() -> void {
   auto document = BML::unserialize(cartridge.manifest());
+  load(document);
 
   if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
     if(prgrom.size = memory["size"].natural()) prgrom.data = new uint8_t[prgrom.size]();
@@ -64,6 +65,7 @@ auto Board::load() -> void {
 
 auto Board::save() -> void {
   auto document = BML::unserialize(cartridge.manifest());
+  save(document);
 
   if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
     if(!memory["volatile"]) {
@@ -82,11 +84,11 @@ auto Board::save() -> void {
   }
 }
 
-auto Board::Memory::read(uint addr) const -> uint8 {
+inline auto Board::BlockMemory::read(uint addr) const -> uint8 {
   return data[mirror(addr, size)];
 }
 
-auto Board::Memory::write(uint addr, uint8 byte) -> void {
+inline auto Board::BlockMemory::write(uint addr, uint8 byte) -> void {
   if(writable) data[mirror(addr, size)] = byte;
 }
 
@@ -228,4 +230,38 @@ auto Board::load(string manifest) -> Board* {
   if(type == "SUNSOFT-5B"  ) return new Sunsoft5B(document);
 
   return nullptr;
+}
+
+auto Board::load(Memory::Readable<uint8>& memory, Markup::Node node) -> bool {
+  if(!node) return false;
+  memory.allocate(node["size"].natural(), 0xff);
+  auto filename = string{node["content"].string(), ".", node["type"].string()}.downcase();
+  if(auto fp = platform->open(cartridge.node, filename, File::Read, File::Required)) {
+    memory.load(fp);
+    return true;
+  }
+  return false;
+}
+
+auto Board::load(Memory::Writable<uint8>& memory, Markup::Node node) -> bool {
+  if(!node) return false;
+  memory.allocate(node["size"].natural(), 0xff);
+  if(node["volatile"]) return true;
+  auto filename = string{node["content"].string(), ".", node["type"].string()}.downcase();
+  if(auto fp = platform->open(cartridge.node, filename, File::Read)) {
+    memory.load(fp);
+    return true;
+  }
+  return false;
+}
+
+auto Board::save(Memory::Writable<uint8>& memory, Markup::Node node) -> bool {
+  if(!node) return false;
+  if(node["volatile"]) return true;
+  auto filename = string{node["content"].string(), ".", node["type"].string()}.downcase();
+  if(auto fp = platform->open(cartridge.node, filename, File::Write)) {
+    memory.save(fp);
+    return true;
+  }
+  return false;
 }

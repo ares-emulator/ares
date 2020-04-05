@@ -1,9 +1,9 @@
 //Hudson Soft HuC6202: Video Priority Controller
 
 struct VPC {
-  inline auto bus(uint16 hcounter) const -> uint9;
-
   //vpc.cpp
+  auto bus(uint16 hcounter) const -> uint9;
+
   auto read(uint5 address) -> uint8;
   auto write(uint5 address, uint8 data) -> void;
   auto store(uint2 address, uint8 data) -> void;

@@ -35,10 +35,10 @@ protected:
   uintptr _metadata = 0;
   vector<SharedNode> _children;
 
-  inline auto _evaluate(string query) const -> bool;
-  inline auto _find(const string& query) const -> vector<Node>;
-  inline auto _lookup(const string& path) const -> Node;
-  inline auto _create(const string& path) -> Node;
+  auto _evaluate(string query) const -> bool;
+  auto _find(const string& query) const -> vector<Node>;
+  auto _lookup(const string& path) const -> Node;
+  auto _create(const string& path) -> Node;
 
   friend class Node;
 };

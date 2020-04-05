@@ -1,4 +1,4 @@
-auto CPU::DMA::run() -> bool {
+inline auto CPU::DMA::run() -> bool {
   if(!active || waiting) return false;
 
   transfer();

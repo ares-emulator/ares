@@ -17,11 +17,11 @@ struct Biquad {
     HighShelf,
   };
 
-  inline auto reset(Type type, double cutoffFrequency, double samplingFrequency, double quality, double gain = 0.0) -> void;
-  inline auto process(double in) -> double;  //normalized sample (-1.0 to +1.0)
+  auto reset(Type type, double cutoffFrequency, double samplingFrequency, double quality, double gain = 0.0) -> void;
+  auto process(double in) -> double;  //normalized sample (-1.0 to +1.0)
 
-  inline static auto shelf(double gain, double slope) -> double;
-  inline static auto butterworth(uint order, uint phase) -> double;
+  static auto shelf(double gain, double slope) -> double;
+  static auto butterworth(uint order, uint phase) -> double;
 
 private:
   Type type;
@@ -33,7 +33,7 @@ private:
   double z1, z2;              //second-order IIR
 };
 
-auto Biquad::reset(Type type, double cutoffFrequency, double samplingFrequency, double quality, double gain) -> void {
+inline auto Biquad::reset(Type type, double cutoffFrequency, double samplingFrequency, double quality, double gain) -> void {
   this->type = type;
   this->cutoffFrequency = cutoffFrequency;
   this->samplingFrequency = samplingFrequency;
@@ -143,7 +143,7 @@ auto Biquad::reset(Type type, double cutoffFrequency, double samplingFrequency, 
   }
 }
 
-auto Biquad::process(double in) -> double {
+inline auto Biquad::process(double in) -> double {
   double out = in * a0 + z1;
   z1 = in * a1 + z2 - b1 * out;
   z2 = in * a2 - b2 * out;
@@ -151,13 +151,13 @@ auto Biquad::process(double in) -> double {
 }
 
 //compute Q values for low-shelf and high-shelf filtering
-auto Biquad::shelf(double gain, double slope) -> double {
+inline auto Biquad::shelf(double gain, double slope) -> double {
   double a = pow(10, gain / 40);
   return 1 / sqrt((a + 1 / a) * (1 / slope - 1) + 2);
 }
 
 //compute Q values for Nth-order butterworth filtering
-auto Biquad::butterworth(uint order, uint phase) -> double {
+inline auto Biquad::butterworth(uint order, uint phase) -> double {
   return -0.5 / cos(Math::Pi * (phase + order + 0.5) / order);
 }
 

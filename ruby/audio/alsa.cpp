@@ -6,7 +6,7 @@ struct AudioALSA : AudioDriver {
   ~AudioALSA() { terminate(); }
 
   auto create() -> bool override {
-    super.setDevice(hasDevices().first());
+    super.setDevice("default");
     super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(20);
@@ -114,7 +114,7 @@ private:
   auto initialize() -> bool {
     terminate();
 
-    if(!hasDevices().find(self.device)) self.device = hasDevices().first();
+    if(!hasDevices().find(self.device)) self.device = "default";
     if(snd_pcm_open(&_interface, self.device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) < 0) return terminate(), false;
 
     uint rate = self.frequency;

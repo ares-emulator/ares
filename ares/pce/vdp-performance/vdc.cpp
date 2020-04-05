@@ -310,20 +310,20 @@ auto VDC::power() -> void {
   sprite.vdc = *this;
 }
 
-auto VDC::VRAM::read(uint16 address) const -> uint16 {
+inline auto VDC::VRAM::read(uint16 address) const -> uint16 {
   if(address.bit(15)) return 0x0000;  //todo: random data?
   return memory[address];
 }
 
-auto VDC::VRAM::write(uint16 address, uint16 data) -> void {
+inline auto VDC::VRAM::write(uint16 address, uint16 data) -> void {
   if(address.bit(15)) return;
   memory[address] = data;
 }
 
-auto VDC::SATB::read(uint8 address) const -> uint16 {
+inline auto VDC::SATB::read(uint8 address) const -> uint16 {
   return memory[address];
 }
 
-auto VDC::SATB::write(uint8 address, uint16 data) -> void {
+inline auto VDC::SATB::write(uint8 address, uint16 data) -> void {
   memory[address] = data;
 }

@@ -17,11 +17,11 @@ struct PPU : Thread, IO {
     } memory;
   } debugger;
 
-  inline auto blank() -> bool;
-
   //ppu.cpp
   auto load(Node::Object, Node::Object) -> void;
   auto unload() -> void;
+
+  auto blank() -> bool;
 
   auto step(uint clocks) -> void;
   auto main() -> void;

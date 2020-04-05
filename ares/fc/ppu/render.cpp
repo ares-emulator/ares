@@ -60,7 +60,7 @@ auto PPU::renderSprite() -> void {
   if(!enable()) return;
 
   uint n = latch.oamIterator++;
-  int ly = io.ly == vlines() - 1 ? -1 : io.ly;
+  int ly = io.ly == vlines() - 1 ? -1 : (int)io.ly;
   uint y = ly - oam[n * 4 + 0];
 
   if(y >= io.spriteHeight) return;

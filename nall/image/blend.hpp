@@ -2,13 +2,13 @@
 
 namespace nall {
 
-auto image::impose(blend mode, unsigned targetX, unsigned targetY, image source, unsigned sourceX, unsigned sourceY, unsigned sourceWidth, unsigned sourceHeight) -> void {
+inline auto image::impose(blend mode, uint targetX, uint targetY, image source, uint sourceX, uint sourceY, uint sourceWidth, uint sourceHeight) -> void {
   source.transform(_endian, _depth, _alpha.mask(), _red.mask(), _green.mask(), _blue.mask());
 
-  for(unsigned y = 0; y < sourceHeight; y++) {
+  for(uint y = 0; y < sourceHeight; y++) {
     const uint8_t* sp = source._data + source.pitch() * (sourceY + y) + source.stride() * sourceX;
     uint8_t* dp = _data + pitch() * (targetY + y) + stride() * targetX;
-    for(unsigned x = 0; x < sourceWidth; x++) {
+    for(uint x = 0; x < sourceWidth; x++) {
       uint64_t sourceColor = source.read(sp);
       uint64_t targetColor = read(dp);
 

@@ -52,14 +52,14 @@ auto CPU::main() -> void {
   instruction();
 }
 
-auto CPU::step(uint clocks) -> void {
+inline auto CPU::step(uint clocks) -> void {
   refresh.ram += clocks;
   while(refresh.ram >= 133) refresh.ram -= 133;
   refresh.external += clocks;
   Thread::step(clocks);
 }
 
-auto CPU::idle(uint clocks) -> void {
+inline auto CPU::idle(uint clocks) -> void {
   step(clocks);
 }
 

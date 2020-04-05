@@ -7,15 +7,15 @@
 namespace nall::DSP::Resampler {
 
 struct Cubic {
-  inline auto inputFrequency() const -> double { return _inputFrequency; }
-  inline auto outputFrequency() const -> double { return _outputFrequency; }
+  auto inputFrequency() const -> double { return _inputFrequency; }
+  auto outputFrequency() const -> double { return _outputFrequency; }
 
-  inline auto reset(double inputFrequency, double outputFrequency = 0, uint queueSize = 0) -> void;
-  inline auto setInputFrequency(double inputFrequency) -> void;
-  inline auto pending() const -> bool;
-  inline auto read() -> double;
-  inline auto write(double sample) -> void;
-  inline auto serialize(serializer&) -> void;
+  auto reset(double inputFrequency, double outputFrequency = 0, uint queueSize = 0) -> void;
+  auto setInputFrequency(double inputFrequency) -> void;
+  auto pending() const -> bool;
+  auto read() -> double;
+  auto write(double sample) -> void;
+  auto serialize(serializer&) -> void;
 
 private:
   double _inputFrequency;
@@ -27,7 +27,7 @@ private:
   queue<double> _samples;
 };
 
-auto Cubic::reset(double inputFrequency, double outputFrequency, uint queueSize) -> void {
+inline auto Cubic::reset(double inputFrequency, double outputFrequency, uint queueSize) -> void {
   _inputFrequency = inputFrequency;
   _outputFrequency = outputFrequency ? outputFrequency : _inputFrequency;
 
@@ -37,20 +37,20 @@ auto Cubic::reset(double inputFrequency, double outputFrequency, uint queueSize)
   _samples.resize(queueSize ? queueSize : _outputFrequency * 0.02);  //default to 20ms max queue size
 }
 
-auto Cubic::setInputFrequency(double inputFrequency) -> void {
+inline auto Cubic::setInputFrequency(double inputFrequency) -> void {
   _inputFrequency = inputFrequency;
   _ratio = _inputFrequency / _outputFrequency;
 }
 
-auto Cubic::pending() const -> bool {
+inline auto Cubic::pending() const -> bool {
   return _samples.pending();
 }
 
-auto Cubic::read() -> double {
+inline auto Cubic::read() -> double {
   return _samples.read();
 }
 
-auto Cubic::write(double sample) -> void {
+inline auto Cubic::write(double sample) -> void {
   auto& mu = _fraction;
   auto& s = _history;
 
@@ -72,7 +72,7 @@ auto Cubic::write(double sample) -> void {
   mu -= 1.0;
 }
 
-auto Cubic::serialize(serializer& s) -> void {
+inline auto Cubic::serialize(serializer& s) -> void {
   s.real(_inputFrequency);
   s.real(_outputFrequency);
   s.real(_ratio);

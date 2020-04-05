@@ -9,34 +9,34 @@ struct Thread {
     function<void ()> entryPoint;
   };
 
-  static inline auto EntryPoints() -> vector<EntryPoint>&;
-  static inline auto Enter() -> void;
+  static auto EntryPoints() -> vector<EntryPoint>&;
+  static auto Enter() -> void;
 
   Thread() = default;
   Thread(const Thread&) = delete;
   auto operator=(const Thread&) = delete;
-  inline virtual ~Thread();
+  virtual ~Thread();
 
   explicit operator bool() const { return _handle; }
-  inline auto active() const -> bool;
-  inline auto handle() const -> cothread_t;
-  inline auto frequency() const -> uintmax;
-  inline auto scalar() const -> uintmax;
-  inline auto clock() const -> uintmax;
+  auto active() const -> bool;
+  auto handle() const -> cothread_t;
+  auto frequency() const -> uintmax;
+  auto scalar() const -> uintmax;
+  auto clock() const -> uintmax;
 
-  inline auto setHandle(cothread_t handle) -> void;
-  inline auto setFrequency(double frequency) -> void;
-  inline auto setScalar(uintmax scalar) -> void;
-  inline auto setClock(uintmax clock) -> void;
+  auto setHandle(cothread_t handle) -> void;
+  auto setFrequency(double frequency) -> void;
+  auto setScalar(uintmax scalar) -> void;
+  auto setClock(uintmax clock) -> void;
 
-  inline auto create(double frequency, function<void ()> entryPoint) -> void;
-  inline auto destroy() -> void;
+  auto create(double frequency, function<void ()> entryPoint) -> void;
+  auto destroy() -> void;
 
-  inline auto step(uint clocks) -> void;
-  inline auto synchronize() -> void;
-  template<typename... P> inline auto synchronize(Thread&, P&&...) -> void;
+  auto step(uint clocks) -> void;
+  auto synchronize() -> void;
+  template<typename... P> auto synchronize(Thread&, P&&...) -> void;
 
-  inline auto serialize(serializer& s) -> void;
+  auto serialize(serializer& s) -> void;
 
 protected:
   cothread_t _handle = nullptr;

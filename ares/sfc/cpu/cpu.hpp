@@ -32,9 +32,9 @@ struct CPU : WDC65816, Thread, PPUcounter {
   auto power(bool reset) -> void;
 
   //dma.cpp
-  inline auto dmaEnable() -> bool;
-  inline auto hdmaEnable() -> bool;
-  inline auto hdmaActive() -> bool;
+  auto dmaEnable() -> bool;
+  auto hdmaEnable() -> bool;
+  auto hdmaActive() -> bool;
 
   auto dmaRun() -> void;
   auto hdmaReset() -> void;
@@ -45,7 +45,7 @@ struct CPU : WDC65816, Thread, PPUcounter {
   auto idle() -> void override;
   auto read(uint24 address) -> uint8 override;
   auto write(uint24 address, uint8 data) -> void override;
-  alwaysinline auto wait(uint24 address) const -> uint;
+  auto wait(uint24 address) const -> uint;
   auto readDisassembler(uint24 address) -> uint8 override;
 
   //io.cpp
@@ -59,28 +59,26 @@ struct CPU : WDC65816, Thread, PPUcounter {
   auto writeDMA(uint24 address, uint8 data) -> void;
 
   //timing.cpp
-  inline auto dmaCounter() const -> uint;
-  inline auto joypadCounter() const -> uint;
+  auto dmaCounter() const -> uint;
+  auto joypadCounter() const -> uint;
 
   auto step(uint clocks) -> void;
   auto scanline() -> void;
 
-  alwaysinline auto aluEdge() -> void;
-  alwaysinline auto dmaEdge() -> void;
+  auto aluEdge() -> void;
+  auto dmaEdge() -> void;
+  auto joypadEdge() -> void;
 
   //irq.cpp
-  alwaysinline auto nmiPoll() -> void;
-  alwaysinline auto irqPoll() -> void;
+  auto nmiPoll() -> void;
+  auto irqPoll() -> void;
   auto nmitimenUpdate(uint8 data) -> void;
   auto rdnmi() -> bool;
   auto timeup() -> bool;
 
-  alwaysinline auto nmiTest() -> bool;
-  alwaysinline auto irqTest() -> bool;
-  alwaysinline auto lastCycle() -> void override;
-
-  //joypad.cpp
-  auto joypadEdge() -> void;
+  auto nmiTest() -> bool;
+  auto irqTest() -> bool;
+  auto lastCycle() -> void override;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -185,24 +183,24 @@ private:
 
   struct Channel {
     //dma.cpp
-    inline auto step(uint clocks) -> void;
-    inline auto edge() -> void;
+    auto step(uint clocks) -> void;
+    auto edge() -> void;
 
-    inline auto validA(uint24 address) -> bool;
-    inline auto readA(uint24 address) -> uint8;
-    inline auto readB(uint8 address, bool valid) -> uint8;
-    inline auto writeA(uint24 address, uint8 data) -> void;
-    inline auto writeB(uint8 address, uint8 data, bool valid) -> void;
-    inline auto transfer(uint24 address, uint2 index) -> void;
+    auto validA(uint24 address) -> bool;
+    auto readA(uint24 address) -> uint8;
+    auto readB(uint8 address, bool valid) -> uint8;
+    auto writeA(uint24 address, uint8 data) -> void;
+    auto writeB(uint8 address, uint8 data, bool valid) -> void;
+    auto transfer(uint24 address, uint2 index) -> void;
 
-    inline auto dmaRun() -> void;
-    inline auto hdmaActive() -> bool;
-    inline auto hdmaFinished() -> bool;
-    inline auto hdmaReset() -> void;
-    inline auto hdmaSetup() -> void;
-    inline auto hdmaReload() -> void;
-    inline auto hdmaTransfer() -> void;
-    inline auto hdmaAdvance() -> void;
+    auto dmaRun() -> void;
+    auto hdmaActive() -> bool;
+    auto hdmaFinished() -> bool;
+    auto hdmaReset() -> void;
+    auto hdmaSetup() -> void;
+    auto hdmaReload() -> void;
+    auto hdmaTransfer() -> void;
+    auto hdmaAdvance() -> void;
 
     //$420b
     uint1 dmaEnable;

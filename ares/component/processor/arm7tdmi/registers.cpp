@@ -1,4 +1,4 @@
-auto ARM7TDMI::r(uint4 index) -> GPR& {
+inline auto ARM7TDMI::r(uint4 index) -> GPR& {
   switch(index) {
   case  0: return processor.r0;
   case  1: return processor.r1;
@@ -34,11 +34,11 @@ auto ARM7TDMI::r(uint4 index) -> GPR& {
   unreachable;
 }
 
-auto ARM7TDMI::cpsr() -> PSR& {
+inline auto ARM7TDMI::cpsr() -> PSR& {
   return processor.cpsr;
 }
 
-auto ARM7TDMI::spsr() -> PSR& {
+inline auto ARM7TDMI::spsr() -> PSR& {
   switch(processor.cpsr.m) {
   case PSR::FIQ: return processor.fiq.spsr;
   case PSR::IRQ: return processor.irq.spsr;
@@ -49,10 +49,10 @@ auto ARM7TDMI::spsr() -> PSR& {
   throw;
 }
 
-auto ARM7TDMI::privileged() const -> bool {
+inline auto ARM7TDMI::privileged() const -> bool {
   return processor.cpsr.m != PSR::USR;
 }
 
-auto ARM7TDMI::exception() const -> bool {
+inline auto ARM7TDMI::exception() const -> bool {
   return privileged() && processor.cpsr.m != PSR::SYS;
 }

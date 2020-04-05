@@ -30,7 +30,7 @@ struct CPU : M68K, Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  inline auto step(uint clocks) -> void;
+  auto step(uint clocks) -> void;
   auto idle(uint clocks) -> void override;
   auto wait(uint clocks) -> void override;
 

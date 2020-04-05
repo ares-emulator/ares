@@ -83,13 +83,13 @@ auto PPU::map() -> void {
   bus.map(reader, writer, "00-3f,80-bf:2100-213f");
 }
 
-auto PPU::step() -> void {
+inline auto PPU::step() -> void {
   tick(2);
   Thread::step(2);
   Thread::synchronize(cpu);
 }
 
-auto PPU::step(uint clocks) -> void {
+inline auto PPU::step(uint clocks) -> void {
   clocks >>= 1;
   while(clocks--) {
     tick(2);

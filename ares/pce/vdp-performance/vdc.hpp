@@ -30,8 +30,8 @@ struct VDC {
 
   struct VRAM {
     //vdc.cpp
-    inline auto read(uint16 address) const -> uint16;
-    inline auto write(uint16 address, uint16 data) -> void;
+    auto read(uint16 address) const -> uint16;
+    auto write(uint16 address, uint16 data) -> void;
 
     uint16 memory[0x8000];
 
@@ -45,8 +45,8 @@ struct VDC {
 
   struct SATB {
     //vdc.cpp
-    inline auto read(uint8 address) const -> uint16;
-    inline auto write(uint8 address, uint16 data) -> void;
+    auto read(uint8 address) const -> uint16;
+    auto write(uint8 address, uint16 data) -> void;
 
     uint16 memory[0x100];
   } satb;

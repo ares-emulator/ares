@@ -3,8 +3,8 @@ struct OAM {
   auto write(uint10 address, uint8 data) -> void;
 
   struct Object {
-    alwaysinline auto width() const -> uint;
-    alwaysinline auto height() const -> uint;
+    auto width() const -> uint;
+    auto height() const -> uint;
 
     uint9 x;
     uint8 y;

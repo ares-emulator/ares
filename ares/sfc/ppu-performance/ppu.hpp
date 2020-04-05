@@ -32,13 +32,13 @@ struct PPU : Thread, PPUcounter {
 
   //io.cpp
   auto latchCounters() -> void;
-  alwaysinline auto addressVRAM() const -> uint16;
-  alwaysinline auto readVRAM() -> uint16;
-  alwaysinline auto writeVRAM(uint1 byte, uint8 data) -> void;
-  alwaysinline auto readOAM(uint10 address) -> uint8;
-  alwaysinline auto writeOAM(uint10 address, uint8 data) -> void;
-  alwaysinline auto readCGRAM(uint1 byte, uint8 address) -> uint8;
-  alwaysinline auto writeCGRAM(uint8 address, uint15 data) -> void;
+  auto addressVRAM() const -> uint16;
+  auto readVRAM() -> uint16;
+  auto writeVRAM(uint1 byte, uint8 data) -> void;
+  auto readOAM(uint10 address) -> uint8;
+  auto writeOAM(uint10 address, uint8 data) -> void;
+  auto readCGRAM(uint1 byte, uint8 address) -> uint8;
+  auto writeCGRAM(uint8 address, uint15 data) -> void;
   auto readIO(uint24 address, uint8 data) -> uint8;
   auto writeIO(uint24 address, uint8 data) -> void;
   auto updateVideoMode() -> void;

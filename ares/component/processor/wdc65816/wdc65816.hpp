@@ -54,22 +54,22 @@ struct WDC65816 {
   auto power() -> void;
 
   //memory.cpp
-  inline auto idleIRQ() -> void;
-  inline auto idle2() -> void;
-  inline auto idle4(uint16 x, uint16 y) -> void;
-  inline auto idle6(uint16 address) -> void;
-  inline auto fetch() -> uint8;
-  inline auto pull() -> uint8;
-         auto push(uint8 data) -> void;
-  inline auto pullN() -> uint8;
-  inline auto pushN(uint8 data) -> void;
-  inline auto readDirect(uint address) -> uint8;
-  inline auto writeDirect(uint address, uint8 data) -> void;
-  inline auto readDirectN(uint address) -> uint8;
-  inline auto readBank(uint address) -> uint8;
-  inline auto writeBank(uint address, uint8 data) -> void;
-  inline auto readStack(uint address) -> uint8;
-  inline auto writeStack(uint address, uint8 data) -> void;
+  auto idleIRQ() -> void;
+  auto idle2() -> void;
+  auto idle4(uint16 x, uint16 y) -> void;
+  auto idle6(uint16 address) -> void;
+  auto fetch() -> uint8;
+  auto pull() -> uint8;
+  auto push(uint8 data) -> void;
+  auto pullN() -> uint8;
+  auto pushN(uint8 data) -> void;
+  auto readDirect(uint address) -> uint8;
+  auto writeDirect(uint address, uint8 data) -> void;
+  auto readDirectN(uint address) -> uint8;
+  auto readBank(uint address) -> uint8;
+  auto writeBank(uint address, uint8 data) -> void;
+  auto readStack(uint address) -> uint8;
+  auto writeStack(uint address, uint8 data) -> void;
 
   //algorithms.cpp
   using  alu8 = auto (WDC65816::*)( uint8) ->  uint8;
@@ -283,7 +283,7 @@ struct WDC65816 {
 
     uint16 vector;  //interrupt vector address
     uint24 mar;     //memory address register
-     r8 mdr;      //memory data register
+     uint8 mdr;     //memory data register
 
     r24 u;  //temporary register
     r24 v;  //temporary register

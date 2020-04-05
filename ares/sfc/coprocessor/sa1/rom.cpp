@@ -1,15 +1,15 @@
-auto SA1::ROM::conflict() const -> bool {
+inline auto SA1::ROM::conflict() const -> bool {
   if((cpu.r.mar & 0x408000) == 0x008000) return true;  //00-3f,80-bf:8000-ffff
   if((cpu.r.mar & 0xc00000) == 0xc00000) return true;  //c0-ff:0000-ffff
   return false;
 }
 
-auto SA1::ROM::read(uint24 address, uint8 data) -> uint8 {
+inline auto SA1::ROM::read(uint24 address, uint8 data) -> uint8 {
   address = bus.mirror(address, size());
   return ReadableMemory::read(address, data);
 }
 
-auto SA1::ROM::write(uint24 address, uint8 data) -> void {
+inline auto SA1::ROM::write(uint24 address, uint8 data) -> void {
 }
 
 //note: addresses are translated prior to invoking this function:

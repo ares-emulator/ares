@@ -5,11 +5,11 @@
 namespace nall {
 
 struct service {
-  inline explicit operator bool() const;
-  inline auto command(const string& name, const string& command) -> bool;
-  inline auto receive() -> string;
-  inline auto name() const -> string;
-  inline auto stop() const -> bool;
+  explicit operator bool() const;
+  auto command(const string& name, const string& command) -> bool;
+  auto receive() -> string;
+  auto name() const -> string;
+  auto stop() const -> bool;
 
 private:
   shared_memory shared;
@@ -17,12 +17,12 @@ private:
   bool _stop = false;
 };
 
-service::operator bool() const {
+inline service::operator bool() const {
   return (bool)shared;
 }
 
 //returns true on new service process creation (false is not necessarily an error)
-auto service::command(const string& name, const string& command) -> bool {
+inline auto service::command(const string& name, const string& command) -> bool {
   if(!name) return false;
   if(!command) return print("[{0}] usage: {service} command\n"
     "commands:\n"
@@ -76,7 +76,7 @@ auto service::command(const string& name, const string& command) -> bool {
   return false;
 }
 
-auto service::receive() -> string {
+inline auto service::receive() -> string {
   string command;
   if(shared) {
     if(auto data = shared.acquire()) {
@@ -103,11 +103,11 @@ auto service::receive() -> string {
   return command;
 }
 
-auto service::name() const -> string {
+inline auto service::name() const -> string {
   return _name;
 }
 
-auto service::stop() const -> bool {
+inline auto service::stop() const -> bool {
   return _stop;
 }
 

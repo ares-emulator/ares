@@ -56,8 +56,8 @@ struct SuperFX : GSU, Thread {
   auto write(uint24 address, uint8 data) -> void override;
 
   auto readOpcode(uint16 address) -> uint8;
-  alwaysinline auto peekpipe() -> uint8;
-  alwaysinline auto pipe() -> uint8 override;
+  auto peekpipe() -> uint8;
+  auto pipe() -> uint8 override;
 
   auto flushCache() -> void override;
   auto readCache(uint16 address) -> uint8;

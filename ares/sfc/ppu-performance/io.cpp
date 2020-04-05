@@ -5,7 +5,7 @@ auto PPU::latchCounters() -> void {
   latch.counters = 1;
 }
 
-auto PPU::addressVRAM() const -> uint16 {
+alwaysinline auto PPU::addressVRAM() const -> uint16 {
   uint16 address = vram.address;
   switch(vram.mapping) {
   case 0: return address;
@@ -16,29 +16,29 @@ auto PPU::addressVRAM() const -> uint16 {
   unreachable;
 }
 
-auto PPU::readVRAM() -> uint16 {
+alwaysinline auto PPU::readVRAM() -> uint16 {
   if(!io.displayDisable && cpu.vcounter() < vdisp()) return 0x0000;
   auto address = addressVRAM();
   return vram[address];
 }
 
-auto PPU::writeVRAM(uint1 byte, uint8 data) -> void {
+alwaysinline auto PPU::writeVRAM(uint1 byte, uint8 data) -> void {
   if(!io.displayDisable && cpu.vcounter() < vdisp()) return;
   auto address = addressVRAM();
   vram[address].byte(byte) = data;
 }
 
-auto PPU::readOAM(uint10 address) -> uint8 {
+alwaysinline auto PPU::readOAM(uint10 address) -> uint8 {
   if(!io.displayDisable && cpu.vcounter() < vdisp()) address = 0x0218;
   return obj.oam.read(address);
 }
 
-auto PPU::writeOAM(uint10 address, uint8 data) -> void {
+alwaysinline auto PPU::writeOAM(uint10 address, uint8 data) -> void {
   if(!io.displayDisable && cpu.vcounter() < vdisp()) address = 0x0218;
   return obj.oam.write(address, data);
 }
 
-auto PPU::readCGRAM(uint1 byte, uint8 address) -> uint8 {
+alwaysinline auto PPU::readCGRAM(uint1 byte, uint8 address) -> uint8 {
   if(!io.displayDisable
   && cpu.vcounter() > 0 && cpu.vcounter() < vdisp()
   && cpu.hcounter() >= 88 && cpu.hcounter() < 1096
@@ -46,7 +46,7 @@ auto PPU::readCGRAM(uint1 byte, uint8 address) -> uint8 {
   return dac.cgram[address].byte(byte);
 }
 
-auto PPU::writeCGRAM(uint8 address, uint15 data) -> void {
+alwaysinline auto PPU::writeCGRAM(uint8 address, uint15 data) -> void {
   if(!io.displayDisable
   && cpu.vcounter() > 0 && cpu.vcounter() < vdisp()
   && cpu.hcounter() >= 88 && cpu.hcounter() < 1096

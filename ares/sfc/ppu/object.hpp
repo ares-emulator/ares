@@ -1,6 +1,6 @@
 struct Object {
-  alwaysinline auto addressReset() -> void;
-  alwaysinline auto setFirstSprite() -> void;
+  auto addressReset() -> void;
+  auto setFirstSprite() -> void;
   auto frame() -> void;
   auto scanline() -> void;
   auto evaluate(uint7 index) -> void;

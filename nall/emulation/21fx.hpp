@@ -35,7 +35,7 @@ struct FX {
   serial device;
 };
 
-auto FX::open(Arguments& arguments) -> bool {
+inline auto FX::open(Arguments& arguments) -> bool {
   //device name override support
   string name;
   arguments.take("--device", name);
@@ -55,27 +55,27 @@ auto FX::open(Arguments& arguments) -> bool {
   return true;
 }
 
-auto FX::close() -> void {
+inline auto FX::close() -> void {
   device.close();
 }
 
-auto FX::readable() -> bool {
+inline auto FX::readable() -> bool {
   return device.readable();
 }
 
 //1000ns delay avoids burning CPU core at 100%; does not slow down max transfer rate at all
-auto FX::read() -> uint8_t {
+inline auto FX::read() -> uint8_t {
   while(!readable()) usleep(1000);
   uint8_t buffer[1] = {0};
   device.read(buffer, 1);
   return buffer[0];
 }
 
-auto FX::writable() -> bool {
+inline auto FX::writable() -> bool {
   return device.writable();
 }
 
-auto FX::write(uint8_t data) -> void {
+inline auto FX::write(uint8_t data) -> void {
   while(!writable()) usleep(1000);
   uint8_t buffer[1] = {data};
   device.write(buffer, 1);
@@ -83,7 +83,7 @@ auto FX::write(uint8_t data) -> void {
 
 //
 
-auto FX::read(uint offset, uint length) -> vector<uint8_t> {
+inline auto FX::read(uint offset, uint length) -> vector<uint8_t> {
   write(0x21);
   write(0x66);
   write(0x78);
@@ -100,7 +100,7 @@ auto FX::read(uint offset, uint length) -> vector<uint8_t> {
   return buffer;
 }
 
-auto FX::write(uint offset, const void* data, uint length) -> void {
+inline auto FX::write(uint offset, const void* data, uint length) -> void {
   write(0x21);
   write(0x66);
   write(0x78);
@@ -117,7 +117,7 @@ auto FX::write(uint offset, const void* data, uint length) -> void {
   write(0x00);
 }
 
-auto FX::execute(uint offset) -> void {
+inline auto FX::execute(uint offset) -> void {
   write(0x21);
   write(0x66);
   write(0x78);
@@ -129,12 +129,12 @@ auto FX::execute(uint offset) -> void {
 
 //
 
-auto FX::read(uint offset) -> uint8_t {
+inline auto FX::read(uint offset) -> uint8_t {
   auto buffer = read(offset, 1);
   return buffer[0];
 }
 
-auto FX::write(uint offset, uint8_t data) -> void {
+inline auto FX::write(uint offset, uint8_t data) -> void {
   vector<uint8_t> buffer = {data};
   write(offset, buffer);
 }

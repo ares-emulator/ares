@@ -1,12 +1,12 @@
 auto CPU::read(uint16 address) -> uint8 {
-  if(io.oamdmaPending) {
-    io.oamdmaPending = false;
+  if(io.oamDMAPending) {
+    io.oamDMAPending = 0;
     read(address);
-    oamdma();
+    oamDMA();
   }
 
   while(io.rdyLine == 0) {
-    r.mdr = bus.read(io.rdyAddrValid ? io.rdyAddrValue : address);
+    r.mdr = bus.read(io.rdyAddressValid ? io.rdyAddressValue : address);
     step(rate());
   }
 
@@ -31,9 +31,9 @@ auto CPU::nmi(uint16& vector) -> void {
   }
 }
 
-auto CPU::oamdma() -> void {
+auto CPU::oamDMA() -> void {
   for(uint n : range(256)) {
-    uint8 data = read(io.oamdmaPage << 8 | n);
+    uint8 data = read(io.oamDMAPage << 8 | n);
     write(0x2004, data);
   }
 }
@@ -58,7 +58,7 @@ auto CPU::rdyLine(bool line) -> void {
   io.rdyLine = line;
 }
 
-auto CPU::rdyAddr(bool valid, uint16 value) -> void {
-  io.rdyAddrValid = valid;
-  io.rdyAddrValue = value;
+auto CPU::rdyAddress(bool valid, uint16 value) -> void {
+  io.rdyAddressValid = valid;
+  io.rdyAddressValue = value;
 }

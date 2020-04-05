@@ -53,12 +53,8 @@ struct Input {
   auto onChange(const function<void (shared_pointer<nall::HID::Device>, uint, uint, int16_t, int16_t)>&) -> void;
   auto doChange(shared_pointer<nall::HID::Device> device, uint group, uint input, int16_t oldValue, int16_t newValue) -> void;
 
-  auto onHotplug(const function<void ()>&) -> void;
-  auto doHotplug() -> void;
-
 protected:
   Input& self;
   unique_pointer<InputDriver> instance;
   function<void (shared_pointer<nall::HID::Device> device, uint group, uint input, int16_t oldValue, int16_t newValue)> change;
-  function<void ()> hotplug;
 };

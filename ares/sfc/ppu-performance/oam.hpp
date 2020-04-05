@@ -8,8 +8,8 @@ struct OAM {
 
   struct Object {
     //oam.cpp
-    alwaysinline auto width() const -> uint;
-    alwaysinline auto height() const -> uint;
+    auto width() const -> uint;
+    auto height() const -> uint;
 
     uint9 x;
     uint8 y;

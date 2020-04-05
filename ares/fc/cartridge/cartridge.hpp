@@ -32,11 +32,11 @@ struct Cartridge : Thread {
 //privileged:
   Board* board = nullptr;
 
-  auto readPRG(uint addr) -> uint8;
-  auto writePRG(uint addr, uint8 data) -> void;
+  auto readPRG(uint address) -> uint8;
+  auto writePRG(uint address, uint8 data) -> void;
 
-  auto readCHR(uint addr) -> uint8;
-  auto writeCHR(uint addr, uint8 data) -> void;
+  auto readCHR(uint address) -> uint8;
+  auto writeCHR(uint address, uint8 data) -> void;
 
   //scanline() is for debugging purposes only:
   //boards must detect scanline edges on their own

@@ -6,10 +6,10 @@ struct DAC {
   auto render() -> void;
   auto pixel(uint8 x, Pixel above, Pixel below) const -> uint15;
   auto blend(uint15 x, uint15 y, bool halve) const -> uint15;
-  inline auto plotAbove(uint8 x, uint8 source, uint8 priority, uint15 color) -> void;
-  inline auto plotBelow(uint8 x, uint8 source, uint8 priority, uint15 color) -> void;
-  inline auto directColor(uint8 palette, uint3 paletteGroup) const -> uint15;
-  inline auto fixedColor() const -> uint15;
+  auto plotAbove(uint8 x, uint8 source, uint8 priority, uint15 color) -> void;
+  auto plotBelow(uint8 x, uint8 source, uint8 priority, uint15 color) -> void;
+  auto directColor(uint8 palette, uint3 paletteGroup) const -> uint15;
+  auto fixedColor() const -> uint15;
   auto power() -> void;
 
   //serialization.cpp

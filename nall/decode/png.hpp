@@ -6,12 +6,12 @@
 namespace nall::Decode {
 
 struct PNG {
-  inline PNG();
-  inline ~PNG();
+  PNG();
+  ~PNG();
 
-  inline auto load(const string& filename) -> bool;
-  inline auto load(const uint8_t* sourceData, uint sourceSize) -> bool;
-  inline auto readbits(const uint8_t*& data) -> uint;
+  auto load(const string& filename) -> bool;
+  auto load(const uint8_t* sourceData, uint sourceSize) -> bool;
+  auto readbits(const uint8_t*& data) -> uint;
 
   struct Info {
     uint width;
@@ -47,28 +47,28 @@ protected:
     IEND = 0x49454e44,
   };
 
-  inline auto interlace(uint pass, uint index) -> uint;
-  inline auto inflateSize() -> uint;
-  inline auto deinterlace(const uint8_t*& inputData, uint pass) -> bool;
-  inline auto filter(uint8_t* outputData, const uint8_t* inputData, uint width, uint height) -> bool;
-  inline auto read(const uint8_t* data, uint length) -> uint;
+  auto interlace(uint pass, uint index) -> uint;
+  auto inflateSize() -> uint;
+  auto deinterlace(const uint8_t*& inputData, uint pass) -> bool;
+  auto filter(uint8_t* outputData, const uint8_t* inputData, uint width, uint height) -> bool;
+  auto read(const uint8_t* data, uint length) -> uint;
 };
 
-PNG::PNG() {
+inline PNG::PNG() {
 }
 
-PNG::~PNG() {
+inline PNG::~PNG() {
   if(data) delete[] data;
 }
 
-auto PNG::load(const string& filename) -> bool {
+inline auto PNG::load(const string& filename) -> bool {
   if(auto memory = file::read(filename)) {
     return load(memory.data(), memory.size());
   }
   return false;
 }
 
-auto PNG::load(const uint8_t* sourceData, uint sourceSize) -> bool {
+inline auto PNG::load(const uint8_t* sourceData, uint sourceSize) -> bool {
   if(sourceSize < 8) return false;
   if(read(sourceData + 0, 4) != 0x89504e47) return false;
   if(read(sourceData + 4, 4) != 0x0d0a1a0a) return false;
@@ -174,7 +174,7 @@ auto PNG::load(const uint8_t* sourceData, uint sourceSize) -> bool {
   return true;
 }
 
-auto PNG::interlace(uint pass, uint index) -> uint {
+inline auto PNG::interlace(uint pass, uint index) -> uint {
   static const uint data[7][4] = {
     //x-distance, y-distance, x-origin, y-origin
     {8, 8, 0, 0},
@@ -188,7 +188,7 @@ auto PNG::interlace(uint pass, uint index) -> uint {
   return data[pass][index];
 }
 
-auto PNG::inflateSize() -> uint {
+inline auto PNG::inflateSize() -> uint {
   if(info.interlaceMethod == 0) {
     return info.width * info.height * info.bytesPerPixel + info.height;
   }
@@ -205,7 +205,7 @@ auto PNG::inflateSize() -> uint {
   return size;
 }
 
-auto PNG::deinterlace(const uint8_t*& inputData, uint pass) -> bool {
+inline auto PNG::deinterlace(const uint8_t*& inputData, uint pass) -> bool {
   uint xd = interlace(pass, 0), yd = interlace(pass, 1);
   uint xo = interlace(pass, 2), yo = interlace(pass, 3);
   uint width  = (info.width  + (xd - xo - 1)) / xd;
@@ -231,7 +231,7 @@ auto PNG::deinterlace(const uint8_t*& inputData, uint pass) -> bool {
   return result;
 }
 
-auto PNG::filter(uint8_t* outputData, const uint8_t* inputData, uint width, uint height) -> bool {
+inline auto PNG::filter(uint8_t* outputData, const uint8_t* inputData, uint width, uint height) -> bool {
   uint8_t* wr = outputData;
   const uint8_t* rd = inputData;
   int bpp = info.bytesPerPixel, pitch = width * bpp;
@@ -294,13 +294,13 @@ auto PNG::filter(uint8_t* outputData, const uint8_t* inputData, uint width, uint
   return true;
 }
 
-auto PNG::read(const uint8_t* data, uint length) -> uint {
+inline auto PNG::read(const uint8_t* data, uint length) -> uint {
   uint result = 0;
   while(length--) result = (result << 8) | (*data++);
   return result;
 }
 
-auto PNG::readbits(const uint8_t*& data) -> uint {
+inline auto PNG::readbits(const uint8_t*& data) -> uint {
   uint result = 0;
   switch(info.bitDepth) {
   case 1:

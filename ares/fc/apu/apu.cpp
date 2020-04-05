@@ -74,7 +74,7 @@ auto APU::tick() -> void {
 }
 
 auto APU::setIRQ() -> void {
-  cpu.apuLine(frame.irqPending || dmc.irqPending);
+  cpu.apuLine(frame.irqPending | dmc.irqPending);
 }
 
 auto APU::power(bool reset) -> void {
@@ -98,118 +98,118 @@ auto APU::power(bool reset) -> void {
 }
 
 auto APU::readIO(uint16 address) -> uint8 {
+  uint8 data = cpu.mdr();
+
   switch(address) {
 
   case 0x4015: {
-    uint8 result = 0x00;
-    result |= pulse[0].lengthCounter ? 0x01 : 0;
-    result |= pulse[1].lengthCounter ? 0x02 : 0;
-    result |= triangle.lengthCounter ? 0x04 : 0;
-    result |=    noise.lengthCounter ? 0x08 : 0;
-    result |=      dmc.lengthCounter ? 0x10 : 0;
-    result |=       frame.irqPending ? 0x40 : 0;
-    result |=         dmc.irqPending ? 0x80 : 0;
-
+    data.bit(0) = (bool)pulse[0].lengthCounter;
+    data.bit(1) = (bool)pulse[1].lengthCounter;
+    data.bit(2) = (bool)triangle.lengthCounter;
+    data.bit(3) = (bool)noise.lengthCounter;
+    data.bit(4) = (bool)dmc.lengthCounter;
+    data.bit(5) = 0;
+    data.bit(6) = frame.irqPending;
+    data.bit(7) = dmc.irqPending;
     frame.irqPending = false;
     setIRQ();
-
-    return result;
+    return data;
   }
 
   }
 
-  return cpu.mdr();
+  return data;
 }
 
 auto APU::writeIO(uint16 address, uint8 data) -> void {
-  const uint n = (address >> 2) & 1;  //pulse#
+  const uint n = address.bit(2);  //pulse#
 
   switch(address) {
 
   case 0x4000: case 0x4004: {
-    pulse[n].duty = data >> 6;
-    pulse[n].envelope.loopMode = data & 0x20;
-    pulse[n].envelope.useSpeedAsVolume = data & 0x10;
-    pulse[n].envelope.speed = data & 0x0f;
+    pulse[n].envelope.speed = data.bit(0,3);
+    pulse[n].envelope.useSpeedAsVolume = data.bit(4);
+    pulse[n].envelope.loopMode = data.bit(5);
+    pulse[n].duty = data.bit(6,7);
     return;
   }
 
   case 0x4001: case 0x4005: {
-    pulse[n].sweep.enable = data & 0x80;
-    pulse[n].sweep.period = (data & 0x70) >> 4;
-    pulse[n].sweep.decrement = data & 0x08;
-    pulse[n].sweep.shift = data & 0x07;
+    pulse[n].sweep.shift = data.bit(0,2);
+    pulse[n].sweep.decrement = data.bit(3);
+    pulse[n].sweep.period = data.bit(4,6);
+    pulse[n].sweep.enable = data.bit(7);
     pulse[n].sweep.reload = true;
     return;
   }
 
   case 0x4002: case 0x4006: {
-    pulse[n].period = (pulse[n].period & 0x0700) | (data << 0);
-    pulse[n].sweep.pulsePeriod = (pulse[n].sweep.pulsePeriod & 0x0700) | (data << 0);
+    pulse[n].period.bit(0,7) = data.bit(0,7);
+    pulse[n].sweep.pulsePeriod.bit(0,7) = data.bit(0,7);
     return;
   }
 
   case 0x4003: case 0x4007: {
-    pulse[n].period = (pulse[n].period & 0x00ff) | (data << 8);
-    pulse[n].sweep.pulsePeriod = (pulse[n].sweep.pulsePeriod & 0x00ff) | (data << 8);
+    pulse[n].period.bit(8,10) = data.bit(0,2);
+    pulse[n].sweep.pulsePeriod.bit(8,10) = data.bit(0,2);
 
     pulse[n].dutyCounter = 0;
     pulse[n].envelope.reloadDecay = true;
 
-    if(enabledChannels & (1 << n)) {
-      pulse[n].lengthCounter = lengthCounterTable[(data >> 3) & 0x1f];
+    if(enabledChannels.bit(n)) {
+      pulse[n].lengthCounter = lengthCounterTable[data.bit(3,7)];
     }
     return;
   }
 
   case 0x4008: {
-    triangle.haltLengthCounter = data & 0x80;
-    triangle.linearLength = data & 0x7f;
+    triangle.linearLength = data.bit(0,6);
+    triangle.haltLengthCounter = data.bit(7);
     return;
   }
 
   case 0x400a: {
-    triangle.period = (triangle.period & 0x0700) | (data << 0);
+    triangle.period.bit(0,7) = data.bit(0,7);
     return;
   }
 
   case 0x400b: {
-    triangle.period = (triangle.period & 0x00ff) | (data << 8);
+    triangle.period.bit(8,10) = data.bit(0,2);
 
     triangle.reloadLinear = true;
 
-    if(enabledChannels & (1 << 2)) {
-      triangle.lengthCounter = lengthCounterTable[(data >> 3) & 0x1f];
+    if(enabledChannels.bit(2)) {
+      triangle.lengthCounter = lengthCounterTable[data.bit(3,7)];
     }
     return;
   }
 
   case 0x400c: {
-    noise.envelope.loopMode = data & 0x20;
-    noise.envelope.useSpeedAsVolume = data & 0x10;
-    noise.envelope.speed = data & 0x0f;
+    noise.envelope.speed = data.bit(0,3);
+    noise.envelope.useSpeedAsVolume = data.bit(4);
+    noise.envelope.loopMode = data.bit(5);
     return;
   }
 
   case 0x400e: {
-    noise.shortMode = data & 0x80;
-    noise.period = data & 0x0f;
+    noise.period = data.bit(0,3);
+    noise.shortMode = data.bit(7);
     return;
   }
 
   case 0x400f: {
     noise.envelope.reloadDecay = true;
 
-    if(enabledChannels & (1 << 3)) {
-      noise.lengthCounter = lengthCounterTable[(data >> 3) & 0x1f];
+    if(enabledChannels.bit(3)) {
+      noise.lengthCounter = lengthCounterTable[data.bit(3,7)];
     }
     return;
   }
 
   case 0x4010: {
-    dmc.irqEnable = data & 0x80;
-    dmc.loopMode = data & 0x40;
-    dmc.period = data & 0x0f;
+    dmc.period = data.bit(0,3);
+    dmc.loopMode = data.bit(6);
+    dmc.irqEnable = data.bit(7);
 
     dmc.irqPending = dmc.irqPending && dmc.irqEnable && !dmc.loopMode;
     setIRQ();
@@ -217,12 +217,12 @@ auto APU::writeIO(uint16 address, uint8 data) -> void {
   }
 
   case 0x4011: {
-    dmc.dacLatch = data & 0x7f;
+    dmc.dacLatch = data.bit(0,6);
     return;
   }
 
   case 0x4012: {
-    dmc.addrLatch = data;
+    dmc.addressLatch = data;
     return;
   }
 
@@ -232,25 +232,28 @@ auto APU::writeIO(uint16 address, uint8 data) -> void {
   }
 
   case 0x4015: {
-    if((data & 0x01) == 0) pulse[0].lengthCounter = 0;
-    if((data & 0x02) == 0) pulse[1].lengthCounter = 0;
-    if((data & 0x04) == 0) triangle.lengthCounter = 0;
-    if((data & 0x08) == 0)    noise.lengthCounter = 0;
+    if(data.bit(0) == 0) pulse[0].lengthCounter = 0;
+    if(data.bit(1) == 0) pulse[1].lengthCounter = 0;
+    if(data.bit(2) == 0) triangle.lengthCounter = 0;
+    if(data.bit(3) == 0)    noise.lengthCounter = 0;
+    if(data.bit(4) == 0)      dmc.stop();
+    if(data.bit(4) == 1)      dmc.start();
 
-    (data & 0x10) ? dmc.start() : dmc.stop();
     dmc.irqPending = false;
 
     setIRQ();
-    enabledChannels = data & 0x1f;
+    enabledChannels = data.bit(0,4);
     return;
   }
 
   case 0x4017: {
-    frame.mode = data >> 6;
+    frame.mode = data.bit(6,7);
 
     frame.counter = 0;
-    if(frame.mode & 2) clockFrameCounter();
-    if(frame.mode & 1) {
+    if(frame.mode.bit(1)) {
+      clockFrameCounter();
+    }
+    if(frame.mode.bit(0)) {
       frame.irqPending = false;
       setIRQ();
     }
@@ -264,7 +267,7 @@ auto APU::writeIO(uint16 address, uint8 data) -> void {
 auto APU::clockFrameCounter() -> void {
   frame.counter++;
 
-  if(frame.counter & 1) {
+  if(frame.counter.bit(0)) {
     pulse[0].clockLength();
     pulse[0].sweep.clock(0);
     pulse[1].clockLength();
@@ -279,7 +282,9 @@ auto APU::clockFrameCounter() -> void {
   noise.envelope.clock();
 
   if(frame.counter == 0) {
-    if(frame.mode & 2) frame.divider += FrameCounter::NtscPeriod;
+    if(frame.mode.bit(1)) {
+      frame.divider += FrameCounter::NtscPeriod;
+    }
     if(frame.mode == 0) {
       frame.irqPending = true;
       setIRQ();

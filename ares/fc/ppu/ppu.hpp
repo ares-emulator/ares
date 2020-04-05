@@ -62,13 +62,11 @@ struct PPU : Thread {
 
   struct IO {
     //internal
-    uint8 mdr;
-
-    uint1 field;
-    uint lx = 0;
-    uint ly = 0;
-
-    uint8 busData;
+     uint8 mdr;
+     uint1 field;
+    uint16 lx;
+    uint16 ly;
+     uint8 busData;
 
     struct Union {
       uint19 data;
@@ -85,31 +83,31 @@ struct PPU : Thread {
       BitRange<19,16,18> fineX     {&data};
     } v, t;
 
-    bool nmiHold = 0;
-    bool nmiFlag = 0;
+     uint1 nmiHold;
+     uint1 nmiFlag;
 
     //$2000
-    uint vramIncrement = 1;
-    uint spriteAddress = 0;
-    uint bgAddress = 0;
-    uint spriteHeight = 0;
-    bool masterSelect = 0;
-    bool nmiEnable = 0;
+     uint6 vramIncrement = 1;  //1 or 32
+    uint16 spriteAddress;      //0x0000 or 0x1000
+    uint16 bgAddress;          //0x0000 or 0x1000
+     uint5 spriteHeight = 8;   //8 or 16
+     uint1 masterSelect;
+     uint1 nmiEnable;
 
     //$2001
-    bool grayscale = 0;
-    bool bgEdgeEnable = 0;
-    bool spriteEdgeEnable = 0;
-    bool bgEnable = 0;
-    bool spriteEnable = 0;
-    uint3 emphasis;
+     uint1 grayscale;
+     uint1 bgEdgeEnable;
+     uint1 spriteEdgeEnable;
+     uint1 bgEnable;
+     uint1 spriteEnable;
+     uint3 emphasis;
 
     //$2002
-    bool spriteOverflow = 0;
-    bool spriteZeroHit = 0;
+     uint1 spriteOverflow;
+     uint1 spriteZeroHit;
 
     //$2003
-    uint8 oamAddress;
+     uint8 oamAddress;
   } io;
 
   struct OAM {
@@ -122,8 +120,8 @@ struct PPU : Thread {
     uint8 attr = 0xff;
     uint8 x = 0xff;
 
-    uint8 tiledataLo = 0;
-    uint8 tiledataHi = 0;
+    uint8 tiledataLo;
+    uint8 tiledataHi;
   };
 
   struct Latches {
@@ -132,8 +130,8 @@ struct PPU : Thread {
     uint16 tiledataLo;
     uint16 tiledataHi;
 
-    uint oamIterator = 0;
-    uint oamCounter = 0;
+    uint16 oamIterator;
+    uint16 oamCounter;
 
     OAM oam[8];   //primary
     OAM soam[8];  //secondary

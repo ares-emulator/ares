@@ -449,9 +449,9 @@ auto BSMemory::Page::write(uint8 address, uint8 data) -> void {
 
 //
 
-auto BSMemory::BlockInformation::bits() const -> uint { return 16; }
-auto BSMemory::BlockInformation::bytes() const -> uint { return 1 << bits(); }
-auto BSMemory::BlockInformation::count() const -> uint { return self->size() >> bits(); }
+inline auto BSMemory::BlockInformation::bits() const -> uint { return 16; }
+inline auto BSMemory::BlockInformation::bytes() const -> uint { return 1 << bits(); }
+inline auto BSMemory::BlockInformation::count() const -> uint { return self->size() >> bits(); }
 
 //
 

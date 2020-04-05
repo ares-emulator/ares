@@ -19,23 +19,23 @@ namespace nall {
 struct SMTP {
   enum class Format : uint { Plain, HTML };
 
-  inline auto server(string server, uint16_t port = 25) -> void;
-  inline auto from(string mail, string name = "") -> void;
-  inline auto to(string mail, string name = "") -> void;
-  inline auto cc(string mail, string name = "") -> void;
-  inline auto bcc(string mail, string name = "") -> void;
-  inline auto attachment(const uint8_t* data, uint size, string name) -> void;
-  inline auto attachment(string filename, string name = "") -> bool;
-  inline auto subject(string subject) -> void;
-  inline auto body(string body, Format format = Format::Plain) -> void;
+  auto server(string server, uint16_t port = 25) -> void;
+  auto from(string mail, string name = "") -> void;
+  auto to(string mail, string name = "") -> void;
+  auto cc(string mail, string name = "") -> void;
+  auto bcc(string mail, string name = "") -> void;
+  auto attachment(const uint8_t* data, uint size, string name) -> void;
+  auto attachment(string filename, string name = "") -> bool;
+  auto subject(string subject) -> void;
+  auto body(string body, Format format = Format::Plain) -> void;
 
-  inline auto send() -> bool;
-  inline auto message() -> string;
-  inline auto response() -> string;
+  auto send() -> bool;
+  auto message() -> string;
+  auto response() -> string;
 
   #if defined(API_WINDOWS)
-  inline auto close(int) -> int;
-  inline SMTP();
+  auto close(int) -> int;
+  SMTP();
   #endif
 
 private:
@@ -63,44 +63,44 @@ private:
     string response;
   } info;
 
-  inline auto send(int sock, const string& text) -> bool;
-  inline auto recv(int sock) -> string;
-  inline auto boundary() -> string;
-  inline auto filename(const string& filename) -> string;
-  inline auto contact(const Information::Contact& contact) -> string;
-  inline auto contacts(const vector<Information::Contact>& contacts) -> string;
-  inline auto split(const string& text) -> string;
+  auto send(int sock, const string& text) -> bool;
+  auto recv(int sock) -> string;
+  auto boundary() -> string;
+  auto filename(const string& filename) -> string;
+  auto contact(const Information::Contact& contact) -> string;
+  auto contacts(const vector<Information::Contact>& contacts) -> string;
+  auto split(const string& text) -> string;
 };
 
-auto SMTP::server(string server, uint16_t port) -> void {
+inline auto SMTP::server(string server, uint16_t port) -> void {
   info.server = server;
   info.port = port;
 }
 
-auto SMTP::from(string mail, string name) -> void {
+inline auto SMTP::from(string mail, string name) -> void {
   info.from = {mail, name};
 }
 
-auto SMTP::to(string mail, string name) -> void {
+inline auto SMTP::to(string mail, string name) -> void {
   info.to.append({mail, name});
 }
 
-auto SMTP::cc(string mail, string name) -> void {
+inline auto SMTP::cc(string mail, string name) -> void {
   info.cc.append({mail, name});
 }
 
-auto SMTP::bcc(string mail, string name) -> void {
+inline auto SMTP::bcc(string mail, string name) -> void {
   info.bcc.append({mail, name});
 }
 
-auto SMTP::attachment(const uint8_t* data, uint size, string name) -> void {
+inline auto SMTP::attachment(const uint8_t* data, uint size, string name) -> void {
   vector<uint8_t> buffer;
   buffer.resize(size);
   memcpy(buffer.data(), data, size);
   info.attachments.append({std::move(buffer), name});
 }
 
-auto SMTP::attachment(string filename, string name) -> bool {
+inline auto SMTP::attachment(string filename, string name) -> bool {
   if(!file::exists(filename)) return false;
   if(name == "") name = notdir(filename);
   auto buffer = file::read(filename);
@@ -108,16 +108,16 @@ auto SMTP::attachment(string filename, string name) -> bool {
   return true;
 }
 
-auto SMTP::subject(string subject) -> void {
+inline auto SMTP::subject(string subject) -> void {
   info.subject = subject;
 }
 
-auto SMTP::body(string body, Format format) -> void {
+inline auto SMTP::body(string body, Format format) -> void {
   info.body = body;
   info.format = format;
 }
 
-auto SMTP::send() -> bool {
+inline auto SMTP::send() -> bool {
   info.message.append("From: =?UTF-8?B?", Base64::encode(contact(info.from)), "?=\r\n");
   info.message.append("To: =?UTF-8?B?", Base64::encode(contacts(info.to)), "?=\r\n");
   info.message.append("Cc: =?UTF-8?B?", Base64::encode(contacts(info.cc)), "?=\r\n");
@@ -212,15 +212,15 @@ auto SMTP::send() -> bool {
   return true;
 }
 
-auto SMTP::message() -> string {
+inline auto SMTP::message() -> string {
   return info.message;
 }
 
-auto SMTP::response() -> string {
+inline auto SMTP::response() -> string {
   return info.response;
 }
 
-auto SMTP::send(int sock, const string& text) -> bool {
+inline auto SMTP::send(int sock, const string& text) -> bool {
   const char* data = text.data();
   uint size = text.size();
   while(size) {
@@ -232,7 +232,7 @@ auto SMTP::send(int sock, const string& text) -> bool {
   return true;
 }
 
-auto SMTP::recv(int sock) -> string {
+inline auto SMTP::recv(int sock) -> string {
   vector<uint8_t> buffer;
   while(true) {
     char c;
@@ -244,7 +244,7 @@ auto SMTP::recv(int sock) -> string {
   return buffer;
 }
 
-auto SMTP::boundary() -> string {
+inline auto SMTP::boundary() -> string {
   random_lfsr random;
   random.seed(time(0));
   string boundary;
@@ -252,7 +252,7 @@ auto SMTP::boundary() -> string {
   return boundary;
 }
 
-auto SMTP::filename(const string& filename) -> string {
+inline auto SMTP::filename(const string& filename) -> string {
   string result;
   for(auto& n : filename) {
     if(n <= 32 || n >= 127) result.append("%", hex<2>(n));
@@ -261,12 +261,12 @@ auto SMTP::filename(const string& filename) -> string {
   return result;
 }
 
-auto SMTP::contact(const Information::Contact& contact) -> string {
+inline auto SMTP::contact(const Information::Contact& contact) -> string {
   if(!contact.name) return contact.mail;
   return {"\"", contact.name, "\" <", contact.mail, ">"};
 }
 
-auto SMTP::contacts(const vector<Information::Contact>& contacts) -> string {
+inline auto SMTP::contacts(const vector<Information::Contact>& contacts) -> string {
   string result;
   for(auto& contact : contacts) {
     result.append(this->contact(contact), "; ");
@@ -275,7 +275,7 @@ auto SMTP::contacts(const vector<Information::Contact>& contacts) -> string {
   return result;
 }
 
-auto SMTP::split(const string& text) -> string {
+inline auto SMTP::split(const string& text) -> string {
   string result;
 
   uint offset = 0;
@@ -293,11 +293,11 @@ auto SMTP::split(const string& text) -> string {
 }
 
 #if defined(API_WINDOWS)
-auto SMTP::close(int sock) -> int {
+inline auto SMTP::close(int sock) -> int {
   return closesocket(sock);
 }
 
-SMTP::SMTP() {
+inline SMTP::SMTP() {
   int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if(sock == INVALID_SOCKET && WSAGetLastError() == WSANOTINITIALISED) {
     WSADATA wsaData;

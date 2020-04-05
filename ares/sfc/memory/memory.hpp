@@ -22,13 +22,13 @@ struct AbstractMemory {
 #include "protectable.hpp"
 
 struct Bus {
-  alwaysinline static auto mirror(uint address, uint size) -> uint;
-  alwaysinline static auto reduce(uint address, uint mask) -> uint;
+  static auto mirror(uint address, uint size) -> uint;
+  static auto reduce(uint address, uint mask) -> uint;
 
   ~Bus();
 
-  alwaysinline auto read(uint24 address, uint8 data) -> uint8;
-  alwaysinline auto write(uint24 address, uint8 data) -> void;
+  auto read(uint24 address, uint8 data) -> uint8;
+  auto write(uint24 address, uint8 data) -> void;
 
   auto reset() -> void;
   auto map(

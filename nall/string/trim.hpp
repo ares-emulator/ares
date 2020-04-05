@@ -2,13 +2,13 @@
 
 namespace nall {
 
-auto string::trim(string_view lhs, string_view rhs, long limit) -> string& {
+inline auto string::trim(string_view lhs, string_view rhs, long limit) -> string& {
   trimRight(rhs, limit);
   trimLeft(lhs, limit);
   return *this;
 }
 
-auto string::trimLeft(string_view lhs, long limit) -> string& {
+inline auto string::trimLeft(string_view lhs, long limit) -> string& {
   if(lhs.size() == 0) return *this;
   long matches = 0;
   while(matches < limit) {
@@ -22,7 +22,7 @@ auto string::trimLeft(string_view lhs, long limit) -> string& {
   return *this;
 }
 
-auto string::trimRight(string_view rhs, long limit) -> string& {
+inline auto string::trimRight(string_view rhs, long limit) -> string& {
   if(rhs.size() == 0) return *this;
   long matches = 0;
   while(matches < limit) {
@@ -36,13 +36,13 @@ auto string::trimRight(string_view rhs, long limit) -> string& {
   return *this;
 }
 
-auto string::itrim(string_view lhs, string_view rhs, long limit) -> string& {
+inline auto string::itrim(string_view lhs, string_view rhs, long limit) -> string& {
   itrimRight(rhs, limit);
   itrimLeft(lhs, limit);
   return *this;
 }
 
-auto string::itrimLeft(string_view lhs, long limit) -> string& {
+inline auto string::itrimLeft(string_view lhs, long limit) -> string& {
   if(lhs.size() == 0) return *this;
   long matches = 0;
   while(matches < limit) {
@@ -56,7 +56,7 @@ auto string::itrimLeft(string_view lhs, long limit) -> string& {
   return *this;
 }
 
-auto string::itrimRight(string_view rhs, long limit) -> string& {
+inline auto string::itrimRight(string_view rhs, long limit) -> string& {
   if(rhs.size() == 0) return *this;
   long matches = 0;
   while(matches < limit) {
@@ -70,13 +70,13 @@ auto string::itrimRight(string_view rhs, long limit) -> string& {
   return *this;
 }
 
-auto string::strip() -> string& {
+inline auto string::strip() -> string& {
   stripRight();
   stripLeft();
   return *this;
 }
 
-auto string::stripLeft() -> string& {
+inline auto string::stripLeft() -> string& {
   uint length = 0;
   while(length < size()) {
     char input = operator[](length);
@@ -87,7 +87,7 @@ auto string::stripLeft() -> string& {
   return *this;
 }
 
-auto string::stripRight() -> string& {
+inline auto string::stripRight() -> string& {
   uint length = 0;
   while(length < size()) {
     bool matched = false;

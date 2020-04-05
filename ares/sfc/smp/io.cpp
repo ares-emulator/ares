@@ -13,7 +13,7 @@ auto SMP::portWrite(uint2 port, uint8 data) -> void {
   if(port == 3) io.apu3 = data;
 }
 
-auto SMP::readIO(uint16 address) -> uint8 {
+inline auto SMP::readIO(uint16 address) -> uint8 {
   uint8 data;
 
   switch(address) {
@@ -76,7 +76,7 @@ auto SMP::readIO(uint16 address) -> uint8 {
   return data;  //unreachable
 }
 
-auto SMP::writeIO(uint16 address, uint8 data) -> void {
+inline auto SMP::writeIO(uint16 address, uint8 data) -> void {
   switch(address) {
   case 0xf0:  //TEST
     if(r.p.p) break;  //writes only valid when P flag is clear

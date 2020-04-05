@@ -70,7 +70,7 @@ auto PPU::unload() -> void {
   debugger = {};
 }
 
-auto PPU::blank() -> bool {
+inline auto PPU::blank() -> bool {
   return io.forceBlank || cpu.stopped();
 }
 

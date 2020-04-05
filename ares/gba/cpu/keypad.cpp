@@ -2,7 +2,7 @@ auto CPU::Keypad::run() -> void {
   if(!enable) return;
   system.controls.poll();
 
-  static const bool lookup[] = {
+  const bool lookup[] = {
     system.controls.a->value(),
     system.controls.b->value(),
     system.controls.select->value(),

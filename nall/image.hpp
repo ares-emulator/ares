@@ -42,61 +42,61 @@ struct image {
   };
 
   //core.hpp
-  inline image(const image& source);
-  inline image(image&& source);
-  inline image(bool endian, uint depth, uint64_t alphaMask, uint64_t redMask, uint64_t greenMask, uint64_t blueMask);
-  inline image(const string& filename);
-  inline image(const void* data, uint size);
-  inline image(const vector<uint8_t>& buffer);
-  template<uint Size> inline image(const uint8_t (&Name)[Size]);
-  inline image();
-  inline ~image();
+  image(const image& source);
+  image(image&& source);
+  image(bool endian, uint depth, uint64_t alphaMask, uint64_t redMask, uint64_t greenMask, uint64_t blueMask);
+  image(const string& filename);
+  image(const void* data, uint size);
+  image(const vector<uint8_t>& buffer);
+  template<uint Size> image(const uint8_t (&Name)[Size]);
+  image();
+  ~image();
 
-  inline auto operator=(const image& source) -> image&;
-  inline auto operator=(image&& source) -> image&;
+  auto operator=(const image& source) -> image&;
+  auto operator=(image&& source) -> image&;
 
-  inline explicit operator bool() const;
-  inline auto operator==(const image& source) const -> bool;
-  inline auto operator!=(const image& source) const -> bool;
+  explicit operator bool() const;
+  auto operator==(const image& source) const -> bool;
+  auto operator!=(const image& source) const -> bool;
 
-  inline auto read(const uint8_t* data) const -> uint64_t;
-  inline auto write(uint8_t* data, uint64_t value) const -> void;
+  auto read(const uint8_t* data) const -> uint64_t;
+  auto write(uint8_t* data, uint64_t value) const -> void;
 
-  inline auto free() -> void;
-  inline auto load(const string& filename) -> bool;
-  inline auto copy(const void* data, uint pitch, uint width, uint height) -> void;
-  inline auto allocate(uint width, uint height) -> void;
+  auto free() -> void;
+  auto load(const string& filename) -> bool;
+  auto copy(const void* data, uint pitch, uint width, uint height) -> void;
+  auto allocate(uint width, uint height) -> void;
 
   //fill.hpp
-  inline auto fill(uint64_t color = 0) -> void;
-  inline auto gradient(uint64_t a, uint64_t b, uint64_t c, uint64_t d) -> void;
-  inline auto gradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY, function<double (double, double)> callback) -> void;
-  inline auto crossGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  inline auto diamondGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  inline auto horizontalGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  inline auto radialGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  inline auto sphericalGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  inline auto squareGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  inline auto verticalGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
+  auto fill(uint64_t color = 0) -> void;
+  auto gradient(uint64_t a, uint64_t b, uint64_t c, uint64_t d) -> void;
+  auto gradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY, function<double (double, double)> callback) -> void;
+  auto crossGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
+  auto diamondGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
+  auto horizontalGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
+  auto radialGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
+  auto sphericalGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
+  auto squareGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
+  auto verticalGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
 
   //scale.hpp
-  inline auto scale(uint width, uint height, bool linear = true) -> void;
+  auto scale(uint width, uint height, bool linear = true) -> void;
 
   //blend.hpp
-  inline auto impose(blend mode, uint targetX, uint targetY, image source, uint x, uint y, uint width, uint height) -> void;
+  auto impose(blend mode, uint targetX, uint targetY, image source, uint x, uint y, uint width, uint height) -> void;
 
   //utility.hpp
-  inline auto shrink(uint64_t transparentColor = 0) -> void;
-  inline auto crop(uint x, uint y, uint width, uint height) -> bool;
-  inline auto alphaBlend(uint64_t alphaColor) -> void;
-  inline auto alphaMultiply() -> void;
-  inline auto transform(const image& source = {}) -> void;
-  inline auto transform(bool endian, uint depth, uint64_t alphaMask, uint64_t redMask, uint64_t greenMask, uint64_t blueMask) -> void;
+  auto shrink(uint64_t transparentColor = 0) -> void;
+  auto crop(uint x, uint y, uint width, uint height) -> bool;
+  auto alphaBlend(uint64_t alphaColor) -> void;
+  auto alphaMultiply() -> void;
+  auto transform(const image& source = {}) -> void;
+  auto transform(bool endian, uint depth, uint64_t alphaMask, uint64_t redMask, uint64_t greenMask, uint64_t blueMask) -> void;
 
   //static.hpp
-  static inline auto bitDepth(uint64_t color) -> uint;
-  static inline auto bitShift(uint64_t color) -> uint;
-  static inline auto normalize(uint64_t color, uint sourceDepth, uint targetDepth) -> uint64_t;
+  static auto bitDepth(uint64_t color) -> uint;
+  static auto bitShift(uint64_t color) -> uint;
+  static auto normalize(uint64_t color, uint sourceDepth, uint targetDepth) -> uint64_t;
 
   //access
   auto data() { return _data; }
@@ -118,31 +118,31 @@ struct image {
 
 private:
   //core.hpp
-  inline auto allocate(uint width, uint height, uint stride) -> uint8_t*;
+  auto allocate(uint width, uint height, uint stride) -> uint8_t*;
 
   //scale.hpp
-  inline auto scaleLinearWidth(uint width) -> void;
-  inline auto scaleLinearHeight(uint height) -> void;
-  inline auto scaleLinear(uint width, uint height) -> void;
-  inline auto scaleNearest(uint width, uint height) -> void;
+  auto scaleLinearWidth(uint width) -> void;
+  auto scaleLinearHeight(uint height) -> void;
+  auto scaleLinear(uint width, uint height) -> void;
+  auto scaleNearest(uint width, uint height) -> void;
 
   //load.hpp
-  inline auto loadBMP(const string& filename) -> bool;
-  inline auto loadBMP(const uint8_t* data, uint size) -> bool;
-  inline auto loadPNG(const string& filename) -> bool;
-  inline auto loadPNG(const uint8_t* data, uint size) -> bool;
+  auto loadBMP(const string& filename) -> bool;
+  auto loadBMP(const uint8_t* data, uint size) -> bool;
+  auto loadPNG(const string& filename) -> bool;
+  auto loadPNG(const uint8_t* data, uint size) -> bool;
 
   //interpolation.hpp
-  alwaysinline auto isplit(uint64_t* component, uint64_t color) -> void;
-  alwaysinline auto imerge(const uint64_t* component) -> uint64_t;
-  alwaysinline auto interpolate1f(uint64_t a, uint64_t b, double x) -> uint64_t;
-  alwaysinline auto interpolate1f(uint64_t a, uint64_t b, uint64_t c, uint64_t d, double x, double y) -> uint64_t;
-  alwaysinline auto interpolate1i(int64_t a, int64_t b, uint32_t x) -> uint64_t;
-  alwaysinline auto interpolate1i(int64_t a, int64_t b, int64_t c, int64_t d, uint32_t x, uint32_t y) -> uint64_t;
-  inline auto interpolate4f(uint64_t a, uint64_t b, double x) -> uint64_t;
-  inline auto interpolate4f(uint64_t a, uint64_t b, uint64_t c, uint64_t d, double x, double y) -> uint64_t;
-  inline auto interpolate4i(uint64_t a, uint64_t b, uint32_t x) -> uint64_t;
-  inline auto interpolate4i(uint64_t a, uint64_t b, uint64_t c, uint64_t d, uint32_t x, uint32_t y) -> uint64_t;
+  auto isplit(uint64_t* component, uint64_t color) -> void;
+  auto imerge(const uint64_t* component) -> uint64_t;
+  auto interpolate1f(uint64_t a, uint64_t b, double x) -> uint64_t;
+  auto interpolate1f(uint64_t a, uint64_t b, uint64_t c, uint64_t d, double x, double y) -> uint64_t;
+  auto interpolate1i(int64_t a, int64_t b, uint32_t x) -> uint64_t;
+  auto interpolate1i(int64_t a, int64_t b, int64_t c, int64_t d, uint32_t x, uint32_t y) -> uint64_t;
+  auto interpolate4f(uint64_t a, uint64_t b, double x) -> uint64_t;
+  auto interpolate4f(uint64_t a, uint64_t b, uint64_t c, uint64_t d, double x, double y) -> uint64_t;
+  auto interpolate4i(uint64_t a, uint64_t b, uint32_t x) -> uint64_t;
+  auto interpolate4i(uint64_t a, uint64_t b, uint64_t c, uint64_t d, uint32_t x, uint32_t y) -> uint64_t;
 
   uint8_t* _data   = nullptr;
   uint _width  = 0;

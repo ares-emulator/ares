@@ -1,7 +1,7 @@
 struct Mosaic {
   //mosaic.cpp
-  alwaysinline auto enable() const -> bool;
-  alwaysinline auto voffset() const -> uint;
+  auto enable() const -> bool;
+  auto voffset() const -> uint;
   auto scanline() -> void;
   auto power() -> void;
 

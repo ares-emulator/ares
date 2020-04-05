@@ -5,7 +5,7 @@ auto PPU::latchCounters() -> void {
   latch.counters = 1;
 }
 
-auto PPU::addressVRAM() const -> uint16 {
+alwaysinline auto PPU::addressVRAM() const -> uint16 {
   uint16 address = io.vramAddress;
   switch(io.vramMapping) {
   case 0: return address;
@@ -16,19 +16,19 @@ auto PPU::addressVRAM() const -> uint16 {
   unreachable;
 }
 
-auto PPU::readVRAM() -> uint16 {
+alwaysinline auto PPU::readVRAM() -> uint16 {
   if(!io.displayDisable && vcounter() < vdisp()) return 0x0000;
   auto address = addressVRAM();
   return vram[address];
 }
 
-auto PPU::writeVRAM(uint1 byte, uint8 data) -> void {
+alwaysinline auto PPU::writeVRAM(uint1 byte, uint8 data) -> void {
   if(!io.displayDisable && vcounter() < vdisp()) return;
   auto address = addressVRAM();
   vram[address].byte(byte) = data;
 }
 
-auto PPU::readOAM(uint10 address) -> uint8 {
+alwaysinline auto PPU::readOAM(uint10 address) -> uint8 {
   if(!io.displayDisable && vcounter() < vdisp()) {
     if(address.bit(9) == 0) return obj.oam.read(0x000 | latch.oamAddress << 2 | address & 1);
     if(address.bit(9) == 1) return obj.oam.read(0x200 | latch.oamAddress >> 2);
@@ -36,7 +36,7 @@ auto PPU::readOAM(uint10 address) -> uint8 {
   return obj.oam.read(address);
 }
 
-auto PPU::writeOAM(uint10 address, uint8 data) -> void {
+alwaysinline auto PPU::writeOAM(uint10 address, uint8 data) -> void {
   if(!io.displayDisable && vcounter() < vdisp()) {
     if(address.bit(9) == 0) return obj.oam.write(0x000 | latch.oamAddress << 2 | address & 1, data);
     if(address.bit(9) == 1) return obj.oam.write(0x200 | latch.oamAddress >> 2, data);
@@ -44,7 +44,7 @@ auto PPU::writeOAM(uint10 address, uint8 data) -> void {
   return obj.oam.write(address, data);
 }
 
-auto PPU::readCGRAM(uint1 byte, uint8 address) -> uint8 {
+alwaysinline auto PPU::readCGRAM(uint1 byte, uint8 address) -> uint8 {
   if(!io.displayDisable
   && vcounter() > 0 && vcounter() < vdisp()
   && hcounter() >= 88 && hcounter() < 1096
@@ -52,7 +52,7 @@ auto PPU::readCGRAM(uint1 byte, uint8 address) -> uint8 {
   return dac.cgram[address].byte(byte);
 }
 
-auto PPU::writeCGRAM(uint8 address, uint15 data) -> void {
+alwaysinline auto PPU::writeCGRAM(uint8 address, uint15 data) -> void {
   if(!io.displayDisable
   && vcounter() > 0 && vcounter() < vdisp()
   && hcounter() >= 88 && hcounter() < 1096

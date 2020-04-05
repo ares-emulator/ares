@@ -2,7 +2,7 @@
 
 namespace nall::Markup {
 
-auto ManagedNode::_evaluate(string query) const -> bool {
+inline auto ManagedNode::_evaluate(string query) const -> bool {
   if(!query) return true;
 
   for(auto& rule : query.split(",")) {
@@ -52,7 +52,7 @@ auto ManagedNode::_evaluate(string query) const -> bool {
   return true;
 }
 
-auto ManagedNode::_find(const string& query) const -> vector<Node> {
+inline auto ManagedNode::_find(const string& query) const -> vector<Node> {
   vector<Node> result;
 
   auto path = query.split("/");
@@ -97,7 +97,7 @@ auto ManagedNode::_find(const string& query) const -> vector<Node> {
 }
 
 //operator[](string)
-auto ManagedNode::_lookup(const string& path) const -> Node {
+inline auto ManagedNode::_lookup(const string& path) const -> Node {
   auto result = _find(path);
   return result ? result[0] : Node{};
 
@@ -116,7 +116,7 @@ auto ManagedNode::_lookup(const string& path) const -> Node {
 */
 }
 
-auto ManagedNode::_create(const string& path) -> Node {
+inline auto ManagedNode::_create(const string& path) -> Node {
   if(auto position = path.find("/")) {
     auto name = slice(path, 0, *position);
     for(auto& node : _children) {

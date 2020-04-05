@@ -1,4 +1,4 @@
-auto VPC::bus(uint16 hcounter) const -> uint9 {
+inline auto VPC::bus(uint16 hcounter) const -> uint9 {
   //bus values are direct CRAM entry indexes:
   //d0-d3 => color (0 = neither background nor sprite)
   //d4-d7 => palette

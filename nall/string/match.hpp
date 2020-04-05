@@ -4,7 +4,7 @@ namespace nall {
 
 //todo: these functions are not binary-safe
 
-auto string::match(string_view source) const -> bool {
+inline auto string::match(string_view source) const -> bool {
   const char* s = data();
   const char* p = source.data();
 
@@ -28,7 +28,7 @@ auto string::match(string_view source) const -> bool {
   return !*p;
 }
 
-auto string::imatch(string_view source) const -> bool {
+inline auto string::imatch(string_view source) const -> bool {
   static auto chrlower = [](char c) -> char {
     return (c >= 'A' && c <= 'Z') ? c + ('a' - 'A') : c;
   };
@@ -56,7 +56,7 @@ auto string::imatch(string_view source) const -> bool {
   return !*p;
 }
 
-auto tokenize(const char* s, const char* p) -> bool {
+inline auto tokenize(const char* s, const char* p) -> bool {
   while(*s) {
     if(*p == '*') {
       while(*s) if(tokenize(s++, p + 1)) return true;
@@ -68,7 +68,7 @@ auto tokenize(const char* s, const char* p) -> bool {
   return !*p;
 }
 
-auto tokenize(vector<string>& list, const char* s, const char* p) -> bool {
+inline auto tokenize(vector<string>& list, const char* s, const char* p) -> bool {
   while(*s) {
     if(*p == '*') {
       const char* b = s;

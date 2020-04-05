@@ -11,9 +11,9 @@ auto CPU::serialize(serializer& s) -> void {
   s.integer(io.apuLine);
 
   s.integer(io.rdyLine);
-  s.integer(io.rdyAddrValid);
-  s.integer(io.rdyAddrValue);
+  s.integer(io.rdyAddressValid);
+  s.integer(io.rdyAddressValue);
 
-  s.integer(io.oamdmaPending);
-  s.integer(io.oamdmaPage);
+  s.integer(io.oamDMAPending);
+  s.integer(io.oamDMAPage);
 }

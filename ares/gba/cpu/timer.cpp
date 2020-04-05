@@ -1,4 +1,4 @@
-auto CPU::Timer::run() -> void {
+inline auto CPU::Timer::run() -> void {
   if(pending) {
     pending = false;
     if(enable) period = reload;

@@ -61,21 +61,21 @@ struct vector_base {
   auto resize(uint64_t size, const T& value = T()) -> bool { return resizeRight(size, value); }
 
   //access.hpp
-  alwaysinline auto operator[](uint64_t offset) -> T&;
-  alwaysinline auto operator[](uint64_t offset) const -> const T&;
+  auto operator[](uint64_t offset) -> T&;
+  auto operator[](uint64_t offset) const -> const T&;
 
-  alwaysinline auto operator()(uint64_t offset) -> T&;
-  alwaysinline auto operator()(uint64_t offset, const T& value) const -> const T&;
+  auto operator()(uint64_t offset) -> T&;
+  auto operator()(uint64_t offset, const T& value) const -> const T&;
 
-  alwaysinline auto left() -> T&;
-  alwaysinline auto first() -> T& { return left(); }
-  alwaysinline auto left() const -> const T&;
-  alwaysinline auto first() const -> const T& { return left(); }
+  auto left() -> T&;
+  auto first() -> T& { return left(); }
+  auto left() const -> const T&;
+  auto first() const -> const T& { return left(); }
 
-  alwaysinline auto right() -> T&;
-  alwaysinline auto last() -> T& { return right(); }
-  alwaysinline auto right() const -> const T&;
-  alwaysinline auto last() const -> const T& { return right(); }
+  auto right() -> T&;
+  auto last() -> T& { return right(); }
+  auto right() const -> const T&;
+  auto last() const -> const T& { return right(); }
 
   //modify.hpp
   auto prepend(const T& value) -> void;

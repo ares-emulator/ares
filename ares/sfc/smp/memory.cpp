@@ -1,10 +1,10 @@
-auto SMP::readRAM(uint16 address) -> uint8 {
+inline auto SMP::readRAM(uint16 address) -> uint8 {
   if(address >= 0xffc0 && io.iplromEnable) return iplrom[address & 0x3f];
   if(io.ramDisable) return 0x5a;  //0xff on mini-SNES
   return dsp.apuram[address];
 }
 
-auto SMP::writeRAM(uint16 address, uint8 data) -> void {
+inline auto SMP::writeRAM(uint16 address, uint8 data) -> void {
   //writes to $ffc0-$ffff always go to apuram, even if the iplrom is enabled
   if(io.ramWritable && !io.ramDisable) dsp.apuram[address] = data;
 }

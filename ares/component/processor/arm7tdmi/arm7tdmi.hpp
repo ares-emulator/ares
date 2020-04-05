@@ -29,11 +29,11 @@ struct ARM7TDMI {
   //registers.cpp
   struct GPR;
   struct PSR;
-  inline auto r(uint4) -> GPR&;
-  inline auto cpsr() -> PSR&;
-  inline auto spsr() -> PSR&;
-  inline auto privileged() const -> bool;
-  inline auto exception() const -> bool;
+  auto r(uint4) -> GPR&;
+  auto cpsr() -> PSR&;
+  auto spsr() -> PSR&;
+  auto privileged() const -> bool;
+  auto exception() const -> bool;
 
   //memory.cpp
   auto idle() -> void;

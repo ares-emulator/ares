@@ -12,21 +12,21 @@ struct InternalRAM {
 
   //PPU byte reads only:
   //WS: address is always < 0x4000
-  alwaysinline auto read8(uint16 address) const -> uint16 {
+  auto read8(uint16 address) const -> uint16 {
     return memory[address];
   }
 
   //PPU word reads only:
   //address & 1 is always 0
   //WS: address is always < 0x4000
-  alwaysinline auto read16(uint16 address) const -> uint16 {
+  auto read16(uint16 address) const -> uint16 {
     return memory[address + 0] << 0 | memory[address + 1] << 8;
   }
 
   //PPU long reads only:
   //address & 3 is always 0
   //WS: address is always < 0x4000
-  alwaysinline auto read32(uint16 address) const -> uint32 {
+  auto read32(uint16 address) const -> uint32 {
     return memory[address + 0] <<  0 | memory[address + 1] <<  8
          | memory[address + 2] << 16 | memory[address + 3] << 24;
   }

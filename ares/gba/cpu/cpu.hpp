@@ -93,7 +93,7 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   struct DMA {
     //dma.cpp
-    inline auto run() -> bool;
+    auto run() -> bool;
     auto transfer() -> void;
 
      uint2 id;
@@ -124,7 +124,7 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   struct Timer {
     //timer.cpp
-    inline auto run() -> void;
+    auto run() -> void;
     auto step() -> void;
 
      uint2 id;

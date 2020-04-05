@@ -1,4 +1,4 @@
-auto Bus::mirror(uint address, uint size) -> uint {
+alwaysinline auto Bus::mirror(uint address, uint size) -> uint {
   if(size == 0) return 0;
   uint base = 0;
   uint mask = 1 << 23;
@@ -14,7 +14,7 @@ auto Bus::mirror(uint address, uint size) -> uint {
   return base + address;
 }
 
-auto Bus::reduce(uint address, uint mask) -> uint {
+alwaysinline auto Bus::reduce(uint address, uint mask) -> uint {
   while(mask) {
     uint bits = (mask & -mask) - 1;
     address = (address >> 1 & ~bits) | address & bits;
@@ -23,10 +23,10 @@ auto Bus::reduce(uint address, uint mask) -> uint {
   return address;
 }
 
-auto Bus::read(uint24 address, uint8 data) -> uint8 {
+alwaysinline auto Bus::read(uint24 address, uint8 data) -> uint8 {
   return reader[lookup[address]](target[address], data);
 }
 
-auto Bus::write(uint24 address, uint8 data) -> void {
+alwaysinline auto Bus::write(uint24 address, uint8 data) -> void {
   return writer[lookup[address]](target[address], data);
 }

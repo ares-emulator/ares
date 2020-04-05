@@ -39,29 +39,29 @@ struct CPU : HuC6280, Thread {
 
 private:
   struct IRQ2 {  //CD-ROM, BRK instruction
-    enum : uint16_t { vector = 0xfff6 };
+    static constexpr uint16_t vector = 0xfff6;
     uint1 disable;
     uint1 pending;
   } irq2;
 
   struct IRQ1 {  //VDC
-    enum : uint16_t { vector = 0xfff8 };
+    static constexpr uint16_t vector = 0xfff8;
     uint1 disable;
     uint1 pending;
   } irq1;
 
   struct TIQ {  //Timer
-    enum : uint16_t { vector = 0xfffa };
+    static constexpr uint16_t vector = 0xfffa;
     uint1 disable;
     uint1 pending;
   } tiq;
 
   struct NMI {  //not exposed by the PC Engine
-    enum : uint16_t { vector = 0xfffc };
+    static constexpr uint16_t vector = 0xfffc;
   } nmi;
 
   struct Reset {
-    enum : uint16_t { vector = 0xfffe };
+    static constexpr uint16_t vector = 0xfffe;
   } reset;
 
   struct Timer {

@@ -6,7 +6,7 @@
 //sometimes the SMP will run far slower than expected
 //other times (and more likely), the SMP will deadlock until the system is reset
 //the timers are not affected by this and advance by their expected values
-auto SMP::wait(bool halve, maybe<uint16> address) -> void {
+inline auto SMP::wait(bool halve, maybe<uint16> address) -> void {
   static const uint cycleWaitStates[4] = {2, 4, 10, 20};
   static const uint timerWaitStates[4] = {2, 4,  8, 16};
 
@@ -19,13 +19,13 @@ auto SMP::wait(bool halve, maybe<uint16> address) -> void {
   stepTimers(timerWaitStates[waitStates] >> halve);
 }
 
-auto SMP::step(uint clocks) -> void {
+inline auto SMP::step(uint clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
   Thread::synchronize(dsp);
 }
 
-auto SMP::stepTimers(uint clocks) -> void {
+inline auto SMP::stepTimers(uint clocks) -> void {
   timer0.step(clocks);
   timer1.step(clocks);
   timer2.step(clocks);

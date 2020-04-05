@@ -3,7 +3,7 @@
 //
 //ppu.(vh)counter(n) returns the value of said counters n-clocks before current time;
 //it is used to emulate hardware communication delay between opcode and interrupt units.
-auto CPU::nmiPoll() -> void {
+alwaysinline auto CPU::nmiPoll() -> void {
   //NMI hold
   if(status.nmiHold.lower() && io.nmiEnable) {
     status.nmiTransition = 1;
@@ -15,7 +15,7 @@ auto CPU::nmiPoll() -> void {
   }
 }
 
-auto CPU::irqPoll() -> void {
+alwaysinline auto CPU::irqPoll() -> void {
   //IRQ hold
   status.irqHold = 0;
   if(status.irqLine && io.irqEnable) {
@@ -66,14 +66,14 @@ auto CPU::timeup() -> bool {
   return result;
 }
 
-auto CPU::nmiTest() -> bool {
+alwaysinline auto CPU::nmiTest() -> bool {
   if(!status.nmiTransition) return 0;
   status.nmiTransition = 0;
   r.wai = 0;
   return 1;
 }
 
-auto CPU::irqTest() -> bool {
+alwaysinline auto CPU::irqTest() -> bool {
   if(!status.irqTransition && !r.irq) return 0;
   status.irqTransition = 0;
   r.wai = 0;
@@ -85,7 +85,7 @@ auto CPU::irqTest() -> bool {
 //
 //status.irqLock is used to simulate hardware delay before interrupts can
 //trigger during certain events (immediately after DMA, writes to $4200, etc)
-auto CPU::lastCycle() -> void {
+alwaysinline auto CPU::lastCycle() -> void {
   if(!status.irqLock) {
     if(nmiTest()) status.nmiPending = 1, status.interruptPending = 1;
     if(irqTest()) status.irqPending = 1, status.interruptPending = 1;

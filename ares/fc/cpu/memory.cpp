@@ -41,8 +41,8 @@ auto CPU::writeIO(uint16 address, uint8 data) -> void {
   switch(address) {
 
   case 0x4014: {
-    io.oamdmaPage = data;
-    io.oamdmaPending = true;
+    io.oamDMAPage = data;
+    io.oamDMAPending = 1;
     return;
   }
 

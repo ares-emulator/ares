@@ -68,8 +68,8 @@ struct VDP : Thread {
   auto outputPixel(uint32 color) -> void;
 
   struct Pixel {
-    inline auto above() const -> bool { return priority == 1 && color; }
-    inline auto below() const -> bool { return priority == 0 && color; }
+    auto above() const -> bool { return priority == 1 && color; }
+    auto below() const -> bool { return priority == 0 && color; }
 
     uint6 color;
     uint1 priority;
@@ -127,8 +127,8 @@ struct VDP : Thread {
 
   struct Object {
     //sprite.cpp
-    inline auto width() const -> uint;
-    inline auto height() const -> uint;
+    auto width() const -> uint;
+    auto height() const -> uint;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;

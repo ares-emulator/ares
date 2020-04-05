@@ -2,11 +2,11 @@
 
 namespace nall {
 
-string::string() : _data(nullptr), _refs(nullptr), _capacity(0), _size(0) {
+inline string::string() : _data(nullptr), _refs(nullptr), _capacity(0), _size(0) {
 }
 
 template<typename T>
-auto string::get() -> T* {
+inline auto string::get() -> T* {
   static char _null[] = "";
   if(!_data) return (T*)_null;
   if(*_refs > 1) _data = _copy();  //make unique for write operations
@@ -14,13 +14,13 @@ auto string::get() -> T* {
 }
 
 template<typename T>
-auto string::data() const -> const T* {
+inline auto string::data() const -> const T* {
   static const char _null[] = "";
   if(!_data) return (const T*)_null;
   return (const T*)_data;
 }
 
-auto string::reset() -> type& {
+inline auto string::reset() -> type& {
   if(_data && !--*_refs) {
     memory::free(_data);
     _data = nullptr;  //_refs = nullptr; is unnecessary
@@ -30,7 +30,7 @@ auto string::reset() -> type& {
   return *this;
 }
 
-auto string::reserve(uint capacity) -> type& {
+inline auto string::reserve(uint capacity) -> type& {
   if(capacity > _capacity) {
     _capacity = bit::round(max(31u, capacity) + 1) - 1;
     _data = _data ? _copy() : _allocate();
@@ -38,13 +38,13 @@ auto string::reserve(uint capacity) -> type& {
   return *this;
 }
 
-auto string::resize(uint size) -> type& {
+inline auto string::resize(uint size) -> type& {
   reserve(size);
   get()[_size = size] = 0;
   return *this;
 }
 
-auto string::operator=(const string& source) -> string& {
+inline auto string::operator=(const string& source) -> string& {
   if(&source == this) return *this;
   reset();
   if(source._data) {
@@ -57,7 +57,7 @@ auto string::operator=(const string& source) -> string& {
   return *this;
 }
 
-auto string::operator=(string&& source) -> string& {
+inline auto string::operator=(string&& source) -> string& {
   if(&source == this) return *this;
   reset();
   _data = source._data;
@@ -71,7 +71,7 @@ auto string::operator=(string&& source) -> string& {
   return *this;
 }
 
-auto string::_allocate() -> char* {
+inline auto string::_allocate() -> char* {
   auto _temp = memory::allocate<char>(_capacity + 1 + sizeof(uint));
   *_temp = 0;
   _refs = (uint*)(_temp + _capacity + 1);  //this will always be aligned by 32 via reserve()
@@ -79,7 +79,7 @@ auto string::_allocate() -> char* {
   return _temp;
 }
 
-auto string::_copy() -> char* {
+inline auto string::_copy() -> char* {
   auto _temp = memory::allocate<char>(_capacity + 1 + sizeof(uint));
   memory::copy(_temp, _data, _size = min(_capacity, _size));
   _temp[_size] = 0;

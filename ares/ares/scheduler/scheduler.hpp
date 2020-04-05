@@ -12,25 +12,25 @@ struct Scheduler {
   Scheduler(const Scheduler&) = delete;
   auto operator=(const Scheduler&) = delete;
 
-  inline auto reset() -> void;
-  inline auto threads() const -> uint;
-  inline auto thread(uint threadID) const -> maybe<Thread&>;
-  inline auto uniqueID() const -> uint;
-  inline auto minimum() const -> uintmax;
-  inline auto maximum() const -> uintmax;
+  auto reset() -> void;
+  auto threads() const -> uint;
+  auto thread(uint threadID) const -> maybe<Thread&>;
+  auto uniqueID() const -> uint;
+  auto minimum() const -> uintmax;
+  auto maximum() const -> uintmax;
 
-  inline auto append(Thread& thread) -> bool;
-  inline auto remove(Thread& thread) -> void;
+  auto append(Thread& thread) -> bool;
+  auto remove(Thread& thread) -> void;
 
-  inline auto power(Thread& thread) -> void;
-  inline auto enter(Mode mode = Mode::Run) -> Event;
-  inline auto exit(Event event) -> void;
+  auto power(Thread& thread) -> void;
+  auto enter(Mode mode = Mode::Run) -> Event;
+  auto exit(Event event) -> void;
 
-  inline auto synchronizing() const -> bool;
-  inline auto synchronize() -> void;
+  auto synchronizing() const -> bool;
+  auto synchronize() -> void;
 
-  inline auto getSynchronize() -> bool;
-  inline auto setSynchronize(bool) -> void;
+  auto getSynchronize() -> bool;
+  auto setSynchronize(bool) -> void;
 
 private:
   cothread_t _host = nullptr;     //program thread (used to exit scheduler)

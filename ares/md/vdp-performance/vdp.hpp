@@ -151,8 +151,8 @@ private:
 
   struct Object {
     //object.cpp
-    inline auto width() const -> uint;
-    inline auto height() const -> uint;
+    auto width() const -> uint;
+    auto height() const -> uint;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;

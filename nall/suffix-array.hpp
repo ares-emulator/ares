@@ -328,12 +328,12 @@ struct SuffixArray {
   using type = SuffixArray;
 
   //O(n)
-  inline SuffixArray(array_view<uint8_t> input) : input(input) {
+  SuffixArray(array_view<uint8_t> input) : input(input) {
     sa = suffix_array(input);
   }
 
   //O(n)
-  inline auto lrcp() -> type& {
+  auto lrcp() -> type& {
   //if(!isa) isa = suffix_array_invert(sa);
   //if(!lcp) lcp = suffix_array_lcp(sa, isa, input);
     if(!phi) phi = suffix_array_phi(sa);
@@ -344,26 +344,26 @@ struct SuffixArray {
   }
 
   //O(n)
-  inline auto lpf() -> type& {
+  auto lpf() -> type& {
     if(!phi) phi = suffix_array_phi(sa);
   //if(!plcp) plcp = suffix_array_plcp(phi, input);
     if(!lengths || !offsets) suffix_array_lpf(lengths, offsets, phi, plcp, input);
     return *this;
   }
 
-  inline auto operator[](int offset) const -> int {
+  auto operator[](int offset) const -> int {
     return sa[offset];
   }
 
   //O(n log m)
   //O(n + log m) with lrcp()
-  inline auto find(int& length, int& offset, array_view<uint8_t> match) -> bool {
+  auto find(int& length, int& offset, array_view<uint8_t> match) -> bool {
     if(!llcp || !rlcp) return suffix_array_find(length, offset, sa, input, match);  //O(n log m)
     return suffix_array_find(length, offset, llcp, rlcp, sa, input, match);  //O(n + log m)
   }
 
   //O(n) with lpf()
-  inline auto previous(int& length, int& offset, int address) -> void {
+  auto previous(int& length, int& offset, int address) -> void {
     length = lengths[address];
     offset = offsets[address];
   }

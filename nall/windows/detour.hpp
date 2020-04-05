@@ -61,7 +61,7 @@ detour::opcode detour::opcodes[] = {
   {0xeb, 2, RelNear,   0xe9},  //jmp near     -> jmp far
 };
 
-auto detour::insert(const string& moduleName, const string& functionName, void*& source, void* target) -> bool {
+inline auto detour::insert(const string& moduleName, const string& functionName, void*& source, void* target) -> bool {
   HMODULE module = GetModuleHandleW(utf16_t(moduleName));
   if(!module) return false;
 
@@ -98,7 +98,7 @@ auto detour::insert(const string& moduleName, const string& functionName, void*&
   return true;
 }
 
-auto detour::remove(const string& moduleName, const string& functionName, void*& source) -> bool {
+inline auto detour::remove(const string& moduleName, const string& functionName, void*& source) -> bool {
   HMODULE module = GetModuleHandleW(utf16_t(moduleName));
   if(!module) return false;
 
@@ -121,7 +121,7 @@ auto detour::remove(const string& moduleName, const string& functionName, void*&
   return true;
 }
 
-auto detour::length(const uint8* function) -> uint {
+inline auto detour::length(const uint8* function) -> uint {
   uint length = 0;
   while(length < 5) {
     detour::opcode *opcode = 0;
@@ -137,7 +137,7 @@ auto detour::length(const uint8* function) -> uint {
   return length;
 }
 
-auto detour::mirror(uint8* target, const uint8* source) -> uint {
+inline auto detour::mirror(uint8* target, const uint8* source) -> uint {
   const uint8* entryPoint = source;
   for(uint n = 0; n < 256; n++) target[256 + n] = source[n];
 

@@ -20,25 +20,25 @@ cons:
 namespace nall {
 
 template<typename T>
-auto string::get() -> T* {
+inline auto string::get() -> T* {
   if(_capacity == 0) reserve(1);
   return (T*)_data;
 }
 
 template<typename T>
-auto string::data() const -> const T* {
+inline auto string::data() const -> const T* {
   if(_capacity == 0) return (const T*)"";
   return (const T*)_data;
 }
 
-auto string::reset() -> type& {
+inline auto string::reset() -> type& {
   if(_data) { memory::free(_data); _data = nullptr; }
   _capacity = 0;
   _size = 0;
   return *this;
 }
 
-auto string::reserve(uint capacity) -> type& {
+inline auto string::reserve(uint capacity) -> type& {
   if(capacity > _capacity) {
     _capacity = bit::round(capacity + 1) - 1;
     _data = memory::resize<char>(_data, _capacity + 1);
@@ -47,13 +47,13 @@ auto string::reserve(uint capacity) -> type& {
   return *this;
 }
 
-auto string::resize(uint size) -> type& {
+inline auto string::resize(uint size) -> type& {
   reserve(size);
   get()[_size = size] = 0;
   return *this;
 }
 
-auto string::operator=(const string& source) -> type& {
+inline auto string::operator=(const string& source) -> type& {
   if(&source == this) return *this;
   reset();
   _data = memory::allocate<char>(source._size + 1);
@@ -63,7 +63,7 @@ auto string::operator=(const string& source) -> type& {
   return *this;
 }
 
-auto string::operator=(string&& source) -> type& {
+inline auto string::operator=(string&& source) -> type& {
   if(&source == this) return *this;
   reset();
   _data = source._data;
@@ -75,7 +75,7 @@ auto string::operator=(string&& source) -> type& {
   return *this;
 }
 
-string::string() {
+inline string::string() {
   _data = nullptr;
   _capacity = 0;
   _size = 0;

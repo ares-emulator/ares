@@ -46,29 +46,27 @@ struct CPU : MOS6502, Thread {
   auto lastCycle() -> void override;
   auto nmi(uint16& vector) -> void override;
 
-  auto oamdma() -> void;
+  auto oamDMA() -> void;
 
   auto nmiLine(bool) -> void;
   auto irqLine(bool) -> void;
   auto apuLine(bool) -> void;
 
   auto rdyLine(bool) -> void;
-  auto rdyAddr(bool valid, uint16 value = 0) -> void;
+  auto rdyAddress(bool valid, uint16 value = 0) -> void;
 
 //protected:
   struct IO {
-    bool interruptPending = 0;
-    bool nmiPending = 0;
-    bool nmiLine = 0;
-    bool irqLine = 0;
-    bool apuLine = 0;
-
-    bool rdyLine = 1;
-    bool rdyAddrValid = 0;
-    uint16 rdyAddrValue;
-
-    bool oamdmaPending = 0;
-    uint8 oamdmaPage;
+     uint1 interruptPending;
+     uint1 nmiPending;
+     uint1 nmiLine;
+     uint1 irqLine;
+     uint1 apuLine;
+     uint1 rdyLine = 1;
+     uint1 rdyAddressValid;
+    uint16 rdyAddressValue;
+     uint1 oamDMAPending;
+     uint8 oamDMAPage;
   } io;
 };
 

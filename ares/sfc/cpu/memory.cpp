@@ -27,7 +27,7 @@ auto CPU::write(uint24 address, uint8 data) -> void {
   bus.write(address, r.mdr = data);
 }
 
-auto CPU::wait(uint24 address) const -> uint {
+alwaysinline auto CPU::wait(uint24 address) const -> uint {
   //00-3f,80-bf:8000-ffff; 40-7f,c0-ff:0000-ffff
   if(address & 0x408000) return address & 0x800000 ? io.romSpeed : 8;
 

@@ -27,6 +27,19 @@ auto SA1::unload() -> void {
   Thread::destroy();
 }
 
+//override R65816::interrupt() to support SA-1 vector location I/O registers
+auto SA1::interrupt() -> void {
+  read(r.pc.d);
+  idle();
+  if(!r.e) push(r.pc.b);
+  push(r.pc.h);
+  push(r.pc.l);
+  push(r.e ? r.p & ~0x10 : r.p);
+  r.p.i = 1;
+  r.p.d = 0;
+  r.pc.d = r.vector;  //PC bank set to 0x00
+}
+
 auto SA1::main() -> void {
   if(r.wai) return instructionWait();
   if(r.stp) return instructionStop();
@@ -46,50 +59,6 @@ auto SA1::main() -> void {
 
   debugger.instruction();
   instruction();
-}
-
-//override R65816::interrupt() to support SA-1 vector location I/O registers
-auto SA1::interrupt() -> void {
-  read(r.pc.d);
-  idle();
-  if(!r.e) push(r.pc.b);
-  push(r.pc.h);
-  push(r.pc.l);
-  push(r.e ? r.p & ~0x10 : r.p);
-  r.p.i = 1;
-  r.p.d = 0;
-  r.pc.d = r.vector;  //PC bank set to 0x00
-}
-
-auto SA1::lastCycle() -> void {
-  if(io.sa1_nmi && !io.sa1_nmicl) {
-    status.interruptPending = true;
-    r.vector = io.cnv;
-    io.sa1_nmifl = true;
-    io.sa1_nmicl = 1;
-    r.wai = false;
-  } else if(!r.p.i) {
-    if(io.timer_irqen && !io.timer_irqcl) {
-      status.interruptPending = true;
-      r.vector = io.civ;
-      io.timer_irqfl = true;
-      r.wai = false;
-    } else if(io.dma_irqen && !io.dma_irqcl) {
-      status.interruptPending = true;
-      r.vector = io.civ;
-      io.dma_irqfl = true;
-      r.wai = false;
-    } else if(io.sa1_irq && !io.sa1_irqcl) {
-      status.interruptPending = true;
-      r.vector = io.civ;
-      io.sa1_irqfl = true;
-      r.wai = false;
-    }
-  }
-}
-
-auto SA1::interruptPending() const -> bool {
-  return status.interruptPending;
 }
 
 auto SA1::step() -> void {
@@ -125,7 +94,38 @@ auto SA1::step() -> void {
   }
 }
 
-auto SA1::triggerIRQ() -> void {
+inline auto SA1::lastCycle() -> void {
+  if(io.sa1_nmi && !io.sa1_nmicl) {
+    status.interruptPending = true;
+    r.vector = io.cnv;
+    io.sa1_nmifl = true;
+    io.sa1_nmicl = 1;
+    r.wai = false;
+  } else if(!r.p.i) {
+    if(io.timer_irqen && !io.timer_irqcl) {
+      status.interruptPending = true;
+      r.vector = io.civ;
+      io.timer_irqfl = true;
+      r.wai = false;
+    } else if(io.dma_irqen && !io.dma_irqcl) {
+      status.interruptPending = true;
+      r.vector = io.civ;
+      io.dma_irqfl = true;
+      r.wai = false;
+    } else if(io.sa1_irq && !io.sa1_irqcl) {
+      status.interruptPending = true;
+      r.vector = io.civ;
+      io.sa1_irqfl = true;
+      r.wai = false;
+    }
+  }
+}
+
+inline auto SA1::interruptPending() const -> bool {
+  return status.interruptPending;
+}
+
+inline auto SA1::triggerIRQ() -> void {
   io.timer_irqfl = true;
   if(io.timer_irqen) io.timer_irqcl = 0;
 }

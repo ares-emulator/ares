@@ -1,4 +1,4 @@
-auto PPU::Background::hires() const -> bool {
+alwaysinline auto PPU::Background::hires() const -> bool {
   return ppu.io.bgMode == 5 || ppu.io.bgMode == 6;
 }
 

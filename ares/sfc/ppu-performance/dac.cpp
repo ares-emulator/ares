@@ -58,15 +58,15 @@ auto PPU::DAC::blend(uint15 x, uint15 y, bool halve) const -> uint15 {
   }
 }
 
-auto PPU::DAC::plotAbove(uint8 x, uint8 source, uint8 priority, uint15 color) -> void {
+inline auto PPU::DAC::plotAbove(uint8 x, uint8 source, uint8 priority, uint15 color) -> void {
   if(priority > above[x].priority) above[x] = {source, priority, color};
 }
 
-auto PPU::DAC::plotBelow(uint8 x, uint8 source, uint8 priority, uint15 color) -> void {
+inline auto PPU::DAC::plotBelow(uint8 x, uint8 source, uint8 priority, uint15 color) -> void {
   if(priority > below[x].priority) below[x] = {source, priority, color};
 }
 
-auto PPU::DAC::directColor(uint8 palette, uint3 paletteGroup) const -> uint15 {
+inline auto PPU::DAC::directColor(uint8 palette, uint3 paletteGroup) const -> uint15 {
   //palette = -------- BBGGGRRR
   //group   = -------- -----bgr
   //output  = 0BBb00GG Gg0RRRr0
@@ -75,7 +75,7 @@ auto PPU::DAC::directColor(uint8 palette, uint3 paletteGroup) const -> uint15 {
        + (palette << 2 & 0x001c) + (paletteGroup <<  1 & 0x0002);
 }
 
-auto PPU::DAC::fixedColor() const -> uint15 {
+inline auto PPU::DAC::fixedColor() const -> uint15 {
   return io.colorRed << 0 | io.colorGreen << 5 | io.colorBlue << 10;
 }
 

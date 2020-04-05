@@ -7,9 +7,9 @@ struct DAC {
   auto above() -> uint16;
 
   auto blend(uint x, uint y) const -> uint15;
-  alwaysinline auto paletteColor(uint8 palette) const -> uint15;
-  alwaysinline auto directColor(uint8 palette, uint3 paletteGroup) const -> uint15;
-  alwaysinline auto fixedColor() const -> uint15;
+  auto paletteColor(uint8 palette) const -> uint15;
+  auto directColor(uint8 palette, uint3 paletteGroup) const -> uint15;
+  auto fixedColor() const -> uint15;
 
   auto serialize(serializer&) -> void;
 

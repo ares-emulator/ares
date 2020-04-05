@@ -14,7 +14,6 @@ auto APU::Envelope::serialize(serializer& s) -> void {
   s.integer(speed);
   s.integer(useSpeedAsVolume);
   s.integer(loopMode);
-
   s.integer(reloadDecay);
   s.integer(decayCounter);
   s.integer(decayVolume);
@@ -31,72 +30,58 @@ auto APU::Sweep::serialize(serializer& s) -> void {
 }
 
 auto APU::Pulse::serialize(serializer& s) -> void {
-  s.integer(lengthCounter);
-
   envelope.serialize(s);
   sweep.serialize(s);
 
+  s.integer(lengthCounter);
+  s.integer(periodCounter);
   s.integer(duty);
   s.integer(dutyCounter);
-
   s.integer(period);
-  s.integer(periodCounter);
 }
 
 auto APU::Triangle::serialize(serializer& s) -> void {
   s.integer(lengthCounter);
-
+  s.integer(periodCounter);
   s.integer(linearLength);
   s.integer(haltLengthCounter);
-
   s.integer(period);
-  s.integer(periodCounter);
-
   s.integer(stepCounter);
   s.integer(linearLengthCounter);
   s.integer(reloadLinear);
 }
 
 auto APU::Noise::serialize(serializer& s) -> void {
-  s.integer(lengthCounter);
-
   envelope.serialize(s);
 
-  s.integer(period);
+  s.integer(lengthCounter);
   s.integer(periodCounter);
-
+  s.integer(period);
   s.integer(shortMode);
   s.integer(lfsr);
 }
 
 auto APU::DMC::serialize(serializer& s) -> void {
   s.integer(lengthCounter);
-  s.integer(irqPending);
-
-  s.integer(period);
   s.integer(periodCounter);
-
+  s.integer(dmaDelayCounter);
+  s.integer(irqPending);
+  s.integer(period);
   s.integer(irqEnable);
   s.integer(loopMode);
-
   s.integer(dacLatch);
-  s.integer(addrLatch);
+  s.integer(addressLatch);
   s.integer(lengthLatch);
-
-  s.integer(readAddr);
-  s.integer(dmaDelayCounter);
-
+  s.integer(readAddress);
   s.integer(bitCounter);
   s.integer(dmaBufferValid);
   s.integer(dmaBuffer);
-
   s.integer(sampleValid);
   s.integer(sample);
 }
 
 auto APU::FrameCounter::serialize(serializer& s) -> void {
   s.integer(irqPending);
-
   s.integer(mode);
   s.integer(counter);
   s.integer(divider);

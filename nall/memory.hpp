@@ -4,35 +4,35 @@
 #include <nall/stdint.hpp>
 
 namespace nall::memory {
-  template<typename T = uint8_t> inline auto allocate(uint size) -> T*;
-  template<typename T = uint8_t> inline auto allocate(uint size, const T& value) -> T*;
+  template<typename T = uint8_t> auto allocate(uint size) -> T*;
+  template<typename T = uint8_t> auto allocate(uint size, const T& value) -> T*;
 
-  template<typename T = uint8_t> inline auto resize(void* target, uint size) -> T*;
+  template<typename T = uint8_t> auto resize(void* target, uint size) -> T*;
 
-  inline auto free(void* target) -> void;
+  auto free(void* target) -> void;
 
-  template<typename T = uint8_t> inline auto compare(const void* target, uint capacity, const void* source, uint size) -> int;
-  template<typename T = uint8_t> inline auto compare(const void* target, const void* source, uint size) -> int;
+  template<typename T = uint8_t> auto compare(const void* target, uint capacity, const void* source, uint size) -> int;
+  template<typename T = uint8_t> auto compare(const void* target, const void* source, uint size) -> int;
 
-  template<typename T = uint8_t> inline auto icompare(const void* target, uint capacity, const void* source, uint size) -> int;
-  template<typename T = uint8_t> inline auto icompare(const void* target, const void* source, uint size) -> int;
+  template<typename T = uint8_t> auto icompare(const void* target, uint capacity, const void* source, uint size) -> int;
+  template<typename T = uint8_t> auto icompare(const void* target, const void* source, uint size) -> int;
 
-  template<typename T = uint8_t> inline auto copy(void* target, uint capacity, const void* source, uint size) -> T*;
-  template<typename T = uint8_t> inline auto copy(void* target, const void* source, uint size) -> T*;
+  template<typename T = uint8_t> auto copy(void* target, uint capacity, const void* source, uint size) -> T*;
+  template<typename T = uint8_t> auto copy(void* target, const void* source, uint size) -> T*;
 
-  template<typename T = uint8_t> inline auto move(void* target, uint capacity, const void* source, uint size) -> T*;
-  template<typename T = uint8_t> inline auto move(void* target, const void* source, uint size) -> T*;
+  template<typename T = uint8_t> auto move(void* target, uint capacity, const void* source, uint size) -> T*;
+  template<typename T = uint8_t> auto move(void* target, const void* source, uint size) -> T*;
 
-  template<typename T = uint8_t> inline auto fill(void* target, uint capacity, const T& value = {}) -> T*;
+  template<typename T = uint8_t> auto fill(void* target, uint capacity, const T& value = {}) -> T*;
 
-  template<typename T> inline auto assign(T* target) -> void {}
-  template<typename T, typename U, typename... P> inline auto assign(T* target, const U& value, P&&... p) -> void;
+  template<typename T> auto assign(T* target) -> void {}
+  template<typename T, typename U, typename... P> auto assign(T* target, const U& value, P&&... p) -> void;
 
-  template<uint size, typename T = uint64_t> inline auto readl(const void* source) -> T;
-  template<uint size, typename T = uint64_t> inline auto readm(const void* source) -> T;
+  template<uint size, typename T = uint64_t> auto readl(const void* source) -> T;
+  template<uint size, typename T = uint64_t> auto readm(const void* source) -> T;
 
-  template<uint size, typename T = uint64_t> inline auto writel(void* target, T data) -> void;
-  template<uint size, typename T = uint64_t> inline auto writem(void* target, T data) -> void;
+  template<uint size, typename T = uint64_t> auto writel(void* target, T data) -> void;
+  template<uint size, typename T = uint64_t> auto writem(void* target, T data) -> void;
 }
 
 namespace nall::memory {
@@ -56,7 +56,7 @@ template<typename T> auto resize(void* target, uint size) -> T* {
   return (T*)realloc(target, size * sizeof(T));
 }
 
-auto free(void* target) -> void {
+inline auto free(void* target) -> void {
   ::free(target);
 }
 

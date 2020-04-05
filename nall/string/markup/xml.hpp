@@ -14,7 +14,7 @@ using SharedNode = shared_pointer<ManagedNode>;
 
 struct ManagedNode : Markup::ManagedNode {
 protected:
-  string escape() const {
+  auto escape() const -> string {
     string result = _value;
     result.replace("&", "&amp;");
     result.replace("<", "&lt;");
@@ -26,7 +26,7 @@ protected:
     return result;
   }
 
-  bool isName(char c) const {
+  auto isName(char c) const -> bool {
     if(c >= 'A' && c <= 'Z') return true;
     if(c >= 'a' && c <= 'z') return true;
     if(c >= '0' && c <= '9') return true;
@@ -35,14 +35,14 @@ protected:
     return false;
   }
 
-  bool isWhitespace(char c) const {
+  auto isWhitespace(char c) const -> bool {
     if(c ==  ' ' || c == '\t') return true;
     if(c == '\r' || c == '\n') return true;
     return false;
   }
 
   //copy part of string from source document into target string; decode markup while copying
-  void copy(string& target, const char* source, uint length) {
+  auto copy(string& target, const char* source, uint length) -> void {
     target.reserve(length + 1);
 
     #if defined(NALL_XML_LITERAL)
@@ -84,7 +84,7 @@ protected:
     *output = 0;
   }
 
-  bool parseExpression(const char*& p) {
+  auto parseExpression(const char*& p) -> bool {
     if(*(p + 1) != '!') return false;
 
     //comment
@@ -119,7 +119,7 @@ protected:
   }
 
   //returns true if tag closes itself (<tag/>); false if not (<tag>)
-  bool parseHead(const char*& p) {
+  auto parseHead(const char*& p) -> bool {
     //parse name
     const char* nameStart = ++p;  //skip '<'
     while(isName(*p)) p++;
@@ -164,14 +164,14 @@ protected:
   }
 
   //parse element and all of its child elements
-  void parseElement(const char*& p) {
+  auto parseElement(const char*& p) -> void {
     SharedNode node(new ManagedNode);
     if(node->parseHead(p) == false) node->parse(p);
     _children.append(node);
   }
 
   //return true if </tag> matches this node's name
-  bool parseClosureElement(const char*& p) {
+  auto parseClosureElement(const char*& p) -> bool {
     if(p[0] != '<' || p[1] != '/') return false;
     p += 2;
     const char* nameStart = p;
@@ -183,7 +183,7 @@ protected:
   }
 
   //parse contents of an element
-  void parse(const char*& p) {
+  auto parse(const char*& p) -> void {
     const char* dataStart = p;
     const char* dataEnd = p;
 

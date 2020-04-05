@@ -103,7 +103,6 @@ private:
     }
 
     SDL_JoystickUpdate();
-    input.doHotplug();
   }
 
   uint64_t lastInitialize = 0;

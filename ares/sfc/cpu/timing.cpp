@@ -1,10 +1,10 @@
 //DMA clock divider
-auto CPU::dmaCounter() const -> uint {
+inline auto CPU::dmaCounter() const -> uint {
   return counter.cpu & 7;
 }
 
 //joypad auto-poll clock divider
-auto CPU::joypadCounter() const -> uint {
+inline auto CPU::joypadCounter() const -> uint {
   return counter.cpu & 255;
 }
 
@@ -75,7 +75,7 @@ auto CPU::scanline() -> void {
   }
 }
 
-auto CPU::aluEdge() -> void {
+alwaysinline auto CPU::aluEdge() -> void {
   if(alu.mpyctr) {
     alu.mpyctr--;
     if(io.rddiv & 1) io.rdmpy += alu.shift;
@@ -94,7 +94,7 @@ auto CPU::aluEdge() -> void {
   }
 }
 
-auto CPU::dmaEdge() -> void {
+alwaysinline auto CPU::dmaEdge() -> void {
   //H/DMA pending && DMA inactive?
   //.. Run one full CPU cycle
   //.. HDMA pending && HDMA enabled ? DMA sync + HDMA run
@@ -137,7 +137,7 @@ auto CPU::dmaEdge() -> void {
 }
 
 //called every 256 clocks; see CPU::step()
-auto CPU::joypadEdge() -> void {
+alwaysinline auto CPU::joypadEdge() -> void {
   if(vcounter() >= ppu.vdisp()) {
     //cache enable state at first iteration
     if(status.autoJoypadCounter == 0) status.autoJoypadLatch = io.autoJoypadPoll;

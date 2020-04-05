@@ -14,11 +14,11 @@ struct SPC700 {
   auto power() -> void;
 
   //memory.cpp
-  inline auto fetch() -> uint8;
-  inline auto load(uint8 address) -> uint8;
-  inline auto store(uint8 address, uint8 data) -> void;
-  inline auto pull() -> uint8;
-  inline auto push(uint8 data) -> void;
+  auto fetch() -> uint8;
+  auto load(uint8 address) -> uint8;
+  auto store(uint8 address, uint8 data) -> void;
+  auto pull() -> uint8;
+  auto push(uint8 data) -> void;
 
   //instruction.cpp
   auto instruction() -> void;

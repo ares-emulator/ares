@@ -20,25 +20,25 @@ cons:
 
 namespace nall {
 
-string::string() {
+inline string::string() {
   _data = nullptr;
   _capacity = SSO - 1;
   _size = 0;
 }
 
 template<typename T>
-auto string::get() -> T* {
+inline auto string::get() -> T* {
   if(_capacity < SSO) return (T*)_text;
   return (T*)_data;
 }
 
 template<typename T>
-auto string::data() const -> const T* {
+inline auto string::data() const -> const T* {
   if(_capacity < SSO) return (const T*)_text;
   return (const T*)_data;
 }
 
-auto string::reset() -> type& {
+inline auto string::reset() -> type& {
   if(_capacity >= SSO) memory::free(_data);
   _data = nullptr;
   _capacity = SSO - 1;
@@ -46,7 +46,7 @@ auto string::reset() -> type& {
   return *this;
 }
 
-auto string::reserve(uint capacity) -> type& {
+inline auto string::reserve(uint capacity) -> type& {
   if(capacity <= _capacity) return *this;
   capacity = bit::round(capacity + 1) - 1;
   if(_capacity < SSO) {
@@ -60,13 +60,13 @@ auto string::reserve(uint capacity) -> type& {
   return *this;
 }
 
-auto string::resize(uint size) -> type& {
+inline auto string::resize(uint size) -> type& {
   reserve(size);
   get()[_size = size] = 0;
   return *this;
 }
 
-auto string::operator=(const string& source) -> type& {
+inline auto string::operator=(const string& source) -> type& {
   if(&source == this) return *this;
   reset();
   if(source._capacity >= SSO) {
@@ -82,7 +82,7 @@ auto string::operator=(const string& source) -> type& {
   return *this;
 }
 
-auto string::operator=(string&& source) -> type& {
+inline auto string::operator=(string&& source) -> type& {
   if(&source == this) return *this;
   reset();
   memory::copy(this, &source, sizeof(string));

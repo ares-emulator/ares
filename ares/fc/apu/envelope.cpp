@@ -12,7 +12,7 @@ auto APU::Envelope::clock() -> void {
 
   if(--decayCounter == 0) {
     decayCounter = speed + 1;
-    if(decayVolume || loopMode) decayVolume--;
+    if(decayVolume | loopMode) decayVolume--;
   }
 }
 

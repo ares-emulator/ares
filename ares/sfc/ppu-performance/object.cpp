@@ -1,9 +1,9 @@
-auto PPU::Object::addressReset() -> void {
+inline auto PPU::Object::addressReset() -> void {
   ppu.io.oamAddress = ppu.io.oamBaseAddress;
   setFirstSprite();
 }
 
-auto PPU::Object::setFirstSprite() -> void {
+inline auto PPU::Object::setFirstSprite() -> void {
   io.firstSprite = 0;
   if(ppu.io.oamPriority) io.firstSprite = ppu.io.oamAddress >> 2;
 }

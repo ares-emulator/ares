@@ -216,16 +216,12 @@ auto InputManager::poll(bool force) -> void {
   if(changed) {
     this->devices = devices;
     bind();
+    inputSettings.refresh();
+    hotkeySettings.refresh();
   }
 }
 
 auto InputManager::eventInput(shared_pointer<HID::Device> device, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> void {
   inputSettings.eventInput(device, groupID, inputID, oldValue, newValue);
   hotkeySettings.eventInput(device, groupID, inputID, oldValue, newValue);
-}
-
-auto InputManager::eventHotplug() -> void {
-  poll(true);
-  inputSettings.refresh();
-  hotkeySettings.refresh();
 }
