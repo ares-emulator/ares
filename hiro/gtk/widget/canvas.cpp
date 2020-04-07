@@ -3,18 +3,18 @@
 namespace hiro {
 
 //GTK3
-static auto Canvas_draw(GtkWidget* widget, cairo_t* context, pCanvas* p) -> signed {
+static auto Canvas_draw(GtkWidget* widget, cairo_t* context, pCanvas* p) -> int {
   p->_onDraw(context);
   return true;
 }
 
 //GTK2
-static auto Canvas_expose(GtkWidget* widget, GdkEventExpose* event, pCanvas* p) -> signed {
+static auto Canvas_expose(GtkWidget* widget, GdkEventExpose* event, pCanvas* p) -> int {
   p->_onExpose(event);
   return true;
 }
 
-static auto Canvas_keyPress(GtkWidget* widget, GdkEventKey* event, pViewport* p) -> signed {
+static auto Canvas_keyPress(GtkWidget* widget, GdkEventKey* event, pViewport* p) -> int {
   //canvass that have been set focusable are intended for games.
   //to prevent arrow keys, tab, etc from losing focus on the game viewport, block key propagation here.
   if(p->self().focusable()) return true;
@@ -23,7 +23,7 @@ static auto Canvas_keyPress(GtkWidget* widget, GdkEventKey* event, pViewport* p)
   return false;
 }
 
-static auto Canvas_mousePress(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> signed {
+static auto Canvas_mousePress(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> int {
   //gtk_widget_set_focus_on_click() is a GTK 3.2+ feature.
   //implement this functionality manually for GTK 2.0+ compatibility.
   if(event->button == 1 && p->self().focusable()) gtk_widget_grab_focus(widget);

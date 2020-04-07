@@ -49,8 +49,8 @@ auto CPU::power(bool reset) -> void {
   ram[0x00a] = 0xdf;
   ram[0x00f] = 0xbf;
 
-  r.pc.byte(0) = bus.read(0xfffc);
-  r.pc.byte(1) = bus.read(0xfffd);
+  r.pc.byte(0) = readBus(0xfffc);
+  r.pc.byte(1) = readBus(0xfffd);
 
   io = {};
 }

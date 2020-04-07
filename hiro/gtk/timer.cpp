@@ -2,7 +2,7 @@
 
 namespace hiro {
 
-static auto Timer_trigger(pTimer* p) -> signed {
+static auto Timer_trigger(pTimer* p) -> int {
   //prevent all timers from firing once the program has been terminated
   if(Application::state().quit) return false;
 

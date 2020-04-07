@@ -73,7 +73,7 @@ struct APU : Thread {
      uint2 duty;
      uint3 dutyCounter;
     uint11 period;
-  } pulse[2];
+  } pulse1, pulse2;
 
   struct Triangle {
     //triangle.cpp

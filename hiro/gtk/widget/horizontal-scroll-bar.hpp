@@ -6,8 +6,8 @@ struct pHorizontalScrollBar : pWidget {
   Declare(HorizontalScrollBar, Widget)
 
   auto minimumSize() const -> Size;
-  auto setLength(unsigned length) -> void;
-  auto setPosition(unsigned position) -> void;
+  auto setLength(uint length) -> void;
+  auto setPosition(uint position) -> void;
 };
 
 }

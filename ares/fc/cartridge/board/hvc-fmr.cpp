@@ -2,8 +2,25 @@
 //HVC-FMR-04
 
 struct HVC_FMR : Board {
-  HVC_FMR(Markup::Node& document) : Board(document) {
+  Memory::Readable<uint8> programROM;
+  Memory::Writable<uint8> programRAM;
+  Memory::Writable<uint8> characterRAM;
+
+  using Board::Board;
+
+  auto load(Markup::Node document) -> void override {
     fds.present = 1;
+
+    auto board = document["game/board"];
+    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Board::load(programRAM, board["memory(type=RAM,content=Save)"]);
+    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+  }
+
+  auto save(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Board::save(programRAM, board["memory(type=RAM,content=Save)"]);
+    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto main() -> void override {
@@ -13,31 +30,31 @@ struct HVC_FMR : Board {
 
   auto readPRG(uint address) -> uint8 {
     if(address >= 0x4020 && address <= 0x409f) return fds.read(address, cpu.mdr());
-    if(address >= 0x6000 && address <= 0xdfff) return prgram.read(address - 0x6000);
-    if(address >= 0xe000 && address <= 0xffff) return prgrom.read(address);
+    if(address >= 0x6000 && address <= 0xdfff) return programRAM.read(address - 0x6000);
+    if(address >= 0xe000 && address <= 0xffff) return programROM.read(address - 0xe000);
     return cpu.mdr();
   }
 
   auto writePRG(uint address, uint8 data) -> void {
     if(address == 0x4025) mirror = data.bit(3);
     if(address >= 0x4020 && address <= 0x409f) return fds.write(address, data);
-    if(address >= 0x6000 && address <= 0xdfff) return prgram.write(address - 0x6000, data);
+    if(address >= 0x6000 && address <= 0xdfff) return programRAM.write(address - 0x6000, data);
   }
 
   auto readCHR(uint address) -> uint8 {
     if(address & 0x2000) {
-      if(mirror == 1) address = ((address & 0x0800) >> 1) | (address & 0x03ff);
-      return ppu.readCIRAM(address & 0x07ff);
+      address = address >> mirror & 0x0400 | address & 0x03ff;
+      return ppu.readCIRAM(address);
     }
-    return chrram.read(address);
+    return characterRAM.read(address);
   }
 
   auto writeCHR(uint address, uint8 data) -> void {
     if(address & 0x2000) {
-      if(mirror == 1) address = ((address & 0x0800) >> 1) | (address & 0x03ff);
-      return ppu.writeCIRAM(address & 0x07ff, data);
+      address = address >> mirror & 0x0400 | address & 0x03ff;
+      return ppu.writeCIRAM(address, data);
     }
-    return chrram.write(address, data);
+    return characterRAM.write(address, data);
   }
 
   auto power() -> void {
@@ -46,8 +63,9 @@ struct HVC_FMR : Board {
   }
 
   auto serialize(serializer& s) -> void {
-    Board::serialize(s);
     fds.serialize(s);
+    programRAM.serialize(s);
+    characterRAM.serialize(s);
     s.integer(mirror);
   }
 

@@ -40,7 +40,7 @@ auto System::load(Node::Object& root, Node::Object from) -> void {
   cpu.load(node, from);
   apu.load(node, from);
   ppu.load(node, from);
-  cartridge.load(node, from);
+  cartridgeSlot.load(node, from);
   controllerPort1.load(node, from);
   controllerPort2.load(node, from);
 }
@@ -56,7 +56,7 @@ auto System::unload() -> void {
   cpu.unload();
   apu.unload();
   ppu.unload();
-  cartridge.unload();
+  cartridgeSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
   node = {};

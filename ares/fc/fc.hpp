@@ -19,7 +19,6 @@ namespace ares::Famicom {
 
   #include <fc/controller/controller.hpp>
   #include <fc/system/system.hpp>
-  #include <fc/memory/memory.hpp>
   #include <fc/cartridge/cartridge.hpp>
   #include <fc/cpu/cpu.hpp>
   #include <fc/apu/apu.hpp>

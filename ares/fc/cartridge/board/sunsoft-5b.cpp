@@ -1,16 +1,31 @@
 //SUNSOFT-5B
 
-struct Sunsoft5B : YM2149, Board {
+struct Sunsoft5B : Board {
+  Memory::Readable<uint8> programROM;
+  Memory::Writable<uint8> programRAM;
+  Memory::Readable<uint8> characterROM;
+  Memory::Writable<uint8> characterRAM;
+  YM2149 ym2149;
   Node::Stream stream;
 
-  Sunsoft5B(Markup::Node& document) : Board(document) {
+  using Board::Board;
+
+  auto load(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Board::load(programRAM, board["memory(type=RAM,content=Save)"]);
+    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+
     stream = Node::append<Node::Stream>(cartridge.node, {}, "Stream");
     stream->setChannels(1);
     stream->setFrequency(uint(system.frequency() + 0.5) / cartridge.rate() / 16);
   }
 
-  ~Sunsoft5B() {
-    stream = {};
+  auto save(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Board::save(programRAM, board["memory(type=RAM,content=Save)"]);
+    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto main() -> void {
@@ -21,7 +36,7 @@ struct Sunsoft5B : YM2149, Board {
     }
 
     if(!++divider) {
-      auto channels = YM2149::clock();
+      auto channels = ym2149.clock();
       double output = 0.0;
       output += volume[channels[0]];
       output += volume[channels[1]];
@@ -32,102 +47,105 @@ struct Sunsoft5B : YM2149, Board {
     tick();
   }
 
-  auto readPRG(uint addr) -> uint8 {
-    if(addr < 0x6000) return cpu.mdr();
+  auto readPRG(uint address) -> uint8 {
+    if(address < 0x6000) return cpu.mdr();
 
-    uint8 bank = 0x3f;  //((addr & 0xe000) == 0xe000
-    if((addr & 0xe000) == 0x6000) bank = prgBank[0];
-    if((addr & 0xe000) == 0x8000) bank = prgBank[1];
-    if((addr & 0xe000) == 0xa000) bank = prgBank[2];
-    if((addr & 0xe000) == 0xc000) bank = prgBank[3];
+    uint8 bank;
+    if((address & 0xe000) == 0x6000) bank = programBank[0];
+    if((address & 0xe000) == 0x8000) bank = programBank[1];
+    if((address & 0xe000) == 0xa000) bank = programBank[2];
+    if((address & 0xe000) == 0xc000) bank = programBank[3];
+    if((address & 0xe000) == 0xe000) bank = 0x3f;
 
-    bool ramEnable = bank & 0x80;
-    bool ramSelect = bank & 0x40;
+    bool ramSelect = bank.bit(6);
+    bool ramEnable = bank.bit(7);
     bank &= 0x3f;
 
     if(ramSelect) {
       if(!ramEnable) return cpu.mdr();
-      return prgram.data[addr & 0x1fff];
+      return programRAM.read((uint13)address);
     }
 
-    addr = (bank << 13) | (addr & 0x1fff);
-    return prgrom.read(addr);
+    address = bank << 13 | (uint13)address;
+    return programROM.read(address);
   }
 
-  auto writePRG(uint addr, uint8 data) -> void {
-    if((addr & 0xe000) == 0x6000) {
-      prgram.data[addr & 0x1fff] = data;
+  auto writePRG(uint address, uint8 data) -> void {
+    if((address & 0xe000) == 0x6000) {
+      programRAM.write((uint13)address, data);
     }
 
-    if(addr == 0x8000) {
-      port = data & 0x0f;
+    if(address == 0x8000) {
+      port = data.bit(0,3);
     }
 
-    if(addr == 0xa000) {
+    if(address == 0xa000) {
       switch(port) {
-      case  0: chrBank[0] = data; break;
-      case  1: chrBank[1] = data; break;
-      case  2: chrBank[2] = data; break;
-      case  3: chrBank[3] = data; break;
-      case  4: chrBank[4] = data; break;
-      case  5: chrBank[5] = data; break;
-      case  6: chrBank[6] = data; break;
-      case  7: chrBank[7] = data; break;
-      case  8: prgBank[0] = data; break;
-      case  9: prgBank[1] = data; break;
-      case 10: prgBank[2] = data; break;
-      case 11: prgBank[3] = data; break;
-      case 12: mirror = data & 3; break;
-      case 13:
-        irqEnable = data & 0x80;
-        irqCounterEnable = data & 0x01;
+      case 0x0: characterBank[0] = data; break;
+      case 0x1: characterBank[1] = data; break;
+      case 0x2: characterBank[2] = data; break;
+      case 0x3: characterBank[3] = data; break;
+      case 0x4: characterBank[4] = data; break;
+      case 0x5: characterBank[5] = data; break;
+      case 0x6: characterBank[6] = data; break;
+      case 0x7: characterBank[7] = data; break;
+      case 0x8: programBank[0] = data; break;
+      case 0x9: programBank[1] = data; break;
+      case 0xa: programBank[2] = data; break;
+      case 0xb: programBank[3] = data; break;
+      case 0xc: mirror = data.bit(0,1); break;
+      case 0xd:
+        irqCounterEnable = data.bit(0);
+        irqEnable = data.bit(7);
         if(irqEnable == 0) cpu.irqLine(0);
         break;
-      case 14: irqCounter = (irqCounter & 0xff00) | (data << 0); break;
-      case 15: irqCounter = (irqCounter & 0x00ff) | (data << 8); break;
+      case 0xe: irqCounter.byte(0) = data; break;
+      case 0xf: irqCounter.byte(1) = data; break;
       }
     }
 
-    if(addr == 0xc000) {
-      YM2149::select(data);
+    if(address == 0xc000) {
+      ym2149.select(data);
     }
 
-    if(addr == 0xe000) {
-      YM2149::write(data);
+    if(address == 0xe000) {
+      ym2149.write(data);
     }
   }
 
-  auto addrCHR(uint addr) -> uint {
-    uint8 bank = (addr >> 10) & 7;
-    return (chrBank[bank] << 10) | (addr & 0x03ff);
+  auto addressCHR(uint address) -> uint {
+    uint3 bank = address >> 10 & 7;
+    return characterBank[bank] << 10 | (uint10)address;
   }
 
-  auto addrCIRAM(uint addr) -> uint {
+  auto addressCIRAM(uint address) -> uint {
     switch(mirror) {
-    case 0: return ((addr & 0x0400) >> 0) | (addr & 0x03ff);  //vertical
-    case 1: return ((addr & 0x0800) >> 1) | (addr & 0x03ff);  //horizontal
-    case 2: return 0x0000 | (addr & 0x03ff);  //first
-    case 3: return 0x0400 | (addr & 0x03ff);  //second
+    case 0: return address >> 0 & 0x0400 | address & 0x03ff;  //vertical
+    case 1: return address >> 1 & 0x0400 | address & 0x03ff;  //horizontal
+    case 2: return 0x0000 | address & 0x03ff;  //first
+    case 3: return 0x0400 | address & 0x03ff;  //second
     }
     unreachable;
   }
 
-  auto readCHR(uint addr) -> uint8 {
-    if(addr & 0x2000) return ppu.readCIRAM(addrCIRAM(addr));
-    return Board::readCHR(addrCHR(addr));
+  auto readCHR(uint address) -> uint8 {
+    if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
+    if(characterROM) return characterROM.read(addressCHR(address));
+    if(characterRAM) return characterRAM.read(addressCHR(address));
+    return 0x00;
   }
 
-  auto writeCHR(uint addr, uint8 data) -> void {
-    if(addr & 0x2000) return ppu.writeCIRAM(addrCIRAM(addr), data);
-    return Board::writeCHR(addrCHR(addr), data);
+  auto writeCHR(uint address, uint8 data) -> void {
+    if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
+    if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
   auto power() -> void {
-    YM2149::power();
+    ym2149.power();
 
     port = 0;
-    for(auto& n : prgBank) n = 0;
-    for(auto& n : chrBank) n = 0;
+    for(auto& bank : programBank) bank = 0;
+    for(auto& bank : characterBank) bank = 0;
     mirror = 0;
     irqEnable = 0;
     irqCounterEnable = 0;
@@ -140,28 +158,26 @@ struct Sunsoft5B : YM2149, Board {
   }
 
   auto serialize(serializer& s) -> void {
-    YM2149::serialize(s);
-    Board::serialize(s);
-
+    programRAM.serialize(s);
+    characterRAM.serialize(s);
+    ym2149.serialize(s);
     s.integer(port);
-    s.array(prgBank);
-    s.array(chrBank);
+    s.array(programBank);
+    s.array(characterBank);
     s.integer(mirror);
     s.integer(irqEnable);
     s.integer(irqCounterEnable);
     s.integer(irqCounter);
-
     s.integer(divider);
   }
 
-  uint4 port;
-  uint8 prgBank[4];
-  uint8 chrBank[8];
-  uint2 mirror;
-  bool irqEnable;
-  bool irqCounterEnable;
+   uint4 port;
+   uint8 programBank[4];
+   uint8 characterBank[8];
+   uint2 mirror;
+   uint1 irqEnable;
+   uint1 irqCounterEnable;
   uint16 irqCounter;
-
-  uint4 divider;
+   uint4 divider;
   double volume[32];
 };

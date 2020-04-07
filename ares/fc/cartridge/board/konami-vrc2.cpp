@@ -1,51 +1,139 @@
 struct KonamiVRC2 : Board {
-  KonamiVRC2(Markup::Node& document) : Board(document), vrc2(*this) {
-    settings.pinout.a0 = 1 << document["game/board/chip/pinout/a0"].natural();
-    settings.pinout.a1 = 1 << document["game/board/chip/pinout/a1"].natural();
+  Memory::Readable<uint8> programROM;
+  Memory::Writable<uint8> programRAM;
+  Memory::Readable<uint8> characterROM;
+  Memory::Writable<uint8> characterRAM;
+
+  using Board::Board;
+
+  auto load(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Board::load(programRAM, board["memory(type=RAM,content=Save)"]);
+    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+    pinA0 = 1 << board["chip(type=VRC2)/pinout/a0"].natural();
+    pinA1 = 1 << board["chip(type=VRC2)/pinout/a1"].natural();
   }
 
-  auto readPRG(uint addr) -> uint8 {
-    if(addr < 0x6000) return cpu.mdr();
-    if(addr < 0x8000) return vrc2.readRAM(addr);
-    return prgrom.read(vrc2.addrPRG(addr));
+  auto save(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Board::save(programRAM, board["memory(type=RAM,content=Save)"]);
+    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto writePRG(uint addr, uint8 data) -> void {
-    if(addr < 0x6000) return;
-    if(addr < 0x8000) return vrc2.writeRAM(addr, data);
+  auto readPRG(uint address) -> uint8 {
+    if(address < 0x6000) return cpu.mdr();
 
-    bool a0 = (addr & settings.pinout.a0);
-    bool a1 = (addr & settings.pinout.a1);
-    addr &= 0xfff0;
-    addr |= (a0 << 0) | (a1 << 1);
-    return vrc2.writeIO(addr, data);
+    if(address < 0x8000) {
+      if(!programRAM && (address & 0xf000) == 0x6000) return cpu.mdr() | latch;
+      if(!programRAM) return cpu.mdr();
+      return programRAM.read((uint13)address);
+    }
+
+    uint5 bank, banks = programROM.size() >> 13;
+    switch(address & 0xe000) {
+    case 0x8000: bank = programBank[0]; break;
+    case 0xa000: bank = programBank[1]; break;
+    case 0xc000: bank = banks - 2; break;
+    case 0xe000: bank = banks - 1; break;
+    }
+    address = bank << 13 | (uint13)address;
+    return programROM.read(address);
   }
 
-  auto readCHR(uint addr) -> uint8 {
-    if(addr & 0x2000) return ppu.readCIRAM(vrc2.addrCIRAM(addr));
-    return Board::readCHR(vrc2.addrCHR(addr));
+  auto writePRG(uint address, uint8 data) -> void {
+    if(address < 0x6000) return;
+
+    if(address < 0x8000) {
+      if(!programRAM && (address & 0xf000) == 0x6000) latch = data.bit(0);
+      if(!programRAM) return;
+      return programRAM.write((uint13)address, data);
+    }
+
+    bool a0 = address & pinA0;
+    bool a1 = address & pinA1;
+    address &= 0xf000;
+    address |= a0 << 0 | a1 << 1;
+
+    switch(address) {
+    case 0x8000: case 0x8001: case 0x8002: case 0x8003:
+      programBank[0] = data.bit(0,4);
+      break;
+    case 0x9000: case 0x9001: case 0x9002: case 0x9003:
+      mirror = data.bit(0,1);
+      break;
+    case 0xa000: case 0xa001: case 0xa002: case 0xa003:
+      programBank[1] = data.bit(0,4);
+      break;
+    case 0xb000: characterBank[0].bit(0,3) = data.bit(0,3); break;
+    case 0xb001: characterBank[0].bit(4,7) = data.bit(0,3); break;
+    case 0xb002: characterBank[1].bit(0,3) = data.bit(0,3); break;
+    case 0xb003: characterBank[1].bit(4,7) = data.bit(0,3); break;
+    case 0xc000: characterBank[2].bit(0,3) = data.bit(0,3); break;
+    case 0xc001: characterBank[2].bit(4,7) = data.bit(0,3); break;
+    case 0xc002: characterBank[3].bit(0,3) = data.bit(0,3); break;
+    case 0xc003: characterBank[3].bit(4,7) = data.bit(0,3); break;
+    case 0xd000: characterBank[4].bit(0,3) = data.bit(0,3); break;
+    case 0xd001: characterBank[4].bit(4,7) = data.bit(0,3); break;
+    case 0xd002: characterBank[5].bit(0,3) = data.bit(0,3); break;
+    case 0xd003: characterBank[5].bit(4,7) = data.bit(0,3); break;
+    case 0xe000: characterBank[6].bit(0,3) = data.bit(0,3); break;
+    case 0xe001: characterBank[6].bit(4,7) = data.bit(0,3); break;
+    case 0xe002: characterBank[7].bit(0,3) = data.bit(0,3); break;
+    case 0xe003: characterBank[7].bit(4,7) = data.bit(0,3); break;
+    }
   }
 
-  auto writeCHR(uint addr, uint8 data) -> void {
-    if(addr & 0x2000) return ppu.writeCIRAM(vrc2.addrCIRAM(addr), data);
-    return Board::writeCHR(vrc2.addrCHR(addr), data);
+  auto addressCIRAM(uint address) const -> uint {
+    switch(mirror) {
+    case 0: return address >> 0 & 0x0400 | address & 0x03ff;  //vertical mirroring
+    case 1: return address >> 1 & 0x0400 | address & 0x03ff;  //horizontal mirroring
+    case 2: return 0x0000 | address & 0x03ff;                 //one-screen mirroring (first)
+    case 3: return 0x0400 | address & 0x03ff;                 //one-screen mirroring (second)
+    }
+    unreachable;
+  }
+
+  auto addressCHR(uint address) const -> uint {
+    uint8 bank = characterBank[address >> 10];
+    return bank << 10 | (uint10)address;
+  }
+
+  auto readCHR(uint address) -> uint8 {
+    if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
+    if(characterROM) return characterROM.read(addressCHR(address));
+    if(characterRAM) return characterRAM.read(addressCHR(address));
+    return 0x00;
+  }
+
+  auto writeCHR(uint address, uint8 data) -> void {
+    if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
+    if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
   auto power() -> void {
-    vrc2.power();
+    for(auto& bank : programBank) bank = 0;
+    for(auto& bank : characterBank) bank = 0;
+    mirror = 0;
+    latch = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    Board::serialize(s);
-    vrc2.serialize(s);
+    programRAM.serialize(s);
+    characterRAM.serialize(s);
+    s.integer(pinA0);
+    s.integer(pinA1);
+    s.array(programBank);
+    s.array(characterBank);
+    s.integer(mirror);
+    s.integer(latch);
   }
 
-  struct Settings {
-    struct Pinout {
-      uint a0;
-      uint a1;
-    } pinout;
-  } settings;
-
-  VRC2 vrc2;
+  uint8 pinA0;
+  uint8 pinA1;
+  uint5 programBank[2];
+  uint8 characterBank[8];
+  uint2 mirror;
+  uint1 latch;
 };

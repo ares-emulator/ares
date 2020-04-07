@@ -2,11 +2,11 @@
 
 namespace hiro {
 
-static auto HexEdit_keyPress(GtkWidget* widget, GdkEventKey* event, pHexEdit* p) -> signed {
+static auto HexEdit_keyPress(GtkWidget* widget, GdkEventKey* event, pHexEdit* p) -> int {
   return p->keyPress(event->keyval, event->state);
 }
 
-static auto HexEdit_mouseScroll(GtkWidget* widget, GdkEventScroll* event, pHexEdit* p) -> signed {
+static auto HexEdit_mouseScroll(GtkWidget* widget, GdkEventScroll* event, pHexEdit* p) -> int {
   double position = gtk_range_get_value(GTK_RANGE(p->scrollBar));
 
   if(event->direction == GDK_SCROLL_UP) {
@@ -20,8 +20,8 @@ static auto HexEdit_mouseScroll(GtkWidget* widget, GdkEventScroll* event, pHexEd
   return true;  //do not propagate event further
 }
 
-static auto HexEdit_scroll(GtkRange* range, GtkScrollType scroll, double value, pHexEdit* p) -> signed {
-  p->scroll((signed)value);
+static auto HexEdit_scroll(GtkRange* range, GtkScrollType scroll, double value, pHexEdit* p) -> int {
+  p->scroll((int)value);
   return true;  //do not propagate event further
 }
 
@@ -88,7 +88,7 @@ auto pHexEdit::focused() const -> bool {
   return gtk_widget_has_focus(subWidget) || gtk_widget_has_focus(scrollBar);
 }
 
-auto pHexEdit::setAddress(unsigned address) -> void {
+auto pHexEdit::setAddress(uint address) -> void {
   setScroll();
   updateScroll();
   update();
@@ -99,7 +99,7 @@ auto pHexEdit::setBackgroundColor(Color color) -> void {
   gtk_widget_modify_base(subWidget, GTK_STATE_NORMAL, color ? &gdkColor : nullptr);
 }
 
-auto pHexEdit::setColumns(unsigned columns) -> void {
+auto pHexEdit::setColumns(uint columns) -> void {
   setScroll();
   update();
 }
@@ -109,12 +109,12 @@ auto pHexEdit::setForegroundColor(Color color) -> void {
   gtk_widget_modify_text(subWidget, GTK_STATE_NORMAL, color ? &gdkColor : nullptr);
 }
 
-auto pHexEdit::setLength(unsigned length) -> void {
+auto pHexEdit::setLength(uint length) -> void {
   setScroll();
   update();
 }
 
-auto pHexEdit::setRows(unsigned rows) -> void {
+auto pHexEdit::setRows(uint rows) -> void {
   setScroll();
   update();
 }
@@ -125,10 +125,10 @@ auto pHexEdit::update() -> void {
     return;
   }
 
-  unsigned position = cursorPosition();
+  uint position = cursorPosition();
 
   string output;
-  unsigned address = state().address;
+  uint address = state().address;
   for(auto row : range(state().rows)) {
     output.append(hex(address, 8L));
     output.append("  ");
@@ -158,21 +158,21 @@ auto pHexEdit::update() -> void {
   setCursorPosition(position);
 }
 
-auto pHexEdit::cursorPosition() -> unsigned {
+auto pHexEdit::cursorPosition() -> uint {
   GtkTextIter iter;
   gtk_text_buffer_get_iter_at_mark(textBuffer, &iter, textCursor);
   return gtk_text_iter_get_offset(&iter);
 }
 
-auto pHexEdit::keyPress(unsigned scancode, unsigned mask) -> bool {
+auto pHexEdit::keyPress(uint scancode, uint mask) -> bool {
   if(!state().onRead) return false;
 
   if(mask & (GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_SUPER_MASK)) return false;  //allow actions such as Ctrl+C (copy)
 
-  signed position = cursorPosition();
-  signed lineWidth = 10 + (state().columns * 3) + 1 + state().columns + 1;
-  signed cursorY = position / lineWidth;
-  signed cursorX = position % lineWidth;
+  int position = cursorPosition();
+  int lineWidth = 10 + (state().columns * 3) + 1 + state().columns + 1;
+  int cursorY = position / lineWidth;
+  int cursorX = position % lineWidth;
 
   if(scancode == GDK_KEY_Home) {
     setCursorPosition(cursorY * lineWidth + 10);
@@ -187,7 +187,7 @@ auto pHexEdit::keyPress(unsigned scancode, unsigned mask) -> bool {
   if(scancode == GDK_KEY_Up) {
     if(cursorY != 0) return false;
 
-    signed newAddress = state().address - state().columns;
+    int newAddress = state().address - state().columns;
     if(newAddress >= 0) {
       self().setAddress(newAddress);
       update();
@@ -199,7 +199,7 @@ auto pHexEdit::keyPress(unsigned scancode, unsigned mask) -> bool {
     if(cursorY >= rows() - 1) return true;
     if(cursorY != state().rows - 1) return false;
 
-    signed newAddress = state().address + state().columns;
+    int newAddress = state().address + state().columns;
     if(newAddress + state().columns * state().rows - (state().columns - 1) <= state().length) {
       self().setAddress(newAddress);
       update();
@@ -208,7 +208,7 @@ auto pHexEdit::keyPress(unsigned scancode, unsigned mask) -> bool {
   }
 
   if(scancode == GDK_KEY_Page_Up) {
-    signed newAddress = state().address - state().columns * state().rows;
+    int newAddress = state().address - state().columns * state().rows;
     if(newAddress >= 0) {
       self().setAddress(newAddress);
     } else {
@@ -219,7 +219,7 @@ auto pHexEdit::keyPress(unsigned scancode, unsigned mask) -> bool {
   }
 
   if(scancode == GDK_KEY_Page_Down) {
-    signed newAddress = state().address + state().columns * state().rows;
+    int newAddress = state().address + state().columns * state().rows;
     for(auto n : range(state().rows)) {
       if(newAddress + state().columns * state().rows - (state().columns - 1) <= state().length) {
         self().setAddress(newAddress);
@@ -246,7 +246,7 @@ auto pHexEdit::keyPress(unsigned scancode, unsigned mask) -> bool {
       cursorX /= 3;
       if(cursorX < state().columns) {
         //not in ANSI region
-        unsigned address = state().address + (cursorY * state().columns + cursorX);
+        uint address = state().address + (cursorY * state().columns + cursorX);
 
         if(address >= state().length) return false;  //do not edit past end of data
         uint8_t data = self().doRead(address);
@@ -274,29 +274,29 @@ auto pHexEdit::keyPress(unsigned scancode, unsigned mask) -> bool {
 }
 
 //number of actual rows
-auto pHexEdit::rows() -> signed {
+auto pHexEdit::rows() -> int {
   return (max(1u, state().length) + state().columns - 1) / state().columns;
 }
 
 //number of scrollable row positions
-auto pHexEdit::rowsScrollable() -> signed {
+auto pHexEdit::rowsScrollable() -> int {
   return max(0u, rows() - state().rows);
 }
 
-auto pHexEdit::scroll(signed position) -> void {
+auto pHexEdit::scroll(int position) -> void {
   if(position > rowsScrollable()) position = rowsScrollable();
   if(position < 0) position = 0;
   self().setAddress(position * state().columns);
 }
 
-auto pHexEdit::setCursorPosition(unsigned position) -> void {
+auto pHexEdit::setCursorPosition(uint position) -> void {
   GtkTextIter iter;
   gtk_text_buffer_get_iter_at_mark(textBuffer, &iter, textCursor);
 
   //GTK+ will throw many errors to the terminal if you set iterator past end of buffer
   GtkTextIter endIter;
   gtk_text_buffer_get_end_iter(textBuffer, &iter);
-  unsigned endPosition = gtk_text_iter_get_offset(&iter);
+  uint endPosition = gtk_text_iter_get_offset(&iter);
 
   gtk_text_iter_set_offset(&iter, min(position, endPosition));
   gtk_text_buffer_place_cursor(textBuffer, &iter);
@@ -312,7 +312,7 @@ auto pHexEdit::setScroll() -> void {
 }
 
 auto pHexEdit::updateScroll() -> void {
-  unsigned row = state().address / state().columns;
+  uint row = state().address / state().columns;
   gtk_range_set_value(GTK_RANGE(scrollBar), row);
 }
 

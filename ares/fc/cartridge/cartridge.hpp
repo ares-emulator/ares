@@ -1,8 +1,7 @@
-#include "chip/chip.hpp"
+#include "slot.hpp"
 #include "board/board.hpp"
 
 struct Cartridge : Thread {
-  Node::Port port;
   Node::Peripheral node;
 
   auto rate() const -> uint { return Region::PAL() ? 16 : 12; }
@@ -11,9 +10,7 @@ struct Cartridge : Thread {
   auto region() const -> string { return information.region; }
 
   //cartridge.cpp
-  auto load(Node::Object, Node::Object) -> void;
-  auto unload() -> void;
-  auto connect(Node::Peripheral) -> void;
+  auto connect(Node::Port, Node::Peripheral) -> void;
   auto disconnect() -> void;
 
   auto power() -> void;
@@ -30,7 +27,7 @@ struct Cartridge : Thread {
   } information;
 
 //privileged:
-  Board* board = nullptr;
+  unique_pointer<Board> board;
 
   auto readPRG(uint address) -> uint8;
   auto writePRG(uint address, uint8 data) -> void;

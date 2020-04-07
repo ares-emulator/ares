@@ -46,12 +46,12 @@ static auto Label_expose(GtkWidget* widget, GdkEvent* event, pLabel* p) -> int {
   return false;
 }
 
-static auto Label_mouseEnter(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> signed {
+static auto Label_mouseEnter(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> int {
   Widget_mouseEnter(widget, event, p);
   return true;
 }
 
-static auto Label_mouseLeave(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> signed {
+static auto Label_mouseLeave(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> int {
   Widget_mouseLeave(widget, event, p);
   return true;
 }

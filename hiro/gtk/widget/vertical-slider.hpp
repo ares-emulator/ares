@@ -6,8 +6,8 @@ struct pVerticalSlider : pWidget {
   Declare(VerticalSlider, Widget)
 
   auto minimumSize() const -> Size override;
-  auto setLength(unsigned length) -> void;
-  auto setPosition(unsigned position) -> void;
+  auto setLength(uint length) -> void;
+  auto setPosition(uint position) -> void;
 };
 
 }

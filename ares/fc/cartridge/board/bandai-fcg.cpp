@@ -1,14 +1,17 @@
-//BANDAI-FCG
-
 struct BandaiFCG : Board {
-  BandaiFCG(Markup::Node& document) : Board(document) {
-  }
+  Memory::Readable<uint8> programROM;
+  Memory::Readable<uint8> characterROM;
+  Memory::Writable<uint8> characterRAM;
+  X24C01 eeprom;
 
-  auto load() -> void override {
-    Board::load();
-    auto manifest = BML::unserialize(cartridge.manifest());
+  using Board::Board;
 
-    if(auto memory = manifest["game/board/memory(type=EEPROM,content=Save)"]) {
+  auto load(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+    if(auto memory = board["memory(type=EEPROM,content=Save)"]) {
       eeprom.erase();
       if(auto fp = platform->open(cartridge.node, "save.eeprom", File::Read)) {
         fp->read(eeprom.memory, min(128, fp->size()));
@@ -16,11 +19,10 @@ struct BandaiFCG : Board {
     }
   }
 
-  auto save() -> void override {
-    Board::save();
-    auto manifest = BML::unserialize(cartridge.manifest());
-
-    if(auto memory = manifest["game/board/memory(type=EEPROM,content=Save)"]) {
+  auto save(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+    if(auto memory = board["memory(type=EEPROM,content=Save)"]) {
       if(auto fp = platform->open(cartridge.node, "save.eeprom", File::Write)) {
         fp->write(eeprom.memory, 128);
       }
@@ -34,16 +36,15 @@ struct BandaiFCG : Board {
         irqCounterEnable = false;
       }
     }
-
     tick();
   }
 
-  auto addrCIRAM(uint addr) const -> uint {
+  auto addressCIRAM(uint address) const -> uint {
     switch(mirror) {
-    case 0: return (addr & 0x0400) >> 0 | addr & 0x03ff;
-    case 1: return (addr & 0x0800) >> 1 | addr & 0x03ff;
-    case 2: return 0x0000 | addr & 0x03ff;
-    case 3: return 0x0400 | addr & 0x03ff;
+    case 0: return address >> 0 & 0x0400 | address & 0x03ff;
+    case 1: return address >> 1 & 0x0400 | address & 0x03ff;
+    case 2: return 0x0000 | address & 0x03ff;
+    case 3: return 0x0400 | address & 0x03ff;
     }
     unreachable;
   }
@@ -57,9 +58,9 @@ struct BandaiFCG : Board {
     }
 
     if(address & 0x8000) {
-      bool region = address & 0x4000;
-      uint bank = (region == 0 ? prgBank : (uint8)0x0f);
-      return prgrom.read(bank << 14 | address & 0x3fff);
+      uint1 region = bool(address & 0x4000);
+      uint4 bank = (region == 0 ? programBank : (uint4)0x0f);
+      return programROM.read(bank << 14 | (uint14)address);
     }
 
     return data;
@@ -67,29 +68,25 @@ struct BandaiFCG : Board {
 
   auto writePRG(uint address, uint8 data) -> void {
     if(address >= 0x6000) {
-      switch(address & 15) {
-      case 0x00: case 0x01: case 0x02: case 0x03:
-      case 0x04: case 0x05: case 0x06: case 0x07:
-        chrBank[address & 7] = data;
-        break;
-      case 0x08:
-        prgBank = data & 0x0f;
-        break;
-      case 0x09:
-        mirror = data & 0x03;
-        break;
-      case 0x0a:
+      switch(address & 0xf) {
+      case 0x0: characterBank[0] = data; break;
+      case 0x1: characterBank[1] = data; break;
+      case 0x2: characterBank[2] = data; break;
+      case 0x3: characterBank[3] = data; break;
+      case 0x4: characterBank[4] = data; break;
+      case 0x5: characterBank[5] = data; break;
+      case 0x6: characterBank[6] = data; break;
+      case 0x7: characterBank[7] = data; break;
+      case 0x8: programBank = data.bit(0,3); break;
+      case 0x9: mirror = data.bit(0,1); break;
+      case 0xa:
         cpu.irqLine(0);
-        irqCounterEnable = data & 0x01;
+        irqCounterEnable = data.bit(0);
         irqCounter = irqLatch;
         break;
-      case 0x0b:
-        irqLatch = irqLatch & 0xff00 | data << 0;
-        break;
-      case 0x0c:
-        irqLatch = irqLatch & 0x00ff | data << 8;
-        break;
-      case 0x0d:
+      case 0xb: irqLatch.byte(0) = data; break;
+      case 0xc: irqLatch.byte(1) = data; break;
+      case 0xd:
         uint1 scl = data.bit(5);
         uint1 sda = data.bit(6);
         eeprom.write(scl, sda);
@@ -99,15 +96,17 @@ struct BandaiFCG : Board {
   }
 
   auto readCHR(uint address) -> uint8 {
-    if(address & 0x2000) return ppu.readCIRAM(addrCIRAM(address));
-    address = chrBank[address >> 10] << 10 | address & 0x03ff;
-    return Board::readCHR(address);
+    if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
+    address = characterBank[address >> 10] << 10 | (uint10)address;
+    if(characterROM) return characterROM.read(address);
+    if(characterRAM) return characterRAM.read(address);
+    return 0x00;
   }
 
   auto writeCHR(uint address, uint8 data) -> void {
-    if(address & 0x2000) return ppu.writeCIRAM(addrCIRAM(address), data);
-    address = chrBank[address >> 10] << 10 | address & 0x03ff;
-    return Board::writeCHR(address, data);
+    if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
+    address = characterBank[address >> 10] << 10 | (uint10)address;
+    if(characterRAM) return characterRAM.write(address, data);
   }
 
   auto power() -> void {
@@ -116,8 +115,8 @@ struct BandaiFCG : Board {
 
   auto reset() -> void {
     eeprom.reset();
-    for(auto& data : chrBank) data = 0;
-    prgBank = 0;
+    for(auto& bank : characterBank) bank = 0;
+    programBank = 0;
     mirror = 0;
     irqCounterEnable = 0;
     irqCounter = 0;
@@ -125,20 +124,18 @@ struct BandaiFCG : Board {
   }
 
   auto serialize(serializer& s) -> void {
-    Board::serialize(s);
+    characterRAM.serialize(s);
     eeprom.serialize(s);
-
-    s.array(chrBank);
-    s.integer(prgBank);
+    s.array(characterBank);
+    s.integer(programBank);
     s.integer(mirror);
     s.integer(irqCounterEnable);
     s.integer(irqCounter);
     s.integer(irqLatch);
   }
 
-  X24C01 eeprom;
-   uint8 chrBank[8];
-   uint8 prgBank;
+   uint8 characterBank[8];
+   uint4 programBank;
    uint2 mirror;
    uint1 irqCounterEnable;
   uint16 irqCounter;

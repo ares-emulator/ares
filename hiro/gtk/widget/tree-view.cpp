@@ -8,7 +8,7 @@ static const uint TreeViewIndentation = 20;
 //gtk_tree_view_expand_all(gtkTreeView);
 
 static auto TreeView_activate(GtkTreeView*, GtkTreePath* gtkPath, GtkTreeViewColumn*, pTreeView* p) -> void { p->_activatePath(gtkPath); }
-static auto TreeView_buttonEvent(GtkTreeView*, GdkEventButton* gdkEvent, pTreeView* p) -> signed { return p->_buttonEvent(gdkEvent); }
+static auto TreeView_buttonEvent(GtkTreeView*, GdkEventButton* gdkEvent, pTreeView* p) -> int { return p->_buttonEvent(gdkEvent); }
 static auto TreeView_change(GtkTreeSelection*, pTreeView* p) -> void { p->_updateSelected(); }
 static auto TreeView_context(GtkTreeView*, pTreeView* p) -> void { p->self().doContext(); }
 static auto TreeView_dataFunc(GtkTreeViewColumn* column, GtkCellRenderer* renderer, GtkTreeModel* model, GtkTreeIter* iter, pTreeView* p) -> void { return p->_doDataFunc(column, renderer, iter); }
@@ -134,7 +134,7 @@ auto pTreeView::_activatePath(GtkTreePath* gtkPath) -> void {
   g_free(path);
 }
 
-auto pTreeView::_buttonEvent(GdkEventButton* gdkEvent) -> signed {
+auto pTreeView::_buttonEvent(GdkEventButton* gdkEvent) -> int {
   if(gdkEvent->type == GDK_BUTTON_PRESS) {
     //detect when the empty space of the GtkTreeView is clicked; and clear the selection
     GtkTreePath* gtkPath = nullptr;

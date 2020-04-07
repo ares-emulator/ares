@@ -1,46 +1,63 @@
-//NES-AMROM
-//NES-ANROM
-//NES-AN1ROM
-//NES-AOROM
-
 struct NES_AxROM : Board {
-  NES_AxROM(Markup::Node& document) : Board(document) {
+  Memory::Readable<uint8> programROM;
+  Memory::Readable<uint8> characterROM;
+  Memory::Writable<uint8> characterRAM;
+
+  enum class Revision : uint {
+    AMROM,
+    ANROM,
+    AN1ROM,
+    AOROM,
+  } revision;
+
+  NES_AxROM(Markup::Node document, Revision revision) : Board(document), revision(revision) {}
+
+  auto load(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto readPRG(uint addr) -> uint8 {
-    if(addr & 0x8000) return prgrom.read((prgBank << 15) | (addr & 0x7fff));
-    return cpu.mdr();
+  auto save(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto writePRG(uint addr, uint8 data) -> void {
-    if(addr & 0x8000) {
-      prgBank = data & 0x0f;
-      mirrorSelect = data & 0x10;
-    }
+  auto readPRG(uint address) -> uint8 {
+    if(address < 0x8000) return cpu.mdr();
+    return programROM.read(programBank << 15 | (uint15)address);
   }
 
-  auto readCHR(uint addr) -> uint8 {
-    if(addr & 0x2000) return ppu.readCIRAM((mirrorSelect << 10) | (addr & 0x03ff));
-    return Board::readCHR(addr);
+  auto writePRG(uint address, uint8 data) -> void {
+    if(address < 0x8000) return;
+    programBank = data.bit(0,3);
+    mirror = data.bit(4);
   }
 
-  auto writeCHR(uint addr, uint8 data) -> void {
-    if(addr & 0x2000) return ppu.writeCIRAM((mirrorSelect << 10) | (addr & 0x03ff), data);
-    return Board::writeCHR(addr, data);
+  auto readCHR(uint address) -> uint8 {
+    if(address & 0x2000) return ppu.readCIRAM(mirror << 10 | address & 0x03ff);
+    if(characterROM) return characterROM.read(address);
+    if(characterRAM) return characterRAM.read(address);
+    return 0x00;
+  }
+
+  auto writeCHR(uint address, uint8 data) -> void {
+    if(address & 0x2000) return ppu.writeCIRAM(mirror << 10 | address & 0x03ff, data);
+    if(characterRAM) return characterRAM.write(address, data);
   }
 
   auto power() -> void {
-    prgBank = 0x0f;
-    mirrorSelect = 0;
+    programBank = 0x0f;
+    mirror = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    Board::serialize(s);
-
-    s.integer(prgBank);
-    s.integer(mirrorSelect);
+    characterRAM.serialize(s);
+    s.integer(programBank);
+    s.integer(mirror);
   }
 
-  uint4 prgBank;
-  bool mirrorSelect;
+  uint4 programBank;
+  uint1 mirror;
 };

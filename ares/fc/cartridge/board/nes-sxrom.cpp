@@ -1,19 +1,53 @@
-//MMC1
-
-struct NES_SxROM : Board {
+struct NES_SxROM : Board {  //MMC1
   Memory::Readable<uint8> programROM;
   Memory::Writable<uint8> programRAM;
+  Memory::Readable<uint8> characterROM;
   Memory::Writable<uint8> characterRAM;
 
-  NES_SxROM(Markup::Node& document) : Board(document) {
-    revision = Revision::SXROM;
-    chipRevision = ChipRevision::MMC1B2;
-  }
+  enum class Revision : uint {
+    SAROM,
+    SBROM,
+    SCROM,
+    SC1ROM,
+    SEROM,
+    SFROM,
+    SFEXPROM,
+    SGROM,
+    SHROM,
+    SH1ROM,
+    SIROM,
+    SJROM,
+    SKROM,
+    SLROM,
+    SL1ROM,
+    SL2ROM,
+    SL3ROM,
+    SLRROM,
+    SMROM,
+    SNROM,
+    SOROM,
+    SUROM,
+    SXROM,
+  } revision;
+
+  enum class ChipRevision : uint {
+    MMC1,
+    MMC1A,
+    MMC1B1,
+    MMC1B2,
+    MMC1B3,
+    MMC1C,
+  } chipRevision;
+
+  NES_SxROM(Markup::Node document, Revision revision) : Board(document), revision(revision) {}
 
   auto load(Markup::Node document) -> void override {
+    chipRevision = ChipRevision::MMC1B2;
+
     auto board = document["game/board"];
     Board::load(programROM, board["memory(type=ROM,content=Program)"]);
     Board::load(programRAM, board["memory(type=RAM,content=Save)"]);
+    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
     Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
@@ -49,7 +83,7 @@ struct NES_SxROM : Board {
     return bank << 13 | (uint13)address;
   }
 
-  auto addressCharacterRAM(uint address) -> uint {
+  auto addressCHR(uint address) -> uint {
     bool region = address & 0x1000;
     uint5 bank = characterBank[region];
     if(characterMode == 0) bank = characterBank[0] & ~1 | region;
@@ -60,8 +94,8 @@ struct NES_SxROM : Board {
     switch(mirrorMode) {
     case 0: return 0x0000 | address & 0x03ff;
     case 1: return 0x0400 | address & 0x03ff;
-    case 2: return (address & 0x0400) >> 0 | address & 0x03ff;
-    case 3: return (address & 0x0800) >> 1 | address & 0x03ff;
+    case 2: return address >> 0 & 0x0400 | address & 0x03ff;
+    case 3: return address >> 1 & 0x0400 | address & 0x03ff;
     }
     unreachable;
   }
@@ -130,12 +164,14 @@ struct NES_SxROM : Board {
 
   auto readCHR(uint address) -> uint8 {
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
-    return characterRAM.read(addressCharacterRAM(address));
+    if(characterROM) return characterROM.read(addressCHR(address));
+    if(characterRAM) return characterRAM.read(addressCHR(address));
+    return 0x00;
   }
 
   auto writeCHR(uint address, uint8 data) -> void {
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
-    return characterRAM.write(addressCharacterRAM(address), data);
+    if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
   auto power() -> void {
@@ -153,10 +189,8 @@ struct NES_SxROM : Board {
   }
 
   auto serialize(serializer& s) -> void {
-    Board::serialize(s);
     programRAM.serialize(s);
     characterRAM.serialize(s);
-
     s.integer(writeDelay);
     s.integer(shiftCount);
     s.integer(shiftValue);
@@ -179,38 +213,4 @@ struct NES_SxROM : Board {
   uint5 characterBank[2];
   uint4 programBank;
   uint1 ramDisable;
-
-  enum class Revision : uint {
-    SAROM,
-    SBROM,
-    SCROM,
-    SC1ROM,
-    SEROM,
-    SFROM,
-    SGROM,
-    SHROM,
-    SH1ROM,
-    SIROM,
-    SJROM,
-    SKROM,
-    SLROM,
-    SL1ROM,
-    SL2ROM,
-    SL3ROM,
-    SLRROM,
-    SMROM,
-    SNROM,
-    SOROM,
-    SUROM,
-    SXROM,
-  } revision;
-
-  enum class ChipRevision : uint {
-    MMC1,
-    MMC1A,
-    MMC1B1,
-    MMC1B2,
-    MMC1B3,
-    MMC1C,
-  } chipRevision;
 };

@@ -30,8 +30,8 @@ struct CPU : MOS6502, Thread {
   auto power(bool reset) -> void;
 
   //memory.cpp
-  auto readRAM(uint11 address) -> uint8;
-  auto writeRAM(uint11 address, uint8 data) -> void;
+  auto readBus(uint16 address) -> uint8;
+  auto writeBus(uint16 address, uint8 data) -> void;
 
   auto readIO(uint16 address) -> uint8;
   auto writeIO(uint16 address, uint8 data) -> void;

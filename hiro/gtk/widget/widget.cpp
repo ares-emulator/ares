@@ -30,12 +30,12 @@ static auto Widget_mouseLeave(GtkWidget* widget, GdkEventButton* event, pWidget*
   return true;
 }
 
-static auto Widget_mouseMove(GtkWidget* widget, GdkEventButton* event, pWidget* p) -> signed {
-  p->self().doMouseMove({(signed)event->x, (signed)event->y});
+static auto Widget_mouseMove(GtkWidget* widget, GdkEventButton* event, pWidget* p) -> int {
+  p->self().doMouseMove({(int)event->x, (int)event->y});
   return true;
 }
 
-static auto Widget_mousePress(GtkWidget* widget, GdkEventButton* event, pWidget* p) -> signed {
+static auto Widget_mousePress(GtkWidget* widget, GdkEventButton* event, pWidget* p) -> int {
   switch(event->button) {
   case 1: p->self().doMousePress(Mouse::Button::Left); break;
   case 2: p->self().doMousePress(Mouse::Button::Middle); break;
@@ -44,7 +44,7 @@ static auto Widget_mousePress(GtkWidget* widget, GdkEventButton* event, pWidget*
   return true;
 }
 
-static auto Widget_mouseRelease(GtkWidget* widget, GdkEventButton* event, pWidget* p) -> signed {
+static auto Widget_mouseRelease(GtkWidget* widget, GdkEventButton* event, pWidget* p) -> int {
   switch(event->button) {
   case 1: p->self().doMouseRelease(Mouse::Button::Left); break;
   case 2: p->self().doMouseRelease(Mouse::Button::Middle); break;

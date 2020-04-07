@@ -1,8 +1,8 @@
 auto APU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  pulse[0].serialize(s);
-  pulse[1].serialize(s);
+  pulse1.serialize(s);
+  pulse2.serialize(s);
   triangle.serialize(s);
   dmc.serialize(s);
   frame.serialize(s);

@@ -2,7 +2,7 @@
 
 namespace hiro {
 
-static auto Console_keyPress(GtkWidget*, GdkEventKey* event, pConsole* p) -> signed {
+static auto Console_keyPress(GtkWidget*, GdkEventKey* event, pConsole* p) -> int {
   return p->_keyPress(event->keyval, event->state);
 }
 
@@ -67,7 +67,7 @@ auto pConsole::setPrompt(const string& prompt) -> void {
   _seekToEnd();
 }
 
-auto pConsole::_keyPress(unsigned scancode, unsigned mask) -> bool {
+auto pConsole::_keyPress(uint scancode, uint mask) -> bool {
   if(mask & (GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_SUPER_MASK)) return false;  //allow actions such as Ctrl+C (copy)
 
   GtkTextMark* mark = gtk_text_buffer_get_mark(textBuffer, "insert");

@@ -159,11 +159,13 @@ auto Famicom::heuristicsINES(vector<uint8_t>& data, string location) -> string {
   case  24:
     s += "  board:  KONAMI-VRC-6\n";
     s += "    chip type=VRC6\n";
+    s += "      pinout a0=0 a1=1\n";
     break;
 
   case  26:
     s += "  board:  KONAMI-VRC-6\n";
     s += "    chip type=VRC6\n";
+    s += "      pinout a0=1 a1=0\n";
     prgram = 8192;
     break;
 

@@ -1,49 +1,58 @@
-//NES-CNROM
-
 struct NES_CNROM : Board {
-  NES_CNROM(Markup::Node& document) : Board(document) {
-    settings.mirror = document["game/board/mirror/mode"].text() == "vertical" ? 1 : 0;
+  Memory::Readable<uint8> programROM;
+  Memory::Readable<uint8> characterROM;
+  Memory::Writable<uint8> characterRAM;
+
+  using Board::Board;
+
+  auto load(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+    mirror = board["mirror/mode"].string() == "vertical";
   }
 
-  auto readPRG(uint addr) -> uint8 {
-    if(addr & 0x8000) return prgrom.read(addr & 0x7fff);
-    return cpu.mdr();
+  auto readPRG(uint address) -> uint8 {
+    if(address < 0x8000) return cpu.mdr();
+    return programROM.read((uint15)address);
   }
 
-  auto writePRG(uint addr, uint8 data) -> void {
-    if(addr & 0x8000) chrBank = data & 0x03;
+  auto writePRG(uint address, uint8 data) -> void {
+    if(address < 0x8000) return;
+    characterBank = data.bit(0,1);
   }
 
-  auto readCHR(uint addr) -> uint8 {
-    if(addr & 0x2000) {
-      if(settings.mirror == 0) addr = ((addr & 0x0800) >> 1) | (addr & 0x03ff);
-      return ppu.readCIRAM(addr & 0x07ff);
+  auto readCHR(uint address) -> uint8 {
+    if(address & 0x2000) {
+      address = address >> !mirror & 0x0400 | address & 0x03ff;
+      return ppu.readCIRAM(address);
     }
-    addr = (chrBank * 0x2000) + (addr & 0x1fff);
-    return Board::readCHR(addr);
+    address = characterBank << 13 | (uint13)address;
+    if(characterROM) return characterROM.read(address);
+    if(characterRAM) return characterRAM.read(address);
+    return 0x00;
   }
 
-  auto writeCHR(uint addr, uint8 data) -> void {
-    if(addr & 0x2000) {
-      if(settings.mirror == 0) addr = ((addr & 0x0800) >> 1) | (addr & 0x03ff);
-      return ppu.writeCIRAM(addr & 0x07ff, data);
+  auto writeCHR(uint address, uint8 data) -> void {
+    if(address & 0x2000) {
+      address = address >> !mirror & 0x0400 | address & 0x03ff;
+      return ppu.writeCIRAM(address, data);
     }
-    addr = (chrBank * 0x2000) + (addr & 0x1fff);
-    Board::writeCHR(addr, data);
+    address = characterBank << 13 | (uint13)address;
+    if(characterRAM) return characterRAM.write(address, data);
   }
 
   auto power() -> void {
-    chrBank = 0;
+    characterBank = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    Board::serialize(s);
-    s.integer(chrBank);
+    characterRAM.serialize(s);
+    s.integer(mirror);
+    s.integer(characterBank);
   }
 
-  struct Settings {
-    bool mirror;  //0 = horizontal, 1 = vertical
-  } settings;
-
-  uint2 chrBank;
+  uint1 mirror;  //0 = horizontal, 1 = vertical
+  uint2 characterBank;
 };

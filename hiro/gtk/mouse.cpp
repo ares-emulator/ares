@@ -12,7 +12,7 @@ auto pMouse::position() -> Position {
   #if defined(DISPLAY_XORG)
   XlibWindow root, child;
   int rootx, rooty, winx, winy;
-  unsigned int mask;
+  uint mask;
   XQueryPointer(pApplication::state().display, DefaultRootWindow(pApplication::state().display), &root, &child, &rootx, &rooty, &winx, &winy, &mask);
   return {rootx, rooty};
   #endif
@@ -30,7 +30,7 @@ auto pMouse::pressed(Mouse::Button button) -> bool {
   #if defined(DISPLAY_XORG)
   XlibWindow root, child;
   int rootx, rooty, winx, winy;
-  unsigned int mask;
+  uint mask;
   XQueryPointer(pApplication::state().display, DefaultRootWindow(pApplication::state().display), &root, &child, &rootx, &rooty, &winx, &winy, &mask);
   switch(button) {
   case Mouse::Button::Left: return mask & Button1Mask;

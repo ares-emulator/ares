@@ -3,12 +3,12 @@
 namespace hiro {
 
 static auto TableView_activate(GtkTreeView*, GtkTreePath* gtkRow, GtkTreeViewColumn* gtkColumn, pTableView* p) -> void { return p->_doActivate(gtkRow, gtkColumn); }
-static auto TableView_buttonEvent(GtkTreeView* treeView, GdkEventButton* event, pTableView* p) -> signed { return p->_doEvent(event); }
+static auto TableView_buttonEvent(GtkTreeView* treeView, GdkEventButton* event, pTableView* p) -> int { return p->_doEvent(event); }
 static auto TableView_change(GtkTreeSelection*, pTableView* p) -> void { return p->_doChange(); }
 static auto TableView_edit(GtkCellRendererText* renderer, const char* path, const char* text, pTableView* p) -> void { return p->_doEdit(renderer, path, text); }
 static auto TableView_headerActivate(GtkTreeViewColumn* column, pTableView* p) -> void { return p->_doHeaderActivate(column); }
 static auto TableView_keyPressEvent(GtkTreeView* treeView, GdkEventKey* event, pTableView* p) -> bool { return p->_doKeyPress(event); }
-static auto TableView_mouseMoveEvent(GtkWidget*, GdkEvent*, pTableView* p) -> signed { return p->_doMouseMove(); }
+static auto TableView_mouseMoveEvent(GtkWidget*, GdkEvent*, pTableView* p) -> int { return p->_doMouseMove(); }
 static auto TableView_popup(GtkTreeView*, pTableView* p) -> void { return p->_doContext(); }
 
 static auto TableView_dataFunc(GtkTreeViewColumn* column, GtkCellRenderer* renderer, GtkTreeModel* model, GtkTreeIter* iter, pTableView* p) -> void { return p->_doDataFunc(column, renderer, iter); }
@@ -88,31 +88,31 @@ auto pTableView::remove(sTableViewItem item) -> void {
 auto pTableView::resizeColumns() -> void {
   auto lock = acquire();
 
-  vector<signed> widths;
-  signed minimumWidth = 0;
-  signed expandable = 0;
+  vector<int> widths;
+  int minimumWidth = 0;
+  int expandable = 0;
   for(uint position : range(self().columnCount())) {
-    signed width = _width(position);
+    int width = _width(position);
     widths.append(width);
     minimumWidth += width;
     if(self().column(position).expandable()) expandable++;
   }
 
-  signed maximumWidth = self().geometry().width() - 6;
+  int maximumWidth = self().geometry().width() - 6;
   if(auto scrollBar = gtk_scrolled_window_get_vscrollbar(gtkScrolledWindow)) {
     GtkAllocation allocation;
     gtk_widget_get_allocation(scrollBar, &allocation);
     if(gtk_widget_get_visible(scrollBar)) maximumWidth -= allocation.width;
   }
 
-  signed expandWidth = 0;
+  int expandWidth = 0;
   if(expandable && maximumWidth > minimumWidth) {
     expandWidth = (maximumWidth - minimumWidth) / expandable;
   }
 
   for(uint position : range(self().columnCount())) {
     if(auto column = self().column(position)->self()) {
-      signed width = widths[position];
+      int width = widths[position];
       if(column->state().expandable) width += expandWidth;
       gtk_tree_view_column_set_fixed_width(column->gtkColumn, width);
     }
@@ -181,8 +181,8 @@ auto pTableView::setSortable(bool sortable) -> void {
   }
 }
 
-auto pTableView::_cellWidth(unsigned _row, unsigned _column) -> unsigned {
-  unsigned width = 8;
+auto pTableView::_cellWidth(uint _row, uint _column) -> uint {
+  uint width = 8;
   if(auto item = self().item(_row)) {
     if(auto cell = item->cell(_column)) {
       if(cell->state.checkable) {
@@ -199,8 +199,8 @@ auto pTableView::_cellWidth(unsigned _row, unsigned _column) -> unsigned {
   return width;
 }
 
-auto pTableView::_columnWidth(unsigned _column) -> unsigned {
-  unsigned width = 6;
+auto pTableView::_columnWidth(uint _column) -> uint {
+  uint width = 6;
   if(auto column = self().column(_column)) {
     if(auto& icon = column->state.icon) {
       width += icon.width() + 2;
@@ -335,7 +335,7 @@ auto pTableView::_doEdit(GtkCellRendererText* gtkCellRendererText, const char* p
   }
 }
 
-auto pTableView::_doEvent(GdkEventButton* gdkEvent) -> signed {
+auto pTableView::_doEvent(GdkEventButton* gdkEvent) -> int {
   if(gdkEvent->type == GDK_BUTTON_PRESS) {
     //detect when the empty space of the GtkTreeView is clicked; and clear the selection
     GtkTreePath* gtkPath = nullptr;
@@ -409,7 +409,7 @@ auto pTableView::_doKeyPress(GdkEventKey* event) -> bool {
 
 //GtkTreeView::cursor-changed and GtkTreeSelection::changed do not send signals for changes during rubber-banding selection
 //so here we capture motion-notify-event, and if the selections have changed, invoke TableView::onChange
-auto pTableView::_doMouseMove() -> signed {
+auto pTableView::_doMouseMove() -> int {
   if(gtk_tree_view_is_rubber_banding_active(gtkTreeView)) {
     if(!locked()) _updateSelected();
   }
@@ -455,7 +455,7 @@ auto pTableView::_updateSelected() -> void {
     return;
   }
 
-  vector<unsigned> selected;
+  vector<uint> selected;
 
   GList* list = gtk_tree_selection_get_selected_rows(gtkTreeSelection, &gtkTreeModel);
   GList* p = list;
@@ -464,7 +464,7 @@ auto pTableView::_updateSelected() -> void {
     GtkTreeIter iter;
     if(gtk_tree_model_get_iter(gtkTreeModel, &iter, (GtkTreePath*)p->data)) {
       char* pathname = gtk_tree_model_get_string_from_iter(gtkTreeModel, &iter);
-      unsigned selection = toNatural(pathname);
+      uint selection = toNatural(pathname);
       g_free(pathname);
       selected.append(selection);
     }
@@ -495,9 +495,9 @@ auto pTableView::_updateSelected() -> void {
   if(!locked()) self().doChange();
 }
 
-auto pTableView::_width(unsigned column) -> unsigned {
+auto pTableView::_width(uint column) -> uint {
   if(auto width = self().column(column).width()) return width;
-  unsigned width = 1;
+  uint width = 1;
   if(!self().column(column).visible()) return width;
   if(self().headered()) width = max(width, _columnWidth(column));
   for(auto row : range(self().itemCount())) {

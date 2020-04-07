@@ -14,7 +14,7 @@ struct pTreeView : pWidget {
   auto setGeometry(Geometry geometry) -> void;
 
   auto _activatePath(GtkTreePath* gtkPath) -> void;
-  auto _buttonEvent(GdkEventButton* gdkEvent) -> signed;
+  auto _buttonEvent(GdkEventButton* gdkEvent) -> int;
   auto _doDataFunc(GtkTreeViewColumn* column, GtkCellRenderer* renderer, GtkTreeIter* iter) -> void;
   auto _togglePath(string path) -> void;
   auto _updateScrollBars() -> void;

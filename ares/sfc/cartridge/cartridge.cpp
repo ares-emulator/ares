@@ -2,11 +2,11 @@
 
 namespace ares::SuperFamicom {
 
+Cartridge cartridge;
 #include "slot.cpp"
 #include "load.cpp"
 #include "save.cpp"
 #include "serialization.cpp"
-Cartridge cartridge;
 
 auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
   node = Node::append<Node::Peripheral>(parent, with, interface->name());

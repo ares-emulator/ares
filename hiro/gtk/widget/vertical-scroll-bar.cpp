@@ -3,7 +3,7 @@
 namespace hiro {
 
 static auto VerticalScrollBar_change(GtkRange* gtkRange, pVerticalScrollBar* p) -> void {
-  auto position = (unsigned)gtk_range_get_value(gtkRange);
+  auto position = (uint)gtk_range_get_value(gtkRange);
   if(p->state().position == position) return;
   p->state().position = position;
   if(!p->locked()) p->self().doChange();
@@ -32,14 +32,14 @@ auto pVerticalScrollBar::minimumSize() const -> Size {
   return {20, 0};
 }
 
-auto pVerticalScrollBar::setLength(unsigned length) -> void {
+auto pVerticalScrollBar::setLength(uint length) -> void {
   auto lock = acquire();
   length += length == 0;
   gtk_range_set_range(GTK_RANGE(gtkWidget), 0, max(1u, length - 1));
   gtk_range_set_increments(GTK_RANGE(gtkWidget), 1, length >> 3);
 }
 
-auto pVerticalScrollBar::setPosition(unsigned position) -> void {
+auto pVerticalScrollBar::setPosition(uint position) -> void {
   gtk_range_set_value(GTK_RANGE(gtkWidget), position);
 }
 

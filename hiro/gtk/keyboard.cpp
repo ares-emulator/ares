@@ -16,7 +16,7 @@ auto pKeyboard::poll() -> vector<bool> {
   return result;
 }
 
-auto pKeyboard::pressed(unsigned code) -> bool {
+auto pKeyboard::pressed(uint code) -> bool {
   char state[256];
   #if defined(DISPLAY_XORG)
   XQueryKeymap(pApplication::state().display, state);
@@ -41,7 +41,7 @@ auto pKeyboard::_pressed(const char* state, uint16_t code) -> bool {
   return false;
 }
 
-auto pKeyboard::_translate(unsigned code) -> signed {
+auto pKeyboard::_translate(uint code) -> int {
   switch(code) {
   case GDK_KEY_Escape: return 0;
   case GDK_KEY_F1: return 0;
@@ -224,7 +224,7 @@ auto pKeyboard::_translate(unsigned code) -> signed {
 }
 
 auto pKeyboard::initialize() -> void {
-  auto append = [](unsigned lo, unsigned hi = 0) {
+  auto append = [](uint lo, uint hi = 0) {
     #if defined(DISPLAY_XORG)
     lo = lo ? (uint8_t)XKeysymToKeycode(pApplication::state().display, lo) : 0;
     hi = hi ? (uint8_t)XKeysymToKeycode(pApplication::state().display, hi) : 0;

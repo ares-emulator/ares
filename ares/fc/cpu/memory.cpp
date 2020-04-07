@@ -1,9 +1,24 @@
-auto CPU::readRAM(uint11 address) -> uint8 {
-  return ram[address];
+//$0000-07ff = RAM (2KB)
+//$0800-1fff = RAM (mirror)
+//$2000-2007 = PPU
+//$2008-3fff = PPU (mirror)
+//$4000-4017 = APU + I/O
+//$4020-403f = FDS
+//$4018-ffff = Cartridge
+
+inline auto CPU::readBus(uint16 address) -> uint8 {
+  uint8 data = cartridge.readPRG(address);
+  if(address <= 0x1fff) return ram.read(address);
+  if(address <= 0x3fff) return ppu.readIO(address);
+  if(address <= 0x4017) return cpu.readIO(address);
+  return data;
 }
 
-auto CPU::writeRAM(uint11 address, uint8 data) -> void {
-  ram[address] = data;
+inline auto CPU::writeBus(uint16 address, uint8 data) -> void {
+  cartridge.writePRG(address, data);
+  if(address <= 0x1fff) return ram.write(address, data);
+  if(address <= 0x3fff) return ppu.writeIO(address, data);
+  if(address <= 0x4017) return cpu.writeIO(address, data);
 }
 
 auto CPU::readIO(uint16 address) -> uint8 {
@@ -58,5 +73,5 @@ auto CPU::writeIO(uint16 address, uint8 data) -> void {
 }
 
 auto CPU::readDebugger(uint16 address) -> uint8 {
-  return bus.read(address);
+  return readBus(address);
 }

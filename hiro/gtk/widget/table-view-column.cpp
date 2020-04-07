@@ -125,7 +125,7 @@ auto pTableViewColumn::setVisible(bool visible) -> void {
   gtk_tree_view_column_set_visible(gtkColumn, visible);
 }
 
-auto pTableViewColumn::setWidth(signed width) -> void {
+auto pTableViewColumn::setWidth(int width) -> void {
   if(auto parent = _parent()) {
     parent->resizeColumns();
   }

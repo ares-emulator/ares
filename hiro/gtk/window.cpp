@@ -2,7 +2,7 @@
 
 namespace hiro {
 
-static auto Window_close(GtkWidget* widget, GdkEvent* event, pWindow* p) -> signed {
+static auto Window_close(GtkWidget* widget, GdkEvent* event, pWindow* p) -> int {
   if(p->state().onClose) {
     p->self().doClose();
   } else {
@@ -13,7 +13,7 @@ static auto Window_close(GtkWidget* widget, GdkEvent* event, pWindow* p) -> sign
 }
 
 //GTK3 draw: called into by GTK2 expose-event
-static auto Window_draw(GtkWidget* widget, cairo_t* context, pWindow* p) -> signed {
+static auto Window_draw(GtkWidget* widget, cairo_t* context, pWindow* p) -> int {
   if(auto color = p->state().backgroundColor) {
     double red   = (double)color.red()   / 255.0;
     double green = (double)color.green() / 255.0;
@@ -43,20 +43,20 @@ static auto Window_draw(GtkWidget* widget, cairo_t* context, pWindow* p) -> sign
 }
 
 //GTK2 expose-event
-static auto Window_expose(GtkWidget* widget, GdkEvent* event, pWindow* p) -> signed {
+static auto Window_expose(GtkWidget* widget, GdkEvent* event, pWindow* p) -> int {
   cairo_t* context = gdk_cairo_create(gtk_widget_get_window(widget));
   Window_draw(widget, context, p);
   cairo_destroy(context);
   return false;
 }
 
-static auto Window_configure(GtkWidget* widget, GdkEvent* event, pWindow* p) -> signed {
+static auto Window_configure(GtkWidget* widget, GdkEvent* event, pWindow* p) -> int {
   p->_synchronizeMargin();
   return false;
 }
 
-static auto Window_drop(GtkWidget* widget, GdkDragContext* context, signed x, signed y,
-GtkSelectionData* data, unsigned type, unsigned timestamp, pWindow* p) -> void {
+static auto Window_drop(GtkWidget* widget, GdkDragContext* context, int x, int y,
+GtkSelectionData* data, uint type, uint timestamp, pWindow* p) -> void {
   if(!p->state().droppable) return;
   auto paths = DropPaths(data);
   if(!paths) return;
@@ -77,7 +77,7 @@ static auto Window_getPreferredHeight(GtkWidget* widget, int* minimalHeight, int
   }
 }
 
-static auto Window_keyPress(GtkWidget* widget, GdkEventKey* event, pWindow* p) -> signed {
+static auto Window_keyPress(GtkWidget* widget, GdkEventKey* event, pWindow* p) -> int {
   if(auto key = pKeyboard::_translate(event->keyval)) {
     p->self().doKeyPress(key);
   }
@@ -92,7 +92,7 @@ static auto Window_keyPress(GtkWidget* widget, GdkEventKey* event, pWindow* p) -
   return false;
 }
 
-static auto Window_keyRelease(GtkWidget* widget, GdkEventKey* event, pWindow* p) -> signed {
+static auto Window_keyRelease(GtkWidget* widget, GdkEventKey* event, pWindow* p) -> int {
   if(auto key = pKeyboard::_translate(event->keyval)) {
     p->self().doKeyRelease(key);
   }

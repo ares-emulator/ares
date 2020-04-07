@@ -76,7 +76,7 @@ auto pTextEdit::setTextCursor(TextCursor cursor) -> void {
   GtkTextIter offset, length;
   gtk_text_buffer_get_end_iter(textBuffer, &offset);
   gtk_text_buffer_get_end_iter(textBuffer, &length);
-  signed end = gtk_text_iter_get_offset(&offset);
+  int end = gtk_text_iter_get_offset(&offset);
   gtk_text_iter_set_offset(&offset, max(0, min(end, cursor.offset())));
   gtk_text_iter_set_offset(&length, max(0, min(end, cursor.offset() + cursor.length())));
   gtk_text_buffer_select_range(textBuffer, &offset, &length);
