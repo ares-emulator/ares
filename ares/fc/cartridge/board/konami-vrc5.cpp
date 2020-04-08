@@ -6,28 +6,28 @@
 //CHR-RAM: 8 KiB volatile internal
 //QTRAM:   2 KiB volatile internal
 
-struct KonamiVRC5 : Board {
+struct KonamiVRC5 : Interface {
   Memory::Readable<uint8> programROM;
   Memory::Writable<uint8> programRAM;
   Memory::Readable<uint8> characterROM;
   Memory::Writable<uint8> characterRAM;
   Memory::Writable<uint8> qtram;
 
-  using Board::Board;
+  using Interface::Interface;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Board::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
-    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
     qtram.allocate(2_KiB);
   }
 
   auto save(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::save(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto main() -> void override {

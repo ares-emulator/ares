@@ -1,16 +1,14 @@
+struct Cartridge;
 #include "board/board.hpp"
 
 struct Cartridge {
-  Node::Port port;
   Node::Peripheral node;
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
 
   //cartridge.cpp
-  auto load(Node::Object, Node::Object) -> void;
-  auto unload() -> void;
-  auto connect(Node::Peripheral) -> void;
+  auto connect(Node::Port, Node::Peripheral) -> void;
   auto disconnect() -> void;
 
   auto save() -> void;
@@ -32,4 +30,5 @@ private:
   } information;
 };
 
-extern Cartridge cartridge;
+#include "slot.hpp"
+extern Cartridge& cartridge;

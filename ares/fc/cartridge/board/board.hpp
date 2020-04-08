@@ -1,7 +1,9 @@
-struct Board {
-  virtual ~Board() = default;
+namespace Board {
 
-  Board(Markup::Node document = {});
+struct Interface {
+  Interface(Markup::Node document = {});
+  virtual ~Interface() = default;
+
   virtual auto load() -> void;
   virtual auto save() -> void;
   virtual auto unload() -> void;
@@ -21,7 +23,7 @@ struct Board {
 
   virtual auto serialize(serializer&) -> void {}
 
-  static auto load(string manifest) -> Board*;
+  static auto load(string manifest) -> Interface*;
 
   struct Information {
     string type;
@@ -35,3 +37,5 @@ protected:
   auto load(Memory::Writable<uint8>& memory, Markup::Node node) -> bool;
   auto save(Memory::Writable<uint8>& memory, Markup::Node node) -> bool;
 };
+
+}

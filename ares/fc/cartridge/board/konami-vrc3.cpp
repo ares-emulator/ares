@@ -1,22 +1,22 @@
-struct KonamiVRC3 : Board {
+struct KonamiVRC3 : Interface {
   Memory::Readable<uint8> programROM;
   Memory::Writable<uint8> programRAM;
   Memory::Writable<uint8> characterRAM;
 
-  using Board::Board;
+  using Interface::Interface;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Board::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
     mirror = board["mirror/mode"].string() == "vertical";
   }
 
   auto save(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::save(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto main() -> void {

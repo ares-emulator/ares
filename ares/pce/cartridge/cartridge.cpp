@@ -2,27 +2,13 @@
 
 namespace ares::PCEngine {
 
-Cartridge cartridge;
+Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "board/board.cpp"
+#include "slot.cpp"
 #include "serialization.cpp"
 
-auto Cartridge::load(Node::Object parent, Node::Object from) -> void {
-  port = Node::append<Node::Port>(parent, from, "Cartridge Slot");
-  port->setFamily(interface->name());
-  port->setType("Cartridge");
-  port->setAllocate([&] { return Node::Peripheral::create(interface->name()); });
-  port->setAttach([&](auto node) { connect(node); });
-  port->setDetach([&](auto node) { disconnect(); });
-  port->scan(from);
-}
-
-auto Cartridge::unload() -> void {
-  disconnect();
-  port = {};
-}
-
-auto Cartridge::connect(Node::Peripheral with) -> void {
-  node = Node::append<Node::Peripheral>(port, with, interface->name());
+auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
+  node = Node::append<Node::Peripheral>(parent, with, interface->name());
   node->setManifest([&] { return information.manifest; });
 
   information = {};
@@ -35,12 +21,12 @@ auto Cartridge::connect(Node::Peripheral with) -> void {
   information.name = document["game/label"].string();
   information.board = document["game/board"].string();
 
-  if(information.board == "Linear") board = new Board::Linear;
-  if(information.board == "Split" ) board = new Board::Split;
-  if(information.board == "Banked") board = new Board::Banked;
-  if(information.board == "RAM"   ) board = new Board::RAM;
-  if(information.board.match("System Card ?.??")) board = new Board::SystemCard;
-  if(!board) board = new Board::Interface;
+  if(information.board == "Linear") board = new Board::Linear{*this};
+  if(information.board == "Split" ) board = new Board::Split{*this};
+  if(information.board == "Banked") board = new Board::Banked{*this};
+  if(information.board == "RAM"   ) board = new Board::RAM{*this};
+  if(information.board.match("System Card ?.??")) board = new Board::SystemCard{*this};
+  if(!board) board = new Board::Interface{*this};
   board->load(document);
 
   if(auto fp = platform->open(node, "save.ram", File::Read)) {

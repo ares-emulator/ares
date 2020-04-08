@@ -111,6 +111,8 @@ auto main(Arguments arguments) -> void {
 
   directory::create({Path::userSettings(), "mia/"});
   file::write({Path::userSettings(), "mia/settings.bml"}, settings.serialize());
+
+  Instances::programWindow.destruct();
 }
 
 }

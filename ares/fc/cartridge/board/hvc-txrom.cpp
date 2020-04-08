@@ -1,26 +1,44 @@
-struct NES_HKROM : Board {  //MMC6
+struct HVC_TxROM : Interface {  //MMC3
   Memory::Readable<uint8> programROM;
   Memory::Writable<uint8> programRAM;
   Memory::Readable<uint8> characterROM;
   Memory::Writable<uint8> characterRAM;
 
-  using Board::Board;
+  enum class Revision : uint {
+    TBROM,
+    TEROM,
+    TFROM,
+    TGROM,
+    TKROM,
+    TKSROM,
+    TLROM,
+    TL1ROM,
+    TL2ROM,
+    TLSROM,
+    TNROM,
+    TQROM,
+    TR1ROM,
+    TSROM,
+    TVROM,
+  } revision;
+
+  HVC_TxROM(Markup::Node document, Revision revision) : Interface(document), revision(revision) {}
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Board::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
-    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto save(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::save(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto main() -> void {
+  auto main() -> void override {
     if(irqDelay) irqDelay--;
     cpu.irqLine(irqLine);
     tick();
@@ -41,14 +59,11 @@ struct NES_HKROM : Board {  //MMC6
   }
 
   auto readPRG(uint address) -> uint8 {
-    if(address < 0x7000) return cpu.mdr();
+    if(address < 0x6000) return cpu.mdr();
 
     if(address < 0x8000) {
       if(!ramEnable) return cpu.mdr();
-      if(!ramReadable[0] && !ramReadable[1]) return cpu.mdr();
-      uint1 bank = address >> 9 & 1;
-      if(!ramReadable[bank]) return 0x00;
-      return programRAM.read(bank << 9 | (uint9)address);
+      return programRAM.read((uint13)address);
     }
 
     uint6 bank;
@@ -63,25 +78,18 @@ struct NES_HKROM : Board {  //MMC6
   }
 
   auto writePRG(uint address, uint8 data) -> void {
-    if(address < 0x7000) return;
+    if(address < 0x6000) return;
 
     if(address < 0x8000) {
-      if(!ramEnable) return;
-      uint1 bank = address >> 9 & 1;
-      if(!ramWritable[bank]) return;
-      return programRAM.write(bank << 9 | (uint9)address, data);
+      if(!ramEnable || !ramWritable) return;
+      return programRAM.write((uint13)address, data);
     }
 
     switch(address & 0xe001) {
     case 0x8000:
       bankSelect = data.bit(0,2);
-      ramEnable = data.bit(5);
       programMode = data.bit(6);
       characterMode = data.bit(7);
-      if(!ramEnable) {
-        ramReadable[0] = ramWritable[0] = 0;
-        ramReadable[1] = ramWritable[1] = 0;
-      }
       break;
     case 0x8001:
       switch(bankSelect) {
@@ -99,11 +107,8 @@ struct NES_HKROM : Board {  //MMC6
       mirror = data.bit(0);
       break;
     case 0xa001:
-      if(!ramEnable) break;
-      ramWritable[0] = data.bit(4);
-      ramReadable[0] = data.bit(5);
-      ramWritable[1] = data.bit(6);
-      ramReadable[1] = data.bit(7);
+      ramWritable = !data.bit(6);
+      ramEnable = data.bit(7);
       break;
     case 0xc000:
       irqLatch = data;
@@ -161,13 +166,12 @@ struct NES_HKROM : Board {  //MMC6
   auto power() -> void {
     characterMode = 0;
     programMode = 0;
-    ramEnable = 0;
     bankSelect = 0;
     for(auto& bank : programBank) bank = 0;
     for(auto& bank : characterBank) bank = 0;
     mirror = 0;
-    for(auto& readable : ramReadable) readable = 0;
-    for(auto& writable : ramWritable) writable = 0;
+    ramEnable = 1;
+    ramWritable = 1;
     irqLatch = 0;
     irqCounter = 0;
     irqEnable = 0;
@@ -179,16 +183,14 @@ struct NES_HKROM : Board {  //MMC6
   auto serialize(serializer& s) -> void {
     programRAM.serialize(s);
     characterRAM.serialize(s);
-
     s.integer(characterMode);
     s.integer(programMode);
-    s.integer(ramEnable);
     s.integer(bankSelect);
     s.array(programBank);
     s.array(characterBank);
     s.integer(mirror);
-    s.array(ramReadable);
-    s.array(ramWritable);
+    s.integer(ramEnable);
+    s.integer(ramWritable);
     s.integer(irqLatch);
     s.integer(irqCounter);
     s.integer(irqEnable);
@@ -199,17 +201,16 @@ struct NES_HKROM : Board {  //MMC6
 
    uint1 characterMode;
    uint1 programMode;
-   uint1 ramEnable;
    uint3 bankSelect;
    uint6 programBank[2];
    uint8 characterBank[6];
    uint1 mirror;
-   uint1 ramReadable[2];
-   uint1 ramWritable[2];
+   uint1 ramEnable;
+   uint1 ramWritable;
    uint8 irqLatch;
    uint8 irqCounter;
    uint1 irqEnable;
-   uint1 irqDelay;
+   uint8 irqDelay;
    uint1 irqLine;
   uint16 characterAddress;
 };

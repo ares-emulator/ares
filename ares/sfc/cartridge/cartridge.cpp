@@ -2,7 +2,7 @@
 
 namespace ares::SuperFamicom {
 
-Cartridge cartridge;
+Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "slot.cpp"
 #include "load.cpp"
 #include "save.cpp"

@@ -3,16 +3,14 @@
 //this class is used to connect a peripheral folder and the BIOS to the emulator.
 
 struct Expansion {
-  Node::Port port;
   Node::Peripheral node;
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
   auto regions() const -> vector<string> { return information.regions; }
 
-  auto load(Node::Object, Node::Object) -> void;
-  auto unload() -> void;
-  auto connect(Node::Peripheral) -> void;
+  //expansion.cpp
+  auto connect(Node::Port, Node::Peripheral) -> void;
   auto disconnect() -> void;
 
   auto save() -> void;
@@ -31,9 +29,8 @@ struct Expansion {
     string manifest;
     string name;
     vector<string> regions;
-  };
-
-  Information information;
+  } information;
 };
 
-extern Expansion expansion;
+#include "port.hpp"
+extern Expansion& expansion;

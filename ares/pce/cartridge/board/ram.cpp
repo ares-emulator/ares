@@ -1,37 +1,30 @@
-auto RAM::load(Markup::Node document) -> void {
-  if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
-    rom.allocate(memory["size"].natural());
-    if(auto fp = platform->open(cartridge.node, "program.rom", File::Read, File::Required)) {
-      rom.load(fp);
-    }
+struct RAM : Interface {
+  using Interface::Interface;
+  Memory::Readable<uint8> rom;
+  Memory::Writable<uint8> ram;
+
+  auto load(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
+    Interface::load(ram, board["memory(type=RAM,content=Save)"]);
   }
 
-  if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
-    ram.allocate(memory["size"].natural());
-    if(auto fp = platform->open(cartridge.node, "save.ram", File::Read)) {
-      ram.load(fp);
-    }
+  auto save(Markup::Node document) -> void override {
+    auto board = document["game/board"];
+    Interface::save(ram, board["memory(type=RAM,content=Save)"]);
   }
-}
 
-auto RAM::save(Markup::Node document) -> void {
-  if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
-    if(auto fp = platform->open(cartridge.node, "save.ram", File::Write)) {
-      ram.save(fp);
-    }
+  auto read(uint8 bank, uint13 address) -> uint8 override {
+    return rom.read(bank << 13 | address);
   }
-}
 
-auto RAM::read(uint8 bank, uint13 address) -> uint8 {
-  return rom.read(bank << 13 | address);
-}
+  auto write(uint8 bank, uint13 address, uint8 data) -> void override {
+  }
 
-auto RAM::write(uint8 bank, uint13 address, uint8 data) -> void {
-}
+  auto power() -> void override {
+  }
 
-auto RAM::power() -> void {
-}
-
-auto RAM::serialize(serializer& s) -> void {
-  if(ram) ram.serialize(s);
-}
+  auto serialize(serializer& s) -> void override {
+    if(ram) ram.serialize(s);
+  }
+};

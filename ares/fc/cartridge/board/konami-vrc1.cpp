@@ -1,20 +1,20 @@
-struct KonamiVRC1 : Board {
+struct KonamiVRC1 : Interface {
   Memory::Readable<uint8> programROM;
   Memory::Readable<uint8> characterROM;
   Memory::Writable<uint8> characterRAM;
 
-  using Board::Board;
+  using Interface::Interface;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
-    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto save(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto readPRG(uint address) -> uint8 {

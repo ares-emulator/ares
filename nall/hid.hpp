@@ -41,6 +41,7 @@ private:
 
 struct Device : vector<Group> {
   Device(const string& name) : _name(name) {}
+  virtual ~Device() = default;
 
   //id => {pathID}-{vendorID}-{productID}
   auto pathID()    const -> uint32_t { return (uint32_t)(_id >> 32); }  //32-63

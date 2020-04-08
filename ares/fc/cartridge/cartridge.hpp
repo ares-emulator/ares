@@ -1,4 +1,4 @@
-#include "slot.hpp"
+struct Cartridge;
 #include "board/board.hpp"
 
 struct Cartridge : Thread {
@@ -27,7 +27,7 @@ struct Cartridge : Thread {
   } information;
 
 //privileged:
-  unique_pointer<Board> board;
+  unique_pointer<Board::Interface> board;
 
   auto readPRG(uint address) -> uint8;
   auto writePRG(uint address, uint8 data) -> void;
@@ -40,4 +40,5 @@ struct Cartridge : Thread {
   auto scanline(uint y) -> void;
 };
 
-extern Cartridge cartridge;
+#include "slot.hpp"
+extern Cartridge& cartridge;

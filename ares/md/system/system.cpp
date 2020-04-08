@@ -44,8 +44,8 @@ auto System::load(Node::Object& root, Node::Object from) -> void {
   vdp.load(node, from);
   psg.load(node, from);
   ym2612.load(node, from);
-  cartridge.load(node, from);
-  expansion.load(node, from);
+  cartridgeSlot.load(node, from);
+  expansionPort.load(node, from);
   controllerPort1.load(node, from);
   controllerPort2.load(node, from);
   extensionPort.load(node, from);
@@ -59,8 +59,8 @@ auto System::unload() -> void {
   vdp.unload();
   psg.unload();
   ym2612.unload();
-  cartridge.unload();
-  expansion.unload();
+  cartridgeSlot.unload();
+  expansionPort.unload();
   controllerPort1.unload();
   controllerPort2.unload();
   extensionPort.unload();
@@ -103,8 +103,8 @@ auto System::power(bool reset) -> void {
 
   random.entropy(Random::Entropy::Low);
 
-  cartridge.power();
-  expansion.power();
+  if(cartridge.node) cartridge.power();
+  if(expansion.node) expansion.power();
   cpu.power(reset);
   apu.power(reset);
   vdp.power(reset);

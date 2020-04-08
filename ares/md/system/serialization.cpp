@@ -47,8 +47,8 @@ auto System::serialize(serializer& s) -> void {
 auto System::serializeAll(serializer& s, bool synchronize) -> void {
   scheduler.setSynchronize(synchronize);
   system.serialize(s);
-  cartridge.serialize(s);
-  expansion.serialize(s);
+  if(cartridge.node) cartridge.serialize(s);
+  if(expansion.node) expansion.serialize(s);
   cpu.serialize(s);
   apu.serialize(s);
   vdp.serialize(s);

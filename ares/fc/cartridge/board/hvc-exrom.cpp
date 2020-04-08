@@ -1,4 +1,4 @@
-struct NES_ExROM : Board {  //MMC5
+struct HVC_ExROM : Interface {  //MMC5
   Memory::Readable<uint8> programROM;
   Memory::Writable<uint8> programRAM;
   Memory::Readable<uint8> characterROM;
@@ -17,7 +17,7 @@ struct NES_ExROM : Board {  //MMC5
     MMC5A,
   } chipRevision;
 
-  NES_ExROM(Markup::Node document, Revision revision) : Board(document), revision(revision) {}
+  HVC_ExROM(Markup::Node document, Revision revision) : Interface(document), revision(revision) {}
 
   struct Envelope {
     auto volume() const -> uint {
@@ -128,9 +128,9 @@ struct NES_ExROM : Board {  //MMC5
     chipRevision = ChipRevision::MMC5A;
 
     auto board = document["game/board"];
-    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Board::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
     exram.allocate(1_KiB);
 
     stream = Node::append<Node::Stream>(cartridge.node, {}, "Stream");
@@ -140,7 +140,7 @@ struct NES_ExROM : Board {  //MMC5
 
   auto save(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::save(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
   }
 
   auto main() -> void override {

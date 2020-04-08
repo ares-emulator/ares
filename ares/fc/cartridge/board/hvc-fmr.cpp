@@ -1,26 +1,23 @@
-//HVC-FMR-03
-//HVC-FMR-04
-
-struct HVC_FMR : Board {
+struct HVC_FMR : Interface {
   Memory::Readable<uint8> programROM;
   Memory::Writable<uint8> programRAM;
   Memory::Writable<uint8> characterRAM;
 
-  using Board::Board;
+  using Interface::Interface;
 
   auto load(Markup::Node document) -> void override {
     fds.present = 1;
 
     auto board = document["game/board"];
-    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Board::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto save(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::save(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto main() -> void override {

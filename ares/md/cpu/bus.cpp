@@ -34,8 +34,8 @@ auto CPU::read(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 
   }
 
   if(address >= 0xa10000 && address <= 0xbfffff) {
-    data = cartridge.readIO(upper, lower, address, data);
-    data = expansion.readIO(upper, lower, address, data);
+    if(cartridge.node) data = cartridge.readIO(upper, lower, address, data);
+    if(expansion.node) data = expansion.readIO(upper, lower, address, data);
     data = readIO(upper, lower, address, data);
     return data;
   }
@@ -86,8 +86,8 @@ auto CPU::write(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void {
   }
 
   if(address >= 0xa10000 && address <= 0xbfffff) {
-    cartridge.writeIO(upper, lower, address, data);
-    expansion.writeIO(upper, lower, address, data);
+    if(cartridge.node) cartridge.writeIO(upper, lower, address, data);
+    if(expansion.node) expansion.writeIO(upper, lower, address, data);
     writeIO(upper, lower, address, data);
     return;
   }

@@ -1,11 +1,9 @@
-struct KonamiVRC6 : Board {
+struct KonamiVRC6 : Interface {
   Memory::Readable<uint8> programROM;
   Memory::Writable<uint8> programRAM;
   Memory::Readable<uint8> characterROM;
   Memory::Writable<uint8> characterRAM;
   Node::Stream stream;
-
-  using Board::Board;
 
   struct Pulse {
     auto clock() -> void {
@@ -75,12 +73,14 @@ struct KonamiVRC6 : Board {
      uint5 output;
   };
 
+  using Interface::Interface;
+
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Board::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
-    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
     pinA0 = 1 << board["chip(type=VRC6)/pinout/a0"].natural();
     pinA1 = 1 << board["chip(type=VRC6)/pinout/a1"].natural();
 
@@ -91,8 +91,8 @@ struct KonamiVRC6 : Board {
 
   auto save(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::save(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto main() -> void override {

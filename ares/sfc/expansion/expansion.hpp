@@ -4,6 +4,6 @@ struct Expansion : Thread {
   virtual auto main() -> void;
 };
 
-#include <sfc/expansion/port.hpp>
-#include <sfc/expansion/satellaview/satellaview.hpp>
-#include <sfc/expansion/21fx/21fx.hpp>
+#include "port.hpp"
+#include "satellaview/satellaview.hpp"
+#include "21fx/21fx.hpp"

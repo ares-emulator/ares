@@ -80,55 +80,55 @@ auto Famicom::heuristicsINES(vector<uint8_t>& data, string location) -> string {
 
   switch(mapper) {
   default:
-    s += "  board:  NES-NROM-256\n";
+    s += "  board:  HVC-NROM-256\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
   case   1:
-    s += "  board:  NES-SXROM\n";
+    s += "  board:  HVC-SXROM\n";
     s += "    chip type=MMC1B2\n";
     prgram = 8192;
     break;
 
   case   2:
-    s += "  board:  NES-UOROM\n";
+    s += "  board:  HVC-UOROM\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
   case   3:
-    s += "  board:  NES-CNROM\n";
+    s += "  board:  HVC-CNROM\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
   case   4:
     //MMC3
-    s += "  board:  NES-TLROM\n";
+    s += "  board:  HVC-TLROM\n";
     s += "    chip type=MMC3B\n";
     prgram = 8192;
     //MMC6
-  //s += "  board:  NES-HKROM\n";
+  //s += "  board:  HVC-HKROM\n";
   //s += "    chip type=MMC6\n";
   //prgram = 1024;
     break;
 
   case   5:
-    s += "  board:  NES-ELROM\n";
+    s += "  board:  HVC-ELROM\n";
     s += "    chip type=MMC5\n";
     prgram = 65536;
     break;
 
   case   7:
-    s += "  board:  NES-AOROM\n";
+    s += "  board:  HVC-AOROM\n";
     break;
 
   case   9:
-    s += "  board:  NES-PNROM\n";
+    s += "  board:  HVC-PNROM\n";
     s += "    chip type=MMC2\n";
     prgram = 8192;
     break;
 
   case  10:
-    s += "  board:  NES-FKROM\n";
+    s += "  board:  HVC-FKROM\n";
     s += "    chip type=MMC4\n";
     prgram = 8192;
     break;
@@ -170,12 +170,12 @@ auto Famicom::heuristicsINES(vector<uint8_t>& data, string location) -> string {
     break;
 
   case  34:
-    s += "  board:  NES-BNROM\n";
+    s += "  board:  HVC-BNROM\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
   case  66:
-    s += "  board:  NES-GNROM\n";
+    s += "  board:  HVC-GNROM\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 

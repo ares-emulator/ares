@@ -2,7 +2,7 @@
 
 namespace ares::Famicom {
 
-Cartridge cartridge;
+Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "slot.cpp"
 #include "board/board.cpp"
 #include "serialization.cpp"
@@ -20,7 +20,7 @@ auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
   information.name = document["game/label"].text();
   information.region = document["game/region"].text();
 
-  Board::load(information.manifest);  //this call sets Cartridge::board internally
+  Board::Interface::load(information.manifest);  //this call sets Cartridge::board internally
   board->load();
 
   power();
@@ -47,7 +47,6 @@ auto Cartridge::save() -> void {
 
 auto Cartridge::power() -> void {
   Thread::create(system.frequency(), {&Cartridge::main, this});
-  if(!board) board = new Board;  //fallback for no cartridge inserted or unsupported mapper
   board->power();
 }
 

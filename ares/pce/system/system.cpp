@@ -24,7 +24,7 @@ auto System::load(Node::Object& root, Node::Object from) -> void {
   cpu.load(node, from);
   vdp.load(node, from);
   psg.load(node, from);
-  cartridge.load(node, from);
+  cartridgeSlot.load(node, from);
   controllerPort.load(node, from);
   if(PCD::Present()) pcd.load(node, from);
 }
@@ -41,7 +41,7 @@ auto System::unload() -> void {
   cpu.unload();
   vdp.unload();
   psg.unload();
-  cartridge.unload();
+  cartridgeSlot.unload();
   controllerPort.unload();
   if(PCD::Present()) pcd.unload();
   node = {};

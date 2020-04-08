@@ -1,4 +1,4 @@
-struct NES_PxROM : Board {  //MMC2
+struct HVC_PxROM : Interface {  //MMC2
   Memory::Readable<uint8> programROM;
   Memory::Writable<uint8> programRAM;
   Memory::Readable<uint8> characterROM;
@@ -9,20 +9,20 @@ struct NES_PxROM : Board {  //MMC2
     PNROM,
   } revision;
 
-  NES_PxROM(Markup::Node document, Revision revision) : Board(document), revision(revision) {}
+  HVC_PxROM(Markup::Node document, Revision revision) : Interface(document), revision(revision) {}
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Board::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::load(characterROM, board["memory(type=ROM,content=Character)"]);
-    Board::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
+    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto save(Markup::Node document) -> void override {
     auto board = document["game/board"];
-    Board::save(programRAM, board["memory(type=RAM,content=Save)"]);
-    Board::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
+    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
   auto readPRG(uint address) -> uint8 {

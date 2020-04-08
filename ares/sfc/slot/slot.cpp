@@ -2,7 +2,7 @@
 
 namespace ares::SuperFamicom {
 
-#include <sfc/slot/bsmemory/bsmemory.cpp>
-#include <sfc/slot/sufamiturbo/sufamiturbo.cpp>
+#include "bsmemory/bsmemory.cpp"
+#include "sufamiturbo/sufamiturbo.cpp"
 
 }

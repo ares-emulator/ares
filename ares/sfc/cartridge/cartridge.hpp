@@ -1,5 +1,3 @@
-#include "slot.hpp"
-
 struct Cartridge {
   Node::Peripheral node;
 
@@ -106,4 +104,5 @@ private:
   friend class ICD;
 };
 
-extern Cartridge cartridge;
+#include "slot.hpp"
+extern Cartridge& cartridge;

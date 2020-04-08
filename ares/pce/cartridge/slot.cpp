@@ -5,7 +5,7 @@ CartridgeSlot::CartridgeSlot(string_view name) : name(name) {
 
 auto CartridgeSlot::load(Node::Object parent, Node::Object from) -> void {
   port = Node::append<Node::Port>(parent, from, name);
-  port->setFamily("Famicom");
+  port->setFamily("PC Engine");
   port->setType("Cartridge");
   port->setAllocate([&] { return Node::Peripheral::create(interface->name()); });
   port->setAttach([&](auto node) { connect(node); });

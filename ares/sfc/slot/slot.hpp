@@ -1,2 +1,2 @@
-#include <sfc/slot/bsmemory/bsmemory.hpp>
-#include <sfc/slot/sufamiturbo/sufamiturbo.hpp>
+#include "bsmemory/bsmemory.hpp"
+#include "sufamiturbo/sufamiturbo.hpp"

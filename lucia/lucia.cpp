@@ -46,4 +46,5 @@ auto nall::main(Arguments arguments) -> void {
 
   Instances::presentation.destruct();
   Instances::settingsWindow.destruct();
+  Instances::toolsWindow.destruct();
 }

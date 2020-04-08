@@ -21,13 +21,12 @@ auto CartridgeSlot::unload() -> void {
 auto CartridgeSlot::connect(Node::Peripheral node) -> void {
   disconnect();
   if(node) {
-    peripheral = cartridge;
-    peripheral->connect(port, node);
+    cartridge.connect(port, node);
   }
 }
 
 auto CartridgeSlot::disconnect() -> void {
-  if(!peripheral) return;
-  peripheral->disconnect();
-  peripheral.reset();
+  if(connected()) {
+    cartridge.disconnect();
+  }
 }
