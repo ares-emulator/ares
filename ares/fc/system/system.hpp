@@ -10,7 +10,7 @@ struct System {
     Node::Button microphone;
 
     //controls.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto poll() -> void;
   } controls;
 

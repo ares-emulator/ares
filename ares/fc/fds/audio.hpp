@@ -1,7 +1,7 @@
 struct FDSAudio {
   Node::Stream stream;
 
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto clock() -> void;

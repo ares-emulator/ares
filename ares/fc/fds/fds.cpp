@@ -8,17 +8,16 @@ FDS fds;
 #include "audio.cpp"
 #include "serialization.cpp"
 
-auto FDS::load(Node::Object parent, Node::Object from) -> void {
-  port = Node::append<Node::Port>(parent, from, "Disk Slot");
+auto FDS::load(Node::Object parent) -> void {
+  port = parent->append<Node::Port>("Disk Slot");
   port->setFamily("Famicom Disk");
   port->setType("Floppy Disk");
   port->setHotSwappable(true);
   port->setAllocate([&] { return Node::Peripheral::create("Famicom Disk"); });
   port->setAttach([&](auto node) { connect(node); });
   port->setDetach([&](auto node) { disconnect(); });
-  port->scan(from);
-  from = Node::scan(parent = port, from);
-  audio.load(parent, from);
+
+  audio.load(parent);
   power();
 }
 

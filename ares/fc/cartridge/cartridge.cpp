@@ -25,7 +25,7 @@ auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
 
   power();
   if(fds.present) {
-    fds.load(node, with);
+    fds.load(node);
   }
 }
 

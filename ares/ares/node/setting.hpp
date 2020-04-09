@@ -129,24 +129,64 @@ protected:
 struct Boolean : Abstract<Boolean, boolean> {
   DeclareClass(Boolean, "Boolean")
   using Abstract::Abstract;
+
+  auto copy(Node::Object object) -> void override {
+    if(auto source = object->cast<Node::Boolean>()) {
+      Object::copy(source);
+      setValue(source->value());
+      setLatch();
+    }
+  }
 };
 
 struct Natural : Abstract<Natural, natural> {
   DeclareClass(Natural, "Natural")
   using Abstract::Abstract;
+
+  auto copy(Node::Object object) -> void override {
+    if(auto source = object->cast<Node::Natural>()) {
+      Object::copy(source);
+      setValue(source->value());
+      setLatch();
+    }
+  }
 };
 
 struct Integer : Abstract<Integer, integer> {
   DeclareClass(Integer, "Integer")
   using Abstract::Abstract;
+
+  auto copy(Node::Object object) -> void override {
+    if(auto source = object->cast<Node::Integer>()) {
+      Object::copy(source);
+      setValue(source->value());
+      setLatch();
+    }
+  }
 };
 
 struct Real : Abstract<Real, real> {
   DeclareClass(Real, "Real")
   using Abstract::Abstract;
+
+  auto copy(Node::Object object) -> void override {
+    if(auto source = object->cast<Node::Real>()) {
+      Object::copy(source);
+      setValue(source->value());
+      setLatch();
+    }
+  }
 };
 
 struct String : Abstract<String, string> {
   DeclareClass(String, "String")
   using Abstract::Abstract;
+
+  auto copy(Node::Object object) -> void override {
+    if(auto source = object->cast<Node::String>()) {
+      Object::copy(source);
+      setValue(source->value());
+      setLatch();
+    }
+  }
 };

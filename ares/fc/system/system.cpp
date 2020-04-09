@@ -21,7 +21,7 @@ auto System::load(Node::Object& root, Node::Object from) -> void {
 
   information = {};
 
-  node = Node::append<Node::System>(nullptr, from, interface->name());
+  node = Node::System::create(interface->name());
   root = node;
 
   regionNode = Node::append<Node::String>(node, from, "Region", "NTSC-J → NTSC-U → PAL");
@@ -36,13 +36,13 @@ auto System::load(Node::Object& root, Node::Object from) -> void {
   });
 
   scheduler.reset();
-  controls.load(node, from);
-  cpu.load(node, from);
-  apu.load(node, from);
-  ppu.load(node, from);
-  cartridgeSlot.load(node, from);
-  controllerPort1.load(node, from);
-  controllerPort2.load(node, from);
+  controls.load(node);
+  cpu.load(node);
+  apu.load(node);
+  ppu.load(node);
+  cartridgeSlot.load(node);
+  controllerPort1.load(node);
+  controllerPort2.load(node);
 }
 
 auto System::save() -> void {

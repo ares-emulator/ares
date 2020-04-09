@@ -1,5 +1,5 @@
-auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
-  memory.ciram = Node::append<Node::Memory>(parent, from, "PPU CIRAM");
+auto PPU::Debugger::load(Node::Object parent) -> void {
+  memory.ciram = parent->append<Node::Memory>("PPU CIRAM");
   memory.ciram->setSize(ppu.ciram.size());
   memory.ciram->setRead([&](uint32 address) -> uint8 {
     return ppu.ciram[address];
@@ -8,7 +8,7 @@ auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     ppu.ciram[address] = data;
   });
 
-  memory.cgram = Node::append<Node::Memory>(parent, from, "PPU CGRAM");
+  memory.cgram = parent->append<Node::Memory>("PPU CGRAM");
   memory.cgram->setSize(ppu.cgram.size());
   memory.cgram->setRead([&](uint32 address) -> uint8 {
     return ppu.cgram[address];
@@ -17,7 +17,7 @@ auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     ppu.cgram[address] = data;
   });
 
-  memory.oam = Node::append<Node::Memory>(parent, from, "PPU OAM");
+  memory.oam = parent->append<Node::Memory>("PPU OAM");
   memory.oam->setSize(ppu.oam.size());
   memory.oam->setRead([&](uint32 address) -> uint8 {
     return ppu.oam[address];

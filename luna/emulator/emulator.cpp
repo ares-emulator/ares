@@ -32,7 +32,9 @@ auto Emulator::create(shared_pointer<ares::Interface> instance, string location)
 
   screens.reset();
   streams.reset();
-  interface->load(root, configuration);
+//interface->load(root, configuration);
+  interface->load(root);
+  root->copy(ares::Node::unserialize(configuration));
 
   systemMenu.setText(system.name);
   toolsMenu.pauseEmulation.setChecked(false);

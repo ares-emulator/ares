@@ -63,6 +63,16 @@ struct Port : Object {
     _hotSwappable = node["hotSwappable"].boolean();
   }
 
+  auto copy(Node::Object object) -> void override {
+    if(auto source = object->cast<Node::Port>()) {
+      Object::copy(source);
+      if(auto peripheral = source->find<Node::Peripheral>(0)) {
+        connect(peripheral);
+        if(auto node = connected()) node->copy(peripheral);
+      }
+    }
+  }
+
 protected:
   function<Node::Peripheral ()> _allocate;
   function<void (Node::Peripheral)> _attach;

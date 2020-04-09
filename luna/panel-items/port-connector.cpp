@@ -162,6 +162,7 @@ auto PortConnector::eventActivate() -> void {
       peripheral->setAttribute("location", location);
       peripheral->setAttribute("name", item.attribute("name"));
       port->connect(peripheral);
+      if(auto node = port->connected()) node->copy(peripheral);
       inputManager.bind();  //bind any inputs this peripheral may contain
       program.refreshPanelList();
     }

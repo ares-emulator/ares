@@ -9,7 +9,7 @@ struct PPU : Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
 
     struct Memory {
       Node::Memory ciram;
@@ -22,7 +22,7 @@ struct PPU : Thread {
   auto vlines() const -> uint { return Region::PAL() ? 312 : 262; }
 
   //ppu.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

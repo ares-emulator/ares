@@ -190,6 +190,18 @@ struct Object : shared_pointer_this<Object> {
     }
   }
 
+  virtual auto copy(Node::Object source) -> void {
+    _attributes = source->_attributes;
+    for(auto& from : source->_nodes) {
+      for(auto& to : _nodes) {
+        if(from->identity() != to->identity()) continue;
+        if(from->name() != to->name()) continue;
+        to->copy(from);
+        break;
+      }
+    }
+  }
+
   auto begin() { return _nodes.begin(); }
   auto end() { return _nodes.end(); }
 

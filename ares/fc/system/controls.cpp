@@ -1,9 +1,8 @@
-auto System::Controls::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Object>(parent, from, "Controls");
-  from = Node::scan(parent = node, from);
+auto System::Controls::load(Node::Object parent) -> void {
+  node = parent->append<Node::Object>("Controls");
 
-  reset      = Node::append<Node::Button>(parent, from, "Reset");
-  microphone = Node::append<Node::Button>(parent, from, "Microphone");
+  reset      = node->append<Node::Button>("Reset");
+  microphone = node->append<Node::Button>("Microphone");
 }
 
 auto System::Controls::poll() -> void {
