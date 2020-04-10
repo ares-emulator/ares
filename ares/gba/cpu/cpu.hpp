@@ -5,7 +5,7 @@ struct CPU : ARM7TDMI, Thread, IO {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view type) -> void;
 
@@ -42,7 +42,7 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto stopped() const -> bool { return context.stopped; }
 
   //cpu.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

@@ -1,5 +1,5 @@
-auto ARMDSP::Debugger::load(Node::Object parent, Node::Object from) -> void {
-  tracer.instruction = Node::append<Node::Instruction>(parent, from, "Instruction", "ARM");
+auto ARMDSP::Debugger::load(Node::Object parent) -> void {
+  tracer.instruction = parent->append<Node::Instruction>("Instruction", "ARM");
   tracer.instruction->setAddressBits(32);
 }
 

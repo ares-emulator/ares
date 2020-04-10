@@ -31,7 +31,7 @@ auto VPU::read(uint24 address) -> uint8 {
 
   case 0x8012:
     data.bit(0,2) = window.color;
-    data.bit(7) = screen.negate;
+    data.bit(7) = dac.negate;
     break;
 
   case 0x8020: data = sprite.hscroll; break;
@@ -84,7 +84,7 @@ auto VPU::read(uint24 address) -> uint8 {
   case 0x87e2:
     if(!Model::NeoGeoPocketColor()) break;
     data.bit(0,6) = 0b000000;
-    data.bit(7) = screen.colorMode;
+    data.bit(7) = dac.colorMode;
     break;
 
   case 0x87fe: data = 0x3f; break;  //input port register (reserved)
@@ -118,7 +118,7 @@ auto VPU::write(uint24 address, uint8 data) -> void {
 
   case 0x8012:
     window.color = data.bit(0,2);
-    screen.negate = data.bit(7);
+    dac.negate = data.bit(7);
     break;
 
   case 0x8020: sprite.hscroll = data; break;
@@ -175,7 +175,7 @@ auto VPU::write(uint24 address, uint8 data) -> void {
   case 0x87e2:
     if(!Model::NeoGeoPocketColor()) break;
     if(!cpu.privilegedMode()) break;  //user-mode code is not supposed to be able to write to this register
-    screen.colorMode = data.bit(7);
+    dac.colorMode = data.bit(7);
     break;
   }
 }

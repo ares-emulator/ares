@@ -9,7 +9,7 @@ struct VDP : Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
 
     struct Memory {
       Node::Memory vram;
@@ -19,7 +19,7 @@ struct VDP : Thread {
   } debugger;
 
   //vdp.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

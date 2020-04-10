@@ -5,6 +5,10 @@ namespace ares::PCEngine {
 Interface* interface = nullptr;
 
 auto AbstractInterface::game() -> string {
+  if(pcd.disc) {
+    return pcd.name();
+  }
+
   if(cartridge.node) {
     return cartridge.name();
   }
@@ -16,9 +20,9 @@ auto AbstractInterface::root() -> Node::Object {
   return system.node;
 }
 
-auto AbstractInterface::load(Node::Object& root, string tree) -> void {
+auto AbstractInterface::load(Node::Object& root) -> void {
   interface = this;
-  system.load(root, Node::unserialize(tree));
+  system.load(root);
 }
 
 auto AbstractInterface::unload() -> void {

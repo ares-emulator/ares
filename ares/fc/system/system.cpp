@@ -16,7 +16,7 @@ auto System::run() -> void {
   if(!reset && controls.reset->value()) power(true);
 }
 
-auto System::load(Node::Object& root, Node::Object from) -> void {
+auto System::load(Node::Object& root) -> void {
   if(node) unload();
 
   information = {};
@@ -24,7 +24,7 @@ auto System::load(Node::Object& root, Node::Object from) -> void {
   node = Node::System::create(interface->name());
   root = node;
 
-  regionNode = Node::append<Node::String>(node, from, "Region", "NTSC-J → NTSC-U → PAL");
+  regionNode = node->append<Node::String>("Region", "NTSC-J → NTSC-U → PAL");
   regionNode->setAllowedValues({
     "NTSC-J → NTSC-U → PAL",
     "NTSC-U → NTSC-J → PAL",

@@ -20,43 +20,41 @@ PPU ppu;
 #include "serialization.cpp"
 #include "counter/serialization.cpp"
 
-auto PPU::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "PPU");
-  from = Node::scan(parent = node, from);
+auto PPU::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("PPU");
 
-  versionPPU1 = Node::append<Node::Natural>(parent, from, "PPU1 Version", 1);
+  versionPPU1 = node->append<Node::Natural>("PPU1 Version", 1);
   versionPPU1->setAllowedValues({1});
 
-  versionPPU2 = Node::append<Node::Natural>(parent, from, "PPU2 Version", 3);
+  versionPPU2 = node->append<Node::Natural>("PPU2 Version", 3);
   versionPPU2->setAllowedValues({1, 2, 3});
 
-  vramSize = Node::append<Node::Natural>(parent, from, "VRAM", 64_KiB);
+  vramSize = node->append<Node::Natural>("VRAM", 64_KiB);
   vramSize->setAllowedValues({64_KiB, 128_KiB});
 
-  screen = Node::append<Node::Screen>(parent, from, "Screen");
+  screen = node->append<Node::Screen>("Screen");
   screen->colors(1 << 19, {&PPU::color, this});
   screen->setSize(512, 480);
   screen->setScale(0.5, 0.5);
   screen->setAspect(8.0, 7.0);
-  from = Node::scan(parent = screen, from);
 
-  overscanEnable = Node::append<Node::Boolean>(parent, from, "Overscan", true, [&](auto value) {
+  overscanEnable = screen->append<Node::Boolean>("Overscan", true, [&](auto value) {
     if(value == 0) screen->setSize(512, 448);
     if(value == 1) screen->setSize(512, 480);
   });
   overscanEnable->setDynamic(true);
 
-  colorEmulation = Node::append<Node::Boolean>(parent, from, "Color Emulation", true, [&](auto value) {
+  colorEmulation = screen->append<Node::Boolean>("Color Emulation", true, [&](auto value) {
     screen->resetPalette();
   });
   colorEmulation->setDynamic(true);
 
-  colorBleed = Node::append<Node::Boolean>(parent, from, "Color Bleed", true, [&](auto value) {
+  colorBleed = screen->append<Node::Boolean>("Color Bleed", true, [&](auto value) {
     screen->setColorBleed(value);
   });
   colorBleed->setDynamic(true);
 
-  debugger.load(parent, from);
+  debugger.load(node);
 
   output = new uint32[512 * 512];
   output += 16 * 512;  //overscan offset

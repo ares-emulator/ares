@@ -17,7 +17,7 @@ struct System {
     Node::Button start;
     Node::Rumble rumbler;  //Game Boy Player
 
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto poll() -> void;
     auto rumble(bool enable) -> void;
 
@@ -37,7 +37,7 @@ struct System {
   //system.cpp
   auto run() -> void;
 
-  auto load(Node::Object&, Node::Object) -> void;
+  auto load(Node::Object&) -> void;
   auto save() -> void;
   auto unload() -> void;
   auto power() -> void;

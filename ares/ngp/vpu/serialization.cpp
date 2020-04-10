@@ -87,8 +87,8 @@ auto VPU::serialize(serializer& s) -> void {
   s.integer(led.control);
   s.integer(led.frequency);
 
-  s.integer(screen.negate);
-  s.integer(screen.colorMode);
+  s.integer(dac.negate);
+  s.integer(dac.colorMode);
 
   s.integer(io.vlines);
   s.integer(io.vcounter);

@@ -15,7 +15,7 @@ struct System {
     Node::Button power;
 
     //controls.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto poll() -> void;
 
     bool yHold = 0;
@@ -35,7 +35,7 @@ struct System {
   //system.cpp
   auto run() -> void;
 
-  auto load(Node::Object&, Node::Object) -> void;
+  auto load(Node::Object&) -> void;
   auto save() -> void;
   auto unload() -> void;
   auto power() -> void;

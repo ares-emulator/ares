@@ -117,37 +117,10 @@ namespace ares::Node {
     return {};
   }
 
-  //tries to locate a node within a source tree's parent.
-  //returns the source tree's equivalent node when found.
-  static inline auto scan(Object node, Object from) -> Object {
-    if(!node || !from) return {};
-    if(auto object = from->find(node)) return object;
-    return {};
-  }
-
-  template<typename T, typename... P>
-  static inline auto append(Object parent, Object from, string name, P&&... p) -> T {
-    auto node = T::create(name, forward<P>(p)...);
-    if(from) {
-      if(!node->load(from)) {
-        if(auto object = from->find<T>(name)) node->load(object);
-      }
-    }
-    if(parent) parent->append(node);
-    return node;
-  }
-
   template<typename T>
   static inline auto find(Object from, string name) -> Object {
     if(!from) return {};
     if(auto object = from->find<T>(name)) return object;
-    return {};
-  }
-
-  template<typename T>
-  static inline auto scan(Object from, string name) -> Object {
-    if(!from) return {};
-    if(auto object = from->scan<T>(name)) return object;
     return {};
   }
 

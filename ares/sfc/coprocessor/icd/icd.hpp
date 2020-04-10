@@ -4,7 +4,7 @@ struct ICD : Platform, GameBoy::SuperGameBoyInterface, Thread {
   //icd.cpp
   auto clockFrequency() const -> double;
 
-  auto load(Node::Peripheral, Node::Peripheral) -> void;
+  auto load(Node::Peripheral) -> void;
   auto unload() -> void;
 
   auto main() -> void;
@@ -69,7 +69,7 @@ struct ICD : Thread {
 
   auto name() const -> string { return {}; }
 
-  auto load(Node::Peripheral, Node::Peripheral) -> void {}
+  auto load(Node::Peripheral) -> void {}
   auto unload() -> void {}
 
   auto connect(Node::Peripheral) -> void {}

@@ -1,5 +1,4 @@
 struct Cartridge : Thread, IO {
-  Node::Port port;
   Node::Peripheral node;
 
   auto manifest() const { return information.manifest; }
@@ -7,15 +6,13 @@ struct Cartridge : Thread, IO {
   auto orientation() const { return information.orientation; }
 
   //cartridge.cpp
-  auto main() -> void;
-  auto step(uint clocks) -> void;
-
-  auto load(Node::Object, Node::Object) -> void;
-  auto unload() -> void;
-  auto connect(Node::Peripheral) -> void;
+  auto connect(Node::Port, Node::Peripheral) -> void;
   auto disconnect() -> void;
   auto save() -> void;
   auto power() -> void;
+
+  auto main() -> void;
+  auto step(uint clocks) -> void;
 
   //memory.cpp
   auto romRead(uint20 address) -> uint8;
@@ -96,4 +93,5 @@ struct Cartridge : Thread, IO {
   RTC rtc;
 };
 
-extern Cartridge cartridge;
+#include "slot.hpp"
+extern Cartridge& cartridge;

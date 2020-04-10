@@ -10,20 +10,18 @@ VPU vpu;
 #include "color.cpp"
 #include "serialization.cpp"
 
-auto VPU::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "VPU");
-  from = Node::scan(parent = node, from);
+auto VPU::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("VPU");
 
-  screen_ = Node::append<Node::Screen>(parent, from, "Screen");
-  if(Model::NeoGeoPocket()) screen_->colors(1 << 3, {&VPU::colorNeoGeoPocket, this});
-  if(Model::NeoGeoPocketColor()) screen_->colors(1 << 12, {&VPU::colorNeoGeoPocketColor, this});
-  screen_->setSize(160, 152);
-  screen_->setScale(1.0, 1.0);
-  screen_->setAspect(1.0, 1.0);
-  from = Node::scan(parent = screen_, from);
+  screen = node->append<Node::Screen>("Screen");
+  if(Model::NeoGeoPocket()) screen->colors(1 << 3, {&VPU::colorNeoGeoPocket, this});
+  if(Model::NeoGeoPocketColor()) screen->colors(1 << 12, {&VPU::colorNeoGeoPocketColor, this});
+  screen->setSize(160, 152);
+  screen->setScale(1.0, 1.0);
+  screen->setAspect(1.0, 1.0);
 
-  interframeBlending = Node::append<Node::Boolean>(parent, from, "Interframe Blending", true, [&](auto value) {
-    screen_->setInterframeBlending(value);
+  interframeBlending = screen->append<Node::Boolean>("Interframe Blending", true, [&](auto value) {
+    screen->setInterframeBlending(value);
   });
   interframeBlending->setDynamic(true);
 }
@@ -62,7 +60,7 @@ auto VPU::main() -> void {
       if(validSprite && sprite.priority == 3) color = sprite.output;
       if(validWindow) color = window.output;
 
-      if(Model::NeoGeoPocket() && screen.negate) {
+      if(Model::NeoGeoPocket() && dac.negate) {
         color ^= 7;
       }
 
@@ -109,7 +107,7 @@ auto VPU::step(uint clocks) -> void {
 }
 
 auto VPU::refresh() -> void {
-  screen_->refresh(buffer, 160 * sizeof(uint32), 160, 152);
+  screen->refresh(buffer, 160 * sizeof(uint32), 160, 152);
 }
 
 auto VPU::power() -> void {
@@ -125,7 +123,7 @@ auto VPU::power() -> void {
   sprite = {0x00, 0xc0};
   for(auto& s : sprites) s = {};
   led = {};
-  screen = {};
+  dac = {};
   io = {};
 }
 

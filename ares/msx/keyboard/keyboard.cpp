@@ -5,14 +5,13 @@ namespace ares::MSX {
 Keyboard keyboard;
 #include "serialization.cpp"
 
-auto Keyboard::load(Node::Object parent, Node::Object from) -> void {
-  port = Node::append<Node::Port>(parent, from, "Keyboard");
+auto Keyboard::load(Node::Object parent) -> void {
+  port = parent->append<Node::Port>("Keyboard");
   port->setFamily("MSX");
   port->setType("Keyboard");
   port->setHotSwappable(true);
   port->setAttach([&](auto node) { connect(node); });
   port->setDetach([&](auto node) { disconnect(); });
-  port->scan(from);
 }
 
 auto Keyboard::connect(Node::Peripheral node) -> void {
@@ -20,7 +19,8 @@ auto Keyboard::connect(Node::Peripheral node) -> void {
   if(node) {
     string name{"Layout"};
     if(node) name = node->name();
-    layout = Node::append<Node::Peripheral>(port, node, name);
+    layout = port->append<Node::Peripheral>(name);
+    layout->load(node);
     Markup::Node document;
     if(auto fp = platform->open(layout, "layout.bml", File::Read)) {
       document = BML::unserialize(fp->reads());
@@ -31,7 +31,7 @@ auto Keyboard::connect(Node::Peripheral node) -> void {
         if(auto key = document[{"layout/key[", column * 8 + row, "]"}]) {
           label = key.text();
         }
-        matrix[column][row] = Node::append<Node::Button>(layout, node, label);
+        matrix[column][row] = layout->append<Node::Button>(label);
       }
     }
   }

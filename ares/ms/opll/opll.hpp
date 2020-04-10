@@ -3,7 +3,7 @@ struct OPLL : YM2413, Thread {
   Node::Stream stream;
 
   //opll.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

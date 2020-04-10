@@ -9,11 +9,10 @@ YM2612 ym2612;
 #include "constants.cpp"
 #include "serialization.cpp"
 
-auto YM2612::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "YM2612");
-  from = Node::scan(parent = node, from);
+auto YM2612::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("YM2612");
 
-  stream = Node::append<Node::Stream>(parent, from, "Stream");
+  stream = node->append<Node::Stream>("Stream");
   stream->setChannels(2);
   stream->setFrequency(system.frequency() / 7.0 / 144.0);
   stream->addHighPassFilter(  20.0, 1);

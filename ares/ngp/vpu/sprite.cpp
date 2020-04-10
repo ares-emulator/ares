@@ -42,7 +42,7 @@ auto VPU::renderSprite(uint8 lx) -> bool {
         sprite.output = sprite.palette[t.palette][index];
       }
       if(Model::NeoGeoPocketColor()) {
-        if(screen.colorMode) {
+        if(dac.colorMode) {
           sprite.output = colors[sprite.colorCompatible + t.palette * 8 + sprite.palette[t.palette][index]];
         } else {
           sprite.output = colors[sprite.colorNative + t.code * 4 + index];

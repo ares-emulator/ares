@@ -6,7 +6,7 @@ struct YM2612 : Thread {
   Node::Stream stream;
 
   //ym2612.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

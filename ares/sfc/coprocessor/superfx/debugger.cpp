@@ -1,5 +1,5 @@
-auto SuperFX::Debugger::load(Node::Object parent, Node::Object from) -> void {
-  tracer.instruction = Node::append<Node::Instruction>(parent, from, "Instruction", "GSU");
+auto SuperFX::Debugger::load(Node::Object parent) -> void {
+  tracer.instruction = parent->append<Node::Instruction>("Instruction", "GSU");
   tracer.instruction->setAddressBits(24);
 }
 

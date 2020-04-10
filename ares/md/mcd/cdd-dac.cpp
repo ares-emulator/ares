@@ -1,7 +1,7 @@
 //Sanyo LC7883KM
 
-auto MCD::CDD::DAC::load(Node::Object parent, Node::Object from) -> void {
-  stream = Node::append<Node::Stream>(parent, from, "DAC Stream");
+auto MCD::CDD::DAC::load(Node::Object parent) -> void {
+  stream = parent->append<Node::Stream>("DAC Stream");
   stream->setChannels(2);
   stream->setFrequency(44100);
 }

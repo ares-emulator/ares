@@ -8,11 +8,10 @@ SA1 sa1;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto SA1::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "SA1");
-  from = Node::scan(parent = node, from);
+auto SA1::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("SA1");
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto SA1::unload() -> void {

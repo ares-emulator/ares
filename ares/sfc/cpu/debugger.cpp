@@ -1,5 +1,5 @@
-auto CPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
-  memory.wram = Node::append<Node::Memory>(parent, from, "CPU WRAM");
+auto CPU::Debugger::load(Node::Object parent) -> void {
+  memory.wram = parent->append<Node::Memory>("CPU WRAM");
   memory.wram->setSize(128_KiB);
   memory.wram->setRead([&](uint32 address) -> uint8 {
     return cpu.wram[uint17(address)];
@@ -8,10 +8,10 @@ auto CPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     cpu.wram[uint17(address)] = data;
   });
 
-  tracer.instruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
+  tracer.instruction = parent->append<Node::Instruction>("Instruction", "CPU");
   tracer.instruction->setAddressBits(24);
 
-  tracer.interrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
+  tracer.interrupt = parent->append<Node::Notification>("Interrupt", "CPU");
 }
 
 auto CPU::Debugger::instruction() -> void {

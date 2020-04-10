@@ -12,11 +12,10 @@ APU apu;
 #include "channel5.cpp"
 #include "serialization.cpp"
 
-auto APU::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "APU");
-  from = Node::scan(parent = node, from);
+auto APU::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("APU");
 
-  stream = Node::append<Node::Stream>(parent, from, "Stream");
+  stream = node->append<Node::Stream>("Stream");
   stream->setChannels(2);
   stream->setFrequency(3'072'000);
   stream->addHighPassFilter(20.0, 1);

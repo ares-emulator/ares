@@ -133,7 +133,7 @@ struct HVC_ExROM : Interface {  //MMC5
     Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
     exram.allocate(1_KiB);
 
-    stream = Node::append<Node::Stream>(cartridge.node, {}, "Stream");
+    stream = cartridge.node->append<Node::Stream>("Stream");
     stream->setChannels(1);
     stream->setFrequency(uint(system.frequency() + 0.5) / cartridge.rate());
   }

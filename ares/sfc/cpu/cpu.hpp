@@ -4,7 +4,7 @@ struct CPU : WDC65816, Thread, PPUcounter {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
 
@@ -24,7 +24,7 @@ struct CPU : WDC65816, Thread, PPUcounter {
   auto synchronizing() const -> bool override { return scheduler.synchronizing(); }
 
   //cpu.cpp
-  auto load(Node::Object parent, Node::Object from) -> void;
+  auto load(Node::Object parent) -> void;
   auto unload() -> void;
 
   auto main() -> void;

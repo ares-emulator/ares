@@ -7,11 +7,10 @@ APU apu;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto APU::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "APU");
-  from = Node::scan(parent = node, from);
+auto APU::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("APU");
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto APU::unload() -> void {

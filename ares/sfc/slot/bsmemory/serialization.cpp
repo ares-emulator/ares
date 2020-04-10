@@ -1,4 +1,4 @@
-auto BSMemory::serialize(serializer& s) -> void {
+auto BSMemoryCartridge::serialize(serializer& s) -> void {
   Thread::serialize(s);
   if(ROM) return;
 
@@ -48,7 +48,7 @@ auto BSMemory::serialize(serializer& s) -> void {
   queue.serialize(s);
 }
 
-auto BSMemory::Queue::serialize(serializer& s) -> void {
+auto BSMemoryCartridge::Queue::serialize(serializer& s) -> void {
   s.integer(history[0].valid);
   s.integer(history[0].address);
   s.integer(history[0].data);

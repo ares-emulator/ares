@@ -6,7 +6,7 @@ struct SuperFX : GSU, Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto instruction() -> void;
 
     struct Tracer {
@@ -15,7 +15,7 @@ struct SuperFX : GSU, Thread {
   } debugger;
 
   //superfx.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

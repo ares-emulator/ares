@@ -1,6 +1,6 @@
 struct MBC5 : Mapper {
   Node::Rumble rumble;
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void override;
 
   auto read(uint16 address) -> uint8;
   auto write(uint16 address, uint8 data) -> void;

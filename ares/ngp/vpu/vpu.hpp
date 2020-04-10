@@ -3,11 +3,11 @@
 
 struct VPU : Thread {
   Node::Component node;
-  Node::Screen screen_;
+  Node::Screen screen;
   Node::Boolean interframeBlending;
 
   //vpu.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;
@@ -130,10 +130,10 @@ struct VPU : Thread {
     uint8 frequency = 0x80;
   } led;
 
-  struct Screen {
+  struct DAC {
     uint1 negate;     //0 = normal, 1 = inverted display
     uint1 colorMode;  //0 = K2GE, 1 = K1GE compatible
-  } screen;
+  } dac;
 
   struct IO {
     uint8  vlines = 0xc6;

@@ -19,7 +19,7 @@ auto VPU::renderPlane(uint8 x, uint8 y, Plane& plane) -> bool {
       if(index) plane.output = plane.palette[a.palette][index];
     }
     if(Model::NeoGeoPocketColor()) {
-      if(screen.colorMode) {
+      if(dac.colorMode) {
         plane.output = colors[plane.colorCompatible + a.palette * 8 + plane.palette[a.palette][index]];
       } else {
         plane.output = colors[plane.colorNative + a.code * 4 + index];

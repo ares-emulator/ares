@@ -3,7 +3,7 @@
 struct VDC {
   struct Debugger {
     //debugger.cpp
-    auto load(VDC&, Node::Object, Node::Object) -> void;
+    auto load(VDC&, Node::Object) -> void;
 
     struct Memory {
       Node::Memory vram;

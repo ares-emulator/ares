@@ -35,10 +35,11 @@ auto FDS::unload() -> void {
 }
 
 auto FDS::connect(Node::Peripheral with) -> void {
-  node = Node::append<Node::Peripheral>(port, with, "Famicom Disk");
+  node = port->append<Node::Peripheral>("Famicom Disk");
+  node->load(with);
   node->setManifest([&] { return information.manifest; });
 
-  state = Node::append<Node::String>(node, with, "State", "Ejected", [&](auto value) {
+  state = node->append<Node::String>("State", "Ejected", [&](auto value) {
     change(value);
   });
   vector<string> states = {"Ejected"};

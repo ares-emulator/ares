@@ -84,7 +84,7 @@ struct KonamiVRC6 : Interface {
     pinA0 = 1 << board["chip(type=VRC6)/pinout/a0"].natural();
     pinA1 = 1 << board["chip(type=VRC6)/pinout/a1"].natural();
 
-    stream = Node::append<Node::Stream>(cartridge.node, {}, "Stream");
+    stream = cartridge.node->append<Node::Stream>("Stream");
     stream->setChannels(1);
     stream->setFrequency(uint(system.frequency() + 0.5) / cartridge.rate());
   }

@@ -16,9 +16,9 @@ auto GameBoyAdvanceInterface::root() -> Node::Object {
   return system.node;
 }
 
-auto GameBoyAdvanceInterface::load(Node::Object& root, string tree) -> void {
+auto GameBoyAdvanceInterface::load(Node::Object& root) -> void {
   interface = this;
-  system.load(root, Node::unserialize(tree));
+  system.load(root);
 }
 
 auto GameBoyAdvanceInterface::unload() -> void {

@@ -30,6 +30,8 @@ struct Port : Object {
     attach(peripheral);
   }
 
+/*
+
   //searches a source port tree for a peripheral that matches this peripheral.
   //if found, it will connect the peripheral to its parent port.
   auto scan(Node::Object port) -> void {
@@ -41,6 +43,8 @@ struct Port : Object {
       }
     }
   }
+
+*/
 
   auto disconnect() -> void {
     if(auto peripheral = connected()) {

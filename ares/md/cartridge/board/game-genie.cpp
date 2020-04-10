@@ -7,7 +7,7 @@ struct GameGenie : Interface {
     auto board = document["game/board"];
     Interface::load(rom, board["memory(type=ROM,content=Program)"]);
 
-    slot.load(cartridge->node, cartridge->with);
+    slot.load(cartridge->node);
   }
 
   auto save(Markup::Node document) -> void override {

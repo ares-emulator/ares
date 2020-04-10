@@ -11,7 +11,7 @@ struct Interface {
 
   //system interface
   virtual auto root() -> Node::Object { return {}; }
-  virtual auto load(Node::Object&, string tree = {}) -> void {}
+  virtual auto load(Node::Object&) -> void {}
   virtual auto power() -> void {}
   virtual auto run() -> void {}
   virtual auto save() -> void {}

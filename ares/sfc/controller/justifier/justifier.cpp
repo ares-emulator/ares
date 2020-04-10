@@ -1,12 +1,13 @@
 Justifier::Justifier(Node::Port parent, Node::Peripheral with) {
-  node = Node::append<Node::Peripheral>(parent, with, "Justifier");
+  node = parent->append<Node::Peripheral>("Justifier");
+  node->load(with);
 
-  x       = Node::append<Node::Axis  >(node, with, "X");
-  y       = Node::append<Node::Axis  >(node, with, "Y");
-  trigger = Node::append<Node::Button>(node, with, "Trigger");
-  start   = Node::append<Node::Button>(node, with, "Start");
+  x       = node->append<Node::Axis  >("X");
+  y       = node->append<Node::Axis  >("Y");
+  trigger = node->append<Node::Button>("Trigger");
+  start   = node->append<Node::Button>("Start");
 
-  sprite = Node::append<Node::Sprite>(node, with, "Crosshair");
+  sprite = node->append<Node::Sprite>("Crosshair");
   sprite->setImage(Resource::Sprite::SuperFamicom::CrosshairGreen);
   ppu.screen->attach(sprite);
 

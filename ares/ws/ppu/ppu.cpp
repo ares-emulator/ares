@@ -9,62 +9,60 @@ PPU ppu;
 #include "color.cpp"
 #include "serialization.cpp"
 
-auto PPU::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "PPU");
-  from = Node::scan(parent = node, from);
+auto PPU::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("PPU");
 
-  screen = Node::append<Node::Screen>(parent, from, "Screen");
+  screen = node->append<Node::Screen>("Screen");
   screen->colors(1 << 12, {&PPU::color, this});
   screen->setSize(224 + (SoC::ASWAN() ? 0 : 13), 144 + (Model::WonderSwan() ? 13 : 0));
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
-  from = Node::scan(parent = screen, from);
 
-  colorEmulation = Node::append<Node::Boolean>(parent, from, "Color Emulation", true, [&](auto value) {
+  colorEmulation = screen->append<Node::Boolean>("Color Emulation", true, [&](auto value) {
     screen->resetPalette();
   });
   colorEmulation->setDynamic(true);
 
-  interframeBlending = Node::append<Node::Boolean>(parent, from, "Interframe Blending", true, [&](auto value) {
+  interframeBlending = screen->append<Node::Boolean>("Interframe Blending", true, [&](auto value) {
     screen->setInterframeBlending(value);
   });
   interframeBlending->setDynamic(true);
 
   if(!Model::PocketChallengeV2()) {
-    orientation = Node::append<Node::String>(parent, from, "Orientation", "Automatic", [&](auto value) {
+    orientation = screen->append<Node::String>("Orientation", "Automatic", [&](auto value) {
       updateOrientation();
     });
     orientation->setDynamic(true);
     orientation->setAllowedValues({"Automatic", "Horizontal", "Vertical"});
 
-    showIcons = Node::append<Node::Boolean>(parent, from, "Show Icons", true, [&](auto value) {
+    showIcons = screen->append<Node::Boolean>("Show Icons", true, [&](auto value) {
       updateIcons();
     });
     showIcons->setDynamic(true);
   }
 
   if(!Model::PocketChallengeV2()) {
-    icon.auxiliary0   = Node::append<Node::Sprite>(parent, from, "Auxiliary - Small Icon");
-    icon.auxiliary1   = Node::append<Node::Sprite>(parent, from, "Auxiliary - Medium Icon");
-    icon.auxiliary2   = Node::append<Node::Sprite>(parent, from, "Auxiliary - Large Icon");
-    icon.headphones   = Node::append<Node::Sprite>(parent, from, "Headphones");
-    icon.initialized  = Node::append<Node::Sprite>(parent, from, "Initialized");
-    icon.lowBattery   = Node::append<Node::Sprite>(parent, from, "Low Battery");
-    icon.orientation0 = Node::append<Node::Sprite>(parent, from, "Orientation - Horizontal");
-    icon.orientation1 = Node::append<Node::Sprite>(parent, from, "Orientation - Vertical");
-    icon.poweredOn    = Node::append<Node::Sprite>(parent, from, "Powered On");
-    icon.sleeping     = Node::append<Node::Sprite>(parent, from, "Sleeping");
+    icon.auxiliary0   = screen->append<Node::Sprite>("Auxiliary - Small Icon");
+    icon.auxiliary1   = screen->append<Node::Sprite>("Auxiliary - Medium Icon");
+    icon.auxiliary2   = screen->append<Node::Sprite>("Auxiliary - Large Icon");
+    icon.headphones   = screen->append<Node::Sprite>("Headphones");
+    icon.initialized  = screen->append<Node::Sprite>("Initialized");
+    icon.lowBattery   = screen->append<Node::Sprite>("Low Battery");
+    icon.orientation0 = screen->append<Node::Sprite>("Orientation - Horizontal");
+    icon.orientation1 = screen->append<Node::Sprite>("Orientation - Vertical");
+    icon.poweredOn    = screen->append<Node::Sprite>("Powered On");
+    icon.sleeping     = screen->append<Node::Sprite>("Sleeping");
   }
   if(Model::WonderSwan()) {
-    icon.volumeA0     = Node::append<Node::Sprite>(parent, from, "Volume - 0%");
-    icon.volumeA1     = Node::append<Node::Sprite>(parent, from, "Volume - 50%");
-    icon.volumeA2     = Node::append<Node::Sprite>(parent, from, "Volume - 100%");
+    icon.volumeA0     = screen->append<Node::Sprite>("Volume - 0%");
+    icon.volumeA1     = screen->append<Node::Sprite>("Volume - 50%");
+    icon.volumeA2     = screen->append<Node::Sprite>("Volume - 100%");
   }
   if(!SoC::ASWAN()) {
-    icon.volumeB0     = Node::append<Node::Sprite>(parent, from, "Volume - 0%");
-    icon.volumeB1     = Node::append<Node::Sprite>(parent, from, "Volume - 33%");
-    icon.volumeB2     = Node::append<Node::Sprite>(parent, from, "Volume - 66%");
-    icon.volumeB3     = Node::append<Node::Sprite>(parent, from, "Volume - 100%");
+    icon.volumeB0     = screen->append<Node::Sprite>("Volume - 0%");
+    icon.volumeB1     = screen->append<Node::Sprite>("Volume - 33%");
+    icon.volumeB2     = screen->append<Node::Sprite>("Volume - 66%");
+    icon.volumeB3     = screen->append<Node::Sprite>("Volume - 100%");
   }
 
   bool invert = SoC::ASWAN();

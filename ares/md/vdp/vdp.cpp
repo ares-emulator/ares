@@ -16,24 +16,22 @@ VDP vdp;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto VDP::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "VDP");
-  from = Node::scan(parent = node, from);
+auto VDP::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("VDP");
 
-  screen = Node::append<Node::Screen>(parent, from, "Screen");
+  screen = node->append<Node::Screen>("Screen");
   screen->colors(3 * (1 << 9), {&VDP::color, this});
   screen->setSize(1280, 480);
   screen->setScale(0.25, 0.50);
   screen->setAspect(1.0, 1.0);
-  from = Node::scan(parent = screen, from);
 
-  overscan = Node::append<Node::Boolean>(parent, from, "Overscan", true, [&](auto value) {
+  overscan = screen->append<Node::Boolean>("Overscan", true, [&](auto value) {
     if(value == 0) screen->setSize(1280, 448);
     if(value == 1) screen->setSize(1280, 480);
   });
   overscan->setDynamic(true);
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto VDP::unload() -> void {

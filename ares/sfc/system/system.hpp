@@ -9,7 +9,7 @@ struct System {
     Node::Button reset;
 
     //controls.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto poll() -> void;
   } controls;
 
@@ -21,7 +21,7 @@ struct System {
 
   auto run() -> void;
 
-  auto load(Node::Object&, Node::Object) -> void;
+  auto load(Node::Object&) -> void;
   auto unload() -> void;
   auto save() -> void;
   auto power(bool reset) -> void;

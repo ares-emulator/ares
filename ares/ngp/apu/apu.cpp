@@ -7,16 +7,15 @@ APU apu;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto APU::load(Node::Object parent, Node::Object from) -> void {
+auto APU::load(Node::Object parent) -> void {
   ram.allocate(4_KiB, 0x00);
   if(auto fp = platform->open(system.node, "apu.ram", File::Read)) {
     ram.load(fp);
   }
 
-  node = Node::append<Node::Component>(parent, from, "APU");
-  from = Node::scan(parent = node, from);
+  node = parent->append<Node::Component>("APU");
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto APU::save() -> void {

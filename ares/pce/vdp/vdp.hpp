@@ -13,7 +13,7 @@ struct VDP : Thread {
   auto irqLine() const -> bool { return vdc0.irqLine() | vdc1.irqLine(); }
 
   //vdp.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

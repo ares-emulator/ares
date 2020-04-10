@@ -32,7 +32,7 @@ struct PPU : Thread, IO {
   auto tilemask() const -> uint { return 1023 >> !system.mode().bit(2); }
 
   //ppu.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

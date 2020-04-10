@@ -3,7 +3,7 @@ struct VDP : TMS9918, Thread {
   Node::Screen screen;
 
   //vdp.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto step(uint clocks) -> void override;

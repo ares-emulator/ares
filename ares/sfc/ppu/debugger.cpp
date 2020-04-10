@@ -1,5 +1,5 @@
-auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
-  memory.vram = Node::append<Node::Memory>(parent, from, "PPU VRAM");
+auto PPU::Debugger::load(Node::Object parent) -> void {
+  memory.vram = parent->append<Node::Memory>("PPU VRAM");
   memory.vram->setSize(ppu.vram.mask + 1 << 1);
   memory.vram->setRead([&](uint32 address) -> uint8 {
     return ppu.vram.data[address >> 1 & ppu.vram.mask].byte(address & 1);
@@ -8,7 +8,7 @@ auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     ppu.vram.data[address >> 1 & ppu.vram.mask].byte(address & 1) = data;
   });
 
-  memory.oam = Node::append<Node::Memory>(parent, from, "PPU OAM");
+  memory.oam = parent->append<Node::Memory>("PPU OAM");
   memory.oam->setSize(512 + 32);
   memory.oam->setRead([&](uint32 address) -> uint8 {
     return ppu.obj.oam.read(address);
@@ -17,7 +17,7 @@ auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     return ppu.obj.oam.write(address, data);
   });
 
-  memory.cgram = Node::append<Node::Memory>(parent, from, "PPU CGRAM");
+  memory.cgram = parent->append<Node::Memory>("PPU CGRAM");
   memory.cgram->setSize(256 << 1);
   memory.cgram->setRead([&](uint32 address) -> uint8 {
     return ppu.dac.cgram[address >> 1 & 255].byte(address & 1);
@@ -26,7 +26,7 @@ auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     ppu.dac.cgram[address >> 1 & 255].byte(address & 1) = data;
   });
 
-  graphics.tiles2bpp = Node::append<Node::Graphics>(parent, from, "2 BPP Tiles");
+  graphics.tiles2bpp = parent->append<Node::Graphics>("2 BPP Tiles");
   graphics.tiles2bpp->setSize(512, 512);
   graphics.tiles2bpp->setCapture([&]() -> vector<uint32_t> {
     vector<uint32_t> output;
@@ -48,7 +48,7 @@ auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     return output;
   });
 
-  graphics.tiles4bpp = Node::append<Node::Graphics>(parent, from, "4 BPP Tiles");
+  graphics.tiles4bpp = parent->append<Node::Graphics>("4 BPP Tiles");
   graphics.tiles4bpp->setSize(512, 256);
   graphics.tiles4bpp->setCapture([&]() -> vector<uint32_t> {
     vector<uint32_t> output;
@@ -73,7 +73,7 @@ auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     return output;
   });
 
-  graphics.tiles8bpp = Node::append<Node::Graphics>(parent, from, "8 BPP Tiles");
+  graphics.tiles8bpp = parent->append<Node::Graphics>("8 BPP Tiles");
   graphics.tiles8bpp->setSize(512, 128);
   graphics.tiles8bpp->setCapture([&]() -> vector<uint32_t> {
     vector<uint32_t> output;
@@ -104,7 +104,7 @@ auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     return output;
   });
 
-  graphics.tilesMode7 = Node::append<Node::Graphics>(parent, from, "Mode 7 Tiles");
+  graphics.tilesMode7 = parent->append<Node::Graphics>("Mode 7 Tiles");
   graphics.tilesMode7->setSize(128, 128);
   graphics.tilesMode7->setCapture([&]() -> vector<uint32_t> {
     vector<uint32_t> output;
@@ -123,7 +123,7 @@ auto PPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     return output;
   });
 
-  properties.registers = Node::append<Node::Properties>(parent, from, "PPU Registers");
+  properties.registers = parent->append<Node::Properties>("PPU Registers");
   properties.registers->setQuery([&] { return registers(); });
 }
 

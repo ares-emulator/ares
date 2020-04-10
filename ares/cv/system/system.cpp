@@ -14,17 +14,17 @@ auto System::run() -> void {
   }
 }
 
-auto System::load(Node::Object& root, Node::Object from) -> void {
+auto System::load(Node::Object& root) -> void {
   if(node) unload();
 
   information = {};
   if(interface->name() == "ColecoVision") information.model = Model::ColecoVision;
   if(interface->name() == "ColecoAdam"  ) information.model = Model::ColecoAdam;
 
-  node = Node::append<Node::System>(nullptr, from, interface->name());
+  node = Node::System::create(interface->name());
   root = node;
 
-  regionNode = Node::append<Node::String>(node, from, "Region", "NTSC → PAL");
+  regionNode = node->append<Node::String>("Region", "NTSC → PAL");
   regionNode->setAllowedValues({
     "NTSC → PAL",
     "PAL → NTSC",
@@ -33,13 +33,13 @@ auto System::load(Node::Object& root, Node::Object from) -> void {
   });
 
   scheduler.reset();
-  controls.load(node, from);
-  cpu.load(node, from);
-  vdp.load(node, from);
-  psg.load(node, from);
-  cartridge.load(node, from);
-  controllerPort1.load(node, from);
-  controllerPort2.load(node, from);
+  controls.load(node);
+  cpu.load(node);
+  vdp.load(node);
+  psg.load(node);
+  cartridgeSlot.load(node);
+  controllerPort1.load(node);
+  controllerPort2.load(node);
 }
 
 auto System::save() -> void {
@@ -53,7 +53,7 @@ auto System::unload() -> void {
   cpu.unload();
   vdp.unload();
   psg.unload();
-  cartridge.unload();
+  cartridgeSlot.unload();
   controllerPort1.port = {};
   controllerPort2.port = {};
   node = {};

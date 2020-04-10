@@ -17,6 +17,10 @@ auto CartridgeSlot::unload() -> void {
   port = {};
 }
 
+auto CartridgeSlot::connected() const -> bool {
+  return (bool)cartridge.node;
+}
+
 auto CartridgeSlot::connect(Node::Peripheral node) -> void {
   disconnect();
   if(node) {

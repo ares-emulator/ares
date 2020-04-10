@@ -17,7 +17,7 @@ struct System {
   //system.cpp
   auto run() -> void;
 
-  auto load(Node::Object&, Node::Object) -> void;
+  auto load(Node::Object&) -> void;
   auto save() -> void;
   auto unload() -> void;
 

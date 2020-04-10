@@ -4,11 +4,10 @@ ARMDSP armdsp;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto ARMDSP::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "ARM");
-  from = Node::scan(parent = node, from);
+auto ARMDSP::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("ARM");
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto ARMDSP::unload() -> void {

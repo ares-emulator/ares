@@ -12,7 +12,7 @@ struct MCD : M68K, Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
 
@@ -32,7 +32,7 @@ struct MCD : M68K, Thread {
   auto name() const -> string { return information.name; }
 
   //mcd.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
   auto connect(Node::Peripheral) -> void;
   auto disconnect() -> void;
@@ -286,7 +286,7 @@ struct MCD : M68K, Thread {
     };};
 
     //cdd.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto unload() -> void;
 
     auto clock() -> void;
@@ -311,7 +311,7 @@ struct MCD : M68K, Thread {
       Node::Stream stream;
 
       //cdd-dac.cpp
-      auto load(Node::Object, Node::Object) -> void;
+      auto load(Node::Object) -> void;
       auto unload() -> void;
 
       auto sample(int16 left, int16 right) -> void;
@@ -409,7 +409,7 @@ struct MCD : M68K, Thread {
     Memory::Writable<uint8> ram;
 
     //pcm.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto unload() -> void;
 
     auto clock() -> void;

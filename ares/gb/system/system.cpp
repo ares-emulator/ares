@@ -17,13 +17,13 @@ auto System::clocksExecuted() -> uint {
   return clocks;
 }
 
-auto System::load(Node::Object& root, Node::Object from) -> void {
+auto System::load(Node::Object& root) -> void {
   if(node) unload();
 
   information = {};
   if(interface->name() == "Game Boy") {
     information.model = Model::GameBoy;
-    node = Node::append<Node::System>(nullptr, from, interface->name());
+    node = Node::System::create(interface->name());
     root = node;
   }
   if(interface->name() == "Super Game Boy") {
@@ -32,16 +32,16 @@ auto System::load(Node::Object& root, Node::Object from) -> void {
   }
   if(interface->name() == "Game Boy Color") {
     information.model = Model::GameBoyColor;
-    node = Node::append<Node::System>(nullptr, from, interface->name());
+    node = Node::System::create(interface->name());
     root = node;
   }
 
   scheduler.reset();
-  controls.load(node, from);
-  cpu.load(node, from);
-  ppu.load(node, from);
-  apu.load(node, from);
-  cartridge.load(node, from);
+  controls.load(node);
+  cpu.load(node);
+  ppu.load(node);
+  apu.load(node);
+  cartridgeSlot.load(node);
 }
 
 auto System::save() -> void {
@@ -55,7 +55,7 @@ auto System::unload() -> void {
   cpu.unload();
   ppu.unload();
   apu.unload();
-  cartridge.unload();
+  cartridgeSlot.unload();
   bootROM.reset();
   node = {};
 }

@@ -1,9 +1,9 @@
 #include "eeprom.cpp"
 #include "serialization.cpp"
 
-auto Cartridge::MBC7::load(Node::Object parent, Node::Object from) -> void {
-  x = Node::append<Node::Axis>(parent, from, "X");
-  y = Node::append<Node::Axis>(parent, from, "Y");
+auto Cartridge::MBC7::load(Node::Object parent) -> void {
+  x = parent->append<Node::Axis>("X");
+  y = parent->append<Node::Axis>("Y");
 }
 
 auto Cartridge::MBC7::load(Markup::Node document) -> void {

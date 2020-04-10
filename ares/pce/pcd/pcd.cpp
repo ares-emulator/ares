@@ -6,18 +6,16 @@ PCD pcd;
 #include "io.cpp"
 #include "serialization.cpp"
 
-auto PCD::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "PC Engine CD");
-  from = Node::scan(parent = node, from);
+auto PCD::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("PC Engine CD");
 
-  tray = Node::append<Node::Port>(parent, from, "Disc Tray");
+  tray = node->append<Node::Port>("Disc Tray");
   tray->setFamily("PC Engine CD");
   tray->setType("Compact Disc");
   tray->setHotSwappable(true);
   tray->setAllocate([&] { return Node::Peripheral::create("PC Engine CD"); });
   tray->setAttach([&](auto node) { connect(node); });
   tray->setDetach([&](auto node) { disconnect(); });
-  tray->scan(from);
 
   wram.allocate(64_KiB);
   bram.allocate(2_KiB);
@@ -37,7 +35,7 @@ auto PCD::unload() -> void {
 auto PCD::connect(Node::Peripheral with) -> void {
   disconnect();
   if(with) {
-    disc = Node::append<Node::Peripheral>(tray, with, "PC Engine CD");
+    disc = tray->append<Node::Peripheral>("PC Engine CD");
     disc->setManifest([&] { return information.manifest; });
 
     information = {};

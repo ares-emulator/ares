@@ -5,7 +5,7 @@ struct HitachiDSP : HG51B, Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto instruction() -> void;
 
     struct Tracer {
@@ -14,7 +14,7 @@ struct HitachiDSP : HG51B, Thread {
   } debugger;
 
   //hitachidsp.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto step(uint clocks) -> void override;

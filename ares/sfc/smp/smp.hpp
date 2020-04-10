@@ -5,7 +5,7 @@ struct SMP : SPC700, Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto instruction() -> void;
 
     struct Tracer {
@@ -16,7 +16,7 @@ struct SMP : SPC700, Thread {
   auto synchronizing() const -> bool override { return scheduler.synchronizing(); }
 
   //smp.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

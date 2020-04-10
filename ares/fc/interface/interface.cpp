@@ -20,9 +20,9 @@ auto FamicomInterface::root() -> Node::Object {
   return system.node;
 }
 
-auto FamicomInterface::load(Node::Object& root, string tree) -> void {
+auto FamicomInterface::load(Node::Object& root) -> void {
   interface = this;
-  system.load(root, Node::unserialize(tree));
+  system.load(root);
 }
 
 auto FamicomInterface::unload() -> void {

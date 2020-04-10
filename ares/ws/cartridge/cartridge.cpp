@@ -2,48 +2,19 @@
 
 namespace ares::WonderSwan {
 
-Cartridge cartridge;
+Cartridge& cartridge = cartridgeSlot.cartridge;
+#include "slot.cpp"
 #include "memory.cpp"
 #include "rtc.cpp"
 #include "io.cpp"
 #include "serialization.cpp"
 
-auto Cartridge::main() -> void {
-  if(rtc.data) {
-    rtcTickSecond();
-    rtcCheckAlarm();
-  }
-  step(3'072'000);
-}
-
-auto Cartridge::step(uint clocks) -> void {
-  Thread::step(clocks);
-  synchronize(cpu);
-}
-
-auto Cartridge::load(Node::Object parent, Node::Object from) -> void {
-  port = Node::append<Node::Port>(parent, from, "Cartridge Slot");
-  port->setFamily(interface->name());
-  port->setType("Cartridge");
-  port->setAllocate([&] {
-    if(Model::SwanCrystal()) return Node::Peripheral::create("WonderSwan Color");
-    return Node::Peripheral::create(interface->name());
-  });
-  port->setAttach([&](auto node) { connect(node); });
-  port->setDetach([&](auto node) { disconnect(); });
-  port->scan(from);
-}
-
-auto Cartridge::unload() -> void {
-  disconnect();
-  port = {};
-}
-
-auto Cartridge::connect(Node::Peripheral with) -> void {
+auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
   string name = interface->name();
   if(Model::SwanCrystal()) name = "WonderSwan Color";
 
-  node = Node::append<Node::Peripheral>(port, with, name);
+  node = parent->append<Node::Peripheral>(name);
+  node->load(with);
   node->setManifest([&] { return information.manifest; });
 
   information = {};
@@ -148,6 +119,19 @@ auto Cartridge::save() -> void {
       }
     }
   }
+}
+
+auto Cartridge::main() -> void {
+  if(rtc.data) {
+    rtcTickSecond();
+    rtcCheckAlarm();
+  }
+  step(3'072'000);
+}
+
+auto Cartridge::step(uint clocks) -> void {
+  Thread::step(clocks);
+  synchronize(cpu);
 }
 
 auto Cartridge::power() -> void {

@@ -3,11 +3,10 @@ HitachiDSP hitachidsp;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto HitachiDSP::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "Hitachi");
-  from = Node::scan(parent = node, from);
+auto HitachiDSP::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("Hitachi");
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto HitachiDSP::unload() -> void {

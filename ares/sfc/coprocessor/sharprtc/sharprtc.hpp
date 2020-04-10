@@ -1,6 +1,6 @@
 struct SharpRTC : Thread {
   Node::RealTimeClock rtc;
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
 
   using Thread::synchronize;
 

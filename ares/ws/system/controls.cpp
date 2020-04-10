@@ -1,35 +1,34 @@
-auto System::Controls::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Object>(parent, from, "Controls");
-  from = Node::scan(parent = node, from);
+auto System::Controls::load(Node::Object parent) -> void {
+  node = parent->append<Node::Object>("Controls");
 
   if(Model::WonderSwan() || Model::WonderSwanColor() || Model::SwanCrystal()) {
-    y1     = Node::append<Node::Button>(parent, from, "Y1");
-    y2     = Node::append<Node::Button>(parent, from, "Y2");
-    y3     = Node::append<Node::Button>(parent, from, "Y3");
-    y4     = Node::append<Node::Button>(parent, from, "Y4");
-    x1     = Node::append<Node::Button>(parent, from, "X1");
-    x2     = Node::append<Node::Button>(parent, from, "X2");
-    x3     = Node::append<Node::Button>(parent, from, "X3");
-    x4     = Node::append<Node::Button>(parent, from, "X4");
-    b      = Node::append<Node::Button>(parent, from, "B");
-    a      = Node::append<Node::Button>(parent, from, "A");
-    start  = Node::append<Node::Button>(parent, from, "Start");
-    volume = Node::append<Node::Button>(parent, from, "Volume");
+    y1     = node->append<Node::Button>("Y1");
+    y2     = node->append<Node::Button>("Y2");
+    y3     = node->append<Node::Button>("Y3");
+    y4     = node->append<Node::Button>("Y4");
+    x1     = node->append<Node::Button>("X1");
+    x2     = node->append<Node::Button>("X2");
+    x3     = node->append<Node::Button>("X3");
+    x4     = node->append<Node::Button>("X4");
+    b      = node->append<Node::Button>("B");
+    a      = node->append<Node::Button>("A");
+    start  = node->append<Node::Button>("Start");
+    volume = node->append<Node::Button>("Volume");
   }
 
   if(Model::PocketChallengeV2()) {
-    up     = Node::append<Node::Button>(parent, from, "Up");
-    down   = Node::append<Node::Button>(parent, from, "Down");
-    left   = Node::append<Node::Button>(parent, from, "Left");
-    right  = Node::append<Node::Button>(parent, from, "Right");
-    pass   = Node::append<Node::Button>(parent, from, "Pass");
-    circle = Node::append<Node::Button>(parent, from, "Circle");
-    clear  = Node::append<Node::Button>(parent, from, "Clear");
-    view   = Node::append<Node::Button>(parent, from, "View");
-    escape = Node::append<Node::Button>(parent, from, "Escape");
+    up     = node->append<Node::Button>("Up");
+    down   = node->append<Node::Button>("Down");
+    left   = node->append<Node::Button>("Left");
+    right  = node->append<Node::Button>("Right");
+    pass   = node->append<Node::Button>("Pass");
+    circle = node->append<Node::Button>("Circle");
+    clear  = node->append<Node::Button>("Clear");
+    view   = node->append<Node::Button>("View");
+    escape = node->append<Node::Button>("Escape");
   }
 
-  power = Node::append<Node::Button>(parent, from, "Power");
+  power = node->append<Node::Button>("Power");
 }
 
 auto System::Controls::poll() -> void {

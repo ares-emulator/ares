@@ -1,17 +1,16 @@
-auto System::Controls::load(Node::Object parent, Node::Object from) -> void {
+auto System::Controls::load(Node::Object parent) -> void {
   if(GameBoy::Model::SuperGameBoy()) return;  //inputs provided by SNES gamepad(s)
 
-  node = Node::append<Node::Object>(parent, from, "Controls");
-  from = Node::scan(parent = node, from);
+  node = parent->append<Node::Object>("Controls");
 
-  up     = Node::append<Node::Button>(parent, from, "Up");
-  down   = Node::append<Node::Button>(parent, from, "Down");
-  left   = Node::append<Node::Button>(parent, from, "Left");
-  right  = Node::append<Node::Button>(parent, from, "Right");
-  b      = Node::append<Node::Button>(parent, from, "B");
-  a      = Node::append<Node::Button>(parent, from, "A");
-  select = Node::append<Node::Button>(parent, from, "Select");
-  start  = Node::append<Node::Button>(parent, from, "Start");
+  up     = node->append<Node::Button>("Up");
+  down   = node->append<Node::Button>("Down");
+  left   = node->append<Node::Button>("Left");
+  right  = node->append<Node::Button>("Right");
+  b      = node->append<Node::Button>("B");
+  a      = node->append<Node::Button>("A");
+  select = node->append<Node::Button>("Select");
+  start  = node->append<Node::Button>("Start");
 }
 
 auto System::Controls::poll() -> void {

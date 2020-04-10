@@ -20,18 +20,16 @@ MCD mcd;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto MCD::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "Mega CD");
-  from = Node::scan(parent = node, from);
+auto MCD::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("Mega CD");
 
-  tray = Node::append<Node::Port>(parent, from, "Disc Tray");
+  tray = parent->append<Node::Port>("Disc Tray");
   tray->setFamily("Mega CD");
   tray->setType("Compact Disc");
   tray->setHotSwappable(true);
   tray->setAllocate([&] { return Node::Peripheral::create("Mega CD"); });
   tray->setAttach([&](auto node) { connect(node); });
   tray->setDetach([&](auto node) { disconnect(); });
-  tray->scan(from);
 
   bios.allocate   (128_KiB >> 1);
   pram.allocate   (512_KiB >> 1);
@@ -45,9 +43,9 @@ auto MCD::load(Node::Object parent, Node::Object from) -> void {
     }
   }
 
-  cdd.load(parent, from);
-  pcm.load(parent, from);
-  debugger.load(parent, from);
+  cdd.load(node);
+  pcm.load(node);
+  debugger.load(node);
 }
 
 auto MCD::unload() -> void {
@@ -76,7 +74,7 @@ auto MCD::unload() -> void {
 auto MCD::connect(Node::Peripheral with) -> void {
   disconnect();
   if(with) {
-    disc = Node::append<Node::Peripheral>(tray, with, "Mega CD");
+    disc = tray->append<Node::Peripheral>("Mega CD");
     disc->setManifest([&] { return information.manifest; });
 
     information = {};

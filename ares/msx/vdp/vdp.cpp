@@ -6,26 +6,23 @@ VDP vdp;
 #include "color.cpp"
 #include "serialization.cpp"
 
-auto VDP::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "VDP");
-  from = Node::scan(parent = node, from);
+auto VDP::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("VDP");
 
   if(Model::MSX()) {
-    screen_ = Node::append<Node::Screen>(parent, from, "Screen");
+    screen_ = node->append<Node::Screen>("Screen");
     screen_->colors(1 << 4, {&VDP::colorMSX, this});
     screen_->setSize(256, 192);
     screen_->setScale(1.0, 1.0);
     screen_->setAspect(1.0, 1.0);
-    from = Node::scan(parent = screen_, from);
   }
 
   if(Model::MSX2()) {
-    screen_ = Node::append<Node::Screen>(parent, from, "Screen");
+    screen_ = node->append<Node::Screen>("Screen");
     screen_->colors(1 << 9, {&VDP::colorMSX2, this});
     screen_->setSize(512, 424);
     screen_->setScale(0.5, 0.5);
     screen_->setAspect(1.0, 1.0);
-    from = Node::scan(parent = screen_, from);
   }
 }
 

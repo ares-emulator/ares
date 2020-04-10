@@ -11,17 +11,17 @@ auto System::run() -> void {
   if(scheduler.enter() == Event::Frame) vdp.refresh();
 }
 
-auto System::load(Node::Object& root, Node::Object from) -> void {
+auto System::load(Node::Object& root) -> void {
   if(node) unload();
 
   information = {};
   if(interface->name() == "MSX" ) information.model = Model::MSX;
   if(interface->name() == "MSX2") information.model = Model::MSX2;
 
-  node = Node::append<Node::System>(nullptr, from, interface->name());
+  node = Node::System::create(interface->name());
   root = node;
 
-  regionNode = Node::append<Node::String>(node, from, "Region", "NTSC → PAL");
+  regionNode = node->append<Node::String>("Region", "NTSC → PAL");
   regionNode->setAllowedValues({
     "NTSC → PAL",
     "PAL → NTSC",
@@ -30,14 +30,14 @@ auto System::load(Node::Object& root, Node::Object from) -> void {
   });
 
   scheduler.reset();
-  keyboard.load(node, from);
-  cpu.load(node, from);
-  vdp.load(node, from);
-  psg.load(node, from);
-  cartridge.load(node, from);
-  expansion.load(node, from);
-  controllerPort1.load(node, from);
-  controllerPort2.load(node, from);
+  keyboard.load(node);
+  cpu.load(node);
+  vdp.load(node);
+  psg.load(node);
+  cartridgeSlot.load(node);
+  expansionSlot.load(node);
+  controllerPort1.load(node);
+  controllerPort2.load(node);
 }
 
 auto System::save() -> void {
@@ -52,8 +52,8 @@ auto System::unload() -> void {
   cpu.unload();
   vdp.unload();
   psg.unload();
-  cartridge.unload();
-  expansion.unload();
+  cartridgeSlot.unload();
+  expansionSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
   node = {};

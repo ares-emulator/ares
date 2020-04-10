@@ -12,15 +12,14 @@ namespace ares::GameBoy {
 #include "serialization.cpp"
 CPU cpu;
 
-auto CPU::load(Node::Object parent, Node::Object from) -> void {
+auto CPU::load(Node::Object parent) -> void {
   wram.allocate(!Model::GameBoyColor() ? 8_KiB : 32_KiB);
   hram.allocate(128);
 
-  node = Node::append<Node::Component>(parent, from, "CPU");
-  from = Node::scan(parent = node, from);
+  node = parent->append<Node::Component>("CPU");
 
   if(Model::GameBoy()) {
-    version = Node::append<Node::String>(parent, from, "Version", "DMG-CPU B");
+    version = node->append<Node::String>("Version", "DMG-CPU B");
     version->setAllowedValues({
       "DMG-CPU",
       "DMG-CPU A",
@@ -31,7 +30,7 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
   }
 
   if(Model::SuperGameBoy()) {
-    version = Node::append<Node::String>(parent, from, "Version", "SGB-CPU 01");
+    version = node->append<Node::String>("Version", "SGB-CPU 01");
     version->setAllowedValues({
       "SGB-CPU 01",
       "CPU SGB2"
@@ -39,7 +38,7 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
   }
 
   if(Model::GameBoyColor()) {
-    version = Node::append<Node::String>(parent, from, "Version", "CPU CGB");
+    version = node->append<Node::String>("Version", "CPU CGB");
     version->setAllowedValues({
       "CPU CGB",
       "CPU CGB A",
@@ -50,7 +49,7 @@ auto CPU::load(Node::Object parent, Node::Object from) -> void {
     });
   }
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto CPU::unload() -> void {

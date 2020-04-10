@@ -138,10 +138,7 @@ auto Emulator::load(const string& location, const vector<uint8_t>& image) -> boo
 
   latch = {};
 
-  auto system = ares::Node::System::create();
-  system->setName(interface->name());
-  auto configuration = ares::Node::serialize(system);
-  interface->load(root, configuration);
+  interface->load(root);
 
   setBoolean("Color Bleed", settings.video.colorBleed);
   setBoolean("Color Emulation", settings.video.colorEmulation);

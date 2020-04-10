@@ -14,7 +14,7 @@ struct PCD : Thread {
   auto name() const -> string { return information.name; }
 
   //pcd.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto save() -> void;
   auto unload() -> void;
   auto connect(Node::Peripheral) -> void;

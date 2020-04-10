@@ -7,7 +7,8 @@ Expansion& expansion = expansionPort.expansion;
 #include "serialization.cpp"
 
 auto Expansion::connect(Node::Port parent, Node::Peripheral with) -> void {
-  node = Node::append<Node::Peripheral>(parent, with, interface->name());
+  node = parent->append<Node::Peripheral>(interface->name());
+  node->load(with);
   node->setManifest([&] { return information.manifest; });
 
   information = {};
@@ -20,7 +21,7 @@ auto Expansion::connect(Node::Port parent, Node::Peripheral with) -> void {
   information.name = document["game/label"].text();
   information.regions = document["game/region"].text().split(",").strip();
 
-  mcd.load(node, with);
+  mcd.load(node);
 
   power();
 }

@@ -1,5 +1,5 @@
-auto MCD::Debugger::load(Node::Object parent, Node::Object from) -> void {
-  memory.pram = Node::append<Node::Memory>(parent, from, "Mega CD PRAM");
+auto MCD::Debugger::load(Node::Object parent) -> void {
+  memory.pram = parent->append<Node::Memory>("Mega CD PRAM");
   memory.pram->setSize(256_KiB << 1);
   memory.pram->setRead([&](uint32 address) -> uint8 {
     return mcd.pram[address >> 1].byte(!address.bit(0));
@@ -8,7 +8,7 @@ auto MCD::Debugger::load(Node::Object parent, Node::Object from) -> void {
     mcd.pram[address >> 1].byte(!address.bit(0)) = data;
   });
 
-  memory.wram = Node::append<Node::Memory>(parent, from, "Mega CD WRAM");
+  memory.wram = parent->append<Node::Memory>("Mega CD WRAM");
   memory.wram->setSize(128_KiB << 1);
   memory.wram->setRead([&](uint32 address) -> uint8 {
     return mcd.wram[address >> 1].byte(!address.bit(0));
@@ -17,7 +17,7 @@ auto MCD::Debugger::load(Node::Object parent, Node::Object from) -> void {
     mcd.wram[address >> 1].byte(!address.bit(0)) = data;
   });
 
-  memory.bram = Node::append<Node::Memory>(parent, from, "Mega CD BRAM");
+  memory.bram = parent->append<Node::Memory>("Mega CD BRAM");
   memory.bram->setSize(8_KiB);
   memory.bram->setRead([&](uint32 address) -> uint8 {
     return mcd.bram[address];
@@ -26,10 +26,10 @@ auto MCD::Debugger::load(Node::Object parent, Node::Object from) -> void {
     mcd.bram[address] = data;
   });
 
-  tracer.instruction = Node::append<Node::Instruction>(parent, from, "Instruction", "MCD");
+  tracer.instruction = parent->append<Node::Instruction>("Instruction", "MCD");
   tracer.instruction->setAddressBits(24);
 
-  tracer.interrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "MCD");
+  tracer.interrupt = parent->append<Node::Notification>("Interrupt", "MCD");
 }
 
 auto MCD::Debugger::instruction() -> void {

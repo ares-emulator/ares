@@ -5,11 +5,10 @@ namespace ares::MasterSystem {
 OPLL opll;
 #include "serialization.cpp"
 
-auto OPLL::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "OPLL");
-  from = Node::scan(parent = node, from);
+auto OPLL::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("OPLL");
 
-  stream = Node::append<Node::Stream>(parent, from, "Stream");
+  stream = node->append<Node::Stream>("Stream");
   stream->setChannels(1);
   stream->setFrequency(system.colorburst() / 72.0);
   stream->addHighPassFilter(20.0, 1);

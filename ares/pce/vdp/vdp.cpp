@@ -17,26 +17,24 @@ VDP vdp;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto VDP::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "VDP");
-  from = Node::scan(parent = node, from);
+auto VDP::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("VDP");
 
-  screen = Node::append<Node::Screen>(parent, from, "Screen");
+  screen = node->append<Node::Screen>("Screen");
   screen->colors(1 << 10, {&VDP::color, this});
   screen->setSize(1088, 239);
   screen->setScale(0.25, 1.0);
   screen->setAspect(8.0, 7.0);
-  from = Node::scan(parent = screen, from);
 
-  overscan = Node::append<Node::Boolean>(parent, from, "Overscan", true, [&](auto value) {
+  overscan = screen->append<Node::Boolean>("Overscan", true, [&](auto value) {
     if(value == 0) screen->setSize(1024, 239);
     if(value == 1) screen->setSize(1088, 239);
   });
   overscan->setDynamic(true);
 
-  vce.debugger.load(vce, parent, from);
-  vdc0.debugger.load(vdc0, parent, from); if(Model::SuperGrafx())
-  vdc1.debugger.load(vdc1, parent, from);
+  vce.debugger.load(vce, node);
+  vdc0.debugger.load(vdc0, node); if(Model::SuperGrafx())
+  vdc1.debugger.load(vdc1, node);
 }
 
 auto VDP::unload() -> void {

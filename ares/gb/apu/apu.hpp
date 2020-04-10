@@ -3,7 +3,7 @@ struct APU : Thread {
   Node::Stream stream;
 
   //apu.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

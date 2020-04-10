@@ -14,17 +14,17 @@ auto System::run() -> void {
   }
 }
 
-auto System::load(Node::Object& root, Node::Object from) -> void {
+auto System::load(Node::Object& root) -> void {
   if(node) unload();
 
   information = {};
   if(interface->name() == "Master System") information.model = Model::MasterSystem;
   if(interface->name() == "Game Gear"    ) information.model = Model::GameGear;
 
-  node = Node::append<Node::System>(nullptr, from, interface->name());
+  node = Node::System::create(interface->name());
   root = node;
 
-  regionNode = Node::append<Node::String>(node, from, "Region", "NTSC → PAL");
+  regionNode = node->append<Node::String>("Region", "NTSC → PAL");
   regionNode->setAllowedValues({
     "NTSC → PAL",
     "PAL → NTSC",
@@ -33,15 +33,15 @@ auto System::load(Node::Object& root, Node::Object from) -> void {
   });
 
   scheduler.reset();
-  controls.load(node, from);
-  cpu.load(node, from);
-  vdp.load(node, from);
-  psg.load(node, from);
-  opll.load(node, from);
-  cartridge.load(node, from);
+  controls.load(node);
+  cpu.load(node);
+  vdp.load(node);
+  psg.load(node);
+  opll.load(node);
+  cartridgeSlot.load(node);
   if(!MasterSystem::Model::GameGear()) {
-    controllerPort1.load(node, from);
-    controllerPort2.load(node, from);
+    controllerPort1.load(node);
+    controllerPort2.load(node);
   }
 }
 
@@ -57,7 +57,7 @@ auto System::unload() -> void {
   vdp.unload();
   psg.unload();
   opll.unload();
-  cartridge.unload();
+  cartridgeSlot.unload();
   if(!MasterSystem::Model::GameGear()) {
     controllerPort1.unload();
     controllerPort2.unload();

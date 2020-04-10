@@ -8,6 +8,7 @@ struct AudioPulseAudioSimple : AudioDriver {
 
   auto create() -> bool override {
     super.setBlocking(true);
+    super.setChannels(2);
     super.setFrequency(48000);
     return initialize();
   }

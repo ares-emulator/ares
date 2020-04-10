@@ -7,11 +7,10 @@ SuperFX superfx;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto SuperFX::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "SuperFX");
-  from = Node::scan(parent = node, from);
+auto SuperFX::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("SuperFX");
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto SuperFX::unload() -> void {

@@ -7,14 +7,13 @@ CPU cpu;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto CPU::load(Node::Object parent, Node::Object from) -> void {
+auto CPU::load(Node::Object parent) -> void {
   if(Model::SG1000()) ram.allocate(1_KiB);
   if(Model::SC3000()) ram.allocate(2_KiB);
 
-  node = Node::append<Node::Component>(parent, from, "CPU");
-  from = Node::scan(parent = node, from);
+  node = parent->append<Node::Component>("CPU");
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto CPU::unload() -> void {

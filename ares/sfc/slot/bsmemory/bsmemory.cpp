@@ -1,46 +1,10 @@
-BSMemory bsmemory;
+BSMemoryCartridge& bsmemory = bsmemorySlot.cartridge;
+#include "slot.cpp"
 #include "serialization.cpp"
 
-auto BSMemory::load(Node::Peripheral parent, Node::Peripheral from) -> void {
-  port = Node::append<Node::Port>(parent, from, "Cartridge Slot");
-  port->setFamily("BS Memory");
-  port->setType("Cartridge");
-  port->setAllocate([&] { return Node::Peripheral::create("BS Memory"); });
-  port->setAttach([&](auto node) { connect(node); });
-  port->setDetach([&](auto node) { disconnect(); });
-  port->scan(from);
-}
-
-auto BSMemory::unload() -> void {
-  disconnect();
-  port = {};
-}
-
-BSMemory::BSMemory() {
-  page.self = this;
-  uint blockID = 0;
-  for(auto& block : blocks) block.self = this, block.id = blockID++;
-  block.self = this;
-}
-
-auto BSMemory::main() -> void {
-  for(uint6 id : range(block.count())) {
-    if(block(id).erasing) return block(id).erase();
-    block(id).status.ready = 1;
-  }
-
-  compatible.status.ready = 1;
-  global.status.ready = 1;
-  Thread::step(10'000);  //10 milliseconds
-}
-
-auto BSMemory::step(uint clocks) -> void {
-  Thread::step(clocks);
-  Thread::synchronize(cpu);
-}
-
-auto BSMemory::connect(Node::Peripheral with) -> void {
-  node = Node::append<Node::Peripheral>(port, with, "BS Memory");
+auto BSMemoryCartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
+  node = parent->append<Node::Peripheral>("BS Memory");
+  node->load(with);
   node->setManifest([&] { return information.manifest; });
 
   if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {
@@ -109,7 +73,7 @@ auto BSMemory::connect(Node::Peripheral with) -> void {
   power();
 }
 
-auto BSMemory::disconnect() -> void {
+auto BSMemoryCartridge::disconnect() -> void {
   if(!node) return;
 
   if(!ROM) {
@@ -135,10 +99,33 @@ auto BSMemory::disconnect() -> void {
   node = {};
 }
 
-auto BSMemory::power() -> void {
+BSMemoryCartridge::BSMemoryCartridge() {
+  page.self = this;
+  uint blockID = 0;
+  for(auto& block : blocks) block.self = this, block.id = blockID++;
+  block.self = this;
+}
+
+auto BSMemoryCartridge::main() -> void {
+  for(uint6 id : range(block.count())) {
+    if(block(id).erasing) return block(id).erase();
+    block(id).status.ready = 1;
+  }
+
+  compatible.status.ready = 1;
+  global.status.ready = 1;
+  Thread::step(10'000);  //10 milliseconds
+}
+
+auto BSMemoryCartridge::step(uint clocks) -> void {
+  Thread::step(clocks);
+  Thread::synchronize(cpu);
+}
+
+auto BSMemoryCartridge::power() -> void {
   if(ROM) return;
 
-  Thread::create(1'000'000, {&BSMemory::main, this});  //microseconds
+  Thread::create(1'000'000, {&BSMemoryCartridge::main, this});  //microseconds
   cpu.coprocessors.append(this);
 
   for(auto& block : blocks) {
@@ -152,7 +139,7 @@ auto BSMemory::power() -> void {
   queue.flush();
 }
 
-auto BSMemory::save() -> void {
+auto BSMemoryCartridge::save() -> void {
   if(!node) return;
   auto document = BML::unserialize(information.manifest);
 
@@ -163,7 +150,7 @@ auto BSMemory::save() -> void {
   }
 }
 
-auto BSMemory::read(uint24 address, uint8 data) -> uint8 {
+auto BSMemoryCartridge::read(uint24 address, uint8 data) -> uint8 {
   if(!memory) return data;
   if(ROM) return memory.read(bus.mirror(address, size()));
 
@@ -191,7 +178,7 @@ auto BSMemory::read(uint24 address, uint8 data) -> uint8 {
   return block(address >> block.bits()).read(address);  //Mode::Flash
 }
 
-auto BSMemory::write(uint24 address, uint8 data) -> void {
+auto BSMemoryCartridge::write(uint24 address, uint8 data) -> void {
   if(!memory || ROM) return;
   queue.push(address, data);
 
@@ -427,7 +414,7 @@ auto BSMemory::write(uint24 address, uint8 data) -> void {
 
 //
 
-auto BSMemory::failed() -> void {
+auto BSMemoryCartridge::failed() -> void {
   compatible.status.writeFailed = 1;  //datasheet specifies these are for write/erase failures
   compatible.status.eraseFailed = 1;  //yet all errors seem to set both of these bits ...
   global.status.failed = 1;
@@ -435,32 +422,32 @@ auto BSMemory::failed() -> void {
 
 //
 
-auto BSMemory::Page::swap() -> void {
+auto BSMemoryCartridge::Page::swap() -> void {
   self->global.status.page ^= 1;
 }
 
-auto BSMemory::Page::read(uint8 address) -> uint8 {
+auto BSMemoryCartridge::Page::read(uint8 address) -> uint8 {
   return buffer[self->global.status.page][address];
 }
 
-auto BSMemory::Page::write(uint8 address, uint8 data) -> void {
+auto BSMemoryCartridge::Page::write(uint8 address, uint8 data) -> void {
   buffer[self->global.status.page][address] = data;
 }
 
 //
 
-inline auto BSMemory::BlockInformation::bits() const -> uint { return 16; }
-inline auto BSMemory::BlockInformation::bytes() const -> uint { return 1 << bits(); }
-inline auto BSMemory::BlockInformation::count() const -> uint { return self->size() >> bits(); }
+inline auto BSMemoryCartridge::BlockInformation::bits() const -> uint { return 16; }
+inline auto BSMemoryCartridge::BlockInformation::bytes() const -> uint { return 1 << bits(); }
+inline auto BSMemoryCartridge::BlockInformation::count() const -> uint { return self->size() >> bits(); }
 
 //
 
-auto BSMemory::Block::read(uint24 address) -> uint8 {
+auto BSMemoryCartridge::Block::read(uint24 address) -> uint8 {
   address &= bytes() - 1;
   return self->memory.read(id << bits() | address);
 }
 
-auto BSMemory::Block::write(uint24 address, uint8 data) -> void {
+auto BSMemoryCartridge::Block::write(uint24 address, uint8 data) -> void {
   if(!self->writable() && status.locked) {
     status.failed = 1;
     return self->failed();
@@ -472,7 +459,7 @@ auto BSMemory::Block::write(uint24 address, uint8 data) -> void {
   self->memory.write(id << bits() | address, data);
 }
 
-auto BSMemory::Block::erase() -> void {
+auto BSMemoryCartridge::Block::erase() -> void {
   if(cpu.active()) {
     //erase command runs even if the block is not currently writable
     erasing = 1;
@@ -499,7 +486,7 @@ auto BSMemory::Block::erase() -> void {
   status.locked = 0;
 }
 
-auto BSMemory::Block::lock() -> void {
+auto BSMemoryCartridge::Block::lock() -> void {
   if(!self->writable()) {
     //produces a failure result even if the page was already locked
     status.failed = 1;
@@ -512,19 +499,19 @@ auto BSMemory::Block::lock() -> void {
 
 //at reset, the locked status bit is set
 //this command refreshes the true locked status bit from the device
-auto BSMemory::Block::update() -> void {
+auto BSMemoryCartridge::Block::update() -> void {
   status.locked = locked;
 }
 
 //
 
-auto BSMemory::Blocks::operator()(uint6 id) -> Block& {
+auto BSMemoryCartridge::Blocks::operator()(uint6 id) -> Block& {
   return self->blocks[id & count() - 1];
 }
 
 //
 
-auto BSMemory::Block::Status::operator()() -> uint8 {
+auto BSMemoryCartridge::Block::Status::operator()() -> uint8 {
   return (  //d0-d1 are reserved; always return zero
     vppLow    << 2
   | queueFull << 3
@@ -537,7 +524,7 @@ auto BSMemory::Block::Status::operator()() -> uint8 {
 
 //
 
-auto BSMemory::Compatible::Status::operator()() -> uint8 {
+auto BSMemoryCartridge::Compatible::Status::operator()() -> uint8 {
   return (  //d0-d2 are reserved; always return zero
     vppLow         << 3
   | writeFailed    << 4
@@ -549,7 +536,7 @@ auto BSMemory::Compatible::Status::operator()() -> uint8 {
 
 //
 
-auto BSMemory::Global::Status::operator()() -> uint8 {
+auto BSMemoryCartridge::Global::Status::operator()() -> uint8 {
   return (
     page          << 0
   | pageReady     << 1
@@ -564,28 +551,28 @@ auto BSMemory::Global::Status::operator()() -> uint8 {
 
 //
 
-auto BSMemory::Queue::flush() -> void {
+auto BSMemoryCartridge::Queue::flush() -> void {
   history[0] = {};
   history[1] = {};
   history[2] = {};
   history[3] = {};
 }
 
-auto BSMemory::Queue::pop() -> void {
+auto BSMemoryCartridge::Queue::pop() -> void {
   if(history[3].valid) { history[3] = {}; return; }
   if(history[2].valid) { history[2] = {}; return; }
   if(history[1].valid) { history[1] = {}; return; }
   if(history[0].valid) { history[0] = {}; return; }
 }
 
-auto BSMemory::Queue::push(uint24 address, uint8 data) -> void {
+auto BSMemoryCartridge::Queue::push(uint24 address, uint8 data) -> void {
   if(!history[0].valid) { history[0] = {true, address, data}; return; }
   if(!history[1].valid) { history[1] = {true, address, data}; return; }
   if(!history[2].valid) { history[2] = {true, address, data}; return; }
   if(!history[3].valid) { history[3] = {true, address, data}; return; }
 }
 
-auto BSMemory::Queue::size() -> uint {
+auto BSMemoryCartridge::Queue::size() -> uint {
   if(history[3].valid) return 4;
   if(history[2].valid) return 3;
   if(history[1].valid) return 2;
@@ -593,12 +580,12 @@ auto BSMemory::Queue::size() -> uint {
   return 0;
 }
 
-auto BSMemory::Queue::address(uint index) -> uint24 {
+auto BSMemoryCartridge::Queue::address(uint index) -> uint24 {
   if(index > 3 || !history[index].valid) return 0;
   return history[index].address;
 }
 
-auto BSMemory::Queue::data(uint index) -> uint8 {
+auto BSMemoryCartridge::Queue::data(uint index) -> uint8 {
   if(index > 3 || !history[index].valid) return 0;
   return history[index].data;
 }

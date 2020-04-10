@@ -9,7 +9,7 @@ struct CPU : TLCS900H, Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
 
@@ -35,7 +35,7 @@ struct CPU : TLCS900H, Thread {
   }
 
   //cpu.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto save() -> void;
   auto unload() -> void;
 

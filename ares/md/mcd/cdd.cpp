@@ -1,8 +1,8 @@
 //NEC uPD75006 (G-631)
 //4-bit MCU HLE
 
-auto MCD::CDD::load(Node::Object parent, Node::Object from) -> void {
-  dac.load(parent, from);
+auto MCD::CDD::load(Node::Object parent) -> void {
+  dac.load(parent);
 }
 
 auto MCD::CDD::unload() -> void {

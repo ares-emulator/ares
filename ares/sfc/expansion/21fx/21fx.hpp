@@ -1,7 +1,7 @@
 struct S21FX : Expansion {
   Node::Peripheral node;
 
-  S21FX(Node::Port, Node::Peripheral);
+  S21FX(Node::Port);
   ~S21FX();
 
   auto step(uint clocks) -> void;

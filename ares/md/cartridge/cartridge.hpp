@@ -2,7 +2,6 @@ struct Cartridge;
 #include "board/board.hpp"
 
 struct Cartridge {
-  Node::Peripheral with;  //todo
   Node::Peripheral node;
 
   auto manifest() const -> string { return information.manifest; }

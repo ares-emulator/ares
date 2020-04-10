@@ -11,25 +11,25 @@ auto System::run() -> void {
   if(scheduler.enter() == Event::Frame) vpu.refresh();
 }
 
-auto System::load(Node::Object& root, Node::Object from) -> void {
+auto System::load(Node::Object& root) -> void {
   if(node) unload();
 
   information = {};
   if(interface->name() == "Neo Geo Pocket"      ) information.model = Model::NeoGeoPocket;
   if(interface->name() == "Neo Geo Pocket Color") information.model = Model::NeoGeoPocketColor;
 
-  node = Node::append<Node::System>(nullptr, from, interface->name());
+  node = Node::System::create(interface->name());
   root = node;
 
-  fastBoot = Node::append<Node::Boolean>(node, from, "Fast Boot", false);
+  fastBoot = node->append<Node::Boolean>("Fast Boot", false);
 
   scheduler.reset();
-  controls.load(node, from);
-  cpu.load(node, from);
-  apu.load(node, from);
-  vpu.load(node, from);
-  psg.load(node, from);
-  cartridge.load(node, from);
+  controls.load(node);
+  cpu.load(node);
+  apu.load(node);
+  vpu.load(node);
+  psg.load(node);
+  cartridgeSlot.load(node);
 }
 
 auto System::save() -> void {
@@ -46,7 +46,7 @@ auto System::unload() -> void {
   apu.unload();
   vpu.unload();
   psg.unload();
-  cartridge.unload();
+  cartridgeSlot.unload();
   node = {};
 }
 

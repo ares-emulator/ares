@@ -1,14 +1,11 @@
 struct Cartridge : Thread {
-  Node::Port port;
   Node::Peripheral node;
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
 
   //cartridge.cpp
-  auto load(Node::Object, Node::Object) -> void;
-  auto unload() -> void;
-  auto connect(Node::Peripheral) -> void;
+  auto connect(Node::Port, Node::Peripheral) -> void;
   auto disconnect() -> void;
   auto save() -> void;
 
@@ -37,7 +34,7 @@ struct Cartridge : Thread {
 
 private:
   struct Mapper {
-    virtual auto load(Node::Object, Node::Object) -> void {}
+    virtual auto load(Node::Object) -> void {}
     virtual auto unload() -> void {}
     virtual auto load(Markup::Node document) -> void {}
     virtual auto save(Markup::Node document) -> void {}
@@ -66,4 +63,5 @@ private:
   #include "tama/tama.hpp"
 };
 
-extern Cartridge cartridge;
+#include "slot.hpp"
+extern Cartridge& cartridge;

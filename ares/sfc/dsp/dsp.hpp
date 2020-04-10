@@ -6,7 +6,7 @@ struct DSP : Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
 
     struct Memory {
       Node::Memory ram;
@@ -19,7 +19,7 @@ struct DSP : Thread {
   auto mute() const -> bool { return master.mute; }
 
   //dsp.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

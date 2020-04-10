@@ -3,7 +3,7 @@ struct Keyboard {
   Node::Peripheral layout;
 
   //keyboard.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto connect(Node::Peripheral) -> void;
   auto disconnect() -> void;
 

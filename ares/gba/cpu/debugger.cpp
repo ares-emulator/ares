@@ -1,5 +1,5 @@
-auto CPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
-  memory.iwram = Node::append<Node::Memory>(parent, from, "CPU IWRAM");
+auto CPU::Debugger::load(Node::Object parent) -> void {
+  memory.iwram = parent->append<Node::Memory>("CPU IWRAM");
   memory.iwram->setSize(cpu.iwram.size());
   memory.iwram->setRead([&](uint32 address) -> uint8 {
     return cpu.iwram[address];
@@ -8,7 +8,7 @@ auto CPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     cpu.iwram[address] = data;
   });
 
-  memory.ewram = Node::append<Node::Memory>(parent, from, "CPU EWRAM");
+  memory.ewram = parent->append<Node::Memory>("CPU EWRAM");
   memory.ewram->setSize(cpu.ewram.size());
   memory.ewram->setRead([&](uint32 address) -> uint8 {
     return cpu.ewram[address];
@@ -17,10 +17,10 @@ auto CPU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     cpu.ewram[address] = data;
   });
 
-  tracer.instruction = Node::append<Node::Instruction>(parent, from, "Instruction", "CPU");
+  tracer.instruction = parent->append<Node::Instruction>("Instruction", "CPU");
   tracer.instruction->setAddressBits(32);
 
-  tracer.interrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "CPU");
+  tracer.interrupt = parent->append<Node::Notification>("Interrupt", "CPU");
 }
 
 auto CPU::Debugger::instruction() -> void {

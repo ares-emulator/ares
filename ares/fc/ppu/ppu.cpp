@@ -33,7 +33,7 @@ auto PPU::load(Node::Object parent) -> void {
   });
   colorEmulation->setDynamic(true);
 
-  debugger.load(parent);
+  debugger.load(node);
 }
 
 auto PPU::unload() -> void {

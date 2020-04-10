@@ -3,11 +3,10 @@ NECDSP necdsp;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto NECDSP::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "NEC");
-  from = Node::scan(parent = node, from);
+auto NECDSP::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("NEC");
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto NECDSP::unload() -> void {

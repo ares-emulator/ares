@@ -6,6 +6,7 @@ struct AudioPulseAudio : AudioDriver {
   ~AudioPulseAudio() { terminate(); }
 
   auto create() -> bool override {
+    super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(40);
     return initialize();

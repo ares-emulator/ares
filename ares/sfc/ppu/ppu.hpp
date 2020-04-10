@@ -13,7 +13,7 @@ struct PPU : Thread, PPUcounter {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto registers() -> string;
 
     struct Memory {
@@ -39,7 +39,7 @@ struct PPU : Thread, PPUcounter {
   auto vdisp() const -> uint { return self.vdisp; }
 
   //ppu.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto map() -> void;

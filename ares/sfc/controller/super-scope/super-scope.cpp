@@ -11,16 +11,17 @@
 //Note that no commercial game ever utilizes a Super Scope in port 1.
 
 SuperScope::SuperScope(Node::Port parent, Node::Peripheral with) {
-  node = Node::append<Node::Peripheral>(parent, with, "Super Scope");
+  node = parent->append<Node::Peripheral>("Super Scope");
+  node->load(with);
 
-  x       = Node::append<Node::Axis  >(node, with, "X");
-  y       = Node::append<Node::Axis  >(node, with, "Y");
-  trigger = Node::append<Node::Button>(node, with, "Trigger");
-  cursor  = Node::append<Node::Button>(node, with, "Cursor");
-  turbo   = Node::append<Node::Button>(node, with, "Turbo");
-  pause   = Node::append<Node::Button>(node, with, "Pause");
+  x       = node->append<Node::Axis  >("X");
+  y       = node->append<Node::Axis  >("Y");
+  trigger = node->append<Node::Button>("Trigger");
+  cursor  = node->append<Node::Button>("Cursor");
+  turbo   = node->append<Node::Button>("Turbo");
+  pause   = node->append<Node::Button>("Pause");
 
-  sprite = Node::append<Node::Sprite>(node, with, "Crosshair");
+  sprite = node->append<Node::Sprite>("Crosshair");
   sprite->setImage(Resource::Sprite::SuperFamicom::CrosshairGreen);
   ppu.screen->attach(sprite);
 

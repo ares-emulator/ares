@@ -2,9 +2,10 @@ struct ControllerPort {
   Node::Port port;
 
   //port.cpp
-  ControllerPort(string_view name);
-  auto load(Node::Object, Node::Object) -> void;
+  ControllerPort(string name);
+  auto load(Node::Object) -> void;
   auto unload() -> void;
+  auto connected() const -> bool;
   auto connect(Node::Peripheral) -> void;
   auto disconnect() -> void;
 

@@ -1,20 +1,19 @@
-auto System::Controls::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Object>(parent, from, "Controls");
-  from = Node::scan(parent = node, from);
+auto System::Controls::load(Node::Object parent) -> void {
+  node = parent->append<Node::Object>("Controls");
 
   if(MasterSystem::Model::MasterSystem()) {
-    pause = Node::append<Node::Button>(parent, from, "Pause");
-    reset = Node::append<Node::Button>(parent, from, "Reset");
+    pause = node->append<Node::Button>("Pause");
+    reset = node->append<Node::Button>("Reset");
   }
 
   if(MasterSystem::Model::GameGear()) {
-    up    = Node::append<Node::Button>(parent, from, "Up");
-    down  = Node::append<Node::Button>(parent, from, "Down");
-    left  = Node::append<Node::Button>(parent, from, "Left");
-    right = Node::append<Node::Button>(parent, from, "Right");
-    one   = Node::append<Node::Button>(parent, from, "1");
-    two   = Node::append<Node::Button>(parent, from, "2");
-    start = Node::append<Node::Button>(parent, from, "Start");
+    up    = node->append<Node::Button>("Up");
+    down  = node->append<Node::Button>("Down");
+    left  = node->append<Node::Button>("Left");
+    right = node->append<Node::Button>("Right");
+    one   = node->append<Node::Button>("1");
+    two   = node->append<Node::Button>("2");
+    start = node->append<Node::Button>("Start");
   }
 }
 

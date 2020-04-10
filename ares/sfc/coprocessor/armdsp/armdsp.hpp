@@ -10,7 +10,7 @@ struct ARMDSP : ARM7TDMI, Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto instruction() -> void;
 
     struct Tracer {
@@ -19,7 +19,7 @@ struct ARMDSP : ARM7TDMI, Thread {
   } debugger;
 
   //armdsp.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto boot() -> void;

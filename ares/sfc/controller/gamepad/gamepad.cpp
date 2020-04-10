@@ -1,18 +1,19 @@
 Gamepad::Gamepad(Node::Port parent, Node::Peripheral with) {
-  node = Node::append<Node::Peripheral>(parent, with, "Gamepad");
+  node = parent->append<Node::Peripheral>("Gamepad");
+  node->load(with);
 
-  up     = Node::append<Node::Button>(node, with, "Up");
-  down   = Node::append<Node::Button>(node, with, "Down");
-  left   = Node::append<Node::Button>(node, with, "Left");
-  right  = Node::append<Node::Button>(node, with, "Right");
-  b      = Node::append<Node::Button>(node, with, "B");
-  a      = Node::append<Node::Button>(node, with, "A");
-  y      = Node::append<Node::Button>(node, with, "Y");
-  x      = Node::append<Node::Button>(node, with, "X");
-  l      = Node::append<Node::Button>(node, with, "L");
-  r      = Node::append<Node::Button>(node, with, "R");
-  select = Node::append<Node::Button>(node, with, "Select");
-  start  = Node::append<Node::Button>(node, with, "Start");
+  up     = node->append<Node::Button>("Up");
+  down   = node->append<Node::Button>("Down");
+  left   = node->append<Node::Button>("Left");
+  right  = node->append<Node::Button>("Right");
+  b      = node->append<Node::Button>("B");
+  a      = node->append<Node::Button>("A");
+  y      = node->append<Node::Button>("Y");
+  x      = node->append<Node::Button>("X");
+  l      = node->append<Node::Button>("L");
+  r      = node->append<Node::Button>("R");
+  select = node->append<Node::Button>("Select");
+  start  = node->append<Node::Button>("Start");
 }
 
 auto Gamepad::data() -> uint2 {

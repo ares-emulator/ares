@@ -6,7 +6,7 @@ struct CPU : HuC6280, Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
 
@@ -21,7 +21,7 @@ struct CPU : HuC6280, Thread {
   } debugger;
 
   //cpu.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

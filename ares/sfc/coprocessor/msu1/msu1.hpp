@@ -3,7 +3,7 @@ struct MSU1 : Thread {
   Shared::File dataFile;
   Shared::File audioFile;
 
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

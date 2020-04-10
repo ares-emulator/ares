@@ -1,14 +1,15 @@
 Gamepad::Gamepad(Node::Port parent, Node::Peripheral with) {
-  node = Node::append<Node::Peripheral>(parent, with, "Gamepad");
+  node = parent->append<Node::Peripheral>("Gamepad");
+  node->load(with);
 
-  up     = Node::append<Node::Button>(node, with, "Up");
-  down   = Node::append<Node::Button>(node, with, "Down");
-  left   = Node::append<Node::Button>(node, with, "Left");
-  right  = Node::append<Node::Button>(node, with, "Right");
-  two    = Node::append<Node::Button>(node, with, "II");
-  one    = Node::append<Node::Button>(node, with, "I");
-  select = Node::append<Node::Button>(node, with, "Select");
-  run    = Node::append<Node::Button>(node, with, "Run");
+  up     = node->append<Node::Button>("Up");
+  down   = node->append<Node::Button>("Down");
+  left   = node->append<Node::Button>("Left");
+  right  = node->append<Node::Button>("Right");
+  two    = node->append<Node::Button>("II");
+  one    = node->append<Node::Button>("I");
+  select = node->append<Node::Button>("Select");
+  run    = node->append<Node::Button>("Run");
 }
 
 auto Gamepad::read() -> uint4 {

@@ -8,11 +8,10 @@ CPU cpu;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto CPU::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "CPU");
-  from = Node::scan(parent = node, from);
+auto CPU::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("CPU");
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto CPU::unload() -> void {

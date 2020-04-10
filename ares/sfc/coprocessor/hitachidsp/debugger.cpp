@@ -1,5 +1,5 @@
-auto HitachiDSP::Debugger::load(Node::Object parent, Node::Object from) -> void {
-  tracer.instruction = Node::append<Node::Instruction>(parent, from, "Instruction", "HIT");
+auto HitachiDSP::Debugger::load(Node::Object parent) -> void {
+  tracer.instruction = parent->append<Node::Instruction>("Instruction", "HIT");
   tracer.instruction->setAddressBits(23);
 }
 

@@ -15,7 +15,7 @@ struct KonamiVRC7 : Interface {
     Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
     Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
 
-    stream = Node::append<Node::Stream>(cartridge.node, {}, "Stream");
+    stream = cartridge.node->append<Node::Stream>("Stream");
     stream->setChannels(1);
     stream->setFrequency(uint(system.frequency() + 0.5) / cartridge.rate() / 36);
     stream->addLowPassFilter(2280.0, 1);

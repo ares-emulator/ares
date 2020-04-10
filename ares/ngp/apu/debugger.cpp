@@ -1,5 +1,5 @@
-auto APU::Debugger::load(Node::Object parent, Node::Object from) -> void {
-  memory.ram = Node::append<Node::Memory>(parent, from, "APU RAM");
+auto APU::Debugger::load(Node::Object parent) -> void {
+  memory.ram = parent->append<Node::Memory>("APU RAM");
   memory.ram->setSize(apu.ram.size());
   memory.ram->setRead([&](uint32 address) -> uint8 {
     return apu.ram[address];
@@ -8,10 +8,10 @@ auto APU::Debugger::load(Node::Object parent, Node::Object from) -> void {
     apu.ram[address] = data;
   });
 
-  tracer.instruction = Node::append<Node::Instruction>(parent, from, "Instruction", "APU");
+  tracer.instruction = parent->append<Node::Instruction>("Instruction", "APU");
   tracer.instruction->setAddressBits(16);
 
-  tracer.interrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "APU");
+  tracer.interrupt = parent->append<Node::Notification>("Interrupt", "APU");
 }
 
 auto APU::Debugger::instruction() -> void {

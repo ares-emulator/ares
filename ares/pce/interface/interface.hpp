@@ -8,7 +8,7 @@ struct AbstractInterface : Interface {
   auto game() -> string override;
 
   auto root() -> Node::Object override;
-  auto load(Node::Object&, string tree = {}) -> void override;
+  auto load(Node::Object&) -> void override;
   auto unload() -> void override;
   auto save() -> void override;
   auto power() -> void override;

@@ -3,7 +3,7 @@ struct PSG : AY38910, Thread {
   Node::Stream stream;
 
   //psg.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

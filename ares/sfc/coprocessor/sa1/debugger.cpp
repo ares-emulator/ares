@@ -1,8 +1,8 @@
-auto SA1::Debugger::load(Node::Object parent, Node::Object from) -> void {
-  tracer.instruction = Node::append<Node::Instruction>(parent, from, "Instruction", "SA1");
+auto SA1::Debugger::load(Node::Object parent) -> void {
+  tracer.instruction = parent->append<Node::Instruction>("Instruction", "SA1");
   tracer.instruction->setAddressBits(24);
 
-  tracer.interrupt = Node::append<Node::Notification>(parent, from, "Interrupt", "SA1");
+  tracer.interrupt = parent->append<Node::Notification>("Interrupt", "SA1");
 }
 
 auto SA1::Debugger::instruction() -> void {

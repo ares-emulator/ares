@@ -5,7 +5,7 @@ struct SA1 : WDC65816, Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
 
@@ -16,7 +16,7 @@ struct SA1 : WDC65816, Thread {
   } debugger;
 
   //sa1.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto interrupt() -> void override;

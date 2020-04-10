@@ -47,7 +47,7 @@ struct System : IO {
     Node::Button power;
 
     //controls.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto poll() -> void;
 
     bool xHold = 0;
@@ -55,7 +55,6 @@ struct System : IO {
     bool rightLatch = 0;
   } controls;
 
-  auto abstract() const -> bool { return information.abstract; }
   auto model() const -> Model { return information.model; }
   auto soc() const -> SoC { return information.soc; }
   auto mode() const -> uint3 { return io.mode; }
@@ -76,7 +75,7 @@ struct System : IO {
   //system.cpp
   auto run() -> void;
 
-  auto load(Node::Object&, Node::Object) -> void;
+  auto load(Node::Object&) -> void;
   auto unload() -> void;
   auto save() -> void;
   auto power() -> void;
@@ -90,7 +89,6 @@ struct System : IO {
   auto unserialize(serializer&) -> bool;
 
   struct Information {
-    bool abstract = false;
     SoC soc = SoC::ASWAN;
     Model model = Model::WonderSwan;
     uint32 serializeSize[2];

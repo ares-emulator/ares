@@ -11,16 +11,14 @@ PPU ppu;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto PPU::load(Node::Object parent, Node::Object from) -> void {
+auto PPU::load(Node::Object parent) -> void {
   vram.allocate(!Model::GameBoyColor() ? 8_KiB : 16_KiB);
   oam.allocate(160);
 
-  node = Node::append<Node::Component>(parent, from, "PPU");
-  from = Node::scan(parent = node, from);
+  node = parent->append<Node::Component>("PPU");
 
   if(Model::GameBoy() || Model::GameBoyColor()) {
-    screen = Node::append<Node::Screen>(parent, from, "Screen");
-    from = Node::scan(parent = screen, from);
+    screen = node->append<Node::Screen>("Screen");
 
     if(Model::GameBoy()) {
       screen->colors(1 << 2, {&PPU::colorGameBoy, this});
@@ -28,13 +26,13 @@ auto PPU::load(Node::Object parent, Node::Object from) -> void {
       screen->setScale(1.0, 1.0);
       screen->setAspect(1.0, 1.0);
 
-      colorEmulationDMG = Node::append<Node::String>(parent, from, "Color Emulation", "Game Boy", [&](auto value) {
+      colorEmulationDMG = screen->append<Node::String>("Color Emulation", "Game Boy", [&](auto value) {
         screen->resetPalette();
       });
       colorEmulationDMG->setAllowedValues({"Game Boy", "Game Boy Pocket", "RGB"});
       colorEmulationDMG->setDynamic(true);
 
-      interframeBlending = Node::append<Node::Boolean>(parent, from, "Interframe Blending", true, [&](auto value) {
+      interframeBlending = screen->append<Node::Boolean>("Interframe Blending", true, [&](auto value) {
         screen->setInterframeBlending(value);
       });
       interframeBlending->setDynamic(true);
@@ -46,19 +44,19 @@ auto PPU::load(Node::Object parent, Node::Object from) -> void {
       screen->setScale(1.0, 1.0);
       screen->setAspect(1.0, 1.0);
 
-      colorEmulationCGB = Node::append<Node::Boolean>(parent, from, "Color Emulation", true, [&](auto value) {
+      colorEmulationCGB = screen->append<Node::Boolean>("Color Emulation", true, [&](auto value) {
         screen->resetPalette();
       });
       colorEmulationCGB->setDynamic(true);
 
-      interframeBlending = Node::append<Node::Boolean>(parent, from, "Interframe Blending", true, [&](auto value) {
+      interframeBlending = screen->append<Node::Boolean>("Interframe Blending", true, [&](auto value) {
         screen->setInterframeBlending(value);
       });
       interframeBlending->setDynamic(true);
     }
   }
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto PPU::unload() -> void {

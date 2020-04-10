@@ -3,7 +3,7 @@
 struct VCE {
   struct Debugger {
     //debugger.cpp
-    auto load(VCE&, Node::Object, Node::Object) -> void;
+    auto load(VCE&, Node::Object) -> void;
 
     struct Memory {
       Node::Memory cram;

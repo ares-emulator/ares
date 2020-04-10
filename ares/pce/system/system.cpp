@@ -10,23 +10,23 @@ auto System::run() -> void {
   if(scheduler.enter() == Event::Frame) vdp.refresh();
 }
 
-auto System::load(Node::Object& root, Node::Object from) -> void {
+auto System::load(Node::Object& root) -> void {
   if(node) unload();
 
   information = {};
   if(interface->name() == "PC Engine" ) information.model = Model::PCEngine;
   if(interface->name() == "SuperGrafx") information.model = Model::SuperGrafx;
 
-  node = Node::append<Node::System>(nullptr, from, interface->name());
+  node = Node::System::create(interface->name());
   root = node;
 
   scheduler.reset();
-  cpu.load(node, from);
-  vdp.load(node, from);
-  psg.load(node, from);
-  cartridgeSlot.load(node, from);
-  controllerPort.load(node, from);
-  if(PCD::Present()) pcd.load(node, from);
+  cpu.load(node);
+  vdp.load(node);
+  psg.load(node);
+  cartridgeSlot.load(node);
+  controllerPort.load(node);
+  if(PCD::Present()) pcd.load(node);
 }
 
 auto System::save() -> void {

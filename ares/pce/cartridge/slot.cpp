@@ -1,21 +1,24 @@
 CartridgeSlot cartridgeSlot{"Cartridge Slot"};
 
-CartridgeSlot::CartridgeSlot(string_view name) : name(name) {
+CartridgeSlot::CartridgeSlot(string name) : name(name) {
 }
 
-auto CartridgeSlot::load(Node::Object parent, Node::Object from) -> void {
-  port = Node::append<Node::Port>(parent, from, name);
+auto CartridgeSlot::load(Node::Object parent) -> void {
+  port = parent->append<Node::Port>(name);
   port->setFamily("PC Engine");
   port->setType("Cartridge");
   port->setAllocate([&] { return Node::Peripheral::create(interface->name()); });
   port->setAttach([&](auto node) { connect(node); });
   port->setDetach([&](auto node) { disconnect(); });
-  port->scan(from);
 }
 
 auto CartridgeSlot::unload() -> void {
   disconnect();
   port = {};
+}
+
+auto CartridgeSlot::connected() const -> bool {
+  return (bool)cartridge.node;
 }
 
 auto CartridgeSlot::connect(Node::Peripheral node) -> void {

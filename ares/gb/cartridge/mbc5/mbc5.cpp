@@ -1,5 +1,5 @@
-auto Cartridge::MBC5::load(Node::Object parent, Node::Object from) -> void {
-  rumble = Node::append<Node::Rumble>(parent, from, "Rumble");
+auto Cartridge::MBC5::load(Node::Object parent) -> void {
+  rumble = parent->append<Node::Rumble>("Rumble");
 }
 
 auto Cartridge::MBC5::read(uint16 address) -> uint8 {

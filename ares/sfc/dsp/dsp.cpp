@@ -14,15 +14,14 @@ DSP dsp;
 #include "debugger.cpp"
 #include "serialization.cpp"
 
-auto DSP::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "DSP");
-  from = Node::scan(parent = node, from);
+auto DSP::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("DSP");
 
-  stream = Node::append<Node::Stream>(parent, from, "Stream");
+  stream = node->append<Node::Stream>("Stream");
   stream->setChannels(2);
   stream->setFrequency(system.apuFrequency() / 768.0);
 
-  debugger.load(parent, from);
+  debugger.load(node);
 }
 
 auto DSP::unload() -> void {

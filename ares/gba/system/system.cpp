@@ -13,22 +13,22 @@ auto System::run() -> void {
   if(GameBoyAdvance::Model::GameBoyPlayer()) player.frame();
 }
 
-auto System::load(Node::Object& root, Node::Object from) -> void {
+auto System::load(Node::Object& root) -> void {
   if(node) unload();
 
   information = {};
   if(interface->name() == "Game Boy Advance") information.model = Model::GameBoyAdvance;
   if(interface->name() == "Game Boy Player" ) information.model = Model::GameBoyPlayer;
 
-  node = Node::append<Node::System>(nullptr, from, interface->name());
+  node = Node::System::create(interface->name());
   root = node;
 
   scheduler.reset();
-  controls.load(node, from);
-  cpu.load(node, from);
-  ppu.load(node, from);
-  apu.load(node, from);
-  cartridge.load(node, from);
+  controls.load(node);
+  cpu.load(node);
+  ppu.load(node);
+  apu.load(node);
+  cartridgeSlot.load(node);
 }
 
 auto System::save() -> void {
@@ -42,7 +42,7 @@ auto System::unload() -> void {
   cpu.unload();
   ppu.unload();
   apu.unload();
-  cartridge.unload();
+  cartridgeSlot.unload();
   node = {};
 }
 

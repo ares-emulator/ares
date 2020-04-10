@@ -13,7 +13,7 @@ struct PPU : Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
 
     struct Memory {
       Node::Memory vram;
@@ -22,7 +22,7 @@ struct PPU : Thread {
   } debugger;
 
   //ppu.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

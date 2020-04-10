@@ -9,7 +9,8 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
-  node = Node::append<Node::Peripheral>(parent, with, interface->name());
+  node = parent->append<Node::Peripheral>(interface->name());
+  node->load(with);
   node->setManifest([&] { return information.manifest; });
 
   information = {};
@@ -24,19 +25,18 @@ auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
   }
 
   loadCartridge(information.document);
-  if(has.SA1) sa1.load(node, with);
-  if(has.SuperFX) superfx.load(node, with);
-  if(has.ARMDSP) armdsp.load(node, with);
-  if(has.HitachiDSP) hitachidsp.load(node, with);
-  if(has.NECDSP) necdsp.load(node, with);
-  if(has.MSU1) msu1.load(node, with);
-  if(has.GameBoySlot) icd.load(node, with);
-  if(has.BSMemorySlot) bsmemory.load(node, with);
-  if(has.SufamiTurboSlotA) sufamiturboA.load(node, with);
-  if(has.SufamiTurboSlotB) sufamiturboB.load(node, with);
-
-  if(has.EpsonRTC) epsonrtc.load(node, with);
-  if(has.SharpRTC) sharprtc.load(node, with);
+  if(has.SA1) sa1.load(node);
+  if(has.SuperFX) superfx.load(node);
+  if(has.ARMDSP) armdsp.load(node);
+  if(has.HitachiDSP) hitachidsp.load(node);
+  if(has.NECDSP) necdsp.load(node);
+  if(has.EpsonRTC) epsonrtc.load(node);
+  if(has.SharpRTC) sharprtc.load(node);
+  if(has.MSU1) msu1.load(node);
+  if(has.GameBoySlot) icd.load(node);
+  if(has.BSMemorySlot) bsmemorySlot.load(node);
+  if(has.SufamiTurboSlotA) sufamiturboSlotA.load(node);
+  if(has.SufamiTurboSlotB) sufamiturboSlotB.load(node);
 
   power(false);
 }
@@ -58,9 +58,9 @@ auto Cartridge::disconnect() -> void {
   if(has.SDD1) sdd1.unload();
   if(has.OBC1) obc1.unload();
   if(has.MSU1) msu1.unload();
-  if(has.BSMemorySlot) bsmemory.unload();
-  if(has.SufamiTurboSlotA) sufamiturboA.unload();
-  if(has.SufamiTurboSlotB) sufamiturboB.unload();
+  if(has.BSMemorySlot) bsmemorySlot.unload();
+  if(has.SufamiTurboSlotA) sufamiturboSlotA.unload();
+  if(has.SufamiTurboSlotB) sufamiturboSlotB.unload();
 
   rom.reset();
   ram.reset();

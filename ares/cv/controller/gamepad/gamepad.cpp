@@ -1,24 +1,25 @@
 Gamepad::Gamepad(Node::Port parent, Node::Peripheral with) {
-  node = Node::append<Node::Peripheral>(parent, with, "Gamepad");
+  node = parent->append<Node::Peripheral>("Gamepad");
+  node->load(with);
 
-  up    = Node::append<Node::Button>(node, with, "Up");
-  down  = Node::append<Node::Button>(node, with, "Down");
-  left  = Node::append<Node::Button>(node, with, "Left");
-  right = Node::append<Node::Button>(node, with, "Right");
-  l     = Node::append<Node::Button>(node, with, "L");
-  r     = Node::append<Node::Button>(node, with, "R");
-  one   = Node::append<Node::Button>(node, with, "1");
-  two   = Node::append<Node::Button>(node, with, "2");
-  three = Node::append<Node::Button>(node, with, "3");
-  four  = Node::append<Node::Button>(node, with, "4");
-  five  = Node::append<Node::Button>(node, with, "5");
-  six   = Node::append<Node::Button>(node, with, "6");
-  seven = Node::append<Node::Button>(node, with, "7");
-  eight = Node::append<Node::Button>(node, with, "8");
-  nine  = Node::append<Node::Button>(node, with, "9");
-  star  = Node::append<Node::Button>(node, with, "*");
-  zero  = Node::append<Node::Button>(node, with, "0");
-  pound = Node::append<Node::Button>(node, with, "#");
+  up    = node->append<Node::Button>("Up");
+  down  = node->append<Node::Button>("Down");
+  left  = node->append<Node::Button>("Left");
+  right = node->append<Node::Button>("Right");
+  l     = node->append<Node::Button>("L");
+  r     = node->append<Node::Button>("R");
+  one   = node->append<Node::Button>("1");
+  two   = node->append<Node::Button>("2");
+  three = node->append<Node::Button>("3");
+  four  = node->append<Node::Button>("4");
+  five  = node->append<Node::Button>("5");
+  six   = node->append<Node::Button>("6");
+  seven = node->append<Node::Button>("7");
+  eight = node->append<Node::Button>("8");
+  nine  = node->append<Node::Button>("9");
+  star  = node->append<Node::Button>("*");
+  zero  = node->append<Node::Button>("0");
+  pound = node->append<Node::Button>("#");
 }
 
 auto Gamepad::read() -> uint8 {

@@ -1,5 +1,4 @@
 struct Cartridge {
-  Node::Port port;
   Node::Peripheral node;
 
   #include "memory.hpp"
@@ -11,9 +10,7 @@ struct Cartridge {
   Cartridge();
   ~Cartridge();
 
-  auto load(Node::Object, Node::Object) -> void;
-  auto unload() -> void;
-  auto connect(Node::Peripheral) -> void;
+  auto connect(Node::Port, Node::Peripheral) -> void;
   auto disconnect() -> void;
 
   auto save() -> void;
@@ -37,4 +34,5 @@ private:
   } has;
 };
 
-extern Cartridge cartridge;
+#include "slot.hpp"
+extern Cartridge& cartridge;

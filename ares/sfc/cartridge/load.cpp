@@ -170,7 +170,7 @@ auto Cartridge::loadBSMemory(Markup::Node node) -> void {
 
   if(auto node = board["slot(type=BSMemory)"]) {
     for(auto map : node.find("map")) {
-      loadMap(map, {&BSMemory::read, &bsmemory}, {&BSMemory::write, &bsmemory});
+      loadMap(map, {&BSMemoryCartridge::read, &bsmemory}, {&BSMemoryCartridge::write, &bsmemory});
     }
   }
 }

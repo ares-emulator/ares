@@ -5,11 +5,10 @@ namespace ares::NeoGeoPocket {
 PSG psg;
 #include "serialization.cpp"
 
-auto PSG::load(Node::Object parent, Node::Object from) -> void {
-  node = Node::append<Node::Component>(parent, from, "PSG");
-  from = Node::scan(parent = node, from);
+auto PSG::load(Node::Object parent) -> void {
+  node = parent->append<Node::Component>("PSG");
 
-  stream = Node::append<Node::Stream>(parent, from, "Stream");
+  stream = node->append<Node::Stream>("Stream");
   stream->setChannels(2);
   stream->setFrequency(system.frequency() / 32.0);
   stream->addHighPassFilter(20.0, 1);

@@ -1,16 +1,13 @@
 struct SufamiTurboCartridge {
-  Node::Port port;
   Node::Peripheral node;
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
 
   //sufamiturbo.cpp
-  auto load(Node::Peripheral, Node::Peripheral) -> void;
-  auto unload() -> void;
-
-  auto connect(Node::Peripheral) -> void;
+  auto connect(Node::Port, Node::Peripheral) -> void;
   auto disconnect() -> void;
+
   auto power() -> void;
   auto save() -> void;
 
@@ -33,5 +30,6 @@ struct SufamiTurboCartridge {
   } information;
 };
 
-extern SufamiTurboCartridge sufamiturboA;
-extern SufamiTurboCartridge sufamiturboB;
+#include "slot.hpp"
+extern SufamiTurboCartridge& sufamiturboA;
+extern SufamiTurboCartridge& sufamiturboB;

@@ -4,7 +4,7 @@ struct NECDSP : uPD96050, Thread {
 
   struct Debugger {
     //debugger.cpp
-    auto load(Node::Object, Node::Object) -> void;
+    auto load(Node::Object) -> void;
     auto instruction() -> void;
 
     struct Tracer {
@@ -13,7 +13,7 @@ struct NECDSP : uPD96050, Thread {
   } debugger;
 
   //necdsp.cpp
-  auto load(Node::Object, Node::Object) -> void;
+  auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;

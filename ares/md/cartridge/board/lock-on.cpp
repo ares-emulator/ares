@@ -9,7 +9,7 @@ struct LockOn : Interface {
     Interface::load(rom, board["memory(type=ROM,content=Program)"]);
     Interface::load(patch, board["memory(type=ROM,content=Patch)"]);
 
-    slot.load(cartridge->node, cartridge->with);
+    slot.load(cartridge->node);
   }
 
   auto save(Markup::Node document) -> void override {

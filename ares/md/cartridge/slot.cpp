@@ -1,16 +1,15 @@
 CartridgeSlot cartridgeSlot{"Cartridge Slot"};
 
-CartridgeSlot::CartridgeSlot(string_view name) : name(name) {
+CartridgeSlot::CartridgeSlot(string name) : name(name) {
 }
 
-auto CartridgeSlot::load(Node::Object parent, Node::Object from) -> void {
-  port = Node::append<Node::Port>(parent, from, name);
+auto CartridgeSlot::load(Node::Object parent) -> void {
+  port = parent->append<Node::Port>(name);
   port->setFamily("Mega Drive");
   port->setType("Cartridge");
   port->setAllocate([&] { return Node::Peripheral::create(interface->name()); });
   port->setAttach([&](auto node) { connect(node); });
   port->setDetach([&](auto node) { disconnect(); });
-  port->scan(from);
 }
 
 auto CartridgeSlot::unload() -> void {
