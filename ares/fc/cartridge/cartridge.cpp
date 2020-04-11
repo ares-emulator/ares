@@ -7,9 +7,11 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "board/board.cpp"
 #include "serialization.cpp"
 
-auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
-  node = parent->append<Node::Peripheral>(interface->name());
-  node->load(with);
+auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
+  return node = parent->append<Node::Peripheral>(interface->name());
+}
+
+auto Cartridge::connect() -> void {
   node->setManifest([&] { return information.manifest; });
 
   information = {};
@@ -18,8 +20,8 @@ auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
   }
 
   auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].text();
-  information.region = document["game/region"].text();
+  information.name = document["game/label"].string();
+  information.region = document["game/region"].string();
 
   Board::Interface::load(information.manifest);  //this call sets Cartridge::board internally
   board->load();

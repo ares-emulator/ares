@@ -2,7 +2,7 @@ struct TwinTap : Controller {
   Node::Button one;
   Node::Button two;
 
-  TwinTap(Node::Port, Node::Peripheral);
+  TwinTap(Node::Port);
 
   auto data() -> uint2;
   auto latch(bool data) -> void;

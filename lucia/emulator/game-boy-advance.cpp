@@ -22,8 +22,8 @@ auto GameBoyAdvance::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   return true;

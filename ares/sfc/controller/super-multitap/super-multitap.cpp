@@ -1,11 +1,10 @@
-SuperMultitap::SuperMultitap(Node::Port parent, Node::Peripheral with):
+SuperMultitap::SuperMultitap(Node::Port parent):
 port1{"Controller Port 1"},
 port2{"Controller Port 2"},
 port3{"Controller Port 3"},
 port4{"Controller Port 4"}
 {
   node = parent->append<Node::Peripheral>("Super Multitap");
-  node->load(with);
 
   port1.load(node);
   port2.load(node);

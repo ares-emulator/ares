@@ -4,9 +4,11 @@ SufamiTurboCartridge& sufamiturboB = sufamiturboSlotB.cartridge;
 #include "memory.cpp"
 #include "serialization.cpp"
 
-auto SufamiTurboCartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
-  node = parent->append<Node::Peripheral>("Sufami Turbo");
-  node->load(with);
+auto SufamiTurboCartridge::allocate(Node::Port parent) -> Node::Peripheral {
+  return node = parent->append<Node::Peripheral>("Sufami Turbo");
+}
+
+auto SufamiTurboCartridge::connect() -> void {
   node->setManifest([&] { return information.manifest; });
 
   if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {

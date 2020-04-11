@@ -13,15 +13,12 @@ auto PCD::load(Node::Object parent) -> void {
   tray->setFamily("PC Engine CD");
   tray->setType("Compact Disc");
   tray->setHotSwappable(true);
-  tray->setAllocate([&] { return Node::Peripheral::create("PC Engine CD"); });
-  tray->setAttach([&](auto node) { connect(node); });
-  tray->setDetach([&](auto node) { disconnect(); });
+  tray->setAllocate([&](auto name) { return allocate(tray); });
+  tray->setConnect([&] { return connect(); });
+  tray->setDisconnect([&] { return disconnect(); });
 
   wram.allocate(64_KiB);
   bram.allocate(2_KiB);
-}
-
-auto PCD::save() -> void {
 }
 
 auto PCD::unload() -> void {
@@ -32,27 +29,30 @@ auto PCD::unload() -> void {
   tray = {};
 }
 
-auto PCD::connect(Node::Peripheral with) -> void {
-  disconnect();
-  if(with) {
-    disc = tray->append<Node::Peripheral>("PC Engine CD");
-    disc->setManifest([&] { return information.manifest; });
+auto PCD::allocate(Node::Port parent) -> Node::Peripheral {
+  return disc = parent->append<Node::Peripheral>("PC Engine CD");
+}
 
-    information = {};
-    if(auto fp = platform->open(disc, "manifest.bml", File::Read, File::Required)) {
-      information.manifest = fp->reads();
-    }
+auto PCD::connect() -> void {
+  disc->setManifest([&] { return information.manifest; });
 
-    auto document = BML::unserialize(information.manifest);
-    information.name = document["game/label"].string();
-
-    fd = platform->open(disc, "cd.rom", File::Read, File::Required);
+  information = {};
+  if(auto fp = platform->open(disc, "manifest.bml", File::Read, File::Required)) {
+    information.manifest = fp->reads();
   }
+
+  auto document = BML::unserialize(information.manifest);
+  information.name = document["game/label"].string();
+
+  fd = platform->open(disc, "cd.rom", File::Read, File::Required);
 }
 
 auto PCD::disconnect() -> void {
   disc = {};
   fd = {};
+}
+
+auto PCD::save() -> void {
 }
 
 auto PCD::main() -> void {

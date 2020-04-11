@@ -7,25 +7,12 @@ auto ExpansionPort::load(Node::Object parent) -> void {
   port = parent->append<Node::Port>(name);
   port->setFamily("Mega Drive");
   port->setType("Cartridge");  //not technically a cartridge, but pin-compatible with one
-  port->setAllocate([&] { return Node::Peripheral::create(interface->name()); });
-  port->setAttach([&](auto node) { return connect(node); });
-  port->setDetach([&](auto node) { return disconnect(); });
+  port->setAllocate([&](auto name) { return expansion.allocate(port); });
+  port->setConnect([&] { return expansion.connect(); });
+  port->setDisconnect([&] { return expansion.disconnect(); });
 }
 
 auto ExpansionPort::unload() -> void {
-  disconnect();
+  expansion.disconnect();
   port = {};
-}
-
-auto ExpansionPort::connect(Node::Peripheral node) -> void {
-  disconnect();
-  if(node) {
-    expansion.connect(port, node);
-  }
-}
-
-auto ExpansionPort::disconnect() -> void {
-  if(connected()) {
-    expansion.disconnect();
-  }
 }

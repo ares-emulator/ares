@@ -6,9 +6,11 @@ Expansion& expansion = expansionPort.expansion;
 #include "port.cpp"
 #include "serialization.cpp"
 
-auto Expansion::connect(Node::Port parent, Node::Peripheral with) -> void {
-  node = parent->append<Node::Peripheral>(interface->name());
-  node->load(with);
+auto Expansion::allocate(Node::Port parent) -> Node::Peripheral {
+  return node = parent->append<Node::Peripheral>(interface->name());
+}
+
+auto Expansion::connect() -> void {
   node->setManifest([&] { return information.manifest; });
 
   information = {};

@@ -133,14 +133,14 @@ auto PortConnector::eventActivate() -> void {
       .setTitle("Error").setAlignment(program).error();
 
       if(directory::copy(source, target)) {
-        auto peripheral = port->allocate();
-        peripheral->setName(name);
-        peripheral->setAttribute("location", target);
-        peripheral->setAttribute("name", label);
-        port->connect(peripheral);
-        inputManager.bind();  //bind any inputs this peripheral may contain
-        program.refreshPanelList();
-        refresh(port);
+        if(auto peripheral = port->allocate(name)) {
+          peripheral->setAttribute("location", target);
+          peripheral->setAttribute("name", label);
+          port->connect();
+          inputManager.bind();  //bind any inputs this peripheral may contain
+          program.refreshPanelList();
+          refresh(port);
+        }
       }
     }
 
@@ -155,16 +155,19 @@ auto PortConnector::eventActivate() -> void {
       .setText({"This peripheral is already connected to another port:\n\n", connected->name()})
       .setTitle("Error").setAlignment(program).error();
 
-      auto peripheral = port->allocate();
       if(auto markup = file::read({location, "settings.bml"})) {
-        peripheral = ares::Node::unserialize(markup);
+        auto node = ares::Node::unserialize(markup);
+        //update the location and name here, in case the folder moved since it was last connected
+        node->setAttribute("location", location);
+        node->setAttribute("name", item.attribute("name"));
+        if(auto peripheral = port->allocate(node->name())) {
+          peripheral->copy(node);
+          port->connect();
+          peripheral->copy(node);
+          inputManager.bind();  //bind any inputs this peripheral may contain
+          program.refreshPanelList();
+        }
       }
-      peripheral->setAttribute("location", location);
-      peripheral->setAttribute("name", item.attribute("name"));
-      port->connect(peripheral);
-      if(auto node = port->connected()) node->copy(peripheral);
-      inputManager.bind();  //bind any inputs this peripheral may contain
-      program.refreshPanelList();
     }
   }
 }

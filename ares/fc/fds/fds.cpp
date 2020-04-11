@@ -13,9 +13,9 @@ auto FDS::load(Node::Object parent) -> void {
   port->setFamily("Famicom Disk");
   port->setType("Floppy Disk");
   port->setHotSwappable(true);
-  port->setAllocate([&] { return Node::Peripheral::create("Famicom Disk"); });
-  port->setAttach([&](auto node) { connect(node); });
-  port->setDetach([&](auto node) { disconnect(); });
+  port->setAllocate([&](auto name) { return allocate(port); });
+  port->setConnect([&] { return connect(); });
+  port->setDisconnect([&] { return disconnect(); });
 
   audio.load(parent);
   power();
@@ -34,9 +34,11 @@ auto FDS::unload() -> void {
   changed = 0;
 }
 
-auto FDS::connect(Node::Peripheral with) -> void {
-  node = port->append<Node::Peripheral>("Famicom Disk");
-  node->load(with);
+auto FDS::allocate(Node::Port parent) -> Node::Peripheral {
+  return node = parent->append<Node::Peripheral>("Famicom Disk");
+}
+
+auto FDS::connect() -> void {
   node->setManifest([&] { return information.manifest; });
 
   state = node->append<Node::String>("State", "Ejected", [&](auto value) {
@@ -78,6 +80,7 @@ auto FDS::connect(Node::Peripheral with) -> void {
   }
 
   state->setAllowedValues(states);
+  state->setDynamic(true);
   change(state->value());
 }
 

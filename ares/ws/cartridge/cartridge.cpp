@@ -9,12 +9,13 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "io.cpp"
 #include "serialization.cpp"
 
-auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
+auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
   string name = interface->name();
   if(Model::SwanCrystal()) name = "WonderSwan Color";
+  return node = parent->append<Node::Peripheral>(name);
+}
 
-  node = parent->append<Node::Peripheral>(name);
-  node->load(with);
+auto Cartridge::connect() -> void {
   node->setManifest([&] { return information.manifest; });
 
   information = {};
@@ -24,7 +25,7 @@ auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
   }
 
   auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].text();
+  information.name = document["game/label"].string();
 
   if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
     rom.size = memory["size"].natural();
@@ -67,8 +68,8 @@ auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
     }
   }
 
-  if(document["game/orientation"].text() == "horizontal") information.orientation = "Horizontal";
-  if(document["game/orientation"].text() == "vertical"  ) information.orientation = "Vertical";
+  if(document["game/orientation"].string() == "horizontal") information.orientation = "Horizontal";
+  if(document["game/orientation"].string() == "vertical"  ) information.orientation = "Vertical";
 
   power();
 }

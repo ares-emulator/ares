@@ -28,14 +28,13 @@ auto MegaDrive::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    auto peripheral = port->allocate();
-    peripheral->setName("Fighting Pad");
-    port->connect(peripheral);
+    port->allocate("Fighting Pad");
+    port->connect();
   }
 
   return true;
@@ -117,19 +116,18 @@ auto MegaCD::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Expansion Port")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   if(auto port = root->scan<ares::Node::Port>("Disc Tray")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    auto peripheral = port->allocate();
-    peripheral->setName("Fighting Pad");
-    port->connect(peripheral);
+    port->allocate("Fighting Pad");
+    port->connect();
   }
 
   return true;

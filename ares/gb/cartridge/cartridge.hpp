@@ -1,14 +1,18 @@
 struct Cartridge : Thread {
   Node::Peripheral node;
+  Memory::Readable<uint8> rom;
+  Memory::Writable<uint8> ram;
+  Memory::Writable<uint8> rtc;
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
 
   //cartridge.cpp
-  auto connect(Node::Port, Node::Peripheral) -> void;
+  auto allocate(Node::Port) -> Node::Peripheral;
+  auto connect() -> void;
   auto disconnect() -> void;
-  auto save() -> void;
 
+  auto save() -> void;
   auto main() -> void;
   auto step(uint clocks) -> void;
   auto power() -> void;
@@ -25,10 +29,6 @@ struct Cartridge : Thread {
     string manifest;
     string name;
   } information;
-
-  Memory::Readable<uint8> rom;
-  Memory::Writable<uint8> ram;
-  Memory::Writable<uint8> rtc;
 
   bool bootromEnable = true;
 

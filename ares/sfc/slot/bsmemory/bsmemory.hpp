@@ -26,7 +26,8 @@ struct BSMemoryCartridge : Thread {
   auto writable(bool writable) { pin.writable = !ROM && writable; }
 
   //bsmemory.cpp
-  auto connect(Node::Port, Node::Peripheral) -> void;
+  auto allocate(Node::Port) -> Node::Peripheral;
+  auto connect() -> void;
   auto disconnect() -> void;
 
   BSMemoryCartridge();

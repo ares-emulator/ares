@@ -15,14 +15,13 @@ SuperFamicom::SuperFamicom() {
 
 auto SuperFamicom::load() -> bool {
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    auto peripheral = port->allocate();
-    peripheral->setName("Gamepad");
-    port->connect(peripheral);
+    port->allocate("Gamepad");
+    port->connect();
   }
 
   return true;

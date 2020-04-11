@@ -36,7 +36,7 @@ auto PPU::load(Node::Object parent) -> void {
   });
   colorEmulation->setDynamic(true);
 
-  debugger.load(parent);
+  debugger.load(node);
 
   output = new uint32[512 * 512];
   output += 16 * 512;  //overscan offset

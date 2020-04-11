@@ -25,14 +25,13 @@ Famicom::Famicom() {
 
 auto Famicom::load() -> bool {
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    auto peripheral = port->allocate();
-    peripheral->setName("Gamepad");
-    port->connect(peripheral);
+    port->allocate("Gamepad");
+    port->connect();
   }
 
   return true;
@@ -122,13 +121,13 @@ auto FamicomDiskSystem::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   if(auto port = root->scan<ares::Node::Port>("Disk Slot")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   if(auto node = root->scan<ares::Node::String>("State")) {
@@ -136,9 +135,8 @@ auto FamicomDiskSystem::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    auto peripheral = port->allocate();
-    peripheral->setName("Gamepad");
-    port->connect(peripheral);
+    port->allocate("Gamepad");
+    port->connect();
   }
 
   return true;

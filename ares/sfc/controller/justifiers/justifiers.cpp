@@ -1,6 +1,5 @@
-Justifiers::Justifiers(Node::Port parent, Node::Peripheral with) {
+Justifiers::Justifiers(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Justifiers");
-  node->load(with);
 
   x1       = node->append<Node::Axis  >("Player 1: X");
   y1       = node->append<Node::Axis  >("Player 1: Y");

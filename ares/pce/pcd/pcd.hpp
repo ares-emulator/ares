@@ -15,11 +15,13 @@ struct PCD : Thread {
 
   //pcd.cpp
   auto load(Node::Object) -> void;
-  auto save() -> void;
   auto unload() -> void;
-  auto connect(Node::Peripheral) -> void;
+
+  auto allocate(Node::Port) -> Node::Peripheral;
+  auto connect() -> void;
   auto disconnect() -> void;
 
+  auto save() -> void;
   auto main() -> void;
   auto step(uint clocks) -> void;
   auto power() -> void;

@@ -10,9 +10,8 @@
 //require manual polling of PIO ($4201.d6) to determine when iobit was written.
 //Note that no commercial game ever utilizes a Super Scope in port 1.
 
-SuperScope::SuperScope(Node::Port parent, Node::Peripheral with) {
+SuperScope::SuperScope(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Super Scope");
-  node->load(with);
 
   x       = node->append<Node::Axis  >("X");
   y       = node->append<Node::Axis  >("Y");

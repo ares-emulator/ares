@@ -29,8 +29,8 @@ auto NeoGeoPocket::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   if(auto node = root->find<ares::Node::Boolean>("Fast Boot")) {
@@ -93,8 +93,8 @@ auto NeoGeoPocketColor::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   if(auto node = root->find<ares::Node::Boolean>("Fast Boot")) {

@@ -1,6 +1,4 @@
 struct S21FX : Expansion {
-  Node::Peripheral node;
-
   S21FX(Node::Port);
   ~S21FX();
 

@@ -9,31 +9,25 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setFamily("Super Famicom");
   port->setType("Controller");
   port->setHotSwappable(true);
-  port->setAttach([&](auto node) { connect(node); });
-  port->setDetach([&](auto node) { disconnect(); });
+  port->setAllocate([&](auto name) { return allocate(name); });
 }
 
 auto ControllerPort::unload() -> void {
-  disconnect();
+  device = {};
   port = {};
 }
 
-auto ControllerPort::connect(Node::Peripheral node) -> void {
-  disconnect();
-  if(node) {
-    if(node->name() == "Gamepad"        ) device = new Gamepad(port, node);
-    if(node->name() == "Justifier"      ) device = new Justifier(port, node);
-    if(node->name() == "Justifiers"     ) device = new Justifiers(port, node);
-    if(node->name() == "Mouse"          ) device = new Mouse(port, node);
-    if(node->name() == "NTT Data Keypad") device = new NTTDataKeypad(port, node);
-    if(node->name() == "Super Multitap" ) device = new SuperMultitap(port, node);
-    if(node->name() == "Super Scope"    ) device = new SuperScope(port, node);
-    if(node->name() == "Twin Tap"       ) device = new TwinTap(port, node);
-  }
-}
-
-auto ControllerPort::disconnect() -> void {
-  device = {};
+auto ControllerPort::allocate(string name) -> Node::Peripheral {
+  if(name == "Gamepad"        ) device = new Gamepad(port);
+  if(name == "Justifier"      ) device = new Justifier(port);
+  if(name == "Justifiers"     ) device = new Justifiers(port);
+  if(name == "Mouse"          ) device = new Mouse(port);
+  if(name == "NTT Data Keypad") device = new NTTDataKeypad(port);
+  if(name == "Super Multitap" ) device = new SuperMultitap(port);
+  if(name == "Super Scope"    ) device = new SuperScope(port);
+  if(name == "Twin Tap"       ) device = new TwinTap(port);
+  if(device) return device->node;
+  return {};
 }
 
 auto ControllerPort::serialize(serializer& s) -> void {

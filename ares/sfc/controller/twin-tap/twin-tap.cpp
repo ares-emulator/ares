@@ -1,6 +1,5 @@
-TwinTap::TwinTap(Node::Port parent, Node::Peripheral with) {
+TwinTap::TwinTap(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Twin Tap");
-  node->load(with);
 
   one = node->append<Node::Button>("1");
   two = node->append<Node::Button>("2");

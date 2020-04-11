@@ -10,29 +10,32 @@ auto Keyboard::load(Node::Object parent) -> void {
   port->setFamily("MSX");
   port->setType("Keyboard");
   port->setHotSwappable(true);
-  port->setAttach([&](auto node) { connect(node); });
-  port->setDetach([&](auto node) { disconnect(); });
+  port->setAllocate([&](auto name) { return allocate(port, name); });
+  port->setConnect([&] { connect(); });
+  port->setDisconnect([&] { disconnect(); });
 }
 
-auto Keyboard::connect(Node::Peripheral node) -> void {
+auto Keyboard::unload() -> void {
   disconnect();
-  if(node) {
-    string name{"Layout"};
-    if(node) name = node->name();
-    layout = port->append<Node::Peripheral>(name);
-    layout->load(node);
-    Markup::Node document;
-    if(auto fp = platform->open(layout, "layout.bml", File::Read)) {
-      document = BML::unserialize(fp->reads());
-    }
-    for(uint column : range(12)) {
-      for(uint row : range(8)) {
-        string label{column, ",", row};
-        if(auto key = document[{"layout/key[", column * 8 + row, "]"}]) {
-          label = key.text();
-        }
-        matrix[column][row] = layout->append<Node::Button>(label);
+  port = {};
+}
+
+auto Keyboard::allocate(Node::Port parent, string name) -> Node::Peripheral {
+  return layout = parent->append<Node::Peripheral>(name);
+}
+
+auto Keyboard::connect() -> void {
+  Markup::Node document;
+  if(auto fp = platform->open(layout, "layout.bml", File::Read)) {
+    document = BML::unserialize(fp->reads());
+  }
+  for(uint column : range(12)) {
+    for(uint row : range(8)) {
+      string label{column, ",", row};
+      if(auto key = document[{"layout/key[", column * 8 + row, "]"}]) {
+        label = key.text();
       }
+      matrix[column][row] = layout->append<Node::Button>(label);
     }
   }
 }

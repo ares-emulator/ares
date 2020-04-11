@@ -1,6 +1,5 @@
-NTTDataKeypad::NTTDataKeypad(Node::Port parent, Node::Peripheral with) {
+NTTDataKeypad::NTTDataKeypad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("NTT Data Keypad");
-  node->load(with);
 
   up    = node->append<Node::Button>("Up");
   down  = node->append<Node::Button>("Down");

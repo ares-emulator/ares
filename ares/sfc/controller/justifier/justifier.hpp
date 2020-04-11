@@ -5,7 +5,7 @@ struct Justifier : Controller, Thread {
   Node::Button trigger;
   Node::Button start;
 
-  Justifier(Node::Port, Node::Peripheral);
+  Justifier(Node::Port);
   ~Justifier();
 
   auto main() -> void;

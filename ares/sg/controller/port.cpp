@@ -9,28 +9,18 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setFamily(interface->name());
   port->setType("Controller");
   port->setHotSwappable(true);
-  port->setAttach([&](auto node) { connect(node); });
-  port->setDetach([&](auto node) { disconnect(); });
+  port->setAllocate([&](auto name) { return allocate(name); });
 }
 
 auto ControllerPort::unload() -> void {
-  disconnect();
+  device = {};
   port = {};
 }
 
-auto ControllerPort::connected() const -> bool {
-  return (bool)device;
-}
-
-auto ControllerPort::connect(Node::Peripheral node) -> void {
-  disconnect();
-  if(node) {
-    if(node->name() == "Gamepad") device = new Gamepad(port, node);
-  }
-}
-
-auto ControllerPort::disconnect() -> void {
-  device = {};
+auto ControllerPort::allocate(string name) -> Node::Peripheral {
+  if(name == "Gamepad") device = new Gamepad(port);
+  if(device) return device->node;
+  return {};
 }
 
 auto ControllerPort::serialize(serializer& s) -> void {

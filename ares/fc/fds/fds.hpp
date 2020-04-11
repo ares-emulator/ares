@@ -26,8 +26,11 @@ struct FDS {
   //fds.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
-  auto connect(Node::Peripheral) -> void;
+
+  auto allocate(Node::Port) -> Node::Peripheral;
+  auto connect() -> void;
   auto disconnect() -> void;
+
   auto change(string value) -> void;
   auto change() -> void;
 

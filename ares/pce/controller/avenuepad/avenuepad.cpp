@@ -1,6 +1,5 @@
-AvenuePad::AvenuePad(Node::Port parent, Node::Peripheral with) {
+AvenuePad::AvenuePad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Avenue Pad 6");
-  node->load(with);
 
   up     = node->append<Node::Button>("Up");
   down   = node->append<Node::Button>("Down");

@@ -1,6 +1,5 @@
-Gamepad::Gamepad(Node::Port parent, Node::Peripheral with) {
+Gamepad::Gamepad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Gamepad");
-  node->load(with);
 
   up    = node->append<Node::Button>("Up");
   down  = node->append<Node::Button>("Down");

@@ -12,7 +12,7 @@ struct FightingPad : Controller, Thread {
   Node::Button mode;
   Node::Button start;
 
-  FightingPad(Node::Port, Node::Peripheral);
+  FightingPad(Node::Port);
   auto main() -> void;
   auto readData() -> uint8 override;
   auto writeData(uint8 data) -> void override;

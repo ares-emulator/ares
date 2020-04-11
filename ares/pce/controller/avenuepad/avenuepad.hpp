@@ -12,7 +12,7 @@ struct AvenuePad : Controller {
   Node::Button select;
   Node::Button run;
 
-  AvenuePad(Node::Port, Node::Peripheral);
+  AvenuePad(Node::Port);
 
   auto read() -> uint4 override;
   auto write(uint2 data) -> void override;

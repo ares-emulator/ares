@@ -19,9 +19,11 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "huc3/huc3.cpp"
 #include "tama/tama.cpp"
 
-auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
-  node = parent->append<Node::Peripheral>(parent->family());
-  node->load(with);
+auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
+  return node = parent->append<Node::Peripheral>(parent->family());
+}
+
+auto Cartridge::connect() -> void {
   node->setManifest([&] { return information.manifest; });
 
   information = {};

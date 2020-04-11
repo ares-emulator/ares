@@ -9,19 +9,18 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setFamily("ColecoVision");
   port->setType("Controller");
   port->setHotSwappable(true);
-  port->setAttach([&](auto node) { connect(node); });
-  port->setDetach([&](auto node) { disconnect(); });
+  port->setAllocate([&](auto name) { return allocate(name); });
 }
 
-auto ControllerPort::connect(Node::Peripheral node) -> void {
-  disconnect();
-  if(node) {
-    if(node->name() == "Gamepad") device = new Gamepad(port, node);
-  }
-}
-
-auto ControllerPort::disconnect() -> void {
+auto ControllerPort::unload() -> void {
   device = {};
+  port = {};
+}
+
+auto ControllerPort::allocate(string name) -> Node::Peripheral {
+  if(name == "Gamepad") device = new Gamepad(port);
+  if(device) return device->node;
+  return {};
 }
 
 auto ControllerPort::serialize(serializer& s) -> void {

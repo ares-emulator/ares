@@ -8,7 +8,8 @@ struct Cartridge {
   auto region() const -> string { return information.region; }
 
   //cartridge.cpp
-  auto connect(Node::Port, Node::Peripheral) -> void;
+  auto allocate(Node::Port) -> Node::Peripheral;
+  auto connect() -> void;
   auto disconnect() -> void;
 
   auto save() -> void;

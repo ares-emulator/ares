@@ -8,7 +8,7 @@ struct Gamepad : Controller {
   Node::Button select;
   Node::Button run;
 
-  Gamepad(Node::Port, Node::Peripheral);
+  Gamepad(Node::Port);
 
   auto read() -> uint4 override;
   auto write(uint2 data) -> void override;

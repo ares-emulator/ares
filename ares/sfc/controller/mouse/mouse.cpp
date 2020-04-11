@@ -1,6 +1,5 @@
-Mouse::Mouse(Node::Port parent, Node::Peripheral with) {
+Mouse::Mouse(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Mouse");
-  node->load(with);
 
   x     = node->append<Node::Axis  >("X");
   y     = node->append<Node::Axis  >("Y");

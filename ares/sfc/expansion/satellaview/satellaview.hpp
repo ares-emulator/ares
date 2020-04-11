@@ -1,6 +1,4 @@
 struct Satellaview : Expansion {
-  Node::Peripheral node;
-
   Satellaview(Node::Port);
   ~Satellaview();
 

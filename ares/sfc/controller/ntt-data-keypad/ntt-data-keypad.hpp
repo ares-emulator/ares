@@ -27,7 +27,7 @@ struct NTTDataKeypad : Controller {
   Node::Button point;
   Node::Button end;
 
-  NTTDataKeypad(Node::Port, Node::Peripheral);
+  NTTDataKeypad(Node::Port);
 
   auto data() -> uint2;
   auto latch(bool data) -> void;

@@ -2,9 +2,11 @@ BSMemoryCartridge& bsmemory = bsmemorySlot.cartridge;
 #include "slot.cpp"
 #include "serialization.cpp"
 
-auto BSMemoryCartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
-  node = parent->append<Node::Peripheral>("BS Memory");
-  node->load(with);
+auto BSMemoryCartridge::allocate(Node::Port parent) -> Node::Peripheral {
+  return node = parent->append<Node::Peripheral>("BS Memory");
+}
+
+auto BSMemoryCartridge::connect() -> void {
   node->setManifest([&] { return information.manifest; });
 
   if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {

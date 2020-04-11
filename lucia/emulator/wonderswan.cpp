@@ -29,8 +29,8 @@ WonderSwan::WonderSwan() {
 
 auto WonderSwan::load() -> bool {
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   return true;
@@ -100,8 +100,8 @@ WonderSwanColor::WonderSwanColor() {
 
 auto WonderSwanColor::load() -> bool {
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   return true;
@@ -171,8 +171,8 @@ PocketChallengeV2::PocketChallengeV2() {
 
 auto PocketChallengeV2::load() -> bool {
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    auto peripheral = port->allocate();
-    port->connect(peripheral);
+    port->allocate();
+    port->connect();
   }
 
   return true;

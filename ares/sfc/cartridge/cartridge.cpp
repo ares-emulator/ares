@@ -8,9 +8,11 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "save.cpp"
 #include "serialization.cpp"
 
-auto Cartridge::connect(Node::Port parent, Node::Peripheral with) -> void {
-  node = parent->append<Node::Peripheral>(interface->name());
-  node->load(with);
+auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
+  return node = parent->append<Node::Peripheral>(interface->name());
+}
+
+auto Cartridge::connect() -> void {
   node->setManifest([&] { return information.manifest; });
 
   information = {};

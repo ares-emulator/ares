@@ -1,4 +1,6 @@
 struct Expansion : Thread {
+  Node::Peripheral node;
+
   Expansion();
   virtual ~Expansion();
   virtual auto main() -> void;

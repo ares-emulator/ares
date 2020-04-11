@@ -8,7 +8,7 @@ struct ControlPad : Controller {
   Node::Button c;
   Node::Button start;
 
-  ControlPad(Node::Port, Node::Peripheral);
+  ControlPad(Node::Port);
 
   auto readData() -> uint8 override;
   auto writeData(uint8 data) -> void override;

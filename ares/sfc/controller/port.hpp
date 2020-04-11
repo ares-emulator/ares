@@ -1,11 +1,11 @@
 struct ControllerPort {
   Node::Port port;
+  unique_pointer<Controller> device;
 
   ControllerPort(string name);
   auto load(Node::Object) -> void;
   auto unload() -> void;
-  auto connect(Node::Peripheral) -> void;
-  auto disconnect() -> void;
+  auto allocate(string name) -> Node::Peripheral;
 
   auto iobit() -> bool { if(device) return device->iobit(); return 0; }
   auto iobit(bool data) -> void { if(device) return device->iobit(data); }
@@ -15,8 +15,6 @@ struct ControllerPort {
   auto serialize(serializer&) -> void;
 
   const string name;
-  unique_pointer<Controller> device;
-  friend class Controller;
 };
 
 extern ControllerPort controllerPort1;

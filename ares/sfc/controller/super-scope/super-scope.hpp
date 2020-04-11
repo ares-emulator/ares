@@ -7,7 +7,7 @@ struct SuperScope : Controller, Thread {
   Node::Button turbo;
   Node::Button pause;
 
-  SuperScope(Node::Port, Node::Peripheral);
+  SuperScope(Node::Port);
   ~SuperScope();
 
   auto main() -> void;

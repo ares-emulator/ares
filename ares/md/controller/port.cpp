@@ -10,25 +10,19 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setFamily("Mega Drive");
   port->setType("Controller");
   port->setHotSwappable(true);
-  port->setAttach([&](auto node) { connect(node); });
-  port->setDetach([&](auto node) { disconnect(); });
+  port->setAllocate([&](auto name) { return allocate(name); });
 }
 
 auto ControllerPort::unload() -> void {
-  disconnect();
+  device = {};
   port = {};
 }
 
-auto ControllerPort::connect(Node::Peripheral node) -> void {
-  disconnect();
-  if(node) {
-    if(node->name() == "Control Pad" ) device = new ControlPad(port, node);
-    if(node->name() == "Fighting Pad") device = new FightingPad(port, node);
-  }
-}
-
-auto ControllerPort::disconnect() -> void {
-  device = {};
+auto ControllerPort::allocate(string name) -> Node::Peripheral {
+  if(name == "Control Pad" ) device = new ControlPad(port);
+  if(name == "Fighting Pad") device = new FightingPad(port);
+  if(device) return device->node;
+  return {};
 }
 
 auto ControllerPort::power() -> void {

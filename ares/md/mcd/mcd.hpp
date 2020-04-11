@@ -34,7 +34,9 @@ struct MCD : M68K, Thread {
   //mcd.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
-  auto connect(Node::Peripheral) -> void;
+
+  auto allocate(Node::Port) -> Node::Peripheral;
+  auto connect() -> void;
   auto disconnect() -> void;
 
   auto main() -> void;

@@ -8,7 +8,8 @@ struct Cartridge {
   auto name() const -> string { return information.name; }
 
   //cartridge.cpp
-  auto connect(Node::Port, Node::Peripheral) -> void;
+  auto allocate(Node::Port) -> Node::Peripheral;
+  auto connect() -> void;
   auto disconnect() -> void;
 
   auto save() -> void;

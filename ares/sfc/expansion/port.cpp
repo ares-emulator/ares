@@ -7,29 +7,20 @@ auto ExpansionPort::load(Node::Object parent) -> void {
   port = parent->append<Node::Port>(name);
   port->setFamily("Super Famicom");
   port->setType("Expansion");
-  port->setAttach([&](auto node) { connect(node); });
-  port->setDetach([&](auto node) { disconnect(); });
+  port->setHotSwappable(false);
+  port->setAllocate([&](auto name) { return allocate(name); });
 }
 
 auto ExpansionPort::unload() -> void {
-  disconnect();
+  device = {};
   port = {};
 }
 
-auto ExpansionPort::connected() const -> bool {
-  return (bool)device;
-}
-
-auto ExpansionPort::connect(Node::Peripheral node) -> void {
-  disconnect();
-  if(node) {
-    if(node->name() == "Satellaview") device = new Satellaview(port);
-    if(node->name() == "21fx"       ) device = new S21FX(port);
-  }
-}
-
-auto ExpansionPort::disconnect() -> void {
-  device = {};
+auto ExpansionPort::allocate(string name) -> Node::Peripheral {
+  if(name == "Satellaview") device = new Satellaview(port);
+  if(name == "21fx"       ) device = new S21FX(port);
+  if(device) return device->node;
+  return {};
 }
 
 auto ExpansionPort::serialize(serializer& s) -> void {

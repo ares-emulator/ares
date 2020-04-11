@@ -27,9 +27,9 @@ auto MCD::load(Node::Object parent) -> void {
   tray->setFamily("Mega CD");
   tray->setType("Compact Disc");
   tray->setHotSwappable(true);
-  tray->setAllocate([&] { return Node::Peripheral::create("Mega CD"); });
-  tray->setAttach([&](auto node) { connect(node); });
-  tray->setDetach([&](auto node) { disconnect(); });
+  tray->setAllocate([&](auto name) { return allocate(tray); });
+  tray->setConnect([&] { return connect(); });
+  tray->setDisconnect([&] { return disconnect(); });
 
   bios.allocate   (128_KiB >> 1);
   pram.allocate   (512_KiB >> 1);
@@ -71,23 +71,23 @@ auto MCD::unload() -> void {
   debugger = {};
 }
 
-auto MCD::connect(Node::Peripheral with) -> void {
-  disconnect();
-  if(with) {
-    disc = tray->append<Node::Peripheral>("Mega CD");
-    disc->setManifest([&] { return information.manifest; });
+auto MCD::allocate(Node::Port parent) -> Node::Peripheral {
+  return disc = parent->append<Node::Peripheral>("Mega CD");
+}
 
-    information = {};
-    if(auto fp = platform->open(disc, "manifest.bml", File::Read, File::Required)) {
-      information.manifest = fp->reads();
-    }
+auto MCD::connect() -> void {
+  disc->setManifest([&] { return information.manifest; });
 
-    auto document = BML::unserialize(information.manifest);
-    information.name = document["game/label"].text();
-
-    fd = platform->open(disc, "cd.rom", File::Read, File::Required);
-    cdd.insert();
+  information = {};
+  if(auto fp = platform->open(disc, "manifest.bml", File::Read, File::Required)) {
+    information.manifest = fp->reads();
   }
+
+  auto document = BML::unserialize(information.manifest);
+  information.name = document["game/label"].text();
+
+  fd = platform->open(disc, "cd.rom", File::Read, File::Required);
+  cdd.insert();
 }
 
 auto MCD::disconnect() -> void {

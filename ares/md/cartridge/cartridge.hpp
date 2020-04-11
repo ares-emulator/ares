@@ -10,7 +10,8 @@ struct Cartridge {
   auto bootable() const -> boolean { return information.bootable; }  //CART_IN line
 
   //cartridge.cpp
-  auto connect(Node::Port, Node::Peripheral) -> void;
+  auto allocate(Node::Port) -> Node::Peripheral;
+  auto connect() -> void;
   auto disconnect() -> void;
 
   auto save() -> void;

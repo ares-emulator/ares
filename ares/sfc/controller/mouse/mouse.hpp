@@ -4,7 +4,7 @@ struct Mouse : Controller {
   Node::Button left;
   Node::Button right;
 
-  Mouse(Node::Port, Node::Peripheral);
+  Mouse(Node::Port);
 
   auto data() -> uint2;
   auto latch(bool data) -> void;

@@ -1,6 +1,5 @@
-ControlPad::ControlPad(Node::Port parent, Node::Peripheral with) {
+ControlPad::ControlPad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Control Pad");
-  node->load(with);
 
   up    = node->append<Node::Button>("Up");
   down  = node->append<Node::Button>("Down");

@@ -1,54 +1,35 @@
 struct Port : Object {
   DeclareClass(Port, "Port")
+  using Object::Object;
 
-  Port(string name = {}) : Object(name) {
-    setAllocate([&] {
-      return Node::Peripheral::create();
-    });
-  }
-
-  auto allocate() -> Node::Peripheral { if(_allocate) return _allocate(); return {}; }
-  auto attach(Node::Peripheral node) -> void { if(_attach) return _attach(node); }
-  auto detach(Node::Peripheral node) -> void { if(_detach) return _detach(node); }
   auto type() const -> string { return _type; }
   auto family() const -> string { return _family; }
   auto hotSwappable() const -> bool { return _hotSwappable; }
 
-  auto setAllocate(function<Node::Peripheral ()> allocate) -> void { _allocate = allocate; }
-  auto setAttach(function<void (Node::Peripheral)> attach) -> void { _attach = attach; }
-  auto setDetach(function<void (Node::Peripheral)> detach) -> void { _detach = detach; }
-  auto setType(string_view type) -> void { _type = type; }
-  auto setFamily(string_view family) -> void { _family = family; }
+  auto setAllocate(function<Node::Peripheral (string)> allocate) -> void { _allocate = allocate; }
+  auto setConnect(function<void ()> connect) -> void { _connect = connect; }
+  auto setDisconnect(function<void ()> disconnect) -> void { _disconnect = disconnect; }
+  auto setType(string type) -> void { _type = type; }
+  auto setFamily(string family) -> void { _family = family; }
   auto setHotSwappable(bool hotSwappable) -> void { _hotSwappable = hotSwappable; }
 
   auto connected() -> Node::Peripheral {
     return find<Node::Peripheral>(0);
   }
 
-  auto connect(Node::Peripheral peripheral) -> void {
+  auto allocate(string name = {}) -> Node::Peripheral {
     disconnect();
-    attach(peripheral);
+    if(_allocate) return _allocate(name);
+    return {};
   }
 
-/*
-
-  //searches a source port tree for a peripheral that matches this peripheral.
-  //if found, it will connect the peripheral to its parent port.
-  auto scan(Node::Object port) -> void {
-    disconnect();
-    if(!port) return;
-    if(auto from = port->find(shared())) {
-      if(auto node = from->find<Node::Peripheral>(0)) {
-        connect(node);
-      }
-    }
+  auto connect() -> void {
+    if(_connect) _connect();
   }
-
-*/
 
   auto disconnect() -> void {
     if(auto peripheral = connected()) {
-      detach(peripheral);
+      if(_disconnect) _disconnect();
       remove(peripheral);
     }
   }
@@ -71,16 +52,19 @@ struct Port : Object {
     if(auto source = object->cast<Node::Port>()) {
       Object::copy(source);
       if(auto peripheral = source->find<Node::Peripheral>(0)) {
-        connect(peripheral);
-        if(auto node = connected()) node->copy(peripheral);
+        if(auto node = allocate(peripheral->name())) {
+          node->copy(peripheral);
+          connect();
+          node->copy(peripheral);
+        }
       }
     }
   }
 
 protected:
-  function<Node::Peripheral ()> _allocate;
-  function<void (Node::Peripheral)> _attach;
-  function<void (Node::Peripheral)> _detach;
+  function<Node::Peripheral (string)> _allocate;
+  function<void ()> _connect;
+  function<void ()> _disconnect;
   string _type;
   string _family;
   bool _hotSwappable = false;

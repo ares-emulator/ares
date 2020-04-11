@@ -1,12 +1,12 @@
 struct ControllerPort {
   Node::Port port;
+  unique_pointer<Controller> device;
 
   //port.cpp
   ControllerPort(string name);
   auto load(Node::Object) -> void;
   auto unload() -> void;
-  auto connect(Node::Peripheral) -> void;
-  auto disconnect() -> void;
+  auto allocate(string name) -> Node::Peripheral;
 
   auto read() -> uint6 { if(device) return device->read(); return 0x3f; }
   auto write(uint8 data) { if(device) return device->write(data); }
@@ -14,7 +14,6 @@ struct ControllerPort {
   auto serialize(serializer&) -> void;
 
   const string name;
-  unique_pointer<Controller> device;
 };
 
 extern ControllerPort controllerPort1;
