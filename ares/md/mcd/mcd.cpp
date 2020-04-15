@@ -84,7 +84,7 @@ auto MCD::connect() -> void {
   }
 
   auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].text();
+  information.name = document["game/label"].string();
 
   fd = platform->open(disc, "cd.rom", File::Read, File::Required);
   cdd.insert();

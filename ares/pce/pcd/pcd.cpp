@@ -4,6 +4,9 @@ namespace ares::PCEngine {
 
 PCD pcd;
 #include "io.cpp"
+#include "bram.cpp"
+#include "scsi.cpp"
+#include "adpcm.cpp"
 #include "serialization.cpp"
 
 auto PCD::load(Node::Object parent) -> void {
@@ -18,12 +21,14 @@ auto PCD::load(Node::Object parent) -> void {
   tray->setDisconnect([&] { return disconnect(); });
 
   wram.allocate(64_KiB);
-  bram.allocate(2_KiB);
+  bram.load(node);
+  adpcm.load(node);
 }
 
 auto PCD::unload() -> void {
   wram.reset();
-  bram.reset();
+  bram.unload();
+  adpcm.unload();
   disconnect();
   node = {};
   tray = {};
@@ -45,9 +50,19 @@ auto PCD::connect() -> void {
   information.name = document["game/label"].string();
 
   fd = platform->open(disc, "cd.rom", File::Read, File::Required);
+
+  uint sectors = fd->size() / 2448;
+  vector<uint8_t> subchannel;
+  subchannel.resize(sectors * 96);
+  for(uint sector : range(sectors)) {
+    fd->seek(sector * 2448 + 2352);
+    fd->read(subchannel.data() + sector * 96, 96);
+  }
+  session.decode(subchannel, 96);
 }
 
 auto PCD::disconnect() -> void {
+  session = {};
   disc = {};
   fd = {};
 }
@@ -56,7 +71,8 @@ auto PCD::save() -> void {
 }
 
 auto PCD::main() -> void {
-  step(1000);
+  scsi.main();
+  step(1);
 }
 
 auto PCD::step(uint clocks) -> void {
@@ -64,8 +80,16 @@ auto PCD::step(uint clocks) -> void {
   Thread::synchronize(cpu);
 }
 
+auto PCD::irqLine() const -> bool {
+  if(scsi.irq.ready.pending && scsi.irq.ready.enable) return 1;
+  if(scsi.irq.completed.pending && scsi.irq.completed.enable) return 1;
+  return 0;
+}
+
 auto PCD::power() -> void {
-  Thread::create(1'000, {&PCD::main, this});
+  Thread::create(75, {&PCD::main, this});
+  scsi = {};
+  io = {};
 }
 
 }

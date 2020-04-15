@@ -164,10 +164,16 @@ auto PortConnector::eventActivate() -> void {
           peripheral->copy(node);
           port->connect();
           peripheral->copy(node);
-          inputManager.bind();  //bind any inputs this peripheral may contain
-          program.refreshPanelList();
+        }
+      } else {
+        if(auto peripheral = port->allocate()) {
+          peripheral->setAttribute("location", location);
+          peripheral->setAttribute("name", item.attribute("name"));
+          port->connect();
         }
       }
+      inputManager.bind();  //bind any inputs this peripheral may contain
+      program.refreshPanelList();
     }
   }
 }

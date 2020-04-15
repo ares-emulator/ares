@@ -8,13 +8,13 @@ auto CPU::read(uint8 bank, uint13 address) -> uint8 {
 
   //$80-87  CD WRAM
   if(bank >= 0x80 && bank <= 0x87) {
-    if(PCD::Present()) return pcd.readWRAM(address);
+    if(PCD::Present()) return pcd.wram.read(address);
     return data;
   }
 
   //$f7  CD BRAM
   if(bank == 0xf7) {
-    if(PCD::Present()) return pcd.readBRAM(bank.bit(0,2) << 13 | address);
+    if(PCD::Present()) return pcd.bram.read(bank.bit(0,2) << 13 | address);
     return data;
   }
 
@@ -119,13 +119,13 @@ auto CPU::write(uint8 bank, uint13 address, uint8 data) -> void {
 
   //$80-87  CD WRAM
   if(bank >= 0x80 && bank <= 0x87) {
-    if(PCD::Present()) return pcd.writeWRAM(bank.bit(0,2) << 13 | address, data);
+    if(PCD::Present()) return pcd.wram.write(bank.bit(0,2) << 13 | address, data);
     return;
   }
 
   //$f7  CD BRAM
   if(bank == 0xf7) {
-    if(PCD::Present()) return pcd.writeBRAM(address, data);
+    if(PCD::Present()) return pcd.bram.write(address, data);
     return;
   }
 

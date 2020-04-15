@@ -33,7 +33,7 @@ auto Cartridge::connect() -> void {
   board->load(document);
 
   if(auto fp = platform->open(node, "save.ram", File::Read)) {
-    pcd.bram.load(fp);
+    pcd.bram.memory.load(fp);
   }
 
   power();
@@ -51,7 +51,7 @@ auto Cartridge::save() -> void {
   board->save(document);
 
   if(auto fp = platform->open(node, "save.ram", File::Write)) {
-    pcd.bram.save(fp);
+    pcd.bram.memory.save(fp);
   }
 }
 

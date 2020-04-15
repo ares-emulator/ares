@@ -83,7 +83,7 @@ auto PCEngine::input(ares::Node::Input node) -> void {
 PCEngineCD::PCEngineCD() {
   interface = new ares::PCEngine::PCEngineInterface;
   name = "PC Engine CD";
-  extensions = {"bin", "img"};
+  extensions = {"cue"};
 
   firmware.append({"BIOS", "World"});
 }
@@ -95,6 +95,11 @@ auto PCEngineCD::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
+    port->allocate();
+    port->connect();
+  }
+
+  if(auto port = root->find<ares::Node::Port>("PC Engine CD/Disc Tray")) {
     port->allocate();
     port->connect();
   }
@@ -131,6 +136,31 @@ auto PCEngineCD::open(ares::Node::Object node, string name, vfs::file::mode mode
     if(name == "save.ram") {
       auto location = locate(game.location, ".sav", settings.paths.saves);
       if(auto result = vfs::fs::file::open(location, mode)) return result;
+    }
+  }
+
+  if(node->name() == "PC Engine CD") {
+    if(name == "manifest.bml") {
+      string manifest;
+      manifest.append("game\n");
+      manifest.append("  name:  ", Location::prefix(game.location), "\n");
+      manifest.append("  label: ", Location::prefix(game.location), "\n");
+      return vfs::memory::file::open(manifest.data<uint8_t>(), manifest.size());
+    }
+
+    if(name == "cd.rom") {
+      if(game.location.iendsWith(".zip")) {
+        MessageDialog().setText(
+          "Sorry, compressed CD-ROM images are not currently supported.\n"
+          "Please extract the image prior to loading it."
+        ).setAlignment(presentation).error();
+        return {};
+      }
+
+      if(auto result = vfs::fs::cdrom::open(game.location)) return result;
+      MessageDialog().setText(
+        "Failed to load CD-ROM image."
+      ).setAlignment(presentation).error();
     }
   }
 

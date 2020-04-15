@@ -86,7 +86,7 @@ auto MegaDrive::input(ares::Node::Input node) -> void {
 MegaCD::MegaCD() {
   interface = new ares::MegaDrive::MegaDriveInterface;
   name = "Mega CD";
-  extensions = {"bin", "img"};
+  extensions = {"cue"};
 
   firmware.append({"BIOS", "US"});
   firmware.append({"BIOS", "Japan"});
@@ -178,13 +178,9 @@ auto MegaCD::open(ares::Node::Object node, string name, vfs::file::mode mode, bo
         return {};
       }
 
-      string binLocation = game.location;
-      string cueLocation = {Location::notsuffix(game.location), ".cue"};
-      string subLocation = {Location::notsuffix(game.location), ".sub"};
-      if(auto result = vfs::fs::cdrom::open(binLocation, cueLocation, subLocation)) return result;
+      if(auto result = vfs::fs::cdrom::open(game.location)) return result;
       MessageDialog().setText(
-        "Failed to load CD-ROM image.\n"
-        "Please ensure image is in single-file BIN+CUE format and is uncompressed."
+        "Failed to load CD-ROM image."
       ).setAlignment(presentation).error();
     }
   }

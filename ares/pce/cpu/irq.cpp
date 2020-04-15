@@ -2,7 +2,7 @@ auto CPU::IRQ::poll() -> void {
   pending = 0;
   if(cpu.r.p.i) return;
 
-  if(!disable.irq2 && 0) {
+  if(!disable.irq2 && pcd.irqLine()) {
     pending = Vector::IRQ2;
   }
 
