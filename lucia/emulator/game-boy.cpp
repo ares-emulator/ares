@@ -33,7 +33,7 @@ auto GameBoy::open(ares::Node::Object node, string name, vfs::file::mode mode, b
   if(name == "manifest.bml") return Emulator::manifest();
 
   if(name == "boot.dmg-1.rom") {
-    return vfs::memory::file::open(Resource::GameBoy::BootDMG1, sizeof Resource::GameBoy::BootDMG1);
+    return vfs::memory::open(Resource::GameBoy::BootDMG1, sizeof Resource::GameBoy::BootDMG1);
   }
 
   auto document = BML::unserialize(game.manifest);
@@ -41,12 +41,12 @@ auto GameBoy::open(ares::Node::Object node, string name, vfs::file::mode mode, b
   auto saveRAMVolatile = (bool)document["game/board/memory(Content=Save,type=RAM)/volatile"];
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   if(name == "save.ram" && !saveRAMVolatile) {
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};
@@ -91,7 +91,7 @@ auto GameBoyColor::open(ares::Node::Object node, string name, vfs::file::mode mo
   if(name == "manifest.bml") return Emulator::manifest();
 
   if(name == "boot.cgb-0.rom") {
-    return vfs::memory::file::open(Resource::GameBoyColor::BootCGB0, sizeof Resource::GameBoyColor::BootCGB0);
+    return vfs::memory::open(Resource::GameBoyColor::BootCGB0, sizeof Resource::GameBoyColor::BootCGB0);
   }
 
   auto document = BML::unserialize(game.manifest);
@@ -99,12 +99,12 @@ auto GameBoyColor::open(ares::Node::Object node, string name, vfs::file::mode mo
   auto saveRAMVolatile = (bool)document["game/board/memory(Content=Save,type=RAM)/volatile"];
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   if(name == "save.ram" && !saveRAMVolatile) {
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};

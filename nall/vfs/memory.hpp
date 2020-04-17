@@ -3,19 +3,19 @@
 #include <nall/file.hpp>
 #include <nall/decode/zip.hpp>
 
-namespace nall::vfs::memory {
+namespace nall::vfs {
 
-struct file : vfs::file {
-  ~file() { delete[] _data; }
+struct memory : file {
+  ~memory() { delete[] _data; }
 
-  static auto open(const void* data, uintmax size) -> shared_pointer<vfs::file> {
-    auto instance = shared_pointer<file>{new file};
+  static auto open(const void* data, uintmax size) -> shared_pointer<memory> {
+    auto instance = shared_pointer<memory>{new memory};
     instance->_open((const uint8_t*)data, size);
     return instance;
   }
 
-  static auto open(string location, bool decompress = false) -> shared_pointer<file> {
-    auto instance = shared_pointer<file>{new file};
+  static auto open(string location, bool decompress = false) -> shared_pointer<memory> {
+    auto instance = shared_pointer<memory>{new memory};
     if(decompress && location.iendsWith(".zip")) {
       Decode::ZIP archive;
       if(archive.open(location) && archive.file.size() == 1) {
@@ -49,9 +49,9 @@ struct file : vfs::file {
   }
 
 private:
-  file() = default;
-  file(const file&) = delete;
-  auto operator=(const file&) -> file& = delete;
+  memory() = default;
+  memory(const file&) = delete;
+  auto operator=(const memory&) -> memory& = delete;
 
   auto _open(const uint8_t* data, uintmax size) -> void {
     _size = size;

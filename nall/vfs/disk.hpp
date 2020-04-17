@@ -2,11 +2,11 @@
 
 #include <nall/file.hpp>
 
-namespace nall::vfs::fs {
+namespace nall::vfs {
 
-struct file : vfs::file {
-  static auto open(string location_, mode mode_) -> shared_pointer<vfs::file> {
-    auto instance = shared_pointer<file>{new file};
+struct disk : file {
+  static auto open(string location_, mode mode_) -> shared_pointer<disk> {
+    auto instance = shared_pointer<disk>{new disk};
     if(!instance->_open(location_, mode_)) return {};
     return instance;
   }
@@ -36,9 +36,9 @@ struct file : vfs::file {
   }
 
 private:
-  file() = default;
-  file(const file&) = delete;
-  auto operator=(const file&) -> file& = delete;
+  disk() = default;
+  disk(const disk&) = delete;
+  auto operator=(const disk&) -> disk& = delete;
 
   auto _open(string location_, mode mode_) -> bool {
     if(!_fp.open(location_, (uint)mode_)) return false;

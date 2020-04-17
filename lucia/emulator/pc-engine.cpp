@@ -49,12 +49,12 @@ auto PCEngine::open(ares::Node::Object node, string name, vfs::file::mode mode, 
   auto programRAMVolatile = (bool)document["game/board/memory(content=Program,type=RAM)/volatile"];
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   if(name == "save.ram" && !programRAMVolatile) {
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};
@@ -123,7 +123,7 @@ auto PCEngineCD::open(ares::Node::Object node, string name, vfs::file::mode mode
             bios.resize(image->size());
             image->read(bios.data(), bios.size());
             auto manifest = cartridge->manifest(bios, firmware[0].location);
-            return vfs::memory::file::open(manifest.data<uint8_t>(), manifest.size());
+            return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
           }
         }
       }
@@ -135,7 +135,7 @@ auto PCEngineCD::open(ares::Node::Object node, string name, vfs::file::mode mode
 
     if(name == "save.ram") {
       auto location = locate(game.location, ".sav", settings.paths.saves);
-      if(auto result = vfs::fs::file::open(location, mode)) return result;
+      if(auto result = vfs::disk::open(location, mode)) return result;
     }
   }
 
@@ -145,7 +145,7 @@ auto PCEngineCD::open(ares::Node::Object node, string name, vfs::file::mode mode
       manifest.append("game\n");
       manifest.append("  name:  ", Location::prefix(game.location), "\n");
       manifest.append("  label: ", Location::prefix(game.location), "\n");
-      return vfs::memory::file::open(manifest.data<uint8_t>(), manifest.size());
+      return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
     }
 
     if(name == "cd.rom") {
@@ -157,7 +157,7 @@ auto PCEngineCD::open(ares::Node::Object node, string name, vfs::file::mode mode
         return {};
       }
 
-      if(auto result = vfs::fs::cdrom::open(game.location)) return result;
+      if(auto result = vfs::cdrom::open(game.location)) return result;
       MessageDialog().setText(
         "Failed to load CD-ROM image."
       ).setAlignment(presentation).error();
@@ -215,12 +215,12 @@ auto SuperGrafx::open(ares::Node::Object node, string name, vfs::file::mode mode
   auto programRAMVolatile = (bool)document["game/board/memory(content=Program,type=RAM)/volatile"];
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   if(name == "save.ram" && !programRAMVolatile) {
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};

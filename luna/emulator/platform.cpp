@@ -28,19 +28,19 @@ auto Emulator::open(ares::Node::Object node, string name, vfs::file::mode mode, 
   if(name == "manifest.bml") {
     if(!file::exists({location, name}) && directory::exists(location)) {
       if(auto manifest = execute("mia", "--system", node->name(), "--manifest", location).output) {
-        return vfs::memory::file::open(manifest.data<uint8_t>(), manifest.size());
+        return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
       }
     }
   }
 
-  if(auto result = vfs::fs::file::open({location, name}, mode)) return result;
+  if(auto result = vfs::disk::open({location, name}, mode)) return result;
 
   if(required) {
     //attempt to pull required system firmware (boot ROMs, etc) from system template
     if(location == emulator.system.data) {
       if(file::exists({emulator.system.templates, name})) {
         file::copy({emulator.system.templates, name}, {emulator.system.data, name});
-        if(auto result = vfs::fs::file::open({location, name}, mode)) return result;
+        if(auto result = vfs::disk::open({location, name}, mode)) return result;
       }
     }
 
@@ -58,12 +58,12 @@ auto Emulator::open(ares::Node::Object node, string name, vfs::file::mode mode, 
     .setAlignment(Alignment::Center)
     .openFile()
     ) {
-      if(auto input = vfs::memory::file::open(source, true)) {
+      if(auto input = vfs::memory::open(source, true)) {
         if(auto output = file::open({location, name}, file::mode::write)) {
           output.write({input->data(), (uint)input->size()});
         }
       }
-      if(auto result = vfs::fs::file::open({location, name}, mode)) return result;
+      if(auto result = vfs::disk::open({location, name}, mode)) return result;
     }
   }
 

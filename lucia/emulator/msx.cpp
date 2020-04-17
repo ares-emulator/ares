@@ -38,14 +38,14 @@ auto MSX::open(ares::Node::Object node, string name, vfs::file::mode mode, bool 
   if(name == "manifest.bml") return Emulator::manifest();
 
   if(name == "bios.rom") {
-    return vfs::memory::file::open(Resource::MSX::BIOS, sizeof Resource::MSX::BIOS);
+    return vfs::memory::open(Resource::MSX::BIOS, sizeof Resource::MSX::BIOS);
   }
 
   auto document = BML::unserialize(game.manifest);
   auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   return {};
@@ -93,18 +93,18 @@ auto MSX2::open(ares::Node::Object node, string name, vfs::file::mode mode, bool
   if(name == "manifest.bml") return Emulator::manifest();
 
   if(name == "bios.rom") {
-    return vfs::memory::file::open(Resource::MSX2::BIOS, sizeof Resource::MSX2::BIOS);
+    return vfs::memory::open(Resource::MSX2::BIOS, sizeof Resource::MSX2::BIOS);
   }
 
   if(name == "sub.rom") {
-    return vfs::memory::file::open(Resource::MSX2::Sub, sizeof Resource::MSX2::Sub);
+    return vfs::memory::open(Resource::MSX2::Sub, sizeof Resource::MSX2::Sub);
   }
 
   auto document = BML::unserialize(game.manifest);
   auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   return {};

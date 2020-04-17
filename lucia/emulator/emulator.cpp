@@ -124,7 +124,7 @@ auto Emulator::manifest() -> shared_pointer<vfs::file> {
     if(media->name() != interface->name()) continue;
     if(auto cartridge = media.cast<mia::Cartridge>()) {
       game.manifest = cartridge->manifest(game.image, game.location);
-      return vfs::memory::file::open(game.manifest.data<uint8_t>(), game.manifest.size());
+      return vfs::memory::open(game.manifest.data<uint8_t>(), game.manifest.size());
     }
   }
   return {};
@@ -155,10 +155,10 @@ auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::fil
     Decode::ZIP archive;
     if(archive.open(firmware.location) && archive.file) {
       auto image = archive.extract(archive.file.first());
-      return vfs::memory::file::open(image.data(), image.size());
+      return vfs::memory::open(image.data(), image.size());
     }
   } else if(auto image = file::read(firmware.location)) {
-    return vfs::memory::file::open(image.data(), image.size());
+    return vfs::memory::open(image.data(), image.size());
   }
   return {};
 }

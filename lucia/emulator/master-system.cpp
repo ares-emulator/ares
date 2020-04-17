@@ -42,12 +42,12 @@ auto MasterSystem::open(ares::Node::Object node, string name, vfs::file::mode mo
   auto saveRAMVolatile = (bool)document["game/board/memory(Content=Save,type=RAM)/volatile"];
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   if(name == "save.ram" && !saveRAMVolatile) {
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};
@@ -96,12 +96,12 @@ auto GameGear::open(ares::Node::Object node, string name, vfs::file::mode mode, 
   auto saveRAMVolatile = (bool)document["game/board/memory(Content=Save,type=RAM)/volatile"];
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   if(name == "save.ram" && !saveRAMVolatile) {
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};

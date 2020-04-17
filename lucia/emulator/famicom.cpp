@@ -47,21 +47,21 @@ auto Famicom::open(ares::Node::Object node, string name, vfs::file::mode mode, b
   auto programRAMVolatile = (bool)document["game/board/memory(content=Program,type=RAM)/volatile"];
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data() + iNESROMSize, programROMSize);
+    return vfs::memory::open(game.image.data() + iNESROMSize, programROMSize);
   }
 
   if(name == "character.rom") {
-    return vfs::memory::file::open(game.image.data() + iNESROMSize + programROMSize, characterROMSize);
+    return vfs::memory::open(game.image.data() + iNESROMSize + programROMSize, characterROMSize);
   }
 
   if(name == "save.ram" && !programRAMVolatile) {
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   if(name == "save.eeprom") {
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};
@@ -153,7 +153,7 @@ auto FamicomDiskSystem::open(ares::Node::Object node, string name, vfs::file::mo
             bios.resize(image->size());
             image->read(bios.data(), bios.size());
             auto manifest = cartridge->manifest(bios, firmware[0].location);
-            return vfs::memory::file::open(manifest.data<uint8_t>(), manifest.size());
+            return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
           }
         }
       }
@@ -172,31 +172,31 @@ auto FamicomDiskSystem::open(ares::Node::Object node, string name, vfs::file::mo
           game.manifest = floppyDisk->manifest(game.image, game.location);
         }
       }
-      return vfs::memory::file::open(game.manifest.data<uint8_t>(), game.manifest.size());
+      return vfs::memory::open(game.manifest.data<uint8_t>(), game.manifest.size());
     }
 
     if(name == "disk1.sideA") {
       auto location = locate(game.location, ".1A.sav", settings.paths.saves);
-      if(auto result = vfs::fs::file::open(location, mode)) return result;
-      if(mode == vfs::file::mode::read) return vfs::memory::file::open(diskSide[0].data(), diskSide[0].size());
+      if(auto result = vfs::disk::open(location, mode)) return result;
+      if(mode == vfs::file::mode::read) return vfs::memory::open(diskSide[0].data(), diskSide[0].size());
     }
 
     if(name == "disk1.sideB") {
       auto location = locate(game.location, ".1B.sav", settings.paths.saves);
-      if(auto result = vfs::fs::file::open(location, mode)) return result;
-      if(mode == vfs::file::mode::read) return vfs::memory::file::open(diskSide[1].data(), diskSide[1].size());
+      if(auto result = vfs::disk::open(location, mode)) return result;
+      if(mode == vfs::file::mode::read) return vfs::memory::open(diskSide[1].data(), diskSide[1].size());
     }
 
     if(name == "disk2.sideA") {
       auto location = locate(game.location, ".2A.sav", settings.paths.saves);
-      if(auto result = vfs::fs::file::open(location, mode)) return result;
-      if(mode == vfs::file::mode::read) return vfs::memory::file::open(diskSide[2].data(), diskSide[2].size());
+      if(auto result = vfs::disk::open(location, mode)) return result;
+      if(mode == vfs::file::mode::read) return vfs::memory::open(diskSide[2].data(), diskSide[2].size());
     }
 
     if(name == "disk2.sideB") {
       auto location = locate(game.location, ".2B.sav", settings.paths.saves);
-      if(auto result = vfs::fs::file::open(location, mode)) return result;
-      if(mode == vfs::file::mode::read) return vfs::memory::file::open(diskSide[3].data(), diskSide[3].size());
+      if(auto result = vfs::disk::open(location, mode)) return result;
+      if(mode == vfs::file::mode::read) return vfs::memory::open(diskSide[3].data(), diskSide[3].size());
     }
   }
 

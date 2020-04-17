@@ -52,8 +52,8 @@ auto NeoGeoPocket::open(ares::Node::Object node, string name, vfs::file::mode mo
 
   if(name == "program.flash") {
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
-    if(mode == vfs::file::mode::read) return vfs::memory::file::open(game.image.data(), programROMSize);
+    if(auto result = vfs::disk::open(location, mode)) return result;
+    if(mode == vfs::file::mode::read) return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   return {};
@@ -116,8 +116,8 @@ auto NeoGeoPocketColor::open(ares::Node::Object node, string name, vfs::file::mo
 
   if(name == "program.flash") {
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
-    if(mode == vfs::file::mode::read) return vfs::memory::file::open(game.image.data(), programROMSize);
+    if(auto result = vfs::disk::open(location, mode)) return result;
+    if(mode == vfs::file::mode::read) return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   return {};

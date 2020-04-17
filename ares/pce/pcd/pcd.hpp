@@ -8,6 +8,17 @@ struct PCD : Thread {
   CD::Session session;
   Memory::Writable<uint8> wram;   //64KB
 
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+
+    struct Memory {
+      Node::Memory wram;
+      Node::Memory adpcm;
+      Node::Memory bram;
+    } memory;
+  } debugger;
+
   static auto Present() -> bool { return true; }
 
   auto manifest() const -> string { return information.manifest; }

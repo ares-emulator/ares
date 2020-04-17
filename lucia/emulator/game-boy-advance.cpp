@@ -41,13 +41,13 @@ auto GameBoyAdvance::open(ares::Node::Object node, string name, vfs::file::mode 
   auto saveRAMVolatile = (bool)document["game/board/memory(Content=Save)/volatile"];
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   if(name == "save.ram" || name == "save.eeprom" || name == "save.flash") {
     if(saveRAMVolatile) return {};
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};

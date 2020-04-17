@@ -7,6 +7,7 @@ PCD pcd;
 #include "bram.cpp"
 #include "scsi.cpp"
 #include "adpcm.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto PCD::load(Node::Object parent) -> void {
@@ -23,6 +24,7 @@ auto PCD::load(Node::Object parent) -> void {
   wram.allocate(64_KiB);
   bram.load(node);
   adpcm.load(node);
+  debugger.load(node);
 }
 
 auto PCD::unload() -> void {

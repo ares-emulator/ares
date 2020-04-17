@@ -47,14 +47,14 @@ auto PCD::read(uint4 address) -> uint8 {
     data = scsi.readData();
   }
 
-if(address != 0x0)
-print("* rd ff:180", hex(address, 1L), " = ", hex(data, 2L), " ", binary(data, 8L), "\n");
+//if(address != 0x0)
+//print("* rd ff:180", hex(address, 1L), " = ", hex(data, 2L), " ", binary(data, 8L), "\n");
 
   return data;
 }
 
 auto PCD::write(uint4 address, uint8 data) -> void {
-print("* wr ff:180", hex(address, 1L), " = ", hex(data, 2L), "\n");
+//print("* wr ff:180", hex(address, 1L), " = ", hex(data, 2L), "\n");
 
   io.mdr[address] = data;
 

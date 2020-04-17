@@ -40,7 +40,7 @@ auto WonderSwan::open(ares::Node::Object node, string name, vfs::file::mode mode
   if(name == "manifest.bml") return Emulator::manifest();
 
   if(node->identity() == "System" && name == "boot.rom") {
-    return vfs::memory::file::open(Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot);
+    return vfs::memory::open(Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot);
   }
 
   if(node->identity() == "System" && name == "save.eeprom") {
@@ -52,18 +52,18 @@ auto WonderSwan::open(ares::Node::Object node, string name, vfs::file::mode mode
   auto saveRAMVolatile = document["game/board/memory(content=Save)/volatile"];
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   if(name == "save.ram" || name == "save.eeprom") {
     if(saveRAMVolatile) return {};
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   if(name == "time.rtc") {
     auto location = locate(game.location, ".rtc", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};
@@ -111,7 +111,7 @@ auto WonderSwanColor::open(ares::Node::Object node, string name, vfs::file::mode
   if(name == "manifest.bml") return Emulator::manifest();
 
   if(node->identity() == "System" && name == "boot.rom") {
-    return vfs::memory::file::open(Resource::WonderSwanColor::Boot, sizeof Resource::WonderSwanColor::Boot);
+    return vfs::memory::open(Resource::WonderSwanColor::Boot, sizeof Resource::WonderSwanColor::Boot);
   }
 
   if(node->identity() == "System" && name == "save.eeprom") {
@@ -123,18 +123,18 @@ auto WonderSwanColor::open(ares::Node::Object node, string name, vfs::file::mode
   auto saveRAMVolatile = document["game/board/memory(content=Save)/volatile"];
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   if(name == "save.ram" || name == "save.eeprom") {
     if(saveRAMVolatile) return {};
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   if(name == "time.rtc") {
     auto location = locate(game.location, ".rtc", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};
@@ -182,7 +182,7 @@ auto PocketChallengeV2::open(ares::Node::Object node, string name, vfs::file::mo
   if(name == "manifest.bml") return Emulator::manifest();
 
   if(node->identity() == "System" && name == "boot.rom") {
-    return vfs::memory::file::open(Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot);
+    return vfs::memory::open(Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot);
   }
 
   if(node->identity() == "System" && name == "save.eeprom") {
@@ -194,18 +194,18 @@ auto PocketChallengeV2::open(ares::Node::Object node, string name, vfs::file::mo
   auto saveRAMVolatile = document["game/board/memory(content=Save)/volatile"];
 
   if(name == "program.rom") {
-    return vfs::memory::file::open(game.image.data(), programROMSize);
+    return vfs::memory::open(game.image.data(), programROMSize);
   }
 
   if(name == "save.ram" || name == "save.eeprom") {
     if(saveRAMVolatile) return {};
     auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   if(name == "time.rtc") {
     auto location = locate(game.location, ".rtc", settings.paths.saves);
-    if(auto result = vfs::fs::file::open(location, mode)) return result;
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};

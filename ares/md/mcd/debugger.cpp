@@ -1,5 +1,5 @@
 auto MCD::Debugger::load(Node::Object parent) -> void {
-  memory.pram = parent->append<Node::Memory>("Mega CD PRAM");
+  memory.pram = parent->append<Node::Memory>("CD PRAM");
   memory.pram->setSize(256_KiB << 1);
   memory.pram->setRead([&](uint32 address) -> uint8 {
     return mcd.pram[address >> 1].byte(!address.bit(0));
@@ -8,7 +8,7 @@ auto MCD::Debugger::load(Node::Object parent) -> void {
     mcd.pram[address >> 1].byte(!address.bit(0)) = data;
   });
 
-  memory.wram = parent->append<Node::Memory>("Mega CD WRAM");
+  memory.wram = parent->append<Node::Memory>("CD WRAM");
   memory.wram->setSize(128_KiB << 1);
   memory.wram->setRead([&](uint32 address) -> uint8 {
     return mcd.wram[address >> 1].byte(!address.bit(0));
@@ -17,7 +17,7 @@ auto MCD::Debugger::load(Node::Object parent) -> void {
     mcd.wram[address >> 1].byte(!address.bit(0)) = data;
   });
 
-  memory.bram = parent->append<Node::Memory>("Mega CD BRAM");
+  memory.bram = parent->append<Node::Memory>("CD BRAM");
   memory.bram->setSize(8_KiB);
   memory.bram->setRead([&](uint32 address) -> uint8 {
     return mcd.bram[address];

@@ -469,7 +469,7 @@ struct Session {
         s.append(MSF(index.lba).toString(), " - ", MSF(index.end).toString(), "\n");
       }
     }
-    s.append("  leadout: ");
+    s.append("  leadOut: ");
     s.append(MSF(leadOut.lba).toString(), " - ", MSF(leadOut.end).toString(), "\n");
     return s;
   }

@@ -67,6 +67,6 @@ struct file {
 
 }
 
-#include <nall/vfs/fs/cdrom.hpp>
-#include <nall/vfs/fs/file.hpp>
-#include <nall/vfs/memory/file.hpp>
+#include <nall/vfs/cdrom.hpp>
+#include <nall/vfs/disk.hpp>
+#include <nall/vfs/memory.hpp>

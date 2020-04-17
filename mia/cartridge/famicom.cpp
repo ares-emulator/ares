@@ -202,6 +202,12 @@ auto Famicom::heuristicsINES(vector<uint8_t>& data, string location) -> string {
     s += "    chip type=VRC7\n";
     prgram = 8192;
     break;
+
+  case 159:
+    s += "  board:  BANDAI-FCG\n";
+    s += "    chip type=LZ93D50\n";
+    eeprom = 128;
+    break;
   }
 
   s += "    memory\n";
