@@ -39,8 +39,8 @@ struct PCD : Thread {
   auto power() -> void;
 
   //io.cpp
-  auto read(uint4 address) -> uint8;
-  auto write(uint4 address, uint8 data) -> void;
+  auto read(uint10 address) -> uint8;
+  auto write(uint10 address, uint8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -73,7 +73,8 @@ struct PCD : Thread {
 
   struct SCSI {
     //scsi.cpp
-    auto main() -> void;
+    auto clock() -> void;
+    auto clockRead() -> void;
     auto readData() -> uint8;
     auto update() -> void;
     auto messageInput() -> void;
@@ -83,11 +84,14 @@ struct PCD : Thread {
     auto commandTestUnitReady() -> void;
     auto commandRead() -> void;
     auto commandGetDirectoryInformation() -> void;
+    auto commandIgnore() -> void;
     auto replyStatusOK() -> void;
     auto replyStatusError() -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
+
+    uint32 counter;
 
     struct {
       IRQ ready;
@@ -130,14 +134,56 @@ struct PCD : Thread {
   } scsi;
 
   struct ADPCM {
+    Node::Stream stream;
+    MSM5205 msm5205;
     Memory::Writable<uint8> memory;  //64KB
 
     //adpcm.cpp
     auto load(Node::Object) -> void;
     auto unload() -> void;
 
+    auto clock() -> void;
+    auto control(uint8 shadow, uint8 data) -> void;
+    auto play() -> void;
+    auto stop(bool) -> void;
+    auto power() -> void;
+
+    auto readRAM() -> uint8;
+    auto writeRAM(uint8 data) -> void;
+
     //serialization.cpp
     auto serialize(serializer&) -> void;
+
+    uint32 counter;
+
+    struct {
+      IRQ halfPlay;
+      IRQ fullPlay;
+    } irq;
+
+     uint1 idle;
+     uint1 nibble;
+
+     uint1 enable;
+     uint1 run;
+
+     uint1 stopped;
+     uint1 playing;
+     uint1 reading;
+     uint1 writing;
+     uint1 repeat;
+     uint4 divider;  //0x01-0x10
+     uint4 period;
+
+    uint16 latch;
+    uint16 length;
+    uint16 readCounter;
+    uint16 readAddress;
+    uint16 writeCounter;
+    uint16 writeAddress;
+    uint16 startAddress;
+    uint16 halfAddress;
+    uint16 endAddress;
   } adpcm;
 
   struct IO {

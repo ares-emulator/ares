@@ -1,10 +1,17 @@
-auto PCD::SCSI::main() -> void {
+auto PCD::SCSI::clock() -> void {
+  if(++counter == 122880) {
+    counter = 0;
+    clockRead();
+  }
+}
+
+auto PCD::SCSI::clockRead() -> void {
   if(read.lba >= read.end) return;
   if(dataBuffer.index != dataBuffer.size) return;
 
 print("* read ", read.lba, "\n");
 
-  pcd.fd->seek((abs(pcd.session.leadIn.lba) + read.lba) * 2448);
+  pcd.fd->seek((abs(pcd.session.leadIn.lba) + read.lba) * 2448 + 16);
   pcd.fd->read(dataBuffer.data, 2048);
 
   if(++read.lba == read.end) {
@@ -150,6 +157,7 @@ if(commandBuffer.index == 1) print(hex(commandBuffer.data[0], 2L), "\n");
     if(command == 0x00 && index ==  6) return commandTestUnitReady();
     if(command == 0x08 && index ==  6) return commandRead();
     if(command == 0xde && index == 10) return commandGetDirectoryInformation();
+    if(command == 0xff && index ==  1) return commandIgnore();
     request = 1;
   }
 }
@@ -176,23 +184,23 @@ auto PCD::SCSI::commandGetDirectoryInformation() -> void {
   auto& session = pcd.session;
 
   if(commandBuffer.data[1] == 0x00) {
-    dataBuffer.data[0] = session.firstTrack / 10 << 4 | session.firstTrack % 10;
-    dataBuffer.data[1] = session.lastTrack  / 10 << 4 | session.lastTrack  % 10;
+    dataBuffer.data[0] = CD::BCD::encode(session.firstTrack);
+    dataBuffer.data[1] = CD::BCD::encode(session.lastTrack);
     dataBuffer.size = 2;
   }
 
   if(commandBuffer.data[1] == 0x01) {
     auto [minute, second, frame] = CD::MSF(session.leadOut.lba);
-    dataBuffer.data[0] = minute / 10 << 4 | minute % 10;
-    dataBuffer.data[1] = second / 10 << 4 | second % 10;
-    dataBuffer.data[2] = frame  / 10 << 4 | frame  % 10;
+    dataBuffer.data[0] = CD::BCD::encode(minute);
+    dataBuffer.data[1] = CD::BCD::encode(second);
+    dataBuffer.data[2] = CD::BCD::encode(frame);
     dataBuffer.size = 3;
   }
 
   if(commandBuffer.data[1] == 0x02) {
     auto lba = session.leadOut.lba;
     auto mode = 0b0100;
-    auto track = commandBuffer.data[2] / 16 * 10 + commandBuffer.data[2] % 16;
+    auto track = CD::BCD::decode(commandBuffer.data[2]);
     if(track < 100 && session.tracks[track]) {
       auto index = session.tracks[track].firstIndex;
       if(index != -1) {
@@ -205,9 +213,9 @@ auto PCD::SCSI::commandGetDirectoryInformation() -> void {
       }
     }
     auto [minute, second, frame] = CD::MSF::fromLBA(lba + 150);
-    dataBuffer.data[0] = minute / 10 << 4 | minute % 10;
-    dataBuffer.data[1] = second / 10 << 4 | second % 10;
-    dataBuffer.data[2] = frame  / 10 << 4 | frame  % 10;
+    dataBuffer.data[0] = CD::BCD::encode(minute);
+    dataBuffer.data[1] = CD::BCD::encode(second);
+    dataBuffer.data[2] = CD::BCD::encode(frame);
     dataBuffer.data[3] = mode;
     dataBuffer.size = 4;
   }
@@ -218,6 +226,11 @@ auto PCD::SCSI::commandGetDirectoryInformation() -> void {
   commandBuffer.index = 0;
   dataBuffer.index = 0;
   dataTransferred = 1;
+}
+
+auto PCD::SCSI::commandIgnore() -> void {
+  replyStatusOK();
+  commandBuffer.index = 0;
 }
 
 auto PCD::SCSI::replyStatusOK() -> void {

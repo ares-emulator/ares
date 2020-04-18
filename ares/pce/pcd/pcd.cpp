@@ -73,7 +73,8 @@ auto PCD::save() -> void {
 }
 
 auto PCD::main() -> void {
-  scsi.main();
+  scsi.clock();
+  adpcm.clock();
   step(1);
 }
 
@@ -85,12 +86,15 @@ auto PCD::step(uint clocks) -> void {
 auto PCD::irqLine() const -> bool {
   if(scsi.irq.ready.pending && scsi.irq.ready.enable) return 1;
   if(scsi.irq.completed.pending && scsi.irq.completed.enable) return 1;
+  if(adpcm.irq.halfPlay.pending && adpcm.irq.halfPlay.enable) return 1;
+  if(adpcm.irq.fullPlay.pending && adpcm.irq.fullPlay.enable) return 1;
   return 0;
 }
 
 auto PCD::power() -> void {
-  Thread::create(75, {&PCD::main, this});
+  Thread::create(9'216'000, {&PCD::main, this});
   scsi = {};
+  adpcm.power();
   io = {};
 }
 

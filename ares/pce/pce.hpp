@@ -4,6 +4,7 @@
 #include <ares/ares.hpp>
 
 #include <component/processor/huc6280/huc6280.hpp>
+#include <component/audio/msm5205/msm5205.hpp>
 
 namespace ares::PCEngine {
   #include <ares/inline.hpp>

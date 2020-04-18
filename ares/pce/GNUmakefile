@@ -1,4 +1,4 @@
-ares.components += huc6280
+ares.components += huc6280 msm5205
 
 ares.objects += ares-pce-interface
 ares.objects += ares-pce-cpu ares-pce-vdp ares-pce-psg ares-pce-pcd

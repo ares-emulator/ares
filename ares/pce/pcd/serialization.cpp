@@ -16,5 +16,6 @@ auto PCD::SCSI::serialize(serializer& s) -> void {
 }
 
 auto PCD::ADPCM::serialize(serializer& s) -> void {
+  msm5205.serialize(s);
   memory.serialize(s);
 }

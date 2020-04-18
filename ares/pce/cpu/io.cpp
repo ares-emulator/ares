@@ -8,20 +8,19 @@ auto CPU::read(uint8 bank, uint13 address) -> uint8 {
 
   //$80-87  CD WRAM
   if(bank >= 0x80 && bank <= 0x87) {
-    if(PCD::Present()) return pcd.wram.read(address);
+    if(PCD::Present()) return pcd.wram.read(bank.bit(0,2) << 13 | address);
     return data;
   }
 
   //$f7  CD BRAM
   if(bank == 0xf7) {
-    if(PCD::Present()) return pcd.bram.read(bank.bit(0,2) << 13 | address);
+    if(PCD::Present()) return pcd.bram.read(address);
     return data;
   }
 
   //$f8-fb  RAM
   if(bank >= 0xf8 && bank <= 0xfb) {
-    if(Model::PCEngine()) return ram[address];
-    if(Model::SuperGrafx()) return ram[bank.bit(0,1) << 13 | address];
+    return ram.read(bank.bit(0,1) << 13 | address);
   }
 
   //$ff  Hardware
@@ -131,8 +130,7 @@ auto CPU::write(uint8 bank, uint13 address, uint8 data) -> void {
 
   //$f8-fb  RAM
   if(bank >= 0xf8 && bank <= 0xfb) {
-    if(Model::PCEngine()) ram[address] = data;
-    if(Model::SuperGrafx()) ram[bank.bit(0,1) << 13 | address] = data;
+    ram.write(bank.bit(0,1) << 13 | address, data);
     return;
   }
 

@@ -1,6 +1,7 @@
 ares.components := $(call unique,$(ares.components))
 
 ares.objects += $(if $(findstring ay38910,$(ares.components)),ares-audio-ay38910)
+ares.objects += $(if $(findstring msm5205,$(ares.components)),ares-audio-msm5205)
 ares.objects += $(if $(findstring sn76489,$(ares.components)),ares-audio-sn76489)
 ares.objects += $(if $(findstring t6w28,$(ares.components)),ares-audio-t6w28)
 ares.objects += $(if $(findstring ym2149,$(ares.components)),ares-audio-ym2149)
@@ -27,6 +28,7 @@ ares.objects += $(if $(findstring tms9918,$(ares.components)),ares-video-tms9918
 ares.objects += $(if $(findstring v9938,$(ares.components)),ares-video-v9938)
 
 $(object.path)/ares-audio-ay38910.o:      $(ares.path)/component/audio/ay38910/ay38910.cpp
+$(object.path)/ares-audio-msm5205.o:      $(ares.path)/component/audio/msm5205/msm5205.cpp
 $(object.path)/ares-audio-sn76489.o:      $(ares.path)/component/audio/sn76489/sn76489.cpp
 $(object.path)/ares-audio-t6w28.o:        $(ares.path)/component/audio/t6w28/t6w28.cpp
 $(object.path)/ares-audio-ym2149.o:       $(ares.path)/component/audio/ym2149/ym2149.cpp

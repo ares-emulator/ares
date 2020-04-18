@@ -47,7 +47,7 @@ inline auto WAV::open(const string& filename) -> bool {
     if(format != 1) return false;  //only PCM is supported
 
     channels = fp.readl(2);
-    frequency = fp.readl(2);
+    frequency = fp.readl(4);
     uint32_t byteRate = fp.readl(4);
     uint16_t blockAlign = fp.readl(2);
     bitrate = fp.readl(2);
