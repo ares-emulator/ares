@@ -4,8 +4,9 @@ namespace ares::PCEngine {
 
 PCD pcd;
 #include "io.cpp"
-#include "bram.cpp"
+#include "drive.cpp"
 #include "scsi.cpp"
+#include "cdda.cpp"
 #include "adpcm.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
@@ -21,15 +22,28 @@ auto PCD::load(Node::Object parent) -> void {
   tray->setConnect([&] { return connect(); });
   tray->setDisconnect([&] { return disconnect(); });
 
-  wram.allocate(64_KiB);
-  bram.load(node);
+  //subclass simulation
+  drive.session = session;
+  scsi.session = session;
+  scsi.drive = drive;
+  scsi.cdda = cdda;
+  scsi.adpcm = adpcm;
+  cdda.drive = drive;
+  adpcm.scsi = scsi;
+
+  wram.allocate( 64_KiB);
+  if(PCD::Duo()) sram.allocate(192_KiB);
+  bram.allocate(  2_KiB);
+  cdda.load(node);
   adpcm.load(node);
   debugger.load(node);
 }
 
 auto PCD::unload() -> void {
   wram.reset();
-  bram.unload();
+  if(PCD::Duo()) sram.reset();
+  bram.reset();
+  cdda.unload();
   adpcm.unload();
   disconnect();
   node = {};
@@ -52,19 +66,20 @@ auto PCD::connect() -> void {
   information.name = document["game/label"].string();
 
   fd = platform->open(disc, "cd.rom", File::Read, File::Required);
+  if(!fd) return disconnect();
 
+  //read disc TOC (table of contents)
   uint sectors = fd->size() / 2448;
   vector<uint8_t> subchannel;
   subchannel.resize(sectors * 96);
   for(uint sector : range(sectors)) {
-    fd->seek(sector * 2448 + 2352);
-    fd->read(subchannel.data() + sector * 96, 96);
+    pcd.fd->seek(sector * 2448 + 2352);
+    pcd.fd->read(subchannel.data() + sector * 96, 96);
   }
   session.decode(subchannel, 96);
 }
 
 auto PCD::disconnect() -> void {
-  session = {};
   disc = {};
   fd = {};
 }
@@ -73,6 +88,25 @@ auto PCD::save() -> void {
 }
 
 auto PCD::main() -> void {
+  if(++clock.drive == 122892) {
+    //75hz
+    clock.drive = 0;
+    scsi.clockSector();
+    cdda.clockSector();
+  }
+
+  if(++clock.cdda == 209) {
+    //44100hz
+    clock.cdda = 0;
+    cdda.clockSample();
+  }
+
+  if(++clock.adpcm == 288) {
+    //32000hz
+    clock.adpcm = 0;
+    adpcm.clockSample();
+  }
+
   scsi.clock();
   adpcm.clock();
   step(1);
@@ -84,17 +118,20 @@ auto PCD::step(uint clocks) -> void {
 }
 
 auto PCD::irqLine() const -> bool {
-  if(scsi.irq.ready.pending && scsi.irq.ready.enable) return 1;
-  if(scsi.irq.completed.pending && scsi.irq.completed.enable) return 1;
-  if(adpcm.irq.halfPlay.pending && adpcm.irq.halfPlay.enable) return 1;
-  if(adpcm.irq.fullPlay.pending && adpcm.irq.fullPlay.enable) return 1;
+  if(scsi.irq.ready.poll()) return 1;
+  if(scsi.irq.completed.poll()) return 1;
+  if(adpcm.irq.halfReached.poll()) return 1;
+  if(adpcm.irq.endReached.poll()) return 1;
   return 0;
 }
 
 auto PCD::power() -> void {
-  Thread::create(9'216'000, {&PCD::main, this});
-  scsi = {};
+  Thread::create(9'216'900, {&PCD::main, this});
+  drive.power();
+  scsi.power();
+  cdda.power();
   adpcm.power();
+  clock = {};
   io = {};
 }
 

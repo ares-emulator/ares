@@ -14,7 +14,7 @@ auto CPU::read(uint8 bank, uint13 address) -> uint8 {
 
   //$f7  CD BRAM
   if(bank == 0xf7) {
-    if(PCD::Present()) return pcd.bram.read(address);
+    if(PCD::Present() && pcd.bramEnable()) return pcd.bram.read(address);
     return data;
   }
 
@@ -124,7 +124,7 @@ auto CPU::write(uint8 bank, uint13 address, uint8 data) -> void {
 
   //$f7  CD BRAM
   if(bank == 0xf7) {
-    if(PCD::Present()) return pcd.bram.write(address, data);
+    if(PCD::Present() && pcd.bramEnable()) return pcd.bram.write(address, data);
     return;
   }
 

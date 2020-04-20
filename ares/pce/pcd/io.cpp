@@ -1,65 +1,69 @@
 auto PCD::read(uint10 address) -> uint8 {
-  //hardware identification
-//if(address == 0x00c5) return 0xaa;
-//if(address == 0x00c6) return 0x55;
-//if(address == 0x00c7) return 0x03;
-  if(address == 0x00c1) return 0xaa;
-  if(address == 0x00c2) return 0x55;
-  if(address == 0x00c3) return 0x03;
+  if(address == 0x00c0) return Duo() ? 0x00 : 0xff;
+  if(address == 0x00c1) return Duo() ? 0xaa : 0xff;
+  if(address == 0x00c2) return Duo() ? 0x55 : 0xff;
+  if(address == 0x00c3) return Duo() ? 0x03 : 0xff;
+
+  if(address == 0x00c4) return cartridge.read(0xff, 0x18c4);
+  if(address == 0x00c5) return cartridge.read(0xff, 0x18c5);
+  if(address == 0x00c6) return cartridge.read(0xff, 0x18c6);
+  if(address == 0x00c7) return cartridge.read(0xff, 0x18c7);
 
   scsi.update();
   address = (uint4)address;
   uint8 data = io.mdr[address];
 
   if(address == 0x0) {
-    data.bit(3) = scsi.input;
-    data.bit(4) = scsi.control;
-    data.bit(5) = scsi.message;
-    data.bit(6) = scsi.request;
-    data.bit(7) = scsi.busy;
-    scsi.irq.ready.pending = 0;
-    scsi.irq.completed.pending = 0;
-    adpcm.irq.halfPlay.pending = 0;
-    adpcm.irq.fullPlay.pending = 0;
+    data.bit(3) = scsi.pin.input;
+    data.bit(4) = scsi.pin.control;
+    data.bit(5) = scsi.pin.message;
+    data.bit(6) = scsi.pin.request;
+    data.bit(7) = scsi.pin.busy;
+    scsi.irq.ready.lower();
+    scsi.irq.completed.lower();
   }
 
   if(address == 0x1) {
-    data = scsi.data;
+    data = scsi.bus.data;
   }
 
   if(address == 0x2) {
-    data.bit(2) = adpcm.irq.halfPlay.enable;
-    data.bit(3) = adpcm.irq.fullPlay.enable;
+    data.bit(2) = adpcm.irq.halfReached.enable;
+    data.bit(3) = adpcm.irq.endReached.enable;
     data.bit(4) = 0;  //???
     data.bit(5) = scsi.irq.completed.enable;
     data.bit(6) = scsi.irq.ready.enable;
-    data.bit(7) = scsi.acknowledge;
+    data.bit(7) = scsi.pin.acknowledge;
   }
 
   if(address == 0x3) {
-    data.bit(2) = adpcm.irq.halfPlay.pending;
-    data.bit(3) = adpcm.irq.fullPlay.pending;
+    data.bit(1) = io.cddaSampleSelect;
+    data.bit(2) = adpcm.irq.halfReached.line;
+    data.bit(3) = adpcm.irq.endReached.line;
     data.bit(4) = 0;  //???
-    data.bit(5) = scsi.irq.completed.pending;
-    data.bit(6) = scsi.irq.ready.pending;
+    data.bit(5) = scsi.irq.completed.line;
+    data.bit(6) = scsi.irq.ready.line;
     data.bit(7) = 0;
-    bram.writable = 0;
+    io.bramEnable = 0;
+    io.cddaSampleSelect = !io.cddaSampleSelect;
   }
 
   if(address == 0x4) {
-    data.bit(1) = scsi.reset;
+    data.bit(1) = scsi.pin.reset;
   }
 
   if(address == 0x5) {
-    data = 0xff;
+    auto sample = !io.cddaSampleSelect ? cdda.sample.left : cdda.sample.right;
+    data = sample.byte(0);
   }
 
   if(address == 0x6) {
-    data = 0xff;
+    auto sample = !io.cddaSampleSelect ? cdda.sample.left : cdda.sample.right;
+    data = sample.byte(1);
   }
 
   if(address == 0x7) {
-    data.bit(7) = bram.writable;
+    data.bit(7) = io.bramEnable;
   }
 
   if(address == 0x8) {
@@ -71,7 +75,8 @@ auto PCD::read(uint10 address) -> uint8 {
   }
 
   if(address == 0xa) {
-    data = adpcm.readRAM();
+    data = adpcm.read.data;
+    adpcm.read.pending = 57;
   }
 
   if(address == 0xb) {
@@ -79,16 +84,21 @@ auto PCD::read(uint10 address) -> uint8 {
   }
 
   if(address == 0xc) {
-    data.bit(0) = adpcm.stopped;
-    data.bit(2) = adpcm.writing;
+    data.bit(0) = adpcm.irq.endReached.line;
+    data.bit(2) = adpcm.write.pending > 0;
     data.bit(3) = adpcm.playing;
-    data.bit(7) = adpcm.reading;
+    data.bit(7) = adpcm.read.pending > 0;
   }
 
   if(address == 0xd) {
-    data.bit(5) = adpcm.repeat;
-    data.bit(6) = adpcm.run;
-    data.bit(7) = adpcm.enable;
+    data.bit(0) = adpcm.io.readOffset;
+    data.bit(1) = adpcm.io.readLatch;
+    data.bit(2) = adpcm.io.writeOffset;
+    data.bit(3) = adpcm.io.writeLatch;
+    data.bit(4) = adpcm.io.lengthLatch;
+    data.bit(5) = adpcm.io.playing;
+    data.bit(6) = adpcm.io.noRepeat;
+    data.bit(7) = adpcm.io.reset;
   }
 
   if(address == 0xe) {
@@ -106,34 +116,36 @@ auto PCD::read(uint10 address) -> uint8 {
 }
 
 auto PCD::write(uint10 address, uint8 data) -> void {
+  if(address == 0x00c0) io.sramEnable = io.sramEnable << 8 | data;
+
   address = (uint4)address;
   io.mdr[address] = data;
 
 //print("* wr ff:180", hex(address, 1L), " = ", hex(data, 2L), "\n");
 
   if(address == 0x0) {
-    scsi.select = 1;
+    scsi.pin.select = 1;
     scsi.update();
-    scsi.select = 0;
+    scsi.pin.select = 0;
     scsi.update();
   }
 
   if(address == 0x1) {
-    scsi.data = data;
+    scsi.bus.data = data;
     scsi.update();
   }
 
   if(address == 0x2) {
-    adpcm.irq.halfPlay.enable = data.bit(2);
-    adpcm.irq.fullPlay.enable = data.bit(3);
-    scsi.irq.completed.enable = data.bit(5);
-    scsi.irq.ready.enable     = data.bit(6);
-    scsi.acknowledge          = data.bit(7);
+    adpcm.irq.halfReached.enable = data.bit(2);
+    adpcm.irq.endReached.enable  = data.bit(3);
+    scsi.irq.completed.enable    = data.bit(5);
+    scsi.irq.ready.enable        = data.bit(6);
+    scsi.pin.acknowledge         = data.bit(7);
     scsi.update();
   }
 
   if(address == 0x4) {
-    scsi.reset = data.bit(1);
+    scsi.pin.reset = data.bit(1);
     scsi.update();
   }
 
@@ -146,7 +158,7 @@ auto PCD::write(uint10 address, uint8 data) -> void {
   }
 
   if(address == 0x7) {
-    if(data.bit(7)) bram.writable = 1;
+    if(data.bit(7)) io.bramEnable = 1;
   }
 
   if(address == 0x8) {
@@ -158,11 +170,12 @@ auto PCD::write(uint10 address, uint8 data) -> void {
   }
 
   if(address == 0xa) {
-    adpcm.writeRAM(data);
+    adpcm.write.pending = 33;
+    adpcm.write.data = data;
   }
 
   if(address == 0xb) {
-    if(data.bit(0,1)) adpcm.writing = 1;
+    adpcm.dmaActive = data.bit(0,1);
   }
 
   if(address == 0xc) {
@@ -170,7 +183,7 @@ auto PCD::write(uint10 address, uint8 data) -> void {
   }
 
   if(address == 0xd) {
-    adpcm.control(io.mdr[address], data);
+    adpcm.control(data);
   }
 
   if(address == 0xe) {

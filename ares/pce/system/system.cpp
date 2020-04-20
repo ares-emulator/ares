@@ -20,6 +20,14 @@ auto System::load(Node::Object& root) -> void {
   node = Node::System::create(interface->name());
   root = node;
 
+  regionNode = node->append<Node::String>("Region", "NTSC-U → NTSC-J");
+  regionNode->setAllowedValues({
+    "NTSC-J → NTSC-U",
+    "NTSC-U → NTSC-J",
+    "NTSC-J",
+    "NTSC-U"
+  });
+
   scheduler.reset();
   cpu.load(node);
   vdp.load(node);
@@ -49,6 +57,20 @@ auto System::unload() -> void {
 
 auto System::power() -> void {
   for(auto& setting : node->find<Node::Setting>()) setting->setLatch();
+
+  auto setRegion = [&](string region) {
+    if(region == "NTSC-J") {
+      information.region = Region::NTSCJ;
+    }
+    if(region == "NTSC-U") {
+      information.region = Region::NTSCU;
+    }
+  };
+  auto regionsHave = regionNode->latch().split("→").strip();
+  setRegion(regionsHave.first());
+  for(auto& have : reverse(regionsHave)) {
+    if(have == cartridge.region()) setRegion(have);
+  }
 
   cartridge.power();
   cpu.power();

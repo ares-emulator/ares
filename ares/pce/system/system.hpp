@@ -1,9 +1,12 @@
 struct System {
   Node::Object node;
+  Node::String regionNode;
 
   enum class Model : uint { PCEngine, SuperGrafx };
+  enum class Region : uint { NTSCJ, NTSCU };
 
   auto model() const -> Model { return information.model; }
+  auto region() const -> Region { return information.region; }
   auto colorburst() const -> double { return information.colorburst; }
 
   //system.cpp
@@ -21,6 +24,7 @@ struct System {
 private:
   struct Information {
     Model model = Model::PCEngine;
+    Region region = Region::NTSCU;  //more compatible
     double colorburst = Constants::Colorburst::NTSC;
     uint32 serializeSize[2];
   } information;
@@ -35,3 +39,6 @@ extern System system;
 
 auto Model::PCEngine() -> bool { return system.model() == System::Model::PCEngine; }
 auto Model::SuperGrafx() -> bool { return system.model() == System::Model::SuperGrafx; }
+
+auto Region::NTSCJ() -> bool { return system.region() == System::Region::NTSCJ; }
+auto Region::NTSCU() -> bool { return system.region() == System::Region::NTSCU; }

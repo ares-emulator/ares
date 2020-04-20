@@ -13,128 +13,119 @@ auto PCD::ADPCM::unload() -> void {
 }
 
 auto PCD::ADPCM::clock() -> void {
-  if(++counter < 6 * msm5205.scaler()) return;
-  counter = 0;
+  if(write.pending && !--write.pending) {
+    if(length < 0x8000) irq.halfReached.raise();
+    if(!io.lengthLatch && length < 0xffff) length++;
+    memory.write(write.address++, write.data);
+  }
 
-  stream->sample(msm5205.sample() / 2048.0);
+  if(dmaActive && !write.pending) {
+    scsi->clockSample();
+  }
+
+  if(read.pending && !--read.pending) {
+    read.data = memory.read(read.address++);
+    if(length < 0x8000) irq.halfReached.raise();
+    if(!io.lengthLatch) {
+      if(length) {
+        length--;
+      } else {
+        irq.endReached.raise();
+        irq.halfReached.lower();
+        if(io.noRepeat) playing = 0;
+      }
+    }
+  }
+}
+
+auto PCD::ADPCM::clockSample() -> void {
+  stream->sample((playing ? msm5205.sample() : (int12)0) / 2048.0);
 
   if(++period < divider) return;
   period = 0;
 
-  auto data = memory.read(startAddress);
-  msm5205.setData(!nibble ? uint4(data >> 4) : uint4(data >> 0));
-  msm5205.clock();
+  if(playing && !sample.nibble) {
+    if(length < 0x8000) irq.halfReached.raise();
+    if(!io.lengthLatch && !length) {
+      irq.halfReached.lower();
+      irq.endReached.raise();
+      if(io.noRepeat) playing = 0;
+    }
 
-  nibble = !nibble;
-  if(!nibble) {
-    startAddress++;
-    if(startAddress == halfAddress) {
-      irq.halfPlay.pending = 1;
-    }
-    if(startAddress >= endAddress) {
-      msm5205.setReset(1);
-      stop(1);
-    }
+    sample.data = memory.read(read.address++);
+    if(!io.lengthLatch && length) length--;
+  }
+
+  if(playing) {
+    msm5205.setData(uint4(sample.data >> (!sample.nibble << 2)));
+    msm5205.clock();
+    sample.nibble = !sample.nibble;
   }
 }
 
-auto PCD::ADPCM::control(uint8 shadow, uint8 data) -> void {
-  if(enable && !data.bit(7)) {
-    msm5205.setReset(1);
-    stop(0);
-    readAddress = 0;
-    writeAddress = 0;
-    startAddress = 0;
-    halfAddress = 0;
-    endAddress = 0;
+auto PCD::ADPCM::control(uint8 data) -> void {
+  io.writeOffset = data.bit(0);
+  if(io.writeLatch.raise(data.bit(1))) {
+    write.address = latch - io.writeOffset;
   }
 
-  if(!run && data.bit(6)) {
-    msm5205.setReset(0);
-    play();
-    startAddress = readAddress;
-    halfAddress = readAddress + length / 2;
-    endAddress = readAddress + length;
+  io.readOffset = data.bit(2);
+  if(io.readLatch.raise(data.bit(3))) {
+    read.address = latch - io.readOffset;
   }
 
-  if(!data.bit(6)) {
-    msm5205.setReset(1);
-    stop(0);
-  }
-
-  repeat = data.bit(5);
-  run    = data.bit(6);
-  enable = data.bit(7);
-
-  if(data.bit(4)) {
+  io.lengthLatch = data.bit(4);
+  if(io.lengthLatch) {
+    irq.endReached.lower();
     length = latch;
   }
 
-  if(data.bit(3)) {
-    readAddress = latch;
-    readCounter = 2;
+  io.playing = data.bit(5);
+
+  if(playing && !io.playing) {
+    playing = 0;
   }
 
-  if(data.bit(1)) {
-    writeAddress = latch;
-    writeCounter = data.bit(0);
+  if(!playing && io.playing) {
+    irq.halfReached.lower();
+    playing = 1;
+    sample = {};
   }
-}
 
-auto PCD::ADPCM::play() -> void {
-  idle = 0;
-  nibble = 0;
-  stopped = 0;
-  playing = 1;
-  irq.fullPlay.pending = 0;
-}
+  io.noRepeat = data.bit(6);
+  if(irq.endReached.line && io.noRepeat) {
+    playing = 0;
+  }
 
-auto PCD::ADPCM::stop(bool withIRQ) -> void {
-  idle = 1;
-  repeat = 0;
-  run = 0;
-  stopped = 1;
-  playing = 0;
-  if(withIRQ) irq.fullPlay.pending = 1;
+  io.reset = data.bit(7);
+  if(io.reset) {
+    irq.halfReached.lower();
+    irq.endReached.lower();
+    io = {};
+    read = {};
+    write = {};
+    sample = {};
+    playing = 0;
+    latch = 0;
+    length = 0;
+  }
 }
 
 auto PCD::ADPCM::power() -> void {
   msm5205.power();
-  msm5205.setReset(1);
-  msm5205.setWidth(1);   //4-bit
-  msm5205.setScaler(2);  //1/48th
+  msm5205.setReset(0);
+  msm5205.setWidth(1);   //4-bit samples
+  msm5205.setScaler(2);  //1/48th rate
 
-  counter = 0;
   irq = {};
-  idle = 1;
-  nibble = 0;
-  enable = 0;
-  run = 0;
-  stopped = 1;
+  io = {};
+  read = {};
+  write = {};
+  sample = {};
+  dmaActive = 0;
   playing = 0;
-  reading = 0;
-  writing = 0;
-  repeat = 0;
   divider = 1;
   period = 0;
   latch = 0;
   length = 0;
-  readCounter = 0;
-  readAddress = 0;
-  writeCounter = 0;
-  writeAddress = 0;
-  startAddress = 0;
-  halfAddress = 0;
-  endAddress = 0;
-}
-
-auto PCD::ADPCM::readRAM() -> uint8 {
-  if(!readCounter) return memory.read(readAddress++);
-  readCounter--;
-  return 0x00;
-}
-
-auto PCD::ADPCM::writeRAM(uint8 data) -> void {
-  if(!writeCounter) return memory.write(writeAddress++, data);
-  writeCounter--;
 }

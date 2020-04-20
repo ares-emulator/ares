@@ -22,6 +22,7 @@ auto Cartridge::connect() -> void {
 
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
+  information.region = document["game/region"].string();
   information.board = document["game/board"].string();
 
   if(information.board == "Linear") board = new Board::Linear{*this};
@@ -33,7 +34,7 @@ auto Cartridge::connect() -> void {
   board->load(document);
 
   if(auto fp = platform->open(node, "save.ram", File::Read)) {
-    pcd.bram.memory.load(fp);
+    pcd.bram.load(fp);
   }
 
   power();
@@ -51,7 +52,7 @@ auto Cartridge::save() -> void {
   board->save(document);
 
   if(auto fp = platform->open(node, "save.ram", File::Write)) {
-    pcd.bram.memory.save(fp);
+    pcd.bram.save(fp);
   }
 }
 

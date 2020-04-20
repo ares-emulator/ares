@@ -14,6 +14,11 @@ namespace ares::PCEngine {
     inline static auto SuperGrafx() -> bool;
   };
 
+  struct Region {
+    inline static auto NTSCJ() -> bool;
+    inline static auto NTSCU() -> bool;
+  };
+
   #include <pce/controller/controller.hpp>
 
   #include <pce/cpu/cpu.hpp>

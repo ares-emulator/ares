@@ -114,6 +114,11 @@ struct Track {
     if(firstIndex > 99 || lastIndex > 99) return false;
     return lba >= indices[firstIndex].lba && lba <= indices[lastIndex].end;
   }
+
+  auto index(uint8_t indexID) -> maybe<Index&> {
+    if(indexID < 100 && indices[indexID]) return indices[indexID];
+    return {};
+  }
 };
 
 struct Session {
@@ -137,6 +142,11 @@ struct Session {
 
   auto inLeadOut(int lba) const -> bool {
     return lba >= leadOut.lba;
+  }
+
+  auto track(uint8_t trackID) -> maybe<Track&> {
+    if(trackID < 100 && tracks[trackID]) return tracks[trackID];
+    return {};
   }
 
   auto encode(uint sectors) const -> vector<uint8_t> {

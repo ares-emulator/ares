@@ -6,7 +6,9 @@ struct PCD : Thread {
   Node::Peripheral disc;
   Shared::File fd;
   CD::Session session;
-  Memory::Writable<uint8> wram;   //64KB
+  Memory::Writable<uint8> wram;  // 64KB
+  Memory::Writable<uint8> sram;  //192KB
+  Memory::Writable<uint8> bram;  //  2KB
 
   struct Debugger {
     //debugger.cpp
@@ -14,15 +16,19 @@ struct PCD : Thread {
 
     struct Memory {
       Node::Memory wram;
+      Node::Memory sram;
       Node::Memory adpcm;
       Node::Memory bram;
     } memory;
   } debugger;
 
   static auto Present() -> bool { return true; }
+  static auto Duo() -> bool { return false; }
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
+  auto sramEnable() const -> bool { return io.sramEnable == 0xaa55; }
+  auto bramEnable() const -> bool { return io.bramEnable; }
 
   //pcd.cpp
   auto load(Node::Object) -> void;
@@ -45,97 +51,163 @@ struct PCD : Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  struct Information {
-    string manifest;
-    string name;
-  } information;
+private:
+  struct Interrupt {
+    auto poll() const -> bool { return line & enable; }
+    auto raise() -> void { line = 1; }
+    auto lower() -> void { line = 0; }
 
-  struct IRQ {
     uint1 enable;
-    uint1 pending;
+    uint1 line;
   };
 
-  struct BRAM {
-    Memory::Writable<uint8> memory;  //2KB
+  struct Buffer {
+    auto reset() -> void { reads = 0; writes = 0; }
+    auto end() const -> bool { return reads >= writes; }
+    auto read() -> uint8 { return data[reads++]; }
+    auto write(uint8 value) -> void { data[writes++] = value; }
 
-    //bram.cpp
-    auto load(Node::Object) -> void;
-    auto unload() -> void;
+     uint8 data[4_KiB];
+    uint12 reads;
+    uint12 writes;
+  };
 
-    auto read(uint11 address) -> uint8;
-    auto write(uint11 address, uint8 data) -> void;
+  struct Drive;
+  struct SCSI;
+  struct CDDA;
+  struct ADPCM;
+
+  struct Drive {
+    maybe<CD::Session&> session;
+
+    enum class Mode : uint {
+      Inactive,  //drive is not running
+      Seeking,   //seeking
+      Reading,   //reading CD data
+      Playing,   //playing CDDA audio
+      Paused,    //paused CDDA audio
+      Stopped,   //stopped CDDA audio
+    };
+
+    auto inactive() const -> bool { return mode == Mode::Inactive; }
+    auto seeking()  const -> bool { return mode == Mode::Seeking;  }
+    auto reading()  const -> bool { return mode == Mode::Reading;  }
+    auto playing()  const -> bool { return mode == Mode::Playing;  }
+    auto paused()   const -> bool { return mode == Mode::Paused;   }
+    auto stopped()  const -> bool { return mode == Mode::Stopped;  }
+
+    auto setInactive() -> void { mode = Mode::Inactive; }
+    auto setSeekingRead() -> void { mode = Mode::Seeking; seek = Mode::Reading; }
+    auto setSeekingPlay() -> void { mode = Mode::Seeking; seek = Mode::Playing; }
+    auto setReading() -> void { mode = Mode::Reading; }
+    auto setPlaying() -> void { mode = Mode::Playing; }
+    auto setPaused() -> void { mode = Mode::Paused; }
+    auto setStopped() -> void { mode = Mode::Stopped; }
+
+    auto inData() const -> bool { return reading() || (seeking() && seek == Mode::Reading); }
+    auto inCDDA() const -> bool { return playing() || (seeking() && seek == Mode::Playing) || paused() || stopped(); }
+
+    auto read() -> void;
+    auto power() -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint1 writable;
-  } bram;
+    Mode mode = Mode::Inactive;
+    Mode seek = Mode::Inactive;
+    int lba = CD::InvalidLBA;  //wnere the laser is currently at
+    int end = CD::InvalidLBA;  //where the laser should stop reading
+    uint8 sector[2448];        //contains the most recently read disc sector
+  } drive;
 
   struct SCSI {
+    maybe<CD::Session&> session;
+    maybe<Drive&> drive;
+    maybe<CDDA&> cdda;
+    maybe<ADPCM&> adpcm;
+    enum class Status : uint { OK, CheckCondition };
+
     //scsi.cpp
     auto clock() -> void;
-    auto clockRead() -> void;
+    auto clockSector() -> void;
+    auto clockSample() -> void;
     auto readData() -> uint8;
     auto update() -> void;
     auto messageInput() -> void;
     auto messageOutput() -> void;
     auto dataInput() -> void;
     auto dataOutput() -> void;
+    auto reply(Status) -> void;
     auto commandTestUnitReady() -> void;
-    auto commandRead() -> void;
+    auto commandReadData() -> void;
+    auto commandAudioSetStartPosition() -> void;
+    auto commandAudioSetStopPosition() -> void;
+    auto commandAudioPause() -> void;
+    auto commandReadSubchannel() -> void;
     auto commandGetDirectoryInformation() -> void;
-    auto commandIgnore() -> void;
-    auto replyStatusOK() -> void;
-    auto replyStatusError() -> void;
+    auto commandInvalid() -> void;
+    auto power() -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint32 counter;
-
-    struct {
-      IRQ ready;
-      IRQ completed;
+    struct IRQ {
+      Interrupt ready;
+      Interrupt completed;
     } irq;
 
-    uint1 reset;        //RST
-    uint1 attention;    //ATN
-    uint1 acknowledge;  //ACK
-    uint1 select;       //SEL
-    uint1 input;        //I/O (1 = input, 0 = output)
-    uint1 control;      //C/D (1 = control, 0 = data)
-    uint1 message;      //MSG
-    uint1 request;      //REQ
-    uint1 busy;         //BSY
+    struct Pin {
+      uint1 reset;        //RST
+      uint1 acknowledge;  //ACK
+      uint1 select;       //SEL (1 = bus select requested)
+      uint1 input;        //I/O (1 = input, 0 = output)
+      uint1 control;      //C/D (1 = control, 0 = data)
+      uint1 message;      //MSG
+      uint1 request;      //REQ
+      uint1 busy;         //BSY
+    } pin;
 
-    uint8 data;
+    struct Bus {
+      uint1 select;  //1 = bus is currently selected
+      uint8 data;    //D0-D7
+    } bus;
 
-    uint1 wasReset;
-    uint1 selected;
-
+    uint8 acknowledging;
+    uint1 dataTransferCompleted;
     uint1 messageAfterStatus;
     uint1 messageSent;
     uint1 statusSent;
-    uint1 dataTransferred;
 
-    struct Buffer {
-       uint8 data[4_KiB];
-      uint12 size;
-      uint12 index;
-    };
-
-    Buffer commandBuffer;
-    Buffer dataBuffer;
-
-    struct Read {
-      int lba;
-      int end;
-    } read;
+    Buffer request;
+    Buffer response;
   } scsi;
 
-  struct ADPCM {
+  struct CDDA {
+    maybe<Drive&> drive;
     Node::Stream stream;
+
+    //cdda.cpp
+    auto load(Node::Object) -> void;
+    auto unload() -> void;
+
+    auto clockSector() -> void;
+    auto clockSample() -> void;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct Sample {
+       int16 left;
+       int16 right;
+      uint12 offset;
+    } sample;
+  } cdda;
+
+  struct ADPCM {
+    maybe<SCSI&> scsi;
     MSM5205 msm5205;
+    Node::Stream stream;
     Memory::Writable<uint8> memory;  //64KB
 
     //adpcm.cpp
@@ -143,52 +215,66 @@ struct PCD : Thread {
     auto unload() -> void;
 
     auto clock() -> void;
-    auto control(uint8 shadow, uint8 data) -> void;
-    auto play() -> void;
-    auto stop(bool) -> void;
+    auto clockSample() -> void;
+    auto control(uint8 data) -> void;
     auto power() -> void;
-
-    auto readRAM() -> uint8;
-    auto writeRAM(uint8 data) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint32 counter;
-
-    struct {
-      IRQ halfPlay;
-      IRQ fullPlay;
+    struct IRQ {
+      Interrupt halfReached;
+      Interrupt endReached;
     } irq;
 
-     uint1 idle;
-     uint1 nibble;
+    struct IO {
+      boolean writeOffset;
+      boolean writeLatch;
+      boolean readLatch;
+      boolean readOffset;
+      boolean lengthLatch;
+      boolean playing;
+      boolean noRepeat;  //0 = loop when length reaches zero
+      boolean reset;
+    } io;
 
-     uint1 enable;
-     uint1 run;
+    struct Bus {
+      uint16 address;
+       uint8 data;
+       uint8 pending;
+    } read, write;
 
-     uint1 stopped;
+    struct Sample {
+      uint8 data;
+      uint1 nibble;
+    } sample;
+
+     uint2 dmaActive;
      uint1 playing;
-     uint1 reading;
-     uint1 writing;
-     uint1 repeat;
-     uint4 divider;  //0x01-0x10
-     uint4 period;
-
+     uint8 divider;  //0x01-0x10
+     uint8 period;   //count-up for divider
     uint16 latch;
     uint16 length;
-    uint16 readCounter;
-    uint16 readAddress;
-    uint16 writeCounter;
-    uint16 writeAddress;
-    uint16 startAddress;
-    uint16 halfAddress;
-    uint16 endAddress;
   } adpcm;
 
+  struct Clock {
+    uint32 drive;
+    uint32 cdda;
+    uint32 adpcm;
+  } clock;
+
   struct IO {
-    uint8 mdr[16];
+     uint8 mdr[16];
+     uint1 cddaSampleSelect;
+    uint16 sramEnable;
+     uint1 bramEnable;
   } io;
+
+//unserialized:
+  struct Information {
+    string manifest;
+    string name;
+  } information;
 };
 
 extern PCD pcd;

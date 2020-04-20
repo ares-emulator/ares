@@ -8,6 +8,17 @@ auto PCD::Debugger::load(Node::Object parent) -> void {
     return pcd.wram.write(address, data);
   });
 
+  if(PCD::Duo()) {
+    memory.sram = parent->append<Node::Memory>("CD SRAM");
+    memory.sram->setSize(192_KiB);
+    memory.sram->setRead([&](uint32 address) -> uint8 {
+      return pcd.sram.read(address);
+    });
+    memory.sram->setWrite([&](uint32 address, uint8 data) -> void {
+      return pcd.sram.write(address, data);
+    });
+  }
+
   memory.adpcm = parent->append<Node::Memory>("CD ADPCM");
   memory.adpcm->setSize(64_KiB);
   memory.adpcm->setRead([&](uint32 address) -> uint8 {
@@ -20,9 +31,9 @@ auto PCD::Debugger::load(Node::Object parent) -> void {
   memory.bram = parent->append<Node::Memory>("CD BRAM");
   memory.bram->setSize(2_KiB);
   memory.bram->setRead([&](uint32 address) -> uint8 {
-    return pcd.bram.memory.read(address);
+    return pcd.bram.read(address);
   });
   memory.bram->setWrite([&](uint32 address, uint8 data) -> void {
-    return pcd.bram.memory.write(address, data);
+    return pcd.bram.write(address, data);
   });
 }

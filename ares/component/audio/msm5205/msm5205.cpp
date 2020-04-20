@@ -6,6 +6,8 @@ namespace ares {
 #include "serialization.cpp"
 
 auto MSM5205::sample() const -> int12 {
+  //note: technically this should return io.sample & ~3;
+  //the DAC output is only 10-bits
   return io.sample;
 }
 

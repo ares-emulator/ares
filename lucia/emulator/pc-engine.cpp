@@ -28,6 +28,10 @@ PCEngine::PCEngine() {
 }
 
 auto PCEngine::load() -> bool {
+  if(auto region = root->find<ares::Node::String>("Region")) {
+    region->setValue("NTSC-U → NTSC-J");
+  }
+
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
@@ -85,13 +89,18 @@ PCEngineCD::PCEngineCD() {
   name = "PC Engine CD";
   extensions = {"cue"};
 
-  firmware.append({"BIOS", "World"});
+  firmware.append({"BIOS", "US"});
+  firmware.append({"BIOS", "Japan"});
 }
 
 auto PCEngineCD::load() -> bool {
-  if(!file::exists(firmware[0].location)) {
-    errorFirmwareRequired(firmware[0]);
+  if(!file::exists(firmware[1].location)) {
+    errorFirmwareRequired(firmware[1]);
     return false;
+  }
+
+  if(auto region = root->find<ares::Node::String>("Region")) {
+    region->setValue("NTSC-J → NTSC-U");
   }
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -118,11 +127,11 @@ auto PCEngineCD::open(ares::Node::Object node, string name, vfs::file::mode mode
       for(auto& media : mia::media) {
         if(media->name() != "PC Engine") continue;
         if(auto cartridge = media.cast<mia::Cartridge>()) {
-          if(auto image = loadFirmware(firmware[0])) {
+          if(auto image = loadFirmware(firmware[1])) {
             vector<uint8_t> bios;
             bios.resize(image->size());
             image->read(bios.data(), bios.size());
-            auto manifest = cartridge->manifest(bios, firmware[0].location);
+            auto manifest = cartridge->manifest(bios, firmware[1].location);
             return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
           }
         }
@@ -130,7 +139,7 @@ auto PCEngineCD::open(ares::Node::Object node, string name, vfs::file::mode mode
     }
 
     if(name == "program.rom") {
-      return loadFirmware(firmware[0]);
+      return loadFirmware(firmware[1]);
     }
 
     if(name == "save.ram") {
@@ -194,6 +203,10 @@ SuperGrafx::SuperGrafx() {
 }
 
 auto SuperGrafx::load() -> bool {
+  if(auto region = root->find<ares::Node::String>("Region")) {
+    region->setValue("NTSC-U → NTSC-J");
+  }
+
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();

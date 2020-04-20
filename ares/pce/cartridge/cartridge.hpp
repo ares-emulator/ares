@@ -6,6 +6,8 @@ struct Cartridge {
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
+  auto region() const -> string { return information.region; }
+//auto board() const -> string { return information.board; }
 
   //cartridge.cpp
   auto allocate(Node::Port) -> Node::Peripheral;
@@ -27,6 +29,7 @@ private:
   struct Information {
     string manifest;
     string name;
+    string region;
     string board;
   } information;
 };

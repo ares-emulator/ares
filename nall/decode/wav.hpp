@@ -52,10 +52,12 @@ inline auto WAV::open(const string& filename) -> bool {
     uint16_t blockAlign = fp.readl(2);
     bitrate = fp.readl(2);
 
-    if(fp.read() != 'd') return false;
-    if(fp.read() != 'a') return false;
-    if(fp.read() != 't') return false;
-    if(fp.read() != 'a') return false;
+    //todo: handle LIST chunk better than this
+    while(!fp.end() && fp.read() != 'd');
+    while(!fp.end() && fp.read() != 'a');
+    while(!fp.end() && fp.read() != 't');
+    while(!fp.end() && fp.read() != 'a');
+    if(fp.end()) return false;
 
     uint32_t dataSize = fp.readl(4);
     uint32_t remaining = fp.size() - fp.offset();

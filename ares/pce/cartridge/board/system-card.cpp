@@ -36,6 +36,15 @@ struct SystemCard : Interface {
       return ram.read((bank - 0x68) << 13 | address);
     }
 
+    if(revision >= 3.00 && bank == 0xff) {
+      switch(address) {
+      case 0x18c4: return 0x00;
+      case 0x18c5: return Region::NTSCJ() ? 0xaa : 0x55;
+      case 0x18c6: return Region::NTSCJ() ? 0x55 : 0xaa;
+      case 0x18c7: return ram.size() / 64_KiB;
+      }
+    }
+
     return data;
   }
 
