@@ -15,7 +15,7 @@ struct Sunsoft5B : Interface {
     Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
     Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
 
-    stream = cartridge.node->append<Node::Stream>("Stream");
+    stream = cartridge.node->append<Node::Stream>("YM2149");
     stream->setChannels(1);
     stream->setFrequency(uint(system.frequency() + 0.5) / cartridge.rate() / 16);
   }

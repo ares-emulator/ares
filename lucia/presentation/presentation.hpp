@@ -46,6 +46,7 @@ struct Presentation : Window {
       MenuItem manifestViewerAction{&toolsMenu};
       MenuItem memoryEditorAction{&toolsMenu};
       MenuItem graphicsViewerAction{&toolsMenu};
+      MenuItem streamManagerAction{&toolsMenu};
       MenuItem propertiesViewerAction{&toolsMenu};
       MenuItem traceLoggerAction{&toolsMenu};
     Menu helpMenu{&menuBar};

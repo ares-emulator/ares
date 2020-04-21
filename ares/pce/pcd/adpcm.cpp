@@ -1,5 +1,5 @@
 auto PCD::ADPCM::load(Node::Object parent) -> void {
-  stream = parent->append<Node::Stream>("ADPCM Stream");
+  stream = parent->append<Node::Stream>("ADPCM");
   stream->setChannels(1);
   stream->setFrequency(32000);
 

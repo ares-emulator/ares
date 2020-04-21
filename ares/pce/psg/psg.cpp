@@ -10,7 +10,7 @@ PSG psg;
 auto PSG::load(Node::Object parent) -> void {
   node = parent->append<Node::Component>("PSG");
 
-  stream = parent->append<Node::Stream>("Stream");
+  stream = parent->append<Node::Stream>("PSG");
   stream->setChannels(2);
   #if defined(PROFILE_ACCURACY)
   stream->setFrequency(system.colorburst());

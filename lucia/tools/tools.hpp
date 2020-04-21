@@ -53,6 +53,15 @@ struct GraphicsViewer : VerticalLayout {
     Button refreshButton{&controlLayout, Size{80, 0}};
 };
 
+struct StreamManager : VerticalLayout {
+  auto construct() -> void;
+  auto reload() -> void;
+  auto unload() -> void;
+
+  Label streamLabel{this, Size{~0, 0}, 2};
+  TableView streamList{this, Size{~0, ~0}};
+};
+
 struct PropertiesViewer : VerticalLayout {
   auto construct() -> void;
   auto reload() -> void;
@@ -94,6 +103,7 @@ struct ToolsWindow : Window {
       ManifestViewer manifestViewer;
       MemoryEditor memoryEditor;
       GraphicsViewer graphicsViewer;
+      StreamManager streamManager;
       PropertiesViewer propertiesViewer;
       TraceLogger traceLogger;
       HomePanel homePanel;
@@ -104,5 +114,6 @@ extern ToolsWindow& toolsWindow;
 extern ManifestViewer& manifestViewer;
 extern MemoryEditor& memoryEditor;
 extern GraphicsViewer& graphicsViewer;
+extern StreamManager& streamManager;
 extern PropertiesViewer& propertiesViewer;
 extern TraceLogger& traceLogger;

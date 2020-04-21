@@ -5,10 +5,12 @@ struct Stream : Object {
   auto channels() const -> uint { return _channels.size(); }
   auto frequency() const -> double { return _frequency; }
   auto resamplerFrequency() const -> double { return _resamplerFrequency; }
+  auto muted() const -> bool { return _muted; }
 
   auto setChannels(uint channels) -> void;
   auto setFrequency(double frequency) -> void;
   auto setResamplerFrequency(double resamplerFrequency) -> void;
+  auto setMuted(bool muted) -> void;
 
   auto resetFilters() -> void;
   auto addLowPassFilter(double cutoffFrequency, uint order, uint passes = 1) -> void;
@@ -43,4 +45,5 @@ protected:
   vector<Channel> _channels;
   double _frequency = 48000.0;
   double _resamplerFrequency = 48000.0;
+  bool _muted = false;
 };

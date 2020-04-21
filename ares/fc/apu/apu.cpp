@@ -14,7 +14,7 @@ APU apu;
 auto APU::load(Node::Object parent) -> void {
   node = parent->append<Node::Component>("APU");
 
-  stream = node->append<Node::Stream>("Stream");
+  stream = node->append<Node::Stream>("PSG");
   stream->setChannels(1);
   stream->setFrequency(uint(system.frequency() + 0.5) / rate());
   stream->addHighPassFilter(   90.0, 1);

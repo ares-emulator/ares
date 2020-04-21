@@ -423,6 +423,12 @@ auto pTableView::_doToggle(GtkCellRendererToggle* gtkCellRendererToggle, const c
         auto row = toNatural(path);
         if(auto item = self().item(row)) {
           if(auto cell = item->cell(column->offset())) {
+            //GTK+ sends the "toggled" signal *before* changing the currently selected item
+            //if TableView::doToggle calls TableView::selected(), it will retrieve the old state instead
+            //gtk_tree_selection_get_selected_rows() will also report incorrectly, so _updateSelected() cannot be used here
+            //note: this hack here also works correctly in batchable (multi-selection) mode, so it seems safe in practice
+            for(auto& item : state().items) item->state.selected = item->offset() == row;
+
             cell->setChecked(!cell->checked());
             if(!locked()) self().doToggle(cell);
             return;

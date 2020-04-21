@@ -121,6 +121,9 @@ Presentation::Presentation() {
   graphicsViewerAction.setText("Graphics").setIcon(Icon::Emblem::Image).onActivate([&] {
     toolsWindow.show("Graphics");
   });
+  streamManagerAction.setText("Streams").setIcon(Icon::Emblem::Audio).onActivate([&] {
+    toolsWindow.show("Streams");
+  });
   propertiesViewerAction.setText("Properties").setIcon(Icon::Emblem::Text).onActivate([&] {
     toolsWindow.show("Properties");
   });
@@ -225,9 +228,12 @@ auto Presentation::loadEmulators() -> void {
   //clean up the recent games history first
   vector<string> recentGames;
   for(uint index : range(9)) {
-    if(file::exists(settings.recent.game[index])) {  //remove missing files
-      if(!recentGames.find(settings.recent.game[index])) {  //remove duplicate entries
-        recentGames.append(settings.recent.game[index]);
+    auto entry = settings.recent.game[index];
+    auto system = entry.split(";", 1L)(0);
+    auto location = entry.split(";", 1L)(1);
+    if(file::exists(location)) {  //remove missing files
+      if(!recentGames.find(entry)) {  //remove duplicate entries
+        recentGames.append(entry);
       }
     }
     settings.recent.game[index] = {};
@@ -243,12 +249,16 @@ auto Presentation::loadEmulators() -> void {
     recentGames.setText("Recent Games");
     for(uint index : range(count)) {
       MenuItem item{&recentGames};
-      auto location = settings.recent.game[index];
+      auto entry = settings.recent.game[index];
+      auto system = entry.split(";", 1L)(0);
+      auto location = entry.split(";", 1L)(1);
       item.setIcon(Icon::Emblem::File);
       item.setText(Location::prefix(location));
       item.onActivate([=] {
-        if(auto emulator = program.identify(location)) {
-          program.load(emulator, location);
+        for(auto& emulator : emulators) {
+          if(emulator->name == system) {
+            return (void)program.load(emulator, location);
+          }
         }
       });
     }

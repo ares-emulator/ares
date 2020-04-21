@@ -2,6 +2,7 @@
 #include "manifest.cpp"
 #include "memory.cpp"
 #include "graphics.cpp"
+#include "streams.cpp"
 #include "properties.cpp"
 #include "tracer.cpp"
 
@@ -10,6 +11,7 @@ ToolsWindow& toolsWindow = Instances::toolsWindow();
 ManifestViewer& manifestViewer = toolsWindow.manifestViewer;
 MemoryEditor& memoryEditor = toolsWindow.memoryEditor;
 GraphicsViewer& graphicsViewer = toolsWindow.graphicsViewer;
+StreamManager& streamManager = toolsWindow.streamManager;
 PropertiesViewer& propertiesViewer = toolsWindow.propertiesViewer;
 TraceLogger& traceLogger = toolsWindow.traceLogger;
 
@@ -19,6 +21,7 @@ ToolsWindow::ToolsWindow() {
   panelList.append(ListViewItem().setText("Manifest").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Memory").setIcon(Icon::Device::Storage));
   panelList.append(ListViewItem().setText("Graphics").setIcon(Icon::Emblem::Image));
+  panelList.append(ListViewItem().setText("Streams").setIcon(Icon::Emblem::Audio));
   panelList.append(ListViewItem().setText("Properties").setIcon(Icon::Emblem::Text));
   panelList.append(ListViewItem().setText("Tracer").setIcon(Icon::Emblem::Script));
   panelList.onChange([&] { eventChange(); });
@@ -26,6 +29,7 @@ ToolsWindow::ToolsWindow() {
   panelContainer.append(manifestViewer, Size{~0, ~0});
   panelContainer.append(memoryEditor, Size{~0, ~0});
   panelContainer.append(graphicsViewer, Size{~0, ~0});
+  panelContainer.append(streamManager, Size{~0, ~0});
   panelContainer.append(propertiesViewer, Size{~0, ~0});
   panelContainer.append(traceLogger, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
@@ -33,6 +37,7 @@ ToolsWindow::ToolsWindow() {
   manifestViewer.construct();
   memoryEditor.construct();
   graphicsViewer.construct();
+  streamManager.construct();
   propertiesViewer.construct();
   traceLogger.construct();
   homePanel.construct();
@@ -60,6 +65,7 @@ auto ToolsWindow::eventChange() -> void {
   manifestViewer.setVisible(false);
   memoryEditor.setVisible(false);
   graphicsViewer.setVisible(false);
+  streamManager.setVisible(false);
   propertiesViewer.setVisible(false);
   traceLogger.setVisible(false);
   homePanel.setVisible(false);
@@ -69,6 +75,7 @@ auto ToolsWindow::eventChange() -> void {
     if(item.text() == "Manifest"  ) found = true, manifestViewer.setVisible();
     if(item.text() == "Memory"    ) found = true, memoryEditor.setVisible();
     if(item.text() == "Graphics"  ) found = true, graphicsViewer.setVisible();
+    if(item.text() == "Streams"   ) found = true, streamManager.setVisible();
     if(item.text() == "Properties") found = true, propertiesViewer.setVisible();
     if(item.text() == "Tracer"    ) found = true, traceLogger.setVisible();
   }

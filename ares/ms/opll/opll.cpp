@@ -8,7 +8,7 @@ OPLL opll;
 auto OPLL::load(Node::Object parent) -> void {
   node = parent->append<Node::Component>("OPLL");
 
-  stream = node->append<Node::Stream>("Stream");
+  stream = node->append<Node::Stream>("YM2413");
   stream->setChannels(1);
   stream->setFrequency(system.colorburst() / 72.0);
   stream->addHighPassFilter(20.0, 1);

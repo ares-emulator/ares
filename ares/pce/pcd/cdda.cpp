@@ -1,5 +1,5 @@
 auto PCD::CDDA::load(Node::Object parent) -> void {
-  stream = parent->append<Node::Stream>("CD-DA Stream");
+  stream = parent->append<Node::Stream>("CD-DA");
   stream->setChannels(2);
   stream->setFrequency(44100);
 }

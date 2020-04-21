@@ -31,6 +31,10 @@ auto Stream::setResamplerFrequency(double resamplerFrequency) -> void {
   }
 }
 
+auto Stream::setMuted(bool muted) -> void {
+  _muted = muted;
+}
+
 auto Stream::resetFilters() -> void {
   for(auto& channel : _channels) {
     channel.filters.reset();
@@ -100,7 +104,7 @@ auto Stream::pending() const -> bool {
 }
 
 auto Stream::read(double samples[]) -> uint {
-  for(uint c : range(_channels.size())) samples[c] = _channels[c].resampler.read();
+  for(uint c : range(_channels.size())) samples[c] = _channels[c].resampler.read() * !muted();
   return _channels.size();
 }
 

@@ -12,7 +12,7 @@ YM2612 ym2612;
 auto YM2612::load(Node::Object parent) -> void {
   node = parent->append<Node::Component>("YM2612");
 
-  stream = node->append<Node::Stream>("Stream");
+  stream = node->append<Node::Stream>("YM2612");
   stream->setChannels(2);
   stream->setFrequency(system.frequency() / 7.0 / 144.0);
   stream->addHighPassFilter(  20.0, 1);

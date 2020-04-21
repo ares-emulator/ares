@@ -64,7 +64,7 @@ auto FDSAudio::Modulator::updateCounter(int8 value) -> void {
 //
 
 auto FDSAudio::load(Node::Object parent) -> void {
-  stream = parent->append<Node::Stream>("Stream");
+  stream = parent->append<Node::Stream>("FDS");
   stream->setChannels(1);
   stream->setFrequency(uint(system.frequency() + 0.5) / cpu.rate());
 }

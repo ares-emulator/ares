@@ -1,7 +1,7 @@
 auto PCD::Drive::read() -> void {
   if(seeking()) mode = seek;
 
-  print("* ", reading() ? "data" : "cdda", " read ", lba, " to ", end - 1, "\n");
+//print("* ", reading() ? "data" : "cdda", " read ", lba, " to ", end - 1, "\n");
 
   pcd.fd->seek(2448 * (abs(session->leadIn.lba) + lba));
   pcd.fd->read(sector, 2448);

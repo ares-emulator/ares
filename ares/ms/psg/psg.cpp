@@ -8,7 +8,7 @@ PSG psg;
 auto PSG::load(Node::Object parent) -> void {
   node = parent->append<Node::Component>("PSG");
 
-  stream = node->append<Node::Stream>("Stream");
+  stream = node->append<Node::Stream>("PSG");
   stream->setChannels(Model::MasterSystem() ? 1 : 2);
   stream->setFrequency(system.colorburst() / 16.0);
   stream->addHighPassFilter(20.0, 1);

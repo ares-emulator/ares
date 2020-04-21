@@ -175,9 +175,9 @@ auto PCD::SCSI::dataOutput() -> void {
     if(executed == 0) {
       pin.request = 1;
     } else {
-      print("* request ");
-      for(uint index : range(request.writes)) print(hex(request.data[index], 2L), " ");
-      print("\n");
+    //print("* request ");
+    //for(uint index : range(request.writes)) print(hex(request.data[index], 2L), " ");
+    //print("\n");
       request.reset();
     }
   }

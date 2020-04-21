@@ -88,6 +88,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
   manifestViewer.reload();
   memoryEditor.reload();
   graphicsViewer.reload();
+  streamManager.reload();
   propertiesViewer.reload();
   traceLogger.reload();
   state = {};  //reset hotkey state slot to 1
@@ -98,7 +99,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
   for(int index = 7; index >= 0; index--) {
     settings.recent.game[index + 1] = settings.recent.game[index];
   }
-  settings.recent.game[0] = filename;
+  settings.recent.game[0] = {emulator->name, ";", filename};
   presentation.loadEmulators();
 
   return true;
@@ -117,6 +118,7 @@ auto Program::unload() -> void {
   manifestViewer.unload();
   memoryEditor.unload();
   graphicsViewer.unload();
+  streamManager.unload();
   propertiesViewer.unload();
   traceLogger.unload();
   message.text = "";
