@@ -1,5 +1,4 @@
 #include "../lucia.hpp"
-#include <mia/mia.hpp>
 
 #ifdef CORE_FC
   #include "famicom.cpp"
@@ -119,13 +118,40 @@ auto Emulator::locate(const string& location, const string& suffix, const string
   return {pathname, Location::prefix(location), suffix};
 }
 
+//this is used to load manifests for cartridges
 auto Emulator::manifest() -> shared_pointer<vfs::file> {
-  for(auto& media : mia::media) {
-    if(media->name() != interface->name()) continue;
-    if(auto cartridge = media.cast<mia::Cartridge>()) {
-      game.manifest = cartridge->manifest(game.image, game.location);
-      return vfs::memory::open(game.manifest.data<uint8_t>(), game.manifest.size());
+  if(auto cartridge = medium.cast<mia::Cartridge>()) {
+    game.manifest = cartridge->manifest(game.image, game.location);
+    return vfs::memory::open(game.manifest.data<uint8_t>(), game.manifest.size());
+  }
+  return {};
+}
+
+//this is used to load manifests for audio CD-ROMs
+//it is a fallback when mia is unable to generate manifests for game CD-ROMs
+auto Emulator::manifest(const string& location) -> shared_pointer<vfs::file> {
+  string manifest;
+  manifest.append("game\n");
+  manifest.append("  name:  ", Location::prefix(location), "\n");
+  manifest.append("  label: ", Location::prefix(location), "\n");
+  return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
+}
+
+//this is used to load manifests for system BIOSes
+auto Emulator::manifest(const string& type, const string& location) -> shared_pointer<vfs::file> {
+  if(auto medium = mia::medium(type)) {
+    if(location.iendsWith(".zip")) {
+      Decode::ZIP archive;
+      if(archive.open(location) && archive.file) {
+        auto image = archive.extract(archive.file.first());
+        if(auto cartridge = medium.cast<mia::Cartridge>()) {
+          auto manifest = cartridge->manifest(image, location);
+          return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
+        }
+      }
     }
+    auto manifest = medium->manifest(location);
+    return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
   }
   return {};
 }

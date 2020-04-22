@@ -16,8 +16,8 @@ struct GameBoyColor : Emulator {
 
 GameBoy::GameBoy() {
   interface = new ares::GameBoy::GameBoyInterface;
+  medium = mia::medium("Game Boy");
   name = "Game Boy";
-  extensions = {"gb"};
 }
 
 auto GameBoy::load() -> bool {
@@ -74,8 +74,8 @@ auto GameBoy::input(ares::Node::Input node) -> void {
 
 GameBoyColor::GameBoyColor() {
   interface = new ares::GameBoy::GameBoyColorInterface;
+  medium = mia::medium("Game Boy Color");
   name = "Game Boy Color";
-  extensions = {"gbc"};
 }
 
 auto GameBoyColor::load() -> bool {

@@ -9,8 +9,8 @@ struct SG1000 : Emulator {
 
 SG1000::SG1000() {
   interface = new ares::SG1000::SG1000Interface;
+  medium = mia::medium("SG-1000");
   name = "SG-1000";
-  extensions = {"sg"};
 }
 
 auto SG1000::load() -> bool {

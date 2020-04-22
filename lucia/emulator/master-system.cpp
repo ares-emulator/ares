@@ -16,8 +16,8 @@ struct GameGear : Emulator {
 
 MasterSystem::MasterSystem() {
   interface = new ares::MasterSystem::MasterSystemInterface;
+  medium = mia::medium("Master System");
   name = "Master System";
-  extensions = {"ms", "sms"};
 }
 
 auto MasterSystem::load() -> bool {
@@ -75,8 +75,8 @@ auto MasterSystem::input(ares::Node::Input node) -> void {
 
 GameGear::GameGear() {
   interface = new ares::MasterSystem::GameGearInterface;
+  medium = mia::medium("Game Gear");
   name = "Game Gear";
-  extensions = {"gg"};
 }
 
 auto GameGear::load() -> bool {

@@ -9,8 +9,8 @@ struct SuperFamicom : Emulator {
 
 SuperFamicom::SuperFamicom() {
   interface = new ares::SuperFamicom::SuperFamicomInterface;
+  medium = mia::medium("Super Famicom");
   name = "Super Famicom";
-  extensions = {"sfc", "smc"};
 }
 
 auto SuperFamicom::load() -> bool {

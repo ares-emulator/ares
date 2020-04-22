@@ -19,8 +19,8 @@ struct FamicomDiskSystem : Emulator {
 
 Famicom::Famicom() {
   interface = new ares::Famicom::FamicomInterface;
+  medium = mia::medium("Famicom");
   name = "Famicom";
-  extensions = {"nes"};
 }
 
 auto Famicom::load() -> bool {
@@ -90,8 +90,8 @@ auto Famicom::input(ares::Node::Input node) -> void {
 
 FamicomDiskSystem::FamicomDiskSystem() {
   interface = new ares::Famicom::FamicomInterface;
+  medium = mia::medium("Famicom Disk");
   name = "Famicom Disk System";
-  extensions = {"fds"};
 
   firmware.append({"BIOS", "Japan"});
 }

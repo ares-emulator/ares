@@ -1,5 +1,6 @@
 struct MasterSystem : Cartridge {
   auto name() -> string override { return "Master System"; }
+  auto extensions() -> vector<string> override { return {"ms", "sms"}; }
   auto export(string location) -> vector<uint8_t> override;
   auto heuristics(vector<uint8_t>& data, string location) -> string override;
 };

@@ -18,8 +18,8 @@ struct MegaCD : Emulator {
 
 MegaDrive::MegaDrive() {
   interface = new ares::MegaDrive::MegaDriveInterface;
+  medium = mia::medium("Mega Drive");
   name = "Mega Drive";
-  extensions = {"md", "smd", "gen"};
 }
 
 auto MegaDrive::load() -> bool {
@@ -85,25 +85,23 @@ auto MegaDrive::input(ares::Node::Input node) -> void {
 
 MegaCD::MegaCD() {
   interface = new ares::MegaDrive::MegaDriveInterface;
+  medium = mia::medium("Mega CD");
   name = "Mega CD";
-  extensions = {"cue"};
 
-  firmware.append({"BIOS", "US"});
-  firmware.append({"BIOS", "Japan"});
-  firmware.append({"BIOS", "Europe"});
+  firmware.append({"BIOS", "US"});      //NTSC-U
+  firmware.append({"BIOS", "Japan"});   //NTSC-J
+  firmware.append({"BIOS", "Europe"});  //PAL
 }
 
 auto MegaCD::load() -> bool {
-  //todo: implement this into mia::MegaCD
-  regionID = 0;
-  if(file::size(game.location) >= 0x210) {
-    auto fp = file::open(game.location, file::mode::read);
-    fp.seek(0x200);
-    uint8_t region = fp.read();
-    if(region == 'U') regionID = 0;
-    if(region == 'J') regionID = 1;
-    if(region == 'E') regionID = 2;
-    if(region == 'W') regionID = 0;
+  regionID = 0;  //default to NTSC-U region
+  if(auto manifest = medium->manifest(game.location)) {
+    auto document = BML::unserialize(manifest);
+    auto regions = document["game/region"].string().split(",");
+    //if statements below are ordered by lowest to highest priority
+    if(regions.find("PAL"   )) regionID = 2;
+    if(regions.find("NTSC-J")) regionID = 1;
+    if(regions.find("NTSC-U")) regionID = 0;
   }
 
   if(!file::exists(firmware[regionID].location)) {
@@ -136,22 +134,11 @@ auto MegaCD::load() -> bool {
 auto MegaCD::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
   if(node->name() == "Mega Drive") {
     if(name == "manifest.bml") {
-      for(auto& media : mia::media) {
-        if(media->name() != "Mega Drive") continue;
-        if(auto cartridge = media.cast<mia::Cartridge>()) {
-          if(auto image = loadFirmware(firmware[regionID])) {
-            vector<uint8_t> bios;
-            bios.resize(image->size());
-            image->read(bios.data(), bios.size());
-            auto manifest = cartridge->manifest(bios, firmware[regionID].location);
-            return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
-          }
-        }
-      }
+      return Emulator::manifest("Mega Drive", firmware[regionID].location);
     }
 
     if(name == "program.rom") {
-      return loadFirmware(firmware[regionID]);
+      return Emulator::loadFirmware(firmware[regionID]);
     }
 
     if(name == "backup.ram") {
@@ -162,11 +149,10 @@ auto MegaCD::open(ares::Node::Object node, string name, vfs::file::mode mode, bo
 
   if(node->name() == "Mega CD") {
     if(name == "manifest.bml") {
-      string manifest;
-      manifest.append("game\n");
-      manifest.append("  name:  ", Location::prefix(game.location), "\n");
-      manifest.append("  label: ", Location::prefix(game.location), "\n");
-      return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
+      if(auto manifest = medium->manifest(game.location)) {
+        return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
+      }
+      return Emulator::manifest(game.location);
     }
 
     if(name == "cd.rom") {

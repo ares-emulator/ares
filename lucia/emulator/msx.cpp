@@ -16,8 +16,8 @@ struct MSX2 : Emulator {
 
 MSX::MSX() {
   interface = new ares::MSX::MSXInterface;
+  medium = mia::medium("MSX");
   name = "MSX";
-  extensions = {"msx"};
 }
 
 auto MSX::load() -> bool {
@@ -71,8 +71,8 @@ auto MSX::input(ares::Node::Input node) -> void {
 
 MSX2::MSX2() {
   interface = new ares::MSX::MSX2Interface;
+  medium = mia::medium("MSX2");
   name = "MSX2";
-  extensions = {"msx2"};
 }
 
 auto MSX2::load() -> bool {

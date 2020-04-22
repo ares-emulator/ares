@@ -1,5 +1,8 @@
 #include <nall/nall.hpp>
 #include <nall/cd.hpp>
+#include <nall/decode/cue.hpp>
+#include <nall/decode/wav.hpp>
+#include <nall/vfs.hpp>
 using namespace nall;
 
 #include <hiro/hiro.hpp>
@@ -20,4 +23,6 @@ namespace mia {
 
   extern vector<shared_pointer<Media>> media;
   auto construct() -> void;
+  auto medium(const string& name) -> shared_pointer<Media>;
+  auto identify(const string& filename) -> string;
 }

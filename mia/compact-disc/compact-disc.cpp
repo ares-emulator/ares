@@ -6,115 +6,92 @@ auto CompactDisc::construct() -> void {
 }
 
 auto CompactDisc::manifest(string location) -> string {
-  string s;
-  s += "game\n";
-  s +={"  name:  ", Media::name(location), "\n"};
-  s +={"  label: ", Media::name(location), "\n"};
-  return s;
+  vector<uint8_t> sector;
+  if(directory::exists(location)) sector = readFirstDataSectorBCD(location);
+  if(file::exists(location)) sector = readFirstDataSectorCUE(location);
+  if(sector) return manifest(sector, location);
+  return {};
 }
 
 auto CompactDisc::import(string filename) -> string {
   string location = {pathname, Location::prefix(filename), "/"};
   if(!directory::create(location)) return "output directory not writable";
 
-  CD::Session session;
-  auto cue = Media::read(filename, ".cue");
-  if(!cue) return "cue file missing";
-  if(auto error = importCUE(session, string{cue})) return error;
-
-  auto img = Media::read(filename, ".img");
-  if(!img) img = Media::read(filename, ".bin");
-  if(!img) return "image file missing";
-  if(img.size() % 2352) return "image file size not a multiple of 2352";
-
-  session.leadOut.lba = img.size() / 2352 + 150;
-  session.synchronize(6750);
-  auto sub = session.encode(abs(session.leadIn.lba) + session.leadOut.lba + 6750);
-
-  //overlay an existing subchannel data file, if it exists
-  //these files are missing lead-in, track 1 pregap, and lead-out
-  if(auto overlay = Media::read(filename, ".sub")) {
-    if(overlay.size() == img.size() / 2352 * 96) {
-      uint target = (abs(session.leadIn.lba) + 150) * 96;
-      memory::copy(sub.data() + target, overlay.data(), overlay.size());
-    }
-  }
+  auto cdrom = vfs::cdrom::open(filename);
+  if(!cdrom) return "failed to parse CUE sheet";
 
   if(auto fp = file::open({location, "cd.rom"}, file::mode::write)) {
-    array_view<uint8_t> imgData{img};
-    array_view<uint8_t> subData{sub};
-
-    for(int sector = session.leadIn.lba; sector < session.leadOut.lba + 6750; sector++) {
-      if(sector < 150 || sector >= session.leadOut.lba) {
-        for(uint index : range(2352)) fp.write(0x00);  //generate missing IMG data
-      } else {
-        for(uint index : range(2352)) fp.write(*imgData++);
-      }
-      for(uint index : range(96)) fp.write(*subData++);
-    }
+    while(!cdrom->end()) fp.write(cdrom->read());
   }
 
-  file::write({location, "cd.bml"}, session.serialize());  //for debugging purposes
   return {};
 }
 
-auto CompactDisc::importCUE(CD::Session& session, string document) -> string {
-  session = {};
-  session.leadIn.lba = -7500;
+auto CompactDisc::readFirstDataSectorBCD(string pathname) -> vector<uint8_t> {
+  auto fp = file::open({pathname, "cd.rom"}, file::mode::read);
+  if(!fp) return {};
 
-  int track = -1;
-  auto lines = document.split("\n").strip();
+  vector<uint8_t> toc;
+  toc.resize(96 * 7500);
+  for(uint sector : range(7500)) {
+    fp.read({toc.data() + 96 * sector, 96});
+  }
+  CD::Session session;
+  session.decode(toc, 96);
 
-  for(auto& line : lines) {
-    if(line.beginsWith("TRACK ")) {
-      line.trimLeft("TRACK ", 1L).strip();
-      int control = 0b1111;
-      int address = 0b0001;
-      if(line.endsWith(" AUDIO")) {
-        line.trimRight(" AUDIO", 1L).strip();
-        control = 0b0000;
-      } else if(line.endsWith(" MODE1/2352")) {
-        line.trimRight(" MODE1/2352", 1L).strip();
-        control = 0b0100;
-      } else return "CUE: unrecognized track type";
-
-      track = line.natural();
-      if(track > 99) return "CUE: invalid track number";
-      session.tracks[track].control = control;
-      session.tracks[track].address = address;
-      continue;
-    }
-
-    if(line.beginsWith("INDEX ")) {
-      if(track == -1) return "CUE: missing track number";
-      line.trimLeft("INDEX ", 1L).strip();
-      auto part = line.split(" ", 1L);
-      if(part.size() != 2) return "CUE: misformatted index";
-      int index = part[0].natural();
-      if(index > 99) return "CUE: invalid index number";
-      auto time = part[1].split(":");
-      if(time.size() != 3) return "CUE: misformatted index time";
-      auto msf = CD::MSF(time[0].natural(), time[1].natural(), time[2].natural());
-      if(!msf) return "CUE: invalid index time";
-      msf = CD::MSF::fromLBA(msf.toLBA() + 150);
-      if(!msf) return "CUE: invalid index time";
-      session.tracks[track].indices[index].lba = msf.toLBA();
-      continue;
+  for(uint trackID : range(100)) {
+    if(auto& track = session.tracks[trackID]) {
+      if(!track.isData()) continue;
+      if(auto index = track.index(1)) {
+        vector<uint8_t> sector;
+        sector.resize(2048);
+        fp.seek(2448 * (abs(session.leadIn.lba) + index->lba) + 16);
+        fp.read({sector.data(), 2448});
+        return sector;
+      }
     }
   }
 
-  for(uint track : range(100)) {
-    if(!session.tracks[track]) continue;
-    session.firstTrack = track;
-    break;
+  return {};
+}
+
+auto CompactDisc::readFirstDataSectorCUE(string filename) -> vector<uint8_t> {
+  Decode::CUE cuesheet;
+  if(!cuesheet.load(filename)) return {};
+
+  for(auto& file : cuesheet.files) {
+    uint64_t offset = 0;
+    auto location = string{Location::path(filename), file.name};
+
+    if(file.type == "binary") {
+      auto binary = file::open(location, nall::file::mode::read);
+      if(!binary) continue;
+      for(auto& track : file.tracks) {
+        for(auto& index : track.indices) {
+          if((track.type == "mode1/2048" || track.type == "mode1/2352") && index.number == 1) {
+            binary.seek(offset + (track.type == "mode1/2352" ? 16 : 0));
+            vector<uint8_t> sector;
+            sector.resize(2048);
+            binary.read({sector.data(), sector.size()});
+            return sector;
+          }
+          offset += track.sectorSize() * index.sectorCount();
+        }
+      }
+    }
+
+    if(file.type == "wave") {
+      Decode::WAV wave;
+      if(!wave.open(location)) continue;
+      offset += wave.headerSize;
+      for(auto& track : file.tracks) {
+        auto length = track.sectorSize();
+        for(auto& index : track.indices) {
+          offset += track.sectorSize() * index.sectorCount();
+        }
+      }
+    }
   }
 
-  for(uint track : reverse(range(100))) {
-    if(!session.tracks[track]) continue;
-    session.lastTrack = track;
-    break;
-  }
-
-  session.tracks[1].indices[0].lba = 0;
   return {};
 }

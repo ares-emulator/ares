@@ -1,20 +1,15 @@
 auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
-  auto suffix = Location::suffix(filename).trimLeft(".", 1L).downcase();
-
-  //ZIP file drag-and-drop support will only work on the first file of the archive with this code
-  if(suffix == "zip") {
-    Decode::ZIP archive;
-    if(!archive.open(filename)) return {};
-    if(!archive.file) return {};
-    suffix = Location::suffix(archive.file.first().name).trimLeft(".", 1L).downcase();
-  }
-
-  for(auto& emulator : emulators) {
-    for(auto& extension : emulator->extensions) {
-      if(suffix == extension) return emulator;
+  if(auto system = mia::identify(filename)) {
+    for(auto& emulator : emulators) {
+      if(emulator->name == system) return emulator;
     }
   }
 
+  MessageDialog().setTitle("lucia").setText({
+    "Filename: ", Location::file(filename), "\n\n"
+    "Unable to determine what type of game this file is.\n"
+    "Please use the load menu to choose the appropriate game system instead."
+  }).setAlignment(presentation).error();
   return {};
 }
 
@@ -28,7 +23,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
     dialog.setPath(location);
     dialog.setAlignment(presentation);
     string filters{"*.zip:"};
-    for(auto& extension : emulator->extensions) {
+    for(auto& extension : emulator->medium->extensions()) {
       filters.append("*.", extension, ":");
     }
     //support both uppercase and lowercase extensions
@@ -41,17 +36,12 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
   if(!file::exists(filename)) return false;
 
   vector<uint8_t> filedata;
-
-  if(emulator->name == "Mega CD" || emulator->name == "PC Engine CD") {
-    //CDs use on-disk file instead of loading image into RAM.
-    //todo: support this more cleanly.
-    filedata.append(0);
-  } else if(filename.iendsWith(".zip")) {
+  if(filename.iendsWith(".zip")) {
     Decode::ZIP archive;
     if(archive.open(filename)) {
       for(auto& file : archive.file) {
         auto extension = Location::suffix(file.name).trimLeft(".", 1L).downcase();
-        if(emulator->extensions.find(extension)) {
+        if(emulator->medium->extensions().find(extension)) {
           filedata = archive.extract(file);
           break;
         }

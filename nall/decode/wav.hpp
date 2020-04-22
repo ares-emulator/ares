@@ -17,6 +17,7 @@ struct WAV {
   uint frequency = 0;
   uint bitrate = 0;
   uint samples = 0;
+  uint headerSize = 0;
 };
 
 inline auto WAV::open(const string& filename) -> bool {
@@ -62,6 +63,7 @@ inline auto WAV::open(const string& filename) -> bool {
     uint32_t dataSize = fp.readl(4);
     uint32_t remaining = fp.size() - fp.offset();
     samples = remaining / (bitrate / 8) / channels;
+    headerSize = fp.offset();
     return true;
   }
 

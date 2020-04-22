@@ -4,6 +4,8 @@ struct Emulator {
   virtual ~Emulator() = default;
   auto locate(const string& location, const string& suffix, const string& path = "") -> string;
   auto manifest() -> shared_pointer<vfs::file>;
+  auto manifest(const string& location) -> shared_pointer<vfs::file>;
+  auto manifest(const string& type, const string& location) -> shared_pointer<vfs::file>;
   auto load(const string& location, const vector<uint8_t>& image) -> bool;
   auto loadFirmware(const Firmware&) -> shared_pointer<vfs::file>;
   auto save() -> void;
@@ -31,8 +33,8 @@ struct Emulator {
   };
 
   shared_pointer<ares::Interface> interface;
+  shared_pointer<mia::Media> medium;
   string name;
-  vector<string> extensions;
 
   ares::Node::Object root;
   vector<Firmware> firmware;

@@ -1,5 +1,6 @@
 struct GameBoyAdvance : Cartridge {
   auto name() -> string override { return "Game Boy Advance"; }
+  auto extensions() -> vector<string> override { return {"gba"}; }
   auto export(string location) -> vector<uint8_t> override;
   auto heuristics(vector<uint8_t>& data, string location) -> string override;
 };

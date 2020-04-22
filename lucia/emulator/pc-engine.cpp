@@ -12,6 +12,8 @@ struct PCEngineCD : Emulator {
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
   auto input(ares::Node::Input) -> void override;
+
+  uint regionID = 0;
 };
 
 struct SuperGrafx : Emulator {
@@ -23,8 +25,8 @@ struct SuperGrafx : Emulator {
 
 PCEngine::PCEngine() {
   interface = new ares::PCEngine::PCEngineInterface;
+  medium = mia::medium("PC Engine");
   name = "PC Engine";
-  extensions = {"pce"};
 }
 
 auto PCEngine::load() -> bool {
@@ -86,16 +88,25 @@ auto PCEngine::input(ares::Node::Input node) -> void {
 
 PCEngineCD::PCEngineCD() {
   interface = new ares::PCEngine::PCEngineInterface;
+  medium = mia::medium("PC Engine CD");
   name = "PC Engine CD";
-  extensions = {"cue"};
 
-  firmware.append({"BIOS", "US"});
-  firmware.append({"BIOS", "Japan"});
+  firmware.append({"BIOS", "US"});     //NTSC-U
+  firmware.append({"BIOS", "Japan"});  //NTSC-J
 }
 
 auto PCEngineCD::load() -> bool {
-  if(!file::exists(firmware[1].location)) {
-    errorFirmwareRequired(firmware[1]);
+  regionID = 0;  //default to NTSC-U region
+  if(auto manifest = medium->manifest(game.location)) {
+    auto document = BML::unserialize(manifest);
+    auto region = document["game/region"].string();
+    //if statements below are ordered by lowest to highest priority
+    if(region == "NTSC-J") regionID = 1;
+    if(region == "NTSC-U") regionID = 0;
+  }
+
+  if(!file::exists(firmware[regionID].location)) {
+    errorFirmwareRequired(firmware[regionID]);
     return false;
   }
 
@@ -124,22 +135,11 @@ auto PCEngineCD::load() -> bool {
 auto PCEngineCD::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
   if(node->name() == "PC Engine") {
     if(name == "manifest.bml") {
-      for(auto& media : mia::media) {
-        if(media->name() != "PC Engine") continue;
-        if(auto cartridge = media.cast<mia::Cartridge>()) {
-          if(auto image = loadFirmware(firmware[1])) {
-            vector<uint8_t> bios;
-            bios.resize(image->size());
-            image->read(bios.data(), bios.size());
-            auto manifest = cartridge->manifest(bios, firmware[1].location);
-            return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
-          }
-        }
-      }
+      return Emulator::manifest("PC Engine", firmware[regionID].location);
     }
 
     if(name == "program.rom") {
-      return loadFirmware(firmware[1]);
+      return Emulator::loadFirmware(firmware[regionID]);
     }
 
     if(name == "save.ram") {
@@ -150,11 +150,10 @@ auto PCEngineCD::open(ares::Node::Object node, string name, vfs::file::mode mode
 
   if(node->name() == "PC Engine CD") {
     if(name == "manifest.bml") {
-      string manifest;
-      manifest.append("game\n");
-      manifest.append("  name:  ", Location::prefix(game.location), "\n");
-      manifest.append("  label: ", Location::prefix(game.location), "\n");
-      return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
+      if(auto manifest = medium->manifest(game.location)) {
+        return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
+      }
+      return Emulator::manifest(game.location);
     }
 
     if(name == "cd.rom") {
@@ -198,8 +197,8 @@ auto PCEngineCD::input(ares::Node::Input node) -> void {
 
 SuperGrafx::SuperGrafx() {
   interface = new ares::PCEngine::SuperGrafxInterface;
+  medium = mia::medium("SuperGrafx");
   name = "SuperGrafx";
-  extensions = {"sgx"};
 }
 
 auto SuperGrafx::load() -> bool {

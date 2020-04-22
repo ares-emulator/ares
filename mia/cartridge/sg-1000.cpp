@@ -1,5 +1,6 @@
 struct SG1000 : Cartridge {
   auto name() -> string override { return "SG-1000"; }
+  auto extensions() -> vector<string> override { return {"sg1000", "sg"}; }
   auto export(string location) -> vector<uint8_t> override;
   auto heuristics(vector<uint8_t>& data, string location) -> string override;
 };

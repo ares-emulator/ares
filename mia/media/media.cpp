@@ -17,6 +17,10 @@ auto Media::read(string location, string suffix) -> vector<uint8_t> {
   return file::read(location);
 }
 
+auto Media::location(string location, string suffix) const -> string {
+  return {Location::notsuffix(location), suffix};
+}
+
 auto Media::name(string location) const -> string {
-  return Location::base(location).trimRight("/", 1L);
+  return Location::prefix(location);
 }

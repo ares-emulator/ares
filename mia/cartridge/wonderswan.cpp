@@ -1,5 +1,6 @@
 struct WonderSwan : Cartridge {
   auto name() -> string override { return "WonderSwan"; }
+  auto extensions() -> vector<string> override { return {"ws"}; }
   auto export(string location) -> vector<uint8_t> override;
   auto heuristics(vector<uint8_t>& data, string location) -> string override;
 };

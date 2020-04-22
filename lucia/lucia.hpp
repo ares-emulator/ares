@@ -5,6 +5,7 @@
 using namespace hiro;
 
 #include <ares/ares.hpp>
+#include <mia/mia.hpp>
 
 #include <nall/instance.hpp>
 #include <nall/beat/single/apply.hpp>

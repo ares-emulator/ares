@@ -16,8 +16,8 @@ struct NeoGeoPocketColor : Emulator {
 
 NeoGeoPocket::NeoGeoPocket() {
   interface = new ares::NeoGeoPocket::NeoGeoPocketInterface;
+  medium = mia::medium("Neo Geo Pocket");
   name = "Neo Geo Pocket";
-  extensions = {"ngp"};
 
   firmware.append({"BIOS", "World", "0293555b21c4fac516d25199df7809b26beeae150e1d4504a050db32264a6ad7"});
 }
@@ -80,8 +80,8 @@ auto NeoGeoPocket::input(ares::Node::Input node) -> void {
 
 NeoGeoPocketColor::NeoGeoPocketColor() {
   interface = new ares::NeoGeoPocket::NeoGeoPocketColorInterface;
+  medium = mia::medium("Neo Geo Pocket Color");
   name = "Neo Geo Pocket Color";
-  extensions = {"ngpc", "ngc"};
 
   firmware.append({"BIOS", "World", "8fb845a2f71514cec20728e2f0fecfade69444f8d50898b92c2259f1ba63e10d"});
 }

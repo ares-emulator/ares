@@ -1,5 +1,6 @@
 struct PCEngine : Cartridge {
   auto name() -> string override { return "PC Engine"; }
+  auto extensions() -> vector<string> override { return {"pce"}; }
   auto export(string location) -> vector<uint8_t> override;
   auto heuristics(vector<uint8_t>& data, string location) -> string override;
 };
