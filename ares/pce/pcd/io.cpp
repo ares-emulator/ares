@@ -86,15 +86,15 @@ auto PCD::read(uint10 address) -> uint8 {
   if(address == 0xc) {
     data.bit(0) = adpcm.irq.endReached.line;
     data.bit(2) = adpcm.write.pending > 0;
-    data.bit(3) = adpcm.playing;
+    data.bit(3) = adpcm.io.playing;
     data.bit(7) = adpcm.read.pending > 0;
   }
 
   if(address == 0xd) {
-    data.bit(0) = adpcm.io.readOffset;
-    data.bit(1) = adpcm.io.readLatch;
-    data.bit(2) = adpcm.io.writeOffset;
-    data.bit(3) = adpcm.io.writeLatch;
+    data.bit(0) = adpcm.io.writeOffset;
+    data.bit(1) = adpcm.io.writeLatch;
+    data.bit(2) = adpcm.io.readOffset;
+    data.bit(3) = adpcm.io.readLatch;
     data.bit(4) = adpcm.io.lengthLatch;
     data.bit(5) = adpcm.io.playing;
     data.bit(6) = adpcm.io.noRepeat;
@@ -163,10 +163,12 @@ auto PCD::write(uint10 address, uint8 data) -> void {
 
   if(address == 0x8) {
     adpcm.latch.byte(0) = data;
+    if(adpcm.io.lengthLatch) adpcm.length = adpcm.latch;
   }
 
   if(address == 0x9) {
     adpcm.latch.byte(1) = data;
+    if(adpcm.io.lengthLatch) adpcm.length = adpcm.latch;
   }
 
   if(address == 0xa) {
@@ -188,6 +190,7 @@ auto PCD::write(uint10 address, uint8 data) -> void {
 
   if(address == 0xe) {
     adpcm.divider = 0x10 - data.bit(0,3);
+    adpcm.period  = 0;
   }
 
   if(address == 0xf && io.mdr[address] != data) {

@@ -29,6 +29,7 @@ auto PCD::load(Node::Object parent) -> void {
   scsi.cdda = cdda;
   scsi.adpcm = adpcm;
   cdda.drive = drive;
+  cdda.scsi = scsi;
   adpcm.scsi = scsi;
 
   wram.allocate( 64_KiB);

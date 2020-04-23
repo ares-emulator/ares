@@ -243,6 +243,7 @@ auto PCD::SCSI::commandAudioSetStartPosition() -> void {
   if(!lba) return reply(Status::CheckCondition);
 
   pcd.drive.lba = *lba;
+  pcd.drive.start = *lba;
   pcd.drive.end = session->leadOut.lba;
   if(auto trackID = session->inTrack(pcd.drive.lba)) {
     if(auto track = session->track(*trackID)) {
@@ -252,9 +253,11 @@ auto PCD::SCSI::commandAudioSetStartPosition() -> void {
     }
   }
 
-  if(request.data[1].bit(0,1) == 0) {
-    drive->setStopped();
-  } else {
+  if(request.data[1].bit(0) == 0) {
+    drive->setPaused();
+  }
+
+  if(request.data[1].bit(0) == 1) {
     drive->setSeekingPlay();
   }
 
@@ -294,8 +297,21 @@ auto PCD::SCSI::commandAudioSetStopPosition() -> void {
 
   if(request.data[1].bit(0,1) == 0) {
     drive->setStopped();
-  } else {
+  }
+
+  if(request.data[1].bit(0,1) == 1) {
     drive->setSeekingPlay();
+    cdda->playMode = PCD::CDDA::PlayMode::Loop;
+  }
+
+  if(request.data[1].bit(0,1) == 2) {
+    drive->setSeekingPlay();
+    cdda->playMode = PCD::CDDA::PlayMode::IRQ;
+  }
+
+  if(request.data[1].bit(0,1) == 3) {
+    drive->setSeekingPlay();
+    cdda->playMode = PCD::CDDA::PlayMode::Once;
   }
 
   irq.completed.raise();

@@ -115,9 +115,10 @@ private:
 
     Mode mode = Mode::Inactive;
     Mode seek = Mode::Inactive;
-    int lba = CD::InvalidLBA;  //wnere the laser is currently at
-    int end = CD::InvalidLBA;  //where the laser should stop reading
-    uint8 sector[2448];        //contains the most recently read disc sector
+    int lba   = CD::InvalidLBA;  //wnere the laser is currently at
+    int start = CD::InvalidLBA;  //where the laser should start reading
+    int end   = CD::InvalidLBA;  //where the laser should stop reading
+    uint8 sector[2448];          //contains the most recently read disc sector
   } drive;
 
   struct SCSI {
@@ -184,6 +185,7 @@ private:
 
   struct CDDA {
     maybe<Drive&> drive;
+    maybe<SCSI&> scsi;
     Node::Stream stream;
 
     //cdda.cpp
@@ -196,6 +198,8 @@ private:
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
+
+    enum class PlayMode : uint { Loop, IRQ, Once } playMode = PlayMode::Loop;
 
     struct Sample {
        int16 left;
@@ -228,14 +232,14 @@ private:
     } irq;
 
     struct IO {
-      boolean writeOffset;
-      boolean writeLatch;
-      boolean readLatch;
-      boolean readOffset;
-      boolean lengthLatch;
-      boolean playing;
-      boolean noRepeat;  //0 = loop when length reaches zero
-      boolean reset;
+      uint1 writeOffset;
+      uint1 writeLatch;
+      uint1 readLatch;
+      uint1 readOffset;
+      uint1 lengthLatch;
+      uint1 playing;
+      uint1 noRepeat;  //0 = do not stop playing when length reaches zero
+      uint1 reset;
     } io;
 
     struct Bus {
@@ -250,7 +254,6 @@ private:
     } sample;
 
      uint2 dmaActive;
-     uint1 playing;
      uint8 divider;  //0x01-0x10
      uint8 period;   //count-up for divider
     uint16 latch;

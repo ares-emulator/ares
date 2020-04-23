@@ -9,8 +9,9 @@ auto PCD::Drive::read() -> void {
 }
 
 auto PCD::Drive::power() -> void {
-  mode = Mode::Inactive;
-  seek = Mode::Inactive;
-  lba = CD::InvalidLBA;
-  end = CD::InvalidLBA;
+  mode  = Mode::Inactive;
+  seek  = Mode::Inactive;
+  lba   = CD::InvalidLBA;
+  start = CD::InvalidLBA;
+  end   = CD::InvalidLBA;
 }

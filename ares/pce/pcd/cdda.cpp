@@ -13,8 +13,21 @@ auto PCD::CDDA::clockSector() -> void {
   if(drive->paused()) return;
   if(drive->stopped()) return;
 
-  drive->read();
   sample.offset = 0;
+  drive->read();
+  if(drive->inactive()) {
+    if(playMode == PlayMode::Loop) {
+      drive->lba = drive->start;
+      drive->setSeekingPlay();
+    }
+    if(playMode == PlayMode::IRQ) {
+      drive->setStopped();
+      scsi->irq.completed.raise();  //unverified
+    }
+    if(playMode == PlayMode::Once) {
+      drive->setStopped();
+    }
+  }
 }
 
 auto PCD::CDDA::clockSample() -> void {

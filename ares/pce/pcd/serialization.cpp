@@ -22,6 +22,7 @@ auto PCD::Drive::serialize(serializer& s) -> void {
   s.integer((uint&)mode);
   s.integer((uint&)seek);
   s.integer(lba);
+  s.integer(start);
   s.integer(end);
   s.array(sector);
 }
@@ -60,6 +61,7 @@ auto PCD::SCSI::serialize(serializer& s) -> void {
 }
 
 auto PCD::CDDA::serialize(serializer& s) -> void {
+  s.integer((uint&)playMode);
   s.integer(sample.left);
   s.integer(sample.right);
   s.integer(sample.offset);
@@ -74,14 +76,14 @@ auto PCD::ADPCM::serialize(serializer& s) -> void {
   s.integer(irq.endReached.enable);
   s.integer(irq.endReached.line);
 
-  s.boolean(io.writeOffset);
-  s.boolean(io.writeLatch);
-  s.boolean(io.readOffset);
-  s.boolean(io.readLatch);
-  s.boolean(io.lengthLatch);
-  s.boolean(io.playing);
-  s.boolean(io.noRepeat);
-  s.boolean(io.reset);
+  s.integer(io.writeOffset);
+  s.integer(io.writeLatch);
+  s.integer(io.readOffset);
+  s.integer(io.readLatch);
+  s.integer(io.lengthLatch);
+  s.integer(io.playing);
+  s.integer(io.noRepeat);
+  s.integer(io.reset);
 
   s.integer(read.address);
   s.integer(read.data);
@@ -95,7 +97,6 @@ auto PCD::ADPCM::serialize(serializer& s) -> void {
   s.integer(sample.nibble);
 
   s.integer(dmaActive);
-  s.integer(playing);
   s.integer(divider);
   s.integer(period);
   s.integer(latch);

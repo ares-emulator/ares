@@ -14,7 +14,7 @@ auto PCD::ADPCM::unload() -> void {
 
 auto PCD::ADPCM::clock() -> void {
   if(write.pending && !--write.pending) {
-    if(length < 0x8000) irq.halfReached.raise();
+    irq.halfReached.line = length < 0x8000;
     if(!io.lengthLatch && length < 0xffff) length++;
     memory.write(write.address++, write.data);
   }
@@ -25,54 +25,55 @@ auto PCD::ADPCM::clock() -> void {
 
   if(read.pending && !--read.pending) {
     read.data = memory.read(read.address++);
-    if(length < 0x8000) irq.halfReached.raise();
+    irq.halfReached.line = length < 0x8000;
     if(!io.lengthLatch) {
       if(length) {
         length--;
       } else {
-        irq.endReached.raise();
         irq.halfReached.lower();
-        if(io.noRepeat) playing = 0;
+        irq.endReached.raise();
+        if(io.noRepeat) io.playing = 0;
       }
     }
   }
 }
 
 auto PCD::ADPCM::clockSample() -> void {
-  stream->sample((playing ? msm5205.sample() : (int12)0) / 2048.0);
+  stream->sample((io.playing ? msm5205.sample() : (int12)0) / 2048.0);
 
   if(++period < divider) return;
   period = 0;
 
-  if(playing && !sample.nibble) {
-    if(length < 0x8000) irq.halfReached.raise();
+  if(io.playing) {
+    if(!sample.nibble++) {
+      sample.data = memory.read(read.address++);
+      if(!io.lengthLatch && length) length--;
+    }
+    msm5205.setData(sample.data >> 4);
+    msm5205.clock();
+    sample.data <<= 4;
+
+    irq.halfReached.line = length < 0x8000;
     if(!io.lengthLatch && !length) {
       irq.halfReached.lower();
       irq.endReached.raise();
-      if(io.noRepeat) playing = 0;
+      if(io.noRepeat) io.playing = 0;
     }
-
-    sample.data = memory.read(read.address++);
-    if(!io.lengthLatch && length) length--;
-  }
-
-  if(playing) {
-    msm5205.setData(uint4(sample.data >> (!sample.nibble << 2)));
-    msm5205.clock();
-    sample.nibble = !sample.nibble;
   }
 }
 
 auto PCD::ADPCM::control(uint8 data) -> void {
   io.writeOffset = data.bit(0);
-  if(io.writeLatch.raise(data.bit(1))) {
-    write.address = latch - io.writeOffset;
+  if(!io.writeLatch && data.bit(1)) {
+    write.address = latch - !io.writeOffset;
   }
+  io.writeLatch = data.bit(1);
 
   io.readOffset = data.bit(2);
-  if(io.readLatch.raise(data.bit(3))) {
-    read.address = latch - io.readOffset;
+  if(!io.readLatch && data.bit(3)) {
+    read.address = latch - !io.readOffset;
   }
+  io.readLatch = data.bit(3);
 
   io.lengthLatch = data.bit(4);
   if(io.lengthLatch) {
@@ -80,21 +81,18 @@ auto PCD::ADPCM::control(uint8 data) -> void {
     length = latch;
   }
 
-  io.playing = data.bit(5);
-
-  if(playing && !io.playing) {
-    playing = 0;
+  if(io.playing && !data.bit(5)) {
+    io.playing = 0;
   }
-
-  if(!playing && io.playing) {
+  if(!io.playing && data.bit(5)) {
     irq.halfReached.lower();
-    playing = 1;
+    io.playing = 1;
     sample = {};
   }
 
   io.noRepeat = data.bit(6);
   if(irq.endReached.line && io.noRepeat) {
-    playing = 0;
+    io.playing = 0;
   }
 
   io.reset = data.bit(7);
@@ -105,7 +103,6 @@ auto PCD::ADPCM::control(uint8 data) -> void {
     read = {};
     write = {};
     sample = {};
-    playing = 0;
     latch = 0;
     length = 0;
   }
@@ -123,7 +120,6 @@ auto PCD::ADPCM::power() -> void {
   write = {};
   sample = {};
   dmaActive = 0;
-  playing = 0;
   divider = 1;
   period = 0;
   latch = 0;
