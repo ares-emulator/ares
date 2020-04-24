@@ -26,8 +26,8 @@ auto Program::runAheadUpdate() -> void {
 }
 
 auto Program::captureScreenshot(const uint32_t* data, uint pitch, uint width, uint height) -> void {
-  string filename{emulator->locate({Location::notsuffix(emulator->game.location), " ", chrono::local::datetime().transform(":", "-"), ".bmp"}, ".bmp", settings.paths.screenshots)};
-  Encode::BMP::create(filename, data, pitch, width, height, false);
+  string filename{emulator->locate({Location::notsuffix(emulator->game.location), " ", chrono::local::datetime().transform(":", "-"), ".png"}, ".png", settings.paths.screenshots)};
+  Encode::PNG::RGB8(filename, data, pitch, width, height);
   showMessage("Captured screenshot");
 }
 

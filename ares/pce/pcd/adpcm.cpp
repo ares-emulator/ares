@@ -20,7 +20,10 @@ auto PCD::ADPCM::clock() -> void {
   }
 
   if(dmaActive && !write.pending) {
-    scsi->clockSample();
+    if(auto data = scsi->clockSample()) {
+      write.pending = WriteLatency;
+      write.data = data();
+    }
   }
 
   if(read.pending && !--read.pending) {
@@ -39,7 +42,7 @@ auto PCD::ADPCM::clock() -> void {
 }
 
 auto PCD::ADPCM::clockSample() -> void {
-  stream->sample((io.playing ? msm5205.sample() : (int12)0) / 2048.0);
+  stream->sample((io.playing ? msm5205.sample() : (int12)0) * fader->adpcm() / 2048.0);
 
   if(++period < divider) return;
   period = 0;

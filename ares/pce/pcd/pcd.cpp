@@ -8,6 +8,7 @@ PCD pcd;
 #include "scsi.cpp"
 #include "cdda.cpp"
 #include "adpcm.cpp"
+#include "fader.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
 
@@ -30,7 +31,9 @@ auto PCD::load(Node::Object parent) -> void {
   scsi.adpcm = adpcm;
   cdda.drive = drive;
   cdda.scsi = scsi;
+  cdda.fader = fader;
   adpcm.scsi = scsi;
+  adpcm.fader = fader;
 
   wram.allocate( 64_KiB);
   if(PCD::Duo()) sram.allocate(192_KiB);
@@ -108,6 +111,12 @@ auto PCD::main() -> void {
     adpcm.clockSample();
   }
 
+  if(++clock.fader == 9217) {
+    //1000hz
+    clock.fader = 0;
+    fader.clock();
+  }
+
   scsi.clock();
   adpcm.clock();
   step(1);
@@ -132,6 +141,7 @@ auto PCD::power() -> void {
   scsi.power();
   cdda.power();
   adpcm.power();
+  fader.power();
   clock = {};
   io = {};
 }

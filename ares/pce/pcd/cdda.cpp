@@ -12,13 +12,13 @@ auto PCD::CDDA::clockSector() -> void {
   if(!drive->inCDDA()) return;
   if(drive->paused()) return;
   if(drive->stopped()) return;
+  if(!drive->read()) return;
 
   sample.offset = 0;
-  drive->read();
+
   if(drive->inactive()) {
     if(playMode == PlayMode::Loop) {
-      drive->lba = drive->start;
-      drive->setSeekingPlay();
+      drive->seekPlay();
     }
     if(playMode == PlayMode::IRQ) {
       drive->setStopped();
@@ -41,7 +41,10 @@ auto PCD::CDDA::clockSample() -> void {
     sample.right |= drive->sector[sample.offset++] << 8;
   }
 
-  stream->sample(sample.left / 32768.0, sample.right / 32768.0);
+  stream->sample(
+    sample.left  * fader->cdda() / 32768.0,
+    sample.right * fader->cdda() / 32768.0
+  );
 }
 
 auto PCD::CDDA::power() -> void {

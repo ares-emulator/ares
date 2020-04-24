@@ -8,7 +8,7 @@ auto PCD::SCSI::clock() -> void {
 auto PCD::SCSI::clockSector() -> void {
   if(!drive->inData()) return;
   if(!response.end()) return;
-  drive->read();
+  if(!drive->read()) return;
 
   response.reset();
   for(uint offset : range(2048)) {
@@ -20,11 +20,11 @@ auto PCD::SCSI::clockSector() -> void {
   dataTransferCompleted = drive->inactive();
 }
 
-auto PCD::SCSI::clockSample() -> void {
+auto PCD::SCSI::clockSample() -> maybe<uint8> {
   if(pin.request && !pin.acknowledge && !pin.control && pin.input) {
-    adpcm->write.pending = 30;
-    adpcm->write.data = readData();
+    return readData();
   }
+  return {};
 }
 
 auto PCD::SCSI::readData() -> uint8 {
@@ -207,9 +207,9 @@ auto PCD::SCSI::commandReadData() -> void {
   if(!pcd.fd) return reply(Status::CheckCondition);
   if(!request.data[4]) return reply(Status::OK);
 
-  drive->setSeekingRead();
-  pcd.drive.lba = request.data[1] << 16 | request.data[2] << 8 | request.data[3] << 0;
-  pcd.drive.end = pcd.drive.lba + request.data[4];
+  pcd.drive.start = request.data[1] << 16 | request.data[2] << 8 | request.data[3] << 0;
+  pcd.drive.end = pcd.drive.start + request.data[4];
+  drive->seekRead();
 
   irq.ready.raise();
 }
@@ -242,10 +242,9 @@ auto PCD::SCSI::commandAudioSetStartPosition() -> void {
 
   if(!lba) return reply(Status::CheckCondition);
 
-  pcd.drive.lba = *lba;
   pcd.drive.start = *lba;
   pcd.drive.end = session->leadOut.lba;
-  if(auto trackID = session->inTrack(pcd.drive.lba)) {
+  if(auto trackID = session->inTrack(*lba)) {
     if(auto track = session->track(*trackID)) {
       if(auto index = track->index(track->lastIndex)) {
         pcd.drive.end = index->end;
@@ -254,11 +253,11 @@ auto PCD::SCSI::commandAudioSetStartPosition() -> void {
   }
 
   if(request.data[1].bit(0) == 0) {
-    drive->setPaused();
+    drive->seekPause();
   }
 
   if(request.data[1].bit(0) == 1) {
-    drive->setSeekingPlay();
+    drive->seekPlay();
   }
 
   irq.completed.raise();
@@ -300,17 +299,17 @@ auto PCD::SCSI::commandAudioSetStopPosition() -> void {
   }
 
   if(request.data[1].bit(0,1) == 1) {
-    drive->setSeekingPlay();
+    drive->seekPlay();
     cdda->playMode = PCD::CDDA::PlayMode::Loop;
   }
 
   if(request.data[1].bit(0,1) == 2) {
-    drive->setSeekingPlay();
+    drive->seekPlay();
     cdda->playMode = PCD::CDDA::PlayMode::IRQ;
   }
 
   if(request.data[1].bit(0,1) == 3) {
-    drive->setSeekingPlay();
+    drive->seekPlay();
     cdda->playMode = PCD::CDDA::PlayMode::Once;
   }
 

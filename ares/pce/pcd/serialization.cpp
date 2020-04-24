@@ -7,10 +7,12 @@ auto PCD::serialize(serializer& s) -> void {
   scsi.serialize(s);
   cdda.serialize(s);
   adpcm.serialize(s);
+  fader.serialize(s);
 
   s.integer(clock.drive);
   s.integer(clock.cdda);
   s.integer(clock.adpcm);
+  s.integer(clock.fader);
 
   s.array(io.mdr);
   s.integer(io.cddaSampleSelect);
@@ -21,6 +23,7 @@ auto PCD::serialize(serializer& s) -> void {
 auto PCD::Drive::serialize(serializer& s) -> void {
   s.integer((uint&)mode);
   s.integer((uint&)seek);
+  s.integer(latency);
   s.integer(lba);
   s.integer(start);
   s.integer(end);
@@ -101,4 +104,10 @@ auto PCD::ADPCM::serialize(serializer& s) -> void {
   s.integer(period);
   s.integer(latch);
   s.integer(length);
+}
+
+auto PCD::Fader::serialize(serializer& s) -> void {
+  s.integer((uint&)mode);
+  s.real(step);
+  s.real(volume);
 }

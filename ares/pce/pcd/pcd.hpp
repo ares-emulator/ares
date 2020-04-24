@@ -76,6 +76,7 @@ private:
   struct SCSI;
   struct CDDA;
   struct ADPCM;
+  struct Fader;
 
   struct Drive {
     maybe<CD::Session&> session;
@@ -97,28 +98,39 @@ private:
     auto stopped()  const -> bool { return mode == Mode::Stopped;  }
 
     auto setInactive() -> void { mode = Mode::Inactive; }
-    auto setSeekingRead() -> void { mode = Mode::Seeking; seek = Mode::Reading; }
-    auto setSeekingPlay() -> void { mode = Mode::Seeking; seek = Mode::Playing; }
-    auto setReading() -> void { mode = Mode::Reading; }
-    auto setPlaying() -> void { mode = Mode::Playing; }
-    auto setPaused() -> void { mode = Mode::Paused; }
-    auto setStopped() -> void { mode = Mode::Stopped; }
+    auto setReading()  -> void { mode = Mode::Reading;  }
+    auto setPlaying()  -> void { mode = Mode::Playing;  }
+    auto setPaused()   -> void { mode = Mode::Paused;   }
+    auto setStopped()  -> void { mode = Mode::Stopped;  }
 
-    auto inData() const -> bool { return reading() || (seeking() && seek == Mode::Reading); }
-    auto inCDDA() const -> bool { return playing() || (seeking() && seek == Mode::Playing) || paused() || stopped(); }
+    auto inData() const -> bool {
+      return reading() || (seeking() && seek == Mode::Reading);
+    }
 
-    auto read() -> void;
+    auto inCDDA() const -> bool {
+      return playing() || (seeking() && seek == Mode::Playing)
+          || paused()  || (seeking() && seek == Mode::Paused)
+          || stopped();
+    }
+
+    //drive.cpp
+    auto distance() -> uint;
+    auto seekRead() -> void;
+    auto seekPlay() -> void;
+    auto seekPause() -> void;
+    auto read() -> bool;
     auto power() -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    Mode mode = Mode::Inactive;
-    Mode seek = Mode::Inactive;
-    int lba   = CD::InvalidLBA;  //wnere the laser is currently at
-    int start = CD::InvalidLBA;  //where the laser should start reading
-    int end   = CD::InvalidLBA;  //where the laser should stop reading
-    uint8 sector[2448];          //contains the most recently read disc sector
+    Mode mode    = Mode::Inactive;  //current drive mode
+    Mode seek    = Mode::Inactive;  //which mode to enter after seeking is completed
+    uint latency = 0;               //how many 75hz cycles are remaining in seek mode
+    int lba      = 0;               //wnere the laser is currently at
+    int start    = 0;               //where the laser should start reading
+    int end      = 0;               //where the laser should stop reading
+    uint8 sector[2448];             //contains the most recently read disc sector
   } drive;
 
   struct SCSI {
@@ -131,7 +143,7 @@ private:
     //scsi.cpp
     auto clock() -> void;
     auto clockSector() -> void;
-    auto clockSample() -> void;
+    auto clockSample() -> maybe<uint8>;
     auto readData() -> uint8;
     auto update() -> void;
     auto messageInput() -> void;
@@ -186,6 +198,7 @@ private:
   struct CDDA {
     maybe<Drive&> drive;
     maybe<SCSI&> scsi;
+    maybe<Fader&> fader;
     Node::Stream stream;
 
     //cdda.cpp
@@ -210,9 +223,13 @@ private:
 
   struct ADPCM {
     maybe<SCSI&> scsi;
+    maybe<Fader&> fader;
     MSM5205 msm5205;
     Node::Stream stream;
     Memory::Writable<uint8> memory;  //64KB
+
+    static constexpr uint ReadLatency  = 20;  //estimation
+    static constexpr uint WriteLatency = 20;  //estimation
 
     //adpcm.cpp
     auto load(Node::Object) -> void;
@@ -260,10 +277,29 @@ private:
     uint16 length;
   } adpcm;
 
+  struct Fader {
+    enum class Mode : uint { Idle, CDDA, ADPCM };
+
+    auto cdda()  const -> double { return mode == Mode::CDDA  ? volume : 1.0; }
+    auto adpcm() const -> double { return mode == Mode::ADPCM ? volume : 1.0; }
+
+    //fader.cpp
+    auto clock() -> void;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    Mode mode;
+    double step;
+    double volume;
+  } fader;
+
   struct Clock {
     uint32 drive;
     uint32 cdda;
     uint32 adpcm;
+    uint32 fader;
   } clock;
 
   struct IO {

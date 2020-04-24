@@ -68,8 +68,8 @@ auto GraphicsViewer::eventExport() -> void {
       auto input  = graphics->capture();
       auto identifier = graphics->name().downcase().replace(" ", "-");
       auto datetime = chrono::local::datetime().replace("-", "").replace(":", "").replace(" ", "-");
-      auto location = emulator->locate({Location::notsuffix(emulator->game.location), "-", identifier, "-", datetime, ".bmp"}, ".bmp", settings.paths.debugging);
-      Encode::BMP::create(location, input.data(), width * sizeof(uint32_t), width, height, false);
+      auto location = emulator->locate({Location::notsuffix(emulator->game.location), "-", identifier, "-", datetime, ".png"}, ".png", settings.paths.debugging);
+      Encode::PNG::RGB8(location, input.data(), width * sizeof(uint32_t), width, height);
     }
   }
 }

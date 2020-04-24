@@ -76,7 +76,7 @@ auto PCD::read(uint10 address) -> uint8 {
 
   if(address == 0xa) {
     data = adpcm.read.data;
-    adpcm.read.pending = 57;
+    adpcm.read.pending = ADPCM::ReadLatency;
   }
 
   if(address == 0xb) {
@@ -119,7 +119,6 @@ auto PCD::write(uint10 address, uint8 data) -> void {
   if(address == 0x00c0) io.sramEnable = io.sramEnable << 8 | data;
 
   address = (uint4)address;
-  io.mdr[address] = data;
 
 //print("* wr ff:180", hex(address, 1L), " = ", hex(data, 2L), "\n");
 
@@ -172,7 +171,7 @@ auto PCD::write(uint10 address, uint8 data) -> void {
   }
 
   if(address == 0xa) {
-    adpcm.write.pending = 33;
+    adpcm.write.pending = ADPCM::WriteLatency;
     adpcm.write.data = data;
   }
 
@@ -194,30 +193,17 @@ auto PCD::write(uint10 address, uint8 data) -> void {
   }
 
   if(address == 0xf && io.mdr[address] != data) {
-    uint4 command = data.bit(0,3);
+    if(data.bit(1) == 0) fader.mode = Fader::Mode::CDDA;
+    if(data.bit(1) == 1) fader.mode = Fader::Mode::ADPCM;
 
-    if(command == 0x0) {  //CD-DA / ADPCM enable (100ms)
-    }
+    if(data.bit(2) == 0) fader.step = 1.0 / 6000;  //6.0 second fade-out
+    if(data.bit(2) == 1) fader.step = 1.0 / 2500;  //2.5 second fade-out
 
-    if(command == 0x1) {  //CD-DA enable (100ms)
-    }
-
-    if(command == 0x8) {  //CD-DA short fade-out (1500ms) / ADPCM enable
-    }
-
-    if(command == 0x9) {  //CD-DA long fade-out (5000ms)
-    }
-
-    if(command == 0xa) {  //ADPCM long fade-out (5000ms)
-    }
-
-    if(command == 0xc) {  //CD-DA short fade out (1500ms) / ADPCM enable
-    }
-
-    if(command == 0xd) {  //CD-DA short fade out (1500ms)
-    }
-
-    if(command == 0xe) {  //ADPCM short fade-out (1500ms)
+    if(!data.bit(3)) {
+      fader.mode = Fader::Mode::Idle;
+      fader.volume = 1.0;
     }
   }
+
+  io.mdr[address] = data;
 }
