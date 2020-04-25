@@ -8,11 +8,17 @@ struct Linear : Interface {
   }
 
   auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
   }
 
-  auto read(uint8 bank, uint13 address) -> uint8 override {
-    return rom.read((uint7)bank << 13 | address);
+  auto unload() -> void override {
+  }
+
+  auto read(uint8 bank, uint13 address, uint8 data) -> uint8 override {
+    if(bank >= 0x00 && bank <= 0x7f) {
+      return rom.read(bank << 13 | address);
+    }
+
+    return data;
   }
 
   auto write(uint8 bank, uint13 address, uint8 data) -> void override {

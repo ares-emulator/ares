@@ -63,6 +63,11 @@ auto PCEngine::open(ares::Node::Object node, string name, vfs::file::mode mode, 
     if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
+  if(name == "backup.ram") {
+    auto location = locate(game.location, ".brm", settings.paths.saves);
+    if(auto result = vfs::disk::open(location, mode)) return result;
+  }
+
   return {};
 }
 
@@ -96,7 +101,7 @@ PCEngineCD::PCEngineCD() {
 }
 
 auto PCEngineCD::load() -> bool {
-  regionID = 0;  //default to NTSC-U region
+  regionID = 1;  //default to NTSC-J region (for audio CDs)
   if(auto manifest = medium->manifest(game.location)) {
     auto document = BML::unserialize(manifest);
     auto region = document["game/region"].string();
@@ -142,8 +147,8 @@ auto PCEngineCD::open(ares::Node::Object node, string name, vfs::file::mode mode
       return Emulator::loadFirmware(firmware[regionID]);
     }
 
-    if(name == "save.ram") {
-      auto location = locate(game.location, ".sav", settings.paths.saves);
+    if(name == "backup.ram") {
+      auto location = locate(game.location, ".brm", settings.paths.saves);
       if(auto result = vfs::disk::open(location, mode)) return result;
     }
   }
@@ -232,6 +237,11 @@ auto SuperGrafx::open(ares::Node::Object node, string name, vfs::file::mode mode
 
   if(name == "save.ram" && !programRAMVolatile) {
     auto location = locate(game.location, ".sav", settings.paths.saves);
+    if(auto result = vfs::disk::open(location, mode)) return result;
+  }
+
+  if(name == "backup.ram") {
+    auto location = locate(game.location, ".brm", settings.paths.saves);
     if(auto result = vfs::disk::open(location, mode)) return result;
   }
 

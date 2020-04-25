@@ -14,8 +14,9 @@ auto System::load(Node::Object& root) -> void {
   if(node) unload();
 
   information = {};
-  if(interface->name() == "PC Engine" ) information.model = Model::PCEngine;
-  if(interface->name() == "SuperGrafx") information.model = Model::SuperGrafx;
+  if(interface->name() == "PC Engine"    ) information.model = Model::PCEngine;
+  if(interface->name() == "PC Engine Duo") information.model = Model::PCEngineDuo;
+  if(interface->name() == "SuperGrafx"   ) information.model = Model::SuperGrafx;
 
   node = Node::System::create(interface->name());
   root = node;
@@ -72,11 +73,11 @@ auto System::power() -> void {
     if(have == cartridge.region()) setRegion(have);
   }
 
-  cartridge.power();
+  if(PCD::Present()) pcd.power();
+  cartridgeSlot.power();
   cpu.power();
   vdp.power();
   psg.power();
-  if(PCD::Present()) pcd.power();
   scheduler.power(cpu);
 
   information.serializeSize[0] = serializeInit(0);

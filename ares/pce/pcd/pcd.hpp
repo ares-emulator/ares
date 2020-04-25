@@ -7,8 +7,10 @@ struct PCD : Thread {
   Shared::File fd;
   CD::Session session;
   Memory::Writable<uint8> wram;  // 64KB
-  Memory::Writable<uint8> sram;  //192KB
   Memory::Writable<uint8> bram;  //  2KB
+  //PC Engine Duo only:
+  Memory::Readable<uint8> bios;  //256KB
+  Memory::Writable<uint8> sram;  //192KB
 
   struct Debugger {
     //debugger.cpp
@@ -16,14 +18,13 @@ struct PCD : Thread {
 
     struct Memory {
       Node::Memory wram;
+      Node::Memory bram;
       Node::Memory sram;
       Node::Memory adpcm;
-      Node::Memory bram;
     } memory;
   } debugger;
 
   static auto Present() -> bool { return true; }
-  static auto Duo() -> bool { return false; }
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
@@ -45,8 +46,11 @@ struct PCD : Thread {
   auto power() -> void;
 
   //io.cpp
-  auto read(uint10 address) -> uint8;
-  auto write(uint10 address, uint8 data) -> void;
+  auto read(uint8 bank, uint13 address, uint8 data) -> uint8;
+  auto write(uint8 bank, uint13 address, uint8 data) -> void;
+
+  auto readIO(uint13 address, uint8 data) -> uint8;
+  auto writeIO(uint13 address, uint8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

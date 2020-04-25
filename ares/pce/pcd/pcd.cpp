@@ -36,8 +36,12 @@ auto PCD::load(Node::Object parent) -> void {
   adpcm.fader = fader;
 
   wram.allocate( 64_KiB);
-  if(PCD::Duo()) sram.allocate(192_KiB);
   bram.allocate(  2_KiB);
+  if(Model::PCEngineDuo()) {
+    bios.allocate(256_KiB);
+    sram.allocate(192_KiB);
+  }
+
   cdda.load(node);
   adpcm.load(node);
   debugger.load(node);
@@ -45,8 +49,12 @@ auto PCD::load(Node::Object parent) -> void {
 
 auto PCD::unload() -> void {
   wram.reset();
-  if(PCD::Duo()) sram.reset();
   bram.reset();
+  if(Model::PCEngineDuo()) {
+    bios.reset();
+    sram.reset();
+  }
+
   cdda.unload();
   adpcm.unload();
   disconnect();
@@ -144,6 +152,12 @@ auto PCD::power() -> void {
   fader.power();
   clock = {};
   io = {};
+
+  if(Model::PCEngineDuo()) {
+    if(auto fp = platform->open(system.node, "bios.rom", File::Read, File::Required)) {
+      bios.load(fp);
+    }
+  }
 }
 
 }

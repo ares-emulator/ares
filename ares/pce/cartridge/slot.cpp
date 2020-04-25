@@ -16,3 +16,11 @@ auto CartridgeSlot::unload() -> void {
   cartridge.disconnect();
   port = {};
 }
+
+auto CartridgeSlot::power() -> void {
+  if(port->connected()) cartridge.power();
+}
+
+auto CartridgeSlot::serialize(serializer& s) -> void {
+  if(port->connected()) cartridge.serialize(s);
+}

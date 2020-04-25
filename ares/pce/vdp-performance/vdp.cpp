@@ -60,13 +60,13 @@ auto VDP::main() -> void {
 
     auto output = buffer + 1365 * io.vcounter;
 
-    if(Model::PCEngine()) {
+    if(Model::SuperGrafx() == 0) {
       for(uint x : range(vce.width())) {
         output[x] = vce.io.grayscale << 9 | vce.cram.read(vdc0.output[x]);
       }
     }
 
-    if(Model::SuperGrafx()) {
+    if(Model::SuperGrafx() == 1) {
       vpc.render();
       for(uint x : range(vce.width())) {
         output[x] = vce.io.grayscale << 9 | vce.cram.read(vpc.output[x]);

@@ -1,17 +1,47 @@
-auto PCD::read(uint10 address) -> uint8 {
-  if(address == 0x00c0) return Duo() ? 0x00 : 0xff;
-  if(address == 0x00c1) return Duo() ? 0xaa : 0xff;
-  if(address == 0x00c2) return Duo() ? 0x55 : 0xff;
-  if(address == 0x00c3) return Duo() ? 0x03 : 0xff;
+auto PCD::read(uint8 bank, uint13 address, uint8 data) -> uint8 {
+  if(bank >= 0x00 && bank <= 0x3f && Model::PCEngineDuo()) {
+    return bios.read(address);
+  }
 
-  if(address == 0x00c4) return cartridge.read(0xff, 0x18c4);
-  if(address == 0x00c5) return cartridge.read(0xff, 0x18c5);
-  if(address == 0x00c6) return cartridge.read(0xff, 0x18c6);
-  if(address == 0x00c7) return cartridge.read(0xff, 0x18c7);
+  if(bank >= 0x68 && bank <= 0x78 && Model::PCEngineDuo() && sramEnable()) {
+    return sram.read(bank - 0x68 << 13 | address);
+  }
+
+  if(bank >= 0x80 && bank <= 0x87) {
+    return wram.read(bank - 0x80 << 13 | address);
+  }
+
+  if(bank == 0xf7 && bramEnable()) {
+    return bram.read(address);
+  }
+
+  return data;
+}
+
+auto PCD::write(uint8 bank, uint13 address, uint8 data) -> void {
+  if(bank >= 0x68 && bank <= 0x7f && Model::PCEngineDuo() && sramEnable()) {
+    return sram.write(bank - 0x68 << 13 | address, data);
+  }
+
+  if(bank >= 0x80 && bank <= 0x87) {
+    return wram.write(bank - 0x80 << 13 | address, data);
+  }
+
+  if(bank == 0xf7 && bramEnable()) {
+    return bram.write(address, data);
+  }
+}
+
+auto PCD::readIO(uint13 address, uint8 data) -> uint8 {
+  if(address == 0x18c0 && Model::PCEngineDuo()) return 0x00;
+  if(address == 0x18c1 && Model::PCEngineDuo()) return 0xaa;
+  if(address == 0x18c2 && Model::PCEngineDuo()) return 0x55;
+  if(address == 0x18c3 && Model::PCEngineDuo()) return sram.size() / 64_KiB;
+  if(address >= 0x18c4) return data;
 
   scsi.update();
   address = (uint4)address;
-  uint8 data = io.mdr[address];
+  data = io.mdr[address];
 
   if(address == 0x0) {
     data.bit(3) = scsi.pin.input;
@@ -43,7 +73,7 @@ auto PCD::read(uint10 address) -> uint8 {
     data.bit(4) = 0;  //???
     data.bit(5) = scsi.irq.completed.line;
     data.bit(6) = scsi.irq.ready.line;
-    data.bit(7) = 0;
+    data.bit(7) = 0;  //???
     io.bramEnable = 0;
     io.cddaSampleSelect = !io.cddaSampleSelect;
   }
@@ -115,8 +145,9 @@ auto PCD::read(uint10 address) -> uint8 {
   return data;
 }
 
-auto PCD::write(uint10 address, uint8 data) -> void {
-  if(address == 0x00c0) io.sramEnable = io.sramEnable << 8 | data;
+auto PCD::writeIO(uint13 address, uint8 data) -> void {
+  if(address == 0x18c0) io.sramEnable = io.sramEnable << 8 | data;
+  if(address >= 0x18c4) return;
 
   address = (uint4)address;
 

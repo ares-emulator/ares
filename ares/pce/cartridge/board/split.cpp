@@ -13,10 +13,12 @@ struct Split : Interface {
   }
 
   auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
   }
 
-  auto read(uint8 bank, uint13 address) -> uint8 override {
+  auto unload() -> void override {
+  }
+
+  auto read(uint8 bank, uint13 address, uint8 data) -> uint8 override {
     uint19 linear = (uint6)bank << 13 | address;
 
     if(bank >= 0x00 && bank <= 0x3f) {
@@ -27,7 +29,7 @@ struct Split : Interface {
       return rom.read(romAddress[1] + linear);
     }
 
-    return 0x00;
+    return data;
   }
 
   auto write(uint8 bank, uint13 address, uint8 data) -> void override {

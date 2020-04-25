@@ -10,8 +10,8 @@ CPU cpu;
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Component>("CPU");
 
-  if(Model::PCEngine())   ram.allocate( 8_KiB, 0x00);
-  if(Model::SuperGrafx()) ram.allocate(32_KiB, 0x00);
+  if(Model::SuperGrafx() == 0) ram.allocate( 8_KiB, 0x00);
+  if(Model::SuperGrafx() == 1) ram.allocate(32_KiB, 0x00);
 
   debugger.load(node);
 }
@@ -63,8 +63,8 @@ auto CPU::power() -> void {
   HuC6280::power();
   Thread::create(system.colorburst() * 6.0, {&CPU::main, this});
 
-  r.pc.byte(0) = cartridge.read(r.mpr[reset.vector >> 13], uint13(reset.vector + 0));
-  r.pc.byte(1) = cartridge.read(r.mpr[reset.vector >> 13], uint13(reset.vector + 1));
+  r.pc.byte(0) = read(r.mpr[reset.vector >> 13], uint13(reset.vector + 0));
+  r.pc.byte(1) = read(r.mpr[reset.vector >> 13], uint13(reset.vector + 1));
 
   ram.fill(0x00);
 

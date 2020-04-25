@@ -2,7 +2,7 @@ struct System {
   Node::Object node;
   Node::String regionNode;
 
-  enum class Model : uint { PCEngine, SuperGrafx };
+  enum class Model : uint { PCEngine, PCEngineDuo, SuperGrafx };
   enum class Region : uint { NTSCJ, NTSCU };
 
   auto model() const -> Model { return information.model; }
@@ -37,8 +37,9 @@ private:
 
 extern System system;
 
-auto Model::PCEngine() -> bool { return system.model() == System::Model::PCEngine; }
-auto Model::SuperGrafx() -> bool { return system.model() == System::Model::SuperGrafx; }
+auto Model::PCEngine()    -> bool { return system.model() == System::Model::PCEngine;    }
+auto Model::PCEngineDuo() -> bool { return system.model() == System::Model::PCEngineDuo; }
+auto Model::SuperGrafx()  -> bool { return system.model() == System::Model::SuperGrafx;  }
 
 auto Region::NTSCJ() -> bool { return system.region() == System::Region::NTSCJ; }
 auto Region::NTSCU() -> bool { return system.region() == System::Region::NTSCU; }

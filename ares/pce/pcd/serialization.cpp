@@ -1,8 +1,8 @@
 auto PCD::serialize(serializer& s) -> void {
   Thread::serialize(s);
   wram.serialize(s);
-  if(PCD::Duo()) sram.serialize(s);
   bram.serialize(s);
+  if(Model::PCEngineDuo()) sram.serialize(s);
   drive.serialize(s);
   scsi.serialize(s);
   cdda.serialize(s);

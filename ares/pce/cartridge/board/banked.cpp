@@ -8,19 +8,21 @@ struct Banked : Interface {
   }
 
   auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
   }
 
-  auto read(uint8 bank, uint13 address) -> uint8 override {
+  auto unload() -> void override {
+  }
+
+  auto read(uint8 bank, uint13 address, uint8 data) -> uint8 override {
     if(bank >= 0x00 && bank <= 0x3f) {
-      return rom.read((uint6)bank << 13 | address);
+      return rom.read(bank << 13 | address);
     }
 
     if(bank >= 0x40 && bank <= 0x7f) {
       return rom.read(1 + romBank << 19 | (uint6)bank << 13 | address);
     }
 
-    return 0x00;
+    return data;
   }
 
   auto write(uint8 bank, uint13 address, uint8 data) -> void override {

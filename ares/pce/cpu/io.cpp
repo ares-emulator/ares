@@ -1,22 +1,11 @@
 auto CPU::read(uint8 bank, uint13 address) -> uint8 {
   uint8 data = 0xff;
 
-  //$00-7f  HuCard
-  if(bank >= 0x00 && bank <= 0x7f) {
-    return cartridge.read(bank, address);
-  }
-
+  //$00-7f  HuCard or PC Engine Duo
   //$80-87  CD WRAM
-  if(bank >= 0x80 && bank <= 0x87) {
-    if(PCD::Present()) return pcd.wram.read(bank.bit(0,2) << 13 | address);
-    return data;
-  }
-
-  //$f7  CD BRAM
-  if(bank == 0xf7) {
-    if(PCD::Present() && pcd.bramEnable()) return pcd.bram.read(address);
-    return data;
-  }
+  //$f7     CD BRAM
+  if(PCD::Present()) data = pcd.read(bank, address, data);
+  if(cartridge.node) data = cartridge.read(bank, address, data);
 
   //$f8-fb  RAM
   if(bank >= 0xf8 && bank <= 0xfb) {
@@ -27,8 +16,8 @@ auto CPU::read(uint8 bank, uint13 address) -> uint8 {
   if(bank == 0xff) {
     //$0000-03ff  VDC or VPC
     if((address & 0x1c00) == 0x0000) {
-      if(Model::PCEngine()) return vdp.vdc0.read(address);
-      if(Model::SuperGrafx()) return vdp.vpc.read(address);
+      if(Model::SuperGrafx() == 0) return vdp.vdc0.read(address);
+      if(Model::SuperGrafx() == 1) return vdp.vpc.read(address);
     }
 
     //$0400-07ff  VCE
@@ -97,7 +86,7 @@ auto CPU::read(uint8 bank, uint13 address) -> uint8 {
 
     //$1800-1bff  CD I/O
     if((address & 0x1c00) == 0x1800) {
-      if(PCD::Present()) return pcd.read(address);
+      if(PCD::Present()) return pcd.readIO(address, data);
       return data;
     }
 
@@ -111,22 +100,11 @@ auto CPU::read(uint8 bank, uint13 address) -> uint8 {
 }
 
 auto CPU::write(uint8 bank, uint13 address, uint8 data) -> void {
-  //$00-7f  HuCard
-  if(bank >= 0x00 && bank <= 0x7f) {
-    return cartridge.write(bank, address, data);
-  }
-
+  //$00-7f  HuCard or PC Engine Duo
   //$80-87  CD WRAM
-  if(bank >= 0x80 && bank <= 0x87) {
-    if(PCD::Present()) return pcd.wram.write(bank.bit(0,2) << 13 | address, data);
-    return;
-  }
-
-  //$f7  CD BRAM
-  if(bank == 0xf7) {
-    if(PCD::Present() && pcd.bramEnable()) return pcd.bram.write(address, data);
-    return;
-  }
+  //$f7     CD BRAM
+  if(PCD::Present()) pcd.write(bank, address, data);
+  if(cartridge.node) cartridge.write(bank, address, data);
 
   //$f8-fb  RAM
   if(bank >= 0xf8 && bank <= 0xfb) {
@@ -138,8 +116,8 @@ auto CPU::write(uint8 bank, uint13 address, uint8 data) -> void {
   if(bank == 0xff) {
     //$0000-03ff  VDC or VPC
     if((address & 0x1c00) == 0x0000) {
-      if(Model::PCEngine()) return vdp.vdc0.write(address, data);
-      if(Model::SuperGrafx()) return vdp.vpc.write(address, data);
+      if(Model::SuperGrafx() == 0) return vdp.vdc0.write(address, data);
+      if(Model::SuperGrafx() == 1) return vdp.vpc.write(address, data);
     }
 
     //$0400-07ff  VCE
@@ -194,7 +172,7 @@ auto CPU::write(uint8 bank, uint13 address, uint8 data) -> void {
 
     //$1800-1bff  CD I/O
     if((address & 0x1c00) == 0x1800) {
-      if(PCD::Present()) return pcd.write(address, data);
+      if(PCD::Present()) return pcd.writeIO(address, data);
       return;
     }
 
@@ -210,6 +188,6 @@ auto CPU::write(uint8 bank, uint13 address, uint8 data) -> void {
 //ST0, ST1, ST2
 auto CPU::store(uint2 address, uint8 data) -> void {
   if(address) address++;  //0,1,2 => 0,2,3
-  if(Model::PCEngine()) vdp.vdc0.write(address, data);
-  if(Model::SuperGrafx()) vdp.vpc.store(address, data);
+  if(Model::SuperGrafx() == 0) vdp.vdc0.write(address, data);
+  if(Model::SuperGrafx() == 1) vdp.vpc.store(address, data);
 }

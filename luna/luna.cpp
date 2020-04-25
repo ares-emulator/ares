@@ -113,6 +113,10 @@ auto nall::main(Arguments arguments) -> void {
   interfaces.append(new ares::PCEngine::PCEngineInterface);
   #endif
 
+  #ifdef CORE_PCE
+  interfaces.append(new ares::PCEngine::PCEngineDuoInterface);
+  #endif
+
   #ifdef CORE_WS
   interfaces.append(new ares::WonderSwan::PocketChallengeV2Interface);
   #endif

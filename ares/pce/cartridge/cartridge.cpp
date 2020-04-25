@@ -26,14 +26,17 @@ auto Cartridge::connect() -> void {
   information.board = document["game/board"].string();
 
   if(information.board == "Linear") board = new Board::Linear{*this};
-  if(information.board == "Split" ) board = new Board::Split{*this};
+  if(information.board == "Split") board = new Board::Split{*this};
   if(information.board == "Banked") board = new Board::Banked{*this};
-  if(information.board == "RAM"   ) board = new Board::RAM{*this};
-  if(information.board.match("System Card ?.??")) board = new Board::SystemCard{*this};
+  if(information.board == "RAM") board = new Board::RAM{*this};
+  if(information.board == "System Card") board = new Board::SystemCard{*this};
+  if(information.board == "Super System Card") board = new Board::SuperSystemCard{*this};
+  if(information.board == "Arcade Card Duo") board = new Board::ArcadeCardDuo{*this};
+  if(information.board == "Arcade Card Pro") board = new Board::ArcadeCardPro{*this};
   if(!board) board = new Board::Interface{*this};
   board->load(document);
 
-  if(auto fp = platform->open(node, "save.ram", File::Read)) {
+  if(auto fp = platform->open(node, "backup.ram", File::Read)) {
     pcd.bram.load(fp);
   }
 
@@ -41,9 +44,10 @@ auto Cartridge::connect() -> void {
 }
 
 auto Cartridge::disconnect() -> void {
-  if(!node) return;
-  node = {};
+  if(!node || !board) return;
+  board->unload();
   board = {};
+  node = {};
 }
 
 auto Cartridge::save() -> void {
@@ -51,7 +55,7 @@ auto Cartridge::save() -> void {
   auto document = BML::unserialize(information.manifest);
   board->save(document);
 
-  if(auto fp = platform->open(node, "save.ram", File::Write)) {
+  if(auto fp = platform->open(node, "backup.ram", File::Write)) {
     pcd.bram.save(fp);
   }
 }
@@ -60,8 +64,8 @@ auto Cartridge::power() -> void {
   board->power();
 }
 
-auto Cartridge::read(uint8 bank, uint13 address) -> uint8 {
-  return board->read(bank, address);
+auto Cartridge::read(uint8 bank, uint13 address, uint8 data) -> uint8 {
+  return board->read(bank, address, data);
 }
 
 auto Cartridge::write(uint8 bank, uint13 address, uint8 data) -> void {

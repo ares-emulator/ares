@@ -27,8 +27,11 @@ auto Program::runAheadUpdate() -> void {
 
 auto Program::captureScreenshot(const uint32_t* data, uint pitch, uint width, uint height) -> void {
   string filename{emulator->locate({Location::notsuffix(emulator->game.location), " ", chrono::local::datetime().transform(":", "-"), ".png"}, ".png", settings.paths.screenshots)};
-  Encode::PNG::RGB8(filename, data, pitch, width, height);
-  showMessage("Captured screenshot");
+  if(Encode::PNG::RGB8(filename, data, pitch, width, height)) {
+    showMessage("Captured screenshot");
+  } else {
+    showMessage("Failed to capture screenshot");
+  }
 }
 
 auto Program::openFile(BrowserDialog& dialog) -> string {

@@ -17,7 +17,7 @@ struct Cartridge {
   auto save() -> void;
   auto power() -> void;
 
-  auto read(uint8 bank, uint13 address) -> uint8;
+  auto read(uint8 bank, uint13 address, uint8 data) -> uint8;
   auto write(uint8 bank, uint13 address, uint8 data) -> void;
 
   //serialization.cpp

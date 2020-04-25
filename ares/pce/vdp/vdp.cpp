@@ -62,8 +62,8 @@ auto VDP::main() -> void {
     vdc1.hclock();
 
     uint10 color;
-    if(Model::PCEngine()) color = vdc0.bus();
-    if(Model::SuperGrafx()) color = vpc.bus(io.hcounter);
+    if(Model::SuperGrafx() == 0) color = vdc0.bus();
+    if(Model::SuperGrafx() == 1) color = vpc.bus(io.hcounter);
     color = vce.io.grayscale << 9 | vce.cram.read(color);
 
     if(vce.clock() >= 2) *output++ = color;

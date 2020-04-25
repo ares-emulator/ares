@@ -11,6 +11,7 @@ namespace ares::PCEngine {
 
   struct Model {
     inline static auto PCEngine() -> bool;
+    inline static auto PCEngineDuo() -> bool;
     inline static auto SuperGrafx() -> bool;
   };
 

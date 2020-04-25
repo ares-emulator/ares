@@ -22,6 +22,10 @@ struct PCEngineInterface : AbstractInterface {
   auto name() -> string override { return "PC Engine"; }
 };
 
+struct PCEngineDuoInterface : AbstractInterface {
+  auto name() -> string override { return "PC Engine Duo"; }
+};
+
 struct SuperGrafxInterface : AbstractInterface {
   auto name() -> string override { return "SuperGrafx"; }
 };

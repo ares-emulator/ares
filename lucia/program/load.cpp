@@ -70,6 +70,17 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
     return false;
   }
 
+  //this is a safeguard warning in case the user loads their games from a read-only location:
+  string savesPath = settings.paths.saves;
+  if(!savesPath) savesPath = Location::path(filename);
+  if(!directory::writable(savesPath)) {
+    MessageDialog().setTitle("lucia").setText({
+      "The current save path is read-only; please choose a writable save path now.\n"
+      "Otherwise, any in-game progress will be lost once this game is unloaded!\n\n"
+      "Current save location: ", savesPath
+    }).warning();
+  }
+
   paletteUpdate();
   runAheadUpdate();
   presentation.loadEmulator();
