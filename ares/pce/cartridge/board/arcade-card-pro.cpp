@@ -68,7 +68,7 @@ struct ArcadeCardPro : Interface {
       case 0x1aff: return 0x51;  //identifier
       }
 
-      auto& page = pages[bank.bit(4,5)];
+      auto& page = pages[address.bit(4,5)];
       switch(address & 0x1f8f) {
       case 0x1a00: return dram.read(page.address());
       case 0x1a01: return dram.read(page.address());
@@ -112,7 +112,7 @@ struct ArcadeCardPro : Interface {
         return;
       }
 
-      auto& page = pages[bank.bit(4,5)];
+      auto& page = pages[address.bit(4,5)];
       switch(address & 0x1f8f) {
       case 0x1a00: return dram.write(page.address(), data);
       case 0x1a01: return dram.write(page.address(), data);

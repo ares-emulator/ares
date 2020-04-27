@@ -2,6 +2,7 @@ auto PCD::SCSI::clock() -> void {
   if(acknowledging && !--acknowledging) {
     pin.acknowledge = 0;
     update();
+    if(pin.control) adpcm->dmaActive = 0;
   }
 }
 

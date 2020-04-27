@@ -110,7 +110,7 @@ auto PCD::readIO(uint13 address, uint8 data) -> uint8 {
   }
 
   if(address == 0xb) {
-    //io.mdr[address]
+    data.bit(0,1) = adpcm.dmaActive;
   }
 
   if(address == 0xc) {
