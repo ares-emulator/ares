@@ -63,3 +63,5 @@ static_assert(sizeof(double) >= 8, "float64_t is not of the correct size");
 //static_assert(sizeof(long double) >= 10, "float80_t is not of the correct size");
 
 using uint = unsigned int;
+using real32_t = float;
+using real64_t = double;
