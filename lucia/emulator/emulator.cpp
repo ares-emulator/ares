@@ -24,6 +24,10 @@
   #include "msx.cpp"
 #endif
 
+#ifdef CORE_N64
+  #include "nintendo-64.cpp"
+#endif
+
 #ifdef CORE_NGP
   #include "neo-geo-pocket.cpp"
 #endif
@@ -57,6 +61,10 @@ auto Emulator::construct() -> void {
 
   #ifdef CORE_SFC
   emulators.append(new SuperFamicom);
+  #endif
+
+  #ifdef CORE_N64
+  emulators.append(new Nintendo64);
   #endif
 
   #ifdef CORE_SG

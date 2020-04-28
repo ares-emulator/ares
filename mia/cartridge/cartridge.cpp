@@ -11,6 +11,7 @@
 #include "msx2.cpp"
 #include "neo-geo-pocket.cpp"
 #include "neo-geo-pocket-color.cpp"
+#include "nintendo-64.cpp"
 #include "pc-engine.cpp"
 #include "sg-1000.cpp"
 #include "sc-3000.cpp"

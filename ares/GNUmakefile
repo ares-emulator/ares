@@ -30,6 +30,10 @@ ifneq ($(filter $(cores),sfc),)
   include $(ares.path)/sfc/GNUmakefile
 endif
 
+ifneq ($(filter $(cores),n64),)
+  include $(ares.path)/n64/GNUmakefile
+endif
+
 ifneq ($(filter $(cores),sg),)
   include $(ares.path)/sg/GNUmakefile
 endif

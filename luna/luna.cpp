@@ -20,6 +20,7 @@ Input inputInstance;
 #include <md/interface/interface.hpp>
 #include <ms/interface/interface.hpp>
 #include <msx/interface/interface.hpp>
+#include <n64/interface/interface.hpp>
 #include <ngp/interface/interface.hpp>
 #include <pce/interface/interface.hpp>
 #include <sfc/interface/interface.hpp>
@@ -99,6 +100,10 @@ auto nall::main(Arguments arguments) -> void {
 
   #ifdef CORE_MSX
   interfaces.append(new ares::MSX::MSX2Interface);
+  #endif
+
+  #ifdef CORE_N64
+  interfaces.append(new ares::Nintendo64::Nintendo64Interface);
   #endif
 
   #ifdef CORE_NGP
