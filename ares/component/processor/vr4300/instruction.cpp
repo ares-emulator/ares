@@ -4,7 +4,39 @@ auto VR4300::exception(uint type) -> void {
 auto VR4300::instruction() -> void {
   switch(opcode >> 26) {
   case 0x00: return instructionSpecial();
+  case 0x01: return instructionRegisterImmediate();
+  case 0x02: return instructionJ();
+  case 0x03: return instructionJAL();
+  case 0x04: return instructionBEQ();
+  case 0x05: return instructionBNE();
+  case 0x06: return instructionBLEZ();
+  case 0x07: return instructionBGTZ();
+  case 0x08: return instructionADDI();
+  case 0x09: return instructionADDIU();
+  case 0x0a: return instructionSLTI();
+  case 0x0b: return instructionSLTIU();
+  case 0x0c: return instructionANDI();
+  case 0x0d: return instructionORI();
+  case 0x0e: return instructionXORI();
+  case 0x0f: return instructionLUI();
+  case 0x10: return instructionCOP0();
+  case 0x11: return instructionCOP1();
+  case 0x12: return instructionCOP2();
+  case 0x13: return instructionCOP3();
+  case 0x14: return instructionBEQL();
+  case 0x15: return instructionBNEL();
+  case 0x16: return instructionBLEZL();
+  case 0x17: return instructionBGTZL();
+  case 0x18: return instructionDADDI();
+  case 0x19: return instructionDADDIU();
+  case 0x1a: return instructionLDL();
+  case 0x1b: return instructionLDR();
+  case 0x1c: break;
+  case 0x1d: break;
+  case 0x1e: break;
+  case 0x1f: break;
   }
+  exception(InvalidInstruction);
 }
 
 auto VR4300::instructionSpecial() -> void {
@@ -73,6 +105,44 @@ auto VR4300::instructionSpecial() -> void {
   case 0x3d: break;
   case 0x3e: return instructionDSRL32();
   case 0x3f: return instructionDSRA32();
+  }
+  exception(InvalidInstruction);
+}
+
+auto VR4300::instructionRegisterImmediate() -> void {
+  switch(opcode >> 16 & 0x1f) {
+  case 0x00: return instructionBLTZ();
+  case 0x01: return instructionBGEZ();
+  case 0x02: return instructionBLTZL();
+  case 0x03: return instructionBGEZL();
+  case 0x04: break;
+  case 0x05: break;
+  case 0x06: break;
+  case 0x07: break;
+  case 0x08: return instructionTGEI();
+  case 0x09: return instructionTGEIU();
+  case 0x0a: return instructionTLTI();
+  case 0x0b: return instructionTLTIU();
+  case 0x0c: return instructionTEQI();
+  case 0x0d: break;
+  case 0x0e: return instructionTNEI();
+  case 0x0f: break;
+  case 0x10: return instructionBLTZAL();
+  case 0x11: return instructionBGEZAL();
+  case 0x12: return instructionBLTZALL();
+  case 0x13: return instructionBGEZALL();
+  case 0x14: break;
+  case 0x15: break;
+  case 0x16: break;
+  case 0x17: break;
+  case 0x18: break;
+  case 0x19: break;
+  case 0x1a: break;
+  case 0x1b: break;
+  case 0x1c: break;
+  case 0x1d: break;
+  case 0x1e: break;
+  case 0x1f: break;
   }
   exception(InvalidInstruction);
 }

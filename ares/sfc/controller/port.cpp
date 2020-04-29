@@ -10,6 +10,16 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setType("Controller");
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
+  port->setSupported({
+    "Gamepad",
+    "Justifier",
+    "Justifiers",
+    "Mouse",
+    "NTT Data Keypad",
+    "Super Multitap",
+    "Super Scope",
+    "Twin Tap"
+  });
 }
 
 auto ControllerPort::unload() -> void {

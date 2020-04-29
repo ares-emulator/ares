@@ -5,6 +5,7 @@ struct Port : Object {
   auto type() const -> string { return _type; }
   auto family() const -> string { return _family; }
   auto hotSwappable() const -> bool { return _hotSwappable; }
+  auto supported() const -> vector<string> { return _supported; }
 
   auto setAllocate(function<Node::Peripheral (string)> allocate) -> void { _allocate = allocate; }
   auto setConnect(function<void ()> connect) -> void { _connect = connect; }
@@ -12,6 +13,7 @@ struct Port : Object {
   auto setType(string type) -> void { _type = type; }
   auto setFamily(string family) -> void { _family = family; }
   auto setHotSwappable(bool hotSwappable) -> void { _hotSwappable = hotSwappable; }
+  auto setSupported(vector<string> supported) -> void { _supported = supported; }
 
   auto connected() -> Node::Peripheral {
     return find<Node::Peripheral>(0);
@@ -68,4 +70,5 @@ protected:
   string _type;
   string _family;
   bool _hotSwappable = false;
+  vector<string> _supported;
 };

@@ -67,14 +67,22 @@ auto PortConnector::refresh(ares::Node::Port port) -> void {
 
   if(string location = {emulator.system.templates, port->type(), "/"}) {
     for(auto& name : directory::folders(location)) {
+    //if(!port->supported().find(name.trimRight("/", 1L))) continue;
       ListViewItem item{&peripheralList};
       item.setAttribute("type", "template");
-      item.setAttribute("location", {location, name});
+      item.setAttribute("location", {location, name, "/"});
       item.setAttribute("path", location);
-      item.setAttribute("name", name.trimRight("/", 1L));
+      item.setAttribute("name", name);
       item.setIcon(Icon::Action::Add).setText(name);
     }
   }
+
+//for(auto& name : port->supported()) {
+//  ListViewItem item{&peripheralList};
+//  item.setAttribute("type", "template");
+//  item.setAttribute("name", name);
+//  item.setIcon(Icon::Action::Add).setText(name);
+//}
 
   for(auto& name : directory::folders(path)) {
     ListViewItem item{&peripheralList};
@@ -132,6 +140,7 @@ auto PortConnector::eventActivate() -> void {
       .setText("A directory by this name already exists.")
       .setTitle("Error").setAlignment(program).error();
 
+    //if(directory::create(target)) {
       if(directory::copy(source, target)) {
         if(auto peripheral = port->allocate(name)) {
           peripheral->setAttribute("location", target);

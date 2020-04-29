@@ -5,6 +5,11 @@
 namespace ares {
 
 struct VR4300 {
+  virtual auto instructionCOP0() -> void {}
+  virtual auto instructionCOP1() -> void {}
+  virtual auto instructionCOP2() -> void {}
+  virtual auto instructionCOP3() -> void {}
+
   //vr4300.cpp
   auto power() -> void;
 
@@ -12,8 +17,9 @@ struct VR4300 {
   auto exception(uint type) -> void;
   auto instruction() -> void;
   auto instructionSpecial() -> void;
+  auto instructionRegisterImmediate() -> void;
 
-  //instructions.cpp
+  //instructions-special.cpp
   auto instructionADD() -> void;
   auto instructionADDU() -> void;
   auto instructionAND() -> void;
@@ -67,12 +73,54 @@ struct VR4300 {
   auto instructionTNE() -> void;
   auto instructionXOR() -> void;
 
+  //instructions-regimm.cpp
+  auto instructionBGEZ() -> void;
+  auto instructionBGEZAL() -> void;
+  auto instructionBGEZALL() -> void;
+  auto instructionBGEZL() -> void;
+  auto instructionBLTZ() -> void;
+  auto instructionBLTZAL() -> void;
+  auto instructionBLTZALL() -> void;
+  auto instructionBLTZL() -> void;
+  auto instructionTEQI() -> void;
+  auto instructionTGEI() -> void;
+  auto instructionTGEIU() -> void;
+  auto instructionTLTI() -> void;
+  auto instructionTLTIU() -> void;
+  auto instructionTNEI() -> void;
+
+  //instructions.cpp
+  auto instructionADDI() -> void;
+  auto instructionADDIU() -> void;
+  auto instructionANDI() -> void;
+  auto instructionBEQ() -> void;
+  auto instructionBEQL() -> void;
+  auto instructionBLEZ() -> void;
+  auto instructionBLEZL() -> void;
+  auto instructionBNE() -> void;
+  auto instructionBNEL() -> void;
+  auto instructionBGTZ() -> void;
+  auto instructionBGTZL() -> void;
+  auto instructionDADDI() -> void;
+  auto instructionDADDIU() -> void;
+  auto instructionJ() -> void;
+  auto instructionJAL() -> void;
+  auto instructionLDL() -> void;
+  auto instructionLDR() -> void;
+  auto instructionLUI() -> void;
+  auto instructionORI() -> void;
+  auto instructionSLTI() -> void;
+  auto instructionSLTIU() -> void;
+  auto instructionXORI() -> void;
+
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
   //disassembler.cpp
   auto disassembleInstruction() -> string;
+  auto disassembleInstructionDecode() -> vector<string>;
   auto disassembleInstructionSpecial() -> vector<string>;
+  auto disassembleInstructionRegisterImmediate() -> vector<string>;
   auto disassembleContext() -> string;
 
   //exceptions
@@ -86,14 +134,13 @@ struct VR4300 {
 
   struct Context {
     uint64_t gpr[32];
-    real64_t fpr[32];  //IEEE754
-    uint64_t pc;
     uint64_t lo;
     uint64_t hi;
-    uint32_t fcr0;
-    uint32_t fcr1;
-        bool llbit;
-  } context;
+    uint64_t pc;
+
+    //internal
+    uint64_t ip;
+  } r;
 
   uint32 opcode;
 };

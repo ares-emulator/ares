@@ -13,6 +13,7 @@ auto Keyboard::load(Node::Object parent) -> void {
   port->setAllocate([&](auto name) { return allocate(port, name); });
   port->setConnect([&] { connect(); });
   port->setDisconnect([&] { disconnect(); });
+  port->setSupported({"Japanese"});
 }
 
 auto Keyboard::unload() -> void {

@@ -9,6 +9,7 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setType("Controller");
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
+  port->setSupported({"Gamepad", "Avenue Pad 6"});
 }
 
 auto ControllerPort::unload() -> void {

@@ -158,6 +158,7 @@ private:
 
 inline auto directory::copy(const string& source, const string& target) -> bool {
   bool result = true;
+  if(!directory::exists(source)) return result = false;
   if(!directory::create(target)) return result = false;
   for(auto& name : directory::folders(source)) {
     if(!directory::copy({source, name}, {target, name})) result = false;
@@ -192,6 +193,7 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
   }
 
   inline auto directory::exists(const string& pathname) -> bool {
+    if(!pathname) return false;
     string name = pathname;
     name.trim("\"", "\"");
     DWORD result = GetFileAttributes(utf16_t(name));
@@ -301,6 +303,7 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
   }
 
   inline auto directory::exists(const string& pathname) -> bool {
+    if(!pathname) return false;
     struct stat data;
     if(stat(pathname, &data) != 0) return false;
     return S_ISDIR(data.st_mode);
