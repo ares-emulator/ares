@@ -48,6 +48,38 @@ auto VR4300::disassembleInstructionDecode() -> vector<string> {
   case 0x1d: break;
   case 0x1e: break;
   case 0x1f: break;
+  case 0x20: return {"lb", _rt, _offsetbase};
+  case 0x21: return {"lh", _rt, _offsetbase};
+  case 0x22: return {"lwl", _rt, _offsetbase};
+  case 0x23: return {"lw", _rt, _offsetbase};
+  case 0x24: return {"lbu", _rt, _offsetbase};
+  case 0x25: return {"lhu", _rt, _offsetbase};
+  case 0x26: return {"lwr", _rt, _offsetbase};
+  case 0x27: return {"lwu", _rt, _offsetbase};
+  case 0x28: return {"sb", _rt, _offsetbase};
+  case 0x29: return {"sh", _rt, _offsetbase};
+  case 0x2a: return {"swl", _rt, _offsetbase};
+  case 0x2b: return {"sw", _rt, _offsetbase};
+  case 0x2c: return {"sdl", _rt, _offsetbase};
+  case 0x2d: return {"sdr", _rt, _offsetbase};
+  case 0x2e: return {"swr", _rt, _offsetbase};
+  case 0x2f: return {"cache", opcode >> 16 & 31, _offsetbase};
+  case 0x30: return {"ll", _rt, _offsetbase};
+  case 0x31: return {"lwc1", _rt, _offsetbase};
+  case 0x32: return {"lwc2", _rt, _offsetbase};
+  case 0x33: return {"lwc3", _rt, _offsetbase};
+  case 0x34: return {"lld", _rt, _offsetbase};
+  case 0x35: return {"ldc1", _rt, _offsetbase};
+  case 0x36: return {"ldc2", _rt, _offsetbase};
+  case 0x37: return {"ld", _rt, _offsetbase};
+  case 0x38: return {"sc", _rt, _offsetbase};
+  case 0x39: return {"swc1", _rt, _offsetbase};
+  case 0x3a: return {"swc2", _rt, _offsetbase};
+  case 0x3b: return {"swc3", _rt, _offsetbase};
+  case 0x3c: return {"scd", _rt, _offsetbase};
+  case 0x3d: return {"sdc1", _rt, _offsetbase};
+  case 0x3e: return {"sdc2", _rt, _offsetbase};
+  case 0x3f: return {"sd", _rt, _offsetbase};
   }
   return {"invalid"};
 }

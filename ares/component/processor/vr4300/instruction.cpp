@@ -35,6 +35,38 @@ auto VR4300::instruction() -> void {
   case 0x1d: break;
   case 0x1e: break;
   case 0x1f: break;
+  case 0x20: return instructionLB();
+  case 0x21: return instructionLH();
+  case 0x22: return instructionLWL();
+  case 0x23: return instructionLW();
+  case 0x24: return instructionLBU();
+  case 0x25: return instructionLHU();
+  case 0x26: return instructionLWR();
+  case 0x27: return instructionLWU();
+  case 0x28: return instructionSB();
+  case 0x29: return instructionSH();
+  case 0x2a: return instructionSWL();
+  case 0x2b: return instructionSW();
+  case 0x2c: return instructionSDL();
+  case 0x2d: return instructionSDR();
+  case 0x2e: return instructionSWR();
+  case 0x2f: return instructionCACHE();
+  case 0x30: return instructionLL();
+  case 0x31: return instructionLWC1();
+  case 0x32: return instructionLWC2();
+  case 0x33: return instructionLWC3();
+  case 0x34: return instructionLLD();
+  case 0x35: return instructionLDC1();
+  case 0x36: return instructionLDC2();
+  case 0x37: return instructionLD();
+  case 0x38: return instructionSC();
+  case 0x39: return instructionSWC1();
+  case 0x3a: return instructionSWC2();
+  case 0x3b: return instructionSWC3();
+  case 0x3c: return instructionSCD();
+  case 0x3d: return instructionSDC1();
+  case 0x3e: return instructionSDC2();
+  case 0x3f: return instructionSD();
   }
   exception(InvalidInstruction);
 }
