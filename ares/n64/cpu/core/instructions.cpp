@@ -7,254 +7,254 @@
 //* SDC1, SDC2
 //* SWC1, SWC2, SWC3
 
-auto VR4300::instructionADD() -> void {
+auto CPU::instructionADD() -> void {
   if(RS32u > ~RT32u) return exception(Overflow);
   wRD32i(RS32u + RT32u);
 }
 
-auto VR4300::instructionADDI() -> void {
+auto CPU::instructionADDI() -> void {
   if(RS32i > ~IMM16i) return exception(Overflow);
   wRT32i(RS32u + IMM16i);
 }
 
-auto VR4300::instructionADDIU() -> void {
+auto CPU::instructionADDIU() -> void {
   wRT32i(RS32u + IMM16i);
 }
 
-auto VR4300::instructionADDU() -> void {
+auto CPU::instructionADDU() -> void {
   wRD32i(RS32u + RT32u);
 }
 
-auto VR4300::instructionAND() -> void {
+auto CPU::instructionAND() -> void {
   wRD64u(RS64u & RT64u);
 }
 
-auto VR4300::instructionANDI() -> void {
+auto CPU::instructionANDI() -> void {
   wRT64u(RS64u & IMM16u);
 }
 
-auto VR4300::instructionBEQ() -> void {
+auto CPU::instructionBEQ() -> void {
   if(RS64u == RT64u) IP = PC + (IMM16i << 2);
 }
 
-auto VR4300::instructionBEQL() -> void {
+auto CPU::instructionBEQL() -> void {
   if(RS64u == RT64u) IP = PC + (IMM16i << 2);
   else PC += 4;
 }
 
-auto VR4300::instructionBGEZ() -> void {
+auto CPU::instructionBGEZ() -> void {
   if(RS64i >= 0) IP = PC + (IMM16i << 2);
 }
 
-auto VR4300::instructionBGEZAL() -> void {
+auto CPU::instructionBGEZAL() -> void {
   wLR32i(PC + 4);
   if(RS64i >= 0) IP = PC + (IMM16i << 2);
 }
 
-auto VR4300::instructionBGEZALL() -> void {
+auto CPU::instructionBGEZALL() -> void {
   wLR32i(PC + 4);
   if(RS64i >= 0) IP = PC + (IMM16i << 2);
   else PC += 4;
 }
 
-auto VR4300::instructionBGEZL() -> void {
+auto CPU::instructionBGEZL() -> void {
   if(RS64i >= 0) IP = PC + (IMM16i << 2);
   else PC += 4;
 }
 
-auto VR4300::instructionBGTZ() -> void {
+auto CPU::instructionBGTZ() -> void {
   if(RS64i > 0) IP = PC + (IMM16i << 2);
 }
 
-auto VR4300::instructionBGTZL() -> void {
+auto CPU::instructionBGTZL() -> void {
   if(RS64i > 0) IP = PC + (IMM16i << 2);
   else PC += 4;
 }
 
-auto VR4300::instructionBLEZ() -> void {
+auto CPU::instructionBLEZ() -> void {
   if(RS64i <= 0) IP = PC + (IMM16i << 2);
 }
 
-auto VR4300::instructionBLEZL() -> void {
+auto CPU::instructionBLEZL() -> void {
   if(RS64i <= 0) IP = PC + (IMM16i << 2);
   else PC += 4;
 }
 
-auto VR4300::instructionBLTZ() -> void {
+auto CPU::instructionBLTZ() -> void {
   if(RS64i < 0) IP = PC + (IMM16i << 2);
 }
 
-auto VR4300::instructionBLTZAL() -> void {
+auto CPU::instructionBLTZAL() -> void {
   wLR32i(PC + 4);
   if(RS64i < 0) IP = PC + (IMM16i << 2);
 }
 
-auto VR4300::instructionBLTZALL() -> void {
+auto CPU::instructionBLTZALL() -> void {
   wLR32i(PC + 4);
   if(RS64i < 0) IP = PC + (IMM16i << 2);
   else PC += 4;
 }
 
-auto VR4300::instructionBLTZL() -> void {
+auto CPU::instructionBLTZL() -> void {
   if(RS64i < 0) IP = PC + (IMM16i << 2);
   else PC += 4;
 }
 
-auto VR4300::instructionBNE() -> void {
+auto CPU::instructionBNE() -> void {
   if(RS64u != RT64u) IP = PC + (IMM16i << 2);
 }
 
-auto VR4300::instructionBNEL() -> void {
+auto CPU::instructionBNEL() -> void {
   if(RS64u != RT64u) IP = PC + (IMM16i << 2);
   else PC += 4;
 }
 
-auto VR4300::instructionBREAK() -> void {
+auto CPU::instructionBREAK() -> void {
   exception(Break);
 }
 
-auto VR4300::instructionCACHE() -> void {
+auto CPU::instructionCACHE() -> void {
   //todo
 }
 
-auto VR4300::instructionDADD() -> void {
+auto CPU::instructionDADD() -> void {
   if(RS64u > ~RT64u) return exception(Overflow);
   wRD64u(RS64u + RT64u);
 }
 
-auto VR4300::instructionDADDI() -> void {
+auto CPU::instructionDADDI() -> void {
   if(RS64i > ~IMM16i) return exception(Overflow);
   wRT64u(RS64u + int64_t(IMM16i));
 }
 
-auto VR4300::instructionDADDIU() -> void {
+auto CPU::instructionDADDIU() -> void {
   wRT64u(RS64u + uint64_t(IMM16i));
 }
 
-auto VR4300::instructionDADDU() -> void {
+auto CPU::instructionDADDU() -> void {
   wRD64u(RS64u + RT64u);
 }
 
-auto VR4300::instructionDDIV() -> void {
+auto CPU::instructionDDIV() -> void {
   if(!RT64u) return;
   wLO64u(RS64i / RT64i);
   wHI64u(RS64i % RT64i);
 }
 
-auto VR4300::instructionDDIVU() -> void {
+auto CPU::instructionDDIVU() -> void {
   if(!RT64u) return;
   wLO64u(RS64u / RT64u);
   wHI64u(RS64u % RT64u);
 }
 
-auto VR4300::instructionDIV() -> void {
+auto CPU::instructionDIV() -> void {
   if(!RT32u) return;
   wLO32i(RS32i / RT32i);
   wHI32i(RS32i % RT32i);
 }
 
-auto VR4300::instructionDIVU() -> void {
+auto CPU::instructionDIVU() -> void {
   if(!RT32u) return;
   wLO32i(RS32u / RT32u);
   wHI32i(RS32u % RT32u);
 }
 
-auto VR4300::instructionDMULT() -> void {
+auto CPU::instructionDMULT() -> void {
   auto result = RS128i * RT128i;
   wLO64u(result >>  0);
   wHI64u(result >> 64);
 }
 
-auto VR4300::instructionDMULTU() -> void {
+auto CPU::instructionDMULTU() -> void {
   auto result = RS128u * RT128u;
   wLO64u(result >>  0);
   wHI64u(result >> 64);
 }
 
-auto VR4300::instructionDSLL() -> void {
+auto CPU::instructionDSLL() -> void {
   wRD64u(RT64u << SA);
 }
 
-auto VR4300::instructionDSLL32() -> void {
+auto CPU::instructionDSLL32() -> void {
   wRD64u(RT64u << SA + 32);
 }
 
-auto VR4300::instructionDSLLV() -> void {
+auto CPU::instructionDSLLV() -> void {
   wRD64u(RT64u << (RS32u & 63));
 }
 
-auto VR4300::instructionDSRA() -> void {
+auto CPU::instructionDSRA() -> void {
   wRD64u(RT64i >> SA);
 }
 
-auto VR4300::instructionDSRA32() -> void {
+auto CPU::instructionDSRA32() -> void {
   wRD64u(RT64i >> SA + 32);
 }
 
-auto VR4300::instructionDSRAV() -> void {
+auto CPU::instructionDSRAV() -> void {
   wRD64u(RT64i >> (RS32u & 63));
 }
 
-auto VR4300::instructionDSRL() -> void {
+auto CPU::instructionDSRL() -> void {
   wRD64u(RT64u >> SA);
 }
 
-auto VR4300::instructionDSRL32() -> void {
+auto CPU::instructionDSRL32() -> void {
   wRD64u(RT64u >> SA + 32);
 }
 
-auto VR4300::instructionDSRLV() -> void {
+auto CPU::instructionDSRLV() -> void {
   wRD64u(RT64u >> (RS32u & 63));
 }
 
-auto VR4300::instructionDSUB() -> void {
+auto CPU::instructionDSUB() -> void {
   if(RS64u < RT64u) return exception(Overflow);
   wRD64u(RS64u - RT64u);
 }
 
-auto VR4300::instructionDSUBU() -> void {
+auto CPU::instructionDSUBU() -> void {
   wRD64u(RS64u - RT64u);
 }
 
-auto VR4300::instructionJ() -> void {
+auto CPU::instructionJ() -> void {
   IP = (PC & 0xf0000000) | (IMM26u << 2);
 }
 
-auto VR4300::instructionJAL() -> void {
+auto CPU::instructionJAL() -> void {
   IP = (PC & 0xf0000000) | (IMM26u << 2);
   GPR[1] = int32_t(PC + 4);
 }
 
-auto VR4300::instructionJALR() -> void {
+auto CPU::instructionJALR() -> void {
   IP = RS32u;
   GPR[1] = int32_t(PC + 4);
 }
 
-auto VR4300::instructionJR() -> void {
+auto CPU::instructionJR() -> void {
   IP = RS32u;
 }
 
-auto VR4300::instructionLB() -> void {
+auto CPU::instructionLB() -> void {
   if(auto data = readByte(RS32u + IMM16i)) wRT64u(int8_t(*data));
 }
 
-auto VR4300::instructionLBU() -> void {
+auto CPU::instructionLBU() -> void {
   if(auto data = readByte(RS32u + IMM16i)) wRT64u(uint8_t(*data));
 }
 
-auto VR4300::instructionLD() -> void {
+auto CPU::instructionLD() -> void {
   if(auto data = readDouble(RS32u + IMM16i)) wRT64u(*data);
 }
 
-auto VR4300::instructionLDC1() -> void {
+auto CPU::instructionLDC1() -> void {
   //todo
 }
 
-auto VR4300::instructionLDC2() -> void {
+auto CPU::instructionLDC2() -> void {
   //todo
 }
 
-auto VR4300::instructionLDL() -> void {
+auto CPU::instructionLDL() -> void {
   auto address = RS32u + IMM16i;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = uint64_t(0) - 1 << shift;
@@ -263,7 +263,7 @@ auto VR4300::instructionLDL() -> void {
   }
 }
 
-auto VR4300::instructionLDR() -> void {
+auto CPU::instructionLDR() -> void {
   auto address = RS32u + IMM16i;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = uint64_t(0) - 1 >> shift;
@@ -272,15 +272,15 @@ auto VR4300::instructionLDR() -> void {
   }
 }
 
-auto VR4300::instructionLH() -> void {
+auto CPU::instructionLH() -> void {
   if(auto data = readHalf(RS32u + IMM16i)) wRT64u(int16_t(*data));
 }
 
-auto VR4300::instructionLHU() -> void {
+auto CPU::instructionLHU() -> void {
   if(auto data = readHalf(RS32u + IMM16i)) wRT64u(uint16_t(*data));
 }
 
-auto VR4300::instructionLL() -> void {
+auto CPU::instructionLL() -> void {
   if(auto data = readWord(RS32u + IMM16i)) {
   //todo: set COP0 LL address
     wRT64u(*data);
@@ -288,7 +288,7 @@ auto VR4300::instructionLL() -> void {
   }
 }
 
-auto VR4300::instructionLLD() -> void {
+auto CPU::instructionLLD() -> void {
   if(auto data = readDouble(RS32u + IMM16i)) {
   //todo: set COP0 LL address
     wRT64u(*data);
@@ -296,27 +296,27 @@ auto VR4300::instructionLLD() -> void {
   }
 }
 
-auto VR4300::instructionLUI() -> void {
+auto CPU::instructionLUI() -> void {
   wRT32i(IMM16u << 16);
 }
 
-auto VR4300::instructionLW() -> void {
+auto CPU::instructionLW() -> void {
   if(auto data = readWord(RS32u + IMM16i)) wRT64u(int32_t(*data));
 }
 
-auto VR4300::instructionLWC1() -> void {
+auto CPU::instructionLWC1() -> void {
   //todo
 }
 
-auto VR4300::instructionLWC2() -> void {
+auto CPU::instructionLWC2() -> void {
   //todo
 }
 
-auto VR4300::instructionLWC3() -> void {
+auto CPU::instructionLWC3() -> void {
   //todo
 }
 
-auto VR4300::instructionLWL() -> void {
+auto CPU::instructionLWL() -> void {
   auto address = RS32u + IMM16i;
   auto shift = 8 * ((address ^ FlipLE) & 3);
   auto mask = uint32_t(0) - 1 << shift;
@@ -325,7 +325,7 @@ auto VR4300::instructionLWL() -> void {
   }
 }
 
-auto VR4300::instructionLWR() -> void {
+auto CPU::instructionLWR() -> void {
   auto address = RS32u + IMM16i;
   auto shift = 8 * ((address ^ FlipBE) & 3);
   auto mask = uint32_t(0) - 1 >> shift;
@@ -334,55 +334,55 @@ auto VR4300::instructionLWR() -> void {
   }
 }
 
-auto VR4300::instructionLWU() -> void {
+auto CPU::instructionLWU() -> void {
   if(auto data = readWord(RS32u + IMM16i)) wRT64u(uint32_t(*data));
 }
 
-auto VR4300::instructionMFHI() -> void {
+auto CPU::instructionMFHI() -> void {
   wRD64u(HI);
 }
 
-auto VR4300::instructionMFLO() -> void {
+auto CPU::instructionMFLO() -> void {
   wRD64u(LO);
 }
 
-auto VR4300::instructionMTHI() -> void {
+auto CPU::instructionMTHI() -> void {
   wHI64u(RS64u);
 }
 
-auto VR4300::instructionMTLO() -> void {
+auto CPU::instructionMTLO() -> void {
   wLO64u(RS64u);
 }
 
-auto VR4300::instructionMULT() -> void {
+auto CPU::instructionMULT() -> void {
   auto result = int64_t(RS32i) * int64_t(RT32i);
   wLO32i(result >>  0);
   wHI32i(result >> 32);
 }
 
-auto VR4300::instructionMULTU() -> void {
+auto CPU::instructionMULTU() -> void {
   auto result = uint64_t(RS32u) * uint64_t(RT32u);
   wLO32i(result >>  0);
   wHI32i(result >> 32);
 }
 
-auto VR4300::instructionNOR() -> void {
+auto CPU::instructionNOR() -> void {
   wRD64u(~(RS64u | RT64u));
 }
 
-auto VR4300::instructionOR() -> void {
+auto CPU::instructionOR() -> void {
   wRD64u(RS64u | RT64u);
 }
 
-auto VR4300::instructionORI() -> void {
+auto CPU::instructionORI() -> void {
   wRT64u(RS64u | IMM16u);
 }
 
-auto VR4300::instructionSB() -> void {
+auto CPU::instructionSB() -> void {
   writeByte(RS32u + IMM16i, RT32u);
 }
 
-auto VR4300::instructionSC() -> void {
+auto CPU::instructionSC() -> void {
   if(readWord(RS32u + IMM16i) && RTn && 0) {  //todo: check COP0 address as well
     writeWord(RS32u + IMM16i, RT32u);
     wRT64u(1);
@@ -391,7 +391,7 @@ auto VR4300::instructionSC() -> void {
   }
 }
 
-auto VR4300::instructionSCD() -> void {
+auto CPU::instructionSCD() -> void {
   if(readDouble(RS32u + IMM16i) && RTn && 0) {  //todo: check COP0 address as well
     writeDouble(RS32u + IMM16i, RT64u);
     wRT64u(1);
@@ -400,176 +400,176 @@ auto VR4300::instructionSCD() -> void {
   }
 }
 
-auto VR4300::instructionSD() -> void {
+auto CPU::instructionSD() -> void {
   writeDouble(RS32u + IMM16i, RT64u);
 }
 
-auto VR4300::instructionSDC1() -> void {
+auto CPU::instructionSDC1() -> void {
   //todo
 }
 
-auto VR4300::instructionSDC2() -> void {
+auto CPU::instructionSDC2() -> void {
   //todo
 }
 
-auto VR4300::instructionSDL() -> void {
+auto CPU::instructionSDL() -> void {
   auto address = RS32u + IMM16i;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = uint64_t(0) - 1 >> shift;
   writeDouble(address & ~7, mask, RT64u >> shift);
 }
 
-auto VR4300::instructionSDR() -> void {
+auto CPU::instructionSDR() -> void {
   auto address = RS32u + IMM16i;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = uint64_t(0) - 1 << shift;
   writeDouble(address & ~7, mask, RT64u << shift);
 }
 
-auto VR4300::instructionSH() -> void {
+auto CPU::instructionSH() -> void {
   writeHalf(RS32u + IMM16i, RT32u);
 }
 
-auto VR4300::instructionSLL() -> void {
+auto CPU::instructionSLL() -> void {
   wRD32i(RT32u << SA);
 }
 
-auto VR4300::instructionSLLV() -> void {
+auto CPU::instructionSLLV() -> void {
   wRD32i(RT32u << (RS32u & 31));
 }
 
-auto VR4300::instructionSLT() -> void {
+auto CPU::instructionSLT() -> void {
   wRD64u(RS64i < RT64i);
 }
 
-auto VR4300::instructionSLTI() -> void {
+auto CPU::instructionSLTI() -> void {
   wRT64u(RS64i < int64_t(IMM16i));
 }
 
-auto VR4300::instructionSLTIU() -> void {
+auto CPU::instructionSLTIU() -> void {
   wRT64u(RS64u < uint64_t(IMM16u));
 }
 
-auto VR4300::instructionSLTU() -> void {
+auto CPU::instructionSLTU() -> void {
   wRD64u(RS64u < RT64u);
 }
 
-auto VR4300::instructionSRA() -> void {
+auto CPU::instructionSRA() -> void {
   wRD64u(RT32i >> SA);
 }
 
-auto VR4300::instructionSRAV() -> void {
+auto CPU::instructionSRAV() -> void {
   wRD64u(RT32i >> (RS32u & 31));
 }
 
-auto VR4300::instructionSRL() -> void {
+auto CPU::instructionSRL() -> void {
   wRD32i(RT32u >> SA);
 }
 
-auto VR4300::instructionSRLV() -> void {
+auto CPU::instructionSRLV() -> void {
   wRD32i(RT32u >> (RS32u & 31));
 }
 
-auto VR4300::instructionSUB() -> void {
+auto CPU::instructionSUB() -> void {
   if(RS32u < RT32u) return exception(Overflow);
   wRD32i(RS32u - RT32u);
 }
 
-auto VR4300::instructionSUBU() -> void {
+auto CPU::instructionSUBU() -> void {
   wRD32i(RS32u - RT32u);
 }
 
-auto VR4300::instructionSW() -> void {
+auto CPU::instructionSW() -> void {
   writeWord(RS32u + IMM16i, RT32u);
 }
 
-auto VR4300::instructionSWC1() -> void {
+auto CPU::instructionSWC1() -> void {
   //todo
 }
 
-auto VR4300::instructionSWC2() -> void {
+auto CPU::instructionSWC2() -> void {
   //todo
 }
 
-auto VR4300::instructionSWC3() -> void {
+auto CPU::instructionSWC3() -> void {
   //todo
 }
 
-auto VR4300::instructionSWL() -> void {
+auto CPU::instructionSWL() -> void {
   auto address = RS32u + IMM16i;
   auto shift = 8 * ((address ^ FlipLE) & 3);
   auto mask = uint32_t(0) - 1 >> shift;
   writeWord(address & ~3, mask, RT32u >> shift);
 }
 
-auto VR4300::instructionSWR() -> void {
+auto CPU::instructionSWR() -> void {
   auto address = RS32u + IMM16i;
   auto shift = 8 * ((address ^ FlipBE) & 3);
   auto mask = uint32_t(0) - 1 << shift;
   writeWord(address & ~3, mask, RT32u << shift);
 }
 
-auto VR4300::instructionSYNC() -> void {
+auto CPU::instructionSYNC() -> void {
   //NOP on VR4300
   //this instruction exists for software compatibility with VR4400 code
 }
 
-auto VR4300::instructionSYSCALL() -> void {
+auto CPU::instructionSYSCALL() -> void {
   exception(Syscall);
 }
 
-auto VR4300::instructionTEQ() -> void {
+auto CPU::instructionTEQ() -> void {
   if(RS64u == RT64u) exception(Trap);
 }
 
-auto VR4300::instructionTEQI() -> void {
+auto CPU::instructionTEQI() -> void {
   if(RS64u == IMM16u) exception(Trap);
 }
 
-auto VR4300::instructionTGE() -> void {
+auto CPU::instructionTGE() -> void {
   if(RS64i >= RT64i) exception(Trap);
 }
 
-auto VR4300::instructionTGEI() -> void {
+auto CPU::instructionTGEI() -> void {
   if(RS64i >= IMM16i) exception(Trap);
 }
 
-auto VR4300::instructionTGEIU() -> void {
+auto CPU::instructionTGEIU() -> void {
   if(RS64u >= IMM16u) exception(Trap);
 }
 
-auto VR4300::instructionTGEU() -> void {
+auto CPU::instructionTGEU() -> void {
   if(RS64u >= RT64u) exception(Trap);
 }
 
-auto VR4300::instructionTLT() -> void {
+auto CPU::instructionTLT() -> void {
   if(RS64i < RT64i) exception(Trap);
 }
 
-auto VR4300::instructionTLTI() -> void {
+auto CPU::instructionTLTI() -> void {
   if(RS64i < IMM16i) exception(Trap);
 }
 
-auto VR4300::instructionTLTIU() -> void {
+auto CPU::instructionTLTIU() -> void {
   if(RS64u < IMM16u) exception(Trap);
 }
 
-auto VR4300::instructionTLTU() -> void {
+auto CPU::instructionTLTU() -> void {
   if(RS64u < RT64u) exception(Trap);
 }
 
-auto VR4300::instructionTNE() -> void {
+auto CPU::instructionTNE() -> void {
   if(RS64u != RT64u) exception(Trap);
 }
 
-auto VR4300::instructionTNEI() -> void {
+auto CPU::instructionTNEI() -> void {
   if(RS64u != IMM16u) exception(Trap);
 }
 
-auto VR4300::instructionXOR() -> void {
+auto CPU::instructionXOR() -> void {
   wRD64u(RS64u ^ RT64u);
 }
 
-auto VR4300::instructionXORI() -> void {
+auto CPU::instructionXORI() -> void {
   wRT64u(RS64u ^ IMM16u);
 }

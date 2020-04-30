@@ -11,6 +11,9 @@ Nintendo64::Nintendo64() {
   interface = new ares::Nintendo64::Nintendo64Interface;
   medium = mia::medium("Nintendo 64");
   name = "Nintendo 64";
+
+  firmware.append({"PIF", "NTSC"});
+  firmware.append({"PIF", "PAL"});
 }
 
 auto Nintendo64::load() -> bool {

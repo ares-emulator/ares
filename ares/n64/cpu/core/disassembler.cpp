@@ -7,14 +7,14 @@
 #define _imm26u string{"#0x", hex(opcode & 0x03ffffff, 8L)}
 #define _offsetbase string{"#0x", int16_t(opcode), "(r", opcode >> 21 & 31 ,")"}
 
-auto VR4300::disassembleInstruction() -> string {
+auto CPU::disassembleInstruction() -> string {
   vector<string> v = disassembleInstructionDecode();
   if(!v) v.append("invalid");
   auto opcode = pad(v.takeFirst(), -8L);
   return {opcode, v.merge(",")};
 }
 
-auto VR4300::disassembleInstructionDecode() -> vector<string> {
+auto CPU::disassembleInstructionDecode() -> vector<string> {
   switch(opcode >> 26) {
   case 0x00: return disassembleInstructionSpecial();
   case 0x01: return disassembleInstructionRegisterImmediate();
@@ -84,7 +84,7 @@ auto VR4300::disassembleInstructionDecode() -> vector<string> {
   return {"invalid"};
 }
 
-auto VR4300::disassembleInstructionSpecial() -> vector<string> {
+auto CPU::disassembleInstructionSpecial() -> vector<string> {
   switch(opcode & 0x3f) {
   case 0x00: return {"sll", _rd, _rt, _sa};
   case 0x01: break;
@@ -154,7 +154,7 @@ auto VR4300::disassembleInstructionSpecial() -> vector<string> {
   return {"invalid"};
 }
 
-auto VR4300::disassembleInstructionRegisterImmediate() -> vector<string> {
+auto CPU::disassembleInstructionRegisterImmediate() -> vector<string> {
   switch(opcode >> 16 & 0x1f) {
   case 0x00: return {"bltz", _rs, _imm16i};
   case 0x01: return {"bgez", _rs, _imm16i};
@@ -192,7 +192,7 @@ auto VR4300::disassembleInstructionRegisterImmediate() -> vector<string> {
   return {"invalid"};
 }
 
-auto VR4300::disassembleContext() -> string {
+auto CPU::disassembleContext() -> string {
   string s;
   for(uint n : range(32)) {
     s.append("r", n, ":", hex(GPR[n], 16L), " ");
@@ -201,3 +201,12 @@ auto VR4300::disassembleContext() -> string {
   s.append("lo:", hex(LO, 16L));
   return s;
 }
+
+#undef _sa
+#undef _rd
+#undef _rt
+#undef _rs
+#undef _imm16i
+#undef _imm16u
+#undef _imm26u
+#undef _offsetbase

@@ -1,5 +1,3 @@
-ares.components += vr4300
-
 ares.objects += ares-n64-interface ares-n64-system
 ares.objects += ares-n64-cartridge ares-n64-controller
 ares.objects += ares-n64-cpu ares-n64-rdp ares-n64-rsp

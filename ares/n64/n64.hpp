@@ -3,8 +3,6 @@
 
 #include <ares/ares.hpp>
 
-#include <component/processor/vr4300/vr4300.hpp>
-
 namespace ares::Nintendo64 {
   #include <ares/inline.hpp>
 

@@ -3,6 +3,7 @@
 namespace ares::Nintendo64 {
 
 CPU cpu;
+#include "core/core.cpp"
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent) -> void {
@@ -23,8 +24,8 @@ auto CPU::step(uint clocks) -> void {
 }
 
 auto CPU::power() -> void {
-  VR4300::power();
   Thread::create(93'750'000, {&CPU::main, this});
+  powerR4300();
 }
 
 }

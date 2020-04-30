@@ -1,6 +1,6 @@
 //NEC VR4300
 
-struct CPU : VR4300, Thread {
+struct CPU : Thread {
   Node::Component node;
 
   //cpu.cpp
@@ -14,6 +14,8 @@ struct CPU : VR4300, Thread {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  #include "core/core.hpp"
 };
 
 extern CPU cpu;

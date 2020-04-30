@@ -1,7 +1,7 @@
-auto VR4300::exception(uint type) -> void {
+auto CPU::exception(uint type) -> void {
 }
 
-auto VR4300::instruction() -> void {
+auto CPU::instruction() -> void {
   switch(opcode >> 26) {
   case 0x00: return instructionSpecial();
   case 0x01: return instructionRegisterImmediate();
@@ -71,7 +71,7 @@ auto VR4300::instruction() -> void {
   exception(InvalidInstruction);
 }
 
-auto VR4300::instructionSpecial() -> void {
+auto CPU::instructionSpecial() -> void {
   switch(opcode & 0x3f) {
   case 0x00: return instructionSLL();
   case 0x01: break;
@@ -141,7 +141,7 @@ auto VR4300::instructionSpecial() -> void {
   exception(InvalidInstruction);
 }
 
-auto VR4300::instructionRegisterImmediate() -> void {
+auto CPU::instructionRegisterImmediate() -> void {
   switch(opcode >> 16 & 0x1f) {
   case 0x00: return instructionBLTZ();
   case 0x01: return instructionBGEZ();

@@ -21,7 +21,6 @@ ares.objects += $(if $(findstring spc700,$(ares.components)),ares-processor-spc7
 ares.objects += $(if $(findstring tlcs900h,$(ares.components)),ares-processor-tlcs900h)
 ares.objects += $(if $(findstring upd96050,$(ares.components)),ares-processor-upd96050)
 ares.objects += $(if $(findstring v30mz,$(ares.components)),ares-processor-v30mz)
-ares.objects += $(if $(findstring vr4300,$(ares.components)),ares-processor-vr4300)
 ares.objects += $(if $(findstring wdc65816,$(ares.components)),ares-processor-wdc65816)
 ares.objects += $(if $(findstring z80,$(ares.components)),ares-processor-z80)
 
@@ -49,7 +48,6 @@ $(object.path)/ares-processor-spc700.o:   $(ares.path)/component/processor/spc70
 $(object.path)/ares-processor-tlcs900h.o: $(ares.path)/component/processor/tlcs900h/tlcs900h.cpp
 $(object.path)/ares-processor-upd96050.o: $(ares.path)/component/processor/upd96050/upd96050.cpp
 $(object.path)/ares-processor-v30mz.o:    $(ares.path)/component/processor/v30mz/v30mz.cpp
-$(object.path)/ares-processor-vr4300.o:   $(ares.path)/component/processor/vr4300/vr4300.cpp
 $(object.path)/ares-processor-wdc65816.o: $(ares.path)/component/processor/wdc65816/wdc65816.cpp
 $(object.path)/ares-processor-z80.o:      $(ares.path)/component/processor/z80/z80.cpp
 

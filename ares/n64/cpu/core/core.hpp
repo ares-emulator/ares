@@ -1,17 +1,12 @@
-#pragma once
-
 //NEC VR4300
+//{
+  auto instructionCOP0() -> void {}
+  auto instructionCOP1() -> void {}
+  auto instructionCOP2() -> void {}
+  auto instructionCOP3() -> void {}
 
-namespace ares {
-
-struct VR4300 {
-  virtual auto instructionCOP0() -> void {}
-  virtual auto instructionCOP1() -> void {}
-  virtual auto instructionCOP2() -> void {}
-  virtual auto instructionCOP3() -> void {}
-
-  //vr4300.cpp
-  auto power() -> void;
+  //core.cpp
+  auto powerR4300() -> void;
 
   //memory.cpp
   auto readByte(uint32_t address) -> maybe<uint32_t>;
@@ -156,7 +151,7 @@ struct VR4300 {
   auto instructionXORI() -> void;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void;
+  auto serializeR4300(serializer&) -> void;
 
   //disassembler.cpp
   auto disassembleInstruction() -> string;
@@ -190,6 +185,4 @@ struct VR4300 {
   static constexpr bool Endian = 1;  //0 = little, 1 = big
   static constexpr uint FlipLE = (Endian == 0 ? 7 : 0);
   static constexpr uint FlipBE = (Endian == 1 ? 7 : 0);
-};
-
-}
+//};
