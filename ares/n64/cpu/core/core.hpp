@@ -180,7 +180,7 @@
     uint64_t ip;
   } r;
 
-  uint32 opcode;
+  uint32_t opcode;
 
   static constexpr bool Endian = 1;  //0 = little, 1 = big
   static constexpr uint FlipLE = (Endian == 0 ? 7 : 0);

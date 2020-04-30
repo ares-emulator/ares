@@ -19,6 +19,7 @@ auto System::load(Node::Object& root) -> void {
   root = node;
 
   scheduler.reset();
+  bus.load(node);
   cpu.load(node);
   rdp.load(node);
   rsp.load(node);
@@ -32,6 +33,7 @@ auto System::load(Node::Object& root) -> void {
 auto System::unload() -> void {
   if(!node) return;
   save();
+  bus.unload();
   cpu.unload();
   rdp.unload();
   rsp.unload();

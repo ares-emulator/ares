@@ -8,10 +8,11 @@
 #define _offsetbase string{"#0x", int16_t(opcode), "(r", opcode >> 21 & 31 ,")"}
 
 auto CPU::disassembleInstruction() -> string {
+  opcode = bus.readWord(PC);
   vector<string> v = disassembleInstructionDecode();
   if(!v) v.append("invalid");
-  auto opcode = pad(v.takeFirst(), -8L);
-  return {opcode, v.merge(",")};
+  auto instruction = pad(v.takeFirst(), -8L);
+  return {instruction, v.merge(",")};
 }
 
 auto CPU::disassembleInstructionDecode() -> vector<string> {

@@ -23,11 +23,9 @@ auto Cartridge::connect() -> void {
   information.name = document["game/label"].string();
 
   if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
-    rom.allocate(memory["size"].natural() >> 2);
+    rom.allocate(memory["size"].natural());
     if(auto fp = platform->open(node, "program.rom", File::Read, File::Required)) {
-      for(uint address : range(rom.size())) {
-        rom[address] = fp->readm(4);
-      }
+      fp->read(rom.data, rom.size);
     }
   }
 
@@ -37,6 +35,7 @@ auto Cartridge::connect() -> void {
 auto Cartridge::disconnect() -> void {
   if(!node) return;
   save();
+  rom.reset();
   node = {};
 }
 

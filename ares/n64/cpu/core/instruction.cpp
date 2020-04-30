@@ -2,6 +2,9 @@ auto CPU::exception(uint type) -> void {
 }
 
 auto CPU::instruction() -> void {
+  opcode = bus.readWord(PC);
+  PC += 4;
+
   switch(opcode >> 26) {
   case 0x00: return instructionSpecial();
   case 0x01: return instructionRegisterImmediate();

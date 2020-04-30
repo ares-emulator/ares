@@ -11,9 +11,14 @@ auto RSP::load(Node::Object parent) -> void {
   stream = node->append<Node::Stream>("RSP");
   stream->setChannels(2);
   stream->setFrequency(48000.0);
+
+  dmem.allocate(4_KiB);
+  imem.allocate(4_KiB);
 }
 
 auto RSP::unload() -> void {
+  dmem.reset();
+  imem.reset();
   node = {};
   stream = {};
 }
