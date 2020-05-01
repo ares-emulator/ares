@@ -25,7 +25,7 @@ auto Cartridge::connect() -> void {
   if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
     rom.allocate(memory["size"].natural());
     if(auto fp = platform->open(node, "program.rom", File::Read, File::Required)) {
-      fp->read(rom.data, rom.size);
+      rom.load(fp);
     }
   }
 

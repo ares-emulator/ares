@@ -1,61 +1,74 @@
 #if !defined(VR4300_REGISTERS_HPP)
   #define VR4300_REGISTERS_HPP
 
-  #define SA  (opcode >>  6 & 31)
-  #define RDn (opcode >> 11 & 31)
-  #define RTn (opcode >> 16 & 31)
-  #define RSn (opcode >> 21 & 31)
+  //ionstruction decoding
+  #define SA  (pipeline.instruction >>  6 & 31)
+  #define RDn (pipeline.instruction >> 11 & 31)
+  #define RTn (pipeline.instruction >> 16 & 31)
+  #define RSn (pipeline.instruction >> 21 & 31)
 
-  #define IMM16i  int16_t(opcode)
-  #define IMM16u uint16_t(opcode)
-  #define IMM26u (opcode & 0x03ffffff)
+  #define IMM16i i16(pipeline.instruction)
+  #define IMM16u u16(pipeline.instruction)
+  #define IMM26u (pipeline.instruction & 0x03ffffff)
 
-  #define GPR r.gpr
-  #define LR  r.gpr[31]
-  #define LO  r.lo
-  #define HI  r.hi
-  #define PC  r.pc
-  #define IP  r.ip
+  //core
+  #define GPR core.r
+  #define RA  core.r[31]
+  #define LO  core.lo
+  #define HI  core.hi
+  #define PC  core.pc
+  #define IP  core.ip
 
   #define RD GPR[RDn]
   #define RT GPR[RTn]
   #define RS GPR[RSn]
 
-  #define  RT32i  int32_t(RT)
-  #define  RT64i  int64_t(RT)
-  #define RT128i int128_t(RT)
+  #define  RT32i  i32(RT)
+  #define  RT64i  i64(RT)
+  #define RT128i i128(RT)
 
-  #define  RS32i  int32_t(RS)
-  #define  RS64i  int64_t(RS)
-  #define RS128i int128_t(RS)
+  #define  RS32i  i32(RS)
+  #define  RS64i  i64(RS)
+  #define RS128i i128(RS)
 
-  #define  RT32u  uint32_t(RT)
-  #define  RT64u  uint64_t(RT)
-  #define RT128u uint128_t(RT)
+  #define  RT32u  u32(RT)
+  #define  RT64u  u64(RT)
+  #define RT128u u128(RT)
 
-  #define  RS32u  uint32_t(RS)
-  #define  RS64u  uint64_t(RS)
-  #define RS128u uint128_t(RS)
+  #define  RS32u  u32(RS)
+  #define  RS64u  u64(RS)
+  #define RS128u u128(RS)
 
-  #define wRD32i(value) if(RDn) RD =  int32_t(value)
-  #define wRD64u(value) if(RDn) RD = uint64_t(value)
+  #define wRD32i(value) if(RDn) RD = i32(value)
+  #define wRD64u(value) if(RDn) RD = u64(value)
 
-  #define wRT32i(value) if(RTn) RT =  int32_t(value)
-  #define wRT64u(value) if(RTn) RT = uint64_t(value)
+  #define wRT32i(value) if(RTn) RT = i32(value)
+  #define wRT64u(value) if(RTn) RT = u64(value)
 
-  #define wLR32i(value) LR =  int32_t(value)
-  #define wLR64u(value) LR = uint64_t(value)
+  #define wRA32i(value) RA = i32(value)
+  #define wRA64u(value) RA = u64(value)
 
-  #define wLO32i(value) LO =  int32_t(value)
-  #define wLO64u(value) LO = uint64_t(value)
+  #define wLO32i(value) LO = i32(value)
+  #define wLO64u(value) LO = u64(value)
 
-  #define wHI32i(value) HI =  int32_t(value)
-  #define wHI64u(value) HI = uint64_t(value)
+  #define wHI32i(value) HI = i32(value)
+  #define wHI64u(value) HI = u64(value)
 
-  #define LLBIT r.llbit
+  #define LLBIT core.llbit
+
+  //COP0
+  #define LL     cop0.r[COP0::Register::LLAddr]
+  #define CAUSE  cop0.r[COP0::Register::Cause]
+  #define STATUS cop0.r[COP0::Register::Status]
+  #define STATUS_FR   (STATUS & 1 << 26)
+  #define STATUS_COP0 (STATUS & 1 << 28)
+  #define STATUS_COP1 (STATUS & 1 << 29)
+  #define STATUS_COP2 (STATUS & 1 << 30)
+  #define STATUS_COP3 (STATUS & 1 << 31)
 #else
   #undef VR4300_REGISTERS_HPP
 
+  //instruction decoding
   #undef SA
   #undef RDn
   #undef RTn
@@ -65,8 +78,9 @@
   #undef IMM16u
   #undef IMM26u
 
+  //core
   #undef GPR
-  #undef LR
+  #undef RA
   #undef LO
   #undef HI
   #undef PC
@@ -107,5 +121,15 @@
   #undef wHI32i
   #undef wHI64u
 
+  #undef LL
   #undef LLBIT
+
+  //COP0
+  #undef CAUSE
+  #undef STATUS
+  #undef STATUS_FR
+  #undef STATUS_COP0
+  #undef STATUS_COP1
+  #undef STATUS_COP2
+  #undef STATUS_COP3
 #endif

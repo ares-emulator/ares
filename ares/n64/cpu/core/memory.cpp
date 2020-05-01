@@ -1,41 +1,41 @@
-auto CPU::readByte(uint32_t address) -> maybe<uint32_t> {
+auto CPU::readByte(u32 address) -> maybe<u32> {
   return {};
 }
 
-auto CPU::readHalf(uint32_t address) -> maybe<uint32_t> {
+auto CPU::readHalf(u32 address) -> maybe<u32> {
   return {};
 }
 
-auto CPU::readWord(uint32_t address) -> maybe<uint32_t> {
+auto CPU::readWord(u32 address) -> maybe<u32> {
   return {};
 }
 
-auto CPU::readWord(uint32_t address, uint32_t mask) -> maybe<uint32_t> {
+auto CPU::readWord(u32 address, u32 mask) -> maybe<u32> {
   return {};
 }
 
-auto CPU::readDouble(uint32_t address) -> maybe<uint64_t> {
+auto CPU::readDouble(u32 address) -> maybe<u64> {
   return {};
 }
 
-auto CPU::readDouble(uint32_t address, uint32_t mask) -> maybe<uint64_t> {
+auto CPU::readDouble(u32 address, u32 mask) -> maybe<u64> {
   return {};
 }
 
-auto CPU::writeByte(uint32_t address, uint8_t data) -> void {
+auto CPU::writeByte(u32 address, u8 data) -> void {
 }
 
-auto CPU::writeHalf(uint32_t address, uint16_t data) -> void {
+auto CPU::writeHalf(u32 address, u16 data) -> void {
 }
 
-auto CPU::writeWord(uint32_t address, uint32_t data) -> void {
+auto CPU::writeWord(u32 address, u32 data) -> void {
 }
 
-auto CPU::writeWord(uint32_t address, uint32_t mask, uint32_t data) -> void {
+auto CPU::writeWord(u32 address, u32 mask, u32 data) -> void {
 }
 
-auto CPU::writeDouble(uint32_t address, uint64_t data) -> void {
+auto CPU::writeDouble(u32 address, u64 data) -> void {
 }
 
-auto CPU::writeDouble(uint32_t address, uint32_t mask, uint64_t data) -> void {
+auto CPU::writeDouble(u32 address, u32 mask, u64 data) -> void {
 }

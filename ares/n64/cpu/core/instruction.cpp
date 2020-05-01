@@ -2,12 +2,25 @@ auto CPU::exception(uint type) -> void {
 }
 
 auto CPU::instruction() -> void {
-  opcode = bus.readWord(PC);
-  PC += 4;
+  pipeline.instruction = bus.readWord(PC);
 
-  switch(opcode >> 26) {
-  case 0x00: return instructionSpecial();
-  case 0x01: return instructionRegisterImmediate();
+  if(IP) {
+    PC = IP();
+    IP = nothing;
+  } else {
+    PC += 4;
+  }
+
+#if 1
+static uint counter = 0;
+if(++counter < 1000) {
+  print(hex(PC, 8L), "  ", hex(pipeline.instruction, 8L), "  ", disassembleInstruction(), "\n");
+}
+#endif
+
+  switch(pipeline.instruction >> 26) {
+  case 0x00: return instructionSPECIAL();
+  case 0x01: return instructionREGIMM();
   case 0x02: return instructionJ();
   case 0x03: return instructionJAL();
   case 0x04: return instructionBEQ();
@@ -74,8 +87,8 @@ auto CPU::instruction() -> void {
   exception(InvalidInstruction);
 }
 
-auto CPU::instructionSpecial() -> void {
-  switch(opcode & 0x3f) {
+auto CPU::instructionSPECIAL() -> void {
+  switch(pipeline.instruction & 0x3f) {
   case 0x00: return instructionSLL();
   case 0x01: break;
   case 0x02: return instructionSRL();
@@ -144,8 +157,8 @@ auto CPU::instructionSpecial() -> void {
   exception(InvalidInstruction);
 }
 
-auto CPU::instructionRegisterImmediate() -> void {
-  switch(opcode >> 16 & 0x1f) {
+auto CPU::instructionREGIMM() -> void {
+  switch(pipeline.instruction >> 16 & 0x1f) {
   case 0x00: return instructionBLTZ();
   case 0x01: return instructionBGEZ();
   case 0x02: return instructionBLTZL();
@@ -179,5 +192,90 @@ auto CPU::instructionRegisterImmediate() -> void {
   case 0x1e: break;
   case 0x1f: break;
   }
+  exception(InvalidInstruction);
+}
+
+auto CPU::instructionCOP0() -> void {
+  if(!STATUS_COP0) return exception(CoprocessorUnusable);
+  switch(pipeline.instruction >> 21 & 31) {
+  case 0x00: return instructionMFC0();
+  case 0x01: return instructionDMFC0();
+  case 0x02: return instructionCFC0();
+  case 0x04: return instructionMTC0();
+  case 0x05: return instructionDMTC0();
+  case 0x06: return instructionCTC0();
+  case 0x08: switch(pipeline.instruction >> 16 & 3) {
+    case 0x00: return instructionBC0F();
+    case 0x01: return instructionBC0T();
+    case 0x02: return instructionBC0FL();
+    case 0x03: return instructionBC0TL();
+    }
+  }
+  if(!(pipeline.instruction >> 25 & 1)) return exception(InvalidInstruction);
+  switch(pipeline.instruction & 0x3f) {
+  case 0x01: return instructionTLBR();
+  case 0x02: return instructionTLBWI();
+  case 0x06: return instructionTLBWR();
+  case 0x08: return instructionTLBP();
+  }
+  exception(InvalidInstruction);
+}
+
+auto CPU::instructionCOP1() -> void {
+  if(!STATUS_COP1) return exception(CoprocessorUnusable);
+  switch(pipeline.instruction >> 21 & 31) {
+  case 0x00: return instructionMFC1();
+  case 0x01: return instructionDMFC1();
+  case 0x02: return instructionCFC1();
+  case 0x04: return instructionMTC1();
+  case 0x05: return instructionDMTC1();
+  case 0x06: return instructionCTC1();
+  case 0x08: switch(pipeline.instruction >> 16 & 3) {
+    case 0x00: return instructionBC1F();
+    case 0x01: return instructionBC1T();
+    case 0x02: return instructionBC1FL();
+    case 0x03: return instructionBC1TL();
+    }
+  }
+  switch(pipeline.instruction & 0x3f) {
+  case 0x00: return instructionFADD();
+  case 0x01: return instructionFSUB();
+  case 0x02: return instructionFMUL();
+  case 0x03: return instructionFDIV();
+  case 0x04: return instructionFSQRT();
+  case 0x05: return instructionFABS();
+  case 0x06: return instructionFMOV();
+  case 0x07: return instructionFNEG();
+  case 0x08: return instructionFROUNDL();
+  case 0x09: return instructionFTRUNCL();
+  case 0x0a: return instructionFCEILL();
+  case 0x0b: return instructionFFLOORL();
+  case 0x0c: return instructionFROUNDW();
+  case 0x0d: return instructionFTRUNCW();
+  case 0x0e: return instructionFCEILW();
+  case 0x0f: return instructionFFLOORW();
+  case 0x20: return instructionFCVTS();
+  case 0x21: return instructionFCVTD();
+  case 0x24: return instructionFCVTW();
+  case 0x25: return instructionFCVTL();
+  case 0x30: case 0x38: return instructionFCF();
+  case 0x31: case 0x39: return instructionFCUN();
+  case 0x32: case 0x3a: return instructionFCEQ();
+  case 0x33: case 0x3b: return instructionFCUEQ();
+  case 0x34: case 0x3c: return instructionFCOLT();
+  case 0x35: case 0x3d: return instructionFCULT();
+  case 0x36: case 0x3e: return instructionFCOLE();
+  case 0x37: case 0x3f: return instructionFCULE();
+  }
+  exception(InvalidInstruction);
+}
+
+auto CPU::instructionCOP2() -> void {
+  if(!STATUS_COP2) return exception(CoprocessorUnusable);
+  exception(InvalidInstruction);
+}
+
+auto CPU::instructionCOP3() -> void {
+  if(!STATUS_COP3) return exception(CoprocessorUnusable);
   exception(InvalidInstruction);
 }

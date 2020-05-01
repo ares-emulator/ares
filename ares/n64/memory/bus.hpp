@@ -1,89 +1,87 @@
 inline auto Bus::readByte(uint32_t address) -> uint8_t {
   address &= 0x1fff'ffff;
-
-  if(address <= 0x007f'ffff) {
-    return rdram.read(address);
-  }
-
-  if(address <= 0x03ff'ffff) {
-    return 0;
-  }
-
-  if(address <= 0x0400'0fff) {
-    return rsp.dmem.read(address & 0xfff);
-  }
-
-  if(address <= 0x0400'1fff) {
-    return rsp.imem.read(address & 0xfff);
-  }
-
-  if(address <= 0x0fff'ffff) {
-    return 0;
-  }
-
-  if(address <= 0x17ff'ffff) {
-    return cartridge.rom.read(address & cartridge.rom.mask);
-  }
-
+  if(address <= 0x007f'ffff) return rdram.readByte(address);
+  if(address <= 0x03ff'ffff) return 0;
+  if(address <= 0x0400'0fff) return rsp.dmem.readByte(address);
+  if(address <= 0x0400'1fff) return rsp.imem.readByte(address);
+  if(address <= 0x0fff'ffff) return 0;
+  if(address <= 0x17ff'ffff) return cartridge.rom.readByte(address);
   return 0;
 }
 
 inline auto Bus::readHalf(uint32_t address) -> uint16_t {
-  uint16_t data;
-  data  = readByte(address + 0) << 8;
-  data |= readByte(address + 1) << 0;
-  return data;
+  address &= 0x1fff'ffff;
+  if(address <= 0x007f'ffff) return rdram.readHalf(address);
+  if(address <= 0x03ff'ffff) return 0;
+  if(address <= 0x0400'0fff) return rsp.dmem.readHalf(address);
+  if(address <= 0x0400'1fff) return rsp.imem.readHalf(address);
+  if(address <= 0x0fff'ffff) return 0;
+  if(address <= 0x17ff'ffff) return cartridge.rom.readHalf(address);
+  return 0;
 }
 
 inline auto Bus::readWord(uint32_t address) -> uint32_t {
-  uint32_t data;
-  data  = readHalf(address + 0) << 16;
-  data |= readHalf(address + 2) <<  0;
-  return data;
+  address &= 0x1fff'ffff;
+  if(address <= 0x007f'ffff) return rdram.readWord(address);
+  if(address <= 0x03ff'ffff) return 0;
+  if(address <= 0x0400'0fff) return rsp.dmem.readWord(address);
+  if(address <= 0x0400'1fff) return rsp.imem.readWord(address);
+  if(address <= 0x0fff'ffff) return 0;
+  if(address <= 0x17ff'ffff) return cartridge.rom.readWord(address);
+  return 0;
 }
 
-inline auto Bus::readQuad(uint32_t address) -> uint64_t {
-  uint64_t data;
-  data  = readWord(address + 0) << 32;
-  data |= readWord(address + 4) <<  0;
-  return data;
+inline auto Bus::readDouble(uint32_t address) -> uint64_t {
+  address &= 0x1fff'ffff;
+  if(address <= 0x07ff'ffff) return rdram.readDouble(address);
+  if(address <= 0x03ff'ffff) return 0;
+  if(address <= 0x0400'0fff) return rsp.dmem.readDouble(address);
+  if(address <= 0x0400'1fff) return rsp.imem.readDouble(address);
+  if(address <= 0x0fff'ffff) return 0;
+  if(address <= 0x17ff'ffff) return cartridge.rom.readDouble(address);
+  return 0;
 }
 
 inline auto Bus::writeByte(uint32_t address, uint8_t data) -> void {
   address &= 0x1fff'ffff;
-
-  if(address <= 0x007f'ffff) {
-    return rdram.write(address, data);
-  }
-
-  if(address <= 0x03ff'ffff) {
-    return;
-  }
-
-  if(address <= 0x0400'0fff) {
-    return rsp.dmem.write(address & 0xfff, data);
-  }
-
-  if(address <= 0x0400'1fff) {
-    return rsp.imem.write(address & 0xfff, data);
-  }
-
-  if(address <= 0x0fff'ffff) {
-    return;
-  }
+  if(address <= 0x007f'ffff) return rdram.writeByte(address, data);
+  if(address <= 0x03ff'ffff) return;
+  if(address <= 0x0400'0fff) return rsp.dmem.writeByte(address, data);
+  if(address <= 0x0400'1fff) return rsp.imem.writeByte(address, data);
+  if(address <= 0x0fff'ffff) return;
+  if(address <= 0x17ff'ffff) return;
+  return;
 }
 
 inline auto Bus::writeHalf(uint32_t address, uint16_t data) -> void {
-  writeByte(address + 0, data >> 8);
-  writeByte(address + 1, data >> 0);
+  address &= 0x1fff'ffff;
+  if(address <= 0x007f'ffff) return rdram.writeHalf(address, data);
+  if(address <= 0x03ff'ffff) return;
+  if(address <= 0x0400'0fff) return rsp.dmem.writeHalf(address, data);
+  if(address <= 0x0400'1fff) return rsp.imem.writeHalf(address, data);
+  if(address <= 0x0fff'ffff) return;
+  if(address <= 0x17ff'ffff) return;
+  return;
 }
 
 inline auto Bus::writeWord(uint32_t address, uint32_t data) -> void {
-  writeHalf(address + 0, data >> 16);
-  writeHalf(address + 2, data >>  0);
+  address &= 0x1fff'ffff;
+  if(address <= 0x007f'ffff) return rdram.writeWord(address, data);
+  if(address <= 0x003f'ffff) return;
+  if(address <= 0x0400'0fff) return rsp.dmem.writeWord(address, data);
+  if(address <= 0x0400'1fff) return rsp.imem.writeWord(address, data);
+  if(address <= 0x0fff'ffff) return;
+  if(address <= 0x17ff'ffff) return;
+  return;
 }
 
-inline auto Bus::writeQuad(uint32_t address, uint64_t data) -> void {
-  writeWord(address + 0, data >> 32);
-  writeWord(address + 4, data >>  0);
+inline auto Bus::writeDouble(uint32_t address, uint64_t data) -> void {
+  address &= 0x1fff'ffff;
+  if(address <= 0x007f'ffff) return rdram.writeDouble(address, data);
+  if(address <= 0x003f'ffff) return;
+  if(address <= 0x0400'0fff) return rsp.dmem.writeDouble(address, data);
+  if(address <= 0x0400'1fff) return rsp.imem.writeDouble(address, data);
+  if(address <= 0x0fff'ffff) return;
+  if(address <= 0x17ff'ffff) return;
+  return;
 }
