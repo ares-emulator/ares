@@ -19,7 +19,7 @@ auto System::load(Node::Object& root) -> void {
   root = node;
 
   scheduler.reset();
-  bus.load(node);
+  rdram.load(node);
   cpu.load(node);
   rdp.load(node);
   rsp.load(node);
@@ -33,7 +33,7 @@ auto System::load(Node::Object& root) -> void {
 auto System::unload() -> void {
   if(!node) return;
   save();
-  bus.unload();
+  rdram.unload();
   cpu.unload();
   rdp.unload();
   rsp.unload();
@@ -54,6 +54,7 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting>()) setting->setLatch();
 
   cartridge.power();
+  rdram.power();
   cpu.power();
   rdp.power();
   rsp.power();

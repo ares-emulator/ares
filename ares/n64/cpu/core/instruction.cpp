@@ -2,22 +2,37 @@ auto CPU::exception(uint type) -> void {
 }
 
 auto CPU::instruction() -> void {
-  pipeline.instruction = bus.readWord(PC);
-
+  pipeline.address = PC;
+  pipeline.instruction = bus.readWord(pipeline.address);
   if(IP) {
     PC = IP();
     IP = nothing;
   } else {
     PC += 4;
   }
-
-#if 0
-static uint counter = 0;
-if(++counter < 1000) {
-  print(hex(PC, 8L), "  ", hex(pipeline.instruction, 8L), "  ", disassembleInstruction(), "\n");
+//instructionDEBUG();
+  instructionEXECUTE();
+  GPR[0].u64 = 0;
 }
-#endif
 
+auto CPU::instructionDEBUG() -> void {
+  static uint counter = 0;
+//if(++counter >= 50000) return;
+if(pipeline.address==0x8000'01ac) { GPR[Core::Register::T0] = GPR[Core::Register::A3]; }
+if(pipeline.address==0x8000'01b8) { GPR[Core::Register::T0] = GPR[Core::Register::S0]; }
+if(pipeline.address==0x8000'02ac) { GPR[Core::Register::T1].u64 |= 0x3000'0000; }
+  print(hex(pipeline.address, 8L), "  ", hex(pipeline.instruction, 8L), "  ", disassembleInstruction(), "\n");
+return;
+  static const string registers[32] = {
+    "$0", "at", "v0", "v1", "a0", "a1", "a2", "a3",
+    "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
+    "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
+    "t8", "t9", "k0", "k1", "gp", "sp", "s8", "ra",
+  };
+  for(uint n = 0; n < 32; n++) { print(registers[n], ":", hex(GPR[n].u64, 8L), " "); if((n&7)==7) print("\n"); }
+}
+
+auto CPU::instructionEXECUTE() -> void {
   switch(pipeline.instruction >> 26) {
   case 0x00: return instructionSPECIAL();
   case 0x01: return instructionREGIMM();

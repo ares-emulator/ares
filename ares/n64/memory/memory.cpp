@@ -3,7 +3,5 @@
 namespace ares::Nintendo64 {
 
 Bus bus;
-Memory rdram;
-#include "bus.cpp"
 
 }

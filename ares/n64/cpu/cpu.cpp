@@ -17,7 +17,6 @@ auto CPU::unload() -> void {
 auto CPU::main() -> void {
   for(uint index : range(2048)) {
     instruction();
-    core.r[0].u64 = 0;
   }
   step(2048);
 }

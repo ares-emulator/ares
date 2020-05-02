@@ -31,7 +31,7 @@ auto CPU::disassembleInstruction() -> string {
   u32 rs = opcode >> 21 & 31;
 
   auto branchAddress = [&]() -> string {
-    u32 pc = PC + (i16(opcode) << 2);
+    u32 pc = pipeline.address + 4 + (i16(opcode) << 2);
     return {"$", hex(pc)};
   };
 

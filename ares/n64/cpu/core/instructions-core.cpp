@@ -229,12 +229,12 @@ auto CPU::instructionJ() -> void {
 
 auto CPU::instructionJAL() -> void {
   IP = (PC & 0xf0000000) | (IMMu26 << 2);
-  GPR[1].u64 = i32(PC + 4);
+  RA.u64 = i32(PC + 4);
 }
 
 auto CPU::instructionJALR() -> void {
   IP = RS.u32;
-  GPR[1].u64 = i32(PC + 4);
+  RA.u64 = i32(PC + 4);
 }
 
 auto CPU::instructionJR() -> void {

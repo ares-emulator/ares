@@ -94,4 +94,3 @@ struct Bus {
 };
 
 extern Bus bus;
-extern Memory rdram;
