@@ -1,102 +1,102 @@
 auto CPU::instructionADD() -> void {
-//if(RS32u > ~RT32u) return exception(Overflow);
-  wRD32i(RS32u + RT32u);
+//if(RS.u32 > ~RT.u32) return exception(Overflow);
+  RD.u64 = i32(RS.u32 + RT.u32);
 }
 
 auto CPU::instructionADDI() -> void {
-//if(RS32i > ~IMM16i) return exception(Overflow);
-  wRT32i(RS32u + IMM16i);
+//if(RS.i32 > ~IMM16i) return exception(Overflow);
+  RT.u64 = i32(RS.u32 + IMMi16);
 }
 
 auto CPU::instructionADDIU() -> void {
-  wRT32i(RS32u + IMM16i);
+  RT.u64 = i32(RS.u32 + IMMi16);
 }
 
 auto CPU::instructionADDU() -> void {
-  wRD32i(RS32u + RT32u);
+  RD.u64 = i32(RS.u32 + RT.u32);
 }
 
 auto CPU::instructionAND() -> void {
-  wRD64u(RS64u & RT64u);
+  RD.u64 = RS.u64 & RT.u64;
 }
 
 auto CPU::instructionANDI() -> void {
-  wRT64u(RS64u & IMM16u);
+  RT.u64 = RS.u64 & IMMu16;
 }
 
 auto CPU::instructionBEQ() -> void {
-  if(RS64u == RT64u) IP = PC + (IMM16i << 2);
+  if(RS.u64 == RT.u64) IP = PC + (IMMi16 << 2);
 }
 
 auto CPU::instructionBEQL() -> void {
-  if(RS64u == RT64u) IP = PC + (IMM16i << 2);
+  if(RS.u64 == RT.u64) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
 auto CPU::instructionBGEZ() -> void {
-  if(RS64i >= 0) IP = PC + (IMM16i << 2);
+  if(RS.i64 >= 0) IP = PC + (IMMi16 << 2);
 }
 
 auto CPU::instructionBGEZAL() -> void {
-  wRA32i(PC + 4);
-  if(RS64i >= 0) IP = PC + (IMM16i << 2);
+  RA.u64 = i32(PC + 4);
+  if(RS.i64 >= 0) IP = PC + (IMMi16 << 2);
 }
 
 auto CPU::instructionBGEZALL() -> void {
-  wRA32i(PC + 4);
-  if(RS64i >= 0) IP = PC + (IMM16i << 2);
+  RA.u64 = i32(PC + 4);
+  if(RS.i64 >= 0) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
 auto CPU::instructionBGEZL() -> void {
-  if(RS64i >= 0) IP = PC + (IMM16i << 2);
+  if(RS.i64 >= 0) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
 auto CPU::instructionBGTZ() -> void {
-  if(RS64i > 0) IP = PC + (IMM16i << 2);
+  if(RS.i64 > 0) IP = PC + (IMMi16 << 2);
 }
 
 auto CPU::instructionBGTZL() -> void {
-  if(RS64i > 0) IP = PC + (IMM16i << 2);
+  if(RS.i64 > 0) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
 auto CPU::instructionBLEZ() -> void {
-  if(RS64i <= 0) IP = PC + (IMM16i << 2);
+  if(RS.i64 <= 0) IP = PC + (IMMi16 << 2);
 }
 
 auto CPU::instructionBLEZL() -> void {
-  if(RS64i <= 0) IP = PC + (IMM16i << 2);
+  if(RS.i64 <= 0) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
 auto CPU::instructionBLTZ() -> void {
-  if(RS64i < 0) IP = PC + (IMM16i << 2);
+  if(RS.i64 < 0) IP = PC + (IMMi16 << 2);
 }
 
 auto CPU::instructionBLTZAL() -> void {
-  wRA32i(PC + 4);
-  if(RS64i < 0) IP = PC + (IMM16i << 2);
+  RA.u64 = i32(PC + 4);
+  if(RS.i64 < 0) IP = PC + (IMMi16 << 2);
 }
 
 auto CPU::instructionBLTZALL() -> void {
-  wRA32i(PC + 4);
-  if(RS64i < 0) IP = PC + (IMM16i << 2);
+  RA.u64 = i32(PC + 4);
+  if(RS.i64 < 0) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
 auto CPU::instructionBLTZL() -> void {
-  if(RS64i < 0) IP = PC + (IMM16i << 2);
+  if(RS.i64 < 0) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
 auto CPU::instructionBNE() -> void {
-  if(RS64u != RT64u) IP = PC + (IMM16i << 2);
+  if(RS.u64 != RT.u64) IP = PC + (IMMi16 << 2);
 }
 
 auto CPU::instructionBNEL() -> void {
-  if(RS64u != RT64u) IP = PC + (IMM16i << 2);
+  if(RS.u64 != RT.u64) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
@@ -109,137 +109,153 @@ auto CPU::instructionCACHE() -> void {
 }
 
 auto CPU::instructionDADD() -> void {
-//if(RS64u > ~RT64u) return exception(Overflow);
-  wRD64u(RS64u + RT64u);
+//if(RS.u64 > ~RT.u64) return exception(Overflow);
+  RD.u64 = RS.u64 + RT.u64;
 }
 
 auto CPU::instructionDADDI() -> void {
-//if(RS64i > ~IMM16i) return exception(Overflow);
-  wRT64u(RS64u + i64(IMM16i));
+//if(RS.i64 > ~IMM16i) return exception(Overflow);
+  RT.u64 = RS.u64 + i64(IMMi16);
 }
 
 auto CPU::instructionDADDIU() -> void {
-  wRT64u(RS64u + u64(IMM16i));
+  RT.u64 = RS.u64 + u64(IMMi16);
 }
 
 auto CPU::instructionDADDU() -> void {
-  wRD64u(RS64u + RT64u);
+  RD.u64 = RS.u64 + RT.u64;
 }
 
 auto CPU::instructionDDIV() -> void {
-  if(!RT64u) return;
-  wLO64u(RS64i / RT64i);
-  wHI64u(RS64i % RT64i);
+  if(RT.u64) {
+    LO.u64 = RS.i64 / RT.i64;
+    HI.u64 = RS.i64 % RT.i64;
+  } else {
+    LO.u64 = ((u64(0) - 1 >> 1) + 1) + (RS.i64 >= 0 ? -1 : +1);
+    HI.u64 = RT.i64;
+  }
 }
 
 auto CPU::instructionDDIVU() -> void {
-  if(!RT64u) return;
-  wLO64u(RS64u / RT64u);
-  wHI64u(RS64u % RT64u);
+  if(RT.u64) {
+    LO.u64 = RS.u64 / RT.u64;
+    HI.u64 = RS.u64 % RT.u64;
+  } else {
+    LO.u64 = ((u64(0) - 1 >> 1) + 1) + (RS.u64 >= 0 ? -1 : +1);
+    HI.u64 = RT.u64;
+  }
 }
 
 auto CPU::instructionDIV() -> void {
-  if(!RT32u) return;
-  wLO32i(RS32i / RT32i);
-  wHI32i(RS32i % RT32i);
+  if(RT.u32) {
+    LO.u64 = i32(RS.i32 / RT.i32);
+    HI.u64 = i32(RS.i32 % RT.i32);
+  } else {
+    LO.u64 = ((u64(0) - 1 >> 1) + 1) + (RS.i32 >= 0 ? -1 : +1);
+    HI.u64 = RT.i32;
+  }
 }
 
 auto CPU::instructionDIVU() -> void {
-  if(!RT32u) return;
-  wLO32i(RS32u / RT32u);
-  wHI32i(RS32u % RT32u);
+  if(RT.u32) {
+    LO.u64 = i32(RS.u32 / RT.u32);
+    HI.u64 = i32(RS.u32 % RT.u32);
+  } else {
+    LO.u64 = ((u64(0) - 1 >> 1) + 1) + (RS.u32 >= 0 ? -1 : +1);
+    HI.u64 = RT.i32;
+  }
 }
 
 auto CPU::instructionDMULT() -> void {
-  auto result = RS128i * RT128i;
-  wLO64u(result >>  0);
-  wHI64u(result >> 64);
+  auto result = RS.i128() * RT.i128();
+  LO.u64 = result >>  0;
+  HI.u64 = result >> 64;
 }
 
 auto CPU::instructionDMULTU() -> void {
-  auto result = RS128u * RT128u;
-  wLO64u(result >>  0);
-  wHI64u(result >> 64);
+  auto result = RS.u128() * RT.u128();
+  LO.u64 = result >>  0;
+  HI.u64 = result >> 64;
 }
 
 auto CPU::instructionDSLL() -> void {
-  wRD64u(RT64u << SA);
+  RD.u64 = RT.u64 << SA;
 }
 
 auto CPU::instructionDSLL32() -> void {
-  wRD64u(RT64u << SA + 32);
+  RD.u64 = RT.u64 << SA + 32;
 }
 
 auto CPU::instructionDSLLV() -> void {
-  wRD64u(RT64u << (RS32u & 63));
+  RD.u64 = RT.u64 << (RS.u32 & 63);
 }
 
 auto CPU::instructionDSRA() -> void {
-  wRD64u(RT64i >> SA);
+  RD.u64 = RT.i64 >> SA;
 }
 
 auto CPU::instructionDSRA32() -> void {
-  wRD64u(RT64i >> SA + 32);
+  RD.u64 = RT.i64 >> SA + 32;
 }
 
 auto CPU::instructionDSRAV() -> void {
-  wRD64u(RT64i >> (RS32u & 63));
+  RD.u64 = RT.i64 >> (RS.u32 & 63);
 }
 
 auto CPU::instructionDSRL() -> void {
-  wRD64u(RT64u >> SA);
+  RD.u64 = RT.u64 >> SA;
 }
 
 auto CPU::instructionDSRL32() -> void {
-  wRD64u(RT64u >> SA + 32);
+  RD.u64 = RT.u64 >> SA + 32;
 }
 
 auto CPU::instructionDSRLV() -> void {
-  wRD64u(RT64u >> (RS32u & 63));
+  RD.u64 = RT.u64 >> (RS.u32 & 63);
 }
 
 auto CPU::instructionDSUB() -> void {
-//if(RS64u < RT64u) return exception(Overflow);
-  wRD64u(RS64u - RT64u);
+//if(RS.u64 < RT.u64) return exception(Overflow);
+  RD.u64 = RS.u64 - RT.u64;
 }
 
 auto CPU::instructionDSUBU() -> void {
-  wRD64u(RS64u - RT64u);
+  RD.u64 = RS.u64 - RT.u64;
 }
 
 auto CPU::instructionJ() -> void {
-  IP = (PC & 0xf0000000) | (IMM26u << 2);
+  IP = (PC & 0xf0000000) | (IMMu26 << 2);
 }
 
 auto CPU::instructionJAL() -> void {
-  IP = (PC & 0xf0000000) | (IMM26u << 2);
-  GPR[1] = i32(PC + 4);
+  IP = (PC & 0xf0000000) | (IMMu26 << 2);
+  GPR[1].u64 = i32(PC + 4);
 }
 
 auto CPU::instructionJALR() -> void {
-  IP = RS32u;
-  GPR[1] = i32(PC + 4);
+  IP = RS.u32;
+  GPR[1].u64 = i32(PC + 4);
 }
 
 auto CPU::instructionJR() -> void {
-  IP = RS32u;
+  IP = RS.u32;
 }
 
 auto CPU::instructionLB() -> void {
-  if(auto data = readByte(RS32u + IMM16i)) wRT64u(i8(*data));
+  if(auto data = readByte(RS.u32 + IMMi16)) RT.u64 = i8(*data);
 }
 
 auto CPU::instructionLBU() -> void {
-  if(auto data = readByte(RS32u + IMM16i)) wRT64u(u8(*data));
+  if(auto data = readByte(RS.u32 + IMMi16)) RT.u64 = u8(*data);
 }
 
 auto CPU::instructionLD() -> void {
-  if(auto data = readDouble(RS32u + IMM16i)) wRT64u(*data);
+  if(auto data = readDouble(RS.u32 + IMMi16)) RT.u64 = *data;
 }
 
 auto CPU::instructionLDC1() -> void {
   if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  if(auto data = readDouble(RS32u + IMM16i)) setCOP1u64(RTn, *data);
+  if(auto data = readDouble(RS.u32 + IMMi16)) cop1.r[RTn].u64 = *data;
 }
 
 auto CPU::instructionLDC2() -> void {
@@ -248,58 +264,58 @@ auto CPU::instructionLDC2() -> void {
 }
 
 auto CPU::instructionLDL() -> void {
-  auto address = RS32u + IMM16i;
+  auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = u64(0) - 1 << shift;
   if(auto data = readDouble(address & ~7, mask >> shift)) {
-    wRT64u(RT64u & ~mask | *data << shift);
+    RT.u64 = RT.u64 & ~mask | *data << shift;
   }
 }
 
 auto CPU::instructionLDR() -> void {
-  auto address = RS32u + IMM16i;
+  auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = u64(0) - 1 >> shift;
   if(auto data = readDouble(address & ~7, mask << shift)) {
-    wRT64u(RT64u & ~mask | *data >> shift);
+    RT.u64 = RT.u64 & ~mask | *data >> shift;
   }
 }
 
 auto CPU::instructionLH() -> void {
-  if(auto data = readHalf(RS32u + IMM16i)) wRT64u(i16(*data));
+  if(auto data = readHalf(RS.u32 + IMMi16)) RT.u64 = i16(*data);
 }
 
 auto CPU::instructionLHU() -> void {
-  if(auto data = readHalf(RS32u + IMM16i)) wRT64u(u16(*data));
+  if(auto data = readHalf(RS.u32 + IMMi16)) RT.u64 = u16(*data);
 }
 
 auto CPU::instructionLL() -> void {
-  if(auto data = readWord(RS32u + IMM16i)) {
-    wRT64u(*data);
-    LL = RS32u + IMM16i;
+  if(auto data = readWord(RS.u32 + IMMi16)) {
+    RT.u64 = *data;
+    LL = RS.u32 + IMMi16;
     LLBIT = 1;
   }
 }
 
 auto CPU::instructionLLD() -> void {
-  if(auto data = readDouble(RS32u + IMM16i)) {
-    wRT64u(*data);
-    LL = RS32u + IMM16i;
+  if(auto data = readDouble(RS.u32 + IMMi16)) {
+    RT.u64 = *data;
+    LL = RS.u32 + IMMi16;
     LLBIT = 1;
   }
 }
 
 auto CPU::instructionLUI() -> void {
-  wRT32i(IMM16u << 16);
+  RT.u64 = i32(IMMu16 << 16);
 }
 
 auto CPU::instructionLW() -> void {
-  if(auto data = readWord(RS32u + IMM16i)) wRT64u(i32(*data));
+  if(auto data = readWord(RS.u32 + IMMi16)) RT.u64 = i32(*data);
 }
 
 auto CPU::instructionLWC1() -> void {
   if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  if(auto data = readWord(RS32u + IMM16i)) setCOP1u32(RTn, *data);
+  if(auto data = readWord(RS.u32 + IMMi16)) cop1.r[RTn].u64 = *data;
 }
 
 auto CPU::instructionLWC2() -> void {
@@ -313,98 +329,98 @@ auto CPU::instructionLWC3() -> void {
 }
 
 auto CPU::instructionLWL() -> void {
-  auto address = RS32u + IMM16i;
+  auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipLE) & 3);
   auto mask = u32(0) - 1 << shift;
   if(auto data = readWord(address & ~3, mask >> shift)) {
-    wRT32i(RT32u & ~mask | *data << shift);
+    RT.u64 = i32(RT.u32 & ~mask | *data << shift);
   }
 }
 
 auto CPU::instructionLWR() -> void {
-  auto address = RS32u + IMM16i;
+  auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipBE) & 3);
   auto mask = u32(0) - 1 >> shift;
   if(auto data = readWord(address & ~3, mask << shift)) {
-    wRT32i(RT32u & ~mask | *data >> shift);
+    RT.u64 = i32(RT.u32 & ~mask | *data >> shift);
   }
 }
 
 auto CPU::instructionLWU() -> void {
-  if(auto data = readWord(RS32u + IMM16i)) wRT64u(u32(*data));
+  if(auto data = readWord(RS.u32 + IMMi16)) RT.u64 = u32(*data);
 }
 
 auto CPU::instructionMFHI() -> void {
-  wRD64u(HI);
+  RD.u64 = HI.u64;
 }
 
 auto CPU::instructionMFLO() -> void {
-  wRD64u(LO);
+  RD.u64 = LO.u64;
 }
 
 auto CPU::instructionMTHI() -> void {
-  wHI64u(RS64u);
+  HI.u64 = RS.u64;
 }
 
 auto CPU::instructionMTLO() -> void {
-  wLO64u(RS64u);
+  LO.u64 = RS.u64;
 }
 
 auto CPU::instructionMULT() -> void {
-  auto result = i64(RS32i) * i64(RT32i);
-  wLO32i(result >>  0);
-  wHI32i(result >> 32);
+  auto result = i64(RS.i32) * i64(RT.i32);
+  LO.u64 = i32(result >>  0);
+  HI.u64 = i32(result >> 32);
 }
 
 auto CPU::instructionMULTU() -> void {
-  auto result = u64(RS32u) * u64(RT32u);
-  wLO32i(result >>  0);
-  wHI32i(result >> 32);
+  auto result = u64(RS.u32) * u64(RT.u32);
+  LO.u64 = i32(result >>  0);
+  HI.u64 = i32(result >> 32);
 }
 
 auto CPU::instructionNOR() -> void {
-  wRD64u(~(RS64u | RT64u));
+  RD.u64 = ~(RS.u64 | RT.u64);
 }
 
 auto CPU::instructionOR() -> void {
-  wRD64u(RS64u | RT64u);
+  RD.u64 = RS.u64 | RT.u64;
 }
 
 auto CPU::instructionORI() -> void {
-  wRT64u(RS64u | IMM16u);
+  RT.u64 = RS.u64 | IMMu16;
 }
 
 auto CPU::instructionSB() -> void {
-  writeByte(RS32u + IMM16i, RT32u);
+  writeByte(RS.u32 + IMMi16, RT.u32);
 }
 
 auto CPU::instructionSC() -> void {
-  u32 address = RS32u + IMM16i;
+  u32 address = RS.u32 + IMMi16;
   if(readWord(address) && RTn && LL == address) {
-    writeWord(address, RT32u);
-    wRT64u(1);
+    writeWord(address, RT.u32);
+    RT.u64 = 1;
   } else {
-    wRT64u(0);
+    RT.u64 = 0;
   }
 }
 
 auto CPU::instructionSCD() -> void {
-  u32 address = RS32u + IMM16i;
+  u32 address = RS.u32 + IMMi16;
   if(readDouble(address) && RTn && LL == address) {
-    writeDouble(address, RT64u);
-    wRT64u(1);
+    writeDouble(address, RT.u64);
+    RT.u64 = 1;
   } else {
-    wRT64u(0);
+    RT.u64 = 0;
   }
 }
 
 auto CPU::instructionSD() -> void {
-  writeDouble(RS32u + IMM16i, RT64u);
+  writeDouble(RS.u32 + IMMi16, RT.u64);
 }
 
 auto CPU::instructionSDC1() -> void {
   if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  writeDouble(RS32u + IMM16i, getCOP1u64(RTn));
+  writeDouble(RS.u32 + IMMi16, cop1.r[RTn].u64);
 }
 
 auto CPU::instructionSDC2() -> void {
@@ -413,79 +429,79 @@ auto CPU::instructionSDC2() -> void {
 }
 
 auto CPU::instructionSDL() -> void {
-  auto address = RS32u + IMM16i;
+  auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = u64(0) - 1 >> shift;
-  writeDouble(address & ~7, mask, RT64u >> shift);
+  writeDouble(address & ~7, mask, RT.u64 >> shift);
 }
 
 auto CPU::instructionSDR() -> void {
-  auto address = RS32u + IMM16i;
+  auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = u64(0) - 1 << shift;
-  writeDouble(address & ~7, mask, RT64u << shift);
+  writeDouble(address & ~7, mask, RT.u64 << shift);
 }
 
 auto CPU::instructionSH() -> void {
-  writeHalf(RS32u + IMM16i, RT32u);
+  writeHalf(RS.u32 + IMMi16, RT.u32);
 }
 
 auto CPU::instructionSLL() -> void {
-  wRD32i(RT32u << SA);
+  RD.u64 = i32(RT.u32 << SA);
 }
 
 auto CPU::instructionSLLV() -> void {
-  wRD32i(RT32u << (RS32u & 31));
+  RD.u64 = i32(RT.u32 << (RS.u32 & 31));
 }
 
 auto CPU::instructionSLT() -> void {
-  wRD64u(RS64i < RT64i);
+  RD.u64 = RS.i64 < RT.i64;
 }
 
 auto CPU::instructionSLTI() -> void {
-  wRT64u(RS64i < i64(IMM16i));
+  RT.u64 = RS.i64 < i64(IMMi16);
 }
 
 auto CPU::instructionSLTIU() -> void {
-  wRT64u(RS64u < u64(IMM16u));
+  RT.u64 = RS.u64 < u64(IMMu16);
 }
 
 auto CPU::instructionSLTU() -> void {
-  wRD64u(RS64u < RT64u);
+  RD.u64 = RS.u64 < RT.u64;
 }
 
 auto CPU::instructionSRA() -> void {
-  wRD64u(RT32i >> SA);
+  RD.u64 = RT.i32 >> SA;
 }
 
 auto CPU::instructionSRAV() -> void {
-  wRD64u(RT32i >> (RS32u & 31));
+  RD.u64 = RT.i32 >> (RS.u32 & 31);
 }
 
 auto CPU::instructionSRL() -> void {
-  wRD32i(RT32u >> SA);
+  RD.u64 = i32(RT.u32 >> SA);
 }
 
 auto CPU::instructionSRLV() -> void {
-  wRD32i(RT32u >> (RS32u & 31));
+  RD.u64 = i32(RT.u32 >> (RS.u32 & 31));
 }
 
 auto CPU::instructionSUB() -> void {
-//if(RS32u < RT32u) return exception(Overflow);
-  wRD32i(RS32u - RT32u);
+//if(RS.u32 < RT.u32) return exception(Overflow);
+  RD.u64 = i32(RS.u32 - RT.u32);
 }
 
 auto CPU::instructionSUBU() -> void {
-  wRD32i(RS32u - RT32u);
+  RD.u64 = i32(RS.u32 - RT.u32);
 }
 
 auto CPU::instructionSW() -> void {
-  writeWord(RS32u + IMM16i, RT32u);
+  writeWord(RS.u32 + IMMi16, RT.u32);
 }
 
 auto CPU::instructionSWC1() -> void {
   if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  writeWord(RS32u + IMM16i, getCOP1u32(RTn));
+  writeWord(RS.u32 + IMMi16, cop1.r[RTn].u32);
 }
 
 auto CPU::instructionSWC2() -> void {
@@ -499,17 +515,17 @@ auto CPU::instructionSWC3() -> void {
 }
 
 auto CPU::instructionSWL() -> void {
-  auto address = RS32u + IMM16i;
+  auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipLE) & 3);
   auto mask = u32(0) - 1 >> shift;
-  writeWord(address & ~3, mask, RT32u >> shift);
+  writeWord(address & ~3, mask, RT.u32 >> shift);
 }
 
 auto CPU::instructionSWR() -> void {
-  auto address = RS32u + IMM16i;
+  auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipBE) & 3);
   auto mask = u32(0) - 1 << shift;
-  writeWord(address & ~3, mask, RT32u << shift);
+  writeWord(address & ~3, mask, RT.u32 << shift);
 }
 
 auto CPU::instructionSYNC() -> void {
@@ -522,57 +538,57 @@ auto CPU::instructionSYSCALL() -> void {
 }
 
 auto CPU::instructionTEQ() -> void {
-  if(RS64u == RT64u) exception(Trap);
+  if(RS.u64 == RT.u64) exception(Trap);
 }
 
 auto CPU::instructionTEQI() -> void {
-  if(RS64u == IMM16u) exception(Trap);
+  if(RS.u64 == IMMu16) exception(Trap);
 }
 
 auto CPU::instructionTGE() -> void {
-  if(RS64i >= RT64i) exception(Trap);
+  if(RS.i64 >= RT.i64) exception(Trap);
 }
 
 auto CPU::instructionTGEI() -> void {
-  if(RS64i >= IMM16i) exception(Trap);
+  if(RS.i64 >= IMMi16) exception(Trap);
 }
 
 auto CPU::instructionTGEIU() -> void {
-  if(RS64u >= IMM16u) exception(Trap);
+  if(RS.u64 >= IMMu16) exception(Trap);
 }
 
 auto CPU::instructionTGEU() -> void {
-  if(RS64u >= RT64u) exception(Trap);
+  if(RS.u64 >= RT.u64) exception(Trap);
 }
 
 auto CPU::instructionTLT() -> void {
-  if(RS64i < RT64i) exception(Trap);
+  if(RS.i64 < RT.i64) exception(Trap);
 }
 
 auto CPU::instructionTLTI() -> void {
-  if(RS64i < IMM16i) exception(Trap);
+  if(RS.i64 < IMMi16) exception(Trap);
 }
 
 auto CPU::instructionTLTIU() -> void {
-  if(RS64u < IMM16u) exception(Trap);
+  if(RS.u64 < IMMu16) exception(Trap);
 }
 
 auto CPU::instructionTLTU() -> void {
-  if(RS64u < RT64u) exception(Trap);
+  if(RS.u64 < RT.u64) exception(Trap);
 }
 
 auto CPU::instructionTNE() -> void {
-  if(RS64u != RT64u) exception(Trap);
+  if(RS.u64 != RT.u64) exception(Trap);
 }
 
 auto CPU::instructionTNEI() -> void {
-  if(RS64u != IMM16u) exception(Trap);
+  if(RS.u64 != IMMu16) exception(Trap);
 }
 
 auto CPU::instructionXOR() -> void {
-  wRD64u(RS64u ^ RT64u);
+  RD.u64 = RS.u64 ^ RT.u64;
 }
 
 auto CPU::instructionXORI() -> void {
-  wRT64u(RS64u ^ IMM16u);
+  RT.u64 = RS.u64 ^ IMMu16;
 }

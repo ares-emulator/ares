@@ -1,52 +1,18 @@
-auto CPU::getCOP1u32(uint index) -> u32 {
-  if(!STATUS_FR) {
-    return ((u32*)&cop1.r[index & ~1])[index & 1];
-  } else {
-    return cop1.r[index];
-  }
-}
-
-auto CPU::getCOP1u64(uint index) -> u64 {
-  if(!STATUS_FR) {
-    return cop1.r[index & ~1];
-  } else {
-    return cop1.r[index];
-  }
-}
-
-auto CPU::setCOP1u32(uint index, u32 data) -> void {
-  if(!STATUS_FR) {
-    ((u32*)&cop1.r[index & ~1])[index & 1] = data;
-  } else {
-    cop1.r[index] = data;
-  }
-}
-
-auto CPU::setCOP1u64(uint index, u64 data) -> void {
-  if(!STATUS_FR) {
-    cop1.r[index & ~1] = data;
-  } else {
-    cop1.r[index] = data;
-  }
-}
-
-//
-
 auto CPU::instructionBC1F() -> void {
-  if(cop1.cf[pipeline.instruction >> 18 & 7] == 0) IP = PC + (IMM16i << 2);
+  if(cop1.cf[pipeline.instruction >> 18 & 7] == 0) IP = PC + (IMMi16 << 2);
 }
 
 auto CPU::instructionBC1FL() -> void {
-  if(cop1.cf[pipeline.instruction >> 18 & 7] == 0) IP = PC + (IMM16i << 2);
+  if(cop1.cf[pipeline.instruction >> 18 & 7] == 0) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
 auto CPU::instructionBC1T() -> void {
-  if(cop1.cf[pipeline.instruction >> 18 & 7] == 1) IP = PC + (IMM16i << 2);
+  if(cop1.cf[pipeline.instruction >> 18 & 7] == 1) IP = PC + (IMMi16 << 2);
 }
 
 auto CPU::instructionBC1TL() -> void {
-  if(cop1.cf[pipeline.instruction >> 18 & 7] == 1) IP = PC + (IMM16i << 2);
+  if(cop1.cf[pipeline.instruction >> 18 & 7] == 1) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
@@ -57,146 +23,272 @@ auto CPU::instructionCFC1() -> void {
     for(uint n : range(8)) {
       if(cop1.cf[n]) result |= 1 << shift[n];
     }
-    wRT32i(result);
+    RT.u64 = i32(result);
     return;
   }
-  wRT32i(cop1.cr[RDn]);
+  RT.u64 = i32(cop1.cr[RDn]);
 }
 
 auto CPU::instructionCTC1() -> void {
   static const uint shift[8] = {23, 25, 26, 27, 28, 29, 30, 31};
-  cop1.cr[RDn] = RT32u;
+  cop1.cr[RDn] = RT.u32;
   if(RDn == 31) {
     for(uint n : range(8)) {
-      cop1.cf[n] = RT32u >> shift[n] & 1;
+      cop1.cf[n] = RT.u32 >> shift[n] & 1;
     }
   }
 }
 
 auto CPU::instructionDMFC1() -> void {
-  wRT64u(getCOP1u64(RDn));
+  RT.u64 = FPR[RDn].u64;
 }
 
 auto CPU::instructionDMTC1() -> void {
-  setCOP1u64(RDn, RT64u);
+  FPR[RDn].u64 = RT.u64;
 }
 
 auto CPU::instructionFABS() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.f32 = fabs(FS.f32);
+  } else {
+    FD.f64 = fabs(FS.f64);
+  }
 }
 
 auto CPU::instructionFADD() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.f32 = FS.f32 + FT.f32;
+  } else {
+    FD.f64 = FS.f64 + FT.f64;
+  }
 }
 
 auto CPU::instructionFCEILL() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.u64 = i64(ceil(FS.f32));
+  } else {
+    FD.u64 = i64(ceil(FS.f64));
+  }
 }
 
 auto CPU::instructionFCEILW() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.u32 = i32(ceil(FS.f32));
+  } else {
+    FD.u32 = i32(ceil(FS.f64));
+  }
 }
 
+#define CF cop1.cf[pipeline.instruction >> 8 & 7]
+
 auto CPU::instructionFCEQ() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    CF = FS.f32 == FT.f32;
+  } else {
+    CF = FS.f64 == FT.f64;
+  }
 }
 
 auto CPU::instructionFCF() -> void {
-  //todo
+  CF = 0;
 }
 
 auto CPU::instructionFCOLE() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    CF = FS.f32 <= FT.f32;
+  } else {
+    CF = FS.f64 <= FT.f64;
+  }
 }
 
 auto CPU::instructionFCOLT() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    CF = FS.f32 < FT.f32;
+  } else {
+    CF = FS.f64 < FT.f64;
+  }
 }
 
 auto CPU::instructionFCUEQ() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    CF = FS.f32 == FT.f32;
+  } else {
+    CF = FS.f64 == FT.f64;
+  }
 }
 
 auto CPU::instructionFCULE() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    CF = FS.f32 <= FT.f32;
+  } else {
+    CF = FS.f64 <= FT.f64;
+  }
 }
 
 auto CPU::instructionFCULT() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    CF = FS.f32 < FT.f32;
+  } else {
+    CF = FS.f64 < FT.f64;
+  }
 }
 
 auto CPU::instructionFCUN() -> void {
-  //todo
+  CF = 0;
 }
 
+#undef CF
+
 auto CPU::instructionFCVTS() -> void {
-  //todo
+  if(FPU_INTEGER) {
+    if(FPU_SINGLE) {
+      FD.f32 = FS.i32;
+    } else {
+      FD.f64 = FS.i64;
+    }
+  } else {
+    FD.f32 = FS.f64;
+  }
 }
 
 auto CPU::instructionFCVTD() -> void {
-  //todo
+  if(FPU_INTEGER) {
+    if(FPU_SINGLE) {
+      FD.f64 = FS.i32;
+    } else {
+      FD.f64 = FS.i64;
+    }
+  } else {
+    FD.f64 = FS.f32;
+  }
 }
 
 auto CPU::instructionFCVTL() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.i64 = i64(FS.f32);
+  } else {
+    FD.i64 = i64(FS.f64);
+  }
 }
 
 auto CPU::instructionFCVTW() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.i32 = i32(FS.f32);
+  } else {
+    FD.i64 = i64(FS.f64);
+  }
 }
 
 auto CPU::instructionFDIV() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    if(FT.i32) {
+      FD.f32 = FS.f32 / FT.f32;
+    } else {
+      //todo: check CCR31
+      exception(FloatingPointError);
+    }
+  } else {
+    if(FT.i64) {
+      FD.f64 = FS.f64 / FT.f64;
+    } else {
+      //todo: check CCR31
+      exception(FloatingPointError);
+    }
+  }
 }
 
 auto CPU::instructionFFLOORL() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.i64 = i64(floor(FS.f32));
+  } else {
+    FD.i64 = i64(floor(FS.f64));
+  }
 }
 
 auto CPU::instructionFFLOORW() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.i32 = i32(floor(FS.f32));
+  } else {
+    FD.i32 = i32(floor(FS.f32));
+  }
 }
 
 auto CPU::instructionFMOV() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.f32 = FS.f32;
+  } else {
+    FD.f64 = FS.f64;
+  }
 }
 
 auto CPU::instructionFMUL() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.f32 = FS.f32 * FT.f32;
+  } else {
+    FD.f64 = FS.f64 * FT.f64;
+  }
 }
 
 auto CPU::instructionFNEG() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.f32 = -FS.f32;
+  } else {
+    FD.f64 = -FS.f64;
+  }
 }
 
 auto CPU::instructionFROUNDL() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.i64 = i64(FS.f32 < 0 ? ceil(FS.f32 - 0.5) : floor(FS.f32 + 0.5));
+  } else {
+    FD.i64 = i64(FS.f64 < 0 ? ceil(FS.f64 - 0.5) : floor(FS.f64 + 0.5));
+  }
 }
 
 auto CPU::instructionFROUNDW() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.i32 = i32(FS.f32 < 0 ? ceil(FS.f32 - 0.5) : floor(FS.f32 + 0.5));
+  } else {
+    FD.i32 = i32(FS.f64 < 0 ? ceil(FS.f64 - 0.5) : floor(FS.f64 + 0.5));
+  }
 }
 
 auto CPU::instructionFSQRT() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.f32 = sqrt(FS.f32);
+  } else {
+    FD.f64 = sqrt(FS.f64);
+  }
 }
 
 auto CPU::instructionFSUB() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.f32 = FS.f32 - FT.f32;
+  } else {
+    FD.f64 = FS.f64 - FT.f64;
+  }
 }
 
 auto CPU::instructionFTRUNCL() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.i64 = i64(FS.f32 < 0 ? ceil(FS.f32) : floor(FS.f32));
+  } else {
+    FD.i64 = i64(FS.f64 < 0 ? ceil(FS.f64) : floor(FS.f64));
+  }
 }
 
 auto CPU::instructionFTRUNCW() -> void {
-  //todo
+  if(FPU_SINGLE) {
+    FD.i32 = i32(FS.f32 < 0 ? ceil(FS.f32) : floor(FS.f32));
+  } else {
+    FD.i32 = i32(FS.f64 < 0 ? ceil(FS.f64) : floor(FS.f64));
+  }
 }
 
 auto CPU::instructionMFC1() -> void {
-  wRT32i(getCOP1u32(RDn));
+  RT.u64 = FPR[RDn].i32;
 }
 
 auto CPU::instructionMTC1() -> void {
-  setCOP1u32(RDn, RT32u);
+  FPR[RDn].u32 = RT.u32;
 }

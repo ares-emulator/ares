@@ -11,7 +11,7 @@ auto CPU::instruction() -> void {
     PC += 4;
   }
 
-#if 1
+#if 0
 static uint counter = 0;
 if(++counter < 1000) {
   print(hex(PC, 8L), "  ", hex(pipeline.instruction, 8L), "  ", disassembleInstruction(), "\n");
@@ -236,6 +236,9 @@ auto CPU::instructionCOP1() -> void {
     case 0x02: return instructionBC1FL();
     case 0x03: return instructionBC1TL();
     }
+  }
+  if(!STATUS_FR) {
+    pipeline.instruction &= ~0b0000'0000'0010'0001'0000'1000'0100'0000;
   }
   switch(pipeline.instruction & 0x3f) {
   case 0x00: return instructionFADD();

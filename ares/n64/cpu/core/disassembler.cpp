@@ -337,9 +337,9 @@ auto CPU::disassembleInstruction() -> string {
 auto CPU::disassembleContext() -> string {
   string s;
   for(uint n : range(32)) {
-    s.append("r", n, ":", hex(GPR[n], 16L), " ");
+    s.append("r", n, ":", hex(GPR[n].u64, 16L), " ");
   }
-  s.append("hi:", hex(HI, 16L), " ");
-  s.append("lo:", hex(LO, 16L));
+  s.append("hi:", hex(HI.u64, 16L), " ");
+  s.append("lo:", hex(LO.u64, 16L));
   return s;
 }

@@ -16,13 +16,13 @@ struct Memory {
     maskWord = 0;
   }
 
-  auto allocate(uint32_t capacity) -> void {
+  auto allocate(u32 capacity) -> void {
     size = capacity & ~7;
-    uint32_t mask = bit::round(size) - 1;
+    u32 mask = bit::round(size) - 1;
     maskByte = mask & ~0;
     maskHalf = mask & ~1;  //MIPS does not allow unaligned reads:
     maskWord = mask & ~3;  //this should throw an address exception
-    data = new uint8_t[mask + 1];
+    data = new u8[mask + 1];
   }
 
   auto load(Shared::File fp) -> void {
@@ -31,45 +31,45 @@ struct Memory {
     }
   }
 
-  auto readByte(uint32_t address) -> uint8_t {
-    return *(uint8_t*)&data[address & maskByte ^ 3];
+  auto readByte(u32 address) -> u8 {
+    return *(u8*)&data[address & maskByte ^ 3];
   }
 
-  auto readHalf(uint32_t address) -> uint16_t {
-    return *(uint16_t*)&data[address & maskHalf ^ 2];
+  auto readHalf(u32 address) -> u16 {
+    return *(u16*)&data[address & maskHalf ^ 2];
   }
 
-  auto readWord(uint32_t address) -> uint32_t {
-    return *(uint32_t*)&data[address & maskWord];
+  auto readWord(u32 address) -> u32 {
+    return *(u32*)&data[address & maskWord];
   }
 
-  auto readDouble(uint32_t address) -> uint64_t {
-    auto value = *(uint64_t*)&data[address & maskWord];
+  auto readDouble(u32 address) -> u64 {
+    auto value = *(u64*)&data[address & maskWord];
     return value << 32 | value >> 32;
   }
 
-  auto writeByte(uint32_t address, uint8_t value) -> void {
-    *(uint8_t*)&data[address & maskByte ^ 3] = value;
+  auto writeByte(u32 address, u8 value) -> void {
+    *(u8*)&data[address & maskByte ^ 3] = value;
   }
 
-  auto writeHalf(uint32_t address, uint16_t value) -> void {
-    *(uint16_t*)&data[address & maskHalf ^ 2] = value;
+  auto writeHalf(u32 address, u16 value) -> void {
+    *(u16*)&data[address & maskHalf ^ 2] = value;
   }
 
-  auto writeWord(uint32_t address, uint32_t value) -> void {
-    *(uint32_t*)&data[address & maskWord] = value;
+  auto writeWord(u32 address, u32 value) -> void {
+    *(u32*)&data[address & maskWord] = value;
   }
 
-  auto writeDouble(uint32_t address, uint64_t value) -> void {
-    *(uint64_t*)&data[address & maskWord] = value << 32 | value >> 32;
+  auto writeDouble(u32 address, u64 value) -> void {
+    *(u64*)&data[address & maskWord] = value << 32 | value >> 32;
   }
 
 private:
-  uint8_t* data = nullptr;
-  uint32_t size = 0;
-  uint32_t maskByte = 0;
-  uint32_t maskHalf = 0;
-  uint32_t maskWord = 0;
+  u8* data = nullptr;
+  u32 size = 0;
+  u32 maskByte = 0;
+  u32 maskHalf = 0;
+  u32 maskWord = 0;
 };
 
 //00000000-7fffffff  kuseg
@@ -79,14 +79,14 @@ private:
 //e0000000-ffffffff  kseg3
 
 struct Bus {
-  auto readByte(uint32_t address) -> uint8_t;
-  auto readHalf(uint32_t address) -> uint16_t;
-  auto readWord(uint32_t address) -> uint32_t;
-  auto readDouble(uint32_t address) -> uint64_t;
-  auto writeByte(uint32_t address, uint8_t data) -> void;
-  auto writeHalf(uint32_t address, uint16_t data) -> void;
-  auto writeWord(uint32_t address, uint32_t data) -> void;
-  auto writeDouble(uint32_t address, uint64_t data) -> void;
+  auto readByte(u32 address) -> u8;
+  auto readHalf(u32 address) -> u16;
+  auto readWord(u32 address) -> u32;
+  auto readDouble(u32 address) -> u64;
+  auto writeByte(u32 address, u8 data) -> void;
+  auto writeHalf(u32 address, u16 data) -> void;
+  auto writeWord(u32 address, u32 data) -> void;
+  auto writeDouble(u32 address, u64 data) -> void;
 
   //bus.cpp
   auto load(Node::Object) -> void;

@@ -17,6 +17,17 @@
   auto writeDouble(u32 address, u64 data) -> void;
   auto writeDouble(u32 address, u32 mask, u64 data) -> void;
 
+  union r64 {
+    struct {   int32_t order_msb2(i32h, i32); };
+    struct {  uint32_t order_msb2(u32h, u32); };
+    struct { float32_t order_msb2(f32h, f32); };
+    struct {   int64_t i64; };
+    struct {  uint64_t u64; };
+    struct { float64_t f64; };
+    auto i128() const ->  int128_t { return  (int128_t)i64; }
+    auto u128() const -> uint128_t { return (uint128_t)u64; }
+  };
+
   //instruction.cpp
   auto exception(uint type) -> void;
   auto instruction() -> void;
@@ -169,11 +180,6 @@
   auto instructionTLBWR() -> void;
 
   //instructions-cop1.cpp
-  auto getCOP1u32(uint) -> u32;
-  auto getCOP1u64(uint) -> u64;
-  auto setCOP1u32(uint, u32) -> void;
-  auto setCOP1u64(uint, u64) -> void;
-
   auto instructionBC1F() -> void;
   auto instructionBC1FL() -> void;
   auto instructionBC1T() -> void;
@@ -226,6 +232,7 @@
     Interrupt,
     InvalidInstruction,
     CoprocessorUnusable,
+    FloatingPointError,
     Overflow,
     Syscall,
     Trap,
@@ -251,11 +258,10 @@
       RA,                              //return address
     };
 
-    u64 r[32];
-    u64 lo;
-    u64 hi;
+    r64 r[32];
+    r64 lo;
+    r64 hi;
     u64 pc;
-    bool llbit;
 
     //internal
     maybe<u64> ip;
@@ -290,13 +296,14 @@
       ErrorEPC    = 30,  //error exception program counter
     };
 
-    u64 r[32];
+    r64 r[32];
     u32 cr[32];
     bool cf;
+    bool llbit;
   } cop0;
 
   struct COP1 {
-    u64 r[32];
+    r64 r[32];
     u32 cr[32];
     bool cf[8];
   } cop1;

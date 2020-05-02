@@ -17,6 +17,7 @@ auto CPU::unload() -> void {
 auto CPU::main() -> void {
   for(uint index : range(2048)) {
     instruction();
+    core.r[0].u64 = 0;
   }
   step(2048);
 }
@@ -31,10 +32,10 @@ auto CPU::power() -> void {
   powerR4300();
 
   //PIF ROM simulation:
-  core.r[20] = 0x0000'0001;
-  core.r[22] = 0x0000'003f;
-  core.r[29] = 0xa400'1ff0;
-  core.pc    = 0xa400'0040;
+  core.r[20].u64 = 0x0000'0001;
+  core.r[22].u64 = 0x0000'003f;
+  core.r[29].u64 = 0xa400'1ff0;
+  core.pc        = 0xa400'0040;
 
   for(uint offset = 0; offset < 0x1000; offset += 4) {
     auto data = bus.readWord(0xb000'0000 + offset);

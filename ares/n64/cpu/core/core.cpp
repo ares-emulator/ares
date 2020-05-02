@@ -8,9 +8,9 @@
 #include "serialization.cpp"
 
 auto CPU::powerR4300() -> void {
-  for(uint n : range(32)) GPR[n] = 0;
-  LO = 0;
-  HI = 0;
+  for(uint n : range(32)) GPR[n].u64 = 0;
+  LO.u64 = 0;
+  HI.u64 = 0;
   PC = 0xbfc00000;
   IP = nothing;
   LLBIT = 0;

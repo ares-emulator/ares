@@ -1,4 +1,4 @@
-inline auto Bus::readByte(uint32_t address) -> uint8_t {
+inline auto Bus::readByte(u32 address) -> u8 {
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return rdram.readByte(address);
   if(address <= 0x03ff'ffff) return 0;
@@ -9,7 +9,7 @@ inline auto Bus::readByte(uint32_t address) -> uint8_t {
   return 0;
 }
 
-inline auto Bus::readHalf(uint32_t address) -> uint16_t {
+inline auto Bus::readHalf(u32 address) -> u16 {
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return rdram.readHalf(address);
   if(address <= 0x03ff'ffff) return 0;
@@ -20,7 +20,7 @@ inline auto Bus::readHalf(uint32_t address) -> uint16_t {
   return 0;
 }
 
-inline auto Bus::readWord(uint32_t address) -> uint32_t {
+inline auto Bus::readWord(u32 address) -> u32 {
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return rdram.readWord(address);
   if(address <= 0x03ff'ffff) return 0;
@@ -31,7 +31,7 @@ inline auto Bus::readWord(uint32_t address) -> uint32_t {
   return 0;
 }
 
-inline auto Bus::readDouble(uint32_t address) -> uint64_t {
+inline auto Bus::readDouble(u32 address) -> u64 {
   address &= 0x1fff'ffff;
   if(address <= 0x07ff'ffff) return rdram.readDouble(address);
   if(address <= 0x03ff'ffff) return 0;
@@ -42,7 +42,7 @@ inline auto Bus::readDouble(uint32_t address) -> uint64_t {
   return 0;
 }
 
-inline auto Bus::writeByte(uint32_t address, uint8_t data) -> void {
+inline auto Bus::writeByte(u32 address, u8 data) -> void {
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return rdram.writeByte(address, data);
   if(address <= 0x03ff'ffff) return;
@@ -53,7 +53,7 @@ inline auto Bus::writeByte(uint32_t address, uint8_t data) -> void {
   return;
 }
 
-inline auto Bus::writeHalf(uint32_t address, uint16_t data) -> void {
+inline auto Bus::writeHalf(u32 address, u16 data) -> void {
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return rdram.writeHalf(address, data);
   if(address <= 0x03ff'ffff) return;
@@ -64,7 +64,7 @@ inline auto Bus::writeHalf(uint32_t address, uint16_t data) -> void {
   return;
 }
 
-inline auto Bus::writeWord(uint32_t address, uint32_t data) -> void {
+inline auto Bus::writeWord(u32 address, u32 data) -> void {
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return rdram.writeWord(address, data);
   if(address <= 0x003f'ffff) return;
@@ -75,7 +75,7 @@ inline auto Bus::writeWord(uint32_t address, uint32_t data) -> void {
   return;
 }
 
-inline auto Bus::writeDouble(uint32_t address, uint64_t data) -> void {
+inline auto Bus::writeDouble(u32 address, u64 data) -> void {
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return rdram.writeDouble(address, data);
   if(address <= 0x003f'ffff) return;
