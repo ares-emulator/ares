@@ -25,6 +25,12 @@ struct Memory {
     data = new u8[mask + 1];
   }
 
+  auto fill(u32 value = 0) -> void {
+    for(uint address = 0; address < size; address += 4) {
+      writeWord(address, value);
+    }
+  }
+
   auto load(Shared::File fp) -> void {
     for(uint address = 0; address < min(size, fp->size()); address += 4) {
       writeWord(address, fp->readm(4));

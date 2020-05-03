@@ -1,81 +1,106 @@
+static const vector<string> registerNames = {
+  "RDRAM_CONFIG",
+  "RDRAM_DEVICE_ID",
+  "RDRAM_DELAY",
+  "RDRAM_MODE",
+  "RDRAM_REF_INTERVAL",
+  "RDRAM_REF_ROW",
+  "RDRAM_RAS_INTERVAL",
+  "RDRAM_MIN_INTERVAL",
+  "RDRAM_ADDR_SELECT",
+  "RDRAM_DEVICE_MANUF",
+};
+
 auto RDRAM::readIO(u32 address) -> u32 {
-  uint32 data = 0;
+  address = (address & 0xfffff) >> 2;
+  u32 data = 0;
 
-  if(address == 0x0470'0000) {
-    //RI_MODE
-    return data;
+  if(address == 0) {
+    //RDRAM_CONFIG
   }
 
-  if(address == 0x0470'0004) {
-    //RI_CONFIG
-    data |= io.currentControlInput  << 0;
-    data |= io.currentControlEnable << 6;
-    return data;
+  if(address == 1) {
+    //RDRAM_DEVICE_ID
   }
 
-  if(address == 0x0470'0008) {
-    //RI_CURRENT_LOAD
-    return data;
+  if(address == 2) {
+    //RDRAM_DELAY
   }
 
-  if(address == 0x0470'000c) {
-    //RI_SELECT
-    return data;
+  if(address == 3) {
+    //RDRAM_MODE
   }
 
-  if(address == 0x0470'0010) {
-    //RI_REFRESH
-    return data;
+  if(address == 4) {
+    //RDRAM_REF_INTERVAL
   }
 
-  if(address == 0x0470'0014) {
-    //RI_LATENCY
-    return data;
+  if(address == 5) {
+    //RDRAM_REF_ROW
   }
 
-  if(address == 0x0470'0018) {
-    //RI_WERROR
-    return data;
+  if(address == 6) {
+    //RDRAM_RAS_INTERVAL
   }
 
+  if(address == 7) {
+    //RDRAM_MIN_INTERVAL
+  }
+
+  if(address == 8) {
+    //RDRAM_ADDR_SELECT
+  }
+
+  if(address == 9) {
+    //RDRAM_DEVICE_MANUF
+  }
+
+  print("* ", registerNames(address, "RDRAM_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
 auto RDRAM::writeIO(u32 address, u32 data) -> void {
-  if(address == 0x0470'0000) {
-    //RI_MODE
-    return;
+  address = (address & 0xfffff) >> 2;
+
+  if(address == 0) {
+    //RDRAM_CONFIG
   }
 
-  if(address == 0x0470'0004) {
-    //RI_CONFIG
-    io.currentControlInput  = data >> 0 & 63;
-    io.currentControlEnable = data >> 6 & 1;
-    return;
+  if(address == 1) {
+    //RDRAM_DEVICE_ID
   }
 
-  if(address == 0x0470'0008) {
-    //RI_CURRENT_LOAD
-    return;
+  if(address == 2) {
+    //RDRAM_DELAY
   }
 
-  if(address == 0x0470'000c) {
-    //RI_SELECT
-    return;
+  if(address == 3) {
+    //RDRAM_MODE
   }
 
-  if(address == 0x0470'0010) {
-    //RI_REFRESH
-    return;
+  if(address == 4) {
+    //RDRAM_REF_INTERVAL
   }
 
-  if(address == 0x0470'0014) {
-    //RI_LATENCY
-    return;
+  if(address == 5) {
+    //RDRAM_REF_ROW
   }
 
-  if(address == 0x0470'0018) {
-    //RI_WERROR
-    return;
+  if(address == 6) {
+    //RDRAM_RAS_INTERVAL
   }
+
+  if(address == 7) {
+    //RDRAM_MIN_INTERVAL
+  }
+
+  if(address == 8) {
+    //RDRAM_ADDR_SELECT
+  }
+
+  if(address == 9) {
+    //RDRAM_DEVICE_MANUF
+  }
+
+  print("* ", registerNames(address, "RDRAM_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }

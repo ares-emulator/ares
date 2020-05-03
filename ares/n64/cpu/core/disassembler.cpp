@@ -1,6 +1,12 @@
+auto CPU::Disassembler::instruction() -> string {
+  return {};
+}
+
+//
+
 auto CPU::disassembleInstruction() -> string {
   static const string registers[32] = {
-    "$0", "at", "v0", "v1", "a0", "a1", "a2", "a3",
+     "0", "at", "v0", "v1", "a0", "a1", "a2", "a3",
     "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
     "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
     "t8", "t9", "k0", "k1", "gp", "sp", "s8", "ra",
@@ -56,6 +62,21 @@ auto CPU::disassembleInstruction() -> string {
     return {"$", hex(u32(i16(opcode) << 16))};
   };
 
+  //
+
+  auto op_rt_rs_i16abs = [&](string op1, string op2) -> vector<string> {
+    i16 imm = i16(opcode);
+    string _op = imm >= 0 ? op1 : op2;
+    string _rt = {registers[rt], "\e[37m{$", hex(GPR[rt].u64, 8L), "}\e[0m"};
+    string _rs = {registers[rs], "\e[37m{$", hex(GPR[rs].u64, 8L), "}\e[0m"};
+    string _imm = {"$", hex(abs(imm))};
+    if(rs ==  0) return {_op, _rt, _imm};
+    if(rt == rs) return {_op, _rt, _imm};
+    return {_op, _rt, _rs, _imm};
+  };
+
+  //
+
   function<vector<string> ()> disassemble;
   function<vector<string> ()> special;
   function<vector<string> ()> regimm;
@@ -74,8 +95,8 @@ auto CPU::disassembleInstruction() -> string {
     case 0x05: return {"bne",    registers[rs], registers[rt], branchAddress()};
     case 0x06: return {"blez",   registers[rs], immediate16i()};
     case 0x07: return {"bgtz",   registers[rs], immediate16i()};
-    case 0x08: return {"addi",   registers[rt], registers[rs], immediate16i()};
-    case 0x09: return {"addiu",  registers[rt], registers[rs], immediate16i()};
+    case 0x08: return op_rt_rs_i16abs("addi",  "subi");
+    case 0x09: return op_rt_rs_i16abs("addiu", "subiu");
     case 0x0a: return {"slti",   registers[rt], registers[rs], immediate16i()};
     case 0x0b: return {"sltiu",  registers[rt], registers[rs], immediate16i()};
     case 0x0c: return {"andi",   registers[rt], registers[rs], immediate16i()};
@@ -330,16 +351,10 @@ auto CPU::disassembleInstruction() -> string {
   if(!v) v.append("invalid");
   if(!opcode) v = {"nop"};
   auto instruction = pad(v.takeFirst(), -8L);
-  if(v.size() >= 2 && v[0] == v[1]) v.takeFirst();
   return {instruction, v.merge(",")};
 }
 
 auto CPU::disassembleContext() -> string {
-  string s;
-  for(uint n : range(32)) {
-    s.append("r", n, ":", hex(GPR[n].u64, 16L), " ");
-  }
-  s.append("hi:", hex(HI.u64, 16L), " ");
-  s.append("lo:", hex(LO.u64, 16L));
-  return s;
+  //there are too many registers for this to be usable
+  return {};
 }

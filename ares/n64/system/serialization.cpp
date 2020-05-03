@@ -47,6 +47,12 @@ auto System::serialize(serializer& s) -> void {
 auto System::serializeAll(serializer& s, bool synchronize) -> void {
   scheduler.setSynchronize(synchronize);
   system.serialize(s);
+  mi.serialize(s);
+  vi.serialize(s);
+  ai.serialize(s);
+  pi.serialize(s);
+  ri.serialize(s);
+  si.serialize(s);
   rdram.serialize(s);
   cpu.serialize(s);
   rdp.serialize(s);

@@ -14,10 +14,17 @@ struct RDP : Thread {
 
   auto power() -> void;
 
+  //io-command.cpp
+  auto readCommand(u32 address) -> u32;
+  auto writeCommand(u32 address, u32 data) -> void;
+
+  //io-span.cpp
+  auto readSpan(u32 address) -> u32;
+  auto writeSpan(u32 address, u32 data) -> void;
+
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-private:
   uint32 output[640 * 480];
 };
 

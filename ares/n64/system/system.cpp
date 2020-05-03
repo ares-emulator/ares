@@ -54,6 +54,12 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting>()) setting->setLatch();
 
   cartridge.power();
+  mi.power();
+  vi.power();
+  ai.power();
+  pi.power();
+  ri.power();
+  si.power();
   rdram.power();
   cpu.power();
   rdp.power();

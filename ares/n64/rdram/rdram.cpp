@@ -17,7 +17,7 @@ auto RDRAM::unload() -> void {
 }
 
 auto RDRAM::power() -> void {
-  io = {};
+  ram.fill();
 }
 
 }

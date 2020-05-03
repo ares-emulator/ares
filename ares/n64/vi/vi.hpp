@@ -1,11 +1,7 @@
-//RAMBUS RAM
+//Video Interface
 
-struct RDRAM {
-  Memory ram;
-
-  //rdram.cpp
-  auto load(Node::Object) -> void;
-  auto unload() -> void;
+struct VI {
+  //vi.cpp
   auto power() -> void;
 
   //io.cpp
@@ -16,7 +12,10 @@ struct RDRAM {
   auto serialize(serializer&) -> void;
 
   struct IO {
+     uint2 colorDepth;
+    uint32 dramAddress;
+    uint12 width;
   } io;
 };
 
-extern RDRAM rdram;
+extern VI vi;

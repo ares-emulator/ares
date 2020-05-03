@@ -1,4 +1,3 @@
-//NEC VR4300
 //{
   //core.cpp
   auto powerR4300() -> void;
@@ -224,10 +223,6 @@
   //serialization.cpp
   auto serializeR4300(serializer&) -> void;
 
-  //disassembler.cpp
-  auto disassembleInstruction() -> string;
-  auto disassembleContext() -> string;
-
   //exceptions
   enum : uint {
     Break,
@@ -314,4 +309,6 @@
   static constexpr bool Endian = 1;  //0 = little, 1 = big
   static constexpr uint FlipLE = (Endian == 0 ? 7 : 0);
   static constexpr uint FlipBE = (Endian == 1 ? 7 : 0);
+
+  #include "disassembler.hpp"
 //};

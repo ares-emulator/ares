@@ -10,6 +10,12 @@ namespace ares::Nintendo64 {
   #include <n64/system/system.hpp>
   #include <n64/cartridge/cartridge.hpp>
   #include <n64/controller/controller.hpp>
+  #include <n64/mi/mi.hpp>
+  #include <n64/vi/vi.hpp>
+  #include <n64/ai/ai.hpp>
+  #include <n64/pi/pi.hpp>
+  #include <n64/ri/ri.hpp>
+  #include <n64/si/si.hpp>
   #include <n64/rdram/rdram.hpp>
   #include <n64/cpu/cpu.hpp>
   #include <n64/rdp/rdp.hpp>

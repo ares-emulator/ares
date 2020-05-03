@@ -1,11 +1,7 @@
-//RAMBUS RAM
+//Serial Interface
 
-struct RDRAM {
-  Memory ram;
-
-  //rdram.cpp
-  auto load(Node::Object) -> void;
-  auto unload() -> void;
+struct SI {
+  //si.cpp
   auto power() -> void;
 
   //io.cpp
@@ -19,4 +15,4 @@ struct RDRAM {
   } io;
 };
 
-extern RDRAM rdram;
+extern SI si;

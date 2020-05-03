@@ -3,6 +3,7 @@
 namespace ares::Nintendo64 {
 
 RSP rsp;
+#include "io.cpp"
 #include "serialization.cpp"
 
 auto RSP::load(Node::Object parent) -> void {

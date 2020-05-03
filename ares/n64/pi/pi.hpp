@@ -1,11 +1,7 @@
-//RAMBUS RAM
+//Peripheral Interface
 
-struct RDRAM {
-  Memory ram;
-
-  //rdram.cpp
-  auto load(Node::Object) -> void;
-  auto unload() -> void;
+struct PI {
+  //pi.cpp
   auto power() -> void;
 
   //io.cpp
@@ -16,7 +12,11 @@ struct RDRAM {
   auto serialize(serializer&) -> void;
 
   struct IO {
+    u32 dramAddress;
+    u32 cartAddress;
+    u32 readLength;
+    u32 writeLength;
   } io;
 };
 
-extern RDRAM rdram;
+extern PI pi;
