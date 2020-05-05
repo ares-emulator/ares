@@ -37,15 +37,24 @@
 
   //COP2
   #define VDn (OP >>  6 & 31)
+  #define VSn (OP >> 11 & 31)
   #define VTn (OP >> 16 & 31)
+  #define DEn (OP >> 11 & 31)
+  #define En  (OP >> 21 & 15)
 
   #define VPR cop2.r
   #define VD  VPR[VDn]
+  #define VS  VPR[VSn]
   #define VT  VPR[VTn]
 
-  #define ACCL cop2.accl
-  #define ACCM cop2.accm
   #define ACCH cop2.acch
+  #define ACCM cop2.accm
+  #define ACCL cop2.accl
+  #define VCOH cop2.vcoh
+  #define VCOL cop2.vcol
+  #define VCCH cop2.vcch
+  #define VCCL cop2.vccl
+  #define VCE  cop2.vce
 #else
   #undef RSP_REGISTERS_HPP
 
@@ -85,13 +94,22 @@
 
   //COP2
   #undef VDn
+  #undef VSn
   #undef VTn
+  #undef DEn
+  #undef En
 
   #undef VPR
   #undef VD
+  #undef VS
   #undef VT
 
-  #undef ACCL
-  #undef ACCM
   #undef ACCH
+  #undef ACCM
+  #undef ACCL
+  #undef VCOH
+  #undef VCOL
+  #undef VCCH
+  #undef VCCL
+  #undef VCE
 #endif

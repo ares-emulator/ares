@@ -2,6 +2,8 @@
 //started: 2020-04-28
 
 #include <ares/ares.hpp>
+#include <nmmintrin.h>
+using s128 = __m128i;
 
 namespace ares::Nintendo64 {
   struct Thread {
