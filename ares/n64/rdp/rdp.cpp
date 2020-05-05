@@ -35,47 +35,58 @@ auto RDP::unload() -> void {
 }
 
 auto RDP::main() -> void {
-  scheduler.exit(Event::Frame);
-  step(1);
+  if(++io.vcounter == 262) {
+    io.vcounter = 0;
+    refreshed = true;
+  }
+
+  step(93'750'000 / 60 / 262);
 }
 
 auto RDP::step(uint clocks) -> void {
-  Thread::step(clocks);
-  Thread::synchronize();
+  clock += clocks;
 }
 
 auto RDP::refresh() -> void {
+  uint width  = vi.io.xscale == 0x200 ? 320 : 640;
+  uint height = vi.io.yscale == 0x400 ? 240 : 480;
+
   if(vi.io.colorDepth < 2) {
-    memory::fill<u32>(output, 320 * 240);
+    memory::fill<u32>(output, width * height);
   }
 
   if(vi.io.colorDepth == 2) {
     //15bpp
-    for(uint y : range(240)) {
-      u32 address = vi.io.dramAddress + y * 320 * 2;
-      for(uint x : range(320)) {
+    for(uint y : range(height)) {
+      u32 address = vi.io.dramAddress + y * width * 2;
+      auto line = &output[y * width];
+      for(uint x : range(width)) {
         u16 data = bus.readHalf(address + x * 2);
-        output[y * 320 + x] = 1 << 24 | data >> 1;
+        *line++ = 1 << 24 | data >> 1;
       }
     }
   }
 
   if(vi.io.colorDepth == 3) {
     //24bpp
-    for(uint y : range(240)) {
-      u32 address = vi.io.dramAddress + y * 320 * 4;
-      for(uint x : range(320)) {
+    for(uint y : range(height)) {
+      u32 address = vi.io.dramAddress + y * width * 4;
+      auto line = &output[y * width];
+      for(uint x : range(width)) {
         u32 data = bus.readWord(address + x * 4);
-        output[y * 320 + x] = data >> 8;
+        *line++ = data >> 8;
       }
     }
   }
 
-  screen->refresh(output, 320 * sizeof(uint32), 320, 240);
+  screen->refresh((uint32*)output, width * sizeof(uint32), width, height);
 }
 
 auto RDP::power() -> void {
-  Thread::create(60, {&RDP::main, this});
+  Thread::reset();
+  refreshed = false;
+  io.vcounter = 0;
+  io.field = 0;
 }
 
 }

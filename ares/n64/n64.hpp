@@ -4,7 +4,17 @@
 #include <ares/ares.hpp>
 
 namespace ares::Nintendo64 {
-  #include <ares/inline.hpp>
+  struct Thread {
+    auto reset() -> void {
+      clock = 0;
+    }
+
+    auto serialize(serializer& s) -> void {
+      s.integer(clock);
+    }
+
+    i64 clock;
+  };
 
   #include <n64/memory/memory.hpp>
   #include <n64/system/system.hpp>

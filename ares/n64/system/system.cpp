@@ -2,12 +2,13 @@
 
 namespace ares::Nintendo64 {
 
-Scheduler scheduler;
 System system;
 #include "serialization.cpp"
 
 auto System::run() -> void {
-  if(scheduler.enter() == Event::Frame) rdp.refresh();
+  while(!rdp.refreshed) cpu.main();
+  rdp.refreshed = false;
+  rdp.refresh();
 }
 
 auto System::load(Node::Object& root) -> void {
@@ -18,7 +19,6 @@ auto System::load(Node::Object& root) -> void {
   node = Node::System::create(interface->name());
   root = node;
 
-  scheduler.reset();
   rdram.load(node);
   cpu.load(node);
   rdp.load(node);
@@ -64,7 +64,6 @@ auto System::power(bool reset) -> void {
   cpu.power();
   rdp.power();
   rsp.power();
-  scheduler.power(cpu);
 
   information.serializeSize[0] = serializeInit(0);
   information.serializeSize[1] = serializeInit(1);

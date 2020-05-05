@@ -1,5 +1,4 @@
 auto System::serialize(bool synchronize) -> serializer {
-  if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);
   serializer s{information.serializeSize[synchronize]};
 
   uint signature = 0x31545342;
@@ -45,7 +44,6 @@ auto System::serialize(serializer& s) -> void {
 }
 
 auto System::serializeAll(serializer& s, bool synchronize) -> void {
-  scheduler.setSynchronize(synchronize);
   system.serialize(s);
   mi.serialize(s);
   vi.serialize(s);

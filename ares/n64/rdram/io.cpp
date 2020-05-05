@@ -55,7 +55,7 @@ auto RDRAM::readIO(u32 address) -> u32 {
     //RDRAM_DEVICE_MANUF
   }
 
-  print("* ", registerNames(address, "RDRAM_UNKNOWN"), " => ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "RDRAM_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 

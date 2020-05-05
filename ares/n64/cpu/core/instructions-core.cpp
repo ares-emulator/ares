@@ -24,79 +24,23 @@ auto CPU::instructionANDI() -> void {
   RT.u64 = RS.u64 & IMMu16;
 }
 
-auto CPU::instructionBEQ() -> void {
-  if(RS.u64 == RT.u64) IP = PC + (IMMi16 << 2);
+auto CPU::instructionB(bool take) -> void {
+  if(take) IP = PC + (IMMi16 << 2);
 }
 
-auto CPU::instructionBEQL() -> void {
-  if(RS.u64 == RT.u64) IP = PC + (IMMi16 << 2);
-  else PC += 4;
-}
-
-auto CPU::instructionBGEZ() -> void {
-  if(RS.i64 >= 0) IP = PC + (IMMi16 << 2);
-}
-
-auto CPU::instructionBGEZAL() -> void {
+auto CPU::instructionBAL(bool take) -> void {
   RA.u64 = i32(PC + 4);
-  if(RS.i64 >= 0) IP = PC + (IMMi16 << 2);
+  if(take) IP = PC + (IMMi16 << 2);
 }
 
-auto CPU::instructionBGEZALL() -> void {
+auto CPU::instructionBALL(bool take) -> void {
   RA.u64 = i32(PC + 4);
-  if(RS.i64 >= 0) IP = PC + (IMMi16 << 2);
+  if(take) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
-auto CPU::instructionBGEZL() -> void {
-  if(RS.i64 >= 0) IP = PC + (IMMi16 << 2);
-  else PC += 4;
-}
-
-auto CPU::instructionBGTZ() -> void {
-  if(RS.i64 > 0) IP = PC + (IMMi16 << 2);
-}
-
-auto CPU::instructionBGTZL() -> void {
-  if(RS.i64 > 0) IP = PC + (IMMi16 << 2);
-  else PC += 4;
-}
-
-auto CPU::instructionBLEZ() -> void {
-  if(RS.i64 <= 0) IP = PC + (IMMi16 << 2);
-}
-
-auto CPU::instructionBLEZL() -> void {
-  if(RS.i64 <= 0) IP = PC + (IMMi16 << 2);
-  else PC += 4;
-}
-
-auto CPU::instructionBLTZ() -> void {
-  if(RS.i64 < 0) IP = PC + (IMMi16 << 2);
-}
-
-auto CPU::instructionBLTZAL() -> void {
-  RA.u64 = i32(PC + 4);
-  if(RS.i64 < 0) IP = PC + (IMMi16 << 2);
-}
-
-auto CPU::instructionBLTZALL() -> void {
-  RA.u64 = i32(PC + 4);
-  if(RS.i64 < 0) IP = PC + (IMMi16 << 2);
-  else PC += 4;
-}
-
-auto CPU::instructionBLTZL() -> void {
-  if(RS.i64 < 0) IP = PC + (IMMi16 << 2);
-  else PC += 4;
-}
-
-auto CPU::instructionBNE() -> void {
-  if(RS.u64 != RT.u64) IP = PC + (IMMi16 << 2);
-}
-
-auto CPU::instructionBNEL() -> void {
-  if(RS.u64 != RT.u64) IP = PC + (IMMi16 << 2);
+auto CPU::instructionBL(bool take) -> void {
+  if(take) IP = PC + (IMMi16 << 2);
   else PC += 4;
 }
 
@@ -127,12 +71,13 @@ auto CPU::instructionDADDU() -> void {
 }
 
 auto CPU::instructionDDIV() -> void {
-  if(RT.u64) {
-    LO.u64 = RS.i64 / RT.i64;
-    HI.u64 = RS.i64 % RT.i64;
+  if(RT.i64) {
+    //cast to i128 to prevent exception on INT64_MIN / -1
+    LO.u64 = (i128)RS.i64 / (i128)RT.i64;
+    HI.u64 = (i128)RS.i64 % (i128)RT.i64;
   } else {
-    LO.u64 = ((u64(0) - 1 >> 1) + 1) + (RS.i64 >= 0 ? -1 : +1);
-    HI.u64 = RT.i64;
+    LO.u64 = RS.i64 < 0 ? +1 : -1;
+    HI.u64 = RS.i64;
   }
 }
 
@@ -141,18 +86,19 @@ auto CPU::instructionDDIVU() -> void {
     LO.u64 = RS.u64 / RT.u64;
     HI.u64 = RS.u64 % RT.u64;
   } else {
-    LO.u64 = ((u64(0) - 1 >> 1) + 1) + (RS.u64 >= 0 ? -1 : +1);
-    HI.u64 = RT.u64;
+    LO.u64 = -1;
+    HI.u64 = RS.u64;
   }
 }
 
 auto CPU::instructionDIV() -> void {
-  if(RT.u32) {
-    LO.u64 = i32(RS.i32 / RT.i32);
-    HI.u64 = i32(RS.i32 % RT.i32);
+  if(RT.i32) {
+    //cast to i64 to prevent exception on INT32_MIN / -1
+    LO.u64 = i32((i64)RS.i32 / (i64)RT.i32);
+    HI.u64 = i32((i64)RS.i32 % (i64)RT.i32);
   } else {
-    LO.u64 = ((u64(0) - 1 >> 1) + 1) + (RS.i32 >= 0 ? -1 : +1);
-    HI.u64 = RT.i32;
+    LO.u64 = RS.i32 < 0 ? +1 : -1;
+    HI.u64 = RS.i32;
   }
 }
 
@@ -161,8 +107,8 @@ auto CPU::instructionDIVU() -> void {
     LO.u64 = i32(RS.u32 / RT.u32);
     HI.u64 = i32(RS.u32 % RT.u32);
   } else {
-    LO.u64 = ((u64(0) - 1 >> 1) + 1) + (RS.u32 >= 0 ? -1 : +1);
-    HI.u64 = RT.i32;
+    LO.u64 = -1;
+    HI.u64 = RS.i32;
   }
 }
 
@@ -224,11 +170,11 @@ auto CPU::instructionDSUBU() -> void {
 }
 
 auto CPU::instructionJ() -> void {
-  IP = (PC & 0xf0000000) | (IMMu26 << 2);
+  IP = (PC & 0xf000'0000) | (IMMu26 << 2);
 }
 
 auto CPU::instructionJAL() -> void {
-  IP = (PC & 0xf0000000) | (IMMu26 << 2);
+  IP = (PC & 0xf000'0000) | (IMMu26 << 2);
   RA.u64 = i32(PC + 4);
 }
 
@@ -267,7 +213,7 @@ auto CPU::instructionLDL() -> void {
   auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = u64(0) - 1 << shift;
-  if(auto data = readDouble(address & ~7, mask >> shift)) {
+  if(auto data = readDouble(address & ~7)) {
     RT.u64 = RT.u64 & ~mask | *data << shift;
   }
 }
@@ -276,7 +222,7 @@ auto CPU::instructionLDR() -> void {
   auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = u64(0) - 1 >> shift;
-  if(auto data = readDouble(address & ~7, mask << shift)) {
+  if(auto data = readDouble(address & ~7)) {
     RT.u64 = RT.u64 & ~mask | *data >> shift;
   }
 }
@@ -313,26 +259,11 @@ auto CPU::instructionLW() -> void {
   if(auto data = readWord(RS.u32 + IMMi16)) RT.u64 = i32(*data);
 }
 
-auto CPU::instructionLWC1() -> void {
-  if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  if(auto data = readWord(RS.u32 + IMMi16)) cop1.r[RTn].u64 = *data;
-}
-
-auto CPU::instructionLWC2() -> void {
-  if(!STATUS_COP2) return exception(CoprocessorUnusable);
-  exception(InvalidInstruction);  //coprocessor 2 not present
-}
-
-auto CPU::instructionLWC3() -> void {
-  if(!STATUS_COP3) return exception(CoprocessorUnusable);
-  exception(InvalidInstruction);  //coprocessor 3 not present
-}
-
 auto CPU::instructionLWL() -> void {
   auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipLE) & 3);
   auto mask = u32(0) - 1 << shift;
-  if(auto data = readWord(address & ~3, mask >> shift)) {
+  if(auto data = readWord(address & ~3)) {
     RT.u64 = i32(RT.u32 & ~mask | *data << shift);
   }
 }
@@ -341,7 +272,7 @@ auto CPU::instructionLWR() -> void {
   auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipBE) & 3);
   auto mask = u32(0) - 1 >> shift;
-  if(auto data = readWord(address & ~3, mask << shift)) {
+  if(auto data = readWord(address & ~3)) {
     RT.u64 = i32(RT.u32 & ~mask | *data >> shift);
   }
 }
@@ -432,14 +363,18 @@ auto CPU::instructionSDL() -> void {
   auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = u64(0) - 1 >> shift;
-  writeDouble(address & ~7, mask, RT.u64 >> shift);
+  if(auto data = readDouble(address & ~7)) {
+    writeDouble(address & ~7, *data & ~mask | RT.u64 >> shift);
+  }
 }
 
 auto CPU::instructionSDR() -> void {
   auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = u64(0) - 1 << shift;
-  writeDouble(address & ~7, mask, RT.u64 << shift);
+  if(auto data = readDouble(address & ~7)) {
+    writeDouble(address & ~7, *data & ~mask | RT.u64 << shift);
+  }
 }
 
 auto CPU::instructionSH() -> void {
@@ -499,38 +434,22 @@ auto CPU::instructionSW() -> void {
   writeWord(RS.u32 + IMMi16, RT.u32);
 }
 
-auto CPU::instructionSWC1() -> void {
-  if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  writeWord(RS.u32 + IMMi16, cop1.r[RTn].u32);
-}
-
-auto CPU::instructionSWC2() -> void {
-  if(!STATUS_COP2) return exception(CoprocessorUnusable);
-  exception(InvalidInstruction);  //coprocessor 2 not present
-}
-
-auto CPU::instructionSWC3() -> void {
-  if(!STATUS_COP3) return exception(CoprocessorUnusable);
-  exception(InvalidInstruction);  //coprocessor 3 not present
-}
-
 auto CPU::instructionSWL() -> void {
   auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipLE) & 3);
   auto mask = u32(0) - 1 >> shift;
-  writeWord(address & ~3, mask, RT.u32 >> shift);
+  if(auto data = readWord(address & ~3)) {
+    writeWord(address & ~3, *data & ~mask | RT.u32 >> shift);
+  }
 }
 
 auto CPU::instructionSWR() -> void {
   auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipBE) & 3);
   auto mask = u32(0) - 1 << shift;
-  writeWord(address & ~3, mask, RT.u32 << shift);
-}
-
-auto CPU::instructionSYNC() -> void {
-  //NOP on VR4300
-  //this instruction exists for software compatibility with VR4400 code
+  if(auto data = readWord(address & ~3)) {
+    writeWord(address & ~3, *data & ~mask | RT.u32 << shift);
+  }
 }
 
 auto CPU::instructionSYSCALL() -> void {

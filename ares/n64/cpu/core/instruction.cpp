@@ -3,7 +3,7 @@ auto CPU::exception(uint type) -> void {
 
 auto CPU::instruction() -> void {
   pipeline.address = PC;
-  pipeline.instruction = bus.readWord(pipeline.address);
+  pipeline.instruction = readWord(pipeline.address)(0);
   if(IP) {
     PC = IP();
     IP = nothing;
@@ -27,15 +27,15 @@ if(!dis) return;
 }
 
 auto CPU::instructionEXECUTE() -> void {
-  switch(pipeline.instruction >> 26) {
+  switch(OP >> 26) {
   case 0x00: return instructionSPECIAL();
   case 0x01: return instructionREGIMM();
   case 0x02: return instructionJ();
   case 0x03: return instructionJAL();
-  case 0x04: return instructionBEQ();
-  case 0x05: return instructionBNE();
-  case 0x06: return instructionBLEZ();
-  case 0x07: return instructionBGTZ();
+  case 0x04: return instructionB(RS.u64 == RT.u64);  //BEQ
+  case 0x05: return instructionB(RS.u64 != RT.u64);  //BNE
+  case 0x06: return instructionB(RS.i64 <= 0);       //BLEZ
+  case 0x07: return instructionB(RS.i64 >  0);       //BGTZ
   case 0x08: return instructionADDI();
   case 0x09: return instructionADDIU();
   case 0x0a: return instructionSLTI();
@@ -48,10 +48,10 @@ auto CPU::instructionEXECUTE() -> void {
   case 0x11: return instructionCOP1();
   case 0x12: return instructionCOP2();
   case 0x13: return instructionCOP3();
-  case 0x14: return instructionBEQL();
-  case 0x15: return instructionBNEL();
-  case 0x16: return instructionBLEZL();
-  case 0x17: return instructionBGTZL();
+  case 0x14: return instructionBL(RS.u64 == RT.u64);  //BEQL
+  case 0x15: return instructionBL(RS.u64 != RT.u64);  //BNEL
+  case 0x16: return instructionBL(RS.i64 <= 0);       //BLEZL
+  case 0x17: return instructionBL(RS.i64 >  0);       //BGTZL
   case 0x18: return instructionDADDI();
   case 0x19: return instructionDADDIU();
   case 0x1a: return instructionLDL();
@@ -78,16 +78,16 @@ auto CPU::instructionEXECUTE() -> void {
   case 0x2f: return instructionCACHE();
   case 0x30: return instructionLL();
   case 0x31: return instructionLWC1();
-  case 0x32: return instructionLWC2();
-  case 0x33: return instructionLWC3();
+  case 0x32: break;  //LWC2
+  case 0x33: break;  //LWC3
   case 0x34: return instructionLLD();
   case 0x35: return instructionLDC1();
   case 0x36: return instructionLDC2();
   case 0x37: return instructionLD();
   case 0x38: return instructionSC();
   case 0x39: return instructionSWC1();
-  case 0x3a: return instructionSWC2();
-  case 0x3b: return instructionSWC3();
+  case 0x3a: break;  //SWC2
+  case 0x3b: break;  //SWC3
   case 0x3c: return instructionSCD();
   case 0x3d: return instructionSDC1();
   case 0x3e: return instructionSDC2();
@@ -97,7 +97,7 @@ auto CPU::instructionEXECUTE() -> void {
 }
 
 auto CPU::instructionSPECIAL() -> void {
-  switch(pipeline.instruction & 0x3f) {
+  switch(OP & 0x3f) {
   case 0x00: return instructionSLL();
   case 0x01: break;
   case 0x02: return instructionSRL();
@@ -113,7 +113,7 @@ auto CPU::instructionSPECIAL() -> void {
   case 0x0c: return instructionSYSCALL();
   case 0x0d: return instructionBREAK();
   case 0x0e: break;
-  case 0x0f: return instructionSYNC();
+  case 0x0f: return;  //SYNC
   case 0x10: return instructionMFHI();
   case 0x11: return instructionMTHI();
   case 0x12: return instructionMFLO();
@@ -167,11 +167,11 @@ auto CPU::instructionSPECIAL() -> void {
 }
 
 auto CPU::instructionREGIMM() -> void {
-  switch(pipeline.instruction >> 16 & 0x1f) {
-  case 0x00: return instructionBLTZ();
-  case 0x01: return instructionBGEZ();
-  case 0x02: return instructionBLTZL();
-  case 0x03: return instructionBGEZL();
+  switch(OP >> 16 & 0x1f) {
+  case 0x00: return instructionB (RS.i64 <  0);  //BLTZ
+  case 0x01: return instructionB (RS.i64 >= 0);  //BGEZ
+  case 0x02: return instructionBL(RS.i64 <  0);  //BLTZL
+  case 0x03: return instructionBL(RS.i64 >= 0);  //BGEZL
   case 0x04: break;
   case 0x05: break;
   case 0x06: break;
@@ -184,10 +184,10 @@ auto CPU::instructionREGIMM() -> void {
   case 0x0d: break;
   case 0x0e: return instructionTNEI();
   case 0x0f: break;
-  case 0x10: return instructionBLTZAL();
-  case 0x11: return instructionBGEZAL();
-  case 0x12: return instructionBLTZALL();
-  case 0x13: return instructionBGEZALL();
+  case 0x10: return instructionBAL (RS.i64 <  0);  //BLTZAL
+  case 0x11: return instructionBAL (RS.i64 >= 0);  //BGEZAL
+  case 0x12: return instructionBALL(RS.i64 <  0);  //BLTZALL
+  case 0x13: return instructionBALL(RS.i64 >= 0);  //BGEZALL
   case 0x14: break;
   case 0x15: break;
   case 0x16: break;
@@ -206,22 +206,17 @@ auto CPU::instructionREGIMM() -> void {
 
 auto CPU::instructionCOP0() -> void {
   if(!STATUS_COP0) return exception(CoprocessorUnusable);
-  switch(pipeline.instruction >> 21 & 31) {
+  switch(OP >> 21 & 31) {
   case 0x00: return instructionMFC0();
   case 0x01: return instructionDMFC0();
   case 0x02: return instructionCFC0();
   case 0x04: return instructionMTC0();
   case 0x05: return instructionDMTC0();
   case 0x06: return instructionCTC0();
-  case 0x08: switch(pipeline.instruction >> 16 & 3) {
-    case 0x00: return instructionBC0F();
-    case 0x01: return instructionBC0T();
-    case 0x02: return instructionBC0FL();
-    case 0x03: return instructionBC0TL();
-    }
+  case 0x08: return instructionBC0();
   }
-  if(!(pipeline.instruction >> 25 & 1)) return exception(InvalidInstruction);
-  switch(pipeline.instruction & 0x3f) {
+  if(!(OP >> 25 & 1)) return exception(InvalidInstruction);
+  switch(OP & 0x3f) {
   case 0x01: return instructionTLBR();
   case 0x02: return instructionTLBWI();
   case 0x06: return instructionTLBWR();
@@ -232,24 +227,19 @@ auto CPU::instructionCOP0() -> void {
 
 auto CPU::instructionCOP1() -> void {
   if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  switch(pipeline.instruction >> 21 & 31) {
+  switch(OP >> 21 & 31) {
   case 0x00: return instructionMFC1();
   case 0x01: return instructionDMFC1();
   case 0x02: return instructionCFC1();
   case 0x04: return instructionMTC1();
   case 0x05: return instructionDMTC1();
   case 0x06: return instructionCTC1();
-  case 0x08: switch(pipeline.instruction >> 16 & 3) {
-    case 0x00: return instructionBC1F();
-    case 0x01: return instructionBC1T();
-    case 0x02: return instructionBC1FL();
-    case 0x03: return instructionBC1TL();
-    }
+  case 0x08: return instructionBC1();
   }
   if(!STATUS_FR) {
-    pipeline.instruction &= ~0b0000'0000'0010'0001'0000'1000'0100'0000;
+    OP &= ~0b0000'0000'0010'0001'0000'1000'0100'0000;
   }
-  switch(pipeline.instruction & 0x3f) {
+  switch(OP & 0x3f) {
   case 0x00: return instructionFADD();
   case 0x01: return instructionFSUB();
   case 0x02: return instructionFMUL();

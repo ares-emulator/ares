@@ -40,6 +40,9 @@ auto VI::readIO(u32 address) -> u32 {
 
   if(address == 4) {
     //VI_V_CURRENT_LINE
+    data |= rdp.io.field    << 0;
+    data |= rdp.io.vcounter << 1;
+    return data;
   }
 
   if(address == 5) {
@@ -72,10 +75,14 @@ auto VI::readIO(u32 address) -> u32 {
 
   if(address == 12) {
     //VI_X_SCALE
+    data |= io.xscale    <<  0;
+    data |= io.xsubpixel << 16;
   }
 
   if(address == 13) {
     //VI_Y_SCALE
+    data |= io.yscale    <<  0;
+    data |= io.ysubpixel << 16;
   }
 
   print("* ", registerNames(address, "VI_UNKNOWN"), " => ", hex(data, 8L), "\n");
@@ -138,10 +145,14 @@ auto VI::writeIO(u32 address, u32 data) -> void {
 
   if(address == 12) {
     //VI_X_SCALE
+    io.xscale    = uint12(data >>  0);
+    io.xsubpixel = uint12(data >> 16);
   }
 
   if(address == 13) {
     //VI_Y_SCALE
+    io.yscale    = uint12(data >>  0);
+    io.ysubpixel = uint12(data >> 16);
   }
 
   print("* ", registerNames(address, "VI_UNKNOWN"), " <= ", hex(data, 8L), "\n");

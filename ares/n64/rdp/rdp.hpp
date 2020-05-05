@@ -25,7 +25,13 @@ struct RDP : Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint32 output[640 * 480];
+  u32 output[640 * 480];
+  bool refreshed;
+
+  struct IO {
+     u32 vcounter;
+    bool field;
+  } io;
 };
 
 extern RDP rdp;

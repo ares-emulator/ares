@@ -15,19 +15,19 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  for(uint index : range(2048)) {
-    instruction();
-  }
-  step(2048);
+  instruction();
+  step(5);
 }
 
 auto CPU::step(uint clocks) -> void {
-  Thread::step(clocks);
-  Thread::synchronize();
+  rsp.clock -= clocks;
+  rdp.clock -= clocks;
+  while(rsp.clock < 0) rsp.main();
+  while(rdp.clock < 0) rdp.main();
 }
 
 auto CPU::power() -> void {
-  Thread::create(93'750'000, {&CPU::main, this});
+  Thread::reset();
   powerR4300();
 
   //PIF ROM simulation:

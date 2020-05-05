@@ -1,19 +1,8 @@
-auto CPU::instructionBC1F() -> void {
-  if(cop1.cf[pipeline.instruction >> 18 & 7] == 0) IP = PC + (IMMi16 << 2);
-}
-
-auto CPU::instructionBC1FL() -> void {
-  if(cop1.cf[pipeline.instruction >> 18 & 7] == 0) IP = PC + (IMMi16 << 2);
-  else PC += 4;
-}
-
-auto CPU::instructionBC1T() -> void {
-  if(cop1.cf[pipeline.instruction >> 18 & 7] == 1) IP = PC + (IMMi16 << 2);
-}
-
-auto CPU::instructionBC1TL() -> void {
-  if(cop1.cf[pipeline.instruction >> 18 & 7] == 1) IP = PC + (IMMi16 << 2);
-  else PC += 4;
+auto CPU::instructionBC1() -> void {
+  bool condition = OP >> 16 & 1;
+  bool likely    = OP >> 17 & 1;
+  if(cop1.cf[pipeline.instruction >> 18 & 7] == condition) IP = PC + (IMMi16 << 2);
+  else if(likely) PC += 4;
 }
 
 auto CPU::instructionCFC1() -> void {
@@ -144,7 +133,7 @@ auto CPU::instructionFCVTS() -> void {
     if(FPU_SINGLE) {
       FD.f32 = FS.i32;
     } else {
-      FD.f64 = FS.i64;
+      FD.f32 = FS.i64;
     }
   } else {
     FD.f32 = FS.f64;
@@ -175,7 +164,7 @@ auto CPU::instructionFCVTW() -> void {
   if(FPU_SINGLE) {
     FD.i32 = i32(FS.f32);
   } else {
-    FD.i64 = i64(FS.f64);
+    FD.i32 = i64(FS.f64);
   }
 }
 
@@ -209,7 +198,7 @@ auto CPU::instructionFFLOORW() -> void {
   if(FPU_SINGLE) {
     FD.i32 = i32(floor(FS.f32));
   } else {
-    FD.i32 = i32(floor(FS.f32));
+    FD.i32 = i32(floor(FS.f64));
   }
 }
 
@@ -239,17 +228,17 @@ auto CPU::instructionFNEG() -> void {
 
 auto CPU::instructionFROUNDL() -> void {
   if(FPU_SINGLE) {
-    FD.i64 = i64(FS.f32 < 0 ? ceil(FS.f32 - 0.5) : floor(FS.f32 + 0.5));
+    FD.i64 = i64(nearbyint(FS.f32));
   } else {
-    FD.i64 = i64(FS.f64 < 0 ? ceil(FS.f64 - 0.5) : floor(FS.f64 + 0.5));
+    FD.i64 = i64(nearbyint(FS.f64));
   }
 }
 
 auto CPU::instructionFROUNDW() -> void {
   if(FPU_SINGLE) {
-    FD.i32 = i32(FS.f32 < 0 ? ceil(FS.f32 - 0.5) : floor(FS.f32 + 0.5));
+    FD.i32 = i32(nearbyint(FS.f32));
   } else {
-    FD.i32 = i32(FS.f64 < 0 ? ceil(FS.f64 - 0.5) : floor(FS.f64 + 0.5));
+    FD.i32 = i32(nearbyint(FS.f64));
   }
 }
 
@@ -285,10 +274,20 @@ auto CPU::instructionFTRUNCW() -> void {
   }
 }
 
+auto CPU::instructionLWC1() -> void {
+  if(!STATUS_COP1) return exception(CoprocessorUnusable);
+  if(auto data = readWord(RS.u32 + IMMi16)) cop1.r[RTn].u64 = *data;
+}
+
 auto CPU::instructionMFC1() -> void {
   RT.u64 = FPR[RDn].i32;
 }
 
 auto CPU::instructionMTC1() -> void {
   FPR[RDn].u32 = RT.u32;
+}
+
+auto CPU::instructionSWC1() -> void {
+  if(!STATUS_COP1) return exception(CoprocessorUnusable);
+  writeWord(RS.u32 + IMMi16, cop1.r[RTn].u32);
 }

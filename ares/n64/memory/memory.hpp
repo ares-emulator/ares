@@ -54,6 +54,11 @@ struct Memory {
     return value << 32 | value >> 32;
   }
 
+  auto readQuad(u32 address) -> u128 {
+    auto value = *(u128*)&data[address & maskWord];
+    return value << 96 | value >> 96 | (u128)u32(value >> 64) << 32 | (u128)u32(value >> 32) << 64;
+  }
+
   auto writeByte(u32 address, u8 value) -> void {
     *(u8*)&data[address & maskByte ^ 3] = value;
   }
@@ -68,6 +73,11 @@ struct Memory {
 
   auto writeDouble(u32 address, u64 value) -> void {
     *(u64*)&data[address & maskWord] = value << 32 | value >> 32;
+  }
+
+  auto writeQuad(u32 address, u128 value) -> void {
+    value = value << 96 | value >> 96 | (u128)u32(value >> 64) << 32 | (u128)u32(value >> 32) << 64;
+    *(u128*)&data[address & maskWord] = value;
   }
 
 private:

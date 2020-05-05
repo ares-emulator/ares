@@ -10,15 +10,7 @@ auto CPU::readWord(u32 address) -> maybe<u32> {
   return bus.readWord(address);
 }
 
-auto CPU::readWord(u32 address, u32 mask) -> maybe<u32> {
-  return bus.readWord(address);
-}
-
 auto CPU::readDouble(u32 address) -> maybe<u64> {
-  return bus.readDouble(address);
-}
-
-auto CPU::readDouble(u32 address, u32 mask) -> maybe<u64> {
   return bus.readDouble(address);
 }
 
@@ -34,14 +26,6 @@ auto CPU::writeWord(u32 address, u32 data) -> void {
   return bus.writeWord(address, data);
 }
 
-auto CPU::writeWord(u32 address, u32 mask, u32 data) -> void {
-  return bus.writeWord(address, data);
-}
-
 auto CPU::writeDouble(u32 address, u64 data) -> void {
-  return bus.writeDouble(address, data);
-}
-
-auto CPU::writeDouble(u32 address, u32 mask, u64 data) -> void {
   return bus.writeDouble(address, data);
 }

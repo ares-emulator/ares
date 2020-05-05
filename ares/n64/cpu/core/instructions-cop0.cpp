@@ -30,22 +30,11 @@ auto CPU::setCOP0u64(uint index, u64 data) -> void {
 
 //
 
-auto CPU::instructionBC0F() -> void {
-  if(cop0.cf == 0) IP = PC + (IMMi16 << 2);
-}
-
-auto CPU::instructionBC0FL() -> void {
-  if(cop0.cf == 0) IP = PC + (IMMi16 << 2);
-  else PC += 4;
-}
-
-auto CPU::instructionBC0T() -> void {
-  if(cop0.cf == 1) IP = PC + (IMMi16 << 2);
-}
-
-auto CPU::instructionBC0TL() -> void {
-  if(cop0.cf == 1) IP = PC + (IMMi16 << 2);
-  else PC += 4;
+auto CPU::instructionBC0() -> void {
+  bool condition = OP >> 16 & 1;
+  bool likely    = OP >> 17 & 1;
+  if(cop0.cf == condition) IP = PC + (IMMi16 << 2);
+  else if(likely) PC += 4;
 }
 
 auto CPU::instructionCFC0() -> void {

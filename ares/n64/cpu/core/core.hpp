@@ -6,15 +6,11 @@
   auto readByte(u32 address) -> maybe<u32>;
   auto readHalf(u32 address) -> maybe<u32>;
   auto readWord(u32 address) -> maybe<u32>;
-  auto readWord(u32 address, u32 mask) -> maybe<u32>;
   auto readDouble(u32 address) -> maybe<u64>;
-  auto readDouble(u32 address, u32 mask) -> maybe<u64>;
   auto writeByte(u32 address, u8 data) -> void;
   auto writeHalf(u32 address, u16 data) -> void;
   auto writeWord(u32 address, u32 data) -> void;
-  auto writeWord(u32 address, u32 mask, u32 data) -> void;
   auto writeDouble(u32 address, u64 data) -> void;
-  auto writeDouble(u32 address, u32 mask, u64 data) -> void;
 
   union r64 {
     struct {   int32_t order_msb2(i32h, i32); };
@@ -46,22 +42,10 @@
   auto instructionADDU() -> void;
   auto instructionAND() -> void;
   auto instructionANDI() -> void;
-  auto instructionBEQ() -> void;
-  auto instructionBEQL() -> void;
-  auto instructionBGEZ() -> void;
-  auto instructionBGEZAL() -> void;
-  auto instructionBGEZALL() -> void;
-  auto instructionBGEZL() -> void;
-  auto instructionBGTZ() -> void;
-  auto instructionBGTZL() -> void;
-  auto instructionBLEZ() -> void;
-  auto instructionBLEZL() -> void;
-  auto instructionBLTZ() -> void;
-  auto instructionBLTZAL() -> void;
-  auto instructionBLTZALL() -> void;
-  auto instructionBLTZL() -> void;
-  auto instructionBNE() -> void;
-  auto instructionBNEL() -> void;
+  auto instructionB(bool take) -> void;
+  auto instructionBAL(bool take) -> void;
+  auto instructionBALL(bool take) -> void;
+  auto instructionBL(bool take) -> void;
   auto instructionBREAK() -> void;
   auto instructionCACHE() -> void;
   auto instructionDADD() -> void;
@@ -102,9 +86,6 @@
   auto instructionLL() -> void;
   auto instructionLLD() -> void;
   auto instructionLW() -> void;
-  auto instructionLWC1() -> void;
-  auto instructionLWC2() -> void;
-  auto instructionLWC3() -> void;
   auto instructionLWL() -> void;
   auto instructionLWR() -> void;
   auto instructionLWU() -> void;
@@ -139,12 +120,8 @@
   auto instructionSUB() -> void;
   auto instructionSUBU() -> void;
   auto instructionSW() -> void;
-  auto instructionSWC1() -> void;
-  auto instructionSWC2() -> void;
-  auto instructionSWC3() -> void;
   auto instructionSWL() -> void;
   auto instructionSWR() -> void;
-  auto instructionSYNC() -> void;
   auto instructionSYSCALL() -> void;
   auto instructionTEQ() -> void;
   auto instructionTEQI() -> void;
@@ -165,10 +142,7 @@
   auto getCOP0u64(uint) -> u64;
   auto setCOP0u64(uint, u64) -> void;
 
-  auto instructionBC0F() -> void;
-  auto instructionBC0FL() -> void;
-  auto instructionBC0T() -> void;
-  auto instructionBC0TL() -> void;
+  auto instructionBC0() -> void;
   auto instructionCFC0() -> void;
   auto instructionCTC0() -> void;
   auto instructionDMFC0() -> void;
@@ -181,10 +155,7 @@
   auto instructionTLBWR() -> void;
 
   //instructions-cop1.cpp
-  auto instructionBC1F() -> void;
-  auto instructionBC1FL() -> void;
-  auto instructionBC1T() -> void;
-  auto instructionBC1TL() -> void;
+  auto instructionBC1() -> void;
   auto instructionCFC1() -> void;
   auto instructionCTC1() -> void;
   auto instructionDMFC1() -> void;
@@ -217,8 +188,10 @@
   auto instructionFSUB() -> void;
   auto instructionFTRUNCL() -> void;
   auto instructionFTRUNCW() -> void;
+  auto instructionLWC1() -> void;
   auto instructionMFC1() -> void;
   auto instructionMTC1() -> void;
+  auto instructionSWC1() -> void;
 
   //serialization.cpp
   auto serializeR4300(serializer&) -> void;

@@ -21,6 +21,22 @@ struct RSP : Thread {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  struct IO {
+    u32 memAddress;   //0-11
+    u32 memSource;    //0 = dmem, 1 = imem
+    u32 dramAddress;  //0-23
+    u32 readLength;
+    u32 readCount;
+    u32 readSkip;
+    u32 writeLength;
+    u32 writeCount;
+    u32 writeSkip;
+    bool halt;
+    bool interruptOnBreak;
+  } io;
+
+  #include "core/core.hpp"
 };
 
 extern RSP rsp;

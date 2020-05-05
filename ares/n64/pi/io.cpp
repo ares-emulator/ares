@@ -94,7 +94,7 @@ auto PI::writeIO(u32 address, u32 data) -> void {
   if(address == 2) {
     //PI_RD_LEN
     io.readLength = uint24(data) + 1;
-    for(u32 address = 0; address < io.writeLength; address += 4) {
+    for(u32 address = 0; address < io.readLength; address += 4) {
       auto data = bus.readWord(io.dramAddress + address);
       bus.writeWord(io.cartAddress + address, data);
     }
