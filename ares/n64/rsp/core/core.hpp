@@ -43,7 +43,7 @@
   auto instructionADDU() -> void;
   auto instructionAND() -> void;
   auto instructionANDI() -> void;
-  auto instructionB(bool take) -> void;
+  auto instructionB(bool) -> void;
   auto instructionBREAK() -> void;
   auto instructionCACHE() -> void;
   auto instructionJ() -> void;
@@ -102,9 +102,8 @@
   auto instructionVEQ() -> void;
   auto instructionVGE() -> void;
   auto instructionVLT() -> void;
-  auto instructionVMACF() -> void;
+  auto instructionVMACF(bool) -> void;
   auto instructionVMACQ() -> void;
-  auto instructionVMACU() -> void;
   auto instructionVMADH() -> void;
   auto instructionVMADL() -> void;
   auto instructionVMADM() -> void;
@@ -115,23 +114,19 @@
   auto instructionVMUDL() -> void;
   auto instructionVMUDM() -> void;
   auto instructionVMUDN() -> void;
-  auto instructionVMULF() -> void;
+  auto instructionVMULF(bool) -> void;
   auto instructionVMULQ() -> void;
-  auto instructionVMULU() -> void;
   auto instructionVNAND() -> void;
   auto instructionVNE() -> void;
   auto instructionVNOP() -> void;
   auto instructionVNOR() -> void;
   auto instructionVNXOR() -> void;
   auto instructionVOR() -> void;
-  auto instructionVRCP() -> void;
+  auto instructionVRCP(bool) -> void;
   auto instructionVRCPH() -> void;
-  auto instructionVRCPL() -> void;
-  auto instructionVRNDN() -> void;
-  auto instructionVRNDP() -> void;
-  auto instructionVRSQ() -> void;
+  auto instructionVRND(bool) -> void;
+  auto instructionVRSQ(bool) -> void;
   auto instructionVRSQH() -> void;
-  auto instructionVRSQL() -> void;
   auto instructionVSAR() -> void;
   auto instructionVSUB() -> void;
   auto instructionVSUBC() -> void;
@@ -192,7 +187,13 @@
     v128 vcoh, vcol;  //16-bit little endian
     v128 vcch, vccl;  //16-bit little endian
     v128 vce;         // 8-bit little endian
+     i32 divin;
+     i32 divout;
+    bool divdp;
   } cop2;
+
+  u16 reciprocals[512];
+  u16 inverseSquareRoots[512];
 
   static constexpr v128 zero{0};
   static constexpr v128 invert{u128(0) - 1};

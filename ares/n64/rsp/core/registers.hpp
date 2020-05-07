@@ -55,6 +55,10 @@
   #define VCCH cop2.vcch
   #define VCCL cop2.vccl
   #define VCE  cop2.vce
+
+  #define DIVIN  cop2.divin
+  #define DIVOUT cop2.divout
+  #define DIVDP  cop2.divdp
 #else
   #undef RSP_REGISTERS_HPP
 
@@ -112,4 +116,8 @@
   #undef VCCH
   #undef VCCL
   #undef VCE
+
+  #undef DIVIN
+  #undef DIVOUT
+  #undef DIVDP
 #endif

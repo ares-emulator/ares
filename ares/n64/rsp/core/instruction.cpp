@@ -228,17 +228,17 @@ auto RSP::instructionCOP2() -> void {
   }
   if(!(OP >> 25 & 1)) return exception(InvalidInstruction);
   switch(OP & 0x3f) {
-  case 0x00: return instructionVMULF();
-  case 0x01: return instructionVMULU();
-  case 0x02: return instructionVRNDP();
+  case 0x00: return instructionVMULF(0);
+  case 0x01: return instructionVMULF(1);
+  case 0x02: return instructionVRND(1);
   case 0x03: return instructionVMULQ();
   case 0x04: return instructionVMUDL();
   case 0x05: return instructionVMUDM();
   case 0x06: return instructionVMUDN();
   case 0x07: return instructionVMUDH();
-  case 0x08: return instructionVMACF();
-  case 0x09: return instructionVMACU();
-  case 0x0a: return instructionVRNDN();
+  case 0x08: return instructionVMACF(0);
+  case 0x09: return instructionVMACF(1);
+  case 0x0a: return instructionVRND(0);
   case 0x0b: return instructionVMACQ();
   case 0x0c: return instructionVMADL();
   case 0x0d: return instructionVMADM();
@@ -276,12 +276,12 @@ auto RSP::instructionCOP2() -> void {
   case 0x2d: return instructionVNXOR();
   case 0x2e: break;
   case 0x2f: break;
-  case 0x30: return instructionVRCP();
-  case 0x31: return instructionVRCPL();
+  case 0x30: return instructionVRCP(0);
+  case 0x31: return instructionVRCP(1);
   case 0x32: return instructionVRCPH();
   case 0x33: return instructionVMOV();
-  case 0x34: return instructionVRSQ();
-  case 0x35: return instructionVRSQL();
+  case 0x34: return instructionVRSQ(0);
+  case 0x35: return instructionVRSQ(1);
   case 0x36: return instructionVRSQH();
   case 0x37: return instructionVNOP();
   case 0x38: break;
