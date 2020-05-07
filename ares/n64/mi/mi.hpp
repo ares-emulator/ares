@@ -2,6 +2,7 @@
 
 struct MI {
   //mi.cpp
+  auto pollInterrupts() -> void;
   auto power() -> void;
 
   //io.cpp
@@ -10,6 +11,20 @@ struct MI {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  struct Interrupt {
+    bool line;
+    bool mask;
+  };
+
+  struct IRQ {
+    Interrupt sp;
+    Interrupt si;
+    Interrupt ai;
+    Interrupt vi;
+    Interrupt pi;
+    Interrupt dp;
+  } irq;
 
   struct IO {
   } io;

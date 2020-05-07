@@ -1,4 +1,17 @@
-auto CPU::exception(uint type) -> void {
+auto CPU::raiseException(uint code, uint interrupt, uint coprocessor) -> void {
+  scc.cause.exceptionCode = code;
+  scc.cause.interruptPending = interrupt;
+  scc.cause.coprocessorError = coprocessor;
+  scc.cause.branchDelay = (bool)IP;
+
+  if(scc.status.exceptionLevel) return;
+  scc.status.exceptionLevel = 1;
+
+  scc.epc.u64 = PC;
+  if(IP) IP = nothing, scc.epc.u64 -= 4;
+
+  PC = scc.status.vectorLocation ? 0xbfc0'0200 : 0x8000'0000;
+  PC += 0x180;
 }
 
 auto CPU::instruction() -> void {
@@ -17,12 +30,12 @@ auto CPU::instruction() -> void {
 
 auto CPU::instructionDEBUG() -> void {
   static uint counter = 0;
-//if(++counter >= 100) return;
-static bool dis = false;
-if(pipeline.address==0x8000'01ac) dis=true;//{ GPR[Core::Register::T0] = GPR[Core::Register::A3]; }
+  if(++counter >= 100) return;
+//static bool dis = false;
+//if(pipeline.address==0x8000'01ac) dis=true;//{ GPR[Core::Register::T0] = GPR[Core::Register::A3]; }
 //if(pipeline.address==0x8000'01b8) { GPR[Core::Register::T0] = GPR[Core::Register::S0]; }
 //if(pipeline.address==0x8000'02ac) { GPR[Core::Register::T1].u64 |= 0x3000'0000; }
-if(!dis) return;
+//if(!dis) return;
   print("\e[37m", hex(pipeline.address, 8L), "\e[0m  ", disassembleInstruction(), "\n");
 }
 
@@ -46,8 +59,8 @@ auto CPU::instructionEXECUTE() -> void {
   case 0x0f: return instructionLUI();
   case 0x10: return instructionCOP0();
   case 0x11: return instructionCOP1();
-  case 0x12: return instructionCOP2();
-  case 0x13: return instructionCOP3();
+  case 0x12: return exception.coprocessor2();         //COP2
+  case 0x13: return exception.coprocessor3();         //COP3
   case 0x14: return instructionBL(RS.u64 == RT.u64);  //BEQL
   case 0x15: return instructionBL(RS.u64 != RT.u64);  //BNEL
   case 0x16: return instructionBL(RS.i64 <= 0);       //BLEZL
@@ -78,22 +91,22 @@ auto CPU::instructionEXECUTE() -> void {
   case 0x2f: return instructionCACHE();
   case 0x30: return instructionLL();
   case 0x31: return instructionLWC1();
-  case 0x32: break;  //LWC2
-  case 0x33: break;  //LWC3
+  case 0x32: return exception.coprocessor2();  //LWC2
+  case 0x33: return exception.coprocessor3();  //LWC3
   case 0x34: return instructionLLD();
   case 0x35: return instructionLDC1();
-  case 0x36: return instructionLDC2();
+  case 0x36: return exception.coprocessor2();  //LDC2
   case 0x37: return instructionLD();
   case 0x38: return instructionSC();
   case 0x39: return instructionSWC1();
-  case 0x3a: break;  //SWC2
-  case 0x3b: break;  //SWC3
+  case 0x3a: return exception.coprocessor2();  //SWC2
+  case 0x3b: return exception.coprocessor3();  //SWC3
   case 0x3c: return instructionSCD();
   case 0x3d: return instructionSDC1();
-  case 0x3e: return instructionSDC2();
+  case 0x3e: return exception.coprocessor2();  //SDC2
   case 0x3f: return instructionSD();
   }
-  exception(InvalidInstruction);
+  exception.reservedInstruction();
 }
 
 auto CPU::instructionSPECIAL() -> void {
@@ -163,7 +176,7 @@ auto CPU::instructionSPECIAL() -> void {
   case 0x3e: return instructionDSRL32();
   case 0x3f: return instructionDSRA32();
   }
-  exception(InvalidInstruction);
+  exception.reservedInstruction();
 }
 
 auto CPU::instructionREGIMM() -> void {
@@ -201,11 +214,11 @@ auto CPU::instructionREGIMM() -> void {
   case 0x1e: break;
   case 0x1f: break;
   }
-  exception(InvalidInstruction);
+  exception.reservedInstruction();
 }
 
 auto CPU::instructionCOP0() -> void {
-  if(!STATUS_COP0) return exception(CoprocessorUnusable);
+  if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
   switch(OP >> 21 & 31) {
   case 0x00: return instructionMFC0();
   case 0x01: return instructionDMFC0();
@@ -215,18 +228,18 @@ auto CPU::instructionCOP0() -> void {
   case 0x06: return instructionCTC0();
   case 0x08: return instructionBC0();
   }
-  if(!(OP >> 25 & 1)) return exception(InvalidInstruction);
+  if(!(OP >> 25 & 1)) return exception.reservedInstruction();
   switch(OP & 0x3f) {
   case 0x01: return instructionTLBR();
   case 0x02: return instructionTLBWI();
   case 0x06: return instructionTLBWR();
   case 0x08: return instructionTLBP();
   }
-  exception(InvalidInstruction);
+  exception.reservedInstruction();
 }
 
 auto CPU::instructionCOP1() -> void {
-  if(!STATUS_COP1) return exception(CoprocessorUnusable);
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   switch(OP >> 21 & 31) {
   case 0x00: return instructionMFC1();
   case 0x01: return instructionDMFC1();
@@ -236,7 +249,7 @@ auto CPU::instructionCOP1() -> void {
   case 0x06: return instructionCTC1();
   case 0x08: return instructionBC1();
   }
-  if(!STATUS_FR) {
+  if(!scc.status.floatingPointMode) {
     OP &= ~0b0000'0000'0010'0001'0000'1000'0100'0000;
   }
   switch(OP & 0x3f) {
@@ -269,15 +282,5 @@ auto CPU::instructionCOP1() -> void {
   case 0x36: case 0x3e: return instructionFCOLE();
   case 0x37: case 0x3f: return instructionFCULE();
   }
-  exception(InvalidInstruction);
-}
-
-auto CPU::instructionCOP2() -> void {
-  if(!STATUS_COP2) return exception(CoprocessorUnusable);
-  exception(InvalidInstruction);
-}
-
-auto CPU::instructionCOP3() -> void {
-  if(!STATUS_COP3) return exception(CoprocessorUnusable);
-  exception(InvalidInstruction);
+  exception.reservedInstruction();
 }

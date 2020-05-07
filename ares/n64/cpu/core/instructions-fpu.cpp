@@ -1,29 +1,29 @@
 auto CPU::instructionBC1() -> void {
   bool condition = OP >> 16 & 1;
   bool likely    = OP >> 17 & 1;
-  if(cop1.cf[pipeline.instruction >> 18 & 7] == condition) IP = PC + (IMMi16 << 2);
+  if(fpu.cf[pipeline.instruction >> 18 & 7] == condition) IP = PC + (IMMi16 << 2);
   else if(likely) PC += 4;
 }
 
 auto CPU::instructionCFC1() -> void {
   static const uint shift[8] = {23, 25, 26, 27, 28, 29, 30, 31};
   if(RDn == 31) {
-    u32 result = cop1.cr[31] & ~0xfe80'0000;
+    u32 result = fpu.cr[31] & ~0xfe80'0000;
     for(uint n : range(8)) {
-      if(cop1.cf[n]) result |= 1 << shift[n];
+      if(fpu.cf[n]) result |= 1 << shift[n];
     }
     RT.u64 = i32(result);
     return;
   }
-  RT.u64 = i32(cop1.cr[RDn]);
+  RT.u64 = i32(fpu.cr[RDn]);
 }
 
 auto CPU::instructionCTC1() -> void {
   static const uint shift[8] = {23, 25, 26, 27, 28, 29, 30, 31};
-  cop1.cr[RDn] = RT.u32;
+  fpu.cr[RDn] = RT.u32;
   if(RDn == 31) {
     for(uint n : range(8)) {
-      cop1.cf[n] = RT.u32 >> shift[n] & 1;
+      fpu.cf[n] = RT.u32 >> shift[n] & 1;
     }
   }
 }
@@ -68,7 +68,7 @@ auto CPU::instructionFCEILW() -> void {
   }
 }
 
-#define CF cop1.cf[pipeline.instruction >> 8 & 7]
+#define CF fpu.cf[pipeline.instruction >> 8 & 7]
 
 auto CPU::instructionFCEQ() -> void {
   if(FPU_SINGLE) {
@@ -174,14 +174,14 @@ auto CPU::instructionFDIV() -> void {
       FD.f32 = FS.f32 / FT.f32;
     } else {
       //todo: check CCR31
-      exception(FloatingPointError);
+      exception.floatingPoint();
     }
   } else {
     if(FT.i64) {
       FD.f64 = FS.f64 / FT.f64;
     } else {
       //todo: check CCR31
-      exception(FloatingPointError);
+      exception.floatingPoint();
     }
   }
 }
@@ -274,9 +274,14 @@ auto CPU::instructionFTRUNCW() -> void {
   }
 }
 
+auto CPU::instructionLDC1() -> void {
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(auto data = readDouble(RS.u32 + IMMi16)) fpu.r[RTn].u64 = *data;
+}
+
 auto CPU::instructionLWC1() -> void {
-  if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  if(auto data = readWord(RS.u32 + IMMi16)) cop1.r[RTn].u64 = *data;
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(auto data = readWord(RS.u32 + IMMi16)) fpu.r[RTn].u64 = *data;
 }
 
 auto CPU::instructionMFC1() -> void {
@@ -287,7 +292,12 @@ auto CPU::instructionMTC1() -> void {
   FPR[RDn].u32 = RT.u32;
 }
 
+auto CPU::instructionSDC1() -> void {
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  writeDouble(RS.u32 + IMMi16, fpu.r[RTn].u64);
+}
+
 auto CPU::instructionSWC1() -> void {
-  if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  writeWord(RS.u32 + IMMi16, cop1.r[RTn].u32);
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  writeWord(RS.u32 + IMMi16, fpu.r[RTn].u32);
 }

@@ -11,7 +11,7 @@
   #define IMMu16 u16(OP)
   #define IMMu26 (OP & 0x03ff'ffff)
 
-  //core
+  //CPU
   #define GPR core.r
   #define LO  core.lo
   #define HI  core.hi
@@ -23,26 +23,13 @@
   #define RS GPR[RSn]
   #define RA GPR[Core::Register::RA]
 
-  //COP0
-  #define LLBIT  cop0.llbit
-  #define SPR    cop0.r
-  #define LL     SPR[COP0::Register::LLAddr].u64
-  #define CAUSE  SPR[COP0::Register::Cause].u64
-  #define STATUS SPR[COP0::Register::Status].u64
-
-  #define STATUS_FR   (STATUS & 1 << 26)
-  #define STATUS_COP0 (STATUS & 1 << 28)
-  #define STATUS_COP1 (STATUS & 1 << 29)
-  #define STATUS_COP2 (STATUS & 1 << 30)
-  #define STATUS_COP3 (STATUS & 1 << 31)
-
-  //COP1
+  //FPU
   #define FDn (OP >>  6 & 31)
   #define FSn (OP >> 11 & 31)
   #define FTn (OP >> 16 & 31)
   #define FRn (OP >> 21 & 31)
 
-  #define FPR cop1.r
+  #define FPR fpu.r
   #define FD  FPR[FDn]
   #define FS  FPR[FSn]
   #define FT  FPR[FTn]
@@ -65,7 +52,7 @@
   #undef IMMu16
   #undef IMMu26
 
-  //core
+  //CPU
   #undef GPR
   #undef LO
   #undef HI
@@ -77,20 +64,7 @@
   #undef RS
   #undef RA
 
-  //COP0
-  #undef LLBIT
-  #undef SPR
-  #undef LL
-  #undef CAUSE
-  #undef STATUS
-
-  #undef STATUS_FR
-  #undef STATUS_COP0
-  #undef STATUS_COP1
-  #undef STATUS_COP2
-  #undef STATUS_COP3
-
-  //COP1
+  //FPU
   #undef FDn
   #undef FSn
   #undef FTn

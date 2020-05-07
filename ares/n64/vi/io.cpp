@@ -113,6 +113,8 @@ auto VI::writeIO(u32 address, u32 data) -> void {
 
   if(address == 4) {
     //VI_V_CURRENT_LINE
+    mi.irq.vi.line = 0;
+    mi.pollInterrupts();
   }
 
   if(address == 5) {

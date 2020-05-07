@@ -24,7 +24,7 @@
   };
 
   //instruction.cpp
-  auto exception(uint type) -> void;
+  auto raiseException(uint, uint = 0, uint = 0) -> void;
   auto instruction() -> void;
   auto instructionDEBUG() -> void;
   auto instructionEXECUTE() -> void;
@@ -32,20 +32,18 @@
   auto instructionREGIMM() -> void;
   auto instructionCOP0() -> void;
   auto instructionCOP1() -> void;
-  auto instructionCOP2() -> void;
-  auto instructionCOP3() -> void;
 
-  //instructions-core.cpp
+  //instructions-cpu.cpp
   auto instructionADD() -> void;
   auto instructionADDI() -> void;
   auto instructionADDIU() -> void;
   auto instructionADDU() -> void;
   auto instructionAND() -> void;
   auto instructionANDI() -> void;
-  auto instructionB(bool take) -> void;
-  auto instructionBAL(bool take) -> void;
-  auto instructionBALL(bool take) -> void;
-  auto instructionBL(bool take) -> void;
+  auto instructionB(bool) -> void;
+  auto instructionBAL(bool) -> void;
+  auto instructionBALL(bool) -> void;
+  auto instructionBL(bool) -> void;
   auto instructionBREAK() -> void;
   auto instructionCACHE() -> void;
   auto instructionDADD() -> void;
@@ -76,8 +74,6 @@
   auto instructionLB() -> void;
   auto instructionLBU() -> void;
   auto instructionLD() -> void;
-  auto instructionLDC1() -> void;
-  auto instructionLDC2() -> void;
   auto instructionLDL() -> void;
   auto instructionLDR() -> void;
   auto instructionLH() -> void;
@@ -102,8 +98,6 @@
   auto instructionSC() -> void;
   auto instructionSD() -> void;
   auto instructionSCD() -> void;
-  auto instructionSDC1() -> void;
-  auto instructionSDC2() -> void;
   auto instructionSDL() -> void;
   auto instructionSDR() -> void;
   auto instructionSH() -> void;
@@ -138,9 +132,9 @@
   auto instructionXOR() -> void;
   auto instructionXORI() -> void;
 
-  //instructions-cop0.cpp
-  auto getCOP0u64(uint) -> u64;
-  auto setCOP0u64(uint, u64) -> void;
+  //instructions-scc.cpp
+  auto getControlRegister(uint5) -> u64;
+  auto setControlRegister(uint5, uint64) -> void;
 
   auto instructionBC0() -> void;
   auto instructionCFC0() -> void;
@@ -154,7 +148,7 @@
   auto instructionTLBWI() -> void;
   auto instructionTLBWR() -> void;
 
-  //instructions-cop1.cpp
+  //instructions-fpu.cpp
   auto instructionBC1() -> void;
   auto instructionCFC1() -> void;
   auto instructionCTC1() -> void;
@@ -188,25 +182,51 @@
   auto instructionFSUB() -> void;
   auto instructionFTRUNCL() -> void;
   auto instructionFTRUNCW() -> void;
+  auto instructionLDC1() -> void;
   auto instructionLWC1() -> void;
   auto instructionMFC1() -> void;
   auto instructionMTC1() -> void;
+  auto instructionSDC1() -> void;
   auto instructionSWC1() -> void;
+
+  struct Exception {
+    CPU& self;
+    auto interruptRCP() { self.raiseException(0, 0, 1 << 2); }
+    auto interruptDD() { self.raiseException(0, 0, 1 << 3); }
+    auto interruptCompare() { self.raiseException(0, 0, 1 << 7); }
+    auto tlbModification() { self.raiseException(1); }
+    auto tlbLoad() { self.raiseException(2); }
+    auto tlbStore() { self.raiseException(3); }
+    auto addressLoad() { self.raiseException(4); }
+    auto addressStore() { self.raiseException(5); }
+    auto busInstruction() { self.raiseException(6); }
+    auto busData() { self.raiseException(7); }
+    auto systemCall() { self.raiseException(8); }
+    auto breakpoint() { self.raiseException(9); }
+    auto reservedInstruction() { self.raiseException(10); }
+    auto coprocessor0() { self.raiseException(11, 0); }
+    auto coprocessor1() { self.raiseException(11, 1); }
+    auto coprocessor2() { self.raiseException(11, 2); }
+    auto coprocessor3() { self.raiseException(11, 3); }
+    auto arithmeticOverflow() { self.raiseException(12); }
+    auto trap() { self.raiseException(13); }
+    auto floatingPoint() { self.raiseException(15); }
+    auto watchAddress() { self.raiseException(23); }
+  } exception{*this};
+
+  enum Interrupt : uint {
+    Software0 = 0,
+    Software1 = 1,
+    RCP       = 2,
+    Cartridge = 3,
+    Reset     = 4,
+    ReadRDB   = 5,
+    WriteRDB  = 6,
+    Timer     = 7,
+  };
 
   //serialization.cpp
   auto serializeR4300(serializer&) -> void;
-
-  //exceptions
-  enum : uint {
-    Break,
-    Interrupt,
-    InvalidInstruction,
-    CoprocessorUnusable,
-    FloatingPointError,
-    Overflow,
-    Syscall,
-    Trap,
-  };
 
   struct Pipeline {
     u32 address;
@@ -232,52 +252,66 @@
     r64 r[32];
     r64 lo;
     r64 hi;
-    u64 pc;
+    u64 pc;   //program counter
 
     //internal
     maybe<u64> ip;
   } core;
 
-  struct COP0 {
-    enum Register : uint {
-      Index       =  0,  //programmable pointer into TLB array
-      Random      =  1,  //pseudorandom pointer into TLB array (read-only)
-      EntryLo0    =  2,  //low half of TLB entry for even virtual address (VPN)
-      EntryLo1    =  3,  //low half of TLB entry for odd virtual address (VPN)
-      Context     =  4,  //pointer to kernel virtual page table entry (PTE) in 32-bit mode
-      PageMask    =  5,  //page size specification
-      Wired       =  6,  //number of writed TLB entries
-      BadVAddr    =  8,  //last virtual address where an error occurred
-      Count       =  9,  //timer count
-      EntryHi     = 10,  //high half of TLB entry (including ASID)
-      Compare     = 11,  //timer compare value
-      Status      = 12,  //operation status setting
-      Cause       = 13,  //cause of last exception
-      EPC         = 14,  //exception program counter
-      PRID        = 15,  //processor revision identifier
-      Config      = 16,  //memory system mode setting
-      LLAddr      = 17,  //load linked instruction address display
-      WatchLo     = 18,  //memory reference trap address low bits
-      WatchHi     = 19,  //memory reference trap address high bits
-      XContext    = 20,  //pointer to kernel virtual page table entry (PTE) in 64-bit mode
-      ParityError = 26,  //(unused in VR4300:) cache parity bits
-      CacheError  = 27,  //(unused in VR4300:) cache error and status register
-      TagLo       = 28,  //cache tag register low
-      TagHi       = 29,  //cache tag register high
-      ErrorEPC    = 30,  //error exception program counter
-    };
+  //System Control Coprocessor
+  struct SCC {
+    //12: Status Register
+    struct Status {
+      uint1 interruptEnable = 1;
+      uint1 exceptionLevel = 0;
+      uint1 errorLevel = 0;
+      uint2 privilegeMode = 0;
+      uint1 userMode = 0;
+      uint1 supervisorMode = 0;
+      uint1 kernelMode = 0;
+      uint8 interruptMask = 0xff;
+      uint1 de = 0;  //unused
+      uint1 ce = 0;  //unused
+      uint1 condition = 0;
+      uint1 softReset = 0;
+      uint1 tlbShutdown = 0;
+      uint1 vectorLocation = 0;
+      uint1 instructionTracing = 0;
+      uint1 reverseEndian = 0;
+      uint1 floatingPointMode = 1;
+      uint1 lowPowerMode = 0;
+      struct Enable {
+        uint1 coprocessor0 = 1;
+        uint1 coprocessor1 = 1;
+        uint1 coprocessor2 = 0;
+        uint1 coprocessor3 = 0;
+      } enable;
+    } status;
 
-    r64 r[32];
+    //13: Cause Register
+    struct Cause {
+      uint5 exceptionCode = 0;
+      uint8 interruptPending = 0x00;
+      uint2 coprocessorError = 0;
+      uint1 branchDelay = 0;
+    } cause;
+
+    //14: Exception Program Counter
+    r64 epc;
+
+    //17: Load Linked Address
+    r64 ll;
+    uint1 llbit;
+
     u32 cr[32];
-    bool cf;
-    bool llbit;
-  } cop0;
+    bool cf = 0;
+  } scc;
 
-  struct COP1 {
+  struct FPU {
     r64 r[32];
     u32 cr[32];
     bool cf[8];
-  } cop1;
+  } fpu;
 
   static constexpr bool Endian = 1;  //0 = little, 1 = big
   static constexpr uint FlipLE = (Endian == 0 ? 7 : 0);

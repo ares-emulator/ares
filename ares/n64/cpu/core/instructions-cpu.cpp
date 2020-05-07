@@ -1,10 +1,10 @@
 auto CPU::instructionADD() -> void {
-//if(RS.u32 > ~RT.u32) return exception(Overflow);
+//if(RS.u32 > ~RT.u32) return exception.arithmeticOverflow();
   RD.u64 = i32(RS.u32 + RT.u32);
 }
 
 auto CPU::instructionADDI() -> void {
-//if(RS.i32 > ~IMM16i) return exception(Overflow);
+//if(RS.i32 > ~IMM16i) return exception.arithmeticOverflow();
   RT.u64 = i32(RS.u32 + IMMi16);
 }
 
@@ -45,7 +45,7 @@ auto CPU::instructionBL(bool take) -> void {
 }
 
 auto CPU::instructionBREAK() -> void {
-  exception(Break);
+  exception.breakpoint();
 }
 
 auto CPU::instructionCACHE() -> void {
@@ -53,12 +53,12 @@ auto CPU::instructionCACHE() -> void {
 }
 
 auto CPU::instructionDADD() -> void {
-//if(RS.u64 > ~RT.u64) return exception(Overflow);
+//if(RS.u64 > ~RT.u64) return exception.arithmeticOverflow();
   RD.u64 = RS.u64 + RT.u64;
 }
 
 auto CPU::instructionDADDI() -> void {
-//if(RS.i64 > ~IMM16i) return exception(Overflow);
+//if(RS.i64 > ~IMM16i) return exception.arithmeticOverflow();
   RT.u64 = RS.u64 + i64(IMMi16);
 }
 
@@ -161,7 +161,7 @@ auto CPU::instructionDSRLV() -> void {
 }
 
 auto CPU::instructionDSUB() -> void {
-//if(RS.u64 < RT.u64) return exception(Overflow);
+//if(RS.u64 < RT.u64) return exception.arithmeticOverflow();
   RD.u64 = RS.u64 - RT.u64;
 }
 
@@ -199,16 +199,6 @@ auto CPU::instructionLD() -> void {
   if(auto data = readDouble(RS.u32 + IMMi16)) RT.u64 = *data;
 }
 
-auto CPU::instructionLDC1() -> void {
-  if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  if(auto data = readDouble(RS.u32 + IMMi16)) cop1.r[RTn].u64 = *data;
-}
-
-auto CPU::instructionLDC2() -> void {
-  if(!STATUS_COP2) return exception(CoprocessorUnusable);
-  exception(InvalidInstruction);  //coprocessor 2 not present
-}
-
 auto CPU::instructionLDL() -> void {
   auto address = RS.u32 + IMMi16;
   auto shift = 8 * ((address ^ FlipLE) & 7);
@@ -238,16 +228,16 @@ auto CPU::instructionLHU() -> void {
 auto CPU::instructionLL() -> void {
   if(auto data = readWord(RS.u32 + IMMi16)) {
     RT.u64 = *data;
-    LL = RS.u32 + IMMi16;
-    LLBIT = 1;
+    scc.ll.u64 = RS.u32 + IMMi16;
+    scc.llbit = 1;
   }
 }
 
 auto CPU::instructionLLD() -> void {
   if(auto data = readDouble(RS.u32 + IMMi16)) {
     RT.u64 = *data;
-    LL = RS.u32 + IMMi16;
-    LLBIT = 1;
+    scc.ll.u64 = RS.u32 + IMMi16;
+    scc.llbit = 1;
   }
 }
 
@@ -327,7 +317,7 @@ auto CPU::instructionSB() -> void {
 
 auto CPU::instructionSC() -> void {
   u32 address = RS.u32 + IMMi16;
-  if(readWord(address) && RTn && LL == address) {
+  if(readWord(address) && RTn && scc.ll.u64 == address) {
     writeWord(address, RT.u32);
     RT.u64 = 1;
   } else {
@@ -337,7 +327,7 @@ auto CPU::instructionSC() -> void {
 
 auto CPU::instructionSCD() -> void {
   u32 address = RS.u32 + IMMi16;
-  if(readDouble(address) && RTn && LL == address) {
+  if(readDouble(address) && RTn && scc.ll.u64 == address) {
     writeDouble(address, RT.u64);
     RT.u64 = 1;
   } else {
@@ -347,16 +337,6 @@ auto CPU::instructionSCD() -> void {
 
 auto CPU::instructionSD() -> void {
   writeDouble(RS.u32 + IMMi16, RT.u64);
-}
-
-auto CPU::instructionSDC1() -> void {
-  if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  writeDouble(RS.u32 + IMMi16, cop1.r[RTn].u64);
-}
-
-auto CPU::instructionSDC2() -> void {
-  if(!STATUS_COP2) return exception(CoprocessorUnusable);
-  exception(InvalidInstruction);  //coprocessor 2 not present
 }
 
 auto CPU::instructionSDL() -> void {
@@ -422,7 +402,7 @@ auto CPU::instructionSRLV() -> void {
 }
 
 auto CPU::instructionSUB() -> void {
-//if(RS.u32 < RT.u32) return exception(Overflow);
+//if(RS.u32 < RT.u32) return exception.arithmeticOverflow();
   RD.u64 = i32(RS.u32 - RT.u32);
 }
 
@@ -453,55 +433,55 @@ auto CPU::instructionSWR() -> void {
 }
 
 auto CPU::instructionSYSCALL() -> void {
-  exception(Syscall);
+  exception.systemCall();
 }
 
 auto CPU::instructionTEQ() -> void {
-  if(RS.u64 == RT.u64) exception(Trap);
+  if(RS.u64 == RT.u64) exception.trap();
 }
 
 auto CPU::instructionTEQI() -> void {
-  if(RS.u64 == IMMu16) exception(Trap);
+  if(RS.u64 == IMMu16) exception.trap();
 }
 
 auto CPU::instructionTGE() -> void {
-  if(RS.i64 >= RT.i64) exception(Trap);
+  if(RS.i64 >= RT.i64) exception.trap();
 }
 
 auto CPU::instructionTGEI() -> void {
-  if(RS.i64 >= IMMi16) exception(Trap);
+  if(RS.i64 >= IMMi16) exception.trap();
 }
 
 auto CPU::instructionTGEIU() -> void {
-  if(RS.u64 >= IMMu16) exception(Trap);
+  if(RS.u64 >= IMMu16) exception.trap();
 }
 
 auto CPU::instructionTGEU() -> void {
-  if(RS.u64 >= RT.u64) exception(Trap);
+  if(RS.u64 >= RT.u64) exception.trap();
 }
 
 auto CPU::instructionTLT() -> void {
-  if(RS.i64 < RT.i64) exception(Trap);
+  if(RS.i64 < RT.i64) exception.trap();
 }
 
 auto CPU::instructionTLTI() -> void {
-  if(RS.i64 < IMMi16) exception(Trap);
+  if(RS.i64 < IMMi16) exception.trap();
 }
 
 auto CPU::instructionTLTIU() -> void {
-  if(RS.u64 < IMMu16) exception(Trap);
+  if(RS.u64 < IMMu16) exception.trap();
 }
 
 auto CPU::instructionTLTU() -> void {
-  if(RS.u64 < RT.u64) exception(Trap);
+  if(RS.u64 < RT.u64) exception.trap();
 }
 
 auto CPU::instructionTNE() -> void {
-  if(RS.u64 != RT.u64) exception(Trap);
+  if(RS.u64 != RT.u64) exception.trap();
 }
 
 auto CPU::instructionTNEI() -> void {
-  if(RS.u64 != IMMu16) exception(Trap);
+  if(RS.u64 != IMMu16) exception.trap();
 }
 
 auto CPU::instructionXOR() -> void {

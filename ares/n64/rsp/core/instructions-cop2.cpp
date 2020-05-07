@@ -261,7 +261,7 @@ auto RSP::instructionVMACF(bool U) -> void {
   carry = _mm_cmpeq_epi16(md, zero);
   carry = _mm_and_si128(carry, omask);
   hi    = _mm_sub_epi16(hi, carry);
-  omask = _mm_adds_epu16(ACCH, md);
+  omask = _mm_adds_epu16(ACCM, md);
   ACCM  = _mm_add_epi16(ACCM, md);
   omask = _mm_cmpeq_epi16(ACCM, omask);
   omask = _mm_cmpeq_epi16(omask, zero);
@@ -305,7 +305,7 @@ auto RSP::instructionVMADH() -> void {
   hi    = _mm_sub_epi16(hi, omask);
   ACCH  = _mm_add_epi16(ACCH, hi);
   lo    = _mm_unpacklo_epi16(ACCM, ACCH);
-  hi    = _mm_unpackhi_epi16(ACCH, ACCH);
+  hi    = _mm_unpackhi_epi16(ACCM, ACCH);
   VD    = _mm_packs_epi32(lo, hi);
 }
 
@@ -358,7 +358,7 @@ auto RSP::instructionVMADM() -> void {
 auto RSP::instructionVMADN() -> void {
   v128 lo, hi, sign, vs, omask, nhi, nmd, shi, smd, cmask, cval;
   lo    = _mm_mullo_epi16(VS, VT);
-  hi    = _mm_mulhi_epi16(VS, VT);
+  hi    = _mm_mulhi_epu16(VS, VT);
   sign  = _mm_srai_epi16(VT, 15);
   vs    = _mm_and_si128(VS, sign);
   hi    = _mm_sub_epi16(hi, vs);
@@ -433,7 +433,7 @@ auto RSP::instructionVMUDN() -> void {
   sign = _mm_srai_epi16(VT, 15);
   vs   = _mm_and_si128(VS, sign);
   ACCM = _mm_sub_epi16(ACCM, vs);
-  ACCM = _mm_srai_epi16(ACCM, 15);
+  ACCH = _mm_srai_epi16(ACCM, 15);
   VD   = ACCL;
 }
 
