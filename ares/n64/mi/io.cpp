@@ -38,7 +38,7 @@ auto MI::readIO(u32 address) -> u32 {
     data |= irq.dp.mask << 5;
   }
 
-  print("* ", registerNames(address, "MI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "MI_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
@@ -73,5 +73,5 @@ auto MI::writeIO(u32 address, u32 data) -> void {
     if(data >> 11 & 1) irq.dp.mask = 1;
   }
 
-  print("* ", registerNames(address, "MI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "MI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }

@@ -42,7 +42,6 @@ auto VI::readIO(u32 address) -> u32 {
     //VI_V_CURRENT_LINE
     data |= rdp.io.field    << 0;
     data |= rdp.io.vcounter << 1;
-    return data;
   }
 
   if(address == 5) {
@@ -85,7 +84,7 @@ auto VI::readIO(u32 address) -> u32 {
     data |= io.ysubpixel << 16;
   }
 
-  print("* ", registerNames(address, "VI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "VI_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
@@ -157,5 +156,5 @@ auto VI::writeIO(u32 address, u32 data) -> void {
     io.ysubpixel = uint12(data >> 16);
   }
 
-  print("* ", registerNames(address, "VI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "VI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }

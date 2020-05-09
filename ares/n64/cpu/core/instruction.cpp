@@ -1,11 +1,11 @@
 auto CPU::raiseException(uint code, uint interrupt, uint coprocessor) -> void {
+  if(scc.status.exceptionLevel) return;
+  scc.status.exceptionLevel = 1;
+
   scc.cause.exceptionCode = code;
   scc.cause.interruptPending = interrupt;
   scc.cause.coprocessorError = coprocessor;
   scc.cause.branchDelay = (bool)IP;
-
-  if(scc.status.exceptionLevel) return;
-  scc.status.exceptionLevel = 1;
 
   scc.epc.u64 = PC;
   if(IP) IP = nothing, scc.epc.u64 -= 4;
@@ -15,6 +15,10 @@ auto CPU::raiseException(uint code, uint interrupt, uint coprocessor) -> void {
 }
 
 auto CPU::instruction() -> void {
+  if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
+    if(scc.status.interruptEnable) raiseException(0, interrupts);
+  }
+
   pipeline.address = PC;
   pipeline.instruction = readWord(pipeline.address)(0);
   if(IP) {
@@ -23,20 +27,28 @@ auto CPU::instruction() -> void {
   } else {
     PC += 4;
   }
-//instructionDEBUG();
+  instructionDEBUG();
   instructionEXECUTE();
   GPR[0].u64 = 0;
+
+  if(--scc.random.value < scc.wired.value) {
+    scc.random.value = scc.wired.value;
+  }
 }
 
 auto CPU::instructionDEBUG() -> void {
   static uint counter = 0;
-  if(++counter >= 100) return;
+  if(++counter >= 50) return;
 //static bool dis = false;
 //if(pipeline.address==0x8000'01ac) dis=true;//{ GPR[Core::Register::T0] = GPR[Core::Register::A3]; }
 //if(pipeline.address==0x8000'01b8) { GPR[Core::Register::T0] = GPR[Core::Register::S0]; }
 //if(pipeline.address==0x8000'02ac) { GPR[Core::Register::T1].u64 |= 0x3000'0000; }
 //if(!dis) return;
-  print("\e[37m", hex(pipeline.address, 8L), "\e[0m  ", disassembleInstruction(), "\n");
+  print(
+    disassembler.hint(hex(pipeline.address, 8L)), "  ",
+  //disassembler.hint(hex(pipeline.instruction, 8L)), "  ",
+    disassembler.disassemble(pipeline.address, pipeline.instruction), "\n"
+  );
 }
 
 auto CPU::instructionEXECUTE() -> void {
@@ -218,8 +230,8 @@ auto CPU::instructionREGIMM() -> void {
 }
 
 auto CPU::instructionCOP0() -> void {
-  if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
-  switch(OP >> 21 & 31) {
+//if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
+  switch(OP >> 21 & 0x1f) {
   case 0x00: return instructionMFC0();
   case 0x01: return instructionDMFC0();
   case 0x02: return instructionCFC0();
@@ -234,13 +246,14 @@ auto CPU::instructionCOP0() -> void {
   case 0x02: return instructionTLBWI();
   case 0x06: return instructionTLBWR();
   case 0x08: return instructionTLBP();
+  case 0x18: return instructionERET();
   }
   exception.reservedInstruction();
 }
 
 auto CPU::instructionCOP1() -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  switch(OP >> 21 & 31) {
+//if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  switch(OP >> 21 & 0x1f) {
   case 0x00: return instructionMFC1();
   case 0x01: return instructionDMFC1();
   case 0x02: return instructionCFC1();
@@ -249,9 +262,10 @@ auto CPU::instructionCOP1() -> void {
   case 0x06: return instructionCTC1();
   case 0x08: return instructionBC1();
   }
-  if(!scc.status.floatingPointMode) {
-    OP &= ~0b0000'0000'0010'0001'0000'1000'0100'0000;
-  }
+  if(!(OP >> 25 & 1)) return exception.reservedInstruction();
+//if(!scc.status.floatingPointMode) {
+//  OP &= ~0b0000'0000'0010'0001'0000'1000'0100'0000;
+//}
   switch(OP & 0x3f) {
   case 0x00: return instructionFADD();
   case 0x01: return instructionFSUB();

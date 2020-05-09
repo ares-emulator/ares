@@ -197,7 +197,7 @@ auto RSP::instructionREGIMM() -> void {
 }
 
 auto RSP::instructionCOP0() -> void {
-  if(!STATUS_COP0) return exception(CoprocessorUnusable);
+//if(!STATUS_COP0) return exception(CoprocessorUnusable);
   switch(OP >> 21 & 31) {
   case 0x00: return instructionMFC0();
   case 0x01: break;  //DMFC0
@@ -211,12 +211,12 @@ auto RSP::instructionCOP0() -> void {
 }
 
 auto RSP::instructionCOP1() -> void {
-  if(!STATUS_COP1) return exception(CoprocessorUnusable);
+//if(!STATUS_COP1) return exception(CoprocessorUnusable);
   exception(InvalidInstruction);
 }
 
 auto RSP::instructionCOP2() -> void {
-  if(!STATUS_COP2) return exception(CoprocessorUnusable);
+//if(!STATUS_COP2) return exception(CoprocessorUnusable);
   switch(OP >> 21 & 31) {
   case 0x00: return instructionMFC2();
   case 0x01: break;  //DMFC2
@@ -297,6 +297,6 @@ auto RSP::instructionCOP2() -> void {
 }
 
 auto RSP::instructionCOP3() -> void {
-  if(!STATUS_COP3) return exception(CoprocessorUnusable);
+//if(!STATUS_COP3) return exception(CoprocessorUnusable);
   exception(InvalidInstruction);
 }

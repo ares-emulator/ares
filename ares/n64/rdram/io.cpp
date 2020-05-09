@@ -102,5 +102,5 @@ auto RDRAM::writeIO(u32 address, u32 data) -> void {
     //RDRAM_DEVICE_MANUF
   }
 
-  print("* ", registerNames(address, "RDRAM_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "RDRAM_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }

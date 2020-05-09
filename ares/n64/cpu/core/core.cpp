@@ -1,9 +1,10 @@
 #include "registers.hpp"
+#include "scc-registers.cpp"
 #include "memory.cpp"
 #include "instruction.cpp"
-#include "instructions-cpu.cpp"
-#include "instructions-scc.cpp"
-#include "instructions-fpu.cpp"
+#include "cpu-instructions.cpp"
+#include "scc-instructions.cpp"
+#include "fpu-instructions.cpp"
 #include "disassembler.cpp"
 #include "serialization.cpp"
 

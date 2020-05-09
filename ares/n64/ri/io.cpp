@@ -45,7 +45,7 @@ auto RI::readIO(u32 address) -> u32 {
     //RI_WERROR
   }
 
-  print("* ", registerNames(address, "RI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "RI_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
@@ -84,5 +84,5 @@ auto RI::writeIO(u32 address, u32 data) -> void {
     //RI_WERROR
   }
 
-  print("* ", registerNames(address, "RI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "RI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }
