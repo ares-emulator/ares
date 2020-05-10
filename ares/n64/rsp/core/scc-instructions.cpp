@@ -7,9 +7,9 @@ auto RSP::instructionCTC0() -> void {
 }
 
 auto RSP::instructionMFC0() -> void {
-  //todo
+  RT.u64 = i32(getControlRegister(RDn));
 }
 
 auto RSP::instructionMTC0() -> void {
-  //todo
+  setControlRegister(RDn, RT.u32);
 }

@@ -48,7 +48,6 @@ auto RSP::instructionLTV() -> void {
 }
 
 auto RSP::instructionLWC2() -> void {
-  if(!STATUS_COP2) return exception(CoprocessorUnusable);
   switch(OP >> 11 & 31) {
   case 0x04: return instructionLQV();
   case 0x0b: return instructionLTV();
@@ -80,7 +79,6 @@ auto RSP::instructionSTV() -> void {
 }
 
 auto RSP::instructionSWC2() -> void {
-  if(!STATUS_COP2) return exception(CoprocessorUnusable);
   switch(OP >> 11 & 31) {
   case 0x04: return instructionSQV();
   case 0x0a: return instructionSWV();

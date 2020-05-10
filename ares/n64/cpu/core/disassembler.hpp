@@ -1,8 +1,4 @@
 //{
-  //disassembler.cpp
-  auto disassembleInstruction() -> string;
-  auto disassembleContext() -> string;
-
   struct Disassembler {
     CPU& self;
     Disassembler(CPU& self) : self(self) {}
@@ -21,6 +17,7 @@
     auto SCC() -> vector<string>;
     auto FPU() -> vector<string>;
     auto immediate(i64 value, uint bits = 0) const -> string;
+    auto cpuRegister(uint index, i16 offset) const -> string;
     auto cpuRegister(uint index) const -> string;
     auto sccRegister(uint index) const -> string;
     auto fpuRegister(uint index) const -> string;

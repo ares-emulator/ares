@@ -19,8 +19,8 @@ auto RSP::instructionB(bool take) -> void {
 }
 
 auto RSP::instructionBREAK() -> void {
-  io.halt = 1;
-  io.interruptOnBreak =1;
+  scc.status.halted = 1;
+  if(scc.status.interruptOnBreak) mi.irq.sp.line = 1;
 }
 
 auto RSP::instructionCACHE() -> void {

@@ -27,18 +27,20 @@ auto CPU::instruction() -> void {
   } else {
     PC += 4;
   }
-  instructionDEBUG();
+  debugger.instruction();
+//instructionDEBUG();
   instructionEXECUTE();
   GPR[0].u64 = 0;
 
   if(--scc.random.value < scc.wired.value) {
-    scc.random.value = scc.wired.value;
+    scc.random.value = 31;
   }
 }
 
 auto CPU::instructionDEBUG() -> void {
   static uint counter = 0;
-  if(++counter >= 50) return;
+  if(++counter <  20000000) return;
+  if(++counter >= 20002500) return;
 //static bool dis = false;
 //if(pipeline.address==0x8000'01ac) dis=true;//{ GPR[Core::Register::T0] = GPR[Core::Register::A3]; }
 //if(pipeline.address==0x8000'01b8) { GPR[Core::Register::T0] = GPR[Core::Register::S0]; }

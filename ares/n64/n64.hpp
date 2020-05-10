@@ -18,6 +18,19 @@ namespace ares::Nintendo64 {
     i64 clock;
   };
 
+  template<uint lo, uint hi, typename T>
+  struct bitref {
+    static constexpr T mask = ~0ull >> 64 - (hi - lo + 1) << lo;
+    bitref(T& data) : data(data) {}
+    operator T() const { return (data & mask) >> lo; }
+    auto& operator=(T value) { return data = data & ~mask | value << lo & mask, *this; }
+    auto& operator=(const bitref& value) { return operator=((T)value); }
+    T& data;
+  };
+
+  template<uint lo, typename T> auto bit(T& value) { return bitref<lo, lo, T>(value); }
+  template<uint lo, uint hi, typename T> auto bit(T& value) { return bitref<lo, hi, T>(value); }
+
   #include <n64/memory/memory.hpp>
   #include <n64/system/system.hpp>
   #include <n64/cartridge/cartridge.hpp>

@@ -37,7 +37,7 @@ auto RDP::unload() -> void {
 auto RDP::main() -> void {
   io.vcounter++;
 
-  if(io.vcounter == 240) {
+  if(io.vcounter == 256) {
     mi.irq.vi.line = 1;
     mi.pollInterrupts();
   }

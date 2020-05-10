@@ -4,14 +4,18 @@ namespace ares::Nintendo64 {
 
 CPU cpu;
 #include "core/core.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Component>("CPU");
+
+  debugger.load(node);
 }
 
 auto CPU::unload() -> void {
   node = {};
+  debugger = {};
 }
 
 auto CPU::main() -> void {
@@ -20,10 +24,18 @@ auto CPU::main() -> void {
 }
 
 auto CPU::step(uint clocks) -> void {
+   ai.clock -= clocks;
   rsp.clock -= clocks;
   rdp.clock -= clocks;
+  while( ai.clock < 0) ai.main();
   while(rsp.clock < 0) rsp.main();
   while(rdp.clock < 0) rdp.main();
+
+  while(clocks--) {
+    if(++scc.count == scc.compare) {
+      scc.cause.interruptPending.bit(Interrupt::Timer) = 1;
+    }
+  }
 }
 
 auto CPU::power() -> void {

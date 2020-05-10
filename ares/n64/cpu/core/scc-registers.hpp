@@ -1,4 +1,8 @@
 //{
+  //scc-registers.cpp
+  auto getControlRegister(uint5) -> u64;
+  auto setControlRegister(uint5, uint64) -> void;
+
   //System Control Coprocessor
   struct SCC {
     //0

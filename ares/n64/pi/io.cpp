@@ -1,8 +1,8 @@
 static const vector<string> registerNames = {
-  "PI_DRAM_ADDR",
-  "PI_CART_ADDR",
-  "PI_RD_LEN",
-  "PI_WR_LEN",
+  "PI_DRAM_ADDRESS",
+  "PI_PBUS_ADDRESS",
+  "PI_READ_LENGTH",
+  "PI_WRITE_LENGTH",
   "PI_STATUS",
   "PI_BSD_DOM1_LAT",
   "PI_BSD_DOM1_PWD",
@@ -16,30 +16,34 @@ static const vector<string> registerNames = {
 
 auto PI::readIO(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
-  u32 data = 0;
+  uint32 data;
 
   if(address == 0) {
-    //PI_DRAM_ADDR
+    //PI_DRAM_ADDRESS
     data = io.dramAddress;
   }
 
   if(address == 1) {
-    //PI_CART_ADDR
-    data = io.cartAddress;
+    //PI_CART_ADDRESS
+    data = io.pbusAddress;
   }
 
   if(address == 2) {
-    //PI_RD_LEN
+    //PI_READ_LENGTH
     data = io.readLength;
   }
 
   if(address == 3) {
-    //PI_WR_LEN
+    //PI_WRITE_LENGTH
     data = io.writeLength;
   }
 
   if(address == 4) {
     //PI_STATUS
+    data.bit(0) = io.dmaBusy;
+    data.bit(1) = io.ioBusy;
+    data.bit(2) = io.error;
+    data.bit(3) = io.interrupt;
   }
 
   if(address == 5) {
@@ -78,39 +82,51 @@ auto PI::readIO(u32 address) -> u32 {
   return data;
 }
 
-auto PI::writeIO(u32 address, u32 data) -> void {
+auto PI::writeIO(u32 address, uint32 data) -> void {
   address = (address & 0xfffff) >> 2;
 
+  //only PI_STATUS can be written while PI is busy
+  if(address != 4 && (io.dmaBusy || io.ioBusy)) {
+    io.error = 1;
+    return;
+  }
+
   if(address == 0) {
-    //PI_DRAM_ADDR
-    io.dramAddress = uint24(data);
+    //PI_DRAM_ADDRESS
+    io.dramAddress = uint24(data) & ~7;
   }
 
   if(address == 1) {
-    //PI_CART_ADDR
-    io.cartAddress = uint29(data);
+    //PI_PBUS_ADDRESS
+    io.pbusAddress = uint29(data) & ~1;
   }
 
   if(address == 2) {
-    //PI_RD_LEN
-    io.readLength = uint24(data) + 1;
-    for(u32 address = 0; address < io.readLength; address += 4) {
-      auto data = bus.readWord(io.dramAddress + address);
-      bus.writeWord(io.cartAddress + address, data);
+    //PI_READ_LENGTH
+    io.readLength = (uint24(data) | 7) + 1;
+    for(u32 address = 0; address < io.readLength; address += 8) {
+      u64 data = rdram.ram.readDouble(io.dramAddress + address);
+      bus.writeDouble(io.pbusAddress + address, data);
     }
+    io.interrupt = 1;
+    mi.irq.pi.line = 1;
   }
 
   if(address == 3) {
-    //PI_WR_LEN
-    io.writeLength = uint24(data) + 1;
-    for(u32 address = 0; address < io.writeLength; address += 4) {
-      auto data = bus.readWord(io.cartAddress + address);
-      bus.writeWord(io.dramAddress + address, data);
+    //PI_WRITE_LENGTH
+    io.writeLength = (uint24(data) | 7) + 1;
+    for(u32 address = 0; address < io.writeLength; address += 8) {
+      u64 data = bus.readDouble(io.pbusAddress + address);
+      rdram.ram.writeDouble(io.dramAddress + address, data);
     }
+    io.interrupt = 1;
+    mi.irq.pi.line = 1;
   }
 
   if(address == 4) {
-    //PI_STATUS (read-only)
+    //PI_STATUS
+    if(data.bit(0)) io.error = 0;
+    if(data.bit(1)) io.interrupt = 0, mi.irq.pi.line = 0;
   }
 
   if(address == 5) {

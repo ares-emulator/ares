@@ -1,6 +1,3 @@
-auto RSP::exception(uint type) -> void {
-}
-
 auto RSP::instruction() -> void {
   pipeline.address = PC;
   pipeline.instruction = imem.readWord(pipeline.address);
@@ -37,9 +34,9 @@ auto RSP::instructionEXECUTE() -> void {
   case 0x0e: return instructionXORI();
   case 0x0f: return instructionLUI();
   case 0x10: return instructionCOP0();
-  case 0x11: return instructionCOP1();
+  case 0x11: break;  //COP1
   case 0x12: return instructionCOP2();
-  case 0x13: return instructionCOP3();
+  case 0x13: break;  //COP3
   case 0x14: break;  //BEQL
   case 0x15: break;  //BNEL
   case 0x16: break;  //BLEZL
@@ -85,7 +82,6 @@ auto RSP::instructionEXECUTE() -> void {
   case 0x3e: break;  //SDC2
   case 0x3f: break;  //SD
   }
-  exception(InvalidInstruction);
 }
 
 auto RSP::instructionSPECIAL() -> void {
@@ -155,7 +151,6 @@ auto RSP::instructionSPECIAL() -> void {
   case 0x3e: break;  //DSRL32
   case 0x3f: break;  //DSRA32
   }
-  exception(InvalidInstruction);
 }
 
 auto RSP::instructionREGIMM() -> void {
@@ -193,11 +188,9 @@ auto RSP::instructionREGIMM() -> void {
   case 0x1e: break;
   case 0x1f: break;
   }
-  exception(InvalidInstruction);
 }
 
 auto RSP::instructionCOP0() -> void {
-//if(!STATUS_COP0) return exception(CoprocessorUnusable);
   switch(OP >> 21 & 31) {
   case 0x00: return instructionMFC0();
   case 0x01: break;  //DMFC0
@@ -207,16 +200,9 @@ auto RSP::instructionCOP0() -> void {
   case 0x06: return instructionCTC0();
   case 0x08: break;  //BC0
   }
-  exception(InvalidInstruction);
-}
-
-auto RSP::instructionCOP1() -> void {
-//if(!STATUS_COP1) return exception(CoprocessorUnusable);
-  exception(InvalidInstruction);
 }
 
 auto RSP::instructionCOP2() -> void {
-//if(!STATUS_COP2) return exception(CoprocessorUnusable);
   switch(OP >> 21 & 31) {
   case 0x00: return instructionMFC2();
   case 0x01: break;  //DMFC2
@@ -226,7 +212,7 @@ auto RSP::instructionCOP2() -> void {
   case 0x06: return instructionCTC2();
   case 0x08: break;  //BC2
   }
-  if(!(OP >> 25 & 1)) return exception(InvalidInstruction);
+  if(!(OP >> 25 & 1)) return;
   switch(OP & 0x3f) {
   case 0x00: return instructionVMULF(0);
   case 0x01: return instructionVMULF(1);
@@ -293,10 +279,4 @@ auto RSP::instructionCOP2() -> void {
   case 0x3e: break;
   case 0x3f: break;
   }
-  exception(InvalidInstruction);
-}
-
-auto RSP::instructionCOP3() -> void {
-//if(!STATUS_COP3) return exception(CoprocessorUnusable);
-  exception(InvalidInstruction);
 }

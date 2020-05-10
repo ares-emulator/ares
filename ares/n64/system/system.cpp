@@ -19,6 +19,8 @@ auto System::load(Node::Object& root) -> void {
   node = Node::System::create(interface->name());
   root = node;
 
+  ai.load(node);
+  pi.load(node);
   rdram.load(node);
   cpu.load(node);
   rdp.load(node);
@@ -33,6 +35,8 @@ auto System::load(Node::Object& root) -> void {
 auto System::unload() -> void {
   if(!node) return;
   save();
+  ai.unload();
+  pi.unload();
   rdram.unload();
   cpu.unload();
   rdp.unload();

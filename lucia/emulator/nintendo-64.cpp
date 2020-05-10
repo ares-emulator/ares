@@ -46,6 +46,22 @@ auto Nintendo64::open(ares::Node::Object node, string name, vfs::file::mode mode
 auto Nintendo64::input(ares::Node::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
+  if(name == "X-axis" );
+  if(name == "Y-axis" );
+  if(name == "Up"     ) mapping = virtualPad.up;
+  if(name == "Down"   ) mapping = virtualPad.down;
+  if(name == "Left"   ) mapping = virtualPad.left;
+  if(name == "Right"  ) mapping = virtualPad.right;
+  if(name == "B"      ) mapping = virtualPad.a;
+  if(name == "A"      ) mapping = virtualPad.b;
+  if(name == "C-Up"   );
+  if(name == "C-Down" );
+  if(name == "C-Left" );
+  if(name == "C-Right");
+  if(name == "L"      ) mapping = virtualPad.l;
+  if(name == "R"      ) mapping = virtualPad.r;
+  if(name == "Z"      ) mapping = virtualPad.select;
+  if(name == "Start"  ) mapping = virtualPad.start;
 
   if(mapping) {
     auto value = mapping->value();
