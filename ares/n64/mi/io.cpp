@@ -71,6 +71,7 @@ auto MI::writeIO(u32 address, u32 data) -> void {
     if(data >>  9 & 1) irq.pi.mask = 1;
     if(data >> 10 & 1) irq.dp.mask = 0;
     if(data >> 11 & 1) irq.dp.mask = 1;
+    poll();
   }
 
 //print("* ", registerNames(address, "MI_UNKNOWN"), " <= ", hex(data, 8L), "\n");

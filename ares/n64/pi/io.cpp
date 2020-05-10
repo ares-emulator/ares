@@ -109,7 +109,7 @@ auto PI::writeIO(u32 address, uint32 data) -> void {
       bus.writeDouble(io.pbusAddress + address, data);
     }
     io.interrupt = 1;
-    mi.irq.pi.line = 1;
+    mi.raise(MI::IRQ::PI);
   }
 
   if(address == 3) {
@@ -120,13 +120,13 @@ auto PI::writeIO(u32 address, uint32 data) -> void {
       rdram.ram.writeDouble(io.dramAddress + address, data);
     }
     io.interrupt = 1;
-    mi.irq.pi.line = 1;
+    mi.raise(MI::IRQ::PI);
   }
 
   if(address == 4) {
     //PI_STATUS
     if(data.bit(0)) io.error = 0;
-    if(data.bit(1)) io.interrupt = 0, mi.irq.pi.line = 0;
+    if(data.bit(1)) io.interrupt = 0, mi.lower(MI::IRQ::PI);
   }
 
   if(address == 5) {

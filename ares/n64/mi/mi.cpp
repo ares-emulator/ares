@@ -6,7 +6,31 @@ MI mi;
 #include "io.cpp"
 #include "serialization.cpp"
 
-auto MI::pollInterrupts() -> void {
+auto MI::raise(IRQ source) -> void {
+  switch(source) {
+  case IRQ::SP: irq.sp.line = 1; break;
+  case IRQ::SI: irq.si.line = 1; break;
+  case IRQ::AI: irq.ai.line = 1; break;
+  case IRQ::VI: irq.vi.line = 1; break;
+  case IRQ::PI: irq.pi.line = 1; break;
+  case IRQ::DP: irq.dp.line = 1; break;
+  }
+  poll();
+}
+
+auto MI::lower(IRQ source) -> void {
+  switch(source) {
+  case IRQ::SP: irq.sp.line = 0; break;
+  case IRQ::SI: irq.si.line = 0; break;
+  case IRQ::AI: irq.ai.line = 0; break;
+  case IRQ::VI: irq.vi.line = 0; break;
+  case IRQ::PI: irq.pi.line = 0; break;
+  case IRQ::DP: irq.dp.line = 0; break;
+  }
+  poll();
+}
+
+auto MI::poll() -> void {
   bool line = 0;
   line |= irq.sp.line & irq.sp.mask;
   line |= irq.si.line & irq.si.mask;

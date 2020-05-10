@@ -23,7 +23,7 @@ auto CPU::Disassembler::EXECUTE() -> vector<string> {
   auto ALU = [&](string_view name) -> vector<string> {
     string target = rt();
     string source = rs();
-    string constant = immediate(abs(i16(instruction)));
+    string constant = immediate(u16(instruction));
     return {name, target, source, constant};
   };
 

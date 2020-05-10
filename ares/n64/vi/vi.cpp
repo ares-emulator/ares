@@ -7,6 +7,7 @@ VI vi;
 #include "serialization.cpp"
 
 auto VI::power() -> void {
+  io = {};
 }
 
 }

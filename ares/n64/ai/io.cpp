@@ -31,7 +31,7 @@ auto AI::readIO(u32 address) -> u32 {
   if(address == 3) {
     //AI_STATUS
     bit< 0>(data) = io.fifoPending == 2;
-    bit<30>(data) = io.dmaBusy;
+    bit<30>(data) = io.fifoPending >= 1 && io.dmaEnable;
     bit<31>(data) = io.fifoPending == 2;
   }
 
@@ -64,7 +64,7 @@ auto AI::writeIO(u32 address, u32 data) -> void {
     //AI_LENGTH
     if(io.fifoPending < 2) {
       auto& fifo = this->fifo[io.fifoWriting];
-      fifo.length = bit<0,17>(data) & ~7;
+      fifo.length = (bit<0,17>(data) | 7) + 1;
       fifo.offset = 0;
       for(u32 offset = 0; offset < fifo.length; offset += 4) {
         u32 data = rdram.ram.readWord(fifo.address + offset);
@@ -83,7 +83,7 @@ auto AI::writeIO(u32 address, u32 data) -> void {
 
   if(address == 3) {
     //AI_STATUS
-    mi.irq.ai.line = 0;
+    mi.lower(MI::IRQ::AI);
   }
 
   if(address == 4) {

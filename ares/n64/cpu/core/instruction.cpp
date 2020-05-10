@@ -1,9 +1,8 @@
 auto CPU::raiseException(uint code, uint interrupt, uint coprocessor) -> void {
-  if(scc.status.exceptionLevel) return;
   scc.status.exceptionLevel = 1;
 
   scc.cause.exceptionCode = code;
-  scc.cause.interruptPending = interrupt;
+  scc.cause.interruptPending |= interrupt;
   scc.cause.coprocessorError = coprocessor;
   scc.cause.branchDelay = (bool)IP;
 
@@ -16,7 +15,9 @@ auto CPU::raiseException(uint code, uint interrupt, uint coprocessor) -> void {
 
 auto CPU::instruction() -> void {
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
-    if(scc.status.interruptEnable) raiseException(0, interrupts);
+    if(scc.status.interruptEnable && !scc.status.exceptionLevel) {
+      raiseException(0, interrupts);
+    }
   }
 
   pipeline.address = PC;

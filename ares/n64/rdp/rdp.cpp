@@ -35,14 +35,11 @@ auto RDP::unload() -> void {
 }
 
 auto RDP::main() -> void {
-  io.vcounter++;
-
-  if(io.vcounter == 256) {
-    mi.irq.vi.line = 1;
-    mi.pollInterrupts();
+  if(io.vcounter == vi.io.coincidence >> 1) {
+    mi.raise(MI::IRQ::VI);
   }
 
-  if(io.vcounter == 262) {
+  if(++io.vcounter == 262) {
     io.vcounter = 0;
     refreshed = true;
   }

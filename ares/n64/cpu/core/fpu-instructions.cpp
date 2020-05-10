@@ -275,12 +275,12 @@ auto CPU::instructionFTRUNCW() -> void {
 }
 
 auto CPU::instructionLDC1() -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+//if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   if(auto data = readDouble(RS.u32 + IMMi16)) fpu.r[RTn].u64 = *data;
 }
 
 auto CPU::instructionLWC1() -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+//if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   if(auto data = readWord(RS.u32 + IMMi16)) fpu.r[RTn].u64 = *data;
 }
 
@@ -293,11 +293,11 @@ auto CPU::instructionMTC1() -> void {
 }
 
 auto CPU::instructionSDC1() -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+//if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   writeDouble(RS.u32 + IMMi16, fpu.r[RTn].u64);
 }
 
 auto CPU::instructionSWC1() -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+//if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   writeWord(RS.u32 + IMMi16, fpu.r[RTn].u32);
 }

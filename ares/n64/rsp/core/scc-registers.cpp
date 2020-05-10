@@ -114,8 +114,8 @@ auto RSP::setControlRegister(uint5 index, uint64 data) -> void {
     if(data.bit( 0)) scc.status.halted = 0;
     if(data.bit( 1)) scc.status.halted = 1;
     if(data.bit( 2)) scc.status.broken = 0;
-    if(data.bit( 3)) mi.irq.sp.line = 0;
-    if(data.bit( 4)) mi.irq.sp.line = 1;
+    if(data.bit( 3)) mi.lower(MI::IRQ::SP);
+    if(data.bit( 4)) mi.raise(MI::IRQ::SP);
     if(data.bit( 5)) scc.status.singleStep = 0;
     if(data.bit( 6)) scc.status.singleStep = 1;
     if(data.bit( 7)) scc.status.interruptOnBreak = 0;

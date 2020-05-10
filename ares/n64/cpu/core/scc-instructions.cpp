@@ -22,7 +22,7 @@ auto CPU::instructionDMTC0() -> void {
 }
 
 auto CPU::instructionERET() -> void {
-  IP = scc.epc.u64;
+  PC = scc.epc.u64;
   if(scc.status.errorLevel) {
     scc.status.errorLevel = 0;
   } else {

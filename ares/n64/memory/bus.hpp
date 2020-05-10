@@ -1,19 +1,28 @@
 inline auto Bus::readByte(u32 address) -> u8 {
+  static auto transform = [&](u32 data) -> u8 {
+    switch(address & 3) {
+    case 0: return data >> 24;
+    case 1: return data >> 16;
+    case 2: return data >>  8;
+    case 3: return data >>  0;
+    } unreachable;
+  };
+
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return rdram.ram.readByte(address);
   if(address <= 0x03ef'ffff) return 0;
-  if(address <= 0x03ff'ffff) return rdram.readIO(address);
+  if(address <= 0x03ff'ffff) return transform(rdram.readIO(address));
   if(address <= 0x0400'0fff) return rsp.dmem.readByte(address);
   if(address <= 0x0400'1fff) return rsp.imem.readByte(address);
-  if(address <= 0x040f'ffff) return rsp.readIO(address);
-  if(address <= 0x041f'ffff) return rdp.readCommand(address);
-  if(address <= 0x042f'ffff) return rdp.readSpan(address);
-  if(address <= 0x043f'ffff) return mi.readIO(address);
-  if(address <= 0x044f'ffff) return vi.readIO(address);
-  if(address <= 0x045f'ffff) return ai.readIO(address);
-  if(address <= 0x046f'ffff) return pi.readIO(address);
-  if(address <= 0x047f'ffff) return ri.readIO(address);
-  if(address <= 0x048f'ffff) return si.readIO(address);
+  if(address <= 0x040f'ffff) return transform(rsp.readIO(address));
+  if(address <= 0x041f'ffff) return transform(rdp.readCommand(address));
+  if(address <= 0x042f'ffff) return transform(rdp.readSpan(address));
+  if(address <= 0x043f'ffff) return transform(mi.readIO(address));
+  if(address <= 0x044f'ffff) return transform(vi.readIO(address));
+  if(address <= 0x045f'ffff) return transform(ai.readIO(address));
+  if(address <= 0x046f'ffff) return transform(pi.readIO(address));
+  if(address <= 0x047f'ffff) return transform(ri.readIO(address));
+  if(address <= 0x048f'ffff) return transform(si.readIO(address));
   if(address <= 0x0fff'ffff) return 0;
   if(address <= 0x1fbf'ffff) return cartridge.rom.readByte(address);
   if(address <= 0x1fc0'07bf) return pi.rom.readByte(address);
@@ -22,21 +31,28 @@ inline auto Bus::readByte(u32 address) -> u8 {
 }
 
 inline auto Bus::readHalf(u32 address) -> u16 {
+  static auto transform = [&](u32 data) -> u16 {
+    switch(address & 2) {
+    case 0: return data >> 16;
+    case 2: return data >>  0;
+    } unreachable;
+  };
+
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return rdram.ram.readHalf(address);
   if(address <= 0x03ef'ffff) return 0;
-  if(address <= 0x03ff'ffff) return rdram.readIO(address);
+  if(address <= 0x03ff'ffff) return transform(rdram.readIO(address));
   if(address <= 0x0400'0fff) return rsp.dmem.readHalf(address);
   if(address <= 0x0400'1fff) return rsp.imem.readHalf(address);
-  if(address <= 0x040f'ffff) return rsp.readIO(address);
-  if(address <= 0x041f'ffff) return rdp.readCommand(address);
-  if(address <= 0x042f'ffff) return rdp.readSpan(address);
-  if(address <= 0x043f'ffff) return mi.readIO(address);
-  if(address <= 0x044f'ffff) return vi.readIO(address);
-  if(address <= 0x045f'ffff) return ai.readIO(address);
-  if(address <= 0x046f'ffff) return pi.readIO(address);
-  if(address <= 0x047f'ffff) return ri.readIO(address);
-  if(address <= 0x048f'ffff) return si.readIO(address);
+  if(address <= 0x040f'ffff) return transform(rsp.readIO(address));
+  if(address <= 0x041f'ffff) return transform(rdp.readCommand(address));
+  if(address <= 0x042f'ffff) return transform(rdp.readSpan(address));
+  if(address <= 0x043f'ffff) return transform(mi.readIO(address));
+  if(address <= 0x044f'ffff) return transform(vi.readIO(address));
+  if(address <= 0x045f'ffff) return transform(ai.readIO(address));
+  if(address <= 0x046f'ffff) return transform(pi.readIO(address));
+  if(address <= 0x047f'ffff) return transform(ri.readIO(address));
+  if(address <= 0x048f'ffff) return transform(si.readIO(address));
   if(address <= 0x0fff'ffff) return 0;
   if(address <= 0x1fbf'ffff) return cartridge.rom.readHalf(address);
   if(address <= 0x1fc0'07bf) return pi.rom.readHalf(address);
@@ -91,21 +107,30 @@ inline auto Bus::readDouble(u32 address) -> u64 {
 }
 
 inline auto Bus::writeByte(u32 address, u8 data) -> void {
+  static auto transform = [&](u32 data) -> u32 {
+    switch(address & 3) {
+    case 0: return data << 24;
+    case 1: return data << 16;
+    case 2: return data <<  8;
+    case 3: return data <<  0;
+    } unreachable;
+  };
+
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return rdram.ram.writeByte(address, data);
   if(address <= 0x03ef'ffff) return;
-  if(address <= 0x03ff'ffff) return rdram.writeIO(address, data);
+  if(address <= 0x03ff'ffff) return rdram.writeIO(address, transform(data));
   if(address <= 0x0400'0fff) return rsp.dmem.writeByte(address, data);
   if(address <= 0x0400'1fff) return rsp.imem.writeByte(address, data);
-  if(address <= 0x040f'ffff) return rsp.writeIO(address, data);
-  if(address <= 0x041f'ffff) return rdp.writeCommand(address, data);
-  if(address <= 0x042f'ffff) return rdp.writeSpan(address, data);
-  if(address <= 0x043f'ffff) return mi.writeIO(address, data);
-  if(address <= 0x044f'ffff) return vi.writeIO(address, data);
-  if(address <= 0x045f'ffff) return ai.writeIO(address, data);
-  if(address <= 0x046f'ffff) return pi.writeIO(address, data);
-  if(address <= 0x047f'ffff) return ri.writeIO(address, data);
-  if(address <= 0x048f'ffff) return si.writeIO(address, data);
+  if(address <= 0x040f'ffff) return rsp.writeIO(address, transform(data));
+  if(address <= 0x041f'ffff) return rdp.writeCommand(address, transform(data));
+  if(address <= 0x042f'ffff) return rdp.writeSpan(address, transform(data));
+  if(address <= 0x043f'ffff) return mi.writeIO(address, transform(data));
+  if(address <= 0x044f'ffff) return vi.writeIO(address, transform(data));
+  if(address <= 0x045f'ffff) return ai.writeIO(address, transform(data));
+  if(address <= 0x046f'ffff) return pi.writeIO(address, transform(data));
+  if(address <= 0x047f'ffff) return ri.writeIO(address, transform(data));
+  if(address <= 0x048f'ffff) return si.writeIO(address, transform(data));
   if(address <= 0x0fff'ffff) return;
   if(address <= 0x1fbf'ffff) return;
   if(address <= 0x1fc0'07bf) return;
@@ -114,21 +139,28 @@ inline auto Bus::writeByte(u32 address, u8 data) -> void {
 }
 
 inline auto Bus::writeHalf(u32 address, u16 data) -> void {
+  static auto transform = [&](u32 data) -> u32 {
+    switch(address & 2) {
+    case 0: return data << 16;
+    case 2: return data <<  0;
+    } unreachable;
+  };
+
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return rdram.ram.writeHalf(address, data);
   if(address <= 0x03ef'ffff) return;
-  if(address <= 0x03ff'ffff) return rdram.writeIO(address, data);
+  if(address <= 0x03ff'ffff) return rdram.writeIO(address, transform(data));
   if(address <= 0x0400'0fff) return rsp.dmem.writeHalf(address, data);
   if(address <= 0x0400'1fff) return rsp.imem.writeHalf(address, data);
-  if(address <= 0x040f'ffff) return rsp.writeIO(address, data);
-  if(address <= 0x041f'ffff) return rdp.writeCommand(address, data);
-  if(address <= 0x042f'ffff) return rdp.writeSpan(address, data);
-  if(address <= 0x043f'ffff) return mi.writeIO(address, data);
-  if(address <= 0x044f'ffff) return vi.writeIO(address, data);
-  if(address <= 0x045f'ffff) return ai.writeIO(address, data);
-  if(address <= 0x046f'ffff) return pi.writeIO(address, data);
-  if(address <= 0x047f'ffff) return ri.writeIO(address, data);
-  if(address <= 0x048f'ffff) return si.writeIO(address, data);
+  if(address <= 0x040f'ffff) return rsp.writeIO(address, transform(data));
+  if(address <= 0x041f'ffff) return rdp.writeCommand(address, transform(data));
+  if(address <= 0x042f'ffff) return rdp.writeSpan(address, transform(data));
+  if(address <= 0x043f'ffff) return mi.writeIO(address, transform(data));
+  if(address <= 0x044f'ffff) return vi.writeIO(address, transform(data));
+  if(address <= 0x045f'ffff) return ai.writeIO(address, transform(data));
+  if(address <= 0x046f'ffff) return pi.writeIO(address, transform(data));
+  if(address <= 0x047f'ffff) return ri.writeIO(address, transform(data));
+  if(address <= 0x048f'ffff) return si.writeIO(address, transform(data));
   if(address <= 0x0fff'ffff) return;
   if(address <= 0x1fbf'ffff) return;
   if(address <= 0x1fc0'07bf) return;

@@ -1,8 +1,12 @@
 //MIPS Interface
 
 struct MI {
+  enum class IRQ : uint { SP, SI, AI, VI, PI, DP };
+
   //mi.cpp
-  auto pollInterrupts() -> void;
+  auto raise(IRQ) -> void;
+  auto lower(IRQ) -> void;
+  auto poll() -> void;
   auto power() -> void;
 
   //io.cpp
@@ -12,12 +16,13 @@ struct MI {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+private:
   struct Interrupt {
     bool line;
     bool mask;
   };
 
-  struct IRQ {
+  struct IRQs {
     Interrupt sp;
     Interrupt si;
     Interrupt ai;

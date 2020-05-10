@@ -15,6 +15,7 @@ struct VI {
      uint2 colorDepth;
     uint32 dramAddress;
     uint12 width;
+    uint10 coincidence = 256;
     uint12 xscale;
     uint12 xsubpixel;
     uint12 yscale;

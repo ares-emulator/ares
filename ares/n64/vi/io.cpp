@@ -36,6 +36,7 @@ auto VI::readIO(u32 address) -> u32 {
 
   if(address == 3) {
     //VI_V_INTR
+    data |= io.coincidence << 0;
   }
 
   if(address == 4) {
@@ -108,12 +109,12 @@ auto VI::writeIO(u32 address, u32 data) -> void {
 
   if(address == 3) {
     //VI_V_INTR
+    io.coincidence = uint10(data >> 0);
   }
 
   if(address == 4) {
     //VI_V_CURRENT_LINE
-    mi.irq.vi.line = 0;
-    mi.pollInterrupts();
+    mi.lower(MI::IRQ::VI);
   }
 
   if(address == 5) {

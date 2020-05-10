@@ -37,7 +37,7 @@ auto AI::sample() -> void {
   if(fifo.length == 0) {
     io.fifoPending--;
     io.fifoPlaying ^= 1;
-    mi.irq.ai.line = 1;
+    mi.raise(MI::IRQ::AI);
   }
 }
 

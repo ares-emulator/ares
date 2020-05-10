@@ -75,7 +75,7 @@ auto SI::writeIO(u32 address, uint32 data) -> void {
       rdram.ram.writeDouble(io.dramAddress + offset, data);
     }
     io.interrupt = 1;
-    mi.irq.si.line = 1;
+    mi.raise(MI::IRQ::SI);
   }
 
   if(address == 2) {
@@ -94,7 +94,7 @@ auto SI::writeIO(u32 address, uint32 data) -> void {
       bus.writeDouble(offset, data);
     }
     io.interrupt = 1;
-    mi.irq.si.line = 1;
+    mi.raise(MI::IRQ::SI);
   }
 
   if(address == 5) {
@@ -104,7 +104,7 @@ auto SI::writeIO(u32 address, uint32 data) -> void {
   if(address == 6) {
     //SI_STATUS
     io.interrupt = 0;
-    mi.irq.si.line = 0;
+    mi.lower(MI::IRQ::SI);
   }
 
   print("* ", registerNames(address, "SI_UNKNOWN"), " <= ", hex(data, 8L), "\n");

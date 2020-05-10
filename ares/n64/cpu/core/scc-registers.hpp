@@ -61,14 +61,14 @@
 
     //12
     struct Status {
-      uint1 interruptEnable = 1;
+      uint1 interruptEnable = 0;
       uint1 exceptionLevel = 0;
       uint1 errorLevel = 0;
       uint2 privilegeMode = 0;
       uint1 userMode = 0;
       uint1 supervisorMode = 0;
       uint1 kernelMode = 0;
-      uint8 interruptMask = 0xff;
+      uint8 interruptMask = 0;
       uint1 de = 0;  //unused
       uint1 ce = 0;  //unused
       uint1 condition = 0;
