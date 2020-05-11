@@ -52,7 +52,7 @@ auto RDP::step(uint clocks) -> void {
 }
 
 auto RDP::refresh() -> void {
-  uint width  = vi.io.xscale == 0x200 ? 320 : 640;
+  uint width  = vi.io.width;
   uint height = vi.io.yscale == 0x400 ? 240 : 480;
 
   if(vi.io.colorDepth < 2) {

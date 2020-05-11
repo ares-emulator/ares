@@ -50,7 +50,7 @@ auto SI::readIO(u32 address) -> u32 {
     data.bit(12)    = io.interrupt;
   }
 
-  print("* ", registerNames(address, "SI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "SI_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
@@ -59,20 +59,16 @@ auto SI::writeIO(u32 address, uint32 data) -> void {
 
   if(address == 0) {
     //SI_DRAM_ADDRESS
-    io.dramAddress = data.bit(0,23);
+    io.dramAddress = data.bit(0,23) & ~7;
   }
 
   if(address == 1) {
     //SI_PIF_ADDRESS_READ64B
-    if(auto& device = controllerPort1.device) pi.ram.writeWord(0x04, device->read());
-    if(auto& device = controllerPort2.device) pi.ram.writeWord(0x0c, device->read());
-    if(auto& device = controllerPort3.device) pi.ram.writeWord(0x14, device->read());
-    if(auto& device = controllerPort4.device) pi.ram.writeWord(0x1c, device->read());
-
-    io.readAddress = data.bit(0,31);
-    for(u32 offset = 0; offset < 64; offset += 8) {
-      u64 data = bus.readDouble(offset);
-      rdram.ram.writeDouble(io.dramAddress + offset, data);
+    main();
+    io.readAddress = data.bit(0,31) & ~1;
+    for(u32 offset = 0; offset < 64; offset += 2) {
+      u16 data = bus.readHalf(io.readAddress + offset);
+      bus.writeHalf(io.dramAddress + offset, data);
     }
     io.interrupt = 1;
     mi.raise(MI::IRQ::SI);
@@ -88,13 +84,14 @@ auto SI::writeIO(u32 address, uint32 data) -> void {
 
   if(address == 4) {
     //SI_PIF_ADDRESS_WRITE64B
-    io.writeAddress = data.bit(0,31);
-    for(u32 offset = 0; offset < 64; offset += 8) {
-      u64 data = rdram.ram.readDouble(io.dramAddress + offset);
-      bus.writeDouble(offset, data);
+    io.writeAddress = data.bit(0,31) & ~1;
+    for(u32 offset = 0; offset < 64; offset += 2) {
+      u16 data = bus.readHalf(io.dramAddress + offset);
+      bus.writeHalf(io.writeAddress + offset, data);
     }
     io.interrupt = 1;
     mi.raise(MI::IRQ::SI);
+    main();
   }
 
   if(address == 5) {
@@ -107,5 +104,5 @@ auto SI::writeIO(u32 address, uint32 data) -> void {
     mi.lower(MI::IRQ::SI);
   }
 
-  print("* ", registerNames(address, "SI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "SI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }

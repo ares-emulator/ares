@@ -2,6 +2,7 @@
 
 struct SI {
   //si.cpp
+  auto main() -> void;
   auto power() -> void;
 
   //io.cpp

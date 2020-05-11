@@ -1,9 +1,6 @@
 //{
   struct Exception {
     CPU& self;
-    auto interruptRCP() { self.raiseException(0, 0, 1 << 2); }
-    auto interruptDD() { self.raiseException(0, 0, 1 << 3); }
-    auto interruptCompare() { self.raiseException(0, 0, 1 << 7); }
     auto tlbModification() { self.raiseException(1); }
     auto tlbLoad() { self.raiseException(2); }
     auto tlbStore() { self.raiseException(3); }

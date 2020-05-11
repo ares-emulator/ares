@@ -1,4 +1,8 @@
 //{
+  auto inKernelMode() const -> bool { return scc.status.privilegeMode == 0; }
+  auto inSupervisorMode() const -> bool { return scc.status.privilegeMode == 1; }
+  auto inUserMode() const -> bool { return scc.status.privilegeMode >= 2; }
+
   //scc-registers.cpp
   auto getControlRegister(uint5) -> u64;
   auto setControlRegister(uint5, uint64) -> void;
@@ -68,7 +72,7 @@
       uint1 userMode = 0;
       uint1 supervisorMode = 0;
       uint1 kernelMode = 0;
-      uint8 interruptMask = 0;
+      uint8 interruptMask = 0xff;
       uint1 de = 0;  //unused
       uint1 ce = 0;  //unused
       uint1 condition = 0;

@@ -1,13 +1,12 @@
-auto CPU::raiseException(uint code, uint interrupt, uint coprocessor) -> void {
+auto CPU::raiseException(uint code, uint coprocessor) -> void {
   scc.status.exceptionLevel = 1;
 
   scc.cause.exceptionCode = code;
-  scc.cause.interruptPending |= interrupt;
   scc.cause.coprocessorError = coprocessor;
   scc.cause.branchDelay = (bool)IP;
 
   scc.epc.u64 = PC;
-  if(IP) IP = nothing, scc.epc.u64 -= 4;
+  if(IP || code) IP = nothing, scc.epc.u64 -= 4;
 
   PC = scc.status.vectorLocation ? 0xbfc0'0200 : 0x8000'0000;
   PC += 0x180;
@@ -16,6 +15,7 @@ auto CPU::raiseException(uint code, uint interrupt, uint coprocessor) -> void {
 auto CPU::instruction() -> void {
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(scc.status.interruptEnable && !scc.status.exceptionLevel) {
+      scc.cause.interruptPending = interrupts;
       raiseException(0, interrupts);
     }
   }
@@ -233,7 +233,7 @@ auto CPU::instructionREGIMM() -> void {
 }
 
 auto CPU::instructionCOP0() -> void {
-//if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
+  if(!scc.status.enable.coprocessor0 && !inKernelMode()) return exception.coprocessor0();
   switch(OP >> 21 & 0x1f) {
   case 0x00: return instructionMFC0();
   case 0x01: return instructionDMFC0();
@@ -255,7 +255,7 @@ auto CPU::instructionCOP0() -> void {
 }
 
 auto CPU::instructionCOP1() -> void {
-//if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   switch(OP >> 21 & 0x1f) {
   case 0x00: return instructionMFC1();
   case 0x01: return instructionDMFC1();

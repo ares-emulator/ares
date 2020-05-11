@@ -12,6 +12,7 @@ auto CPU::Disassembler::disassemble(u32 address, u32 instruction) -> string {
 auto CPU::Disassembler::EXECUTE() -> vector<string> {
   auto rd = [&] { return cpuRegister(instruction >> 11 & 31); };
   auto rt = [&] { return cpuRegister(instruction >> 16 & 31); };
+  auto ft = [&] { return fpuRegister(instruction >> 16 & 31); };
   auto rs = [&] { return cpuRegister(instruction >> 21 & 31); };
   auto imm16i = [&] { return immediate(i16(instruction)); };
   auto imm32i = [&] { return immediate(i16(instruction) << 16); };
@@ -97,19 +98,19 @@ auto CPU::Disassembler::EXECUTE() -> vector<string> {
   case 0x2e: return LS("swr");
   case 0x2f: return {"cache", instruction >> 16 & 31, offsetBase()};
   case 0x30: return LS("ll");
-  case 0x31: return LS("lwc1");
+  case 0x31: return {"lwc1", ft(), offsetBase()};
   case 0x32: return LS("lwc2");
   case 0x33: return LS("lwc3");
   case 0x34: return LS("lld");
-  case 0x35: return LS("ldc1");
+  case 0x35: return {"ldc1", ft(), offsetBase()};
   case 0x36: return LS("ldc2");
   case 0x37: return LS("ld");
   case 0x38: return LS("sc");
-  case 0x39: return LS("swc1");
+  case 0x39: return {"swc1", ft(), offsetBase()};
   case 0x3a: return LS("swc2");
   case 0x3b: return LS("swc3");
   case 0x3c: return LS("scd");
-  case 0x3d: return LS("sdc1");
+  case 0x3d: return {"sdc1", ft(), offsetBase()};
   case 0x3e: return LS("sdc2");
   case 0x3f: return LS("sd");
   }
@@ -304,10 +305,10 @@ auto CPU::Disassembler::FPU() -> vector<string> {
   case 0x05: return {"dmtc1", fd(), rt()};
   case 0x06: return {"ctc1",  fd(), rt()};
   case 0x08: switch(instruction >> 16 & 3) {
-    case 0x00: return {"bc0f", branch()};
-    case 0x01: return {"bc0t", branch()};
-    case 0x02: return {"bc0fl", branch()};
-    case 0x03: return {"bc0tl", branch()};
+    case 0x00: return {"bc1f", branch()};
+    case 0x01: return {"bc1t", branch()};
+    case 0x02: return {"bc1fl", branch()};
+    case 0x03: return {"bc1tl", branch()};
     }
   }
   if(!(instruction >> 25 & 1)) return {};

@@ -1,6 +1,6 @@
 //{
   //instruction.cpp
-  auto raiseException(uint, uint = 0, uint = 0) -> void;
+  auto raiseException(uint, uint = 0) -> void;
   auto instruction() -> void;
   auto instructionDEBUG() -> void;
   auto instructionEXECUTE() -> void;

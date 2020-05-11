@@ -45,7 +45,7 @@ auto AI::readIO(u32 address) -> u32 {
     bit<0,3>(data) = io.bitRate;
   }
 
-  print("* ", registerNames(address, "AI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "AI_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
@@ -101,5 +101,5 @@ auto AI::writeIO(u32 address, u32 data) -> void {
     dac.precision = io.bitRate + 1;
   }
 
-  print("* ", registerNames(address, "AI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "AI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }

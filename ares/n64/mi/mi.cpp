@@ -42,12 +42,12 @@ auto MI::poll() -> void {
 }
 
 auto MI::power() -> void {
-  irq.sp.line = 0;
-  irq.si.line = 0;
-  irq.ai.line = 0;
-  irq.vi.line = 0;
-  irq.pi.line = 0;
-  irq.dp.line = 0;
+  irq.sp.line = 0; irq.sp.mask = 1;
+  irq.si.line = 0; irq.si.mask = 1;
+  irq.ai.line = 0; irq.ai.mask = 1;
+  irq.vi.line = 0; irq.vi.mask = 1;
+  irq.pi.line = 0; irq.pi.mask = 1;
+  irq.dp.line = 0; irq.dp.mask = 1;
 }
 
 }
