@@ -21,7 +21,7 @@ Gamepad::Gamepad(Node::Port parent) {
 
 auto Gamepad::read() -> uint32 {
   platform->input(x);
-  platform->input(x);
+  platform->input(y);
   platform->input(up);
   platform->input(down);
   platform->input(left);
@@ -38,8 +38,8 @@ auto Gamepad::read() -> uint32 {
   platform->input(start);
 
   uint32 data;
-  data.byte(0) = 0x80;  //Y-axis
-  data.byte(1) = 0x80;  //X-axis
+  data.byte(0) = 0x00;  //Y-axis
+  data.byte(1) = 0x00;  //X-axis
   data.bit(16) = cameraRight->value();
   data.bit(17) = cameraLeft->value();
   data.bit(18) = cameraDown->value();

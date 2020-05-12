@@ -24,9 +24,11 @@ auto CPU::main() -> void {
 }
 
 auto CPU::step(uint clocks) -> void {
+   vi.clock -= clocks;
    ai.clock -= clocks;
   rsp.clock -= clocks;
   rdp.clock -= clocks;
+  while( vi.clock < 0) vi.main();
   while( ai.clock < 0) ai.main();
   while(rsp.clock < 0) rsp.main();
   while(rdp.clock < 0) rdp.main();

@@ -6,6 +6,17 @@
 using s128 = __m128i;
 
 namespace ares::Nintendo64 {
+  struct Accuracy {
+    //enable all accuracy flags
+    static constexpr bool Reference = 0;
+
+    //emulate the CPU translation lookaside buffer
+    static constexpr bool TLB = 0 | Reference;
+
+    //exceptions when the CPU accesses unaligned memory addresses
+    static constexpr bool AddressErrors = 0 | Reference;
+  };
+
   struct Thread {
     auto reset() -> void {
       clock = 0;

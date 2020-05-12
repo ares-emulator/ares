@@ -6,6 +6,7 @@
     //disassembler.cpp
     auto disassemble(u32 address, u32 instruction) -> string;
     template<typename... P> auto hint(P&&... p) const -> string;
+    template<typename... P> auto shorthand(P&&... p) const -> string;
 
     bool showColors = true;
     bool showValues = true;

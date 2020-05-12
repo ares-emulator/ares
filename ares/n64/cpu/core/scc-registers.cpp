@@ -6,32 +6,32 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit(31)    = scc.index.probeFailure;
     break;
   case  1:  //random
-    data.bit(0,4) = scc.random.value;
+    data.bit(0,4) = scc.random.index;
     data.bit(5)   = scc.random.unused;
     break;
   case  2:  //entrylo0
-    data.bit(0)    = scc.entryLo[0].ignoreAddressSpaceID;
+    data.bit(0)    = scc.entryLo[0].global;
     data.bit(1)    = scc.entryLo[0].pageValid;
     data.bit(2)    = scc.entryLo[0].pageDirty;
     data.bit(3, 5) = scc.entryLo[0].cacheAlgorithm;
-    data.bit(6,29) = scc.entryLo[0].pageFrameNumber;
+    data.bit(6,29) = scc.entryLo[0].physicalAddress.bit(6,29);
     break;
   case  3:  //entrylo1
-    data.bit(0)    = scc.entryLo[1].ignoreAddressSpaceID;
+    data.bit(0)    = scc.entryLo[1].global;
     data.bit(1)    = scc.entryLo[1].pageValid;
     data.bit(2)    = scc.entryLo[1].pageDirty;
     data.bit(3, 5) = scc.entryLo[1].cacheAlgorithm;
-    data.bit(6,29) = scc.entryLo[1].pageFrameNumber;
+    data.bit(6,29) = scc.entryLo[1].physicalAddress.bit(6,29);
     break;
   case  4:  //context
     data.bit( 4,22) = scc.context.badVirtualPageNumber;
     data.bit(23,63) = scc.context.pageTableEntryBase;
     break;
   case  5:  //pagemask
-    data.bit(13,24) = scc.pageMask;
+    data.bit(0,24) = scc.pageMask;
     break;
   case  6:  //wired
-    data.bit(0,4) = scc.wired.value;
+    data.bit(0,4) = scc.wired.index;
     data.bit(5)   = scc.wired.unused;
     break;
   case  8:  //badvaddr
@@ -42,8 +42,8 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     break;
   case 10:  //entryhi
     data.bit( 0, 7) = scc.entryHi.addressSpaceID;
-    data.bit(13,39) = scc.entryHi.virtualPageNumber;
-    data.bit(40,61) = scc.entryHi.virtualPageNumberSignExtension;
+    data.bit( 8,39) = scc.entryHi.virtualAddress.bit(9,39);
+    data.bit(40,61) = scc.entryHi.unused;
     data.bit(62,63) = scc.entryHi.region;
     break;
   case 11:  //compare
@@ -54,9 +54,9 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit( 1)    = scc.status.exceptionLevel;
     data.bit( 2)    = scc.status.errorLevel;
     data.bit( 3, 4) = scc.status.privilegeMode;
-    data.bit( 5)    = scc.status.userMode;
-    data.bit( 6)    = scc.status.supervisorMode;
-    data.bit( 7)    = scc.status.kernelMode;
+    data.bit( 5)    = scc.status.userExtendedAddressing;
+    data.bit( 6)    = scc.status.supervisorExtendedAddressing;
+    data.bit( 7)    = scc.status.kernelExtendedAddressing;
     data.bit( 8,15) = scc.status.interruptMask;
     data.bit(16)    = scc.status.de;
     data.bit(17)    = scc.status.ce;
@@ -80,11 +80,11 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit(31)    = scc.cause.branchDelay;
     break;
   case 14:  //exception program counter
-    data = scc.epc.u64;
+    data = scc.epc;
     break;
-  case 15:  //processor revision identifier
-    data.bit(0, 7) = scc.processor.revision;
-    data.bit(8,15) = scc.processor.implementation;
+  case 15:  //coprocessor revision identifier
+    data.bit(0, 7) = scc.coprocessor.revision;
+    data.bit(8,15) = scc.coprocessor.implementation;
     break;
   case 16:  //configuration
     data.bit( 0, 1) = scc.configuration.coherencyAlgorithmKSEG0;
@@ -94,7 +94,7 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit(28,30) = scc.configuration.systemClockRatio;
     break;
   case 17:  //load linked address
-    data = scc.ll.u64;
+    data = scc.ll;
     break;
   case 18:  //watchlo
     data.bit(0)    = scc.watchLo.trapOnWrite;
@@ -117,7 +117,7 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit(8,27) = scc.tagLo.physicalAddress.bit(12,31);
     break;
   case 31:  //error exception program counter
-    data = scc.epcError.u64;
+    data = scc.epcError;
     break;
   }
   return data;
@@ -131,34 +131,34 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.index.probeFailure = data.bit(31);
     break;
   case  1:  //random
-  //scc.random.value  = data.bit(0,4);
+  //scc.random.index  = data.bit(0,4);
     scc.random.unused = data.bit(5);
     break;
   case  2:  //entrylo0
-    scc.entryLo[0].ignoreAddressSpaceID = data.bit(0);
-    scc.entryLo[0].pageValid            = data.bit(1);
-    scc.entryLo[0].pageDirty            = data.bit(2);
-    scc.entryLo[0].cacheAlgorithm       = data.bit(3, 5);
-    scc.entryLo[0].pageFrameNumber      = data.bit(6,29);
+    scc.entryLo[0].global                    = data.bit(0);
+    scc.entryLo[0].pageValid                 = data.bit(1);
+    scc.entryLo[0].pageDirty                 = data.bit(2);
+    scc.entryLo[0].cacheAlgorithm            = data.bit(3, 5);
+    scc.entryLo[0].physicalAddress.bit(6,29) = data.bit(6,29);
     break;
   case  3:  //entrylo1
-    scc.entryLo[1].ignoreAddressSpaceID = data.bit(0);
-    scc.entryLo[1].pageValid            = data.bit(1);
-    scc.entryLo[1].pageDirty            = data.bit(2);
-    scc.entryLo[1].cacheAlgorithm       = data.bit(3, 5);
-    scc.entryLo[1].pageFrameNumber      = data.bit(6,29);
+    scc.entryLo[1].global                    = data.bit(0);
+    scc.entryLo[1].pageValid                 = data.bit(1);
+    scc.entryLo[1].pageDirty                 = data.bit(2);
+    scc.entryLo[1].cacheAlgorithm            = data.bit(3, 5);
+    scc.entryLo[1].physicalAddress.bit(6,29) = data.bit(6,29);
     break;
   case  4:  //context
     scc.context.badVirtualPageNumber = data.bit( 4,22);
     scc.context.pageTableEntryBase   = data.bit(23,63);
     break;
   case  5:  //pagemask
-    scc.pageMask = data.bit(13,24);
+    scc.pageMask = data.bit(0,24);
     break;
   case  6:  //wired
-    scc.wired.value  = data.bit(0,4);
+    scc.wired.index  = data.bit(0,4);
     scc.wired.unused = data.bit(5);
-    scc.random.value = 31;
+    scc.random.index = 31;
     break;
   case  8:  //badvaddr
   //scc.badVirtualAddress = data;  //read-only
@@ -167,49 +167,49 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.count = data.bit(0,31);
     break;
   case 10:  //entryhi
-    scc.entryHi.addressSpaceID                 = data.bit( 0, 7);
-    scc.entryHi.virtualPageNumber              = data.bit(13,39);
-    scc.entryHi.virtualPageNumberSignExtension = data.bit(40,61);
-    scc.entryHi.region                         = data.bit(62,63);
+    scc.entryHi.addressSpaceID           = data.bit( 0, 7);
+    scc.entryHi.virtualAddress.bit(9,39) = data.bit( 8,39);
+    scc.entryHi.unused                   = data.bit(40,61);
+    scc.entryHi.region                   = data.bit(62,63);
     break;
   case 11:  //compare
     scc.compare = data.bit(0,31);
     scc.cause.interruptPending.bit(Interrupt::Timer) = 0;
     break;
   case 12:  //status
-    scc.status.interruptEnable     = data.bit( 0);
-    scc.status.exceptionLevel      = data.bit( 1);
-    scc.status.errorLevel          = data.bit( 2);
-    scc.status.privilegeMode       = data.bit( 3, 4);
-    scc.status.userMode            = data.bit( 5);
-    scc.status.supervisorMode      = data.bit( 6);
-    scc.status.kernelMode          = data.bit( 7);
-    scc.status.interruptMask       = data.bit( 8,15);
-    scc.status.de                  = data.bit(16);
-    scc.status.ce                  = data.bit(17);
-    scc.status.condition           = data.bit(18);
-    scc.status.softReset           = data.bit(20);
-  //scc.status.tlbShutdown         = data.bit(21);  //read-only
-    scc.status.vectorLocation      = data.bit(22);
-    scc.status.instructionTracing  = data.bit(24);
-    scc.status.reverseEndian       = data.bit(25);
-    scc.status.floatingPointMode   = data.bit(26);
-    scc.status.lowPowerMode        = data.bit(27);
-    scc.status.enable.coprocessor0 = data.bit(28);
-    scc.status.enable.coprocessor1 = data.bit(29);
-    scc.status.enable.coprocessor2 = data.bit(30);
-    scc.status.enable.coprocessor3 = data.bit(31);
+    scc.status.interruptEnable              = data.bit( 0);
+    scc.status.exceptionLevel               = data.bit( 1);
+    scc.status.errorLevel                   = data.bit( 2);
+    scc.status.privilegeMode                = data.bit( 3, 4);
+    scc.status.userExtendedAddressing       = data.bit( 5);
+    scc.status.supervisorExtendedAddressing = data.bit( 6);
+    scc.status.kernelExtendedAddressing     = data.bit( 7);
+    scc.status.interruptMask                = data.bit( 8,15);
+    scc.status.de                           = data.bit(16);
+    scc.status.ce                           = data.bit(17);
+    scc.status.condition                    = data.bit(18);
+    scc.status.softReset                    = data.bit(20);
+  //scc.status.tlbShutdown                  = data.bit(21);  //read-only
+    scc.status.vectorLocation               = data.bit(22);
+    scc.status.instructionTracing           = data.bit(24);
+    scc.status.reverseEndian                = data.bit(25);
+    scc.status.floatingPointMode            = data.bit(26);
+    scc.status.lowPowerMode                 = data.bit(27);
+    scc.status.enable.coprocessor0          = data.bit(28);
+    scc.status.enable.coprocessor1          = data.bit(29);
+    scc.status.enable.coprocessor2          = data.bit(30);
+    scc.status.enable.coprocessor3          = data.bit(31);
     break;
   case 13:  //cause
     scc.cause.interruptPending.bit(0) = data.bit(8);
     scc.cause.interruptPending.bit(1) = data.bit(9);
     break;
   case 14:  //exception program counter
-    scc.epc.u64 = data;
+    scc.epc = data;
     break;
-  case 15:  //processor revision identifier
-  //scc.processor.revision       = data.bit(0, 7);  //read-only
-  //scc.processor.implementation = data.bit(8,15);  //read-only
+  case 15:  //coprocessor revision identifier
+  //scc.coprocessor.revision       = data.bit(0, 7);  //read-only
+  //scc.coprocessor.implementation = data.bit(8,15);  //read-only
     break;
   case 16:  //configuration
     scc.configuration.coherencyAlgorithmKSEG0 = data.bit( 0, 1);
@@ -219,7 +219,7 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
   //scc.configuration.systemClockRatio        = data.bit(28,30);  //read-only
     break;
   case 17:  //load linked address
-    scc.ll.u64 = data;
+    scc.ll = data;
     break;
   case 18:  //watchlo
     scc.watchLo.trapOnWrite               = data.bit(0);
@@ -241,8 +241,8 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.tagLo.primaryCacheState          = data.bit(6, 7);
     scc.tagLo.physicalAddress.bit(12,31) = data.bit(8,27);
     break;
-  case 31:  //errorepc
-    scc.epcError.u64 = data;
+  case 31:  //error exception program counter
+    scc.epcError = data;
     break;
   }
 }

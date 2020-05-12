@@ -3,7 +3,7 @@ auto CPU::Disassembler::disassemble(u32 address, u32 instruction) -> string {
   this->instruction = instruction;
 
   auto v = EXECUTE();
-  if(!v) v.append("invalid");
+  if(!v) v.append("invalid", string{"$", hex(instruction, 8L)});
   if(!instruction) v = {"nop"};
   auto s = pad(v.takeFirst(), -8L);
   return {s, v.merge(",")};
@@ -22,14 +22,14 @@ auto CPU::Disassembler::EXECUTE() -> vector<string> {
   auto offsetBase = [&] { return cpuRegister(instruction >> 21 & 31, i16(instruction)); };
 
   auto ALU = [&](string_view name) -> vector<string> {
-    string target = rt();
-    string source = rs();
-    string constant = immediate(u16(instruction));
-    return {name, target, source, constant};
+    if(rt() == rs()) return {name, shorthand(rt()), immediate(u16(instruction))};
+    return {name, rt(), rs(), immediate(u16(instruction))};
   };
 
   auto ADDI = [&](string_view add, string_view sub) -> vector<string> {
-    return ALU(i16(instruction) >= 0 ? add : sub);
+    auto name = i16(instruction) >= 0 ? add : sub;
+    if(rt() == rs()) return {name, shorthand(rt()), immediate(abs(i16(instruction)))};
+    return {name, rt(), rs(), immediate(abs(i16(instruction)))};
   };
 
   auto BRANCH1 = [&](string_view name) -> vector<string> {
@@ -38,6 +38,30 @@ auto CPU::Disassembler::EXECUTE() -> vector<string> {
 
   auto BRANCH2 = [&](string_view name) -> vector<string> {
     return {name, rs(), rt(), branch()};
+  };
+
+  auto CACHE = [&](string_view name) -> vector<string> {
+    auto cache  = instruction >> 16 & 3;
+    auto op     = instruction >> 18 & 7;
+    string type = "reserved";
+    if(cache == 0) switch(op) {
+    case 0: type = "code(IndexInvalidate)"; break;
+    case 1: type = "code(IndexLoadTag)"; break;
+    case 2: type = "code(IndexStoreTag)"; break;
+    case 4: type = "code(HitInvalidate)"; break;
+    case 5: type = "code(Fill)"; break;
+    case 6: type = "code(HitWriteBack)"; break;
+    }
+    if(cache == 1) switch(op) {
+    case 0: type = "data(IndexWriteBackInvalidate)"; break;
+    case 1: type = "data(IndexLoadTag)"; break;
+    case 2: type = "data(IndexStoreTag)"; break;
+    case 3: type = "data(CreateDirtyExclusive)"; break;
+    case 4: type = "data(HitInvalidate)"; break;
+    case 5: type = "data(HitWriteBackInvalidate)"; break;
+    case 6: type = "data(HitWriteBack)"; break;
+    }
+    return {name, type, offsetBase()};
   };
 
   auto JUMP = [&](string_view name) -> vector<string> {
@@ -96,22 +120,22 @@ auto CPU::Disassembler::EXECUTE() -> vector<string> {
   case 0x2c: return LS("sdl");
   case 0x2d: return LS("sdr");
   case 0x2e: return LS("swr");
-  case 0x2f: return {"cache", instruction >> 16 & 31, offsetBase()};
+  case 0x2f: return CACHE("cache");
   case 0x30: return LS("ll");
   case 0x31: return {"lwc1", ft(), offsetBase()};
-  case 0x32: return LS("lwc2");
-  case 0x33: return LS("lwc3");
+  case 0x32: break;  //LWC2
+  case 0x33: break;  //LWC3
   case 0x34: return LS("lld");
   case 0x35: return {"ldc1", ft(), offsetBase()};
-  case 0x36: return LS("ldc2");
+  case 0x36: break;  //LDC2
   case 0x37: return LS("ld");
   case 0x38: return LS("sc");
   case 0x39: return {"swc1", ft(), offsetBase()};
-  case 0x3a: return LS("swc2");
-  case 0x3b: return LS("swc3");
+  case 0x3a: break;  //SWC2
+  case 0x3b: break;  //SWC3
   case 0x3c: return LS("scd");
   case 0x3d: return {"sdc1", ft(), offsetBase()};
-  case 0x3e: return LS("sdc2");
+  case 0x3e: break;  //SDC2
   case 0x3f: return LS("sd");
   }
   return {};
@@ -124,16 +148,18 @@ auto CPU::Disassembler::SPECIAL() -> vector<string> {
   auto rs = [&] { return cpuRegister(instruction >> 21 & 31); };
 
   auto ALU = [&](string_view name, string_view by) -> vector<string> {
-    string target = rd();
-    string source = rt();
-    return {name, target, source, by};
+    if(rd() == rt()) return {name, shorthand(rd()), by};
+    return {name, rd(), rt(), by};
+  };
+
+  auto JALR = [&](string_view name) -> vector<string> {
+    if((instruction >> 11 & 31) == 31) return {name, rs()};
+    return {name, rd(), rs()};
   };
 
   auto REG = [&](string_view name) -> vector<string> {
-    string target = rd();
-    string source = rs();
-    string extend = rt();
-    return {name, target, source, extend};
+    if(rd() == rs()) return {name, shorthand(rd()), rt()};
+    return {name, rd(), rs(), rt()};
   };
 
   auto ST = [&](string_view name) -> vector<string> {
@@ -150,17 +176,17 @@ auto CPU::Disassembler::SPECIAL() -> vector<string> {
   case 0x06: return ALU("srlv", rs());
   case 0x07: return ALU("srav", rs());
   case 0x08: return {"jr", rs()};
-  case 0x09: return {"jalr", rd(), rs()};
+  case 0x09: return JALR("jalr");
   case 0x0a: break;
   case 0x0b: break;
   case 0x0c: return {"syscall"};
   case 0x0d: return {"break"};
   case 0x0e: break;
   case 0x0f: return {"sync"};
-  case 0x10: return {"mfhi"};
-  case 0x11: return {"mthi"};
-  case 0x12: return {"mflo"};
-  case 0x13: return {"mtlo"};
+  case 0x10: return {"mfhi", rd()};
+  case 0x11: return {"mthi", rs()};
+  case 0x12: return {"mflo", rd()};
+  case 0x13: return {"mtlo", rs()};
   case 0x14: return ALU("dsllv", rs());
   case 0x15: break;
   case 0x16: return ALU("dsrlv", rs());
@@ -213,37 +239,37 @@ auto CPU::Disassembler::SPECIAL() -> vector<string> {
 auto CPU::Disassembler::REGIMM() -> vector<string> {
   auto rs = [&] { return cpuRegister(instruction >> 21 & 31); };
   auto imm16i = [&] { return immediate(i16(instruction)); };
-  auto imm16u = [&] { return immediate(u16(instruction)); };
+  auto branch = [&] { return immediate(address + 4 + (i16(instruction) << 2)); };
 
-  auto I = [&](string_view name) -> vector<string> {
+  auto BRANCH = [&](string_view name) -> vector<string> {
+    return {name, rs(), branch()};
+  };
+
+  auto TRAP = [&](string_view name) -> vector<string> {
     return {name, rs(), imm16i()};
   };
 
-  auto U = [&](string_view name) -> vector<string> {
-    return {name, rs(), imm16u()};
-  };
-
   switch(instruction >> 16 & 0x1f) {
-  case 0x00: return I("bltz");
-  case 0x01: return I("bgez");
-  case 0x02: return I("bltzl");
-  case 0x03: return I("bgezl");
+  case 0x00: return BRANCH("bltz");
+  case 0x01: return BRANCH("bgez");
+  case 0x02: return BRANCH("bltzl");
+  case 0x03: return BRANCH("bgezl");
   case 0x04: break;
   case 0x05: break;
   case 0x06: break;
   case 0x07: break;
-  case 0x08: return I("tgei");
-  case 0x09: return U("tgeiu");
-  case 0x0a: return I("tlti");
-  case 0x0b: return U("tltiu");
-  case 0x0c: return I("teqi");
+  case 0x08: return TRAP("tgei");
+  case 0x09: return TRAP("tgeiu");
+  case 0x0a: return TRAP("tlti");
+  case 0x0b: return TRAP("tltiu");
+  case 0x0c: return TRAP("teqi");
   case 0x0d: break;
-  case 0x0e: return I("tnei");
+  case 0x0e: return TRAP("tnei");
   case 0x0f: break;
-  case 0x10: return I("bltzal");
-  case 0x11: return I("bgezal");
-  case 0x12: return I("bltzall");
-  case 0x13: return I("bgezall");
+  case 0x10: return BRANCH("bltzal");
+  case 0x11: return BRANCH("bgezal");
+  case 0x12: return BRANCH("bltzall");
+  case 0x13: return BRANCH("bgezall");
   case 0x14: break;
   case 0x15: break;
   case 0x16: break;
@@ -263,19 +289,20 @@ auto CPU::Disassembler::REGIMM() -> vector<string> {
 
 auto CPU::Disassembler::SCC() -> vector<string> {
   auto rt = [&] { return cpuRegister(instruction >> 16 & 31); };
-  auto sd = [&] { return sccRegister(instruction >> 11 & 31); };
+  auto rd = [&] { return sccRegister(instruction >> 11 & 31); };
+  auto cd = [&] { return string{"ccr", instruction >> 11 & 31}; };
   auto branch = [&] { return immediate(address + 4 + (i16(instruction) << 2)); };
 
   switch(instruction >> 21 & 0x1f) {
-  case 0x00: return {"mfc0",  rt(), sd()};
-  case 0x01: return {"dmfc0", rt(), sd()};
-  case 0x02: return {"cfc0",  rt(), sd()};
-  case 0x04: return {"mtc0",  sd(), rt()};
-  case 0x05: return {"dmtc0", sd(), rt()};
-  case 0x06: return {"ctc0",  sd(), rt()};
+  case 0x00: return {"mfc0",  rt(), rd()};
+  case 0x01: return {"dmfc0", rt(), rd()};
+  case 0x02: return {"cfc0",  rt(), cd()};
+  case 0x04: return {"mtc0",  rt(), rd()};
+  case 0x05: return {"dmtc0", rt(), rd()};
+  case 0x06: return {"ctc0",  rt(), cd()};
   case 0x08: switch(instruction >> 16 & 3) {
-    case 0x00: return {"bc0f", branch()};
-    case 0x01: return {"bc0t", branch()};
+    case 0x00: return {"bc0f",  branch()};
+    case 0x01: return {"bc0t",  branch()};
     case 0x02: return {"bc0fl", branch()};
     case 0x03: return {"bc0tl", branch()};
     }
@@ -294,56 +321,76 @@ auto CPU::Disassembler::SCC() -> vector<string> {
 
 auto CPU::Disassembler::FPU() -> vector<string> {
   auto rt = [&] { return cpuRegister(instruction >> 16 & 31); };
-  auto fd = [&] { return fpuRegister(instruction >> 11 & 31); };
+  auto rd = [&] { return fpuRegister(instruction >> 11 & 31); };
+  auto cd = [&] { return string{"ccr", instruction >> 11 & 31}; };
   auto branch = [&] { return immediate(address + 4 + (i16(instruction) << 2)); };
 
   switch(instruction >> 21 & 0x1f) {
-  case 0x00: return {"mfc1",  rt(), fd()};
-  case 0x01: return {"dmfc1", rt(), fd()};
-  case 0x02: return {"cfc1",  rt(), fd()};
-  case 0x04: return {"mtc1",  fd(), rt()};
-  case 0x05: return {"dmtc1", fd(), rt()};
-  case 0x06: return {"ctc1",  fd(), rt()};
+  case 0x00: return {"mfc1",  rt(), rd()};
+  case 0x01: return {"dmfc1", rt(), rd()};
+  case 0x02: return {"cfc1",  rt(), cd()};
+  case 0x04: return {"mtc1",  rt(), rd()};
+  case 0x05: return {"dmtc1", rt(), rd()};
+  case 0x06: return {"ctc1",  rt(), cd()};
   case 0x08: switch(instruction >> 16 & 3) {
-    case 0x00: return {"bc1f", branch()};
-    case 0x01: return {"bc1t", branch()};
+    case 0x00: return {"bc1f",  branch()};
+    case 0x01: return {"bc1t",  branch()};
     case 0x02: return {"bc1fl", branch()};
     case 0x03: return {"bc1tl", branch()};
     }
   }
   if(!(instruction >> 25 & 1)) return {};
+
+  auto fd = [&] { return fpuRegister(instruction >>  6 & 31); };
+  auto fs = [&] { return fpuRegister(instruction >> 11 & 31); };
+  auto ft = [&] { return fpuRegister(instruction >> 16 & 31); };
+
+  auto DS = [&](string_view name) -> vector<string> {
+    if(fd() == fs()) return {name, shorthand(fd())};
+    return {name, fd(), fs()};
+  };
+
+  auto DST = [&](string_view name) -> vector<string> {
+    if(fd() == fs()) return {name, shorthand(fd()), ft()};
+    return {name, fd(), fs(), ft()};
+  };
+
+  auto ST = [&](string_view name) -> vector<string> {
+    return {name, fs(), ft()};
+  };
+
   bool s = (instruction & 1 << 21) == 0;
   bool i = (instruction & 1 << 23) != 0;
-  //todo: FPU arguments
+
   switch(instruction & 0x3f) {
-  case 0x00: return {s ? "addS"    : "addD"   };
-  case 0x01: return {s ? "subS"    : "subD"   };
-  case 0x02: return {s ? "mulS"    : "mulD"   };
-  case 0x03: return {s ? "divS"    : "divD"   };
-  case 0x04: return {s ? "sqrtS"   : "sqrtD"  };
-  case 0x05: return {s ? "absS"    : "absD"   };
-  case 0x06: return {s ? "movS"    : "movD"   };
-  case 0x07: return {s ? "negS"    : "negD"   };
-  case 0x08: return {s ? "roundlS" : "roundlD"};
-  case 0x09: return {s ? "trunclS" : "trunclD"};
-  case 0x0a: return {s ? "ceillS"  : "ceillD" };
-  case 0x0b: return {s ? "floorlS" : "floorlD"};
-  case 0x0c: return {s ? "roundwS" : "roundwD"};
-  case 0x0d: return {s ? "truncwS" : "truncwD"};
-  case 0x0e: return {s ? "ceilwS"  : "ceilwD" };
-  case 0x0f: return {s ? "floorwS" : "floorwD"};
-  case 0x20: return {i ? (s ? "cvtsW" : "cvtsL") : "cvtsD"};
-  case 0x21: return {i ? (s ? "cvtdW" : "cvtdL") : "cvtdS"};
-  case 0x24: return {s ? "cvtwS"   : "cvtwD"  };
-  case 0x25: return {s ? "cvtlS"   : "cvtlD"  };
-  case 0x30: case 0x38: return {s ? "cfS"   : "cfD"  };
-  case 0x31: case 0x39: return {s ? "cunS"  : "cunD" };
-  case 0x32: case 0x3a: return {s ? "ceqS"  : "ceqD" };
-  case 0x33: case 0x3b: return {s ? "cueqS" : "cueqD"};
-  case 0x34: case 0x3c: return {s ? "coltS" : "coltD"};
-  case 0x35: case 0x3d: return {s ? "cultS" : "cultD"};
-  case 0x36: case 0x3e: return {s ? "coleS" : "coleD"};
-  case 0x37: case 0x3f: return {s ? "culeS" : "culeD"};
+  case 0x00: return DST(s ? "adds"    : "addd"   );
+  case 0x01: return DST(s ? "subs"    : "subd"   );
+  case 0x02: return DST(s ? "muls"    : "muld"   );
+  case 0x03: return DST(s ? "divs"    : "divd"   );
+  case 0x04: return DS (s ? "sqrts"   : "sqrtd"  );
+  case 0x05: return DS (s ? "abss"    : "absd"   );
+  case 0x06: return DS (s ? "movs"    : "movd"   );
+  case 0x07: return DS (s ? "negs"    : "negd"   );
+  case 0x08: return DS (s ? "roundls" : "roundld");
+  case 0x09: return DS (s ? "truncls" : "truncld");
+  case 0x0a: return DS (s ? "ceills"  : "ceilld" );
+  case 0x0b: return DS (s ? "floorls" : "floorld");
+  case 0x0c: return DS (s ? "roundws" : "roundwd");
+  case 0x0d: return DS (s ? "truncws" : "truncwd");
+  case 0x0e: return DS (s ? "ceilws"  : "ceilwd" );
+  case 0x0f: return DS (s ? "floorws" : "floorwd");
+  case 0x20: return DS (i ? (s ? "cvtsw" : "cvtsl") : "cvtsd");
+  case 0x21: return DS (i ? (s ? "cvtdw" : "cvtdl") : "cvtds");
+  case 0x24: return DS (s ? "cvtws" : "cvtwd");
+  case 0x25: return DS (s ? "cvtls" : "cvtld");
+  case 0x30: case 0x38: return ST(s ? "cfs"   : "cfd"  );
+  case 0x31: case 0x39: return ST(s ? "cuns"  : "cund" );
+  case 0x32: case 0x3a: return ST(s ? "ceqs"  : "ceqd" );
+  case 0x33: case 0x3b: return ST(s ? "cueqs" : "cueqd");
+  case 0x34: case 0x3c: return ST(s ? "colts" : "coltd");
+  case 0x35: case 0x3d: return ST(s ? "cults" : "cultd");
+  case 0x36: case 0x3e: return ST(s ? "coles" : "coled");
+  case 0x37: case 0x3f: return ST(s ? "cules" : "culed");
   }
 
   return {};
@@ -410,6 +457,12 @@ auto CPU::Disassembler::fpuRegister(uint index) const -> string {
 
 template<typename... P>
 auto CPU::Disassembler::hint(P&&... p) const -> string {
-  if(showColors) return {"\e[37m", forward<P>(p)..., "\e[0m"};
+  if(showColors) return {"\e[0m\e[37m", forward<P>(p)..., "\e[0m"};
   return {forward<P>(p)...};
+}
+
+template<typename... P>
+auto CPU::Disassembler::shorthand(P&&... p) const -> string {
+  if(showColors) return {"\e[0m\e[1;92m", forward<P>(p)..., "\e[0m"};
+  return {"!", forward<P>(p)...};
 }

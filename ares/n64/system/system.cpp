@@ -6,9 +6,9 @@ System system;
 #include "serialization.cpp"
 
 auto System::run() -> void {
-  while(!rdp.refreshed) cpu.main();
-  rdp.refreshed = false;
-  rdp.refresh();
+  while(!vi.refreshed) cpu.main();
+  vi.refreshed = false;
+  vi.refresh();
 }
 
 auto System::load(Node::Object& root) -> void {
@@ -19,6 +19,7 @@ auto System::load(Node::Object& root) -> void {
   node = Node::System::create(interface->name());
   root = node;
 
+  vi.load(node);
   ai.load(node);
   pi.load(node);
   rdram.load(node);
@@ -35,6 +36,7 @@ auto System::load(Node::Object& root) -> void {
 auto System::unload() -> void {
   if(!node) return;
   save();
+  vi.unload();
   ai.unload();
   pi.unload();
   rdram.unload();

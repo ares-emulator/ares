@@ -2,7 +2,6 @@
 
 struct RDP : Thread {
   Node::Component node;
-  Node::Screen screen;
 
   //rdp.cpp
   auto load(Node::Object) -> void;
@@ -10,8 +9,6 @@ struct RDP : Thread {
 
   auto main() -> void;
   auto step(uint clocks) -> void;
-  auto refresh() -> void;
-
   auto power() -> void;
 
   //io-command.cpp
@@ -24,14 +21,6 @@ struct RDP : Thread {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
-
-  u32 output[640 * 480];
-  bool refreshed;
-
-  struct IO {
-     u32 vcounter;
-    bool field;
-  } io;
 };
 
 extern RDP rdp;

@@ -1,31 +1,18 @@
+#define CF fpu.csr.compare
+
 auto CPU::instructionBC1() -> void {
   bool condition = OP >> 16 & 1;
   bool likely    = OP >> 17 & 1;
-  if(fpu.cf[pipeline.instruction >> 18 & 7] == condition) IP = PC + (IMMi16 << 2);
+  if(CF == condition) IP = PC + (IMMi16 << 2);
   else if(likely) PC += 4;
 }
 
 auto CPU::instructionCFC1() -> void {
-  static const uint shift[8] = {23, 25, 26, 27, 28, 29, 30, 31};
-  if(RDn == 31) {
-    u32 result = fpu.cr[31] & ~0xfe80'0000;
-    for(uint n : range(8)) {
-      if(fpu.cf[n]) result |= 1 << shift[n];
-    }
-    RT.u64 = i32(result);
-    return;
-  }
-  RT.u64 = i32(fpu.cr[RDn]);
+  RT.u64 = i32(getControlRegisterFPU(RDn));
 }
 
 auto CPU::instructionCTC1() -> void {
-  static const uint shift[8] = {23, 25, 26, 27, 28, 29, 30, 31};
-  fpu.cr[RDn] = RT.u32;
-  if(RDn == 31) {
-    for(uint n : range(8)) {
-      fpu.cf[n] = RT.u32 >> shift[n] & 1;
-    }
-  }
+  setControlRegisterFPU(RDn, RT.u32);
 }
 
 auto CPU::instructionDMFC1() -> void {
@@ -67,8 +54,6 @@ auto CPU::instructionFCEILW() -> void {
     FD.u32 = i32(ceil(FS.f64));
   }
 }
-
-#define CF fpu.cf[pipeline.instruction >> 8 & 7]
 
 auto CPU::instructionFCEQ() -> void {
   if(FPU_SINGLE) {
@@ -126,8 +111,6 @@ auto CPU::instructionFCUN() -> void {
   CF = 0;
 }
 
-#undef CF
-
 auto CPU::instructionFCVTS() -> void {
   if(FPU_INTEGER) {
     if(FPU_SINGLE) {
@@ -172,17 +155,17 @@ auto CPU::instructionFDIV() -> void {
   if(FPU_SINGLE) {
     if(FT.f32) {
       FD.f32 = FS.f32 / FT.f32;
-    } else if(scc.cr[31] & 1 << 10) {
-      scc.cr[31] |= 1 <<  5;
-      scc.cr[31] |= 1 << 15;
+    } else if(fpu.csr.enable.divisionByZero) {
+      fpu.csr.flag.divisionByZero = 1;
+      fpu.csr.cause.divisionByZero = 1;
       exception.floatingPoint();
     }
   } else {
     if(FT.f64) {
       FD.f64 = FS.f64 / FT.f64;
-    } else if(scc.cr[31] & 1 << 10) {
-      scc.cr[31] |= 1 <<  5;
-      scc.cr[31] |= 1 << 15;
+    } else if(fpu.csr.enable.divisionByZero) {
+      fpu.csr.flag.divisionByZero = 1;
+      fpu.csr.cause.divisionByZero = 1;
       exception.floatingPoint();
     }
   }
@@ -303,3 +286,5 @@ auto CPU::instructionSWC1() -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   writeWord(RS.u32 + IMMi16, fpu.r[RTn].u32);
 }
+
+#undef CF

@@ -50,6 +50,53 @@ auto CPU::instructionBREAK() -> void {
 
 auto CPU::instructionCACHE() -> void {
   //todo
+  uint cache     = OP >> 16 & 3;
+  uint operation = OP >> 18 & 3;
+  if(cache == 0) {
+    //instruction
+    if(operation == 0) {
+      //index invalidate
+    }
+    if(operation == 1) {
+      //index load tag
+    }
+    if(operation == 2) {
+      //index store tag
+    }
+    if(operation == 4) {
+      //hit invalidate
+    }
+    if(operation == 5) {
+      //fill
+    }
+    if(operation == 6) {
+      //hit write back
+    }
+  }
+  if(cache == 1) {
+    //data
+    if(operation == 0) {
+      //index write back invalidate
+    }
+    if(operation == 1) {
+      //index load tag
+    }
+    if(operation == 2) {
+      //index store tag
+    }
+    if(operation == 3) {
+      //create dirty exclusive
+    }
+    if(operation == 4) {
+      //hit invalidate
+    }
+    if(operation == 5) {
+      //hit write back invalidate
+    }
+    if(operation == 6) {
+      //hit write back
+    }
+  }
 }
 
 auto CPU::instructionDADD() -> void {
@@ -228,7 +275,7 @@ auto CPU::instructionLHU() -> void {
 auto CPU::instructionLL() -> void {
   if(auto data = readWord(RS.u32 + IMMi16)) {
     RT.u64 = *data;
-    scc.ll.u64 = RS.u32 + IMMi16;
+    scc.ll = RS.u32 + IMMi16;
     scc.llbit = 1;
   }
 }
@@ -236,7 +283,7 @@ auto CPU::instructionLL() -> void {
 auto CPU::instructionLLD() -> void {
   if(auto data = readDouble(RS.u32 + IMMi16)) {
     RT.u64 = *data;
-    scc.ll.u64 = RS.u32 + IMMi16;
+    scc.ll = RS.u32 + IMMi16;
     scc.llbit = 1;
   }
 }
@@ -317,7 +364,7 @@ auto CPU::instructionSB() -> void {
 
 auto CPU::instructionSC() -> void {
   u32 address = RS.u32 + IMMi16;
-  if(readWord(address) && RTn && scc.ll.u64 == address) {
+  if(readWord(address) && RTn && scc.ll == address) {
     writeWord(address, RT.u32);
     RT.u64 = 1;
   } else {
@@ -327,7 +374,7 @@ auto CPU::instructionSC() -> void {
 
 auto CPU::instructionSCD() -> void {
   u32 address = RS.u32 + IMMi16;
-  if(readDouble(address) && RTn && scc.ll.u64 == address) {
+  if(readDouble(address) && RTn && scc.ll == address) {
     writeDouble(address, RT.u64);
     RT.u64 = 1;
   } else {

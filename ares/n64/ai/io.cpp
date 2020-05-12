@@ -64,7 +64,7 @@ auto AI::writeIO(u32 address, u32 data) -> void {
     //AI_LENGTH
     if(io.fifoPending < 2) {
       auto& fifo = this->fifo[io.fifoWriting];
-      fifo.length = (bit<0,17>(data) | 7) + 1;
+      fifo.length = bit<0,17>(data) & ~7;
       fifo.offset = 0;
       for(u32 offset = 0; offset < fifo.length; offset += 4) {
         u32 data = rdram.ram.readWord(fifo.address + offset);

@@ -1,7 +1,16 @@
 //Video Interface
 
-struct VI {
+struct VI : Thread {
+  Node::Component node;
+  Node::Screen screen;
+
   //vi.cpp
+  auto load(Node::Object) -> void;
+  auto unload() -> void;
+
+  auto main() -> void;
+  auto step(uint clocks) -> void;
+  auto refresh() -> void;
   auto power() -> void;
 
   //io.cpp
@@ -20,7 +29,15 @@ struct VI {
     uint12 xsubpixel;
     uint12 yscale;
     uint12 ysubpixel;
+
+  //internal:
+     uint9 vcounter;
+     uint1 field;
   } io;
+
+//unserialized:
+  u32 output[640 * 512];
+  bool refreshed;
 };
 
 extern VI vi;

@@ -5,16 +5,17 @@ auto CPU::raiseException(uint code, uint coprocessor) -> void {
   scc.cause.coprocessorError = coprocessor;
   scc.cause.branchDelay = (bool)IP;
 
-  scc.epc.u64 = PC;
-  if(IP || code) IP = nothing, scc.epc.u64 -= 4;
+  u64 vectorBase = !scc.status.vectorLocation ? (i32)0x8000'0000 : (i32)0xbfc0'0200;
+  u32 vectorOffset = 0x0180;  //todo: 0x0000 for TLB miss, 0x0080 for XTLB miss
 
-  PC = scc.status.vectorLocation ? 0xbfc0'0200 : 0x8000'0000;
-  PC += 0x180;
+  scc.epc = PC;
+  if(IP || code) IP = nothing, scc.epc -= 4;
+  PC = vectorBase + vectorOffset;
 }
 
 auto CPU::instruction() -> void {
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
-    if(scc.status.interruptEnable && !scc.status.exceptionLevel) {
+    if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
       scc.cause.interruptPending = interrupts;
       raiseException(0, interrupts);
     }
@@ -33,20 +34,19 @@ auto CPU::instruction() -> void {
   instructionEXECUTE();
   GPR[0].u64 = 0;
 
-  if(--scc.random.value < scc.wired.value) {
-    scc.random.value = 31;
+  if(--scc.random.index < scc.wired.index) {
+    scc.random.index = 31;
   }
 }
 
 auto CPU::instructionDEBUG() -> void {
-  static uint counter = 0;
-  if(++counter <  20000000) return;
-  if(++counter >= 20002500) return;
-//static bool dis = false;
-//if(pipeline.address==0x8000'01ac) dis=true;//{ GPR[Core::Register::T0] = GPR[Core::Register::A3]; }
-//if(pipeline.address==0x8000'01b8) { GPR[Core::Register::T0] = GPR[Core::Register::S0]; }
-//if(pipeline.address==0x8000'02ac) { GPR[Core::Register::T1].u64 |= 0x3000'0000; }
-//if(!dis) return;
+  static vector<bool> mask;
+  if(!mask) mask.resize(0x04000000);
+  if(mask[(PC & 0x1fffffff) >> 2]) return;
+  mask[(PC & 0x1fffffff) >> 2] = 1;
+
+//static uint counter = 0;
+//if(++counter > 100) return;
   print(
     disassembler.hint(hex(pipeline.address, 8L)), "  ",
   //disassembler.hint(hex(pipeline.instruction, 8L)), "  ",
@@ -251,7 +251,7 @@ auto CPU::instructionCOP0() -> void {
   case 0x08: return instructionTLBP();
   case 0x18: return instructionERET();
   }
-  exception.reservedInstruction();
+//undefined instructions do not throw a reserved instruction exception
 }
 
 auto CPU::instructionCOP1() -> void {
@@ -299,5 +299,5 @@ auto CPU::instructionCOP1() -> void {
   case 0x36: case 0x3e: return instructionFCOLE();
   case 0x37: case 0x3f: return instructionFCULE();
   }
-  exception.reservedInstruction();
+//undefined instructions do not throw a reserved instruction exception
 }

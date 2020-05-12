@@ -38,7 +38,7 @@ inline auto Bus::readHalf(u32 address) -> u16 {
     } unreachable;
   };
 
-  address &= 0x1fff'ffff;
+  address &= 0x1fff'fffe;
   if(address <= 0x007f'ffff) return rdram.ram.readHalf(address);
   if(address <= 0x03ef'ffff) return 0;
   if(address <= 0x03ff'ffff) return transform(rdram.readIO(address));
@@ -61,7 +61,7 @@ inline auto Bus::readHalf(u32 address) -> u16 {
 }
 
 inline auto Bus::readWord(u32 address) -> u32 {
-  address &= 0x1fff'ffff;
+  address &= 0x1fff'fffc;
   if(address <= 0x007f'ffff) return rdram.ram.readWord(address);
   if(address <= 0x03ef'ffff) return 0;
   if(address <= 0x03ff'ffff) return rdram.readIO(address);
@@ -84,7 +84,7 @@ inline auto Bus::readWord(u32 address) -> u32 {
 }
 
 inline auto Bus::readDouble(u32 address) -> u64 {
-  address &= 0x1fff'ffff;
+  address &= 0x1fff'fff8;
   if(address <= 0x007f'ffff) return rdram.ram.readDouble(address);
   if(address <= 0x03ef'ffff) return 0;
   if(address <= 0x03ff'ffff) { u64 data = rdram.readIO(address); return data << 32 | rdram.readIO(address + 4); }
@@ -146,7 +146,7 @@ inline auto Bus::writeHalf(u32 address, u16 data) -> void {
     } unreachable;
   };
 
-  address &= 0x1fff'ffff;
+  address &= 0x1fff'fffe;
   if(address <= 0x007f'ffff) return rdram.ram.writeHalf(address, data);
   if(address <= 0x03ef'ffff) return;
   if(address <= 0x03ff'ffff) return rdram.writeIO(address, transform(data));
@@ -169,7 +169,7 @@ inline auto Bus::writeHalf(u32 address, u16 data) -> void {
 }
 
 inline auto Bus::writeWord(u32 address, u32 data) -> void {
-  address &= 0x1fff'ffff;
+  address &= 0x1fff'fffc;
   if(address <= 0x007f'ffff) return rdram.ram.writeWord(address, data);
   if(address <= 0x03ef'ffff) return;
   if(address <= 0x03ff'ffff) return rdram.writeIO(address, data);
@@ -192,7 +192,7 @@ inline auto Bus::writeWord(u32 address, u32 data) -> void {
 }
 
 inline auto Bus::writeDouble(u32 address, u64 data) -> void {
-  address &= 0x1fff'ffff;
+  address &= 0x1fff'fff8;
   if(address <= 0x007f'ffff) return rdram.ram.writeDouble(address, data);
   if(address <= 0x03ef'ffff) return;
   if(address <= 0x03ff'ffff) { rdram.writeIO(address, data >> 32); return rdram.writeIO(address + 4, data); }

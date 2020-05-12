@@ -1,7 +1,20 @@
 //{
-  auto inKernelMode() const -> bool { return scc.status.privilegeMode == 0; }
-  auto inSupervisorMode() const -> bool { return scc.status.privilegeMode == 1; }
-  auto inUserMode() const -> bool { return scc.status.privilegeMode >= 2; }
+  enum PrivilegeMode : uint { Kernel = 0, Supervisor = 1, User = 2 };
+  auto inKernelMode() const -> bool {
+    if(scc.status.exceptionLevel) return true;
+    if(scc.status.errorLevel) return true;
+    return scc.status.privilegeMode == PrivilegeMode::Kernel;
+  }
+  auto inSupervisorMode() const -> bool {
+    if(scc.status.exceptionLevel) return false;
+    if(scc.status.errorLevel) return false;
+    return scc.status.privilegeMode == PrivilegeMode::Supervisor;
+  }
+  auto inUserMode() const -> bool {
+    if(scc.status.exceptionLevel) return false;
+    if(scc.status.errorLevel) return false;
+    return scc.status.privilegeMode == PrivilegeMode::User;
+  }
 
   //scc-registers.cpp
   auto getControlRegister(uint5) -> u64;
@@ -17,18 +30,18 @@
 
     //1
     struct Random {
-      uint5 value = 31;
+      uint5 index = 31;
       uint1 unused = 0;
     } random;
 
     //2: EntryLo0
     //3: EntryLo1
     struct EntryLo {
-       uint1 ignoreAddressSpaceID = 0;
+       uint1 global = 0;
        uint1 pageValid = 0;
        uint1 pageDirty = 0;
        uint3 cacheAlgorithm = 0;
-      uint24 pageFrameNumber = 0;
+      uint30 physicalAddress = 0;
     } entryLo[2];
 
     //4
@@ -38,11 +51,11 @@
     } context;
 
     //5: PageMask
-    uint12 pageMask = 0;
+    uint25 pageMask = 0;
 
     //6
     struct Wired {
-      uint5 value = 0;
+      uint5 index = 0;
       uint1 unused = 0;
     } wired;
 
@@ -55,8 +68,8 @@
     //10
     struct EntryHi {
        uint8 addressSpaceID = 0;
-      uint27 virtualPageNumber;
-      uint22 virtualPageNumberSignExtension;
+      uint40 virtualAddress = 0;
+      uint22 unused = 0;
        uint2 region = 0;
     } entryHi;
 
@@ -67,18 +80,18 @@
     struct Status {
       uint1 interruptEnable = 0;
       uint1 exceptionLevel = 0;
-      uint1 errorLevel = 0;
+      uint1 errorLevel = 1;
       uint2 privilegeMode = 0;
-      uint1 userMode = 0;
-      uint1 supervisorMode = 0;
-      uint1 kernelMode = 0;
+      uint1 userExtendedAddressing = 0;
+      uint1 supervisorExtendedAddressing = 0;
+      uint1 kernelExtendedAddressing = 0;
       uint8 interruptMask = 0xff;
       uint1 de = 0;  //unused
       uint1 ce = 0;  //unused
       uint1 condition = 0;
       uint1 softReset = 0;
       uint1 tlbShutdown = 0;
-      uint1 vectorLocation = 0;
+      uint1 vectorLocation = 1;
       uint1 instructionTracing = 0;
       uint1 reverseEndian = 0;
       uint1 floatingPointMode = 1;
@@ -100,13 +113,13 @@
     } cause;
 
     //14: Exception Program Counter
-    r64 epc;
+    u64 epc;
 
-    //15: Processor Revision Identifier
-    struct Processor {
+    //15: Coprocessor Revision Identifier
+    struct Coprocessor {
       static constexpr u8 revision = 0x00;
       static constexpr u8 implementation = 0x0b;
-    } processor;
+    } coprocessor;
 
     //16
     struct Configuration {
@@ -118,7 +131,7 @@
     } configuration;
 
     //17: Load Linked Address
-    r64 ll;
+    u64 ll;
     uint1 llbit;
 
     //18
@@ -152,7 +165,7 @@
     } tagLo;
 
     //31: Error Exception Program Counter
-    r64 epcError;
+    u64 epcError;
 
     u32 cr[32];
     bool cf = 0;

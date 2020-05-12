@@ -3,25 +3,14 @@
   auto powerR4300() -> void;
 
   //memory.cpp
-  auto readByte   (u32 address) -> maybe<u32>;
-  auto readHalf   (u32 address) -> maybe<u32>;
-  auto readWord   (u32 address) -> maybe<u32>;
-  auto readDouble (u32 address) -> maybe<u64>;
-  auto writeByte  (u32 address,  u8 data) -> void;
-  auto writeHalf  (u32 address, u16 data) -> void;
-  auto writeWord  (u32 address, u32 data) -> void;
-  auto writeDouble(u32 address, u64 data) -> void;
-
-  union r64 {
-    struct {   int32_t order_msb2(i32h, i32); };
-    struct {  uint32_t order_msb2(u32h, u32); };
-    struct { float32_t order_msb2(f32h, f32); };
-    struct {   int64_t i64; };
-    struct {  uint64_t u64; };
-    struct { float64_t f64; };
-    auto i128() const ->  int128_t { return  (int128_t)i64; }
-    auto u128() const -> uint128_t { return (uint128_t)u64; }
-  };
+  auto readByte   (u64 address) -> maybe<u32>;
+  auto readHalf   (u64 address) -> maybe<u32>;
+  auto readWord   (u64 address) -> maybe<u32>;
+  auto readDouble (u64 address) -> maybe<u64>;
+  auto writeByte  (u64 address,  u8 data) -> void;
+  auto writeHalf  (u64 address, u16 data) -> void;
+  auto writeWord  (u64 address, u32 data) -> void;
+  auto writeDouble(u64 address, u64 data) -> void;
 
   enum Interrupt : uint {
     Software0 = 0,
@@ -37,6 +26,7 @@
   //serialization.cpp
   auto serializeR4300(serializer&) -> void;
 
+  #include "tlb.hpp"
   #include "instruction.hpp"
   #include "exception.hpp"
   #include "pipeline.hpp"

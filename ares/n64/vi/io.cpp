@@ -41,8 +41,8 @@ auto VI::readIO(u32 address) -> u32 {
 
   if(address == 4) {
     //VI_V_CURRENT_LINE
-    data |= rdp.io.field    << 0;
-    data |= rdp.io.vcounter << 1;
+    data |= io.field    << 0;
+    data |= io.vcounter << 1;
   }
 
   if(address == 5) {

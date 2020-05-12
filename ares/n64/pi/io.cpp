@@ -78,7 +78,7 @@ auto PI::readIO(u32 address) -> u32 {
     //PI_BSD_DOM2_RLS
   }
 
-  print("* ", registerNames(address, "PI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "PI_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
@@ -161,5 +161,5 @@ auto PI::writeIO(u32 address, uint32 data) -> void {
     //PI_BSD_DOM2_RLS
   }
 
-  print("* ", registerNames(address, "PI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "PI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }
