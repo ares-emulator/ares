@@ -25,19 +25,21 @@ auto AI::main() -> void {
 }
 
 auto AI::sample() -> void {
-  if(io.fifoPending == 0) return stream->sample(0.0, 0.0);
+  if(io.dmaCount == 0) return stream->sample(0.0, 0.0);
 
-  auto& fifo = this->fifo[io.fifoPlaying];
-  auto data  = fifo.buffer[fifo.offset++];
+  auto data  = rdram.ram.readWord(io.dmaAddress[0]);
   auto left  = i16(data >> 16);
   auto right = i16(data >>  0);
   stream->sample(left / 32768.0, right / 32768.0);
 
-  fifo.length -= 4;
-  if(fifo.length == 0) {
-    io.fifoPending--;
-    io.fifoPlaying ^= 1;
+  io.dmaAddress[0] += 4;
+  io.dmaLength [0] -= 4;
+  if(!io.dmaLength[0]) {
     mi.raise(MI::IRQ::AI);
+    if(--io.dmaCount) {
+      io.dmaAddress[0] = io.dmaAddress[1];
+      io.dmaLength [0] = io.dmaLength [1];
+    }
   }
 }
 

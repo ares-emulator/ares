@@ -22,7 +22,7 @@ auto RDP::readCommand(u32 address) -> u32 {
   if(address == 6) data = rsp.getControlRegister(14);
   if(address == 7) data = rsp.getControlRegister(15);
 
-  print("* ", commandRegisterNames(address, "DPC_UNKNOWN"), " => ", hex(data, 8L), "\n");
+//print("* ", commandRegisterNames(address, "DPC_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
@@ -38,5 +38,5 @@ auto RDP::writeCommand(u32 address, u32 data) -> void {
   if(address == 6) rsp.setControlRegister(14, data);
   if(address == 7) rsp.setControlRegister(15, data);
 
-  print("* ", commandRegisterNames(address, "DPC_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+//print("* ", commandRegisterNames(address, "DPC_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }

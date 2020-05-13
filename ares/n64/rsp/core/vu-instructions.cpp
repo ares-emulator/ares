@@ -1,3 +1,30 @@
+auto RSP::vt() -> v128 {
+  static const u128 quarter = 0x01010101;
+  static const u128 half = quarter << 32 | quarter;
+  static const u128 whole = half << 64 | half;
+
+  auto v = VT.u128;
+  switch(OP >> 21 & 15) {
+  case  0:                           break;  //01234567
+  case  1:                           break;  //01234567
+  case  2: v = (v >>  64) * quarter; break;  //01230123
+  case  3: v = (v >>   0) * quarter; break;  //45674567
+  case  4: v = (v >>  96) * half;    break;  //01010101
+  case  5: v = (v >>  64) * half;    break;  //23232323
+  case  6: v = (v >>  32) * half;    break;  //45454545
+  case  7: v = (v >>   0) * half;    break;  //67676767
+  case  8: v = (v >> 112) * whole;   break;  //00000000
+  case  9: v = (v >>  96) * whole;   break;  //11111111
+  case 10: v = (v >>  80) * whole;   break;  //22222222
+  case 11: v = (v >>  64) * whole;   break;  //33333333
+  case 12: v = (v >>  48) * whole;   break;  //44444444
+  case 13: v = (v >>  32) * whole;   break;  //55555555
+  case 14: v = (v >>  16) * whole;   break;  //66666666
+  case 15: v = (v >>   0) * whole;   break;  //77777777
+  }
+  return v128{v};
+}
+
 auto RSP::instructionCFC2() -> void {
   v128 vdh, vdl, vd;
   switch(RDn) {
@@ -13,7 +40,7 @@ auto RSP::instructionCFC2() -> void {
   vd = _mm_shuffle_epi32  (vd, _MM_SHUFFLE(0, 1, 2, 3));
   vd = _mm_shufflelo_epi16(vd, _MM_SHUFFLE(2, 3, 0, 1));
   vd = _mm_shufflehi_epi16(vd, _MM_SHUFFLE(2, 3, 0, 1));
-  RT.u64 = i64(_mm_movemask_epi8(vd));
+  RT.u32 = i16(_mm_movemask_epi8(vd));
 }
 
 auto RSP::instructionCTC2() -> void {
@@ -25,7 +52,7 @@ auto RSP::instructionCTC2() -> void {
   case 0x02: vth = zero; vtl = VCE;  break;
   default:   vth = zero; vtl = zero; break;
   }
-  u16 rd = RD.u64;
+  u16 rd = RD.u32;
   for(uint bit : range(8)) {
     vth->element(7 - bit) = 0 - bool(rd & 0x0100 << bit);
     vtl->element(7 - bit) = 0 - bool(rd & 0x0001 << bit);
@@ -33,12 +60,12 @@ auto RSP::instructionCTC2() -> void {
 }
 
 auto RSP::instructionLQV() -> void {
-  u32 address = RS.u64 + int7(OP) * 16;
+  u32 address = RS.u32 + int7(OP) * 16;
   VT.u128 = dmem.readQuad(address);
 }
 
 auto RSP::instructionLTV() -> void {
-   u32 address = RS.u64 + int7(OP) * 16;
+   u32 address = RS.u32 + int7(OP) * 16;
    u32 element = OP >> 8 & 7;
    u32 vt = VTn & ~7;
   v128 vs{dmem.readQuad(address)};
@@ -55,20 +82,20 @@ auto RSP::instructionLWC2() -> void {
 }
 
 auto RSP::instructionMFC2() -> void {
-  RT.u64 = i16(VD.element(OP >> 8 & 7));
+  RT.u32 = i16(VD.element(OP >> 8 & 7));
 }
 
 auto RSP::instructionMTC2() -> void {
-  VD.element(OP >> 8 & 7) = RT.u64;
+  VD.element(OP >> 8 & 7) = RT.u32;
 }
 
 auto RSP::instructionSQV() -> void {
-  u32 address = RS.u64 + int7(OP) * 16;
+  u32 address = RS.u32 + int7(OP) * 16;
   dmem.writeQuad(address, VT.u128);
 }
 
 auto RSP::instructionSTV() -> void {
-   u32 address = RS.u64 + int7(OP) * 16;
+   u32 address = RS.u32 + int7(OP) * 16;
    u32 element = OP >> 8 & 7;
    u32 vt = VTn & ~7;
   v128 vs;
@@ -87,12 +114,15 @@ auto RSP::instructionSWC2() -> void {
 }
 
 auto RSP::instructionSWV() -> void {
-   u32 address = RS.u64 + int7(OP) * 16;
+   u32 address = RS.u32 + int7(OP) * 16;
    u32 rotate = (OP >> 8 & 7) * 16;
   v128 vt{VPR[VTn].u128};
   v128 vs{vt.u128 << rotate | vt.u128 >> 128 - rotate};
   dmem.writeQuad(address, vs.u128);
 }
+
+#undef VT
+#define VT this->vt()
 
 auto RSP::instructionVABS() -> void {
   v128 vs0, slt;
@@ -608,3 +638,6 @@ auto RSP::instructionVXOR() -> void {
   ACCL = _mm_xor_si128(VS, VT);
   VD   = ACCL;
 }
+
+#undef VT
+#define VT VPR[VTn]

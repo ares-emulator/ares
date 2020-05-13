@@ -1,7 +1,7 @@
 #include "registers.hpp"
+#include "scc-tlb.cpp"
 #include "scc-registers.cpp"
 #include "fpu-registers.cpp"
-#include "tlb.cpp"
 #include "memory.cpp"
 #include "instruction.cpp"
 #include "cpu-instructions.cpp"
@@ -22,7 +22,7 @@ auto CPU::powerR4300() -> void {
 }
 
 auto CPU::Context::setMode() -> void {
-  mode = self.scc.status.privilegeMode;
+  mode = min(2, self.scc.status.privilegeMode);
   if(self.scc.status.exceptionLevel) mode = Mode::Kernel;
   if(self.scc.status.errorLevel) mode = Mode::Kernel;
 
@@ -42,7 +42,7 @@ auto CPU::Context::setMode() -> void {
     segment[6] = Segment::Mapped;
     segment[7] = Segment::Invalid;
   }
-  if(mode == Mode::User || mode == Mode::Undefined) {
+  if(mode == Mode::User) {
     segment[4] = Segment::Invalid;
     segment[5] = Segment::Invalid;
     segment[6] = Segment::Invalid;

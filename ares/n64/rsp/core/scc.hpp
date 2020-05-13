@@ -85,4 +85,8 @@
       } tmemBusy;
     } command;
   } scc;
+
+  //scc-instructions.cpp
+  auto instructionMFC0() -> void;
+  auto instructionMTC0() -> void;
 //};

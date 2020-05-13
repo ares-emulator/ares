@@ -9,7 +9,7 @@ auto RSP::instruction() -> void {
   }
 //instructionDEBUG();
   instructionEXECUTE();
-  GPR[0].u64 = 0;
+  GPR[0].u32 = 0;
 }
 
 auto RSP::instructionDEBUG() -> void {
@@ -21,10 +21,10 @@ auto RSP::instructionEXECUTE() -> void {
   case 0x01: return instructionREGIMM();
   case 0x02: return instructionJ();
   case 0x03: return instructionJAL();
-  case 0x04: return instructionB(RS.u64 == RT.u64);  //BEQ
-  case 0x05: return instructionB(RS.u64 != RT.u64);  //BNE
-  case 0x06: return instructionB(RS.i64 <= 0);       //BLEZ
-  case 0x07: return instructionB(RS.i64 >  0);       //BGTZ
+  case 0x04: return instructionB(RS.u32 == RT.u32);  //BEQ
+  case 0x05: return instructionB(RS.u32 != RT.u32);  //BNE
+  case 0x06: return instructionB(RS.i32 <= 0);       //BLEZ
+  case 0x07: return instructionB(RS.i32 >  0);       //BGTZ
   case 0x08: return instructionADDIU();  //ADDI
   case 0x09: return instructionADDIU();
   case 0x0a: return instructionSLTIU();  //SLTI
@@ -155,8 +155,8 @@ auto RSP::instructionSPECIAL() -> void {
 
 auto RSP::instructionREGIMM() -> void {
   switch(OP >> 16 & 0x1f) {
-  case 0x00: return instructionB(RS.i64 <  0);  //BLTZ
-  case 0x01: return instructionB(RS.i64 >= 0);  //BGEZ
+  case 0x00: return instructionB(RS.i32 <  0);  //BLTZ
+  case 0x01: return instructionB(RS.i32 >= 0);  //BGEZ
   case 0x02: break;  //BLTZL
   case 0x03: break;  //BGEZL
   case 0x04: break;
@@ -194,10 +194,10 @@ auto RSP::instructionCOP0() -> void {
   switch(OP >> 21 & 31) {
   case 0x00: return instructionMFC0();
   case 0x01: break;  //DMFC0
-  case 0x02: return instructionCFC0();
+  case 0x02: break;  //CFC0
   case 0x04: return instructionMTC0();
   case 0x05: break;  //DMTC0
-  case 0x06: return instructionCTC0();
+  case 0x06: break;  //CTC0
   case 0x08: break;  //BC0
   }
 }

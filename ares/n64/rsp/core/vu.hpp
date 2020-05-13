@@ -1,54 +1,31 @@
 //{
-  //instruction.cpp
-  auto instruction() -> void;
-  auto instructionDEBUG() -> void;
-  auto instructionEXECUTE() -> void;
-  auto instructionSPECIAL() -> void;
-  auto instructionREGIMM() -> void;
-  auto instructionCOP0() -> void;
-  auto instructionCOP2() -> void;
+  union v128 {
+    struct { uint128_t u128; };
+    struct {   __m128i s128; };
+    operator __m128i() const { return s128; }
+    auto operator=(__m128i value) { s128 = value; }
+    auto element(uint index) -> u16& { return ((u16*)&u128)[ 7 - index]; }
+  };
 
-  //cpu-instructions.cpp
-  auto instructionADDIU() -> void;
-  auto instructionADDU() -> void;
-  auto instructionAND() -> void;
-  auto instructionANDI() -> void;
-  auto instructionB(bool) -> void;
-  auto instructionBREAK() -> void;
-  auto instructionCACHE() -> void;
-  auto instructionJ() -> void;
-  auto instructionJAL() -> void;
-  auto instructionJALR() -> void;
-  auto instructionJR() -> void;
-  auto instructionLB() -> void;
-  auto instructionLBU() -> void;
-  auto instructionLH() -> void;
-  auto instructionLHU() -> void;
-  auto instructionLUI() -> void;
-  auto instructionLW() -> void;
-  auto instructionNOR() -> void;
-  auto instructionOR() -> void;
-  auto instructionORI() -> void;
-  auto instructionSB() -> void;
-  auto instructionSH() -> void;
-  auto instructionSLL() -> void;
-  auto instructionSLLV() -> void;
-  auto instructionSLTIU() -> void;
-  auto instructionSLTU() -> void;
-  auto instructionSRA() -> void;
-  auto instructionSRAV() -> void;
-  auto instructionSRL() -> void;
-  auto instructionSRLV() -> void;
-  auto instructionSUBU() -> void;
-  auto instructionSW() -> void;
-  auto instructionXOR() -> void;
-  auto instructionXORI() -> void;
+  //vu-instructions.cpp
+  auto vt() -> v128;
 
-  //scc-instructions.cpp
-  auto instructionCFC0() -> void;
-  auto instructionCTC0() -> void;
-  auto instructionMFC0() -> void;
-  auto instructionMTC0() -> void;
+  struct COP2 {
+    v128 r[32];
+    v128 acch, accm, accl;
+    v128 vcoh, vcol;  //16-bit little endian
+    v128 vcch, vccl;  //16-bit little endian
+    v128 vce;         // 8-bit little endian
+     i32 divin;
+     i32 divout;
+    bool divdp;
+  } vu;
+
+  u16 reciprocals[512];
+  u16 inverseSquareRoots[512];
+
+  static constexpr v128 zero{0};
+  static constexpr v128 invert{u128(0) - 1};
 
   //vu-instructions.cpp
   auto instructionCFC2() -> void;

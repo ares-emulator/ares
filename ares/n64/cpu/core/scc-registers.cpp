@@ -28,7 +28,7 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit(23,63) = scc.context.pageTableEntryBase;
     break;
   case  5:  //pagemask
-    data.bit(0,24) = scc.pageMask;
+    data.bit(13,24) = scc.pageMask;
     break;
   case  6:  //wired
     data.bit(0,4) = scc.wired.index;
@@ -154,7 +154,7 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.context.pageTableEntryBase = data.bit(23,63);
     break;
   case  5:  //pagemask
-    scc.pageMask = data.bit(0,24);
+    scc.pageMask = data.bit(13,24);
     break;
   case  6:  //wired
     scc.wired.index  = data.bit(0,4);

@@ -9,13 +9,24 @@
 #include "serialization.cpp"
 
 auto RSP::powerCore() -> void {
-  for(uint n : range(32)) GPR[n].u64 = 0;
-  for(uint n : range(32)) VPR[n].u128 = 0;
-  LO.u64 = 0;
-  HI.u64 = 0;
+  for(uint n : range(32)) GPR[n].u32 = 0;
+  LO.u32 = 0;
+  HI.u32 = 0;
   PC = 0;
   IP = nothing;
   scc = {};
+  for(uint n : range(32)) VPR[n].u128 = 0;
+  ACCH = zero;
+  ACCM = zero;
+  ACCL = zero;
+  VCOH = zero;
+  VCOL = zero;
+  VCCH = zero;
+  VCCL = zero;
+  VCE  = zero;
+  DIVIN  = 0;
+  DIVOUT = 0;
+  DIVDP  = 0;
 
   reciprocals[0] = u16(~0);
   for(u16 index : range(1, 512)) {

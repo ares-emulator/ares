@@ -1,17 +1,17 @@
 auto RSP::instructionADDIU() -> void {
-  RT.u64 = i32(RS.u32 + IMMi16);
+  RT.u32 = i32(RS.u32 + IMMi16);
 }
 
 auto RSP::instructionADDU() -> void {
-  RD.u64 = i32(RS.u32 + RT.u32);
+  RD.u32 = i32(RS.u32 + RT.u32);
 }
 
 auto RSP::instructionAND() -> void {
-  RD.u64 = RS.u64 & RT.u64;
+  RD.u32 = RS.u32 & RT.u32;
 }
 
 auto RSP::instructionANDI() -> void {
-  RT.u64 = RS.u64 & IMMu16;
+  RT.u32 = RS.u32 & IMMu16;
 }
 
 auto RSP::instructionB(bool take) -> void {
@@ -33,12 +33,12 @@ auto RSP::instructionJ() -> void {
 
 auto RSP::instructionJAL() -> void {
   IP = (PC & 0xf000'0000) | (IMMu26 << 2);
-  RA.u64 = i32(PC + 4);
+  RA.u32 = i32(PC + 4);
 }
 
 auto RSP::instructionJALR() -> void {
   IP = RS.u32;
-  RA.u64 = i32(PC + 4);
+  RA.u32 = i32(PC + 4);
 }
 
 auto RSP::instructionJR() -> void {
@@ -46,39 +46,39 @@ auto RSP::instructionJR() -> void {
 }
 
 auto RSP::instructionLB() -> void {
-  if(auto data = readByte(RS.u32 + IMMi16)) RT.u64 = i8(*data);
+  if(auto data = readByte(RS.u32 + IMMi16)) RT.u32 = i8(*data);
 }
 
 auto RSP::instructionLBU() -> void {
-  if(auto data = readByte(RS.u32 + IMMi16)) RT.u64 = u8(*data);
+  if(auto data = readByte(RS.u32 + IMMi16)) RT.u32 = u8(*data);
 }
 
 auto RSP::instructionLH() -> void {
-  if(auto data = readHalf(RS.u32 + IMMi16)) RT.u64 = i16(*data);
+  if(auto data = readHalf(RS.u32 + IMMi16)) RT.u32 = i16(*data);
 }
 
 auto RSP::instructionLHU() -> void {
-  if(auto data = readHalf(RS.u32 + IMMi16)) RT.u64 = u16(*data);
+  if(auto data = readHalf(RS.u32 + IMMi16)) RT.u32 = u16(*data);
 }
 
 auto RSP::instructionLUI() -> void {
-  RT.u64 = i32(IMMu16 << 16);
+  RT.u32 = i32(IMMu16 << 16);
 }
 
 auto RSP::instructionLW() -> void {
-  if(auto data = readWord(RS.u32 + IMMi16)) RT.u64 = i32(*data);
+  if(auto data = readWord(RS.u32 + IMMi16)) RT.u32 = i32(*data);
 }
 
 auto RSP::instructionNOR() -> void {
-  RD.u64 = ~(RS.u64 | RT.u64);
+  RD.u32 = ~(RS.u32 | RT.u32);
 }
 
 auto RSP::instructionOR() -> void {
-  RD.u64 = RS.u64 | RT.u64;
+  RD.u32 = RS.u32 | RT.u32;
 }
 
 auto RSP::instructionORI() -> void {
-  RT.u64 = RS.u64 | IMMu16;
+  RT.u32 = RS.u32 | IMMu16;
 }
 
 auto RSP::instructionSB() -> void {
@@ -90,39 +90,39 @@ auto RSP::instructionSH() -> void {
 }
 
 auto RSP::instructionSLL() -> void {
-  RD.u64 = i32(RT.u32 << SA);
+  RD.u32 = i32(RT.u32 << SA);
 }
 
 auto RSP::instructionSLLV() -> void {
-  RD.u64 = i32(RT.u32 << (RS.u32 & 31));
+  RD.u32 = i32(RT.u32 << (RS.u32 & 31));
 }
 
 auto RSP::instructionSLTIU() -> void {
-  RT.u64 = RS.u64 < u64(IMMu16);
+  RT.u32 = RS.u32 < u64(IMMu16);
 }
 
 auto RSP::instructionSLTU() -> void {
-  RD.u64 = RS.u64 < RT.u64;
+  RD.u32 = RS.u32 < RT.u32;
 }
 
 auto RSP::instructionSRA() -> void {
-  RD.u64 = RT.i32 >> SA;
+  RD.u32 = RT.i32 >> SA;
 }
 
 auto RSP::instructionSRAV() -> void {
-  RD.u64 = RT.i32 >> (RS.u32 & 31);
+  RD.u32 = RT.i32 >> (RS.u32 & 31);
 }
 
 auto RSP::instructionSRL() -> void {
-  RD.u64 = i32(RT.u32 >> SA);
+  RD.u32 = i32(RT.u32 >> SA);
 }
 
 auto RSP::instructionSRLV() -> void {
-  RD.u64 = i32(RT.u32 >> (RS.u32 & 31));
+  RD.u32 = i32(RT.u32 >> (RS.u32 & 31));
 }
 
 auto RSP::instructionSUBU() -> void {
-  RD.u64 = i32(RS.u32 - RT.u32);
+  RD.u32 = i32(RS.u32 - RT.u32);
 }
 
 auto RSP::instructionSW() -> void {
@@ -130,9 +130,9 @@ auto RSP::instructionSW() -> void {
 }
 
 auto RSP::instructionXOR() -> void {
-  RD.u64 = RS.u64 ^ RT.u64;
+  RD.u32 = RS.u32 ^ RT.u32;
 }
 
 auto RSP::instructionXORI() -> void {
-  RS.u64 = RS.u64 ^ IMMu16;
+  RS.u32 = RS.u32 ^ IMMu16;
 }

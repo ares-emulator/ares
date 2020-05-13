@@ -241,11 +241,11 @@ auto CPU::instructionCOP0() -> void {
   switch(OP >> 21 & 0x1f) {
   case 0x00: return instructionMFC0();
   case 0x01: return instructionDMFC0();
-  case 0x02: return instructionCFC0();
+  case 0x02: break;  //CFC0
   case 0x04: return instructionMTC0();
   case 0x05: return instructionDMTC0();
-  case 0x06: return instructionCTC0();
-  case 0x08: return instructionBC0();
+  case 0x06: break;  //CTC0
+  case 0x08: break;  //BC0F, BC0FL, BC0T, BC0TL
   }
   if(!(OP >> 25 & 1)) return exception.reservedInstruction();
   switch(OP & 0x3f) {

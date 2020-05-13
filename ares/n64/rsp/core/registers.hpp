@@ -30,23 +30,23 @@
   #define DEn (OP >> 11 & 31)
   #define En  (OP >> 21 & 15)
 
-  #define VPR cop2.r
+  #define VPR vu.r
   #define VD  VPR[VDn]
   #define VS  VPR[VSn]
   #define VT  VPR[VTn]
 
-  #define ACCH cop2.acch
-  #define ACCM cop2.accm
-  #define ACCL cop2.accl
-  #define VCOH cop2.vcoh
-  #define VCOL cop2.vcol
-  #define VCCH cop2.vcch
-  #define VCCL cop2.vccl
-  #define VCE  cop2.vce
+  #define ACCH vu.acch
+  #define ACCM vu.accm
+  #define ACCL vu.accl
+  #define VCOH vu.vcoh
+  #define VCOL vu.vcol
+  #define VCCH vu.vcch
+  #define VCCL vu.vccl
+  #define VCE  vu.vce
 
-  #define DIVIN  cop2.divin
-  #define DIVOUT cop2.divout
-  #define DIVDP  cop2.divdp
+  #define DIVIN  vu.divin
+  #define DIVOUT vu.divout
+  #define DIVDP  vu.divdp
 #else
   #undef RSP_REGISTERS_HPP
 

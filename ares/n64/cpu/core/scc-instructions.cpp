@@ -1,18 +1,3 @@
-auto CPU::instructionBC0() -> void {
-  bool condition = OP >> 16 & 1;
-  bool likely    = OP >> 17 & 1;
-  if(scc.cf == condition) IP = PC + (IMMi16 << 2);
-  else if(likely) PC += 4;
-}
-
-auto CPU::instructionCFC0() -> void {
-  RT.u64 = i32(scc.cr[RDn]);
-}
-
-auto CPU::instructionCTC0() -> void {
-  scc.cr[RDn] = RT.u32;
-}
-
 auto CPU::instructionDMFC0() -> void {
   RT.u64 = getControlRegister(RDn);
 }
@@ -73,7 +58,7 @@ auto CPU::instructionTLBR() -> void {
   scc.entryHi.virtualAddress = lo.virtualAddress >> 13;
   scc.entryHi.addressSpaceID = lo.addressSpaceID;
   scc.entryHi.region = lo.region;
-  scc.pageMask = lo.mask;
+  scc.pageMask = lo.mask >> 13;
 }
 
 auto CPU::instructionTLBWI() -> void {
@@ -98,8 +83,8 @@ auto CPU::instructionTLBWI() -> void {
   hi.addressSpaceID = scc.entryHi.addressSpaceID;
   lo.region = scc.entryHi.region;
   hi.region = scc.entryHi.region;
-  lo.mask = scc.pageMask;
-  hi.mask = scc.pageMask;
+  lo.mask = scc.pageMask << 13;
+  hi.mask = scc.pageMask << 13;
   tlb.rebuild();
 }
 
@@ -125,7 +110,7 @@ auto CPU::instructionTLBWR() -> void {
   hi.addressSpaceID = scc.entryHi.addressSpaceID;
   lo.region = scc.entryHi.region;
   hi.region = scc.entryHi.region;
-  lo.mask = scc.pageMask;
-  hi.mask = scc.pageMask;
+  lo.mask = scc.pageMask << 13;
+  hi.mask = scc.pageMask << 13;
   tlb.rebuild();
 }

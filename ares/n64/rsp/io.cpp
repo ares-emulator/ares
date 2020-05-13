@@ -39,7 +39,7 @@ auto RSP::readIO(u32 address) -> u32 {
     //SP_IBIST
   }
 
-  print("* ", registerNames(address, "SP_UNKNOWN"), " => ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "SP_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
@@ -70,5 +70,5 @@ auto RSP::writeIO(u32 address, u32 data) -> void {
     //SP_IBIST
   }
 
-  print("* ", registerNames(address, "SP_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "SP_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }

@@ -3,6 +3,35 @@
   auto getControlRegister(uint5) -> u64;
   auto setControlRegister(uint5, uint64) -> void;
 
+  //Translation Lookaside Buffer
+  struct TLB {
+    CPU& self;
+    TLB(CPU& self) : self(self) {}
+    static constexpr uint Entries = 32;
+
+    //tlb.cpp
+    auto load(u32 address) -> maybe<u32>;
+    auto store(u32 address) -> maybe<u32>;
+    auto exception(u32 address) -> void;
+    auto rebuild() -> void;
+
+    struct Entry {
+      bool valid = 0;
+      bool dirty = 0;
+      bool cached = 0;
+      bool global = 0;
+      u32 physicalAddress = 0;
+      u32 virtualAddress = 0;
+      u32 mask = 0;
+    //unimplemented:
+       u8 addressSpaceID = 0;
+       u8 region = 0;
+    } entry[TLB::Entries * 2];  //even + odd entries
+
+    enum : u8 { Invalid = 0xff };
+    u8 pageTable[1_MiB];  //d12-d31 lookup to TLB entry
+  } tlb{*this};
+
   //System Control Coprocessor
   struct SCC {
     //0
@@ -34,7 +63,7 @@
     } context;
 
     //5: PageMask
-    uint25 pageMask = 0;
+    uint12 pageMask = 0;
 
     //6
     struct Wired {
@@ -149,8 +178,16 @@
 
     //31: Error Exception Program Counter
     u64 epcError;
-
-    u32 cr[32];
-    bool cf = 0;
   } scc;
+
+  //scc-instructions.cpp
+  auto instructionDMFC0() -> void;
+  auto instructionDMTC0() -> void;
+  auto instructionERET() -> void;
+  auto instructionMFC0() -> void;
+  auto instructionMTC0() -> void;
+  auto instructionTLBP() -> void;
+  auto instructionTLBR() -> void;
+  auto instructionTLBWI() -> void;
+  auto instructionTLBWR() -> void;
 //};

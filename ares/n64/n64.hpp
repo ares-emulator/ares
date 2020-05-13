@@ -10,8 +10,10 @@ namespace ares::Nintendo64 {
     //enable all accuracy flags
     static constexpr bool Reference = 0;
 
-    //exceptions when the CPU accesses unaligned memory addresses
-    static constexpr bool AddressErrors = 0 | Reference;
+    struct CPU {
+      //exceptions when the CPU accesses unaligned memory addresses
+      static constexpr bool AddressErrors = 0 | Reference;
+    };
   };
 
   struct Thread {
