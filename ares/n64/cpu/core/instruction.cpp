@@ -6,11 +6,13 @@ auto CPU::raiseException(uint code, uint coprocessor) -> void {
   scc.cause.branchDelay = (bool)IP;
 
   u64 vectorBase = !scc.status.vectorLocation ? (i32)0x8000'0000 : (i32)0xbfc0'0200;
-  u32 vectorOffset = 0x0180;  //todo: 0x0000 for TLB miss, 0x0080 for XTLB miss
+  u32 vectorOffset = (code == 2 || code == 3) ? 0x0000 : 0x0180;
 
   scc.epc = PC;
   if(IP || code) IP = nothing, scc.epc -= 4;
   PC = vectorBase + vectorOffset;
+
+  context.setMode();
 }
 
 auto CPU::instruction() -> void {
@@ -233,7 +235,9 @@ auto CPU::instructionREGIMM() -> void {
 }
 
 auto CPU::instructionCOP0() -> void {
-  if(!scc.status.enable.coprocessor0 && !inKernelMode()) return exception.coprocessor0();
+  if(!scc.status.enable.coprocessor0) {
+    if(context.mode != Context::Mode::Kernel) return exception.coprocessor0();
+  }
   switch(OP >> 21 & 0x1f) {
   case 0x00: return instructionMFC0();
   case 0x01: return instructionDMFC0();

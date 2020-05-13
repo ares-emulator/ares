@@ -25,7 +25,7 @@ auto RDP::readSpan(u32 address) -> u32 {
     //DPS_BUFTEST_DATA
   }
 
-  print("* ", spanRegisterNames(address, "DPS_UNKNOWN"), " => ", hex(data, 8L), "\n");
+//print("* ", spanRegisterNames(address, "DPS_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
@@ -48,5 +48,5 @@ auto RDP::writeSpan(u32 address, u32 data) -> void {
     //DPS_BUFTEST_DATA
   }
 
-  print("* ", spanRegisterNames(address, "DPS_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+//print("* ", spanRegisterNames(address, "DPS_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }

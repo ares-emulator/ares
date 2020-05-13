@@ -3,14 +3,17 @@
   auto powerR4300() -> void;
 
   //memory.cpp
-  auto readByte   (u64 address) -> maybe<u32>;
-  auto readHalf   (u64 address) -> maybe<u32>;
-  auto readWord   (u64 address) -> maybe<u32>;
-  auto readDouble (u64 address) -> maybe<u64>;
-  auto writeByte  (u64 address,  u8 data) -> void;
-  auto writeHalf  (u64 address, u16 data) -> void;
-  auto writeWord  (u64 address, u32 data) -> void;
-  auto writeDouble(u64 address, u64 data) -> void;
+  auto readAddress (u32 address) -> maybe<u32>;
+  auto readByte    (u32 address) -> maybe<u32>;
+  auto readHalf    (u32 address) -> maybe<u32>;
+  auto readWord    (u32 address) -> maybe<u32>;
+  auto readDouble  (u32 address) -> maybe<u64>;
+
+  auto writeAddress(u32 address) -> maybe<u32>;
+  auto writeByte   (u32 address,  u8 data) -> void;
+  auto writeHalf   (u32 address, u16 data) -> void;
+  auto writeWord   (u32 address, u32 data) -> void;
+  auto writeDouble (u32 address, u64 data) -> void;
 
   enum Interrupt : uint {
     Software0 = 0,
@@ -25,6 +28,19 @@
 
   //serialization.cpp
   auto serializeR4300(serializer&) -> void;
+
+  struct Context {
+    CPU& self;
+    Context(CPU& self) : self(self) {}
+
+    enum Mode : uint { Kernel, Supervisor, User, Undefined };
+    enum Segment : uint { Invalid, Mapped, Cached, Uncached };
+    uint mode;
+    uint segment[8];  //512_MiB chunks
+
+    //core.cpp
+    auto setMode() -> void;
+  } context{*this};
 
   #include "tlb.hpp"
   #include "instruction.hpp"

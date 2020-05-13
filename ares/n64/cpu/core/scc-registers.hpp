@@ -1,21 +1,4 @@
 //{
-  enum PrivilegeMode : uint { Kernel = 0, Supervisor = 1, User = 2 };
-  auto inKernelMode() const -> bool {
-    if(scc.status.exceptionLevel) return true;
-    if(scc.status.errorLevel) return true;
-    return scc.status.privilegeMode == PrivilegeMode::Kernel;
-  }
-  auto inSupervisorMode() const -> bool {
-    if(scc.status.exceptionLevel) return false;
-    if(scc.status.errorLevel) return false;
-    return scc.status.privilegeMode == PrivilegeMode::Supervisor;
-  }
-  auto inUserMode() const -> bool {
-    if(scc.status.exceptionLevel) return false;
-    if(scc.status.errorLevel) return false;
-    return scc.status.privilegeMode == PrivilegeMode::User;
-  }
-
   //scc-registers.cpp
   auto getControlRegister(uint5) -> u64;
   auto setControlRegister(uint5, uint64) -> void;
@@ -41,12 +24,12 @@
        uint1 pageValid = 0;
        uint1 pageDirty = 0;
        uint3 cacheAlgorithm = 0;
-      uint30 physicalAddress = 0;
+      uint24 physicalAddress = 0;
     } entryLo[2];
 
     //4
     struct Context {
-      uint19 badVirtualPageNumber = 0;
+      uint19 badVirtualAddress = 0;
       uint41 pageTableEntryBase = 0;
     } context;
 
@@ -68,7 +51,7 @@
     //10
     struct EntryHi {
        uint8 addressSpaceID = 0;
-      uint40 virtualAddress = 0;
+      uint27 virtualAddress = 0;
       uint22 unused = 0;
        uint2 region = 0;
     } entryHi;
@@ -148,7 +131,7 @@
 
     //20
     struct XContext {
-      uint27 badVirtualPageNumber = 0;
+      uint27 badVirtualAddress = 0;
        uint2 region = 0;
       uint31 pageTableEntryBase = 0;
     } xcontext;

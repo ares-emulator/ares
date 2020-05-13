@@ -10,9 +10,6 @@ namespace ares::Nintendo64 {
     //enable all accuracy flags
     static constexpr bool Reference = 0;
 
-    //emulate the CPU translation lookaside buffer
-    static constexpr bool TLB = 0 | Reference;
-
     //exceptions when the CPU accesses unaligned memory addresses
     static constexpr bool AddressErrors = 0 | Reference;
   };

@@ -14,17 +14,17 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit(1)    = scc.entryLo[0].pageValid;
     data.bit(2)    = scc.entryLo[0].pageDirty;
     data.bit(3, 5) = scc.entryLo[0].cacheAlgorithm;
-    data.bit(6,29) = scc.entryLo[0].physicalAddress.bit(6,29);
+    data.bit(6,29) = scc.entryLo[0].physicalAddress;
     break;
   case  3:  //entrylo1
     data.bit(0)    = scc.entryLo[1].global;
     data.bit(1)    = scc.entryLo[1].pageValid;
     data.bit(2)    = scc.entryLo[1].pageDirty;
     data.bit(3, 5) = scc.entryLo[1].cacheAlgorithm;
-    data.bit(6,29) = scc.entryLo[1].physicalAddress.bit(6,29);
+    data.bit(6,29) = scc.entryLo[1].physicalAddress;
     break;
   case  4:  //context
-    data.bit( 4,22) = scc.context.badVirtualPageNumber;
+    data.bit( 4,22) = scc.context.badVirtualAddress;
     data.bit(23,63) = scc.context.pageTableEntryBase;
     break;
   case  5:  //pagemask
@@ -42,7 +42,7 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     break;
   case 10:  //entryhi
     data.bit( 0, 7) = scc.entryHi.addressSpaceID;
-    data.bit( 8,39) = scc.entryHi.virtualAddress.bit(9,39);
+    data.bit(13,39) = scc.entryHi.virtualAddress;
     data.bit(40,61) = scc.entryHi.unused;
     data.bit(62,63) = scc.entryHi.region;
     break;
@@ -72,6 +72,7 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit(29)    = scc.status.enable.coprocessor1;
     data.bit(30)    = scc.status.enable.coprocessor2;
     data.bit(31)    = scc.status.enable.coprocessor3;
+    context.setMode();
     break;
   case 13:  //cause
     data.bit( 2, 6) = scc.cause.exceptionCode;
@@ -105,7 +106,7 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit(0,3) = scc.watchHi.physicalAddressExtended;
     break;
   case 20:  //xcontext
-    data.bit( 4,30) = scc.xcontext.badVirtualPageNumber;
+    data.bit( 4,30) = scc.xcontext.badVirtualAddress;
     data.bit(31,32) = scc.xcontext.region;
     data.bit(33,63) = scc.xcontext.pageTableEntryBase;
     break;
@@ -135,22 +136,22 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.random.unused = data.bit(5);
     break;
   case  2:  //entrylo0
-    scc.entryLo[0].global                    = data.bit(0);
-    scc.entryLo[0].pageValid                 = data.bit(1);
-    scc.entryLo[0].pageDirty                 = data.bit(2);
-    scc.entryLo[0].cacheAlgorithm            = data.bit(3, 5);
-    scc.entryLo[0].physicalAddress.bit(6,29) = data.bit(6,29);
+    scc.entryLo[0].global          = data.bit(0);
+    scc.entryLo[0].pageValid       = data.bit(1);
+    scc.entryLo[0].pageDirty       = data.bit(2);
+    scc.entryLo[0].cacheAlgorithm  = data.bit(3, 5);
+    scc.entryLo[0].physicalAddress = data.bit(6,29);
     break;
   case  3:  //entrylo1
-    scc.entryLo[1].global                    = data.bit(0);
-    scc.entryLo[1].pageValid                 = data.bit(1);
-    scc.entryLo[1].pageDirty                 = data.bit(2);
-    scc.entryLo[1].cacheAlgorithm            = data.bit(3, 5);
-    scc.entryLo[1].physicalAddress.bit(6,29) = data.bit(6,29);
+    scc.entryLo[1].global          = data.bit(0);
+    scc.entryLo[1].pageValid       = data.bit(1);
+    scc.entryLo[1].pageDirty       = data.bit(2);
+    scc.entryLo[1].cacheAlgorithm  = data.bit(3, 5);
+    scc.entryLo[1].physicalAddress = data.bit(6,29);
     break;
   case  4:  //context
-    scc.context.badVirtualPageNumber = data.bit( 4,22);
-    scc.context.pageTableEntryBase   = data.bit(23,63);
+    scc.context.badVirtualAddress  = data.bit( 4,22);
+    scc.context.pageTableEntryBase = data.bit(23,63);
     break;
   case  5:  //pagemask
     scc.pageMask = data.bit(0,24);
@@ -167,10 +168,10 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.count = data.bit(0,31);
     break;
   case 10:  //entryhi
-    scc.entryHi.addressSpaceID           = data.bit( 0, 7);
-    scc.entryHi.virtualAddress.bit(9,39) = data.bit( 8,39);
-    scc.entryHi.unused                   = data.bit(40,61);
-    scc.entryHi.region                   = data.bit(62,63);
+    scc.entryHi.addressSpaceID = data.bit( 0, 7);
+    scc.entryHi.virtualAddress = data.bit(13,39);
+    scc.entryHi.unused         = data.bit(40,61);
+    scc.entryHi.region         = data.bit(62,63);
     break;
   case 11:  //compare
     scc.compare = data.bit(0,31);
@@ -230,9 +231,9 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.watchHi.physicalAddressExtended = data.bit(0,3);
     break;
   case 20:  //xcontext
-    scc.xcontext.badVirtualPageNumber = data.bit( 4,30);
-    scc.xcontext.region               = data.bit(31,32);
-    scc.xcontext.pageTableEntryBase   = data.bit(33,63);
+    scc.xcontext.badVirtualAddress  = data.bit( 4,30);
+    scc.xcontext.region             = data.bit(31,32);
+    scc.xcontext.pageTableEntryBase = data.bit(33,63);
     break;
   case 26:  //parity error
     scc.parityError.diagnostic = data.bit(0,7);
