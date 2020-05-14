@@ -22,23 +22,6 @@
   #define RT GPR[RTn]
   #define RS GPR[RSn]
   #define RA GPR[Core::Register::RA]
-
-  //FPU
-  #define FDn (OP >>  6 & 31)
-  #define FSn (OP >> 11 & 31)
-  #define FTn (OP >> 16 & 31)
-  #define FRn (OP >> 21 & 31)
-
-  #define FPR fpu.r
-  #define FD  FPR[FDn]
-  #define FS  FPR[FSn]
-  #define FT  FPR[FTn]
-  #define FR  FPR[FRn]
-
-  #define FPU_SINGLE  ((pipeline.instruction & 1 << 21) == 0)
-  #define FPU_DOUBLE  ((pipeline.instruction & 1 << 21) != 0)
-  #define FPU_REAL    ((pipeline.instruction & 1 << 23) == 0)
-  #define FPU_INTEGER ((pipeline.instruction & 1 << 23) != 0)
 #else
   #undef CPU_REGISTERS_HPP
 
@@ -63,21 +46,4 @@
   #undef RT
   #undef RS
   #undef RA
-
-  //FPU
-  #undef FDn
-  #undef FSn
-  #undef FTn
-  #undef FRn
-
-  #undef FPR
-  #undef FD
-  #undef FS
-  #undef FT
-  #undef FR
-
-  #undef FPU_SINGLE
-  #undef FPU_DOUBLE
-  #undef FPU_REAL
-  #undef FPU_INTEGER
 #endif

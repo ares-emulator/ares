@@ -270,9 +270,6 @@ auto CPU::instructionCOP1() -> void {
   case 0x08: return instructionBC1();
   }
   if(!(OP >> 25 & 1)) return exception.reservedInstruction();
-//if(!scc.status.floatingPointMode) {
-//  OP &= ~0b0000'0000'0010'0001'0000'1000'0100'0000;
-//}
   switch(OP & 0x3f) {
   case 0x00: return instructionFADD();
   case 0x01: return instructionFSUB();

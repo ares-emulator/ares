@@ -7,7 +7,7 @@ static const vector<string> registerNames = {
 
 auto MI::readIO(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
-  u32 data = 0;
+  uint32 data;
 
   if(address == 0) {
     //MI_INIT_MODE
@@ -15,34 +15,37 @@ auto MI::readIO(u32 address) -> u32 {
 
   if(address == 1) {
     //MI_VERSION
-    data = 0x01010101;  //unverified
+    data.byte(0) = revision.io;
+    data.byte(1) = revision.rac;
+    data.byte(2) = revision.rdp;
+    data.byte(3) = revision.rsp;
   }
 
   if(address == 2) {
     //MI_INTR
-    data |= irq.sp.line << 0;
-    data |= irq.si.line << 1;
-    data |= irq.ai.line << 2;
-    data |= irq.vi.line << 3;
-    data |= irq.pi.line << 4;
-    data |= irq.dp.line << 5;
+    data.bit(0) = irq.sp.line;
+    data.bit(1) = irq.si.line;
+    data.bit(2) = irq.ai.line;
+    data.bit(3) = irq.vi.line;
+    data.bit(4) = irq.pi.line;
+    data.bit(5) = irq.dp.line;
   }
 
   if(address == 3) {
     //MI_INTR_MASK
-    data |= irq.sp.mask << 0;
-    data |= irq.si.mask << 1;
-    data |= irq.ai.mask << 2;
-    data |= irq.vi.mask << 3;
-    data |= irq.pi.mask << 4;
-    data |= irq.dp.mask << 5;
+    data.bit(0) = irq.sp.mask;
+    data.bit(1) = irq.si.mask;
+    data.bit(2) = irq.ai.mask;
+    data.bit(3) = irq.vi.mask;
+    data.bit(4) = irq.pi.mask;
+    data.bit(5) = irq.dp.mask;
   }
 
 //print("* ", registerNames(address, "MI_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
-auto MI::writeIO(u32 address, u32 data) -> void {
+auto MI::writeIO(u32 address, uint32 data) -> void {
   address = (address & 0xfffff) >> 2;
 
   if(address == 0) {
@@ -59,18 +62,18 @@ auto MI::writeIO(u32 address, u32 data) -> void {
 
   if(address == 3) {
     //MI_INTR_MASK
-    if(data >>  0 & 1) irq.sp.mask = 0;
-    if(data >>  1 & 1) irq.sp.mask = 1;
-    if(data >>  2 & 1) irq.si.mask = 0;
-    if(data >>  3 & 1) irq.si.mask = 1;
-    if(data >>  4 & 1) irq.ai.mask = 0;
-    if(data >>  5 & 1) irq.ai.mask = 1;
-    if(data >>  6 & 1) irq.vi.mask = 0;
-    if(data >>  7 & 1) irq.vi.mask = 1;
-    if(data >>  8 & 1) irq.pi.mask = 0;
-    if(data >>  9 & 1) irq.pi.mask = 1;
-    if(data >> 10 & 1) irq.dp.mask = 0;
-    if(data >> 11 & 1) irq.dp.mask = 1;
+    if(data.bit( 0)) irq.sp.mask = 0;
+    if(data.bit( 1)) irq.sp.mask = 1;
+    if(data.bit( 2)) irq.si.mask = 0;
+    if(data.bit( 3)) irq.si.mask = 1;
+    if(data.bit( 4)) irq.ai.mask = 0;
+    if(data.bit( 5)) irq.ai.mask = 1;
+    if(data.bit( 6)) irq.vi.mask = 0;
+    if(data.bit( 7)) irq.vi.mask = 1;
+    if(data.bit( 8)) irq.pi.mask = 0;
+    if(data.bit( 9)) irq.pi.mask = 1;
+    if(data.bit(10)) irq.dp.mask = 0;
+    if(data.bit(11)) irq.dp.mask = 1;
     poll();
   }
 

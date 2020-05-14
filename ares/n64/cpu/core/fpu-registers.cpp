@@ -1,3 +1,47 @@
+template<> auto CPU::fgr<i32>(uint index) -> i32& {
+  if(scc.status.floatingPointMode) {
+    return fpu.r[index].i32;
+  } else if(index & 1) {
+    return fpu.r[index & ~1].i32h;
+  } else {
+    return fpu.r[index & ~1].i32;
+  }
+}
+
+template<> auto CPU::fgr<u32>(uint index) -> u32& {
+  return (u32&)fgr<i32>(index);
+}
+
+template<> auto CPU::fgr<f32>(uint index) -> f32& {
+  if(scc.status.floatingPointMode) {
+    return fpu.r[index].f32;
+  } else if(index & 1) {
+    return fpu.r[index & ~1].f32h;
+  } else {
+    return fpu.r[index & ~1].f32;
+  }
+}
+
+template<> auto CPU::fgr<i64>(uint index) -> i64& {
+  if(scc.status.floatingPointMode) {
+    return fpu.r[index].i64;
+  } else {
+    return fpu.r[index & ~1].i64;
+  }
+}
+
+template<> auto CPU::fgr<u64>(uint index) -> u64& {
+  return (u64&)fgr<i64>(index);
+}
+
+template<> auto CPU::fgr<f64>(uint index) -> f64& {
+  if(scc.status.floatingPointMode) {
+    return fpu.r[index].f64;
+  } else {
+    return fpu.r[index & ~1].f64;
+  }
+}
+
 auto CPU::getControlRegisterFPU(uint5 index) -> u32 {
   uint32 data;
   switch(index) {

@@ -1,5 +1,6 @@
 //{
   //fpu-registers.cpp
+  template<typename T> auto fgr(uint) -> T&;
   auto getControlRegisterFPU(uint5) -> u32;
   auto setControlRegisterFPU(uint5, uint32) -> void;
 

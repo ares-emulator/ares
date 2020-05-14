@@ -13,6 +13,7 @@
 auto CPU::powerR4300() -> void {
   for(uint n : range(32)) GPR[n].u64 = 0;
   scc = {};
+  fpu = {};
   LO.u64 = 0;
   HI.u64 = 0;
   PC = 0xbfc00000;
