@@ -32,9 +32,9 @@ auto CPU::instructionDMTC1() -> void {
 
 auto CPU::instructionFABS() -> void {
   if(FPU_SINGLE) {
-    FD(f32) = FS(f32);
+    FD(f32) = fabs(FS(f32));
   } else {
-    FD(f64) = FS(f64);
+    FD(f64) = fabs(FS(f64));
   }
 }
 

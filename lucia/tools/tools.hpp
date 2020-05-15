@@ -90,6 +90,10 @@ struct TraceLogger : VerticalLayout {
 
   Label tracerLabel{this, Size{~0, 0}, 2};
   ListView tracerList{this, Size{~0, ~0}};
+  HorizontalLayout controlLayout{this, Size{~0, 0}};
+    Button selectAllButton{&controlLayout, Size{80, 0}};
+    Button unselectAllButton{&controlLayout, Size{80, 0}};
+    CheckLabel traceToTerminal{&controlLayout, Size{~0, 0}};
 };
 
 struct ToolsWindow : Window {

@@ -4,6 +4,21 @@ auto TraceLogger::construct() -> void {
 
   tracerLabel.setText("Trace Logger").setFont(Font().setBold());
   tracerList.onToggle([&](auto item) { eventToggle(item); });
+  selectAllButton.setText("Select All").onActivate([&] {
+    for(auto item : tracerList.items()) {
+      if(item.checked()) continue;
+      item.setChecked(true);
+      eventToggle(item);
+    }
+  });
+  unselectAllButton.setText("Unselect All").onActivate([&] {
+    for(auto item : tracerList.items()) {
+      if(!item.checked()) continue;
+      item.setChecked(false);
+      eventToggle(item);
+    }
+  });
+  traceToTerminal.setText("Trace To Terminal");
 }
 
 auto TraceLogger::reload() -> void {

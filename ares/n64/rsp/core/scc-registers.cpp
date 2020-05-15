@@ -46,20 +46,28 @@ auto RSP::getControlRegister(uint5 index) -> u64 {
     data.bit(0) = scc.semaphore;
     break;
   case  8:  //CMD_START
+    data.bit(0,23) = scc.command.start;
     break;
   case  9:  //CMD_END
+    data.bit(0,23) = scc.command.end;
     break;
   case 10:  //CMD_CURRENT
+    data.bit(0,23) = scc.command.current;
     break;
   case 11:  //CMD_STATUS
+    data.bit(0) = scc.command.status.source;
     break;
   case 12:  //CMD_CLOCK
+    data.bit(0,23) = scc.command.clock;
     break;
   case 13:  //CMD_BUSY
+    data.bit(0,23) = scc.command.bufferBusy;
     break;
   case 14:  //CMD_PIPE_BUSY
+    data.bit(0,23) = scc.command.pipeBusy;
     break;
   case 15:  //CMD_TMEM_BUSY
+    data.bit(0,23) = scc.command.tmemBusy;
     break;
   }
   return data;
@@ -145,20 +153,31 @@ auto RSP::setControlRegister(uint5 index, uint64 data) -> void {
     if(!data.bit(0)) scc.semaphore = 0;
     break;
   case  8:  //CMD_START
+    scc.command.start = data.bit(0,23);
     break;
-  case  9:  //CMD_END
-    break;
-  case 10:  //CMD_CURRENT
+  case  9: {//CMD_END
+    scc.command.end = data.bit(0,23);
+  //hack:
+    scc.command.current = scc.command.end;
+    auto& memory = !scc.command.status.source ? rdram.ram : dmem;
+    for(uint address = scc.command.start; address < scc.command.end; address += 8) {
+      u64 command = memory.readDouble(address) >> 56 & 0x3f;
+      if(command == 0x29) mi.raise(MI::IRQ::DP);
+    }
+  } break;
+  case 10:  //CMD_CURRENT (read-only)
     break;
   case 11:  //CMD_STATUS
+    if(data.bit(0)) scc.command.status.source = 0;
+    if(data.bit(1)) scc.command.status.source = 1;
     break;
-  case 12:  //CMD_CLOCK
+  case 12:  //CMD_CLOCK (read-only)
     break;
-  case 13:  //CMD_BUSY
+  case 13:  //CMD_BUSY (read-only)
     break;
-  case 14:  //CMD_PIPE_BUSY
+  case 14:  //CMD_PIPE_BUSY (read-only)
     break;
-  case 15:  //CMD_TMEM_BUSY
+  case 15:  //CMD_TMEM_BUSY (read-only)
     break;
   }
 }

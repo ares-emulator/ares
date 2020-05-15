@@ -1,12 +1,27 @@
 //MIPS Interface
 
 struct MI {
-  enum class IRQ : uint { SP, SI, AI, VI, PI, DP };
+  Node::Component node;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto interrupt(string_view) -> void;
+
+    struct Tracer {
+      Node::Notification interrupt;
+    } tracer;
+  } debugger;
 
   //mi.cpp
+  auto load(Node::Object) -> void;
+  auto unload() -> void;
+
+  enum class IRQ : uint { SP, SI, AI, VI, PI, DP };
   auto raise(IRQ) -> void;
   auto lower(IRQ) -> void;
   auto poll() -> void;
+
   auto power() -> void;
 
   //io.cpp

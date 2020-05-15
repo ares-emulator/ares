@@ -19,6 +19,7 @@ auto System::load(Node::Object& root) -> void {
   node = Node::System::create(interface->name());
   root = node;
 
+  mi.load(node);
   vi.load(node);
   ai.load(node);
   pi.load(node);
@@ -36,6 +37,7 @@ auto System::load(Node::Object& root) -> void {
 auto System::unload() -> void {
   if(!node) return;
   save();
+  mi.unload();
   vi.unload();
   ai.unload();
   pi.unload();

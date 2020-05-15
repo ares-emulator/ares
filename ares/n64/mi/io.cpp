@@ -50,6 +50,7 @@ auto MI::writeIO(u32 address, uint32 data) -> void {
 
   if(address == 0) {
     //MI_INIT_MODE
+    if(data.bit(11)) mi.lower(MI::IRQ::DP);
   }
 
   if(address == 1) {

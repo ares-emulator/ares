@@ -27,6 +27,9 @@ auto Program::event(ares::Event event) -> void {
 }
 
 auto Program::log(string_view message) -> void {
+  if(traceLogger.traceToTerminal.checked()) {
+    return print(message);
+  }
   if(!traceLogger.fp) {
     auto datetime = chrono::local::datetime().replace("-", "").replace(":", "").replace(" ", "-");
     auto location = emulator->locate({Location::notsuffix(emulator->game.location), "-", datetime, ".log"}, ".log", settings.paths.debugging);

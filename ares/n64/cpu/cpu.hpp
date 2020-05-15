@@ -7,10 +7,12 @@ struct CPU : Thread {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto instruction() -> void;
+    auto exception(string_view) -> void;
     auto interrupt(string_view) -> void;
 
     struct Tracer {
       Node::Instruction instruction;
+      Node::Notification exception;
       Node::Notification interrupt;
     } tracer;
   } debugger;

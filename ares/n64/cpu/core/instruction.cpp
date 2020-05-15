@@ -1,4 +1,7 @@
 auto CPU::raiseException(uint code, uint coprocessor) -> void {
+  if(debugger.tracer.exception->enabled()) {
+    debugger.exception(hex(code, 2L));
+  }
   scc.status.exceptionLevel = 1;
 
   scc.cause.exceptionCode = code;
@@ -18,6 +21,9 @@ auto CPU::raiseException(uint code, uint coprocessor) -> void {
 auto CPU::instruction() -> void {
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
+      if(debugger.tracer.interrupt->enabled()) {
+        debugger.interrupt(hex(scc.cause.interruptPending, 2L));
+      }
       scc.cause.interruptPending = interrupts;
       raiseException(0, interrupts);
     }

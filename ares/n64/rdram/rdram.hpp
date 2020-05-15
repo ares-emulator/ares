@@ -1,7 +1,17 @@
 //RAMBUS RAM
 
 struct RDRAM {
+  Node::Component node;
   Memory ram;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+
+    struct Memory {
+      Node::Memory ram;
+    } memory;
+  } debugger;
 
   //rdram.cpp
   auto load(Node::Object) -> void;

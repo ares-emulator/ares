@@ -464,5 +464,5 @@ auto CPU::Disassembler::hint(P&&... p) const -> string {
 template<typename... P>
 auto CPU::Disassembler::shorthand(P&&... p) const -> string {
   if(showColors) return {"\e[0m\e[1;92m", forward<P>(p)..., "\e[0m"};
-  return {"!", forward<P>(p)...};
+  return {forward<P>(p)...};
 }

@@ -53,36 +53,30 @@
 
     struct Command {
       //8: CMD_START
-      struct Start {
-      } start;
+      uint24 start = 0;
 
       //9: CMD_END
-      struct End {
-      } end;
+      uint24 end = 0;
 
       //10: CMD_CURRENT
-      struct Current {
-      } current;
+      uint24 current = 0;
 
       //11: CMD_STATUS
       struct Status {
+        uint1 source = 0;  //0 = RDRAM, 1 = DMEM
       } status;
 
       //12: CMD_CLOCK
-      struct Clock {
-      } clock;
+      uint24 clock = 0;
 
       //13: CMD_BUSY
-      struct Busy {
-      } busy;
+      uint24 bufferBusy = 0;
 
       //14: CMD_PIPE_BUSY
-      struct PipeBusy {
-      } pipeBusy;
+      uint24 pipeBusy = 0;
 
       //15: CMD_TMEM_BUSY
-      struct TMEMBusy {
-      } tmemBusy;
+      uint24 tmemBusy = 0;
     } command;
   } scc;
 
