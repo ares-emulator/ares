@@ -1,11 +1,11 @@
-static const vector<string> spanRegisterNames = {
+static const vector<string> registerNames = {
   "DPS_TBIST",
   "DPS_TEST_MODE",
   "DPS_BUFTEST_ADDR",
   "DPS_BUFTEST_DATA",
 };
 
-auto RDP::readSpan(u32 address) -> u32 {
+auto RDP::readIO(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   u32 data = 0;
 
@@ -25,11 +25,11 @@ auto RDP::readSpan(u32 address) -> u32 {
     //DPS_BUFTEST_DATA
   }
 
-print("* ", spanRegisterNames(address, "DPS_UNKNOWN"), " => ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "DPS_UNKNOWN"), " => ", hex(data, 8L), "\n");
   return data;
 }
 
-auto RDP::writeSpan(u32 address, u32 data) -> void {
+auto RDP::writeIO(u32 address, u32 data) -> void {
   address = (address & 0xfffff) >> 2;
 
   if(address == 0) {
@@ -48,5 +48,5 @@ auto RDP::writeSpan(u32 address, u32 data) -> void {
     //DPS_BUFTEST_DATA
   }
 
-print("* ", spanRegisterNames(address, "DPS_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+//print("* ", registerNames(address, "DPS_UNKNOWN"), " <= ", hex(data, 8L), "\n");
 }

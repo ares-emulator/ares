@@ -19,8 +19,8 @@ auto RSP::instructionB(bool take) -> void {
 }
 
 auto RSP::instructionBREAK() -> void {
-  scc.status.halted = 1;
-  if(scc.status.interruptOnBreak) mi.raise(MI::IRQ::SP);
+  status.halted = 1;
+  if(status.interruptOnBreak) mi.raise(MI::IRQ::SP);
 }
 
 auto RSP::instructionCACHE() -> void {

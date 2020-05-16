@@ -1,5 +1,4 @@
 #include "registers.hpp"
-#include "scc-registers.cpp"
 #include "memory.cpp"
 #include "instruction.cpp"
 #include "cpu-instructions.cpp"
@@ -14,7 +13,6 @@ auto RSP::powerCore() -> void {
   HI.u32 = 0;
   PC = 0;
   IP = nothing;
-  scc = {};
   for(uint n : range(32)) VPR[n].u128 = 0;
   ACCH = zero;
   ACCM = zero;

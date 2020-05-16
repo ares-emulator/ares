@@ -3,8 +3,8 @@
 namespace ares::Nintendo64 {
 
 RDP rdp;
-#include "io-command.cpp"
-#include "io-span.cpp"
+#include "io.cpp"
+#include "io-scc.cpp"
 #include "serialization.cpp"
 
 auto RDP::load(Node::Object parent) -> void {
