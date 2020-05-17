@@ -3,6 +3,7 @@
 namespace ares::Nintendo64 {
 
 RDP rdp;
+#include "render.cpp"
 #include "io.cpp"
 #include "io-scc.cpp"
 #include "serialization.cpp"
@@ -25,6 +26,9 @@ auto RDP::step(uint clocks) -> void {
 
 auto RDP::power() -> void {
   Thread::reset();
+  command = {};
+  set = {};
+  io = {};
 }
 
 }
