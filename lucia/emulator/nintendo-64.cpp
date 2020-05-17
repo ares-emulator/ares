@@ -11,9 +11,6 @@ Nintendo64::Nintendo64() {
   interface = new ares::Nintendo64::Nintendo64Interface;
   medium = mia::medium("Nintendo 64");
   name = "Nintendo 64";
-
-  firmware.append({"PIF", "NTSC"});
-  firmware.append({"PIF", "PAL"});
 }
 
 auto Nintendo64::load() -> bool {
@@ -32,6 +29,18 @@ auto Nintendo64::load() -> bool {
 
 auto Nintendo64::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
   if(name == "manifest.bml") return Emulator::manifest();
+
+  if(name == "pif.rom") {
+    return vfs::memory::open(Resource::Nintendo64::PIF::ROM, sizeof Resource::Nintendo64::PIF::ROM);
+  }
+
+  if(name == "pif.ntsc.rom") {
+    return vfs::memory::open(Resource::Nintendo64::PIF::NTSC, sizeof Resource::Nintendo64::PIF::NTSC);
+  }
+
+  if(name == "pif.pal.rom") {
+    return vfs::memory::open(Resource::Nintendo64::PIF::PAL, sizeof Resource::Nintendo64::PIF::PAL);
+  }
 
   auto document = BML::unserialize(game.manifest);
   auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();

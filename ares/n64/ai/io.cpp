@@ -41,8 +41,9 @@ auto AI::writeIO(u32 address, uint32 data) -> void {
 
   if(address == 1) {
     //AI_LENGTH
-    if(io.dmaCount < 2) {
-      io.dmaLength[io.dmaCount] = data.bit(0,17) & ~7;
+    uint18 length = data.bit(0,17) & ~7;
+    if(io.dmaCount < 2 && length) {
+      io.dmaLength[io.dmaCount] = length;
       io.dmaCount++;
     }
   }

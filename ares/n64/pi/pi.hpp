@@ -1,8 +1,18 @@
 //Peripheral Interface
 
 struct PI {
+  Node::Component node;
   Memory rom;
   Memory ram;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+
+    struct Memory {
+      Node::Memory ram;
+    } memory;
+  } debugger;
 
   //pi.cpp
   auto load(Node::Object) -> void;
@@ -26,6 +36,13 @@ struct PI {
     uint32 readLength = 0;
     uint32 writeLength = 0;
   } io;
+
+  struct BSD {
+    uint8 latency = 0;
+    uint8 pulseWidth = 0;
+    uint8 pageSize = 0;
+    uint8 releaseDuration = 0;
+  } bsd1, bsd2;
 };
 
 extern PI pi;

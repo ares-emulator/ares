@@ -72,7 +72,9 @@ auto RDP::writeSCC(u32 address, uint32 data) -> void {
     command.current = command.end;
     auto& memory = !command.source ? rdram.ram : rsp.dmem;
     for(u32 address = command.start; address < command.end; address += 8) {
-      u64 command = memory.readDouble(address) >> 56 & 0x3f;
+      u64 command = memory.readDouble(address);
+    //print("* RDP ", hex(command, 16L), "\n");
+      command = command >> 56 & 0x3f;
       if(command == 0x27) mi.raise(MI::IRQ::DP);
       if(command == 0x28) mi.raise(MI::IRQ::DP);
       if(command == 0x29) mi.raise(MI::IRQ::DP);

@@ -16,6 +16,11 @@ namespace ares::Nintendo64 {
     };
   };
 
+  struct Region {
+    static inline auto NTSC() -> bool;
+    static inline auto PAL() -> bool;
+  };
+
   struct Thread {
     auto reset() -> void {
       clock = 0;

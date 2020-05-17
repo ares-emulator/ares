@@ -48,34 +48,42 @@ auto PI::readIO(u32 address) -> u32 {
 
   if(address == 5) {
     //PI_BSD_DOM1_LAT
+    data.bit(0,7) = bsd1.latency;
   }
 
   if(address == 6) {
     //PI_BSD_DOM1_PWD
+    data.bit(0,7) = bsd1.pulseWidth;
   }
 
   if(address == 7) {
     //PI_BSD_DOM1_PGS
+    data.bit(0,7) = bsd1.pageSize;
   }
 
   if(address == 8) {
     //PI_BSD_DOM1_RLS
+    data.bit(0,7) = bsd1.releaseDuration;
   }
 
   if(address == 9) {
     //PI_BSD_DOM2_LAT
+    data.bit(0,7) = bsd2.latency;
   }
 
   if(address == 10) {
     //PI_BSD_DOM2_PWD
+    data.bit(0,7) = bsd2.pulseWidth;
   }
 
   if(address == 11) {
     //PI_BSD_DOM2_PGS
+    data.bit(0,7) = bsd2.pageSize;
   }
 
   if(address == 12) {
     //PI_BSD_DOM2_RLS
+    data.bit(0,7) = bsd2.releaseDuration;
   }
 
 //print("* ", registerNames(address, "PI_UNKNOWN"), " => ", hex(data, 8L), "\n");
@@ -131,34 +139,42 @@ auto PI::writeIO(u32 address, uint32 data) -> void {
 
   if(address == 5) {
     //PI_BSD_DOM1_LAT
+    bsd1.latency = data.bit(0,7);
   }
 
   if(address == 6) {
     //PI_BSD_DOM1_PWD
+    bsd1.pulseWidth = data.bit(0,7);
   }
 
   if(address == 7) {
     //PI_BSD_DOM1_PGS
+    bsd1.pageSize = data.bit(0,7);
   }
 
   if(address == 8) {
     //PI_BSD_DOM1_RLS
+    bsd1.releaseDuration = data.bit(0,7);
   }
 
   if(address == 9) {
     //PI_BSD_DOM2_LAT
+    bsd2.latency = data.bit(0,7);
   }
 
   if(address == 10) {
     //PI_BSD_DOM2_PWD
+    bsd2.pulseWidth = data.bit(0,7);
   }
 
   if(address == 11) {
     //PI_BSD_DOM2_PGS
+    bsd2.pageSize = data.bit(0,7);
   }
 
   if(address == 12) {
     //PI_BSD_DOM2_RLS
+    bsd2.releaseDuration = data.bit(0,7);
   }
 
 //print("* ", registerNames(address, "PI_UNKNOWN"), " <= ", hex(data, 8L), "\n");

@@ -4,6 +4,7 @@ auto CPU::raiseException(uint code, uint coprocessor) -> void {
   }
   scc.status.exceptionLevel = 1;
 
+  if(code == 10) print("* reserved instruction @ ", hex(pipeline.address), " ", hex(pipeline.instruction), "\n");
   scc.cause.exceptionCode = code;
   scc.cause.coprocessorError = coprocessor;
   scc.cause.branchDelay = (bool)IP;
@@ -49,7 +50,7 @@ auto CPU::instruction() -> void {
 
 auto CPU::instructionDEBUG() -> void {
   static vector<bool> mask;
-  if(!mask) mask.resize(0x04000000);
+  if(!mask) mask.resize(0x08000000);
   if(mask[(PC & 0x1fffffff) >> 2]) return;
   mask[(PC & 0x1fffffff) >> 2] = 1;
 

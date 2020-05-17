@@ -16,6 +16,10 @@ auto SI::main() -> void {
 
   static constexpr bool Debug = 0;
 
+  //hack:
+  auto data = pi.ram.readByte(0x3f);
+  pi.ram.writeByte(0x3f, 0x80 | data);
+
   if constexpr(Debug) {
     print("{\n");
     for(uint y : range(8)) {
@@ -28,7 +32,7 @@ auto SI::main() -> void {
     print("}\n");
   }
 
-//if(pi.ram.readByte(0x3f) != 0x01) return;
+  if((pi.ram.readByte(0x3f) & 0x3f) != 0x01) return;
   uint3 channel = 0;
   for(uint offset = 0; offset < 64;) {
     u8 send = pi.ram.readByte(offset++) & 0x3f;
@@ -42,6 +46,13 @@ auto SI::main() -> void {
       input[index] = pi.ram.readByte(offset++) & 0x3f;
     }
     uint8 output[256];
+    if(input[0] == 0x00 || input[0] == 0xff) {
+      if(channel < 4 && send == 1 && recv == 3) {
+        output[0] = 0x05;  //0x05 = gamepad; 0x02 = mouse
+        output[1] = 0x00;
+        output[2] = 0x01;
+      }
+    }
     if(input[0] == 0x01) {
       if(channel < 4 && controllers[channel]->device) {
         u32 data = controllers[channel]->device->read();
@@ -65,7 +76,7 @@ auto SI::main() -> void {
     }
     channel++;
   }
-//pi.ram.writeByte(0x3f, 0x00);
+  pi.ram.writeByte(0x3c, pi.ram.readByte(0x3c) & 0x7f);
 
   if constexpr(Debug) {
     print("[\n");

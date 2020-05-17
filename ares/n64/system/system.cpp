@@ -9,6 +9,7 @@ auto System::run() -> void {
   while(!vi.refreshed) cpu.main();
   vi.refreshed = false;
   vi.refresh();
+  si.main();
 }
 
 auto System::load(Node::Object& root) -> void {
@@ -18,6 +19,14 @@ auto System::load(Node::Object& root) -> void {
 
   node = Node::System::create(interface->name());
   root = node;
+
+  regionNode = node->append<Node::String>("Region", "NTSC → PAL");
+  regionNode->setAllowedValues({
+    "NTSC → PAL",
+    "PAL → NTSC",
+    "NTSC",
+    "PAL"
+  });
 
   mi.load(node);
   vi.load(node);
@@ -60,6 +69,20 @@ auto System::save() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting>()) setting->setLatch();
+
+  auto setRegion = [&](string region) {
+    if(region == "NTSC") {
+      information.region = Region::NTSC;
+    }
+    if(region == "PAL") {
+      information.region = Region::PAL;
+    }
+  };
+  auto regionsHave = regionNode->latch().split("→").strip();
+  setRegion(regionsHave.first());
+  for(auto& have : reverse(regionsHave)) {
+    if(have == cartridge.region()) setRegion(have);
+  }
 
   cartridge.power();
   mi.power();

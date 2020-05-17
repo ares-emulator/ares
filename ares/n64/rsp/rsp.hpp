@@ -47,7 +47,6 @@ struct RSP : Thread {
      uint1 singleStep = 0;
      uint1 interruptOnBreak = 0;
      uint1 signal[8] = {};
-    uint12 pc = 0;
   } status;
 
   #include "core/core.hpp"

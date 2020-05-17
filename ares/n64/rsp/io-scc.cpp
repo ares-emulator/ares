@@ -135,7 +135,6 @@ auto RSP::writeSCC(u32 address, uint32 data) -> void {
 
   if(address == 4) {
     //SP_STATUS
-    bool halted = status.halted;
     if(data.bit( 0)) status.halted = 0;
     if(data.bit( 1)) status.halted = 1;
     if(data.bit( 2)) status.broken = 0;
@@ -161,7 +160,6 @@ auto RSP::writeSCC(u32 address, uint32 data) -> void {
     if(data.bit(22)) status.signal[6] = 1;
     if(data.bit(23)) status.signal[7] = 0;
     if(data.bit(24)) status.signal[7] = 1;
-    if(halted && !status.halted) core.pc = status.pc;
   }
 
   if(address == 5) {

@@ -21,6 +21,8 @@ auto Cartridge::connect() -> void {
 
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
+  information.region = document["game/region"].string();
+  information.cic = document["game/board/cic"].string();
 
   if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
     rom.allocate(memory["size"].natural());
