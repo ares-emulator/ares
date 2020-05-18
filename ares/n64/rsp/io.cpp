@@ -16,7 +16,9 @@ auto RSP::readIO(u32 address) -> u32 {
     //SP_IBIST
   }
 
-//print("* ", registerNames(address, "SP_UNKNOWN"), " => ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "SP_UNKNOWN"), " => ", hex(data, 8L)});
+  }
   return data;
 }
 
@@ -32,5 +34,7 @@ auto RSP::writeIO(u32 address, uint32 data) -> void {
     //SP_IBIST
   }
 
-//print("* ", registerNames(address, "SP_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "SP_UNKNOWN"), " <= ", hex(data, 8L)});
+  }
 }

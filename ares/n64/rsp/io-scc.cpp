@@ -69,11 +69,13 @@ auto RSP::readSCC(u32 address) -> u32 {
 
   if(address == 7) {
     //SP_SEMAPHORE
-    status.semaphore = 1;
     data.bit(0) = status.semaphore;
+    status.semaphore = 1;
   }
 
-//print("* ", registerNamesSCC(address, "SP_UNKNOWN"), " => ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNamesSCC(address, "SP_UNKNOWN"), " => ", hex(data, 8L)});
+  }
   return data;
 }
 
@@ -175,5 +177,7 @@ auto RSP::writeSCC(u32 address, uint32 data) -> void {
     if(!data.bit(0)) status.semaphore = 0;
   }
 
-//print("* ", registerNamesSCC(address, "SP_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNamesSCC(address, "SP_UNKNOWN"), " <= ", hex(data, 8L)});
+  }
 }

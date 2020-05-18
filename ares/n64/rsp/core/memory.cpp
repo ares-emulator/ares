@@ -1,12 +1,12 @@
-auto RSP::readByte(u32 address) -> maybe<u32> {
+auto RSP::readByte(u32 address) -> u32 {
   return dmem.readByte(address);
 }
 
-auto RSP::readHalf(u32 address) -> maybe<u32> {
+auto RSP::readHalf(u32 address) -> u32 {
   return dmem.readHalf(address);
 }
 
-auto RSP::readWord(u32 address) -> maybe<u32> {
+auto RSP::readWord(u32 address) -> u32 {
   return dmem.readWord(address);
 }
 

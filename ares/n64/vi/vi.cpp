@@ -4,6 +4,7 @@ namespace ares::Nintendo64 {
 
 VI vi;
 #include "io.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto VI::load(Node::Object parent) -> void {
@@ -25,12 +26,15 @@ auto VI::load(Node::Object parent) -> void {
       return a << 48 | r << 32 | g << 16 | b << 0;
     }
   });
-  screen->setSize(640, 480);
+  screen->setSize(640, 478);
+
+  debugger.load(node);
 }
 
 auto VI::unload() -> void {
   node = {};
   screen = {};
+  debugger = {};
 }
 
 auto VI::main() -> void {
@@ -53,7 +57,7 @@ auto VI::step(uint clocks) -> void {
 auto VI::refresh() -> void {
   uint pitch  = vi.io.width;
   uint width  = vi.io.xscale <= 0x300 ? 320 : 640;
-  uint height = vi.io.yscale == 0x400 ? 240 : 480;
+  uint height = vi.io.yscale == 0x400 ? 239 : 478;
 
   if(vi.io.colorDepth < 2) {
     memory::fill<u32>(output, width * height);

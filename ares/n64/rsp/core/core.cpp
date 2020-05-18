@@ -9,8 +9,6 @@
 
 auto RSP::powerCore() -> void {
   for(uint n : range(32)) GPR[n].u32 = 0;
-  LO.u32 = 0;
-  HI.u32 = 0;
   PC = 0;
   branch.reset();
   for(uint n : range(32)) VPR[n].u128 = 0;

@@ -13,8 +13,6 @@
 
   //CPU
   #define GPR core.r
-  #define LO  core.lo
-  #define HI  core.hi
   #define PC  core.pc
 
   #define RD GPR[RDn]
@@ -61,8 +59,6 @@
 
   //CPU
   #undef GPR
-  #undef LO
-  #undef HI
   #undef PC
 
   #undef RD

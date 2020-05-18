@@ -4,6 +4,7 @@ namespace ares::Nintendo64 {
 
 AI ai;
 #include "io.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto AI::load(Node::Object parent) -> void {
@@ -12,11 +13,14 @@ auto AI::load(Node::Object parent) -> void {
   stream = node->append<Node::Stream>("AI");
   stream->setChannels(2);
   stream->setFrequency(44100.0);
+
+  debugger.load(node);
 }
 
 auto AI::unload() -> void {
   node = {};
   stream = {};
+  debugger = {};
 }
 
 auto AI::main() -> void {

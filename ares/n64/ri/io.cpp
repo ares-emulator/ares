@@ -45,7 +45,9 @@ auto RI::readIO(u32 address) -> u32 {
     //RI_WERROR
   }
 
-//print("* ", registerNames(address, "RI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "RI_UNKNOWN"), " => ", hex(data, 8L)});
+  }
   return data;
 }
 
@@ -84,5 +86,7 @@ auto RI::writeIO(u32 address, u32 data) -> void {
     //RI_WERROR
   }
 
-//print("* ", registerNames(address, "RI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "RI_UNKNOWN"), " <= ", hex(data, 8L)});
+  }
 }

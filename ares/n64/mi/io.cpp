@@ -41,7 +41,9 @@ auto MI::readIO(u32 address) -> u32 {
     data.bit(5) = irq.dp.mask;
   }
 
-//print("* ", registerNames(address, "MI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "MI_UNKNOWN"), " => ", hex(data, 8L)});
+  }
   return data;
 }
 
@@ -78,5 +80,7 @@ auto MI::writeIO(u32 address, uint32 data) -> void {
     poll();
   }
 
-//print("* ", registerNames(address, "MI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "MI_UNKNOWN"), " <= ", hex(data, 8L)});
+  }
 }

@@ -6,7 +6,6 @@
     //disassembler.cpp
     auto disassemble(u32 address, u32 instruction) -> string;
     template<typename... P> auto hint(P&&... p) const -> string;
-    template<typename... P> auto shorthand(P&&... p) const -> string;
 
     bool showColors = true;
     bool showValues = true;
@@ -18,10 +17,15 @@
     auto SCC() -> vector<string>;
     auto FPU() -> vector<string>;
     auto immediate(i64 value, uint bits = 0) const -> string;
-    auto cpuRegister(uint index, i16 offset) const -> string;
-    auto cpuRegister(uint index) const -> string;
-    auto sccRegister(uint index) const -> string;
-    auto fpuRegister(uint index) const -> string;
+    auto cpuRegisterName(uint index) const -> string;
+    auto cpuRegisterValue(uint index) const -> string;
+    auto cpuRegisterIndex(uint index, i16 offset) const -> string;
+    auto sccRegisterName(uint index) const -> string;
+    auto sccRegisterValue(uint index) const -> string;
+    auto fpuRegisterName(uint index) const -> string;
+    auto fpuRegisterValue(uint index) const -> string;
+    auto ccrRegisterName(uint index) const -> string;
+    auto ccrRegisterValue(uint index) const -> string;
 
     u32 address;
     u32 instruction;

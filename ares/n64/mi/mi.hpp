@@ -7,9 +7,11 @@ struct MI {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto interrupt(string_view) -> void;
+    auto io(string_view) -> void;
 
     struct Tracer {
       Node::Notification interrupt;
+      Node::Notification io;
     } tracer;
   } debugger;
 

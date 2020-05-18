@@ -6,14 +6,17 @@ RDP rdp;
 #include "render.cpp"
 #include "io.cpp"
 #include "io-scc.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto RDP::load(Node::Object parent) -> void {
   node = parent->append<Node::Component>("RDP");
+  debugger.load(node);
 }
 
 auto RDP::unload() -> void {
   node = {};
+  debugger = {};
 }
 
 auto RDP::main() -> void {

@@ -3,6 +3,18 @@
 struct RDP : Thread {
   Node::Component node;
 
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto command(string_view) -> void;
+    auto io(string_view) -> void;
+
+    struct Tracer {
+      Node::Notification command;
+      Node::Notification io;
+    } tracer;
+  } debugger;
+
   //rdp.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;

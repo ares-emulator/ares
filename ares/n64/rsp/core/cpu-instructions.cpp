@@ -46,19 +46,19 @@ auto RSP::instructionJR() -> void {
 }
 
 auto RSP::instructionLB() -> void {
-  if(auto data = readByte(RS.u32 + IMMi16)) RT.u32 = i8(*data);
+  RT.u32 = i8(readByte(RS.u32 + IMMi16));
 }
 
 auto RSP::instructionLBU() -> void {
-  if(auto data = readByte(RS.u32 + IMMi16)) RT.u32 = u8(*data);
+  RT.u32 = u8(readByte(RS.u32 + IMMi16));
 }
 
 auto RSP::instructionLH() -> void {
-  if(auto data = readHalf(RS.u32 + IMMi16)) RT.u32 = i16(*data);
+  RT.u32 = i16(readHalf(RS.u32 + IMMi16));
 }
 
 auto RSP::instructionLHU() -> void {
-  if(auto data = readHalf(RS.u32 + IMMi16)) RT.u32 = u16(*data);
+  RT.u32 = u16(readHalf(RS.u32 + IMMi16));
 }
 
 auto RSP::instructionLUI() -> void {
@@ -66,7 +66,7 @@ auto RSP::instructionLUI() -> void {
 }
 
 auto RSP::instructionLW() -> void {
-  if(auto data = readWord(RS.u32 + IMMi16)) RT.u32 = i32(*data);
+  RT.u32 = i32(readWord(RS.u32 + IMMi16));
 }
 
 auto RSP::instructionNOR() -> void {

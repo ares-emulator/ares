@@ -14,6 +14,13 @@ auto RSP::instruction() -> void {
 }
 
 auto RSP::instructionDEBUG() -> void {
+  static uint counter = 0;
+//if(++counter > 100) return;
+  print(
+    disassembler.hint(hex(pipeline.address, 3L)), "  ",
+  //disassembler.hint(hex(pipeline.instruction, 8L)), "  ",
+    disassembler.disassemble(pipeline.address, pipeline.instruction), "\n"
+  );
 }
 
 auto RSP::instructionEXECUTE() -> void {

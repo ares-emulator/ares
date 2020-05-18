@@ -50,7 +50,9 @@ auto SI::readIO(u32 address) -> u32 {
     data.bit(12)    = io.interrupt;
   }
 
-//print("* ", registerNames(address, "SI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "SI_UNKNOWN"), " => ", hex(data, 8L)});
+  }
   return data;
 }
 
@@ -104,5 +106,7 @@ auto SI::writeIO(u32 address, uint32 data) -> void {
     mi.lower(MI::IRQ::SI);
   }
 
-//print("* ", registerNames(address, "SI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "SI_UNKNOWN"), " <= ", hex(data, 8L)});
+  }
 }

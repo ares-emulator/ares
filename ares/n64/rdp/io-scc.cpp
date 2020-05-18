@@ -37,10 +37,10 @@ auto RDP::readSCC(u32 address) -> u32 {
     data.bit( 4) = command.tmemBusy > 0;
     data.bit( 5) = command.pipeBusy > 0;
     data.bit( 6) = command.bufferBusy > 0;
-    data.bit( 7) = 1;  //cbuf ready?
+    data.bit( 7) = 0;  //cbuf ready?
     data.bit( 8) = 0;  //DMA busy
-    data.bit( 9) = 1;  //end valid
-    data.bit(10) = 1;  //start valid
+    data.bit( 9) = 0;  //end valid
+    data.bit(10) = 0;  //start valid
   }
 
   if(address == 4) {
@@ -63,7 +63,9 @@ auto RDP::readSCC(u32 address) -> u32 {
     data.bit(0,23) = command.tmemBusy;
   }
 
-//print("* ", registerNamesSCC(address, "DPC_UNKNOWN"), " => ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNamesSCC(address, "DPC_UNKNOWN"), " => ", hex(data, 8L)});
+  }
   return data;
 }
 
@@ -80,6 +82,7 @@ auto RDP::writeSCC(u32 address, uint32 data) -> void {
     //DPC_END
     command.end = data.bit(0,23) & ~7;
     render();
+    command.current = command.end;
   }
 
   if(address == 2) {
@@ -116,5 +119,7 @@ auto RDP::writeSCC(u32 address, uint32 data) -> void {
     //DPC_TMEM_BUSY (read-only)
   }
 
-//print("* ", registerNamesSCC(address, "DPC_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNamesSCC(address, "DPC_UNKNOWN"), " <= ", hex(data, 8L)});
+  }
 }

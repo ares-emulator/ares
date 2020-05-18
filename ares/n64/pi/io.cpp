@@ -86,7 +86,9 @@ auto PI::readIO(u32 address) -> u32 {
     data.bit(0,7) = bsd2.releaseDuration;
   }
 
-//print("* ", registerNames(address, "PI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "PI_UNKNOWN"), " => ", hex(data, 8L)});
+  }
   return data;
 }
 
@@ -177,5 +179,7 @@ auto PI::writeIO(u32 address, uint32 data) -> void {
     bsd2.releaseDuration = data.bit(0,7);
   }
 
-//print("* ", registerNames(address, "PI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "PI_UNKNOWN"), " <= ", hex(data, 8L)});
+  }
 }

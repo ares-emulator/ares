@@ -108,7 +108,9 @@ auto VI::readIO(u32 address) -> u32 {
     data.bit(16,27) = io.ysubpixel;
   }
 
-//print("* ", registerNames(address, "VI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "VI_UNKNOWN"), " => ", hex(data, 8L)});
+  }
   return data;
 }
 
@@ -203,5 +205,7 @@ auto VI::writeIO(u32 address, uint32 data) -> void {
     io.ysubpixel = data.bit(16,27);
   }
 
-//print("* ", registerNames(address, "VI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "VI_UNKNOWN"), " <= ", hex(data, 8L)});
+  }
 }

@@ -4,6 +4,16 @@ struct AI : Thread {
   Node::Component node;
   Node::Stream stream;
 
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto io(string_view) -> void;
+
+    struct Tracer {
+      Node::Notification io;
+    } tracer;
+  } debugger;
+
   //ai.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;

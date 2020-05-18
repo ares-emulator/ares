@@ -32,6 +32,8 @@ auto System::load(Node::Object& root) -> void {
   vi.load(node);
   ai.load(node);
   pi.load(node);
+  ri.load(node);
+  si.load(node);
   rdram.load(node);
   cpu.load(node);
   rdp.load(node);
@@ -50,6 +52,8 @@ auto System::unload() -> void {
   vi.unload();
   ai.unload();
   pi.unload();
+  ri.unload();
+  si.unload();
   rdram.unload();
   cpu.unload();
   rdp.unload();

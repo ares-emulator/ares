@@ -6,19 +6,21 @@ RSP rsp;
 #include "core/core.cpp"
 #include "io.cpp"
 #include "io-scc.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto RSP::load(Node::Object parent) -> void {
   node = parent->append<Node::Component>("RSP");
-
   dmem.allocate(4_KiB);
   imem.allocate(4_KiB);
+  debugger.load(node);
 }
 
 auto RSP::unload() -> void {
   dmem.reset();
   imem.reset();
   node = {};
+  debugger = {};
 }
 
 auto RSP::main() -> void {

@@ -8,6 +8,11 @@ struct PI {
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto io(string_view) -> void;
+
+    struct Tracer {
+      Node::Notification io;
+    } tracer;
 
     struct Memory {
       Node::Memory ram;

@@ -32,7 +32,9 @@ auto RDP::readIO(u32 address) -> u32 {
     data.bit(0,31) = io.test.data;
   }
 
-//print("* ", registerNames(address, "DPS_UNKNOWN"), " => ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "DPS_UNKNOWN"), " => ", hex(data, 8L)});
+  }
   return data;
 }
 
@@ -61,5 +63,7 @@ auto RDP::writeIO(u32 address, uint32 data) -> void {
     io.test.data = data.bit(0,31);
   }
 
-//print("* ", registerNames(address, "DPS_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "DPS_UNKNOWN"), " <= ", hex(data, 8L)});
+  }
 }

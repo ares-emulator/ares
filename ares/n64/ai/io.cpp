@@ -25,7 +25,9 @@ auto AI::readIO(u32 address) -> u32 {
     data.bit(31) = io.dmaCount > 1;
   }
 
-//print("* ", registerNames(address, "AI_UNKNOWN"), " => ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "AI_UNKNOWN"), " => ", hex(data, 8L)});
+  }
   return data;
 }
 
@@ -73,5 +75,7 @@ auto AI::writeIO(u32 address, uint32 data) -> void {
     dac.precision = io.bitRate + 1;
   }
 
-//print("* ", registerNames(address, "AI_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "AI_UNKNOWN"), " <= ", hex(data, 8L)});
+  }
 }

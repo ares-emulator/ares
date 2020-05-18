@@ -4,6 +4,16 @@ struct VI : Thread {
   Node::Component node;
   Node::Screen screen;
 
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto io(string_view) -> void;
+
+    struct Tracer {
+      Node::Notification io;
+    } tracer;
+  } debugger;
+
   //vi.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;

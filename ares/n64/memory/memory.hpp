@@ -19,10 +19,11 @@ struct Memory {
 
   auto allocate(u32 capacity) -> void {
     size = capacity & ~7;
-    u32 mask = bit::round(size) - 1;
-    maskByte = mask & ~0;
-    maskHalf = mask & ~1;  //MIPS does not allow unaligned reads:
-    maskWord = mask & ~3;  //this should throw an address exception
+    u32 mask   = bit::round(size) - 1;
+    maskByte   = mask & ~0;
+    maskHalf   = mask & ~1;
+    maskWord   = mask & ~3;
+    maskDouble = mask & ~7;
     data = new u8[mask + 1];
   }
 
@@ -51,7 +52,7 @@ struct Memory {
   }
 
   auto readDouble(u32 address) -> u64 {
-    return __builtin_bswap64(*(u64*)&data[address & maskWord]);
+    return __builtin_bswap64(*(u64*)&data[address & maskDouble]);
   }
 
   auto readQuad(u32 address) -> u128 {
@@ -71,7 +72,7 @@ struct Memory {
   }
 
   auto writeDouble(u32 address, u64 value) -> void {
-    *(u64*)&data[address & maskWord] = __builtin_bswap64(value);
+    *(u64*)&data[address & maskDouble] = __builtin_bswap64(value);
   }
 
   auto writeQuad(u32 address, u128 value) -> void {
@@ -79,12 +80,13 @@ struct Memory {
     writeDouble(address + 8, value >>  0);
   }
 
-private:
+//private:
   u8* data = nullptr;
   u32 size = 0;
   u32 maskByte = 0;
   u32 maskHalf = 0;
   u32 maskWord = 0;
+  u32 maskDouble = 0;
 };
 
 //00000000-7fffffff  kuseg

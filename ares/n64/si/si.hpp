@@ -1,7 +1,21 @@
 //Serial Interface
 
 struct SI {
+  Node::Component node;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto io(string_view) -> void;
+
+    struct Tracer {
+      Node::Notification io;
+    } tracer;
+  } debugger;
+
   //si.cpp
+  auto load(Node::Object) -> void;
+  auto unload() -> void;
   auto main() -> void;
   auto power() -> void;
 
@@ -24,6 +38,8 @@ struct SI {
      uint1 dmaError = 0;
      uint1 interrupt = 0;
   } io;
+
+  u64 resetStrobe = 0;  //hack
 };
 
 extern SI si;

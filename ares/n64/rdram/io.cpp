@@ -55,7 +55,9 @@ auto RDRAM::readIO(u32 address) -> u32 {
     //RDRAM_DEVICE_MANUF
   }
 
-//print("* ", registerNames(address, "RDRAM_UNKNOWN"), " => ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "RDRAM_UNKNOWN"), " => ", hex(data, 8L)});
+  }
   return data;
 }
 
@@ -102,5 +104,7 @@ auto RDRAM::writeIO(u32 address, u32 data) -> void {
     //RDRAM_DEVICE_MANUF
   }
 
-//print("* ", registerNames(address, "RDRAM_UNKNOWN"), " <= ", hex(data, 8L), "\n");
+  if(debugger.tracer.io->enabled()) {
+    debugger.io({registerNames(address, "RDRAM_UNKNOWN"), " <= ", hex(data, 8L)});
+  }
 }

@@ -5,6 +5,23 @@ struct RSP : Thread {
   Memory dmem;
   Memory imem;
 
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto instruction() -> void;
+    auto io(string_view) -> void;
+
+    struct Tracer {
+      Node::Instruction instruction;
+      Node::Notification io;
+    } tracer;
+
+    struct Memory {
+      Node::Memory dmem;
+      Node::Memory imem;
+    } memory;
+  } debugger;
+
   //rsp.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
