@@ -28,10 +28,21 @@
     cpu64 lo;
     cpu64 hi;
       u64 pc;  //program counter
-
-    //internal
-    maybe<u64> ip;
   } core;
+
+  struct Branch {
+    enum : u32 { Step, Take, DelaySlot, Exception, Discard };
+
+    auto inDelaySlot() const -> bool { return state == DelaySlot; }
+    auto reset() -> void { state = Step; }
+    auto take(u32 address) -> void { state = Take; pc = address; }
+    auto delaySlot() -> void { state = DelaySlot; }
+    auto exception() -> void { state = Exception; }
+    auto discard() -> void { state = Discard; }
+
+    u64 pc;
+    u32 state;
+  } branch;
 
   //cpu-instructions.cpp
   auto instructionADD() -> void;

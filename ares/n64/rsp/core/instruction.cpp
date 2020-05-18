@@ -1,15 +1,16 @@
 auto RSP::instruction() -> void {
   pipeline.address = PC;
   pipeline.instruction = imem.readWord(pipeline.address);
-  if(IP) {
-    PC = IP();
-    IP = nothing;
-  } else {
-    PC += 4;
-  }
+
 //instructionDEBUG();
   instructionEXECUTE();
   GPR[0].u32 = 0;
+
+  switch(branch.state) {
+  case Branch::Step: PC += 4; break;
+  case Branch::DelaySlot: PC = branch.pc; branch.reset(); break;
+  case Branch::Take: PC += 4; branch.delaySlot(); break;
+  }
 }
 
 auto RSP::instructionDEBUG() -> void {

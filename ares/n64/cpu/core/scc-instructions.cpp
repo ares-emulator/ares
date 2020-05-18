@@ -7,6 +7,7 @@ auto CPU::instructionDMTC0() -> void {
 }
 
 auto CPU::instructionERET() -> void {
+  branch.exception();
   if(scc.status.errorLevel) {
     PC = scc.epcError;
     scc.status.errorLevel = 0;
@@ -23,7 +24,7 @@ auto CPU::instructionMFC0() -> void {
 }
 
 auto CPU::instructionMTC0() -> void {
-  setControlRegister(RDn, RT.u32);
+  setControlRegister(RDn, i32(RT.u32));
 }
 
 auto CPU::instructionTLBP() -> void {

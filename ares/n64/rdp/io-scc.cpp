@@ -30,7 +30,17 @@ auto RDP::readSCC(u32 address) -> u32 {
 
   if(address == 3) {
     //DPC_STATUS
-    data.bit(0) = command.source;
+    data.bit( 0) = command.source;
+    data.bit( 1) = command.freeze;
+    data.bit( 2) = command.flush;
+    data.bit( 3) = 0;  //start gclk?
+    data.bit( 4) = command.tmemBusy > 0;
+    data.bit( 5) = command.pipeBusy > 0;
+    data.bit( 6) = command.bufferBusy > 0;
+    data.bit( 7) = 1;  //cbuf ready?
+    data.bit( 8) = 0;  //DMA busy
+    data.bit( 9) = 1;  //end valid
+    data.bit(10) = 1;  //start valid
   }
 
   if(address == 4) {
@@ -63,12 +73,12 @@ auto RDP::writeSCC(u32 address, uint32 data) -> void {
   if(address == 0) {
     //DPC_START
     command.start = data.bit(0,23) & ~7;
+    command.current = command.start;
   }
 
   if(address == 1) {
     //DPC_END
     command.end = data.bit(0,23) & ~7;
-    command.current = command.end;
     render();
   }
 
@@ -80,6 +90,14 @@ auto RDP::writeSCC(u32 address, uint32 data) -> void {
     //DPC_STATUS
     if(data.bit(0)) command.source = 0;
     if(data.bit(1)) command.source = 1;
+    if(data.bit(2)) command.freeze = 0;
+    if(data.bit(3)) command.freeze = 1;
+    if(data.bit(4)) command.flush = 0;
+    if(data.bit(5)) command.flush = 1;
+    if(data.bit(6)) command.tmemBusy = 0;
+    if(data.bit(7)) command.pipeBusy = 0;
+    if(data.bit(8)) command.bufferBusy = 0;
+    if(data.bit(9)) command.clock = 0;
   }
 
   if(address == 4) {

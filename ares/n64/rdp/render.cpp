@@ -6,7 +6,6 @@ auto RDP::render() -> void {
     return op;
   };
 
-  command.current = command.start;
   while(command.current < command.end) {
     u64 op = fetch();
 

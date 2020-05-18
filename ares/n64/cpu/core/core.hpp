@@ -1,6 +1,6 @@
 //{
   //core.cpp
-  auto powerR4300() -> void;
+  auto powerR4300(bool reset) -> void;
 
   //memory.cpp
   auto readAddress (u32 address) -> maybe<u32>;
@@ -11,10 +11,10 @@
   auto readWord    (u32 address) -> maybe<u32>;
   auto readDouble  (u32 address) -> maybe<u64>;
 
-  auto writeByte   (u32 address,  u8 data) -> void;
-  auto writeHalf   (u32 address, u16 data) -> void;
-  auto writeWord   (u32 address, u32 data) -> void;
-  auto writeDouble (u32 address, u64 data) -> void;
+  auto writeByte   (u32 address,  u8 data) -> bool;
+  auto writeHalf   (u32 address, u16 data) -> bool;
+  auto writeWord   (u32 address, u32 data) -> bool;
+  auto writeDouble (u32 address, u64 data) -> bool;
 
   //instruction.cpp
   auto raiseException(uint, uint = 0) -> void;

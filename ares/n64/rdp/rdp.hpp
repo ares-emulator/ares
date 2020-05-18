@@ -43,7 +43,6 @@ struct RDP : Thread {
   auto serialize(serializer&) -> void;
 
   struct Command {
-     uint1 source = 0;  //0 = RDRAM, 1 = DMEM
     uint24 start = 0;
     uint24 end = 0;
     uint24 current = 0;
@@ -51,6 +50,9 @@ struct RDP : Thread {
     uint24 bufferBusy = 0;
     uint24 pipeBusy = 0;
     uint24 tmemBusy = 0;
+     uint1 source = 0;  //0 = RDRAM, 1 = DMEM
+     uint1 freeze = 0;
+     uint1 flush = 0;
   } command;
 
   struct Set {

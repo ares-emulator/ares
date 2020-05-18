@@ -16,10 +16,19 @@
     r32 lo;
     r32 hi;
     u32 pc;
-
-    //internal
-    maybe<u32> ip;
   } core;
+
+  struct Branch {
+    enum : u32 { Step, Take, DelaySlot };
+
+    auto inDelaySlot() const -> bool { return state == DelaySlot; }
+    auto reset() -> void { state = Step; }
+    auto take(u32 address) -> void { state = Take; pc = address; }
+    auto delaySlot() -> void { state = DelaySlot; }
+
+    u64 pc;
+    u32 state;
+  } branch;
 
   //cpu-instructions.cpp
   auto instructionADDIU() -> void;

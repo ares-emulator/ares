@@ -15,7 +15,7 @@ auto RSP::instructionANDI() -> void {
 }
 
 auto RSP::instructionB(bool take) -> void {
-  if(take) IP = PC + (IMMi16 << 2);
+  if(take) branch.take(PC + 4 + (IMMi16 << 2));
 }
 
 auto RSP::instructionBREAK() -> void {
@@ -28,21 +28,21 @@ auto RSP::instructionCACHE() -> void {
 }
 
 auto RSP::instructionJ() -> void {
-  IP = (PC & 0xf000'0000) | (IMMu26 << 2);
+  branch.take((PC + 4 & 0xf000'0000) | (IMMu26 << 2));
 }
 
 auto RSP::instructionJAL() -> void {
-  IP = (PC & 0xf000'0000) | (IMMu26 << 2);
-  RA.u32 = i32(PC + 4);
+  branch.take((PC + 4 & 0xf000'0000) | (IMMu26 << 2));
+  RA.u32 = i32(PC + 8);
 }
 
 auto RSP::instructionJALR() -> void {
-  IP = RS.u32;
-  RA.u32 = i32(PC + 4);
+  branch.take(RS.u32);
+  RD.u32 = i32(PC + 8);
 }
 
 auto RSP::instructionJR() -> void {
-  IP = RS.u32;
+  branch.take(RS.u32);
 }
 
 auto RSP::instructionLB() -> void {

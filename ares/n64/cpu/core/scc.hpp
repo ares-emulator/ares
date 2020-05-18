@@ -29,7 +29,8 @@
     } entry[TLB::Entries * 2];  //even + odd entries
 
     enum : u8 { Invalid = 0xff };
-    u8 pageTable[1_MiB];  //d12-d31 lookup to TLB entry
+    u8 pageTable[1_MiB] = {};  //d12-d31 lookup to TLB entry
+    u64 physicalAddress = 0;  //last successful TLB translation
   } tlb{*this};
 
   //System Control Coprocessor

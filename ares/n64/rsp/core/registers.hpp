@@ -16,7 +16,6 @@
   #define LO  core.lo
   #define HI  core.hi
   #define PC  core.pc
-  #define IP  core.ip
 
   #define RD GPR[RDn]
   #define RT GPR[RTn]
@@ -65,7 +64,6 @@
   #undef LO
   #undef HI
   #undef PC
-  #undef IP
 
   #undef RD
   #undef RT

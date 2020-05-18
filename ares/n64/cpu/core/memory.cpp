@@ -59,27 +59,31 @@ auto CPU::readDouble(u32 address) -> maybe<u64> {
   return nothing;
 }
 
-auto CPU::writeByte(u32 address, u8 data) -> void {
-  if(auto physical = writeAddress(address)) return bus.writeByte(physical(), data);
+auto CPU::writeByte(u32 address, u8 data) -> bool {
+  if(auto physical = writeAddress(address)) return bus.writeByte(physical(), data), true;
+  return false;
 }
 
-auto CPU::writeHalf(u32 address, u16 data) -> void {
+auto CPU::writeHalf(u32 address, u16 data) -> bool {
   if constexpr(Accuracy::CPU::AddressErrors) {
-    if(address & 1) return exception.addressStore();
+    if(address & 1) return exception.addressStore(), false;
   }
-  if(auto physical = writeAddress(address)) return bus.writeHalf(physical(), data);
+  if(auto physical = writeAddress(address)) return bus.writeHalf(physical(), data), true;
+  return false;
 }
 
-auto CPU::writeWord(u32 address, u32 data) -> void {
+auto CPU::writeWord(u32 address, u32 data) -> bool {
   if constexpr(Accuracy::CPU::AddressErrors) {
-    if(address & 3) return exception.addressStore();
+    if(address & 3) return exception.addressStore(), false;
   }
-  if(auto physical = writeAddress(address)) return bus.writeWord(physical(), data);
+  if(auto physical = writeAddress(address)) return bus.writeWord(physical(), data), true;
+  return false;
 }
 
-auto CPU::writeDouble(u32 address, u64 data) -> void {
+auto CPU::writeDouble(u32 address, u64 data) -> bool {
   if constexpr(Accuracy::CPU::AddressErrors) {
-    if(address & 7) return exception.addressStore();
+    if(address & 7) return exception.addressStore(), false;
   }
-  if(auto physical = writeAddress(address)) return bus.writeDouble(physical(), data);
+  if(auto physical = writeAddress(address)) return bus.writeDouble(physical(), data), true;
+  return false;
 }

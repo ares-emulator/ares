@@ -25,11 +25,7 @@ auto RSP::writeIO(u32 address, uint32 data) -> void {
 
   if(address == 0) {
     //SP_PC_REG
-    if(core.ip) {
-      core.ip = 0x1000 | data.bit(0,11);
-    } else {
-      core.pc = 0x1000 | data.bit(0,11);
-    }
+    core.pc = data.bit(0,11);
   }
 
   if(address == 1) {

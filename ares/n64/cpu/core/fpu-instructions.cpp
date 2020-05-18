@@ -10,8 +10,8 @@
 auto CPU::instructionBC1() -> void {
   bool condition = OP >> 16 & 1;
   bool likely    = OP >> 17 & 1;
-  if(CF == condition) IP = PC + (IMMi16 << 2);
-  else if(likely) PC += 4;
+  if(CF == condition) branch.take(PC + 4 + (IMMi16 << 2));
+  else if(likely) branch.discard();
 }
 
 auto CPU::instructionCFC1() -> void {

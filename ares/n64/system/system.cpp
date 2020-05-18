@@ -92,7 +92,7 @@ auto System::power(bool reset) -> void {
   ri.power();
   si.power();
   rdram.power();
-  cpu.power();
+  cpu.power(reset);
   rdp.power();
   rsp.power();
 

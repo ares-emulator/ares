@@ -2,7 +2,7 @@ auto CPU::TLB::load(u32 address) -> maybe<u32> {
   i8 index = pageTable[address >> 12];
   if(index == Invalid) return self.exception.tlbLoad(), nothing;
   if(!entry[index].valid) return self.exception.tlbLoad(), nothing;
-  return entry[index].physicalAddress | address & 0xfff;
+  return physicalAddress = entry[index].physicalAddress | address & 0xfff;
 }
 
 auto CPU::TLB::store(u32 address) -> maybe<u32> {
@@ -10,7 +10,7 @@ auto CPU::TLB::store(u32 address) -> maybe<u32> {
   if(index == Invalid) return self.exception.tlbStore(), nothing;
   if(!entry[index].valid) return self.exception.tlbStore(), nothing;
   if(!entry[index].dirty) return self.exception.tlbModification(), nothing;
-  return entry[index].physicalAddress | address & 0xfff;
+  return physicalAddress = entry[index].physicalAddress | address & 0xfff;
 }
 
 auto CPU::TLB::exception(u32 address) -> void {

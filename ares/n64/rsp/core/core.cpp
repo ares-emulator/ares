@@ -12,7 +12,7 @@ auto RSP::powerCore() -> void {
   LO.u32 = 0;
   HI.u32 = 0;
   PC = 0;
-  IP = nothing;
+  branch.reset();
   for(uint n : range(32)) VPR[n].u128 = 0;
   ACCH = zero;
   ACCM = zero;

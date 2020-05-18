@@ -9,7 +9,6 @@ CPU cpu;
 
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Component>("CPU");
-
   debugger.load(node);
 }
 
@@ -40,20 +39,9 @@ auto CPU::step(uint clocks) -> void {
   }
 }
 
-auto CPU::power() -> void {
+auto CPU::power(bool reset) -> void {
   Thread::reset();
-  powerR4300();
-
-  //PIF ROM simulation:
-  core.r[20].u64 = 0x0000'0001;
-  core.r[22].u64 = 0x0000'003f;
-  core.r[29].u64 = 0xa400'1ff0;
-  core.pc        = 0xbfc0'0000;  //0xa400'0040;
-
-  for(uint offset = 0; offset < 0x1000; offset += 4) {
-    auto data = bus.readWord(0xb000'0000 + offset);
-    bus.writeWord(0xa400'0000 + offset, data);
-  }
+  powerR4300(reset);
 }
 
 }

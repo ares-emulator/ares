@@ -24,7 +24,7 @@ struct CPU : Thread {
   auto main() -> void;
   auto step(uint clocks) -> void;
 
-  auto power() -> void;
+  auto power(bool reset) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

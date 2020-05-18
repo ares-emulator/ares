@@ -2,46 +2,52 @@ auto CPU::raiseException(uint code, uint coprocessor) -> void {
   if(debugger.tracer.exception->enabled()) {
     debugger.exception(hex(code, 2L));
   }
-  scc.status.exceptionLevel = 1;
 
-  if(code == 10) print("* reserved instruction @ ", hex(pipeline.address), " ", hex(pipeline.instruction), "\n");
-  scc.cause.exceptionCode = code;
-  scc.cause.coprocessorError = coprocessor;
-  scc.cause.branchDelay = (bool)IP;
+  if(!scc.status.exceptionLevel) {
+    if(code == 10) print("* reserved instruction @ ", hex(pipeline.address), " ", hex(pipeline.instruction), "\n");
+    scc.epc = PC;
+    scc.status.exceptionLevel = 1;
+    scc.cause.exceptionCode = code;
+    scc.cause.coprocessorError = coprocessor;
+    if(scc.cause.branchDelay = branch.inDelaySlot()) scc.epc -= 4;
+  } else {
+    scc.cause.exceptionCode = code;
+    scc.cause.coprocessorError = coprocessor;
+  }
 
-  u64 vectorBase = !scc.status.vectorLocation ? (i32)0x8000'0000 : (i32)0xbfc0'0200;
+  u64 vectorBase = !scc.status.vectorLocation ? i32(0x8000'0000) : i32(0xbfc0'0200);
   u32 vectorOffset = (code == 2 || code == 3) ? 0x0000 : 0x0180;
-
-  scc.epc = PC;
-  if(IP || code) IP = nothing, scc.epc -= 4;
   PC = vectorBase + vectorOffset;
-
+  branch.exception();
   context.setMode();
 }
 
 auto CPU::instruction() -> void {
+  pipeline.address = PC;
+  pipeline.instruction = readWord(pipeline.address)(0);
+
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
       if(debugger.tracer.interrupt->enabled()) {
         debugger.interrupt(hex(scc.cause.interruptPending, 2L));
       }
       scc.cause.interruptPending = interrupts;
-      raiseException(0, interrupts);
+      return raiseException(0, interrupts);
     }
   }
 
-  pipeline.address = PC;
-  pipeline.instruction = readWord(pipeline.address)(0);
-  if(IP) {
-    PC = IP();
-    IP = nothing;
-  } else {
-    PC += 4;
-  }
   debugger.instruction();
 //instructionDEBUG();
   instructionEXECUTE();
   GPR[0].u64 = 0;
+
+  switch(branch.state) {
+  case Branch::Step: PC += 4; break;
+  case Branch::DelaySlot: PC = branch.pc; branch.reset(); break;
+  case Branch::Take: PC += 4; branch.delaySlot(); break;
+  case Branch::Exception: branch.reset(); break;
+  case Branch::Discard: PC += 8; branch.reset(); break;
+  }
 
   if(--scc.random.index < scc.wired.index) {
     scc.random.index = 31;
@@ -54,7 +60,7 @@ auto CPU::instructionDEBUG() -> void {
   if(mask[(PC & 0x1fffffff) >> 2]) return;
   mask[(PC & 0x1fffffff) >> 2] = 1;
 
-//static uint counter = 0;
+  static uint counter = 0;
 //if(++counter > 100) return;
   print(
     disassembler.hint(hex(pipeline.address, 8L)), "  ",

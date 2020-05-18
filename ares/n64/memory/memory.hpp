@@ -2,10 +2,11 @@
 //given the most common memory accesses are words,
 //optimize accesses by special-casing bytes anf halves instead.
 struct Memory {
-  auto bytes()   const -> uint { return size >> 0; }
-  auto halves()  const -> uint { return size >> 1; }
-  auto words()   const -> uint { return size >> 2; }
-  auto doubles() const -> uint { return size >> 3; }
+  auto bytes()   const -> u32 { return size >> 0; }
+  auto halves()  const -> u32 { return size >> 1; }
+  auto words()   const -> u32 { return size >> 2; }
+  auto doubles() const -> u32 { return size >> 3; }
+  auto quads()   const -> u32 { return size >> 4; }
 
   auto reset() -> void {
     delete[] data;
@@ -38,46 +39,44 @@ struct Memory {
   }
 
   auto readByte(u32 address) -> u8 {
-    return *(u8*)&data[address & maskByte ^ 3];
+    return *(u8*)&data[address & maskByte];
   }
 
   auto readHalf(u32 address) -> u16 {
-    return *(u16*)&data[address & maskHalf ^ 2];
+    return __builtin_bswap16(*(u16*)&data[address & maskHalf]);
   }
 
   auto readWord(u32 address) -> u32 {
-    return *(u32*)&data[address & maskWord];
+    return __builtin_bswap32(*(u32*)&data[address & maskWord]);
   }
 
   auto readDouble(u32 address) -> u64 {
-    auto value = *(u64*)&data[address & maskWord];
-    return value << 32 | value >> 32;
+    return __builtin_bswap64(*(u64*)&data[address & maskWord]);
   }
 
   auto readQuad(u32 address) -> u128 {
-    auto value = *(u128*)&data[address & maskWord];
-    return value << 96 | value >> 96 | (u128)u32(value >> 64) << 32 | (u128)u32(value >> 32) << 64;
+    return (u128)readDouble(address + 0) << 64 | (u128)readDouble(address + 8) << 0;
   }
 
   auto writeByte(u32 address, u8 value) -> void {
-    *(u8*)&data[address & maskByte ^ 3] = value;
+    *(u8*)&data[address & maskByte] = value;
   }
 
   auto writeHalf(u32 address, u16 value) -> void {
-    *(u16*)&data[address & maskHalf ^ 2] = value;
+    *(u16*)&data[address & maskHalf] = __builtin_bswap16(value);
   }
 
   auto writeWord(u32 address, u32 value) -> void {
-    *(u32*)&data[address & maskWord] = value;
+    *(u32*)&data[address & maskWord] = __builtin_bswap32(value);
   }
 
   auto writeDouble(u32 address, u64 value) -> void {
-    *(u64*)&data[address & maskWord] = value << 32 | value >> 32;
+    *(u64*)&data[address & maskWord] = __builtin_bswap64(value);
   }
 
   auto writeQuad(u32 address, u128 value) -> void {
-    value = value << 96 | value >> 96 | (u128)u32(value >> 64) << 32 | (u128)u32(value >> 32) << 64;
-    *(u128*)&data[address & maskWord] = value;
+    writeDouble(address + 0, value >> 64);
+    writeDouble(address + 8, value >>  0);
   }
 
 private:

@@ -10,14 +10,16 @@
 #include "disassembler.cpp"
 #include "serialization.cpp"
 
-auto CPU::powerR4300() -> void {
+auto CPU::powerR4300(bool reset) -> void {
   for(uint n : range(32)) GPR[n].u64 = 0;
   scc = {};
+  scc.status.softReset = reset;
   fpu = {};
   LO.u64 = 0;
   HI.u64 = 0;
-  PC = 0xbfc00000;
-  IP = nothing;
+  GPR[Core::Register::SP].u64 = i32(0xa400'1ff0);
+  PC = i32(0xbfc00000);
+  branch.reset();
   fesetround(FE_TONEAREST);
   context.setMode();
 }
