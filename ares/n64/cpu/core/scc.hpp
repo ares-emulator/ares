@@ -13,24 +13,22 @@
     auto load(u32 address) -> maybe<u32>;
     auto store(u32 address) -> maybe<u32>;
     auto exception(u32 address) -> void;
-    auto rebuild() -> void;
 
     struct Entry {
-      bool valid = 0;
-      bool dirty = 0;
-      bool cached = 0;
-      bool global = 0;
-      u32 physicalAddress = 0;
-      u32 virtualAddress = 0;
-      u32 mask = 0;
+       uint1 global[2] = {};
+       uint1 valid[2] = {};
+       uint1 dirty[2] = {};
+       uint3 cacheAlgorithm[2] = {2, 2};
+      uint32 physicalAddress[2] = {};
+      uint32 pageMask = 0x1fff;
+      uint32 virtualAddress = 0;
+       uint8 addressSpaceID = 0;
     //unimplemented:
-       u8 addressSpaceID = 0;
-       u8 region = 0;
-    } entry[TLB::Entries * 2];  //even + odd entries
+      uint22 unused = 0;
+       uint2 region = 0;
+    } entry[TLB::Entries];
 
-    enum : u8 { Invalid = 0xff };
-    u8 pageTable[1_MiB] = {};  //d12-d31 lookup to TLB entry
-    u64 physicalAddress = 0;  //last successful TLB translation
+    u32 physicalAddress = 0;
   } tlb{*this};
 
   //System Control Coprocessor
@@ -49,22 +47,15 @@
 
     //2: EntryLo0
     //3: EntryLo1
-    struct EntryLo {
-       uint1 global = 0;
-       uint1 pageValid = 0;
-       uint1 pageDirty = 0;
-       uint3 cacheAlgorithm = 0;
-      uint24 physicalAddress = 0;
-    } entryLo[2];
+    //5: PageMask
+    //10: EntryHi
+    TLB::Entry tlb;
 
     //4
     struct Context {
       uint19 badVirtualAddress = 0;
       uint41 pageTableEntryBase = 0;
     } context;
-
-    //5: PageMask
-    uint12 pageMask = 0;
 
     //6
     struct Wired {
@@ -77,14 +68,6 @@
 
     //9
     u32 count = 0;
-
-    //10
-    struct EntryHi {
-       uint8 addressSpaceID = 0;
-      uint27 virtualAddress = 0;
-      uint22 unused = 0;
-       uint2 region = 0;
-    } entryHi;
 
     //11
     u32 compare = 0;

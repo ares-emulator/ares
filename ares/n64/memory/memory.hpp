@@ -15,6 +15,8 @@ struct Memory {
     maskByte = 0;
     maskHalf = 0;
     maskWord = 0;
+    maskDouble = 0;
+    maskQuad = 0;
   }
 
   auto allocate(u32 capacity) -> void {
@@ -24,6 +26,7 @@ struct Memory {
     maskHalf   = mask & ~1;
     maskWord   = mask & ~3;
     maskDouble = mask & ~7;
+    maskQuad   = mask & ~15;
     data = new u8[mask + 1];
   }
 
@@ -39,46 +42,29 @@ struct Memory {
     }
   }
 
-  auto readByte(u32 address) -> u8 {
-    return *(u8*)&data[address & maskByte];
-  }
+  //N64 CPU requires aligned memory accesses
+  auto readByte(u32 address) -> u8 { return *(u8*)&data[address & maskByte]; }
+  auto readHalf(u32 address) -> u16 { return bswap16(*(u16*)&data[address & maskHalf]); }
+  auto readWord(u32 address) -> u32 { return bswap32(*(u32*)&data[address & maskWord]); }
+  auto readDouble(u32 address) -> u64 { return bswap64(*(u64*)&data[address & maskDouble]); }
+  auto readQuad(u32 address) -> u128 { return bswap128(*(u128*)&data[address & maskQuad]); }
 
-  auto readHalf(u32 address) -> u16 {
-    return __builtin_bswap16(*(u16*)&data[address & maskHalf]);
-  }
+  auto writeByte(u32 address, u8 value) -> void { *(u8*)&data[address & maskByte] = value; }
+  auto writeHalf(u32 address, u16 value) -> void { *(u16*)&data[address & maskHalf] = bswap16(value); }
+  auto writeWord(u32 address, u32 value) -> void { *(u32*)&data[address & maskWord] = bswap32(value); }
+  auto writeDouble(u32 address, u64 value) -> void { *(u64*)&data[address & maskDouble] = bswap64(value); }
+  auto writeQuad(u32 address, u128 value) -> void { *(u128*)&data[address & maskQuad] = bswap128(value); }
 
-  auto readWord(u32 address) -> u32 {
-    return __builtin_bswap32(*(u32*)&data[address & maskWord]);
-  }
+  //N64 RSP allows unaligned memory accesses in certain cases
+  auto readHalfUnaligned(u32 address) -> u16 { return bswap16(*(u16*)&data[address & maskByte]); }
+  auto readWordUnaligned(u32 address) -> u32 { return bswap32(*(u32*)&data[address & maskByte]); }
+  auto readDoubleUnaligned(u32 address) -> u64 { return bswap64(*(u64*)&data[address & maskByte]); }
+  auto readQuadUnaligned(u32 address) -> u128 { return bswap128(*(u128*)&data[address & maskByte]); }
 
-  auto readDouble(u32 address) -> u64 {
-    return __builtin_bswap64(*(u64*)&data[address & maskDouble]);
-  }
-
-  auto readQuad(u32 address) -> u128 {
-    return (u128)readDouble(address + 0) << 64 | (u128)readDouble(address + 8) << 0;
-  }
-
-  auto writeByte(u32 address, u8 value) -> void {
-    *(u8*)&data[address & maskByte] = value;
-  }
-
-  auto writeHalf(u32 address, u16 value) -> void {
-    *(u16*)&data[address & maskHalf] = __builtin_bswap16(value);
-  }
-
-  auto writeWord(u32 address, u32 value) -> void {
-    *(u32*)&data[address & maskWord] = __builtin_bswap32(value);
-  }
-
-  auto writeDouble(u32 address, u64 value) -> void {
-    *(u64*)&data[address & maskDouble] = __builtin_bswap64(value);
-  }
-
-  auto writeQuad(u32 address, u128 value) -> void {
-    writeDouble(address + 0, value >> 64);
-    writeDouble(address + 8, value >>  0);
-  }
+  auto writeHalfUnaligned(u32 address, u16 value) -> void { *(u16*)&data[address & maskByte] = bswap16(value); }
+  auto writeWordUnaligned(u32 address, u32 value) -> void { *(u32*)&data[address & maskByte] = bswap32(value); }
+  auto writeDoubleUnaligned(u32 address, u64 value) -> void { *(u64*)&data[address & maskByte] = bswap64(value); }
+  auto writeQuadUnaligned(u32 address, u128 value) -> void { *(u128*)&data[address & maskByte] = bswap128(value); }
 
 //private:
   u8* data = nullptr;
@@ -87,6 +73,7 @@ struct Memory {
   u32 maskHalf = 0;
   u32 maskWord = 0;
   u32 maskDouble = 0;
+  u32 maskQuad = 0;
 };
 
 //00000000-7fffffff  kuseg

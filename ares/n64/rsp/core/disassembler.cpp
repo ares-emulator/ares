@@ -70,8 +70,18 @@ auto RSP::Disassembler::EXECUTE() -> vector<string> {
     return {name, rtName(), offset()};
   };
 
+  auto LWC2 = [&]() -> vector<string> {
+    //todo
+    return {"lwc2", vtName(), offset()};
+  };
+
   auto STORE = [&](string_view name) -> vector<string> {
     return {name, rtValue(), offset()};
+  };
+
+  auto SWC2 = [&]() -> vector<string> {
+    //todo
+    return {"swc2", vtValue(), offset()};
   };
 
   switch(instruction >> 26) {
@@ -125,7 +135,7 @@ auto RSP::Disassembler::EXECUTE() -> vector<string> {
   case 0x2f: return CACHE("cache");
   case 0x30: break;  //LL
   case 0x31: break;  //LWC1
-  case 0x32: return {"lwc2", vtName(), offset()};
+  case 0x32: return LWC2();
   case 0x33: break;  //LWC3
   case 0x34: break;  //LLD
   case 0x35: break;  //LDC1
@@ -133,7 +143,7 @@ auto RSP::Disassembler::EXECUTE() -> vector<string> {
   case 0x37: break;  //LD
   case 0x38: break;  //SC
   case 0x39: break;  //SWC1
-  case 0x3a: return {"swc2", vtValue(), offset()};
+  case 0x3a: return SWC2();
   case 0x3b: break;  //SWC3
   case 0x3c: break;  //SCD
   case 0x3d: break;  //SDC1

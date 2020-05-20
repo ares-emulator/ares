@@ -4,7 +4,8 @@
     struct {   __m128i s128; };
     operator __m128i() const { return s128; }
     auto operator=(__m128i value) { s128 = value; }
-    auto element(uint index) -> u16& { return ((u16*)&u128)[ 7 - index]; }
+    auto byte(uint index) -> u8& { return ((u8*)&u128)[15 - index]; }
+    auto element(uint index) -> u16& { return ((u16*)&u128)[7 - index]; }
   };
 
   //vu-instructions.cpp
@@ -30,13 +31,32 @@
   //vu-instructions.cpp
   auto instructionCFC2() -> void;
   auto instructionCTC2() -> void;
+  auto instructionLBV() -> void;
+  auto instructionLDV() -> void;
+  auto instructionLFV() -> void;
+  auto instructionLHV() -> void;
+  auto instructionLLV() -> void;
+  auto instructionLPV() -> void;
   auto instructionLQV() -> void;
+  auto instructionLRV() -> void;
+  auto instructionLSV() -> void;
   auto instructionLTV() -> void;
+  auto instructionLUV() -> void;
   auto instructionLWC2() -> void;
+  auto instructionLWV() -> void;
   auto instructionMFC2() -> void;
   auto instructionMTC2() -> void;
+  auto instructionSBV() -> void;
+  auto instructionSDV() -> void;
+  auto instructionSFV() -> void;
+  auto instructionSHV() -> void;
+  auto instructionSLV() -> void;
+  auto instructionSPV() -> void;
   auto instructionSQV() -> void;
+  auto instructionSRV() -> void;
+  auto instructionSSV() -> void;
   auto instructionSTV() -> void;
+  auto instructionSUV() -> void;
   auto instructionSWC2() -> void;
   auto instructionSWV() -> void;
   auto instructionVABS() -> void;

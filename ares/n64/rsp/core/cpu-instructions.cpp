@@ -46,19 +46,19 @@ auto RSP::instructionJR() -> void {
 }
 
 auto RSP::instructionLB() -> void {
-  RT.u32 = i8(readByte(RS.u32 + IMMi16));
+  RT.u32 = i8(dmem.readByte(RS.u32 + IMMi16));
 }
 
 auto RSP::instructionLBU() -> void {
-  RT.u32 = u8(readByte(RS.u32 + IMMi16));
+  RT.u32 = u8(dmem.readByte(RS.u32 + IMMi16));
 }
 
 auto RSP::instructionLH() -> void {
-  RT.u32 = i16(readHalf(RS.u32 + IMMi16));
+  RT.u32 = i16(dmem.readHalfUnaligned(RS.u32 + IMMi16));
 }
 
 auto RSP::instructionLHU() -> void {
-  RT.u32 = u16(readHalf(RS.u32 + IMMi16));
+  RT.u32 = u16(dmem.readHalfUnaligned(RS.u32 + IMMi16));
 }
 
 auto RSP::instructionLUI() -> void {
@@ -66,7 +66,7 @@ auto RSP::instructionLUI() -> void {
 }
 
 auto RSP::instructionLW() -> void {
-  RT.u32 = i32(readWord(RS.u32 + IMMi16));
+  RT.u32 = i32(dmem.readWordUnaligned(RS.u32 + IMMi16));
 }
 
 auto RSP::instructionNOR() -> void {
@@ -82,11 +82,11 @@ auto RSP::instructionORI() -> void {
 }
 
 auto RSP::instructionSB() -> void {
-  writeByte(RS.u32 + IMMi16, RT.u32);
+  dmem.writeByte(RS.u32 + IMMi16, RT.u32);
 }
 
 auto RSP::instructionSH() -> void {
-  writeHalf(RS.u32 + IMMi16, RT.u32);
+  dmem.writeHalfUnaligned(RS.u32 + IMMi16, RT.u32);
 }
 
 auto RSP::instructionSLL() -> void {
@@ -126,7 +126,7 @@ auto RSP::instructionSUBU() -> void {
 }
 
 auto RSP::instructionSW() -> void {
-  writeWord(RS.u32 + IMMi16, RT.u32);
+  dmem.writeWordUnaligned(RS.u32 + IMMi16, RT.u32);
 }
 
 auto RSP::instructionXOR() -> void {

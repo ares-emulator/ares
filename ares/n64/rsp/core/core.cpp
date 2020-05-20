@@ -1,5 +1,4 @@
 #include "registers.hpp"
-#include "memory.cpp"
 #include "instruction.cpp"
 #include "cpu-instructions.cpp"
 #include "scc-instructions.cpp"

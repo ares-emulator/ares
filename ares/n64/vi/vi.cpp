@@ -56,8 +56,8 @@ auto VI::step(uint clocks) -> void {
 
 auto VI::refresh() -> void {
   uint pitch  = vi.io.width;
-  uint width  = vi.io.xscale <= 0x300 ? 320 : 640;
-  uint height = vi.io.yscale == 0x400 ? 239 : 478;
+  uint width  = vi.io.width;  //vi.io.xscale <= 0x300 ? 320 : 640;
+  uint height = vi.io.yscale <= 0x400 ? 239 : 478;
 
   if(vi.io.colorDepth < 2) {
     memory::fill<u32>(output, width * height);
@@ -87,8 +87,7 @@ auto VI::refresh() -> void {
     }
   }
 
-  uint center = max(0, min(16, (pitch - width) / 2));
-  screen->refresh((uint32*)output + center, width * sizeof(uint32), width, height);
+  screen->refresh((uint32*)output, width * sizeof(uint32), width, height);
 }
 
 auto VI::power() -> void {

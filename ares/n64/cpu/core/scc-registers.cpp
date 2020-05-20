@@ -10,25 +10,25 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit(5)   = scc.random.unused;
     break;
   case  2:  //entrylo0
-    data.bit(0)    = scc.entryLo[0].global;
-    data.bit(1)    = scc.entryLo[0].pageValid;
-    data.bit(2)    = scc.entryLo[0].pageDirty;
-    data.bit(3, 5) = scc.entryLo[0].cacheAlgorithm;
-    data.bit(6,29) = scc.entryLo[0].physicalAddress;
+    data.bit(0)    = scc.tlb.global[0];
+    data.bit(1)    = scc.tlb.valid[0];
+    data.bit(2)    = scc.tlb.dirty[0];
+    data.bit(3, 5) = scc.tlb.cacheAlgorithm[0];
+    data.bit(6,29) = scc.tlb.physicalAddress[0].bit(6,29);
     break;
   case  3:  //entrylo1
-    data.bit(0)    = scc.entryLo[1].global;
-    data.bit(1)    = scc.entryLo[1].pageValid;
-    data.bit(2)    = scc.entryLo[1].pageDirty;
-    data.bit(3, 5) = scc.entryLo[1].cacheAlgorithm;
-    data.bit(6,29) = scc.entryLo[1].physicalAddress;
+    data.bit(0)    = scc.tlb.global[1];
+    data.bit(1)    = scc.tlb.valid[1];
+    data.bit(2)    = scc.tlb.dirty[1];
+    data.bit(3, 5) = scc.tlb.cacheAlgorithm[1];
+    data.bit(6,29) = scc.tlb.physicalAddress[1].bit(6,29);
     break;
   case  4:  //context
     data.bit( 4,22) = scc.context.badVirtualAddress;
     data.bit(23,63) = scc.context.pageTableEntryBase;
     break;
   case  5:  //pagemask
-    data.bit(13,24) = scc.pageMask;
+    data.bit(13,24) = scc.tlb.pageMask.bit(13,24);
     break;
   case  6:  //wired
     data.bit(0,4) = scc.wired.index;
@@ -41,10 +41,10 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit(0,31) = scc.count;
     break;
   case 10:  //entryhi
-    data.bit( 0, 7) = scc.entryHi.addressSpaceID;
-    data.bit(13,39) = scc.entryHi.virtualAddress;
-    data.bit(40,61) = scc.entryHi.unused;
-    data.bit(62,63) = scc.entryHi.region;
+    data.bit( 0, 7) = scc.tlb.addressSpaceID;
+    data.bit(13,39) = scc.tlb.virtualAddress.bit(13,31);
+    data.bit(40,61) = scc.tlb.unused;
+    data.bit(62,63) = scc.tlb.region;
     break;
   case 11:  //compare
     data.bit(0,31) = scc.compare;
@@ -136,25 +136,25 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.random.unused = data.bit(5);
     break;
   case  2:  //entrylo0
-    scc.entryLo[0].global          = data.bit(0);
-    scc.entryLo[0].pageValid       = data.bit(1);
-    scc.entryLo[0].pageDirty       = data.bit(2);
-    scc.entryLo[0].cacheAlgorithm  = data.bit(3, 5);
-    scc.entryLo[0].physicalAddress = data.bit(6,29);
+    scc.tlb.global[0]                    = data.bit(0);
+    scc.tlb.valid[0]                     = data.bit(1);
+    scc.tlb.dirty[0]                     = data.bit(2);
+    scc.tlb.cacheAlgorithm[0]            = data.bit(3, 5);
+    scc.tlb.physicalAddress[0].bit(6,29) = data.bit(6,29);
     break;
   case  3:  //entrylo1
-    scc.entryLo[1].global          = data.bit(0);
-    scc.entryLo[1].pageValid       = data.bit(1);
-    scc.entryLo[1].pageDirty       = data.bit(2);
-    scc.entryLo[1].cacheAlgorithm  = data.bit(3, 5);
-    scc.entryLo[1].physicalAddress = data.bit(6,29);
+    scc.tlb.global[1]                    = data.bit(0);
+    scc.tlb.valid[1]                     = data.bit(1);
+    scc.tlb.dirty[1]                     = data.bit(2);
+    scc.tlb.cacheAlgorithm[1]            = data.bit(3, 5);
+    scc.tlb.physicalAddress[1].bit(6,29) = data.bit(6,29);
     break;
   case  4:  //context
     scc.context.badVirtualAddress  = data.bit( 4,22);
     scc.context.pageTableEntryBase = data.bit(23,63);
     break;
   case  5:  //pagemask
-    scc.pageMask = data.bit(13,24);
+    scc.tlb.pageMask.bit(13,24) = data.bit(13,24);
     break;
   case  6:  //wired
     scc.wired.index  = data.bit(0,4);
@@ -168,10 +168,10 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.count = data.bit(0,31);
     break;
   case 10:  //entryhi
-    scc.entryHi.addressSpaceID = data.bit( 0, 7);
-    scc.entryHi.virtualAddress = data.bit(13,39);
-    scc.entryHi.unused         = data.bit(40,61);
-    scc.entryHi.region         = data.bit(62,63);
+    scc.tlb.addressSpaceID            = data.bit( 0, 7);
+    scc.tlb.virtualAddress.bit(13,31) = data.bit(13,39);
+    scc.tlb.unused                    = data.bit(40,61);
+    scc.tlb.region                    = data.bit(62,63);
     break;
   case 11:  //compare
     scc.compare = data.bit(0,31);

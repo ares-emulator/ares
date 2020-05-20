@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nall/intrinsics.hpp>
+#include <nall/stdint.hpp>
 
 namespace Math {
   static const long double e  = 2.71828182845904523536;
@@ -57,6 +58,10 @@ namespace Math {
   #include <poll.h>
 #endif
 
+#if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_AMD64)
+  #include <immintrin.h>
+#endif
+
 #if defined(COMPILER_MICROSOFT)
   #define va_copy(dest, src) ((dest) = (src))
 #endif
@@ -97,6 +102,47 @@ namespace Math {
   }
 #else
   #define dllexport
+#endif
+
+#undef bswap16
+#undef bswap32
+#undef bswap64
+#undef bswap128
+#undef likely
+#undef unlikely
+#if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
+  #define bswap16(value) __builtin_bswap16(value)
+  #define bswap32(value) __builtin_bswap32(value)
+  #define bswap64(value) __builtin_bswap64(value)
+  #if defined(__SIZEOF_INT128__)
+  inline auto bswap128(uint128_t value) -> uint128_t {
+    #if defined(__SSSE3__)
+    static const __m128i shuffle = _mm_setr_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
+    return reinterpret_cast<uint128_t>(_mm_shuffle_epi8(reinterpret_cast<__m128i>(value), shuffle));
+    #else
+    return (uint128_t)__builtin_bswap64(value) << 64 | __builtin_bswap64(value >> 64);
+    #endif
+  }
+  #endif
+  #define likely(expression) __builtin_expect(bool(expression), true)
+  #define unlikely(expression) __builtin_expect(bool(expression), false)
+#else
+  inline auto bswap16(uint16_t value) -> uint16_t {
+    return value << 8 | value >> 8;
+  }
+  inline auto bswap32(uint32_t value) -> uint32_t {
+    return (uint32_t)bswap16(value) << 16 | bswap16(value >> 16);
+  }
+  inline auto bswap64(uint64_t value) -> uint64_t {
+    return (uint64_t)bswap32(value) << 32 | bswap32(value >> 32);
+  }
+  #if defined(__SIZEOF_INT128__)
+  inline auto bswap128(uint128_t value) -> uint128_t {
+    return (uint128_t)bswap64(value) << 64 | bswap64(value >> 64);
+  }
+  #endif
+  #define likely(expression) expression
+  #define unlikely(expression) expression
 #endif
 
 #if defined(PLATFORM_MACOS)
