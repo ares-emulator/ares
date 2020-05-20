@@ -34,6 +34,7 @@
   auto instructionAND() -> void;
   auto instructionANDI() -> void;
   auto instructionB(bool) -> void;
+  auto instructionBAL(bool) -> void;
   auto instructionBREAK() -> void;
   auto instructionCACHE() -> void;
   auto instructionJ() -> void;
@@ -53,6 +54,8 @@
   auto instructionSH() -> void;
   auto instructionSLL() -> void;
   auto instructionSLLV() -> void;
+  auto instructionSLT() -> void;
+  auto instructionSLTI() -> void;
   auto instructionSLTIU() -> void;
   auto instructionSLTU() -> void;
   auto instructionSRA() -> void;

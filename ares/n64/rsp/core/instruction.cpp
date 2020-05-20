@@ -2,6 +2,7 @@ auto RSP::instruction() -> void {
   pipeline.address = PC;
   pipeline.instruction = imem.readWord(pipeline.address);
 
+  debugger.instruction();
 //instructionDEBUG();
   instructionEXECUTE();
   GPR[0].u32 = 0;
@@ -35,7 +36,7 @@ auto RSP::instructionEXECUTE() -> void {
   case 0x07: return instructionB(RS.i32 >  0);       //BGTZ
   case 0x08: return instructionADDIU();  //ADDI
   case 0x09: return instructionADDIU();
-  case 0x0a: return instructionSLTIU();  //SLTI
+  case 0x0a: return instructionSLTI();
   case 0x0b: return instructionSLTIU();
   case 0x0c: return instructionANDI();
   case 0x0d: return instructionORI();
@@ -109,7 +110,7 @@ auto RSP::instructionSPECIAL() -> void {
   case 0x0c: break;  //SYSCALL
   case 0x0d: return instructionBREAK();
   case 0x0e: break;
-  case 0x0f: return; //SYNC
+  case 0x0f: break;  //SYNC
   case 0x10: break;  //MFHI
   case 0x11: break;  //MTHI
   case 0x12: break;  //MFLO
@@ -136,7 +137,7 @@ auto RSP::instructionSPECIAL() -> void {
   case 0x27: return instructionNOR();
   case 0x28: break;
   case 0x29: break;
-  case 0x2a: return instructionSLTU();  //SLT
+  case 0x2a: return instructionSLT();
   case 0x2b: return instructionSLTU();
   case 0x2c: break;  //DADD
   case 0x2d: break;  //DADDU
@@ -179,8 +180,8 @@ auto RSP::instructionREGIMM() -> void {
   case 0x0d: break;
   case 0x0e: break;  //TNEI
   case 0x0f: break;
-  case 0x10: break;  //BLTZAL
-  case 0x11: break;  //BGEZAL
+  case 0x10: return instructionBAL(RS.i32 <  0);  //BLTZAL
+  case 0x11: return instructionBAL(RS.i32 >= 0);  //BGEZAL
   case 0x12: break;  //BLTZALL
   case 0x13: break;  //BGEZALL
   case 0x14: break;

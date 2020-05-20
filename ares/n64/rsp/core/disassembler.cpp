@@ -71,8 +71,21 @@ auto RSP::Disassembler::EXECUTE() -> vector<string> {
   };
 
   auto LWC2 = [&]() -> vector<string> {
-    //todo
-    return {"lwc2", vtName(), offset()};
+    switch(instruction >> 11 & 31) {
+    case 0x00: return {"lbv", vtName(), offset()};
+    case 0x01: return {"lsv", vtName(), offset()};
+    case 0x02: return {"llv", vtName(), offset()};
+    case 0x03: return {"ldv", vtName(), offset()};
+    case 0x04: return {"lqv", vtName(), offset()};
+    case 0x05: return {"lrv", vtName(), offset()};
+    case 0x06: return {"lpv", vtName(), offset()};
+    case 0x07: return {"luv", vtName(), offset()};
+    case 0x08: return {"lhv", vtName(), offset()};
+    case 0x09: return {"lfv", vtName(), offset()};
+  //case 0x0a: return {"lwv", vtName(), offset()};  //not present on N64 RSP
+    case 0x0b: return {"ltv", vtName(), offset()};
+    }
+    return {};
   };
 
   auto STORE = [&](string_view name) -> vector<string> {
@@ -80,8 +93,21 @@ auto RSP::Disassembler::EXECUTE() -> vector<string> {
   };
 
   auto SWC2 = [&]() -> vector<string> {
-    //todo
-    return {"swc2", vtValue(), offset()};
+    switch(instruction >> 11 & 31) {
+    case 0x00: return {"sbv", vtValue(), offset()};
+    case 0x01: return {"ssv", vtValue(), offset()};
+    case 0x02: return {"slv", vtValue(), offset()};
+    case 0x03: return {"sdv", vtValue(), offset()};
+    case 0x04: return {"sqv", vtValue(), offset()};
+    case 0x05: return {"srv", vtValue(), offset()};
+    case 0x06: return {"spv", vtValue(), offset()};
+    case 0x07: return {"suv", vtValue(), offset()};
+    case 0x08: return {"shv", vtValue(), offset()};
+    case 0x09: return {"sfv", vtValue(), offset()};
+    case 0x0a: return {"swv", vtValue(), offset()};
+    case 0x0b: return {"stv", vtValue(), offset()};
+    }
+    return {};
   };
 
   switch(instruction >> 26) {
@@ -269,8 +295,8 @@ auto RSP::Disassembler::REGIMM() -> vector<string> {
   case 0x0d: break;
   case 0x0e: break;  //TNEI
   case 0x0f: break;
-  case 0x10: break;  //BLTZAL
-  case 0x11: break;  //BGEZAL
+  case 0x10: return BRANCH("bltzal");
+  case 0x11: return BRANCH("bgezal");
   case 0x12: break;  //BLTZALL
   case 0x13: break;  //BGEZALL
   case 0x14: break;

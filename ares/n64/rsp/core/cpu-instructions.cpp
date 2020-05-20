@@ -18,6 +18,11 @@ auto RSP::instructionB(bool take) -> void {
   if(take) branch.take(PC + 4 + (IMMi16 << 2));
 }
 
+auto RSP::instructionBAL(bool take) -> void {
+  RA.u32 = i32(PC + 8);
+  if(take) branch.take(PC + 4 + (IMMi16 << 2));
+}
+
 auto RSP::instructionBREAK() -> void {
   status.halted = 1;
   if(status.interruptOnBreak) mi.raise(MI::IRQ::SP);
@@ -97,8 +102,16 @@ auto RSP::instructionSLLV() -> void {
   RD.u32 = i32(RT.u32 << (RS.u32 & 31));
 }
 
+auto RSP::instructionSLT() -> void {
+  RD.u32 = RS.i32 < RT.i32;
+}
+
+auto RSP::instructionSLTI() -> void {
+  RT.u32 = RS.i32 < i32(IMMi16);
+}
+
 auto RSP::instructionSLTIU() -> void {
-  RT.u32 = RS.u32 < u64(IMMu16);
+  RT.u32 = RS.u32 < u32(IMMu16);
 }
 
 auto RSP::instructionSLTU() -> void {

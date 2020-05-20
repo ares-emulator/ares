@@ -84,13 +84,13 @@ auto RSP::writeSCC(u32 address, uint32 data) -> void {
 
   if(address == 0) {
     //SP_PBUS_ADDRESS
-    dma.memAddress = data.bit( 0,11);
+    dma.memAddress = data.bit( 0,11) & ~3;
     dma.memSource  = data.bit(12);
   }
 
   if(address == 1) {
     //SP_DRAM_ADDRESS
-    dma.dramAddress = data.bit(0,23);
+    dma.dramAddress = data.bit(0,23) & ~7;
   }
 
   if(address == 2) {
@@ -100,17 +100,15 @@ auto RSP::writeSCC(u32 address, uint32 data) -> void {
     dma.read.skip   = data.bit(20,31);
 
     auto& memory = dma.memSource == 0 ? dmem : imem;
-    auto source  = dma.dramAddress & ~7;
-    auto target  = dma.memAddress  & ~7;
     auto length  = (dma.read.length | 7) + 1;
-    auto count   = dma.read.count + 1;
-    auto skip    = dma.read.skip;
-    for(u32 line = 0; line < count; line++) {
-      auto base = line * (length + skip);
-      for(u32 offset = 0; offset < length; offset += 8) {
-        u64 data = rdram.ram.readDouble(source + base + offset);
-        memory.writeDouble(target + offset, data);
+    if(dma.memAddress + length > 0x1000) length = 0x1000 - dma.memAddress;
+    for(u32 count : range(dma.read.count + 1)) {
+      for(u32 offset = 0; offset < length; offset += 4) {
+        u32 data = rdram.ram.readWord(dma.dramAddress + offset);
+        memory.writeWord(dma.memAddress + offset, data);
       }
+      dma.dramAddress += length + dma.read.skip;
+      dma.memAddress += length;
     }
   }
 
@@ -121,17 +119,15 @@ auto RSP::writeSCC(u32 address, uint32 data) -> void {
     dma.write.skip   = data.bit(20,31);
 
     auto& memory = dma.memSource == 0 ? dmem : imem;
-    auto source  = dma.memAddress  & ~7;
-    auto target  = dma.dramAddress & ~7;
     auto length  = (dma.write.length | 7) + 1;
-    auto count   = dma.write.count + 1;
-    auto skip    = dma.write.skip;
-    for(u32 line = 0; line < count; line++) {
-      auto base = line * (length + skip);
-      for(u32 offset = 0; offset < length; offset += 8) {
-        u64 data = memory.readDouble(source + offset);
-        rdram.ram.writeDouble(target + base + offset, data);
+    if(dma.memAddress + length > 0x1000) length = 0x1000 - dma.memAddress;
+    for(u32 count : range(dma.write.count + 1)) {
+      for(u32 offset = 0; offset < length; offset += 4) {
+        u32 data = memory.readWord(dma.memAddress + offset);
+        rdram.ram.writeWord(dma.dramAddress + offset, data);
       }
+      dma.dramAddress += length + dma.write.skip;
+      dma.memAddress += length;
     }
   }
 

@@ -24,7 +24,7 @@ auto RSP::unload() -> void {
 }
 
 auto RSP::main() -> void {
-  if(status.halted) return step(93'750'000 / 48'000);
+  if(status.halted) return step(96);
   instruction();
   step(6);
 }
