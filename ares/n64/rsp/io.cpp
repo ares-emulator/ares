@@ -27,7 +27,11 @@ auto RSP::writeIO(u32 address, uint32 data) -> void {
 
   if(address == 0) {
     //SP_PC_REG
-    core.pc = data.bit(0,11) & ~3;
+    if(branch.state == Branch::Take) {
+      branch.pc = data.bit(0,11) & ~3;
+    } else {
+      core.pc = data.bit(0,11) & ~3;
+    }
   }
 
   if(address == 1) {

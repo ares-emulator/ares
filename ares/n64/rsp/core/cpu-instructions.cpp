@@ -25,6 +25,7 @@ auto RSP::instructionBAL(bool take) -> void {
 
 auto RSP::instructionBREAK() -> void {
   status.halted = 1;
+  status.broken = 1;
   if(status.interruptOnBreak) mi.raise(MI::IRQ::SP);
 }
 
@@ -147,5 +148,5 @@ auto RSP::instructionXOR() -> void {
 }
 
 auto RSP::instructionXORI() -> void {
-  RS.u32 = RS.u32 ^ IMMu16;
+  RT.u32 = RS.u32 ^ IMMu16;
 }

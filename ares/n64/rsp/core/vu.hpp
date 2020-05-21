@@ -9,7 +9,7 @@
   };
 
   //vu-instructions.cpp
-  auto vt() -> v128;
+  auto vte() -> v128;
 
   struct COP2 {
     v128 r[32];
@@ -17,8 +17,8 @@
     v128 vcoh, vcol;  //16-bit little endian
     v128 vcch, vccl;  //16-bit little endian
     v128 vce;         // 8-bit little endian
-     i32 divin;
-     i32 divout;
+     i16 divin;
+     i16 divout;
     bool divdp;
   } vu;
 

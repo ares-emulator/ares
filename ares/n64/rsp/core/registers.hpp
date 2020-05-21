@@ -31,6 +31,7 @@
   #define VD  VPR[VDn]
   #define VS  VPR[VSn]
   #define VT  VPR[VTn]
+  #define VTe this->vte()
 
   #define ACCH vu.acch
   #define ACCM vu.accm
@@ -77,6 +78,7 @@
   #undef VD
   #undef VS
   #undef VT
+  #undef VTe
 
   #undef ACCH
   #undef ACCM

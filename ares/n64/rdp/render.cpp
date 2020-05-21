@@ -47,7 +47,7 @@ static const vector<string> commandNames = {
 auto RDP::render() -> void {
   auto& memory = !command.source ? rdram.ram : rsp.dmem;
   auto fetch = [&]() -> u64 {
-    u64 op = memory.readDouble(command.current);
+    u64 op = memory.readDoubleUnaligned(command.current);
     command.current += 8;
     return op;
   };
@@ -288,7 +288,11 @@ auto RDP::render() -> void {
     } break;
 
     case 0x3f: {
-    //setColorImage();
+      auto format      =  uint3(op >> 53);
+      auto size        =  uint2(op >> 51);
+      auto width       = uint10(op >> 32);
+      auto dramAddress = uint26(op >>  0);
+      setColorImage(format, size, width, dramAddress);
     } break;
 
     }
@@ -345,12 +349,12 @@ auto RDP::fillRectangle(uint12 xl, uint12 yl, uint12 xh, uint12 yh) -> void {
   xh >>= shift;
   yh >>= shift;
 
-  u32 base = vi.io.dramAddress;
+  u32 base = set.color.dramAddress;
   for(u32 y = yh; y <= yl; y++) {
     u32 line = base + y * vi.io.width * depth;
     u32 address = line + xh * depth;
     for(u32 x = xh; x <= xl; x += step) {
-      rdram.ram.writeWord(address, set.fill.color);
+    //rdram.ram.writeWord(address, set.fill.color);
       address += 4;
     }
   }
@@ -367,4 +371,12 @@ auto RDP::setTextureImage(uint3 format, uint2 size, uint10 width, uint26 dramAdd
   set.texture.size = size;
   set.texture.width = width;
   set.texture.dramAddress = dramAddress;
+}
+
+//0x3f
+auto RDP::setColorImage(uint3 format, uint2 size, uint10 width, uint26 dramAddress) -> void {
+  set.color.format = format;
+  set.color.size = size;
+  set.color.width = width;
+  set.color.dramAddress = dramAddress;
 }

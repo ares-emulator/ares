@@ -324,7 +324,7 @@ auto RSP::Disassembler::SCC() -> vector<string> {
 
   switch(instruction >> 21 & 0x1f) {
   case 0x00: return {"mfc0", rtName(), sdValue()};
-  case 0x04: return {"mtc0", sdValue(), rtName()};
+  case 0x04: return {"mtc0", sdName(), rtValue()};
   }
 
   return {};
@@ -333,8 +333,8 @@ auto RSP::Disassembler::SCC() -> vector<string> {
 auto RSP::Disassembler::VU() -> vector<string> {
   auto rtName  = [&] { return cpuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return cpuRegisterValue(instruction >> 16 & 31); };
-  auto rdName  = [&] { return vuRegisterName  (instruction >> 11 & 31); };
-  auto rdValue = [&] { return vuRegisterValue (instruction >> 11 & 31); };
+  auto rdName  = [&] { return vuRegisterName  (instruction >> 11 & 31, instruction >> 7 & 15); };
+  auto rdValue = [&] { return vuRegisterValue (instruction >> 11 & 31, instruction >> 7 & 15); };
   auto cdName  = [&] { return ccrRegisterName (instruction >> 11 & 31); };
   auto cdValue = [&] { return ccrRegisterValue(instruction >> 11 & 31); };
 
@@ -486,7 +486,7 @@ auto RSP::Disassembler::vuRegisterName(uint index, uint element) const -> string
 }
 
 auto RSP::Disassembler::vuRegisterValue(uint index, uint element) const -> string {
-  if(index && showValues) return {vuRegisterName(index, element), hint("{$", hex(self.vu.r[index].u128, 32L), "}")};
+  if(showValues) return {vuRegisterName(index, element), hint("{$", hex(self.vu.r[index].u128, 32L), "}")};
   return vuRegisterName(index, element);
 }
 

@@ -13,7 +13,7 @@
 auto CPU::powerR4300(bool reset) -> void {
   for(uint n : range(32)) GPR[n].u64 = 0;
   scc = {};
-  scc.status.softReset = reset;
+  scc.status.softReset = 1;  //reset;
   fpu = {};
   LO.u64 = 0;
   HI.u64 = 0;

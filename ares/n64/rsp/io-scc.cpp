@@ -101,7 +101,6 @@ auto RSP::writeSCC(u32 address, uint32 data) -> void {
 
     auto& memory = dma.memSource == 0 ? dmem : imem;
     auto length  = (dma.read.length | 7) + 1;
-    if(dma.memAddress + length > 0x1000) length = 0x1000 - dma.memAddress;
     for(u32 count : range(dma.read.count + 1)) {
       for(u32 offset = 0; offset < length; offset += 4) {
         u32 data = rdram.ram.readWord(dma.dramAddress + offset);
@@ -120,7 +119,6 @@ auto RSP::writeSCC(u32 address, uint32 data) -> void {
 
     auto& memory = dma.memSource == 0 ? dmem : imem;
     auto length  = (dma.write.length | 7) + 1;
-    if(dma.memAddress + length > 0x1000) length = 0x1000 - dma.memAddress;
     for(u32 count : range(dma.write.count + 1)) {
       for(u32 offset = 0; offset < length; offset += 4) {
         u32 data = memory.readWord(dma.memAddress + offset);

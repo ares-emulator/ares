@@ -42,6 +42,7 @@ struct RDP : Thread {
   auto fillRectangle(uint12 xl, uint12 yl, uint12 xh, uint12 yh) -> void;
   auto setFillColor(uint32 color) -> void;
   auto setTextureImage(uint3 format, uint2 size, uint10 width, uint26 dramAddress) -> void;
+  auto setColorImage(uint3 format, uint2 size, uint10 width, uint26 dramAddress) -> void;
 
   //io.cpp
   auto readIO(u32 address) -> u32;
@@ -65,6 +66,7 @@ struct RDP : Thread {
      uint1 source = 0;  //0 = RDRAM, 1 = DMEM
      uint1 freeze = 0;
      uint1 flush = 0;
+     uint1 ready = 1;
   } command;
 
   struct Set {
@@ -72,11 +74,17 @@ struct RDP : Thread {
       uint32 color = 0;
     } fill;
     struct Texture {
-      uint3 format = 0;
-      uint2 size = 0;
+       uint3 format = 0;
+       uint2 size = 0;
       uint10 width = 0;
       uint26 dramAddress = 0;
     } texture;
+    struct Color {
+       uint3 format = 0;
+       uint2 size = 0;
+      uint10 width = 0;
+      uint26 dramAddress = 0;
+    } color;
   } set;
 
   struct IO {
