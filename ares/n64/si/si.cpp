@@ -62,7 +62,7 @@ auto SI::main() -> void {
     }
     uint8 output[256];
     bool valid = 0;
-    if(input[0] == 0x00 || input[0] == 0xff) {
+    if(input[0] == 0x00 || input[0] == 0x3f) {
       if(channel < 4 && send == 1 && recv == 3) {
         output[0] = 0x05;  //0x05 = gamepad; 0x02 = mouse
         output[1] = 0x00;

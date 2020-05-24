@@ -15,6 +15,8 @@
     auto SPECIAL() -> vector<string>;
     auto REGIMM() -> vector<string>;
     auto SCC() -> vector<string>;
+    auto LWC2() -> vector<string>;
+    auto SWC2() -> vector<string>;
     auto VU() -> vector<string>;
     auto immediate(i64 value, uint bits = 0) const -> string;
     auto cpuRegisterName(uint index) const -> string;

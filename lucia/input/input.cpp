@@ -37,7 +37,55 @@ auto InputMapping::bind(uint binding, string assignment) -> void {
   bind();
 }
 
-auto InputMapping::bind(uint binding, shared_pointer<HID::Device> device, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> bool {
+auto InputMapping::unbind() -> void {
+  for(uint binding : range(BindingLimit)) unbind(binding);
+}
+
+auto InputMapping::unbind(uint binding) -> void {
+  if(binding >= BindingLimit) return;
+  bindings[binding] = {};
+  assignments[binding] = {};
+}
+
+auto InputMapping::Binding::icon() -> image {
+  if(!device && deviceID) return Icon::Device::Joypad;
+  if(!device) return {};
+  if(device->isKeyboard()) return Icon::Device::Keyboard;
+  if(device->isMouse()) return Icon::Device::Mouse;
+  if(device->isJoypad()) return Icon::Device::Joypad;
+  return {};
+}
+
+auto InputMapping::Binding::text() -> string {
+  if(!device && deviceID) return "(disconnected)";
+  if(!device) return {};
+  if(groupID >= device->size()) return {};
+  if(inputID >= device->group(groupID).size()) return {};
+
+  if(device->isKeyboard()) {
+    return device->group(groupID).input(inputID).name();
+  }
+
+  if(device->isMouse()) {
+    return device->group(groupID).input(inputID).name();
+  }
+
+  if(device->isJoypad()) {
+    string name{Hash::CRC16(string{device->id()}).digest().upcase()};
+    name.append(" ", device->group(groupID).name());
+    name.append(" ", device->group(groupID).input(inputID).name());
+    if(qualifier == Qualifier::Lo) name.append(" Lo");
+    if(qualifier == Qualifier::Hi) name.append(" Hi");
+    if(qualifier == Qualifier::Rumble) name.append(" Rumble");
+    return name;
+  }
+
+  return {};
+}
+
+//
+
+auto InputButton::bind(uint binding, shared_pointer<HID::Device> device, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> bool {
   string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
 
   if(device->isNull()) {
@@ -83,17 +131,7 @@ auto InputMapping::bind(uint binding, shared_pointer<HID::Device> device, uint g
   return false;
 }
 
-auto InputMapping::unbind() -> void {
-  for(uint binding : range(BindingLimit)) unbind(binding);
-}
-
-auto InputMapping::unbind(uint binding) -> void {
-  if(binding >= BindingLimit) return;
-  bindings[binding] = {};
-  assignments[binding] = {};
-}
-
-auto InputMapping::value() -> int16_t {
+auto InputButton::value() -> int16_t {
   int16_t result = 0;
 
   for(auto& binding : bindings) {
@@ -135,45 +173,51 @@ auto InputMapping::value() -> int16_t {
   return result;
 }
 
-auto InputMapping::Binding::icon() -> image {
-  if(!device && deviceID) return Icon::Device::Joypad;
-  if(!device) return {};
-  if(device->isKeyboard()) return Icon::Device::Keyboard;
-  if(device->isMouse()) return Icon::Device::Mouse;
-  if(device->isJoypad()) return Icon::Device::Joypad;
-  return {};
+//
+
+auto InputAxis::bind(uint binding, shared_pointer<HID::Device> device, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> bool {
+  string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
+
+  if(device->isNull()) {
+    return unbind(binding), true;
+  }
+
+  if(device->isKeyboard() && device->group(groupID).input(inputID).name() == "Escape") {
+    return unbind(binding), true;
+  }
+
+  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && abs(newValue) > +16384) {
+    return bind(binding, assignment), true;
+  }
+
+  return false;
 }
 
-auto InputMapping::Binding::text() -> string {
-  if(!device && deviceID) return "(disconnected)";
-  if(!device) return {};
-  if(groupID >= device->size()) return {};
-  if(inputID >= device->group(groupID).size()) return {};
+auto InputAxis::value() -> int16_t {
+  int16_t result = 0;
 
-  if(device->isKeyboard()) {
-    return device->group(groupID).input(inputID).name();
+  for(auto& binding : bindings) {
+    if(!binding.device) continue;  //unbound
+
+    auto& device = binding.device;
+    auto& groupID = binding.groupID;
+    auto& inputID = binding.inputID;
+    auto& qualifier = binding.qualifier;
+    int16_t value = device->group(groupID).input(inputID).value();
+
+    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis) {
+      result += value;
+    }
   }
 
-  if(device->isMouse()) {
-    return device->group(groupID).input(inputID).name();
-  }
-
-  if(device->isJoypad()) {
-    string name{Hash::CRC16(string{device->id()}).digest().upcase()};
-    name.append(" ", device->group(groupID).name());
-    name.append(" ", device->group(groupID).input(inputID).name());
-    if(qualifier == Qualifier::Lo) name.append(" Lo");
-    if(qualifier == Qualifier::Hi) name.append(" Hi");
-    if(qualifier == Qualifier::Rumble) name.append(" Rumble");
-    return name;
-  }
-
-  return {};
+  return result;
 }
 
 //
 
 VirtualPad::VirtualPad() {
+  mappings.append(&xAxis);
+  mappings.append(&yAxis);
   mappings.append(&up);
   mappings.append(&down);
   mappings.append(&left);
@@ -182,8 +226,10 @@ VirtualPad::VirtualPad() {
   mappings.append(&start);
   mappings.append(&a);
   mappings.append(&b);
+  mappings.append(&c);
   mappings.append(&x);
   mappings.append(&y);
+  mappings.append(&z);
   mappings.append(&l);
   mappings.append(&r);
 }

@@ -13,8 +13,6 @@ auto RSP::Disassembler::EXECUTE() -> vector<string> {
   auto rtName  = [&] { return cpuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return cpuRegisterValue(instruction >> 16 & 31); };
   auto rsValue = [&] { return cpuRegisterValue(instruction >> 21 & 31); };
-  auto vtName  = [&] { return vuRegisterName  (instruction >> 16 & 31); };
-  auto vtValue = [&] { return vuRegisterValue (instruction >> 16 & 31); };
   auto imm16i  = [&] { return immediate(i16(instruction)); };
   auto imm16u  = [&] { return immediate(u16(instruction), 16L); };
   auto jump    = [&] { return immediate(uint12(address + 4 & 0xf000'0000 | (instruction & 0x03ff'ffff) << 2)); };
@@ -70,44 +68,8 @@ auto RSP::Disassembler::EXECUTE() -> vector<string> {
     return {name, rtName(), offset()};
   };
 
-  auto LWC2 = [&]() -> vector<string> {
-    switch(instruction >> 11 & 31) {
-    case 0x00: return {"lbv", vtName(), offset()};
-    case 0x01: return {"lsv", vtName(), offset()};
-    case 0x02: return {"llv", vtName(), offset()};
-    case 0x03: return {"ldv", vtName(), offset()};
-    case 0x04: return {"lqv", vtName(), offset()};
-    case 0x05: return {"lrv", vtName(), offset()};
-    case 0x06: return {"lpv", vtName(), offset()};
-    case 0x07: return {"luv", vtName(), offset()};
-    case 0x08: return {"lhv", vtName(), offset()};
-    case 0x09: return {"lfv", vtName(), offset()};
-  //case 0x0a: return {"lwv", vtName(), offset()};  //not present on N64 RSP
-    case 0x0b: return {"ltv", vtName(), offset()};
-    }
-    return {};
-  };
-
   auto STORE = [&](string_view name) -> vector<string> {
     return {name, rtValue(), offset()};
-  };
-
-  auto SWC2 = [&]() -> vector<string> {
-    switch(instruction >> 11 & 31) {
-    case 0x00: return {"sbv", vtValue(), offset()};
-    case 0x01: return {"ssv", vtValue(), offset()};
-    case 0x02: return {"slv", vtValue(), offset()};
-    case 0x03: return {"sdv", vtValue(), offset()};
-    case 0x04: return {"sqv", vtValue(), offset()};
-    case 0x05: return {"srv", vtValue(), offset()};
-    case 0x06: return {"spv", vtValue(), offset()};
-    case 0x07: return {"suv", vtValue(), offset()};
-    case 0x08: return {"shv", vtValue(), offset()};
-    case 0x09: return {"sfv", vtValue(), offset()};
-    case 0x0a: return {"swv", vtValue(), offset()};
-    case 0x0b: return {"stv", vtValue(), offset()};
-    }
-    return {};
   };
 
   switch(instruction >> 26) {
@@ -330,6 +292,50 @@ auto RSP::Disassembler::SCC() -> vector<string> {
   return {};
 }
 
+auto RSP::Disassembler::LWC2() -> vector<string> {
+  auto vtName  = [&] { return vuRegisterName  (instruction >> 16 & 31, instruction >> 7 & 15); };
+  auto vtValue = [&] { return vuRegisterValue (instruction >> 16 & 31, instruction >> 7 & 15); };
+  auto offset  = [&](uint multiplier) { return cpuRegisterIndex(instruction >> 21 & 31, int7(instruction) * multiplier); };
+
+  switch(instruction >> 11 & 31) {
+  case 0x00: return {"lbv", vtName(), offset( 1)};
+  case 0x01: return {"lsv", vtName(), offset( 2)};
+  case 0x02: return {"llv", vtName(), offset( 4)};
+  case 0x03: return {"ldv", vtName(), offset( 8)};
+  case 0x04: return {"lqv", vtName(), offset(16)};
+  case 0x05: return {"lrv", vtName(), offset(16)};
+  case 0x06: return {"lpv", vtName(), offset( 8)};
+  case 0x07: return {"luv", vtName(), offset( 8)};
+  case 0x08: return {"lhv", vtName(), offset(16)};
+  case 0x09: return {"lfv", vtName(), offset(16)};
+//case 0x0a: return {"lwv", vtName(), offset(16)};  //not present on N64 RSP
+  case 0x0b: return {"ltv", vtName(), offset(16)};
+  }
+  return {};
+}
+
+auto RSP::Disassembler::SWC2() -> vector<string> {
+  auto vtName  = [&] { return vuRegisterName  (instruction >> 16 & 31); };
+  auto vtValue = [&] { return vuRegisterValue (instruction >> 16 & 31); };
+  auto offset  = [&](uint multiplier) { return cpuRegisterIndex(instruction >> 21 & 31, int7(instruction) * multiplier); };
+
+  switch(instruction >> 11 & 31) {
+  case 0x00: return {"sbv", vtValue(), offset( 1)};
+  case 0x01: return {"ssv", vtValue(), offset( 2)};
+  case 0x02: return {"slv", vtValue(), offset( 4)};
+  case 0x03: return {"sdv", vtValue(), offset( 8)};
+  case 0x04: return {"sqv", vtValue(), offset(16)};
+  case 0x05: return {"srv", vtValue(), offset(16)};
+  case 0x06: return {"spv", vtValue(), offset( 8)};
+  case 0x07: return {"suv", vtValue(), offset( 8)};
+  case 0x08: return {"shv", vtValue(), offset(16)};
+  case 0x09: return {"sfv", vtValue(), offset(16)};
+  case 0x0a: return {"swv", vtValue(), offset(16)};
+  case 0x0b: return {"stv", vtValue(), offset(16)};
+  }
+  return {};
+}
+
 auto RSP::Disassembler::VU() -> vector<string> {
   auto rtName  = [&] { return cpuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return cpuRegisterValue(instruction >> 16 & 31); };
@@ -486,7 +492,11 @@ auto RSP::Disassembler::vuRegisterName(uint index, uint element) const -> string
 }
 
 auto RSP::Disassembler::vuRegisterValue(uint index, uint element) const -> string {
-  if(showValues) return {vuRegisterName(index, element), hint("{$", hex(self.vu.r[index].u128, 32L), "}")};
+  if(showValues) {
+    vector<string> elements;
+    for(uint index : range(8)) elements.append(hex(self.vu.r[index].element(index), 4L));
+    return {vuRegisterName(index, element), hint("{$", elements.merge("|"), "}")};
+  }
   return vuRegisterName(index, element);
 }
 

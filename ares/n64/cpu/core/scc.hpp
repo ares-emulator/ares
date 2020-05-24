@@ -15,17 +15,26 @@
     auto exception(u32 address) -> void;
 
     struct Entry {
+      //scc-tlb.cpp
+      auto synchronize() -> void;
+
        uint1 global[2] = {};
        uint1 valid[2] = {};
        uint1 dirty[2] = {};
        uint3 cacheAlgorithm[2] = {2, 2};
       uint32 physicalAddress[2] = {};
-      uint32 pageMask = 0x1fff;
+      uint32 pageMask = 0;
       uint32 virtualAddress = 0;
        uint8 addressSpaceID = 0;
     //unimplemented:
       uint22 unused = 0;
        uint2 region = 0;
+    //internal:
+       uint1 globals = 0;
+      uint32 addressMaskHi = 0;
+      uint32 addressMaskLo = 0;
+      uint32 addressSelect = 0;
+      uint32 addressCompare = 0;
     } entry[TLB::Entries];
 
     u32 physicalAddress = 0;

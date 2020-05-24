@@ -55,18 +55,18 @@ auto Nintendo64::open(ares::Node::Object node, string name, vfs::file::mode mode
 auto Nintendo64::input(ares::Node::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "X-axis" );
-  if(name == "Y-axis" );
+  if(name == "X-axis" ) mapping = virtualPad.xAxis;
+  if(name == "Y-axis" ) mapping = virtualPad.yAxis;
   if(name == "Up"     ) mapping = virtualPad.up;
   if(name == "Down"   ) mapping = virtualPad.down;
   if(name == "Left"   ) mapping = virtualPad.left;
   if(name == "Right"  ) mapping = virtualPad.right;
   if(name == "B"      ) mapping = virtualPad.a;
   if(name == "A"      ) mapping = virtualPad.b;
-  if(name == "C-Up"   );
-  if(name == "C-Down" );
-  if(name == "C-Left" );
-  if(name == "C-Right");
+  if(name == "C-Up"   ) mapping = virtualPad.c;
+  if(name == "C-Down" ) mapping = virtualPad.x;
+  if(name == "C-Left" ) mapping = virtualPad.y;
+  if(name == "C-Right") mapping = virtualPad.z;
   if(name == "L"      ) mapping = virtualPad.l;
   if(name == "R"      ) mapping = virtualPad.r;
   if(name == "Z"      ) mapping = virtualPad.select;
@@ -74,6 +74,9 @@ auto Nintendo64::input(ares::Node::Input node) -> void {
 
   if(mapping) {
     auto value = mapping->value();
+    if(auto axis = node->cast<ares::Node::Axis>()) {
+      axis->setValue(value);
+    }
     if(auto button = node->cast<ares::Node::Button>()) {
       button->setValue(value);
     }

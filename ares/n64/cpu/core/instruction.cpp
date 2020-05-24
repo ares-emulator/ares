@@ -1,6 +1,6 @@
 auto CPU::raiseException(uint code, uint coprocessor) -> void {
   if(debugger.tracer.exception->enabled()) {
-    debugger.exception(hex(code, 2L));
+    if(code != 0) debugger.exception(hex(code, 2L));
   }
 
   if(!scc.status.exceptionLevel) {

@@ -38,8 +38,8 @@ auto Gamepad::read() -> uint32 {
   platform->input(start);
 
   uint32 data;
-  data.byte(0) = 0x00;  //Y-axis
-  data.byte(1) = 0x00;  //X-axis
+  data.byte(0) = y->value() >> 8;
+  data.byte(1) = x->value() >> 8;
   data.bit(16) = cameraRight->value();
   data.bit(17) = cameraLeft->value();
   data.bit(18) = cameraDown->value();

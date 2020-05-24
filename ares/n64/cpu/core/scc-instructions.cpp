@@ -28,18 +28,19 @@ auto CPU::instructionMTC0() -> void {
 }
 
 auto CPU::instructionTLBP() -> void {
+  scc.index.tlbEntry = 0;  //technically undefined
+  scc.index.probeFailure = 1;
   for(uint index : range(TLB::Entries)) {
     auto& entry = tlb.entry[index];
+    auto mask = ~entry.pageMask & ~0x1fff;
+    if((entry.virtualAddress & mask) != (scc.tlb.virtualAddress & mask)) continue;
     if(!entry.global[0] || !entry.global[1]) {
       if(entry.addressSpaceID != scc.tlb.addressSpaceID) continue;
     }
-    if(entry.virtualAddress != scc.tlb.virtualAddress) continue;
-    if(entry.region != scc.tlb.region) continue;
     scc.index.tlbEntry = index;
     scc.index.probeFailure = 0;
-    return;
+    break;
   }
-  scc.index.probeFailure = 1;
 }
 
 auto CPU::instructionTLBR() -> void {
@@ -54,5 +55,5 @@ auto CPU::instructionTLBWI() -> void {
 
 auto CPU::instructionTLBWR() -> void {
   if(scc.random.index >= TLB::Entries) return;
-  tlb.entry[scc.random.index] = scc.tlb;
+  tlb.entry[scc.index.tlbEntry] = scc.tlb;
 }

@@ -7,10 +7,11 @@ struct InputMapping {
 
   auto bind() -> void;
   auto bind(uint binding, string assignment) -> void;
-  auto bind(uint binding, shared_pointer<HID::Device>, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> bool;
   auto unbind() -> void;
   auto unbind(uint binding) -> void;
-  auto value() -> int16_t;
+
+  virtual auto bind(uint binding, shared_pointer<HID::Device>, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> bool = 0;
+  virtual auto value() -> int16_t = 0;
 
   const string name;
   string assignments[BindingLimit];
@@ -30,10 +31,20 @@ struct InputMapping {
 
 struct InputButton : InputMapping {
   using InputMapping::InputMapping;
+  using InputMapping::bind;
+  auto bind(uint binding, shared_pointer<HID::Device>, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> bool override;
+  auto value() -> int16_t override;
 };
 
-struct InputHotkey : InputMapping {
+struct InputAxis : InputMapping {
   using InputMapping::InputMapping;
+  using InputMapping::bind;
+  auto bind(uint binding, shared_pointer<HID::Device>, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> bool override;
+  auto value() -> int16_t override;
+};
+
+struct InputHotkey : InputButton {
+  using InputButton::InputButton;
   auto& onPress(function<void ()> press) { return this->press = press, *this; }
   auto& onRelease(function<void ()> release) { return this->release = release, *this; }
 
@@ -47,10 +58,11 @@ private:
 struct VirtualPad {
   VirtualPad();
 
+  InputAxis   xAxis{"X-axis"}, yAxis{"Y-axis"};
   InputButton up{"Up"}, down{"Down"}, left{"Left"}, right{"Right"};
   InputButton select{"Select"}, start{"Start"};
-  InputButton a{"A"}, b{"B"};
-  InputButton x{"X"}, y{"Y"};
+  InputButton a{"A"}, b{"B"}, c{"C"};
+  InputButton x{"X"}, y{"Y"}, z{"Z"};
   InputButton l{"L"}, r{"R"};
 
   vector<InputMapping*> mappings;

@@ -19,7 +19,7 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   instruction();
-  step(4);
+  step(2);
 }
 
 auto CPU::step(uint clocks) -> void {

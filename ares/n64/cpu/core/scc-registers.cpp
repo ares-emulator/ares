@@ -14,14 +14,14 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
     data.bit(1)    = scc.tlb.valid[0];
     data.bit(2)    = scc.tlb.dirty[0];
     data.bit(3, 5) = scc.tlb.cacheAlgorithm[0];
-    data.bit(6,29) = scc.tlb.physicalAddress[0].bit(6,29);
+    data.bit(6,29) = scc.tlb.physicalAddress[0].bit(12,35);
     break;
   case  3:  //entrylo1
     data.bit(0)    = scc.tlb.global[1];
     data.bit(1)    = scc.tlb.valid[1];
     data.bit(2)    = scc.tlb.dirty[1];
     data.bit(3, 5) = scc.tlb.cacheAlgorithm[1];
-    data.bit(6,29) = scc.tlb.physicalAddress[1].bit(6,29);
+    data.bit(6,29) = scc.tlb.physicalAddress[1].bit(12,35);
     break;
   case  4:  //context
     data.bit( 4,22) = scc.context.badVirtualAddress;
@@ -136,18 +136,20 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.random.unused = data.bit(5);
     break;
   case  2:  //entrylo0
-    scc.tlb.global[0]                    = data.bit(0);
-    scc.tlb.valid[0]                     = data.bit(1);
-    scc.tlb.dirty[0]                     = data.bit(2);
-    scc.tlb.cacheAlgorithm[0]            = data.bit(3, 5);
-    scc.tlb.physicalAddress[0].bit(6,29) = data.bit(6,29);
+    scc.tlb.global[0]                     = data.bit(0);
+    scc.tlb.valid[0]                      = data.bit(1);
+    scc.tlb.dirty[0]                      = data.bit(2);
+    scc.tlb.cacheAlgorithm[0]             = data.bit(3, 5);
+    scc.tlb.physicalAddress[0].bit(12,35) = data.bit(6,29);
+    scc.tlb.synchronize();
     break;
   case  3:  //entrylo1
-    scc.tlb.global[1]                    = data.bit(0);
-    scc.tlb.valid[1]                     = data.bit(1);
-    scc.tlb.dirty[1]                     = data.bit(2);
-    scc.tlb.cacheAlgorithm[1]            = data.bit(3, 5);
-    scc.tlb.physicalAddress[1].bit(6,29) = data.bit(6,29);
+    scc.tlb.global[1]                     = data.bit(0);
+    scc.tlb.valid[1]                      = data.bit(1);
+    scc.tlb.dirty[1]                      = data.bit(2);
+    scc.tlb.cacheAlgorithm[1]             = data.bit(3, 5);
+    scc.tlb.physicalAddress[1].bit(12,35) = data.bit(6,29);
+    scc.tlb.synchronize();
     break;
   case  4:  //context
     scc.context.badVirtualAddress  = data.bit( 4,22);
@@ -155,6 +157,7 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     break;
   case  5:  //pagemask
     scc.tlb.pageMask.bit(13,24) = data.bit(13,24);
+    scc.tlb.synchronize();
     break;
   case  6:  //wired
     scc.wired.index  = data.bit(0,4);
@@ -172,6 +175,7 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.tlb.virtualAddress.bit(13,31) = data.bit(13,39);
     scc.tlb.unused                    = data.bit(40,61);
     scc.tlb.region                    = data.bit(62,63);
+    scc.tlb.synchronize();
     break;
   case 11:  //compare
     scc.compare = data.bit(0,31);
