@@ -63,10 +63,10 @@ auto Nintendo64::input(ares::Node::Input node) -> void {
   if(name == "Right"  ) mapping = virtualPad.right;
   if(name == "B"      ) mapping = virtualPad.a;
   if(name == "A"      ) mapping = virtualPad.b;
-  if(name == "C-Up"   ) mapping = virtualPad.c;
-  if(name == "C-Down" ) mapping = virtualPad.x;
-  if(name == "C-Left" ) mapping = virtualPad.y;
-  if(name == "C-Right") mapping = virtualPad.z;
+  if(name == "C-Up"   ) mapping = virtualPad.cUp;
+  if(name == "C-Down" ) mapping = virtualPad.cDown;
+  if(name == "C-Left" ) mapping = virtualPad.cLeft;
+  if(name == "C-Right") mapping = virtualPad.cRight;
   if(name == "L"      ) mapping = virtualPad.l;
   if(name == "R"      ) mapping = virtualPad.r;
   if(name == "Z"      ) mapping = virtualPad.select;

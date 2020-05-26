@@ -6,16 +6,24 @@ struct InputJoypadSDL {
 
   struct Joypad {
     shared_pointer<HID::Joypad> hid{new HID::Joypad};
+    vector<bool> axisPolled;
 
     uint id = 0;
     SDL_Joystick* handle = nullptr;
   };
   vector<Joypad> joypads;
 
-  auto assign(shared_pointer<HID::Joypad> hid, uint groupID, uint inputID, int16_t value) -> void {
-    auto& group = hid->group(groupID);
+  auto assign(Joypad& joypad, uint groupID, uint inputID, int16_t value) -> void {
+    auto& group = joypad.hid->group(groupID);
     if(group.input(inputID).value() == value) return;
-    input.doChange(hid, groupID, inputID, group.input(inputID).value(), value);
+    if(groupID == HID::Joypad::GroupID::Axis && !joypad.axisPolled(inputID)) {
+      //suppress the first axis polling event, because the value can change dramatically.
+      //SDL seems to return 0 for all axes, until the first movement, where it jumps to the real value.
+      //this triggers onChange handlers to instantly bind inputs erroneously if not suppressed.
+      joypad.axisPolled[inputID] = true;
+    } else {
+      input.doChange(joypad.hid, groupID, inputID, group.input(inputID).value(), value);
+    }
     group.input(inputID).setValue(value);
   }
 
@@ -28,29 +36,19 @@ struct InputJoypadSDL {
       }
     }
 
-    #if defined(PLATFORM_BSD)
-    //SDL 2.0 on FreeBSD never sends SDL_JOYDEVICE(ADDED|REMOVED) events, nor updates SDL_NumJoysticks()
-    //the only way to support hotplugging here is to manually restart the SDL driver periodically to poll for new joypads
-    uint64_t thisInitialize = chrono::millisecond();
-    if(thisInitialize - lastInitialize > 5000) {
-      lastInitialize = thisInitialize;
-      initialize();
-    }
-    #endif
-
     for(auto& jp : joypads) {
       for(auto n : range(jp.hid->axes().size())) {
-        assign(jp.hid, HID::Joypad::GroupID::Axis, n, (int16_t)SDL_JoystickGetAxis(jp.handle, n));
+        assign(jp, HID::Joypad::GroupID::Axis, n, (int16_t)SDL_JoystickGetAxis(jp.handle, n));
       }
 
       for(int n = 0; n < (int)jp.hid->hats().size() - 1; n += 2) {
         uint8_t state = SDL_JoystickGetHat(jp.handle, n >> 1);
-        assign(jp.hid, HID::Joypad::GroupID::Hat, n + 0, state & SDL_HAT_LEFT ? -32767 : state & SDL_HAT_RIGHT ? +32767 : 0);
-        assign(jp.hid, HID::Joypad::GroupID::Hat, n + 1, state & SDL_HAT_UP   ? -32767 : state & SDL_HAT_DOWN  ? +32767 : 0);
+        assign(jp, HID::Joypad::GroupID::Hat, n + 0, state & SDL_HAT_LEFT ? -32767 : state & SDL_HAT_RIGHT ? +32767 : 0);
+        assign(jp, HID::Joypad::GroupID::Hat, n + 1, state & SDL_HAT_UP   ? -32767 : state & SDL_HAT_DOWN  ? +32767 : 0);
       }
 
       for(auto n : range(jp.hid->buttons().size())) {
-        assign(jp.hid, HID::Joypad::GroupID::Button, n, (bool)SDL_JoystickGetButton(jp.handle, n));
+        assign(jp, HID::Joypad::GroupID::Button, n, (bool)SDL_JoystickGetButton(jp.handle, n));
       }
 
       devices.append(jp.hid);
@@ -63,7 +61,6 @@ struct InputJoypadSDL {
     SDL_InitSubSystem(SDL_INIT_JOYSTICK);
     SDL_JoystickEventState(SDL_ENABLE);
     enumerate();
-    lastInitialize = chrono::millisecond();
     return true;
   }
 
@@ -104,6 +101,4 @@ private:
 
     SDL_JoystickUpdate();
   }
-
-  uint64_t lastInitialize = 0;
 };

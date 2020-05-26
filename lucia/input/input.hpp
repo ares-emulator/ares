@@ -58,12 +58,13 @@ private:
 struct VirtualPad {
   VirtualPad();
 
-  InputAxis   xAxis{"X-axis"}, yAxis{"Y-axis"};
+  InputAxis xAxis{"X-axis"}, yAxis{"Y-axis"};
   InputButton up{"Up"}, down{"Down"}, left{"Left"}, right{"Right"};
   InputButton select{"Select"}, start{"Start"};
-  InputButton a{"A"}, b{"B"}, c{"C"};
-  InputButton x{"X"}, y{"Y"}, z{"Z"};
+  InputButton a{"A"}, b{"B"};
+  InputButton x{"X"}, y{"Y"};
   InputButton l{"L"}, r{"R"};
+  InputButton cUp{"C-Up"}, cDown{"C-Down"}, cLeft{"C-Left"}, cRight{"C-Right"};
 
   vector<InputMapping*> mappings;
 };

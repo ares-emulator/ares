@@ -42,6 +42,7 @@ struct Response : Message {
   auto findContentType() const -> string;
   auto findContentType(const string& suffix) const -> string;
   auto findResponseType() const -> string;
+  auto findResponseTypeVerbose() const -> string;
   auto setFileETag() -> void;
 
   const Request* _request = nullptr;
@@ -221,6 +222,18 @@ inline auto Response::findResponseType() const -> string {
   case 503: return "503 Service Unavailable";
   }
   return "501 Not Implemented";
+}
+
+inline auto Response::findResponseTypeVerbose() const -> string {
+  switch(responseType()) {
+  case 400: return "The server was unable to understand your request.";
+  case 403: return "You are not authorized to access this resource.";
+  case 404: return "The requested content could not be found.";
+  case 500: return "The server has encountered an error.";
+  case 501: return "The requested feature has not been implemented.";
+  case 503: return "The requested service is not currently available.";
+  }
+  return findResponseType();  //fallback for uncommon responses
 }
 
 inline auto Response::setData(const vector<uint8_t>& value) -> type& {

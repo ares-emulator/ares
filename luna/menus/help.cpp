@@ -8,7 +8,7 @@ HelpMenu::HelpMenu(MenuBar* parent) : Menu(parent) {
     .setDescription("luna — an advanced multi-system emulator")
     .setVersion(ares::Version)
   //.setCopyright(ares::Copyright)
-    .setLicense(ares::License)
+  //.setLicense(ares::License)
     .setWebsite(ares::Website)
     .setAlignment(program, {0.5f, program.panelLayout.visible() ? 0.32f : 0.5f})
     .show();

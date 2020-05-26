@@ -37,9 +37,11 @@ auto HotkeySettings::refresh() -> void {
   uint index = 0;
   for(auto& mapping : inputManager.hotkeys) {
     for(uint binding : range(BindingLimit)) {
-      inputList.item(index).cell(1 + binding)
-      .setIcon(mapping.bindings[binding].icon())
-      .setText(mapping.bindings[binding].text());
+      //do not remove identifier from mappings currently being assigned
+      if(activeMapping && &activeMapping() == &mapping && activeBinding == binding) continue;
+      auto cell = inputList.item(index).cell(1 + binding);
+      cell.setIcon(mapping.bindings[binding].icon());
+      cell.setText(mapping.bindings[binding].text());
     }
     index++;
   }

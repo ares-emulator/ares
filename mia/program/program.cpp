@@ -35,7 +35,7 @@ ProgramWindow::ProgramWindow() {
     .setDescription("mia — a game analyzer and converter")
     .setVersion(ares::Version)
   //.setCopyright(ares::Copyright)
-    .setLicense(ares::License)
+  //.setLicense(ares::License)
     .setWebsite(ares::Website)
     .setAlignment(*this)
     .show();

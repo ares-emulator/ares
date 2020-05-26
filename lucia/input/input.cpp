@@ -104,27 +104,15 @@ auto InputButton::bind(uint binding, shared_pointer<HID::Device> device, uint gr
     return bind(binding, assignment), true;
   }
 
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Hat && newValue < -16384) {
+  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button && (
+    (oldValue >= -16384 && newValue < -16384) || (oldValue <= -16384 && newValue > -16384)
+  )) {
     return bind(binding, {assignment, "/Lo"}), true;
   }
 
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Hat && newValue > +16384) {
-    return bind(binding, {assignment, "/Hi"}), true;
-  }
-
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && newValue < -16384) {
-    return bind(binding, {assignment, "/Lo"}), true;
-  }
-
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && newValue > +16384) {
-    return bind(binding, {assignment, "/Hi"}), true;
-  }
-
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Trigger && newValue < -16384) {
-    return bind(binding, {assignment, "/Lo"}), true;
-  }
-
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Trigger && newValue > +16384) {
+  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button && (
+    (oldValue <= +16384 && newValue > +16384) || (oldValue >= +16384 && newValue < +16384)
+  )) {
     return bind(binding, {assignment, "/Hi"}), true;
   }
 
@@ -186,7 +174,15 @@ auto InputAxis::bind(uint binding, shared_pointer<HID::Device> device, uint grou
     return unbind(binding), true;
   }
 
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && abs(newValue) > +16384) {
+  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && (
+    (oldValue >= -16384 && newValue < -16384) || (oldValue <= -16384 && newValue > -16384)
+  )) {
+    return bind(binding, assignment), true;
+  }
+
+  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && (
+    (oldValue <= +16384 && newValue > +16384) || (oldValue >= +16384 && newValue < +16384)
+  )) {
     return bind(binding, assignment), true;
   }
 
@@ -226,12 +222,14 @@ VirtualPad::VirtualPad() {
   mappings.append(&start);
   mappings.append(&a);
   mappings.append(&b);
-  mappings.append(&c);
   mappings.append(&x);
   mappings.append(&y);
-  mappings.append(&z);
   mappings.append(&l);
   mappings.append(&r);
+  mappings.append(&cUp);
+  mappings.append(&cDown);
+  mappings.append(&cLeft);
+  mappings.append(&cRight);
 }
 
 //
