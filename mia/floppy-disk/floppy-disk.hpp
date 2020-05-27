@@ -11,3 +11,4 @@ struct FloppyDisk : Media {
 };
 
 #include "famicom-disk.hpp"
+#include "nintendo-64dd.hpp"

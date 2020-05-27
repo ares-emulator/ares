@@ -72,11 +72,15 @@ auto InputMapping::Binding::text() -> string {
 
   if(device->isJoypad()) {
     string name{Hash::CRC16(string{device->id()}).digest().upcase()};
-    name.append(" ", device->group(groupID).name());
+    if(device->vendorID() == 0x045e && device->productID() == 0x028e) {
+      name = {"Xbox360{", 1 + device->pathID(), "}"};
+    } else {
+      name.append(" ", device->group(groupID).name());
+    }
     name.append(" ", device->group(groupID).input(inputID).name());
-    if(qualifier == Qualifier::Lo) name.append(" Lo");
-    if(qualifier == Qualifier::Hi) name.append(" Hi");
-    if(qualifier == Qualifier::Rumble) name.append(" Rumble");
+    if(qualifier == Qualifier::Lo) name.append(".Lo");
+    if(qualifier == Qualifier::Hi) name.append(".Hi");
+    if(qualifier == Qualifier::Rumble) name.append(".Rumble");
     return name;
   }
 

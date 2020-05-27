@@ -10,11 +10,11 @@ ifeq ($(ruby),)
   else ifeq ($(platform),linux)
     ruby += video.glx video.glx2 video.xvideo video.xshm
     ruby += audio.oss audio.alsa audio.openal audio.pulseaudio audio.pulseaudiosimple audio.ao
-    ruby += input.sdl input.xlib input.udev
+    ruby += input.udev input.sdl input.xlib
   else ifeq ($(platform),bsd)
     ruby += video.glx video.glx2 video.xvideo video.xshm
     ruby += audio.oss audio.openal #audio.pulseaudio
-    ruby += input.sdl input.xlib
+    ruby += input.uhid input.sdl input.xlib
   endif
 endif
 
@@ -47,6 +47,7 @@ ruby.options += $(if $(findstring audio.xaudio2,$(ruby)),-lole32)
 
 ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell sdl2-config --libs))
 ruby.options += $(if $(findstring input.udev,$(ruby)),-ludev)
+ruby.options += $(if $(findstring input.uhid,$(ruby)),-lusbhid)
 ruby.options += $(if $(findstring input.windows,$(ruby)),-ldinput8 -ldxguid)
 
 ifeq ($(platform),windows)

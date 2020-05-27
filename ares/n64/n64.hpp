@@ -37,6 +37,7 @@ namespace ares::Nintendo64 {
   #include <n64/system/system.hpp>
   #include <n64/cartridge/cartridge.hpp>
   #include <n64/controller/controller.hpp>
+  #include <n64/dd/dd.hpp>
   #include <n64/mi/mi.hpp>
   #include <n64/vi/vi.hpp>
   #include <n64/ai/ai.hpp>

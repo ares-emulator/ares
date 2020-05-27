@@ -1,4 +1,5 @@
 #include "famicom-disk.cpp"
+#include "nintendo-64dd.cpp"
 
 auto FloppyDisk::construct() -> void {
   Media::construct();

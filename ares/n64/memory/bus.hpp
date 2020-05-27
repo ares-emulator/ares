@@ -25,6 +25,13 @@ inline auto Bus::readByte(u32 address) -> u8 {
   if(address <= 0x046f'ffff) return transform(pi.readIO(address));
   if(address <= 0x047f'ffff) return transform(ri.readIO(address));
   if(address <= 0x048f'ffff) return transform(si.readIO(address));
+  if(address <= 0x04ff'ffff) return 0;
+  if(address <= 0x0500'03ff) return dd.c2s.readByte(address);
+  if(address <= 0x0500'04ff) return dd.ds.readByte(address);
+  if(address <= 0x0500'057f) return transform(dd.readIO(address));
+  if(address <= 0x0500'05bf) return dd.ms.readByte(address);
+  if(address <= 0x05ff'ffff) return 0;
+  if(address <= 0x063f'ffff) return dd.iplrom.readByte(address);
   if(address <= 0x0fff'ffff) return 0;
   if(address <= 0x1fbf'ffff) return cartridge.rom.readByte(address);
   if(address <= 0x1fc0'07bf) return pi.rom.readByte(address);
@@ -57,6 +64,13 @@ inline auto Bus::readHalf(u32 address) -> u16 {
   if(address <= 0x046f'ffff) return transform(pi.readIO(address));
   if(address <= 0x047f'ffff) return transform(ri.readIO(address));
   if(address <= 0x048f'ffff) return transform(si.readIO(address));
+  if(address <= 0x04ff'ffff) return 0;
+  if(address <= 0x0500'03ff) return dd.c2s.readHalf(address);
+  if(address <= 0x0500'04ff) return dd.ds.readHalf(address);
+  if(address <= 0x0500'057f) return transform(dd.readIO(address));
+  if(address <= 0x0500'05bf) return dd.ms.readHalf(address);
+  if(address <= 0x05ff'ffff) return 0;
+  if(address <= 0x063f'ffff) return dd.iplrom.readHalf(address);
   if(address <= 0x0fff'ffff) return 0;
   if(address <= 0x1fbf'ffff) return cartridge.rom.readHalf(address);
   if(address <= 0x1fc0'07bf) return pi.rom.readHalf(address);
@@ -82,6 +96,13 @@ inline auto Bus::readWord(u32 address) -> u32 {
   if(address <= 0x046f'ffff) return pi.readIO(address);
   if(address <= 0x047f'ffff) return ri.readIO(address);
   if(address <= 0x048f'ffff) return si.readIO(address);
+  if(address <= 0x04ff'ffff) return 0;
+  if(address <= 0x0500'03ff) return dd.c2s.readWord(address);
+  if(address <= 0x0500'04ff) return dd.ds.readWord(address);
+  if(address <= 0x0500'057f) return dd.readIO(address);
+  if(address <= 0x0500'05bf) return dd.ms.readWord(address);
+  if(address <= 0x05ff'ffff) return 0;
+  if(address <= 0x063f'ffff) return dd.iplrom.readWord(address);
   if(address <= 0x0fff'ffff) return 0;
   if(address <= 0x1fbf'ffff) return cartridge.rom.readWord(address);
   if(address <= 0x1fc0'07bf) return pi.rom.readWord(address);
@@ -107,6 +128,13 @@ inline auto Bus::readDouble(u32 address) -> u64 {
   if(address <= 0x046f'ffff) { u64 data = pi.readIO(address);    return data << 32 | pi.readIO   (address + 4); }
   if(address <= 0x047f'ffff) { u64 data = ri.readIO(address);    return data << 32 | ri.readIO   (address + 4); }
   if(address <= 0x048f'ffff) { u64 data = si.readIO(address);    return data << 32 | si.readIO   (address + 4); }
+  if(address <= 0x04ff'ffff) return 0;
+  if(address <= 0x0500'03ff) return dd.c2s.readDouble(address);
+  if(address <= 0x0500'04ff) return dd.ds.readDouble(address);
+  if(address <= 0x0500'057f) { u64 data = dd.readIO(address);    return data << 32 | dd.readIO   (address + 4); }
+  if(address <= 0x0500'05bf) return dd.ms.readDouble(address);
+  if(address <= 0x05ff'ffff) return 0;
+  if(address <= 0x063f'ffff) return dd.iplrom.readDouble(address);
   if(address <= 0x0fff'ffff) return 0;
   if(address <= 0x1fbf'ffff) return cartridge.rom.readDouble(address);
   if(address <= 0x1fc0'07bf) return pi.rom.readDouble(address);
@@ -141,6 +169,13 @@ inline auto Bus::writeByte(u32 address, u8 data) -> void {
   if(address <= 0x046f'ffff) return pi.writeIO(address, transform(data));
   if(address <= 0x047f'ffff) return ri.writeIO(address, transform(data));
   if(address <= 0x048f'ffff) return si.writeIO(address, transform(data));
+  if(address <= 0x04ff'ffff) return;
+  if(address <= 0x0500'03ff) return dd.c2s.writeByte(address, data);
+  if(address <= 0x0500'04ff) return dd.ds.writeByte(address, data);
+  if(address <= 0x0500'057f) return dd.writeIO(address, transform(data));
+  if(address <= 0x0500'05bf) return dd.ms.writeByte(address, data);
+  if(address <= 0x05ff'ffff) return;
+  if(address <= 0x063f'ffff) return;
   if(address <= 0x0fff'ffff) return;
   if(address <= 0x1fbf'ffff) return;
   if(address <= 0x1fc0'07bf) return;
@@ -173,6 +208,13 @@ inline auto Bus::writeHalf(u32 address, u16 data) -> void {
   if(address <= 0x046f'ffff) return pi.writeIO(address, transform(data));
   if(address <= 0x047f'ffff) return ri.writeIO(address, transform(data));
   if(address <= 0x048f'ffff) return si.writeIO(address, transform(data));
+  if(address <= 0x04ff'ffff) return;
+  if(address <= 0x0500'03ff) return dd.c2s.writeHalf(address, data);
+  if(address <= 0x0500'04ff) return dd.ds.writeHalf(address, data);
+  if(address <= 0x0500'057f) return dd.writeIO(address, transform(data));
+  if(address <= 0x0500'05bf) return dd.ms.writeHalf(address, data);
+  if(address <= 0x05ff'ffff) return;
+  if(address <= 0x063f'ffff) return;
   if(address <= 0x0fff'ffff) return;
   if(address <= 0x1fbf'ffff) return;
   if(address <= 0x1fc0'07bf) return;
@@ -198,6 +240,13 @@ inline auto Bus::writeWord(u32 address, u32 data) -> void {
   if(address <= 0x046f'ffff) return pi.writeIO(address, data);
   if(address <= 0x047f'ffff) return ri.writeIO(address, data);
   if(address <= 0x048f'ffff) return si.writeIO(address, data);
+  if(address <= 0x04ff'ffff) return;
+  if(address <= 0x0500'03ff) return dd.c2s.writeWord(address, data);
+  if(address <= 0x0500'04ff) return dd.ds.writeWord(address, data);
+  if(address <= 0x0500'057f) return dd.writeIO(address, data);
+  if(address <= 0x0500'05bf) return dd.ms.writeWord(address, data);
+  if(address <= 0x05ff'ffff) return;
+  if(address <= 0x063f'ffff) return;
   if(address <= 0x0fff'ffff) return;
   if(address <= 0x1fbf'ffff) return;
   if(address <= 0x1fc0'07bf) return;
@@ -223,6 +272,13 @@ inline auto Bus::writeDouble(u32 address, u64 data) -> void {
   if(address <= 0x046f'ffff) { pi.writeIO   (address, data >> 32); return pi.writeIO   (address + 4, data); }
   if(address <= 0x047f'ffff) { ri.writeIO   (address, data >> 32); return ri.writeIO   (address + 4, data); }
   if(address <= 0x048f'ffff) { si.writeIO   (address, data >> 32); return si.writeIO   (address + 4, data); }
+  if(address <= 0x04ff'ffff) return;
+  if(address <= 0x0500'03ff) return dd.c2s.writeDouble(address, data);
+  if(address <= 0x0500'04ff) return dd.ds.writeDouble(address, data);
+  if(address <= 0x0500'057f) { dd.writeIO   (address, data >> 32); return dd.writeIO   (address + 4, data); }
+  if(address <= 0x0500'05bf) return dd.ms.writeDouble(address, data);
+  if(address <= 0x05ff'ffff) return;
+  if(address <= 0x063f'ffff) return;
   if(address <= 0x0fff'ffff) return;
   if(address <= 0x1fbf'ffff) return;
   if(address <= 0x1fc0'07bf) return;

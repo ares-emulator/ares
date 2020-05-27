@@ -29,6 +29,8 @@ auto Cartridge::connect() -> void {
     if(auto fp = platform->open(node, "program.rom", File::Read, File::Required)) {
       rom.load(fp);
     }
+  } else {
+    rom.allocate(16);
   }
 
   power();

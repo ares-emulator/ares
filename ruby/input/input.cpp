@@ -14,6 +14,10 @@
   #include <ruby/input/udev.cpp>
 #endif
 
+#if defined(INPUT_UHID)
+  #include <ruby/input/uhid.cpp>
+#endif
+
 #if defined(INPUT_WINDOWS)
   #include <ruby/input/windows.cpp>
 #endif
@@ -85,6 +89,10 @@ auto Input::create(string driver) -> bool {
   if(driver == "udev") self.instance = new InputUdev(*this);
   #endif
 
+  #if defined(INPUT_UHID)
+  if(driver == "uhid") self.instance = new InputUHID(*this);
+  #endif
+
   #if defined(INPUT_SDL)
   if(driver == "SDL") self.instance = new InputSDL(*this);
   #endif
@@ -117,6 +125,10 @@ auto Input::hasDrivers() -> vector<string> {
   "udev",
   #endif
 
+  #if defined(INPUT_UHID)
+  "uhid",
+  #endif
+
   #if defined(INPUT_SDL)
   "SDL",
   #endif
@@ -137,6 +149,8 @@ auto Input::optimalDriver() -> string {
   return "Carbon";
   #elif defined(INPUT_UDEV)
   return "udev";
+  #elif defined(INPUT_UHID)
+  return "uhid";
   #elif defined(INPUT_SDL)
   return "SDL";
   #elif defined(INPUT_XLIB)
@@ -155,6 +169,8 @@ auto Input::safestDriver() -> string {
   return "Carbon";
   #elif defined(INPUT_UDEV)
   return "udev";
+  #elif defined(INPUT_UHID)
+  return "uhid";
   #elif defined(INPUT_SDL)
   return "SDL";
   #elif defined(INPUT_XLIB)

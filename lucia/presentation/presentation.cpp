@@ -310,7 +310,7 @@ auto Presentation::loadEmulators() -> void {
 }
 
 auto Presentation::loadEmulator() -> void {
-  setTitle(Location::prefix(emulator->interface->game()));
+  setTitle(emulator->interface->game());
 
   systemMenu.setText(emulator->name);
   systemMenu.setVisible();

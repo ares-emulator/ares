@@ -43,6 +43,7 @@ auto System::load(Node::Object& root) -> void {
   controllerPort2.load(node);
   controllerPort3.load(node);
   controllerPort4.load(node);
+  dd.load(node);
 }
 
 auto System::unload() -> void {
@@ -63,6 +64,7 @@ auto System::unload() -> void {
   controllerPort2.unload();
   controllerPort3.unload();
   controllerPort4.unload();
+  dd.unload();
   node.reset();
 }
 
@@ -89,6 +91,7 @@ auto System::power(bool reset) -> void {
   }
 
   cartridge.power();
+  dd.power(reset);
   mi.power();
   vi.power();
   ai.power();

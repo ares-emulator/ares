@@ -60,6 +60,7 @@ auto System::serializeAll(serializer& s, bool synchronize) -> void {
   controllerPort2.serialize(s);
   controllerPort3.serialize(s);
   controllerPort4.serialize(s);
+  dd.serialize(s);
 }
 
 auto System::serializeInit(bool synchronize) -> uint {
