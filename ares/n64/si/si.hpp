@@ -1,6 +1,6 @@
 //Serial Interface
 
-struct SI {
+struct SI : Memory::IO<SI> {
   Node::Component node;
 
   struct Debugger {
@@ -20,8 +20,8 @@ struct SI {
   auto power() -> void;
 
   //io.cpp
-  auto readIO(u32 address) -> u32;
-  auto writeIO(u32 address, uint32 data) -> void;
+  auto readWord(u32 address) -> u32;
+  auto writeWord(u32 address, u32 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

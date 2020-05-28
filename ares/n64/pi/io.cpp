@@ -14,7 +14,7 @@ static const vector<string> registerNames = {
   "PI_BSD_DOM2_RLS",
 };
 
-auto PI::readIO(u32 address) -> u32 {
+auto PI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   uint32 data;
 
@@ -92,8 +92,9 @@ auto PI::readIO(u32 address) -> u32 {
   return data;
 }
 
-auto PI::writeIO(u32 address, uint32 data) -> void {
+auto PI::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0xfffff) >> 2;
+  uint32 data = data_;
 
   //only PI_STATUS can be written while PI is busy
   if(address != 4 && (io.dmaBusy || io.ioBusy)) {

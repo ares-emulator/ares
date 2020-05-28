@@ -1,8 +1,8 @@
 //RAMBUS RAM
 
-struct RDRAM {
+struct RDRAM : Memory::IO<RDRAM> {
   Node::Component node;
-  Memory ram;
+  Memory::Writable ram;
 
   struct Debugger {
     //debugger.cpp
@@ -24,8 +24,8 @@ struct RDRAM {
   auto power() -> void;
 
   //io.cpp
-  auto readIO(u32 address) -> u32;
-  auto writeIO(u32 address, u32 data) -> void;
+  auto readWord(u32 address) -> u32;
+  auto writeWord(u32 address, u32 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

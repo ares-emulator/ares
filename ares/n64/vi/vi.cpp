@@ -8,7 +8,7 @@ VI vi;
 #include "serialization.cpp"
 
 auto VI::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("RDP");
+  node = parent->append<Node::Component>("VI");
 
   screen = node->append<Node::Screen>("Screen");
   screen->colors((1 << 24) + (1 << 15), [&](uint32 color) -> uint64 {

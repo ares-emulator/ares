@@ -19,7 +19,14 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   instruction();
-  step(2);
+  instruction();
+  instruction();
+  instruction();
+  instruction();
+  instruction();
+  instruction();
+  instruction();
+  step(2 * 8);
 }
 
 auto CPU::step(uint clocks) -> void {
@@ -32,11 +39,10 @@ auto CPU::step(uint clocks) -> void {
   while(rsp.clock < 0) rsp.main();
   while(rdp.clock < 0) rdp.main();
 
-  while(clocks--) {
-    if(++scc.count == scc.compare) {
-      scc.cause.interruptPending.bit(Interrupt::Timer) = 1;
-    }
+  if(scc.count < scc.compare && scc.count + clocks >= scc.compare) {
+    scc.cause.interruptPending.bit(Interrupt::Timer) = 1;
   }
+  scc.count += clocks;
 }
 
 auto CPU::power(bool reset) -> void {

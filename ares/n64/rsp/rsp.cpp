@@ -5,7 +5,6 @@ namespace ares::Nintendo64 {
 RSP rsp;
 #include "core/core.cpp"
 #include "io.cpp"
-#include "io-scc.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
 
@@ -37,7 +36,13 @@ auto RSP::power() -> void {
   Thread::reset();
   powerCore();
   dma = {};
-  status = {};
+  status.semaphore = 0;
+  status.halted = 1;
+  status.broken = 0;
+  status.full = 0;
+  status.singleStep = 0;
+  status.interruptOnBreak = 0;
+  for(auto& signal : status.signal) signal = 0;
 }
 
 }

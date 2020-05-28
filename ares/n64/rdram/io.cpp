@@ -11,7 +11,7 @@ static const vector<string> registerNames = {
   "RDRAM_DEVICE_MANUF",
 };
 
-auto RDRAM::readIO(u32 address) -> u32 {
+auto RDRAM::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   u32 data = 0;
 
@@ -61,7 +61,7 @@ auto RDRAM::readIO(u32 address) -> u32 {
   return data;
 }
 
-auto RDRAM::writeIO(u32 address, u32 data) -> void {
+auto RDRAM::writeWord(u32 address, u32 data) -> void {
   address = (address & 0xfffff) >> 2;
 
   if(address == 0) {

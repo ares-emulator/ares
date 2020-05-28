@@ -1,22 +1,22 @@
 //{
-  union v128 {
+  union r128 {
     struct { uint128_t u128; };
-    struct {   __m128i s128; };
-    operator __m128i() const { return s128; }
-    auto operator=(__m128i value) { s128 = value; }
+    struct {   __m128i v128; };
+    operator __m128i() const { return v128; }
+    auto operator=(__m128i value) { v128 = value; }
     auto byte(uint index) -> u8& { return ((u8*)&u128)[15 - index]; }
     auto element(uint index) -> u16& { return ((u16*)&u128)[7 - index]; }
   };
 
   //vu-instructions.cpp
-  auto vte() -> v128;
+  auto vte() -> r128;
 
   struct COP2 {
-    v128 r[32];
-    v128 acch, accm, accl;
-    v128 vcoh, vcol;  //16-bit little endian
-    v128 vcch, vccl;  //16-bit little endian
-    v128 vce;         // 8-bit little endian
+    r128 r[32];
+    r128 acch, accm, accl;
+    r128 vcoh, vcol;  //16-bit little endian
+    r128 vcch, vccl;  //16-bit little endian
+    r128 vce;         // 8-bit little endian
      i16 divin;
      i16 divout;
     bool divdp;
@@ -25,8 +25,8 @@
   u16 reciprocals[512];
   u16 inverseSquareRoots[512];
 
-  static constexpr v128 zero{0};
-  static constexpr v128 invert{u128(0) - 1};
+  static constexpr r128 zero{0};
+  static constexpr r128 invert{u128(0) - 1};
 
   //vu-instructions.cpp
   auto instructionCFC2() -> void;

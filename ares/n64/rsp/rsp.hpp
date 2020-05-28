@@ -1,9 +1,9 @@
 //Reality Signal Processor
 
-struct RSP : Thread {
+struct RSP : Thread, Memory::IO<RSP> {
   Node::Component node;
-  Memory dmem;
-  Memory imem;
+  Memory::Writable dmem;
+  Memory::Writable imem;
 
   struct Debugger {
     //debugger.cpp
@@ -32,12 +32,8 @@ struct RSP : Thread {
   auto power() -> void;
 
   //io.cpp
-  auto readIO(u32 address) -> u32;
-  auto writeIO(u32 address, uint32 data) -> void;
-
-  //io-scc.cpp
-  auto readSCC(u32 address) -> u32;
-  auto writeSCC(u32 address, uint32 data) -> void;
+  auto readWord(u32 address) -> u32;
+  auto writeWord(u32 address, u32 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -56,15 +52,22 @@ struct RSP : Thread {
     } read, write;
   } dma;
 
-  struct Status {
-     uint1 semaphore = 0;
-     uint1 halted = 1;
-     uint1 broken = 0;
-     uint1 full = 0;
-     uint1 singleStep = 0;
-     uint1 interruptOnBreak = 0;
-     uint1 signal[8] = {};
-  } status;
+  struct Status : Memory::IO<Status> {
+    RSP& self;
+    Status(RSP& self) : self(self) {}
+
+    //io.cpp
+    auto readWord(u32 address) -> u32;
+    auto writeWord(u32 address, u32 data) -> void;
+
+    uint1 semaphore = 0;
+    uint1 halted = 1;
+    uint1 broken = 0;
+    uint1 full = 0;
+    uint1 singleStep = 0;
+    uint1 interruptOnBreak = 0;
+    uint1 signal[8] = {};
+  } status{*this};
 
   #include "core/core.hpp"
 };

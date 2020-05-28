@@ -32,9 +32,7 @@ auto PI::power() -> void {
   string iplrom = cartridge.region() == "NTSC" ? "pif.ntsc.rom" : "pif.pal.rom";
   iplrom = "pif.rom";
   if(auto fp = platform->open(node, iplrom, File::Read, File::Required)) {
-    for(u32 offset = 0; offset < 0x7c0; offset++) {
-      rom.writeByte(offset, fp->read());
-    }
+    rom.load(fp);
   }
 
   //write CIC seeds into PIF RAM so that cartridge checksum function passes

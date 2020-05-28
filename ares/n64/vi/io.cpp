@@ -15,7 +15,7 @@ static const vector<string> registerNames = {
   "VI_Y_SCALE",
 };
 
-auto VI::readIO(u32 address) -> u32 {
+auto VI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   uint32 data;
 
@@ -114,8 +114,9 @@ auto VI::readIO(u32 address) -> u32 {
   return data;
 }
 
-auto VI::writeIO(u32 address, uint32 data) -> void {
+auto VI::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0xfffff) >> 2;
+  uint32 data = data_;
 
   if(address == 0) {
     //VI_CONTROL

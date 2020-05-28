@@ -75,6 +75,7 @@ auto HotkeySettings::eventAssign(TableViewCell cell) -> void {
 
     item.cell(1 + activeBinding).setIcon(Icon::Go::Right).setText("(assign ...)");
     assignLabel.setText({"Press a key or button for mapping #", 1 + activeBinding, " [", activeMapping->name, "] ..."});
+    refresh();
     settingsWindow.setDismissable(false);
     Application::processEvents();
     spacer.setFocused();

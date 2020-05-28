@@ -1,6 +1,6 @@
 //Video Interface
 
-struct VI : Thread {
+struct VI : Thread, Memory::IO<VI> {
   Node::Component node;
   Node::Screen screen;
 
@@ -24,8 +24,8 @@ struct VI : Thread {
   auto power() -> void;
 
   //io.cpp
-  auto readIO(u32 address) -> u32;
-  auto writeIO(u32 address, uint32 data) -> void;
+  auto readWord(u32 address) -> u32;
+  auto writeWord(u32 address, u32 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

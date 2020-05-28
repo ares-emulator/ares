@@ -1,6 +1,6 @@
 struct Cartridge {
   Node::Peripheral node;
-  Memory rom;
+  Memory::Readable rom;
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }

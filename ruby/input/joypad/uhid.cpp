@@ -15,6 +15,7 @@ struct InputJoypadUHID {
     int reportID = -1;
     int reportSize = -1;
     uint8_t* buffer = nullptr;
+    bool writable = false;
   };
   vector<Joypad> joypads;
 
@@ -92,7 +93,16 @@ struct InputJoypadUHID {
     enumeratedDevices = devices.merge(";");
     for(auto device : devices) {
       Joypad joypad;
-      joypad.fd = open(string{"/dev/", device}, O_RDONLY | O_NONBLOCK);
+      string deviceName = {"/dev/", device};
+      if(inode::writable(deviceName)) {
+        joypad.fd = open(deviceName, O_RDWR | O_NONBLOCK);
+        joypad.writable = true;
+      } else if(inode::readable(deviceName)) {
+        joypad.fd = open(deviceName, O_RDONLY | O_NONBLOCK);
+        joypad.writable = false;
+      } else {
+        continue;
+      }
       joypad.report = hid_get_report_desc(joypad.fd);
       joypad.reportID = hid_get_report_id(joypad.fd);
       joypad.reportSize = hid_report_size(joypad.report, hid_input, joypad.reportID);
@@ -108,6 +118,7 @@ struct InputJoypadUHID {
         if(item.kind == hid_collection && HID_PAGE(item.usage) == HUP_GENERIC_DESKTOP) {
           if(HID_USAGE(item.usage) == HUG_JOYSTICK) isJoypad = true;
           if(HID_USAGE(item.usage) == HUG_GAME_PAD) isJoypad = true;
+          if(HID_USAGE(item.usage) == HUG_POINTER ) isJoypad = true;
         }
         if(item.kind == hid_input && HID_PAGE(item.usage) == HUP_GENERIC_DESKTOP) {
           auto usage = HID_USAGE(item.usage);

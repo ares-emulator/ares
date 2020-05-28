@@ -8,7 +8,7 @@ static const vector<string> registerNames = {
   "SI_STATUS",
 };
 
-auto SI::readIO(u32 address) -> u32 {
+auto SI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   uint32 data;
 
@@ -56,8 +56,9 @@ auto SI::readIO(u32 address) -> u32 {
   return data;
 }
 
-auto SI::writeIO(u32 address, uint32 data) -> void {
+auto SI::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0xfffff) >> 2;
+  uint32 data = data_;
 
   if(address == 0) {
     //SI_DRAM_ADDRESS

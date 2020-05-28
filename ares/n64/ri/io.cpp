@@ -9,7 +9,7 @@ static const vector<string> registerNames = {
   "RI_WERROR",
 };
 
-auto RI::readIO(u32 address) -> u32 {
+auto RI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   uint32 data = 0;
 
@@ -51,8 +51,9 @@ auto RI::readIO(u32 address) -> u32 {
   return data;
 }
 
-auto RI::writeIO(u32 address, u32 data) -> void {
+auto RI::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0xfffff) >> 2;
+  uint32 data = data_;
 
   if(address == 0) {
     //RI_MODE

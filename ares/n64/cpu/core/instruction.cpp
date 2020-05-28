@@ -4,7 +4,6 @@ auto CPU::raiseException(uint code, uint coprocessor) -> void {
   }
 
   if(!scc.status.exceptionLevel) {
-    if(code == 10) print("* reserved instruction @ ", hex(pipeline.address), " ", hex(pipeline.instruction), "\n");
     scc.epc = PC;
     scc.status.exceptionLevel = 1;
     scc.cause.exceptionCode = code;

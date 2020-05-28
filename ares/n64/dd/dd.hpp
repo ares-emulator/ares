@@ -1,11 +1,11 @@
 //Disk Drive
 
-struct DD {
+struct DD : Memory::IO<DD> {
   Node::Component node;
-  Memory iplrom;
-  Memory c2s;
-  Memory ds;
-  Memory ms;
+  Memory::Readable iplrom;
+  Memory::Writable c2s;
+  Memory::Writable ds;
+  Memory::Writable ms;
 
   //dd.cpp
   auto load(Node::Object) -> void;
@@ -14,8 +14,8 @@ struct DD {
   auto power(bool reset) -> void;
 
   //io.cpp
-  auto readIO(u32 address) -> u32;
-  auto writeIO(u32 address, uint32 data) -> void;
+  auto readWord(u32 address) -> u32;
+  auto writeWord(u32 address, u32 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

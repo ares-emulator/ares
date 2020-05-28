@@ -479,9 +479,9 @@ auto RSP::Disassembler::sccRegisterName(uint index) const -> string {
 
 auto RSP::Disassembler::sccRegisterValue(uint index) const -> string {
   u32 value = 0;
-  if(index <= 6) value = rsp.readSCC((index & 7) << 2);
+  if(index <= 6) value = rsp.readWord((index & 7) << 2);
   if(index == 7) value = self.status.semaphore;  //rsp.readSCC(7) has side-effects
-  if(index >= 8) value = rdp.readSCC((index & 7) << 2);
+  if(index >= 8) value = rdp.readWord((index & 7) << 2);
   if(showValues) return {sccRegisterName(index), hint("{$", hex(value, 8L), "}")};
   return sccRegisterName(index);
 }

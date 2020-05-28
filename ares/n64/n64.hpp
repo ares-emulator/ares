@@ -2,8 +2,11 @@
 //started: 2020-04-28
 
 #include <ares/ares.hpp>
-#include <nmmintrin.h>
-using s128 = __m128i;
+
+#if defined(SIMD_SSE4)
+  #include <nmmintrin.h>
+  using v128 = __m128i;
+#endif
 
 namespace ares::Nintendo64 {
   struct Accuracy {

@@ -5,7 +5,7 @@ static const vector<string> registerNames = {
   "MI_INTR_MASK",
 };
 
-auto MI::readIO(u32 address) -> u32 {
+auto MI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   uint32 data;
 
@@ -47,8 +47,9 @@ auto MI::readIO(u32 address) -> u32 {
   return data;
 }
 
-auto MI::writeIO(u32 address, uint32 data) -> void {
+auto MI::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0xfffff) >> 2;
+  uint32 data = data_;
 
   if(address == 0) {
     //MI_INIT_MODE

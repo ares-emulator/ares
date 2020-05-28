@@ -7,7 +7,7 @@ static const vector<string> registerNames = {
   "AI_BITRATE",
 };
 
-auto AI::readIO(u32 address) -> u32 {
+auto AI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   uint32 data;
 
@@ -31,8 +31,9 @@ auto AI::readIO(u32 address) -> u32 {
   return data;
 }
 
-auto AI::writeIO(u32 address, uint32 data) -> void {
+auto AI::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0xfffff) >> 2;
+  uint32 data = data_;
 
   if(address == 0) {
     //AI_DRAM_ADDRESS

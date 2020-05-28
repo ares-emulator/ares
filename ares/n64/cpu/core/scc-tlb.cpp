@@ -23,7 +23,7 @@ auto CPU::TLB::store(u32 address) -> maybe<u32> {
 
 auto CPU::TLB::exception(u32 address) -> void {
   self.scc.badVirtualAddress = address;
-  self.scc.tlb.addressSpaceID = address >> 32;  //note: needs u64 address
+  self.scc.tlb.addressSpaceID = 0;  //address >> 32;  //note: needs u64 address
   self.scc.tlb.virtualAddress = address >> 13;
   self.scc.context.badVirtualAddress = address >> 13;
   self.scc.xcontext.badVirtualAddress = address >> 13;
