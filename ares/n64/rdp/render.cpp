@@ -306,23 +306,46 @@ auto RDP::render() -> void {
     } break;
 
     case 0x2a: {
-    //setKeyGB();
+      key.g.width  = uint12(op >> 44);
+      key.b.width  = uint12(op >> 32);
+      key.g.center =  uint8(op >> 24);
+      key.g.scale  =  uint8(op >> 16);
+      key.b.center =  uint8(op >>  8);
+      key.b.scale  =  uint8(op >>  0);
+      setKeyGB();
     } break;
 
     case 0x2b: {
-    //setKeyR();
+      key.r.width  = uint12(op >> 16);
+      key.r.center =  uint8(op >>  8);
+      key.r.scale  =  uint8(op >>  0);
+      setKeyR();
     } break;
 
     case 0x2c: {
-    //setConvert();
+      convert.k[0] = uint9(op >> 45);
+      convert.k[1] = uint9(op >> 36);
+      convert.k[2] = uint9(op >> 27);
+      convert.k[3] = uint9(op >> 18);
+      convert.k[4] = uint9(op >>  9);
+      convert.k[5] = uint8(op >>  0);
+      setConvert();
     } break;
 
     case 0x2d: {
-    //setScissor();
+      scissor.x.hi  = uint12(op >> 44);
+      scissor.y.hi  = uint12(op >> 32);
+      scissor.field =  uint1(op >> 25);
+      scissor.odd   =  uint1(op >> 24);
+      scissor.x.lo  = uint12(op >> 12);
+      scissor.y.lo  = uint12(op >>  0);
+      setScissor();
     } break;
 
     case 0x2e: {
-    //setPrimitiveDepth();
+      primitiveDepth.z      = uint16(op >> 16);
+      primitiveDepth.deltaZ = uint16(op >>  0);
+      setPrimitiveDepth();
     } break;
 
     case 0x2f: {
@@ -370,7 +393,12 @@ auto RDP::render() -> void {
     } break;
 
     case 0x30: {
-    //loadTextureLUT();
+      tlut.s.lo  = uint12(op >> 44);
+      tlut.t.lo  = uint12(op >> 32);
+      tlut.index =  uint3(op >> 24);
+      tlut.s.hi  = uint12(op >> 12);
+      tlut.t.hi  = uint12(op >>  0);
+      loadTLUT();
     } break;
 
     case 0x31: {
@@ -378,48 +406,95 @@ auto RDP::render() -> void {
     } break;
 
     case 0x32: {
-    //setTileSize();
+      tileSize.s.lo  = uint12(op >> 44);
+      tileSize.t.lo  = uint12(op >> 32);
+      tileSize.index =  uint3(op >> 24);
+      tileSize.s.hi  = uint12(op >> 12);
+      tileSize.t.hi  = uint12(op >>  0);
+      setTileSize();
     } break;
 
     case 0x33: {
-    //loadBlock();
+      load_.block.s.lo  = uint12(op >> 44);
+      load_.block.t.lo  = uint12(op >> 32);
+      load_.block.index =  uint3(op >> 24);
+      load_.block.s.hi  = uint12(op >> 12);
+      load_.block.t.hi  = uint12(op >>  0);
+      loadBlock();
     } break;
 
     case 0x34: {
-    //loadTile();
+      load_.tile.s.lo  = uint12(op >> 44);
+      load_.tile.t.lo  = uint12(op >> 32);
+      load_.tile.index =  uint3(op >> 24);
+      load_.tile.s.hi  = uint12(op >> 12);
+      load_.tile.t.hi  = uint12(op >>  0);
+      loadTile();
     } break;
 
     case 0x35: {
-    //setTile();
+      tile.format   = uint3(op >> 53);
+      tile.size     = uint2(op >> 51);
+      tile.line     = uint9(op >> 41);
+      tile.address  = uint9(op >> 32);
+      tile.index    = uint3(op >> 24);
+      tile.palette  = uint4(op >> 20);
+      tile.t.clamp  = uint1(op >> 19);
+      tile.t.mirror = uint1(op >> 18);
+      tile.t.mask   = uint4(op >> 14);
+      tile.t.shift  = uint4(op >> 10);
+      tile.s.clamp  = uint1(op >>  9);
+      tile.s.mirror = uint1(op >>  8);
+      tile.s.mask   = uint4(op >>  4);
+      tile.s.shift  = uint4(op >>  0);
+      setTile();
     } break;
 
     case 0x36: {
-      auto xl = uint12(op >> 44);
-      auto yl = uint12(op >> 32);
-      auto xh = uint12(op >> 12);
-      auto yh = uint12(op >>  0);
-      fillRectangle(xl, yl, xh, yh);
+      fillRectangle_.x.lo = uint12(op >> 44);
+      fillRectangle_.y.lo = uint12(op >> 32);
+      fillRectangle_.x.hi = uint12(op >> 12);
+      fillRectangle_.y.hi = uint12(op >>  0);
+      fillRectangle();
     } break;
 
     case 0x37: {
-      auto color = uint32(op >> 0);
-      setFillColor(color);
+      set.fill.color = uint32(op >> 0);
+      setFillColor();
     } break;
 
     case 0x38: {
-    //setFogColor();
+      fog.red   = uint8(op >> 24);
+      fog.green = uint8(op >> 16);
+      fog.blue  = uint8(op >>  8);
+      fog.alpha = uint8(op >>  0);
+      setFogColor();
     } break;
 
     case 0x39: {
-    //setBlendColor();
+      blend.red   = uint8(op >> 24);
+      blend.green = uint8(op >> 16);
+      blend.blue  = uint8(op >>  8);
+      blend.alpha = uint8(op >>  0);
+      setBlendColor();
     } break;
 
     case 0x3a: {
-    //setPrimitiveColor();
+      primitive.minimum  = uint4(op >> 40);
+      primitive.fraction = uint8(op >> 32);
+      primitive.red      = uint8(op >> 24);
+      primitive.green    = uint8(op >> 16);
+      primitive.blue     = uint8(op >>  8);
+      primitive.alpha    = uint8(op >>  0);
+      setPrimitiveColor();
     } break;
 
     case 0x3b: {
-    //setEnvironmentColor();
+      environment.red   = uint8(op >> 24);
+      environment.green = uint8(op >> 16);
+      environment.blue  = uint8(op >>  8);
+      environment.alpha = uint8(op >>  0);
+      setEnvironmentColor();
     } break;
 
     case 0x3c: {
@@ -443,24 +518,24 @@ auto RDP::render() -> void {
     } break;
 
     case 0x3d: {
-      auto format      =  uint3(op >> 53);
-      auto size        =  uint2(op >> 51);
-      auto width       = uint10(op >> 32);
-      auto dramAddress = uint26(op >>  0);
-      setTextureImage(format, size, width, dramAddress);
+      set.texture.format      =  uint3(op >> 53);
+      set.texture.size        =  uint2(op >> 51);
+      set.texture.width       = uint10(op >> 32);
+      set.texture.dramAddress = uint26(op >>  0);
+      setTextureImage();
     } break;
 
     case 0x3e: {
-      auto dramAddress = uint26(op >>  0);
-      setMaskImage(dramAddress);
+      set.mask.dramAddress = uint26(op >>  0);
+      setMaskImage();
     } break;
 
     case 0x3f: {
-      auto format      =  uint3(op >> 53);
-      auto size        =  uint2(op >> 51);
-      auto width       = uint10(op >> 32);
-      auto dramAddress = uint26(op >>  0);
-      setColorImage(format, size, width, dramAddress);
+      set.color.format      =  uint3(op >> 53);
+      set.color.size        =  uint2(op >> 51);
+      set.color.width       = uint10(op >> 32);
+      set.color.dramAddress = uint26(op >>  0);
+      setColorImage();
     } break;
 
     }
@@ -532,35 +607,72 @@ auto RDP::syncFull() -> void {
   mi.raise(MI::IRQ::DP);
 }
 
+//0x2a
+auto RDP::setKeyGB() -> void {
+}
+
+//0x2b
+auto RDP::setKeyR() -> void {
+}
+
+//0x2c
+auto RDP::setConvert() -> void {
+}
+
+//0x2d
+auto RDP::setScissor() -> void {
+}
+
+//0x2e
+auto RDP::setPrimitiveDepth() -> void {
+}
+
 //0x2f
 auto RDP::setOtherModes() -> void {
 }
 
+//0x30
+auto RDP::loadTLUT() -> void {
+}
+
+//0x32
+auto RDP::setTileSize() -> void {
+}
+
+//0x33
+auto RDP::loadBlock() -> void {
+}
+
+//0x34
+auto RDP::loadTile() -> void {
+}
+
+//0x35
+auto RDP::setTile() -> void {
+}
+
 //0x36
-auto RDP::fillRectangle(uint12 xl, uint12 yl, uint12 xh, uint12 yh) -> void {
-  u32 depth = vi.io.colorDepth == 2 ? 2 : 4;
-  u32 step  = vi.io.colorDepth == 2 ? 2 : 1;
-  u32 shift = 2;
-
-  xl >>= shift;
-  yl >>= shift;
-  xh >>= shift;
-  yh >>= shift;
-
-  u32 base = set.color.dramAddress;
-  for(u32 y = yh; y <= yl; y++) {
-    u32 line = base + y * vi.io.width * depth;
-    u32 address = line + xh * depth;
-    for(u32 x = xh; x <= xl; x += step) {
-    //rdram.ram.writeWord(address, set.fill.color);
-      address += 4;
-    }
-  }
+auto RDP::fillRectangle() -> void {
 }
 
 //0x37
-auto RDP::setFillColor(uint32 color) -> void {
-  set.fill.color = color;
+auto RDP::setFillColor() -> void {
+}
+
+//0x38
+auto RDP::setFogColor() -> void {
+}
+
+//0x39
+auto RDP::setBlendColor() -> void {
+}
+
+//0x3a
+auto RDP::setPrimitiveColor() -> void {
+}
+
+//0x3b
+auto RDP::setEnvironmentColor() -> void {
 }
 
 //0x3c
@@ -568,22 +680,13 @@ auto RDP::setCombineMode() -> void {
 }
 
 //0x3d
-auto RDP::setTextureImage(uint3 format, uint2 size, uint10 width, uint26 dramAddress) -> void {
-  set.texture.format = format;
-  set.texture.size = size;
-  set.texture.width = width;
-  set.texture.dramAddress = dramAddress;
+auto RDP::setTextureImage() -> void {
 }
 
 //0x3e
-auto RDP::setMaskImage(uint26 dramAddress) -> void {
-  set.mask.dramAddress = dramAddress;
+auto RDP::setMaskImage() -> void {
 }
 
 //0x3f
-auto RDP::setColorImage(uint3 format, uint2 size, uint10 width, uint26 dramAddress) -> void {
-  set.color.format = format;
-  set.color.size = size;
-  set.color.width = width;
-  set.color.dramAddress = dramAddress;
+auto RDP::setColorImage() -> void {
 }

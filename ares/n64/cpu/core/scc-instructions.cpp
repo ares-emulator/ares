@@ -1,9 +1,9 @@
-auto CPU::instructionDMFC0() -> void {
-  RT.u64 = getControlRegister(RDn);
+auto CPU::instructionDMFC0(r64& rt, u8 rd) -> void {
+  rt.u64 = getControlRegister(rd);
 }
 
-auto CPU::instructionDMTC0() -> void {
-  setControlRegister(RDn, RT.u64);
+auto CPU::instructionDMTC0(cr64& rt, u8 rd) -> void {
+  setControlRegister(rd, rt.u64);
 }
 
 auto CPU::instructionERET() -> void {
@@ -19,12 +19,12 @@ auto CPU::instructionERET() -> void {
   context.setMode();
 }
 
-auto CPU::instructionMFC0() -> void {
-  RT.u64 = i32(getControlRegister(RDn));
+auto CPU::instructionMFC0(r64& rt, u8 rd) -> void {
+  rt.u64 = i32(getControlRegister(rd));
 }
 
-auto CPU::instructionMTC0() -> void {
-  setControlRegister(RDn, i32(RT.u32));
+auto CPU::instructionMTC0(cr64& rt, u8 rd) -> void {
+  setControlRegister(rd, i32(rt.u32));
 }
 
 auto CPU::instructionTLBP() -> void {

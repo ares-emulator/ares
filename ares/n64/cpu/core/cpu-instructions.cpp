@@ -1,46 +1,102 @@
-auto CPU::instructionADD() -> void {
-//if(RS.u32 > ~RT.u32) return exception.arithmeticOverflow();
-  RD.u64 = i32(RS.u32 + RT.u32);
+auto CPU::instructionADD(r64& rd, cr64& rs, cr64& rt) -> void {
+//if(rs.u32 > ~rt.u32) return exception.arithmeticOverflow();
+  rd.u64 = i32(rs.u32 + rt.u32);
 }
 
-auto CPU::instructionADDI() -> void {
-//if(RS.i32 > ~IMMi16) return exception.arithmeticOverflow();
-  RT.u64 = i32(RS.u32 + IMMi16);
+auto CPU::instructionADDI(r64& rt, cr64& rs, i16 imm) -> void {
+//if(rs.i32 > ~imm) return exception.arithmeticOverflow();
+  rt.u64 = i32(rs.u32 + imm);
 }
 
-auto CPU::instructionADDIU() -> void {
-  RT.u64 = i32(RS.u32 + IMMi16);
+auto CPU::instructionADDIU(r64& rt, cr64& rs, i16 imm) -> void {
+  rt.u64 = i32(rs.u32 + imm);
 }
 
-auto CPU::instructionADDU() -> void {
-  RD.u64 = i32(RS.u32 + RT.u32);
+auto CPU::instructionADDU(r64& rd, cr64& rs, cr64& rt) -> void {
+  rd.u64 = i32(rs.u32 + rt.u32);
 }
 
-auto CPU::instructionAND() -> void {
-  RD.u64 = RS.u64 & RT.u64;
+auto CPU::instructionAND(r64& rd, cr64& rs, cr64& rt) -> void {
+  rd.u64 = rs.u64 & rt.u64;
 }
 
-auto CPU::instructionANDI() -> void {
-  RT.u64 = RS.u64 & IMMu16;
+auto CPU::instructionANDI(r64& rt, cr64& rs, u16 imm) -> void {
+  rt.u64 = rs.u64 & imm;
 }
 
-auto CPU::instructionB(bool take) -> void {
-  if(take) branch.take(PC + 4 + (IMMi16 << 2));
+auto CPU::instructionBEQ(cr64& rs, cr64& rt, i16 imm) -> void {
+  if(rs.u64 == rt.u64) branch.take(PC + 4 + (imm << 2));
 }
 
-auto CPU::instructionBAL(bool take) -> void {
-  RA.u64 = i32(PC + 8);
-  if(take) branch.take(PC + 4 + (IMMi16 << 2));
-}
-
-auto CPU::instructionBALL(bool take) -> void {
-  RA.u64 = i32(PC + 8);
-  if(take) branch.take(PC + 4 + (IMMi16 << 2));
+auto CPU::instructionBEQL(cr64& rs, cr64& rt, i16 imm) -> void {
+  if(rs.u64 == rt.u64) branch.take(PC + 4 + (imm << 2));
   else branch.discard();
 }
 
-auto CPU::instructionBL(bool take) -> void {
-  if(take) branch.take(PC + 4 + (IMMi16 << 2));
+auto CPU::instructionBGEZ(cr64& rs, i16 imm) -> void {
+  if(rs.i64 >= 0) branch.take(PC + 4 + (imm << 2));
+}
+
+auto CPU::instructionBGEZAL(cr64& rs, i16 imm) -> void {
+  RA.u64 = i32(PC + 8);
+  if(rs.i64 >= 0) branch.take(PC + 4 + (imm << 2));
+}
+
+auto CPU::instructionBGEZALL(cr64& rs, i16 imm) -> void {
+  RA.u64 = i32(PC + 8);
+  if(rs.i64 >= 0) branch.take(PC + 4 + (imm << 2));
+  else branch.discard();
+}
+
+auto CPU::instructionBGEZL(cr64& rs, i16 imm) -> void {
+  if(rs.i64 >= 0) branch.take(PC + 4 + (imm << 2));
+  else branch.discard();
+}
+
+auto CPU::instructionBGTZ(cr64& rs, i16 imm) -> void {
+  if(rs.i64 > 0) branch.take(PC + 4 + (imm << 2));
+}
+
+auto CPU::instructionBGTZL(cr64& rs, i16 imm) -> void {
+  if(rs.i64 > 0) branch.take(PC + 4 + (imm << 2));
+  else branch.discard();
+}
+
+auto CPU::instructionBLEZ(cr64& rs, i16 imm) -> void {
+  if(rs.i64 <= 0) branch.take(PC + 4 + (imm << 2));
+}
+
+auto CPU::instructionBLEZL(cr64& rs, i16 imm) -> void {
+  if(rs.i64 <= 0) branch.take(PC + 4 + (imm << 2));
+  else branch.discard();
+}
+
+auto CPU::instructionBLTZ(cr64& rs, i16 imm) -> void {
+  if(rs.i64 < 0) branch.take(PC + 4 + (imm << 2));
+}
+
+auto CPU::instructionBLTZAL(cr64& rs, i16 imm) -> void {
+  RA.u64 = i32(PC + 8);
+  if(rs.i64 < 0) branch.take(PC + 4 + (imm << 2));
+}
+
+auto CPU::instructionBLTZALL(cr64& rs, i16 imm) -> void {
+  RA.u64 = i32(PC + 8);
+  if(rs.i64 < 0) branch.take(PC + 4 + (imm << 2));
+  else branch.discard();
+}
+
+auto CPU::instructionBLTZL(cr64& rs, i16 imm) -> void {
+  if(rs.i64 < 0) branch.take(PC + 4 + (imm << 2));
+  else branch.discard();
+}
+
+auto CPU::instructionBNE(cr64& rs, cr64& rt, i16 imm) -> void {
+  if(rs.u64 != rt.u64) branch.take(PC + 4 + (imm << 2));
+}
+
+auto CPU::instructionBNEL(cr64& rs, cr64& rt, i16 imm) -> void {
+  if(rs.u64 != rt.u64) branch.take(PC + 4 + (imm << 2));
   else branch.discard();
 }
 
@@ -48,10 +104,8 @@ auto CPU::instructionBREAK() -> void {
   exception.breakpoint();
 }
 
-auto CPU::instructionCACHE() -> void {
+auto CPU::instructionCACHE(u8 cache, u8 operation) -> void {
   //todo
-  uint cache     = OP >> 16 & 3;
-  uint operation = OP >> 18 & 3;
   if(cache == 0) {
     //instruction
     if(operation == 0) {
@@ -99,381 +153,369 @@ auto CPU::instructionCACHE() -> void {
   }
 }
 
-auto CPU::instructionDADD() -> void {
-//if(RS.u64 > ~RT.u64) return exception.arithmeticOverflow();
-  RD.u64 = RS.u64 + RT.u64;
+auto CPU::instructionDADD(r64& rd, cr64& rs, cr64& rt) -> void {
+//if(rs.u64 > ~rt.u64) return exception.arithmeticOverflow();
+  rd.u64 = rs.u64 + rt.u64;
 }
 
-auto CPU::instructionDADDI() -> void {
-//if(RS.i64 > ~IMM16i) return exception.arithmeticOverflow();
-  RT.u64 = RS.u64 + i64(IMMi16);
+auto CPU::instructionDADDI(r64& rt, cr64& rs, i16 imm) -> void {
+//if(rs.i64 > ~imm) return exception.arithmeticOverflow();
+  rt.u64 = rs.u64 + imm;
 }
 
-auto CPU::instructionDADDIU() -> void {
-  RT.u64 = RS.u64 + i64(IMMi16);
+auto CPU::instructionDADDIU(r64& rt, cr64& rs, i16 imm) -> void {
+  rt.u64 = rs.u64 + imm;
 }
 
-auto CPU::instructionDADDU() -> void {
-  RD.u64 = RS.u64 + RT.u64;
+auto CPU::instructionDADDU(r64& rd, cr64& rs, cr64& rt) -> void {
+  rd.u64 = rs.u64 + rt.u64;
 }
 
-auto CPU::instructionDDIV() -> void {
-  if(RT.i64) {
+auto CPU::instructionDDIV(cr64& rs, cr64& rt) -> void {
+  if(rt.i64) {
     //cast to i128 to prevent exception on INT64_MIN / -1
-    LO.u64 = i128(RS.i64) / i128(RT.i64);
-    HI.u64 = i128(RS.i64) % i128(RT.i64);
+    LO.u64 = i128(rs.i64) / i128(rt.i64);
+    HI.u64 = i128(rs.i64) % i128(rt.i64);
   } else {
-    LO.u64 = RS.i64 < 0 ? +1 : -1;
-    HI.u64 = RS.i64;
+    LO.u64 = rs.i64 < 0 ? +1 : -1;
+    HI.u64 = rs.i64;
   }
 }
 
-auto CPU::instructionDDIVU() -> void {
-  if(RT.u64) {
-    LO.u64 = RS.u64 / RT.u64;
-    HI.u64 = RS.u64 % RT.u64;
+auto CPU::instructionDDIVU(cr64& rs, cr64& rt) -> void {
+  if(rt.u64) {
+    LO.u64 = rs.u64 / rt.u64;
+    HI.u64 = rs.u64 % rt.u64;
   } else {
     LO.u64 = -1;
-    HI.u64 = RS.u64;
+    HI.u64 = rs.u64;
   }
 }
 
-auto CPU::instructionDIV() -> void {
-  if(RT.i32) {
+auto CPU::instructionDIV(cr64& rs, cr64& rt) -> void {
+  if(rt.i32) {
     //cast to i64 to prevent exception on INT32_MIN / -1
-    LO.u64 = i32(i64(RS.i32) / i64(RT.i32));
-    HI.u64 = i32(i64(RS.i32) % i64(RT.i32));
+    LO.u64 = i32(i64(rs.i32) / i64(rt.i32));
+    HI.u64 = i32(i64(rs.i32) % i64(rt.i32));
   } else {
-    LO.u64 = RS.i32 < 0 ? +1 : -1;
-    HI.u64 = RS.i32;
+    LO.u64 = rs.i32 < 0 ? +1 : -1;
+    HI.u64 = rs.i32;
   }
 }
 
-auto CPU::instructionDIVU() -> void {
-  if(RT.u32) {
-    LO.u64 = i32(RS.u32 / RT.u32);
-    HI.u64 = i32(RS.u32 % RT.u32);
+auto CPU::instructionDIVU(cr64& rs, cr64& rt) -> void {
+  if(rt.u32) {
+    LO.u64 = i32(rs.u32 / rt.u32);
+    HI.u64 = i32(rs.u32 % rt.u32);
   } else {
     LO.u64 = -1;
-    HI.u64 = RS.i32;
+    HI.u64 = rs.i32;
   }
 }
 
-auto CPU::instructionDMULT() -> void {
-  u128 result = RS.i128() * RT.i128();
+auto CPU::instructionDMULT(cr64& rs, cr64& rt) -> void {
+  u128 result = rs.i128() * rt.i128();
   LO.u64 = result >>  0;
   HI.u64 = result >> 64;
 }
 
-auto CPU::instructionDMULTU() -> void {
-  u128 result = RS.u128() * RT.u128();
+auto CPU::instructionDMULTU(cr64& rs, cr64& rt) -> void {
+  u128 result = rs.u128() * rt.u128();
   LO.u64 = result >>  0;
   HI.u64 = result >> 64;
 }
 
-auto CPU::instructionDSLL() -> void {
-  RD.u64 = RT.u64 << SA;
+auto CPU::instructionDSLL(r64& rd, cr64& rt, u8 sa) -> void {
+  rd.u64 = rt.u64 << sa;
 }
 
-auto CPU::instructionDSLL32() -> void {
-  RD.u64 = RT.u64 << SA + 32;
+auto CPU::instructionDSLLV(r64& rd, cr64& rt, cr64& rs) -> void {
+  rd.u64 = rt.u64 << (rs.u32 & 63);
 }
 
-auto CPU::instructionDSLLV() -> void {
-  RD.u64 = RT.u64 << (RS.u32 & 63);
+auto CPU::instructionDSRA(r64& rd, cr64& rt, u8 sa) -> void {
+  rd.u64 = rt.i64 >> sa;
 }
 
-auto CPU::instructionDSRA() -> void {
-  RD.u64 = RT.i64 >> SA;
+auto CPU::instructionDSRAV(r64& rd, cr64& rt, cr64& rs) -> void {
+  rd.u64 = rt.i64 >> (rs.u32 & 63);
 }
 
-auto CPU::instructionDSRA32() -> void {
-  RD.u64 = RT.i64 >> SA + 32;
+auto CPU::instructionDSRL(r64& rd, cr64& rt, u8 sa) -> void {
+  rd.u64 = rt.u64 >> sa;
 }
 
-auto CPU::instructionDSRAV() -> void {
-  RD.u64 = RT.i64 >> (RS.u32 & 63);
+auto CPU::instructionDSRLV(r64& rd, cr64& rt, cr64& rs) -> void {
+  rd.u64 = rt.u64 >> (rs.u32 & 63);
 }
 
-auto CPU::instructionDSRL() -> void {
-  RD.u64 = RT.u64 >> SA;
+auto CPU::instructionDSUB(r64& rd, cr64& rs, cr64& rt) -> void {
+//if(rs.u64 < rt.u64) return exception.arithmeticOverflow();
+  rd.u64 = rs.u64 - rt.u64;
 }
 
-auto CPU::instructionDSRL32() -> void {
-  RD.u64 = RT.u64 >> SA + 32;
+auto CPU::instructionDSUBU(r64& rd, cr64& rs, cr64& rt) -> void {
+  rd.u64 = rs.u64 - rt.u64;
 }
 
-auto CPU::instructionDSRLV() -> void {
-  RD.u64 = RT.u64 >> (RS.u32 & 63);
+auto CPU::instructionJ(u32 imm) -> void {
+  branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
 }
 
-auto CPU::instructionDSUB() -> void {
-//if(RS.u64 < RT.u64) return exception.arithmeticOverflow();
-  RD.u64 = RS.u64 - RT.u64;
-}
-
-auto CPU::instructionDSUBU() -> void {
-  RD.u64 = RS.u64 - RT.u64;
-}
-
-auto CPU::instructionJ() -> void {
-  branch.take((PC + 4 & 0xf000'0000) | (IMMu26 << 2));
-}
-
-auto CPU::instructionJAL() -> void {
-  branch.take((PC + 4 & 0xf000'0000) | (IMMu26 << 2));
+auto CPU::instructionJAL(u32 imm) -> void {
+  branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
   RA.u64 = i32(PC + 8);
 }
 
-auto CPU::instructionJALR() -> void {
-  branch.take(RS.u32);
-  RD.u64 = i32(PC + 8);
+auto CPU::instructionJALR(r64& rd, cr64& rs) -> void {
+  branch.take(rs.u32);
+  rd.u64 = i32(PC + 8);
 }
 
-auto CPU::instructionJR() -> void {
-  branch.take(RS.u32);
+auto CPU::instructionJR(cr64& rs) -> void {
+  branch.take(rs.u32);
 }
 
-auto CPU::instructionLB() -> void {
-  if(auto data = readByte(RS.u32 + IMMi16)) RT.u64 = i8(*data);
+auto CPU::instructionLB(r64& rt, cr64& rs, i16 imm) -> void {
+  if(auto data = readByte(rs.u32 + imm)) rt.u64 = i8(*data);
 }
 
-auto CPU::instructionLBU() -> void {
-  if(auto data = readByte(RS.u32 + IMMi16)) RT.u64 = u8(*data);
+auto CPU::instructionLBU(r64& rt, cr64& rs, i16 imm) -> void {
+  if(auto data = readByte(rs.u32 + imm)) rt.u64 = u8(*data);
 }
 
-auto CPU::instructionLD() -> void {
-  if(auto data = readDouble(RS.u32 + IMMi16)) RT.u64 = *data;
+auto CPU::instructionLD(r64& rt, cr64& rs, i16 imm) -> void {
+  if(auto data = readDouble(rs.u32 + imm)) rt.u64 = *data;
 }
 
-auto CPU::instructionLDL() -> void {
-  auto address = RS.u32 + IMMi16;
+auto CPU::instructionLDL(r64& rt, cr64& rs, i16 imm) -> void {
+  auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = u64(0) - 1 << shift;
   if(auto data = readDouble(address & ~7)) {
-    RT.u64 = RT.u64 & ~mask | *data << shift;
+    rt.u64 = rt.u64 & ~mask | *data << shift;
   }
 }
 
-auto CPU::instructionLDR() -> void {
-  auto address = RS.u32 + IMMi16;
+auto CPU::instructionLDR(r64& rt, cr64& rs, i16 imm) -> void {
+  auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = u64(0) - 1 >> shift;
   if(auto data = readDouble(address & ~7)) {
-    RT.u64 = RT.u64 & ~mask | *data >> shift;
+    rt.u64 = rt.u64 & ~mask | *data >> shift;
   }
 }
 
-auto CPU::instructionLH() -> void {
-  if(auto data = readHalf(RS.u32 + IMMi16)) RT.u64 = i16(*data);
+auto CPU::instructionLH(r64& rt, cr64& rs, i16 imm) -> void {
+  if(auto data = readHalf(rs.u32 + imm)) rt.u64 = i16(*data);
 }
 
-auto CPU::instructionLHU() -> void {
-  if(auto data = readHalf(RS.u32 + IMMi16)) RT.u64 = u16(*data);
+auto CPU::instructionLHU(r64& rt, cr64& rs, i16 imm) -> void {
+  if(auto data = readHalf(rs.u32 + imm)) rt.u64 = u16(*data);
 }
 
-auto CPU::instructionLL() -> void {
-  if(auto data = readWord(RS.u32 + IMMi16)) {
-    RT.u64 = i32(*data);
+auto CPU::instructionLL(r64& rt, cr64& rs, i16 imm) -> void {
+  if(auto data = readWord(rs.u32 + imm)) {
+    rt.u64 = i32(*data);
     scc.ll = tlb.physicalAddress >> 4;
     scc.llbit = 1;
   }
 }
 
-auto CPU::instructionLLD() -> void {
-  if(auto data = readDouble(RS.u32 + IMMi16)) {
-    RT.u64 = *data;
+auto CPU::instructionLLD(r64& rt, cr64& rs, i16 imm) -> void {
+  if(auto data = readDouble(rs.u32 + imm)) {
+    rt.u64 = *data;
     scc.ll = tlb.physicalAddress >> 4;
     scc.llbit = 1;
   }
 }
 
-auto CPU::instructionLUI() -> void {
-  RT.u64 = i32(IMMu16 << 16);
+auto CPU::instructionLUI(r64& rt, u16 imm) -> void {
+  rt.u64 = i32(imm << 16);
 }
 
-auto CPU::instructionLW() -> void {
-  if(auto data = readWord(RS.u32 + IMMi16)) RT.u64 = i32(*data);
+auto CPU::instructionLW(r64& rt, cr64& rs, i16 imm) -> void {
+  if(auto data = readWord(rs.u32 + imm)) rt.u64 = i32(*data);
 }
 
-auto CPU::instructionLWL() -> void {
-  auto address = RS.u32 + IMMi16;
+auto CPU::instructionLWL(r64& rt, cr64& rs, i16 imm) -> void {
+  auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipLE) & 3);
   auto mask = u32(0) - 1 << shift;
   if(auto data = readWord(address & ~3)) {
-    RT.u64 = i32(RT.u32 & ~mask | *data << shift);
+    rt.u64 = i32(rt.u32 & ~mask | *data << shift);
   }
 }
 
-auto CPU::instructionLWR() -> void {
-  auto address = RS.u32 + IMMi16;
+auto CPU::instructionLWR(r64& rt, cr64& rs, i16 imm) -> void {
+  auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipBE) & 3);
   auto mask = u32(0) - 1 >> shift;
   if(auto data = readWord(address & ~3)) {
-    RT.u64 = i32(RT.u32 & ~mask | *data >> shift);
+    rt.u64 = i32(rt.u32 & ~mask | *data >> shift);
   }
 }
 
-auto CPU::instructionLWU() -> void {
-  if(auto data = readWord(RS.u32 + IMMi16)) RT.u64 = u32(*data);
+auto CPU::instructionLWU(r64& rt, cr64& rs, i16 imm) -> void {
+  if(auto data = readWord(rs.u32 + imm)) rt.u64 = u32(*data);
 }
 
-auto CPU::instructionMFHI() -> void {
-  RD.u64 = HI.u64;
+auto CPU::instructionMFHI(r64& rd) -> void {
+  rd.u64 = HI.u64;
 }
 
-auto CPU::instructionMFLO() -> void {
-  RD.u64 = LO.u64;
+auto CPU::instructionMFLO(r64& rd) -> void {
+  rd.u64 = LO.u64;
 }
 
-auto CPU::instructionMTHI() -> void {
-  HI.u64 = RS.u64;
+auto CPU::instructionMTHI(cr64& rs) -> void {
+  HI.u64 = rs.u64;
 }
 
-auto CPU::instructionMTLO() -> void {
-  LO.u64 = RS.u64;
+auto CPU::instructionMTLO(cr64& rs) -> void {
+  LO.u64 = rs.u64;
 }
 
-auto CPU::instructionMULT() -> void {
-  u64 result = i64(RS.i32) * i64(RT.i32);
+auto CPU::instructionMULT(cr64& rs, cr64& rt) -> void {
+  u64 result = i64(rs.i32) * i64(rt.i32);
   LO.u64 = i32(result >>  0);
   HI.u64 = i32(result >> 32);
 }
 
-auto CPU::instructionMULTU() -> void {
-  u64 result = u64(RS.u32) * u64(RT.u32);
+auto CPU::instructionMULTU(cr64& rs, cr64& rt) -> void {
+  u64 result = u64(rs.u32) * u64(rt.u32);
   LO.u64 = i32(result >>  0);
   HI.u64 = i32(result >> 32);
 }
 
-auto CPU::instructionNOR() -> void {
-  RD.u64 = ~(RS.u64 | RT.u64);
+auto CPU::instructionNOR(r64& rd, cr64& rs, cr64& rt) -> void {
+  rd.u64 = ~(rs.u64 | rt.u64);
 }
 
-auto CPU::instructionOR() -> void {
-  RD.u64 = RS.u64 | RT.u64;
+auto CPU::instructionOR(r64& rd, cr64& rs, cr64& rt) -> void {
+  rd.u64 = rs.u64 | rt.u64;
 }
 
-auto CPU::instructionORI() -> void {
-  RT.u64 = RS.u64 | IMMu16;
+auto CPU::instructionORI(r64& rt, cr64& rs, u16 imm) -> void {
+  rt.u64 = rs.u64 | imm;
 }
 
-auto CPU::instructionSB() -> void {
-  writeByte(RS.u32 + IMMi16, RT.u32);
+auto CPU::instructionSB(cr64& rt, cr64& rs, i16 imm) -> void {
+  writeByte(rs.u32 + imm, rt.u32);
 }
 
-auto CPU::instructionSC() -> void {
+auto CPU::instructionSC(r64& rt, cr64& rs, i16 imm) -> void {
   if(scc.llbit) {
     scc.llbit = 0;
-    RT.u64 = writeWord(RS.u32 + IMMi16, RT.u32);
+    rt.u64 = writeWord(rs.u32 + imm, rt.u32);
   } else {
-    RT.u64 = 0;
+    rt.u64 = 0;
   }
 }
 
-auto CPU::instructionSCD() -> void {
+auto CPU::instructionSCD(r64& rt, cr64& rs, i16 imm) -> void {
   if(scc.llbit) {
     scc.llbit = 0;
-    RT.u64 = writeDouble(RS.u32 + IMMi16, RT.u64);
+    rt.u64 = writeDouble(rs.u32 + imm, rt.u64);
   } else {
-    RT.u64 = 0;
+    rt.u64 = 0;
   }
 }
 
-auto CPU::instructionSD() -> void {
-  writeDouble(RS.u32 + IMMi16, RT.u64);
+auto CPU::instructionSD(cr64& rt, cr64& rs, i16 imm) -> void {
+  writeDouble(rs.u32 + imm, rt.u64);
 }
 
-auto CPU::instructionSDL() -> void {
-  auto address = RS.u32 + IMMi16;
+auto CPU::instructionSDL(cr64& rt, cr64& rs, i16 imm) -> void {
+  auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = u64(0) - 1 >> shift;
   if(auto data = readDouble(address & ~7)) {
-    writeDouble(address & ~7, *data & ~mask | RT.u64 >> shift);
+    writeDouble(address & ~7, *data & ~mask | rt.u64 >> shift);
   }
 }
 
-auto CPU::instructionSDR() -> void {
-  auto address = RS.u32 + IMMi16;
+auto CPU::instructionSDR(cr64& rt, cr64& rs, i16 imm) -> void {
+  auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = u64(0) - 1 << shift;
   if(auto data = readDouble(address & ~7)) {
-    writeDouble(address & ~7, *data & ~mask | RT.u64 << shift);
+    writeDouble(address & ~7, *data & ~mask | rt.u64 << shift);
   }
 }
 
-auto CPU::instructionSH() -> void {
-  writeHalf(RS.u32 + IMMi16, RT.u32);
+auto CPU::instructionSH(cr64& rt, cr64& rs, i16 imm) -> void {
+  writeHalf(rs.u32 + imm, rt.u32);
 }
 
-auto CPU::instructionSLL() -> void {
-  RD.u64 = i32(RT.u32 << SA);
+auto CPU::instructionSLL(r64& rd, cr64& rt, u8 sa) -> void {
+  rd.u64 = i32(rt.u32 << sa);
 }
 
-auto CPU::instructionSLLV() -> void {
-  RD.u64 = i32(RT.u32 << (RS.u32 & 31));
+auto CPU::instructionSLLV(r64& rd, cr64& rt, cr64& rs) -> void {
+  rd.u64 = i32(rt.u32 << (rs.u32 & 31));
 }
 
-auto CPU::instructionSLT() -> void {
-  RD.u64 = RS.i64 < RT.i64;
+auto CPU::instructionSLT(r64& rd, cr64& rs, cr64& rt) -> void {
+  rd.u64 = rs.i64 < rt.i64;
 }
 
-auto CPU::instructionSLTI() -> void {
-  RT.u64 = RS.i64 < i64(IMMi16);
+auto CPU::instructionSLTI(r64& rt, cr64& rs, i16 imm) -> void {
+  rt.u64 = rs.i64 < imm;
 }
 
-auto CPU::instructionSLTIU() -> void {
-  RT.u64 = RS.u64 < u64(IMMi16);
+auto CPU::instructionSLTIU(r64& rt, cr64& rs, i16 imm) -> void {
+  rt.u64 = rs.u64 < imm;
 }
 
-auto CPU::instructionSLTU() -> void {
-  RD.u64 = RS.u64 < RT.u64;
+auto CPU::instructionSLTU(r64& rd, cr64& rs, cr64& rt) -> void {
+  rd.u64 = rs.u64 < rt.u64;
 }
 
-auto CPU::instructionSRA() -> void {
-  RD.u64 = RT.i32 >> SA;
+auto CPU::instructionSRA(r64& rd, cr64& rt, u8 sa) -> void {
+  rd.u64 = rt.i32 >> sa;
 }
 
-auto CPU::instructionSRAV() -> void {
-  RD.u64 = RT.i32 >> (RS.u32 & 31);
+auto CPU::instructionSRAV(r64& rd, cr64& rt, cr64& rs) -> void {
+  rd.u64 = rt.i32 >> (rs.u32 & 31);
 }
 
-auto CPU::instructionSRL() -> void {
-  RD.u64 = i32(RT.u32 >> SA);
+auto CPU::instructionSRL(r64& rd, cr64& rt, u8 sa) -> void {
+  rd.u64 = i32(rt.u32 >> sa);
 }
 
-auto CPU::instructionSRLV() -> void {
-  RD.u64 = i32(RT.u32 >> (RS.u32 & 31));
+auto CPU::instructionSRLV(r64& rd, cr64& rt, cr64& rs) -> void {
+  rd.u64 = i32(rt.u32 >> (rs.u32 & 31));
 }
 
-auto CPU::instructionSUB() -> void {
-//if(RS.u32 < RT.u32) return exception.arithmeticOverflow();
-  RD.u64 = i32(RS.u32 - RT.u32);
+auto CPU::instructionSUB(r64& rd, cr64& rs, cr64& rt) -> void {
+//if(rs.u32 < rt.u32) return exception.arithmeticOverflow();
+  rd.u64 = i32(rs.u32 - rt.u32);
 }
 
-auto CPU::instructionSUBU() -> void {
-  RD.u64 = i32(RS.u32 - RT.u32);
+auto CPU::instructionSUBU(r64& rd, cr64& rs, cr64& rt) -> void {
+  rd.u64 = i32(rs.u32 - rt.u32);
 }
 
-auto CPU::instructionSW() -> void {
-  writeWord(RS.u32 + IMMi16, RT.u32);
+auto CPU::instructionSW(cr64& rt, cr64& rs, i16 imm) -> void {
+  writeWord(rs.u32 + imm, rt.u32);
 }
 
-auto CPU::instructionSWL() -> void {
-  auto address = RS.u32 + IMMi16;
+auto CPU::instructionSWL(cr64& rt, cr64& rs, i16 imm) -> void {
+  auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipLE) & 3);
   auto mask = u32(0) - 1 >> shift;
   if(auto data = readWord(address & ~3)) {
-    writeWord(address & ~3, *data & ~mask | RT.u32 >> shift);
+    writeWord(address & ~3, *data & ~mask | rt.u32 >> shift);
   }
 }
 
-auto CPU::instructionSWR() -> void {
-  auto address = RS.u32 + IMMi16;
+auto CPU::instructionSWR(cr64& rt, cr64& rs, i16 imm) -> void {
+  auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipBE) & 3);
   auto mask = u32(0) - 1 << shift;
   if(auto data = readWord(address & ~3)) {
-    writeWord(address & ~3, *data & ~mask | RT.u32 << shift);
+    writeWord(address & ~3, *data & ~mask | rt.u32 << shift);
   }
 }
 
@@ -481,58 +523,58 @@ auto CPU::instructionSYSCALL() -> void {
   exception.systemCall();
 }
 
-auto CPU::instructionTEQ() -> void {
-  if(RS.u64 == RT.u64) exception.trap();
+auto CPU::instructionTEQ(cr64& rs, cr64& rt) -> void {
+  if(rs.u64 == rt.u64) exception.trap();
 }
 
-auto CPU::instructionTEQI() -> void {
-  if(RS.u64 == u64(IMMi16)) exception.trap();
+auto CPU::instructionTEQI(cr64& rs, i16 imm) -> void {
+  if(rs.i64 == imm) exception.trap();
 }
 
-auto CPU::instructionTGE() -> void {
-  if(RS.i64 >= RT.i64) exception.trap();
+auto CPU::instructionTGE(cr64& rs, cr64& rt) -> void {
+  if(rs.i64 >= rt.i64) exception.trap();
 }
 
-auto CPU::instructionTGEI() -> void {
-  if(RS.i64 >= i64(IMMi16)) exception.trap();
+auto CPU::instructionTGEI(cr64& rs, i16 imm) -> void {
+  if(rs.i64 >= imm) exception.trap();
 }
 
-auto CPU::instructionTGEIU() -> void {
-  if(RS.u64 >= u64(IMMi16)) exception.trap();
+auto CPU::instructionTGEIU(cr64& rs, i16 imm) -> void {
+  if(rs.u64 >= imm) exception.trap();
 }
 
-auto CPU::instructionTGEU() -> void {
-  if(RS.u64 >= RT.u64) exception.trap();
+auto CPU::instructionTGEU(cr64& rs, cr64& rt) -> void {
+  if(rs.u64 >= rt.u64) exception.trap();
 }
 
-auto CPU::instructionTLT() -> void {
-  if(RS.i64 < RT.i64) exception.trap();
+auto CPU::instructionTLT(cr64& rs, cr64& rt) -> void {
+  if(rs.i64 < rt.i64) exception.trap();
 }
 
-auto CPU::instructionTLTI() -> void {
-  if(RS.i64 < i64(IMMi16)) exception.trap();
+auto CPU::instructionTLTI(cr64& rs, i16 imm) -> void {
+  if(rs.i64 < imm) exception.trap();
 }
 
-auto CPU::instructionTLTIU() -> void {
-  if(RS.u64 < u64(IMMi16)) exception.trap();
+auto CPU::instructionTLTIU(cr64& rs, i16 imm) -> void {
+  if(rs.u64 < imm) exception.trap();
 }
 
-auto CPU::instructionTLTU() -> void {
-  if(RS.u64 < RT.u64) exception.trap();
+auto CPU::instructionTLTU(cr64& rs, cr64& rt) -> void {
+  if(rs.u64 < rt.u64) exception.trap();
 }
 
-auto CPU::instructionTNE() -> void {
-  if(RS.u64 != RT.u64) exception.trap();
+auto CPU::instructionTNE(cr64& rs, cr64& rt) -> void {
+  if(rs.u64 != rt.u64) exception.trap();
 }
 
-auto CPU::instructionTNEI() -> void {
-  if(RS.u64 != u64(IMMi16)) exception.trap();
+auto CPU::instructionTNEI(cr64& rs, i16 imm) -> void {
+  if(rs.i64 != imm) exception.trap();
 }
 
-auto CPU::instructionXOR() -> void {
-  RD.u64 = RS.u64 ^ RT.u64;
+auto CPU::instructionXOR(r64& rd, cr64& rs, cr64& rt) -> void {
+  rd.u64 = rs.u64 ^ rt.u64;
 }
 
-auto CPU::instructionXORI() -> void {
-  RT.u64 = RS.u64 ^ IMMu16;
+auto CPU::instructionXORI(r64& rt, cr64& rs, u16 imm) -> void {
+  rt.u64 = rs.u64 ^ imm;
 }

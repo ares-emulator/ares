@@ -1,5 +1,8 @@
 //{
   //core.cpp
+  auto raiseException(uint, uint = 0) -> void;
+  auto instruction() -> void;
+  auto instructionDEBUG() -> void;
   auto powerR4300(bool reset) -> void;
 
   //memory.cpp
@@ -16,10 +19,7 @@
   auto writeWord   (u32 address, u32 data) -> bool;
   auto writeDouble (u32 address, u64 data) -> bool;
 
-  //instruction.cpp
-  auto raiseException(uint, uint = 0) -> void;
-  auto instruction() -> void;
-  auto instructionDEBUG() -> void;
+  //decoder.cpp
   auto instructionEXECUTE() -> void;
   auto instructionSPECIAL() -> void;
   auto instructionREGIMM() -> void;

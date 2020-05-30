@@ -95,6 +95,7 @@ struct InputJoypadUHID {
       Joypad joypad;
       string deviceName = {"/dev/", device};
       if(inode::writable(deviceName)) {
+        //needed to use hid_set_report and write on fd
         joypad.fd = open(deviceName, O_RDWR | O_NONBLOCK);
         joypad.writable = true;
       } else if(inode::readable(deviceName)) {
@@ -118,7 +119,7 @@ struct InputJoypadUHID {
         if(item.kind == hid_collection && HID_PAGE(item.usage) == HUP_GENERIC_DESKTOP) {
           if(HID_USAGE(item.usage) == HUG_JOYSTICK) isJoypad = true;
           if(HID_USAGE(item.usage) == HUG_GAME_PAD) isJoypad = true;
-          if(HID_USAGE(item.usage) == HUG_POINTER ) isJoypad = true;
+          if(HID_USAGE(item.usage) == HUG_POINTER ) isJoypad = true;  //PS3 sixaxis
         }
         if(item.kind == hid_input && HID_PAGE(item.usage) == HUP_GENERIC_DESKTOP) {
           auto usage = HID_USAGE(item.usage);

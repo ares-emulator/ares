@@ -5,11 +5,14 @@
     operator __m128i() const { return v128; }
     auto operator=(__m128i value) { v128 = value; }
     auto byte(uint index) -> u8& { return ((u8*)&u128)[15 - index]; }
+    auto byte(uint index) const -> u8 { return ((u8*)&u128)[15 - index]; }
     auto element(uint index) -> u16& { return ((u16*)&u128)[7 - index]; }
-  };
+    auto element(uint index) const -> u16 { return ((u16*)&u128)[7 - index]; }
 
-  //vu-instructions.cpp
-  auto vte() -> r128;
+    //vu-registers.cpp
+    auto operator()(uint index) const -> r128;
+  };
+  using cr128 = const r128;
 
   struct COP2 {
     r128 r[32];
@@ -29,73 +32,71 @@
   static constexpr r128 invert{u128(0) - 1};
 
   //vu-instructions.cpp
-  auto instructionCFC2() -> void;
-  auto instructionCTC2() -> void;
-  auto instructionLBV() -> void;
-  auto instructionLDV() -> void;
-  auto instructionLFV() -> void;
-  auto instructionLHV() -> void;
-  auto instructionLLV() -> void;
-  auto instructionLPV() -> void;
-  auto instructionLQV() -> void;
-  auto instructionLRV() -> void;
-  auto instructionLSV() -> void;
-  auto instructionLTV() -> void;
-  auto instructionLUV() -> void;
-  auto instructionLWC2() -> void;
-  auto instructionLWV() -> void;
-  auto instructionMFC2() -> void;
-  auto instructionMTC2() -> void;
-  auto instructionSBV() -> void;
-  auto instructionSDV() -> void;
-  auto instructionSFV() -> void;
-  auto instructionSHV() -> void;
-  auto instructionSLV() -> void;
-  auto instructionSPV() -> void;
-  auto instructionSQV() -> void;
-  auto instructionSRV() -> void;
-  auto instructionSSV() -> void;
-  auto instructionSTV() -> void;
-  auto instructionSUV() -> void;
-  auto instructionSWC2() -> void;
-  auto instructionSWV() -> void;
-  auto instructionVABS() -> void;
-  auto instructionVADD() -> void;
-  auto instructionVADDC() -> void;
-  auto instructionVAND() -> void;
-  auto instructionVCL() -> void;
-  auto instructionVCH() -> void;
-  auto instructionVCR() -> void;
-  auto instructionVEQ() -> void;
-  auto instructionVGE() -> void;
-  auto instructionVLT() -> void;
-  auto instructionVMACF(bool) -> void;
-  auto instructionVMACQ() -> void;
-  auto instructionVMADH() -> void;
-  auto instructionVMADL() -> void;
-  auto instructionVMADM() -> void;
-  auto instructionVMADN() -> void;
-  auto instructionVMOV() -> void;
-  auto instructionVMRG() -> void;
-  auto instructionVMUDH() -> void;
-  auto instructionVMUDL() -> void;
-  auto instructionVMUDM() -> void;
-  auto instructionVMUDN() -> void;
-  auto instructionVMULF(bool) -> void;
-  auto instructionVMULQ() -> void;
-  auto instructionVNAND() -> void;
-  auto instructionVNE() -> void;
+  auto instructionCFC2(r32& rt, u8 rd) -> void;
+  auto instructionCTC2(cr32& rt, u8 rd) -> void;
+  auto instructionLBV(r128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionLDV(r128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionLFV(r128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionLHV(r128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionLLV(r128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionLPV(r128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionLQV(r128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionLRV(r128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionLSV(r128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionLTV(u8 vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionLUV(r128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionLWV(r128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionMFC2(r32& rt, cr128& vs, u8 e) -> void;
+  auto instructionMTC2(cr32& rt, r128& vs, u8 e) -> void;
+  auto instructionSBV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionSDV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionSFV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionSHV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionSLV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionSPV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionSQV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionSRV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionSSV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionSTV(u8 vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionSUV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionSWV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void;
+  auto instructionVABS(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVADD(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVADDC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVCH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVCL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVCR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVEQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVGE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVLT(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMACF(bool, r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMACQ(r128& vd) -> void;
+  auto instructionVMADH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMADL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMADM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMADN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMOV(r128& vd, u8 de, cr128& vt, u8 e) -> void;
+  auto instructionVMRG(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMUDH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMUDL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMUDM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMUDN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMULF(bool, r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVMULQ(r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVNAND(r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVNE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVNOP() -> void;
-  auto instructionVNOR() -> void;
-  auto instructionVNXOR() -> void;
-  auto instructionVOR() -> void;
-  auto instructionVRCP(bool) -> void;
-  auto instructionVRCPH() -> void;
-  auto instructionVRND(bool) -> void;
-  auto instructionVRSQ(bool) -> void;
-  auto instructionVRSQH() -> void;
-  auto instructionVSAR() -> void;
-  auto instructionVSUB() -> void;
-  auto instructionVSUBC() -> void;
-  auto instructionVXOR() -> void;
+  auto instructionVNOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVNXOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVRCP(bool, r128& vd, u8 de, cr128& vt, u8 e) -> void;
+  auto instructionVRCPH(r128& vd, u8 de, cr128& vt, u8 e) -> void;
+  auto instructionVRND(bool, r128& vd, u8 vs, cr128& vt, u8 e) -> void;
+  auto instructionVRSQ(bool, r128& vd, u8 de, cr128& vt, u8 e) -> void;
+  auto instructionVRSQH(r128& vd, u8 de, cr128& vt, u8 e) -> void;
+  auto instructionVSAR(r128& vd, cr128& vs, u8 e) -> void;
+  auto instructionVSUB(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVSUBC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  auto instructionVXOR(r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
 //};

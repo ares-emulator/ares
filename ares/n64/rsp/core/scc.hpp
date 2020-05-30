@@ -4,6 +4,6 @@
   auto setControlRegister(uint, uint32) -> void;
 
   //scc-instructions.cpp
-  auto instructionMFC0() -> void;
-  auto instructionMTC0() -> void;
+  auto instructionMFC0(r32& rt, u8 rd) -> void;
+  auto instructionMTC0(cr32& rt, u8 rd) -> void;
 //};

@@ -1,9 +1,9 @@
-auto RSP::instructionMFC0() -> void {
-  if((RDn & 8) == 0) RT.u32 = rsp.readWord((RDn & 7) << 2);
-  if((RDn & 8) != 0) RT.u32 = rdp.readWord((RDn & 7) << 2);
+auto RSP::instructionMFC0(r32& rt, u8 rd) -> void {
+  if((rd & 8) == 0) rt.u32 = rsp.readWord((rd & 7) << 2);
+  if((rd & 8) != 0) rt.u32 = rdp.readWord((rd & 7) << 2);
 }
 
-auto RSP::instructionMTC0() -> void {
-  if((RDn & 8) == 0) rsp.writeWord((RDn & 7) << 2, RT.u32);
-  if((RDn & 8) != 0) rdp.writeWord((RDn & 7) << 2, RT.u32);
+auto RSP::instructionMTC0(cr32& rt, u8 rd) -> void {
+  if((rd & 8) == 0) rsp.writeWord((rd & 7) << 2, rt.u32);
+  if((rd & 8) != 0) rdp.writeWord((rd & 7) << 2, rt.u32);
 }

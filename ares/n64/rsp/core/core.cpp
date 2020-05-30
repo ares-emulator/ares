@@ -1,10 +1,37 @@
 #include "registers.hpp"
-#include "instruction.cpp"
+#include "vu-registers.cpp"
+#include "decoder.cpp"
 #include "cpu-instructions.cpp"
 #include "scc-instructions.cpp"
 #include "vu-instructions.cpp"
 #include "disassembler.cpp"
 #include "serialization.cpp"
+
+auto RSP::instruction() -> void {
+  pipeline.address = PC;
+  pipeline.instruction = imem.readWord(pipeline.address);
+
+  debugger.instruction();
+//instructionDEBUG();
+  instructionEXECUTE();
+  GPR[0].u32 = 0;
+
+  switch(branch.state) {
+  case Branch::Step: PC += 4; break;
+  case Branch::DelaySlot: PC = branch.pc; branch.reset(); break;
+  case Branch::Take: PC += 4; branch.delaySlot(); break;
+  }
+}
+
+auto RSP::instructionDEBUG() -> void {
+  static uint counter = 0;
+//if(++counter > 100) return;
+  print(
+    disassembler.hint(hex(pipeline.address, 3L)), "  ",
+  //disassembler.hint(hex(pipeline.instruction, 8L)), "  ",
+    disassembler.disassemble(pipeline.address, pipeline.instruction), "\n"
+  );
+}
 
 auto RSP::powerCore() -> void {
   for(uint n : range(32)) GPR[n].u32 = 0;

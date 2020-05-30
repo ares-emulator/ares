@@ -174,11 +174,11 @@
   } scc;
 
   //scc-instructions.cpp
-  auto instructionDMFC0() -> void;
-  auto instructionDMTC0() -> void;
+  auto instructionDMFC0(r64& rt, u8 rd) -> void;
+  auto instructionDMTC0(cr64& rt, u8 rd) -> void;
   auto instructionERET() -> void;
-  auto instructionMFC0() -> void;
-  auto instructionMTC0() -> void;
+  auto instructionMFC0(r64& rt, u8 rd) -> void;
+  auto instructionMTC0(cr64& rt, u8 rd) -> void;
   auto instructionTLBP() -> void;
   auto instructionTLBR() -> void;
   auto instructionTLBWI() -> void;

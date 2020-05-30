@@ -39,15 +39,29 @@ struct RDP : Thread, Memory::IO<RDP> {
   auto syncPipe() -> void;
   auto syncTile() -> void;
   auto syncFull() -> void;
+  auto setKeyGB() -> void;
+  auto setKeyR() -> void;
+  auto setConvert() -> void;
+  auto setScissor() -> void;
+  auto setPrimitiveDepth() -> void;
   auto setOtherModes() -> void;
   auto textureRectangle() -> void;
   auto textureRectangleFlip() -> void;
-  auto fillRectangle(uint12 xl, uint12 yl, uint12 xh, uint12 yh) -> void;
-  auto setFillColor(uint32 color) -> void;
+  auto loadTLUT() -> void;
+  auto setTileSize() -> void;
+  auto loadBlock() -> void;
+  auto loadTile() -> void;
+  auto setTile() -> void;
+  auto fillRectangle() -> void;
+  auto setFillColor() -> void;
+  auto setFogColor() -> void;
+  auto setBlendColor() -> void;
+  auto setPrimitiveColor() -> void;
+  auto setEnvironmentColor() -> void;
   auto setCombineMode() -> void;
-  auto setTextureImage(uint3 format, uint2 size, uint10 width, uint26 dramAddress) -> void;
-  auto setMaskImage(uint26 dramAddress) -> void;
-  auto setColorImage(uint3 format, uint2 size, uint10 width, uint26 dramAddress) -> void;
+  auto setTextureImage() -> void;
+  auto setMaskImage() -> void;
+  auto setColorImage() -> void;
 
   //io.cpp
   auto readWord(u32 address) -> u32;
@@ -165,6 +179,36 @@ struct RDP : Thread, Memory::IO<RDP> {
     uint1 alphaCompare;
   } other;
 
+  struct FogColor {
+    uint8 red;
+    uint8 green;
+    uint8 blue;
+    uint8 alpha;
+  } fog;
+
+  struct Blend {
+    uint8 red;
+    uint8 green;
+    uint8 blue;
+    uint8 alpha;
+  } blend;
+
+  struct PrimitiveColor {
+    uint5 minimum;
+    uint8 fraction;
+    uint8 red;
+    uint8 green;
+    uint8 blue;
+    uint8 alpha;
+  } primitive;
+
+  struct EnvironmentColor {
+    uint8 red;
+    uint8 green;
+    uint8 blue;
+    uint8 alpha;
+  } environment;
+
   struct CombineMode {
     struct MUL {
       uint5 color[2];
@@ -179,6 +223,54 @@ struct RDP : Thread, Memory::IO<RDP> {
       uint3 alpha[2];
     } sba, sbb;
   } combine;
+
+  struct TLUT {
+    uint3 index;
+    struct {
+      uint12 lo;
+      uint12 hi;
+    } s, t;
+  } tlut;
+
+  struct Load {
+    struct Block {
+      uint3 index;
+      struct {
+        uint12 lo;
+        uint12 hi;
+      } s, t;
+    } block;
+    struct Tile {
+      uint3 index;
+      struct {
+        uint12 lo;
+        uint12 hi;
+      } s, t;
+    } tile;
+  } load_;
+
+  struct TileSize {
+    uint3 index;
+    struct {
+      uint12 lo;
+      uint12 hi;
+    } s, t;
+  } tileSize;
+
+  struct Tile {
+    uint3 format;
+    uint2 size;
+    uint9 line;
+    uint9 address;
+    uint3 index;
+    uint4 palette;
+    struct {
+      uint1 clamp;
+      uint1 mirror;
+      uint4 mask;
+      uint4 shift;
+    } s, t;
+  } tile;
 
   struct Set {
     struct Fill {
@@ -200,6 +292,39 @@ struct RDP : Thread, Memory::IO<RDP> {
       uint26 dramAddress = 0;
     } color;
   } set;
+
+  struct PrimitiveDepth {
+    uint16 z;
+    uint16 deltaZ;
+  } primitiveDepth;
+
+  struct Scissor {
+    uint1 field;
+    uint1 odd;
+    struct {
+      uint12 lo;
+      uint12 hi;
+    } x, y;
+  } scissor;
+
+  struct Convert {
+    uint9 k[6];
+  } convert;
+
+  struct Key {
+    struct {
+      uint12 width;
+       uint8 center;
+       uint8 scale;
+    } r, g, b;
+  } key;
+
+  struct FillRectangle {
+    struct {
+      uint12 lo;
+      uint12 hi;
+    } x, y;
+  } fillRectangle_;
 
   struct IO : Memory::IO<IO> {
     RDP& self;

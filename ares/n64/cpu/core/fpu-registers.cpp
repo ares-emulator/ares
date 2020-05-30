@@ -1,3 +1,11 @@
+auto CPU::FPU::setFloatingPointMode(bool mode) -> void {
+  if(mode == 0) {
+    //32x64-bit -> 16x64-bit
+  } else {
+    //16x64-bit -> 32x64-bit
+  }
+}
+
 template<> auto CPU::fgr<i32>(uint index) -> i32& {
   if(scc.status.floatingPointMode) {
     return fpu.r[index].i32;

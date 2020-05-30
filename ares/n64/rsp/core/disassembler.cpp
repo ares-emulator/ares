@@ -365,8 +365,20 @@ auto RSP::Disassembler::VU() -> vector<string> {
     return {name, vdName(), vsValue(), vtValue()};
   };
 
+  auto DSE = [&](string_view name) -> vector<string> {
+    static const string registerNames[] = {
+      "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
+      "acch", "accm", "accl", "r11", "r12", "r13", "r14", "r15",
+    };
+    return {name, vdName(), vsValue(), registerNames[instruction >> 21 & 15]};
+  };
+
   auto DT = [&](string_view name) -> vector<string> {
     return {name, vmName(), vtValue()};
+  };
+
+  auto D = [&](string_view name) -> vector<string> {
+    return {name, vdName()};
   };
 
   switch(instruction & 0x3f) {
@@ -381,7 +393,7 @@ auto RSP::Disassembler::VU() -> vector<string> {
   case 0x08: return DST("vmacf");
   case 0x09: return DST("vmacu");
   case 0x0a: return DST("vrndn");
-  case 0x0b: return DST("vmacq");
+  case 0x0b: return D("vmacq");
   case 0x0c: return DST("vmadl");
   case 0x0d: return DST("vmadm");
   case 0x0e: return DST("vmadn");
@@ -399,7 +411,7 @@ auto RSP::Disassembler::VU() -> vector<string> {
   case 0x1a: break;
   case 0x1b: break;
   case 0x1c: break;
-  case 0x1d: return DST("vsar");
+  case 0x1d: return DSE("vsar");
   case 0x1e: break;
   case 0x1f: break;
   case 0x20: return DST("vlt");

@@ -1,34 +1,6 @@
-//returns VT[e]
-auto RSP::vte() -> r128 {
-  static const v128 shuffle[16] = {
-    //vector
-    _mm_set_epi8(15,14,13,12,11,10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0),  //01234567
-    _mm_set_epi8(15,14,13,12,11,10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0),  //01234567
-    //scalar quarter
-    _mm_set_epi8(15,14,15,14,11,10,11,10, 7, 6, 7, 6, 3, 2, 3, 2),  //00224466
-    _mm_set_epi8(13,12,13,12, 9, 8, 9, 8, 5, 4, 5, 4, 1, 0, 1, 0),  //11335577
-    //scalar half
-    _mm_set_epi8(15,14,15,14,15,14,15,14, 7, 6, 7, 6, 7, 6, 7, 6),  //00004444
-    _mm_set_epi8(13,12,13,12,13,12,13,12, 5, 4, 5, 4, 5, 4, 5, 4),  //11115555
-    _mm_set_epi8(11,10,11,10,11,10,11,10, 3, 2, 3, 2, 3, 2, 3, 2),  //22226666
-    _mm_set_epi8( 9, 8, 9, 8, 9, 8, 9, 8, 1, 0, 1, 0, 1, 0, 1, 0),  //33337777
-    //scalar whole
-    _mm_set_epi8(15,14,15,14,15,14,15,14,15,14,15,14,15,14,15,14),  //00000000
-    _mm_set_epi8(13,12,13,12,13,12,13,12,13,12,13,12,13,12,13,12),  //11111111
-    _mm_set_epi8(11,10,11,10,11,10,11,10,11,10,11,10,11,10,11,10),  //22222222
-    _mm_set_epi8( 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8),  //33333333
-    _mm_set_epi8( 7, 6, 7, 6, 7, 6, 7, 6, 7, 6, 7, 6, 7, 6, 7, 6),  //44444444
-    _mm_set_epi8( 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4),  //55555555
-    _mm_set_epi8( 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2),  //66666666
-    _mm_set_epi8( 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0),  //77777777
-  };
-  //todo: benchmark to see if testing for cases 0&1 to return value directly is faster
-  return {u128(_mm_shuffle_epi8(VT.v128, shuffle[OP >> 21 & 15]))};
-}
-
-auto RSP::instructionCFC2() -> void {
+auto RSP::instructionCFC2(r32& rt, u8 rd) -> void {
   r128 hi, lo;
-  switch(RDn & 3) {
+  switch(rd & 3) {
   case 0x00: hi = VCOH; lo = VCOL; break;
   case 0x01: hi = VCCH; lo = VCCL; break;
   case 0x02: hi = zero; lo = VCE;  break;
@@ -36,13 +8,13 @@ auto RSP::instructionCFC2() -> void {
   }
 
   static const v128 reverse = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-  RT.u32 = i16(_mm_movemask_epi8(_mm_shuffle_epi8(_mm_packs_epi16(hi, lo), reverse)));
+  rt.u32 = i16(_mm_movemask_epi8(_mm_shuffle_epi8(_mm_packs_epi16(hi, lo), reverse)));
 }
 
-auto RSP::instructionCTC2() -> void {
+auto RSP::instructionCTC2(cr32& rt, u8 rd) -> void {
   maybe<r128&> hi, lo;
   r128 null;
-  switch(RDn & 3) {
+  switch(rd & 3) {
   case 0x00: hi = VCOH; lo = VCOL; break;
   case 0x01: hi = VCCH; lo = VCCL; break;
   case 0x02: hi = null; lo = VCE;  break;
@@ -50,267 +22,217 @@ auto RSP::instructionCTC2() -> void {
   }
 
   static const v128 mask = _mm_set_epi16(0x0101, 0x0202, 0x0404, 0x0808, 0x1010, 0x2020, 0x4040, 0x8080);
-  lo->v128 = _mm_cmpeq_epi8(_mm_and_si128(_mm_shuffle_epi8(r128{~RT.u32 >> 0}, zero), mask), zero);
-  hi->v128 = _mm_cmpeq_epi8(_mm_and_si128(_mm_shuffle_epi8(r128{~RT.u32 >> 8}, zero), mask), zero);
+  lo->v128 = _mm_cmpeq_epi8(_mm_and_si128(_mm_shuffle_epi8(r128{~rt.u32 >> 0}, zero), mask), zero);
+  hi->v128 = _mm_cmpeq_epi8(_mm_and_si128(_mm_shuffle_epi8(r128{~rt.u32 >> 8}, zero), mask), zero);
 }
 
-auto RSP::instructionLBV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP);
-  auto index = OP >> 7 & 15;
-  data.byte(index) = dmem.readByte(address);
+auto RSP::instructionLBV(r128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm;
+  vt.byte(e) = dmem.readByte(address);
 }
 
-auto RSP::instructionLDV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 8;
-  auto start = OP >> 7 & 15;
+auto RSP::instructionLDV(r128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 8;
+  auto start = e;
   auto end = start + 8;
   for(uint offset = start; offset < end; offset++) {
-    data.byte(offset & 15) = dmem.readByte(address++);
+    vt.byte(offset & 15) = dmem.readByte(address++);
   }
 }
 
-auto RSP::instructionLFV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 16;
-  auto index = OP >> 7 & 15;
-  auto start = index >> 1;
+auto RSP::instructionLFV(r128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
+  auto start = e >> 1;
   auto end = start + 4;
   for(uint offset = start; offset < end; offset++) {
-    data.element(offset & 7) = dmem.readByte(address) << 7;
+    vt.element(offset & 7) = dmem.readByte(address) << 7;
     address += 4;
   }
 }
 
-auto RSP::instructionLHV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 16;
-  auto index = OP >> 7 & 15;
+auto RSP::instructionLHV(r128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
   for(uint offset = 0; offset < 8; offset++) {
-    data.element(offset) = dmem.readByte(address + (16 - index + offset * 2 & 15)) << 7;
+    vt.element(offset) = dmem.readByte(address + (16 - e + offset * 2 & 15)) << 7;
   }
 }
 
-auto RSP::instructionLLV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 4;
-  auto start = OP >> 7 & 15;
+auto RSP::instructionLLV(r128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 4;
+  auto start = e;
   auto end = start + 4;
   for(uint offset = start; offset < end; offset++) {
-    data.byte(offset & 15) = dmem.readByte(address++);
+    vt.byte(offset & 15) = dmem.readByte(address++);
   }
 }
 
-auto RSP::instructionLPV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 8;
-  auto index = OP >> 7 & 15;
+auto RSP::instructionLPV(r128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 8;
   for(uint offset = 0; offset < 8; offset++) {
-    data.element(offset) = dmem.readByte(address + (16 - index + offset & 15)) << 8;
+    vt.element(offset) = dmem.readByte(address + (16 - e + offset & 15)) << 8;
   }
 }
 
-auto RSP::instructionLQV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 16;
-  auto start = 0;  //OP >> 7 & 15; ?
+auto RSP::instructionLQV(r128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
+  auto start = e;
   auto end = 16 - (address & 15);
   for(uint offset = start; offset < end; offset++) {
-    data.byte(offset & 15) = dmem.readByte(address++);
+    vt.byte(offset & 15) = dmem.readByte(address++);
   }
 }
 
-auto RSP::instructionLRV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 16;
-  auto index = OP >> 7 & 15;  //0?
+auto RSP::instructionLRV(r128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
+  auto index = e;
   auto start = 16 - ((address & 15) - index);
   address &= ~15;
   for(uint offset = start; offset < 16; offset++) {
-    data.byte(offset & 15) = dmem.readByte(address++);
+    vt.byte(offset & 15) = dmem.readByte(address++);
   }
 }
 
-auto RSP::instructionLSV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 2;
-  auto start = OP >> 7 & 15;
+auto RSP::instructionLSV(r128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 2;
+  auto start = e;
   auto end = start + 2;
   for(uint offset = start; offset < end; offset++) {
-    data.byte(offset & 15) = dmem.readByte(address++);
+    vt.byte(offset & 15) = dmem.readByte(address++);
   }
 }
 
-auto RSP::instructionLTV() -> void {
-  auto address = RS.u32 + int7(OP) * 16;
-  auto index = OP >> 7 & 15;
-  auto start = OP >> 16 & 31;
+auto RSP::instructionLTV(u8 vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
+  auto start = vt;
   auto end = min(32, start + 8);
-  address = (address + 8 & ~15) + (index & 1);
+  address = (address + 8 & ~15) + (e & 1);
   for(uint offset = start; offset < end; offset++) {
-    auto byte = (8 - (index >> 1) + (offset - start)) << 1;
+    auto byte = (8 - (e >> 1) + (offset - start)) << 1;
     VPR[offset].byte(byte + 0 & 15) = dmem.readByte(address++);
     VPR[offset].byte(byte + 1 & 15) = dmem.readByte(address++);
   }
 }
 
-auto RSP::instructionLUV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 8;
-  auto index = OP >> 7 & 15;
+auto RSP::instructionLUV(r128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 8;
   for(uint offset = 0; offset < 8; offset++) {
-    data.element(offset) = dmem.readByte(address + (16 - index + offset & 15)) << 7;
+    vt.element(offset) = dmem.readByte(address + (16 - e + offset & 15)) << 7;
   }
 }
 
-auto RSP::instructionLWC2() -> void {
-  switch(OP >> 11 & 31) {
-  case 0x00: return instructionLBV();
-  case 0x01: return instructionLSV();
-  case 0x02: return instructionLLV();
-  case 0x03: return instructionLDV();
-  case 0x04: return instructionLQV();
-  case 0x05: return instructionLRV();
-  case 0x06: return instructionLPV();
-  case 0x07: return instructionLUV();
-  case 0x08: return instructionLHV();
-  case 0x09: return instructionLFV();
-//case 0x0a: return instructionLWV();  //not present on N64 RSP
-  case 0x0b: return instructionLTV();
-  }
-}
-
-auto RSP::instructionLWV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 16;
-  auto index = OP >> 7 & 15;
-  auto start = 16 - index;
-  auto end = index + 16;
+auto RSP::instructionLWV(r128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
+  auto start = 16 - e;
+  auto end = e + 16;
   for(uint offset = start; offset < end; offset++) {
-    data.byte(offset & 15) = dmem.readByte(address);
+    vt.byte(offset & 15) = dmem.readByte(address);
     address += 4;
   }
 }
 
-auto RSP::instructionMFC2() -> void {
-  auto index = OP >> 7 & 15;
-  auto hi = VS.byte(index + 0 & 15);
-  auto lo = VS.byte(index + 1 & 15);
-  RT.u32 = i16(hi << 8 | lo << 0);
+auto RSP::instructionMFC2(r32& rt, cr128& vs, u8 e) -> void {
+  auto hi = vs.byte(e + 0 & 15);
+  auto lo = vs.byte(e + 1 & 15);
+  rt.u32 = i16(hi << 8 | lo << 0);
 }
 
-auto RSP::instructionMTC2() -> void {
-  auto index = OP >> 7 & 15;
-  VS.byte(index + 0 & 15) = RT.u32 >> 8;
-  VS.byte(index + 1 & 15) = RT.u32 >> 0;
+auto RSP::instructionMTC2(cr32& rt, r128& vs, u8 e) -> void {
+  vs.byte(e + 0 & 15) = rt.u32 >> 8;
+  vs.byte(e + 1 & 15) = rt.u32 >> 0;
 }
 
-auto RSP::instructionSBV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP);
-  auto index = OP >> 7 & 15;
-  dmem.writeByte(address, data.byte(index));
+auto RSP::instructionSBV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm;
+  dmem.writeByte(address, vt.byte(e));
 }
 
-auto RSP::instructionSDV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 8;
-  auto start = OP >> 7 & 15;
+auto RSP::instructionSDV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 8;
+  auto start = e;
   auto end = start + 8;
   for(uint offset = start; offset < end; offset++) {
-    dmem.writeByte(address++, data.byte(offset & 15));
+    dmem.writeByte(address++, vt.byte(offset & 15));
   }
 }
 
-auto RSP::instructionSFV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 16;
-  auto index = OP >> 7 & 15;
-  auto start = index >> 1;
+auto RSP::instructionSFV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
+  auto start = e >> 1;
   auto end = start + 4;
   auto base = address & 15;
   address &= ~15;
   for(uint offset = start; offset < end; offset++) {
-    dmem.writeByte(address + (base & 15), data.element(offset & 7) >> 7);
+    dmem.writeByte(address + (base & 15), vt.element(offset & 7) >> 7);
     base += 4;
   }
 }
 
-auto RSP::instructionSHV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 16;
-  auto index = OP >> 7 & 15;
+auto RSP::instructionSHV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
   for(uint offset = 0; offset < 8; offset++) {
-    auto byte = index + offset * 2;
-    auto value = data.byte(byte + 0 & 15) << 1 | data.byte(byte + 1 & 15) >> 7;
+    auto byte = e + offset * 2;
+    auto value = vt.byte(byte + 0 & 15) << 1 | vt.byte(byte + 1 & 15) >> 7;
     dmem.writeByte(address, value);
     address += 2;
   }
 }
 
-auto RSP::instructionSLV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 4;
-  auto start = OP >> 7 & 15;
+auto RSP::instructionSLV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 4;
+  auto start = e;
   auto end = start + 4;
   for(uint offset = start; offset < end; offset++) {
-    dmem.writeByte(address++, data.byte(offset & 15));
+    dmem.writeByte(address++, vt.byte(offset & 15));
   }
 }
 
-auto RSP::instructionSPV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 8;
-  auto start = OP >> 7 & 15;
+auto RSP::instructionSPV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 8;
+  auto start = e;
   auto end = start + 8;
   for(uint offset = start; offset < end; offset++) {
     if((offset & 15) < 8) {
-      dmem.writeByte(address++, data.byte((offset & 7) << 1));
+      dmem.writeByte(address++, vt.byte((offset & 7) << 1));
     } else {
-      dmem.writeByte(address++, data.element(offset & 7) >> 7);
+      dmem.writeByte(address++, vt.element(offset & 7) >> 7);
     }
   }
 }
 
-auto RSP::instructionSQV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 16;
-  auto start = OP >> 7 & 15;
+auto RSP::instructionSQV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
+  auto start = e;
   auto end = start + (16 - (address & 15));
   for(uint offset = start; offset < end; offset++) {
-    dmem.writeByte(address++, data.byte(offset & 15));
+    dmem.writeByte(address++, vt.byte(offset & 15));
   }
 }
 
-auto RSP::instructionSRV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 16;
-  auto start = OP >> 7 & 15;
+auto RSP::instructionSRV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
+  auto start = e;
   auto end = start + (address & 15);
   auto base = 16 - (address & 15);
   address &= ~15;
   for(uint offset = start; offset < end; offset++) {
-    dmem.writeByte(address++, data.byte(offset + base & 15));
+    dmem.writeByte(address++, vt.byte(offset + base & 15));
   }
 }
 
-auto RSP::instructionSSV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 2;
-  auto start = OP >> 7 & 15;
+auto RSP::instructionSSV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 2;
+  auto start = e;
   auto end = start + 2;
   for(uint offset = start; offset < end; offset++) {
-    dmem.writeByte(address++, data.byte(offset & 15));
+    dmem.writeByte(address++, vt.byte(offset & 15));
   }
 }
 
-auto RSP::instructionSTV() -> void {
-  auto address = RS.u32 + int7(OP) * 16;
-  auto index = OP >> 7 & 15;
-  auto start = OP >> 16 & 31;
+auto RSP::instructionSTV(u8 vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
+  auto start = vt;
   auto end = min(32, start + 8);
-  auto element = 8 - (index >> 1);
+  auto element = 8 - (e >> 1);
   auto base = (address & 15) + (element << 1);
   address &= ~15;
   for(uint offset = start; offset < end; offset++) {
@@ -319,123 +241,74 @@ auto RSP::instructionSTV() -> void {
   }
 }
 
-auto RSP::instructionSUV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 8;
-  auto start = OP >> 7 & 15;
+auto RSP::instructionSUV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 8;
+  auto start = e;
   auto end = start + 8;
   for(uint offset = start; offset < end; offset++) {
     if((offset & 15) < 8) {
-      dmem.writeByte(address++, data.element(offset & 7) >> 7);
+      dmem.writeByte(address++, vt.element(offset & 7) >> 7);
     } else {
-      dmem.writeByte(address++, data.byte((offset & 7) << 1));
+      dmem.writeByte(address++, vt.byte((offset & 7) << 1));
     }
   }
 }
 
-auto RSP::instructionSWC2() -> void {
-  switch(OP >> 11 & 31) {
-  case 0x00: return instructionSBV();
-  case 0x01: return instructionSSV();
-  case 0x02: return instructionSLV();
-  case 0x03: return instructionSDV();
-  case 0x04: return instructionSQV();
-  case 0x05: return instructionSRV();
-  case 0x06: return instructionSPV();
-  case 0x07: return instructionSUV();
-  case 0x08: return instructionSHV();
-  case 0x09: return instructionSFV();
-  case 0x0a: return instructionSWV();
-  case 0x0b: return instructionSTV();
-  }
-}
-
-auto RSP::instructionSWV() -> void {
-  auto& data = VT;
-  auto address = RS.u32 + int7(OP) * 16;
-  auto start = OP >> 7 & 15;
+auto RSP::instructionSWV(cr128& vt, u8 e, cr32& rs, i8 imm) -> void {
+  auto address = rs.u32 + imm * 16;
+  auto start = e;
   auto end = start + 16;
   auto base = address & 15;
   address &= ~15;
   for(uint offset = start; offset < end; offset++) {
-    dmem.writeByte(address + (base++ & 15), data.byte(offset & 15));
+    dmem.writeByte(address + (base++ & 15), vt.byte(offset & 15));
   }
 }
 
-auto RSP::instructionVABS() -> void {
-  r128 vte = VTe, vs0, slt;
-  vs0  = _mm_cmpeq_epi16(VS, zero);
-  slt  = _mm_srai_epi16(VS, 15);
-  VD   = _mm_andnot_si128(vs0, vte);
-  VD   = _mm_xor_si128(VD, slt);
-  ACCL = _mm_sub_epi16(VD, slt);
-  VD   = _mm_subs_epi16(VD, slt);
+auto RSP::instructionVABS(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vs0, slt;
+  vs0  = _mm_cmpeq_epi16(vs, zero);
+  slt  = _mm_srai_epi16(vs, 15);
+  vd   = _mm_andnot_si128(vs0, vt(e));
+  vd   = _mm_xor_si128(vd, slt);
+  ACCL = _mm_sub_epi16(vd, slt);
+  vd   = _mm_subs_epi16(vd, slt);
 }
 
-auto RSP::instructionVADD() -> void {
-  r128 vte = VTe, sum, min, max;
-  sum  = _mm_add_epi16(VS, vte);
+auto RSP::instructionVADD(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), sum, min, max;
+  sum  = _mm_add_epi16(vs, vte);
   ACCL = _mm_sub_epi16(sum, VCOL);
-  min  = _mm_min_epi16(VS, vte);
-  max  = _mm_max_epi16(VS, vte);
+  min  = _mm_min_epi16(vs, vte);
+  max  = _mm_max_epi16(vs, vte);
   min  = _mm_subs_epi16(min, VCOL);
-  VD   = _mm_adds_epi16(min, max);
+  vd   = _mm_adds_epi16(min, max);
   VCOL = zero;
   VCOH = zero;
 }
 
-auto RSP::instructionVADDC() -> void {
-  r128 vte = VTe, sum;
-  sum  = _mm_adds_epu16(VS, vte);
-  ACCL = _mm_add_epi16(VS, vte);
+auto RSP::instructionVADDC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), sum;
+  sum  = _mm_adds_epu16(vs, vte);
+  ACCL = _mm_add_epi16(vs, vte);
   VCOL = _mm_cmpeq_epi16(sum, ACCL);
   VCOL = _mm_cmpeq_epi16(VCOL, zero);
   VCOH = zero;
-  VD   = ACCL;
+  vd   = ACCL;
 }
 
-auto RSP::instructionVAND() -> void {
-  ACCL = _mm_and_si128(VS, VTe);
-  VD   = ACCL;
+auto RSP::instructionVAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  ACCL = _mm_and_si128(vs, vt(e));
+  vd   = ACCL;
 }
 
-auto RSP::instructionVCL() -> void {
-  r128 vte = VTe, nvt, diff, ncarry, nvce, diff0, lec1, lec2, leeq, geeq, le, ge, mask;
-  nvt    = _mm_xor_si128(vte, VCOL);
-  nvt    = _mm_sub_epi16(nvt, VCOL);
-  diff   = _mm_sub_epi16(VS, nvt);
-  ncarry = _mm_adds_epu16(VS, vte);
-  ncarry = _mm_cmpeq_epi16(diff, ncarry);
-  nvce   = _mm_cmpeq_epi16(VCE, zero);
-  diff0  = _mm_cmpeq_epi16(diff, zero);
-  lec1   = _mm_and_si128(diff0, ncarry);
-  lec1   = _mm_and_si128(nvce, lec1);
-  lec2   = _mm_or_si128(diff0, ncarry);
-  lec2   = _mm_and_si128(VCE, lec2);
-  leeq   = _mm_or_si128(lec1, lec2);
-  geeq   = _mm_subs_epu16(vte, VS);
-  geeq   = _mm_cmpeq_epi16(geeq, zero);
-  le     = _mm_andnot_si128(VCOH, VCOL);
-  le     = _mm_blendv_epi8(VCCL, leeq, le);
-  ge     = _mm_or_si128(VCOL, VCOH);
-  ge     = _mm_blendv_epi8(geeq, VCCH, ge);
-  mask   = _mm_blendv_epi8(ge, le, VCOL);
-  ACCL   = _mm_blendv_epi8(VS, nvt, mask);
-  VCCH   = ge;
-  VCCL   = le;
-  VCOH   = zero;
-  VCOL   = zero;
-  VCE    = zero;
-  VD     = ACCL;
-}
-
-auto RSP::instructionVCH() -> void {
-  r128 vte = VTe, nvt, diff, diff0, vtn, dlez, dgez, mask;
-  VCOL  = _mm_xor_si128(VS, vte);
+auto RSP::instructionVCH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), nvt, diff, diff0, vtn, dlez, dgez, mask;
+  VCOL  = _mm_xor_si128(vs, vte);
   VCOL  = _mm_cmplt_epi16(VCOL, zero);
   nvt   = _mm_xor_si128(vte, VCOL);
   nvt   = _mm_sub_epi16(nvt, VCOL);
-  diff  = _mm_sub_epi16(VS, nvt);
+  diff  = _mm_sub_epi16(vs, nvt);
   diff0 = _mm_cmpeq_epi16(diff, zero);
   vtn   = _mm_cmplt_epi16(vte, zero);
   dlez  = _mm_cmpgt_epi16(diff, zero);
@@ -448,72 +321,102 @@ auto RSP::instructionVCH() -> void {
   VCOH  = _mm_or_si128(diff0, VCE);
   VCOH  = _mm_cmpeq_epi16(VCOH, zero);
   mask  = _mm_blendv_epi8(VCCH, VCCL, VCOL);
-  ACCL  = _mm_blendv_epi8(VS, nvt, mask);
-  VD    = ACCL;
+  ACCL  = _mm_blendv_epi8(vs, nvt, mask);
+  vd    = ACCL;
 }
 
-auto RSP::instructionVCR() -> void {
-  r128 vte = VTe, sign, dlez, dgez, nvt, mask;
-  sign = _mm_xor_si128(VS, vte);
+auto RSP::instructionVCL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), nvt, diff, ncarry, nvce, diff0, lec1, lec2, leeq, geeq, le, ge, mask;
+  nvt    = _mm_xor_si128(vte, VCOL);
+  nvt    = _mm_sub_epi16(nvt, VCOL);
+  diff   = _mm_sub_epi16(vs, nvt);
+  ncarry = _mm_adds_epu16(vs, vte);
+  ncarry = _mm_cmpeq_epi16(diff, ncarry);
+  nvce   = _mm_cmpeq_epi16(VCE, zero);
+  diff0  = _mm_cmpeq_epi16(diff, zero);
+  lec1   = _mm_and_si128(diff0, ncarry);
+  lec1   = _mm_and_si128(nvce, lec1);
+  lec2   = _mm_or_si128(diff0, ncarry);
+  lec2   = _mm_and_si128(VCE, lec2);
+  leeq   = _mm_or_si128(lec1, lec2);
+  geeq   = _mm_subs_epu16(vte, vs);
+  geeq   = _mm_cmpeq_epi16(geeq, zero);
+  le     = _mm_andnot_si128(VCOH, VCOL);
+  le     = _mm_blendv_epi8(VCCL, leeq, le);
+  ge     = _mm_or_si128(VCOL, VCOH);
+  ge     = _mm_blendv_epi8(geeq, VCCH, ge);
+  mask   = _mm_blendv_epi8(ge, le, VCOL);
+  ACCL   = _mm_blendv_epi8(vs, nvt, mask);
+  VCCH   = ge;
+  VCCL   = le;
+  VCOH   = zero;
+  VCOL   = zero;
+  VCE    = zero;
+  vd     = ACCL;
+}
+
+auto RSP::instructionVCR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), sign, dlez, dgez, nvt, mask;
+  sign = _mm_xor_si128(vs, vte);
   sign = _mm_srai_epi16(sign, 15);
-  dlez = _mm_and_si128(VS, sign);
+  dlez = _mm_and_si128(vs, sign);
   dlez = _mm_add_epi16(dlez, vte);
   VCCL = _mm_srai_epi16(dlez, 15);
-  dgez = _mm_or_si128(VS, sign);
+  dgez = _mm_or_si128(vs, sign);
   dgez = _mm_min_epi16(dgez, vte);
   VCCH = _mm_cmpeq_epi16(dgez, vte);
   nvt  = _mm_xor_si128(vte, sign);
   mask = _mm_blendv_epi8(VCCH, VCCL, sign);
-  ACCL = _mm_blendv_epi8(VS, nvt, mask);
-  VD   = ACCL;
+  ACCL = _mm_blendv_epi8(vs, nvt, mask);
+  vd   = ACCL;
   VCOL = zero;
   VCOH = zero;
   VCE  = zero;
 }
 
-auto RSP::instructionVEQ() -> void {
-  r128 vte = VTe, eq;
-  eq   = _mm_cmpeq_epi16(VS, vte);
+auto RSP::instructionVEQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), eq;
+  eq   = _mm_cmpeq_epi16(vs, vte);
   VCCL = _mm_andnot_si128(VCOH, eq);
-  ACCL = _mm_blendv_epi8(vte, VS, VCCL);
+  ACCL = _mm_blendv_epi8(vte, vs, VCCL);
   VCCH = zero;
   VCOH = zero;
   VCOL = zero;
-  VD   = ACCL;
+  vd   = ACCL;
 }
 
-auto RSP::instructionVGE() -> void {
-  r128 vte = VTe, eq, gt, es;
-  eq   = _mm_cmpeq_epi16(VS, vte);
-  gt   = _mm_cmpgt_epi16(VS, vte);
+auto RSP::instructionVGE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), eq, gt, es;
+  eq   = _mm_cmpeq_epi16(vs, vte);
+  gt   = _mm_cmpgt_epi16(vs, vte);
   es   = _mm_and_si128(VCOH, VCOL);
   eq   = _mm_andnot_si128(es, eq);
   VCCL = _mm_or_si128(gt, eq);
-  ACCL = _mm_blendv_epi8(vte, VS, VCCL);
+  ACCL = _mm_blendv_epi8(vte, vs, VCCL);
   VCCH = zero;
   VCOH = zero;
   VCOL = zero;
-  VD   = ACCL;
+  vd   = ACCL;
 }
 
-auto RSP::instructionVLT() -> void {
-  r128 vte = VTe, eq, lt;
-  eq   = _mm_cmpeq_epi16(VS, vte);
-  lt   = _mm_cmplt_epi16(VS, vte);
+auto RSP::instructionVLT(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), eq, lt;
+  eq   = _mm_cmpeq_epi16(vs, vte);
+  lt   = _mm_cmplt_epi16(vs, vte);
   eq   = _mm_and_si128(VCOH, eq);
   eq   = _mm_and_si128(VCOL, eq);
   VCCL = _mm_or_si128(lt, eq);
-  ACCL = _mm_blendv_epi8(vte, VS, VCCL);
+  ACCL = _mm_blendv_epi8(vte, vs, VCCL);
   VCCH = zero;
   VCOH = zero;
   VCOL = zero;
-  VD   = ACCL;
+  vd   = ACCL;
 }
 
-auto RSP::instructionVMACF(bool U) -> void {
-  r128 vte = VTe, lo, md, hi, carry, omask;
-  lo    = _mm_mullo_epi16(VS, vte);
-  hi    = _mm_mulhi_epi16(VS, vte);
+auto RSP::instructionVMACF(bool U, r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), lo, md, hi, carry, omask;
+  lo    = _mm_mullo_epi16(vs, vte);
+  hi    = _mm_mulhi_epi16(vs, vte);
   md    = _mm_slli_epi16(hi, 1);
   carry = _mm_srli_epi16(lo, 15);
   hi    = _mm_srai_epi16(hi, 15);
@@ -536,7 +439,7 @@ auto RSP::instructionVMACF(bool U) -> void {
   if(!U) {
     lo = _mm_unpacklo_epi16(ACCM, ACCH);
     hi = _mm_unpackhi_epi16(ACCM, ACCH);
-    VD = _mm_packs_epi32(lo, hi);
+    vd = _mm_packs_epi32(lo, hi);
   } else {
     r128 mmask, hmask;
     mmask = _mm_srai_epi16(ACCM, 15);
@@ -544,11 +447,11 @@ auto RSP::instructionVMACF(bool U) -> void {
     md    = _mm_or_si128(mmask, ACCM);
     omask = _mm_cmpgt_epi16(ACCH, zero);
     md    = _mm_andnot_si128(hmask, md);
-    VD    = _mm_or_si128(omask, md);
+    vd    = _mm_or_si128(omask, md);
   }
 }
 
-auto RSP::instructionVMACQ() -> void {
+auto RSP::instructionVMACQ(r128& vd) -> void {
   for(uint n : range(8)) {
     i32 product = ACCH.element(n) << 16 | ACCM.element(n) << 0;
     if(product < 0 && !(product & 1 << 5)) product += 32;
@@ -556,14 +459,14 @@ auto RSP::instructionVMACQ() -> void {
     ACCH.element(n) = product >> 16;
     ACCM.element(n) = product >>  0;
     ACCL.element(n) = 0;  //unconfirmed
-    VD.element(n) = sclamp<16>(product >> 1) & ~15;
+    vd.element(n) = sclamp<16>(product >> 1) & ~15;
   }
 }
 
-auto RSP::instructionVMADH() -> void {
-  r128 vte = VTe, lo, hi, omask;
-  lo    = _mm_mullo_epi16(VS, vte);
-  hi    = _mm_mulhi_epi16(VS, vte);
+auto RSP::instructionVMADH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), lo, hi, omask;
+  lo    = _mm_mullo_epi16(vs, vte);
+  hi    = _mm_mulhi_epi16(vs, vte);
   omask = _mm_adds_epu16(ACCM, lo);
   ACCM  = _mm_add_epi16(ACCM, lo);
   omask = _mm_cmpeq_epi16(ACCM, omask);
@@ -572,12 +475,12 @@ auto RSP::instructionVMADH() -> void {
   ACCH  = _mm_add_epi16(ACCH, hi);
   lo    = _mm_unpacklo_epi16(ACCM, ACCH);
   hi    = _mm_unpackhi_epi16(ACCM, ACCH);
-  VD    = _mm_packs_epi32(lo, hi);
+  vd    = _mm_packs_epi32(lo, hi);
 }
 
-auto RSP::instructionVMADL() -> void {
-  r128 vte = VTe, hi, omask, nhi, nmd, shi, smd, cmask, cval;
-  hi    = _mm_mulhi_epu16(VS, vte);
+auto RSP::instructionVMADL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), hi, omask, nhi, nmd, shi, smd, cmask, cval;
+  hi    = _mm_mulhi_epu16(vs, vte);
   omask = _mm_adds_epu16(ACCL, hi);
   ACCL  = _mm_add_epi16(ACCL, hi);
   omask = _mm_cmpeq_epi16(ACCL, omask);
@@ -594,16 +497,16 @@ auto RSP::instructionVMADL() -> void {
   smd   = _mm_cmpeq_epi16(nhi, nmd);
   cmask = _mm_and_si128(smd, shi);
   cval  = _mm_cmpeq_epi16(nhi, zero);
-  VD    = _mm_blendv_epi8(cval, ACCL, cmask);
+  vd    = _mm_blendv_epi8(cval, ACCL, cmask);
 }
 
-auto RSP::instructionVMADM() -> void {
-  r128 vte = VTe, lo, hi, sign, vt, omask;
-  lo    = _mm_mullo_epi16(VS, vte);
-  hi    = _mm_mulhi_epu16(VS, vte);
-  sign  = _mm_srai_epi16(VS, 15);
-  vt    = _mm_and_si128(vte, sign);
-  hi    = _mm_sub_epi16(hi, vt);
+auto RSP::instructionVMADM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), lo, hi, sign, vta, omask;
+  lo    = _mm_mullo_epi16(vs, vte);
+  hi    = _mm_mulhi_epu16(vs, vte);
+  sign  = _mm_srai_epi16(vs, 15);
+  vta   = _mm_and_si128(vte, sign);
+  hi    = _mm_sub_epi16(hi, vta);
   omask = _mm_adds_epu16(ACCL, lo);
   ACCL  = _mm_add_epi16(ACCL, lo);
   omask = _mm_cmpeq_epi16(ACCL, omask);
@@ -618,16 +521,16 @@ auto RSP::instructionVMADM() -> void {
   ACCH  = _mm_sub_epi16(ACCH, omask);
   lo    = _mm_unpacklo_epi16(ACCM, ACCH);
   hi    = _mm_unpackhi_epi16(ACCM, ACCH);
-  VD    = _mm_packs_epi32(lo, hi);
+  vd    = _mm_packs_epi32(lo, hi);
 }
 
-auto RSP::instructionVMADN() -> void {
-  r128 vte = VTe, lo, hi, sign, vs, omask, nhi, nmd, shi, smd, cmask, cval;
-  lo    = _mm_mullo_epi16(VS, vte);
-  hi    = _mm_mulhi_epu16(VS, vte);
+auto RSP::instructionVMADN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), lo, hi, sign, vsa, omask, nhi, nmd, shi, smd, cmask, cval;
+  lo    = _mm_mullo_epi16(vs, vte);
+  hi    = _mm_mulhi_epu16(vs, vte);
   sign  = _mm_srai_epi16(vte, 15);
-  vs    = _mm_and_si128(VS, sign);
-  hi    = _mm_sub_epi16(hi, vs);
+  vsa   = _mm_and_si128(vs, sign);
+  hi    = _mm_sub_epi16(hi, vsa);
   omask = _mm_adds_epu16(ACCL, lo);
   ACCL  = _mm_add_epi16(ACCL, lo);
   omask = _mm_cmpeq_epi16(ACCL, omask);
@@ -646,141 +549,140 @@ auto RSP::instructionVMADN() -> void {
   smd   = _mm_cmpeq_epi16(nhi, nmd);
   cmask = _mm_and_si128(smd, shi);
   cval  = _mm_cmpeq_epi16(nhi, zero);
-  VD    = _mm_blendv_epi8(cval, ACCL, cmask);
+  vd    = _mm_blendv_epi8(cval, ACCL, cmask);
 }
 
-auto RSP::instructionVMOV() -> void {
-  u32 de = OP >> 11 & 7;
-  ACCL = vte();
-  VD.element(de) = ACCL.element(de);
+auto RSP::instructionVMOV(r128& vd, u8 de, cr128& vt, u8 e) -> void {
+  ACCL = vt(e);
+  vd.element(de & 7) = ACCL.element(de & 7);
 }
 
-auto RSP::instructionVMRG() -> void {
-  ACCL = _mm_blendv_epi8(VTe, VS, VCCL);
+auto RSP::instructionVMRG(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  ACCL = _mm_blendv_epi8(vt(e), vs, VCCL);
   VCOH = zero;
   VCOL = zero;
-  VD   = ACCL;
+  vd   = ACCL;
 }
 
-auto RSP::instructionVMUDH() -> void {
-  r128 vte = VTe, lo, hi;
+auto RSP::instructionVMUDH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), lo, hi;
   ACCL = zero;
-  ACCM = _mm_mullo_epi16(VS, vte);
-  ACCH = _mm_mulhi_epi16(VS, vte);
+  ACCM = _mm_mullo_epi16(vs, vte);
+  ACCH = _mm_mulhi_epi16(vs, vte);
   lo   = _mm_unpacklo_epi16(ACCM, ACCH);
   hi   = _mm_unpackhi_epi16(ACCM, ACCH);
-  VD   = _mm_packs_epi32(lo, hi);
+  vd   = _mm_packs_epi32(lo, hi);
 }
 
-auto RSP::instructionVMUDL() -> void {
-  ACCL = _mm_mulhi_epu16(VS, VTe);
+auto RSP::instructionVMUDL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  ACCL = _mm_mulhi_epu16(vs, vt(e));
   ACCM = zero;
   ACCH = zero;
-  VD   = ACCL;
+  vd   = ACCL;
 }
 
-auto RSP::instructionVMUDM() -> void {
-  r128 vte = VTe, sign, vt;
-  ACCL = _mm_mullo_epi16(VS, vte);
-  ACCM = _mm_mulhi_epu16(VS, vte);
-  sign = _mm_srai_epi16(VS, 15);
-  vt   = _mm_and_si128(vte, sign);
-  ACCM = _mm_sub_epi16(ACCM, vt);
+auto RSP::instructionVMUDM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), sign, vta;
+  ACCL = _mm_mullo_epi16(vs, vte);
+  ACCM = _mm_mulhi_epu16(vs, vte);
+  sign = _mm_srai_epi16(vs, 15);
+  vta  = _mm_and_si128(vte, sign);
+  ACCM = _mm_sub_epi16(ACCM, vta);
   ACCH = _mm_srai_epi16(ACCM, 15);
-  VD   = ACCM;
+  vd   = ACCM;
 }
 
-auto RSP::instructionVMUDN() -> void {
-  r128 vte = VTe, sign, vs;
-  ACCL = _mm_mullo_epi16(VS, vte);
-  ACCM = _mm_mulhi_epu16(VS, vte);
+auto RSP::instructionVMUDN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), sign, vsa;
+  ACCL = _mm_mullo_epi16(vs, vte);
+  ACCM = _mm_mulhi_epu16(vs, vte);
   sign = _mm_srai_epi16(vte, 15);
-  vs   = _mm_and_si128(VS, sign);
-  ACCM = _mm_sub_epi16(ACCM, vs);
+  vsa  = _mm_and_si128(vs, sign);
+  ACCM = _mm_sub_epi16(ACCM, vsa);
   ACCH = _mm_srai_epi16(ACCM, 15);
-  VD   = ACCL;
+  vd   = ACCL;
 }
 
-auto RSP::instructionVMULF(bool U) -> void {
-  r128 vte = VTe, lo, hi, round, sign1, sign2, neq, eq, neg;
-  lo    = _mm_mullo_epi16(VS, vte);
+auto RSP::instructionVMULF(bool U, r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), lo, hi, round, sign1, sign2, neq, eq, neg;
+  lo    = _mm_mullo_epi16(vs, vte);
   round = _mm_cmpeq_epi16(zero, zero);
   sign1 = _mm_srli_epi16(lo, 15);
   lo    = _mm_add_epi16(lo, lo);
   round = _mm_slli_epi16(round, 15);
-  hi    = _mm_mulhi_epi16(VS, vte);
+  hi    = _mm_mulhi_epi16(vs, vte);
   sign2 = _mm_srli_epi16(lo, 15);
   ACCL  = _mm_add_epi16(round, lo);
   sign1 = _mm_add_epi16(sign1, sign2);
   hi    = _mm_slli_epi16(hi, 1);
-  neq   = _mm_cmpeq_epi16(VS, vte);
+  neq   = _mm_cmpeq_epi16(vs, vte);
   ACCM  = _mm_add_epi16(hi, sign1);
   neg   = _mm_srai_epi16(ACCM, 15);
   if(!U) {
     eq   = _mm_and_si128(neq, neg);
     ACCH = _mm_andnot_si128(neq, neg);
-    VD   = _mm_add_epi16(ACCM, eq);
+    vd   = _mm_add_epi16(ACCM, eq);
   } else {
     ACCH = _mm_andnot_si128(neq, neg);
     hi   = _mm_or_si128(ACCM, neg);
-    VD   = _mm_andnot_si128(ACCH, hi);
+    vd   = _mm_andnot_si128(ACCH, hi);
   }
 }
 
-auto RSP::instructionVMULQ() -> void {
-  r128 vte = VTe;
+auto RSP::instructionVMULQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e);
   for(uint n : range(8)) {
-    i32 product = (i16)VS.element(n) * (i16)vte.element(n);
+    i32 product = (i16)vs.element(n) * (i16)vte.element(n);
     if(product < 0) product += 31;  //round
     ACCH.element(n) = product >> 16;
     ACCM.element(n) = product >>  0;
     ACCL.element(n) = 0;  //unconfirmed
-    VD.element(n) = sclamp<16>(product >> 1) & ~15;
+    vd.element(n) = sclamp<16>(product >> 1) & ~15;
   }
 }
 
-auto RSP::instructionVNAND() -> void {
-  ACCL = _mm_and_si128(VS, VTe);
+auto RSP::instructionVNAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  ACCL = _mm_and_si128(vs, vt(e));
   ACCL = _mm_xor_si128(ACCL, invert);
-  VD   = ACCL;
+  vd   = ACCL;
 }
 
-auto RSP::instructionVNE() -> void {
-  r128 vte = VTe, eq, ne;
-  eq   = _mm_cmpeq_epi16(VS, vte);
+auto RSP::instructionVNE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), eq, ne;
+  eq   = _mm_cmpeq_epi16(vs, vte);
   ne   = _mm_cmpeq_epi16(eq, zero);
   VCCL = _mm_and_si128(VCOH, eq);
   VCCL = _mm_or_si128(VCCL, ne);
-  ACCL = _mm_blendv_epi8(vte, VS, VCCL);
+  ACCL = _mm_blendv_epi8(vte, vs, VCCL);
   VCCH = zero;
   VCOH = zero;
   VCOL = zero;
-  VD   = ACCL;
+  vd   = ACCL;
 }
 
 auto RSP::instructionVNOP() -> void {
 }
 
-auto RSP::instructionVNOR() -> void {
-  ACCL = _mm_or_si128(VS, VTe);
+auto RSP::instructionVNOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  ACCL = _mm_or_si128(vs, vt(e));
   ACCL = _mm_xor_si128(ACCL, invert);
-  VD   = ACCL;
+  vd   = ACCL;
 }
 
-auto RSP::instructionVNXOR() -> void {
-  ACCL = _mm_xor_si128(VS, VTe);
+auto RSP::instructionVNXOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  ACCL = _mm_xor_si128(vs, vt(e));
   ACCL = _mm_xor_si128(ACCL, invert);
-  VD   = ACCL;
+  vd   = ACCL;
 }
 
-auto RSP::instructionVOR() -> void {
-  ACCL = _mm_or_si128(VS, VTe);
-  VD   = ACCL;
+auto RSP::instructionVOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  ACCL = _mm_or_si128(vs, vt(e));
+  vd   = ACCL;
 }
 
-auto RSP::instructionVRCP(bool L) -> void {
+auto RSP::instructionVRCP(bool L, r128& vd, u8 de, cr128& vt, u8 e) -> void {
   i32 result = 0;
-  i32 input = L && DIVDP ? DIVIN << 16 | VT.element(En & 7) : i16(VT.element(En & 7));
+  i32 input = L && DIVDP ? DIVIN << 16 | vt.element(e & 7) : i16(vt.element(e & 7));
   i32 mask = input >> 31;
   i32 data = input ^ mask;
   if(input > -32768) data -= mask;
@@ -797,22 +699,22 @@ auto RSP::instructionVRCP(bool L) -> void {
   }
   DIVDP = 0;
   DIVOUT = result >> 16;
-  ACCL = VTe;
-  VD.element(DEn & 7) = result;
+  ACCL = vt(e);
+  vd.element(de & 7) = result;
 }
 
-auto RSP::instructionVRCPH() -> void {
-  ACCL  = VTe;
+auto RSP::instructionVRCPH(r128& vd, u8 de, cr128& vt, u8 e) -> void {
+  ACCL  = vt(e);
   DIVDP = 1;
-  DIVIN = VT.element(En & 7);
-  VD.element(DEn & 7) = DIVOUT;
+  DIVIN = vt.element(e & 7);
+  vd.element(de & 7) = DIVOUT;
 }
 
-auto RSP::instructionVRND(bool D) -> void {
-  r128 vte = VTe;
+auto RSP::instructionVRND(bool D, r128& vd, u8 vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e);
   for(uint n : range(8)) {
     i32 product = (i16)vte.element(n);
-    if(VSn & 1) product <<= 16;
+    if(vs & 1) product <<= 16;
     i64 acc = 0;
     acc |= ACCH.element(n); acc <<= 16;
     acc |= ACCM.element(n); acc <<= 16;
@@ -823,13 +725,13 @@ auto RSP::instructionVRND(bool D) -> void {
     ACCH.element(n) = acc >> 32;
     ACCM.element(n) = acc >> 16;
     ACCL.element(n) = acc >>  0;
-    VD.element(n) = acc >> 16;
+    vd.element(n) = acc >> 16;
   }
 }
 
-auto RSP::instructionVRSQ(bool L) -> void {
+auto RSP::instructionVRSQ(bool L, r128& vd, u8 de, cr128& vt, u8 e) -> void {
   i32 result = 0;
-  i32 input = L && DIVDP ? DIVIN << 16 | VT.element(En & 7) : i16(VT.element(En & 7));
+  i32 input = L && DIVDP ? DIVIN << 16 | vt.element(e & 7) : i16(vt.element(e & 7));
   i32 mask = input >> 31;
   i32 data = input ^ mask;
   if(input > -32768) data -= mask;
@@ -846,50 +748,50 @@ auto RSP::instructionVRSQ(bool L) -> void {
   }
   DIVDP = 0;
   DIVOUT = result >> 16;
-  ACCL = VTe;
-  VD.element(DEn & 7) = result;
+  ACCL = vt(e);
+  vd.element(de & 7) = result;
 }
 
-auto RSP::instructionVRSQH() -> void {
-  ACCL  = VTe;
+auto RSP::instructionVRSQH(r128& vd, u8 de, cr128& vt, u8 e) -> void {
+  ACCL  = vt(e);
   DIVDP = 1;
-  DIVIN = VT.element(En & 7);
-  VD.element(DEn & 7) = DIVOUT;
+  DIVIN = vt.element(e & 7);
+  vd.element(de & 7) = DIVOUT;
 }
 
-auto RSP::instructionVSAR() -> void {
-  switch(En) {
-  case 0x8: VD = ACCH; break;
-  case 0x9: VD = ACCM; break;
-  case 0xa: VD = ACCL; break;
-  default:  VD = zero; break;
+auto RSP::instructionVSAR(r128& vd, cr128& vs, u8 e) -> void {
+  switch(e) {
+  case 0x8: vd = ACCH; break;
+  case 0x9: vd = ACCM; break;
+  case 0xa: vd = ACCL; break;
+  default:  vd = zero; break;
   }
 }
 
-auto RSP::instructionVSUB() -> void {
-  r128 vte = VTe, udiff, sdiff, ov;
+auto RSP::instructionVSUB(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), udiff, sdiff, ov;
   udiff = _mm_sub_epi16(vte, VCOL);
   sdiff = _mm_subs_epi16(vte, VCOL);
-  ACCL  = _mm_sub_epi16(VS, udiff);
+  ACCL  = _mm_sub_epi16(vs, udiff);
   ov    = _mm_cmpgt_epi16(sdiff, udiff);
-  VD    = _mm_subs_epi16(VS, sdiff);
-  VD    = _mm_adds_epi16(VD, ov);
+  vd    = _mm_subs_epi16(vs, sdiff);
+  vd    = _mm_adds_epi16(vd, ov);
   VCOL  = zero;
   VCOH  = zero;
 }
 
-auto RSP::instructionVSUBC() -> void {
-  r128 vte = VTe, equal, udiff, diff0;
-  udiff = _mm_subs_epu16(VS, vte);
-  equal = _mm_cmpeq_epi16(VS, vte);
+auto RSP::instructionVSUBC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  r128 vte = vt(e), equal, udiff, diff0;
+  udiff = _mm_subs_epu16(vs, vte);
+  equal = _mm_cmpeq_epi16(vs, vte);
   diff0 = _mm_cmpeq_epi16(udiff, zero);
   VCOH  = _mm_cmpeq_epi16(equal, zero);
   VCOL  = _mm_andnot_si128(equal, diff0);
-  ACCL  = _mm_sub_epi16(VS, vte);
-  VD    = ACCL;
+  ACCL  = _mm_sub_epi16(vs, vte);
+  vd    = ACCL;
 }
 
-auto RSP::instructionVXOR() -> void {
-  ACCL = _mm_xor_si128(VS, VTe);
-  VD   = ACCL;
+auto RSP::instructionVXOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+  ACCL = _mm_xor_si128(vs, vt(e));
+  vd   = ACCL;
 }

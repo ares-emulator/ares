@@ -181,7 +181,8 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.compare = data.bit(0,31);
     scc.cause.interruptPending.bit(Interrupt::Timer) = 0;
     break;
-  case 12:  //status
+  case 12: {//status
+    bool floatingPointMode = scc.status.floatingPointMode;
     scc.status.interruptEnable              = data.bit( 0);
     scc.status.exceptionLevel               = data.bit( 1);
     scc.status.errorLevel                   = data.bit( 2);
@@ -204,7 +205,10 @@ auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
     scc.status.enable.coprocessor1          = data.bit(29);
     scc.status.enable.coprocessor2          = data.bit(30);
     scc.status.enable.coprocessor3          = data.bit(31);
-    break;
+    if(floatingPointMode != scc.status.floatingPointMode) {
+      fpu.setFloatingPointMode(scc.status.floatingPointMode);
+    }
+  } break;
   case 13:  //cause
     scc.cause.interruptPending.bit(0) = data.bit(8);
     scc.cause.interruptPending.bit(1) = data.bit(9);
