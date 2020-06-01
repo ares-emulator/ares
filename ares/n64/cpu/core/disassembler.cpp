@@ -379,16 +379,24 @@ auto CPU::Disassembler::FPU() -> vector<string> {
   case 0x0f: return DS (s ? "floorws" : "floorwd");
   case 0x20: return DS (i ? (s ? "cvtsw" : "cvtsl") : "cvtsd");
   case 0x21: return DS (i ? (s ? "cvtdw" : "cvtdl") : "cvtds");
-  case 0x24: return DS (s ? "cvtws" : "cvtwd");
-  case 0x25: return DS (s ? "cvtls" : "cvtld");
-  case 0x30: case 0x38: return ST(s ? "cfs"   : "cfd"  );
-  case 0x31: case 0x39: return ST(s ? "cuns"  : "cund" );
-  case 0x32: case 0x3a: return ST(s ? "ceqs"  : "ceqd" );
-  case 0x33: case 0x3b: return ST(s ? "cueqs" : "cueqd");
-  case 0x34: case 0x3c: return ST(s ? "colts" : "coltd");
-  case 0x35: case 0x3d: return ST(s ? "cults" : "cultd");
-  case 0x36: case 0x3e: return ST(s ? "coles" : "coled");
-  case 0x37: case 0x3f: return ST(s ? "cules" : "culed");
+  case 0x24: return DS (s ? "cvtws" : "cvtwd" );
+  case 0x25: return DS (s ? "cvtls" : "cvtld" );
+  case 0x30: return ST(s ? "cfs"    : "cfd"   );
+  case 0x31: return ST(s ? "cuns"   : "cund"  );
+  case 0x32: return ST(s ? "ceqs"   : "ceqd"  );
+  case 0x33: return ST(s ? "cueqs"  : "cueqd" );
+  case 0x34: return ST(s ? "colts"  : "coltd" );
+  case 0x35: return ST(s ? "cults"  : "cultd" );
+  case 0x36: return ST(s ? "coles"  : "coled" );
+  case 0x37: return ST(s ? "cules"  : "culed" );
+  case 0x38: return ST(s ? "csfs"   : "csfd"  );
+  case 0x39: return ST(s ? "cngles" : "cngled");
+  case 0x3a: return ST(s ? "cseqs"  : "cseqd" );
+  case 0x3b: return ST(s ? "cngls"  : "cngld" );
+  case 0x3c: return ST(s ? "clts"   : "cltd"  );
+  case 0x3d: return ST(s ? "cnges"  : "cnged" );
+  case 0x3e: return ST(s ? "cles"   : "cled"  );
+  case 0x3f: return ST(s ? "cngts"  : "cngtd" );
   }
 
   return {};

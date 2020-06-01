@@ -519,6 +519,10 @@ auto CPU::instructionSWR(cr64& rt, cr64& rs, i16 imm) -> void {
   }
 }
 
+auto CPU::instructionSYNC() -> void {
+  //no operation; for compatibility with R4000-series code
+}
+
 auto CPU::instructionSYSCALL() -> void {
   exception.systemCall();
 }

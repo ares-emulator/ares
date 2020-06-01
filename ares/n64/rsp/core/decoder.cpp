@@ -16,291 +16,293 @@
 #define IMMu16 u16(OP)
 #define IMMu26 (OP & 0x03ff'ffff)
 
+#define op(id, name, ...) case id: return instruction##name(__VA_ARGS__)
+
 auto RSP::instructionEXECUTE() -> void {
   switch(OP >> 26) {
-  case 0x00: return instructionSPECIAL();
-  case 0x01: return instructionREGIMM();
-  case 0x02: return instructionJ(IMMu26);
-  case 0x03: return instructionJAL(IMMu26);
-  case 0x04: return instructionBEQ(RS, RT, IMMi16);
-  case 0x05: return instructionBNE(RS, RT, IMMi16);
-  case 0x06: return instructionBLEZ(RS, IMMi16);
-  case 0x07: return instructionBGTZ(RS, IMMi16);
-  case 0x08: return instructionADDIU(RT, RS, IMMi16);  //ADDI
-  case 0x09: return instructionADDIU(RT, RS, IMMi16);
-  case 0x0a: return instructionSLTI(RT, RS, IMMi16);
-  case 0x0b: return instructionSLTIU(RT, RS, IMMi16);
-  case 0x0c: return instructionANDI(RT, RS, IMMu16);
-  case 0x0d: return instructionORI(RT, RS, IMMu16);
-  case 0x0e: return instructionXORI(RT, RS, IMMu16);
-  case 0x0f: return instructionLUI(RT, IMMu16);
-  case 0x10: return instructionCOP0();
-  case 0x11: break;  //COP1
-  case 0x12: return instructionCOP2();
-  case 0x13: break;  //COP3
-  case 0x14: break;  //BEQL
-  case 0x15: break;  //BNEL
-  case 0x16: break;  //BLEZL
-  case 0x17: break;  //BGTZL
-  case 0x18: break;  //DADDI
-  case 0x19: break;  //DADDIU
-  case 0x1a: break;  //LDL
-  case 0x1b: break;  //LDR
-  case 0x1c: break;
-  case 0x1d: break;
-  case 0x1e: break;
-  case 0x1f: break;
-  case 0x20: return instructionLB(RT, RS, IMMi16);
-  case 0x21: return instructionLH(RT, RS, IMMi16);
-  case 0x22: break;  //LWL
-  case 0x23: return instructionLW(RT, RS, IMMi16);
-  case 0x24: return instructionLBU(RT, RS, IMMi16);
-  case 0x25: return instructionLHU(RT, RS, IMMi16);
-  case 0x26: break;  //LWR
-  case 0x27: break;  //LWU
-  case 0x28: return instructionSB(RT, RS, IMMi16);
-  case 0x29: return instructionSH(RT, RS, IMMi16);
-  case 0x2a: break;  //SWL
-  case 0x2b: return instructionSW(RT, RS, IMMi16);
-  case 0x2c: break;  //SDL
-  case 0x2d: break;  //SDR
-  case 0x2e: break;  //SWR
-  case 0x2f: return instructionCACHE(OP >> 16 & 3, OP >> 18 & 3);
-  case 0x30: break;  //LL
-  case 0x31: break;  //LWC1
-  case 0x32: return instructionLWC2();
-  case 0x33: break;  //LWC3
-  case 0x34: break;  //LLD
-  case 0x35: break;  //LDC1
-  case 0x36: break;  //LDC2
-  case 0x37: break;  //LD
-  case 0x38: break;  //SC
-  case 0x39: break;  //SWC1
-  case 0x3a: return instructionSWC2();
-  case 0x3b: break;  //SWC3
-  case 0x3c: break;  //SCD
-  case 0x3d: break;  //SDC1
-  case 0x3e: break;  //SDC2
-  case 0x3f: break;  //SD
+  op(0x00, SPECIAL);
+  op(0x01, REGIMM);
+  op(0x02, J, IMMu26);
+  op(0x03, JAL, IMMu26);
+  op(0x04, BEQ, RS, RT, IMMi16);
+  op(0x05, BNE, RS, RT, IMMi16);
+  op(0x06, BLEZ, RS, IMMi16);
+  op(0x07, BGTZ, RS, IMMi16);
+  op(0x08, ADDIU, RT, RS, IMMi16);  //ADDI
+  op(0x09, ADDIU, RT, RS, IMMi16);
+  op(0x0a, SLTI, RT, RS, IMMi16);
+  op(0x0b, SLTIU, RT, RS, IMMi16);
+  op(0x0c, ANDI, RT, RS, IMMu16);
+  op(0x0d, ORI, RT, RS, IMMu16);
+  op(0x0e, XORI, RT, RS, IMMu16);
+  op(0x0f, LUI, RT, IMMu16);
+  op(0x10, COP0);
+  op(0x11, INVALID);  //COP1
+  op(0x12, COP2);
+  op(0x13, INVALID);  //COP3
+  op(0x14, INVALID);  //BEQL
+  op(0x15, INVALID);  //BNEL
+  op(0x16, INVALID);  //BLEZL
+  op(0x17, INVALID);  //BGTZL
+  op(0x18, INVALID);  //DADDI
+  op(0x19, INVALID);  //DADDIU
+  op(0x1a, INVALID);  //LDL
+  op(0x1b, INVALID);  //LDR
+  op(0x1c, INVALID);
+  op(0x1d, INVALID);
+  op(0x1e, INVALID);
+  op(0x1f, INVALID);
+  op(0x20, LB, RT, RS, IMMi16);
+  op(0x21, LH, RT, RS, IMMi16);
+  op(0x22, INVALID);  //LWL
+  op(0x23, LW, RT, RS, IMMi16);
+  op(0x24, LBU, RT, RS, IMMi16);
+  op(0x25, LHU, RT, RS, IMMi16);
+  op(0x26, INVALID);  //LWR
+  op(0x27, INVALID);  //LWU
+  op(0x28, SB, RT, RS, IMMi16);
+  op(0x29, SH, RT, RS, IMMi16);
+  op(0x2a, INVALID);  //SWL
+  op(0x2b, SW, RT, RS, IMMi16);
+  op(0x2c, INVALID);  //SDL
+  op(0x2d, INVALID);  //SDR
+  op(0x2e, INVALID);  //SWR
+  op(0x2f, CACHE, OP >> 16 & 3, OP >> 18 & 3);
+  op(0x30, INVALID);  //LL
+  op(0x31, INVALID);  //LWC1
+  op(0x32, LWC2);
+  op(0x33, INVALID);  //LWC3
+  op(0x34, INVALID);  //LLD
+  op(0x35, INVALID);  //LDC1
+  op(0x36, INVALID);  //LDC2
+  op(0x37, INVALID);  //LD
+  op(0x38, INVALID);  //SC
+  op(0x39, INVALID);  //SWC1
+  op(0x3a, SWC2);
+  op(0x3b, INVALID);  //SWC3
+  op(0x3c, INVALID);  //SCD
+  op(0x3d, INVALID);  //SDC1
+  op(0x3e, INVALID);  //SDC2
+  op(0x3f, INVALID);  //SD
   }
 }
 
 auto RSP::instructionSPECIAL() -> void {
   switch(OP & 0x3f) {
-  case 0x00: return instructionSLL(RD, RT, SA);
-  case 0x01: break;
-  case 0x02: return instructionSRL(RD, RT, SA);
-  case 0x03: return instructionSRA(RD, RT, SA);
-  case 0x04: return instructionSLLV(RD, RT, RS);
-  case 0x05: break;
-  case 0x06: return instructionSRLV(RD, RT, RS);
-  case 0x07: return instructionSRAV(RD, RT, RS);
-  case 0x08: return instructionJR(RS);
-  case 0x09: return instructionJALR(RD, RS);
-  case 0x0a: break;
-  case 0x0b: break;
-  case 0x0c: break;  //SYSCALL
-  case 0x0d: return instructionBREAK();
-  case 0x0e: break;
-  case 0x0f: break;  //SYNC
-  case 0x10: break;  //MFHI
-  case 0x11: break;  //MTHI
-  case 0x12: break;  //MFLO
-  case 0x13: break;  //MTLO
-  case 0x14: break;  //DSLLV
-  case 0x15: break;
-  case 0x16: break;  //DSRLV
-  case 0x17: break;  //DSRAV
-  case 0x18: break;  //MULT
-  case 0x19: break;  //MULTU
-  case 0x1a: break;  //DIV
-  case 0x1b: break;  //DIVU
-  case 0x1c: break;  //DMULT
-  case 0x1d: break;  //DMULTU
-  case 0x1e: break;  //DDIV
-  case 0x1f: break;  //DDIVU
-  case 0x20: return instructionADDU(RD, RS, RT);  //ADD
-  case 0x21: return instructionADDU(RD, RS, RT);
-  case 0x22: return instructionSUBU(RD, RS, RT);  //SUB
-  case 0x23: return instructionSUBU(RD, RS, RT);
-  case 0x24: return instructionAND(RD, RS, RT);
-  case 0x25: return instructionOR(RD, RS, RT);
-  case 0x26: return instructionXOR(RD, RS, RT);
-  case 0x27: return instructionNOR(RD, RS, RT);
-  case 0x28: break;
-  case 0x29: break;
-  case 0x2a: return instructionSLT(RD, RS, RT);
-  case 0x2b: return instructionSLTU(RD, RS, RT);
-  case 0x2c: break;  //DADD
-  case 0x2d: break;  //DADDU
-  case 0x2e: break;  //DSUB
-  case 0x2f: break;  //DSUBU
-  case 0x30: break;  //TGE
-  case 0x31: break;  //TGEU
-  case 0x32: break;  //TLT
-  case 0x33: break;  //TLTU
-  case 0x34: break;  //TEQ
-  case 0x35: break;
-  case 0x36: break;  //TNE
-  case 0x37: break;
-  case 0x38: break;  //DSLL
-  case 0x39: break;
-  case 0x3a: break;  //DSRL
-  case 0x3b: break;  //DSRA
-  case 0x3c: break;  //DSLL32
-  case 0x3d: break;
-  case 0x3e: break;  //DSRL32
-  case 0x3f: break;  //DSRA32
+  op(0x00, SLL, RD, RT, SA);
+  op(0x01, INVALID);
+  op(0x02, SRL, RD, RT, SA);
+  op(0x03, SRA, RD, RT, SA);
+  op(0x04, SLLV, RD, RT, RS);
+  op(0x05, INVALID);
+  op(0x06, SRLV, RD, RT, RS);
+  op(0x07, SRAV, RD, RT, RS);
+  op(0x08, JR, RS);
+  op(0x09, JALR, RD, RS);
+  op(0x0a, INVALID);
+  op(0x0b, INVALID);
+  op(0x0c, INVALID);  //SYSCALL
+  op(0x0d, BREAK);
+  op(0x0e, INVALID);
+  op(0x0f, INVALID);  //SYNC
+  op(0x10, INVALID);  //MFHI
+  op(0x11, INVALID);  //MTHI
+  op(0x12, INVALID);  //MFLO
+  op(0x13, INVALID);  //MTLO
+  op(0x14, INVALID);  //DSLLV
+  op(0x15, INVALID);
+  op(0x16, INVALID);  //DSRLV
+  op(0x17, INVALID);  //DSRAV
+  op(0x18, INVALID);  //MULT
+  op(0x19, INVALID);  //MULTU
+  op(0x1a, INVALID);  //DIV
+  op(0x1b, INVALID);  //DIVU
+  op(0x1c, INVALID);  //DMULT
+  op(0x1d, INVALID);  //DMULTU
+  op(0x1e, INVALID);  //DDIV
+  op(0x1f, INVALID);  //DDIVU
+  op(0x20, ADDU, RD, RS, RT);  //ADD
+  op(0x21, ADDU, RD, RS, RT);
+  op(0x22, SUBU, RD, RS, RT);  //SUB
+  op(0x23, SUBU, RD, RS, RT);
+  op(0x24, AND, RD, RS, RT);
+  op(0x25, OR, RD, RS, RT);
+  op(0x26, XOR, RD, RS, RT);
+  op(0x27, NOR, RD, RS, RT);
+  op(0x28, INVALID);
+  op(0x29, INVALID);
+  op(0x2a, SLT, RD, RS, RT);
+  op(0x2b, SLTU, RD, RS, RT);
+  op(0x2c, INVALID);  //DADD
+  op(0x2d, INVALID);  //DADDU
+  op(0x2e, INVALID);  //DSUB
+  op(0x2f, INVALID);  //DSUBU
+  op(0x30, INVALID);  //TGE
+  op(0x31, INVALID);  //TGEU
+  op(0x32, INVALID);  //TLT
+  op(0x33, INVALID);  //TLTU
+  op(0x34, INVALID);  //TEQ
+  op(0x35, INVALID);
+  op(0x36, INVALID);  //TNE
+  op(0x37, INVALID);
+  op(0x38, INVALID);  //DSLL
+  op(0x39, INVALID);
+  op(0x3a, INVALID);  //DSRL
+  op(0x3b, INVALID);  //DSRA
+  op(0x3c, INVALID);  //DSLL32
+  op(0x3d, INVALID);
+  op(0x3e, INVALID);  //DSRL32
+  op(0x3f, INVALID);  //DSRA32
   }
 }
 
 auto RSP::instructionREGIMM() -> void {
   switch(OP >> 16 & 0x1f) {
-  case 0x00: return instructionBLTZ(RS, IMMi16);
-  case 0x01: return instructionBGEZ(RS, IMMi16);
-  case 0x02: break;  //BLTZL
-  case 0x03: break;  //BGEZL
-  case 0x04: break;
-  case 0x05: break;
-  case 0x06: break;
-  case 0x07: break;
-  case 0x08: break;  //TGEI
-  case 0x09: break;  //TGEIU
-  case 0x0a: break;  //TLTI
-  case 0x0b: break;  //TLTIU
-  case 0x0c: break;  //TEQI
-  case 0x0d: break;
-  case 0x0e: break;  //TNEI
-  case 0x0f: break;
-  case 0x10: return instructionBLTZAL(RS, IMMi16);
-  case 0x11: return instructionBGEZAL(RS, IMMi16);
-  case 0x12: break;  //BLTZALL
-  case 0x13: break;  //BGEZALL
-  case 0x14: break;
-  case 0x15: break;
-  case 0x16: break;
-  case 0x17: break;
-  case 0x18: break;
-  case 0x19: break;
-  case 0x1a: break;
-  case 0x1b: break;
-  case 0x1c: break;
-  case 0x1d: break;
-  case 0x1e: break;
-  case 0x1f: break;
+  op(0x00, BLTZ, RS, IMMi16);
+  op(0x01, BGEZ, RS, IMMi16);
+  op(0x02, INVALID);  //BLTZL
+  op(0x03, INVALID);  //BGEZL
+  op(0x04, INVALID);
+  op(0x05, INVALID);
+  op(0x06, INVALID);
+  op(0x07, INVALID);
+  op(0x08, INVALID);  //TGEI
+  op(0x09, INVALID);  //TGEIU
+  op(0x0a, INVALID);  //TLTI
+  op(0x0b, INVALID);  //TLTIU
+  op(0x0c, INVALID);  //TEQI
+  op(0x0d, INVALID);
+  op(0x0e, INVALID);  //TNEI
+  op(0x0f, INVALID);
+  op(0x10, BLTZAL, RS, IMMi16);
+  op(0x11, BGEZAL, RS, IMMi16);
+  op(0x12, INVALID);  //BLTZALL
+  op(0x13, INVALID);  //BGEZALL
+  op(0x14, INVALID);
+  op(0x15, INVALID);
+  op(0x16, INVALID);
+  op(0x17, INVALID);
+  op(0x18, INVALID);
+  op(0x19, INVALID);
+  op(0x1a, INVALID);
+  op(0x1b, INVALID);
+  op(0x1c, INVALID);
+  op(0x1d, INVALID);
+  op(0x1e, INVALID);
+  op(0x1f, INVALID);
   }
 }
 
 auto RSP::instructionCOP0() -> void {
-  switch(OP >> 21 & 31) {
-  case 0x00: return instructionMFC0(RT, RDn);
-  case 0x01: return;  //DMFC0
-  case 0x02: return;  //CFC0
-  case 0x03: return;
-  case 0x04: return instructionMTC0(RT, RDn);
-  case 0x05: return;  //DMTC0
-  case 0x06: return;  //CTC0
-  case 0x07: return;
-  case 0x08: return;  //BC0
-  case 0x09: return;
-  case 0x0a: return;
-  case 0x0b: return;
-  case 0x0c: return;
-  case 0x0d: return;
-  case 0x0e: return;
-  case 0x0f: return;
+  switch(OP >> 21 & 0x1f) {
+  op(0x00, MFC0, RT, RDn);
+  op(0x01, INVALID);  //DMFC0
+  op(0x02, INVALID);  //CFC0
+  op(0x03, INVALID);
+  op(0x04, MTC0, RT, RDn);
+  op(0x05, INVALID);  //DMTC0
+  op(0x06, INVALID);  //CTC0
+  op(0x07, INVALID);
+  op(0x08, INVALID);  //BC0
+  op(0x09, INVALID);
+  op(0x0a, INVALID);
+  op(0x0b, INVALID);
+  op(0x0c, INVALID);
+  op(0x0d, INVALID);
+  op(0x0e, INVALID);
+  op(0x0f, INVALID);
   }
 }
 
 auto RSP::instructionCOP2() -> void {
   #define E (OP >> 7 & 15)
-  switch(OP >> 21 & 31) {
-  case 0x00: return instructionMFC2(RT, VS, E);
-  case 0x01: return;  //DMFC2
-  case 0x02: return instructionCFC2(RT, RDn);
-  case 0x03: return;
-  case 0x04: return instructionMTC2(RT, VS, E);
-  case 0x05: return;  //DMTC2
-  case 0x06: return instructionCTC2(RT, RDn);
-  case 0x07: return;
-  case 0x08: return;  //BC2
-  case 0x09: return;
-  case 0x0a: return;
-  case 0x0b: return;
-  case 0x0c: return;
-  case 0x0d: return;
-  case 0x0e: return;
-  case 0x0f: return;
+  switch(OP >> 21 & 0x1f) {
+  op(0x00, MFC2, RT, VS, E);
+  op(0x01, INVALID);  //DMFC2
+  op(0x02, CFC2, RT, RDn);
+  op(0x03, INVALID);
+  op(0x04, MTC2, RT, VS, E);
+  op(0x05, INVALID);  //DMTC2
+  op(0x06, CTC2, RT, RDn);
+  op(0x07, INVALID);
+  op(0x08, INVALID);  //BC2
+  op(0x09, INVALID);
+  op(0x0a, INVALID);
+  op(0x0b, INVALID);
+  op(0x0c, INVALID);
+  op(0x0d, INVALID);
+  op(0x0e, INVALID);
+  op(0x0f, INVALID);
   }
   #undef E
 
   #define E  (OP >> 21 & 15)
   #define DE (OP >> 11 & 31)
   switch(OP & 0x3f) {
-  case 0x00: return instructionVMULF(0, VD, VS, VT, E);
-  case 0x01: return instructionVMULF(1, VD, VS, VT, E);
-  case 0x02: return instructionVRND(1, VD, VSn, VT, E);
-  case 0x03: return instructionVMULQ(VD, VS, VT, E);
-  case 0x04: return instructionVMUDL(VD, VS, VT, E);
-  case 0x05: return instructionVMUDM(VD, VS, VT, E);
-  case 0x06: return instructionVMUDN(VD, VS, VT, E);
-  case 0x07: return instructionVMUDH(VD, VS, VT, E);
-  case 0x08: return instructionVMACF(0, VD, VS, VT, E);
-  case 0x09: return instructionVMACF(1, VD, VS, VT, E);
-  case 0x0a: return instructionVRND(0, VD, VSn, VT, E);
-  case 0x0b: return instructionVMACQ(VD);
-  case 0x0c: return instructionVMADL(VD, VS, VT, E);
-  case 0x0d: return instructionVMADM(VD, VS, VT, E);
-  case 0x0e: return instructionVMADN(VD, VS, VT, E);
-  case 0x0f: return instructionVMADH(VD, VS, VT, E);
-  case 0x10: return instructionVADD(VD, VS, VT, E);
-  case 0x11: return instructionVSUB(VD, VS, VT, E);
-  case 0x12: break;
-  case 0x13: return instructionVABS(VD, VS, VT, E);
-  case 0x14: return instructionVADDC(VD, VS, VT, E);
-  case 0x15: return instructionVSUBC(VD, VS, VT, E);
-  case 0x16: break;
-  case 0x17: break;
-  case 0x18: break;
-  case 0x19: break;
-  case 0x1a: break;
-  case 0x1b: break;
-  case 0x1c: break;
-  case 0x1d: return instructionVSAR(VD, VS, E);
-  case 0x1e: break;
-  case 0x1f: break;
-  case 0x20: return instructionVLT(VD, VS, VT, E);
-  case 0x21: return instructionVEQ(VD, VS, VT, E);
-  case 0x22: return instructionVNE(VD, VS, VT, E);
-  case 0x23: return instructionVGE(VD, VS, VT, E);
-  case 0x24: return instructionVCL(VD, VS, VT, E);
-  case 0x25: return instructionVCH(VD, VS, VT, E);
-  case 0x26: return instructionVCR(VD, VS, VT, E);
-  case 0x27: return instructionVMRG(VD, VS, VT, E);
-  case 0x28: return instructionVAND(VD, VS, VT, E);
-  case 0x29: return instructionVNAND(VD, VS, VT, E);
-  case 0x2a: return instructionVOR(VD, VS, VT, E);
-  case 0x2b: return instructionVNOR(VD, VS, VT, E);
-  case 0x2c: return instructionVXOR(VD, VS, VT, E);
-  case 0x2d: return instructionVNXOR(VD, VS, VT, E);
-  case 0x2e: break;
-  case 0x2f: break;
-  case 0x30: return instructionVRCP(0, VD, DE, VT, E);
-  case 0x31: return instructionVRCP(1, VD, DE, VT, E);
-  case 0x32: return instructionVRCPH(VD, DE, VT, E);
-  case 0x33: return instructionVMOV(VD, DE, VT, E);
-  case 0x34: return instructionVRSQ(0, VD, DE, VT, E);
-  case 0x35: return instructionVRSQ(1, VD, DE, VT, E);
-  case 0x36: return instructionVRSQH(VD, DE, VT, E);
-  case 0x37: return instructionVNOP();
-  case 0x38: break;
-  case 0x39: break;
-  case 0x3a: break;
-  case 0x3b: break;
-  case 0x3c: break;
-  case 0x3d: break;
-  case 0x3e: break;
-  case 0x3f: break;
+  op(0x00, VMULF<0>, VD, VS, VT, E);
+  op(0x01, VMULF<1>, VD, VS, VT, E);
+  op(0x02, VRND<1>, VD, VSn, VT, E);
+  op(0x03, VMULQ, VD, VS, VT, E);
+  op(0x04, VMUDL, VD, VS, VT, E);
+  op(0x05, VMUDM, VD, VS, VT, E);
+  op(0x06, VMUDN, VD, VS, VT, E);
+  op(0x07, VMUDH, VD, VS, VT, E);
+  op(0x08, VMACF<0>, VD, VS, VT, E);
+  op(0x09, VMACF<1>, VD, VS, VT, E);
+  op(0x0a, VRND<0>, VD, VSn, VT, E);
+  op(0x0b, VMACQ, VD);
+  op(0x0c, VMADL, VD, VS, VT, E);
+  op(0x0d, VMADM, VD, VS, VT, E);
+  op(0x0e, VMADN, VD, VS, VT, E);
+  op(0x0f, VMADH, VD, VS, VT, E);
+  op(0x10, VADD, VD, VS, VT, E);
+  op(0x11, VSUB, VD, VS, VT, E);
+  op(0x12, INVALID);
+  op(0x13, VABS, VD, VS, VT, E);
+  op(0x14, VADDC, VD, VS, VT, E);
+  op(0x15, VSUBC, VD, VS, VT, E);
+  op(0x16, INVALID);
+  op(0x17, INVALID);
+  op(0x18, INVALID);
+  op(0x19, INVALID);
+  op(0x1a, INVALID);
+  op(0x1b, INVALID);
+  op(0x1c, INVALID);
+  op(0x1d, VSAR, VD, VS, E);
+  op(0x1e, INVALID);
+  op(0x1f, INVALID);
+  op(0x20, VLT, VD, VS, VT, E);
+  op(0x21, VEQ, VD, VS, VT, E);
+  op(0x22, VNE, VD, VS, VT, E);
+  op(0x23, VGE, VD, VS, VT, E);
+  op(0x24, VCL, VD, VS, VT, E);
+  op(0x25, VCH, VD, VS, VT, E);
+  op(0x26, VCR, VD, VS, VT, E);
+  op(0x27, VMRG, VD, VS, VT, E);
+  op(0x28, VAND, VD, VS, VT, E);
+  op(0x29, VNAND, VD, VS, VT, E);
+  op(0x2a, VOR, VD, VS, VT, E);
+  op(0x2b, VNOR, VD, VS, VT, E);
+  op(0x2c, VXOR, VD, VS, VT, E);
+  op(0x2d, VNXOR, VD, VS, VT, E);
+  op(0x2e, INVALID);
+  op(0x2f, INVALID);
+  op(0x30, VRCP<0>, VD, DE, VT, E);
+  op(0x31, VRCP<1>, VD, DE, VT, E);
+  op(0x32, VRCPH, VD, DE, VT, E);
+  op(0x33, VMOV, VD, DE, VT, E);
+  op(0x34, VRSQ<0>, VD, DE, VT, E);
+  op(0x35, VRSQ<1>, VD, DE, VT, E);
+  op(0x36, VRSQH, VD, DE, VT, E);
+  op(0x37, VNOP);
+  op(0x38, INVALID);
+  op(0x39, INVALID);
+  op(0x3a, INVALID);
+  op(0x3b, INVALID);
+  op(0x3c, INVALID);
+  op(0x3d, INVALID);
+  op(0x3e, INVALID);
+  op(0x3f, INVALID);
   }
   #undef E
   #undef DE
@@ -310,41 +312,46 @@ auto RSP::instructionCOP2() -> void {
 #define IMMi7 int7(OP)
 
 auto RSP::instructionLWC2() -> void {
-  switch(OP >> 11 & 31) {
-  case 0x00: return instructionLBV(VT, E, RS, IMMi7);
-  case 0x01: return instructionLSV(VT, E, RS, IMMi7);
-  case 0x02: return instructionLLV(VT, E, RS, IMMi7);
-  case 0x03: return instructionLDV(VT, E, RS, IMMi7);
-  case 0x04: return instructionLQV(VT, E, RS, IMMi7);
-  case 0x05: return instructionLRV(VT, E, RS, IMMi7);
-  case 0x06: return instructionLPV(VT, E, RS, IMMi7);
-  case 0x07: return instructionLUV(VT, E, RS, IMMi7);
-  case 0x08: return instructionLHV(VT, E, RS, IMMi7);
-  case 0x09: return instructionLFV(VT, E, RS, IMMi7);
-//case 0x0a: return instructionLWV(VT, E, RS, IMMi7);  //not present on N64 RSP
-  case 0x0b: return instructionLTV(VTn, E, RS, IMMi7);
+  switch(OP >> 11 & 0x1f) {
+  op(0x00, LBV, VT, E, RS, IMMi7);
+  op(0x01, LSV, VT, E, RS, IMMi7);
+  op(0x02, LLV, VT, E, RS, IMMi7);
+  op(0x03, LDV, VT, E, RS, IMMi7);
+  op(0x04, LQV, VT, E, RS, IMMi7);
+  op(0x05, LRV, VT, E, RS, IMMi7);
+  op(0x06, LPV, VT, E, RS, IMMi7);
+  op(0x07, LUV, VT, E, RS, IMMi7);
+  op(0x08, LHV, VT, E, RS, IMMi7);
+  op(0x09, LFV, VT, E, RS, IMMi7);
+//op(0x0a, LWV, VT, E, RS, IMMi7);  //not present on N64 RSP
+  op(0x0b, LTV, VTn, E, RS, IMMi7);
   }
 }
 
 auto RSP::instructionSWC2() -> void {
-  switch(OP >> 11 & 31) {
-  case 0x00: return instructionSBV(VT, E, RS, IMMi7);
-  case 0x01: return instructionSSV(VT, E, RS, IMMi7);
-  case 0x02: return instructionSLV(VT, E, RS, IMMi7);
-  case 0x03: return instructionSDV(VT, E, RS, IMMi7);
-  case 0x04: return instructionSQV(VT, E, RS, IMMi7);
-  case 0x05: return instructionSRV(VT, E, RS, IMMi7);
-  case 0x06: return instructionSPV(VT, E, RS, IMMi7);
-  case 0x07: return instructionSUV(VT, E, RS, IMMi7);
-  case 0x08: return instructionSHV(VT, E, RS, IMMi7);
-  case 0x09: return instructionSFV(VT, E, RS, IMMi7);
-  case 0x0a: return instructionSWV(VT, E, RS, IMMi7);
-  case 0x0b: return instructionSTV(VTn, E, RS, IMMi7);
+  switch(OP >> 11 & 0x1f) {
+  op(0x00, SBV, VT, E, RS, IMMi7);
+  op(0x01, SSV, VT, E, RS, IMMi7);
+  op(0x02, SLV, VT, E, RS, IMMi7);
+  op(0x03, SDV, VT, E, RS, IMMi7);
+  op(0x04, SQV, VT, E, RS, IMMi7);
+  op(0x05, SRV, VT, E, RS, IMMi7);
+  op(0x06, SPV, VT, E, RS, IMMi7);
+  op(0x07, SUV, VT, E, RS, IMMi7);
+  op(0x08, SHV, VT, E, RS, IMMi7);
+  op(0x09, SFV, VT, E, RS, IMMi7);
+  op(0x0a, SWV, VT, E, RS, IMMi7);
+  op(0x0b, STV, VTn, E, RS, IMMi7);
   }
+}
+
+auto RSP::instructionINVALID() -> void {
 }
 
 #undef E
 #undef IMMi7
+
+#undef op
 
 #undef OP
 #undef SA

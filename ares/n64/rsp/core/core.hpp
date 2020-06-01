@@ -12,6 +12,7 @@
   auto instructionCOP2() -> void;
   auto instructionLWC2() -> void;
   auto instructionSWC2() -> void;
+  auto instructionINVALID() -> void;
 
   //serialization.cpp
   auto serializeCore(serializer&) -> void;

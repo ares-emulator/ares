@@ -36,31 +36,59 @@ auto CPU::instructionFCEIL_L_D(u8 fd, u8 fs) -> void { FD(i64) = ceil(FS(f64)); 
 auto CPU::instructionFCEIL_W_S(u8 fd, u8 fs) -> void { FD(i32) = ceil(FS(f32)); }
 auto CPU::instructionFCEIL_W_D(u8 fd, u8 fs) -> void { FD(i32) = ceil(FS(f64)); }
 
-auto CPU::instructionFCEQ_S(u8 fs, u8 ft) -> void { CF = FS(f32) == FT(f32); }
-auto CPU::instructionFCEQ_D(u8 fs, u8 ft) -> void { CF = FS(f64) == FT(f64); }
+#define   ORDERED(type, value) if(isnan(FS(type)) || isnan(FT(type))) { CF = value; return exception.floatingPoint(); }
+#define UNORDERED(type, value) if(isnan(FS(type)) || isnan(FT(type))) { CF = value; return; }
 
-auto CPU::instructionFCF() -> void {
-  CF = 0;
-}
+auto CPU::instructionFC_EQ_S(u8 fs, u8 ft) -> void { UNORDERED(f32, 0); CF = FS(f32) == FT(f32); }
+auto CPU::instructionFC_EQ_D(u8 fs, u8 ft) -> void { UNORDERED(f64, 0); CF = FS(f64) == FT(f64); }
 
-auto CPU::instructionFCOLE_S(u8 fs, u8 ft) -> void { CF = FS(f32) <= FT(f32); }
-auto CPU::instructionFCOLE_D(u8 fs, u8 ft) -> void { CF = FS(f64) <= FT(f64); }
+auto CPU::instructionFC_F_S(u8 fs, u8 ft) -> void { UNORDERED(f32, 0); CF = 0; }
+auto CPU::instructionFC_F_D(u8 fs, u8 ft) -> void { UNORDERED(f64, 0); CF = 0; }
 
-auto CPU::instructionFCOLT_S(u8 fs, u8 ft) -> void { CF = FS(f32) < FT(f32); }
-auto CPU::instructionFCOLT_D(u8 fs, u8 ft) -> void { CF = FS(f64) < FT(f64); }
+auto CPU::instructionFC_LE_S(u8 fs, u8 ft) -> void { ORDERED(f32, 0); CF = FS(f32) <= FT(f32); }
+auto CPU::instructionFC_LE_D(u8 fs, u8 ft) -> void { ORDERED(f64, 0); CF = FS(f64) <= FT(f64); }
 
-auto CPU::instructionFCUEQ_S(u8 fs, u8 ft) -> void { CF = FS(f32) == FT(f32); }
-auto CPU::instructionFCUEQ_D(u8 fs, u8 ft) -> void { CF = FS(f64) == FT(f64); }
+auto CPU::instructionFC_LT_S(u8 fs, u8 ft) -> void { ORDERED(f32, 0); CF = FS(f32) < FT(f32); }
+auto CPU::instructionFC_LT_D(u8 fs, u8 ft) -> void { ORDERED(f64, 0); CF = FS(f64) < FT(f64); }
 
-auto CPU::instructionFCULE_S(u8 fs, u8 ft) -> void { CF = FS(f32) <= FT(f32); }
-auto CPU::instructionFCULE_D(u8 fs, u8 ft) -> void { CF = FS(f64) <= FT(f64); }
+auto CPU::instructionFC_NGE_S(u8 fs, u8 ft) -> void { ORDERED(f32, 1); CF = FS(f32) < FT(f32); }
+auto CPU::instructionFC_NGE_D(u8 fs, u8 ft) -> void { ORDERED(f64, 1); CF = FS(f64) < FT(f64); }
 
-auto CPU::instructionFCULT_S(u8 fs, u8 ft) -> void { CF = FS(f32) < FT(f32); }
-auto CPU::instructionFCULT_D(u8 fs, u8 ft) -> void { CF = FS(f64) < FT(f64); }
+auto CPU::instructionFC_NGL_S(u8 fs, u8 ft) -> void { ORDERED(f32, 1); CF = FS(f32) == FT(f32); }
+auto CPU::instructionFC_NGL_D(u8 fs, u8 ft) -> void { ORDERED(f64, 1); CF = FS(f64) == FT(f64); }
 
-auto CPU::instructionFCUN() -> void {
-  CF = 0;
-}
+auto CPU::instructionFC_NGLE_S(u8 fs, u8 ft) -> void { ORDERED(f32, 1); CF = 0; }
+auto CPU::instructionFC_NGLE_D(u8 fs, u8 ft) -> void { ORDERED(f64, 1); CF = 0; }
+
+auto CPU::instructionFC_NGT_S(u8 fs, u8 ft) -> void { ORDERED(f32, 1); CF = FS(f32) <= FT(f32); }
+auto CPU::instructionFC_NGT_D(u8 fs, u8 ft) -> void { ORDERED(f64, 1); CF = FS(f64) <= FT(f64); }
+
+auto CPU::instructionFC_OLE_S(u8 fs, u8 ft) -> void { UNORDERED(f32, 0); CF = FS(f32) <= FT(f32); }
+auto CPU::instructionFC_OLE_D(u8 fs, u8 ft) -> void { UNORDERED(f64, 0); CF = FS(f64) <= FT(f64); }
+
+auto CPU::instructionFC_OLT_S(u8 fs, u8 ft) -> void { UNORDERED(f32, 0); CF = FS(f32) < FT(f32); }
+auto CPU::instructionFC_OLT_D(u8 fs, u8 ft) -> void { UNORDERED(f64, 0); CF = FS(f64) < FT(f64); }
+
+auto CPU::instructionFC_SEQ_S(u8 fs, u8 ft) -> void { ORDERED(f32, 0); CF = FS(f32) == FT(f32); }
+auto CPU::instructionFC_SEQ_D(u8 fs, u8 ft) -> void { ORDERED(f64, 0); CF = FS(f64) == FT(f64); }
+
+auto CPU::instructionFC_SF_S(u8 fs, u8 ft) -> void { ORDERED(f32, 0); CF = 0; }
+auto CPU::instructionFC_SF_D(u8 fs, u8 ft) -> void { ORDERED(f64, 0); CF = 0; }
+
+auto CPU::instructionFC_UEQ_S(u8 fs, u8 ft) -> void { UNORDERED(f32, 1); CF = FS(f32) == FT(f32); }
+auto CPU::instructionFC_UEQ_D(u8 fs, u8 ft) -> void { UNORDERED(f64, 1); CF = FS(f64) == FT(f64); }
+
+auto CPU::instructionFC_ULE_S(u8 fs, u8 ft) -> void { UNORDERED(f32, 1); CF = FS(f32) <= FT(f32); }
+auto CPU::instructionFC_ULE_D(u8 fs, u8 ft) -> void { UNORDERED(f64, 1); CF = FS(f64) <= FT(f64); }
+
+auto CPU::instructionFC_ULT_S(u8 fs, u8 ft) -> void { UNORDERED(f32, 1); CF = FS(f32) < FT(f32); }
+auto CPU::instructionFC_ULT_D(u8 fs, u8 ft) -> void { UNORDERED(f64, 1); CF = FS(f64) < FT(f64); }
+
+auto CPU::instructionFC_UN_S(u8 fs, u8 ft) -> void { UNORDERED(f32, 1); CF = 0; }
+auto CPU::instructionFC_UN_D(u8 fs, u8 ft) -> void { UNORDERED(f64, 1); CF = 0; }
+
+#undef   ORDERED
+#undef UNORDERED
 
 auto CPU::instructionFCVT_S_D(u8 fd, u8 fs) -> void { FD(f32) = FS(f64); }
 auto CPU::instructionFCVT_S_W(u8 fd, u8 fs) -> void { FD(f32) = FS(i32); }

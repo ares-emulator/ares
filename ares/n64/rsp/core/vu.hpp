@@ -70,7 +70,8 @@
   auto instructionVEQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVGE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVLT(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto instructionVMACF(bool, r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  template<bool U>
+  auto instructionVMACF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVMACQ(r128& vd) -> void;
   auto instructionVMADH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVMADL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
@@ -82,7 +83,8 @@
   auto instructionVMUDL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVMUDM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVMUDN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto instructionVMULF(bool, r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
+  template<bool U>
+  auto instructionVMULF(r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVMULQ(r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVNAND(r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVNE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
@@ -90,10 +92,13 @@
   auto instructionVNOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVNXOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
   auto instructionVOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto instructionVRCP(bool, r128& vd, u8 de, cr128& vt, u8 e) -> void;
+  template<bool L>
+  auto instructionVRCP(r128& vd, u8 de, cr128& vt, u8 e) -> void;
   auto instructionVRCPH(r128& vd, u8 de, cr128& vt, u8 e) -> void;
-  auto instructionVRND(bool, r128& vd, u8 vs, cr128& vt, u8 e) -> void;
-  auto instructionVRSQ(bool, r128& vd, u8 de, cr128& vt, u8 e) -> void;
+  template<bool D>
+  auto instructionVRND(r128& vd, u8 vs, cr128& vt, u8 e) -> void;
+  template<bool L>
+  auto instructionVRSQ(r128& vd, u8 de, cr128& vt, u8 e) -> void;
   auto instructionVRSQH(r128& vd, u8 de, cr128& vt, u8 e) -> void;
   auto instructionVSAR(r128& vd, cr128& vs, u8 e) -> void;
   auto instructionVSUB(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;

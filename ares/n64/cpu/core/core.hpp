@@ -25,6 +25,9 @@
   auto instructionREGIMM() -> void;
   auto instructionCOP0() -> void;
   auto instructionCOP1() -> void;
+  auto instructionCOP2() -> void;
+  auto instructionCOP3() -> void;
+  auto instructionINVALID() -> void;
 
   enum Interrupt : uint {
     Software0 = 0,

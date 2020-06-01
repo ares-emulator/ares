@@ -141,6 +141,7 @@
   auto instructionSW(cr64& rt, cr64& rs, i16 imm) -> void;
   auto instructionSWL(cr64& rt, cr64& rs, i16 imm) -> void;
   auto instructionSWR(cr64& rt, cr64& rs, i16 imm) -> void;
+  auto instructionSYNC() -> void;
   auto instructionSYSCALL() -> void;
   auto instructionTEQ(cr64& rs, cr64& rt) -> void;
   auto instructionTEQI(cr64& rs, i16 imm) -> void;

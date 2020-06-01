@@ -413,7 +413,8 @@ auto RSP::instructionVLT(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   vd   = ACCL;
 }
 
-auto RSP::instructionVMACF(bool U, r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<bool U>
+auto RSP::instructionVMACF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   r128 vte = vt(e), lo, md, hi, carry, omask;
   lo    = _mm_mullo_epi16(vs, vte);
   hi    = _mm_mulhi_epi16(vs, vte);
@@ -436,7 +437,7 @@ auto RSP::instructionVMACF(bool U, r128& vd, cr128& vs, cr128& vt, u8 e) -> void
   omask = _mm_cmpeq_epi16(omask, zero);
   ACCH  = _mm_add_epi16(ACCH, hi);
   ACCH  = _mm_sub_epi16(ACCH, omask);
-  if(!U) {
+  if constexpr(!U) {
     lo = _mm_unpacklo_epi16(ACCM, ACCH);
     hi = _mm_unpackhi_epi16(ACCM, ACCH);
     vd = _mm_packs_epi32(lo, hi);
@@ -603,7 +604,8 @@ auto RSP::instructionVMUDN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   vd   = ACCL;
 }
 
-auto RSP::instructionVMULF(bool U, r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<bool U>
+auto RSP::instructionVMULF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   r128 vte = vt(e), lo, hi, round, sign1, sign2, neq, eq, neg;
   lo    = _mm_mullo_epi16(vs, vte);
   round = _mm_cmpeq_epi16(zero, zero);
@@ -618,7 +620,7 @@ auto RSP::instructionVMULF(bool U, r128& vd, cr128& vs, cr128& vt, u8 e) -> void
   neq   = _mm_cmpeq_epi16(vs, vte);
   ACCM  = _mm_add_epi16(hi, sign1);
   neg   = _mm_srai_epi16(ACCM, 15);
-  if(!U) {
+  if constexpr(!U) {
     eq   = _mm_and_si128(neq, neg);
     ACCH = _mm_andnot_si128(neq, neg);
     vd   = _mm_add_epi16(ACCM, eq);
@@ -680,7 +682,8 @@ auto RSP::instructionVOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   vd   = ACCL;
 }
 
-auto RSP::instructionVRCP(bool L, r128& vd, u8 de, cr128& vt, u8 e) -> void {
+template<bool L>
+auto RSP::instructionVRCP(r128& vd, u8 de, cr128& vt, u8 e) -> void {
   i32 result = 0;
   i32 input = L && DIVDP ? DIVIN << 16 | vt.element(e & 7) : i16(vt.element(e & 7));
   i32 mask = input >> 31;
@@ -710,7 +713,8 @@ auto RSP::instructionVRCPH(r128& vd, u8 de, cr128& vt, u8 e) -> void {
   vd.element(de & 7) = DIVOUT;
 }
 
-auto RSP::instructionVRND(bool D, r128& vd, u8 vs, cr128& vt, u8 e) -> void {
+template<bool D>
+auto RSP::instructionVRND(r128& vd, u8 vs, cr128& vt, u8 e) -> void {
   r128 vte = vt(e);
   for(uint n : range(8)) {
     i32 product = (i16)vte.element(n);
@@ -729,7 +733,8 @@ auto RSP::instructionVRND(bool D, r128& vd, u8 vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::instructionVRSQ(bool L, r128& vd, u8 de, cr128& vt, u8 e) -> void {
+template<bool L>
+auto RSP::instructionVRSQ(r128& vd, u8 de, cr128& vt, u8 e) -> void {
   i32 result = 0;
   i32 input = L && DIVDP ? DIVIN << 16 | vt.element(e & 7) : i16(vt.element(e & 7));
   i32 mask = input >> 31;
