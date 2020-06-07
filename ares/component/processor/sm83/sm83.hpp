@@ -115,6 +115,7 @@ struct SM83 {
   auto instructionOR_Direct_Direct(uint8&, uint8&) -> void;
   auto instructionOR_Direct_Indirect(uint8&, uint16&) -> void;
   auto instructionPOP_Direct(uint16&) -> void;
+  auto instructionPOP_Direct_AF(uint16&) -> void;
   auto instructionPUSH_Direct(uint16&) -> void;
   auto instructionRES_Index_Direct(uint3, uint8&) -> void;
   auto instructionRES_Index_Indirect(uint3, uint16&) -> void;

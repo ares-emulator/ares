@@ -3,7 +3,7 @@
 
 namespace ares {
 
-#include "registers.cpp"
+#include "registers.hpp"
 #include "memory.cpp"
 #include "algorithms.cpp"
 #include "instruction.cpp"

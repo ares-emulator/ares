@@ -139,9 +139,9 @@ Presentation::Presentation() {
     .setLogo(logo)
     .setDescription("lucia — a simplified multi-system emulator")
     .setVersion(ares::Version)
-  //.setCopyright(ares::Copyright)
-  //.setLicense(ares::License)
-    .setWebsite(ares::Website)
+    .setCopyright(ares::Copyright)
+    .setLicense(ares::License, ares::LicenseURI)
+    .setWebsite(ares::Website, ares::WebsiteURI)
     .setAlignment(presentation)
     .show();
   });

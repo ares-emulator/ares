@@ -271,6 +271,10 @@ auto SM83::instructionPOP_Direct(uint16& data) -> void {
   data = pop();
 }
 
+auto SM83::instructionPOP_Direct_AF(uint16& data) -> void {
+  data = pop() & ~15;  //flag bits 0-3 are forced to zero
+}
+
 auto SM83::instructionPUSH_Direct(uint16& data) -> void {
   idle();
   push(data);

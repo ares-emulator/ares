@@ -4,7 +4,7 @@
 namespace ares {
 
 #include "disassembler.cpp"
-#include "registers.cpp"
+#include "registers.hpp"
 #include "memory.cpp"
 #include "instruction.cpp"
 #include "algorithms.cpp"

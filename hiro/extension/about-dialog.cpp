@@ -22,8 +22,9 @@ auto AboutDialog::setDescription(const string& description) -> type& {
   return *this;
 }
 
-auto AboutDialog::setLicense(const string& license) -> type& {
+auto AboutDialog::setLicense(const string& license, const string& uri) -> type& {
   state.license = license;
+  state.licenseURI = uri;
   return *this;
 }
 
@@ -44,8 +45,9 @@ auto AboutDialog::setVersion(const string& version) -> type& {
   return *this;
 }
 
-auto AboutDialog::setWebsite(const string& website) -> type& {
+auto AboutDialog::setWebsite(const string& website, const string& uri) -> type& {
   state.website = website;
+  state.websiteURI = uri;
   return *this;
 }
 
@@ -116,11 +118,19 @@ auto AboutDialog::show() -> void {
   licenseLabel.setFont(Font().setBold());
   licenseLabel.setForegroundColor({0, 0, 0});
   licenseLabel.setText("License:");
-  Label licenseValue{&licenseLayout, Size{~0, 0}};
+  HorizontalLayout licenseValueLayout{&licenseLayout, Size{~0, 0}};
+  Label licenseValue{&licenseValueLayout, Size{0, 0}};
   licenseValue.setAlignment(0.0);
   licenseValue.setFont(Font().setBold());
   licenseValue.setForegroundColor({0, 0, 0});
   licenseValue.setText(state.license);
+  if(state.licenseURI) {
+    licenseValue.setForegroundColor({0, 0, 240});
+    licenseValue.setMouseCursor(MouseCursor::Hand);
+    licenseValue.onMouseRelease([&](auto button) {
+      if(button == Mouse::Button::Left) invoke(state.licenseURI);
+    });
+  }
   if(!state.license) licenseLayout.setVisible(false);
 
   HorizontalLayout websiteLayout{&layout, Size{~0, 0}, 0};
@@ -130,23 +140,19 @@ auto AboutDialog::show() -> void {
   websiteLabel.setFont(Font().setBold());
   websiteLabel.setForegroundColor({0, 0, 0});
   websiteLabel.setText("Website:");
-  //add a layout for the website value to fill 50% of the window,
   HorizontalLayout websiteValueLayout{&websiteLayout, Size{~0, 0}};
-  //so that the label is only as long as its text content,
   Label websiteValue{&websiteValueLayout, Size{0, 0}};
   websiteValue.setAlignment(0.0);
   websiteValue.setFont(Font().setBold());
-  websiteValue.setForegroundColor({0, 0, 240});
-  auto website = state.website;
-  if(0);  //remove protocol prefix from displayed label:
-  else if(website.beginsWith("http://" )) website.trimLeft("http://" , 1L);
-  else if(website.beginsWith("https://")) website.trimLeft("https://", 1L);
-  websiteValue.setText(website);
-  //so that the hand cursor is only visible when overing over the link.
-  websiteValue.setMouseCursor(MouseCursor::Hand);
-  websiteValue.onMouseRelease([&](auto button) {
-    if(button == Mouse::Button::Left) invoke(state.website);
-  });
+  websiteValue.setForegroundColor({0, 0, 0});
+  websiteValue.setText(state.website);
+  if(state.websiteURI) {
+    websiteValue.setForegroundColor({0, 0, 240});
+    websiteValue.setMouseCursor(MouseCursor::Hand);
+    websiteValue.onMouseRelease([&](auto button) {
+      if(button == Mouse::Button::Left) invoke(state.websiteURI);
+    });
+  }
   if(!state.website) websiteLayout.setVisible(false);
 
   window.setTitle({"About ", state.name ? state.name : Application::name(), " ..."});

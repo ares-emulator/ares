@@ -75,7 +75,7 @@ else ifeq ($(platform),macos)
 	mkdir -p ~/Library/Application\ Support\$(name)/
 	mkdir -p ~/Library/Application\ Support\$(name)/System/
 	cp -R $(output.path)/$(name).app /Applications/$(name).app
-	cp -R System/* ~/Library/Application\ Support/$(name)/
+	cp -R System/* ~/Library/Application\ Support/$(name)/System/
 else ifneq ($(filter $(platform),linux bsd),)
 	mkdir -p $(prefix)/bin/
 	mkdir -p $(prefix)/share/applications/

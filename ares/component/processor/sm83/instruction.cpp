@@ -237,7 +237,7 @@ auto SM83::instruction() -> void {
   op(0xee, XOR_Direct_Data, A)
   op(0xef, RST_Implied, 0x28)
   op(0xf0, LDH_Direct_Address, A)
-  op(0xf1, POP_Direct, AF)
+  op(0xf1, POP_Direct_AF, AF)
   op(0xf2, LDH_Direct_Indirect, A, C)
   op(0xf3, DI)
   op(0xf5, PUSH_Direct, AF)
