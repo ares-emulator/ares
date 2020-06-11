@@ -25,4 +25,5 @@ $(object.path)/ares-n64-rsp.o:        $(ares.path)/n64/rsp/rsp.cpp
 
 flags += -DSIMD_SSE4
 flags += -msse4.2
+flags += -fno-operator-names
 options += -msse4.2

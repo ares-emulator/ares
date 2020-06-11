@@ -2,6 +2,7 @@
   //core.cpp
   auto raiseException(uint, uint = 0) -> void;
   auto instruction() -> void;
+  auto instructionEpilogue() -> void;
   auto instructionDEBUG() -> void;
   auto powerR4300(bool reset) -> void;
 
@@ -61,6 +62,7 @@
   #include "cpu.hpp"
   #include "scc.hpp"
   #include "fpu.hpp"
+  #include "recompiler.hpp"
   #include "disassembler.hpp"
 
   static constexpr bool Endian = 1;  //0 = little, 1 = big

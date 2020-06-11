@@ -7,6 +7,7 @@
 #include "cpu-instructions.cpp"
 #include "scc-instructions.cpp"
 #include "fpu-instructions.cpp"
+#include "recompiler.cpp"
 #include "disassembler.cpp"
 #include "serialization.cpp"
 
@@ -34,22 +35,35 @@ auto CPU::raiseException(uint code, uint coprocessor) -> void {
 }
 
 auto CPU::instruction() -> void {
-  pipeline.address = PC;
-  pipeline.instruction = readWord(pipeline.address)(0);
-
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
       if(debugger.tracer.interrupt->enabled()) {
         debugger.interrupt(hex(scc.cause.interruptPending, 2L));
       }
       scc.cause.interruptPending = interrupts;
+      step(2);
       return raiseException(0, interrupts);
     }
   }
 
   debugger.instruction();
-//instructionDEBUG();
-  instructionEXECUTE();
+//for(auto& block : blocks) block.reset();
+//blocks.reset();
+//maybe<Block&> block;
+//if(branch.state == Branch::Step && (block = recompile(PC))) {
+//  block->execute();
+//  step(block->step);
+//} else {
+    pipeline.address = PC;
+    pipeline.instruction = readWord(pipeline.address)(0);
+  //instructionDEBUG();
+    instructionEXECUTE();
+    instructionEpilogue();
+    step(2);
+//}
+}
+
+auto CPU::instructionEpilogue() -> void {
   GPR[0].u64 = 0;
 
   switch(branch.state) {
@@ -66,9 +80,12 @@ auto CPU::instruction() -> void {
 }
 
 auto CPU::instructionDEBUG() -> void {
+  pipeline.address = PC;
+  pipeline.instruction = readWord(pipeline.address)(0);
+
   static vector<bool> mask;
   if(!mask) mask.resize(0x08000000);
-//if(mask[(PC & 0x1fffffff) >> 2]) return;
+  if(mask[(PC & 0x1fffffff) >> 2]) return;
   mask[(PC & 0x1fffffff) >> 2] = 1;
 
   static uint counter = 0;

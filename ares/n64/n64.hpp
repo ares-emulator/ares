@@ -2,11 +2,9 @@
 //started: 2020-04-28
 
 #include <ares/ares.hpp>
-
-#if defined(SIMD_SSE4)
-  #include <nmmintrin.h>
-  using v128 = __m128i;
-#endif
+#include <nall/dynarec/amd64/amd64.hpp>
+#include <nmmintrin.h>
+using v128 = __m128i;
 
 namespace ares::Nintendo64 {
   struct Accuracy {

@@ -19,24 +19,16 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   instruction();
-  instruction();
-  instruction();
-  instruction();
-  instruction();
-  instruction();
-  instruction();
-  instruction();
-  step(2 * 8);
 }
 
 auto CPU::step(uint clocks) -> void {
    vi.clock -= clocks;
    ai.clock -= clocks;
-  rsp.clock -= clocks;
+  Nintendo64::rsp.clock -= clocks;
   rdp.clock -= clocks;
   while( vi.clock < 0) vi.main();
   while( ai.clock < 0) ai.main();
-  while(rsp.clock < 0) rsp.main();
+  while(Nintendo64::rsp.clock < 0) Nintendo64::rsp.main();
   while(rdp.clock < 0) rdp.main();
 
   if(scc.count < scc.compare && scc.count + clocks >= scc.compare) {

@@ -1,7 +1,3 @@
-//the N64 is configured for big-endian mode.
-//given the most common memory accesses are words,
-//optimize accesses by special-casing bytes anf halves instead.
-
 namespace Memory {
 
 struct Readable {

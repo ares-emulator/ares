@@ -176,9 +176,13 @@ inline auto Response::findContentType(const string& s) const -> string {
   if(s == ".avi" ) return "video/avi";
   if(s == ".bml" ) return "text/plain; charset=utf-8";
   if(s == ".bz2" ) return "application/x-bzip2";
+  if(s == ".c"   ) return "text/plain; charset=utf-8";
+  if(s == ".cpp" ) return "text/plain; charset=utf-8";
   if(s == ".css" ) return "text/css; charset=utf-8";
   if(s == ".gif" ) return "image/gif";
   if(s == ".gz"  ) return "application/gzip";
+  if(s == ".h"   ) return "text/plain; charset=utf-8";
+  if(s == ".hpp" ) return "text/plain; charset=utf-8";
   if(s == ".htm" ) return "text/html; charset=utf-8";
   if(s == ".html") return "text/html; charset=utf-8";
   if(s == ".ico" ) return "image/x-icon";
