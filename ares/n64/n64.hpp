@@ -2,6 +2,7 @@
 //started: 2020-04-28
 
 #include <ares/ares.hpp>
+#include <nall/hashset.hpp>
 #include <nall/dynarec/amd64/amd64.hpp>
 #include <nmmintrin.h>
 using v128 = __m128i;

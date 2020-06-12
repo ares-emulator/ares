@@ -29,6 +29,12 @@
     u64 data;
   };
 
+  struct ptr64 {
+    explicit ptr64(u64 data) : data(data) {}
+    template<typename T> explicit ptr64(T* pointer) : data((u64)pointer) {}
+    u64 data;
+  };
+
   enum class reg8 : uint {
     al, cl, dl, bl, ah, ch, dh, bh, r8b, r9b, r10b, r11b, r12b, r13b, r14b, r15b,
   };

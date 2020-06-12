@@ -33,6 +33,13 @@ struct encoder {
     emit.qword(is.data);
   }
 
+  auto mov(reg64 rt, ptr64 ps) {
+    if(rt != rax) throw;
+    emit.rex(1, 0, 0, 0);
+    emit.byte(0xa1);
+    emit.qword(ps.data);
+  }
+
   auto ret() { emit.byte(0xc3); }
 
   #define op(code) \
@@ -117,6 +124,13 @@ struct encoder {
   auto sbb(reg64 rt, imm8 is) { op(0x83, 3); }
   auto sub(reg64 rt, imm8 is) { op(0x83, 5); }
   auto xor(reg64 rt, imm8 is) { op(0x83, 6); }
+  #undef op
+
+  #define op(code) \
+    emit.byte(code); \
+    emit.byte(it.data);
+  auto jnz(imm8 it) { op(0x75); }
+  auto jz (imm8 it) { op(0x74); }
   #undef op
 
   #include "encoder-call.hpp"

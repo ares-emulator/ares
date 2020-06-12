@@ -100,12 +100,12 @@ auto RSP::writeWord(u32 address, u32 data_) -> void {
     dma.read.count  = data.bit(12,19);
     dma.read.skip   = data.bit(20,31);
 
-    auto& memory = dma.memSource == 0 ? dmem : imem;
-    auto length  = (dma.read.length | 7) + 1;
+    auto target = dma.memSource == 0 ? 0x0400'0000 : 0x0400'1000;
+    auto length = (dma.read.length | 7) + 1;
     for(u32 count : range(dma.read.count + 1)) {
       for(u32 offset = 0; offset < length; offset += 4) {
-        u32 data = rdram.ram.readWord(dma.dramAddress + offset);
-        memory.writeWord(dma.memAddress + offset, data);
+        u32 data = bus.readWord(dma.dramAddress + offset);
+        bus.writeWord(dma.memAddress + target + offset, data);
       }
       dma.dramAddress += length + dma.read.skip;
       dma.memAddress += length;
@@ -118,12 +118,12 @@ auto RSP::writeWord(u32 address, u32 data_) -> void {
     dma.write.count  = data.bit(12,19);
     dma.write.skip   = data.bit(20,31);
 
-    auto& memory = dma.memSource == 0 ? dmem : imem;
-    auto length  = (dma.write.length | 7) + 1;
+    auto source = dma.memSource == 0 ? 0x0400'0000 : 0x0400'1000;
+    auto length = (dma.write.length | 7) + 1;
     for(u32 count : range(dma.write.count + 1)) {
       for(u32 offset = 0; offset < length; offset += 4) {
-        u32 data = memory.readWord(dma.memAddress + offset);
-        rdram.ram.writeWord(dma.dramAddress + offset, data);
+        u32 data = bus.readWord(dma.memAddress + source + offset);
+        bus.writeWord(dma.dramAddress + offset, data);
       }
       dma.dramAddress += length + dma.write.skip;
       dma.memAddress += length;

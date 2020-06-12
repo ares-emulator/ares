@@ -44,7 +44,6 @@ struct emitter {
     byte(mod << 6 | reg << 3 | rm << 0);
   }
 
-private:
   array_span<u8> _span;
 };
 

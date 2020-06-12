@@ -1,6 +1,7 @@
 //{
   //core.cpp
   auto instruction() -> void;
+  auto instructionEpilogue() -> bool;
   auto instructionDEBUG() -> void;
   auto powerCore() -> void;
 
@@ -21,5 +22,6 @@
   #include "cpu.hpp"
   #include "scc.hpp"
   #include "vu.hpp"
+  #include "recompiler.hpp"
   #include "disassembler.hpp"
 //};

@@ -4,26 +4,50 @@
 #include "cpu-instructions.cpp"
 #include "scc-instructions.cpp"
 #include "vu-instructions.cpp"
+#include "recompiler.cpp"
 #include "disassembler.cpp"
 #include "serialization.cpp"
 
 auto RSP::instruction() -> void {
-  pipeline.address = PC;
-  pipeline.instruction = imem.readWord(pipeline.address);
+  static constexpr bool Recompiler = 1;
 
-  debugger.instruction();
-//instructionDEBUG();
-  instructionEXECUTE();
-  GPR[0].u32 = 0;
+  if constexpr(Recompiler == 1) {
+    auto& pool = recompiler.pool;
+    if(!pool) pool = Pool::allocate();
+    auto& block = pool->blocks[PC >> 2 & 0x3ff];
+    if(!block) block = recompile(PC);
+    block->execute();
+    step(block->step);
+  }
 
-  switch(branch.state) {
-  case Branch::Step: PC += 4; break;
-  case Branch::DelaySlot: PC = branch.pc; branch.reset(); break;
-  case Branch::Take: PC += 4; branch.delaySlot(); break;
+  if constexpr(Recompiler == 0) {
+    pipeline.address = PC;
+    pipeline.instruction = imem.readWord(pipeline.address);
+    debugger.instruction();
+  //instructionDEBUG();
+    instructionEXECUTE();
+    instructionEpilogue();
+    step(3);
   }
 }
 
+auto RSP::instructionEpilogue() -> bool {
+  GPR[0].u32 = 0;
+
+  switch(branch.state) {
+  case Branch::Step: PC += 4; return 0;
+  case Branch::DelaySlot: PC = branch.pc; branch.reset(); return 1;
+  case Branch::Take: PC += 4; branch.delaySlot(); return 0;
+  case Branch::Halt: PC += 4; return 1;
+  }
+
+  unreachable;
+}
+
 auto RSP::instructionDEBUG() -> void {
+  pipeline.address = PC;
+  pipeline.instruction = imem.readWord(pipeline.address);
+
   static uint counter = 0;
 //if(++counter > 100) return;
   print(
@@ -64,4 +88,7 @@ auto RSP::powerCore() -> void {
     while(a * (b + 1) * (b + 1) < (u64(1) << 44)) b++;
     inverseSquareRoots[index] = u16(b >> 1);
   }
+
+  allocator.construct();
+  recompiler.reset();
 }

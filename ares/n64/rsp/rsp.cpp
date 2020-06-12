@@ -25,7 +25,6 @@ auto RSP::unload() -> void {
 auto RSP::main() -> void {
   if(status.halted) return step(96);
   instruction();
-  step(3);
 }
 
 auto RSP::step(uint clocks) -> void {

@@ -52,6 +52,7 @@ auto RSP::instructionBREAK() -> void {
   status.halted = 1;
   status.broken = 1;
   if(status.interruptOnBreak) mi.raise(MI::IRQ::SP);
+  branch.halt();
 }
 
 auto RSP::instructionCACHE(u8 cache, u8 operation) -> void {

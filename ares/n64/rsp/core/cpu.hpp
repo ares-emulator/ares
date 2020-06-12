@@ -18,12 +18,13 @@
   } core;
 
   struct Branch {
-    enum : u32 { Step, Take, DelaySlot };
+    enum : u32 { Step, Take, DelaySlot, Halt };
 
     auto inDelaySlot() const -> bool { return state == DelaySlot; }
     auto reset() -> void { state = Step; }
     auto take(u32 address) -> void { state = Take; pc = address; }
     auto delaySlot() -> void { state = DelaySlot; }
+    auto halt() -> void { state = Halt; }
 
     u64 pc;
     u32 state;

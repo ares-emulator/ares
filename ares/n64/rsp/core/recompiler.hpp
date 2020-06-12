@@ -30,7 +30,12 @@
   struct Pool {
     static auto allocate() -> Pool*;
 
-    Block* blocks[1 << 8];
+    auto operator==(const Pool& source) const -> bool { return hashcode == source.hashcode; }
+    auto operator< (const Pool& source) const -> bool { return hashcode <  source.hashcode; }
+    auto hash() const -> u32 { return hashcode; }
+
+    u32 hashcode = 0;
+    Block* blocks[1024];
   };
 
   auto recompile(u32 address) -> Block*;
@@ -38,14 +43,18 @@
   auto recompileSPECIAL(u32 instruction) -> bool;
   auto recompileREGIMM(u32 instruction) -> bool;
   auto recompileCOP0(u32 instruction) -> bool;
-  auto recompileCOP1(u32 instruction) -> bool;
-  auto recompileCheckCOP1() -> bool;
+  auto recompileCOP2(u32 instruction) -> bool;
+  auto recompileLWC2(u32 instruction) -> bool;
+  auto recompileSWC2(u32 instruction) -> bool;
 
   struct Recompiler {
     auto reset() -> void {
-      for(uint index : range(1 << 19)) pools[index] = nullptr;
+      pool = nullptr;
+      pools.reset();
     }
 
-    Pool* pools[1 << 19];
+    Pool* pool = nullptr;
+    set<Pool> pools;
+  //hashset<Pool> pools;
   } recompiler;
 //};

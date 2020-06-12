@@ -1,23 +1,43 @@
-auto CPU::recompile(u32 address) -> maybe<Block&> {
-  if(auto block = blocks.find({address})) {
-    return block;
+auto CPU::Pool::allocate() -> Pool* {
+  auto pool = (Pool*)(cpu.allocator.memory + cpu.allocator.offset);
+  cpu.allocator.offset += sizeof(Pool);
+  return pool;
+}
+
+auto CPU::recompile(u32 address) -> Block* {
+  if(unlikely(512_MiB - allocator.offset < 1_MiB)) {
+    print("CPU allocator flush\n");
+    allocator.construct();
+    recompiler.reset();
   }
 
-  Block instance{address};
-  instance.allocate();
-  bind({instance.code, 4096});
+  Block* block = (Block*)(allocator.memory + allocator.offset);
+  allocator.offset += sizeof(Block);
+
+  block->code = allocator.memory + allocator.offset;
+  bind({block->code, 512_MiB - allocator.offset});
 
   bool branched = 0;
   uint instructions = 0;
+  uint idle = 0;
   do {
-    u32 instruction = readWord(address)(0);
+    u32 instruction = bus.readWord(address);
+    if(instruction == 0x1000'ffff) idle += 64;  //accelerate idle loops
     branched = recompileEXECUTE(instruction);
     call(&CPU::instructionEpilogue, this);
+    test(rax, rax);
+    jz(imm8{+1});
+    ret();
     address += 4;
-  } while(++instructions < 2 && !branched);
+    if((address & 0xffc) == 0) break;  //block boundary
+  } while(++instructions < 64 && !branched);
   ret();
-  instance.step = 2 * instructions;
-  return blocks.insert(instance);
+
+  block->step = 2 * instructions + idle;
+  block->size = emit._span.data() - block->code;
+  allocator.offset += block->size;
+//print(hex(PC, 8L), " ", instructions, " ", block->size, "\n");
+  return block;
 }
 
 #define OP     instruction
@@ -262,6 +282,11 @@ auto CPU::recompileCOP0(u32 instruction) -> bool {
 }
 
 auto CPU::recompileCOP1(u32 instruction) -> bool {
+  call(&CPU::recompileCheckCOP1, this);
+  test(rax, rax);
+  jz(imm8{+1});
+  ret();
+
   switch(OP >> 21 & 0x1f) {
   op(0x00, MFC1, RT, FS);
   op(0x01, DMFC1, RT, FS);
@@ -362,7 +387,7 @@ auto CPU::recompileCOP1(u32 instruction) -> bool {
   if((OP >> 21 & 31) == 20)
   switch(OP & 0x3f) {
   op(0x20, FCVT_S_W, FD, FS);
-  br(0x21, FCVT_D_W, FD, FS);
+  op(0x21, FCVT_D_W, FD, FS);
   }
 
   if((OP >> 21 & 31) == 21)
@@ -372,6 +397,13 @@ auto CPU::recompileCOP1(u32 instruction) -> bool {
   }
 
   return 0;
+}
+
+auto CPU::recompileCheckCOP1() -> bool {
+  if(!scc.status.enable.coprocessor1) {
+    return exception.coprocessor1(), true;
+  }
+  return false;
 }
 
 #undef jp

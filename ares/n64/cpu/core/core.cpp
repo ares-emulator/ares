@@ -46,37 +46,45 @@ auto CPU::instruction() -> void {
     }
   }
 
-  debugger.instruction();
-//for(auto& block : blocks) block.reset();
-//blocks.reset();
-//maybe<Block&> block;
-//if(branch.state == Branch::Step && (block = recompile(PC))) {
-//  block->execute();
-//  step(block->step);
-//} else {
+  static constexpr bool Recompiler = 1;
+
+  if constexpr(Recompiler == 1) {
+    auto address = readAddress(PC)(0);
+    auto& pool = recompiler.pools[address >> 10 & 0x7ffff];
+    if(!pool) pool = Pool::allocate();
+    auto& block = pool->blocks[address >> 2 & 0xff];
+    if(!block) block = recompile(address);
+    block->execute();
+    step(block->step);
+  }
+
+  if constexpr(Recompiler == 0) {
     pipeline.address = PC;
     pipeline.instruction = readWord(pipeline.address)(0);
+    debugger.instruction();
   //instructionDEBUG();
     instructionEXECUTE();
     instructionEpilogue();
     step(2);
-//}
+  }
 }
 
-auto CPU::instructionEpilogue() -> void {
+auto CPU::instructionEpilogue() -> bool {
   GPR[0].u64 = 0;
-
-  switch(branch.state) {
-  case Branch::Step: PC += 4; break;
-  case Branch::DelaySlot: PC = branch.pc; branch.reset(); break;
-  case Branch::Take: PC += 4; branch.delaySlot(); break;
-  case Branch::Exception: branch.reset(); break;
-  case Branch::Discard: PC += 8; branch.reset(); break;
-  }
 
   if(--scc.random.index < scc.wired.index) {
     scc.random.index = 31;
   }
+
+  switch(branch.state) {
+  case Branch::Step: PC += 4; return 0;
+  case Branch::DelaySlot: PC = branch.pc; branch.reset(); return 1;
+  case Branch::Take: PC += 4; branch.delaySlot(); return 0;
+  case Branch::Exception: branch.reset(); return 1;
+  case Branch::Discard: PC += 8; branch.reset(); return 1;
+  }
+
+  unreachable;
 }
 
 auto CPU::instructionDEBUG() -> void {
@@ -104,11 +112,13 @@ auto CPU::powerR4300(bool reset) -> void {
   fpu = {};
   LO.u64 = 0;
   HI.u64 = 0;
-  GPR[Core::Register::SP].u64 = i32(0xa400'1ff0);
-  PC = i32(0xbfc00000);
+  GPR[Core::Register::SP].u64 = u32(0xa400'1ff0);
+  PC = u32(0xbfc00000);
   branch.reset();
   fesetround(FE_TONEAREST);
   context.setMode();
+  allocator.construct();
+  recompiler.reset();
 }
 
 auto CPU::Context::setMode() -> void {

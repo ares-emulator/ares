@@ -1,9 +1,12 @@
-#define decode(access, ...) \
+#define decode(write, access, ...) \
   if(address <= 0x007f'ffff) return rdram.ram.access(__VA_ARGS__); \
   if(address <= 0x03ef'ffff) return unmapped; \
   if(address <= 0x03ff'ffff) return rdram.access(__VA_ARGS__); \
   if(address <= 0x0400'0fff) return rsp.dmem.access(__VA_ARGS__); \
-  if(address <= 0x0400'1fff) return rsp.imem.access(__VA_ARGS__); \
+  if(address <= 0x0400'1fff) { \
+    if constexpr(write) { rsp.recompiler.pool = nullptr; } \
+    return rsp.imem.access(__VA_ARGS__); \
+  } \
   if(address <= 0x0403'ffff) return unmapped; \
   if(address <= 0x0407'ffff) return rsp.access(__VA_ARGS__); \
   if(address <= 0x040f'ffff) return rsp.status.access(__VA_ARGS__); \
@@ -32,22 +35,22 @@
 
 inline auto Bus::readByte(u32 address) -> u8 {
   address &= 0x1fff'ffff;
-  decode(readByte, address);
+  decode(0, readByte, address);
 }
 
 inline auto Bus::readHalf(u32 address) -> u16 {
   address &= 0x1fff'fffe;
-  decode(readHalf, address);
+  decode(0, readHalf, address);
 }
 
 inline auto Bus::readWord(u32 address) -> u32 {
   address &= 0x1fff'fffc;
-  decode(readWord, address);
+  decode(0, readWord, address);
 }
 
 inline auto Bus::readDouble(u32 address) -> u64 {
   address &= 0x1fff'fff8;
-  decode(readDouble, address);
+  decode(0, readDouble, address);
 }
 
 #undef unmapped
@@ -55,22 +58,27 @@ inline auto Bus::readDouble(u32 address) -> u64 {
 
 inline auto Bus::writeByte(u32 address, u8 data) -> void {
   address &= 0x1fff'ffff;
-  decode(writeByte, address, data);
+  cpu.recompiler.pools[address >> 10] = nullptr;
+  decode(1, writeByte, address, data);
 }
 
 inline auto Bus::writeHalf(u32 address, u16 data) -> void {
   address &= 0x1fff'fffe;
-  decode(writeHalf, address, data);
+  cpu.recompiler.pools[address >> 10] = nullptr;
+  decode(1, writeHalf, address, data);
 }
 
 inline auto Bus::writeWord(u32 address, u32 data) -> void {
   address &= 0x1fff'fffc;
-  decode(writeWord, address, data);
+  cpu.recompiler.pools[address >> 10] = nullptr;
+  decode(1, writeWord, address, data);
 }
 
 inline auto Bus::writeDouble(u32 address, u64 data) -> void {
   address &= 0x1fff'fff8;
-  decode(writeDouble, address, data);
+  cpu.recompiler.pools[address + 0 >> 10] = nullptr;
+  cpu.recompiler.pools[address + 4 >> 10] = nullptr;
+  decode(2, writeDouble, address, data);
 }
 
 #undef unmapped

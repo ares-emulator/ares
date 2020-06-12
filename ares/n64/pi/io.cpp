@@ -116,7 +116,7 @@ auto PI::writeWord(u32 address, u32 data_) -> void {
     //PI_READ_LENGTH
     io.readLength = (uint24(data) | 7) + 1;
     for(u32 address = 0; address < io.readLength; address += 2) {
-      u16 data = rdram.ram.readHalf(io.dramAddress + address);
+      u16 data = bus.readHalf(io.dramAddress + address);
       bus.writeHalf(io.pbusAddress + address, data);
     }
     io.interrupt = 1;
@@ -128,7 +128,7 @@ auto PI::writeWord(u32 address, u32 data_) -> void {
     io.writeLength = (uint24(data) | 7) + 1;
     for(u32 address = 0; address < io.writeLength; address += 2) {
       u16 data = bus.readHalf(io.pbusAddress + address);
-      rdram.ram.writeHalf(io.dramAddress + address, data);
+      bus.writeHalf(io.dramAddress + address, data);
     }
     io.interrupt = 1;
     mi.raise(MI::IRQ::PI);

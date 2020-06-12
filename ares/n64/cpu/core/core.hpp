@@ -2,7 +2,7 @@
   //core.cpp
   auto raiseException(uint, uint = 0) -> void;
   auto instruction() -> void;
-  auto instructionEpilogue() -> void;
+  auto instructionEpilogue() -> bool;
   auto instructionDEBUG() -> void;
   auto powerR4300(bool reset) -> void;
 

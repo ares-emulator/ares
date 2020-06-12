@@ -1,3 +1,5 @@
+#define rsp Nintendo64::rsp
+
 auto RSP::Debugger::load(Node::Object parent) -> void {
   tracer.instruction = parent->append<Node::Instruction>("Instruction", "RSP");
   tracer.instruction->setAddressBits(12);
@@ -40,3 +42,5 @@ auto RSP::Debugger::io(string_view message) -> void {
     tracer.io->notify(message);
   }
 }
+
+#undef rsp
