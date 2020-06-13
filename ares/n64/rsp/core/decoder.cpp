@@ -1,372 +1,68 @@
-#define OP     pipeline.instruction
-#define SA     (OP >>  6 & 31)
-#define RDn    (OP >> 11 & 31)
-#define RTn    (OP >> 16 & 31)
-#define RSn    (OP >> 21 & 31)
-#define VDn    (OP >>  6 & 31)
-#define VSn    (OP >> 11 & 31)
-#define VTn    (OP >> 16 & 31)
-#define RD     GPR[RDn]
-#define RT     GPR[RTn]
-#define RS     GPR[RSn]
-#define VD     VPR[VDn]
-#define VS     VPR[VSn]
-#define VT     VPR[VTn]
-#define IMMi16 i16(OP)
-#define IMMu16 u16(OP)
-#define IMMu26 (OP & 0x03ff'ffff)
+#define OP pipeline.instruction
+#define RD GPR[RDn]
+#define RT GPR[RTn]
+#define RS GPR[RSn]
+#define VD VPR[VDn]
+#define VS VPR[VSn]
+#define VT VPR[VTn]
 
+#define jp(id, name, ...) case id: return decoder##name(__VA_ARGS__)
 #define op(id, name, ...) case id: return instruction##name(__VA_ARGS__)
+#define br(id, name, ...) case id: return instruction##name(__VA_ARGS__)
 
-auto RSP::instructionEXECUTE() -> void {
-  switch(OP >> 26) {
-  op(0x00, SPECIAL);
-  op(0x01, REGIMM);
-  op(0x02, J, IMMu26);
-  op(0x03, JAL, IMMu26);
-  op(0x04, BEQ, RS, RT, IMMi16);
-  op(0x05, BNE, RS, RT, IMMi16);
-  op(0x06, BLEZ, RS, IMMi16);
-  op(0x07, BGTZ, RS, IMMi16);
-  op(0x08, ADDIU, RT, RS, IMMi16);  //ADDI
-  op(0x09, ADDIU, RT, RS, IMMi16);
-  op(0x0a, SLTI, RT, RS, IMMi16);
-  op(0x0b, SLTIU, RT, RS, IMMi16);
-  op(0x0c, ANDI, RT, RS, IMMu16);
-  op(0x0d, ORI, RT, RS, IMMu16);
-  op(0x0e, XORI, RT, RS, IMMu16);
-  op(0x0f, LUI, RT, IMMu16);
-  op(0x10, COP0);
-  op(0x11, INVALID);  //COP1
-  op(0x12, COP2);
-  op(0x13, INVALID);  //COP3
-  op(0x14, INVALID);  //BEQL
-  op(0x15, INVALID);  //BNEL
-  op(0x16, INVALID);  //BLEZL
-  op(0x17, INVALID);  //BGTZL
-  op(0x18, INVALID);  //DADDI
-  op(0x19, INVALID);  //DADDIU
-  op(0x1a, INVALID);  //LDL
-  op(0x1b, INVALID);  //LDR
-  op(0x1c, INVALID);
-  op(0x1d, INVALID);
-  op(0x1e, INVALID);
-  op(0x1f, INVALID);
-  op(0x20, LB, RT, RS, IMMi16);
-  op(0x21, LH, RT, RS, IMMi16);
-  op(0x22, INVALID);  //LWL
-  op(0x23, LW, RT, RS, IMMi16);
-  op(0x24, LBU, RT, RS, IMMi16);
-  op(0x25, LHU, RT, RS, IMMi16);
-  op(0x26, INVALID);  //LWR
-  op(0x27, INVALID);  //LWU
-  op(0x28, SB, RT, RS, IMMi16);
-  op(0x29, SH, RT, RS, IMMi16);
-  op(0x2a, INVALID);  //SWL
-  op(0x2b, SW, RT, RS, IMMi16);
-  op(0x2c, INVALID);  //SDL
-  op(0x2d, INVALID);  //SDR
-  op(0x2e, INVALID);  //SWR
-  op(0x2f, CACHE, OP >> 16 & 3, OP >> 18 & 3);
-  op(0x30, INVALID);  //LL
-  op(0x31, INVALID);  //LWC1
-  op(0x32, LWC2);
-  op(0x33, INVALID);  //LWC3
-  op(0x34, INVALID);  //LLD
-  op(0x35, INVALID);  //LDC1
-  op(0x36, INVALID);  //LDC2
-  op(0x37, INVALID);  //LD
-  op(0x38, INVALID);  //SC
-  op(0x39, INVALID);  //SWC1
-  op(0x3a, SWC2);
-  op(0x3b, INVALID);  //SWC3
-  op(0x3c, INVALID);  //SCD
-  op(0x3d, INVALID);  //SDC1
-  op(0x3e, INVALID);  //SDC2
-  op(0x3f, INVALID);  //SD
-  }
+auto RSP::decoderEXECUTE() -> void {
+  #define DECODER_EXECUTE
+  #include "decoder.hpp"
+  #undef DECODER_EXECUTE
 }
 
-auto RSP::instructionSPECIAL() -> void {
-  switch(OP & 0x3f) {
-  op(0x00, SLL, RD, RT, SA);
-  op(0x01, INVALID);
-  op(0x02, SRL, RD, RT, SA);
-  op(0x03, SRA, RD, RT, SA);
-  op(0x04, SLLV, RD, RT, RS);
-  op(0x05, INVALID);
-  op(0x06, SRLV, RD, RT, RS);
-  op(0x07, SRAV, RD, RT, RS);
-  op(0x08, JR, RS);
-  op(0x09, JALR, RD, RS);
-  op(0x0a, INVALID);
-  op(0x0b, INVALID);
-  op(0x0c, INVALID);  //SYSCALL
-  op(0x0d, BREAK);
-  op(0x0e, INVALID);
-  op(0x0f, INVALID);  //SYNC
-  op(0x10, INVALID);  //MFHI
-  op(0x11, INVALID);  //MTHI
-  op(0x12, INVALID);  //MFLO
-  op(0x13, INVALID);  //MTLO
-  op(0x14, INVALID);  //DSLLV
-  op(0x15, INVALID);
-  op(0x16, INVALID);  //DSRLV
-  op(0x17, INVALID);  //DSRAV
-  op(0x18, INVALID);  //MULT
-  op(0x19, INVALID);  //MULTU
-  op(0x1a, INVALID);  //DIV
-  op(0x1b, INVALID);  //DIVU
-  op(0x1c, INVALID);  //DMULT
-  op(0x1d, INVALID);  //DMULTU
-  op(0x1e, INVALID);  //DDIV
-  op(0x1f, INVALID);  //DDIVU
-  op(0x20, ADDU, RD, RS, RT);  //ADD
-  op(0x21, ADDU, RD, RS, RT);
-  op(0x22, SUBU, RD, RS, RT);  //SUB
-  op(0x23, SUBU, RD, RS, RT);
-  op(0x24, AND, RD, RS, RT);
-  op(0x25, OR, RD, RS, RT);
-  op(0x26, XOR, RD, RS, RT);
-  op(0x27, NOR, RD, RS, RT);
-  op(0x28, INVALID);
-  op(0x29, INVALID);
-  op(0x2a, SLT, RD, RS, RT);
-  op(0x2b, SLTU, RD, RS, RT);
-  op(0x2c, INVALID);  //DADD
-  op(0x2d, INVALID);  //DADDU
-  op(0x2e, INVALID);  //DSUB
-  op(0x2f, INVALID);  //DSUBU
-  op(0x30, INVALID);  //TGE
-  op(0x31, INVALID);  //TGEU
-  op(0x32, INVALID);  //TLT
-  op(0x33, INVALID);  //TLTU
-  op(0x34, INVALID);  //TEQ
-  op(0x35, INVALID);
-  op(0x36, INVALID);  //TNE
-  op(0x37, INVALID);
-  op(0x38, INVALID);  //DSLL
-  op(0x39, INVALID);
-  op(0x3a, INVALID);  //DSRL
-  op(0x3b, INVALID);  //DSRA
-  op(0x3c, INVALID);  //DSLL32
-  op(0x3d, INVALID);
-  op(0x3e, INVALID);  //DSRL32
-  op(0x3f, INVALID);  //DSRA32
-  }
+auto RSP::decoderSPECIAL() -> void {
+  #define DECODER_SPECIAL
+  #include "decoder.hpp"
+  #undef DECODER_SPECIAL
 }
 
-auto RSP::instructionREGIMM() -> void {
-  switch(OP >> 16 & 0x1f) {
-  op(0x00, BLTZ, RS, IMMi16);
-  op(0x01, BGEZ, RS, IMMi16);
-  op(0x02, INVALID);  //BLTZL
-  op(0x03, INVALID);  //BGEZL
-  op(0x04, INVALID);
-  op(0x05, INVALID);
-  op(0x06, INVALID);
-  op(0x07, INVALID);
-  op(0x08, INVALID);  //TGEI
-  op(0x09, INVALID);  //TGEIU
-  op(0x0a, INVALID);  //TLTI
-  op(0x0b, INVALID);  //TLTIU
-  op(0x0c, INVALID);  //TEQI
-  op(0x0d, INVALID);
-  op(0x0e, INVALID);  //TNEI
-  op(0x0f, INVALID);
-  op(0x10, BLTZAL, RS, IMMi16);
-  op(0x11, BGEZAL, RS, IMMi16);
-  op(0x12, INVALID);  //BLTZALL
-  op(0x13, INVALID);  //BGEZALL
-  op(0x14, INVALID);
-  op(0x15, INVALID);
-  op(0x16, INVALID);
-  op(0x17, INVALID);
-  op(0x18, INVALID);
-  op(0x19, INVALID);
-  op(0x1a, INVALID);
-  op(0x1b, INVALID);
-  op(0x1c, INVALID);
-  op(0x1d, INVALID);
-  op(0x1e, INVALID);
-  op(0x1f, INVALID);
-  }
+auto RSP::decoderREGIMM() -> void {
+  #define DECODER_REGIMM
+  #include "decoder.hpp"
+  #undef DECODER_REGIMM
 }
 
-auto RSP::instructionCOP0() -> void {
-  switch(OP >> 21 & 0x1f) {
-  op(0x00, MFC0, RT, RDn);
-  op(0x01, INVALID);  //DMFC0
-  op(0x02, INVALID);  //CFC0
-  op(0x03, INVALID);
-  op(0x04, MTC0, RT, RDn);
-  op(0x05, INVALID);  //DMTC0
-  op(0x06, INVALID);  //CTC0
-  op(0x07, INVALID);
-  op(0x08, INVALID);  //BC0
-  op(0x09, INVALID);
-  op(0x0a, INVALID);
-  op(0x0b, INVALID);
-  op(0x0c, INVALID);
-  op(0x0d, INVALID);
-  op(0x0e, INVALID);
-  op(0x0f, INVALID);
-  }
+auto RSP::decoderCOP0() -> void {
+  #define DECODER_COP0
+  #include "decoder.hpp"
+  #undef DECODER_COP0
 }
 
-auto RSP::instructionCOP2() -> void {
-  #define E (OP >> 7 & 15)
-  switch(OP >> 21 & 0x1f) {
-  op(0x00, MFC2, RT, VS, E);
-  op(0x01, INVALID);  //DMFC2
-  op(0x02, CFC2, RT, RDn);
-  op(0x03, INVALID);
-  op(0x04, MTC2, RT, VS, E);
-  op(0x05, INVALID);  //DMTC2
-  op(0x06, CTC2, RT, RDn);
-  op(0x07, INVALID);
-  op(0x08, INVALID);  //BC2
-  op(0x09, INVALID);
-  op(0x0a, INVALID);
-  op(0x0b, INVALID);
-  op(0x0c, INVALID);
-  op(0x0d, INVALID);
-  op(0x0e, INVALID);
-  op(0x0f, INVALID);
-  }
-  #undef E
-
-  #define E  (OP >> 21 & 15)
-  #define DE (OP >> 11 & 31)
-  switch(OP & 0x3f) {
-  op(0x00, VMULF<0>, VD, VS, VT, E);
-  op(0x01, VMULF<1>, VD, VS, VT, E);
-  op(0x02, VRND<1>, VD, VSn, VT, E);
-  op(0x03, VMULQ, VD, VS, VT, E);
-  op(0x04, VMUDL, VD, VS, VT, E);
-  op(0x05, VMUDM, VD, VS, VT, E);
-  op(0x06, VMUDN, VD, VS, VT, E);
-  op(0x07, VMUDH, VD, VS, VT, E);
-  op(0x08, VMACF<0>, VD, VS, VT, E);
-  op(0x09, VMACF<1>, VD, VS, VT, E);
-  op(0x0a, VRND<0>, VD, VSn, VT, E);
-  op(0x0b, VMACQ, VD);
-  op(0x0c, VMADL, VD, VS, VT, E);
-  op(0x0d, VMADM, VD, VS, VT, E);
-  op(0x0e, VMADN, VD, VS, VT, E);
-  op(0x0f, VMADH, VD, VS, VT, E);
-  op(0x10, VADD, VD, VS, VT, E);
-  op(0x11, VSUB, VD, VS, VT, E);
-  op(0x12, INVALID);
-  op(0x13, VABS, VD, VS, VT, E);
-  op(0x14, VADDC, VD, VS, VT, E);
-  op(0x15, VSUBC, VD, VS, VT, E);
-  op(0x16, INVALID);
-  op(0x17, INVALID);
-  op(0x18, INVALID);
-  op(0x19, INVALID);
-  op(0x1a, INVALID);
-  op(0x1b, INVALID);
-  op(0x1c, INVALID);
-  op(0x1d, VSAR, VD, VS, E);
-  op(0x1e, INVALID);
-  op(0x1f, INVALID);
-  op(0x20, VLT, VD, VS, VT, E);
-  op(0x21, VEQ, VD, VS, VT, E);
-  op(0x22, VNE, VD, VS, VT, E);
-  op(0x23, VGE, VD, VS, VT, E);
-  op(0x24, VCL, VD, VS, VT, E);
-  op(0x25, VCH, VD, VS, VT, E);
-  op(0x26, VCR, VD, VS, VT, E);
-  op(0x27, VMRG, VD, VS, VT, E);
-  op(0x28, VAND, VD, VS, VT, E);
-  op(0x29, VNAND, VD, VS, VT, E);
-  op(0x2a, VOR, VD, VS, VT, E);
-  op(0x2b, VNOR, VD, VS, VT, E);
-  op(0x2c, VXOR, VD, VS, VT, E);
-  op(0x2d, VNXOR, VD, VS, VT, E);
-  op(0x2e, INVALID);
-  op(0x2f, INVALID);
-  op(0x30, VRCP<0>, VD, DE, VT, E);
-  op(0x31, VRCP<1>, VD, DE, VT, E);
-  op(0x32, VRCPH, VD, DE, VT, E);
-  op(0x33, VMOV, VD, DE, VT, E);
-  op(0x34, VRSQ<0>, VD, DE, VT, E);
-  op(0x35, VRSQ<1>, VD, DE, VT, E);
-  op(0x36, VRSQH, VD, DE, VT, E);
-  op(0x37, VNOP);
-  op(0x38, INVALID);
-  op(0x39, INVALID);
-  op(0x3a, INVALID);
-  op(0x3b, INVALID);
-  op(0x3c, INVALID);
-  op(0x3d, INVALID);
-  op(0x3e, INVALID);
-  op(0x3f, INVALID);
-  }
-  #undef E
-  #undef DE
+auto RSP::decoderCOP2() -> void {
+  #define DECODER_COP2
+  #include "decoder.hpp"
+  #undef DECODER_COP2
 }
 
-#define E     (OP >> 7 & 15)
-#define IMMi7 int7(OP)
-
-auto RSP::instructionLWC2() -> void {
-  switch(OP >> 11 & 0x1f) {
-  op(0x00, LBV, VT, E, RS, IMMi7);
-  op(0x01, LSV, VT, E, RS, IMMi7);
-  op(0x02, LLV, VT, E, RS, IMMi7);
-  op(0x03, LDV, VT, E, RS, IMMi7);
-  op(0x04, LQV, VT, E, RS, IMMi7);
-  op(0x05, LRV, VT, E, RS, IMMi7);
-  op(0x06, LPV, VT, E, RS, IMMi7);
-  op(0x07, LUV, VT, E, RS, IMMi7);
-  op(0x08, LHV, VT, E, RS, IMMi7);
-  op(0x09, LFV, VT, E, RS, IMMi7);
-//op(0x0a, LWV, VT, E, RS, IMMi7);  //not present on N64 RSP
-  op(0x0b, LTV, VTn, E, RS, IMMi7);
-  }
+auto RSP::decoderLWC2() -> void {
+  #define DECODER_LWC2
+  #include "decoder.hpp"
+  #undef DECODER_LWC2
 }
 
-auto RSP::instructionSWC2() -> void {
-  switch(OP >> 11 & 0x1f) {
-  op(0x00, SBV, VT, E, RS, IMMi7);
-  op(0x01, SSV, VT, E, RS, IMMi7);
-  op(0x02, SLV, VT, E, RS, IMMi7);
-  op(0x03, SDV, VT, E, RS, IMMi7);
-  op(0x04, SQV, VT, E, RS, IMMi7);
-  op(0x05, SRV, VT, E, RS, IMMi7);
-  op(0x06, SPV, VT, E, RS, IMMi7);
-  op(0x07, SUV, VT, E, RS, IMMi7);
-  op(0x08, SHV, VT, E, RS, IMMi7);
-  op(0x09, SFV, VT, E, RS, IMMi7);
-  op(0x0a, SWV, VT, E, RS, IMMi7);
-  op(0x0b, STV, VTn, E, RS, IMMi7);
-  }
+auto RSP::decoderSWC2() -> void {
+  #define DECODER_SWC2
+  #include "decoder.hpp"
+  #undef DECODER_SWC2
 }
 
 auto RSP::instructionINVALID() -> void {
 }
 
-#undef E
-#undef IMMi7
-
+#undef jp
 #undef op
+#undef br
 
 #undef OP
-#undef SA
-#undef RDn
-#undef RTn
-#undef RSn
-#undef VDn
-#undef VSn
-#undef VTn
 #undef RD
 #undef RT
 #undef RS
 #undef VD
 #undef VS
 #undef VT
-#undef IMMi16
-#undef IMMu16
-#undef IMMu26

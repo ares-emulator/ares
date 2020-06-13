@@ -1,60 +1,50 @@
 //{
-  struct Allocator {
-    auto construct() -> void {
-      destruct();
-      memory = (u8*)calloc(512_MiB, 1);
-      offset = 0;
-      mprotect(memory, 512_MiB, PROT_READ | PROT_WRITE | PROT_EXEC);
-    }
+  struct Recompiler : recompiler::amd64 {
+    RSP& self;
+    Recompiler(RSP& self) : self(self) {}
 
-    auto destruct() -> void {
-      free(memory);
-      memory = nullptr;
-    }
+    struct Block {
+      auto execute() -> void {
+        ((void (*)())code)();
+      }
 
-    u8* memory = nullptr;
-    u32 offset = 0;
-  } allocator;
+      u32 step;
+      u8* code;
+    };
 
-  struct Block {
-    auto execute() -> void {
-      auto function = (void (*)())code;
-      function();
-    }
+    struct Pool {
+      auto operator==(const Pool& source) const -> bool { return hashcode == source.hashcode; }
+      auto operator< (const Pool& source) const -> bool { return hashcode <  source.hashcode; }
+      auto hash() const -> u32 { return hashcode; }
 
-    u32 step;
-    u32 size;
-    u8* code;
-  };
+      u32 hashcode;
+      Block* blocks[1024];
+    };
 
-  struct Pool {
-    static auto allocate() -> Pool*;
-
-    auto operator==(const Pool& source) const -> bool { return hashcode == source.hashcode; }
-    auto operator< (const Pool& source) const -> bool { return hashcode <  source.hashcode; }
-    auto hash() const -> u32 { return hashcode; }
-
-    u32 hashcode = 0;
-    Block* blocks[1024];
-  };
-
-  auto recompile(u32 address) -> Block*;
-  auto recompileEXECUTE(u32 instruction) -> bool;
-  auto recompileSPECIAL(u32 instruction) -> bool;
-  auto recompileREGIMM(u32 instruction) -> bool;
-  auto recompileCOP0(u32 instruction) -> bool;
-  auto recompileCOP2(u32 instruction) -> bool;
-  auto recompileLWC2(u32 instruction) -> bool;
-  auto recompileSWC2(u32 instruction) -> bool;
-
-  struct Recompiler {
     auto reset() -> void {
-      pool = nullptr;
+      context = nullptr;
       pools.reset();
     }
 
-    Pool* pool = nullptr;
+    auto invalidate() -> void {
+      context = nullptr;
+    }
+
+    auto pool() -> Pool*;
+    auto block(u32 address) -> Block*;
+
+    auto emit(u32 address) -> Block*;
+    auto emitEXECUTE(u32 instruction) -> bool;
+    auto emitSPECIAL(u32 instruction) -> bool;
+    auto emitREGIMM(u32 instruction) -> bool;
+    auto emitCOP0(u32 instruction) -> bool;
+    auto emitCOP2(u32 instruction) -> bool;
+    auto emitLWC2(u32 instruction) -> bool;
+    auto emitSWC2(u32 instruction) -> bool;
+
+    bump_allocator allocator;
+    Pool* context = nullptr;
     set<Pool> pools;
   //hashset<Pool> pools;
-  } recompiler;
+  } recompiler{*this};
 //};

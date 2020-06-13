@@ -3,7 +3,7 @@
   auto raiseException(uint, uint = 0) -> void;
   auto instruction() -> void;
   auto instructionEpilogue() -> bool;
-  auto instructionDEBUG() -> void;
+  auto instructionDebug() -> void;
   auto powerR4300(bool reset) -> void;
 
   //memory.cpp
@@ -21,11 +21,12 @@
   auto writeDouble (u32 address, u64 data) -> bool;
 
   //decoder.cpp
-  auto instructionEXECUTE() -> void;
-  auto instructionSPECIAL() -> void;
-  auto instructionREGIMM() -> void;
-  auto instructionCOP0() -> void;
-  auto instructionCOP1() -> void;
+  auto decoderEXECUTE() -> void;
+  auto decoderSPECIAL() -> void;
+  auto decoderREGIMM() -> void;
+  auto decoderCOP0() -> void;
+  auto decoderCOP1() -> void;
+
   auto instructionCOP2() -> void;
   auto instructionCOP3() -> void;
   auto instructionINVALID() -> void;

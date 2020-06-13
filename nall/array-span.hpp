@@ -28,6 +28,7 @@ template<typename T> struct array_span : array_view<T> {
   auto operator[](uint index) -> T& { return (T&)super::operator[](index); }
 
   template<typename U = T> auto data() -> U* { return (U*)super::_data; }
+  template<typename U = T> auto data() const -> const U* { return (const U*)super::_data; }
 
   auto begin() -> iterator<T> { return {(T*)super::_data, (uint)0}; }
   auto end() -> iterator<T> { return {(T*)super::_data, (uint)super::_size}; }

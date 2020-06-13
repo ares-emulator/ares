@@ -1,6 +1,6 @@
 #pragma once
 
-//struct encoder {
+//{
   struct imm8 {
     explicit imm8(u8 data) : data(data) {}
     u8 data;
@@ -26,12 +26,19 @@
       } cast{function};
       data = cast.pointer;
     }
+    template<typename C, typename R, typename... P> explicit imm64(auto (C::*function)(P...) const -> R) {
+      union force_cast_ub {
+        auto (C::*function)(P...) const -> R;
+        u64 pointer;
+      } cast{function};
+      data = cast.pointer;
+    }
     u64 data;
   };
 
-  struct ptr64 {
-    explicit ptr64(u64 data) : data(data) {}
-    template<typename T> explicit ptr64(T* pointer) : data((u64)pointer) {}
+  struct mem64 {
+    explicit mem64(u64 data) : data(data) {}
+    template<typename T> explicit mem64(T* pointer) : data((u64)pointer) {}
     u64 data;
   };
 

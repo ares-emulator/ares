@@ -4,7 +4,7 @@
   if(address <= 0x03ff'ffff) return rdram.access(__VA_ARGS__); \
   if(address <= 0x0400'0fff) return rsp.dmem.access(__VA_ARGS__); \
   if(address <= 0x0400'1fff) { \
-    if constexpr(write) { rsp.recompiler.pool = nullptr; } \
+    if constexpr(write) { rsp.recompiler.invalidate(); } \
     return rsp.imem.access(__VA_ARGS__); \
   } \
   if(address <= 0x0403'ffff) return unmapped; \
@@ -58,26 +58,26 @@ inline auto Bus::readDouble(u32 address) -> u64 {
 
 inline auto Bus::writeByte(u32 address, u8 data) -> void {
   address &= 0x1fff'ffff;
-  cpu.recompiler.pools[address >> 10] = nullptr;
+  cpu.recompiler.invalidate(address);
   decode(1, writeByte, address, data);
 }
 
 inline auto Bus::writeHalf(u32 address, u16 data) -> void {
   address &= 0x1fff'fffe;
-  cpu.recompiler.pools[address >> 10] = nullptr;
+  cpu.recompiler.invalidate(address);
   decode(1, writeHalf, address, data);
 }
 
 inline auto Bus::writeWord(u32 address, u32 data) -> void {
   address &= 0x1fff'fffc;
-  cpu.recompiler.pools[address >> 10] = nullptr;
+  cpu.recompiler.invalidate(address);
   decode(1, writeWord, address, data);
 }
 
 inline auto Bus::writeDouble(u32 address, u64 data) -> void {
   address &= 0x1fff'fff8;
-  cpu.recompiler.pools[address + 0 >> 10] = nullptr;
-  cpu.recompiler.pools[address + 4 >> 10] = nullptr;
+  cpu.recompiler.invalidate(address + 0);
+  cpu.recompiler.invalidate(address + 4);
   decode(2, writeDouble, address, data);
 }
 

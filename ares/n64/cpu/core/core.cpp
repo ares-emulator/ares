@@ -46,24 +46,21 @@ auto CPU::instruction() -> void {
     }
   }
 
-  static constexpr bool Recompiler = 1;
+  //devirtualize the program counter
+  auto address = readAddress(PC)(0);
 
-  if constexpr(Recompiler == 1) {
-    auto address = readAddress(PC)(0);
-    auto& pool = recompiler.pools[address >> 10 & 0x7ffff];
-    if(!pool) pool = Pool::allocate();
-    auto& block = pool->blocks[address >> 2 & 0xff];
-    if(!block) block = recompile(address);
+  if constexpr(Accuracy::CPU::Interpreter == 0) {
+    auto block = recompiler.block(address);
     block->execute();
     step(block->step);
   }
 
-  if constexpr(Recompiler == 0) {
+  if constexpr(Accuracy::CPU::Interpreter == 1) {
     pipeline.address = PC;
-    pipeline.instruction = readWord(pipeline.address)(0);
+    pipeline.instruction = bus.readWord(address);
     debugger.instruction();
-  //instructionDEBUG();
-    instructionEXECUTE();
+  //instructionDebug();
+    decoderEXECUTE();
     instructionEpilogue();
     step(2);
   }
@@ -87,7 +84,7 @@ auto CPU::instructionEpilogue() -> bool {
   unreachable;
 }
 
-auto CPU::instructionDEBUG() -> void {
+auto CPU::instructionDebug() -> void {
   pipeline.address = PC;
   pipeline.instruction = readWord(pipeline.address)(0);
 
@@ -117,8 +114,11 @@ auto CPU::powerR4300(bool reset) -> void {
   branch.reset();
   fesetround(FE_TONEAREST);
   context.setMode();
-  allocator.construct();
-  recompiler.reset();
+
+  if constexpr(Accuracy::CPU::Interpreter == 0) {
+    recompiler.allocator.resize(512_MiB, bump_allocator::executable | bump_allocator::zero_fill);
+    recompiler.reset();
+  }
 }
 
 auto CPU::Context::setMode() -> void {

@@ -1,6 +1,6 @@
 //NEC VR4300
 
-struct CPU : Thread, dynarec::amd64::encoder {
+struct CPU : Thread {
   Node::Component node;
 
   struct Debugger {

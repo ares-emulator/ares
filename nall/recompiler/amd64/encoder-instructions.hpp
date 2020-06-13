@@ -1,16 +1,6 @@
 #pragma once
-//requires -fno-operator-names
 
-namespace nall::dynarec::amd64 {
-
-struct encoder {
-  emitter emit;
-  #include "constants.hpp"
-
-  auto bind(array_span<uint8_t> span) {
-    emit.bind(span);
-  }
-
+//{
   auto call(reg64 rt) {
     auto _rt = (uint)rt;
     emit.rex(0, 0, 0, _rt & 8);
@@ -33,8 +23,8 @@ struct encoder {
     emit.qword(is.data);
   }
 
-  auto mov(reg64 rt, ptr64 ps) {
-    if(rt != rax) throw;
+  auto mov(reg64 rt, mem64 ps) {
+    if(unlikely(rt != rax)) throw;
     emit.rex(1, 0, 0, 0);
     emit.byte(0xa1);
     emit.qword(ps.data);
@@ -132,8 +122,4 @@ struct encoder {
   auto jnz(imm8 it) { op(0x75); }
   auto jz (imm8 it) { op(0x74); }
   #undef op
-
-  #include "encoder-call.hpp"
-};
-
-}
+//};

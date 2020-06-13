@@ -1,6 +1,6 @@
 //Reality Signal Processor
 
-struct RSP : Thread, Memory::IO<RSP>, dynarec::amd64::encoder {
+struct RSP : Thread, Memory::IO<RSP> {
   Node::Component node;
   Memory::Writable dmem;
   Memory::Writable imem;

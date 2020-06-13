@@ -1,21 +1,25 @@
-auto CPU::Pool::allocate() -> Pool* {
-  auto pool = (Pool*)(cpu.allocator.memory + cpu.allocator.offset);
-  cpu.allocator.offset += sizeof(Pool);
+auto CPU::Recompiler::pool(u32 address) -> Pool* {
+  auto& pool = pools[address >> 8 & 0x1fffff];
+  if(!pool) pool = (Pool*)allocator.acquire(sizeof(Pool));
   return pool;
 }
 
-auto CPU::recompile(u32 address) -> Block* {
-  if(unlikely(512_MiB - allocator.offset < 1_MiB)) {
+auto CPU::Recompiler::block(u32 address) -> Block* {
+  auto& block = pool(address)->blocks[address >> 2 & 0x3f];
+  if(!block) block = emit(address);
+  return block;
+}
+
+auto CPU::Recompiler::emit(u32 address) -> Block* {
+  if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
-    allocator.construct();
-    recompiler.reset();
+    allocator.release(bump_allocator::zero_fill);
+    reset();
   }
 
-  Block* block = (Block*)(allocator.memory + allocator.offset);
-  allocator.offset += sizeof(Block);
-
-  block->code = allocator.memory + allocator.offset;
-  bind({block->code, 512_MiB - allocator.offset});
+  auto block = (Block*)allocator.acquire(sizeof(Block));
+  block->code = allocator.acquire();
+  bind({block->code, allocator.available()});
 
   bool branched = 0;
   uint instructions = 0;
@@ -23,385 +27,84 @@ auto CPU::recompile(u32 address) -> Block* {
   do {
     u32 instruction = bus.readWord(address);
     if(instruction == 0x1000'ffff) idle += 64;  //accelerate idle loops
-    branched = recompileEXECUTE(instruction);
-    call(&CPU::instructionEpilogue, this);
+    branched = emitEXECUTE(instruction);
+    call(&CPU::instructionEpilogue, &self);
     test(rax, rax);
     jz(imm8{+1});
     ret();
     address += 4;
-    if((address & 0xffc) == 0) break;  //block boundary
+    if((address & 0xfc) == 0) break;  //block boundary
   } while(++instructions < 64 && !branched);
   ret();
 
   block->step = 2 * instructions + idle;
-  block->size = emit._span.data() - block->code;
-  allocator.offset += block->size;
-//print(hex(PC, 8L), " ", instructions, " ", block->size, "\n");
+  allocator.reserve(size());
+//print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;
 }
 
-#define OP     instruction
-#define SA     (OP >>  6 & 31)
-#define RDn    (OP >> 11 & 31)
-#define RTn    (OP >> 16 & 31)
-#define RSn    (OP >> 21 & 31)
-#define RD     &GPR[RDn]
-#define RT     &GPR[RTn]
-#define RS     &GPR[RSn]
-#define FD     (OP >>  6 & 31)
-#define FS     (OP >> 11 & 31)
-#define FT     (OP >> 16 & 31)
-#define IMMi16 i16(OP)
-#define IMMu16 u16(OP)
-#define IMMu26 (OP & 0x03ff'ffff)
+#define OP instruction
+#define RD &self.GPR[RDn]
+#define RT &self.GPR[RTn]
+#define RS &self.GPR[RSn]
 
 #define jp(id, name) \
   case id: \
-    return recompile##name(instruction); \
+    return emit##name(instruction); \
 
 #define op(id, name, ...) \
   case id: \
-    call(&CPU::instruction##name, this, ##__VA_ARGS__); \
+    call(&CPU::instruction##name, &self, ##__VA_ARGS__); \
     return 0; \
 
 #define br(id, name, ...) \
   case id: \
-    call(&CPU::instruction##name, this, ##__VA_ARGS__); \
+    call(&CPU::instruction##name, &self, ##__VA_ARGS__); \
     return 1; \
 
-auto CPU::recompileEXECUTE(u32 instruction) -> bool {
-  switch(OP >> 26) {
-  jp(0x00, SPECIAL);
-  jp(0x01, REGIMM);
-  br(0x02, J, IMMu26);
-  br(0x03, JAL, IMMu26);
-  br(0x04, BEQ, RS, RT, IMMi16);
-  br(0x05, BNE, RS, RT, IMMi16);
-  br(0x06, BLEZ, RS, IMMi16);
-  br(0x07, BGTZ, RS, IMMi16);
-  op(0x08, ADDI, RT, RS, IMMi16);
-  op(0x09, ADDIU, RT, RS, IMMi16);
-  op(0x0a, SLTI, RT, RS, IMMi16);
-  op(0x0b, SLTIU, RT, RS, IMMi16);
-  op(0x0c, ANDI, RT, RS, IMMu16);
-  op(0x0d, ORI, RT, RS, IMMu16);
-  op(0x0e, XORI, RT, RS, IMMu16);
-  op(0x0f, LUI, RT, IMMu16);
-  jp(0x10, COP0);
-  jp(0x11, COP1);
-  op(0x12, COP2);
-  op(0x13, COP3);
-  br(0x14, BEQL, RS, RT, IMMi16);
-  br(0x15, BNEL, RS, RT, IMMi16);
-  br(0x16, BLEZL, RS, IMMi16);
-  br(0x17, BGTZL, RS, IMMi16);
-  op(0x18, DADDI, RT, RS, IMMi16);
-  op(0x19, DADDIU, RT, RS, IMMi16);
-  op(0x1a, LDL, RT, RS, IMMi16);
-  op(0x1b, LDR, RT, RS, IMMi16);
-  op(0x1c, INVALID);
-  op(0x1d, INVALID);
-  op(0x1e, INVALID);
-  op(0x1f, INVALID);
-  op(0x20, LB, RT, RS, IMMi16);
-  op(0x21, LH, RT, RS, IMMi16);
-  op(0x22, LWL, RT, RS, IMMi16);
-  op(0x23, LW, RT, RS, IMMi16);
-  op(0x24, LBU, RT, RS, IMMi16);
-  op(0x25, LHU, RT, RS, IMMi16);
-  op(0x26, LWR, RT, RS, IMMi16);
-  op(0x27, LWU, RT, RS, IMMi16);
-  op(0x28, SB, RT, RS, IMMi16);
-  op(0x29, SH, RT, RS, IMMi16);
-  op(0x2a, SWL, RT, RS, IMMi16);
-  op(0x2b, SW, RT, RS, IMMi16);
-  op(0x2c, SDL, RT, RS, IMMi16);
-  op(0x2d, SDR, RT, RS, IMMi16);
-  op(0x2e, SWR, RT, RS, IMMi16);
-  op(0x2f, CACHE, OP >> 16 & 3, OP >> 18 & 3);
-  op(0x30, LL, RT, RS, IMMi16);
-  op(0x31, LWC1, FT, RS, IMMi16);
-  op(0x32, COP2);  //LWC2
-  op(0x33, COP3);  //LWC3
-  op(0x34, LLD, RT, RS, IMMi16);
-  op(0x35, LDC1, FT, RS, IMMi16);
-  op(0x36, COP2);  //LDC2
-  op(0x37, LD, RT, RS, IMMi16);
-  op(0x38, SC, RT, RS, IMMi16);
-  op(0x39, SWC1, FT, RS, IMMi16);
-  op(0x3a, COP2);  //SWC2
-  op(0x3b, COP3);  //SWC3
-  op(0x3c, SCD, RT, RS, IMMi16);
-  op(0x3d, SDC1, FT, RS, IMMi16);
-  op(0x3e, COP2);  //SDC2
-  op(0x3f, SD, RT, RS, IMMi16);
-  }
-
+auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
+  #define DECODER_EXECUTE
+  #include "decoder.hpp"
+  #undef DECODER_EXECUTE
   return 0;
 }
 
-auto CPU::recompileSPECIAL(u32 instruction) -> bool {
-  switch(OP & 0x3f) {
-  op(0x00, SLL, RD, RT, SA);
-  op(0x01, INVALID);
-  op(0x02, SRL, RD, RT, SA);
-  op(0x03, SRA, RD, RT, SA);
-  op(0x04, SLLV, RD, RT, RS);
-  op(0x05, INVALID);
-  op(0x06, SRLV, RD, RT, RS);
-  op(0x07, SRAV, RD, RT, RS);
-  br(0x08, JR, RS);
-  br(0x09, JALR, RD, RS);
-  op(0x0a, INVALID);
-  op(0x0b, INVALID);
-  op(0x0c, SYSCALL);
-  op(0x0d, BREAK);
-  op(0x0e, INVALID);
-  op(0x0f, SYNC);
-  op(0x10, MFHI, RD);
-  op(0x11, MTHI, RS);
-  op(0x12, MFLO, RD);
-  op(0x13, MTLO, RS);
-  op(0x14, DSLLV, RD, RT, RS);
-  op(0x15, INVALID);
-  op(0x16, DSRLV, RD, RT, RS);
-  op(0x17, DSRAV, RD, RT, RS);
-  op(0x18, MULT, RS, RT);
-  op(0x19, MULTU, RS, RT);
-  op(0x1a, DIV, RS, RT);
-  op(0x1b, DIVU, RS, RT);
-  op(0x1c, DMULT, RS, RT);
-  op(0x1d, DMULTU, RS, RT);
-  op(0x1e, DDIV, RS, RT);
-  op(0x1f, DDIVU, RS, RT);
-  op(0x20, ADD, RD, RS, RT);
-  op(0x21, ADDU, RD, RS, RT);
-  op(0x22, SUB, RD, RS, RT);
-  op(0x23, SUBU, RD, RS, RT);
-  op(0x24, AND, RD, RS, RT);
-  op(0x25, OR, RD, RS, RT);
-  op(0x26, XOR, RD, RS, RT);
-  op(0x27, NOR, RD, RS, RT);
-  op(0x28, INVALID);
-  op(0x29, INVALID);
-  op(0x2a, SLT, RD, RS, RT);
-  op(0x2b, SLTU, RD, RS, RT);
-  op(0x2c, DADD, RD, RS, RT);
-  op(0x2d, DADDU, RD, RS, RT);
-  op(0x2e, DSUB, RD, RS, RT);
-  op(0x2f, DSUBU, RD, RS, RT);
-  op(0x30, TGE, RS, RT);
-  op(0x31, TGEU, RS, RT);
-  op(0x32, TLT, RS, RT);
-  op(0x33, TLTU, RS, RT);
-  op(0x34, TEQ, RS, RT);
-  op(0x35, INVALID);
-  op(0x36, TNE, RS, RT);
-  op(0x37, INVALID);
-  op(0x38, DSLL, RD, RT, SA);
-  op(0x39, INVALID);
-  op(0x3a, DSRL, RD, RT, SA);
-  op(0x3b, DSRA, RD, RT, SA);
-  op(0x3c, DSLL, RD, RT, SA + 32);
-  op(0x3d, INVALID);
-  op(0x3e, DSRL, RD, RT, SA + 32);
-  op(0x3f, DSRA, RD, RT, SA + 32);
-  }
-
+auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
+  #define DECODER_SPECIAL
+  #include "decoder.hpp"
+  #undef DECODER_SPECIAL
   return 0;
 }
 
-auto CPU::recompileREGIMM(u32 instruction) -> bool {
-  switch(OP >> 16 & 0x1f) {
-  br(0x00, BLTZ, RS, IMMi16);
-  br(0x01, BGEZ, RS, IMMi16);
-  br(0x02, BLTZL, RS, IMMi16);
-  br(0x03, BGEZL, RS, IMMi16);
-  op(0x04, INVALID);
-  op(0x05, INVALID);
-  op(0x06, INVALID);
-  op(0x07, INVALID);
-  op(0x08, TGEI, RS, IMMi16);
-  op(0x09, TGEIU, RS, IMMi16);
-  op(0x0a, TLTI, RS, IMMi16);
-  op(0x0b, TLTIU, RS, IMMi16);
-  op(0x0c, TEQI, RS, IMMi16);
-  op(0x0d, INVALID);
-  op(0x0e, TNEI, RS, IMMi16);
-  op(0x0f, INVALID);
-  br(0x10, BLTZAL, RS, IMMi16);
-  br(0x11, BGEZAL, RS, IMMi16);
-  br(0x12, BLTZALL, RS, IMMi16);
-  br(0x13, BGEZALL, RS, IMMi16);
-  op(0x14, INVALID);
-  op(0x15, INVALID);
-  op(0x16, INVALID);
-  op(0x17, INVALID);
-  op(0x18, INVALID);
-  op(0x19, INVALID);
-  op(0x1a, INVALID);
-  op(0x1b, INVALID);
-  op(0x1c, INVALID);
-  op(0x1d, INVALID);
-  op(0x1e, INVALID);
-  op(0x1f, INVALID);
-  }
-
+auto CPU::Recompiler::emitREGIMM(u32 instruction) -> bool {
+  #define DECODER_REGIMM
+  #include "decoder.hpp"
+  #undef DECODER_REGIMM
   return 0;
 }
 
-auto CPU::recompileCOP0(u32 instruction) -> bool {
-  switch(OP >> 21 & 0x1f) {
-  op(0x00, MFC0, RT, RDn);
-  op(0x01, DMFC0, RT, RDn);
-  op(0x02, INVALID);  //CFC0
-  op(0x03, INVALID);
-  op(0x04, MTC0, RT, RDn);
-  op(0x05, DMTC0, RT, RDn);
-  op(0x06, INVALID);  //CTC0
-  op(0x07, INVALID);
-  op(0x08, INVALID);  //BC0
-  op(0x09, INVALID);
-  op(0x0a, INVALID);
-  op(0x0b, INVALID);
-  op(0x0c, INVALID);
-  op(0x0d, INVALID);
-  op(0x0e, INVALID);
-  op(0x0f, INVALID);
-  }
-
-  switch(OP & 0x3f) {
-  op(0x01, TLBR);
-  op(0x02, TLBWI);
-  op(0x06, TLBWR);
-  op(0x08, TLBP);
-  br(0x18, ERET);
-  }
-
+auto CPU::Recompiler::emitCOP0(u32 instruction) -> bool {
+  #define DECODER_COP0
+  #include "decoder.hpp"
+  #undef DECODER_COP0
   return 0;
 }
 
-auto CPU::recompileCOP1(u32 instruction) -> bool {
-  call(&CPU::recompileCheckCOP1, this);
+auto CPU::Recompiler::emitCOP1(u32 instruction) -> bool {
+  call(&CPU::Recompiler::emitCheckCOP1, this);
   test(rax, rax);
   jz(imm8{+1});
   ret();
 
-  switch(OP >> 21 & 0x1f) {
-  op(0x00, MFC1, RT, FS);
-  op(0x01, DMFC1, RT, FS);
-  op(0x02, CFC1, RT, RDn);
-  op(0x03, INVALID);
-  op(0x04, MTC1, RT, FS);
-  op(0x05, DMTC1, RT, FS);
-  op(0x06, CTC1, RT, RDn);
-  op(0x07, INVALID);
-  br(0x08, BC1, OP >> 16 & 1, OP >> 17 & 1, IMMi16);
-  op(0x09, INVALID);
-  op(0x0a, INVALID);
-  op(0x0b, INVALID);
-  op(0x0c, INVALID);
-  op(0x0d, INVALID);
-  op(0x0e, INVALID);
-  op(0x0f, INVALID);
-  }
-
-  if((OP >> 21 & 31) == 16)
-  switch(OP & 0x3f) {
-  op(0x00, FADD_S, FD, FS, FT);
-  op(0x01, FSUB_S, FD, FS, FT);
-  op(0x02, FMUL_S, FD, FS, FT);
-  op(0x03, FDIV_S, FD, FS, FT);
-  op(0x04, FSQRT_S, FD, FS);
-  op(0x05, FABS_S, FD, FS);
-  op(0x06, FMOV_S, FD, FS);
-  op(0x07, FNEG_S, FD, FS);
-  op(0x08, FROUND_L_S, FD, FS);
-  op(0x09, FTRUNC_L_S, FD, FS);
-  op(0x0a, FCEIL_L_S, FD, FS);
-  op(0x0b, FFLOOR_L_S, FD, FS);
-  op(0x0c, FROUND_W_S, FD, FS);
-  op(0x0d, FTRUNC_W_S, FD, FS);
-  op(0x0e, FCEIL_W_S, FD, FS);
-  op(0x0f, FFLOOR_W_S, FD, FS);
-  op(0x21, FCVT_D_S, FD, FS);
-  op(0x24, FCVT_W_S, FD, FS);
-  op(0x25, FCVT_L_S, FD, FS);
-  op(0x30, FC_F_S, FS, FT);
-  op(0x31, FC_UN_S, FS, FT);
-  op(0x32, FC_EQ_S, FS, FT);
-  op(0x33, FC_UEQ_S, FS, FT);
-  op(0x34, FC_OLT_S, FS, FT);
-  op(0x35, FC_ULT_S, FS, FT);
-  op(0x36, FC_OLE_S, FS, FT);
-  op(0x37, FC_ULE_S, FS, FT);
-  op(0x38, FC_SF_S, FS, FT);
-  op(0x39, FC_NGLE_S, FS, FT);
-  op(0x3a, FC_SEQ_S, FS, FT);
-  op(0x3b, FC_NGL_S, FS, FT);
-  op(0x3c, FC_LT_S, FS, FT);
-  op(0x3d, FC_NGE_S, FS, FT);
-  op(0x3e, FC_LE_S, FS, FT);
-  op(0x3f, FC_NGT_S, FS, FT);
-  }
-
-  if((OP >> 21 & 31) == 17)
-  switch(OP & 0x3f) {
-  op(0x00, FADD_D, FD, FS, FT);
-  op(0x01, FSUB_D, FD, FS, FT);
-  op(0x02, FMUL_D, FD, FS, FT);
-  op(0x03, FDIV_D, FD, FS, FT);
-  op(0x04, FSQRT_D, FD, FS);
-  op(0x05, FABS_D, FD, FS);
-  op(0x06, FMOV_D, FD, FS);
-  op(0x07, FNEG_D, FD, FS);
-  op(0x08, FROUND_L_D, FD, FS);
-  op(0x09, FTRUNC_L_D, FD, FS);
-  op(0x0a, FCEIL_L_D, FD, FS);
-  op(0x0b, FFLOOR_L_D, FD, FS);
-  op(0x0c, FROUND_W_D, FD, FS);
-  op(0x0d, FTRUNC_W_D, FD, FS);
-  op(0x0e, FCEIL_W_D, FD, FS);
-  op(0x0f, FFLOOR_W_D, FD, FS);
-  op(0x20, FCVT_S_D, FD, FS);
-  op(0x24, FCVT_W_D, FD, FS);
-  op(0x25, FCVT_L_D, FD, FS);
-  op(0x30, FC_F_D, FS, FT);
-  op(0x31, FC_UN_D, FS, FT);
-  op(0x32, FC_EQ_D, FS, FT);
-  op(0x33, FC_UEQ_D, FS, FT);
-  op(0x34, FC_OLT_D, FS, FT);
-  op(0x35, FC_ULT_D, FS, FT);
-  op(0x36, FC_OLE_D, FS, FT);
-  op(0x37, FC_ULE_D, FS, FT);
-  op(0x38, FC_SF_D, FS, FT);
-  op(0x39, FC_NGLE_D, FS, FT);
-  op(0x3a, FC_SEQ_D, FS, FT);
-  op(0x3b, FC_NGL_D, FS, FT);
-  op(0x3c, FC_LT_D, FS, FT);
-  op(0x3d, FC_NGE_D, FS, FT);
-  op(0x3e, FC_LE_D, FS, FT);
-  op(0x3f, FC_NGT_D, FS, FT);
-  }
-
-  if((OP >> 21 & 31) == 20)
-  switch(OP & 0x3f) {
-  op(0x20, FCVT_S_W, FD, FS);
-  op(0x21, FCVT_D_W, FD, FS);
-  }
-
-  if((OP >> 21 & 31) == 21)
-  switch(OP & 0x3f) {
-  op(0x20, FCVT_S_L, FD, FS);
-  op(0x21, FCVT_D_L, FD, FS);
-  }
-
+  #define DECODER_COP1
+  #include "decoder.hpp"
+  #undef DECODER_COP1
   return 0;
 }
 
-auto CPU::recompileCheckCOP1() -> bool {
-  if(!scc.status.enable.coprocessor1) {
-    return exception.coprocessor1(), true;
+auto CPU::Recompiler::emitCheckCOP1() -> bool {
+  if(!self.scc.status.enable.coprocessor1) {
+    return self.exception.coprocessor1(), true;
   }
   return false;
 }
@@ -411,16 +114,6 @@ auto CPU::recompileCheckCOP1() -> bool {
 #undef br
 
 #undef OP
-#undef SA
-#undef RDn
-#undef RTn
-#undef RSn
 #undef RD
 #undef RT
 #undef RS
-#undef FD
-#undef FS
-#undef FT
-#undef IMMi16
-#undef IMMu16
-#undef IMMu26

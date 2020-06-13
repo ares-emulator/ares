@@ -3,7 +3,7 @@
 
 #include <ares/ares.hpp>
 #include <nall/hashset.hpp>
-#include <nall/dynarec/amd64/amd64.hpp>
+#include <nall/recompiler/amd64/amd64.hpp>
 #include <nmmintrin.h>
 using v128 = __m128i;
 
@@ -13,8 +13,16 @@ namespace ares::Nintendo64 {
     static constexpr bool Reference = 0;
 
     struct CPU {
+      //0 = dynamic recompiler; 1 = interpreter
+      static constexpr bool Interpreter = 0 | Reference;
+
       //exceptions when the CPU accesses unaligned memory addresses
       static constexpr bool AddressErrors = 0 | Reference;
+    };
+
+    struct RSP {
+      //0 = dynamic recompiler; 1 = interpreter
+      static constexpr bool Interpreter = 0 | Reference;
     };
   };
 

@@ -1,4 +1,6 @@
-//struct encoder {
+#pragma once
+
+//{
   //virtual instructions to call member functions
   template<typename C, typename R, typename... P>
   auto call(auto (C::*function)(P...) -> R, C* object) {

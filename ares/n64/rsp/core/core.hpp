@@ -2,17 +2,18 @@
   //core.cpp
   auto instruction() -> void;
   auto instructionEpilogue() -> bool;
-  auto instructionDEBUG() -> void;
+  auto instructionDebug() -> void;
   auto powerCore() -> void;
 
   //decoder.cpp
-  auto instructionEXECUTE() -> void;
-  auto instructionSPECIAL() -> void;
-  auto instructionREGIMM() -> void;
-  auto instructionCOP0() -> void;
-  auto instructionCOP2() -> void;
-  auto instructionLWC2() -> void;
-  auto instructionSWC2() -> void;
+  auto decoderEXECUTE() -> void;
+  auto decoderSPECIAL() -> void;
+  auto decoderREGIMM() -> void;
+  auto decoderCOP0() -> void;
+  auto decoderCOP2() -> void;
+  auto decoderLWC2() -> void;
+  auto decoderSWC2() -> void;
+
   auto instructionINVALID() -> void;
 
   //serialization.cpp

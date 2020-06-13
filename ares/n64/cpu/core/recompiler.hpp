@@ -1,51 +1,41 @@
 //{
-  struct Allocator {
-    auto construct() -> void {
-      destruct();
-      memory = (u8*)calloc(512_MiB, 1);
-      offset = 0;
-      mprotect(memory, 512_MiB, PROT_READ | PROT_WRITE | PROT_EXEC);
-    }
+  struct Recompiler : recompiler::amd64 {
+    CPU& self;
+    Recompiler(CPU& self) : self(self) {}
 
-    auto destruct() -> void {
-      free(memory);
-      memory = nullptr;
-    }
+    struct Block {
+      auto execute() -> void {
+        ((void (*)())code)();
+      }
 
-    u8* memory = nullptr;
-    u32 offset = 0;
-  } allocator;
+      u32 step;
+      u8* code;
+    };
 
-  struct Block {
-    auto execute() -> void {
-      auto function = (void (*)())code;
-      function();
-    }
+    struct Pool {
+      Block* blocks[1 << 6];
+    };
 
-    u32 step;
-    u32 size;
-    u8* code;
-  };
-
-  struct Pool {
-    static auto allocate() -> Pool*;
-
-    Block* blocks[1 << 8];
-  };
-
-  auto recompile(u32 address) -> Block*;
-  auto recompileEXECUTE(u32 instruction) -> bool;
-  auto recompileSPECIAL(u32 instruction) -> bool;
-  auto recompileREGIMM(u32 instruction) -> bool;
-  auto recompileCOP0(u32 instruction) -> bool;
-  auto recompileCOP1(u32 instruction) -> bool;
-  auto recompileCheckCOP1() -> bool;
-
-  struct Recompiler {
     auto reset() -> void {
-      for(uint index : range(1 << 19)) pools[index] = nullptr;
+      for(u32 index : range(1 << 21)) pools[index] = nullptr;
     }
 
-    Pool* pools[1 << 19];
-  } recompiler;
+    auto invalidate(u32 address) -> void {
+      pools[address >> 8 & 0x1fffff] = nullptr;
+    }
+
+    auto pool(u32 address) -> Pool*;
+    auto block(u32 address) -> Block*;
+
+    auto emit(u32 address) -> Block*;
+    auto emitEXECUTE(u32 instruction) -> bool;
+    auto emitSPECIAL(u32 instruction) -> bool;
+    auto emitREGIMM(u32 instruction) -> bool;
+    auto emitCOP0(u32 instruction) -> bool;
+    auto emitCOP1(u32 instruction) -> bool;
+    auto emitCheckCOP1() -> bool;
+
+    bump_allocator allocator;
+    Pool* pools[1 << 21];  //2_MiB * sizeof(void*) == 16_MiB
+  } recompiler{*this};
 //};

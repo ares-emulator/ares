@@ -51,6 +51,7 @@ namespace Math {
   #include <unistd.h>
   #include <pwd.h>
   #include <grp.h>
+  #include <sys/mman.h>
   #include <sys/socket.h>
   #include <sys/wait.h>
   #include <netinet/in.h>

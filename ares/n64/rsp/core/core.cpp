@@ -9,23 +9,18 @@
 #include "serialization.cpp"
 
 auto RSP::instruction() -> void {
-  static constexpr bool Recompiler = 1;
-
-  if constexpr(Recompiler == 1) {
-    auto& pool = recompiler.pool;
-    if(!pool) pool = Pool::allocate();
-    auto& block = pool->blocks[PC >> 2 & 0x3ff];
-    if(!block) block = recompile(PC);
+  if constexpr(Accuracy::RSP::Interpreter == 0) {
+    auto block = recompiler.block(PC);
     block->execute();
     step(block->step);
   }
 
-  if constexpr(Recompiler == 0) {
+  if constexpr(Accuracy::RSP::Interpreter == 1) {
     pipeline.address = PC;
     pipeline.instruction = imem.readWord(pipeline.address);
     debugger.instruction();
-  //instructionDEBUG();
-    instructionEXECUTE();
+  //instructionDebug();
+    decoderEXECUTE();
     instructionEpilogue();
     step(3);
   }
@@ -44,7 +39,7 @@ auto RSP::instructionEpilogue() -> bool {
   unreachable;
 }
 
-auto RSP::instructionDEBUG() -> void {
+auto RSP::instructionDebug() -> void {
   pipeline.address = PC;
   pipeline.instruction = imem.readWord(pipeline.address);
 
@@ -89,6 +84,8 @@ auto RSP::powerCore() -> void {
     inverseSquareRoots[index] = u16(b >> 1);
   }
 
-  allocator.construct();
-  recompiler.reset();
+  if constexpr(Accuracy::RSP::Interpreter == 0) {
+    recompiler.allocator.resize(512_MiB, bump_allocator::executable | bump_allocator::zero_fill);
+    recompiler.reset();
+  }
 }
