@@ -239,7 +239,7 @@
   #undef E
 
   #define E  (OP >> 21 & 15)
-  #define DE (OP >> 11 & 31)
+  #define DE (OP >> 11 &  7)
   switch(OP & 0x3f) {
   op(0x00, VMULF<0>, VD, VS, VT, E);
   op(0x01, VMULF<1>, VD, VS, VT, E);

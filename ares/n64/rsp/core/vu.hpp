@@ -2,12 +2,28 @@
   union r128 {
     struct { uint128_t u128; };
     struct {   __m128i v128; };
+
     operator __m128i() const { return v128; }
     auto operator=(__m128i value) { v128 = value; }
-    auto byte(uint index) -> u8& { return ((u8*)&u128)[15 - index]; }
-    auto byte(uint index) const -> u8 { return ((u8*)&u128)[15 - index]; }
-    auto element(uint index) -> u16& { return ((u16*)&u128)[7 - index]; }
-    auto element(uint index) const -> u16 { return ((u16*)&u128)[7 - index]; }
+
+    auto byte(uint index) -> uint8_t& { return ((uint8_t*)&u128)[15 - index]; }
+    auto byte(uint index) const -> uint8_t { return ((uint8_t*)&u128)[15 - index]; }
+
+    auto element(uint index) -> uint16_t& { return ((uint16_t*)&u128)[7 - index]; }
+    auto element(uint index) const -> uint16_t { return ((uint16_t*)&u128)[7 - index]; }
+
+    auto u8(uint index) -> uint8_t& { return ((uint8_t*)&u128)[15 - index]; }
+    auto u8(uint index) const -> uint8_t { return ((uint8_t*)&u128)[15 - index]; }
+
+    auto i16(uint index) -> int16_t& { return ((int16_t*)&u128)[7 - index]; }
+    auto i16(uint index) const -> int16_t { return ((int16_t*)&u128)[7 - index]; }
+
+    auto u16(uint index) -> uint16_t& { return ((uint16_t*)&u128)[7 - index]; }
+    auto u16(uint index) const -> uint16_t { return ((uint16_t*)&u128)[7 - index]; }
+
+    //VCx registers
+    auto get(uint index) const -> bool { return u16(index) != 0; }
+    auto set(uint index, bool value) -> bool { return u16(index) = 0 - value, value; }
 
     //vu-registers.cpp
     auto operator()(uint index) const -> r128;
@@ -24,6 +40,11 @@
      i16 divout;
     bool divdp;
   } vu;
+
+  //vu-registers.cpp
+  auto accumulatorGet(uint index) const -> u64;
+  auto accumulatorSet(uint index, u64 value) -> void;
+  auto accumulatorSaturate(uint index, bool slice, u16 negative, u16 positive) const -> u16;
 
   u16 reciprocals[512];
   u16 inverseSquareRoots[512];
