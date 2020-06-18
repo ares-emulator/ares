@@ -44,6 +44,7 @@ auto construct() -> void {
   media.append(new Nintendo64DD);
   media.append(new PCEngine);
   media.append(new PCEngineCD);
+  media.append(new PlayStation);
   media.append(new PocketChallengeV2);
   media.append(new SC3000);
   media.append(new SG1000);

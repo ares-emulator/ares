@@ -24,6 +24,7 @@ struct PocketChallengeV2 : Emulator {
 WonderSwan::WonderSwan() {
   interface = new ares::WonderSwan::WonderSwanInterface;
   medium = mia::medium("WonderSwan");
+  manufacturer = "Bandai";
   name = "WonderSwan";
 }
 
@@ -95,6 +96,7 @@ auto WonderSwan::input(ares::Node::Input node) -> void {
 WonderSwanColor::WonderSwanColor() {
   interface = new ares::WonderSwan::WonderSwanColorInterface;
   medium = mia::medium("WonderSwan Color");
+  manufacturer = "Bandai";
   name = "WonderSwan Color";
 }
 
@@ -166,6 +168,7 @@ auto WonderSwanColor::input(ares::Node::Input node) -> void {
 PocketChallengeV2::PocketChallengeV2() {
   interface = new ares::WonderSwan::PocketChallengeV2Interface;
   medium = mia::medium("Pocket Challenge V2");
+  manufacturer = "Benesse";
   name = "Pocket Challenge V2";
 }
 

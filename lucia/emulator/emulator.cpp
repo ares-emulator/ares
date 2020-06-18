@@ -36,6 +36,10 @@
   #include "pc-engine.cpp"
 #endif
 
+#ifdef CORE_PS1
+  #include "playstation.cpp"
+#endif
+
 #ifdef CORE_SFC
   #include "super-famicom.cpp"
 #endif
@@ -79,6 +83,10 @@ auto Emulator::construct() -> void {
   #ifdef CORE_MD
   emulators.append(new MegaDrive);
   emulators.append(new MegaCD);
+  #endif
+
+  #ifdef CORE_PS1
+  emulators.append(new PlayStation);
   #endif
 
   #ifdef CORE_PCE

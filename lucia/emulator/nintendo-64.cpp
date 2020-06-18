@@ -17,6 +17,7 @@ struct Nintendo64DD : Emulator {
 Nintendo64::Nintendo64() {
   interface = new ares::Nintendo64::Nintendo64Interface;
   medium = mia::medium("Nintendo 64");
+  manufacturer = "Nintendo";
   name = "Nintendo 64";
 }
 
@@ -93,6 +94,7 @@ auto Nintendo64::input(ares::Node::Input node) -> void {
 Nintendo64DD::Nintendo64DD() {
   interface = new ares::Nintendo64::Nintendo64Interface;
   medium = mia::medium("Nintendo 64DD");
+  manufacturer = "Nintendo";
   name = "Nintendo 64DD";
 
   firmware.append({"BIOS", "Japan"});

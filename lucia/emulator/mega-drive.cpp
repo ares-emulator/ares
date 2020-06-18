@@ -19,6 +19,7 @@ struct MegaCD : Emulator {
 MegaDrive::MegaDrive() {
   interface = new ares::MegaDrive::MegaDriveInterface;
   medium = mia::medium("Mega Drive");
+  manufacturer = "Sega";
   name = "Mega Drive";
 }
 
@@ -86,6 +87,7 @@ auto MegaDrive::input(ares::Node::Input node) -> void {
 MegaCD::MegaCD() {
   interface = new ares::MegaDrive::MegaDriveInterface;
   medium = mia::medium("Mega CD");
+  manufacturer = "Sega";
   name = "Mega CD";
 
   firmware.append({"BIOS", "US"});      //NTSC-U

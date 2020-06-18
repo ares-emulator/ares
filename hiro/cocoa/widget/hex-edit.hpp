@@ -2,28 +2,25 @@
 
 @interface CocoaHexEdit : NSScrollView {
 @public
-  phoenix::HexEdit* hexEdit;
+  hiro::mHexEdit* hexEdit;
 }
--(id) initWith:(phoenix::HexEdit&)hexEdit;
+-(id) initWith:(hiro::mHexEdit&)hexEdit;
 @end
 
 namespace hiro {
 
 struct pHexEdit : public pWidget {
-  HexEdit& hexEdit;
+  Declare(HexEdit, Widget);
+
+  auto setAddress(uint address) -> void;
+  auto setBackgroundColor(Color color) -> void;
+  auto setColumns(uint columns) -> void;
+  auto setForegroundColor(Color color) -> void;
+  auto setLength(uint length) -> void;
+  auto setRows(uint rows) -> void;
+  auto update() -> void;
+
   CocoaHexEdit* cocoaHexEdit = nullptr;
-
-  void setBackgroundColor(Color color);
-  void setColumns(unsigned columns);
-  void setForegroundColor(Color color);
-  void setLength(unsigned length);
-  void setOffset(unsigned offset);
-  void setRows(unsigned rows);
-  void update();
-
-  pHexEdit(HexEdit& hexEdit) : pWidget(hexEdit), hexEdit(hexEdit) {}
-  void constructor();
-  void destructor();
 };
 
 }

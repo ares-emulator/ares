@@ -10,6 +10,7 @@ struct GameBoyAdvance : Emulator {
 GameBoyAdvance::GameBoyAdvance() {
   interface = new ares::GameBoyAdvance::GameBoyAdvanceInterface;
   medium = mia::medium("Game Boy Advance");
+  manufacturer = "Nintendo";
   name = "Game Boy Advance";
 
   firmware.append({"BIOS", "World", "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"});

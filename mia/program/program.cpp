@@ -60,7 +60,7 @@ ProgramWindow::ProgramWindow() {
 
   onClose(&Application::quit);
   setTitle({"mia v", ares::Version});
-  setSize({800_sx, 525_sy});
+  setSize({800_sx, 545_sy});
   setAlignment(Alignment::Center);
   setVisible();
 }

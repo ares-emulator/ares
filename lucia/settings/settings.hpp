@@ -53,6 +53,7 @@ struct Settings : Markup::Node {
     bool runAhead = false;
     bool autoSaveMemory = true;
     bool nativeFileDialogs = true;
+    bool groupEmulators = true;
   } general;
 
   struct Rewind {
@@ -181,6 +182,9 @@ struct EmulatorSettings : VerticalLayout {
   HorizontalLayout nativeFileDialogsLayout{this, Size{~0, 0}};
     CheckLabel nativeFileDialogs{&nativeFileDialogsLayout, Size{0, 0}, 2};
     Label nativeFileDialogsHint{&nativeFileDialogsLayout, Size{~0, 0}};
+  HorizontalLayout groupEmulatorsLayout{this, Size{~0, 0}};
+    CheckLabel groupEmulators{&groupEmulatorsLayout, Size{0, 0}, 2};
+    Label groupEmulatorsHint{&groupEmulatorsLayout, Size{~0, 0}};
   Label emulatorLabel{this, Size{~0, 0}, 2};
   TableView emulatorList{this, Size{~0, ~0}};
 };

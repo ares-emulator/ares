@@ -70,8 +70,14 @@ auto pWidget::setFont(const Font& font) -> void {
 
 auto pWidget::setGeometry(Geometry geometry) -> void {
   @autoreleasepool {
+    //round coordinates
+    uint x = geometry.x();
+    uint y = windowHeight - geometry.y() - geometry.height();
+    uint width = geometry.width();
+    uint height = geometry.height();
+
     CGFloat windowHeight = [[cocoaView superview] frame].size.height;
-    [cocoaView setFrame:NSMakeRect(geometry.x(), windowHeight - geometry.y() - geometry.height(), geometry.width(), geometry.height())];
+    [cocoaView setFrame:NSMakeRect(x, y, width, height)];
     [[cocoaView superview] setNeedsDisplay:YES];
   }
   pSizable::setGeometry(geometry);

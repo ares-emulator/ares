@@ -26,6 +26,7 @@ struct SuperGrafx : Emulator {
 PCEngine::PCEngine() {
   interface = new ares::PCEngine::PCEngineInterface;
   medium = mia::medium("PC Engine");
+  manufacturer = "NEC";
   name = "PC Engine";
 }
 
@@ -94,6 +95,7 @@ auto PCEngine::input(ares::Node::Input node) -> void {
 PCEngineCD::PCEngineCD() {
   interface = new ares::PCEngine::PCEngineInterface;
   medium = mia::medium("PC Engine CD");
+  manufacturer = "NEC";
   name = "PC Engine CD";
 
   firmware.append({"BIOS", "US"});     //NTSC-U
@@ -203,6 +205,7 @@ auto PCEngineCD::input(ares::Node::Input node) -> void {
 SuperGrafx::SuperGrafx() {
   interface = new ares::PCEngine::SuperGrafxInterface;
   medium = mia::medium("SuperGrafx");
+  manufacturer = "NEC";
   name = "SuperGrafx";
 }
 

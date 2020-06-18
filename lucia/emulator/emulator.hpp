@@ -34,6 +34,7 @@ struct Emulator {
 
   shared_pointer<ares::Interface> interface;
   shared_pointer<mia::Media> medium;
+  string manufacturer;
   string name;
 
   ares::Node::Object root;

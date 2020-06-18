@@ -10,6 +10,7 @@ struct SuperFamicom : Emulator {
 SuperFamicom::SuperFamicom() {
   interface = new ares::SuperFamicom::SuperFamicomInterface;
   medium = mia::medium("Super Famicom");
+  manufacturer = "Nintendo";
   name = "Super Famicom";
 }
 

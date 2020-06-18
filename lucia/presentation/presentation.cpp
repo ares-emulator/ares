@@ -186,6 +186,13 @@ Presentation::Presentation() {
   setBackgroundColor({0, 0, 0});
   setAlignment(Alignment::Center);
   setVisible();
+
+  #if defined(PLATFORM_MACOS)
+  Application::Cocoa::onAbout([&] { aboutAction.doActivate(); });
+  Application::Cocoa::onActivate([&] { setFocused(); });
+  Application::Cocoa::onPreferences([&] { settingsWindow.show("Video"); });
+  Application::Cocoa::onQuit([&] { doClose(); });
+  #endif
 }
 
 auto Presentation::resizeWindow() -> void {
@@ -280,14 +287,35 @@ auto Presentation::loadEmulators() -> void {
   //build emulator load list
   uint enabled = 0;
   for(auto& emulator : emulators) {
-    MenuItem item{&loadMenu};
+    if(!emulator->configuration.visible) continue;
+    enabled++;
+
+    MenuItem item;
     item.setIcon(Icon::Place::Server);
     item.setText({emulator->name, " ..."});
     item.setVisible(emulator->configuration.visible);
     item.onActivate([=] {
       program.load(emulator);
     });
-    if(emulator->configuration.visible) enabled++;
+    if(settings.general.groupEmulators) {
+      Menu menu;
+      for(auto& action : loadMenu.actions()) {
+        if(auto group = action.cast<Menu>()) {
+          if(group.text() == emulator->manufacturer) {
+            menu = group;
+            break;
+          }
+        }
+      }
+      if(!menu) {
+        menu.setIcon(Icon::Emblem::Folder);
+        menu.setText(emulator->manufacturer);
+        loadMenu.append(menu);
+      }
+      menu.append(item);
+    } else {
+      loadMenu.append(item);
+    }
   }
   if(enabled == 0) {
     //if the user disables every system, give an indication for how to re-add systems to the load menu

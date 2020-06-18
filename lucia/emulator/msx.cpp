@@ -17,6 +17,7 @@ struct MSX2 : Emulator {
 MSX::MSX() {
   interface = new ares::MSX::MSXInterface;
   medium = mia::medium("MSX");
+  manufacturer = "Microsoft";
   name = "MSX";
 }
 
@@ -72,6 +73,7 @@ auto MSX::input(ares::Node::Input node) -> void {
 MSX2::MSX2() {
   interface = new ares::MSX::MSX2Interface;
   medium = mia::medium("MSX2");
+  manufacturer = "Microsoft";
   name = "MSX2";
 }
 

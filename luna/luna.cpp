@@ -23,6 +23,7 @@ Input inputInstance;
 #include <n64/interface/interface.hpp>
 #include <ngp/interface/interface.hpp>
 #include <pce/interface/interface.hpp>
+#include <ps1/interface/interface.hpp>
 #include <sfc/interface/interface.hpp>
 #include <sg/interface/interface.hpp>
 #include <ws/interface/interface.hpp>
@@ -120,6 +121,10 @@ auto nall::main(Arguments arguments) -> void {
 
   #ifdef CORE_PCE
   interfaces.append(new ares::PCEngine::PCEngineDuoInterface);
+  #endif
+
+  #ifdef CORE_PS1
+  interfaces.append(new ares::PlayStation::PlayStationInterface);
   #endif
 
   #ifdef CORE_WS

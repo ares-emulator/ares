@@ -85,10 +85,6 @@
   #undef Hiro_TreeView
 #endif
 
-#if defined(HIRO_COCOA)
-  #undef Hiro_HexEdit
-#endif
-
 //extensions
 
 #define Hiro_FixedLayout
