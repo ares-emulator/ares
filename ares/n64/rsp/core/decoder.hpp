@@ -80,6 +80,7 @@
   op(0x3f, INVALID);  //SD
   }
 }
+#undef DECODER_EXECUTE
 #endif
 
 #ifdef DECODER_SPECIAL
@@ -151,6 +152,7 @@
   op(0x3f, INVALID);  //DSRA32
   }
 }
+#undef DECODER_SPECIAL
 #endif
 
 #ifdef DECODER_REGIMM
@@ -190,6 +192,7 @@
   op(0x1f, INVALID);
   }
 }
+#undef DECODER_REGIMM
 #endif
 
 #ifdef DECODER_COP0
@@ -213,6 +216,7 @@
   op(0x0f, INVALID);
   }
 }
+#undef DECODER_COP0
 #endif
 
 #ifdef DECODER_COP2
@@ -309,6 +313,7 @@
   #undef E
   #undef DE
 }
+#undef DECODER_COP2
 #endif
 
 #ifdef DECODER_LWC2
@@ -332,6 +337,7 @@
   #undef E
   #undef IMMi7
 }
+#undef DECODER_LWC2
 #endif
 
 #ifdef DECODER_SWC2
@@ -355,6 +361,7 @@
   #undef E
   #undef IMMi7
 }
+#undef DECODER_SWC2
 #endif
 
 #undef SA

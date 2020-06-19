@@ -64,13 +64,13 @@ auto RSP::instructionJ(u32 imm) -> void {
 }
 
 auto RSP::instructionJAL(u32 imm) -> void {
-  branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
   RA.u32 = i32(PC + 8);
+  branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
 }
 
 auto RSP::instructionJALR(r32& rd, cr32& rs) -> void {
-  branch.take(rs.u32);
   rd.u32 = i32(PC + 8);
+  branch.take(rs.u32);
 }
 
 auto RSP::instructionJR(cr32& rs) -> void {

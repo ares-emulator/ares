@@ -31,8 +31,8 @@ auto RSP::instructionEpilogue() -> bool {
 
   switch(branch.state) {
   case Branch::Step: PC += 4; return 0;
-  case Branch::DelaySlot: PC = branch.pc; branch.reset(); return 1;
   case Branch::Take: PC += 4; branch.delaySlot(); return 0;
+  case Branch::DelaySlot: PC = branch.pc; branch.reset(); return 1;
   case Branch::Halt: PC += 4; return 1;
   }
 

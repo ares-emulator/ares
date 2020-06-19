@@ -24,13 +24,13 @@ struct Readable {
   }
 
   auto fill(u32 value = 0) -> void {
-    for(uint address = 0; address < size; address += 4) {
+    for(u32 address = 0; address < size; address += 4) {
       *(u32*)&data[address & maskWord] = bswap32(value);
     }
   }
 
   auto load(Shared::File fp) -> void {
-    for(uint address = 0; address < min(size, fp->size()); address += 4) {
+    for(u32 address = 0; address < min(size, fp->size()); address += 4) {
       *(u32*)&data[address & maskWord] = bswap32(fp->readm(4));
     }
   }
@@ -93,14 +93,14 @@ struct Writable {
   }
 
   auto fill(u32 value = 0) -> void {
-    for(uint address = 0; address < size; address += 4) {
+    for(u32 address = 0; address < size; address += 4) {
       *(u32*)&data[address & maskWord] = bswap32(value);
       writeWord(address, value);
     }
   }
 
   auto load(Shared::File fp) -> void {
-    for(uint address = 0; address < min(size, fp->size()); address += 4) {
+    for(u32 address = 0; address < min(size, fp->size()); address += 4) {
       *(u32*)&data[address & maskWord] = bswap32(fp->readm(4));
     }
   }

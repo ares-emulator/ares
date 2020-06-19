@@ -263,13 +263,13 @@ auto CPU::instructionJ(u32 imm) -> void {
 }
 
 auto CPU::instructionJAL(u32 imm) -> void {
-  branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
   RA.u64 = i32(PC + 8);
+  branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
 }
 
 auto CPU::instructionJALR(r64& rd, cr64& rs) -> void {
-  branch.take(rs.u32);
   rd.u64 = i32(PC + 8);
+  branch.take(rs.u32);
 }
 
 auto CPU::instructionJR(cr64& rs) -> void {

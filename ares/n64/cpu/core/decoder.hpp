@@ -80,6 +80,7 @@
   op(0x3f, SD, RT, RS, IMMi16);
   }
 }
+#undef DECODER_EXECUTE
 #endif
 
 #ifdef DECODER_SPECIAL
@@ -151,6 +152,7 @@
   op(0x3f, DSRA, RD, RT, SA + 32);
   }
 }
+#undef DECODER_SPECIAL
 #endif
 
 #ifdef DECODER_REGIMM
@@ -190,6 +192,7 @@
   op(0x1f, INVALID);
   }
 }
+#undef DECODER_REGIMM
 #endif
 
 #ifdef DECODER_COP0
@@ -221,6 +224,7 @@
   br(0x18, ERET);
   }
 }
+#undef DECODER_COP0
 #endif
 
 #ifdef DECODER_COP1
@@ -334,6 +338,7 @@
   op(0x21, FCVT_D_L, FD, FS);
   }
 }
+#undef DECODER_COP1
 #endif
 
 #undef SA

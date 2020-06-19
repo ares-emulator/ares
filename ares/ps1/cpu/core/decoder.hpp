@@ -1,0 +1,113 @@
+//shares instruction decoding between interpreter and dynamic recompiler
+
+#define SA     (OP >>  6 & 31)
+#define RDn    (OP >> 11 & 31)
+#define RTn    (OP >> 16 & 31)
+#define RSn    (OP >> 21 & 31)
+#define IMMi16 i16(OP)
+#define IMMu16 u16(OP)
+#define IMMu26 (OP & 0x03ff'ffff)
+
+#ifdef DECODER_EXECUTE
+{
+  switch(OP >> 26) {
+  jp(0x00, SPECIAL);
+  jp(0x01, REGIMM);
+  br(0x02, J, IMMu26);
+  br(0x03, JAL, IMMu26);
+  br(0x04, BEQ, RS, RT, IMMi16);
+  br(0x05, BNE, RS, RT, IMMi16);
+  br(0x06, BLEZ, RS, IMMi16);
+  br(0x07, BGTZ, RS, IMMi16);
+  op(0x08, ADDI, RT, RS, IMMi16);
+  op(0x09, ADDIU, RT, RS, IMMi16);
+  op(0x0a, SLTI, RT, RS, IMMi16);
+  op(0x0b, SLTIU, RT, RS, IMMi16);
+  op(0x0c, ANDI, RT, RS, IMMu16);
+  op(0x0d, ORI, RT, RS, IMMu16);
+  op(0x0e, XORI, RT, RS, IMMu16);
+  op(0x0f, LUI, RT, IMMu16);
+  op(0x20, LB, RT, RS, IMMi16);
+  op(0x21, LH, RT, RS, IMMi16);
+  op(0x22, LWL, RT, RS, IMMi16);
+  op(0x23, LW, RT, RS, IMMi16);
+  op(0x24, LBU, RT, RS, IMMi16);
+  op(0x25, LHU, RT, RS, IMMi16);
+  op(0x26, LWR, RT, RS, IMMi16);
+  op(0x28, SB, RT, RS, IMMi16);
+  op(0x29, SH, RT, RS, IMMi16);
+  op(0x2a, SWL, RT, RS, IMMi16);
+  op(0x2b, SW, RT, RS, IMMi16);
+  op(0x2e, SWR, RT, RS, IMMi16);
+  }
+}
+#undef DECODER_EXECUTE
+#endif
+
+#ifdef DECODER_SPECIAL
+{
+  switch(OP & 0x3f) {
+  op(0x00, SLL, RD, RT, SA);
+  op(0x02, SRL, RD, RT, SA);
+  op(0x03, SRA, RD, RT, SA);
+  op(0x04, SLLV, RD, RT, SA);
+  op(0x06, SRLV, RD, RT, RS);
+  op(0x07, SRAV, RD, RT, RS);
+  br(0x08, JR, RS);
+  br(0x09, JALR, RD, RS);
+  br(0x0c, SYSCALL);
+  br(0x0d, BREAK);
+  op(0x10, MFHI, RD);
+  op(0x11, MTHI, RS);
+  op(0x12, MFLO, RD);
+  op(0x13, MTLO, RS);
+  op(0x18, MULT, RS, RT);
+  op(0x19, MULTU, RS, RT);
+  op(0x1a, DIV, RS, RT);
+  op(0x1b, DIVU, RS, RT);
+  op(0x20, ADD, RD, RS, RT);
+  op(0x21, ADDU, RD, RS, RT);
+  op(0x22, SUB, RD, RS, RT);
+  op(0x23, SUBU, RD, RS, RT);
+  op(0x24, AND, RD, RS, RT);
+  op(0x25, OR, RD, RS, RT);
+  op(0x26, XOR, RD, RS, RT);
+  op(0x27, NOR, RD, RS, RT);
+  op(0x2a, SLT, RD, RS, RT);
+  op(0x2b, SLTU, RD, RS, RT);
+  }
+}
+#undef DECODER_SPECIAL
+#endif
+
+#ifdef DECODER_REGIMM
+{
+  switch(OP >> 16 & 0x1f) {
+  br(0x00, BLTZ, RS, IMMi16);
+  br(0x01, BGEZ, RS, IMMi16);
+  br(0x10, BLTZAL, RS, IMMi16);
+  br(0x11, BGEZAL, RS, IMMi16);
+  }
+}
+#undef DECODER_REGIMM
+#endif
+
+#ifdef DECODER_COP0
+{
+}
+#undef DECODER_COP0
+#endif
+
+#ifdef DECODER_COP2
+{
+}
+#undef DECODER_COP2
+#endif
+
+#undef SA
+#undef RDn
+#undef RTn
+#undef RSn
+#undef IMMi16
+#undef IMMu16
+#undef IMMu26

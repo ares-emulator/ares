@@ -1,7 +1,7 @@
-#define OP pipeline.instruction
-#define RD GPR[RDn]
-#define RT GPR[RTn]
-#define RS GPR[RSn]
+#define OP 0
+#define RD core.r[RDn]
+#define RT core.r[RTn]
+#define RS core.r[RSn]
 
 #define jp(id, name, ...) case id: return decoder##name(__VA_ARGS__)
 #define op(id, name, ...) case id: return instruction##name(__VA_ARGS__)
@@ -23,29 +23,17 @@ auto CPU::decoderREGIMM() -> void {
 }
 
 auto CPU::decoderCOP0() -> void {
-  if(!scc.status.enable.coprocessor0) {
-    if(context.mode != Context::Mode::Kernel) return exception.coprocessor0();
-  }
-
   #define DECODER_COP0
   #include "decoder.hpp"
-
-  //undefined instructions do not throw a reserved instruction exception
 }
 
-auto CPU::decoderCOP1() -> void {
-  if(!scc.status.enable.coprocessor1) {
-    return exception.coprocessor1();
-  }
-
-  #define DECODER_COP1
+auto CPU::decoderCOP2() -> void {
+  #define DECODER_COP2
   #include "decoder.hpp"
-
-  //undefined instructions do not throw a reserved instruction exception
 }
 
-auto CPU::instructionCOP2() -> void {
-  exception.coprocessor2();
+auto CPU::instructionCOP1() -> void {
+  exception.coprocessor1();
 }
 
 auto CPU::instructionCOP3() -> void {

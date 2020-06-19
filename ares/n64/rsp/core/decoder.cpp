@@ -13,43 +13,36 @@
 auto RSP::decoderEXECUTE() -> void {
   #define DECODER_EXECUTE
   #include "decoder.hpp"
-  #undef DECODER_EXECUTE
 }
 
 auto RSP::decoderSPECIAL() -> void {
   #define DECODER_SPECIAL
   #include "decoder.hpp"
-  #undef DECODER_SPECIAL
 }
 
 auto RSP::decoderREGIMM() -> void {
   #define DECODER_REGIMM
   #include "decoder.hpp"
-  #undef DECODER_REGIMM
 }
 
 auto RSP::decoderCOP0() -> void {
   #define DECODER_COP0
   #include "decoder.hpp"
-  #undef DECODER_COP0
 }
 
 auto RSP::decoderCOP2() -> void {
   #define DECODER_COP2
   #include "decoder.hpp"
-  #undef DECODER_COP2
 }
 
 auto RSP::decoderLWC2() -> void {
   #define DECODER_LWC2
   #include "decoder.hpp"
-  #undef DECODER_LWC2
 }
 
 auto RSP::decoderSWC2() -> void {
   #define DECODER_SWC2
   #include "decoder.hpp"
-  #undef DECODER_SWC2
 }
 
 auto RSP::instructionINVALID() -> void {

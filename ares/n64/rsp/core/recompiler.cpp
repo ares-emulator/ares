@@ -83,49 +83,42 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
 auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   #define DECODER_EXECUTE
   #include "decoder.hpp"
-  #undef DECODER_EXECUTE
   return 0;
 }
 
 auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   #define DECODER_SPECIAL
   #include "decoder.hpp"
-  #undef DECODER_SPECIAL
   return 0;
 }
 
 auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
   #define DECODER_REGIMM
   #include "decoder.hpp"
-  #undef DECODER_REGIMM
   return 0;
 }
 
 auto RSP::Recompiler::emitCOP0(u32 instruction) -> bool {
   #define DECODER_COP0
   #include "decoder.hpp"
-  #undef DECODER_COP0
   return 0;
 }
 
 auto RSP::Recompiler::emitCOP2(u32 instruction) -> bool {
   #define DECODER_COP2
   #include "decoder.hpp"
-  #undef DECODER_COP2
   return 0;
 }
 
 auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
   #define DECODER_LWC2
   #include "decoder.hpp"
-  #undef DECODER_LWC2
   return 0;
 }
 
 auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
   #define DECODER_SWC2
   #include "decoder.hpp"
-  #undef DECODER_SWC2
   return 0;
 }
 

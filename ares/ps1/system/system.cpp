@@ -15,11 +15,18 @@ auto System::load(Node::Object& root) -> void {
 
   node = Node::System::create(interface->name());
   root = node;
+
+  cpu.load(node);
+  gpu.load(node);
+  spu.load(node);
 }
 
 auto System::unload() -> void {
   if(!node) return;
   save();
+  cpu.unload();
+  gpu.unload();
+  spu.unload();
   node.reset();
 }
 
@@ -29,6 +36,10 @@ auto System::save() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting>()) setting->setLatch();
+
+  cpu.power(reset);
+  gpu.power(reset);
+  spu.power(reset);
 
   information.serializeSize[0] = serializeInit(0);
   information.serializeSize[1] = serializeInit(1);
