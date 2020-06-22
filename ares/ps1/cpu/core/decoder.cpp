@@ -1,4 +1,4 @@
-#define OP 0
+#define OP pipeline.instruction
 #define RD core.r[RDn]
 #define RT core.r[RTn]
 #define RS core.r[RSn]
@@ -22,13 +22,13 @@ auto CPU::decoderREGIMM() -> void {
   #include "decoder.hpp"
 }
 
-auto CPU::decoderCOP0() -> void {
-  #define DECODER_COP0
+auto CPU::decoderSCC() -> void {
+  #define DECODER_SCC
   #include "decoder.hpp"
 }
 
-auto CPU::decoderCOP2() -> void {
-  #define DECODER_COP2
+auto CPU::decoderGTE() -> void {
+  #define DECODER_GTE
   #include "decoder.hpp"
 }
 

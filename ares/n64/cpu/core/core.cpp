@@ -89,9 +89,9 @@ auto CPU::instructionDebug() -> void {
   pipeline.instruction = readWord(pipeline.address)(0);
 
   static vector<bool> mask;
-  if(!mask) mask.resize(0x08000000);
-  if(mask[(PC & 0x1fffffff) >> 2]) return;
-  mask[(PC & 0x1fffffff) >> 2] = 1;
+  if(!mask) mask.resize(0x0800'0000);
+  if(mask[(PC & 0x1fff'ffff) >> 2]) return;
+  mask[(PC & 0x1fff'ffff) >> 2] = 1;
 
   static uint counter = 0;
 //if(++counter > 100) return;
@@ -110,7 +110,7 @@ auto CPU::powerR4300(bool reset) -> void {
   LO.u64 = 0;
   HI.u64 = 0;
   GPR[Core::Register::SP].u64 = u32(0xa400'1ff0);
-  PC = u32(0xbfc00000);
+  PC = u32(0xbfc0'0000);
   branch.reset();
   fesetround(FE_TONEAREST);
   context.setMode();

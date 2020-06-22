@@ -14,7 +14,7 @@
       K0, K1,                          //kernel registers
       GP,                              //global pointer
       SP,                              //stack pointer
-      S8,                              //saved register
+      FP,                              //frame pointer
       RA,                              //return address
     };
 
@@ -24,18 +24,41 @@
     u32 pc;
   } core;
 
-  struct Branch {
-    enum : u32 { Step, Take, DelaySlot, Exception };
+  struct Delay {
+    //load delay slot
+    struct {
+      u32* target = nullptr;
+      u32  source = 0;
+    } load, fetch, write;
 
-    auto inDelaySlot() const -> bool { return state == DelaySlot; }
-    auto reset() -> void { state = Step; }
-    auto take(u32 address) -> void { state = Take; pc = address; }
-    auto delaySlot() -> void { state = DelaySlot; }
-    auto exception() -> void { state = Exception; }
+    //branch delay slot
+    struct Branch {
+      enum : u32 { Step, Take, DelaySlot, Exception };
 
-    u32 pc;
-    u32 state;
-  } branch;
+      auto inDelaySlot() const -> bool { return state == DelaySlot; }
+      auto reset() -> void { state = Step; }
+      auto take(u32 address) -> void { state = Take; pc = address; }
+      auto delaySlot() -> void { state = DelaySlot; }
+      auto exception() -> void { state = Exception; }
+
+      u32 pc = 0;
+      u32 state = Step;
+    } branch;
+  } delay;
+
+  auto fetch(u32& target, u32 source) -> void {
+    delay.fetch.target = &target;
+    delay.fetch.source =  source;
+  }
+
+  auto write(u32& target, u32 source) -> void {
+    delay.write.target = &target;
+    delay.write.source =  source;
+  }
+
+  auto branch(u32 address) -> void {
+    delay.branch.take(address);
+  }
 
   //cpu-instructions.cpp
   auto instructionADD(u32& rd, cu32& rs, cu32& rt) -> void;

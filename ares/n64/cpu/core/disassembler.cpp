@@ -445,7 +445,7 @@ auto CPU::Disassembler::sccRegisterName(uint index) const -> string {
 }
 
 auto CPU::Disassembler::sccRegisterValue(uint index) const -> string {
-  if(showValues) return {sccRegisterName(index), hint("{$", hex(self.getControlRegister(index)), "}")};
+  if(showValues) return {sccRegisterName(index), hint("{$", hex(self.getControlRegister(index), 8L), "}")};
   return sccRegisterName(index);
 }
 

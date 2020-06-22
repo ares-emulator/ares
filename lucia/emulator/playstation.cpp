@@ -5,6 +5,8 @@ struct PlayStation : Emulator {
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
   auto input(ares::Node::Input) -> void override;
+
+  uint regionID = 0;
 };
 
 PlayStation::PlayStation() {
@@ -19,10 +21,19 @@ PlayStation::PlayStation() {
 }
 
 auto PlayStation::load() -> bool {
+  if(!file::exists(firmware[regionID].location)) {
+    errorFirmwareRequired(firmware[regionID]);
+    return false;
+  }
+
   return true;
 }
 
 auto PlayStation::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
+  if(name == "bios.rom") {
+    return Emulator::loadFirmware(firmware[regionID]);
+  }
+
   return {};
 }
 

@@ -19,7 +19,8 @@ auto RDRAM::load(Node::Object parent) -> void {
 
 auto RDRAM::unload() -> void {
   ram.reset();
-  debugger = {};
+  debugger.reset();
+  node.reset();
 }
 
 auto RDRAM::power() -> void {

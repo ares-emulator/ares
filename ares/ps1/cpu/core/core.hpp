@@ -7,23 +7,20 @@
   auto powerCore(bool reset) -> void;
 
   //memory.cpp
-  auto readAddress (u32 address) -> maybe<u32>;
-  auto writeAddress(u32 address) -> maybe<u32>;
+  auto readByte(u32 address) ->  u8;
+  auto readHalf(u32 address) -> u16;
+  auto readWord(u32 address) -> u32;
 
-  auto readByte(u32 address) -> maybe< u8>;
-  auto readHalf(u32 address) -> maybe<u16>;
-  auto readWord(u32 address) -> maybe<u32>;
-
-  auto writeByte(u32 address,  u8 data) -> bool;
-  auto writeHalf(u32 address, u16 data) -> bool;
-  auto writeWord(u32 address, u32 data) -> bool;
+  auto writeByte(u32 address,  u8 data) -> void;
+  auto writeHalf(u32 address, u16 data) -> void;
+  auto writeWord(u32 address, u32 data) -> void;
 
   //decoder.cpp
   auto decoderEXECUTE() -> void;
   auto decoderSPECIAL() -> void;
   auto decoderREGIMM() -> void;
-  auto decoderCOP0() -> void;
-  auto decoderCOP2() -> void;
+  auto decoderSCC() -> void;
+  auto decoderGTE() -> void;
 
   auto instructionCOP1() -> void;
   auto instructionCOP3() -> void;
@@ -36,6 +33,12 @@
   #include "cpu.hpp"
   #include "scc.hpp"
   #include "gte.hpp"
+  #include "disassembler.hpp"
+
+  struct Pipeline {
+    u32 address;
+    u32 instruction;
+  } pipeline;
 
   static constexpr bool Endian = 0;  //0 = little, 1 = big
   static constexpr uint FlipLE = (Endian == 0 ? 3 : 0);

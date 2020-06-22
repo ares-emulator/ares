@@ -15,7 +15,7 @@ namespace hiro {
 
 auto pHexEdit::construct() -> void {
   @autoreleasepool {
-    cocoaView = cocoaHexEdit = [[CocoaHexEdit alloc] initWith:hexEdit];
+    cocoaView = cocoaHexEdit = [[CocoaHexEdit alloc] initWith:self()];
   }
 }
 

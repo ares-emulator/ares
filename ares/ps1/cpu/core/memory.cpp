@@ -1,37 +1,29 @@
-auto CPU::readAddress(u32 address) -> maybe<u32> {
-  return nothing;
+inline auto CPU::readByte(u32 address) -> u8 {
+  if(scc.status.cache.isolate) return cache.readByte(address);
+  return bus.readByte(address);
 }
 
-auto CPU::writeAddress(u32 address) -> maybe<u32> {
-  return nothing;
+inline auto CPU::readHalf(u32 address) -> u16 {
+  if(scc.status.cache.isolate) return cache.readHalf(address);
+  return bus.readHalf(address);
 }
 
-auto CPU::readByte(u32 address) -> maybe<u8> {
-  if(auto physical = readAddress(address)) return bus.readByte(physical());
-  return nothing;
+inline auto CPU::readWord(u32 address) -> u32 {
+  if(scc.status.cache.isolate) return cache.readWord(address);
+  return bus.readWord(address);
 }
 
-auto CPU::readHalf(u32 address) -> maybe<u16> {
-  if(auto physical = readAddress(address)) return bus.readHalf(physical());
-  return nothing;
+inline auto CPU::writeByte(u32 address, u8 data) -> void {
+  if(scc.status.cache.isolate) return cache.writeByte(address, data);
+  return bus.writeByte(address, data);
 }
 
-auto CPU::readWord(u32 address) -> maybe<u32> {
-  if(auto physical = readAddress(address)) return bus.readWord(physical());
-  return nothing;
+inline auto CPU::writeHalf(u32 address, u16 data) -> void {
+  if(scc.status.cache.isolate) return cache.writeHalf(address, data);
+  return bus.writeHalf(address, data);
 }
 
-auto CPU::writeByte(u32 address, u8 data) -> bool {
-  if(auto physical = writeAddress(address)) return bus.writeByte(physical(), data), true;
-  return false;
-}
-
-auto CPU::writeHalf(u32 address, u16 data) -> bool {
-  if(auto physical = writeAddress(address)) return bus.writeHalf(physical(), data), true;
-  return false;
-}
-
-auto CPU::writeWord(u32 address, u32 data) -> bool {
-  if(auto physical = writeAddress(address)) return bus.writeWord(physical(), data), true;
-  return false;
+inline auto CPU::writeWord(u32 address, u32 data) -> void {
+  if(scc.status.cache.isolate) return cache.writeWord(address, data);
+  return bus.writeWord(address, data);
 }

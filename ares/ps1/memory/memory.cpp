@@ -3,5 +3,6 @@
 namespace ares::PlayStation {
 
 Bus bus;
+Memory::Readable bios;
 
 }

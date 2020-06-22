@@ -6,6 +6,9 @@ System system;
 #include "serialization.cpp"
 
 auto System::run() -> void {
+  while(!gpu.refreshed) cpu.main();
+  gpu.refreshed = false;
+  gpu.refresh();
 }
 
 auto System::load(Node::Object& root) -> void {
@@ -36,6 +39,11 @@ auto System::save() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting>()) setting->setLatch();
+
+  bios.allocate(512_KiB);
+  if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
+    bios.load(fp);
+  }
 
   cpu.power(reset);
   gpu.power(reset);
