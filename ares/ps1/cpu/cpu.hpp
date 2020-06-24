@@ -19,14 +19,57 @@ struct CPU : Thread {
 
   #include "core/core.hpp"
 
-  struct DMA : Memory::IO<DMA> {
+  struct Interrupt {
+    enum : uint { Vblank, GPU, CDROM, DMA, Timer0, Timer1, Timer2, Peripheral, SIO, SPU, PIO };
+
+    CPU& self;
+    Interrupt(CPU& self) : self(self) {}
+
+    //interrupt.cpp
+    auto poll() -> void;
+    auto pulse(uint source) -> void;
+    auto raise(uint source) -> void;
+    auto lower(uint source) -> void;
+
+    auto readByte(u32 address) -> u8;
+    auto readHalf(u32 address) -> u16;
+    auto readWord(u32 address) -> u32;
+    auto writeByte(u32 address, u8 data) -> void;
+    auto writeHalf(u32 address, u16 data) -> void;
+    auto writeWord(u32 address, u32 data) -> void;
+
+    struct Source {
+      uint1 line = 0;
+      uint1 stat = 0;
+      uint1 mask = 0;
+    };
+
+    uint1  line = 0;
+    Source vblank;
+    Source gpu;
+    Source cdrom;
+    Source dma;
+    Source timer0;
+    Source timer1;
+    Source timer2;
+    Source peripheral;
+    Source sio;
+    Source spu;
+    Source pio;
+  } interrupt{*this};
+
+  struct DMA {
     enum : uint { MDECIN, MDECOUT, GPU, CDROM, SPU, PIO, OTC };  //channels
 
     CPU& self;
     DMA(CPU& self) : self(self) {}
 
     //dma.cpp
+    auto readByte(u32 address) -> u8;
+    auto readHalf(u32 address) -> u16;
     auto readWord(u32 address) -> u32;
+    auto writeByte(u32 address, u8 data) -> void;
+    auto writeHalf(u32 address, u16 data) -> void;
     auto writeWord(u32 address, u32 data) -> void;
     auto transferLinear(uint c) -> void;
     auto transferLinked(uint c) -> void;

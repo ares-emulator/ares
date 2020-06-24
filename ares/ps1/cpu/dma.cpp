@@ -1,20 +1,28 @@
+auto CPU::DMA::readByte(u32 address) -> u8 {
+  return 0;
+}
+
+auto CPU::DMA::readHalf(u32 address) -> u16 {
+  return 0;
+}
+
 auto CPU::DMA::readWord(u32 address) -> u32 {
   uint32 data = 0;
   uint32 c = address >> 4 & 7;
 
   //DnMADR: DMA Base Address
-  if((address & 0xffff'ff0f) == 0x1f80'1080 && c < 7) {
+  if((address & 0xffff'ff8f) == 0x1f80'1080 && c < 7) {
     data.bit(0,23) = channel[c].address;
   }
 
   //DnBCR: DMA Block Control
-  if((address & 0xffff'ff0f) == 0x1f80'1084 && c < 7) {
+  if((address & 0xffff'ff8f) == 0x1f80'1084 && c < 7) {
     data.bit( 0,15) = channel[c].length;
     data.bit(16,31) = channel[c].blocks;
   }
 
   //DnCHCR: DMA Channel Control
-  if((address & 0xffff'ff0f) == 0x1f80'1088 && c < 7) {
+  if((address & 0xffff'ff8f) == 0x1f80'1088 && c < 7) {
     data.bit( 0)    = channel[c].direction;
     data.bit( 1)    = channel[c].step;
     data.bit( 2)    = channel[c].chopping.enable;
@@ -68,6 +76,12 @@ auto CPU::DMA::readWord(u32 address) -> u32 {
   return data;
 }
 
+auto CPU::DMA::writeByte(u32 address, u8 value) -> void {
+}
+
+auto CPU::DMA::writeHalf(u32 address, u16 value) -> void {
+}
+
 auto CPU::DMA::writeWord(u32 address, u32 value) -> void {
   uint32 data = value;
   uint32 c = address >> 4 & 7;
@@ -95,12 +109,14 @@ auto CPU::DMA::writeWord(u32 address, u32 value) -> void {
     channel[c].trigger            = data.bit(28);
     channel[c].unknown            = data.bit(29,30);
 
-  //print(c, " ", channel[c].direction, " ", channel[c].synchronization, " ", hex(channel[c].address, 8L), "\n");
-
     if(channel[c].active()) {
+    //u32 base = address & 0xffff'fff0;
+    //print("DMA", c, " ", hex(readWord(base + 8), 8L), " ", hex(readWord(base + 0), 8L), " ", hex(readWord(base + 4), 8L), "\n");
+
       if(channel[c].synchronization == 0) transferLinear(c);
       if(channel[c].synchronization == 1) transferLinear(c);
       if(channel[c].synchronization == 2) transferLinked(c);
+      self.interrupt.pulse(CPU::Interrupt::DMA);
     }
   }
 
@@ -194,6 +210,8 @@ auto CPU::DMA::transferLinked(uint c) -> void {
     address = header & 0xffffff;
     if(address & 0x800000) break;
   } while(--timeout);
+  channel[c].enable  = 0;
+  channel[c].trigger = 0;
 }
 
 auto CPU::DMA::pollIRQ() -> void {

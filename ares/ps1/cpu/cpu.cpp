@@ -4,6 +4,7 @@ namespace ares::PlayStation {
 
 CPU cpu;
 #include "core/core.cpp"
+#include "interrupt.cpp"
 #include "dma.cpp"
 #include "serialization.cpp"
 

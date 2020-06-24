@@ -7,7 +7,7 @@
     auto disassemble(u32 address, u32 instruction) -> string;
     template<typename... P> auto hint(P&&... p) const -> string;
 
-    bool showColors = true;
+    bool showColors = false;
     bool showValues = true;
 
   //private:

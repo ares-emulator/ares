@@ -87,7 +87,7 @@
   op(0x01, INVALID);
   op(0x02, SRL, RD, RT, SA);
   op(0x03, SRA, RD, RT, SA);
-  op(0x04, SLLV, RD, RT, SA);
+  op(0x04, SLLV, RD, RT, RS);
   op(0x05, INVALID);
   op(0x06, SRLV, RD, RT, RS);
   op(0x07, SRAV, RD, RT, RS);

@@ -94,43 +94,6 @@ struct Writable {
   u32 maskWord = 0;
 };
 
-template<typename T>
-struct IO {
-  auto readByte(u32 address) -> u8 {
-    auto data = ((T*)this)->readWord(address);
-    switch(address & 3) {
-    case 0: return data >>  0;
-    case 1: return data >>  8;
-    case 2: return data >> 16;
-    case 3: return data >> 24;
-    } unreachable;
-  }
-
-  auto readHalf(u32 address) -> u16 {
-    auto data = ((T*)this)->readWord(address);
-    switch(address & 2) {
-    case 0: return data >>  0;
-    case 2: return data >> 16;
-    } unreachable;
-  }
-
-  auto writeByte(u32 address, u8 data) -> void {
-    switch(address & 3) {
-    case 0: return ((T*)this)->writeWord(address, data <<  0);
-    case 1: return ((T*)this)->writeWord(address, data <<  8);
-    case 2: return ((T*)this)->writeWord(address, data << 16);
-    case 3: return ((T*)this)->writeWord(address, data << 24);
-    }
-  }
-
-  auto writeHalf(u32 address, u16 data) -> void {
-    switch(address & 2) {
-    case 0: return ((T*)this)->writeWord(address, data <<  0);
-    case 2: return ((T*)this)->writeWord(address, data << 16);
-    }
-  }
-};
-
 }
 
 struct Bus {

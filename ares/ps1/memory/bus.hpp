@@ -5,11 +5,14 @@
   if(address <= 0x1eff'ffff) return unmapped; \
   if(address <= 0x1f7f'ffff) return unmapped; \
   if(address <= 0x1f80'03ff) return cpu.cache.access(__VA_ARGS__); \
-  if(address <= 0x1f80'107f) return unmapped; \
+  if(address <= 0x1f80'106f) return unmapped; \
+  if(address <= 0x1f80'107f) return cpu.interrupt.access(__VA_ARGS__); \
   if(address <= 0x1f80'10ff) return cpu.dma.access(__VA_ARGS__); \
   if(address <= 0x1f80'17ff) return unmapped; \
   if(address <= 0x1f80'180f) return unmapped; \
   if(address <= 0x1f80'181f) return gpu.access(__VA_ARGS__); \
+  if(address <= 0x1f80'1bff) return unmapped; \
+  if(address <= 0x1f80'1fff) return spu.access(__VA_ARGS__); \
   if(address <= 0x1fbf'ffff) return unmapped; \
   if(address <= 0x1fff'ffff) return bios.access(__VA_ARGS__); \
   return unmapped; \

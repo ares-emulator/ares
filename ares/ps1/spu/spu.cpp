@@ -3,6 +3,7 @@
 namespace ares::PlayStation {
 
 SPU spu;
+#include "io.cpp"
 #include "serialization.cpp"
 
 auto SPU::load(Node::Object parent) -> void {
@@ -33,6 +34,7 @@ auto SPU::step(uint clocks) -> void {
 
 auto SPU::power(bool reset) -> void {
   Thread::reset();
+  io = {};
 }
 
 }

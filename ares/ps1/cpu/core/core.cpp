@@ -26,13 +26,21 @@ auto CPU::raiseException(uint code, uint coprocessor) -> void {
 auto CPU::instruction() -> void {
   auto address = PC;
 
+  if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
+    if(interrupt.line & scc.status.frame[0].interruptEnable) {
+      scc.cause.interruptPending = interrupts;
+      step(1);
+      return raiseException(0);
+    }
+  }
+
   if constexpr(1) {
     pipeline.address = address;
     pipeline.instruction = bus.readWord(address);
   //instructionDebug();
     decoderEXECUTE();
     instructionEpilogue();
-    step(1);
+    step(2);
   }
 }
 
@@ -65,8 +73,8 @@ auto CPU::instructionEpilogue() -> bool {
 }
 
 auto CPU::instructionDebug() -> void {
-  pipeline.address = PC;
-  pipeline.instruction = bus.readWord(pipeline.address);
+//pipeline.address = PC;
+//pipeline.instruction = bus.readWord(pipeline.address);
 
   static vector<bool> mask;
   if(!mask) mask.resize(0x0800'0000);
