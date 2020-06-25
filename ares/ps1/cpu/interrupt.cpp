@@ -100,7 +100,7 @@ auto CPU::Interrupt::readWord(u32 address) -> u32 {
 
 auto CPU::Interrupt::writeByte(u32 address, u8 value) -> void {
   uint8 data = value;
-  print("* write byte ", hex(address, 8L), "\n");
+  print("* write byte ", hex(address, 8L), " = ", hex(value, 2L), "\n");
 }
 
 auto CPU::Interrupt::writeHalf(u32 address, u16 value) -> void {

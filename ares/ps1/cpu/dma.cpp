@@ -1,8 +1,10 @@
 auto CPU::DMA::readByte(u32 address) -> u8 {
+  print("* read byte ", hex(address, 8L), "\n");
   return 0;
 }
 
 auto CPU::DMA::readHalf(u32 address) -> u16 {
+  print("* read half ", hex(address, 8L), "\n");
   return 0;
 }
 
@@ -77,9 +79,11 @@ auto CPU::DMA::readWord(u32 address) -> u32 {
 }
 
 auto CPU::DMA::writeByte(u32 address, u8 value) -> void {
+  print("* write byte ", hex(address, 8L), " = ", hex(value, 2L), "\n");
 }
 
 auto CPU::DMA::writeHalf(u32 address, u16 value) -> void {
+  print("* write half ", hex(address, 8L), " = ", hex(value, 4L), "\n");
 }
 
 auto CPU::DMA::writeWord(u32 address, u32 value) -> void {
@@ -179,6 +183,9 @@ auto CPU::DMA::transferLinear(uint c) -> void {
 
       if(channel[c].direction == 1) {
         u32 data = bus.readWord(address);
+        if(c == 2) {
+          gpu.gp0(data);
+        }
         address += 4;
       }
 
@@ -203,7 +210,7 @@ auto CPU::DMA::transferLinked(uint c) -> void {
       u32 data = bus.readWord(address);
 
       if(c == 2) {
-      //print("gpu ", hex(data, 8L), "\n");
+        gpu.gp0(data);
       }
     }
 
