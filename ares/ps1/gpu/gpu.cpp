@@ -6,6 +6,7 @@ GPU gpu;
 #include "io.cpp"
 #include "gp0.cpp"
 #include "gp1.cpp"
+#include "render.cpp"
 #include "serialization.cpp"
 
 auto GPU::load(Node::Object parent) -> void {

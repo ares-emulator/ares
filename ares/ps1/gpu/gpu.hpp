@@ -115,6 +115,28 @@ struct GPU : Thread {
     Queue gp1;
   } queue;
 
+  struct Point {
+    i32 x;
+    i32 y;
+  };
+
+  struct Color {
+    u8 r;
+    u8 g;
+    u8 b;
+  };
+
+  struct Vertex : Point, Color {
+  };
+
+  //render.cpp
+  auto renderPixel(Point p, Color c) -> void;
+  auto renderSolidLine(Point p0, Point p1, Color c) -> void;
+  auto renderSolidOpaqueTriangle(Point p0, Point p1, Point p2, Color c) -> void;
+  auto renderShadedOpaqueTriangle(Vertex v0, Vertex v1, Vertex v2) -> void;
+  auto renderSolidOpaqueQuadrilateral(Point p0, Point p1, Point p2, Point p3, Color c) -> void;
+  auto renderShadedOpaqueQuadrilateral(Vertex v0, Vertex v1, Vertex v2, Vertex v3) -> void;
+
 //unserialized:
   u32 output[1024 * 512];
   bool refreshed;

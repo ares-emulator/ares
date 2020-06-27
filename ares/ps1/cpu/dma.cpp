@@ -186,7 +186,6 @@ auto CPU::DMA::transferLinear(uint c) -> void {
         if(c == 2) {
           gpu.gp0(data);
         }
-        address += 4;
       }
 
       if(channel[c].step == 0) address += 4;

@@ -25,15 +25,23 @@ auto GPU::gp0(u32 value) -> void {
   //monochrome quadrilateral
   if(command == 0x28) {
     if(queue.write(value) < 5) return;
-    uint24 color = queue.data[0].bit( 0,23);
-    uint10 x1    = queue.data[1].bit( 0,15);
-     uint9 y1    = queue.data[1].bit(16,31);
-    uint10 x2    = queue.data[2].bit( 0,15);
-     uint9 y2    = queue.data[2].bit(16,31);
-    uint10 x3    = queue.data[3].bit( 0,15);
-     uint9 y3    = queue.data[3].bit(16,31);
-    uint10 x4    = queue.data[4].bit( 0,15);
-     uint9 y4    = queue.data[4].bit(16,31);
+    Color c;
+    c.r = queue.data[0].bit( 0, 7);
+    c.g = queue.data[0].bit( 8,15);
+    c.b = queue.data[0].bit(16,23);
+    Point p0;
+    p0.x = queue.data[1].bit( 0,15);
+    p0.y = queue.data[1].bit(16,31);
+    Point p1;
+    p1.x = queue.data[2].bit( 0,15);
+    p1.y = queue.data[2].bit(16,31);
+    Point p2;
+    p2.x = queue.data[3].bit( 0,15);
+    p2.y = queue.data[3].bit(16,31);
+    Point p3;
+    p3.x = queue.data[4].bit( 0,15);
+    p3.y = queue.data[4].bit(16,31);
+    renderSolidOpaqueQuadrilateral(p0, p1, p2, p3, c);
     return queue.reset();
   }
 
@@ -52,6 +60,31 @@ auto GPU::gp0(u32 value) -> void {
   //shaded quadrilateral
   if(command == 0x38) {
     if(queue.write(value) < 8) return;
+    Vertex v0;
+    v0.r = queue.data[0].bit( 0, 7);
+    v0.g = queue.data[0].bit( 8,15);
+    v0.b = queue.data[0].bit(16,23);
+    v0.x = queue.data[1].bit( 0,15);
+    v0.y = queue.data[1].bit(16,31);
+    Vertex v1;
+    v1.r = queue.data[2].bit( 0, 7);
+    v1.g = queue.data[2].bit( 8,15);
+    v1.b = queue.data[2].bit(16,23);
+    v1.x = queue.data[3].bit( 0,15);
+    v1.y = queue.data[3].bit(16,31);
+    Vertex v2;
+    v2.r = queue.data[4].bit( 0, 7);
+    v2.g = queue.data[4].bit( 8,15);
+    v2.b = queue.data[4].bit(16,23);
+    v2.x = queue.data[5].bit( 0,15);
+    v2.y = queue.data[5].bit(16,31);
+    Vertex v3;
+    v3.r = queue.data[6].bit( 0, 7);
+    v3.g = queue.data[6].bit( 8,15);
+    v3.b = queue.data[6].bit(16,23);
+    v3.x = queue.data[7].bit( 0,15);
+    v3.y = queue.data[7].bit(16,31);
+    renderShadedOpaqueQuadrilateral(v0, v1, v2, v3);
     return queue.reset();
   }
 
