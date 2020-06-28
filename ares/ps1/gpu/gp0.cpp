@@ -25,66 +25,50 @@ auto GPU::gp0(u32 value) -> void {
   //monochrome quadrilateral
   if(command == 0x28) {
     if(queue.write(value) < 5) return;
-    Color c;
-    c.r = queue.data[0].bit( 0, 7);
-    c.g = queue.data[0].bit( 8,15);
-    c.b = queue.data[0].bit(16,23);
-    Point p0;
-    p0.x = queue.data[1].bit( 0,15);
-    p0.y = queue.data[1].bit(16,31);
-    Point p1;
-    p1.x = queue.data[2].bit( 0,15);
-    p1.y = queue.data[2].bit(16,31);
-    Point p2;
-    p2.x = queue.data[3].bit( 0,15);
-    p2.y = queue.data[3].bit(16,31);
-    Point p3;
-    p3.x = queue.data[4].bit( 0,15);
-    p3.y = queue.data[4].bit(16,31);
-    renderSolidOpaqueQuadrilateral(p0, p1, p2, p3, c);
+    auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
+    auto v1 = Vertex().setColor(queue.data[0]).setPoint(queue.data[2]);
+    auto v2 = Vertex().setColor(queue.data[0]).setPoint(queue.data[3]);
+    auto v3 = Vertex().setColor(queue.data[0]).setPoint(queue.data[4]);
+    auto ts = Texture();
+    renderTriangle<Render::Solid>(v0, v1, v2, ts);
+    renderTriangle<Render::Solid>(v1, v2, v3, ts);
     return queue.reset();
   }
 
   //textured quadrilateral with blending
   if(command == 0x2c) {
     if(queue.write(value) < 9) return;
+    auto v0 = Vertex().setColor(0).setPoint(queue.data[1]).setTexel(queue.data[2]);
+    auto v1 = Vertex().setColor(0).setPoint(queue.data[3]).setTexel(queue.data[4]);
+    auto v2 = Vertex().setColor(0).setPoint(queue.data[5]).setTexel(queue.data[6]);
+    auto v3 = Vertex().setColor(0).setPoint(queue.data[7]).setTexel(queue.data[8]);
+    auto ts = Texture().setPalette(queue.data[2]).setPage(queue.data[4]);
+    renderTriangle<Render::Texel>(v0, v1, v2, ts);
+    renderTriangle<Render::Texel>(v1, v2, v3, ts);
     return queue.reset();
   }
 
   //shaded triangle
   if(command == 0x30) {
     if(queue.write(value) < 6) return;
+    auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
+    auto v1 = Vertex().setColor(queue.data[2]).setPoint(queue.data[3]);
+    auto v2 = Vertex().setColor(queue.data[4]).setPoint(queue.data[5]);
+    auto ts = Texture();
+    renderTriangle<Render::Color>(v0, v1, v2, ts);
     return queue.reset();
   }
 
   //shaded quadrilateral
   if(command == 0x38) {
     if(queue.write(value) < 8) return;
-    Vertex v0;
-    v0.r = queue.data[0].bit( 0, 7);
-    v0.g = queue.data[0].bit( 8,15);
-    v0.b = queue.data[0].bit(16,23);
-    v0.x = queue.data[1].bit( 0,15);
-    v0.y = queue.data[1].bit(16,31);
-    Vertex v1;
-    v1.r = queue.data[2].bit( 0, 7);
-    v1.g = queue.data[2].bit( 8,15);
-    v1.b = queue.data[2].bit(16,23);
-    v1.x = queue.data[3].bit( 0,15);
-    v1.y = queue.data[3].bit(16,31);
-    Vertex v2;
-    v2.r = queue.data[4].bit( 0, 7);
-    v2.g = queue.data[4].bit( 8,15);
-    v2.b = queue.data[4].bit(16,23);
-    v2.x = queue.data[5].bit( 0,15);
-    v2.y = queue.data[5].bit(16,31);
-    Vertex v3;
-    v3.r = queue.data[6].bit( 0, 7);
-    v3.g = queue.data[6].bit( 8,15);
-    v3.b = queue.data[6].bit(16,23);
-    v3.x = queue.data[7].bit( 0,15);
-    v3.y = queue.data[7].bit(16,31);
-    renderShadedOpaqueQuadrilateral(v0, v1, v2, v3);
+    auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
+    auto v1 = Vertex().setColor(queue.data[2]).setPoint(queue.data[3]);
+    auto v2 = Vertex().setColor(queue.data[4]).setPoint(queue.data[5]);
+    auto v3 = Vertex().setColor(queue.data[6]).setPoint(queue.data[7]);
+    auto ts = Texture();
+    renderTriangle<Render::Color>(v0, v1, v2, ts);
+    renderTriangle<Render::Color>(v1, v2, v3, ts);
     return queue.reset();
   }
 
