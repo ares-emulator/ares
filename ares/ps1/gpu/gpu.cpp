@@ -23,7 +23,7 @@ auto GPU::load(Node::Object parent) -> void {
     u64 b = image::normalize(color >>  0 & 31, 5, 16);
     return a << 48 | r << 32 | g << 16 | b << 0;
   });
-  screen->setSize(1024, 512);
+  screen->setSize(640, 480);
 
   vram.allocate(1_MiB);
 }
@@ -62,7 +62,7 @@ auto GPU::refresh() -> void {
       output[target++] = data & 0x7fff;
     }
   }
-  screen->refresh((uint32*)output, 1024 * sizeof(uint32), 1024, 512);
+  screen->refresh((uint32*)output, 1024 * sizeof(uint32), 640, 480);
 }
 
 auto GPU::power(bool reset) -> void {

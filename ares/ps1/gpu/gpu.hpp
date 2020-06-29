@@ -115,54 +115,24 @@ struct GPU : Thread {
     Queue gp1;
   } queue;
 
-/*
-  struct Point {
-    static auto fromData(u32 data) -> Point { return {i16(data >> 0), i16(data >> 16)}; }
-    i32 x, y;
-  };
-
-  struct Color {
-    static auto fromData(u32 data) -> Color { return {u8(data >> 0), u8(data >> 8), u8(data >> 16)}; }
-    u8 r, g, b;
-  };
-
-  struct Texel {
-    static auto fromData(u32 data) -> Texel { return {u8(data >> 0), u8(data >> 8)}; }
-    i32 u, v;
-  };
-
-  struct Palette {
-    static auto fromData(u32 data) -> Palette { return {(data >> 16 & 0x3f) << 4, data >> 22 & 0x1ff}; }
-    u16 px, py;
-  };
-
-  struct Page {
-    static auto fromData(u32 data) -> Page { return {(data >> 16 & 15) * 64, (data >> 20 & 1) * 256}; }
-    u16 pageX, pageY;
-  };
-
-  struct TexelState : Color, Palette, Page {
-    static auto fromData(u32 color, u32 palette, u32 page) -> TexelState {
-      return {Color::fromData(color), Palette::fromData(palette), Page::fromData(page)};
-    }
-  };
-
-  struct ColorPoint : Point, Color {
-    static auto fromData(u32 point, u32 color) -> ColorPoint {
-      return {Point::fromData(point), Color::fromData(color)};
-    }
-  };
-
-  struct TexelPoint : Point, Texel {
-    static auto fromData(u32 point, u32 texel) -> TexelPoint {
-      return {Point::fromData(point), Texel::fromData(texel)};
-    }
-  };
-*/
-
   struct Point { i32 x, y; };
   struct Texel { i32 u, v; };
-  struct Color {  u8 r, g, b; };
+
+  struct Color {
+    static auto from16(u16 data) -> Color {
+      return {
+        (data >>  0 & 31) << 3 | (data >>  0 & 31) >> 2,
+        (data >>  5 & 31) << 3 | (data >>  5 & 31) >> 2,
+        (data >> 10 & 31) << 3 | (data >> 10 & 31) >> 2
+      };
+    }
+
+    auto to16() const -> u16 {
+      return {(r >> 3) << 10 | (g >> 3) << 5 | (b >> 3) << 0};
+    }
+
+    u8 r, g, b;
+  };
 
   struct Vertex : Point, Texel, Color {
     auto setPoint(u32 data) -> Vertex& {
@@ -203,16 +173,23 @@ struct GPU : Thread {
   };
 
   struct Render {
-    enum : uint { Solid = 1 << 0 };
-    enum : uint { Color = 1 << 1 };
-    enum : uint { Texel = 1 << 2 };
+    enum : uint { Color         = 1 << 0 };
+    enum : uint { Shade         = 1 << 1 };
+    enum : uint { Texel         = 1 << 2 };
+    enum : uint { Alpha         = 1 << 3 };
+    enum : uint { ModulateColor = 1 << 4 };
+    enum : uint { ModulateShade = 1 << 5 };
   };
 
   //render.cpp
   auto weight(Point a, Point b, Point c) const -> i32;
-  auto renderPixel(Point p, Color c) -> void;
+  auto dither(Point p, Color c) const -> Color;
+  auto renderPixelColor(Point p, Color c) -> void;
+  auto renderPixelAlpha(Point P, Color c) -> void;
+  auto renderTexel(Point tp, Texture ts) -> u16;
   auto renderSolidLine(Point p0, Point p1, Color c) -> void;
-  template<uint RenderFlags = 0> auto renderTriangle(Vertex v0, Vertex v1, Vertex v2, Texture ts) -> void;
+  template<uint RenderFlags> auto renderTriangle(Vertex v0, Vertex v1, Vertex v2, Texture ts) -> void;
+  template<uint RenderFlags> auto renderQuadrilateral(Vertex v0, Vertex v1, Vertex v2, Vertex v3, Texture ts) -> void;
 
 //unserialized:
   u32 output[1024 * 512];

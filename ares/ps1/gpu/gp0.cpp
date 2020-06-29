@@ -22,53 +22,107 @@ auto GPU::gp0(u32 value) -> void {
     return;
   }
 
+  //monochrome triangle
+  if(command == 0x20 || command == 0x21 || command == 0x22 || command == 0x23) {
+    if(queue.write(value) < 4) return;
+    auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
+    auto v1 = Vertex().setColor(queue.data[0]).setPoint(queue.data[2]);
+    auto v2 = Vertex().setColor(queue.data[0]).setPoint(queue.data[3]);
+    auto ts = Texture();
+    if(command == 0x20 || command == 0x21) renderTriangle<Render::Color>(v0, v1, v2, ts);
+    if(command == 0x22 || command == 0x23) renderTriangle<Render::Color | Render::Alpha>(v0, v1, v2, ts);
+    return queue.reset();
+  }
+
+  //textured triangle
+  if(command == 0x24 || command == 0x25 || command == 0x26 || command == 0x27) {
+    if(queue.write(value) < 7) return;
+    auto v0 = Vertex().setColor(0).setPoint(queue.data[1]).setTexel(queue.data[2]);
+    auto v1 = Vertex().setColor(0).setPoint(queue.data[3]).setTexel(queue.data[4]);
+    auto v2 = Vertex().setColor(0).setPoint(queue.data[5]).setTexel(queue.data[6]);
+    auto ts = Texture().setPalette(queue.data[2]).setPage(queue.data[4]);
+    if(command == 0x24) renderTriangle<Render::Texel | Render::ModulateColor>(v0, v1, v2, ts);
+    if(command == 0x25) renderTriangle<Render::Texel>(v0, v1, v2, ts);
+    if(command == 0x26) renderTriangle<Render::Texel | Render::Alpha | Render::ModulateColor>(v0, v1, v2, ts);
+    if(command == 0x27) renderTriangle<Render::Texel | Render::Alpha>(v0, v1, v2, ts);
+    return queue.reset();
+  }
+
   //monochrome quadrilateral
-  if(command == 0x28) {
+  if(command == 0x28 || command == 0x29 || command == 0x2a || command == 0x2b) {
     if(queue.write(value) < 5) return;
     auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
     auto v1 = Vertex().setColor(queue.data[0]).setPoint(queue.data[2]);
     auto v2 = Vertex().setColor(queue.data[0]).setPoint(queue.data[3]);
     auto v3 = Vertex().setColor(queue.data[0]).setPoint(queue.data[4]);
     auto ts = Texture();
-    renderTriangle<Render::Solid>(v0, v1, v2, ts);
-    renderTriangle<Render::Solid>(v1, v2, v3, ts);
+    if(command == 0x28 || command == 0x29) renderQuadrilateral<Render::Color>(v0, v1, v2, v3, ts);
+    if(command == 0x2a || command == 0x2b) renderQuadrilateral<Render::Color | Render::Alpha>(v0, v1, v2, v3, ts);
     return queue.reset();
   }
 
-  //textured quadrilateral with blending
-  if(command == 0x2c) {
+  //textured quadrilateral
+  if(command == 0x2c || command == 0x2d || command == 0x2e || command == 0x2f) {
     if(queue.write(value) < 9) return;
-    auto v0 = Vertex().setColor(0).setPoint(queue.data[1]).setTexel(queue.data[2]);
-    auto v1 = Vertex().setColor(0).setPoint(queue.data[3]).setTexel(queue.data[4]);
-    auto v2 = Vertex().setColor(0).setPoint(queue.data[5]).setTexel(queue.data[6]);
-    auto v3 = Vertex().setColor(0).setPoint(queue.data[7]).setTexel(queue.data[8]);
+    auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]).setTexel(queue.data[2]);
+    auto v1 = Vertex().setColor(queue.data[0]).setPoint(queue.data[3]).setTexel(queue.data[4]);
+    auto v2 = Vertex().setColor(queue.data[0]).setPoint(queue.data[5]).setTexel(queue.data[6]);
+    auto v3 = Vertex().setColor(queue.data[0]).setPoint(queue.data[7]).setTexel(queue.data[8]);
     auto ts = Texture().setPalette(queue.data[2]).setPage(queue.data[4]);
-    renderTriangle<Render::Texel>(v0, v1, v2, ts);
-    renderTriangle<Render::Texel>(v1, v2, v3, ts);
+    if(command == 0x2c) renderQuadrilateral<Render::Texel | Render::ModulateColor>(v0, v1, v2, v3, ts);
+    if(command == 0x2d) renderQuadrilateral<Render::Texel>(v0, v1, v2, v3, ts);
+    if(command == 0x2e) renderQuadrilateral<Render::Texel | Render::Alpha | Render::ModulateColor>(v0, v1, v2, v3, ts);
+    if(command == 0x2f) renderQuadrilateral<Render::Texel | Render::Alpha>(v0, v1, v2, v3, ts);
     return queue.reset();
   }
 
   //shaded triangle
-  if(command == 0x30) {
+  if(command == 0x30 || command == 0x31 || command == 0x32 || command == 0x33) {
     if(queue.write(value) < 6) return;
     auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
     auto v1 = Vertex().setColor(queue.data[2]).setPoint(queue.data[3]);
     auto v2 = Vertex().setColor(queue.data[4]).setPoint(queue.data[5]);
     auto ts = Texture();
-    renderTriangle<Render::Color>(v0, v1, v2, ts);
+    if(command == 0x30 || command == 0x31) renderTriangle<Render::Shade>(v0, v1, v2, ts);
+    if(command == 0x32 || command == 0x33) renderTriangle<Render::Shade | Render::Alpha>(v0, v1, v2, ts);
+    return queue.reset();
+  }
+
+  //shaded textured triangle
+  if(command == 0x34 || command == 0x35 || command == 0x36 || command == 0x37) {
+    if(queue.write(value) < 9) return;
+    auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]).setTexel(queue.data[2]);
+    auto v1 = Vertex().setColor(queue.data[3]).setPoint(queue.data[4]).setTexel(queue.data[5]);
+    auto v2 = Vertex().setColor(queue.data[6]).setPoint(queue.data[7]).setTexel(queue.data[8]);
+    auto ts = Texture().setPalette(queue.data[2]).setPage(queue.data[5]);
+    if(command == 0x34 || command == 0x35) renderTriangle<Render::Texel | Render::ModulateShade>(v0, v1, v2, ts);
+    if(command == 0x36 || command == 0x37) renderTriangle<Render::Texel | Render::Alpha | Render::ModulateShade>(v0, v1, v2, ts);
     return queue.reset();
   }
 
   //shaded quadrilateral
-  if(command == 0x38) {
+  if(command == 0x38 || command == 0x39 || command == 0x3a || command == 0x3b) {
     if(queue.write(value) < 8) return;
     auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
     auto v1 = Vertex().setColor(queue.data[2]).setPoint(queue.data[3]);
     auto v2 = Vertex().setColor(queue.data[4]).setPoint(queue.data[5]);
     auto v3 = Vertex().setColor(queue.data[6]).setPoint(queue.data[7]);
     auto ts = Texture();
-    renderTriangle<Render::Color>(v0, v1, v2, ts);
-    renderTriangle<Render::Color>(v1, v2, v3, ts);
+    if(command == 0x38 || command == 0x39) renderQuadrilateral<Render::Shade>(v0, v1, v2, v3, ts);
+    if(command == 0x3a || command == 0x3b) renderQuadrilateral<Render::Shade | Render::Alpha>(v0, v1, v2, v3, ts);
+    return queue.reset();
+  }
+
+  //shaded textured quadrilateral
+  if(command == 0x3c || command == 0x3d || command == 0x3e || command == 0x3f) {
+    if(queue.write(value) < 12) return;
+    auto v0 = Vertex().setColor(queue.data[ 0]).setPoint(queue.data[ 1]).setTexel(queue.data[ 2]);
+    auto v1 = Vertex().setColor(queue.data[ 3]).setPoint(queue.data[ 4]).setTexel(queue.data[ 5]);
+    auto v2 = Vertex().setColor(queue.data[ 6]).setPoint(queue.data[ 7]).setTexel(queue.data[ 8]);
+    auto v3 = Vertex().setColor(queue.data[ 9]).setPoint(queue.data[10]).setTexel(queue.data[11]);
+    auto ts = Texture().setPalette(queue.data[2]).setPage(queue.data[5]);
+    if(command == 0x3c || command == 0x3d) renderQuadrilateral<Render::Texel | Render::ModulateShade>(v0, v1, v2, v3, ts);
+    if(command == 0x3e || command == 0x3f) renderQuadrilateral<Render::Texel | Render::Alpha | Render::ModulateShade>(v0, v1, v2, v3, ts);
     return queue.reset();
   }
 
