@@ -137,7 +137,8 @@ private:
   } voice[8];
 
   //gaussian.cpp
-  static const int16 GaussianTable[512];
+  int16 gaussianTable[512];
+  auto gaussianConstructTable() -> void;
   auto gaussianInterpolate(const Voice& v) -> int;
 
   //counter.cpp

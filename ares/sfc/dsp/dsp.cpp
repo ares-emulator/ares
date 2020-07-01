@@ -209,6 +209,8 @@ auto DSP::power(bool reset) -> void {
     voice[n] = {};
     voice[n].index = n << 4;
   }
+
+  gaussianConstructTable();
 }
 
 }

@@ -4,6 +4,7 @@ namespace ares::PlayStation {
 
 SPU spu;
 #include "io.cpp"
+#include "gaussian.cpp"
 #include "serialization.cpp"
 
 auto SPU::load(Node::Object parent) -> void {
@@ -12,9 +13,12 @@ auto SPU::load(Node::Object parent) -> void {
   stream = node->append<Node::Stream>("SPU");
   stream->setChannels(2);
   stream->setFrequency(44100.0);
+
+  ram.allocate(512_KiB);
 }
 
 auto SPU::unload() -> void {
+  ram.reset();
   stream.reset();
   node.reset();
 }
@@ -35,6 +39,7 @@ auto SPU::step(uint clocks) -> void {
 auto SPU::power(bool reset) -> void {
   Thread::reset();
   io = {};
+  gaussianConstructTable();
 }
 
 }
