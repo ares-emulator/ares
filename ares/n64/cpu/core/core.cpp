@@ -42,7 +42,7 @@ auto CPU::instruction() -> void {
       }
       scc.cause.interruptPending = interrupts;
       step(2);
-      return raiseException(0, interrupts);
+      return raiseException(0);
     }
   }
 

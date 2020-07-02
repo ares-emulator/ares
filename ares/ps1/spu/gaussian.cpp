@@ -26,3 +26,19 @@ auto SPU::gaussianConstructTable() -> void {
     gaussianTable[255 - phase] = nearbyint(table[255 - phase] - diff);
   }
 }
+
+auto SPU::Voice::gaussianRead(i8 index) const -> i32 {
+  if(index < 0) return adpcm.previousSamples[index + 3];
+  return adpcm.currentSamples[index];
+}
+
+auto SPU::Voice::gaussianInterpolate() const -> i32 {
+  u8 g = counter >>  4 & 255;
+  u8 s = counter >> 12 &  31;
+  i32 out = 0;
+  out += self.gaussianTable[255 - g] * gaussianRead(s - 3);
+  out += self.gaussianTable[511 - g] * gaussianRead(s - 2);
+  out += self.gaussianTable[256 + g] * gaussianRead(s - 1);
+  out += self.gaussianTable[  0 + g] * gaussianRead(s - 0);
+  return out >> 15;
+}

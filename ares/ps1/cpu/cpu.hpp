@@ -5,6 +5,25 @@ struct CPU : Thread {
   Memory::Writable ram;
   Memory::Writable cache;
 
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto instruction() -> void;
+    auto exception(string_view) -> void;
+    auto interrupt(string_view) -> void;
+
+    struct Tracer {
+      Node::Instruction instruction;
+      Node::Notification exception;
+      Node::Notification interrupt;
+    } tracer;
+
+    struct Memory {
+      Node::Memory ram;
+      Node::Memory cache;
+    } memory;
+  } debugger;
+
   //cpu.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;

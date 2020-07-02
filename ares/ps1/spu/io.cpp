@@ -27,27 +27,25 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //ADPCM start address
   if((address & 0xffff'fe0f) == 0x1f80'1c06 && v < 24) {
-    data.bit(0,15) = voice[v].adpcm.startAddress;
+    data.bit(0,15) = voice[v].adpcm.startAddress >> 3;
   }
 
   //ADSR
   if((address & 0xffff'fe0f) == 0x1f80'1c08 && v < 24) {
     data.bit( 0, 3) = voice[v].sustain.level;
-    data.bit( 4, 7) = voice[v].decay.shift;
-    data.bit( 8, 9) = voice[v].attack.step;
-    data.bit(10,14) = voice[v].attack.shift;
-    data.bit(15)    = voice[v].attack.mode;
+    data.bit( 4, 7) = voice[v].decay.rate;
+    data.bit( 8,14) = voice[v].attack.rate;
+    data.bit(15)    = voice[v].attack.exponential;
   }
 
   //ADSR
   if((address & 0xffff'fe0f) == 0x1f80'1c0a && v < 24) {
-    data.bit( 0, 4) = voice[v].release.shift;
-    data.bit( 5)    = voice[v].release.mode;
-    data.bit( 6, 7) = voice[v].sustain.step;
-    data.bit( 8,12) = voice[v].sustain.shift;
+    data.bit( 0, 4) = voice[v].release.rate;
+    data.bit( 5)    = voice[v].release.exponential;
+    data.bit( 6,12) = voice[v].sustain.rate;
     data.bit(13)    = voice[v].sustain.unknown;
-    data.bit(14)    = voice[v].sustain.direction;
-    data.bit(15)    = voice[v].sustain.mode;
+    data.bit(14)    = voice[v].sustain.decrease;
+    data.bit(15)    = voice[v].sustain.exponential;
   }
 
   //current ADSR volume
@@ -57,7 +55,7 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //ADPCM repeat address
   if((address & 0xffff'fe0f) == 0x1f80'1c0e && v < 24) {
-    data.bit(0,15) = voice[v].adpcm.repeatAddress;
+    data.bit(0,15) = voice[v].adpcm.repeatAddress >> 3;
   }
 
   //main volume left
@@ -126,17 +124,17 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //mBASE
   if(address == 0x1f80'1da2) {
-    data.bit(0,15) = reverb.address.work;
+    data.bit(0,15) = reverb.address.work >> 3;
   }
 
   //RAM IRQ address
   if(address == 0x1f80'1da4) {
-    data.bit(0,15) = io.ramTransfer.irqAddress;
+    data.bit(0,15) = transfer.irqAddress >> 3;
   }
 
   //RAM transfer address
   if(address == 0x1f80'1da6) {
-    data.bit(0,15) = io.ramTransfer.address;
+    data.bit(0,15) = transfer.address >> 3;
   }
 
   //RAM transfer data
@@ -146,24 +144,34 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //SPUCNT
   if(address == 0x1f80'1daa) {
-    //write-only
+    data.bit( 0)    = cdda.enable;
+    data.bit( 1)    = external.enable;
+    data.bit( 2)    = cdda.reverb;
+    data.bit( 3)    = external.reverb;
+    data.bit( 4, 5) = transfer.mode;
+    data.bit( 6)    = transfer.irqEnable;
+    data.bit( 7)    = reverb.enable;
+    data.bit( 8, 9) = noise.step;
+    data.bit(10,13) = noise.shift;
+    data.bit(14)    = master.mute;
+    data.bit(15)    = master.enable;
   }
 
   //SPURAMCNT
   if(address == 0x1f80'1dac) {
-    data.bit(0)    = io.ramTransfer.unknown_0;
-    data.bit(1,3)  = io.ramTransfer.type;
-    data.bit(4,15) = io.ramTransfer.unknown_4_15;
+    data.bit(0)    = transfer.unknown_0;
+    data.bit(1,3)  = transfer.type;
+    data.bit(4,15) = transfer.unknown_4_15;
   }
 
   //SPUSTAT
   if(address == 0x1f80'1dae) {
-    data.bit(0)   = io.cdAudioEnable;
-    data.bit(1)   = io.externalAudioEnable;
-    data.bit(2)   = io.cdAudioReverb;
-    data.bit(3)   = io.externalAudioReverb;
-    data.bit(4,5) = io.ramTransfer.mode;
-    data.bit(7)   = io.ramTransfer.mode.bit(1);  //unverified
+    data.bit(0)   = cdda.enable;
+    data.bit(1)   = external.enable;
+    data.bit(2)   = cdda.reverb;
+    data.bit(3)   = external.reverb;
+    data.bit(4,5) = transfer.mode;
+    data.bit(7)   = transfer.mode.bit(1);  //unverified
   }
 
   //CD-DA volume left
@@ -198,12 +206,12 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //dAPF1
   if(address == 0x1f80'1dc0) {
-    data.bit(0,15) = reverb.offset.apf1;
+    data.bit(0,15) = reverb.offset.apf1 >> 3;
   }
 
   //dAPF2
   if(address == 0x1f80'1dc2) {
-    data.bit(0,15) = reverb.offset.apf2;
+    data.bit(0,15) = reverb.offset.apf2 >> 3;
   }
 
   //vIIR
@@ -248,102 +256,102 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //mLSAME
   if(address == 0x1f80'1dd4) {
-    data.bit(0,15) = reverb.address.same1[0];
+    data.bit(0,15) = reverb.address.same1[0] >> 3;
   }
 
   //mRSAME
   if(address == 0x1f80'1dd6) {
-    data.bit(0,15) = reverb.address.same1[1];
+    data.bit(0,15) = reverb.address.same1[1] >> 3;
   }
 
   //mLCOMB1
   if(address == 0x1f80'1dd8) {
-    data.bit(0,15) = reverb.address.comb1[0];
+    data.bit(0,15) = reverb.address.comb1[0] >> 3;
   }
 
   //mRCOMB1
   if(address == 0x1f80'1dda) {
-    data.bit(0,15) = reverb.address.comb1[1];
+    data.bit(0,15) = reverb.address.comb1[1] >> 3;
   }
 
   //mLCOMB2
   if(address == 0x1f80'1ddc) {
-    data.bit(0,15) = reverb.address.comb2[0];
+    data.bit(0,15) = reverb.address.comb2[0] >> 3;
   }
 
   //mRCOMB2
   if(address == 0x1f80'1dde) {
-    data.bit(0,15) = reverb.address.comb2[1];
+    data.bit(0,15) = reverb.address.comb2[1] >> 3;
   }
 
   //dLSAME
   if(address == 0x1f80'1de0) {
-    data.bit(0,15) = reverb.address.same2[0];
+    data.bit(0,15) = reverb.address.same2[0] >> 3;
   }
 
   //dRSAME
   if(address == 0x1f80'1de2) {
-    data.bit(0,15) = reverb.address.same2[1];
+    data.bit(0,15) = reverb.address.same2[1] >> 3;
   }
 
   //mLDIFF
   if(address == 0x1f80'1de4) {
-    data.bit(0,15) = reverb.address.diff1[0];
+    data.bit(0,15) = reverb.address.diff1[0] >> 3;
   }
 
   //mRDIFF
   if(address == 0x1f80'1de6) {
-    data.bit(0,15) = reverb.address.diff1[1];
+    data.bit(0,15) = reverb.address.diff1[1] >> 3;
   }
 
   //mLCOMB3
   if(address == 0x1f80'1de8) {
-    data.bit(0,15) = reverb.address.comb3[0];
+    data.bit(0,15) = reverb.address.comb3[0] >> 3;
   }
 
   //mRCOMB3
   if(address == 0x1f80'1dea) {
-    data.bit(0,15) = reverb.address.comb3[1];
+    data.bit(0,15) = reverb.address.comb3[1] >> 3;
   }
 
   //mLCOMB4
   if(address == 0x1f80'1dec) {
-    data.bit(0,15) = reverb.address.comb4[0];
+    data.bit(0,15) = reverb.address.comb4[0] >> 3;
   }
 
   //mRCOMB4
   if(address == 0x1f80'1dee) {
-    data.bit(0,15) = reverb.address.comb4[1];
+    data.bit(0,15) = reverb.address.comb4[1] >> 3;
   }
 
   //dLDIFF
   if(address == 0x1f80'1df0) {
-    data.bit(0,15) = reverb.address.diff2[0];
+    data.bit(0,15) = reverb.address.diff2[0] >> 3;
   }
 
   //dRDIFF
   if(address == 0x1f80'1df2) {
-    data.bit(0,15) = reverb.address.diff2[1];
+    data.bit(0,15) = reverb.address.diff2[1] >> 3;
   }
 
   //mLAPF1
   if(address == 0x1f80'1df4) {
-    data.bit(0,15) = reverb.address.apf1[0];
+    data.bit(0,15) = reverb.address.apf1[0] >> 3;
   }
 
   //mRAPF1
   if(address == 0x1f80'1df6) {
-    data.bit(0,15) = reverb.address.apf1[1];
+    data.bit(0,15) = reverb.address.apf1[1] >> 3;
   }
 
   //mLAPF2
   if(address == 0x1f80'1df8) {
-    data.bit(0,15) = reverb.address.apf2[0];
+    data.bit(0,15) = reverb.address.apf2[0] >> 3;
   }
 
   //mRAPF2
   if(address == 0x1f80'1dfa) {
-    data.bit(0,15) = reverb.address.apf2[1];
+    data.bit(0,15) = reverb.address.apf2[1] >> 3;
   }
 
   //vLIN
@@ -419,27 +427,25 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //ADPCM start address
   if((address & 0xffff'fe0f) == 0x1f80'1c06 && v < 24) {
-    voice[v].adpcm.startAddress = data.bit(0,15);
+    voice[v].adpcm.startAddress = data.bit(0,15) << 3;
   }
 
   //ADSR
   if((address & 0xffff'fe0f) == 0x1f80'1c08 && v < 24) {
-    voice[v].sustain.level = data.bit( 0, 3);
-    voice[v].decay.shift   = data.bit( 4, 7);
-    voice[v].attack.step   = data.bit( 8, 9);
-    voice[v].attack.shift  = data.bit(10,14);
-    voice[v].attack.mode   = data.bit(15);
+    voice[v].sustain.level      = data.bit( 0, 3);
+    voice[v].decay.rate         = data.bit( 4, 7);
+    voice[v].attack.rate        = data.bit( 8,14);
+    voice[v].attack.exponential = data.bit(15);
   }
 
   //ADSR
   if((address & 0xffff'fe0f) == 0x1f80'1c0a && v < 24) {
-    voice[v].release.shift     = data.bit( 0, 4);
-    voice[v].release.mode      = data.bit( 5);
-    voice[v].sustain.step      = data.bit( 6, 7);
-    voice[v].sustain.shift     = data.bit( 8,12);
-    voice[v].sustain.unknown   = data.bit(13);
-    voice[v].sustain.direction = data.bit(14);
-    voice[v].sustain.mode      = data.bit(15);
+    voice[v].release.rate        = data.bit( 0, 4);
+    voice[v].release.exponential = data.bit( 5);
+    voice[v].sustain.rate        = data.bit( 6,12);
+    voice[v].sustain.unknown     = data.bit(13);
+    voice[v].sustain.decrease    = data.bit(14);
+    voice[v].sustain.exponential = data.bit(15);
   }
 
   //current ADSR volume
@@ -449,7 +455,8 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //ADPCM repeat address
   if((address & 0xffff'fe0f) == 0x1f80'1c0e && v < 24) {
-    voice[v].adpcm.repeatAddress = data.bit(0,15);
+    voice[v].adpcm.repeatAddress = data.bit(0,15) << 3;
+    voice[v].adpcm.ignoreLoopAddress = 1;
   }
 
   //main volume left
@@ -532,38 +539,47 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //mBASE
   if(address == 0x1f80'1da2) {
-    reverb.address.work = data.bit(0,15);
+    reverb.address.work = data.bit(0,15) << 3;
   }
 
   //RAM IRQ address
   if(address == 0x1f80'1da4) {
-    io.ramTransfer.irqAddress = data.bit(0,15);
+    transfer.irqAddress = data.bit(0,15) << 3;
   }
 
   //RAM transfer address
   if(address == 0x1f80'1da6) {
-    io.ramTransfer.address = data.bit(0,15);
+    transfer.address = data.bit(0,15) << 3;
   }
 
   //RAM transfer data
   if(address == 0x1f80'1da8) {
-    //todo
+    fifoWrite(data);
   }
 
   //SPUCNT
   if(address == 0x1f80'1daa) {
-    io.cdAudioEnable       = data.bit(0);
-    io.externalAudioEnable = data.bit(1);
-    io.cdAudioReverb       = data.bit(2);
-    io.externalAudioReverb = data.bit(3);
-    io.ramTransfer.mode    = data.bit(4,5);
+    cdda.enable        = data.bit( 0);
+    external.enable    = data.bit( 1);
+    cdda.reverb        = data.bit( 2);
+    external.reverb    = data.bit( 3);
+    transfer.mode      = data.bit( 4, 5);
+    transfer.irqEnable = data.bit( 6);
+    reverb.enable      = data.bit( 7);
+    noise.step         = data.bit( 8, 9);
+    noise.shift        = data.bit(10,13);
+    master.mute        = data.bit(14);
+    master.enable      = data.bit(15);
+
+    if(transfer.mode == 0) fifoReset();
+    if(transfer.mode == 1) fifoManualWrite();
   }
 
   //SPURAMCNT
   if(address == 0x1f80'1dac) {
-    io.ramTransfer.unknown_0    = data.bit(0);
-    io.ramTransfer.type         = data.bit(1, 3);
-    io.ramTransfer.unknown_4_15 = data.bit(4,15);
+    transfer.unknown_0    = data.bit(0);
+    transfer.type         = data.bit(1, 3);
+    transfer.unknown_4_15 = data.bit(4,15);
   }
 
   //SPUSTAT
@@ -603,12 +619,12 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //dAPF1
   if(address == 0x1f80'1dc0) {
-    reverb.offset.apf1 = data.bit(0,15);
+    reverb.offset.apf1 = data.bit(0,15) << 3;
   }
 
   //dAPF2
   if(address == 0x1f80'1dc2) {
-    reverb.offset.apf2 = data.bit(0,15);
+    reverb.offset.apf2 = data.bit(0,15) << 3;
   }
 
   //vIIR
@@ -653,102 +669,102 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //mLSAME
   if(address == 0x1f80'1dd4) {
-    reverb.address.same1[0] = data.bit(0,15);
+    reverb.address.same1[0] = data.bit(0,15) << 3;
   }
 
   //mRSAME
   if(address == 0x1f80'1dd6) {
-    reverb.address.same1[1] = data.bit(0,15);
+    reverb.address.same1[1] = data.bit(0,15) << 3;
   }
 
   //mLCOMB1
   if(address == 0x1f80'1dd8) {
-    reverb.address.comb1[0] = data.bit(0,15);
+    reverb.address.comb1[0] = data.bit(0,15) << 3;
   }
 
   //mRCOMB1
   if(address == 0x1f80'1dda) {
-    reverb.address.comb1[1] = data.bit(0,15);
+    reverb.address.comb1[1] = data.bit(0,15) << 3;
   }
 
   //mLCOMB2
   if(address == 0x1f80'1ddc) {
-    reverb.address.comb2[0] = data.bit(0,15);
+    reverb.address.comb2[0] = data.bit(0,15) << 3;
   }
 
   //mRCOMB2
   if(address == 0x1f80'1dde) {
-    reverb.address.comb2[1] = data.bit(0,15);
+    reverb.address.comb2[1] = data.bit(0,15) << 3;
   }
 
   //dLSAME
   if(address == 0x1f80'1de0) {
-    reverb.address.same2[0] = data.bit(0,15);
+    reverb.address.same2[0] = data.bit(0,15) << 3;
   }
 
   //dRSAME
   if(address == 0x1f80'1de2) {
-    reverb.address.same2[1] = data.bit(0,15);
+    reverb.address.same2[1] = data.bit(0,15) << 3;
   }
 
   //mLDIFF
   if(address == 0x1f80'1de4) {
-    reverb.address.diff1[0] = data.bit(0,15);
+    reverb.address.diff1[0] = data.bit(0,15) << 3;
   }
 
   //mRDIFF
   if(address == 0x1f80'1de6) {
-    reverb.address.diff1[1] = data.bit(0,15);
+    reverb.address.diff1[1] = data.bit(0,15) << 3;
   }
 
   //mLCOMB3
   if(address == 0x1f80'1de8) {
-    reverb.address.comb3[0] = data.bit(0,15);
+    reverb.address.comb3[0] = data.bit(0,15) << 3;
   }
 
   //mRCOMB3
   if(address == 0x1f80'1dea) {
-    reverb.address.comb3[1] = data.bit(0,15);
+    reverb.address.comb3[1] = data.bit(0,15) << 3;
   }
 
   //mLCOMB4
   if(address == 0x1f80'1dec) {
-    reverb.address.comb4[0] = data.bit(0,15);
+    reverb.address.comb4[0] = data.bit(0,15) << 3;
   }
 
   //mRCOMB4
   if(address == 0x1f80'1dee) {
-    reverb.address.comb4[1] = data.bit(0,15);
+    reverb.address.comb4[1] = data.bit(0,15) << 3;
   }
 
   //dLDIFF
   if(address == 0x1f80'1df0) {
-    reverb.address.diff2[0] = data.bit(0,15);
+    reverb.address.diff2[0] = data.bit(0,15) << 3;
   }
 
   //dRDIFF
   if(address == 0x1f80'1df2) {
-    reverb.address.diff2[1] = data.bit(0,15);
+    reverb.address.diff2[1] = data.bit(0,15) << 3;
   }
 
   //mLAPF1
   if(address == 0x1f80'1df4) {
-    reverb.address.apf1[0] = data.bit(0,15);
+    reverb.address.apf1[0] = data.bit(0,15) << 3;
   }
 
   //mRAPF1
   if(address == 0x1f80'1df6) {
-    reverb.address.apf1[1] = data.bit(0,15);
+    reverb.address.apf1[1] = data.bit(0,15) << 3;
   }
 
   //mLAPF2
   if(address == 0x1f80'1df8) {
-    reverb.address.apf2[0] = data.bit(0,15);
+    reverb.address.apf2[0] = data.bit(0,15) << 3;
   }
 
   //mRAPF2
   if(address == 0x1f80'1dfa) {
-    reverb.address.apf2[1] = data.bit(0,15);
+    reverb.address.apf2[1] = data.bit(0,15) << 3;
   }
 
   //vLIN

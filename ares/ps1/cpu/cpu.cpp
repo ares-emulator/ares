@@ -6,17 +6,20 @@ CPU cpu;
 #include "core/core.cpp"
 #include "interrupt.cpp"
 #include "dma.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Component>("CPU");
   ram.allocate(2_MiB);
   cache.allocate(1_KiB);
+  debugger.load(node);
 }
 
 auto CPU::unload() -> void {
-  ram.reset();
+  debugger = {};
   cache.reset();
+  ram.reset();
   node.reset();
 }
 

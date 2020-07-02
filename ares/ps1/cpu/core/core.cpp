@@ -10,6 +10,10 @@
 #define PC core.pc
 
 auto CPU::raiseException(uint code, uint coprocessor) -> void {
+  if(debugger.tracer.exception->enabled()) {
+    if(code != 0) debugger.exception(hex(code, 2L));
+  }
+
   scc.status.frame[2] = scc.status.frame[1];
   scc.status.frame[1] = scc.status.frame[0];
   scc.status.frame[0] = {};
@@ -28,6 +32,9 @@ auto CPU::instruction() -> void {
 
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(interrupt.line & scc.status.frame[0].interruptEnable) {
+      if(debugger.tracer.interrupt->enabled()) {
+        debugger.interrupt(hex(scc.cause.interruptPending, 2L));
+      }
       scc.cause.interruptPending = interrupts;
       step(1);
       return raiseException(0);
@@ -37,6 +44,7 @@ auto CPU::instruction() -> void {
   if constexpr(1) {
     pipeline.address = address;
     pipeline.instruction = bus.readWord(address);
+    debugger.instruction();
   //instructionDebug();
     decoderEXECUTE();
     instructionEpilogue();

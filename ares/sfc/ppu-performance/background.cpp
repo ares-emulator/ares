@@ -28,13 +28,12 @@ auto PPU::Background::render() -> void {
   uint vmask = (width << io.tileSize << !!(io.screenSize & 2)) - 1;
 
   uint y = ppu.vcounter();
-  if(io.mosaicEnable) y -= ppu.mosaic.voffset();
   if(hires) {
     hscroll <<= 1;
-    if(ppu.io.interlace) {
-      y = y << 1 | ppu.field();
-      if(io.mosaicEnable) y -= ppu.mosaic.voffset() + ppu.field();
-    }
+    if(ppu.io.interlace) y = y << 1 | ppu.field();
+  }
+  if(io.mosaicEnable) {
+    y -= ppu.mosaic.voffset() << (hires && ppu.io.interlace);
   }
 
   uint mosaicCounter = 1;

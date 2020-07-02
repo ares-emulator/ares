@@ -2,9 +2,20 @@
 
 namespace ares::PlayStation {
 
+auto amplify(i32 sample, i16 volume) -> i32 {
+  return sample * volume >> 15;
+}
+
 SPU spu;
 #include "io.cpp"
+#include "fifo.cpp"
+#include "adsr.cpp"
 #include "gaussian.cpp"
+#include "adpcm.cpp"
+#include "noise.cpp"
+#include "voice.cpp"
+#include "envelope.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto SPU::load(Node::Object parent) -> void {
@@ -15,9 +26,12 @@ auto SPU::load(Node::Object parent) -> void {
   stream->setFrequency(44100.0);
 
   ram.allocate(512_KiB);
+
+  debugger.load(node);
 }
 
 auto SPU::unload() -> void {
+  debugger = {};
   ram.reset();
   stream.reset();
   node.reset();
@@ -29,7 +43,22 @@ auto SPU::main() -> void {
 }
 
 auto SPU::sample() -> void {
-  stream->sample(0.0, 0.0);
+  if(!master.enable) return stream->sample(0.0, 0.0);
+  i32 lsum = 0;
+  i32 rsum = 0;
+  i16 modulation = 0;
+  for(auto& voice : this->voice) {
+    auto [lvoice, rvoice] = voice.sample(modulation);
+    modulation = sclamp<16>(voice.adsr.lastVolume);
+    lsum += lvoice;
+    lsum += rvoice;
+    if(voice.koff) voice.keyOff();
+    if(voice.kon ) voice.keyOn();
+  }
+  noise.update();
+  lsum = amplify(sclamp<16>(lsum), volume[0].level) * master.mute;
+  rsum = amplify(sclamp<16>(rsum), volume[1].level) * master.mute;
+  stream->sample(lsum / 32768.0, rsum / 32768.0);
 }
 
 auto SPU::step(uint clocks) -> void {
@@ -38,7 +67,7 @@ auto SPU::step(uint clocks) -> void {
 
 auto SPU::power(bool reset) -> void {
   Thread::reset();
-  io = {};
+  adsrConstructTable();
   gaussianConstructTable();
 }
 
