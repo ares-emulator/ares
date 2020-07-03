@@ -127,35 +127,72 @@ struct SPU : Thread {
   } current;
 
   struct Reverb {
-    uint1 enable;
+    SPU& self;
+    Reverb(SPU& self) : self(self) {}
 
-    struct Volume {
-      uint16 output[2];
-      uint16 reflection[2];
-      uint16 comb[4];
-      uint16 apf[2];
-      uint16 input[2];
-    } volume;
+    //reverb.cpp
+    auto process(i16 linput, i16 rinput) -> std::pair<i32, i32>;
+    auto compute() -> void;
+    auto iiasm(i16 sample) -> i32;
+    template<bool phase> auto r2244(const int16* source) -> i32;
+    auto r4422(const int16* source) -> i32;
+    auto address(u32 address) -> u32;
+    auto read(u32 address, i32 offset = 0) -> i16;
+    auto write(u32 address, i16 data) -> void;
 
-    struct Offset {
-      uint19 apf1 = 0;
-      uint19 apf2 = 0;
-    } offset;
+     uint1 enable;
 
-    struct Address {
-      uint19 work = 0;
-      uint19 apf1[2];
-      uint19 apf2[2];
-      uint19 same1[2];
-      uint19 same2[2];
-      uint19 diff1[2];
-      uint19 diff2[2];
-      uint19 comb1[2];
-      uint19 comb2[2];
-      uint19 comb3[2];
-      uint19 comb4[2];
-    } address;
-  } reverb;
+    uint16 vLOUT;
+    uint16 vROUT;
+    uint16 mBASE;
+
+    uint16 FB_SRC_A;
+    uint16 FB_SRC_B;
+     int16 IIR_ALPHA;
+     int16 ACC_COEF_A;
+     int16 ACC_COEF_B;
+     int16 ACC_COEF_C;
+     int16 ACC_COEF_D;
+     int16 IIR_COEF;
+     int16 FB_ALPHA;
+     int16 FB_X;
+    uint16 IIR_DEST_A0;
+    uint16 IIR_DEST_A1;
+    uint16 ACC_SRC_A0;
+    uint16 ACC_SRC_A1;
+    uint16 ACC_SRC_B0;
+    uint16 ACC_SRC_B1;
+    uint16 IIR_SRC_A0;
+    uint16 IIR_SRC_A1;
+    uint16 IIR_DEST_B0;
+    uint16 IIR_DEST_B1;
+    uint16 ACC_SRC_C0;
+    uint16 ACC_SRC_C1;
+    uint16 ACC_SRC_D0;
+    uint16 ACC_SRC_D1;
+    uint16 IIR_SRC_B1;  //misordered
+    uint16 IIR_SRC_B0;  //misordered
+    uint16 MIX_DEST_A0;
+    uint16 MIX_DEST_A1;
+    uint16 MIX_DEST_B0;
+    uint16 MIX_DEST_B1;
+     int16 IN_COEF_L;
+     int16 IN_COEF_R;
+
+  //internal:
+     int16 lastInput[2];
+     int32 lastOutput[2];
+     int16 downsampleBuffer[2][128];
+     int16 upsampleBuffer[2][64];
+     uint6 resamplePosition;
+    uint18 baseAddress;
+    uint18 currentAddress;
+
+    static constexpr i16 coefficients[20] = {
+      -1, +2, -10, +35, -103, +266, -616, +1332, -2960, +10246,
+      +10246, -2960, +1332, -616, +266, -103, +35, -10, +2, -1,
+    };
+  } reverb{*this};
 
   struct Voice {
     SPU& self;

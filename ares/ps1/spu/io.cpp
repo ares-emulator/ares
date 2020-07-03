@@ -72,12 +72,12 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //vLOUT
   if(address == 0x1f80'1d84) {
-    data.bit(0,15) = reverb.volume.output[0];
+    data.bit(0,15) = reverb.vLOUT;
   }
 
   //vROUT
   if(address == 0x1f80'1d86) {
-    data.bit(0,15) = reverb.volume.output[1];
+    data.bit(0,15) = reverb.vROUT;
   }
 
   //KON
@@ -124,7 +124,7 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //mBASE
   if(address == 0x1f80'1da2) {
-    data.bit(0,15) = reverb.address.work >> 3;
+    data.bit(0,15) = reverb.mBASE;
   }
 
   //RAM IRQ address
@@ -206,162 +206,162 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //dAPF1
   if(address == 0x1f80'1dc0) {
-    data.bit(0,15) = reverb.offset.apf1 >> 3;
+    data.bit(0,15) = reverb.FB_SRC_A;
   }
 
   //dAPF2
   if(address == 0x1f80'1dc2) {
-    data.bit(0,15) = reverb.offset.apf2 >> 3;
+    data.bit(0,15) = reverb.FB_SRC_B;
   }
 
   //vIIR
   if(address == 0x1f80'1dc4) {
-    data.bit(0,15) = reverb.volume.reflection[0];
+    data.bit(0,15) = reverb.IIR_ALPHA;
   }
 
   //vCOMB1
   if(address == 0x1f80'1dc6) {
-    data.bit(0,15) = reverb.volume.comb[0];
+    data.bit(0,15) = reverb.ACC_COEF_A;
   }
 
   //vCOMB2
   if(address == 0x1f80'1dc8) {
-    data.bit(0,15) = reverb.volume.comb[1];
+    data.bit(0,15) = reverb.ACC_COEF_B;
   }
 
   //vCOMB3
   if(address == 0x1f80'1dca) {
-    data.bit(0,15) = reverb.volume.comb[2];
+    data.bit(0,15) = reverb.ACC_COEF_C;
   }
 
   //vCOMB4
   if(address == 0x1f80'1dcc) {
-    data.bit(0,15) = reverb.volume.comb[3];
+    data.bit(0,15) = reverb.ACC_COEF_D;
   }
 
   //vWALL
   if(address == 0x1f80'1dce) {
-    data.bit(0,15) = reverb.volume.reflection[1];
+    data.bit(0,15) = reverb.IIR_COEF;
   }
 
   //vAPF1
   if(address == 0x1f80'1dd0) {
-    data.bit(0,15) = reverb.volume.apf[0];
+    data.bit(0,15) = reverb.FB_ALPHA;
   }
 
   //vAPF2
   if(address == 0x1f80'1dd2) {
-    data.bit(0,15) = reverb.volume.apf[1];
+    data.bit(0,15) = reverb.FB_X;
   }
 
   //mLSAME
   if(address == 0x1f80'1dd4) {
-    data.bit(0,15) = reverb.address.same1[0] >> 3;
+    data.bit(0,15) = reverb.IIR_DEST_A0;
   }
 
   //mRSAME
   if(address == 0x1f80'1dd6) {
-    data.bit(0,15) = reverb.address.same1[1] >> 3;
+    data.bit(0,15) = reverb.IIR_DEST_A1;
   }
 
   //mLCOMB1
   if(address == 0x1f80'1dd8) {
-    data.bit(0,15) = reverb.address.comb1[0] >> 3;
+    data.bit(0,15) = reverb.ACC_SRC_A0;
   }
 
   //mRCOMB1
   if(address == 0x1f80'1dda) {
-    data.bit(0,15) = reverb.address.comb1[1] >> 3;
+    data.bit(0,15) = reverb.ACC_SRC_A1;
   }
 
   //mLCOMB2
   if(address == 0x1f80'1ddc) {
-    data.bit(0,15) = reverb.address.comb2[0] >> 3;
+    data.bit(0,15) = reverb.ACC_SRC_B0;
   }
 
   //mRCOMB2
   if(address == 0x1f80'1dde) {
-    data.bit(0,15) = reverb.address.comb2[1] >> 3;
+    data.bit(0,15) = reverb.ACC_SRC_B1;
   }
 
   //dLSAME
   if(address == 0x1f80'1de0) {
-    data.bit(0,15) = reverb.address.same2[0] >> 3;
+    data.bit(0,15) = reverb.IIR_SRC_A0;
   }
 
   //dRSAME
   if(address == 0x1f80'1de2) {
-    data.bit(0,15) = reverb.address.same2[1] >> 3;
+    data.bit(0,15) = reverb.IIR_SRC_A1;
   }
 
   //mLDIFF
   if(address == 0x1f80'1de4) {
-    data.bit(0,15) = reverb.address.diff1[0] >> 3;
+    data.bit(0,15) = reverb.IIR_DEST_B0;
   }
 
   //mRDIFF
   if(address == 0x1f80'1de6) {
-    data.bit(0,15) = reverb.address.diff1[1] >> 3;
+    data.bit(0,15) = reverb.IIR_DEST_B1;
   }
 
   //mLCOMB3
   if(address == 0x1f80'1de8) {
-    data.bit(0,15) = reverb.address.comb3[0] >> 3;
+    data.bit(0,15) = reverb.ACC_SRC_C0;
   }
 
   //mRCOMB3
   if(address == 0x1f80'1dea) {
-    data.bit(0,15) = reverb.address.comb3[1] >> 3;
+    data.bit(0,15) = reverb.ACC_SRC_C1;
   }
 
   //mLCOMB4
   if(address == 0x1f80'1dec) {
-    data.bit(0,15) = reverb.address.comb4[0] >> 3;
+    data.bit(0,15) = reverb.ACC_SRC_D0;
   }
 
   //mRCOMB4
   if(address == 0x1f80'1dee) {
-    data.bit(0,15) = reverb.address.comb4[1] >> 3;
+    data.bit(0,15) = reverb.ACC_SRC_D1;
   }
 
   //dLDIFF
   if(address == 0x1f80'1df0) {
-    data.bit(0,15) = reverb.address.diff2[0] >> 3;
+    data.bit(0,15) = reverb.IIR_SRC_B1;  //misordered
   }
 
   //dRDIFF
   if(address == 0x1f80'1df2) {
-    data.bit(0,15) = reverb.address.diff2[1] >> 3;
+    data.bit(0,15) = reverb.IIR_SRC_B0;  //misordered
   }
 
   //mLAPF1
   if(address == 0x1f80'1df4) {
-    data.bit(0,15) = reverb.address.apf1[0] >> 3;
+    data.bit(0,15) = reverb.MIX_DEST_A0;
   }
 
   //mRAPF1
   if(address == 0x1f80'1df6) {
-    data.bit(0,15) = reverb.address.apf1[1] >> 3;
+    data.bit(0,15) = reverb.MIX_DEST_A1;
   }
 
   //mLAPF2
   if(address == 0x1f80'1df8) {
-    data.bit(0,15) = reverb.address.apf2[0] >> 3;
+    data.bit(0,15) = reverb.MIX_DEST_B0;
   }
 
   //mRAPF2
   if(address == 0x1f80'1dfa) {
-    data.bit(0,15) = reverb.address.apf2[1] >> 3;
+    data.bit(0,15) = reverb.MIX_DEST_B1;
   }
 
   //vLIN
   if(address == 0x1f80'1dfc) {
-    data.bit(0,15) = reverb.volume.input[0];
+    data.bit(0,15) = reverb.IN_COEF_L;
   }
 
   //vRIN
   if(address == 0x1f80'1dfe) {
-    data.bit(0,15) = reverb.volume.input[1];
+    data.bit(0,15) = reverb.IN_COEF_R;
   }
 
   v = address >> 2 & 31;
@@ -487,12 +487,12 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //vLOUT
   if(address == 0x1f80'1d84) {
-    reverb.volume.output[0] = data.bit(0,15);
+    reverb.vLOUT = data.bit(0,15);
   }
 
   //vROUT
   if(address == 0x1f80'1d86) {
-    reverb.volume.output[1] = data.bit(0,15);
+    reverb.vROUT = data.bit(0,15);
   }
 
   //KON
@@ -539,7 +539,9 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //mBASE
   if(address == 0x1f80'1da2) {
-    reverb.address.work = data.bit(0,15) << 3;
+    reverb.mBASE = data.bit(0,15);
+    reverb.baseAddress = reverb.mBASE << 2;
+    reverb.currentAddress = reverb.mBASE << 2;
   }
 
   //RAM IRQ address
@@ -619,162 +621,162 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //dAPF1
   if(address == 0x1f80'1dc0) {
-    reverb.offset.apf1 = data.bit(0,15) << 3;
+    reverb.FB_SRC_A = data.bit(0,15);
   }
 
   //dAPF2
   if(address == 0x1f80'1dc2) {
-    reverb.offset.apf2 = data.bit(0,15) << 3;
+    reverb.FB_SRC_B = data.bit(0,15);
   }
 
   //vIIR
   if(address == 0x1f80'1dc4) {
-    reverb.volume.reflection[0] = data.bit(0,15);
+    reverb.IIR_ALPHA = data.bit(0,15);
   }
 
   //vCOMB1
   if(address == 0x1f80'1dc6) {
-    reverb.volume.comb[0] = data.bit(0,15);
+    reverb.ACC_COEF_A = data.bit(0,15);
   }
 
   //vCOMB2
   if(address == 0x1f80'1dc8) {
-    reverb.volume.comb[1] = data.bit(0,15);
+    reverb.ACC_COEF_B = data.bit(0,15);
   }
 
   //vCOMB3
   if(address == 0x1f80'1dca) {
-    reverb.volume.comb[2] = data.bit(0,15);
+    reverb.ACC_COEF_C = data.bit(0,15);
   }
 
   //vCOMB4
   if(address == 0x1f80'1dcc) {
-    reverb.volume.comb[3] = data.bit(0,15);
+    reverb.ACC_COEF_D = data.bit(0,15);
   }
 
   //vWALL
   if(address == 0x1f80'1dce) {
-    reverb.volume.reflection[1] = data.bit(0,15);
+    reverb.IIR_COEF = data.bit(0,15);
   }
 
   //vAPF1
   if(address == 0x1f80'1dd0) {
-    reverb.volume.apf[0] = data.bit(0,15);
+    reverb.FB_ALPHA = data.bit(0,15);
   }
 
   //vAPF2
   if(address == 0x1f80'1dd2) {
-    reverb.volume.apf[1] = data.bit(0,15);
+    reverb.FB_X = data.bit(0,15);
   }
 
   //mLSAME
   if(address == 0x1f80'1dd4) {
-    reverb.address.same1[0] = data.bit(0,15) << 3;
+    reverb.IIR_DEST_A0 = data.bit(0,15);
   }
 
   //mRSAME
   if(address == 0x1f80'1dd6) {
-    reverb.address.same1[1] = data.bit(0,15) << 3;
+    reverb.IIR_DEST_A1 = data.bit(0,15);
   }
 
   //mLCOMB1
   if(address == 0x1f80'1dd8) {
-    reverb.address.comb1[0] = data.bit(0,15) << 3;
+    reverb.ACC_SRC_A0 = data.bit(0,15);
   }
 
   //mRCOMB1
   if(address == 0x1f80'1dda) {
-    reverb.address.comb1[1] = data.bit(0,15) << 3;
+    reverb.ACC_SRC_A1 = data.bit(0,15);
   }
 
   //mLCOMB2
   if(address == 0x1f80'1ddc) {
-    reverb.address.comb2[0] = data.bit(0,15) << 3;
+    reverb.ACC_SRC_B0 = data.bit(0,15);
   }
 
   //mRCOMB2
   if(address == 0x1f80'1dde) {
-    reverb.address.comb2[1] = data.bit(0,15) << 3;
+    reverb.ACC_SRC_B1 = data.bit(0,15);
   }
 
   //dLSAME
   if(address == 0x1f80'1de0) {
-    reverb.address.same2[0] = data.bit(0,15) << 3;
+    reverb.IIR_SRC_A0 = data.bit(0,15);
   }
 
   //dRSAME
   if(address == 0x1f80'1de2) {
-    reverb.address.same2[1] = data.bit(0,15) << 3;
+    reverb.IIR_SRC_A1 = data.bit(0,15);
   }
 
   //mLDIFF
   if(address == 0x1f80'1de4) {
-    reverb.address.diff1[0] = data.bit(0,15) << 3;
+    reverb.IIR_DEST_B0 = data.bit(0,15);
   }
 
   //mRDIFF
   if(address == 0x1f80'1de6) {
-    reverb.address.diff1[1] = data.bit(0,15) << 3;
+    reverb.IIR_DEST_B1 = data.bit(0,15);
   }
 
   //mLCOMB3
   if(address == 0x1f80'1de8) {
-    reverb.address.comb3[0] = data.bit(0,15) << 3;
+    reverb.ACC_SRC_C0 = data.bit(0,15);
   }
 
   //mRCOMB3
   if(address == 0x1f80'1dea) {
-    reverb.address.comb3[1] = data.bit(0,15) << 3;
+    reverb.ACC_SRC_C1 = data.bit(0,15);
   }
 
   //mLCOMB4
   if(address == 0x1f80'1dec) {
-    reverb.address.comb4[0] = data.bit(0,15) << 3;
+    reverb.ACC_SRC_D0 = data.bit(0,15);
   }
 
   //mRCOMB4
   if(address == 0x1f80'1dee) {
-    reverb.address.comb4[1] = data.bit(0,15) << 3;
+    reverb.ACC_SRC_D1 = data.bit(0,15);
   }
 
   //dLDIFF
   if(address == 0x1f80'1df0) {
-    reverb.address.diff2[0] = data.bit(0,15) << 3;
+    reverb.IIR_SRC_B1 = data.bit(0,15);  //misordered
   }
 
   //dRDIFF
   if(address == 0x1f80'1df2) {
-    reverb.address.diff2[1] = data.bit(0,15) << 3;
+    reverb.IIR_SRC_B0 = data.bit(0,15);  //misordered
   }
 
   //mLAPF1
   if(address == 0x1f80'1df4) {
-    reverb.address.apf1[0] = data.bit(0,15) << 3;
+    reverb.MIX_DEST_A0 = data.bit(0,15);
   }
 
   //mRAPF1
   if(address == 0x1f80'1df6) {
-    reverb.address.apf1[1] = data.bit(0,15) << 3;
+    reverb.MIX_DEST_A1 = data.bit(0,15);
   }
 
   //mLAPF2
   if(address == 0x1f80'1df8) {
-    reverb.address.apf2[0] = data.bit(0,15) << 3;
+    reverb.MIX_DEST_B0 = data.bit(0,15);
   }
 
   //mRAPF2
   if(address == 0x1f80'1dfa) {
-    reverb.address.apf2[1] = data.bit(0,15) << 3;
+    reverb.MIX_DEST_B1 = data.bit(0,15);
   }
 
   //vLIN
   if(address == 0x1f80'1dfc) {
-    reverb.volume.input[0] = data.bit(0,15);
+    reverb.IN_COEF_L = data.bit(0,15);
   }
 
   //vRIN
   if(address == 0x1f80'1dfe) {
-    reverb.volume.input[1] = data.bit(0,15);
+    reverb.IN_COEF_R = data.bit(0,15);
   }
 
   v = address >> 2 & 31;
