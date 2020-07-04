@@ -139,8 +139,7 @@ auto CPU::Interrupt::writeHalf(u32 address, u16 value) -> void {
   }
 }
 
-auto CPU::Interrupt::writeWord(u32 address, u32 value) -> void {
-  uint32 data = value;
-  writeHalf(address & ~3 | 0, value >>  0);
-  writeHalf(address & ~3 | 2, value >> 16);
+auto CPU::Interrupt::writeWord(u32 address, u32 data) -> void {
+  writeHalf(address & ~3 | 0, data >>  0);
+  writeHalf(address & ~3 | 2, data >> 16);
 }

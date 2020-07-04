@@ -9,7 +9,7 @@
   if(address <= 0x1f80'107f) return cpu.interrupt.access(__VA_ARGS__); \
   if(address <= 0x1f80'10ff) return cpu.dma.access(__VA_ARGS__); \
   if(address <= 0x1f80'17ff) return unmapped; \
-  if(address <= 0x1f80'180f) return unmapped; \
+  if(address <= 0x1f80'180f) return disc.access(__VA_ARGS__); \
   if(address <= 0x1f80'181f) return gpu.access(__VA_ARGS__); \
   if(address <= 0x1f80'1bff) return unmapped; \
   if(address <= 0x1f80'1fff) return spu.access(__VA_ARGS__); \

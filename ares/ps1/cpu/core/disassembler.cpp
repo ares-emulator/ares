@@ -260,6 +260,23 @@ auto CPU::Disassembler::SCC() -> vector<string> {
 }
 
 auto CPU::Disassembler::GTE() -> vector<string> {
+  auto rtName  = [&] { return cpuRegisterName (instruction >> 16 & 31); };
+  auto rtValue = [&] { return cpuRegisterValue(instruction >> 16 & 31); };
+  auto drName  = [&] { return gteDataRegisterName (instruction >> 11 & 31); };
+  auto drValue = [&] { return gteDataRegisterValue(instruction >> 11 & 31); };
+  auto crName  = [&] { return gteControlRegisterName (instruction >> 11 & 31); };
+  auto crValue = [&] { return gteControlRegisterValue(instruction >> 11 & 31); };
+
+  switch(instruction >> 21 & 0x1f) {
+  case 0x00: return {"mfc2", rtName(), drValue()};
+  case 0x02: return {"cfc2", rtName(), crValue()};
+  case 0x04: return {"mtc2", rtValue(), drName()};
+  case 0x06: return {"ctc2", rtValue(), crName()};
+  }
+  if(!(instruction >> 25 & 1)) return {};
+  switch(instruction & 0x3f) {
+  }
+
   return {};
 }
 
@@ -304,6 +321,36 @@ auto CPU::Disassembler::sccRegisterName(u8 index) const -> string {
 auto CPU::Disassembler::sccRegisterValue(u8 index) const -> string {
   if(showValues) return {sccRegisterName(index), hint("{$", hex(self.getControlRegister(index), 8L), "}")};
   return sccRegisterName(index);
+}
+
+auto CPU::Disassembler::gteDataRegisterName(u8 index) const -> string {
+  static const string registers[32] = {
+    "vxy0", "vz0", "vxy1", "vz2", "vxy2", "vz2", "rgbc", "otz",
+    "ir0", "ir1", "ir2", "ir3", "sxy0", "sxy1", "sxy2", "sxyp",
+    "sz0", "sz1", "sz2", "sz3", "rgb0", "rgb1", "rgb2", "res1",
+    "mac0", "mac1", "mac2", "mac3", "irgb", "orgb", "lzcs", "lzcr",
+  };
+  return registers[index];
+}
+
+auto CPU::Disassembler::gteDataRegisterValue(u8 index) const -> string {
+  if(showValues) return {gteDataRegisterName(index)};  //todo
+  return gteDataRegisterName(index);
+}
+
+auto CPU::Disassembler::gteControlRegisterName(u8 index) const -> string {
+  static const string registers[32] = {
+    "rt11+rt12", "rt13+rt21", "rt22+rt23", "rt31+rt32", "rt33", "trx", "try", "trz",
+    "l11+l12", "l13+l21", "l22+l23", "l31+l32", "l33", "rbk", "gbk", "bbk",
+    "lr1+lr2", "lr3+lg1", "lg2+lg3", "lb1+lb2", "lb3", "rfc", "gfc", "bfc",
+    "ofx", "ofy", "h", "dqa", "dqb", "zsf3", "zsf4", "flag",
+  };
+  return registers[index];
+}
+
+auto CPU::Disassembler::gteControlRegisterValue(u8 index) const -> string {
+  if(showValues) return {gteControlRegisterName(index)};  //todo
+  return gteControlRegisterName(index);
 }
 
 template<typename... P>

@@ -20,6 +20,7 @@ namespace ares::PlayStation {
 
   #include <ps1/memory/memory.hpp>
   #include <ps1/system/system.hpp>
+  #include <ps1/disc/disc.hpp>
   #include <ps1/cpu/cpu.hpp>
   #include <ps1/gpu/gpu.hpp>
   #include <ps1/spu/spu.hpp>

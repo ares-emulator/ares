@@ -48,6 +48,7 @@ auto System::serializeAll(serializer& s, bool synchronize) -> void {
   cpu.serialize(s);
   gpu.serialize(s);
   spu.serialize(s);
+  disc.serialize(s);
 }
 
 auto System::serializeInit(bool synchronize) -> uint {

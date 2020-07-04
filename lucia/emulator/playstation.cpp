@@ -26,12 +26,40 @@ auto PlayStation::load() -> bool {
     return false;
   }
 
+  if(auto port = root->find<ares::Node::Port>("PlayStation/Disc Tray")) {
+    port->allocate();
+    port->connect();
+  }
+
   return true;
 }
 
 auto PlayStation::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
   if(name == "bios.rom") {
     return Emulator::loadFirmware(firmware[regionID]);
+  }
+
+  if(name == "manifest.bml") {
+    if(auto manifest = medium->manifest(game.location)) {
+      return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
+    }
+    return Emulator::manifest(game.location);
+  }
+
+  if(name == "cd.rom") {
+    if(game.location.iendsWith(".zip")) {
+      MessageDialog().setText(
+        "Sorry, compressed CD-ROM images are not currently supported.\n"
+        "Please extract the image prior to loading it."
+      ).setAlignment(presentation).error();
+      return {};
+    }
+
+    if(auto result = vfs::cdrom::open(game.location)) return result;
+
+    MessageDialog().setText(
+      "Failed to load CD-ROM image."
+    ).setAlignment(presentation).error();
   }
 
   return {};

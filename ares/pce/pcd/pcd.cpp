@@ -85,8 +85,8 @@ auto PCD::connect() -> void {
   vector<uint8_t> subchannel;
   subchannel.resize(sectors * 96);
   for(uint sector : range(sectors)) {
-    pcd.fd->seek(sector * 2448 + 2352);
-    pcd.fd->read(subchannel.data() + sector * 96, 96);
+    fd->seek(sector * 2448 + 2352);
+    fd->read(subchannel.data() + sector * 96, 96);
   }
   session.decode(subchannel, 96);
 }

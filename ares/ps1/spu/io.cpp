@@ -380,8 +380,8 @@ auto SPU::readHalf(u32 address) -> u32 {
 }
 
 auto SPU::readWord(u32 address) -> u32 {
-  uint16 data = readHalf(address & ~1 ^ 0) <<  0;
-  return data | readHalf(address & ~1 ^ 2) << 16;
+  uint32 data = readHalf(address & ~3 | 0) <<  0;
+  return data | readHalf(address & ~3 | 2) << 16;
 }
 
 auto SPU::writeByte(u32 address, u32 value) -> void {
@@ -792,7 +792,7 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
   }
 }
 
-auto SPU::writeWord(u32 address, u32 value) -> void {
-  writeHalf(address & ~1 ^ 0, value >>  0);
-  writeHalf(address & ~1 ^ 2, value >> 16);
+auto SPU::writeWord(u32 address, u32 data) -> void {
+  writeHalf(address & ~3 | 0, data >>  0);
+  writeHalf(address & ~3 | 2, data >> 16);
 }

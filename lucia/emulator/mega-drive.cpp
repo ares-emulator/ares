@@ -167,6 +167,7 @@ auto MegaCD::open(ares::Node::Object node, string name, vfs::file::mode mode, bo
       }
 
       if(auto result = vfs::cdrom::open(game.location)) return result;
+
       MessageDialog().setText(
         "Failed to load CD-ROM image."
       ).setAlignment(presentation).error();

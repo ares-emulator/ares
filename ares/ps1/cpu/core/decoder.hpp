@@ -196,7 +196,21 @@
 {
   switch(OP >> 21 & 0x1f) {
   op(0x00, MFC0, RT, RDn);
+  op(0x01, INVALID);
+  op(0x02, INVALID);
+  op(0x03, INVALID);
   op(0x04, MTC0, RT, RDn);
+  op(0x05, INVALID);
+  op(0x06, INVALID);
+  op(0x07, INVALID);
+  op(0x08, INVALID);
+  op(0x09, INVALID);
+  op(0x0a, INVALID);
+  op(0x0b, INVALID);
+  op(0x0c, INVALID);
+  op(0x0d, INVALID);
+  op(0x0e, INVALID);
+  op(0x0f, INVALID);
   }
 
   switch(OP & 0x3f) {
@@ -208,6 +222,51 @@
 
 #ifdef DECODER_GTE
 {
+  switch(OP >> 21 & 0x1f) {
+  op(0x00, MFC2, RT, RDn);
+  op(0x01, INVALID);
+  op(0x02, CFC2, RT, RDn);
+  op(0x03, INVALID);
+  op(0x04, MTC2, RT, RDn);
+  op(0x05, INVALID);
+  op(0x06, CTC2, RT, RDn);
+  op(0x07, INVALID);
+  op(0x08, INVALID);
+  op(0x09, INVALID);
+  op(0x0a, INVALID);
+  op(0x0b, INVALID);
+  op(0x0c, INVALID);
+  op(0x0d, INVALID);
+  op(0x0e, INVALID);
+  op(0x0f, INVALID);
+  }
+
+  switch(OP & 0x3f) {
+  op(0x00, RTPS);
+  op(0x01, RTPS);  //0x00 mirror?
+  op(0x06, NCLIP);
+  op(0x0c, OP);
+  op(0x10, DPCS);
+  op(0x11, INTPL);
+  op(0x12, MVMVA);
+  op(0x13, NCDS);
+  op(0x14, CDP);
+  op(0x16, NCDT);
+  op(0x1a, DCPL);  //0x29 mirror?
+  op(0x1b, NCCS);
+  op(0x1c, CC);
+  op(0x1e, NCS);
+  op(0x20, NCT);
+  op(0x28, SQR);
+  op(0x29, DCPL);
+  op(0x2a, DPCT);
+  op(0x2d, AVSZ3);
+  op(0x2e, AVSZ4);
+  op(0x30, RTPT);
+  op(0x3d, GPF);
+  op(0x3e, GPL);
+  op(0x3f, NCCT);
+  }
 }
 #undef DECODER_GTE
 #endif

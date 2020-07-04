@@ -22,6 +22,10 @@
     auto cpuRegisterIndex(u8 index, i16 offset) const -> string;
     auto sccRegisterName(u8 index) const -> string;
     auto sccRegisterValue(u8 index) const -> string;
+    auto gteDataRegisterName(u8 index) const -> string;
+    auto gteDataRegisterValue(u8 index) const -> string;
+    auto gteControlRegisterName(u8 index) const -> string;
+    auto gteControlRegisterValue(u8 index) const -> string;
 
     u32 address;
     u32 instruction;

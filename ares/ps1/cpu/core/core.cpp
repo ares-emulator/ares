@@ -86,7 +86,7 @@ auto CPU::instructionDebug() -> void {
 
   static vector<bool> mask;
   if(!mask) mask.resize(0x0800'0000);
-//if(mask[(PC & 0x1fff'ffff) >> 2]) return;
+  if(mask[(PC & 0x1fff'ffff) >> 2]) return;
   mask[(PC & 0x1fff'ffff) >> 2] = 1;
 
   static uint counter = 0;

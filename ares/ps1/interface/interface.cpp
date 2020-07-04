@@ -5,6 +5,10 @@ namespace ares::PlayStation {
 Interface* interface = nullptr;
 
 auto PlayStationInterface::game() -> string {
+  if(disc.cd) {
+    return disc.name();
+  }
+
   return "(no disc inserted)";
 }
 
