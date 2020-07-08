@@ -6,8 +6,9 @@
   if(address <= 0x1f7f'ffff) return unmapped; \
   if(address <= 0x1f80'03ff) return cpu.cache.access(__VA_ARGS__); \
   if(address <= 0x1f80'106f) return unmapped; \
-  if(address <= 0x1f80'107f) return cpu.interrupt.access(__VA_ARGS__); \
-  if(address <= 0x1f80'10ff) return cpu.dma.access(__VA_ARGS__); \
+  if(address <= 0x1f80'107f) return interrupt.access(__VA_ARGS__); \
+  if(address <= 0x1f80'10ff) return dma.access(__VA_ARGS__); \
+  if(address <= 0x1f80'112f) return timer.access(__VA_ARGS__); \
   if(address <= 0x1f80'17ff) return unmapped; \
   if(address <= 0x1f80'180f) return disc.access(__VA_ARGS__); \
   if(address <= 0x1f80'181f) return gpu.access(__VA_ARGS__); \
@@ -24,6 +25,7 @@ inline auto Bus::readByte(u32 address) -> u8 {
 }
 
 inline auto Bus::readHalf(u32 address) -> u16 {
+  if(address == 0x1f80'1044) return 0x0007;
   decode(0, readHalf, address);
 }
 

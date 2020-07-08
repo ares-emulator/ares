@@ -69,6 +69,22 @@ auto Disc::disconnect() -> void {
 }
 
 auto Disc::main() -> void {
+  if(irq.acknowledge.delay && !--irq.acknowledge.delay) {
+    irq.acknowledge.flag = 1;
+    irq.poll();
+  } else if(irq.error.delay && !--irq.error.delay) {
+    fifo.response.write(0x0a);
+    fifo.response.write(0x90);
+    fifo.response.write(0x00);
+    fifo.response.write(0x00);
+    fifo.response.write(0x00);
+    fifo.response.write(0x00);
+    fifo.response.write(0x00);
+    fifo.response.write(0x00);
+
+    irq.error.flag = 1;
+    irq.poll();
+  }
   step(33'868'800 / 75);
 }
 
@@ -76,7 +92,7 @@ auto Disc::step(uint clocks) -> void {
   Thread::clock += clocks;
 }
 
-auto Disc::power() -> void {
+auto Disc::power(bool reset) -> void {
   Thread::reset();
   io = {};
 }

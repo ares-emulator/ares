@@ -18,7 +18,7 @@ struct Disc : Thread {
 
   auto main() -> void;
   auto step(uint clocks) -> void;
-  auto power() -> void;
+  auto power(bool reset) -> void;
 
   //io.cpp
   auto readByte(u32 address) -> u32;
@@ -31,8 +31,11 @@ struct Disc : Thread {
   //command.cpp
   auto command(u8 operation) -> void;
   auto commandGetStatus() -> void;
+  auto commandGetFirstAndLastTrackNumbers() -> void;
+  auto commandGetTrackStart() -> void;
   auto commandTest() -> void;
   auto commandTestControllerDate() -> void;
+  auto commandGetID() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -42,25 +45,26 @@ struct Disc : Thread {
     string name;
   } information;
 
-  struct Interrupt {
-    uint1 enable;
-    uint1 flag;
-  };
-
   struct IRQ {
     //irq.cpp
     auto poll() -> void;
 
+    struct Source {
+       uint1 enable;
+       uint1 flag;
+      uint32 delay;
+    };
+
     uint5 flag;
     uint5 mask;
 
-    Interrupt ready;        //INT1
-    Interrupt complete;     //INT2
-    Interrupt acknowledge;  //INT3
-    Interrupt end;          //INT4
-    Interrupt error;        //INT5
-    Interrupt unknown;      //INT8
-    Interrupt start;        //INT10
+    Source ready;        //INT1
+    Source complete;     //INT2
+    Source acknowledge;  //INT3
+    Source end;          //INT4
+    Source error;        //INT5
+    Source unknown;      //INT8
+    Source start;        //INT10
   } irq;
 
   struct FIFO {

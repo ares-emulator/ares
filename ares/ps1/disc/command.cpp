@@ -3,7 +3,10 @@ auto Disc::command(u8 operation) -> void {
 
   switch(operation) {
   case 0x01: return commandGetStatus();
+  case 0x13: return commandGetFirstAndLastTrackNumbers();
+  case 0x14: return commandGetTrackStart();
   case 0x19: return commandTest();
+  case 0x1a: return commandGetID();
   }
 }
 
@@ -21,8 +24,25 @@ auto Disc::commandGetStatus() -> void {
   fifo.response.write(data);
   ssr.shellOpen = 0;
 
-  irq.acknowledge.flag = 1;
-  irq.poll();
+  irq.acknowledge.delay = 3;
+}
+
+//0x13
+auto Disc::commandGetFirstAndLastTrackNumbers() -> void {
+  fifo.response.write(0x00);
+  fifo.response.write(0x01);
+  fifo.response.write(0x01);
+
+  irq.acknowledge.delay = 3;
+}
+
+//0x14
+auto Disc::commandGetTrackStart() -> void {
+  fifo.response.write(0x00);
+  fifo.response.write(0x00);
+  fifo.response.write(0x00);
+
+  irq.acknowledge.delay = 3;
 }
 
 //0x19
@@ -40,6 +60,22 @@ auto Disc::commandTestControllerDate() -> void {
   fifo.response.write(0x16);
   fifo.response.write(0xc1);
 
-  irq.acknowledge.flag = 1;
-  irq.poll();
+  irq.acknowledge.delay = 3;
+}
+
+//0x1a
+auto Disc::commandGetID() -> void {
+/*
+  fifo.response.write(0x0a);
+  fifo.response.write(0x90);
+  fifo.response.write(0x00);
+  fifo.response.write(0x00);
+  fifo.response.write(0x00);
+  fifo.response.write(0x00);
+  fifo.response.write(0x00);
+  fifo.response.write(0x00);
+*/
+
+  irq.acknowledge.delay = 3;
+  irq.error.delay = 3;
 }

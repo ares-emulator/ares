@@ -1,4 +1,7 @@
-struct Cartridge {
+struct Cartridge;
+#include "board/board.hpp"
+
+struct Cartridge : Thread {
   Node::Peripheral node;
   Memory::Readable<uint8> rom;
   Memory::Writable<uint8> ram;
@@ -13,6 +16,8 @@ struct Cartridge {
   auto disconnect() -> void;
 
   auto save() -> void;
+  auto main() -> void;
+  auto step(uint clocks) -> void;
   auto power() -> void;
 
   auto read(uint16 address) -> uint8;
@@ -21,11 +26,14 @@ struct Cartridge {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  unique_pointer<Board::Interface> board;
+
 private:
   struct Information {
     string manifest;
     string name;
     string region;
+    string board;
   } information;
 };
 

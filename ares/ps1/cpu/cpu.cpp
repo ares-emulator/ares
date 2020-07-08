@@ -4,8 +4,6 @@ namespace ares::PlayStation {
 
 CPU cpu;
 #include "core/core.cpp"
-#include "interrupt.cpp"
-#include "dma.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
 
@@ -28,10 +26,14 @@ auto CPU::main() -> void {
 }
 
 auto CPU::step(uint clocks) -> void {
-  gpu.clock -= clocks;
-  spu.clock -= clocks;
-  while(gpu.clock < 0) gpu.main();
-  while(spu.clock < 0) spu.main();
+  dma.step(clocks);
+  timer.step(clocks);
+  gpu.clock  -= clocks;
+  spu.clock  -= clocks;
+  disc.clock -= clocks;
+  while(gpu.clock  < 0) gpu.main();
+  while(spu.clock  < 0) spu.main();
+  while(disc.clock < 0) disc.main();
 }
 
 auto CPU::power(bool reset) -> void {
@@ -39,7 +41,6 @@ auto CPU::power(bool reset) -> void {
   powerCore(reset);
   ram.fill();
   cache.fill();
-  dma.power(reset);
 }
 
 }

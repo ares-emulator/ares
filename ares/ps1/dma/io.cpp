@@ -1,15 +1,15 @@
-auto CPU::DMA::readByte(u32 address) -> u8 {
-  print("* read byte ", hex(address, 8L), "\n");
+auto DMA::readByte(u32 address) -> u32 {
+  print("* rb", hex(address, 8L), "\n");
   return 0;
 }
 
-auto CPU::DMA::readHalf(u32 address) -> u16 {
-  print("* read half ", hex(address, 8L), "\n");
+auto DMA::readHalf(u32 address) -> u32 {
+  print("* rh", hex(address, 8L), "\n");
   return 0;
 }
 
-auto CPU::DMA::readWord(u32 address) -> u32 {
-  uint32 data = 0;
+auto DMA::readWord(u32 address) -> u32 {
+  uint32 data;
   uint32 c = address >> 4 & 7;
 
   //DnMADR: DMA Base Address
@@ -78,15 +78,15 @@ auto CPU::DMA::readWord(u32 address) -> u32 {
   return data;
 }
 
-auto CPU::DMA::writeByte(u32 address, u8 value) -> void {
-  print("* write byte ", hex(address, 8L), " = ", hex(value, 2L), "\n");
+auto DMA::writeByte(u32 address, u32 value) -> void {
+  print("* wb", hex(address, 8L), " = ", hex(value, 2L), "\n");
 }
 
-auto CPU::DMA::writeHalf(u32 address, u16 value) -> void {
-  print("* write half ", hex(address, 8L), " = ", hex(value, 4L), "\n");
+auto DMA::writeHalf(u32 address, u32 value) -> void {
+  print("* wh", hex(address, 8L), " = ", hex(value, 4L), "\n");
 }
 
-auto CPU::DMA::writeWord(u32 address, u32 value) -> void {
+auto DMA::writeWord(u32 address, u32 value) -> void {
   uint32 data = value;
   uint32 c = address >> 4 & 7;
 
@@ -120,7 +120,7 @@ auto CPU::DMA::writeWord(u32 address, u32 value) -> void {
       if(channel[c].synchronization == 0) transferLinear(c);
       if(channel[c].synchronization == 1) transferLinear(c);
       if(channel[c].synchronization == 2) transferLinked(c);
-      self.interrupt.pulse(CPU::Interrupt::DMA);
+      interrupt.pulse(Interrupt::DMA);
     }
   }
 
@@ -163,79 +163,4 @@ auto CPU::DMA::writeWord(u32 address, u32 value) -> void {
     if(data.bit(30)) channel[6].irq.flag = 0;
     pollIRQ();
   }
-}
-
-auto CPU::DMA::transferLinear(uint c) -> void {
-  u32 address = channel[c].address;
-  u16 blocks  = channel[c].synchronization == 0 ? uint16(1) : channel[c].blocks;
-
-  do {
-    u16 length = channel[c].length;
-    do {
-      if(channel[c].direction == 0) {
-        u32 data = 0;
-        if(c == 6) {
-          data = address - 4 & 0xfffffc;    //point to previous entry
-          if(length == 1) data = 0xffffff;  //end of ordering table
-        }
-        bus.writeWord(address, data);
-      }
-
-      if(channel[c].direction == 1) {
-        u32 data = bus.readWord(address);
-        if(c == 2) {
-          gpu.gp0(data);
-        }
-      }
-
-      if(channel[c].step == 0) address += 4;
-      if(channel[c].step == 1) address -= 4;
-    } while(--length);
-  } while(--blocks);
-  channel[c].enable  = 0;
-  channel[c].trigger = 0;
-}
-
-auto CPU::DMA::transferLinked(uint c) -> void {
-  if(channel[c].direction == 0) return;  //invalid direction for this mode
-
-  u32 address = channel[c].address;
-  u32 timeout = 0x40000;  //unverified; prevents potential infinite loop
-  do {
-    u32 header = bus.readWord(address);
-
-    for(uint count : range(header >> 24)) {
-      address += 4;
-      u32 data = bus.readWord(address);
-
-      if(c == 2) {
-        gpu.gp0(data);
-      }
-    }
-
-    address = header & 0xffffff;
-    if(address & 0x800000) break;
-  } while(--timeout);
-  channel[c].enable  = 0;
-  channel[c].trigger = 0;
-}
-
-auto CPU::DMA::pollIRQ() -> void {
-  irq.flag = irq.force;
-  if(!irq.enable) return;
-  for(uint n : range(7)) {
-    if(channel[n].irq.flag & channel[n].irq.enable) irq.flag = 1;
-  }
-}
-
-auto CPU::DMA::power(bool reset) -> void {
-  for(uint n : range(7)) {
-    channel[n].priority = 1 + n;
-    channel[n].masterEnable = 0;
-  }
-}
-
-auto CPU::DMA::Channel::active() const -> bool {
-  if(synchronization == 0) return enable && trigger;
-  return enable;
 }

@@ -23,6 +23,9 @@ auto System::load(Node::Object& root) -> void {
   gpu.load(node);
   spu.load(node);
   disc.load(node);
+  interrupt.load(node);
+  dma.load(node);
+  timer.load(node);
 }
 
 auto System::unload() -> void {
@@ -32,6 +35,9 @@ auto System::unload() -> void {
   gpu.unload();
   spu.unload();
   disc.unload();
+  interrupt.unload();
+  dma.unload();
+  timer.unload();
   node.reset();
 }
 
@@ -50,7 +56,10 @@ auto System::power(bool reset) -> void {
   cpu.power(reset);
   gpu.power(reset);
   spu.power(reset);
-  disc.power();
+  disc.power(reset);
+  interrupt.power(reset);
+  dma.power(reset);
+  timer.power(reset);
 
   information.serializeSize[0] = serializeInit(0);
   information.serializeSize[1] = serializeInit(1);

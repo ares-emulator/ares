@@ -36,13 +36,13 @@ auto GPU::unload() -> void {
 
 auto GPU::main() -> void {
   if(io.vcounter == 240) {
-    cpu.interrupt.raise(CPU::Interrupt::Vblank);
+    interrupt.raise(Interrupt::Vblank);
   }
 
   if(++io.vcounter == 262) {
     io.vcounter = 0;
     io.field = !io.field;
-    cpu.interrupt.lower(CPU::Interrupt::Vblank);
+    interrupt.lower(Interrupt::Vblank);
     refreshed = true;
   }
 

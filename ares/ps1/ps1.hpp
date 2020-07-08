@@ -24,6 +24,9 @@ namespace ares::PlayStation {
   #include <ps1/cpu/cpu.hpp>
   #include <ps1/gpu/gpu.hpp>
   #include <ps1/spu/spu.hpp>
+  #include <ps1/irq/irq.hpp>
+  #include <ps1/dma/dma.hpp>
+  #include <ps1/timer/timer.hpp>
   #include <ps1/memory/bus.hpp>
 }
 
