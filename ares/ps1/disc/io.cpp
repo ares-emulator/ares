@@ -49,7 +49,7 @@ auto Disc::readByte(u32 address) -> u32 {
     data.bit(7) = 1;
   }
 
-print("* r", hex(address, 8L), ":", io.index, "=", hex(data, 2L), "\n");
+//print("* r", hex(address, 8L), ":", io.index, "=", hex(data, 2L), "\n");
 
   return data;
 }
@@ -67,7 +67,7 @@ auto Disc::readWord(u32 address) -> u32 {
 auto Disc::writeByte(u32 address, u32 value) -> void {
   uint8 data = value;
 
-print("* w", hex(address, 8L), ":", io.index, "=", hex(data, 2L), "\n");
+//print("* w", hex(address, 8L), ":", io.index, "=", hex(data, 2L), "\n");
 
   if(address == 0x1f80'1800) {
     io.index = data.bit(0,1);

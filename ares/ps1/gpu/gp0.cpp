@@ -1,4 +1,58 @@
-auto GPU::gp0(u32 value) -> void {
+auto GPU::readGP0() -> u32 {
+  uint32 data;
+
+  if(io.mode == Mode::CopyFromVRAM) {
+    for(uint loop : range(2)) {
+      uint10 x = io.copy.x + io.copy.px;
+       uint9 y = io.copy.y + io.copy.py;
+      data = vram.readHalf((y * 1024 + x) * 2) << 16 | data >> 16;
+      if(++io.copy.px >= io.copy.width) {
+        io.copy.px = 0;
+        if(++io.copy.py >= io.copy.height) {
+          io.copy.py = 0;
+          io.mode = Mode::Normal;
+          return data;
+        }
+      }
+    }
+    return data;
+  }
+
+  return data;
+}
+
+auto GPU::writeGP0(u32 value) -> void {
+  if(io.mode == Mode::CopyToVRAM) {
+    for(uint loop : range(2)) {
+      uint10 x = io.copy.x + io.copy.px;
+       uint9 y = io.copy.y + io.copy.py;
+      vram.writeHalf((y * 1024 + x) * 2, value);
+      value >>= 16;
+      if(++io.copy.px >= io.copy.width) {
+        io.copy.px = 0;
+        if(++io.copy.py >= io.copy.height) {
+          io.copy.py = 0;
+          io.mode = Mode::Normal;
+          return;
+        }
+      }
+    }
+    return;
+  }
+
+  auto setPalette = [&](u32 data) -> void {
+    io.texturePaletteX = data >> 16 &  0x3f;
+    io.texturePaletteY = data >> 22 & 0x1ff;
+  };
+
+  auto setPage = [&](u32 data) -> void {
+    io.texturePageBaseX = data >> 16 & 15;
+    io.texturePageBaseY = data >> 20 &  1;
+    io.semiTransparency = data >> 21 &  3;
+    io.textureDepth     = data >> 23 &  3;
+    io.textureDisable   = data >> 27 &  1;
+  };
+
   auto& queue = this->queue.gp0;
 
    uint8 command = value >> 24;
@@ -22,15 +76,30 @@ auto GPU::gp0(u32 value) -> void {
     return;
   }
 
+  //fill rectangle
+  if(command == 0x02) {
+    if(queue.write(value) < 3) return;
+    uint16 color  = Color::to16(queue.data[0].bit(0,23));
+    uint16 x      = queue.data[1].bit( 0,15);
+    uint16 y      = queue.data[1].bit(16,31);
+    uint16 width  = queue.data[2].bit( 0,15);
+    uint16 height = queue.data[2].bit(16,31);
+    for(uint py : range(height)) {
+      for(uint px : range(width)) {
+        vram.writeHalf(((y + py) * 1024 + (x + px)) * 2, color);
+      }
+    }
+    return queue.reset();
+  }
+
   //monochrome triangle
   if(command == 0x20 || command == 0x21 || command == 0x22 || command == 0x23) {
     if(queue.write(value) < 4) return;
     auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
     auto v1 = Vertex().setColor(queue.data[0]).setPoint(queue.data[2]);
     auto v2 = Vertex().setColor(queue.data[0]).setPoint(queue.data[3]);
-    auto ts = Texture();
-    if(command == 0x20 || command == 0x21) renderTriangle<Render::Color>(v0, v1, v2, ts);
-    if(command == 0x22 || command == 0x23) renderTriangle<Render::Color | Render::Alpha>(v0, v1, v2, ts);
+    if(command == 0x20 || command == 0x21) renderTriangle<Render::Color>(v0, v1, v2);
+    if(command == 0x22 || command == 0x23) renderTriangle<Render::Color | Render::Alpha>(v0, v1, v2);
     return queue.reset();
   }
 
@@ -40,11 +109,12 @@ auto GPU::gp0(u32 value) -> void {
     auto v0 = Vertex().setColor(0).setPoint(queue.data[1]).setTexel(queue.data[2]);
     auto v1 = Vertex().setColor(0).setPoint(queue.data[3]).setTexel(queue.data[4]);
     auto v2 = Vertex().setColor(0).setPoint(queue.data[5]).setTexel(queue.data[6]);
-    auto ts = Texture().setPalette(queue.data[2]).setPage(queue.data[4]);
-    if(command == 0x24) renderTriangle<Render::Texel | Render::ModulateColor>(v0, v1, v2, ts);
-    if(command == 0x25) renderTriangle<Render::Texel>(v0, v1, v2, ts);
-    if(command == 0x26) renderTriangle<Render::Texel | Render::Alpha | Render::ModulateColor>(v0, v1, v2, ts);
-    if(command == 0x27) renderTriangle<Render::Texel | Render::Alpha>(v0, v1, v2, ts);
+    setPalette(queue.data[2]);
+    setPage(queue.data[4]);
+    if(command == 0x24) renderTriangle<Render::Texel | Render::ModulateColor>(v0, v1, v2);
+    if(command == 0x25) renderTriangle<Render::Texel>(v0, v1, v2);
+    if(command == 0x26) renderTriangle<Render::Texel | Render::Alpha | Render::ModulateColor>(v0, v1, v2);
+    if(command == 0x27) renderTriangle<Render::Texel | Render::Alpha>(v0, v1, v2);
     return queue.reset();
   }
 
@@ -55,9 +125,8 @@ auto GPU::gp0(u32 value) -> void {
     auto v1 = Vertex().setColor(queue.data[0]).setPoint(queue.data[2]);
     auto v2 = Vertex().setColor(queue.data[0]).setPoint(queue.data[3]);
     auto v3 = Vertex().setColor(queue.data[0]).setPoint(queue.data[4]);
-    auto ts = Texture();
-    if(command == 0x28 || command == 0x29) renderQuadrilateral<Render::Color>(v0, v1, v2, v3, ts);
-    if(command == 0x2a || command == 0x2b) renderQuadrilateral<Render::Color | Render::Alpha>(v0, v1, v2, v3, ts);
+    if(command == 0x28 || command == 0x29) renderQuadrilateral<Render::Color>(v0, v1, v2, v3);
+    if(command == 0x2a || command == 0x2b) renderQuadrilateral<Render::Color | Render::Alpha>(v0, v1, v2, v3);
     return queue.reset();
   }
 
@@ -68,11 +137,12 @@ auto GPU::gp0(u32 value) -> void {
     auto v1 = Vertex().setColor(queue.data[0]).setPoint(queue.data[3]).setTexel(queue.data[4]);
     auto v2 = Vertex().setColor(queue.data[0]).setPoint(queue.data[5]).setTexel(queue.data[6]);
     auto v3 = Vertex().setColor(queue.data[0]).setPoint(queue.data[7]).setTexel(queue.data[8]);
-    auto ts = Texture().setPalette(queue.data[2]).setPage(queue.data[4]);
-    if(command == 0x2c) renderQuadrilateral<Render::Texel | Render::ModulateColor>(v0, v1, v2, v3, ts);
-    if(command == 0x2d) renderQuadrilateral<Render::Texel>(v0, v1, v2, v3, ts);
-    if(command == 0x2e) renderQuadrilateral<Render::Texel | Render::Alpha | Render::ModulateColor>(v0, v1, v2, v3, ts);
-    if(command == 0x2f) renderQuadrilateral<Render::Texel | Render::Alpha>(v0, v1, v2, v3, ts);
+    setPalette(queue.data[2]);
+    setPage(queue.data[4]);
+    if(command == 0x2c) renderQuadrilateral<Render::Texel | Render::ModulateColor>(v0, v1, v2, v3);
+    if(command == 0x2d) renderQuadrilateral<Render::Texel>(v0, v1, v2, v3);
+    if(command == 0x2e) renderQuadrilateral<Render::Texel | Render::Alpha | Render::ModulateColor>(v0, v1, v2, v3);
+    if(command == 0x2f) renderQuadrilateral<Render::Texel | Render::Alpha>(v0, v1, v2, v3);
     return queue.reset();
   }
 
@@ -82,9 +152,8 @@ auto GPU::gp0(u32 value) -> void {
     auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
     auto v1 = Vertex().setColor(queue.data[2]).setPoint(queue.data[3]);
     auto v2 = Vertex().setColor(queue.data[4]).setPoint(queue.data[5]);
-    auto ts = Texture();
-    if(command == 0x30 || command == 0x31) renderTriangle<Render::Shade>(v0, v1, v2, ts);
-    if(command == 0x32 || command == 0x33) renderTriangle<Render::Shade | Render::Alpha>(v0, v1, v2, ts);
+    if(command == 0x30 || command == 0x31) renderTriangle<Render::Shade>(v0, v1, v2);
+    if(command == 0x32 || command == 0x33) renderTriangle<Render::Shade | Render::Alpha>(v0, v1, v2);
     return queue.reset();
   }
 
@@ -94,9 +163,10 @@ auto GPU::gp0(u32 value) -> void {
     auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]).setTexel(queue.data[2]);
     auto v1 = Vertex().setColor(queue.data[3]).setPoint(queue.data[4]).setTexel(queue.data[5]);
     auto v2 = Vertex().setColor(queue.data[6]).setPoint(queue.data[7]).setTexel(queue.data[8]);
-    auto ts = Texture().setPalette(queue.data[2]).setPage(queue.data[5]);
-    if(command == 0x34 || command == 0x35) renderTriangle<Render::Texel | Render::ModulateShade>(v0, v1, v2, ts);
-    if(command == 0x36 || command == 0x37) renderTriangle<Render::Texel | Render::Alpha | Render::ModulateShade>(v0, v1, v2, ts);
+    setPalette(queue.data[2]);
+    setPage(queue.data[5]);
+    if(command == 0x34 || command == 0x35) renderTriangle<Render::Texel | Render::ModulateShade>(v0, v1, v2);
+    if(command == 0x36 || command == 0x37) renderTriangle<Render::Texel | Render::Alpha | Render::ModulateShade>(v0, v1, v2);
     return queue.reset();
   }
 
@@ -107,9 +177,8 @@ auto GPU::gp0(u32 value) -> void {
     auto v1 = Vertex().setColor(queue.data[2]).setPoint(queue.data[3]);
     auto v2 = Vertex().setColor(queue.data[4]).setPoint(queue.data[5]);
     auto v3 = Vertex().setColor(queue.data[6]).setPoint(queue.data[7]);
-    auto ts = Texture();
-    if(command == 0x38 || command == 0x39) renderQuadrilateral<Render::Shade>(v0, v1, v2, v3, ts);
-    if(command == 0x3a || command == 0x3b) renderQuadrilateral<Render::Shade | Render::Alpha>(v0, v1, v2, v3, ts);
+    if(command == 0x38 || command == 0x39) renderQuadrilateral<Render::Shade>(v0, v1, v2, v3);
+    if(command == 0x3a || command == 0x3b) renderQuadrilateral<Render::Shade | Render::Alpha>(v0, v1, v2, v3);
     return queue.reset();
   }
 
@@ -120,42 +189,56 @@ auto GPU::gp0(u32 value) -> void {
     auto v1 = Vertex().setColor(queue.data[ 3]).setPoint(queue.data[ 4]).setTexel(queue.data[ 5]);
     auto v2 = Vertex().setColor(queue.data[ 6]).setPoint(queue.data[ 7]).setTexel(queue.data[ 8]);
     auto v3 = Vertex().setColor(queue.data[ 9]).setPoint(queue.data[10]).setTexel(queue.data[11]);
-    auto ts = Texture().setPalette(queue.data[2]).setPage(queue.data[5]);
-    if(command == 0x3c || command == 0x3d) renderQuadrilateral<Render::Texel | Render::ModulateShade>(v0, v1, v2, v3, ts);
-    if(command == 0x3e || command == 0x3f) renderQuadrilateral<Render::Texel | Render::Alpha | Render::ModulateShade>(v0, v1, v2, v3, ts);
+    setPalette(queue.data[2]);
+    setPage(queue.data[5]);
+    if(command == 0x3c || command == 0x3d) renderQuadrilateral<Render::Texel | Render::ModulateShade>(v0, v1, v2, v3);
+    if(command == 0x3e || command == 0x3f) renderQuadrilateral<Render::Texel | Render::Alpha | Render::ModulateShade>(v0, v1, v2, v3);
+    return queue.reset();
+  }
+
+  //textured rectangle
+  if(command == 0x64 || command == 0x65 || command == 0x66 || command == 0x67) {
+    if(queue.write(value) < 4) return;
+    auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]).setTexel(queue.data[2]);
+    auto sz = Size().setSize(queue.data[3]);
+    setPalette(queue.data[2]);
+    if(command == 0x64) renderRectangle<Render::Texel | Render::ModulateColor>(v0, sz);
+    if(command == 0x65) renderRectangle<Render::Texel>(v0, sz);
+    if(command == 0x66) renderRectangle<Render::Texel | Render::Alpha>(v0, sz);
+    if(command == 0x67) renderRectangle<Render::Texel | Render::Alpha | Render::ModulateColor>(v0, sz);
+    return queue.reset();
+  }
+
+  //copy rectangle (VRAM to VRAM)
+  if(command == 0x80) {
+    if(queue.write(value) < 4) return;
+    print("* GPU copy VRAM to VRAM\n");
     return queue.reset();
   }
 
   //copy rectangle (CPU to VRAM)
   if(command == 0xa0) {
-    if(queue.length < 3) return (void)queue.write(value);
-    uint16 x       = (queue.data[1].bit( 0,15) & 1023);
-    uint16 y       = (queue.data[1].bit(16,31) &  511);
-    uint16 width   = (queue.data[2].bit( 0,15) - 1 & 1023) + 1;
-    uint16 height  = (queue.data[2].bit(16,31) - 1 &  511) + 1;
-    for(uint pixel : range(2)) {
-      uint10 offsetX = x + queue.counterX;
-       uint9 offsetY = y + queue.counterY;
-      vram.writeHalf((offsetY * 1024 + offsetX) * 2, value);
-      value >>= 16;
-      if(++queue.counterX >= width) {
-        queue.counterX = 0;
-        if(++queue.counterY >= height) {
-          queue.counterY = 0;
-          return queue.reset();
-        }
-      }
-    }
-    return;
+    if(queue.write(value) < 3) return;
+    io.copy.x      = (queue.data[1].bit( 0,15) & 1023);
+    io.copy.y      = (queue.data[1].bit(16,31) &  511);
+    io.copy.width  = (queue.data[2].bit( 0,15) - 1 & 1023) + 1;
+    io.copy.height = (queue.data[2].bit(16,31) - 1 &  511) + 1;
+    io.copy.px     = 0;
+    io.copy.py     = 0;
+    io.mode        = Mode::CopyToVRAM;
+    return queue.reset();
   }
 
   //copy rectangle (VRAM to CPU)
   if(command == 0xc0) {
-    if(queue.length < 3) return (void)queue.write(value);
-    uint16 x      = (queue.data[1].bit( 0,15) & 1023);
-    uint16 y      = (queue.data[1].bit(16,31) &  511);
-    uint16 width  = (queue.data[2].bit( 0,15) - 1 & 1023) + 1;
-    uint16 height = (queue.data[2].bit(16,31) - 1 &  511) + 1;
+    if(queue.write(value) < 3) return;
+    io.copy.x      = (queue.data[1].bit( 0,15) & 1023);
+    io.copy.y      = (queue.data[1].bit(16,31) &  511);
+    io.copy.width  = (queue.data[2].bit( 0,15) - 1 & 1023) + 1;
+    io.copy.height = (queue.data[2].bit(16,31) - 1 &  511) + 1;
+    io.copy.px     = 0;
+    io.copy.py     = 0;
+    io.mode        = Mode::CopyFromVRAM;
     return queue.reset();
   }
 
@@ -210,5 +293,5 @@ auto GPU::gp0(u32 value) -> void {
     return;
   }
 
-//print("* GP0(", hex(command, 2L), ") = ", hex(value, 6L), "\n");
+  print("* GP0(", hex(command, 2L), ") = ", hex(value, 6L), "\n");
 }

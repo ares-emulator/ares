@@ -23,17 +23,39 @@ struct GPU : Thread {
   auto writeWord(u32 address, u32 data) -> void;
 
   //gp0.cpp
-  auto gp0(u32 data) -> void;
+  auto readGP0() -> u32;
+  auto writeGP0(u32 data) -> void;
 
   //gp1.cpp
-  auto gp1(u32 data) -> void;
+  auto readGP1() -> u32;
+  auto writeGP1(u32 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  enum class Mode : uint {
+    Normal,
+    CopyToVRAM,
+    CopyFromVRAM,
+  };
+
   struct IO {
+    Mode mode = Mode::Normal;
+
      uint1 field = 0;
     uint16 vcounter = 0;
+
+    //GP0(a0): copy rectangle (CPU to VRAM)
+    //GP0(c0): copy rectangle (VRAM to CPU)
+    struct Copy {
+      uint16 x;
+      uint16 y;
+      uint16 width;
+      uint16 height;
+    //internal:
+      uint16 px;
+      uint16 py;
+    } copy;
 
     //GP0(e1): draw mode
      uint4 texturePageBaseX = 0;
@@ -96,6 +118,10 @@ struct GPU : Thread {
      uint1 colorDepth = 0;
      uint1 interlace = 0;
      uint1 reverseFlag = 0;
+
+    //internal:
+     uint6 texturePaletteX;
+     uint9 texturePaletteY;
   } io;
 
   struct Queue {
@@ -127,8 +153,12 @@ struct GPU : Thread {
       };
     }
 
+    static auto to16(u32 data) -> u16 {
+      return (data >> 3 & 0x1f) << 0 | (data >> 11 & 0x1f) << 5 | (data >> 19 & 0x1f) << 10;
+    }
+
     auto to16() const -> u16 {
-      return {(r >> 3) << 10 | (g >> 3) << 5 | (b >> 3) << 0};
+      return {(r >> 3) << 0 | (g >> 3) << 5 | (b >> 3) << 10};
     }
 
     u8 r, g, b;
@@ -141,9 +171,21 @@ struct GPU : Thread {
       return *this;
     }
 
+    auto setPoint(i16 px, i16 py) -> Vertex& {
+      x = px;
+      y = py;
+      return *this;
+    }
+
     auto setTexel(u32 data) -> Vertex& {
       u = u8(data >> 0);
       v = u8(data >> 8);
+      return *this;
+    }
+
+    auto setTexel(i16 tu, i16 tv) -> Vertex& {
+      u = tu;
+      v = tv;
       return *this;
     }
 
@@ -153,23 +195,23 @@ struct GPU : Thread {
       b = u8(data >> 16);
       return *this;
     }
+
+    auto setColor(u8 cr, u8 cg, u8 cb) -> Vertex& {
+      r = cr;
+      g = cg;
+      b = cb;
+      return *this;
+    }
   };
 
-  struct Palette { u16 cx, cy; };
-  struct Page { u16 px, py; };
-
-  struct Texture : Palette, Page {
-    auto setPalette(u32 data) -> Texture& {
-      cx = (data >> 16 &  0x3f) << 4;
-      cy = (data >> 22 & 0x1ff) << 0;
+  struct Size {
+    auto setSize(u32 data) -> Size& {
+      w = u16(data >>  0);
+      h = u16(data >> 16);
       return *this;
     }
 
-    auto setPage(u32 data) -> Texture& {
-      px = (data >> 16 & 0xf) << 6;
-      py = (data >> 20 & 0x1) << 8;
-      return *this;
-    }
+    u16 w, h;
   };
 
   struct Render {
@@ -183,13 +225,14 @@ struct GPU : Thread {
 
   //render.cpp
   auto weight(Point a, Point b, Point c) const -> i32;
+  auto texel(Point p) const -> u16;
   auto dither(Point p, Color c) const -> Color;
   auto renderPixelColor(Point p, Color c) -> void;
   auto renderPixelAlpha(Point P, Color c) -> void;
-  auto renderTexel(Point tp, Texture ts) -> u16;
   auto renderSolidLine(Point p0, Point p1, Color c) -> void;
-  template<uint RenderFlags> auto renderTriangle(Vertex v0, Vertex v1, Vertex v2, Texture ts) -> void;
-  template<uint RenderFlags> auto renderQuadrilateral(Vertex v0, Vertex v1, Vertex v2, Vertex v3, Texture ts) -> void;
+  template<uint Flags> auto renderTriangle(Vertex v0, Vertex v1, Vertex v2) -> void;
+  template<uint Flags> auto renderQuadrilateral(Vertex v0, Vertex v1, Vertex v2, Vertex v3) -> void;
+  template<uint Flags> auto renderRectangle(Vertex v0, Size sz) -> void;
 
 //unserialized:
   u32 output[1024 * 512];

@@ -5,7 +5,5 @@ auto Disc::IRQ::poll() -> void {
   pending |= acknowledge.flag & acknowledge.enable;
   pending |= end.flag & end.enable;
   pending |= error.flag & error.enable;
-
-  if(pending == 0) interrupt.lower(Interrupt::CDROM);
-  if(pending == 1) interrupt.raise(Interrupt::CDROM), print("* IRQ\n");
+  interrupt.drive(Interrupt::CDROM, pending);
 }

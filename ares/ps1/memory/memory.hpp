@@ -31,9 +31,9 @@ struct Readable {
     }
   }
 
-  auto readByte(u32 address) -> u8 { return *(u8*)&data[address & maskByte]; }
-  auto readHalf(u32 address) -> u16 { return *(u16*)&data[address & maskHalf]; }
-  auto readWord(u32 address) -> u32 { return *(u32*)&data[address & maskWord]; }
+  auto readByte(u32 address) const -> u8 { return *(u8*)&data[address & maskByte]; }
+  auto readHalf(u32 address) const -> u16 { return *(u16*)&data[address & maskHalf]; }
+  auto readWord(u32 address) const -> u32 { return *(u32*)&data[address & maskWord]; }
 
   auto writeByte(u32 address, u8 data) -> void {}
   auto writeHalf(u32 address, u16 data) -> void {}
@@ -78,9 +78,9 @@ struct Writable {
     }
   }
 
-  auto readByte(u32 address) -> u8 { return *(u8*)&data[address & maskByte]; }
-  auto readHalf(u32 address) -> u16 { return *(u16*)&data[address & maskHalf]; }
-  auto readWord(u32 address) -> u32 { return *(u32*)&data[address & maskWord]; }
+  auto readByte(u32 address) const -> u8 { return *(u8*)&data[address & maskByte]; }
+  auto readHalf(u32 address) const -> u16 { return *(u16*)&data[address & maskHalf]; }
+  auto readWord(u32 address) const -> u32 { return *(u32*)&data[address & maskWord]; }
 
   auto writeByte(u32 address, u8 value) -> void { *(u8*)&data[address & maskByte] = value; }
   auto writeHalf(u32 address, u16 value) -> void { *(u16*)&data[address & maskHalf] = value; }

@@ -15,15 +15,13 @@ auto GPU::load(Node::Object parent) -> void {
   screen = node->append<Node::Screen>("Screen");
   screen->colors(1 << 16, [&](uint32 color) -> uint64 {
     u64 a = 65535;
-  //u64 r = image::normalize(color >> 16 & 255, 8, 16);
-  //u64 g = image::normalize(color >>  8 & 255, 8, 16);
-  //u64 b = image::normalize(color >>  0 & 255, 8, 16);
-    u64 r = image::normalize(color >> 10 & 31, 5, 16);
+    u64 r = image::normalize(color >>  0 & 31, 5, 16);
     u64 g = image::normalize(color >>  5 & 31, 5, 16);
-    u64 b = image::normalize(color >>  0 & 31, 5, 16);
+    u64 b = image::normalize(color >> 10 & 31, 5, 16);
     return a << 48 | r << 32 | g << 16 | b << 0;
   });
   screen->setSize(640, 480);
+//screen->setSize(1024, 512);
 
   vram.allocate(1_MiB);
 }
@@ -63,6 +61,7 @@ auto GPU::refresh() -> void {
     }
   }
   screen->refresh((uint32*)output, 1024 * sizeof(uint32), 640, 480);
+//screen->refresh((uint32*)output, 1024 * sizeof(uint32), 1024, 512);
 }
 
 auto GPU::power(bool reset) -> void {

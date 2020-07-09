@@ -6,6 +6,7 @@ struct Timer {
   auto unload() -> void;
 
   auto step(uint clocks) -> void;
+  auto poll() -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -20,6 +21,13 @@ struct Timer {
   auto serialize(serializer&) -> void;
 
   struct Source {
+    Timer& self;
+    Source(Timer& self) : self(self) {}
+
+    //timer.cpp
+    auto step(uint clocks) -> void;
+    auto irq() -> void;
+
     uint16 counter;
     uint16 target;
      uint1 synchronizeEnable;
@@ -30,15 +38,15 @@ struct Timer {
      uint1 irqRepeat;
      uint1 irqMode;
      uint2 clockSource;
-     uint1 irqLine;
+     uint1 irqLine = 1;  //0 = active
      uint1 reachedTarget;
      uint1 reachedSaturate;
      uint3 unknown;
   };
 
-  Source htimer;  //Hblank timer 0
-  Source vtimer;  //Vblank timer 1
-  Source ftimer;  //free timer 2
+  Source htimer{*this};  //Hblank timer 0
+  Source vtimer{*this};  //Vblank timer 1
+  Source ftimer{*this};  //free timer 2
 };
 
 extern Timer timer;

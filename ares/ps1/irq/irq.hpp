@@ -6,9 +6,10 @@ struct Interrupt {
   auto unload() -> void;
 
   auto poll() -> void;
-  auto pulse(uint source) -> void;
   auto raise(uint source) -> void;
   auto lower(uint source) -> void;
+  auto pulse(uint source) -> void;
+  auto drive(uint source, bool line) -> void;
   auto power(bool reset) -> void;
 
   //io.cpp

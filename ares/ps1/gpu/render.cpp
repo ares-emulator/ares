@@ -3,6 +3,39 @@ auto GPU::weight(Point a, Point b, Point c) const -> i32 {
   return (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
 }
 
+auto GPU::texel(Point p) const -> u16 {
+  u16 px = io.texturePaletteX << 4;
+  u16 py = io.texturePaletteY << 0;
+  i32 bx = io.texturePageBaseX << 6;
+  i32 by = io.texturePageBaseY << 8;
+  i32 tx = p.x & ~(io.textureWindowMaskX * 8) | (io.textureWindowOffsetX & io.textureWindowMaskX) * 8;
+  i32 ty = p.y & ~(io.textureWindowMaskY * 8) | (io.textureWindowOffsetY & io.textureWindowMaskY) * 8;
+  if(io.textureDepth == 0) {  //4bpp
+    i32 ix = tx / 4 + bx & 1023;
+    i32 iy = ty + by & 511;
+    u16 index = vram.readHalf((iy * 1024 + ix) * 2);
+    u16 entry = index >> (tx & 3) * 4 & 15;
+    i32 cx = px + entry & 1023;
+    i32 cy = py;
+    return vram.readHalf((cy * 1024 + cx) * 2);
+  }
+  if(io.textureDepth == 1) {  //8bpp
+    i32 ix = tx / 2 + bx & 1023;
+    i32 iy = ty + by & 511;
+    u16 index = vram.readHalf((iy * 1024 + ix) * 2);
+    u16 entry = index >> (tx & 1) * 8 & 255;
+    i32 cx = px + entry & 1023;
+    i32 cy = py;
+    return vram.readHalf((cy * 1024 + cx) * 2);
+  }
+  if(io.textureDepth == 2) {  //16bpp
+    i32 ix = tx + bx & 1023;
+    i32 iy = ty + by & 511;
+    return vram.readHalf((iy * 1024 + ix) * 2);
+  }
+  return 0;
+}
+
 auto GPU::dither(Point p, Color c) const -> Color {
   if(io.dithering) {
     static constexpr i8 table[4 * 4] = {
@@ -20,11 +53,29 @@ auto GPU::dither(Point p, Color c) const -> Color {
 }
 
 auto GPU::renderPixelColor(Point point, Color color) -> void {
+  point.x = point.x + io.drawingAreaOffsetX & 1023;
+  point.y = point.y + io.drawingAreaOffsetY &  511;
+
+  if(point.x < io.drawingAreaOriginX1) return;
+  if(point.y < io.drawingAreaOriginY1) return;
+
+  if(point.x > io.drawingAreaOriginX2) return;
+  if(point.y > io.drawingAreaOriginY2) return;
+
   u32 address = (point.y & 511) * 1024 + (point.x & 1023);
   vram.writeHalf(address * 2, dither(point, color).to16());
 }
 
 auto GPU::renderPixelAlpha(Point point, Color above) -> void {
+  point.x = point.x + io.drawingAreaOffsetX & 1023;
+  point.y = point.y + io.drawingAreaOffsetY &  511;
+
+  if(point.x < io.drawingAreaOriginX1) return;
+  if(point.y < io.drawingAreaOriginY1) return;
+
+  if(point.x > io.drawingAreaOriginX2) return;
+  if(point.y > io.drawingAreaOriginY2) return;
+
   u32 address = (point.y & 511) * 1024 + (point.x & 1023);
   Color below = Color::from16(vram.readHalf(address * 2)), color;
   switch(io.semiTransparency) {
@@ -52,35 +103,6 @@ auto GPU::renderPixelAlpha(Point point, Color above) -> void {
   vram.writeHalf(address * 2, dither(point, color).to16());
 }
 
-auto GPU::renderTexel(Point tp, Texture ts) -> u16 {
-  i32 tx = tp.x & ~(io.textureWindowMaskX * 8) | (io.textureWindowOffsetX & io.textureWindowMaskX) * 8;
-  i32 ty = tp.y & ~(io.textureWindowMaskY * 8) | (io.textureWindowOffsetY & io.textureWindowMaskY) * 8;
-  if(io.textureDepth == 0) {  //4bpp
-    i32 ix = tx / 4 + ts.px & 1023;
-    i32 iy = ty + ts.py & 511;
-    u16 index = vram.readHalf((iy * 1024 + ix) * 2);
-    u16 entry = index >> (tx & 3) * 4 & 15;
-    i32 cx = ts.cx + entry & 1023;
-    i32 cy = ts.cy;
-    return vram.readHalf((cy * 1024 + cx) * 2);
-  }
-  if(io.textureDepth == 1) {  //8bpp
-    i32 ix = tx / 2 + ts.px & 1023;
-    i32 iy = ty + ts.py & 511;
-    u16 index = vram.readHalf((iy * 1024 + ix) * 2);
-    u16 entry = index >> (tx & 1) * 8 & 255;
-    i32 cx = ts.cx + entry & 1023;
-    i32 cy = ts.cy;
-    return vram.readHalf((cy * 1024 + cx) * 2);
-  }
-  if(io.textureDepth == 2) {  //16bpp
-    i32 ix = tx + ts.px & 1023;
-    i32 iy = ty + ts.py & 511;
-    return vram.readHalf((iy * 1024 + ix) * 2);
-  }
-  return 0;
-}
-
 auto GPU::renderSolidLine(Point p0, Point p1, Color c) -> void {
   Point d = {p1.x - p0.x, p1.y - p0.y};
   i32 steps = abs(d.x) > abs(d.y) ? abs(d.x) : abs(d.y);
@@ -99,7 +121,7 @@ auto GPU::renderSolidLine(Point p0, Point p1, Color c) -> void {
 
 #if defined(RENDER_DDA)
 template<uint Flags>
-auto GPU::renderTriangle(Vertex v0, Vertex v1, Vertex v2, Texture ts) -> void {
+auto GPU::renderTriangle(Vertex v0, Vertex v1, Vertex v2) -> void {
   //sort: y0 <= y1 <= y2
   if(v0.y > v1.y) swap(v0, v1);
   if(v0.y > v2.y) swap(v0, v2);
@@ -161,7 +183,7 @@ auto GPU::renderTriangle(Vertex v0, Vertex v1, Vertex v2, Texture ts) -> void {
         r += rx, g += gx, b += bx;
       }
       if constexpr(Flags & Render::Texel) {
-        if(u16 texel = renderTexel({u >> 16, v >> 16}, ts)) {
+        if(u16 texel = this->texel({u >> 16, v >> 16})) {
           renderPixelColor({x, y}, Color::from16(texel));
         }
         u += ux, v += vx;
@@ -184,7 +206,7 @@ auto GPU::renderTriangle(Vertex v0, Vertex v1, Vertex v2, Texture ts) -> void {
 
 #if defined(RENDER_BARYCENTRIC)
 template<uint Flags>
-auto GPU::renderTriangle(Vertex v0, Vertex v1, Vertex v2, Texture ts) -> void {
+auto GPU::renderTriangle(Vertex v0, Vertex v1, Vertex v2) -> void {
   Point vmin{min(v0.x, v1.x, v2.x), min(v0.y, v1.y, v2.y)};
   Point vmax{max(v0.x, v1.x, v2.x), max(v0.y, v1.y, v2.y)};
 
@@ -220,7 +242,7 @@ auto GPU::renderTriangle(Vertex v0, Vertex v1, Vertex v2, Texture ts) -> void {
       if constexpr(Flags & Render::Texel) {
         u8 u = (v0.u * w0 + v1.u * w1 + v2.u * w2) / w;
         u8 v = (v0.v * w0 + v1.v * w1 + v2.v * w2) / w;
-        if(u16 texel = renderTexel({u, v}, ts)) {
+        if(u16 texel = this->texel({u, v})) {
           Color c = Color::from16(texel);
           if constexpr(Flags & Render::ModulateColor) {
             c.r = c.r * v0.r >> 7;
@@ -248,7 +270,15 @@ auto GPU::renderTriangle(Vertex v0, Vertex v1, Vertex v2, Texture ts) -> void {
 #endif
 
 template<uint Flags>
-auto GPU::renderQuadrilateral(Vertex v0, Vertex v1, Vertex v2, Vertex v3, Texture ts) -> void {
-  renderTriangle<Flags>(v0, v1, v2, ts);
-  renderTriangle<Flags>(v1, v2, v3, ts);
+auto GPU::renderQuadrilateral(Vertex v0, Vertex v1, Vertex v2, Vertex v3) -> void {
+  renderTriangle<Flags>(v0, v1, v2);
+  renderTriangle<Flags>(v1, v2, v3);
+}
+
+template<uint Flags>
+auto GPU::renderRectangle(Vertex v0, Size sz) -> void {
+  auto v1 = Vertex(v0).setPoint(v0.x + sz.w, v0.y).setTexel(v0.u + sz.w, v0.v);
+  auto v2 = Vertex(v0).setPoint(v0.x, v0.y + sz.h).setTexel(v0.u, v0.v + sz.h);
+  auto v3 = Vertex(v0).setPoint(v0.x + sz.w, v0.y + sz.h).setTexel(v0.u + sz.w, v0.v + sz.h);
+  renderQuadrilateral<Flags>(v0, v1, v2, v3);
 }

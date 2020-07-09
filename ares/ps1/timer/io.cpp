@@ -109,10 +109,11 @@ auto Timer::writeHalf(u32 address, u32 value) -> void {
     htimer.irqRepeat         = data.bit( 6);
     htimer.irqMode           = data.bit( 7);
     htimer.clockSource       = data.bit( 8, 9);
-    htimer.irqLine           = data.bit(10);
+    htimer.irqLine           = 1;
     htimer.reachedTarget     = data.bit(11);
     htimer.reachedSaturate   = data.bit(12);
     htimer.unknown           = data.bit(13,15);
+    poll();
   }
 
   if(address == 0x1f80'1108) {
@@ -132,10 +133,11 @@ auto Timer::writeHalf(u32 address, u32 value) -> void {
     vtimer.irqRepeat         = data.bit( 6);
     vtimer.irqMode           = data.bit( 7);
     vtimer.clockSource       = data.bit( 8, 9);
-    vtimer.irqLine           = data.bit(10);
+    vtimer.irqLine           = 1;
     vtimer.reachedTarget     = data.bit(11);
     vtimer.reachedSaturate   = data.bit(12);
     vtimer.unknown           = data.bit(13,15);
+    poll();
   }
 
   if(address == 0x1f80'1118) {
@@ -155,10 +157,11 @@ auto Timer::writeHalf(u32 address, u32 value) -> void {
     ftimer.irqRepeat         = data.bit( 6);
     ftimer.irqMode           = data.bit( 7);
     ftimer.clockSource       = data.bit( 8, 9);
-    ftimer.irqLine           = data.bit(10);
+    ftimer.irqLine           = 1;
     ftimer.reachedTarget     = data.bit(11);
     ftimer.reachedSaturate   = data.bit(12);
     ftimer.unknown           = data.bit(13,15);
+    poll();
   }
 
   if(address == 0x1f80'1128) {

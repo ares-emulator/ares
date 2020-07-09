@@ -2,11 +2,16 @@ auto DMA::transferLinear(uint c) -> void {
   u32 address = channel[c].address;
   u16 blocks  = channel[c].synchronization == 0 ? uint16(1) : channel[c].blocks;
 
+//print(hex(address, 8L), " ", channel[c].length, " ", blocks, " ", c, " ", channel[c].direction, "\n");
+
   do {
     u16 length = channel[c].length;
     do {
       if(channel[c].direction == 0) {
         u32 data = 0;
+        if(c == 2) {
+          data = gpu.readGP0();
+        }
         if(c == 6) {
           data = address - 4 & 0xfffffc;    //point to previous entry
           if(length == 1) data = 0xffffff;  //end of ordering table
@@ -17,7 +22,7 @@ auto DMA::transferLinear(uint c) -> void {
       if(channel[c].direction == 1) {
         u32 data = bus.readWord(address);
         if(c == 2) {
-          gpu.gp0(data);
+          gpu.writeGP0(data);
         }
       }
 
@@ -42,7 +47,7 @@ auto DMA::transferLinked(uint c) -> void {
       u32 data = bus.readWord(address);
 
       if(c == 2) {
-        gpu.gp0(data);
+        gpu.writeGP0(data);
       }
     }
 

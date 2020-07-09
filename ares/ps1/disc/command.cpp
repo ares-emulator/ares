@@ -1,5 +1,5 @@
 auto Disc::command(u8 operation) -> void {
-  print("* CDC ", hex(operation, 2L), "\n");
+//print("* CDC ", hex(operation, 2L), "\n");
 
   switch(operation) {
   case 0x01: return commandGetStatus();
