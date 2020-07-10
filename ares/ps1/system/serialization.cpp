@@ -49,7 +49,10 @@ auto System::serializeAll(serializer& s, bool synchronize) -> void {
   gpu.serialize(s);
   spu.serialize(s);
   disc.serialize(s);
+  controllerPort1.serialize(s);
+  controllerPort2.serialize(s);
   interrupt.serialize(s);
+  peripheral.serialize(s);
   dma.serialize(s);
   timer.serialize(s);
 }

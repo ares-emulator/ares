@@ -31,6 +31,11 @@ auto PlayStation::load() -> bool {
     port->connect();
   }
 
+  if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
+    port->allocate("Gamepad");
+    port->connect();
+  }
+
   return true;
 }
 
@@ -66,4 +71,36 @@ auto PlayStation::open(ares::Node::Object node, string name, vfs::file::mode mod
 }
 
 auto PlayStation::input(ares::Node::Input node) -> void {
+  auto name = node->name();
+  maybe<InputMapping&> mapping;
+  if(name == "Up"      ) mapping = virtualPad.up;
+  if(name == "Down"    ) mapping = virtualPad.down;
+  if(name == "Left"    ) mapping = virtualPad.left;
+  if(name == "Right"   ) mapping = virtualPad.right;
+  if(name == "Cross"   ) mapping = virtualPad.a;
+  if(name == "Circle"  ) mapping = virtualPad.b;
+  if(name == "Square"  ) mapping = virtualPad.x;
+  if(name == "Triangle") mapping = virtualPad.y;
+  if(name == "L1"      ) mapping = virtualPad.l;
+  if(name == "L2"      );
+  if(name == "R1"      ) mapping = virtualPad.r;
+  if(name == "R2"      );
+  if(name == "Select"  ) mapping = virtualPad.select;
+  if(name == "Start"   ) mapping = virtualPad.start;
+  if(name == "LX-axis" ) mapping = virtualPad.xAxis;
+  if(name == "LY-axis" ) mapping = virtualPad.yAxis;
+  if(name == "RX-axis" );
+  if(name == "RY-axis" );
+  if(name == "L-thumb" );
+  if(name == "R-thumb" );
+
+  if(mapping) {
+    auto value = mapping->value();
+    if(auto axis = node->cast<ares::Node::Axis>()) {
+      axis->setValue(value);
+    }
+    if(auto button = node->cast<ares::Node::Button>()) {
+      button->setValue(value);
+    }
+  }
 }

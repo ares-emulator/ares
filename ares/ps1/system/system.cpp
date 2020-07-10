@@ -23,7 +23,10 @@ auto System::load(Node::Object& root) -> void {
   gpu.load(node);
   spu.load(node);
   disc.load(node);
+  controllerPort1.load(node);
+  controllerPort2.load(node);
   interrupt.load(node);
+  peripheral.load(node);
   dma.load(node);
   timer.load(node);
 }
@@ -35,7 +38,10 @@ auto System::unload() -> void {
   gpu.unload();
   spu.unload();
   disc.unload();
+  controllerPort1.unload();
+  controllerPort2.unload();
   interrupt.unload();
+  peripheral.unload();
   dma.unload();
   timer.unload();
   node.reset();
@@ -58,6 +64,7 @@ auto System::power(bool reset) -> void {
   spu.power(reset);
   disc.power(reset);
   interrupt.power(reset);
+  peripheral.power(reset);
   dma.power(reset);
   timer.power(reset);
 

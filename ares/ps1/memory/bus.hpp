@@ -5,6 +5,8 @@
   if(address <= 0x1eff'ffff) return unmapped; \
   if(address <= 0x1f7f'ffff) return unmapped; \
   if(address <= 0x1f80'03ff) return cpu.cache.access(__VA_ARGS__); \
+  if(address <= 0x1f80'103f) return unmapped; \
+  if(address <= 0x1f80'104f) return peripheral.access(__VA_ARGS__); \
   if(address <= 0x1f80'106f) return unmapped; \
   if(address <= 0x1f80'107f) return interrupt.access(__VA_ARGS__); \
   if(address <= 0x1f80'10ff) return dma.access(__VA_ARGS__); \
@@ -25,7 +27,6 @@ inline auto Bus::readByte(u32 address) -> u8 {
 }
 
 inline auto Bus::readHalf(u32 address) -> u16 {
-  if(address == 0x1f80'1044) return 0x0007;
   decode(0, readHalf, address);
 }
 

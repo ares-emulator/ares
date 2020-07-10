@@ -8,6 +8,8 @@ auto Disc::command(u8 operation) -> void {
   case 0x19: return commandTest();
   case 0x1a: return commandGetID();
   }
+
+  print("* CDC ", hex(operation, 2L), "\n");
 }
 
 //0x01
@@ -48,9 +50,13 @@ auto Disc::commandGetTrackStart() -> void {
 //0x19
 auto Disc::commandTest() -> void {
   u8 operation = fifo.parameter.read();
+//print("* CDC 19 ", hex(operation, 2L), "\n");
+
   switch(operation) {
   case 0x20: return commandTestControllerDate();
   }
+
+  print("* CDC 19 ", hex(operation, 2L), "\n");
 }
 
 //0x19 0x20

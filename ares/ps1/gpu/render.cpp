@@ -10,6 +10,7 @@ auto GPU::texel(Point p) const -> u16 {
   i32 by = io.texturePageBaseY << 8;
   i32 tx = p.x & ~(io.textureWindowMaskX * 8) | (io.textureWindowOffsetX & io.textureWindowMaskX) * 8;
   i32 ty = p.y & ~(io.textureWindowMaskY * 8) | (io.textureWindowOffsetY & io.textureWindowMaskY) * 8;
+
   if(io.textureDepth == 0) {  //4bpp
     i32 ix = tx / 4 + bx & 1023;
     i32 iy = ty + by & 511;
@@ -19,6 +20,7 @@ auto GPU::texel(Point p) const -> u16 {
     i32 cy = py;
     return vram.readHalf((cy * 1024 + cx) * 2);
   }
+
   if(io.textureDepth == 1) {  //8bpp
     i32 ix = tx / 2 + bx & 1023;
     i32 iy = ty + by & 511;
@@ -28,11 +30,13 @@ auto GPU::texel(Point p) const -> u16 {
     i32 cy = py;
     return vram.readHalf((cy * 1024 + cx) * 2);
   }
+
   if(io.textureDepth == 2) {  //16bpp
     i32 ix = tx + bx & 1023;
     i32 iy = ty + by & 511;
     return vram.readHalf((iy * 1024 + ix) * 2);
   }
+
   return 0;
 }
 
@@ -53,8 +57,8 @@ auto GPU::dither(Point p, Color c) const -> Color {
 }
 
 auto GPU::renderPixelColor(Point point, Color color) -> void {
-  point.x = point.x + io.drawingAreaOffsetX & 1023;
-  point.y = point.y + io.drawingAreaOffsetY &  511;
+  point.x = point.x + io.drawingAreaOffsetX;
+  point.y = point.y + io.drawingAreaOffsetY;
 
   if(point.x < io.drawingAreaOriginX1) return;
   if(point.y < io.drawingAreaOriginY1) return;
@@ -67,8 +71,8 @@ auto GPU::renderPixelColor(Point point, Color color) -> void {
 }
 
 auto GPU::renderPixelAlpha(Point point, Color above) -> void {
-  point.x = point.x + io.drawingAreaOffsetX & 1023;
-  point.y = point.y + io.drawingAreaOffsetY &  511;
+  point.x = point.x + io.drawingAreaOffsetX;
+  point.y = point.y + io.drawingAreaOffsetY;
 
   if(point.x < io.drawingAreaOriginX1) return;
   if(point.y < io.drawingAreaOriginY1) return;
@@ -77,30 +81,35 @@ auto GPU::renderPixelAlpha(Point point, Color above) -> void {
   if(point.y > io.drawingAreaOriginY2) return;
 
   u32 address = (point.y & 511) * 1024 + (point.x & 1023);
-  Color below = Color::from16(vram.readHalf(address * 2)), color;
-  switch(io.semiTransparency) {
-  case 0:
-    color.r = (below.r >> 1) + (above.r >> 1);
-    color.g = (below.g >> 1) + (above.g >> 1);
-    color.b = (below.b >> 1) + (above.b >> 1);
-    break;
-  case 1:
-    color.r = min(255, (u16)below.r + (u16)above.r);
-    color.g = min(255, (u16)below.g + (u16)above.g);
-    color.b = min(255, (u16)below.b + (u16)above.b);
-    break;
-  case 2:
-    color.r = max(  0, (i16)below.r - (i16)above.r);
-    color.g = max(  0, (i16)below.g - (i16)above.g);
-    color.b = max(  0, (i16)below.b - (i16)above.b);
-    break;
-  case 3:
-    color.r = min(255, (u16)below.r + (above.r >> 2));
-    color.g = min(255, (u16)below.g + (above.g >> 2));
-    color.b = min(255, (u16)below.b + (above.b >> 2));
-    break;
+  u16 data = vram.readHalf(address * 2);
+
+  if(data & 0x8000) {
+    Color below = Color::from16(data);
+    switch(io.semiTransparency) {
+    case 0:
+      above.r = (below.r >> 1) + (above.r >> 1);
+      above.g = (below.g >> 1) + (above.g >> 1);
+      above.b = (below.b >> 1) + (above.b >> 1);
+      break;
+    case 1:
+      above.r = min(255, (u16)below.r + (u16)above.r);
+      above.g = min(255, (u16)below.g + (u16)above.g);
+      above.b = min(255, (u16)below.b + (u16)above.b);
+      break;
+    case 2:
+      above.r = max(  0, (i16)below.r - (i16)above.r);
+      above.g = max(  0, (i16)below.g - (i16)above.g);
+      above.b = max(  0, (i16)below.b - (i16)above.b);
+      break;
+    case 3:
+      above.r = min(255, (u16)below.r + (above.r >> 2));
+      above.g = min(255, (u16)below.g + (above.g >> 2));
+      above.b = min(255, (u16)below.b + (above.b >> 2));
+      break;
+    }
   }
-  vram.writeHalf(address * 2, dither(point, color).to16());
+
+  vram.writeHalf(address * 2, dither(point, above).to16());
 }
 
 auto GPU::renderSolidLine(Point p0, Point p1, Color c) -> void {

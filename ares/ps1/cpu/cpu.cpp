@@ -26,14 +26,18 @@ auto CPU::main() -> void {
 }
 
 auto CPU::step(uint clocks) -> void {
-  dma.step(clocks);
+    dma.step(clocks);
   timer.step(clocks);
-  gpu.clock  -= clocks;
-  spu.clock  -= clocks;
-  disc.clock -= clocks;
-  while(gpu.clock  < 0) gpu.main();
-  while(spu.clock  < 0) spu.main();
-  while(disc.clock < 0) disc.main();
+
+         gpu.clock -= clocks;
+         spu.clock -= clocks;
+        disc.clock -= clocks;
+  peripheral.clock -= clocks;
+
+  while(       gpu.clock < 0)        gpu.main();
+  while(       spu.clock < 0)        spu.main();
+  while(      disc.clock < 0)       disc.main();
+  while(peripheral.clock < 0) peripheral.main();
 }
 
 auto CPU::power(bool reset) -> void {

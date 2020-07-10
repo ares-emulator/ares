@@ -21,10 +21,12 @@ namespace ares::PlayStation {
   #include <ps1/memory/memory.hpp>
   #include <ps1/system/system.hpp>
   #include <ps1/disc/disc.hpp>
+  #include <ps1/controller/controller.hpp>
   #include <ps1/cpu/cpu.hpp>
   #include <ps1/gpu/gpu.hpp>
   #include <ps1/spu/spu.hpp>
-  #include <ps1/irq/irq.hpp>
+  #include <ps1/interrupt/interrupt.hpp>
+  #include <ps1/peripheral/peripheral.hpp>
   #include <ps1/dma/dma.hpp>
   #include <ps1/timer/timer.hpp>
   #include <ps1/memory/bus.hpp>
