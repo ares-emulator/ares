@@ -21,9 +21,23 @@ PlayStation::PlayStation() {
 }
 
 auto PlayStation::load() -> bool {
+  regionID = 0;  //default to NTSC-U region (for audio CDs)
+  if(auto manifest = medium->manifest(game.location)) {
+    auto document = BML::unserialize(manifest);
+    auto region = document["game/region"].string();
+    //if statements below are ordered by lowest to highest priority
+    if(region == "PAL"   ) regionID = 2;
+    if(region == "NTSC-J") regionID = 1;
+    if(region == "NTSC-U") regionID = 0;
+  }
+
   if(!file::exists(firmware[regionID].location)) {
     errorFirmwareRequired(firmware[regionID]);
     return false;
+  }
+
+  if(auto region = root->find<ares::Node::String>("Region")) {
+    region->setValue("NTSC-U → NTSC-J → PAL");
   }
 
   if(auto port = root->find<ares::Node::Port>("PlayStation/Disc Tray")) {

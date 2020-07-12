@@ -6,6 +6,12 @@
 #include <nall/recompiler/amd64/amd64.hpp>
 
 namespace ares::PlayStation {
+  struct Region {
+    inline static auto NTSCJ() -> bool;
+    inline static auto NTSCU() -> bool;
+    inline static auto PAL() -> bool;
+  };
+
   struct Thread {
     auto reset() -> void {
       clock = 0;

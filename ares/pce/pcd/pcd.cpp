@@ -35,8 +35,8 @@ auto PCD::load(Node::Object parent) -> void {
   adpcm.scsi = scsi;
   adpcm.fader = fader;
 
-  wram.allocate( 64_KiB);
-  bram.allocate(  2_KiB);
+  wram.allocate(64_KiB);
+  bram.allocate( 2_KiB);
   if(Model::PCEngineDuo()) {
     bios.allocate(256_KiB);
     sram.allocate(192_KiB);

@@ -19,6 +19,17 @@ auto System::load(Node::Object& root) -> void {
   node = Node::System::create(interface->name());
   root = node;
 
+  regionNode = node->append<Node::String>("Region", "NTSC-J → NTSC-U → PAL");
+  regionNode->setAllowedValues({
+    "NTSC-J → NTSC-U → PAL",
+    "NTSC-U → NTSC-J → PAL",
+    "PAL → NTSC-J → NTSC-U",
+    "PAL → NTSC-U → NTSC-J",
+    "NTSC-J",
+    "NTSC-U",
+    "PAL"
+  });
+
   cpu.load(node);
   gpu.load(node);
   spu.load(node);
@@ -53,6 +64,23 @@ auto System::save() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting>()) setting->setLatch();
+
+  auto setRegion = [&](string region) {
+    if(region == "NTSC-J") {
+      information.region = Region::NTSCJ;
+    }
+    if(region == "NTSC-U") {
+      information.region = Region::NTSCU;
+    }
+    if(region == "PAL") {
+      information.region = Region::PAL;
+    }
+  };
+  auto regionsHave = regionNode->latch().split("→").strip();
+  setRegion(regionsHave.first());
+  for(auto& have : reverse(regionsHave)) {
+    if(have == disc.region()) setRegion(have);
+  }
 
   bios.allocate(512_KiB);
   if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {

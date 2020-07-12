@@ -1,3 +1,12 @@
+auto Disc::readDMA() -> u32 {
+  u32 data = 0;
+  data |= drive.sector.data[drive.sector.offset++] <<  0;
+  data |= drive.sector.data[drive.sector.offset++] <<  8;
+  data |= drive.sector.data[drive.sector.offset++] << 16;
+  data |= drive.sector.data[drive.sector.offset++] << 24;
+  return data;
+}
+
 auto Disc::readByte(u32 address) -> u32 {
   uint8 data = 0;
 
@@ -75,7 +84,9 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 
   //command register
   if(address == 0x1f80'1801 && io.index == 0) {
-    command(data);
+    event.command = data;
+    event.counter = 25000;
+    event.invocation = 0;
   }
 
   //sound map data output

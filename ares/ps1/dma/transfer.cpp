@@ -12,6 +12,9 @@ auto DMA::transferLinear(uint c) -> void {
         if(c == 2) {
           data = gpu.readGP0();
         }
+        if(c == 3) {
+          data = disc.readDMA();
+        }
         if(c == 6) {
           data = address - 4 & 0xfffffc;    //point to previous entry
           if(length == 1) data = 0xffffff;  //end of ordering table

@@ -215,6 +215,7 @@ inline auto CUE::Track::sectorCount() const -> uint {
 inline auto CUE::Track::sectorSize() const -> uint {
   if(type == "mode1/2048") return 2048;
   if(type == "mode1/2352") return 2352;
+  if(type == "mode2/2352") return 2352;
   if(type == "audio"     ) return 2352;
   return 0;
 }

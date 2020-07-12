@@ -8,8 +8,8 @@ auto CompactDisc::construct() -> void {
 
 auto CompactDisc::manifest(string location) -> string {
   vector<uint8_t> sector;
-  if(directory::exists(location)) sector = readFirstDataSectorBCD(location);
-  if(file::exists(location)) sector = readFirstDataSectorCUE(location);
+  if(directory::exists(location)) sector = readDataSectorBCD(location, manifestSector());
+  if(file::exists(location)) sector = readDataSectorCUE(location, manifestSector());
   if(sector) return manifest(sector, location);
   return {};
 }
@@ -28,7 +28,7 @@ auto CompactDisc::import(string filename) -> string {
   return {};
 }
 
-auto CompactDisc::readFirstDataSectorBCD(string pathname) -> vector<uint8_t> {
+auto CompactDisc::readDataSectorBCD(string pathname, uint sectorID) -> vector<uint8_t> {
   auto fp = file::open({pathname, "cd.rom"}, file::mode::read);
   if(!fp) return {};
 
@@ -46,7 +46,7 @@ auto CompactDisc::readFirstDataSectorBCD(string pathname) -> vector<uint8_t> {
       if(auto index = track.index(1)) {
         vector<uint8_t> sector;
         sector.resize(2048);
-        fp.seek(2448 * (abs(session.leadIn.lba) + index->lba) + 16);
+        fp.seek(2448 * (abs(session.leadIn.lba) + index->lba + sectorID) + 16);
         fp.read({sector.data(), 2448});
         return sector;
       }
@@ -56,7 +56,7 @@ auto CompactDisc::readFirstDataSectorBCD(string pathname) -> vector<uint8_t> {
   return {};
 }
 
-auto CompactDisc::readFirstDataSectorCUE(string filename) -> vector<uint8_t> {
+auto CompactDisc::readDataSectorCUE(string filename, uint sectorID) -> vector<uint8_t> {
   Decode::CUE cuesheet;
   if(!cuesheet.load(filename)) return {};
 
@@ -69,8 +69,12 @@ auto CompactDisc::readFirstDataSectorCUE(string filename) -> vector<uint8_t> {
       if(!binary) continue;
       for(auto& track : file.tracks) {
         for(auto& index : track.indices) {
-          if((track.type == "mode1/2048" || track.type == "mode1/2352") && index.number == 1) {
-            binary.seek(offset + (track.type == "mode1/2352" ? 16 : 0));
+          uint sectorSize = 0;
+          if(track.type == "mode1/2048") sectorSize = 2048;
+          if(track.type == "mode1/2352") sectorSize = 2352;
+          if(track.type == "mode2/2352") sectorSize = 2352;
+          if(sectorSize && index.number == 1) {
+            binary.seek(offset + (sectorSize * sectorID) + (sectorSize == 2352 ? 16 : 0));
             vector<uint8_t> sector;
             sector.resize(2048);
             binary.read({sector.data(), sector.size()});

@@ -5,7 +5,8 @@ struct CompactDisc : Media {
   auto manifest(string location) -> string override;
   auto import(string filename) -> string override;
 
+  virtual auto manifestSector() const -> uint = 0;
   virtual auto manifest(vector<uint8_t> sector, string location) -> string = 0;
-  auto readFirstDataSectorBCD(string filename) -> vector<uint8_t>;
-  auto readFirstDataSectorCUE(string filename) -> vector<uint8_t>;
+  auto readDataSectorBCD(string filename, uint sectorID) -> vector<uint8_t>;
+  auto readDataSectorCUE(string filename, uint sectorID) -> vector<uint8_t>;
 };

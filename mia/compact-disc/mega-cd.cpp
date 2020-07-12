@@ -1,5 +1,6 @@
 struct MegaCD : CompactDisc {
   auto name() -> string override { return "Mega CD"; }
+  auto manifestSector() const -> uint override { return 0; }
   auto manifest(vector<uint8_t> sector, string location) -> string override;
 };
 

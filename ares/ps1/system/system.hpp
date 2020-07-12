@@ -1,5 +1,10 @@
 struct System {
   Node::Object node;
+  Node::String regionNode;
+
+  enum class Region : uint { NTSCJ, NTSCU, PAL };
+
+  auto region() const -> Region { return information.region; }
 
   //system.cpp
   auto run() -> void;
@@ -14,6 +19,7 @@ struct System {
 
 private:
   struct Information {
+    Region region = Region::NTSCJ;
     uint32 serializeSize[2];
   } information;
 
@@ -24,3 +30,7 @@ private:
 };
 
 extern System system;
+
+auto Region::NTSCJ() -> bool { return system.region() == System::Region::NTSCJ; }
+auto Region::NTSCU() -> bool { return system.region() == System::Region::NTSCU; }
+auto Region::PAL()   -> bool { return system.region() == System::Region::PAL;   }

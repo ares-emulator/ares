@@ -1,5 +1,6 @@
 struct PCEngineCD : CompactDisc {
   auto name() -> string override { return "PC Engine CD"; }
+  auto manifestSector() const -> uint override { return 0; }
   auto manifest(vector<uint8_t> sector, string location) -> string override;
 };
 
