@@ -12,7 +12,7 @@ auto Disc::status() -> u8 {
 }
 
 auto Disc::command(u8 operation) -> void {
-  print("* CDC ", hex(operation, 2L), "\n");
+//print("* CDC ", hex(operation, 2L), "\n");
 
   switch(operation) {
   case 0x01: return commandGetStatus();
@@ -34,7 +34,7 @@ auto Disc::command(u8 operation) -> void {
   case 0x1a: return commandGetID();
   }
 
-  print("* CDC ", hex(operation, 2L), "\n");
+//print("* CDC ", hex(operation, 2L), "\n");
 }
 
 auto Disc::commandTest() -> void {
@@ -45,7 +45,7 @@ auto Disc::commandTest() -> void {
   case 0x20: return commandTestControllerDate();
   }
 
-  print("* CDC 19 ", hex(operation, 2L), "\n");
+//print("* CDC 19 ", hex(operation, 2L), "\n");
 }
 
 //0x01
@@ -124,6 +124,7 @@ auto Disc::commandRewind() -> void {
 
 //0x06
 auto Disc::commandReadWithRetry() -> void {
+  drive.lba.current = drive.lba.request;
   ssr.reading = 1;
 
   fifo.response.flush();
@@ -143,7 +144,7 @@ auto Disc::commandReadWithoutRetry() -> void {
 auto Disc::commandStop() -> void {
   if(event.invocation == 0) {
     event.invocation = 1;
-    event.counter = 2500000;
+    event.counter = 25000;
 
     fifo.response.flush();
     fifo.response.write(status());
@@ -169,7 +170,7 @@ auto Disc::commandStop() -> void {
 auto Disc::commandPause() -> void {
   if(event.invocation == 0) {
     event.invocation = 1;
-    event.counter = 2500000;
+    event.counter = 25000;
 
     fifo.response.flush();
     fifo.response.write(status());
@@ -193,24 +194,39 @@ auto Disc::commandPause() -> void {
 
 //0x0a
 auto Disc::commandInitialize() -> void {
-  drive.mode.cdda       = 0;
-  drive.mode.autoPause  = 0;
-  drive.mode.report     = 0;
-  drive.mode.xaFilter   = 0;
-  drive.mode.ignore     = 0;
-  drive.mode.sectorSize = 0;
-  drive.mode.xaADPCM    = 0;
-  drive.mode.speed      = 0;
+  if(event.invocation == 0) {
+    event.invocation = 1;
+    event.counter = 25000;
 
-  ssr.motorOn = 1;
-  ssr.reading = 0;
-  ssr.seeking = 0;
+    drive.mode.cdda       = 0;
+    drive.mode.autoPause  = 0;
+    drive.mode.report     = 0;
+    drive.mode.xaFilter   = 0;
+    drive.mode.ignore     = 0;
+    drive.mode.sectorSize = 0;
+    drive.mode.xaADPCM    = 0;
+    drive.mode.speed      = 0;
 
-  fifo.response.flush();
-  fifo.response.write(status());
+    ssr.motorOn = 1;
+    ssr.reading = 0;
+    ssr.seeking = 0;
 
-  irq.acknowledge.flag = 1;
-  irq.poll();
+    fifo.response.flush();
+    fifo.response.write(status());
+
+    irq.acknowledge.flag = 1;
+    irq.poll();
+    return;
+  }
+
+  if(event.invocation == 1) {
+    fifo.response.flush();
+    fifo.response.write(status());
+
+    irq.complete.flag = 1;
+    irq.poll();
+    return;
+  }
 }
 
 //0x0e
@@ -308,7 +324,7 @@ auto Disc::commandTestControllerDate() -> void {
 auto Disc::commandGetID() -> void {
   if(event.invocation == 0) {
     event.invocation = 1;
-    event.counter = 2500000;
+    event.counter = 25000;
 
     fifo.response.flush();
     fifo.response.write(status());
@@ -319,11 +335,11 @@ auto Disc::commandGetID() -> void {
   }
 
   if(event.invocation == 1) {
-    ssr.idError = 1;
-
-    fifo.response.flush();
-    fifo.response.write(status());
     if(region() == "NTSC-J") {
+      ssr.idError = 0;
+
+      fifo.response.flush();
+      fifo.response.write(status());
       fifo.response.write(0x00);
       fifo.response.write(0x20);
       fifo.response.write(0x00);
@@ -335,6 +351,10 @@ auto Disc::commandGetID() -> void {
       irq.complete.flag = 1;
       irq.poll();
     } else if(region() == "NTSC-U") {
+      ssr.idError = 0;
+
+      fifo.response.flush();
+      fifo.response.write(status());
       fifo.response.write(0x00);
       fifo.response.write(0x20);
       fifo.response.write(0x00);
@@ -346,6 +366,10 @@ auto Disc::commandGetID() -> void {
       irq.complete.flag = 1;
       irq.poll();
     } else if(region() == "PAL") {
+      ssr.idError = 0;
+
+      fifo.response.flush();
+      fifo.response.write(status());
       fifo.response.write(0x00);
       fifo.response.write(0x20);
       fifo.response.write(0x00);
@@ -357,6 +381,10 @@ auto Disc::commandGetID() -> void {
       irq.complete.flag = 1;
       irq.poll();
     } else {
+      ssr.idError = 1;
+
+      fifo.response.flush();
+      fifo.response.write(status());
       fifo.response.write(0x90);
       fifo.response.write(0x00);
       fifo.response.write(0x00);

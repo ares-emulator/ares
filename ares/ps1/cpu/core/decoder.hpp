@@ -61,7 +61,7 @@
   op(0x2f, INVALID);
   op(0x30, INVALID);
   op(0x31, INVALID);
-//LWC2
+  op(0x32, LWC2, RTn, RS, IMMi16);
   op(0x33, INVALID);
   op(0x34, INVALID);
   op(0x35, INVALID);
@@ -69,7 +69,7 @@
   op(0x37, INVALID);
   op(0x38, INVALID);
   op(0x39, INVALID);
-//SWC2
+  op(0x3a, SWC2, RTn, RS, IMMi16);
   op(0x3b, INVALID);
   op(0x3c, INVALID);
   op(0x3d, INVALID);
@@ -241,17 +241,22 @@
   op(0x0f, INVALID);
   }
 
+  #define LM OP >> 10 & 1
+  #define TV OP >> 13 & 3
+  #define MV OP >> 15 & 3
+  #define MM OP >> 17 & 3
+  #define SF OP >> 19 & 1 ? 12 : 0
   switch(OP & 0x3f) {
-  op(0x00, RTPS);
-  op(0x01, RTPS);  //0x00 mirror?
+  op(0x00, RTPS, LM, SF);
+  op(0x01, RTPS, LM, SF);  //0x00 mirror?
   op(0x06, NCLIP);
   op(0x0c, OP);
   op(0x10, DPCS);
   op(0x11, INTPL);
   op(0x12, MVMVA);
-  op(0x13, NCDS);
+  op(0x13, NCDS, LM, SF);
   op(0x14, CDP);
-  op(0x16, NCDT);
+  op(0x16, NCDT, LM, SF);
   op(0x1a, DCPL);  //0x29 mirror?
   op(0x1b, NCCS);
   op(0x1c, CC);
@@ -262,11 +267,16 @@
   op(0x2a, DPCT);
   op(0x2d, AVSZ3);
   op(0x2e, AVSZ4);
-  op(0x30, RTPT);
+  op(0x30, RTPT, LM, SF);
   op(0x3d, GPF);
   op(0x3e, GPL);
   op(0x3f, NCCT);
   }
+  #undef LM
+  #undef TV
+  #undef MV
+  #undef MM
+  #undef SF
 }
 #undef DECODER_GTE
 #endif

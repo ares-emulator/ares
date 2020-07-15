@@ -13,6 +13,8 @@ auto CPU::Disassembler::EXECUTE() -> vector<string> {
   auto rtName  = [&] { return cpuRegisterName (instruction >> 16 & 31); };
   auto rtValue = [&] { return cpuRegisterValue(instruction >> 16 & 31); };
   auto rsValue = [&] { return cpuRegisterValue(instruction >> 21 & 31); };
+  auto dtName  = [&] { return gteDataRegisterName (instruction >> 16 & 31); };
+  auto dtValue = [&] { return gteDataRegisterValue(instruction >> 16 & 31); };
   auto jump    = [&] { return immediate(address + 4 & 0xf000'0000 | (instruction & 0x03ff'ffff) << 2, 32L); };
   auto branch  = [&] { return immediate(address + 4 + (i16(instruction) << 2), 32L); };
   auto offset  = [&] { return cpuRegisterIndex(instruction >> 21 & 31, i16(instruction)); };
@@ -96,6 +98,8 @@ auto CPU::Disassembler::EXECUTE() -> vector<string> {
   case 0x2e: return STORE("swr");
   case 0x2f: break;
   case 0x30: break;
+  case 0x32: return {"lwc2", dtName(), offset()};
+  case 0x3a: return {"swc2", dtValue(), offset()};
   }
 
   return {};

@@ -1,6 +1,7 @@
 #include "scc-registers.cpp"
 #include "memory.cpp"
 #include "decoder.cpp"
+#include "gte.cpp"
 #include "cpu-instructions.cpp"
 #include "scc-instructions.cpp"
 #include "gte-instructions.cpp"
@@ -106,4 +107,5 @@ auto CPU::powerCore(bool reset) -> void {
   core.hi = 0;
   core.pc = 0xbfc0'0000;
   delay = {};
+  gte.constructTable();
 }
