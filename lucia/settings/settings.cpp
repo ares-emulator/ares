@@ -4,6 +4,7 @@
 #include "input.cpp"
 #include "hotkeys.cpp"
 #include "emulators.cpp"
+#include "options.cpp"
 #include "firmware.cpp"
 #include "paths.cpp"
 #include "drivers.cpp"
@@ -17,6 +18,7 @@ AudioSettings& audioSettings = settingsWindow.audioSettings;
 InputSettings& inputSettings = settingsWindow.inputSettings;
 HotkeySettings& hotkeySettings = settingsWindow.hotkeySettings;
 EmulatorSettings& emulatorSettings = settingsWindow.emulatorSettings;
+OptionSettings& optionSettings = settingsWindow.optionSettings;
 FirmwareSettings& firmwareSettings = settingsWindow.firmwareSettings;
 PathSettings& pathSettings = settingsWindow.pathSettings;
 DriverSettings& driverSettings = settingsWindow.driverSettings;
@@ -85,6 +87,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "General/Rewind", general.rewind);
   bind(boolean, "General/RunAhead", general.runAhead);
   bind(boolean, "General/AutoSaveMemory", general.autoSaveMemory);
+  bind(boolean, "General/FastBoot", general.fastBoot);
   bind(boolean, "General/NativeFileDialogs", general.nativeFileDialogs);
   bind(boolean, "General/GroupEmulators", general.groupEmulators);
 
@@ -150,6 +153,7 @@ SettingsWindow::SettingsWindow() {
   panelList.append(ListViewItem().setText("Input").setIcon(Icon::Device::Joypad));
   panelList.append(ListViewItem().setText("Hotkeys").setIcon(Icon::Device::Keyboard));
   panelList.append(ListViewItem().setText("Emulators").setIcon(Icon::Place::Server));
+  panelList.append(ListViewItem().setText("Options").setIcon(Icon::Action::Settings));
   panelList.append(ListViewItem().setText("Firmware").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
   panelList.append(ListViewItem().setText("Drivers").setIcon(Icon::Place::Settings));
@@ -160,6 +164,7 @@ SettingsWindow::SettingsWindow() {
   panelContainer.append(inputSettings, Size{~0, ~0});
   panelContainer.append(hotkeySettings, Size{~0, ~0});
   panelContainer.append(emulatorSettings, Size{~0, ~0});
+  panelContainer.append(optionSettings, Size{~0, ~0});
   panelContainer.append(firmwareSettings, Size{~0, ~0});
   panelContainer.append(pathSettings, Size{~0, ~0});
   panelContainer.append(driverSettings, Size{~0, ~0});
@@ -170,6 +175,7 @@ SettingsWindow::SettingsWindow() {
   inputSettings.construct();
   hotkeySettings.construct();
   emulatorSettings.construct();
+  optionSettings.construct();
   firmwareSettings.construct();
   pathSettings.construct();
   driverSettings.construct();
@@ -200,6 +206,7 @@ auto SettingsWindow::eventChange() -> void {
   inputSettings.setVisible(false);
   hotkeySettings.setVisible(false);
   emulatorSettings.setVisible(false);
+  optionSettings.setVisible(false);
   firmwareSettings.setVisible(false);
   pathSettings.setVisible(false);
   driverSettings.setVisible(false);
@@ -212,6 +219,7 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Input"    ) found = true, inputSettings.setVisible();
     if(item.text() == "Hotkeys"  ) found = true, hotkeySettings.setVisible();
     if(item.text() == "Emulators") found = true, emulatorSettings.setVisible();
+    if(item.text() == "Options"  ) found = true, optionSettings.setVisible();
     if(item.text() == "Firmware" ) found = true, firmwareSettings.setVisible();
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
     if(item.text() == "Drivers"  ) found = true, driverSettings.setVisible();

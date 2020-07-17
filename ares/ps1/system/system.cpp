@@ -30,6 +30,8 @@ auto System::load(Node::Object& root) -> void {
     "PAL"
   });
 
+  fastBoot = node->append<Node::Boolean>("Fast Boot", false);
+
   cpu.load(node);
   gpu.load(node);
   spu.load(node);
@@ -55,6 +57,8 @@ auto System::unload() -> void {
   peripheral.unload();
   dma.unload();
   timer.unload();
+  fastBoot.reset();
+  regionNode.reset();
   node.reset();
 }
 

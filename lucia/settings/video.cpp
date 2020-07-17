@@ -30,7 +30,7 @@ auto VideoSettings::construct() -> void {
     program.paletteUpdate();
   }).doChange();
 
-  emulatorOptionsLabel.setText("Emulator Options").setFont(Font().setBold());
+  emulatorSettingsLabel.setText("Emulator Settings").setFont(Font().setBold());
   colorBleedOption.setText("Color Bleed").setChecked(settings.video.colorBleed).onToggle([&] {
     settings.video.colorBleed = colorBleedOption.checked();
     if(emulator) emulator->setBoolean("Color Bleed", settings.video.colorBleed);

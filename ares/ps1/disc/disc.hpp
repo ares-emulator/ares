@@ -8,6 +8,7 @@ struct Disc : Thread {
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
   auto region() const -> string { return information.region; }
+  auto audio() const -> bool { return information.region == ""; }
   auto executable() const -> bool { return information.executable; }
 
   //disc.cpp

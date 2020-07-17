@@ -34,8 +34,8 @@ auto NeoGeoPocket::load() -> bool {
     port->connect();
   }
 
-  if(auto node = root->find<ares::Node::Boolean>("Fast Boot")) {
-    node->setValue(true);
+  if(auto fastBoot = root->find<ares::Node::Boolean>("Fast Boot")) {
+    fastBoot->setValue(settings.general.fastBoot);
   }
 
   return true;
@@ -99,8 +99,8 @@ auto NeoGeoPocketColor::load() -> bool {
     port->connect();
   }
 
-  if(auto node = root->find<ares::Node::Boolean>("Fast Boot")) {
-    node->setValue(true);
+  if(auto fastBoot = root->find<ares::Node::Boolean>("Fast Boot")) {
+    fastBoot->setValue(settings.general.fastBoot);
   }
 
   return true;

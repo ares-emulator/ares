@@ -52,6 +52,7 @@ struct Settings : Markup::Node {
     bool rewind = false;
     bool runAhead = false;
     bool autoSaveMemory = true;
+    bool fastBoot = true;
     bool nativeFileDialogs = true;
     bool groupEmulators = true;
   } general;
@@ -90,7 +91,7 @@ struct VideoSettings : VerticalLayout {
     Label gammaLabel{&colorAdjustmentLayout, Size{0, 0}};
     Label gammaValue{&colorAdjustmentLayout, Size{50_sx, 0}};
     HorizontalSlider gammaSlider{&colorAdjustmentLayout, Size{~0, 0}};
-  Label emulatorOptionsLabel{this, Size{~0, 0}, 2};
+  Label emulatorSettingsLabel{this, Size{~0, 0}, 2};
     HorizontalLayout colorBleedLayout{this, Size{~0, 0}, 2};
       CheckLabel colorBleedOption{&colorBleedLayout, Size{0, 0}, 2};
       Label colorBleedHint{&colorBleedLayout, Size{~0, 0}};
@@ -169,6 +170,16 @@ struct EmulatorSettings : VerticalLayout {
   auto construct() -> void;
   auto eventToggle(TableViewCell cell) -> void;
 
+  Label emulatorLabel{this, Size{~0, 0}, 2};
+  TableView emulatorList{this, Size{~0, ~0}};
+  HorizontalLayout groupEmulatorsLayout{this, Size{~0, 0}};
+    CheckLabel groupEmulators{&groupEmulatorsLayout, Size{0, 0}, 2};
+    Label groupEmulatorsHint{&groupEmulatorsLayout, Size{~0, 0}};
+};
+
+struct OptionSettings : VerticalLayout {
+  auto construct() -> void;
+
   Label optionsLabel{this, Size{~0, 0}, 2};
   HorizontalLayout rewindLayout{this, Size{~0, 0}, 2};
     CheckLabel rewind{&rewindLayout, Size{0, 0}, 2};
@@ -179,14 +190,12 @@ struct EmulatorSettings : VerticalLayout {
   HorizontalLayout autoSaveMemoryLayout{this, Size{~0, 0}, 2};
     CheckLabel autoSaveMemory{&autoSaveMemoryLayout, Size{0, 0}, 2};
     Label autoSaveMemoryHint{&autoSaveMemoryLayout, Size{~0, 0}};
-  HorizontalLayout nativeFileDialogsLayout{this, Size{~0, 0}};
+  HorizontalLayout fastBootLayout{this, Size{~0, 0}, 2};
+    CheckLabel fastBoot{&fastBootLayout, Size{0, 0}, 2};
+    Label fastBootHint{&fastBootLayout, Size{~0, 0}};
+  HorizontalLayout nativeFileDialogsLayout{this, Size{~0, 0}, 2};
     CheckLabel nativeFileDialogs{&nativeFileDialogsLayout, Size{0, 0}, 2};
     Label nativeFileDialogsHint{&nativeFileDialogsLayout, Size{~0, 0}};
-  HorizontalLayout groupEmulatorsLayout{this, Size{~0, 0}};
-    CheckLabel groupEmulators{&groupEmulatorsLayout, Size{0, 0}, 2};
-    Label groupEmulatorsHint{&groupEmulatorsLayout, Size{~0, 0}};
-  Label emulatorLabel{this, Size{~0, 0}, 2};
-  TableView emulatorList{this, Size{~0, ~0}};
 };
 
 struct FirmwareSettings : VerticalLayout {
@@ -312,6 +321,7 @@ struct SettingsWindow : Window {
       InputSettings inputSettings;
       HotkeySettings hotkeySettings;
       EmulatorSettings emulatorSettings;
+      OptionSettings optionSettings;
       FirmwareSettings firmwareSettings;
       PathSettings pathSettings;
       DriverSettings driverSettings;
@@ -326,6 +336,7 @@ extern AudioSettings& audioSettings;
 extern InputSettings& inputSettings;
 extern HotkeySettings& hotkeySettings;
 extern EmulatorSettings& emulatorSettings;
+extern OptionSettings& optionSettings;
 extern FirmwareSettings& firmwareSettings;
 extern PathSettings& pathSettings;
 extern DriverSettings& driverSettings;

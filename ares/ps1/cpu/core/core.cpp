@@ -94,11 +94,11 @@ auto CPU::instructionEpilogue() -> bool {
 }
 
 auto CPU::instructionHook() -> void {
-//return;
-
   //fast-boot or executable side-loading
   if(PC == 0x8003'0000) {
-    if(disc.executable()) {
+    if(!disc.cd || disc.audio()) {
+      //todo: is it possible to fast boot into the BIOS menu here?
+    } else if(disc.executable()) {
       if(auto fp = platform->open(disc.node, "program.exe", File::Read, File::Required)) {
         Memory::Readable exe;
         exe.allocate(fp->size());
@@ -114,8 +114,8 @@ auto CPU::instructionHook() -> void {
           ram.writeByte(target + address, exe.readByte(source + address));
         }
       }
-    } else {
-    //PC = core.r[31];
+    } else if(system.fastBoot->value()) {
+      PC = core.r[31];
     }
   }
 

@@ -81,6 +81,9 @@ Presentation::Presentation() {
   emulatorSettingsAction.setText("Emulators ...").setIcon(Icon::Place::Server).onActivate([&] {
     settingsWindow.show("Emulators");
   });
+  optionSettingsAction.setText("Options ...").setIcon(Icon::Action::Settings).onActivate([&] {
+    settingsWindow.show("Options");
+  });
   firmwareSettingsAction.setText("Firmware ...").setIcon(Icon::Emblem::Binary).onActivate([&] {
     settingsWindow.show("Firmware");
   });

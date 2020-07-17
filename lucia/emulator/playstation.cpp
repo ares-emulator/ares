@@ -40,6 +40,10 @@ auto PlayStation::load() -> bool {
     region->setValue("NTSC-U → NTSC-J → PAL");
   }
 
+  if(auto fastBoot = root->find<ares::Node::Boolean>("Fast Boot")) {
+    fastBoot->setValue(settings.general.fastBoot);
+  }
+
   if(auto port = root->find<ares::Node::Port>("PlayStation/Disc Tray")) {
     port->allocate();
     port->connect();

@@ -12,7 +12,7 @@ auto Timer::readHalf(u32 address) -> u32 {
   }
 
   if((address & 0xffff'ffcf) == 0x1f80'1104 && c <= 2) {
-    data.bit( 0)    = timers[c].disable;
+    data.bit( 0)    = timers[c].sync;
     data.bit( 1, 2) = timers[c].mode;
     data.bit( 3)    = timers[c].resetMode;
     data.bit( 4)    = timers[c].irqOnTarget;
@@ -50,11 +50,11 @@ auto Timer::writeHalf(u32 address, u32 value) -> void {
   uint c = address >> 4 & 3;
 
   if((address & 0xffff'ffcf) == 0x1f80'1100 && c <= 2) {
-    timers[c].counter = data.bit(0,15);
+    timers[c].reset();
   }
 
   if((address & 0xffff'ffcf) == 0x1f80'1104 && c <= 2) {
-    timers[c].disable         = data.bit( 0);
+    timers[c].sync            = data.bit( 0);
     timers[c].mode            = data.bit( 1, 2);
     timers[c].resetMode       = data.bit( 3);
     timers[c].irqOnTarget     = data.bit( 4);

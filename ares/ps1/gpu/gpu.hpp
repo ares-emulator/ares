@@ -211,6 +211,12 @@ struct GPU : Thread {
       return *this;
     }
 
+    auto setSize(u16 sw, u16 sh) -> Size& {
+      w = sw;
+      h = sh;
+      return *this;
+    }
+
     u16 w, h;
   };
 

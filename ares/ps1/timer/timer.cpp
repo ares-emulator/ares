@@ -16,7 +16,6 @@ auto Timer::unload() -> void {
 
 auto Timer::step(uint clocks) -> void {
   counter.dotclock += clocks;
-  counter.hclock   += clocks;
   counter.divclock += clocks;
 
   {
@@ -28,7 +27,7 @@ auto Timer::step(uint clocks) -> void {
       timers[1].step(clocks);
     }
 
-    if(timers[2].divider == 0 && timers[2].disable == 0) {
+    if(timers[2].divider == 0 && timers[2].sync == 0) {
       timers[2].step(clocks);
     }
   }
@@ -40,18 +39,39 @@ auto Timer::step(uint clocks) -> void {
     }
   }
 
-  while(counter.hclock >= 2154) {
-    counter.hclock -= 2154;
-    if(timers[1].clock == 1) {
-      timers[1].step();
-    }
-  }
-
   while(counter.divclock >= 8) {
     counter.divclock -= 8;
-    if(timers[2].divider == 1 && timers[2].disable == 0) {
+    if(timers[2].divider == 1 && timers[2].sync == 0) {
       timers[2].step();
     }
+  }
+}
+
+auto Timer::hsync(bool line) -> void {
+  if(timers[0].sync)
+  switch(timers[0].mode) {
+  case 0: timers[0].paused  = 1; break;
+  case 1: timers[0].counter = 0; break;
+  case 2: timers[0].counter = 0; timers[0].paused = line == 0; break;
+  case 3: timers[0].paused  = 0; break;
+  }
+
+  if(timers[1].clock == 1) {
+    timers[1].step();
+  }
+}
+
+auto Timer::vsync(bool line) -> void {
+  if(timers[1].sync)
+  switch(timers[1].mode) {
+  case 0: timers[1].paused  = 1; break;
+  case 1: timers[1].counter = 0; break;
+  case 2: timers[1].counter = 0; timers[0].paused = line == 0; break;
+  case 3: timers[1].paused  = 0; break;
+  }
+
+  if(timers[1].mode == 0) {
+    timers[1].paused = 1;
   }
 }
 
@@ -65,6 +85,8 @@ auto Timer::power(bool reset) -> void {
 }
 
 auto Timer::Source::step(uint clocks) -> void {
+  if(sync && paused) return;
+
   if(counter < target && counter + clocks >= target) {
     reachedTarget = 1;
     if(irqOnTarget) irq();
@@ -95,6 +117,16 @@ auto Timer::Source::irq() -> void {
   if(!irqRepeat) {
     irqOnTarget = 0;
     irqOnSaturate = 0;
+  }
+}
+
+auto Timer::Source::reset() -> void {
+  counter = 0;
+
+  switch(id) {
+  case 0: paused = mode == 3; break;
+  case 1: paused = mode == 3; break;
+  case 2: paused = mode == 3 || mode == 0; break;
   }
 }
 

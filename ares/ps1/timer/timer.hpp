@@ -6,6 +6,8 @@ struct Timer {
   auto unload() -> void;
 
   auto step(uint clocks) -> void;
+  auto hsync(bool line) -> void;
+  auto vsync(bool line) -> void;
   auto poll() -> void;
   auto power(bool reset) -> void;
 
@@ -22,21 +24,22 @@ struct Timer {
 
   struct Counter {
     u32 dotclock = 0;
-    u32 hclock   = 0;
     u32 divclock = 0;
   } counter;
 
   struct Source {
     Timer& self;
-    Source(Timer& self) : self(self) {}
+    const uint id;
+    Source(Timer& self, uint id) : self(self), id(id) {}
 
     //timer.cpp
     auto step(uint clocks = 1) -> void;
     auto irq() -> void;
+    auto reset() -> void;
 
     uint16 counter;
     uint16 target;
-     uint1 disable;
+     uint1 sync;
      uint2 mode;
      uint1 resetMode;
      uint1 irqOnTarget;
@@ -49,7 +52,10 @@ struct Timer {
      uint1 reachedTarget;
      uint1 reachedSaturate;
      uint3 unknown;
-  } timers[3] = {*this, *this, *this};
+
+  //internal:
+     uint1 paused;
+  } timers[3] = {{*this, 0}, {*this, 1}, {*this, 2}};
 };
 
 extern Timer timer;

@@ -1,6 +1,7 @@
 struct System {
   Node::Object node;
   Node::String regionNode;
+  Node::Boolean fastBoot;
 
   enum class Region : uint { NTSCJ, NTSCU, PAL };
 
