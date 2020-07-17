@@ -24,7 +24,7 @@ auto GPU::readGP1() -> u32 {
   data.bit(27)    = 1;  //ready to send VRAM to CPU
   data.bit(28)    = 1;  //ready to receive DMA block
   data.bit(29,30) = io.dmaDirection;
-  data.bit(31)    = io.interlace ? (bool)io.field : io.vcounter & 1;
+  data.bit(31)    = (io.vcounter >= 240) || (io.interlace && !(io.vcounter & 1)) ? 0 : 1;
   return data;
 }
 

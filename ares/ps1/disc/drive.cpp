@@ -10,14 +10,27 @@ auto Disc::Drive::clockSector() -> void {
     sector.offset = 0;
 
     if(!self.ssr.playingCDDA) {
-      sector.offset += 24;  //skip sync header and mode 2 form header
-      lba.current++;
+      if(mode.sectorSize == 0) {
+        self.fifo.data.flush();
+        for(uint offset : range(2048)) {
+          self.fifo.data.write(sector.data[24 + offset]);
+        }
+      }
+
+      if(mode.sectorSize == 1) {
+        self.fifo.data.flush();
+        for(uint offset : range(2340)) {
+          self.fifo.data.write(sector.data[12 + offset]);
+        }
+      }
 
       self.fifo.response.flush();
       self.fifo.response.write(self.status());
 
       self.irq.ready.flag = 1;
       self.irq.poll();
+
+      lba.current++;
     } else if(cdda->playMode == Disc::CDDA::PlayMode::Normal) {
       lba.current++;
     } else if(cdda->playMode == Disc::CDDA::PlayMode::FastForward) {
@@ -29,6 +42,7 @@ auto Disc::Drive::clockSector() -> void {
           }
         }
       }
+
       lba.current = min(end, lba.current + 10);
     } else if(cdda->playMode == Disc::CDDA::PlayMode::Rewind) {
       int start = 0;
@@ -39,6 +53,7 @@ auto Disc::Drive::clockSector() -> void {
           }
         }
       }
+
       lba.current = max(start, lba.current - 10);
     }
   }

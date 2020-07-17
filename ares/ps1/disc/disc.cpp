@@ -60,24 +60,27 @@ auto Disc::connect() -> void {
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
   information.region = document["game/region"].string();
+  information.executable = (bool)document["game/executable"];
 
-  fd = platform->open(cd, "cd.rom", File::Read, File::Required);
-  if(!fd) return disconnect();
+  if(!executable()) {
+    fd = platform->open(cd, "cd.rom", File::Read, File::Required);
+    if(!fd) return disconnect();
 
-  //read disc TOC (table of contents)
-  uint sectors = fd->size() / 2448;
-  vector<uint8_t> subchannel;
-  subchannel.resize(sectors * 96);
-  for(uint sector : range(sectors)) {
-    fd->seek(sector * 2448 + 2352);
-    fd->read(subchannel.data() + sector * 96, 96);
+    //read disc TOC (table of contents)
+    uint sectors = fd->size() / 2448;
+    vector<uint8_t> subchannel;
+    subchannel.resize(sectors * 96);
+    for(uint sector : range(sectors)) {
+      fd->seek(sector * 2448 + 2352);
+      fd->read(subchannel.data() + sector * 96, 96);
+    }
+    session.decode(subchannel, 96);
   }
-  session.decode(subchannel, 96);
 }
 
 auto Disc::disconnect() -> void {
-  fd = {};
-  cd = {};
+  fd.reset();
+  cd.reset();
 }
 
 auto Disc::main() -> void {

@@ -59,8 +59,8 @@ auto PlayStation::open(ares::Node::Object node, string name, vfs::file::mode mod
   }
 
   if(name == "manifest.bml") {
-    if(auto manifest = medium->manifest(game.location)) {
-      return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
+    if(game.manifest = medium->manifest(game.location)) {
+      return vfs::memory::open(game.manifest.data<uint8_t>(), game.manifest.size());
     }
     return Emulator::manifest(game.location);
   }
@@ -79,6 +79,10 @@ auto PlayStation::open(ares::Node::Object node, string name, vfs::file::mode mod
     MessageDialog().setText(
       "Failed to load CD-ROM image."
     ).setAlignment(presentation).error();
+  }
+
+  if(name == "program.exe") {
+    return vfs::memory::open(game.image.data(), game.image.size());
   }
 
   return {};

@@ -15,28 +15,50 @@ auto Timer::unload() -> void {
 }
 
 auto Timer::step(uint clocks) -> void {
-  if(!htimer.synchronizeEnable) {
-    htimer.step(clocks);
-  } else {
+  counter.dotclock += clocks;
+  counter.hclock   += clocks;
+  counter.divclock += clocks;
+
+  {
+    if(timers[0].clock == 0) {
+      timers[0].step(clocks);
+    }
+
+    if(timers[1].clock == 0) {
+      timers[1].step(clocks);
+    }
+
+    if(timers[2].divider == 0 && timers[2].disable == 0) {
+      timers[2].step(clocks);
+    }
   }
 
-  if(!vtimer.synchronizeEnable) {
-    vtimer.step(clocks);
-  } else {
+  while(counter.dotclock >= 8) {
+    counter.dotclock -= 8;
+    if(timers[0].clock == 1) {
+      timers[0].step();
+    }
   }
 
-  if(!ftimer.synchronizeEnable) {
-    ftimer.step(clocks);
-  } else {
-    if(ftimer.synchronizeMode == 1) ftimer.step(clocks);
-    if(ftimer.synchronizeMode == 2) ftimer.step(clocks);
+  while(counter.hclock >= 2154) {
+    counter.hclock -= 2154;
+    if(timers[1].clock == 1) {
+      timers[1].step();
+    }
+  }
+
+  while(counter.divclock >= 8) {
+    counter.divclock -= 8;
+    if(timers[2].divider == 1 && timers[2].disable == 0) {
+      timers[2].step();
+    }
   }
 }
 
 auto Timer::poll() -> void {
-  interrupt.drive(Interrupt::Timer0, htimer.irqLine == 0);
-  interrupt.drive(Interrupt::Timer1, vtimer.irqLine == 0);
-  interrupt.drive(Interrupt::Timer2, ftimer.irqLine == 0);
+  interrupt.drive(Interrupt::Timer0, timers[0].irqLine == 0);
+  interrupt.drive(Interrupt::Timer1, timers[1].irqLine == 0);
+  interrupt.drive(Interrupt::Timer2, timers[2].irqLine == 0);
 }
 
 auto Timer::power(bool reset) -> void {

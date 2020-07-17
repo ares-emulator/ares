@@ -1,9 +1,9 @@
 auto Disc::readDMA() -> u32 {
   u32 data = 0;
-  data |= drive.sector.data[drive.sector.offset++] <<  0;
-  data |= drive.sector.data[drive.sector.offset++] <<  8;
-  data |= drive.sector.data[drive.sector.offset++] << 16;
-  data |= drive.sector.data[drive.sector.offset++] << 24;
+  if(!fifo.data.empty()) data |= fifo.data.read() <<  0;
+  if(!fifo.data.empty()) data |= fifo.data.read() <<  8;
+  if(!fifo.data.empty()) data |= fifo.data.read() << 16;
+  if(!fifo.data.empty()) data |= fifo.data.read() << 24;
   return data;
 }
 
@@ -28,6 +28,7 @@ auto Disc::readByte(u32 address) -> u32 {
 
   //data FIFO
   if(address == 0x1f80'1802 && (io.index == 0 || io.index == 1 || io.index == 2 || io.index == 3)) {
+    if(!fifo.data.empty()) data = fifo.data.read();
   }
 
   //interrupt enable

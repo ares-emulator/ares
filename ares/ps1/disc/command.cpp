@@ -25,6 +25,8 @@ auto Disc::command(u8 operation) -> void {
   case 0x08: return commandStop();
   case 0x09: return commandPause();
   case 0x0a: return commandInitialize();
+  case 0x0b: return commandMute();
+  case 0x0c: return commandUnmute();
   case 0x0e: return commandSetMode();
   case 0x13: return commandGetFirstAndLastTrackNumbers();
   case 0x14: return commandGetTrackStart();
@@ -227,6 +229,28 @@ auto Disc::commandInitialize() -> void {
     irq.poll();
     return;
   }
+}
+
+//0x0b
+auto Disc::commandMute() -> void {
+  //todo
+
+  fifo.response.flush();
+  fifo.response.write(status());
+
+  irq.acknowledge.flag = 1;
+  irq.poll();
+}
+
+//0x0c
+auto Disc::commandUnmute() -> void {
+  //todo
+
+  fifo.response.flush();
+  fifo.response.write(status());
+
+  irq.acknowledge.flag = 1;
+  irq.poll();
 }
 
 //0x0e

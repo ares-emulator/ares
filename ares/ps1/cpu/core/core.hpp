@@ -3,6 +3,7 @@
   auto raiseException(uint, uint = 0) -> void;
   auto instruction() -> void;
   auto instructionEpilogue() -> bool;
+  auto instructionHook() -> void;
   auto instructionDebug() -> void;
   auto powerCore(bool reset) -> void;
 

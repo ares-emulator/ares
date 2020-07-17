@@ -140,7 +140,7 @@ auto CPU::instructionLWL(u32& rt, cu32& rs, i16 imm) -> void {
   auto shift = 8 * ((address ^ FlipLE) & 3);
   auto mask = u32(0) - 1 << shift;
   auto data = readWord(address & ~3);
-  fetch(rt, rt & ~mask | data << shift);
+  fetch(rt, data << shift, ~mask);
 }
 
 auto CPU::instructionLWR(u32& rt, cu32& rs, i16 imm) -> void {
@@ -148,7 +148,7 @@ auto CPU::instructionLWR(u32& rt, cu32& rs, i16 imm) -> void {
   auto shift = 8 * ((address ^ FlipBE) & 3);
   auto mask = u32(0) - 1 >> shift;
   auto data = readWord(address & ~3);
-  fetch(rt, rt & ~mask | data >> shift);
+  fetch(rt, data >> shift, ~mask);
 }
 
 auto CPU::instructionMFHI(u32& rd) -> void {

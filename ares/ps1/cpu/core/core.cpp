@@ -55,7 +55,8 @@ auto CPU::instruction() -> void {
 
 auto CPU::instructionEpilogue() -> bool {
   if(delay.load.target) {
-    *delay.load.target = delay.load.source;
+    *delay.load.target &= delay.load.mask;
+    *delay.load.target |= delay.load.source;
     delay.load.target = nullptr;
   }
 
@@ -72,13 +73,61 @@ auto CPU::instructionEpilogue() -> bool {
   core.r[0] = 0;
 
   switch(delay.branch.state) {
-  case Delay::Branch::Step: PC += 4; return 0;
-  case Delay::Branch::Take: PC += 4; delay.branch.delaySlot(); return 0;
-  case Delay::Branch::DelaySlot: PC = delay.branch.pc; delay.branch.reset(); return 1;
-  case Delay::Branch::Exception: delay.branch.reset(); return 1;
+  case Delay::Branch::Step:
+    PC += 4;
+    return 0;
+  case Delay::Branch::Take:
+    PC += 4;
+    delay.branch.delaySlot();
+    return 0;
+  case Delay::Branch::DelaySlot:
+    PC = delay.branch.pc;
+    delay.branch.reset();
+    instructionHook();
+    return 1;
+  case Delay::Branch::Exception:
+    delay.branch.reset();
+    return 1;
   }
 
   unreachable;
+}
+
+auto CPU::instructionHook() -> void {
+//return;
+
+  //fast-boot or executable side-loading
+  if(PC == 0x8003'0000) {
+    if(disc.executable()) {
+      if(auto fp = platform->open(disc.node, "program.exe", File::Read, File::Required)) {
+        Memory::Readable exe;
+        exe.allocate(fp->size());
+        exe.load(fp);
+        u32 pc     = exe.readWord(0x10);
+        u32 gp     = exe.readWord(0x14);
+        u32 target = exe.readWord(0x18) & ram.size - 1;
+        u32 source = 2048;
+
+        PC = pc;
+        core.r[28] = gp;
+        for(uint address : range(exe.size - source)) {
+          ram.writeByte(target + address, exe.readByte(source + address));
+        }
+      }
+    } else {
+    //PC = core.r[31];
+    }
+  }
+
+  //putchar
+  if(PC == 0xa0 && core.r[9] == 0x3c) {
+    print((char)core.r[4]);
+  }
+
+  //putchar
+  if(PC == 0xb0 && core.r[9] == 0x3d) {
+    print((char)core.r[4]);
+  }
 }
 
 auto CPU::instructionDebug() -> void {

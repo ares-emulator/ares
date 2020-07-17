@@ -8,6 +8,7 @@ struct Disc : Thread {
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
   auto region() const -> string { return information.region; }
+  auto executable() const -> bool { return information.executable; }
 
   //disc.cpp
   auto load(Node::Object) -> void;
@@ -44,6 +45,8 @@ struct Disc : Thread {
   auto commandStop() -> void;
   auto commandPause() -> void;
   auto commandInitialize() -> void;
+  auto commandMute() -> void;
+  auto commandUnmute() -> void;
   auto commandSetMode() -> void;
   auto commandGetFirstAndLastTrackNumbers() -> void;
   auto commandGetTrackStart() -> void;
@@ -188,6 +191,7 @@ struct Disc : Thread {
     string manifest;
     string name;
     string region;
+    boolean executable;
   } information;
 };
 
