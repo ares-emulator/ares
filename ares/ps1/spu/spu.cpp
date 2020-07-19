@@ -27,12 +27,14 @@ auto SPU::load(Node::Object parent) -> void {
   stream->setFrequency(44100.0);
 
   ram.allocate(512_KiB);
+  fifo.resize(32);
 
   debugger.load(node);
 }
 
 auto SPU::unload() -> void {
   debugger = {};
+  fifo.reset();
   ram.reset();
   stream.reset();
   node.reset();

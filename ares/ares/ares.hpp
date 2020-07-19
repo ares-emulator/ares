@@ -18,6 +18,7 @@
 #include <nall/set.hpp>
 #include <nall/shared-pointer.hpp>
 #include <nall/string.hpp>
+#include <nall/terminal.hpp>
 #include <nall/traits.hpp>
 #include <nall/unique-pointer.hpp>
 #include <nall/variant.hpp>
@@ -59,6 +60,7 @@ namespace ares {
 #include <ares/information.hpp>
 #include <ares/types.hpp>
 #include <ares/random.hpp>
+#include <ares/debug/debug.hpp>
 #include <ares/node/node.hpp>
 #include <ares/platform.hpp>
 #include <ares/interface.hpp>

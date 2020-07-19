@@ -197,12 +197,12 @@ auto GPU::writeGP0(u32 value) -> void {
   }
 
   //monochrome rectangle (variable size)
-  if(command == 0x60 || command == 0x62) {
+  if(command == 0x60 || command == 0x61 || command == 0x62 || command == 0x63) {
     if(queue.write(value) < 3) return;
     auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
     auto sz = Size().setSize(queue.data[2]);
-    if(command == 0x60) renderRectangle<Render::Color>(v0, sz);
-    if(command == 0x62) renderRectangle<Render::Color | Render::Alpha>(v0, sz);
+    if(command == 0x60 || command == 0x61) renderRectangle<Render::Color>(v0, sz);
+    if(command == 0x62 || command == 0x63) renderRectangle<Render::Color | Render::Alpha>(v0, sz);
     return queue.reset();
   }
 
@@ -220,12 +220,12 @@ auto GPU::writeGP0(u32 value) -> void {
   }
 
   //monochrome rectangle (1x1 size)
-  if(command == 0x68 || command == 0x6a) {
+  if(command == 0x68 || command == 0x69 || command == 0x6a || command == 0x6b) {
     if(queue.write(value) < 2) return;
     auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
     auto sz = Size().setSize(1, 1);
-    if(command == 0x68) renderRectangle<Render::Color>(v0, sz);
-    if(command == 0x6a) renderRectangle<Render::Color | Render::Alpha>(v0, sz);
+    if(command == 0x68 || command == 0x69) renderRectangle<Render::Color>(v0, sz);
+    if(command == 0x6a || command == 0x6b) renderRectangle<Render::Color | Render::Alpha>(v0, sz);
     return queue.reset();
   }
 
@@ -243,12 +243,12 @@ auto GPU::writeGP0(u32 value) -> void {
   }
 
   //monochrome rectangle (8x8 size)
-  if(command == 0x70 || command == 0x72) {
+  if(command == 0x70 || command == 0x71 || command == 0x72 || command == 0x73) {
     if(queue.write(value) < 2) return;
     auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
     auto sz = Size().setSize(8, 8);
-    if(command == 0x70) renderRectangle<Render::Color>(v0, sz);
-    if(command == 0x72) renderRectangle<Render::Color | Render::Alpha>(v0, sz);
+    if(command == 0x70 || command == 0x71) renderRectangle<Render::Color>(v0, sz);
+    if(command == 0x72 || command == 0x73) renderRectangle<Render::Color | Render::Alpha>(v0, sz);
     return queue.reset();
   }
 
@@ -266,12 +266,12 @@ auto GPU::writeGP0(u32 value) -> void {
   }
 
   //monochrome rectangle (16x16 size)
-  if(command == 0x78 || command == 0x7a) {
+  if(command == 0x78 || command == 0x79 || command == 0x7a || command == 0x7b) {
     if(queue.write(value) < 2) return;
     auto v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
     auto sz = Size().setSize(16, 16);
-    if(command == 0x78) renderRectangle<Render::Color>(v0, sz);
-    if(command == 0x7a) renderRectangle<Render::Color | Render::Alpha>(v0, sz);
+    if(command == 0x78 || command == 0x79) renderRectangle<Render::Color>(v0, sz);
+    if(command == 0x7a || command == 0x7b) renderRectangle<Render::Color | Render::Alpha>(v0, sz);
     return queue.reset();
   }
 
@@ -291,7 +291,7 @@ auto GPU::writeGP0(u32 value) -> void {
   //copy rectangle (VRAM to VRAM)
   if(command == 0x80) {
     if(queue.write(value) < 4) return;
-    print("* GPU copy VRAM to VRAM\n");
+    debug.unimplemented("GPU copy VRAM to VRAM");
     return queue.reset();
   }
 
@@ -372,5 +372,5 @@ auto GPU::writeGP0(u32 value) -> void {
     return;
   }
 
-  print("* GP0(", hex(command, 2L), ") = ", hex(value, 6L), "\n");
+  debug.unimplemented("GP0(", hex(command, 2L), ") = ", hex(value, 6L));
 }

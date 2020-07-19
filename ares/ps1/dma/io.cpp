@@ -161,6 +161,6 @@ auto DMA::writeWord(u32 address, u32 value) -> void {
     if(data.bit(28)) channel[4].irq.flag = 0;
     if(data.bit(29)) channel[5].irq.flag = 0;
     if(data.bit(30)) channel[6].irq.flag = 0;
-    pollIRQ();
+    irq.poll();
   }
 }

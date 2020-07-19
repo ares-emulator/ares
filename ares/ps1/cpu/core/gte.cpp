@@ -354,16 +354,42 @@ auto CPU::GTE::cdp() -> void {
   print("CDP\n");
 }
 
+auto CPU::GTE::dpc(i16 r, i16 g, i16 b) -> void {
+  setMacAndIr<1>((i64(rfc) << 12) - (r << 12));
+  setMacAndIr<2>((i64(gfc) << 12) - (g << 12));
+  setMacAndIr<3>((i64(bfc) << 12) - (b << 12));
+
+  setMacAndIr<1>((i64(ir0) << 12) + ir1 * r);
+  setMacAndIr<2>((i64(ir0) << 12) + ir2 * g);
+  setMacAndIr<3>((i64(ir0) << 12) + ir3 * b);
+
+  pushColor();
+}
+
 auto CPU::GTE::dcpl() -> void {
-  print("DCPL\n");
+  i16 i1 = ir1;
+  i16 i2 = ir2;
+  i16 i3 = ir3;
+
+  setMacAndIr<1>((i64(rfc) << 12) - R * i1);
+  setMacAndIr<2>((i64(gfc) << 12) - G * i2);
+  setMacAndIr<3>((i64(bfc) << 12) - B * i3);
+
+  setMacAndIr<1>(R * i1 + ir0 * ir1, lm);
+  setMacAndIr<2>(G * i2 + ir0 * ir2, lm);
+  setMacAndIr<3>(B * i3 + ir0 * ir3, lm);
+
+  pushColor();
 }
 
 auto CPU::GTE::dpcs() -> void {
-  print("DPCS\n");
+  dpc(R, G, B);
 }
 
 auto CPU::GTE::dpct() -> void {
-  print("DPCT\n");
+  dpc(rgb0 << 4, rgb1 << 4, rgb2 << 4);
+  dpc(rgb0 << 4, rgb1 << 4, rgb2 << 4);
+  dpc(rgb0 << 4, rgb1 << 4, rgb2 << 4);
 }
 
 auto CPU::GTE::gpf() -> void {
@@ -375,11 +401,82 @@ auto CPU::GTE::gpl() -> void {
 }
 
 auto CPU::GTE::intpl() -> void {
-  print("INTPL\n");
+  i16 i1 = ir1;
+  i16 i2 = ir2;
+  i16 i3 = ir3;
+
+  setMacAndIr<1>((i64(rfc) << 12) - (i64(i1) << 12));
+  setMacAndIr<2>((i64(gfc) << 12) - (i64(i2) << 12));
+  setMacAndIr<3>((i64(bfc) << 12) - (i64(i3) << 12));
+
+  setMacAndIr<1>((i64(ir0) << 12) + ir1 * i1, lm);
+  setMacAndIr<2>((i64(ir0) << 12) + ir2 * i2, lm);
+  setMacAndIr<3>((i64(ir0) << 12) + ir3 * i3, lm);
+
+  pushColor();
 }
 
 auto CPU::GTE::mvmva() -> void {
-  print("MVMVA\n");
+  i32 tx, ty, tz;
+  switch(tv) {
+  case 0: tx = trx; ty = trY; tz = trz; break;
+  case 1: tx = rbk; ty = gbk; tz = bbk; break;
+  case 2: tx = rfc; ty = gfc; tz = bfc; break;
+  case 3: tx = 0;   ty = 0;   tz = 0;   break;
+  }
+
+  i16 vx, vy, vz;
+  switch(mv) {
+  case 0: vx = vx0; vy = vy0; vz = vz0; break;
+  case 1: vx = vx1; vy = vy1; vz = vz1; break;
+  case 2: vx = vx2; vy = vy2; vz = vz2; break;
+  case 3: vx = ir1; vy = ir2; vz = ir3; break;
+  }
+
+  i16 m11, m12, m13;
+  i16 m21, m22, m23;
+  i16 m31, m32, m33;
+  switch(mm) {
+  case 0:  //rotation
+    m11 = rt11; m12 = rt12; m13 = rt13;
+    m21 = rt21; m22 = rt22; m23 = rt23;
+    m31 = rt31; m32 = rt32; m33 = rt33;
+    break;
+  case 1:  //light
+    m11 = l11; m12 = l12; m13 = l13;
+    m21 = l21; m22 = l22; m23 = l23;
+    m31 = l31; m32 = l32; m33 = l33;
+    break;
+  case 2:  //color
+    m11 = lr1; m12 = lr2; m13 = lr3;
+    m21 = lg1; m22 = lg2; m23 = lg3;
+    m31 = lb1; m32 = lb2; m33 = lb3;
+    break;
+  case 3:  //reserved
+    m11 = -R;   m12 = +R;   m13 = ir0;
+    m21 = rt13; m22 = rt13; m23 = rt13;
+    m31 = rt22; m32 = rt22; m33 = rt22;
+    break;
+  }
+
+  i64 x, y, z;
+  if(tv != 2) {
+    x = extend<1>(extend<1>(extend<1>((i64(tx) << 12) + m11 * vx) + m12 * vy) + m13 * vz);
+    y = extend<2>(extend<2>(extend<2>((i64(ty) << 12) + m21 * vx) + m22 * vy) + m23 * vz);
+    z = extend<3>(extend<3>(extend<3>((i64(tz) << 12) + m31 * vx) + m32 * vy) + m33 * vz);
+  } else {
+    setIr<1>(extend<1>((i64(tx) << 12) + m11 * vx) >> sf);
+    setIr<2>(extend<2>((i64(ty) << 12) + m21 * vx) >> sf);
+    setIr<3>(extend<3>((i64(tz) << 12) + m31 * vx) >> sf);
+
+    x = extend<1>(extend<1>(m12 * vy) + m13 * vz);
+    y = extend<1>(extend<1>(m22 * vy) + m23 * vz);
+    z = extend<1>(extend<1>(m32 * vy) + m33 * vz);
+  }
+
+  setMacAndIr<1>(x, lm);
+  setMacAndIr<2>(y, lm);
+  setMacAndIr<3>(z, lm);
 }
 
 template<uint m>
@@ -397,8 +494,8 @@ auto CPU::GTE::nc(i32 vx, i32 vy, i32 vz) -> void {
   z = extend<3>(extend<3>(extend<3>((i64(bbk) << 12) + lb1 * ir1) + lb2 * ir2) + lb3 * ir3);
 
   setMacAndIr<1>(x, lm);
-  setMacAndIr<2>(x, lm);
-  setMacAndIr<3>(x, lm);
+  setMacAndIr<2>(y, lm);
+  setMacAndIr<3>(z, lm);
 
   if constexpr(m == 1) {
     setMacAndIr<1>(R * ir1);

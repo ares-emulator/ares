@@ -6,7 +6,6 @@ struct DMA {
   auto unload() -> void;
 
   auto step(uint clocks) -> void;
-  auto pollIRQ() -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -27,11 +26,17 @@ struct DMA {
   enum : uint { MDECIN, MDECOUT, GPU, CDROM, SPU, PIO, OTC };  //channels
 
   struct IRQ {
+    DMA& self;
+    IRQ(DMA& self) : self(self) {}
+
+    //irq.cpp
+    auto poll() -> void;
+
     uint1 force;
     uint1 enable;
     uint1 flag;
     uint6 unknown;
-  } irq;
+  } irq{*this};
 
   struct Channel {
     //dma.cpp

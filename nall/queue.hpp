@@ -81,6 +81,10 @@ struct queue {
     for(uint n : range(_capacity)) _data[n] = value;
   }
 
+  auto peek(uint index) const -> T {
+    return _data[(_read + index) % _size];
+  }
+
   auto read() -> T {
     T value = _data[_read++];
     if(_read >= _capacity) _read = 0;

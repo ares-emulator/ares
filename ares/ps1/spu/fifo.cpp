@@ -1,26 +1,66 @@
-auto SPU::fifoReset() -> void {
-  fifo.size = 0;
-}
-
-auto SPU::fifoWrite(u16 data) -> void {
-  fifo.data[fifo.size++ & 31] = data;
-}
-
 auto SPU::fifoManualWrite() -> void {
-  for(uint index : range(min(32, fifo.size))) {
-    u16 data = 0;
-    switch(transfer.type) {
-    case 0: break;  //unknown
-    case 1: break;  //unknown
-    case 2: data = fifo.data[index]; break;
-    case 3: data = fifo.data[index & ~1]; break;
-    case 4: data = fifo.data[index & ~3]; break;
-    case 5: data = fifo.data[index & ~7 | 7]; break;
-    case 6: break;  //unknown
-    case 7: break;  //unknown
+  if(transfer.type == 2) {
+    while(fifo.size() >= 1) {
+      u16 data = fifo.read();
+      writeRAM(transfer.current, data);
+      transfer.current += 2;
     }
-    ram.writeHalf(transfer.address, data);
-    transfer.address += 2;
   }
-  fifoReset();
+
+  if(transfer.type == 3) {
+    while(fifo.size() >= 2) {
+      u16 data = fifo.read();
+      fifo.read();
+      writeRAM(transfer.current + 0, data);
+      writeRAM(transfer.current + 2, data);
+      transfer.current += 4;
+    }
+  }
+
+  if(transfer.type == 4) {
+    while(fifo.size() >= 4) {
+      u16 data = fifo.read();
+      fifo.read();
+      fifo.read();
+      fifo.read();
+      writeRAM(transfer.current + 0, data);
+      writeRAM(transfer.current + 2, data);
+      writeRAM(transfer.current + 4, data);
+      writeRAM(transfer.current + 6, data);
+      transfer.current += 8;
+    }
+  }
+
+  if(transfer.type == 5) {
+    while(fifo.size() >= 8) {
+      fifo.read();
+      fifo.read();
+      fifo.read();
+      fifo.read();
+      fifo.read();
+      fifo.read();
+      fifo.read();
+      u16 data = fifo.read();
+      writeRAM(transfer.current +  0, data);
+      writeRAM(transfer.current +  2, data);
+      writeRAM(transfer.current +  4, data);
+      writeRAM(transfer.current +  6, data);
+      writeRAM(transfer.current +  8, data);
+      writeRAM(transfer.current + 10, data);
+      writeRAM(transfer.current + 12, data);
+      writeRAM(transfer.current + 14, data);
+      transfer.current += 16;
+    }
+  }
+
+  if(transfer.type <= 1 || transfer.type >= 6) {
+    if(u16 size = fifo.size()) {
+      u16 data = 0;
+      while(!fifo.empty()) data = fifo.read();
+      while(size--) {
+        writeRAM(transfer.current, data);
+        transfer.current += 2;
+      }
+    }
+  }
 }

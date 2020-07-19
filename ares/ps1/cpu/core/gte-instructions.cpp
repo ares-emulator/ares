@@ -86,8 +86,11 @@ auto CPU::instructionINTPL() -> void {
   gte.updateError();
 }
 
-auto CPU::instructionMVMVA() -> void {
+auto CPU::instructionMVMVA(u8 tv, u8 mv, u8 mm) -> void {
   gte.clearFlags();
+  gte.tv = tv;
+  gte.mv = mv;
+  gte.mm = mm;
   gte.mvmva();
   gte.updateError();
 }

@@ -1,3 +1,36 @@
+auto SPU::readRAM(u32 address) -> u16 {
+  if(irq.enable && irq.address == u16(address >> 3)) {
+    irq.flag = 1;
+    interrupt.raise(Interrupt::SPU);
+  }
+  return ram.readHalf(address);
+}
+
+auto SPU::writeRAM(u32 address, u16 data) -> void {
+  if(irq.enable && irq.address == u16(address >> 3)) {
+    irq.flag = 1;
+    interrupt.raise(Interrupt::SPU);
+  }
+  return ram.writeHalf(address, data);
+}
+
+auto SPU::readDMA() -> u32 {
+  print("* SPU DMA read\n");
+  return 0;
+}
+
+auto SPU::writeDMA(u32 data) -> void {
+  for(uint half : range(2)) {
+    if(fifo.full()) break;
+    fifo.write(u16(data));
+    data >>= 16;
+    if(fifo.full() && irq.enable) {
+      irq.flag = 1;
+      interrupt.raise(Interrupt::SPU);
+    }
+  }
+}
+
 auto SPU::readByte(u32 address) -> u32 {
   uint16 data = readHalf(address & ~1);
   return data >> 8 * (address & 1) & 0xff;
@@ -129,12 +162,12 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //RAM IRQ address
   if(address == 0x1f80'1da4) {
-    data.bit(0,15) = transfer.irqAddress >> 3;
+    data.bit(0,15) = irq.address;
   }
 
   //RAM transfer address
   if(address == 0x1f80'1da6) {
-    data.bit(0,15) = transfer.address >> 3;
+    data.bit(0,15) = transfer.address;
   }
 
   //RAM transfer data
@@ -149,7 +182,7 @@ auto SPU::readHalf(u32 address) -> u32 {
     data.bit( 2)    = cdda.reverb;
     data.bit( 3)    = external.reverb;
     data.bit( 4, 5) = transfer.mode;
-    data.bit( 6)    = transfer.irqEnable;
+    data.bit( 6)    = irq.enable;
     data.bit( 7)    = reverb.enable;
     data.bit( 8, 9) = noise.step;
     data.bit(10,13) = noise.shift;
@@ -171,7 +204,8 @@ auto SPU::readHalf(u32 address) -> u32 {
     data.bit(2)   = cdda.reverb;
     data.bit(3)   = external.reverb;
     data.bit(4,5) = transfer.mode;
-    data.bit(7)   = transfer.mode.bit(1);  //unverified
+    data.bit(6)   = irq.flag;
+    data.bit(7)   = transfer.mode.bit(1);
   }
 
   //CD-DA volume left
@@ -546,35 +580,41 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //RAM IRQ address
   if(address == 0x1f80'1da4) {
-    transfer.irqAddress = data.bit(0,15) << 3;
+    irq.address = data.bit(0,15);
   }
 
   //RAM transfer address
   if(address == 0x1f80'1da6) {
-    transfer.address = data.bit(0,15) << 3;
+    transfer.address = data.bit(0,15);
+    transfer.current = transfer.address << 3;
   }
 
   //RAM transfer data
   if(address == 0x1f80'1da8) {
-    fifoWrite(data);
+    if(!fifo.full()) fifo.write(data);
   }
 
   //SPUCNT
   if(address == 0x1f80'1daa) {
-    cdda.enable        = data.bit( 0);
-    external.enable    = data.bit( 1);
-    cdda.reverb        = data.bit( 2);
-    external.reverb    = data.bit( 3);
-    transfer.mode      = data.bit( 4, 5);
-    transfer.irqEnable = data.bit( 6);
-    reverb.enable      = data.bit( 7);
-    noise.step         = data.bit( 8, 9);
-    noise.shift        = data.bit(10,13);
-    master.mute        = data.bit(14);
-    master.enable      = data.bit(15);
+    cdda.enable     = data.bit( 0);
+    external.enable = data.bit( 1);
+    cdda.reverb     = data.bit( 2);
+    external.reverb = data.bit( 3);
+    transfer.mode   = data.bit( 4, 5);
+    irq.enable      = data.bit( 6);
+    reverb.enable   = data.bit( 7);
+    noise.step      = data.bit( 8, 9);
+    noise.shift     = data.bit(10,13);
+    master.mute     = data.bit(14);
+    master.enable   = data.bit(15);
 
-    if(transfer.mode == 0) fifoReset();
+    if(transfer.mode == 0) fifo.flush();
     if(transfer.mode == 1) fifoManualWrite();
+
+    if(irq.enable == 0) {
+      irq.flag = 0;
+      interrupt.lower(Interrupt::SPU);
+    }
   }
 
   //SPURAMCNT

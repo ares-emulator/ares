@@ -53,6 +53,7 @@ struct Settings : Markup::Node {
     bool runAhead = false;
     bool autoSaveMemory = true;
     bool fastBoot = true;
+    bool autoDebug = false;
     bool nativeFileDialogs = true;
     bool groupEmulators = true;
   } general;
@@ -193,6 +194,9 @@ struct OptionSettings : VerticalLayout {
   HorizontalLayout fastBootLayout{this, Size{~0, 0}, 2};
     CheckLabel fastBoot{&fastBootLayout, Size{0, 0}, 2};
     Label fastBootHint{&fastBootLayout, Size{~0, 0}};
+  HorizontalLayout autoDebugLayout{this, Size{~0, 0}, 2};
+    CheckLabel autoDebug{&autoDebugLayout, Size{0, 0}, 2};
+    Label autoDebugHint{&autoDebugLayout, Size{~0, 0}};
   HorizontalLayout nativeFileDialogsLayout{this, Size{~0, 0}, 2};
     CheckLabel nativeFileDialogs{&nativeFileDialogsLayout, Size{0, 0}, 2};
     Label nativeFileDialogsHint{&nativeFileDialogsLayout, Size{~0, 0}};

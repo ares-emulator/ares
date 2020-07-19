@@ -35,6 +35,7 @@
     auto cc() -> void;
     auto cdp() -> void;
     auto dcpl() -> void;
+    auto dpc(i16 r, i16 g, i16 b) -> void;
     auto dpcs() -> void;
     auto dpct() -> void;
     auto gpf() -> void;
@@ -112,6 +113,9 @@
       BitField<32, 31> error          {&value};
     } flag;
     bool lm;
+      u8 tv;
+      u8 mv;
+      u8 mm;
       u8 sf;
 
   //unserialized:
@@ -139,7 +143,7 @@
   auto instructionGPF() -> void;
   auto instructionGPL() -> void;
   auto instructionINTPL() -> void;
-  auto instructionMVMVA() -> void;
+  auto instructionMVMVA(u8 tv, u8 mv, u8 mm) -> void;
   auto instructionNCCS() -> void;
   auto instructionNCCT() -> void;
   auto instructionNCDS(bool lm, u8 sf) -> void;

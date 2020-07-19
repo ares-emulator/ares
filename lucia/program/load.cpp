@@ -93,7 +93,13 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
   propertiesViewer.reload();
   traceLogger.reload();
   state = {};  //reset hotkey state slot to 1
-  pause(false);
+  if(settings.general.autoDebug) {
+    pause(true);
+    toolsWindow.show("Tracer");
+    presentation.setFocused();
+  } else {
+    pause(false);
+  }
   showMessage({"Loaded ", Location::prefix(emulator->game.location), patchApplied ? ", and patch applied" : ""});
 
   //update recent games list

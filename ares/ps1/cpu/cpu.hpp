@@ -11,11 +11,15 @@ struct CPU : Thread {
     auto instruction() -> void;
     auto exception(string_view) -> void;
     auto interrupt(string_view) -> void;
+    auto message(char) -> void;
+    auto function() -> void;
 
     struct Tracer {
       Node::Instruction instruction;
       Node::Notification exception;
       Node::Notification interrupt;
+      Node::Notification message;
+      Node::Notification function;
     } tracer;
 
     struct Memory {

@@ -253,7 +253,7 @@
   op(0x0c, OP);
   op(0x10, DPCS);
   op(0x11, INTPL);
-  op(0x12, MVMVA);
+  op(0x12, MVMVA, TV, MV, MM);
   op(0x13, NCDS, LM, SF);
   op(0x14, CDP);
   op(0x16, NCDT, LM, SF);

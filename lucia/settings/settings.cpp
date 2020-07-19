@@ -88,6 +88,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "General/RunAhead", general.runAhead);
   bind(boolean, "General/AutoSaveMemory", general.autoSaveMemory);
   bind(boolean, "General/FastBoot", general.fastBoot);
+  bind(boolean, "General/AutoDebug", general.autoDebug);
   bind(boolean, "General/NativeFileDialogs", general.nativeFileDialogs);
   bind(boolean, "General/GroupEmulators", general.groupEmulators);
 

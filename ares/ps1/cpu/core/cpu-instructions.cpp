@@ -9,7 +9,7 @@ auto CPU::instructionADD(u32& rd, cu32& rs, cu32& rt) -> void {
 }
 
 auto CPU::instructionADDI(u32& rt, cu32& rs, i16 imm) -> void {
-  if(~(rs ^ rt) & (rs ^ rs + imm) & 0x8000'0000) return exception.arithmeticOverflow();
+  if(~(rs ^ imm) & (rs ^ rs + imm) & 0x8000'0000) return exception.arithmeticOverflow();
   write(rt, rs + imm);
 }
 

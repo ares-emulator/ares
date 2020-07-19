@@ -25,6 +25,10 @@ struct SPU : Thread {
   auto power(bool reset) -> void;
 
   //io.cpp
+  auto readRAM(u32 address) -> u16;
+  auto writeRAM(u32 address, u16 data) -> void;
+  auto readDMA() -> u32;
+  auto writeDMA(u32 data) -> void;
   auto readByte(u32 address) -> u32;
   auto readHalf(u32 address) -> u32;
   auto readWord(u32 address) -> u32;
@@ -33,8 +37,6 @@ struct SPU : Thread {
   auto writeWord(u32 address, u32 data) -> void;
 
   //fifo.cpp
-  auto fifoReset() -> void;
-  auto fifoWrite(u16 data) -> void;
   auto fifoManualWrite() -> void;
 
   //adsr.cpp
@@ -73,17 +75,17 @@ struct SPU : Thread {
   struct Transfer {
      uint2 mode = 0;
      uint3 type = 0;
-    uint19 address = 0;
-    uint19 irqAddress = 0;
-     uint1 irqEnable = 0;
+    uint16 address = 0;
+    uint19 current = 0;
      uint1 unknown_0 = 0;
     uint12 unknown_4_15 = 0;
   } transfer;
 
-  struct FIFO {
-    uint16 data[32];
-    uint16 size;
-  } fifo;
+  struct IRQ {
+     uint1 enable;
+     uint1 flag;
+    uint16 address;
+  } irq;
 
   struct Volume {
      uint1 mode = 0;  //0 = volume level; 1 = sweep volume
@@ -296,6 +298,8 @@ struct SPU : Thread {
     {*this, 16}, {*this, 17}, {*this, 18}, {*this, 19},
     {*this, 20}, {*this, 21}, {*this, 22}, {*this, 23},
   };
+
+  queue<u16> fifo;
 
 //unserialized:
   i16 gaussianTable[512];

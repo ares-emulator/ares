@@ -119,14 +119,18 @@ auto CPU::instructionHook() -> void {
     }
   }
 
-  //putchar
-  if(PC == 0xa0 && core.r[9] == 0x3c) {
-    print((char)core.r[4]);
+  if(debugger.tracer.function->enabled()) {
+    debugger.function();
   }
 
-  //putchar
-  if(PC == 0xb0 && core.r[9] == 0x3d) {
-    print((char)core.r[4]);
+  if(debugger.tracer.message->enabled()) {
+    if(PC == 0xa0 && core.r[9] == 0x3c) {
+      debugger.message((char)core.r[4]);
+    }
+
+    if(PC == 0xb0 && core.r[9] == 0x3d) {
+      debugger.message((char)core.r[4]);
+    }
   }
 }
 

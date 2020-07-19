@@ -4,6 +4,7 @@ namespace ares::PlayStation {
 
 DMA dma;
 #include "io.cpp"
+#include "irq.cpp"
 #include "transfer.cpp"
 #include "serialization.cpp"
 
@@ -16,14 +17,6 @@ auto DMA::unload() -> void {
 }
 
 auto DMA::step(uint clocks) -> void {
-}
-
-auto DMA::pollIRQ() -> void {
-  irq.flag = irq.force;
-  if(!irq.enable) return;
-  for(uint n : range(7)) {
-    if(channel[n].irq.flag & channel[n].irq.enable) irq.flag = 1;
-  }
 }
 
 auto DMA::power(bool reset) -> void {

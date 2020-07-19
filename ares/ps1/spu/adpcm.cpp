@@ -1,19 +1,21 @@
 auto SPU::Voice::readBlock() -> void {
   uint19 address = adpcm.currentAddress;
 
-  uint8 header = self.ram.readByte(address++);
-  block.shift  = header.bit(0,3) > 12 ? 9 : header.bit(0,3);
-  block.filter = header.bit(4,6) >  4 ? 4 : header.bit(4,6);
+  uint16 header = self.readRAM(address);
+  block.shift      = header.bit(0,3) > 12 ? 9 : header.bit(0,3);
+  block.filter     = header.bit(4,6) >  4 ? 4 : header.bit(4,6);
+  block.loopEnd    = header.bit( 8);
+  block.loopRepeat = header.bit( 9);
+  block.loopStart  = header.bit(10);
+  address += 2;
 
-  uint8 flags = self.ram.readByte(address++);
-  block.loopEnd    = flags.bit(0);
-  block.loopRepeat = flags.bit(1);
-  block.loopStart  = flags.bit(2);
-
-  for(uint nibble : range(14)) {
-    uint8 data = self.ram.readByte(address++);
-    block.brr[nibble << 1 | 0] = data.bit(0,3);
-    block.brr[nibble << 1 | 1] = data.bit(4,7);
+  for(uint word : range(7)) {
+    uint16 data = self.readRAM(address);
+    block.brr[word << 2 | 0] = data >>  0 & 15;
+    block.brr[word << 2 | 1] = data >>  4 & 15;
+    block.brr[word << 2 | 2] = data >>  8 & 15;
+    block.brr[word << 2 | 3] = data >> 12 & 15;
+    address += 2;
   }
 }
 
