@@ -1,6 +1,8 @@
 namespace ares {
 
 struct Debug {
+  static constexpr bool enabled = true;
+
   auto reset() -> void;
 
   template<typename... P> auto unimplemented(P&&... p) -> void {
@@ -13,6 +15,8 @@ private:
   vector<string> _unimplementedNotices;
 };
 
-extern Debug debug;
+extern Debug _debug;
 
 }
+
+#define debug(function, ...) if constexpr(ares::_debug.enabled) ares::_debug.function(__VA_ARGS__)

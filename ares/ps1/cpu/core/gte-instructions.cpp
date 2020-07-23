@@ -38,71 +38,93 @@ auto CPU::instructionAVSZ4() -> void {
   gte.updateError();
 }
 
-auto CPU::instructionCC() -> void {
+auto CPU::instructionCC(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.cc();
   gte.updateError();
 }
 
-auto CPU::instructionCDP() -> void {
+auto CPU::instructionCDP(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.cdp();
   gte.updateError();
 }
 
-auto CPU::instructionDCPL() -> void {
+auto CPU::instructionDCPL(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.dcpl();
   gte.updateError();
 }
 
-auto CPU::instructionDPCS() -> void {
+auto CPU::instructionDPCS(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.dpcs();
   gte.updateError();
 }
 
-auto CPU::instructionDPCT() -> void {
+auto CPU::instructionDPCT(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.dpct();
   gte.updateError();
 }
 
-auto CPU::instructionGPF() -> void {
+auto CPU::instructionGPF(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.gpf();
   gte.updateError();
 }
 
-auto CPU::instructionGPL() -> void {
+auto CPU::instructionGPL(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.gpl();
   gte.updateError();
 }
 
-auto CPU::instructionINTPL() -> void {
+auto CPU::instructionINTPL(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.intpl();
   gte.updateError();
 }
 
-auto CPU::instructionMVMVA(u8 tv, u8 mv, u8 mm) -> void {
+auto CPU::instructionMVMVA(bool lm, u8 tv, u8 mv, u8 mm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
   gte.tv = tv;
   gte.mv = mv;
   gte.mm = mm;
+  gte.sf = sf;
   gte.mvmva();
   gte.updateError();
 }
 
-auto CPU::instructionNCCS() -> void {
+auto CPU::instructionNCCS(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.nccs();
   gte.updateError();
 }
 
-auto CPU::instructionNCCT() -> void {
+auto CPU::instructionNCCT(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.ncct();
   gte.updateError();
 }
@@ -129,20 +151,26 @@ auto CPU::instructionNCLIP() -> void {
   gte.updateError();
 }
 
-auto CPU::instructionNCS() -> void {
+auto CPU::instructionNCS(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.ncs();
   gte.updateError();
 }
 
-auto CPU::instructionNCT() -> void {
+auto CPU::instructionNCT(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.nct();
   gte.updateError();
 }
 
-auto CPU::instructionOP() -> void {
+auto CPU::instructionOP(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.op();
   gte.updateError();
 }
@@ -163,8 +191,10 @@ auto CPU::instructionRTPT(bool lm, u8 sf) -> void {
   gte.updateError();
 }
 
-auto CPU::instructionSQR() -> void {
+auto CPU::instructionSQR(bool lm, u8 sf) -> void {
   gte.clearFlags();
+  gte.lm = lm;
+  gte.sf = sf;
   gte.sqr();
   gte.updateError();
 }

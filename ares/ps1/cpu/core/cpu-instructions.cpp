@@ -117,11 +117,17 @@ auto CPU::instructionLBU(u32& rt, cu32& rs, i16 imm) -> void {
 }
 
 auto CPU::instructionLH(u32& rt, cu32& rs, i16 imm) -> void {
+  if constexpr(Accuracy::CPU::AlignmentErrors) {
+    if(unlikely(rs + imm & 1)) return exception.addressLoad();
+  }
   auto data = readHalf(rs + imm);
   fetch(rt, i16(data));
 }
 
 auto CPU::instructionLHU(u32& rt, cu32& rs, i16 imm) -> void {
+  if constexpr(Accuracy::CPU::AlignmentErrors) {
+    if(unlikely(rs + imm & 1)) return exception.addressLoad();
+  }
   auto data = readHalf(rs + imm);
   fetch(rt, u16(data));
 }
@@ -131,6 +137,9 @@ auto CPU::instructionLUI(u32& rt, u16 imm) -> void {
 }
 
 auto CPU::instructionLW(u32& rt, cu32& rs, i16 imm) -> void {
+  if constexpr(Accuracy::CPU::AlignmentErrors) {
+    if(unlikely(rs + imm & 3)) return exception.addressLoad();
+  }
   auto data = readWord(rs + imm);
   fetch(rt, i32(data));
 }
@@ -196,6 +205,9 @@ auto CPU::instructionSB(cu32& rt, cu32& rs, i16 imm) -> void {
 }
 
 auto CPU::instructionSH(cu32& rt, cu32& rs, i16 imm) -> void {
+  if constexpr(Accuracy::CPU::AlignmentErrors) {
+    if(rs + imm & 1) return exception.addressStore();
+  }
   writeHalf(rs + imm, rt);
 }
 
@@ -240,7 +252,7 @@ auto CPU::instructionSRLV(u32& rd, cu32& rt, cu32& rs) -> void {
 }
 
 auto CPU::instructionSUB(u32& rd, cu32& rs, cu32& rt) -> void {
-  if((rs ^ rt) & (rs ^ rs + rt) & 0x8000'0000) return exception.arithmeticOverflow();
+  if((rs ^ rt) & (rs ^ rs - rt) & 0x8000'0000) return exception.arithmeticOverflow();
   write(rd, rs - rt);
 }
 
@@ -249,6 +261,9 @@ auto CPU::instructionSUBU(u32& rd, cu32& rs, cu32& rt) -> void {
 }
 
 auto CPU::instructionSW(cu32& rt, cu32& rs, i16 imm) -> void {
+  if constexpr(Accuracy::CPU::AlignmentErrors) {
+    if(rs + imm & 3) return exception.addressStore();
+  }
   writeWord(rs + imm, rt);
 }
 

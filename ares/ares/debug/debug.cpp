@@ -1,6 +1,6 @@
 namespace ares {
 
-Debug debug;
+Debug _debug;
 
 auto Debug::reset() -> void {
   _unimplementedNotices.reset();

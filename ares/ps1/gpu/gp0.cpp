@@ -291,7 +291,7 @@ auto GPU::writeGP0(u32 value) -> void {
   //copy rectangle (VRAM to VRAM)
   if(command == 0x80) {
     if(queue.write(value) < 4) return;
-    debug.unimplemented("GPU copy VRAM to VRAM");
+    debug(unimplemented, "GPU copy VRAM to VRAM");
     return queue.reset();
   }
 
@@ -372,5 +372,5 @@ auto GPU::writeGP0(u32 value) -> void {
     return;
   }
 
-  debug.unimplemented("GP0(", hex(command, 2L), ") = ", hex(value, 6L));
+  debug(unimplemented, "GP0(", hex(command, 2L), ") = ", hex(value, 6L));
 }

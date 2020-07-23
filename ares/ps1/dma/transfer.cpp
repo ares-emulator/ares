@@ -12,10 +12,10 @@ auto DMA::transferLinear(uint c) -> void {
       if(channel[c].direction == 0) {
         u32 data = 0;
         if(c == 0) {
-          debug.unimplemented("DMA MDECin read");
+          debug(unimplemented, "DMA MDECin read");
         }
         if(c == 1) {
-          debug.unimplemented("DMA MDECout read");
+          debug(unimplemented, "DMA MDECout read");
         }
         if(c == 2) {
           data = gpu.readGP0();
@@ -27,7 +27,7 @@ auto DMA::transferLinear(uint c) -> void {
           data = spu.readDMA();
         }
         if(c == 5) {
-          debug.unimplemented("DMA PIO read");
+          debug(unimplemented, "DMA PIO read");
         }
         if(c == 6) {
           data = address - 4 & 0xfffffc;    //point to previous entry
@@ -39,25 +39,25 @@ auto DMA::transferLinear(uint c) -> void {
       if(channel[c].direction == 1) {
         u32 data = bus.readWord(address);
         if(c == 0) {
-          debug.unimplemented("DMA MDECin write");
+          debug(unimplemented, "DMA MDECin write");
         }
         if(c == 1) {
-          debug.unimplemented("DMA MDECout write");
+          debug(unimplemented, "DMA MDECout write");
         }
         if(c == 2) {
           gpu.writeGP0(data);
         }
         if(c == 3) {
-          debug.unimplemented("DMA CDROM write");
+          debug(unimplemented, "DMA CDROM write");
         }
         if(c == 4) {
           spu.writeDMA(data);
         }
         if(c == 5) {
-          debug.unimplemented("DMA PIO write");
+          debug(unimplemented, "DMA PIO write");
         }
         if(c == 6) {
-          debug.unimplemented("DMA OTC write");
+          debug(unimplemented, "DMA OTC write");
         }
       }
 
@@ -89,25 +89,25 @@ auto DMA::transferLinked(uint c) -> void {
       u32 data = bus.readWord(address);
 
       if(c == 0) {
-        debug.unimplemented("DMA MDECin linked");
+        debug(unimplemented, "DMA MDECin linked");
       }
       if(c == 1) {
-        debug.unimplemented("DMA MDECout linked");
+        debug(unimplemented, "DMA MDECout linked");
       }
       if(c == 2) {
         gpu.writeGP0(data);
       }
       if(c == 3) {
-        debug.unimplemented("DMA CDROM linked");
+        debug(unimplemented, "DMA CDROM linked");
       }
       if(c == 4) {
-        debug.unimplemented("DMA SPU linked");
+        debug(unimplemented, "DMA SPU linked");
       }
       if(c == 5) {
-        debug.unimplemented("DMA PIO linked");
+        debug(unimplemented, "DMA PIO linked");
       }
       if(c == 6) {
-        debug.unimplemented("DMA OTC linked");
+        debug(unimplemented, "DMA OTC linked");
       }
     }
 

@@ -250,27 +250,27 @@
   op(0x00, RTPS, LM, SF);
   op(0x01, RTPS, LM, SF);  //0x00 mirror?
   op(0x06, NCLIP);
-  op(0x0c, OP);
-  op(0x10, DPCS);
-  op(0x11, INTPL);
-  op(0x12, MVMVA, TV, MV, MM);
+  op(0x0c, OP, LM, SF);
+  op(0x10, DPCS, LM, SF);
+  op(0x11, INTPL, LM, SF);
+  op(0x12, MVMVA, LM, TV, MV, MM, SF);
   op(0x13, NCDS, LM, SF);
-  op(0x14, CDP);
+  op(0x14, CDP, LM, SF);
   op(0x16, NCDT, LM, SF);
-  op(0x1a, DCPL);  //0x29 mirror?
-  op(0x1b, NCCS);
-  op(0x1c, CC);
-  op(0x1e, NCS);
-  op(0x20, NCT);
-  op(0x28, SQR);
-  op(0x29, DCPL);
-  op(0x2a, DPCT);
+  op(0x1a, DCPL, LM, SF);  //0x29 mirror?
+  op(0x1b, NCCS, LM, SF);
+  op(0x1c, CC, LM, SF);
+  op(0x1e, NCS, LM, SF);
+  op(0x20, NCT, LM, SF);
+  op(0x28, SQR, LM, SF);
+  op(0x29, DCPL, LM, SF);
+  op(0x2a, DPCT, LM, SF);
   op(0x2d, AVSZ3);
   op(0x2e, AVSZ4);
   op(0x30, RTPT, LM, SF);
-  op(0x3d, GPF);
-  op(0x3e, GPL);
-  op(0x3f, NCCT);
+  op(0x3d, GPF, LM, SF);
+  op(0x3e, GPL, LM, SF);
+  op(0x3f, NCCT, LM, SF);
   }
   #undef LM
   #undef TV

@@ -6,6 +6,19 @@
 #include <nall/recompiler/amd64/amd64.hpp>
 
 namespace ares::PlayStation {
+  struct Accuracy {
+    //enable all accuracy flags
+    static constexpr bool Reference = 1;
+
+    struct CPU {
+      //0 = dynamic recompiler; 1 = interpreter
+      static constexpr bool Interpreter = 1 | Reference;
+
+      //exceptions when the CPU accesses unaligned memory addresses
+      static constexpr bool AlignmentErrors = 0 | Reference;
+    };
+  };
+
   struct Region {
     inline static auto NTSCJ() -> bool;
     inline static auto NTSCU() -> bool;

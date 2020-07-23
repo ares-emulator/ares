@@ -43,6 +43,14 @@ auto CPU::instruction() -> void {
   }
 
   if constexpr(1) {
+    if constexpr(Accuracy::CPU::AlignmentErrors) {
+      if(unlikely(address & 3)) {
+        exception.busInstruction();
+        step(2);
+        return;
+      }
+    }
+
     pipeline.address = address;
     pipeline.instruction = bus.readWord(address);
     debugger.instruction();
