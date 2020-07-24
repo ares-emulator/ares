@@ -11,7 +11,7 @@ struct System {
     Node::Button a;
     Node::Button b;
     Node::Button option;
-    Node::Button debug;
+    Node::Button debugger;
     Node::Button power;
 
     //controls.cpp

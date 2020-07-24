@@ -465,7 +465,7 @@ auto CPU::readIO(uint8 address) -> uint8 {
     data.bit(4) = system.controls.a->value();
     data.bit(5) = system.controls.b->value();
     data.bit(6) = system.controls.option->value();
-    data.bit(7) = system.controls.debug->value();
+    data.bit(7) = system.controls.debugger->value();
     return data;
 
   case 0xb1:
