@@ -121,4 +121,10 @@
   static constexpr reg64 r13 = reg64::r13;
   static constexpr reg64 r14 = reg64::r14;
   static constexpr reg64 r15 = reg64::r15;
+
+  struct dis64 {
+    explicit dis64(reg64 base, i32 offset) : base(base), offset(offset) {}
+    reg64 base;
+    i32 offset;
+  };
 //};

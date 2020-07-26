@@ -48,14 +48,14 @@ else
 endif
 
 compiler.c      = $(compiler) -x c -std=c11
-compiler.cpp    = $(compiler) -x c++ -std=c++17
+compiler.cpp    = $(compiler) -x c++ -std=c++17 -fno-operator-names
 compiler.objc   = $(compiler) -x objective-c -std=c11
-compiler.objcpp = $(compiler) -x objective-c++ -std=c++17
+compiler.objcpp = $(compiler) -x objective-c++ -std=c++17 -fno-operator-names
 
 flags.c      = -x c -std=c11
-flags.cpp    = -x c++ -std=c++17
+flags.cpp    = -x c++ -std=c++17 -fno-operator-names
 flags.objc   = -x objective-c -std=c11
-flags.objcpp = -x objective-c++ -std=c++17
+flags.objcpp = -x objective-c++ -std=c++17 -fno-operator-names
 flags.deps   = -MMD -MP -MF $(@:.o=.d)
 
 # compiler detection
@@ -105,10 +105,10 @@ endif
 
 # clang settings
 ifeq ($(findstring clang++,$(compiler)),clang++)
-  flags += -fno-operator-names -fno-strict-aliasing -fwrapv -Wno-everything
+  flags += -fno-strict-aliasing -fwrapv -Wno-everything
 # gcc settings
 else ifeq ($(findstring g++,$(compiler)),g++)
-  flags += -fno-operator-names -fno-strict-aliasing -fwrapv -Wno-trigraphs
+  flags += -fno-strict-aliasing -fwrapv -Wno-trigraphs
 endif
 
 # windows settings

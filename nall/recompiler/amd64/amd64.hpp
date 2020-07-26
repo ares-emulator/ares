@@ -10,6 +10,10 @@ namespace nall::recompiler {
     #include "emitter.hpp"
     #include "constants.hpp"
     #include "encoder-instructions.hpp"
-    #include "encoder-calls.hpp"
+    #if defined(PLATFORM_WINDOWS)
+      #include "encoder-calls-windows.hpp"
+    #else
+      #include "encoder-calls-systemv.hpp"
+    #endif
   };
 }

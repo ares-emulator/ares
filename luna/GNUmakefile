@@ -18,7 +18,7 @@ ruby.path := ../ruby
 include $(ruby.path)/GNUmakefile
 
 hiro.path := ../hiro
-hiro.resource := $(ui)/resource/luna.rc
+hiro.resource := resource/luna.rc
 include $(hiro.path)/GNUmakefile
 
 profile := accuracy
