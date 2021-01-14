@@ -1,14 +1,14 @@
-auto Stream::setChannels(uint channels) -> void {
+auto Stream::setChannels(u32 channels) -> void {
   _channels.reset();
   _channels.resize(channels);
 }
 
-auto Stream::setFrequency(double frequency) -> void {
+auto Stream::setFrequency(f64 frequency) -> void {
   _frequency = frequency;
   setResamplerFrequency(_resamplerFrequency);
 }
 
-auto Stream::setResamplerFrequency(double resamplerFrequency) -> void {
+auto Stream::setResamplerFrequency(f64 resamplerFrequency) -> void {
   _resamplerFrequency = resamplerFrequency;
 
   for(auto& channel : _channels) {
@@ -18,12 +18,12 @@ auto Stream::setResamplerFrequency(double resamplerFrequency) -> void {
 
   if(_frequency >= _resamplerFrequency * 2) {
     //add a low-pass filter to prevent aliasing during resampling
-    double cutoffFrequency = min(25000.0, _resamplerFrequency / 2.0 - 2000.0);
+    f64 cutoffFrequency = min(25000.0, _resamplerFrequency / 2.0 - 2000.0);
     for(auto& channel : _channels) {
-      uint passes = 3;
-      for(uint pass : range(passes)) {
+      u32 passes = 3;
+      for(u32 pass : range(passes)) {
         DSP::IIR::Biquad filter;
-        double q = DSP::IIR::Biquad::butterworth(passes * 2, pass);
+        f64 q = DSP::IIR::Biquad::butterworth(passes * 2, pass);
         filter.reset(DSP::IIR::Biquad::Type::LowPass, cutoffFrequency, _frequency, q);
         channel.nyquist.append(filter);
       }
@@ -41,9 +41,9 @@ auto Stream::resetFilters() -> void {
   }
 }
 
-auto Stream::addLowPassFilter(double cutoffFrequency, uint order, uint passes) -> void {
+auto Stream::addLowPassFilter(f64 cutoffFrequency, u32 order, u32 passes) -> void {
   for(auto& channel : _channels) {
-    for(uint pass : range(passes)) {
+    for(u32 pass : range(passes)) {
       if(order == 1) {
         Filter filter{Filter::Mode::OnePole, Filter::Type::LowPass, Filter::Order::First};
         filter.onePole.reset(DSP::IIR::OnePole::Type::LowPass, cutoffFrequency, _frequency);
@@ -51,7 +51,7 @@ auto Stream::addLowPassFilter(double cutoffFrequency, uint order, uint passes) -
       }
       if(order == 2) {
         Filter filter{Filter::Mode::Biquad, Filter::Type::LowPass, Filter::Order::Second};
-        double q = DSP::IIR::Biquad::butterworth(passes * 2, pass);
+        f64 q = DSP::IIR::Biquad::butterworth(passes * 2, pass);
         filter.biquad.reset(DSP::IIR::Biquad::Type::LowPass, cutoffFrequency, _frequency, q);
         channel.filters.append(filter);
       }
@@ -59,9 +59,9 @@ auto Stream::addLowPassFilter(double cutoffFrequency, uint order, uint passes) -
   }
 }
 
-auto Stream::addHighPassFilter(double cutoffFrequency, uint order, uint passes) -> void {
+auto Stream::addHighPassFilter(f64 cutoffFrequency, u32 order, u32 passes) -> void {
   for(auto& channel : _channels) {
-    for(uint pass : range(passes)) {
+    for(u32 pass : range(passes)) {
       if(order == 1) {
         Filter filter{Filter::Mode::OnePole, Filter::Type::HighPass, Filter::Order::First};
         filter.onePole.reset(DSP::IIR::OnePole::Type::HighPass, cutoffFrequency, _frequency);
@@ -69,7 +69,7 @@ auto Stream::addHighPassFilter(double cutoffFrequency, uint order, uint passes) 
       }
       if(order == 2) {
         Filter filter{Filter::Mode::Biquad, Filter::Type::HighPass, Filter::Order::Second};
-        double q = DSP::IIR::Biquad::butterworth(passes * 2, pass);
+        f64 q = DSP::IIR::Biquad::butterworth(passes * 2, pass);
         filter.biquad.reset(DSP::IIR::Biquad::Type::HighPass, cutoffFrequency, _frequency, q);
         channel.filters.append(filter);
       }
@@ -77,22 +77,22 @@ auto Stream::addHighPassFilter(double cutoffFrequency, uint order, uint passes) 
   }
 }
 
-auto Stream::addLowShelfFilter(double cutoffFrequency, uint order, double gain, double slope) -> void {
+auto Stream::addLowShelfFilter(f64 cutoffFrequency, u32 order, f64 gain, f64 slope) -> void {
   for(auto& channel : _channels) {
     if(order == 2) {
       Filter filter{Filter::Mode::Biquad, Filter::Type::LowShelf, Filter::Order::Second};
-      double q = DSP::IIR::Biquad::shelf(gain, slope);
+      f64 q = DSP::IIR::Biquad::shelf(gain, slope);
       filter.biquad.reset(DSP::IIR::Biquad::Type::LowShelf, cutoffFrequency, _frequency, q);
       channel.filters.append(filter);
     }
   }
 }
 
-auto Stream::addHighShelfFilter(double cutoffFrequency, uint order, double gain, double slope) -> void {
+auto Stream::addHighShelfFilter(f64 cutoffFrequency, u32 order, f64 gain, f64 slope) -> void {
   for(auto& channel : _channels) {
     if(order == 2) {
       Filter filter{Filter::Mode::Biquad, Filter::Type::HighShelf, Filter::Order::Second};
-      double q = DSP::IIR::Biquad::shelf(gain, slope);
+      f64 q = DSP::IIR::Biquad::shelf(gain, slope);
       filter.biquad.reset(DSP::IIR::Biquad::Type::HighShelf, cutoffFrequency, _frequency, q);
       channel.filters.append(filter);
     }
@@ -103,14 +103,16 @@ auto Stream::pending() const -> bool {
   return _channels && _channels[0].resampler.pending();
 }
 
-auto Stream::read(double samples[]) -> uint {
-  for(uint c : range(_channels.size())) samples[c] = _channels[c].resampler.read() * !muted();
+auto Stream::read(f64 samples[]) -> u32 {
+  for(u32 c : range(_channels.size())) {
+    samples[c] = _channels[c].resampler.read() * !muted();
+  }
   return _channels.size();
 }
 
-auto Stream::write(const double samples[]) -> void {
-  for(uint c : range(_channels.size())) {
-    double sample = samples[c] + 1e-25;  //constant offset used to suppress denormals
+auto Stream::write(const f64 samples[]) -> void {
+  for(u32 c : range(_channels.size())) {
+    f64 sample = samples[c] + 1e-25;  //constant offset used to suppress denormals
     for(auto& filter : _channels[c].filters) {
       switch(filter.mode) {
       case Filter::Mode::OnePole: sample = filter.onePole.process(sample); break;

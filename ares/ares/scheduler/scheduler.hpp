@@ -1,7 +1,7 @@
 struct Thread;
 
 struct Scheduler {
-  enum class Mode : uint {
+  enum class Mode : u32 {
     Run,
     Synchronize,
     SynchronizePrimary,
@@ -13,9 +13,9 @@ struct Scheduler {
   auto operator=(const Scheduler&) = delete;
 
   auto reset() -> void;
-  auto threads() const -> uint;
-  auto thread(uint threadID) const -> maybe<Thread&>;
-  auto uniqueID() const -> uint;
+  auto threads() const -> u32;
+  auto thread(u32 threadID) const -> maybe<Thread&>;
+  auto uniqueID() const -> u32;
   auto minimum() const -> uintmax;
   auto maximum() const -> uintmax;
 

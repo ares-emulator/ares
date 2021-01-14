@@ -10,7 +10,7 @@ SMP smp;
 #include "serialization.cpp"
 
 auto SMP::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("SMP");
+  node = parent->append<Node::Object>("SMP");
 
   debugger.load(node);
 }

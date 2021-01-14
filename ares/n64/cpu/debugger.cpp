@@ -1,9 +1,15 @@
 auto CPU::Debugger::load(Node::Object parent) -> void {
-  tracer.instruction = parent->append<Node::Instruction>("Instruction", "CPU");
-  tracer.instruction->setAddressBits(32);
+  tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "CPU");
+  tracer.instruction->setAddressBits(32, 2);
 
-  tracer.exception = parent->append<Node::Notification>("Exception", "CPU");
-  tracer.interrupt = parent->append<Node::Notification>("Interrupt", "CPU");
+  tracer.exception = parent->append<Node::Debugger::Tracer::Notification>("Exception", "CPU");
+  tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "CPU");
+}
+
+auto CPU::Debugger::unload() -> void {
+  tracer.instruction.reset();
+  tracer.exception.reset();
+  tracer.interrupt.reset();
 }
 
 auto CPU::Debugger::instruction() -> void {

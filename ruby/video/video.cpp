@@ -37,6 +37,7 @@
 namespace ruby {
 
 auto Video::setFullScreen(bool fullScreen) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
   if(instance->fullScreen == fullScreen) return true;
   if(!instance->hasFullScreen()) return false;
   if(!instance->setFullScreen(instance->fullScreen = fullScreen)) return false;
@@ -44,6 +45,7 @@ auto Video::setFullScreen(bool fullScreen) -> bool {
 }
 
 auto Video::setMonitor(string monitor) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
   if(instance->monitor == monitor) return true;
   if(!instance->hasMonitor()) return false;
   if(!instance->setMonitor(instance->monitor = monitor)) return false;
@@ -51,6 +53,7 @@ auto Video::setMonitor(string monitor) -> bool {
 }
 
 auto Video::setExclusive(bool exclusive) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
   if(instance->exclusive == exclusive) return true;
   if(!instance->hasExclusive()) return false;
   if(!instance->setExclusive(instance->exclusive = exclusive)) return false;
@@ -58,6 +61,7 @@ auto Video::setExclusive(bool exclusive) -> bool {
 }
 
 auto Video::setContext(uintptr context) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
   if(instance->context == context) return true;
   if(!instance->hasContext()) return false;
   if(!instance->setContext(instance->context = context)) return false;
@@ -65,6 +69,7 @@ auto Video::setContext(uintptr context) -> bool {
 }
 
 auto Video::setBlocking(bool blocking) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
   if(instance->blocking == blocking) return true;
   if(!instance->hasBlocking()) return false;
   if(!instance->setBlocking(instance->blocking = blocking)) return false;
@@ -72,6 +77,7 @@ auto Video::setBlocking(bool blocking) -> bool {
 }
 
 auto Video::setFlush(bool flush) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
   if(instance->flush == flush) return true;
   if(!instance->hasFlush()) return false;
   if(!instance->setFlush(instance->flush = flush)) return false;
@@ -79,6 +85,7 @@ auto Video::setFlush(bool flush) -> bool {
 }
 
 auto Video::setFormat(string format) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
   if(instance->format == format) return true;
   if(!instance->hasFormat(format)) return false;
   if(!instance->setFormat(instance->format = format)) return false;
@@ -86,6 +93,7 @@ auto Video::setFormat(string format) -> bool {
 }
 
 auto Video::setShader(string shader) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
   if(instance->shader == shader) return true;
   if(!instance->hasShader()) return false;
   if(!instance->setShader(instance->shader = shader)) return false;
@@ -94,51 +102,71 @@ auto Video::setShader(string shader) -> bool {
 
 //
 
+auto Video::acquireContext() -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
+  return instance->acquireContext();
+}
+
+auto Video::releaseContext() -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
+  return instance->releaseContext();
+}
+
 auto Video::focused() -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
   return instance->focused();
 }
 
 auto Video::clear() -> void {
+  lock_guard<recursive_mutex> lock(mutex);
   return instance->clear();
 }
 
 auto Video::size() -> Size {
+  lock_guard<recursive_mutex> lock(mutex);
   Size result;
   instance->size(result.width, result.height);
   return result;
 }
 
-auto Video::acquire(uint width, uint height) -> Acquire {
+auto Video::acquire(u32 width, u32 height) -> Acquire {
+  lock_guard<recursive_mutex> lock(mutex);
   Acquire result;
   if(instance->acquire(result.data, result.pitch, width, height)) return result;
   return {};
 }
 
 auto Video::release() -> void {
+  lock_guard<recursive_mutex> lock(mutex);
   return instance->release();
 }
 
-auto Video::output(uint width, uint height) -> void {
+auto Video::output(u32 width, u32 height) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
   return instance->output(width, height);
 }
 
 auto Video::poll() -> void {
+  lock_guard<recursive_mutex> lock(mutex);
   return instance->poll();
 }
 
 //
 
-auto Video::onUpdate(const function<void (uint, uint)>& onUpdate) -> void {
+auto Video::onUpdate(const function<void (u32, u32)>& onUpdate) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
   update = onUpdate;
 }
 
-auto Video::doUpdate(uint width, uint height) -> void {
+auto Video::doUpdate(u32 width, u32 height) -> void {
+  lock_guard<recursive_mutex> lock(mutex);
   if(update) return update(width, height);
 }
 
 //
 
 auto Video::create(string driver) -> bool {
+  lock_guard<recursive_mutex> lock(mutex);
   self.instance.reset();
   if(!driver) driver = optimalDriver();
 
@@ -314,8 +342,8 @@ static auto MonitorKeyArrayCallback(const void* key, const void* value, void* co
 auto Video::hasMonitors() -> vector<Monitor> {
   vector<Monitor> monitors;
   @autoreleasepool {
-    uint count = [[NSScreen screens] count];
-    for(uint index : range(count)) {
+    u32 count = [[NSScreen screens] count];
+    for(u32 index : range(count)) {
       auto screen = [[NSScreen screens] objectAtIndex:index];
       auto rectangle = [screen frame];
       Monitor monitor;
@@ -362,7 +390,7 @@ auto Video::hasMonitors() -> vector<Monitor> {
   auto rootWindow = RootWindow(display, screen);
   auto resources = XRRGetScreenResourcesCurrent(display, rootWindow);
   auto primary = XRRGetOutputPrimary(display, rootWindow);
-  for(uint index : range(resources->noutput)) {
+  for(u32 index : range(resources->noutput)) {
     Monitor monitor;
     auto output = XRRGetOutputInfo(display, resources, resources->outputs[index]);
     if(output->connection != RR_Connected || output->crtc == None) {
@@ -372,17 +400,17 @@ auto Video::hasMonitors() -> vector<Monitor> {
     auto crtc = XRRGetCrtcInfo(display, resources, output->crtc);
     monitor.name = {1 + monitors.size(), ": ", output->name};  //fallback name
     monitor.primary = false;
-    for(uint n : range(crtc->noutput)) monitor.primary |= crtc->outputs[n] == primary;
+    for(u32 n : range(crtc->noutput)) monitor.primary |= crtc->outputs[n] == primary;
     monitor.x = crtc->x;
     monitor.y = crtc->y;
     monitor.width = crtc->width;
     monitor.height = crtc->height;
     //Linux: "Think Low-Level"
     Atom actualType;
-    int actualFormat;
+    s32 actualFormat;
     unsigned long size;
     unsigned long bytesAfter;
-    unsigned char* data = nullptr;
+    u8* data = nullptr;
     auto property = XRRGetOutputProperty(
       display, resources->outputs[index],
       XInternAtom(display, "EDID", 1), 0, 384,

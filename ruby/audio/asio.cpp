@@ -34,17 +34,17 @@ struct AudioASIO : AudioDriver {
     return devices;
   }
 
-  auto hasChannels() -> vector<uint> override {
+  auto hasChannels() -> vector<u32> override {
     return {1, 2};
   }
 
-  auto hasFrequencies() -> vector<uint> override {
+  auto hasFrequencies() -> vector<u32> override {
     return {self.frequency};
   }
 
-  auto hasLatencies() -> vector<uint> override {
-    vector<uint> latencies;
-    uint latencyList[] = {64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 6144};  //factors of 6144
+  auto hasLatencies() -> vector<u32> override {
+    vector<u32> latencies;
+    u32 latencyList[] = {64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 6144};  //factors of 6144
     for(auto& latency : latencyList) {
       if(self.activeDevice) {
         if(latency < self.activeDevice.minimumBufferSize) continue;
@@ -63,22 +63,22 @@ struct AudioASIO : AudioDriver {
   auto setContext(uintptr context) -> bool override { return initialize(); }
   auto setDevice(string device) -> bool override { return initialize(); }
   auto setBlocking(bool blocking) -> bool override { return initialize(); }
-  auto setChannels(uint channels) -> bool override { return initialize(); }
-  auto setLatency(uint latency) -> bool override { return initialize(); }
+  auto setChannels(u32 channels) -> bool override { return initialize(); }
+  auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
     if(!ready()) return;
-    for(uint n : range(self.channels)) {
-      memory::fill<uint8_t>(_channel[n].buffers[0], self.latency * _sampleSize);
-      memory::fill<uint8_t>(_channel[n].buffers[1], self.latency * _sampleSize);
+    for(u32 n : range(self.channels)) {
+      memory::fill<u8>(_channel[n].buffers[0], self.latency * _sampleSize);
+      memory::fill<u8>(_channel[n].buffers[1], self.latency * _sampleSize);
     }
-    memory::fill<uint8_t>(_queue.samples, sizeof(_queue.samples));
+    memory::fill<u8>(_queue.samples, sizeof(_queue.samples));
     _queue.read = 0;
     _queue.write = 0;
     _queue.count = 0;
   }
 
-  auto output(const double samples[]) -> void override {
+  auto output(const f64 samples[]) -> void override {
     if(!ready()) return;
     //defer call to IASIO::start(), because the drivers themselves will sometimes crash internally.
     //if software initializes AudioASIO but does not play music at startup, this can prevent a crash loop.
@@ -92,7 +92,7 @@ struct AudioASIO : AudioDriver {
     if(self.blocking) {
       while(_queue.count >= self.latency);
     }
-    for(uint n : range(self.channels)) {
+    for(u32 n : range(self.channels)) {
       _queue.samples[_queue.write][n] = samples[n];
     }
     _queue.write++;
@@ -136,7 +136,7 @@ private:
     self.latency = self.latency < self.activeDevice.minimumBufferSize ? self.activeDevice.minimumBufferSize : self.latency;
     self.latency = self.latency > self.activeDevice.maximumBufferSize ? self.activeDevice.maximumBufferSize : self.latency;
 
-    for(uint n : range(self.channels)) {
+    for(u32 n : range(self.channels)) {
       _channel[n].isInput = false;
       _channel[n].channelNum = n;
       _channel[n].buffers[0] = nullptr;
@@ -200,28 +200,28 @@ private:
   }
 
   auto bufferSwitch(long doubleBufferInput, ASIOBool directProcess) -> void {
-    for(uint sampleIndex : range(self.latency)) {
-      double samples[8] = {0};
+    for(u32 sampleIndex : range(self.latency)) {
+      f64 samples[8] = {0};
       if(_queue.count) {
-        for(uint n : range(self.channels)) {
+        for(u32 n : range(self.channels)) {
           samples[n] = _queue.samples[_queue.read][n];
         }
         _queue.read++;
         _queue.count--;
       }
 
-      for(uint n : range(self.channels)) {
-        auto buffer = (uint8_t*)_channel[n].buffers[doubleBufferInput];
+      for(u32 n : range(self.channels)) {
+        auto buffer = (u8*)_channel[n].buffers[doubleBufferInput];
         buffer += sampleIndex * _sampleSize;
 
         switch(_sampleFormat) {
         case ASIOSTInt16LSB: {
-          *(uint16_t*)buffer = (uint16_t)sclamp<16>(samples[n] * (32768.0 - 1.0));
+          *(u16*)buffer = (u16)sclamp<16>(samples[n] * (32768.0 - 1.0));
           break;
         }
 
         case ASIOSTInt24LSB: {
-          auto value = (uint32_t)sclamp<24>(samples[n] * (256.0 * 32768.0 - 1.0));
+          auto value = (u32)sclamp<24>(samples[n] * (256.0 * 32768.0 - 1.0));
           buffer[0] = value >>  0;
           buffer[1] = value >>  8;
           buffer[2] = value >> 16;
@@ -229,17 +229,17 @@ private:
         }
 
         case ASIOSTInt32LSB: {
-          *(uint32_t*)buffer = (uint32_t)sclamp<32>(samples[n] * (65536.0 * 32768.0 - 1.0));
+          *(u32*)buffer = (u32)sclamp<32>(samples[n] * (65536.0 * 32768.0 - 1.0));
           break;
         }
 
         case ASIOSTFloat32LSB: {
-          *(float*)buffer = max(-1.0, min(+1.0, samples[n]));
+          *(f32*)buffer = max(-1.0, min(+1.0, samples[n]));
           break;
         }
 
         case ASIOSTFloat64LSB: {
-          *(double*)buffer = max(-1.0, min(+1.0, samples[n]));
+          *(f64*)buffer = max(-1.0, min(+1.0, samples[n]));
           break;
         }
         }
@@ -262,10 +262,10 @@ private:
   bool _started = false;
 
   struct Queue {
-    double samples[65536][8];
-    uint16_t read;
-    uint16_t write;
-    std::atomic<uint16_t> count;
+    f64 samples[65536][8];
+    u16 read;
+    u16 write;
+    std::atomic<u16> count;
   };
 
   struct Device {

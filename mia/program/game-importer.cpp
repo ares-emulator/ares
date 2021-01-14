@@ -14,7 +14,7 @@ auto GameImporter::import(string system, const vector<string>& files) -> void {
   programWindow.show(*this);
 
   processing = true;
-  uint index = 1;
+  u32 index = 1;
   for(auto& file : files) {
     if(!processing) break;
     messageLabel.setText({"[", index++, "/", files.size(), "] Importing ", Location::file(file), " ..."});

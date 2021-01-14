@@ -2,139 +2,139 @@ auto SA1::serialize(serializer& s) -> void {
   WDC65816::serialize(s);
   Thread::serialize(s);
 
-  s.array(iram.data(), iram.size());
-  s.array(bwram.data(), bwram.size());
-  s.integer(bwram.dma);
+  s(iram);
+  s(bwram);
+  s(bwram.dma);
 
-  s.integer(status.counter);
+  s(status.counter);
 
-  s.integer(status.interruptPending);
+  s(status.interruptPending);
 
-  s.integer(status.scanlines);
-  s.integer(status.vcounter);
-  s.integer(status.hcounter);
+  s(status.scanlines);
+  s(status.vcounter);
+  s(status.hcounter);
 
-  s.integer(dma.line);
+  s(dma.line);
 
-  s.integer(io.sa1_irq);
-  s.integer(io.sa1_rdyb);
-  s.integer(io.sa1_resb);
-  s.integer(io.sa1_nmi);
-  s.integer(io.smeg);
+  s(io.sa1_irq);
+  s(io.sa1_rdyb);
+  s(io.sa1_resb);
+  s(io.sa1_nmi);
+  s(io.smeg);
 
-  s.integer(io.cpu_irqen);
-  s.integer(io.chdma_irqen);
+  s(io.cpu_irqen);
+  s(io.chdma_irqen);
 
-  s.integer(io.cpu_irqcl);
-  s.integer(io.chdma_irqcl);
+  s(io.cpu_irqcl);
+  s(io.chdma_irqcl);
 
-  s.integer(io.crv);
+  s(io.crv);
 
-  s.integer(io.cnv);
+  s(io.cnv);
 
-  s.integer(io.civ);
+  s(io.civ);
 
-  s.integer(io.cpu_irq);
-  s.integer(io.cpu_ivsw);
-  s.integer(io.cpu_nvsw);
-  s.integer(io.cmeg);
+  s(io.cpu_irq);
+  s(io.cpu_ivsw);
+  s(io.cpu_nvsw);
+  s(io.cmeg);
 
-  s.integer(io.sa1_irqen);
-  s.integer(io.timer_irqen);
-  s.integer(io.dma_irqen);
-  s.integer(io.sa1_nmien);
+  s(io.sa1_irqen);
+  s(io.timer_irqen);
+  s(io.dma_irqen);
+  s(io.sa1_nmien);
 
-  s.integer(io.sa1_irqcl);
-  s.integer(io.timer_irqcl);
-  s.integer(io.dma_irqcl);
-  s.integer(io.sa1_nmicl);
+  s(io.sa1_irqcl);
+  s(io.timer_irqcl);
+  s(io.dma_irqcl);
+  s(io.sa1_nmicl);
 
-  s.integer(io.snv);
+  s(io.snv);
 
-  s.integer(io.siv);
+  s(io.siv);
 
-  s.integer(io.hvselb);
-  s.integer(io.ven);
-  s.integer(io.hen);
+  s(io.hvselb);
+  s(io.ven);
+  s(io.hen);
 
-  s.integer(io.hcnt);
+  s(io.hcnt);
 
-  s.integer(io.vcnt);
+  s(io.vcnt);
 
-  s.integer(io.cbmode);
-  s.integer(io.cb);
+  s(io.cbmode);
+  s(io.cb);
 
-  s.integer(io.dbmode);
-  s.integer(io.db);
+  s(io.dbmode);
+  s(io.db);
 
-  s.integer(io.ebmode);
-  s.integer(io.eb);
+  s(io.ebmode);
+  s(io.eb);
 
-  s.integer(io.fbmode);
-  s.integer(io.fb);
+  s(io.fbmode);
+  s(io.fb);
 
-  s.integer(io.sbm);
+  s(io.sbm);
 
-  s.integer(io.sw46);
-  s.integer(io.cbm);
+  s(io.sw46);
+  s(io.cbm);
 
-  s.integer(io.swen);
+  s(io.swen);
 
-  s.integer(io.cwen);
+  s(io.cwen);
 
-  s.integer(io.bwp);
+  s(io.bwp);
 
-  s.integer(io.siwp);
+  s(io.siwp);
 
-  s.integer(io.ciwp);
+  s(io.ciwp);
 
-  s.integer(io.dmaen);
-  s.integer(io.dprio);
-  s.integer(io.cden);
-  s.integer(io.cdsel);
-  s.integer(io.dd);
-  s.integer(io.sd);
+  s(io.dmaen);
+  s(io.dprio);
+  s(io.cden);
+  s(io.cdsel);
+  s(io.dd);
+  s(io.sd);
 
-  s.integer(io.chdend);
-  s.integer(io.dmasize);
-  s.integer(io.dmacb);
+  s(io.chdend);
+  s(io.dmasize);
+  s(io.dmacb);
 
-  s.integer(io.dsa);
+  s(io.dsa);
 
-  s.integer(io.dda);
+  s(io.dda);
 
-  s.integer(io.dtc);
+  s(io.dtc);
 
-  s.integer(io.bbf);
+  s(io.bbf);
 
-  s.array(io.brf);
+  s(io.brf);
 
-  s.integer(io.acm);
-  s.integer(io.md);
+  s(io.acm);
+  s(io.md);
 
-  s.integer(io.ma);
+  s(io.ma);
 
-  s.integer(io.mb);
+  s(io.mb);
 
-  s.integer(io.hl);
-  s.integer(io.vb);
+  s(io.hl);
+  s(io.vb);
 
-  s.integer(io.va);
-  s.integer(io.vbit);
+  s(io.va);
+  s(io.vbit);
 
-  s.integer(io.cpu_irqfl);
-  s.integer(io.chdma_irqfl);
+  s(io.cpu_irqfl);
+  s(io.chdma_irqfl);
 
-  s.integer(io.sa1_irqfl);
-  s.integer(io.timer_irqfl);
-  s.integer(io.dma_irqfl);
-  s.integer(io.sa1_nmifl);
+  s(io.sa1_irqfl);
+  s(io.timer_irqfl);
+  s(io.dma_irqfl);
+  s(io.sa1_nmifl);
 
-  s.integer(io.hcr);
+  s(io.hcr);
 
-  s.integer(io.vcr);
+  s(io.vcr);
 
-  s.integer(io.mr);
+  s(io.mr);
 
-  s.integer(io.overflow);
+  s(io.overflow);
 }

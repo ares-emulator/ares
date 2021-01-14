@@ -8,9 +8,10 @@ VI vi;
 #include "serialization.cpp"
 
 auto VI::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("VI");
+  node = parent->append<Node::Object>("VI");
 
-  screen = node->append<Node::Screen>("Screen");
+  screen = node->append<Node::Video::Screen>("Screen", 640, 478);
+  screen->setRefresh({&VI::refresh, this});
   screen->colors((1 << 24) + (1 << 15), [&](uint32 color) -> uint64 {
     if(color < (1 << 24)) {
       u64 a = 65535;
@@ -32,6 +33,7 @@ auto VI::load(Node::Object parent) -> void {
 }
 
 auto VI::unload() -> void {
+  screen->quit();
   node = {};
   screen = {};
   debugger = {};
@@ -45,6 +47,7 @@ auto VI::main() -> void {
   if(++io.vcounter == 262) {
     io.vcounter = 0;
     refreshed = true;
+    screen->frame();
   }
 
   step(93'750'000 / 60 / 262);
@@ -58,16 +61,13 @@ auto VI::refresh() -> void {
   uint pitch  = vi.io.width;
   uint width  = vi.io.width;  //vi.io.xscale <= 0x300 ? 320 : 640;
   uint height = vi.io.yscale <= 0x400 ? 239 : 478;
-
-  if(vi.io.colorDepth < 2) {
-    memory::fill<u32>(output, width * height);
-  }
+  screen->setViewport(0, 0, width, height);
 
   if(vi.io.colorDepth == 2) {
     //15bpp
     for(uint y : range(height)) {
       u32 address = vi.io.dramAddress + y * pitch * 2;
-      auto line = &output[y * width];
+      auto line = screen->pixels(1).data() + y * 640;
       for(uint x : range(min(width, pitch))) {
         u16 data = bus.readHalf(address + x * 2);
         *line++ = 1 << 24 | data >> 1;
@@ -79,21 +79,19 @@ auto VI::refresh() -> void {
     //24bpp
     for(uint y : range(height)) {
       u32 address = vi.io.dramAddress + y * pitch * 4;
-      auto line = &output[y * width];
+      auto line = screen->pixels(1).data() + y * 640;
       for(uint x : range(min(width, pitch))) {
         u32 data = bus.readWord(address + x * 4);
         *line++ = data >> 8;
       }
     }
   }
-
-  screen->refresh((uint32*)output, width * sizeof(uint32), width, height);
 }
 
-auto VI::power() -> void {
+auto VI::power(bool reset) -> void {
   Thread::reset();
+  screen->power();
   refreshed = false;
-  io = {};
 }
 
 }

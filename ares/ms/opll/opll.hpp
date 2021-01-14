@@ -1,6 +1,6 @@
 struct OPLL : YM2413, Thread {
-  Node::Component node;
-  Node::Stream stream;
+  Node::Object node;
+  Node::Audio::Stream stream;
 
   //opll.cpp
   auto load(Node::Object) -> void;

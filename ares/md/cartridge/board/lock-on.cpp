@@ -27,12 +27,12 @@ struct LockOn : Interface {
     if(slot.connected()) slot.cartridge.write(upper, lower, address, data);
   }
 
-  auto readIO(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16 override {
+  auto readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 override {
     if(slot.connected()) slot.cartridge.readIO(upper, lower, address, data);
     return data;
   }
 
-  auto writeIO(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void override {
+  auto writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void override {
     if(slot.connected()) slot.cartridge.writeIO(upper, lower, address, data);
     if(!lower) return;  //todo: unconfirmed
     if(address == 0xa130f0) patchEnable = data.bit(0);
@@ -44,8 +44,8 @@ struct LockOn : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
-    if(slot.connected()) slot.cartridge.serialize(s);
-    s.integer(patchEnable);
+    if(slot.connected()) s(slot.cartridge);
+    s(patchEnable);
   }
 
   uint1 patchEnable;

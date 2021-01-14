@@ -8,7 +8,7 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>(interface->name());
+  return node = parent->append<Node::Peripheral>(system.name());
 }
 
 auto Cartridge::connect() -> void {
@@ -23,7 +23,7 @@ auto Cartridge::connect() -> void {
   information.name = document["game/label"].string();
   information.region = document["game/region"].string();
 
-  Board::Interface::load(information.manifest);  //this call sets Cartridge::board internally
+  board = Board::Interface::create(information.manifest);
   board->load();
 
   power();
@@ -57,23 +57,23 @@ auto Cartridge::main() -> void {
   board->main();
 }
 
-auto Cartridge::readPRG(uint addr) -> uint8 {
-  return board->readPRG(addr);
+auto Cartridge::readPRG(n32 address, n8 data) -> n8 {
+  return board->readPRG(address, data);
 }
 
-auto Cartridge::writePRG(uint addr, uint8 data) -> void {
-  return board->writePRG(addr, data);
+auto Cartridge::writePRG(n32 address, n8 data) -> void {
+  return board->writePRG(address, data);
 }
 
-auto Cartridge::readCHR(uint addr) -> uint8 {
-  return board->readCHR(addr);
+auto Cartridge::readCHR(n32 address, n8 data) -> n8 {
+  return board->readCHR(address, data);
 }
 
-auto Cartridge::writeCHR(uint addr, uint8 data) -> void {
-  return board->writeCHR(addr, data);
+auto Cartridge::writeCHR(n32 address, n8 data) -> void {
+  return board->writeCHR(address, data);
 }
 
-auto Cartridge::scanline(uint y) -> void {
+auto Cartridge::scanline(n32 y) -> void {
   return board->scanline(y);
 }
 

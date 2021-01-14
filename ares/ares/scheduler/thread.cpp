@@ -4,7 +4,7 @@ inline auto Thread::EntryPoints() -> vector<EntryPoint>& {
 }
 
 inline auto Thread::Enter() -> void {
-  for(uint64_t index : range(EntryPoints().size())) {
+  for(u32 index : range(EntryPoints().size())) {
     if(co_active() == EntryPoints()[index].handle) {
       auto entryPoint = EntryPoints()[index].entryPoint;
       EntryPoints().remove(index);
@@ -63,7 +63,7 @@ inline auto Thread::destroy() -> void {
   _handle = nullptr;
 }
 
-inline auto Thread::step(uint clocks) -> void {
+inline auto Thread::step(u32 clocks) -> void {
   _clock += _scalar * clocks;
 }
 
@@ -89,30 +89,25 @@ inline auto Thread::synchronize(Thread& thread, P&&... p) -> void {
 }
 
 inline auto Thread::serialize(serializer& s) -> void {
-  s.integer(_frequency);
-  s.integer(_scalar);
-  s.integer(_clock);
+  s(_frequency);
+  s(_scalar);
+  s(_clock);
 
   if(!scheduler._synchronize) {
-    static uint8_t stack[Thread::Size];
+    static u8 stack[Thread::Size];
     bool resume = co_active() == _handle;
 
-    if(s.mode() == serializer::Size) {
-      s.array(stack, Thread::Size);
-      s.boolean(resume);
-    }
-
-    if(s.mode() == serializer::Load) {
-      s.array(stack, Thread::Size);
-      s.boolean(resume);
+    if(s.reading()) {
+      s(stack);
+      s(resume);
       memory::copy(_handle, stack, Thread::Size);
       if(resume) scheduler._resume = _handle;
     }
 
-    if(s.mode() == serializer::Save) {
+    if(s.writing()) {
       memory::copy(stack, _handle, Thread::Size);
-      s.array(stack, Thread::Size);
-      s.boolean(resume);
+      s(stack);
+      s(resume);
     }
   }
 }

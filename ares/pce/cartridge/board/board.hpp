@@ -11,10 +11,9 @@ struct Interface {
   virtual auto power() -> void {}
   virtual auto serialize(serializer&) -> void {}
 
-  auto load(Memory::Readable<uint8>& memory, Markup::Node node) -> bool;
-  auto load(Memory::Writable<uint8>& memory, Markup::Node node) -> bool;
-
-  auto save(Memory::Writable<uint8>& memory, Markup::Node node) -> bool;
+  auto load(Memory::Readable<uint8>&, Markup::Node) -> bool;
+  auto load(Memory::Writable<uint8>&, Markup::Node) -> bool;
+  auto save(Memory::Writable<uint8>&, Markup::Node) -> bool;
 
   Cartridge& cartridge;
 };

@@ -1,5 +1,5 @@
 struct CPU : V30MZ, Thread, IO {
-  Node::Component node;
+  Node::Object node;
 
   struct Debugger {
     //debugger.cpp
@@ -8,12 +8,12 @@ struct CPU : V30MZ, Thread, IO {
     auto interrupt(string_view) -> void;
 
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
 
     struct Tracer {
-      Node::Instruction instruction;
-      Node::Notification interrupt;
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
     } tracer;
   } debugger;
 

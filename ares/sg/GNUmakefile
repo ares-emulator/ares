@@ -1,11 +1,14 @@
-ares.components += z80 tms9918 sn76489
+ares.components += z80
+ares.components += tms9918
+ares.components += sn76489
 
-ares.objects += ares-sg-interface
-ares.objects += ares-sg-cpu ares-sg-vdp ares-sg-psg
-ares.objects += ares-sg-system ares-sg-cartridge
+ares.objects += ares-sg-cpu
+ares.objects += ares-sg-vdp
+ares.objects += ares-sg-psg
+ares.objects += ares-sg-system
+ares.objects += ares-sg-cartridge
 ares.objects += ares-sg-controller
 
-$(object.path)/ares-sg-interface.o:  $(ares.path)/sg/interface/interface.cpp
 $(object.path)/ares-sg-cpu.o:        $(ares.path)/sg/cpu/cpu.cpp
 $(object.path)/ares-sg-vdp.o:        $(ares.path)/sg/vdp/vdp.cpp
 $(object.path)/ares-sg-psg.o:        $(ares.path)/sg/psg/psg.cpp

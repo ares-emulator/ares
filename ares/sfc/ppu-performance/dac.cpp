@@ -15,17 +15,23 @@ auto PPU::DAC::render() -> void {
   ppu.window.render(window, window.aboveMask, windowAbove);
   ppu.window.render(window, window.belowMask, windowBelow);
 
-  auto output = ppu.output + ppu.vcounter() * 1024 + (ppu.interlace() && ppu.field() ? 512 : 0);
+  auto vcounter = ppu.vcounter();
+  auto output = (uint32*)ppu.screen->pixels().data();
+  if(!ppu.state.overscan) vcounter += 8;
+  if(vcounter < 240) {
+    output += vcounter * 2 * 512;
+    if(ppu.interlace() && ppu.field()) output += 512;
 
-  uint luma = ppu.io.displayBrightness << 15;
-  if(!ppu.hires()) {
-    for(uint x : range(256)) {
-      *output++ = luma | pixel(x, above[x], below[x]);
-    }
-  } else {
-    for(uint x : range(256)) {
-      *output++ = luma | pixel(x, below[x], above[x]);
-      *output++ = luma | pixel(x, above[x], below[x]);
+    uint luma = ppu.io.displayBrightness << 15;
+    if(!ppu.hires()) {
+      for(uint x : range(256)) {
+        *output++ = luma | pixel(x, above[x], below[x]);
+      }
+    } else {
+      for(uint x : range(256)) {
+        *output++ = luma | pixel(x, below[x], above[x]);
+        *output++ = luma | pixel(x, above[x], below[x]);
+      }
     }
   }
 }

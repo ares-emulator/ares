@@ -7,7 +7,7 @@ Timer timer;
 #include "serialization.cpp"
 
 auto Timer::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("Timer");
+  node = parent->append<Node::Object>("Timer");
 }
 
 auto Timer::unload() -> void {
@@ -27,13 +27,15 @@ auto Timer::step(uint clocks) -> void {
       timers[1].step(clocks);
     }
 
-    if(timers[2].divider == 0 && timers[2].sync == 0) {
-      timers[2].step(clocks);
+    if(timers[2].divider == 0) {
+      if(timers[2].synchronize == 0 || timers[2].mode == 1 || timers[2].mode == 2) {
+        timers[2].step(clocks);
+      }
     }
   }
 
-  while(counter.dotclock >= 8) {
-    counter.dotclock -= 8;
+  while(counter.dotclock >= 5) {
+    counter.dotclock -= 5;
     if(timers[0].clock == 1) {
       timers[0].step();
     }
@@ -41,82 +43,75 @@ auto Timer::step(uint clocks) -> void {
 
   while(counter.divclock >= 8) {
     counter.divclock -= 8;
-    if(timers[2].divider == 1 && timers[2].sync == 0) {
-      timers[2].step();
+    if(timers[2].divider == 1) {
+      if(timers[2].synchronize == 0 || timers[2].mode == 1 || timers[2].mode == 2) {
+        timers[2].step();
+      }
     }
   }
 }
 
 auto Timer::hsync(bool line) -> void {
-  if(timers[0].sync)
+  if(timers[0].synchronize)
   switch(timers[0].mode) {
-  case 0: timers[0].paused  = 1; break;
-  case 1: timers[0].counter = 0; break;
-  case 2: timers[0].counter = 0; timers[0].paused = line == 0; break;
-  case 3: timers[0].paused  = 0; break;
+  case 0: timers[0].paused = line == 1; break;
+  case 1: if(line == 1) timers[0].counter = 0; break;
+  case 2: if(line == 1) timers[0].counter = 0; timers[0].paused = line == 0; break;
+  case 3: if(line == 1) timers[0].paused = timers[0].synchronize = 0; break;
   }
 
-  if(timers[1].clock == 1) {
+  if(timers[1].clock == 1 && line == 1) {
     timers[1].step();
   }
 }
 
 auto Timer::vsync(bool line) -> void {
-  if(timers[1].sync)
+  if(timers[1].synchronize)
   switch(timers[1].mode) {
-  case 0: timers[1].paused  = 1; break;
-  case 1: timers[1].counter = 0; break;
-  case 2: timers[1].counter = 0; timers[0].paused = line == 0; break;
-  case 3: timers[1].paused  = 0; break;
+  case 0: timers[1].paused = line == 1; break;
+  case 1: if(line == 1) timers[1].counter = 0; break;
+  case 2: if(line == 1) timers[1].counter = 0; timers[1].paused = line == 0; break;
+  case 3: if(line == 1) timers[1].paused = timers[1].synchronize = 0; break;
   }
-
-  if(timers[1].mode == 0) {
-    timers[1].paused = 1;
-  }
-}
-
-auto Timer::poll() -> void {
-  interrupt.drive(Interrupt::Timer0, timers[0].irqLine == 0);
-  interrupt.drive(Interrupt::Timer1, timers[1].irqLine == 0);
-  interrupt.drive(Interrupt::Timer2, timers[2].irqLine == 0);
 }
 
 auto Timer::power(bool reset) -> void {
+  Memory::Interface::setWaitStates(2, 2, 2);
+  for(auto& timer : timers) {
+    timer.irqLine = 1;
+  }
 }
 
 auto Timer::Source::step(uint clocks) -> void {
-  if(sync && paused) return;
+  if(synchronize && paused) return;
 
-  if(counter < target && counter + clocks >= target) {
-    reachedTarget = 1;
-    if(irqOnTarget) irq();
-  }
+  while(clocks--) {
+    counter++;
 
-  if(counter + clocks >= 0x10000) {
-    reachedSaturate = 1;
-    if(irqOnSaturate) irq();
-  }
+    //counter value can be read in the range of 0..target (inclusive)
+    if(u16(counter - 1) == target) {
+      reachedTarget = 1;
+      if(resetMode == 1) counter = 0;
+      if(irqOnTarget) irq();
+    }
 
-  if(resetMode == 0 && counter + clocks >= target) {
-    counter = counter + clocks - target;
-  } else if(resetMode == 1 && counter + clocks >= 0x10000) {
-    counter = counter + clocks - 0x10000;
-  } else {
-    counter = counter + clocks;
+    if(counter == 0xffff) {
+      reachedSaturate = 1;
+      if(resetMode == 0) counter = 0;
+      if(irqOnSaturate) irq();
+    }
   }
 }
 
 auto Timer::Source::irq() -> void {
-  if(irqMode == 0) {
-    irqLine = 0;
-  } else {
-    irqLine = !irqLine;
-  }
-  self.poll();
-
-  if(!irqRepeat) {
-    irqOnTarget = 0;
-    irqOnSaturate = 0;
+  if(!irqTriggered) {
+    if(irqMode == 0) {
+      interrupt.pulse(Interrupt::Timer0 + id);
+    } else {
+      irqLine = !irqLine;
+      if(!irqLine) interrupt.pulse(Interrupt::Timer0 + id);
+    }
+    if(!irqRepeat) irqTriggered = 1;
   }
 }
 

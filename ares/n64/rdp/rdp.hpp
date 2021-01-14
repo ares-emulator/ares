@@ -1,7 +1,7 @@
 //Reality Display Processor
 
 struct RDP : Thread, Memory::IO<RDP> {
-  Node::Component node;
+  Node::Object node;
 
   struct Debugger {
     //debugger.cpp
@@ -10,8 +10,8 @@ struct RDP : Thread, Memory::IO<RDP> {
     auto io(string_view) -> void;
 
     struct Tracer {
-      Node::Notification command;
-      Node::Notification io;
+      Node::Debugger::Tracer::Notification command;
+      Node::Debugger::Tracer::Notification io;
     } tracer;
   } debugger;
 
@@ -21,7 +21,7 @@ struct RDP : Thread, Memory::IO<RDP> {
 
   auto main() -> void;
   auto step(uint clocks) -> void;
-  auto power() -> void;
+  auto power(bool reset) -> void;
 
   //render.cpp
   auto render() -> void;
@@ -71,17 +71,17 @@ struct RDP : Thread, Memory::IO<RDP> {
   auto serialize(serializer&) -> void;
 
   struct Command {
-    uint24 start = 0;
-    uint24 end = 0;
-    uint24 current = 0;
-    uint24 clock = 0;
-    uint24 bufferBusy = 0;
-    uint24 pipeBusy = 0;
-    uint24 tmemBusy = 0;
-     uint1 source = 0;  //0 = RDRAM, 1 = DMEM
-     uint1 freeze = 0;
-     uint1 flush = 0;
-     uint1 ready = 1;
+    uint24 start;
+    uint24 end;
+    uint24 current;
+    uint24 clock;
+    uint24 bufferBusy;
+    uint24 pipeBusy;
+    uint24 tmemBusy;
+     uint1 source;  //0 = RDRAM, 1 = DMEM
+     uint1 freeze;
+     uint1 flush;
+     uint1 ready;
   } command;
 
   struct Point {
@@ -335,15 +335,15 @@ struct RDP : Thread, Memory::IO<RDP> {
     auto writeWord(u32 address, u32 data) -> void;
 
     struct BIST {
-      uint1 check = 0;
-      uint1 go = 0;
-      uint1 done = 0;
-      uint8 fail = 0x00;
+      uint1 check;
+      uint1 go;
+      uint1 done;
+      uint8 fail;
     } bist;
     struct Test {
-       uint1 enable = 0;
-       uint7 address = 0;
-      uint32 data = 0;
+       uint1 enable;
+       uint7 address;
+      uint32 data;
     } test;
   } io{*this};
 };

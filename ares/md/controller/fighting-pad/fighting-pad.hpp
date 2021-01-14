@@ -1,16 +1,16 @@
 struct FightingPad : Controller, Thread {
-  Node::Button up;
-  Node::Button down;
-  Node::Button left;
-  Node::Button right;
-  Node::Button a;
-  Node::Button b;
-  Node::Button c;
-  Node::Button x;
-  Node::Button y;
-  Node::Button z;
-  Node::Button mode;
-  Node::Button start;
+  Node::Input::Button up;
+  Node::Input::Button down;
+  Node::Input::Button left;
+  Node::Input::Button right;
+  Node::Input::Button a;
+  Node::Input::Button b;
+  Node::Input::Button c;
+  Node::Input::Button x;
+  Node::Input::Button y;
+  Node::Input::Button z;
+  Node::Input::Button mode;
+  Node::Input::Button start;
 
   FightingPad(Node::Port);
   auto main() -> void;

@@ -1,10 +1,10 @@
-auto Nintendo64DD::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto Nintendo64DD::export(string location) -> vector<u8> {
+  vector<u8> data;
   append(data, {location, "program.disk"});
   return data;
 }
 
-auto Nintendo64DD::heuristics(vector<uint8_t>& data, string location) -> string {
+auto Nintendo64DD::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name: ",  Media::name(location), "\n"};

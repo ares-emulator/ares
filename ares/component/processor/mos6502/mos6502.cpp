@@ -44,7 +44,7 @@ namespace ares {
 #undef N
 #undef L
 
-auto MOS6502::mdr() const -> uint8 {
+auto MOS6502::mdr() const -> n8 {
   return r.mdr;
 }
 

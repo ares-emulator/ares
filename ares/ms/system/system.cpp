@@ -2,29 +2,46 @@
 
 namespace ares::MasterSystem {
 
+auto load(Node::System& node, string name) -> bool {
+  return system.load(node, name);
+}
+
 Scheduler scheduler;
 System system;
 #include "controls.cpp"
 #include "serialization.cpp"
 
-auto System::run() -> void {
-  if(scheduler.enter() == Event::Frame) {
-    vdp.refresh();
-    controls.poll();
+auto System::game() -> string {
+  if(cartridge.node) {
+    return cartridge.name();
   }
+
+  return "(no cartridge connected)";
 }
 
-auto System::load(Node::Object& root) -> void {
+auto System::run() -> void {
+  scheduler.enter();
+  controls.poll();
+}
+
+auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(interface->name() == "Master System") information.model = Model::MasterSystem;
-  if(interface->name() == "Game Gear"    ) information.model = Model::GameGear;
+  if(name == "Master System") information.model = Model::MasterSystem;
+  if(name == "Game Gear"    ) information.model = Model::GameGear;
 
-  node = Node::System::create(interface->name());
+  node = Node::System::create(name);
+  node->setGame({&System::game, this});
+  node->setRun({&System::run, this});
+  node->setPower({&System::power, this});
+  node->setSave({&System::save, this});
+  node->setUnload({&System::unload, this});
+  node->setSerialize({&System::serialize, this});
+  node->setUnserialize({&System::unserialize, this});
   root = node;
 
-  regionNode = node->append<Node::String>("Region", "NTSC → PAL");
+  regionNode = node->append<Node::Setting::String>("Region", "NTSC → PAL");
   regionNode->setAllowedValues({
     "NTSC → PAL",
     "PAL → NTSC",
@@ -43,6 +60,7 @@ auto System::load(Node::Object& root) -> void {
     controllerPort1.load(node);
     controllerPort2.load(node);
   }
+  return true;
 }
 
 auto System::save() -> void {
@@ -65,8 +83,8 @@ auto System::unload() -> void {
   node = {};
 }
 
-auto System::power() -> void {
-  for(auto& setting : node->find<Node::Setting>()) setting->setLatch();
+auto System::power(bool reset) -> void {
+  for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   auto setRegion = [&](string region) {
     if(region == "NTSC") {
@@ -90,9 +108,6 @@ auto System::power() -> void {
   psg.power();
   opll.power();
   scheduler.power(cpu);
-
-  information.serializeSize[0] = serializeInit(0);
-  information.serializeSize[1] = serializeInit(1);
 }
 
 }

@@ -74,7 +74,7 @@ private:
   uint23 dcuAddress;
   uint dcuOffset;
   uint8 dcuTile[32];
-  Decompressor* decompressor;
+  Decompressor* decompressor = nullptr;
 
   //data port unit
   uint8 r4810;  //data port read + seek

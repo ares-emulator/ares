@@ -1,22 +1,22 @@
 auto M68K::serialize(serializer& s) -> void {
-  s.array(r.d);
-  s.array(r.a);
-  s.integer(r.sp);
-  s.integer(r.pc);
+  s(r.d);
+  s(r.a);
+  s(r.sp);
+  s(r.pc);
 
-  s.integer(r.c);
-  s.integer(r.v);
-  s.integer(r.z);
-  s.integer(r.n);
-  s.integer(r.x);
-  s.integer(r.i);
-  s.integer(r.s);
-  s.integer(r.t);
+  s(r.c);
+  s(r.v);
+  s(r.z);
+  s(r.n);
+  s(r.x);
+  s(r.i);
+  s(r.s);
+  s(r.t);
 
-  s.integer(r.irc);
-  s.integer(r.ir);
-  s.integer(r.ird);
+  s(r.irc);
+  s(r.ir);
+  s(r.ird);
 
-  s.integer(r.stop);
-  s.integer(r.reset);
+  s(r.stop);
+  s(r.reset);
 }

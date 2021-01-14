@@ -3,23 +3,28 @@
 namespace ares::Nintendo64 {
 
 RSP rsp;
-#include "core/core.cpp"
 #include "io.cpp"
+#include "ipu.cpp"
+#include "scc.cpp"
+#include "vpu.cpp"
+#include "decoder.cpp"
+#include "recompiler.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
+#include "disassembler.cpp"
 
 auto RSP::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("RSP");
+  node = parent->append<Node::Object>("RSP");
   dmem.allocate(4_KiB);
   imem.allocate(4_KiB);
   debugger.load(node);
 }
 
 auto RSP::unload() -> void {
+  debugger.unload();
   dmem.reset();
   imem.reset();
-  node = {};
-  debugger = {};
+  node.reset();
 }
 
 auto RSP::main() -> void {
@@ -31,17 +36,72 @@ auto RSP::step(uint clocks) -> void {
   clock += clocks;
 }
 
-auto RSP::power() -> void {
+auto RSP::instruction() -> void {
+  if constexpr(Accuracy::RSP::Interpreter == 0) {
+    auto block = recompiler.block(ipu.pc);
+    block->execute();
+  }
+
+  if constexpr(Accuracy::RSP::Interpreter == 1) {
+    pipeline.address = ipu.pc;
+    pipeline.instruction = imem.readWord(pipeline.address);
+    debugger.instruction();
+  //instructionDebug();
+    decoderEXECUTE();
+    instructionEpilogue();
+    step(3);
+  }
+}
+
+auto RSP::instructionEpilogue() -> bool {
+  ipu.r[0].u32 = 0;
+
+  switch(branch.state) {
+  case Branch::Step: ipu.pc += 4; return 0;
+  case Branch::Take: ipu.pc += 4; branch.delaySlot(); return 0;
+  case Branch::DelaySlot: ipu.pc = branch.pc; branch.reset(); return 1;
+  case Branch::Halt: ipu.pc += 4; return 1;
+  }
+
+  unreachable;
+}
+
+auto RSP::instructionDebug() -> void {
+  pipeline.address = ipu.pc;
+  pipeline.instruction = imem.readWord(pipeline.address);
+
+  static uint counter = 0;
+//if(++counter > 100) return;
+  print(
+    disassembler.hint(hex(pipeline.address, 3L)), "  ",
+  //disassembler.hint(hex(pipeline.instruction, 8L)), "  ",
+    disassembler.disassemble(pipeline.address, pipeline.instruction), "\n"
+  );
+}
+
+auto RSP::power(bool reset) -> void {
   Thread::reset();
-  powerCore();
-  dma = {};
-  status.semaphore = 0;
   status.halted = 1;
-  status.broken = 0;
-  status.full = 0;
-  status.singleStep = 0;
-  status.interruptOnBreak = 0;
-  for(auto& signal : status.signal) signal = 0;
+
+  reciprocals[0] = u16(~0);
+  for(u16 index : range(1, 512)) {
+    u64 a = index + 512;
+    u64 b = (u64(1) << 34) / a;
+    reciprocals[index] = u16(b + 1 >> 8);
+  }
+
+  for(u16 index : range(0, 512)) {
+    u64 a = index + 512 >> (index % 2 == 1);
+    u64 b = 1 << 17;
+    //find the largest b where b < 1.0 / sqrt(a)
+    while(a * (b + 1) * (b + 1) < (u64(1) << 44)) b++;
+    inverseSquareRoots[index] = u16(b >> 1);
+  }
+
+  if constexpr(Accuracy::RSP::Interpreter == 0) {
+    recompiler.allocator.resize(512_MiB, bump_allocator::executable | bump_allocator::zero_fill);
+    recompiler.reset();
+  }
 }
 
 }

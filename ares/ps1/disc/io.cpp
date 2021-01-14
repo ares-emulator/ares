@@ -1,9 +1,9 @@
 auto Disc::readDMA() -> u32 {
   u32 data = 0;
-  if(!fifo.data.empty()) data |= fifo.data.read() <<  0;
-  if(!fifo.data.empty()) data |= fifo.data.read() <<  8;
-  if(!fifo.data.empty()) data |= fifo.data.read() << 16;
-  if(!fifo.data.empty()) data |= fifo.data.read() << 24;
+  data |= fifo.data.read(0) <<  0;
+  data |= fifo.data.read(0) <<  8;
+  data |= fifo.data.read(0) << 16;
+  data |= fifo.data.read(0) << 24;
   return data;
 }
 
@@ -23,12 +23,12 @@ auto Disc::readByte(u32 address) -> u32 {
 
   //response FIFO
   if(address == 0x1f80'1801 && (io.index == 0 || io.index == 1 || io.index == 2 || io.index == 3)) {
-    if(!fifo.response.empty()) data = fifo.response.read();
+    data = fifo.response.read(data);
   }
 
   //data FIFO
   if(address == 0x1f80'1802 && (io.index == 0 || io.index == 1 || io.index == 2 || io.index == 3)) {
-    if(!fifo.data.empty()) data = fifo.data.read();
+    data = fifo.data.read(data);
   }
 
   //interrupt enable
@@ -59,17 +59,17 @@ auto Disc::readByte(u32 address) -> u32 {
     data.bit(7) = 1;
   }
 
-//print("* r", hex(address, 8L), ":", io.index, "=", hex(data, 2L), "\n");
-
   return data;
 }
 
 auto Disc::readHalf(u32 address) -> u32 {
+  debug(unverified, "Disc::readHalf(", hex(address, 8L), ")");
   uint16 data = readByte(address & ~1 | 0) <<  0;
   return data | readByte(address & ~1 | 1) <<  8;
 }
 
 auto Disc::readWord(u32 address) -> u32 {
+  debug(unverified, "Disc::readWord(", hex(address, 8L), ")");
   uint32 data = readHalf(address & ~3 | 0) <<  0;
   return data | readHalf(address & ~3 | 2) << 16;
 }
@@ -77,16 +77,17 @@ auto Disc::readWord(u32 address) -> u32 {
 auto Disc::writeByte(u32 address, u32 value) -> void {
   uint8 data = value;
 
-//print("* w", hex(address, 8L), ":", io.index, "=", hex(data, 2L), "\n");
-
   if(address == 0x1f80'1800) {
     io.index = data.bit(0,1);
   }
 
   //command register
   if(address == 0x1f80'1801 && io.index == 0) {
+    if(event.counter) {
+      debug(unimplemented, "Disc::writeByte(): ", hex(event.counter, 2L), "->", hex(data, 2L));
+    }
     event.command = data;
-    event.counter = 25000;
+    event.counter = 50'000;
     event.invocation = 0;
   }
 
@@ -100,7 +101,7 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 
   //audio volume for right CD output to right SPU input
   if(address == 0x1f80'1801 && io.index == 3) {
-    cdda.volumeLatch[3] = data;
+    audio.volumeLatch[3] = data;
   }
 
   //parameter FIFO
@@ -120,12 +121,12 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 
   //audio volume for left CD output to left SPU input
   if(address == 0x1f80'1802 && io.index == 2) {
-    cdda.volumeLatch[0] = data;
+    audio.volumeLatch[0] = data;
   }
 
   //audio volume for right CD output to left SPU input
   if(address == 0x1f80'1802 && io.index == 3) {
-    cdda.volumeLatch[2] = data;
+    audio.volumeLatch[2] = data;
   }
 
   //request register
@@ -150,27 +151,30 @@ auto Disc::writeByte(u32 address, u32 value) -> void {
 
   //audio volume for left CD output to right SPU input
   if(address == 0x1f80'1803 && io.index == 2) {
-    cdda.volumeLatch[1] = data;
+    audio.volumeLatch[1] = data;
   }
 
   //audio volume apply changes
   if(address == 0x1f80'1803 && io.index == 3) {
-    adpcm.mute = data.bit(0);
+    audio.muteADPCM = data.bit(0);
     if(data.bit(5)) {
-      cdda.volume[0] = cdda.volumeLatch[0];
-      cdda.volume[1] = cdda.volumeLatch[1];
-      cdda.volume[2] = cdda.volumeLatch[2];
-      cdda.volume[3] = cdda.volumeLatch[3];
+      audio.volume[0] = audio.volumeLatch[0];
+      audio.volume[1] = audio.volumeLatch[1];
+      audio.volume[2] = audio.volumeLatch[2];
+      audio.volume[3] = audio.volumeLatch[3];
     }
+    if(audio.muteADPCM) debug(unusual, "Disc::writeByte: ADPMUTE = 1");
   }
 }
 
 auto Disc::writeHalf(u32 address, u32 data) -> void {
+  debug(unverified, "Disc::writeHalf(", hex(address, 8L), ")");
   writeByte(address & ~1 | 0, data >>  0);
   writeByte(address & ~1 | 1, data >>  8);
 }
 
 auto Disc::writeWord(u32 address, u32 data) -> void {
+  debug(unverified, "Disc::writeWord(", hex(address, 8L), ")");
   writeHalf(address & ~3 | 0, data >>  0);
   writeHalf(address & ~3 | 2, data >> 16);
 }

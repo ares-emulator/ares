@@ -10,9 +10,9 @@ struct InputMouseRawInput {
   struct Mouse {
     shared_pointer<HID::Mouse> hid{new HID::Mouse};
 
-    int relativeX = 0;
-    int relativeY = 0;
-    int relativeZ = 0;
+    s32 relativeX = 0;
+    s32 relativeY = 0;
+    s32 relativeZ = 0;
     bool buttons[5] = {0};
   } ms;
 
@@ -52,7 +52,7 @@ struct InputMouseRawInput {
     }
 
     if(input->data.mouse.usButtonFlags & RI_MOUSE_WHEEL) {
-      ms.relativeZ += (int16_t)input->data.mouse.usButtonData;
+      ms.relativeZ += (s16)input->data.mouse.usButtonData;
     }
 
     if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_1_DOWN) ms.buttons[0] = 1;
@@ -67,7 +67,7 @@ struct InputMouseRawInput {
     if(input->data.mouse.usButtonFlags & RI_MOUSE_BUTTON_5_UP  ) ms.buttons[4] = 0;
   }
 
-  auto assign(uint groupID, uint inputID, int16_t value) -> void {
+  auto assign(u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = ms.hid->group(groupID);
     if(group.input(inputID).value() == value) return;
     input.doChange(ms.hid, groupID, inputID, group.input(inputID).value(), value);

@@ -6,7 +6,7 @@ struct VCE {
     auto load(VCE&, Node::Object) -> void;
 
     struct Memory {
-      Node::Memory cram;
+      Node::Debugger::Memory cram;
     } memory;
   } debugger;
 

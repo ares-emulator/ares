@@ -6,8 +6,8 @@ struct VDC {
     auto load(VDC&, Node::Object) -> void;
 
     struct Memory {
-      Node::Memory vram;
-      Node::Memory satb;
+      Node::Debugger::Memory vram;
+      Node::Debugger::Memory satb;
     } memory;
   } debugger;
 

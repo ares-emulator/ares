@@ -12,8 +12,8 @@ auto APU::DMC::stop() -> void {
   cpu.rdyAddress(false);
 }
 
-auto APU::DMC::clock() -> uint8 {
-  uint8 result = dacLatch;
+auto APU::DMC::clock() -> n8 {
+  n8 result = dacLatch;
 
   if(dmaDelayCounter > 0) {
     dmaDelayCounter--;
@@ -42,8 +42,8 @@ auto APU::DMC::clock() -> uint8 {
 
   if(--periodCounter == 0) {
     if(sampleValid) {
-      int delta = (((sample >> bitCounter) & 1) << 2) - 2;
-      uint data = dacLatch + delta;
+      s32 delta = (((sample >> bitCounter) & 1) << 2) - 2;
+      u32 data = dacLatch + delta;
       if((data & 0x80) == 0) dacLatch = data;
     }
 
@@ -66,24 +66,4 @@ auto APU::DMC::clock() -> uint8 {
   }
 
   return result;
-}
-
-auto APU::DMC::power() -> void {
-  lengthCounter = 0;
-  irqPending = 0;
-
-  period = 0;
-  periodCounter = Region::PAL() ? dmcPeriodTablePAL[0] : dmcPeriodTableNTSC[0];
-  irqEnable = 0;
-  loopMode = 0;
-  dacLatch = 0;
-  addressLatch = 0;
-  lengthLatch = 0;
-  readAddress = 0;
-  dmaDelayCounter = 0;
-  bitCounter = 0;
-  dmaBufferValid = 0;
-  dmaBuffer = 0;
-  sampleValid = 0;
-  sample = 0;
 }

@@ -13,7 +13,7 @@ struct Cartridge {
   auto disconnect() -> void;
 
   auto save() -> void;
-  auto power() -> void;
+  auto power(bool reset) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

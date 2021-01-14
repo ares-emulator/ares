@@ -4,7 +4,7 @@
 //it is able to.
 
 struct CPU : TLCS900H, Thread {
-  Node::Component node;
+  Node::Object node;
   ares::Memory::Writable<uint8> ram;  //12KB
 
   struct Debugger {
@@ -14,12 +14,12 @@ struct CPU : TLCS900H, Thread {
     auto interrupt(string_view) -> void;
 
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
 
     struct Tracer {
-      Node::Instruction instruction;
-      Node::Notification interrupt;
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
     } tracer;
   } debugger;
 

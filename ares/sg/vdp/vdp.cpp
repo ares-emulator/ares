@@ -7,18 +7,23 @@ VDP vdp;
 #include "serialization.cpp"
 
 auto VDP::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("VDP");
+  node = parent->append<Node::Object>("VDP");
 
-  screen = node->append<Node::Screen>("Screen");
+  screen = node->append<Node::Video::Screen>("Screen", 256, 192);
   screen->colors(1 << 4, {&VDP::color, this});
   screen->setSize(256, 192);
+  screen->setViewport(0, 0, 256, 192);
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
+
+  TMS9918::load(screen);
 }
 
 auto VDP::unload() -> void {
-  node = {};
-  screen = {};
+  TMS9918::unload();
+  screen->quit();
+  screen.reset();
+  node.reset();
 }
 
 auto VDP::step(uint clocks) -> void {
@@ -31,16 +36,14 @@ auto VDP::irq(bool line) -> void {
 }
 
 auto VDP::frame() -> void {
+  screen->frame();
   scheduler.exit(Event::Frame);
-}
-
-auto VDP::refresh() -> void {
-  screen->refresh(buffer, 256 * sizeof(uint32), 256, 192);
 }
 
 auto VDP::power() -> void {
   TMS9918::power();
   Thread::create(system.colorburst() * 2, [&] { main(); });
+  screen->power();
   vram.allocate(0x4000);
 }
 

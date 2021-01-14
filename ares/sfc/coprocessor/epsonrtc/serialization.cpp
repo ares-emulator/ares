@@ -1,53 +1,53 @@
 auto EpsonRTC::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s.integer(clocks);
-  s.integer(seconds);
+  s(clocks);
+  s(seconds);
 
-  s.integer(chipselect);
-  s.integer((uint&)state);
-  s.integer(mdr);
-  s.integer(offset);
-  s.integer(wait);
-  s.integer(ready);
-  s.integer(holdtick);
+  s(chipselect);
+  s((uint&)state);
+  s(mdr);
+  s(offset);
+  s(wait);
+  s(ready);
+  s(holdtick);
 
-  s.integer(secondlo);
-  s.integer(secondhi);
-  s.integer(batteryfailure);
+  s(secondlo);
+  s(secondhi);
+  s(batteryfailure);
 
-  s.integer(minutelo);
-  s.integer(minutehi);
-  s.integer(resync);
+  s(minutelo);
+  s(minutehi);
+  s(resync);
 
-  s.integer(hourlo);
-  s.integer(hourhi);
-  s.integer(meridian);
+  s(hourlo);
+  s(hourhi);
+  s(meridian);
 
-  s.integer(daylo);
-  s.integer(dayhi);
-  s.integer(dayram);
+  s(daylo);
+  s(dayhi);
+  s(dayram);
 
-  s.integer(monthlo);
-  s.integer(monthhi);
-  s.integer(monthram);
+  s(monthlo);
+  s(monthhi);
+  s(monthram);
 
-  s.integer(yearlo);
-  s.integer(yearhi);
+  s(yearlo);
+  s(yearhi);
 
-  s.integer(weekday);
+  s(weekday);
 
-  s.integer(hold);
-  s.integer(calendar);
-  s.integer(irqflag);
-  s.integer(roundseconds);
+  s(hold);
+  s(calendar);
+  s(irqflag);
+  s(roundseconds);
 
-  s.integer(irqmask);
-  s.integer(irqduty);
-  s.integer(irqperiod);
+  s(irqmask);
+  s(irqduty);
+  s(irqperiod);
 
-  s.integer(pause);
-  s.integer(stop);
-  s.integer(atime);
-  s.integer(test);
+  s(pause);
+  s(stop);
+  s(atime);
+  s(test);
 }

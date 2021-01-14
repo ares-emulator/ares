@@ -1,5 +1,5 @@
 struct APU : Z80, Z80::Bus, Thread {
-  Node::Component node;
+  Node::Object node;
   Memory::Writable<uint8> ram;
 
   struct Debugger {
@@ -9,12 +9,12 @@ struct APU : Z80, Z80::Bus, Thread {
     auto interrupt(string_view) -> void;
 
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
 
     struct Tracer {
-      Node::Instruction instruction;
-      Node::Notification interrupt;
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
     } tracer;
   } debugger;
 

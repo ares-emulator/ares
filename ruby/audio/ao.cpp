@@ -14,20 +14,20 @@ struct AudioAO : AudioDriver {
   auto driver() -> string override { return "libao"; }
   auto ready() -> bool override { return _ready; }
 
-  auto hasChannels() -> vector<uint> override {
+  auto hasChannels() -> vector<u32> override {
     return {2};
   }
 
-  auto hasFrequencies() -> vector<uint> override {
+  auto hasFrequencies() -> vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto setFrequency(uint frequency) -> bool override { return initialize(); }
+  auto setFrequency(u32 frequency) -> bool override { return initialize(); }
 
-  auto output(const double samples[]) -> void override {
-    uint32_t sample = 0;
-    sample |= (uint16_t)sclamp<16>(samples[0] * 32767.0) <<  0;
-    sample |= (uint16_t)sclamp<16>(samples[1] * 32767.0) << 16;
+  auto output(const f64 samples[]) -> void override {
+    u32 sample = 0;
+    sample |= (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
+    sample |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
     ao_play(_interface, (char*)&sample, 4);
   }
 
@@ -37,7 +37,7 @@ private:
 
     ao_initialize();
 
-    int driverID = ao_default_driver_id();
+    s32 driverID = ao_default_driver_id();
     if(driverID < 0) return false;
 
     ao_sample_format format;

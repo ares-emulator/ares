@@ -93,7 +93,9 @@ struct TraceLogger : VerticalLayout {
   HorizontalLayout controlLayout{this, Size{~0, 0}};
     Button selectAllButton{&controlLayout, Size{80, 0}};
     Button unselectAllButton{&controlLayout, Size{80, 0}};
-    CheckLabel traceToTerminal{&controlLayout, Size{~0, 0}};
+    CheckLabel traceToTerminal{&controlLayout, Size{0, 0}};
+    CheckLabel traceToFile{&controlLayout, Size{0, 0}};
+    CheckLabel traceMask{&controlLayout, Size{0, 0}};
 };
 
 struct ToolsWindow : Window {

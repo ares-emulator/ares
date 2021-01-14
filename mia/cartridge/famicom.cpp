@@ -1,15 +1,15 @@
 struct Famicom : Cartridge {
   auto name() -> string override { return "Famicom"; }
   auto extensions() -> vector<string> override { return {"nes", "unif"}; }
-  auto export(string location) -> vector<uint8_t> override;
-  auto heuristics(vector<uint8_t>& data, string location) -> string override;
-  auto heuristicsFDS(vector<uint8_t>& data, string location) -> string;
-  auto heuristicsINES(vector<uint8_t>& data, string location) -> string;
-  auto heuristicsUNIF(vector<uint8_t>& data, string location) -> string;
+  auto export(string location) -> vector<u8> override;
+  auto heuristics(vector<u8>& data, string location) -> string override;
+  auto heuristicsFDS(vector<u8>& data, string location) -> string;
+  auto heuristicsINES(vector<u8>& data, string location) -> string;
+  auto heuristicsUNIF(vector<u8>& data, string location) -> string;
 };
 
-auto Famicom::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto Famicom::export(string location) -> vector<u8> {
+  vector<u8> data;
   append(data, {location, "ines.rom"});
   append(data, {location, "unif.rom"});
   append(data, {location, "program.rom"});
@@ -17,7 +17,7 @@ auto Famicom::export(string location) -> vector<uint8_t> {
   return data;
 }
 
-auto Famicom::heuristics(vector<uint8_t>& data, string location) -> string {
+auto Famicom::heuristics(vector<u8>& data, string location) -> string {
   if(data.size() < 256) return {};
 
   string digest = Hash::SHA256(data).digest();
@@ -41,7 +41,7 @@ auto Famicom::heuristics(vector<uint8_t>& data, string location) -> string {
 }
 
 //Famicom Disk System (BIOS)
-auto Famicom::heuristicsFDS(vector<uint8_t>& data, string location) -> string {
+auto Famicom::heuristicsFDS(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:  ", Media::name(location), "\n"};
@@ -65,21 +65,39 @@ auto Famicom::heuristicsFDS(vector<uint8_t>& data, string location) -> string {
 }
 
 //iNES
-auto Famicom::heuristicsINES(vector<uint8_t>& data, string location) -> string {
-  uint mapper = ((data[7] >> 4) << 4) | (data[6] >> 4);
-  uint mirror = ((data[6] & 0x08) >> 2) | (data[6] & 0x01);
-  uint prgrom = data[4] * 0x4000;
-  uint chrrom = data[5] * 0x2000;
-  uint prgram = 0u;
-  uint chrram = chrrom == 0u ? 8192u : 0u;
-  uint eeprom = 0u;
+auto Famicom::heuristicsINES(vector<u8>& data, string location) -> string {
+  u32 mapper = ((data[7] >> 4) << 4) | (data[6] >> 4);
+  u32 mirror = ((data[6] & 0x08) >> 2) | (data[6] & 0x01);
+  u32 prgrom = data[4] * 0x4000;
+  u32 chrrom = data[5] * 0x2000;
+  u32 prgram = 0u;
+  u32 chrram = chrrom == 0u ? 8192u : 0u;
+  u32 eeprom = 0u;
+  auto digest = Hash::SHA256({data.data() + 16, data.size() - 16}).digest();
 
   string s;
   s += "game\n";
-  s +={"  name:  ", Media::name(location), "\n"};
-  s +={"  label: ", Media::name(location), "\n"};
+  s +={"  sha256: ", digest, "\n"};
+  s +={"  name:   ", Media::name(location), "\n"};
+  s +={"  label:  ", Media::name(location), "\n"};
+
+  //Family BASIC (Japan)
+  if(digest == "c8c0b6c21bdda7503bab7592aea0f945a0259c18504bb241aafb1eabe65846f3") {
+    prgram = 8192;
+  }
+
+  //Gauntlet (USA)
+  if(digest == "fd2a8520314fb183e15fd62f48df97f92eb9c81140da4e6ab9ff0386e4797071") {
+    mapper = 206;
+  }
+
+  //Gauntlet (USA) [Unlicensed]
+  if(digest == "67b8a39744807dd740bdebcfe3d33bdac11a4d47b4807c0ffd35e322f8d670c2") {
+    mapper = 206;
+  }
 
   switch(mapper) {
+
   default:
     s += "  board:  HVC-NROM-256\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
@@ -140,6 +158,11 @@ auto Famicom::heuristicsINES(vector<uint8_t>& data, string location) -> string {
     eeprom = 128;
     break;
 
+  case  18:
+    s += "  board:  JALECO-JF\n";
+    s += "    chip type=SS88006\n";
+    break;
+
   case  21:
   case  23:
   case  25:
@@ -180,6 +203,19 @@ auto Famicom::heuristicsINES(vector<uint8_t>& data, string location) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
+  case  67:
+    s += "  board:  SUNSOFT-3\n";
+    break;
+
+  case  68:
+    s += "  board:  SUNSOFT-4\n";
+    s += "    memory\n";
+    s += "      type: ROM\n";
+    s += "      size: 0x4000\n";
+    s += "      content: Option\n";
+    prgram = 8192;
+    break;
+
   case  69:
     s += "  board:  SUNSOFT-5B\n";
     s += "    chip type=5B\n";
@@ -204,11 +240,35 @@ auto Famicom::heuristicsINES(vector<uint8_t>& data, string location) -> string {
     prgram = 8192;
     break;
 
+  case  89:
+    s += "  board:  SUNSOFT-2\n";
+    break;
+
+  case  93:
+    s += "  board:  SUNSOFT-2\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
+  case  97:
+    s += "  board:  IREM-TAM-S1\n";
+    break;
+
   case 159:
     s += "  board:  BANDAI-FCG\n";
     s += "    chip type=LZ93D50\n";
     eeprom = 128;
     break;
+
+  case 184:
+    s += "  board:  SUNSOFT-1\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
+  case 206:
+    s += "  board: HVC-DRROM\n";
+    chrram = 2048;
+    break;
+
   }
 
   s += "    memory\n";
@@ -255,21 +315,21 @@ auto Famicom::heuristicsINES(vector<uint8_t>& data, string location) -> string {
   return s;
 }
 
-auto Famicom::heuristicsUNIF(vector<uint8_t>& data, string location) -> string {
+auto Famicom::heuristicsUNIF(vector<u8>& data, string location) -> string {
   string board;
   string region = "NTSC";  //fallback
   bool battery = false;
   string mirroring;
-  vector<uint8_t> programROMs[8];
-  vector<uint8_t> characterROMs[8];
+  vector<u8> programROMs[8];
+  vector<u8> characterROMs[8];
 
-  uint offset = 32;
+  u32 offset = 32;
   while(offset + 8 < data.size()) {
     string type;
     type.resize(4);
     memory::copy(type.get(), &data[offset + 0], 4);
 
-    uint32_t size = 0;
+    u32 size = 0;
     size |= data[offset + 4] <<  0;
     size |= data[offset + 5] <<  8;
     size |= data[offset + 6] << 16;
@@ -285,20 +345,20 @@ auto Famicom::heuristicsUNIF(vector<uint8_t>& data, string location) -> string {
     }
 
     if(type == "TVCI" && size > 0) {
-      uint8_t byte = data[offset + 8];
+      u8 byte = data[offset + 8];
       if(byte == 0x00) region = "NTSC";
       if(byte == 0x01) region = "PAL";
       if(byte == 0x02) region = "NTSC, PAL";
     }
 
     if(type == "BATR" && size > 0) {
-      uint8_t byte = data[offset + 8];
+      u8 byte = data[offset + 8];
       if(byte == 0x00) battery = false;
       if(byte == 0x01) battery = true;
     }
 
     if(type == "MIRR" && size > 0) {
-      uint8_t byte = data[offset + 8];
+      u8 byte = data[offset + 8];
       if(byte == 0x00) mirroring = "A11";  //horizontal
       if(byte == 0x01) mirroring = "A10";  //vertical
       if(byte == 0x02) mirroring = "GND";  //screen A
@@ -308,14 +368,14 @@ auto Famicom::heuristicsUNIF(vector<uint8_t>& data, string location) -> string {
     }
 
     if(type.beginsWith("PRG")) {
-      uint8_t id = data[offset + 3] - '0';
+      u8 id = data[offset + 3] - '0';
       if(id >= 8) continue;  //invalid ID
       programROMs[id].resize(size);
       memory::copy(programROMs[id].data(), &data[offset + 8], size);
     }
 
     if(type.beginsWith("CHR")) {
-      uint8_t id = data[offset + 3] - '0';
+      u8 id = data[offset + 3] - '0';
       if(id >= 8) continue;  //invalid ID
       characterROMs[id].resize(size);
       memory::copy(characterROMs[id].data(), &data[offset + 8], size);
@@ -324,13 +384,13 @@ auto Famicom::heuristicsUNIF(vector<uint8_t>& data, string location) -> string {
     offset += 8 + size;
   }
 
-  vector<uint8_t> programROM;
-  vector<uint8_t> characterROM;
-  for(uint id : range(8)) programROM.append(programROMs[id]);
-  for(uint id : range(8)) characterROM.append(characterROMs[id]);
+  vector<u8> programROM;
+  vector<u8> characterROM;
+  for(u32 id : range(8)) programROM.append(programROMs[id]);
+  for(u32 id : range(8)) characterROM.append(characterROMs[id]);
 
-  uint programRAM = 0;
-  uint characterRAM = 0;
+  u32 programRAM = 0;
+  u32 characterRAM = 0;
 
   if(board == "KONAMI-QTAI") {
     board = "KONAMI-VRC-5";

@@ -1,9 +1,9 @@
 struct PPU : Thread, IO {
-  Node::Component node;
-  Node::Screen screen;
-  Node::Boolean colorEmulation;
-  Node::Boolean interframeBlending;
-  Node::String rotation;
+  Node::Object node;
+  Node::Video::Screen screen;
+  Node::Setting::Boolean colorEmulation;
+  Node::Setting::Boolean interframeBlending;
+  Node::Setting::String rotation;
   Memory::Writable<uint8> vram;  //96KB
   Memory::Writable<uint16> pram;
 
@@ -12,8 +12,8 @@ struct PPU : Thread, IO {
     auto load(Node::Object) -> void;
 
     struct Memory {
-      Node::Memory vram;
-      Node::Memory pram;
+      Node::Debugger::Memory vram;
+      Node::Debugger::Memory pram;
     } memory;
   } debugger;
 
@@ -51,8 +51,6 @@ struct PPU : Thread, IO {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
-
-  uint32 output[240 * 160];
 
 private:
   //note: I/O register order is {BG0-BG3, OBJ, SFX}

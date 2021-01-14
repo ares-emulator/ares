@@ -1,26 +1,34 @@
-#include <sfc/interface/interface.hpp>
+namespace ares::SuperFamicom {
+  auto load(Node::System& node, string name) -> bool;
+}
 
 struct SuperFamicom : Emulator {
   SuperFamicom();
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 SuperFamicom::SuperFamicom() {
-  interface = new ares::SuperFamicom::SuperFamicomInterface;
   medium = mia::medium("Super Famicom");
   manufacturer = "Nintendo";
   name = "Super Famicom";
 }
 
 auto SuperFamicom::load() -> bool {
+  if(!ares::SuperFamicom::load(root, "Super Famicom")) return false;
+
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
+    port->allocate("Gamepad");
+    port->connect();
+  }
+
+  if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
     port->allocate("Gamepad");
     port->connect();
   }
@@ -195,26 +203,39 @@ auto SuperFamicom::open(ares::Node::Object node, string name, vfs::file::mode mo
   return {};
 }
 
-auto SuperFamicom::input(ares::Node::Input node) -> void {
-  auto name = node->name();
-  maybe<InputMapping&> mapping;
-  if(name == "Up"    ) mapping = virtualPad.up;
-  if(name == "Down"  ) mapping = virtualPad.down;
-  if(name == "Left"  ) mapping = virtualPad.left;
-  if(name == "Right" ) mapping = virtualPad.right;
-  if(name == "B"     ) mapping = virtualPad.a;
-  if(name == "A"     ) mapping = virtualPad.b;
-  if(name == "Y"     ) mapping = virtualPad.x;
-  if(name == "X"     ) mapping = virtualPad.y;
-  if(name == "L"     ) mapping = virtualPad.l;
-  if(name == "R"     ) mapping = virtualPad.r;
-  if(name == "Select") mapping = virtualPad.select;
-  if(name == "Start" ) mapping = virtualPad.start;
+auto SuperFamicom::input(ares::Node::Input::Input node) -> void {
+  auto parent = ares::Node::parent(node);
+  if(!parent) return;
 
-  if(mapping) {
-    auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Button>()) {
-      button->setValue(value);
+  if(parent->name() == "Gamepad") {
+    auto port = ares::Node::parent(parent);
+    if(!port) return;
+
+    maybe<u32> index;
+    if(port->name() == "Controller Port 1") index = 0;
+    if(port->name() == "Controller Port 2") index = 1;
+    if(!index) return;
+
+    auto name = node->name();
+    maybe<InputMapping&> mapping;
+    if(name == "Up"    ) mapping = virtualPads[*index].up;
+    if(name == "Down"  ) mapping = virtualPads[*index].down;
+    if(name == "Left"  ) mapping = virtualPads[*index].left;
+    if(name == "Right" ) mapping = virtualPads[*index].right;
+    if(name == "B"     ) mapping = virtualPads[*index].a;
+    if(name == "A"     ) mapping = virtualPads[*index].b;
+    if(name == "Y"     ) mapping = virtualPads[*index].x;
+    if(name == "X"     ) mapping = virtualPads[*index].y;
+    if(name == "L"     ) mapping = virtualPads[*index].l1;
+    if(name == "R"     ) mapping = virtualPads[*index].r1;
+    if(name == "Select") mapping = virtualPads[*index].select;
+    if(name == "Start" ) mapping = virtualPads[*index].start;
+
+    if(mapping) {
+      auto value = mapping->value();
+      if(auto button = node->cast<ares::Node::Input::Button>()) {
+        button->setValue(value);
+      }
     }
   }
 }

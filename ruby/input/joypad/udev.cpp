@@ -11,14 +11,14 @@ struct InputJoypadUdev {
   udev_list_entry* item = nullptr;
 
   struct JoypadInput {
-    int code = 0;
-    uint id = 0;
-    int16_t value = 0;
+    s32 code = 0;
+    u32 id = 0;
+    s16 value = 0;
     input_absinfo info;
 
     JoypadInput() {}
-    JoypadInput(int code) : code(code) {}
-    JoypadInput(int code, uint id) : code(code), id(id) {}
+    JoypadInput(s32 code) : code(code) {}
+    JoypadInput(s32 code, u32 id) : code(code), id(id) {}
     bool operator< (const JoypadInput& source) const { return code <  source.code; }
     bool operator==(const JoypadInput& source) const { return code == source.code; }
   };
@@ -26,16 +26,16 @@ struct InputJoypadUdev {
   struct Joypad {
     shared_pointer<HID::Joypad> hid{new HID::Joypad};
 
-    int fd = -1;
+    s32 fd = -1;
     dev_t device = 0;
     string deviceName;
     string deviceNode;
 
-    uint8_t evbit[(EV_MAX + 7) / 8] = {0};
-    uint8_t keybit[(KEY_MAX + 7) / 8] = {0};
-    uint8_t absbit[(ABS_MAX + 7) / 8] = {0};
-    uint8_t ffbit[(FF_MAX + 7) / 8] = {0};
-    uint effects = 0;
+    u8 evbit[(EV_MAX + 7) / 8] = {0};
+    u8 keybit[(KEY_MAX + 7) / 8] = {0};
+    u8 absbit[(ABS_MAX + 7) / 8] = {0};
+    u8 ffbit[(FF_MAX + 7) / 8] = {0};
+    u32 effects = 0;
 
     string name;
     string manufacturer;
@@ -48,11 +48,11 @@ struct InputJoypadUdev {
     set<JoypadInput> hats;
     set<JoypadInput> buttons;
     bool rumble = false;
-    int effectID = -1;
+    s32 effectID = -1;
   };
   vector<Joypad> joypads;
 
-  auto assign(shared_pointer<HID::Joypad> hid, uint groupID, uint inputID, int16_t value) -> void {
+  auto assign(shared_pointer<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = hid->group(groupID);
     if(group.input(inputID).value() == value) return;
     input.doChange(hid, groupID, inputID, group.input(inputID).value(), value);
@@ -64,21 +64,21 @@ struct InputJoypadUdev {
 
     for(auto& jp : joypads) {
       input_event events[32];
-      int length = 0;
+      s32 length = 0;
       while((length = read(jp.fd, events, sizeof(events))) > 0) {
         length /= sizeof(input_event);
-        for(uint i : range(length)) {
-          int code = events[i].code;
-          int type = events[i].type;
-          int value = events[i].value;
+        for(u32 i : range(length)) {
+          s32 code = events[i].code;
+          s32 type = events[i].type;
+          s32 value = events[i].value;
 
           if(type == EV_ABS) {
             if(auto input = jp.axes.find({code})) {
-              int range = input().info.maximum - input().info.minimum;
+              s32 range = input().info.maximum - input().info.minimum;
               value = (value - input().info.minimum) * 65535ll / range - 32767;
               assign(jp.hid, HID::Joypad::GroupID::Axis, input().id, sclamp<16>(value));
             } else if(auto input = jp.hats.find({code})) {
-              int range = input().info.maximum - input().info.minimum;
+              s32 range = input().info.maximum - input().info.minimum;
               value = (value - input().info.minimum) * 65535ll / range - 32767;
               assign(jp.hid, HID::Joypad::GroupID::Hat, input().id, sclamp<16>(value));
             }
@@ -96,7 +96,7 @@ struct InputJoypadUdev {
     }
   }
 
-  auto rumble(uint64_t id, bool enable) -> bool {
+  auto rumble(u64 id, bool enable) -> bool {
     for(auto& jp : joypads) {
       if(jp.hid->id() != id) continue;
       if(!jp.hid->rumble()) continue;
@@ -199,9 +199,9 @@ private:
     jp.fd = open(deviceNode, O_RDWR | O_NONBLOCK);
     if(jp.fd < 0) return;
 
-    uint8_t evbit[(EV_MAX + 7) / 8] = {0};
-    uint8_t keybit[(KEY_MAX + 7) / 8] = {0};
-    uint8_t absbit[(ABS_MAX + 7) / 8] = {0};
+    u8 evbit[(EV_MAX + 7) / 8] = {0};
+    u8 keybit[(KEY_MAX + 7) / 8] = {0};
+    u8 absbit[(ABS_MAX + 7) / 8] = {0};
 
     ioctl(jp.fd, EVIOCGBIT(0, sizeof(jp.evbit)), jp.evbit);
     ioctl(jp.fd, EVIOCGBIT(EV_KEY, sizeof(jp.keybit)), jp.keybit);
@@ -228,10 +228,10 @@ private:
         }
       }
 
-      uint axes = 0;
-      uint hats = 0;
-      uint buttons = 0;
-      for(int i = 0; i < ABS_MISC; i++) {
+      u32 axes = 0;
+      u32 hats = 0;
+      u32 buttons = 0;
+      for(s32 i = 0; i < ABS_MISC; i++) {
         if(testBit(jp.absbit, i)) {
           if(i >= ABS_HAT0X && i <= ABS_HAT3Y) {
             if(auto hat = jp.hats.insert({i, hats++})) {
@@ -244,12 +244,12 @@ private:
           }
         }
       }
-      for(int i = BTN_JOYSTICK; i < KEY_MAX; i++) {
+      for(s32 i = BTN_JOYSTICK; i < KEY_MAX; i++) {
         if(testBit(jp.keybit, i)) {
           jp.buttons.insert({i, buttons++});
         }
       }
-      for(int i = BTN_MISC; i < BTN_JOYSTICK; i++) {
+      for(s32 i = BTN_MISC; i < BTN_JOYSTICK; i++) {
         if(testBit(jp.keybit, i)) {
           jp.buttons.insert({i, buttons++});
         }
@@ -268,14 +268,14 @@ private:
     jp.hid->setProductID(jp.productID.hex());
     jp.hid->setPathID(Hash::CRC32(jp.deviceName).value());
 
-    for(uint n : range(jp.axes.size())) jp.hid->axes().append(n);
-    for(uint n : range(jp.hats.size())) jp.hid->hats().append(n);
-    for(uint n : range(jp.buttons.size())) jp.hid->buttons().append(n);
+    for(u32 n : range(jp.axes.size())) jp.hid->axes().append(n);
+    for(u32 n : range(jp.hats.size())) jp.hid->hats().append(n);
+    for(u32 n : range(jp.buttons.size())) jp.hid->buttons().append(n);
     jp.hid->setRumble(jp.rumble);
   }
 
   auto removeJoypad(udev_device* device, const string& deviceNode) -> void {
-    for(uint n : range(joypads.size())) {
+    for(u32 n : range(joypads.size())) {
       if(joypads[n].deviceNode == deviceNode) {
         close(joypads[n].fd);
         joypads.remove(n);

@@ -1,12 +1,15 @@
 struct Sunsoft5B : Interface {
-  Memory::Readable<uint8> programROM;
-  Memory::Writable<uint8> programRAM;
-  Memory::Readable<uint8> characterROM;
-  Memory::Writable<uint8> characterRAM;
-  YM2149 ym2149;
-  Node::Stream stream;
+  static auto create(string id) -> Interface* {
+    if(id == "SUNSOFT-5B") return new Sunsoft5B;
+    return nullptr;
+  }
 
-  using Interface::Interface;
+  Memory::Readable<n8> programROM;
+  Memory::Writable<n8> programRAM;
+  Memory::Readable<n8> characterROM;
+  Memory::Writable<n8> characterRAM;
+  YM2149 ym2149;
+  Node::Audio::Stream stream;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -15,9 +18,9 @@ struct Sunsoft5B : Interface {
     Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
     Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
 
-    stream = cartridge.node->append<Node::Stream>("YM2149");
+    stream = cartridge.node->append<Node::Audio::Stream>("YM2149");
     stream->setChannels(1);
-    stream->setFrequency(uint(system.frequency() + 0.5) / cartridge.rate() / 16);
+    stream->setFrequency(u32(system.frequency() + 0.5) / cartridge.rate() / 16);
   }
 
   auto save(Markup::Node document) -> void override {
@@ -39,16 +42,16 @@ struct Sunsoft5B : Interface {
       output += volume[channels[0]];
       output += volume[channels[1]];
       output += volume[channels[2]];
-      stream->sample(output);
+      stream->frame(output);
     }
 
     tick();
   }
 
-  auto readPRG(uint address) -> uint8 {
-    if(address < 0x6000) return cpu.mdr();
+  auto readPRG(n32 address, n8 data) -> n8 override {
+    if(address < 0x6000) return data;
 
-    uint8 bank;
+    n8 bank;
     if((address & 0xe000) == 0x6000) bank = programBank[0];
     if((address & 0xe000) == 0x8000) bank = programBank[1];
     if((address & 0xe000) == 0xa000) bank = programBank[2];
@@ -60,17 +63,17 @@ struct Sunsoft5B : Interface {
     bank &= 0x3f;
 
     if(ramSelect) {
-      if(!ramEnable) return cpu.mdr();
-      return programRAM.read((uint13)address);
+      if(!ramEnable) return data;
+      return programRAM.read((n13)address);
     }
 
-    address = bank << 13 | (uint13)address;
+    address = bank << 13 | (n13)address;
     return programROM.read(address);
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if((address & 0xe000) == 0x6000) {
-      programRAM.write((uint13)address, data);
+      programRAM.write((n13)address, data);
     }
 
     if(address == 0x8000) {
@@ -111,12 +114,12 @@ struct Sunsoft5B : Interface {
     }
   }
 
-  auto addressCHR(uint address) -> uint {
-    uint3 bank = address >> 10 & 7;
-    return characterBank[bank] << 10 | (uint10)address;
+  auto addressCHR(n32 address) -> n32 {
+    n3 bank = address >> 10 & 7;
+    return characterBank[bank] << 10 | (n10)address;
   }
 
-  auto addressCIRAM(uint address) -> uint {
+  auto addressCIRAM(n32 address) -> n32 {
     switch(mirror) {
     case 0: return address >> 0 & 0x0400 | address & 0x03ff;  //vertical
     case 1: return address >> 1 & 0x0400 | address & 0x03ff;  //horizontal
@@ -126,58 +129,48 @@ struct Sunsoft5B : Interface {
     unreachable;
   }
 
-  auto readCHR(uint address) -> uint8 {
+  auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
     if(characterROM) return characterROM.read(addressCHR(address));
     if(characterRAM) return characterRAM.read(addressCHR(address));
-    return 0x00;
+    return data;
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void override {
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
   auto power() -> void {
     ym2149.power();
-
-    port = 0;
-    for(auto& bank : programBank) bank = 0;
-    for(auto& bank : characterBank) bank = 0;
-    mirror = 0;
-    irqEnable = 0;
-    irqCounterEnable = 0;
-    irqCounter = 0;
-
-    divider = 0;
-    for(uint level : range(32)) {
+    for(u32 level : range(32)) {
       volume[level] = 1.0 / pow(2, 1.0 / 2 * (31 - level));
     }
   }
 
   auto serialize(serializer& s) -> void {
-    programRAM.serialize(s);
-    characterRAM.serialize(s);
-    ym2149.serialize(s);
-    s.integer(port);
-    s.array(programBank);
-    s.array(characterBank);
-    s.integer(mirror);
-    s.integer(irqEnable);
-    s.integer(irqCounterEnable);
-    s.integer(irqCounter);
-    s.integer(divider);
+    s(programRAM);
+    s(characterRAM);
+    s(ym2149);
+    s(port);
+    s(programBank);
+    s(characterBank);
+    s(mirror);
+    s(irqEnable);
+    s(irqCounterEnable);
+    s(irqCounter);
+    s(divider);
   }
 
-   uint4 port;
-   uint8 programBank[4];
-   uint8 characterBank[8];
-   uint2 mirror;
-   uint1 irqEnable;
-   uint1 irqCounterEnable;
-  uint16 irqCounter;
-   uint4 divider;
+  n04 port;
+  n08 programBank[4];
+  n08 characterBank[8];
+  n02 mirror;
+  n01 irqEnable;
+  n01 irqCounterEnable;
+  n16 irqCounter;
+  n04 divider;
 
 //unserialized:
-  double volume[32];
+  f64 volume[32];
 };

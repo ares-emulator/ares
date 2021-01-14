@@ -19,7 +19,7 @@ struct AudioWaveOut : AudioDriver {
 
   auto hasDevices() -> vector<string> override {
     vector<string> devices{"Default"};
-    for(uint index : range(waveOutGetNumDevs())) {
+    for(u32 index : range(waveOutGetNumDevs())) {
       WAVEOUTCAPS caps{};
       if(waveOutGetDevCaps(index, &caps, sizeof(WAVEOUTCAPS)) == MMSYSERR_NOERROR) {
         devices.append((const char*)utf8_t(caps.szPname));
@@ -30,12 +30,12 @@ struct AudioWaveOut : AudioDriver {
 
   auto hasBlocking() -> bool override { return true; }
   auto hasDynamic() -> bool override { return true; }
-  auto hasFrequencies() -> vector<uint> override { return {44100}; }
-  auto hasLatencies() -> vector<uint> override { return {512, 384, 320, 256, 192, 160, 128, 96, 80, 64, 48, 40, 32}; }
+  auto hasFrequencies() -> vector<u32> override { return {44100}; }
+  auto hasLatencies() -> vector<u32> override { return {512, 384, 320, 256, 192, 160, 128, 96, 80, 64, 48, 40, 32}; }
 
   auto setBlocking(bool blocking) -> bool override { return true; }
   auto setDynamic(bool dynamic) -> bool override { return initialize(); }
-  auto setLatency(uint latency) -> bool override { return initialize(); }
+  auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
     for(auto& header : headers) {
@@ -43,15 +43,15 @@ struct AudioWaveOut : AudioDriver {
     }
   }
 
-  auto level() -> double override {
-    return (double)((blockQueue * frameCount) + frameIndex) / (blockCount * frameCount);
+  auto level() -> f64 override {
+    return (f64)((blockQueue * frameCount) + frameIndex) / (blockCount * frameCount);
   }
 
-  auto output(const double samples[]) -> void override {
-    uint16_t lsample = sclamp<16>(samples[0] * 32767.0);
-    uint16_t rsample = sclamp<16>(samples[1] * 32767.0);
+  auto output(const f64 samples[]) -> void override {
+    u16 lsample = sclamp<16>(samples[0] * 32767.0);
+    u16 rsample = sclamp<16>(samples[1] * 32767.0);
 
-    auto block = (uint32_t*)headers[blockIndex].lpData;
+    auto block = (u32*)headers[blockIndex].lpData;
     block[frameIndex] = lsample << 0 | rsample << 16;
 
     if(++frameIndex >= frameCount) {
@@ -86,7 +86,7 @@ private:
     format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
     format.cbSize = 0;  //not sizeof(WAVEFORMAT); size of extra information after WAVEFORMATEX
     //-1 = default; 0+ = specific device; subtract -1 as hasDevices() includes "Default" entry
-    waveOutOpen(&handle, (int)*deviceIndex - 1, &format, (DWORD_PTR)waveOutCallback, (DWORD_PTR)this, CALLBACK_FUNCTION);
+    waveOutOpen(&handle, (s32)*deviceIndex - 1, &format, (DWORD_PTR)waveOutCallback, (DWORD_PTR)this, CALLBACK_FUNCTION);
 
     frameCount = self.latency;
     blockCount = 32;
@@ -122,10 +122,10 @@ private:
 
   HWAVEOUT handle = nullptr;
   vector<WAVEHDR> headers;
-  uint frameCount = 0;
-  uint blockCount = 0;
-  uint frameIndex = 0;
-  uint blockIndex = 0;
+  u32 frameCount = 0;
+  u32 blockCount = 0;
+  u32 frameIndex = 0;
+  u32 blockIndex = 0;
 
 public:
   LONG blockQueue = 0;

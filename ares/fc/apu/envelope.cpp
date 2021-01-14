@@ -1,4 +1,4 @@
-auto APU::Envelope::volume() const -> uint {
+auto APU::Envelope::volume() const -> u32 {
   return useSpeedAsVolume ? speed : decayVolume;
 }
 
@@ -14,13 +14,4 @@ auto APU::Envelope::clock() -> void {
     decayCounter = speed + 1;
     if(decayVolume || loopMode) decayVolume--;
   }
-}
-
-auto APU::Envelope::power() -> void {
-  speed = 0;
-  useSpeedAsVolume = 0;
-  loopMode = 0;
-  reloadDecay = 0;
-  decayCounter = 0;
-  decayVolume = 0;
 }

@@ -1,7 +1,7 @@
 //Disk Drive
 
 struct DD : Memory::IO<DD> {
-  Node::Component node;
+  Node::Object node;
   Memory::Readable iplrom;
   Memory::Writable c2s;
   Memory::Writable ds;

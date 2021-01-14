@@ -8,11 +8,11 @@ auto APU::Sweep::checkPeriod() -> bool {
   return true;
 }
 
-auto APU::Sweep::clock(uint channel) -> void {
+auto APU::Sweep::clock(u32 channel) -> void {
   if(--counter == 0) {
     counter = period + 1;
     if(enable && shift && pulsePeriod > 8) {
-      int delta = pulsePeriod >> shift;
+      s32 delta = pulsePeriod >> shift;
 
       if(decrement) {
         pulsePeriod -= delta;
@@ -27,14 +27,4 @@ auto APU::Sweep::clock(uint channel) -> void {
     reload = false;
     counter = period + 1;
   }
-}
-
-auto APU::Sweep::power() -> void {
-  shift = 0;
-  decrement = 0;
-  period = 0;
-  counter = 1;
-  enable = 0;
-  reload = 0;
-  pulsePeriod = 0;
 }

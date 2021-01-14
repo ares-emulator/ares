@@ -69,20 +69,20 @@ auto APU::Noise::power(bool initializeLength) -> void {
 }
 
 auto APU::Noise::serialize(serializer& s) -> void {
-  s.integer(enable);
+  s(enable);
 
-  s.integer(envelopeVolume);
-  s.integer(envelopeDirection);
-  s.integer(envelopeFrequency);
-  s.integer(frequency);
-  s.integer(narrow);
-  s.integer(divisor);
-  s.integer(counter);
+  s(envelopeVolume);
+  s(envelopeDirection);
+  s(envelopeFrequency);
+  s(frequency);
+  s(narrow);
+  s(divisor);
+  s(counter);
 
-  s.integer(output);
-  s.integer(length);
-  s.integer(envelopePeriod);
-  s.integer(volume);
-  s.integer(period);
-  s.integer(lfsr);
+  s(output);
+  s(length);
+  s(envelopePeriod);
+  s(volume);
+  s(period);
+  s(lfsr);
 }

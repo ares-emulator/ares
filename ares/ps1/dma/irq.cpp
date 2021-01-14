@@ -1,13 +1,15 @@
 auto DMA::IRQ::poll() -> void {
+  bool previous = flag;
   flag = force;
   if(enable) {
-    flag |= self.channel[0].irq.flag & self.channel[0].irq.enable;
-    flag |= self.channel[1].irq.flag & self.channel[1].irq.enable;
-    flag |= self.channel[2].irq.flag & self.channel[2].irq.enable;
-    flag |= self.channel[3].irq.flag & self.channel[3].irq.enable;
-    flag |= self.channel[4].irq.flag & self.channel[4].irq.enable;
-    flag |= self.channel[5].irq.flag & self.channel[5].irq.enable;
-    flag |= self.channel[6].irq.flag & self.channel[6].irq.enable;
+    flag |= self.channels[0].irq.flag & self.channels[0].irq.enable;
+    flag |= self.channels[1].irq.flag & self.channels[1].irq.enable;
+    flag |= self.channels[2].irq.flag & self.channels[2].irq.enable;
+    flag |= self.channels[3].irq.flag & self.channels[3].irq.enable;
+    flag |= self.channels[4].irq.flag & self.channels[4].irq.enable;
+    flag |= self.channels[5].irq.flag & self.channels[5].irq.enable;
+    flag |= self.channels[6].irq.flag & self.channels[6].irq.enable;
   }
-  interrupt.drive(Interrupt::DMA, flag);
+  if(!previous && flag) interrupt.raise(Interrupt::DMA);
+  if(!flag) interrupt.lower(Interrupt::DMA);
 }

@@ -73,12 +73,12 @@ inline auto Cubic::write(double sample) -> void {
 }
 
 inline auto Cubic::serialize(serializer& s) -> void {
-  s.real(_inputFrequency);
-  s.real(_outputFrequency);
-  s.real(_ratio);
-  s.real(_fraction);
-  s.array(_history);
-  _samples.serialize(s);
+  s(_inputFrequency);
+  s(_outputFrequency);
+  s(_ratio);
+  s(_fraction);
+  s(_history);
+  s(_samples);
 }
 
 }

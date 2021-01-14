@@ -2,11 +2,11 @@ inline auto Scheduler::reset() -> void {
   _threads.reset();
 }
 
-inline auto Scheduler::threads() const -> uint {
+inline auto Scheduler::threads() const -> u32 {
   return _threads.size();
 }
 
-inline auto Scheduler::thread(uint uniqueID) const -> maybe<Thread&> {
+inline auto Scheduler::thread(u32 uniqueID) const -> maybe<Thread&> {
   for(auto& thread : _threads) {
     if(thread->_uniqueID == uniqueID) return *thread;
   }
@@ -16,8 +16,8 @@ inline auto Scheduler::thread(uint uniqueID) const -> maybe<Thread&> {
 //if threads A and B both have a clock value of 0, it is ambiguous which should run first.
 //to resolve this, a uniqueID is assigned to each thread when appended to the scheduler.
 //the first unused ID is selected, to avoid the uniqueID growing in an unbounded fashion.
-inline auto Scheduler::uniqueID() const -> uint {
-  uint uniqueID = 0;
+inline auto Scheduler::uniqueID() const -> u32 {
+  u32 uniqueID = 0;
   while(thread(uniqueID)) uniqueID++;
   return uniqueID;
 }

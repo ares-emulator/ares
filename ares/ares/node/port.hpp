@@ -1,5 +1,5 @@
 struct Port : Object {
-  DeclareClass(Port, "Port")
+  DeclareClass(Port, "port")
   using Object::Object;
 
   auto type() const -> string { return _type; }

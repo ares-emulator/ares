@@ -20,7 +20,7 @@ extern const unsigned char PAL[1984];
 }
 }
 namespace SuperFamicom {
-extern const unsigned char Boards[31960];
+extern const unsigned char Boards[31896];
 extern const unsigned char IPLROM[64];
 }
 namespace WonderSwan {

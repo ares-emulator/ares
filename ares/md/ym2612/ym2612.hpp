@@ -2,8 +2,8 @@
 //Author: Talarubi
 
 struct YM2612 : Thread {
-  Node::Component node;
-  Node::Stream stream;
+  Node::Object node;
+  Node::Audio::Stream stream;
 
   //ym2612.cpp
   auto load(Node::Object) -> void;

@@ -10,16 +10,16 @@ struct InputJoypadUHID {
 
   struct Joypad {
     shared_pointer<HID::Joypad> hid{new HID::Joypad};
-    int fd = -1;
+    s32 fd = -1;
     report_desc_t report;
-    int reportID = -1;
-    int reportSize = -1;
-    uint8_t* buffer = nullptr;
+    s32 reportID = -1;
+    s32 reportSize = -1;
+    u8* buffer = nullptr;
     bool writable = false;
   };
   vector<Joypad> joypads;
 
-  auto assign(Joypad& joypad, uint groupID, uint inputID, int16_t value) -> void {
+  auto assign(Joypad& joypad, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = joypad.hid->group(groupID);
     if(group.input(inputID).value() == value) return;
     input.doChange(joypad.hid, groupID, inputID, group.input(inputID).value(), value);
@@ -28,7 +28,7 @@ struct InputJoypadUHID {
 
   auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
     //hotplug support
-    uint64_t thisTimestamp = chrono::millisecond();
+    u64 thisTimestamp = chrono::millisecond();
     if(thisTimestamp - lastTimestamp >= 2000) {
       lastTimestamp = thisTimestamp;
       auto devices = directory::files("/dev/", "uhid*");
@@ -37,9 +37,9 @@ struct InputJoypadUHID {
 
     for(auto& joypad : joypads) {
       bool isXbox = joypad.hid->vendorID() == 0x045e && joypad.hid->productID() == 0x028e;
-      int16_t hat[2] = {0, 0};
-      uint axis = 0;
-      uint button = 0;
+      s16 hat[2] = {0, 0};
+      u32 axis = 0;
+      u32 button = 0;
       while(read(joypad.fd, joypad.buffer, joypad.reportSize) == joypad.reportSize) {
         auto parse = hid_start_parse(joypad.report, 1 << hid_input, joypad.reportID);
         hid_item_t item;
@@ -48,6 +48,7 @@ struct InputJoypadUHID {
           if(HID_PAGE(item.usage) == HUP_GENERIC_DESKTOP) {
             auto usage = HID_USAGE(item.usage);
             auto value = hid_get_data(joypad.buffer, &item);
+            if(value == -32768) value = -32767;
 
             //Xbox 360 hat support
             if(usage == 0x90 && value == 1) { hat[1] = -32767; continue; }  //HatUp
@@ -60,19 +61,23 @@ struct InputJoypadUHID {
               if(usage == HUG_Y ) assign(joypad, HID::Joypad::GroupID::Axis, 1, -value);  //LeftThumbY
               if(usage == HUG_RX) assign(joypad, HID::Joypad::GroupID::Axis, 2, +value);  //RightThumbX
               if(usage == HUG_RY) assign(joypad, HID::Joypad::GroupID::Axis, 3, -value);  //RightTHumbY
-              if(usage == HUG_Z ) assign(joypad, HID::Joypad::GroupID::Trigger, 0, value << 7);
-              if(usage == HUG_RZ) assign(joypad, HID::Joypad::GroupID::Trigger, 1, value << 7);
+              if(usage == HUG_Z ) assign(joypad, HID::Joypad::GroupID::Trigger, 0, value << 7 | value >> 1);
+              if(usage == HUG_RZ) assign(joypad, HID::Joypad::GroupID::Trigger, 1, value << 7 | value >> 1);
             } else if(usage == HUG_X  || usage == HUG_Y  || usage == HUG_Z
                    || usage == HUG_RX || usage == HUG_RY || usage == HUG_RZ
             ) {
-              assign(joypad, HID::Joypad::GroupID::Axis, axis++, value);
+              if(axis < joypad.hid->axes().size()) {
+                assign(joypad, HID::Joypad::GroupID::Axis, axis++, value);
+              }
             } else if(usage == HUG_HAT_SWITCH) {
               //todo
             }
           }
           if(HID_PAGE(item.usage) == HUP_BUTTON) {
             auto value = hid_get_data(joypad.buffer, &item);
-            assign(joypad, HID::Joypad::GroupID::Button, button++, value);
+            if(button < joypad.hid->buttons().size()) {
+              assign(joypad, HID::Joypad::GroupID::Button, button++, value);
+            }
           }
         }
         if(isXbox) {
@@ -88,7 +93,7 @@ struct InputJoypadUHID {
   auto initialize() -> bool {
     terminate();
 
-    uint pathID = 0;
+    u32 pathID = 0;
     auto devices = directory::files("/dev/", "uhid*");
     enumeratedDevices = devices.merge(";");
     for(auto device : devices) {
@@ -104,16 +109,25 @@ struct InputJoypadUHID {
       } else {
         continue;
       }
+
+      //device files use global state: if two processes open the same device file, the driver can crash the process.
+      //this can easily happen by opening two instances of a program utilizing this driver, for instance.
+      //to prevent this, request an exclusive access lock on the file, released via terminate() or on error below.
+      if(flock(joypad.fd, LOCK_EX) != 0) {  //0 = success; -1 = error
+        close(joypad.fd);
+        continue;
+      }
+
       joypad.report = hid_get_report_desc(joypad.fd);
       joypad.reportID = hid_get_report_id(joypad.fd);
       joypad.reportSize = hid_report_size(joypad.report, hid_input, joypad.reportID);
-      joypad.buffer = new uint8_t[joypad.reportSize];
+      joypad.buffer = new u8[joypad.reportSize];
       auto parse = hid_start_parse(joypad.report, 1 << hid_input, joypad.reportID);
       hid_item_t item;
       bool isJoypad = false;
-      uint axes = 0;
-      uint hats = 0;
-      uint buttons = 0;
+      u32 axes = 0;
+      u32 hats = 0;
+      u32 buttons = 0;
       bool xbox360[4] = {0, 0, 0, 0};
       while(hid_get_item(parse, &item)) {
         if(item.kind == hid_collection && HID_PAGE(item.usage) == HUP_GENERIC_DESKTOP) {
@@ -135,6 +149,7 @@ struct InputJoypadUHID {
       hid_end_parse(parse);
 
       if(!isJoypad) {
+        flock(joypad.fd, LOCK_UN);
         close(joypad.fd);
         continue;
       }
@@ -166,9 +181,9 @@ struct InputJoypadUHID {
         joypad.hid->setVendorID(HID::Joypad::GenericVendorID);
         joypad.hid->setProductID(HID::Joypad::GenericProductID);
         joypad.hid->setPathID(pathID++);
-        for(uint n : range(axes)) joypad.hid->axes().append(n);
-        for(uint n : range(axes)) joypad.hid->hats().append(n);
-        for(uint n : range(axes)) joypad.hid->buttons().append(n);
+        for(u32 n : range(axes)) joypad.hid->axes().append(n);
+        for(u32 n : range(axes)) joypad.hid->hats().append(n);
+        for(u32 n : range(axes)) joypad.hid->buttons().append(n);
       }
 
       joypads.append(joypad);
@@ -181,12 +196,13 @@ struct InputJoypadUHID {
   auto terminate() -> void {
     for(auto& joypad : joypads) {
       delete[] joypad.buffer;
+      flock(joypad.fd, LOCK_UN);
       close(joypad.fd);
     }
     joypads.reset();
   }
 
 private:
-  uint64_t lastTimestamp = 0;
+  u64 lastTimestamp = 0;
   string enumeratedDevices;
 };

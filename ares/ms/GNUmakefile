@@ -1,11 +1,15 @@
-ares.components += z80 sn76489 ym2413
+ares.components += z80
+ares.components += sn76489
+ares.components += ym2413
 
-ares.objects += ares-ms-interface
-ares.objects += ares-ms-cpu ares-ms-vdp ares-ms-psg ares-ms-opll
-ares.objects += ares-ms-system ares-ms-cartridge
+ares.objects += ares-ms-cpu
+ares.objects += ares-ms-vdp
+ares.objects += ares-ms-psg
+ares.objects += ares-ms-opll
+ares.objects += ares-ms-system
+ares.objects += ares-ms-cartridge
 ares.objects += ares-ms-controller
 
-$(object.path)/ares-ms-interface.o:  $(ares.path)/ms/interface/interface.cpp
 $(object.path)/ares-ms-cpu.o:        $(ares.path)/ms/cpu/cpu.cpp
 $(object.path)/ares-ms-vdp.o:        $(ares.path)/ms/vdp/vdp.cpp
 $(object.path)/ares-ms-psg.o:        $(ares.path)/ms/psg/psg.cpp

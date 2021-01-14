@@ -17,39 +17,34 @@ PPU ppu;
 #include "../ppu/counter/serialization.cpp"
 
 auto PPU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("PPU");
+  node = parent->append<Node::Object>("PPU");
 
-  screen = node->append<Node::Screen>("Screen");
+  screen = node->append<Node::Video::Screen>("Screen", 512, 480);
   screen->colors(1 << 19, {&PPU::color, this});
   screen->setSize(512, 480);
   screen->setScale(0.5, 0.5);
   screen->setAspect(8.0, 7.0);
 
-  overscanEnable = screen->append<Node::Boolean>("Overscan", true, [&](auto value) {
+  overscanEnable = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
     if(value == 0) screen->setSize(512, 448);
     if(value == 1) screen->setSize(512, 480);
   });
   overscanEnable->setDynamic(true);
 
-  colorEmulation = screen->append<Node::Boolean>("Color Emulation", true, [&](auto value) {
+  colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
     screen->resetPalette();
   });
   colorEmulation->setDynamic(true);
 
   debugger.load(node);
-
-  output = new uint32[512 * 512];
-  output += 16 * 512;  //overscan offset
 }
 
 auto PPU::unload() -> void {
+  screen->quit();
   node = {};
   screen = {};
   colorEmulation = {};
   debugger = {};
-
-  output -= 16 * 512;
-  delete[] output;
 }
 
 auto PPU::step(uint clocks) -> void {
@@ -92,6 +87,12 @@ auto PPU::main() -> void {
   }
 
   if(vcounter() == 240) {
+    normalize();
+    if(state.interlace == 0) screen->setProgressive(1);
+    if(state.interlace == 1) screen->setInterlace(field());
+    if(overscanEnable->value() == 0) screen->setViewport(0, 18, 256 << width512, 448);
+    if(overscanEnable->value() == 1) screen->setViewport(0,  0, 256 << width512, 480);
+    screen->frame();
     scheduler.exit(Event::Frame);
   }
 
@@ -107,8 +108,7 @@ auto PPU::map() -> void {
 auto PPU::power(bool reset) -> void {
   Thread::create(system.cpuFrequency(), {&PPU::main, this});
   PPUcounter::reset();
-
-  memory::fill<uint32>(output, 512 * 480);
+  screen->power();
 
   ppu1.version = 1, ppu1.mdr = 0x00;
   ppu2.version = 3, ppu2.mdr = 0x00;
@@ -147,11 +147,11 @@ auto PPU::power(bool reset) -> void {
   if(title == "Suguro Quest++") renderingCycle = 128;
 }
 
-auto PPU::refresh() -> void {
-  //this frame contains mixed resolutions: normalize every scanline to 512-width
+auto PPU::normalize() -> void {
   if(width256 && width512) {
+    //this frame contains mixed resolutions: normalize every scanline to 512-width
     for(uint y : range(1, 240)) {
-      auto line = output + 1024 * y + (interlace() && field() ? 512 : 0);
+      auto line = screen->pixels().data() + 1024 * y + (interlace() && field() ? 512 : 0);
       if(widths[y] == 256) {
         auto source = &line[256];
         auto target = &line[512];
@@ -162,23 +162,6 @@ auto PPU::refresh() -> void {
         }
       }
     }
-  }
-
-  auto data  = output;
-  uint width = width512 ? 512 : 256;
-  uint pitch = state.interlace ? 512 : 1024;
-
-  if(overscanEnable->value() == 0) {
-    data += 2 * 512;
-    if(overscan()) data += 16 * 512;
-    uint height = 224 << state.interlace;
-    screen->refresh(data, pitch * sizeof(uint32), width, height);
-  }
-
-  if(overscanEnable->value() == 1) {
-    if(!overscan()) data -= 14 * 512;
-    uint height = 240 << state.interlace;
-    screen->refresh(data, pitch * sizeof(uint32), width, height);
   }
 }
 

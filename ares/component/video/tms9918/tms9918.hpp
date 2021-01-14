@@ -5,11 +5,16 @@ namespace ares {
 //Texas Instruments TMS9918 family
 
 struct TMS9918 {
+  Node::Video::Screen screen;
+
   virtual auto step(uint clocks) -> void = 0;
   virtual auto irq(bool line) -> void = 0;
   virtual auto frame() -> void = 0;
 
   //tms9918.cpp
+  auto load(Node::Video::Screen) -> void;
+  auto unload() -> void;
+
   auto main() -> void;
   auto power() -> void;
 
@@ -36,7 +41,6 @@ struct TMS9918 {
   auto serialize(serializer&) -> void;
 
 protected:
-  uint32 buffer[256 * 192];
   Memory::Writable<uint8> vram;
 
   struct IO {

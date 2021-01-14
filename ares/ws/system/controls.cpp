@@ -2,33 +2,33 @@ auto System::Controls::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("Controls");
 
   if(Model::WonderSwan() || Model::WonderSwanColor() || Model::SwanCrystal()) {
-    y1     = node->append<Node::Button>("Y1");
-    y2     = node->append<Node::Button>("Y2");
-    y3     = node->append<Node::Button>("Y3");
-    y4     = node->append<Node::Button>("Y4");
-    x1     = node->append<Node::Button>("X1");
-    x2     = node->append<Node::Button>("X2");
-    x3     = node->append<Node::Button>("X3");
-    x4     = node->append<Node::Button>("X4");
-    b      = node->append<Node::Button>("B");
-    a      = node->append<Node::Button>("A");
-    start  = node->append<Node::Button>("Start");
-    volume = node->append<Node::Button>("Volume");
+    y1     = node->append<Node::Input::Button>("Y1");
+    y2     = node->append<Node::Input::Button>("Y2");
+    y3     = node->append<Node::Input::Button>("Y3");
+    y4     = node->append<Node::Input::Button>("Y4");
+    x1     = node->append<Node::Input::Button>("X1");
+    x2     = node->append<Node::Input::Button>("X2");
+    x3     = node->append<Node::Input::Button>("X3");
+    x4     = node->append<Node::Input::Button>("X4");
+    b      = node->append<Node::Input::Button>("B");
+    a      = node->append<Node::Input::Button>("A");
+    start  = node->append<Node::Input::Button>("Start");
+    volume = node->append<Node::Input::Button>("Volume");
   }
 
   if(Model::PocketChallengeV2()) {
-    up     = node->append<Node::Button>("Up");
-    down   = node->append<Node::Button>("Down");
-    left   = node->append<Node::Button>("Left");
-    right  = node->append<Node::Button>("Right");
-    pass   = node->append<Node::Button>("Pass");
-    circle = node->append<Node::Button>("Circle");
-    clear  = node->append<Node::Button>("Clear");
-    view   = node->append<Node::Button>("View");
-    escape = node->append<Node::Button>("Escape");
+    up     = node->append<Node::Input::Button>("Up");
+    down   = node->append<Node::Input::Button>("Down");
+    left   = node->append<Node::Input::Button>("Left");
+    right  = node->append<Node::Input::Button>("Right");
+    pass   = node->append<Node::Input::Button>("Pass");
+    circle = node->append<Node::Input::Button>("Circle");
+    clear  = node->append<Node::Input::Button>("Clear");
+    view   = node->append<Node::Input::Button>("View");
+    escape = node->append<Node::Input::Button>("Escape");
   }
 
-  power = node->append<Node::Button>("Power");
+  power = node->append<Node::Input::Button>("Power");
 }
 
 auto System::Controls::poll() -> void {

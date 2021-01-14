@@ -1,5 +1,5 @@
-struct Timer {
-  Node::Component node;
+struct Timer : Memory::Interface {
+  Node::Object node;
 
   //timer.cpp
   auto load(Node::Object) -> void;
@@ -8,7 +8,6 @@ struct Timer {
   auto step(uint clocks) -> void;
   auto hsync(bool line) -> void;
   auto vsync(bool line) -> void;
-  auto poll() -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -23,8 +22,8 @@ struct Timer {
   auto serialize(serializer&) -> void;
 
   struct Counter {
-    u32 dotclock = 0;
-    u32 divclock = 0;
+    u32 dotclock;
+    u32 divclock;
   } counter;
 
   struct Source {
@@ -39,7 +38,7 @@ struct Timer {
 
     uint16 counter;
     uint16 target;
-     uint1 sync;
+     uint1 synchronize;
      uint2 mode;
      uint1 resetMode;
      uint1 irqOnTarget;
@@ -48,13 +47,14 @@ struct Timer {
      uint1 irqMode;
      uint1 clock;
      uint1 divider;
-     uint1 irqLine = 1;  //0 = active
+     uint1 irqLine;  //0 = active
      uint1 reachedTarget;
      uint1 reachedSaturate;
      uint3 unknown;
 
   //internal:
      uint1 paused;
+     uint1 irqTriggered;
   } timers[3] = {{*this, 0}, {*this, 1}, {*this, 2}};
 };
 

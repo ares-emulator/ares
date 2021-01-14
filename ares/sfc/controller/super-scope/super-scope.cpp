@@ -13,14 +13,14 @@
 SuperScope::SuperScope(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Super Scope");
 
-  x       = node->append<Node::Axis  >("X");
-  y       = node->append<Node::Axis  >("Y");
-  trigger = node->append<Node::Button>("Trigger");
-  cursor  = node->append<Node::Button>("Cursor");
-  turbo   = node->append<Node::Button>("Turbo");
-  pause   = node->append<Node::Button>("Pause");
+  x       = node->append<Node::Input::Axis  >("X");
+  y       = node->append<Node::Input::Axis  >("Y");
+  trigger = node->append<Node::Input::Button>("Trigger");
+  cursor  = node->append<Node::Input::Button>("Cursor");
+  turbo   = node->append<Node::Input::Button>("Turbo");
+  pause   = node->append<Node::Input::Button>("Pause");
 
-  sprite = node->append<Node::Sprite>("Crosshair");
+  sprite = node->append<Node::Video::Sprite>("Crosshair");
   sprite->setImage(Resource::Sprite::SuperFamicom::CrosshairGreen);
   ppu.screen->attach(sprite);
 

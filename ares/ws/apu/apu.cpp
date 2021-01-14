@@ -13,9 +13,9 @@ APU apu;
 #include "serialization.cpp"
 
 auto APU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("APU");
+  node = parent->append<Node::Object>("APU");
 
-  stream = node->append<Node::Stream>("PSG");
+  stream = node->append<Node::Audio::Stream>("PSG");
   stream->setChannels(2);
   stream->setFrequency(3'072'000);
   stream->addHighPassFilter(20.0, 1);
@@ -77,7 +77,7 @@ auto APU::dacRun() -> void {
 
   //ASWAN has three volume steps (0%, 50%, 100%); SPHINX and SPHINX2 have four (0%, 33%, 66%, 100%)
   double amplitude = 1.0 / (SoC::ASWAN() ? 2.0 : 3.0) * r.masterVolume;
-  stream->sample(left / 32768.0 * amplitude, right / 32768.0 * amplitude);
+  stream->frame(left / 32768.0 * amplitude, right / 32768.0 * amplitude);
 }
 
 auto APU::step(uint clocks) -> void {

@@ -1,18 +1,18 @@
 struct NeoGeoPocket : Cartridge {
   auto name() -> string override { return "Neo Geo Pocket"; }
   auto extensions() -> vector<string> override { return {"ngp"}; }
-  auto export(string location) -> vector<uint8_t> override;
-  auto heuristics(vector<uint8_t>& data, string location) -> string override;
-  auto title(vector<uint8_t>& data) -> string;
+  auto export(string location) -> vector<u8> override;
+  auto heuristics(vector<u8>& data, string location) -> string override;
+  auto title(vector<u8>& data) -> string;
 };
 
-auto NeoGeoPocket::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto NeoGeoPocket::export(string location) -> vector<u8> {
+  vector<u8> data;
   append(data, {location, "program.flash"});
   return data;
 }
 
-auto NeoGeoPocket::heuristics(vector<uint8_t>& data, string location) -> string {
+auto NeoGeoPocket::heuristics(vector<u8>& data, string location) -> string {
   //expand ROMs that are smaller than valid flash chip sizes (homebrew games)
        if(data.size() <= 0x080000) data.resize(0x080000);  // 4mbit
   else if(data.size() <= 0x100000) data.resize(0x100000);  // 8mbit
@@ -34,10 +34,10 @@ auto NeoGeoPocket::heuristics(vector<uint8_t>& data, string location) -> string 
   return s;
 }
 
-auto NeoGeoPocket::title(vector<uint8_t>& data) -> string {
+auto NeoGeoPocket::title(vector<u8>& data) -> string {
   string title;
   title.size(12);
-  for(uint index : range(12)) {
+  for(u32 index : range(12)) {
     char letter = data[0x24 + index];
     if(letter >= 0x20 && letter <= 0x7e) title.get()[index] = letter;
   }

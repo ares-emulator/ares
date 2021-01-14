@@ -1,6 +1,6 @@
 struct PSG : T6W28, Thread {
-  Node::Component node;
-  Node::Stream stream;
+  Node::Object node;
+  Node::Audio::Stream stream;
 
   //psg.cpp
   auto load(Node::Object) -> void;

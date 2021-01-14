@@ -1,6 +1,6 @@
 auto MI::Debugger::load(Node::Object parent) -> void {
-  tracer.interrupt = parent->append<Node::Notification>("Interrupt", "RCP");
-  tracer.io = parent->append<Node::Notification>("I/O", "MI");
+  tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "RCP");
+  tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "MI");
 }
 
 auto MI::Debugger::interrupt(string_view type) -> void {

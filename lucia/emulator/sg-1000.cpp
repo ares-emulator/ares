@@ -1,20 +1,23 @@
-#include <sg/interface/interface.hpp>
+namespace ares::SG1000 {
+  auto load(Node::System& node, string name) -> bool;
+}
 
 struct SG1000 : Emulator {
   SG1000();
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 SG1000::SG1000() {
-  interface = new ares::SG1000::SG1000Interface;
   medium = mia::medium("SG-1000");
   manufacturer = "Sega";
   name = "SG-1000";
 }
 
 auto SG1000::load() -> bool {
+  if(!ares::SG1000::load(root, "SG-1000")) return false;
+
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
@@ -47,19 +50,19 @@ auto SG1000::open(ares::Node::Object node, string name, vfs::file::mode mode, bo
   return {};
 }
 
-auto SG1000::input(ares::Node::Input node) -> void {
+auto SG1000::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "Up"   ) mapping = virtualPad.up;
-  if(name == "Down" ) mapping = virtualPad.down;
-  if(name == "Left" ) mapping = virtualPad.left;
-  if(name == "Right") mapping = virtualPad.right;
-  if(name == "1"    ) mapping = virtualPad.a;
-  if(name == "2"    ) mapping = virtualPad.b;
+  if(name == "Up"   ) mapping = virtualPads[0].up;
+  if(name == "Down" ) mapping = virtualPads[0].down;
+  if(name == "Left" ) mapping = virtualPads[0].left;
+  if(name == "Right") mapping = virtualPads[0].right;
+  if(name == "1"    ) mapping = virtualPads[0].a;
+  if(name == "2"    ) mapping = virtualPads[0].b;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }

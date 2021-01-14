@@ -1,15 +1,21 @@
 struct HVC_PxROM : Interface {  //MMC2
-  Memory::Readable<uint8> programROM;
-  Memory::Writable<uint8> programRAM;
-  Memory::Readable<uint8> characterROM;
-  Memory::Writable<uint8> characterRAM;
+  static auto create(string id) -> Interface* {
+    if(id == "HVC-PEEOROM") return new HVC_PxROM(Revision::PEEOROM);
+    if(id == "HVC-PNROM"  ) return new HVC_PxROM(Revision::PNROM);
+    return nullptr;
+  }
 
-  enum Revision : uint {
+  Memory::Readable<n8> programROM;
+  Memory::Writable<n8> programRAM;
+  Memory::Readable<n8> characterROM;
+  Memory::Writable<n8> characterRAM;
+
+  enum Revision : u32 {
     PEEOROM,
     PNROM,
   } revision;
 
-  HVC_PxROM(Markup::Node document, Revision revision) : Interface(document), revision(revision) {}
+  HVC_PxROM(Revision revision) : revision(revision) {}
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -25,24 +31,24 @@ struct HVC_PxROM : Interface {  //MMC2
     Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto readPRG(uint address) -> uint8 {
-    if(address < 0x6000) return cpu.mdr();
-    if(address < 0x8000) return programRAM.read((uint13)address);
+  auto readPRG(n32 address, n8 data) -> n8 override {
+    if(address < 0x6000) return data;
+    if(address < 0x8000) return programRAM.read((n13)address);
 
-    uint4 bank = 0;
+    n4 bank = 0;
     switch(address & 0xe000) {
     case 0x8000: bank = programBank; break;
     case 0xa000: bank = 0xd; break;
     case 0xc000: bank = 0xe; break;
     case 0xe000: bank = 0xf; break;
     }
-    address = bank << 13 | (uint13)address;
+    address = bank << 13 | (n13)address;
     return programROM.read(address);
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000) return;
-    if(address < 0x8000) return programRAM.write((uint13)address, data);
+    if(address < 0x8000) return programRAM.write((n13)address, data);
 
     switch(address & 0xf000) {
     case 0xa000: programBank = data.bit(0,3); break;
@@ -54,57 +60,49 @@ struct HVC_PxROM : Interface {  //MMC2
     }
   }
 
-  auto addressCIRAM(uint address) const -> uint {
-    return address >> mirror & 0x0400 | address & 0x03ff;
+  auto addressCIRAM(n32 address) const -> n32 {
+    return address >> mirror & 0x0400 | (n10)address;
   }
 
-  auto readCHR(uint address) -> uint8 {
+  auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
-    uint1 region = bool(address & 0x1000);
-    uint5 bank = characterBank[region][latch[region]];
+    n1 region = bool(address & 0x1000);
+    n5 bank = characterBank[region][latch[region]];
     if((address & 0x0ff8) == 0x0fd8) latch[region] = 0;
     if((address & 0x0ff8) == 0x0fe8) latch[region] = 1;
-    address = bank << 12 | (uint12)address;
+    address = bank << 12 | (n12)address;
     if(characterROM) return characterROM.read(address);
     if(characterRAM) return characterRAM.read(address);
-    return 0x00;
+    return data;
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void override {
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
-    uint1 region = bool(address & 0x1000);
-    uint5 bank = characterBank[region][latch[region]];
+    n1 region = bool(address & 0x1000);
+    n5 bank = characterBank[region][latch[region]];
     if((address & 0x0ff8) == 0x0fd8) latch[region] = 0;
     if((address & 0x0ff8) == 0x0fe8) latch[region] = 1;
-    address = bank << 12 | (uint12)address;
+    address = bank << 12 | (n12)address;
     if(characterRAM) return characterRAM.write(address, data);
   }
 
   auto power() -> void {
-    programBank = 0;
-    characterBank[0][0] = 0;
-    characterBank[0][1] = 0;
-    characterBank[1][0] = 0;
-    characterBank[1][1] = 0;
-    mirror = 0;
-    latch[0] = 0;
-    latch[1] = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    programRAM.serialize(s);
-    characterRAM.serialize(s);
-    s.integer(programBank);
-    s.integer(characterBank[0][0]);
-    s.integer(characterBank[0][1]);
-    s.integer(characterBank[1][0]);
-    s.integer(characterBank[1][1]);
-    s.integer(mirror);
-    s.array(latch);
+    s(programRAM);
+    s(characterRAM);
+    s(programBank);
+    s(characterBank[0][0]);
+    s(characterBank[0][1]);
+    s(characterBank[1][0]);
+    s(characterBank[1][1]);
+    s(mirror);
+    s(latch);
   }
 
-  uint4 programBank;
-  uint5 characterBank[2][2];
-  uint1 mirror;
-  uint1 latch[2];
+  n4 programBank;
+  n5 characterBank[2][2];
+  n1 mirror;
+  n1 latch[2];
 };

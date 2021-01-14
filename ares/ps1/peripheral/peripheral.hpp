@@ -1,5 +1,14 @@
-struct Peripheral : Thread {
-  Node::Component node;
+struct PeripheralDevice {
+  Node::Peripheral node;
+
+  virtual ~PeripheralDevice() = default;
+  virtual auto reset() -> void {}
+  virtual auto acknowledge() -> bool { return 0; }
+  virtual auto bus(u8 data) -> u8 { return 0xff; }
+};
+
+struct Peripheral : Thread, Memory::Interface {
+  Node::Object node;
 
   //peripheral.cpp
   auto load(Node::Object) -> void;
@@ -10,6 +19,8 @@ struct Peripheral : Thread {
   auto power(bool reset) -> void;
 
   //io.cpp
+  auto receive() -> u8;
+  auto transmit(u8 data) -> void;
   auto readByte(u32 address) -> u32;
   auto readHalf(u32 address) -> u32;
   auto readWord(u32 address) -> u32;
@@ -29,9 +40,10 @@ struct Peripheral : Thread {
      uint8 transmitData;
 
     //JOY_STAT
-     uint1 transmitStarted = 1;
-     uint1 transmitFinished = 1;
-     uint1 acknowledgeLine;
+     uint1 transmitStarted;
+     uint1 transmitFinished;
+     uint1 parityError;
+     uint1 interruptRequest;
 
     //JOY_MODE
      uint2 baudrateReloadFactor;
@@ -62,16 +74,11 @@ struct Peripheral : Thread {
     uint16 baudrateReloadValue;
 
     //internal
-    enum class Mode : uint {
-      Idle,
-      ControllerAccess,
-      ControllerIDLower,
-      ControllerIDUpper,
-      ControllerDataLower,
-      ControllerDataUpper,
-    } mode = Mode::Idle;
      int32 counter;
   } io;
 };
 
+#include "port.hpp"
+#include "digital-gamepad/digital-gamepad.hpp"
+#include "memory-card/memory-card.hpp"
 extern Peripheral peripheral;

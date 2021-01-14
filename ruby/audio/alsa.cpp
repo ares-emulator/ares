@@ -24,7 +24,7 @@ struct AudioALSA : AudioDriver {
 
     char** list;
     if(snd_device_name_hint(-1, "pcm", (void***)&list) == 0) {
-      uint index = 0;
+      u32 index = 0;
       while(list[index]) {
         char* deviceName = snd_device_name_get_hint(list[index], "NAME");
         if(deviceName) devices.append(deviceName);
@@ -37,37 +37,37 @@ struct AudioALSA : AudioDriver {
     return devices;
   }
 
-  auto hasChannels() -> vector<uint> override {
+  auto hasChannels() -> vector<u32> override {
     return {2};
   }
 
-  auto hasFrequencies() -> vector<uint> override {
+  auto hasFrequencies() -> vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto hasLatencies() -> vector<uint> override {
+  auto hasLatencies() -> vector<u32> override {
     return {20, 40, 60, 80, 100};
   }
 
   auto setDevice(string device) -> bool override { return initialize(); }
   auto setBlocking(bool blocking) -> bool override { return true; }
-  auto setChannels(uint channels) -> bool override { return true; }
-  auto setFrequency(uint frequency) -> bool override { return initialize(); }
-  auto setLatency(uint latency) -> bool override { return initialize(); }
+  auto setChannels(u32 channels) -> bool override { return true; }
+  auto setFrequency(u32 frequency) -> bool override { return initialize(); }
+  auto setLatency(u32 latency) -> bool override { return initialize(); }
 
-  auto level() -> double override {
+  auto level() -> f64 override {
     snd_pcm_sframes_t available;
-    for(uint timeout : range(256)) {
+    for(u32 timeout : range(256)) {
       available = snd_pcm_avail_update(_interface);
       if(available >= 0) break;
       snd_pcm_recover(_interface, available, 1);
     }
-    return (double)(_bufferSize - available) / _bufferSize;
+    return (f64)(_bufferSize - available) / _bufferSize;
   }
 
-  auto output(const double samples[]) -> void override {
-    _buffer[_offset]  = (uint16_t)sclamp<16>(samples[0] * 32767.0) <<  0;
-    _buffer[_offset] |= (uint16_t)sclamp<16>(samples[1] * 32767.0) << 16;
+  auto output(const f64 samples[]) -> void override {
+    _buffer[_offset]  = (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
+    _buffer[_offset] |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
     if(++_offset < _periodSize) return;
 
     snd_pcm_sframes_t available;
@@ -82,13 +82,13 @@ struct AudioALSA : AudioDriver {
           _offset = 0;
           return;
         }
-        int error = snd_pcm_wait(_interface, -1);
+        s32 error = snd_pcm_wait(_interface, -1);
         if(error < 0) snd_pcm_recover(_interface, error, 1);
       }
     } while(available < _offset);
 
-    uint32_t* output = _buffer;
-    int i = 4;
+    u32* output = _buffer;
+    s32 i = 4;
 
     while(_offset > 0 && i--) {
       snd_pcm_sframes_t written = snd_pcm_writei(_interface, output, _offset);
@@ -106,7 +106,7 @@ struct AudioALSA : AudioDriver {
         _offset--;
         output++;
       }
-      memory::move<uint32_t>(_buffer, output, _offset);
+      memory::move<u32>(_buffer, output, _offset);
     }
   }
 
@@ -117,9 +117,9 @@ private:
     if(!hasDevices().find(self.device)) self.device = "default";
     if(snd_pcm_open(&_interface, self.device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) < 0) return terminate(), false;
 
-    uint rate = self.frequency;
-    uint bufferTime = self.latency * 1000;
-    uint periodTime = self.latency * 1000 / 8;
+    u32 rate = self.frequency;
+    u32 bufferTime = self.latency * 1000;
+    u32 periodTime = self.latency * 1000 / 8;
 
     snd_pcm_hw_params_t* hardwareParameters;
     snd_pcm_hw_params_alloca(&hardwareParameters);
@@ -168,6 +168,6 @@ private:
   snd_pcm_uframes_t _bufferSize;
   snd_pcm_uframes_t _periodSize;
 
-  uint32_t* _buffer = nullptr;
-  uint _offset = 0;
+  u32* _buffer = nullptr;
+  u32 _offset = 0;
 };

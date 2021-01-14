@@ -11,7 +11,7 @@ auto CPU::load(Node::Object parent) -> void {
   if(Model::SG1000()) ram.allocate(1_KiB);
   if(Model::SC3000()) ram.allocate(2_KiB);
 
-  node = parent->append<Node::Component>("CPU");
+  node = parent->append<Node::Object>("CPU");
 
   debugger.load(node);
 }

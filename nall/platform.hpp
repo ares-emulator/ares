@@ -146,6 +146,18 @@ namespace Math {
   #define unlikely(expression) expression
 #endif
 
+//notify the processor/operating system that this thread is currently awaiting an event (eg a spinloop)
+//calling this function aims to avoid consuming 100% CPU resources on the active thread during spinloops
+inline auto spinloop() -> void {
+  #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
+    #if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_AMD64)
+      __builtin_ia32_pause();
+      return;
+    #endif
+  #endif
+  usleep(1);
+}
+
 #if defined(PLATFORM_MACOS)
   #define MSG_NOSIGNAL 0
 #endif

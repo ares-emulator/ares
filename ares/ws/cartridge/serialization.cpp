@@ -1,22 +1,22 @@
 auto Cartridge::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  if(ram.size) s.array(ram.data, ram.size);
-  if(eeprom.size) eeprom.serialize(s);
-  if(rtc.size) s.array(rtc.data, rtc.size);
+  s(array_span<uint8_t>{ram.data, ram.size});
+  s(eeprom);
+  s(array_span<uint8_t>{rtc.data, rtc.size});
 
   if(rtc.size) {
-    s.integer(rtc.command);
-    s.integer(rtc.index);
-    s.integer(rtc.alarm);
-    s.integer(rtc.alarmHour);
-    s.integer(rtc.alarmMinute);
+    s(rtc.command);
+    s(rtc.index);
+    s(rtc.alarm);
+    s(rtc.alarmHour);
+    s(rtc.alarmMinute);
   }
 
-  s.integer(r.romBank0);
-  s.integer(r.romBank1);
-  s.integer(r.romBank2);
-  s.integer(r.sramBank);
-  s.integer(r.gpoEnable);
-  s.integer(r.gpoData);
+  s(r.romBank0);
+  s(r.romBank1);
+  s(r.romBank2);
+  s(r.sramBank);
+  s(r.gpoEnable);
+  s(r.gpoData);
 }

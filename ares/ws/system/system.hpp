@@ -1,6 +1,6 @@
 struct System : IO {
-  Node::Object node;
-  Node::Boolean headphones;
+  Node::System node;
+  Node::Setting::Boolean headphones;
 
   enum class SoC : uint {
     ASWAN,
@@ -19,32 +19,32 @@ struct System : IO {
     Node::Object node;
 
     //WonderSwan, WonderSwan Color, SwanCrystal
-    Node::Button y1;
-    Node::Button y2;
-    Node::Button y3;
-    Node::Button y4;
-    Node::Button x1;
-    Node::Button x2;
-    Node::Button x3;
-    Node::Button x4;
-    Node::Button b;
-    Node::Button a;
-    Node::Button start;
-    Node::Button volume;
+    Node::Input::Button y1;
+    Node::Input::Button y2;
+    Node::Input::Button y3;
+    Node::Input::Button y4;
+    Node::Input::Button x1;
+    Node::Input::Button x2;
+    Node::Input::Button x3;
+    Node::Input::Button x4;
+    Node::Input::Button b;
+    Node::Input::Button a;
+    Node::Input::Button start;
+    Node::Input::Button volume;
 
     //Pocket Challenge V2
-    Node::Button up;
-    Node::Button down;
-    Node::Button left;
-    Node::Button right;
-    Node::Button pass;
-    Node::Button circle;
-    Node::Button clear;
-    Node::Button view;
-    Node::Button escape;
+    Node::Input::Button up;
+    Node::Input::Button down;
+    Node::Input::Button left;
+    Node::Input::Button right;
+    Node::Input::Button pass;
+    Node::Input::Button circle;
+    Node::Input::Button clear;
+    Node::Input::Button view;
+    Node::Input::Button escape;
 
     //all models
-    Node::Button power;
+    Node::Input::Button power;
 
     //controls.cpp
     auto load(Node::Object) -> void;
@@ -55,6 +55,7 @@ struct System : IO {
     bool rightLatch = 0;
   } controls;
 
+  auto name() const -> string { return node->name(); }
   auto model() const -> Model { return information.model; }
   auto soc() const -> SoC { return information.soc; }
   auto mode() const -> uint3 { return io.mode; }
@@ -73,12 +74,13 @@ struct System : IO {
   //11x => 4bpp, color
 
   //system.cpp
+  auto game() -> string;
   auto run() -> void;
 
-  auto load(Node::Object&) -> void;
+  auto load(Node::System& node, string name) -> bool;
   auto unload() -> void;
   auto save() -> void;
-  auto power() -> void;
+  auto power(bool reset = false) -> void;
 
   //io.cpp
   auto portRead(uint16 address) -> uint8 override;
@@ -91,7 +93,6 @@ struct System : IO {
   struct Information {
     SoC soc = SoC::ASWAN;
     Model model = Model::WonderSwan;
-    uint32 serializeSize[2];
   } information;
 
   Memory::Readable<uint8> bootROM;
@@ -107,9 +108,7 @@ private:
   } io;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void;
-  auto serializeAll(serializer&, bool synchronize) -> void;
-  auto serializeInit(bool synchronize) -> uint;
+  auto serialize(serializer&, bool synchronize) -> void;
 };
 
 extern System system;

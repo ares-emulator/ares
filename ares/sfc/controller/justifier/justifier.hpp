@@ -1,9 +1,9 @@
 struct Justifier : Controller, Thread {
-  Node::Sprite sprite;
-  Node::Axis x;
-  Node::Axis y;
-  Node::Button trigger;
-  Node::Button start;
+  Node::Video::Sprite sprite;
+  Node::Input::Axis x;
+  Node::Input::Axis y;
+  Node::Input::Button trigger;
+  Node::Input::Button start;
 
   Justifier(Node::Port);
   ~Justifier();

@@ -6,7 +6,7 @@ auto MOS6502::interrupt() -> void {
   idle();
   push(PCH);
   push(PCL);
-  uint16 vector = 0xfffe;
+  n16 vector = 0xfffe;
   nmi(vector);
   push(P | 0x20);
   I = 1;

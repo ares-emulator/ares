@@ -22,9 +22,12 @@ auto operator+=(string& lhs, const string& rhs) -> string& {
 #include "cartridge/cartridge.cpp"
 #include "compact-disc/compact-disc.cpp"
 #include "floppy-disk/floppy-disk.cpp"
+#if !defined(MIA_LIBRARY)
 #include "program/program.cpp"
+#endif
 
 auto construct() -> void {
+  if(media) return;  //only construct once
   media.append(new BSMemory);
   media.append(new ColecoVision);
   media.append(new Famicom);
@@ -92,7 +95,9 @@ auto identify(const string& filename) -> string {
 }
 
 auto main(Arguments arguments) -> void {
+  #if !defined(MIA_LIBRARY)
   Application::setName("mia");
+  #endif
 
   construct();
 
@@ -129,6 +134,7 @@ auto main(Arguments arguments) -> void {
         return (void)medium->import(import);
       }
 
+      #if !defined(MIA_LIBRARY)
       if(arguments.take("--import")) {
         if(auto import = BrowserDialog()
         .setTitle({"Import ", system, " Game"})
@@ -146,9 +152,11 @@ auto main(Arguments arguments) -> void {
         }
         return;
       }
+      #endif
     }
   }
 
+  #if !defined(MIA_LIBRARY)
   Instances::programWindow.construct();
 
   #if defined(PLATFORM_MACOS)
@@ -160,21 +168,20 @@ auto main(Arguments arguments) -> void {
   programWindow.setVisible();
   Application::run();
 
+  Instances::programWindow.destruct();
+  #endif
+
   directory::create({Path::userSettings(), "mia/"});
   file::write({Path::userSettings(), "mia/settings.bml"}, settings.serialize());
-
-  Instances::programWindow.destruct();
 }
 
 }
 
 #if !defined(MIA_LIBRARY)
-
 #include <ares/resource/resource.cpp>
-
 #include <nall/main.hpp>
+
 auto nall::main(Arguments arguments) -> void {
   mia::main(arguments);
 }
-
 #endif

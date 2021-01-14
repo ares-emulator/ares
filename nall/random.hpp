@@ -77,7 +77,7 @@ struct LFSR : RNG<LFSR> {
   }
 
   auto serialize(serializer& s) -> void {
-    s.integer(lfsr);
+    s(lfsr);
   }
 
 private:
@@ -106,8 +106,8 @@ struct PCG : RNG<PCG> {
   }
 
   auto serialize(serializer& s) -> void {
-    s.integer(state);
-    s.integer(increment);
+    s(state);
+    s(increment);
   }
 
 private:

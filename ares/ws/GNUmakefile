@@ -1,10 +1,14 @@
-ares.components += v30mz m93lcx6
+ares.components += v30mz
+ares.components += m93lcx6
 
-ares.objects += ares-ws-interface ares-ws-system
-ares.objects += ares-ws-memory ares-ws-eeprom ares-ws-cartridge
-ares.objects += ares-ws-cpu ares-ws-ppu ares-ws-apu
+ares.objects += ares-ws-system
+ares.objects += ares-ws-memory
+ares.objects += ares-ws-eeprom
+ares.objects += ares-ws-cartridge
+ares.objects += ares-ws-cpu
+ares.objects += ares-ws-ppu
+ares.objects += ares-ws-apu
 
-$(object.path)/ares-ws-interface.o: $(ares.path)/ws/interface/interface.cpp
 $(object.path)/ares-ws-system.o:    $(ares.path)/ws/system/system.cpp
 $(object.path)/ares-ws-memory.o:    $(ares.path)/ws/memory/memory.cpp
 $(object.path)/ares-ws-eeprom.o:    $(ares.path)/ws/eeprom/eeprom.cpp

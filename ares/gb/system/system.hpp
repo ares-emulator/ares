@@ -1,16 +1,17 @@
 struct System {
-  Node::Object node;
+  Node::System node;
+  Node::Setting::Boolean fastBoot;
 
   struct Controls {
     Node::Object node;
-    Node::Button up;
-    Node::Button down;
-    Node::Button left;
-    Node::Button right;
-    Node::Button b;
-    Node::Button a;
-    Node::Button select;
-    Node::Button start;
+    Node::Input::Button up;
+    Node::Input::Button down;
+    Node::Input::Button left;
+    Node::Input::Button right;
+    Node::Input::Button b;
+    Node::Input::Button a;
+    Node::Input::Button select;
+    Node::Input::Button start;
 
     //controls.cpp
     auto load(Node::Object) -> void;
@@ -31,17 +32,19 @@ struct System {
   };
   Memory::Readable<uint8> bootROM;
 
+  auto name() const -> string { return node->name(); }
   auto model() const -> Model { return information.model; }
   auto clocksExecuted() const -> uint { return information.clocksExecuted; }
 
   //system.cpp
+  auto game() -> string;
   auto run() -> void;
   auto clocksExecuted() -> uint;
 
-  auto load(Node::Object&) -> void;
+  auto load(Node::System& node, string name) -> bool;
   auto unload() -> void;
   auto save() -> void;
-  auto power() -> void;
+  auto power(bool reset = false) -> void;
 
   //serialization.cpp
   auto serialize(bool synchronize) -> serializer;
@@ -49,19 +52,15 @@ struct System {
 
   struct Information {
     Model model = Model::GameBoy;
-    uint32 serializeSize[2];
     uint32 clocksExecuted;
   } information;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void;
-  auto serializeAll(serializer&, bool synchronize) -> void;
-  auto serializeInit(bool synchronize) -> uint;
+  auto serialize(serializer&, bool synchronize) -> void;
 };
 
-#include <gb/interface/interface.hpp>
-
 extern System system;
+extern SuperGameBoyInterface* superGameBoy;
 
 auto Model::GameBoy() -> bool { return system.model() == System::Model::GameBoy; }
 auto Model::GameBoyColor() -> bool { return system.model() == System::Model::GameBoyColor; }

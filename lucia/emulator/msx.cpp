@@ -1,27 +1,30 @@
-#include <msx/interface/interface.hpp>
+namespace ares::MSX {
+  auto load(Node::System& node, string name) -> bool;
+}
 
 struct MSX : Emulator {
   MSX();
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 struct MSX2 : Emulator {
   MSX2();
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 MSX::MSX() {
-  interface = new ares::MSX::MSXInterface;
   medium = mia::medium("MSX");
   manufacturer = "Microsoft";
   name = "MSX";
 }
 
 auto MSX::load() -> bool {
+  if(!ares::MSX::load(root, "MSX")) return false;
+
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
@@ -52,32 +55,33 @@ auto MSX::open(ares::Node::Object node, string name, vfs::file::mode mode, bool 
   return {};
 }
 
-auto MSX::input(ares::Node::Input node) -> void {
+auto MSX::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "Up"   ) mapping = virtualPad.up;
-  if(name == "Down" ) mapping = virtualPad.down;
-  if(name == "Left" ) mapping = virtualPad.left;
-  if(name == "Right") mapping = virtualPad.right;
-  if(name == "A"    ) mapping = virtualPad.a;
-  if(name == "B"    ) mapping = virtualPad.b;
+  if(name == "Up"   ) mapping = virtualPads[0].up;
+  if(name == "Down" ) mapping = virtualPads[0].down;
+  if(name == "Left" ) mapping = virtualPads[0].left;
+  if(name == "Right") mapping = virtualPads[0].right;
+  if(name == "A"    ) mapping = virtualPads[0].a;
+  if(name == "B"    ) mapping = virtualPads[0].b;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }
 }
 
 MSX2::MSX2() {
-  interface = new ares::MSX::MSX2Interface;
   medium = mia::medium("MSX2");
   manufacturer = "Microsoft";
   name = "MSX2";
 }
 
 auto MSX2::load() -> bool {
+  if(!ares::MSX::load(root, "MSX2")) return false;
+
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
@@ -112,19 +116,19 @@ auto MSX2::open(ares::Node::Object node, string name, vfs::file::mode mode, bool
   return {};
 }
 
-auto MSX2::input(ares::Node::Input node) -> void {
+auto MSX2::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "Up"   ) mapping = virtualPad.up;
-  if(name == "Down" ) mapping = virtualPad.down;
-  if(name == "Left" ) mapping = virtualPad.left;
-  if(name == "Right") mapping = virtualPad.right;
-  if(name == "A"    ) mapping = virtualPad.a;
-  if(name == "B"    ) mapping = virtualPad.b;
+  if(name == "Up"   ) mapping = virtualPads[0].up;
+  if(name == "Down" ) mapping = virtualPads[0].down;
+  if(name == "Left" ) mapping = virtualPads[0].left;
+  if(name == "Right") mapping = virtualPads[0].right;
+  if(name == "A"    ) mapping = virtualPads[0].a;
+  if(name == "B"    ) mapping = virtualPads[0].b;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }

@@ -8,10 +8,6 @@ auto CPU::step() -> void {
 
 auto CPU::step(uint clocks) -> void {
   for(auto n : range(clocks)) {
-    if(++status.clock == 0) {
-      cartridge.second();
-    }
-
     status.div++;
     if(( uint4)status.div == 0) timer262144hz();
     if(( uint6)status.div == 0)  timer65536hz();
@@ -83,11 +79,13 @@ auto CPU::hblank() -> void {
 }
 
 auto CPU::hblankTrigger() -> void {
-  if(status.dmaMode == 1 && status.dmaLength && ppu.status.ly < 144) {
-    for(uint n : range(16)) {
+  if(status.hdmaActive && ppu.status.ly < 144) {
+    for(uint loop : range(16)) {
       writeDMA(status.dmaTarget++, readDMA(status.dmaSource++, 0xff));
-      status.dmaLength--;
-      if(n & 1) step(1 << status.speedDouble);
+      if(loop & 1) step(1 << status.speedDouble);
+    }
+    if(status.dmaLength-- == 0) {
+      status.hdmaActive = 0;
     }
   }
 }

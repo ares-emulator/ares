@@ -1,10 +1,13 @@
 struct KonamiVRC2 : Interface {
-  Memory::Readable<uint8> programROM;
-  Memory::Writable<uint8> programRAM;
-  Memory::Readable<uint8> characterROM;
-  Memory::Writable<uint8> characterRAM;
+  static auto create(string id) -> Interface* {
+    if(id == "KONAMI-VRC-2") return new KonamiVRC2;
+    return nullptr;
+  }
 
-  using Interface::Interface;
+  Memory::Readable<n8> programROM;
+  Memory::Writable<n8> programRAM;
+  Memory::Readable<n8> characterROM;
+  Memory::Writable<n8> characterRAM;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -22,33 +25,33 @@ struct KonamiVRC2 : Interface {
     Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto readPRG(uint address) -> uint8 {
-    if(address < 0x6000) return cpu.mdr();
+  auto readPRG(n32 address, n8 data) -> n8 override {
+    if(address < 0x6000) return data;
 
     if(address < 0x8000) {
-      if(!programRAM && (address & 0xf000) == 0x6000) return cpu.mdr() | latch;
-      if(!programRAM) return cpu.mdr();
-      return programRAM.read((uint13)address);
+      if(!programRAM && (address & 0xf000) == 0x6000) return data | latch;
+      if(!programRAM) return data;
+      return programRAM.read((n13)address);
     }
 
-    uint5 bank, banks = programROM.size() >> 13;
+    n5 bank, banks = programROM.size() >> 13;
     switch(address & 0xe000) {
     case 0x8000: bank = programBank[0]; break;
     case 0xa000: bank = programBank[1]; break;
     case 0xc000: bank = banks - 2; break;
     case 0xe000: bank = banks - 1; break;
     }
-    address = bank << 13 | (uint13)address;
+    address = bank << 13 | (n13)address;
     return programROM.read(address);
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000) return;
 
     if(address < 0x8000) {
       if(!programRAM && (address & 0xf000) == 0x6000) latch = data.bit(0);
       if(!programRAM) return;
-      return programRAM.write((uint13)address, data);
+      return programRAM.write((n13)address, data);
     }
 
     bool a0 = address & pinA0;
@@ -85,7 +88,7 @@ struct KonamiVRC2 : Interface {
     }
   }
 
-  auto addressCIRAM(uint address) const -> uint {
+  auto addressCIRAM(n32 address) const -> n32 {
     switch(mirror) {
     case 0: return address >> 0 & 0x0400 | address & 0x03ff;  //vertical mirroring
     case 1: return address >> 1 & 0x0400 | address & 0x03ff;  //horizontal mirroring
@@ -95,45 +98,41 @@ struct KonamiVRC2 : Interface {
     unreachable;
   }
 
-  auto addressCHR(uint address) const -> uint {
-    uint8 bank = characterBank[address >> 10];
-    return bank << 10 | (uint10)address;
+  auto addressCHR(n32 address) const -> n32 {
+    n8 bank = characterBank[address >> 10];
+    return bank << 10 | (n10)address;
   }
 
-  auto readCHR(uint address) -> uint8 {
+  auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
     if(characterROM) return characterROM.read(addressCHR(address));
     if(characterRAM) return characterRAM.read(addressCHR(address));
-    return 0x00;
+    return data;
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void override {
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
   auto power() -> void {
-    for(auto& bank : programBank) bank = 0;
-    for(auto& bank : characterBank) bank = 0;
-    mirror = 0;
-    latch = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    programRAM.serialize(s);
-    characterRAM.serialize(s);
-    s.integer(pinA0);
-    s.integer(pinA1);
-    s.array(programBank);
-    s.array(characterBank);
-    s.integer(mirror);
-    s.integer(latch);
+    s(programRAM);
+    s(characterRAM);
+    s(programBank);
+    s(characterBank);
+    s(mirror);
+    s(latch);
   }
 
-  uint8 pinA0;
-  uint8 pinA1;
-  uint5 programBank[2];
-  uint8 characterBank[8];
-  uint2 mirror;
-  uint1 latch;
+  n5 programBank[2];
+  n8 characterBank[8];
+  n2 mirror;
+  n1 latch;
+
+//unserialized:
+  n8 pinA0;
+  n8 pinA1;
 };

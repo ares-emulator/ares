@@ -1,17 +1,17 @@
 auto CPU::Debugger::load(Node::Object parent) -> void {
-  memory.ram = parent->append<Node::Memory>("CPU RAM");
+  memory.ram = parent->append<Node::Debugger::Memory>("CPU RAM");
   memory.ram->setSize(cpu.ram.size());
-  memory.ram->setRead([&](uint32 address) -> uint8 {
+  memory.ram->setRead([&](u32 address) -> u8 {
     return cpu.ram[address];
   });
-  memory.ram->setWrite([&](uint32 address, uint8 data) -> void {
+  memory.ram->setWrite([&](u32 address, u8 data) -> void {
     cpu.ram[address] = data;
   });
 
-  tracer.instruction = parent->append<Node::Instruction>("Instruction", "CPU");
+  tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "CPU");
   tracer.instruction->setAddressBits(24);
 
-  tracer.interrupt = parent->append<Node::Notification>("Interrupt", "CPU");
+  tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "CPU");
 }
 
 auto CPU::Debugger::instruction() -> void {

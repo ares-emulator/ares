@@ -1,22 +1,22 @@
 Gamepad::Gamepad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Gamepad");
 
-  x           = node->append<Node::Axis>  ("X-axis");
-  y           = node->append<Node::Axis>  ("Y-axis");
-  up          = node->append<Node::Button>("Up");
-  down        = node->append<Node::Button>("Down");
-  left        = node->append<Node::Button>("Left");
-  right       = node->append<Node::Button>("Right");
-  b           = node->append<Node::Button>("B");
-  a           = node->append<Node::Button>("A");
-  cameraUp    = node->append<Node::Button>("C-Up");
-  cameraDown  = node->append<Node::Button>("C-Down");
-  cameraLeft  = node->append<Node::Button>("C-Left");
-  cameraRight = node->append<Node::Button>("C-Right");
-  l           = node->append<Node::Button>("L");
-  r           = node->append<Node::Button>("R");
-  z           = node->append<Node::Button>("Z");
-  start       = node->append<Node::Button>("Start");
+  x           = node->append<Node::Input::Axis>  ("X-axis");
+  y           = node->append<Node::Input::Axis>  ("Y-axis");
+  up          = node->append<Node::Input::Button>("Up");
+  down        = node->append<Node::Input::Button>("Down");
+  left        = node->append<Node::Input::Button>("Left");
+  right       = node->append<Node::Input::Button>("Right");
+  b           = node->append<Node::Input::Button>("B");
+  a           = node->append<Node::Input::Button>("A");
+  cameraUp    = node->append<Node::Input::Button>("C-Up");
+  cameraDown  = node->append<Node::Input::Button>("C-Down");
+  cameraLeft  = node->append<Node::Input::Button>("C-Left");
+  cameraRight = node->append<Node::Input::Button>("C-Right");
+  l           = node->append<Node::Input::Button>("L");
+  r           = node->append<Node::Input::Button>("R");
+  z           = node->append<Node::Input::Button>("Z");
+  start       = node->append<Node::Input::Button>("Start");
 }
 
 auto Gamepad::read() -> uint32 {

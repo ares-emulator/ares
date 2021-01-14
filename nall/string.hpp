@@ -315,7 +315,7 @@ template<> struct vector<string> : vector_base<string> {
   auto find(string_view source) const -> maybe<uint>;
   auto ifind(string_view source) const -> maybe<uint>;
   auto match(string_view pattern) const -> vector<string>;
-  auto merge(string_view separator) const -> string;
+  auto merge(string_view separator = "") const -> string;
   auto strip() -> type&;
 
   //split.hpp

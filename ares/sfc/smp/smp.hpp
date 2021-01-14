@@ -1,7 +1,7 @@
 //Sony CXP1100Q-1
 
 struct SMP : SPC700, Thread {
-  Node::Component node;
+  Node::Object node;
 
   struct Debugger {
     //debugger.cpp
@@ -9,7 +9,7 @@ struct SMP : SPC700, Thread {
     auto instruction() -> void;
 
     struct Tracer {
-      Node::Instruction instruction;
+      Node::Debugger::Tracer::Instruction instruction;
     } tracer;
   } debugger;
 

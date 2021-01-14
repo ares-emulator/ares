@@ -8,7 +8,7 @@ SI si;
 #include "serialization.cpp"
 
 auto SI::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("SI");
+  node = parent->append<Node::Object>("SI");
   debugger.load(node);
 }
 
@@ -110,8 +110,7 @@ auto SI::main() -> void {
   }
 }
 
-auto SI::power() -> void {
-  resetStrobe = 0;
+auto SI::power(bool reset) -> void {
 }
 
 }

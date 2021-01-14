@@ -26,7 +26,7 @@ auto Cartridge::construct() -> void {
   Media::construct();
 }
 
-auto Cartridge::append(vector<uint8_t>& output, string filename) -> bool {
+auto Cartridge::append(vector<u8>& output, string filename) -> bool {
   if(!file::exists(filename)) return false;
   auto input = file::read(filename);
   auto size = output.size();
@@ -48,7 +48,7 @@ auto Cartridge::import(string location) -> string {
     file::write({location, "manifest.bml"}, manifest);
   }
 
-  auto buffer = array_view<uint8_t>{data};
+  auto buffer = array_view<u8>{data};
   for(auto memory : document.find("game/board/memory")) {
     auto type = memory["type"].text();
     auto size = memory["size"].natural();
@@ -75,7 +75,7 @@ auto Cartridge::import(string location) -> string {
 }
 
 auto Cartridge::manifest(string location) -> string {
-  vector<uint8_t> data;
+  vector<u8> data;
   if(directory::exists(location)) {
     data = export(location);
   } else if(file::exists(location)) {
@@ -84,7 +84,7 @@ auto Cartridge::manifest(string location) -> string {
   return manifest(data, location);
 }
 
-auto Cartridge::manifest(vector<uint8_t>& data, string location) -> string {
+auto Cartridge::manifest(vector<u8>& data, string location) -> string {
   string digest = Hash::SHA256(data).digest();
   for(auto game : database.find("game")) {
     if(game["sha256"].text() == digest) return BML::serialize(game);

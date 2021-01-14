@@ -11,13 +11,13 @@ auto Program::rewindReset() -> void {
 }
 
 auto Program::rewindRun() -> void {
-  if(rewind.frequency == 0) return;  //rewind disabled?
+  if(!settings.general.rewind) return;  //rewind disabled?
 
   if(rewind.mode == Rewind::Mode::Playing) {
     if(++rewind.counter < rewind.frequency) return;
     rewind.counter = 0;
     if(rewind.history.size() >= rewind.length) rewind.history.takeFirst();
-    auto s = emulator->interface->serialize(0);
+    auto s = emulator->root->serialize(0);
     rewind.history.append(s);
   }
 
@@ -26,8 +26,8 @@ auto Program::rewindRun() -> void {
     if(++rewind.counter < rewind.frequency / 5) return;  //rewind 5x faster than playing
     rewind.counter = 0;
     auto s = rewind.history.takeLast();
-    s.setMode(serializer::Mode::Load);
-    emulator->interface->unserialize(s);
+    s.setReading();
+    emulator->root->unserialize(s);
     if(!rewind.history) {
       showMessage("Rewind history exhausted");
       rewindReset();

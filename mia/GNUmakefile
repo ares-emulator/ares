@@ -1,6 +1,11 @@
 name := mia
-build := performance
+build := optimized
+local := true
 flags += -I. -I.. -I../ares
+
+ifeq ($(local),true)
+  flags += -march=native
+endif
 
 nall.path := ../nall
 include $(nall.path)/GNUmakefile

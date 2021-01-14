@@ -1,6 +1,8 @@
 #if defined(CORE_GB)
 
 struct ICD : Platform, GameBoy::SuperGameBoyInterface, Thread {
+  Node::System node;
+
   //icd.cpp
   auto clockFrequency() const -> double;
 

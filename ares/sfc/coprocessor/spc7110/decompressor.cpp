@@ -122,20 +122,20 @@ struct Decompressor {
   auto serialize(serializer& s) -> void {
     for(auto& root : context) {
       for(auto& node : root) {
-        s.integer(node.prediction);
-        s.integer(node.swap);
+        s(node.prediction);
+        s(node.swap);
       }
     }
 
-    s.integer(bpp);
-    s.integer(offset);
-    s.integer(bits);
-    s.integer(range);
-    s.integer(input);
-    s.integer(output);
-    s.integer(pixels);
-    s.integer(colormap);
-    s.integer(result);
+    s(bpp);
+    s(offset);
+    s(bits);
+    s(range);
+    s(input);
+    s(output);
+    s(pixels);
+    s(colormap);
+    s(result);
   }
 
   enum : uint { MPS = 0, LPS = 1 };

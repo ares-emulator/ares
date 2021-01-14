@@ -5,6 +5,8 @@ namespace ares {
 //Yamaha V9938
 
 struct V9938 {
+  Node::Video::Screen screen_;
+
   virtual auto step(uint clocks) -> void = 0;
   virtual auto irq(bool line) -> void = 0;
   virtual auto frame() -> void = 0;
@@ -32,6 +34,9 @@ struct V9938 {
   auto s2() const -> bool { return g3() || g4() || g5() || g6() || g7(); }
 
   //v9938.cpp
+  auto load(Node::Video::Screen) -> void;
+  auto unload() -> void;
+
   auto main() -> void;
   auto poll() -> void;
   auto tick(uint clocks) -> void;
@@ -94,7 +99,6 @@ struct V9938 {
   auto serialize(serializer&) -> void;
 
 protected:
-  uint32 buffer[512 * 424];
   Memory::Writable<uint8> videoRAM;
   Memory::Writable<uint8> expansionRAM;
   uint9 paletteRAM[16];

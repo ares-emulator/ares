@@ -1,21 +1,22 @@
-#include <ngp/interface/interface.hpp>
+namespace ares::NeoGeoPocket {
+  auto load(Node::System& node, string name) -> bool;
+}
 
 struct NeoGeoPocket : Emulator {
   NeoGeoPocket();
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 struct NeoGeoPocketColor : Emulator {
   NeoGeoPocketColor();
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 NeoGeoPocket::NeoGeoPocket() {
-  interface = new ares::NeoGeoPocket::NeoGeoPocketInterface;
   medium = mia::medium("Neo Geo Pocket");
   manufacturer = "SNK";
   name = "Neo Geo Pocket";
@@ -24,6 +25,8 @@ NeoGeoPocket::NeoGeoPocket() {
 }
 
 auto NeoGeoPocket::load() -> bool {
+  if(!ares::NeoGeoPocket::load(root, "Neo Geo Pocket")) return false;
+
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
     return false;
@@ -34,8 +37,8 @@ auto NeoGeoPocket::load() -> bool {
     port->connect();
   }
 
-  if(auto fastBoot = root->find<ares::Node::Boolean>("Fast Boot")) {
-    fastBoot->setValue(settings.general.fastBoot);
+  if(auto fastBoot = root->find<ares::Node::Setting::Boolean>("Fast Boot")) {
+    fastBoot->setValue(settings.boot.fast);
   }
 
   return true;
@@ -60,27 +63,26 @@ auto NeoGeoPocket::open(ares::Node::Object node, string name, vfs::file::mode mo
   return {};
 }
 
-auto NeoGeoPocket::input(ares::Node::Input node) -> void {
+auto NeoGeoPocket::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "Up"    ) mapping = virtualPad.up;
-  if(name == "Down"  ) mapping = virtualPad.down;
-  if(name == "Left"  ) mapping = virtualPad.left;
-  if(name == "Right" ) mapping = virtualPad.right;
-  if(name == "A"     ) mapping = virtualPad.a;
-  if(name == "B"     ) mapping = virtualPad.b;
-  if(name == "Option") mapping = virtualPad.start;
+  if(name == "Up"    ) mapping = virtualPads[0].up;
+  if(name == "Down"  ) mapping = virtualPads[0].down;
+  if(name == "Left"  ) mapping = virtualPads[0].left;
+  if(name == "Right" ) mapping = virtualPads[0].right;
+  if(name == "A"     ) mapping = virtualPads[0].a;
+  if(name == "B"     ) mapping = virtualPads[0].b;
+  if(name == "Option") mapping = virtualPads[0].start;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }
 }
 
 NeoGeoPocketColor::NeoGeoPocketColor() {
-  interface = new ares::NeoGeoPocket::NeoGeoPocketColorInterface;
   medium = mia::medium("Neo Geo Pocket Color");
   manufacturer = "SNK";
   name = "Neo Geo Pocket Color";
@@ -89,6 +91,8 @@ NeoGeoPocketColor::NeoGeoPocketColor() {
 }
 
 auto NeoGeoPocketColor::load() -> bool {
+  if(!ares::NeoGeoPocket::load(root, "Neo Geo Pocket Color")) return false;
+
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
     return false;
@@ -99,8 +103,8 @@ auto NeoGeoPocketColor::load() -> bool {
     port->connect();
   }
 
-  if(auto fastBoot = root->find<ares::Node::Boolean>("Fast Boot")) {
-    fastBoot->setValue(settings.general.fastBoot);
+  if(auto fastBoot = root->find<ares::Node::Setting::Boolean>("Fast Boot")) {
+    fastBoot->setValue(settings.boot.fast);
   }
 
   return true;
@@ -125,20 +129,20 @@ auto NeoGeoPocketColor::open(ares::Node::Object node, string name, vfs::file::mo
   return {};
 }
 
-auto NeoGeoPocketColor::input(ares::Node::Input node) -> void {
+auto NeoGeoPocketColor::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "Up"    ) mapping = virtualPad.up;
-  if(name == "Down"  ) mapping = virtualPad.down;
-  if(name == "Left"  ) mapping = virtualPad.left;
-  if(name == "Right" ) mapping = virtualPad.right;
-  if(name == "A"     ) mapping = virtualPad.a;
-  if(name == "B"     ) mapping = virtualPad.b;
-  if(name == "Option") mapping = virtualPad.start;
+  if(name == "Up"    ) mapping = virtualPads[0].up;
+  if(name == "Down"  ) mapping = virtualPads[0].down;
+  if(name == "Left"  ) mapping = virtualPads[0].left;
+  if(name == "Right" ) mapping = virtualPads[0].right;
+  if(name == "A"     ) mapping = virtualPads[0].a;
+  if(name == "B"     ) mapping = virtualPads[0].b;
+  if(name == "Option") mapping = virtualPads[0].start;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }

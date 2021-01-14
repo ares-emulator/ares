@@ -1,124 +1,124 @@
 auto PPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  vram.serialize(s);
-  pram.serialize(s);
+  s(vram);
+  s(pram);
 
-  s.integer(io.gameBoyColorMode);
-  s.integer(io.forceBlank);
-  s.integer(io.greenSwap);
-  s.integer(io.vblank);
-  s.integer(io.hblank);
-  s.integer(io.vcoincidence);
-  s.integer(io.irqvblank);
-  s.integer(io.irqhblank);
-  s.integer(io.irqvcoincidence);
-  s.integer(io.vcompare);
-  s.integer(io.vcounter);
+  s(io.gameBoyColorMode);
+  s(io.forceBlank);
+  s(io.greenSwap);
+  s(io.vblank);
+  s(io.hblank);
+  s(io.vcoincidence);
+  s(io.irqvblank);
+  s(io.irqhblank);
+  s(io.irqvcoincidence);
+  s(io.vcompare);
+  s(io.vcounter);
 
-  s.integer(Background::IO::mode);
-  s.integer(Background::IO::frame);
-  s.integer(Background::IO::mosaicWidth);
-  s.integer(Background::IO::mosaicHeight);
-  bg0.serialize(s);
-  bg1.serialize(s);
-  bg2.serialize(s);
-  bg3.serialize(s);
-  objects.serialize(s);
-  window0.serialize(s);
-  window1.serialize(s);
-  window2.serialize(s);
-  window3.serialize(s);
-  dac.serialize(s);
-  for(auto& object : this->object) object.serialize(s);
-  for(auto& param : this->objectParam) param.serialize(s);
+  s(Background::IO::mode);
+  s(Background::IO::frame);
+  s(Background::IO::mosaicWidth);
+  s(Background::IO::mosaicHeight);
+  s(bg0);
+  s(bg1);
+  s(bg2);
+  s(bg3);
+  s(objects);
+  s(window0);
+  s(window1);
+  s(window2);
+  s(window3);
+  s(dac);
+  for(auto& object : this->object) s(object);
+  for(auto& param : this->objectParam) s(param);
 }
 
 auto PPU::Background::serialize(serializer& s) -> void {
-  s.integer(id);
+  s(id);
 
-  s.integer(io.enable);
-  s.integer(io.priority);
-  s.integer(io.characterBase);
-  s.integer(io.unused);
-  s.integer(io.mosaic);
-  s.integer(io.colorMode);
-  s.integer(io.screenBase);
-  s.integer(io.affineWrap);
-  s.integer(io.screenSize);
-  s.integer(io.hoffset);
-  s.integer(io.voffset);
-  s.integer(io.pa);
-  s.integer(io.pb);
-  s.integer(io.pc);
-  s.integer(io.pd);
-  s.integer(io.x);
-  s.integer(io.y);
-  s.integer(io.lx);
-  s.integer(io.ly);
+  s(io.enable);
+  s(io.priority);
+  s(io.characterBase);
+  s(io.unused);
+  s(io.mosaic);
+  s(io.colorMode);
+  s(io.screenBase);
+  s(io.affineWrap);
+  s(io.screenSize);
+  s(io.hoffset);
+  s(io.voffset);
+  s(io.pa);
+  s(io.pb);
+  s(io.pc);
+  s(io.pd);
+  s(io.x);
+  s(io.y);
+  s(io.lx);
+  s(io.ly);
 
-  s.integer(mosaicOffset);
-  s.integer(hmosaic);
-  s.integer(vmosaic);
-  s.integer(fx);
-  s.integer(fy);
+  s(mosaicOffset);
+  s(hmosaic);
+  s(vmosaic);
+  s(fx);
+  s(fy);
 }
 
 auto PPU::Objects::serialize(serializer& s) -> void {
-  s.integer(io.enable);
-  s.integer(io.hblank);
-  s.integer(io.mapping);
-  s.integer(io.mosaicWidth);
-  s.integer(io.mosaicHeight);
+  s(io.enable);
+  s(io.hblank);
+  s(io.mapping);
+  s(io.mosaicWidth);
+  s(io.mosaicHeight);
 
-  s.integer(mosaicOffset);
+  s(mosaicOffset);
 }
 
 auto PPU::Window::serialize(serializer& s) -> void {
-  s.integer(id);
+  s(id);
 
-  s.integer(io.enable);
-  s.array(io.active);
-  s.integer(io.x1);
-  s.integer(io.x2);
-  s.integer(io.y1);
-  s.integer(io.y2);
+  s(io.enable);
+  s(io.active);
+  s(io.x1);
+  s(io.x2);
+  s(io.y1);
+  s(io.y2);
 
-  s.integer(output);
+  s(output);
 }
 
 auto PPU::DAC::serialize(serializer& s) -> void {
-  s.integer(io.blendMode);
-  s.array(io.blendAbove);
-  s.array(io.blendBelow);
-  s.integer(io.blendEVA);
-  s.integer(io.blendEVB);
-  s.integer(io.blendEVY);
+  s(io.blendMode);
+  s(io.blendAbove);
+  s(io.blendBelow);
+  s(io.blendEVA);
+  s(io.blendEVB);
+  s(io.blendEVY);
 }
 
 auto PPU::Object::serialize(serializer& s) -> void {
-  s.integer(y);
-  s.integer(affine);
-  s.integer(affineSize);
-  s.integer(mode);
-  s.integer(mosaic);
-  s.integer(colors);
-  s.integer(shape);
-  s.integer(x);
-  s.integer(affineParam);
-  s.integer(hflip);
-  s.integer(vflip);
-  s.integer(size);
-  s.integer(character);
-  s.integer(priority);
-  s.integer(palette);
-  s.integer(width);
-  s.integer(height);
+  s(y);
+  s(affine);
+  s(affineSize);
+  s(mode);
+  s(mosaic);
+  s(colors);
+  s(shape);
+  s(x);
+  s(affineParam);
+  s(hflip);
+  s(vflip);
+  s(size);
+  s(character);
+  s(priority);
+  s(palette);
+  s(width);
+  s(height);
 }
 
 auto PPU::ObjectParam::serialize(serializer& s) -> void {
-  s.integer(pa);
-  s.integer(pb);
-  s.integer(pc);
-  s.integer(pd);
+  s(pa);
+  s(pb);
+  s(pc);
+  s(pd);
 }

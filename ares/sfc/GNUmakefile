@@ -1,11 +1,22 @@
-ares.components += wdc65816 spc700 arm7tdmi gsu hg51b upd96050
+ares.components += wdc65816
+ares.components += spc700
+ares.components += arm7tdmi
+ares.components += gsu
+ares.components += hg51b
+ares.components += upd96050
 
-ares.objects += ares-sfc-interface ares-sfc-system ares-sfc-controller
-ares.objects += ares-sfc-cartridge ares-sfc-memory
-ares.objects += ares-sfc-cpu ares-sfc-smp ares-sfc-dsp ares-sfc-ppu
-ares.objects += ares-sfc-coprocessor ares-sfc-expansion ares-sfc-slot
+ares.objects += ares-sfc-system
+ares.objects += ares-sfc-controller
+ares.objects += ares-sfc-cartridge
+ares.objects += ares-sfc-memory
+ares.objects += ares-sfc-cpu
+ares.objects += ares-sfc-smp
+ares.objects += ares-sfc-dsp
+ares.objects += ares-sfc-ppu
+ares.objects += ares-sfc-coprocessor
+ares.objects += ares-sfc-expansion
+ares.objects += ares-sfc-slot
 
-$(object.path)/ares-sfc-interface.o:   $(ares.path)/sfc/interface/interface.cpp
 $(object.path)/ares-sfc-system.o:      $(ares.path)/sfc/system/system.cpp
 $(object.path)/ares-sfc-controller.o:  $(ares.path)/sfc/controller/controller.cpp
 $(object.path)/ares-sfc-cartridge.o:   $(ares.path)/sfc/cartridge/cartridge.cpp

@@ -2,10 +2,10 @@
 
 namespace ares::Memory {
 
-inline auto mirror(uint address, uint size) -> uint {
+inline auto mirror(u32 address, u32 size) -> u32 {
   if(size == 0) return 0;
-  uint base = 0;
-  uint mask = 1 << 31;
+  u32 base = 0;
+  u32 mask = 1 << 31;
   while(address >= size) {
     while(!(address & mask)) mask >>= 1;
     address -= mask;
@@ -18,9 +18,9 @@ inline auto mirror(uint address, uint size) -> uint {
   return base + address;
 }
 
-inline auto reduce(uint address, uint mask) -> uint {
+inline auto reduce(u32 address, u32 mask) -> u32 {
   while(mask) {
-    uint bits = (mask & -mask) - 1;
+    u32 bits = (mask & -mask) - 1;
     address = address >> 1 & ~bits | address & bits;
     mask = (mask & mask - 1) >> 1;
   }

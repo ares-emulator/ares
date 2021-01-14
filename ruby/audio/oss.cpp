@@ -40,23 +40,23 @@ struct AudioOSS : AudioDriver {
     return devices;
   }
 
-  auto hasChannels() -> vector<uint> override {
+  auto hasChannels() -> vector<u32> override {
     return {1, 2};
   }
 
-  auto hasFrequencies() -> vector<uint> override {
+  auto hasFrequencies() -> vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto hasLatencies() -> vector<uint> override {
+  auto hasLatencies() -> vector<u32> override {
     return {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   }
 
   auto setDevice(string device) -> bool override { return initialize(); }
   auto setBlocking(bool blocking) -> bool override { return updateBlocking(); }
-  auto setChannels(uint channels) -> bool override { return initialize(); }
-  auto setFrequency(uint frequency) -> bool override { return initialize(); }
-  auto setLatency(uint latency) -> bool override { return initialize(); }
+  auto setChannels(u32 channels) -> bool override { return initialize(); }
+  auto setFrequency(u32 frequency) -> bool override { return initialize(); }
+  auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
     buffer.resize(64);
@@ -69,10 +69,10 @@ struct AudioOSS : AudioDriver {
   }
 
   auto output(const double samples[]) -> void override {
-    for(uint n : range(self.channels)) {
+    for(u32 n : range(self.channels)) {
       buffer.write(sclamp<16>(samples[n] * 32767.0));
       if(buffer.full()) {
-        write(_fd, buffer.data(), buffer.capacity<uint8_t>());
+        write(_fd, buffer.data(), buffer.capacity<u8>());
         buffer.flush();
       }
     }
@@ -84,7 +84,7 @@ private:
 
     if(!hasDevices().find(self.device)) self.device = hasDevices().first();
 
-    _fd = open(self.device, O_WRONLY, O_NONBLOCK);
+    _fd = open(self.device, O_WRONLY | O_NONBLOCK);
     if(_fd < 0) return false;
 
     int cooked = 1;
@@ -120,9 +120,9 @@ private:
     return true;
   }
 
-  int _fd = -1;
-  int _format = AFMT_S16_LE;
-  int _bufferSize = 1;
+  s32 _fd = -1;
+  s32 _format = AFMT_S16_LE;
+  s32 _bufferSize = 1;
 
-  queue<int16_t> buffer;
+  queue<s16> buffer;
 };

@@ -9,6 +9,7 @@
 
 namespace ares::NeoGeoPocket {
   #include <ares/inline.hpp>
+  auto load(Node::System& node, string name) -> bool;
 
   struct Model {
     inline static auto NeoGeoPocket() -> bool;
@@ -22,5 +23,3 @@ namespace ares::NeoGeoPocket {
   #include <ngp/vpu/vpu.hpp>
   #include <ngp/psg/psg.hpp>
 }
-
-#include <ngp/interface/interface.hpp>

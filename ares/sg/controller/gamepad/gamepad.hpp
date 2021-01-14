@@ -1,10 +1,10 @@
 struct Gamepad : Controller {
-  Node::Button up;
-  Node::Button down;
-  Node::Button left;
-  Node::Button right;
-  Node::Button one;
-  Node::Button two;
+  Node::Input::Button up;
+  Node::Input::Button down;
+  Node::Input::Button left;
+  Node::Input::Button right;
+  Node::Input::Button one;
+  Node::Input::Button two;
 
   Gamepad(Node::Port);
 

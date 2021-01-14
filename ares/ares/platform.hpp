@@ -2,7 +2,7 @@
 
 namespace ares {
 
-enum class Event : uint {
+enum class Event : u32 {
   None,
   Step,
   Frame,
@@ -16,9 +16,9 @@ struct Platform {
   virtual auto open(Node::Object, string name, vfs::file::mode mode, bool required = false) -> shared_pointer<vfs::file> { return {}; }
   virtual auto event(Event) -> void {}
   virtual auto log(string_view message) -> void {}
-  virtual auto video(Node::Screen, const uint32_t* data, uint pitch, uint width, uint height) -> void {}
-  virtual auto audio(Node::Stream) -> void {}
-  virtual auto input(Node::Input) -> void {}
+  virtual auto video(Node::Video::Screen, const u32* data, u32 pitch, u32 width, u32 height) -> void {}
+  virtual auto audio(Node::Audio::Stream) -> void {}
+  virtual auto input(Node::Input::Input) -> void {}
 };
 
 extern Platform* platform;
@@ -26,6 +26,7 @@ extern Platform* platform;
 }
 
 namespace ares::Core {
+  // <ares/node/node.hpp> forward declarations
   auto PlatformAttach(Node::Object node) -> void { if(platform && node->name()) platform->attach(node); }
   auto PlatformDetach(Node::Object node) -> void { if(platform && node->name()) platform->detach(node); }
   auto PlatformLog(string_view text) -> void { if(platform) platform->log(text); }

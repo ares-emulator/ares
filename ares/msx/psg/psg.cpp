@@ -6,9 +6,9 @@ PSG psg;
 #include "serialization.cpp"
 
 auto PSG::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("PSG");
+  node = parent->append<Node::Object>("PSG");
 
-  stream = node->append<Node::Stream>("PSG");
+  stream = node->append<Node::Audio::Stream>("PSG");
   stream->setChannels(1);
   stream->setFrequency(system.colorburst() / 16.0);
   stream->addHighPassFilter(20.0, 1);
@@ -25,7 +25,7 @@ auto PSG::main() -> void {
   output += volume[channels[0]];
   output += volume[channels[1]];
   output += volume[channels[2]];
-  stream->sample(output / 3.0);
+  stream->frame(output / 3.0);
   step(1);
 }
 

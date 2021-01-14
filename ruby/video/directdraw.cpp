@@ -54,14 +54,14 @@ struct VideoDirectDraw : VideoDriver {
     _raster->Blt(0, 0, 0, DDBLT_WAIT | DDBLT_COLORFILL, &fx);
   }
 
-  auto size(uint& width, uint& height) -> void override {
+  auto size(u32& width, u32& height) -> void override {
     RECT rectangle;
     GetClientRect(_context, &rectangle);
     width = rectangle.right - rectangle.left;
     height = rectangle.bottom - rectangle.top;
   }
 
-  auto acquire(uint32_t*& data, uint& pitch, uint width, uint height) -> bool override {
+  auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
     if(width != _width || height != _height) resize(_width = width, _height = height);
     DDSURFACEDESC2 description = {};
     description.dwSize = sizeof(DDSURFACEDESC2);
@@ -70,15 +70,15 @@ struct VideoDirectDraw : VideoDriver {
       if(_raster->Lock(0, &description, DDLOCK_WAIT, 0) != DD_OK) return false;
     }
     pitch = description.lPitch;
-    return data = (uint32_t*)description.lpSurface;
+    return data = (u32*)description.lpSurface;
   }
 
   auto release() -> void override {
     _raster->Unlock(0);
   }
 
-  auto output(uint width, uint height) -> void override {
-    uint windowWidth, windowHeight;
+  auto output(u32 width, u32 height) -> void override {
+    u32 windowWidth, windowHeight;
     size(windowWidth, windowHeight);
 
     if(self.blocking) while(true) {
@@ -97,8 +97,8 @@ struct VideoDirectDraw : VideoDriver {
     GetClientRect(_context, &target);
     OffsetRect(&target, point.x, point.y);
 
-    target.left += ((int)windowWidth - (int)width) / 2;
-    target.top += ((int)windowHeight - (int)height) / 2;
+    target.left += ((s32)windowWidth - (s32)width) / 2;
+    target.top += ((s32)windowHeight - (s32)height) / 2;
     target.right = target.left + width;
     target.bottom = target.top + height;
 
@@ -180,7 +180,7 @@ private:
     _context = nullptr;
   }
 
-  auto resize(uint width, uint height) -> void {
+  auto resize(u32 width, u32 height) -> void {
     if(_surfaceWidth >= width && _surfaceHeight >= height) return;
 
     _surfaceWidth = max(width, _surfaceWidth);
@@ -191,7 +191,7 @@ private:
     DDSURFACEDESC2 description{};
     description.dwSize = sizeof(DDSURFACEDESC2);
     _screen->GetSurfaceDesc(&description);
-    int depth = description.ddpfPixelFormat.dwRGBBitCount;
+    s32 depth = description.ddpfPixelFormat.dwRGBBitCount;
     if(depth == 32) goto tryNativeSurface;
 
     memory::fill(&description, sizeof(DDSURFACEDESC2));
@@ -223,13 +223,13 @@ private:
 
   bool _ready = false;
 
-  int _monitorX = 0;
-  int _monitorY = 0;
-  int _monitorWidth = 0;
-  int _monitorHeight = 0;
+  s32 _monitorX = 0;
+  s32 _monitorY = 0;
+  s32 _monitorWidth = 0;
+  s32 _monitorHeight = 0;
 
-  uint _width = 0;
-  uint _height = 0;
+  u32 _width = 0;
+  u32 _height = 0;
 
   HWND _context = nullptr;
   HWND _window = nullptr;
@@ -237,6 +237,6 @@ private:
   LPDIRECTDRAWSURFACE7 _screen = nullptr;
   LPDIRECTDRAWSURFACE7 _raster = nullptr;
   LPDIRECTDRAWCLIPPER _clipper = nullptr;
-  uint _surfaceWidth = 0;
-  uint _surfaceHeight = 0;
+  u32 _surfaceWidth = 0;
+  u32 _surfaceHeight = 0;
 };

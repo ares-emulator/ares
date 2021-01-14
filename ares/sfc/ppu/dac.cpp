@@ -1,7 +1,13 @@
 auto PPU::DAC::scanline() -> void {
-  lineA = ppu.output + ppu.vcounter() * 1024;
-  lineB = lineA + (ppu.self.interlace ? 0 : 512);
-  if(ppu.self.interlace && ppu.field()) lineA += 512, lineB += 512;
+  line = nullptr;
+
+  auto vcounter = ppu.vcounter();
+  auto output = ppu.screen->pixels().data();
+  if(!ppu.self.overscan) vcounter += 8;
+  if(vcounter < 240) {
+    line = output + vcounter * 2 * 512;
+    if(ppu.self.interlace && ppu.field()) line += 512;
+  }
 
   //the first hires pixel of each scanline is transparent
   //note: exact value initializations are not confirmed on hardware
@@ -23,8 +29,9 @@ auto PPU::DAC::run() -> void {
   auto belowColor = below(hires);
   auto aboveColor = above();
 
-  *lineA++ = *lineB++ = ppu.io.displayBrightness << 15 | (hires ? belowColor : aboveColor);
-  *lineA++ = *lineB++ = ppu.io.displayBrightness << 15 | (aboveColor);
+  if(!line) return;
+  *line++ = ppu.io.displayBrightness << 15 | (hires ? belowColor : aboveColor);
+  *line++ = ppu.io.displayBrightness << 15 | (aboveColor);
 }
 
 auto PPU::DAC::below(bool hires) -> uint16 {

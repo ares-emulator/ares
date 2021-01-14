@@ -50,13 +50,15 @@ auto PPU::Objects::scanline(uint y) -> void {
 
         uint8 color = ppu.readObjectVRAM(baseAddress + (offset >> !object.colors));
         if(object.colors == 0) color = sx & 1 ? color >> 4 : color & 15;
-        if(color) {
-          if(object.mode & 2) {
+        if(object.mode & 2) {
+          if(color) {
             buffer[bx].window = true;
-          } else if(!buffer[bx].enable || object.priority < buffer[bx].priority) {
+          }
+        } else if(!buffer[bx].enable || object.priority < buffer[bx].priority) {
+          buffer[bx].priority = object.priority;  //updated regardless of transparency
+          if(color) {
             if(object.colors == 0) color = object.palette * 16 + color;
             buffer[bx].enable = true;
-            buffer[bx].priority = object.priority;
             buffer[bx].color = ppu.pram[256 + color];
             buffer[bx].translucent = object.mode == 1;
             buffer[bx].mosaic = object.mosaic;

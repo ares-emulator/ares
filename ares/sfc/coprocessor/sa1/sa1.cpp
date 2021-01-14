@@ -9,7 +9,7 @@ SA1 sa1;
 #include "serialization.cpp"
 
 auto SA1::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("SA1");
+  node = parent->append<Node::Object>("SA1");
 
   debugger.load(node);
 }

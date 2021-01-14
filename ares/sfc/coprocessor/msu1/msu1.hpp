@@ -1,5 +1,5 @@
 struct MSU1 : Thread {
-  Node::Stream stream;
+  Node::Audio::Stream stream;
   Shared::File dataFile;
   Shared::File audioFile;
 

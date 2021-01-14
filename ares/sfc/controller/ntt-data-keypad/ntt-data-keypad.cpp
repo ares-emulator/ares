@@ -1,33 +1,33 @@
 NTTDataKeypad::NTTDataKeypad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("NTT Data Keypad");
 
-  up    = node->append<Node::Button>("Up");
-  down  = node->append<Node::Button>("Down");
-  left  = node->append<Node::Button>("Left");
-  right = node->append<Node::Button>("Right");
-  b     = node->append<Node::Button>("B");
-  a     = node->append<Node::Button>("A");
-  y     = node->append<Node::Button>("Y");
-  x     = node->append<Node::Button>("X");
-  l     = node->append<Node::Button>("L");
-  r     = node->append<Node::Button>("R");
-  back  = node->append<Node::Button>("Back");
-  next  = node->append<Node::Button>("Next");
-  one   = node->append<Node::Button>("1");
-  two   = node->append<Node::Button>("2");
-  three = node->append<Node::Button>("3");
-  four  = node->append<Node::Button>("4");
-  five  = node->append<Node::Button>("5");
-  six   = node->append<Node::Button>("6");
-  seven = node->append<Node::Button>("7");
-  eight = node->append<Node::Button>("8");
-  nine  = node->append<Node::Button>("9");
-  zero  = node->append<Node::Button>("0");
-  star  = node->append<Node::Button>("*");
-  clear = node->append<Node::Button>("C");
-  pound = node->append<Node::Button>("#");
-  point = node->append<Node::Button>(".");
-  end   = node->append<Node::Button>("End");
+  up    = node->append<Node::Input::Button>("Up");
+  down  = node->append<Node::Input::Button>("Down");
+  left  = node->append<Node::Input::Button>("Left");
+  right = node->append<Node::Input::Button>("Right");
+  b     = node->append<Node::Input::Button>("B");
+  a     = node->append<Node::Input::Button>("A");
+  y     = node->append<Node::Input::Button>("Y");
+  x     = node->append<Node::Input::Button>("X");
+  l     = node->append<Node::Input::Button>("L");
+  r     = node->append<Node::Input::Button>("R");
+  back  = node->append<Node::Input::Button>("Back");
+  next  = node->append<Node::Input::Button>("Next");
+  one   = node->append<Node::Input::Button>("1");
+  two   = node->append<Node::Input::Button>("2");
+  three = node->append<Node::Input::Button>("3");
+  four  = node->append<Node::Input::Button>("4");
+  five  = node->append<Node::Input::Button>("5");
+  six   = node->append<Node::Input::Button>("6");
+  seven = node->append<Node::Input::Button>("7");
+  eight = node->append<Node::Input::Button>("8");
+  nine  = node->append<Node::Input::Button>("9");
+  zero  = node->append<Node::Input::Button>("0");
+  star  = node->append<Node::Input::Button>("*");
+  clear = node->append<Node::Input::Button>("C");
+  pound = node->append<Node::Input::Button>("#");
+  point = node->append<Node::Input::Button>(".");
+  end   = node->append<Node::Input::Button>("End");
 }
 
 auto NTTDataKeypad::data() -> uint2 {

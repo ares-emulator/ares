@@ -46,7 +46,7 @@ auto CPU::load(Node::Object parent) -> void {
     ram[0x2f95] = ram[0x2f91];
   }
 
-  node = parent->append<Node::Component>("CPU");
+  node = parent->append<Node::Object>("CPU");
 
   debugger.load(node);
 }

@@ -1,60 +1,60 @@
 auto YM2149::serialize(serializer& s) -> void {
-  s.integer(toneA.counter);
-  s.integer(toneA.period);
-  s.integer(toneA.unused);
-  s.integer(toneA.output);
+  s(toneA.counter);
+  s(toneA.period);
+  s(toneA.unused);
+  s(toneA.output);
 
-  s.integer(toneB.counter);
-  s.integer(toneB.period);
-  s.integer(toneB.unused);
-  s.integer(toneB.output);
+  s(toneB.counter);
+  s(toneB.period);
+  s(toneB.unused);
+  s(toneB.output);
 
-  s.integer(toneC.counter);
-  s.integer(toneC.period);
-  s.integer(toneC.unused);
-  s.integer(toneC.output);
+  s(toneC.counter);
+  s(toneC.period);
+  s(toneC.unused);
+  s(toneC.output);
 
-  s.integer(noise.counter);
-  s.integer(noise.period);
-  s.integer(noise.unused);
-  s.integer(noise.flip);
-  s.integer(noise.lfsr);
-  s.integer(noise.output);
+  s(noise.counter);
+  s(noise.period);
+  s(noise.unused);
+  s(noise.flip);
+  s(noise.lfsr);
+  s(noise.output);
 
-  s.integer(envelope.counter);
-  s.integer(envelope.period);
-  s.integer(envelope.holding);
-  s.integer(envelope.attacking);
-  s.integer(envelope.hold);
-  s.integer(envelope.alternate);
-  s.integer(envelope.attack);
-  s.integer(envelope.repeat);
-  s.integer(envelope.unused);
-  s.integer(envelope.output);
+  s(envelope.counter);
+  s(envelope.period);
+  s(envelope.holding);
+  s(envelope.attacking);
+  s(envelope.hold);
+  s(envelope.alternate);
+  s(envelope.attack);
+  s(envelope.repeat);
+  s(envelope.unused);
+  s(envelope.output);
 
-  s.integer(channelA.tone);
-  s.integer(channelA.noise);
-  s.integer(channelA.envelope);
-  s.integer(channelA.volume);
-  s.integer(channelA.unused);
+  s(channelA.tone);
+  s(channelA.noise);
+  s(channelA.envelope);
+  s(channelA.volume);
+  s(channelA.unused);
 
-  s.integer(channelB.tone);
-  s.integer(channelB.noise);
-  s.integer(channelB.envelope);
-  s.integer(channelB.volume);
-  s.integer(channelB.unused);
+  s(channelB.tone);
+  s(channelB.noise);
+  s(channelB.envelope);
+  s(channelB.volume);
+  s(channelB.unused);
 
-  s.integer(channelC.tone);
-  s.integer(channelC.noise);
-  s.integer(channelC.envelope);
-  s.integer(channelC.volume);
-  s.integer(channelC.unused);
+  s(channelC.tone);
+  s(channelC.noise);
+  s(channelC.envelope);
+  s(channelC.volume);
+  s(channelC.unused);
 
-  s.integer(portA.direction);
-  s.integer(portA.data);
+  s(portA.direction);
+  s(portA.data);
 
-  s.integer(portB.direction);
-  s.integer(portB.data);
+  s(portB.direction);
+  s(portB.data);
 
-  s.integer(io.register);
+  s(io.register);
 }

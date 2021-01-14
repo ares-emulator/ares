@@ -8,11 +8,19 @@ namespace ares {
 #include "sprites.cpp"
 #include "serialization.cpp"
 
+auto TMS9918::load(Node::Video::Screen screen) -> void {
+  this->screen = screen;
+}
+
+auto TMS9918::unload() -> void {
+  this->screen.reset();
+}
+
 auto TMS9918::main() -> void {
   if(io.vcounter < 192) {
     uint8 y = io.vcounter;
     sprite(y);
-    auto line = buffer + y * 256;
+    auto line = screen->pixels().data() + y * 256;
     for(uint8 x : range(256)) {
       background(x, y);
       sprite(x, y);

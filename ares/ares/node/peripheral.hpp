@@ -1,5 +1,5 @@
 struct Peripheral : Object {
-  DeclareClass(Peripheral, "Peripheral")
+  DeclareClass(Peripheral, "peripheral")
   using Object::Object;
 
   auto manifest() -> string { if(_manifest) return _manifest(); return {}; }

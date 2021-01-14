@@ -87,18 +87,18 @@ auto APU::Wave::power(bool initializeLength) -> void {
 }
 
 auto APU::Wave::serialize(serializer& s) -> void {
-  s.integer(enable);
+  s(enable);
 
-  s.integer(dacEnable);
-  s.integer(volume);
-  s.integer(frequency);
-  s.integer(counter);
-  s.array(pattern);
+  s(dacEnable);
+  s(volume);
+  s(frequency);
+  s(counter);
+  s(pattern);
 
-  s.integer(output);
-  s.integer(length);
-  s.integer(period);
-  s.integer(patternOffset);
-  s.integer(patternSample);
-  s.integer(patternHold);
+  s(output);
+  s(length);
+  s(period);
+  s(patternOffset);
+  s(patternSample);
+  s(patternHold);
 }

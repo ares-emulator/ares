@@ -15,20 +15,15 @@ auto SPU::writeRAM(u32 address, u16 data) -> void {
 }
 
 auto SPU::readDMA() -> u32 {
-  print("* SPU DMA read\n");
-  return 0;
+  if(fifo.empty()) fifoReadBlock();
+  uint32 data = fifo.read(0) <<  0;
+  return data | fifo.read(0) << 16;
 }
 
 auto SPU::writeDMA(u32 data) -> void {
-  for(uint half : range(2)) {
-    if(fifo.full()) break;
-    fifo.write(u16(data));
-    data >>= 16;
-    if(fifo.full() && irq.enable) {
-      irq.flag = 1;
-      interrupt.raise(Interrupt::SPU);
-    }
-  }
+  fifo.write(data >>  0);
+  fifo.write(data >> 16);
+  if(fifo.size() >= 8) fifoWriteBlock();
 }
 
 auto SPU::readByte(u32 address) -> u32 {
@@ -44,13 +39,13 @@ auto SPU::readHalf(u32 address) -> u32 {
   //volume left
   if((address & 0xffff'fe0f) == 0x1f80'1c00 && v < 24) {
     data.bit( 0,14) = voice[v].volume[0].level;
-    data.bit(15)    = voice[v].volume[0].mode;
+    data.bit(15)    = voice[v].volume[0].sweep;
   }
 
   //volume right
   if((address & 0xffff'fe0f) == 0x1f80'1c02 && v < 24) {
     data.bit( 0,14) = voice[v].volume[1].level;
-    data.bit(15)    = voice[v].volume[1].mode;
+    data.bit(15)    = voice[v].volume[1].sweep;
   }
 
   //ADPCM sample rate
@@ -94,13 +89,13 @@ auto SPU::readHalf(u32 address) -> u32 {
   //main volume left
   if(address == 0x1f80'1d80) {
     data.bit( 0,14) = volume[0].level;
-    data.bit(15)    = volume[0].mode;
+    data.bit(15)    = volume[0].sweep;
   }
 
   //main volume right
   if(address == 0x1f80'1d82) {
     data.bit( 0,14) = volume[1].level;
-    data.bit(15)    = volume[1].mode;
+    data.bit(15)    = volume[1].sweep;
   }
 
   //vLOUT
@@ -177,16 +172,16 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //SPUCNT
   if(address == 0x1f80'1daa) {
-    data.bit( 0)    = cdda.enable;
+    data.bit( 0)    = cdaudio.enable;
     data.bit( 1)    = external.enable;
-    data.bit( 2)    = cdda.reverb;
+    data.bit( 2)    = cdaudio.reverb;
     data.bit( 3)    = external.reverb;
     data.bit( 4, 5) = transfer.mode;
     data.bit( 6)    = irq.enable;
     data.bit( 7)    = reverb.enable;
     data.bit( 8, 9) = noise.step;
     data.bit(10,13) = noise.shift;
-    data.bit(14)    = master.mute;
+    data.bit(14)    = master.unmute;
     data.bit(15)    = master.enable;
   }
 
@@ -199,23 +194,27 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //SPUSTAT
   if(address == 0x1f80'1dae) {
-    data.bit(0)   = cdda.enable;
-    data.bit(1)   = external.enable;
-    data.bit(2)   = cdda.reverb;
-    data.bit(3)   = external.reverb;
-    data.bit(4,5) = transfer.mode;
-    data.bit(6)   = irq.flag;
-    data.bit(7)   = transfer.mode.bit(1);
+    data.bit( 0)    = cdaudio.enable;
+    data.bit( 1)    = external.enable;
+    data.bit( 2)    = cdaudio.reverb;
+    data.bit( 3)    = external.reverb;
+    data.bit( 4, 5) = transfer.mode;
+    data.bit( 6)    = irq.flag;
+    data.bit( 7)    = transfer.mode.bit(1);
+    data.bit( 8)    = 0;  //DMA read request
+    data.bit( 9)    = 0;  //DMA write request
+    data.bit(10)    = 0;  //transfer busy
+    data.bit(11)    = capture.address.bit(9);  //in second-half of capture buffer
   }
 
-  //CD-DA volume left
+  //CD audio volume left
   if(address == 0x1f80'1db0) {
-    data.bit(0,15) = cdda.volume[0];
+    data.bit(0,15) = cdaudio.volume[0];
   }
 
-  //CD-DA volume right
+  //CD audio volume right
   if(address == 0x1f80'1db2) {
-    data.bit(0,15) = cdda.volume[1];
+    data.bit(0,15) = cdaudio.volume[1];
   }
 
   //external volume left
@@ -430,28 +429,30 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //volume left
   if((address & 0xffff'fe0f) == 0x1f80'1c00 && v < 24) {
-    voice[v].volume[0].level    = data.bit( 0,14);
-    voice[v].volume[0].mode     = data.bit(15);
-
-    voice[v].sweep[0].step      = data.bit( 0, 1);
-    voice[v].sweep[0].shift     = data.bit( 2, 6);
-    voice[v].sweep[0].unknown   = data.bit( 7,11);
-    voice[v].sweep[0].phase     = data.bit(12);
-    voice[v].sweep[0].direction = data.bit(13);
-    voice[v].sweep[0].mode      = data.bit(14);
+    //normal
+    voice[v].volume[0].level       = data.bit( 0,14);
+    //sweep
+    voice[v].volume[0].rate        = data.bit( 0, 6);
+    voice[v].volume[0].negative    = data.bit(12);
+    voice[v].volume[0].decreasing  = data.bit(13);
+    voice[v].volume[0].exponential = data.bit(14);
+    //mode
+    voice[v].volume[0].sweep       = data.bit(15);
+    voice[v].volume[0].reset();
   }
 
   //volume right
   if((address & 0xffff'fe0f) == 0x1f80'1c02 && v < 24) {
-    voice[v].volume[1].level    = data.bit( 0,14);
-    voice[v].volume[1].mode     = data.bit(15);
-
-    voice[v].sweep[1].step      = data.bit( 0, 1);
-    voice[v].sweep[1].shift     = data.bit( 2, 6);
-    voice[v].sweep[1].unknown   = data.bit( 7,11);
-    voice[v].sweep[1].phase     = data.bit(12);
-    voice[v].sweep[1].direction = data.bit(13);
-    voice[v].sweep[1].mode      = data.bit(14);
+    //normal
+    voice[v].volume[1].level       = data.bit( 0,14);
+    //sweep
+    voice[v].volume[1].rate        = data.bit( 0, 6);
+    voice[v].volume[1].negative    = data.bit(12);
+    voice[v].volume[1].decreasing  = data.bit(13);
+    voice[v].volume[1].exponential = data.bit(14);
+    //mode
+    voice[v].volume[1].sweep       = data.bit(15);
+    voice[v].volume[1].reset();
   }
 
   //ADPCM sample rate
@@ -495,28 +496,30 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //main volume left
   if(address == 0x1f80'1d80) {
-    volume[0].level    = data.bit( 0,14);
-    volume[0].mode     = data.bit(15);
-
-    sweep[0].step      = data.bit( 0, 1);
-    sweep[0].shift     = data.bit( 2, 6);
-    sweep[0].unknown   = data.bit( 7,11);
-    sweep[0].phase     = data.bit(12);
-    sweep[0].direction = data.bit(13);
-    sweep[0].mode      = data.bit(14);
+    //normal
+    volume[0].level       = data.bit( 0,14);
+    //sweep
+    volume[0].rate        = data.bit( 0, 6);
+    volume[0].negative    = data.bit(12);
+    volume[0].decreasing  = data.bit(13);
+    volume[0].exponential = data.bit(14);
+    //mode
+    volume[0].sweep       = data.bit(15);
+    volume[0].reset();
   }
 
   //main volume right
   if(address == 0x1f80'1d82) {
-    volume[1].level    = data.bit( 0,14);
-    volume[1].mode     = data.bit(15);
-
-    sweep[1].step      = data.bit( 0, 1);
-    sweep[1].shift     = data.bit( 2, 6);
-    sweep[1].unknown   = data.bit( 7,11);
-    sweep[1].phase     = data.bit(12);
-    sweep[1].direction = data.bit(13);
-    sweep[1].mode      = data.bit(14);
+    //normal
+    volume[1].level       = data.bit( 0,14);
+    //sweep
+    volume[1].rate        = data.bit( 0, 6);
+    volume[1].negative    = data.bit(12);
+    volume[1].decreasing  = data.bit(13);
+    volume[1].exponential = data.bit(14);
+    //mode
+    volume[1].sweep       = data.bit(15);
+    volume[1].reset();
   }
 
   //vLOUT
@@ -596,20 +599,26 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //SPUCNT
   if(address == 0x1f80'1daa) {
-    cdda.enable     = data.bit( 0);
+    cdaudio.enable  = data.bit( 0);
     external.enable = data.bit( 1);
-    cdda.reverb     = data.bit( 2);
+    cdaudio.reverb  = data.bit( 2);
     external.reverb = data.bit( 3);
     transfer.mode   = data.bit( 4, 5);
     irq.enable      = data.bit( 6);
     reverb.enable   = data.bit( 7);
     noise.step      = data.bit( 8, 9);
     noise.shift     = data.bit(10,13);
-    master.mute     = data.bit(14);
+    master.unmute   = data.bit(14);
     master.enable   = data.bit(15);
 
-    if(transfer.mode == 0) fifo.flush();
-    if(transfer.mode == 1) fifoManualWrite();
+    if(transfer.mode == 0) {
+      fifo.flush();
+    }
+
+    if(transfer.mode == 1) {
+      while(fifo.size() >= 8) fifoWriteBlock();
+      if(!fifo.empty()) debug(unhandled, "SPU::writeHalf: FIFO not empty");
+    }
 
     if(irq.enable == 0) {
       irq.flag = 0;
@@ -629,14 +638,14 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
     //read-only
   }
 
-  //CD-DA volume left
+  //CD audio volume left
   if(address == 0x1f80'1db0) {
-    cdda.volume[0] = data.bit(0,15);
+    cdaudio.volume[0] = data.bit(0,15);
   }
 
-  //CD-DA volume right
+  //CD audio volume right
   if(address == 0x1f80'1db2) {
-    cdda.volume[1] = data.bit(0,15);
+    cdaudio.volume[1] = data.bit(0,15);
   }
 
   //external volume left

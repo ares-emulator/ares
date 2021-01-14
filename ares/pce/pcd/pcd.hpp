@@ -1,7 +1,7 @@
 //PC Engine CD-ROM
 
 struct PCD : Thread {
-  Node::Component node;
+  Node::Object node;
   Node::Port tray;
   Node::Peripheral disc;
   Shared::File fd;
@@ -17,10 +17,10 @@ struct PCD : Thread {
     auto load(Node::Object) -> void;
 
     struct Memory {
-      Node::Memory wram;
-      Node::Memory bram;
-      Node::Memory sram;
-      Node::Memory adpcm;
+      Node::Debugger::Memory wram;
+      Node::Debugger::Memory bram;
+      Node::Debugger::Memory sram;
+      Node::Debugger::Memory adpcm;
     } memory;
   } debugger;
 
@@ -203,7 +203,7 @@ private:
     maybe<Drive&> drive;
     maybe<SCSI&> scsi;
     maybe<Fader&> fader;
-    Node::Stream stream;
+    Node::Audio::Stream stream;
 
     //cdda.cpp
     auto load(Node::Object) -> void;
@@ -229,7 +229,7 @@ private:
     maybe<SCSI&> scsi;
     maybe<Fader&> fader;
     MSM5205 msm5205;
-    Node::Stream stream;
+    Node::Audio::Stream stream;
     Memory::Writable<uint8> memory;  //64KB
 
     static constexpr uint ReadLatency  = 20;  //estimation

@@ -30,7 +30,7 @@ struct SuperLodeRunner : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
-    s.integer(bank);
+    s(bank);
   }
 
   uint8 bank;

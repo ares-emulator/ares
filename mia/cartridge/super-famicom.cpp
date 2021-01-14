@@ -1,38 +1,38 @@
 struct SuperFamicom : Cartridge {
   auto name() -> string override { return "Super Famicom"; }
   auto extensions() -> vector<string> override { return {"sfc", "smc", "swc", "fig"}; }
-  auto export(string location) -> vector<uint8_t> override;
-  auto heuristics(vector<uint8_t>& data, string location) -> string override;
+  auto export(string location) -> vector<u8> override;
+  auto heuristics(vector<u8>& data, string location) -> string override;
 
   auto region() const -> string;
   auto revision() const -> string;
   auto board() const -> string;
   auto title() const -> string;
   auto serial() const -> string;
-  auto romSize() const -> uint;
-  auto programRomSize() const -> uint;
-  auto dataRomSize() const -> uint;
-  auto expansionRomSize() const -> uint;
-  auto firmwareRomSize() const -> uint;
-  auto ramSize() const -> uint;
-  auto expansionRamSize() const -> uint;
+  auto romSize() const -> u32;
+  auto programRomSize() const -> u32;
+  auto dataRomSize() const -> u32;
+  auto expansionRomSize() const -> u32;
+  auto firmwareRomSize() const -> u32;
+  auto ramSize() const -> u32;
+  auto expansionRamSize() const -> u32;
   auto nonVolatile() const -> bool;
 
-  auto size() const -> uint { return data.size(); }
-  auto scoreHeader(uint address) -> uint;
+  auto size() const -> u32 { return data.size(); }
+  auto scoreHeader(u32 address) -> u32;
   auto firmwareARM() const -> string;
   auto firmwareEXNEC() const -> string;
   auto firmwareGB() const -> string;
   auto firmwareHITACHI() const -> string;
   auto firmwareNEC() const -> string;
 
-  array_view<uint8_t> data;
+  array_view<u8> data;
   string location;
   natural headerAddress;
 };
 
-auto SuperFamicom::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto SuperFamicom::export(string location) -> vector<u8> {
+  vector<u8> data;
   auto files = directory::files(location, "*.rom");
   append(data, {location, "program.rom"});
   append(data, {location, "data.rom"   });
@@ -42,7 +42,7 @@ auto SuperFamicom::export(string location) -> vector<uint8_t> {
   return data;
 }
 
-auto SuperFamicom::heuristics(vector<uint8_t>& data, string location) -> string {
+auto SuperFamicom::heuristics(vector<u8>& data, string location) -> string {
   this->data = data;
   this->location = location;
 
@@ -55,10 +55,10 @@ auto SuperFamicom::heuristics(vector<uint8_t>& data, string location) -> string 
   //ignore images too small to be valid
   if(size() < 0x8000) return {};
 
-  uint LoROM   = scoreHeader(  0x7fb0);
-  uint HiROM   = scoreHeader(  0xffb0);
-  uint ExLoROM = scoreHeader(0x407fb0);
-  uint ExHiROM = scoreHeader(0x40ffb0);
+  u32 LoROM   = scoreHeader(  0x7fb0);
+  u32 HiROM   = scoreHeader(  0xffb0);
+  u32 ExLoROM = scoreHeader(0x407fb0);
+  u32 ExHiROM = scoreHeader(0x40ffb0);
   if(ExLoROM) ExLoROM += 4;
   if(ExHiROM) ExHiROM += 4;
 
@@ -319,7 +319,7 @@ auto SuperFamicom::revision() const -> string {
   char C = data[headerAddress + 0x04];  //game code
   char D = data[headerAddress + 0x05];  //region code (new; sometimes ambiguous)
   auto E = data[headerAddress + 0x29];  //region code (old)
-  uint F = data[headerAddress + 0x2b];  //revision code
+  auto F = data[headerAddress + 0x2b];  //revision code
 
   auto valid = [](char n) { return (n >= '0' && n <= '9') || (n >= 'A' && n <= 'Z'); };
   if(data[headerAddress + 0x2a] == 0x33 && valid(A) && valid(B) & valid(C) & valid(D)) {
@@ -421,7 +421,7 @@ auto SuperFamicom::board() const -> string {
 auto SuperFamicom::title() const -> string {
   string label;
 
-  for(uint n = 0; n < 0x15; n++) {
+  for(u32 n = 0; n < 0x15; n++) {
     auto x = data[headerAddress + 0x10 + n];
     auto y = n == 0x14 ? 0 : data[headerAddress + 0x11 + n];
 
@@ -534,29 +534,29 @@ auto SuperFamicom::serial() const -> string {
   return "";
 }
 
-auto SuperFamicom::romSize() const -> uint {
+auto SuperFamicom::romSize() const -> u32 {
   return size() - firmwareRomSize();
 }
 
-auto SuperFamicom::programRomSize() const -> uint {
+auto SuperFamicom::programRomSize() const -> u32 {
   if(board().beginsWith("SPC7110-")) return 0x100000;
   if(board().beginsWith("EXSPC7110-")) return 0x100000;
   return romSize();
 }
 
-auto SuperFamicom::dataRomSize() const -> uint {
+auto SuperFamicom::dataRomSize() const -> u32 {
   if(board().beginsWith("SPC7110-")) return romSize() - 0x100000;
   if(board().beginsWith("EXSPC7110-")) return 0x500000;
   return 0;
 }
 
-auto SuperFamicom::expansionRomSize() const -> uint {
+auto SuperFamicom::expansionRomSize() const -> u32 {
   if(board().beginsWith("EXSPC7110-")) return 0x100000;
   return 0;
 }
 
 //detect if any firmware is appended to the ROM image, and return its size if so
-auto SuperFamicom::firmwareRomSize() const -> uint {
+auto SuperFamicom::firmwareRomSize() const -> u32 {
   auto cartridgeTypeLo  = data[headerAddress + 0x26] & 15;
   auto cartridgeTypeHi  = data[headerAddress + 0x26] >> 4;
   auto cartridgeSubType = data[headerAddress + 0x0f];
@@ -589,13 +589,13 @@ auto SuperFamicom::firmwareRomSize() const -> uint {
   return 0;
 }
 
-auto SuperFamicom::ramSize() const -> uint {
+auto SuperFamicom::ramSize() const -> u32 {
   auto ramSize = data[headerAddress + 0x28] & 7;
   if(ramSize) return 1024 << ramSize;
   return 0;
 }
 
-auto SuperFamicom::expansionRamSize() const -> uint {
+auto SuperFamicom::expansionRamSize() const -> u32 {
   if(data[headerAddress + 0x2a] == 0x33) {
     auto ramSize = data[headerAddress + 0x0d] & 7;
     if(ramSize) return 1024 << ramSize;
@@ -612,17 +612,17 @@ auto SuperFamicom::nonVolatile() const -> bool {
   return cartridgeTypeLo == 0x2 || cartridgeTypeLo == 0x5 || cartridgeTypeLo == 0x6;
 }
 
-auto SuperFamicom::scoreHeader(uint address) -> uint {
-  int score = 0;
+auto SuperFamicom::scoreHeader(u32 address) -> u32 {
+  s32 score = 0;
   if(size() < address + 0x50) return score;
 
-  uint8_t  mapMode     = data[address + 0x25] & ~0x10;  //ignore FastROM bit
-  uint16_t complement  = data[address + 0x2c] << 0 | data[address + 0x2d] << 8;
-  uint16_t checksum    = data[address + 0x2e] << 0 | data[address + 0x2f] << 8;
-  uint16_t resetVector = data[address + 0x4c] << 0 | data[address + 0x4d] << 8;
+  u8  mapMode     = data[address + 0x25] & ~0x10;  //ignore FastROM bit
+  u16 complement  = data[address + 0x2c] << 0 | data[address + 0x2d] << 8;
+  u16 checksum    = data[address + 0x2e] << 0 | data[address + 0x2f] << 8;
+  u16 resetVector = data[address + 0x4c] << 0 | data[address + 0x4d] << 8;
   if(resetVector < 0x8000) return score;  //$00:0000-7fff is never ROM data
 
-  uint8_t opcode = data[(address & ~0x7fff) | (resetVector & 0x7fff)];  //first instruction executed
+  u8 opcode = data[(address & ~0x7fff) | (resetVector & 0x7fff)];  //first instruction executed
 
   //most likely opcodes
   if(opcode == 0x78  //sei

@@ -12,9 +12,9 @@ CPU cpu;
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("CPU");
+  node = parent->append<Node::Object>("CPU");
 
-  version = parent->append<Node::Natural>("Version", 2);
+  version = parent->append<Node::Setting::Natural>("Version", 2);
   version->setAllowedValues({1, 2});
 
   debugger.load(node);
@@ -89,11 +89,12 @@ auto CPU::power(bool reset) -> void {
   PPUcounter::reset();
   PPUcounter::scanline = {&CPU::scanline, this};
 
-  if(!reset) random.array(wram, sizeof(wram));
+  if(!reset) random.array({wram, sizeof(wram)});
 
-  for(uint n : range(8)) {
-    channels[n] = {};
-    if(n != 7) channels[n].next = channels[n + 1];
+  for(uint id : range(8)) {
+    channels[id] = {};
+    channels[id].id = id;
+    if(id != 7) channels[id].next = channels[id + 1];
   }
 
   counter = {};

@@ -16,20 +16,20 @@ struct AudioPulseAudioSimple : AudioDriver {
   auto driver() -> string override { return "PulseAudio Simple"; }
   auto ready() -> bool override { return _ready; }
 
-  auto hasFrequencies() -> vector<uint> override {
+  auto hasFrequencies() -> vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto setFrequency(uint frequency) -> bool override { return initialize(); }
+  auto setFrequency(u32 frequency) -> bool override { return initialize(); }
 
-  auto output(const double samples[]) -> void override {
+  auto output(const f64 samples[]) -> void override {
     if(!ready()) return;
 
-    _buffer[_offset]  = (uint16_t)sclamp<16>(samples[0] * 32767.0) <<  0;
-    _buffer[_offset] |= (uint16_t)sclamp<16>(samples[1] * 32767.0) << 16;
+    _buffer[_offset]  = (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
+    _buffer[_offset] |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
     if(++_offset >= 64) {
       int error;
-      pa_simple_write(_interface, (const void*)_buffer, _offset * sizeof(uint32_t), &error);
+      pa_simple_write(_interface, (const void*)_buffer, _offset * sizeof(u32), &error);
       _offset = 0;
     }
   }
@@ -57,7 +57,7 @@ private:
     );
     if(!_interface) return false;
 
-    _buffer = new uint32_t[64]();
+    _buffer = new u32[64]();
     _offset = 0;
     return _ready = true;
   }
@@ -82,6 +82,6 @@ private:
 
   pa_simple* _interface = nullptr;
 
-  uint32_t* _buffer = nullptr;
-  uint _offset = 0;
+  u32* _buffer = nullptr;
+  u32 _offset = 0;
 };

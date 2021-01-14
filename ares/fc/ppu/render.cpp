@@ -2,23 +2,25 @@ auto PPU::enable() const -> bool {
   return io.bgEnable || io.spriteEnable;
 }
 
-auto PPU::loadCHR(uint16 address) -> uint8 {
-  return enable() ? cartridge.readCHR(address) : (uint8)0x00;
+auto PPU::loadCHR(n16 address) -> n8 {
+  return enable() ? cartridge.readCHR(address) : (n8)0x00;
 }
 
 auto PPU::renderPixel() -> void {
-  uint32* output = buffer + io.ly * 256;
+  //todo: renderPixel() is called when Y=261 ... why?
+  if(io.ly >= screen->canvasHeight()) return;
+  auto output = screen->pixels().data() + io.ly * 256;
 
-  uint x = io.lx - 1;
-  uint mask = 0x8000 >> (io.v.fineX + (x & 7));
-  uint palette = 0;
-  uint objectPalette = 0;
+  u32  x = io.lx - 1;
+  u32  mask = 0x8000 >> (io.v.fineX + (x & 7));
+  u32  palette = 0;
+  u32  objectPalette = 0;
   bool objectPriority = 0;
 
   palette |= latch.tiledataLo & mask ? 1 : 0;
   palette |= latch.tiledataHi & mask ? 2 : 0;
   if(palette) {
-    uint attr = latch.attribute;
+    u32 attr = latch.attribute;
     if(mask >= 256) attr >>= 2;
     palette |= (attr & 3) << 2;
   }
@@ -27,16 +29,16 @@ auto PPU::renderPixel() -> void {
   if(!io.bgEdgeEnable && x < 8) palette = 0;
 
   if(io.spriteEnable)
-  for(int sprite = 7; sprite >= 0; sprite--) {
+  for(i32 sprite = 7; sprite >= 0; sprite--) {
     if(!io.spriteEdgeEnable && x < 8) continue;
     if(latch.oam[sprite].id == 64) continue;
 
-    uint spriteX = x - latch.oam[sprite].x;
+    u32 spriteX = x - latch.oam[sprite].x;
     if(spriteX >= 8) continue;
 
     if(latch.oam[sprite].attr & 0x40) spriteX ^= 7;
-    uint mask = 0x80 >> spriteX;
-    uint spritePalette = 0;
+    u32 mask = 0x80 >> spriteX;
+    u32 spritePalette = 0;
     spritePalette |= latch.oam[sprite].tiledataLo & mask ? 1 : 0;
     spritePalette |= latch.oam[sprite].tiledataHi & mask ? 2 : 0;
     if(spritePalette == 0) continue;
@@ -59,9 +61,9 @@ auto PPU::renderPixel() -> void {
 auto PPU::renderSprite() -> void {
   if(!enable()) return;
 
-  uint n = latch.oamIterator++;
-  int ly = io.ly == vlines() - 1 ? -1 : (int)io.ly;
-  uint y = ly - oam[n * 4 + 0];
+  u32 n = latch.oamIterator++;
+  s32 ly = io.ly == vlines() - 1 ? -1 : (s32)io.ly;
+  u32 y = ly - oam[n * 4 + 0];
 
   if(y >= io.spriteHeight) return;
   if(latch.oamCounter == 8) {
@@ -90,16 +92,16 @@ auto PPU::renderScanline() -> void {
   step(1);
 
   //  1-256
-  for(uint tile : range(32)) {
-    uint nametable = loadCHR(0x2000 | (uint12)io.v.address);
-    uint tileaddr = io.bgAddress | nametable << 4 | io.v.fineY;
+  for(u32 tile : range(32)) {
+    u32 nametable = loadCHR(0x2000 | (n12)io.v.address);
+    u32 tileaddr = io.bgAddress | nametable << 4 | io.v.fineY;
     renderPixel();
     step(1);
 
     renderPixel();
     step(1);
 
-    uint attribute = loadCHR(0x23c0 | io.v.nametable << 10 | (io.v.tileY >> 2) << 3 | io.v.tileX >> 2);
+    u32 attribute = loadCHR(0x23c0 | io.v.nametable << 10 | (io.v.tileY >> 2) << 3 | io.v.tileX >> 2);
     if(io.v.tileY & 2) attribute >>= 4;
     if(io.v.tileX & 2) attribute >>= 2;
     renderPixel();
@@ -111,14 +113,14 @@ auto PPU::renderScanline() -> void {
     renderSprite();
     step(1);
 
-    uint tiledataLo = loadCHR(tileaddr + 0);
+    u32 tiledataLo = loadCHR(tileaddr + 0);
     renderPixel();
     step(1);
 
     renderPixel();
     step(1);
 
-    uint tiledataHi = loadCHR(tileaddr + 8);
+    u32 tiledataHi = loadCHR(tileaddr + 8);
     renderPixel();
     step(1);
 
@@ -132,11 +134,11 @@ auto PPU::renderScanline() -> void {
     latch.tiledataHi = latch.tiledataHi << 8 | tiledataHi;
   }
 
-  for(auto n : range(8)) latch.oam[n] = latch.soam[n];
+  for(u32 n : range(8)) latch.oam[n] = latch.soam[n];
 
   //257-320
-  for(uint sprite : range(8)) {
-    uint nametable = loadCHR(0x2000 | (uint12)io.v.address);
+  for(u32 sprite : range(8)) {
+    u32 nametable = loadCHR(0x2000 | (n12)io.v.address);
     step(1);
 
     if(enable() && sprite == 0) {
@@ -146,13 +148,13 @@ auto PPU::renderScanline() -> void {
     }
     step(1);
 
-    uint attribute = loadCHR(0x23c0 | io.v.nametable << 10 | (io.v.tileY >> 2) << 3 | io.v.tileX >> 2);
-    uint tileaddr = io.spriteHeight == 8
+    u32 attribute = loadCHR(0x23c0 | io.v.nametable << 10 | (io.v.tileY >> 2) << 3 | io.v.tileX >> 2);
+    u32 tileaddr = io.spriteHeight == 8
     ? io.spriteAddress + latch.oam[sprite].tile * 16
     : (latch.oam[sprite].tile & ~1) * 16 + (latch.oam[sprite].tile & 1) * 0x1000;
     step(2);
 
-    uint spriteY = (io.ly - latch.oam[sprite].y) & (io.spriteHeight - 1);
+    u32 spriteY = (io.ly - latch.oam[sprite].y) & (io.spriteHeight - 1);
     if(latch.oam[sprite].attr & 0x80) spriteY ^= io.spriteHeight - 1;
     tileaddr += spriteY + (spriteY & 8);
 
@@ -169,12 +171,12 @@ auto PPU::renderScanline() -> void {
   }
 
   //321-336
-  for(uint tile : range(2)) {
-    uint nametable = loadCHR(0x2000 | (uint12)io.v.address);
-    uint tileaddr = io.bgAddress | nametable << 4 | io.v.fineY;
+  for(u32 tile : range(2)) {
+    u32 nametable = loadCHR(0x2000 | (n12)io.v.address);
+    u32 tileaddr = io.bgAddress | nametable << 4 | io.v.fineY;
     step(2);
 
-    uint attribute = loadCHR(0x23c0 | io.v.nametable << 10 | (io.v.tileY >> 2) << 3 | io.v.tileX >> 2);
+    u32 attribute = loadCHR(0x23c0 | io.v.nametable << 10 | (io.v.tileY >> 2) << 3 | io.v.tileX >> 2);
     if(io.v.tileY & 2) attribute >>= 4;
     if(io.v.tileX & 2) attribute >>= 2;
     step(1);
@@ -182,10 +184,10 @@ auto PPU::renderScanline() -> void {
     if(enable() && ++io.v.tileX == 0) io.v.nametableX++;
     step(1);
 
-    uint tiledataLo = loadCHR(tileaddr + 0);
+    u32 tiledataLo = loadCHR(tileaddr + 0);
     step(2);
 
-    uint tiledataHi = loadCHR(tileaddr + 8);
+    u32 tiledataHi = loadCHR(tileaddr + 8);
     step(2);
 
     latch.nametable = latch.nametable << 8 | nametable;
@@ -195,13 +197,13 @@ auto PPU::renderScanline() -> void {
   }
 
   //337-338
-  loadCHR(0x2000 | (uint12)io.v.address);
+  loadCHR(0x2000 | (n12)io.v.address);
   step(1);
   bool skip = enable() && io.field == 1 && io.ly == vlines() - 1;
   step(1);
 
   //339
-  loadCHR(0x2000 | (uint12)io.v.address);
+  loadCHR(0x2000 | (n12)io.v.address);
   step(1);
 
   //340

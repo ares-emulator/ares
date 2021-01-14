@@ -33,23 +33,23 @@ struct AudioWASAPI : AudioDriver {
     return devices;
   }
 
-  auto hasChannels() -> vector<uint> override {
+  auto hasChannels() -> vector<u32> override {
     return {self.channels};
   }
 
-  auto hasFrequencies() -> vector<uint> override {
+  auto hasFrequencies() -> vector<u32> override {
     return {self.frequency};
   }
 
-  auto hasLatencies() -> vector<uint> override {
+  auto hasLatencies() -> vector<u32> override {
     return {0, 20, 40, 60, 80, 100};
   }
 
   auto setExclusive(bool exclusive) -> bool override { return initialize(); }
   auto setDevice(string device) -> bool override { return initialize(); }
   auto setBlocking(bool blocking) -> bool override { return true; }
-  auto setFrequency(uint frequency) -> bool override { return initialize(); }
-  auto setLatency(uint latency) -> bool override { return initialize(); }
+  auto setFrequency(u32 frequency) -> bool override { return initialize(); }
+  auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
     self.queue.read = 0;
@@ -60,8 +60,8 @@ struct AudioWASAPI : AudioDriver {
     self.audioClient->Start();
   }
 
-  auto output(const double samples[]) -> void override {
-    for(uint n : range(self.channels)) {
+  auto output(const f64 samples[]) -> void override {
+    for(u32 n : range(self.channels)) {
       self.queue.samples[self.queue.write][n] = samples[n];
     }
     self.queue.write++;
@@ -96,10 +96,10 @@ private:
     IMMDeviceCollection* deviceCollection = nullptr;
     if(self.enumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &deviceCollection) != S_OK) return false;
 
-    uint deviceCount = 0;
+    u32 deviceCount = 0;
     if(deviceCollection->GetCount(&deviceCount) != S_OK) return false;
 
-    for(uint deviceIndex : range(deviceCount)) {
+    for(u32 deviceIndex : range(deviceCount)) {
       IMMDevice* deviceContext = nullptr;
       if(deviceCollection->Item(deviceIndex, &deviceContext) != S_OK) continue;
 
@@ -207,21 +207,21 @@ private:
   }
 
   auto write() -> void {
-    uint32_t available = self.bufferSize;
+    u32 available = self.bufferSize;
     if(!self.exclusive) {
-      uint32_t padding = 0;
+      u32 padding = 0;
       self.audioClient->GetCurrentPadding(&padding);
       available = self.bufferSize - padding;
     }
-    uint32_t length = min(available, self.queue.count);
+    u32 length = min(available, self.queue.count);
 
-    uint8_t* buffer = nullptr;
+    u8* buffer = nullptr;
     if(self.renderClient->GetBuffer(length, &buffer) == S_OK) {
-      uint bufferFlags = 0;
-      for(uint _ : range(length)) {
-        double samples[8] = {};
+      u32 bufferFlags = 0;
+      for(u32 _ : range(length)) {
+        f64 samples[8] = {};
         if(self.queue.count) {
-          for(uint n : range(self.channels)) {
+          for(u32 n : range(self.channels)) {
             samples[n] = self.queue.samples[self.queue.read][n];
           }
           self.queue.read++;
@@ -229,17 +229,17 @@ private:
         }
 
         if(self.mode == 1 && self.precision == 16) {
-          auto output = (uint16_t*)buffer;
-          for(uint n : range(self.channels)) *output++ = (uint16_t)sclamp<16>(samples[n] * (32768.0 - 1.0));
-          buffer = (uint8_t*)output;
+          auto output = (u16*)buffer;
+          for(u32 n : range(self.channels)) *output++ = (u16)sclamp<16>(samples[n] * (32768.0 - 1.0));
+          buffer = (u8*)output;
         } else if(self.mode == 1 && self.precision == 32) {
-          auto output = (uint32_t*)buffer;
-          for(uint n : range(self.channels)) *output++ = (uint32_t)sclamp<32>(samples[n] * (65536.0 * 32768.0 - 1.0));
-          buffer = (uint8_t*)output;
+          auto output = (u32*)buffer;
+          for(u32 n : range(self.channels)) *output++ = (u32)sclamp<32>(samples[n] * (65536.0 * 32768.0 - 1.0));
+          buffer = (u8*)output;
         } else if(self.mode == 3 && self.precision == 32) {
-          auto output = (float*)buffer;
-          for(uint n : range(self.channels)) *output++ = float(max(-1.0, min(+1.0, samples[n])));
-          buffer = (uint8_t*)output;
+          auto output = (f32*)buffer;
+          for(u32 n : range(self.channels)) *output++ = f32(max(-1.0, min(+1.0, samples[n])));
+          buffer = (u8*)output;
         } else {
           //output silence for unsupported sample formats
           bufferFlags = AUDCLNT_BUFFERFLAGS_SILENT;
@@ -252,14 +252,14 @@ private:
 
   bool isReady = false;
 
-  uint mode = 0;
-  uint precision = 0;
+  u32 mode = 0;
+  u32 precision = 0;
 
   struct Queue {
-    double samples[65536][8];
-    uint16_t read;
-    uint16_t write;
-    uint16_t count;
+    f64 samples[65536][8];
+    u16 read;
+    u16 write;
+    u16 count;
   } queue;
 
   IMMDeviceEnumerator* enumerator = nullptr;
@@ -269,5 +269,5 @@ private:
   HANDLE eventHandle = nullptr;
   HANDLE taskHandle = nullptr;
   REFERENCE_TIME devicePeriod = 0;
-  uint32_t bufferSize = 0;  //in frames
+  u32 bufferSize = 0;  //in frames
 };

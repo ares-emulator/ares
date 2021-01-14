@@ -1,6 +1,6 @@
 struct CPU : SM83, Thread {
-  Node::Component node;
-  Node::String version;
+  Node::Object node;
+  Node::Setting::String version;
   Memory::Writable<uint8> wram;  //GB = 8KB, GBC = 32KB
   Memory::Writable<uint8> hram;
 
@@ -11,13 +11,13 @@ struct CPU : SM83, Thread {
     auto interrupt(string_view) -> void;
 
     struct Memory {
-      Node::Memory wram;
-      Node::Memory hram;
+      Node::Debugger::Memory wram;
+      Node::Debugger::Memory hram;
     } memory;
 
     struct Tracer {
-      Node::Instruction instruction;
-      Node::Notification interrupt;
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
     } tracer;
   } debugger;
 
@@ -120,9 +120,8 @@ struct CPU : SM83, Thread {
     uint16 dmaTarget;
 
     //$ff55  HDMA5
-    uint12 dmaLength;
-     uint1 dmaMode;
-     uint1 dmaCompleted = 1;
+    uint7 dmaLength;
+    uint1 hdmaActive;
 
     //$ff6c  ???
     uint1 ff6c;

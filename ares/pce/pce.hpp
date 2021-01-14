@@ -8,6 +8,7 @@
 
 namespace ares::PCEngine {
   #include <ares/inline.hpp>
+  auto load(Node::System& node, string name) -> bool;
 
   struct Model {
     inline static auto PCEngine() -> bool;
@@ -30,5 +31,3 @@ namespace ares::PCEngine {
   #include <pce/system/system.hpp>
   #include <pce/cartridge/cartridge.hpp>
 }
-
-#include <pce/interface/interface.hpp>

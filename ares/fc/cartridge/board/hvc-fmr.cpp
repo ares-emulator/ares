@@ -1,9 +1,12 @@
 struct HVC_FMR : Interface {
-  Memory::Readable<uint8> programROM;
-  Memory::Writable<uint8> programRAM;
-  Memory::Writable<uint8> characterRAM;
+  static auto create(string id) -> Interface* {
+    if(id == "HVC-FMR") return new HVC_FMR;
+    return nullptr;
+  }
 
-  using Interface::Interface;
+  Memory::Readable<n8> programROM;
+  Memory::Writable<n8> programRAM;
+  Memory::Writable<n8> characterRAM;
 
   auto load(Markup::Node document) -> void override {
     fds.present = 1;
@@ -25,30 +28,30 @@ struct HVC_FMR : Interface {
     tick();
   }
 
-  auto readPRG(uint address) -> uint8 {
-    if(address >= 0x4020 && address <= 0x409f) return fds.read(address, cpu.mdr());
+  auto readPRG(n32 address, n8 data) -> n8 override {
+    if(address >= 0x4020 && address <= 0x409f) return fds.read(address, data);
     if(address >= 0x6000 && address <= 0xdfff) return programRAM.read(address - 0x6000);
     if(address >= 0xe000 && address <= 0xffff) return programROM.read(address - 0xe000);
-    return cpu.mdr();
+    return data;
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if(address == 0x4025) mirror = data.bit(3);
     if(address >= 0x4020 && address <= 0x409f) return fds.write(address, data);
     if(address >= 0x6000 && address <= 0xdfff) return programRAM.write(address - 0x6000, data);
   }
 
-  auto readCHR(uint address) -> uint8 {
+  auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) {
-      address = address >> mirror & 0x0400 | address & 0x03ff;
+      address = address >> mirror & 0x0400 | (n10)address;
       return ppu.readCIRAM(address);
     }
     return characterRAM.read(address);
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void override {
     if(address & 0x2000) {
-      address = address >> mirror & 0x0400 | address & 0x03ff;
+      address = address >> mirror & 0x0400 | (n10)address;
       return ppu.writeCIRAM(address, data);
     }
     return characterRAM.write(address, data);
@@ -56,15 +59,14 @@ struct HVC_FMR : Interface {
 
   auto power() -> void {
     fds.power();
-    mirror = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    fds.serialize(s);
-    programRAM.serialize(s);
-    characterRAM.serialize(s);
-    s.integer(mirror);
+    s(fds);
+    s(programRAM);
+    s(characterRAM);
+    s(mirror);
   }
 
-  uint1 mirror;
+  n1 mirror;
 };

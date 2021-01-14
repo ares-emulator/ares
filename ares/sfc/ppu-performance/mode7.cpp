@@ -56,7 +56,7 @@ auto PPU::Background::renderMode7() -> void {
       mosaicPalette = palette;
       mosaicPriority = priority;
       if(ppu.dac.io.directColor && id == ID::BG1) {
-        mosaicColor = ppu.dac.directColor(0, palette);
+        mosaicColor = ppu.dac.directColor(palette, 0);
       } else {
         mosaicColor = ppu.dac.cgram[palette];
       }

@@ -4,17 +4,17 @@ auto APU::Pulse::clockLength() -> void {
   }
 }
 
-auto APU::Pulse::clock() -> uint8 {
+auto APU::Pulse::clock() -> n8 {
   if(!sweep.checkPeriod()) return 0;
   if(lengthCounter == 0) return 0;
 
-  static const uint dutyTable[4][8] = {
+  static constexpr u32 dutyTable[4][8] = {
     {0, 0, 0, 0, 0, 0, 0, 1},  //12.5%
     {0, 0, 0, 0, 0, 0, 1, 1},  //25.0%
     {0, 0, 0, 0, 1, 1, 1, 1},  //50.0%
     {1, 1, 1, 1, 1, 1, 0, 0},  //25.0% (negated)
   };
-  uint8 result = dutyTable[duty][dutyCounter] ? envelope.volume() : 0;
+  n8 result = dutyTable[duty][dutyCounter] ? envelope.volume() : 0;
   if(sweep.pulsePeriod < 0x008) result = 0;
 
   if(--periodCounter == 0) {
@@ -23,16 +23,4 @@ auto APU::Pulse::clock() -> uint8 {
   }
 
   return result;
-}
-
-auto APU::Pulse::power() -> void {
-  envelope.power();
-  sweep.power();
-
-  lengthCounter = 0;
-
-  duty = 0;
-  dutyCounter = 0;
-  period = 0;
-  periodCounter = 1;
 }

@@ -80,7 +80,7 @@ auto Audio::setDynamic(bool dynamic) -> bool {
   return true;
 }
 
-auto Audio::setChannels(uint channels) -> bool {
+auto Audio::setChannels(u32 channels) -> bool {
   if(resamplers.size() != channels) {
     resamplers.reset();
     resamplers.resize(channels);
@@ -92,7 +92,7 @@ auto Audio::setChannels(uint channels) -> bool {
   return true;
 }
 
-auto Audio::setFrequency(uint frequency) -> bool {
+auto Audio::setFrequency(u32 frequency) -> bool {
   if(instance->frequency == frequency) return true;
   if(!instance->hasFrequency(frequency)) return false;
   if(!instance->setFrequency(instance->frequency = frequency)) return false;
@@ -100,7 +100,7 @@ auto Audio::setFrequency(uint frequency) -> bool {
   return true;
 }
 
-auto Audio::setLatency(uint latency) -> bool {
+auto Audio::setLatency(u32 latency) -> bool {
   if(instance->latency == latency) return true;
   if(!instance->hasLatency(latency)) return false;
   if(!instance->setLatency(instance->latency = latency)) return false;
@@ -114,24 +114,24 @@ auto Audio::clear() -> void {
   return instance->clear();
 }
 
-auto Audio::level() -> double {
+auto Audio::level() -> f64 {
   return instance->level();
 }
 
-auto Audio::output(const double samples[]) -> void {
+auto Audio::output(const f64 samples[]) -> void {
   if(!instance->dynamic) return instance->output(samples);
 
-  auto maxDelta = 0.005;
-  double fillLevel = instance->level();
-  double dynamicFrequency = ((1.0 - maxDelta) + 2.0 * fillLevel * maxDelta) * instance->frequency;
+  f64 maxDelta = 0.005;
+  f64 fillLevel = instance->level();
+  f64 dynamicFrequency = ((1.0 - maxDelta) + 2.0 * fillLevel * maxDelta) * instance->frequency;
   for(auto& resampler : resamplers) {
     resampler.setInputFrequency(dynamicFrequency);
     resampler.write(*samples++);
   }
 
   while(resamplers.first().pending()) {
-    double samples[instance->channels];
-    for(uint n : range(instance->channels)) samples[n] = resamplers[n].read();
+    f64 samples[instance->channels];
+    for(u32 n : range(instance->channels)) samples[n] = resamplers[n].read();
     instance->output(samples);
   }
 }

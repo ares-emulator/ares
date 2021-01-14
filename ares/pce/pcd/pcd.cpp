@@ -13,7 +13,7 @@ PCD pcd;
 #include "serialization.cpp"
 
 auto PCD::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("PC Engine CD");
+  node = parent->append<Node::Object>("PC Engine CD");
 
   tray = node->append<Node::Port>("Disc Tray");
   tray->setFamily("PC Engine CD");
@@ -80,8 +80,8 @@ auto PCD::connect() -> void {
   fd = platform->open(disc, "cd.rom", File::Read, File::Required);
   if(!fd) return disconnect();
 
-  //read disc TOC (table of contents)
-  uint sectors = fd->size() / 2448;
+  //read TOC (table of contents) from disc lead-in
+  uint sectors = min(7500, fd->size() / 2448);
   vector<uint8_t> subchannel;
   subchannel.resize(sectors * 96);
   for(uint sector : range(sectors)) {

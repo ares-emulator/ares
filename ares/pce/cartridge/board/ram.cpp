@@ -11,7 +11,7 @@ struct RAM : Interface {
     auto unload(Node::Object) -> void;
 
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
   } debugger;
 
@@ -55,6 +55,6 @@ struct RAM : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
-    if(ram) ram.serialize(s);
+    s(ram);
   }
 };

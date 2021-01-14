@@ -1,8 +1,8 @@
 TwinTap::TwinTap(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Twin Tap");
 
-  one = node->append<Node::Button>("1");
-  two = node->append<Node::Button>("2");
+  one = node->append<Node::Input::Button>("1");
+  two = node->append<Node::Input::Button>("2");
 }
 
 auto TwinTap::data() -> uint2 {

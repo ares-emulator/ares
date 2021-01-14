@@ -1,8 +1,8 @@
 //Video Interface
 
 struct VI : Thread, Memory::IO<VI> {
-  Node::Component node;
-  Node::Screen screen;
+  Node::Object node;
+  Node::Video::Screen screen;
 
   struct Debugger {
     //debugger.cpp
@@ -10,7 +10,7 @@ struct VI : Thread, Memory::IO<VI> {
     auto io(string_view) -> void;
 
     struct Tracer {
-      Node::Notification io;
+      Node::Debugger::Tracer::Notification io;
     } tracer;
   } debugger;
 
@@ -21,7 +21,7 @@ struct VI : Thread, Memory::IO<VI> {
   auto main() -> void;
   auto step(uint clocks) -> void;
   auto refresh() -> void;
-  auto power() -> void;
+  auto power(bool reset) -> void;
 
   //io.cpp
   auto readWord(u32 address) -> u32;
@@ -66,7 +66,6 @@ struct VI : Thread, Memory::IO<VI> {
   } io;
 
 //unserialized:
-  u32 output[640 * 512];
   bool refreshed;
 };
 

@@ -1,18 +1,18 @@
 struct BSMemory : Cartridge {
   auto name() -> string override { return "BS Memory"; }
   auto extensions() -> vector<string> override { return {"bs"}; }
-  auto export(string location) -> vector<uint8_t> override;
-  auto heuristics(vector<uint8_t>& data, string location) -> string override;
+  auto export(string location) -> vector<u8> override;
+  auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto BSMemory::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto BSMemory::export(string location) -> vector<u8> {
+  vector<u8> data;
   append(data, {location, "program.rom"});
   append(data, {location, "program.flash"});
   return data;
 }
 
-auto BSMemory::heuristics(vector<uint8_t>& data, string location) -> string {
+auto BSMemory::heuristics(vector<u8>& data, string location) -> string {
   if(data.size() < 0x8000) return {};
 
   string s;

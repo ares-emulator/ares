@@ -1,28 +1,28 @@
 struct MegaDrive : Cartridge {
   auto name() -> string override { return "Mega Drive"; }
   auto extensions() -> vector<string> override { return {"md", "smd", "gen", "bin"}; }
-  auto export(string location) -> vector<uint8_t> override;
-  auto heuristics(vector<uint8_t>& data, string location) -> string override;
+  auto export(string location) -> vector<u8> override;
+  auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto MegaDrive::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto MegaDrive::export(string location) -> vector<u8> {
+  vector<u8> data;
   append(data, {location, "program.rom"});
   return data;
 }
 
-auto MegaDrive::heuristics(vector<uint8_t>& data, string location) -> string {
+auto MegaDrive::heuristics(vector<u8>& data, string location) -> string {
   if(data.size() < 0x200) return {};
 
   string ramMode = "none";
 
-  uint32_t ramFrom = 0;
+  u32 ramFrom = 0;
   ramFrom |= data[0x01b4] << 24;
   ramFrom |= data[0x01b5] << 16;
   ramFrom |= data[0x01b6] <<  8;
   ramFrom |= data[0x01b7] <<  0;
 
-  uint32_t ramTo = 0;
+  u32 ramTo = 0;
   ramTo |= data[0x01b8] << 24;
   ramTo |= data[0x01b9] << 16;
   ramTo |= data[0x01ba] <<  8;
@@ -33,7 +33,7 @@ auto MegaDrive::heuristics(vector<uint8_t>& data, string location) -> string {
   if(!(ramFrom & 1) &&  (ramTo & 1)) ramMode = "word";
   if(data[0x01b0] != 'R' || data[0x01b1] != 'A') ramMode = "none";
 
-  uint32_t ramSize = ramTo - ramFrom + 1;
+  u32 ramSize = ramTo - ramFrom + 1;
   if(ramMode == "hi") ramSize = (ramTo >> 1) - (ramFrom >> 1) + 1;
   if(ramMode == "lo") ramSize = (ramTo >> 1) - (ramFrom >> 1) + 1;
   if(ramMode == "word") ramSize = ramTo - ramFrom + 1;
@@ -53,7 +53,7 @@ auto MegaDrive::heuristics(vector<uint8_t>& data, string location) -> string {
     if(region.find("W")) regions.append("NTSC-J", "NTSC-U", "PAL");
   }
   if(!regions && region.size() == 1) {
-    uint8_t field = region.hex();
+    u8 field = region.hex();
     if(field & 0x01) regions.append("NTSC-J");
     if(field & 0x04) regions.append("NTSC-U");
     if(field & 0x08) regions.append("PAL");

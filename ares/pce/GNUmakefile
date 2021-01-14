@@ -1,11 +1,14 @@
-ares.components += huc6280 msm5205
+ares.components += huc6280
+ares.components += msm5205
 
-ares.objects += ares-pce-interface
-ares.objects += ares-pce-cpu ares-pce-vdp ares-pce-psg ares-pce-pcd
-ares.objects += ares-pce-system ares-pce-cartridge
+ares.objects += ares-pce-cpu
+ares.objects += ares-pce-vdp
+ares.objects += ares-pce-psg
+ares.objects += ares-pce-pcd
+ares.objects += ares-pce-system
+ares.objects += ares-pce-cartridge
 ares.objects += ares-pce-controller
 
-$(object.path)/ares-pce-interface.o:  $(ares.path)/pce/interface/interface.cpp
 $(object.path)/ares-pce-cpu.o:        $(ares.path)/pce/cpu/cpu.cpp
 $(object.path)/ares-pce-vdp.o:        $(ares.path)/pce/vdp/vdp.cpp
 $(object.path)/ares-pce-psg.o:        $(ares.path)/pce/psg/psg.cpp

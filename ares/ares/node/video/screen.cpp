@@ -1,106 +1,237 @@
+Screen::Screen(string name, u32 width, u32 height) : Video(name) {
+  _canvasWidth  = width;
+  _canvasHeight = height;
+
+  if(width && height) {
+    _inputA = new u32[width * height]();
+    _inputB = new u32[width * height]();
+    _output = new u32[width * height]();
+    _rotate = new u32[width * height]();
+
+    if constexpr(ares::Video::Threaded) {
+      _thread = nall::thread::create({&Screen::main, this});
+    }
+  }
+}
+
+Screen::~Screen() {
+  if constexpr(ares::Video::Threaded) {
+    if(_canvasWidth && _canvasHeight) {
+      _kill = true;
+      _thread.join();
+    }
+  }
+}
+
+auto Screen::main(uintptr_t) -> void {
+  while(!_kill) {
+    usleep(1);
+    if(_frame) {
+      refresh();
+      _frame = false;
+    }
+  }
+}
+
+auto Screen::quit() -> void {
+  _kill = true;
+  _thread.join();
+}
+
+auto Screen::power() -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  memory::fill<u32>(_inputA.data(), _canvasWidth * _canvasHeight, _fillColor);
+  memory::fill<u32>(_inputB.data(), _canvasWidth * _canvasHeight, _fillColor);
+  memory::fill<u32>(_output.data(), _canvasWidth * _canvasHeight, _fillColor);
+  memory::fill<u32>(_rotate.data(), _canvasWidth * _canvasHeight, _fillColor);
+}
+
+auto Screen::pixels(bool frame) -> array_span<u32> {
+  if(frame == 0) return {_inputA.data(), _canvasWidth * _canvasHeight};
+  if(frame == 1) return {_inputB.data(), _canvasWidth * _canvasHeight};
+  return {};
+}
+
 auto Screen::resetPalette() -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
   _palette.reset();
 }
 
 auto Screen::resetSprites() -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
   _sprites.reset();
 }
 
-auto Screen::attach(Node::Sprite sprite) -> void {
+auto Screen::setRefresh(function<void ()> refresh) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _refresh = refresh;
+}
+
+auto Screen::setViewport(u32 x, u32 y, u32 width, u32 height) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _viewportX = x;
+  _viewportY = y;
+  _viewportWidth  = width;
+  _viewportHeight = height;
+}
+
+auto Screen::setSize(u32 width, u32 height) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _width  = width;
+  _height = height;
+}
+
+auto Screen::setScale(f64 scaleX, f64 scaleY) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _scaleX = scaleX;
+  _scaleY = scaleY;
+}
+
+auto Screen::setAspect(f64 aspectX, f64 aspectY) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _aspectX = aspectX;
+  _aspectY = aspectY;
+}
+
+auto Screen::setSaturation(f64 saturation) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _saturation = saturation;
+  _palette.reset();
+}
+
+auto Screen::setGamma(f64 gamma) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _gamma = gamma;
+  _palette.reset();
+}
+
+auto Screen::setLuminance(f64 luminance) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _luminance = luminance;
+  _palette.reset();
+}
+
+auto Screen::setFillColor(u32 fillColor) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _fillColor = fillColor;
+}
+
+auto Screen::setColorBleed(bool colorBleed) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _colorBleed = colorBleed;
+}
+
+auto Screen::setInterframeBlending(bool interframeBlending) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _interframeBlending = interframeBlending;
+}
+
+auto Screen::setRotation(u32 rotation) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _rotation = rotation;
+}
+
+auto Screen::setProgressive(bool progressiveDouble) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _interlace = false;
+  _progressive = true;
+  _progressiveDouble = progressiveDouble;
+}
+
+auto Screen::setInterlace(bool interlaceField) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _progressive = false;
+  _interlace = true;
+  _interlaceField = interlaceField;
+}
+
+auto Screen::attach(Node::Video::Sprite sprite) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
   if(_sprites.find(sprite)) return;
   _sprites.append(sprite);
 }
 
-auto Screen::detach(Node::Sprite sprite) -> void {
+auto Screen::detach(Node::Video::Sprite sprite) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
   if(!_sprites.find(sprite)) return;
   _sprites.removeByValue(sprite);
 }
 
-auto Screen::colors(uint colors, function<uint64 (uint32)> color) -> void {
+auto Screen::colors(u32 colors, function<n64 (n32)> color) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
   _colors = colors;
   _color = color;
   _palette.reset();
 }
 
-auto Screen::refresh(uint32* input, uint pitch, uint width, uint height) -> void {
+auto Screen::frame() -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  if(runAhead()) return;
+  while(_frame) spinloop();
+
+  _inputA.swap(_inputB);
+  _frame = true;
+  if constexpr(!ares::Video::Threaded) {
+    refresh();
+    _frame = false;
+  }
+}
+
+auto Screen::refresh() -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
   if(runAhead()) return;
 
-  //allocate the screen buffers (only when growing)
-  if(_renderWidth != width || _renderHeight != height) {
-    if(_renderWidth * _renderHeight < width * height) {
-      _buffer = new uint32[width * height];
-      _rotate = new uint32[width * height];
-    }
-  }
+  refreshPalette();
+  if(_refresh) _refresh();
 
-  //generate the color lookup palettes to convert native colors to ARGB8888
-  if(!_palette) {
-    _palette = new uint32[_colors];
-    for(uint index : range(_colors)) {
-      uint64 color = _color(index);
-      uint16 b = color.bit( 0,15);
-      uint16 g = color.bit(16,31);
-      uint16 r = color.bit(32,47);
-      uint16 a = 65535;
+  auto viewX = _viewportX;
+  auto viewY = _viewportY;
+  auto viewWidth  = _viewportWidth;
+  auto viewHeight = _viewportHeight;
 
-      if(_saturation != 1.0) {
-        uint16 grayscale = uclamp<16>((r + g + b) / 3);
-        double inverse = max(0.0, 1.0 - _saturation);
-        r = uclamp<16>(r * _saturation + grayscale * inverse);
-        g = uclamp<16>(g * _saturation + grayscale * inverse);
-        b = uclamp<16>(b * _saturation + grayscale * inverse);
-      }
+  auto pitch  = _canvasWidth;
+  auto width  = _canvasWidth;
+  auto height = _canvasHeight;
+  auto input  = _inputB.data();
+  auto output = _output.data();
 
-      if(_gamma != 1.0) {
-        double reciprocal = 1.0 / 32767.0;
-        r = r > 32767 ? r : uint16(32767 * pow(r * reciprocal, _gamma));
-        g = g > 32767 ? g : uint16(32767 * pow(g * reciprocal, _gamma));
-        b = b > 32767 ? b : uint16(32767 * pow(b * reciprocal, _gamma));
-      }
-
-      if(_luminance != 1.0) {
-        r = uclamp<16>(r * _luminance);
-        g = uclamp<16>(g * _luminance);
-        b = uclamp<16>(b * _luminance);
-      }
-
-      a >>= 8;
-      r >>= 8;
-      g >>= 8;
-      b >>= 8;
-
-      _palette[index] = a << 24 | r << 16 | g << 8 | b << 0;
-    }
-  }
-
-  auto output = _buffer.data();
-  pitch >>= 2;  //bytes to words
-
-  for(uint y : range(height)) {
-    auto source = input + y * pitch;
+  for(u32 y : range(height)) {
+    auto source = input  + y * pitch;
     auto target = output + y * width;
 
-    //if not blending, or if previous frame resolution was different, render normally
-    if(!_interframeBlending || width != _renderWidth || height != _renderHeight) {
-      for(uint x : range(width)) {
+    if(_interlace) {
+      if((_interlaceField & 1) == (y & 1)) {
+        for(u32 x : range(width)) {
+          auto color = _palette[*source++];
+          *target++ = color;
+        }
+      }
+    } else if(_progressive && _progressiveDouble) {
+      source = input + (y & ~1) * pitch;
+      for(u32 x : range(width)) {
         auto color = _palette[*source++];
         *target++ = color;
       }
-    } else {
-      uint32 mask = 1 << 24 | 1 << 16 | 1 << 8 | 1 << 0;
-      for(uint x : range(width)) {
+    } else if(_interframeBlending) {
+      n32 mask = 1 << 24 | 1 << 16 | 1 << 8 | 1 << 0;
+      for(u32 x : range(width)) {
         auto a = *target;
         auto b = _palette[*source++];
         *target++ = (a + b - ((a ^ b) & mask)) >> 1;
+      }
+    } else {
+      for(u32 x : range(width)) {
+        auto color = _palette[*source++];
+        *target++ = color;
       }
     }
   }
 
   if(_colorBleed) {
-    uint32 mask = 1 << 24 | 1 << 16 | 1 << 8 | 1 << 9;
-    for(uint y : range(height)) {
+    n32 mask = 1 << 24 | 1 << 16 | 1 << 8 | 1 << 0;
+    for(u32 y : range(height)) {
       auto target = output + y * width;
-      for(uint x : range(width)) {
+      for(u32 x : range(width)) {
         auto a = target[x];
         auto b = target[x + (x != width - 1)];
         target[x] = (a + b - ((a ^ b) & mask)) >> 1;
@@ -111,15 +242,15 @@ auto Screen::refresh(uint32* input, uint pitch, uint width, uint height) -> void
   for(auto& sprite : _sprites) {
     if(!sprite->visible()) continue;
 
-    uint32 alpha = 255u << 24;
+    n32 alpha = 255u << 24;
     for(int y : range(sprite->height())) {
-      int pixelY = sprite->y() + y;
+      s32 pixelY = sprite->y() + y;
       if(pixelY < 0 || pixelY >= height) continue;
 
       auto source = sprite->image() + y * sprite->width();
       auto target = &output[pixelY * width];
-      for(int x : range(sprite->width())) {
-        int pixelX = sprite->x() + x;
+      for(s32 x : range(sprite->width())) {
+        s32 pixelX = sprite->x() + x;
         if(pixelX < 0 || pixelX >= width) continue;
 
         auto pixel = source[x];
@@ -130,22 +261,23 @@ auto Screen::refresh(uint32* input, uint pitch, uint width, uint height) -> void
 
   if(_rotation == 90) {
     //rotate left
-    for(uint y : range(height)) {
+    for(u32 y : range(height)) {
       auto source = output + y * width;
-      for(uint x : range(width)) {
+      for(u32 x : range(width)) {
         auto target = _rotate.data() + (width - 1 - x) * height + y;
         *target = *source++;
       }
     }
     output = _rotate.data();
     swap(width, height);
+    swap(viewWidth, viewHeight);
   }
 
   if(_rotation == 180) {
     //rotate upside down
-    for(uint y : range(height)) {
+    for(u32 y : range(height)) {
       auto source = output + y * width;
-      for(uint x : range(width)) {
+      for(u32 x : range(width)) {
         auto target = _rotate.data() + (height - 1 - y) * width + (width - 1 - x);
         *target = *source++;
       }
@@ -155,25 +287,67 @@ auto Screen::refresh(uint32* input, uint pitch, uint width, uint height) -> void
 
   if(_rotation == 270) {
     //rotate right
-    for(uint y : range(height)) {
+    for(u32 y : range(height)) {
       auto source = output + y * width;
-      for(uint x : range(width)) {
+      for(u32 x : range(width)) {
         auto target = _rotate.data() + x * height + (height - 1 - y);
         *target = *source++;
       }
     }
     output = _rotate.data();
     swap(width, height);
+    swap(viewWidth, viewHeight);
   }
 
-  platform->video(shared(), (const uint32_t*)output, width * sizeof(uint32), width, height);
+  platform->video(shared(), output + viewX + viewY * width, width * sizeof(u32), viewWidth, viewHeight);
+  memory::fill<u32>(_inputB.data(), width * height, _fillColor);
+}
 
-  _renderWidth = width;
-  _renderHeight = height;
+auto Screen::refreshPalette() -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  if(_palette) return;
+
+  //generate the color lookup palettes to convert native colors to ARGB8888
+  _palette = new u32[_colors];
+  for(u32 index : range(_colors)) {
+    n64 color = _color(index);
+    n16 b = color.bit( 0,15);
+    n16 g = color.bit(16,31);
+    n16 r = color.bit(32,47);
+    n16 a = 65535;
+
+    if(_saturation != 1.0) {
+      n16 grayscale = uclamp<16>((r + g + b) / 3);
+      f64 inverse = max(0.0, 1.0 - _saturation);
+      r = uclamp<16>(r * _saturation + grayscale * inverse);
+      g = uclamp<16>(g * _saturation + grayscale * inverse);
+      b = uclamp<16>(b * _saturation + grayscale * inverse);
+    }
+
+    if(_gamma != 1.0) {
+      f64 reciprocal = 1.0 / 32767.0;
+      r = r > 32767 ? r : n16(32767 * pow(r * reciprocal, _gamma));
+      g = g > 32767 ? g : n16(32767 * pow(g * reciprocal, _gamma));
+      b = b > 32767 ? b : n16(32767 * pow(b * reciprocal, _gamma));
+    }
+
+    if(_luminance != 1.0) {
+      r = uclamp<16>(r * _luminance);
+      g = uclamp<16>(g * _luminance);
+      b = uclamp<16>(b * _luminance);
+    }
+
+    a >>= 8;
+    r >>= 8;
+    g >>= 8;
+    b >>= 8;
+
+    _palette[index] = a << 24 | r << 16 | g << 8 | b << 0;
+  }
 }
 
 auto Screen::serialize(string& output, string depth) -> void {
-  Object::serialize(output, depth);
+  Video::serialize(output, depth);
   output.append(depth, "  width: ", _width, "\n");
   output.append(depth, "  height: ", _height, "\n");
   output.append(depth, "  scaleX: ", _scaleX, "\n");
@@ -184,13 +358,15 @@ auto Screen::serialize(string& output, string depth) -> void {
   output.append(depth, "  saturation: ", _saturation, "\n");
   output.append(depth, "  gamma: ", _gamma, "\n");
   output.append(depth, "  luminance: ", _luminance, "\n");
+  output.append(depth, "  fillColor: ", _fillColor, "\n");
   output.append(depth, "  colorBleed: ", _colorBleed, "\n");
+  output.append(depth, "  interlace: ", _interlace, "\n");
   output.append(depth, "  interframeBlending: ", _interframeBlending, "\n");
   output.append(depth, "  rotation: ", _rotation, "\n");
 }
 
 auto Screen::unserialize(Markup::Node node) -> void {
-  Object::unserialize(node);
+  Video::unserialize(node);
   _width = node["width"].natural();
   _height = node["height"].natural();
   _scaleX = node["scaleX"].real();
@@ -201,7 +377,9 @@ auto Screen::unserialize(Markup::Node node) -> void {
   _saturation = node["saturation"].real();
   _gamma = node["gamma"].real();
   _luminance = node["luminance"].real();
+  _fillColor = node["fillColor"].natural();
   _colorBleed = node["colorBleed"].boolean();
+  _interlace = node["interlace"].natural();
   _interframeBlending = node["interframeBlending"].boolean();
   _rotation = node["rotation"].natural();
   resetPalette();

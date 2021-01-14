@@ -28,12 +28,14 @@ struct VideoDriver {
   virtual auto setFormat(string format) -> bool { return true; }
   virtual auto setShader(string shader) -> bool { return true; }
 
+  virtual auto acquireContext() -> bool { return true; }
+  virtual auto releaseContext() -> bool { return true; }
   virtual auto focused() -> bool { return true; }
   virtual auto clear() -> void {}
-  virtual auto size(uint& width, uint& height) -> void {}
-  virtual auto acquire(uint32_t*& data, uint& pitch, uint width, uint height) -> bool { return false; }
+  virtual auto size(u32& width, u32& height) -> void {}
+  virtual auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool { return false; }
   virtual auto release() -> void {}
-  virtual auto output(uint width = 0, uint height = 0) -> void {}
+  virtual auto output(u32 width = 0, u32 height = 0) -> void {}
   virtual auto poll() -> void {}
 
 protected:
@@ -59,10 +61,10 @@ struct Video {
   struct Monitor {
     string name;
     bool primary = false;
-    int x = 0;
-    int y = 0;
-    int width = 0;
-    int height = 0;
+    s32 x = 0;
+    s32 y = 0;
+    s32 width = 0;
+    s32 height = 0;
   };
   static auto monitor(string name) -> Monitor;
   static auto hasMonitors() -> vector<Monitor>;
@@ -109,28 +111,36 @@ struct Video {
   auto setFormat(string format) -> bool;
   auto setShader(string shader) -> bool;
 
+  auto acquireContext() -> bool;
+  auto releaseContext() -> bool;
   auto focused() -> bool;
   auto clear() -> void;
   struct Size {
-    uint width = 0;
-    uint height = 0;
+    u32 width = 0;
+    u32 height = 0;
   };
   auto size() -> Size;
   struct Acquire {
     explicit operator bool() const { return data; }
-    uint32_t* data = nullptr;
-    uint pitch = 0;
+    u32* data = nullptr;
+    u32 pitch = 0;
   };
-  auto acquire(uint width, uint height) -> Acquire;
+  auto acquire(u32 width, u32 height) -> Acquire;
   auto release() -> void;
-  auto output(uint width = 0, uint height = 0) -> void;
+  auto output(u32 width = 0, u32 height = 0) -> void;
   auto poll() -> void;
 
-  auto onUpdate(const function<void (uint, uint)>&) -> void;
-  auto doUpdate(uint width, uint height) -> void;
+  auto onUpdate(const function<void (u32, u32)>&) -> void;
+  auto doUpdate(u32 width, u32 height) -> void;
+
+  auto lock() -> void { mutex.lock(); }
+  auto unlock() -> void { mutex.unlock(); }
 
 protected:
   Video& self;
   unique_pointer<VideoDriver> instance;
-  function<void (uint, uint)> update;
+  function<void (u32, u32)> update;
+
+private:
+  std::recursive_mutex mutex;
 };

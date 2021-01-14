@@ -1,14 +1,14 @@
 ControlPad::ControlPad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Control Pad");
 
-  up    = node->append<Node::Button>("Up");
-  down  = node->append<Node::Button>("Down");
-  left  = node->append<Node::Button>("Left");
-  right = node->append<Node::Button>("Right");
-  a     = node->append<Node::Button>("A");
-  b     = node->append<Node::Button>("B");
-  c     = node->append<Node::Button>("C");
-  start = node->append<Node::Button>("Start");
+  up    = node->append<Node::Input::Button>("Up");
+  down  = node->append<Node::Input::Button>("Down");
+  left  = node->append<Node::Input::Button>("Left");
+  right = node->append<Node::Input::Button>("Right");
+  a     = node->append<Node::Input::Button>("A");
+  b     = node->append<Node::Input::Button>("B");
+  c     = node->append<Node::Input::Button>("C");
+  start = node->append<Node::Input::Button>("Start");
 }
 
 auto ControlPad::readData() -> uint8 {

@@ -1,18 +1,18 @@
 FightingPad::FightingPad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Fighting Pad");
 
-  up    = node->append<Node::Button>("Up");
-  down  = node->append<Node::Button>("Down");
-  left  = node->append<Node::Button>("Left");
-  right = node->append<Node::Button>("Right");
-  a     = node->append<Node::Button>("A");
-  b     = node->append<Node::Button>("B");
-  c     = node->append<Node::Button>("C");
-  x     = node->append<Node::Button>("X");
-  y     = node->append<Node::Button>("Y");
-  z     = node->append<Node::Button>("Z");
-  mode  = node->append<Node::Button>("Mode");
-  start = node->append<Node::Button>("Start");
+  up    = node->append<Node::Input::Button>("Up");
+  down  = node->append<Node::Input::Button>("Down");
+  left  = node->append<Node::Input::Button>("Left");
+  right = node->append<Node::Input::Button>("Right");
+  a     = node->append<Node::Input::Button>("A");
+  b     = node->append<Node::Input::Button>("B");
+  c     = node->append<Node::Input::Button>("C");
+  x     = node->append<Node::Input::Button>("X");
+  y     = node->append<Node::Input::Button>("Y");
+  z     = node->append<Node::Input::Button>("Z");
+  mode  = node->append<Node::Input::Button>("Mode");
+  start = node->append<Node::Input::Button>("Start");
 
   Thread::create(1'000'000, {&FightingPad::main, this});
 }

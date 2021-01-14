@@ -5,7 +5,7 @@
 //there is a possibility the ARMv3 supports 26-bit mode; but cannot be verified
 
 struct ARMDSP : ARM7TDMI, Thread {
-  Node::Component node;
+  Node::Object node;
   uint Frequency;
 
   struct Debugger {
@@ -14,7 +14,7 @@ struct ARMDSP : ARM7TDMI, Thread {
     auto instruction() -> void;
 
     struct Tracer {
-      Node::Instruction instruction;
+      Node::Debugger::Tracer::Instruction instruction;
     } tracer;
   } debugger;
 

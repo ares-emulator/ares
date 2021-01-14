@@ -48,7 +48,7 @@ inline auto string::_replace(string_view from, string_view to, long limit) -> st
       if(Quoted) { if(p[n] == '\"') { quoted ^= 1; n++; continue; } if(quoted) { n++; continue; } }
       if(_compare<Insensitive>(p + n, size - n, from.data(), from.size())) { n++; continue; }
 
-      if(offset) memory::move(p + offset, p + base, n - base);
+      if(base) memory::move(p + offset, p + base, n - base);
       memory::copy(p + offset + (n - base), to.data(), to.size());
       offset += (n - base) + to.size();
 

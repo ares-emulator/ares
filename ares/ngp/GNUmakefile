@@ -1,9 +1,14 @@
-ares.components += tlcs900h z80 t6w28
+ares.components += tlcs900h
+ares.components += z80
+ares.components += t6w28
 
-ares.objects += ares-ngp-interface ares-ngp-system ares-ngp-cartridge
-ares.objects += ares-ngp-cpu ares-ngp-apu ares-ngp-vpu ares-ngp-psg
+ares.objects += ares-ngp-system
+ares.objects += ares-ngp-cartridge
+ares.objects += ares-ngp-cpu
+ares.objects += ares-ngp-apu
+ares.objects += ares-ngp-vpu
+ares.objects += ares-ngp-psg
 
-$(object.path)/ares-ngp-interface.o: $(ares.path)/ngp/interface/interface.cpp
 $(object.path)/ares-ngp-system.o:    $(ares.path)/ngp/system/system.cpp
 $(object.path)/ares-ngp-cartridge.o: $(ares.path)/ngp/cartridge/cartridge.cpp
 $(object.path)/ares-ngp-cpu.o:       $(ares.path)/ngp/cpu/cpu.cpp

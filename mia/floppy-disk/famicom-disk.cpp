@@ -1,12 +1,12 @@
-auto FamicomDisk::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto FamicomDisk::export(string location) -> vector<u8> {
+  vector<u8> data;
   for(auto& filename : directory::files(location, "disk?*.side?*")) {
     append(data, {location, filename});
   }
   return data;
 }
 
-auto FamicomDisk::heuristics(vector<uint8_t>& data, string location) -> string {
+auto FamicomDisk::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:  ", Media::name(location), "\n"};
@@ -27,8 +27,8 @@ auto FamicomDisk::import(string location) -> string {
     input.resize(input.size() - 16);
   }
 
-  array_view<uint8_t> view = input;
-  uint disk = 0, side = 0;
+  array_view<u8> view = input;
+  u32 disk = 0, side = 0;
   while(auto output = transform(view)) {
     string name{"disk", 1 + disk, ".", "side", !side ? "A" : "B"};
     file::write({location, name}, output);
@@ -41,25 +41,25 @@ auto FamicomDisk::import(string location) -> string {
   return {};
 }
 
-auto FamicomDisk::transform(array_view<uint8_t> input) -> vector<uint8_t> {
+auto FamicomDisk::transform(array_view<u8> input) -> vector<u8> {
   if(input.size() < 65500) return {};
 
-  array_view<uint8_t> data{input.data(), 65500};
+  array_view<u8> data{input.data(), 65500};
   if(data[0x00] != 0x01) return {};
   if(data[0x38] != 0x02) return {};
   if(data[0x3a] != 0x03) return {};
   if(data[0x4a] != 0x04) return {};
 
-  vector<uint8_t> output;
-  uint16_t crc16 = 0;
-  auto hash = [&](uint8_t byte) {
-    for(uint bit : range(8)) {
+  vector<u8> output;
+  u16 crc16 = 0;
+  auto hash = [&](u8 byte) {
+    for(u32 bit : range(8)) {
       bool carry = crc16 & 1;
       crc16 = crc16 >> 1 | bool(byte & 1 << bit) << 15;
       if(carry) crc16 ^= 0x8408;
     }
   };
-  auto write = [&](uint8_t byte) {
+  auto write = [&](u8 byte) {
     hash(byte);
     output.append(byte);
   };
@@ -72,32 +72,32 @@ auto FamicomDisk::transform(array_view<uint8_t> input) -> vector<uint8_t> {
   };
 
   //block 1
-  for(uint n : range(0xe00)) write(0x00);  //pregap
+  for(u32 n : range(0xe00)) write(0x00);  //pregap
   write(0x80);
-  for(uint n : range(0x38)) write(*data++);
+  for(u32 n : range(0x38)) write(*data++);
   flush();
 
   //block 2
-  for(uint n : range(0x80)) write(0x00);  //gap
+  for(u32 n : range(0x80)) write(0x00);  //gap
   write(0x80);
-  for(uint n : range(0x02)) write(*data++);
+  for(u32 n : range(0x02)) write(*data++);
   flush();
 
   while(true) {
     if(data[0x00] != 0x03 || data.size() < 0x11) break;
-    uint16_t size = data[0x0d] << 0 | data[0x0e] << 8;
+    u16 size = data[0x0d] << 0 | data[0x0e] << 8;
     if(data[0x10] != 0x04 || data.size() < 0x11 + size) break;
 
     //block 3
-    for(uint n : range(0x80)) write(0x00);  //gap
+    for(u32 n : range(0x80)) write(0x00);  //gap
     write(0x80);
-    for(uint n : range(0x10)) write(*data++);
+    for(u32 n : range(0x10)) write(*data++);
     flush();
 
     //block 4
-    for(uint n : range(0x80)) write(0x00);  //gap
+    for(u32 n : range(0x80)) write(0x00);  //gap
     write(0x80);
-    for(uint n : range(1 + size)) write(*data++);
+    for(u32 n : range(1 + size)) write(*data++);
     flush();
   }
 

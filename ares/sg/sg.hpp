@@ -29,5 +29,3 @@ namespace ares::SG1000 {
   #include <sg/system/system.hpp>
   #include <sg/cartridge/cartridge.hpp>
 }
-
-#include <sg/interface/interface.hpp>

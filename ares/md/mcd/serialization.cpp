@@ -2,199 +2,199 @@ auto MCD::serialize(serializer& s) -> void {
   M68K::serialize(s);
   Thread::serialize(s);
 
-  pram.serialize(s);
-  wram.serialize(s);
-  bram.serialize(s);
+  s(pram);
+  s(wram);
+  s(bram);
 
-  s.integer(counter.divider);
-  s.integer(counter.dma);
-  s.real(counter.pcm);
+  s(counter.divider);
+  s(counter.dma);
+  s(counter.pcm);
 
-  s.integer(io.run);
-  s.integer(io.request);
-  s.integer(io.halt);
-  s.integer(io.wramLatch);
-  s.integer(io.wramMode);
-  s.integer(io.wramSwitch);
-  s.integer(io.wramSelect);
-  s.integer(io.wramPriority);
-  s.integer(io.pramBank);
-  s.integer(io.pramProtect);
+  s(io.run);
+  s(io.request);
+  s(io.halt);
+  s(io.wramLatch);
+  s(io.wramMode);
+  s(io.wramSwitch);
+  s(io.wramSelect);
+  s(io.wramPriority);
+  s(io.pramBank);
+  s(io.pramProtect);
 
-  s.integer(led.red);
-  s.integer(led.green);
+  s(led.red);
+  s(led.green);
 
-  s.integer(irq.pending);
-  irq.reset.serialize(s);
-  irq.subcode.serialize(s);
-  external.irq.serialize(s);
+  s(irq.pending);
+  s(irq.reset);
+  s(irq.subcode);
+  s(external.irq);
 
-  s.integer(communication.cfm);
-  s.integer(communication.cfs);
-  s.array(communication.command);
-  s.array(communication.status);
+  s(communication.cfm);
+  s(communication.cfs);
+  s(communication.command);
+  s(communication.status);
 
-  cdc.serialize(s);
-  cdd.serialize(s);
-  timer.serialize(s);
-  gpu.serialize(s);
-  pcm.serialize(s);
+  s(cdc);
+  s(cdd);
+  s(timer);
+  s(gpu);
+  s(pcm);
 }
 
 auto MCD::IRQ::serialize(serializer& s) -> void {
-  s.integer(enable);
-  s.integer(pending);
+  s(enable);
+  s(pending);
 }
 
 auto MCD::CDC::serialize(serializer& s) -> void {
-  ram.serialize(s);
+  s(ram);
 
-  s.integer(address);
-  s.integer(stopwatch);
+  s(address);
+  s(stopwatch);
 
-  irq.decoder.serialize(s);
-  irq.transfer.serialize(s);
-  irq.command.serialize(s);
+  s(irq.decoder);
+  s(irq.transfer);
+  s(irq.command);
 
-  s.array(command.fifo);
-  s.integer(command.read);
-  s.integer(command.write);
-  s.integer(command.empty);
+  s(command.fifo);
+  s(command.read);
+  s(command.write);
+  s(command.empty);
 
-  s.array(status.fifo);
-  s.integer(status.read);
-  s.integer(status.write);
-  s.integer(status.empty);
-  s.integer(status.enable);
-  s.integer(status.active);
-  s.integer(status.busy);
-  s.integer(status.wait);
+  s(status.fifo);
+  s(status.read);
+  s(status.write);
+  s(status.empty);
+  s(status.enable);
+  s(status.active);
+  s(status.busy);
+  s(status.wait);
 
-  transfer.serialize(s);
+  s(transfer);
 
-  s.integer(decoder.enable);
-  s.integer(decoder.mode);
-  s.integer(decoder.form);
-  s.integer(decoder.valid);
+  s(decoder.enable);
+  s(decoder.mode);
+  s(decoder.form);
+  s(decoder.valid);
 
-  s.integer(header.minute);
-  s.integer(header.second);
-  s.integer(header.frame);
-  s.integer(header.mode);
+  s(header.minute);
+  s(header.second);
+  s(header.frame);
+  s(header.mode);
 
-  s.integer(subheader.file);
-  s.integer(subheader.channel);
-  s.integer(subheader.submode);
-  s.integer(subheader.coding);
+  s(subheader.file);
+  s(subheader.channel);
+  s(subheader.submode);
+  s(subheader.coding);
 
-  s.integer(control.head);
-  s.integer(control.mode);
-  s.integer(control.form);
-  s.integer(control.commandBreak);
-  s.integer(control.modeByteCheck);
-  s.integer(control.erasureRequest);
-  s.integer(control.writeRequest);
-  s.integer(control.pCodeCorrection);
-  s.integer(control.qCodeCorrection);
-  s.integer(control.autoCorrection);
-  s.integer(control.errorCorrection);
-  s.integer(control.edcCorrection);
-  s.integer(control.correctionWrite);
-  s.integer(control.descramble);
-  s.integer(control.syncDetection);
-  s.integer(control.syncInterrupt);
-  s.integer(control.erasureCorrection);
-  s.integer(control.statusTrigger);
-  s.integer(control.statusControl);
+  s(control.head);
+  s(control.mode);
+  s(control.form);
+  s(control.commandBreak);
+  s(control.modeByteCheck);
+  s(control.erasureRequest);
+  s(control.writeRequest);
+  s(control.pCodeCorrection);
+  s(control.qCodeCorrection);
+  s(control.autoCorrection);
+  s(control.errorCorrection);
+  s(control.edcCorrection);
+  s(control.correctionWrite);
+  s(control.descramble);
+  s(control.syncDetection);
+  s(control.syncInterrupt);
+  s(control.erasureCorrection);
+  s(control.statusTrigger);
+  s(control.statusControl);
 }
 
 auto MCD::CDC::Transfer::serialize(serializer& s) -> void {
-  s.integer(destination);
-  s.integer(address);
-  s.integer(source);
-  s.integer(target);
-  s.integer(pointer);
-  s.integer(length);
-  s.integer(enable);
-  s.integer(active);
-  s.integer(busy);
-  s.integer(wait);
-  s.integer(ready);
-  s.integer(completed);
+  s(destination);
+  s(address);
+  s(source);
+  s(target);
+  s(pointer);
+  s(length);
+  s(enable);
+  s(active);
+  s(busy);
+  s(wait);
+  s(ready);
+  s(completed);
 }
 
 auto MCD::CDD::serialize(serializer& s) -> void {
-  irq.serialize(s);
-  s.integer(counter);
+  s(irq);
+  s(counter);
 
-  s.integer(dac.rate);
-  s.integer(dac.deemphasis);
-  s.integer(dac.attenuator);
-  s.integer(dac.attenuated);
+  s(dac.rate);
+  s(dac.deemphasis);
+  s(dac.attenuator);
+  s(dac.attenuated);
   dac.reconfigure();
 
-  s.integer(io.status);
-  s.integer(io.seeking);
-  s.integer(io.latency);
-  s.integer(io.sector);
-  s.integer(io.sample);
-  s.integer(io.track);
+  s(io.status);
+  s(io.seeking);
+  s(io.latency);
+  s(io.sector);
+  s(io.sample);
+  s(io.track);
 
-  s.integer(hostClockEnable);
-  s.integer(statusPending);
-  s.array(status);
-  s.array(command);
+  s(hostClockEnable);
+  s(statusPending);
+  s(status);
+  s(command);
 }
 
 auto MCD::Timer::serialize(serializer& s) -> void {
-  irq.serialize(s);
-  s.integer(counter);
+  s(irq);
+  s(counter);
 }
 
 auto MCD::GPU::serialize(serializer& s) -> void {
-  irq.serialize(s);
+  s(irq);
 
-  s.integer(font.color.background);
-  s.integer(font.color.foreground);
-  s.integer(font.data);
+  s(font.color.background);
+  s(font.color.foreground);
+  s(font.data);
 
-  s.integer(stamp.repeat);
-  s.integer(stamp.tile.size);
-  s.integer(stamp.map.size);
-  s.integer(stamp.map.base);
-  s.integer(stamp.map.address);
+  s(stamp.repeat);
+  s(stamp.tile.size);
+  s(stamp.map.size);
+  s(stamp.map.base);
+  s(stamp.map.address);
 
-  s.integer(image.base);
-  s.integer(image.offset);
-  s.integer(image.vcells);
-  s.integer(image.vdots);
-  s.integer(image.hdots);
-  s.integer(image.address);
+  s(image.base);
+  s(image.offset);
+  s(image.vcells);
+  s(image.vdots);
+  s(image.hdots);
+  s(image.address);
 
-  s.integer(vector.base);
-  s.integer(vector.address);
+  s(vector.base);
+  s(vector.address);
 
-  s.integer(active);
-  s.integer(counter);
-  s.integer(period);
+  s(active);
+  s(counter);
+  s(period);
 }
 
 auto MCD::PCM::serialize(serializer& s) -> void {
-  ram.serialize(s);
+  s(ram);
 
-  s.integer(io.enable);
-  s.integer(io.bank);
-  s.integer(io.channel);
+  s(io.enable);
+  s(io.bank);
+  s(io.channel);
 
-  for(auto& channel : channels) channel.serialize(s);
+  for(auto& channel : channels) s(channel);
 }
 
 auto MCD::PCM::Channel::serialize(serializer& s) -> void {
-  s.integer(enable);
-  s.integer(envelope);
-  s.integer(pan);
-  s.integer(step);
-  s.integer(loop);
-  s.integer(start);
-  s.integer(address);
+  s(enable);
+  s(envelope);
+  s(pan);
+  s(step);
+  s(loop);
+  s(start);
+  s(address);
 }

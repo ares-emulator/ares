@@ -1,10 +1,10 @@
 name := luna
-build := performance
+build := optimized
 openmp := false
 local := true
 flags += -I. -I.. -I../ares
 
-ifeq ($(platform),local)
+ifeq ($(local),true)
   flags += -march=native
 endif
 
@@ -68,14 +68,13 @@ endif
 install: all
 ifeq ($(platform),windows)
 	mkdir -p $(prefix)/$(name)/
-	cp -R System/* $(prefix)/$(name)/
+	cp -R $(ares.path)/System/* $(prefix)/$(name)/
 else ifeq ($(shell id -un),root)
 	$(error "make install should not be run as root")
 else ifeq ($(platform),macos)
-	mkdir -p ~/Library/Application\ Support\$(name)/
-	mkdir -p ~/Library/Application\ Support\$(name)/System/
+	mkdir -p ~/Library/Application\ Support/$(name)/
 	cp -R $(output.path)/$(name).app /Applications/$(name).app
-	cp -R System/* ~/Library/Application\ Support/$(name)/System/
+	cp -R $(ares.path)/System/* ~/Library/Application\ Support/$(name)/
 else ifneq ($(filter $(platform),linux bsd),)
 	mkdir -p $(prefix)/bin/
 	mkdir -p $(prefix)/share/applications/

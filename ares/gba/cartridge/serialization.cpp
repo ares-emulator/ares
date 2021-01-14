@@ -1,42 +1,42 @@
 auto Cartridge::serialize(serializer& s) -> void {
-  mrom.serialize(s);
-  if(has.sram) sram.serialize(s);
-  if(has.eeprom) eeprom.serialize(s);
-  if(has.flash) flash.serialize(s);
+  s(mrom);
+  if(has.sram) s(sram);
+  if(has.eeprom) s(eeprom);
+  if(has.flash) s(flash);
 }
 
 auto Cartridge::MROM::serialize(serializer& s) -> void {
-  s.integer(size);
-  s.integer(mask);
+  s(size);
+  s(mask);
 }
 
 auto Cartridge::SRAM::serialize(serializer& s) -> void {
-  s.array(data, size);
-  s.integer(size);
-  s.integer(mask);
+  s(array_span<uint8>{data, size});
+  s(size);
+  s(mask);
 }
 
 auto Cartridge::EEPROM::serialize(serializer& s) -> void {
-  s.array(data, size);
-  s.integer(size);
-  s.integer(mask);
-  s.integer(test);
-  s.integer(bits);
-  s.integer((uint&)mode);
-  s.integer(offset);
-  s.integer(address);
-  s.integer(addressbits);
+  s(array_span<uint8>{data, size});
+  s(size);
+  s(mask);
+  s(test);
+  s(bits);
+  s((uint&)mode);
+  s(offset);
+  s(address);
+  s(addressbits);
 }
 
 auto Cartridge::FLASH::serialize(serializer& s) -> void {
-  s.array(data, size);
-  s.integer(size);
-  s.integer(id);
-  s.integer(unlockhi);
-  s.integer(unlocklo);
-  s.integer(idmode);
-  s.integer(erasemode);
-  s.integer(bankselect);
-  s.integer(writeselect);
-  s.integer(bank);
+  s(array_span<uint8>{data, size});
+  s(size);
+  s(id);
+  s(unlockhi);
+  s(unlocklo);
+  s(idmode);
+  s(erasemode);
+  s(bankselect);
+  s(writeselect);
+  s(bank);
 }

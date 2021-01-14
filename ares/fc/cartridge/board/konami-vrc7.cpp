@@ -1,12 +1,15 @@
 struct KonamiVRC7 : Interface {
-  Memory::Readable<uint8> programROM;
-  Memory::Writable<uint8> programRAM;
-  Memory::Readable<uint8> characterROM;
-  Memory::Writable<uint8> characterRAM;
-  YM2413 ym2413;
-  Node::Stream stream;
+  static auto create(string id) -> Interface* {
+    if(id == "KONAMI-VRC-7") return new KonamiVRC7;
+    return nullptr;
+  }
 
-  using Interface::Interface;
+  Memory::Readable<n8> programROM;
+  Memory::Writable<n8> programRAM;
+  Memory::Readable<n8> characterROM;
+  Memory::Writable<n8> characterRAM;
+  YM2413 ym2413;
+  Node::Audio::Stream stream;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -15,9 +18,9 @@ struct KonamiVRC7 : Interface {
     Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
     Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
 
-    stream = cartridge.node->append<Node::Stream>("YM2413");
+    stream = cartridge.node->append<Node::Audio::Stream>("YM2413");
     stream->setChannels(1);
-    stream->setFrequency(uint(system.frequency() + 0.5) / cartridge.rate() / 36);
+    stream->setFrequency(u32(system.frequency() + 0.5) / cartridge.rate() / 36);
     stream->addLowPassFilter(2280.0, 1);
   }
 
@@ -57,28 +60,28 @@ struct KonamiVRC7 : Interface {
       divider = 0;
       double sample = 0.0;
       if(!disableFM) sample = ym2413.clock();
-      stream->sample(sample);
+      stream->frame(sample);
     }
 
     tick();
   }
 
-  auto readPRG(uint address) -> uint8 {
-    if(address < 0x6000) return cpu.mdr();
+  auto readPRG(n32 address, n8 data) -> n8 override {
+    if(address < 0x6000) return data;
     if(address < 0x8000) return programRAM.read(address);
 
-    uint8 bank;
+    n8 bank;
     switch(address & 0xe000) {
     case 0x8000: bank = programBank[0]; break;
     case 0xa000: bank = programBank[1]; break;
     case 0xc000: bank = programBank[2]; break;
     case 0xe000: bank = 0xff; break;
     }
-    address = bank << 13 | (uint13)address;
+    address = bank << 13 | (n13)address;
     return programROM.read(address);
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000) return;
     if(address < 0x8000) return programRAM.write(address, data);
 
@@ -122,7 +125,7 @@ struct KonamiVRC7 : Interface {
     }
   }
 
-  auto addressCIRAM(uint address) const -> uint {
+  auto addressCIRAM(n32 address) const -> n32 {
     switch(mirror) {
     case 0: return address >> 0 & 0x0400 | address & 0x03ff;  //vertical mirroring
     case 1: return address >> 1 & 0x0400 | address & 0x03ff;  //horizontal mirroring
@@ -132,70 +135,59 @@ struct KonamiVRC7 : Interface {
     unreachable;
   }
 
-  auto addressCHR(uint address) const -> uint {
-    uint8 bank = characterBank[address >> 10 & 7];
-    return bank << 10 | (uint10)address;
+  auto addressCHR(n32 address) const -> n32 {
+    n8 bank = characterBank[address >> 10 & 7];
+    return bank << 10 | (n10)address;
   }
 
-  auto readCHR(uint address) -> uint8 {
+  auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
     if(characterROM) return characterROM.read(addressCHR(address));
     if(characterRAM) return characterRAM.read(addressCHR(address));
-    return 0x00;
+    return data;
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void {
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
   auto power() -> void {
     ym2413.power();
-    for(auto& bank : programBank) bank = 0;
-    for(auto& bank : characterBank) bank = 0;
-    mirror = 0;
     disableFM = 1;
     ramWritable = 1;
-    irqLatch = 0;
-    irqMode = 0;
-    irqEnable = 0;
-    irqAcknowledge = 0;
-    irqCounter = 0;
-    irqScalar = 0;
-    irqLine = 0;
-    divider = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    programRAM.serialize(s);
-    characterRAM.serialize(s);
-    ym2413.serialize(s);
-    s.array(programBank);
-    s.array(characterBank);
-    s.integer(mirror);
-    s.integer(disableFM);
-    s.integer(ramWritable);
-    s.integer(irqLatch);
-    s.integer(irqMode);
-    s.integer(irqEnable);
-    s.integer(irqAcknowledge);
-    s.integer(irqCounter);
-    s.integer(irqScalar);
-    s.integer(irqLine);
-    s.integer(divider);
+    s(programRAM);
+    s(characterRAM);
+    s(ym2413);
+    s(programBank);
+    s(characterBank);
+    s(mirror);
+    s(disableFM);
+    s(ramWritable);
+    s(irqLatch);
+    s(irqMode);
+    s(irqEnable);
+    s(irqAcknowledge);
+    s(irqCounter);
+    s(irqScalar);
+    s(irqLine);
+    s(divider);
   }
 
-  uint8 programBank[3];
-  uint8 characterBank[8];
-  uint2 mirror;
-  uint1 disableFM;
-  uint1 ramWritable;
-  uint8 irqLatch;
-  uint1 irqMode;
-  uint1 irqEnable;
-  uint1 irqAcknowledge;
-  uint8 irqCounter;
-  int16 irqScalar;
-  uint1 irqLine;
-  uint6 divider;
+  n08 programBank[3];
+  n08 characterBank[8];
+  n02 mirror;
+  n01 disableFM;
+  n01 ramWritable;
+  n08 irqLatch;
+  n01 irqMode;
+  n01 irqEnable;
+  n01 irqAcknowledge;
+  n08 irqCounter;
+  i16 irqScalar;
+  n01 irqLine;
+  n06 divider;
 };

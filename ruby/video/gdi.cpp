@@ -30,20 +30,20 @@ struct VideoGDI : VideoDriver {
     return _context == focused || IsChild(_context, focused);
   }
 
-  auto size(uint& width, uint& height) -> void override {
+  auto size(u32& width, u32& height) -> void override {
     RECT rectangle;
     GetClientRect(_context, &rectangle);
     width = rectangle.right - rectangle.left;
     height = rectangle.bottom - rectangle.top;
   }
 
-  auto acquire(uint32_t*& data, uint& pitch, uint width, uint height) -> bool override {
+  auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
     if(!_buffer || _width != width || _height != height) {
       if(_buffer) delete[] _buffer;
       if(_bitmap) DeleteObject(_bitmap);
       if(_dc) DeleteObject(_dc);
 
-      _buffer = new uint32_t[width * height]();
+      _buffer = new u32[width * height]();
       _width = width;
       _height = height;
 
@@ -60,24 +60,24 @@ struct VideoGDI : VideoDriver {
       _info.bmiHeader.biPlanes = 1;
       _info.bmiHeader.biBitCount = 32;
       _info.bmiHeader.biCompression = BI_RGB;
-      _info.bmiHeader.biSizeImage = width * height * sizeof(uint32_t);
+      _info.bmiHeader.biSizeImage = width * height * sizeof(u32);
     }
 
-    pitch = _width * sizeof(uint32_t);
+    pitch = _width * sizeof(u32);
     return data = _buffer;
   }
 
   auto release() -> void override {
   }
 
-  auto output(uint width, uint height) -> void override {
-    uint windowWidth, windowHeight;
+  auto output(u32 width, u32 height) -> void override {
+    u32 windowWidth, windowHeight;
     size(windowWidth, windowHeight);
 
     SetDIBits(_dc, _bitmap, 0, _height, (void*)_buffer, &_info, DIB_RGB_COLORS);
     HDC hdc = GetDC(_context);
     StretchBlt(hdc,
-      ((int)windowWidth - (int)width) / 2, ((int)windowHeight - (int)height) / 2, width, height, _dc,
+      ((s32)windowWidth - (s32)width) / 2, ((s32)windowHeight - (s32)height) / 2, width, height, _dc,
       0, 0, _width, _height, SRCCOPY
     );
     ReleaseDC(_context, hdc);
@@ -137,14 +137,14 @@ private:
 
   bool _ready = false;
 
-  int _monitorX = 0;
-  int _monitorY = 0;
-  int _monitorWidth = 0;
-  int _monitorHeight = 0;
+  s32 _monitorX = 0;
+  s32 _monitorY = 0;
+  s32 _monitorWidth = 0;
+  s32 _monitorHeight = 0;
 
-  uint32_t* _buffer = nullptr;
-  uint _width = 0;
-  uint _height = 0;
+  u32* _buffer = nullptr;
+  u32 _width = 0;
+  u32 _height = 0;
 
   HWND _window = nullptr;
   HWND _context = nullptr;

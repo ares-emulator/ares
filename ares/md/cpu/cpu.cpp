@@ -9,7 +9,7 @@ CPU cpu;
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("CPU");
+  node = parent->append<Node::Object>("CPU");
 
   debugger.load(node);
 }

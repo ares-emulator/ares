@@ -1,75 +1,73 @@
 struct PPU : Thread {
-  Node::Component node;
-  Node::Screen screen;
-  Node::Boolean overscan;
-  Node::Boolean colorEmulation;
-  Memory::Writable<uint8> ciram;
-  Memory::Writable<uint8> cgram;
-  Memory::Writable<uint8> oam;
+  Node::Object node;
+  Node::Video::Screen screen;
+  Node::Setting::Boolean overscan;
+  Node::Setting::Boolean colorEmulation;
+  Memory::Writable<n8> ciram;
+  Memory::Writable<n8> cgram;
+  Memory::Writable<n8> oam;
 
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto unload() -> void;
 
     struct Memory {
-      Node::Memory ciram;
-      Node::Memory cgram;
-      Node::Memory oam;
+      Node::Debugger::Memory ciram;
+      Node::Debugger::Memory cgram;
+      Node::Debugger::Memory oam;
     } memory;
   } debugger;
 
-  auto rate() const -> uint { return Region::PAL() ? 5 : 4; }
-  auto vlines() const -> uint { return Region::PAL() ? 312 : 262; }
+  auto rate() const -> u32 { return Region::PAL() ? 5 : 4; }
+  auto vlines() const -> u32 { return Region::PAL() ? 312 : 262; }
 
   //ppu.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
 
   auto scanline() -> void;
   auto frame() -> void;
-  auto refresh() -> void;
 
   auto power(bool reset) -> void;
 
   //memory.cpp
-  auto readCIRAM(uint11 address) -> uint8;
-  auto writeCIRAM(uint11 address, uint8 data) -> void;
+  auto readCIRAM(n11 address) -> n8;
+  auto writeCIRAM(n11 address, n8 data) -> void;
 
-  auto readCGRAM(uint5 address) -> uint8;
-  auto writeCGRAM(uint5 address, uint8 data) -> void;
+  auto readCGRAM(n5 address) -> n8;
+  auto writeCGRAM(n5 address, n8 data) -> void;
 
-  auto readIO(uint16 address) -> uint8;
-  auto writeIO(uint16 address, uint8 data) -> void;
+  auto readIO(n16 address) -> n8;
+  auto writeIO(n16 address, n8 data) -> void;
 
   //render.cpp
   auto enable() const -> bool;
-  auto loadCHR(uint16 address) -> uint8;
+  auto loadCHR(n16 address) -> n8;
 
   auto renderPixel() -> void;
   auto renderSprite() -> void;
   auto renderScanline() -> void;
 
   //color.cpp
-  auto color(uint32) -> uint64;
+  auto color(n32) -> n64;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint32 buffer[256 * 262];
-
   struct IO {
     //internal
-     uint8 mdr;
-     uint1 field;
-    uint16 lx;
-    uint16 ly;
-     uint8 busData;
+    n08 mdr;
+    n01 field;
+    n16 lx;
+    n16 ly;
+    n08 busData;
 
     struct Union {
-      uint19 data;
+      n19 data;
       BitRange<19, 0, 4> tileX     {&data};
       BitRange<19, 5, 9> tileY     {&data};
       BitRange<19,10,11> nametable {&data};
@@ -83,55 +81,55 @@ struct PPU : Thread {
       BitRange<19,16,18> fineX     {&data};
     } v, t;
 
-     uint1 nmiHold;
-     uint1 nmiFlag;
+    n01 nmiHold;
+    n01 nmiFlag;
 
     //$2000
-     uint6 vramIncrement = 1;  //1 or 32
-    uint16 spriteAddress;      //0x0000 or 0x1000
-    uint16 bgAddress;          //0x0000 or 0x1000
-     uint5 spriteHeight = 8;   //8 or 16
-     uint1 masterSelect;
-     uint1 nmiEnable;
+    n06 vramIncrement;  //1 or 32
+    n16 spriteAddress;  //0x0000 or 0x1000
+    n16 bgAddress;      //0x0000 or 0x1000
+    n05 spriteHeight;   //8 or 16
+    n01 masterSelect;
+    n01 nmiEnable;
 
     //$2001
-     uint1 grayscale;
-     uint1 bgEdgeEnable;
-     uint1 spriteEdgeEnable;
-     uint1 bgEnable;
-     uint1 spriteEnable;
-     uint3 emphasis;
+    n01 grayscale;
+    n01 bgEdgeEnable;
+    n01 spriteEdgeEnable;
+    n01 bgEnable;
+    n01 spriteEnable;
+    n03 emphasis;
 
     //$2002
-     uint1 spriteOverflow;
-     uint1 spriteZeroHit;
+    n01 spriteOverflow;
+    n01 spriteZeroHit;
 
     //$2003
-     uint8 oamAddress;
+    n08 oamAddress;
   } io;
 
   struct OAM {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint8 id = 64;
-    uint8 y = 0xff;
-    uint8 tile = 0xff;
-    uint8 attr = 0xff;
-    uint8 x = 0xff;
+    n8 id = 64;
+    n8 y = 0xff;
+    n8 tile = 0xff;
+    n8 attr = 0xff;
+    n8 x = 0xff;
 
-    uint8 tiledataLo;
-    uint8 tiledataHi;
+    n8 tiledataLo;
+    n8 tiledataHi;
   };
 
   struct Latches {
-    uint16 nametable;
-    uint16 attribute;
-    uint16 tiledataLo;
-    uint16 tiledataHi;
+    n16 nametable;
+    n16 attribute;
+    n16 tiledataLo;
+    n16 tiledataHi;
 
-    uint16 oamIterator;
-    uint16 oamCounter;
+    n16 oamIterator;
+    n16 oamCounter;
 
     OAM oam[8];   //primary
     OAM soam[8];  //secondary

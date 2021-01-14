@@ -37,12 +37,12 @@ struct VideoXShm : VideoDriver {
 
   auto clear() -> void override {
     auto dp = _inputBuffer;
-    uint length = _inputWidth * _inputHeight;
+    u32 length = _inputWidth * _inputHeight;
     while(length--) *dp++ = 255u << 24;
     output();
   }
 
-  auto size(uint& width, uint& height) -> void override {
+  auto size(u32& width, u32& height) -> void override {
     if(self.fullScreen) {
       width = _monitorWidth;
       height = _monitorHeight;
@@ -54,23 +54,23 @@ struct VideoXShm : VideoDriver {
     }
   }
 
-  auto acquire(uint32_t*& data, uint& pitch, uint width, uint height) -> bool override {
+  auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
     if(!_inputBuffer || _inputWidth != width || _inputHeight != height) {
       if(_inputBuffer) delete[] _inputBuffer;
       _inputWidth = width;
       _inputHeight = height;
-      _inputBuffer = new uint32_t[width * height + 16];  //+16 is padding for linear interpolation
+      _inputBuffer = new u32[width * height + 16];  //+16 is padding for linear interpolation
     }
 
     data = _inputBuffer;
-    pitch = _inputWidth * sizeof(uint32_t);
+    pitch = _inputWidth * sizeof(u32);
     return true;
   }
 
   auto release() -> void override {
   }
 
-  auto output(uint width = 0, uint height = 0) -> void override {
+  auto output(u32 width = 0, u32 height = 0) -> void override {
     XWindowAttributes window;
     XGetWindowAttributes(_display, _window, &window);
 
@@ -84,10 +84,10 @@ struct VideoXShm : VideoDriver {
       allocate();
     }
 
-    uint viewportX = 0;
-    uint viewportY = 0;
-    uint viewportWidth = parent.width;
-    uint viewportHeight = parent.height;
+    u32 viewportX = 0;
+    u32 viewportY = 0;
+    u32 viewportWidth = parent.width;
+    u32 viewportHeight = parent.height;
 
     if(self.fullScreen) {
       viewportX = _monitorX;
@@ -101,11 +101,11 @@ struct VideoXShm : VideoDriver {
     if(!width) width = viewportWidth;
     if(!height) height = viewportHeight;
 
-    float xratio = (float)_inputWidth / (float)width;
-    float yratio = (float)_inputHeight / (float)height;
+    f32 xratio = (f32)_inputWidth / (f32)width;
+    f32 yratio = (f32)_inputHeight / (f32)height;
 
-    int x = ((int)viewportWidth - (int)width) / 2;
-    int y = ((int)viewportHeight - (int)height) / 2;
+    s32 x = ((s32)viewportWidth - (s32)width) / 2;
+    s32 y = ((s32)viewportHeight - (s32)height) / 2;
 
     width = min(width, viewportWidth);
     height = min(height, viewportHeight);
@@ -127,21 +127,21 @@ struct VideoXShm : VideoDriver {
     y += viewportY;
 
     #pragma omp parallel for
-    for(uint y = 0; y < height; y++) {
-      float ystep = y * yratio;
-      float xstep = 0;
+    for(u32 y = 0; y < height; y++) {
+      f32 ystep = y * yratio;
+      f32 xstep = 0;
 
-      uint32_t* sp = inputBuffer + (uint)ystep * _inputWidth;
-      uint32_t* dp = outputBuffer + y * _outputWidth;
+      u32* sp = inputBuffer + (u32)ystep * _inputWidth;
+      u32* dp = outputBuffer + y * _outputWidth;
 
       if(self.shader != "Blur") {
-        for(uint x = 0; x < width; x++) {
-          *dp++ = 255u << 24 | sp[(uint)xstep];
+        for(u32 x = 0; x < width; x++) {
+          *dp++ = 255u << 24 | sp[(u32)xstep];
           xstep += xratio;
         }
       } else {
-        for(uint x = 0; x < width; x++) {
-          *dp++ = 255u << 24 | interpolate(xstep - (uint)xstep, sp[(uint)xstep], sp[(uint)xstep + 1]);
+        for(u32 x = 0; x < width; x++) {
+          *dp++ = 255u << 24 | interpolate(xstep - (u32)xstep, sp[(u32)xstep], sp[(u32)xstep + 1]);
           xstep += xratio;
         }
       }
@@ -243,13 +243,13 @@ private:
   auto allocate() -> void {
     free();
 
-    _shmInfo.shmid = shmget(IPC_PRIVATE, _outputWidth * _outputHeight * sizeof(uint32_t), IPC_CREAT | 0777);
+    _shmInfo.shmid = shmget(IPC_PRIVATE, _outputWidth * _outputHeight * sizeof(u32), IPC_CREAT | 0777);
     if(_shmInfo.shmid < 0) return;
 
     _shmInfo.shmaddr = (char*)shmat(_shmInfo.shmid, 0, 0);
     _shmInfo.readOnly = False;
     XShmAttach(_display, &_shmInfo);
-    _outputBuffer = (uint32_t*)_shmInfo.shmaddr;
+    _outputBuffer = (u32*)_shmInfo.shmaddr;
     _image = XShmCreateImage(_display, _visual, _depth, ZPixmap, _shmInfo.shmaddr, &_shmInfo, _outputWidth, _outputHeight);
   }
 
@@ -265,16 +265,16 @@ private:
     _outputBuffer = nullptr;
   }
 
-  alwaysinline auto interpolate(float mu, uint32_t a, uint32_t b) -> uint32_t {
-    uint8_t ar = a >> 16, ag = a >> 8, ab = a >> 0;
-    uint8_t br = b >> 16, bg = b >> 8, bb = b >> 0;
-    uint8_t cr = ar * (1.0 - mu) + br * mu;
-    uint8_t cg = ag * (1.0 - mu) + bg * mu;
-    uint8_t cb = ab * (1.0 - mu) + bb * mu;
+  alwaysinline auto interpolate(f32 mu, u32 a, u32 b) -> u32 {
+    u8 ar = a >> 16, ag = a >> 8, ab = a >> 0;
+    u8 br = b >> 16, bg = b >> 8, bb = b >> 0;
+    u8 cr = ar * (1.0 - mu) + br * mu;
+    u8 cg = ag * (1.0 - mu) + bg * mu;
+    u8 cb = ab * (1.0 - mu) + bb * mu;
     return cr << 16 | cg << 8 | cb << 0;
   }
 
-  static auto errorHandler(Display* display, XErrorEvent* event) -> int {
+  static auto errorHandler(Display* display, XErrorEvent* event) -> s32 {
     //catch occasional BadAccess errors during window resize events
     //currently, I'm unsure of the cause, but they're certainly not fatal
     return 0;
@@ -282,17 +282,17 @@ private:
 
   bool _ready = false;
 
-  uint32_t* _inputBuffer = nullptr;
-  uint _inputWidth = 0;
-  uint _inputHeight = 0;
+  u32* _inputBuffer = nullptr;
+  u32 _inputWidth = 0;
+  u32 _inputHeight = 0;
 
   Display* _display = nullptr;
-  uint _monitorX = 0;
-  uint _monitorY = 0;
-  uint _monitorWidth = 0;
-  uint _monitorHeight = 0;
-  int _screen = 0;
-  int _depth = 0;
+  u32 _monitorX = 0;
+  u32 _monitorY = 0;
+  u32 _monitorWidth = 0;
+  u32 _monitorHeight = 0;
+  s32 _screen = 0;
+  s32 _depth = 0;
   Visual* _visual = nullptr;
   Window _parent = 0;
   Window _window = 0;
@@ -301,7 +301,7 @@ private:
   XShmSegmentInfo _shmInfo;
   XImage* _image = nullptr;
 
-  uint32_t* _outputBuffer = nullptr;
-  uint _outputWidth = 0;
-  uint _outputHeight = 0;
+  u32* _outputBuffer = nullptr;
+  u32 _outputWidth = 0;
+  u32 _outputHeight = 0;
 };

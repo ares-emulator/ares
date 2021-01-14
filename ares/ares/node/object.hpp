@@ -8,7 +8,7 @@
   private: static inline Class::Register<Type> register; public: \
 
 struct Object : shared_pointer_this<Object> {
-  DeclareClass(Object, "Object")
+  DeclareClass(Object, "object")
 
   Object(string name = {}) : _name(name) {}
   virtual ~Object() = default;
@@ -86,7 +86,7 @@ struct Object : shared_pointer_this<Object> {
   }
 
   template<typename T>
-  auto find(uint index) -> shared_pointer<typename T::type> {
+  auto find(u32 index) -> shared_pointer<typename T::type> {
     auto result = find<T>();
     if(index < result.size()) return result[index];
     return {};
@@ -178,13 +178,13 @@ struct Object : shared_pointer_this<Object> {
 
   virtual auto unserialize(Markup::Node markup) -> void {
     if(!markup) return;
-    _name = markup["name"].text();
+    _name = markup["name"].string();
     _attributes.reset();
     for(auto& attribute : markup.find("attribute")) {
-      _attributes.insert({attribute["name"].text(), attribute["value"].text()});
+      _attributes.insert({attribute["name"].string(), attribute["value"].string()});
     }
     for(auto& leaf : markup.find("node")) {
-      auto node = Class::create(leaf.text());
+      auto node = Class::create(leaf.string());
       append(node);
       node->unserialize(leaf);
     }

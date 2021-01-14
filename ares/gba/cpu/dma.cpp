@@ -27,7 +27,8 @@ auto CPU::DMA::transfer() -> void {
     uint32 addr = latch.source();
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
-    data = cpu.get(mode, addr);
+    cpu.dmabus.data = cpu.get(mode, addr);
+    if(mode & Half) cpu.dmabus.data |= cpu.dmabus.data << 16;
   }
 
   if(latch.target() < 0x0200'0000) {
@@ -36,7 +37,7 @@ auto CPU::DMA::transfer() -> void {
     uint32 addr = latch.target();
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
-    cpu.set(mode, addr, data);
+    cpu.set(mode, addr, cpu.dmabus.data);
   }
 
   switch(sourceMode) {

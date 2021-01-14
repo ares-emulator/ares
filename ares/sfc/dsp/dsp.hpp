@@ -1,15 +1,15 @@
 //Sony CXD1222Q-1
 
 struct DSP : Thread {
-  Node::Component node;
-  Node::Stream stream;
+  Node::Object node;
+  Node::Audio::Stream stream;
 
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
 
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
   } debugger;
 

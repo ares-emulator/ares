@@ -1,5 +1,5 @@
 struct CPU : ARM7TDMI, Thread, IO {
-  Node::Component node;
+  Node::Object node;
   Memory::Writable<uint8> iwram;  // 32KB
   Memory::Writable<uint8> ewram;  //256KB
 
@@ -10,13 +10,13 @@ struct CPU : ARM7TDMI, Thread, IO {
     auto interrupt(string_view type) -> void;
 
     struct Memory {
-      Node::Memory iwram;
-      Node::Memory ewram;
+      Node::Debugger::Memory iwram;
+      Node::Debugger::Memory ewram;
     } memory;
 
     struct Tracer {
-      Node::Instruction instruction;
-      Node::Notification interrupt;  //todo: ARM7TDMI needs to notify CPU when interrupts occur
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;  //todo: ARM7TDMI needs to notify CPU when interrupts occur
     } tracer;
   } debugger;
 
@@ -91,6 +91,11 @@ struct CPU : ARM7TDMI, Thread, IO {
     uint32 mask;
   };
 
+  //DMA data bus shared between all DMA channels
+  struct DMABus {
+    uint32 data;
+  } dmabus;
+
   struct DMA {
     //dma.cpp
     auto run() -> bool;
@@ -109,7 +114,6 @@ struct CPU : ARM7TDMI, Thread, IO {
      uint2 timingMode;
      uint1 irq;
      uint1 enable;
-    uint32 data;
 
     uintVN source;
     uintVN target;

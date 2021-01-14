@@ -31,5 +31,5 @@ auto ControllerPort::power() -> void {
 }
 
 auto ControllerPort::serialize(serializer& s) -> void {
-  s.integer(control);
+  s(control);
 }

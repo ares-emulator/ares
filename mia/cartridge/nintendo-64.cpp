@@ -1,17 +1,17 @@
 struct Nintendo64 : Cartridge {
   auto name() -> string override { return "Nintendo 64"; }
   auto extensions() -> vector<string> override { return {"n64", "v64", "z64"}; }
-  auto export(string location) -> vector<uint8_t> override;
-  auto heuristics(vector<uint8_t>& data, string location) -> string override;
+  auto export(string location) -> vector<u8> override;
+  auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto Nintendo64::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto Nintendo64::export(string location) -> vector<u8> {
+  vector<u8> data;
   append(data, {location, "program.rom"});
   return data;
 }
 
-auto Nintendo64::heuristics(vector<uint8_t>& data, string location) -> string {
+auto Nintendo64::heuristics(vector<u8>& data, string location) -> string {
   if(data.size() < 0x1000) {
     //too small
     return {};
@@ -19,19 +19,19 @@ auto Nintendo64::heuristics(vector<uint8_t>& data, string location) -> string {
     //big endian
   } else if(data[0] == 0x37 && data[1] == 0x80 && data[2] == 0x40 && data[3] == 0x12) {
     //byte-swapped
-    for(uint index = 0; index < data.size(); index += 2) {
-      uint8_t d0 = data[index + 0];
-      uint8_t d1 = data[index + 1];
+    for(u32 index = 0; index < data.size(); index += 2) {
+      u8 d0 = data[index + 0];
+      u8 d1 = data[index + 1];
       data[index + 0] = d1;
       data[index + 1] = d0;
     }
   } else if(data[0] == 0x40 && data[1] == 0x12 && data[2] == 0x37 && data[3] == 0x80) {
     //little endian
-    for(uint index = 0; index < data.size(); index += 4) {
-      uint8_t d0 = data[index + 0];
-      uint8_t d1 = data[index + 1];
-      uint8_t d2 = data[index + 2];
-      uint8_t d3 = data[index + 3];
+    for(u32 index = 0; index < data.size(); index += 4) {
+      u8 d0 = data[index + 0];
+      u8 d1 = data[index + 1];
+      u8 d2 = data[index + 2];
+      u8 d3 = data[index + 3];
       data[index + 0] = d3;
       data[index + 1] = d2;
       data[index + 2] = d1;
@@ -70,7 +70,7 @@ auto Nintendo64::heuristics(vector<uint8_t>& data, string location) -> string {
   //note: NTSC 6104 / PAL 7104 was never officially used
   bool ntsc = region == "NTSC";
   string cic = ntsc ? "CIC-NUS-6102" : "CIC-NUS-7101";  //fallback; most common
-  uint32_t crc32 = Hash::CRC32({&data[0x40], 0x9c0}).value();
+  u32 crc32 = Hash::CRC32({&data[0x40], 0x9c0}).value();
   if(crc32 == 0x1deb51a9) cic = ntsc ? "CIC-NUS-6101" : "CIC-NUS-7102";
   if(crc32 == 0xc08e5bd6) cic = ntsc ? "CIC-NUS-6102" : "CIC-NUS-7101";
   if(crc32 == 0x03b8376a) cic = ntsc ? "CIC-NUS-6103" : "CIC-NUS-7103";

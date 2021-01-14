@@ -13,14 +13,14 @@ struct RawInput {
   struct Device {
     HANDLE handle = nullptr;
     string path;
-    enum class Type : uint { Keyboard, Mouse, Joypad } type;
-    uint16_t vendorID = 0;
-    uint16_t productID = 0;
+    enum class Type : u32 { Keyboard, Mouse, Joypad } type;
+    u16 vendorID = 0;
+    u16 productID = 0;
     bool isXInputDevice = false;
   };
   vector<Device> devices;
 
-  auto find(uint16_t vendorID, uint16_t productID) -> maybe<Device&> {
+  auto find(u16 vendorID, u16 productID) -> maybe<Device&> {
     for(auto& device : devices) {
       if(device.vendorID == vendorID && device.productID == productID) return device;
     }
@@ -30,14 +30,14 @@ struct RawInput {
   auto scanDevices() -> void {
     devices.reset();
 
-    uint deviceCount = 0;
+    u32 deviceCount = 0;
     GetRawInputDeviceList(NULL, &deviceCount, sizeof(RAWINPUTDEVICELIST));
     RAWINPUTDEVICELIST* list = new RAWINPUTDEVICELIST[deviceCount];
     GetRawInputDeviceList(list, &deviceCount, sizeof(RAWINPUTDEVICELIST));
 
-    for(auto n : range(deviceCount)) {
+    for(u32 n : range(deviceCount)) {
       wchar_t path[4096];
-      uint size = sizeof(path) - 1;
+      u32 size = sizeof(path) - 1;
       GetRawInputDeviceInfo(list[n].hDevice, RIDI_DEVICENAME, &path, &size);
 
       RID_DEVICE_INFO info;
@@ -79,7 +79,7 @@ struct RawInput {
   auto windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> LRESULT {
     if(msg != WM_INPUT) return DefWindowProc(hwnd, msg, wparam, lparam);
 
-    uint size = 0;
+    u32 size = 0;
     GetRawInputData((HRAWINPUT)lparam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
     RAWINPUT* input = new RAWINPUT[size];
     GetRawInputData((HRAWINPUT)lparam, RID_INPUT, input, &size, sizeof(RAWINPUTHEADER));

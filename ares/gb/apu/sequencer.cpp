@@ -58,21 +58,21 @@ auto APU::Sequencer::power() -> void {
 }
 
 auto APU::Sequencer::serialize(serializer& s) -> void {
-  s.integer(leftEnable);
-  s.integer(leftVolume);
-  s.integer(rightEnable);
-  s.integer(rightVolume);
-  s.integer(noise.leftEnable);
-  s.integer(wave.leftEnable);
-  s.integer(square2.leftEnable);
-  s.integer(square1.leftEnable);
-  s.integer(noise.rightEnable);
-  s.integer(wave.rightEnable);
-  s.integer(square2.rightEnable);
-  s.integer(square1.rightEnable);
-  s.integer(enable);
+  s(leftEnable);
+  s(leftVolume);
+  s(rightEnable);
+  s(rightVolume);
+  s(noise.leftEnable);
+  s(wave.leftEnable);
+  s(square2.leftEnable);
+  s(square1.leftEnable);
+  s(noise.rightEnable);
+  s(wave.rightEnable);
+  s(square2.rightEnable);
+  s(square1.rightEnable);
+  s(enable);
 
-  s.integer(center);
-  s.integer(left);
-  s.integer(right);
+  s(center);
+  s(left);
+  s(right);
 }

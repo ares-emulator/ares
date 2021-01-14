@@ -10,13 +10,13 @@ Presentation::Presentation() {
   settingsMenu.setText("Settings");
   videoSizeMenu.setText("Size").setIcon(Icon::Emblem::Image);
   //determine the largest multiplier that can be used by the largest monitor found
-  uint monitorHeight = 1;
-  for(uint monitor : range(Monitor::count())) {
+  u32 monitorHeight = 1;
+  for(u32 monitor : range(Monitor::count())) {
     monitorHeight = max(monitorHeight, Monitor::workspace(monitor).height());
   }
   //generate size menu
-  uint multipliers = max(1, monitorHeight / 240);
-  for(uint multiplier : range(2, multipliers + 1)) {
+  u32 multipliers = max(1, monitorHeight / 240);
+  for(u32 multiplier : range(2, multipliers + 1)) {
     MenuItem item{&videoSizeMenu};
     item.setText({multiplier, "x (", 240 * multiplier, "p)"});
     item.onActivate([=] {
@@ -54,6 +54,25 @@ Presentation::Presentation() {
   });
   videoShaderMenu.setText("Shader").setIcon(Icon::Emblem::Image);
   loadShaders();
+  bootOptionsMenu.setText("Boot Options").setIcon(Icon::Place::Settings);
+  fastBoot.setText("Fast Boot").setChecked(settings.boot.fast).onToggle([&] {
+    settings.boot.fast = fastBoot.checked();
+  });
+  launchDebugger.setText("Launch Debugger").setChecked(settings.boot.debugger).onToggle([&] {
+    settings.boot.debugger = launchDebugger.checked();
+  });
+  preferNTSCU.setText("Prefer US").onActivate([&] {
+    settings.boot.prefer = "NTSC-U";
+  });
+  preferNTSCJ.setText("Prefer Japan").onActivate([&] {
+    settings.boot.prefer = "NTSC-J";
+  });
+  preferPAL.setText("Prefer Europe").onActivate([&] {
+    settings.boot.prefer = "PAL";
+  });
+  if(settings.boot.prefer == "NTSC-U") preferNTSCU.setChecked();
+  if(settings.boot.prefer == "NTSC-J") preferNTSCJ.setChecked();
+  if(settings.boot.prefer == "PAL") preferPAL.setChecked();
   muteAudioSetting.setText("Mute Audio").setChecked(settings.audio.mute).onToggle([&] {
     settings.audio.mute = muteAudioSetting.checked();
   });
@@ -96,14 +115,14 @@ Presentation::Presentation() {
 
   toolsMenu.setVisible(false).setText("Tools");
   saveStateMenu.setText("Save State").setIcon(Icon::Media::Record);
-  for(uint slot : range(9)) {
+  for(u32 slot : range(9)) {
     MenuItem item{&saveStateMenu};
     item.setText({"Slot ", 1 + slot}).onActivate([=] {
       program.stateSave(1 + slot);
     });
   }
   loadStateMenu.setText("Load State").setIcon(Icon::Media::Rewind);
-  for(uint slot : range(9)) {
+  for(u32 slot : range(9)) {
     MenuItem item{&loadStateMenu};
     item.setText({"Slot ", 1 + slot}).onActivate([=] {
       program.stateLoad(1 + slot);
@@ -142,7 +161,6 @@ Presentation::Presentation() {
     .setLogo(logo)
     .setDescription("lucia — a simplified multi-system emulator")
     .setVersion(ares::Version)
-    .setCopyright(ares::Copyright)
     .setLicense(ares::License, ares::LicenseURI)
     .setWebsite(ares::Website, ares::WebsiteURI)
     .setAlignment(presentation)
@@ -202,26 +220,26 @@ auto Presentation::resizeWindow() -> void {
   if(fullScreen()) return;
   if(maximized()) setMaximized(false);
 
-  uint multiplier = max(2, settings.video.multiplier);
-  uint viewportWidth = 320 * multiplier;
-  uint viewportHeight = 240 * multiplier;
+  u32 multiplier = max(2, settings.video.multiplier);
+  u32 viewportWidth = 320 * multiplier;
+  u32 viewportHeight = 240 * multiplier;
 
   if(emulator && program.screens) {
     auto& node = program.screens.first();
-    uint videoWidth = node->width() * node->scaleX();
-    uint videoHeight = node->height() * node->scaleY();
+    u32 videoWidth = node->width() * node->scaleX();
+    u32 videoHeight = node->height() * node->scaleY();
     if(settings.video.aspectCorrection) videoWidth = videoWidth * node->aspectX() / node->aspectY();
     if(node->rotation() == 90 || node->rotation() == 270) swap(videoWidth, videoHeight);
 
-    uint multiplierX = viewportWidth / videoWidth;
-    uint multiplierY = viewportHeight / videoHeight;
-    uint multiplier = min(multiplierX, multiplierY);
+    u32 multiplierX = viewportWidth / videoWidth;
+    u32 multiplierY = viewportHeight / videoHeight;
+    u32 multiplier = min(multiplierX, multiplierY);
 
     viewportWidth = videoWidth * multiplier;
     viewportHeight = videoHeight * multiplier;
   }
 
-  uint statusHeight = showStatusBarSetting.checked() ? StatusHeight : 0;
+  u32 statusHeight = showStatusBarSetting.checked() ? StatusHeight : 0;
 
   if(settings.video.autoCentering) {
     setGeometry(Alignment::Center, {viewportWidth, viewportHeight + statusHeight});
@@ -237,7 +255,7 @@ auto Presentation::loadEmulators() -> void {
 
   //clean up the recent games history first
   vector<string> recentGames;
-  for(uint index : range(9)) {
+  for(u32 index : range(9)) {
     auto entry = settings.recent.game[index];
     auto system = entry.split(";", 1L)(0);
     auto location = entry.split(";", 1L)(1);
@@ -250,14 +268,14 @@ auto Presentation::loadEmulators() -> void {
   }
 
   //build recent games list
-  uint count = 0;
+  u32 count = 0;
   for(auto& game : recentGames) {
     settings.recent.game[count++] = game;
   }
   { Menu recentGames{&loadMenu};
     recentGames.setIcon(Icon::Action::Open);
     recentGames.setText("Recent Games");
-    for(uint index : range(count)) {
+    for(u32 index : range(count)) {
       MenuItem item{&recentGames};
       auto entry = settings.recent.game[index];
       auto system = entry.split(";", 1L)(0);
@@ -278,7 +296,7 @@ auto Presentation::loadEmulators() -> void {
       clearHistory.setIcon(Icon::Edit::Clear);
       clearHistory.setText("Clear History");
       clearHistory.onActivate([&] {
-        for(uint index : range(9)) settings.recent.game[index] = {};
+        for(u32 index : range(9)) settings.recent.game[index] = {};
         loadEmulators();
       });
     } else {
@@ -288,7 +306,7 @@ auto Presentation::loadEmulators() -> void {
   loadMenu.append(MenuSeparator());
 
   //build emulator load list
-  uint enabled = 0;
+  u32 enabled = 0;
   for(auto& emulator : emulators) {
     if(!emulator->configuration.visible) continue;
     enabled++;
@@ -341,35 +359,45 @@ auto Presentation::loadEmulators() -> void {
 }
 
 auto Presentation::loadEmulator() -> void {
-  setTitle(emulator->interface->game());
+  setTitle(emulator->root->game());
 
   systemMenu.setText(emulator->name);
   systemMenu.setVisible();
 
-  //todo: structure this better ...
-  if(emulator->name == "Famicom Disk System") {
-    Menu diskMenu{&systemMenu};
-    diskMenu.setText("Disk Drive").setIcon(Icon::Media::Floppy);
-    MenuRadioItem ejected{&diskMenu};
-    ejected.setText("No Disk").onActivate([&] { emulator->notify("Ejected"); });
-    MenuRadioItem disk1sideA{&diskMenu};
-    disk1sideA.setText("Disk 1: Side A").onActivate([&] { emulator->notify("Disk 1: Side A"); });
-    MenuRadioItem disk1sideB{&diskMenu};
-    disk1sideB.setText("Disk 1: Side B").onActivate([&] { emulator->notify("Disk 1: Side B"); });
-    MenuRadioItem disk2sideA{&diskMenu};
-    disk2sideA.setText("Disk 2: Side A").onActivate([&] { emulator->notify("Disk 2: Side A"); });
-    MenuRadioItem disk2sideB{&diskMenu};
-    disk2sideB.setText("Disk 2: Side B").onActivate([&] { emulator->notify("Disk 2: Side B"); });
-    Group group{&ejected, &disk1sideA, &disk1sideB, &disk2sideA, &disk2sideB};
-    disk1sideA.setChecked();
+  //allow each emulator core to create any specialized menus necessary:
+  //for instance, floppy disk and CD-ROM swapping support.
+  emulator->load(systemMenu);
+  if(systemMenu.actionCount() > 0) systemMenu.append(MenuSeparator());
+
+  u32 portsFound = 0;
+  for(auto port : ares::Node::enumerate<ares::Node::Port>(emulator->root)) {
+    if(!port->hotSwappable()) continue;
+    if(port->type() != "Controller" && port->type() != "Expansion") continue;
+
+    portsFound++;
+    Menu portMenu{&systemMenu};
+    if(port->type() == "Controller") portMenu.setIcon(Icon::Device::Joypad);
+    if(port->type() == "Expansion" ) portMenu.setIcon(Icon::Device::Storage);
+    portMenu.setText(port->name());
+
+    Group peripheralGroup;
+    { MenuRadioItem peripheralItem{&portMenu};
+      peripheralItem.setText("Nothing");
+      peripheralGroup.append(peripheralItem);
+    }
+    for(auto peripheral : port->supported()) {
+      MenuRadioItem peripheralItem{&portMenu};
+      peripheralItem.setText(peripheral);
+      peripheralGroup.append(peripheralItem);
+    }
   }
+  if(portsFound > 0) systemMenu.append(MenuSeparator());
 
   MenuItem reset{&systemMenu};
   reset.setText("Reset").setIcon(Icon::Action::Refresh).onActivate([&] {
-    emulator->interface->power();
+    emulator->root->power();
     program.showMessage("System reset");
   });
-
   systemMenu.append(MenuSeparator());
 
   MenuItem unload{&systemMenu};

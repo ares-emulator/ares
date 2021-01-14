@@ -3,13 +3,13 @@
 struct KonamiSCC : Interface {
   using Interface::Interface;
   Memory::Readable<uint8> rom;
-  Node::Stream stream;
+  Node::Audio::Stream stream;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
     Interface::load(rom, board["memory(type=ROM,content=Program)"]);
 
-    stream = cartridge.node->append<Node::Stream>("SCC");
+    stream = cartridge.node->append<Node::Audio::Stream>("SCC");
     stream->setChannels(1);
     stream->setFrequency(system.colorburst() / 16.0);
     stream->addHighPassFilter(20.0, 1);
@@ -35,7 +35,7 @@ struct KonamiSCC : Interface {
       sample += voice.wave[voice.counter] * voice.volume * voice.key >> 3;
     }
 
-    stream->sample(mixer[sample] / 32768.0);
+    stream->frame(mixer[sample] / 32768.0);
     cartridge.step(16);
   }
 
@@ -222,16 +222,16 @@ struct KonamiSCC : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
-    s.array(bank);
+    s(bank);
     for(auto& voice : voices) {
-      s.integer(voice.clock);
-      s.integer(voice.frequency);
-      s.integer(voice.counter);
-      s.integer(voice.volume);
-      s.integer(voice.key);
-      s.array(voice.wave);
+      s(voice.clock);
+      s(voice.frequency);
+      s(voice.counter);
+      s(voice.volume);
+      s(voice.key);
+      s(voice.wave);
     }
-    s.integer(test);
+    s(test);
   }
 
   uint8 bank[4];

@@ -1,9 +1,21 @@
 auto VDP::vcounter() -> uint8 {
-  switch(io.mode) {
-  default:     return io.vcounter <= 218 ? io.vcounter : io.vcounter - 6;  //256x192
-  case 0b1011: return io.vcounter <= 234 ? io.vcounter : io.vcounter - 6;  //256x224
-  case 0b1110: return io.vcounter;  //256x240
+  if(Region::NTSC()) {
+    switch(io.mode) {
+    default:     return io.vcounter <= 218 ? io.vcounter : io.vcounter - 6;  //256x192
+    case 0b1011: return io.vcounter <= 234 ? io.vcounter : io.vcounter - 6;  //256x224
+    case 0b1110: return io.vcounter;  //256x240
+    }
   }
+
+  if(Region::PAL()) {
+    switch(io.mode) {
+    default:     return io.vcounter <= 242 ? io.vcounter : io.vcounter - 57;  //256x192
+    case 0b1011: return io.vcounter <= 258 ? io.vcounter : io.vcounter - 57;  //256x224
+    case 0b1110: return io.vcounter <= 266 ? io.vcounter : io.vcounter - 56;  //256x240
+    }
+  }
+
+  unreachable;
 }
 
 auto VDP::hcounter() -> uint8 {
@@ -22,11 +34,11 @@ auto VDP::data() -> uint8 {
 auto VDP::status() -> uint8 {
   io.controlLatch = 0;
 
-  uint8 result = 0x00;
-  result |= io.intFrame << 7;
-  result |= io.spriteOverflow << 6;
-  result |= io.spriteCollision << 5;
-  result |= io.fifthSprite << 0;
+  uint8 result;
+  result.bit(0,4) = io.fifthSprite;
+  result.bit(5)   = io.spriteCollision;
+  result.bit(6)   = io.spriteOverflow;
+  result.bit(7)   = io.intFrame;
 
   io.intLine = 0;
   io.intFrame = 0;

@@ -32,7 +32,7 @@ struct Thread {
   auto create(double frequency, function<void ()> entryPoint) -> void;
   auto destroy() -> void;
 
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto synchronize() -> void;
   template<typename... P> auto synchronize(Thread&, P&&...) -> void;
 
@@ -40,7 +40,7 @@ struct Thread {
 
 protected:
   cothread_t _handle = nullptr;
-  uint _uniqueID = 0;
+  u32 _uniqueID = 0;
   uintmax _frequency = 0;
   uintmax _scalar = 0;
   uintmax _clock = 0;

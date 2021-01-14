@@ -2,13 +2,26 @@
 
 namespace ares::GameBoy {
 
+auto load(Node::System& node, string name) -> bool {
+  return system.load(node, name);
+}
+
 Scheduler scheduler;
 System system;
+SuperGameBoyInterface* superGameBoy = nullptr;
 #include "controls.cpp"
 #include "serialization.cpp"
 
+auto System::game() -> string {
+  if(cartridge.node) {
+    return cartridge.name();
+  }
+
+  return "(no cartridge connected)";
+}
+
 auto System::run() -> void {
-  if(scheduler.enter() == Event::Frame) ppu.refresh();
+  scheduler.enter();
 }
 
 auto System::clocksExecuted() -> uint {
@@ -17,23 +30,27 @@ auto System::clocksExecuted() -> uint {
   return clocks;
 }
 
-auto System::load(Node::Object& root) -> void {
+auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(interface->name() == "Game Boy") {
-    information.model = Model::GameBoy;
-    node = Node::System::create(interface->name());
+  if(name == "Game Boy" || name == "Game Boy Color") {
+    if(name == "Game Boy") information.model = Model::GameBoy;
+    if(name == "Game Boy Color") information.model = Model::GameBoyColor;
+    node = Node::System::create(name);
+    node->setGame({&System::game, this});
+    node->setRun({&System::run, this});
+    node->setPower({&System::power, this});
+    node->setSave({&System::save, this});
+    node->setUnload({&System::unload, this});
+    node->setSerialize({&System::serialize, this});
+    node->setUnserialize({&System::unserialize, this});
     root = node;
+    fastBoot = node->append<Node::Setting::Boolean>("Fast Boot", false);
   }
-  if(interface->name() == "Super Game Boy") {
+  if(name == "Super Game Boy") {
     information.model = Model::SuperGameBoy;
     node = root;
-  }
-  if(interface->name() == "Game Boy Color") {
-    information.model = Model::GameBoyColor;
-    node = Node::System::create(interface->name());
-    root = node;
   }
 
   scheduler.reset();
@@ -42,6 +59,7 @@ auto System::load(Node::Object& root) -> void {
   ppu.load(node);
   apu.load(node);
   cartridgeSlot.load(node);
+  return true;
 }
 
 auto System::save() -> void {
@@ -60,8 +78,8 @@ auto System::unload() -> void {
   node = {};
 }
 
-auto System::power() -> void {
-  for(auto& setting : node->find<Node::Setting>()) setting->setLatch();
+auto System::power(bool reset) -> void {
+  for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   string name = "boot.rom";  //fallback name (should not be used)
 
@@ -92,6 +110,14 @@ auto System::power() -> void {
 
   if(auto fp = platform->open(node, name, File::Read, File::Required)) {
     bootROM.load(fp);
+
+    if(fastBoot->latch()) {
+      if(name == "boot.dmg-1.rom") {
+        bootROM.program(0x64, 0x18);
+        bootROM.program(0x65, 0x7a);
+      }
+      //todo: add fast boot patches for other boot ROMs
+    }
   }
 
   cartridge.power();
@@ -99,9 +125,6 @@ auto System::power() -> void {
   ppu.power();
   apu.power();
   scheduler.power(cpu);
-
-  information.serializeSize[0] = serializeInit(0);
-  information.serializeSize[1] = serializeInit(1);
 }
 
 }

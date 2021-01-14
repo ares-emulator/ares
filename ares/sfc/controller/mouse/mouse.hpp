@@ -1,8 +1,8 @@
 struct Mouse : Controller {
-  Node::Axis x;
-  Node::Axis y;
-  Node::Button left;
-  Node::Button right;
+  Node::Input::Axis x;
+  Node::Input::Axis y;
+  Node::Input::Button left;
+  Node::Input::Button right;
 
   Mouse(Node::Port);
 

@@ -20,11 +20,14 @@ namespace nall {
   using std::forward;
   using std::initializer_list;
   using std::is_array;
+  using std::is_array_v;
   using std::is_base_of;
   using std::is_base_of_v;
   using std::is_function;
   using std::is_integral;
   using std::is_integral_v;
+  using std::is_pointer;
+  using std::is_pointer_v;
   using std::is_same;
   using std::is_same_v;
   using std::is_signed;
@@ -34,7 +37,9 @@ namespace nall {
   using std::move;
   using std::nullptr_t;
   using std::remove_extent;
+  using std::remove_extent_t;
   using std::remove_reference;
+  using std::remove_reference_t;
   using std::swap;
   using std::true_type;
 }

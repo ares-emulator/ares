@@ -20,8 +20,6 @@ struct pFrame : pWidget {
   auto setText(const string& text) -> void;
   auto setVisible(bool visible) -> void override;
 
-  auto _sizable() -> maybe<pSizable&>;
-
   CocoaFrame* cocoaFrame = nullptr;
 };
 

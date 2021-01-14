@@ -1,5 +1,5 @@
 auto SMP::Debugger::load(Node::Object parent) -> void {
-  tracer.instruction = parent->append<Node::Instruction>("Instruction", "SMP");
+  tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "SMP");
   tracer.instruction->setAddressBits(16);
 }
 

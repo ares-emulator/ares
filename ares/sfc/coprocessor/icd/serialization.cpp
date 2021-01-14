@@ -1,33 +1,33 @@
 auto ICD::serialize(serializer& s) -> void {
   Thread::serialize(s);
-  GameBoy::system.serializeAll(s, scheduler.getSynchronize());
+  GameBoy::system.serialize(s, scheduler.getSynchronize());
 
-  for(uint n : range(64)) s.array(packet[n].data);
-  s.integer(packetSize);
+  for(uint n : range(64)) s(packet[n].data);
+  s(packetSize);
 
-  s.integer(joypID);
-  s.integer(joypLock);
-  s.integer(pulseLock);
-  s.integer(strobeLock);
-  s.integer(packetLock);
-  s.array(joypPacket.data);
-  s.integer(packetOffset);
-  s.integer(bitData);
-  s.integer(bitOffset);
+  s(joypID);
+  s(joypLock);
+  s(pulseLock);
+  s(strobeLock);
+  s(packetLock);
+  s(joypPacket.data);
+  s(packetOffset);
+  s(bitData);
+  s(bitOffset);
 
-  s.array(output);
-  s.integer(readBank);
-  s.integer(readAddress);
-  s.integer(writeBank);
+  s(output);
+  s(readBank);
+  s(readAddress);
+  s(writeBank);
 
-  s.integer(r6003);
-  s.integer(r6004);
-  s.integer(r6005);
-  s.integer(r6006);
-  s.integer(r6007);
-  s.array(r7000);
-  s.integer(mltReq);
+  s(r6003);
+  s(r6004);
+  s(r6005);
+  s(r6006);
+  s(r6007);
+  s(r7000);
+  s(mltReq);
 
-  s.integer(hcounter);
-  s.integer(vcounter);
+  s(hcounter);
+  s(vcounter);
 }

@@ -1,53 +1,42 @@
-#define decode(write, access, ...) \
-  if(address >= 0xfffe'0000) return unmapped; \
-  address &= 0x1fff'ffff; \
-  if(address <= 0x001f'ffff) return cpu.ram.access(__VA_ARGS__); \
-  if(address <= 0x1eff'ffff) return unmapped; \
-  if(address <= 0x1f7f'ffff) return unmapped; \
-  if(address <= 0x1f80'03ff) return cpu.cache.access(__VA_ARGS__); \
-  if(address <= 0x1f80'103f) return unmapped; \
-  if(address <= 0x1f80'104f) return peripheral.access(__VA_ARGS__); \
-  if(address <= 0x1f80'106f) return unmapped; \
-  if(address <= 0x1f80'107f) return interrupt.access(__VA_ARGS__); \
-  if(address <= 0x1f80'10ff) return dma.access(__VA_ARGS__); \
-  if(address <= 0x1f80'112f) return timer.access(__VA_ARGS__); \
-  if(address <= 0x1f80'17ff) return unmapped; \
-  if(address <= 0x1f80'180f) return disc.access(__VA_ARGS__); \
-  if(address <= 0x1f80'181f) return gpu.access(__VA_ARGS__); \
-  if(address <= 0x1f80'1bff) return unmapped; \
-  if(address <= 0x1f80'1fff) return spu.access(__VA_ARGS__); \
-  if(address <= 0x1fbf'ffff) return unmapped; \
-  if(address <= 0x1fff'ffff) return bios.access(__VA_ARGS__); \
-  return unmapped; \
-
-#define unmapped 0
-
-inline auto Bus::readByte(u32 address) -> u8 {
-  decode(0, readByte, address);
+inline auto Bus::mmio(u32 address) -> Memory::Interface& {
+  address &= 0x1fff'ffff;
+  if(address <= 0x1eff'ffff) return unmapped;
+  if(address <= 0x1f7f'ffff) return expansion1;
+  if(address <= 0x1f80'03ff) return cpu.scratchpad;
+  if(address <= 0x1f80'0fff) return unmapped;
+  if(address <= 0x1f80'103f) return memory;
+  if(address <= 0x1f80'105f) return peripheral;
+  if(address <= 0x1f80'106f) return memory;
+  if(address <= 0x1f80'107f) return interrupt;
+  if(address <= 0x1f80'10ff) return dma;
+  if(address <= 0x1f80'112f) return timer;
+  if(address <= 0x1f80'17ff) return unmapped;
+  if(address <= 0x1f80'180f) return disc;
+  if(address <= 0x1f80'181f) return gpu;
+  if(address <= 0x1f80'182f) return mdec;
+  if(address <= 0x1f80'1bff) return unmapped;
+  if(address <= 0x1f80'1fff) return spu;
+  if(address <= 0x1f80'2fff) return expansion2;
+  if(address <= 0x1f9f'ffff) return unmapped;
+  if(address <= 0x1fbf'ffff) return expansion3;
+  return unmapped;
 }
 
-inline auto Bus::readHalf(u32 address) -> u16 {
-  decode(0, readHalf, address);
+template<uint Size>
+inline auto Bus::read(u32 address) -> u32 {
+  address &= 0x1fff'ffff;
+  if(address <= 0x007f'ffff) return cpu.ram.read<Size>(address);
+  if(address >= 0x1fc0'0000) return bios.read<Size>(address);
+  return mmio(address).read<Size>(address);
 }
 
-inline auto Bus::readWord(u32 address) -> u32 {
-  decode(0, readWord, address);
+template<uint Size>
+inline auto Bus::write(u32 address, u32 data) -> void {
+  address &= 0x1fff'ffff;
+  if(address <= 0x007f'ffff) {
+    if constexpr(Accuracy::CPU::Recompiler) cpu.recompiler.invalidate(address);
+    return cpu.ram.write<Size>(address, data);
+  }
+  if(address >= 0x1fc0'0000) return bios.write<Size>(address, data);
+  return mmio(address).write<Size>(address, data);
 }
-
-#undef unmapped
-#define unmapped
-
-inline auto Bus::writeByte(u32 address, u8 data) -> void {
-  decode(1, writeByte, address, data);
-}
-
-inline auto Bus::writeHalf(u32 address, u16 data) -> void {
-  decode(1, writeHalf, address, data);
-}
-
-inline auto Bus::writeWord(u32 address, u32 data) -> void {
-  decode(1, writeWord, address, data);
-}
-
-#undef unmapped
-#undef decode

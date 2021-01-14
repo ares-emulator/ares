@@ -1,14 +1,14 @@
 auto RDRAM::Debugger::load(Node::Object parent) -> void {
-  tracer.io = parent->append<Node::Notification>("I/O", "RDRAM");
-
-  memory.ram = parent->append<Node::Memory>("RDRAM");
+  memory.ram = parent->append<Node::Debugger::Memory>("RDRAM");
   memory.ram->setSize(4_MiB + 4_MiB);
-  memory.ram->setRead([&](uint32 address) -> uint8 {
+  memory.ram->setRead([&](u32 address) -> u8 {
     return rdram.ram.readByte(address);
   });
-  memory.ram->setWrite([&](uint32 address, uint8 data) -> void {
+  memory.ram->setWrite([&](u32 address, u8 data) -> void {
     return rdram.ram.writeByte(address, data);
   });
+
+  tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "RDRAM");
 }
 
 auto RDRAM::Debugger::io(string_view message) -> void {

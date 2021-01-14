@@ -1,34 +1,58 @@
-#include <ws/interface/interface.hpp>
+namespace ares::WonderSwan {
+  auto load(Node::System& node, string name) -> bool;
+}
 
 struct WonderSwan : Emulator {
   WonderSwan();
+  auto load(Menu) -> void override;
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 struct WonderSwanColor : Emulator {
   WonderSwanColor();
+  auto load(Menu) -> void override;
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 struct PocketChallengeV2 : Emulator {
   PocketChallengeV2();
+  auto load(Menu) -> void override;
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 WonderSwan::WonderSwan() {
-  interface = new ares::WonderSwan::WonderSwanInterface;
   medium = mia::medium("WonderSwan");
   manufacturer = "Bandai";
   name = "WonderSwan";
 }
 
+auto WonderSwan::load(Menu menu) -> void {
+  Menu orientationMenu{&menu};
+  orientationMenu.setText("Orientation").setIcon(Icon::Device::Display);
+  if(auto orientations = root->find<ares::Node::Setting::String>("PPU/Screen/Orientation")) {
+    Group group;
+    for(auto& orientation : orientations->readAllowedValues()) {
+      MenuRadioItem item{&orientationMenu};
+      item.setText(orientation);
+      item.onActivate([=] {
+        if(auto orientations = root->find<ares::Node::Setting::String>("PPU/Screen/Orientation")) {
+          orientations->setValue(orientation);
+        }
+      });
+      group.append(item);
+    }
+  }
+}
+
 auto WonderSwan::load() -> bool {
+  if(!ares::WonderSwan::load(root, "WonderSwan")) return false;
+
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
@@ -40,11 +64,11 @@ auto WonderSwan::load() -> bool {
 auto WonderSwan::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
   if(name == "manifest.bml") return Emulator::manifest();
 
-  if(node->identity() == "System" && name == "boot.rom") {
+  if(node->is<ares::Node::System>() && name == "boot.rom") {
     return vfs::memory::open(Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot);
   }
 
-  if(node->identity() == "System" && name == "save.eeprom") {
+  if(node->is<ares::Node::System>() && name == "save.eeprom") {
     return {};
   }
 
@@ -70,37 +94,56 @@ auto WonderSwan::open(ares::Node::Object node, string name, vfs::file::mode mode
   return {};
 }
 
-auto WonderSwan::input(ares::Node::Input node) -> void {
+auto WonderSwan::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "Y1"   ) mapping = virtualPad.x;
-  if(name == "Y2"   ) mapping = virtualPad.y;
-  if(name == "Y3"   ) mapping = virtualPad.l;
-  if(name == "Y4"   ) mapping = virtualPad.r;
-  if(name == "X1"   ) mapping = virtualPad.up;
-  if(name == "X2"   ) mapping = virtualPad.right;
-  if(name == "X3"   ) mapping = virtualPad.down;
-  if(name == "X4"   ) mapping = virtualPad.left;
-  if(name == "B"    ) mapping = virtualPad.a;
-  if(name == "A"    ) mapping = virtualPad.b;
-  if(name == "Start") mapping = virtualPad.start;
+  if(name == "Y1"   ) mapping = virtualPads[0].l1;
+  if(name == "Y2"   ) mapping = virtualPads[0].l2;
+  if(name == "Y3"   ) mapping = virtualPads[0].r1;
+  if(name == "Y4"   ) mapping = virtualPads[0].r2;
+  if(name == "X1"   ) mapping = virtualPads[0].up;
+  if(name == "X2"   ) mapping = virtualPads[0].right;
+  if(name == "X3"   ) mapping = virtualPads[0].down;
+  if(name == "X4"   ) mapping = virtualPads[0].left;
+  if(name == "B"    ) mapping = virtualPads[0].a;
+  if(name == "A"    ) mapping = virtualPads[0].b;
+  if(name == "Start") mapping = virtualPads[0].start;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }
 }
 
 WonderSwanColor::WonderSwanColor() {
-  interface = new ares::WonderSwan::WonderSwanColorInterface;
   medium = mia::medium("WonderSwan Color");
   manufacturer = "Bandai";
   name = "WonderSwan Color";
 }
 
+auto WonderSwanColor::load(Menu menu) -> void {
+  Menu orientationMenu{&menu};
+  orientationMenu.setText("Orientation").setIcon(Icon::Device::Display);
+  if(auto orientations = root->find<ares::Node::Setting::String>("PPU/Screen/Orientation")) {
+    Group group;
+    for(auto& orientation : orientations->readAllowedValues()) {
+      MenuRadioItem item{&orientationMenu};
+      item.setText(orientation);
+      item.onActivate([=] {
+        if(auto orientations = root->find<ares::Node::Setting::String>("PPU/Screen/Orientation")) {
+          orientations->setValue(orientation);
+        }
+      });
+      group.append(item);
+    }
+  }
+}
+
 auto WonderSwanColor::load() -> bool {
+  if(!ares::WonderSwan::load(root, "WonderSwan Color")) return false;
+
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
@@ -112,11 +155,11 @@ auto WonderSwanColor::load() -> bool {
 auto WonderSwanColor::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
   if(name == "manifest.bml") return Emulator::manifest();
 
-  if(node->identity() == "System" && name == "boot.rom") {
+  if(node->is<ares::Node::System>() && name == "boot.rom") {
     return vfs::memory::open(Resource::WonderSwanColor::Boot, sizeof Resource::WonderSwanColor::Boot);
   }
 
-  if(node->identity() == "System" && name == "save.eeprom") {
+  if(node->is<ares::Node::System>() && name == "save.eeprom") {
     return {};
   }
 
@@ -142,37 +185,44 @@ auto WonderSwanColor::open(ares::Node::Object node, string name, vfs::file::mode
   return {};
 }
 
-auto WonderSwanColor::input(ares::Node::Input node) -> void {
+auto WonderSwanColor::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "Y1"   ) mapping = virtualPad.x;
-  if(name == "Y2"   ) mapping = virtualPad.y;
-  if(name == "Y3"   ) mapping = virtualPad.l;
-  if(name == "Y4"   ) mapping = virtualPad.r;
-  if(name == "X1"   ) mapping = virtualPad.up;
-  if(name == "X2"   ) mapping = virtualPad.right;
-  if(name == "X3"   ) mapping = virtualPad.down;
-  if(name == "X4"   ) mapping = virtualPad.left;
-  if(name == "B"    ) mapping = virtualPad.a;
-  if(name == "A"    ) mapping = virtualPad.b;
-  if(name == "Start") mapping = virtualPad.start;
+  if(name == "Y1"   ) mapping = virtualPads[0].l1;
+  if(name == "Y2"   ) mapping = virtualPads[0].l2;
+  if(name == "Y3"   ) mapping = virtualPads[0].r1;
+  if(name == "Y4"   ) mapping = virtualPads[0].r2;
+  if(name == "X1"   ) mapping = virtualPads[0].up;
+  if(name == "X2"   ) mapping = virtualPads[0].right;
+  if(name == "X3"   ) mapping = virtualPads[0].down;
+  if(name == "X4"   ) mapping = virtualPads[0].left;
+  if(name == "B"    ) mapping = virtualPads[0].a;
+  if(name == "A"    ) mapping = virtualPads[0].b;
+  if(name == "Start") mapping = virtualPads[0].start;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }
 }
 
 PocketChallengeV2::PocketChallengeV2() {
-  interface = new ares::WonderSwan::PocketChallengeV2Interface;
   medium = mia::medium("Pocket Challenge V2");
   manufacturer = "Benesse";
   name = "Pocket Challenge V2";
 }
 
+auto PocketChallengeV2::load(Menu menu) -> void {
+  //the Pocket Challenge V2 game library is very small.
+  //no titles for the system use portrait (vertical) orientation.
+  //as such, neither the ares::WonderSwan core nor lucia provide an orientation setting.
+}
+
 auto PocketChallengeV2::load() -> bool {
+  if(!ares::WonderSwan::load(root, "Pocket Challenge V2")) return false;
+
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
@@ -184,11 +234,11 @@ auto PocketChallengeV2::load() -> bool {
 auto PocketChallengeV2::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
   if(name == "manifest.bml") return Emulator::manifest();
 
-  if(node->identity() == "System" && name == "boot.rom") {
+  if(node->is<ares::Node::System>() && name == "boot.rom") {
     return vfs::memory::open(Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot);
   }
 
-  if(node->identity() == "System" && name == "save.eeprom") {
+  if(node->is<ares::Node::System>() && name == "save.eeprom") {
     return {};
   }
 
@@ -214,22 +264,22 @@ auto PocketChallengeV2::open(ares::Node::Object node, string name, vfs::file::mo
   return {};
 }
 
-auto PocketChallengeV2::input(ares::Node::Input node) -> void {
+auto PocketChallengeV2::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "Up"    ) mapping = virtualPad.up;
-  if(name == "Down"  ) mapping = virtualPad.down;
-  if(name == "Left"  ) mapping = virtualPad.left;
-  if(name == "Right" ) mapping = virtualPad.right;
-  if(name == "Pass"  ) mapping = virtualPad.a;
-  if(name == "Circle") mapping = virtualPad.b;
-  if(name == "Clear" ) mapping = virtualPad.y;
-  if(name == "View"  ) mapping = virtualPad.start;
-  if(name == "Escape") mapping = virtualPad.select;
+  if(name == "Up"    ) mapping = virtualPads[0].up;
+  if(name == "Down"  ) mapping = virtualPads[0].down;
+  if(name == "Left"  ) mapping = virtualPads[0].left;
+  if(name == "Right" ) mapping = virtualPads[0].right;
+  if(name == "Pass"  ) mapping = virtualPads[0].a;
+  if(name == "Circle") mapping = virtualPads[0].b;
+  if(name == "Clear" ) mapping = virtualPads[0].y;
+  if(name == "View"  ) mapping = virtualPads[0].start;
+  if(name == "Escape") mapping = virtualPads[0].select;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }

@@ -9,7 +9,7 @@ RDP rdp;
 #include "serialization.cpp"
 
 auto RDP::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("RDP");
+  node = parent->append<Node::Object>("RDP");
   debugger.load(node);
 }
 
@@ -26,12 +26,9 @@ auto RDP::step(uint clocks) -> void {
   clock += clocks;
 }
 
-auto RDP::power() -> void {
+auto RDP::power(bool reset) -> void {
   Thread::reset();
-  command = {};
-  set = {};
-  io.bist = {};
-  io.test = {};
+  command.ready = 1;
 }
 
 }

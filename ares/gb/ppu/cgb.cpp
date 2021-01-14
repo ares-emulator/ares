@@ -12,33 +12,32 @@
 //0x08: VRAM bank#
 //0x07: palette#
 
-auto PPU::readTileCGB(bool select, uint x, uint y, uint& attr, uint& data) -> void {
-  uint tmaddr = 0x1800 + (select << 10);
-  tmaddr += (((y >> 3) << 5) + (x >> 3)) & 0x03ff;
+auto PPU::readTileCGB(bool select, uint x, uint y, uint16& tiledata, uint8& attributes) -> void {
+  uint14 tilemapAddress = 0x1800 + (select << 10);
+  tilemapAddress += (((y >> 3) << 5) + (x >> 3)) & 0x03ff;
 
-  uint tile = vram[0x0000 + tmaddr];
-  attr = vram[0x2000 + tmaddr];
+  uint8 tile = vram[0x0000 + tilemapAddress];
+  attributes = vram[0x2000 + tilemapAddress];
 
-  uint tdaddr = attr & 0x08 ? 0x2000 : 0x0000;
+  uint14 tiledataAddress = attributes.bit(3) ? 0x2000 : 0x0000;
   if(status.bgTiledataSelect == 0) {
-    tdaddr += 0x1000 + ((int8)tile << 4);
+    tiledataAddress += 0x1000 + ( int8(tile) << 4);
   } else {
-    tdaddr += 0x0000 + (tile << 4);
+    tiledataAddress += 0x0000 + (uint8(tile) << 4);
   }
 
-  y &= 7;
-  if(attr & 0x40) y ^= 7;
-  tdaddr += y << 1;
+  if(attributes.bit(6)) y ^= 7;
+  tiledataAddress += (y & 7) << 1;
 
-  data  = vram[tdaddr++] << 0;
-  data |= vram[tdaddr++] << 8;
-  if(attr & 0x20) data = hflip(data);
+  tiledata.byte(0) = vram[tiledataAddress + 0];
+  tiledata.byte(1) = vram[tiledataAddress + 1];
+  if(attributes.bit(5)) tiledata = hflip(tiledata);
 }
 
 auto PPU::scanlineCGB() -> void {
   px = 0;
 
-  const uint Height = (status.obSize == 0 ? 8 : 16);
+  const int Height = (status.obSize == 0 ? 8 : 16);
   sprites = 0;
 
   //find first ten sprites on this scanline
@@ -47,27 +46,27 @@ auto PPU::scanlineCGB() -> void {
     s.y = oam[n + 0] - 16;
     s.x = oam[n + 1] -  8;
     s.tile = oam[n + 2] & ~status.obSize;
-    s.attr = oam[n + 3];
+    s.attributes = oam[n + 3];
 
+    if(int(status.ly) <  s.y) continue;
+    if(int(status.ly) >= s.y + Height) continue;
     s.y = status.ly - s.y;
-    if(s.y >= Height) continue;
 
-    if(s.attr & 0x40) s.y ^= (Height - 1);
-    uint tdaddr = (s.attr & 0x08 ? 0x2000 : 0x0000) + (s.tile << 4) + (s.y << 1);
-    s.data  = vram[tdaddr + 0] << 0;
-    s.data |= vram[tdaddr + 1] << 8;
-    if(s.attr & 0x20) s.data = hflip(s.data);
+    if(s.attributes.bit(6)) s.y ^= Height - 1;
+    uint14 tiledataAddress = (s.attributes.bit(3) ? 0x2000 : 0x0000) + (s.tile << 4) + (s.y << 1);
+    s.tiledata.byte(0) = vram[tiledataAddress + 0];
+    s.tiledata.byte(1) = vram[tiledataAddress + 1];
+    if(s.attributes.bit(5)) s.tiledata = hflip(s.tiledata);
 
     if(++sprites == 10) break;
   }
 }
 
 auto PPU::runCGB() -> void {
-  ob.color = 0;
-  ob.palette = 0;
-  ob.priority = 0;
+  bg = {};
+  ob = {};
 
-  uint color = 0x7fff;
+  uint15 color = 0x7fff;
   runBackgroundCGB();
   if(latch.windowDisplayEnable) runWindowCGB();
   if(status.obEnable) runObjectsCGB();
@@ -86,53 +85,45 @@ auto PPU::runCGB() -> void {
     color = bg.color;
   }
 
-  uint32* output = this->output + status.ly * 160 + px++;
+  auto output = screen->pixels().data() + status.ly * 160 + px++;
   *output = color;
 }
 
 auto PPU::runBackgroundCGB() -> void {
-  uint scrolly = (status.ly + status.scy) & 255;
-  uint scrollx = (px + status.scx) & 255;
-  uint tx = scrollx & 7;
-  if(tx == 0 || px == 0) readTileCGB(status.bgTilemapSelect, scrollx, scrolly, background.attr, background.data);
+  uint8 scrollY = status.ly + status.scy;
+  uint8 scrollX = px + status.scx;
+  uint3 tileX = scrollX & 7;
+  if(tileX == 0 || px == 0) readTileCGB(status.bgTilemapSelect, scrollX, scrollY, background.tiledata, background.attributes);
 
-  uint index = 0;
-  index |= (background.data & (0x0080 >> tx)) ? 1 : 0;
-  index |= (background.data & (0x8000 >> tx)) ? 2 : 0;
-  uint palette = ((background.attr & 0x07) << 2) + index;
-  uint color = 0;
-  color |= bgpd[(palette << 1) + 0] << 0;
-  color |= bgpd[(palette << 1) + 1] << 8;
-  color &= 0x7fff;
+  uint2 index;
+  index.bit(0) = background.tiledata.bit( 7 - tileX);
+  index.bit(1) = background.tiledata.bit(15 - tileX);
+  uint5 palette = background.attributes.bit(0,2) << 2 | index;
 
-  bg.color = color;
+  bg.color = bgpd[palette];
   bg.palette = index;
-  bg.priority = background.attr & 0x80;
+  bg.priority = background.attributes.bit(7);
 }
 
 auto PPU::runWindowCGB() -> void {
   if(status.ly < status.wy) return;
   if(px + 7 == status.wx) latch.wy++;
 
-  uint scrolly = latch.wy - 1;
-  uint scrollx = px + 7 - latch.wx;
+  uint8 scrollY = latch.wy - 1;
+  uint8 scrollX = px + 7 - latch.wx;
+  uint3 tileX = scrollX & 7;
 
-  if(scrollx >= 160u) return;  //also matches underflow (scrollx < 0)
-  uint tx = scrollx & 7;
-  if(tx == 0 || px == 0) readTileCGB(status.windowTilemapSelect, scrollx, scrolly, window.attr, window.data);
+  if(scrollX >= 160u) return;  //also matches underflow (scrollX < 0)
+  if(tileX == 0 || px == 0) readTileCGB(status.windowTilemapSelect, scrollX, scrollY, window.tiledata, window.attributes);
 
-  uint index = 0;
-  index |= (window.data & (0x0080 >> tx)) ? 1 : 0;
-  index |= (window.data & (0x8000 >> tx)) ? 2 : 0;
-  uint palette = ((window.attr & 0x07) << 2) + index;
-  uint color = 0;
-  color |= bgpd[(palette << 1) + 0] << 0;
-  color |= bgpd[(palette << 1) + 1] << 8;
-  color &= 0x7fff;
+  uint2 index;
+  index.bit(0) = window.tiledata.bit( 7 - tileX);
+  index.bit(1) = window.tiledata.bit(15 - tileX);
+  uint5 palette = window.attributes.bit(0,2) << 2 | index;
 
-  bg.color = color;
+  bg.color = bgpd[palette];
   bg.palette = index;
-  bg.priority = window.attr & 0x80;
+  bg.priority = window.attributes.bit(7);
 }
 
 auto PPU::runObjectsCGB() -> void {
@@ -140,22 +131,17 @@ auto PPU::runObjectsCGB() -> void {
   for(int n = sprites - 1; n >= 0; n--) {
     Sprite& s = sprite[n];
 
-    int tx = px - s.x;
-    if(tx < 0 || tx > 7) continue;
+    int tileX = px - s.x;
+    if(tileX < 0 || tileX > 7) continue;
 
-    uint index = 0;
-    index |= (s.data & (0x0080 >> tx)) ? 1 : 0;
-    index |= (s.data & (0x8000 >> tx)) ? 2 : 0;
+    uint2 index;
+    index.bit(0) = s.tiledata.bit( 7 - tileX);
+    index.bit(1) = s.tiledata.bit(15 - tileX);
     if(index == 0) continue;
+    uint5 palette = s.attributes.bit(0,2) << 2 | index;
 
-    uint palette = ((s.attr & 0x07) << 2) + index;
-    uint color = 0;
-    color |= obpd[(palette << 1) + 0] << 0;
-    color |= obpd[(palette << 1) + 1] << 8;
-    color &= 0x7fff;
-
-    ob.color = color;
+    ob.color = obpd[palette];
     ob.palette = index;
-    ob.priority = !(s.attr & 0x80);
+    ob.priority = !s.attributes.bit(7);
   }
 }

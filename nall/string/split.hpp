@@ -13,7 +13,12 @@ inline auto vector<string>::_split(string_view source, string_view find, long li
   int matches = 0;
 
   for(int n = 0, quoted = 0; n <= size - (int)find.size();) {
-    if(Quoted) { if(p[n] == '\"') { quoted ^= 1; n++; continue; } if(quoted) { n++; continue; } }
+    if constexpr(Quoted) {
+      if(quoted && p[n] == '\\') { n += 2; continue; }
+      if(p[n] == '\'' && quoted != 2) { quoted ^= 1; n++; continue; }
+      if(p[n] == '\"' && quoted != 1) { quoted ^= 2; n++; continue; }
+      if(quoted) { n++; continue; }
+    }
     if(string::_compare<Insensitive>(p + n, size - n, find.data(), find.size())) { n++; continue; }
     if(matches >= limit) break;
 

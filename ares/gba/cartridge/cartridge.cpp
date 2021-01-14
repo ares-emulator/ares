@@ -25,7 +25,7 @@ Cartridge::~Cartridge() {
 }
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>(interface->name());
+  return node = parent->append<Node::Peripheral>("Game Boy Advance");
 }
 
 auto Cartridge::connect() -> void {
@@ -39,7 +39,7 @@ auto Cartridge::connect() -> void {
   }
 
   auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].text();
+  information.name = document["game/label"].string();
 
   if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
     mrom.size = min(32 * 1024 * 1024, memory["size"].natural());
@@ -78,7 +78,7 @@ auto Cartridge::connect() -> void {
   if(auto memory = document["game/board/memory(type=Flash,content=Save)"]) {
     has.flash = true;
     flash.size = min(128 * 1024, memory["size"].natural());
-    flash.manufacturer = memory["manufacturer"].text();
+    flash.manufacturer = memory["manufacturer"].string();
     for(auto n : range(flash.size)) flash.data[n] = 0xff;
 
     flash.id = 0;

@@ -7,7 +7,7 @@ auto FDSTimer::clock() -> void {
   }
 }
 
-auto FDSTimer::read(uint16 address, uint8 data) -> uint8 {
+auto FDSTimer::read(n16 address, n8 data) -> n8 {
   switch(address) {
 
   case 0x4030:
@@ -21,7 +21,7 @@ auto FDSTimer::read(uint16 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto FDSTimer::write(uint16 address, uint8 data) -> void {
+auto FDSTimer::write(n16 address, n8 data) -> void {
   switch(address) {
 
   case 0x4020:

@@ -1,7 +1,7 @@
 //Zilog Z80
 
 struct APU : Z80, Z80::Bus, Thread {
-  Node::Component node;
+  Node::Object node;
 
   struct Debugger {
     //debugger.cpp
@@ -10,12 +10,12 @@ struct APU : Z80, Z80::Bus, Thread {
     auto interrupt(string_view) -> void;
 
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
 
     struct Tracer {
-      Node::Instruction instruction;
-      Node::Notification interrupt;
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
     } tracer;
   } debugger;
 

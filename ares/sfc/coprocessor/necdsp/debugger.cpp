@@ -1,5 +1,5 @@
 auto NECDSP::Debugger::load(Node::Object parent) -> void {
-  tracer.instruction = parent->append<Node::Instruction>("Instruction", "NEC");
+  tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "NEC");
   tracer.instruction->setAddressBits(14);
 }
 

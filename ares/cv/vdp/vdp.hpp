@@ -1,6 +1,6 @@
 struct VDP : TMS9918, Thread {
-  Node::Component node;
-  Node::Screen screen;
+  Node::Object node;
+  Node::Video::Screen screen;
 
   //vdp.cpp
   auto load(Node::Object) -> void;
@@ -9,7 +9,6 @@ struct VDP : TMS9918, Thread {
   auto step(uint clocks) -> void override;
   auto irq(bool line) -> void override;
   auto frame() -> void override;
-  auto refresh() -> void;
   auto power() -> void;
 
   //color.cpp

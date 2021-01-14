@@ -1,7 +1,7 @@
 //RAMBUS RAM
 
 struct RDRAM : Memory::IO<RDRAM> {
-  Node::Component node;
+  Node::Object node;
   Memory::Writable ram;
 
   struct Debugger {
@@ -9,19 +9,19 @@ struct RDRAM : Memory::IO<RDRAM> {
     auto load(Node::Object) -> void;
     auto io(string_view) -> void;
 
-    struct Tracer {
-      Node::Notification io;
-    } tracer;
-
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
+
+    struct Tracer {
+      Node::Debugger::Tracer::Notification io;
+    } tracer;
   } debugger;
 
   //rdram.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
-  auto power() -> void;
+  auto power(bool reset) -> void;
 
   //io.cpp
   auto readWord(u32 address) -> u32;
@@ -29,9 +29,6 @@ struct RDRAM : Memory::IO<RDRAM> {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
-
-  struct IO {
-  } io;
 };
 
 extern RDRAM rdram;

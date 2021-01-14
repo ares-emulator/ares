@@ -8,7 +8,7 @@ MI mi;
 #include "serialization.cpp"
 
 auto MI::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("MI");
+  node = parent->append<Node::Object>("MI");
 
   debugger.load(node);
 }
@@ -62,13 +62,13 @@ auto MI::poll() -> void {
   cpu.scc.cause.interruptPending.bit(2) = line;
 }
 
-auto MI::power() -> void {
-  irq.sp.line = 0; irq.sp.mask = 1;
-  irq.si.line = 0; irq.si.mask = 1;
-  irq.ai.line = 0; irq.ai.mask = 1;
-  irq.vi.line = 0; irq.vi.mask = 1;
-  irq.pi.line = 0; irq.pi.mask = 1;
-  irq.dp.line = 0; irq.dp.mask = 1;
+auto MI::power(bool reset) -> void {
+  irq.sp.mask = 1;
+  irq.si.mask = 1;
+  irq.ai.mask = 1;
+  irq.vi.mask = 1;
+  irq.pi.mask = 1;
+  irq.dp.mask = 1;
 }
 
 }

@@ -7,12 +7,12 @@ struct InputKeyboardCarbon {
   shared_pointer<HID::Keyboard> hid{new HID::Keyboard};
 
   struct Key {
-    uint8 id;
+    u8 id = 0;
     string name;
   };
   vector<Key> keys;
 
-  auto assign(uint inputID, bool value) -> void {
+  auto assign(u32 inputID, bool value) -> void {
     auto& group = hid->buttons();
     if(group.input(inputID).value() == value) return;
     input.doChange(hid, HID::Keyboard::GroupID::Button, inputID, group.input(inputID).value(), value);
@@ -24,7 +24,7 @@ struct InputKeyboardCarbon {
     GetKeys(keymap);
     auto buffer = (const uint8*)keymap;
 
-    uint inputID = 0;
+    u32 inputID = 0;
     for(auto& key : keys) {
       bool value = buffer[key.id >> 3] & (1 << (key.id & 7));
       assign(inputID++, value);

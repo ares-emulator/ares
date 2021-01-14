@@ -1,12 +1,18 @@
-ares.components += m68k z80 sn76489
+ares.components += m68k
+ares.components += z80
+ares.components += sn76489
 
-ares.objects += ares-md-interface
-ares.objects += ares-md-cpu ares-md-apu ares-md-vdp ares-md-psg ares-md-ym2612
+ares.objects += ares-md-cpu
+ares.objects += ares-md-apu
+ares.objects += ares-md-vdp
+ares.objects += ares-md-psg
+ares.objects += ares-md-ym2612
 ares.objects += ares-md-mcd
-ares.objects += ares-md-system ares-md-cartridge ares-md-expansion
+ares.objects += ares-md-system
+ares.objects += ares-md-cartridge
+ares.objects += ares-md-expansion
 ares.objects += ares-md-controller
 
-$(object.path)/ares-md-interface.o:  $(ares.path)/md/interface/interface.cpp
 $(object.path)/ares-md-cpu.o:        $(ares.path)/md/cpu/cpu.cpp
 $(object.path)/ares-md-apu.o:        $(ares.path)/md/apu/apu.cpp
 $(object.path)/ares-md-vdp.o:        $(ares.path)/md/vdp/vdp.cpp

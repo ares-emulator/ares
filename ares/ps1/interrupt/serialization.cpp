@@ -1,2 +1,35 @@
 auto Interrupt::serialize(serializer& s) -> void {
+  s(vblank.line);
+  s(vblank.stat);
+  s(vblank.mask);
+  s(gpu.line);
+  s(gpu.stat);
+  s(gpu.mask);
+  s(cdrom.line);
+  s(cdrom.stat);
+  s(cdrom.mask);
+  s(dma.line);
+  s(dma.stat);
+  s(dma.mask);
+  s(timer0.line);
+  s(timer0.stat);
+  s(timer0.mask);
+  s(timer1.line);
+  s(timer1.stat);
+  s(timer1.mask);
+  s(timer2.line);
+  s(timer2.stat);
+  s(timer2.mask);
+  s(peripheral.line);
+  s(peripheral.stat);
+  s(peripheral.mask);
+  s(sio.line);
+  s(sio.stat);
+  s(sio.mask);
+  s(spu.line);
+  s(spu.stat);
+  s(spu.mask);
+  s(pio.line);
+  s(pio.stat);
+  s(pio.mask);
 }

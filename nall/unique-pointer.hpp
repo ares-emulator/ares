@@ -54,13 +54,18 @@ struct unique_pointer {
       pointer = nullptr;
     }
   }
+
+  auto swap(unique_pointer<T>& target) -> void {
+    std::swap(pointer, target.pointer);
+    std::swap(deleter, target.deleter);
+  }
 };
 
 template<typename T>
 struct unique_pointer<T[]> {
   using type = T;
   T* pointer = nullptr;
-  function<auto (T*) -> void> deleter;
+  function<void (T*)> deleter;
 
   unique_pointer(const unique_pointer&) = delete;
   auto operator=(const unique_pointer&) -> unique_pointer& = delete;
@@ -100,6 +105,11 @@ struct unique_pointer<T[]> {
       }
       pointer = nullptr;
     }
+  }
+
+  auto swap(unique_pointer<T[]>& target) -> void {
+    std::swap(pointer, target.pointer);
+    std::swap(deleter, target.deleter);
   }
 };
 

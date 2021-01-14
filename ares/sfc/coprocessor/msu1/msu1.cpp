@@ -2,7 +2,7 @@ MSU1 msu1;
 #include "serialization.cpp"
 
 auto MSU1::load(Node::Object parent) -> void {
-  stream = parent->append<Node::Stream>("MSU1");
+  stream = parent->append<Node::Audio::Stream>("MSU1");
   stream->setChannels(2);
   stream->setFrequency(44100);
 }
@@ -40,7 +40,7 @@ auto MSU1::main() -> void {
     }
   }
 
-  stream->sample(left, right);
+  stream->frame(left, right);
   Thread::step(1);
   Thread::synchronize(cpu);
 }

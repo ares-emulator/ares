@@ -97,9 +97,11 @@ inline auto CPU::Channel::transfer(uint24 addressA, uint2 index) -> void {
   if(direction == 0) {
     auto data = readA(addressA);
     writeB(addressB, data, valid);
+    if(valid) cpu.debugger.dma(id, addressA, addressB, data);
   } else {
     auto data = readB(addressB, valid);
     writeA(addressA, data);
+    if(valid) cpu.debugger.dma(id, addressA, addressB, data);
   }
 }
 

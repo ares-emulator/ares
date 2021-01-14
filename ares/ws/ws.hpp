@@ -8,6 +8,7 @@
 
 namespace ares::WonderSwan {
   #include <ares/inline.hpp>
+  auto load(Node::System& node, string name) -> bool;
 
   enum : uint { Byte = 1, Word = 2, Long = 4 };
 
@@ -32,5 +33,3 @@ namespace ares::WonderSwan {
   #include <ws/ppu/ppu.hpp>
   #include <ws/apu/apu.hpp>
 }
-
-#include <ws/interface/interface.hpp>

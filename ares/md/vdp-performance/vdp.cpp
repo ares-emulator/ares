@@ -14,17 +14,17 @@ VDP vdp;
 #include "serialization.cpp"
 
 auto VDP::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("VDP");
+  node = parent->append<Node::Object>("VDP");
 
-  screen = node->append<Node::Screen>("Screen");
+  screen = node->append<Node::Video::Screen>("Screen", 320, 480);
   screen->colors(3 * (1 << 9), {&VDP::color, this});
-  screen->setSize(1280, 480);
-  screen->setScale(0.25, 0.50);
+  screen->setSize(320, 480);
+  screen->setScale(1.0, 0.5);
   screen->setAspect(1.0, 1.0);
 
-  overscan = screen->append<Node::Boolean>("Overscan", true, [&](auto value) {
-    if(value == 0) screen->setSize(1280, 448);
-    if(value == 1) screen->setSize(1280, 480);
+  overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
+    if(value == 0) screen->setSize(320, 448);
+    if(value == 1) screen->setSize(320, 480);
   });
   overscan->setDynamic(true);
 
@@ -32,10 +32,11 @@ auto VDP::load(Node::Object parent) -> void {
 }
 
 auto VDP::unload() -> void {
-  node = {};
-  screen = {};
-  overscan = {};
+  screen->quit();
   debugger = {};
+  overscan.reset();
+  screen.reset();
+  node.reset();
 }
 
 auto VDP::main() -> void {
@@ -82,12 +83,17 @@ auto VDP::main() -> void {
   state.vcounter++;
 
   if(state.vcounter == 240) {
+    if(latch.interlace == 0) screen->setProgressive(1);
+    if(latch.interlace == 1) screen->setInterlace(latch.field);
+    screen->setViewport(0, 0, screen->width(), screen->height());
+    screen->frame();
     scheduler.exit(Event::Frame);
   }
 
   if(state.vcounter >= frameHeight()) {
     state.vcounter = 0;
     state.field ^= 1;
+    latch.field = state.field;
     latch.interlace = io.interlaceMode == 3;
     latch.overscan = io.overscan;
   }
@@ -107,31 +113,10 @@ auto VDP::step(uint clocks) -> void {
   }
 }
 
-auto VDP::refresh() -> void {
-  auto data = output;
-
-  if(overscan->value() == 0) {
-    if(latch.overscan) data += (8 << latch.interlace) * 320;
-    screen->refresh(data, 320 * sizeof(uint32), screenWidth(), 224 << latch.interlace);
-  }
-
-  if(overscan->value() == 1) {
-    if(!latch.overscan) data -= (8 << latch.interlace) * 320;
-    screen->refresh(data, 320 * sizeof(uint32), screenWidth(), 240 << latch.interlace);
-  }
-}
-
 auto VDP::render() -> void {
-  auto output = this->output;
-  uint y = state.vcounter;
-  if(!latch.interlace) {
-    output += y * 320;
-  } else {
-    output += (y * 2 + state.field) * 320;
-  }
-  if(!io.displayEnable) return (void)memory::fill<uint32>(output, screenWidth());
+  if(!io.displayEnable) return;
 
-  if(y < window.io.verticalOffset ^ window.io.verticalDirection) {
+  if(state.vcounter < window.io.verticalOffset ^ window.io.verticalDirection) {
     window.renderWindow(0, screenWidth());
   } else if(!window.io.horizontalDirection) {
     window.renderWindow(0, window.io.horizontalOffset);
@@ -142,6 +127,25 @@ auto VDP::render() -> void {
   }
   planeB.renderScreen(0, screenWidth());
   sprite.render();
+
+  uint32_t* output = nullptr;
+  if(overscan->value() == 0 && io.overscan == 0) {
+    if(state.vcounter >= 224) return;
+    output = screen->pixels().data() + (state.vcounter - 0) * 2 * 320;
+  }
+  if(overscan->value() == 0 && io.overscan == 1) {
+    if(state.vcounter <=   7) return;
+    if(state.vcounter >= 232) return;
+    output = screen->pixels().data() + (state.vcounter - 8) * 2 * 320;
+  }
+  if(overscan->value() == 1 && io.overscan == 0) {
+    if(state.vcounter >= 232) return;
+    output = screen->pixels().data() + (state.vcounter + 8) * 2 * 320;
+  }
+  if(overscan->value() == 1 && io.overscan == 1) {
+    output = screen->pixels().data() + (state.vcounter + 0) * 2 * 320;
+  }
+  if(latch.interlace) output += state.field * 320;
 
   auto A = &planeA.pixels[0];
   auto B = &planeB.pixels[0];
@@ -181,9 +185,7 @@ auto VDP::render() -> void {
 
 auto VDP::power(bool reset) -> void {
   Thread::create(system.frequency() / 2.0, {&VDP::main, this});
-
-  for(auto& pixel : buffer) pixel = 0;
-  output = buffer + 16 * 320;  //overscan offset
+  screen->power();
 
   for(auto& data : vram.pixels) data = 0;
   for(auto& data : vram.memory) data = 0;

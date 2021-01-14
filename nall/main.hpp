@@ -19,12 +19,12 @@ namespace nall {
 
     main(move(Arguments{argc, argv}));
 
+    #if !defined(PLATFORM_WINDOWS)
     //when a program is running, input on the terminal queues in stdin
     //when terminating the program, the shell proceeds to try and execute all stdin data
     //this is annoying behavior: this code tries to minimize the impact as much as it can
     //we can flush all of stdin up to the last line feed, preventing spurious commands from executing
     //however, even with setvbuf(_IONBF), we can't stop the last line from echoing to the terminal
-    #if !defined(PLATFORM_WINDOWS)
     auto flags = fcntl(fileno(stdin), F_GETFL, 0);
     fcntl(fileno(stdin), F_SETFL, flags | O_NONBLOCK);  //don't allow read() to block when empty
     char buffer[4096], data = false;

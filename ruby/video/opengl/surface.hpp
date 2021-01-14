@@ -4,7 +4,7 @@ auto OpenGLSurface::allocate() -> void {
   glGenBuffers(3, &vbo[0]);
 }
 
-auto OpenGLSurface::size(uint w, uint h) -> void {
+auto OpenGLSurface::size(u32 w, u32 h) -> void {
   if(width == w && height == h) return;
   width = w, height = h;
   w = glrSize(w), h = glrSize(h);
@@ -12,7 +12,7 @@ auto OpenGLSurface::size(uint w, uint h) -> void {
   if(texture) { glDeleteTextures(1, &texture); texture = 0; }
   if(buffer) { delete[] buffer; buffer = nullptr; }
 
-  buffer = new uint32_t[w * h]();
+  buffer = new u32[w * h]();
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexImage2D(GL_TEXTURE_2D, 0, format, w, h, 0, getFormat(), getType(), buffer);
@@ -37,14 +37,14 @@ auto OpenGLSurface::release() -> void {
   width = 0, height = 0;
 }
 
-auto OpenGLSurface::render(uint sourceWidth, uint sourceHeight, uint targetX, uint targetY, uint targetWidth, uint targetHeight) -> void {
+auto OpenGLSurface::render(u32 sourceWidth, u32 sourceHeight, u32 targetX, u32 targetY, u32 targetWidth, u32 targetHeight) -> void {
   glViewport(targetX, targetY, targetWidth, targetHeight);
 
-  float w = (float)sourceWidth / (float)glrSize(sourceWidth);
-  float h = (float)sourceHeight / (float)glrSize(sourceHeight);
+  f32 w = (f32)sourceWidth / (f32)glrSize(sourceWidth);
+  f32 h = (f32)sourceHeight / (f32)glrSize(sourceHeight);
 
-  float u = (float)targetWidth;
-  float v = (float)targetHeight;
+  f32 u = (f32)targetWidth;
+  f32 v = (f32)targetHeight;
 
   GLfloat modelView[] = {
     1, 0, 0, 0,
@@ -71,7 +71,7 @@ auto OpenGLSurface::render(uint sourceWidth, uint sourceHeight, uint targetX, ui
   };
 
   GLfloat positions[4 * 4];
-  for(uint n = 0; n < 16; n += 4) {
+  for(u32 n = 0; n < 16; n += 4) {
     MatrixMultiply(&positions[n], &vertices[n], 1, 4, modelViewProjection, 4, 4);
   }
 

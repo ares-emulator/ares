@@ -1,51 +1,51 @@
 auto uPD96050::serialize(serializer& s) -> void {
-  s.array(dataRAM);
-  regs.serialize(s);
-  flags.a.serialize(s);
-  flags.b.serialize(s);
+  s(dataRAM);
+  s(regs);
+  s(flags.a);
+  s(flags.b);
 }
 
 auto uPD96050::Flag::serialize(serializer& s) -> void {
-  s.boolean(ov0);
-  s.boolean(ov1);
-  s.boolean(z);
-  s.boolean(c);
-  s.boolean(s0);
-  s.boolean(s1);
+  s(ov0);
+  s(ov1);
+  s(z);
+  s(c);
+  s(s0);
+  s(s1);
 }
 
 auto uPD96050::Status::serialize(serializer& s) -> void {
-  s.boolean(p0);
-  s.boolean(p1);
-  s.boolean(ei);
-  s.boolean(sic);
-  s.boolean(soc);
-  s.boolean(drc);
-  s.boolean(dma);
-  s.boolean(drs);
-  s.boolean(usf0);
-  s.boolean(usf1);
-  s.boolean(rqm);
-  s.boolean(siack);
-  s.boolean(soack);
+  s(p0);
+  s(p1);
+  s(ei);
+  s(sic);
+  s(soc);
+  s(drc);
+  s(dma);
+  s(drs);
+  s(usf0);
+  s(usf1);
+  s(rqm);
+  s(siack);
+  s(soack);
 }
 
 auto uPD96050::Registers::serialize(serializer& s) -> void {
-  s.array(stack);
-  s.integer(pc);
-  s.integer(rp);
-  s.integer(dp);
-  s.integer(sp);
-  s.integer(si);
-  s.integer(so);
-  s.integer(k);
-  s.integer(l);
-  s.integer(m);
-  s.integer(n);
-  s.integer(a);
-  s.integer(b);
-  s.integer(tr);
-  s.integer(trb);
-  s.integer(dr);
-  sr.serialize(s);
+  s(stack);
+  s(pc);
+  s(rp);
+  s(dp);
+  s(sp);
+  s(si);
+  s(so);
+  s(k);
+  s(l);
+  s(m);
+  s(n);
+  s(a);
+  s(b);
+  s(tr);
+  s(trb);
+  s(dr);
+  s(sr);
 }

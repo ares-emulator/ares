@@ -1,6 +1,16 @@
 struct Cartridge {
   Node::Peripheral node;
 
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+
+    struct Memory {
+      Node::Debugger::Memory rom;
+      Node::Debugger::Memory ram;
+    } memory;
+  } debugger;
+
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
   auto region() const -> string { return information.region; }
@@ -59,8 +69,8 @@ private:
   auto loadBoard(string) -> Markup::Node;
   auto loadCartridge(Markup::Node) -> void;
   auto loadMemory(AbstractMemory&, Markup::Node, bool required) -> void;
-  template<typename T> auto loadMap(Markup::Node, T&) -> uint;
-  auto loadMap(Markup::Node, const function<uint8 (uint24, uint8)>&, const function<void (uint24, uint8)>&) -> uint;
+  template<typename T> auto loadMap(Markup::Node, T&) -> n32;
+  auto loadMap(Markup::Node, const function<n8 (n24, n8)>&, const function<void (n24, n8)>&) -> n32;
 
   auto loadROM(Markup::Node) -> void;
   auto loadRAM(Markup::Node) -> void;
@@ -74,7 +84,7 @@ private:
   auto loadSA1(Markup::Node) -> void;
   auto loadSuperFX(Markup::Node) -> void;
   auto loadARMDSP(Markup::Node) -> void;
-  auto loadHitachiDSP(Markup::Node, uint roms) -> void;
+  auto loadHitachiDSP(Markup::Node, n32 roms) -> void;
   auto loaduPD7725(Markup::Node) -> void;
   auto loaduPD96050(Markup::Node) -> void;
   auto loadEpsonRTC(Markup::Node) -> void;

@@ -35,30 +35,30 @@ struct AudioOpenAL : AudioDriver {
     return devices;
   }
 
-  auto hasChannels() -> vector<uint> override {
+  auto hasChannels() -> vector<u32> override {
     return {2};
   }
 
-  auto hasFrequencies() -> vector<uint> override {
+  auto hasFrequencies() -> vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto hasLatencies() -> vector<uint> override {
+  auto hasLatencies() -> vector<u32> override {
     return {20, 40, 60, 80, 100};
   }
 
   auto setDevice(string device) -> bool override { return initialize(); }
   auto setBlocking(bool blocking) -> bool override { return true; }
   auto setFrequency(uint frequency) -> bool override { return initialize(); }
-  auto setLatency(uint latency) -> bool override { return updateLatency(); }
+  auto setLatency(u32 latency) -> bool override { return updateLatency(); }
 
-  auto output(const double samples[]) -> void override {
-    _buffer[_bufferLength]  = (uint16_t)sclamp<16>(samples[0] * 32767.0) <<  0;
-    _buffer[_bufferLength] |= (uint16_t)sclamp<16>(samples[1] * 32767.0) << 16;
+  auto output(const f64 samples[]) -> void override {
+    _buffer[_bufferLength]  = (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
+    _buffer[_bufferLength] |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
     if(++_bufferLength < _bufferSize) return;
 
     ALuint alBuffer = 0;
-    int processed = 0;
+    s32 processed = 0;
     while(true) {
       alGetSourcei(_source, AL_BUFFERS_PROCESSED, &processed);
       while(processed--) {
@@ -122,11 +122,11 @@ private:
     _ready = false;
 
     if(alIsSource(_source) == AL_TRUE) {
-      int playing = 0;
+      s32 playing = 0;
       alGetSourcei(_source, AL_SOURCE_STATE, &playing);
       if(playing == AL_PLAYING) {
         alSourceStop(_source);
-        int queued = 0;
+        s32 queued = 0;
         alGetSourcei(_source, AL_BUFFERS_QUEUED, &queued);
         while(queued--) {
           ALuint alBuffer = 0;
@@ -168,9 +168,9 @@ private:
   ALCcontext* _context = nullptr;
   ALuint _source = 0;
   ALenum _format = AL_FORMAT_STEREO16;
-  uint _queueLength = 0;
+  u32 _queueLength = 0;
 
-  uint32_t* _buffer = nullptr;
-  uint _bufferLength = 0;
-  uint _bufferSize = 0;
+  u32* _buffer = nullptr;
+  u32 _bufferLength = 0;
+  u32 _bufferSize = 0;
 };

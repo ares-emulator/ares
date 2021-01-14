@@ -47,26 +47,26 @@ auto Z80::displace(uint16& x) -> uint16 {
   return WZ;
 }
 
-auto Z80::read(uint16 addr) -> uint8 {
+auto Z80::read(uint16 address) -> uint8 {
   yield();
   step(3);
-  return bus->read(addr);
+  return bus->read(address);
 }
 
-auto Z80::write(uint16 addr, uint8 data) -> void {
+auto Z80::write(uint16 address, uint8 data) -> void {
   yield();
   step(3);
-  return bus->write(addr, data);
+  return bus->write(address, data);
 }
 
-auto Z80::in(uint8 addr) -> uint8 {
+auto Z80::in(uint16 address) -> uint8 {
   yield();
   step(4);
-  return bus->in(addr);
+  return bus->in(address);
 }
 
-auto Z80::out(uint8 addr, uint8 data) -> void {
+auto Z80::out(uint16 address, uint8 data) -> void {
   yield();
   step(4);
-  return bus->out(addr, data);
+  return bus->out(address, data);
 }

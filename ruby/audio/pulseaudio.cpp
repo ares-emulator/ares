@@ -18,17 +18,17 @@ struct AudioPulseAudio : AudioDriver {
   auto hasBlocking() -> bool override { return true; }
   auto hasDynamic() -> bool override { return true; }
 
-  auto hasFrequencies() -> vector<uint> override {
+  auto hasFrequencies() -> vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto hasLatencies() -> vector<uint> override {
+  auto hasLatencies() -> vector<u32> override {
     return {20, 40, 60, 80, 100};
   }
 
   auto setBlocking(bool blocking) -> bool override { return true; }
-  auto setFrequency(uint frequency) -> bool override { return initialize(); }
-  auto setLatency(uint latency) -> bool override { return initialize(); }
+  auto setFrequency(u32 frequency) -> bool override { return initialize(); }
+  auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto level() -> double override {
     pa_mainloop_iterate(_mainLoop, 0, nullptr);
@@ -38,8 +38,8 @@ struct AudioPulseAudio : AudioDriver {
 
   auto output(const double samples[]) -> void override {
     pa_stream_begin_write(_stream, (void**)&_buffer, &_period);
-    _buffer[_offset]  = (uint16_t)sclamp<16>(samples[0] * 32767.0) <<  0;
-    _buffer[_offset] |= (uint16_t)sclamp<16>(samples[1] * 32767.0) << 16;
+    _buffer[_offset]  = (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
+    _buffer[_offset] |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
     if((++_offset + 1) * pa_frame_size(&_specification) <= _period) return;
 
     while(true) {
@@ -129,10 +129,10 @@ private:
 
   bool _ready = false;
 
-  uint32_t* _buffer = nullptr;
+  u32* _buffer = nullptr;
   size_t _period = 0;
   size_t _bufferSize = 0;
-  uint _offset = 0;
+  u32 _offset = 0;
 
   pa_mainloop* _mainLoop = nullptr;
   pa_context* _context = nullptr;

@@ -1,6 +1,6 @@
 struct TwinTap : Controller {
-  Node::Button one;
-  Node::Button two;
+  Node::Input::Button one;
+  Node::Input::Button two;
 
   TwinTap(Node::Port);
 

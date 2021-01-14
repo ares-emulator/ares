@@ -30,11 +30,11 @@ struct BMP {
     read(p, 8);
     uint offset = read(p, 4);
     if(read(p, 4) != 40) return false;  //DIB size
-    int width = read(p, 4);
-    if(width < 0) return false;
-    int height = read(p, 4);
-    bool flip = height < 0;
-    if(flip) height = -height;
+    int width = (int32_t)read(p, 4);
+    if(width < 0) width = -width;
+    int height = (int32_t)read(p, 4);
+    bool flip = height >= 0;
+    if(height < 0) height = -height;
     read(p, 2);
     uint bitsPerPixel = read(p, 2);
     if(bitsPerPixel != 24 && bitsPerPixel != 32) return false;
@@ -66,9 +66,9 @@ private:
   uint _width = 0;
   uint _height = 0;
 
-  auto read(const uint8_t*& buffer, uint length) -> uintmax {
-    uintmax result = 0;
-    for(auto n : range(length)) result |= (uintmax)*buffer++ << (n << 3);
+  auto read(const uint8_t*& buffer, uint length) -> uint64_t {
+    uint64_t result = 0;
+    for(uint n : range(length)) result |= (uint64_t)*buffer++ << (n << 3);
     return result;
   }
 };

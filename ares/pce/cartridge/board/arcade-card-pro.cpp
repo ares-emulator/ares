@@ -12,8 +12,8 @@ struct ArcadeCardPro : Interface {
     auto unload(Node::Object) -> void;
 
     struct Memory {
-      Node::Memory ram;
-      Node::Memory dram;
+      Node::Debugger::Memory ram;
+      Node::Debugger::Memory dram;
     } memory;
   } debugger;
 
@@ -144,19 +144,19 @@ struct ArcadeCardPro : Interface {
   }
 
   auto serialize(serializer& s) -> void {
-    ram.serialize(s);
-    dram.serialize(s);
+    s(ram);
+    s(dram);
 
     for(auto& page : pages) {
-      s.integer(page.control);
-      s.integer(page.base);
-      s.integer(page.offset);
-      s.integer(page.adjust);
+      s(page.control);
+      s(page.base);
+      s(page.offset);
+      s(page.adjust);
     }
 
-    s.integer(alu.value);
-    s.integer(alu.shift);
-    s.integer(alu.rotate);
+    s(alu.value);
+    s(alu.shift);
+    s(alu.rotate);
   }
 
   struct Page {

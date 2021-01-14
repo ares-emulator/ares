@@ -21,7 +21,7 @@ MCD mcd;
 #include "serialization.cpp"
 
 auto MCD::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("Mega CD");
+  node = parent->append<Node::Object>("Mega CD");
 
   tray = parent->append<Node::Port>("Disc Tray");
   tray->setFamily("Mega CD");

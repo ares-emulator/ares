@@ -4,23 +4,29 @@
 //0x20: horizontal flip
 //0x10: palette#
 
-auto PPU::readTileDMG(bool select, uint x, uint y, uint& data) -> void {
-  uint tmaddr = 0x1800 + (select << 10), tdaddr;
-  tmaddr += (((y >> 3) << 5) + (x >> 3)) & 0x03ff;
+auto PPU::readTileDMG(bool select, uint x, uint y, uint16& tiledata) -> void {
+  uint13 tilemapAddress = 0x1800 + (select << 10);
+  tilemapAddress += (((y >> 3) << 5) + (x >> 3)) & 0x03ff;
+
+  uint8 tile = vram[tilemapAddress];
+
+  uint13 tiledataAddress;
   if(status.bgTiledataSelect == 0) {
-    tdaddr = 0x1000 + ((int8)vram[tmaddr] << 4);
+    tiledataAddress = 0x1000 + ( int8(tile) << 4);
   } else {
-    tdaddr = 0x0000 + (vram[tmaddr] << 4);
+    tiledataAddress = 0x0000 + (uint8(tile) << 4);
   }
-  tdaddr += (y & 7) << 1;
-  data  = vram[tdaddr + 0] << 0;
-  data |= vram[tdaddr + 1] << 8;
+
+  tiledataAddress += (y & 7) << 1;
+
+  tiledata.byte(0) = vram[tiledataAddress + 0];
+  tiledata.byte(1) = vram[tiledataAddress + 1];
 }
 
 auto PPU::scanlineDMG() -> void {
   px = 0;
 
-  const uint Height = (status.obSize == 0 ? 8 : 16);
+  const int Height = (status.obSize == 0 ? 8 : 16);
   sprites = 0;
 
   //find first ten sprites on this scanline
@@ -29,16 +35,17 @@ auto PPU::scanlineDMG() -> void {
     s.y = oam[n + 0] - 16;
     s.x = oam[n + 1] -  8;
     s.tile = oam[n + 2] & ~status.obSize;
-    s.attr = oam[n + 3];
+    s.attributes = oam[n + 3];
 
-    s.y = status.ly - s.y;
-    if(s.y >= Height) continue;
+    if(int(status.ly) <  s.y) continue;
+    if(int(status.ly) >= s.y + Height) continue;
+    s.y = int(status.ly) - s.y;
 
-    if(s.attr & 0x40) s.y ^= (Height - 1);
-    uint tdaddr = (s.tile << 4) + (s.y << 1);
-    s.data  = vram[tdaddr + 0] << 0;
-    s.data |= vram[tdaddr + 1] << 8;
-    if(s.attr & 0x20) s.data = hflip(s.data);
+    if(s.attributes.bit(6)) s.y ^= Height - 1;
+    uint13 tiledataAddress = (s.tile << 4) + (s.y << 1);
+    s.tiledata.byte(0) = vram[tiledataAddress + 0];
+    s.tiledata.byte(1) = vram[tiledataAddress + 1];
+    if(s.attributes.bit(5)) s.tiledata = hflip(s.tiledata);
 
     if(++sprites == 10) break;
   }
@@ -52,13 +59,10 @@ auto PPU::scanlineDMG() -> void {
 }
 
 auto PPU::runDMG() -> void {
-  bg.color = 0;
-  bg.palette = 0;
+  bg = {};
+  ob = {};
 
-  ob.color = 0;
-  ob.palette = 0;
-
-  uint color = 0;
+  uint2 color = 0;
   if(status.bgEnable) runBackgroundDMG();
   if(latch.windowDisplayEnable) runWindowDMG();
   if(status.obEnable) runObjectsDMG();
@@ -73,20 +77,20 @@ auto PPU::runDMG() -> void {
     color = bg.color;
   }
 
-  uint32* output = this->output + status.ly * 160 + px++;
+  auto output = screen->pixels().data() + status.ly * 160 + px++;
   *output = color;
   if(Model::SuperGameBoy()) superGameBoy->ppuWrite(color);
 }
 
 auto PPU::runBackgroundDMG() -> void {
-  uint scrolly = (status.ly + status.scy) & 255;
-  uint scrollx = (px + status.scx) & 255;
-  uint tx = scrollx & 7;
-  if(tx == 0 || px == 0) readTileDMG(status.bgTilemapSelect, scrollx, scrolly, background.data);
+  uint8 scrollY = status.ly + status.scy;
+  uint8 scrollX = px + status.scx;
+  uint3 tileX = scrollX & 7;
+  if(tileX == 0 || px == 0) readTileDMG(status.bgTilemapSelect, scrollX, scrollY, background.tiledata);
 
-  uint index = 0;
-  index |= (background.data & (0x0080 >> tx)) ? 1 : 0;
-  index |= (background.data & (0x8000 >> tx)) ? 2 : 0;
+  uint2 index;
+  index.bit(0) = background.tiledata.bit( 7 - tileX);
+  index.bit(1) = background.tiledata.bit(15 - tileX);
 
   bg.color = bgp[index];
   bg.palette = index;
@@ -96,16 +100,16 @@ auto PPU::runWindowDMG() -> void {
   if(status.ly < status.wy) return;
   if(px + 7 == status.wx) latch.wy++;
 
-  uint scrolly = latch.wy - 1;
-  uint scrollx = px + 7 - latch.wx;
+  uint8 scrollY = latch.wy - 1;
+  uint8 scrollX = px + 7 - latch.wx;
+  uint3 tileX = scrollX & 7;
 
-  if(scrollx >= 160u) return;  //also matches underflow (scrollx < 0)
-  uint tx = scrollx & 7;
-  if(tx == 0 || px == 0) readTileDMG(status.windowTilemapSelect, scrollx, scrolly, window.data);
+  if(scrollX >= 160u) return;  //also matches underflow (scrollX < 0)
+  if(tileX == 0 || px == 0) readTileDMG(status.windowTilemapSelect, scrollX, scrollY, window.tiledata);
 
-  uint index = 0;
-  index |= (window.data & (0x0080 >> tx)) ? 1 : 0;
-  index |= (window.data & (0x8000 >> tx)) ? 2 : 0;
+  uint2 index;
+  index.bit(0) = window.tiledata.bit( 7 - tileX);
+  index.bit(1) = window.tiledata.bit(15 - tileX);
 
   bg.color = bgp[index];
   bg.palette = index;
@@ -116,16 +120,17 @@ auto PPU::runObjectsDMG() -> void {
   for(int n = sprites - 1; n >= 0; n--) {
     Sprite& s = sprite[n];
 
-    int tx = px - s.x;
-    if(tx < 0 || tx > 7) continue;
+    int tileX = px - s.x;
+    if(tileX < 0 || tileX > 7) continue;
 
-    uint index = 0;
-    index |= (s.data & (0x0080 >> tx)) ? 1 : 0;
-    index |= (s.data & (0x8000 >> tx)) ? 2 : 0;
+    uint2 index;
+    index.bit(0) = s.tiledata.bit( 7 - tileX);
+    index.bit(1) = s.tiledata.bit(15 - tileX);
     if(index == 0) continue;
+    uint3 palette = s.attributes.bit(4) << 2 | index;
 
-    ob.color = obp[(bool)(s.attr & 0x10)][index];
+    ob.color = obp[palette];
     ob.palette = index;
-    ob.priority = !(s.attr & 0x80);
+    ob.priority = !s.attributes.bit(7);
   }
 }

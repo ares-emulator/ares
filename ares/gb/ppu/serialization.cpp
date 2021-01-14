@@ -1,80 +1,79 @@
 auto PPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  vram.serialize(s);
-  oam.serialize(s);
+  s(vram);
+  s(oam);
+  s(bgp);
+  s(obp);
+  s(bgpd);
+  s(obpd);
 
-  s.array(bgp);
-  s.array(obp[0]);
-  s.array(obp[1]);
-  s.array(bgpd);
-  s.array(obpd);
+  s(status.irq);
+  s(status.lx);
 
-  s.integer(status.irq);
-  s.integer(status.lx);
+  s(status.bgEnable);
+  s(status.obEnable);
+  s(status.obSize);
+  s(status.bgTilemapSelect);
+  s(status.bgTiledataSelect);
+  s(status.windowDisplayEnable);
+  s(status.windowTilemapSelect);
+  s(status.displayEnable);
 
-  s.integer(status.bgEnable);
-  s.integer(status.obEnable);
-  s.integer(status.obSize);
-  s.integer(status.bgTilemapSelect);
-  s.integer(status.bgTiledataSelect);
-  s.integer(status.windowDisplayEnable);
-  s.integer(status.windowTilemapSelect);
-  s.integer(status.displayEnable);
+  s(status.mode);
+  s(status.interruptHblank);
+  s(status.interruptVblank);
+  s(status.interruptOAM);
+  s(status.interruptLYC);
 
-  s.integer(status.mode);
-  s.integer(status.interruptHblank);
-  s.integer(status.interruptVblank);
-  s.integer(status.interruptOAM);
-  s.integer(status.interruptLYC);
+  s(status.scy);
+  s(status.scx);
 
-  s.integer(status.scy);
-  s.integer(status.scx);
+  s(status.ly);
+  s(status.lyc);
 
-  s.integer(status.ly);
-  s.integer(status.lyc);
+  s(status.dmaBank);
+  s(status.dmaActive);
+  s(status.dmaClock);
 
-  s.integer(status.dmaBank);
-  s.integer(status.dmaActive);
-  s.integer(status.dmaClock);
+  s(status.wy);
+  s(status.wx);
 
-  s.integer(status.wy);
-  s.integer(status.wx);
+  s(status.vramBank);
 
-  s.integer(status.vramBank);
+  s(status.bgpiIncrement);
+  s(status.bgpi);
 
-  s.integer(status.bgpiIncrement);
-  s.integer(status.bgpi);
+  s(status.obpiIncrement);
+  s(status.obpi);
 
-  s.integer(status.obpiIncrement);
-  s.integer(status.obpi);
+  s(latch.displayEnable);
+  s(latch.windowDisplayEnable);
+  s(latch.wx);
+  s(latch.wy);
 
-  s.integer(latch.displayEnable);
-  s.integer(latch.windowDisplayEnable);
-  s.integer(latch.wx);
-  s.integer(latch.wy);
+  s(history.mode);
 
-  s.integer(history.mode);
+  s(bg.color);
+  s(bg.palette);
+  s(bg.priority);
 
-  s.integer(bg.color);
-  s.integer(bg.palette);
-  s.integer(bg.priority);
-
-  s.integer(ob.color);
-  s.integer(ob.palette);
-  s.integer(ob.priority);
+  s(ob.color);
+  s(ob.palette);
+  s(ob.priority);
 
   for(auto& o : sprite) {
-    s.integer(o.x);
-    s.integer(o.y);
-    s.integer(o.tile);
-    s.integer(o.attr);
+    s(o.x);
+    s(o.y);
+    s(o.tile);
+    s(o.attributes);
+    s(o.tiledata);
   }
-  s.integer(sprites);
+  s(sprites);
 
-  s.integer(background.attr);
-  s.integer(background.data);
+  s(background.attributes);
+  s(background.tiledata);
 
-  s.integer(window.attr);
-  s.integer(window.data);
+  s(window.attributes);
+  s(window.tiledata);
 }

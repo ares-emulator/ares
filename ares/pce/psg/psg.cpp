@@ -8,9 +8,9 @@ PSG psg;
 #include "serialization.cpp"
 
 auto PSG::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("PSG");
+  node = parent->append<Node::Object>("PSG");
 
-  stream = parent->append<Node::Stream>("PSG");
+  stream = parent->append<Node::Audio::Stream>("PSG");
   stream->setChannels(2);
   #if defined(PROFILE_ACCURACY)
   stream->setFrequency(system.colorburst());
@@ -32,7 +32,7 @@ auto PSG::main() -> void {
 
   #if defined(PROFILE_ACCURACY)
   frame(outputLeft, outputRight);
-  stream->sample(sclamp<16>(outputLeft) / 32768.0, sclamp<16>(outputRight) / 32768.0);
+  stream->frame(sclamp<16>(outputLeft) / 32768.0, sclamp<16>(outputRight) / 32768.0);
   step(1);
   #endif
 
@@ -40,7 +40,7 @@ auto PSG::main() -> void {
   //3.57MHz stereo audio through a 6th-order biquad IIR filter is very demanding.
   //decimate the audio to ~56KHz, which is still well above the range of human hearing.
   for(uint n : range(64)) frame(outputLeft, outputRight);
-  stream->sample(sclamp<16>(outputLeft) / 32768.0, sclamp<16>(outputRight) / 32768.0);
+  stream->frame(sclamp<16>(outputLeft) / 32768.0, sclamp<16>(outputRight) / 32768.0);
   step(64);
   #endif
 }
@@ -57,7 +57,7 @@ auto PSG::frame(int16& outputLeft, int16& outputRight) -> void {
   uint5 lmal = volumeScale[io.volumeLeft];
   uint5 rmal = volumeScale[io.volumeRight];
 
-  for(auto C : range(6)) {
+  for(uint C : range(6)) {
     uint5  al = channel[C].io.volume;
     uint5 lal = volumeScale[channel[C].io.volumeLeft];
     uint5 ral = volumeScale[channel[C].io.volumeRight];

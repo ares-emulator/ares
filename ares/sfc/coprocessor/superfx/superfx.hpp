@@ -1,5 +1,5 @@
 struct SuperFX : GSU, Thread {
-  Node::Component node;
+  Node::Object node;
   ReadableMemory rom;
   WritableMemory ram;
   WritableMemory bram;
@@ -10,7 +10,7 @@ struct SuperFX : GSU, Thread {
     auto instruction() -> void;
 
     struct Tracer {
-      Node::Instruction instruction;
+      Node::Debugger::Tracer::Instruction instruction;
     } tracer;
   } debugger;
 

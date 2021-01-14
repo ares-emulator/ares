@@ -1,7 +1,7 @@
 //Motorola 68000
 
 struct CPU : M68K, Thread {
-  Node::Component node;
+  Node::Object node;
 
   struct Debugger {
     //debugger.cpp
@@ -10,12 +10,12 @@ struct CPU : M68K, Thread {
     auto interrupt(string_view) -> void;
 
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
 
     struct Tracer {
-      Node::Instruction instruction;
-      Node::Notification interrupt;
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
     } tracer;
   } debugger;
 

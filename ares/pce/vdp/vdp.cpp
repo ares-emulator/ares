@@ -18,15 +18,15 @@ VDP vdp;
 #include "serialization.cpp"
 
 auto VDP::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("VDP");
+  node = parent->append<Node::Object>("VDP");
 
-  screen = node->append<Node::Screen>("Screen");
+  screen = node->append<Node::Video::Screen>("Screen", 1365, 263);
   screen->colors(1 << 10, {&VDP::color, this});
   screen->setSize(1088, 239);
   screen->setScale(0.25, 1.0);
   screen->setAspect(8.0, 7.0);
 
-  overscan = screen->append<Node::Boolean>("Overscan", true, [&](auto value) {
+  overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
     if(value == 0) screen->setSize(1024, 239);
     if(value == 1) screen->setSize(1088, 239);
   });
@@ -38,6 +38,7 @@ auto VDP::load(Node::Object parent) -> void {
 }
 
 auto VDP::unload() -> void {
+  screen->quit();
   node = {};
   screen = {};
   overscan = {};
@@ -55,7 +56,7 @@ auto VDP::main() -> void {
     vdc1.vsync();
   }
 
-  auto output = buffer + 1365 * io.vcounter;
+  auto output = screen->pixels().data() + 1365 * io.vcounter;
 
   while(io.hcounter <= 1360) {
     vdc0.hclock(); if(Model::SuperGrafx())
@@ -81,6 +82,9 @@ auto VDP::main() -> void {
   io.hcounter = 0;
   if(++io.vcounter >= 262 + vce.io.extraLine) {
     io.vcounter = 0;
+    if(overscan->value() == 0) screen->setViewport(96, 21, 1024, 239);
+    if(overscan->value() == 1) screen->setViewport(96, 21, 1088, 239);
+    screen->frame();
     scheduler.exit(Event::Frame);
   }
 }
@@ -94,18 +98,9 @@ auto VDP::step(uint clocks) -> void {
   synchronize(cpu);
 }
 
-auto VDP::refresh() -> void {
-  if(overscan->value() == 0) {
-    screen->refresh(buffer + 1365 * 21 + 96, 1365 * sizeof(uint32), 1024, 239);
-  }
-
-  if(overscan->value() == 1) {
-    screen->refresh(buffer + 1365 * 21 + 96, 1365 * sizeof(uint32), 1088, 239);
-  }
-}
-
 auto VDP::power() -> void {
   Thread::create(system.colorburst() * 6.0, {&VDP::main, this});
+  screen->power();
 
   vce.power();
   vdc0.power(); if(Model::SuperGrafx())

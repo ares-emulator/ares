@@ -49,20 +49,20 @@ auto Program::main() -> void {
   rewindRun();
 
   if(!runAhead || fastForwarding || rewinding) {
-    emulator->interface->run();
+    emulator->root->run();
   } else {
     ares::setRunAhead(true);
-    emulator->interface->run();
-    auto state = emulator->interface->serialize(false);
+    emulator->root->run();
+    auto state = emulator->root->serialize(false);
     ares::setRunAhead(false);
-    emulator->interface->run();
-    state.setMode(serializer::Mode::Load);
-    emulator->interface->unserialize(state);
+    emulator->root->run();
+    state.setReading();
+    emulator->root->unserialize(state);
   }
 
   if(settings.general.autoSaveMemory) {
-    static uint64_t previousTime = chrono::timestamp();
-    uint64_t currentTime = chrono::timestamp();
+    static u64 previousTime = chrono::timestamp();
+    u64 currentTime = chrono::timestamp();
     if(currentTime - previousTime >= 30) {
       previousTime = currentTime;
       emulator->save();

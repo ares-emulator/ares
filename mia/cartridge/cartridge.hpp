@@ -4,9 +4,9 @@ struct Cartridge : Media {
   auto manifest(string location) -> string override;
   auto import(string filename) -> string override;
 
-  auto append(vector<uint8_t>& data, string filename) -> bool;
-  auto manifest(vector<uint8_t>& data, string location) -> string;
+  auto append(vector<u8>& data, string filename) -> bool;
+  auto manifest(vector<u8>& data, string location) -> string;
 
-  virtual auto export(string location) -> vector<uint8_t> = 0;
-  virtual auto heuristics(vector<uint8_t>& data, string location) -> string = 0;
+  virtual auto export(string location) -> vector<u8> = 0;
+  virtual auto heuristics(vector<u8>& data, string location) -> string = 0;
 };

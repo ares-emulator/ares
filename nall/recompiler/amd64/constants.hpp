@@ -39,6 +39,13 @@
   struct mem64 {
     explicit mem64(u64 data) : data(data) {}
     template<typename T> explicit mem64(T* pointer) : data((u64)pointer) {}
+    template<typename T, typename C> explicit mem64(T C::*variable, C* object) {
+      union force_cast_ub {
+        T C::*variable;
+        u64 pointer;
+      } cast{variable};
+      data = cast.pointer + u64(object);
+    }
     u64 data;
   };
 
@@ -123,8 +130,8 @@
   static constexpr reg64 r15 = reg64::r15;
 
   struct dis64 {
-    explicit dis64(reg64 base, i32 offset) : base(base), offset(offset) {}
+    explicit dis64(reg64 base, s32 offset) : base(base), offset(offset) {}
     reg64 base;
-    i32 offset;
+    s32 offset;
   };
 //};

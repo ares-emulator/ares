@@ -16,9 +16,9 @@ auto GraphicsViewer::construct() -> void {
 
 auto GraphicsViewer::reload() -> void {
   graphicsList.reset();
-  for(auto graphics : ares::Node::enumerate<ares::Node::Graphics>(emulator->root)) {
+  for(auto graphics : ares::Node::enumerate<ares::Node::Debugger::Graphics>(emulator->root)) {
     ComboButtonItem item{&graphicsList};
-    item.setAttribute<ares::Node::Graphics>("node", graphics);
+    item.setAttribute<ares::Node::Debugger::Graphics>("node", graphics);
     item.setText(graphics->name());
   }
   eventChange();
@@ -31,16 +31,16 @@ auto GraphicsViewer::unload() -> void {
 
 auto GraphicsViewer::refresh() -> void {
   if(auto item = graphicsList.selected()) {
-    if(auto graphics = item.attribute<ares::Node::Graphics>("node")) {
+    if(auto graphics = item.attribute<ares::Node::Debugger::Graphics>("node")) {
       auto width  = graphics->width();
       auto height = graphics->height();
       auto input  = graphics->capture();
-      uint offset = 0;
+      u32 offset = 0;
       image view;
       view.allocate(width, height);
-      for(uint y : range(height)) {
+      for(u32 y : range(height)) {
         auto output = view.data() + y * view.pitch();
-        for(uint x : range(width)) {
+        for(u32 x : range(width)) {
           view.write(output, 255 << 24 | input[offset++]);
           output += view.stride();
         }
@@ -62,14 +62,14 @@ auto GraphicsViewer::eventChange() -> void {
 
 auto GraphicsViewer::eventExport() -> void {
   if(auto item = graphicsList.selected()) {
-    if(auto graphics = item.attribute<ares::Node::Graphics>("node")) {
+    if(auto graphics = item.attribute<ares::Node::Debugger::Graphics>("node")) {
       auto width  = graphics->width();
       auto height = graphics->height();
       auto input  = graphics->capture();
       auto identifier = graphics->name().downcase().replace(" ", "-");
       auto datetime = chrono::local::datetime().replace("-", "").replace(":", "").replace(" ", "-");
       auto location = emulator->locate({Location::notsuffix(emulator->game.location), "-", identifier, "-", datetime, ".png"}, ".png", settings.paths.debugging);
-      Encode::PNG::RGB8(location, input.data(), width * sizeof(uint32_t), width, height);
+      Encode::PNG::RGB8(location, input.data(), width * sizeof(u32), width, height);
     }
   }
 }

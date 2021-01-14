@@ -13,11 +13,20 @@ namespace ares {
 #include "sprite2.cpp"
 #include "serialization.cpp"
 
+auto V9938::load(Node::Video::Screen screen_) -> void {
+  this->screen_ = screen_;
+}
+
+auto V9938::unload() -> void {
+  screen_.reset();
+}
+
 auto V9938::main() -> void {
   if(io.vcounter < vlines()) {
     uint9 y = io.vcounter;
     uint9 ycenter = y + (!overscan() ? 10 : 0);  //centers output within buffer
-    uint32* lines[2] = {buffer + ycenter * 1024, buffer + ycenter * 1024 + 512};
+    auto line = screen_->pixels().data() + ycenter * 1024;
+    if(interlace() && field()) line += 512;
 
     if(s1()) sprite1(y);
     if(s2()) sprite2(y);
@@ -34,13 +43,8 @@ auto V9938::main() -> void {
         if(s1()) sprite1(color, x, y);
         if(s2()) sprite2(color, x, y);
       }
-
-      if(!interlace()) {
-        *lines[0]++ = paletteRAM[color]; *lines[0]++ = paletteRAM[color];
-        *lines[1]++ = paletteRAM[color]; *lines[1]++ = paletteRAM[color];
-      } else {
-        *lines[field()]++ = paletteRAM[color]; *lines[field()]++ = paletteRAM[color];
-      }
+      *line++ = paletteRAM[color];
+      *line++ = paletteRAM[color];
 
       tick(1);
     }
@@ -58,14 +62,6 @@ auto V9938::main() -> void {
     latch.overscan = screen.overscan;
     latch.interlace = screen.interlace;
     latch.field = !latch.field;
-    if(!overscan()) {
-      //clear border regions (in case the previous frame drew in the overscan area)
-      for(uint y : range(212)) {
-        if(y >= 10 && y < 202) continue;
-        auto line = buffer + y * 1024;
-        for(uint x : range(1024)) *line++ = 0;
-      }
-    }
   }
   if(io.vcounter == vlines()) virq.pending |= virq.enable, poll(), frame();
   if(io.vcounter == hirq.coincidence) hirq.pending |= hirq.enable, poll();

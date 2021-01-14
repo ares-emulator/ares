@@ -1,19 +1,19 @@
 auto System::Controls::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("Controls");
 
-  up     = node->append<Node::Button>("Up");
-  down   = node->append<Node::Button>("Down");
-  left   = node->append<Node::Button>("Left");
-  right  = node->append<Node::Button>("Right");
-  b      = node->append<Node::Button>("B");
-  a      = node->append<Node::Button>("A");
-  l      = node->append<Node::Button>("L");
-  r      = node->append<Node::Button>("R");
-  select = node->append<Node::Button>("Select");
-  start  = node->append<Node::Button>("Start");
+  up     = node->append<Node::Input::Button>("Up");
+  down   = node->append<Node::Input::Button>("Down");
+  left   = node->append<Node::Input::Button>("Left");
+  right  = node->append<Node::Input::Button>("Right");
+  b      = node->append<Node::Input::Button>("B");
+  a      = node->append<Node::Input::Button>("A");
+  l      = node->append<Node::Input::Button>("L");
+  r      = node->append<Node::Input::Button>("R");
+  select = node->append<Node::Input::Button>("Select");
+  start  = node->append<Node::Input::Button>("Start");
 
   if(GameBoyAdvance::Model::GameBoyPlayer()) {
-    rumbler = parent->append<Node::Rumble>("Rumble");
+    rumbler = parent->append<Node::Input::Rumble>("Rumble");
   }
 }
 

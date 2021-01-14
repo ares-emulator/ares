@@ -1,7 +1,7 @@
 //Peripheral Interface
 
 struct PI : Memory::IO<PI> {
-  Node::Component node;
+  Node::Object node;
   Memory::Readable rom;
   Memory::Writable ram;
 
@@ -10,19 +10,19 @@ struct PI : Memory::IO<PI> {
     auto load(Node::Object) -> void;
     auto io(string_view) -> void;
 
-    struct Tracer {
-      Node::Notification io;
-    } tracer;
-
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
+
+    struct Tracer {
+      Node::Debugger::Tracer::Notification io;
+    } tracer;
   } debugger;
 
   //pi.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
-  auto power() -> void;
+  auto power(bool reset) -> void;
 
   //io.cpp
   auto readWord(u32 address) -> u32;
@@ -32,21 +32,21 @@ struct PI : Memory::IO<PI> {
   auto serialize(serializer&) -> void;
 
   struct IO {
-     uint1 dmaBusy = 0;
-     uint1 ioBusy = 0;
-     uint1 error = 0;
-     uint1 interrupt = 0;
-    uint32 dramAddress = 0;
-    uint32 pbusAddress = 0;
-    uint32 readLength = 0;
-    uint32 writeLength = 0;
+     uint1 dmaBusy;
+     uint1 ioBusy;
+     uint1 error;
+     uint1 interrupt;
+    uint32 dramAddress;
+    uint32 pbusAddress;
+    uint32 readLength;
+    uint32 writeLength;
   } io;
 
   struct BSD {
-    uint8 latency = 0;
-    uint8 pulseWidth = 0;
-    uint8 pageSize = 0;
-    uint8 releaseDuration = 0;
+    uint8 latency;
+    uint8 pulseWidth;
+    uint8 pageSize;
+    uint8 releaseDuration;
   } bsd1, bsd2;
 };
 

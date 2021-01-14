@@ -1,12 +1,12 @@
 auto SM83::serialize(serializer& s) -> void {
-  s.integer(r.af.word);
-  s.integer(r.bc.word);
-  s.integer(r.de.word);
-  s.integer(r.hl.word);
-  s.integer(r.sp.word);
-  s.integer(r.pc.word);
-  s.integer(r.ei);
-  s.integer(r.halt);
-  s.integer(r.stop);
-  s.integer(r.ime);
+  s(r.af.word);
+  s(r.bc.word);
+  s(r.de.word);
+  s(r.hl.word);
+  s(r.sp.word);
+  s(r.pc.word);
+  s(r.ei);
+  s(r.halt);
+  s(r.stop);
+  s(r.ime);
 }

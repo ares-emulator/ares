@@ -1,39 +1,44 @@
 struct KonamiVRC6 : Interface {
-  Memory::Readable<uint8> programROM;
-  Memory::Writable<uint8> programRAM;
-  Memory::Readable<uint8> characterROM;
-  Memory::Writable<uint8> characterRAM;
-  Node::Stream stream;
+  static auto create(string id) -> Interface* {
+    if(id == "KONAMI-VRC-6") return new KonamiVRC6;
+    return nullptr;
+  }
+
+  Memory::Readable<n8> programROM;
+  Memory::Writable<n8> programRAM;
+  Memory::Readable<n8> characterROM;
+  Memory::Writable<n8> characterRAM;
+  Node::Audio::Stream stream;
 
   struct Pulse {
     auto clock() -> void {
       if(--divider == 0) {
         divider = frequency + 1;
         cycle++;
-        output = (mode == 1 || cycle > duty) ? volume : (uint4)0;
+        output = (mode == 1 || cycle > duty) ? volume : (n4)0;
       }
       if(!enable) output = 0;
     }
 
     auto serialize(serializer& s) -> void {
-      s.integer(mode);
-      s.integer(duty);
-      s.integer(volume);
-      s.integer(enable);
-      s.integer(frequency);
-      s.integer(divider);
-      s.integer(cycle);
-      s.integer(output);
+      s(mode);
+      s(duty);
+      s(volume);
+      s(enable);
+      s(frequency);
+      s(divider);
+      s(cycle);
+      s(output);
     }
 
-     uint1 mode;
-     uint3 duty;
-     uint4 volume;
-     uint1 enable;
-    uint12 frequency;
-    uint12 divider = 1;
-     uint4 cycle;
-     uint4 output;
+    n01 mode;
+    n03 duty;
+    n04 volume;
+    n01 enable;
+    n12 frequency;
+    n12 divider;
+    n04 cycle;
+    n04 output;
   };
 
   struct Sawtooth {
@@ -53,24 +58,24 @@ struct KonamiVRC6 : Interface {
     }
 
     auto serialize(serializer& s) -> void {
-      s.integer(rate);
-      s.integer(enable);
-      s.integer(frequency);
-      s.integer(divider);
-      s.integer(phase);
-      s.integer(stage);
-      s.integer(accumulator);
-      s.integer(output);
+      s(rate);
+      s(enable);
+      s(frequency);
+      s(divider);
+      s(phase);
+      s(stage);
+      s(accumulator);
+      s(output);
     }
 
-     uint6 rate;
-     uint1 enable;
-    uint12 frequency;
-    uint12 divider = 1;
-     uint1 phase;
-     uint3 stage;
-     uint8 accumulator;
-     uint5 output;
+    n06 rate;
+    n01 enable;
+    n12 frequency;
+    n12 divider;
+    n01 phase;
+    n03 stage;
+    n08 accumulator;
+    n05 output;
   };
 
   using Interface::Interface;
@@ -84,9 +89,9 @@ struct KonamiVRC6 : Interface {
     pinA0 = 1 << board["chip(type=VRC6)/pinout/a0"].natural();
     pinA1 = 1 << board["chip(type=VRC6)/pinout/a1"].natural();
 
-    stream = cartridge.node->append<Node::Stream>("VRC6");
+    stream = cartridge.node->append<Node::Audio::Stream>("VRC6");
     stream->setChannels(1);
-    stream->setFrequency(uint(system.frequency() + 0.5) / cartridge.rate());
+    stream->setFrequency(u32(system.frequency() + 0.5) / cartridge.rate());
   }
 
   auto save(Markup::Node document) -> void override {
@@ -125,27 +130,27 @@ struct KonamiVRC6 : Interface {
     pulse2.clock();
     sawtooth.clock();
     double output = (pulse1.output + pulse2.output + sawtooth.output) / 61.0 * 0.25;
-    stream->sample(-output);
+    stream->frame(-output);
 
     tick();
   }
 
-  auto addressPRG(uint address) const -> uint {
-    if((address & 0xc000) == 0x8000) return programBank[0] << 14 | (uint14)address;
-    if((address & 0xe000) == 0xc000) return programBank[1] << 13 | (uint13)address;
-    if((address & 0xe000) == 0xe000) return 0xff << 13 | (uint13)address;
+  auto addressPRG(n32 address) const -> n32 {
+    if((address & 0xc000) == 0x8000) return programBank[0] << 14 | (n14)address;
+    if((address & 0xe000) == 0xc000) return programBank[1] << 13 | (n13)address;
+    if((address & 0xe000) == 0xe000) return 0xff << 13 | (n13)address;
     return 0;
   }
 
-  auto readPRG(uint address) -> uint8 {
-    if(address < 0x6000) return cpu.mdr();
-    if(address < 0x8000) return programRAM.read((uint13)address);
+  auto readPRG(n32 address, n8 data) -> n8 override {
+    if(address < 0x6000) return data;
+    if(address < 0x8000) return programRAM.read((n13)address);
     return programROM.read(addressPRG(address));
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000) return;
-    if(address < 0x8000) return programRAM.write((uint13)address, data);
+    if(address < 0x8000) return programRAM.write((n13)address, data);
 
     bool a0 = address & pinA0;
     bool a1 = address & pinA1;
@@ -223,7 +228,7 @@ struct KonamiVRC6 : Interface {
     }
   }
 
-  auto addressCIRAM(uint address) const -> uint {
+  auto addressCIRAM(n32 address) const -> n32 {
     switch(mirror) {
     case 0: return address >> 0 & 0x0400 | address & 0x03ff;  //vertical mirroring
     case 1: return address >> 1 & 0x0400 | address & 0x03ff;  //horizontal mirroring
@@ -233,72 +238,62 @@ struct KonamiVRC6 : Interface {
     unreachable;
   }
 
-  auto addressCHR(uint address) const -> uint {
-    uint8 bank = characterBank[address >> 10 & 7];
-    return bank << 10 | (uint10)address;
+  auto addressCHR(n32 address) const -> n32 {
+    n8 bank = characterBank[address >> 10 & 7];
+    return bank << 10 | (n10)address;
   }
 
-  auto readCHR(uint address) -> uint8 {
+  auto readCHR(n32 address, n8 data) -> n8 {
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
     if(characterROM) return characterROM.read(addressCHR(address));
     if(characterRAM) return characterRAM.read(addressCHR(address));
-    return 0x00;
+    return data;
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void {
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
   auto power() -> void {
-    pulse1 = {};
-    pulse2 = {};
-    sawtooth = {};
-    for(auto& bank : programBank) bank = 0;
-    for(auto& bank : characterBank) bank = 0;
-    mirror = 0;
-    irqLatch = 0;
-    irqMode = 0;
-    irqEnable = 0;
-    irqAcknowledge = 0;
-    irqCounter = 0;
-    irqScalar = 0;
-    irqLine = 0;
+    pulse1.divider = 1;
+    pulse2.divider = 1;
+    sawtooth.divider = 1;
   }
 
   auto serialize(serializer& s) -> void {
-    programRAM.serialize(s);
-    characterRAM.serialize(s);
-    pulse1.serialize(s);
-    pulse2.serialize(s);
-    sawtooth.serialize(s);
-    s.integer(pinA0);
-    s.integer(pinA1);
-    s.array(programBank);
-    s.array(characterBank);
-    s.integer(mirror);
-    s.integer(irqLatch);
-    s.integer(irqMode);
-    s.integer(irqEnable);
-    s.integer(irqAcknowledge);
-    s.integer(irqCounter);
-    s.integer(irqScalar);
-    s.integer(irqLine);
+    s(programRAM);
+    s(characterRAM);
+    s(pulse1);
+    s(pulse2);
+    s(sawtooth);
+    s(programBank);
+    s(characterBank);
+    s(mirror);
+    s(irqLatch);
+    s(irqMode);
+    s(irqEnable);
+    s(irqAcknowledge);
+    s(irqCounter);
+    s(irqScalar);
+    s(irqLine);
   }
 
   Pulse pulse1;
   Pulse pulse2;
   Sawtooth sawtooth;
-  uint8 pinA0;
-  uint8 pinA1;
-  uint8 programBank[2];
-  uint8 characterBank[8];
-  uint2 mirror;
-  uint8 irqLatch;
-  uint1 irqMode;
-  uint1 irqEnable;
-  uint1 irqAcknowledge;
-  uint8 irqCounter;
-  int16 irqScalar;
-  uint1 irqLine;
+  n08 programBank[2];
+  n08 characterBank[8];
+  n02 mirror;
+  n08 irqLatch;
+  n01 irqMode;
+  n01 irqEnable;
+  n01 irqAcknowledge;
+  n08 irqCounter;
+  i16 irqScalar;
+  n01 irqLine;
+
+//unserialized:
+  n8 pinA0;
+  n8 pinA1;
 };

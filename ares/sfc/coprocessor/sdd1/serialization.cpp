@@ -1,65 +1,65 @@
 auto SDD1::serialize(serializer& s) -> void {
-  s.integer(r4800);
-  s.integer(r4801);
-  s.integer(r4804);
-  s.integer(r4805);
-  s.integer(r4806);
-  s.integer(r4807);
+  s(r4800);
+  s(r4801);
+  s(r4804);
+  s(r4805);
+  s(r4806);
+  s(r4807);
   for(auto& channel : dma) {
-    s.integer(channel.address);
-    s.integer(channel.size);
+    s(channel.address);
+    s(channel.size);
   }
-  s.integer(dmaReady);
-  decompressor.serialize(s);
+  s(dmaReady);
+  s(decompressor);
 }
 
 auto SDD1::Decompressor::serialize(serializer& s) -> void {
-  im.serialize(s);
-  gcd.serialize(s);
-  bg0.serialize(s);
-  bg1.serialize(s);
-  bg2.serialize(s);
-  bg3.serialize(s);
-  bg4.serialize(s);
-  bg5.serialize(s);
-  bg6.serialize(s);
-  bg7.serialize(s);
-  pem.serialize(s);
-  cm.serialize(s);
-  ol.serialize(s);
+  s(im);
+  s(gcd);
+  s(bg0);
+  s(bg1);
+  s(bg2);
+  s(bg3);
+  s(bg4);
+  s(bg5);
+  s(bg6);
+  s(bg7);
+  s(pem);
+  s(cm);
+  s(ol);
 }
 
 auto SDD1::Decompressor::IM::serialize(serializer& s) -> void {
-  s.integer(offset);
-  s.integer(bitCount);
+  s(offset);
+  s(bitCount);
 }
 
 auto SDD1::Decompressor::GCD::serialize(serializer& s) -> void {
 }
 
 auto SDD1::Decompressor::BG::serialize(serializer& s) -> void {
-  s.integer(mpsCount);
-  s.integer(lpsIndex);
+  s(mpsCount);
+  s(lpsIndex);
 }
 
 auto SDD1::Decompressor::PEM::serialize(serializer& s) -> void {
   for(auto& info : contextInfo) {
-    s.integer(info.status);
-    s.integer(info.mps);
+    s(info.status);
+    s(info.mps);
   }
 }
 
 auto SDD1::Decompressor::CM::serialize(serializer& s) -> void {
-  s.integer(bitplanesInfo);
-  s.integer(contextBitsInfo);
-  s.integer(bitNumber);
-  s.integer(currentBitplane);
-  s.array(previousBitplaneBits);
+  s(bitplanesInfo);
+  s(contextBitsInfo);
+  s(bitNumber);
+  s(currentBitplane);
+  s(previousBitplaneBits);
 }
 
 auto SDD1::Decompressor::OL::serialize(serializer& s) -> void {
-  s.integer(bitplanesInfo);
-  s.integer(r0);
-  s.integer(r1);
-  s.integer(r2);
+  s(bitplanesInfo);
+  s(r0);
+  s(r1);
+  s(r2);
 }

@@ -1,31 +1,36 @@
-#include <md/interface/interface.hpp>
+namespace ares::MegaDrive {
+  auto load(Node::System& node, string name) -> bool;
+}
 
 struct MegaDrive : Emulator {
   MegaDrive();
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 struct MegaCD : Emulator {
   MegaCD();
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 
-  uint regionID = 0;
+  u32 regionID = 0;
 };
 
 MegaDrive::MegaDrive() {
-  interface = new ares::MegaDrive::MegaDriveInterface;
   medium = mia::medium("Mega Drive");
   manufacturer = "Sega";
   name = "Mega Drive";
 }
 
 auto MegaDrive::load() -> bool {
-  if(auto region = root->find<ares::Node::String>("Region")) {
-    region->setValue("NTSC-U → NTSC-J → PAL");
+  if(!ares::MegaDrive::load(root, "Mega Drive")) return false;
+
+  if(auto region = root->find<ares::Node::Setting::String>("Region")) {
+    if(settings.boot.prefer == "NTSC-U") region->setValue("NTSC-U → NTSC-J → PAL");
+    if(settings.boot.prefer == "NTSC-J") region->setValue("NTSC-J → NTSC-U → PAL");
+    if(settings.boot.prefer == "PAL"   ) region->setValue("PAL → NTSC-U → NTSC-J");
   }
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -60,32 +65,31 @@ auto MegaDrive::open(ares::Node::Object node, string name, vfs::file::mode mode,
   return {};
 }
 
-auto MegaDrive::input(ares::Node::Input node) -> void {
+auto MegaDrive::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "Up"   ) mapping = virtualPad.up;
-  if(name == "Down" ) mapping = virtualPad.down;
-  if(name == "Left" ) mapping = virtualPad.left;
-  if(name == "Right") mapping = virtualPad.right;
-  if(name == "A"    ) mapping = virtualPad.x;
-  if(name == "B"    ) mapping = virtualPad.a;
-  if(name == "C"    ) mapping = virtualPad.b;
-  if(name == "X"    ) mapping = virtualPad.y;
-  if(name == "Y"    ) mapping = virtualPad.l;
-  if(name == "Z"    ) mapping = virtualPad.r;
-  if(name == "Mode" ) mapping = virtualPad.select;
-  if(name == "Start") mapping = virtualPad.start;
+  if(name == "Up"   ) mapping = virtualPads[0].up;
+  if(name == "Down" ) mapping = virtualPads[0].down;
+  if(name == "Left" ) mapping = virtualPads[0].left;
+  if(name == "Right") mapping = virtualPads[0].right;
+  if(name == "A"    ) mapping = virtualPads[0].a;
+  if(name == "B"    ) mapping = virtualPads[0].b;
+  if(name == "C"    ) mapping = virtualPads[0].c;
+  if(name == "X"    ) mapping = virtualPads[0].x;
+  if(name == "Y"    ) mapping = virtualPads[0].y;
+  if(name == "Z"    ) mapping = virtualPads[0].z;
+  if(name == "Mode" ) mapping = virtualPads[0].select;
+  if(name == "Start") mapping = virtualPads[0].start;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }
 }
 
 MegaCD::MegaCD() {
-  interface = new ares::MegaDrive::MegaDriveInterface;
   medium = mia::medium("Mega CD");
   manufacturer = "Sega";
   name = "Mega CD";
@@ -96,7 +100,14 @@ MegaCD::MegaCD() {
 }
 
 auto MegaCD::load() -> bool {
-  regionID = 0;  //default to NTSC-U region
+  if(!ares::MegaDrive::load(root, "Mega Drive")) return false;
+
+  if(auto region = root->find<ares::Node::Setting::String>("Region")) {
+    if(settings.boot.prefer == "NTSC-U") region->setValue("NTSC-U → NTSC-J → PAL"), regionID = 0;
+    if(settings.boot.prefer == "NTSC-J") region->setValue("NTSC-J → NTSC-U → PAL"), regionID = 1;
+    if(settings.boot.prefer == "PAL"   ) region->setValue("PAL → NTSC-U → NTSC-J"), regionID = 2;
+  }
+
   if(auto manifest = medium->manifest(game.location)) {
     auto document = BML::unserialize(manifest);
     auto regions = document["game/region"].string().split(",");
@@ -109,10 +120,6 @@ auto MegaCD::load() -> bool {
   if(!file::exists(firmware[regionID].location)) {
     errorFirmwareRequired(firmware[regionID]);
     return false;
-  }
-
-  if(auto region = root->find<ares::Node::String>("Region")) {
-    region->setValue("NTSC-U → NTSC-J → PAL");
   }
 
   if(auto port = root->find<ares::Node::Port>("Expansion Port")) {
@@ -152,7 +159,7 @@ auto MegaCD::open(ares::Node::Object node, string name, vfs::file::mode mode, bo
   if(node->name() == "Mega CD") {
     if(name == "manifest.bml") {
       if(auto manifest = medium->manifest(game.location)) {
-        return vfs::memory::open(manifest.data<uint8_t>(), manifest.size());
+        return vfs::memory::open(manifest.data<u8>(), manifest.size());
       }
       return Emulator::manifest(game.location);
     }
@@ -177,25 +184,25 @@ auto MegaCD::open(ares::Node::Object node, string name, vfs::file::mode mode, bo
   return {};
 }
 
-auto MegaCD::input(ares::Node::Input node) -> void {
+auto MegaCD::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "Up"   ) mapping = virtualPad.up;
-  if(name == "Down" ) mapping = virtualPad.down;
-  if(name == "Left" ) mapping = virtualPad.left;
-  if(name == "Right") mapping = virtualPad.right;
-  if(name == "A"    ) mapping = virtualPad.x;
-  if(name == "B"    ) mapping = virtualPad.a;
-  if(name == "C"    ) mapping = virtualPad.b;
-  if(name == "X"    ) mapping = virtualPad.y;
-  if(name == "Y"    ) mapping = virtualPad.l;
-  if(name == "Z"    ) mapping = virtualPad.r;
-  if(name == "Mode" ) mapping = virtualPad.select;
-  if(name == "Start") mapping = virtualPad.start;
+  if(name == "Up"   ) mapping = virtualPads[0].up;
+  if(name == "Down" ) mapping = virtualPads[0].down;
+  if(name == "Left" ) mapping = virtualPads[0].left;
+  if(name == "Right") mapping = virtualPads[0].right;
+  if(name == "A"    ) mapping = virtualPads[0].a;
+  if(name == "B"    ) mapping = virtualPads[0].b;
+  if(name == "C"    ) mapping = virtualPads[0].c;
+  if(name == "X"    ) mapping = virtualPads[0].x;
+  if(name == "Y"    ) mapping = virtualPads[0].y;
+  if(name == "Z"    ) mapping = virtualPads[0].z;
+  if(name == "Mode" ) mapping = virtualPads[0].select;
+  if(name == "Start") mapping = virtualPads[0].start;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }

@@ -1,5 +1,5 @@
-auto MOS6502::disassembleInstruction(maybe<uint16> _pc) -> string {
-  uint16 pc = _pc ? *_pc : r.pc;
+auto MOS6502::disassembleInstruction(maybe<n16> _pc) -> string {
+  n16 pc = _pc ? *_pc : r.pc;
   string s;
 
   auto absolute = [&]() -> string {
@@ -15,7 +15,7 @@ auto MOS6502::disassembleInstruction(maybe<uint16> _pc) -> string {
   };
 
   auto branch = [&]() -> string {
-    return {"$", hex((pc + 2) + (int8)readDebugger(pc + 1), 4L)};
+    return {"$", hex((pc + 2) + (i8)readDebugger(pc + 1), 4L)};
   };
 
   auto immediate = [&]() -> string {

@@ -49,10 +49,10 @@ struct Z80 {
   auto push(uint16) -> void;
   auto pop() -> uint16;
   auto displace(uint16&) -> uint16;
-  auto read(uint16 addr) -> uint8;
-  auto write(uint16 addr, uint8 data) -> void;
-  auto in(uint8 addr) -> uint8;
-  auto out(uint8 addr, uint8 data) -> void;
+  auto read(uint16 address) -> uint8;
+  auto write(uint16 address, uint8 data) -> void;
+  auto in(uint16 address) -> uint8;
+  auto out(uint16 address, uint8 data) -> void;
 
   //instruction.cpp
   auto instruction() -> void;

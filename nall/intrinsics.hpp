@@ -9,7 +9,7 @@ namespace nall {
   enum class DisplayServer : uint { Windows, Quartz, Xorg, Unknown };
   enum class Architecture : uint { x86, amd64, ARM32, ARM64, PPC32, PPC64, Unknown };
   enum class Endian : uint { LSB, MSB, Unknown };
-  enum class Build : uint { Debug, Stable, Size, Release, Performance };
+  enum class Build : uint { Debug, Stable, Minified, Release, Optimized };
 
   static inline constexpr auto compiler() -> Compiler;
   static inline constexpr auto platform() -> Platform;
@@ -186,15 +186,15 @@ namespace nall {
 #elif defined(BUILD_STABLE)
   #define DEBUG
   constexpr auto build() -> Build { return Build::Stable; }
-#elif defined(BUILD_SIZE)
+#elif defined(BUILD_MINIFIED)
   #define NDEBUG
-  constexpr auto build() -> Build { return Build::Size; }
+  constexpr auto build() -> Build { return Build::Minified; }
 #elif defined(BUILD_RELEASE)
   #define NDEBUG
   constexpr auto build() -> Build { return Build::Release; }
-#elif defined(BUILD_PERFORMANCE)
+#elif defined(BUILD_OPTIMIZED)
   #define NDEBUG
-  constexpr auto build() -> Build { return Build::Performance; }
+  constexpr auto build() -> Build { return Build::Optimized; }
 #else
   //default to debug mode
   #define DEBUG

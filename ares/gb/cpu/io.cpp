@@ -97,8 +97,8 @@ auto CPU::readIO(uint cycle, uint16 address, uint8 data) -> uint8 {
 
   if(Model::GameBoyColor())
   if(address == 0xff55 && cycle == 2) {  //HDMA5
-    data.bit(0,6) = status.dmaLength / 16 - 1 & 0x7f;
-    data.bit(7)   = status.dmaCompleted;
+    data.bit(0,6) = status.dmaLength;
+    data.bit(7)   = status.hdmaActive;
     return data;
   }
 
@@ -240,18 +240,24 @@ auto CPU::writeIO(uint cycle, uint16 address, uint8 data) -> void {
 
   if(Model::GameBoyColor())
   if(address == 0xff55 && cycle == 2) {  //HDMA5
-    status.dmaLength    = (data.bit(0,6) + 1) * 16;
-    status.dmaMode      = data.bit(7);
-    status.dmaCompleted = !status.dmaMode;
+    //1->0 transistion stops an active HDMA (and does not trigger GDMA)
+    if(status.hdmaActive && !data.bit(7)) {
+      status.dmaLength  = data.bit(0,6);
+      status.hdmaActive = 0;
+      return;
+    }
 
-    if(status.dmaMode == 0) {
+    status.dmaLength  = data.bit(0,6);
+    status.hdmaActive = data.bit(7);
+
+    //GDMA
+    if(!data.bit(7)) {
       do {
         for(uint loop : range(16)) {
           writeDMA(status.dmaTarget++, readDMA(status.dmaSource++, 0xff));
         }
         step(8 << status.speedDouble);
-        status.dmaLength -= 16;
-      } while(status.dmaLength);
+      } while(status.dmaLength--);
     }
     return;
   }

@@ -1,7 +1,7 @@
 #pragma once
 
 /* Document Markup Language (DML) v1.0 parser
- * revision 0.05
+ * revision 0.06
  */
 
 #include <nall/location.hpp>
@@ -45,6 +45,7 @@ private:
 
   auto address(string text) -> string;
   auto escape(const string& text) -> string;
+  auto anchor(const string& text) -> string;
   auto markup(const string& text) -> string;
 };
 
@@ -111,9 +112,9 @@ inline auto DML::parseBlock(string& block, const string& pathname, uint depth) -
 
   //header
   else if(auto depth = count(block, '#')) {
-    auto content = slice(lines.takeLeft(), depth + 1).split("::", 1L).strip();
-    auto data = markup(content[0]);
-    auto name = escape(content(1, data.hash()));
+    auto content = slice(lines.takeLeft(), depth + 1);
+    auto data = markup(content);
+    auto name = anchor(content);
     if(depth <= 5) {
       state.output.append("<h", depth + 1, " id=\"", name, "\">", data);
       for(auto& line : lines) {
@@ -132,9 +133,9 @@ inline auto DML::parseBlock(string& block, const string& pathname, uint depth) -
       if(auto depth = count(line, '-')) {
         while(level < depth) level++, state.output.append("<ul>\n");
         while(level > depth) level--, state.output.append("</ul>\n");
-        auto content = slice(line, depth + 1).split("::", 1L).strip();
-        auto data = markup(content[0]);
-        auto name = escape(content(1, data.hash()));
+        auto content = slice(line, depth + 1);
+        auto data = markup(content);
+        auto name = anchor(content);
         state.output.append("<li><a href=\"#", name, "\">", data, "</a></li>\n");
       }
     }
@@ -241,6 +242,16 @@ inline auto DML::escape(const string& text) -> string {
     output.append(c);
   }
   return output;
+}
+
+inline auto DML::anchor(const string& text) -> string {
+  string output;
+  for(char c : text) {
+    if(c >= 'a' && c <= 'z') { output.append(c); continue; }
+    if(c >= 'A' && c <= 'Z') { output.append(char(c + 0x20)); continue; }
+    if(!output.endsWith("-")) output.append('-');
+  }
+  return output.trim("-", "-");
 }
 
 inline auto DML::markup(const string& s) -> string {

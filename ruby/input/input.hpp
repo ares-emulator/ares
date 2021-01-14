@@ -16,7 +16,7 @@ struct InputDriver {
   virtual auto acquire() -> bool { return false; }
   virtual auto release() -> bool { return false; }
   virtual auto poll() -> vector<shared_pointer<nall::HID::Device>> { return {}; }
-  virtual auto rumble(uint64_t id, bool enable) -> bool { return false; }
+  virtual auto rumble(u64 id, bool enable) -> bool { return false; }
 
 protected:
   Input& super;
@@ -48,13 +48,13 @@ struct Input {
   auto acquire() -> bool;
   auto release() -> bool;
   auto poll() -> vector<shared_pointer<nall::HID::Device>>;
-  auto rumble(uint64_t id, bool enable) -> bool;
+  auto rumble(u64 id, bool enable) -> bool;
 
-  auto onChange(const function<void (shared_pointer<nall::HID::Device>, uint, uint, int16_t, int16_t)>&) -> void;
-  auto doChange(shared_pointer<nall::HID::Device> device, uint group, uint input, int16_t oldValue, int16_t newValue) -> void;
+  auto onChange(const function<void (shared_pointer<nall::HID::Device>, u32, u32, s16, s16)>&) -> void;
+  auto doChange(shared_pointer<nall::HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue) -> void;
 
 protected:
   Input& self;
   unique_pointer<InputDriver> instance;
-  function<void (shared_pointer<nall::HID::Device> device, uint group, uint input, int16_t oldValue, int16_t newValue)> change;
+  function<void (shared_pointer<nall::HID::Device> device, u32 group, u32 input, s16 oldValue, s16 newValue)> change;
 };

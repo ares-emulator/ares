@@ -34,6 +34,14 @@
     emit.qword(ps.data);
   }
 
+  //mov [mem],reg
+  auto mov(mem64 pt, reg64 rs) {
+    if(unlikely(rs != rax)) throw;
+    emit.rex(1, 0, 0, 0);
+    emit.byte(0xa3);
+    emit.qword(pt.data);
+  }
+
   //mov [reg+mem],reg
   //todo: add more valid register combinations
   auto mov(dis64 dt, reg64 rs) {
@@ -49,6 +57,22 @@
   //ret
   auto ret() {
     emit.byte(0xc3);
+  }
+
+  //inc reg
+  auto inc(reg64 rt) {
+    auto _rt = (uint)rt;
+    emit.rex(1, 0, 0, _rt & 8);
+    emit.byte(0xff);
+    emit.modrm(3, 0, _rt & 7);
+  }
+
+  //dec reg
+  auto dec(reg64 rt) {
+    auto _rt = (uint)rt;
+    emit.rex(1, 0, 0, _rt & 8);
+    emit.byte(0xff);
+    emit.modrm(3, 1, _rt & 7);
   }
 
   #define op(code) \

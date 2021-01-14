@@ -1,6 +1,6 @@
 struct CPU : MOS6502, Thread {
-  Node::Component node;
-  Memory::Writable<uint8> ram;
+  Node::Object node;
+  Memory::Writable<n8> ram;
 
   struct Debugger {
     //debugger.cpp
@@ -9,42 +9,42 @@ struct CPU : MOS6502, Thread {
     auto interrupt(string_view) -> void;
 
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
 
     struct Tracer {
-      Node::Instruction instruction;
-      Node::Notification interrupt;
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
     } tracer;
   } debugger;
 
-  auto rate() const -> uint { return Region::PAL() ? 16 : 12; }
+  auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
 
   //cpu.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
 
   auto power(bool reset) -> void;
 
   //memory.cpp
-  auto readBus(uint16 address) -> uint8;
-  auto writeBus(uint16 address, uint8 data) -> void;
+  auto readBus(n16 address) -> n8;
+  auto writeBus(n16 address, n8 data) -> void;
 
-  auto readIO(uint16 address) -> uint8;
-  auto writeIO(uint16 address, uint8 data) -> void;
+  auto readIO(n16 address) -> n8;
+  auto writeIO(n16 address, n8 data) -> void;
 
-  auto readDebugger(uint16 address) -> uint8 override;
+  auto readDebugger(n16 address) -> n8 override;
 
   auto serialize(serializer&) -> void;
 
   //timing.cpp
-  auto read(uint16 address) -> uint8 override;
-  auto write(uint16 address, uint8 data) -> void override;
+  auto read(n16 address) -> n8 override;
+  auto write(n16 address, n8 data) -> void override;
   auto lastCycle() -> void override;
-  auto nmi(uint16& vector) -> void override;
+  auto nmi(n16& vector) -> void override;
 
   auto oamDMA() -> void;
 
@@ -53,20 +53,20 @@ struct CPU : MOS6502, Thread {
   auto apuLine(bool) -> void;
 
   auto rdyLine(bool) -> void;
-  auto rdyAddress(bool valid, uint16 value = 0) -> void;
+  auto rdyAddress(bool valid, n16 value = 0) -> void;
 
 //protected:
   struct IO {
-     uint1 interruptPending;
-     uint1 nmiPending;
-     uint1 nmiLine;
-     uint1 irqLine;
-     uint1 apuLine;
-     uint1 rdyLine = 1;
-     uint1 rdyAddressValid;
-    uint16 rdyAddressValue;
-     uint1 oamDMAPending;
-     uint8 oamDMAPage;
+    n01 interruptPending;
+    n01 nmiPending;
+    n01 nmiLine;
+    n01 irqLine;
+    n01 apuLine;
+    n01 rdyLine;
+    n01 rdyAddressValid;
+    n16 rdyAddressValue;
+    n01 oamDMAPending;
+    n08 oamDMAPage;
   } io;
 };
 

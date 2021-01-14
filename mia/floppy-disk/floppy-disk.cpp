@@ -5,7 +5,7 @@ auto FloppyDisk::construct() -> void {
   Media::construct();
 }
 
-auto FloppyDisk::append(vector<uint8_t>& output, string filename) -> bool {
+auto FloppyDisk::append(vector<u8>& output, string filename) -> bool {
   if(!file::exists(filename)) return false;
   auto input = file::read(filename);
   auto size = output.size();
@@ -15,7 +15,7 @@ auto FloppyDisk::append(vector<uint8_t>& output, string filename) -> bool {
 }
 
 auto FloppyDisk::manifest(string location) -> string {
-  vector<uint8_t> data;
+  vector<u8> data;
   if(directory::exists(location)) {
     data = export(location);
   } else if(file::exists(location)) {
@@ -24,7 +24,7 @@ auto FloppyDisk::manifest(string location) -> string {
   return manifest(data, location);
 }
 
-auto FloppyDisk::manifest(vector<uint8_t>& data, string location) -> string {
+auto FloppyDisk::manifest(vector<u8>& data, string location) -> string {
   string digest = Hash::SHA256(data).digest();
   for(auto game : database.find("game")) {
     if(game["sha256"].text() == digest) return BML::serialize(game);

@@ -7,8 +7,8 @@ struct Interface {
   virtual auto save(Markup::Node) -> void {}
   virtual auto read(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16 { return 0; }
   virtual auto write(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void {}
-  virtual auto readIO(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16 { return 0; }
-  virtual auto writeIO(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void {}
+  virtual auto readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 { return 0; }
+  virtual auto writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void {}
   virtual auto power() -> void {}
   virtual auto serialize(serializer&) -> void {}
 

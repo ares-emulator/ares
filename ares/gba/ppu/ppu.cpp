@@ -27,25 +27,26 @@ auto PPU::load(Node::Object parent) -> void {
   vram.allocate(96_KiB);
   pram.allocate(512);
 
-  node = parent->append<Node::Component>("PPU");
+  node = parent->append<Node::Object>("PPU");
 
-  screen = node->append<Node::Screen>("Screen");
+  screen = node->append<Node::Video::Screen>("Screen", 240, 160);
   screen->colors(1 << 15, {&PPU::color, this});
   screen->setSize(240, 160);
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
+  screen->setViewport(0, 0, 240, 160);
 
-  colorEmulation = screen->append<Node::Boolean>("Color Emulation", true, [&](auto value) {
+  colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
     screen->resetPalette();
   });
   colorEmulation->setDynamic(true);
 
-  interframeBlending = screen->append<Node::Boolean>("Interframe Blending", true, [&](auto value) {
+  interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
     screen->setInterframeBlending(value);
   });
   interframeBlending->setDynamic(true);
 
-  rotation = parent->append<Node::String>("Orientation", "0°", [&](auto value) {
+  rotation = screen->append<Node::Setting::String>("Orientation", "0°", [&](auto value) {
     if(value ==   "0°") screen->setRotation(  0);
     if(value ==  "90°") screen->setRotation( 90);
     if(value == "180°") screen->setRotation(180);
@@ -58,6 +59,7 @@ auto PPU::load(Node::Object parent) -> void {
 }
 
 auto PPU::unload() -> void {
+  screen->quit();
   vram.reset();
   pram.reset();
   node = {};
@@ -109,6 +111,7 @@ auto PPU::main() -> void {
     bg2.scanline(y);
     bg3.scanline(y);
     objects.scanline(y);
+    auto line = screen->pixels().data() + y * 240;
     for(uint x : range(240)) {
       bg0.run(x, y);
       bg1.run(x, y);
@@ -120,7 +123,7 @@ auto PPU::main() -> void {
       window2.output = objects.output.window;
       window3.output = true;
       uint15 color = dac.run(x, y);
-      output[y * 240 + x] = color;
+      line[x] = color;
       step(4);
     }
   } else {
@@ -140,19 +143,15 @@ auto PPU::main() -> void {
 }
 
 auto PPU::frame() -> void {
+  screen->frame();
   scheduler.exit(Event::Frame);
-}
-
-auto PPU::refresh() -> void {
-  screen->refresh(output, 240 * sizeof(uint32), 240, 160);
 }
 
 auto PPU::power() -> void {
   Thread::create(system.frequency(), {&PPU::main, this});
+  screen->power();
 
   for(uint n = 0x000; n <= 0x055; n++) bus.io[n] = this;
-
-  for(uint n = 0; n < 240 * 160; n++) output[n] = 0;
 
   for(uint n = 0; n < 96 * 1024; n++) vram[n] = 0x00;
   for(uint n = 0; n < 1024; n += 2) writePRAM(n, Half, 0x0000);

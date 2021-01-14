@@ -5,8 +5,8 @@ struct InputKeyboardRawInput {
   InputKeyboardRawInput(Input& input) : input(input) {}
 
   struct Key {
-    uint16_t code;
-    uint16_t flag;
+    u16 code;
+    u16 flag;
     string name;
     bool value;
   };
@@ -17,8 +17,8 @@ struct InputKeyboardRawInput {
   } kb;
 
   auto update(RAWINPUT* input) -> void {
-    uint code = input->data.keyboard.MakeCode;
-    uint flag = input->data.keyboard.Flags;
+    u32 code = input->data.keyboard.MakeCode;
+    u32 flag = input->data.keyboard.Flags;
 
     for(auto& key : keys) {
       if(key.code != code) continue;
@@ -26,7 +26,7 @@ struct InputKeyboardRawInput {
     }
   }
 
-  auto assign(uint inputID, bool value) -> void {
+  auto assign(u32 inputID, bool value) -> void {
     auto& group = kb.hid->buttons();
     if(group.input(inputID).value() == value) return;
     input.doChange(kb.hid, HID::Keyboard::GroupID::Button, inputID, group.input(inputID).value(), value);

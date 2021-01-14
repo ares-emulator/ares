@@ -4,7 +4,7 @@ NECDSP necdsp;
 #include "serialization.cpp"
 
 auto NECDSP::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("NEC");
+  node = parent->append<Node::Object>("NEC");
 
   debugger.load(node);
 }

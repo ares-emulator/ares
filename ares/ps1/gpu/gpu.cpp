@@ -2,82 +2,159 @@
 
 namespace ares::PlayStation {
 
+//cpu.clock = 44,100 * 768 = 33,868,000hz
+//gpu.clock = cpu.clock * 11 / 7 = 53,222,400hz
+//ntsc.clocks_per_scanline = ~3,413
+// pal.clocks_per_scanline = ~3,406
+//ntsc.scanlines_per_frame = 263
+// pal.scanlines_per_frame = 314
+
 GPU gpu;
+GPU::Color GPU::Color::table[65536];
 #include "io.cpp"
 #include "gp0.cpp"
 #include "gp1.cpp"
-#include "render.cpp"
+#include "renderer.cpp"
+#include "blitter.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto GPU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("GPU");
+  node = parent->append<Node::Object>("GPU");
 
-  screen = node->append<Node::Screen>("Screen");
-  screen->colors(1 << 16, [&](uint32 color) -> uint64 {
-    u64 a = 65535;
-    u64 r = image::normalize(color >>  0 & 31, 5, 16);
-    u64 g = image::normalize(color >>  5 & 31, 5, 16);
-    u64 b = image::normalize(color >> 10 & 31, 5, 16);
-    return a << 48 | r << 32 | g << 16 | b << 0;
+  screen = node->append<Node::Video::Screen>("Screen", 640, 480);
+  screen->setRefresh({&GPU::Blitter::refresh, &blitter});
+  screen->colors((1 << 24) + (1 << 15), [&](uint32 color) -> uint64 {
+    if(color < (1 << 24)) {
+      u64 a = 65535;
+      u64 r = image::normalize(color >>  0 & 255, 8, 16);
+      u64 g = image::normalize(color >>  8 & 255, 8, 16);
+      u64 b = image::normalize(color >> 16 & 255, 8, 16);
+      return a << 48 | r << 32 | g << 16 | b << 0;
+    } else {
+      u64 a = 65535;
+      u64 r = image::normalize(color >>  0 & 31, 5, 16);
+      u64 g = image::normalize(color >>  5 & 31, 5, 16);
+      u64 b = image::normalize(color >> 10 & 31, 5, 16);
+      return a << 48 | r << 32 | g << 16 | b << 0;
+    }
   });
-//screen->setSize( 320, 240);
-  screen->setSize( 640, 480);
-//screen->setSize(1024, 512);
+  screen->setSize(640, 480);
+
+  overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
+    if(value == 0) screen->setSize(640, 448);
+    if(value == 1) screen->setSize(640, 480);
+  });
+  overscan->setDynamic(true);
 
   vram.allocate(1_MiB);
+  for(uint y : range(512)) {
+    vram2D[y] = (u16*)&vram.data[y * 2048];
+  }
+
+  debugger.load(node);
+
+  generateTables();
 }
 
 auto GPU::unload() -> void {
+  screen->quit();
+  renderer.kill();
+  debugger = {};
   vram.reset();
+  overscan.reset();
   screen.reset();
   node.reset();
 }
 
 auto GPU::main() -> void {
-  if(io.vcounter <= 240) {
+  step(12);
+
+  if(io.hcounter == 1800) {
+    //hsync signal is sent even during vertical blanking period
     timer.hsync(1);
+  }
+
+  if(io.hcounter == 2172) {
+    io.hcounter = 0;
     timer.hsync(0);
+
+    if(++io.vcounter == vtotal()) {
+      io.vcounter = 0;
+      io.field = !io.field;
+      frame();
+    }
+
+    if(io.vcounter == vstart()) {
+      timer.vsync(0);
+      interrupt.lower(Interrupt::Vblank);
+    }
+
+    if(io.vcounter == vend()) {
+      timer.vsync(1);
+      io.interrupt = 1;
+      interrupt.raise(Interrupt::Vblank);
+      blitter.queue();
+    }
+  }
+}
+
+auto GPU::frame() -> void {
+  switch(io.horizontalResolution) {
+  case 0:
+    display.dotclock = 10;
+    display.width = 256;
+    break;
+  case 1:
+    display.dotclock = 8;
+    display.width = 320;
+    break;
+  case 2:
+    display.dotclock = 5;
+    display.width = 512;
+    break;
+  case 3:
+    display.dotclock = 4;
+    display.width = 640;
+    break;
+  case 4: case 5: case 6: case 7:
+    display.dotclock = 7;
+    display.width = 368;
+    break;
   }
 
-  if(io.vcounter == 240) {
-    timer.vsync(1);
-    interrupt.raise(Interrupt::Vblank);
+  if(io.verticalResolution && io.interlace) {
+    display.height = 480;
+    display.interlace = 1;
+  } else {
+    display.height = 240;
+    display.interlace = 0;
   }
-
-  if(++io.vcounter == 262) {
-    timer.vsync(0);
-    io.vcounter = 0;
-    io.field = !io.field;
-    interrupt.lower(Interrupt::Vblank);
-    refreshed = true;
-  }
-
-  step(33'868'800 / 60 / 262);
 }
 
 auto GPU::step(uint clocks) -> void {
   Thread::clock += clocks;
-}
-
-auto GPU::refresh() -> void {
-  u32 source = 0;
-  u32 target = 0;
-  for(uint y : range(512)) {
-    for(uint x : range(1024)) {
-      u32 data = vram.readHalf(source++ << 1);
-      output[target++] = data & 0x7fff;
-    }
-  }
-//screen->refresh((uint32*)output, 1024 * sizeof(uint32),  320, 240);
-  screen->refresh((uint32*)output, 1024 * sizeof(uint32),  640, 480);
-//screen->refresh((uint32*)output, 1024 * sizeof(uint32), 1024, 512);
+  io.hcounter += clocks;
+  io.pcounter -= clocks;
+  if(io.pcounter < 0) io.pcounter = 0;
 }
 
 auto GPU::power(bool reset) -> void {
   Thread::reset();
+  Memory::Interface::setWaitStates(2, 2, 3);
+  screen->power();
   refreshed = false;
-  vram.fill();
-  io = {};
+
+  io.displayDisable = 1;
+  io.displayRangeX1 = 512;
+  io.displayRangeX2 = 512 + 256 * 10;
+  io.displayRangeY1 =  16;
+  io.displayRangeY2 =  16 + 240;
+  io.horizontalResolution = 1;
+  frame();
+
+  renderer.power();
+  blitter.power();
 }
 
 }

@@ -1,104 +1,105 @@
 auto VDP::serialize(serializer& s) -> void {
   Thread::serialize(s);
-  vram.serialize(s);
-  vsram.serialize(s);
-  cram.serialize(s);
-  dma.serialize(s);
-  planeA.serialize(s);
-  window.serialize(s);
-  planeB.serialize(s);
-  sprite.serialize(s);
+  s(vram);
+  s(vsram);
+  s(cram);
+  s(dma);
+  s(planeA);
+  s(window);
+  s(planeB);
+  s(sprite);
 
-  s.integer(state.hdot);
-  s.integer(state.hcounter);
-  s.integer(state.vcounter);
-  s.integer(state.field);
+  s(state.hdot);
+  s(state.hcounter);
+  s(state.vcounter);
+  s(state.field);
 
-  s.integer(io.vblankIRQ);
-  s.integer(io.command);
-  s.integer(io.address);
-  s.integer(io.commandPending);
-  s.integer(io.displayOverlayEnable);
-  s.integer(io.counterLatch);
-  s.integer(io.horizontalBlankInterruptEnable);
-  s.integer(io.leftColumnBlank);
-  s.integer(io.videoMode);
-  s.integer(io.overscan);
-  s.integer(io.verticalBlankInterruptEnable);
-  s.integer(io.displayEnable);
-  s.integer(io.backgroundColor);
-  s.integer(io.horizontalInterruptCounter);
-  s.integer(io.externalInterruptEnable);
-  s.integer(io.displayWidth);
-  s.integer(io.interlaceMode);
-  s.integer(io.shadowHighlightEnable);
-  s.integer(io.externalColorEnable);
-  s.integer(io.horizontalSync);
-  s.integer(io.verticalSync);
-  s.integer(io.dataIncrement);
+  s(io.vblankIRQ);
+  s(io.command);
+  s(io.address);
+  s(io.commandPending);
+  s(io.displayOverlayEnable);
+  s(io.counterLatch);
+  s(io.horizontalBlankInterruptEnable);
+  s(io.leftColumnBlank);
+  s(io.videoMode);
+  s(io.overscan);
+  s(io.verticalBlankInterruptEnable);
+  s(io.displayEnable);
+  s(io.backgroundColor);
+  s(io.horizontalInterruptCounter);
+  s(io.externalInterruptEnable);
+  s(io.displayWidth);
+  s(io.interlaceMode);
+  s(io.shadowHighlightEnable);
+  s(io.externalColorEnable);
+  s(io.horizontalSync);
+  s(io.verticalSync);
+  s(io.dataIncrement);
 
-  s.integer(latch.interlace);
-  s.integer(latch.overscan);
-  s.integer(latch.horizontalInterruptCounter);
-  s.integer(latch.displayWidth);
+  s(latch.field);
+  s(latch.interlace);
+  s(latch.overscan);
+  s(latch.horizontalInterruptCounter);
+  s(latch.displayWidth);
 }
 
 auto VDP::VRAM::serialize(serializer& s) -> void {
-  s.array(pixels);
-  s.array(memory);
-  s.integer(size);
-  s.integer(mode);
+  s(pixels);
+  s(memory);
+  s(size);
+  s(mode);
 }
 
 auto VDP::VSRAM::serialize(serializer& s) -> void {
-  s.array(memory);
+  s(memory);
 }
 
 auto VDP::CRAM::serialize(serializer& s) -> void {
-  s.array(memory);
-  s.array(palette);
+  s(memory);
+  s(palette);
 }
 
 auto VDP::DMA::serialize(serializer& s) -> void {
-  s.integer(active);
-  s.integer(io.mode);
-  s.integer(io.source);
-  s.integer(io.length);
-  s.integer(io.fill);
-  s.integer(io.enable);
-  s.integer(io.wait);
+  s(active);
+  s(io.mode);
+  s(io.source);
+  s(io.length);
+  s(io.fill);
+  s(io.enable);
+  s(io.wait);
 }
 
 auto VDP::Background::serialize(serializer& s) -> void {
-  s.integer(io.generatorAddress);
-  s.integer(io.nametableAddress);
-  s.integer(io.nametableWidth);
-  s.integer(io.nametableHeight);
-  s.integer(io.horizontalScrollAddress);
-  s.integer(io.horizontalScrollMode);
-  s.integer(io.verticalScrollMode);
-  s.integer(io.horizontalOffset);
-  s.integer(io.horizontalDirection);
-  s.integer(io.verticalOffset);
-  s.integer(io.verticalDirection);
+  s(io.generatorAddress);
+  s(io.nametableAddress);
+  s(io.nametableWidth);
+  s(io.nametableHeight);
+  s(io.horizontalScrollAddress);
+  s(io.horizontalScrollMode);
+  s(io.verticalScrollMode);
+  s(io.horizontalOffset);
+  s(io.horizontalDirection);
+  s(io.verticalOffset);
+  s(io.verticalDirection);
 }
 
 auto VDP::Object::serialize(serializer& s) -> void {
-  s.integer(x);
-  s.integer(y);
-  s.integer(tileWidth);
-  s.integer(tileHeight);
-  s.integer(horizontalFlip);
-  s.integer(verticalFlip);
-  s.integer(palette);
-  s.integer(priority);
-  s.integer(address);
-  s.integer(link);
+  s(x);
+  s(y);
+  s(tileWidth);
+  s(tileHeight);
+  s(horizontalFlip);
+  s(verticalFlip);
+  s(palette);
+  s(priority);
+  s(address);
+  s(link);
 }
 
 auto VDP::Sprite::serialize(serializer& s) -> void {
-  s.integer(io.generatorAddress);
-  s.integer(io.nametableAddress);
-  for(auto& object : oam) object.serialize(s);
-  for(auto& object : objects) object.serialize(s);
+  s(io.generatorAddress);
+  s(io.nametableAddress);
+  for(auto& object : oam) s(object);
+  for(auto& object : objects) s(object);
 }

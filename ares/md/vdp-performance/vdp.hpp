@@ -1,17 +1,17 @@
 //Yamaha YM7101
 struct VDP : Thread {
-  Node::Component node;
-  Node::Screen screen;
-  Node::Boolean overscan;
+  Node::Object node;
+  Node::Video::Screen screen;
+  Node::Setting::Boolean overscan;
 
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
 
     struct Memory {
-      Node::Memory vram;
-      Node::Memory vsram;
-      Node::Memory cram;
+      Node::Debugger::Memory vram;
+      Node::Debugger::Memory vsram;
+      Node::Debugger::Memory cram;
     } memory;
   } debugger;
 
@@ -21,7 +21,6 @@ struct VDP : Thread {
 
   auto main() -> void;
   auto step(uint clocks) -> void;
-  auto refresh() -> void;
   auto render() -> void;
   auto power(bool reset) -> void;
 
@@ -46,9 +45,6 @@ private:
   auto screenWidth() const -> uint { return latch.displayWidth ? 320 : 256; }
   auto screenHeight() const -> uint { return latch.overscan ? 240 : 224; }
   auto frameHeight() const -> uint { return Region::PAL() ? 312 : 262; }
-
-  uint32 buffer[320 * 512];
-  uint32* output = nullptr;
 
   struct VRAM {
     //memory.cpp
@@ -170,6 +166,12 @@ private:
   };
 
   struct Sprite {
+    VDP& vdp;
+
+    auto objectLimit() const -> uint { return vdp.io.displayWidth ? 20 : 16; }
+    auto tileLimit()   const -> uint { return vdp.io.displayWidth ? 40 : 32; }
+    auto linkLimit()   const -> uint { return vdp.io.displayWidth ? 80 : 64; }
+
     //sprite.cpp
     auto render() -> void;
     auto write(uint9 address, uint16 data) -> void;
@@ -187,7 +189,7 @@ private:
 
   //unserialized:
     uint7 pixels[512];
-  } sprite;
+  } sprite{*this};
 
   struct State {
     uint16 hdot;
@@ -240,6 +242,7 @@ private:
 
   struct Latch {
     //per-frame
+     uint1 field;
      uint1 interlace;
      uint1 overscan;
      uint8 horizontalInterruptCounter;

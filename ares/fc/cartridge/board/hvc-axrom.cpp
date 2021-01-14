@@ -1,16 +1,24 @@
 struct HVC_AxROM : Interface {
-  Memory::Readable<uint8> programROM;
-  Memory::Readable<uint8> characterROM;
-  Memory::Writable<uint8> characterRAM;
+  static auto create(string id) -> Interface* {
+    if(id == "HVC-AMROM" ) return new HVC_AxROM(Revision::AMROM);
+    if(id == "HVC-ANROM" ) return new HVC_AxROM(Revision::ANROM);
+    if(id == "HVC-AN1ROM") return new HVC_AxROM(Revision::AN1ROM);
+    if(id == "HVC-AOROM" ) return new HVC_AxROM(Revision::AOROM);
+    return nullptr;
+  }
 
-  enum class Revision : uint {
+  Memory::Readable<n8> programROM;
+  Memory::Readable<n8> characterROM;
+  Memory::Writable<n8> characterRAM;
+
+  enum class Revision : u32 {
     AMROM,
     ANROM,
     AN1ROM,
     AOROM,
   } revision;
 
-  HVC_AxROM(Markup::Node document, Revision revision) : Interface(document), revision(revision) {}
+  HVC_AxROM(Revision revision) : revision(revision) {}
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -24,40 +32,39 @@ struct HVC_AxROM : Interface {
     Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto readPRG(uint address) -> uint8 {
-    if(address < 0x8000) return cpu.mdr();
-    return programROM.read(programBank << 15 | (uint15)address);
+  auto readPRG(n32 address, n8 data) -> n8 override {
+    if(address < 0x8000) return data;
+    return programROM.read(programBank << 15 | (n15)address);
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x8000) return;
     programBank = data.bit(0,3);
     mirror = data.bit(4);
   }
 
-  auto readCHR(uint address) -> uint8 {
-    if(address & 0x2000) return ppu.readCIRAM(mirror << 10 | address & 0x03ff);
+  auto readCHR(n32 address, n8 data) -> n8 override {
+    if(address & 0x2000) return ppu.readCIRAM(mirror << 10 | (n10)address);
     if(characterROM) return characterROM.read(address);
     if(characterRAM) return characterRAM.read(address);
-    return 0x00;
+    return data;
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
-    if(address & 0x2000) return ppu.writeCIRAM(mirror << 10 | address & 0x03ff, data);
+  auto writeCHR(n32 address, n8 data) -> void override {
+    if(address & 0x2000) return ppu.writeCIRAM(mirror << 10 | (n10)address, data);
     if(characterRAM) return characterRAM.write(address, data);
   }
 
   auto power() -> void {
     programBank = 0x0f;
-    mirror = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    characterRAM.serialize(s);
-    s.integer(programBank);
-    s.integer(mirror);
+    s(characterRAM);
+    s(programBank);
+    s(mirror);
   }
 
-  uint4 programBank;
-  uint1 mirror;
+  n4 programBank;
+  n1 mirror;
 };

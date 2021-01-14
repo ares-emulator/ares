@@ -1,21 +1,21 @@
 struct GameBoy : Cartridge {
   auto name() -> string override { return "Game Boy"; }
   auto extensions() -> vector<string> override { return {"gb"}; }
-  auto export(string location) -> vector<uint8_t> override;
-  auto heuristics(vector<uint8_t>& data, string location) -> string override;
+  auto export(string location) -> vector<u8> override;
+  auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto GameBoy::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto GameBoy::export(string location) -> vector<u8> {
+  vector<u8> data;
   append(data, {location, "program.rom"});
   return data;
 }
 
-auto GameBoy::heuristics(vector<uint8_t>& data, string location) -> string {
+auto GameBoy::heuristics(vector<u8>& data, string location) -> string {
   if(data.size() < 0x4000) return {};
 
-  uint headerAddress = data.size() < 0x8000 ? data.size() : data.size() - 0x8000;
-  auto read = [&](uint offset) { return data[headerAddress + offset]; };
+  u32 headerAddress = data.size() < 0x8000 ? data.size() : data.size() - 0x8000;
+  auto read = [&](u32 offset) { return data[headerAddress + offset]; };
 
   if(read(0x0104) == 0xce && read(0x0105) == 0xed && read(0x0106) == 0x66 && read(0x0107) == 0x66
   && read(0x0108) == 0xcc && read(0x0109) == 0x0d && read(0x0147) >= 0x0b && read(0x0147) <= 0x0d
@@ -37,18 +37,18 @@ auto GameBoy::heuristics(vector<uint8_t>& data, string location) -> string {
   bool accelerometer = false;
   bool rumble = false;
 
-  uint romSize = 0;
-  uint ramSize = 0;
-  uint eepromSize = 0;
-  uint eepromWidth = 0;
-  uint flashSize = 0;
-  uint rtcSize = 0;
+  u32 romSize = 0;
+  u32 ramSize = 0;
+  u32 eepromSize = 0;
+  u32 eepromWidth = 0;
+  u32 flashSize = 0;
+  u32 rtcSize = 0;
 
-  string mapper = "MBC0";
+  string mapper;
 
   switch(read(0x0147)) {
   case 0x00:
-    mapper = "MBC0";
+    //no mapper
     break;
 
   case 0x01:
@@ -205,7 +205,7 @@ auto GameBoy::heuristics(vector<uint8_t>& data, string location) -> string {
   //Game Boy Color (early games): title = $0134-0142; model = $0143
   //Game Boy Color (later games): title = $0134-013e; serial = $013f-0142; model = $0143
   string title;
-  for(uint n : range(black || clear ? 15 : 16)) {
+  for(u32 n : range(black || clear ? 15 : 16)) {
     char byte = read(0x0134 + n);
     if(byte < 0x20 || byte > 0x7e) byte = ' ';
     title.append(byte);
@@ -237,17 +237,19 @@ auto GameBoy::heuristics(vector<uint8_t>& data, string location) -> string {
   }
 
   switch(read(0x0149)) { default:
-  case 0x00: ramSize =  0 * 1024; break;
-  case 0x01: ramSize =  2 * 1024; break;
-  case 0x02: ramSize =  8 * 1024; break;
-  case 0x03: ramSize = 32 * 1024; break;
+  case 0x00: ramSize =   0_KiB; break;
+  case 0x01: ramSize =   2_KiB; break;
+  case 0x02: ramSize =   8_KiB; break;
+  case 0x03: ramSize =  32_KiB; break;
+  case 0x04: ramSize = 128_KiB; break;
+  case 0x05: ramSize =  64_KiB; break;
   }
 
   if(mapper == "MBC2" && ram) ramSize = 256;
-  if(mapper == "MBC6" && ram) ramSize =  32 * 1024;
+  if(mapper == "MBC3" && (romSize > 2_MiB || ramSize > 32_KiB)) mapper = "MBC30";
+  if(mapper == "MBC6" && ram) ramSize =  32_KiB;
   if(mapper == "TAMA" && ram) ramSize =  32;
-
-  if(mapper == "MBC6" && flash) flashSize = 1024 * 1024;
+  if(mapper == "MBC6" && flash) flashSize = 1_MiB;
 
   //Game Boy header does not specify EEPROM size: detect via game title instead
   //Command Master:        EEPROM = 512 bytes
@@ -262,7 +264,7 @@ auto GameBoy::heuristics(vector<uint8_t>& data, string location) -> string {
   }
 
   if(mapper == "MBC3" && rtc) rtcSize = 13;
-  if(mapper == "TAMA" && rtc) rtcSize = 21;
+  if(mapper == "TAMA" && rtc) rtcSize = 15;
 
   string s;
   s += "game\n";
@@ -271,7 +273,10 @@ auto GameBoy::heuristics(vector<uint8_t>& data, string location) -> string {
   s +={"  title:  ", title, "\n"};
   if(serial)
   s +={"  serial: ", serial, "\n"};
+  if(mapper)
   s +={"  board:  ", mapper, "\n"};
+  else
+  s += "  board\n";
 
   s += "    memory\n";
   s += "      type: ROM\n";

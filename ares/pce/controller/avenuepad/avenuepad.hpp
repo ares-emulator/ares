@@ -1,16 +1,16 @@
 struct AvenuePad : Controller {
-  Node::Button up;
-  Node::Button down;
-  Node::Button left;
-  Node::Button right;
-  Node::Button three;
-  Node::Button two;
-  Node::Button one;
-  Node::Button four;
-  Node::Button five;
-  Node::Button six;
-  Node::Button select;
-  Node::Button run;
+  Node::Input::Button up;
+  Node::Input::Button down;
+  Node::Input::Button left;
+  Node::Input::Button right;
+  Node::Input::Button three;
+  Node::Input::Button two;
+  Node::Input::Button one;
+  Node::Input::Button four;
+  Node::Input::Button five;
+  Node::Input::Button six;
+  Node::Input::Button select;
+  Node::Input::Button run;
 
   AvenuePad(Node::Port);
 

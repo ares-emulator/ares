@@ -6,9 +6,9 @@
 #include "vpc.hpp"
 
 struct VDP : Thread {
-  Node::Component node;
-  Node::Screen screen;
-  Node::Boolean overscan;
+  Node::Object node;
+  Node::Video::Screen screen;
+  Node::Setting::Boolean overscan;
 
   auto irqLine() const -> bool { return vdc0.irqLine() | vdc1.irqLine(); }
 
@@ -18,7 +18,6 @@ struct VDP : Thread {
 
   auto main() -> void;
   auto step(uint clocks) -> void;
-  auto refresh() -> void;
   auto power() -> void;
 
   //color.cpp
@@ -26,8 +25,6 @@ struct VDP : Thread {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
-
-  uint32 buffer[1365 * 263];
 
   VCE vce;
   VDC vdc0;

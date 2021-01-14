@@ -1,12 +1,12 @@
 struct ControlPad : Controller {
-  Node::Button up;
-  Node::Button down;
-  Node::Button left;
-  Node::Button right;
-  Node::Button a;
-  Node::Button b;
-  Node::Button c;
-  Node::Button start;
+  Node::Input::Button up;
+  Node::Input::Button down;
+  Node::Input::Button left;
+  Node::Input::Button right;
+  Node::Input::Button a;
+  Node::Input::Button b;
+  Node::Input::Button c;
+  Node::Input::Button start;
 
   ControlPad(Node::Port);
 

@@ -13,7 +13,7 @@ struct M93LCx6 {
   //m93lcx6.cpp
   explicit operator bool() const;
   auto reset() -> void;
-  auto allocate(uint size, uint width, uint8 fill = 0xff) -> bool;
+  auto allocate(uint size, uint width, bool endian, uint8 fill) -> bool;
   auto program(uint11 address, uint8 data) -> void;
   auto clock() -> void;
   auto power() -> void;
@@ -35,6 +35,7 @@ struct M93LCx6 {
   uint8 data[2048];  //uint8 was chosen solely for easier serialization and saving
   uint size;         //in bytes
   uint width;        //8-bit (ORG=0) or 16-bit (ORG=1) configuration
+  bool endian;       //16-bit mode: 0 = little-endian; 1 = big-endian
 
   boolean writable;  //EWEN, EWDS
   uint busy;         //busy cycles in milliseconds remaining for programming (write) operations to complete

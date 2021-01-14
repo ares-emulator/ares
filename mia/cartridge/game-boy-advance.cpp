@@ -1,17 +1,17 @@
 struct GameBoyAdvance : Cartridge {
   auto name() -> string override { return "Game Boy Advance"; }
   auto extensions() -> vector<string> override { return {"gba"}; }
-  auto export(string location) -> vector<uint8_t> override;
-  auto heuristics(vector<uint8_t>& data, string location) -> string override;
+  auto export(string location) -> vector<u8> override;
+  auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto GameBoyAdvance::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto GameBoyAdvance::export(string location) -> vector<u8> {
+  vector<u8> data;
   append(data, {location, "program.rom"});
   return data;
 }
 
-auto GameBoyAdvance::heuristics(vector<uint8_t>& data, string location) -> string {
+auto GameBoyAdvance::heuristics(vector<u8>& data, string location) -> string {
   vector<string> identifiers = {
     "SRAM_V",
     "SRAM_F_V",
@@ -23,7 +23,7 @@ auto GameBoyAdvance::heuristics(vector<uint8_t>& data, string location) -> strin
 
   vector<string> list;
   for(auto& identifier : identifiers) {
-    for(int n : range(data.size() - 16)) {
+    for(s32 n : range(data.size() - 16)) {
       if(!memory::compare(&data[n], identifier.data(), identifier.size())) {
         auto p = (const char*)&data[n + identifier.size()];
         if(p[0] >= '0' && p[0] <= '9'

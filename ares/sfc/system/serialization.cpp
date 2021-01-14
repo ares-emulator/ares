@@ -1,97 +1,71 @@
 auto System::serialize(bool synchronize) -> serializer {
   if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);
-  serializer s{information.serializeSize[synchronize]};
+  serializer s;
 
-  uint signature = 0x31545342;
-  uint size = s.capacity();
+  uint signature = SerializerSignature;
   char version[16] = {};
   char description[512] = {};
   memory::copy(&version, (const char*)SerializerVersion, SerializerVersion.size());
 
-  s.integer(signature);
-  s.integer(size);
-  s.integer(synchronize);
-  s.array(version);
-  s.array(description);
-  serializeAll(s, synchronize);
+  s(signature);
+  s(synchronize);
+  s(version);
+  s(description);
+
+  serialize(s, synchronize);
   return s;
 }
 
 auto System::unserialize(serializer& s) -> bool {
   uint signature = 0;
-  uint size = 0;
   bool synchronize = true;
   char version[16] = {};
   char description[512] = {};
 
-  s.integer(signature);
-  s.integer(size);
-  s.integer(synchronize);
-  s.array(version);
-  s.array(description);
+  s(signature);
+  s(synchronize);
+  s(version);
+  s(description);
 
-  if(signature != 0x31545342) return false;
-  if(size != information.serializeSize[synchronize]) return false;
+  if(signature != SerializerSignature) return false;
   if(string{version} != SerializerVersion) return false;
 
   if(synchronize) power(/* reset = */ false);
-  serializeAll(s, synchronize);
+  serialize(s, synchronize);
   return true;
 }
 
-//internal
-
-auto System::serialize(serializer& s) -> void {
-}
-
-auto System::serializeAll(serializer& s, bool synchronize) -> void {
+auto System::serialize(serializer& s, bool synchronize) -> void {
   scheduler.setSynchronize(synchronize);
-  system.serialize(s);
-  random.serialize(s);
-  cartridge.serialize(s);
-  cpu.serialize(s);
-  smp.serialize(s);
-  ppu.serialize(s);
-  dsp.serialize(s);
 
-  if(cartridge.has.ICD) icd.serialize(s);
-  if(cartridge.has.MCC) mcc.serialize(s);
-  if(cartridge.has.DIP) dip.serialize(s);
-  if(cartridge.has.Competition) competition.serialize(s);
-  if(cartridge.has.SA1) sa1.serialize(s);
-  if(cartridge.has.SuperFX) superfx.serialize(s);
-  if(cartridge.has.ARMDSP) armdsp.serialize(s);
-  if(cartridge.has.HitachiDSP) hitachidsp.serialize(s);
-  if(cartridge.has.NECDSP) necdsp.serialize(s);
-  if(cartridge.has.EpsonRTC) epsonrtc.serialize(s);
-  if(cartridge.has.SharpRTC) sharprtc.serialize(s);
-  if(cartridge.has.SPC7110) spc7110.serialize(s);
-  if(cartridge.has.SDD1) sdd1.serialize(s);
-  if(cartridge.has.OBC1) obc1.serialize(s);
-  if(cartridge.has.MSU1) msu1.serialize(s);
+  s(random);
+  s(cartridge);
+  s(cpu);
+  s(smp);
+  s(ppu);
+  s(dsp);
 
-  if(cartridge.has.BSMemorySlot) bsmemory.serialize(s);
-  if(cartridge.has.SufamiTurboSlotA) sufamiturboA.serialize(s);
-  if(cartridge.has.SufamiTurboSlotB) sufamiturboB.serialize(s);
+  if(cartridge.has.ICD) s(icd);
+  if(cartridge.has.MCC) s(mcc);
+  if(cartridge.has.DIP) s(dip);
+  if(cartridge.has.Competition) s(competition);
+  if(cartridge.has.SA1) s(sa1);
+  if(cartridge.has.SuperFX) s(superfx);
+  if(cartridge.has.ARMDSP) s(armdsp);
+  if(cartridge.has.HitachiDSP) s(hitachidsp);
+  if(cartridge.has.NECDSP) s(necdsp);
+  if(cartridge.has.EpsonRTC) s(epsonrtc);
+  if(cartridge.has.SharpRTC) s(sharprtc);
+  if(cartridge.has.SPC7110) s(spc7110);
+  if(cartridge.has.SDD1) s(sdd1);
+  if(cartridge.has.OBC1) s(obc1);
+  if(cartridge.has.MSU1) s(msu1);
 
-  controllerPort1.serialize(s);
-  controllerPort2.serialize(s);
-  expansionPort.serialize(s);
-}
+  if(cartridge.has.BSMemorySlot) s(bsmemory);
+  if(cartridge.has.SufamiTurboSlotA) s(sufamiturboA);
+  if(cartridge.has.SufamiTurboSlotB) s(sufamiturboB);
 
-auto System::serializeInit(bool synchronize) -> uint {
-  serializer s;
-
-  uint signature = 0;
-  uint size = 0;
-  char version[16] = {};
-  char description[512] = {};
-
-  s.integer(signature);
-  s.integer(size);
-  s.integer(synchronize);
-  s.array(version);
-  s.array(description);
-  serializeAll(s, synchronize);
-  return s.size();
+  s(controllerPort1);
+  s(controllerPort2);
+  s(expansionPort);
 }

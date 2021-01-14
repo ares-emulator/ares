@@ -1,4 +1,4 @@
-auto PlayStation::manifest(vector<uint8_t> sector, string location) -> string {
+auto PlayStation::manifest(vector<u8> sector, string location) -> string {
   string text;
   text.resize(sector.size());
   memory::copy(text.get(), sector.data(), sector.size());
@@ -34,10 +34,11 @@ auto PlayStation::manifest(string location) -> string {
   return s;
 }
 
-auto PlayStation::cdFromExecutable(string location) -> vector<uint8_t> {
+//todo: not implemented yet
+auto PlayStation::cdFromExecutable(string location) -> vector<u8> {
   auto exe = file::read(location);
   if(exe.size() < 2048) return {};
   if(memory::compare(exe.data(), "PS-X EXE", 8)) return {};
-  vector<uint8_t> cd;
+  vector<u8> cd;
   return cd;
 }

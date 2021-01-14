@@ -5,13 +5,13 @@
 #include <nall/vfs.hpp>
 using namespace nall;
 
+#if !defined(MIA_LIBRARY)
 #include <hiro/hiro.hpp>
 using namespace hiro;
+#endif
 
 #include <ares/information.hpp>
 #include <ares/resource/resource.hpp>
-
-#include "resource/resource.hpp"
 
 namespace mia {
   #include "settings/settings.hpp"
@@ -20,7 +20,9 @@ namespace mia {
   #include "compact-disc/compact-disc.hpp"
   #include "compact-disc/playstation.hpp"
   #include "floppy-disk/floppy-disk.hpp"
+  #if !defined(MIA_LIBRARY)
   #include "program/program.hpp"
+  #endif
 
   extern vector<shared_pointer<Media>> media;
   auto construct() -> void;

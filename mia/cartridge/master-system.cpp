@@ -1,17 +1,17 @@
 struct MasterSystem : Cartridge {
   auto name() -> string override { return "Master System"; }
   auto extensions() -> vector<string> override { return {"ms", "sms"}; }
-  auto export(string location) -> vector<uint8_t> override;
-  auto heuristics(vector<uint8_t>& data, string location) -> string override;
+  auto export(string location) -> vector<u8> override;
+  auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto MasterSystem::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto MasterSystem::export(string location) -> vector<u8> {
+  vector<u8> data;
   append(data, {location, "program.rom"});
   return data;
 }
 
-auto MasterSystem::heuristics(vector<uint8_t>& data, string location) -> string {
+auto MasterSystem::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:  ", Media::name(location), "\n"};

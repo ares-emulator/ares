@@ -185,7 +185,7 @@ auto PPU::writeIO(uint24 address, uint8 data) -> void {
 
   //INIDISP
   case 0x2100: {
-    if(io.displayDisable && vcounter() == vdisp()) obj.addressReset();
+    if(io.displayDisable && cpu.vcounter() == vdisp()) obj.addressReset();
     io.displayBrightness = data.bit(0,3);
     io.displayDisable    = data.bit(7);
     return;

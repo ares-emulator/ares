@@ -1,127 +1,127 @@
 auto VDP::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  vce.serialize(s);
-  vdc0.serialize(s); if(Model::SuperGrafx())
-  vdc1.serialize(s); if(Model::SuperGrafx())
-  vpc.serialize(s);
+  s(vce);
+  s(vdc0); if(Model::SuperGrafx())
+  s(vdc1); if(Model::SuperGrafx())
+  s(vpc);
 
-  s.integer(io.hcounter);
-  s.integer(io.vcounter);
+  s(io.hcounter);
+  s(io.vcounter);
 }
 
 auto VCE::serialize(serializer& s) -> void {
-  s.array(cram.memory);
-  s.integer(cram.address);
+  s(cram.memory);
+  s(cram.address);
 
-  s.integer(io.clock);
-  s.integer(io.extraLine);
-  s.integer(io.grayscale);
+  s(io.clock);
+  s(io.extraLine);
+  s(io.grayscale);
 }
 
 auto VDC::serialize(serializer& s) -> void {
-  s.array(vram.memory);
-  s.integer(vram.addressRead);
-  s.integer(vram.addressWrite);
-  s.integer(vram.addressIncrement);
-  s.integer(vram.dataRead);
-  s.integer(vram.dataWrite);
+  s(vram.memory);
+  s(vram.addressRead);
+  s(vram.addressWrite);
+  s(vram.addressIncrement);
+  s(vram.dataRead);
+  s(vram.dataWrite);
 
-  s.array(satb.memory);
+  s(satb.memory);
 
-  s.integer(irq.line);
-  s.integer(irq.collision.enable);
-  s.integer(irq.collision.pending);
-  s.integer(irq.overflow.enable);
-  s.integer(irq.overflow.pending);
-  s.integer(irq.coincidence.enable);
-  s.integer(irq.coincidence.pending);
-  s.integer(irq.vblank.enable);
-  s.integer(irq.vblank.pending);
-  s.integer(irq.transferVRAM.enable);
-  s.integer(irq.transferVRAM.pending);
-  s.integer(irq.transferSATB.enable);
-  s.integer(irq.transferSATB.pending);
+  s(irq.line);
+  s(irq.collision.enable);
+  s(irq.collision.pending);
+  s(irq.overflow.enable);
+  s(irq.overflow.pending);
+  s(irq.coincidence.enable);
+  s(irq.coincidence.pending);
+  s(irq.vblank.enable);
+  s(irq.vblank.pending);
+  s(irq.transferVRAM.enable);
+  s(irq.transferVRAM.pending);
+  s(irq.transferSATB.enable);
+  s(irq.transferSATB.pending);
 
-  s.integer(dma.sourceIncrementMode);
-  s.integer(dma.targetIncrementMode);
-  s.integer(dma.satbRepeat);
-  s.integer(dma.source);
-  s.integer(dma.target);
-  s.integer(dma.length);
-  s.integer(dma.satbSource);
-  s.integer(dma.vramActive);
-  s.integer(dma.satbActive);
-  s.integer(dma.satbPending);
-  s.integer(dma.satbOffset);
+  s(dma.sourceIncrementMode);
+  s(dma.targetIncrementMode);
+  s(dma.satbRepeat);
+  s(dma.source);
+  s(dma.target);
+  s(dma.length);
+  s(dma.satbSource);
+  s(dma.vramActive);
+  s(dma.satbActive);
+  s(dma.satbPending);
+  s(dma.satbOffset);
 
-  s.integer(timing.horizontalSyncWidth);
-  s.integer(timing.horizontalDisplayStart);
-  s.integer(timing.horizontalDisplayWidth);
-  s.integer(timing.horizontalDisplayEnd);
-  s.integer(timing.verticalSyncWidth);
-  s.integer(timing.verticalDisplayStart);
-  s.integer(timing.verticalDisplayWidth);
-  s.integer(timing.verticalDisplayEnd);
-  s.integer(timing.hstate);
-  s.integer(timing.vstate);
-  s.integer(timing.hoffset);
-  s.integer(timing.voffset);
-  s.integer(timing.coincidence);
+  s(timing.horizontalSyncWidth);
+  s(timing.horizontalDisplayStart);
+  s(timing.horizontalDisplayWidth);
+  s(timing.horizontalDisplayEnd);
+  s(timing.verticalSyncWidth);
+  s(timing.verticalDisplayStart);
+  s(timing.verticalDisplayWidth);
+  s(timing.verticalDisplayEnd);
+  s(timing.hstate);
+  s(timing.vstate);
+  s(timing.hoffset);
+  s(timing.voffset);
+  s(timing.coincidence);
 
-  s.integer(latch.horizontalSyncWidth);
-  s.integer(latch.horizontalDisplayStart);
-  s.integer(latch.horizontalDisplayWidth);
-  s.integer(latch.horizontalDisplayEnd);
-  s.integer(latch.verticalSyncWidth);
-  s.integer(latch.verticalDisplayStart);
-  s.integer(latch.verticalDisplayWidth);
-  s.integer(latch.verticalDisplayEnd);
+  s(latch.horizontalSyncWidth);
+  s(latch.horizontalDisplayStart);
+  s(latch.horizontalDisplayWidth);
+  s(latch.horizontalDisplayEnd);
+  s(latch.verticalSyncWidth);
+  s(latch.verticalDisplayStart);
+  s(latch.verticalDisplayWidth);
+  s(latch.verticalDisplayEnd);
 
-  s.integer(io.address);
-  s.integer(io.externalSync);
-  s.integer(io.displayOutput);
-  s.integer(io.dramRefresh);
-  s.integer(io.coincidence);
+  s(io.address);
+  s(io.externalSync);
+  s(io.displayOutput);
+  s(io.dramRefresh);
+  s(io.coincidence);
 
-  s.integer(background.enable);
-  s.integer(background.vramMode);
-  s.integer(background.characterMode);
-  s.integer(background.hscroll);
-  s.integer(background.vscroll);
-  s.integer(background.vcounter);
-  s.integer(background.width);
-  s.integer(background.height);
-  s.integer(background.hoffset);
-  s.integer(background.voffset);
-  s.integer(background.latch.vramMode);
-  s.integer(background.latch.characterMode);
+  s(background.enable);
+  s(background.vramMode);
+  s(background.characterMode);
+  s(background.hscroll);
+  s(background.vscroll);
+  s(background.vcounter);
+  s(background.width);
+  s(background.height);
+  s(background.hoffset);
+  s(background.voffset);
+  s(background.latch.vramMode);
+  s(background.latch.characterMode);
 
-  s.integer(sprite.enable);
-  s.integer(sprite.vramMode);
-  s.integer(sprite.latch.vramMode);
+  s(sprite.enable);
+  s(sprite.vramMode);
+  s(sprite.latch.vramMode);
 }
 
 auto VDC::Object::serialize(serializer& s) -> void {
-  s.integer(y);
-  s.integer(x);
-  s.integer(characterMode);
-  s.integer(pattern);
-  s.integer(palette);
-  s.integer(priority);
-  s.integer(width);
-  s.integer(height);
-  s.integer(hflip);
-  s.integer(vflip);
-  s.integer(first);
+  s(y);
+  s(x);
+  s(characterMode);
+  s(pattern);
+  s(palette);
+  s(priority);
+  s(width);
+  s(height);
+  s(hflip);
+  s(vflip);
+  s(first);
 }
 
 auto VPC::serialize(serializer& s) -> void {
   for(auto& setting : settings) {
-    s.integer(setting.enableVDC0);
-    s.integer(setting.enableVDC1);
-    s.integer(setting.priority);
+    s(setting.enableVDC0);
+    s(setting.enableVDC1);
+    s(setting.priority);
   }
-  s.array(window);
-  s.integer(select);
+  s(window);
+  s(select);
 }

@@ -2,31 +2,54 @@
 
 namespace ares::MegaDrive {
 
+auto load(Node::System& node, string name) -> bool {
+  return system.load(node, name);
+}
+
 Random random;
 Scheduler scheduler;
 System system;
 #include "controls.cpp"
 #include "serialization.cpp"
 
-auto System::run() -> void {
-  if(scheduler.enter() == Event::Frame) vdp.refresh();
+auto System::game() -> string {
+  if(expansion.node && (!cartridge.node || !cartridge.bootable())) {
+    if(mcd.disc) return mcd.name();
+    return expansion.name();
+  }
 
+  if(cartridge.node && cartridge.bootable()) {
+    return cartridge.name();
+  }
+
+  return "(no cartridge connected)";
+}
+
+auto System::run() -> void {
+  scheduler.enter();
   auto reset = controls.reset->value();
   controls.poll();
   if(!reset && controls.reset->value()) power(true);
 }
 
-auto System::load(Node::Object& root) -> void {
+auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
 
-  node = Node::System::create(interface->name());
+  node = Node::System::create(name);
+  node->setGame({&System::game, this});
+  node->setRun({&System::run, this});
+  node->setPower({&System::power, this});
+  node->setSave({&System::save, this});
+  node->setUnload({&System::unload, this});
+  node->setSerialize({&System::serialize, this});
+  node->setUnserialize({&System::unserialize, this});
   root = node;
 
-  tmss = node->append<Node::Boolean>("TMSS", false);
+  tmss = node->append<Node::Setting::Boolean>("TMSS", false);
 
-  regionNode = node->append<Node::String>("Region", "NTSC-J → NTSC-U → PAL");
+  regionNode = node->append<Node::Setting::String>("Region", "NTSC-J → NTSC-U → PAL");
   regionNode->setAllowedValues({
     "NTSC-J → NTSC-U → PAL",
     "NTSC-U → NTSC-J → PAL",
@@ -49,6 +72,7 @@ auto System::load(Node::Object& root) -> void {
   controllerPort1.load(node);
   controllerPort2.load(node);
   extensionPort.load(node);
+  return true;
 }
 
 auto System::unload() -> void {
@@ -75,7 +99,7 @@ auto System::save() -> void {
 }
 
 auto System::power(bool reset) -> void {
-  for(auto& setting : node->find<Node::Setting>()) setting->setLatch();
+  for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   auto setRegion = [&](string region) {
     if(region == "NTSC-J") {
@@ -112,9 +136,6 @@ auto System::power(bool reset) -> void {
   ym2612.power(reset);
   if(MegaCD()) mcd.power(reset);
   scheduler.power(cpu);
-
-  information.serializeSize[0] = serializeInit(0);
-  information.serializeSize[1] = serializeInit(1);
 }
 
 }

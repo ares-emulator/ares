@@ -1,103 +1,103 @@
 auto VPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s.array(colors);
+  s(colors);
 
-  s.integer(background.color);
-  s.integer(background.unused);
-  s.integer(background.mode);
+  s(background.color);
+  s(background.unused);
+  s(background.mode);
 
-  s.integer(window.hoffset);
-  s.integer(window.voffset);
-  s.integer(window.hlength);
-  s.integer(window.vlength);
-  s.integer(window.color);
-  s.integer(window.output);
+  s(window.hoffset);
+  s(window.voffset);
+  s(window.hlength);
+  s(window.vlength);
+  s(window.color);
+  s(window.output);
 
   for(auto& a : attributes) {
-    s.integer(a.character);
-    s.integer(a.code);
-    s.integer(a.palette);
-    s.integer(a.vflip);
-    s.integer(a.hflip);
+    s(a.character);
+    s(a.code);
+    s(a.palette);
+    s(a.vflip);
+    s(a.hflip);
   }
 
   for(auto& c : characters) {
     for(auto& y : c) {
       for(auto& x : y) {
-        s.integer(x);
+        s(x);
       }
     }
   }
 
-  s.integer(plane1.address);
-  s.integer(plane1.colorNative);
-  s.integer(plane1.colorCompatible);
-  s.integer(plane1.hscroll);
-  s.integer(plane1.vscroll);
-  s.array(plane1.palette[0]);
-  s.array(plane1.palette[1]);
-  s.integer(plane1.output);
-  s.integer(plane1.priority);
+  s(plane1.address);
+  s(plane1.colorNative);
+  s(plane1.colorCompatible);
+  s(plane1.hscroll);
+  s(plane1.vscroll);
+  s(plane1.palette[0]);
+  s(plane1.palette[1]);
+  s(plane1.output);
+  s(plane1.priority);
 
-  s.integer(plane2.address);
-  s.integer(plane2.colorNative);
-  s.integer(plane2.colorCompatible);
-  s.integer(plane2.hscroll);
-  s.integer(plane2.vscroll);
-  s.array(plane2.palette[0]);
-  s.array(plane2.palette[1]);
-  s.integer(plane2.output);
-  s.integer(plane2.priority);
+  s(plane2.address);
+  s(plane2.colorNative);
+  s(plane2.colorCompatible);
+  s(plane2.hscroll);
+  s(plane2.vscroll);
+  s(plane2.palette[0]);
+  s(plane2.palette[1]);
+  s(plane2.output);
+  s(plane2.priority);
 
-  s.integer(sprite.colorNative);
-  s.integer(sprite.colorCompatible);
-  s.integer(sprite.hscroll);
-  s.integer(sprite.vscroll);
-  s.array(sprite.palette[0]);
-  s.array(sprite.palette[1]);
-  s.integer(sprite.output);
-  s.integer(sprite.priority);
+  s(sprite.colorNative);
+  s(sprite.colorCompatible);
+  s(sprite.hscroll);
+  s(sprite.vscroll);
+  s(sprite.palette[0]);
+  s(sprite.palette[1]);
+  s(sprite.output);
+  s(sprite.priority);
 
   for(auto& o : sprites) {
-    s.integer(o.character);
-    s.integer(o.vchain);
-    s.integer(o.hchain);
-    s.integer(o.priority);
-    s.integer(o.palette);
-    s.integer(o.vflip);
-    s.integer(o.hflip);
-    s.integer(o.hoffset);
-    s.integer(o.voffset);
-    s.integer(o.code);
+    s(o.character);
+    s(o.vchain);
+    s(o.hchain);
+    s(o.priority);
+    s(o.palette);
+    s(o.vflip);
+    s(o.hflip);
+    s(o.hoffset);
+    s(o.voffset);
+    s(o.code);
   }
 
   for(auto& o : tiles) {
-    s.integer(o.x);
-    s.integer(o.y);
-    s.integer(o.character);
-    s.integer(o.priority);
-    s.integer(o.palette);
-    s.integer(o.hflip);
-    s.integer(o.code);
+    s(o.x);
+    s(o.y);
+    s(o.character);
+    s(o.priority);
+    s(o.palette);
+    s(o.hflip);
+    s(o.code);
   }
 
-  s.integer(tileCount);
+  s(tileCount);
 
-  s.integer(led.control);
-  s.integer(led.frequency);
+  s(led.control);
+  s(led.frequency);
 
-  s.integer(dac.negate);
-  s.integer(dac.colorMode);
+  s(dac.negate);
+  s(dac.colorMode);
 
-  s.integer(io.vlines);
-  s.integer(io.vcounter);
-  s.integer(io.hcounter);
+  s(io.vlines);
+  s(io.vcounter);
+  s(io.hcounter);
 
-  s.integer(io.hblankEnableIRQ);
-  s.integer(io.vblankEnableIRQ);
-  s.integer(io.hblankActive);
-  s.integer(io.vblankActive);
-  s.integer(io.characterOver);
-  s.integer(io.planePriority);
+  s(io.hblankEnableIRQ);
+  s(io.vblankEnableIRQ);
+  s(io.hblankActive);
+  s(io.vblankActive);
+  s(io.characterOver);
+  s(io.planePriority);
 }

@@ -1,17 +1,17 @@
 Gamepad::Gamepad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Gamepad");
 
-  up     = node->append<Node::Button>("Up");
-  down   = node->append<Node::Button>("Down");
-  left   = node->append<Node::Button>("Left");
-  right  = node->append<Node::Button>("Right");
-  b      = node->append<Node::Button>("B");
-  a      = node->append<Node::Button>("A");
-  select = node->append<Node::Button>("Select");
-  start  = node->append<Node::Button>("Start");
+  up     = node->append<Node::Input::Button>("Up");
+  down   = node->append<Node::Input::Button>("Down");
+  left   = node->append<Node::Input::Button>("Left");
+  right  = node->append<Node::Input::Button>("Right");
+  b      = node->append<Node::Input::Button>("B");
+  a      = node->append<Node::Input::Button>("A");
+  select = node->append<Node::Input::Button>("Select");
+  start  = node->append<Node::Input::Button>("Start");
 }
 
-auto Gamepad::data() -> uint3 {
+auto Gamepad::data() -> n3 {
   if(latched == 1) {
     platform->input(a);
     return a->value();
@@ -32,7 +32,7 @@ auto Gamepad::data() -> uint3 {
   return 1;
 }
 
-auto Gamepad::latch(uint1 data) -> void {
+auto Gamepad::latch(n1 data) -> void {
   if(latched == data) return;
   latched = data;
   counter = 0;

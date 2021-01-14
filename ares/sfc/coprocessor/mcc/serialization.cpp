@@ -1,30 +1,30 @@
 auto MCC::serialize(serializer& s) -> void {
-  s.array(psram.data(), psram.size());
+  s(psram);
 
-  s.integer(irq.flag);
-  s.integer(irq.enable);
+  s(irq.flag);
+  s(irq.enable);
 
-  s.integer(r.mapping);
-  s.integer(r.psramEnableLo);
-  s.integer(r.psramEnableHi);
-  s.integer(r.psramMapping);
-  s.integer(r.romEnableLo);
-  s.integer(r.romEnableHi);
-  s.integer(r.exEnableLo);
-  s.integer(r.exEnableHi);
-  s.integer(r.exMapping);
-  s.integer(r.internallyWritable);
-  s.integer(r.externallyWritable);
+  s(r.mapping);
+  s(r.psramEnableLo);
+  s(r.psramEnableHi);
+  s(r.psramMapping);
+  s(r.romEnableLo);
+  s(r.romEnableHi);
+  s(r.exEnableLo);
+  s(r.exEnableHi);
+  s(r.exMapping);
+  s(r.internallyWritable);
+  s(r.externallyWritable);
 
-  s.integer(w.mapping);
-  s.integer(w.psramEnableLo);
-  s.integer(w.psramEnableHi);
-  s.integer(w.psramMapping);
-  s.integer(w.romEnableLo);
-  s.integer(w.romEnableHi);
-  s.integer(w.exEnableLo);
-  s.integer(w.exEnableHi);
-  s.integer(w.exMapping);
-  s.integer(w.internallyWritable);
-  s.integer(w.externallyWritable);
+  s(w.mapping);
+  s(w.psramEnableLo);
+  s(w.psramEnableHi);
+  s(w.psramMapping);
+  s(w.romEnableLo);
+  s(w.romEnableHi);
+  s(w.exEnableLo);
+  s(w.exEnableHi);
+  s(w.exMapping);
+  s(w.internallyWritable);
+  s(w.externallyWritable);
 }

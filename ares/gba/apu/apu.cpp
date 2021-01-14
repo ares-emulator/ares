@@ -14,9 +14,9 @@ APU apu;
 #include "serialization.cpp"
 
 auto APU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("APU");
+  node = parent->append<Node::Object>("APU");
 
-  stream = node->append<Node::Stream>("PSG");
+  stream = node->append<Node::Audio::Stream>("PSG");
   stream->setChannels(2);
   stream->setFrequency(system.frequency() / 64.0);
   stream->addHighPassFilter(20.0, 1);
@@ -76,7 +76,7 @@ auto APU::main() -> void {
   if(bias.amplitude == 3) lsample &= ~7, rsample &= ~7;  //6-bit
 
   if(cpu.stopped()) lsample = 0, rsample = 0;
-  stream->sample((lsample << 5) / 32768.0, (rsample << 5) / 32768.0);
+  stream->frame((lsample << 5) / 32768.0, (rsample << 5) / 32768.0);
 }
 
 auto APU::step(uint clocks) -> void {

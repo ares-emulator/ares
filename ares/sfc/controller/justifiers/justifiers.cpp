@@ -1,21 +1,21 @@
 Justifiers::Justifiers(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Justifiers");
 
-  x1       = node->append<Node::Axis  >("Player 1: X");
-  y1       = node->append<Node::Axis  >("Player 1: Y");
-  trigger1 = node->append<Node::Button>("Player 1: Trigger");
-  start1   = node->append<Node::Button>("Player 1: Start");
+  x1       = node->append<Node::Input::Axis  >("Player 1: X");
+  y1       = node->append<Node::Input::Axis  >("Player 1: Y");
+  trigger1 = node->append<Node::Input::Button>("Player 1: Trigger");
+  start1   = node->append<Node::Input::Button>("Player 1: Start");
 
-  x2       = node->append<Node::Axis  >("Player 2: X");
-  y2       = node->append<Node::Axis  >("Player 2: Y");
-  trigger2 = node->append<Node::Button>("Player 2: Trigger");
-  start2   = node->append<Node::Button>("Player 2: Start");
+  x2       = node->append<Node::Input::Axis  >("Player 2: X");
+  y2       = node->append<Node::Input::Axis  >("Player 2: Y");
+  trigger2 = node->append<Node::Input::Button>("Player 2: Trigger");
+  start2   = node->append<Node::Input::Button>("Player 2: Start");
 
-  sprite1 = node->append<Node::Sprite>("Crosshair - Player 1");
+  sprite1 = node->append<Node::Video::Sprite>("Crosshair - Player 1");
   sprite1->setImage(Resource::Sprite::SuperFamicom::CrosshairGreen);
   ppu.screen->attach(sprite1);
 
-  sprite2 = node->append<Node::Sprite>("Crosshair - Player 2");
+  sprite2 = node->append<Node::Video::Sprite>("Crosshair - Player 2");
   sprite2->setImage(Resource::Sprite::SuperFamicom::CrosshairRed);
   ppu.screen->attach(sprite2);
 

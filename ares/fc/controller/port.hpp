@@ -7,8 +7,8 @@ struct ControllerPort {
   auto unload() -> void;
   auto allocate(string name) -> Node::Peripheral;
 
-  auto data() -> uint3 { if(device) return device->data(); return 0b000; }
-  auto latch(uint1 data) -> void { if(device) return device->latch(data); }
+  auto data() -> n3 { if(device) return device->data(); return 0b000; }
+  auto latch(n1 data) -> void { if(device) return device->latch(data); }
 
   auto serialize(serializer&) -> void;
 

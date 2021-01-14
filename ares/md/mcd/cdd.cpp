@@ -271,7 +271,8 @@ auto MCD::CDD::insert() -> void {
     return;
   }
 
-  uint sectors = mcd.fd->size() / 2448;
+  //read TOC (table of contents) from disc lead-in
+  uint sectors = min(7500, mcd.fd->size() / 2448);
   vector<uint8_t> sub;
   sub.resize(sectors * 96);
   for(uint sector : range(sectors)) {

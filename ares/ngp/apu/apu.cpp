@@ -13,7 +13,7 @@ auto APU::load(Node::Object parent) -> void {
     ram.load(fp);
   }
 
-  node = parent->append<Node::Component>("APU");
+  node = parent->append<Node::Object>("APU");
 
   debugger.load(node);
 }

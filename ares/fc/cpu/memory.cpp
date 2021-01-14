@@ -6,44 +6,46 @@
 //$4020-403f = FDS
 //$4018-ffff = Cartridge
 
-inline auto CPU::readBus(uint16 address) -> uint8 {
-  uint8 data = cartridge.readPRG(address);
+inline auto CPU::readBus(n16 address) -> n8 {
+  n8 data = cartridge.readPRG(address, r.mdr);
   if(address <= 0x1fff) return ram.read(address);
   if(address <= 0x3fff) return ppu.readIO(address);
   if(address <= 0x4017) return cpu.readIO(address);
   return data;
 }
 
-inline auto CPU::writeBus(uint16 address, uint8 data) -> void {
+inline auto CPU::writeBus(n16 address, n8 data) -> void {
   cartridge.writePRG(address, data);
   if(address <= 0x1fff) return ram.write(address, data);
   if(address <= 0x3fff) return ppu.writeIO(address, data);
   if(address <= 0x4017) return cpu.writeIO(address, data);
 }
 
-auto CPU::readIO(uint16 address) -> uint8 {
-  uint8 data = mdr();
+auto CPU::readIO(n16 address) -> n8 {
+  n8 data = mdr();
 
   switch(address) {
 
   case 0x4016: {
-    auto poll = controllerPort1.data();
+    auto port1 = controllerPort1.data();
+    auto port3 = expansionPort.read1();
     platform->input(system.controls.microphone);
-    data.bit(0) = poll.bit(0);
-    data.bit(1) = 0;
+    data.bit(0) = port1.bit(0);
+    data.bit(1) = port3.bit(0);
     data.bit(2) = system.controls.microphone->value() ? random().bit(0) : 0;
-    data.bit(3) = poll.bit(1);
-    data.bit(4) = poll.bit(2);
+    data.bit(3) = port1.bit(1);
+    data.bit(4) = port1.bit(2);
     return data;
   }
 
   case 0x4017: {
-    auto poll = controllerPort2.data();
-    data.bit(0) = poll.bit(0);
-    data.bit(1) = 0;
-    data.bit(2) = 0;
-    data.bit(3) = poll.bit(1);
-    data.bit(4) = poll.bit(2);
+    auto port2 = controllerPort2.data();
+    auto port3 = expansionPort.read2();
+    data.bit(0) = port3.bit(0) | port2.bit(0);
+    data.bit(1) = port3.bit(1);
+    data.bit(2) = port3.bit(2);
+    data.bit(3) = port3.bit(3) | port2.bit(1);
+    data.bit(4) = port3.bit(4) | port2.bit(2);
     return data;
   }
 
@@ -52,7 +54,7 @@ auto CPU::readIO(uint16 address) -> uint8 {
   return apu.readIO(address);
 }
 
-auto CPU::writeIO(uint16 address, uint8 data) -> void {
+auto CPU::writeIO(n16 address, n8 data) -> void {
   switch(address) {
 
   case 0x4014: {
@@ -64,6 +66,7 @@ auto CPU::writeIO(uint16 address, uint8 data) -> void {
   case 0x4016: {
     controllerPort1.latch(data.bit(0));
     controllerPort2.latch(data.bit(0));
+    expansionPort.write(data.bit(0,2));
     return;
   }
 
@@ -72,6 +75,6 @@ auto CPU::writeIO(uint16 address, uint8 data) -> void {
   return apu.writeIO(address, data);
 }
 
-auto CPU::readDebugger(uint16 address) -> uint8 {
+auto CPU::readDebugger(n16 address) -> n8 {
   return readBus(address);
 }

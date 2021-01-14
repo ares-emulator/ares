@@ -57,9 +57,8 @@ struct file_buffer {
   }
 
   auto read() -> uint8_t {
-    if(!fileHandle) return 0;              //file not open
-    if(fileMode == mode::write) return 0;  //reads not permitted
-    if(fileOffset >= fileSize) return 0;   //cannot read past end of file
+    if(!fileHandle) return 0;             //file not open
+    if(fileOffset >= fileSize) return 0;  //cannot read past end of file
     bufferSynchronize();
     return buffer[fileOffset++ & buffer.size() - 1];
   }

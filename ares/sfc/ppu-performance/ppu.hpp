@@ -1,18 +1,25 @@
 struct PPU : Thread, PPUcounter {
-  Node::Component node;
-  Node::Screen screen;
-  Node::Boolean overscanEnable;
-  Node::Boolean colorEmulation;
+  Node::Object node;
+  Node::Video::Screen screen;
+  Node::Setting::Boolean overscanEnable;
+  Node::Setting::Boolean colorEmulation;
 
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
 
     struct Memory {
-      Node::Memory vram;
-      Node::Memory oam;
-      Node::Memory cgram;
+      Node::Debugger::Memory vram;
+      Node::Debugger::Memory oam;
+      Node::Debugger::Memory cgram;
     } memory;
+
+    struct Graphics {
+      Node::Debugger::Graphics tiles2bpp;
+      Node::Debugger::Graphics tiles4bpp;
+      Node::Debugger::Graphics tiles8bpp;
+      Node::Debugger::Graphics tilesMode7;
+    } graphics;
   } debugger;
 
   auto hires() const -> bool { return io.pseudoHires || io.bgMode == 5 || io.bgMode == 6; }
@@ -28,7 +35,8 @@ struct PPU : Thread, PPUcounter {
   auto main() -> void;
   auto map() -> void;
   auto power(bool reset) -> void;
-  auto refresh() -> void;
+  auto normalize() -> void;
+  auto draw(uint32_t* output) -> void;
 
   //io.cpp
   auto latchCounters() -> void;
@@ -52,7 +60,6 @@ struct PPU : Thread, PPUcounter {
 private:
   struct Source { enum : uint { BG1, BG2, BG3, BG4, OBJ1, OBJ2, COL }; };
 
-  uint32* output = nullptr;
   uint32 renderingCycle;
 
   struct {

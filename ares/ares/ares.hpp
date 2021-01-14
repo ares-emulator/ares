@@ -13,12 +13,14 @@
 #include <nall/endian.hpp>
 #include <nall/image.hpp>
 #include <nall/literals.hpp>
+#include <nall/queue.hpp>
 #include <nall/random.hpp>
 #include <nall/serializer.hpp>
 #include <nall/set.hpp>
 #include <nall/shared-pointer.hpp>
 #include <nall/string.hpp>
 #include <nall/terminal.hpp>
+#include <nall/thread.hpp>
 #include <nall/traits.hpp>
 #include <nall/unique-pointer.hpp>
 #include <nall/variant.hpp>
@@ -33,19 +35,23 @@
 using namespace nall;
 
 namespace ares {
+  namespace Video {
+    static constexpr bool Threaded = false;
+  }
+
   namespace Constants {
     namespace Colorburst {
-      static constexpr double NTSC = 315.0 / 88.0 * 1'000'000.0;
-      static constexpr double PAL  = 283.75 * 15'625.0 + 25.0;
+      static constexpr f64 NTSC = 315.0 / 88.0 * 1'000'000.0;
+      static constexpr f64 PAL  = 283.75 * 15'625.0 + 25.0;
     }
   }
 
   //nall/vfs shorthand constants
   namespace File {
-    static const auto Read  = vfs::file::mode::read;
-    static const auto Write = vfs::file::mode::write;
-    static const auto Optional = false;
-    static const auto Required = true;
+    static constexpr auto Read  = vfs::file::mode::read;
+    static constexpr auto Write = vfs::file::mode::write;
+    static constexpr bool Optional = false;
+    static constexpr bool Required = true;
   }
 
   namespace Shared {
@@ -63,7 +69,6 @@ namespace ares {
 #include <ares/debug/debug.hpp>
 #include <ares/node/node.hpp>
 #include <ares/platform.hpp>
-#include <ares/interface.hpp>
 #include <ares/memory/readable.hpp>
 #include <ares/memory/writable.hpp>
 #include <ares/resource/resource.hpp>

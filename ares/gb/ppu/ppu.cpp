@@ -14,25 +14,31 @@ PPU ppu;
 auto PPU::load(Node::Object parent) -> void {
   vram.allocate(!Model::GameBoyColor() ? 8_KiB : 16_KiB);
   oam.allocate(160);
+  bgp.allocate(4);
+  obp.allocate(8);
+  bgpd.allocate(32);
+  obpd.allocate(32);
 
-  node = parent->append<Node::Component>("PPU");
+  node = parent->append<Node::Object>("PPU");
 
   if(Model::GameBoy() || Model::GameBoyColor()) {
-    screen = node->append<Node::Screen>("Screen");
+    screen = node->append<Node::Video::Screen>("Screen", 160, 144);
+    screen->setViewport(0, 0, 160, 144);
+    screen->setSize(160, 144);
+    screen->setScale(1.0, 1.0);
+    screen->setAspect(1.0, 1.0);
 
     if(Model::GameBoy()) {
       screen->colors(1 << 2, {&PPU::colorGameBoy, this});
-      screen->setSize(160, 144);
-      screen->setScale(1.0, 1.0);
-      screen->setAspect(1.0, 1.0);
+      screen->setFillColor(0);
 
-      colorEmulationDMG = screen->append<Node::String>("Color Emulation", "Game Boy", [&](auto value) {
+      colorEmulationDMG = screen->append<Node::Setting::String>("Color Emulation", "Game Boy", [&](auto value) {
         screen->resetPalette();
       });
       colorEmulationDMG->setAllowedValues({"Game Boy", "Game Boy Pocket", "RGB"});
       colorEmulationDMG->setDynamic(true);
 
-      interframeBlending = screen->append<Node::Boolean>("Interframe Blending", true, [&](auto value) {
+      interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
         screen->setInterframeBlending(value);
       });
       interframeBlending->setDynamic(true);
@@ -40,16 +46,14 @@ auto PPU::load(Node::Object parent) -> void {
 
     if(Model::GameBoyColor()) {
       screen->colors(1 << 15, {&PPU::colorGameBoyColor, this});
-      screen->setSize(160, 144);
-      screen->setScale(1.0, 1.0);
-      screen->setAspect(1.0, 1.0);
+      screen->setFillColor(0x7fff);
 
-      colorEmulationCGB = screen->append<Node::Boolean>("Color Emulation", true, [&](auto value) {
+      colorEmulationCGB = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
         screen->resetPalette();
       });
       colorEmulationCGB->setDynamic(true);
 
-      interframeBlending = screen->append<Node::Boolean>("Interframe Blending", true, [&](auto value) {
+      interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
         screen->setInterframeBlending(value);
       });
       interframeBlending->setDynamic(true);
@@ -60,8 +64,13 @@ auto PPU::load(Node::Object parent) -> void {
 }
 
 auto PPU::unload() -> void {
+  screen->quit();
   vram.reset();
   oam.reset();
+  bgp.reset();
+  obp.reset();
+  bgpd.reset();
+  obpd.reset();
   node = {};
   screen = {};
   colorEmulationDMG = {};
@@ -72,8 +81,8 @@ auto PPU::unload() -> void {
 
 auto PPU::main() -> void {
   if(!status.displayEnable) {
-    for(uint n : range(160 * 144)) output[n] = Model::GameBoyColor() ? 0x7fff : 0;
-    step(154 * 456);
+    step(456 * 154);
+    screen->frame();
     scheduler.exit(Event::Frame);
     return;
   }
@@ -124,6 +133,7 @@ auto PPU::main() -> void {
 
   if(status.ly == 144) {
     cpu.raise(CPU::Interrupt::VerticalBlank);
+    screen->frame();
     scheduler.exit(Event::Frame);
   }
 
@@ -161,12 +171,6 @@ auto PPU::coincidence() -> bool {
   return ly == status.lyc;
 }
 
-auto PPU::refresh() -> void {
-  if(!Model::SuperGameBoy()) {
-    screen->refresh(output, 160 * sizeof(uint32), 160, 144);
-  }
-}
-
 auto PPU::step(uint clocks) -> void {
   while(clocks--) {
     history.mode = history.mode << 2 | status.mode;
@@ -197,15 +201,21 @@ auto PPU::step(uint clocks) -> void {
   }
 }
 
-auto PPU::hflip(uint data) const -> uint {
-  return (data & 0x8080) >> 7 | (data & 0x4040) >> 5
-       | (data & 0x2020) >> 3 | (data & 0x1010) >> 1
-       | (data & 0x0808) << 1 | (data & 0x0404) << 3
-       | (data & 0x0202) << 5 | (data & 0x0101) << 7;
+//flips 2bpp tiledata line horizontally
+auto PPU::hflip(uint16 tiledata) const -> uint16 {
+  return tiledata >> 7 & 0x0101
+       | tiledata >> 5 & 0x0202
+       | tiledata >> 3 & 0x0404
+       | tiledata >> 1 & 0x0808
+       | tiledata << 1 & 0x1010
+       | tiledata << 3 & 0x2020
+       | tiledata << 5 & 0x4040
+       | tiledata << 7 & 0x8080;
 }
 
 auto PPU::power() -> void {
   Thread::create(4 * 1024 * 1024, {&PPU::main, this});
+  if(screen) screen->power();
 
   if(Model::GameBoyColor()) {
     scanline = {&PPU::scanlineCGB, this};
@@ -216,18 +226,15 @@ auto PPU::power() -> void {
   }
 
   for(auto& n : vram) n = 0x00;
-  for(auto& n : oam) n = 0x00;
-  for(auto& n : bgp) n = 0x00;
-  for(auto& n : obp[0]) n = 3;
-  for(auto& n : obp[1]) n = 3;
+  for(auto& n : oam ) n = 0x00;
+  for(auto& n : bgp ) n = 0;
+  for(auto& n : obp ) n = 3;
   for(auto& n : bgpd) n = 0x0000;
   for(auto& n : obpd) n = 0x0000;
 
   status = {};
   latch = {};
   history = {};
-
-  for(auto& n : output) n = 0;
 
   bg.color = 0;
   bg.palette = 0;
@@ -237,20 +244,11 @@ auto PPU::power() -> void {
   ob.palette = 0;
   ob.priority = 0;
 
-  for(auto& s : sprite) {
-    s.x = 0;
-    s.y = 0;
-    s.tile = 0;
-    s.attr = 0;
-    s.data = 0;
-  }
+  for(auto& s : sprite) s = {};
   sprites = 0;
 
-  background.attr = 0;
-  background.data = 0;
-
-  window.attr = 0;
-  window.data = 0;
+  background = {};
+  window = {};
 }
 
 }

@@ -1,18 +1,18 @@
 struct System {
-  Node::Object node;
-  Node::Boolean fastBoot;
+  Node::System node;
+  Node::Setting::Boolean fastBoot;
 
   struct Controls {
     Node::Object node;
-    Node::Button up;
-    Node::Button down;
-    Node::Button left;
-    Node::Button right;
-    Node::Button a;
-    Node::Button b;
-    Node::Button option;
-    Node::Button debugger;
-    Node::Button power;
+    Node::Input::Button up;
+    Node::Input::Button down;
+    Node::Input::Button left;
+    Node::Input::Button right;
+    Node::Input::Button a;
+    Node::Input::Button b;
+    Node::Input::Button option;
+    Node::Input::Button debugger;
+    Node::Input::Button power;
 
     //controls.cpp
     auto load(Node::Object) -> void;
@@ -29,16 +29,18 @@ struct System {
   enum class Model : uint { NeoGeoPocket, NeoGeoPocketColor };
   Memory::Readable<uint8> bios;
 
+  auto name() const -> string { return node->name(); }
   auto model() const -> Model { return information.model; }
   auto frequency() const -> double { return 6'144'000; }
 
   //system.cpp
+  auto game() -> string;
   auto run() -> void;
 
-  auto load(Node::Object&) -> void;
+  auto load(Node::System& node, string name) -> bool;
   auto save() -> void;
   auto unload() -> void;
-  auto power() -> void;
+  auto power(bool reset = false) -> void;
 
   //serialization.cpp
   auto serialize(bool synchronize) -> serializer;
@@ -47,13 +49,10 @@ struct System {
 private:
   struct Information {
     Model model = Model::NeoGeoPocket;
-    uint32 serializeSize[2];
   } information;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void;
-  auto serializeAll(serializer&, bool synchronize) -> void;
-  auto serializeInit(bool synchronize) -> uint;
+  auto serialize(serializer&, bool synchronize) -> void;
 };
 
 extern System system;

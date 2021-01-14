@@ -9,7 +9,7 @@ Cartridge& expansion = expansionSlot.cartridge;
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>(interface->name());
+  return node = parent->append<Node::Peripheral>(system.name());
 }
 
 auto Cartridge::connect() -> void {
@@ -34,7 +34,7 @@ auto Cartridge::connect() -> void {
   if(information.board == "Linear") board = new Board::Linear{*this};
   if(information.board == "SuperLodeRunner") board = new Board::SuperLodeRunner{*this};
   if(information.board == "SuperPierrot") board = new Board::SuperPierrot{*this};
-  if(!board) board = new Board::KonamiSCC{*this};
+  if(!board) board = new Board::Konami{*this};
   board->load(document);
 
   power();

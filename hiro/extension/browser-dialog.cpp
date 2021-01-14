@@ -21,7 +21,6 @@ private:
       HorizontalLayout pathLayout{&layout, Size{~0, 0}, 5_sx};
         LineEdit pathName{&pathLayout, Size{~0, 0}, 0};
         Button pathRefresh{&pathLayout, Size{0, 0}, 0};
-        Button pathNew{&pathLayout, Size{0, 0}, 0};
         Button pathHome{&pathLayout, Size{0, 0}, 0};
         Button pathUp{&pathLayout, Size{0, 0}, 0};
       ListView view{&layout, Size{~0, ~0}, 5_sx};
@@ -206,9 +205,6 @@ auto BrowserDialogWindow::run() -> BrowserDialog::Response {
   image iconRefresh{Icon::Action::Refresh};
   iconRefresh.scale(16_sx, 16_sy);
   pathRefresh.setBordered(false).setIcon(iconRefresh).onActivate([&] { setPath(state.path); });
-  image iconNew{Icon::Action::NewFolder};
-  iconNew.scale(16_sx, 16_sy);
-  pathNew.setBordered(false).setIcon(iconNew).onActivate([&] { createAction.doActivate(); });
   image iconHome{Icon::Go::Home};
   iconHome.scale(16_sx, 16_sy);
   pathHome.setBordered(false).setIcon(iconHome).onActivate([&] { setPath(Path::user()); });

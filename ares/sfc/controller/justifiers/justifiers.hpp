@@ -1,14 +1,14 @@
 struct Justifiers : Controller, Thread {
-  Node::Sprite sprite1;
-  Node::Sprite sprite2;
-  Node::Axis x1;
-  Node::Axis y1;
-  Node::Button trigger1;
-  Node::Button start1;
-  Node::Axis x2;
-  Node::Axis y2;
-  Node::Button trigger2;
-  Node::Button start2;
+  Node::Video::Sprite sprite1;
+  Node::Video::Sprite sprite2;
+  Node::Input::Axis x1;
+  Node::Input::Axis y1;
+  Node::Input::Button trigger1;
+  Node::Input::Button start1;
+  Node::Input::Axis x2;
+  Node::Input::Axis y2;
+  Node::Input::Button trigger2;
+  Node::Input::Button start2;
 
   Justifiers(Node::Port);
   ~Justifiers();

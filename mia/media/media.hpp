@@ -1,7 +1,7 @@
 struct Media {
   virtual ~Media() {}
   virtual auto construct() -> void;
-  virtual auto read(string filename, string suffix = "") -> vector<uint8_t>;
+  virtual auto read(string filename, string suffix = "") -> vector<u8>;
   virtual auto type() -> string = 0;
   virtual auto name() -> string = 0;
   virtual auto extensions() -> vector<string> = 0;

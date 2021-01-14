@@ -9,6 +9,7 @@
 
 namespace ares::MasterSystem {
   #include <ares/inline.hpp>
+  auto load(Node::System& node, string name) -> bool;
 
   struct Model {
     inline static auto MasterSystem() -> bool;
@@ -30,5 +31,3 @@ namespace ares::MasterSystem {
   #include <ms/system/system.hpp>
   #include <ms/cartridge/cartridge.hpp>
 }
-
-#include <ms/interface/interface.hpp>

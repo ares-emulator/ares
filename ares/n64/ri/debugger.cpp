@@ -1,5 +1,5 @@
 auto RI::Debugger::load(Node::Object parent) -> void {
-  tracer.io = parent->append<Node::Notification>("I/O", "RI");
+  tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "RI");
 }
 
 auto RI::Debugger::io(string_view message) -> void {

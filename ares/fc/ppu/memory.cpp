@@ -1,25 +1,25 @@
-auto PPU::readCIRAM(uint11 address) -> uint8 {
+auto PPU::readCIRAM(n11 address) -> n8 {
   return ciram[address];
 }
 
-auto PPU::writeCIRAM(uint11 address, uint8 data) -> void {
+auto PPU::writeCIRAM(n11 address, n8 data) -> void {
   ciram[address] = data;
 }
 
-auto PPU::readCGRAM(uint5 address) -> uint8 {
+auto PPU::readCGRAM(n5 address) -> n8 {
   if((address & 0x13) == 0x10) address &= ~0x10;
-  uint8 data = cgram[address];
+  n8 data = cgram[address];
   if(io.grayscale) data &= 0x30;
   return data;
 }
 
-auto PPU::writeCGRAM(uint5 address, uint8 data) -> void {
+auto PPU::writeCGRAM(n5 address, n8 data) -> void {
   if((address & 0x13) == 0x10) address &= ~0x10;
   cgram[address] = data;
 }
 
-auto PPU::readIO(uint16 address) -> uint8 {
-  uint8 result = 0x00;
+auto PPU::readIO(n16 address) -> n8 {
+  n8 result = 0x00;
 
   switch(address.bit(0,2)) {
 
@@ -43,7 +43,7 @@ auto PPU::readIO(uint16 address) -> uint8 {
   case 7:
     if(enable() && (io.ly <= 240 || io.ly == 261)) return 0x00;
 
-    address = (uint14)io.v.address;
+    address = (n14)io.v.address;
     if(address <= 0x1fff) {
       result = io.busData;
       io.busData = cartridge.readCHR(address);
@@ -62,7 +62,7 @@ auto PPU::readIO(uint16 address) -> uint8 {
   return result;
 }
 
-auto PPU::writeIO(uint16 address, uint8 data) -> void {
+auto PPU::writeIO(n16 address, n8 data) -> void {
   io.mdr = data;
 
   switch(address.bit(0,2)) {
@@ -129,7 +129,7 @@ auto PPU::writeIO(uint16 address, uint8 data) -> void {
   case 7:
     if(enable() && (io.ly <= 240 || io.ly == 261)) return;
 
-    address = (uint14)io.v.address;
+    address = (n14)io.v.address;
     if(address <= 0x1fff) {
       cartridge.writeCHR(address, data);
     } else if(address <= 0x3eff) {

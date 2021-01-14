@@ -3,6 +3,9 @@ auto InputSettings::construct() -> void {
   setVisible(false);
 
   inputLabel.setText("Virtual Gamepad Bindings").setFont(Font().setBold());
+  deviceList.append(ComboButtonItem().setText("Controller 1"));
+  deviceList.append(ComboButtonItem().setText("Controller 2"));
+  deviceList.onChange([&] { reload(); });
   inputList.setBatchable();
   inputList.setHeadered();
   inputList.onChange([&] { eventChange(); });
@@ -19,24 +22,28 @@ auto InputSettings::construct() -> void {
 auto InputSettings::reload() -> void {
   inputList.reset();
   inputList.append(TableViewColumn().setText("Name"));
-  for(uint binding : range(BindingLimit)) {
+  for(u32 binding : range(BindingLimit)) {
     inputList.append(TableViewColumn().setText({"Mapping #", 1 + binding}).setExpandable());
   }
 
+  auto& virtualPad = virtualPads[deviceList.selected().offset()];
   for(auto& mapping : virtualPad.mappings) {
     TableViewItem item{&inputList};
     item.append(TableViewCell().setText(mapping->name).setFont(Font().setBold()));
-    for(uint binding : range(BindingLimit)) item.append(TableViewCell());
+    for(u32 binding : range(BindingLimit)) item.append(TableViewCell());
   }
 
   refresh();
   eventChange();
+  Application::processEvents();
+  inputList.resizeColumns();
 }
 
 auto InputSettings::refresh() -> void {
-  uint index = 0;
+  u32 index = 0;
+  auto& virtualPad = virtualPads[deviceList.selected().offset()];
   for(auto& mapping : virtualPad.mappings) {
-    for(uint binding : range(BindingLimit)) {
+    for(u32 binding : range(BindingLimit)) {
       //do not remove identifier from mappings currently being assigned
       if(activeMapping && &activeMapping() == mapping && activeBinding == binding) continue;
       auto cell = inputList.item(index).cell(1 + binding);
@@ -53,6 +60,7 @@ auto InputSettings::eventChange() -> void {
 }
 
 auto InputSettings::eventClear() -> void {
+  auto& virtualPad = virtualPads[deviceList.selected().offset()];
   for(auto& item : inputList.batched()) {
     auto& mapping = *virtualPad.mappings[item.offset()];
     mapping.unbind();
@@ -68,10 +76,11 @@ auto InputSettings::eventAssign(TableViewCell cell) -> void {
     "Please go to driver settings and activate an input driver first."
   ).setAlignment(settingsWindow).error();
 
+  auto& virtualPad = virtualPads[deviceList.selected().offset()];
   if(auto item = inputList.selected()) {
     if(activeMapping) refresh();  //clear any previous assign arrow prompts
     activeMapping = *virtualPad.mappings[item.offset()];
-    activeBinding = max(0, (int)cell.offset() - 1);
+    activeBinding = max(0, (s32)cell.offset() - 1);
 
     item.cell(1 + activeBinding).setIcon(Icon::Go::Right).setText("(assign ...)");
     assignLabel.setText({"Press a key or button for mapping #", 1 + activeBinding, " [", activeMapping->name, "] ..."});
@@ -82,7 +91,7 @@ auto InputSettings::eventAssign(TableViewCell cell) -> void {
   }
 }
 
-auto InputSettings::eventInput(shared_pointer<HID::Device> device, uint groupID, uint inputID, int16_t oldValue, int16_t newValue) -> void {
+auto InputSettings::eventInput(shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
   if(!activeMapping) return;
   if(!settingsWindow.focused()) return;
 

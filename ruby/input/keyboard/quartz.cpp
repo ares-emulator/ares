@@ -8,11 +8,11 @@ struct InputKeyboardQuartz {
 
   struct Key {
     string name;
-    uint id;
+    u32 id = 0;
   };
   vector<Key> keys;
 
-  auto assign(uint inputID, bool value) -> void {
+  auto assign(u32 inputID, bool value) -> void {
     auto& group = hid->buttons();
     if(group.input(inputID).value() == value) return;
     input.doChange(hid, HID::Keyboard::GroupID::Button, inputID, group.input(inputID).value(), value);
@@ -20,7 +20,7 @@ struct InputKeyboardQuartz {
   }
 
   auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
-    uint inputID = 0;
+    u32 inputID = 0;
     for(auto& key : keys) {
       bool value = CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, key.id);
       assign(inputID++, value);

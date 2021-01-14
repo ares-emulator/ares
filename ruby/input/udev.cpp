@@ -40,7 +40,7 @@ struct InputUdev : InputDriver {
     return devices;
   }
 
-  auto rumble(uint64_t id, bool enable) -> bool override {
+  auto rumble(u64 id, bool enable) -> bool override {
     return joypad.rumble(id, enable);
   }
 

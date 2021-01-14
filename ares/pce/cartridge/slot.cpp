@@ -5,7 +5,7 @@ CartridgeSlot::CartridgeSlot(string name) : name(name) {
 
 auto CartridgeSlot::load(Node::Object parent) -> void {
   port = parent->append<Node::Port>(name);
-  port->setFamily("PC Engine");
+  port->setFamily(system.name());
   port->setType("Cartridge");
   port->setAllocate([&](auto name) { return cartridge.allocate(port); });
   port->setConnect([&] { return cartridge.connect(); });
@@ -22,5 +22,5 @@ auto CartridgeSlot::power() -> void {
 }
 
 auto CartridgeSlot::serialize(serializer& s) -> void {
-  if(port->connected()) cartridge.serialize(s);
+  if(port->connected()) s(cartridge);
 }

@@ -1,11 +1,12 @@
-struct Interrupt {
-  Node::Component node;
+struct Interrupt : Memory::Interface {
+  Node::Object node;
 
   //irq.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto poll() -> void;
+  auto level(uint source) -> bool;
   auto raise(uint source) -> void;
   auto lower(uint source) -> void;
   auto pulse(uint source) -> void;
@@ -26,12 +27,17 @@ struct Interrupt {
   enum : uint { Vblank, GPU, CDROM, DMA, Timer0, Timer1, Timer2, Peripheral, SIO, SPU, PIO };
 
   struct Source {
-    uint1 line = 0;
-    uint1 stat = 0;
-    uint1 mask = 0;
+    auto poll() const { return stat & mask; }
+    auto level() const { return stat; }
+    auto raise() { line = stat = 1; }
+    auto lower() { line = 0; }
+    auto acknowledge() { stat = 0; }
+
+    uint1 line;
+    uint1 stat;
+    uint1 mask;
   };
 
-  uint1  line = 0;
   Source vblank;
   Source gpu;
   Source cdrom;

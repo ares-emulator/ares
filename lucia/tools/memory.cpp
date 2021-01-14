@@ -27,9 +27,9 @@ auto MemoryEditor::construct() -> void {
 
 auto MemoryEditor::reload() -> void {
   memoryList.reset();
-  for(auto memory : ares::Node::enumerate<ares::Node::Memory>(emulator->root)) {
+  for(auto memory : ares::Node::enumerate<ares::Node::Debugger::Memory>(emulator->root)) {
     ComboButtonItem item{&memoryList};
-    item.setAttribute<ares::Node::Memory>("node", memory);
+    item.setAttribute<ares::Node::Debugger::Memory>("node", memory);
     item.setText(memory->name());
   }
   gotoAddress.setText();
@@ -52,12 +52,12 @@ auto MemoryEditor::liveRefresh() -> void {
 
 auto MemoryEditor::eventChange() -> void {
   if(auto item = memoryList.selected()) {
-    if(auto memory = item.attribute<ares::Node::Memory>("node")) {
+    if(auto memory = item.attribute<ares::Node::Debugger::Memory>("node")) {
       memoryEditor.setLength(memory->size());
-      memoryEditor.onRead([=](uint address) -> uint8_t {
+      memoryEditor.onRead([=](u32 address) -> u8 {
         return memory->read(address);
       });
-      memoryEditor.onWrite([=](uint address, uint8_t data) -> void {
+      memoryEditor.onWrite([=](u32 address, u8 data) -> void {
         return memory->write(address, data);
       });
     }
@@ -72,12 +72,12 @@ auto MemoryEditor::eventChange() -> void {
 
 auto MemoryEditor::eventExport() -> void {
   if(auto item = memoryList.selected()) {
-    if(auto memory = item.attribute<ares::Node::Memory>("node")) {
+    if(auto memory = item.attribute<ares::Node::Debugger::Memory>("node")) {
       auto identifier = memory->name().downcase().replace(" ", "-");
       auto datetime = chrono::local::datetime().replace("-", "").replace(":", "").replace(" ", "-");
       auto location = emulator->locate({Location::notsuffix(emulator->game.location), "-", identifier, "-", datetime, ".bin"}, ".bin", settings.paths.debugging);
       if(auto fp = file::open(location, file::mode::write)) {
-        for(uint address : range(memory->size())) {
+        for(u32 address : range(memory->size())) {
           fp.write(memory->read(address));
         }
       }

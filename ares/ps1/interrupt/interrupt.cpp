@@ -7,7 +7,7 @@ Interrupt interrupt;
 #include "serialization.cpp"
 
 auto Interrupt::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("Interrupt");
+  node = parent->append<Node::Object>("Interrupt");
 }
 
 auto Interrupt::unload() -> void {
@@ -15,47 +15,97 @@ auto Interrupt::unload() -> void {
 }
 
 auto Interrupt::poll() -> void {
-  line = 0;
-  line |= vblank.stat & vblank.mask;
-  line |= gpu.stat & gpu.mask;
-  line |= cdrom.stat & cdrom.mask;
-  line |= dma.stat & dma.mask;
-  line |= timer0.stat & timer0.mask;
-  line |= timer1.stat & timer1.mask;
-  line |= timer2.stat & timer2.mask;
-  line |= peripheral.stat & peripheral.mask;
-  line |= sio.stat & sio.mask;
-  line |= spu.stat & spu.mask;
-  line |= pio.stat & pio.mask;
+  bool interruptsWerePending = cpu.exception.interruptsPending();
+  bool line = 0;
+  line |= vblank.poll();
+  line |= gpu.poll();
+  line |= cdrom.poll();
+  line |= dma.poll();
+  line |= timer0.poll();
+  line |= timer1.poll();
+  line |= timer2.poll();
+  line |= peripheral.poll();
+  line |= sio.poll();
+  line |= spu.poll();
+  line |= pio.poll();
   cpu.scc.cause.interruptPending.bit(2) = line;
+  if(!interruptsWerePending && cpu.exception.interruptsPending()) cpu.delay.interrupt = 2;
+}
+
+auto Interrupt::level(uint source) -> bool {
+  if(source ==  0) return vblank.level();
+  if(source ==  1) return gpu.level();
+  if(source ==  2) return cdrom.level();
+  if(source ==  3) return dma.level();
+  if(source ==  4) return timer0.level();
+  if(source ==  5) return timer1.level();
+  if(source ==  6) return timer2.level();
+  if(source ==  7) return peripheral.level();
+  if(source ==  8) return sio.level();
+  if(source ==  9) return spu.level();
+  if(source == 10) return pio.level();
+  return 0;
 }
 
 auto Interrupt::raise(uint source) -> void {
-  if(source ==  0 && !vblank.line) return vblank.line = vblank.stat = 1, poll();
-  if(source ==  1 && !gpu.line) return gpu.line = gpu.stat = 1, poll();
-  if(source ==  2 && !cdrom.line) return cdrom.line = cdrom.stat = 1, poll();
-  if(source ==  3 && !dma.line) return dma.line = dma.stat = 1, poll();
-  if(source ==  4 && !timer0.line) return timer0.line = timer0.stat = 1, poll();
-  if(source ==  5 && !timer1.line) return timer1.line = timer1.stat = 1, poll();
-  if(source ==  6 && !timer2.line) return timer2.line = timer2.stat = 1, poll();
-  if(source ==  7 && !peripheral.line) return peripheral.line = peripheral.stat = 1, poll();
-  if(source ==  8 && !sio.line) return sio.line = sio.stat = 1, poll();
-  if(source ==  9 && !spu.line) return spu.line = spu.stat = 1, poll();
-  if(source == 10 && !pio.line) return pio.line = pio.stat = 1, poll();
+  if(source ==  0 && !vblank.line) {
+    vblank.raise();
+    poll();
+  }
+  if(source ==  1 && !gpu.line) {
+    gpu.raise();
+    poll();
+  }
+  if(source ==  2 && !cdrom.line) {
+    cdrom.raise();
+    poll();
+  }
+  if(source ==  3 && !dma.line) {
+    dma.raise();
+    poll();
+  }
+  if(source ==  4 && !timer0.line) {
+    timer0.raise();
+    poll();
+  }
+  if(source ==  5 && !timer1.line) {
+    timer1.raise();
+    poll();
+  }
+  if(source ==  6 && !timer2.line) {
+    timer2.raise();
+    poll();
+  }
+  if(source ==  7 && !peripheral.line) {
+    peripheral.raise();
+    poll();
+  }
+  if(source ==  8 && !sio.line) {
+    sio.raise();
+    poll();
+  }
+  if(source ==  9 && !spu.line) {
+    spu.raise();
+    poll();
+  }
+  if(source == 10 && !pio.line) {
+    pio.raise();
+    poll();
+  }
 }
 
 auto Interrupt::lower(uint source) -> void {
-  if(source ==  0 && vblank.line) return vblank.line = 0, poll();
-  if(source ==  1 && gpu.line) return gpu.line = 0, poll();
-  if(source ==  2 && cdrom.line) return cdrom.line = 0, poll();
-  if(source ==  3 && dma.line) return dma.line = 0, poll();
-  if(source ==  4 && timer0.line) return timer0.line = 0, poll();
-  if(source ==  5 && timer1.line) return timer1.line = 0, poll();
-  if(source ==  6 && timer2.line) return timer2.line = 0, poll();
-  if(source ==  7 && peripheral.line) return peripheral.line = 0, poll();
-  if(source ==  8 && sio.line) return sio.line = 0, poll();
-  if(source ==  9 && spu.line) return spu.line = 0, poll();
-  if(source == 10 && pio.line) return pio.line = 0, poll();
+  if(source ==  0 && vblank.line) return vblank.lower(), poll();
+  if(source ==  1 && gpu.line) return gpu.lower(), poll();
+  if(source ==  2 && cdrom.line) return cdrom.lower(), poll();
+  if(source ==  3 && dma.line) return dma.lower(), poll();
+  if(source ==  4 && timer0.line) return timer0.lower(), poll();
+  if(source ==  5 && timer1.line) return timer1.lower(), poll();
+  if(source ==  6 && timer2.line) return timer2.lower(), poll();
+  if(source ==  7 && peripheral.line) return peripheral.lower(), poll();
+  if(source ==  8 && sio.line) return sio.lower(), poll();
+  if(source ==  9 && spu.line) return spu.lower(), poll();
+  if(source == 10 && pio.line) return pio.lower(), poll();
 }
 
 auto Interrupt::pulse(uint source) -> void {
@@ -69,6 +119,7 @@ auto Interrupt::drive(uint source, bool line) -> void {
 }
 
 auto Interrupt::power(bool reset) -> void {
+  Memory::Interface::setWaitStates(2, 3, 2);
 }
 
 }

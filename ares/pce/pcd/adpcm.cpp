@@ -1,5 +1,5 @@
 auto PCD::ADPCM::load(Node::Object parent) -> void {
-  stream = parent->append<Node::Stream>("ADPCM");
+  stream = parent->append<Node::Audio::Stream>("ADPCM");
   stream->setChannels(1);
   stream->setFrequency(32000);
 
@@ -42,7 +42,7 @@ auto PCD::ADPCM::clock() -> void {
 }
 
 auto PCD::ADPCM::clockSample() -> void {
-  stream->sample((io.playing ? msm5205.sample() : (int12)0) * fader->adpcm() / 2048.0);
+  stream->frame((io.playing ? msm5205.sample() : (int12)0) * fader->adpcm() / 2048.0);
 
   if(++period < divider) return;
   period = 0;

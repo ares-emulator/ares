@@ -11,7 +11,10 @@ BIOS::~BIOS() {
 
 auto BIOS::read(uint mode, uint32 addr) -> uint32 {
   //unmapped memory
-  if(addr >= 0x0000'4000) return cpu.pipeline.fetch.instruction;  //0000'4000-01ff'ffff
+  if(addr >= 0x0000'4000) {
+    if(cpu.context.dmaActive) return cpu.dmabus.data;
+    return cpu.pipeline.fetch.instruction;  //0000'4000-01ff'ffff
+  }
 
   //GBA BIOS is read-protected; only the BIOS itself can read its own memory
   //when accessed elsewhere; this should return the last value read by the BIOS program

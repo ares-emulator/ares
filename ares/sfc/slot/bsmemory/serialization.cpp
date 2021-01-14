@@ -1,67 +1,68 @@
 auto BSMemoryCartridge::serialize(serializer& s) -> void {
-  Thread::serialize(s);
   if(ROM) return;
 
-  s.array(memory.data(), memory.size());
+  Thread::serialize(s);
 
-  s.integer(pin.writable);
+  s(memory);
 
-  s.integer(chip.vendor);
-  s.integer(chip.device);
-  s.integer(chip.serial);
+  s(pin.writable);
 
-  s.array(page.buffer[0]);
-  s.array(page.buffer[1]);
+  s(chip.vendor);
+  s(chip.device);
+  s(chip.serial);
+
+  s(page.buffer[0]);
+  s(page.buffer[1]);
 
   for(auto& block : blocks) {
-    s.integer(block.id);
-    s.integer(block.erased);
-    s.integer(block.locked);
-    s.integer(block.erasing);
-    s.integer(block.status.vppLow);
-    s.integer(block.status.queueFull);
-    s.integer(block.status.aborted);
-    s.integer(block.status.failed);
-    s.integer(block.status.locked);
-    s.integer(block.status.ready);
+    s(block.id);
+    s(block.erased);
+    s(block.locked);
+    s(block.erasing);
+    s(block.status.vppLow);
+    s(block.status.queueFull);
+    s(block.status.aborted);
+    s(block.status.failed);
+    s(block.status.locked);
+    s(block.status.ready);
   }
 
-  s.integer(compatible.status.vppLow);
-  s.integer(compatible.status.writeFailed);
-  s.integer(compatible.status.eraseFailed);
-  s.integer(compatible.status.eraseSuspended);
-  s.integer(compatible.status.ready);
+  s(compatible.status.vppLow);
+  s(compatible.status.writeFailed);
+  s(compatible.status.eraseFailed);
+  s(compatible.status.eraseSuspended);
+  s(compatible.status.ready);
 
-  s.integer(global.status.page);
-  s.integer(global.status.pageReady);
-  s.integer(global.status.pageAvailable);
-  s.integer(global.status.queueFull);
-  s.integer(global.status.sleeping);
-  s.integer(global.status.failed);
-  s.integer(global.status.suspended);
-  s.integer(global.status.ready);
+  s(global.status.page);
+  s(global.status.pageReady);
+  s(global.status.pageAvailable);
+  s(global.status.queueFull);
+  s(global.status.sleeping);
+  s(global.status.failed);
+  s(global.status.suspended);
+  s(global.status.ready);
 
-  s.integer(mode);
+  s(mode);
 
-  s.integer(readyBusyMode);
+  s(readyBusyMode);
 
-  queue.serialize(s);
+  s(queue);
 }
 
 auto BSMemoryCartridge::Queue::serialize(serializer& s) -> void {
-  s.integer(history[0].valid);
-  s.integer(history[0].address);
-  s.integer(history[0].data);
+  s(history[0].valid);
+  s(history[0].address);
+  s(history[0].data);
 
-  s.integer(history[1].valid);
-  s.integer(history[1].address);
-  s.integer(history[1].data);
+  s(history[1].valid);
+  s(history[1].address);
+  s(history[1].data);
 
-  s.integer(history[2].valid);
-  s.integer(history[2].address);
-  s.integer(history[2].data);
+  s(history[2].valid);
+  s(history[2].address);
+  s(history[2].data);
 
-  s.integer(history[3].valid);
-  s.integer(history[3].address);
-  s.integer(history[3].data);
+  s(history[3].valid);
+  s(history[3].address);
+  s(history[3].data);
 }

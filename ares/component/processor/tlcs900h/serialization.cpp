@@ -1,38 +1,44 @@
 auto TLCS900H::serialize(serializer& s) -> void {
   for(uint n : range(4)) {
-    s.integer(r.xwa[n].l.l0);
-    s.integer(r.xbc[n].l.l0);
-    s.integer(r.xde[n].l.l0);
-    s.integer(r.xhl[n].l.l0);
+    s(r.xwa[n].l.l0);
+    s(r.xbc[n].l.l0);
+    s(r.xde[n].l.l0);
+    s(r.xhl[n].l.l0);
   }
-  s.integer(r.xix.l.l0);
-  s.integer(r.xiy.l.l0);
-  s.integer(r.xiz.l.l0);
-  s.integer(r.xsp.l.l0);
-  s.integer(r.pc.l.l0);
+  s(r.xix.l.l0);
+  s(r.xiy.l.l0);
+  s(r.xiz.l.l0);
+  s(r.xsp.l.l0);
+  s(r.pc.l.l0);
 
   for(uint n : range(4)) {
-    s.integer(r.dmas[n].l.l0);
-    s.integer(r.dmad[n].l.l0);
-    s.integer(r.dmam[n].l.l0);
+    s(r.dmas[n].l.l0);
+    s(r.dmad[n].l.l0);
+    s(r.dmam[n].l.l0);
   }
-  s.integer(r.intnest.l.l0);
+  s(r.intnest.l.l0);
 
-  s.integer(r.c); s.integer(r.cp);
-  s.integer(r.n); s.integer(r.np);
-  s.integer(r.v); s.integer(r.vp);
-  s.integer(r.h); s.integer(r.hp);
-  s.integer(r.z); s.integer(r.zp);
-  s.integer(r.s); s.integer(r.sp);
-  s.integer(r.rfp);
-  s.integer(r.iff);
+  s(r.c);
+  s(r.n);
+  s(r.v);
+  s(r.h);
+  s(r.z);
+  s(r.s);
+  s(r.cp);
+  s(r.np);
+  s(r.vp);
+  s(r.hp);
+  s(r.zp);
+  s(r.sp);
+  s(r.rfp);
+  s(r.iff);
 
-  s.integer(r.halted);
-  s.integer(r.prefix);
+  s(r.halted);
+  s(r.prefix);
 
-  s.integer(p.valid);
-  s.integer(p.data);
+  s(p.valid);
+  s(p.data);
 
-  s.integer(mar);
-  s.integer(mdr);
+  s(mar);
+  s(mdr);
 }

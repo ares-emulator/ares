@@ -36,7 +36,7 @@ struct Banked : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
-    s.integer(romBank);
+    s(romBank);
   }
 
   uint2 romBank;

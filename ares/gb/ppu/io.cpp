@@ -68,18 +68,18 @@ auto PPU::readIO(uint cycle, uint16 address, uint8 data) -> uint8 {
   }
 
   if(address == 0xff48 && cycle == 2) {  //OBP0
-    data.bit(0,1) = obp[0][0];
-    data.bit(2,3) = obp[1][1];
-    data.bit(4,5) = obp[2][2];
-    data.bit(6,7) = obp[3][3];
+    data.bit(0,1) = obp[0];
+    data.bit(2,3) = obp[1];
+    data.bit(4,5) = obp[2];
+    data.bit(6,7) = obp[3];
     return data;
   }
 
   if(address == 0xff49 && cycle == 2) {  //OBP1
-    data.bit(0,1) = obp[1][0];
-    data.bit(2,3) = obp[1][1];
-    data.bit(4,5) = obp[1][2];
-    data.bit(6,7) = obp[1][3];
+    data.bit(0,1) = obp[4];
+    data.bit(2,3) = obp[5];
+    data.bit(4,5) = obp[6];
+    data.bit(6,7) = obp[7];
     return data;
   }
 
@@ -105,7 +105,7 @@ auto PPU::readIO(uint cycle, uint16 address, uint8 data) -> uint8 {
 
   if(Model::GameBoyColor())
   if(address == 0xff69 && cycle == 2) {  //BGPD
-    return bgpd[status.bgpi];
+    return bgpd[status.bgpi >> 1].byte(status.bgpi & 1);
   }
 
   if(Model::GameBoyColor())
@@ -117,7 +117,7 @@ auto PPU::readIO(uint cycle, uint16 address, uint8 data) -> uint8 {
 
   if(Model::GameBoyColor())
   if(address == 0xff6b && cycle == 2) {  //OBPD
-    return obpd[status.obpi];
+    return obpd[status.obpi >> 1].byte(status.obpi & 1);
   }
 
   return data;
@@ -216,18 +216,18 @@ auto PPU::writeIO(uint cycle, uint16 address, uint8 data) -> void {
   }
 
   if(address == 0xff48 && cycle == 2) {  //OBP0
-    obp[0][0] = data.bit(0,1);
-    obp[0][1] = data.bit(2,3);
-    obp[0][2] = data.bit(4,5);
-    obp[0][3] = data.bit(6,7);
+    obp[0] = data.bit(0,1);
+    obp[1] = data.bit(2,3);
+    obp[2] = data.bit(4,5);
+    obp[3] = data.bit(6,7);
     return;
   }
 
   if(address == 0xff49 && cycle == 2) {  //OBP1
-    obp[1][0] = data.bit(0,1);
-    obp[1][1] = data.bit(2,3);
-    obp[1][2] = data.bit(4,5);
-    obp[1][3] = data.bit(6,7);
+    obp[4] = data.bit(0,1);
+    obp[5] = data.bit(2,3);
+    obp[6] = data.bit(4,5);
+    obp[7] = data.bit(6,7);
     return;
   }
 
@@ -256,7 +256,7 @@ auto PPU::writeIO(uint cycle, uint16 address, uint8 data) -> void {
 
   if(Model::GameBoyColor())
   if(address == 0xff69 && cycle == 2) {  //BGPD
-    bgpd[status.bgpi] = data;
+    bgpd[status.bgpi >> 1].byte(status.bgpi & 1) = data;
     if(status.bgpiIncrement) status.bgpi++;
     return;
   }
@@ -269,7 +269,7 @@ auto PPU::writeIO(uint cycle, uint16 address, uint8 data) -> void {
 
   if(Model::GameBoyColor())
   if(address == 0xff6b && cycle == 2) {  //OBPD
-    obpd[status.obpi] = data;
+    obpd[status.obpi >> 1].byte(status.obpi & 1) = data;
     if(status.obpiIncrement) status.obpi++;
   }
 }

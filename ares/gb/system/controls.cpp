@@ -3,14 +3,14 @@ auto System::Controls::load(Node::Object parent) -> void {
 
   node = parent->append<Node::Object>("Controls");
 
-  up     = node->append<Node::Button>("Up");
-  down   = node->append<Node::Button>("Down");
-  left   = node->append<Node::Button>("Left");
-  right  = node->append<Node::Button>("Right");
-  b      = node->append<Node::Button>("B");
-  a      = node->append<Node::Button>("A");
-  select = node->append<Node::Button>("Select");
-  start  = node->append<Node::Button>("Start");
+  up     = node->append<Node::Input::Button>("Up");
+  down   = node->append<Node::Input::Button>("Down");
+  left   = node->append<Node::Input::Button>("Left");
+  right  = node->append<Node::Input::Button>("Right");
+  b      = node->append<Node::Input::Button>("B");
+  a      = node->append<Node::Input::Button>("A");
+  select = node->append<Node::Input::Button>("Select");
+  start  = node->append<Node::Input::Button>("Start");
 }
 
 auto System::Controls::poll() -> void {
@@ -34,6 +34,6 @@ auto System::Controls::poll() -> void {
   if(!(left->value() & right->value())) {
     xHold = 0, leftLatch = left->value(), rightLatch = right->value();
   } else if(!xHold) {
-    xHold = 1, swap(leftLatch, downLatch);
+    xHold = 1, swap(leftLatch, rightLatch);
   }
 }

@@ -65,7 +65,7 @@ auto Cartridge::saveARMDSP(Markup::Node node) -> void {
   if(auto memory = node["memory(type=RAM,content=Data,architecture=ARM6)"]) {
     if(!memory["volatile"]) {
       if(auto fp = platform->open(Cartridge::node, "arm6.data.ram", File::Write)) {
-        for(uint n : range(16 * 1024)) fp->write(armdsp.programRAM[n]);
+        for(u32 n : range(16 * 1024)) fp->write(armdsp.programRAM[n]);
       }
     }
   }
@@ -82,7 +82,7 @@ auto Cartridge::saveHitachiDSP(Markup::Node node) -> void {
   if(auto memory = node["memory(type=RAM,content=Data,architecture=HG51BS169)"]) {
     if(!memory["volatile"]) {
       if(auto fp = platform->open(Cartridge::node, "hg51bs169.data.ram", File::Write)) {
-        for(uint n : range(3 * 1024)) fp->write(hitachidsp.dataRAM[n]);
+        for(u32 n : range(3 * 1024)) fp->write(hitachidsp.dataRAM[n]);
       }
     }
   }
@@ -93,7 +93,7 @@ auto Cartridge::saveuPD7725(Markup::Node node) -> void {
   if(auto memory = node["memory(type=RAM,content=Data,architecture=uPD7725)"]) {
     if(!memory["volatile"]) {
       if(auto fp = platform->open(Cartridge::node, "upd7725.data.ram", File::Write)) {
-        for(uint n : range(256)) fp->writel(necdsp.dataRAM[n], 2);
+        for(u32 n : range(256)) fp->writel(necdsp.dataRAM[n], 2);
       }
     }
   }
@@ -104,7 +104,7 @@ auto Cartridge::saveuPD96050(Markup::Node node) -> void {
   if(auto memory = node["memory(type=RAM,content=Data,architecture=uPD96050)"]) {
     if(!memory["volatile"]) {
       if(auto fp = platform->open(Cartridge::node, "upd96050.data.ram", File::Write)) {
-        for(uint n : range(2 * 1024)) fp->writel(necdsp.dataRAM[n], 2);
+        for(u32 n : range(2 * 1024)) fp->writel(necdsp.dataRAM[n], 2);
       }
     }
   }
@@ -115,7 +115,7 @@ auto Cartridge::saveEpsonRTC(Markup::Node node) -> void {
   if(auto memory = node["memory(type=RTC,content=Time,manufacturer=Epson)"]) {
     if(!memory["volatile"]) {
       if(auto fp = platform->open(Cartridge::node, "epson.time.rtc", File::Write)) {
-        uint8 data[16] = {0};
+        n8 data[16];
         epsonrtc.save(data);
         fp->write(data, 16);
       }
@@ -128,7 +128,7 @@ auto Cartridge::saveSharpRTC(Markup::Node node) -> void {
   if(auto memory = node["memory(type=RTC,content=Time,manufacturer=Sharp)"]) {
     if(!memory["volatile"]) {
       if(auto fp = platform->open(Cartridge::node, "sharp.time.rtc", File::Write)) {
-        uint8 data[16] = {0};
+        n8 data[16];
         sharprtc.save(data);
         fp->write(data, 16);
       }

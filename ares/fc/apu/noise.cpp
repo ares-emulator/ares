@@ -4,13 +4,13 @@ auto APU::Noise::clockLength() -> void {
   }
 }
 
-auto APU::Noise::clock() -> uint8 {
+auto APU::Noise::clock() -> n8 {
   if(lengthCounter == 0) return 0;
 
-  uint8 result = (lfsr & 1) ? envelope.volume() : 0;
+  n8 result = (lfsr & 1) ? envelope.volume() : 0;
 
   if(--periodCounter == 0) {
-    uint feedback;
+    u32 feedback;
 
     if(shortMode) {
       feedback = ((lfsr >> 0) & 1) ^ ((lfsr >> 6) & 1);
@@ -23,20 +23,4 @@ auto APU::Noise::clock() -> uint8 {
   }
 
   return result;
-}
-
-auto APU::Noise::power() -> void {
-  lengthCounter = 0;
-
-  envelope.speed = 0;
-  envelope.useSpeedAsVolume = 0;
-  envelope.loopMode = 0;
-  envelope.reloadDecay = 0;
-  envelope.decayCounter = 0;
-  envelope.decayVolume = 0;
-
-  period = 0;
-  periodCounter = 1;
-  shortMode = 0;
-  lfsr = 1;
 }

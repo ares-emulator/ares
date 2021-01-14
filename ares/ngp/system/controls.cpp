@@ -1,15 +1,15 @@
 auto System::Controls::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("Controls");
 
-  up       = node->append<Node::Button>("Up");
-  down     = node->append<Node::Button>("Down");
-  left     = node->append<Node::Button>("Left");
-  right    = node->append<Node::Button>("Right");
-  a        = node->append<Node::Button>("A");
-  b        = node->append<Node::Button>("B");
-  option   = node->append<Node::Button>("Option");
-  debugger = node->append<Node::Button>("Debugger");
-  power    = node->append<Node::Button>("Power");
+  up       = node->append<Node::Input::Button>("Up");
+  down     = node->append<Node::Input::Button>("Down");
+  left     = node->append<Node::Input::Button>("Left");
+  right    = node->append<Node::Input::Button>("Right");
+  a        = node->append<Node::Input::Button>("A");
+  b        = node->append<Node::Input::Button>("B");
+  option   = node->append<Node::Input::Button>("Option");
+  debugger = node->append<Node::Input::Button>("Debugger");
+  power    = node->append<Node::Input::Button>("Power");
 }
 
 auto System::Controls::poll() -> void {

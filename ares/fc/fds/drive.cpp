@@ -57,8 +57,8 @@ auto FDSDrive::advance() -> void {
   }
 }
 
-auto FDSDrive::crc(uint8 data) -> void {
-  for(uint index : range(8)) {
+auto FDSDrive::crc(n8 data) -> void {
+  for(u32 index : range(8)) {
     bool carry = crc16.bit(0);
     crc16 = crc16 >> 1 | data.bit(index) << 15;
     if(carry) crc16 ^= 0x8408;
@@ -100,7 +100,7 @@ auto FDSDrive::write() -> void {
   fds.poll();
 }
 
-auto FDSDrive::read(uint16 address, uint8 data) -> uint8 {
+auto FDSDrive::read(n16 address, n8 data) -> n8 {
   switch(address) {
 
   case 0x4030:
@@ -135,7 +135,7 @@ auto FDSDrive::read(uint16 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto FDSDrive::write(uint16 address, uint8 data) -> void {
+auto FDSDrive::write(n16 address, n8 data) -> void {
   switch(address) {
 
   case 0x4023:

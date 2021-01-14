@@ -11,11 +11,11 @@ struct InputJoypadIOKit {
 
   struct Joypad {
     auto appendElements(CFArrayRef elements) -> void {
-      for(uint n : range(CFArrayGetCount(elements))) {
+      for(u32 n : range(CFArrayGetCount(elements))) {
         IOHIDElementRef element = (IOHIDElementRef)CFArrayGetValueAtIndex(elements, n);
         IOHIDElementType type = IOHIDElementGetType(element);
-        uint32_t page = IOHIDElementGetUsagePage(element);
-        uint32_t usage = IOHIDElementGetUsage(element);
+        u32 page = IOHIDElementGetUsagePage(element);
+        u32 usage = IOHIDElementGetUsage(element);
         switch(type) {
         case kIOHIDElementTypeInput_Button:
           appendButton(element);
@@ -50,9 +50,9 @@ struct InputJoypadIOKit {
         return;
       }
 
-      int min = IOHIDElementGetLogicalMin(element);
-      int max = IOHIDElementGetLogicalMax(element);
-      int range = max - min;
+      s32 min = IOHIDElementGetLogicalMin(element);
+      s32 max = IOHIDElementGetLogicalMax(element);
+      s32 range = max - min;
       if(range == 0) return;
 
       hid->axes().append(axes.size());
@@ -65,7 +65,7 @@ struct InputJoypadIOKit {
         return;
       }
 
-      uint n = hats.size() * 2;
+      u32 n = hats.size() * 2;
       hid->hats().append(n + 0);
       hid->hats().append(n + 1);
       hats.append(element);
@@ -91,9 +91,9 @@ struct InputJoypadIOKit {
   vector<Joypad> joypads;
   IOHIDManagerRef manager = nullptr;
 
-  enum : int { Center = 0, Up = -1, Down = +1, Left = -1, Right = +1 };
+  enum : s32 { Center = 0, Up = -1, Down = +1, Left = -1, Right = +1 };
 
-  auto assign(shared_pointer<HID::Joypad> hid, uint groupID, uint inputID, int16_t value) -> void {
+  auto assign(shared_pointer<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = hid->group(groupID);
     if(group.input(inputID).value() == value) return;
     input.doChange(hid, groupID, inputID, group.input(inputID).value(), value);
@@ -104,29 +104,29 @@ struct InputJoypadIOKit {
     for(auto& jp : joypads) {
       IOHIDDeviceRef device = jp.device;
 
-      for(uint n : range(jp.axes.size())) {
-        int value = 0;
+      for(u32 n : range(jp.axes.size())) {
+        s32 value = 0;
         IOHIDValueRef valueRef;
         if(IOHIDDeviceGetValue(device, jp.axes[n], &valueRef) == kIOReturnSuccess) {
-          int min = IOHIDElementGetLogicalMin(jp.axes[n]);
-          int max = IOHIDElementGetLogicalMax(jp.axes[n]);
-          int range = max - min;
+          s32 min = IOHIDElementGetLogicalMin(jp.axes[n]);
+          s32 max = IOHIDElementGetLogicalMax(jp.axes[n]);
+          s32 range = max - min;
           value = (IOHIDValueGetIntegerValue(valueRef) - min) * 65535LL / range - 32767;
         }
         assign(jp.hid, HID::Joypad::GroupID::Axis, n, sclamp<16>(value));
       }
 
-      for(uint n : range(jp.hats.size())) {
-        int x = Center;
-        int y = Center;
+      for(u32 n : range(jp.hats.size())) {
+        s32 x = Center;
+        s32 y = Center;
         IOHIDValueRef valueRef;
         if(IOHIDDeviceGetValue(device, jp.hats[n], &valueRef) == kIOReturnSuccess) {
-          int position = IOHIDValueGetIntegerValue(valueRef);
-          int min = IOHIDElementGetLogicalMin(jp.hats[n]);
-          int max = IOHIDElementGetLogicalMax(jp.hats[n]);
+          s32 position = IOHIDValueGetIntegerValue(valueRef);
+          s32 min = IOHIDElementGetLogicalMin(jp.hats[n]);
+          s32 max = IOHIDElementGetLogicalMax(jp.hats[n]);
           if(position >= min && position <= max) {
             position -= min;
-            int range = max - min + 1;
+            s32 range = max - min + 1;
             if(range == 4) {
               position *= 2;
             }
@@ -148,8 +148,8 @@ struct InputJoypadIOKit {
         assign(jp.hid, HID::Joypad::GroupID::Hat, n * 2 + 1, y * 32767);
       }
 
-      for(uint n : range(jp.buttons.size())) {
-        int value = 0;
+      for(u32 n : range(jp.buttons.size())) {
+        s32 value = 0;
         IOHIDValueRef valueRef;
         if(IOHIDDeviceGetValue(device, jp.buttons[n], &valueRef) == kIOReturnSuccess) {
           value = IOHIDValueGetIntegerValue(valueRef);
@@ -161,7 +161,7 @@ struct InputJoypadIOKit {
     }
   }
 
-  auto rumble(uint64_t id, bool enable) -> bool {
+  auto rumble(u64 id, bool enable) -> bool {
     //todo
     return false;
   }
@@ -199,7 +199,7 @@ struct InputJoypadIOKit {
     Joypad jp;
     jp.device = device;
 
-    int32_t vendorID, productID;
+    s32 vendorID, productID;
     CFNumberGetValue((CFNumberRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDVendorIDKey)), kCFNumberSInt32Type, &vendorID);
     CFNumberGetValue((CFNumberRef)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductIDKey)), kCFNumberSInt32Type, &productID);
     jp.hid->setVendorID(vendorID);
@@ -214,7 +214,7 @@ struct InputJoypadIOKit {
   }
 
   auto removeJoypad(IOHIDDeviceRef device) -> void {
-    for(uint n : range(joypads.size())) {
+    for(u32 n : range(joypads.size())) {
       if(joypads[n].device == device) {
         joypads.remove(n);
         return;
@@ -242,7 +242,7 @@ private:
     return array;
   }
 
-  auto createMatcherCriteria(uint32_t page, uint32_t usage) -> CFDictionaryRef {
+  auto createMatcherCriteria(u32 page, u32 usage) -> CFDictionaryRef {
     CFNumberRef pageNumber = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &page);
     if(!pageNumber) return nullptr;
 

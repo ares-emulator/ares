@@ -1,7 +1,7 @@
 //Epson RTC-4513 Real-Time Clock
 
 struct EpsonRTC : Thread {
-  Node::RealTimeClock rtc;
+  Node::Component::RealTimeClock rtc;
   auto load(Node::Object) -> void;
 
   using Thread::synchronize;

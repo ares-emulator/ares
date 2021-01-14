@@ -18,7 +18,7 @@ struct Keyboard {
   auto serialize(serializer&) -> void;
 
 private:
-  Node::Button matrix[12][8];
+  Node::Input::Button matrix[12][8];
 
   struct IO {
     uint4 select;

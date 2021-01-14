@@ -4,7 +4,7 @@ struct Cartridge;
 struct Cartridge : Thread {
   Node::Peripheral node;
 
-  auto rate() const -> uint { return Region::PAL() ? 16 : 12; }
+  auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
   auto region() const -> string { return information.region; }
@@ -30,15 +30,15 @@ struct Cartridge : Thread {
 //privileged:
   unique_pointer<Board::Interface> board;
 
-  auto readPRG(uint address) -> uint8;
-  auto writePRG(uint address, uint8 data) -> void;
+  auto readPRG(n32 address, n8 data) -> n8;
+  auto writePRG(n32 address, n8 data) -> void;
 
-  auto readCHR(uint address) -> uint8;
-  auto writeCHR(uint address, uint8 data) -> void;
+  auto readCHR(n32 address, n8 data = 0x00) -> n8;
+  auto writeCHR(n32 address, n8 data) -> void;
 
   //scanline() is for debugging purposes only:
   //boards must detect scanline edges on their own
-  auto scanline(uint y) -> void;
+  auto scanline(n32 y) -> void;
 };
 
 #include "slot.hpp"

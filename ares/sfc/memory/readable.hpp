@@ -34,8 +34,16 @@ struct ReadableMemory : AbstractMemory {
   auto write(uint24 address, uint8 data) -> void override {
   }
 
+  auto program(uint24 address, uint8 data) -> void {
+    self.data[address] = data;
+  }
+
   auto operator[](uint24 address) const -> uint8 {
     return self.data[address];
+  }
+
+  auto serialize(serializer& s) -> void {
+    s(array_span<uint8>{self.data, self.size});
   }
 
 private:

@@ -12,9 +12,9 @@ auto PropertiesViewer::construct() -> void {
 
 auto PropertiesViewer::reload() -> void {
   propertiesList.reset();
-  for(auto properties : ares::Node::enumerate<ares::Node::Properties>(emulator->root)) {
+  for(auto properties : ares::Node::enumerate<ares::Node::Debugger::Properties>(emulator->root)) {
     ComboButtonItem item{&propertiesList};
-    item.setAttribute<ares::Node::Properties>("node", properties);
+    item.setAttribute<ares::Node::Debugger::Properties>("node", properties);
     item.setText(properties->name());
   }
   eventChange();
@@ -27,7 +27,7 @@ auto PropertiesViewer::unload() -> void {
 
 auto PropertiesViewer::refresh() -> void {
   if(auto item = propertiesList.selected()) {
-    if(auto properties = item.attribute<ares::Node::Properties>("node")) {
+    if(auto properties = item.attribute<ares::Node::Debugger::Properties>("node")) {
       propertiesView.setText(properties->query());
     }
   } else {

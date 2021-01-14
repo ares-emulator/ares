@@ -41,7 +41,7 @@ auto FDS::allocate(Node::Port parent) -> Node::Peripheral {
 auto FDS::connect() -> void {
   node->setManifest([&] { return information.manifest; });
 
-  state = node->append<Node::String>("State", "Ejected", [&](auto value) {
+  state = node->append<Node::Setting::String>("State", "Ejected", [&](auto value) {
     change(value);
   });
   vector<string> states = {"Ejected"};
@@ -144,19 +144,17 @@ auto FDS::main() -> void {
 
 auto FDS::power() -> void {
   change();
-  drive = {};  //clears drive.changing; no need to wait after power-on
-  timer = {};
   audio.power();
 }
 
-auto FDS::read(uint16 address, uint8 data) -> uint8 {
+auto FDS::read(n16 address, n8 data) -> n8 {
   data = drive.read(address, data);
   data = timer.read(address, data);
   data = audio.read(address, data);
   return data;
 }
 
-auto FDS::write(uint16 address, uint8 data) -> void {
+auto FDS::write(n16 address, n8 data) -> void {
   drive.write(address, data);
   timer.write(address, data);
   audio.write(address, data);

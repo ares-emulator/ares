@@ -106,27 +106,27 @@ auto APU::Square1::power(bool initializeLength) -> void {
 }
 
 auto APU::Square1::serialize(serializer& s) -> void {
-  s.integer(enable);
+  s(enable);
 
-  s.integer(sweepFrequency);
-  s.integer(sweepDirection);
-  s.integer(sweepShift);
-  s.integer(sweepNegate);
-  s.integer(duty);
-  s.integer(length);
-  s.integer(envelopeVolume);
-  s.integer(envelopeDirection);
-  s.integer(envelopeFrequency);
-  s.integer(frequency);
-  s.integer(counter);
+  s(sweepFrequency);
+  s(sweepDirection);
+  s(sweepShift);
+  s(sweepNegate);
+  s(duty);
+  s(length);
+  s(envelopeVolume);
+  s(envelopeDirection);
+  s(envelopeFrequency);
+  s(frequency);
+  s(counter);
 
-  s.integer(output);
-  s.integer(dutyOutput);
-  s.integer(phase);
-  s.integer(period);
-  s.integer(envelopePeriod);
-  s.integer(sweepPeriod);
-  s.integer(frequencyShadow);
-  s.integer(sweepEnable);
-  s.integer(volume);
+  s(output);
+  s(dutyOutput);
+  s(phase);
+  s(period);
+  s(envelopePeriod);
+  s(sweepPeriod);
+  s(frequencyShadow);
+  s(sweepEnable);
+  s(volume);
 }

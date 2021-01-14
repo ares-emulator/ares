@@ -1,5 +1,5 @@
 struct NECDSP : uPD96050, Thread {
-  Node::Component node;
+  Node::Object node;
   uint Frequency = 0;
 
   struct Debugger {
@@ -8,7 +8,7 @@ struct NECDSP : uPD96050, Thread {
     auto instruction() -> void;
 
     struct Tracer {
-      Node::Instruction instruction;
+      Node::Debugger::Tracer::Instruction instruction;
     } tracer;
   } debugger;
 

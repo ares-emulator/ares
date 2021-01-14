@@ -2,45 +2,45 @@ auto SMP::serialize(serializer& s) -> void {
   SPC700::serialize(s);
   Thread::serialize(s);
 
-  s.integer(io.clockCounter);
-  s.integer(io.dspCounter);
+  s(io.clockCounter);
+  s(io.dspCounter);
 
-  s.integer(io.apu0);
-  s.integer(io.apu1);
-  s.integer(io.apu2);
-  s.integer(io.apu3);
+  s(io.apu0);
+  s(io.apu1);
+  s(io.apu2);
+  s(io.apu3);
 
-  s.integer(io.timersDisable);
-  s.integer(io.ramWritable);
-  s.integer(io.ramDisable);
-  s.integer(io.timersEnable);
-  s.integer(io.externalWaitStates);
-  s.integer(io.internalWaitStates);
+  s(io.timersDisable);
+  s(io.ramWritable);
+  s(io.ramDisable);
+  s(io.timersEnable);
+  s(io.externalWaitStates);
+  s(io.internalWaitStates);
 
-  s.integer(io.iplromEnable);
+  s(io.iplromEnable);
 
-  s.integer(io.dspAddress);
+  s(io.dspAddress);
 
-  s.integer(io.cpu0);
-  s.integer(io.cpu1);
-  s.integer(io.cpu2);
-  s.integer(io.cpu3);
+  s(io.cpu0);
+  s(io.cpu1);
+  s(io.cpu2);
+  s(io.cpu3);
 
-  s.integer(io.aux4);
-  s.integer(io.aux5);
+  s(io.aux4);
+  s(io.aux5);
 
-  timer0.serialize(s);
-  timer1.serialize(s);
-  timer2.serialize(s);
+  s(timer0);
+  s(timer1);
+  s(timer2);
 }
 
 template<uint Frequency>
 auto SMP::Timer<Frequency>::serialize(serializer& s) -> void {
-  s.integer(stage0);
-  s.integer(stage1);
-  s.integer(stage2);
-  s.integer(stage3);
-  s.boolean(line);
-  s.boolean(enable);
-  s.integer(target);
+  s(stage0);
+  s(stage1);
+  s(stage2);
+  s(stage3);
+  s(line);
+  s(enable);
+  s(target);
 }

@@ -42,11 +42,11 @@ struct Linear : Interface {
     }
   }
 
-  auto readIO(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16 override {
+  auto readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 override {
     return data;
   }
 
-  auto writeIO(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void override {
+  auto writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void override {
     if(!lower) return;  //todo: unconfirmed
     if(address == 0xa130f0) {
       ramEnable   = data.bit(0);
@@ -60,10 +60,10 @@ struct Linear : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
-    wram.serialize(s);
-    bram.serialize(s);
-    s.integer(ramEnable);
-    s.integer(ramWritable);
+    s(wram);
+    s(bram);
+    s(ramEnable);
+    s(ramWritable);
   }
 
   uint1 ramEnable = 1;

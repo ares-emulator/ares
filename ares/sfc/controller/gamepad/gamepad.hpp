@@ -1,16 +1,16 @@
 struct Gamepad : Controller {
-  Node::Button up;
-  Node::Button down;
-  Node::Button left;
-  Node::Button right;
-  Node::Button b;
-  Node::Button a;
-  Node::Button y;
-  Node::Button x;
-  Node::Button l;
-  Node::Button r;
-  Node::Button select;
-  Node::Button start;
+  Node::Input::Button up;
+  Node::Input::Button down;
+  Node::Input::Button left;
+  Node::Input::Button right;
+  Node::Input::Button b;
+  Node::Input::Button a;
+  Node::Input::Button y;
+  Node::Input::Button x;
+  Node::Input::Button l;
+  Node::Input::Button r;
+  Node::Input::Button select;
+  Node::Input::Button start;
 
   Gamepad(Node::Port);
 

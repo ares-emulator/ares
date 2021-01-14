@@ -2,9 +2,9 @@
 //K2GE: K2 Graphics Engine (Neo Geo Pocket Color)
 
 struct VPU : Thread {
-  Node::Component node;
-  Node::Screen screen;
-  Node::Boolean interframeBlending;
+  Node::Object node;
+  Node::Video::Screen screen;
+  Node::Setting::Boolean interframeBlending;
 
   //vpu.cpp
   auto load(Node::Object) -> void;
@@ -12,7 +12,6 @@ struct VPU : Thread {
 
   auto main() -> void;
   auto step(uint clocks) -> void;
-  auto refresh() -> void;
   auto power() -> void;
 
   //memory.cpp
@@ -48,7 +47,6 @@ struct VPU : Thread {
   auto serialize(serializer&) -> void;
 
 //private:
-  uint32 buffer[160 * 152];
   uint12 colors[256];
 
   struct Background {

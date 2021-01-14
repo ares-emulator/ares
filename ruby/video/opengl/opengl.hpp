@@ -27,8 +27,8 @@ struct OpenGLTexture {
   auto getType() const -> GLuint;
 
   GLuint texture = 0;
-  uint width = 0;
-  uint height = 0;
+  u32 width = 0;
+  u32 height = 0;
   GLuint format = GL_RGBA8;
   GLuint filter = GL_LINEAR;
   GLuint wrap = GL_CLAMP_TO_BORDER;
@@ -36,9 +36,9 @@ struct OpenGLTexture {
 
 struct OpenGLSurface : OpenGLTexture {
   auto allocate() -> void;
-  auto size(uint width, uint height) -> void;
+  auto size(u32 width, u32 height) -> void;
   auto release() -> void;
-  auto render(uint sourceWidth, uint sourceHeight, uint targetX, uint targetY, uint targetWidth, uint targetHeight) -> void;
+  auto render(u32 sourceWidth, u32 sourceHeight, u32 targetX, u32 targetY, u32 targetWidth, u32 targetHeight) -> void;
 
   GLuint program = 0;
   GLuint framebuffer = 0;
@@ -47,7 +47,7 @@ struct OpenGLSurface : OpenGLTexture {
   GLuint vertex = 0;
   GLuint geometry = 0;
   GLuint fragment = 0;
-  uint32_t* buffer = nullptr;
+  u32* buffer = nullptr;
 };
 
 struct OpenGLProgram : OpenGLSurface {
@@ -55,20 +55,20 @@ struct OpenGLProgram : OpenGLSurface {
   auto parse(OpenGL* instance, string& source) -> void;
   auto release() -> void;
 
-  uint phase = 0;   //frame counter
-  uint modulo = 0;  //frame counter modulus
-  uint absoluteWidth = 0;
-  uint absoluteHeight = 0;
-  double relativeWidth = 0;
-  double relativeHeight = 0;
+  u32 phase = 0;   //frame counter
+  u32 modulo = 0;  //frame counter modulus
+  u32 absoluteWidth = 0;
+  u32 absoluteHeight = 0;
+  f64 relativeWidth = 0;
+  f64 relativeHeight = 0;
   vector<OpenGLTexture> pixmaps;
 };
 
 struct OpenGL : OpenGLProgram {
   auto setShader(const string& pathname) -> void;
-  auto allocateHistory(uint size) -> void;
+  auto allocateHistory(u32 size) -> void;
   auto clear() -> void;
-  auto lock(uint32_t*& data, uint& pitch) -> bool;
+  auto lock(u32*& data, u32& pitch) -> bool;
   auto output() -> void;
   auto initialize(const string& shader) -> bool;
   auto terminate() -> void;
@@ -76,10 +76,10 @@ struct OpenGL : OpenGLProgram {
   vector<OpenGLProgram> programs;
   vector<OpenGLTexture> history;
   GLuint inputFormat = GL_RGBA8;
-  uint outputX = 0;
-  uint outputY = 0;
-  uint outputWidth = 0;
-  uint outputHeight = 0;
+  u32 outputX = 0;
+  u32 outputY = 0;
+  u32 outputWidth = 0;
+  u32 outputHeight = 0;
   struct Setting {
     string name;
     string value;

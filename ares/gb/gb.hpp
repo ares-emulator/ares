@@ -8,11 +8,19 @@
 
 namespace ares::GameBoy {
   #include <ares/inline.hpp>
+  auto load(Node::System& node, string name) -> bool;
 
   struct Model {
     inline static auto GameBoy() -> bool;
     inline static auto GameBoyColor() -> bool;
     inline static auto SuperGameBoy() -> bool;
+  };
+
+  struct SuperGameBoyInterface {
+    virtual auto ppuHreset() -> void = 0;
+    virtual auto ppuVreset() -> void = 0;
+    virtual auto ppuWrite(uint2 color) -> void = 0;
+    virtual auto joypWrite(uint1 p14, uint1 p15) -> void = 0;
   };
 
   #include <gb/system/system.hpp>
@@ -22,5 +30,3 @@ namespace ares::GameBoy {
   #include <gb/ppu/ppu.hpp>
   #include <gb/apu/apu.hpp>
 }
-
-#include <gb/interface/interface.hpp>

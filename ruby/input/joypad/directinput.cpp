@@ -14,20 +14,20 @@ struct InputJoypadDirectInput {
     LPDIRECTINPUTDEVICE8 device = nullptr;
     LPDIRECTINPUTEFFECT effect = nullptr;
 
-    uint32_t pathID = 0;
-    uint16_t vendorID = 0;
-    uint16_t productID = 0;
+    u32 pathID = 0;
+    u16 vendorID = 0;
+    u16 productID = 0;
     bool isXInputDevice = false;
   };
   vector<Joypad> joypads;
 
-  uintptr_t handle = 0;
+  uintptr handle = 0;
   LPDIRECTINPUT8 context = nullptr;
   LPDIRECTINPUTDEVICE8 device = nullptr;
   bool xinputAvailable = false;
-  uint effects = 0;
+  u32 effects = 0;
 
-  auto assign(shared_pointer<HID::Joypad> hid, uint groupID, uint inputID, int16_t value) -> void {
+  auto assign(shared_pointer<HID::Joypad> hid, u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = hid->group(groupID);
     if(group.input(inputID).value() == value) return;
     input.doChange(hid, groupID, inputID, group.input(inputID).value(), value);
@@ -41,7 +41,7 @@ struct InputJoypadDirectInput {
       DIJOYSTATE2 state;
       if(FAILED(jp.device->GetDeviceState(sizeof(DIJOYSTATE2), &state))) continue;
 
-      for(auto n : range(4)) {
+      for(u32 n : range(4)) {
         assign(jp.hid, HID::Joypad::GroupID::Axis, 0, state.lX);
         assign(jp.hid, HID::Joypad::GroupID::Axis, 1, state.lY);
         assign(jp.hid, HID::Joypad::GroupID::Axis, 2, state.lZ);
@@ -49,9 +49,9 @@ struct InputJoypadDirectInput {
         assign(jp.hid, HID::Joypad::GroupID::Axis, 4, state.lRy);
         assign(jp.hid, HID::Joypad::GroupID::Axis, 5, state.lRz);
 
-        uint pov = state.rgdwPOV[n];
-        int16_t xaxis = 0;
-        int16_t yaxis = 0;
+        u32 pov = state.rgdwPOV[n];
+        s16 xaxis = 0;
+        s16 yaxis = 0;
 
         if(pov < 36000) {
           if(pov >= 31500 || pov <=  4500) yaxis = -32767;
@@ -64,7 +64,7 @@ struct InputJoypadDirectInput {
         assign(jp.hid, HID::Joypad::GroupID::Hat, n * 2 + 1, yaxis);
       }
 
-      for(auto n : range(128)) {
+      for(u32 n : range(128)) {
         assign(jp.hid, HID::Joypad::GroupID::Button, n, (bool)state.rgbButtons[n]);
       }
 
@@ -72,7 +72,7 @@ struct InputJoypadDirectInput {
     }
   }
 
-  auto rumble(uint64_t id, bool enable) -> bool {
+  auto rumble(u64 id, bool enable) -> bool {
     for(auto& jp : joypads) {
       if(jp.hid->id() != id) continue;
       if(jp.effect == nullptr) continue;

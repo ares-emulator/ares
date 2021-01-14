@@ -51,7 +51,7 @@ struct VideoCGL : VideoDriver, OpenGL {
     if(!view) return true;
     @autoreleasepool {
       [[view openGLContext] makeCurrentContext];
-      int blocking = self.blocking;
+      s32 blocking = self.blocking;
       [[view openGLContext] setValues:&blocking forParameter:NSOpenGLCPSwapInterval];
     }
     return true;
@@ -64,6 +64,24 @@ struct VideoCGL : VideoDriver, OpenGL {
   auto setShader(string shader) -> bool override {
     OpenGL::setShader(shader);
     return true;
+  }
+
+  auto acquireContext() -> bool override {
+    @autoreleasepool {
+      if(!_ready) return true;
+      //makeCurrentContext returns void(!!), so we just have to pray it was successful here
+      [[view openGLContext] makeCurrentContext];
+      return true;
+    }
+  }
+
+  auto releaseContext() -> bool override {
+    @autoreleasepool {
+      if(!_ready) return true;
+      //clearCurrentContext returns void(!!), so we just have to pray it was successful here
+      [NSOpenGLContext clearCurrentContext];
+      return true;
+    }
   }
 
   auto focused() -> bool override {
@@ -79,7 +97,7 @@ struct VideoCGL : VideoDriver, OpenGL {
     }
   }
 
-  auto size(uint& width, uint& height) -> void override {
+  auto size(u32& width, u32& height) -> void override {
     @autoreleasepool {
       auto area = [view convertRectToBacking:[view bounds]];
       width = area.size.width;
@@ -87,7 +105,7 @@ struct VideoCGL : VideoDriver, OpenGL {
     }
   }
 
-  auto acquire(uint32_t*& data, uint& pitch, uint width, uint height) -> bool override {
+  auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
     OpenGL::size(width, height);
     return OpenGL::lock(data, pitch);
   }
@@ -95,8 +113,8 @@ struct VideoCGL : VideoDriver, OpenGL {
   auto release() -> void override {
   }
 
-  auto output(uint width, uint height) -> void override {
-    uint windowWidth, windowHeight;
+  auto output(u32 width, u32 height) -> void override {
+    u32 windowWidth, windowHeight;
     size(windowWidth, windowHeight);
 
     @autoreleasepool {
@@ -155,7 +173,7 @@ private:
 
       OpenGL::initialize(self.shader);
 
-      int blocking = self.blocking;
+      s32 blocking = self.blocking;
       [[view openGLContext] setValues:&blocking forParameter:NSOpenGLCPSwapInterval];
 
       [view unlockFocus];

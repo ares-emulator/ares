@@ -1,4 +1,4 @@
-static auto glrSize(uint size) -> uint {
+static auto glrSize(u32 size) -> u32 {
   return size;
 //return bit::round(size);  //return nearest power of two
 }
@@ -28,7 +28,7 @@ static auto glrWrap(const string& wrap)  -> GLuint {
   return GL_CLAMP_TO_BORDER;
 }
 
-static auto glrModulo(uint modulo) -> uint {
+static auto glrModulo(u32 modulo) -> u32 {
   if(modulo) return modulo;
   return 300;  //divisible by 2, 3, 4, 5, 6, 10, 12, 15, 20, 25, 30, 50, 60, 100, 150
 }

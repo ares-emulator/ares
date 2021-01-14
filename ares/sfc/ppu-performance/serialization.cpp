@@ -2,162 +2,157 @@ auto PPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
   PPUcounter::serialize(s);
 
-  s.integer(ppu1.version);
-  s.integer(ppu1.mdr);
+  s(ppu1.version);
+  s(ppu1.mdr);
 
-  s.integer(ppu2.version);
-  s.integer(ppu2.mdr);
+  s(ppu2.version);
+  s(ppu2.mdr);
 
-  s.array(vram.data);
-  s.integer(vram.mask);
-  s.integer(vram.address);
-  s.integer(vram.increment);
-  s.integer(vram.mapping);
-  s.integer(vram.mode);
+  s(array_span<uint16_t>{vram.data, vram.mask + 1});
+  s(vram.address);
+  s(vram.increment);
+  s(vram.mapping);
+  s(vram.mode);
 
-  s.integer(state.interlace);
-  s.integer(state.overscan);
-  s.integer(state.vdisp);
+  s(state.interlace);
+  s(state.overscan);
+  s(state.vdisp);
 
-  s.integer(latch.vram);
-  s.integer(latch.oam);
-  s.integer(latch.cgram);
-  s.integer(latch.bgofsPPU1);
-  s.integer(latch.bgofsPPU2);
-  s.integer(latch.mode7);
-  s.integer(latch.counters);
-  s.integer(latch.hcounter);
-  s.integer(latch.vcounter);
-  s.integer(latch.oamAddress);
-  s.integer(latch.cgramAddress);
+  s(latch.vram);
+  s(latch.oam);
+  s(latch.cgram);
+  s(latch.bgofsPPU1);
+  s(latch.bgofsPPU2);
+  s(latch.mode7);
+  s(latch.counters);
+  s(latch.hcounter);
+  s(latch.vcounter);
+  s(latch.oamAddress);
+  s(latch.cgramAddress);
 
-  s.integer(io.displayBrightness);
-  s.integer(io.displayDisable);
-  s.integer(io.oamBaseAddress);
-  s.integer(io.oamAddress);
-  s.integer(io.oamPriority);
-  s.integer(io.bgMode);
-  s.integer(io.bgPriority);
-  s.integer(io.cgramAddress);
-  s.integer(io.cgramAddressLatch);
-  s.integer(io.interlace);
-  s.integer(io.overscan);
-  s.integer(io.pseudoHires);
-  s.integer(io.extbg);
-  s.integer(io.hcounter);
-  s.integer(io.vcounter);
+  s(io.displayBrightness);
+  s(io.displayDisable);
+  s(io.oamBaseAddress);
+  s(io.oamAddress);
+  s(io.oamPriority);
+  s(io.bgMode);
+  s(io.bgPriority);
+  s(io.cgramAddress);
+  s(io.cgramAddressLatch);
+  s(io.interlace);
+  s(io.overscan);
+  s(io.pseudoHires);
+  s(io.extbg);
+  s(io.hcounter);
+  s(io.vcounter);
 
-  s.integer(mode7.hoffset);
-  s.integer(mode7.voffset);
-  s.integer(mode7.hflip);
-  s.integer(mode7.vflip);
-  s.integer(mode7.repeat);
-  s.integer(mode7.a);
-  s.integer(mode7.b);
-  s.integer(mode7.c);
-  s.integer(mode7.d);
-  s.integer(mode7.hcenter);
-  s.integer(mode7.vcenter);
+  s(mode7.hoffset);
+  s(mode7.voffset);
+  s(mode7.hflip);
+  s(mode7.vflip);
+  s(mode7.repeat);
+  s(mode7.a);
+  s(mode7.b);
+  s(mode7.c);
+  s(mode7.d);
+  s(mode7.hcenter);
+  s(mode7.vcenter);
 
-  window.serialize(s);
-  mosaic.serialize(s);
-  bg1.serialize(s);
-  bg2.serialize(s);
-  bg3.serialize(s);
-  bg4.serialize(s);
-  obj.serialize(s);
-  dac.serialize(s);
+  s(window);
+  s(mosaic);
+  s(bg1);
+  s(bg2);
+  s(bg3);
+  s(bg4);
+  s(obj);
+  s(dac);
 }
 
 auto PPU::Window::Layer::serialize(serializer& s) -> void {
-  s.integer(oneInvert);
-  s.integer(oneEnable);
-  s.integer(twoInvert);
-  s.integer(twoEnable);
-  s.integer(mask);
-  s.integer(aboveEnable);
-  s.integer(belowEnable);
+  s(oneInvert);
+  s(oneEnable);
+  s(twoInvert);
+  s(twoEnable);
+  s(mask);
+  s(aboveEnable);
+  s(belowEnable);
 }
 
 auto PPU::Window::Color::serialize(serializer& s) -> void {
-  s.integer(oneInvert);
-  s.integer(oneEnable);
-  s.integer(twoInvert);
-  s.integer(twoEnable);
-  s.integer(mask);
-  s.integer(aboveMask);
-  s.integer(belowMask);
+  s(oneInvert);
+  s(oneEnable);
+  s(twoInvert);
+  s(twoEnable);
+  s(mask);
+  s(aboveMask);
+  s(belowMask);
 }
 
 auto PPU::Window::serialize(serializer& s) -> void {
-  s.integer(io.oneLeft);
-  s.integer(io.oneRight);
-  s.integer(io.twoLeft);
-  s.integer(io.twoRight);
+  s(io.oneLeft);
+  s(io.oneRight);
+  s(io.twoLeft);
+  s(io.twoRight);
 }
 
 auto PPU::Mosaic::serialize(serializer& s) -> void {
-  s.integer(size);
-  s.integer(vcounter);
+  s(size);
+  s(vcounter);
 }
 
 auto PPU::Background::serialize(serializer& s) -> void {
-  s.integer(io.screenSize);
-  s.integer(io.screenAddress);
-  s.integer(io.tiledataAddress);
-  s.integer(io.tileSize);
-  s.integer(io.hoffset);
-  s.integer(io.voffset);
-  s.integer(io.aboveEnable);
-  s.integer(io.belowEnable);
-  s.integer(io.mosaicEnable);
-  s.integer(io.mode);
-  s.array(io.priority);
-  window.serialize(s);
+  s(io.screenSize);
+  s(io.screenAddress);
+  s(io.tiledataAddress);
+  s(io.tileSize);
+  s(io.hoffset);
+  s(io.voffset);
+  s(io.aboveEnable);
+  s(io.belowEnable);
+  s(io.mosaicEnable);
+  s(io.mode);
+  s(io.priority);
+  s(window);
 }
 
 auto PPU::OAM::serialize(serializer& s) -> void {
   for(auto& object : objects) {
-    s.integer(object.x);
-    s.integer(object.y);
-    s.integer(object.character);
-    s.integer(object.nameselect);
-    s.integer(object.vflip);
-    s.integer(object.hflip);
-    s.integer(object.priority);
-    s.integer(object.palette);
-    s.integer(object.size);
+    s(object.x);
+    s(object.y);
+    s(object.character);
+    s(object.nameselect);
+    s(object.vflip);
+    s(object.hflip);
+    s(object.priority);
+    s(object.palette);
+    s(object.size);
   }
 }
 
 auto PPU::Object::serialize(serializer& s) -> void {
-  oam.serialize(s);
-
-  s.integer(io.interlace);
-  s.integer(io.tiledataAddress);
-  s.integer(io.nameselect);
-  s.integer(io.baseSize);
-  s.integer(io.firstSprite);
-  s.integer(io.aboveEnable);
-  s.integer(io.belowEnable);
-  s.integer(io.rangeOver);
-  s.integer(io.timeOver);
-  s.array(io.priority);
-
-  window.serialize(s);
+  s(oam);
+  s(io.interlace);
+  s(io.tiledataAddress);
+  s(io.nameselect);
+  s(io.baseSize);
+  s(io.firstSprite);
+  s(io.aboveEnable);
+  s(io.belowEnable);
+  s(io.rangeOver);
+  s(io.timeOver);
+  s(io.priority);
+  s(window);
 }
 
 auto PPU::DAC::serialize(serializer& s) -> void {
-  s.array(cgram);
-
-  s.integer(io.directColor);
-  s.integer(io.blendMode);
-  s.array(io.colorEnable);
-  s.integer(io.colorHalve);
-  s.integer(io.colorMode);
-  s.integer(io.colorRed);
-  s.integer(io.colorGreen);
-  s.integer(io.colorBlue);
-
-  window.serialize(s);
+  s(cgram);
+  s(io.directColor);
+  s(io.blendMode);
+  s(io.colorEnable);
+  s(io.colorHalve);
+  s(io.colorMode);
+  s(io.colorRed);
+  s(io.colorGreen);
+  s(io.colorBlue);
+  s(window);
 }

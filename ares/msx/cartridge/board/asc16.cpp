@@ -36,7 +36,7 @@ struct ASC16 : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
-    s.array(bank);
+    s(bank);
   }
 
   uint8 bank[2];

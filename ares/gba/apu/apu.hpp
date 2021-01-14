@@ -1,6 +1,6 @@
 struct APU : Thread, IO {
-  Node::Component node;
-  Node::Stream stream;
+  Node::Object node;
+  Node::Audio::Stream stream;
 
   //apu.cpp
   auto load(Node::Object) -> void;
@@ -9,8 +9,8 @@ struct APU : Thread, IO {
   auto main() -> void;
   auto step(uint clocks) -> void;
 
-  auto readIO(uint32 addr) -> uint8;
-  auto writeIO(uint32 addr, uint8 byte) -> void;
+  auto readIO(uint32 address) -> uint8;
+  auto writeIO(uint32 address, uint8 byte) -> void;
   auto power() -> void;
 
   //sequencer.cpp

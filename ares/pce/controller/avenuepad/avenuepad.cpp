@@ -1,18 +1,18 @@
 AvenuePad::AvenuePad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Avenue Pad 6");
 
-  up     = node->append<Node::Button>("Up");
-  down   = node->append<Node::Button>("Down");
-  left   = node->append<Node::Button>("Left");
-  right  = node->append<Node::Button>("Right");
-  three  = node->append<Node::Button>("III");
-  two    = node->append<Node::Button>("II");
-  one    = node->append<Node::Button>("I");
-  four   = node->append<Node::Button>("IV");
-  five   = node->append<Node::Button>("V");
-  six    = node->append<Node::Button>("VI");
-  select = node->append<Node::Button>("Select");
-  run    = node->append<Node::Button>("Run");
+  up     = node->append<Node::Input::Button>("Up");
+  down   = node->append<Node::Input::Button>("Down");
+  left   = node->append<Node::Input::Button>("Left");
+  right  = node->append<Node::Input::Button>("Right");
+  three  = node->append<Node::Input::Button>("III");
+  two    = node->append<Node::Input::Button>("II");
+  one    = node->append<Node::Input::Button>("I");
+  four   = node->append<Node::Input::Button>("IV");
+  five   = node->append<Node::Input::Button>("V");
+  six    = node->append<Node::Input::Button>("VI");
+  select = node->append<Node::Input::Button>("Select");
+  run    = node->append<Node::Input::Button>("Run");
 }
 
 auto AvenuePad::read() -> uint4 {

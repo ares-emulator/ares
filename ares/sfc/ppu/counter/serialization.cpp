@@ -1,11 +1,10 @@
 auto PPUcounter::serialize(serializer& s) -> void {
-  s.integer(time.interlace);
-  s.integer(time.field);
-  s.integer(time.vperiod);
-  s.integer(time.hperiod);
-  s.integer(time.vcounter);
-  s.integer(time.hcounter);
-
-  s.integer(last.vperiod);
-  s.integer(last.hperiod);
+  s(time.interlace);
+  s(time.field);
+  s(time.vperiod);
+  s(time.hperiod);
+  s(time.vcounter);
+  s(time.hcounter);
+  s(last.vperiod);
+  s(last.hperiod);
 }

@@ -1,28 +1,30 @@
 extern Random random;
 
 struct System {
-  Node::Object node;
-  Node::String regionNode;
+  Node::System node;
+  Node::Setting::String regionNode;
 
   struct Controls {
     Node::Object node;
-    Node::Button reset;
-    Node::Button microphone;
+    Node::Input::Button reset;
+    Node::Input::Button microphone;
 
     //controls.cpp
     auto load(Node::Object) -> void;
     auto poll() -> void;
   } controls;
 
-  enum class Region : uint { NTSCJ, NTSCU, PAL };
+  enum class Region : u32 { NTSCJ, NTSCU, PAL };
 
+  auto name() const -> string { return node->name(); }
   auto region() const -> Region { return information.region; }
-  auto frequency() const -> double { return information.frequency; }
+  auto frequency() const -> f64 { return information.frequency; }
 
   //system.cpp
+  auto game() -> string;
   auto run() -> void;
 
-  auto load(Node::Object&) -> void;
+  auto load(Node::System& node, string name) -> bool;
   auto save() -> void;
   auto unload() -> void;
   auto power(bool reset) -> void;
@@ -34,14 +36,11 @@ struct System {
 private:
   struct Information {
     Region region = Region::NTSCJ;
-    double frequency = Constants::Colorburst::NTSC * 6.0;
-    uint32 serializeSize[2];
+    f64 frequency = Constants::Colorburst::NTSC * 6.0;
   } information;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void;
-  auto serializeAll(serializer&, bool synchronize) -> void;
-  auto serializeInit(bool synchronize) -> uint;
+  auto serialize(serializer&, bool synchronize) -> void;
 };
 
 extern System system;

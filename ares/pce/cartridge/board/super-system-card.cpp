@@ -11,7 +11,7 @@ struct SuperSystemCard : Interface {
     auto unload(Node::Object) -> void;
 
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
   } debugger;
 
@@ -62,6 +62,6 @@ struct SuperSystemCard : Interface {
   }
 
   auto serialize(serializer& s) -> void {
-    ram.serialize(s);
+    s(ram);
   }
 };

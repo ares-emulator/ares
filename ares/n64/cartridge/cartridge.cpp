@@ -7,7 +7,7 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>(interface->name());
+  return node = parent->append<Node::Peripheral>(system.name());
 }
 
 auto Cartridge::connect() -> void {
@@ -33,7 +33,7 @@ auto Cartridge::connect() -> void {
     rom.allocate(16);
   }
 
-  power();
+  power(false);
 }
 
 auto Cartridge::disconnect() -> void {
@@ -48,7 +48,7 @@ auto Cartridge::save() -> void {
   auto document = BML::unserialize(information.manifest);
 }
 
-auto Cartridge::power() -> void {
+auto Cartridge::power(bool reset) -> void {
 }
 
 }

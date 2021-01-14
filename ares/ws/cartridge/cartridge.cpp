@@ -10,7 +10,7 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  string name = interface->name();
+  string name = system.name();
   if(Model::SwanCrystal()) name = "WonderSwan Color";
   return node = parent->append<Node::Peripheral>(name);
 }
@@ -50,7 +50,7 @@ auto Cartridge::connect() -> void {
   }
 
   if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    eeprom.allocate(memory["size"].natural(), 16);
+    eeprom.allocate(memory["size"].natural(), 16, 1, 0xff);
     if(auto fp = platform->open(node, "save.eeprom", File::Read)) {
       fp->read(eeprom.data, eeprom.size);
     }

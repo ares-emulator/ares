@@ -2,7 +2,7 @@
 #undef interface
 
 struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
-  enum : uint { Buffers = 32 };
+  enum : u32 { Buffers = 32 };
 
   AudioXAudio2& self = *this;
   AudioXAudio2(Audio& super) : AudioDriver(super) { construct(); }
@@ -28,18 +28,18 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
     return devices;
   }
 
-  auto hasFrequencies() -> vector<uint> override {
+  auto hasFrequencies() -> vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto hasLatencies() -> vector<uint> override {
+  auto hasLatencies() -> vector<u32> override {
     return {20, 40, 60, 80, 100};
   }
 
   auto setDevice(string device) -> bool override { return initialize(); }
   auto setBlocking(bool blocking) -> bool override { return true; }
-  auto setFrequency(uint frequency) -> bool override { return initialize(); }
-  auto setLatency(uint latency) -> bool override { return initialize(); }
+  auto setFrequency(u32 frequency) -> bool override { return initialize(); }
+  auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
     self.sourceVoice->Stop(0);
@@ -47,23 +47,23 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
 
     self.index = 0;
     self.queue = 0;
-    for(uint n : range(Buffers)) self.buffers[n].fill();
+    for(u32 n : range(Buffers)) self.buffers[n].fill();
 
     self.sourceVoice->Start(0);
   }
 
-  auto level() -> double override {
+  auto level() -> f64 override {
     XAUDIO2_VOICE_STATE state{};
     self.sourceVoice->GetState(&state);
-    uint level = state.BuffersQueued * self.period + buffers[self.index].size() - state.SamplesPlayed % self.period;
-    uint limit = Buffers * self.period;
-    return (double)level / limit;
+    u32 level = state.BuffersQueued * self.period + buffers[self.index].size() - state.SamplesPlayed % self.period;
+    u32 limit = Buffers * self.period;
+    return (f64)level / limit;
   }
 
-  auto output(const double samples[]) -> void override {
-    uint32_t frame = 0;
-    frame |= (uint16_t)sclamp<16>(samples[0] * 32767.0) <<  0;
-    frame |= (uint16_t)sclamp<16>(samples[1] * 32767.0) << 16;
+  auto output(const f64 samples[]) -> void override {
+    u32 frame = 0;
+    frame |= (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
+    frame |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
 
     auto& buffer = self.buffers[self.index];
     buffer.write(frame);
@@ -80,15 +80,15 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
       }
     }
 
-    write(buffer.data(), buffer.capacity<uint8_t>());
+    write(buffer.data(), buffer.capacity<u8>());
     self.index = (self.index + 1) % Buffers;
   }
 
 private:
   struct Device {
-    uint id = 0;
-    uint channels = 0;
-    uint frequency = 0;
+    u32 id = 0;
+    u32 channels = 0;
+    u32 frequency = 0;
     Format format = Format::none;
     string name;
   };
@@ -97,9 +97,9 @@ private:
   auto construct() -> void {
     XAudio2Create(&self.interface, 0 , XAUDIO2_DEFAULT_PROCESSOR);
 
-    uint deviceCount = 0;
+    u32 deviceCount = 0;
     self.interface->GetDeviceCount(&deviceCount);
-    for(uint deviceIndex : range(deviceCount)) {
+    for(u32 deviceIndex : range(deviceCount)) {
       XAUDIO2_DEVICE_DETAILS deviceDetails{};
       self.interface->GetDeviceDetails(deviceIndex, &deviceDetails);
       auto format = deviceDetails.OutputFormat.Format.wFormatTag;
@@ -140,12 +140,12 @@ private:
     if(!self.interface) return false;
 
     self.period = self.frequency * self.latency / Buffers / 1000.0 + 0.5;
-    for(uint n : range(Buffers)) buffers[n].resize(self.period);
+    for(u32 n : range(Buffers)) buffers[n].resize(self.period);
     self.index = 0;
     self.queue = 0;
 
     if(!hasDevices().find(self.device)) self.device = hasDevices().first();
-    uint deviceID = devices[hasDevices().find(self.device)()].id;
+    u32 deviceID = devices[hasDevices().find(self.device)()].id;
 
     if(FAILED(self.interface->CreateMasteringVoice(&self.masterVoice, self.channels, self.frequency, 0, deviceID, nullptr))) return terminate(), false;
 
@@ -179,7 +179,7 @@ private:
     }
   }
 
-  auto write(const uint32_t* audioData, uint bytes) -> void {
+  auto write(const u32* audioData, u32 bytes) -> void {
     XAUDIO2_BUFFER buffer{};
     buffer.AudioBytes = bytes;
     buffer.pAudioData = (const BYTE*)audioData;
@@ -190,9 +190,9 @@ private:
 
   bool isReady = false;
 
-  queue<uint32_t> buffers[Buffers];
-  uint period = 0;          //amount (in 32-bit frames) of samples per buffer
-  uint index = 0;           //current buffer for writing samples to
+  queue<u32> buffers[Buffers];
+  u32 period = 0;          //amount (in 32-bit frames) of samples per buffer
+  u32 index = 0;           //current buffer for writing samples to
   volatile long queue = 0;  //how many buffers are queued and ready for playback
 
   IXAudio2* interface = nullptr;

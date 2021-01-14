@@ -1,13 +1,13 @@
 auto Player::serialize(serializer& s) -> void {
-  s.integer(status.enable);
-  s.integer(status.rumble);
+  s(status.enable);
+  s(status.rumble);
 
-  s.integer(status.logoDetected);
-  s.integer(status.logoCounter);
+  s(status.logoDetected);
+  s(status.logoCounter);
 
-  s.integer(status.packet);
-  s.integer(status.send);
-  s.integer(status.recv);
+  s(status.packet);
+  s(status.send);
+  s(status.recv);
 
-  s.integer(status.timeout);
+  s(status.timeout);
 }

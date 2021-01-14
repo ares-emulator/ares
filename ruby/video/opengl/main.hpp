@@ -10,7 +10,7 @@ auto OpenGL::setShader(const string& pathname) -> void {
   absoluteWidth = 0, absoluteHeight = 0;
   relativeWidth = 0, relativeHeight = 0;
 
-  uint historySize = 0;
+  u32 historySize = 0;
   if(pathname == "None") {
     filter = GL_NEAREST;
   } else if(pathname == "Blur") {
@@ -42,7 +42,7 @@ auto OpenGL::setShader(const string& pathname) -> void {
     }
 
     for(auto node : document.find("program")) {
-      uint n = programs.size();
+      u32 n = programs.size();
       programs(n).bind(this, node, pathname);
     }
   }
@@ -55,7 +55,7 @@ auto OpenGL::setShader(const string& pathname) -> void {
   allocateHistory(historySize);
 }
 
-auto OpenGL::allocateHistory(uint size) -> void {
+auto OpenGL::allocateHistory(u32 size) -> void {
   for(auto& frame : history) glDeleteTextures(1, &frame.texture);
   history.reset();
   while(size--) {
@@ -82,8 +82,8 @@ auto OpenGL::clear() -> void {
   glClear(GL_COLOR_BUFFER_BIT);
 }
 
-auto OpenGL::lock(uint32_t*& data, uint& pitch) -> bool {
-  pitch = width * sizeof(uint32_t);
+auto OpenGL::lock(u32*& data, u32& pitch) -> bool {
+  pitch = width * sizeof(u32);
   return data = buffer;
 }
 
@@ -96,15 +96,15 @@ auto OpenGL::output() -> void {
 
   struct Source {
     GLuint texture;
-    uint width, height;
+    u32 width, height;
     GLuint filter, wrap;
   };
   vector<Source> sources;
   sources.prepend({texture, width, height, filter, wrap});
 
   for(auto& p : programs) {
-    uint targetWidth = p.absoluteWidth ? p.absoluteWidth : outputWidth;
-    uint targetHeight = p.absoluteHeight ? p.absoluteHeight : outputHeight;
+    u32 targetWidth = p.absoluteWidth ? p.absoluteWidth : outputWidth;
+    u32 targetHeight = p.absoluteHeight ? p.absoluteHeight : outputHeight;
     if(p.relativeWidth) targetWidth = sources[0].width * p.relativeWidth;
     if(p.relativeHeight) targetHeight = sources[0].height * p.relativeHeight;
 
@@ -119,7 +119,7 @@ auto OpenGL::output() -> void {
     glrUniform4f("targetSize", targetWidth, targetHeight, 1.0 / targetWidth, 1.0 / targetHeight);
     glrUniform4f("outputSize", outputWidth, outputHeight, 1.0 / outputWidth, 1.0 / outputHeight);
 
-    uint aid = 0;
+    u32 aid = 0;
     for(auto& frame : history) {
       glrUniform1i({"history[", aid, "]"}, aid);
       glrUniform4f({"historySize[", aid, "]"}, frame.width, frame.height, 1.0 / frame.width, 1.0 / frame.height);
@@ -128,7 +128,7 @@ auto OpenGL::output() -> void {
       glrParameters(frame.filter, frame.wrap);
     }
 
-    uint bid = 0;
+    u32 bid = 0;
     for(auto& source : sources) {
       glrUniform1i({"source[", bid, "]"}, aid + bid);
       glrUniform4f({"sourceSize[", bid, "]"}, source.width, source.height, 1.0 / source.width, 1.0 / source.height);
@@ -137,7 +137,7 @@ auto OpenGL::output() -> void {
       glrParameters(source.filter, source.wrap);
     }
 
-    uint cid = 0;
+    u32 cid = 0;
     for(auto& pixmap : p.pixmaps) {
       glrUniform1i({"pixmap[", cid, "]"}, aid + bid + cid);
       glrUniform4f({"pixmapSize[", bid, "]"}, pixmap.width, pixmap.height, 1.0 / pixmap.width, 1.0 / pixmap.height);
@@ -155,8 +155,8 @@ auto OpenGL::output() -> void {
     sources.prepend({p.texture, p.width, p.height, p.filter, p.wrap});
   }
 
-  uint targetWidth = absoluteWidth ? absoluteWidth : outputWidth;
-  uint targetHeight = absoluteHeight ? absoluteHeight : outputHeight;
+  u32 targetWidth = absoluteWidth ? absoluteWidth : outputWidth;
+  u32 targetHeight = absoluteHeight ? absoluteHeight : outputHeight;
   if(relativeWidth) targetWidth = sources[0].width * relativeWidth;
   if(relativeHeight) targetHeight = sources[0].height * relativeHeight;
 

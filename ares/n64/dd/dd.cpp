@@ -7,7 +7,7 @@ DD dd;
 #include "serialization.cpp"
 
 auto DD::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("Disk Drive");
+  node = parent->append<Node::Object>("Disk Drive");
   c2s.allocate(0x400);
   ds.allocate(0x100);
   ms.allocate(0x40);

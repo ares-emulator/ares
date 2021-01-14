@@ -11,16 +11,16 @@ struct InputMouseXlib {
   Display* display = nullptr;
   Window rootWindow = 0;
   Cursor invisibleCursor = 0;
-  uint screenWidth = 0;
-  uint screenHeight = 0;
+  u32 screenWidth = 0;
+  u32 screenHeight = 0;
 
   struct Mouse {
     bool acquired = false;
-    int numerator = 0;
-    int denominator = 0;
-    int threshold = 0;
-    uint relativeX = 0;
-    uint relativeY = 0;
+    s32 numerator = 0;
+    s32 denominator = 0;
+    s32 threshold = 0;
+    u32 relativeX = 0;
+    u32 relativeY = 0;
   } ms;
 
   auto acquired() -> bool {
@@ -56,7 +56,7 @@ struct InputMouseXlib {
     return true;
   }
 
-  auto assign(uint groupID, uint inputID, int16_t value) -> void {
+  auto assign(u32 groupID, u32 inputID, s16 value) -> void {
     auto& group = hid->group(groupID);
     if(group.input(inputID).value() == value) return;
     input.doChange(hid, groupID, inputID, group.input(inputID).value(), value);
@@ -66,11 +66,11 @@ struct InputMouseXlib {
   auto poll(vector<shared_pointer<HID::Device>>& devices) -> void {
     Window rootReturn;
     Window childReturn;
-    int rootXReturn = 0;
-    int rootYReturn = 0;
-    int windowXReturn = 0;
-    int windowYReturn = 0;
-    uint maskReturn = 0;
+    s32 rootXReturn = 0;
+    s32 rootYReturn = 0;
+    s32 windowXReturn = 0;
+    s32 windowYReturn = 0;
+    u32 maskReturn = 0;
     XQueryPointer(display, handle, &rootReturn, &childReturn, &rootXReturn, &rootYReturn, &windowXReturn, &windowYReturn, &maskReturn);
 
     if(acquired()) {
@@ -78,16 +78,16 @@ struct InputMouseXlib {
       XGetWindowAttributes(display, handle, &attributes);
 
       //absolute -> relative conversion
-      assign(HID::Mouse::GroupID::Axis, 0, (int16_t)(rootXReturn - screenWidth  / 2));
-      assign(HID::Mouse::GroupID::Axis, 1, (int16_t)(rootYReturn - screenHeight / 2));
+      assign(HID::Mouse::GroupID::Axis, 0, (s16)(rootXReturn - screenWidth  / 2));
+      assign(HID::Mouse::GroupID::Axis, 1, (s16)(rootYReturn - screenHeight / 2));
 
       if(hid->axes().input(0).value() != 0 || hid->axes().input(1).value() != 0) {
         //if mouse moved, re-center mouse for next poll
         XWarpPointer(display, None, rootWindow, 0, 0, 0, 0, screenWidth / 2, screenHeight / 2);
       }
     } else {
-      assign(HID::Mouse::GroupID::Axis, 0, (int16_t)(rootXReturn - ms.relativeX));
-      assign(HID::Mouse::GroupID::Axis, 1, (int16_t)(rootYReturn - ms.relativeY));
+      assign(HID::Mouse::GroupID::Axis, 0, (s16)(rootXReturn - ms.relativeX));
+      assign(HID::Mouse::GroupID::Axis, 1, (s16)(rootYReturn - ms.relativeY));
 
       ms.relativeX = rootXReturn;
       ms.relativeY = rootYReturn;

@@ -3,7 +3,7 @@ auto Media::construct() -> void {
   pathname = {Path::user(), "Emulation/", name(), "/"};
 }
 
-auto Media::read(string location, string suffix) -> vector<uint8_t> {
+auto Media::read(string location, string suffix) -> vector<u8> {
   if(location.iendsWith(".zip")) {
     Decode::ZIP archive;
     if(archive.open(location)) {

@@ -1,8 +1,8 @@
 //Sound Processing Unit
 
-struct SPU : Thread {
-  Node::Component node;
-  Node::Stream stream;
+struct SPU : Thread, Memory::Interface {
+  Node::Object node;
+  Node::Audio::Stream stream;
   Memory::Writable ram;
 
   struct Debugger {
@@ -10,7 +10,7 @@ struct SPU : Thread {
     auto load(Node::Object) -> void;
 
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
   } debugger;
 
@@ -37,7 +37,11 @@ struct SPU : Thread {
   auto writeWord(u32 address, u32 data) -> void;
 
   //fifo.cpp
-  auto fifoManualWrite() -> void;
+  auto fifoReadBlock() -> void;
+  auto fifoWriteBlock() -> void;
+
+  //capture.cpp
+  auto captureVolume(uint channel, s16 volume) -> void;
 
   //adsr.cpp
   auto adsrConstructTable() -> void;
@@ -50,7 +54,7 @@ struct SPU : Thread {
 
   struct Master {
     uint1 enable;
-    uint1 mute;  //0 = muted; 1 = unmuted
+    uint1 unmute;
   } master;
 
   struct Noise {
@@ -68,17 +72,18 @@ struct SPU : Thread {
   } noise{*this};
 
   struct ADSREntry {
-    i32 ticks;
-    i32 step;
+  //unserialized:
+    s32 ticks;
+    s32 step;
   } adsrEntries[2][128];
 
   struct Transfer {
-     uint2 mode = 0;
-     uint3 type = 0;
-    uint16 address = 0;
-    uint19 current = 0;
-     uint1 unknown_0 = 0;
-    uint12 unknown_4_15 = 0;
+     uint2 mode;
+     uint3 type;
+    uint16 address;
+    uint19 current;
+     uint1 unknown_0;
+    uint12 unknown_4_15;
   } transfer;
 
   struct IRQ {
@@ -87,40 +92,38 @@ struct SPU : Thread {
     uint16 address;
   } irq;
 
-  struct Volume {
-     uint1 mode = 0;  //0 = volume level; 1 = sweep volume
-    uint14 level = 0;
-  } volume[2];
-
   struct Envelope {
     //envelope.cpp
     auto reset(u8 rate, bool decreasing, bool exponential) -> void;
-    auto tick(i32 level) -> i16;
+    auto tick(s32 level) -> s16;
 
     int32 counter;
-    uint8 rate;
+    uint7 rate;
     uint1 decreasing;
     uint1 exponential;
   } envelope;
 
-  struct Sweep {
-    uint1 mode = 0;       //0 = linear; 1 = exponential
-    uint1 direction = 0;  //0 = increase; 1 = decrease
-    uint1 phase = 0;      //0 = positive; 1 = negative
-    uint5 shift = 0;
-    uint2 step = 0;
-    uint5 unknown = 0;
-  } sweep[2];
+  struct VolumeSweep : Envelope {
+    //envelope.cpp
+    auto reset() -> void;
+    auto tick() -> void;
 
-  struct CDDA {
-     uint1 enable = 0;
-     uint1 reverb = 0;
+    uint1 active;
+    uint1 sweep;
+    uint1 negative;
+    int15 level;
+    int16 current;
+  } volume[2];
+
+  struct CDAudio {
+     uint1 enable;
+     uint1 reverb;
     uint16 volume[2];
-  } cdda;
+  } cdaudio;
 
   struct External {
-     uint1 enable = 0;
-     uint1 reverb = 0;
+     uint1 enable;
+     uint1 reverb;
     uint16 volume[2];
   } external;
 
@@ -133,14 +136,14 @@ struct SPU : Thread {
     Reverb(SPU& self) : self(self) {}
 
     //reverb.cpp
-    auto process(i16 linput, i16 rinput) -> std::pair<i32, i32>;
+    auto process(s16 linput, s16 rinput) -> std::pair<s32, s32>;
     auto compute() -> void;
-    auto iiasm(i16 sample) -> i32;
-    template<bool phase> auto r2244(const int16* source) -> i32;
-    auto r4422(const int16* source) -> i32;
+    auto iiasm(s16 sample) -> s32;
+    template<bool phase> auto r2244(const int16* source) -> s32;
+    auto r4422(const int16* source) -> s32;
     auto address(u32 address) -> u32;
-    auto read(u32 address, i32 offset = 0) -> i16;
-    auto write(u32 address, i16 data) -> void;
+    auto read(u32 address, s32 offset = 0) -> s16;
+    auto write(u32 address, s16 data) -> void;
 
      uint1 enable;
 
@@ -190,7 +193,7 @@ struct SPU : Thread {
     uint18 baseAddress;
     uint18 currentAddress;
 
-    static constexpr i16 coefficients[20] = {
+    static constexpr s16 coefficients[20] = {
       -1, +2, -10, +35, -103, +266, -616, +1332, -2960, +10246,
       +10246, -2960, +1332, -616, +266, -103, +35, -10, +2, -1,
     };
@@ -202,7 +205,7 @@ struct SPU : Thread {
     Voice(SPU& self, uint id) : self(self), id(id) {}
 
     //voice.app
-    auto sample(i16 modulation) -> std::pair<i32, i32>;
+    auto sample(s32 modulation) -> std::pair<s32, s32>;
     auto tickEnvelope() -> void;
     auto advancePhase() -> void;
     auto updateEnvelope() -> void;
@@ -215,8 +218,8 @@ struct SPU : Thread {
     auto decodeBlock() -> void;
 
     //gaussian.cpp
-    auto gaussianRead(i8 index) const -> i32;
-    auto gaussianInterpolate() const -> i32;
+    auto gaussianRead(s8 index) const -> s32;
+    auto gaussianInterpolate() const -> s32;
 
     struct ADPCM {
       uint19 startAddress;
@@ -272,7 +275,7 @@ struct SPU : Thread {
       Phase phase = Phase::Off;
       int16 volume;
     //internal:
-      int16 lastVolume;
+      int32 lastVolume;
       int16 target;
     } adsr;
 
@@ -280,8 +283,7 @@ struct SPU : Thread {
       uint16 volume[2];
     } current;
 
-    Volume volume[2];
-    Sweep sweep[2];
+    VolumeSweep volume[2];
     Envelope envelope;
     uint32 counter;
      uint1 pmon;
@@ -299,10 +301,14 @@ struct SPU : Thread {
     {*this, 20}, {*this, 21}, {*this, 22}, {*this, 23},
   };
 
-  queue<u16> fifo;
+  struct Capture {
+    uint10 address;
+  } capture;
+
+  queue<u16[32]> fifo;
 
 //unserialized:
-  i16 gaussianTable[512];
+  s16 gaussianTable[512];
 };
 
 extern SPU spu;

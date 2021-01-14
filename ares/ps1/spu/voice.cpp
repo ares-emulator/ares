@@ -1,11 +1,11 @@
-auto SPU::Voice::sample(i16 modulation) -> std::pair<i32, i32> {
-  if(adsr.phase == ADSR::Phase::Off) {
+auto SPU::Voice::sample(s32 modulation) -> std::pair<s32, s32> {
+  if(adsr.phase == ADSR::Phase::Off && !self.irq.enable) {
     adsr.lastVolume = 0;
     return {0, 0};
   }
 
-  i32 l = 0;
-  i32 r = 0;
+  s32 l = 0;
+  s32 r = 0;
 
   if(!adpcm.hasSamples) {
     readBlock();
@@ -17,7 +17,7 @@ auto SPU::Voice::sample(i16 modulation) -> std::pair<i32, i32> {
     }
   }
 
-  i32 volume = 0;
+  s32 volume = 0;
   if(non) {
     volume = self.noise.level;
   } else {
@@ -25,10 +25,10 @@ auto SPU::Voice::sample(i16 modulation) -> std::pair<i32, i32> {
   }
   volume = amplify(volume, adsr.volume);
   adsr.lastVolume = volume;
-  tickEnvelope();
+  if(adsr.phase != ADSR::Phase::Off) tickEnvelope();
 
   u16 step = adpcm.sampleRate;
-  if(pmon) step = amplify(step, modulation + 0x8000);
+  if(pmon) step = amplify(step, sclamp<16>(modulation) + 0x8000);
   counter += uclamp<14>(step);
   if(counter >> 12 >= 28) {
     counter -= 28 << 12;
@@ -44,9 +44,10 @@ auto SPU::Voice::sample(i16 modulation) -> std::pair<i32, i32> {
     }
   }
 
-  l = amplify(volume, this->volume[0].level);
-  r = amplify(volume, this->volume[1].level);
-  //todo: sweep
+  l = amplify(volume, this->volume[0].current);
+  r = amplify(volume, this->volume[1].current);
+  this->volume[0].tick();
+  this->volume[1].tick();
   return {l, r};
 }
 

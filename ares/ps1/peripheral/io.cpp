@@ -1,16 +1,51 @@
+auto Peripheral::receive() -> u8 {
+  u8 data = 0xff;
+  if(io.receiveSize) {
+    data = io.receiveData;
+    io.receiveData >>= 8;
+    io.receiveSize--;
+  }
+  return data;
+}
+
+auto Peripheral::transmit(u8 data) -> void {
+  if(io.slotNumber == 0) {
+    if(!memoryCardPort1.acknowledge()) {
+      io.receiveSize = 1;
+      io.receiveData = controllerPort1.bus(data);
+      io.counter = 600;
+    }
+
+    if(!controllerPort1.acknowledge()) {
+      io.receiveSize = 1;
+      io.receiveData = memoryCardPort1.bus(data);
+      io.counter = 600;
+    }
+  }
+
+  if(io.slotNumber == 1) {
+    if(!memoryCardPort2.acknowledge()) {
+      io.receiveSize = 1;
+      io.receiveData = controllerPort2.bus(data);
+      io.counter = 600;
+    }
+
+    if(!controllerPort2.acknowledge()) {
+      io.receiveSize = 1;
+      io.receiveData = memoryCardPort2.bus(data);
+      io.counter = 600;
+    }
+  }
+}
+
 auto Peripheral::readByte(u32 address) -> u32 {
   uint8 data;
 
   //JOY_RX_DATA
   if(address == 0x1f80'1040) {
-    if(io.receiveSize) {
-      data = io.receiveData;
-      io.receiveData >>= 8;
-      io.receiveSize--;
-    }
+    data = receive();
   }
 
-//print("* rb", hex(address, 8L), " = ", hex(data, 2L), "\n");
   return data;
 }
 
@@ -19,11 +54,7 @@ auto Peripheral::readHalf(u32 address) -> u32 {
 
   //JOY_RX_DATA
   if(address == 0x1f80'1040) {
-    if(io.receiveSize) {
-      data = io.receiveData;
-      io.receiveData >>= 8;
-      io.receiveSize--;
-    }
+    data = receive();
   }
 
   //JOY_STAT
@@ -31,7 +62,9 @@ auto Peripheral::readHalf(u32 address) -> u32 {
     data.bit(0) = io.transmitStarted;
     data.bit(1) = io.receiveSize > 0;
     data.bit(2) = io.transmitFinished;
-    data.bit(7) = io.acknowledgeLine == 0;
+    data.bit(3) = io.parityError;
+    data.bit(7) =!interrupt.level(Interrupt::Peripheral);
+    data.bit(9) = io.interruptRequest;
   }
 
   //JOY_MODE
@@ -68,7 +101,6 @@ auto Peripheral::readHalf(u32 address) -> u32 {
     data.bit(0,15) = io.baudrateReloadValue;
   }
 
-//print("* rh", hex(address, 8L), " = ", hex(data, 4L), "\n");
   return data;
 }
 
@@ -84,7 +116,16 @@ auto Peripheral::readWord(u32 address) -> u32 {
     }
   }
 
-  print("* rw", hex(address, 8L), "\n");
+  //JOY_STAT
+  if(address == 0x1f80'1044) {
+    data.bit(0) = io.transmitStarted;
+    data.bit(1) = io.receiveSize > 0;
+    data.bit(2) = io.transmitFinished;
+    data.bit(3) = io.parityError;
+    data.bit(7) =!interrupt.level(Interrupt::Peripheral);
+    data.bit(9) = io.interruptRequest;
+  }
+
   return data;
 }
 
@@ -93,15 +134,17 @@ auto Peripheral::writeByte(u32 address, u32 value) -> void {
 
   //JOY_TX_DATA
   if(address == 0x1f80'1040) {
-    io.transmitData = data;
-    io.receiveEnable = 1;
+    transmit(data);
   }
-
-//print("* wb", hex(address, 8L), " = ", hex(data, 2L), "\n");
 }
 
 auto Peripheral::writeHalf(u32 address, u32 value) -> void {
   uint16 data = value;
+
+  //JOY_TX_DATA
+  if(address == 0x1f80'1040) {
+    transmit(data);
+  }
 
   //JOY_MODE
   if(address == 0x1f80'1048) {
@@ -131,29 +174,17 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
     io.slotNumber                 = data.bit(13);
     io.unknownCtrl_14_15          = data.bit(14,15);
 
-    if(io.acknowledge || io.reset) {
-      io.acknowledgeLine = 0;
-      interrupt.lower(Interrupt::Peripheral);
+    if(!io.joyOutput) {
+      controllerPort1.reset();
+      memoryCardPort1.reset();
+      controllerPort2.reset();
+      memoryCardPort2.reset();
     }
 
-    if(io.transmitEnable) {
-      io.transmitStarted = 1;
-      if(io.transmitData == 0x01) {
-        io.mode = IO::Mode::ControllerAccess;
-        io.counter = 340;
-      } else if(io.transmitData == 0x42) {
-        io.mode = IO::Mode::ControllerIDLower;
-        io.counter = 340;
-      } else if(io.transmitData == 0x00 && io.mode == IO::Mode::ControllerIDLower) {
-        io.mode = IO::Mode::ControllerIDUpper;
-        io.counter = 340;
-      } else if(io.transmitData == 0x00 && io.mode == IO::Mode::ControllerIDUpper) {
-        io.mode = IO::Mode::ControllerDataLower;
-        io.counter = 340;
-      } else if(io.transmitData == 0x00 && io.mode == IO::Mode::ControllerDataLower) {
-        io.mode = IO::Mode::ControllerDataUpper;
-        io.counter = 340;
-      }
+    if(io.acknowledge || io.reset) {
+      io.parityError = 0;
+      io.interruptRequest = 0;
+      interrupt.lower(Interrupt::Peripheral);
     }
   }
 
@@ -161,10 +192,8 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
   if(address == 0x1f80'104e) {
     io.baudrateReloadValue = data.bit(0,15);
   }
-
-//print("* wh", hex(address, 8L), " = ", hex(data, 4L), "\n");
 }
 
 auto Peripheral::writeWord(u32 address, u32 data) -> void {
-  print("* ww", hex(address, 8L), " = ", hex(data, 8L), "\n");
+  debug(unimplemented, "Peripheral::writeWord");
 }

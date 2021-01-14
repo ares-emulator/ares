@@ -1,11 +1,19 @@
-auto GPU::readByte(u32 address) -> u8 {
-  print("* read byte ", hex(address, 8L), "\n");
-  return 0;
+auto GPU::readDMA() -> u32 {
+  return readWord(0x1f80'1810);
 }
 
-auto GPU::readHalf(u32 address) -> u16 {
-  print("* read half ", hex(address, 8L), "\n");
-  return 0;
+auto GPU::writeDMA(u32 data) -> void {
+  return writeWord(0x1f80'1810, data);
+}
+
+auto GPU::readByte(u32 address) -> u32 {
+  debug(unverified, "GPU::readByte(", hex(address, 8L), ")");
+  return readWord(address & ~3) >> 8 * (address & 3);
+}
+
+auto GPU::readHalf(u32 address) -> u32 {
+  debug(unverified, "GPU::readHalf(", hex(address, 8L), ")");
+  return readWord(address & ~3) >> 8 * (address & 3);
 }
 
 auto GPU::readWord(u32 address) -> u32 {
@@ -15,12 +23,14 @@ auto GPU::readWord(u32 address) -> u32 {
   return data;
 }
 
-auto GPU::writeByte(u32 address, u8 value) -> void {
-  print("* write byte ", hex(address, 8L), " = ", hex(value, 2L), "\n");
+auto GPU::writeByte(u32 address, u32 data) -> void {
+  debug(unverified, "GPU::writeByte(", hex(address, 8L), ")");
+  return writeWord(address & ~3, data << 8 * (address & 3));
 }
 
-auto GPU::writeHalf(u32 address, u16 value) -> void {
-  print("* write half ", hex(address, 8L), " = ", hex(value, 4L), "\n");
+auto GPU::writeHalf(u32 address, u32 data) -> void {
+  debug(unverified, "GPU::writeHalf(", hex(address, 8L), ")");
+  return writeWord(address & ~3, data << 8 * (address & 3));
 }
 
 auto GPU::writeWord(u32 address, u32 data) -> void {

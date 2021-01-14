@@ -1,17 +1,17 @@
 struct WonderSwan : Cartridge {
   auto name() -> string override { return "WonderSwan"; }
   auto extensions() -> vector<string> override { return {"ws"}; }
-  auto export(string location) -> vector<uint8_t> override;
-  auto heuristics(vector<uint8_t>& data, string location) -> string override;
+  auto export(string location) -> vector<u8> override;
+  auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto WonderSwan::export(string location) -> vector<uint8_t> {
-  vector<uint8_t> data;
+auto WonderSwan::export(string location) -> vector<u8> {
+  vector<u8> data;
   append(data, {location, "program.rom"});
   return data;
 }
 
-auto WonderSwan::heuristics(vector<uint8_t>& data, string location) -> string {
+auto WonderSwan::heuristics(vector<u8>& data, string location) -> string {
   if(data.size() < 0x10000) return {};
 
   auto metadata = &data[data.size() - 16];
@@ -19,7 +19,7 @@ auto WonderSwan::heuristics(vector<uint8_t>& data, string location) -> string {
   bool color = metadata[7];
 
   string ramType;
-  uint ramSize = 0;
+  u32 ramSize = 0;
   switch(metadata[11]) {
   case 0x01: ramType = "RAM";    ramSize =    8 * 1024; break;
   case 0x02: ramType = "RAM";    ramSize =   32 * 1024; break;

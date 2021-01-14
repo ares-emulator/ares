@@ -1,5 +1,5 @@
 struct HitachiDSP : HG51B, Thread {
-  Node::Component node;
+  Node::Object node;
   ReadableMemory rom;
   WritableMemory ram;
 
@@ -9,7 +9,7 @@ struct HitachiDSP : HG51B, Thread {
     auto instruction() -> void;
 
     struct Tracer {
-      Node::Instruction instruction;  //todo: HG51B needs to notify HitachiDSP when instructiosn are executed
+      Node::Debugger::Tracer::Instruction instruction;  //todo: HG51B needs to notify HitachiDSP when instructiosn are executed
     } tracer;
   } debugger;
 

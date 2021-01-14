@@ -31,7 +31,7 @@ auto CPU::readCPU(uint24 address, uint8 data) -> uint8 {
     return data;
 
   case 0x4212:  //HVBJOY
-    data.bit(0) = status.autoJoypadActive;
+    data.bit(0) = io.autoJoypadPoll && status.autoJoypadCounter < 33;
     data.bit(6) = hcounter() <= 2 || hcounter() >= 1096;  //Hblank
     data.bit(7) = vcounter() >= ppu.vdisp();              //Vblank
     return data;

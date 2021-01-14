@@ -4,7 +4,7 @@ EpsonRTC epsonrtc;
 #include "serialization.cpp"
 
 auto EpsonRTC::load(Node::Object parent) -> void {
-  rtc = parent->append<Node::RealTimeClock>("RTC");
+  rtc = parent->append<Node::Component::RealTimeClock>("RTC");
 }
 
 auto EpsonRTC::main() -> void {

@@ -83,19 +83,31 @@ struct VideoGLX2 : VideoDriver {
     return true;
   }
 
+  auto acquireContext() -> bool override {
+    if(!_ready) return true;
+    if(glXMakeCurrent(_display, _glXWindow, _glXContext)) return true;
+    return initialize();
+  }
+
+  auto releaseContext() -> bool override {
+    if(!_ready) return true;
+    if(glXMakeCurrent(_display, 0, nullptr)) return true;
+    return terminate(), true;
+  }
+
   auto focused() -> bool override {
     return true;
   }
 
   auto clear() -> void override {
-    memory::fill<uint32_t>(_glBuffer, _glWidth * _glHeight);
+    memory::fill<u32>(_glBuffer, _glWidth * _glHeight);
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glFlush();
     if(_isDoubleBuffered) glXSwapBuffers(_display, _glXWindow);
   }
 
-  auto size(uint& width, uint& height) -> void override {
+  auto size(u32& width, u32& height) -> void override {
     if(self.fullScreen) {
       width = _monitorWidth;
       height = _monitorHeight;
@@ -107,16 +119,16 @@ struct VideoGLX2 : VideoDriver {
     }
   }
 
-  auto acquire(uint32_t*& data, uint& pitch, uint width, uint height) -> bool override {
+  auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
     if(width != _width || height != _height) resize(width, height);
-    pitch = _glWidth * sizeof(uint32_t);
+    pitch = _glWidth * sizeof(u32);
     return data = _glBuffer;
   }
 
   auto release() -> void override {
   }
 
-  auto output(uint width, uint height) -> void override {
+  auto output(u32 width, u32 height) -> void override {
     XWindowAttributes window;
     XGetWindowAttributes(_display, _window, &window);
 
@@ -127,10 +139,10 @@ struct VideoGLX2 : VideoDriver {
       XResizeWindow(_display, _window, parent.width, parent.height);
     }
 
-    uint viewportX = 0;
-    uint viewportY = 0;
-    uint viewportWidth = parent.width;
-    uint viewportHeight = parent.height;
+    u32 viewportX = 0;
+    u32 viewportY = 0;
+    u32 viewportWidth = parent.width;
+    u32 viewportHeight = parent.height;
 
     if(self.fullScreen) {
       viewportX = _monitorX;
@@ -160,26 +172,26 @@ struct VideoGLX2 : VideoDriver {
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _width, _height, GL_BGRA, _glFormat, _glBuffer);
 
     //normalize texture coordinates and adjust for NPOT textures
-    double w = (double)_width / (double)_glWidth;
-    double h = (double)_height / (double)_glHeight;
+    f64 w = (f64)_width / (f64)_glWidth;
+    f64 h = (f64)_height / (f64)_glHeight;
 
     //size of the active monitor
-    double mw = (double)viewportWidth / (double)parent.width;
-    double mh = (double)viewportHeight / (double)parent.height;
+    f64 mw = (f64)viewportWidth / (f64)parent.width;
+    f64 mh = (f64)viewportHeight / (f64)parent.height;
 
     //offset of the active monitor
-    double mx = (double)viewportX / (double)parent.width;
-    double my = (double)viewportY / (double)parent.height;
+    f64 mx = (f64)viewportX / (f64)parent.width;
+    f64 my = (f64)viewportY / (f64)parent.height;
 
     //size of the render area
-    double vw = (double)width / (double)parent.width;
-    double vh = (double)height / (double)parent.height;
+    f64 vw = (f64)width / (f64)parent.width;
+    f64 vh = (f64)height / (f64)parent.height;
 
     //center the render area within the active monitor
-    double vl = mx + (mw - vw) / 2;
-    double vt = my + (mh - vh) / 2;
-    double vr = vl + vw;
-    double vb = vt + vh;
+    f64 vl = mx + (mw - vw) / 2;
+    f64 vt = my + (mh - vh) / 2;
+    f64 vr = vl + vw;
+    f64 vb = vt + vh;
 
     //OpenGL places (0,0) at the bottom left; convert our (0,0) at the top left to this form:
     vt = 1.0 - vt;
@@ -228,15 +240,15 @@ private:
     terminate();
     if(!self.fullScreen && !self.context) return false;
 
-    int versionMajor = 0, versionMinor = 0;
+    s32 versionMajor = 0, versionMinor = 0;
     glXQueryVersion(_display, &versionMajor, &versionMinor);
     if(versionMajor < 1 || (versionMajor == 1 && versionMinor < 2)) return false;
 
-    int redDepth   = self.format == "RGB30" ? 10 : 8;
-    int greenDepth = self.format == "RGB30" ? 10 : 8;
-    int blueDepth  = self.format == "RGB30" ? 10 : 8;
+    s32 redDepth   = self.format == "RGB30" ? 10 : 8;
+    s32 greenDepth = self.format == "RGB30" ? 10 : 8;
+    s32 blueDepth  = self.format == "RGB30" ? 10 : 8;
 
-    int attributeList[] = {
+    s32 attributeList[] = {
       GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
       GLX_RENDER_TYPE, GLX_RGBA_BIT,
       GLX_DOUBLEBUFFER, True,
@@ -246,7 +258,7 @@ private:
       None
     };
 
-    int fbCount = 0;
+    s32 fbCount = 0;
     auto fbConfig = glXChooseFBConfig(_display, _screen, attributeList, &fbCount);
     if(fbCount == 0) return false;
 
@@ -289,7 +301,7 @@ private:
 
     if(glXSwapInterval) glXSwapInterval(self.blocking);
 
-    int value = 0;
+    s32 value = 0;
     glXGetConfig(_display, visual, GLX_DOUBLEBUFFER, &value);
     _isDoubleBuffered = value;
     _isDirect = glXIsDirect(_display, _glXContext);
@@ -339,7 +351,7 @@ private:
     }
   }
 
-  auto resize(uint width, uint height) -> void {
+  auto resize(u32 width, u32 height) -> void {
     _width = width;
     _height = height;
 
@@ -347,7 +359,7 @@ private:
     _glWidth = max(_glWidth, width);
     _glHeight = max(_glHeight, height);
     delete[] _glBuffer;
-    _glBuffer = new uint32_t[_glWidth * _glHeight]();
+    _glBuffer = new u32[_glWidth * _glHeight]();
 
     glBindTexture(GL_TEXTURE_2D, _glTexture);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, _glWidth);
@@ -358,12 +370,12 @@ private:
   bool blur = false;
 
   Display* _display = nullptr;
-  uint _monitorX = 0;
-  uint _monitorY = 0;
-  uint _monitorWidth = 0;
-  uint _monitorHeight = 0;
-  int _screen = 0;
-  uint _depth = 24;  //depth of the default root window
+  u32 _monitorX = 0;
+  u32 _monitorY = 0;
+  u32 _monitorWidth = 0;
+  u32 _monitorHeight = 0;
+  s32 _screen = 0;
+  u32 _depth = 24;  //depth of the default root window
   Window _parent = 0;
   Window _window = 0;
   Colormap _colormap = 0;
@@ -373,14 +385,14 @@ private:
   bool _isDoubleBuffered = false;
   bool _isDirect = false;
 
-  uint _width = 256;
-  uint _height = 256;
+  u32 _width = 256;
+  u32 _height = 256;
 
   GLuint _glTexture = 0;
-  uint32_t* _glBuffer = nullptr;
-  uint _glWidth = 0;
-  uint _glHeight = 0;
-  uint _glFormat = GL_UNSIGNED_INT_8_8_8_8_REV;
+  u32* _glBuffer = nullptr;
+  u32 _glWidth = 0;
+  u32 _glHeight = 0;
+  u32 _glFormat = GL_UNSIGNED_INT_8_8_8_8_REV;
 
   auto (*glXSwapInterval)(int) -> int = nullptr;
 };

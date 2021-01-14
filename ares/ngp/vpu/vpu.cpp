@@ -11,22 +11,24 @@ VPU vpu;
 #include "serialization.cpp"
 
 auto VPU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("VPU");
+  node = parent->append<Node::Object>("VPU");
 
-  screen = node->append<Node::Screen>("Screen");
+  screen = node->append<Node::Video::Screen>("Screen", 160, 152);
   if(Model::NeoGeoPocket()) screen->colors(1 << 3, {&VPU::colorNeoGeoPocket, this});
   if(Model::NeoGeoPocketColor()) screen->colors(1 << 12, {&VPU::colorNeoGeoPocketColor, this});
   screen->setSize(160, 152);
+  screen->setViewport(0, 0, 160, 152);
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
 
-  interframeBlending = screen->append<Node::Boolean>("Interframe Blending", true, [&](auto value) {
+  interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
     screen->setInterframeBlending(value);
   });
   interframeBlending->setDynamic(true);
 }
 
 auto VPU::unload() -> void {
+  screen->quit();
   node = {};
   screen = {};
   interframeBlending = {};
@@ -35,7 +37,7 @@ auto VPU::unload() -> void {
 auto VPU::main() -> void {
   if(io.vcounter < 152) {
     uint8 y = io.vcounter;
-    auto output = buffer + y * 160;
+    auto line = screen->pixels().data() + y * 160;
     cacheSprites(y);
     for(uint8 x : range(160)) {
       bool validPlane1 = renderPlane(x, y, plane1);
@@ -64,7 +66,7 @@ auto VPU::main() -> void {
         color ^= 7;
       }
 
-      output[x] = color;
+      line[x] = color;
       io.hcounter += 3;
       step(3);
     }
@@ -83,6 +85,7 @@ auto VPU::main() -> void {
   if(io.vcounter == 152) {
     io.vblankActive = 1;
     cpu.int4.set(!io.vblankEnableIRQ);
+    screen->frame();
     scheduler.exit(Event::Frame);
   }
   if(io.vcounter == io.vlines) {
@@ -106,12 +109,9 @@ auto VPU::step(uint clocks) -> void {
   synchronize(cpu);
 }
 
-auto VPU::refresh() -> void {
-  screen->refresh(buffer, 160 * sizeof(uint32), 160, 152);
-}
-
 auto VPU::power() -> void {
   Thread::create(system.frequency(), {&VPU::main, this});
+  screen->power();
 
   for(auto& p : colors) p = {};
   background = {};

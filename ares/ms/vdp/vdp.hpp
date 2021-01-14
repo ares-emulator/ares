@@ -1,9 +1,9 @@
 //Texas Instruments TMS9918A (derivative)
 
 struct VDP : Thread {
-  Node::Component node;
-  Node::Screen screen;
-  Node::Boolean interframeBlending;  //Game Gear
+  Node::Object node;
+  Node::Video::Screen screen;
+  Node::Setting::Boolean interframeBlending;  //Game Gear
   Memory::Writable<uint8> vram;  //16KB
   Memory::Writable<uint8> cram;  //SG + MS = 32, GG = 64
 
@@ -12,8 +12,8 @@ struct VDP : Thread {
     auto load(Node::Object) -> void;
 
     struct Memory {
-      Node::Memory vram;
-      Node::Memory cram;
+      Node::Debugger::Memory vram;
+      Node::Debugger::Memory cram;
     } memory;
   } debugger;
 
@@ -23,7 +23,6 @@ struct VDP : Thread {
 
   auto main() -> void;
   auto step(uint clocks) -> void;
-  auto refresh() -> void;
 
   auto vlines() -> uint;
   auto vblank() -> bool;
@@ -96,8 +95,6 @@ struct VDP : Thread {
 
 private:
   auto palette(uint5 index) -> uint12;
-
-  uint32 buffer[256 * 264];
 
   struct IO {
     uint vcounter = 0;  //vertical counter

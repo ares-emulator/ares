@@ -57,13 +57,13 @@ struct VideoDirect3D : VideoDriver {
     }
 
     //clear primary display and all backbuffers
-    for(uint n : range(3)) {
+    for(u32 n : range(3)) {
       _device->Clear(0, 0, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0x00, 0x00, 0x00), 1.0f, 0);
       _device->Present(0, 0, 0, 0);
     }
   }
 
-  auto size(uint& width, uint& height) -> void {
+  auto size(u32& width, u32& height) -> void {
     if(_lost && !recover()) return;
 
     RECT rectangle;
@@ -77,10 +77,10 @@ struct VideoDirect3D : VideoDriver {
     if(width != _windowWidth || height != _windowHeight) initialize();
   }
 
-  auto acquire(uint32_t*& data, uint& pitch, uint width, uint height) -> bool override {
+  auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
     if(_lost && !recover()) return false;
 
-    uint windowWidth, windowHeight;
+    u32 windowWidth, windowHeight;
     size(windowWidth, windowHeight);
 
     if(width != _inputWidth || height != _inputHeight) {
@@ -94,7 +94,7 @@ struct VideoDirect3D : VideoDriver {
     D3DLOCKED_RECT lockedRectangle;
     _surface->LockRect(&lockedRectangle, 0, D3DLOCK_NOSYSLOCK | D3DLOCK_DISCARD);
     pitch = lockedRectangle.Pitch;
-    return data = (uint32_t*)lockedRectangle.pBits;
+    return data = (u32*)lockedRectangle.pBits;
   }
 
   auto release() -> void override {
@@ -103,7 +103,7 @@ struct VideoDirect3D : VideoDriver {
     _surface = nullptr;
   }
 
-  auto output(uint width, uint height) -> void override {
+  auto output(u32 width, u32 height) -> void override {
     if(_lost && !recover()) return;
 
     if(!width) width = _windowWidth;
@@ -111,8 +111,8 @@ struct VideoDirect3D : VideoDriver {
 
     _device->BeginScene();
     //center output within window
-    uint x = (_windowWidth - width) / 2;
-    uint y = (_windowHeight - height) / 2;
+    u32 x = (_windowWidth - width) / 2;
+    u32 y = (_windowHeight - height) / 2;
     setVertex(0, 0, _inputWidth, _inputHeight, _textureWidth, _textureHeight, x, y, width, height);
     _device->SetTexture(0, _texture);
     _device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
@@ -195,7 +195,7 @@ private:
     return true;
   }
 
-  auto resize(uint width, uint height) -> void {
+  auto resize(u32 width, u32 height) -> void {
     if(_textureWidth >= width && _textureHeight >= height) return;
 
     _textureWidth = bit::round(max(width, _textureWidth));
@@ -220,27 +220,23 @@ private:
 
   //(x,y) screen coordinates, in pixels
   //(u,v) texture coordinates, betweeen 0.0 (top, left) to 1.0 (bottom, right)
-  auto setVertex(
-    uint32_t px, uint32_t py, uint32_t pw, uint32_t ph,
-    uint32_t tw, uint32_t th,
-    uint32_t x, uint32_t y, uint32_t w, uint32_t h
-  ) -> void {
+  auto setVertex(u32 px, u32 py, u32 pw, u32 ph, u32 tw, u32 th, u32 x, u32 y, u32 w, u32 h) -> void {
     Vertex vertex[4];
-    vertex[0].x = vertex[2].x = (double)(x     - 0.5);
-    vertex[1].x = vertex[3].x = (double)(x + w - 0.5);
-    vertex[0].y = vertex[1].y = (double)(y     - 0.5);
-    vertex[2].y = vertex[3].y = (double)(y + h - 0.5);
+    vertex[0].x = vertex[2].x = (f64)(x     - 0.5);
+    vertex[1].x = vertex[3].x = (f64)(x + w - 0.5);
+    vertex[0].y = vertex[1].y = (f64)(y     - 0.5);
+    vertex[2].y = vertex[3].y = (f64)(y + h - 0.5);
 
     //Z-buffer and RHW are unused for 2D blit, set to normal values
     vertex[0].z = vertex[1].z = vertex[2].z = vertex[3].z = 0.0;
     vertex[0].rhw = vertex[1].rhw = vertex[2].rhw = vertex[3].rhw = 1.0;
 
-    double rw = (double)w / (double)pw * (double)tw;
-    double rh = (double)h / (double)ph * (double)th;
-    vertex[0].u = vertex[2].u = (double)(px    ) / rw;
-    vertex[1].u = vertex[3].u = (double)(px + w) / rw;
-    vertex[0].v = vertex[1].v = (double)(py    ) / rh;
-    vertex[2].v = vertex[3].v = (double)(py + h) / rh;
+    f64 rw = (f64)w / (f64)pw * (f64)tw;
+    f64 rh = (f64)h / (f64)ph * (f64)th;
+    vertex[0].u = vertex[2].u = (f64)(px    ) / rw;
+    vertex[1].u = vertex[3].u = (f64)(px + w) / rw;
+    vertex[0].v = vertex[1].v = (f64)(py    ) / rh;
+    vertex[2].v = vertex[3].v = (f64)(py + h) / rh;
 
     LPDIRECT3DVERTEXBUFFER9* vertexPointer = nullptr;
     _vertexBuffer->Lock(0, sizeof(Vertex) * 4, (void**)&vertexPointer, 0);
@@ -359,19 +355,19 @@ private:
 
   bool _exclusive = false;
   bool _lost = true;
-  uint _windowWidth;
-  uint _windowHeight;
-  uint _textureWidth;
-  uint _textureHeight;
-  int _monitorX;
-  int _monitorY;
-  int _monitorWidth;
-  int _monitorHeight;
-  uint _inputWidth;
-  uint _inputHeight;
+  u32 _windowWidth;
+  u32 _windowHeight;
+  u32 _textureWidth;
+  u32 _textureHeight;
+  s32 _monitorX;
+  s32 _monitorY;
+  s32 _monitorWidth;
+  s32 _monitorHeight;
+  u32 _inputWidth;
+  u32 _inputHeight;
 
-  uint32_t _textureUsage;
-  uint32_t _texturePool;
-  uint32_t _vertexUsage;
-  uint32_t _vertexPool;
+  u32 _textureUsage;
+  u32 _texturePool;
+  u32 _vertexUsage;
+  u32 _vertexPool;
 };

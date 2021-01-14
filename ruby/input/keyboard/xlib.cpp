@@ -10,12 +10,12 @@ struct InputKeyboardXlib {
 
   struct Key {
     string name;
-    uint keysym;
-    uint keycode;
+    u32 keysym = 0;
+    u32 keycode = 0;
   };
   vector<Key> keys;
 
-  auto assign(uint inputID, bool value) -> void {
+  auto assign(u32 inputID, bool value) -> void {
     auto& group = hid->buttons();
     if(group.input(inputID).value() == value) return;
     input.doChange(hid, HID::Keyboard::GroupID::Button, inputID, group.input(inputID).value(), value);
@@ -26,7 +26,7 @@ struct InputKeyboardXlib {
     char state[32];
     XQueryKeymap(display, state);
 
-    uint inputID = 0;
+    u32 inputID = 0;
     for(auto& key : keys) {
       bool value = state[key.keycode >> 3] & (1 << (key.keycode & 7));
       assign(inputID++, value);

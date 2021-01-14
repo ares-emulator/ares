@@ -1,9 +1,12 @@
 struct HVC_BNROM : Interface {
-  Memory::Readable<uint8> programROM;
-  Memory::Readable<uint8> characterROM;
-  Memory::Writable<uint8> characterRAM;
+  static auto create(string id) -> Interface* {
+    if(id == "HVC-BNROM") return new HVC_BNROM;
+    return nullptr;
+  }
 
-  using Interface::Interface;
+  Memory::Readable<n8> programROM;
+  Memory::Readable<n8> characterROM;
+  Memory::Writable<n8> characterRAM;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -18,44 +21,43 @@ struct HVC_BNROM : Interface {
     Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto readPRG(uint address) -> uint8 {
-    if(address < 0x8000) return cpu.mdr();
-    return programROM.read(programBank << 15 | (uint15)address);
+  auto readPRG(n32 address, n8 data) -> n8 override {
+    if(address < 0x8000) return data;
+    return programROM.read(programBank << 15 | (n15)address);
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x8000) return;
     programBank = data.bit(0,1);
   }
 
-  auto readCHR(uint address) -> uint8 {
+  auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) {
-      address = address >> !mirror & 0x0400 | address & 0x03ff;
+      address = address >> !mirror & 0x0400 | (n10)address;
       return ppu.readCIRAM(address);
     }
     if(characterROM) return characterROM.read(address);
     if(characterRAM) return characterRAM.read(address);
-    return 0x00;
+    return data;
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void override {
     if(address & 0x2000) {
-      address = address >> !mirror & 0x0400 | address & 0x03ff;
+      address = address >> !mirror & 0x0400 | (n10)address;
       return ppu.writeCIRAM(address, data);
     }
     if(characterRAM) return characterRAM.write(address, data);
   }
 
   auto power() -> void {
-    programBank = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    characterRAM.serialize(s);
-    s.integer(mirror);
-    s.integer(programBank);
+    s(characterRAM);
+    s(mirror);
+    s(programBank);
   }
 
-  uint1 mirror;  //0 = horizontal, 1 = vertical
-  uint2 programBank;
+  n1 mirror;  //0 = horizontal, 1 = vertical
+  n2 programBank;
 };

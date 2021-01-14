@@ -21,16 +21,6 @@ auto OptionSettings::construct() -> void {
   });
   autoSaveMemoryHint.setText("Helps safeguard game saves from being lost").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
 
-  fastBoot.setText("Fast Boot").setChecked(settings.general.fastBoot).onToggle([&] {
-    settings.general.fastBoot = fastBoot.checked();
-  });
-  fastBootHint.setText("Skips BIOS boot screens for the PlayStation and Neo Geo Pocket").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
-
-  autoDebug.setText("Auto Debug").setChecked(settings.general.autoDebug).onToggle([&] {
-    settings.general.autoDebug = autoDebug.checked();
-  });
-  autoDebugHint.setText("Pauses the emulator and activates the debugger on game load").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
-
   nativeFileDialogs.setText("Use Native File Dialogs").setChecked(settings.general.nativeFileDialogs).onToggle([&] {
     settings.general.nativeFileDialogs = nativeFileDialogs.checked();
   });

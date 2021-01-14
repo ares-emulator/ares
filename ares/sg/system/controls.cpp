@@ -1,7 +1,7 @@
 auto System::Controls::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("Controls");
 
-  pause = node->append<Node::Button>("Pause");
+  pause = node->append<Node::Input::Button>("Pause");
 }
 
 auto System::Controls::poll() -> void {

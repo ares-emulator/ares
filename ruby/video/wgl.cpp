@@ -53,6 +53,18 @@ struct VideoWGL : VideoDriver, OpenGL {
     return true;
   }
 
+  auto acquireContext() -> bool override {
+    if(!_ready) return true;
+    if(wglMakeCurrent(_display, _wglContext)) return true;
+    return initialize();
+  }
+
+  auto releaseContext() -> bool override {
+    if(!_ready) return true;
+    if(wglMakeCurrent(_display, nullptr)) return true;
+    return terminate(), true;
+  }
+
   auto focused() -> bool override {
     if(self.fullScreen && self.exclusive) return true;
     auto focused = GetFocus();
@@ -64,7 +76,7 @@ struct VideoWGL : VideoDriver, OpenGL {
     SwapBuffers(_display);
   }
 
-  auto size(uint& width, uint& height) -> void override {
+  auto size(u32& width, u32& height) -> void override {
     if(self.fullScreen) {
       width = _monitorWidth;
       height = _monitorHeight;
@@ -76,7 +88,7 @@ struct VideoWGL : VideoDriver, OpenGL {
     }
   }
 
-  auto acquire(uint32_t*& data, uint& pitch, uint width, uint height) -> bool override {
+  auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
     OpenGL::size(width, height);
     return OpenGL::lock(data, pitch);
   }
@@ -84,8 +96,8 @@ struct VideoWGL : VideoDriver, OpenGL {
   auto release() -> void override {
   }
 
-  auto output(uint width, uint height) -> void override {
-    uint windowWidth, windowHeight;
+  auto output(u32 width, u32 height) -> void override {
+    u32 windowWidth, windowHeight;
     size(windowWidth, windowHeight);
 
     OpenGL::absoluteWidth = width;
@@ -155,7 +167,7 @@ private:
     wglSwapInterval = (BOOL (APIENTRY*)(int))glGetProcAddress("wglSwapIntervalEXT");
 
     if(wglCreateContextAttribs) {
-      int attributeList[] = {
+      s32 attributeList[] = {
         WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
         WGL_CONTEXT_MINOR_VERSION_ARB, 2,
         0
@@ -194,10 +206,10 @@ private:
 
   bool _ready = false;
 
-  int _monitorX = 0;
-  int _monitorY = 0;
-  int _monitorWidth = 0;
-  int _monitorHeight = 0;
+  s32 _monitorX = 0;
+  s32 _monitorY = 0;
+  s32 _monitorWidth = 0;
+  s32 _monitorHeight = 0;
 
   HWND _window = nullptr;
   HWND _context = nullptr;

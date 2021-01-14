@@ -39,6 +39,10 @@ struct WritableMemory : AbstractMemory {
     return self.data[address];
   }
 
+  auto serialize(serializer& s) -> void {
+    s(array_span<uint8>{self.data, self.size});
+  }
+
 private:
   struct {
     uint8* data = nullptr;

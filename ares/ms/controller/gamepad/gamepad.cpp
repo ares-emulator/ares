@@ -1,12 +1,12 @@
 Gamepad::Gamepad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Gamepad");
 
-  up    = node->append<Node::Button>("Up");
-  down  = node->append<Node::Button>("Down");
-  left  = node->append<Node::Button>("Left");
-  right = node->append<Node::Button>("Right");
-  one   = node->append<Node::Button>("1");
-  two   = node->append<Node::Button>("2");
+  up    = node->append<Node::Input::Button>("Up");
+  down  = node->append<Node::Input::Button>("Down");
+  left  = node->append<Node::Input::Button>("Left");
+  right = node->append<Node::Input::Button>("Right");
+  one   = node->append<Node::Input::Button>("1");
+  two   = node->append<Node::Input::Button>("2");
 }
 
 auto Gamepad::read() -> uint8 {

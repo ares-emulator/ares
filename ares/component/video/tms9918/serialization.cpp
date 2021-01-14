@@ -1,39 +1,39 @@
 auto TMS9918::serialize(serializer& s) -> void {
-  s.array(vram.data(), vram.size());
+  s(vram);
 
-  s.integer(io.vcounter);
-  s.integer(io.hcounter);
+  s(io.vcounter);
+  s(io.hcounter);
 
-  s.integer(io.controlLatch);
-  s.integer(io.controlValue);
-  s.integer(io.vramLatch);
+  s(io.controlLatch);
+  s(io.controlValue);
+  s(io.vramLatch);
 
-  s.integer(io.spriteOverflowIndex);
-  s.integer(io.spriteCollision);
-  s.integer(io.spriteOverflow);
-  s.integer(io.irqLine);
+  s(io.spriteOverflowIndex);
+  s(io.spriteCollision);
+  s(io.spriteOverflow);
+  s(io.irqLine);
 
-  s.integer(io.externalInput);
-  s.integer(io.videoMode);
-  s.integer(io.spriteZoom);
-  s.integer(io.spriteSize);
-  s.integer(io.irqEnable);
-  s.integer(io.displayEnable);
-  s.integer(io.ramMode);
-  s.integer(io.nameTableAddress);
-  s.integer(io.colorTableAddress);
-  s.integer(io.patternTableAddress);
-  s.integer(io.spriteAttributeTableAddress);
-  s.integer(io.spritePatternTableAddress);
-  s.integer(io.colorBackground);
-  s.integer(io.colorForeground);
+  s(io.externalInput);
+  s(io.videoMode);
+  s(io.spriteZoom);
+  s(io.spriteSize);
+  s(io.irqEnable);
+  s(io.displayEnable);
+  s(io.ramMode);
+  s(io.nameTableAddress);
+  s(io.colorTableAddress);
+  s(io.patternTableAddress);
+  s(io.spriteAttributeTableAddress);
+  s(io.spritePatternTableAddress);
+  s(io.colorBackground);
+  s(io.colorForeground);
 
   for(auto& sprite : sprites) {
-    s.integer(sprite.x);
-    s.integer(sprite.y);
-    s.integer(sprite.pattern);
-    s.integer(sprite.color);
+    s(sprite.x);
+    s(sprite.y);
+    s(sprite.pattern);
+    s(sprite.color);
   }
 
-  s.integer(output.color);
+  s(output.color);
 }

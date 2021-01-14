@@ -13,9 +13,6 @@ struct DAC {
 
   auto serialize(serializer&) -> void;
 
-  uint32* lineA;
-  uint32* lineB;
-
   uint15 cgram[256];
 
   struct IO {
@@ -44,4 +41,7 @@ struct DAC {
   } math;
 
   friend class PPU;
+
+//unserialized:
+  u32* line = nullptr;
 };

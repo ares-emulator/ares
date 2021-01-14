@@ -134,6 +134,12 @@
   return self;
 }
 
+-(void) reloadData {
+  //acquire lock to prevent tableViewSelectionDidChange from invoking the onChange callback
+  auto lock = tableView->self()->acquire();
+  [super reloadData];
+}
+
 -(void) keyDown:(NSEvent*)event {
   auto character = [[event characters] characterAtIndex:0];
   if(character == NSEnterCharacter || character == NSCarriageReturnCharacter) {
@@ -149,6 +155,17 @@
   }
 
   [super keyDown:event];
+}
+
+-(NSMenu*) menuForEvent:(NSEvent*)event {
+  //macOS doesn't set focus to right-clicked items, but this is neccesary for context menus:
+  NSInteger row = [self rowAtPoint:[self convertPoint:event.locationInWindow fromView:nil]];
+  if(row >= 0 && ![self isRowSelected:row]) {
+    [self selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+  }
+
+  tableView->doContext();
+  return nil;
 }
 
 @end

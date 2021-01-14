@@ -1,26 +1,34 @@
 struct HVC_ExROM : Interface {  //MMC5
-  Memory::Readable<uint8> programROM;
-  Memory::Writable<uint8> programRAM;
-  Memory::Readable<uint8> characterROM;
-  Memory::Writable<uint8> exram;
-  Node::Stream stream;
+  static auto create(string id) -> Interface* {
+    if(id == "HVC-EKROM") return new HVC_ExROM(Revision::EKROM);
+    if(id == "HVC-ELROM") return new HVC_ExROM(Revision::ELROM);
+    if(id == "HVC-ETROM") return new HVC_ExROM(Revision::ETROM);
+    if(id == "HVC-EWROM") return new HVC_ExROM(Revision::EWROM);
+    return nullptr;
+  }
 
-  enum class Revision : uint {
+  Memory::Readable<n8> programROM;
+  Memory::Writable<n8> programRAM;
+  Memory::Readable<n8> characterROM;
+  Memory::Writable<n8> exram;
+  Node::Audio::Stream stream;
+
+  enum class Revision : u32 {
     EKROM,
     ELROM,
     ETROM,
     EWROM,
   } revision;
 
-  enum class ChipRevision : uint {
+  enum class ChipRevision : u32 {
     MMC5,
     MMC5A,
   } chipRevision;
 
-  HVC_ExROM(Markup::Node document, Revision revision) : Interface(document), revision(revision) {}
+  HVC_ExROM(Revision revision) : revision(revision) {}
 
   struct Envelope {
-    auto volume() const -> uint {
+    auto volume() const -> u32 {
       return useSpeedAsVolume ? speed : decayVolume;
     }
 
@@ -38,20 +46,20 @@ struct HVC_ExROM : Interface {  //MMC5
     }
 
     auto serialize(serializer& s) -> void {
-      s.integer(speed);
-      s.integer(useSpeedAsVolume);
-      s.integer(loopMode);
-      s.integer(reloadDecay);
-      s.integer(decayCounter);
-      s.integer(decayVolume);
+      s(speed);
+      s(useSpeedAsVolume);
+      s(loopMode);
+      s(reloadDecay);
+      s(decayCounter);
+      s(decayVolume);
     }
 
-    uint4 speed;
-    uint1 useSpeedAsVolume;
-    uint1 loopMode;
-    uint1 reloadDecay;
-    uint8 decayCounter;
-    uint4 decayVolume;
+    n4 speed;
+    n1 useSpeedAsVolume;
+    n1 loopMode;
+    n1 reloadDecay;
+    n8 decayCounter;
+    n4 decayVolume;
   };
 
   struct Pulse {
@@ -65,15 +73,15 @@ struct HVC_ExROM : Interface {  //MMC5
       }
     }
 
-    auto clock() -> uint8 {
+    auto clock() -> n8 {
       if(lengthCounter == 0) return 0;
-      static const uint dutyTable[4][8] = {
+      static constexpr u32 dutyTable[4][8] = {
         {0, 0, 0, 0, 0, 0, 0, 1},  //12.5%
         {0, 0, 0, 0, 0, 0, 1, 1},  //25.0%
         {0, 0, 0, 0, 1, 1, 1, 1},  //50.0%
         {1, 1, 1, 1, 1, 1, 0, 0},  //25.0% (negated)
       };
-      uint8 result = dutyTable[duty][dutyCounter] ? envelope.volume() : 0;
+      n8 result = dutyTable[duty][dutyCounter] ? envelope.volume() : 0;
       if(--periodCounter == 0) {
         periodCounter = (period + 1) * 2;
         dutyCounter--;
@@ -82,46 +90,46 @@ struct HVC_ExROM : Interface {  //MMC5
     }
 
     auto serialize(serializer& s) -> void {
-      envelope.serialize(s);
-      s.integer(lengthCounter);
-      s.integer(periodCounter);
-      s.integer(duty);
-      s.integer(dutyCounter);
-      s.integer(period);
+      s(envelope);
+      s(lengthCounter);
+      s(periodCounter);
+      s(duty);
+      s(dutyCounter);
+      s(period);
     }
 
     Envelope envelope;
-    uint16 lengthCounter;
-    uint16 periodCounter;
-     uint2 duty;
-     uint3 dutyCounter;
-    uint11 period;
+    n16 lengthCounter;
+    n16 periodCounter;
+    n02 duty;
+    n03 dutyCounter;
+    n11 period;
   };
 
   struct PCM {
     auto serialize(serializer& s) -> void {
-      s.integer(mode);
-      s.integer(irqEnable);
-      s.integer(irqLine);
-      s.integer(dac);
+      s(mode);
+      s(irqEnable);
+      s(irqLine);
+      s(dac);
     }
 
-    uint1 mode;
-    uint1 irqEnable;
-    uint1 irqLine;
-    uint8 dac;
+    n1 mode;
+    n1 irqEnable;
+    n1 irqLine;
+    n8 dac;
   };
 
   struct Pin {
     auto serialize(serializer& s) -> void {
-      s.integer(source);
-      s.integer(direction);
-      s.integer(line);
+      s(source);
+      s(direction);
+      s(line);
     }
 
-    uint1 source;     //0 = $5208, 1 = $5800-5bff
-    uint1 direction;  //0 = output, 1 = input
-    uint1 line;
+    n1 source;     //0 = $5208, 1 = $5800-5bff
+    n1 direction;  //0 = output, 1 = input
+    n1 line;
   };
 
   auto load(Markup::Node document) -> void override {
@@ -133,9 +141,9 @@ struct HVC_ExROM : Interface {  //MMC5
     Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
     exram.allocate(1_KiB);
 
-    stream = cartridge.node->append<Node::Stream>("MMC5");
+    stream = cartridge.node->append<Node::Audio::Stream>("MMC5");
     stream->setChannels(1);
-    stream->setFrequency(uint(system.frequency() + 0.5) / cartridge.rate());
+    stream->setFrequency(u32(system.frequency() + 0.5) / cartridge.rate());
   }
 
   auto save(Markup::Node document) -> void override {
@@ -152,10 +160,10 @@ struct HVC_ExROM : Interface {  //MMC5
       timerLine = 1;
     }
 
-    int output = 0;
+    i32 output = 0;
     output += apu.pulseDAC[pulse1.clock() + pulse2.clock()];
     output += pcm.dac << 7;
-    stream->sample(sclamp<16>(-output) / 32768.0);
+    stream->frame(sclamp<16>(-output) / 32768.0);
 
     cpu.irqLine((irqLine & irqEnable) || (pcm.irqLine & pcm.irqEnable) || timerLine);
 
@@ -180,8 +188,8 @@ struct HVC_ExROM : Interface {  //MMC5
     }
   }
 
-  auto accessPRG(bool write, uint address, uint8 data = 0x00) -> uint8 {
-    uint8 bank;
+  auto accessPRG(bool write, n32 address, n8 data = 0x00) -> n8 {
+    n8 bank;
 
     if((address & 0xe000) == 0x6000) {
       bank = ramSelect << 2 | ramBank;
@@ -207,7 +215,7 @@ struct HVC_ExROM : Interface {  //MMC5
       address &= 0x1fff;
     }
 
-    uint1 rom = bank.bit(7);
+    n1 rom = bank.bit(7);
     bank.bit(7) = 0;
 
     if(!write) {
@@ -228,28 +236,28 @@ struct HVC_ExROM : Interface {  //MMC5
     }
   }
 
-  auto readPRG(uint address) -> uint8 {
+  auto readPRG(n32 address, n8 data) -> n8 override {
     if((address & 0xfc00) == 0x5800) {
-      if(chipRevision != ChipRevision::MMC5A) return cpu.mdr();
+      if(chipRevision != ChipRevision::MMC5A) return data;
       if(cl3.direction == 1) cl3.line = 0;  //!M2
       if(sl3.direction == 1) sl3.line = 0;  //!M2
-      return cpu.mdr();
+      return data;
     }
 
     if((address & 0xfc00) == 0x5c00) {
-      if(exramMode >= 2) return exram[(uint10)address];
-      return cpu.mdr();
+      if(exramMode >= 2) return exram[(n10)address];
+      return data;
     }
 
     if(address >= 0x6000) {
-      uint8 data = accessPRG(0, address);
+      data = accessPRG(0, address);
       if(pcm.mode == 1 && (address & 0xc000) == 0x8000) pcm.dac = data;
       return data;
     }
 
     switch(address) {
     case 0x5010: {
-      uint8 data;
+      n8 data;
       data.bit(0) = pcm.mode;
       data.bit(7) = pcm.irqLine & pcm.irqEnable;
       pcm.irqLine = 0;
@@ -257,14 +265,14 @@ struct HVC_ExROM : Interface {  //MMC5
     }
 
     case 0x5015: {
-      uint8 data;
+      n8 data;
       data.bit(0) = (bool)pulse1.lengthCounter;
       data.bit(1) = (bool)pulse2.lengthCounter;
       return data;
     }
 
     case 0x5204: {
-      uint8 data;
+      n8 data;
       data.bit(6) = inFrame;
       data.bit(7) = irqLine;
       irqLine = 0;
@@ -279,7 +287,7 @@ struct HVC_ExROM : Interface {  //MMC5
 
     case 0x5208: {
       if(chipRevision != ChipRevision::MMC5A) break;
-      uint8 data;
+      n8 data;
       data.bit(6) = cl3.line;
       data.bit(7) = sl3.line;
       return data;
@@ -287,7 +295,7 @@ struct HVC_ExROM : Interface {  //MMC5
 
     case 0x5209: {
       if(chipRevision != ChipRevision::MMC5A) break;
-      uint8 data;
+      n8 data;
       data.bit(7) = timerLine;
       timerLine = 0;
       return data;
@@ -297,7 +305,7 @@ struct HVC_ExROM : Interface {  //MMC5
     return 0x00;
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if((address & 0xfc00) == 0x5800) {
       if(chipRevision != ChipRevision::MMC5A) return;
       if(cl3.direction == 1) cl3.line = 0;  //!M2
@@ -307,8 +315,8 @@ struct HVC_ExROM : Interface {  //MMC5
 
     if((address & 0xfc00) == 0x5c00) {
       //writes 0x00 *during* Vblank (not during screen rendering ...)
-      if(exramMode == 0 || exramMode == 1) exram[(uint10)address] = inFrame ? data : (uint8)0x00;
-      if(exramMode == 2) exram[(uint10)address] = data;
+      if(exramMode == 0 || exramMode == 1) exram[(n10)address] = inFrame ? data : (n8)0x00;
+      if(exramMode == 2) exram[(n10)address] = data;
       return;
     }
 
@@ -560,74 +568,74 @@ struct HVC_ExROM : Interface {  //MMC5
     }
   }
 
-  auto readCIRAM(uint address) -> uint8 {
+  auto readCIRAM(n32 address) -> n8 {
     if(vsplitFetch && (hcounter & 2) == 0) return exram[vsplitVoffset / 8 * 32 + vsplitHoffset / 8];
     if(vsplitFetch && (hcounter & 2) != 0) return exram[vsplitVoffset / 32 * 8 + vsplitHoffset / 32 + 0x03c0];
 
     switch(nametableMode[address >> 10 & 3]) {
-    case 0: return ppu.readCIRAM(0x0000 | address & 0x03ff);
-    case 1: return ppu.readCIRAM(0x0400 | address & 0x03ff);
-    case 2: return exramMode < 2 ? exram[(uint10)address] : (uint8)0x00;
+    case 0: return ppu.readCIRAM(0x0000 | (n10)address);
+    case 1: return ppu.readCIRAM(0x0400 | (n10)address);
+    case 2: return exramMode < 2 ? exram[(n10)address] : (n8)0x00;
     case 3: return (hcounter & 2) == 0 ? fillmodeTile : fillmodeColor;
     }
     unreachable;
   }
 
-  auto characterSpriteAddress(uint address) -> uint {
+  auto characterSpriteAddress(n32 address) -> n32 {
     if(characterMode == 0) {
       auto bank = characterSpriteBank[7];
-      return bank << 13 | (uint13)address;
+      return bank << 13 | (n13)address;
     }
 
     if(characterMode == 1) {
       auto bank = characterSpriteBank[(address >> 12) * 4 + 3];
-      return bank << 12 | (uint12)address;
+      return bank << 12 | (n12)address;
     }
 
     if(characterMode == 2) {
       auto bank = characterSpriteBank[(address >> 11) * 2 + 1];
-      return bank << 11 | (uint11)address;
+      return bank << 11 | (n11)address;
     }
 
     if(characterMode == 3) {
       auto bank = characterSpriteBank[(address >> 10)];
-      return bank << 10 | (uint10)address;
+      return bank << 10 | (n10)address;
     }
 
     unreachable;
   }
 
-  auto characterBackgroundAddress(uint address) -> uint {
+  auto characterBackgroundAddress(n32 address) -> n32 {
     address &= 0x0fff;
 
     if(characterMode == 0) {
       auto bank = characterBackgroundBank[3];
-      return bank << 13 | (uint12)address;
+      return bank << 13 | (n12)address;
     }
 
     if(characterMode == 1) {
       auto bank = characterBackgroundBank[3];
-      return bank << 12 | (uint12)address;
+      return bank << 12 | (n12)address;
     }
 
     if(characterMode == 2) {
       auto bank = characterBackgroundBank[(address >> 11) * 2 + 1];
-      return bank << 11 | (uint11)address;
+      return bank << 11 | (n11)address;
     }
 
     if(characterMode == 3) {
       auto bank = characterBackgroundBank[(address >> 10)];
-      return bank << 10 | (uint10)address;
+      return bank << 10 | (n10)address;
     }
 
     unreachable;
   }
 
-  auto characterVsplitAddress(uint address) -> uint {
+  auto characterVsplitAddress(n32 address) -> n32 {
     return vsplitBank << 12 | address & 0x0ff8 | vsplitVoffset & 7;
   }
 
-  auto readCHR(uint address) -> uint8 {
+  auto readCHR(n32 address, n8 data) -> n8 override {
     characterAccess[0] = characterAccess[1];
     characterAccess[1] = characterAccess[2];
     characterAccess[2] = characterAccess[3];
@@ -645,8 +653,8 @@ struct HVC_ExROM : Interface {  //MMC5
       return characterROM.read(characterActive ? characterBackgroundAddress(address) : characterSpriteAddress(address));
     }
 
-    uint1 backgroundFetch = (hcounter < 256 || hcounter >= 320);
-    uint8 data = 0x00;
+    n1 backgroundFetch = (hcounter < 256 || hcounter >= 320);
+    data = 0x00;
 
     if((hcounter & 7) == 0) {
       vsplitHoffset = hcounter >= 320 ? hcounter - 320 : hcounter + 16;
@@ -657,11 +665,11 @@ struct HVC_ExROM : Interface {  //MMC5
 
       data = readCIRAM(address);
 
-      exbank = characterBankHi << 6 | exram[(uint10)address].bit(0,5);
-      exattr.bit(0,1) = exram[(uint10)address].bit(6,7);
-      exattr.bit(2,3) = exram[(uint10)address].bit(6,7);
-      exattr.bit(4,5) = exram[(uint10)address].bit(6,7);
-      exattr.bit(6,7) = exram[(uint10)address].bit(6,7);
+      exbank = characterBankHi << 6 | exram[(n10)address].bit(0,5);
+      exattr.bit(0,1) = exram[(n10)address].bit(6,7);
+      exattr.bit(2,3) = exram[(n10)address].bit(6,7);
+      exattr.bit(4,5) = exram[(n10)address].bit(6,7);
+      exattr.bit(6,7) = exram[(n10)address].bit(6,7);
     } else if((hcounter & 7) == 2) {
       data = readCIRAM(address);
       if(backgroundFetch && exramMode == 1) data = exattr;
@@ -669,174 +677,133 @@ struct HVC_ExROM : Interface {  //MMC5
       if(vsplitFetch) data = characterROM.read(characterVsplitAddress(address));
       else if(sprite8x16 ? backgroundFetch : characterActive) data = characterROM.read(characterBackgroundAddress(address));
       else data = characterROM.read(characterSpriteAddress(address));
-      if(backgroundFetch && exramMode == 1) data = characterROM.read(exbank << 12 | (uint12)address);
+      if(backgroundFetch && exramMode == 1) data = characterROM.read(exbank << 12 | (n12)address);
     }
 
     hcounter += 2;
     return data;
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void override {
     if(address & 0x2000) {
       switch(nametableMode[address >> 10 & 3]) {
-      case 0: return ppu.writeCIRAM(0x0000 | address & 0x03ff, data);
-      case 1: return ppu.writeCIRAM(0x0400 | address & 0x03ff, data);
-      case 2: exram[(uint10)address] = data; break;
+      case 0: return ppu.writeCIRAM(0x0000 | (n10)address, data);
+      case 1: return ppu.writeCIRAM(0x0400 | (n10)address, data);
+      case 2: exram[(n10)address] = data; break;
       }
     }
   }
 
   auto power() -> void {
-    pulse1 = {};
-    pulse2 = {};
-    pcm = {};
     for(auto& byte : exram) byte = 0xff;
     programMode = 3;
-    characterMode = 0;
-    for(auto& writeProtect : ramWriteProtect) writeProtect = 0;
-    exramMode = 0;
-    for(auto& mode : nametableMode) mode = 0;
-    fillmodeTile = 0;
-    fillmodeColor = 0;
-    ramSelect = 0;
-    ramBank = 0;
-    programBank[0] = 0x00;
-    programBank[1] = 0x00;
-    programBank[2] = 0x00;
     programBank[3] = 0xff;
-    for(auto& bank : characterSpriteBank) bank = 0;
-    for(auto& bank : characterBackgroundBank) bank = 0;
-    characterBankHi = 0;
-    vsplitEnable = 0;
-    vsplitSide = 0;
-    vsplitTile = 0;
-    vsplitScroll = 0;
-    vsplitBank = 0;
-    irqCoincidence = 0;
-    irqEnable = 0;
-    multiplicand = 0;
-    multiplier = 0;
-    timerCounter = 0;
-    timerLine = 0;
-    cycleCounter = 0;
-    irqLine = 0;
-    inFrame = 0;
-    vcounter = 0;
-    hcounter = 0;
-    for(auto& access : characterAccess) access = 0;
-    characterActive = 0;
-    sprite8x16 = 0;
-    exbank = 0;
-    exattr = 0;
-    vsplitFetch = 0;
-    vsplitVoffset = 0;
-    vsplitHoffset = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    programRAM.serialize(s);
-    exram.serialize(s);
-    pulse1.serialize(s);
-    pulse2.serialize(s);
-    pcm.serialize(s);
-    cl3.serialize(s);
-    sl3.serialize(s);
-    s.integer(programMode);
-    s.integer(characterMode);
-    s.array(ramWriteProtect);
-    s.integer(exramMode);
-    s.array(nametableMode);
-    s.integer(fillmodeTile);
-    s.integer(fillmodeColor);
-    s.integer(ramSelect);
-    s.integer(ramBank);
-    s.array(programBank);
-    s.array(characterSpriteBank);
-    s.array(characterBackgroundBank);
-    s.integer(characterBankHi);
-    s.integer(vsplitEnable);
-    s.integer(vsplitSide);
-    s.integer(vsplitTile);
-    s.integer(vsplitScroll);
-    s.integer(vsplitBank);
-    s.integer(irqCoincidence);
-    s.integer(irqEnable);
-    s.integer(multiplicand);
-    s.integer(multiplier);
-    s.integer(timerCounter);
-    s.integer(timerLine);
-    s.integer(cycleCounter);
-    s.integer(irqLine);
-    s.integer(inFrame);
-    s.integer(vcounter);
-    s.integer(hcounter);
-    s.array(characterAccess);
-    s.integer(characterActive);
-    s.integer(sprite8x16);
-    s.integer(exbank);
-    s.integer(exattr);
-    s.integer(vsplitFetch);
-    s.integer(vsplitVoffset);
-    s.integer(vsplitHoffset);
+    s(programRAM);
+    s(exram);
+    s(pulse1);
+    s(pulse2);
+    s(pcm);
+    s(cl3);
+    s(sl3);
+    s(programMode);
+    s(characterMode);
+    s(ramWriteProtect);
+    s(exramMode);
+    s(nametableMode);
+    s(fillmodeTile);
+    s(fillmodeColor);
+    s(ramSelect);
+    s(ramBank);
+    s(programBank);
+    s(characterSpriteBank);
+    s(characterBackgroundBank);
+    s(characterBankHi);
+    s(vsplitEnable);
+    s(vsplitSide);
+    s(vsplitTile);
+    s(vsplitScroll);
+    s(vsplitBank);
+    s(irqCoincidence);
+    s(irqEnable);
+    s(multiplicand);
+    s(multiplier);
+    s(timerCounter);
+    s(timerLine);
+    s(cycleCounter);
+    s(irqLine);
+    s(inFrame);
+    s(vcounter);
+    s(hcounter);
+    s(characterAccess);
+    s(characterActive);
+    s(sprite8x16);
+    s(exbank);
+    s(exattr);
+    s(vsplitFetch);
+    s(vsplitVoffset);
+    s(vsplitHoffset);
   }
 
   //programmable registers
 
-   Pulse pulse1;  //$5000-5003
-   Pulse pulse2;  //$5004-5007
-     PCM pcm;     //$5010-5011
+  Pulse pulse1;  //$5000-5003
+  Pulse pulse2;  //$5004-5007
+  PCM   pcm;     //$5010-5011
 
-     Pin cl3;  //$5207-5208
-     Pin sl3;  //$5207-5208
+  Pin cl3;  //$5207-5208
+  Pin sl3;  //$5207-5208
 
-   uint2 programMode;    //$5100
-   uint2 characterMode;  //$5101
+  n02 programMode;    //$5100
+  n02 characterMode;  //$5101
 
-   uint2 ramWriteProtect[2];  //$5102-$5103
+  n02 ramWriteProtect[2];  //$5102-$5103
 
-   uint2 exramMode;         //$5104
-   uint2 nametableMode[4];  //$5105
-   uint8 fillmodeTile;      //$5106
-   uint8 fillmodeColor;     //$5107
+  n02 exramMode;         //$5104
+  n02 nametableMode[4];  //$5105
+  n08 fillmodeTile;      //$5106
+  n08 fillmodeColor;     //$5107
 
-   uint1 ramSelect;                   //$5113
-   uint2 ramBank;                     //$5113
-   uint8 programBank[4];              //$5114-5117
-  uint10 characterSpriteBank[8];      //$5120-5127
-  uint10 characterBackgroundBank[4];  //$5128-512b
-   uint2 characterBankHi;             //$5130
+  n01 ramSelect;                   //$5113
+  n02 ramBank;                     //$5113
+  n08 programBank[4];              //$5114-5117
+  n10 characterSpriteBank[8];      //$5120-5127
+  n10 characterBackgroundBank[4];  //$5128-512b
+  n02 characterBankHi;             //$5130
 
-   uint1 vsplitEnable;  //$5200
-   uint1 vsplitSide;    //$5200
-   uint5 vsplitTile;    //$5200
-   uint8 vsplitScroll;  //$5201
-   uint8 vsplitBank;    //$5202
+  n01 vsplitEnable;  //$5200
+  n01 vsplitSide;    //$5200
+  n05 vsplitTile;    //$5200
+  n08 vsplitScroll;  //$5201
+  n08 vsplitBank;    //$5202
 
-   uint8 irqCoincidence;  //$5203
-   uint1 irqEnable;       //$5204
+  n08 irqCoincidence;  //$5203
+  n01 irqEnable;       //$5204
 
-   uint8 multiplicand;  //$5205
-   uint8 multiplier;    //$5206
+  n08 multiplicand;  //$5205
+  n08 multiplier;    //$5206
 
-  uint16 timerCounter;  //$5209-520a
-   uint1 timerLine;
+  n16 timerCounter;  //$5209-520a
+  n01 timerLine;
 
   //status registers
 
-   uint8 cycleCounter;
-   uint1 irqLine;
-   uint1 inFrame;
+  n08 cycleCounter;
+  n01 irqLine;
+  n01 inFrame;
 
-  uint16 vcounter;
-  uint16 hcounter;
-  uint16 characterAccess[4];
-   uint1 characterActive;
-   uint1 sprite8x16;
+  n16 vcounter;
+  n16 hcounter;
+  n16 characterAccess[4];
+  n01 characterActive;
+  n01 sprite8x16;
 
-   uint8 exbank;
-   uint8 exattr;
+  n08 exbank;
+  n08 exattr;
 
-   uint1 vsplitFetch;
-   uint8 vsplitVoffset;
-   uint8 vsplitHoffset;
+  n01 vsplitFetch;
+  n08 vsplitVoffset;
+  n08 vsplitHoffset;
 };

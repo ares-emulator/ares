@@ -17,15 +17,15 @@ VDP vdp;
 #include "serialization.cpp"
 
 auto VDP::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("VDP");
+  node = parent->append<Node::Object>("VDP");
 
-  screen = node->append<Node::Screen>("Screen");
+  screen = node->append<Node::Video::Screen>("Screen", 1280, 480);
   screen->colors(3 * (1 << 9), {&VDP::color, this});
   screen->setSize(1280, 480);
   screen->setScale(0.25, 0.50);
   screen->setAspect(1.0, 1.0);
 
-  overscan = screen->append<Node::Boolean>("Overscan", true, [&](auto value) {
+  overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
     if(value == 0) screen->setSize(1280, 448);
     if(value == 1) screen->setSize(1280, 480);
   });
@@ -35,10 +35,11 @@ auto VDP::load(Node::Object parent) -> void {
 }
 
 auto VDP::unload() -> void {
-  node = {};
-  screen = {};
-  overscan = {};
-  debugger = {};
+  screen->quit();
+  debugger.unload();
+  screen.reset();
+  overscan.reset();
+  node.reset();
 }
 
 auto VDP::main() -> void {
@@ -86,6 +87,8 @@ auto VDP::main() -> void {
   if(++state.vcounter >= frameHeight()) {
     state.vcounter = 0;
     state.field ^= 1;
+    latch.field = state.field;
+    latch.interlace = io.interlaceMode == 3;
     latch.overscan = io.overscan;
   }
   latch.displayWidth = io.displayWidth;
@@ -100,29 +103,14 @@ auto VDP::step(uint clocks) -> void {
   }
 }
 
-auto VDP::refresh() -> void {
-  auto data = output;
-
-  if(overscan->value() == 0) {
-    if(latch.overscan) data += 16 * 1280;
-    screen->refresh(data, 1280 * sizeof(uint32), 1280, 448);
-  }
-
-  if(overscan->value() == 1) {
-    if(!latch.overscan) data -= 16 * 1280;
-    screen->refresh(data, 1280 * sizeof(uint32), 1280, 480);
-  }
-}
-
 auto VDP::power(bool reset) -> void {
   Thread::create(system.frequency() / 2.0, {&VDP::main, this});
-
-  output = buffer + 16 * 1280;  //overscan offset
+  screen->power();
 
   if(!reset) {
-    for(auto& data : vram.memory) data = 0;
+    for(auto& data : vram.memory ) data = 0;
     for(auto& data : vsram.memory) data = 0;
-    for(auto& data : cram.memory) data = 0;
+    for(auto& data : cram.memory ) data = 0;
   }
 
   vram.mode = 0;

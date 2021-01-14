@@ -7,8 +7,8 @@ MAKEFLAGS := Rr
 [a-z] = a b c d e f g h i j k l m n o p q r s t u v w x y z
 [markup] = ` ~ ! @ \# $$ % ^ & * ( ) - _ = + [ { ] } \ | ; : ' " , < . > / ?
 [all] = $([0-9]) $([A-Z]) $([a-z]) $([markup])
-[space] :=
-[space] +=
+[empty] :=
+[space] := $([empty]) $([empty])
 
 # platform detection
 ifeq ($(platform),)
@@ -63,7 +63,7 @@ ifeq ($(compiler),)
   ifeq ($(platform),windows)
     compiler := g++
     compiler.cpp = $(compiler) -x c++ -std=gnu++17
-    flags.cpp = -x c++ -std=gnu++17
+    flags.cpp = -x c++ -std=gnu++17 -fno-operator-names
   else ifeq ($(platform),macos)
     compiler := clang++
   else ifeq ($(platform),linux)
@@ -80,12 +80,14 @@ ifeq ($(build),debug)
   flags += -Og -g -DBUILD_DEBUG
 else ifeq ($(build),stable)
   flags += -O1 -DBUILD_STABLE
-else ifeq ($(build),size)
-  flags += -Os -DBUILD_SIZE
+else ifeq ($(build),minified)
+  flags += -Os -DBUILD_MINIFIED
 else ifeq ($(build),release)
   flags += -O2 -DBUILD_RELEASE
-else ifeq ($(build),performance)
-  flags += -O3 -DBUILD_PERFORMANCE
+else ifeq ($(build),optimized)
+  flags += -O3 -DBUILD_OPTIMIZED
+else
+  $(error unrecognized build type.)
 endif
 
 # link-time optimization

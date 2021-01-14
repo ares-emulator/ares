@@ -1,10 +1,29 @@
 struct HVC_TxROM : Interface {  //MMC3
-  Memory::Readable<uint8> programROM;
-  Memory::Writable<uint8> programRAM;
-  Memory::Readable<uint8> characterROM;
-  Memory::Writable<uint8> characterRAM;
+  static auto create(string id) -> Interface* {
+    if(id == "HVC-TBROM" ) return new HVC_TxROM(Revision::TBROM);
+    if(id == "HVC-TEROM" ) return new HVC_TxROM(Revision::TEROM);
+    if(id == "HVC-TFROM" ) return new HVC_TxROM(Revision::TFROM);
+    if(id == "HVC-TGROM" ) return new HVC_TxROM(Revision::TGROM);
+    if(id == "HVC-TKROM" ) return new HVC_TxROM(Revision::TKROM);
+    if(id == "HVC-TKSROM") return new HVC_TxROM(Revision::TKSROM);
+    if(id == "HVC-TLROM" ) return new HVC_TxROM(Revision::TLROM);
+    if(id == "HVC-TL1ROM") return new HVC_TxROM(Revision::TL1ROM);
+    if(id == "HVC-TL2ROM") return new HVC_TxROM(Revision::TL2ROM);
+    if(id == "HVC-TLSROM") return new HVC_TxROM(Revision::TLSROM);
+    if(id == "HVC-TNROM" ) return new HVC_TxROM(Revision::TNROM);
+    if(id == "HVC-TQROM" ) return new HVC_TxROM(Revision::TQROM);
+    if(id == "HVC-TR1ROM") return new HVC_TxROM(Revision::TR1ROM);
+    if(id == "HVC-TSROM" ) return new HVC_TxROM(Revision::TSROM);
+    if(id == "HVC-TVROM" ) return new HVC_TxROM(Revision::TVROM);
+    return nullptr;
+  }
 
-  enum class Revision : uint {
+  Memory::Readable<n8> programROM;
+  Memory::Writable<n8> programRAM;
+  Memory::Readable<n8> characterROM;
+  Memory::Writable<n8> characterRAM;
+
+  enum class Revision : u32 {
     TBROM,
     TEROM,
     TFROM,
@@ -22,7 +41,7 @@ struct HVC_TxROM : Interface {  //MMC3
     TVROM,
   } revision;
 
-  HVC_TxROM(Markup::Node document, Revision revision) : Interface(document), revision(revision) {}
+  HVC_TxROM(Revision revision) : revision(revision) {}
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -44,7 +63,7 @@ struct HVC_TxROM : Interface {  //MMC3
     tick();
   }
 
-  auto irqTest(uint address) -> void {
+  auto irqTest(n16 address) -> void {
     if(!(characterAddress & 0x1000) && (address & 0x1000)) {
       if(irqDelay == 0) {
         if(irqCounter == 0) {
@@ -58,31 +77,31 @@ struct HVC_TxROM : Interface {  //MMC3
     characterAddress = address;
   }
 
-  auto readPRG(uint address) -> uint8 {
-    if(address < 0x6000) return cpu.mdr();
+  auto readPRG(n32 address, n8 data) -> n8 override {
+    if(address < 0x6000) return data;
 
     if(address < 0x8000) {
-      if(!ramEnable) return cpu.mdr();
-      return programRAM.read((uint13)address);
+      if(!ramEnable) return data;
+      return programRAM.read((n13)address);
     }
 
-    uint6 bank;
+    n6 bank;
     switch(address >> 13 & 3) {
-    case 0: bank = (programMode == 0 ? programBank[0] : (uint6)0x3e); break;
+    case 0: bank = (programMode == 0 ? programBank[0] : (n6)0x3e); break;
     case 1: bank = programBank[1]; break;
-    case 2: bank = (programMode == 1 ? programBank[0] : (uint6)0x3e); break;
+    case 2: bank = (programMode == 1 ? programBank[0] : (n6)0x3e); break;
     case 3: bank = 0x3f; break;
     }
-    address = bank << 13 | (uint13)address;
+    address = bank << 13 | (n13)address;
     return programROM.read(address);
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000) return;
 
     if(address < 0x8000) {
       if(!ramEnable || !ramWritable) return;
-      return programRAM.write((uint13)address, data);
+      return programRAM.write((n13)address, data);
     }
 
     switch(address & 0xe001) {
@@ -126,91 +145,79 @@ struct HVC_TxROM : Interface {  //MMC3
     }
   }
 
-  auto addressCHR(uint address) const -> uint {
+  auto addressCHR(n32 address) const -> n32 {
     if(characterMode == 0) {
-      if(address <= 0x07ff) return characterBank[0] << 10 | (uint11)address;
-      if(address <= 0x0fff) return characterBank[1] << 10 | (uint11)address;
-      if(address <= 0x13ff) return characterBank[2] << 10 | (uint10)address;
-      if(address <= 0x17ff) return characterBank[3] << 10 | (uint10)address;
-      if(address <= 0x1bff) return characterBank[4] << 10 | (uint10)address;
-      if(address <= 0x1fff) return characterBank[5] << 10 | (uint10)address;
+      if(address <= 0x07ff) return characterBank[0] << 10 | (n11)address;
+      if(address <= 0x0fff) return characterBank[1] << 10 | (n11)address;
+      if(address <= 0x13ff) return characterBank[2] << 10 | (n10)address;
+      if(address <= 0x17ff) return characterBank[3] << 10 | (n10)address;
+      if(address <= 0x1bff) return characterBank[4] << 10 | (n10)address;
+      if(address <= 0x1fff) return characterBank[5] << 10 | (n10)address;
     } else {
-      if(address <= 0x03ff) return characterBank[2] << 10 | (uint10)address;
-      if(address <= 0x07ff) return characterBank[3] << 10 | (uint10)address;
-      if(address <= 0x0bff) return characterBank[4] << 10 | (uint10)address;
-      if(address <= 0x0fff) return characterBank[5] << 10 | (uint10)address;
-      if(address <= 0x17ff) return characterBank[0] << 10 | (uint11)address;
-      if(address <= 0x1fff) return characterBank[1] << 10 | (uint11)address;
+      if(address <= 0x03ff) return characterBank[2] << 10 | (n10)address;
+      if(address <= 0x07ff) return characterBank[3] << 10 | (n10)address;
+      if(address <= 0x0bff) return characterBank[4] << 10 | (n10)address;
+      if(address <= 0x0fff) return characterBank[5] << 10 | (n10)address;
+      if(address <= 0x17ff) return characterBank[0] << 10 | (n11)address;
+      if(address <= 0x1fff) return characterBank[1] << 10 | (n11)address;
     }
     unreachable;
   }
 
-  auto addressCIRAM(uint address) const -> uint {
-    return address >> mirror & 0x0400 | address & 0x03ff;
+  auto addressCIRAM(n32 address) const -> n32 {
+    return address >> mirror & 0x0400 | (n10)address;
   }
 
-  auto readCHR(uint address) -> uint8 {
+  auto readCHR(n32 address, n8 data) -> n8 override {
     irqTest(address);
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
     if(characterROM) return characterROM.read(addressCHR(address));
     if(characterRAM) return characterRAM.read(addressCHR(address));
-    return 0x00;
+    return data;
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void override {
     irqTest(address);
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
   auto power() -> void {
-    characterMode = 0;
-    programMode = 0;
-    bankSelect = 0;
-    for(auto& bank : programBank) bank = 0;
-    for(auto& bank : characterBank) bank = 0;
-    mirror = 0;
     ramEnable = 1;
     ramWritable = 1;
-    irqLatch = 0;
-    irqCounter = 0;
-    irqEnable = 0;
-    irqDelay = 0;
-    irqLine = 0;
-    characterAddress = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    programRAM.serialize(s);
-    characterRAM.serialize(s);
-    s.integer(characterMode);
-    s.integer(programMode);
-    s.integer(bankSelect);
-    s.array(programBank);
-    s.array(characterBank);
-    s.integer(mirror);
-    s.integer(ramEnable);
-    s.integer(ramWritable);
-    s.integer(irqLatch);
-    s.integer(irqCounter);
-    s.integer(irqEnable);
-    s.integer(irqDelay);
-    s.integer(irqLine);
-    s.integer(characterAddress);
+    s(programRAM);
+    s(characterRAM);
+    s(characterMode);
+    s(programMode);
+    s(bankSelect);
+    s(programBank);
+    s(characterBank);
+    s(mirror);
+    s(ramEnable);
+    s(ramWritable);
+    s(irqLatch);
+    s(irqCounter);
+    s(irqEnable);
+    s(irqDelay);
+    s(irqLine);
+    s(characterAddress);
   }
 
-   uint1 characterMode;
-   uint1 programMode;
-   uint3 bankSelect;
-   uint6 programBank[2];
-   uint8 characterBank[6];
-   uint1 mirror;
-   uint1 ramEnable;
-   uint1 ramWritable;
-   uint8 irqLatch;
-   uint8 irqCounter;
-   uint1 irqEnable;
-   uint8 irqDelay;
-   uint1 irqLine;
-  uint16 characterAddress;
+  n01 characterMode;
+  n01 programMode;
+  n03 bankSelect;
+  n06 programBank[2];
+  n08 characterBank[6];
+  n01 mirror;
+  n01 ramEnable;
+  n01 ramWritable;
+  n08 irqLatch;
+  n08 irqCounter;
+  n01 irqEnable;
+  n08 irqDelay;
+  n01 irqLine;
+  n16 characterAddress;
 };

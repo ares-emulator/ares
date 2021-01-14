@@ -62,13 +62,13 @@ struct VideoXVideo : VideoDriver {
   }
 
   auto clear() -> void override {
-    memory::fill<uint32_t>(_buffer, _bufferWidth * _bufferHeight);
+    memory::fill<u32>(_buffer, _bufferWidth * _bufferHeight);
     //clear twice in case video is double buffered ...
     output();
     output();
   }
 
-  auto size(uint& width, uint& height) -> void override {
+  auto size(u32& width, u32& height) -> void override {
     if(self.fullScreen) {
       width = _monitorWidth;
       height = _monitorHeight;
@@ -80,7 +80,7 @@ struct VideoXVideo : VideoDriver {
     }
   }
 
-  auto acquire(uint32_t*& data, uint& pitch, uint width, uint height) -> bool override {
+  auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
     if(width != _width || height != _height) resize(_width = width, _height = height);
     pitch = _bufferWidth * 4;
     return data = _buffer;
@@ -89,7 +89,7 @@ struct VideoXVideo : VideoDriver {
   auto release() -> void override {
   }
 
-  auto output(uint width = 0, uint height = 0) -> void override {
+  auto output(u32 width = 0, u32 height = 0) -> void override {
     XWindowAttributes window;
     XGetWindowAttributes(_display, _window, &window);
 
@@ -100,10 +100,10 @@ struct VideoXVideo : VideoDriver {
       XResizeWindow(_display, _window, parent.width, parent.height);
     }
 
-    uint viewportX = 0;
-    uint viewportY = 0;
-    uint viewportWidth = parent.width;
-    uint viewportHeight = parent.height;
+    u32 viewportX = 0;
+    u32 viewportY = 0;
+    u32 viewportWidth = parent.width;
+    u32 viewportHeight = parent.height;
 
     if(self.fullScreen) {
       viewportX = _monitorX;
@@ -124,8 +124,8 @@ struct VideoXVideo : VideoDriver {
 
     if(!width) width = viewportWidth;
     if(!height) height = viewportHeight;
-    int x = viewportX + ((int)viewportWidth - (int)width) / 2;
-    int y = viewportY + ((int)viewportHeight - (int)height) / 2;
+    s32 x = viewportX + ((s32)viewportWidth - (s32)width) / 2;
+    s32 y = viewportY + ((s32)viewportHeight - (s32)height) / 2;
 
     XvShmPutImage(_display, _port, _window, _gc, _image,
       0, 0, _width, _height,
@@ -160,12 +160,12 @@ private:
 
     //find an appropriate Xv port
     _port = -1;
-    int depth = 0;
-    int visualID = 0;
+    s32 depth = 0;
+    s32 visualID = 0;
     XvAdaptorInfo* adaptorInfo = nullptr;
-    uint adaptorCount = 0;
+    u32 adaptorCount = 0;
     XvQueryAdaptors(_display, DefaultRootWindow(_display), &adaptorCount, &adaptorInfo);
-    for(uint n : range(adaptorCount)) {
+    for(u32 n : range(adaptorCount)) {
       //find adaptor that supports both input (memory->drawable) and image (drawable->screen) masks
       if(adaptorInfo[n].num_formats < 1) continue;
       if(!(adaptorInfo[n].type & XvInputMask)) continue;
@@ -187,7 +187,7 @@ private:
     visualTemplate.screen = _screen;
     visualTemplate.depth = depth;
     visualTemplate.visual = 0;
-    int visualMatches = 0;
+    s32 visualMatches = 0;
     auto visualInfo = XGetVisualInfo(_display, VisualIDMask | VisualScreenMask | VisualDepthMask, &visualTemplate, &visualMatches);
     if(visualMatches < 1 || !visualInfo->visual) {
       if(visualInfo) XFree(visualInfo);
@@ -224,7 +224,7 @@ private:
 
     _gc = XCreateGC(_display, _window, 0, 0);
 
-    int attributeCount = 0;
+    s32 attributeCount = 0;
     auto attributeList = XvQueryPortAttributes(_display, _port, &attributeCount);
     for(auto n : range(attributeCount)) {
       if(string{attributeList[n].name} == "XV_AUTOPAINT_COLORKEY") {
@@ -300,11 +300,11 @@ private:
     ids.reset();
     names.reset();
 
-    int count = 0;
+    s32 count = 0;
     auto array = XvListImageFormats(_display, _port, &count);
 
-    for(uint sort : range(8)) {
-      for(uint n : range(count)) {
+    for(u32 sort : range(8)) {
+      for(u32 n : range(count)) {
         auto id = array[n].id;
         auto type = array[n].type;
         auto format = array[n].format;
@@ -312,7 +312,7 @@ private:
         auto redMask = array[n].red_mask;
         auto order = array[n].component_order;
         string components;
-        for(uint n : range(4)) if(char c = order[n]) components.append(c);
+        for(u32 n : range(4)) if(char c = order[n]) components.append(c);
 
         if(type == XvRGB) {
           if(sort == 0 && depth == 32) ids.append(id), names.append("RGB24");
@@ -336,14 +336,14 @@ private:
     free(array);
   }
 
-  auto resize(uint width, uint height) -> void {
+  auto resize(u32 width, u32 height) -> void {
     if(_bufferWidth >= width && _bufferHeight >= height) return;
     _bufferWidth = max(width, _bufferWidth);
     _bufferHeight = max(height, _bufferHeight);
 
     //must round to be evenly divisible by 4
-    if(uint round = _bufferWidth & 3) _bufferWidth += 4 - round;
-    if(uint round = _bufferHeight & 3) _bufferHeight += 4 - round;
+    if(u32 round = _bufferWidth & 3) _bufferWidth += 4 - round;
+    if(u32 round = _bufferHeight & 3) _bufferHeight += 4 - round;
 
     _bufferWidth = bit::round(_bufferWidth);
     _bufferHeight = bit::round(_bufferHeight);
@@ -363,28 +363,28 @@ private:
     XShmAttach(_display, &_shmInfo);
 
     delete[] _buffer;
-    _buffer = new uint32_t[_bufferWidth * _bufferHeight];
+    _buffer = new u32[_bufferWidth * _bufferHeight];
   }
 
-  auto renderRGB24(uint width, uint height) -> void {
-    for(uint y : range(height)) {
-      auto input = (const uint32_t*)_buffer + y * width;
-      auto output = (uint32_t*)_image->data + y * (_image->pitches[0] >> 2);
+  auto renderRGB24(u32 width, u32 height) -> void {
+    for(u32 y : range(height)) {
+      auto input = (const u32*)_buffer + y * width;
+      auto output = (u32*)_image->data + y * (_image->pitches[0] >> 2);
 
-      for(uint x : range(width)) {
-        uint32_t p = *input++;
+      for(u32 x : range(width)) {
+        u32 p = *input++;
         *output++ = p;
       }
     }
   }
 
-  auto renderRGB24P(uint width, uint height) -> void {
-    for(uint y : range(height)) {
-      auto input = (const uint32_t*)_buffer + y * width;
-      auto output = (uint8_t*)_image->data + y * _image->pitches[0];
+  auto renderRGB24P(u32 width, u32 height) -> void {
+    for(u32 y : range(height)) {
+      auto input = (const u32*)_buffer + y * width;
+      auto output = (u8*)_image->data + y * _image->pitches[0];
 
-      for(uint x : range(width)) {
-        uint32_t p = *input++;
+      for(u32 x : range(width)) {
+        u32 p = *input++;
         *output++ = p >>  0;
         *output++ = p >>  8;
         *output++ = p >> 16;
@@ -392,13 +392,13 @@ private:
     }
   }
 
-  auto renderRGB16(uint width, uint height) -> void {
-    for(uint y : range(height)) {
-      auto input = (const uint32_t*)_buffer + y * width;
-      auto output = (uint16_t*)_image->data + y * (_image->pitches[0] >> 1);
+  auto renderRGB16(u32 width, u32 height) -> void {
+    for(u32 y : range(height)) {
+      auto input = (const u32*)_buffer + y * width;
+      auto output = (u16*)_image->data + y * (_image->pitches[0] >> 1);
 
-      for(uint x : range(width)) {
-        uint32_t p = toRGB16(*input++);
+      for(u32 x : range(width)) {
+        u32 p = toRGB16(*input++);
         *output++ = p;
       }
 
@@ -407,26 +407,26 @@ private:
     }
   }
 
-  auto renderRGB15(uint width, uint height) -> void {
-    for(uint y : range(height)) {
-      auto input = (const uint32_t*)_buffer + y * width;
-      auto output = (uint16_t*)_image->data + y * (_image->pitches[0] >> 1);
+  auto renderRGB15(u32 width, u32 height) -> void {
+    for(u32 y : range(height)) {
+      auto input = (const u32*)_buffer + y * width;
+      auto output = (u16*)_image->data + y * (_image->pitches[0] >> 1);
 
-      for(uint x : range(width)) {
-        uint32_t p = toRGB15(*input++);
+      for(u32 x : range(width)) {
+        u32 p = toRGB15(*input++);
         *output++ = p;
       }
     }
   }
 
-  auto renderUYVY(uint width, uint height) -> void {
-    for(uint y : range(height)) {
-      auto input = (const uint32_t*)_buffer + y * width;
-      auto output = (uint16_t*)_image->data + y * (_image->pitches[0] >> 1);
+  auto renderUYVY(u32 width, u32 height) -> void {
+    for(u32 y : range(height)) {
+      auto input = (const u32*)_buffer + y * width;
+      auto output = (u16*)_image->data + y * (_image->pitches[0] >> 1);
 
-      for(uint x : range(width >> 1)) {
-        uint32_t p0 = toRGB16(*input++);
-        uint32_t p1 = toRGB16(*input++);
+      for(u32 x : range(width >> 1)) {
+        u32 p0 = toRGB16(*input++);
+        u32 p1 = toRGB16(*input++);
 
         *output++ = _ytable[p0] << 8 | ((_utable[p0] + _utable[p1]) >> 1) << 0;
         *output++ = _ytable[p1] << 8 | ((_vtable[p0] + _vtable[p1]) >> 1) << 0;
@@ -434,14 +434,14 @@ private:
     }
   }
 
-  auto renderYUY2(uint width, uint height) -> void {
-    for(uint y : range(height)) {
-      auto input = (const uint32_t*)_buffer + y * width;
-      auto output = (uint16_t*)_image->data + y * (_image->pitches[0] >> 1);
+  auto renderYUY2(u32 width, u32 height) -> void {
+    for(u32 y : range(height)) {
+      auto input = (const u32*)_buffer + y * width;
+      auto output = (u16*)_image->data + y * (_image->pitches[0] >> 1);
 
-      for(uint x : range(width >> 1)) {
-        uint32_t p0 = toRGB16(*input++);
-        uint32_t p1 = toRGB16(*input++);
+      for(u32 x : range(width >> 1)) {
+        u32 p0 = toRGB16(*input++);
+        u32 p1 = toRGB16(*input++);
 
         *output++ = ((_utable[p0] + _utable[p1]) >> 1) << 8 | _ytable[p0] << 0;
         *output++ = ((_vtable[p0] + _vtable[p1]) >> 1) << 8 | _ytable[p1] << 0;
@@ -449,20 +449,20 @@ private:
     }
   }
 
-  auto renderYV12(uint width, uint height) -> void {
-    for(uint y : range(height >> 1)) {
-      auto input0 = (const uint32_t*)_buffer + (2 * y + 0) * width;
-      auto input1 = (const uint32_t*)_buffer + (2 * y + 1) * width;
-      auto youtput0 = (uint16_t*)_image->data + (_image->offsets[0] >> 1) + (2 * y + 0) * (_image->pitches[0] >> 1);
-      auto youtput1 = (uint16_t*)_image->data + (_image->offsets[0] >> 1) + (2 * y + 1) * (_image->pitches[0] >> 1);
-      auto voutput = (uint8_t*)_image->data + _image->offsets[1] + y * _image->pitches[1];
-      auto uoutput = (uint8_t*)_image->data + _image->offsets[2] + y * _image->pitches[2];
+  auto renderYV12(u32 width, u32 height) -> void {
+    for(u32 y : range(height >> 1)) {
+      auto input0 = (const u32*)_buffer + (2 * y + 0) * width;
+      auto input1 = (const u32*)_buffer + (2 * y + 1) * width;
+      auto youtput0 = (u16*)_image->data + (_image->offsets[0] >> 1) + (2 * y + 0) * (_image->pitches[0] >> 1);
+      auto youtput1 = (u16*)_image->data + (_image->offsets[0] >> 1) + (2 * y + 1) * (_image->pitches[0] >> 1);
+      auto voutput = (u8*)_image->data + _image->offsets[1] + y * _image->pitches[1];
+      auto uoutput = (u8*)_image->data + _image->offsets[2] + y * _image->pitches[2];
 
-      for(uint x : range(width >> 1)) {
-        uint16_t p0 = toRGB16(*input0++);
-        uint16_t p1 = toRGB16(*input0++);
-        uint16_t p2 = toRGB16(*input1++);
-        uint16_t p3 = toRGB16(*input1++);
+      for(u32 x : range(width >> 1)) {
+        u16 p0 = toRGB16(*input0++);
+        u16 p1 = toRGB16(*input0++);
+        u16 p2 = toRGB16(*input1++);
+        u16 p3 = toRGB16(*input1++);
 
         *youtput0++ = _ytable[p0] << 0 | _ytable[p1] << 8;
         *youtput1++ = _ytable[p2] << 0 | _ytable[p3] << 8;
@@ -472,20 +472,20 @@ private:
     }
   }
 
-  auto renderI420(uint width, uint height) -> void {
-    for(uint y : range(height >> 1)) {
-      auto input0 = (const uint32_t*)_buffer + (2 * y + 0) * width;
-      auto input1 = (const uint32_t*)_buffer + (2 * y + 1) * width;
-      auto youtput0 = (uint16_t*)_image->data + (_image->offsets[0] >> 1) + (2 * y + 0) * (_image->pitches[0] >> 1);
-      auto youtput1 = (uint16_t*)_image->data + (_image->offsets[0] >> 1) + (2 * y + 1) * (_image->pitches[0] >> 1);
-      auto uoutput = (uint8_t*)_image->data + _image->offsets[1] + y * _image->pitches[1];
-      auto voutput = (uint8_t*)_image->data + _image->offsets[2] + y * _image->pitches[2];
+  auto renderI420(u32 width, u32 height) -> void {
+    for(u32 y : range(height >> 1)) {
+      auto input0 = (const u32*)_buffer + (2 * y + 0) * width;
+      auto input1 = (const u32*)_buffer + (2 * y + 1) * width;
+      auto youtput0 = (u16*)_image->data + (_image->offsets[0] >> 1) + (2 * y + 0) * (_image->pitches[0] >> 1);
+      auto youtput1 = (u16*)_image->data + (_image->offsets[0] >> 1) + (2 * y + 1) * (_image->pitches[0] >> 1);
+      auto uoutput = (u8*)_image->data + _image->offsets[1] + y * _image->pitches[1];
+      auto voutput = (u8*)_image->data + _image->offsets[2] + y * _image->pitches[2];
 
-      for(uint x : range(width >> 1)) {
-        uint16_t p0 = toRGB16(*input0++);
-        uint16_t p1 = toRGB16(*input0++);
-        uint16_t p2 = toRGB16(*input1++);
-        uint16_t p3 = toRGB16(*input1++);
+      for(u32 x : range(width >> 1)) {
+        u16 p0 = toRGB16(*input0++);
+        u16 p1 = toRGB16(*input0++);
+        u16 p2 = toRGB16(*input1++);
+        u16 p3 = toRGB16(*input1++);
 
         *youtput0++ = _ytable[p0] << 0 | _ytable[p1] << 8;
         *youtput1++ = _ytable[p2] << 0 | _ytable[p3] << 8;
@@ -495,37 +495,37 @@ private:
     }
   }
 
-  inline auto toRGB15(uint32_t rgb32) const -> uint16_t {
+  inline auto toRGB15(u32 rgb32) const -> u16 {
     return ((rgb32 >> 9) & 0x7c00) + ((rgb32 >> 6) & 0x03e0) + ((rgb32 >> 3) & 0x001f);
   }
 
-  inline auto toRGB16(uint32_t rgb32) const -> uint16_t {
+  inline auto toRGB16(u32 rgb32) const -> u16 {
     return ((rgb32 >> 8) & 0xf800) + ((rgb32 >> 5) & 0x07e0) + ((rgb32 >> 3) & 0x001f);
   }
 
   auto initializeTables() -> void {
-    _ytable = new uint8_t[65536];
-    _utable = new uint8_t[65536];
-    _vtable = new uint8_t[65536];
+    _ytable = new u8[65536];
+    _utable = new u8[65536];
+    _vtable = new u8[65536];
 
-    for(uint n : range(65536)) {
+    for(u32 n : range(65536)) {
       //extract RGB565 color data from i
-      uint8_t r = (n >> 11) & 31, g = (n >> 5) & 63, b = (n) & 31;
+      u8 r = (n >> 11) & 31, g = (n >> 5) & 63, b = (n) & 31;
       r = (r << 3) | (r >> 2);  //R5->R8
       g = (g << 2) | (g >> 4);  //G6->G8
       b = (b << 3) | (b >> 2);  //B5->B8
 
       //ITU-R Recommendation BT.601
       //double lr = 0.299, lg = 0.587, lb = 0.114;
-      int y = int( +(double(r) * 0.257) + (double(g) * 0.504) + (double(b) * 0.098) +  16.0 );
-      int u = int( -(double(r) * 0.148) - (double(g) * 0.291) + (double(b) * 0.439) + 128.0 );
-      int v = int( +(double(r) * 0.439) - (double(g) * 0.368) - (double(b) * 0.071) + 128.0 );
+      s32 y = s32( +(f64(r) * 0.257) + (f64(g) * 0.504) + (f64(b) * 0.098) +  16.0 );
+      s32 u = s32( -(f64(r) * 0.148) - (f64(g) * 0.291) + (f64(b) * 0.439) + 128.0 );
+      s32 v = s32( +(f64(r) * 0.439) - (f64(g) * 0.368) - (f64(b) * 0.071) + 128.0 );
 
       //ITU-R Recommendation BT.709
-      //double lr = 0.2126, lg = 0.7152, lb = 0.0722;
-      //int y = int( double(r) * lr + double(g) * lg + double(b) * lb );
-      //int u = int( (double(b) - y) / (2.0 - 2.0 * lb) + 128.0 );
-      //int v = int( (double(r) - y) / (2.0 - 2.0 * lr) + 128.0 );
+      //f64 lr = 0.2126, lg = 0.7152, lb = 0.0722;
+      //s32 y = s32( f64(r) * lr + f64(g) * lg + f64(b) * lb );
+      //s32 u = s32( (f64(b) - y) / (2.0 - 2.0 * lb) + 128.0 );
+      //s32 v = s32( (f64(r) - y) / (2.0 - 2.0 * lr) + 128.0 );
 
       _ytable[n] = y < 0 ? 0 : y > 255 ? 255 : y;
       _utable[n] = u < 0 ? 0 : u > 255 ? 255 : u;
@@ -535,35 +535,35 @@ private:
 
   bool _ready = false;
 
-  uint _width = 0;
-  uint _height = 0;
+  u32 _width = 0;
+  u32 _height = 0;
 
-  uint32_t* _buffer = nullptr;
-  uint _bufferWidth = 0;
-  uint _bufferHeight = 0;
+  u32* _buffer = nullptr;
+  u32 _bufferWidth = 0;
+  u32 _bufferHeight = 0;
 
-  uint8_t* _ytable = nullptr;
-  uint8_t* _utable = nullptr;
-  uint8_t* _vtable = nullptr;
+  u8* _ytable = nullptr;
+  u8* _utable = nullptr;
+  u8* _vtable = nullptr;
 
   Display* _display = nullptr;
-  uint _monitorX = 0;
-  uint _monitorY = 0;
-  uint _monitorWidth = 0;
-  uint _monitorHeight = 0;
-  uint _screen = 0;
+  u32 _monitorX = 0;
+  u32 _monitorY = 0;
+  u32 _monitorWidth = 0;
+  u32 _monitorHeight = 0;
+  u32 _screen = 0;
   GC _gc = 0;
   Window _parent = 0;
   Window _window = 0;
   Colormap _colormap = 0;
   XShmSegmentInfo _shmInfo;
 
-  int _port = -1;
+  s32 _port = -1;
   XvImage* _image = nullptr;
 
-  vector<int> _formatIDs;
+  vector<s32> _formatIDs;
   vector<string> _formatNames;
 
-  int _formatID = 0;
+  s32 _formatID = 0;
   string _formatName;
 };

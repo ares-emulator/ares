@@ -2,49 +2,48 @@ auto CPU::serialize(serializer& s) -> void {
   SM83::serialize(s);
   Thread::serialize(s);
 
-  wram.serialize(s);
-  hram.serialize(s);
+  s(wram);
+  s(hram);
 
-  s.integer(status.clock);
-  s.integer(status.interruptLatch);
-  s.integer(status.hblankPending);
+  s(status.clock);
+  s(status.interruptLatch);
+  s(status.hblankPending);
 
-  s.integer(status.joyp);
-  s.integer(status.p14);
-  s.integer(status.p15);
+  s(status.joyp);
+  s(status.p14);
+  s(status.p15);
 
-  s.integer(status.serialData);
-  s.integer(status.serialBits);
+  s(status.serialData);
+  s(status.serialBits);
 
-  s.integer(status.serialClock);
-  s.integer(status.serialSpeed);
-  s.integer(status.serialTransfer);
+  s(status.serialClock);
+  s(status.serialSpeed);
+  s(status.serialTransfer);
 
-  s.integer(status.div);
-  s.integer(status.tima);
-  s.integer(status.tma);
-  s.integer(status.timerClock);
-  s.integer(status.timerEnable);
+  s(status.div);
+  s(status.tima);
+  s(status.tma);
+  s(status.timerClock);
+  s(status.timerEnable);
 
-  s.integer(status.interruptFlag);
+  s(status.interruptFlag);
 
-  s.integer(status.speedSwitch);
-  s.integer(status.speedDouble);
+  s(status.speedSwitch);
+  s(status.speedDouble);
 
-  s.integer(status.dmaSource);
-  s.integer(status.dmaTarget);
-  s.integer(status.dmaLength);
-  s.integer(status.dmaMode);
-  s.integer(status.dmaCompleted);
+  s(status.dmaSource);
+  s(status.dmaTarget);
+  s(status.dmaLength);
+  s(status.hdmaActive);
 
-  s.integer(status.ff6c);
+  s(status.ff6c);
 
-  s.integer(status.wramBank);
+  s(status.wramBank);
 
-  s.integer(status.ff72);
-  s.integer(status.ff73);
-  s.integer(status.ff74);
-  s.integer(status.ff75);
+  s(status.ff72);
+  s(status.ff73);
+  s(status.ff74);
+  s(status.ff75);
 
-  s.integer(status.interruptEnable);
+  s(status.interruptEnable);
 }

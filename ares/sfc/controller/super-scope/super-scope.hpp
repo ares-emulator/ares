@@ -1,11 +1,11 @@
 struct SuperScope : Controller, Thread {
-  Node::Sprite sprite;
-  Node::Axis x;
-  Node::Axis y;
-  Node::Button trigger;
-  Node::Button cursor;
-  Node::Button turbo;
-  Node::Button pause;
+  Node::Video::Sprite sprite;
+  Node::Input::Axis x;
+  Node::Input::Axis y;
+  Node::Input::Button trigger;
+  Node::Input::Button cursor;
+  Node::Input::Button turbo;
+  Node::Input::Button pause;
 
   SuperScope(Node::Port);
   ~SuperScope();

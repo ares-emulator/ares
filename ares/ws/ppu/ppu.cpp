@@ -10,59 +10,65 @@ PPU ppu;
 #include "serialization.cpp"
 
 auto PPU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("PPU");
+  node = parent->append<Node::Object>("PPU");
 
-  screen = node->append<Node::Screen>("Screen");
+  //LCD display icons are simulated as an extended part of the LCD screen using sprites
+  //this isn't ideal as the display icons are vectors, but it's the best we can do for now
+  const uint width  = 224 + (SoC::ASWAN() ? 0 : 13);
+  const uint height = 144 + (Model::WonderSwan() ? 13 : 0);
+
+  screen = node->append<Node::Video::Screen>("Screen", width, height);
   screen->colors(1 << 12, {&PPU::color, this});
-  screen->setSize(224 + (SoC::ASWAN() ? 0 : 13), 144 + (Model::WonderSwan() ? 13 : 0));
+  screen->setSize(width, height);
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
+  screen->setFillColor(SoC::ASWAN() ? 0xfff : 0);
 
-  colorEmulation = screen->append<Node::Boolean>("Color Emulation", true, [&](auto value) {
+  colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
     screen->resetPalette();
   });
   colorEmulation->setDynamic(true);
 
-  interframeBlending = screen->append<Node::Boolean>("Interframe Blending", true, [&](auto value) {
+  interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
     screen->setInterframeBlending(value);
   });
   interframeBlending->setDynamic(true);
 
   if(!Model::PocketChallengeV2()) {
-    orientation = screen->append<Node::String>("Orientation", "Automatic", [&](auto value) {
+    orientation = screen->append<Node::Setting::String>("Orientation", "Automatic", [&](auto value) {
       updateOrientation();
     });
     orientation->setDynamic(true);
     orientation->setAllowedValues({"Automatic", "Horizontal", "Vertical"});
 
-    showIcons = screen->append<Node::Boolean>("Show Icons", true, [&](auto value) {
+    showIcons = screen->append<Node::Setting::Boolean>("Show Icons", true, [&](auto value) {
       updateIcons();
     });
     showIcons->setDynamic(true);
   }
 
   if(!Model::PocketChallengeV2()) {
-    icon.auxiliary0   = screen->append<Node::Sprite>("Auxiliary - Small Icon");
-    icon.auxiliary1   = screen->append<Node::Sprite>("Auxiliary - Medium Icon");
-    icon.auxiliary2   = screen->append<Node::Sprite>("Auxiliary - Large Icon");
-    icon.headphones   = screen->append<Node::Sprite>("Headphones");
-    icon.initialized  = screen->append<Node::Sprite>("Initialized");
-    icon.lowBattery   = screen->append<Node::Sprite>("Low Battery");
-    icon.orientation0 = screen->append<Node::Sprite>("Orientation - Horizontal");
-    icon.orientation1 = screen->append<Node::Sprite>("Orientation - Vertical");
-    icon.poweredOn    = screen->append<Node::Sprite>("Powered On");
-    icon.sleeping     = screen->append<Node::Sprite>("Sleeping");
+    icon.auxiliary0   = screen->append<Node::Video::Sprite>("Auxiliary - Small Icon");
+    icon.auxiliary1   = screen->append<Node::Video::Sprite>("Auxiliary - Medium Icon");
+    icon.auxiliary2   = screen->append<Node::Video::Sprite>("Auxiliary - Large Icon");
+    icon.headphones   = screen->append<Node::Video::Sprite>("Headphones");
+    icon.initialized  = screen->append<Node::Video::Sprite>("Initialized");
+    icon.lowBattery   = screen->append<Node::Video::Sprite>("Low Battery");
+    icon.orientation0 = screen->append<Node::Video::Sprite>("Orientation - Horizontal");
+    icon.orientation1 = screen->append<Node::Video::Sprite>("Orientation - Vertical");
+    icon.poweredOn    = screen->append<Node::Video::Sprite>("Powered On");
+    icon.sleeping     = screen->append<Node::Video::Sprite>("Sleeping");
   }
   if(Model::WonderSwan()) {
-    icon.volumeA0     = screen->append<Node::Sprite>("Volume - 0%");
-    icon.volumeA1     = screen->append<Node::Sprite>("Volume - 50%");
-    icon.volumeA2     = screen->append<Node::Sprite>("Volume - 100%");
+    icon.volumeA0     = screen->append<Node::Video::Sprite>("Volume - 0%");
+    icon.volumeA1     = screen->append<Node::Video::Sprite>("Volume - 50%");
+    icon.volumeA2     = screen->append<Node::Video::Sprite>("Volume - 100%");
   }
   if(!SoC::ASWAN()) {
-    icon.volumeB0     = screen->append<Node::Sprite>("Volume - 0%");
-    icon.volumeB1     = screen->append<Node::Sprite>("Volume - 33%");
-    icon.volumeB2     = screen->append<Node::Sprite>("Volume - 66%");
-    icon.volumeB3     = screen->append<Node::Sprite>("Volume - 100%");
+    icon.volumeB0     = screen->append<Node::Video::Sprite>("Volume - 0%");
+    icon.volumeB1     = screen->append<Node::Video::Sprite>("Volume - 33%");
+    icon.volumeB2     = screen->append<Node::Video::Sprite>("Volume - 66%");
+    icon.volumeB3     = screen->append<Node::Video::Sprite>("Volume - 100%");
   }
 
   bool invert = SoC::ASWAN();
@@ -153,13 +159,14 @@ auto PPU::load(Node::Object parent) -> void {
 }
 
 auto PPU::unload() -> void {
-  node = {};
-  screen = {};
-  colorEmulation = {};
-  interframeBlending = {};
-  orientation = {};
-  showIcons = {};
+  screen->quit();
   icon = {};
+  showIcons.reset();
+  orientation.reset();
+  interframeBlending.reset();
+  colorEmulation.reset();
+  screen.reset();
+  node.reset();
 }
 
 auto PPU::main() -> void {
@@ -169,7 +176,7 @@ auto PPU::main() -> void {
 
   if(s.vtime < 144) {
     uint y = s.vtime % (r.vtotal + 1);
-    auto output = this->output + y * (224 + 13);
+    auto line = screen->pixels().data() + y * screen->width();
     latchRegisters();
     latchSprites(y);
     for(uint x : range(224)) {
@@ -190,7 +197,7 @@ auto PPU::main() -> void {
         g = min(15, g * 1.5);
         r = min(15, r * 1.5);
       }
-      *output++ = s.pixel.color;
+      *line++ = s.pixel.color;
       step(1);
     }
     step(32);
@@ -235,13 +242,9 @@ auto PPU::scanline() -> void {
 auto PPU::frame() -> void {
   s.field = !s.field;
   s.vtime = 0;
+  screen->setViewport(0, 0, screen->width(), screen->height());
+  screen->frame();
   scheduler.exit(Event::Frame);
-}
-
-auto PPU::refresh() -> void {
-  uint width  = screen->width();
-  uint height = screen->height();
-  screen->refresh(output, (224 + 13) * sizeof(uint32), width, height);
 }
 
 auto PPU::step(uint clocks) -> void {
@@ -251,14 +254,13 @@ auto PPU::step(uint clocks) -> void {
 
 auto PPU::power() -> void {
   Thread::create(3'072'000, {&PPU::main, this});
+  screen->power();
 
   bus.map(this, 0x0000, 0x0017);
   bus.map(this, 0x001c, 0x003f);
   bus.map(this, 0x00a2);
   bus.map(this, 0x00a4, 0x00ab);
 
-  auto color = SoC::ASWAN() ? 0xfff : 0x000;
-  for(auto& pixel : output) pixel = color;
   s = {};
   l = {};
   r = {};

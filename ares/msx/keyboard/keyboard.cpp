@@ -36,7 +36,7 @@ auto Keyboard::connect() -> void {
       if(auto key = document[{"layout/key[", column * 8 + row, "]"}]) {
         label = key.text();
       }
-      matrix[column][row] = layout->append<Node::Button>(label);
+      matrix[column][row] = layout->append<Node::Input::Button>(label);
     }
   }
 }

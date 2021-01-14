@@ -8,9 +8,9 @@ AI ai;
 #include "serialization.cpp"
 
 auto AI::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("AI");
+  node = parent->append<Node::Object>("AI");
 
-  stream = node->append<Node::Stream>("AI");
+  stream = node->append<Node::Audio::Stream>("AI");
   stream->setChannels(2);
   stream->setFrequency(44100.0);
 
@@ -29,12 +29,12 @@ auto AI::main() -> void {
 }
 
 auto AI::sample() -> void {
-  if(io.dmaCount == 0) return stream->sample(0.0, 0.0);
+  if(io.dmaCount == 0) return stream->frame(0.0, 0.0);
 
   auto data  = rdram.ram.readWord(io.dmaAddress[0]);
-  auto left  = i16(data >> 16);
-  auto right = i16(data >>  0);
-  stream->sample(left / 32768.0, right / 32768.0);
+  auto left  = s16(data >> 16);
+  auto right = s16(data >>  0);
+  stream->frame(left / 32768.0, right / 32768.0);
 
   io.dmaAddress[0] += 4;
   io.dmaLength [0] -= 4;
@@ -51,11 +51,13 @@ auto AI::step(uint clocks) -> void {
   clock += clocks;
 }
 
-auto AI::power() -> void {
+auto AI::power(bool reset) -> void {
   Thread::reset();
-  io = {};
-  dac = {};
-  stream->setFrequency(dac.frequency);
+  stream->setFrequency(44100);
+
+  dac.frequency = 44100;
+  dac.precision = 16;
+  dac.period = 93'750'000 / 44'100;
 }
 
 }

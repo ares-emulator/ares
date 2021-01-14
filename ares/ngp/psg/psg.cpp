@@ -6,9 +6,9 @@ PSG psg;
 #include "serialization.cpp"
 
 auto PSG::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("PSG");
+  node = parent->append<Node::Object>("PSG");
 
-  stream = node->append<Node::Stream>("PSG");
+  stream = node->append<Node::Audio::Stream>("PSG");
   stream->setChannels(2);
   stream->setFrequency(system.frequency() / 32.0);
   stream->addHighPassFilter(20.0, 1);
@@ -40,7 +40,7 @@ auto PSG::main() -> void {
     right += dac.right / 255.0;
   }
 
-  stream->sample(left, right);
+  stream->frame(left, right);
   step(1);
 }
 

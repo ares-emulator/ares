@@ -3,7 +3,7 @@
 #define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
 
-auto VideoGLX_X11ErrorHandler(Display*, XErrorEvent*) -> int {
+auto VideoGLX_X11ErrorHandler(Display*, XErrorEvent*) -> s32 {
   return 0;  //suppress errors
 }
 
@@ -70,8 +70,21 @@ struct VideoGLX : VideoDriver, OpenGL {
   }
 
   auto setShader(string shader) -> bool override {
+    if(!initialize()) return false;  //hack: shader compilation fails without this
     OpenGL::setShader(shader);
     return true;
+  }
+
+  auto acquireContext() -> bool override {
+    if(!_ready) return true;
+    if(glXMakeCurrent(_display, _glXWindow, _glXContext)) return true;
+    return initialize();
+  }
+
+  auto releaseContext() -> bool override {
+    if(!_ready) return true;
+    if(glXMakeCurrent(_display, 0, nullptr)) return true;
+    return terminate(), true;
   }
 
   auto focused() -> bool override {
@@ -83,7 +96,7 @@ struct VideoGLX : VideoDriver, OpenGL {
     if(_doubleBuffer) glXSwapBuffers(_display, _glXWindow);
   }
 
-  auto size(uint& width, uint& height) -> void override {
+  auto size(u32& width, u32& height) -> void override {
     if(self.fullScreen) {
       width = _monitorWidth;
       height = _monitorHeight;
@@ -95,7 +108,7 @@ struct VideoGLX : VideoDriver, OpenGL {
     }
   }
 
-  auto acquire(uint32_t*& data, uint& pitch, uint width, uint height) -> bool override {
+  auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
     OpenGL::size(width, height);
     return OpenGL::lock(data, pitch);
   }
@@ -103,7 +116,7 @@ struct VideoGLX : VideoDriver, OpenGL {
   auto release() -> void override {
   }
 
-  auto output(uint width, uint height) -> void override {
+  auto output(u32 width, u32 height) -> void override {
     XWindowAttributes window;
     XGetWindowAttributes(_display, _window, &window);
 
@@ -165,13 +178,13 @@ private:
     glXQueryVersion(_display, &_versionMajor, &_versionMinor);
     if(_versionMajor < 1 || (_versionMajor == 1 && _versionMinor < 2)) return false;
 
-    int redDepth   = VideoDriver::format == "RGB30" ? 10 : 8;
-    int greenDepth = VideoDriver::format == "RGB30" ? 10 : 8;
-    int blueDepth  = VideoDriver::format == "RGB30" ? 10 : 8;
+    s32 redDepth   = VideoDriver::format == "RGB30" ? 10 : 8;
+    s32 greenDepth = VideoDriver::format == "RGB30" ? 10 : 8;
+    s32 blueDepth  = VideoDriver::format == "RGB30" ? 10 : 8;
 
     //let GLX determine the best Visual to use for GL output; provide a few hints
     //note: some video drivers will override double buffering attribute
-    int attributeList[] = {
+    s32 attributeList[] = {
       GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
       GLX_RENDER_TYPE, GLX_RGBA_BIT,
       GLX_DOUBLEBUFFER, True,
@@ -181,7 +194,7 @@ private:
       None
     };
 
-    int fbCount = 0;
+    s32 fbCount = 0;
     GLXFBConfig* fbConfig = glXChooseFBConfig(_display, _screen, attributeList, &fbCount);
     if(fbCount == 0) return false;
 
@@ -291,20 +304,20 @@ private:
   auto (*glXSwapInterval)(int) -> int = nullptr;
 
   Display* _display = nullptr;
-  uint _monitorX = 0;
-  uint _monitorY = 0;
-  uint _monitorWidth = 0;
-  uint _monitorHeight = 0;
-  int _screen = 0;
-  uint _depth = 24;  //depth of the default root window
+  u32 _monitorX = 0;
+  u32 _monitorY = 0;
+  u32 _monitorWidth = 0;
+  u32 _monitorHeight = 0;
+  s32 _screen = 0;
+  u32 _depth = 24;  //depth of the default root window
   Window _parent = 0;
   Window _window = 0;
   Colormap _colormap = 0;
   GLXContext _glXContext = nullptr;
   GLXWindow _glXWindow = 0;
 
-  int _versionMajor = 0;
-  int _versionMinor = 0;
+  s32 _versionMajor = 0;
+  s32 _versionMinor = 0;
   bool _doubleBuffer = false;
   bool _isDirect = false;
 };

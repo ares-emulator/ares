@@ -12,16 +12,16 @@ APU apu;
 #include "serialization.cpp"
 
 auto APU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("APU");
+  node = parent->append<Node::Object>("APU");
 
-  stream = node->append<Node::Stream>("PSG");
+  stream = node->append<Node::Audio::Stream>("PSG");
   stream->setChannels(1);
-  stream->setFrequency(uint(system.frequency() + 0.5) / rate());
+  stream->setFrequency(u32(system.frequency() + 0.5) / rate());
   stream->addHighPassFilter(   90.0, 1);
   stream->addHighPassFilter(  440.0, 1);
   stream->addLowPassFilter (14000.0, 1);
 
-  for(uint amp : range(32)) {
+  for(u32 amp : range(32)) {
     if(amp == 0) {
       pulseDAC[amp] = 0;
     } else {
@@ -29,9 +29,9 @@ auto APU::load(Node::Object parent) -> void {
     }
   }
 
-  for(uint dmcAmp : range(128)) {
-    for(uint triangleAmp : range(16)) {
-      for(uint noiseAmp : range(16)) {
+  for(u32 dmcAmp : range(128)) {
+    for(u32 triangleAmp : range(16)) {
+      for(u32 noiseAmp : range(16)) {
         if(dmcAmp == 0 && triangleAmp == 0 && noiseAmp == 0) {
           dmcTriangleNoiseDAC[dmcAmp][triangleAmp][noiseAmp] = 0;
         } else {
@@ -44,21 +44,21 @@ auto APU::load(Node::Object parent) -> void {
 }
 
 auto APU::unload() -> void {
-  node = {};
-  stream = {};
+  node.reset();
+  stream.reset();
 }
 
 auto APU::main() -> void {
-  uint pulseOutput = pulse1.clock() + pulse2.clock();
-  uint triangleOutput = triangle.clock();
-  uint noiseOutput = noise.clock();
-  uint dmcOutput = dmc.clock();
+  u32 pulseOutput = pulse1.clock() + pulse2.clock();
+  u32 triangleOutput = triangle.clock();
+  u32 noiseOutput = noise.clock();
+  u32 dmcOutput = dmc.clock();
   clockFrameCounterDivider();
 
-  int output = 0;
+  s32 output = 0;
   output += pulseDAC[pulseOutput];
   output += dmcTriangleNoiseDAC[dmcOutput][triangleOutput][noiseOutput];
-  stream->sample(sclamp<16>(output) / 32768.0);
+  stream->frame(sclamp<16>(output) / 32768.0);
 
   tick();
 }
@@ -75,25 +75,26 @@ auto APU::setIRQ() -> void {
 auto APU::power(bool reset) -> void {
   Thread::create(system.frequency(), {&APU::main, this});
 
-  pulse1.power();
-  pulse2.power();
-  triangle.power();
-  noise.power();
-  dmc.power();
+  pulse1.periodCounter = 1;
+  pulse1.sweep.counter = 1;
 
-  frame.irqPending = 0;
+  pulse2.periodCounter = 1;
+  pulse2.sweep.counter = 1;
 
-  frame.mode = 0;
-  frame.counter = 0;
+  triangle.periodCounter = 1;
+
+  noise.periodCounter = 1;
+  noise.lfsr = 1;
+
+  dmc.periodCounter = Region::PAL() ? dmcPeriodTablePAL[0] : dmcPeriodTableNTSC[0];
+
   frame.divider = 1;
-
-  enabledChannels = 0;
 
   setIRQ();
 }
 
-auto APU::readIO(uint16 address) -> uint8 {
-  uint8 data = cpu.mdr();
+auto APU::readIO(n16 address) -> n8 {
+  n8 data = cpu.mdr();
 
   switch(address) {
 
@@ -116,7 +117,7 @@ auto APU::readIO(uint16 address) -> uint8 {
   return data;
 }
 
-auto APU::writeIO(uint16 address, uint8 data) -> void {
+auto APU::writeIO(n16 address, n8 data) -> void {
   switch(address) {
 
   case 0x4000: {
@@ -328,24 +329,24 @@ auto APU::clockFrameCounterDivider() -> void {
   }
 }
 
-const uint8 APU::lengthCounterTable[32] = {
-  0x0a, 0xfe, 0x14, 0x02, 0x28, 0x04, 0x50, 0x06, 0xa0, 0x08, 0x3c, 0x0a, 0x0e, 0x0c, 0x1a, 0x0e,
-  0x0c, 0x10, 0x18, 0x12, 0x30, 0x14, 0x60, 0x16, 0xc0, 0x18, 0x48, 0x1a, 0x10, 0x1c, 0x20, 0x1e,
+const n8 APU::lengthCounterTable[32] = {
+  0x0a,0xfe,0x14,0x02,0x28,0x04,0x50,0x06,0xa0,0x08,0x3c,0x0a,0x0e,0x0c,0x1a,0x0e,
+  0x0c,0x10,0x18,0x12,0x30,0x14,0x60,0x16,0xc0,0x18,0x48,0x1a,0x10,0x1c,0x20,0x1e,
 };
 
-const uint16 APU::noisePeriodTableNTSC[16] = {
+const n16 APU::noisePeriodTableNTSC[16] = {
   4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068,
 };
 
-const uint16 APU::noisePeriodTablePAL[16] = {
+const n16 APU::noisePeriodTablePAL[16] = {
   4, 8, 14, 30, 60, 88, 118, 148, 188, 236, 354, 472, 708,  944, 1890, 3778,
 };
 
-const uint16 APU::dmcPeriodTableNTSC[16] = {
+const n16 APU::dmcPeriodTableNTSC[16] = {
   428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106, 84, 72, 54,
 };
 
-const uint16 APU::dmcPeriodTablePAL[16] = {
+const n16 APU::dmcPeriodTablePAL[16] = {
   398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118,  98, 78, 66, 50,
 };
 

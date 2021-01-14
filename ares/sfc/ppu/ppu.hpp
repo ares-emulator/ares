@@ -2,14 +2,14 @@
 #include "../ppu-performance/ppu.hpp"
 #else
 struct PPU : Thread, PPUcounter {
-  Node::Component node;
-  Node::Natural versionPPU1;
-  Node::Natural versionPPU2;
-  Node::Natural vramSize;
-  Node::Screen screen;
-  Node::Boolean overscanEnable;
-  Node::Boolean colorEmulation;
-  Node::Boolean colorBleed;
+  Node::Object node;
+  Node::Setting::Natural versionPPU1;
+  Node::Setting::Natural versionPPU2;
+  Node::Setting::Natural vramSize;
+  Node::Video::Screen screen;
+  Node::Setting::Boolean overscanEnable;
+  Node::Setting::Boolean colorEmulation;
+  Node::Setting::Boolean colorBleed;
 
   struct Debugger {
     //debugger.cpp
@@ -17,20 +17,20 @@ struct PPU : Thread, PPUcounter {
     auto registers() -> string;
 
     struct Memory {
-      Node::Memory vram;
-      Node::Memory oam;
-      Node::Memory cgram;
+      Node::Debugger::Memory vram;
+      Node::Debugger::Memory oam;
+      Node::Debugger::Memory cgram;
     } memory;
 
     struct Graphics {
-      Node::Graphics tiles2bpp;
-      Node::Graphics tiles4bpp;
-      Node::Graphics tiles8bpp;
-      Node::Graphics tilesMode7;
+      Node::Debugger::Graphics tiles2bpp;
+      Node::Debugger::Graphics tiles4bpp;
+      Node::Debugger::Graphics tiles8bpp;
+      Node::Debugger::Graphics tilesMode7;
     } graphics;
 
     struct Properties {
-      Node::Properties registers;
+      Node::Debugger::Properties registers;
     } properties;
   } debugger;
 
@@ -44,7 +44,6 @@ struct PPU : Thread, PPUcounter {
 
   auto map() -> void;
   auto power(bool reset) -> void;
-  auto refresh() -> void;
 
   //main.cpp
   auto main() -> void;
@@ -81,8 +80,6 @@ private:
   auto readIO(uint24 address, uint8 data) -> uint8;
   auto writeIO(uint24 address, uint8 data) -> void;
   auto updateVideoMode() -> void;
-
-  uint32* output = nullptr;
 
   struct VRAM {
     auto& operator[](uint address) { return data[address & mask]; }

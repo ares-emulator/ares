@@ -8,7 +8,7 @@ APU apu;
 #include "serialization.cpp"
 
 auto APU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("APU");
+  node = parent->append<Node::Object>("APU");
 
   debugger.load(node);
 }

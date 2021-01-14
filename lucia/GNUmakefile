@@ -1,10 +1,10 @@
 name := lucia
-build := performance
+build := optimized
 openmp := false
 local := true
 flags += -I. -I.. -I../ares -DMIA_LIBRARY
 
-ifeq ($(platform),local)
+ifeq ($(local),true)
   flags += -march=native
 endif
 
@@ -22,7 +22,7 @@ hiro.resource := resource/lucia.rc
 include $(hiro.path)/GNUmakefile
 
 profile := performance
-cores := fc sfc n64 sg ms md ps1 pce msx gb gba ws ngp
+cores := fc sfc n64 sg ms md ps1 pce msx cv gb gba ws ngp
 
 ares.path := ../ares
 include $(ares.path)/GNUmakefile
@@ -86,8 +86,9 @@ else ifneq ($(filter $(platform),linux bsd),)
 	mkdir -p $(prefix)/bin/
 	mkdir -p $(prefix)/share/applications/
 	mkdir -p $(prefix)/share/icons/
-	mkdir -p $(prefix)/share/$(name)/
+	mkdir -p $(prefix)/share/$(name)/Shaders/
 	cp $(output.path)/$(name) $(prefix)/bin/$(name)
+	cp -R $(ares.path)/Shaders/* $(prefix)/share/$(name)/Shaders/
 	cp resource/$(name).desktop $(prefix)/share/applications/$(name).desktop
 	cp resource/$(name).png $(prefix)/share/icons/$(name).png
 endif

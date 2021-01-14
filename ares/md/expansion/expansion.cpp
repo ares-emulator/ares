@@ -7,7 +7,7 @@ Expansion& expansion = expansionPort.expansion;
 #include "serialization.cpp"
 
 auto Expansion::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>(interface->name());
+  return node = parent->append<Node::Peripheral>("Mega Drive");
 }
 
 auto Expansion::connect() -> void {

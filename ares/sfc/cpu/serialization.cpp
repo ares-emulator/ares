@@ -3,101 +3,99 @@ auto CPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
   PPUcounter::serialize(s);
 
-  s.array(wram);
+  s(wram);
 
-  s.integer(counter.cpu);
-  s.integer(counter.dma);
+  s(counter.cpu);
+  s(counter.dma);
 
-  s.integer(status.clockCount);
+  s(status.clockCount);
 
-  s.integer(status.irqLock);
+  s(status.irqLock);
 
-  s.integer(status.dramRefreshPosition);
-  s.integer(status.dramRefresh);
+  s(status.dramRefreshPosition);
+  s(status.dramRefresh);
 
-  s.integer(status.hdmaSetupPosition);
-  s.integer(status.hdmaSetupTriggered);
+  s(status.hdmaSetupPosition);
+  s(status.hdmaSetupTriggered);
 
-  s.integer(status.hdmaPosition);
-  s.integer(status.hdmaTriggered);
+  s(status.hdmaPosition);
+  s(status.hdmaTriggered);
 
-  s.boolean(status.nmiValid);
-  s.boolean(status.nmiLine);
-  s.boolean(status.nmiTransition);
-  s.boolean(status.nmiPending);
-  s.boolean(status.nmiHold);
+  s(status.nmiValid);
+  s(status.nmiLine);
+  s(status.nmiTransition);
+  s(status.nmiPending);
+  s(status.nmiHold);
 
-  s.boolean(status.irqValid);
-  s.boolean(status.irqLine);
-  s.boolean(status.irqTransition);
-  s.boolean(status.irqPending);
-  s.boolean(status.irqHold);
+  s(status.irqValid);
+  s(status.irqLine);
+  s(status.irqTransition);
+  s(status.irqPending);
+  s(status.irqHold);
 
-  s.integer(status.resetPending);
-  s.integer(status.interruptPending);
+  s(status.resetPending);
+  s(status.interruptPending);
 
-  s.integer(status.dmaActive);
-  s.integer(status.dmaPending);
-  s.integer(status.hdmaPending);
-  s.integer(status.hdmaMode);
+  s(status.dmaActive);
+  s(status.dmaPending);
+  s(status.hdmaPending);
+  s(status.hdmaMode);
 
-  s.integer(status.autoJoypadActive);
-  s.integer(status.autoJoypadLatch);
-  s.integer(status.autoJoypadCounter);
+  s(status.autoJoypadCounter);
 
-  s.integer(io.wramAddress);
+  s(io.wramAddress);
 
-  s.boolean(io.hirqEnable);
-  s.boolean(io.virqEnable);
-  s.boolean(io.irqEnable);
-  s.boolean(io.nmiEnable);
-  s.boolean(io.autoJoypadPoll);
+  s(io.hirqEnable);
+  s(io.virqEnable);
+  s(io.irqEnable);
+  s(io.nmiEnable);
+  s(io.autoJoypadPoll);
 
-  s.integer(io.pio);
+  s(io.pio);
 
-  s.integer(io.wrmpya);
-  s.integer(io.wrmpyb);
+  s(io.wrmpya);
+  s(io.wrmpyb);
 
-  s.integer(io.wrdiva);
-  s.integer(io.wrdivb);
+  s(io.wrdiva);
+  s(io.wrdivb);
 
-  s.integer(io.htime);
-  s.integer(io.vtime);
+  s(io.htime);
+  s(io.vtime);
 
-  s.integer(io.romSpeed);
+  s(io.romSpeed);
 
-  s.integer(io.version);
+  s(io.version);
 
-  s.integer(io.rddiv);
-  s.integer(io.rdmpy);
+  s(io.rddiv);
+  s(io.rdmpy);
 
-  s.integer(io.joy1);
-  s.integer(io.joy2);
-  s.integer(io.joy3);
-  s.integer(io.joy4);
+  s(io.joy1);
+  s(io.joy2);
+  s(io.joy3);
+  s(io.joy4);
 
-  s.integer(alu.mpyctr);
-  s.integer(alu.divctr);
-  s.integer(alu.shift);
+  s(alu.mpyctr);
+  s(alu.divctr);
+  s(alu.shift);
 
   for(auto& channel : channels) {
-    s.integer(channel.dmaEnable);
-    s.integer(channel.hdmaEnable);
-    s.integer(channel.direction);
-    s.integer(channel.indirect);
-    s.integer(channel.unused);
-    s.integer(channel.reverseTransfer);
-    s.integer(channel.fixedTransfer);
-    s.integer(channel.transferMode);
-    s.integer(channel.targetAddress);
-    s.integer(channel.sourceAddress);
-    s.integer(channel.sourceBank);
-    s.integer(channel.transferSize);
-    s.integer(channel.indirectBank);
-    s.integer(channel.hdmaAddress);
-    s.integer(channel.lineCounter);
-    s.integer(channel.unknown);
-    s.integer(channel.hdmaCompleted);
-    s.integer(channel.hdmaDoTransfer);
+    s(channel.dmaEnable);
+    s(channel.hdmaEnable);
+    s(channel.direction);
+    s(channel.indirect);
+    s(channel.unused);
+    s(channel.reverseTransfer);
+    s(channel.fixedTransfer);
+    s(channel.transferMode);
+    s(channel.targetAddress);
+    s(channel.sourceAddress);
+    s(channel.sourceBank);
+    s(channel.transferSize);
+    s(channel.indirectBank);
+    s(channel.hdmaAddress);
+    s(channel.lineCounter);
+    s(channel.unknown);
+    s(channel.hdmaCompleted);
+    s(channel.hdmaDoTransfer);
   }
 }

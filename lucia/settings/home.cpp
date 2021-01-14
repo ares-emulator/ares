@@ -4,11 +4,11 @@ auto HomePanel::construct() -> void {
 
   image icon{Resource::Ares::Icon};
   icon.shrink();
-  for(uint y : range(icon.height())) {
+  for(u32 y : range(icon.height())) {
     auto data = icon.data() + y * icon.pitch();
-    for(uint x : range(icon.width())) {
-      uint8_t alpha = icon.read(data) >> 24;
-      icon.write(data, uint8_t(alpha * 0.15) << 24);
+    for(u32 x : range(icon.width())) {
+      u8 alpha = icon.read(data) >> 24;
+      icon.write(data, u8(alpha * 0.15) << 24);
       data += icon.stride();
     }
   }

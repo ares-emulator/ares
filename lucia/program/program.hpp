@@ -9,9 +9,9 @@ struct Program : ares::Platform {
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
   auto event(ares::Event) -> void override;
   auto log(string_view message) -> void override;
-  auto video(ares::Node::Screen, const uint32_t* data, uint pitch, uint width, uint height) -> void override;
-  auto audio(ares::Node::Stream) -> void override;
-  auto input(ares::Node::Input) -> void override;
+  auto video(ares::Node::Video::Screen, const u32* data, u32 pitch, u32 width, u32 height) -> void override;
+  auto audio(ares::Node::Audio::Stream) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 
   //load.cpp
   auto identify(const string& filename) -> shared_pointer<Emulator>;
@@ -19,8 +19,8 @@ struct Program : ares::Platform {
   auto unload() -> void;
 
   //states.cpp
-  auto stateSave(uint slot) -> bool;
-  auto stateLoad(uint slot) -> bool;
+  auto stateSave(u32 slot) -> bool;
+  auto stateLoad(u32 slot) -> bool;
 
   //status.cpp
   auto updateMessage() -> void;
@@ -30,7 +30,7 @@ struct Program : ares::Platform {
   auto pause(bool) -> void;
   auto paletteUpdate() -> void;
   auto runAheadUpdate() -> void;
-  auto captureScreenshot(const uint32_t* data, uint pitch, uint width, uint height) -> void;
+  auto captureScreenshot(const u32* data, u32 pitch, u32 width, u32 height) -> void;
   auto openFile(BrowserDialog&) -> string;
   auto selectFolder(BrowserDialog&) -> string;
 
@@ -50,8 +50,8 @@ struct Program : ares::Platform {
   bool startFullScreen = false;
   string startGameLoad;
 
-  vector<ares::Node::Screen> screens;
-  vector<ares::Node::Stream> streams;
+  vector<ares::Node::Video::Screen> screens;
+  vector<ares::Node::Audio::Stream> streams;
 
   bool paused = false;
   bool fastForwarding = false;
@@ -60,23 +60,23 @@ struct Program : ares::Platform {
   bool requestScreenshot = false;
 
   struct State {
-    uint slot = 1;
+    u32 slot = 1;
   } state;
 
   //rewind.cpp
   struct Rewind {
-    enum class Mode : uint { Playing, Rewinding } mode = Mode::Playing;
+    enum class Mode : u32 { Playing, Rewinding } mode = Mode::Playing;
     vector<serializer> history;
-    uint length = 0;
-    uint frequency = 0;
-    uint counter = 0;
+    u32 length = 0;
+    u32 frequency = 0;
+    u32 counter = 0;
   } rewind;
   auto rewindSetMode(Rewind::Mode) -> void;
   auto rewindReset() -> void;
   auto rewindRun() -> void;
 
   struct Message {
-    uint64_t timestamp = 0;
+    u64 timestamp = 0;
     string text;
   } message;
 };

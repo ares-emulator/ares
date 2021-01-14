@@ -1,28 +1,28 @@
 struct PPU : Thread, IO {
-  Node::Component node;
-  Node::Screen screen;
-  Node::Boolean colorEmulation;
-  Node::Boolean interframeBlending;
-  Node::String orientation;
-  Node::Boolean showIcons;
+  Node::Object node;
+  Node::Video::Screen screen;
+  Node::Setting::Boolean colorEmulation;
+  Node::Setting::Boolean interframeBlending;
+  Node::Setting::String orientation;
+  Node::Setting::Boolean showIcons;
   struct Icon {
-    Node::Sprite auxiliary0;
-    Node::Sprite auxiliary1;
-    Node::Sprite auxiliary2;
-    Node::Sprite headphones;
-    Node::Sprite initialized;
-    Node::Sprite lowBattery;
-    Node::Sprite orientation0;
-    Node::Sprite orientation1;
-    Node::Sprite poweredOn;
-    Node::Sprite sleeping;
-    Node::Sprite volumeA0;
-    Node::Sprite volumeA1;
-    Node::Sprite volumeA2;
-    Node::Sprite volumeB0;
-    Node::Sprite volumeB1;
-    Node::Sprite volumeB2;
-    Node::Sprite volumeB3;
+    Node::Video::Sprite auxiliary0;
+    Node::Video::Sprite auxiliary1;
+    Node::Video::Sprite auxiliary2;
+    Node::Video::Sprite headphones;
+    Node::Video::Sprite initialized;
+    Node::Video::Sprite lowBattery;
+    Node::Video::Sprite orientation0;
+    Node::Video::Sprite orientation1;
+    Node::Video::Sprite poweredOn;
+    Node::Video::Sprite sleeping;
+    Node::Video::Sprite volumeA0;
+    Node::Video::Sprite volumeA1;
+    Node::Video::Sprite volumeA2;
+    Node::Video::Sprite volumeB0;
+    Node::Video::Sprite volumeB1;
+    Node::Video::Sprite volumeB2;
+    Node::Video::Sprite volumeB3;
   } icon;
 
   auto planar() const -> bool { return system.mode().bit(0) == 0; }
@@ -38,7 +38,6 @@ struct PPU : Thread, IO {
   auto main() -> void;
   auto scanline() -> void;
   auto frame() -> void;
-  auto refresh() -> void;
   auto step(uint clocks) -> void;
   auto power() -> void;
   auto updateIcons() -> void;
@@ -74,8 +73,6 @@ struct PPU : Thread, IO {
     Source source;
     uint12 color;
   };
-
-  uint32 output[(224 + 13) * (144 * 13)];
 
   struct State {
     uint1 field = 0;

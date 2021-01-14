@@ -37,5 +37,3 @@ namespace ares::MegaDrive {
   #include <md/cartridge/cartridge.hpp>
   #include <md/expansion/expansion.hpp>
 }
-
-#include <md/interface/interface.hpp>

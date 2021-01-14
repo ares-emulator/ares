@@ -16,10 +16,10 @@ auto CPU::load(Node::Object parent) -> void {
   wram.allocate(!Model::GameBoyColor() ? 8_KiB : 32_KiB);
   hram.allocate(128);
 
-  node = parent->append<Node::Component>("CPU");
+  node = parent->append<Node::Object>("CPU");
 
   if(Model::GameBoy()) {
-    version = node->append<Node::String>("Version", "DMG-CPU B");
+    version = node->append<Node::Setting::String>("Version", "DMG-CPU B");
     version->setAllowedValues({
       "DMG-CPU",
       "DMG-CPU A",
@@ -30,7 +30,7 @@ auto CPU::load(Node::Object parent) -> void {
   }
 
   if(Model::SuperGameBoy()) {
-    version = node->append<Node::String>("Version", "SGB-CPU 01");
+    version = node->append<Node::Setting::String>("Version", "SGB-CPU 01");
     version->setAllowedValues({
       "SGB-CPU 01",
       "CPU SGB2"
@@ -38,7 +38,7 @@ auto CPU::load(Node::Object parent) -> void {
   }
 
   if(Model::GameBoyColor()) {
-    version = node->append<Node::String>("Version", "CPU CGB");
+    version = node->append<Node::Setting::String>("Version", "CPU CGB");
     version->setAllowedValues({
       "CPU CGB",
       "CPU CGB A",

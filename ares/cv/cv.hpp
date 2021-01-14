@@ -9,6 +9,7 @@
 
 namespace ares::ColecoVision {
   #include <ares/inline.hpp>
+  auto load(Node::System& node, string name) -> bool;
 
   struct Model {
     inline static auto ColecoVision() -> bool;
@@ -29,5 +30,3 @@ namespace ares::ColecoVision {
   #include <cv/system/system.hpp>
   #include <cv/cartridge/cartridge.hpp>
 }
-
-#include <cv/interface/interface.hpp>

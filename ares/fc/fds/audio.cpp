@@ -25,8 +25,8 @@ auto FDSAudio::Modulator::clockModulator() -> bool {
   if(enabled()) {
     overflow += frequency;
     if(overflow < frequency) {  //overflow occurred
-      static const integer lookup[8] = {0, 1, 2, 4, -8, -4, -2, -1};
-      integer offset = lookup[table.data[table.index++]];
+      static const i32 lookup[8] = {0, 1, 2, 4, -8, -4, -2, -1};
+      i32 offset = lookup[table.data[table.index++]];
       updateCounter(offset == -8 ? 0 : counter + offset);
       return true;
     }
@@ -34,9 +34,9 @@ auto FDSAudio::Modulator::clockModulator() -> bool {
   return false;
 }
 
-auto FDSAudio::Modulator::updateOutput(uint16 pitch) -> void {
+auto FDSAudio::Modulator::updateOutput(n16 pitch) -> void {
   output = counter * gain;
-  integer remainder = output.bit(0,3);
+  i32 remainder = output.bit(0,3);
   output >>= 4;
   if(remainder > 0 && !output.bit(7)) output += counter < 0 ? -1 : 2;
 
@@ -52,7 +52,7 @@ auto FDSAudio::Modulator::updateOutput(uint16 pitch) -> void {
   if(remainder >= 32) output++;
 }
 
-auto FDSAudio::Modulator::updateCounter(int8 value) -> void {
+auto FDSAudio::Modulator::updateCounter(i8 value) -> void {
   counter = value;
   if(counter >= 64) {
     counter -= 128;
@@ -64,9 +64,9 @@ auto FDSAudio::Modulator::updateCounter(int8 value) -> void {
 //
 
 auto FDSAudio::load(Node::Object parent) -> void {
-  stream = parent->append<Node::Stream>("FDS");
+  stream = parent->append<Node::Audio::Stream>("FDS");
   stream->setChannels(1);
-  stream->setFrequency(uint(system.frequency() + 0.5) / cpu.rate());
+  stream->setFrequency(u32(system.frequency() + 0.5) / cpu.rate());
 }
 
 auto FDSAudio::unload() -> void {
@@ -74,9 +74,9 @@ auto FDSAudio::unload() -> void {
 }
 
 auto FDSAudio::clock() -> void {
-  if(!enable) return stream->sample(0.0);
+  if(!enable) return stream->frame(0.0);
 
-  int frequency = carrier.frequency;
+  i32 frequency = carrier.frequency;
   if(envelopes && !waveform.halt) {
     carrier.clockEnvelope();
     if(modulator.clockEnvelope()) {
@@ -103,18 +103,18 @@ auto FDSAudio::clock() -> void {
 }
 
 auto FDSAudio::updateOutput() -> void {
-  static const uint lookup[4] = {36, 24, 17, 14};
-  integer level = min(carrier.gain, 32) * lookup[masterVolume];
+  static constexpr u32 lookup[4] = {36, 24, 17, 14};
+  i32 level = min(carrier.gain, 32) * lookup[masterVolume];
 
-  uint8 output = waveform.data[waveform.index] * level / 1152;
-  stream->sample(output / 255.0 * 0.5);
+  n8 output = waveform.data[waveform.index] * level / 1152;
+  stream->frame(output / 255.0 * 0.5);
 }
 
-auto FDSAudio::read(uint16 address, uint8 data) -> uint8 {
+auto FDSAudio::read(n16 address, n8 data) -> n8 {
   if(!enable) return data;
 
   if(address >= 0x4040 && address <= 0x407f) {
-    data.bit(0,5) = waveform.data[(uint6)address];
+    data.bit(0,5) = waveform.data[(n6)address];
     return data;
   }
 
@@ -133,11 +133,11 @@ auto FDSAudio::read(uint16 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto FDSAudio::write(uint16 address, uint8 data) -> void {
+auto FDSAudio::write(n16 address, n8 data) -> void {
   if(!enable && address != 0x4025) return;
 
   if(address >= 0x4040 && address <= 0x407f && waveform.writable) {
-    waveform.data[(uint6)address] = data.bit(0,5);
+    waveform.data[(n6)address] = data.bit(0,5);
     return;
   }
 

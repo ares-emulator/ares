@@ -1,5 +1,5 @@
 auto AI::Debugger::load(Node::Object parent) -> void {
-  tracer.io = parent->append<Node::Notification>("I/O", "AI");
+  tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "AI");
 }
 
 auto AI::Debugger::io(string_view message) -> void {

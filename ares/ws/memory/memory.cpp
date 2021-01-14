@@ -10,7 +10,7 @@ auto InternalRAM::power() -> void {
 }
 
 auto InternalRAM::serialize(serializer& s) -> void {
-  s.array(memory, SoC::ASWAN() ? 16_KiB : 64_KiB);
+  s(array_span<uint8_t>{memory, SoC::ASWAN() ? 16_KiB : 64_KiB});
 }
 
 auto InternalRAM::read(uint16 address) -> uint8 {

@@ -49,7 +49,7 @@ struct CrossBlaim : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
-    s.integer(mode);
+    s(mode);
   }
 
   uint2 mode;

@@ -5,6 +5,7 @@ auto CPU::sleep() -> void {
 auto CPU::get(uint mode, uint32 addr) -> uint32 {
   uint clocks = _wait(mode, addr);
   uint word = pipeline.fetch.instruction;
+  if(context.dmaActive) word = dmabus.data;
 
   if(addr >= 0x1000'0000) {
     prefetchStep(clocks);
@@ -20,7 +21,7 @@ auto CPU::get(uint mode, uint32 addr) -> uint32 {
       step(1);
     }
   } else {
-    prefetchStep(clocks - 1);
+    prefetchStep(clocks);
          if(addr <  0x0200'0000) word = bios.read(mode, addr);
     else if(addr <  0x0300'0000) word = readEWRAM(mode, addr);
     else if(addr <  0x0400'0000) word = readIWRAM(mode, addr);
@@ -29,7 +30,6 @@ auto CPU::get(uint mode, uint32 addr) -> uint32 {
     else if(addr >= 0x0500'0000) word = ppu.readPRAM(mode, addr);
     else if((addr & 0xffff'fc00) == 0x0400'0000) word = bus.io[addr & 0x3ff]->readIO(mode, addr);
     else if((addr & 0xff00'ffff) == 0x0400'0800) word = ((IO*)this)->readIO(mode, 0x0400'0800 | (addr & 3));
-    prefetchStep(1);
   }
 
   return word;

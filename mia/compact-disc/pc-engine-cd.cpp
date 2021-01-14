@@ -1,10 +1,10 @@
 struct PCEngineCD : CompactDisc {
   auto name() -> string override { return "PC Engine CD"; }
-  auto manifestSector() const -> uint override { return 0; }
+  auto manifestSector() const -> u32 override { return 0; }
   auto manifest(vector<uint8_t> sector, string location) -> string override;
 };
 
-auto PCEngineCD::manifest(vector<uint8_t> sector, string location) -> string {
+auto PCEngineCD::manifest(vector<u8> sector, string location) -> string {
   //yes, "Electronics" is spelled incorrectly in actual PC Engine CD games ...
   if(memory::compare(sector.data() + 0x264, "NEC Home Electoronics", 21)) return {};
 

@@ -7,6 +7,7 @@ auto VDP::Sprite::render() -> void {
   uint tiles = 0;
   uint count = 0;
   uint objectSize = 0;
+
   do {
     auto& object = oam[link];
     link = object.link;
@@ -17,7 +18,11 @@ auto VDP::Sprite::render() -> void {
 
     objects[objectSize++] = object;
     tiles += object.width() >> 3;
-  } while(link && link < 80 && objectSize < 20 && tiles < 40 && ++count < 80);
+
+    if(!link || link >= linkLimit()) break;
+    if(objectSize >= objectLimit()) break;
+    if(tiles >= tileLimit()) break;
+  } while(++count < linkLimit());
 
   memory::fill<uint8>(pixels, vdp.screenWidth());
   uint shiftY = interlace ? 4 : 3;

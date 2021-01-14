@@ -12,9 +12,9 @@ namespace ares::GameBoy {
 APU apu;
 
 auto APU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("APU");
+  node = parent->append<Node::Object>("APU");
 
-  stream = node->append<Node::Stream>("PSG");
+  stream = node->append<Node::Audio::Stream>("PSG");
   stream->setChannels(2);
   stream->setFrequency(2 * 1024 * 1024);
   stream->addHighPassFilter(20.0, 1);
@@ -31,7 +31,7 @@ auto APU::main() -> void {
   wave.run();
   noise.run();
   sequencer.run();
-  stream->sample(sequencer.left / 32768.0, sequencer.right / 32768.0);
+  stream->frame(sequencer.left / 32768.0, sequencer.right / 32768.0);
 
   if(cycle == 0) {  //512hz
     if(phase == 0 || phase == 2 || phase == 4 || phase == 6) {  //256hz

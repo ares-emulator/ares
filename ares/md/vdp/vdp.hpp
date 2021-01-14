@@ -3,20 +3,24 @@
 #include "../vdp-performance/vdp.hpp"
 #else
 struct VDP : Thread {
-  Node::Component node;
-  Node::Screen screen;
-  Node::Boolean overscan;
+  Node::Object node;
+  Node::Video::Screen screen;
+  Node::Setting::Boolean overscan;
 
   struct Debugger {
+    VDP& self;
+    Debugger(VDP& self) : self(self) {}
+
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto unload() -> void;
 
     struct Memory {
-      Node::Memory vram;
-      Node::Memory vsram;
-      Node::Memory cram;
+      Node::Debugger::Memory vram;
+      Node::Debugger::Memory vsram;
+      Node::Debugger::Memory cram;
     } memory;
-  } debugger;
+  } debugger{*this};
 
   //vdp.cpp
   auto load(Node::Object) -> void;
@@ -24,7 +28,6 @@ struct VDP : Thread {
 
   auto main() -> void;
   auto step(uint clocks) -> void;
-  auto refresh() -> void;
 
   auto power(bool reset) -> void;
 
@@ -146,6 +149,13 @@ struct VDP : Thread {
   };
 
   struct Sprite {
+    VDP& vdp;
+
+    //the per-scanline sprite limits are different between H40 and H32 modes
+    auto objectLimit() const -> uint { return vdp.io.displayWidth ? 20 : 16; }
+    auto tileLimit()   const -> uint { return vdp.io.displayWidth ? 40 : 32; }
+    auto linkLimit()   const -> uint { return vdp.io.displayWidth ? 80 : 64; }
+
     //sprite.cpp
     auto write(uint9 addr, uint16 data) -> void;
     auto scanline(uint y) -> void;
@@ -166,7 +176,7 @@ struct VDP : Thread {
     adaptive_array<Object, 80> oam;
     adaptive_array<Object, 20> objects;
   };
-  Sprite sprite;
+  Sprite sprite{*this};
 
   //color.cpp
   auto color(uint32) -> uint64;
@@ -267,6 +277,8 @@ private:
 
   struct Latch {
     //per-frame
+    uint1 field;
+    uint1 interlace;
     uint1 overscan;
     uint8 horizontalInterruptCounter;
 
@@ -275,15 +287,12 @@ private:
   } latch;
 
   struct State {
-    uint32* output = nullptr;
+    uint32_t* output = nullptr;
     uint16 hdot;
     uint16 hcounter;
     uint16 vcounter;
      uint1 field;
   } state;
-
-  uint32 buffer[1280 * 512];
-  uint32* output = nullptr;
 
   friend class Interface;
 };

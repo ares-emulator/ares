@@ -1,10 +1,13 @@
 auto Timer::readByte(u32 address) -> u32 {
-  print("* rb", hex(address, 8L), "\n");
-  return 0;
+  return readWord(address & ~3) >> 8 * (address & 3);
 }
 
 auto Timer::readHalf(u32 address) -> u32 {
-  uint16 data;
+  return readWord(address & ~3) >> 8 * (address & 3);
+}
+
+auto Timer::readWord(u32 address) -> u32 {
+  uint32 data;
   uint c = address >> 4 & 3;
 
   if((address & 0xffff'ffcf) == 0x1f80'1100 && c <= 2) {
@@ -12,7 +15,7 @@ auto Timer::readHalf(u32 address) -> u32 {
   }
 
   if((address & 0xffff'ffcf) == 0x1f80'1104 && c <= 2) {
-    data.bit( 0)    = timers[c].sync;
+    data.bit( 0)    = timers[c].synchronize;
     data.bit( 1, 2) = timers[c].mode;
     data.bit( 3)    = timers[c].resetMode;
     data.bit( 4)    = timers[c].irqOnTarget;
@@ -36,17 +39,16 @@ auto Timer::readHalf(u32 address) -> u32 {
   return data;
 }
 
-auto Timer::readWord(u32 address) -> u32 {
-  uint32 data = readHalf(address & ~3 | 0) <<  0;
-  return data | readHalf(address & ~3 | 2) << 16;
+auto Timer::writeByte(u32 address, u32 data) -> void {
+  return writeWord(address & ~3, data << 8 * (address & 3));
 }
 
-auto Timer::writeByte(u32 address, u32 value) -> void {
-  print("* wb", hex(address, 8L), "\n");
+auto Timer::writeHalf(u32 address, u32 data) -> void {
+  return writeWord(address & ~3, data << 8 * (address & 3));
 }
 
-auto Timer::writeHalf(u32 address, u32 value) -> void {
-  uint16 data = value;
+auto Timer::writeWord(u32 address, u32 value) -> void {
+  uint32 data = value;
   uint c = address >> 4 & 3;
 
   if((address & 0xffff'ffcf) == 0x1f80'1100 && c <= 2) {
@@ -54,28 +56,27 @@ auto Timer::writeHalf(u32 address, u32 value) -> void {
   }
 
   if((address & 0xffff'ffcf) == 0x1f80'1104 && c <= 2) {
-    timers[c].sync            = data.bit( 0);
-    timers[c].mode            = data.bit( 1, 2);
-    timers[c].resetMode       = data.bit( 3);
-    timers[c].irqOnTarget     = data.bit( 4);
-    timers[c].irqOnSaturate   = data.bit( 5);
-    timers[c].irqRepeat       = data.bit( 6);
-    timers[c].irqMode         = data.bit( 7);
-    timers[c].clock           = data.bit( 8);
-    timers[c].divider         = data.bit( 9);
-    timers[c].irqLine         = 1;
-    timers[c].reachedTarget   = data.bit(11);
-    timers[c].reachedSaturate = data.bit(12);
-    timers[c].unknown         = data.bit(13,15);
-    poll();
+    timers[c].synchronize   = data.bit( 0);
+    timers[c].mode          = data.bit( 1, 2);
+    timers[c].resetMode     = data.bit( 3);
+    timers[c].irqOnTarget   = data.bit( 4);
+    timers[c].irqOnSaturate = data.bit( 5);
+    timers[c].irqRepeat     = data.bit( 6);
+    timers[c].irqMode       = data.bit( 7);
+    timers[c].clock         = data.bit( 8);
+    timers[c].divider       = data.bit( 9);
+    timers[c].irqLine       = 1;
+    timers[c].unknown       = data.bit(13,15);
+
+    if(c == 0) timers[0].paused = timers[0].mode == 3;
+    if(c == 1) timers[1].paused = timers[1].mode == 3;
+    if(c == 2) timers[2].paused = timers[2].mode == 3 || timers[2].mode == 0;
+
+    timers[c].counter      = 0;
+    timers[c].irqTriggered = 0;
   }
 
   if((address & 0xffff'ffcf) == 0x1f80'1108 && c <= 2) {
     timers[c].target = data.bit(0,15);
   }
-}
-
-auto Timer::writeWord(u32 address, u32 data) -> void {
-  writeHalf(address & ~3 | 0, data >>  0);
-  writeHalf(address & ~3 | 2, data >> 16);
 }

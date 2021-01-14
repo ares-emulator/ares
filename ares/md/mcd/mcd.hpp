@@ -1,7 +1,7 @@
 //Mega CD
 
 struct MCD : M68K, Thread {
-  Node::Component node;
+  Node::Object node;
   Node::Port tray;
   Node::Peripheral disc;
   Shared::File fd;
@@ -17,14 +17,14 @@ struct MCD : M68K, Thread {
     auto interrupt(string_view) -> void;
 
     struct Memory {
-      Node::Memory pram;
-      Node::Memory wram;
-      Node::Memory bram;
+      Node::Debugger::Memory pram;
+      Node::Debugger::Memory wram;
+      Node::Debugger::Memory bram;
     } memory;
 
     struct Tracer {
-      Node::Instruction instruction;
-      Node::Notification interrupt;
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
     } tracer;
   } debugger;
 
@@ -310,7 +310,7 @@ struct MCD : M68K, Thread {
     uint16 counter;
 
     struct DAC {
-      Node::Stream stream;
+      Node::Audio::Stream stream;
 
       //cdd-dac.cpp
       auto load(Node::Object) -> void;
@@ -407,7 +407,7 @@ struct MCD : M68K, Thread {
   } gpu;
 
   struct PCM {
-    Node::Stream stream;
+    Node::Audio::Stream stream;
     Memory::Writable<uint8> ram;
 
     //pcm.cpp

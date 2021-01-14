@@ -1,20 +1,22 @@
 struct CPU : WDC65816, Thread, PPUcounter {
-  Node::Component node;
-  Node::Natural version;
+  Node::Object node;
+  Node::Setting::Natural version;
 
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
+    auto dma(uint8 channelID, uint24 addressA, uint8 addressB, uint8 data) -> void;
 
     struct Memory {
-      Node::Memory wram;
+      Node::Debugger::Memory wram;
     } memory;
 
     struct Tracer {
-      Node::Instruction instruction;
-      Node::Notification interrupt;
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
+      Node::Debugger::Tracer::Notification dma;
     } tracer;
   } debugger;
 
@@ -127,9 +129,7 @@ private:
     bool hdmaPending = 0;
     bool hdmaMode = 0;  //0 = init, 1 = run
 
-    bool autoJoypadActive = 0;
-    bool autoJoypadLatch = 0;
-    uint autoJoypadCounter = 0;
+    uint autoJoypadCounter = 33;  //state machine; 4224 / 128 = 33 (inactive)
   } status;
 
   struct IO {
@@ -247,6 +247,8 @@ private:
     uint1 hdmaCompleted;
     uint1 hdmaDoTransfer;
 
+    //unserialized:
+    uint8 id;
     maybe<Channel&> next;
 
     Channel() : transferSize(0xffff) {}

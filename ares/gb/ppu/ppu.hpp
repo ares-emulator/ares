@@ -1,23 +1,27 @@
 struct PPU : Thread {
-  Node::Component node;
-  Node::Screen screen;
-  Node::String colorEmulationDMG;
-  Node::Boolean colorEmulationCGB;
-  Node::Boolean interframeBlending;
+  Node::Object node;
+  Node::Video::Screen screen;
+  Node::Setting::String colorEmulationDMG;
+  Node::Setting::Boolean colorEmulationCGB;
+  Node::Setting::Boolean interframeBlending;
   Memory::Writable<uint8> vram;  //GB = 8KB, GBC = 16KB
   Memory::Writable<uint8> oam;
-  uint8 bgp[4];
-  uint8 obp[2][4];
-  uint8 bgpd[64];
-  uint8 obpd[64];
+  Memory::Writable<uint2> bgp;
+  Memory::Writable<uint2> obp;
+  Memory::Writable<uint16> bgpd;
+  Memory::Writable<uint16> obpd;
 
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
 
     struct Memory {
-      Node::Memory vram;
-      Node::Memory oam;
+      Node::Debugger::Memory vram;
+      Node::Debugger::Memory oam;
+      Node::Debugger::Memory bgp;
+      Node::Debugger::Memory obp;
+      Node::Debugger::Memory bgpd;
+      Node::Debugger::Memory obpd;
     } memory;
   } debugger;
 
@@ -29,10 +33,9 @@ struct PPU : Thread {
   auto mode(uint2 mode) -> void;
   auto stat() -> void;
   auto coincidence() -> bool;
-  auto refresh() -> void;
   auto step(uint clocks) -> void;
 
-  auto hflip(uint data) const -> uint;
+  auto hflip(uint16 tiledata) const -> uint16;
 
   auto power() -> void;
 
@@ -47,7 +50,7 @@ struct PPU : Thread {
   auto writeIO(uint cycle, uint16 address, uint8 data) -> void;
 
   //dmg.cpp
-  auto readTileDMG(bool select, uint x, uint y, uint& data) -> void;
+  auto readTileDMG(bool select, uint x, uint y, uint16& tiledata) -> void;
   auto scanlineDMG() -> void;
   auto runDMG() -> void;
   auto runBackgroundDMG() -> void;
@@ -55,7 +58,7 @@ struct PPU : Thread {
   auto runObjectsDMG() -> void;
 
   //cgb.cpp
-  auto readTileCGB(bool select, uint x, uint y, uint& attr, uint& data) -> void;
+  auto readTileCGB(bool select, uint x, uint y, uint16& tiledata, uint8& attributes) -> void;
   auto scanlineCGB() -> void;
   auto runCGB() -> void;
   auto runBackgroundCGB() -> void;
@@ -72,14 +75,12 @@ struct PPU : Thread {
   function<void ()> scanline;
   function<void ()> run;
 
-  uint32 output[160 * 144];
-
   struct Status {
     uint1 irq;  //STAT IRQ line
     uint9 lx;   //0~455
 
     //$ff40  LCDC
-    uint1 bgEnable;
+    uint1 bgEnable;  //DMG: BG enable; CGB: BG priority
     uint1 obEnable;
     uint1 obSize;
     uint1 bgTilemapSelect;
@@ -142,7 +143,7 @@ struct PPU : Thread {
   } history;
 
   struct Pixel {
-    uint16 color;
+    uint15 color;
      uint8 palette;
      uint1 priority;
   };
@@ -150,20 +151,20 @@ struct PPU : Thread {
   Pixel ob;
 
   struct Sprite {
-    uint x = 0;
-    uint y = 0;
-    uint tile = 0;
-    uint attr = 0;
-    uint data = 0;
+     int16 x;
+     int16 y;
+     uint8 tile;
+     uint8 attributes;
+    uint16 tiledata;
   };
   Sprite sprite[10];
-  uint4 sprites;  //0~9
+  uint4 sprites;  //0-9
 
-  uint8 px;  //0~159
+  uint8 px;  //0-159
 
   struct Background {
-    uint attr = 0;
-    uint data = 0;
+     uint8 attributes;
+    uint16 tiledata;
   };
   Background background;
   Background window;

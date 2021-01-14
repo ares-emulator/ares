@@ -11,6 +11,7 @@
 
 namespace ares::MSX {
   #include <ares/inline.hpp>
+  auto load(Node::System& node, string name) -> bool;
 
   struct Model {
     inline static auto MSX() -> bool;
@@ -31,5 +32,3 @@ namespace ares::MSX {
   #include <msx/vdp/vdp.hpp>
   #include <msx/psg/psg.hpp>
 }
-
-#include <msx/interface/interface.hpp>

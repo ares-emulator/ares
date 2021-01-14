@@ -17,17 +17,17 @@ struct AudioDirectSound : AudioDriver {
 
   auto hasBlocking() -> bool override { return true; }
 
-  auto hasFrequencies() -> vector<uint> override {
+  auto hasFrequencies() -> vector<u32> override {
     return {44100, 48000, 96000};
   }
 
-  auto hasLatencies() -> vector<uint> override {
+  auto hasLatencies() -> vector<u32> override {
     return {40, 60, 80, 100};
   }
 
   auto setBlocking(bool blocking) -> bool override { return true; }
-  auto setFrequency(uint frequency) -> bool override { return initialize(); }
-  auto setLatency(uint latency) -> bool override { return initialize(); }
+  auto setFrequency(u32 frequency) -> bool override { return initialize(); }
+  auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
     if(!ready()) return;
@@ -36,7 +36,7 @@ struct AudioDirectSound : AudioDriver {
     _ringWrite = _rings - 1;
     _ringDistance = _rings - 1;
 
-    if(_buffer) memory::fill<uint32_t>(_buffer, _period * _rings);
+    if(_buffer) memory::fill<u32>(_buffer, _period * _rings);
     _offset = 0;
 
     if(!_secondary) return;
@@ -46,17 +46,17 @@ struct AudioDirectSound : AudioDriver {
     void* output;
     DWORD size;
     _secondary->Lock(0, _period * _rings * 4, &output, &size, 0, 0, 0);
-    memory::fill<uint8_t>(output, size);
+    memory::fill<u8>(output, size);
     _secondary->Unlock(output, size, 0, 0);
 
     _secondary->Play(0, 0, DSBPLAY_LOOPING);
   }
 
-  auto output(const double samples[]) -> void override {
+  auto output(const f64 samples[]) -> void override {
     if(!ready()) return;
 
-    _buffer[_offset]  = (uint16_t)sclamp<16>(samples[0] * 32767.0) <<  0;
-    _buffer[_offset] |= (uint16_t)sclamp<16>(samples[1] * 32767.0) << 16;
+    _buffer[_offset]  = (u16)sclamp<16>(samples[0] * 32767.0) <<  0;
+    _buffer[_offset] |= (u16)sclamp<16>(samples[1] * 32767.0) << 16;
     if(++_offset < _period) return;
     _offset = 0;
 
@@ -65,7 +65,7 @@ struct AudioDirectSound : AudioDriver {
       while(_ringDistance >= _rings - 1) {
         DWORD position;
         _secondary->GetCurrentPosition(&position, 0);
-        uint ringActive = position / (_period * 4);
+        u32 ringActive = position / (_period * 4);
         if(ringActive == _ringRead) continue;
 
         //subtract number of played rings from ring distance counter
@@ -87,7 +87,7 @@ struct AudioDirectSound : AudioDriver {
     void* output;
     DWORD size;
     if(_secondary->Lock(_ringWrite * _period * 4, _period * 4, &output, &size, 0, 0, 0) == DS_OK) {
-      memory::copy<uint32_t>(output, _buffer, _period);
+      memory::copy<u32>(output, _buffer, _period);
       _secondary->Unlock(output, size, 0, 0);
     }
   }
@@ -98,7 +98,7 @@ private:
 
     _rings = 8;
     _period = self.frequency * self.latency / _rings / 1000.0 + 0.5;
-    _buffer = new uint32_t[_period * _rings];
+    _buffer = new u32[_period * _rings];
     _offset = 0;
 
     if(DirectSoundCreate(0, &_interface, 0) != DS_OK) return terminate(), false;
@@ -149,12 +149,12 @@ private:
   LPDIRECTSOUNDBUFFER _primary = nullptr;
   LPDIRECTSOUNDBUFFER _secondary = nullptr;
 
-  uint32_t* _buffer = nullptr;
-  uint _offset = 0;
+  u32* _buffer = nullptr;
+  u32 _offset = 0;
 
-  uint _period = 0;
-  uint _rings = 0;
-  uint _ringRead = 0;
-  uint _ringWrite = 0;
-  int _ringDistance = 0;
+  u32 _period = 0;
+  u32 _rings = 0;
+  u32 _ringRead = 0;
+  u32 _ringWrite = 0;
+  s32 _ringDistance = 0;
 };

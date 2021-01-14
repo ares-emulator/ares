@@ -1,10 +1,13 @@
 struct KonamiVRC4 : Interface {
-  Memory::Readable<uint8> programROM;
-  Memory::Writable<uint8> programRAM;
-  Memory::Readable<uint8> characterROM;
-  Memory::Writable<uint8> characterRAM;
+  static auto create(string id) -> Interface* {
+    if(id == "KONAMI-VRC-4") return new KonamiVRC4;
+    return nullptr;
+  }
 
-  using Interface::Interface;
+  Memory::Readable<n8> programROM;
+  Memory::Writable<n8> programRAM;
+  Memory::Readable<n8> characterROM;
+  Memory::Writable<n8> characterRAM;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -49,24 +52,24 @@ struct KonamiVRC4 : Interface {
     tick();
   }
 
-  auto readPRG(uint address) -> uint8 {
-    if(address < 0x6000) return cpu.mdr();
-    if(address < 0x8000) return programRAM.read((uint13)address);
+  auto readPRG(n32 address, n8 data) -> n8 override {
+    if(address < 0x6000) return data;
+    if(address < 0x8000) return programRAM.read((n13)address);
 
-    uint5 bank, banks = programROM.size() >> 13;
+    n5 bank, banks = programROM.size() >> 13;
     switch(address & 0xe000) {
-    case 0x8000: bank = programMode == 0 ? programBank[0] : uint5(banks - 2); break;
+    case 0x8000: bank = programMode == 0 ? programBank[0] : n5(banks - 2); break;
     case 0xa000: bank = programBank[1]; break;
-    case 0xc000: bank = programMode == 1 ? programBank[0] : uint5(banks - 2); break;
+    case 0xc000: bank = programMode == 1 ? programBank[0] : n5(banks - 2); break;
     case 0xe000: bank = banks - 1; break;
     }
-    address = bank << 13 | (uint13)address;
+    address = bank << 13 | (n13)address;
     return programROM.read(address);
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000) return;
-    if(address < 0x8000) return programRAM.write((uint13)address, data);
+    if(address < 0x8000) return programRAM.write((n13)address, data);
 
     bool a0 = address & pinA0;
     bool a1 = address & pinA1;
@@ -121,7 +124,7 @@ struct KonamiVRC4 : Interface {
     }
   }
 
-  auto addressCIRAM(uint address) const -> uint {
+  auto addressCIRAM(n32 address) const -> n32 {
     switch(mirror) {
     case 0: return address >> 0 & 0x0400 | address & 0x03ff;  //vertical mirroring
     case 1: return address >> 1 & 0x0400 | address & 0x03ff;  //horizontal mirroring
@@ -131,66 +134,55 @@ struct KonamiVRC4 : Interface {
     unreachable;
   }
 
-  auto addressCHR(uint address) const -> uint {
-    uint8 bank = characterBank[address >> 10];
-    return bank << 10 | (uint10)address;
+  auto addressCHR(n32 address) const -> n32 {
+    n8 bank = characterBank[address >> 10 & 7];
+    return bank << 10 | (n10)address;
   }
 
-  auto readCHR(uint address) -> uint8 {
+  auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
     if(characterROM) return characterROM.read(addressCHR(address));
     if(characterRAM) return characterRAM.read(addressCHR(address));
-    return 0x00;
+    return data;
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void override {
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
   auto power() -> void {
-    programMode = 0;
-    for(auto& bank : programBank) bank = 0;
-    mirror = 0;
-    for(auto& bank : characterBank) bank = 0;
-    irqLatch = 0;
-    irqMode = 0;
-    irqEnable = 0;
-    irqAcknowledge = 0;
-    irqCounter = 0;
-    irqScalar = 0;
-    irqLine = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    programRAM.serialize(s);
-    characterRAM.serialize(s);
-    s.integer(pinA0);
-    s.integer(pinA1);
-    s.integer(programMode);
-    s.array(programBank);
-    s.integer(mirror);
-    s.array(characterBank);
-    s.integer(irqLatch);
-    s.integer(irqMode);
-    s.integer(irqEnable);
-    s.integer(irqAcknowledge);
-    s.integer(irqCounter);
-    s.integer(irqScalar);
-    s.integer(irqLine);
+    s(programRAM);
+    s(characterRAM);
+    s(programMode);
+    s(programBank);
+    s(mirror);
+    s(characterBank);
+    s(irqLatch);
+    s(irqMode);
+    s(irqEnable);
+    s(irqAcknowledge);
+    s(irqCounter);
+    s(irqScalar);
+    s(irqLine);
   }
 
-  uint8 pinA0;
-  uint8 pinA1;
-  uint1 programMode;
-  uint5 programBank[2];
-  uint2 mirror;
-  uint8 characterBank[8];
-  uint8 irqLatch;
-  uint1 irqMode;
-  uint1 irqEnable;
-  uint1 irqAcknowledge;
-  uint8 irqCounter;
-  int16 irqScalar;
-  uint1 irqLine;
+  n01 programMode;
+  n05 programBank[2];
+  n02 mirror;
+  n08 characterBank[8];
+  n08 irqLatch;
+  n01 irqMode;
+  n01 irqEnable;
+  n01 irqAcknowledge;
+  n08 irqCounter;
+  i16 irqScalar;
+  n01 irqLine;
+
+//unserialized:
+  n08 pinA0;
+  n08 pinA1;
 };

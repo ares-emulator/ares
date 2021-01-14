@@ -19,11 +19,11 @@ struct Banked : Interface {
   auto write(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void override {
   }
 
-  auto readIO(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16 override {
+  auto readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 override {
     return data;
   }
 
-  auto writeIO(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void override {
+  auto writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void override {
     if(!lower) return;  //todo: unconfirmed
     if(address == 0xa130f2) romBank[1] = data.bit(0,5);
     if(address == 0xa130f4) romBank[2] = data.bit(0,5);
@@ -39,7 +39,7 @@ struct Banked : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
-    s.array(romBank);
+    s(romBank);
   }
 
   uint6 romBank[8];

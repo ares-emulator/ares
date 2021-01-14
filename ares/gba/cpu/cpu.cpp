@@ -17,7 +17,7 @@ auto CPU::load(Node::Object parent) -> void {
   iwram.allocate( 32_KiB);
   ewram.allocate(256_KiB);
 
-  node = parent->append<Node::Component>("CPU");
+  node = parent->append<Node::Object>("CPU");
 
   debugger.load(node);
 }
@@ -103,6 +103,8 @@ auto CPU::power() -> void {
   memory = {};
   prefetch = {};
   context = {};
+
+  dmabus = {};
 
   dma[0].source.setBits(27); dma[0].latch.source.setBits(27);
   dma[0].target.setBits(27); dma[0].latch.target.setBits(27);

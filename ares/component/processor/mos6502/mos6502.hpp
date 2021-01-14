@@ -5,45 +5,45 @@
 namespace ares {
 
 struct MOS6502 {
-  virtual auto read(uint16 addr) -> uint8 = 0;
-  virtual auto write(uint16 addr, uint8 data) -> void = 0;
+  virtual auto read(n16 addr) -> n8 = 0;
+  virtual auto write(n16 addr, n8 data) -> void = 0;
   virtual auto lastCycle() -> void = 0;
-  virtual auto nmi(uint16& vector) -> void = 0;
-  virtual auto readDebugger(uint16 addr) -> uint8 { return 0; }
+  virtual auto nmi(n16& vector) -> void = 0;
+  virtual auto readDebugger(n16 addr) -> n8 { return 0; }
 
   //mos6502.cpp
-  auto mdr() const -> uint8;
+  auto mdr() const -> n8;
   auto power() -> void;
 
   //memory.cpp
   auto idle() -> void;
-  auto idlePageCrossed(uint16, uint16) -> void;
-  auto idlePageAlways(uint16, uint16) -> void;
-  auto opcode() -> uint8;
-  auto operand() -> uint8;
-  auto load(uint8 addr) -> uint8;
-  auto store(uint8 addr, uint8 data) -> void;
-  auto push(uint8 data) -> void;
-  auto pull() -> uint8;
+  auto idlePageCrossed(n16, n16) -> void;
+  auto idlePageAlways(n16, n16) -> void;
+  auto opcode() -> n8;
+  auto operand() -> n8;
+  auto load(n8 addr) -> n8;
+  auto store(n8 addr, n8 data) -> void;
+  auto push(n8 data) -> void;
+  auto pull() -> n8;
 
   //algorithms.cpp
-  using fp = auto (MOS6502::*)(uint8) -> uint8;
-  auto algorithmADC(uint8) -> uint8;
-  auto algorithmAND(uint8) -> uint8;
-  auto algorithmASL(uint8) -> uint8;
-  auto algorithmBIT(uint8) -> uint8;
-  auto algorithmCMP(uint8) -> uint8;
-  auto algorithmCPX(uint8) -> uint8;
-  auto algorithmCPY(uint8) -> uint8;
-  auto algorithmDEC(uint8) -> uint8;
-  auto algorithmEOR(uint8) -> uint8;
-  auto algorithmINC(uint8) -> uint8;
-  auto algorithmLD (uint8) -> uint8;
-  auto algorithmLSR(uint8) -> uint8;
-  auto algorithmORA(uint8) -> uint8;
-  auto algorithmROL(uint8) -> uint8;
-  auto algorithmROR(uint8) -> uint8;
-  auto algorithmSBC(uint8) -> uint8;
+  using fp = auto (MOS6502::*)(n8) -> n8;
+  auto algorithmADC(n8) -> n8;
+  auto algorithmAND(n8) -> n8;
+  auto algorithmASL(n8) -> n8;
+  auto algorithmBIT(n8) -> n8;
+  auto algorithmCMP(n8) -> n8;
+  auto algorithmCPX(n8) -> n8;
+  auto algorithmCPY(n8) -> n8;
+  auto algorithmDEC(n8) -> n8;
+  auto algorithmEOR(n8) -> n8;
+  auto algorithmINC(n8) -> n8;
+  auto algorithmLD (n8) -> n8;
+  auto algorithmLSR(n8) -> n8;
+  auto algorithmORA(n8) -> n8;
+  auto algorithmROL(n8) -> n8;
+  auto algorithmROR(n8) -> n8;
+  auto algorithmSBC(n8) -> n8;
 
   //instruction.cpp
   auto interrupt() -> void;
@@ -51,44 +51,44 @@ struct MOS6502 {
 
   //instructions.cpp
   auto instructionAbsoluteModify(fp alu) -> void;
-  auto instructionAbsoluteModify(fp alu, uint8 index) -> void;
-  auto instructionAbsoluteRead(fp alu, uint8& data) -> void;
-  auto instructionAbsoluteRead(fp alu, uint8& data, uint8 index) -> void;
-  auto instructionAbsoluteWrite(uint8& data) -> void;
-  auto instructionAbsoluteWrite(uint8& data, uint8 index) -> void;
+  auto instructionAbsoluteModify(fp alu, n8 index) -> void;
+  auto instructionAbsoluteRead(fp alu, n8& data) -> void;
+  auto instructionAbsoluteRead(fp alu, n8& data, n8 index) -> void;
+  auto instructionAbsoluteWrite(n8& data) -> void;
+  auto instructionAbsoluteWrite(n8& data, n8 index) -> void;
   auto instructionBranch(bool take) -> void;
   auto instructionBreak() -> void;
   auto instructionCallAbsolute() -> void;
   auto instructionClear(bool& flag) -> void;
-  auto instructionImmediate(fp alu, uint8& data) -> void;
-  auto instructionImplied(fp alu, uint8& data) -> void;
-  auto instructionIndirectXRead(fp alu, uint8& data) -> void;
-  auto instructionIndirectXWrite(uint8& data) -> void;
-  auto instructionIndirectYRead(fp alu, uint8& data) -> void;
-  auto instructionIndirectYWrite(uint8& data) -> void;
+  auto instructionImmediate(fp alu, n8& data) -> void;
+  auto instructionImplied(fp alu, n8& data) -> void;
+  auto instructionIndirectXRead(fp alu, n8& data) -> void;
+  auto instructionIndirectXWrite(n8& data) -> void;
+  auto instructionIndirectYRead(fp alu, n8& data) -> void;
+  auto instructionIndirectYWrite(n8& data) -> void;
   auto instructionJumpAbsolute() -> void;
   auto instructionJumpIndirect() -> void;
   auto instructionNoOperation() -> void;
-  auto instructionPull(uint8& data) -> void;
+  auto instructionPull(n8& data) -> void;
   auto instructionPullP() -> void;
-  auto instructionPush(uint8& data) -> void;
+  auto instructionPush(n8& data) -> void;
   auto instructionPushP() -> void;
   auto instructionReturnInterrupt() -> void;
   auto instructionReturnSubroutine() -> void;
   auto instructionSet(bool& flag) -> void;
-  auto instructionTransfer(uint8& source, uint8& target, bool flag) -> void;
+  auto instructionTransfer(n8& source, n8& target, bool flag) -> void;
   auto instructionZeroPageModify(fp alu) -> void;
-  auto instructionZeroPageModify(fp alu, uint8 index) -> void;
-  auto instructionZeroPageRead(fp alu, uint8& data) -> void;
-  auto instructionZeroPageRead(fp alu, uint8& data, uint8 index) -> void;
-  auto instructionZeroPageWrite(uint8& data) -> void;
-  auto instructionZeroPageWrite(uint8& data, uint8 index) -> void;
+  auto instructionZeroPageModify(fp alu, n8 index) -> void;
+  auto instructionZeroPageRead(fp alu, n8& data) -> void;
+  auto instructionZeroPageRead(fp alu, n8& data, n8 index) -> void;
+  auto instructionZeroPageWrite(n8& data) -> void;
+  auto instructionZeroPageWrite(n8& data, n8 index) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
   //disassembler.cpp
-  noinline auto disassembleInstruction(maybe<uint16> pc = {}) -> string;
+  noinline auto disassembleInstruction(maybe<n16> pc = {}) -> string;
   noinline auto disassembleContext() -> string;
 
   //set to false to disable BCD mode in ADC, SBC instructions
@@ -102,11 +102,11 @@ struct MOS6502 {
     bool v;  //overflow
     bool n;  //negative
 
-    operator uint() const {
+    operator u8() const {
       return c << 0 | z << 1 | i << 2 | d << 3 | v << 6 | n << 7;
     }
 
-    auto& operator=(uint8 data) {
+    auto& operator=(n8 data) {
       c = data.bit(0);
       z = data.bit(1);
       i = data.bit(2);
@@ -118,13 +118,13 @@ struct MOS6502 {
   };
 
   struct Registers {
-    uint8  a;
-    uint8  x;
-    uint8  y;
-    uint8  s;
-    uint16 pc;
-    Flags  p;
-    uint8  mdr;
+    n8 a;
+    n8 x;
+    n8 y;
+    n8 s;
+    n16 pc;
+    Flags p;
+    n8 mdr;
   } r;
 };
 

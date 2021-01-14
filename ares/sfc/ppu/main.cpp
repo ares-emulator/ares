@@ -19,6 +19,11 @@ auto PPU::main() -> void {
   dac.scanline();
 
   if(vcounter() == 240) {
+    if(self.interlace == 0) screen->setProgressive(1);
+    if(self.interlace == 1) screen->setInterlace(field());
+    if(overscanEnable->value() == 0) screen->setViewport(0, 18, 512, 448);
+    if(overscanEnable->value() == 1) screen->setViewport(0,  0, 512, 480);
+    screen->frame();
     scheduler.exit(Event::Frame);
   }
 

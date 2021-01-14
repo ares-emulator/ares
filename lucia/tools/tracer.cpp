@@ -19,13 +19,19 @@ auto TraceLogger::construct() -> void {
     }
   });
   traceToTerminal.setText("Trace To Terminal");
+  traceToFile.setText("Trace To File");
+  traceMask.setText("Mask").onToggle([&] {
+    for(auto instruction : ares::Node::enumerate<ares::Node::Debugger::Tracer::Instruction>(emulator->root)) {
+      instruction->setMask(traceMask.checked());
+    }
+  });
 }
 
 auto TraceLogger::reload() -> void {
   tracerList.reset();
-  for(auto tracer : ares::Node::enumerate<ares::Node::Tracer>(emulator->root)) {
+  for(auto tracer : ares::Node::enumerate<ares::Node::Debugger::Tracer::Tracer>(emulator->root)) {
     ListViewItem item{&tracerList};
-    item.setAttribute<ares::Node::Tracer>("tracer", tracer);
+    item.setAttribute<ares::Node::Debugger::Tracer::Tracer>("tracer", tracer);
     item.setCheckable();
     item.setText({tracer->component(), " ", tracer->name()});
   }
@@ -37,7 +43,7 @@ auto TraceLogger::unload() -> void {
 }
 
 auto TraceLogger::eventToggle(ListViewItem item) -> void {
-  if(auto tracer = item.attribute<ares::Node::Tracer>("tracer")) {
+  if(auto tracer = item.attribute<ares::Node::Debugger::Tracer::Tracer>("tracer")) {
     tracer->setEnabled(item.checked());
   }
 }

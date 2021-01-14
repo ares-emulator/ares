@@ -11,7 +11,7 @@ auto CPU::load(Node::Object parent) -> void {
   ram.allocate(0x0400);
   expansion.allocate(0x1000);
 
-  node = parent->append<Node::Component>("CPU");
+  node = parent->append<Node::Object>("CPU");
 
   debugger.load(node);
 }

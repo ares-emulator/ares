@@ -99,6 +99,7 @@ auto PPU::readIO(uint32 addr) -> uint8 {
 
   }
 
+  if(cpu.context.dmaActive) return cpu.dmabus.data.byte(addr & 3);
   return cpu.pipeline.fetch.instruction.byte(addr & 1);
 }
 

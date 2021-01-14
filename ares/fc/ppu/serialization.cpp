@@ -1,62 +1,48 @@
 auto PPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
-
-  ciram.serialize(s);
-  cgram.serialize(s);
-  oam.serialize(s);
-
-  s.integer(io.mdr);
-
-  s.integer(io.field);
-  s.integer(io.lx);
-  s.integer(io.ly);
-
-  s.integer(io.busData);
-
-  s.integer(io.v.data);
-  s.integer(io.t.data);
-
-  s.integer(io.nmiHold);
-  s.integer(io.nmiFlag);
-
-  s.integer(io.vramIncrement);
-  s.integer(io.spriteAddress);
-  s.integer(io.bgAddress);
-  s.integer(io.spriteHeight);
-  s.integer(io.masterSelect);
-  s.integer(io.nmiEnable);
-
-  s.integer(io.grayscale);
-  s.integer(io.bgEdgeEnable);
-  s.integer(io.spriteEdgeEnable);
-  s.integer(io.bgEnable);
-  s.integer(io.spriteEnable);
-  s.integer(io.emphasis);
-
-  s.integer(io.spriteOverflow);
-  s.integer(io.spriteZeroHit);
-
-  s.integer(io.oamAddress);
-
-  s.integer(latch.nametable);
-  s.integer(latch.attribute);
-  s.integer(latch.tiledataLo);
-  s.integer(latch.tiledataHi);
-
-  s.integer(latch.oamIterator);
-  s.integer(latch.oamCounter);
-
-  for(auto& o : latch.oam) o.serialize(s);
-  for(auto& o : latch.soam) o.serialize(s);
+  s(ciram);
+  s(cgram);
+  s(oam);
+  s(io.mdr);
+  s(io.field);
+  s(io.lx);
+  s(io.ly);
+  s(io.busData);
+  s(io.v.data);
+  s(io.t.data);
+  s(io.nmiHold);
+  s(io.nmiFlag);
+  s(io.vramIncrement);
+  s(io.spriteAddress);
+  s(io.bgAddress);
+  s(io.spriteHeight);
+  s(io.masterSelect);
+  s(io.nmiEnable);
+  s(io.grayscale);
+  s(io.bgEdgeEnable);
+  s(io.spriteEdgeEnable);
+  s(io.bgEnable);
+  s(io.spriteEnable);
+  s(io.emphasis);
+  s(io.spriteOverflow);
+  s(io.spriteZeroHit);
+  s(io.oamAddress);
+  s(latch.nametable);
+  s(latch.attribute);
+  s(latch.tiledataLo);
+  s(latch.tiledataHi);
+  s(latch.oamIterator);
+  s(latch.oamCounter);
+  for(auto& o : latch.oam) s(o);
+  for(auto& o : latch.soam) s(o);
 }
 
 auto PPU::OAM::serialize(serializer& s) -> void {
-  s.integer(id);
-  s.integer(y);
-  s.integer(tile);
-  s.integer(attr);
-  s.integer(x);
-
-  s.integer(tiledataLo);
-  s.integer(tiledataHi);
+  s(id);
+  s(y);
+  s(tile);
+  s(attr);
+  s(x);
+  s(tiledataLo);
+  s(tiledataHi);
 }

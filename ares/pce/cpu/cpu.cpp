@@ -8,7 +8,7 @@ CPU cpu;
 #include "serialization.cpp"
 
 auto CPU::load(Node::Object parent) -> void {
-  node = parent->append<Node::Component>("CPU");
+  node = parent->append<Node::Object>("CPU");
 
   if(Model::SuperGrafx() == 0) ram.allocate( 8_KiB, 0x00);
   if(Model::SuperGrafx() == 1) ram.allocate(32_KiB, 0x00);

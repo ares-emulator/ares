@@ -24,8 +24,8 @@ struct Controller {
 
   virtual ~Controller() = default;
 
-  virtual auto data() -> uint3 { return 0b000; }
-  virtual auto latch(uint1 data) -> void {}
+  virtual auto data() -> n3 { return 0b000; }
+  virtual auto latch(n1 data) -> void {}
 };
 
 #include "port.hpp"

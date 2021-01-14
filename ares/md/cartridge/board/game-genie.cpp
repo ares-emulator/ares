@@ -40,12 +40,12 @@ struct GameGenie : Interface {
     }
   }
 
-  auto readIO(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16 override {
+  auto readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 override {
     if(slot.connected()) slot.cartridge.readIO(upper, lower, address, data);
     return data;
   }
 
-  auto writeIO(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void override {
+  auto writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void override {
     if(slot.connected()) slot.cartridge.writeIO(upper, lower, address, data);
   }
 
@@ -56,12 +56,12 @@ struct GameGenie : Interface {
   }
 
   auto serialize(serializer& s) -> void {
-    if(slot.connected()) slot.cartridge.serialize(s);
-    s.integer(enable);
+    if(slot.connected()) s(slot.cartridge);
+    s(enable);
     for(auto& code : codes) {
-      s.integer(code.enable);
-      s.integer(code.address);
-      s.integer(code.data);
+      s(code.enable);
+      s(code.address);
+      s(code.data);
     }
   }
 

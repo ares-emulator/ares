@@ -1,7 +1,7 @@
 //Hudson Soft HuC6280
 
 struct CPU : HuC6280, Thread {
-  Node::Component node;
+  Node::Object node;
   Memory::Writable<uint8> ram;  //PC Engine = 8KB, SuperGrafx = 32KB
 
   struct Debugger {
@@ -11,12 +11,12 @@ struct CPU : HuC6280, Thread {
     auto interrupt(string_view) -> void;
 
     struct Memory {
-      Node::Memory ram;
+      Node::Debugger::Memory ram;
     } memory;
 
     struct Tracer {
-      Node::Instruction instruction;
-      Node::Notification interrupt;
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
     } tracer;
   } debugger;
 

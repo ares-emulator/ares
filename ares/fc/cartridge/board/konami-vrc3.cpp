@@ -1,9 +1,12 @@
 struct KonamiVRC3 : Interface {
-  Memory::Readable<uint8> programROM;
-  Memory::Writable<uint8> programRAM;
-  Memory::Writable<uint8> characterRAM;
+  static auto create(string id) -> Interface* {
+    if(id == "KONAMI-VRC-3") return new KonamiVRC3;
+    return nullptr;
+  }
 
-  using Interface::Interface;
+  Memory::Readable<n8> programROM;
+  Memory::Writable<n8> programRAM;
+  Memory::Writable<n8> characterRAM;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -40,18 +43,18 @@ struct KonamiVRC3 : Interface {
     tick();
   }
 
-  auto readPRG(uint address) -> uint8 {
-    if(address < 0x6000) return cpu.mdr();
-    if(address < 0x8000) return programRAM.read((uint13)address);
+  auto readPRG(n32 address, n8 data) -> n8 override {
+    if(address < 0x6000) return data;
+    if(address < 0x8000) return programRAM.read((n13)address);
 
-    uint4 bank = (address < 0xc000 ? programBank : (uint4)0xf);
-    address = bank << 14 | (uint14)address;
+    n4 bank = (address < 0xc000 ? programBank : (n4)0xf);
+    address = bank << 14 | (n14)address;
     return programROM.read(address);
   }
 
-  auto writePRG(uint address, uint8 data) -> void {
+  auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000) return;
-    if(address < 0x8000) return programRAM.write((uint13)address, data);
+    if(address < 0x8000) return programRAM.write((n13)address, data);
 
     switch(address & 0xf000) {
     case 0x8000: irqLatch.bit( 0, 3) = data.bit(0,3); break;
@@ -74,50 +77,43 @@ struct KonamiVRC3 : Interface {
     }
   }
 
-  auto addressCIRAM(uint address) const -> uint {
+  auto addressCIRAM(n32 address) const -> n32 {
     return address >> !mirror & 0x0400 | address & 0x03ff;
   }
 
-  auto readCHR(uint address) -> uint8 {
+  auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
     if(characterRAM) return characterRAM.read(address);
-    return 0x00;
+    return data;
   }
 
-  auto writeCHR(uint address, uint8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void override {
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
     if(characterRAM) return characterRAM.write(address, data);
   }
 
   auto power() -> void {
-    programBank = 0;
-    irqMode = 0;
-    irqEnable = 0;
-    irqAcknowledge = 0;
-    irqLatch = 0;
-    irqCounter = 0;
-    irqLine = 0;
   }
 
   auto serialize(serializer& s) -> void {
-    programRAM.serialize(s);
-    characterRAM.serialize(s);
-    s.integer(mirror);
-    s.integer(programBank);
-    s.integer(irqMode);
-    s.integer(irqEnable);
-    s.integer(irqAcknowledge);
-    s.integer(irqLatch);
-    s.integer(irqCounter);
-    s.integer(irqLine);
+    s(programRAM);
+    s(characterRAM);
+    s(mirror);
+    s(programBank);
+    s(irqMode);
+    s(irqEnable);
+    s(irqAcknowledge);
+    s(irqLatch);
+    s(irqCounter);
+    s(irqLine);
   }
 
-   uint1 mirror;
-   uint4 programBank;
-   uint1 irqMode;
-   uint1 irqEnable;
-   uint1 irqAcknowledge;
-  uint16 irqLatch;
-  uint16 irqCounter;
-   uint1 irqLine;
+  n01 mirror;
+  n04 programBank;
+  n01 irqMode;
+  n01 irqEnable;
+  n01 irqAcknowledge;
+  n16 irqLatch;
+  n16 irqCounter;
+  n01 irqLine;
 };

@@ -1,27 +1,30 @@
-#include <n64/interface/interface.hpp>
+namespace ares::Nintendo64 {
+  auto load(Node::System& node, string name) -> bool;
+}
 
 struct Nintendo64 : Emulator {
   Nintendo64();
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 struct Nintendo64DD : Emulator {
   Nintendo64DD();
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input) -> void override;
+  auto input(ares::Node::Input::Input) -> void override;
 };
 
 Nintendo64::Nintendo64() {
-  interface = new ares::Nintendo64::Nintendo64Interface;
   medium = mia::medium("Nintendo 64");
   manufacturer = "Nintendo";
   name = "Nintendo 64";
 }
 
 auto Nintendo64::load() -> bool {
+  if(!ares::Nintendo64::load(root, "Nintendo 64")) return false;
+
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
     port->connect();
@@ -60,39 +63,38 @@ auto Nintendo64::open(ares::Node::Object node, string name, vfs::file::mode mode
   return {};
 }
 
-auto Nintendo64::input(ares::Node::Input node) -> void {
+auto Nintendo64::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "X-axis" ) mapping = virtualPad.xAxis;
-  if(name == "Y-axis" ) mapping = virtualPad.yAxis;
-  if(name == "Up"     ) mapping = virtualPad.up;
-  if(name == "Down"   ) mapping = virtualPad.down;
-  if(name == "Left"   ) mapping = virtualPad.left;
-  if(name == "Right"  ) mapping = virtualPad.right;
-  if(name == "B"      ) mapping = virtualPad.a;
-  if(name == "A"      ) mapping = virtualPad.b;
-  if(name == "C-Up"   ) mapping = virtualPad.cUp;
-  if(name == "C-Down" ) mapping = virtualPad.cDown;
-  if(name == "C-Left" ) mapping = virtualPad.cLeft;
-  if(name == "C-Right") mapping = virtualPad.cRight;
-  if(name == "L"      ) mapping = virtualPad.l;
-  if(name == "R"      ) mapping = virtualPad.r;
-  if(name == "Z"      ) mapping = virtualPad.select;
-  if(name == "Start"  ) mapping = virtualPad.start;
+  if(name == "X-Axis" ) mapping = virtualPads[0].lx;
+  if(name == "Y-Axis" ) mapping = virtualPads[0].ly;
+  if(name == "Up"     ) mapping = virtualPads[0].up;
+  if(name == "Down"   ) mapping = virtualPads[0].down;
+  if(name == "Left"   ) mapping = virtualPads[0].left;
+  if(name == "Right"  ) mapping = virtualPads[0].right;
+  if(name == "B"      ) mapping = virtualPads[0].a;
+  if(name == "A"      ) mapping = virtualPads[0].b;
+  if(name == "C-Up"   ) mapping = virtualPads[0].ry;
+  if(name == "C-Down" ) mapping = virtualPads[0].ry;
+  if(name == "C-Left" ) mapping = virtualPads[0].rx;
+  if(name == "C-Right") mapping = virtualPads[0].rx;
+  if(name == "L"      ) mapping = virtualPads[0].l1;
+  if(name == "R"      ) mapping = virtualPads[0].r1;
+  if(name == "Z"      ) mapping = virtualPads[0].z;
+  if(name == "Start"  ) mapping = virtualPads[0].start;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto axis = node->cast<ares::Node::Axis>()) {
+    if(auto axis = node->cast<ares::Node::Input::Axis>()) {
       axis->setValue(value);
     }
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }
 }
 
 Nintendo64DD::Nintendo64DD() {
-  interface = new ares::Nintendo64::Nintendo64Interface;
   medium = mia::medium("Nintendo 64DD");
   manufacturer = "Nintendo";
   name = "Nintendo 64DD";
@@ -101,6 +103,8 @@ Nintendo64DD::Nintendo64DD() {
 }
 
 auto Nintendo64DD::load() -> bool {
+  if(!ares::Nintendo64::load(root, "Nintendo 64")) return false;
+
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
     return false;
@@ -132,32 +136,32 @@ auto Nintendo64DD::open(ares::Node::Object node, string name, vfs::file::mode mo
   return {};
 }
 
-auto Nintendo64DD::input(ares::Node::Input node) -> void {
+auto Nintendo64DD::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "X-axis" ) mapping = virtualPad.xAxis;
-  if(name == "Y-axis" ) mapping = virtualPad.yAxis;
-  if(name == "Up"     ) mapping = virtualPad.up;
-  if(name == "Down"   ) mapping = virtualPad.down;
-  if(name == "Left"   ) mapping = virtualPad.left;
-  if(name == "Right"  ) mapping = virtualPad.right;
-  if(name == "B"      ) mapping = virtualPad.a;
-  if(name == "A"      ) mapping = virtualPad.b;
-  if(name == "C-Up"   ) mapping = virtualPad.cUp;
-  if(name == "C-Down" ) mapping = virtualPad.cDown;
-  if(name == "C-Left" ) mapping = virtualPad.cLeft;
-  if(name == "C-Right") mapping = virtualPad.cRight;
-  if(name == "L"      ) mapping = virtualPad.l;
-  if(name == "R"      ) mapping = virtualPad.r;
-  if(name == "Z"      ) mapping = virtualPad.select;
-  if(name == "Start"  ) mapping = virtualPad.start;
+  if(name == "X-axis" ) mapping = virtualPads[0].lx;
+  if(name == "Y-axis" ) mapping = virtualPads[0].ly;
+  if(name == "Up"     ) mapping = virtualPads[0].up;
+  if(name == "Down"   ) mapping = virtualPads[0].down;
+  if(name == "Left"   ) mapping = virtualPads[0].left;
+  if(name == "Right"  ) mapping = virtualPads[0].right;
+  if(name == "B"      ) mapping = virtualPads[0].a;
+  if(name == "A"      ) mapping = virtualPads[0].b;
+  if(name == "C-Up"   ) mapping = virtualPads[0].ry;
+  if(name == "C-Down" ) mapping = virtualPads[0].ry;
+  if(name == "C-Left" ) mapping = virtualPads[0].rx;
+  if(name == "C-Right") mapping = virtualPads[0].rx;
+  if(name == "L"      ) mapping = virtualPads[0].l1;
+  if(name == "R"      ) mapping = virtualPads[0].r1;
+  if(name == "Z"      ) mapping = virtualPads[0].z;
+  if(name == "Start"  ) mapping = virtualPads[0].start;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto axis = node->cast<ares::Node::Axis>()) {
+    if(auto axis = node->cast<ares::Node::Input::Axis>()) {
       axis->setValue(value);
     }
-    if(auto button = node->cast<ares::Node::Button>()) {
+    if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }

@@ -1,5 +1,5 @@
-auto APU::readIO(uint32 addr) -> uint8 {
-  switch(addr) {
+auto APU::readIO(uint32 address) -> uint8 {
+  switch(address) {
 
   //NR10
   case 0x0400'0060: return square1.read(0);
@@ -136,11 +136,12 @@ auto APU::readIO(uint32 addr) -> uint8 {
 
   }
 
-  return cpu.pipeline.fetch.instruction.byte(addr & 1);
+  if(cpu.context.dmaActive) return cpu.dmabus.data.byte(address & 3);
+  return cpu.pipeline.fetch.instruction.byte(address & 1);
 }
 
-auto APU::writeIO(uint32 addr, uint8 data) -> void {
-  switch(addr) {
+auto APU::writeIO(uint32 address, uint8 data) -> void {
+  switch(address) {
 
   //NR10
   case 0x0400'0060: return square1.write(0, data);
