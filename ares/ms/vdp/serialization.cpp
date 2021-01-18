@@ -6,7 +6,9 @@ auto VDP::serialize(serializer& s) -> void {
   s(sprite);
   s(io.vcounter);
   s(io.hcounter);
+  s(io.pcounter);
   s(io.lcounter);
+  s(io.ccounter);
   s(io.intLine);
   s(io.intFrame);
   s(io.spriteOverflow);

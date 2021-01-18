@@ -1,17 +1,17 @@
-auto VDP::Sprite::setup(uint9 voffset) -> void {
+auto VDP::Sprite::setup(n9 voffset) -> void {
   objectsValid = 0;
-  uint limit = vdp.io.spriteTile ? 15 : 7;
+  u32 limit = vdp.io.spriteTile ? 15 : 7;
 
   if(!vdp.io.mode.bit(3)) {
-    uint14 attributeAddress;
+    n14 attributeAddress;
     attributeAddress.bit(7,13) = vdp.io.spriteAttributeTableAddress;
-    for(uint index : range(32)) {
-      uint8 y = vdp.vram[attributeAddress++];
+    for(u32 index : range(32)) {
+      n8 y = vdp.vram[attributeAddress++];
       if(y == 0xd0) break;
 
-      uint8 x = vdp.vram[attributeAddress++];
-      uint8 pattern = vdp.vram[attributeAddress++];
-      uint8 extra = vdp.vram[attributeAddress++];
+      n8 x = vdp.vram[attributeAddress++];
+      n8 pattern = vdp.vram[attributeAddress++];
+      n8 extra = vdp.vram[attributeAddress++];
 
       if(extra.bit(7)) x -= 32;
       y += 1;
@@ -27,12 +27,12 @@ auto VDP::Sprite::setup(uint9 voffset) -> void {
       }
     }
   } else {
-    uint14 attributeAddress;
+    n14 attributeAddress;
     attributeAddress.bit(8,13) = vdp.io.spriteAttributeTableAddress.bit(1,6);
-    for(uint index : range(64)) {
-      uint8 y = vdp.vram[attributeAddress + index];
-      uint8 x = vdp.vram[attributeAddress + 0x80 + (index << 1)];
-      uint8 pattern = vdp.vram[attributeAddress + 0x81 + (index << 1)];
+    for(u32 index : range(64)) {
+      n8 y = vdp.vram[attributeAddress + index];
+      n8 x = vdp.vram[attributeAddress + 0x80 + (index << 1)];
+      n8 pattern = vdp.vram[attributeAddress + 0x81 + (index << 1)];
       if(vdp.vlines() == 192 && y == 0xd0) break;
 
       if(vdp.io.spriteShift) x -= 8;
@@ -51,7 +51,7 @@ auto VDP::Sprite::setup(uint9 voffset) -> void {
   }
 }
 
-auto VDP::Sprite::run(uint8 hoffset, uint9 voffset) -> void {
+auto VDP::Sprite::run(n8 hoffset, n9 voffset) -> void {
   output = {};
   switch(vdp.io.mode) {
   case 0b0000: return graphics1(hoffset, voffset);
@@ -73,56 +73,56 @@ auto VDP::Sprite::run(uint8 hoffset, uint9 voffset) -> void {
   }
 }
 
-auto VDP::Sprite::graphics1(uint8 hoffset, uint9 voffset) -> void {
+auto VDP::Sprite::graphics1(n8 hoffset, n9 voffset) -> void {
   //todo: are sprites different in graphics mode 1?
   return graphics2(hoffset, voffset);
 }
 
-auto VDP::Sprite::graphics2(uint8 hoffset, uint9 voffset) -> void {
-  uint limit = vdp.io.spriteTile ? 15 : 7;
-  for(uint objectIndex : range(objectsValid)) {
+auto VDP::Sprite::graphics2(n8 hoffset, n9 voffset) -> void {
+  u32 limit = vdp.io.spriteTile ? 15 : 7;
+  for(u32 objectIndex : range(objectsValid)) {
     auto& o = objects[objectIndex];
     if(hoffset < o.x) continue;
     if(hoffset > o.x + limit) continue;
 
-    uint x = hoffset - o.x;
-    uint y = voffset - o.y;
+    u32 x = hoffset - o.x;
+    u32 y = voffset - o.y;
 
-    uint14 address;
+    n14 address;
     address.bit( 0,10) = (o.pattern << 3) + (x >> 3 << 4) + (y & limit);
     address.bit(11,13) = vdp.io.spritePatternTableAddress;
 
-    uint3 index = x ^ 7;
+    n3 index = x ^ 7;
     if(vdp.vram[address].bit(index)) {
-      if(output.color) { vdp.io.spriteCollision = true; break; }
+      if(output.color && vdp.io.displayEnable) { vdp.io.spriteCollision = true; break; }
       output.color = o.color;
     }
   }
 }
 
-auto VDP::Sprite::graphics3(uint8 hoffset, uint9 voffset, uint vlines) -> void {
-  uint limit = vdp.io.spriteTile ? 15 : 7;
-  for(uint objectIndex : range(objectsValid)) {
+auto VDP::Sprite::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
+  u32 limit = vdp.io.spriteTile ? 15 : 7;
+  for(u32 objectIndex : range(objectsValid)) {
     auto& o = objects[objectIndex];
     if(hoffset < o.x) continue;
     if(hoffset > o.x + 7) continue;
 
-    uint x = hoffset - o.x;
-    uint y = voffset - o.y;
+    u32 x = hoffset - o.x;
+    u32 y = voffset - o.y;
 
-    uint14 address;
+    n14 address;
     address.bit(2,12) = (o.pattern << 3) + (y & limit);
     address.bit  (13) = vdp.io.spritePatternTableAddress.bit(2);
 
-    uint3 index = x ^ 7;
-    uint4 color;
+    n3 index = x ^ 7;
+    n4 color;
     color.bit(0) = vdp.vram[address | 0].bit(index);
     color.bit(1) = vdp.vram[address | 1].bit(index);
     color.bit(2) = vdp.vram[address | 2].bit(index);
     color.bit(3) = vdp.vram[address | 3].bit(index);
     if(color == 0) continue;
 
-    if(output.color) { vdp.io.spriteCollision = true; break; }
+    if(output.color && vdp.io.displayEnable) { vdp.io.spriteCollision = true; break; }
     output.color = color;
   }
 }

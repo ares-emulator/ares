@@ -14,8 +14,8 @@ struct Cartridge {
   auto power() -> void;
 
   //mapper.cpp
-  auto read(uint16 address) -> maybe<uint8>;
-  auto write(uint16 address, uint8 data) -> bool;
+  auto read(n16 address) -> maybe<n8>;
+  auto write(n16 address, n8 data) -> bool;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -27,25 +27,25 @@ struct Cartridge {
     string region;
   } information;
 
-  Memory::Readable<uint8> rom;
-  Memory::Writable<uint8> ram;
+  Memory::Readable<n8> rom;
+  Memory::Writable<n8> ram;
 
   struct Mapper {
     //$fffc
-    uint2 shift;
-    uint1 ramPage2;
-    uint1 ramEnablePage2;
-    uint1 ramEnablePage3;
-    uint1 romWriteEnable;
+    n2 shift;
+    n1 ramPage2;
+    n1 ramEnablePage2;
+    n1 ramEnablePage3;
+    n1 romWriteEnable;
 
     //$fffd
-    uint8 romPage0;
+    n8 romPage0 = 0;
 
     //$fffe
-    uint8 romPage1;
+    n8 romPage1 = 1;
 
     //$ffff
-    uint8 romPage2;
+    n8 romPage2 = 2;
   } mapper;
 };
 

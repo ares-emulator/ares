@@ -7,11 +7,15 @@ struct OPLL : YM2413, Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  struct IO {
+    n1 mute = 1;
+  } io;
 };
 
 extern OPLL opll;

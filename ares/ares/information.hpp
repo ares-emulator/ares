@@ -2,7 +2,7 @@
 
 namespace ares {
   static const string Name       = "ares";
-  static const string Version    = "116.7";
+  static const string Version    = "116.8";
   static const string License    = "CC BY-NC-ND 4.0";
   static const string LicenseURI = "https://creativecommons.org/licenses/by-nc-nd/4.0/";
   static const string Website    = "ares.dev";

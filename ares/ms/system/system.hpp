@@ -21,16 +21,16 @@ struct System {
     auto load(Node::Object) -> void;
     auto poll() -> void;
 
-    bool yHold = 0;
-    bool upLatch = 0;
-    bool downLatch = 0;
-    bool xHold = 0;
-    bool leftLatch = 0;
-    bool rightLatch = 0;
+    n1 yHold;
+    n1 upLatch;
+    n1 downLatch;
+    n1 xHold;
+    n1 leftLatch;
+    n1 rightLatch;
   } controls;
 
-  enum class Model : uint { MasterSystem, GameGear };
-  enum class Region : uint { NTSC, PAL };
+  enum class Model : u32 { MarkIII, MasterSystemI, MasterSystemII, GameGear };
+  enum class Region : u32 { NTSCJ, NTSCU, PAL };
 
   auto name() const -> string { return node->name(); }
   auto model() const -> Model { return information.model; }
@@ -52,9 +52,9 @@ struct System {
 
 private:
   struct Information {
-    Model model = Model::MasterSystem;
-    Region region = Region::NTSC;
-    double colorburst = Constants::Colorburst::NTSC;
+    Model model = Model::MasterSystemII;
+    Region region = Region::NTSCJ;
+    f64 colorburst = Constants::Colorburst::NTSC;
   } information;
 
   //serialization.cpp
@@ -63,8 +63,12 @@ private:
 
 extern System system;
 
-auto Model::MasterSystem() -> bool { return system.model() == System::Model::MasterSystem; }
+auto Model::MarkIII() -> bool { return system.model() == System::Model::MarkIII; }
+auto Model::MasterSystemI() -> bool { return system.model() == System::Model::MasterSystemI; }
+auto Model::MasterSystemII() -> bool { return system.model() == System::Model::MasterSystemII; }
+auto Model::MasterSystem() -> bool { return MarkIII() || MasterSystemI() || MasterSystemII(); }
 auto Model::GameGear() -> bool { return system.model() == System::Model::GameGear; }
 
-auto Region::NTSC() -> bool { return system.region() == System::Region::NTSC; }
+auto Region::NTSCJ() -> bool { return system.region() == System::Region::NTSCJ; }
+auto Region::NTSCU() -> bool { return system.region() == System::Region::NTSCU; }
 auto Region::PAL() -> bool { return system.region() == System::Region::PAL; }

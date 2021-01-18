@@ -4,8 +4,8 @@ struct VDP : Thread {
   Node::Object node;
   Node::Video::Screen screen;
   Node::Setting::Boolean interframeBlending;  //Game Gear
-  Memory::Writable<uint8> vram;  //16KB
-  Memory::Writable<uint8> cram;  //SG + MS = 32, GG = 64
+  Memory::Writable<n8> vram;  //16KB
+  Memory::Writable<n8> cram;  //SG + MS = 32, GG = 64
 
   struct Debugger {
     //debugger.cpp
@@ -22,29 +22,31 @@ struct VDP : Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
 
-  auto vlines() -> uint;
+  auto vlines() -> u32;
   auto vblank() -> bool;
 
   auto power() -> void;
 
   //io.cpp
-  auto vcounter() -> uint8;
-  auto hcounter() -> uint8;
-  auto data() -> uint8;
-  auto status() -> uint8;
+  auto vcounter() -> n8;
+  auto hcounter() -> n8;
+  auto hcounterLatch() -> void;
+  auto ccounter() -> n12;
+  auto data() -> n8;
+  auto status() -> n8;
 
-  auto data(uint8) -> void;
-  auto control(uint8) -> void;
-  auto registerWrite(uint4 addr, uint8 data) -> void;
+  auto data(n8) -> void;
+  auto control(n8) -> void;
+  auto registerWrite(n4 addr, n8 data) -> void;
 
   //background.cpp
   struct Background {
-    auto run(uint8 hoffset, uint9 voffset) -> void;
-    auto graphics1(uint8 hoffset, uint9 voffset) -> void;
-    auto graphics2(uint8 hoffset, uint9 voffset) -> void;
-    auto graphics3(uint8 hoffset, uint9 voffset, uint vlines) -> void;
+    auto run(n8 hoffset, n9 voffset) -> void;
+    auto graphics1(n8 hoffset, n9 voffset) -> void;
+    auto graphics2(n8 hoffset, n9 voffset) -> void;
+    auto graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void;
 
     auto power() -> void;
 
@@ -52,19 +54,19 @@ struct VDP : Thread {
     auto serialize(serializer&) -> void;
 
     struct Output {
-      uint4 color;
-      uint1 palette;
-      uint1 priority;
+      n4 color;
+      n1 palette;
+      n1 priority;
     } output;
   } background;
 
   //sprite.cpp
   struct Sprite {
-    auto setup(uint9 voffset) -> void;
-    auto run(uint8 hoffset, uint9 voffset) -> void;
-    auto graphics1(uint8 hoffset, uint9 voffset) -> void;
-    auto graphics2(uint8 hoffset, uint9 voffset) -> void;
-    auto graphics3(uint8 hoffset, uint9 voffset, uint vlines) -> void;
+    auto setup(n9 voffset) -> void;
+    auto run(n8 hoffset, n9 voffset) -> void;
+    auto graphics1(n8 hoffset, n9 voffset) -> void;
+    auto graphics2(n8 hoffset, n9 voffset) -> void;
+    auto graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void;
 
     auto power() -> void;
 
@@ -72,95 +74,97 @@ struct VDP : Thread {
     auto serialize(serializer&) -> void;
 
     struct Object {
-      uint8 x;
-      uint8 y;
-      uint8 pattern;
-      uint4 color;
+      n8 x;
+      n8 y;
+      n8 pattern;
+      n4 color;
     };
 
     struct Output {
-      uint4 color;
+      n4 color;
     } output;
 
     array<Object[8]> objects;
-    uint objectsValid;
+    u32 objectsValid;
   } sprite;
 
   //color.cpp
-  auto colorMasterSystem(uint32) -> uint64;
-  auto colorGameGear(uint32) -> uint64;
+  auto colorMasterSystem(n32) -> n64;
+  auto colorGameGear(n32) -> n64;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 private:
-  auto palette(uint5 index) -> uint12;
+  auto palette(n5 index) -> n12;
 
   struct IO {
-    uint vcounter = 0;  //vertical counter
-    uint hcounter = 0;  //horizontal counter
-    uint lcounter = 0;  //line counter
+    u32 vcounter = 0;  //vertical counter
+    u32 hcounter = 0;  //horizontal counter
+    u32 pcounter = 0;  //horizontal counter (latched)
+    u32 lcounter = 0;  //line counter
+    n12 ccounter = 0;  //csync counter
 
     //interrupt flags
-    uint1 intLine;
-    uint1 intFrame;
+    n1  intLine;
+    n1  intFrame;
 
     //status flags
-    uint1 spriteOverflow;
-    uint1 spriteCollision;
-    uint5 fifthSprite;
+    n1  spriteOverflow;
+    n1  spriteCollision;
+    n5  fifthSprite;
 
     //latches
-     uint1 controlLatch;
-    uint16 controlData;
-     uint2 code;
-    uint14 address;
+    n1  controlLatch;
+    n16 controlData;
+    n2  code;
+    n14 address;
 
-    uint8 vramLatch;
+    n8  vramLatch;
 
     //$00 mode control 1
-    uint1 externalSync;
-    uint1 spriteShift;
-    uint1 lineInterrupts;
-    uint1 leftClip;
-    uint1 horizontalScrollLock;
-    uint1 verticalScrollLock;
+    n1  externalSync;
+    n1  spriteShift;
+    n1  lineInterrupts;
+    n1  leftClip;
+    n1  horizontalScrollLock;
+    n1  verticalScrollLock;
 
     //$01 mode control 2
-    uint1 spriteDouble;
-    uint1 spriteTile;
-    uint1 frameInterrupts;
-    uint1 displayEnable;
+    n1  spriteDouble;
+    n1  spriteTile;
+    n1  frameInterrupts;
+    n1  displayEnable;
 
     //$00 + $01
-    uint4 mode;
+    n4  mode;
 
     //$02 name table base address
-    uint4 nameTableAddress;
+    n4  nameTableAddress;
 
     //$03 color table base address
-    uint8 colorTableAddress;
+    n8  colorTableAddress;
 
     //$04 pattern table base address
-    uint3 patternTableAddress;
+    n3  patternTableAddress;
 
     //$05 sprite attribute table base address
-    uint7 spriteAttributeTableAddress;
+    n7  spriteAttributeTableAddress;
 
     //$06 sprite pattern table base address
-    uint3 spritePatternTableAddress;
+    n3  spritePatternTableAddress;
 
     //$07 backdrop color
-    uint4 backdropColor;
+    n4  backdropColor;
 
     //$08 horizontal scroll offset
-    uint8 hscroll;
+    n8  hscroll;
 
     //$09 vertical scroll offset
-    uint8 vscroll;
+    n8  vscroll;
 
     //$0a line counter
-    uint8 lineCounter;
+    n8  lineCounter;
   } io;
 };
 

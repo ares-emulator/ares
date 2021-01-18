@@ -65,16 +65,16 @@ auto VDP::main() -> void {
   }
 
   //684 clocks/scanline
-  uint y = io.vcounter;
+  u32 y = io.vcounter;
   sprite.setup(y);
   if(y < vlines()) {
     auto line = screen->pixels().data() + (24 + y) * 256;
-    for(uint x : range(256)) {
+    for(u32 x : range(256)) {
       background.run(x, y);
       sprite.run(x, y);
       step(2);
 
-      uint12 color = palette(16 | io.backdropColor);
+      n12 color = palette(16 | io.backdropColor);
       if(!io.leftClip || x >= 8) {
         if(background.output.priority || !sprite.output.color) {
           color = palette(background.output.palette << 4 | background.output.color);
@@ -92,6 +92,7 @@ auto VDP::main() -> void {
   step(172);
 
   if(io.vcounter == 240) {
+    io.ccounter++;  //C-sync counter
     if(Model::MasterSystem()) {
       if(vlines() == 192) screen->setViewport(0,  0, 256, 240);
       if(vlines() == 224) screen->setViewport(0, 16, 256, 240);
@@ -105,11 +106,11 @@ auto VDP::main() -> void {
   }
 }
 
-auto VDP::step(uint clocks) -> void {
+auto VDP::step(u32 clocks) -> void {
   while(clocks--) {
     if(++io.hcounter == 684) {
       io.hcounter = 0;
-      if(++io.vcounter == (Region::NTSC() ? 262 : 313)) {
+      if(++io.vcounter == (Region::PAL() ? 313 : 262)) {
         io.vcounter = 0;
       }
     }
@@ -120,7 +121,7 @@ auto VDP::step(uint clocks) -> void {
   }
 }
 
-auto VDP::vlines() -> uint {
+auto VDP::vlines() -> u32 {
   switch(io.mode) {
   default:     return 192;
   case 0b1011: return 224;
@@ -144,9 +145,9 @@ auto VDP::power() -> void {
   sprite.power();
 }
 
-auto VDP::palette(uint5 index) -> uint12 {
+auto VDP::palette(n5 index) -> n12 {
   //Master System and Game Gear approximate TMS9918A colors by converting to RGB6 palette colors
-  static uint6 palette[16] = {
+  static const n6 palette[16] = {
     0x00, 0x00, 0x08, 0x0c, 0x10, 0x30, 0x01, 0x3c,
     0x02, 0x03, 0x05, 0x0f, 0x04, 0x33, 0x15, 0x3f,
   };

@@ -36,7 +36,7 @@ using namespace nall;
 
 namespace ares {
   namespace Video {
-    static constexpr bool Threaded = false;
+    static constexpr bool Threaded = true;
   }
 
   namespace Constants {

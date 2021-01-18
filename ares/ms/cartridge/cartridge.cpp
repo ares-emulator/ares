@@ -63,9 +63,6 @@ auto Cartridge::save() -> void {
 
 auto Cartridge::power() -> void {
   mapper = {};
-  mapper.romPage0 = 0;
-  mapper.romPage1 = 1;
-  mapper.romPage2 = 2;
 }
 
 }

@@ -110,15 +110,15 @@ auto PlayStation::input(ares::Node::Input::Input node) -> void {
   auto parent = ares::Node::parent(node);
   if(!parent) return;
 
+  auto port = ares::Node::parent(parent);
+  if(!port) return;
+
+  maybe<u32> index;
+  if(port->name() == "Controller Port 1") index = 0;
+  if(port->name() == "Controller Port 2") index = 1;
+  if(!index) return;
+
   if(parent->name() == "Digital Gamepad") {
-    auto port = ares::Node::parent(parent);
-    if(!port) return;
-
-    maybe<u32> index;
-    if(port->name() == "Controller Port 1") index = 0;
-    if(port->name() == "Controller Port 2") index = 1;
-    if(!index) return;
-
     auto name = node->name();
     maybe<InputMapping&> mapping;
     if(name == "Up"      ) mapping = virtualPads[*index].up;

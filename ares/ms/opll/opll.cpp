@@ -15,17 +15,19 @@ auto OPLL::load(Node::Object parent) -> void {
 }
 
 auto OPLL::unload() -> void {
-  node = {};
-  stream = {};
+  node->remove(stream);
+  stream.reset();
+  node.reset();
 }
 
 auto OPLL::main() -> void {
   auto output = YM2413::clock();
+  if(io.mute) output = 0.0;
   stream->frame(output);
   step(1);
 }
 
-auto OPLL::step(uint clocks) -> void {
+auto OPLL::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }
@@ -33,6 +35,7 @@ auto OPLL::step(uint clocks) -> void {
 auto OPLL::power() -> void {
   YM2413::power();
   Thread::create(system.colorburst() / 72.0, {&OPLL::main, this});
+  io = {};
 }
 
 }

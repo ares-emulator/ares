@@ -23,7 +23,13 @@ MasterSystem::MasterSystem() {
 }
 
 auto MasterSystem::load() -> bool {
-  if(!ares::MasterSystem::load(root, "Master System")) return false;
+  if(!ares::MasterSystem::load(root, "Master System II")) return false;
+
+  if(auto region = root->find<ares::Node::Setting::String>("Region")) {
+    if(settings.boot.prefer == "NTSC-U") region->setValue("NTSC-U → NTSC-J → PAL");
+    if(settings.boot.prefer == "NTSC-J") region->setValue("NTSC-J → NTSC-U → PAL");
+    if(settings.boot.prefer == "PAL"   ) region->setValue("PAL → NTSC-U → NTSC-J");
+  }
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -32,6 +38,16 @@ auto MasterSystem::load() -> bool {
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
     port->allocate("Gamepad");
+    port->connect();
+  }
+
+  if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
+    port->allocate("Gamepad");
+    port->connect();
+  }
+
+  if(auto port = root->find<ares::Node::Port>("Expansion Port")) {
+    port->allocate("FM Sound Unit");
     port->connect();
   }
 
@@ -58,21 +74,34 @@ auto MasterSystem::open(ares::Node::Object node, string name, vfs::file::mode mo
 }
 
 auto MasterSystem::input(ares::Node::Input::Input node) -> void {
-  auto name = node->name();
-  maybe<InputMapping&> mapping;
-  if(name == "Pause") mapping = virtualPads[0].start;
-  if(name == "Reset") mapping = nothing;
-  if(name == "Up"   ) mapping = virtualPads[0].up;
-  if(name == "Down" ) mapping = virtualPads[0].down;
-  if(name == "Left" ) mapping = virtualPads[0].left;
-  if(name == "Right") mapping = virtualPads[0].right;
-  if(name == "1"    ) mapping = virtualPads[0].a;
-  if(name == "2"    ) mapping = virtualPads[0].b;
+  auto parent = ares::Node::parent(node);
+  if(!parent) return;
 
-  if(mapping) {
-    auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Input::Button>()) {
-      button->setValue(value);
+  auto port = ares::Node::parent(parent);
+  if(!port) return;
+
+  maybe<u32> index;
+  if(port->name() == "Controller Port 1") index = 0;
+  if(port->name() == "Controller Port 2") index = 1;
+  if(!index) return;
+
+  if(parent->name() == "Gamepad") {
+    auto name = node->name();
+    maybe<InputMapping&> mapping;
+    if(name == "Pause") mapping = virtualPads[*index].start;
+    if(name == "Reset") mapping = nothing;
+    if(name == "Up"   ) mapping = virtualPads[*index].up;
+    if(name == "Down" ) mapping = virtualPads[*index].down;
+    if(name == "Left" ) mapping = virtualPads[*index].left;
+    if(name == "Right") mapping = virtualPads[*index].right;
+    if(name == "1"    ) mapping = virtualPads[*index].a;
+    if(name == "2"    ) mapping = virtualPads[*index].b;
+
+    if(mapping) {
+      auto value = mapping->value();
+      if(auto button = node->cast<ares::Node::Input::Button>()) {
+        button->setValue(value);
+      }
     }
   }
 }

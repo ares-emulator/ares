@@ -24,5 +24,14 @@ auto ControllerPort::allocate(string name) -> Node::Peripheral {
   return {};
 }
 
+auto ControllerPort::power() -> void {
+  io = {};
+}
+
 auto ControllerPort::serialize(serializer& s) -> void {
+  s(io.trInputEnable);
+  s(io.thInputEnable);
+  s(io.trOutputLevel);
+  s(io.thOutputLevel);
+  s(io.thPreviousLevel);
 }

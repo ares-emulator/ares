@@ -1,4 +1,4 @@
-auto VDP::Background::run(uint8 hoffset, uint9 voffset) -> void {
+auto VDP::Background::run(n8 hoffset, n9 voffset) -> void {
   output = {};
   switch(vdp.io.mode) {
   case 0b0000: return graphics1(hoffset, voffset);
@@ -20,24 +20,24 @@ auto VDP::Background::run(uint8 hoffset, uint9 voffset) -> void {
   }
 }
 
-auto VDP::Background::graphics1(uint8 hoffset, uint9 voffset) -> void {
-  uint14 nameTableAddress;
+auto VDP::Background::graphics1(n8 hoffset, n9 voffset) -> void {
+  n14 nameTableAddress;
   nameTableAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameTableAddress.bit( 5, 9) = voffset.bit(3,7);
   nameTableAddress.bit(10,13) = vdp.io.nameTableAddress;
-  uint8 pattern = vdp.vram[nameTableAddress];
+  n8 pattern = vdp.vram[nameTableAddress];
 
-  uint14 patternAddress;
+  n14 patternAddress;
   patternAddress.bit( 0, 2) = voffset.bit(0,2);
   patternAddress.bit( 3,10) = pattern;
   patternAddress.bit(11,13) = vdp.io.patternTableAddress;
 
-  uint14 colorAddress;  //d5 = 0
+  n14 colorAddress;  //d5 = 0
   colorAddress.bit(0, 4) = pattern.bit(3,7);
   colorAddress.bit(6,13) = vdp.io.colorTableAddress;
 
-  uint8 color = vdp.vram[colorAddress];
-  uint3 index = hoffset ^ 7;
+  n8 color = vdp.vram[colorAddress];
+  n3 index = hoffset ^ 7;
   if(!vdp.vram[patternAddress].bit(index)) {
     output.color = color.bit(0,3);
   } else {
@@ -45,25 +45,25 @@ auto VDP::Background::graphics1(uint8 hoffset, uint9 voffset) -> void {
   }
 }
 
-auto VDP::Background::graphics2(uint8 hoffset, uint9 voffset) -> void {
-  uint14 nameTableAddress;
+auto VDP::Background::graphics2(n8 hoffset, n9 voffset) -> void {
+  n14 nameTableAddress;
   nameTableAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameTableAddress.bit( 5, 9) = voffset.bit(3,7);
   nameTableAddress.bit(10,13) = vdp.io.nameTableAddress;
-  uint8 pattern = vdp.vram[nameTableAddress];
+  n8 pattern = vdp.vram[nameTableAddress];
 
-  uint14 patternAddress;
+  n14 patternAddress;
   patternAddress.bit(0, 2) = voffset.bit(0,2);
   patternAddress.bit(3,10) = pattern;
   if(voffset >=  64 && voffset <= 127) patternAddress.bit(11) = vdp.io.patternTableAddress.bit(0);
   if(voffset >= 128 && voffset <= 191) patternAddress.bit(12) = vdp.io.patternTableAddress.bit(1);
-  uint14 colorAddress = patternAddress;
+  n14 colorAddress = patternAddress;
   patternAddress.bit(13) = vdp.io.patternTableAddress.bit(2);
   colorAddress.bit(13) = vdp.io.colorTableAddress.bit(7);
 
-  uint8 colorMask = vdp.io.colorTableAddress.bit(0,6) << 1 | 1;
-  uint8 color = vdp.vram[colorAddress];
-  uint3 index = hoffset ^ 7;
+  n8 colorMask = vdp.io.colorTableAddress.bit(0,6) << 1 | 1;
+  n8 color = vdp.vram[colorAddress];
+  n3 index = hoffset ^ 7;
   if(!vdp.vram[patternAddress].bit(index)) {
     output.color = color.bit(0,3);
   } else {
@@ -71,13 +71,13 @@ auto VDP::Background::graphics2(uint8 hoffset, uint9 voffset) -> void {
   }
 }
 
-auto VDP::Background::graphics3(uint8 hoffset, uint9 voffset, uint vlines) -> void {
+auto VDP::Background::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
   if(hoffset < vdp.io.hscroll.bit(0,2)) return;
 
   if(!vdp.io.horizontalScrollLock || voffset >=  16) hoffset -= vdp.io.hscroll;
   if(!vdp.io.verticalScrollLock   || hoffset <= 191) voffset += vdp.io.vscroll;
 
-  uint14 nameTableAddress;
+  n14 nameTableAddress;
   if(vlines == 192) {
     if(voffset >= 224) voffset -= 224;
     nameTableAddress.bit( 1, 5) = hoffset.bit(3,7);
@@ -90,7 +90,7 @@ auto VDP::Background::graphics3(uint8 hoffset, uint9 voffset, uint vlines) -> vo
     nameTableAddress.bit(12,13) = vdp.io.nameTableAddress.bit(2,3);
   }
 
-  uint16 pattern;
+  n16 pattern;
   pattern.byte(0) = vdp.vram[nameTableAddress | 0];
   pattern.byte(1) = vdp.vram[nameTableAddress | 1];
 
@@ -99,11 +99,11 @@ auto VDP::Background::graphics3(uint8 hoffset, uint9 voffset, uint vlines) -> vo
   output.palette  = pattern.bit(11);
   output.priority = pattern.bit(12);
 
-  uint14 patternAddress;
+  n14 patternAddress;
   patternAddress.bit(2, 4) = voffset.bit(0,2);
   patternAddress.bit(5,13) = pattern.bit(0,8);
 
-  uint3 index = hoffset ^ 7;
+  n3 index = hoffset ^ 7;
   output.color.bit(0) = vdp.vram[patternAddress | 0].bit(index);
   output.color.bit(1) = vdp.vram[patternAddress | 1].bit(index);
   output.color.bit(2) = vdp.vram[patternAddress | 2].bit(index);

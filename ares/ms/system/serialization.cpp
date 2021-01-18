@@ -2,7 +2,7 @@ auto System::serialize(bool synchronize) -> serializer {
   if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);
   serializer s;
 
-  uint signature = SerializerSignature;
+  u32  signature = SerializerSignature;
   char version[16] = {};
   char description[512] = {};
   memory::copy(&version, (const char*)SerializerVersion, SerializerVersion.size());
@@ -17,7 +17,7 @@ auto System::serialize(bool synchronize) -> serializer {
 }
 
 auto System::unserialize(serializer& s) -> bool {
-  uint signature = 0;
+  u32  signature = 0;
   bool synchronize = true;
   char version[16] = {};
   char description[512] = {};
@@ -41,9 +41,19 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(cpu);
   s(vdp);
   s(psg);
-  s(opll);
-  if(!MasterSystem::Model::GameGear()) {
+  if(MasterSystem::Model::MasterSystem()) {
     s(controllerPort1);
     s(controllerPort2);
+  }
+  if(MasterSystem::Region::NTSCJ()) {
+    if(MasterSystem::Model::MarkIII()) {
+      s(expansionPort);
+    }
+    if(MasterSystem::Model::MasterSystemI()) {
+      s(opll);
+    }
+    if(MasterSystem::Model::MasterSystemII()) {
+      s(opll);
+    }
   }
 }

@@ -23,23 +23,24 @@ auto PSG::main() -> void {
   auto channels = SN76489::clock();
 
   if(Model::MasterSystem()) {
-    double output = 0.0;
+    f64 output = 0.0;
     output += volume[channels[0]];
     output += volume[channels[1]];
     output += volume[channels[2]];
     output += volume[channels[3]];
+    if(io.mute) output = 0.0;
 
     stream->frame(output / 4.0);
   }
 
   if(Model::GameGear()) {
-    double left = 0.0;
+    f64 left = 0.0;
     if(io.enable.bit(4)) left  += volume[channels[0]];
     if(io.enable.bit(5)) left  += volume[channels[1]];
     if(io.enable.bit(6)) left  += volume[channels[2]];
     if(io.enable.bit(7)) left  += volume[channels[3]];
 
-    double right = 0.0;
+    f64 right = 0.0;
     if(io.enable.bit(0)) right += volume[channels[0]];
     if(io.enable.bit(1)) right += volume[channels[1]];
     if(io.enable.bit(2)) right += volume[channels[2]];
@@ -51,12 +52,12 @@ auto PSG::main() -> void {
   step(1);
 }
 
-auto PSG::step(uint clocks) -> void {
+auto PSG::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }
 
-auto PSG::balance(uint8 data) -> void {
+auto PSG::balance(n8 data) -> void {
   if(Model::GameGear()) {
     io.enable = data;
   }
@@ -67,7 +68,7 @@ auto PSG::power() -> void {
   Thread::create(system.colorburst() / 16.0, {&PSG::main, this});
 
   io = {};
-  for(uint level : range(15)) {
+  for(u32 level : range(15)) {
     volume[level] = pow(2, level * -2.0 / 6.0);
   }
   volume[15] = 0;

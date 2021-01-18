@@ -1,99 +1,184 @@
-auto CPU::read(uint16 address) -> uint8 {
-  uint8 data = 0xff;
+auto CPU::read(n16 address) -> n8 {
+  n8 data = 0xff;
   if(auto result = cartridge.read(address)) {
     data = result();
   } else if(address >= 0xc000) {
     data = ram.read(address);
   }
-  return data;
+  return mdr = data;
 }
 
-auto CPU::write(uint16 address, uint8 data) -> void {
+auto CPU::write(n16 address, n8 data) -> void {
+  mdr = data;
   if(cartridge.write(address, data)) {
   } else if(address >= 0xc000) {
     ram.write(address, data);
   }
 }
 
-auto CPU::in(uint16 address) -> uint8 {
-  switch(address.bit(6,7)) {
+auto CPU::in(n16 address) -> n8 {
+  if((address & 0xc1) == 0x01 && Model::MasterSystem() && !Region::NTSCJ()) {
+    n8 data;
+    data.bit(0) = controllerPort1.io.trInputEnable;
+    data.bit(1) = controllerPort1.io.thInputEnable;
+    data.bit(2) = controllerPort2.io.trInputEnable;
+    data.bit(3) = controllerPort2.io.thInputEnable;
+    data.bit(4) = controllerPort1.io.trOutputLevel;
+    data.bit(5) = controllerPort1.io.thOutputLevel;
+    data.bit(6) = controllerPort2.io.trOutputLevel;
+    data.bit(7) = controllerPort2.io.thOutputLevel;
+    return data;
+  }
 
-  case 0: {
-    if(Model::GameGear()) {
-      platform->input(system.controls.start);
-      bool start = !system.controls.start->value();
-      return 0x7f | start << 7;
+  if((address & 0xc0) == 0x00 && Model::MasterSystem()) {
+    if(Model::MarkIII()) return mdr;
+    if(Model::MasterSystemI()) return mdr;
+    if(Model::MasterSystemII()) return 0xff;
+  }
+
+  if((address & 0xc0) == 0x00 && Model::GameGear()) {
+    platform->input(system.controls.start);
+    bool start = !system.controls.start->value();
+    return 0x7f | start << 7;
+  }
+
+  if((address & 0xc1) == 0x40) {
+    return vdp.vcounter();
+  }
+
+  if((address & 0xc1) == 0x41) {
+    return vdp.hcounter();
+  }
+
+  if((address & 0xc1) == 0x80) {
+    return vdp.data();
+  }
+
+  if((address & 0xc1) == 0x81) {
+    return vdp.status();
+  }
+
+  if((address & 0xff) == 0xf2 && opll.node) {
+    n8 data;
+    if(psg.io.mute == 0 && opll.io.mute == 0) data.bit(0,1) = 3;
+    if(psg.io.mute == 0 && opll.io.mute == 1) data.bit(0,1) = 0;
+    if(psg.io.mute == 1 && opll.io.mute == 0) data.bit(0,1) = 1;
+    if(psg.io.mute == 1 && opll.io.mute == 1) data.bit(0,1) = 2;
+    data.bit(2) = 0;
+    data.bit(3) = 0;
+    data.bit(4) = 0;
+    data.bit(5) = vdp.ccounter().bit( 3);
+    data.bit(6) = vdp.ccounter().bit( 7);
+    data.bit(7) = vdp.ccounter().bit(11);
+    return data;
+  }
+
+  if((address & 0xc1) == 0xc0 && Model::MasterSystem()) {
+    auto port1 = controllerPort1.read();
+    auto port2 = controllerPort2.read();
+    n8 data;
+    data.bit(0,5) = port1.bit(0,5);
+    data.bit(6,7) = port2.bit(0,1);
+    if(!Region::NTSCJ()) {
+      if(!controllerPort1.io.trInputEnable) data.bit(5) = controllerPort1.io.trOutputLevel;
     }
-
-    return 0xff;  //SMS1 = MDR, SMS2 = 0xff
+    return data;
   }
 
-  case 1: {
-    return !address.bit(0) ? vdp.vcounter() : vdp.hcounter();
-  }
-
-  case 2: {
-    return !address.bit(0) ? vdp.data() : vdp.status();
-  }
-
-  case 3: {
-    if(address == 0xf2) return state.enableFM;
-
-    if(Model::MasterSystem()) {
-      platform->input(system.controls.reset);
-      bool reset = !system.controls.reset->value();
-      auto port1 = controllerPort1.read();
-      auto port2 = controllerPort2.read();
-      if(address.bit(0) == 0) {
-        return port1.bit(0,5) << 0 | port2.bit(0,1) << 6;
-      } else {
-        return port2.bit(2,5) << 0 | reset << 4 | 1 << 5 | port1.bit(6) << 6 | port2.bit(6) << 7;
-      }
+  if((address & 0xc1) == 0xc1 && Model::MasterSystem()) {
+    platform->input(system.controls.reset);
+    bool reset = !system.controls.reset->value();
+    auto port1 = controllerPort1.read();
+    auto port2 = controllerPort2.read();
+    n8 data;
+    data.bit(0,3) = port2.bit(2,5);
+    data.bit(4)   = reset;
+    data.bit(5)   = 1;
+    data.bit(6)   = port1.bit(6);
+    data.bit(7)   = port2.bit(6);
+    if(!Region::NTSCJ()) {
+      if(!controllerPort2.io.trInputEnable) data.bit(3) = controllerPort2.io.trOutputLevel;
+      if(!controllerPort1.io.thInputEnable) data.bit(6) = controllerPort1.io.thOutputLevel;
+      if(!controllerPort2.io.thInputEnable) data.bit(7) = controllerPort2.io.thOutputLevel;
     }
-
-    if(Model::GameGear()) {
-      if(address.bit(0) == 0) {
-        system.controls.poll();
-        bool up    = !system.controls.upLatch;
-        bool down  = !system.controls.downLatch;
-        bool left  = !system.controls.leftLatch;
-        bool right = !system.controls.rightLatch;
-        bool one   = !system.controls.one->value();
-        bool two   = !system.controls.two->value();
-        return up << 0 | down << 1 | left << 2 | right << 3 | one << 4 | two << 5 | 1 << 6 | 1 << 7;
-      } else {
-        return 0xff;
-      }
-    }
-
-    return 0xff;
+    return data;
   }
 
+  if((address & 0xc1) == 0xc0 && Model::GameGear()) {
+    system.controls.poll();
+    n8 data;
+    data.bit(0) = !system.controls.upLatch;
+    data.bit(1) = !system.controls.downLatch;
+    data.bit(2) = !system.controls.leftLatch;
+    data.bit(3) = !system.controls.rightLatch;
+    data.bit(4) = !system.controls.one->value();
+    data.bit(5) = !system.controls.two->value();
+    data.bit(6) = 1;
+    data.bit(7) = 1;
+    return data;
   }
 
   return 0xff;
 }
 
-auto CPU::out(uint16 address, uint8 data) -> void {
-  if((uint8)address == 0x06) {
-    if(Model::GameGear()) return psg.balance(data);
+auto CPU::out(n16 address, n8 data) -> void {
+  if((address & 0xc1) == 0x01 && Model::MasterSystem()) {
+    controllerPort1.io.trInputEnable = data.bit(0);
+    controllerPort1.io.thInputEnable = data.bit(1);
+    controllerPort2.io.trInputEnable = data.bit(2);
+    controllerPort2.io.thInputEnable = data.bit(3);
+    if(Region::NTSCJ()) {
+      //NTSC-J region sets thOutputLevel to thInputEnable
+      controllerPort1.io.thOutputLevel = data.bit(1);
+      controllerPort2.io.thOutputLevel = data.bit(3);
+    } else {
+      //NTSC-U and PAL regions allow values to be set directly
+      controllerPort1.io.trOutputLevel = data.bit(4);
+      controllerPort1.io.thOutputLevel = data.bit(5);
+      controllerPort2.io.trOutputLevel = data.bit(6);
+      controllerPort2.io.thOutputLevel = data.bit(7);
+    }
+    if(controllerPort1.io.thPreviousLevel == 0 && controllerPort1.io.thOutputLevel == 1) {
+      vdp.hcounterLatch();
+    }
+    if(controllerPort2.io.thPreviousLevel == 0 && controllerPort2.io.thOutputLevel == 1) {
+      vdp.hcounterLatch();
+    }
+    controllerPort1.io.thPreviousLevel = controllerPort1.io.thOutputLevel;
+    controllerPort2.io.thPreviousLevel = controllerPort2.io.thOutputLevel;
+    return;
   }
 
-  switch(address.bit(6,7)) {
+  if((address & 0xff) == 0x06 && Model::GameGear()) {
+    return psg.balance(data);
+  }
 
-  case 1: {
+  if((address & 0xc0) == 0x40) {
     return psg.write(data);
   }
 
-  case 2: {
-    return !address.bit(0) ? vdp.data(data) : vdp.control(data);
+  if((address & 0xc1) == 0x80) {
+    return vdp.data(data);
   }
 
-  case 3: {
-    if(address == 0xf0 && state.enableFM) opll.address(data);
-    if(address == 0xf1 && state.enableFM) opll.write(data);
-    if(address == 0xf2) state.enableFM = data.bit(0);
+  if((address & 0xc1) == 0x81) {
+    return vdp.control(data);
   }
 
+  if((address & 0xff) == 0xf0 && opll.node) {
+    return opll.address(data);
+  }
+
+  if((address & 0xff) == 0xf1 && opll.node) {
+    return opll.write(data);
+  }
+
+  if((address & 0xff) == 0xf2 && opll.node) {
+    if(Model::MarkIII()) data.bit(1) = 0;
+    if(data.bit(0,1) == 0) psg.io.mute = 0, opll.io.mute = 1;
+    if(data.bit(0,1) == 1) psg.io.mute = 1, opll.io.mute = 0;
+    if(data.bit(0,1) == 2) psg.io.mute = 1, opll.io.mute = 1;
+    if(data.bit(0,1) == 3) psg.io.mute = 0, opll.io.mute = 0;
+    return;
   }
 }

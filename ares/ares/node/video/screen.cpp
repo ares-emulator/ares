@@ -165,10 +165,10 @@ auto Screen::colors(u32 colors, function<n64 (n32)> color) -> void {
 }
 
 auto Screen::frame() -> void {
-  lock_guard<recursive_mutex> lock(_mutex);
   if(runAhead()) return;
   while(_frame) spinloop();
 
+  lock_guard<recursive_mutex> lock(_mutex);
   _inputA.swap(_inputB);
   _frame = true;
   if constexpr(!ares::Video::Threaded) {

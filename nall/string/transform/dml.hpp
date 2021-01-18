@@ -301,11 +301,12 @@ inline auto DML::markup(const string& s) -> string {
       string name = list.size() == 2 ? list.first() : uri.split("//", 1L).last();
       list = side(1).split("; ");
       boolean link, title, caption;
-      string width, height;
+      string Class, width, height;
       for(auto p : list) {
         if(p == "link") { link = true; continue; }
         if(p == "title") { title = true; continue; }
         if(p == "caption") { caption = true; continue; }
+        if(p.beginsWith("class:")) { p.trimLeft("class:", 1L); Class = p.strip(); continue; }
         if(p.beginsWith("width:")) { p.trimLeft("width:", 1L); width = p.strip(); continue; }
         if(p.beginsWith("height:")) { p.trimLeft("height:", 1L); height = p.strip(); continue; }
       }
@@ -315,6 +316,7 @@ inline auto DML::markup(const string& s) -> string {
         if(link) t.append("<a href=\"", escape(uri), "\">");
         t.append("<img loading=\"lazy\" src=\"", escape(uri), "\" alt=\"", escape(name ? name : uri.hash()), "\"");
         if(title) t.append(" title=\"", escape(name), "\"");
+        if(Class) t.append(" class=\"", escape(Class), "\"");
         if(width) t.append(" width=\"", escape(width), "\"");
         if(height) t.append(" height=\"", escape(height), "\"");
         t.append(">\n");
@@ -325,6 +327,7 @@ inline auto DML::markup(const string& s) -> string {
         if(link) t.append("<a href=\"", escape(uri), "\">");
         t.append("<img loading=\"lazy\" src=\"", escape(uri), "\" alt=\"", escape(name ? name : uri.hash()), "\"");
         if(title) t.append(" title=\"", escape(name), "\"");
+        if(Class) t.append(" class=\"", escape(Class), "\"");
         if(width) t.append(" width=\"", escape(width), "\"");
         if(height) t.append(" height=\"", escape(height), "\"");
         t.append(">");

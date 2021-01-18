@@ -1,31 +1,31 @@
-auto Cartridge::read(uint16 addr) -> maybe<uint8> {
+auto Cartridge::read(n16 address) -> maybe<n8> {
   if(!node) return nothing;
 
-  uint2 page = addr >> 14;
-  addr &= 0x3fff;
+  n2 page = address >> 14;
+  address &= 0x3fff;
 
   switch(page) {
 
   case 0: {
-    if(addr <= 0x03ff) return rom.read(addr);
-    return rom.read(mapper.romPage0 << 14 | addr);
+    if(address <= 0x03ff) return rom.read(address);
+    return rom.read(mapper.romPage0 << 14 | address);
   }
 
   case 1: {
-    return rom.read(mapper.romPage1 << 14 | addr);
+    return rom.read(mapper.romPage1 << 14 | address);
   }
 
   case 2: {
     if(ram && mapper.ramEnablePage2) {
-      return ram.read(mapper.ramPage2 << 14 | addr);
+      return ram.read(mapper.ramPage2 << 14 | address);
     }
 
-    return rom.read(mapper.romPage2 << 14 | addr);
+    return rom.read(mapper.romPage2 << 14 | address);
   }
 
   case 3: {
     if(ram && mapper.ramEnablePage3) {
-      return ram.read(addr);
+      return ram.read(address);
     }
 
     return nothing;
@@ -36,10 +36,10 @@ auto Cartridge::read(uint16 addr) -> maybe<uint8> {
   unreachable;
 }
 
-auto Cartridge::write(uint16 addr, uint8 data) -> bool {
+auto Cartridge::write(n16 address, n8 data) -> bool {
   if(!node) return false;
 
-  if(addr == 0xfffc) {
+  if(address == 0xfffc) {
     mapper.shift = data.bit(0,1);
     mapper.ramPage2 = data.bit(2);
     mapper.ramEnablePage2 = data.bit(3);
@@ -47,20 +47,20 @@ auto Cartridge::write(uint16 addr, uint8 data) -> bool {
     mapper.romWriteEnable = data.bit(7);
   }
 
-  if(addr == 0xfffd) {
+  if(address == 0xfffd) {
     mapper.romPage0 = data;
   }
 
-  if(addr == 0xfffe) {
+  if(address == 0xfffe) {
     mapper.romPage1 = data;
   }
 
-  if(addr == 0xffff) {
+  if(address == 0xffff) {
     mapper.romPage2 = data;
   }
 
-  uint2 page = addr >> 14;
-  addr &= 0x3fff;
+  n2 page = address >> 14;
+  address &= 0x3fff;
 
   switch(page) {
 
@@ -74,7 +74,7 @@ auto Cartridge::write(uint16 addr, uint8 data) -> bool {
 
   case 2: {
     if(ram && mapper.ramEnablePage2) {
-      ram.write(mapper.ramPage2 << 14 | addr, data);
+      ram.write(mapper.ramPage2 << 14 | address, data);
       return true;
     }
 
@@ -83,7 +83,7 @@ auto Cartridge::write(uint16 addr, uint8 data) -> bool {
 
   case 3: {
     if(ram && mapper.ramEnablePage3) {
-      ram.write(addr, data);
+      ram.write(address, data);
       return true;
     }
 

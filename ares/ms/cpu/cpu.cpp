@@ -38,7 +38,7 @@ auto CPU::main() -> void {
   instruction();
 }
 
-auto CPU::step(uint clocks) -> void {
+auto CPU::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize();
 }
