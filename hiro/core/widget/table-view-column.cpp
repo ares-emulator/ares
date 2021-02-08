@@ -33,7 +33,7 @@ auto mTableViewColumn::foregroundColor() const -> Color {
   return state.foregroundColor;
 }
 
-auto mTableViewColumn::horizontalAlignment() const -> float {
+auto mTableViewColumn::horizontalAlignment() const -> f32 {
   return state.horizontalAlignment;
 }
 
@@ -86,7 +86,7 @@ auto mTableViewColumn::setForegroundColor(Color color) -> type& {
   return *this;
 }
 
-auto mTableViewColumn::setHorizontalAlignment(float alignment) -> type& {
+auto mTableViewColumn::setHorizontalAlignment(f32 alignment) -> type& {
   alignment = max(0.0, min(1.0, alignment));
   state.horizontalAlignment = alignment;
   signal(setHorizontalAlignment, alignment);
@@ -123,7 +123,7 @@ auto mTableViewColumn::setText(const string& text) -> type& {
   return *this;
 }
 
-auto mTableViewColumn::setVerticalAlignment(float alignment) -> type& {
+auto mTableViewColumn::setVerticalAlignment(f32 alignment) -> type& {
   alignment = max(0.0, min(1.0, alignment));
   state.verticalAlignment = alignment;
   signal(setVerticalAlignment, alignment);
@@ -136,7 +136,7 @@ auto mTableViewColumn::setVisible(bool visible) -> type& {
   return *this;
 }
 
-auto mTableViewColumn::setWidth(float width) -> type& {
+auto mTableViewColumn::setWidth(f32 width) -> type& {
   state.width = max(0, width);
   signal(setWidth, width);
   return *this;
@@ -150,11 +150,11 @@ auto mTableViewColumn::text() const -> string {
   return state.text;
 }
 
-auto mTableViewColumn::verticalAlignment() const -> float {
+auto mTableViewColumn::verticalAlignment() const -> f32 {
   return state.verticalAlignment;
 }
 
-auto mTableViewColumn::width() const -> float {
+auto mTableViewColumn::width() const -> f32 {
   return state.width;
 }
 

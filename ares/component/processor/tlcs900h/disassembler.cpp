@@ -2,14 +2,14 @@ auto TLCS900H::disassembleInstruction() -> string {
   string output;
 
   auto pc = r.pc.l.l0;
-  uint8 op[8] = {}, ops = 0;
+  n8 op[8] = {}, ops = 0;
 
-  auto  read8 = [&]() ->  uint8 { return op[ops++] = disassembleRead(pc++); };
-  auto read16 = [&]() -> uint16 { uint16 data = read8(); return data | read8() << 8; };
-  auto read24 = [&]() -> uint24 { uint24 data = read8(); data |= read8() << 8; return data | read8() << 16; };
-  auto read32 = [&]() -> uint32 { uint32 data = read8(); data |= read8() << 8; data |= read8() << 16; return data | read8() << 24; };
+  auto read8  = [&]() -> n8  { return op[ops++] = disassembleRead(pc++); };
+  auto read16 = [&]() -> n16 { n16 data = read8(); return data | read8() << 8; };
+  auto read24 = [&]() -> n24 { n24 data = read8(); data |= read8() << 8; return data | read8() << 16; };
+  auto read32 = [&]() -> n32 { n32 data = read8(); data |= read8() << 8; data |= read8() << 16; return data | read8() << 24; };
 
-  enum : uint {
+  enum : u32 {
     Null,
     Text,       //text
     Condition,  //condition
@@ -49,26 +49,26 @@ auto TLCS900H::disassembleInstruction() -> string {
 
     auto null() -> void { mode(Null); }
     auto text(string text_) -> void { mode(Text); _text = text_; }
-    auto condition(uint4 condition_) -> void { mode(Condition); _condition = condition_; }
-    auto register(natural size_, uint8 register_) -> void { mode(Register); size(size_); _register = register_; }
-    auto register3(natural size_, uint3 register_) -> void { mode(Register); size(size_); _register = lookup(size_, register_); }
-    auto control(natural size_, uint8 register_) -> void { mode(Control); size(size_); _register = register_; }
+    auto condition(n4 condition_) -> void { mode(Condition); _condition = condition_; }
+    auto register(natural size_, n8 register_) -> void { mode(Register); size(size_); _register = register_; }
+    auto register3(natural size_, n3 register_) -> void { mode(Register); size(size_); _register = lookup(size_, register_); }
+    auto control(natural size_, n8 register_) -> void { mode(Control); size(size_); _register = register_; }
     auto immediate(natural size_, natural immediate_) -> void { mode(Immediate); size(size_); _immediate = immediate_; }
     auto displacement(natural size_, natural displacement_) -> void { mode(Displacement); size(size_); _displacement = displacement_; }
     auto displacementPC(natural size_, natural displacement_) -> void { mode(DisplacementPC); size(size_); _displacement = displacement_; }
 
-    auto indirectRegister(natural size_, uint8 register_) -> void { mode(IndirectRegister); size(size_); _register = register_; }
-    auto indirectRegister3(natural size_, uint3 register_) -> void { mode(IndirectRegister); size(size_); _register = lookup(32, register_); }
-    auto indirectRegisterDecrement(natural size_, uint8 register_) -> void { mode(IndirectRegisterDecrement); size(size_); _register = register_; }
-    auto indirectRegisterIncrement(natural size_, uint8 register_) -> void { mode(IndirectRegisterIncrement); size(size_); _register = register_; }
-    auto indirectRegister3Increment(natural size_, uint3 register_) -> void { mode(IndirectRegisterIncrement); size(size_); _register = lookup(32, register_); }
-    auto indirectRegisterRegister8(natural size_, uint8 register32, uint8 register8) -> void { mode(IndirectRegisterRegister8); size(size_); _register = register32; _registerAdd = register8; }
-    auto indirectRegisterRegister16(natural size_, uint8 register32, uint8 register16) -> void { mode(IndirectRegisterRegister16); size(size_); _register = register32; _registerAdd = register16; }
-    auto indirectRegister3Displacement8(natural size_, uint3 register_, uint8 displacement_) -> void { mode(IndirectRegisterDisplacement8); size(size_); _register = lookup(32, register_); _displacement = displacement_; }
-    auto indirectRegisterDisplacement16(natural size_, uint8 register_, uint16 displacement_) -> void { mode(IndirectRegisterDisplacement16); size(size_); _register = register_; _displacement = displacement_; }
-    auto indirectImmediate8(natural size_, uint8 immediate_) -> void { mode(IndirectImmediate8); size(size_); _immediate = immediate_; }
-    auto indirectImmediate16(natural size_, uint16 immediate_) -> void { mode(IndirectImmediate16); size(size_); _immediate = immediate_; }
-    auto indirectImmediate24(natural size_, uint24 immediate_) -> void { mode(IndirectImmediate24); size(size_); _immediate = immediate_; }
+    auto indirectRegister(natural size_, n8 register_) -> void { mode(IndirectRegister); size(size_); _register = register_; }
+    auto indirectRegister3(natural size_, n3 register_) -> void { mode(IndirectRegister); size(size_); _register = lookup(32, register_); }
+    auto indirectRegisterDecrement(natural size_, n8 register_) -> void { mode(IndirectRegisterDecrement); size(size_); _register = register_; }
+    auto indirectRegisterIncrement(natural size_, n8 register_) -> void { mode(IndirectRegisterIncrement); size(size_); _register = register_; }
+    auto indirectRegister3Increment(natural size_, n3 register_) -> void { mode(IndirectRegisterIncrement); size(size_); _register = lookup(32, register_); }
+    auto indirectRegisterRegister8(natural size_, n8 register32, n8 register8) -> void { mode(IndirectRegisterRegister8); size(size_); _register = register32; _registerAdd = register8; }
+    auto indirectRegisterRegister16(natural size_, n8 register32, n8 register16) -> void { mode(IndirectRegisterRegister16); size(size_); _register = register32; _registerAdd = register16; }
+    auto indirectRegister3Displacement8(natural size_, n3 register_, n8 displacement_) -> void { mode(IndirectRegisterDisplacement8); size(size_); _register = lookup(32, register_); _displacement = displacement_; }
+    auto indirectRegisterDisplacement16(natural size_, n8 register_, n16 displacement_) -> void { mode(IndirectRegisterDisplacement16); size(size_); _register = register_; _displacement = displacement_; }
+    auto indirectImmediate8(natural size_, n8 immediate_) -> void { mode(IndirectImmediate8); size(size_); _immediate = immediate_; }
+    auto indirectImmediate16(natural size_, n16 immediate_) -> void { mode(IndirectImmediate16); size(size_); _immediate = immediate_; }
+    auto indirectImmediate24(natural size_, n24 immediate_) -> void { mode(IndirectImmediate24); size(size_); _immediate = immediate_; }
 
   private:
     natural _mode = Null;
@@ -80,7 +80,7 @@ auto TLCS900H::disassembleInstruction() -> string {
     natural _immediate;
     natural _displacement;
 
-    static auto lookup(natural size, uint3 register) -> uint8 {
+    static auto lookup(natural size, n3 register) -> n8 {
       if(size ==  8) return from_array<0xe1, 0xe0, 0xe5, 0xe4, 0xe9, 0xe8, 0xed, 0xec>(register);
       if(size == 16) return from_array<0xe0, 0xe4, 0xe8, 0xec, 0xf0, 0xf4, 0xf8, 0xfc>(register);
       if(size == 32) return from_array<0xe0, 0xe4, 0xe8, 0xec, 0xf0, 0xf4, 0xf8, 0xfc>(register);
@@ -101,7 +101,7 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x03: name = "pop"; lhs.text("sr"); break;
   case 0x04: break;  //"max" or "min" (not present on 900/H)
   case 0x05: name = "halt"; break;
-  case 0x06: name = "ei"; lhs.immediate(3, (uint3)read8()); if(lhs.immediate() == 7) name = "di", lhs.null(); break;
+  case 0x06: name = "ei"; lhs.immediate(3, (n3)read8()); if(lhs.immediate() == 7) name = "di", lhs.null(); break;
   case 0x07: name = "reti"; break;
   case 0x08: name = "ld"; lhs.indirectImmediate8(8, read8()); rhs.immediate(8, read8()); break;
   case 0x09: name = "push"; lhs.immediate(8, read8()); break;
@@ -118,7 +118,7 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x14: name = "push"; lhs.register3(8, A.id); break;
   case 0x15: name = "pop"; lhs.register3(8, A.id); break;
   case 0x16: name = "ex"; lhs.text("f"); rhs.text("f'"); break;
-  case 0x17: name = "ldf"; lhs.immediate(2, (uint2)read8()); break;
+  case 0x17: name = "ldf"; lhs.immediate(2, (n2)read8()); break;
   case 0x18: name = "push"; lhs.text("f"); break;
   case 0x19: name = "pop"; lhs.text("f"); break;
   case 0x1a: name = "jp"; lhs.immediate(16, read16()); break;
@@ -176,14 +176,14 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0xc3: case 0xd3: case 0xe3: case 0xf3: {
     opSourceMemory = fetch < 0xf0; opTargetMemory = !opSourceMemory;
     auto data = read8();
-    if((uint2)data == 0) lhs.indirectRegister(opSize, data);
-    if((uint2)data == 1) lhs.indirectRegisterDisplacement16(opSize, data, read16());
+    if((n2)data == 0) lhs.indirectRegister(opSize, data);
+    if((n2)data == 1) lhs.indirectRegisterDisplacement16(opSize, data, read16());
     if(data == 0x03) { auto r32 = read8(); lhs.indirectRegisterRegister8(opSize, r32, read8()); }
     if(data == 0x07) { auto r32 = read8(); lhs.indirectRegisterRegister16(opSize, r32, read8()); }
     if(data == 0x17 && opTargetMemory) {
       opTargetMemory = false;
       name = "ldar";
-      int16 d16 = read16();
+      i16 d16 = read16();
       data = read8();
       if((data & 0xf8) == 0x20) {
         lhs.register3(16, data);
@@ -217,12 +217,12 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: case 0xed: case 0xee: case 0xef:
     opRegister = true; lhs.register3(32, fetch); break;
   case 0xf8: case 0xf9: case 0xfa: case 0xfb: case 0xfc: case 0xfd: case 0xfe: case 0xff:
-    name = "swi"; lhs.immediate(3, (uint3)fetch); break;
+    name = "swi"; lhs.immediate(3, (n3)fetch); break;
   }
   #undef opSize
 
-  auto reads = [&](uint size) -> uint32 {
-    if(size ==  8) return  read8();
+  auto reads = [&](u32 size) -> n32 {
+    if(size == 8 ) return read8 ();
     if(size == 16) return read16();
     if(size == 24) return read24();
     if(size == 32) return read32();
@@ -258,11 +258,11 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x1a: case 0x1b: break;
   case 0x1c: name = "djnz"; rhs.displacementPC(8, read8()); break;
   case 0x1d: case 0x1e: case 0x1f: break;
-  case 0x20: name = "andcf"; rhs.immediate(4, (uint4)read8()); break;
-  case 0x21: name = "orcf"; rhs.immediate(4, (uint4)read8()); break;
-  case 0x22: name = "xorcf"; rhs.immediate(4, (uint4)read8()); break;
-  case 0x23: name = "ldcf"; rhs.immediate(4, (uint4)read8()); break;
-  case 0x24: name = "stcf"; rhs.immediate(4, (uint4)read8()); break;
+  case 0x20: name = "andcf"; rhs.immediate(4, (n4)read8()); break;
+  case 0x21: name = "orcf"; rhs.immediate(4, (n4)read8()); break;
+  case 0x22: name = "xorcf"; rhs.immediate(4, (n4)read8()); break;
+  case 0x23: name = "ldcf"; rhs.immediate(4, (n4)read8()); break;
+  case 0x24: name = "stcf"; rhs.immediate(4, (n4)read8()); break;
   case 0x25: case 0x26: case 0x27: break;
   case 0x28: name = "andcf"; rhs.register(8, A.id); break;
   case 0x29: name = "orcf"; rhs.register(8, A.id); break;
@@ -272,11 +272,11 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x2d: break;
   case 0x2e: name = "ldc"; rhs = lhs; lhs.control(rhs.size(), read8()); break;
   case 0x2f: name = "ldc"; rhs.control(lhs.size(), read8()); break;
-  case 0x30: name = "res"; rhs.immediate(4, (uint4)read8()); break;
-  case 0x31: name = "set"; rhs.immediate(4, (uint4)read8()); break;
-  case 0x32: name = "chg"; rhs.immediate(4, (uint4)read8()); break;
-  case 0x33: name = "bit"; rhs.immediate(4, (uint4)read8()); break;
-  case 0x34: name = "tset"; rhs.immediate(4, (uint4)read8()); break;
+  case 0x30: name = "res"; rhs.immediate(4, (n4)read8()); break;
+  case 0x31: name = "set"; rhs.immediate(4, (n4)read8()); break;
+  case 0x32: name = "chg"; rhs.immediate(4, (n4)read8()); break;
+  case 0x33: name = "bit"; rhs.immediate(4, (n4)read8()); break;
+  case 0x34: name = "tset"; rhs.immediate(4, (n4)read8()); break;
   case 0x35: case 0x36: case 0x37: break;
   case 0x38: name = "minc1"; rhs.immediate(16, read16()); break;
   case 0x39: name = "minc2"; rhs.immediate(16, read16()); break;
@@ -295,9 +295,9 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f:
     name = "divs"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
   case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
-    name = "inc"; rhs.immediate(4, fetch ? natural((uint3)fetch) : 8_n); break;
+    name = "inc"; rhs.immediate(4, fetch ? natural((n3)fetch) : 8_n); break;
   case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
-    name = "dec"; rhs.immediate(4, fetch ? natural((uint3)fetch) : 8_n); break;
+    name = "dec"; rhs.immediate(4, fetch ? natural((n3)fetch) : 8_n); break;
   case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
   case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: case 0x7f:
     name = "scc"; rhs = lhs; lhs.condition(fetch); break;
@@ -312,7 +312,7 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
     name = "sub"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
   case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
-    name = "ld"; rhs.immediate(3, (uint3)fetch); break;
+    name = "ld"; rhs.immediate(3, (n3)fetch); break;
   case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
     name = "sbb"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
   case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
@@ -330,7 +330,7 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0xd0: case 0xd1: case 0xd2: case 0xd3: case 0xd4: case 0xd5: case 0xd6: case 0xd7:
     name = "xor"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
   case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
-    name = "cp"; rhs.immediate(3, (uint3)fetch); break;
+    name = "cp"; rhs.immediate(3, (n3)fetch); break;
   case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
     name = "or"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
   case 0xe8: name = "rlc"; { auto data = read8(); rhs.immediate(5, data ? natural(data) : 16_n); } break;
@@ -364,23 +364,23 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d: case 0x0e: case 0x0f: break;
   case 0x10:
     name = lhs.size() == 8 ? "ldi" : "ldiw";
-    lhs.indirectRegisterIncrement(32, (uint3)op[0] != 5 ? XDE.id : XIX.id);
-    rhs.indirectRegisterIncrement(32, (uint3)op[0] != 5 ? XHL.id : XIY.id);
+    lhs.indirectRegisterIncrement(32, (n3)op[0] != 5 ? XDE.id : XIX.id);
+    rhs.indirectRegisterIncrement(32, (n3)op[0] != 5 ? XHL.id : XIY.id);
     break;
   case 0x11:
     name = lhs.size() == 8 ? "ldir" : "ldirw";
-    lhs.indirectRegisterIncrement(32, (uint3)op[0] != 5 ? XDE.id : XIX.id);
-    rhs.indirectRegisterIncrement(32, (uint3)op[0] != 5 ? XHL.id : XIY.id);
+    lhs.indirectRegisterIncrement(32, (n3)op[0] != 5 ? XDE.id : XIX.id);
+    rhs.indirectRegisterIncrement(32, (n3)op[0] != 5 ? XHL.id : XIY.id);
     break;
   case 0x12:
     name = lhs.size() == 8 ? "ldd" : "lddw";
-    lhs.indirectRegisterIncrement(32, (uint3)op[0] != 5 ? XDE.id : XIX.id);
-    rhs.indirectRegisterIncrement(32, (uint3)op[0] != 5 ? XHL.id : XIY.id);
+    lhs.indirectRegisterIncrement(32, (n3)op[0] != 5 ? XDE.id : XIX.id);
+    rhs.indirectRegisterIncrement(32, (n3)op[0] != 5 ? XHL.id : XIY.id);
     break;
   case 0x13:
     name = lhs.size() == 8 ? "lddr" : "lddrw";
-    lhs.indirectRegisterIncrement(32, (uint3)op[0] != 5 ? XDE.id : XIX.id);
-    rhs.indirectRegisterIncrement(32, (uint3)op[0] != 5 ? XHL.id : XIY.id);
+    lhs.indirectRegisterIncrement(32, (n3)op[0] != 5 ? XDE.id : XIX.id);
+    rhs.indirectRegisterIncrement(32, (n3)op[0] != 5 ? XHL.id : XIY.id);
     break;
   case 0x14:
     name = lhs.size() == 8 ? "cpi" : "cpiw";
@@ -427,9 +427,9 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f:
     name = "divs"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
   case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
-    name = "inc"; rhs.immediate(4, (uint3)fetch ? natural((uint3)fetch) : 8_n); break;
+    name = "inc"; rhs.immediate(4, (n3)fetch ? natural((n3)fetch) : 8_n); break;
   case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
-    name = "dec"; rhs.immediate(4, (uint3)fetch ? natural((uint3)fetch) : 8_n); break;
+    name = "dec"; rhs.immediate(4, (n3)fetch ? natural((n3)fetch) : 8_n); break;
   case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77: break;
   case 0x78: name = "rlc"; break;
   case 0x79: name = "rrc"; break;
@@ -512,25 +512,25 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77: break;
   case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: case 0x7f: break;
   case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
-    name = "andcf"; lhs.size(8); rhs.immediate(3, (uint3)fetch); break;
+    name = "andcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
   case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
-    name = "orcf"; lhs.size(8); rhs.immediate(3, (uint3)fetch); break;
+    name = "orcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
   case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
-    name = "xorcf"; lhs.size(8); rhs.immediate(3, (uint3)fetch); break;
+    name = "xorcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
   case 0x98: case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: case 0x9e: case 0x9f:
-    name = "ldcf"; lhs.size(8); rhs.immediate(3, (uint3)fetch); break;
+    name = "ldcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
   case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
-    name = "stcf"; lhs.size(8); rhs.immediate(3, (uint3)fetch); break;
+    name = "stcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
   case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
-    name = "tset"; lhs.size(8); rhs.immediate(3, (uint3)fetch); break;
+    name = "tset"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
   case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
-    name = "res"; lhs.size(8); rhs.immediate(3, (uint3)fetch); break;
+    name = "res"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
   case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
-    name = "set"; lhs.size(8); rhs.immediate(3, (uint3)fetch); break;
+    name = "set"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
   case 0xc0: case 0xc1: case 0xc2: case 0xc3: case 0xc4: case 0xc5: case 0xc6: case 0xc7:
-    name = "chg"; lhs.size(8); rhs.immediate(3, (uint3)fetch); break;
+    name = "chg"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
   case 0xc8: case 0xc9: case 0xca: case 0xcb: case 0xcc: case 0xcd: case 0xce: case 0xcf:
-    name = "bit"; lhs.size(8); rhs.immediate(3, (uint3)fetch); break;
+    name = "bit"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
   case 0xd0: case 0xd1: case 0xd2: case 0xd3: case 0xd4: case 0xd5: case 0xd6: case 0xd7:
   case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
     name = "jp"; lhs.size(32); rhs = lhs; lhs.condition(fetch); break;
@@ -552,7 +552,7 @@ auto TLCS900H::disassembleInstruction() -> string {
        "a",   "w",  "qa",  "qw",   "c",   "b",  "qc",  "qb",   "e",   "d",  "qe",  "qd",   "l",   "h",  "ql",  "qh",    //e0-ef
       "ixl", "ixh", "qixl","qixh","iyl", "iyh", "qiyl","qiyh","izl", "izh", "qizl","qizh","spl", "sph", "qspl","qsph",  //f0-ff
     };
-    auto register8 = [&](uint8 register) -> string {
+    auto register8 = [&](n8 register) -> string {
       if(register <  0x40) return registers8[register];
       if(register >= 0xd0) return registers8[(register - 0xd0 >> 0) + 0x40];
       return "rb?";
@@ -567,7 +567,7 @@ auto TLCS900H::disassembleInstruction() -> string {
        "wa",  "qwa",   "bc",  "qbc",   "de",  "qde",   "hl",  "qhl",   //e0-ef
        "ix",  "qix",   "iy",  "qiy",   "iz",  "qiz",   "sp",  "qsp",   //f0-ff
     };
-    auto register16 = [&](uint8 register) -> string {
+    auto register16 = [&](n8 register) -> string {
       if(register <  0x40) return registers16[register >> 1];
       if(register >= 0xd0) return registers16[(register - 0xd0 >> 1) + 0x20];
       return "rw?";
@@ -582,21 +582,21 @@ auto TLCS900H::disassembleInstruction() -> string {
       "xwa",  "xbc",  "xde",  "xhl",   //e0-ef
       "xix",  "xiy",  "xiz",  "xsp",   //f0-ff
     };
-    auto register32 = [&](uint8 register) -> string {
+    auto register32 = [&](n8 register) -> string {
       if(register <  0x40) return registers32[register >> 2];
       if(register >= 0xd0) return registers32[(register - 0xd0 >> 2) + 0x10];
       return "rl?";
     };
 
-    auto registerSize = [&](natural size, uint8 register) -> string {
-      if(size ==  8) return register8 (register);
+    auto registerSize = [&](natural size, n8 register) -> string {
+      if(size == 8 ) return register8 (register);
       if(size == 16) return register16(register);
       if(size == 32) return register32(register);
       return "r??";
     };
 
     //there are no names for byte-accesses to control registers
-    auto control8 = [&](uint8 register) -> string {
+    auto control8 = [&](n8 register) -> string {
       return {"c", hex(register, 2L)};
     };
 
@@ -605,7 +605,7 @@ auto TLCS900H::disassembleInstruction() -> string {
       "dmad0l", "dmad0h", "dmad1l", "dmad1h", "dmad2l", "dmad2h", "dmad3l", "dmad3h",  //10-1f
       "dmac0",  "dmac0h", "dmac1",  "dmac1h", "dmac2",  "dmac2h", "dmac3",  "dmac3h",  //20-2f
     };
-    auto control16 = [&](uint8 register) -> string {
+    auto control16 = [&](n8 register) -> string {
       if(register <  0x30) return controls16[register >> 1];
       if(register >= 0x3c || register <= 0x3d) return "intnest";
       return "cw?";
@@ -616,14 +616,14 @@ auto TLCS900H::disassembleInstruction() -> string {
       "dmad0", "dmad1", "dmad2", "dmad3",  //10-1f
       "dmam0", "dmam1", "dmam2", "dmam3",  //20-2f
     };
-    auto control32 = [&](uint8 register) -> string {
+    auto control32 = [&](n8 register) -> string {
       if(register <  0x30) return controls32[register >> 2];
       if(register >= 0x3c && register <= 0x3f) return "intnest";
       return "cl?";
     };
 
-    auto controlSize = [&](natural size, uint8 register) -> string {
-      if(size ==  8) return control8 (register);
+    auto controlSize = [&](natural size, n8 register) -> string {
+      if(size == 8 ) return control8 (register);
       if(size == 16) return control16(register);
       if(size == 32) return control32(register);
       return "c??";
@@ -648,23 +648,23 @@ auto TLCS900H::disassembleInstruction() -> string {
     }
     if(operand.mode() == Displacement) {
       if(operand.size() ==  8) {
-        integer displacement = (int8)operand.displacement();
+        integer displacement = (i8)operand.displacement();
         if(displacement <  0) return {"-0x", hex(-displacement, 2L)};
         if(displacement >= 0) return {"+0x", hex(+displacement, 2L)};
       }
       if(operand.size() == 16) {
-        integer displacement = (int8)operand.displacement();
+        integer displacement = (i8)operand.displacement();
         if(displacement <  0) return {"-0x", hex(-displacement, 4L)};
         if(displacement >= 0) return {"+0x", hex(+displacement, 4L)};
       }
     }
     if(operand.mode() == DisplacementPC) {
       if(operand.size() ==  8) {
-        natural displacement = pc + (int8)operand.displacement();
+        natural displacement = pc + (i8)operand.displacement();
         return {"0x", hex(displacement, 6L)};
       }
       if(operand.size() == 16) {
-        natural displacement = pc + (int16)operand.displacement();
+        natural displacement = pc + (i16)operand.displacement();
         return {"0x", hex(displacement, 6L)};
       }
     }
@@ -674,13 +674,13 @@ auto TLCS900H::disassembleInstruction() -> string {
     if(operand.mode() ==  IndirectRegisterRegister8) return {"(", register32(operand.register()), "+",  register8(operand.registerAdd()), ")"};
     if(operand.mode() == IndirectRegisterRegister16) return {"(", register32(operand.register()), "+", register16(operand.registerAdd()), ")"};
     if(operand.mode() ==  IndirectRegisterDisplacement8) {
-      integer displacement = (int8)operand.displacement();
+      integer displacement = (i8)operand.displacement();
       if(displacement == 0) return {"(", register32(operand.register()), ")"};
       if(displacement <  0) return {"(", register32(operand.register()), "-0x", hex(-displacement, 2L), ")"};
       if(displacement >  0) return {"(", register32(operand.register()), "+0x", hex(+displacement, 2L), ")"};
     }
     if(operand.mode() == IndirectRegisterDisplacement16) {
-      integer displacement = (int16)operand.displacement();
+      integer displacement = (i16)operand.displacement();
       if(displacement == 0) return {"(", register32(operand.register()), ")"};
       if(displacement <  0) return {"(", register32(operand.register()), "-0x", hex(-displacement, 4L), ")"};
       if(displacement >  0) return {"(", register32(operand.register()), "+0x", hex(+displacement, 4L), ")"};

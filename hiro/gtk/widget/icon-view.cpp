@@ -6,7 +6,7 @@ static auto IconView_activate(GtkIconView* iconView, GtkTreePath* path, pIconVie
   if(!p->locked()) p->self().doActivate();
 }
 
-static auto IconView_buttonEvent(GtkTreeView* treeView, GdkEventButton* event, pIconView* p) -> int {
+static auto IconView_buttonEvent(GtkTreeView* treeView, GdkEventButton* event, pIconView* p) -> s32 {
   if(event->type == GDK_BUTTON_RELEASE && event->button == 3) {
     if(!p->locked()) p->self().doContext();
     return false;
@@ -121,7 +121,7 @@ auto pIconView::setGeometry(Geometry geometry) -> void {
   }
 }
 
-auto pIconView::setItemIcon(uint position, const image& icon) -> void {
+auto pIconView::setItemIcon(u32 position, const image& icon) -> void {
   if(position >= self().itemCount()) return;
   GtkTreeIter iter;
   if(gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(store), &iter, string{position})) {
@@ -134,7 +134,7 @@ auto pIconView::setItemIcon(uint position, const image& icon) -> void {
   }
 }
 
-auto pIconView::setItemSelected(uint position, bool selected) -> void {
+auto pIconView::setItemSelected(u32 position, bool selected) -> void {
   if(position >= self().itemCount()) return;
   lock();
   GtkTreePath* path = gtk_tree_path_new_from_string(string{position});
@@ -148,7 +148,7 @@ auto pIconView::setItemSelected(uint position, bool selected) -> void {
   unlock();
 }
 
-auto pIconView::setItemSelected(const vector<int>& selections) -> void {
+auto pIconView::setItemSelected(const vector<s32>& selections) -> void {
   lock();
   setItemSelectedNone();
   for(auto& position : selections) setItemSelected(position, true);
@@ -170,7 +170,7 @@ auto pIconView::setItemSelectedNone() -> void {
   unlock();
 }
 
-auto pIconView::setItemText(uint position, const string& text) -> void {
+auto pIconView::setItemText(u32 position, const string& text) -> void {
   if(position >= self().itemCount()) return;
   GtkTreeIter iter;
   if(gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(store), &iter, string{position})) {
@@ -185,7 +185,7 @@ auto pIconView::setOrientation(Orientation orientation) -> void {
 }
 
 auto pIconView::_updateSelected() -> void {
-  vector<uint> selected;
+  vector<u32> selected;
 
   GList* list = gtk_icon_view_get_selected_items(GTK_ICON_VIEW(subWidget));
   GList* p = list;
@@ -193,7 +193,7 @@ auto pIconView::_updateSelected() -> void {
   while(p) {
     auto path = (GtkTreePath*)p->data;
     char* pathString = gtk_tree_path_to_string(path);
-    uint position = toNatural(pathString);
+    u32 position = toNatural(pathString);
     g_free(pathString);
     selected.append(position);
     p = p->next;
@@ -204,7 +204,7 @@ auto pIconView::_updateSelected() -> void {
 
   bool identical = selected.size() == currentSelection.size();
   if(identical) {
-    for(uint n = 0; n < selected.size(); n++) {
+    for(u32 n = 0; n < selected.size(); n++) {
       if(selected[n] != currentSelection[n]) {
         identical = false;
         break;

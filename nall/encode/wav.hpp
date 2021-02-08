@@ -3,11 +3,11 @@
 namespace nall::Encode {
 
 struct WAV {
-  static auto stereo_16bit(const string& filename, array_view<int16_t> left, array_view<int16_t> right, uint frequency) -> bool {
+  static auto stereo_16bit(const string& filename, array_view<s16> left, array_view<s16> right, u32 frequency) -> bool {
     if(left.size() != right.size()) return false;
-    static uint channels = 2;
-    static uint bits = 16;
-    static uint samples = left.size();
+    static u32 channels = 2;
+    static u32 bits = 16;
+    static u32 samples = left.size();
 
     file_buffer fp;
     if(!fp.open(filename, file::mode::write)) return false;
@@ -40,7 +40,7 @@ struct WAV {
     fp.write('t');
     fp.write('a');
     fp.writel(samples * 4, 4);
-    for(uint sample : range(samples)) {
+    for(u32 sample : range(samples)) {
       fp.writel(left[sample], 2);
       fp.writel(right[sample], 2);
     }

@@ -50,12 +50,12 @@ auto mTableView::bordered() const -> bool {
   return state.bordered;
 }
 
-auto mTableView::column(uint position) const -> TableViewColumn {
+auto mTableView::column(u32 position) const -> TableViewColumn {
   if(position < columnCount()) return state.columns[position];
   return {};
 }
 
-auto mTableView::columnCount() const -> uint {
+auto mTableView::columnCount() const -> u32 {
   return state.columns.size();
 }
 
@@ -97,12 +97,12 @@ auto mTableView::headered() const -> bool {
   return state.headered;
 }
 
-auto mTableView::item(unsigned position) const -> TableViewItem {
+auto mTableView::item(u32 position) const -> TableViewItem {
   if(position < itemCount()) return state.items[position];
   return {};
 }
 
-auto mTableView::itemCount() const -> unsigned {
+auto mTableView::itemCount() const -> u32 {
   return state.items.size();
 }
 
@@ -145,7 +145,7 @@ auto mTableView::onToggle(const function<void (TableViewCell)>& callback) -> typ
 auto mTableView::remove(sTableViewColumn column) -> type& {
   signal(remove, column);
   state.columns.remove(column->offset());
-  for(uint n : range(column->offset(), columnCount())) {
+  for(u32 n : range(column->offset(), columnCount())) {
     state.columns[n]->adjustOffset(-1);
   }
   column->setParent();
@@ -155,7 +155,7 @@ auto mTableView::remove(sTableViewColumn column) -> type& {
 auto mTableView::remove(sTableViewItem item) -> type& {
   signal(remove, item);
   state.items.remove(item->offset());
-  for(uint n : range(item->offset(), itemCount())) {
+  for(u32 n : range(item->offset(), itemCount())) {
     state.items[n]->adjustOffset(-1);
   }
   item->setParent();
@@ -231,7 +231,7 @@ auto mTableView::setHeadered(bool headered) -> type& {
   return *this;
 }
 
-auto mTableView::setParent(mObject* parent, signed offset) -> type& {
+auto mTableView::setParent(mObject* parent, s32 offset) -> type& {
   for(auto& item : reverse(state.items)) item->destruct();
   for(auto& column : reverse(state.columns)) column->destruct();
   mObject::setParent(parent, offset);
@@ -248,7 +248,7 @@ auto mTableView::setSortable(bool sortable) -> type& {
 
 auto mTableView::sort() -> type& {
   Sort sorting = Sort::None;
-  uint offset = 0;
+  u32 offset = 0;
   for(auto& column : state.columns) {
     if(column->sorting() == Sort::None) continue;
     sorting = column->sorting();

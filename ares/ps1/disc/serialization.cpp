@@ -21,7 +21,7 @@ auto Disc::serialize(serializer& s) -> void {
   s(audio.volume);
   s(audio.volumeLatch);
 
-  s((uint&)cdda.playMode);
+  s((u32&)cdda.playMode);
   s(cdda.sample.left);
   s(cdda.sample.right);
 

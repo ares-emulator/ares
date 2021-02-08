@@ -11,73 +11,73 @@ struct EpsonRTC : Thread {
   auto initialize() -> void;
   auto unload() -> void;
   auto power() -> void;
-  auto synchronize(uint64 timestamp) -> void;
+  auto synchronize(n64 timestamp) -> void;
 
-  auto read(uint24 address, uint8 data) -> uint8;
-  auto write(uint24 address, uint8 data) -> void;
+  auto read(n24 address, n8 data) -> n8;
+  auto write(n24 address, n8 data) -> void;
 
   auto serialize(serializer&) -> void;
 
-  uint21 clocks;
-  uint seconds;
+  n21 clocks;
+  n32 seconds;
 
-  uint2 chipselect;
-  enum class State : uint { Mode, Seek, Read, Write } state;
-  uint4 mdr;
-  uint4 offset;
-  uint wait;
-  uint1 ready;
-  uint1 holdtick;
+  n2  chipselect;
+  enum class State : u32 { Mode, Seek, Read, Write } state;
+  n4  mdr;
+  n4  offset;
+  u32 wait;
+  n1  ready;
+  n1  holdtick;
 
-  uint4 secondlo;
-  uint3 secondhi;
-  uint1 batteryfailure;
+  n4  secondlo;
+  n3  secondhi;
+  n1  batteryfailure;
 
-  uint4 minutelo;
-  uint3 minutehi;
-  uint1 resync;
+  n4  minutelo;
+  n3  minutehi;
+  n1  resync;
 
-  uint4 hourlo;
-  uint2 hourhi;
-  uint1 meridian;
+  n4  hourlo;
+  n2  hourhi;
+  n1  meridian;
 
-  uint4 daylo;
-  uint2 dayhi;
-  uint1 dayram;
+  n4  daylo;
+  n2  dayhi;
+  n1  dayram;
 
-  uint4 monthlo;
-  uint1 monthhi;
-  uint2 monthram;
+  n4  monthlo;
+  n1  monthhi;
+  n2  monthram;
 
-  uint4 yearlo;
-  uint4 yearhi;
+  n4  yearlo;
+  n4  yearhi;
 
-  uint3 weekday;
+  n3  weekday;
 
-  uint1 hold;
-  uint1 calendar;
-  uint1 irqflag;
-  uint1 roundseconds;
+  n1  hold;
+  n1  calendar;
+  n1  irqflag;
+  n1  roundseconds;
 
-  uint1 irqmask;
-  uint1 irqduty;
-  uint2 irqperiod;
+  n1  irqmask;
+  n1  irqduty;
+  n2  irqperiod;
 
-  uint1 pause;
-  uint1 stop;
-  uint1 atime;  //astronomical time (24-hour mode)
-  uint1 test;
+  n1  pause;
+  n1  stop;
+  n1  atime;  //astronomical time (24-hour mode)
+  n1  test;
 
   //memory.cpp
   auto rtcReset() -> void;
-  auto rtcRead(uint4 address) -> uint4;
-  auto rtcWrite(uint4 address, uint4 data) -> void;
+  auto rtcRead(n4 address) -> n4;
+  auto rtcWrite(n4 address, n4 data) -> void;
 
-  auto load(const uint8* data) -> void;
-  auto save(uint8* data) -> void;
+  auto load(const n8* data) -> void;
+  auto save(n8* data) -> void;
 
   //time.cpp
-  auto irq(uint2 period) -> void;
+  auto irq(n2 period) -> void;
   auto duty() -> void;
   auto roundSeconds() -> void;
   auto tick() -> void;

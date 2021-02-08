@@ -76,7 +76,7 @@ auto pTextEdit::setTextCursor(TextCursor cursor) -> void {
   GtkTextIter offset, length;
   gtk_text_buffer_get_end_iter(textBuffer, &offset);
   gtk_text_buffer_get_end_iter(textBuffer, &length);
-  int end = gtk_text_iter_get_offset(&offset);
+  s32 end = gtk_text_iter_get_offset(&offset);
   gtk_text_iter_set_offset(&offset, max(0, min(end, cursor.offset())));
   gtk_text_iter_set_offset(&length, max(0, min(end, cursor.offset() + cursor.length())));
   gtk_text_buffer_select_range(textBuffer, &offset, &length);
@@ -104,16 +104,16 @@ auto pTextEdit::text() const -> string {
 
 auto pTextEdit::textCursor() const -> TextCursor {
   TextCursor cursor;
-  int offset = 0;
+  s32 offset = 0;
   g_object_get(G_OBJECT(textBuffer), "cursor-position", &offset, nullptr);
   cursor.setOffset(offset);
   GtkTextIter start, end;
   if(gtk_text_buffer_get_selection_bounds(textBuffer, &start, &end)) {
     //if selecting text from left to right, the cursor may be ahead of the selection start ...
     //since hiro combines selection bounds (end-start) into length, move the offset to the start
-    int origin = gtk_text_iter_get_offset(&start);
+    s32 origin = gtk_text_iter_get_offset(&start);
     cursor.setOffset(origin);
-    int length = gtk_text_iter_get_offset(&end) - origin;
+    s32 length = gtk_text_iter_get_offset(&end) - origin;
     cursor.setLength(length);
   }
   return cursor;

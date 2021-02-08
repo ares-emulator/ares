@@ -1,11 +1,11 @@
 auto PPU::DAC::prepare() -> void {
   bool hires = ppu.io.pseudoHires || ppu.io.bgMode == 5 || ppu.io.bgMode == 6;
 
-  uint15 aboveColor = cgram[0];
-  uint15 belowColor = hires ? cgram[0] : fixedColor();
+  n15 aboveColor = cgram[0];
+  n15 belowColor = hires ? cgram[0] : fixedColor();
   if(ppu.io.displayDisable) aboveColor = 0, belowColor = 0;
 
-  for(uint x : range(256)) {
+  for(u32 x : range(256)) {
     above[x] = {PPU::Source::COL, 0, aboveColor};
     below[x] = {PPU::Source::COL, 0, belowColor};
   }
@@ -16,19 +16,19 @@ auto PPU::DAC::render() -> void {
   ppu.window.render(window, window.belowMask, windowBelow);
 
   auto vcounter = ppu.vcounter();
-  auto output = (uint32*)ppu.screen->pixels().data();
+  auto output = (n32*)ppu.screen->pixels().data();
   if(!ppu.state.overscan) vcounter += 8;
   if(vcounter < 240) {
     output += vcounter * 2 * 512;
     if(ppu.interlace() && ppu.field()) output += 512;
 
-    uint luma = ppu.io.displayBrightness << 15;
+    u32 luma = ppu.io.displayBrightness << 15;
     if(!ppu.hires()) {
-      for(uint x : range(256)) {
+      for(u32 x : range(256)) {
         *output++ = luma | pixel(x, above[x], below[x]);
       }
     } else {
-      for(uint x : range(256)) {
+      for(u32 x : range(256)) {
         *output++ = luma | pixel(x, below[x], above[x]);
         *output++ = luma | pixel(x, above[x], below[x]);
       }
@@ -36,7 +36,7 @@ auto PPU::DAC::render() -> void {
   }
 }
 
-auto PPU::DAC::pixel(uint8 x, Pixel above, Pixel below) const -> uint15 {
+auto PPU::DAC::pixel(n8 x, Pixel above, Pixel below) const -> n15 {
   if(!windowAbove[x]) above.color = 0x0000;
   if(!windowBelow[x]) return above.color;
   if(!io.colorEnable[above.source]) return above.color;
@@ -44,18 +44,18 @@ auto PPU::DAC::pixel(uint8 x, Pixel above, Pixel below) const -> uint15 {
   return blend(above.color, below.color, io.colorHalve && windowAbove[x] && below.source != PPU::Source::COL);
 }
 
-auto PPU::DAC::blend(uint15 x, uint15 y, bool halve) const -> uint15 {
+auto PPU::DAC::blend(n15 x, n15 y, bool halve) const -> n15 {
   if(!io.colorMode) {
     if(!halve) {
-      uint sum = x + y;
-      uint carry = (sum - ((x ^ y) & 0x0421)) & 0x8420;
+      u32 sum = x + y;
+      u32 carry = (sum - ((x ^ y) & 0x0421)) & 0x8420;
       return (sum - carry) | (carry - (carry >> 5));
     } else {
       return (x + y - ((x ^ y) & 0x0421)) >> 1;
     }
   } else {
-    uint diff = x - y + 0x8420;
-    uint borrow = (diff - ((x ^ y) & 0x8420)) & 0x8420;
+    u32 diff = x - y + 0x8420;
+    u32 borrow = (diff - ((x ^ y) & 0x8420)) & 0x8420;
     if(!halve) {
       return   (diff - borrow) & (borrow - (borrow >> 5));
     } else {
@@ -64,15 +64,15 @@ auto PPU::DAC::blend(uint15 x, uint15 y, bool halve) const -> uint15 {
   }
 }
 
-inline auto PPU::DAC::plotAbove(uint8 x, uint8 source, uint8 priority, uint15 color) -> void {
+inline auto PPU::DAC::plotAbove(n8 x, n8 source, n8 priority, n15 color) -> void {
   if(priority > above[x].priority) above[x] = {source, priority, color};
 }
 
-inline auto PPU::DAC::plotBelow(uint8 x, uint8 source, uint8 priority, uint15 color) -> void {
+inline auto PPU::DAC::plotBelow(n8 x, n8 source, n8 priority, n15 color) -> void {
   if(priority > below[x].priority) below[x] = {source, priority, color};
 }
 
-inline auto PPU::DAC::directColor(uint8 palette, uint3 paletteGroup) const -> uint15 {
+inline auto PPU::DAC::directColor(n8 palette, n3 paletteGroup) const -> n15 {
   //palette = -------- BBGGGRRR
   //group   = -------- -----bgr
   //output  = 0BBb00GG Gg0RRRr0
@@ -81,7 +81,7 @@ inline auto PPU::DAC::directColor(uint8 palette, uint3 paletteGroup) const -> ui
        + (palette << 2 & 0x001c) + (paletteGroup <<  1 & 0x0002);
 }
 
-inline auto PPU::DAC::fixedColor() const -> uint15 {
+inline auto PPU::DAC::fixedColor() const -> n15 {
   return io.colorRed << 0 | io.colorGreen << 5 | io.colorBlue << 10;
 }
 

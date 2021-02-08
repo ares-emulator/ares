@@ -2,7 +2,7 @@
 
 namespace ares::MegaDrive {
 
-static uint16 Unmapped = 0;
+static n16 Unmapped = 0;
 
 MCD mcd;
 #include "bus.cpp"
@@ -140,7 +140,7 @@ auto MCD::main() -> void {
   instruction();
 }
 
-auto MCD::step(uint clocks) -> void {
+auto MCD::step(u32 clocks) -> void {
   gpu.step(clocks);
   counter.divider += clocks;
   while(counter.divider >= 384) {
@@ -164,18 +164,18 @@ auto MCD::step(uint clocks) -> void {
   Thread::step(clocks);
 }
 
-auto MCD::idle(uint clocks) -> void {
+auto MCD::idle(u32 clocks) -> void {
   step(clocks);
 }
 
-auto MCD::wait(uint clocks) -> void {
+auto MCD::wait(u32 clocks) -> void {
   step(clocks);
   Thread::synchronize(cpu);
 }
 
 auto MCD::power(bool reset) -> void {
   if(auto fp = platform->open(expansion.node, "program.rom", File::Read, File::Required)) {
-    for(uint address : range(bios.size())) bios.program(address, fp->readm(2));
+    for(u32 address : range(bios.size())) bios.program(address, fp->readm(2));
   }
 
   M68K::power();

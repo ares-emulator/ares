@@ -6,7 +6,7 @@ auto CPU::FPU::setFloatingPointMode(bool mode) -> void {
   }
 }
 
-template<> auto CPU::fgr<s32>(uint index) -> s32& {
+template<> auto CPU::fgr<s32>(u32 index) -> s32& {
   if(scc.status.floatingPointMode) {
     return fpu.r[index].s32;
   } else if(index & 1) {
@@ -16,11 +16,11 @@ template<> auto CPU::fgr<s32>(uint index) -> s32& {
   }
 }
 
-template<> auto CPU::fgr<u32>(uint index) -> u32& {
+template<> auto CPU::fgr<u32>(u32 index) -> u32& {
   return (u32&)fgr<s32>(index);
 }
 
-template<> auto CPU::fgr<f32>(uint index) -> f32& {
+template<> auto CPU::fgr<f32>(u32 index) -> f32& {
   if(scc.status.floatingPointMode) {
     return fpu.r[index].f32;
   } else if(index & 1) {
@@ -30,7 +30,7 @@ template<> auto CPU::fgr<f32>(uint index) -> f32& {
   }
 }
 
-template<> auto CPU::fgr<s64>(uint index) -> s64& {
+template<> auto CPU::fgr<s64>(u32 index) -> s64& {
   if(scc.status.floatingPointMode) {
     return fpu.r[index].s64;
   } else {
@@ -38,11 +38,11 @@ template<> auto CPU::fgr<s64>(uint index) -> s64& {
   }
 }
 
-template<> auto CPU::fgr<u64>(uint index) -> u64& {
+template<> auto CPU::fgr<u64>(u32 index) -> u64& {
   return (u64&)fgr<s64>(index);
 }
 
-template<> auto CPU::fgr<f64>(uint index) -> f64& {
+template<> auto CPU::fgr<f64>(u32 index) -> f64& {
   if(scc.status.floatingPointMode) {
     return fpu.r[index].f64;
   } else {
@@ -50,8 +50,8 @@ template<> auto CPU::fgr<f64>(uint index) -> f64& {
   }
 }
 
-auto CPU::getControlRegisterFPU(uint5 index) -> u32 {
-  uint32 data;
+auto CPU::getControlRegisterFPU(n5 index) -> u32 {
+  n32 data;
   switch(index) {
   case  0:  //coprocessor revision identifier
     data.bit(0, 7) = fpu.coprocessor.revision;
@@ -83,7 +83,7 @@ auto CPU::getControlRegisterFPU(uint5 index) -> u32 {
   return data;
 }
 
-auto CPU::setControlRegisterFPU(uint5 index, uint32 data) -> void {
+auto CPU::setControlRegisterFPU(n5 index, n32 data) -> void {
   //read-only variables are defined but commented out for documentation purposes
   switch(index) {
   case  0:  //coprocessor revision identifier
@@ -91,7 +91,7 @@ auto CPU::setControlRegisterFPU(uint5 index, uint32 data) -> void {
   //fpu.coprocessor.implementation = data.bit(8,15);
     break;
   case 31: {//control / status register
-    uint roundModePrevious = fpu.csr.roundMode;
+    u32 roundModePrevious = fpu.csr.roundMode;
     fpu.csr.roundMode.bit(0)             = data.bit( 0);
     fpu.csr.roundMode.bit(1)             = data.bit( 1);
     fpu.csr.flag.inexact                 = data.bit( 2);
@@ -286,7 +286,7 @@ auto CPU::instructionFTRUNC_W_D(u8 fd, u8 fs) -> void { FD(s32) = FS(f64) < 0 ? 
 
 auto CPU::instructionLDC1(u8 ft, cr64& rs, s16 imm) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  if(auto data = readDouble(rs.u32 + imm)) FT(u64) = *data;
+  if(auto data = readDual(rs.u32 + imm)) FT(u64) = *data;
 }
 
 auto CPU::instructionLWC1(u8 ft, cr64& rs, s16 imm) -> void {
@@ -304,7 +304,7 @@ auto CPU::instructionMTC1(cr64& rt, u8 fs) -> void {
 
 auto CPU::instructionSDC1(u8 ft, cr64& rs, s16 imm) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  writeDouble(rs.u32 + imm, FT(u64));
+  writeDual(rs.u32 + imm, FT(u64));
 }
 
 auto CPU::instructionSWC1(u8 ft, cr64& rs, s16 imm) -> void {

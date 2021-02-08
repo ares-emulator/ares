@@ -5,22 +5,22 @@ namespace ares {
 
 #include "serialization.cpp"
 
-auto YM2149::clock() -> array<uint5[3]> {
+auto YM2149::clock() -> array<n5[3]> {
   toneA.clock();
   toneB.clock();
   toneC.clock();
   noise.clock();
   envelope.clock();
 
-  array<uint5[3]> output;
+  array<n5[3]> output;
   if((toneA.output | channelA.tone) & (noise.output | channelA.noise)) {
-    output[0] = channelA.envelope ? envelope.output : uint5(channelA.volume << 1 | 1);
+    output[0] = channelA.envelope ? envelope.output : n5(channelA.volume << 1 | 1);
   }
   if((toneB.output | channelB.tone) & (noise.output | channelB.noise)) {
-    output[1] = channelB.envelope ? envelope.output : uint5(channelB.volume << 1 | 1);
+    output[1] = channelB.envelope ? envelope.output : n5(channelB.volume << 1 | 1);
   }
   if((toneC.output | channelC.tone) & (noise.output | channelC.noise)) {
-    output[2] = channelC.envelope ? envelope.output : uint5(channelC.volume << 1 | 1);
+    output[2] = channelC.envelope ? envelope.output : n5(channelC.volume << 1 | 1);
   }
   return output;
 }
@@ -67,8 +67,8 @@ auto YM2149::Envelope::clock() -> void {
   }
 }
 
-auto YM2149::read() -> uint8 {
-  uint8 data;
+auto YM2149::read() -> n8 {
+  n8 data;
 
   switch(io.register) {
   case  0:
@@ -145,7 +145,7 @@ auto YM2149::read() -> uint8 {
   return data;
 }
 
-auto YM2149::write(uint8 data) -> void {
+auto YM2149::write(n8 data) -> void {
   switch(io.register) {
   case  0:
     toneA.period.bit(0, 7) = data.bit(0,7);
@@ -222,7 +222,7 @@ auto YM2149::write(uint8 data) -> void {
   }
 }
 
-auto YM2149::select(uint4 data) -> void {
+auto YM2149::select(n4 data) -> void {
   io.register = data;
 }
 

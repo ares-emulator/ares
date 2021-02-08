@@ -8,11 +8,11 @@ inline auto vector<string>::_split(string_view source, string_view find, long li
   if(limit <= 0 || find.size() == 0) return *this;
 
   const char* p = source.data();
-  int size = source.size();
-  int base = 0;
-  int matches = 0;
+  s32 size = source.size();
+  s32 base = 0;
+  s32 matches = 0;
 
-  for(int n = 0, quoted = 0; n <= size - (int)find.size();) {
+  for(s32 n = 0, quoted = 0; n <= size - (s32)find.size();) {
     if constexpr(Quoted) {
       if(quoted && p[n] == '\\') { n += 2; continue; }
       if(p[n] == '\'' && quoted != 2) { quoted ^= 1; n++; continue; }

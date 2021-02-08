@@ -82,7 +82,7 @@ auto mTabFrameItem::setMovable(bool movable) -> type& {
   return *this;
 }
 
-auto mTabFrameItem::setParent(mObject* parent, int offset) -> type& {
+auto mTabFrameItem::setParent(mObject* parent, s32 offset) -> type& {
   if(auto& sizable = state.sizable) sizable->destruct();
   mObject::setParent(parent, offset);
   if(auto& sizable = state.sizable) sizable->setParent(this, sizable->offset());

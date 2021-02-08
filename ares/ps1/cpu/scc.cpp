@@ -1,5 +1,5 @@
 auto CPU::getControlRegister(u8 index) -> u32 {
-  uint32 data = 0;
+  n32 data = 0;
 
   switch(index & 15) {
 
@@ -94,7 +94,7 @@ auto CPU::getControlRegister(u8 index) -> u32 {
 }
 
 auto CPU::setControlRegister(u8 index, u32 value) -> void {
-  uint32 data = value;
+  n32 data = value;
 
   switch(index & 15) {
 

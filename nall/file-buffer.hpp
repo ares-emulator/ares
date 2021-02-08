@@ -20,14 +20,14 @@ namespace nall {
 //this speeds up Windows substantially, without harming performance elsewhere much
 
 struct file_buffer {
-  struct mode { enum : uint { read, write, modify, append }; };
-  struct index { enum : uint { absolute, relative }; };
+  struct mode  { enum : u32 { read, write, modify, append }; };
+  struct index { enum : u32 { absolute, relative }; };
 
   file_buffer(const file_buffer&) = delete;
   auto operator=(const file_buffer&) -> file_buffer& = delete;
 
   file_buffer() = default;
-  file_buffer(const string& filename, uint mode) { open(filename, mode); }
+  file_buffer(const string& filename, u32 mode) { open(filename, mode); }
 
   file_buffer(file_buffer&& source) { operator=(move(source)); }
 
@@ -56,22 +56,22 @@ struct file_buffer {
     return (bool)fileHandle;
   }
 
-  auto read() -> uint8_t {
+  auto read() -> u8 {
     if(!fileHandle) return 0;             //file not open
     if(fileOffset >= fileSize) return 0;  //cannot read past end of file
     bufferSynchronize();
     return buffer[fileOffset++ & buffer.size() - 1];
   }
 
-  template<typename T = uint64_t> auto readl(uint length = 1) -> T {
+  template<typename T = u64> auto readl(u32 length = 1) -> T {
     T data = 0;
-    for(uint n : range(length)) {
+    for(u32 n : range(length)) {
       data |= (T)read() << n * 8;
     }
     return data;
   }
 
-  template<typename T = uint64_t> auto readm(uint length = 1) -> T {
+  template<typename T = u64> auto readm(u32 length = 1) -> T {
     T data = 0;
     while(length--) {
       data <<= 8;
@@ -80,18 +80,18 @@ struct file_buffer {
     return data;
   }
 
-  auto reads(uint length) -> string {
+  auto reads(u32 length) -> string {
     string result;
     result.resize(length);
     for(auto& byte : result) byte = read();
     return result;
   }
 
-  auto read(array_span<uint8_t> memory) -> void {
+  auto read(array_span<u8> memory) -> void {
     for(auto& byte : memory) byte = read();
   }
 
-  auto write(uint8_t data) -> void {
+  auto write(u8 data) -> void {
     if(!fileHandle) return;             //file not open
     if(fileMode == mode::read) return;  //writes not permitted
     bufferSynchronize();
@@ -100,16 +100,16 @@ struct file_buffer {
     if(fileOffset > fileSize) fileSize = fileOffset;
   }
 
-  template<typename T = uint64_t> auto writel(T data, uint length = 1) -> void {
+  template<typename T = u64> auto writel(T data, u32 length = 1) -> void {
     while(length--) {
-      write(uint8_t(data));
+      write(u8(data));
       data >>= 8;
     }
   }
 
-  template<typename T = uint64_t> auto writem(T data, uint length = 1) -> void {
-    for(uint n : reverse(range(length))) {
-      write(uint8_t(data >> n * 8));
+  template<typename T = u64> auto writem(T data, u32 length = 1) -> void {
+    for(u32 n : reverse(range(length))) {
+      write(u8(data >> n * 8));
     }
   }
 
@@ -117,7 +117,7 @@ struct file_buffer {
     for(auto& byte : s) write(byte);
   }
 
-  auto write(array_view<uint8_t> memory) -> void {
+  auto write(array_view<u8> memory) -> void {
     for(auto& byte : memory) write(byte);
   }
 
@@ -131,11 +131,11 @@ struct file_buffer {
     fflush(fileHandle);
   }
 
-  auto seek(int64_t offset, uint index_ = index::absolute) -> void {
+  auto seek(s64 offset, u32 index_ = index::absolute) -> void {
     if(!fileHandle) return;
     bufferFlush();
 
-    int64_t seekOffset = fileOffset;
+    s64 seekOffset = fileOffset;
     switch(index_) {
     case index::absolute: seekOffset  = offset; break;
     case index::relative: seekOffset += offset; break;
@@ -154,17 +154,17 @@ struct file_buffer {
     fileOffset = seekOffset;
   }
 
-  auto offset() const -> uint64_t {
+  auto offset() const -> u64 {
     if(!fileHandle) return 0;
     return fileOffset;
   }
 
-  auto size() const -> uint64_t {
+  auto size() const -> u64 {
     if(!fileHandle) return 0;
     return fileSize;
   }
 
-  auto truncate(uint64_t size) -> bool {
+  auto truncate(u64 size) -> bool {
     if(!fileHandle) return false;
     #if defined(API_POSIX)
     return ftruncate(fileno(fileHandle), size) == 0;
@@ -178,7 +178,7 @@ struct file_buffer {
     return fileOffset >= fileSize;
   }
 
-  auto open(const string& filename, uint mode_) -> bool {
+  auto open(const string& filename, u32 mode_) -> bool {
     close();
 
     switch(fileMode = mode_) {
@@ -186,12 +186,12 @@ struct file_buffer {
     case mode::read:   fileHandle = fopen(filename, "rb" ); break;
     case mode::write:  fileHandle = fopen(filename, "wb+"); break;  //need read permission for buffering
     case mode::modify: fileHandle = fopen(filename, "rb+"); break;
-    case mode::append: fileHandle = fopen(filename, "wb+"); break;
+    case mode::append: fileHandle = fopen(filename, "ab+"); break;
     #elif defined(API_WINDOWS)
     case mode::read:   fileHandle = _wfopen(utf16_t(filename), L"rb" ); break;
     case mode::write:  fileHandle = _wfopen(utf16_t(filename), L"wb+"); break;
     case mode::modify: fileHandle = _wfopen(utf16_t(filename), L"rb+"); break;
-    case mode::append: fileHandle = _wfopen(utf16_t(filename), L"wb+"); break;
+    case mode::append: fileHandle = _wfopen(utf16_t(filename), L"ab+"); break;
     #endif
     }
     if(!fileHandle) return false;
@@ -212,13 +212,13 @@ struct file_buffer {
   }
 
 private:
-  array<uint8_t[4096]> buffer;
-  int bufferOffset = -1;
+  array<u8[4096]> buffer;
+  s32 bufferOffset = -1;
   bool bufferDirty = false;
   FILE* fileHandle = nullptr;
-  uint64_t fileOffset = 0;
-  uint64_t fileSize = 0;
-  uint fileMode = mode::read;
+  u64 fileOffset = 0;
+  u64 fileSize = 0;
+  u32 fileMode = mode::read;
 
   auto bufferSynchronize() -> void {
     if(!fileHandle) return;
@@ -227,7 +227,7 @@ private:
     bufferFlush();
     bufferOffset = fileOffset & ~(buffer.size() - 1);
     fseek(fileHandle, bufferOffset, SEEK_SET);
-    uint64_t length = bufferOffset + buffer.size() <= fileSize ? buffer.size() : fileSize & buffer.size() - 1;
+    u64 length = bufferOffset + buffer.size() <= fileSize ? buffer.size() : fileSize & buffer.size() - 1;
     if(length) (void)fread(buffer.data(), 1, length, fileHandle);
   }
 
@@ -238,7 +238,7 @@ private:
     if(!bufferDirty) return;            //buffer unmodified since read
 
     fseek(fileHandle, bufferOffset, SEEK_SET);
-    uint64_t length = bufferOffset + buffer.size() <= fileSize ? buffer.size() : fileSize & buffer.size() - 1;
+    u64 length = bufferOffset + buffer.size() <= fileSize ? buffer.size() : fileSize & buffer.size() - 1;
     if(length) (void)fwrite(buffer.data(), 1, length, fileHandle);
     bufferOffset = -1;
     bufferDirty = false;

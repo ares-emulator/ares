@@ -1,24 +1,24 @@
 struct OAM {
   //oam.cpp
-  auto read(uint10 address) -> uint8;
-  auto write(uint10 address, uint8 data) -> void;
+  auto read(n10 address) -> n8;
+  auto write(n10 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
   struct Object {
     //oam.cpp
-    auto width() const -> uint;
-    auto height() const -> uint;
+    auto width() const -> u32;
+    auto height() const -> u32;
 
-    uint9 x;
-    uint8 y;
-    uint8 character;
-    uint1 nameselect;
-    uint1 vflip;
-    uint1 hflip;
-    uint2 priority;
-    uint3 palette;
-    uint1 size;
+    n9 x;
+    n8 y;
+    n8 character;
+    n1 nameselect;
+    n1 vflip;
+    n1 hflip;
+    n2 priority;
+    n3 palette;
+    n1 size;
   } objects[128];
 };

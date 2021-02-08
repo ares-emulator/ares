@@ -14,7 +14,7 @@ auto mTimer::doActivate() const -> void {
   if(state.onActivate) return state.onActivate();
 }
 
-auto mTimer::interval() const -> unsigned {
+auto mTimer::interval() const -> u32 {
   return state.interval;
 }
 
@@ -23,7 +23,7 @@ auto mTimer::onActivate(const function<void ()>& callback) -> type& {
   return *this;
 }
 
-auto mTimer::setInterval(unsigned interval) -> type& {
+auto mTimer::setInterval(u32 interval) -> type& {
   state.interval = interval;
   signal(setInterval, interval);
   return *this;

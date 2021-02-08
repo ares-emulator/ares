@@ -5,13 +5,13 @@ struct mTimer : mObject {
   mTimer();
 
   auto doActivate() const -> void;
-  auto interval() const -> uint;
+  auto interval() const -> u32;
   auto onActivate(const function<void ()>& callback = {}) -> type&;
-  auto setInterval(uint interval = 0) -> type&;
+  auto setInterval(u32 interval = 0) -> type&;
 
 //private:
   struct State {
-    uint interval = 0;
+    u32 interval = 0;
     function<void ()> onActivate;
   } state;
 };

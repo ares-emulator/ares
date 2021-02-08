@@ -15,11 +15,11 @@ struct ZIP {
 
   //append path: append("path/");
   //append file: append("path/file", data, size);
-  auto append(string filename, const uint8_t* data = nullptr, uint size = 0u, time_t timestamp = 0) -> void {
+  auto append(string filename, const u8* data = nullptr, u32 size = 0u, time_t timestamp = 0) -> void {
     filename.transform("\\", "/");
     if(!timestamp) timestamp = this->timestamp;
-    uint32_t checksum = Hash::CRC32({data, size}).digest().hex();
-    directory.append({filename, timestamp, checksum, size, (uint32_t)fp.offset()});
+    u32 checksum = Hash::CRC32({data, size}).digest().hex();
+    directory.append({filename, timestamp, checksum, size, (u32)fp.offset()});
 
     fp.writel(0x04034b50, 4);         //signature
     fp.writel(0x0014, 2);             //minimum version (2.0)
@@ -39,7 +39,7 @@ struct ZIP {
 
   ~ZIP() {
     //central directory
-    uint baseOffset = fp.offset();
+    u32 baseOffset = fp.offset();
     for(auto& entry : directory) {
       fp.writel(0x02014b50, 4);               //signature
       fp.writel(0x0014, 2);                   //version made by (2.0)
@@ -60,7 +60,7 @@ struct ZIP {
       fp.writel(entry.offset, 4);             //relative offset of file header
       fp.print(entry.filename);
     }
-    uint finishOffset = fp.offset();
+    u32 finishOffset = fp.offset();
 
     //end of central directory
     fp.writel(0x06054b50, 4);                 //signature
@@ -76,12 +76,12 @@ struct ZIP {
   }
 
 protected:
-  auto makeTime(time_t timestamp) -> uint16_t {
+  auto makeTime(time_t timestamp) -> u16 {
     tm* info = localtime(&timestamp);
     return (info->tm_hour << 11) | (info->tm_min << 5) | (info->tm_sec >> 1);
   }
 
-  auto makeDate(time_t timestamp) -> uint16_t {
+  auto makeDate(time_t timestamp) -> u16 {
     tm* info = localtime(&timestamp);
     return ((info->tm_year - 80) << 9) | ((1 + info->tm_mon) << 5) + (info->tm_mday);
   }
@@ -91,9 +91,9 @@ protected:
   struct entry_t {
     string filename;
     time_t timestamp;
-    uint32_t checksum;
-    uint32_t size;
-    uint32_t offset;
+    u32 checksum;
+    u32 size;
+    u32 offset;
   };
   vector<entry_t> directory;
 };

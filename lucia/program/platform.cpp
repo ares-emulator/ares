@@ -55,7 +55,7 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
     emulator->latch.width = node->width();
     emulator->latch.height = node->height();
     emulator->latch.rotation = node->rotation();
-    if(settings.video.adaptiveSizing) presentation.resizeWindow();
+    emulator->latch.changed = true;  //signal Program::main() to potentially resize the presentation window
   }
 
   u32 videoWidth = node->width() * node->scaleX();
@@ -64,7 +64,6 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
   if(node->rotation() == 90 || node->rotation() == 270) swap(videoWidth, videoHeight);
 
   ruby::video.lock();
-  ruby::video.acquireContext();
   auto [viewportWidth, viewportHeight] = ruby::video.size();
   u32 multiplierX = viewportWidth / videoWidth;
   u32 multiplierY = viewportHeight / videoHeight;
@@ -96,7 +95,6 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
     ruby::video.release();
     ruby::video.output(outputWidth, outputHeight);
   }
-  ruby::video.releaseContext();
   ruby::video.unlock();
 
   static u64 frameCounter = 0, previous, current;

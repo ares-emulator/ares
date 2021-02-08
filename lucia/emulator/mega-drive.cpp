@@ -25,13 +25,9 @@ MegaDrive::MegaDrive() {
 }
 
 auto MegaDrive::load() -> bool {
-  if(!ares::MegaDrive::load(root, "Mega Drive")) return false;
-
-  if(auto region = root->find<ares::Node::Setting::String>("Region")) {
-    if(settings.boot.prefer == "NTSC-U") region->setValue("NTSC-U → NTSC-J → PAL");
-    if(settings.boot.prefer == "NTSC-J") region->setValue("NTSC-J → NTSC-U → PAL");
-    if(settings.boot.prefer == "PAL"   ) region->setValue("PAL → NTSC-U → NTSC-J");
-  }
+  auto region = Emulator::region();
+  auto system = region == "NTSC-U" ? "Genesis" : "Mega Drive";
+  if(!ares::MegaDrive::load(root, {"[Sega] ", system, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -100,22 +96,14 @@ MegaCD::MegaCD() {
 }
 
 auto MegaCD::load() -> bool {
-  if(!ares::MegaDrive::load(root, "Mega Drive")) return false;
+  auto region = Emulator::region();
+  auto system = region == "NTSC-U" ? "Genesis" : "Mega Drive";
+  if(!ares::MegaDrive::load(root, {"[Sega] ", system, " (", region, ")"})) return false;
 
-  if(auto region = root->find<ares::Node::Setting::String>("Region")) {
-    if(settings.boot.prefer == "NTSC-U") region->setValue("NTSC-U → NTSC-J → PAL"), regionID = 0;
-    if(settings.boot.prefer == "NTSC-J") region->setValue("NTSC-J → NTSC-U → PAL"), regionID = 1;
-    if(settings.boot.prefer == "PAL"   ) region->setValue("PAL → NTSC-U → NTSC-J"), regionID = 2;
-  }
-
-  if(auto manifest = medium->manifest(game.location)) {
-    auto document = BML::unserialize(manifest);
-    auto regions = document["game/region"].string().split(",");
-    //if statements below are ordered by lowest to highest priority
-    if(regions.find("PAL"   )) regionID = 2;
-    if(regions.find("NTSC-J")) regionID = 1;
-    if(regions.find("NTSC-U")) regionID = 0;
-  }
+  //if statements below are ordered by lowest to highest priority
+  if(region == "PAL"   ) regionID = 2;
+  if(region == "NTSC-J") regionID = 1;
+  if(region == "NTSC-U") regionID = 0;
 
   if(!file::exists(firmware[regionID].location)) {
     errorFirmwareRequired(firmware[regionID]);

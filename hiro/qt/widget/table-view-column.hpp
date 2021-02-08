@@ -19,7 +19,7 @@ struct pTableViewColumn : pObject {
   auto setText(const string& text) -> void;
   auto setVerticalAlignment(double alignment) -> void;
   auto setVisible(bool visible) -> void;
-  auto setWidth(signed width) -> void;
+  auto setWidth(s32 width) -> void;
 
   auto _parent() -> maybe<pTableView&>;
   auto _setState() -> void;

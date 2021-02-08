@@ -34,7 +34,7 @@ struct serial {
   }
 
   //-1 on error, otherwise return bytes read
-  auto read(uint8_t* data, uint length) -> int {
+  auto read(u8* data, u32 length) -> s32 {
     if(!opened) return -1;
     return ::read(port, (void*)data, length);
   }
@@ -53,14 +53,14 @@ struct serial {
   }
 
   //-1 on error, otherwise return bytes written
-  auto write(const uint8_t* data, uint length) -> int {
+  auto write(const u8* data, u32 length) -> s32 {
     if(!opened) return -1;
     return ::write(port, (void*)data, length);
   }
 
   //rate==0: use flow control (synchronous mode)
   //rate!=0: baud-rate (asynchronous mode)
-  auto open(string device, uint rate = 0) -> bool {
+  auto open(string device, u32 rate = 0) -> bool {
     close();
 
     if(!device) device = "/dev/ttyU0";  //note: default device name is for FreeBSD 10+

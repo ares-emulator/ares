@@ -1,4 +1,4 @@
-auto TLCS900H::condition(uint4 code) -> bool {
+auto TLCS900H::condition(n4 code) -> bool {
   switch(code) {
   case  0: return 0 == 1;               //F   (false)
   case  1: return (SF ^ VF) == 1;       //LT  (signed less than)

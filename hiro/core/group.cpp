@@ -14,7 +14,7 @@ auto mGroup::append(sObject object) -> type& {
   return *this;
 }
 
-auto mGroup::object(unsigned position) const -> Object {
+auto mGroup::object(u32 position) const -> Object {
   if(position < objectCount()) {
     if(auto object = state.objects[position].acquire()) {
       return object;
@@ -23,7 +23,7 @@ auto mGroup::object(unsigned position) const -> Object {
   return {};
 }
 
-auto mGroup::objectCount() const -> unsigned {
+auto mGroup::objectCount() const -> u32 {
   return state.objects.size();
 }
 

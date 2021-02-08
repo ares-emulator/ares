@@ -31,14 +31,14 @@ struct KonamiVRC6 : Interface {
       s(output);
     }
 
-    n01 mode;
-    n03 duty;
-    n04 volume;
-    n01 enable;
+    n1  mode;
+    n3  duty;
+    n4  volume;
+    n1  enable;
     n12 frequency;
     n12 divider;
-    n04 cycle;
-    n04 output;
+    n4  cycle;
+    n4  output;
   };
 
   struct Sawtooth {
@@ -68,14 +68,14 @@ struct KonamiVRC6 : Interface {
       s(output);
     }
 
-    n06 rate;
-    n01 enable;
+    n6  rate;
+    n1  enable;
     n12 frequency;
     n12 divider;
-    n01 phase;
-    n03 stage;
-    n08 accumulator;
-    n05 output;
+    n1  phase;
+    n3  stage;
+    n8  accumulator;
+    n5  output;
   };
 
   using Interface::Interface;
@@ -129,7 +129,7 @@ struct KonamiVRC6 : Interface {
     pulse1.clock();
     pulse2.clock();
     sawtooth.clock();
-    double output = (pulse1.output + pulse2.output + sawtooth.output) / 61.0 * 0.25;
+    f64 output = (pulse1.output + pulse2.output + sawtooth.output) / 61.0 * 0.25;
     stream->frame(-output);
 
     tick();
@@ -243,25 +243,25 @@ struct KonamiVRC6 : Interface {
     return bank << 10 | (n10)address;
   }
 
-  auto readCHR(n32 address, n8 data) -> n8 {
+  auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
     if(characterROM) return characterROM.read(addressCHR(address));
     if(characterRAM) return characterRAM.read(addressCHR(address));
     return data;
   }
 
-  auto writeCHR(n32 address, n8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void override {
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
     pulse1.divider = 1;
     pulse2.divider = 1;
     sawtooth.divider = 1;
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programRAM);
     s(characterRAM);
     s(pulse1);
@@ -282,18 +282,18 @@ struct KonamiVRC6 : Interface {
   Pulse pulse1;
   Pulse pulse2;
   Sawtooth sawtooth;
-  n08 programBank[2];
-  n08 characterBank[8];
-  n02 mirror;
-  n08 irqLatch;
-  n01 irqMode;
-  n01 irqEnable;
-  n01 irqAcknowledge;
-  n08 irqCounter;
+  n8  programBank[2];
+  n8  characterBank[8];
+  n2  mirror;
+  n8  irqLatch;
+  n1  irqMode;
+  n1  irqEnable;
+  n1  irqAcknowledge;
+  n8  irqCounter;
   i16 irqScalar;
-  n01 irqLine;
+  n1  irqLine;
 
 //unserialized:
-  n8 pinA0;
-  n8 pinA1;
+  n8  pinA0;
+  n8  pinA1;
 };

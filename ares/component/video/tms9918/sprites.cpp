@@ -1,21 +1,21 @@
-auto TMS9918::sprite(uint8 voffset) -> void {
+auto TMS9918::sprite(n8 voffset) -> void {
   io.spriteCollision = false;
   io.spriteOverflow = false;
   io.spriteOverflowIndex = 0;
 
-  uint8 valid = 0;
-  uint5 limit = (8 << io.spriteSize << io.spriteZoom) - 1;
-  for(uint index : range(4)) sprites[index].y = 0xd0;
+  n8 valid = 0;
+  n5 limit = (8 << io.spriteSize << io.spriteZoom) - 1;
+  for(u32 index : range(4)) sprites[index].y = 0xd0;
 
-  uint14 attributeAddress;
+  n14 attributeAddress;
   attributeAddress.bit(7,13) = io.spriteAttributeTableAddress;
-  for(uint index : range(32)) {
-    uint8 y = vram.read(attributeAddress++);
+  for(u32 index : range(32)) {
+    n8 y = vram.read(attributeAddress++);
     if(y == 0xd0) break;
 
-    uint8 x = vram.read(attributeAddress++);
-    uint8 pattern = vram.read(attributeAddress++);
-    uint8 extra = vram.read(attributeAddress++);
+    n8 x = vram.read(attributeAddress++);
+    n8 pattern = vram.read(attributeAddress++);
+    n8 extra = vram.read(attributeAddress++);
 
     if(extra.bit(7)) x -= 32;
     y += 1;
@@ -34,24 +34,24 @@ auto TMS9918::sprite(uint8 voffset) -> void {
   }
 }
 
-auto TMS9918::sprite(uint8 hoffset, uint8 voffset) -> void {
-  uint4 color;
-  uint5 limit = (8 << io.spriteSize << io.spriteZoom) - 1;
+auto TMS9918::sprite(n8 hoffset, n8 voffset) -> void {
+  n4 color;
+  n5 limit = (8 << io.spriteSize << io.spriteZoom) - 1;
 
-  for(uint n : range(4)) {
+  for(u32 n : range(4)) {
     auto& o = sprites[n];
     if(o.y == 0xd0) continue;
     if(hoffset < o.x) continue;
     if(hoffset > o.x + limit) continue;
 
-    uint x = hoffset - o.x >> io.spriteZoom;
-    uint y = voffset - o.y >> io.spriteZoom;
+    u32 x = hoffset - o.x >> io.spriteZoom;
+    u32 y = voffset - o.y >> io.spriteZoom;
 
-    uint14 address;
+    n14 address;
     address.bit( 0,10) = (o.pattern << 3) + (x >> 3 << 4) + y;
     address.bit(11,13) = io.spritePatternTableAddress;
 
-    uint3 index = x ^ 7;
+    n3 index = x ^ 7;
     if(vram.read(address).bit(index)) {
       if(color) { io.spriteCollision = true; break; }
       color = o.color;

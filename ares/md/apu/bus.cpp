@@ -5,7 +5,7 @@
  * for now, assume that only the cartridge and expansion buses are also accessible.
  */
 
-auto APU::read(uint16 address) -> uint8 {
+auto APU::read(n16 address) -> n8 {
   //$2000-3fff mirrors $0000-1fff
   if(address >= 0x0000 && address <= 0x3fff) return ram.read(address);
   if(address >= 0x4000 && address <= 0x4003) return ym2612.readStatus();
@@ -19,7 +19,7 @@ auto APU::read(uint16 address) -> uint8 {
     cpu.idle(11);
     step(3);
 
-    uint24 location = io.bank << 15 | (uint15)address & ~1;
+    n24 location = io.bank << 15 | (n15)address & ~1;
     if(location >= 0xa00000 && location <= 0xffffff) {
       //todo: apparently *some* I/O addresses can be read or written from the Z80.
       //it is not currently known which addresses are accepted.
@@ -34,7 +34,7 @@ auto APU::read(uint16 address) -> uint8 {
   return 0x00;
 }
 
-auto APU::write(uint16 address, uint8 data) -> void {
+auto APU::write(n16 address, n8 data) -> void {
   //$2000-3fff mirrors $0000-1fff
   if(address >= 0x0000 && address <= 0x3fff) return ram.write(address, data);
   if(address == 0x4000) return ym2612.writeAddress(0 << 8 | data);
@@ -56,7 +56,7 @@ auto APU::write(uint16 address, uint8 data) -> void {
     cpu.idle(11);
     step(3);
 
-    uint24 location = io.bank << 15 | (uint15)address;
+    n24 location = io.bank << 15 | (n15)address;
     if(location >= 0xa00000 && location <= 0xdfffff) return;
     if(address & 1) {
       return cpu.write(0, 1, location & ~1, data << 8 | data << 0);
@@ -67,10 +67,10 @@ auto APU::write(uint16 address, uint8 data) -> void {
 }
 
 //unused on Mega Drive
-auto APU::in(uint16 address) -> uint8 {
+auto APU::in(n16 address) -> n8 {
   return 0x00;
 }
 
 //unused on Mega Drive
-auto APU::out(uint16 address, uint8 data) -> void {
+auto APU::out(n16 address, n8 data) -> void {
 }

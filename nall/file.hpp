@@ -5,12 +5,12 @@
 namespace nall {
 
 struct file : inode {
-  struct mode { enum : uint { read, write, modify, append }; };
-  struct index { enum : uint { absolute, relative }; };
+  struct mode  { enum : u32 { read, write, modify, append }; };
+  struct index { enum : u32 { absolute, relative }; };
 
   file() = delete;
 
-  static auto open(const string& filename, uint mode) -> file_buffer {
+  static auto open(const string& filename, u32 mode) -> file_buffer {
     return file_buffer{filename, mode};
   }
 
@@ -18,7 +18,7 @@ struct file : inode {
     if(sourcename == targetname) return true;
     if(auto reader = file::open(sourcename, mode::read)) {
       if(auto writer = file::open(targetname, mode::write)) {
-        for(uint64_t n : range(reader.size())) writer.write(reader.read());
+        for(u64 n : range(reader.size())) writer.write(reader.read());
         return true;
       }
     }
@@ -35,7 +35,7 @@ struct file : inode {
     return false;
   }
 
-  static auto truncate(const string& filename, uint64_t size) -> bool {
+  static auto truncate(const string& filename, u64 size) -> bool {
     #if defined(API_POSIX)
     return ::truncate(filename, size) == 0;
     #elif defined(API_WINDOWS)
@@ -60,7 +60,7 @@ struct file : inode {
     return !(data.st_mode & S_IFDIR);
   }
 
-  static auto size(const string& filename) -> uint64_t {
+  static auto size(const string& filename) -> u64 {
     #if defined(API_POSIX)
     struct stat data;
     stat(filename, &data);
@@ -71,8 +71,8 @@ struct file : inode {
     return S_ISREG(data.st_mode) ? data.st_size : 0u;
   }
 
-  static auto read(const string& filename) -> vector<uint8_t> {
-    vector<uint8_t> memory;
+  static auto read(const string& filename) -> vector<u8> {
+    vector<u8> memory;
     if(auto fp = file::open(filename, mode::read)) {
       memory.resize(fp.size());
       fp.read(memory);
@@ -80,12 +80,12 @@ struct file : inode {
     return memory;
   }
 
-  static auto read(const string& filename, array_span<uint8_t> memory) -> bool {
+  static auto read(const string& filename, array_span<u8> memory) -> bool {
     if(auto fp = file::open(filename, mode::read)) return fp.read(memory), true;
     return false;
   }
 
-  static auto write(const string& filename, array_view<uint8_t> memory) -> bool {
+  static auto write(const string& filename, array_view<u8> memory) -> bool {
     if(auto fp = file::open(filename, mode::write)) return fp.write(memory), true;
     return false;
   }

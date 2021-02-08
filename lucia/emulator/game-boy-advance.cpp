@@ -37,7 +37,7 @@ auto GameBoyAdvance::load(Menu menu) -> void {
 }
 
 auto GameBoyAdvance::load() -> bool {
-  if(!ares::GameBoyAdvance::load(root, "Game Boy Advance")) return false;
+  if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Advance")) return false;
 
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);

@@ -1,8 +1,8 @@
 //MBC1 with mapper bits repurposed for supporting multi-game cartridges
 struct MBC1M : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
-  Memory::Writable<uint8> ram;
+  Memory::Readable<n8> rom;
+  Memory::Writable<n8> ram;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -18,25 +18,25 @@ struct MBC1M : Interface {
   auto unload() -> void override {
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(address >= 0x0000 && address <= 0x3fff) {
-      if(io.mode == 0) return rom.read((uint14)address);
-      return rom.read(io.rom.bank.bit(4,5) << 18 | (uint14)address);
+      if(io.mode == 0) return rom.read((n14)address);
+      return rom.read(io.rom.bank.bit(4,5) << 18 | (n14)address);
     }
 
     if(address >= 0x4000 && address <= 0x7fff) {
-      return rom.read(io.rom.bank << 14 | (uint14)address);
+      return rom.read(io.rom.bank << 14 | (n14)address);
     }
 
     if(address >= 0xa000 && address <= 0xbfff) {
       if(!ram) return data;
-      return ram.read((uint13)address);
+      return ram.read((n13)address);
     }
 
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     if(address >= 0x2000 && address <= 0x3fff) {
       io.rom.bank.bit(0,3) = data.bit(0,3);
     }
@@ -51,7 +51,7 @@ struct MBC1M : Interface {
 
     if(address >= 0xa000 && address <= 0xbfff) {
       if(!ram) return;
-      ram.write((uint14)address, data);
+      ram.write((n14)address, data);
     }
   }
 
@@ -66,9 +66,9 @@ struct MBC1M : Interface {
   }
 
   struct IO {
-    uint1 mode;
+    n1 mode;
     struct ROM {
-      uint6 bank = 0x01;
+      n6 bank = 0x01;
     } rom;
   } io;
 };

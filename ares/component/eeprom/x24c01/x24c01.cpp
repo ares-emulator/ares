@@ -16,11 +16,11 @@ auto X24C01::reset() -> void {
   line = 1;
 }
 
-auto X24C01::read() -> uint1 {
+auto X24C01::read() -> n1 {
   return line;
 }
 
-auto X24C01::write(uint1 scl, uint1 sda) -> void {
+auto X24C01::write(n1 scl, n1 sda) -> void {
   clock.write(scl);
   data.write(sda);
 
@@ -113,11 +113,11 @@ auto X24C01::write(uint1 scl, uint1 sda) -> void {
   }
 }
 
-auto X24C01::erase(uint8 fill) -> void {
+auto X24C01::erase(n8 fill) -> void {
   for(auto& byte : memory) byte = fill;
 }
 
-auto X24C01::Line::write(uint1 data) -> void {
+auto X24C01::Line::write(n1 data) -> void {
   lo   = !line && !data;
   hi   =  line &&  data;
   fall =  line && !data;

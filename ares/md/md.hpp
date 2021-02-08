@@ -9,8 +9,10 @@
 
 namespace ares::MegaDrive {
   #include <ares/inline.hpp>
+  auto enumerate() -> vector<string>;
+  auto load(Node::System& node, string name) -> bool;
 
-  enum : uint {
+  enum : u32 {
     Byte = 0,
     Word = 1,
   };

@@ -10,40 +10,40 @@ struct WDC65816 {
   virtual auto idle() -> void = 0;
   virtual auto idleBranch() -> void {}
   virtual auto idleJump() -> void {}
-  virtual auto read(uint24 addr) -> uint8 = 0;
-  virtual auto write(uint24 addr, uint8 data) -> void = 0;
+  virtual auto read(n24 address) -> n8 = 0;
+  virtual auto write(n24 address, n8 data) -> void = 0;
   virtual auto lastCycle() -> void = 0;
   virtual auto interruptPending() const -> bool = 0;
   virtual auto interrupt() -> void;
   virtual auto synchronizing() const -> bool = 0;
 
-  virtual auto readDisassembler(uint24 addr) -> uint8 { return 0; }
+  virtual auto readDisassembler(n24 address) -> n8 { return 0; }
 
   auto irq() const -> bool { return r.irq; }
   auto irq(bool line) -> void { r.irq = line; }
 
-  using r8 = uint8;
+  using r8 = n8;
 
   struct r16 {
     r16() {}
-    r16(uint data) : w(data) {}
+    r16(n32 data) : w(data) {}
     r16(const r16& data) : w(data.w) {}
-    auto& operator=(uint data) { w = data; return *this; }
+    auto& operator=(u32 data) { w = data; return *this; }
     auto& operator=(const r16& data) { w = data.w; return *this; }
 
-    uint16 w;
+    n16 w;
     BitRange<16,0, 7> l{&w};
     BitRange<16,8,15> h{&w};
   };
 
   struct r24 {
     r24() {}
-    r24(uint data) : d(data) {}
+    r24(u32 data) : d(data) {}
     r24(const r24& data) : d(data.d) {}
-    auto& operator=(uint data) { d = data; return *this; }
+    auto& operator=(u32 data) { d = data; return *this; }
     auto& operator=(const r24& data) { d = data.d; return *this; }
 
-    uint24 d;
+    n24 d;
     BitRange<24, 0, 7> l{&d};
     BitRange<24, 8,15> h{&d};
     BitRange<24,16,23> b{&d};
@@ -56,65 +56,65 @@ struct WDC65816 {
   //memory.cpp
   auto idleIRQ() -> void;
   auto idle2() -> void;
-  auto idle4(uint16 x, uint16 y) -> void;
-  auto idle6(uint16 address) -> void;
-  auto fetch() -> uint8;
-  auto pull() -> uint8;
-  auto push(uint8 data) -> void;
-  auto pullN() -> uint8;
-  auto pushN(uint8 data) -> void;
-  auto readDirect(uint address) -> uint8;
-  auto writeDirect(uint address, uint8 data) -> void;
-  auto readDirectN(uint address) -> uint8;
-  auto readBank(uint address) -> uint8;
-  auto writeBank(uint address, uint8 data) -> void;
-  auto readStack(uint address) -> uint8;
-  auto writeStack(uint address, uint8 data) -> void;
+  auto idle4(n16 x, n16 y) -> void;
+  auto idle6(n16 address) -> void;
+  auto fetch() -> n8;
+  auto pull() -> n8;
+  auto push(n8 data) -> void;
+  auto pullN() -> n8;
+  auto pushN(n8 data) -> void;
+  auto readDirect(u32 address) -> n8;
+  auto writeDirect(u32 address, n8 data) -> void;
+  auto readDirectN(u32 address) -> n8;
+  auto readBank(u32 address) -> n8;
+  auto writeBank(u32 address, n8 data) -> void;
+  auto readStack(u32 address) -> n8;
+  auto writeStack(u32 address, n8 data) -> void;
 
   //algorithms.cpp
-  using  alu8 = auto (WDC65816::*)( uint8) ->  uint8;
-  using alu16 = auto (WDC65816::*)(uint16) -> uint16;
+  using  alu8 = auto (WDC65816::*)(n8 ) -> n8;
+  using alu16 = auto (WDC65816::*)(n16) -> n16;
 
-  auto algorithmADC8(uint8) -> uint8;
-  auto algorithmADC16(uint16) -> uint16;
-  auto algorithmAND8(uint8) -> uint8;
-  auto algorithmAND16(uint16) -> uint16;
-  auto algorithmASL8(uint8) -> uint8;
-  auto algorithmASL16(uint16) -> uint16;
-  auto algorithmBIT8(uint8) -> uint8;
-  auto algorithmBIT16(uint16) -> uint16;
-  auto algorithmCMP8(uint8) -> uint8;
-  auto algorithmCMP16(uint16) -> uint16;
-  auto algorithmCPX8(uint8) -> uint8;
-  auto algorithmCPX16(uint16) -> uint16;
-  auto algorithmCPY8(uint8) -> uint8;
-  auto algorithmCPY16(uint16) -> uint16;
-  auto algorithmDEC8(uint8) -> uint8;
-  auto algorithmDEC16(uint16) -> uint16;
-  auto algorithmEOR8(uint8) -> uint8;
-  auto algorithmEOR16(uint16) -> uint16;
-  auto algorithmINC8(uint8) -> uint8;
-  auto algorithmINC16(uint16) -> uint16;
-  auto algorithmLDA8(uint8) -> uint8;
-  auto algorithmLDA16(uint16) -> uint16;
-  auto algorithmLDX8(uint8) -> uint8;
-  auto algorithmLDX16(uint16) -> uint16;
-  auto algorithmLDY8(uint8) -> uint8;
-  auto algorithmLDY16(uint16) -> uint16;
-  auto algorithmLSR8(uint8) -> uint8;
-  auto algorithmLSR16(uint16) -> uint16;
-  auto algorithmORA8(uint8) -> uint8;
-  auto algorithmORA16(uint16) -> uint16;
-  auto algorithmROL8(uint8) -> uint8;
-  auto algorithmROL16(uint16) -> uint16;
-  auto algorithmROR8(uint8) -> uint8;
-  auto algorithmROR16(uint16) -> uint16;
-  auto algorithmSBC8(uint8) -> uint8;
-  auto algorithmSBC16(uint16) -> uint16;
-  auto algorithmTRB8(uint8) -> uint8;
-  auto algorithmTRB16(uint16) -> uint16;
-  auto algorithmTSB8(uint8) -> uint8;
-  auto algorithmTSB16(uint16) -> uint16;
+  auto algorithmADC8(n8) -> n8;
+  auto algorithmADC16(n16) -> n16;
+  auto algorithmAND8(n8) -> n8;
+  auto algorithmAND16(n16) -> n16;
+  auto algorithmASL8(n8) -> n8;
+  auto algorithmASL16(n16) -> n16;
+  auto algorithmBIT8(n8) -> n8;
+  auto algorithmBIT16(n16) -> n16;
+  auto algorithmCMP8(n8) -> n8;
+  auto algorithmCMP16(n16) -> n16;
+  auto algorithmCPX8(n8) -> n8;
+  auto algorithmCPX16(n16) -> n16;
+  auto algorithmCPY8(n8) -> n8;
+  auto algorithmCPY16(n16) -> n16;
+  auto algorithmDEC8(n8) -> n8;
+  auto algorithmDEC16(n16) -> n16;
+  auto algorithmEOR8(n8) -> n8;
+  auto algorithmEOR16(n16) -> n16;
+  auto algorithmINC8(n8) -> n8;
+  auto algorithmINC16(n16) -> n16;
+  auto algorithmLDA8(n8) -> n8;
+  auto algorithmLDA16(n16) -> n16;
+  auto algorithmLDX8(n8) -> n8;
+  auto algorithmLDX16(n16) -> n16;
+  auto algorithmLDY8(n8) -> n8;
+  auto algorithmLDY16(n16) -> n16;
+  auto algorithmLSR8(n8) -> n8;
+  auto algorithmLSR16(n16) -> n16;
+  auto algorithmORA8(n8) -> n8;
+  auto algorithmORA16(n16) -> n16;
+  auto algorithmROL8(n8) -> n8;
+  auto algorithmROL16(n16) -> n16;
+  auto algorithmROR8(n8) -> n8;
+  auto algorithmROR16(n16) -> n16;
+  auto algorithmSBC8(n8) -> n8;
+  auto algorithmSBC16(n16) -> n16;
+  auto algorithmTRB8(n8) -> n8;
+  auto algorithmTRB16(n16) -> n16;
+  auto algorithmTSB8(n8) -> n8;
+  auto algorithmTSB16(n16) -> n16;
 
   //instructions-read.cpp
   auto instructionImmediateRead8(alu8) -> void;
@@ -199,8 +199,8 @@ struct WDC65816 {
   auto instructionNoOperation() -> void;
   auto instructionPrefix() -> void;
   auto instructionExchangeBA() -> void;
-  auto instructionBlockMove8(int) -> void;
-  auto instructionBlockMove16(int) -> void;
+  auto instructionBlockMove8(s32) -> void;
+  auto instructionBlockMove16(s32) -> void;
   auto instructionInterrupt(r16) -> void;
   auto instructionStop() -> void;
   auto instructionWait() -> void;
@@ -234,7 +234,7 @@ struct WDC65816 {
   auto serialize(serializer&) -> void;
 
   //disassembler.cpp
-  noinline auto disassembleInstruction(uint24 address, bool e, bool m, bool x) -> string;
+  noinline auto disassembleInstruction(n24 address, bool e, bool m, bool x) -> string;
   noinline auto disassembleInstruction() -> string;
   noinline auto disassembleContext(maybe<bool> e = {}) -> string;
 
@@ -248,11 +248,11 @@ struct WDC65816 {
     bool v = 0;  //overflow
     bool n = 0;  //negative
 
-    operator uint() const {
+    operator u32() const {
       return c << 0 | z << 1 | i << 2 | d << 3 | x << 4 | m << 5 | v << 6 | n << 7;
     }
 
-    auto& operator=(uint8 data) {
+    auto& operator=(n8 data) {
       c = data.bit(0);
       z = data.bit(1);
       i = data.bit(2);
@@ -281,9 +281,9 @@ struct WDC65816 {
     bool wai = 0;  //raised during wai, cleared after interrupt triggered
     bool stp = 0;  //raised during stp, never cleared
 
-    uint16 vector;  //interrupt vector address
-    uint24 mar;     //memory address register
-     uint8 mdr;     //memory data register
+    n16 vector;  //interrupt vector address
+    n24 mar;     //memory address register
+    n8  mdr;     //memory data register
 
     r24 u;  //temporary register
     r24 v;  //temporary register

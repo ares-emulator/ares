@@ -1,4 +1,4 @@
-auto APU::readIO(uint32 address) -> uint8 {
+auto APU::readIO(n32 address) -> n8 {
   switch(address) {
 
   //NR10
@@ -140,7 +140,7 @@ auto APU::readIO(uint32 address) -> uint8 {
   return cpu.pipeline.fetch.instruction.byte(address & 1);
 }
 
-auto APU::writeIO(uint32 address, uint8 data) -> void {
+auto APU::writeIO(n32 address, n8 data) -> void {
   switch(address) {
 
   //NR10

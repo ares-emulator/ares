@@ -1,6 +1,6 @@
 auto V30MZ::instructionLoop() -> void {
   wait(1);
-  auto offset = (int8)fetch();
+  auto offset = (i8)fetch();
   if(--r.cx) {
     wait(3);
     r.ip += offset;
@@ -9,7 +9,7 @@ auto V30MZ::instructionLoop() -> void {
 
 auto V30MZ::instructionLoopWhile(bool value) -> void {
   wait(2);
-  auto offset = (int8)fetch();
+  auto offset = (i8)fetch();
   if(--r.cx && r.f.z == value) {
     wait(3);
     r.ip += offset;
@@ -18,18 +18,18 @@ auto V30MZ::instructionLoopWhile(bool value) -> void {
 
 auto V30MZ::instructionJumpShort() -> void {
   wait(3);
-  auto offset = (int8)fetch();
+  auto offset = (i8)fetch();
   r.ip += offset;
 }
 
 auto V30MZ::instructionJumpIf(bool condition) -> void {
-  auto offset = (int8)fetch();
+  auto offset = (i8)fetch();
   if(condition) r.ip += offset;
 }
 
 auto V30MZ::instructionJumpNear() -> void {
   wait(3);
-  r.ip += (int16)fetch(Word);
+  r.ip += (i16)fetch(Word);
 }
 
 auto V30MZ::instructionJumpFar() -> void {
@@ -42,7 +42,7 @@ auto V30MZ::instructionJumpFar() -> void {
 
 auto V30MZ::instructionCallNear() -> void {
   wait(4);
-  auto offset = (int16)fetch(Word);
+  auto offset = (i16)fetch(Word);
   push(r.ip);
   r.ip += offset;
 }
@@ -116,7 +116,7 @@ auto V30MZ::instructionEnter() -> void {
 
   if(length) {
     wait(length > 1 ? 7 : 6);
-    for(uint n = 1; n < length; n++) {
+    for(u32 n = 1; n < length; n++) {
       wait(4);
       auto data = read(Word, segment(r.ss), r.bp - n * 2);
       push(data);
@@ -131,11 +131,11 @@ auto V30MZ::instructionLeave() -> void {
   r.bp = pop();
 }
 
-auto V30MZ::instructionPushReg(uint16_t& reg) -> void {
+auto V30MZ::instructionPushReg(u16& reg) -> void {
   push(reg);
 }
 
-auto V30MZ::instructionPopReg(uint16_t& reg) -> void {
+auto V30MZ::instructionPopReg(u16& reg) -> void {
   reg = pop();
   if(&reg == &r.ss) state.poll = false;
 }
@@ -178,7 +178,7 @@ auto V30MZ::instructionPopAll() -> void {
 }
 
 auto V30MZ::instructionPushImm(Size size) -> void {
-  if(size == Byte) push((int8)fetch(Byte));
+  if(size == Byte) push((i8)fetch(Byte));
   if(size == Word) push(fetch(Word));
 }
 

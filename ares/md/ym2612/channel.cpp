@@ -27,15 +27,15 @@ auto YM2612::Channel::Operator::trigger(bool state) -> void {
 }
 
 auto YM2612::Channel::Operator::runEnvelope() -> void {
-  uint sustain = envelope.sustainLevel < 15 ? envelope.sustainLevel << 5 : 0x3f0;
+  u32 sustain = envelope.sustainLevel < 15 ? envelope.sustainLevel << 5 : 0x3f0;
   if(ym2612.envelope.clock & (1 << envelope.divider) - 1) return;
 
-  uint value = ym2612.envelope.clock >> envelope.divider;
-  uint step = envelope.steps >> ((~value & 7) << 2) & 0xf;
+  u32 value = ym2612.envelope.clock >> envelope.divider;
+  u32 step = envelope.steps >> ((~value & 7) << 2) & 0xf;
   if(ssg.enable) step <<= 2;  //SSG results in a 4x faster envelope
 
   if(envelope.state == Attack) {
-    uint next = envelope.value + (~uint16(envelope.value) * step >> 4) & 0x3ff;
+    u32 next = envelope.value + (~u16(envelope.value) * step >> 4) & 0x3ff;
     if(next <= envelope.value) {
       envelope.value = next;
     } else {
@@ -80,9 +80,9 @@ auto YM2612::Channel::Operator::runPhase() -> void {
 }
 
 auto YM2612::Channel::Operator::updateEnvelope() -> void {
-  uint key = min(max((uint)pitch.value, 0x300), 0x4ff);
-  uint ksr = (octave.value << 2) + ((key - 0x300) >> 7);
-  uint rate = 0;
+  u32 key = min(max((u32)pitch.value, 0x300), 0x4ff);
+  u32 ksr = (octave.value << 2) + ((key - 0x300) >> 7);
+  u32 rate = 0;
 
   if(envelope.state == Attack)  rate += (envelope.attackRate  << 1);
   if(envelope.state == Decay)   rate += (envelope.decayRate   << 1);
@@ -110,13 +110,13 @@ auto YM2612::Channel::Operator::updatePitch() -> void {
 }
 
 auto YM2612::Channel::Operator::updatePhase() -> void {
-  uint key = min(max((uint)pitch.value, 0x300), 0x4ff);
-  uint ksr = (octave.value << 2) + ((key - 0x300) >> 7);
-  uint tuning = detune & 3 ? detunes[(detune & 3) - 1][ksr & 7] >> (3 - (ksr >> 3)) : 0;
+  u32 key = min(max((u32)pitch.value, 0x300), 0x4ff);
+  u32 ksr = (octave.value << 2) + ((key - 0x300) >> 7);
+  u32 tuning = detune & 3 ? detunes[(detune & 3) - 1][ksr & 7] >> (3 - (ksr >> 3)) : 0;
 
-  uint lfo = ym2612.lfo.clock >> 2 & 0x1f;
-  uint pm = 4 * vibratos[channel.vibrato][lfo & 15] * (-lfo >> 4);
-  uint msb = 10;
+  u32 lfo = ym2612.lfo.clock >> 2 & 0x1f;
+  u32 pm = 4 * vibratos[channel.vibrato][lfo & 15] * (-lfo >> 4);
+  u32 msb = 10;
   while(msb > 4 && ~pitch.value & 1 << msb) msb--;
 
   phase.delta = pitch.value + (pm >> 10 - msb) << 6 >> 7 - octave.value;
@@ -125,11 +125,11 @@ auto YM2612::Channel::Operator::updatePhase() -> void {
 }
 
 auto YM2612::Channel::Operator::updateLevel() -> void {
-  uint lfo = ym2612.lfo.clock & 0x40 ? ym2612.lfo.clock & 0x3f : ~ym2612.lfo.clock & 0x3f;
-  uint depth = tremolos[channel.tremolo];
+  u32 lfo = ym2612.lfo.clock & 0x40 ? ym2612.lfo.clock & 0x3f : ~ym2612.lfo.clock & 0x3f;
+  u32 depth = tremolos[channel.tremolo];
 
   bool invert = ssg.attack != ssg.invert && envelope.state != Release;
-  uint10 value = ssg.enable && invert ? 0x200 - envelope.value : 0 + envelope.value;
+  n10 value = ssg.enable && invert ? 0x200 - envelope.value : 0 + envelope.value;
 
   outputLevel = ((totalLevel << 3) + value + (lfoEnable ? lfo << 1 >> depth : 0)) << 3;
 }

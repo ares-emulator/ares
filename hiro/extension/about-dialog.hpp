@@ -5,7 +5,7 @@ struct AboutDialog {
 
   auto setAlignment(Alignment = Alignment::Center) -> type&;
   auto setAlignment(sWindow relativeTo, Alignment = Alignment::Center) -> type&;
-  auto setCopyright(const string& copyright = "") -> type&;
+  auto setCopyright(const string& copyright = "", const string& uri = "") -> type&;
   auto setDescription(const string& description = "") -> type&;
   auto setLicense(const string& license = "", const string& uri = "") -> type&;
   auto setLogo(const image& logo = {}) -> type&;
@@ -18,6 +18,7 @@ private:
   struct State {
     Alignment alignment = Alignment::Center;
     string copyright;
+    string copyrightURI;
     string description;
     string license;
     string licenseURI;

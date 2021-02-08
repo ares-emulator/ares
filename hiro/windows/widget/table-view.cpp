@@ -40,17 +40,17 @@ auto pTableView::remove(sTableViewItem item) -> void {
 auto pTableView::resizeColumns() -> void {
   auto lock = acquire();
 
-  vector<signed> widths;
-  signed minimumWidth = 0;
-  signed expandable = 0;
+  vector<s32> widths;
+  s32 minimumWidth = 0;
+  s32 expandable = 0;
   for(auto column : range(self().columnCount())) {
-    signed width = _width(column);
+    s32 width = _width(column);
     widths.append(width);
     minimumWidth += width;
     if(state().columns[column]->expandable()) expandable++;
   }
 
-  signed maximumWidth = self().geometry().width() - 4;
+  s32 maximumWidth = self().geometry().width() - 4;
   SCROLLBARINFO sbInfo{sizeof(SCROLLBARINFO)};
   if(GetScrollBarInfo(hwnd, OBJID_VSCROLL, &sbInfo)) {
     if(!(sbInfo.rgstate[0] & STATE_SYSTEM_INVISIBLE)) {
@@ -58,14 +58,14 @@ auto pTableView::resizeColumns() -> void {
     }
   }
 
-  signed expandWidth = 0;
+  s32 expandWidth = 0;
   if(expandable && maximumWidth > minimumWidth) {
     expandWidth = (maximumWidth - minimumWidth) / expandable;
   }
 
   for(auto column : range(self().columnCount())) {
     if(auto self = state().columns[column]->self()) {
-      signed width = widths[column];
+      s32 width = widths[column];
       if(self->state().expandable) width += expandWidth;
       self->_width = width;
       self->_setState();
@@ -111,9 +111,9 @@ auto pTableView::onActivate(LPARAM lparam) -> void {
     ScreenToClient(nmlistview->hdr.hwndFrom, &hitTest.pt);
     ListView_SubItemHitTest(nmlistview->hdr.hwndFrom, &hitTest);
     if(hitTest.flags & LVHT_ONITEM) {
-      int row = hitTest.iItem;
+      s32 row = hitTest.iItem;
       if(row >= 0 && row < state().items.size()) {
-        int column = hitTest.iSubItem;
+        s32 column = hitTest.iSubItem;
         if(column >= 0 && column < state().columns.size()) {
           auto item = state().items[row];
           activateCell = item->cell(column);
@@ -162,13 +162,13 @@ auto pTableView::onCustomDraw(LPARAM lparam) -> LRESULT {
   case CDDS_ITEMPOSTPAINT: {
     HDC hdc = lvcd->nmcd.hdc;
     HDC hdcSource = CreateCompatibleDC(hdc);
-    unsigned row = lvcd->nmcd.dwItemSpec;
+    u32 row = lvcd->nmcd.dwItemSpec;
     for(auto column : range(self().columnCount())) {
       RECT rc, rcLabel;
       ListView_GetSubItemRect(hwnd, row, column, LVIR_BOUNDS, &rc);
       ListView_GetSubItemRect(hwnd, row, column, LVIR_LABEL, &rcLabel);
       rc.right = rcLabel.right;  //bounds of column 0 returns width of entire item
-      signed iconSize = rc.bottom - rc.top - 1;
+      s32 iconSize = rc.bottom - rc.top - 1;
       bool selected = state().items(row)->state.selected;
 
       if(auto cell = self().item(row)->cell(column)) {
@@ -183,10 +183,10 @@ auto pTableView::onCustomDraw(LPARAM lparam) -> LRESULT {
 
         if(cell->state.checkable) {
           if(auto htheme = OpenThemeData(hwnd, L"BUTTON")) {
-            unsigned state = cell->state.checked ? CBS_CHECKEDNORMAL : CBS_UNCHECKEDNORMAL;
+            u32 state = cell->state.checked ? CBS_CHECKEDNORMAL : CBS_UNCHECKEDNORMAL;
             SIZE size;
             GetThemePartSize(htheme, hdc, BP_CHECKBOX, state, nullptr, TS_TRUE, &size);
-            signed center = max(0, (rc.bottom - rc.top - size.cy) / 2);
+            s32 center = max(0, (rc.bottom - rc.top - size.cy) / 2);
             RECT rd{rc.left + center, rc.top + center, rc.left + center + size.cx, rc.top + center + size.cy};
             DrawThemeBackground(htheme, hdc, BP_CHECKBOX, state, &rd, nullptr);
             CloseThemeData(htheme);
@@ -323,7 +323,7 @@ auto pTableView::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -
 
 //
 
-auto pTableView::_backgroundColor(unsigned _row, unsigned _column) -> Color {
+auto pTableView::_backgroundColor(u32 _row, u32 _column) -> Color {
   if(auto item = self().item(_row)) {
     if(auto cell = item->cell(_column)) {
       if(auto color = cell->backgroundColor()) return color;
@@ -338,8 +338,8 @@ auto pTableView::_backgroundColor(unsigned _row, unsigned _column) -> Color {
   return {255, 255, 255};
 }
 
-auto pTableView::_cellWidth(unsigned _row, unsigned _column) -> unsigned {
-  unsigned width = 6;
+auto pTableView::_cellWidth(u32 _row, u32 _column) -> u32 {
+  u32 width = 6;
   if(auto item = self().item(_row)) {
     if(auto cell = item->cell(_column)) {
       if(cell->state.checkable) {
@@ -356,8 +356,8 @@ auto pTableView::_cellWidth(unsigned _row, unsigned _column) -> unsigned {
   return width;
 }
 
-auto pTableView::_columnWidth(unsigned _column) -> unsigned {
-  unsigned width = 12;
+auto pTableView::_columnWidth(u32 _column) -> u32 {
+  u32 width = 12;
   if(auto column = self().column(_column)) {
     if(auto& icon = column->state.icon) {
       width += 16 + 12;  //yes; icon spacing in column headers is excessive
@@ -372,7 +372,7 @@ auto pTableView::_columnWidth(unsigned _column) -> unsigned {
   return width;
 }
 
-auto pTableView::_font(unsigned _row, unsigned _column) -> Font {
+auto pTableView::_font(u32 _row, u32 _column) -> Font {
   if(auto item = self().item(_row)) {
     if(auto cell = item->cell(_column)) {
       if(auto font = cell->font()) return font;
@@ -386,7 +386,7 @@ auto pTableView::_font(unsigned _row, unsigned _column) -> Font {
   return {};
 }
 
-auto pTableView::_foregroundColor(unsigned _row, unsigned _column) -> Color {
+auto pTableView::_foregroundColor(u32 _row, u32 _column) -> Color {
   if(auto item = self().item(_row)) {
     if(auto cell = item->cell(_column)) {
       if(auto color = cell->foregroundColor()) return color;
@@ -430,9 +430,9 @@ auto pTableView::_setIcons() -> void {
   DeleteObject(bitmap);
 }
 
-auto pTableView::_width(unsigned column) -> unsigned {
+auto pTableView::_width(u32 column) -> u32 {
   if(auto width = self().column(column).width()) return width;
-  unsigned width = 1;
+  u32 width = 1;
   if(state().headered) width = max(width, _columnWidth(column));
   for(auto row : range(state().items.size())) {
     width = max(width, _cellWidth(row, column));

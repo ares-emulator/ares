@@ -8,14 +8,14 @@ struct mTabFrameItem : mObject {
   auto movable() const -> bool;
   auto remove() -> type& override;
   auto remove(sSizable sizable) -> type&;
-  auto reset() -> type&;
+  auto reset() -> type& override;
   auto selected() const -> bool;
   auto setClosable(bool closable = true) -> type&;
   auto setEnabled(bool enabled = true) -> type& override;
   auto setFont(const Font& font = {}) -> type& override;
   auto setIcon(const image& icon = {}) -> type&;
   auto setMovable(bool movable = true) -> type&;
-  auto setParent(mObject* object = nullptr, int offset = -1) -> type& override;
+  auto setParent(mObject* object = nullptr, s32 offset = -1) -> type& override;
   auto setSelected() -> type&;
   auto setText(const string& text = "") -> type&;
   auto setVisible(bool visible = true) -> type& override;

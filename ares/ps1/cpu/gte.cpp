@@ -1,18 +1,18 @@
 auto CPU::GTE::constructTable() -> void {
-  for(uint n : range(256)) {
+  for(u32 n : range(256)) {
     unsignedNewtonRaphsonTable[n] = max(0, (0x40000 / (n + 0x100) + 1) / 2 - 0x101);
   }
   unsignedNewtonRaphsonTable[256] = 0;
 }
 
-auto CPU::GTE::countLeadingZeroes16(u16 value) -> uint {
-  uint zeroes = 0;
+auto CPU::GTE::countLeadingZeroes16(u16 value) -> u32 {
+  u32 zeroes = 0;
   while(!(value >> 15) && zeroes < 16) value <<= 1, zeroes++;
   return zeroes;
 }
 
-auto CPU::GTE::countLeadingZeroes32(u32 value) -> uint {
-  uint zeroes = 0;
+auto CPU::GTE::countLeadingZeroes32(u32 value) -> u32 {
+  u32 zeroes = 0;
   if(!(value >> 31)) value = ~value;
   while(value >> 31) value <<= 1, zeroes++;
   return zeroes;
@@ -20,7 +20,7 @@ auto CPU::GTE::countLeadingZeroes32(u32 value) -> uint {
 
 //
 
-auto CPU::GTE::getDataRegister(uint index) -> u32 {
+auto CPU::GTE::getDataRegister(u32 index) -> u32 {
   u32 data;
   switch(index) {
   case  0: data = u16(v.a.x) << 0 | u16(v.a.y) << 16; break;
@@ -64,7 +64,7 @@ auto CPU::GTE::getDataRegister(uint index) -> u32 {
   return data;
 }
 
-auto CPU::GTE::setDataRegister(uint index, u32 data) -> void {
+auto CPU::GTE::setDataRegister(u32 index, u32 data) -> void {
   switch(index) {
   case  0: v.a.x = data >> 0; v.a.y = data >> 16; break;
   case  1: v.a.z = data >> 0; break;
@@ -114,7 +114,7 @@ auto CPU::GTE::setDataRegister(uint index, u32 data) -> void {
   }
 }
 
-auto CPU::GTE::getControlRegister(uint index) -> u32 {
+auto CPU::GTE::getControlRegister(u32 index) -> u32 {
   u32 data;
   switch(index) {
   case  0: data = u16(rotation.a.x) << 0 | u16(rotation.a.y) << 16; break;
@@ -153,7 +153,7 @@ auto CPU::GTE::getControlRegister(uint index) -> u32 {
   return data;
 }
 
-auto CPU::GTE::setControlRegister(uint index, u32 data) -> void {
+auto CPU::GTE::setControlRegister(u32 index, u32 data) -> void {
   switch(index) {
   case  0: rotation.a.x = data >> 0; rotation.a.y = data >> 16; break;
   case  1: rotation.a.z = data >> 0; rotation.b.x = data >> 16; break;
@@ -192,7 +192,7 @@ auto CPU::GTE::setControlRegister(uint index, u32 data) -> void {
 
 //
 
-template<uint id>
+template<u32 id>
 auto CPU::GTE::checkMac(s64 value) -> s64 {
   static constexpr s64 min = -(s64(1) << (id == 0 ? 31 : 43));
   static constexpr s64 max = +(s64(1) << (id == 0 ? 31 : 43)) - 1;
@@ -211,7 +211,7 @@ auto CPU::GTE::checkMac(s64 value) -> s64 {
   return value;
 }
 
-template<uint id>
+template<u32 id>
 auto CPU::GTE::extend(s64 mac) -> s64 {
   checkMac<id>(mac);
   if constexpr(id == 1) return sclip<44>(mac);
@@ -220,7 +220,7 @@ auto CPU::GTE::extend(s64 mac) -> s64 {
   unreachable;
 }
 
-template<uint id>
+template<u32 id>
 auto CPU::GTE::saturateIr(s32 value, bool lm) -> s32 {
   static constexpr s32 min = id == 0 ? 0x0000 : -0x8000;
   static constexpr s32 max = id == 0 ? 0x1000 : +0x7fff;
@@ -242,7 +242,7 @@ auto CPU::GTE::saturateIr(s32 value, bool lm) -> s32 {
   return value;
 }
 
-template<uint id>
+template<u32 id>
 auto CPU::GTE::saturateColor(s32 value) -> u8 {
   if(value < 0 || value > 255) {
     if constexpr(id == 0) flag.r_saturated = 1;
@@ -255,7 +255,7 @@ auto CPU::GTE::saturateColor(s32 value) -> u8 {
 
 //
 
-template<uint id>
+template<u32 id>
 auto CPU::GTE::setMac(s64 value) -> s64 {
   checkMac<id>(value);
   if constexpr(id == 0) { mac.t = value;       return value;       }
@@ -264,7 +264,7 @@ auto CPU::GTE::setMac(s64 value) -> s64 {
   if constexpr(id == 3) { mac.z = value >> sf; return value >> sf; }
 }
 
-template<uint id>
+template<u32 id>
 auto CPU::GTE::setIr(s32 value, bool lm) -> void {
   if constexpr(id == 0) ir.t = saturateIr<0>(value, lm);
   if constexpr(id == 1) ir.x = saturateIr<1>(value, lm);
@@ -272,7 +272,7 @@ auto CPU::GTE::setIr(s32 value, bool lm) -> void {
   if constexpr(id == 3) ir.z = saturateIr<3>(value, lm);
 }
 
-template<uint id>
+template<u32 id>
 auto CPU::GTE::setMacAndIr(s64 value, bool lm) -> void {
   setIr<id>(setMac<id>(value), lm);
 }
@@ -569,7 +569,7 @@ auto CPU::GTE::MVMVA(bool lm, u8 tv, u8 mv, u8 mm, u8 sf) -> void {
 }
 
 //meta-instruction
-template<uint m>
+template<u32 m>
 auto CPU::GTE::NC(const v16& vector) -> void {
   setMacAndIr(matrixMultiply(light, vector));
   setMacAndIr(matrixMultiply(color, ir, backgroundColor));

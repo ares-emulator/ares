@@ -7,17 +7,17 @@
 
 namespace nall::EllipticCurve {
 
-static const uint256_t P = (1_u256 << 255) - 19;
+static const u256 P = (1_u256 << 255) - 19;
 
 struct Modulo25519 {
   Modulo25519() = default;
   Modulo25519(const Modulo25519& source) : value(source.value) {}
   template<typename T> Modulo25519(const T& value) : value(value) {}
   explicit operator bool() const { return (bool)value; }
-  auto operator()() const -> uint256_t { return value; }
+  auto operator()() const -> u256 { return value; }
 
 private:
-  uint256_t value;
+  u256 value;
 };
 
 inline auto operator-(const Modulo25519& lhs) -> Modulo25519 {
@@ -25,36 +25,36 @@ inline auto operator-(const Modulo25519& lhs) -> Modulo25519 {
 }
 
 inline auto operator+(const Modulo25519& lhs, const Modulo25519& rhs) -> Modulo25519 {
-  uint512_t value = (uint512_t)lhs() + rhs();
+  u512 value = (u512)lhs() + rhs();
   if(value >= P) value -= P;
   return value;
 }
 
 inline auto operator-(const Modulo25519& lhs, const Modulo25519& rhs) -> Modulo25519 {
-  uint512_t value = (uint512_t)lhs();
+  u512 value = (u512)lhs();
   if(value < rhs()) value += P;
-  return uint256_t(value - rhs());
+  return u256(value - rhs());
 }
 
 inline auto operator*(const Modulo25519& lhs, const Modulo25519& rhs) -> Modulo25519 {
   static const BarrettReduction<256> P{EllipticCurve::P};
-  uint256_t hi, lo;
+  u256 hi, lo;
   mul(lhs(), rhs(), hi, lo);
-  return uint512_t{hi, lo} % P;
+  return u512{hi, lo} % P;
 }
 
-inline auto operator&(const Modulo25519& lhs, uint256_t rhs) -> uint256_t {
+inline auto operator&(const Modulo25519& lhs, u256 rhs) -> u256 {
   return lhs() & rhs;
 }
 
 inline auto square(const Modulo25519& lhs) -> Modulo25519 {
   static const BarrettReduction<256> P{EllipticCurve::P};
-  uint256_t hi, lo;
+  u256 hi, lo;
   square(lhs(), hi, lo);
-  return uint512_t{hi, lo} % P;
+  return u512{hi, lo} % P;
 }
 
-inline auto exponentiate(const Modulo25519& lhs, uint256_t exponent) -> Modulo25519 {
+inline auto exponentiate(const Modulo25519& lhs, u256 exponent) -> Modulo25519 {
   if(exponent == 0) return 1;
   Modulo25519 value = square(exponentiate(lhs, exponent >> 1));
   if(exponent & 1) value = value * lhs;

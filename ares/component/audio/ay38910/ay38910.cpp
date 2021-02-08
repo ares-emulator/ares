@@ -5,14 +5,14 @@ namespace ares {
 
 #include "serialization.cpp"
 
-auto AY38910::clock() -> array<uint4[3]> {
+auto AY38910::clock() -> array<n4[3]> {
   toneA.clock();
   toneB.clock();
   toneC.clock();
   noise.clock();
   envelope.clock();
 
-  array<uint4[3]> output;
+  array<n4[3]> output;
   if((toneA.output | channelA.tone) & (noise.output | channelA.noise)) {
     output[0] = channelA.envelope ? envelope.output : channelA.volume;
   }
@@ -65,8 +65,8 @@ auto AY38910::Envelope::clock() -> void {
   }
 }
 
-auto AY38910::read() -> uint8 {
-  uint8 data;
+auto AY38910::read() -> n8 {
+  n8 data;
 
   switch(io.register) {
   case  0:
@@ -135,7 +135,7 @@ auto AY38910::read() -> uint8 {
   return data;
 }
 
-auto AY38910::write(uint8 data) -> void {
+auto AY38910::write(n8 data) -> void {
   switch(io.register) {
   case  0:
     toneA.period.bit(0, 7) = data.bit(0,7);
@@ -204,7 +204,7 @@ auto AY38910::write(uint8 data) -> void {
   }
 }
 
-auto AY38910::select(uint4 data) -> void {
+auto AY38910::select(n4 data) -> void {
   io.register = data;
 }
 

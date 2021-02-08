@@ -10,18 +10,18 @@ namespace nall::HTTP {
 
 struct Role {
   struct Settings {
-    int connectionLimit =     1 * 1024;  //server
-    int headSizeLimit   =    16 * 1024;  //client, server
-    int bodySizeLimit   = 65536 * 1024;  //client, server
-    int chunkSize       =    32 * 1024;  //client, server
-    int threadStackSize =   128 * 1024;  //server
-    int timeoutReceive  =    15 * 1000;  //server
-    int timeoutSend     =    15 * 1000;  //server
+    s32 connectionLimit =     1 * 1024;  //server
+    s32 headSizeLimit   =    16 * 1024;  //client, server
+    s32 bodySizeLimit   = 65536 * 1024;  //client, server
+    s32 chunkSize       =    32 * 1024;  //client, server
+    s32 threadStackSize =   128 * 1024;  //server
+    s32 timeoutReceive  =    15 * 1000;  //server
+    s32 timeoutSend     =    15 * 1000;  //server
   } settings;
 
   auto configure(const string& parameters) -> bool;
-  auto download(int fd, Message& message) -> bool;
-  auto upload(int fd, const Message& message) -> bool;
+  auto download(s32 fd, Message& message) -> bool;
+  auto upload(s32 fd, const Message& message) -> bool;
 };
 
 inline auto Role::configure(const string& parameters) -> bool {
@@ -42,11 +42,11 @@ inline auto Role::configure(const string& parameters) -> bool {
   return true;
 }
 
-inline auto Role::download(int fd, Message& message) -> bool {
+inline auto Role::download(s32 fd, Message& message) -> bool {
   auto& head = message._head;
   auto& body = message._body;
   string chunk;
-  uint8_t packet[settings.chunkSize], *p = nullptr;
+  u8 packet[settings.chunkSize], *p = nullptr;
 
   head.reset(), head.reserve(4095);
   body.reset(), body.reserve(4095);
@@ -55,9 +55,9 @@ inline auto Role::download(int fd, Message& message) -> bool {
   bool chunked = false;
   bool chunkReceived = false;
   bool chunkFooterReceived = true;
-  int length = 0;
-  int chunkLength = 0;
-  int contentLength = 0;
+  s32 length = 0;
+  s32 chunkLength = 0;
+  s32 contentLength = 0;
 
   while(true) {
     if(auto limit = settings.headSizeLimit) if(head.size() >= limit) return false;
@@ -116,7 +116,7 @@ inline auto Role::download(int fd, Message& message) -> bool {
       p += length;
       length = 0;
     } else {
-      int transferLength = min(length, chunkLength);
+      s32 transferLength = min(length, chunkLength);
       body.resize(body.size() + transferLength);
       memory::copy(body.get() + body.size() - transferLength, p, transferLength);
 
@@ -135,10 +135,10 @@ inline auto Role::download(int fd, Message& message) -> bool {
   return true;
 }
 
-inline auto Role::upload(int fd, const Message& message) -> bool {
-  auto transfer = [&](const uint8_t* data, uint size) -> bool {
+inline auto Role::upload(s32 fd, const Message& message) -> bool {
+  auto transfer = [&](const u8* data, u32 size) -> bool {
     while(size) {
-      int length = send(fd, data, min(size, settings.chunkSize), MSG_NOSIGNAL);
+      s32 length = send(fd, data, min(size, settings.chunkSize), MSG_NOSIGNAL);
       if(length < 0) return false;
       data += length;
       size -= length;
@@ -146,8 +146,8 @@ inline auto Role::upload(int fd, const Message& message) -> bool {
     return true;
   };
 
-  if(message.head([&](const uint8_t* data, uint size) -> bool { return transfer(data, size); })) {
-    if(message.body([&](const uint8_t* data, uint size) -> bool { return transfer(data, size); })) {
+  if(message.head([&](const u8* data, u32 size) -> bool { return transfer(data, size); })) {
+    if(message.body([&](const u8* data, u32 size) -> bool { return transfer(data, size); })) {
       return true;
     }
   }

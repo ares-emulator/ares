@@ -38,12 +38,12 @@ auto mComboEdit::foregroundColor() const -> Color {
   return state.foregroundColor;
 }
 
-auto mComboEdit::item(uint position) const -> ComboEditItem {
+auto mComboEdit::item(u32 position) const -> ComboEditItem {
   if(position < itemCount()) return state.items[position];
   return {};
 }
 
-auto mComboEdit::itemCount() const -> uint {
+auto mComboEdit::itemCount() const -> u32 {
   return state.items.size();
 }
 
@@ -98,7 +98,7 @@ auto mComboEdit::setForegroundColor(Color color) -> type& {
   return *this;
 }
 
-auto mComboEdit::setParent(mObject* parent, int offset) -> type& {
+auto mComboEdit::setParent(mObject* parent, s32 offset) -> type& {
   for(auto& item : state.items) item->destruct();
   mObject::setParent(parent, offset);
   for(auto& item : state.items) item->setParent(this, item->offset());

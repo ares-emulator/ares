@@ -29,15 +29,15 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
   graphics.tiles2bpp = parent->append<Node::Debugger::Graphics>("2 BPP Tiles");
   graphics.tiles2bpp->setSize(512, 512);
   graphics.tiles2bpp->setCapture([&]() -> vector<u32> {
-    vector<uint32_t> output;
+    vector<u32> output;
     output.resize(512 * 512);
-    for(uint tileY : range(64)) {
-      for(uint tileX : range(64)) {
-        uint15 address = tileY * 64 + tileX << 3;
-        for(uint y : range(8)) {
-          uint16 d0 = ppu.vram.data[address + y];
-          for(uint x : range(8)) {
-            uint2 color;
+    for(u32 tileY : range(64)) {
+      for(u32 tileX : range(64)) {
+        n15 address = tileY * 64 + tileX << 3;
+        for(u32 y : range(8)) {
+          n16 d0 = ppu.vram.data[address + y];
+          for(u32 x : range(8)) {
+            n2 color;
             color.bit(0) = d0.bit( 7 - x);
             color.bit(1) = d0.bit(15 - x);
             output[(tileY * 8 + y) * 512 + (tileX * 8 + x)] = color * 0x555555;
@@ -51,16 +51,16 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
   graphics.tiles4bpp = parent->append<Node::Debugger::Graphics>("4 BPP Tiles");
   graphics.tiles4bpp->setSize(512, 256);
   graphics.tiles4bpp->setCapture([&]() -> vector<u32> {
-    vector<uint32_t> output;
+    vector<u32> output;
     output.resize(512 * 256);
-    for(uint tileY : range(32)) {
-      for(uint tileX : range(64)) {
-        uint15 address = tileY * 64 + tileX << 4;
-        for(uint y : range(8)) {
-          uint16 d0 = ppu.vram.data[address + y + 0];
-          uint16 d1 = ppu.vram.data[address + y + 8];
-          for(uint x : range(8)) {
-            uint4 color;
+    for(u32 tileY : range(32)) {
+      for(u32 tileX : range(64)) {
+        n15 address = tileY * 64 + tileX << 4;
+        for(u32 y : range(8)) {
+          n16 d0 = ppu.vram.data[address + y + 0];
+          n16 d1 = ppu.vram.data[address + y + 8];
+          for(u32 x : range(8)) {
+            n4 color;
             color.bit(0) = d0.bit( 7 - x);
             color.bit(1) = d0.bit(15 - x);
             color.bit(2) = d1.bit( 7 - x);
@@ -76,18 +76,18 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
   graphics.tiles8bpp = parent->append<Node::Debugger::Graphics>("8 BPP Tiles");
   graphics.tiles8bpp->setSize(512, 128);
   graphics.tiles8bpp->setCapture([&]() -> vector<u32> {
-    vector<uint32_t> output;
+    vector<u32> output;
     output.resize(512 * 128);
-    for(uint tileY : range(16)) {
-      for(uint tileX : range(64)) {
-        uint15 address = tileY * 64 + tileX << 5;
-        for(uint y : range(8)) {
-          uint16 d0 = ppu.vram.data[address + y +  0];
-          uint16 d1 = ppu.vram.data[address + y +  8];
-          uint16 d2 = ppu.vram.data[address + y + 16];
-          uint16 d3 = ppu.vram.data[address + y + 24];
-          for(uint x : range(8)) {
-            uint8 color;
+    for(u32 tileY : range(16)) {
+      for(u32 tileX : range(64)) {
+        n15 address = tileY * 64 + tileX << 5;
+        for(u32 y : range(8)) {
+          n16 d0 = ppu.vram.data[address + y +  0];
+          n16 d1 = ppu.vram.data[address + y +  8];
+          n16 d2 = ppu.vram.data[address + y + 16];
+          n16 d3 = ppu.vram.data[address + y + 24];
+          for(u32 x : range(8)) {
+            n8 color;
             color.bit(0) = d0.bit( 7 - x);
             color.bit(1) = d0.bit(15 - x);
             color.bit(2) = d1.bit( 7 - x);
@@ -107,14 +107,14 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
   graphics.tilesMode7 = parent->append<Node::Debugger::Graphics>("Mode 7 Tiles");
   graphics.tilesMode7->setSize(128, 128);
   graphics.tilesMode7->setCapture([&]() -> vector<u32> {
-    vector<uint32_t> output;
+    vector<u32> output;
     output.resize(128 * 128);
-    for(uint tileY : range(16)) {
-      for(uint tileX : range(16)) {
-        uint15 address = tileY * 16 + tileX << 6;
-        for(uint y : range(8)) {
-          for(uint x : range(8)) {
-            uint8 color = ppu.vram.data[address + y * 8 + x].byte(1);
+    for(u32 tileY : range(16)) {
+      for(u32 tileX : range(16)) {
+        n15 address = tileY * 16 + tileX << 6;
+        for(u32 y : range(8)) {
+          for(u32 x : range(8)) {
+            n8 color = ppu.vram.data[address + y * 8 + x].byte(1);
             output[(tileY * 8 + y) * 128 + (tileX * 8 + x)] = color << 16 | color << 8 | color << 0;
           }
         }

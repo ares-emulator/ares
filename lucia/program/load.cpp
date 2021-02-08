@@ -5,7 +5,7 @@ auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
     }
   }
 
-  MessageDialog().setTitle("lucia").setText({
+  MessageDialog().setTitle(ares::Name).setText({
     "Filename: ", Location::file(filename), "\n\n"
     "Unable to determine what type of game this file is.\n"
     "Please use the load menu to choose the appropriate game system instead."
@@ -74,7 +74,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
   string savesPath = settings.paths.saves;
   if(!savesPath) savesPath = Location::path(filename);
   if(!directory::writable(savesPath)) {
-    MessageDialog().setTitle("lucia").setText({
+    MessageDialog().setTitle(ares::Name).setText({
       "The current save path is read-only; please choose a writable save path now.\n"
       "Otherwise, any in-game progress will be lost once this game is unloaded!\n\n"
       "Current save location: ", savesPath
@@ -133,7 +133,6 @@ auto Program::unload() -> void {
   propertiesViewer.unload();
   traceLogger.unload();
   message.text = "";
-  ruby::video.acquireContext();
   ruby::video.clear();
   ruby::audio.clear();
 }

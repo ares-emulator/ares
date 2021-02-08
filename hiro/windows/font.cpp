@@ -26,7 +26,7 @@ auto pFont::family(const string& family) -> string {
 }
 
 auto pFont::create(const Font& font) -> HFONT {
-  static float dpi = Monitor::dpi().x();
+  static f32 dpi = Monitor::dpi().x();
   return CreateFont(
     -((font.size() ? font.size() : 8) * dpi / 72.0 + 0.5),
     0, 0, 0, font.bold() ? FW_BOLD : FW_NORMAL, font.italic(), 0, 0, 0, 0, 0, 0, 0,

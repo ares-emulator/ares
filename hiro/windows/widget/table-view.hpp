@@ -27,13 +27,13 @@ struct pTableView : pWidget {
   auto onToggle(LPARAM lparam) -> void;
   auto windowProc(HWND, UINT, WPARAM, LPARAM) -> maybe<LRESULT> override;
 
-  auto _backgroundColor(unsigned row, unsigned column) -> Color;
-  auto _cellWidth(unsigned row, unsigned column) -> unsigned;
-  auto _columnWidth(unsigned column) -> unsigned;
-  auto _font(unsigned row, unsigned column) -> Font;
-  auto _foregroundColor(unsigned row, unsigned column) -> Color;
+  auto _backgroundColor(u32 row, u32 column) -> Color;
+  auto _cellWidth(u32 row, u32 column) -> u32;
+  auto _columnWidth(u32 column) -> u32;
+  auto _font(u32 row, u32 column) -> Font;
+  auto _foregroundColor(u32 row, u32 column) -> Color;
   auto _setIcons() -> void;
-  auto _width(unsigned column) -> unsigned;
+  auto _width(u32 column) -> u32;
 
   TableViewCell activateCell;
   HIMAGELIST imageList = 0;

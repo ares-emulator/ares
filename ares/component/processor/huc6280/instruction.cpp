@@ -1,7 +1,7 @@
 #define op(id, name, ...) case id: return instruction##name(__VA_ARGS__);
 #define fp(name) &HuC6280::algorithm##name
 
-auto HuC6280::interrupt(uint16 vector) -> void {
+auto HuC6280::interrupt(n16 vector) -> void {
   idle();
   idle();
   idle();

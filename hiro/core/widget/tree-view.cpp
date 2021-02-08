@@ -59,13 +59,13 @@ auto mTreeView::foregroundColor() const -> Color {
 auto mTreeView::item(const string& path) const -> TreeViewItem {
   if(!path) return {};
   auto paths = path.split("/");
-  unsigned position = paths.takeLeft().natural();
+  u32 position = paths.takeLeft().natural();
   if(position >= itemCount()) return {};
   if(!paths) return state.items[position];
   return state.items[position]->item(paths.merge("/"));
 }
 
-auto mTreeView::itemCount() const -> unsigned {
+auto mTreeView::itemCount() const -> u32 {
   return state.items.size();
 }
 
@@ -141,7 +141,7 @@ auto mTreeView::setForegroundColor(Color color) -> type& {
   return *this;
 }
 
-auto mTreeView::setParent(mObject* object, signed offset) -> type& {
+auto mTreeView::setParent(mObject* object, s32 offset) -> type& {
   for(auto& item : reverse(state.items)) item->destruct();
   mObject::setParent(object, offset);
   for(auto& item : state.items) item->setParent(this, item->offset());

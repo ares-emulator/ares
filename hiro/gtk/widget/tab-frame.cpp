@@ -2,7 +2,7 @@
 
 namespace hiro {
 
-static auto TabFrame_change(GtkNotebook* notebook, GtkWidget* page, uint position, pTabFrame* p) -> void {
+static auto TabFrame_change(GtkNotebook* notebook, GtkWidget* page, u32 position, pTabFrame* p) -> void {
   for(auto& item : p->state().items) item->state.selected = false;
   if(auto item = p->self().item(position)) item->state.selected = true;
 
@@ -11,7 +11,7 @@ static auto TabFrame_change(GtkNotebook* notebook, GtkWidget* page, uint positio
 }
 
 static auto TabFrame_close(GtkButton* button, pTabFrame* p) -> void {
-  maybe<uint> position;
+  maybe<u32> position;
   for(auto n : range(p->tabs.size())) {
     if(button == (GtkButton*)p->tabs[n].close) {
       position = n;
@@ -23,12 +23,12 @@ static auto TabFrame_close(GtkButton* button, pTabFrame* p) -> void {
   }
 }
 
-static auto TabFrame_move(GtkNotebook* notebook, GtkWidget* page, uint moveTo, pTabFrame* p) -> void {
-  uint position = gtk_notebook_get_current_page(notebook);
+static auto TabFrame_move(GtkNotebook* notebook, GtkWidget* page, u32 moveTo, pTabFrame* p) -> void {
+  u32 position = gtk_notebook_get_current_page(notebook);
   for(auto& item : p->state().items) item->state.selected = false;
   if(auto item = p->self().item(position)) item->state.selected = true;
 
-  maybe<uint> moveFrom;
+  maybe<u32> moveFrom;
   for(auto n : range(p->tabs.size())) {
     if(page == p->tabs[n].child) {
       moveFrom = n;
@@ -83,7 +83,7 @@ auto pTabFrame::container(mWidget& widget) -> GtkWidget* {
     break;
   }
 
-  uint position = 0;
+  u32 position = 0;
   for(auto& item : state().items) {
     if(item->state.sizable.data() == object) return tabs[position].child;
     position++;
@@ -97,7 +97,7 @@ auto pTabFrame::remove(sTabFrameItem item) -> void {
   //if we are removing the current tab, we have to select another tab manually
   if(item->offset() == gtk_notebook_get_current_page(GTK_NOTEBOOK(gtkWidget))) {
     //the new tab will be the one after this one
-    uint displacement = 1;
+    u32 displacement = 1;
     //... unless it's the last tab, in which case it's the one before it
     if(item->offset() == self().itemCount() - 1) displacement = -1;
     //... unless there are no tabs left, in which case nothing is selected
@@ -108,7 +108,7 @@ auto pTabFrame::remove(sTabFrameItem item) -> void {
   tabs.remove(item->offset());
   gtk_notebook_remove_page(GTK_NOTEBOOK(gtkWidget), item->offset());
 
-  uint position = gtk_notebook_get_current_page(GTK_NOTEBOOK(gtkWidget));
+  u32 position = gtk_notebook_get_current_page(GTK_NOTEBOOK(gtkWidget));
   for(auto& item : state().items) item->state.selected = false;
   if(auto item = self().item(position)) item->state.selected = true;
   unlock();
@@ -140,31 +140,31 @@ auto pTabFrame::setGeometry(Geometry geometry) -> void {
   }
 }
 
-auto pTabFrame::setItemClosable(uint position, bool closable) -> void {
+auto pTabFrame::setItemClosable(u32 position, bool closable) -> void {
   _synchronizeTab(position);
 }
 
-auto pTabFrame::setItemIcon(uint position, const image& icon) -> void {
+auto pTabFrame::setItemIcon(u32 position, const image& icon) -> void {
   _synchronizeTab(position);
 }
 
-auto pTabFrame::setItemMovable(uint position, bool movable) -> void {
+auto pTabFrame::setItemMovable(u32 position, bool movable) -> void {
   lock();
   gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(gtkWidget), tabs[position].child, movable);
   unlock();
 }
 
-auto pTabFrame::setItemSelected(uint position) -> void {
+auto pTabFrame::setItemSelected(u32 position) -> void {
   lock();
   gtk_notebook_set_current_page(GTK_NOTEBOOK(gtkWidget), position);
   unlock();
 }
 
-auto pTabFrame::setItemSizable(uint position, sSizable sizable) -> void {
+auto pTabFrame::setItemSizable(u32 position, sSizable sizable) -> void {
 //if(layout->self()) layout->self()->setParent();
 }
 
-auto pTabFrame::setItemText(uint position, const string& text) -> void {
+auto pTabFrame::setItemText(u32 position, const string& text) -> void {
   _synchronizeTab(position);
 }
 
@@ -226,12 +226,12 @@ auto pTabFrame::_synchronizeLayout() -> void {
   }
 }
 
-auto pTabFrame::_synchronizeTab(uint position) -> void {
+auto pTabFrame::_synchronizeTab(u32 position) -> void {
   auto& item = state().items[position];
   auto& tab = tabs[position];
   gtk_widget_set_visible(tab.close, item->closable());
   if(auto& icon = item->state.icon) {
-    uint size = pFont::size(self().font(true), " ").height();
+    u32 size = pFont::size(self().font(true), " ").height();
     auto pixbuf = CreatePixbuf(icon, true);
     gtk_image_set_from_pixbuf(GTK_IMAGE(tab.image), pixbuf);
   } else {
@@ -246,8 +246,8 @@ auto pTabFrame::_synchronizeTab(uint position) -> void {
 }
 
 //compute the height of the tallest tab for child layout geometry calculations
-auto pTabFrame::_tabHeight() -> uint {
-  int height = 1;
+auto pTabFrame::_tabHeight() -> u32 {
+  s32 height = 1;
 
   for(auto n : range(self().itemCount())) {
     GtkAllocation imageAllocation, titleAllocation, closeAllocation;
@@ -263,8 +263,8 @@ auto pTabFrame::_tabHeight() -> uint {
   return height;
 }
 
-auto pTabFrame::_tabWidth() -> uint {
-  int width = 1;
+auto pTabFrame::_tabWidth() -> u32 {
+  s32 width = 1;
 
   for(auto n : range(self().itemCount())) {
     GtkAllocation imageAllocation, titleAllocation, closeAllocation;

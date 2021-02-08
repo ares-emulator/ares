@@ -18,7 +18,7 @@ auto Controller::iobit() -> bool {
   return 1;
 }
 
-auto Controller::iobit(bool data) -> void {
+auto Controller::iobit(n1 data) -> void {
   if(this == controllerPort1.device.data()) bus.write(0x4201, cpu.pio() & ~0x40 | data << 6);
   if(this == controllerPort2.device.data()) bus.write(0x4201, cpu.pio() & ~0x80 | data << 7);
 }

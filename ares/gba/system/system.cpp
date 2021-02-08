@@ -2,7 +2,15 @@
 
 namespace ares::GameBoyAdvance {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[Nintendo] Game Boy Advance",
+    "[Nintendo] Game Boy Player",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -29,10 +37,16 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(name == "Game Boy Advance") information.model = Model::GameBoyAdvance;
-  if(name == "Game Boy Player" ) information.model = Model::GameBoyPlayer;
+  if(name.find("Game Boy Advance")) {
+    information.name = "Game Boy Advance";
+    information.model = Model::GameBoyAdvance;
+  }
+  if(name.find("Game Boy Player")) {
+    information.name = "Game Boy Player";
+    information.model = Model::GameBoyPlayer;
+  }
 
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});

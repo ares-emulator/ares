@@ -2,19 +2,19 @@
 
 namespace nall {
 
-template<int...> struct BitField;
+template<s32...> struct BitField;
 
 /* static BitField */
 
-template<int Precision, int Index> struct BitField<Precision, Index> {
+template<s32 Precision, s32 Index> struct BitField<Precision, Index> {
   static_assert(Precision >= 1 && Precision <= 64);
   using type =
-    conditional_t<Precision <=  8,  uint8_t,
-    conditional_t<Precision <= 16, uint16_t,
-    conditional_t<Precision <= 32, uint32_t,
-    conditional_t<Precision <= 64, uint64_t,
+    conditional_t<Precision <=  8, u8,
+    conditional_t<Precision <= 16, u16,
+    conditional_t<Precision <= 32, u32,
+    conditional_t<Precision <= 64, u64,
     void>>>>;
-  enum : uint { shift = Index < 0 ? Precision + Index : Index };
+  enum : u32 { shift = Index < 0 ? Precision + Index : Index };
   enum : type { mask = 1ull << shift };
 
   BitField(const BitField&) = delete;
@@ -62,13 +62,13 @@ private:
 
 /* dynamic BitField */
 
-template<int Precision> struct BitField<Precision> {
+template<s32 Precision> struct BitField<Precision> {
   static_assert(Precision >= 1 && Precision <= 64);
   using type =
-    conditional_t<Precision <=  8,  uint8_t,
-    conditional_t<Precision <= 16, uint16_t,
-    conditional_t<Precision <= 32, uint32_t,
-    conditional_t<Precision <= 64, uint64_t,
+    conditional_t<Precision <=  8, u8,
+    conditional_t<Precision <= 16, u16,
+    conditional_t<Precision <= 32, u32,
+    conditional_t<Precision <= 64, u64,
     void>>>>;
 
   BitField(const BitField&) = delete;
@@ -78,7 +78,7 @@ template<int Precision> struct BitField<Precision> {
     return *this;
   }
 
-  template<typename T> BitField(T* source, int index) : target((type&)*source) {
+  template<typename T> BitField(T* source, s32 index) : target((type&)*source) {
     static_assert(sizeof(T) == sizeof(type));
     if(index < 0) index = Precision + index;
     mask = 1ull << index;
@@ -116,7 +116,7 @@ template<int Precision> struct BitField<Precision> {
 private:
   type& target;
   type mask;
-  uint shift;
+  u32 shift;
 };
 
 }

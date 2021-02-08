@@ -11,7 +11,7 @@ static const vector<string> registerNames = {
 
 auto RI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
-  uint32 data = 0;
+  n32 data = 0;
 
   if(address == 0) {
     //RI_MODE
@@ -53,7 +53,7 @@ auto RI::readWord(u32 address) -> u32 {
 
 auto RI::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0xfffff) >> 2;
-  uint32 data = data_;
+  n32 data = data_;
 
   if(address == 0) {
     //RI_MODE

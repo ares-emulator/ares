@@ -26,12 +26,12 @@ auto mTableViewItem::backgroundColor() const -> Color {
   return state.backgroundColor;
 }
 
-auto mTableViewItem::cell(unsigned position) const -> TableViewCell {
+auto mTableViewItem::cell(u32 position) const -> TableViewCell {
   if(position < cellCount()) return state.cells[position];
   return {};
 }
 
-auto mTableViewItem::cellCount() const -> unsigned {
+auto mTableViewItem::cellCount() const -> u32 {
   return state.cells.size();
 }
 
@@ -92,7 +92,7 @@ auto mTableViewItem::setForegroundColor(Color color) -> type& {
   return *this;
 }
 
-auto mTableViewItem::setParent(mObject* parent, signed offset) -> type& {
+auto mTableViewItem::setParent(mObject* parent, s32 offset) -> type& {
   for(auto& cell : state.cells) cell->destruct();
   mObject::setParent(parent, offset);
   for(auto& cell : state.cells) cell->setParent(this, cell->offset());

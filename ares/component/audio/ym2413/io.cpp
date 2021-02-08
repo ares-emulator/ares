@@ -1,14 +1,14 @@
-auto YM2413::address(uint8 data) -> void {
+auto YM2413::address(n8 data) -> void {
   io.address = data;
 }
 
-auto YM2413::write(uint8 data) -> void {
-  uint4 index = io.address.bit(0,3) % 9;
+auto YM2413::write(n8 data) -> void {
+  n4 index = io.address.bit(0,3) % 9;
   auto& voice = voices[index];
 
   if(io.address >= 0x00 && io.address <= 0x07) {
     customTone[io.address] = data;
-    for(uint n : range(9)) {
+    for(u32 n : range(9)) {
       if(voices[n].tone == 0) reload(n);
     }
     return;
@@ -18,7 +18,7 @@ auto YM2413::write(uint8 data) -> void {
     if(io.isVRC7) return;
     if(io.rhythmMode != data.bit(5)) {
       io.rhythmMode = data.bit(5);
-      for(uint n : range(9)) reload(n);
+      for(u32 n : range(9)) reload(n);
     }
     if(io.rhythmMode) {
       hihat.trigger(data.bit(0));
@@ -46,8 +46,8 @@ auto YM2413::write(uint8 data) -> void {
     if(io.isVRC7 && index >= 6) return;
     voice.fnumber.bit(8) = data.bit(0);
     voice.block          = data.bit(1,3);
-    uint1 keyOn          = data.bit(4);
-    uint1 sustainOn      = data.bit(5);
+    n1 keyOn             = data.bit(4);
+    n1 sustainOn         = data.bit(5);
     voice.update();
     voice.carrier.trigger(keyOn, sustainOn);
     return;

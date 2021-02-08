@@ -10,8 +10,8 @@ struct APU : Thread {
   auto power() -> void;
 
   //io.cpp
-  auto readIO(uint cycle, uint16 address, uint8 data) -> uint8;
-  auto writeIO(uint cycle, uint16 address, uint8 data) -> void;
+  auto readIO(u32 cycle, n16 address, n8 data) -> n8;
+  auto writeIO(u32 cycle, n16 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -32,27 +32,27 @@ struct APU : Thread {
 
     bool enable;
 
-    uint3 sweepFrequency;
+    n3 sweepFrequency;
     bool sweepDirection;
-    uint3 sweepShift;
+    n3 sweepShift;
     bool sweepNegate;
-    uint2 duty;
-    uint length;
-    uint4 envelopeVolume;
+    n2 duty;
+    u32 length;
+    n4 envelopeVolume;
     bool envelopeDirection;
-    uint3 envelopeFrequency;
-    uint11 frequency;
+    n3 envelopeFrequency;
+    n11 frequency;
     bool counter;
 
-    int16 output;
+    i16 output;
     bool dutyOutput;
-    uint3 phase;
-    uint period;
-    uint3 envelopePeriod;
-    uint3 sweepPeriod;
-    int frequencyShadow;
+    n3 phase;
+    u32 period;
+    n3 envelopePeriod;
+    n3 sweepPeriod;
+    s32 frequencyShadow;
     bool sweepEnable;
-    uint4 volume;
+    n4 volume;
   } square1;
 
   //square2.cpp
@@ -69,30 +69,30 @@ struct APU : Thread {
 
     bool enable;
 
-    uint2 duty;
-    uint length;
-    uint4 envelopeVolume;
+    n2 duty;
+    u32 length;
+    n4 envelopeVolume;
     bool envelopeDirection;
-    uint3 envelopeFrequency;
-    uint11 frequency;
+    n3 envelopeFrequency;
+    n11 frequency;
     bool counter;
 
-    int16 output;
+    i16 output;
     bool dutyOutput;
-    uint3 phase;
-    uint period;
-    uint3 envelopePeriod;
-    uint4 volume;
+    n3 phase;
+    u32 period;
+    n3 envelopePeriod;
+    n4 volume;
   } square2;
 
   struct Wave {
-    auto getPattern(uint5 offset) const -> uint4;
+    auto getPattern(n5 offset) const -> n4;
 
     auto run() -> void;
     auto clockLength() -> void;
     auto trigger() -> void;
-    auto readRAM(uint4 address, uint8 data) -> uint8;
-    auto writeRAM(uint4 address, uint8 data) -> void;
+    auto readRAM(n4 address, n8 data) -> n8;
+    auto writeRAM(n4 address, n8 data) -> void;
     auto power(bool initializeLength = true) -> void;
 
     auto serialize(serializer&) -> void;
@@ -100,22 +100,22 @@ struct APU : Thread {
     bool enable;
 
     bool dacEnable;
-    uint2 volume;
-    uint11 frequency;
+    n2 volume;
+    n11 frequency;
     bool counter;
-    uint8 pattern[16];
+    n8 pattern[16];
 
-    int16 output;
-    uint length;
-    uint period;
-    uint5 patternOffset;
-    uint4 patternSample;
-    uint patternHold;
+    i16 output;
+    u32 length;
+    u32 period;
+    n5 patternOffset;
+    n4 patternSample;
+    u32 patternHold;
   } wave;
 
   struct Noise {
     auto dacEnable() const -> bool;
-    auto getPeriod() const -> uint;
+    auto getPeriod() const -> u32;
 
     auto run() -> void;
     auto clockLength() -> void;
@@ -127,20 +127,20 @@ struct APU : Thread {
 
     bool enable;
 
-    uint4 envelopeVolume;
+    n4 envelopeVolume;
     bool envelopeDirection;
-    uint3 envelopeFrequency;
-    uint4 frequency;
+    n3 envelopeFrequency;
+    n4 frequency;
     bool narrow;
-    uint3 divisor;
+    n3 divisor;
     bool counter;
 
-    int16 output;
-    uint length;
-    uint3 envelopePeriod;
-    uint4 volume;
-    uint period;
-    uint15 lfsr;
+    i16 output;
+    u32 length;
+    n3 envelopePeriod;
+    n4 volume;
+    u32 period;
+    n15 lfsr;
   } noise;
 
   struct Sequencer {
@@ -150,9 +150,9 @@ struct APU : Thread {
     auto serialize(serializer&) -> void;
 
     bool leftEnable;
-    uint3 leftVolume;
+    n3 leftVolume;
     bool rightEnable;
-    uint3 rightVolume;
+    n3 rightVolume;
 
     struct Channel {
       bool leftEnable;
@@ -161,13 +161,13 @@ struct APU : Thread {
 
     bool enable;
 
-    int16 center;
-    int16 left;
-    int16 right;
+    i16 center;
+    i16 left;
+    i16 right;
   } sequencer;
 
-  uint3 phase;   //high 3-bits of clock counter
-  uint12 cycle;  //low 12-bits of clock counter
+  n3 phase;   //high 3-bits of clock counter
+  n12 cycle;  //low 12-bits of clock counter
 };
 
 extern APU apu;

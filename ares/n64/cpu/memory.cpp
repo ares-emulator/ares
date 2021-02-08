@@ -51,11 +51,11 @@ auto CPU::readWord(u32 address) -> maybe<u32> {
   return nothing;
 }
 
-auto CPU::readDouble(u32 address) -> maybe<u64> {
+auto CPU::readDual(u32 address) -> maybe<u64> {
   if constexpr(Accuracy::CPU::AddressErrors) {
     if(unlikely(address & 7)) return exception.addressLoad(), nothing;
   }
-  if(auto physical = readAddress(address)) return bus.readDouble(physical());
+  if(auto physical = readAddress(address)) return bus.readDual(physical());
   return nothing;
 }
 
@@ -80,10 +80,10 @@ auto CPU::writeWord(u32 address, u32 data) -> bool {
   return false;
 }
 
-auto CPU::writeDouble(u32 address, u64 data) -> bool {
+auto CPU::writeDual(u32 address, u64 data) -> bool {
   if constexpr(Accuracy::CPU::AddressErrors) {
     if(unlikely(address & 7)) return exception.addressStore(), false;
   }
-  if(auto physical = writeAddress(address)) return bus.writeDouble(physical(), data), true;
+  if(auto physical = writeAddress(address)) return bus.writeDual(physical(), data), true;
   return false;
 }

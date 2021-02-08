@@ -6,11 +6,11 @@ struct PCD : Thread {
   Node::Peripheral disc;
   Shared::File fd;
   CD::Session session;
-  Memory::Writable<uint8> wram;  // 64KB
-  Memory::Writable<uint8> bram;  //  2KB
+  Memory::Writable<n8> wram;  // 64KB
+  Memory::Writable<n8> bram;  //  2KB
   //PC Engine Duo only:
-  Memory::Readable<uint8> bios;  //256KB
-  Memory::Writable<uint8> sram;  //192KB
+  Memory::Readable<n8> bios;  //256KB
+  Memory::Writable<n8> sram;  //192KB
 
   struct Debugger {
     //debugger.cpp
@@ -41,16 +41,16 @@ struct PCD : Thread {
 
   auto save() -> void;
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto irqLine() const -> bool;
   auto power() -> void;
 
   //io.cpp
-  auto read(uint8 bank, uint13 address, uint8 data) -> uint8;
-  auto write(uint8 bank, uint13 address, uint8 data) -> void;
+  auto read(n8 bank, n13 address, n8 data) -> n8;
+  auto write(n8 bank, n13 address, n8 data) -> void;
 
-  auto readIO(uint13 address, uint8 data) -> uint8;
-  auto writeIO(uint13 address, uint8 data) -> void;
+  auto readIO(n13 address, n8 data) -> n8;
+  auto writeIO(n13 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -61,19 +61,19 @@ private:
     auto raise() -> void { line = 1; }
     auto lower() -> void { line = 0; }
 
-    uint1 enable;
-    uint1 line;
+    n1 enable;
+    n1 line;
   };
 
   struct Buffer {
     auto reset() -> void { reads = 0; writes = 0; }
     auto end() const -> bool { return reads >= writes; }
-    auto read() -> uint8 { return data[reads++]; }
-    auto write(uint8 value) -> void { data[writes++] = value; }
+    auto read() -> n8 { return data[reads++]; }
+    auto write(n8 value) -> void { data[writes++] = value; }
 
-     uint8 data[4_KiB];
-    uint12 reads;
-    uint12 writes;
+    n8  data[4_KiB];
+    n12 reads;
+    n12 writes;
   };
 
   struct Drive;
@@ -85,7 +85,7 @@ private:
   struct Drive {
     maybe<CD::Session&> session;
 
-    enum class Mode : uint {
+    enum class Mode : u32 {
       Inactive,  //drive is not running
       Seeking,   //seeking
       Reading,   //reading CD data
@@ -118,7 +118,7 @@ private:
     }
 
     //drive.cpp
-    auto distance() -> uint;
+    auto distance() -> u32;
     auto seekRead() -> void;
     auto seekPlay() -> void;
     auto seekPause() -> void;
@@ -128,13 +128,13 @@ private:
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    Mode mode    = Mode::Inactive;  //current drive mode
-    Mode seek    = Mode::Inactive;  //which mode to enter after seeking is completed
-    uint latency = 0;               //how many 75hz cycles are remaining in seek mode
-    int lba      = 0;               //wnere the laser is currently at
-    int start    = 0;               //where the laser should start reading
-    int end      = 0;               //where the laser should stop reading
-    uint8 sector[2448];             //contains the most recently read disc sector
+    Mode mode   = Mode::Inactive;  //current drive mode
+    Mode seek   = Mode::Inactive;  //which mode to enter after seeking is completed
+    u32 latency = 0;               //how many 75hz cycles are remaining in seek mode
+    s32 lba     = 0;               //wnere the laser is currently at
+    s32 start   = 0;               //where the laser should start reading
+    s32 end     = 0;               //where the laser should stop reading
+    n8  sector[2448];              //contains the most recently read disc sector
   } drive;
 
   struct SCSI {
@@ -142,13 +142,13 @@ private:
     maybe<Drive&> drive;
     maybe<CDDA&> cdda;
     maybe<ADPCM&> adpcm;
-    enum class Status : uint { OK, CheckCondition };
+    enum class Status : u32 { OK, CheckCondition };
 
     //scsi.cpp
     auto clock() -> void;
     auto clockSector() -> void;
-    auto clockSample() -> maybe<uint8>;
-    auto readData() -> uint8;
+    auto clockSample() -> maybe<n8>;
+    auto readData() -> n8;
     auto update() -> void;
     auto messageInput() -> void;
     auto messageOutput() -> void;
@@ -174,26 +174,26 @@ private:
     } irq;
 
     struct Pin {
-      uint1 reset;        //RST
-      uint1 acknowledge;  //ACK
-      uint1 select;       //SEL (1 = bus select requested)
-      uint1 input;        //I/O (1 = input, 0 = output)
-      uint1 control;      //C/D (1 = control, 0 = data)
-      uint1 message;      //MSG
-      uint1 request;      //REQ
-      uint1 busy;         //BSY
+      n1 reset;        //RST
+      n1 acknowledge;  //ACK
+      n1 select;       //SEL (1 = bus select requested)
+      n1 input;        //I/O (1 = input, 0 = output)
+      n1 control;      //C/D (1 = control, 0 = data)
+      n1 message;      //MSG
+      n1 request;      //REQ
+      n1 busy;         //BSY
     } pin;
 
     struct Bus {
-      uint1 select;  //1 = bus is currently selected
-      uint8 data;    //D0-D7
+      n1 select;  //1 = bus is currently selected
+      n8 data;    //D0-D7
     } bus;
 
-    uint8 acknowledging;
-    uint1 dataTransferCompleted;
-    uint1 messageAfterStatus;
-    uint1 messageSent;
-    uint1 statusSent;
+    n8 acknowledging;
+    n1 dataTransferCompleted;
+    n1 messageAfterStatus;
+    n1 messageSent;
+    n1 statusSent;
 
     Buffer request;
     Buffer response;
@@ -216,12 +216,12 @@ private:
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    enum class PlayMode : uint { Loop, IRQ, Once } playMode = PlayMode::Loop;
+    enum class PlayMode : u32 { Loop, IRQ, Once } playMode = PlayMode::Loop;
 
     struct Sample {
-       int16 left;
-       int16 right;
-      uint12 offset;
+      i16 left;
+      i16 right;
+      n12 offset;
     } sample;
   } cdda;
 
@@ -230,10 +230,10 @@ private:
     maybe<Fader&> fader;
     MSM5205 msm5205;
     Node::Audio::Stream stream;
-    Memory::Writable<uint8> memory;  //64KB
+    Memory::Writable<n8> memory;  //64KB
 
-    static constexpr uint ReadLatency  = 20;  //estimation
-    static constexpr uint WriteLatency = 20;  //estimation
+    static constexpr u32 ReadLatency  = 20;  //estimation
+    static constexpr u32 WriteLatency = 20;  //estimation
 
     //adpcm.cpp
     auto load(Node::Object) -> void;
@@ -241,7 +241,7 @@ private:
 
     auto clock() -> void;
     auto clockSample() -> void;
-    auto control(uint8 data) -> void;
+    auto control(n8 data) -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -253,39 +253,39 @@ private:
     } irq;
 
     struct IO {
-      uint1 writeOffset;
-      uint1 writeLatch;
-      uint1 readLatch;
-      uint1 readOffset;
-      uint1 lengthLatch;
-      uint1 playing;
-      uint1 noRepeat;  //0 = do not stop playing when length reaches zero
-      uint1 reset;
+      n1 writeOffset;
+      n1 writeLatch;
+      n1 readLatch;
+      n1 readOffset;
+      n1 lengthLatch;
+      n1 playing;
+      n1 noRepeat;  //0 = do not stop playing when length reaches zero
+      n1 reset;
     } io;
 
     struct Bus {
-      uint16 address;
-       uint8 data;
-       uint8 pending;
+      n16 address;
+      n8  data;
+      n8  pending;
     } read, write;
 
     struct Sample {
-      uint8 data;
-      uint1 nibble;
+      n8 data;
+      n1 nibble;
     } sample;
 
-     uint2 dmaActive;
-     uint8 divider;  //0x01-0x10
-     uint8 period;   //count-up for divider
-    uint16 latch;
-    uint16 length;
+    n2  dmaActive;
+    n8  divider;  //0x01-0x10
+    n8  period;   //count-up for divider
+    n16 latch;
+    n16 length;
   } adpcm;
 
   struct Fader {
-    enum class Mode : uint { Idle, CDDA, ADPCM };
+    enum class Mode : u32 { Idle, CDDA, ADPCM };
 
-    auto cdda()  const -> double { return mode == Mode::CDDA  ? volume : 1.0; }
-    auto adpcm() const -> double { return mode == Mode::ADPCM ? volume : 1.0; }
+    auto cdda()  const -> f64 { return mode == Mode::CDDA  ? volume : 1.0; }
+    auto adpcm() const -> f64 { return mode == Mode::ADPCM ? volume : 1.0; }
 
     //fader.cpp
     auto clock() -> void;
@@ -295,22 +295,22 @@ private:
     auto serialize(serializer&) -> void;
 
     Mode mode;
-    double step;
-    double volume;
+    f64 step;
+    f64 volume;
   } fader;
 
   struct Clock {
-    uint32 drive;
-    uint32 cdda;
-    uint32 adpcm;
-    uint32 fader;
+    n32 drive;
+    n32 cdda;
+    n32 adpcm;
+    n32 fader;
   } clock;
 
   struct IO {
-     uint8 mdr[16];
-     uint1 cddaSampleSelect;
-    uint16 sramEnable;
-     uint1 bramEnable;
+    n8  mdr[16];
+    n1  cddaSampleSelect;
+    n16 sramEnable;
+    n1  bramEnable;
   } io;
 
 //unserialized:

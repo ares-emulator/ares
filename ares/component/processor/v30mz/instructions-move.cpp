@@ -29,11 +29,11 @@ auto V30MZ::instructionMoveMemAcc(Size size) -> void {
   write(size, segment(r.ds), fetch(Word), getAcc(size));
 }
 
-auto V30MZ::instructionMoveRegImm(uint8_t& reg) -> void {
+auto V30MZ::instructionMoveRegImm(u8& reg) -> void {
   reg = fetch(Byte);
 }
 
-auto V30MZ::instructionMoveRegImm(uint16_t& reg) -> void {
+auto V30MZ::instructionMoveRegImm(u16& reg) -> void {
   reg = fetch(Word);
 }
 
@@ -42,9 +42,9 @@ auto V30MZ::instructionMoveMemImm(Size size) -> void {
   setMem(size, fetch(size));
 }
 
-auto V30MZ::instructionExchange(uint16_t& x, uint16_t& y) -> void {
+auto V30MZ::instructionExchange(u16& x, u16& y) -> void {
   wait(2);
-  uint16 z = x;
+  n16 z = x;
   x = y;
   y = z;
 }
@@ -63,7 +63,7 @@ auto V30MZ::instructionLoadEffectiveAddressRegMem() -> void {
   setReg(Word, modrm.address);
 }
 
-auto V30MZ::instructionLoadSegmentMem(uint16_t& segment) -> void {
+auto V30MZ::instructionLoadSegmentMem(u16& segment) -> void {
   wait(5);
   modRM();
   setReg(Word, getMem(Word));

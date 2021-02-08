@@ -1,5 +1,5 @@
 auto uPD96050::exec() -> void {
-  uint24 opcode = programROM[regs.pc++];
+  n24 opcode = programROM[regs.pc++];
   switch(opcode >> 22) {
   case 0: execOP(opcode); break;
   case 1: execRT(opcode); break;
@@ -7,22 +7,22 @@ auto uPD96050::exec() -> void {
   case 3: execLD(opcode); break;
   }
 
-  int32 result = (int32)regs.k * regs.l;  //sign + 30-bit result
+  i32 result = (i32)regs.k * regs.l;  //sign + 30-bit result
   regs.m = result >> 15;  //store sign + top 15-bits
   regs.n = result <<  1;  //store low 15-bits + zero
 }
 
-auto uPD96050::execOP(uint24 opcode) -> void {
-  uint2 pselect = opcode >> 20;  //P select
-  uint4 alu     = opcode >> 16;  //ALU operation mode
-  uint1 asl     = opcode >> 15;  //accumulator select
-  uint2 dpl     = opcode >> 13;  //DP low modify
-  uint4 dphm    = opcode >>  9;  //DP high XOR modify
-  uint1 rpdcr   = opcode >>  8;  //RP decrement
-  uint4 src     = opcode >>  4;  //move source
-  uint4 dst     = opcode >>  0;  //move destination
+auto uPD96050::execOP(n24 opcode) -> void {
+  n2 pselect = opcode >> 20;  //P select
+  n4 alu     = opcode >> 16;  //ALU operation mode
+  n1 asl     = opcode >> 15;  //accumulator select
+  n2 dpl     = opcode >> 13;  //DP low modify
+  n4 dphm    = opcode >>  9;  //DP high XOR modify
+  n1 rpdcr   = opcode >>  8;  //RP decrement
+  n4 src     = opcode >>  4;  //move source
+  n4 dst     = opcode >>  0;  //move destination
 
-  uint16 idb;
+  n16 idb;
   switch(src) {
   case  0: idb = regs.trb; break;
   case  1: idb = regs.a; break;
@@ -43,7 +43,7 @@ auto uPD96050::execOP(uint24 opcode) -> void {
   }
 
   if(alu) {
-    uint16 p, q, r;
+    n16 p, q, r;
     Flag flag;
     boolean c;
 
@@ -102,8 +102,8 @@ auto uPD96050::execOP(uint24 opcode) -> void {
     case  7:    //ADC
     case  8:    //DEC
     case  9: {  //INC
-      uint16 carries = q ^ p ^ r;
-      uint16 overflow = (q ^ r) & (p ^ (alu & 1 ? r : q));
+      n16 carries = q ^ p ^ r;
+      n16 overflow = (q ^ r) & (p ^ (alu & 1 ? r : q));
       flag.ov0 = overflow & 0x8000;
       flag.ov1 = flag.ov0 & flag.ov1 ? flag.s0 == flag.s1 : flag.ov0 | flag.ov1;
       flag.c = (carries ^ overflow) & 0x8000;
@@ -148,17 +148,17 @@ auto uPD96050::execOP(uint24 opcode) -> void {
   }
 }
 
-auto uPD96050::execRT(uint24 opcode) -> void {
+auto uPD96050::execRT(n24 opcode) -> void {
   execOP(opcode);
   regs.pc = regs.stack[--regs.sp];
 }
 
-auto uPD96050::execJP(uint24 opcode) -> void {
-  uint9 brch = opcode >> 13;  //branch
-  uint11 na  = opcode >>  2;  //next address
-  uint2 bank = opcode >>  0;  //bank address
+auto uPD96050::execJP(n24 opcode) -> void {
+  n9 brch = opcode >> 13;  //branch
+  n11 na  = opcode >>  2;  //next address
+  n2 bank = opcode >>  0;  //bank address
 
-  uint14 jp = regs.pc & 0x2000 | bank << 11 | na << 0;
+  n14 jp = regs.pc & 0x2000 | bank << 11 | na << 0;
 
   switch(brch) {
   case 0x000: regs.pc = regs.so; return;  //JMPSO
@@ -215,9 +215,9 @@ auto uPD96050::execJP(uint24 opcode) -> void {
   }
 }
 
-auto uPD96050::execLD(uint24 opcode) -> void {
-  uint16 id = opcode >> 6;  //immediate data
-  uint4 dst = opcode >> 0;  //destination
+auto uPD96050::execLD(n24 opcode) -> void {
+  n16 id = opcode >> 6;  //immediate data
+  n4 dst = opcode >> 0;  //destination
 
   switch(dst) {
   case  0: break;

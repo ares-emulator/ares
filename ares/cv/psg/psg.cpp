@@ -30,7 +30,7 @@ auto PSG::main() -> void {
   step(1);
 }
 
-auto PSG::step(uint clocks) -> void {
+auto PSG::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }
@@ -39,7 +39,7 @@ auto PSG::power() -> void {
   SN76489::power();
   Thread::create(system.colorburst() / 16.0, {&PSG::main, this});
 
-  for(uint level : range(15)) {
+  for(u32 level : range(15)) {
     volume[level] = pow(2, level * -2.0 / 6.0);
   }
   volume[15] = 0;

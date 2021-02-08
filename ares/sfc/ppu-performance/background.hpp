@@ -1,13 +1,13 @@
 struct Background {
-  struct ID { enum : uint { BG1, BG2, BG3, BG4 }; };
-  struct Mode { enum : uint { BPP2, BPP4, BPP8, Mode7, Inactive }; };
+  struct ID { enum : u32 { BG1, BG2, BG3, BG4 }; };
+  struct Mode { enum : u32 { BPP2, BPP4, BPP8, Mode7, Inactive }; };
 
-  const uint id;
-  Background(uint id) : id(id) {}
+  const u32 id;
+  Background(u32 id) : id(id) {}
 
   //background.cpp
   auto render() -> void;
-  auto getTile(uint hoffset, uint voffset) -> uint16;
+  auto getTile(u32 hoffset, u32 voffset) -> n16;
   auto power() -> void;
 
   //mode7.cpp
@@ -17,21 +17,21 @@ struct Background {
   auto serialize(serializer&) -> void;
 
   struct IO {
-     uint2 screenSize;
-    uint16 screenAddress;
+    n2  screenSize;
+    n16 screenAddress;
 
-    uint16 tiledataAddress;
-     uint1 tileSize;
+    n16 tiledataAddress;
+    n1  tileSize;
 
-    uint16 hoffset;
-    uint16 voffset;
+    n16 hoffset;
+    n16 voffset;
 
-     uint1 aboveEnable;
-     uint1 belowEnable;
-     uint1 mosaicEnable;
+    n1  aboveEnable;
+    n1  belowEnable;
+    n1  mosaicEnable;
 
-     uint8 mode;
-     uint8 priority[2];
+    n8  mode;
+    n8  priority[2];
   } io;
 
   PPU::Window::Layer window;

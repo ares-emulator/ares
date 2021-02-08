@@ -16,7 +16,8 @@ SG1000::SG1000() {
 }
 
 auto SG1000::load() -> bool {
-  if(!ares::SG1000::load(root, "SG-1000")) return false;
+  auto region = Emulator::region();
+  if(!ares::SG1000::load(root, {"[Sega] SG-1000 (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

@@ -1,4 +1,4 @@
-auto Cartridge::read(uint cycle, uint16 address, uint8 data) -> uint8 {
+auto Cartridge::read(u32 cycle, n16 address, n8 data) -> n8 {
   if(address == 0xff50 && cycle == 2) {
     return data;
   }
@@ -24,7 +24,7 @@ auto Cartridge::read(uint cycle, uint16 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto Cartridge::write(uint cycle, uint16 address, uint8 data) -> void {
+auto Cartridge::write(u32 cycle, n16 address, n8 data) -> void {
   if(bootromEnable && address == 0xff50 && cycle == 2) {
     bootromEnable = false;  //does the written value matter?
     return;

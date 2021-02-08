@@ -3,34 +3,34 @@ inline auto SA1::IRAM::conflict() const -> bool {
   return false;
 }
 
-inline auto SA1::IRAM::read(uint24 address, uint8 data) -> uint8 {
+inline auto SA1::IRAM::read(n24 address, n8 data) -> n8 {
   if(!size()) return data;
   address = bus.mirror(address, size());
   return WritableMemory::read(address, data);
 }
 
-inline auto SA1::IRAM::write(uint24 address, uint8 data) -> void {
+inline auto SA1::IRAM::write(n24 address, n8 data) -> void {
   if(!size()) return;
   address = bus.mirror(address, size());
   return WritableMemory::write(address, data);
 }
 
-auto SA1::IRAM::readCPU(uint24 address, uint8 data) -> uint8 {
+auto SA1::IRAM::readCPU(n24 address, n8 data) -> n8 {
   cpu.synchronize(sa1);
   return read(address, data);
 }
 
-auto SA1::IRAM::writeCPU(uint24 address, uint8 data) -> void {
+auto SA1::IRAM::writeCPU(n24 address, n8 data) -> void {
   cpu.synchronize(sa1);
   if(!sa1.io.siwp.bit(address.bit(8,10))) return;
   return write(address, data);
 }
 
-auto SA1::IRAM::readSA1(uint24 address, uint8 data) -> uint8 {
+auto SA1::IRAM::readSA1(n24 address, n8 data) -> n8 {
   return read(address, data);
 }
 
-auto SA1::IRAM::writeSA1(uint24 address, uint8 data) -> void {
+auto SA1::IRAM::writeSA1(n24 address, n8 data) -> void {
   if(!sa1.io.ciwp.bit(address.bit(8,10))) return;
   return write(address, data);
 }

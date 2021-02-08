@@ -2,7 +2,7 @@
 
 namespace hiro {
 
-enum class MessageWindowType : uint { Error, Information, Question, Warning };
+enum class MessageWindowType : u32 { Error, Information, Question, Warning };
 
 auto MessageWindow_dialog(MessageWindow::State& state, MessageWindowType type) -> MessageWindow::Response {
   @autoreleasepool {

@@ -49,12 +49,12 @@ auto pMenu::_update() -> void {
   mi.dwStyle = MNS_NOTIFYBYPOS;  //| MNS_MODELESS;
   SetMenuInfo(hmenu, &mi);
 
-  unsigned position = 0;
+  u32 position = 0;
 
   for(auto& action : state().actions) {
     if(!action->self()) continue;
     action->self()->position = position;
-    unsigned enabled = action->enabled() ? 0 : MF_GRAYED;
+    u32 enabled = action->enabled() ? 0 : MF_GRAYED;
 
     MENUITEMINFO mii{sizeof(MENUITEMINFO)};
     mii.fMask = MIIM_DATA;

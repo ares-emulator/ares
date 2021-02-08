@@ -5,10 +5,10 @@
 namespace hiro {
 
 struct MonitorInfo {
-  uint monitor = 0;
-  uint primary = 0;
+  u32 monitor = 0;
+  u32 primary = 0;
   Geometry geometry;
-  uint index = 0;
+  u32 index = 0;
 };
 
 static auto CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) -> BOOL {
@@ -26,32 +26,32 @@ static auto CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT l
   return true;
 }
 
-auto pMonitor::count() -> uint {
+auto pMonitor::count() -> u32 {
   return GetSystemMetrics(SM_CMONITORS);
 }
 
 auto pMonitor::dpi(uint monitor) -> Position {
   HDC hdc = GetDC(0);
-  auto dpiX = (float)GetDeviceCaps(hdc, LOGPIXELSX);
-  auto dpiY = (float)GetDeviceCaps(hdc, LOGPIXELSY);
+  auto dpiX = (f32)GetDeviceCaps(hdc, LOGPIXELSX);
+  auto dpiY = (f32)GetDeviceCaps(hdc, LOGPIXELSY);
   ReleaseDC(0, hdc);
   return {dpiX, dpiY};
 }
 
-auto pMonitor::geometry(uint monitor) -> Geometry {
+auto pMonitor::geometry(u32 monitor) -> Geometry {
   MonitorInfo info;
   info.monitor = monitor;
   EnumDisplayMonitors(nullptr, nullptr, MonitorEnumProc, (LPARAM)&info);
   return info.geometry;
 }
 
-auto pMonitor::primary() -> uint {
+auto pMonitor::primary() -> u32 {
   MonitorInfo info;
   EnumDisplayMonitors(nullptr, nullptr, MonitorEnumProc, (LPARAM)&info);
   return info.primary;
 }
 
-auto pMonitor::workspace(uint monitor) -> Geometry {
+auto pMonitor::workspace(u32 monitor) -> Geometry {
   return pDesktop::workspace();
 }
 

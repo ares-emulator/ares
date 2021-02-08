@@ -8,6 +8,7 @@
 
 namespace ares::PCEngine {
   #include <ares/inline.hpp>
+  auto enumerate() -> vector<string>;
   auto load(Node::System& node, string name) -> bool;
 
   struct Model {

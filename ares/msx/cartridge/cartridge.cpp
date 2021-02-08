@@ -57,7 +57,7 @@ auto Cartridge::main() -> void {
   step(system.colorburst());
 }
 
-auto Cartridge::step(uint clocks) -> void {
+auto Cartridge::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }
@@ -67,12 +67,12 @@ auto Cartridge::power() -> void {
   if(board) board->power();
 }
 
-auto Cartridge::read(uint16 address) -> uint8 {
+auto Cartridge::read(n16 address) -> n8 {
   if(board) return board->read(address, 0xff);
   return 0xff;
 }
 
-auto Cartridge::write(uint16 address, uint8 data) -> void {
+auto Cartridge::write(n16 address, n8 data) -> void {
   if(board) return board->write(address, data);
 }
 

@@ -2,7 +2,7 @@
 struct Font {
   using type = Font;
 
-  Font(const string& family = "", float size = 0.0);
+  Font(const string& family = "", f32 size = 0.0);
 
   explicit operator bool() const;
   auto operator==(const Font& source) const -> bool;
@@ -15,21 +15,19 @@ struct Font {
   auto setBold(bool bold = true) -> type&;
   auto setFamily(const string& family = "") -> type&;
   auto setItalic(bool italic = true) -> type&;
-  auto setSize(float size = 0.0) -> type&;
-  auto size() const -> float;
+  auto setSize(f32 size = 0.0) -> type&;
+  auto size() const -> f32;
   auto size(const string& text) const -> Size;
 
   static const string Sans;
   static const string Serif;
   static const string Mono;
 
-//private:
-//sizeof(Font) == 32
   struct State {
-    string family;         //24
-    float size = 0.0;      //4
-    char bold = false;     //1+
-    char italic = false;   //1=4
+    string family;
+    f32 size = 0.0;
+    char bold = false;
+    char italic = false;
   } state;
 };
 #endif

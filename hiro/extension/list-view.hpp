@@ -20,7 +20,7 @@ struct mListView : mTableView {
   auto doChange() const -> void;
   auto doContext() const -> void;
   auto doToggle(ListViewItem) const -> void;
-  auto item(uint position) const -> ListViewItem;
+  auto item(u32 position) const -> ListViewItem;
   auto items() const -> vector<ListViewItem>;
   auto onActivate(const function<void ()>& callback) -> type&;
   auto onChange(const function<void ()>& callback) -> type&;
@@ -29,7 +29,7 @@ struct mListView : mTableView {
   auto reset() -> type& override;
   auto resizeColumn() -> type&;
   auto selected() const -> ListViewItem;
-  auto setVisible(bool visible = true) -> type&;
+  auto setVisible(bool visible = true) -> type& override;
 
 //private:
   struct State {

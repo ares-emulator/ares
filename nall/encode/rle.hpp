@@ -2,26 +2,26 @@
 
 namespace nall::Encode {
 
-template<uint S = 1, uint M = 4 / S>  //S = word size; M = match length
-inline auto RLE(array_view<uint8_t> input) -> vector<uint8_t> {
-  vector<uint8_t> output;
-  for(uint byte : range(8)) output.append(input.size() >> byte * 8);
+template<u32 S = 1, u32 M = 4 / S>  //S = word size; M = match length
+inline auto RLE(array_view<u8> input) -> vector<u8> {
+  vector<u8> output;
+  for(u32 byte : range(8)) output.append(input.size() >> byte * 8);
 
-  uint base = 0;
-  uint skip = 0;
+  u32 base = 0;
+  u32 skip = 0;
 
-  auto load = [&](uint offset) -> uint8_t {
+  auto load = [&](u32 offset) -> u8 {
     return input(offset);
   };
 
-  auto read = [&](uint offset) -> uint64_t {
-    uint64_t value = 0;
-    for(uint byte : range(S)) value |= load(offset + byte) << byte * 8;
+  auto read = [&](u32 offset) -> u64 {
+    u64 value = 0;
+    for(u32 byte : range(S)) value |= load(offset + byte) << byte * 8;
     return value;
   };
 
-  auto write = [&](uint64_t value) -> void {
-    for(uint byte : range(S)) output.append(value >> byte * 8);
+  auto write = [&](u64 value) -> void {
+    for(u32 byte : range(S)) output.append(value >> byte * 8);
   };
 
   auto flush = [&] {
@@ -33,8 +33,8 @@ inline auto RLE(array_view<uint8_t> input) -> vector<uint8_t> {
   };
 
   while(base + S * skip < input.size()) {
-    uint same = 1;
-    for(uint offset = base + S * (skip + 1); offset < input.size(); offset += S) {
+    u32 same = 1;
+    for(u32 offset = base + S * (skip + 1); offset < input.size(); offset += S) {
       if(read(offset) != read(base + S * skip)) break;
       if(++same == 127 + M) break;
     }

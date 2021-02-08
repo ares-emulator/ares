@@ -3,7 +3,7 @@
 mVerticalResizeGrip::mVerticalResizeGrip() {
   image icon;
   icon.allocate(15, 5);
-  for(uint x : range(icon.width())) {
+  for(u32 x : range(icon.width())) {
     auto data = icon.data() + x * icon.stride();
     icon.write(data, 0x00000000); data += icon.pitch();
     icon.write(data, 0xff9f9f9f); data += icon.pitch();
@@ -33,7 +33,7 @@ auto mVerticalResizeGrip::doActivate() const -> void {
   if(state.onActivate) state.onActivate();
 }
 
-auto mVerticalResizeGrip::doResize(int offset) const -> void {
+auto mVerticalResizeGrip::doResize(s32 offset) const -> void {
   if(state.onResize) state.onResize(offset);
 }
 
@@ -42,7 +42,7 @@ auto mVerticalResizeGrip::onActivate(const function<void ()>& callback) -> type&
   return *this;
 }
 
-auto mVerticalResizeGrip::onResize(const function<void (int)>& callback) -> type& {
+auto mVerticalResizeGrip::onResize(const function<void (s32)>& callback) -> type& {
   state.onResize = callback;
   return *this;
 }

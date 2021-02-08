@@ -10,7 +10,7 @@ auto APU::Square::run() -> void {
     }
   }
 
-  uint4 sample = volume;
+  n4 sample = volume;
   if(enable == false || signal == false) sample = 0;
   output = sample;
 }

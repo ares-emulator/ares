@@ -47,7 +47,7 @@ auto AI::sample() -> void {
   }
 }
 
-auto AI::step(uint clocks) -> void {
+auto AI::step(u32 clocks) -> void {
   clock += clocks;
 }
 

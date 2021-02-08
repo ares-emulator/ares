@@ -47,9 +47,9 @@ auto Competition::power() -> void {
   scoreSecondsRemaining = 0;
 }
 
-auto Competition::mcuRead(uint24 address, uint8 data) -> uint8 {
+auto Competition::mcuRead(n24 address, n8 data) -> n8 {
   if(board == Board::CampusChallenge92) {
-    uint id = 0;
+    u32 id = 0;
     if(select == 0x09) id = 1;
     if(select == 0x05) id = 2;
     if(select == 0x03) id = 3;
@@ -62,7 +62,7 @@ auto Competition::mcuRead(uint24 address, uint8 data) -> uint8 {
   }
 
   if(board == Board::PowerFest94) {
-    uint id = 0;
+    u32 id = 0;
     if(select == 0x09) id = 1;
     if(select == 0x0c) id = 2;
     if(select == 0x0a) id = 3;
@@ -83,17 +83,17 @@ auto Competition::mcuRead(uint24 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto Competition::mcuWrite(uint24 address, uint8 data) -> void {
+auto Competition::mcuWrite(n24 address, n8 data) -> void {
 }
 
-auto Competition::read(uint24 address, uint8 data) -> uint8 {
+auto Competition::read(n24 address, n8 data) -> n8 {
   if(address == 0x106000 || address == 0xc00000) {
     return status;
   }
   return data;
 }
 
-auto Competition::write(uint24 address, uint8 data) -> void {
+auto Competition::write(n24 address, n8 data) -> void {
   if(address == 0x206000 || address == 0xe00000) {
     select = data;
     if(timer && data == 0x09) {

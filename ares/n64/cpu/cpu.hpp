@@ -23,7 +23,7 @@ struct CPU : Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto synchronize() -> void;
 
   auto instruction() -> void;
@@ -71,10 +71,10 @@ struct CPU : Thread {
     CPU& self;
     Context(CPU& self) : self(self) {}
 
-    enum Mode : uint { Kernel, Supervisor, User };
-    enum Segment : uint { Invalid, Mapped, Cached, Uncached };
-    uint mode;
-    uint segment[8];  //512_MiB chunks
+    enum Mode : u32 { Kernel, Supervisor, User };
+    enum Segment : u32 { Invalid, Mapped, Cached, Uncached };
+    u32 mode;
+    u32 segment[8];  //512_MiB chunks
 
     auto setMode() -> void;
   } context{*this};
@@ -83,7 +83,7 @@ struct CPU : Thread {
   struct TLB {
     CPU& self;
     TLB(CPU& self) : self(self) {}
-    static constexpr uint Entries = 32;
+    static constexpr u32 Entries = 32;
 
     //tlb.cpp
     auto load(u32 address) -> maybe<u32>;
@@ -94,23 +94,23 @@ struct CPU : Thread {
       //scc-tlb.cpp
       auto synchronize() -> void;
 
-       uint1 global[2];
-       uint1 valid[2];
-       uint1 dirty[2];
-       uint3 cacheAlgorithm[2];
-      uint32 physicalAddress[2];
-      uint32 pageMask;
-      uint32 virtualAddress;
-       uint8 addressSpaceID;
+      n1  global[2];
+      n1  valid[2];
+      n1  dirty[2];
+      n3  cacheAlgorithm[2];
+      n32 physicalAddress[2];
+      n32 pageMask;
+      n32 virtualAddress;
+      n8  addressSpaceID;
     //unimplemented:
-      uint22 unused;
-       uint2 region;
+      n22 unused;
+      n2  region;
     //internal:
-       uint1 globals;
-      uint32 addressMaskHi;
-      uint32 addressMaskLo;
-      uint32 addressSelect;
-      uint32 addressCompare;
+      n1  globals;
+      n32 addressMaskHi;
+      n32 addressMaskLo;
+      n32 addressSelect;
+      n32 addressCompare;
     } entry[TLB::Entries];
 
     u32 physicalAddress;
@@ -120,15 +120,15 @@ struct CPU : Thread {
   auto readAddress (u32 address) -> maybe<u32>;
   auto writeAddress(u32 address) -> maybe<u32>;
 
-  auto readByte    (u32 address) -> maybe<u32>;
-  auto readHalf    (u32 address) -> maybe<u32>;
-  auto readWord    (u32 address) -> maybe<u32>;
-  auto readDouble  (u32 address) -> maybe<u64>;
+  auto readByte(u32 address) -> maybe<u32>;
+  auto readHalf(u32 address) -> maybe<u32>;
+  auto readWord(u32 address) -> maybe<u32>;
+  auto readDual(u32 address) -> maybe<u64>;
 
-  auto writeByte   (u32 address,  u8 data) -> bool;
-  auto writeHalf   (u32 address, u16 data) -> bool;
-  auto writeWord   (u32 address, u32 data) -> bool;
-  auto writeDouble (u32 address, u64 data) -> bool;
+  auto writeByte(u32 address, u8  data) -> bool;
+  auto writeHalf(u32 address, u16 data) -> bool;
+  auto writeWord(u32 address, u32 data) -> bool;
+  auto writeDual(u32 address, u64 data) -> bool;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -136,7 +136,7 @@ struct CPU : Thread {
   //exception.cpp
   struct Exception {
     CPU& self;
-    auto trigger(uint code, uint coprocessor = 0) -> void;
+    auto trigger(u32 code, u32 coprocessor = 0) -> void;
     auto interrupt() -> void;
     auto tlbModification() -> void;
     auto tlbLoad() -> void;
@@ -158,7 +158,7 @@ struct CPU : Thread {
     auto watchAddress() -> void;
   } exception{*this};
 
-  enum Interrupt : uint {
+  enum Interrupt : u32 {
     Software0 = 0,
     Software1 = 1,
     RCP       = 2,
@@ -183,7 +183,7 @@ struct CPU : Thread {
   using cr64 = const r64;
 
   struct IPU {
-    enum Register : uint {
+    enum Register : u32 {
       R0,                              //zero (read-only)
       AT,                              //assembler temporary
       V0, V1,                          //arithmetic values
@@ -318,14 +318,14 @@ struct CPU : Thread {
   struct SCC {
     //0
     struct Index {
-      uint6 tlbEntry;
-      uint1 probeFailure;
+      n6 tlbEntry;
+      n1 probeFailure;
     } index;
 
     //1
     struct Random {
-      uint5 index;
-      uint1 unused;
+      n5 index;
+      n1 unused;
     } random;
 
     //2: EntryLo0
@@ -336,14 +336,14 @@ struct CPU : Thread {
 
     //4
     struct Context {
-      uint19 badVirtualAddress;
-      uint41 pageTableEntryBase;
+      n19 badVirtualAddress;
+      n41 pageTableEntryBase;
     } context;
 
     //6
     struct Wired {
-      uint5 index;
-      uint1 unused;
+      n5 index;
+      n1 unused;
     } wired;
 
     //8
@@ -357,38 +357,38 @@ struct CPU : Thread {
 
     //12
     struct Status {
-      uint1 interruptEnable;
-      uint1 exceptionLevel;
-      uint1 errorLevel;
-      uint2 privilegeMode;
-      uint1 userExtendedAddressing;
-      uint1 supervisorExtendedAddressing;
-      uint1 kernelExtendedAddressing;
-      uint8 interruptMask;
-      uint1 de;  //unused
-      uint1 ce;  //unused
-      uint1 condition;
-      uint1 softReset;
-      uint1 tlbShutdown;
-      uint1 vectorLocation;
-      uint1 instructionTracing;
-      uint1 reverseEndian;
-      uint1 floatingPointMode;
-      uint1 lowPowerMode;
+      n1 interruptEnable;
+      n1 exceptionLevel;
+      n1 errorLevel;
+      n2 privilegeMode;
+      n1 userExtendedAddressing;
+      n1 supervisorExtendedAddressing;
+      n1 kernelExtendedAddressing;
+      n8 interruptMask;
+      n1 de;  //unused
+      n1 ce;  //unused
+      n1 condition;
+      n1 softReset;
+      n1 tlbShutdown;
+      n1 vectorLocation;
+      n1 instructionTracing;
+      n1 reverseEndian;
+      n1 floatingPointMode;
+      n1 lowPowerMode;
       struct Enable {
-        uint1 coprocessor0;
-        uint1 coprocessor1;
-        uint1 coprocessor2;
-        uint1 coprocessor3;
+        n1 coprocessor0;
+        n1 coprocessor1;
+        n1 coprocessor2;
+        n1 coprocessor3;
       } enable;
     } status;
 
     //13
     struct Cause {
-      uint5 exceptionCode;
-      uint8 interruptPending;
-      uint2 coprocessorError;
-      uint1 branchDelay;
+      n5 exceptionCode;
+      n8 interruptPending;
+      n2 coprocessorError;
+      n1 branchDelay;
     } cause;
 
     //14: Exception Program Counter
@@ -402,53 +402,53 @@ struct CPU : Thread {
 
     //16
     struct Configuration {
-      uint2 coherencyAlgorithmKSEG0;
-      uint2 cu;  //reserved
-      uint1 bigEndian;
-      uint2 sysadWritebackPattern;
-      uint2 systemClockRatio;
+      n2 coherencyAlgorithmKSEG0;
+      n2 cu;  //reserved
+      n1 bigEndian;
+      n2 sysadWritebackPattern;
+      n2 systemClockRatio;
     } configuration;
 
     //17: Load Linked Address
     u64 ll;
-    uint1 llbit;
+    n1  llbit;
 
     //18
     struct WatchLo {
-       uint1 trapOnWrite;
-       uint1 trapOnRead;
-      uint32 physicalAddress;
+      n1  trapOnWrite;
+      n1  trapOnRead;
+      n32 physicalAddress;
     } watchLo;
 
     //19
     struct WatchHi {
-      uint4 physicalAddressExtended;  //unused; for R4000 compatibility only
+      n4 physicalAddressExtended;  //unused; for R4000 compatibility only
     } watchHi;
 
     //20
     struct XContext {
-      uint27 badVirtualAddress;
-       uint2 region;
-      uint31 pageTableEntryBase;
+      n27 badVirtualAddress;
+      n2  region;
+      n31 pageTableEntryBase;
     } xcontext;
 
     //26
     struct ParityError {
-      uint8 diagnostic;  //unused; for R4000 compatibility only
+      n8 diagnostic;  //unused; for R4000 compatibility only
     } parityError;
 
     //28
     struct TagLo {
-       uint2 primaryCacheState;
-      uint32 physicalAddress;
+      n2  primaryCacheState;
+      n32 physicalAddress;
     } tagLo;
 
     //31: Error Exception Program Counter
     u64 epcError;
   } scc;
 
-  auto getControlRegister(uint5) -> u64;
-  auto setControlRegister(uint5, uint64) -> void;
+  auto getControlRegister(n5) -> u64;
+  auto setControlRegister(n5, n64) -> void;
 
   auto instructionDMFC0(r64& rt, u8 rd) -> void;
   auto instructionDMTC0(cr64& rt, u8 rd) -> void;
@@ -472,37 +472,37 @@ struct CPU : Thread {
     } coprocessor;
 
     struct ControlStatus {
-      uint2 roundMode = 0;
+      n2 roundMode = 0;
       struct Flag {
-        uint1 inexact = 0;
-        uint1 underflow = 0;
-        uint1 overflow = 0;
-        uint1 divisionByZero = 0;
-        uint1 invalidOperation = 0;
+        n1 inexact = 0;
+        n1 underflow = 0;
+        n1 overflow = 0;
+        n1 divisionByZero = 0;
+        n1 invalidOperation = 0;
       } flag;
       struct Enable {
-        uint1 inexact = 0;
-        uint1 underflow = 0;
-        uint1 overflow = 0;
-        uint1 divisionByZero = 0;
-        uint1 invalidOperation = 0;
+        n1 inexact = 0;
+        n1 underflow = 0;
+        n1 overflow = 0;
+        n1 divisionByZero = 0;
+        n1 invalidOperation = 0;
       } enable;
       struct Cause {
-        uint1 inexact = 0;
-        uint1 underflow = 0;
-        uint1 overflow = 0;
-        uint1 divisionByZero = 0;
-        uint1 invalidOperation = 0;
-        uint1 unimplementedOperation = 0;
+        n1 inexact = 0;
+        n1 underflow = 0;
+        n1 overflow = 0;
+        n1 divisionByZero = 0;
+        n1 invalidOperation = 0;
+        n1 unimplementedOperation = 0;
       } cause;
-      uint1 compare = 0;
-      uint1 flushed = 0;
+      n1 compare = 0;
+      n1 flushed = 0;
     } csr;
   } fpu;
 
-  template<typename T> auto fgr(uint) -> T&;
-  auto getControlRegisterFPU(uint5) -> u32;
-  auto setControlRegisterFPU(uint5, uint32) -> void;
+  template<typename T> auto fgr(u32) -> T&;
+  auto getControlRegisterFPU(n5) -> u32;
+  auto setControlRegisterFPU(n5, n32) -> void;
 
   auto instructionBC1(bool value, bool likely, s16 imm) -> void;
   auto instructionCFC1(r64& rt, u8 rd) -> void;
@@ -658,24 +658,24 @@ struct CPU : Thread {
     auto REGIMM() -> vector<string>;
     auto SCC() -> vector<string>;
     auto FPU() -> vector<string>;
-    auto immediate(s64 value, uint bits = 0) const -> string;
-    auto ipuRegisterName(uint index) const -> string;
-    auto ipuRegisterValue(uint index) const -> string;
-    auto ipuRegisterIndex(uint index, s16 offset) const -> string;
-    auto sccRegisterName(uint index) const -> string;
-    auto sccRegisterValue(uint index) const -> string;
-    auto fpuRegisterName(uint index) const -> string;
-    auto fpuRegisterValue(uint index) const -> string;
-    auto ccrRegisterName(uint index) const -> string;
-    auto ccrRegisterValue(uint index) const -> string;
+    auto immediate(s64 value, u32 bits = 0) const -> string;
+    auto ipuRegisterName(u32 index) const -> string;
+    auto ipuRegisterValue(u32 index) const -> string;
+    auto ipuRegisterIndex(u32 index, s16 offset) const -> string;
+    auto sccRegisterName(u32 index) const -> string;
+    auto sccRegisterValue(u32 index) const -> string;
+    auto fpuRegisterName(u32 index) const -> string;
+    auto fpuRegisterValue(u32 index) const -> string;
+    auto ccrRegisterName(u32 index) const -> string;
+    auto ccrRegisterValue(u32 index) const -> string;
 
     u32 address;
     u32 instruction;
   } disassembler{*this};
 
   static constexpr bool Endian = 1;  //0 = little, 1 = big
-  static constexpr uint FlipLE = (Endian == 0 ? 7 : 0);
-  static constexpr uint FlipBE = (Endian == 1 ? 7 : 0);
+  static constexpr u32  FlipLE = (Endian == 0 ? 7 : 0);
+  static constexpr u32  FlipBE = (Endian == 1 ? 7 : 0);
 };
 
 extern CPU cpu;

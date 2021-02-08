@@ -23,13 +23,8 @@ MasterSystem::MasterSystem() {
 }
 
 auto MasterSystem::load() -> bool {
-  if(!ares::MasterSystem::load(root, "Master System II")) return false;
-
-  if(auto region = root->find<ares::Node::Setting::String>("Region")) {
-    if(settings.boot.prefer == "NTSC-U") region->setValue("NTSC-U → NTSC-J → PAL");
-    if(settings.boot.prefer == "NTSC-J") region->setValue("NTSC-J → NTSC-U → PAL");
-    if(settings.boot.prefer == "PAL"   ) region->setValue("PAL → NTSC-U → NTSC-J");
-  }
+  auto region = Emulator::region();
+  if(!ares::MasterSystem::load(root, {"[Sega] Master System (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -113,7 +108,7 @@ GameGear::GameGear() {
 }
 
 auto GameGear::load() -> bool {
-  if(!ares::MasterSystem::load(root, "Game Gear")) return false;
+  if(!ares::MasterSystem::load(root, "[Sega] Game Gear")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

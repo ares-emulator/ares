@@ -68,7 +68,7 @@ auto SPU::Reverb::iiasm(s16 sample) -> s32 {
 }
 
 template<bool phase>
-auto SPU::Reverb::r2244(const int16* source) -> s32 {
+auto SPU::Reverb::r2244(const i16* source) -> s32 {
   s32 output = 0;
   if(phase) {
     output = source[9];
@@ -79,7 +79,7 @@ auto SPU::Reverb::r2244(const int16* source) -> s32 {
   return output;
 }
 
-auto SPU::Reverb::r4422(const int16* source) -> s32 {
+auto SPU::Reverb::r4422(const i16* source) -> s32 {
   s32 output = 0;
   for(u32 n : range(20)) output += coefficients[n] * source[n * 2];
   output += 0x4000 * source[19];

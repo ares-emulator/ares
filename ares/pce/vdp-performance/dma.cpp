@@ -1,4 +1,4 @@
-auto VDC::DMA::step(uint clocks) -> void {
+auto VDC::DMA::step(u32 clocks) -> void {
   do {
     if(!vramActive && !satbActive) break;
 
@@ -10,7 +10,7 @@ auto VDC::DMA::step(uint clocks) -> void {
         continue;
       }
 
-      uint16 data = vdc->vram.read(source);
+      n16 data = vdc->vram.read(source);
       vdc->vram.write(target, data);
       sourceIncrementMode == 0 ? source++ : source--;
       targetIncrementMode == 0 ? target++ : target--;
@@ -22,7 +22,7 @@ auto VDC::DMA::step(uint clocks) -> void {
     }
 
     if(satbActive) {
-      uint16 data = vdc->vram.read(satbSource + satbOffset);
+      n16 data = vdc->vram.read(satbSource + satbOffset);
       vdc->satb.write(satbOffset, data);
       if(!++satbOffset) {
         satbActive = 0;

@@ -42,7 +42,7 @@ auto CPU::hdmaRun() -> void {
 
 //
 
-inline auto CPU::Channel::step(uint clocks) -> void {
+inline auto CPU::Channel::step(u32 clocks) -> void {
   cpu.counter.dma += clocks;
   cpu.step(clocks);
 }
@@ -51,7 +51,7 @@ inline auto CPU::Channel::edge() -> void {
   cpu.dmaEdge();
 }
 
-inline auto CPU::Channel::validA(uint24 address) -> bool {
+inline auto CPU::Channel::validA(n24 address) -> bool {
   //A-bus cannot access the B-bus or CPU I/O registers
   if((address & 0x40ff00) == 0x2100) return false;  //00-3f,80-bf:2100-21ff
   if((address & 0x40fe00) == 0x4000) return false;  //00-3f,80-bf:4000-41ff
@@ -60,30 +60,30 @@ inline auto CPU::Channel::validA(uint24 address) -> bool {
   return true;
 }
 
-inline auto CPU::Channel::readA(uint24 address) -> uint8 {
+inline auto CPU::Channel::readA(n24 address) -> n8 {
   step(4);
-  cpu.r.mdr = validA(address) ? bus.read(address, cpu.r.mdr) : (uint8)0x00;
-  step(4);
-  return cpu.r.mdr;
-}
-
-inline auto CPU::Channel::readB(uint8 address, bool valid) -> uint8 {
-  step(4);
-  cpu.r.mdr = valid ? bus.read(0x2100 | address, cpu.r.mdr) : (uint8)0x00;
+  cpu.r.mdr = validA(address) ? bus.read(address, cpu.r.mdr) : (n8)0x00;
   step(4);
   return cpu.r.mdr;
 }
 
-inline auto CPU::Channel::writeA(uint24 address, uint8 data) -> void {
+inline auto CPU::Channel::readB(n8 address, bool valid) -> n8 {
+  step(4);
+  cpu.r.mdr = valid ? bus.read(0x2100 | address, cpu.r.mdr) : (n8)0x00;
+  step(4);
+  return cpu.r.mdr;
+}
+
+inline auto CPU::Channel::writeA(n24 address, n8 data) -> void {
   if(validA(address)) bus.write(address, data);
 }
 
-inline auto CPU::Channel::writeB(uint8 address, uint8 data, bool valid) -> void {
+inline auto CPU::Channel::writeB(n8 address, n8 data, bool valid) -> void {
   if(valid) bus.write(0x2100 | address, data);
 }
 
-inline auto CPU::Channel::transfer(uint24 addressA, uint2 index) -> void {
-  uint8 addressB = targetAddress;
+inline auto CPU::Channel::transfer(n24 addressA, n2 index) -> void {
+  n8 addressB = targetAddress;
   switch(transferMode) {
   case 1: case 5: addressB += index.bit(0); break;
   case 3: case 7: addressB += index.bit(1); break;
@@ -111,7 +111,7 @@ inline auto CPU::Channel::dmaRun() -> void {
   step(8);
   edge();
 
-  uint2 index = 0;
+  n2 index = 0;
   do {
     transfer(sourceBank << 16 | sourceAddress, index++);
     if(!fixedTransfer) !reverseTransfer ? sourceAddress++ : sourceAddress--;
@@ -152,7 +152,7 @@ inline auto CPU::Channel::hdmaSetup() -> void {
 inline auto CPU::Channel::hdmaReload() -> void {
   auto data = readA(cpu.r.mar = sourceBank << 16 | hdmaAddress);
 
-  if((uint7)lineCounter == 0) {
+  if((n7)lineCounter == 0) {
     lineCounter = data;
     hdmaAddress++;
 
@@ -175,9 +175,9 @@ inline auto CPU::Channel::hdmaTransfer() -> void {
   dmaEnable = false;  //HDMA will stop active DMA mid-transfer
   if(!hdmaDoTransfer) return;
 
-  static const uint lengths[8] = {1, 2, 2, 4, 4, 4, 2, 4};
-  for(uint2 index : range(lengths[transferMode])) {
-    uint24 address = !indirect ? sourceBank << 16 | hdmaAddress++ : indirectBank << 16 | indirectAddress++;
+  static constexpr u32 lengths[8] = {1, 2, 2, 4, 4, 4, 2, 4};
+  for(n2 index : range(lengths[transferMode])) {
+    n24 address = !indirect ? sourceBank << 16 | hdmaAddress++ : indirectBank << 16 | indirectAddress++;
     transfer(address, index);
   }
 }

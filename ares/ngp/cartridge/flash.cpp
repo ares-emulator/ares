@@ -13,7 +13,7 @@ auto Flash::allocate(natural size) -> bool {
   if(size == 16_Mibit) { rom.allocate(size); vendorID = 0x98; deviceID = 0x2f; }  //vendorID 0xec => Samsung
   if(!rom) return false;
 
-  for(uint index : range(size / 64_KiB - 1)) blocks.append({true, index * 64_KiB, 64_KiB});
+  for(u32 index : range(size / 64_KiB - 1)) blocks.append({true, index * 64_KiB, 64_KiB});
   blocks.append({true, size - 64_KiB, 32_KiB});
   blocks.append({true, size - 32_KiB,  8_KiB});
   blocks.append({true, size - 24_KiB,  8_KiB});
@@ -35,9 +35,9 @@ auto Flash::power() -> void {
   status(Read);
 }
 
-auto Flash::read(uint21 address) -> uint8 {
+auto Flash::read(n21 address) -> n8 {
   if(mode == ReadID) {
-    switch((uint14)address) {  //todo: actual mask value unknown
+    switch((n14)address) {  //todo: actual mask value unknown
     case 0: return vendorID;
     case 1: return deviceID;
     case 2: return 0x02;  //unknown purpose
@@ -48,10 +48,10 @@ auto Flash::read(uint21 address) -> uint8 {
   return rom.read(address);  //todo: what happens when mode != Read here?
 }
 
-auto Flash::write(uint21 address, uint8 data) -> void {
+auto Flash::write(n21 address, n8 data) -> void {
   if(mode == Write) return program(address, data);
   if(data == 0xf0) return status(Read);
-  uint15 addr = (uint15)address;
+  n15 addr = (n15)address;
   if(index == 0 && addr == 0x5555 && data == 0xaa) return status(Index);
   if(index == 1 && addr == 0x2aaa && data == 0x55) return status(Index);
   //todo: erase and protect diverge here; but they're treated the same for simplicity for now
@@ -68,14 +68,14 @@ auto Flash::write(uint21 address, uint8 data) -> void {
   return status(Read);
 }
 
-auto Flash::status(uint mode_) -> void {
+auto Flash::status(u32 mode_) -> void {
   mode = mode_;
   if(mode == Read) index = 0;
   if(mode == Index) index++;
 }
 
-auto Flash::block(uint21 address) -> maybe<uint6> {
-  for(uint6 index : range(blocks.size())) {
+auto Flash::block(n21 address) -> maybe<n6> {
+  for(n6 index : range(blocks.size())) {
     if(address <  blocks[index].offset) continue;
     if(address >= blocks[index].offset + blocks[index].length) continue;
     return index;
@@ -84,7 +84,7 @@ auto Flash::block(uint21 address) -> maybe<uint6> {
   return {};
 }
 
-auto Flash::program(uint21 address, uint8 data) -> void {
+auto Flash::program(n21 address, n8 data) -> void {
   auto blockID = block(address);
   if(blockID && blocks[*blockID].writable) {
     if(auto input = rom.read(address); input != (input & data)) {
@@ -95,7 +95,7 @@ auto Flash::program(uint21 address, uint8 data) -> void {
   return status(Read);
 }
 
-auto Flash::protect(uint21 address) -> void {
+auto Flash::protect(n21 address) -> void {
   auto blockID = block(address);
   if(blockID && blocks[*blockID].writable) {
     blocks[*blockID].writable = false;
@@ -104,12 +104,12 @@ auto Flash::protect(uint21 address) -> void {
   return status(Read);
 }
 
-auto Flash::erase(uint21 address) -> void {
+auto Flash::erase(n21 address) -> void {
   auto blockID = block(address);
   if(blockID && blocks[*blockID].writable) {
     auto address = blocks[*blockID].offset;
     auto length = blocks[*blockID].length;
-    for(uint offset : range(length)) rom.write(address + offset, 0xff);
+    for(u32 offset : range(length)) rom.write(address + offset, 0xff);
     modified = true;
   }
   return status(Read);

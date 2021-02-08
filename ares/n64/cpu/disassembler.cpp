@@ -402,12 +402,12 @@ auto CPU::Disassembler::FPU() -> vector<string> {
   return {};
 }
 
-auto CPU::Disassembler::immediate(s64 value, uint bits) const -> string {
+auto CPU::Disassembler::immediate(s64 value, u32 bits) const -> string {
   if(value < 0) return {"-$", hex(-value, bits >> 2)};
   return {"$", hex(value, bits >> 2)};
 };
 
-auto CPU::Disassembler::ipuRegisterName(uint index) const -> string {
+auto CPU::Disassembler::ipuRegisterName(u32 index) const -> string {
   static const string registers[32] = {
      "0", "at", "v0", "v1", "a0", "a1", "a2", "a3",
     "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
@@ -417,12 +417,12 @@ auto CPU::Disassembler::ipuRegisterName(uint index) const -> string {
   return registers[index];
 }
 
-auto CPU::Disassembler::ipuRegisterValue(uint index) const -> string {
+auto CPU::Disassembler::ipuRegisterValue(u32 index) const -> string {
   if(index && showValues) return {ipuRegisterName(index), hint("{$", hex(self.ipu.r[index].u64, 8L), "}")};
   return ipuRegisterName(index);
 }
 
-auto CPU::Disassembler::ipuRegisterIndex(uint index, s16 offset) const -> string {
+auto CPU::Disassembler::ipuRegisterIndex(u32 index, s16 offset) const -> string {
   string adjust;
   if(offset >= 0) adjust = {"+$", hex( offset)};
   if(offset <  0) adjust = {"-$", hex(-offset)};
@@ -430,7 +430,7 @@ auto CPU::Disassembler::ipuRegisterIndex(uint index, s16 offset) const -> string
   return {ipuRegisterName(index), adjust};
 }
 
-auto CPU::Disassembler::sccRegisterName(uint index) const -> string {
+auto CPU::Disassembler::sccRegisterName(u32 index) const -> string {
   static const string registers[32] = {
     "Index",    "Random",   "EntryLo0",    "EntryLo1",
     "Context",  "PageMask", "Wired",       "Unused7",
@@ -444,12 +444,12 @@ auto CPU::Disassembler::sccRegisterName(uint index) const -> string {
   return registers[index];
 }
 
-auto CPU::Disassembler::sccRegisterValue(uint index) const -> string {
+auto CPU::Disassembler::sccRegisterValue(u32 index) const -> string {
   if(showValues) return {sccRegisterName(index), hint("{$", hex(self.getControlRegister(index), 8L), "}")};
   return sccRegisterName(index);
 }
 
-auto CPU::Disassembler::fpuRegisterName(uint index) const -> string {
+auto CPU::Disassembler::fpuRegisterName(u32 index) const -> string {
   static const string registers[32] = {
      "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7",
      "f8",  "f9", "f10", "f11", "f12", "f13", "f14", "f15",
@@ -459,7 +459,7 @@ auto CPU::Disassembler::fpuRegisterName(uint index) const -> string {
   return registers[index];
 }
 
-auto CPU::Disassembler::fpuRegisterValue(uint index) const -> string {
+auto CPU::Disassembler::fpuRegisterValue(u32 index) const -> string {
   bool f32 = (instruction & 1 << 21) == 0;
   bool f64 = (instruction & 1 << 21) != 0;
   if(f32 && showValues) return {fpuRegisterName(index), hint("{", self.fpu.r[index].f32, "}")};
@@ -467,11 +467,11 @@ auto CPU::Disassembler::fpuRegisterValue(uint index) const -> string {
   return fpuRegisterName(index);
 }
 
-auto CPU::Disassembler::ccrRegisterName(uint index) const -> string {
+auto CPU::Disassembler::ccrRegisterName(u32 index) const -> string {
   return {"ccr", index};
 }
 
-auto CPU::Disassembler::ccrRegisterValue(uint index) const -> string {
+auto CPU::Disassembler::ccrRegisterValue(u32 index) const -> string {
   if(showValues) return {ccrRegisterName(index), hint("{$", hex(self.getControlRegisterFPU(index)), "}")};
   return ccrRegisterName(index);
 }

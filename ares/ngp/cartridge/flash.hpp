@@ -10,9 +10,9 @@ struct Flash {
   natural ID;  //todo: can this be made const, even though it's declared as Cartridge::Flash[2] ?
 
   boolean modified;
-  Memory::Writable<uint8> rom;
-  uint8 vendorID;
-  uint8 deviceID;
+  Memory::Writable<n8> rom;
+  n8 vendorID;
+  n8 deviceID;
 
   explicit operator bool() const { return (bool)rom; }
 
@@ -23,20 +23,20 @@ struct Flash {
   auto save(shared_pointer<vfs::file> fp) -> void;
 
   auto power() -> void;
-  auto read(uint21 address) -> uint8;
-  auto write(uint21 address, uint8 data) -> void;
+  auto read(n21 address) -> n8;
+  auto write(n21 address, n8 data) -> void;
 
-  auto status(uint) -> void;
-  auto block(uint21 address) -> maybe<uint6>;
-  auto program(uint21 address, uint8 data) -> void;
-  auto protect(uint21 blockID) -> void;
-  auto erase(uint21 blockID) -> void;
+  auto status(u32) -> void;
+  auto block(n21 address) -> maybe<n6>;
+  auto program(n21 address, n8 data) -> void;
+  auto protect(n21 blockID) -> void;
+  auto erase(n21 blockID) -> void;
   auto eraseAll() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  enum : uint { Read, Index, ReadID, Write };
+  enum : u32 { Read, Index, ReadID, Write };
   natural mode;
   natural index;
 

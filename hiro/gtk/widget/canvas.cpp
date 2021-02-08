@@ -3,18 +3,18 @@
 namespace hiro {
 
 //GTK3
-static auto Canvas_draw(GtkWidget* widget, cairo_t* context, pCanvas* p) -> int {
+static auto Canvas_draw(GtkWidget* widget, cairo_t* context, pCanvas* p) -> s32 {
   p->_onDraw(context);
   return true;
 }
 
 //GTK2
-static auto Canvas_expose(GtkWidget* widget, GdkEventExpose* event, pCanvas* p) -> int {
+static auto Canvas_expose(GtkWidget* widget, GdkEventExpose* event, pCanvas* p) -> s32 {
   p->_onExpose(event);
   return true;
 }
 
-static auto Canvas_keyPress(GtkWidget* widget, GdkEventKey* event, pViewport* p) -> int {
+static auto Canvas_keyPress(GtkWidget* widget, GdkEventKey* event, pViewport* p) -> s32 {
   //canvass that have been set focusable are intended for games.
   //to prevent arrow keys, tab, etc from losing focus on the game viewport, block key propagation here.
   if(p->self().focusable()) return true;
@@ -23,7 +23,7 @@ static auto Canvas_keyPress(GtkWidget* widget, GdkEventKey* event, pViewport* p)
   return false;
 }
 
-static auto Canvas_mousePress(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> int {
+static auto Canvas_mousePress(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> s32 {
   //gtk_widget_set_focus_on_click() is a GTK 3.2+ feature.
   //implement this functionality manually for GTK 2.0+ compatibility.
   if(event->button == 1 && p->self().focusable()) gtk_widget_grab_focus(widget);
@@ -78,7 +78,7 @@ auto pCanvas::handle() const -> uintptr {
 }
 
 auto pCanvas::minimumSize() const -> Size {
-  if(auto& icon = state().icon) return {(int)icon.width(), (int)icon.height()};
+  if(auto& icon = state().icon) return {(s32)icon.width(), (s32)icon.height()};
   return {0, 0};
 }
 
@@ -115,8 +115,8 @@ auto pCanvas::update() -> void {
 auto pCanvas::_onDraw(cairo_t* context) -> void {
   if(!surface) return;
 
-  int sx = 0, sy = 0, dx = 0, dy = 0;
-  int width = surfaceWidth, height = surfaceHeight;
+  s32 sx = 0, sy = 0, dx = 0, dy = 0;
+  s32 width = surfaceWidth, height = surfaceHeight;
   auto geometry = pSizable::state().geometry;
   auto alignment = state().alignment ? state().alignment : Alignment{0.5, 0.5};
 
@@ -152,8 +152,8 @@ auto pCanvas::_onExpose(GdkEventExpose* expose) -> void {
 }
 
 auto pCanvas::_rasterize() -> void {
-  int width = 0;
-  int height = 0;
+  s32 width = 0;
+  s32 height = 0;
 
   if(auto& icon = state().icon) {
     width = icon.width();
@@ -169,10 +169,10 @@ auto pCanvas::_rasterize() -> void {
   surfaceHeight = height;
 
   if(!surface) surface = gdk_pixbuf_new(GDK_COLORSPACE_RGB, true, 8, width, height);
-  auto buffer = (uint32_t*)gdk_pixbuf_get_pixels(surface);
+  auto buffer = (u32*)gdk_pixbuf_get_pixels(surface);
 
   if(auto& icon = state().icon) {
-    memory::copy<uint32_t>(buffer, state().icon.data(), width * height);
+    memory::copy<u32>(buffer, state().icon.data(), width * height);
   } else if(auto& gradient = state().gradient) {
     auto& colors = gradient.state.colors;
     image fill;
@@ -180,13 +180,13 @@ auto pCanvas::_rasterize() -> void {
     fill.gradient(colors[0].value(), colors[1].value(), colors[2].value(), colors[3].value());
     memory::copy(buffer, fill.data(), fill.size());
   } else {
-    uint32_t color = state().color.value();
+    u32 color = state().color.value();
     for(auto n : range(width * height)) buffer[n] = color;
   }
 
   //ARGB -> ABGR conversion
   for(auto n : range(width * height)) {
-    uint32_t color = *buffer;
+    u32 color = *buffer;
     color = (color & 0xff00ff00) | ((color & 0xff0000) >> 16) | ((color & 0x0000ff) << 16);
     *buffer++ = color;
   }

@@ -104,7 +104,7 @@ auto CPU::Debugger::messageChar(char c) -> void {
 auto CPU::Debugger::messageText(u32 address) -> void {
   if(!tracer.message->enabled()) return;
 
-  for(uint index : range(512)) {
+  for(u32 index : range(512)) {
     char data = bus.read<Byte>(address + index);
     if(!data) break;
     messageChar(data);
@@ -155,7 +155,7 @@ auto CPU::Debugger::function() -> void {
   auto text = [](u32 address) -> string {
     string output;
     output.append("\"");
-    for(uint n : range(256)) {
+    for(u32 n : range(256)) {
       char value = bus.read<Byte>(address + n);
       if(!value) break;
       else if(value == 0x09) output.append("\\t");

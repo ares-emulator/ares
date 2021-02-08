@@ -1,6 +1,6 @@
-auto V9938::status() -> uint8 {
+auto V9938::status() -> n8 {
   io.controlLatch = 0;
-  uint8 data;
+  n8 data;
 
   switch(io.statusIndex) {
 
@@ -59,11 +59,11 @@ auto V9938::status() -> uint8 {
   return data;
 }
 
-auto V9938::data() -> uint8 {
+auto V9938::data() -> n8 {
   io.controlLatch = 0;
-  uint17 address = io.ramBank << 14 | io.controlValue.bit(0,13)++;
+  n17 address = io.ramBank << 14 | io.controlValue.bit(0,13)++;
   if(!io.controlValue.bit(0,13)) io.ramBank++;  //unconfirmed
-  uint8 data = io.ramLatch;
+  n8 data = io.ramLatch;
   if(io.ramSelect == 0) {
     io.ramLatch = videoRAM.read(address);
   } else {
@@ -74,9 +74,9 @@ auto V9938::data() -> uint8 {
 
 //
 
-auto V9938::data(uint8 data) -> void {
+auto V9938::data(n8 data) -> void {
   io.controlLatch = 0;
-  uint17 address = io.ramBank << 14 | io.controlValue.bit(0,13)++;
+  n17 address = io.ramBank << 14 | io.controlValue.bit(0,13)++;
   if(!io.controlValue.bit(0,13)) io.ramBank++;  //unconfirmed
   if(io.ramSelect == 0) {
     videoRAM.write(address, data);
@@ -85,7 +85,7 @@ auto V9938::data(uint8 data) -> void {
   }
 }
 
-auto V9938::control(uint8 data) -> void {
+auto V9938::control(n8 data) -> void {
   io.controlValue.byte(io.controlLatch++) = data;
   if(io.controlLatch) return;
   if(io.controlValue.bit(15)) {
@@ -94,7 +94,7 @@ auto V9938::control(uint8 data) -> void {
   if(!io.controlValue.bit(14)) V9938::data();  //read-ahead
 }
 
-auto V9938::palette(uint8 data) -> void {
+auto V9938::palette(n8 data) -> void {
   io.paletteValue.byte(io.paletteLatch++) = data;
   if(io.paletteLatch) return;
   paletteRAM[io.paletteIndex].bit(0,2) = io.paletteValue.bit(0, 2);  //B
@@ -103,7 +103,7 @@ auto V9938::palette(uint8 data) -> void {
   io.paletteIndex++;
 }
 
-auto V9938::register(uint8 data) -> void {
+auto V9938::register(n8 data) -> void {
   //indirect register writes cannot change the indirect register index setting
   if(io.registerIndex != 0x11) register(io.registerIndex, data);
   if(!io.registerFixed) io.registerIndex++;
@@ -111,7 +111,7 @@ auto V9938::register(uint8 data) -> void {
 
 //
 
-auto V9938::register(uint6 register, uint8 data) -> void {
+auto V9938::register(n6 register, n8 data) -> void {
   switch(register) {
 
   case 0x00:

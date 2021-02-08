@@ -26,7 +26,7 @@ auto pComboButton::append(sComboButtonItem item) -> void {
 }
 
 auto pComboButton::minimumSize() const -> Size {
-  signed width = 0;
+  s32 width = 0;
   for(auto& item : state().items) {
     width = max(width, pFont::size(hfont, item->state.text).width());
   }
@@ -58,7 +58,7 @@ auto pComboButton::setGeometry(Geometry geometry) -> void {
 }
 
 auto pComboButton::onChange() -> void {
-  signed offset = SendMessage(hwnd, CB_GETCURSEL, 0, 0);
+  s32 offset = SendMessage(hwnd, CB_GETCURSEL, 0, 0);
   if(offset == CB_ERR) return;
   for(auto& item : state().items) item->state.selected = false;
   if(auto item = self().item(offset)) item->setSelected();

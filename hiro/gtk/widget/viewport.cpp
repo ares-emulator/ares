@@ -3,18 +3,18 @@
 namespace hiro {
 
 //GTK3
-static auto Viewport_draw(GtkWidget* widget, cairo_t* context, pViewport* p) -> int {
+static auto Viewport_draw(GtkWidget* widget, cairo_t* context, pViewport* p) -> s32 {
   p->_onDraw(context);
   return true;
 }
 
 //GTK2
-static auto Viewport_expose(GtkWidget* widget, GdkEventExpose* event, pViewport* p) -> int {
+static auto Viewport_expose(GtkWidget* widget, GdkEventExpose* event, pViewport* p) -> s32 {
   p->_onExpose(event);
   return true;
 }
 
-static auto Viewport_keyPress(GtkWidget* widget, GdkEventKey* event, pViewport* p) -> int {
+static auto Viewport_keyPress(GtkWidget* widget, GdkEventKey* event, pViewport* p) -> s32 {
   //viewports that have been set focusable are intended for games.
   //to prevent arrow keys, tab, etc from losing focus on the game viewport, block key propagation here.
   if(p->self().focusable()) return true;
@@ -23,7 +23,7 @@ static auto Viewport_keyPress(GtkWidget* widget, GdkEventKey* event, pViewport* 
   return false;
 }
 
-static auto Viewport_mousePress(GtkWidget* widget, GdkEventButton* event, pViewport* p) -> int {
+static auto Viewport_mousePress(GtkWidget* widget, GdkEventButton* event, pViewport* p) -> s32 {
   //gtk_widget_set_focus_on_click() is a GTK 3.2+ feature.
   //implement this functionality manually for GTK 2.0+ compatibility.
   if(event->button == 1 && p->self().focusable()) gtk_widget_grab_focus(widget);

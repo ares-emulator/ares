@@ -30,8 +30,8 @@ auto Keyboard::connect() -> void {
   if(auto fp = platform->open(layout, "layout.bml", File::Read)) {
     document = BML::unserialize(fp->reads());
   }
-  for(uint column : range(12)) {
-    for(uint row : range(8)) {
+  for(u32 column : range(12)) {
+    for(u32 row : range(8)) {
       string label{column, ",", row};
       if(auto key = document[{"layout/key[", column * 8 + row, "]"}]) {
         label = key.text();
@@ -43,8 +43,8 @@ auto Keyboard::connect() -> void {
 
 auto Keyboard::disconnect() -> void {
   layout = {};
-  for(uint column : range(12)) {
-    for(uint row : range(8)) {
+  for(u32 column : range(12)) {
+    for(u32 row : range(8)) {
       matrix[column][row] = {};
     }
   }
@@ -54,11 +54,11 @@ auto Keyboard::power() -> void {
   io = {};
 }
 
-auto Keyboard::read() -> uint8 {
-  uint8 column = io.select;
-  uint8 data = 0xff;
+auto Keyboard::read() -> n8 {
+  n8 column = io.select;
+  n8 data = 0xff;
   if(column >= 0 && column <= 11) {
-    for(uint row : range(8)) {
+    for(u32 row : range(8)) {
       if(auto node = matrix[column][row]) {
         platform->input(node);
         data.bit(row) = !node->value();
@@ -68,7 +68,7 @@ auto Keyboard::read() -> uint8 {
   return data;
 }
 
-auto Keyboard::write(uint4 data) -> void {
+auto Keyboard::write(n4 data) -> void {
   io.select = data;
 }
 

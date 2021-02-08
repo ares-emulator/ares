@@ -11,10 +11,10 @@ struct Settings {
   //pWindow::setVisible() attempts to compute the actual window bounds to correct Window::frameMargin()
   //note: different window styles have different extended frame bounds
   struct ExtendedFrameBounds {
-    uint x = 0;
-    uint y = 0;
-    uint width = 0;
-    uint height = 0;
+    u32 x = 0;
+    u32 y = 0;
+    u32 width = 0;
+    u32 height = 0;
   };
 
   //these are the default values for Windows 10 ... they will be updated later if they are incorrect

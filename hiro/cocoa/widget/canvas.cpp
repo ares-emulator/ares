@@ -59,7 +59,7 @@
 -(void) mouseMove:(NSEvent*)event {
   if([event window] == nil) return;
   NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
-  canvas->doMouseMove({(int)location.x, (int)([self frame].size.height - 1 - location.y)});
+  canvas->doMouseMove({(s32)location.x, (s32)([self frame].size.height - 1 - location.y)});
 }
 
 -(void) mouseDown:(NSEvent*)event {
@@ -117,7 +117,7 @@ auto pCanvas::destruct() -> void {
 }
 
 auto pCanvas::minimumSize() const -> Size {
-  if(auto& icon = state().icon) return {(int)icon.width(), (int)icon.height()};
+  if(auto& icon = state().icon) return {(s32)icon.width(), (s32)icon.height()};
   return {0, 0};
 }
 
@@ -166,8 +166,8 @@ auto pCanvas::update() -> void {
 //todo: support cases where the icon size does not match the canvas size (alignment)
 auto pCanvas::_rasterize() -> void {
   @autoreleasepool {
-    int width = 0;
-    int height = 0;
+    s32 width = 0;
+    s32 height = 0;
 
     if(auto& icon = state().icon) {
       width = icon.width();
@@ -201,7 +201,7 @@ auto pCanvas::_rasterize() -> void {
       [cocoaView setImage:surface];
     }
 
-    auto target = (uint32_t*)[bitmap bitmapData];
+    auto target = (u32*)[bitmap bitmapData];
 
     if(auto icon = state().icon) {
       icon.transform(0, 32, 255u << 24, 255u << 0, 255u << 8, 255u << 16);  //Cocoa uses ABGR format
@@ -213,7 +213,7 @@ auto pCanvas::_rasterize() -> void {
       fill.gradient(colors[0].value(), colors[1].value(), colors[2].value(), colors[3].value());
       memory::copy(target, fill.data(), fill.size());
     } else {
-      uint32_t color = state().color.value();
+      u32 color = state().color.value();
       for(auto n : range(width * height)) target[n] = color;
     }
   }

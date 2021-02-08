@@ -6,11 +6,11 @@ auto pHorizontalSlider::minimumSize() const -> Size {
   return {0, 20};
 }
 
-auto pHorizontalSlider::setLength(unsigned length) -> void {
+auto pHorizontalSlider::setLength(u32 length) -> void {
   _setState();
 }
 
-auto pHorizontalSlider::setPosition(unsigned position) -> void {
+auto pHorizontalSlider::setPosition(u32 position) -> void {
   _setState();
 }
 
@@ -18,7 +18,7 @@ auto pHorizontalSlider::construct() -> void {
   qtWidget = qtHorizontalSlider = new QtHorizontalSlider(*this);
   qtHorizontalSlider->setRange(0, 100);
   qtHorizontalSlider->setPageStep(101 >> 3);
-  qtHorizontalSlider->connect(qtHorizontalSlider, SIGNAL(valueChanged(int)), SLOT(onChange()));
+  qtHorizontalSlider->connect(qtHorizontalSlider, SIGNAL(valueChanged(s32)), SLOT(onChange()));
 
   pWidget::construct();
   _setState();
@@ -30,7 +30,7 @@ auto pHorizontalSlider::destruct() -> void {
 }
 
 auto pHorizontalSlider::_setState() -> void {
-  signed length = state().length + (state().length == 0);
+  s32 length = state().length + (state().length == 0);
   qtHorizontalSlider->setRange(0, length - 1);
   qtHorizontalSlider->setPageStep(length >> 3);
   qtHorizontalSlider->setValue(state().position);

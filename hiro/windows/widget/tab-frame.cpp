@@ -86,7 +86,7 @@ auto pTabFrame::setVisible(bool visible) -> void {
 //
 
 auto pTabFrame::_buildImageList() -> void {
-  unsigned size = pFont::size(hfont, " ").height();
+  u32 size = pFont::size(hfont, " ").height();
 
   if(imageList) { ImageList_Destroy(imageList); imageList = nullptr; }
   imageList = ImageList_Create(size, size, ILC_COLOR32, 1, 0);
@@ -110,14 +110,14 @@ auto pTabFrame::_synchronizeSizable() -> void {
   //without this call, widgets from the previous tab will remain visible
   //alongside widgets from the newly selected tab for about one frame ...
   Application::processEvents();
-  uint selected = TabCtrl_GetCurSel(hwnd);
+  u32 selected = TabCtrl_GetCurSel(hwnd);
   if(auto item = self().item(selected)) {
     if(auto& sizable = item->state.sizable) sizable->setVisible(true);
   }
 }
 
 auto pTabFrame::onChange() -> void {
-  uint selected = TabCtrl_GetCurSel(hwnd);
+  u32 selected = TabCtrl_GetCurSel(hwnd);
   for(auto& item : state().items) item->state.selected = false;
   if(auto item = self().item(selected)) item->state.selected = true;
   _synchronizeSizable();

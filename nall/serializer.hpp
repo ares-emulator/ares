@@ -53,21 +53,21 @@ struct serializer {
     _size = 0;
   }
 
-  auto data() const -> const uint8_t* {
+  auto data() const -> const u8* {
     return _data;
   }
 
-  auto size() const -> uint {
+  auto size() const -> u32 {
     return _size;
   }
 
-  auto capacity() const -> uint {
+  auto capacity() const -> u32 {
     return _capacity;
   }
 
-  auto reserve(uint size) -> void {
+  auto reserve(u32 size) -> void {
     if(size > _capacity) {
-      auto data = new uint8_t[bit::round(size)]();
+      auto data = new u8[bit::round(size)]();
       memory::copy(data, _data, _capacity);
       delete[] _data;
       _data = data;
@@ -87,7 +87,7 @@ struct serializer {
     return *this;
   }
 
-  template<typename T, int N> auto operator()(T (&array)[N]) -> serializer& {
+  template<typename T, s32 N> auto operator()(T (&array)[N]) -> serializer& {
     for(auto& value : array) operator()(value);
     return *this;
   }
@@ -101,7 +101,7 @@ struct serializer {
     if(_data) delete[] _data;
 
     _mode = s._mode;
-    _data = new uint8_t[s._capacity];
+    _data = new u8[s._capacity];
     _size = s._size;
     _capacity = s._capacity;
 
@@ -126,14 +126,14 @@ struct serializer {
 
   serializer() {
     setWriting();
-    _data = new uint8_t[1024 * 1024]();
+    _data = new u8[1024 * 1024]();
     _size = 0;
     _capacity = 1024 * 1024;
   }
 
-  serializer(const uint8_t* data, uint capacity) {
+  serializer(const u8* data, u32 capacity) {
     setReading();
-    _data = new uint8_t[capacity]();
+    _data = new u8[capacity]();
     _size = 0;
     _capacity = capacity;
     memory::copy(_data, data, capacity);
@@ -145,36 +145,36 @@ struct serializer {
 
 private:
   template<typename T> auto integer(T& value) -> serializer& {
-    enum : uint { size = std::is_same<bool, T>::value ? 1 : sizeof(T) };
+    enum : u32 { size = std::is_same<bool, T>::value ? 1 : sizeof(T) };
     reserve(_size + size);
     if(writing()) {
       T copy = value;
-      for(uint n : range(size)) _data[_size++] = copy, copy >>= 8;
+      for(u32 n : range(size)) _data[_size++] = copy, copy >>= 8;
     } else if(reading()) {
       value = 0;
-      for(uint n : range(size)) value |= (T)_data[_size++] << (n << 3);
+      for(u32 n : range(size)) value |= (T)_data[_size++] << (n << 3);
     }
     return *this;
   }
 
   template<typename T> auto real(T& value) -> serializer& {
-    enum : uint { size = sizeof(T) };
+    enum : u32 { size = sizeof(T) };
     reserve(_size + size);
     //this is rather dangerous, and not cross-platform safe;
     //but there is no standardized way to export floating point values
-    auto p = (uint8_t*)&value;
+    auto p = (u8*)&value;
     if(writing()) {
-      for(uint n : range(size)) _data[_size++] = p[n];
+      for(u32 n : range(size)) _data[_size++] = p[n];
     } else if(reading()) {
-      for(uint n : range(size)) p[n] = _data[_size++];
+      for(u32 n : range(size)) p[n] = _data[_size++];
     }
     return *this;
   }
 
   bool _mode = 0;
-  uint8_t* _data = nullptr;
-  uint _size = 0;
-  uint _capacity = 0;
+  u8* _data = nullptr;
+  u32 _size = 0;
+  u32 _capacity = 0;
 };
 
 }

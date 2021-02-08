@@ -20,7 +20,7 @@ inline auto CPU::store(u32& target, u32 source) -> void {
   target = source;
 }
 
-template<uint N>
+template<u32 N>
 inline auto CPU::branch(u32 address, bool take) -> void {
   delay.branch[N].slot = true;
   delay.branch[N].take = take;

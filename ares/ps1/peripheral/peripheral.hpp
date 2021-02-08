@@ -15,7 +15,7 @@ struct Peripheral : Thread, Memory::Interface {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -33,48 +33,48 @@ struct Peripheral : Thread, Memory::Interface {
 
   struct IO {
     //JOY_RX_DATA
-    uint64 receiveData;
-     uint8 receiveSize;
+    n64 receiveData;
+    n8  receiveSize;
 
     //JOY_TX_DATA
-     uint8 transmitData;
+    n8 transmitData;
 
     //JOY_STAT
-     uint1 transmitStarted;
-     uint1 transmitFinished;
-     uint1 parityError;
-     uint1 interruptRequest;
+    n1 transmitStarted;
+    n1 transmitFinished;
+    n1 parityError;
+    n1 interruptRequest;
 
     //JOY_MODE
-     uint2 baudrateReloadFactor;
-     uint2 characterLength;
-     uint1 parityEnable;
-     uint1 parityType;
-     uint2 unknownMode_6_7;
-     uint1 clockOutputPolarity;
-     uint7 unknownMode_9_15;
+    n2 baudrateReloadFactor;
+    n2 characterLength;
+    n1 parityEnable;
+    n1 parityType;
+    n2 unknownMode_6_7;
+    n1 clockOutputPolarity;
+    n7 unknownMode_9_15;
 
     //JOY_CTRL
-     uint1 transmitEnable;
-     uint1 joyOutput;
-     uint1 receiveEnable;
-     uint1 unknownCtrl_3;
-     uint1 acknowledge;
-     uint1 unknownCtrl_5;
-     uint1 reset;
-     uint1 unknownCtrl_7;
-     uint2 receiveInterruptMode;
-     uint1 transmitInterruptEnable;
-     uint1 receiveInterruptEnable;
-     uint1 acknowledgeInterruptEnable;
-     uint1 slotNumber;
-     uint2 unknownCtrl_14_15;
+    n1 transmitEnable;
+    n1 joyOutput;
+    n1 receiveEnable;
+    n1 unknownCtrl_3;
+    n1 acknowledge;
+    n1 unknownCtrl_5;
+    n1 reset;
+    n1 unknownCtrl_7;
+    n2 receiveInterruptMode;
+    n1 transmitInterruptEnable;
+    n1 receiveInterruptEnable;
+    n1 acknowledgeInterruptEnable;
+    n1 slotNumber;
+    n2 unknownCtrl_14_15;
 
     //JOY_BAUD
-    uint16 baudrateReloadValue;
+    n16 baudrateReloadValue;
 
     //internal
-     int32 counter;
+    i32 counter;
   } io;
 };
 

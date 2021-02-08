@@ -2,7 +2,7 @@
 
 struct ASC8 : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
+  Memory::Readable<n8> rom;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -15,21 +15,21 @@ struct ASC8 : Interface {
   auto unload() -> void override {
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
-    if(address >= 0x4000 && address <= 0x5fff) data = rom.read(bank[0] << 13 | (uint13)address);
-    if(address >= 0x6000 && address <= 0x7fff) data = rom.read(bank[1] << 13 | (uint13)address);
-    if(address >= 0x8000 && address <= 0x9fff) data = rom.read(bank[2] << 13 | (uint13)address);
-    if(address >= 0xa000 && address <= 0xbfff) data = rom.read(bank[3] << 13 | (uint13)address);
+  auto read(n16 address, n8 data) -> n8 override {
+    if(address >= 0x4000 && address <= 0x5fff) data = rom.read(bank[0] << 13 | (n13)address);
+    if(address >= 0x6000 && address <= 0x7fff) data = rom.read(bank[1] << 13 | (n13)address);
+    if(address >= 0x8000 && address <= 0x9fff) data = rom.read(bank[2] << 13 | (n13)address);
+    if(address >= 0xa000 && address <= 0xbfff) data = rom.read(bank[3] << 13 | (n13)address);
 
-    if(address >= 0xc000 && address <= 0xdfff) data = rom.read(bank[0] << 13 | (uint13)address);
-    if(address >= 0xe000 && address <= 0xffff) data = rom.read(bank[1] << 13 | (uint13)address);
-    if(address >= 0x0000 && address <= 0x1fff) data = rom.read(bank[2] << 13 | (uint13)address);
-    if(address >= 0x2000 && address <= 0x3fff) data = rom.read(bank[3] << 13 | (uint13)address);
+    if(address >= 0xc000 && address <= 0xdfff) data = rom.read(bank[0] << 13 | (n13)address);
+    if(address >= 0xe000 && address <= 0xffff) data = rom.read(bank[1] << 13 | (n13)address);
+    if(address >= 0x0000 && address <= 0x1fff) data = rom.read(bank[2] << 13 | (n13)address);
+    if(address >= 0x2000 && address <= 0x3fff) data = rom.read(bank[3] << 13 | (n13)address);
 
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     if(address >= 0x6000 && address <= 0x67ff) bank[0] = data;
     if(address >= 0x6800 && address <= 0x6fff) bank[1] = data;
     if(address >= 0x7000 && address <= 0x77ff) bank[2] = data;
@@ -47,5 +47,5 @@ struct ASC8 : Interface {
     s(bank);
   }
 
-  uint8 bank[4];
+  n8 bank[4];
 };

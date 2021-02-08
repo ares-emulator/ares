@@ -16,7 +16,7 @@ auto pRadioButton::destruct() -> void {
 }
 
 auto pRadioButton::minimumSize() const -> Size {
-  Size icon = {(int)state().icon.width(), (int)state().icon.height()};
+  Size icon = {(s32)state().icon.width(), (s32)state().icon.height()};
   Size text = state().text ? pFont::size(self().font(true), state().text) : Size{};
   Size size;
   if(state().orientation == Orientation::Horizontal) {

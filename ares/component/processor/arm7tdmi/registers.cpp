@@ -1,4 +1,4 @@
-inline auto ARM7TDMI::r(uint4 index) -> GPR& {
+inline auto ARM7TDMI::r(n4 index) -> GPR& {
   switch(index) {
   case  0: return processor.r0;
   case  1: return processor.r1;

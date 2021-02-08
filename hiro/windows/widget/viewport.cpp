@@ -31,7 +31,7 @@ auto pViewport::doMouseLeave() -> void {
   return self().doMouseLeave();
 }
 
-auto pViewport::doMouseMove(int x, int y) -> void {
+auto pViewport::doMouseMove(s32 x, s32 y) -> void {
   return self().doMouseMove({x, y});
 }
 

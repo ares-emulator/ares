@@ -62,7 +62,7 @@ flags.deps   = -MMD -MP -MF $(@:.o=.d)
 ifeq ($(compiler),)
   ifeq ($(platform),windows)
     compiler := g++
-    compiler.cpp = $(compiler) -x c++ -std=gnu++17
+    compiler.cpp = $(compiler) -x c++ -std=gnu++17 -fno-operator-names
     flags.cpp = -x c++ -std=gnu++17 -fno-operator-names
   else ifeq ($(platform),macos)
     compiler := clang++
@@ -107,7 +107,7 @@ endif
 
 # clang settings
 ifeq ($(findstring clang++,$(compiler)),clang++)
-  flags += -fno-strict-aliasing -fwrapv -Wno-everything
+  flags += -fno-strict-aliasing -fwrapv
 # gcc settings
 else ifeq ($(findstring g++,$(compiler)),g++)
   flags += -fno-strict-aliasing -fwrapv -Wno-trigraphs

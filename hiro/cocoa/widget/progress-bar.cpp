@@ -37,7 +37,7 @@ auto pProgressBar::minimumSize() const -> Size {
   return {0, 12};
 }
 
-auto pProgressBar::setPosition(uint position) -> void {
+auto pProgressBar::setPosition(u32 position) -> void {
   @autoreleasepool {
     [cocoaView setDoubleValue:position];
   }

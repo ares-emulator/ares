@@ -4,7 +4,7 @@ namespace ares::GameBoy {
 
 Bus bus;
 
-auto Bus::read(uint cycle, uint16 address, uint8 data) -> uint8 {
+auto Bus::read(u32 cycle, n16 address, n8 data) -> n8 {
   data &= cpu.readIO(cycle, address, data);
   data &= apu.readIO(cycle, address, data);
   data &= ppu.readIO(cycle, address, data);
@@ -12,14 +12,14 @@ auto Bus::read(uint cycle, uint16 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto Bus::write(uint cycle, uint16 address, uint8 data) -> void {
+auto Bus::write(u32 cycle, n16 address, n8 data) -> void {
   cpu.writeIO(cycle, address, data);
   apu.writeIO(cycle, address, data);
   ppu.writeIO(cycle, address, data);
   cartridge.write(cycle, address, data);
 }
 
-auto Bus::read(uint16 address, uint8 data) -> uint8 {
+auto Bus::read(n16 address, n8 data) -> n8 {
 //data &= read(0, address, data);
 //data &= read(1, address, data);
   data &= read(2, address, data);
@@ -28,7 +28,7 @@ auto Bus::read(uint16 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto Bus::write(uint16 address, uint8 data) -> void {
+auto Bus::write(n16 address, n8 data) -> void {
 //write(0, address, data);
 //write(1, address, data);
   write(2, address, data);

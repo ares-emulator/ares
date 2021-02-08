@@ -24,7 +24,7 @@ S21FX::S21FX(Node::Port parent) {
   //there's not really much choice but to copy the library to a temporary directory here
   if(auto fp = platform->open(node, "21fx.so", File::Read, File::Required)) {
     if(auto buffer = file::open({Path::temporary(), "21fx.so"}, file::mode::write)) {
-      for(uint index : range(fp->size())) buffer.write(fp->read());
+      for(u32 index : range(fp->size())) buffer.write(fp->read());
     }
   }
 
@@ -46,10 +46,10 @@ S21FX::~S21FX() {
   //the downside is that if 00:fffc-fffd were anything but ROM; it will now only act as ROM
   //given that this is the only device that hooks the reset vector like this,
   //it's not worth the added complexity to support some form of reversible bus mapping hooks
-  uint vector = resetVector;
-  bus.map([vector](uint24 addr, uint8) -> uint8 {
+  u32 vector = resetVector;
+  bus.map([vector](n24 addr, n8) -> n8 {
     return vector >> addr * 8;
-  }, [](uint24, uint8) -> void {
+  }, [](n24, n8) -> void {
   }, "00:fffc-fffd", 2);
 
   if(link.open()) link.close();
@@ -57,7 +57,7 @@ S21FX::~S21FX() {
   linkMain.reset();
 }
 
-auto S21FX::step(uint clocks) -> void {
+auto S21FX::step(u32 clocks) -> void {
   Thread::step(clocks);
   synchronize(cpu);
 }
@@ -75,7 +75,7 @@ auto S21FX::main() -> void {
   while(true) scheduler.synchronize(), step(10'000'000);
 }
 
-auto S21FX::read(uint24 address, uint8 data) -> uint8 {
+auto S21FX::read(n24 address, n8 data) -> n8 {
   address &= 0x40ffff;
 
   if(address == 0xfffc) return booted ? resetVector >> 0 : (0x84);
@@ -98,7 +98,7 @@ auto S21FX::read(uint24 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto S21FX::write(uint24 address, uint8 data) -> void {
+auto S21FX::write(n24 address, n8 data) -> void {
   address &= 0x40ffff;
 
   if(address == 0x21ff) {
@@ -113,7 +113,7 @@ auto S21FX::quit() -> bool {
   return false;
 }
 
-auto S21FX::usleep(uint microseconds) -> void {
+auto S21FX::usleep(u32 microseconds) -> void {
   step(10 * microseconds);
 }
 
@@ -128,7 +128,7 @@ auto S21FX::writable() -> bool {
 }
 
 //SNES -> Link
-auto S21FX::read() -> uint8 {
+auto S21FX::read() -> n8 {
   step(1);
   if(snesBuffer.size() > 0) {
     return snesBuffer.takeLeft();
@@ -137,7 +137,7 @@ auto S21FX::read() -> uint8 {
 }
 
 //Link -> SNES
-auto S21FX::write(uint8 data) -> void {
+auto S21FX::write(n8 data) -> void {
   step(1);
   if(linkBuffer.size() < 1024) {
     linkBuffer.append(data);

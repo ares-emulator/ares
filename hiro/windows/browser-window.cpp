@@ -2,7 +2,7 @@
 
 namespace hiro {
 
-static auto CALLBACK BrowserWindowCallbackProc(HWND hwnd, UINT msg, LPARAM lparam, LPARAM lpdata) -> signed {
+static auto CALLBACK BrowserWindowCallbackProc(HWND hwnd, UINT msg, LPARAM lparam, LPARAM lpdata) -> s32 {
   if(msg == BFFM_INITIALIZED) {
     if(lpdata) {
       auto state = (BrowserWindow::State*)lpdata;

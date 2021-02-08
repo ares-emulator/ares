@@ -29,11 +29,11 @@ struct System {
     bool rightLatch = 0;
   } controls;
 
-  enum class Model : uint { GameBoyAdvance, GameBoyPlayer };
+  enum class Model : u32 { GameBoyAdvance, GameBoyPlayer };
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto model() const -> Model { return information.model; }
-  auto frequency() const -> double { return 16 * 1024 * 1024; }
+  auto frequency() const -> f64 { return 16 * 1024 * 1024; }
 
   //system.cpp
   auto game() -> string;
@@ -50,6 +50,7 @@ struct System {
 
 private:
   struct Information {
+    string name = "Game Boy Advance";
     Model model = Model::GameBoyAdvance;
   } information;
 

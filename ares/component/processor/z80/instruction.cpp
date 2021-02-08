@@ -11,7 +11,7 @@ auto Z80::instruction() -> void {
     return wait(1);
   }
 
-  uint8 code;
+  n8 code;
   while(true) {
     R.bit(0,6)++;
     code = opcode();
@@ -21,7 +21,7 @@ auto Z80::instruction() -> void {
   }
 
   if(code == 0xcb && prefix != Prefix::hl) {
-    WZ = HL + (int8)operand();
+    WZ = HL + (i8)operand();
     wait(1);
   //R is not incremented here
     instructionCBd(WZ, opcode());
@@ -40,7 +40,7 @@ auto Z80::instruction() -> void {
 
 #define op(id, name, ...) case id: return instruction##name(__VA_ARGS__);
 
-auto Z80::instruction(uint8 code) -> void {
+auto Z80::instruction(n8 code) -> void {
   switch(code) {
   op(0x00, NOP)
   op(0x01, LD_rr_nn, BC)
@@ -301,7 +301,7 @@ auto Z80::instruction(uint8 code) -> void {
   }
 }
 
-auto Z80::instructionCB(uint8 code) -> void {
+auto Z80::instructionCB(n8 code) -> void {
   switch(code) {
   op(0x00, RLC_r, B)
   op(0x01, RLC_r, C)
@@ -562,8 +562,8 @@ auto Z80::instructionCB(uint8 code) -> void {
   }
 }
 
-auto Z80::instructionCBd(uint16 addr, uint8 code) -> void {
-  uint8 _;
+auto Z80::instructionCBd(n16 addr, n8 code) -> void {
+  n8 _;
 
   switch(code) {
   op(0x00, RLC_irr_r, addr, B)
@@ -825,7 +825,7 @@ auto Z80::instructionCBd(uint16 addr, uint8 code) -> void {
   }
 }
 
-auto Z80::instructionED(uint8 code) -> void {
+auto Z80::instructionED(n8 code) -> void {
   switch(code) {
   op(0x40, IN_r_ic, B)
   op(0x41, OUT_ic_r, B)

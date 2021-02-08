@@ -5,108 +5,108 @@
 namespace ares {
 
 struct HuC6280 {
-  virtual auto step(uint clocks) -> void = 0;
-  virtual auto read(uint8 bank, uint13 address) -> uint8 = 0;
-  virtual auto write(uint8 bank, uint13 address, uint8 data) -> void = 0;
-  virtual auto store(uint2 address, uint8 data) -> void = 0;
+  virtual auto step(u32 clocks) -> void = 0;
+  virtual auto read(n8 bank, n13 address) -> n8 = 0;
+  virtual auto write(n8 bank, n13 address, n8 data) -> void = 0;
+  virtual auto store(n2 address, n8 data) -> void = 0;
   virtual auto lastCycle() -> void = 0;
 
   //huc6280.cpp
   auto power() -> void;
 
   //memory.cpp
-  auto load8(uint8) -> uint8;
-  auto load16(uint16) -> uint8;
-  auto store8(uint8, uint8) -> void;
-  auto store16(uint16, uint8) -> void;
+  auto load8(n8) -> n8;
+  auto load16(n16) -> n8;
+  auto store8(n8, n8) -> void;
+  auto store16(n16, n8) -> void;
 
   auto idle() -> void;
-  auto opcode() -> uint8;
-  auto operand() -> uint8;
+  auto opcode() -> n8;
+  auto operand() -> n8;
 
-  auto push(uint8) -> void;
-  auto pull() -> uint8;
+  auto push(n8) -> void;
+  auto pull() -> n8;
 
   //instructions.cpp
-  using fp = auto (HuC6280::*)(uint8) -> uint8;
-  auto algorithmADC(uint8) -> uint8;
-  auto algorithmAND(uint8) -> uint8;
-  auto algorithmASL(uint8) -> uint8;
-  auto algorithmBIT(uint8) -> uint8;
-  auto algorithmCMP(uint8) -> uint8;
-  auto algorithmCPX(uint8) -> uint8;
-  auto algorithmCPY(uint8) -> uint8;
-  auto algorithmDEC(uint8) -> uint8;
-  auto algorithmEOR(uint8) -> uint8;
-  auto algorithmINC(uint8) -> uint8;
-  auto algorithmLD (uint8) -> uint8;
-  auto algorithmLSR(uint8) -> uint8;
-  auto algorithmORA(uint8) -> uint8;
-  auto algorithmROL(uint8) -> uint8;
-  auto algorithmROR(uint8) -> uint8;
-  auto algorithmSBC(uint8) -> uint8;
-  auto algorithmTRB(uint8) -> uint8;
-  auto algorithmTSB(uint8) -> uint8;
+  using fp = auto (HuC6280::*)(n8) -> n8;
+  auto algorithmADC(n8) -> n8;
+  auto algorithmAND(n8) -> n8;
+  auto algorithmASL(n8) -> n8;
+  auto algorithmBIT(n8) -> n8;
+  auto algorithmCMP(n8) -> n8;
+  auto algorithmCPX(n8) -> n8;
+  auto algorithmCPY(n8) -> n8;
+  auto algorithmDEC(n8) -> n8;
+  auto algorithmEOR(n8) -> n8;
+  auto algorithmINC(n8) -> n8;
+  auto algorithmLD (n8) -> n8;
+  auto algorithmLSR(n8) -> n8;
+  auto algorithmORA(n8) -> n8;
+  auto algorithmROL(n8) -> n8;
+  auto algorithmROR(n8) -> n8;
+  auto algorithmSBC(n8) -> n8;
+  auto algorithmTRB(n8) -> n8;
+  auto algorithmTSB(n8) -> n8;
 
-  using bp = auto (HuC6280::*)(uint16&, uint16&, bool) -> void;
-  auto algorithmTAI(uint16&, uint16&, bool) -> void;
-  auto algorithmTDD(uint16&, uint16&, bool) -> void;
-  auto algorithmTIA(uint16&, uint16&, bool) -> void;
-  auto algorithmTII(uint16&, uint16&, bool) -> void;
-  auto algorithmTIN(uint16&, uint16&, bool) -> void;
+  using bp = auto (HuC6280::*)(n16&, n16&, bool) -> void;
+  auto algorithmTAI(n16&, n16&, bool) -> void;
+  auto algorithmTDD(n16&, n16&, bool) -> void;
+  auto algorithmTIA(n16&, n16&, bool) -> void;
+  auto algorithmTII(n16&, n16&, bool) -> void;
+  auto algorithmTIN(n16&, n16&, bool) -> void;
 
   //instruction.cpp
-  auto interrupt(uint16 vector) -> void;
+  auto interrupt(n16 vector) -> void;
   auto instruction() -> void;
 
   //instructions.cpp
-  auto instructionAbsoluteModify(fp, uint8 = 0) -> void;
-  auto instructionAbsoluteRead(fp, uint8&, uint8 = 0) -> void;
-  auto instructionAbsoluteReadMemory(fp, uint8 = 0) -> void;
-  auto instructionAbsoluteWrite(uint8, uint8 = 0) -> void;
+  auto instructionAbsoluteModify(fp, n8 = 0) -> void;
+  auto instructionAbsoluteRead(fp, n8&, n8 = 0) -> void;
+  auto instructionAbsoluteReadMemory(fp, n8 = 0) -> void;
+  auto instructionAbsoluteWrite(n8, n8 = 0) -> void;
   auto instructionBlockMove(bp) -> void;
   auto instructionBranch(bool) -> void;
-  auto instructionBranchIfBitReset(uint3) -> void;
-  auto instructionBranchIfBitSet(uint3) -> void;
+  auto instructionBranchIfBitReset(n3) -> void;
+  auto instructionBranchIfBitSet(n3) -> void;
   auto instructionBranchSubroutine() -> void;
   auto instructionBreak() -> void;
   auto instructionCallAbsolute() -> void;
   auto instructionChangeSpeedLow() -> void;
   auto instructionChangeSpeedHigh() -> void;
-  auto instructionClear(uint8&) -> void;
+  auto instructionClear(n8&) -> void;
   auto instructionClear(bool&) -> void;
-  auto instructionImmediate(fp, uint8&) -> void;
+  auto instructionImmediate(fp, n8&) -> void;
   auto instructionImmediateMemory(fp) -> void;
-  auto instructionImplied(fp, uint8&) -> void;
-  auto instructionIndirectRead(fp, uint8&, uint8 = 0) -> void;
-  auto instructionIndirectReadMemory(fp, uint8 = 0) -> void;
-  auto instructionIndirectWrite(uint8, uint8 = 0) -> void;
-  auto instructionIndirectYRead(fp, uint8&) -> void;
+  auto instructionImplied(fp, n8&) -> void;
+  auto instructionIndirectRead(fp, n8&, n8 = 0) -> void;
+  auto instructionIndirectReadMemory(fp, n8 = 0) -> void;
+  auto instructionIndirectWrite(n8, n8 = 0) -> void;
+  auto instructionIndirectYRead(fp, n8&) -> void;
   auto instructionIndirectYReadMemory(fp) -> void;
-  auto instructionIndirectYWrite(uint8) -> void;
+  auto instructionIndirectYWrite(n8) -> void;
   auto instructionJumpAbsolute() -> void;
-  auto instructionJumpIndirect(uint8 = 0) -> void;
+  auto instructionJumpIndirect(n8 = 0) -> void;
   auto instructionNoOperation() -> void;
-  auto instructionPull(uint8&) -> void;
+  auto instructionPull(n8&) -> void;
   auto instructionPullP() -> void;
-  auto instructionPush(uint8) -> void;
-  auto instructionResetMemoryBit(uint3) -> void;
+  auto instructionPush(n8) -> void;
+  auto instructionResetMemoryBit(n3) -> void;
   auto instructionReturnInterrupt() -> void;
   auto instructionReturnSubroutine() -> void;
   auto instructionSet(bool&) -> void;
-  auto instructionSetMemoryBit(uint3) -> void;
-  auto instructionStoreImplied(uint2) -> void;
-  auto instructionSwap(uint8&, uint8&) -> void;
-  auto instructionTestAbsolute(uint8 = 0) -> void;
-  auto instructionTestZeroPage(uint8 = 0) -> void;
-  auto instructionTransfer(uint8&, uint8&) -> void;
+  auto instructionSetMemoryBit(n3) -> void;
+  auto instructionStoreImplied(n2) -> void;
+  auto instructionSwap(n8&, n8&) -> void;
+  auto instructionTestAbsolute(n8 = 0) -> void;
+  auto instructionTestZeroPage(n8 = 0) -> void;
+  auto instructionTransfer(n8&, n8&) -> void;
   auto instructionTransferAccumulatorToMPR() -> void;
   auto instructionTransferMPRToAccumulator() -> void;
   auto instructionTransferXS() -> void;
-  auto instructionZeroPageModify(fp, uint8 = 0) -> void;
-  auto instructionZeroPageRead(fp, uint8&, uint8 = 0) -> void;
-  auto instructionZeroPageReadMemory(fp, uint8 = 0) -> void;
-  auto instructionZeroPageWrite(uint8, uint8 = 0) -> void;
+  auto instructionZeroPageModify(fp, n8 = 0) -> void;
+  auto instructionZeroPageRead(fp, n8&, n8 = 0) -> void;
+  auto instructionZeroPageReadMemory(fp, n8 = 0) -> void;
+  auto instructionZeroPageWrite(n8, n8 = 0) -> void;
 
   //disassembler.cpp
   auto disassembleInstruction() -> string;
@@ -125,15 +125,15 @@ struct HuC6280 {
     bool v;  //overflow
     bool n;  //negative
 
-    operator uint8() const {
+    operator n8() const {
       return c << 0 | z << 1 | i << 2 | d << 3 | b << 4 | t << 5 | v << 6 | n << 7;
     }
 
-    auto operator()() const -> uint8 {
-      return operator uint8();
+    auto operator()() const -> n8 {
+      return operator n8();
     }
 
-    auto& operator=(uint8 data) {
+    auto& operator=(n8 data) {
       c = data.bit(0);
       z = data.bit(1);
       i = data.bit(2);
@@ -147,15 +147,15 @@ struct HuC6280 {
   };
 
   struct Registers {
-     uint8 a;
-     uint8 x;
-     uint8 y;
-     uint8 s;
-    uint16 pc;
-     uint8 mpr[8];
-     uint8 mpl;  //MPR latch
-     uint8 cs;   //code speed (3 = fast, 12 = slow)
-     Flags p;
+    n8  a;
+    n8  x;
+    n8  y;
+    n8  s;
+    n16 pc;
+    n8  mpr[8];
+    n8  mpl;  //MPR latch
+    n8  cs;   //code speed (3 = fast, 12 = slow)
+    Flags p;
   } r;
 
   bool blockMove;

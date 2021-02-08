@@ -1,7 +1,5 @@
 #pragma once
 
-using uint = unsigned;
-
 namespace nall {
   //UTF-8 to UTF-16
   struct utf16_t {
@@ -32,11 +30,11 @@ namespace nall {
     auto data() -> wchar_t* { return buffer; }
     auto data() const -> const wchar_t* { return buffer; }
 
-    auto size() const -> uint { return length; }
+    auto size() const -> u32 { return length; }
 
   private:
     wchar_t* buffer = nullptr;
-    uint length = 0;
+    u32 length = 0;
   };
 
   //UTF-16 to UTF-8
@@ -68,17 +66,17 @@ namespace nall {
     auto data() -> char* { return buffer; }
     auto data() const -> const char* { return buffer; }
 
-    auto size() const -> uint { return length; }
+    auto size() const -> u32 { return length; }
 
   private:
     char* buffer = nullptr;
-    uint length = 0;
+    u32 length = 0;
   };
 
   inline auto utf8_arguments(int& argc, char**& argv) -> void {
     wchar_t** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
     argv = new char*[argc + 1]();
-    for(uint i = 0; i < argc; i++) {
+    for(u32 i = 0; i < argc; i++) {
       argv[i] = new char[PATH_MAX];
       strcpy(argv[i], nall::utf8_t(wargv[i]));
     }

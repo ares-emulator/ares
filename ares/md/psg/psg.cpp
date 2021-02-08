@@ -31,7 +31,7 @@ auto PSG::main() -> void {
   step(16);
 }
 
-auto PSG::step(uint clocks) -> void {
+auto PSG::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu, apu);
 }
@@ -40,7 +40,7 @@ auto PSG::power(bool reset) -> void {
   SN76489::power();
   Thread::create(system.frequency() / 15.0, {&PSG::main, this});
 
-  for(uint level : range(15)) {
+  for(u32 level : range(15)) {
     volume[level] = pow(2, level * -2.0 / 6.0);
   }
   volume[15] = 0;

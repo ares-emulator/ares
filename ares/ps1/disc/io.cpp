@@ -8,7 +8,7 @@ auto Disc::readDMA() -> u32 {
 }
 
 auto Disc::readByte(u32 address) -> u32 {
-  uint8 data = 0;
+  n8 data = 0;
 
   if(address == 0x1f80'1800) {
     data.bit(0) = io.index.bit(0);
@@ -45,7 +45,7 @@ auto Disc::readByte(u32 address) -> u32 {
 
   //interrupt flag
   if(address == 0x1f80'1803 && (io.index == 1 || io.index == 3)) {
-    uint3 flags = 0;
+    n3 flags = 0;
     if(irq.error.flag      ) flags = 5;
     if(irq.end.flag        ) flags = 4;
     if(irq.acknowledge.flag) flags = 3;
@@ -64,18 +64,18 @@ auto Disc::readByte(u32 address) -> u32 {
 
 auto Disc::readHalf(u32 address) -> u32 {
   debug(unverified, "Disc::readHalf(", hex(address, 8L), ")");
-  uint16 data = readByte(address & ~1 | 0) <<  0;
+  n16    data = readByte(address & ~1 | 0) <<  0;
   return data | readByte(address & ~1 | 1) <<  8;
 }
 
 auto Disc::readWord(u32 address) -> u32 {
   debug(unverified, "Disc::readWord(", hex(address, 8L), ")");
-  uint32 data = readHalf(address & ~3 | 0) <<  0;
+  n32    data = readHalf(address & ~3 | 0) <<  0;
   return data | readHalf(address & ~3 | 2) << 16;
 }
 
 auto Disc::writeByte(u32 address, u32 value) -> void {
-  uint8 data = value;
+  n8 data = value;
 
   if(address == 0x1f80'1800) {
     io.index = data.bit(0,1);

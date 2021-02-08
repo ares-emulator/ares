@@ -1,8 +1,8 @@
 auto DMA::sortChannelsByPriority() -> void {
-  uint1 selected[7];
-  for(uint index : range(7)) {
-    uint id = 8, lowest = 8;
-    for(uint search : range(7)) {
+  n1 selected[7];
+  for(u32 index : range(7)) {
+    u32 id = 8, lowest = 8;
+    for(u32 search : range(7)) {
       if(selected[search]) continue;
       if(channels[search].priority < lowest) {
         lowest = channels[search].priority;
@@ -14,7 +14,7 @@ auto DMA::sortChannelsByPriority() -> void {
   }
 }
 
-auto DMA::Channel::step(uint clocks) -> bool {
+auto DMA::Channel::step(u32 clocks) -> bool {
   if(!masterEnable || !counter) return false;
 
   if(counter > clocks) {
@@ -137,7 +137,7 @@ auto DMA::Channel::transferChain() -> void {
   u32 timeout = 0x1000;
 
   do {
-    uint32 data = bus.read<Word>(address & 0xfffffc);
+    n32 data = bus.read<Word>(address & 0xfffffc);
     address += 4;
     clocks  += 1;
 

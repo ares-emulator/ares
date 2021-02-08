@@ -1,7 +1,7 @@
-auto ARM7TDMI::ADD(uint32 source, uint32 modify, bool carry) -> uint32 {
-  uint32 result = source + modify + carry;
+auto ARM7TDMI::ADD(n32 source, n32 modify, bool carry) -> n32 {
+  n32 result = source + modify + carry;
   if(cpsr().t || opcode.bit(20)) {
-    uint32 overflow = ~(source ^ modify) & (source ^ result);
+    n32 overflow = ~(source ^ modify) & (source ^ result);
     cpsr().v = 1 << 31 & (overflow);
     cpsr().c = 1 << 31 & (overflow ^ source ^ modify ^ result);
     cpsr().z = result == 0;
@@ -10,15 +10,15 @@ auto ARM7TDMI::ADD(uint32 source, uint32 modify, bool carry) -> uint32 {
   return result;
 }
 
-auto ARM7TDMI::ASR(uint32 source, uint8 shift) -> uint32 {
+auto ARM7TDMI::ASR(n32 source, n8 shift) -> n32 {
   carry = cpsr().c;
   if(shift == 0) return source;
   carry = shift > 32 ? source & 1 << 31 : source & 1 << shift - 1;
-  source = shift > 31 ? (int32)source >> 31 : (int32)source >> shift;
+  source = shift > 31 ? (i32)source >> 31 : (i32)source >> shift;
   return source;
 }
 
-auto ARM7TDMI::BIT(uint32 result) -> uint32 {
+auto ARM7TDMI::BIT(n32 result) -> n32 {
   if(cpsr().t || opcode.bit(20)) {
     cpsr().c = carry;
     cpsr().z = result == 0;
@@ -27,7 +27,7 @@ auto ARM7TDMI::BIT(uint32 result) -> uint32 {
   return result;
 }
 
-auto ARM7TDMI::LSL(uint32 source, uint8 shift) -> uint32 {
+auto ARM7TDMI::LSL(n32 source, n8 shift) -> n32 {
   carry = cpsr().c;
   if(shift == 0) return source;
   carry = shift > 32 ? 0 : source & 1 << 32 - shift;
@@ -35,7 +35,7 @@ auto ARM7TDMI::LSL(uint32 source, uint8 shift) -> uint32 {
   return source;
 }
 
-auto ARM7TDMI::LSR(uint32 source, uint8 shift) -> uint32 {
+auto ARM7TDMI::LSR(n32 source, n8 shift) -> n32 {
   carry = cpsr().c;
   if(shift == 0) return source;
   carry = shift > 32 ? 0 : source & 1 << shift - 1;
@@ -43,7 +43,7 @@ auto ARM7TDMI::LSR(uint32 source, uint8 shift) -> uint32 {
   return source;
 }
 
-auto ARM7TDMI::MUL(uint32 product, uint32 multiplicand, uint32 multiplier) -> uint32 {
+auto ARM7TDMI::MUL(n32 product, n32 multiplicand, n32 multiplier) -> n32 {
   idle();
   if(multiplier >>  8 && multiplier >>  8 != 0xffffff) idle();
   if(multiplier >> 16 && multiplier >> 16 !=   0xffff) idle();
@@ -56,7 +56,7 @@ auto ARM7TDMI::MUL(uint32 product, uint32 multiplicand, uint32 multiplier) -> ui
   return product;
 }
 
-auto ARM7TDMI::ROR(uint32 source, uint8 shift) -> uint32 {
+auto ARM7TDMI::ROR(n32 source, n8 shift) -> n32 {
   carry = cpsr().c;
   if(shift == 0) return source;
   if(shift &= 31) source = source << 32 - shift | source >> shift;
@@ -64,16 +64,16 @@ auto ARM7TDMI::ROR(uint32 source, uint8 shift) -> uint32 {
   return source;
 }
 
-auto ARM7TDMI::RRX(uint32 source) -> uint32 {
+auto ARM7TDMI::RRX(n32 source) -> n32 {
   carry = source.bit(0);
   return cpsr().c << 31 | source >> 1;
 }
 
-auto ARM7TDMI::SUB(uint32 source, uint32 modify, bool carry) -> uint32 {
+auto ARM7TDMI::SUB(n32 source, n32 modify, bool carry) -> n32 {
   return ADD(source, ~modify, carry);
 }
 
-auto ARM7TDMI::TST(uint4 mode) -> bool {
+auto ARM7TDMI::TST(n4 mode) -> bool {
   switch(mode) {
   case  0: return cpsr().z == 1;                          //EQ (equal)
   case  1: return cpsr().z == 0;                          //NE (not equal)

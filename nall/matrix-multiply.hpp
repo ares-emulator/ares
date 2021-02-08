@@ -7,15 +7,15 @@ namespace nall {
 
 template<typename T> inline auto MatrixMultiply(
 T* output,
-const T* xdata, uint xrows, uint xcols,
-const T* ydata, uint yrows, uint ycols
+const T* xdata, u32 xrows, u32 xcols,
+const T* ydata, u32 yrows, u32 ycols
 ) -> void {
   if(xcols != yrows) return;
 
-  for(uint y : range(xrows)) {
-    for(uint x : range(ycols)) {
+  for(u32 y : range(xrows)) {
+    for(u32 x : range(ycols)) {
       T sum = 0;
-      for(uint z : range(xcols)) {
+      for(u32 z : range(xcols)) {
         sum += xdata[y * xcols + z] * ydata[z * ycols + x];
       }
       *output++ = sum;
@@ -24,8 +24,8 @@ const T* ydata, uint yrows, uint ycols
 }
 
 template<typename T> inline auto MatrixMultiply(
-const T* xdata, uint xrows, uint xcols,
-const T* ydata, uint yrows, uint ycols
+const T* xdata, u32 xrows, u32 xcols,
+const T* ydata, u32 yrows, u32 ycols
 ) -> vector<T> {
   vector<T> output;
   output.resize(xrows * ycols);

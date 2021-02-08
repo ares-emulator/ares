@@ -13,15 +13,15 @@ struct pConsole : public pWidget {
   Console& console;
   CocoaConsole* cocoaConsole = nullptr;
 
-  void print(string text);
-  void reset();
-  void setBackgroundColor(Color color);
-  void setForegroundColor(Color color);
-  void setPrompt(string prompt);
+  auto print(string text) -> void;
+  auto reset() -> void;
+  auto setBackgroundColor(Color color) -> void;
+  auto setForegroundColor(Color color) -> void;
+  auto setPrompt(string prompt) -> void;
 
   pConsole(Console& console) : pWidget(console), console(console) {}
-  void constructor();
-  void destructor();
+  auto constructor() -> void;
+  auto destructor() -> void;
 };
 
 }

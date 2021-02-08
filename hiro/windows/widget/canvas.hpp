@@ -16,16 +16,16 @@ struct pCanvas : pWidget {
   auto update() -> void;
 
   auto doMouseLeave() -> void override;
-  auto doMouseMove(int x, int y) -> void override;
+  auto doMouseMove(s32 x, s32 y) -> void override;
   auto windowProc(HWND, UINT, WPARAM, LPARAM) -> maybe<LRESULT> override;
 
   auto _paint() -> void;
   auto _rasterize() -> void;
   auto _redraw() -> void;
 
-  vector<uint32_t> pixels;
-  signed width = 0;
-  signed height = 0;
+  vector<u32> pixels;
+  s32 width = 0;
+  s32 height = 0;
 };
 
 }

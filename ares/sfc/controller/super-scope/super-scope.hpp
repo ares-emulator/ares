@@ -11,22 +11,22 @@ struct SuperScope : Controller, Thread {
   ~SuperScope();
 
   auto main() -> void;
-  auto data() -> uint2;
-  auto latch(bool data) -> void;
+  auto data() -> n2;
+  auto latch(n1 data) -> void;
 
 private:
-  bool latched = 0;
-  uint counter = 0;
+  n1  latched;
+  n32 counter;
 
-  int  cx = 256 / 2;
-  int  cy = 240 / 2;
-  bool triggerValue = 0;
-  bool turboEdge = 0;
-  bool pauseEdge = 0;
+  i32 cx = 256 / 2;
+  i32 cy = 240 / 2;
+  n1  triggerValue;
+  n1  turboEdge;
+  n1  pauseEdge;
 
-  bool offscreen = 0;
-  bool turboOld = 0;
-  bool triggerLock = 0;
-  bool pauseLock = 0;
-  uint previous = 0;
+  n1  offscreen;
+  n1  turboOld;
+  n1  triggerLock;
+  n1  pauseLock;
+  n32 previous;
 };

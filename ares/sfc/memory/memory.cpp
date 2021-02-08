@@ -19,22 +19,22 @@ auto Bus::reset() -> void {
   if(lookup) delete[] lookup;
   if(target) delete[] target;
 
-  lookup = new uint8 [16 * 1024 * 1024]();
-  target = new uint32[16 * 1024 * 1024]();
+  lookup = new n8 [16_MiB]();
+  target = new n32[16_MiB]();
 
-  reader[0] = [](uint24, uint8 data) -> uint8 { return data; };
-  writer[0] = [](uint24, uint8) -> void {};
+  reader[0] = [](n24, n8 data) -> n8 { return data; };
+  writer[0] = [](n24, n8) -> void {};
 
   cpu.map();
   ppu.map();
 }
 
 auto Bus::map(
-  const function<uint8 (uint24, uint8)>& read,
-  const function<void  (uint24, uint8)>& write,
-  const string& addr, uint size, uint base, uint mask
-) -> uint {
-  uint id = 1;
+  const function<n8   (n24, n8)>& read,
+  const function<void (n24, n8)>& write,
+  const string& addr, u32 size, u32 base, u32 mask
+) -> u32 {
+  u32 id = 1;
   while(counter[id]) {
     if(++id >= 256) return print("SFC error: bus map exhausted\n"), 0;
   }
@@ -49,20 +49,20 @@ auto Bus::map(
     for(auto& addr : addrs) {
       auto bankRange = bank.split("-", 1L);
       auto addrRange = addr.split("-", 1L);
-      uint bankLo = bankRange(0).hex();
-      uint bankHi = bankRange(1, bankRange(0)).hex();
-      uint addrLo = addrRange(0).hex();
-      uint addrHi = addrRange(1, addrRange(0)).hex();
+      u32 bankLo = bankRange(0).hex();
+      u32 bankHi = bankRange(1, bankRange(0)).hex();
+      u32 addrLo = addrRange(0).hex();
+      u32 addrHi = addrRange(1, addrRange(0)).hex();
 
-      for(uint bank = bankLo; bank <= bankHi; bank++) {
-        for(uint addr = addrLo; addr <= addrHi; addr++) {
-          uint pid = lookup[bank << 16 | addr];
+      for(u32 bank = bankLo; bank <= bankHi; bank++) {
+        for(u32 addr = addrLo; addr <= addrHi; addr++) {
+          u32 pid = lookup[bank << 16 | addr];
           if(pid && --counter[pid] == 0) {
             reader[pid].reset();
             writer[pid].reset();
           }
 
-          uint offset = reduce(bank << 16 | addr, mask);
+          u32 offset = reduce(bank << 16 | addr, mask);
           if(size) base = mirror(base, size);
           if(size) offset = base + mirror(offset, size - base);
           lookup[bank << 16 | addr] = id;
@@ -84,14 +84,14 @@ auto Bus::unmap(const string& addr) -> void {
     for(auto& addr : addrs) {
       auto bankRange = bank.split("-", 1L);
       auto addrRange = addr.split("-", 1L);
-      uint bankLo = bankRange(0).hex();
-      uint bankHi = bankRange(1, bankRange(0)).hex();
-      uint addrLo = addrRange(0).hex();
-      uint addrHi = addrRange(1, addrRange(1)).hex();
+      u32 bankLo = bankRange(0).hex();
+      u32 bankHi = bankRange(1, bankRange(0)).hex();
+      u32 addrLo = addrRange(0).hex();
+      u32 addrHi = addrRange(1, addrRange(1)).hex();
 
-      for(uint bank = bankLo; bank <= bankHi; bank++) {
-        for(uint addr = addrLo; addr <= addrHi; addr++) {
-          uint pid = lookup[bank << 16 | addr];
+      for(u32 bank = bankLo; bank <= bankHi; bank++) {
+        for(u32 addr = addrLo; addr <= addrHi; addr++) {
+          u32 pid = lookup[bank << 16 | addr];
           if(pid && --counter[pid] == 0) {
             reader[pid].reset();
             writer[pid].reset();

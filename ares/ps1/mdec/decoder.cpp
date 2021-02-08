@@ -22,7 +22,7 @@ auto MDEC::decodeMacroblocks() -> void {
 
     //4-bit
     if(status.outputDepth == 0) {
-      for(uint index = 0; index < 64; index += 8) {
+      for(u32 index = 0; index < 64; index += 8) {
         u32 a = (output[index + 0] >> 4) <<  0;
         u32 b = (output[index + 1] >> 4) <<  4;
         u32 c = (output[index + 2] >> 4) <<  8;
@@ -37,7 +37,7 @@ auto MDEC::decodeMacroblocks() -> void {
 
     //8-bit
     if(status.outputDepth == 1) {
-      for(uint index = 0; index < 64; index += 4) {
+      for(u32 index = 0; index < 64; index += 4) {
         u32 a = output[index + 0] <<  0;
         u32 b = output[index + 1] <<  8;
         u32 c = output[index + 2] << 16;
@@ -48,7 +48,7 @@ auto MDEC::decodeMacroblocks() -> void {
 
     //15-bit
     if(status.outputDepth == 3) {
-      for(uint index = 0; index < 256; index += 2) {
+      for(u32 index = 0; index < 256; index += 2) {
         u32 a = GPU::Color::to16(output[index + 0]) <<  0 | status.outputMaskBit << 15;
         u32 b = GPU::Color::to16(output[index + 1]) << 16 | status.outputMaskBit << 31;
         fifo.output.write(a | b);
@@ -57,9 +57,9 @@ auto MDEC::decodeMacroblocks() -> void {
 
     //24-bit
     if(status.outputDepth == 2) {
-      uint index = 0;
-      uint state = 0;
-      uint rgb = 0;
+      u32 index = 0;
+      u32 state = 0;
+      u32 rgb = 0;
       while(index < 256) {
         switch(state) {
         case 0:
@@ -88,17 +88,17 @@ auto MDEC::decodeMacroblocks() -> void {
 }
 
 auto MDEC::decodeBlock(s16 block[64], u8 table[64]) -> bool {
-  for(uint n : range(64)) block[n] = 0;
+  for(u32 n : range(64)) block[n] = 0;
 
   maybe<u16> dct = fifo.input.read();
   if(!dct) return false;
   //skip block padding
   while(!fifo.input.empty() && *dct == 0xfe00) dct = fifo.input.read();
-  s32 current = (int10)*dct;  //direct current
+  s32 current = (i10)*dct;  //direct current
   u16 qfactor = *dct >> 10;   //quantization factor
 
   s32 value = current * table[0];
-  for(uint n = 0; n < 64;) {
+  for(u32 n = 0; n < 64;) {
     if(qfactor == 0) value = current << 1;
     value = sclamp<11>(value);
 
@@ -110,7 +110,7 @@ auto MDEC::decodeBlock(s16 block[64], u8 table[64]) -> bool {
 
     maybe<u16> rle = fifo.input.read();
     if(!rle) return false;
-    current = (int10)*rle;
+    current = (i10)*rle;
     n += (*rle >> 10) + 1;
     if(n >= 64) break;
 
@@ -123,12 +123,12 @@ auto MDEC::decodeBlock(s16 block[64], u8 table[64]) -> bool {
   return true;
 }
 
-template<uint Pass>
+template<u32 Pass>
 auto MDEC::decodeIDCT(s16 source[64], s16 target[64]) -> void {
-  for(uint x : range(8)) {
-    for(uint y : range(8)) {
+  for(u32 x : range(8)) {
+    for(u32 y : range(8)) {
       s32 sum = 0;
-      for(uint z : range(8)) {
+      for(u32 z : range(8)) {
         sum += source[y + z * 8] * block.scale[x + z * 8];
       }
       if constexpr(Pass == 0) target[x + y * 8] = sum + 0x8000 >> 16;
@@ -138,18 +138,18 @@ auto MDEC::decodeIDCT(s16 source[64], s16 target[64]) -> void {
 }
 
 auto MDEC::convertY(u32 output[64], s16 luma[64]) -> void {
-  for(uint y : range(8)) {
-    for(uint x : range(8)) {
-      s16 Y = (int10)luma[x + y * 8];
+  for(u32 y : range(8)) {
+    for(u32 x : range(8)) {
+      s16 Y = (i10)luma[x + y * 8];
       Y = uclamp<8>(Y + 128);
       output[x + y * 8] = Y;
     }
   }
 }
 
-auto MDEC::convertYUV(u32 output[256], s16 luma[64], uint bx, uint by) -> void {
-  for(uint y : range(8)) {
-    for(uint x : range(8)) {
+auto MDEC::convertYUV(u32 output[256], s16 luma[64], u32 bx, u32 by) -> void {
+  for(u32 y : range(8)) {
+    for(u32 x : range(8)) {
       s16 Y  = luma[x + y * 8];
       s16 Cb = block.cb[(x + bx >> 1) + (y + by >> 1) * 8];
       s16 Cr = block.cr[(x + bx >> 1) + (y + by >> 1) * 8];

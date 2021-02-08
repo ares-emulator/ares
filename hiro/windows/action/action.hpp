@@ -13,7 +13,7 @@ struct pAction : pObject {
   auto _parentPopupMenu() -> maybe<pPopupMenu&>;
   auto _synchronize() -> void;
 
-  unsigned position = 0;
+  u32 position = 0;
 };
 
 }

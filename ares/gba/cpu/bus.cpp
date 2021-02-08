@@ -2,9 +2,9 @@ auto CPU::sleep() -> void {
   prefetchStep(1);
 }
 
-auto CPU::get(uint mode, uint32 addr) -> uint32 {
-  uint clocks = _wait(mode, addr);
-  uint word = pipeline.fetch.instruction;
+auto CPU::get(u32 mode, n32 addr) -> n32 {
+  u32 clocks = _wait(mode, addr);
+  u32 word = pipeline.fetch.instruction;
   if(context.dmaActive) word = dmabus.data;
 
   if(addr >= 0x1000'0000) {
@@ -35,8 +35,8 @@ auto CPU::get(uint mode, uint32 addr) -> uint32 {
   return word;
 }
 
-auto CPU::set(uint mode, uint32 addr, uint32 word) -> void {
-  uint clocks = _wait(mode, addr);
+auto CPU::set(u32 mode, n32 addr, n32 word) -> void {
+  u32 clocks = _wait(mode, addr);
 
   if(addr >= 0x1000'0000) {
     prefetchStep(clocks);
@@ -57,7 +57,7 @@ auto CPU::set(uint mode, uint32 addr, uint32 word) -> void {
   }
 }
 
-auto CPU::_wait(uint mode, uint32 addr) -> uint {
+auto CPU::_wait(u32 mode, n32 addr) -> u32 {
   if(addr >= 0x1000'0000) return 1;  //unmapped
   if(addr <  0x0200'0000) return 1;
   if(addr <  0x0300'0000) return (16 - memory.ewramWait) * (mode & Word ? 2 : 1);
@@ -65,9 +65,9 @@ auto CPU::_wait(uint mode, uint32 addr) -> uint {
   if(addr <  0x0700'0000) return mode & Word ? 2 : 1;
   if(addr <  0x0800'0000) return 1;
 
-  static uint timings[] = {5, 4, 3, 9};
-  uint n = timings[wait.nwait[addr >> 25 & 3]];
-  uint s = wait.swait[addr >> 25 & 3];
+  static u32 timings[] = {5, 4, 3, 9};
+  u32 n = timings[wait.nwait[addr >> 25 & 3]];
+  u32 s = wait.swait[addr >> 25 & 3];
 
   switch(addr & 0x0e00'0000) {
   case 0x0800'0000: s = s ? 2 : 3; break;
@@ -79,7 +79,7 @@ auto CPU::_wait(uint mode, uint32 addr) -> uint {
   bool sequential = (mode & Sequential);
   if((addr & 0x1fffe) == 0) sequential = false;  //N cycle on 16-bit ROM crossing 128KB page boundary (RAM S==N)
 
-  uint clocks = sequential ? s : n;
+  u32 clocks = sequential ? s : n;
   if(mode & Word) clocks += s;  //16-bit bus requires two transfers for words
   return clocks;
 }

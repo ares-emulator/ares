@@ -7,17 +7,17 @@ struct PSG : AY38910, Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power() -> void;
 
-  auto readIO(uint1 port) -> uint8 override;
-  auto writeIO(uint1 port, uint8 data) -> void override;
+  auto readIO(n1 port) -> n8 override;
+  auto writeIO(n1 port, n8 data) -> void override;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 private:
-  double volume[16];
+  f64 volume[16];
 };
 
 extern PSG psg;

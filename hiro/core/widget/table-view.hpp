@@ -10,8 +10,8 @@ struct mTableView : mWidget {
   auto batchable() const -> bool;
   auto batched() const -> vector<TableViewItem>;
   auto bordered() const -> bool;
-  auto column(uint position) const -> TableViewColumn;
-  auto columnCount() const -> uint;
+  auto column(u32 position) const -> TableViewColumn;
+  auto columnCount() const -> u32;
   auto columns() const -> vector<TableViewColumn>;
   auto doActivate(sTableViewCell cell) const -> void;
   auto doChange() const -> void;
@@ -21,8 +21,8 @@ struct mTableView : mWidget {
   auto doToggle(sTableViewCell cell) const -> void;
   auto foregroundColor() const -> Color;
   auto headered() const -> bool;
-  auto item(uint position) const -> TableViewItem;
-  auto itemCount() const -> uint;
+  auto item(u32 position) const -> TableViewItem;
+  auto itemCount() const -> u32;
   auto items() const -> vector<TableViewItem>;
   auto onActivate(const function<void (TableViewCell)>& callback = {}) -> type&;
   auto onChange(const function<void ()>& callback = {}) -> type&;
@@ -32,7 +32,7 @@ struct mTableView : mWidget {
   auto onToggle(const function<void (TableViewCell)>& callback = {}) -> type&;
   auto remove(sTableViewColumn column) -> type&;
   auto remove(sTableViewItem item) -> type&;
-  auto reset() -> type&;
+  auto reset() -> type& override;
   auto resizeColumns() -> type&;
   auto selectAll() -> type&;
   auto selectNone() -> type&;
@@ -43,14 +43,14 @@ struct mTableView : mWidget {
   auto setBordered(bool bordered = true) -> type&;
   auto setForegroundColor(Color color = {}) -> type&;
   auto setHeadered(bool headered = true) -> type&;
-  auto setParent(mObject* parent = nullptr, int offset = -1) -> type& override;
+  auto setParent(mObject* parent = nullptr, s32 offset = -1) -> type& override;
   auto setSortable(bool sortable = true) -> type&;
   auto sort() -> type&;
   auto sortable() const -> bool;
 
 //private:
   struct State {
-    uint activeColumn = 0;
+    u32 activeColumn = 0;
     Alignment alignment;
     Color backgroundColor;
     bool batchable = false;

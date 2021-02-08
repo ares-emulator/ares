@@ -6,17 +6,17 @@ struct VDP : TMS9918, V9938, Thread {
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
-  auto step(uint clocks) -> void override;
+  auto step(u32 clocks) -> void override;
   auto irq(bool line) -> void override;
   auto frame() -> void override;
   auto power() -> void;
 
-  auto read(uint2 port) -> uint8;
-  auto write(uint2 port, uint8 data) -> void;
+  auto read(n2 port) -> n8;
+  auto write(n2 port, n8 data) -> void;
 
   //color.cpp
-  auto colorMSX(uint32) -> uint64;
-  auto colorMSX2(uint32) -> uint64;
+  auto colorMSX(n32) -> n64;
+  auto colorMSX2(n32) -> n64;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

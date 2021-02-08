@@ -10,7 +10,7 @@ struct pViewport : pWidget {
   auto setFocusable(bool focusable) -> void override;
 
   auto doMouseLeave() -> void override;
-  auto doMouseMove(int x, int y) -> void override;
+  auto doMouseMove(s32 x, s32 y) -> void override;
   auto windowProc(HWND, UINT, WPARAM, LPARAM) -> maybe<LRESULT> override;
 };
 

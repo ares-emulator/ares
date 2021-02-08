@@ -2,13 +2,13 @@ struct System : IO {
   Node::System node;
   Node::Setting::Boolean headphones;
 
-  enum class SoC : uint {
+  enum class SoC : u32 {
     ASWAN,
     SPHINX,
     SPHINX2,
   };
 
-  enum class Model : uint {
+  enum class Model : u32 {
     WonderSwan,
     WonderSwanColor,
     SwanCrystal,
@@ -55,11 +55,11 @@ struct System : IO {
     bool rightLatch = 0;
   } controls;
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto model() const -> Model { return information.model; }
   auto soc() const -> SoC { return information.soc; }
-  auto mode() const -> uint3 { return io.mode; }
-  auto memory() const -> uint { return io.mode.bit(2) == 0 ? 16_KiB : 64_KiB; }
+  auto mode() const -> n3 { return io.mode; }
+  auto memory() const -> u32 { return io.mode.bit(2) == 0 ? 16_KiB : 64_KiB; }
 
   //mode:
   //xx0 => planar tiledata
@@ -83,28 +83,29 @@ struct System : IO {
   auto power(bool reset = false) -> void;
 
   //io.cpp
-  auto portRead(uint16 address) -> uint8 override;
-  auto portWrite(uint16 address, uint8 data) -> void override;
+  auto portRead(n16 address) -> n8 override;
+  auto portWrite(n16 address, n8 data) -> void override;
 
   //serialization.cpp
   auto serialize(bool synchronize) -> serializer;
   auto unserialize(serializer&) -> bool;
 
   struct Information {
+    string name = "WonderSwan";
     SoC soc = SoC::ASWAN;
     Model model = Model::WonderSwan;
   } information;
 
-  Memory::Readable<uint8> bootROM;
+  Memory::Readable<n8> bootROM;
   EEPROM eeprom;
 
 private:
   struct Registers {
     //$0060  DISP_MODE
-    uint1 unknown0;
-    uint1 unknown1;
-    uint1 unknown3;
-    uint3 mode;
+    n1 unknown0;
+    n1 unknown1;
+    n1 unknown3;
+    n3 mode;
   } io;
 
   //serialization.cpp

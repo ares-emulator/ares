@@ -82,8 +82,8 @@ auto pWindow::handle() const -> uintptr_t {
   return (uintptr_t)qtWindow->winId();
 }
 
-auto pWindow::monitor() const -> uint {
-  int monitor = QDesktopWidget().screenNumber(qtWindow);
+auto pWindow::monitor() const -> u32 {
+  s32 monitor = QDesktopWidget().screenNumber(qtWindow);
   if(monitor < 0) monitor = Monitor::primary();
   return monitor;
 }
@@ -250,15 +250,15 @@ auto pWindow::_append(mWidget& widget) -> void {
   }
 }
 
-auto pWindow::_menuHeight() const -> uint {
+auto pWindow::_menuHeight() const -> u32 {
   if(auto& menuBar = state().menuBar) {
     if(menuBar->visible()) return settings.geometry.menuHeight + _menuTextHeight();
   }
   return 0;
 }
 
-auto pWindow::_menuTextHeight() const -> uint {
-  uint height = 0;
+auto pWindow::_menuTextHeight() const -> u32 {
+  u32 height = 0;
   if(auto& menuBar = state().menuBar) {
     for(auto& menu : menuBar->state.menus) {
       height = max(height, menu->font(true).size(menu->text()).height());
@@ -267,15 +267,15 @@ auto pWindow::_menuTextHeight() const -> uint {
   return height;
 }
 
-auto pWindow::_statusHeight() const -> uint {
+auto pWindow::_statusHeight() const -> u32 {
   if(auto& statusBar = state().statusBar) {
     if(statusBar->visible()) return settings.geometry.statusHeight + _statusTextHeight();
   }
   return 0;
 }
 
-auto pWindow::_statusTextHeight() const -> uint {
-  uint height = 0;
+auto pWindow::_statusTextHeight() const -> u32 {
+  u32 height = 0;
   if(auto& statusBar = state().statusBar) {
     height = statusBar->font(true).size(statusBar->text()).height();
   }
@@ -367,8 +367,8 @@ auto QtWindow::resizeEvent(QResizeEvent* event) -> void {
 }
 
 auto QtWindow::sizeHint() const -> QSize {
-  uint width = p.state().geometry.width();
-  uint height = p.state().geometry.height();
+  u32 width = p.state().geometry.width();
+  u32 height = p.state().geometry.height();
   height += p._menuHeight();
   height += p._statusHeight();
   return QSize(width, height);

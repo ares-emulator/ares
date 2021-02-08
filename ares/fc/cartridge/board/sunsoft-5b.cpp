@@ -29,7 +29,7 @@ struct Sunsoft5B : Interface {
     Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto main() -> void {
+  auto main() -> void override {
     if(irqCounterEnable) {
       if(--irqCounter == 0xffff) {
         cpu.irqLine(irqEnable);
@@ -141,14 +141,14 @@ struct Sunsoft5B : Interface {
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
     ym2149.power();
     for(u32 level : range(32)) {
       volume[level] = 1.0 / pow(2, 1.0 / 2 * (31 - level));
     }
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programRAM);
     s(characterRAM);
     s(ym2149);
@@ -162,14 +162,14 @@ struct Sunsoft5B : Interface {
     s(divider);
   }
 
-  n04 port;
-  n08 programBank[4];
-  n08 characterBank[8];
-  n02 mirror;
-  n01 irqEnable;
-  n01 irqCounterEnable;
+  n4  port;
+  n8  programBank[4];
+  n8  characterBank[8];
+  n2  mirror;
+  n1  irqEnable;
+  n1  irqCounterEnable;
   n16 irqCounter;
-  n04 divider;
+  n4  divider;
 
 //unserialized:
   f64 volume[32];

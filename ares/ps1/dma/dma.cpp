@@ -20,19 +20,19 @@ auto DMA::unload() -> void {
 }
 
 auto DMA::main() -> void {
-  for(uint id : channelsByPriority) {
+  for(u32 id : channelsByPriority) {
     if(channels[id].step(16)) break;
   }
   step(16);
 }
 
-auto DMA::step(uint clocks) -> void {
+auto DMA::step(u32 clocks) -> void {
   Thread::clock += clocks;
 }
 
 auto DMA::power(bool reset) -> void {
   Memory::Interface::setWaitStates(3, 3, 2);
-  for(uint n : range(7)) {
+  for(u32 n : range(7)) {
     channels[n].priority = 1 + n;
   }
   sortChannelsByPriority();

@@ -1,5 +1,5 @@
-auto System::portRead(uint16 address) -> uint8 {
-  uint8 data;
+auto System::portRead(n16 address) -> n8 {
+  n8 data;
 
   //DISP_MODE
   if(address == 0x0060) {
@@ -45,7 +45,7 @@ auto System::portRead(uint16 address) -> uint8 {
   return data;
 }
 
-auto System::portWrite(uint16 address, uint8 data) -> void {
+auto System::portWrite(n16 address, n8 data) -> void {
   //DISP_MODE
   if(address == 0x0060) {
     io.unknown0 = data.bit(0);

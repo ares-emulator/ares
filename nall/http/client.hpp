@@ -5,19 +5,19 @@
 namespace nall::HTTP {
 
 struct Client : Role {
-  auto open(const string& hostname, uint port = 80) -> bool;
+  auto open(const string& hostname, u16 port = 80) -> bool;
   auto upload(const Request& request) -> bool;
   auto download(const Request& request) -> Response;
   auto close() -> void;
   ~Client() { close(); }
 
 private:
-  int fd = -1;
+  s32 fd = -1;
   addrinfo* info = nullptr;
 };
 
-inline auto Client::open(const string& hostname, uint port) -> bool {
-  addrinfo hint = {0};
+inline auto Client::open(const string& hostname, u16 port) -> bool {
+  addrinfo hint = {};
   hint.ai_family = AF_UNSPEC;
   hint.ai_socktype = SOCK_STREAM;
   hint.ai_flags = AI_ADDRCONFIG;

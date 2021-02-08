@@ -51,11 +51,11 @@ auto Application::quit() -> void {
   return pApplication::quit();
 }
 
-auto Application::scale() -> float {
+auto Application::scale() -> f32 {
   return state().scale;
 }
 
-auto Application::scale(float value) -> float {
+auto Application::scale(f32 value) -> f32 {
   return value * state().scale;
 }
 
@@ -71,7 +71,7 @@ auto Application::setName(const string& name) -> void {
   state().name = name;
 }
 
-auto Application::setScale(float scale) -> void {
+auto Application::setScale(f32 scale) -> void {
   state().scale = scale;
 }
 
@@ -94,7 +94,7 @@ auto Application::toolTips() -> bool {
   return state().toolTips;
 }
 
-auto Application::unscale(float value) -> float {
+auto Application::unscale(f32 value) -> f32 {
   return value * (1.0 / state().scale);
 }
 

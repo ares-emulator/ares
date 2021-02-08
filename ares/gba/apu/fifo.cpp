@@ -8,7 +8,7 @@ auto APU::FIFO::read() -> void {
   active = samples[rdoffset++];
 }
 
-auto APU::FIFO::write(int8 byte) -> void {
+auto APU::FIFO::write(i8 byte) -> void {
   if(size == 32) rdoffset++;
   else size++;
   samples[wroffset++] = byte;

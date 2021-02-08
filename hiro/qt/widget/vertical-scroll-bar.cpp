@@ -6,7 +6,7 @@ auto pVerticalScrollBar::construct() -> void {
   qtWidget = qtVerticalScrollBar = new QtVerticalScrollBar(*this);
   qtVerticalScrollBar->setRange(0, 100);
   qtVerticalScrollBar->setPageStep(101 >> 3);
-  qtVerticalScrollBar->connect(qtVerticalScrollBar, SIGNAL(valueChanged(int)), SLOT(onChange()));
+  qtVerticalScrollBar->connect(qtVerticalScrollBar, SIGNAL(valueChanged(s32)), SLOT(onChange()));
 
   pWidget::construct();
   _setState();
@@ -21,16 +21,16 @@ auto pVerticalScrollBar::minimumSize() const -> Size {
   return {15, 0};
 }
 
-auto pVerticalScrollBar::setLength(unsigned length) -> void {
+auto pVerticalScrollBar::setLength(u32 length) -> void {
   _setState();
 }
 
-auto pVerticalScrollBar::setPosition(unsigned position) -> void {
+auto pVerticalScrollBar::setPosition(u32 position) -> void {
   _setState();
 }
 
 auto pVerticalScrollBar::_setState() -> void {
-  signed length = state().length + (state().length == 0);
+  s32 length = state().length + (state().length == 0);
   qtVerticalScrollBar->setRange(0, length - 1);
   qtVerticalScrollBar->setPageStep(length >> 3);
   qtVerticalScrollBar->setValue(state().position);

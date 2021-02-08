@@ -1,14 +1,14 @@
-auto CPU::readRAM(uint24 address, uint8 data) -> uint8 {
+auto CPU::readRAM(n24 address, n8 data) -> n8 {
   return wram[address];
 }
 
-auto CPU::readAPU(uint24 address, uint8 data) -> uint8 {
+auto CPU::readAPU(n24 address, n8 data) -> n8 {
   synchronize(smp);
   return smp.portRead(address.bit(0,1));
 }
 
-auto CPU::readCPU(uint24 address, uint8 data) -> uint8 {
-  switch((uint16)address) {
+auto CPU::readCPU(n24 address, n8 data) -> n8 {
+  switch((n16)address) {
   case 0x2180:  //WMDATA
     return bus.read(0x7e0000 | io.wramAddress++, data);
 
@@ -57,7 +57,7 @@ auto CPU::readCPU(uint24 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto CPU::readDMA(uint24 address, uint8 data) -> uint8 {
+auto CPU::readDMA(n24 address, n8 data) -> n8 {
   auto& channel = this->channels[address.bit(4,6)];
 
   switch(address & 0xff8f) {
@@ -89,17 +89,17 @@ auto CPU::readDMA(uint24 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto CPU::writeRAM(uint24 address, uint8 data) -> void {
+auto CPU::writeRAM(n24 address, n8 data) -> void {
   wram[address] = data;
 }
 
-auto CPU::writeAPU(uint24 address, uint8 data) -> void {
+auto CPU::writeAPU(n24 address, n8 data) -> void {
   synchronize(smp);
   return smp.portWrite(address.bit(0,1), data);
 }
 
-auto CPU::writeCPU(uint24 address, uint8 data) -> void {
-  switch((uint16)address) {
+auto CPU::writeCPU(n24 address, n8 data) -> void {
+  switch((n16)address) {
 
   case 0x2180:  //WMDATA
     return bus.write(0x7e0000 | io.wramAddress++, data);
@@ -192,12 +192,12 @@ auto CPU::writeCPU(uint24 address, uint8 data) -> void {
     return;
 
   case 0x420b:  //DMAEN
-    for(uint n : range(8)) channels[n].dmaEnable = data.bit(n);
+    for(u32 n : range(8)) channels[n].dmaEnable = data.bit(n);
     if(data) status.dmaPending = true;
     return;
 
   case 0x420c:  //HDMAEN
-    for(uint n : range(8)) channels[n].hdmaEnable = data.bit(n);
+    for(u32 n : range(8)) channels[n].hdmaEnable = data.bit(n);
     return;
 
   case 0x420d:  //MEMSEL
@@ -207,7 +207,7 @@ auto CPU::writeCPU(uint24 address, uint8 data) -> void {
   }
 }
 
-auto CPU::writeDMA(uint24 address, uint8 data) -> void {
+auto CPU::writeDMA(n24 address, n8 data) -> void {
   auto& channel = this->channels[address.bit(4,6)];
 
   switch(address & 0xff8f) {

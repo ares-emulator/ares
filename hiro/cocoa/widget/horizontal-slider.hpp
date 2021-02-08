@@ -15,8 +15,8 @@ struct pHorizontalSlider : pWidget {
 
   auto minimumSize() const -> Size override;
   auto setGeometry(Geometry geometry) -> void;
-  auto setLength(uint length) -> void;
-  auto setPosition(uint position) -> void;
+  auto setLength(u32 length) -> void;
+  auto setPosition(u32 position) -> void;
 
   CocoaHorizontalSlider* cocoaHorizontalSlider = nullptr;
 };

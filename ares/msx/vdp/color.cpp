@@ -1,4 +1,4 @@
-auto VDP::colorMSX(uint32 color) -> uint64 {
+auto VDP::colorMSX(n32 color) -> n64 {
   switch(color.bit(0,3)) {
   case  0: return 0x0000'0000'0000ull;  //transparent
   case  1: return 0x0000'0000'0000ull;  //black
@@ -20,14 +20,14 @@ auto VDP::colorMSX(uint32 color) -> uint64 {
   unreachable;
 }
 
-auto VDP::colorMSX2(uint32 color) -> uint64 {
-  uint3 B = color.bit(0,2);
-  uint3 R = color.bit(3,5);
-  uint3 G = color.bit(6,8);
+auto VDP::colorMSX2(n32 color) -> n64 {
+  n3 B = color.bit(0,2);
+  n3 R = color.bit(3,5);
+  n3 G = color.bit(6,8);
 
-  uint64 r = image::normalize(R, 3, 16);
-  uint64 g = image::normalize(G, 3, 16);
-  uint64 b = image::normalize(B, 3, 16);
+  n64 r = image::normalize(R, 3, 16);
+  n64 g = image::normalize(G, 3, 16);
+  n64 b = image::normalize(B, 3, 16);
 
   return r << 32 | g << 16 | b << 0;
 }

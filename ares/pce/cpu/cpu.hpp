@@ -2,7 +2,7 @@
 
 struct CPU : HuC6280, Thread {
   Node::Object node;
-  Memory::Writable<uint8> ram;  //PC Engine = 8KB, SuperGrafx = 32KB
+  Memory::Writable<n8> ram;  //PC Engine = 8KB, SuperGrafx = 32KB
 
   struct Debugger {
     //debugger.cpp
@@ -25,57 +25,57 @@ struct CPU : HuC6280, Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void override;
+  auto step(u32 clocks) -> void override;
   auto power() -> void;
   auto lastCycle() -> void override;
 
   //io.cpp
-  auto read(uint8 bank, uint13 address) -> uint8 override;
-  auto write(uint8 bank, uint13 address, uint8 data) -> void override;
-  auto store(uint2 address, uint8 data) -> void override;
+  auto read(n8 bank, n13 address) -> n8 override;
+  auto write(n8 bank, n13 address, n8 data) -> void override;
+  auto store(n2 address, n8 data) -> void override;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 private:
   struct IRQ2 {  //CD-ROM, BRK instruction
-    static constexpr uint16_t vector = 0xfff6;
-    uint1 disable;
-    uint1 pending;
+    static constexpr u16 vector = 0xfff6;
+    n1 disable;
+    n1 pending;
   } irq2;
 
   struct IRQ1 {  //VDC
-    static constexpr uint16_t vector = 0xfff8;
-    uint1 disable;
-    uint1 pending;
+    static constexpr u16 vector = 0xfff8;
+    n1 disable;
+    n1 pending;
   } irq1;
 
   struct TIQ {  //Timer
-    static constexpr uint16_t vector = 0xfffa;
-    uint1 disable;
-    uint1 pending;
+    static constexpr u16 vector = 0xfffa;
+    n1 disable;
+    n1 pending;
   } tiq;
 
   struct NMI {  //not exposed by the PC Engine
-    static constexpr uint16_t vector = 0xfffc;
+    static constexpr u16 vector = 0xfffc;
   } nmi;
 
   struct Reset {
-    static constexpr uint16_t vector = 0xfffe;
+    static constexpr u16 vector = 0xfffe;
   } reset;
 
   struct Timer {
     auto irqLine() const -> bool { return line; }
 
-    uint1 line;
-    uint1 enable;
-    uint7 reload;
-    uint7 value;
-    int32 counter;
+    n1  line;
+    n1  enable;
+    n7  reload;
+    n7  value;
+    i32 counter;
   } timer;
 
   struct IO {
-    uint8 buffer;  //latches only on $ff:0800-17ff writes
+    n8 buffer;  //latches only on $ff:0800-17ff writes
   } io;
 };
 

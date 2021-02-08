@@ -1,9 +1,9 @@
 //direct data transfer
 auto SA1::dmaNormal() -> void {
   while(io.dtc--) {
-    uint8 data = r.mdr;
-    uint24 source = io.dsa++;
-    uint16 target = io.dda++;
+    n8  data = r.mdr;
+    n24 source = io.dsa++;
+    n16 target = io.dda++;
 
     if(io.sd == DMA::SourceROM && io.dd == DMA::DestBWRAM) {
       step();
@@ -61,29 +61,29 @@ auto SA1::dmaCC1() -> void {
 //works for 2bpp, 4bpp and 8bpp modes
 
 //type-1 character conversion
-auto SA1::dmaCC1Read(uint address) -> uint8 {
+auto SA1::dmaCC1Read(n24 address) -> n8 {
   //16 bytes/char (2bpp); 32 bytes/char (4bpp); 64 bytes/char (8bpp)
-  uint charmask = (1 << (6 - io.dmacb)) - 1;
+  u32 charmask = (1 << (6 - io.dmacb)) - 1;
 
   if((address & charmask) == 0) {
     //buffer next character to I-RAM
-    uint bpp = 2 << (2 - io.dmacb);
-    uint bpl = (8 << io.dmasize) >> io.dmacb;
-    uint bwmask = bwram.size() - 1;
-    uint tile = ((address - io.dsa) & bwmask) >> (6 - io.dmacb);
-    uint ty = (tile >> io.dmasize);
-    uint tx = tile & ((1 << io.dmasize) - 1);
-    uint bwaddr = io.dsa + ty * 8 * bpl + tx * bpp;
+    u32 bpp = 2 << (2 - io.dmacb);
+    u32 bpl = (8 << io.dmasize) >> io.dmacb;
+    u32 bwmask = bwram.size() - 1;
+    u32 tile = ((address - io.dsa) & bwmask) >> (6 - io.dmacb);
+    u32 ty = (tile >> io.dmasize);
+    u32 tx = tile & ((1 << io.dmasize) - 1);
+    u32 bwaddr = io.dsa + ty * 8 * bpl + tx * bpp;
 
-    for(uint y : range(8)) {
-      uint64 data = 0;
-      for(uint byte : range(bpp)) {
-        data |= (uint64)bwram.read((bwaddr + byte) & bwmask) << (byte << 3);
+    for(u32 y : range(8)) {
+      u64 data = 0;
+      for(u32 byte : range(bpp)) {
+        data |= (u64)bwram.read((bwaddr + byte) & bwmask) << (byte << 3);
       }
       bwaddr += bpl;
 
-      uint8 out[] = {0, 0, 0, 0, 0, 0, 0, 0};
-      for(uint x : range(8)) {
+      u8 out[] = {0, 0, 0, 0, 0, 0, 0, 0};
+      for(u32 x : range(8)) {
         out[0] |= (data & 1) << 7 - x; data >>= 1;
         out[1] |= (data & 1) << 7 - x; data >>= 1;
         if(io.dmacb == 2) continue;
@@ -96,8 +96,8 @@ auto SA1::dmaCC1Read(uint address) -> uint8 {
         out[7] |= (data & 1) << 7 - x; data >>= 1;
       }
 
-      for(uint byte : range(bpp)) {
-        uint p = io.dda + (y << 1) + ((byte & 6) << 3) + (byte & 1);
+      for(u32 byte : range(bpp)) {
+        u32 p = io.dda + (y << 1) + ((byte & 6) << 3) + (byte & 1);
         iram.write(p & 0x07ff, out[byte]);
       }
     }
@@ -109,16 +109,16 @@ auto SA1::dmaCC1Read(uint address) -> uint8 {
 //type-2 character conversion
 auto SA1::dmaCC2() -> void {
   //select register file index (0-7 or 8-15)
-  const uint8* brf = &io.brf[(dma.line & 1) << 3];
-  uint bpp = 2 << (2 - io.dmacb);
-  uint address = io.dda & 0x07ff;
+  const n8* brf = &io.brf[(dma.line & 1) << 3];
+  u32 bpp = 2 << (2 - io.dmacb);
+  u32 address = io.dda & 0x07ff;
   address &= ~((1 << (7 - io.dmacb)) - 1);
   address += (dma.line & 8) * bpp;
   address += (dma.line & 7) * 2;
 
-  for(uint byte : range(bpp)) {
-    uint8 output = 0;
-    for(uint bit : range(8)) {
+  for(u32 byte : range(bpp)) {
+    u8 output = 0;
+    for(u32 bit : range(8)) {
       output |= ((brf[bit] >> byte) & 1) << (7 - bit);
     }
     iram.write(address + ((byte & 6) << 3) + (byte & 1), output);

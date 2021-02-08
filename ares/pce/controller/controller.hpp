@@ -3,8 +3,8 @@ struct Controller : Thread {
 
   virtual ~Controller() = default;
 
-  virtual auto read() -> uint4 { return 0x0f; }
-  virtual auto write(uint2) -> void {}
+  virtual auto read() -> n4 { return 0x0f; }
+  virtual auto write(n2) -> void {}
 };
 
 #include "port.hpp"

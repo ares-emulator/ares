@@ -14,7 +14,7 @@ auto Timer::unload() -> void {
   node.reset();
 }
 
-auto Timer::step(uint clocks) -> void {
+auto Timer::step(u32 clocks) -> void {
   counter.dotclock += clocks;
   counter.divclock += clocks;
 
@@ -82,7 +82,7 @@ auto Timer::power(bool reset) -> void {
   }
 }
 
-auto Timer::Source::step(uint clocks) -> void {
+auto Timer::Source::step(u32 clocks) -> void {
   if(synchronize && paused) return;
 
   while(clocks--) {

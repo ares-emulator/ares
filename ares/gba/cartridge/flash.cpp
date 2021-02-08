@@ -7,7 +7,7 @@
 //0x1362  128KB   32x4096  Sanyo
 //0x09c2  128KB   32x4096  Macronix
 
-auto Cartridge::FLASH::read(uint16 address) -> uint8 {
+auto Cartridge::FLASH::read(n16 address) -> n8 {
   if(idmode) {
     if(address == 0x0000) return id >> 0;
     if(address == 0x0001) return id >> 8;
@@ -17,7 +17,7 @@ auto Cartridge::FLASH::read(uint16 address) -> uint8 {
   return data[bank << 16 | address];
 }
 
-auto Cartridge::FLASH::write(uint16 address, uint8 byte) -> void {
+auto Cartridge::FLASH::write(n16 address, n8 byte) -> void {
   if(bankselect) {
     bankselect = false;
     //bank select is only applicable on 128KB chips
@@ -42,7 +42,7 @@ auto Cartridge::FLASH::write(uint16 address, uint8 byte) -> void {
     if(byte == 0x10 && address == 0x5555) {
       if(erasemode) {
         erasemode = false;
-        for(uint n : range(size)) data[n] = 0xff;
+        for(u32 n : range(size)) data[n] = 0xff;
       }
     }
 
@@ -50,8 +50,8 @@ auto Cartridge::FLASH::write(uint16 address, uint8 byte) -> void {
       //command only valid for non-Atmel chips
       if(erasemode && id != 0x3d1f) {
         erasemode = false;
-        uint offset = bank << 16 | (address & ~4095);
-        for(uint n : range(4096)) data[offset++] = 0xff;
+        u32 offset = bank << 16 | (address & ~4095);
+        for(u32 n : range(4096)) data[offset++] = 0xff;
       }
     }
 

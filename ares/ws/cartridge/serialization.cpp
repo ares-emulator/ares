@@ -1,9 +1,9 @@
 auto Cartridge::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s(array_span<uint8_t>{ram.data, ram.size});
+  s(array_span<u8>{ram.data, ram.size});
   s(eeprom);
-  s(array_span<uint8_t>{rtc.data, rtc.size});
+  s(array_span<u8>{rtc.data, rtc.size});
 
   if(rtc.size) {
     s(rtc.command);

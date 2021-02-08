@@ -61,8 +61,8 @@ auto CPU::main() -> void {
 }
 
 auto CPU::map() -> void {
-  function<uint8 (uint24, uint8)> reader;
-  function<void  (uint24, uint8)> writer;
+  function<n8   (n24, n8)> reader;
+  function<void (n24, n8)> writer;
 
   reader = {&CPU::readRAM, this};
   writer = {&CPU::writeRAM, this};
@@ -91,7 +91,7 @@ auto CPU::power(bool reset) -> void {
 
   if(!reset) random.array({wram, sizeof(wram)});
 
-  for(uint id : range(8)) {
+  for(u32 id : range(8)) {
     channels[id] = {};
     channels[id].id = id;
     if(id != 7) channels[id].next = channels[id + 1];

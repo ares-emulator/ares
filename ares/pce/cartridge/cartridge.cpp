@@ -64,11 +64,11 @@ auto Cartridge::power() -> void {
   board->power();
 }
 
-auto Cartridge::read(uint8 bank, uint13 address, uint8 data) -> uint8 {
+auto Cartridge::read(n8 bank, n13 address, n8 data) -> n8 {
   return board->read(bank, address, data);
 }
 
-auto Cartridge::write(uint8 bank, uint13 address, uint8 data) -> void {
+auto Cartridge::write(n8 bank, n13 address, n8 data) -> void {
   return board->write(bank, address, data);
 }
 

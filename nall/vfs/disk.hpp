@@ -11,23 +11,23 @@ struct disk : file {
     return instance;
   }
 
-  auto size() const -> uintmax override {
+  auto size() const -> u64 override {
     return _fp.size();
   }
 
-  auto offset() const -> uintmax override {
+  auto offset() const -> u64 override {
     return _fp.offset();
   }
 
-  auto seek(intmax offset_, index index_) -> void override {
-    _fp.seek(offset_, (uint)index_);
+  auto seek(s64 offset_, index index_) -> void override {
+    _fp.seek(offset_, (u32)index_);
   }
 
-  auto read() -> uint8_t override {
+  auto read() -> u8 override {
     return _fp.read();
   }
 
-  auto write(uint8_t data_) -> void override {
+  auto write(u8 data_) -> void override {
     _fp.write(data_);
   }
 
@@ -41,7 +41,7 @@ private:
   auto operator=(const disk&) -> disk& = delete;
 
   auto _open(string location_, mode mode_) -> bool {
-    if(!_fp.open(location_, (uint)mode_)) return false;
+    if(!_fp.open(location_, (u32)mode_)) return false;
     return true;
   }
 

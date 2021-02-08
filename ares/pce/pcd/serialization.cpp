@@ -21,8 +21,8 @@ auto PCD::serialize(serializer& s) -> void {
 }
 
 auto PCD::Drive::serialize(serializer& s) -> void {
-  s((uint&)mode);
-  s((uint&)seek);
+  s((u32&)mode);
+  s((u32&)seek);
   s(latency);
   s(lba);
   s(start);
@@ -64,7 +64,7 @@ auto PCD::SCSI::serialize(serializer& s) -> void {
 }
 
 auto PCD::CDDA::serialize(serializer& s) -> void {
-  s((uint&)playMode);
+  s((u32&)playMode);
   s(sample.left);
   s(sample.right);
   s(sample.offset);
@@ -107,7 +107,7 @@ auto PCD::ADPCM::serialize(serializer& s) -> void {
 }
 
 auto PCD::Fader::serialize(serializer& s) -> void {
-  s((uint&)mode);
+  s((u32&)mode);
   s(step);
   s(volume);
 }

@@ -1,10 +1,10 @@
 #if defined(Hiro_VerticalLayout)
 
-auto mVerticalLayout::alignment() const -> maybe<float> {
+auto mVerticalLayout::alignment() const -> maybe<f32> {
   return state.alignment;
 }
 
-auto mVerticalLayout::append(sSizable sizable, Size size, float spacing) -> type& {
+auto mVerticalLayout::append(sSizable sizable, Size size, f32 spacing) -> type& {
   for(auto& cell : state.cells) {
     if(cell->state.sizable == sizable) return *this;
   }
@@ -18,7 +18,7 @@ auto mVerticalLayout::append(sSizable sizable, Size size, float spacing) -> type
   return synchronize();
 }
 
-auto mVerticalLayout::cell(uint position) const -> VerticalLayoutCell {
+auto mVerticalLayout::cell(u32 position) const -> VerticalLayoutCell {
   return state.cells(position, {});
 }
 
@@ -33,7 +33,7 @@ auto mVerticalLayout::cells() const -> vector<VerticalLayoutCell> {
   return state.cells;
 }
 
-auto mVerticalLayout::cellCount() const -> uint {
+auto mVerticalLayout::cellCount() const -> u32 {
   return state.cells.size();
 }
 
@@ -43,7 +43,7 @@ auto mVerticalLayout::destruct() -> void {
 }
 
 auto mVerticalLayout::minimumSize() const -> Size {
-  float width = 0;
+  f32 width = 0;
   for(auto index : range(cellCount())) {
     auto cell = this->cell(index);
     if(cell.collapsible()) continue;
@@ -54,8 +54,8 @@ auto mVerticalLayout::minimumSize() const -> Size {
     width = max(width, cell.size().width());
   }
 
-  float height = 0;
-  float spacing = 0;
+  f32 height = 0;
+  f32 spacing = 0;
   for(auto index : range(cellCount())) {
     auto cell = this->cell(index);
     if(cell.collapsible()) continue;
@@ -90,7 +90,7 @@ auto mVerticalLayout::remove(sVerticalLayoutCell cell) -> type& {
   auto offset = cell->offset();
   cell->setParent();
   state.cells.remove(offset);
-  for(uint n : range(offset, cellCount())) state.cells[n]->adjustOffset(-1);
+  for(u32 n : range(offset, cellCount())) state.cells[n]->adjustOffset(-1);
   return synchronize();
 }
 
@@ -104,7 +104,7 @@ auto mVerticalLayout::resize() -> type& {
   return *this;
 }
 
-auto mVerticalLayout::setAlignment(maybe<float> alignment) -> type& {
+auto mVerticalLayout::setAlignment(maybe<f32> alignment) -> type& {
   state.alignment = alignment;
   return synchronize();
 }
@@ -130,8 +130,8 @@ auto mVerticalLayout::setGeometry(Geometry requestedGeometry) -> type& {
   geometry.setWidth (geometry.width()  - padding().x() - padding().width());
   geometry.setHeight(geometry.height() - padding().y() - padding().height());
 
-  float width = 0;
-  for(uint index : range(cellCount())) {
+  f32 width = 0;
+  for(u32 index : range(cellCount())) {
     auto cell = this->cell(index);
     if(cell.collapsible()) continue;
     if(cell.size().width() == Size::Maximum) {
@@ -144,13 +144,13 @@ auto mVerticalLayout::setGeometry(Geometry requestedGeometry) -> type& {
     }
   }
 
-  vector<float> heights;
+  vector<f32> heights;
   heights.resize(cellCount());
-  uint maximumHeights = 0;
-  for(uint index : range(cellCount())) {
+  u32 maximumHeights = 0;
+  for(u32 index : range(cellCount())) {
     auto cell = this->cell(index);
     if(cell.collapsible()) continue;
-    float height = 0;
+    f32 height = 0;
     if(cell.size().height() == Size::Maximum) {
       height = Size::Maximum;
       maximumHeights++;
@@ -162,9 +162,9 @@ auto mVerticalLayout::setGeometry(Geometry requestedGeometry) -> type& {
     heights[index] = height;
   }
 
-  float fixedHeight = 0;
-  float spacing = 0;
-  for(uint index : range(cellCount())) {
+  f32 fixedHeight = 0;
+  f32 spacing = 0;
+  for(u32 index : range(cellCount())) {
     auto cell = this->cell(index);
     if(cell.collapsible()) continue;
     if(heights[index] != Size::Maximum) fixedHeight += heights[index];
@@ -172,27 +172,27 @@ auto mVerticalLayout::setGeometry(Geometry requestedGeometry) -> type& {
     spacing = cell.spacing();
   }
 
-  float maximumHeight = (geometry.height() - fixedHeight) / maximumHeights;
+  f32 maximumHeight = (geometry.height() - fixedHeight) / maximumHeights;
   for(auto& height : heights) {
     if(height == Size::Maximum) height = maximumHeight;
   }
 
-  float geometryX = geometry.x();
-  float geometryY = geometry.y();
-  for(uint index : range(cellCount())) {
+  f32 geometryX = geometry.x();
+  f32 geometryY = geometry.y();
+  for(u32 index : range(cellCount())) {
     auto cell = this->cell(index);
     if(cell.collapsible()) continue;
-    float geometryWidth  = width;
-    float geometryHeight = heights[index];
+    f32 geometryWidth  = width;
+    f32 geometryHeight = heights[index];
     auto alignment = cell.alignment();
     if(!alignment) alignment = this->alignment();
     if(!alignment) alignment = 0.0;
-    float cellWidth  = cell.size().width();
-    float cellHeight = geometryHeight;
+    f32 cellWidth  = cell.size().width();
+    f32 cellHeight = geometryHeight;
     if(cellWidth == Size::Minimum) cellWidth = cell.sizable()->minimumSize().width();
     if(cellWidth == Size::Maximum) cellWidth = geometryWidth;
-    float cellX = geometryX + alignment() * (geometryWidth - cellWidth);
-    float cellY = geometryY;
+    f32 cellX = geometryX + alignment() * (geometryWidth - cellWidth);
+    f32 cellY = geometryY;
     cell.sizable().setGeometry({cellX, cellY, cellWidth, cellHeight});
     geometryY += geometryHeight + cell.spacing();
   }
@@ -206,14 +206,14 @@ auto mVerticalLayout::setPadding(Geometry padding) -> type& {
   return synchronize();
 }
 
-auto mVerticalLayout::setParent(mObject* parent, int offset) -> type& {
+auto mVerticalLayout::setParent(mObject* parent, s32 offset) -> type& {
   for(auto& cell : reverse(state.cells)) cell->destruct();
   mSizable::setParent(parent, offset);
   for(auto& cell : state.cells) cell->setParent(this, cell->offset());
   return *this;
 }
 
-auto mVerticalLayout::setSpacing(float spacing) -> type& {
+auto mVerticalLayout::setSpacing(f32 spacing) -> type& {
   state.spacing = spacing;
   return synchronize();
 }
@@ -224,7 +224,7 @@ auto mVerticalLayout::setVisible(bool visible) -> type& {
   return synchronize();
 }
 
-auto mVerticalLayout::spacing() const -> float {
+auto mVerticalLayout::spacing() const -> f32 {
   return state.spacing;
 }
 
@@ -235,7 +235,7 @@ auto mVerticalLayout::synchronize() -> type& {
 
 //
 
-auto mVerticalLayoutCell::alignment() const -> maybe<float> {
+auto mVerticalLayoutCell::alignment() const -> maybe<f32> {
   return state.alignment;
 }
 
@@ -249,7 +249,7 @@ auto mVerticalLayoutCell::destruct() -> void {
   mObject::destruct();
 }
 
-auto mVerticalLayoutCell::setAlignment(maybe<float> alignment) -> type& {
+auto mVerticalLayoutCell::setAlignment(maybe<f32> alignment) -> type& {
   state.alignment = alignment;
   return synchronize();
 }
@@ -266,7 +266,7 @@ auto mVerticalLayoutCell::setFont(const Font& font) -> type& {
   return *this;
 }
 
-auto mVerticalLayoutCell::setParent(mObject* parent, int offset) -> type& {
+auto mVerticalLayoutCell::setParent(mObject* parent, s32 offset) -> type& {
   state.sizable->destruct();
   mObject::setParent(parent, offset);
   state.sizable->setParent(this, 0);
@@ -283,7 +283,7 @@ auto mVerticalLayoutCell::setSize(Size size) -> type& {
   return synchronize();
 }
 
-auto mVerticalLayoutCell::setSpacing(float spacing) -> type& {
+auto mVerticalLayoutCell::setSpacing(f32 spacing) -> type& {
   state.spacing = spacing;
   return synchronize();
 }
@@ -302,7 +302,7 @@ auto mVerticalLayoutCell::size() const -> Size {
   return state.size;
 }
 
-auto mVerticalLayoutCell::spacing() const -> float {
+auto mVerticalLayoutCell::spacing() const -> f32 {
   return state.spacing;
 }
 

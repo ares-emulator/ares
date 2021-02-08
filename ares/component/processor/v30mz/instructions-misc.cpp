@@ -1,4 +1,4 @@
-auto V30MZ::instructionSegment(uint16 segment) -> void {
+auto V30MZ::instructionSegment(n16 segment) -> void {
   if(prefixes.size() >= 7) prefixes.removeRight();
   prefixes.prepend(opcode);
   state.prefix = true;

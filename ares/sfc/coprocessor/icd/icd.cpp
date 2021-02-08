@@ -6,14 +6,14 @@ ICD icd;
 #include "io.cpp"
 #include "serialization.cpp"
 
-auto ICD::clockFrequency() const -> double {
-  return Frequency ? Frequency : system.cpuFrequency();
+auto ICD::clockFrequency() const -> f64 {
+  return Frequency ? Frequency : (n32)system.cpuFrequency();
 }
 
 auto ICD::load(Node::Peripheral parent) -> void {
   node = parent->append<Node::System>("Super Game Boy");
   GameBoy::superGameBoy = this;
-  GameBoy::system.load(node, "Super Game Boy");
+  GameBoy::system.load(node, "[Nintendo] Super Game Boy");
   GameBoy::cpu.version->setValue(!Frequency ? "SGB-CPU 01" : "CPU SGB2");
   GameBoy::cpu.version->setLatch();
 }

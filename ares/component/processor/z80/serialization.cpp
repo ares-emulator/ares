@@ -1,6 +1,6 @@
 auto Z80::serialize(serializer& s) -> void {
-  s((uint&)mosfet);
-  s((uint&)prefix);
+  s((u32&)mosfet);
+  s((u32&)prefix);
   s(r.af.word);
   s(r.bc.word);
   s(r.de.word);

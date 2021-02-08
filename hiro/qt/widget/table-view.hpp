@@ -19,9 +19,9 @@ struct pTableView : pWidget {
   auto setSortable(bool sortable) -> void;
 
   auto _onSize() -> void;
-  auto _width(unsigned column) -> unsigned;
-  auto _widthOfColumn(unsigned column) -> unsigned;
-  auto _widthOfCell(unsigned row, unsigned column) -> unsigned;
+  auto _width(u32 column) -> u32;
+  auto _widthOfColumn(u32 column) -> u32;
+  auto _widthOfCell(u32 row, u32 column) -> u32;
 
   QtTableView* qtTableView = nullptr;
   QtTableViewDelegate* qtTableViewDelegate = nullptr;

@@ -7,7 +7,7 @@ auto GSU::disassembleInstruction() -> string {
 auto GSU::disassembleContext() -> string {
   string s;
 
-  for(uint n : range(16)) {
+  for(u32 n : range(16)) {
     s.append("r", n, ":", hex(regs.r[n].data, 4L), " ");
   }
 
@@ -26,7 +26,7 @@ auto GSU::disassembleOpcode(char* output) -> void {
   case 3: disassembleALT3(output); break;
   }
 
-  uint length = strlen(output);
+  u32 length = strlen(output);
   while(length++ < 20) strcat(output, " ");
 }
 
@@ -56,17 +56,17 @@ auto GSU::disassembleALT0(char* output) -> void {
     case  (0x02): sprintf(t, "cache"); break;
     case  (0x03): sprintf(t, "lsr"); break;
     case  (0x04): sprintf(t, "rol"); break;
-    case  (0x05): sprintf(t, "bra %+d", (int8_t)op1); break;
-    case  (0x06): sprintf(t, "blt %+d", (int8_t)op1); break;
-    case  (0x07): sprintf(t, "bge %+d", (int8_t)op1); break;
-    case  (0x08): sprintf(t, "bne %+d", (int8_t)op1); break;
-    case  (0x09): sprintf(t, "beq %+d", (int8_t)op1); break;
-    case  (0x0a): sprintf(t, "bpl %+d", (int8_t)op1); break;
-    case  (0x0b): sprintf(t, "bmi %+d", (int8_t)op1); break;
-    case  (0x0c): sprintf(t, "bcc %+d", (int8_t)op1); break;
-    case  (0x0d): sprintf(t, "bcs %+d", (int8_t)op1); break;
-    case  (0x0e): sprintf(t, "bvc %+d", (int8_t)op1); break;
-    case  (0x0f): sprintf(t, "bvs %+d", (int8_t)op1); break;
+    case  (0x05): sprintf(t, "bra %+d", (s8)op1); break;
+    case  (0x06): sprintf(t, "blt %+d", (s8)op1); break;
+    case  (0x07): sprintf(t, "bge %+d", (s8)op1); break;
+    case  (0x08): sprintf(t, "bne %+d", (s8)op1); break;
+    case  (0x09): sprintf(t, "beq %+d", (s8)op1); break;
+    case  (0x0a): sprintf(t, "bpl %+d", (s8)op1); break;
+    case  (0x0b): sprintf(t, "bmi %+d", (s8)op1); break;
+    case  (0x0c): sprintf(t, "bcc %+d", (s8)op1); break;
+    case  (0x0d): sprintf(t, "bcs %+d", (s8)op1); break;
+    case  (0x0e): sprintf(t, "bvc %+d", (s8)op1); break;
+    case  (0x0f): sprintf(t, "bvs %+d", (s8)op1); break;
     case16(0x10): sprintf(t, "to r%u", op0 & 15); break;
     case16(0x20): sprintf(t, "with r%u", op0 & 15); break;
     case12(0x30): sprintf(t, "stw (r%u)", op0 & 15); break;
@@ -113,17 +113,17 @@ auto GSU::disassembleALT1(char* output) -> void {
     case  (0x02): sprintf(t, "cache"); break;
     case  (0x03): sprintf(t, "lsr"); break;
     case  (0x04): sprintf(t, "rol"); break;
-    case  (0x05): sprintf(t, "bra %+d", (int8_t)op1); break;
-    case  (0x06): sprintf(t, "blt %+d", (int8_t)op1); break;
-    case  (0x07): sprintf(t, "bge %+d", (int8_t)op1); break;
-    case  (0x08): sprintf(t, "bne %+d", (int8_t)op1); break;
-    case  (0x09): sprintf(t, "beq %+d", (int8_t)op1); break;
-    case  (0x0a): sprintf(t, "bpl %+d", (int8_t)op1); break;
-    case  (0x0b): sprintf(t, "bmi %+d", (int8_t)op1); break;
-    case  (0x0c): sprintf(t, "bcc %+d", (int8_t)op1); break;
-    case  (0x0d): sprintf(t, "bcs %+d", (int8_t)op1); break;
-    case  (0x0e): sprintf(t, "bvc %+d", (int8_t)op1); break;
-    case  (0x0f): sprintf(t, "bvs %+d", (int8_t)op1); break;
+    case  (0x05): sprintf(t, "bra %+d", (s8)op1); break;
+    case  (0x06): sprintf(t, "blt %+d", (s8)op1); break;
+    case  (0x07): sprintf(t, "bge %+d", (s8)op1); break;
+    case  (0x08): sprintf(t, "bne %+d", (s8)op1); break;
+    case  (0x09): sprintf(t, "beq %+d", (s8)op1); break;
+    case  (0x0a): sprintf(t, "bpl %+d", (s8)op1); break;
+    case  (0x0b): sprintf(t, "bmi %+d", (s8)op1); break;
+    case  (0x0c): sprintf(t, "bcc %+d", (s8)op1); break;
+    case  (0x0d): sprintf(t, "bcs %+d", (s8)op1); break;
+    case  (0x0e): sprintf(t, "bvc %+d", (s8)op1); break;
+    case  (0x0f): sprintf(t, "bvs %+d", (s8)op1); break;
     case16(0x10): sprintf(t, "to r%u", op0 & 15); break;
     case16(0x20): sprintf(t, "with r%u", op0 & 15); break;
     case12(0x30): sprintf(t, "stb (r%u)", op0 & 15); break;
@@ -170,17 +170,17 @@ auto GSU::disassembleALT2(char* output) -> void {
     case  (0x02): sprintf(t, "cache"); break;
     case  (0x03): sprintf(t, "lsr"); break;
     case  (0x04): sprintf(t, "rol"); break;
-    case  (0x05): sprintf(t, "bra %+d", (int8_t)op1); break;
-    case  (0x06): sprintf(t, "blt %+d", (int8_t)op1); break;
-    case  (0x07): sprintf(t, "bge %+d", (int8_t)op1); break;
-    case  (0x08): sprintf(t, "bne %+d", (int8_t)op1); break;
-    case  (0x09): sprintf(t, "beq %+d", (int8_t)op1); break;
-    case  (0x0a): sprintf(t, "bpl %+d", (int8_t)op1); break;
-    case  (0x0b): sprintf(t, "bmi %+d", (int8_t)op1); break;
-    case  (0x0c): sprintf(t, "bcc %+d", (int8_t)op1); break;
-    case  (0x0d): sprintf(t, "bcs %+d", (int8_t)op1); break;
-    case  (0x0e): sprintf(t, "bvc %+d", (int8_t)op1); break;
-    case  (0x0f): sprintf(t, "bvs %+d", (int8_t)op1); break;
+    case  (0x05): sprintf(t, "bra %+d", (s8)op1); break;
+    case  (0x06): sprintf(t, "blt %+d", (s8)op1); break;
+    case  (0x07): sprintf(t, "bge %+d", (s8)op1); break;
+    case  (0x08): sprintf(t, "bne %+d", (s8)op1); break;
+    case  (0x09): sprintf(t, "beq %+d", (s8)op1); break;
+    case  (0x0a): sprintf(t, "bpl %+d", (s8)op1); break;
+    case  (0x0b): sprintf(t, "bmi %+d", (s8)op1); break;
+    case  (0x0c): sprintf(t, "bcc %+d", (s8)op1); break;
+    case  (0x0d): sprintf(t, "bcs %+d", (s8)op1); break;
+    case  (0x0e): sprintf(t, "bvc %+d", (s8)op1); break;
+    case  (0x0f): sprintf(t, "bvs %+d", (s8)op1); break;
     case16(0x10): sprintf(t, "to r%u", op0 & 15); break;
     case16(0x20): sprintf(t, "with r%u", op0 & 15); break;
     case12(0x30): sprintf(t, "stw (r%u)", op0 & 15); break;
@@ -227,17 +227,17 @@ auto GSU::disassembleALT3(char* output) -> void {
     case  (0x02): sprintf(t, "cache"); break;
     case  (0x03): sprintf(t, "lsr"); break;
     case  (0x04): sprintf(t, "rol"); break;
-    case  (0x05): sprintf(t, "bra %+d", (int8_t)op1); break;
-    case  (0x06): sprintf(t, "blt %+d", (int8_t)op1); break;
-    case  (0x07): sprintf(t, "bge %+d", (int8_t)op1); break;
-    case  (0x08): sprintf(t, "bne %+d", (int8_t)op1); break;
-    case  (0x09): sprintf(t, "beq %+d", (int8_t)op1); break;
-    case  (0x0a): sprintf(t, "bpl %+d", (int8_t)op1); break;
-    case  (0x0b): sprintf(t, "bmi %+d", (int8_t)op1); break;
-    case  (0x0c): sprintf(t, "bcc %+d", (int8_t)op1); break;
-    case  (0x0d): sprintf(t, "bcs %+d", (int8_t)op1); break;
-    case  (0x0e): sprintf(t, "bvc %+d", (int8_t)op1); break;
-    case  (0x0f): sprintf(t, "bvs %+d", (int8_t)op1); break;
+    case  (0x05): sprintf(t, "bra %+d", (s8)op1); break;
+    case  (0x06): sprintf(t, "blt %+d", (s8)op1); break;
+    case  (0x07): sprintf(t, "bge %+d", (s8)op1); break;
+    case  (0x08): sprintf(t, "bne %+d", (s8)op1); break;
+    case  (0x09): sprintf(t, "beq %+d", (s8)op1); break;
+    case  (0x0a): sprintf(t, "bpl %+d", (s8)op1); break;
+    case  (0x0b): sprintf(t, "bmi %+d", (s8)op1); break;
+    case  (0x0c): sprintf(t, "bcc %+d", (s8)op1); break;
+    case  (0x0d): sprintf(t, "bcs %+d", (s8)op1); break;
+    case  (0x0e): sprintf(t, "bvc %+d", (s8)op1); break;
+    case  (0x0f): sprintf(t, "bvs %+d", (s8)op1); break;
     case16(0x10): sprintf(t, "to r%u", op0 & 15); break;
     case16(0x20): sprintf(t, "with r%u", op0 & 15); break;
     case12(0x30): sprintf(t, "stb (r%u)", op0 & 15); break;

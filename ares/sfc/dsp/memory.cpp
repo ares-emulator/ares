@@ -1,8 +1,8 @@
-auto DSP::read(uint7 address) -> uint8 {
+auto DSP::read(n7 address) -> n8 {
   return registers[address];
 }
 
-auto DSP::write(uint7 address, uint8 data) -> void {
+auto DSP::write(n7 address, n8 data) -> void {
   registers[address] = data;
 
   switch(address) {
@@ -19,11 +19,11 @@ auto DSP::write(uint7 address, uint8 data) -> void {
     echo.volume[1] = data;
     break;
   case 0x4c:  //KON
-    for(uint n : range(8)) voice[n].keyon = data.bit(n);
-    for(uint n : range(8)) voice[n]._keylatch = data.bit(n);
+    for(u32 n : range(8)) voice[n].keyon = data.bit(n);
+    for(u32 n : range(8)) voice[n]._keylatch = data.bit(n);
     break;
   case 0x5c:  //KOFF
-    for(uint n : range(8)) voice[n].keyoff = data.bit(n);
+    for(u32 n : range(8)) voice[n].keyoff = data.bit(n);
     break;
   case 0x6c:  //FLG
     noise.frequency = data.bit(0,4);
@@ -32,21 +32,21 @@ auto DSP::write(uint7 address, uint8 data) -> void {
     master.reset    = data.bit(7);
     break;
   case 0x7c:  //ENDX
-    for(uint n : range(8)) voice[n]._end = 0;
+    for(u32 n : range(8)) voice[n]._end = 0;
     registers[0x7c] = 0;  //always cleared, regardless of data written
     break;
   case 0x0d:  //EFB
     echo.feedback = data;
     break;
   case 0x2d:  //PMON
-    for(uint n : range(8)) voice[n].modulate = data.bit(n);
+    for(u32 n : range(8)) voice[n].modulate = data.bit(n);
     voice[0].modulate = 0;  //voice 0 does not support modulation
     break;
   case 0x3d:  //NON
-    for(uint n : range(8)) voice[n].noise = data.bit(n);
+    for(u32 n : range(8)) voice[n].noise = data.bit(n);
     break;
   case 0x4d:  //EON
-    for(uint n : range(8)) voice[n].echo = data.bit(n);
+    for(u32 n : range(8)) voice[n].echo = data.bit(n);
     break;
   case 0x5d:  //DIR
     brr.bank = data;
@@ -59,8 +59,8 @@ auto DSP::write(uint7 address, uint8 data) -> void {
     break;
   }
 
-  uint4 n = address.bit(4,6);
-  switch((uint4)address) {
+  n3 n = address.bit(4,6);
+  switch((n4)address) {
   case 0x00:  //VxVOLL
     voice[n].volume[0] = data;
     break;

@@ -17,7 +17,7 @@ struct CPU : V30MZ, Thread, IO {
     } tracer;
   } debugger;
 
-  enum class Interrupt : uint {
+  enum class Interrupt : u32 {
     SerialSend,
     Input,
     Cartridge,
@@ -33,20 +33,20 @@ struct CPU : V30MZ, Thread, IO {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
 
-  auto wait(uint clocks = 1) -> void override;
-  auto read(uint20 addr) -> uint8 override;
-  auto write(uint20 addr, uint8 data) -> void override;
-  auto in(uint16 port) -> uint8 override;
-  auto out(uint16 port, uint8 data) -> void override;
+  auto wait(u32 clocks = 1) -> void override;
+  auto read(n20 addr) -> n8 override;
+  auto write(n20 addr, n8 data) -> void override;
+  auto in(n16 port) -> n8 override;
+  auto out(n16 port, n8 data) -> void override;
 
   auto power() -> void;
 
   //io.cpp
-  auto keypadRead() -> uint4;
-  auto portRead(uint16 address) -> uint8 override;
-  auto portWrite(uint16 address, uint8 data) -> void override;
+  auto keypadRead() -> n4;
+  auto portRead(n16 address) -> n8 override;
+  auto portWrite(n16 address, n8 data) -> void override;
 
   //interrupt.cpp
   auto poll() -> void;
@@ -61,39 +61,39 @@ struct CPU : V30MZ, Thread, IO {
 
   struct Registers {
     //$0040-0042  DMA_SRC
-    uint20 dmaSource;
+    n20 dmaSource;
 
     //$0044-0045  DMA_DST
-    uint16 dmaTarget;
+    n16 dmaTarget;
 
     //$0046-0047  DMA_LEN
-    uint16 dmaLength;
+    n16 dmaLength;
 
     //$0048  DMA_CTRL
-    uint1 dmaEnable;
-    uint1 dmaMode;  //0 = increment; 1 = decrement
+    n1 dmaEnable;
+    n1 dmaMode;  //0 = increment; 1 = decrement
 
     //$00a0  HW_FLAGS
-    uint1 cartridgeEnable;
+    n1 cartridgeEnable;
 
     //$00b0  INT_BASE
-    uint8 interruptBase;
+    n8 interruptBase;
 
     //$00b1  SER_DATA
-    uint8 serialData;
+    n8 serialData;
 
     //$00b2  INT_ENABLE
-    uint8 interruptEnable;
+    n8 interruptEnable;
 
     //$00b3  SER_STATUS
-    uint1 serialBaudRate;  //0 = 9600; 1 = 38400
-    uint1 serialEnable;
+    n1 serialBaudRate;  //0 = 9600; 1 = 38400
+    n1 serialEnable;
 
     //$00b4  INT_STATUS
-    uint8 interruptStatus;
+    n8 interruptStatus;
 
     //$00b5  KEYPAD
-    uint3 keypadMatrix;
+    n3 keypadMatrix;
   } r;
 };
 

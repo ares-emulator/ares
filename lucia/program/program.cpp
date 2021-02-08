@@ -69,6 +69,13 @@ auto Program::main() -> void {
     }
   }
 
+  //if Platform::video() changed the screen resolution, resize the presentation window here.
+  //window operations must be performed from the main thread.
+  if(emulator->latch.changed) {
+    emulator->latch.changed = false;
+    if(settings.video.adaptiveSizing) presentation.resizeWindow();
+  }
+
   memoryEditor.liveRefresh();
   graphicsViewer.liveRefresh();
   propertiesViewer.liveRefresh();

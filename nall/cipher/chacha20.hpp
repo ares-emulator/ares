@@ -7,8 +7,8 @@ namespace nall::Cipher {
 
 //64-bit nonce; 64-bit x 64-byte (256GB) counter
 struct ChaCha20 {
-  ChaCha20(uint256_t key, uint64_t nonce, uint64_t counter = 0) {
-    static const uint128_t sigma = 0x6b20657479622d323320646e61707865_u128;  //"expand 32-byte k"
+  ChaCha20(u256 key, u64 nonce, u64 counter = 0) {
+    static const u128 sigma = 0x6b20657479622d323320646e61707865_u128;  //"expand 32-byte k"
 
     input[ 0] = sigma   >>   0;
     input[ 1] = sigma   >>  32;
@@ -30,8 +30,8 @@ struct ChaCha20 {
     offset = 0;
   }
 
-  auto encrypt(array_view<uint8_t> input) -> vector<uint8_t> {
-    vector<uint8_t> output;
+  auto encrypt(array_view<u8> input) -> vector<u8> {
+    vector<u8> output;
     while(input) {
       if(!offset) {
         cipher();
@@ -44,16 +44,16 @@ struct ChaCha20 {
     return output;
   }
 
-  auto decrypt(array_view<uint8_t> input) -> vector<uint8_t> {
+  auto decrypt(array_view<u8> input) -> vector<u8> {
     return encrypt(input);  //reciprocal cipher
   }
 
 //protected:
-  auto rol(uint32_t value, uint bits) -> uint32_t {
+  auto rol(u32 value, u32 bits) -> u32 {
     return value << bits | value >> 32 - bits;
   }
 
-  auto quarterRound(uint32_t x[16], uint a, uint b, uint c, uint d) -> void {
+  auto quarterRound(u32 x[16], u32 a, u32 b, u32 c, u32 d) -> void {
     x[a] += x[b]; x[d] = rol(x[d] ^ x[a], 16);
     x[c] += x[d]; x[b] = rol(x[b] ^ x[c], 12);
     x[a] += x[b]; x[d] = rol(x[d] ^ x[a],  8);
@@ -62,7 +62,7 @@ struct ChaCha20 {
 
   auto cipher() -> void {
     memory::copy(block, input, 64);
-    for(uint n : range(10)) {
+    for(u32 n : range(10)) {
       quarterRound(block, 0, 4,  8, 12);
       quarterRound(block, 1, 5,  9, 13);
       quarterRound(block, 2, 6, 10, 14);
@@ -75,33 +75,33 @@ struct ChaCha20 {
   }
 
   auto increment() -> void {
-    for(uint n : range(16)) {
+    for(u32 n : range(16)) {
       block[n] += input[n];
     }
     if(!++input[12]) ++input[13];
   }
 
-  uint32_t input[16];
-  uint32_t block[16];
-  uint64_t offset;
+  u32 input[16];
+  u32 block[16];
+  u64 offset;
 };
 
 struct HChaCha20 : protected ChaCha20 {
-  HChaCha20(uint256_t key, uint128_t nonce) : ChaCha20(key, nonce >> 64, nonce >> 0) {
+  HChaCha20(u256 key, u128 nonce) : ChaCha20(key, nonce >> 64, nonce >> 0) {
     cipher();
   }
 
-  auto key() const -> uint256_t {
-    uint256_t key = 0;
-    for(uint n : range(4)) key |= (uint256_t)block[ 0 + n] << (n + 0) * 32;
-    for(uint n : range(4)) key |= (uint256_t)block[12 + n] << (n + 4) * 32;
+  auto key() const -> u256 {
+    u256 key = 0;
+    for(u32 n : range(4)) key |= (u256)block[ 0 + n] << (n + 0) * 32;
+    for(u32 n : range(4)) key |= (u256)block[12 + n] << (n + 4) * 32;
     return key;
   }
 };
 
 //192-bit nonce; 64-bit x 64-byte (256GB) counter
 struct XChaCha20 : ChaCha20 {
-  XChaCha20(uint256_t key, uint192_t nonce, uint64_t counter = 0):
+  XChaCha20(u256 key, u192 nonce, u64 counter = 0):
   ChaCha20(HChaCha20(key, nonce).key(), nonce >> 128, counter) {
   }
 };

@@ -16,7 +16,7 @@ auto CPU::Keypad::run() -> void {
   };
 
   bool test = condition;  //0 = OR, 1 = AND
-  for(uint index : range(10)) {
+  for(u32 index : range(10)) {
     if(!flag[index]) continue;
     bool input = lookup[index];
     if(condition == 0) test |= input;

@@ -39,7 +39,7 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
   bind({block->code, allocator.available()});
 
   bool hasBranched = 0;
-  uint instructions = 0;
+  u32  instructions = 0;
   do {
     u32 instruction = self.imem.readWord(address);
     bool branched = emitEXECUTE(instruction);

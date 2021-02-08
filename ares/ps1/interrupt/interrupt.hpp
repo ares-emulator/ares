@@ -1,16 +1,16 @@
 struct Interrupt : Memory::Interface {
   Node::Object node;
 
-  //irq.cpp
+  //interrupt.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto poll() -> void;
-  auto level(uint source) -> bool;
-  auto raise(uint source) -> void;
-  auto lower(uint source) -> void;
-  auto pulse(uint source) -> void;
-  auto drive(uint source, bool line) -> void;
+  auto level(u32 source) -> bool;
+  auto raise(u32 source) -> void;
+  auto lower(u32 source) -> void;
+  auto pulse(u32 source) -> void;
+  auto drive(u32 source, bool line) -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -24,7 +24,7 @@ struct Interrupt : Memory::Interface {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  enum : uint { Vblank, GPU, CDROM, DMA, Timer0, Timer1, Timer2, Peripheral, SIO, SPU, PIO };
+  enum : u32 { Vblank, GPU, CDROM, DMA, Timer0, Timer1, Timer2, Peripheral, SIO, SPU, PIO };
 
   struct Source {
     auto poll() const { return stat & mask; }
@@ -33,9 +33,9 @@ struct Interrupt : Memory::Interface {
     auto lower() { line = 0; }
     auto acknowledge() { stat = 0; }
 
-    uint1 line;
-    uint1 stat;
-    uint1 mask;
+    n1 line;
+    n1 stat;
+    n1 mask;
   };
 
   Source vblank;

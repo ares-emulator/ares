@@ -26,7 +26,7 @@ auto VDP::unload() -> void {
   node.reset();
 }
 
-auto VDP::step(uint clocks) -> void {
+auto VDP::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }

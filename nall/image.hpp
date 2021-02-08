@@ -11,7 +11,7 @@
 namespace nall {
 
 struct image {
-  enum class blend : uint {
+  enum class blend : u32 {
     add,
     sourceAlpha,  //color = sourceColor * sourceAlpha + targetColor * (1 - sourceAlpha)
     sourceColor,  //color = sourceColor
@@ -20,7 +20,7 @@ struct image {
   };
 
   struct channel {
-    channel(uint64_t mask, uint depth, uint shift) : _mask(mask), _depth(depth), _shift(shift) {
+    channel(u64 mask, u32 depth, u32 shift) : _mask(mask), _depth(depth), _shift(shift) {
     }
 
     auto operator==(const channel& source) const -> bool {
@@ -36,19 +36,19 @@ struct image {
     auto shift() const { return _shift; }
 
   private:
-    uint64_t _mask;
-    uint _depth;
-    uint _shift;
+    u64 _mask;
+    u32 _depth;
+    u32 _shift;
   };
 
   //core.hpp
   image(const image& source);
   image(image&& source);
-  image(bool endian, uint depth, uint64_t alphaMask, uint64_t redMask, uint64_t greenMask, uint64_t blueMask);
+  image(bool endian, u32 depth, u64 alphaMask, u64 redMask, u64 greenMask, u64 blueMask);
   image(const string& filename);
-  image(const void* data, uint size);
-  image(const vector<uint8_t>& buffer);
-  template<uint Size> image(const uint8_t (&Name)[Size]);
+  image(const void* data, u32 size);
+  image(const vector<u8>& buffer);
+  template<u32 Size> image(const u8 (&Name)[Size]);
   image();
   ~image();
 
@@ -59,44 +59,44 @@ struct image {
   auto operator==(const image& source) const -> bool;
   auto operator!=(const image& source) const -> bool;
 
-  auto read(const uint8_t* data) const -> uint64_t;
-  auto write(uint8_t* data, uint64_t value) const -> void;
+  auto read(const u8* data) const -> u64;
+  auto write(u8* data, u64 value) const -> void;
 
   auto free() -> void;
   auto load(const string& filename) -> bool;
-  auto copy(const void* data, uint pitch, uint width, uint height) -> void;
-  auto allocate(uint width, uint height) -> void;
+  auto copy(const void* data, u32 pitch, u32 width, u32 height) -> void;
+  auto allocate(u32 width, u32 height) -> void;
 
   //fill.hpp
-  auto fill(uint64_t color = 0) -> void;
-  auto gradient(uint64_t a, uint64_t b, uint64_t c, uint64_t d) -> void;
-  auto gradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY, function<double (double, double)> callback) -> void;
-  auto crossGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  auto diamondGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  auto horizontalGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  auto radialGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  auto sphericalGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  auto squareGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
-  auto verticalGradient(uint64_t a, uint64_t b, int radiusX, int radiusY, int centerX, int centerY) -> void;
+  auto fill(u64 color = 0) -> void;
+  auto gradient(u64 a, u64 b, u64 c, u64 d) -> void;
+  auto gradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY, function<f64 (f64, f64)> callback) -> void;
+  auto crossGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;
+  auto diamondGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;
+  auto horizontalGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;
+  auto radialGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;
+  auto sphericalGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;
+  auto squareGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;
+  auto verticalGradient(u64 a, u64 b, s32 radiusX, s32 radiusY, s32 centerX, s32 centerY) -> void;
 
   //scale.hpp
-  auto scale(uint width, uint height, bool linear = true) -> void;
+  auto scale(u32 width, u32 height, bool linear = true) -> void;
 
   //blend.hpp
-  auto impose(blend mode, uint targetX, uint targetY, image source, uint x, uint y, uint width, uint height) -> void;
+  auto impose(blend mode, u32 targetX, u32 targetY, image source, u32 x, u32 y, u32 width, u32 height) -> void;
 
   //utility.hpp
-  auto shrink(uint64_t transparentColor = 0) -> void;
-  auto crop(uint x, uint y, uint width, uint height) -> bool;
-  auto alphaBlend(uint64_t alphaColor) -> void;
+  auto shrink(u64 transparentColor = 0) -> void;
+  auto crop(u32 x, u32 y, u32 width, u32 height) -> bool;
+  auto alphaBlend(u64 alphaColor) -> void;
   auto alphaMultiply() -> void;
   auto transform(const image& source = {}) -> void;
-  auto transform(bool endian, uint depth, uint64_t alphaMask, uint64_t redMask, uint64_t greenMask, uint64_t blueMask) -> void;
+  auto transform(bool endian, u32 depth, u64 alphaMask, u64 redMask, u64 greenMask, u64 blueMask) -> void;
 
   //static.hpp
-  static auto bitDepth(uint64_t color) -> uint;
-  static auto bitShift(uint64_t color) -> uint;
-  static auto normalize(uint64_t color, uint sourceDepth, uint targetDepth) -> uint64_t;
+  static auto bitDepth(u64 color) -> u32;
+  static auto bitShift(u64 color) -> u32;
+  static auto normalize(u64 color, u32 sourceDepth, u32 targetDepth) -> u64;
 
   //access
   auto data() { return _data; }
@@ -118,38 +118,38 @@ struct image {
 
 private:
   //core.hpp
-  auto allocate(uint width, uint height, uint stride) -> uint8_t*;
+  auto allocate(u32 width, u32 height, u32 stride) -> u8*;
 
   //scale.hpp
-  auto scaleLinearWidth(uint width) -> void;
-  auto scaleLinearHeight(uint height) -> void;
-  auto scaleLinear(uint width, uint height) -> void;
-  auto scaleNearest(uint width, uint height) -> void;
+  auto scaleLinearWidth(u32 width) -> void;
+  auto scaleLinearHeight(u32 height) -> void;
+  auto scaleLinear(u32 width, u32 height) -> void;
+  auto scaleNearest(u32 width, u32 height) -> void;
 
   //load.hpp
   auto loadBMP(const string& filename) -> bool;
-  auto loadBMP(const uint8_t* data, uint size) -> bool;
+  auto loadBMP(const u8* data, u32 size) -> bool;
   auto loadPNG(const string& filename) -> bool;
-  auto loadPNG(const uint8_t* data, uint size) -> bool;
+  auto loadPNG(const u8* data, u32 size) -> bool;
 
   //interpolation.hpp
-  auto isplit(uint64_t* component, uint64_t color) -> void;
-  auto imerge(const uint64_t* component) -> uint64_t;
-  auto interpolate1f(uint64_t a, uint64_t b, double x) -> uint64_t;
-  auto interpolate1f(uint64_t a, uint64_t b, uint64_t c, uint64_t d, double x, double y) -> uint64_t;
-  auto interpolate1i(int64_t a, int64_t b, uint32_t x) -> uint64_t;
-  auto interpolate1i(int64_t a, int64_t b, int64_t c, int64_t d, uint32_t x, uint32_t y) -> uint64_t;
-  auto interpolate4f(uint64_t a, uint64_t b, double x) -> uint64_t;
-  auto interpolate4f(uint64_t a, uint64_t b, uint64_t c, uint64_t d, double x, double y) -> uint64_t;
-  auto interpolate4i(uint64_t a, uint64_t b, uint32_t x) -> uint64_t;
-  auto interpolate4i(uint64_t a, uint64_t b, uint64_t c, uint64_t d, uint32_t x, uint32_t y) -> uint64_t;
+  auto isplit(u64* component, u64 color) -> void;
+  auto imerge(const u64* component) -> u64;
+  auto interpolate1f(u64 a, u64 b, f64 x) -> u64;
+  auto interpolate1f(u64 a, u64 b, u64 c, u64 d, f64 x, f64 y) -> u64;
+  auto interpolate1i(s64 a, s64 b, u32 x) -> u64;
+  auto interpolate1i(s64 a, s64 b, s64 c, s64 d, u32 x, u32 y) -> u64;
+  auto interpolate4f(u64 a, u64 b, f64 x) -> u64;
+  auto interpolate4f(u64 a, u64 b, u64 c, u64 d, f64 x, f64 y) -> u64;
+  auto interpolate4i(u64 a, u64 b, u32 x) -> u64;
+  auto interpolate4i(u64 a, u64 b, u64 c, u64 d, u32 x, u32 y) -> u64;
 
-  uint8_t* _data   = nullptr;
-  uint _width  = 0;
-  uint _height = 0;
+  u8* _data   = nullptr;
+  u32 _width  = 0;
+  u32 _height = 0;
 
   bool _endian =  0;  //0 = lsb, 1 = msb
-  uint _depth  = 32;
+  u32 _depth  = 32;
 
   channel _alpha{255u << 24, 8, 24};
   channel _red  {255u << 16, 8, 16};

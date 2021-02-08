@@ -1,5 +1,5 @@
 struct EEPROM : M93LCx6 {
-  enum : uint {
+  enum : u32 {
     DataLo,
     DataHi,
     AddressLo,
@@ -10,25 +10,25 @@ struct EEPROM : M93LCx6 {
 
   //eeprom.cpp
   auto power() -> void;
-  auto read(uint port) -> uint8;
-  auto write(uint port, uint8 data) -> void;
+  auto read(u32 port) -> n8;
+  auto write(u32 port, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 private:
   struct Registers {
-    uint16 data;
-    uint16 address;
+    n16 data;
+    n16 address;
 
     //note: timing is not yet emulated; ready bits always remain set.
-     uint1 readReady = 1;
-     uint1 writeReady = 1;
-     uint1 eraseReady = 1;
-     uint1 resetReady = 1;
-     uint1 readPending;
-     uint1 writePending;
-     uint1 erasePending;
-     uint1 resetPending;
+    n1 readReady = 1;
+    n1 writeReady = 1;
+    n1 eraseReady = 1;
+    n1 resetReady = 1;
+    n1 readPending;
+    n1 writePending;
+    n1 erasePending;
+    n1 resetPending;
   } r;
 };

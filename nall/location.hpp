@@ -8,7 +8,7 @@ namespace nall::Location {
 // (/parent/child.type/)name.type
 inline auto path(string_view self) -> string {
   const char* p = self.data() + self.size() - 1;
-  for(int offset = self.size() - 1; offset >= 0; offset--, p--) {
+  for(s32 offset = self.size() - 1; offset >= 0; offset--, p--) {
     if(*p == '/') return slice(self, 0, offset + 1);
   }
   return "";  //no path found
@@ -18,7 +18,7 @@ inline auto path(string_view self) -> string {
 // /parent/child.type/(name.type)
 inline auto file(string_view self) -> string {
   const char* p = self.data() + self.size() - 1;
-  for(int offset = self.size() - 1; offset >= 0; offset--, p--) {
+  for(s32 offset = self.size() - 1; offset >= 0; offset--, p--) {
     if(*p == '/') return slice(self, offset + 1);
   }
   return self;  //no path found
@@ -28,7 +28,7 @@ inline auto file(string_view self) -> string {
 // (/parent/child.type/)name.type
 inline auto dir(string_view self) -> string {
   const char* p = self.data() + self.size() - 1, *last = p;
-  for(int offset = self.size() - 1; offset >= 0; offset--, p--) {
+  for(s32 offset = self.size() - 1; offset >= 0; offset--, p--) {
     if(*p == '/' && p == last) continue;
     if(*p == '/') return slice(self, 0, offset + 1);
   }
@@ -39,7 +39,7 @@ inline auto dir(string_view self) -> string {
 // /parent/child.type/(name.type)
 inline auto base(string_view self) -> string {
   const char* p = self.data() + self.size() - 1, *last = p;
-  for(int offset = self.size() - 1; offset >= 0; offset--, p--) {
+  for(s32 offset = self.size() - 1; offset >= 0; offset--, p--) {
     if(*p == '/' && p == last) continue;
     if(*p == '/') return slice(self, offset + 1);
   }
@@ -50,7 +50,7 @@ inline auto base(string_view self) -> string {
 // /parent/child.type/(name).type
 inline auto prefix(string_view self) -> string {
   const char* p = self.data() + self.size() - 1, *last = p;
-  for(int offset = self.size() - 1, suffix = -1; offset >= 0; offset--, p--) {
+  for(s32 offset = self.size() - 1, suffix = -1; offset >= 0; offset--, p--) {
     if(*p == '/' && p == last) continue;
     if(*p == '/') return slice(self, offset + 1, (suffix >= 0 ? suffix : self.size()) - offset - 1).trimRight("/");
     if(*p == '.' && suffix == -1) { suffix = offset; continue; }
@@ -63,7 +63,7 @@ inline auto prefix(string_view self) -> string {
 // /parent/child.type/name(.type)
 inline auto suffix(string_view self) -> string {
   const char* p = self.data() + self.size() - 1, *last = p;
-  for(int offset = self.size() - 1; offset >= 0; offset--, p--) {
+  for(s32 offset = self.size() - 1; offset >= 0; offset--, p--) {
     if(*p == '/' && p == last) continue;
     if(*p == '/') break;
     if(*p == '.') return slice(self, offset).trimRight("/");

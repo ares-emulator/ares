@@ -9,12 +9,12 @@ namespace ares {
 #include "io.cpp"
 #include "serialization.cpp"
 
-auto YM2413::clock() -> double {
+auto YM2413::clock() -> f64 {
   auto melody = 0;
   auto rhythm = 0;
   auto mask = -(1 << 12 - 9);
 
-  for(uint index : range(io.rhythmMode ? 6 : 9)) {
+  for(u32 index : range(io.rhythmMode ? 6 : 9)) {
     auto& voice = voices[index];
     auto input = voice.modulator.output + voice.modulator.prior >> 8 - voice.feedback;
     voice.modulator.clock(io.clock, voice.modulator.phase >> 9, voice.feedback ? input : 0);
@@ -50,7 +50,7 @@ auto YM2413::clock() -> double {
   return mix / 32768.0 * 4.0;
 }
 
-auto YM2413::reload(uint4 index) -> void {
+auto YM2413::reload(n4 index) -> void {
   auto& voice = voices[index];
   voice.modulator.audible = io.rhythmMode && index > 6;
   voice.carrier.audible = true;
@@ -74,23 +74,23 @@ auto YM2413::power(bool isVRC7) -> void {
     //10.9 fixed point phases
     auto y = sin((2 * x + 1) * Math::Pi / 1024.0);   //0x400 units to 2pi radians
     auto z = -(1 << 8) * log(y) / log(2);            //convert to -6 dB/256 units
-    auto s = (1 << 10) * pow(2, uint8(~x) / 256.0);  //0x7fa .. 0x400
+    auto s = (1 << 10) * pow(2, n8(~x) / 256.0);  //0x7fa .. 0x400
 
-    sinTable[0x000 + x] = sinTable[0x1ff - x] = uint(z + 0.5) * 2 + 1;
-    sinTable[0x200 + x] = sinTable[0x3ff - x] = uint(z + 0.5) * 2 + 0;
+    sinTable[0x000 + x] = sinTable[0x1ff - x] = u32(z + 0.5) * 2 + 1;
+    sinTable[0x200 + x] = sinTable[0x3ff - x] = u32(z + 0.5) * 2 + 0;
 
-    expTable[x * 2 + 1] = +uint(s + 0.5);
-    expTable[x * 2 + 0] = ~uint(s + 0.5);
+    expTable[x * 2 + 1] = +u32(s + 0.5);
+    expTable[x * 2 + 0] = ~u32(s + 0.5);
   }
 
   io = {};
   io.isVRC7 = isVRC7;
-  for(uint n : range(9)) {
+  for(u32 n : range(9)) {
     voices[n] = {};
     reload(n);
   }
 
-  for(uint n : range(3)) {
+  for(u32 n : range(3)) {
     voices[3 * n + 0].modulator.slot = 1 + 6 * n;
     voices[3 * n + 1].modulator.slot = 2 + 6 * n;
     voices[3 * n + 2].modulator.slot = 3 + 6 * n;

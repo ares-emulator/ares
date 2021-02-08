@@ -51,13 +51,13 @@ auto CPU::main() -> void {
   instruction();
 }
 
-auto CPU::step(uint clocks) -> void {
+auto CPU::step(u32 clocks) -> void {
   if(!clocks) return;
 
-  dma[0].waiting = max(0, dma[0].waiting - (int)clocks);
-  dma[1].waiting = max(0, dma[1].waiting - (int)clocks);
-  dma[2].waiting = max(0, dma[2].waiting - (int)clocks);
-  dma[3].waiting = max(0, dma[3].waiting - (int)clocks);
+  dma[0].waiting = max(0, dma[0].waiting - (s32)clocks);
+  dma[1].waiting = max(0, dma[1].waiting - (s32)clocks);
+  dma[2].waiting = max(0, dma[2].waiting - (s32)clocks);
+  dma[3].waiting = max(0, dma[3].waiting - (s32)clocks);
 
   if(!context.dmaActive) {
     context.dmaActive = true;
@@ -75,7 +75,7 @@ auto CPU::step(uint clocks) -> void {
 
   #if defined(PROFILE_PERFORMANCE)
   //20% speedup by only synchronizing other components every 64 clock cycles
-  static uint counter = 0;
+  static u32 counter = 0;
   counter += clocks;
   if(counter < 64) return;
   clocks = counter;
@@ -122,13 +122,13 @@ auto CPU::power() -> void {
   dma[3].target.setBits(28); dma[3].latch.target.setBits(28);
   dma[3].length.setBits(16); dma[3].latch.length.setBits(16);
 
-  for(uint n = 0x0b0; n <= 0x0df; n++) bus.io[n] = this;  //DMA
-  for(uint n = 0x100; n <= 0x10f; n++) bus.io[n] = this;  //Timers
-  for(uint n = 0x120; n <= 0x12b; n++) bus.io[n] = this;  //Serial
-  for(uint n = 0x130; n <= 0x133; n++) bus.io[n] = this;  //Keypad
-  for(uint n = 0x134; n <= 0x159; n++) bus.io[n] = this;  //Serial
-  for(uint n = 0x200; n <= 0x209; n++) bus.io[n] = this;  //System
-  for(uint n = 0x300; n <= 0x301; n++) bus.io[n] = this;  //System
+  for(u32 n = 0x0b0; n <= 0x0df; n++) bus.io[n] = this;  //DMA
+  for(u32 n = 0x100; n <= 0x10f; n++) bus.io[n] = this;  //Timers
+  for(u32 n = 0x120; n <= 0x12b; n++) bus.io[n] = this;  //Serial
+  for(u32 n = 0x130; n <= 0x133; n++) bus.io[n] = this;  //Keypad
+  for(u32 n = 0x134; n <= 0x159; n++) bus.io[n] = this;  //Serial
+  for(u32 n = 0x200; n <= 0x209; n++) bus.io[n] = this;  //System
+  for(u32 n = 0x300; n <= 0x301; n++) bus.io[n] = this;  //System
   //0x080-0x083 mirrored via gba/memory/memory.cpp        //System
 }
 

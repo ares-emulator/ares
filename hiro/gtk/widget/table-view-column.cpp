@@ -5,7 +5,7 @@ namespace hiro {
 auto pTableViewColumn::construct() -> void {
   if(auto parent = _parent()) {
     auto handle = parent.data();
-    uint offset = self().offset();
+    u32 offset = self().offset();
 
     #if HIRO_GTK==2
     gtkHeader = gtk_hbox_new(false, 0);
@@ -125,7 +125,7 @@ auto pTableViewColumn::setVisible(bool visible) -> void {
   gtk_tree_view_column_set_visible(gtkColumn, visible);
 }
 
-auto pTableViewColumn::setWidth(int width) -> void {
+auto pTableViewColumn::setWidth(s32 width) -> void {
   if(auto parent = _parent()) {
     parent->resizeColumns();
   }

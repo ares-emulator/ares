@@ -10,35 +10,35 @@ struct uPD96050 {
   auto exec() -> void;
   auto serialize(serializer&) -> void;
 
-  auto execOP(uint24 opcode) -> void;
-  auto execRT(uint24 opcode) -> void;
-  auto execJP(uint24 opcode) -> void;
-  auto execLD(uint24 opcode) -> void;
+  auto execOP(n24 opcode) -> void;
+  auto execRT(n24 opcode) -> void;
+  auto execJP(n24 opcode) -> void;
+  auto execLD(n24 opcode) -> void;
 
-  auto readSR() -> uint8;
-  auto writeSR(uint8 data) -> void;
+  auto readSR() -> n8;
+  auto writeSR(n8 data) -> void;
 
-  auto readDR() -> uint8;
-  auto writeDR(uint8 data) -> void;
+  auto readDR() -> n8;
+  auto writeDR(n8 data) -> void;
 
-  auto readDP(uint12 addr) -> uint8;
-  auto writeDP(uint12 addr, uint8 data) -> void;
+  auto readDP(n12 address) -> n8;
+  auto writeDP(n12 address, n8 data) -> void;
 
   //disassembler.cpp
-  noinline auto disassembleInstruction(maybe<uint14> ip = {}) -> string;
+  noinline auto disassembleInstruction(maybe<n14> ip = {}) -> string;
   noinline auto disassembleContext() -> string;
 
-  enum class Revision : uint { uPD7725, uPD96050 } revision;
-  uint24 programROM[16384];
-  uint16 dataROM[2048];
-  uint16 dataRAM[2048];
+  enum class Revision : u32 { uPD7725, uPD96050 } revision;
+  n24 programROM[16384];
+  n16 dataROM[2048];
+  n16 dataRAM[2048];
 
   struct Flag {
-    operator uint() const {
+    operator u32() const {
       return ov0 << 0 | ov1 << 1 | z << 2 | c << 3 | s0 << 4 | s1 << 5;
     }
 
-    auto operator=(uint16 data) -> Flag& {
+    auto operator=(n16 data) -> Flag& {
       ov0 = data.bit(0);
       ov1 = data.bit(1);
       z   = data.bit(2);
@@ -59,13 +59,13 @@ struct uPD96050 {
   };
 
   struct Status {
-    operator uint() const {
+    operator u32() const {
       bool _drs = drs & !drc;  //when DRC=1, DRS=0
       return p0 << 0 | p1 << 1 | ei << 7 | sic << 8 | soc << 9 | drc << 10
            | dma << 11 | _drs << 12 | usf0 << 13 | usf1 << 14 | rqm << 15;
     }
 
-    auto operator=(uint16 data) -> Status& {
+    auto operator=(n16 data) -> Status& {
       p0   = data.bit( 0);
       p1   = data.bit( 1);
       ei   = data.bit( 7);
@@ -102,22 +102,22 @@ struct uPD96050 {
   struct Registers {
     auto serialize(serializer&) -> void;
 
-    uint16 stack[16];    //LIFO
+    n16 stack[16];       //LIFO
     VariadicNatural pc;  //program counter
     VariadicNatural rp;  //ROM pointer
     VariadicNatural dp;  //data pointer
-    uint4 sp;            //stack pointer
-    uint16 si;           //serial input
-    uint16 so;           //serial output
-    int16 k;
-    int16 l;
-    int16 m;
-    int16 n;
-    int16 a;             //accumulator
-    int16 b;             //accumulator
-    uint16 tr;           //temporary register
-    uint16 trb;          //temporary register
-    uint16 dr;           //data register
+    n4 sp;               //stack pointer
+    n16 si;              //serial input
+    n16 so;              //serial output
+    i16 k;
+    i16 l;
+    i16 m;
+    i16 n;
+    i16 a;               //accumulator
+    i16 b;               //accumulator
+    n16 tr;              //temporary register
+    n16 trb;             //temporary register
+    n16 dr;              //data register
     Status sr;           //status register
   } regs;
 

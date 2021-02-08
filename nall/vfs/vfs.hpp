@@ -6,36 +6,36 @@
 namespace nall::vfs {
 
 struct file {
-  enum class mode : uint { read, write, modify, create };
-  enum class index : uint { absolute, relative };
+  enum class mode  : u32 { read, write, modify, create };
+  enum class index : u32 { absolute, relative };
 
   virtual ~file() = default;
 
-  virtual auto size() const -> uintmax = 0;
-  virtual auto offset() const -> uintmax = 0;
+  virtual auto size() const -> u64 = 0;
+  virtual auto offset() const -> u64 = 0;
 
-  virtual auto seek(intmax offset, index = index::absolute) -> void = 0;
-  virtual auto read() -> uint8_t = 0;
-  virtual auto write(uint8_t data) -> void = 0;
+  virtual auto seek(s64 offset, index = index::absolute) -> void = 0;
+  virtual auto read() -> u8 = 0;
+  virtual auto write(u8 data) -> void = 0;
   virtual auto flush() -> void {}
 
   auto end() const -> bool {
     return offset() >= size();
   }
 
-  auto read(void* vdata, uintmax bytes) -> void {
-    auto data = (uint8_t*)vdata;
+  auto read(void* vdata, u64 bytes) -> void {
+    auto data = (u8*)vdata;
     while(bytes--) *data++ = read();
   }
 
-  auto readl(uint bytes) -> uintmax {
-    uintmax data = 0;
-    for(auto n : range(bytes)) data |= (uintmax)read() << n * 8;
+  auto readl(u32 bytes) -> u64 {
+    u64 data = 0;
+    for(auto n : range(bytes)) data |= (u64)read() << n * 8;
     return data;
   }
 
-  auto readm(uint bytes) -> uintmax {
-    uintmax data = 0;
+  auto readm(u32 bytes) -> u64 {
+    u64 data = 0;
     for(auto n : range(bytes)) data = data << 8 | read();
     return data;
   }
@@ -43,25 +43,25 @@ struct file {
   auto reads() -> string {
     string s;
     s.resize(size());
-    read(s.get<uint8_t>(), s.size());
+    read(s.get<u8>(), s.size());
     return s;
   }
 
-  auto write(const void* vdata, uintmax bytes) -> void {
-    auto data = (const uint8_t*)vdata;
+  auto write(const void* vdata, u64 bytes) -> void {
+    auto data = (const u8*)vdata;
     while(bytes--) write(*data++);
   }
 
-  auto writel(uintmax data, uint bytes) -> void {
+  auto writel(u64 data, u32 bytes) -> void {
     for(auto n : range(bytes)) write(data), data >>= 8;
   }
 
-  auto writem(uintmax data, uint bytes) -> void {
+  auto writem(u64 data, u32 bytes) -> void {
     for(auto n : reverse(range(bytes))) write(data >> n * 8);
   }
 
   auto writes(const string& s) -> void {
-    write(s.data<uint8_t>(), s.size());
+    write(s.data<u8>(), s.size());
   }
 };
 

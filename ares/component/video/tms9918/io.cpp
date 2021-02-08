@@ -1,6 +1,6 @@
-auto TMS9918::status() -> uint8 {
+auto TMS9918::status() -> n8 {
   io.controlLatch = 0;
-  uint8 data = 0x00;
+  n8 data = 0x00;
   data.bit(0,4) = io.spriteOverflowIndex;
   data.bit(5) = io.spriteCollision;
   data.bit(6) = io.spriteOverflow;
@@ -9,21 +9,21 @@ auto TMS9918::status() -> uint8 {
   return data;
 }
 
-auto TMS9918::data() -> uint8 {
+auto TMS9918::data() -> n8 {
   io.controlLatch = 0;
-  uint14 address = io.controlValue.bit(0,13)++;
-  uint8 data = io.vramLatch;
+  n14 address = io.controlValue.bit(0,13)++;
+  n8  data = io.vramLatch;
   io.vramLatch = vram.read(address);
   return data;
 }
 
-auto TMS9918::data(uint8 data) -> void {
+auto TMS9918::data(n8 data) -> void {
   io.controlLatch = 0;
-  uint14 address = io.controlValue.bit(0,13)++;
+  n14 address = io.controlValue.bit(0,13)++;
   vram.write(address, data);
 }
 
-auto TMS9918::control(uint8 data) -> void {
+auto TMS9918::control(n8 data) -> void {
   io.controlValue.byte(io.controlLatch++) = data;
   if(io.controlLatch) return;
   if(io.controlValue.bit(15)) {
@@ -32,7 +32,7 @@ auto TMS9918::control(uint8 data) -> void {
   if(!io.controlValue.bit(14)) TMS9918::data();  //read-ahead
 }
 
-auto TMS9918::register(uint3 register, uint8 data) -> void {
+auto TMS9918::register(n3 register, n8 data) -> void {
   switch(register) {
   case 0:
     io.externalInput = data.bit(0);

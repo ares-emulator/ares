@@ -3,8 +3,8 @@ struct Controller {
 
   virtual ~Controller() = default;
 
-  virtual auto readData() -> uint8 { return 0xff; }
-  virtual auto writeData(uint8 data) -> void {}
+  virtual auto readData() -> n8 { return 0xff; }
+  virtual auto writeData(n8 data) -> void {}
 };
 
 #include "port.hpp"

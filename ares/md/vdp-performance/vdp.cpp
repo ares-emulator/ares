@@ -99,7 +99,7 @@ auto VDP::main() -> void {
   }
 }
 
-auto VDP::step(uint clocks) -> void {
+auto VDP::step(u32 clocks) -> void {
   state.hcounter += clocks;
 
   if(!dma.io.enable || dma.io.wait) {
@@ -128,7 +128,7 @@ auto VDP::render() -> void {
   planeB.renderScreen(0, screenWidth());
   sprite.render();
 
-  uint32_t* output = nullptr;
+  u32* output = nullptr;
   if(overscan->value() == 0 && io.overscan == 0) {
     if(state.vcounter >= 224) return;
     output = screen->pixels().data() + (state.vcounter - 0) * 2 * 320;
@@ -150,24 +150,24 @@ auto VDP::render() -> void {
   auto A = &planeA.pixels[0];
   auto B = &planeB.pixels[0];
   auto S = &sprite.pixels[0];
-  uint7 c[4] = {0, 0, 0, io.backgroundColor};
+  n7 c[4] = {0, 0, 0, io.backgroundColor};
   if(!io.shadowHighlightEnable) {
     auto p = &cram.palette[1 << 7];
-    for(uint x : range(screenWidth())) {
+    for(u32 x : range(screenWidth())) {
       c[0] = *A++;
       c[1] = *B++;
       c[2] = *S++;
-      uint l = lookupFG[c[0] >> 2 << 10 | c[1] >> 2 << 5 | c[2] >> 2];
+      u32 l = lookupFG[c[0] >> 2 << 10 | c[1] >> 2 << 5 | c[2] >> 2];
       *output++ = p[c[l]];
     }
   } else {
     auto p = &cram.palette[0 << 7];
-    for(uint x : range(screenWidth())) {
+    for(u32 x : range(screenWidth())) {
       c[0] = *A++;
       c[1] = *B++;
       c[2] = *S++;
-      uint l = lookupFG[c[0] >> 2 << 10 | c[1] >> 2 << 5 | c[2] >> 2];
-      uint mode = (c[0] | c[1]) >> 2 & 1;  //0 = shadow, 1 = normal, 2 = highlight
+      u32 l = lookupFG[c[0] >> 2 << 10 | c[1] >> 2 << 5 | c[2] >> 2];
+      u32 mode = (c[0] | c[1]) >> 2 & 1;  //0 = shadow, 1 = normal, 2 = highlight
       if(l == 2) {
         if(c[2] >= 0x70) {
           if(c[2] <= 0x72) mode = 1;
@@ -215,23 +215,23 @@ auto VDP::power(bool reset) -> void {
   if(!initialized) {
     initialized = true;
 
-    for(uint a = 0; a < 32; a++) {
-      for(uint b = 0; b < 32; b++) {
-        uint ap = a & 1, ac = a >> 1;
-        uint bp = b & 1, bc = b >> 1;
-        uint bg = (ap && ac) || ac && !(bp && bc) ? 0 : bc ? 1 : 3;
+    for(u32 a = 0; a < 32; a++) {
+      for(u32 b = 0; b < 32; b++) {
+        u32 ap = a & 1, ac = a >> 1;
+        u32 bp = b & 1, bc = b >> 1;
+        u32 bg = (ap && ac) || ac && !(bp && bc) ? 0 : bc ? 1 : 3;
         lookupBG[a << 5 | b] = bg;
       }
     }
 
-    for(uint a = 0; a < 32; a++) {
-      for(uint b = 0; b < 32; b++) {
-        for(uint s = 0; s < 32; s++) {
-          uint ap = a & 1, ac = a >> 1;
-          uint bp = b & 1, bc = b >> 1;
-          uint sp = s & 1, sc = s >> 1;
-          uint bg = (ap && ac) || ac && !(bp && bc) ? 0 : bc ? 1 : 3;
-          uint fg = (sp && sc) || sc && !(bp && bc) && !(ap && ac) ? 2 : bg;
+    for(u32 a = 0; a < 32; a++) {
+      for(u32 b = 0; b < 32; b++) {
+        for(u32 s = 0; s < 32; s++) {
+          u32 ap = a & 1, ac = a >> 1;
+          u32 bp = b & 1, bc = b >> 1;
+          u32 sp = s & 1, sc = s >> 1;
+          u32 bg = (ap && ac) || ac && !(bp && bc) ? 0 : bc ? 1 : 3;
+          u32 fg = (sp && sc) || sc && !(bp && bc) && !(ap && ac) ? 2 : bg;
           lookupFG[a << 10 | b << 5 | s] = fg;
         }
       }

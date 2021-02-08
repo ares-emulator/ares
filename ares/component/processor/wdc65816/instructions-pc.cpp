@@ -3,7 +3,7 @@ auto WDC65816::instructionBranch(bool take) -> void {
 L   fetch();
   } else {
     U.l = fetch();
-    V.w = PC.d + (int8)U.l;
+    V.w = PC.d + (i8)U.l;
     idle6(V.w);
 L   idle();
     PC.w = V.w;
@@ -14,7 +14,7 @@ L   idle();
 auto WDC65816::instructionBranchLong() -> void {
   U.l = fetch();
   U.h = fetch();
-  V.w = PC.d + (int16)U.w;
+  V.w = PC.d + (i16)U.w;
 L idle();
   PC.w = V.w;
   idleBranch();
@@ -38,8 +38,8 @@ L V.b = fetch();
 auto WDC65816::instructionJumpIndirect() -> void {
   V.l = fetch();
   V.h = fetch();
-  W.l = read(uint16(V.w + 0));
-L W.h = read(uint16(V.w + 1));
+  W.l = read(n16(V.w + 0));
+L W.h = read(n16(V.w + 1));
   PC.w = W.w;
   idleJump();
 }
@@ -48,8 +48,8 @@ auto WDC65816::instructionJumpIndexedIndirect() -> void {
   V.l = fetch();
   V.h = fetch();
   idle();
-  W.l = read(PC.b << 16 | uint16(V.w + X.w + 0));
-L W.h = read(PC.b << 16 | uint16(V.w + X.w + 1));
+  W.l = read(PC.b << 16 | n16(V.w + X.w + 0));
+L W.h = read(PC.b << 16 | n16(V.w + X.w + 1));
   PC.w = W.w;
   idleJump();
 }
@@ -57,9 +57,9 @@ L W.h = read(PC.b << 16 | uint16(V.w + X.w + 1));
 auto WDC65816::instructionJumpIndirectLong() -> void {
   U.l = fetch();
   U.h = fetch();
-  V.l = read(uint16(U.w + 0));
-  V.h = read(uint16(U.w + 1));
-L V.b = read(uint16(U.w + 2));
+  V.l = read(n16(U.w + 0));
+  V.h = read(n16(U.w + 1));
+L V.b = read(n16(U.w + 2));
   PC.d = V.d;
   idleJump();
 }
@@ -95,8 +95,8 @@ auto WDC65816::instructionCallIndexedIndirect() -> void {
   pushN(PC.l);
   V.h = fetch();
   idle();
-  W.l = read(PC.b << 16 | uint16(V.w + X.w + 0));
-L W.h = read(PC.b << 16 | uint16(V.w + X.w + 1));
+  W.l = read(PC.b << 16 | n16(V.w + X.w + 0));
+L W.h = read(PC.b << 16 | n16(V.w + X.w + 1));
   PC.w = W.w;
 E S.h = 0x01;
   idleJump();

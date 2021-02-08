@@ -14,8 +14,9 @@ auto MasterSystem::export(string location) -> vector<u8> {
 auto MasterSystem::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
-  s +={"  name:  ", Media::name(location), "\n"};
-  s +={"  label: ", Media::name(location), "\n"};
+  s +={"  name:   ", Media::name(location), "\n"};
+  s +={"  label:  ", Media::name(location), "\n"};
+  s += "  region: NTSC-J, NTSC-U, PAL\n";  //database required to detect region
   s += "  board\n";
   s += "    memory\n";
   s += "      type: ROM\n";

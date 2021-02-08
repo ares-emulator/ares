@@ -64,9 +64,9 @@ struct pTableView : pWidget {
   auto setHeadered(bool headered) -> void;
   auto setSortable(bool sortable) -> void;
 
-  auto _cellWidth(uint row, uint column) -> uint;
-  auto _columnWidth(uint column) -> uint;
-  auto _width(uint column) -> uint;
+  auto _cellWidth(u32 row, u32 column) -> u32;
+  auto _columnWidth(u32 column) -> u32;
+  auto _width(u32 column) -> u32;
 
   CocoaTableView* cocoaTableView = nullptr;
 };

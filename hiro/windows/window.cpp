@@ -16,11 +16,11 @@ static auto CALLBACK Window_windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARA
   return Shared_windowProc(DefWindowProc, hwnd, msg, wparam, lparam);
 }
 
-static const uint PopupStyle = WS_POPUP | WS_CLIPCHILDREN;
-static const uint FixedStyle = WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_BORDER | WS_CLIPCHILDREN;
-static const uint ResizableStyle = WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN;
+static constexpr u32 PopupStyle = WS_POPUP | WS_CLIPCHILDREN;
+static constexpr u32 FixedStyle = WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_BORDER | WS_CLIPCHILDREN;
+static constexpr u32 ResizableStyle = WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN;
 
-uint pWindow::minimumStatusHeight = 0;
+u32 pWindow::minimumStatusHeight = 0;
 
 auto pWindow::initialize() -> void {
   pApplication::state().modalTimer.setInterval(1);
@@ -67,7 +67,7 @@ auto pWindow::focused() const -> bool {
 
 auto pWindow::frameMargin() const -> Geometry {
   RECT rc{0, 0, 640, 480};
-  uint style = state().fullScreen ? 0 : state().resizable ? ResizableStyle : FixedStyle;
+  u32 style = state().fullScreen ? 0 : state().resizable ? ResizableStyle : FixedStyle;
   bool menuVisible = state().menuBar && state().menuBar->visible();
   AdjustWindowRect(&rc, style, menuVisible);
   auto& efb = state().fullScreen ? settings.efbPopup : !state().resizable ? settings.efbFixed : settings.efbResizable;
@@ -83,7 +83,7 @@ auto pWindow::handle() const -> uintptr_t {
   return (uintptr_t)hwnd;
 }
 
-auto pWindow::monitor() const -> uint {
+auto pWindow::monitor() const -> u32 {
   //TODO
   return 0;
 }
@@ -356,8 +356,8 @@ auto pWindow::_geometry() -> Geometry {
   return {x, y, width, height};
 }
 
-auto pWindow::_modalityCount() -> unsigned {
-  unsigned modalWindows = 0;
+auto pWindow::_modalityCount() -> u32 {
+  u32 modalWindows = 0;
   for(auto& weak : windows) {
     if(auto object = weak.acquire()) {
       if(auto window = dynamic_cast<mWindow*>(object.data())) {
@@ -374,7 +374,7 @@ auto pWindow::_modalityDisabled() -> bool {
 }
 
 auto pWindow::_modalityUpdate() -> void {
-  unsigned modalWindows = _modalityCount();
+  u32 modalWindows = _modalityCount();
   for(auto& weak : windows) {
     if(auto object = weak.acquire()) {
       if(auto window = dynamic_cast<mWindow*>(object.data())) {
@@ -389,8 +389,8 @@ auto pWindow::_modalityUpdate() -> void {
   }
 }
 
-auto pWindow::_statusHeight() const -> int {
-  int height = 0;
+auto pWindow::_statusHeight() const -> s32 {
+  s32 height = 0;
   if(auto& statusBar = state().statusBar) {
     if(statusBar->visible()) {
       auto& text = statusBar->state.text;

@@ -2,13 +2,13 @@ struct DIP {
   //dip.cpp
   auto power() -> void;
 
-  auto read(uint24 address, uint8 data) -> uint8;
-  auto write(uint24 address, uint8 data) -> void;
+  auto read(n24 address, n8 data) -> n8;
+  auto write(n24 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint8 value = 0x00;
+  n8 value = 0x00;
 };
 
 extern DIP dip;

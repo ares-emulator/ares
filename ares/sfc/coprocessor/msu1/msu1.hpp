@@ -12,13 +12,13 @@ struct MSU1 : Thread {
   auto dataOpen() -> void;
   auto audioOpen() -> void;
 
-  auto readIO(uint24 address, uint8 data) -> uint8;
-  auto writeIO(uint24 address, uint8 data) -> void;
+  auto readIO(n24 address, n8 data) -> n8;
+  auto writeIO(n24 address, n8 data) -> void;
 
   auto serialize(serializer&) -> void;
 
 private:
-  enum Flag : uint {
+  enum Flag : u32 {
     Revision       = 0x02,  //max: 0x07
     AudioError     = 0x08,
     AudioPlaying   = 0x10,
@@ -28,23 +28,23 @@ private:
   };
 
   struct IO {
-    uint32 dataSeekOffset;
-    uint32 dataReadOffset;
+    n32 dataSeekOffset;
+    n32 dataReadOffset;
 
-    uint32 audioPlayOffset;
-    uint32 audioLoopOffset;
+    n32 audioPlayOffset;
+    n32 audioLoopOffset;
 
-    uint16 audioTrack;
-    uint8 audioVolume;
+    n16 audioTrack;
+    n8  audioVolume;
 
-    uint32 audioResumeTrack;
-    uint32 audioResumeOffset;
+    n32 audioResumeTrack;
+    n32 audioResumeOffset;
 
-    boolean audioError;
-    boolean audioPlay;
-    boolean audioRepeat;
-    boolean audioBusy;
-    boolean dataBusy;
+    n1  audioError;
+    n1  audioPlay;
+    n1  audioRepeat;
+    n1  audioBusy;
+    n1  dataBusy;
   } io;
 };
 

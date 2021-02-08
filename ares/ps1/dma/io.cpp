@@ -1,5 +1,5 @@
 auto DMA::readByte(u32 address) -> u32 {
-  uint32 data;
+  n32 data;
   if((address & ~3) == 0x1f80'10f0) return data = readWord(address & ~3) >> 8 * (address & 3);
   if((address & ~3) == 0x1f80'10f4) return data = readWord(address & ~3) >> 8 * (address & 3);
   if((address & ~3) == 0x1f80'10f8) return data = readWord(address & ~3) >> 8 * (address & 3);
@@ -16,7 +16,7 @@ auto DMA::readByte(u32 address) -> u32 {
 }
 
 auto DMA::readHalf(u32 address) -> u32 {
-  uint32 data;
+  n32 data;
   if((address & ~3) == 0x1f80'10f0) return data = readWord(address & ~3) >> 8 * (address & 3);
   if((address & ~3) == 0x1f80'10f4) return data = readWord(address & ~3) >> 8 * (address & 3);
   if((address & ~3) == 0x1f80'10f8) return data = readWord(address & ~3) >> 8 * (address & 3);
@@ -31,7 +31,7 @@ auto DMA::readHalf(u32 address) -> u32 {
 }
 
 auto DMA::readWord(u32 address) -> u32 {
-  uint32 data;
+  n32 data;
 
   //DPCR: DMA Control
   if(address == 0x1f80'10f0) {
@@ -118,7 +118,7 @@ auto DMA::readWord(u32 address) -> u32 {
 }
 
 auto DMA::writeByte(u32 address, u32 value) -> void {
-  uint32 data = value;
+  n32 data = value;
   if((address & ~3) == 0x1f80'10f0) return writeWord(address & ~3, data << 8 * (address & 3));
   if((address & ~3) == 0x1f80'10f4) return writeWord(address & ~3, data << 8 * (address & 3));
   if((address & ~3) == 0x1f80'10f8) return writeWord(address & ~3, data << 8 * (address & 3));
@@ -134,7 +134,7 @@ auto DMA::writeByte(u32 address, u32 value) -> void {
 }
 
 auto DMA::writeHalf(u32 address, u32 value) -> void {
-  uint32 data = value;
+  n32 data = value;
   if((address & ~3) == 0x1f80'10f0) return writeWord(address & ~3, data << 8 * (address & 3));
   if((address & ~3) == 0x1f80'10f4) return writeWord(address & ~3, data << 8 * (address & 3));
   if((address & ~3) == 0x1f80'10f8) return writeWord(address & ~3, data << 8 * (address & 3));
@@ -148,7 +148,7 @@ auto DMA::writeHalf(u32 address, u32 value) -> void {
 }
 
 auto DMA::writeWord(u32 address, u32 value) -> void {
-  uint32 data = value;
+  n32 data = value;
 
   //DPCR: DMA Control
   if(address == 0x1f80'10f0) {

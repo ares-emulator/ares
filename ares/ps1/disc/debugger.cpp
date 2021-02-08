@@ -116,7 +116,7 @@ auto Disc::Debugger::commandPrologue(u8 operation, maybe<u8> suboperation) -> vo
 
   _command = name;
   _command.append("(");
-  for(uint index : range(disc.fifo.parameter.size())) {
+  for(u32 index : range(disc.fifo.parameter.size())) {
     u8 data = disc.fifo.parameter.peek(index);
     _command.append("$", hex(data, 2L), ",");
   }
@@ -129,7 +129,7 @@ auto Disc::Debugger::commandEpilogue(u8 operation, maybe<u8> suboperation) -> vo
   if(operation == 0x19 && !suboperation) return;
 
   _command.append(" = {");
-  for(uint index : range(disc.fifo.response.size())) {
+  for(u32 index : range(disc.fifo.response.size())) {
     u8 data = disc.fifo.response.peek(index);
     _command.append("$", hex(data, 2L), ",");
   }
@@ -139,7 +139,7 @@ auto Disc::Debugger::commandEpilogue(u8 operation, maybe<u8> suboperation) -> vo
   tracer.command->notify(_command);
 }
 
-auto Disc::Debugger::read(int lba) -> void {
+auto Disc::Debugger::read(s32 lba) -> void {
   if(!tracer.read->enabled()) return;
 
   auto [minute, second, frame] = CD::MSF::fromLBA(lba);

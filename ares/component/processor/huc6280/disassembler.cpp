@@ -1,51 +1,51 @@
 auto HuC6280::disassembleInstruction() -> string {
-  uint16 pc = r.pc;
-  maybe<uint24> effectiveAddress;
+  n16 pc = r.pc;
+  maybe<n24> effectiveAddress;
   string s;
 
-  auto readByte = [&]() -> uint8 {
-    uint8 data = read(MPR[pc >> 13], pc & 0x1fff);
+  auto readByte = [&]() -> n8 {
+    n8 data = read(MPR[pc >> 13], pc & 0x1fff);
     return pc++, data;
   };
 
-  auto readWord = [&]() -> uint16 {
-    uint16 data = readByte() << 0;
+  auto readWord = [&]() -> n16 {
+    n16    data = readByte() << 0;
     return data | readByte() << 8;
   };
 
-  auto computeAbsolute = [&](uint16 address) {
+  auto computeAbsolute = [&](n16 address) {
     effectiveAddress = MPR[address >> 13] << 16 | address & 0x1fff;
   };
 
-  auto computeIndirect = [&](uint8 address) {
-    uint16 absolute = 0;
+  auto computeIndirect = [&](n8 address) {
+    n16 absolute = 0;
     absolute |= read(MPR[1], address + 0) << 0;
     absolute |= read(MPR[1], address + 1) << 8;
     effectiveAddress = absolute;
   };
 
-  auto computeIndirectX = [&](uint8 address) {
-    uint16 absolute = 0;
+  auto computeIndirectX = [&](n8 address) {
+    n16 absolute = 0;
     absolute |= read(MPR[1], address + r.x + 0) << 0;
     absolute |= read(MPR[1], address + r.x + 1) << 8;
     effectiveAddress = absolute;
   };
 
-  auto computeIndirectY = [&](uint8 address) {
-    uint16 absolute = 0;
+  auto computeIndirectY = [&](n8 address) {
+    n16 absolute = 0;
     absolute |= read(MPR[1], address + 0) << 0;
     absolute |= read(MPR[1], address + 1) << 8;
     effectiveAddress = absolute + r.y;
   };
 
-  auto computeIndirectLong = [&](uint16 address, uint8 index = 0) {
-    uint16 absolute = 0;
+  auto computeIndirectLong = [&](n16 address, n8 index = 0) {
+    n16 absolute = 0;
     absolute |= read(MPR[address >> 13], address & 0x1fff) << 0; address++;
     absolute |= read(MPR[address >> 13], address & 0x1fff) << 8;
     effectiveAddress = absolute + index;
   };
 
-  auto computeZeroPage = [&](uint8 address) {
+  auto computeZeroPage = [&](n8 address) {
     effectiveAddress = MPR[1] << 16 | address;
   };
 
@@ -103,8 +103,8 @@ auto HuC6280::disassembleInstruction() -> string {
 
   auto relative = [&]() -> string {
     auto displacement = readByte();
-    computeAbsolute(pc + (int8)displacement);
-    return {"$", hex(pc + (int8)displacement, 4L)};
+    computeAbsolute(pc + (i8)displacement);
+    return {"$", hex(pc + (i8)displacement, 4L)};
   };
 
   auto zeropage = [&]() -> string {
@@ -128,7 +128,7 @@ auto HuC6280::disassembleInstruction() -> string {
   auto immediateAbsolute = [&](string index = "") -> string {
     auto immediate = readByte();
     auto absolute = readWord();
-    computeAbsolute(absolute + (index == "x" ? r.x : (uint8)0));
+    computeAbsolute(absolute + (index == "x" ? r.x : (n8)0));
     if(index) index.prepend(",");
     return {"#$", hex(immediate, 2L), ",$", hex(absolute, 4L), index};
   };
@@ -136,22 +136,22 @@ auto HuC6280::disassembleInstruction() -> string {
   auto immediateZeropage = [&](string index = "") -> string {
     auto immediate = readByte();
     auto zeroPage = readByte();
-    computeZeroPage(zeroPage + (index == "x" ? r.x : (uint8)0));
+    computeZeroPage(zeroPage + (index == "x" ? r.x : (n8)0));
     if(index) index.prepend(",");
     return {"#$", hex(immediate, 2L), ",$", hex(zeroPage, 2L), index};
   };
 
-  auto zeropageBit = [&](uint3 bit) -> string {
+  auto zeropageBit = [&](n3 bit) -> string {
     auto zeroPage = readByte();
     computeZeroPage(zeroPage);
     return {"$", hex(zeroPage, 2L), ":", bit};
   };
 
-  auto zeropageBitRelative = [&](uint3 bit) -> string {
+  auto zeropageBitRelative = [&](n3 bit) -> string {
     auto zeroPage = readByte();
     auto displacement = readByte();
     computeZeroPage(zeroPage);
-    return {"$", hex(zeroPage, 2L), ":", bit, ",$", hex(pc + (int8)displacement, 4L)};
+    return {"$", hex(zeroPage, 2L), ":", bit, ",$", hex(pc + (i8)displacement, 4L)};
   };
 
   auto blockMove = [&]() -> string {
@@ -161,7 +161,7 @@ auto HuC6280::disassembleInstruction() -> string {
     return {"$", hex(source, 4L), ",$", hex(target, 4L), ",$", hex(length, 4L)};
   };
 
-  uint8 opcode = readByte();
+  n8 opcode = readByte();
 
   #define op(id, name, ...) case id: o = {name, " ", vector<string>{__VA_ARGS__}.merge(",")}; break;
   string o;

@@ -27,28 +27,28 @@ auto CPU::main() -> void {
   exec();
 }
 
-auto CPU::step(uint clocks) -> void {
+auto CPU::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize();
 }
 
-auto CPU::wait(uint clocks) -> void {
+auto CPU::wait(u32 clocks) -> void {
   step(clocks);
 }
 
-auto CPU::read(uint20 addr) -> uint8 {
+auto CPU::read(n20 addr) -> n8 {
   return bus.read(addr);
 }
 
-auto CPU::write(uint20 addr, uint8 data) -> void {
+auto CPU::write(n20 addr, n8 data) -> void {
   return bus.write(addr, data);
 }
 
-auto CPU::in(uint16 port) -> uint8 {
+auto CPU::in(n16 port) -> n8 {
   return bus.portRead(port);
 }
 
-auto CPU::out(uint16 port, uint8 data) -> void {
+auto CPU::out(n16 port, n8 data) -> void {
   return bus.portWrite(port, data);
 }
 

@@ -8,24 +8,18 @@
 namespace nall::Decode {
 
 namespace puff {
-  inline auto puff(
-    unsigned char* dest, unsigned long* destlen,
-    unsigned char* source, unsigned long* sourcelen
-  ) -> int;
+  inline auto puff(u8* dest, u32* destlen, u8* source, u32* sourcelen) -> s32;
 }
 
-inline auto inflate(
-  uint8_t* target, uint targetLength,
-  const uint8_t* source, uint sourceLength
-) -> bool {
-  unsigned long tl = targetLength, sl = sourceLength;
-  int result = puff::puff((unsigned char*)target, &tl, (unsigned char*)source, &sl);
+inline auto inflate(u8* target, u32 targetLength, const u8* source, u32 sourceLength) -> bool {
+  u32 tl = targetLength, sl = sourceLength;
+  s32 result = puff::puff((u8*)target, &tl, (u8*)source, &sl);
   return result == 0;
 }
 
 namespace puff {
 
-enum : uint {
+enum : u32 {
   MAXBITS   =  15,
   MAXLCODES = 286,
   MAXDCODES =  30,
@@ -34,42 +28,42 @@ enum : uint {
 };
 
 struct state {
-  unsigned char* out;
-  unsigned long outlen;
-  unsigned long outcnt;
+  u8* out;
+  u32 outlen;
+  u32 outcnt;
 
-  unsigned char* in;
-  unsigned long inlen;
-  unsigned long incnt;
-  int bitbuf;
-  int bitcnt;
+  u8* in;
+  u32 inlen;
+  u32 incnt;
+  s32 bitbuf;
+  s32 bitcnt;
 
   jmp_buf env;
 };
 
 struct huffman {
-  short* count;
-  short* symbol;
+  s16* count;
+  s16* symbol;
 };
 
-inline auto bits(state* s, int need) -> int {
-  long val;
+inline auto bits(state* s, s32 need) -> s32 {
+  s32 val;
 
   val = s->bitbuf;
   while(s->bitcnt < need) {
     if(s->incnt == s->inlen) longjmp(s->env, 1);
-    val |= (long)(s->in[s->incnt++]) << s->bitcnt;
+    val |= (s32)(s->in[s->incnt++]) << s->bitcnt;
     s->bitcnt += 8;
   }
 
-  s->bitbuf = (int)(val >> need);
+  s->bitbuf = (s32)(val >> need);
   s->bitcnt -= need;
 
-  return (int)(val & ((1L << need) - 1));
+  return (s32)(val & ((1L << need) - 1));
 }
 
-inline auto stored(state* s) -> int {
-  uint len;
+inline auto stored(state* s) -> s32 {
+  u32 len;
 
   s->bitbuf = 0;
   s->bitcnt = 0;
@@ -93,9 +87,9 @@ inline auto stored(state* s) -> int {
   return 0;
 }
 
-inline auto decode(state* s, huffman* h) -> int {
-  int len, code, first, count, index, bitbuf, left;
-  short* next;
+inline auto decode(state* s, huffman* h) -> s32 {
+  s32 len, code, first, count, index, bitbuf, left;
+  s16* next;
 
   bitbuf = s->bitbuf;
   left = s->bitcnt;
@@ -128,9 +122,9 @@ inline auto decode(state* s, huffman* h) -> int {
   return -10;
 }
 
-inline auto construct(huffman* h, short* length, int n) -> int {
-  int symbol, len, left;
-  short offs[MAXBITS + 1];
+inline auto construct(huffman* h, s16* length, s32 n) -> s32 {
+  s32 symbol, len, left;
+  s16 offs[MAXBITS + 1];
 
   for(len = 0; len <= MAXBITS; len++) h->count[len] = 0;
   for(symbol = 0; symbol < n; symbol++) h->count[length[symbol]]++;
@@ -153,23 +147,23 @@ inline auto construct(huffman* h, short* length, int n) -> int {
   return left;
 }
 
-inline auto codes(state* s, huffman* lencode, huffman* distcode) -> int {
-  int symbol, len;
-  uint dist;
-  static const short lens[29] = {
+inline auto codes(state* s, huffman* lencode, huffman* distcode) -> s32 {
+  s32 symbol, len;
+  u32 dist;
+  static const s16 lens[29] = {
     3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
     35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258
   };
-  static const short lext[29] = {
+  static const s16 lext[29] = {
     0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2,
     3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0
   };
-  static const short dists[30] = {
+  static const s16 dists[30] = {
     1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,
     257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145,
     8193, 12289, 16385, 24577
   };
-  static const short dext[30] = {
+  static const s16 dext[30] = {
     0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
     7, 7, 8, 8, 9, 9, 10, 10, 11, 11,
     12, 12, 13, 13
@@ -215,15 +209,15 @@ inline auto codes(state* s, huffman* lencode, huffman* distcode) -> int {
   return 0;
 }
 
-inline auto fixed(state* s) -> int {
-  static int virgin = 1;
-  static short lencnt[MAXBITS + 1], lensym[FIXLCODES];
-  static short distcnt[MAXBITS + 1], distsym[MAXDCODES];
+inline auto fixed(state* s) -> s32 {
+  static s32 virgin = 1;
+  static s16 lencnt[MAXBITS + 1], lensym[FIXLCODES];
+  static s16 distcnt[MAXBITS + 1], distsym[MAXDCODES];
   static huffman lencode, distcode;
 
   if(virgin) {
-    int symbol = 0;
-    short lengths[FIXLCODES];
+    s32 symbol = 0;
+    s16 lengths[FIXLCODES];
 
     lencode.count = lencnt;
     lencode.symbol = lensym;
@@ -245,13 +239,13 @@ inline auto fixed(state* s) -> int {
   return codes(s, &lencode, &distcode);
 }
 
-inline auto dynamic(state* s) -> int {
-  int nlen, ndist, ncode, index, err;
-  short lengths[MAXCODES];
-  short lencnt[MAXBITS + 1], lensym[MAXLCODES];
-  short distcnt[MAXBITS + 1], distsym[MAXDCODES];
+inline auto dynamic(state* s) -> s32 {
+  s32 nlen, ndist, ncode, index, err;
+  s16 lengths[MAXCODES];
+  s16 lencnt[MAXBITS + 1], lensym[MAXLCODES];
+  s16 distcnt[MAXBITS + 1], distsym[MAXDCODES];
   huffman lencode, distcode;
-  static const short order[19] = {
+  static const s16 order[19] = {
     16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15
   };
 
@@ -273,7 +267,7 @@ inline auto dynamic(state* s) -> int {
 
   index = 0;
   while(index < nlen + ndist) {
-    int symbol, len;
+    s32 symbol, len;
 
     symbol = decode(s, &lencode);
     if(symbol < 16) {
@@ -305,12 +299,9 @@ inline auto dynamic(state* s) -> int {
   return codes(s, &lencode, &distcode);
 }
 
-inline auto puff(
-  unsigned char* dest, unsigned long* destlen,
-  unsigned char* source, unsigned long* sourcelen
-) -> int {
+inline auto puff(u8* dest, u32* destlen, u8* source, u32* sourcelen) -> s32 {
   state s;
-  int last, type, err;
+  s32 last, type, err;
 
   s.out = dest;
   s.outlen = *destlen;

@@ -1,5 +1,5 @@
-auto CPU::getControlRegister(uint5 index) -> u64 {
-  uint64 data;
+auto CPU::getControlRegister(n5 index) -> u64 {
+  n64 data;
   switch(index) {
   case  0:  //index
     data.bit( 0, 5) = scc.index.tlbEntry;
@@ -124,7 +124,7 @@ auto CPU::getControlRegister(uint5 index) -> u64 {
   return data;
 }
 
-auto CPU::setControlRegister(uint5 index, uint64 data) -> void {
+auto CPU::setControlRegister(n5 index, n64 data) -> void {
   //read-only variables are defined but commented out for documentation purposes
   switch(index) {
   case  0:  //index
@@ -288,7 +288,7 @@ auto CPU::instructionMTC0(cr64& rt, u8 rd) -> void {
 auto CPU::instructionTLBP() -> void {
   scc.index.tlbEntry = 0;  //technically undefined
   scc.index.probeFailure = 1;
-  for(uint index : range(TLB::Entries)) {
+  for(u32 index : range(TLB::Entries)) {
     auto& entry = tlb.entry[index];
     auto mask = ~entry.pageMask & ~0x1fff;
     if((entry.virtualAddress & mask) != (scc.tlb.virtualAddress & mask)) continue;

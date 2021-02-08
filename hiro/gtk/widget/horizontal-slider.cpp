@@ -3,7 +3,7 @@
 namespace hiro {
 
 static auto HorizontalSlider_change(GtkRange* gtkRange, pHorizontalSlider* p) -> void {
-  auto position = (uint)gtk_range_get_value(gtkRange);
+  auto position = (u32)gtk_range_get_value(gtkRange);
   if(p->state().position == position) return;
   p->state().position = position;
   if(!p->locked()) p->self().doChange();
@@ -33,13 +33,13 @@ auto pHorizontalSlider::minimumSize() const -> Size {
   return {3, 20};
 }
 
-auto pHorizontalSlider::setLength(uint length) -> void {
+auto pHorizontalSlider::setLength(u32 length) -> void {
   length += length == 0;
   gtk_range_set_range(GTK_RANGE(gtkWidget), 0, max(1u, length - 1));
   gtk_range_set_increments(GTK_RANGE(gtkWidget), 1, length >> 3);
 }
 
-auto pHorizontalSlider::setPosition(uint position) -> void {
+auto pHorizontalSlider::setPosition(u32 position) -> void {
   gtk_range_set_value(GTK_RANGE(gtkWidget), position);
 }
 

@@ -88,7 +88,7 @@ auto pTableViewColumn::setVisible(bool visible) -> void {
   _setState();
 }
 
-auto pTableViewColumn::setWidth(signed width) -> void {
+auto pTableViewColumn::setWidth(s32 width) -> void {
   _setState();
 }
 

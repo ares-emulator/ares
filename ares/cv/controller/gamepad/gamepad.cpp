@@ -21,7 +21,7 @@ Gamepad::Gamepad(Node::Port parent) {
   pound = node->append<Node::Input::Button>("#");
 }
 
-auto Gamepad::read() -> uint8 {
+auto Gamepad::read() -> n8 {
   platform->input(up);
   platform->input(down);
   platform->input(left);
@@ -53,7 +53,7 @@ auto Gamepad::read() -> uint8 {
     xHold = 1, swap(leftLatch, rightLatch);
   }
 
-  uint8 data = 0xff;
+  n8 data = 0xff;
   if(select == 0) {
          if(one->value  ()) data.bit(0,3) = 0b1101;
     else if(two->value  ()) data.bit(0,3) = 0b0111;
@@ -78,6 +78,6 @@ auto Gamepad::read() -> uint8 {
   return data;
 }
 
-auto Gamepad::write(uint8 data) -> void {
+auto Gamepad::write(n8 data) -> void {
   select = data.bit(0);
 }

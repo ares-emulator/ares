@@ -1,11 +1,11 @@
-auto uPD96050::readSR() -> uint8 {
+auto uPD96050::readSR() -> n8 {
   return regs.sr >> 8;
 }
 
-auto uPD96050::writeSR(uint8 data) -> void {
+auto uPD96050::writeSR(n8 data) -> void {
 }
 
-auto uPD96050::readDR() -> uint8 {
+auto uPD96050::readDR() -> n8 {
   if(regs.sr.drc == 0) {
     //16-bit
     if(regs.sr.drs == 0) {
@@ -23,7 +23,7 @@ auto uPD96050::readDR() -> uint8 {
   }
 }
 
-auto uPD96050::writeDR(uint8 data) -> void {
+auto uPD96050::writeDR(n8 data) -> void {
   if(regs.sr.drc == 0) {
     //16-bit
     if(regs.sr.drs == 0) {
@@ -41,24 +41,24 @@ auto uPD96050::writeDR(uint8 data) -> void {
   }
 }
 
-auto uPD96050::readDP(uint12 addr) -> uint8 {
-  bool hi = addr & 1;
-  addr = (addr >> 1) & 2047;
+auto uPD96050::readDP(n12 address) -> n8 {
+  bool hi = address & 1;
+  address = (address >> 1) & 2047;
 
   if(hi == false) {
-    return dataRAM[addr] >> 0;
+    return dataRAM[address] >> 0;
   } else {
-    return dataRAM[addr] >> 8;
+    return dataRAM[address] >> 8;
   }
 }
 
-auto uPD96050::writeDP(uint12 addr, uint8 data) -> void {
-  bool hi = addr & 1;
-  addr = (addr >> 1) & 2047;
+auto uPD96050::writeDP(n12 address, n8 data) -> void {
+  bool hi = address & 1;
+  address = (address >> 1) & 2047;
 
   if(hi == false) {
-    dataRAM[addr] = (dataRAM[addr] & 0xff00) | (data << 0);
+    dataRAM[address] = (dataRAM[address] & 0xff00) | (data << 0);
   } else {
-    dataRAM[addr] = (dataRAM[addr] & 0x00ff) | (data << 8);
+    dataRAM[address] = (dataRAM[address] & 0x00ff) | (data << 8);
   }
 }

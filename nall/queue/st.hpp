@@ -1,23 +1,23 @@
 #pragma once
 
-//simple circular ring buffer
+//simple circular ring buffer (single-threaded)
 
 namespace nall {
 
 template<typename T> struct queue;
 
-template<typename T, uint Size>
+template<typename T, u32 Size>
 struct queue<T[Size]> {
   auto flush() -> void {
     _read  = 0;
     _write = 2 * Size;
   }
 
-  auto size() const -> uint {
+  auto size() const -> u32 {
     return (_write - _read) % (2 * Size);
   }
 
-  auto capacity() const -> uint {
+  auto capacity() const -> u32 {
     return Size;
   }
 
@@ -29,7 +29,7 @@ struct queue<T[Size]> {
     return size() == Size;
   }
 
-  auto peek(uint index) const -> T {
+  auto peek(u32 index) const -> T {
     return _data[(_read + index) % Size];
   }
 
@@ -62,8 +62,8 @@ struct queue<T[Size]> {
 
 private:
   T _data[Size];
-  uint _read  = 0;
-  uint _write = 2 * Size;
+  u32 _read  = 0;
+  u32 _write = 2 * Size;
 };
 
 template<typename T>
@@ -81,7 +81,7 @@ struct queue {
     _size = source._size;
     _read = source._read;
     _write = source._write;
-    for(uint n : range(_capacity)) _data[n] = source._data[n];
+    for(u32 n : range(_capacity)) _data[n] = source._data[n];
     return *this;
   }
 
@@ -97,13 +97,13 @@ struct queue {
     return *this;
   }
 
-  template<typename U = T> auto capacity() const -> uint { return _capacity * sizeof(T) / sizeof(U); }
-  template<typename U = T> auto size() const -> uint { return _size * sizeof(T) / sizeof(U); }
+  template<typename U = T> auto capacity() const -> u32 { return _capacity * sizeof(T) / sizeof(U); }
+  template<typename U = T> auto size() const -> u32 { return _size * sizeof(T) / sizeof(U); }
   auto empty() const -> bool { return _size == 0; }
   auto pending() const -> bool { return _size > 0; }
-  auto full() const -> bool { return _size >= (int)_capacity; }
+  auto full() const -> bool { return _size >= (s32)_capacity; }
   auto underflow() const -> bool { return _size < 0; }
-  auto overflow() const -> bool { return _size > (int)_capacity; }
+  auto overflow() const -> bool { return _size > (s32)_capacity; }
 
   auto data() -> T* { return _data; }
   auto data() const -> const T* { return _data; }
@@ -117,14 +117,14 @@ struct queue {
     _write = 0;
   }
 
-  auto resize(uint capacity, const T& value = {}) -> void {
+  auto resize(u32 capacity, const T& value = {}) -> void {
     delete[] _data;
     _data = new T[capacity];
     _capacity = capacity;
     _size = 0;
     _read = 0;
     _write = 0;
-    for(uint n : range(_capacity)) _data[n] = value;
+    for(u32 n : range(_capacity)) _data[n] = value;
   }
 
   auto flush() -> void {
@@ -137,10 +137,10 @@ struct queue {
     _size = 0;
     _read = 0;
     _write = 0;
-    for(uint n : range(_capacity)) _data[n] = value;
+    for(u32 n : range(_capacity)) _data[n] = value;
   }
 
-  auto peek(uint index) const -> T {
+  auto peek(u32 index) const -> T {
     return _data[(_read + index) % _capacity];
   }
 
@@ -165,10 +165,10 @@ struct queue {
 
 private:
   T* _data = nullptr;
-  uint _capacity = 0;
-  int _size = 0;
-  uint _read = 0;
-  uint _write = 0;
+  u32 _capacity = 0;
+  s32 _size = 0;
+  u32 _read = 0;
+  u32 _write = 0;
 };
 
 }

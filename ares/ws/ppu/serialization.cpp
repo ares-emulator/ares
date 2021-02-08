@@ -3,7 +3,7 @@ auto PPU::serialize(serializer& s) -> void {
 
   s(this->s.field);
   s(this->s.vtime);
-  s((uint&)this->s.pixel.source);
+  s((u32&)this->s.pixel.source);
   s(this->s.pixel.color);
 
   s(l.backColor);
@@ -31,7 +31,7 @@ auto PPU::serialize(serializer& s) -> void {
   s(l.sprite);
   s(l.spriteCount);
 
-  for(uint n : range(2)) s(l.oam[n]);
+  for(u32 n : range(2)) s(l.oam[n]);
   s(l.oamCount);
 
   s(l.orientation);
@@ -73,7 +73,7 @@ auto PPU::serialize(serializer& s) -> void {
   s(r.vtotal);
   s(r.vsync);
   s(r.pool);
-  for(uint n : range(16)) s(r.palette[n].color);
+  for(u32 n : range(16)) s(r.palette[n].color);
   s(r.htimerEnable);
   s(r.htimerRepeat);
   s(r.vtimerEnable);

@@ -1,4 +1,4 @@
-const uint SharpRTC::daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+const u32 SharpRTC::daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 auto SharpRTC::tickSecond() -> void {
   if(++second < 60) return;
@@ -19,7 +19,7 @@ auto SharpRTC::tickHour() -> void {
 }
 
 auto SharpRTC::tickDay() -> void {
-  uint days = daysInMonth[(month - 1) % 12];
+  u32 days = daysInMonth[(month - 1) % 12];
 
   //add one day in February for leap years
   if(month == 2) {
@@ -41,15 +41,15 @@ auto SharpRTC::tickMonth() -> void {
 
 auto SharpRTC::tickYear() -> void {
   year++;
-  year = (uint12)year;
+  year = (n12)year;
 }
 
 //returns day of week for specified date
 //eg 0 = Sunday, 1 = Monday, ... 6 = Saturday
 //usage: calculate_weekday(2008, 1, 1) returns weekday of January 1st, 2008
-auto SharpRTC::calculateWeekday(uint year, uint month, uint day) -> uint {
-  uint y = 1000, m = 1;  //SharpRTC epoch is 1000-01-01
-  uint sum = 0;          //number of days passed since epoch
+auto SharpRTC::calculateWeekday(u32 year, u32 month, u32 day) -> u32 {
+  u32 y = 1000, m = 1;  //SharpRTC epoch is 1000-01-01
+  u32 sum = 0;          //number of days passed since epoch
 
   year = max(1000, year);
   month = max(1, min(12, month));
@@ -66,7 +66,7 @@ auto SharpRTC::calculateWeekday(uint year, uint month, uint day) -> uint {
   }
 
   while(m < month) {
-    uint days = daysInMonth[(m - 1) % 12];
+    u32 days = daysInMonth[(m - 1) % 12];
     bool leapyearmonth = false;
     if(days == 28) {
       if(y % 4 == 0) {

@@ -286,13 +286,13 @@ struct KonamiVRC5 : Interface {
     }
   }
 
-  auto power() -> void {
+  auto power() -> void override {
     programBank3 = 0x3f;
     programChip3 = 1;
     graphicBank1 = 1;
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programRAM);
     s(characterRAM);
     s(qtram);
@@ -324,38 +324,38 @@ struct KonamiVRC5 : Interface {
     s(chrLatchCount);
   }
 
-  n01 saveBank0;
-  n01 saveBank1;
+  n1  saveBank0;
+  n1  saveBank1;
 
-  n01 saveChip0;  //0 = external, 1 = internal
-  n01 saveChip1;
+  n1  saveChip0;  //0 = external, 1 = internal
+  n1  saveChip1;
 
-  n06 programBank0;
-  n06 programBank1;
-  n06 programBank2;
-  n06 programBank3;  //fixed
+  n6  programBank0;
+  n6  programBank1;
+  n6  programBank2;
+  n6  programBank3;  //fixed
 
-  n01 programChip0;  //0 = internal, 1 = external
-  n01 programChip1;
-  n01 programChip2;
-  n01 programChip3;  //fixed
+  n1  programChip0;  //0 = internal, 1 = external
+  n1  programChip1;
+  n1  programChip2;
+  n1  programChip3;  //fixed
 
-  n01 graphicBank0;
-  n01 graphicBank1;  //fixed
+  n1  graphicBank0;
+  n1  graphicBank1;  //fixed
 
   n16 irqCounter;
   n16 irqLatch;
-  n01 irqRepeat;
-  n01 irqEnable;
+  n1  irqRepeat;
+  n1  irqEnable;
 
-  n01 qtramEnable;  //0 = CIRAM, 1 = QTRAM
-  n01 mirror;       //0 = vertical, 1 = horizontal
+  n1  qtramEnable;  //0 = CIRAM, 1 = QTRAM
+  n1  mirror;       //0 = vertical, 1 = horizontal
 
-  n02 jisPosition;   //0 = top-left, 1 = top-right, 2 = bottom-left, 3 = bottom-right
-  n01 jisAttribute;  //0 = normal, 1 = alternate
-  n07 jisColumn;
-  n07 jisRow;
+  n2  jisPosition;   //0 = top-left, 1 = top-right, 2 = bottom-left, 3 = bottom-right
+  n1  jisAttribute;  //0 = normal, 1 = alternate
+  n7  jisColumn;
+  n7  jisRow;
 
-  n08 chrLatchData;
-  n08 chrLatchCount;
+  n8  chrLatchData;
+  n8  chrLatchCount;
 };

@@ -39,7 +39,7 @@ auto APU::main() -> void {
   instruction();
 }
 
-auto APU::step(uint clocks) -> void {
+auto APU::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu, vdp, psg, ym2612);
 }

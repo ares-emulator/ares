@@ -27,8 +27,8 @@ auto MemoryCard::acknowledge() -> bool {
 }
 
 auto MemoryCard::bus(u8 data) -> u8 {
-  uint8 input  = data;
-  uint8 output = 0xff;
+  n8 input  = data;
+  n8 output = 0xff;
 
   if(state == State::Idle) {
     command = Command::None;
@@ -69,15 +69,15 @@ auto MemoryCard::bus(u8 data) -> u8 {
 }
 
 auto MemoryCard::identify(u8 data) -> u8 {
-  uint8 input  = data;
-  uint8 output = 0xff;
+  n8 input  = data;
+  n8 output = 0xff;
   command = Command::None;
   return output;
 }
 
 auto MemoryCard::read(u8 data) -> u8 {
-  uint8 input  = data;
-  uint8 output = 0xff;
+  n8 input  = data;
+  n8 output = 0xff;
 
   switch(phase++) {
   case   2: return 0x5a;  //ID lower
@@ -100,8 +100,8 @@ auto MemoryCard::read(u8 data) -> u8 {
 }
 
 auto MemoryCard::write(u8 data) -> u8 {
-  uint8 input  = data;
-  uint8 output = 0xff;
+  n8 input  = data;
+  n8 output = 0xff;
 
   switch(phase++) {
   case   2: return 0x5a;  //ID lower

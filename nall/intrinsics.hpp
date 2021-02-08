@@ -1,15 +1,15 @@
 #pragma once
 
 namespace nall {
-  using uint = unsigned;
+  using u32 = unsigned int;
 
-  enum class Compiler : uint { Clang, GCC, Microsoft, Unknown };
-  enum class Platform : uint { Windows, MacOS, Linux, BSD, Android, Unknown };
-  enum class API : uint { Windows, Posix, Unknown };
-  enum class DisplayServer : uint { Windows, Quartz, Xorg, Unknown };
-  enum class Architecture : uint { x86, amd64, ARM32, ARM64, PPC32, PPC64, Unknown };
-  enum class Endian : uint { LSB, MSB, Unknown };
-  enum class Build : uint { Debug, Stable, Minified, Release, Optimized };
+  enum class Compiler : u32 { Clang, GCC, Microsoft, Unknown };
+  enum class Platform : u32 { Windows, MacOS, Linux, BSD, Android, Unknown };
+  enum class API : u32 { Windows, Posix, Unknown };
+  enum class DisplayServer : u32 { Windows, Quartz, Xorg, Unknown };
+  enum class Architecture : u32 { x86, amd64, ARM32, ARM64, PPC32, PPC64, Unknown };
+  enum class Endian : u32 { LSB, MSB, Unknown };
+  enum class Build : u32 { Debug, Stable, Minified, Release, Optimized };
 
   static inline constexpr auto compiler() -> Compiler;
   static inline constexpr auto platform() -> Platform;
@@ -27,7 +27,6 @@ namespace nall {
 #if defined(__clang__)
   #define COMPILER_CLANG
   constexpr auto compiler() -> Compiler { return Compiler::Clang; }
-
   #pragma clang diagnostic warning "-Wreturn-type"
   #pragma clang diagnostic ignored "-Wunused-result"
   #pragma clang diagnostic ignored "-Wunknown-pragmas"
@@ -39,24 +38,20 @@ namespace nall {
   #pragma clang diagnostic ignored "-Wabsolute-value"
   #pragma clang diagnostic ignored "-Wshift-count-overflow"
   #pragma clang diagnostic ignored "-Wtrigraphs"
-
-  //temporary
-  #pragma clang diagnostic ignored "-Winconsistent-missing-override"
-//#pragma clang diagnostic error   "-Wdeprecated-declarations"
+  #pragma clang diagnostic ignored "-Wnarrowing"
 #elif defined(__GNUC__)
   #define COMPILER_GCC
   constexpr auto compiler() -> Compiler { return Compiler::GCC; }
-
   #pragma GCC diagnostic warning "-Wreturn-type"
   #pragma GCC diagnostic ignored "-Wunused-result"
   #pragma GCC diagnostic ignored "-Wunknown-pragmas"
   #pragma GCC diagnostic ignored "-Wpragmas"
   #pragma GCC diagnostic ignored "-Wswitch-bool"
   #pragma GCC diagnostic ignored "-Wtrigraphs"
+  #pragma GCC diagnostic ignored "-Wnarrowing"
 #elif defined(_MSC_VER)
   #define COMPILER_MICROSOFT
   constexpr auto compiler() -> Compiler { return Compiler::Microsoft; }
-
   #pragma warning(disable:4996)  //libc "deprecation" warnings
 #else
   #warning "unable to detect compiler"

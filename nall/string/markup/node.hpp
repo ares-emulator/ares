@@ -59,29 +59,29 @@ struct Node {
 
   auto value(nall::string& target) const -> bool { if(shared) target = string(); return (bool)shared; }
   auto value(bool& target) const -> bool { if(shared) target = boolean(); return (bool)shared; }
-  auto value(int& target) const -> bool { if(shared) target = integer(); return (bool)shared; }
-  auto value(uint& target) const -> bool { if(shared) target = natural(); return (bool)shared; }
-  auto value(double& target) const -> bool { if(shared) target = real(); return (bool)shared; }
+  auto value(s32& target) const -> bool { if(shared) target = integer(); return (bool)shared; }
+  auto value(u32& target) const -> bool { if(shared) target = natural(); return (bool)shared; }
+  auto value(f64& target) const -> bool { if(shared) target = real(); return (bool)shared; }
 
   auto text() const -> nall::string { return value().strip(); }
   auto string() const -> nall::string { return value().strip(); }
   auto boolean() const -> bool { return text() == "true"; }
-  auto integer() const -> int64_t { return text().integer(); }
-  auto natural() const -> uint64_t { return text().natural(); }
-  auto real() const -> double { return text().real(); }
+  auto integer() const -> s64 { return text().integer(); }
+  auto natural() const -> u64 { return text().natural(); }
+  auto real() const -> f64 { return text().real(); }
 
   auto text(const nall::string& fallback) const -> nall::string { return bool(*this) ? text() : fallback; }
   auto string(const nall::string& fallback) const -> nall::string { return bool(*this) ? string() : fallback; }
   auto boolean(bool fallback) const -> bool { return bool(*this) ? boolean() : fallback; }
-  auto integer(int64_t fallback) const -> int64_t { return bool(*this) ? integer() : fallback; }
-  auto natural(uint64_t fallback) const -> uint64_t { return bool(*this) ? natural() : fallback; }
-  auto real(double fallback) const -> double { return bool(*this) ? real() : fallback; }
+  auto integer(s64 fallback) const -> s64 { return bool(*this) ? integer() : fallback; }
+  auto natural(u64 fallback) const -> u64 { return bool(*this) ? natural() : fallback; }
+  auto real(f64 fallback) const -> f64 { return bool(*this) ? real() : fallback; }
 
   auto setName(const nall::string& name = "") -> Node& { shared->_name = name; return *this; }
   auto setValue(const nall::string& value = "") -> Node& { shared->_value = value; return *this; }
 
   auto reset() -> void { shared->_children.reset(); }
-  auto size() const -> uint { return shared->_children.size(); }
+  auto size() const -> u32 { return shared->_children.size(); }
 
   auto prepend(const Node& node) -> void { shared->_children.prepend(node.shared); }
   auto append(const Node& node) -> void { shared->_children.append(node.shared); }
@@ -94,17 +94,17 @@ struct Node {
     return false;
   }
 
-  auto insert(uint position, const Node& node) -> bool {
+  auto insert(u32 position, const Node& node) -> bool {
     if(position > size()) return false;  //used > instead of >= to allow indexed-equivalent of append()
     return shared->_children.insert(position, node.shared), true;
   }
 
-  auto remove(uint position) -> bool {
+  auto remove(u32 position) -> bool {
     if(position >= size()) return false;
     return shared->_children.remove(position), true;
   }
 
-  auto swap(uint x, uint y) -> bool {
+  auto swap(u32 x, u32 y) -> bool {
     if(x >= size() || y >= size()) return false;
     return std::swap(shared->_children[x], shared->_children[y]), true;
   }
@@ -117,7 +117,7 @@ struct Node {
     });
   }
 
-  auto operator[](int position) -> Node {
+  auto operator[](s32 position) -> Node {
     if(position >= size()) return {};
     return shared->_children[position];
   }
@@ -130,11 +130,11 @@ struct Node {
     auto operator*() -> Node { return {source.shared->_children[position]}; }
     auto operator!=(const iterator& source) const -> bool { return position != source.position; }
     auto operator++() -> iterator& { return position++, *this; }
-    iterator(const Node& source, uint position) : source(source), position(position) {}
+    iterator(const Node& source, u32 position) : source(source), position(position) {}
 
   private:
     const Node& source;
-    uint position;
+    u32 position;
   };
 
   auto begin() const -> iterator { return iterator(*this, 0); }

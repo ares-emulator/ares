@@ -17,11 +17,11 @@ struct Cartridge {
   auto save() -> void;
   auto power() -> void;
 
-  auto read(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16;
-  auto write(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void;
+  auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16;
+  auto write(n1 upper, n1 lower, n22 address, n16 data) -> void;
 
-  auto readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16;
-  auto writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void;
+  auto readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16;
+  auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

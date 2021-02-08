@@ -319,7 +319,7 @@
 #ifdef DECODER_LWC2
 {
   #define E     (OP >> 7 & 15)
-  #define IMMi7 int7(OP)
+  #define IMMi7 i7(OP)
   switch(OP >> 11 & 0x1f) {
   op(0x00, LBV, VT, E, RS, IMMi7);
   op(0x01, LSV, VT, E, RS, IMMi7);
@@ -343,7 +343,7 @@
 #ifdef DECODER_SWC2
 {
   #define E     (OP >> 7 & 15)
-  #define IMMi7 int7(OP)
+  #define IMMi7 i7(OP)
   switch(OP >> 11 & 0x1f) {
   op(0x00, SBV, VT, E, RS, IMMi7);
   op(0x01, SSV, VT, E, RS, IMMi7);

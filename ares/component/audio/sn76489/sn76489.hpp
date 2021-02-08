@@ -6,8 +6,8 @@ namespace ares {
 
 struct SN76489 {
   //sn76489.cpp
-  auto clock() -> array<uint4[4]>;
-  auto write(uint8 data) -> void;
+  auto clock() -> array<n4[4]>;
+  auto write(n8 data) -> void;
   auto power() -> void;
 
   //serialization.cpp
@@ -21,10 +21,10 @@ protected:
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint4  volume = 15;
-    uint10 counter;
-    uint10 pitch;
-    uint1  output;
+    n4  volume = 15;
+    n10 counter;
+    n10 pitch;
+    n1  output;
   };
 
   struct Noise {
@@ -34,18 +34,18 @@ protected:
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint4  volume = 15;
-    uint10 counter;
-    uint10 pitch;
-    uint1  enable;
-    uint2  rate;
-    uint16 lfsr = 0x8000;
-    uint1  flip;
-    uint1  output;
+    n4  volume = 15;
+    n10 counter;
+    n10 pitch;
+    n1  enable;
+    n2  rate;
+    n16 lfsr = 0x8000;
+    n1  flip;
+    n1  output;
   };
 
   struct IO {
-    uint3 register;
+    n3 register;
   };
 
   Tone tone0;

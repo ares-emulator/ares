@@ -24,7 +24,7 @@ auto GPU::load(Node::Object parent) -> void {
 
   screen = node->append<Node::Video::Screen>("Screen", 640, 480);
   screen->setRefresh({&GPU::Blitter::refresh, &blitter});
-  screen->colors((1 << 24) + (1 << 15), [&](uint32 color) -> uint64 {
+  screen->colors((1 << 24) + (1 << 15), [&](n32 color) -> n64 {
     if(color < (1 << 24)) {
       u64 a = 65535;
       u64 r = image::normalize(color >>  0 & 255, 8, 16);
@@ -48,7 +48,7 @@ auto GPU::load(Node::Object parent) -> void {
   overscan->setDynamic(true);
 
   vram.allocate(1_MiB);
-  for(uint y : range(512)) {
+  for(u32 y : range(512)) {
     vram2D[y] = (u16*)&vram.data[y * 2048];
   }
 
@@ -132,7 +132,7 @@ auto GPU::frame() -> void {
   }
 }
 
-auto GPU::step(uint clocks) -> void {
+auto GPU::step(u32 clocks) -> void {
   Thread::clock += clocks;
   io.hcounter += clocks;
   io.pcounter -= clocks;

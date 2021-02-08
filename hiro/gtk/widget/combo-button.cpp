@@ -31,7 +31,7 @@ auto pComboButton::append(sComboButtonItem item) -> void {
 
 auto pComboButton::minimumSize() const -> Size {
   auto font = self().font(true);
-  int maximumWidth = 0;
+  s32 maximumWidth = 0;
   for(auto& item : state().items) {
     maximumWidth = max(maximumWidth,
       (item->state.icon ? pFont::size(font, " ").height() + 2 : 0)
@@ -78,7 +78,7 @@ auto pComboButton::_append(sComboButtonItem item) -> void {
 
 auto pComboButton::_updateSelected() -> void {
   for(auto& item : state().items) item->state.selected = false;
-  int selected = gtk_combo_box_get_active(gtkComboBox);
+  s32 selected = gtk_combo_box_get_active(gtkComboBox);
   if(selected >= 0) {
     if(auto item = self().item(selected)) {
       item->state.selected = true;

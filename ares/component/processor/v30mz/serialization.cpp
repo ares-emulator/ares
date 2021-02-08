@@ -5,17 +5,17 @@ auto V30MZ::serialize(serializer& s) -> void {
 
   s(opcode);
   if(s.reading()) {
-    uint8 _prefixes[7] = {};
-    uint8 _prefixCount = 0;
+    n8 _prefixes[7] = {};
+    n8 _prefixCount = 0;
     s(_prefixCount);
     s(_prefixes);
     prefixes.resize(_prefixCount);
-    for(uint n : range(_prefixCount)) prefixes[n] = _prefixes[n];
+    for(u32 n : range(_prefixCount)) prefixes[n] = _prefixes[n];
   }
   if(s.writing()) {
-    uint8 _prefixes[7] = {};
-    uint8 _prefixCount = prefixes.size();
-    for(uint n : range(_prefixCount)) _prefixes[n] = prefixes[n];
+    n8 _prefixes[7] = {};
+    n8 _prefixCount = prefixes.size();
+    for(u32 n : range(_prefixCount)) _prefixes[n] = prefixes[n];
     s(_prefixCount);
     s(_prefixes);
   }

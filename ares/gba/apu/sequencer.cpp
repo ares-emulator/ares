@@ -48,7 +48,7 @@ auto APU::Sequencer::sample() -> void {
   routput >>= 3 - volume;
 }
 
-auto APU::Sequencer::read(uint addr) const -> uint8 {
+auto APU::Sequencer::read(u32 addr) const -> n8 {
   switch(addr) {
   case 0: return (rvolume << 0) | (lvolume << 4);
   case 1: return (
@@ -72,7 +72,7 @@ auto APU::Sequencer::read(uint addr) const -> uint8 {
   return 0;
 }
 
-auto APU::Sequencer::write(uint addr, uint8 byte) -> void {
+auto APU::Sequencer::write(u32 addr, n8 byte) -> void {
   switch(addr) {
   case 0:  //NR50
     rvolume = byte >> 0;

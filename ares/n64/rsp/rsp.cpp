@@ -32,7 +32,7 @@ auto RSP::main() -> void {
   instruction();
 }
 
-auto RSP::step(uint clocks) -> void {
+auto RSP::step(u32 clocks) -> void {
   clock += clocks;
 }
 
@@ -70,7 +70,7 @@ auto RSP::instructionDebug() -> void {
   pipeline.address = ipu.pc;
   pipeline.instruction = imem.readWord(pipeline.address);
 
-  static uint counter = 0;
+  static u32 counter = 0;
 //if(++counter > 100) return;
   print(
     disassembler.hint(hex(pipeline.address, 3L)), "  ",

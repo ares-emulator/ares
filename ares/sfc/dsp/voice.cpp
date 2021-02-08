@@ -1,6 +1,6 @@
-inline auto DSP::voiceOutput(Voice& v, uint1 channel) -> void {
+inline auto DSP::voiceOutput(Voice& v, n1 channel) -> void {
   //apply left/right volume
-  int amp = latch.output * v.volume[channel] >> 7;
+  s32 amp = latch.output * v.volume[channel] >> 7;
 
   //add to output total
   master.output[channel] += amp;
@@ -20,7 +20,7 @@ auto DSP::voice1(Voice& v) -> void {
 
 auto DSP::voice2(Voice& v) -> void {
   //read sample pointer (ignored if not needed)
-  uint16 address = brr._address;
+  n16 address = brr._address;
   if(!v.keyonDelay) address += 2;
   brr._nextAddress.byte(0) = apuram[address++];
   brr._nextAddress.byte(1) = apuram[address++];
@@ -41,8 +41,8 @@ auto DSP::voice3a(Voice& v) -> void {
 }
 
 auto DSP::voice3b(Voice& v) -> void {
-  brr._byte   = apuram[uint16(v.brrAddress + v.brrOffset)];
-  brr._header = apuram[uint16(v.brrAddress)];
+  brr._byte   = apuram[n16(v.brrAddress + v.brrOffset)];
+  brr._header = apuram[n16(v.brrAddress)];
 }
 
 auto DSP::voice3c(Voice& v) -> void {
@@ -75,11 +75,11 @@ auto DSP::voice3c(Voice& v) -> void {
   }
 
   //gaussian interpolation
-  int output = gaussianInterpolate(v);
+  s32 output = gaussianInterpolate(v);
 
   //noise
   if(v._noise) {
-    output = (int16)(noise.lfsr << 1);
+    output = (i16)(noise.lfsr << 1);
   }
 
   //apply envelope
@@ -117,7 +117,7 @@ auto DSP::voice4(Voice& v) -> void {
     v.brrOffset += 2;
     if(v.brrOffset >= 9) {
       //start decoding next BRR block
-      v.brrAddress = uint16(v.brrAddress + 9);
+      v.brrAddress = n16(v.brrAddress + 9);
       if(brr._header.bit(0)) {
         v.brrAddress = brr._nextAddress;
         v._looped = 1;
@@ -152,7 +152,7 @@ auto DSP::voice6(Voice& v) -> void {
 }
 
 auto DSP::voice7(Voice& v) -> void {
-  for(uint n : range(8)) registers[0x7c].bit(n) = voice[n]._end;
+  for(u32 n : range(8)) registers[0x7c].bit(n) = voice[n]._end;
   latch.envx = v.envx;
 }
 

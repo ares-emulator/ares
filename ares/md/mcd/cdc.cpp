@@ -14,7 +14,7 @@ auto MCD::CDC::clock() -> void {
   stopwatch++;
 }
 
-auto MCD::CDC::decode(int sector) -> void {
+auto MCD::CDC::decode(s32 sector) -> void {
   if(!decoder.enable || !mcd.fd) return;
 
   auto [minute, second, frame] = CD::MSF(sector);
@@ -33,19 +33,19 @@ auto MCD::CDC::decode(int sector) -> void {
 
     //the sync header is written at the tail instead of head.
     mcd.fd->seek((abs(mcd.cdd.session.leadIn.lba) + sector) * 2448);
-    for(uint index = 0; index <   12; index += 2) {
-      ram[uint13(transfer.pointer + index + 2340 >> 1)] = mcd.fd->readm(2);
+    for(u32 index = 0; index <   12; index += 2) {
+      ram[n13(transfer.pointer + index + 2340 >> 1)] = mcd.fd->readm(2);
     }
-    for(uint index = 0; index < 2340; index += 2) {
-      ram[uint13(transfer.pointer + index +    0 >> 1)] = mcd.fd->readm(2);
+    for(u32 index = 0; index < 2340; index += 2) {
+      ram[n13(transfer.pointer + index +    0 >> 1)] = mcd.fd->readm(2);
     }
   }
 }
 
-auto MCD::CDC::read() -> uint8 {
+auto MCD::CDC::read() -> n8 {
 //print("CDC ", hex(address), " ", "\n");
 
-  uint8 data;
+  n8 data;
 
   switch(address) {
 
@@ -198,7 +198,7 @@ auto MCD::CDC::read() -> uint8 {
   return data;
 }
 
-auto MCD::CDC::write(uint8 data) -> void {
+auto MCD::CDC::write(n8 data) -> void {
 //print("CDC ", hex(address), "=", hex(data), "\n");
   switch(address) {
 

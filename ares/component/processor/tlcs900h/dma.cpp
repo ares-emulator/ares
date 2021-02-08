@@ -1,11 +1,11 @@
-auto TLCS900H::dma(uint2 channel) -> bool {
+auto TLCS900H::dma(n2 channel) -> bool {
   auto& source = r.dmas[channel].l.l0;
   auto& target = r.dmad[channel].l.l0;
   auto& length = r.dmam[channel].w.w0;  //0 = 65536
   auto& config = r.dmam[channel].w.w1;
 
-  uint32 mode = config.bit(2,4);
-  uint32 size;
+  n32 mode = config.bit(2,4);
+  n32 size;
   switch(config.bit(0,1)) {
   case 0: size = Byte; break;
   case 1: size = Word; break;

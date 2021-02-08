@@ -96,8 +96,8 @@ auto VDP::Sprite::serialize(serializer& s) -> void {
   s(output.color);
   s(output.priority);
 
-  for(uint n : range(80)) s(oam[n]);
-  for(uint n : range(20)) s(objects[n]);
+  for(u32 n : range(80)) s(oam[n]);
+  for(u32 n : range(20)) s(objects[n]);
 }
 
 auto VDP::VRAM::serialize(serializer& s) -> void {

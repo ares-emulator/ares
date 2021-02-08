@@ -22,7 +22,7 @@ struct KonamiVRC3 : Interface {
     Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto main() -> void {
+  auto main() -> void override {
     if(irqEnable) {
       if(irqMode == 0) {  //16-bit
         if(++irqCounter.bit(0,15) == 0) {
@@ -92,10 +92,10 @@ struct KonamiVRC3 : Interface {
     if(characterRAM) return characterRAM.write(address, data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programRAM);
     s(characterRAM);
     s(mirror);
@@ -108,12 +108,12 @@ struct KonamiVRC3 : Interface {
     s(irqLine);
   }
 
-  n01 mirror;
-  n04 programBank;
-  n01 irqMode;
-  n01 irqEnable;
-  n01 irqAcknowledge;
+  n1  mirror;
+  n4  programBank;
+  n1  irqMode;
+  n1  irqEnable;
+  n1  irqAcknowledge;
   n16 irqLatch;
   n16 irqCounter;
-  n01 irqLine;
+  n1  irqLine;
 };

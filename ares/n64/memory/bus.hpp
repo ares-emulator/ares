@@ -48,9 +48,9 @@ inline auto Bus::readWord(u32 address) -> u32 {
   decode(0, readWord, address);
 }
 
-inline auto Bus::readDouble(u32 address) -> u64 {
+inline auto Bus::readDual(u32 address) -> u64 {
   address &= 0x1fff'fff8;
-  decode(0, readDouble, address);
+  decode(0, readDual, address);
 }
 
 #undef unmapped
@@ -74,11 +74,11 @@ inline auto Bus::writeWord(u32 address, u32 data) -> void {
   decode(1, writeWord, address, data);
 }
 
-inline auto Bus::writeDouble(u32 address, u64 data) -> void {
+inline auto Bus::writeDual(u32 address, u64 data) -> void {
   address &= 0x1fff'fff8;
   cpu.recompiler.invalidate(address + 0);
   cpu.recompiler.invalidate(address + 4);
-  decode(2, writeDouble, address, data);
+  decode(2, writeDual, address, data);
 }
 
 #undef unmapped

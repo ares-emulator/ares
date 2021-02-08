@@ -2,7 +2,18 @@
 
 namespace ares::PCEngine {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[NEC] PC Engine (NTSC-J)",
+    "[NEC] TurboGrafx 16 (NTSC-U)",
+    "[NEC] PC Engine Duo (NTSC-J)",
+    "[NEC] TurboDuo (NTSC-U)",
+    "[NEC] SuperGrafx (NTSC-J)",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -30,11 +41,34 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(name == "PC Engine"    ) information.model = Model::PCEngine;
-  if(name == "PC Engine Duo") information.model = Model::PCEngineDuo;
-  if(name == "SuperGrafx"   ) information.model = Model::SuperGrafx;
+  if(name.find("PC Engine")) {
+    information.name = "PC Engine";
+    information.model = Model::PCEngine;
+  }
+  if(name.find("TurboGrafx 16")) {
+    information.name = "PC Engine";
+    information.model = Model::PCEngine;
+  }
+  if(name.find("PC Engine Duo")) {
+    information.name = "PC Engine";
+    information.model = Model::PCEngineDuo;
+  }
+  if(name.find("TurboDuo")) {
+    information.name = "PC Engine";
+    information.model = Model::PCEngineDuo;
+  }
+  if(name.find("SuperGrafx")) {
+    information.name = "SuperGrafx";
+    information.model = Model::SuperGrafx;
+  }
+  if(name.find("NTSC-J")) {
+    information.region = Region::NTSCJ;
+  }
+  if(name.find("NTSC-U")) {
+    information.region = Region::NTSCU;
+  }
 
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});
@@ -43,14 +77,6 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
-
-  regionNode = node->append<Node::Setting::String>("Region", "NTSC-U → NTSC-J");
-  regionNode->setAllowedValues({
-    "NTSC-J → NTSC-U",
-    "NTSC-U → NTSC-J",
-    "NTSC-J",
-    "NTSC-U"
-  });
 
   scheduler.reset();
   cpu.load(node);
@@ -82,20 +108,6 @@ auto System::unload() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
-  auto setRegion = [&](string region) {
-    if(region == "NTSC-J") {
-      information.region = Region::NTSCJ;
-    }
-    if(region == "NTSC-U") {
-      information.region = Region::NTSCU;
-    }
-  };
-  auto regionsHave = regionNode->latch().split("→").strip();
-  setRegion(regionsHave.first());
-  for(auto& have : reverse(regionsHave)) {
-    if(have == cartridge.region()) setRegion(have);
-  }
 
   if(PCD::Present()) pcd.power();
   cartridgeSlot.power();

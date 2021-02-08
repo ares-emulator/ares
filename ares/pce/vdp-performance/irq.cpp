@@ -1,5 +1,5 @@
 auto VDC::IRQ::poll() -> void {
-  uint1 pending = 0;
+  n1 pending = 0;
   pending |= collision.pending;
   pending |= overflow.pending;
   pending |= coincidence.pending;

@@ -37,7 +37,7 @@ auto SharpRTC::power() -> void {
   index = -1;
 }
 
-auto SharpRTC::synchronize(uint64 timestamp) -> void {
+auto SharpRTC::synchronize(n64 timestamp) -> void {
   time_t systime = timestamp;
   tm* timeinfo = localtime(&systime);
 
@@ -50,7 +50,7 @@ auto SharpRTC::synchronize(uint64 timestamp) -> void {
   weekday = timeinfo->tm_wday;
 }
 
-auto SharpRTC::read(uint24 address, uint8 data) -> uint8 {
+auto SharpRTC::read(n24 address, n8 data) -> n8 {
   address &= 1;
 
   if(address == 0) {
@@ -70,7 +70,7 @@ auto SharpRTC::read(uint24 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto SharpRTC::write(uint24 address, uint8 data) -> void {
+auto SharpRTC::write(n24 address, n8 data) -> void {
   address &= 1, data &= 15;
 
   if(address == 1) {

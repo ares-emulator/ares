@@ -6,6 +6,7 @@ struct Emulator {
   auto manifest() -> shared_pointer<vfs::file>;
   auto manifest(const string& location) -> shared_pointer<vfs::file>;
   auto manifest(const string& type, const string& location) -> shared_pointer<vfs::file>;
+  auto region() -> string;
   auto load(const string& location, const vector<u8>& image) -> bool;
   auto loadFirmware(const Firmware&) -> shared_pointer<vfs::file>;
   auto save() -> void;
@@ -51,6 +52,7 @@ struct Emulator {
     u32 width = 0;
     u32 height = 0;
     u32 rotation = 0;
+    bool changed = false;  //used to signal Program::main() to resize the presentation window
   } latch;
 };
 

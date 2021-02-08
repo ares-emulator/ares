@@ -20,17 +20,17 @@ auto pVerticalScrollBar::minimumSize() const -> Size {
   return {18_sx, 0};
 }
 
-auto pVerticalScrollBar::setLength(unsigned length) -> void {
+auto pVerticalScrollBar::setLength(u32 length) -> void {
   length += (length == 0);
   SetScrollRange(hwnd, SB_CTL, 0, length - 1, TRUE);
 }
 
-auto pVerticalScrollBar::setPosition(unsigned position) -> void {
+auto pVerticalScrollBar::setPosition(u32 position) -> void {
   SetScrollPos(hwnd, SB_CTL, position, TRUE);
 }
 
 auto pVerticalScrollBar::onChange(WPARAM wparam) -> void {
-  unsigned position = ScrollEvent(hwnd, wparam);
+  u32 position = ScrollEvent(hwnd, wparam);
   if(position == state().position) return;
   state().position = position;
   self().doChange();

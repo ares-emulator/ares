@@ -19,7 +19,7 @@ Gamepad::Gamepad(Node::Port parent) {
   start       = node->append<Node::Input::Button>("Start");
 }
 
-auto Gamepad::read() -> uint32 {
+auto Gamepad::read() -> n32 {
   platform->input(x);
   platform->input(y);
   platform->input(up);
@@ -37,7 +37,7 @@ auto Gamepad::read() -> uint32 {
   platform->input(z);
   platform->input(start);
 
-  uint32 data;
+  n32 data;
   data.byte(0) = -y->value() >> 8;
   data.byte(1) = +x->value() >> 8;
   data.bit(16) = cameraRight->value();

@@ -20,7 +20,7 @@ auto pProgressBar::minimumSize() const -> Size {
   return {0, 23};
 }
 
-auto pProgressBar::setPosition(unsigned position) -> void {
+auto pProgressBar::setPosition(u32 position) -> void {
   SendMessage(hwnd, PBM_SETPOS, (WPARAM)position, 0);
 }
 

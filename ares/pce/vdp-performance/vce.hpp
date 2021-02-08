@@ -10,12 +10,12 @@ struct VCE {
     } memory;
   } debugger;
 
-  auto clock() const -> uint { return io.clock; }
-  auto width() const -> uint { return io.clock == 4 ? 256 : io.clock == 3 ? 344 : 512; }
+  auto clock() const -> u32 { return io.clock; }
+  auto width() const -> u32 { return io.clock == 4 ? 256 : io.clock == 3 ? 344 : 512; }
 
   //vce.cpp
-  auto read(uint3 address) -> uint8;
-  auto write(uint3 address, uint8 data) -> void;
+  auto read(n3 address) -> n8;
+  auto write(n3 address, n8 data) -> void;
   auto power() -> void;
 
   //serialization.cpp
@@ -23,16 +23,16 @@ struct VCE {
 
   struct CRAM {
     //vce.cpp
-    auto read(uint9 address) -> uint9;
-    auto write(uint9 address, uint1 a0, uint8 data) -> void;
+    auto read(n9 address) -> n9;
+    auto write(n9 address, n1 a0, n8 data) -> void;
 
-    uint9 memory[0x200];
-    uint9 address;
+    n9 memory[0x200];
+    n9 address;
   } cram;
 
   struct IO {
-    uint8 clock = 4;
-    uint1 extraLine;
-    uint1 grayscale;
+    n8 clock = 4;
+    n1 extraLine;
+    n1 grayscale;
   } io;
 };

@@ -37,7 +37,7 @@ struct string_view {
   string_view(const string_view& source);
   string_view(string_view&& source);
   string_view(const char* data);
-  string_view(const char* data, uint size);
+  string_view(const char* data, u32 size);
   string_view(const string& source);
   template<typename... P> string_view(P&&... p);
   ~string_view();
@@ -45,10 +45,13 @@ struct string_view {
   auto operator=(const string_view& source) -> type&;
   auto operator=(string_view&& source) -> type&;
 
+  auto operator==(const char* source) const -> bool { return strcmp(data(), source) == 0; }
+  auto operator!=(const char* source) const -> bool { return strcmp(data(), source) != 0; }
+
   explicit operator bool() const;
   operator const char*() const;
   auto data() const -> const char*;
-  auto size() const -> uint;
+  auto size() const -> u32;
 
   auto begin() const { return &_data[0]; }
   auto end() const { return &_data[size()]; }
@@ -56,7 +59,7 @@ struct string_view {
 protected:
   string* _string;
   const char* _data;
-  mutable int _size;
+  mutable s32 _size;
 };
 
 //adaptive (SSO + COW) is by far the best choice, the others exist solely to:
@@ -74,33 +77,34 @@ template<typename T> struct stringify;
 template<typename... P> auto print(P&&...) -> void;
 template<typename... P> auto print(FILE*, P&&...) -> void;
 template<typename T> auto pad(const T& value, long precision = 0, char padchar = ' ') -> string;
-auto hex(uintmax value, long precision = 0, char padchar = '0') -> string;
-auto octal(uintmax value, long precision = 0, char padchar = '0') -> string;
-auto binary(uintmax value, long precision = 0, char padchar = '0') -> string;
+auto hex(u64 value, long precision = 0, char padchar = '0') -> string;
+auto octal(u64 value, long precision = 0, char padchar = '0') -> string;
+auto binary(u64 value, long precision = 0, char padchar = '0') -> string;
 
 //match.hpp
 auto tokenize(const char* s, const char* p) -> bool;
 auto tokenize(vector<string>& list, const char* s, const char* p) -> bool;
 
 //utf8.hpp
-auto characters(string_view self, int offset = 0, int length = -1) -> uint;
+auto characters(string_view self, s32 offset = 0, s32 length = -1) -> u32;
 
 //utility.hpp
-auto slice(string_view self, int offset = 0, int length = -1) -> string;
+auto slice(string_view self, s32 offset = 0, s32 length = -1) -> string;
 template<typename T> auto fromInteger(char* result, T value) -> char*;
 template<typename T> auto fromNatural(char* result, T value) -> char*;
-template<typename T> auto fromReal(char* str, T value) -> uint;
+template<typename T> auto fromHex(char* result, T value) -> char*;
+template<typename T> auto fromReal(char* str, T value) -> u32;
 
 struct string {
   using type = string;
 
 protected:
   #if defined(NALL_STRING_ALLOCATOR_ADAPTIVE)
-  enum : uint { SSO = 24 };
+  enum : u32 { SSO = 24 };
   union {
     struct {  //copy-on-write
       char* _data;
-      uint* _refs;
+      u32* _refs;
     };
     struct {  //small-string-optimization
       char _text[SSO];
@@ -113,13 +117,13 @@ protected:
 
   #if defined(NALL_STRING_ALLOCATOR_COPY_ON_WRITE)
   char* _data;
-  mutable uint* _refs;
+  mutable u32* _refs;
   auto _allocate() -> char*;
   auto _copy() -> char*;
   #endif
 
   #if defined(NALL_STRING_ALLOCATOR_SMALL_STRING_OPTIMIZATION)
-  enum : uint { SSO = 24 };
+  enum : u32 { SSO = 24 };
   union {
     char* _data;
     char _text[SSO];
@@ -130,8 +134,8 @@ protected:
   char* _data;
   #endif
 
-  uint _capacity;
-  uint _size;
+  u32 _capacity;
+  u32 _size;
 
 public:
   string();
@@ -140,11 +144,11 @@ public:
   string(string&& source) : string() { operator=(move(source)); }
   template<typename T = char> auto get() -> T*;
   template<typename T = char> auto data() const -> const T*;
-  template<typename T = char> auto size() const -> uint { return _size / sizeof(T); }
-  template<typename T = char> auto capacity() const -> uint { return _capacity / sizeof(T); }
+  template<typename T = char> auto size() const -> u32 { return _size / sizeof(T); }
+  template<typename T = char> auto capacity() const -> u32 { return _capacity / sizeof(T); }
   auto reset() -> type&;
-  auto reserve(uint) -> type&;
-  auto resize(uint) -> type&;
+  auto reserve(u32) -> type&;
+  auto resize(u32) -> type&;
   auto operator=(const string&) -> type&;
   auto operator=(string&&) -> type&;
 
@@ -157,8 +161,8 @@ public:
   operator const char*() const { return (const char*)data(); }
   operator array_span<char>() { return {(char*)get(), size()}; }
   operator array_view<char>() const { return {(const char*)data(), size()}; }
-  operator array_span<uint8_t>() { return {(uint8_t*)get(), size()}; }
-  operator array_view<uint8_t>() const { return {(const uint8_t*)data(), size()}; }
+  operator array_span<u8>() { return {(u8*)get(), size()}; }
+  operator array_view<u8>() const { return {(const u8*)data(), size()}; }
 
   auto operator==(const string& source) const -> bool {
     return size() == source.size() && memory::compare(data(), source.data(), size()) == 0;
@@ -184,14 +188,14 @@ public:
 
   //atoi.hpp
   auto boolean() const -> bool;
-  auto integer() const -> intmax;
-  auto natural() const -> uintmax;
-  auto hex() const -> uintmax;
-  auto real() const -> double;
+  auto integer() const -> s64;
+  auto natural() const -> u64;
+  auto hex() const -> u64;
+  auto real() const -> f64;
 
   //core.hpp
-  auto operator[](uint) const -> const char&;
-  auto operator()(uint, char = 0) const -> char;
+  auto operator[](u32) const -> const char&;
+  auto operator()(u32, char = 0) const -> char;
   template<typename... P> auto assign(P&&...) -> type&;
   template<typename T, typename... P> auto prepend(const T&, P&&...) -> type&;
   template<typename... P> auto prepend(const nall::string_format&, P&&...) -> type&;
@@ -199,38 +203,38 @@ public:
   template<typename T, typename... P> auto append(const T&, P&&...) -> type&;
   template<typename... P> auto append(const nall::string_format&, P&&...) -> type&;
   template<typename T> auto _append(const stringify<T>&) -> type&;
-  auto length() const -> uint;
+  auto length() const -> u32;
 
   //find.hpp
-  auto contains(string_view characters) const -> maybe<uint>;
+  auto contains(string_view characters) const -> maybe<u32>;
 
-  template<bool, bool> auto _find(int, string_view) const -> maybe<uint>;
+  template<bool, bool> auto _find(s32, string_view) const -> maybe<u32>;
 
-  auto find(string_view source) const -> maybe<uint>;
-  auto ifind(string_view source) const -> maybe<uint>;
-  auto qfind(string_view source) const -> maybe<uint>;
-  auto iqfind(string_view source) const -> maybe<uint>;
+  auto find(string_view source) const -> maybe<u32>;
+  auto ifind(string_view source) const -> maybe<u32>;
+  auto qfind(string_view source) const -> maybe<u32>;
+  auto iqfind(string_view source) const -> maybe<u32>;
 
-  auto findFrom(int offset, string_view source) const -> maybe<uint>;
-  auto ifindFrom(int offset, string_view source) const -> maybe<uint>;
+  auto findFrom(s32 offset, string_view source) const -> maybe<u32>;
+  auto ifindFrom(s32 offset, string_view source) const -> maybe<u32>;
 
-  auto findNext(int offset, string_view source) const -> maybe<uint>;
-  auto ifindNext(int offset, string_view source) const -> maybe<uint>;
+  auto findNext(s32 offset, string_view source) const -> maybe<u32>;
+  auto ifindNext(s32 offset, string_view source) const -> maybe<u32>;
 
-  auto findPrevious(int offset, string_view source) const -> maybe<uint>;
-  auto ifindPrevious(int offset, string_view source) const -> maybe<uint>;
+  auto findPrevious(s32 offset, string_view source) const -> maybe<u32>;
+  auto ifindPrevious(s32 offset, string_view source) const -> maybe<u32>;
 
   //format.hpp
   auto format(const nall::string_format& params) -> type&;
 
   //compare.hpp
-  template<bool> static auto _compare(const char*, uint, const char*, uint) -> int;
+  template<bool> static auto _compare(const char*, u32, const char*, u32) -> s32;
 
-  static auto compare(string_view, string_view) -> int;
-  static auto icompare(string_view, string_view) -> int;
+  static auto compare(string_view, string_view) -> s32;
+  static auto icompare(string_view, string_view) -> s32;
 
-  auto compare(string_view source) const -> int;
-  auto icompare(string_view source) const -> int;
+  auto compare(string_view source) const -> s32;
+  auto icompare(string_view source) const -> s32;
 
   auto equals(string_view source) const -> bool;
   auto iequals(string_view source) const -> bool;
@@ -281,17 +285,17 @@ public:
   auto stripRight() -> type&;
 
   //utf8.hpp
-  auto characters(int offset = 0, int length = -1) const -> uint;
+  auto characters(s32 offset = 0, s32 length = -1) const -> u32;
 
   //utility.hpp
   static auto read(string_view filename) -> string;
-  static auto repeat(string_view pattern, uint times) -> string;
+  static auto repeat(string_view pattern, u32 times) -> string;
   auto fill(char fill = ' ') -> type&;
-  auto hash() const -> uint;
-  auto remove(uint offset, uint length) -> type&;
+  auto hash() const -> u32;
+  auto remove(u32 offset, u32 length) -> type&;
   auto reverse() -> type&;
-  auto size(int length, char fill = ' ') -> type&;
-  auto slice(int offset = 0, int length = -1) const -> string;
+  auto size(s32 length, char fill = ' ') -> type&;
+  auto slice(s32 offset = 0, s32 length = -1) const -> string;
 };
 
 template<> struct vector<string> : vector_base<string> {
@@ -312,8 +316,8 @@ template<> struct vector<string> : vector_base<string> {
   auto append() -> type&;
 
   auto isort() -> type&;
-  auto find(string_view source) const -> maybe<uint>;
-  auto ifind(string_view source) const -> maybe<uint>;
+  auto find(string_view source) const -> maybe<u32>;
+  auto ifind(string_view source) const -> maybe<u32>;
   auto match(string_view pattern) const -> vector<string>;
   auto merge(string_view separator = "") const -> string;
   auto strip() -> type&;

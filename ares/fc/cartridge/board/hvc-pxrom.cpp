@@ -86,10 +86,10 @@ struct HVC_PxROM : Interface {  //MMC2
     if(characterRAM) return characterRAM.write(address, data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programRAM);
     s(characterRAM);
     s(programBank);

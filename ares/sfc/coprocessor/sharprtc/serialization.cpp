@@ -1,7 +1,7 @@
 auto SharpRTC::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s((uint&)state);
+  s((u32&)state);
   s(index);
 
   s(second);

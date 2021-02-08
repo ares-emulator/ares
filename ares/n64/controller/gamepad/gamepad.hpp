@@ -17,5 +17,5 @@ struct Gamepad : Controller {
   Node::Input::Button start;
 
   Gamepad(Node::Port);
-  auto read() -> uint32 override;
+  auto read() -> n32 override;
 };

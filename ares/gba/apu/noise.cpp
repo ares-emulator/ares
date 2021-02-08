@@ -1,4 +1,4 @@
-auto APU::Noise::divider() const -> uint {
+auto APU::Noise::divider() const -> u32 {
   if(divisor == 0) return 4;
   return divisor * 8;
 }
@@ -30,7 +30,7 @@ auto APU::Noise::clockEnvelope() -> void {
   }
 }
 
-auto APU::Noise::read(uint addr) const -> uint8 {
+auto APU::Noise::read(u32 addr) const -> n8 {
   switch(addr) {
   case 1: return 0;
   case 2: return (envelope.frequency << 0) | (envelope.direction << 3) | (envelope.volume << 4);
@@ -40,7 +40,7 @@ auto APU::Noise::read(uint addr) const -> uint8 {
   return 0;
 }
 
-auto APU::Noise::write(uint addr, uint8 byte) -> void {
+auto APU::Noise::write(u32 addr, n8 byte) -> void {
   switch(addr) {
   case 1:  //NR41
     length = byte >> 0;

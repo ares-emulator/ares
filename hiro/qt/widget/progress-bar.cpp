@@ -20,7 +20,7 @@ auto pProgressBar::minimumSize() const -> Size {
   return {0, 25};
 }
 
-auto pProgressBar::setPosition(unsigned position) -> void {
+auto pProgressBar::setPosition(u32 position) -> void {
   _setState();
 }
 

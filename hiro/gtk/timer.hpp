@@ -6,7 +6,7 @@ struct pTimer : pObject {
   Declare(Timer, Object)
 
   auto setEnabled(bool enabled) -> void override;
-  auto setInterval(uint interval) -> void;
+  auto setInterval(u32 interval) -> void;
 };
 
 }

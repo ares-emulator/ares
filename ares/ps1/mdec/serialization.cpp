@@ -15,7 +15,7 @@ auto MDEC::serialize(serializer& s) -> void {
   s(status.inputFull);
   s(status.outputEmpty);
 
-  s((uint&)io.mode);
+  s((u32&)io.mode);
   s(io.offset);
 
   s(block.luma);

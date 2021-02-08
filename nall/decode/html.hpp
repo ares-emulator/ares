@@ -4,7 +4,7 @@ namespace nall::Decode {
 
 inline auto HTML(const string& input) -> string {
   string output;
-  for(uint n = 0; n < input.size();) {
+  for(u32 n = 0; n < input.size();) {
     if(input[n] == '&') {
       if(input(n + 1) == 'a' && input(n + 2) == 'm' && input(n + 3) == 'p' && input(n + 4) == ';') {
         output.append('&');

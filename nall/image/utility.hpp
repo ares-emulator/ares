@@ -5,13 +5,13 @@ namespace nall {
 //scan all four sides of the image for fully transparent pixels, and then crop them
 //imagine an icon centered on a transparent background: this function removes the bordering
 //this certainly won't win any speed awards, but nall::image is meant to be correct and simple, not fast
-inline auto image::shrink(uint64_t transparentColor) -> void {
+inline auto image::shrink(u64 transparentColor) -> void {
   //top
-  { uint padding = 0;
-    for(uint y : range(_height)) {
-      const uint8_t* sp = _data + pitch() * y;
+  { u32 padding = 0;
+    for(u32 y : range(_height)) {
+      const u8* sp = _data + pitch() * y;
       bool found = false;
-      for(uint x : range(_width)) {
+      for(u32 x : range(_width)) {
         if(read(sp) != transparentColor) { found = true; break; }
         sp += stride();
       }
@@ -22,11 +22,11 @@ inline auto image::shrink(uint64_t transparentColor) -> void {
   }
 
   //bottom
-  { uint padding = 0;
-    for(uint y : reverse(range(_height))) {
-      const uint8_t* sp = _data + pitch() * y;
+  { u32 padding = 0;
+    for(u32 y : reverse(range(_height))) {
+      const u8* sp = _data + pitch() * y;
       bool found = false;
-      for(uint x : range(_width)) {
+      for(u32 x : range(_width)) {
         if(read(sp) != transparentColor) { found = true; break; }
         sp += stride();
       }
@@ -37,11 +37,11 @@ inline auto image::shrink(uint64_t transparentColor) -> void {
   }
 
   //left
-  { uint padding = 0;
-    for(uint x : range(_width)) {
-      const uint8_t* sp = _data + stride() * x;
+  { u32 padding = 0;
+    for(u32 x : range(_width)) {
+      const u8* sp = _data + stride() * x;
       bool found = false;
-      for(uint y : range(_height)) {
+      for(u32 y : range(_height)) {
         if(read(sp) != transparentColor) { found = true; break; }
         sp += pitch();
       }
@@ -52,11 +52,11 @@ inline auto image::shrink(uint64_t transparentColor) -> void {
   }
 
   //right
-  { uint padding = 0;
-    for(uint x : reverse(range(_width))) {
-      const uint8_t* sp = _data + stride() * x;
+  { u32 padding = 0;
+    for(u32 x : reverse(range(_width))) {
+      const u8* sp = _data + stride() * x;
       bool found = false;
-      for(uint y : range(_height)) {
+      for(u32 y : range(_height)) {
         if(read(sp) != transparentColor) { found = true; break; }
         sp += pitch();
       }
@@ -67,17 +67,17 @@ inline auto image::shrink(uint64_t transparentColor) -> void {
   }
 }
 
-inline auto image::crop(uint outputX, uint outputY, uint outputWidth, uint outputHeight) -> bool {
+inline auto image::crop(u32 outputX, u32 outputY, u32 outputWidth, u32 outputHeight) -> bool {
   if(outputX + outputWidth > _width) return false;
   if(outputY + outputHeight > _height) return false;
 
-  uint8_t* outputData = allocate(outputWidth, outputHeight, stride());
-  uint outputPitch = outputWidth * stride();
+  u8* outputData = allocate(outputWidth, outputHeight, stride());
+  u32 outputPitch = outputWidth * stride();
 
-  for(uint y = 0; y < outputHeight; y++) {
-    const uint8_t* sp = _data + pitch() * (outputY + y) + stride() * outputX;
-    uint8_t* dp = outputData + outputPitch * y;
-    for(uint x = 0; x < outputWidth; x++) {
+  for(u32 y = 0; y < outputHeight; y++) {
+    const u8* sp = _data + pitch() * (outputY + y) + stride() * outputX;
+    u8* dp = outputData + outputPitch * y;
+    for(u32 x = 0; x < outputWidth; x++) {
       write(dp, read(sp));
       sp += stride();
       dp += stride();
@@ -91,21 +91,21 @@ inline auto image::crop(uint outputX, uint outputY, uint outputWidth, uint outpu
   return true;
 }
 
-inline auto image::alphaBlend(uint64_t alphaColor) -> void {
-  uint64_t alphaR = (alphaColor & _red.mask()  ) >> _red.shift();
-  uint64_t alphaG = (alphaColor & _green.mask()) >> _green.shift();
-  uint64_t alphaB = (alphaColor & _blue.mask() ) >> _blue.shift();
+inline auto image::alphaBlend(u64 alphaColor) -> void {
+  u64 alphaR = (alphaColor & _red.mask()  ) >> _red.shift();
+  u64 alphaG = (alphaColor & _green.mask()) >> _green.shift();
+  u64 alphaB = (alphaColor & _blue.mask() ) >> _blue.shift();
 
-  for(uint y = 0; y < _height; y++) {
-    uint8_t* dp = _data + pitch() * y;
-    for(uint x = 0; x < _width; x++) {
-      uint64_t color = read(dp);
+  for(u32 y = 0; y < _height; y++) {
+    u8* dp = _data + pitch() * y;
+    for(u32 x = 0; x < _width; x++) {
+      u64 color = read(dp);
 
-      uint64_t colorA = (color & _alpha.mask()) >> _alpha.shift();
-      uint64_t colorR = (color & _red.mask()  ) >> _red.shift();
-      uint64_t colorG = (color & _green.mask()) >> _green.shift();
-      uint64_t colorB = (color & _blue.mask() ) >> _blue.shift();
-      double alphaScale = (double)colorA / (double)((1 << _alpha.depth()) - 1);
+      u64 colorA = (color & _alpha.mask()) >> _alpha.shift();
+      u64 colorR = (color & _red.mask()  ) >> _red.shift();
+      u64 colorG = (color & _green.mask()) >> _green.shift();
+      u64 colorB = (color & _blue.mask() ) >> _blue.shift();
+      f64 alphaScale = (f64)colorA / (f64)((1 << _alpha.depth()) - 1);
 
       colorA = (1 << _alpha.depth()) - 1;
       colorR = (colorR * alphaScale) + (alphaR * (1.0 - alphaScale));
@@ -119,17 +119,17 @@ inline auto image::alphaBlend(uint64_t alphaColor) -> void {
 }
 
 inline auto image::alphaMultiply() -> void {
-  uint divisor = (1 << _alpha.depth()) - 1;
+  u32 divisor = (1 << _alpha.depth()) - 1;
 
-  for(uint y = 0; y < _height; y++) {
-    uint8_t* dp = _data + pitch() * y;
-    for(uint x = 0; x < _width; x++) {
-      uint64_t color = read(dp);
+  for(u32 y = 0; y < _height; y++) {
+    u8* dp = _data + pitch() * y;
+    for(u32 x = 0; x < _width; x++) {
+      u64 color = read(dp);
 
-      uint64_t colorA = (color & _alpha.mask()) >> _alpha.shift();
-      uint64_t colorR = (color & _red.mask()  ) >> _red.shift();
-      uint64_t colorG = (color & _green.mask()) >> _green.shift();
-      uint64_t colorB = (color & _blue.mask() ) >> _blue.shift();
+      u64 colorA = (color & _alpha.mask()) >> _alpha.shift();
+      u64 colorR = (color & _red.mask()  ) >> _red.shift();
+      u64 colorG = (color & _green.mask()) >> _green.shift();
+      u64 colorB = (color & _blue.mask() ) >> _blue.shift();
 
       colorR = (colorR * colorA) / divisor;
       colorG = (colorG * colorA) / divisor;
@@ -145,23 +145,23 @@ inline auto image::transform(const image& source) -> void {
   return transform(source._endian, source._depth, source._alpha.mask(), source._red.mask(), source._green.mask(), source._blue.mask());
 }
 
-inline auto image::transform(bool outputEndian, uint outputDepth, uint64_t outputAlphaMask, uint64_t outputRedMask, uint64_t outputGreenMask, uint64_t outputBlueMask) -> void {
+inline auto image::transform(bool outputEndian, u32 outputDepth, u64 outputAlphaMask, u64 outputRedMask, u64 outputGreenMask, u64 outputBlueMask) -> void {
   if(_endian == outputEndian && _depth == outputDepth && _alpha.mask() == outputAlphaMask && _red.mask() == outputRedMask && _green.mask() == outputGreenMask && _blue.mask() == outputBlueMask) return;
 
   image output(outputEndian, outputDepth, outputAlphaMask, outputRedMask, outputGreenMask, outputBlueMask);
   output.allocate(_width, _height);
 
-  for(uint y = 0; y < _height; y++) {
-    const uint8_t* sp = _data + pitch() * y;
-    uint8_t* dp = output._data + output.pitch() * y;
-    for(uint x = 0; x < _width; x++) {
-      uint64_t color = read(sp);
+  for(u32 y = 0; y < _height; y++) {
+    const u8* sp = _data + pitch() * y;
+    u8* dp = output._data + output.pitch() * y;
+    for(u32 x = 0; x < _width; x++) {
+      u64 color = read(sp);
       sp += stride();
 
-      uint64_t a = (color & _alpha.mask()) >> _alpha.shift();
-      uint64_t r = (color & _red.mask()  ) >> _red.shift();
-      uint64_t g = (color & _green.mask()) >> _green.shift();
-      uint64_t b = (color & _blue.mask() ) >> _blue.shift();
+      u64 a = (color & _alpha.mask()) >> _alpha.shift();
+      u64 r = (color & _red.mask()  ) >> _red.shift();
+      u64 g = (color & _green.mask()) >> _green.shift();
+      u64 b = (color & _blue.mask() ) >> _blue.shift();
 
       a = normalize(a, _alpha.depth(), output._alpha.depth());
       r = normalize(r, _red.depth(),   output._red.depth());

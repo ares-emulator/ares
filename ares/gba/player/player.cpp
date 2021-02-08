@@ -12,7 +12,7 @@ auto Player::main() -> void {
   step(1);
 }
 
-auto Player::step(uint clocks) -> void {
+auto Player::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }
@@ -35,7 +35,7 @@ auto Player::power() -> void {
 
 auto Player::frame() -> void {
   //todo: this is not a very performant way of detecting the GBP logo ...
-  uint32 hash = Hash::CRC32({ppu.screen->pixels().data(), 240 * 160 * sizeof(uint32)}).value();
+  u32 hash = Hash::CRC32({ppu.screen->pixels().data(), 240 * 160 * sizeof(u32)}).value();
   status.logoDetected = (hash == 0x7776eb55);
 
   if(status.logoDetected) {
@@ -90,7 +90,7 @@ auto Player::frame() -> void {
   }
 }
 
-auto Player::keyinput() -> maybe<uint16> {
+auto Player::keyinput() -> maybe<n16> {
   if(status.logoDetected) {
     switch(status.logoCounter) {
     case 0: return {0x03ff};
@@ -101,15 +101,15 @@ auto Player::keyinput() -> maybe<uint16> {
   return nothing;
 }
 
-auto Player::read() -> maybe<uint32> {
+auto Player::read() -> maybe<n32> {
   if(status.enable) return status.send;
   return nothing;
 }
 
-auto Player::write(uint2 addr, uint8 byte) -> void {
+auto Player::write(n2 addr, n8 byte) -> void {
   if(!status.enable) return;
 
-  uint shift = addr << 3;
+  u32 shift = addr << 3;
   status.recv &= ~(255 << shift);
   status.recv |= byte << shift;
 

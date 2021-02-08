@@ -18,21 +18,21 @@ auto V30MZ::modRM() -> void {
     case 6: modrm.segment = segment(r.ss); modrm.address = r.bp; break;
     case 7: modrm.segment = segment(r.ds); modrm.address = r.bx; break;
     }
-    if(modrm.mod == 1) modrm.address += (int8)fetch(Byte);
-    if(modrm.mod == 2) modrm.address += (int16)fetch(Word);
+    if(modrm.mod == 1) modrm.address += (i8 )fetch(Byte);
+    if(modrm.mod == 2) modrm.address += (i16)fetch(Word);
   }
 }
 
 //
 
-auto V30MZ::getMem(Size size, uint offset) -> uint16 {
+auto V30MZ::getMem(Size size, u32 offset) -> n16 {
   if(modrm.mod != 3) return read(size, modrm.segment, modrm.address + offset);
   if(size == Byte) return *r.b[modrm.mem];
   if(size == Word) return *r.w[modrm.mem];
   unreachable;
 }
 
-auto V30MZ::setMem(Size size, uint16 data) -> void {
+auto V30MZ::setMem(Size size, n16 data) -> void {
   if(modrm.mod != 3) return write(size, modrm.segment, modrm.address, data);
   if(size == Byte) *r.b[modrm.mem] = data;
   if(size == Word) *r.w[modrm.mem] = data;
@@ -40,23 +40,23 @@ auto V30MZ::setMem(Size size, uint16 data) -> void {
 
 //
 
-auto V30MZ::getReg(Size size) -> uint16 {
+auto V30MZ::getReg(Size size) -> n16 {
   if(size == Byte) return *r.b[modrm.reg];
   if(size == Word) return *r.w[modrm.reg];
   unreachable;
 }
 
-auto V30MZ::setReg(Size size, uint16 data) -> void {
+auto V30MZ::setReg(Size size, n16 data) -> void {
   if(size == Byte) *r.b[modrm.reg] = data;
   if(size == Word) *r.w[modrm.reg] = data;
 }
 
 //
 
-auto V30MZ::getSeg() -> uint16 {
+auto V30MZ::getSeg() -> n16 {
   return *r.s[modrm.reg];
 }
 
-auto V30MZ::setSeg(uint16 data) -> void {
+auto V30MZ::setSeg(n16 data) -> void {
   *r.s[modrm.reg] = data;
 }

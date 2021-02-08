@@ -11,12 +11,12 @@ auto mPopupMenu::destruct() -> void {
 
 //
 
-auto mPopupMenu::action(unsigned position) const -> Action {
+auto mPopupMenu::action(u32 position) const -> Action {
   if(position < actionCount()) return state.actions[position];
   return {};
 }
 
-auto mPopupMenu::actionCount() const -> unsigned {
+auto mPopupMenu::actionCount() const -> u32 {
   return state.actions.size();
 }
 
@@ -34,7 +34,7 @@ auto mPopupMenu::append(sAction action) -> type& {
 }
 
 auto mPopupMenu::remove(sAction action) -> type& {
-  signed offset = action->offset();
+  s32 offset = action->offset();
   signal(remove, action);
   state.actions.remove(offset);
   for(auto n : range(offset, actionCount())) {
@@ -49,7 +49,7 @@ auto mPopupMenu::reset() -> type& {
   return *this;
 }
 
-auto mPopupMenu::setParent(mObject* parent, signed offset) -> type& {
+auto mPopupMenu::setParent(mObject* parent, s32 offset) -> type& {
   for(auto& action : reverse(state.actions)) action->destruct();
   mObject::setParent(parent, offset);
   for(auto& action : state.actions) action->construct();

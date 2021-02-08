@@ -4,17 +4,17 @@
 //0x20: horizontal flip
 //0x10: palette#
 
-auto PPU::readTileDMG(bool select, uint x, uint y, uint16& tiledata) -> void {
-  uint13 tilemapAddress = 0x1800 + (select << 10);
+auto PPU::readTileDMG(bool select, u32 x, u32 y, n16& tiledata) -> void {
+  n13 tilemapAddress = 0x1800 + (select << 10);
   tilemapAddress += (((y >> 3) << 5) + (x >> 3)) & 0x03ff;
 
-  uint8 tile = vram[tilemapAddress];
+  n8 tile = vram[tilemapAddress];
 
-  uint13 tiledataAddress;
+  n13 tiledataAddress;
   if(status.bgTiledataSelect == 0) {
-    tiledataAddress = 0x1000 + ( int8(tile) << 4);
+    tiledataAddress = 0x1000 + (i8(tile) << 4);
   } else {
-    tiledataAddress = 0x0000 + (uint8(tile) << 4);
+    tiledataAddress = 0x0000 + (n8(tile) << 4);
   }
 
   tiledataAddress += (y & 7) << 1;
@@ -26,23 +26,23 @@ auto PPU::readTileDMG(bool select, uint x, uint y, uint16& tiledata) -> void {
 auto PPU::scanlineDMG() -> void {
   px = 0;
 
-  const int Height = (status.obSize == 0 ? 8 : 16);
+  const s32 Height = (status.obSize == 0 ? 8 : 16);
   sprites = 0;
 
   //find first ten sprites on this scanline
-  for(uint n = 0; n < 40 * 4; n += 4) {
+  for(u32 n = 0; n < 40 * 4; n += 4) {
     Sprite& s = sprite[sprites];
     s.y = oam[n + 0] - 16;
     s.x = oam[n + 1] -  8;
     s.tile = oam[n + 2] & ~status.obSize;
     s.attributes = oam[n + 3];
 
-    if(int(status.ly) <  s.y) continue;
-    if(int(status.ly) >= s.y + Height) continue;
-    s.y = int(status.ly) - s.y;
+    if(s32(status.ly) <  s.y) continue;
+    if(s32(status.ly) >= s.y + Height) continue;
+    s.y = s32(status.ly) - s.y;
 
     if(s.attributes.bit(6)) s.y ^= Height - 1;
-    uint13 tiledataAddress = (s.tile << 4) + (s.y << 1);
+    n13 tiledataAddress = (s.tile << 4) + (s.y << 1);
     s.tiledata.byte(0) = vram[tiledataAddress + 0];
     s.tiledata.byte(1) = vram[tiledataAddress + 1];
     if(s.attributes.bit(5)) s.tiledata = hflip(s.tiledata);
@@ -51,8 +51,8 @@ auto PPU::scanlineDMG() -> void {
   }
 
   //sort by X-coordinate
-  for(uint lo = 0; lo < sprites; lo++) {
-    for(uint hi = lo + 1; hi < sprites; hi++) {
+  for(u32 lo = 0; lo < sprites; lo++) {
+    for(u32 hi = lo + 1; hi < sprites; hi++) {
       if(sprite[hi].x < sprite[lo].x) swap(sprite[lo], sprite[hi]);
     }
   }
@@ -62,7 +62,7 @@ auto PPU::runDMG() -> void {
   bg = {};
   ob = {};
 
-  uint2 color = 0;
+  n2 color = 0;
   if(status.bgEnable) runBackgroundDMG();
   if(latch.windowDisplayEnable) runWindowDMG();
   if(status.obEnable) runObjectsDMG();
@@ -83,12 +83,12 @@ auto PPU::runDMG() -> void {
 }
 
 auto PPU::runBackgroundDMG() -> void {
-  uint8 scrollY = status.ly + status.scy;
-  uint8 scrollX = px + status.scx;
-  uint3 tileX = scrollX & 7;
+  n8 scrollY = status.ly + status.scy;
+  n8 scrollX = px + status.scx;
+  n3 tileX = scrollX & 7;
   if(tileX == 0 || px == 0) readTileDMG(status.bgTilemapSelect, scrollX, scrollY, background.tiledata);
 
-  uint2 index;
+  n2 index;
   index.bit(0) = background.tiledata.bit( 7 - tileX);
   index.bit(1) = background.tiledata.bit(15 - tileX);
 
@@ -100,14 +100,14 @@ auto PPU::runWindowDMG() -> void {
   if(status.ly < status.wy) return;
   if(px + 7 == status.wx) latch.wy++;
 
-  uint8 scrollY = latch.wy - 1;
-  uint8 scrollX = px + 7 - latch.wx;
-  uint3 tileX = scrollX & 7;
+  n8 scrollY = latch.wy - 1;
+  n8 scrollX = px + 7 - latch.wx;
+  n3 tileX = scrollX & 7;
 
   if(scrollX >= 160u) return;  //also matches underflow (scrollX < 0)
   if(tileX == 0 || px == 0) readTileDMG(status.windowTilemapSelect, scrollX, scrollY, window.tiledata);
 
-  uint2 index;
+  n2 index;
   index.bit(0) = window.tiledata.bit( 7 - tileX);
   index.bit(1) = window.tiledata.bit(15 - tileX);
 
@@ -117,17 +117,17 @@ auto PPU::runWindowDMG() -> void {
 
 auto PPU::runObjectsDMG() -> void {
   //render backwards, so that first sprite has priority
-  for(int n = sprites - 1; n >= 0; n--) {
+  for(s32 n = sprites - 1; n >= 0; n--) {
     Sprite& s = sprite[n];
 
-    int tileX = px - s.x;
+    s32 tileX = px - s.x;
     if(tileX < 0 || tileX > 7) continue;
 
-    uint2 index;
+    n2 index;
     index.bit(0) = s.tiledata.bit( 7 - tileX);
     index.bit(1) = s.tiledata.bit(15 - tileX);
     if(index == 0) continue;
-    uint3 palette = s.attributes.bit(4) << 2 | index;
+    n3 palette = s.attributes.bit(4) << 2 | index;
 
     ob.color = obp[palette];
     ob.palette = index;

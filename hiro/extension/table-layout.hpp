@@ -21,29 +21,29 @@ struct mTableLayout : mSizable {
 
   auto alignment() const -> Alignment;
   auto append(sSizable sizable, Size size) -> type&;
-  auto cell(uint position) const -> TableLayoutCell;
-  auto cell(uint x, uint y) const -> TableLayoutCell;
+  auto cell(u32 position) const -> TableLayoutCell;
+  auto cell(u32 x, u32 y) const -> TableLayoutCell;
   auto cell(sSizable sizable) const -> TableLayoutCell;
   auto cells() const -> vector<TableLayoutCell>;
-  auto cellCount() const -> uint;
-  auto column(uint position) const -> TableLayoutColumn;
+  auto cellCount() const -> u32;
+  auto column(u32 position) const -> TableLayoutColumn;
   auto columns() const -> vector<TableLayoutColumn>;
-  auto columnCount() const -> uint;
+  auto columnCount() const -> u32;
   auto minimumSize() const -> Size override;
   auto padding() const -> Geometry;
   auto remove(sSizable sizable) -> type&;
   auto remove(sTableLayoutCell cell) -> type&;
   auto reset() -> type& override;
   auto resize() -> type&;
-  auto row(uint position) const -> TableLayoutRow;
+  auto row(u32 position) const -> TableLayoutRow;
   auto rows() const -> vector<TableLayoutRow>;
-  auto rowCount() const -> uint;
+  auto rowCount() const -> u32;
   auto setAlignment(Alignment alignment) -> type&;
   auto setEnabled(bool enabled) -> type& override;
   auto setFont(const Font& font) -> type& override;
   auto setGeometry(Geometry geometry) -> type& override;
   auto setPadding(Geometry padding) -> type&;
-  auto setParent(mObject* parent = nullptr, int offset = -1) -> type& override;
+  auto setParent(mObject* parent = nullptr, s32 offset = -1) -> type& override;
   auto setSize(Size size) -> type&;
   auto setVisible(bool visible) -> type& override;
   auto size() const -> Size;
@@ -67,14 +67,14 @@ struct mTableLayoutColumn : mObject {
 
   auto alignment() const -> Alignment;
   auto setAlignment(Alignment alignment) -> type&;
-  auto setSpacing(float spacing) -> type&;
-  auto spacing() const -> float;
+  auto setSpacing(f32 spacing) -> type&;
+  auto spacing() const -> f32;
   auto synchronize() -> type&;
 
 private:
   struct State {
     Alignment alignment;
-    float spacing = 5_sx;
+    f32 spacing = 5_sx;
   } state;
 
   friend class mTableLayout;
@@ -85,14 +85,14 @@ struct mTableLayoutRow : mObject {
 
   auto alignment() const -> Alignment;
   auto setAlignment(Alignment alignment) -> type&;
-  auto setSpacing(float spacing) -> type&;
-  auto spacing() const -> float;
+  auto setSpacing(f32 spacing) -> type&;
+  auto spacing() const -> f32;
   auto synchronize() -> type&;
 
 private:
   struct State {
     Alignment alignment;
-    float spacing = 5_sy;
+    f32 spacing = 5_sy;
   } state;
 
   friend class mTableLayout;
@@ -105,7 +105,7 @@ struct mTableLayoutCell : mObject {
   auto setAlignment(Alignment alignment) -> type&;
   auto setEnabled(bool enabled) -> type& override;
   auto setFont(const Font& font) -> type& override;
-  auto setParent(mObject* parent = nullptr, int offset = -1) -> type& override;
+  auto setParent(mObject* parent = nullptr, s32 offset = -1) -> type& override;
   auto setSizable(sSizable sizable) -> type&;
   auto setSize(Size size) -> type&;
   auto setVisible(bool visible) -> type& override;

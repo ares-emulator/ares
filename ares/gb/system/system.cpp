@@ -2,7 +2,16 @@
 
 namespace ares::GameBoy {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[Nintendo] Game Boy",
+    "[Nintendo] Game Boy Color",
+    "[Nintendo] Super Game Boy",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -24,8 +33,8 @@ auto System::run() -> void {
   scheduler.enter();
 }
 
-auto System::clocksExecuted() -> uint {
-  uint clocks = information.clocksExecuted;
+auto System::clocksExecuted() -> u32 {
+  u32 clocks = information.clocksExecuted;
   information.clocksExecuted = 0;
   return clocks;
 }
@@ -34,10 +43,21 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(name == "Game Boy" || name == "Game Boy Color") {
-    if(name == "Game Boy") information.model = Model::GameBoy;
-    if(name == "Game Boy Color") information.model = Model::GameBoyColor;
-    node = Node::System::create(name);
+  if(name.find("Game Boy")) {
+    information.name = "Game Boy";
+    information.model = Model::GameBoy;
+  }
+  if(name.find("Game Boy Color")) {
+    information.name = "Game Boy Color";
+    information.model = Model::GameBoyColor;
+  }
+  if(name.find("Super Game Boy")) {
+    information.name = "Super Game Boy";
+    information.model = Model::SuperGameBoy;
+  }
+
+  if(information.name == "Game Boy" || information.name == "Game Boy Color") {
+    node = Node::System::create(information.name);
     node->setGame({&System::game, this});
     node->setRun({&System::run, this});
     node->setPower({&System::power, this});
@@ -48,8 +68,7 @@ auto System::load(Node::System& root, string name) -> bool {
     root = node;
     fastBoot = node->append<Node::Setting::Boolean>("Fast Boot", false);
   }
-  if(name == "Super Game Boy") {
-    information.model = Model::SuperGameBoy;
+  if(information.name == "Super Game Boy") {
     node = root;
   }
 

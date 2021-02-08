@@ -43,8 +43,8 @@ struct pCanvas : pWidget {
   CocoaCanvas* cocoaCanvas = nullptr;
   NSImage* surface = nullptr;
   NSBitmapImageRep* bitmap = nullptr;
-  uint surfaceWidth = 0;
-  uint surfaceHeight = 0;
+  u32 surfaceWidth = 0;
+  u32 surfaceHeight = 0;
 };
 
 }

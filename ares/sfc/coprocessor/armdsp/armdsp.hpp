@@ -6,7 +6,7 @@
 
 struct ARMDSP : ARM7TDMI, Thread {
   Node::Object node;
-  uint Frequency;
+  n32 Frequency;
 
   struct Debugger {
     //debugger.cpp
@@ -24,42 +24,42 @@ struct ARMDSP : ARM7TDMI, Thread {
 
   auto boot() -> void;
   auto main() -> void;
-  auto step(uint clocks) -> void override;
+  auto step(u32 clocks) -> void override;
   auto power() -> void;
   auto reset() -> void;  //soft reset
 
   //memory.cpp
   auto sleep() -> void override;
-  auto get(uint mode, uint32 address) -> uint32 override;
-  auto set(uint mode, uint32 address, uint32 word) -> void override;
+  auto get(u32 mode, n32 address) -> n32 override;
+  auto set(u32 mode, n32 address, n32 word) -> void override;
 
   //io.cpp
-  auto read(uint24 address, uint8 data) -> uint8;
-  auto write(uint24 address, uint8 data) -> void;
+  auto read(n24 address, n8 data) -> n8;
+  auto write(n24 address, n8 data) -> void;
 
   //serialization.cpp
-  auto firmware() const -> vector<uint8>;
+  auto firmware() const -> vector<n8>;
   auto serialize(serializer&) -> void;
 
-  uint8 programROM[128 * 1024];
-  uint8 dataROM[32 * 1024];
-  uint8 programRAM[16 * 1024];
+  n8 programROM[128_KiB];
+  n8 dataROM[32_KiB];
+  n8 programRAM[16_KiB];
 
   struct Bridge {
     struct Buffer {
-      bool ready;
-      uint8 data;
+      n1 ready;
+      n8 data;
     };
     Buffer cputoarm;
     Buffer armtocpu;
-    uint32 timer;
-    uint32 timerlatch;
-    bool reset;
-    bool ready;
-    bool signal;
+    n32 timer;
+    n32 timerlatch;
+    n1  reset;
+    n1  ready;
+    n1  signal;
 
-    auto status() const -> uint8 {
-      uint8 data;
+    auto status() const -> n8 {
+      n8 data;
       data.bit(0) = armtocpu.ready;
       data.bit(2) = signal;
       data.bit(3) = cputoarm.ready;

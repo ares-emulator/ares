@@ -136,11 +136,11 @@ struct Sunsoft4 : Interface {
   }
 
   n32 optionTimer;
-  n08 characterBank[4];
-  n08 nametableBank[2];
-  n04 programBank;
-  n01 optionDisable;
-  n01 ramEnable;
-  n01 nametableEnable;
-  n02 mirror;
+  n8  characterBank[4];
+  n8  nametableBank[2];
+  n4  programBank;
+  n1  optionDisable;
+  n1  ramEnable;
+  n1  nametableEnable;
+  n2  mirror;
 };

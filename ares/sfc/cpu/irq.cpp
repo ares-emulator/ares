@@ -30,7 +30,7 @@ alwaysinline auto CPU::irqPoll() -> void {
   )) status.irqLine = status.irqHold = 1;  //hold /IRQ for four cycles
 }
 
-auto CPU::nmitimenUpdate(uint8 data) -> void {
+auto CPU::nmitimenUpdate(n8 data) -> void {
   io.hirqEnable = data.bit(4);
   io.virqEnable = data.bit(5);
   io.irqEnable = io.hirqEnable || io.virqEnable;

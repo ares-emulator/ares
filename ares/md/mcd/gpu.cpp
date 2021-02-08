@@ -1,6 +1,6 @@
 //Graphics Processing Unit
 
-auto MCD::GPU::step(uint clocks) -> void {
+auto MCD::GPU::step(u32 clocks) -> void {
   if(!active) return;
 
   counter += clocks;
@@ -15,28 +15,28 @@ auto MCD::GPU::step(uint clocks) -> void {
   }
 }
 
-auto MCD::GPU::read(uint19 address) -> uint4 {
-  uint lo = 12 - ((address & 3) << 2), hi = lo + 3;
+auto MCD::GPU::read(n19 address) -> n4 {
+  u32 lo = 12 - ((address & 3) << 2), hi = lo + 3;
   return mcd.wram[address >> 2].bit(lo, hi);
 }
 
-auto MCD::GPU::write(uint19 address, uint4 data) -> void {
-  uint lo = 12 - ((address & 3) << 2), hi = lo + 3;
+auto MCD::GPU::write(n19 address, n4 data) -> void {
+  u32 lo = 12 - ((address & 3) << 2), hi = lo + 3;
   mcd.wram[address >> 2].bit(lo, hi) = data;
 }
 
-auto MCD::GPU::render(uint19 address, uint9 width) -> void {
-   uint8 stampShift = 11 + 4 + stamp.tile.size;
-   uint8 mapShift   = (4 << stamp.map.size) - stamp.tile.size;
+auto MCD::GPU::render(n19 address, n9 width) -> void {
+  n8  stampShift = 11 + 4 + stamp.tile.size;
+  n8  mapShift   = (4 << stamp.map.size) - stamp.tile.size;
 
-   uint2 stampMask  = !stamp.tile.size ? 1 : 3;
-  uint23 mapMask    = !stamp.map.size ? 0x07ffff : 0x7fffff;
+  n2  stampMask  = !stamp.tile.size ? 1 : 3;
+  n23 mapMask    = !stamp.map.size ? 0x07ffff : 0x7fffff;
 
-  uint24 x = mcd.wram[vector.address++] << 8;  //13.3 -> 13.11
-  uint24 y = mcd.wram[vector.address++] << 8;  //13.3 -> 13.11
+  n24 x = mcd.wram[vector.address++] << 8;  //13.3 -> 13.11
+  n24 y = mcd.wram[vector.address++] << 8;  //13.3 -> 13.11
 
-   int16 xstep = mcd.wram[vector.address++];
-   int16 ystep = mcd.wram[vector.address++];
+  i16 xstep = mcd.wram[vector.address++];
+  i16 ystep = mcd.wram[vector.address++];
 
   while(width--) {
     if(stamp.repeat) {
@@ -44,34 +44,34 @@ auto MCD::GPU::render(uint19 address, uint9 width) -> void {
       y &= mapMask;
     }
 
-    uint4 output;
+    n4 output;
     if(bool outside = (x | y) & ~mapMask; !outside) {
       auto xstamp = x >> stampShift;
       auto ystamp = y >> stampShift << mapShift;
 
       auto data  = mcd.wram[stamp.map.address + xstamp + ystamp];
-      auto index = uint10(data >>  0);
-      auto lroll =  uint1(data >> 13);  //0 = 0 degrees; 1 =  90 degrees
-      auto hroll =  uint1(data >> 14);  //0 = 0 degrees; 1 = 180 degrees
-      auto hflip =  uint1(data >> 15);
+      auto index = n10(data >>  0);
+      auto lroll = n1 (data >> 13);  //0 = 0 degrees; 1 =  90 degrees
+      auto hroll = n1 (data >> 14);  //0 = 0 degrees; 1 = 180 degrees
+      auto hflip = n1 (data >> 15);
 
       if(index) {  //stamp index 0 is not rendered
-        auto xpixel = uint6(x >> 11);
-        auto ypixel = uint6(y >> 11);
+        auto xpixel = n6(x >> 11);
+        auto ypixel = n6(y >> 11);
 
         if(hflip) { xpixel = ~xpixel; }
         if(hroll) { xpixel = ~xpixel; ypixel = ~ypixel; }
         if(lroll) { auto tpixel = xpixel; xpixel = ~ypixel; ypixel = tpixel; }
 
-        uint6 pixel = uint3(xpixel) + uint3(ypixel) * 8;
+        n6 pixel = n3(xpixel) + n3(ypixel) * 8;
         xpixel = xpixel >> 3 & stampMask;
         ypixel = ypixel >> 3 & stampMask;
-        uint4 cell = ypixel + xpixel * (1 + stampMask);
+        n4 cell = ypixel + xpixel * (1 + stampMask);
         output = read(index << 8 | cell << 6 | pixel);
       }
     }
 
-    uint4 input = read(address);
+    n4 input = read(address);
     switch(mcd.io.wramPriority) {
     case 0: output = output; break;
     case 1: output = input ? input : output; break;

@@ -5,13 +5,13 @@ namespace ares {
 
 #include "serialization.cpp"
 
-auto SN76489::clock() -> array<uint4[4]> {
+auto SN76489::clock() -> array<n4[4]> {
   tone0.clock();
   tone1.clock();
   tone2.clock();
   noise.clock();
 
-  array<uint4[4]> output{15, 15, 15, 15};
+  array<n4[4]> output{15, 15, 15, 15};
   if(tone0.output) output[0] = tone0.volume;
   if(tone1.output) output[1] = tone1.volume;
   if(tone2.output) output[2] = tone2.volume;
@@ -28,7 +28,7 @@ auto SN76489::Tone::clock() -> void {
 
 auto SN76489::Noise::clock() -> void {
   if(!counter--) {
-    counter = array<uint10[4]>{0x10, 0x20, 0x40, pitch}[rate];
+    counter = array<n10[4]>{0x10, 0x20, 0x40, pitch}[rate];
     if(flip ^= 1) {  //0->1 transition
       output = !lfsr.bit(0);
       lfsr = (lfsr.bit(0) ^ lfsr.bit(3) & enable) << 15 | lfsr >> 1;
@@ -36,7 +36,7 @@ auto SN76489::Noise::clock() -> void {
   }
 }
 
-auto SN76489::write(uint8 data) -> void {
+auto SN76489::write(n8 data) -> void {
   if(data.bit(7)) io.register = data.bit(4,6);
 
   if(io.register.bit(0)) switch(io.register.bit(1,2)) {

@@ -33,7 +33,7 @@ private:
   bool inMedia = false;
   bool inMediaNode = false;
 
-  auto parseDocument(const string& filedata, const string& pathname, uint depth) -> bool;
+  auto parseDocument(const string& filedata, const string& pathname, u32 depth) -> bool;
 };
 
 inline auto CML::parse(const string& filename) -> string {
@@ -49,7 +49,7 @@ inline auto CML::parse(const string& filedata, const string& pathname) -> string
   return state.output;
 }
 
-inline auto CML::parseDocument(const string& filedata, const string& pathname, uint depth) -> bool {
+inline auto CML::parseDocument(const string& filedata, const string& pathname, u32 depth) -> bool {
   if(depth >= 100) return false;  //prevent infinite recursion
 
   auto vendorAppend = [&](const string& name, const string& value) {

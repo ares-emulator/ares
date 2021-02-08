@@ -35,7 +35,7 @@ pToolTip::~pToolTip() {
 auto pToolTip::drawLayered() -> void {
   auto hdcOutput = GetDC(nullptr);
 
-  uint32_t* below = nullptr;
+  u32* below = nullptr;
   auto hdcBelow = CreateCompatibleDC(hdcOutput);
   auto hbmBelow = CreateBitmap(hdcBelow, size.cx, size.cy, below);
   SelectObject(hdcBelow, hbmBelow);
@@ -43,12 +43,12 @@ auto pToolTip::drawLayered() -> void {
   rc.left = 0, rc.top = 0, rc.right = size.cx, rc.bottom = size.cy;
   DrawThemeBackground(htheme, hdcBelow, TTP_STANDARD, TTSS_NORMAL, &rc, nullptr);
 
-  uint32_t* above = nullptr;
+  u32* above = nullptr;
   auto hdcAbove = CreateCompatibleDC(hdcOutput);
   auto hbmAbove = CreateBitmap(hdcAbove, size.cx, size.cy, above);
   SelectObject(hdcAbove, hbmAbove);
 
-  memory::copy<uint32_t>(above, below, size.cx * size.cy);
+  memory::copy<u32>(above, below, size.cx * size.cy);
 
   auto hfont = pFont::create(Font());
   SelectObject(hdcAbove, hfont);
@@ -59,7 +59,7 @@ auto pToolTip::drawLayered() -> void {
   DrawText(hdcAbove, drawText, -1, &rc, DT_LEFT | DT_TOP);
   DeleteObject(hfont);
 
-  for(uint n : range(size.cx * size.cy)) {
+  for(u32 n : range(size.cx * size.cy)) {
     below[n] = (below[n] & 0xff000000) | (above[n] & 0x00ffffff);
   }
 

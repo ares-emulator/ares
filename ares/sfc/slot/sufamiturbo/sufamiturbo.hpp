@@ -13,11 +13,11 @@ struct SufamiTurboCartridge {
   auto save() -> void;
 
   //memory.cpp
-  auto readROM(uint24 address, uint8 data) -> uint8;
-  auto writeROM(uint24 address, uint8 data) -> void;
+  auto readROM(n24 address, n8 data) -> n8;
+  auto writeROM(n24 address, n8 data) -> void;
 
-  auto readRAM(uint24 address, uint8 data) -> uint8;
-  auto writeRAM(uint24 address, uint8 data) -> void;
+  auto readRAM(n24 address, n8 data) -> n8;
+  auto writeRAM(n24 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

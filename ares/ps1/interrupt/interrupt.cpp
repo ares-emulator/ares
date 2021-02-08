@@ -32,7 +32,7 @@ auto Interrupt::poll() -> void {
   if(!interruptsWerePending && cpu.exception.interruptsPending()) cpu.delay.interrupt = 2;
 }
 
-auto Interrupt::level(uint source) -> bool {
+auto Interrupt::level(u32 source) -> bool {
   if(source ==  0) return vblank.level();
   if(source ==  1) return gpu.level();
   if(source ==  2) return cdrom.level();
@@ -47,7 +47,7 @@ auto Interrupt::level(uint source) -> bool {
   return 0;
 }
 
-auto Interrupt::raise(uint source) -> void {
+auto Interrupt::raise(u32 source) -> void {
   if(source ==  0 && !vblank.line) {
     vblank.raise();
     poll();
@@ -94,7 +94,7 @@ auto Interrupt::raise(uint source) -> void {
   }
 }
 
-auto Interrupt::lower(uint source) -> void {
+auto Interrupt::lower(u32 source) -> void {
   if(source ==  0 && vblank.line) return vblank.lower(), poll();
   if(source ==  1 && gpu.line) return gpu.lower(), poll();
   if(source ==  2 && cdrom.line) return cdrom.lower(), poll();
@@ -108,12 +108,12 @@ auto Interrupt::lower(uint source) -> void {
   if(source == 10 && pio.line) return pio.lower(), poll();
 }
 
-auto Interrupt::pulse(uint source) -> void {
+auto Interrupt::pulse(u32 source) -> void {
   raise(source);
   lower(source);
 }
 
-auto Interrupt::drive(uint source, bool line) -> void {
+auto Interrupt::drive(u32 source, bool line) -> void {
   if(line == 0) lower(source);
   if(line == 1) raise(source);
 }

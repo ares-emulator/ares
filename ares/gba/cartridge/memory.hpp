@@ -1,33 +1,33 @@
 struct MROM {
   //mrom.cpp
-  auto read(uint mode, uint32 address) -> uint32;
-  auto write(uint mode, uint32 address, uint32 word) -> void;
+  auto read(u32 mode, n32 address) -> n32;
+  auto write(u32 mode, n32 address, n32 word) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint8* data = nullptr;
-  uint size;
-  uint mask;
+  n8* data = nullptr;
+  u32 size;
+  u32 mask;
 } mrom;
 
 struct SRAM {
   //sram.cpp
-  auto read(uint mode, uint32 address) -> uint32;
-  auto write(uint mode, uint32 address, uint32 word) -> void;
+  auto read(u32 mode, n32 address) -> n32;
+  auto write(u32 mode, n32 address, n32 word) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint8* data = nullptr;
-  uint size;
-  uint mask;
+  n8* data = nullptr;
+  u32 size;
+  u32 mask;
 } sram;
 
 struct EEPROM {
   //eeprom.cpp
-  auto read(uint address) -> bool;
-  auto write(uint address, bool bit) -> void;
+  auto read(u32 address) -> bool;
+  auto write(u32 address, bool bit) -> void;
 
   auto read() -> bool;
   auto write(bool bit) -> void;
@@ -36,35 +36,35 @@ struct EEPROM {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint8* data = nullptr;
-  uint size;
-  uint mask;
-  uint test;
-  uint bits;
+  n8* data = nullptr;
+  u32 size;
+  u32 mask;
+  u32 test;
+  u32 bits;
 
-  enum class Mode : uint {
+  enum class Mode : u32 {
     Wait, Command, ReadAddress, ReadValidate, ReadData, WriteAddress, WriteData, WriteValidate
   } mode;
-  uint offset;
-  uint address;
-  uint addressbits;
+  u32 offset;
+  u32 address;
+  u32 addressbits;
 } eeprom;
 
 struct FLASH {
   //flash.cpp
-  auto read(uint16 address) -> uint8;
-  auto write(uint16 address, uint8 byte) -> void;
+  auto read(n16 address) -> n8;
+  auto write(n16 address, n8 byte) -> void;
 
   auto power() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint8* data = nullptr;
-  uint size;
+  n8* data = nullptr;
+  u32 size;
   string manufacturer;
 
-  uint16 id;
+  n16 id;
 
   bool unlockhi;
   bool unlocklo;

@@ -6,8 +6,8 @@
 namespace nall::CD::EFM {
 
 //the algorithm to generate this table is unknown
-inline auto lookup(uint8_t index) -> uint16_t {
-  static const uint16_t lookup[256] = {
+inline auto lookup(u8 index) -> u16 {
+  static const u16 lookup[256] = {
     0x1220, 0x2100, 0x2420, 0x2220, 0x1100, 0x0110, 0x0420, 0x0900,
     0x1240, 0x2040, 0x2440, 0x2240, 0x1040, 0x0040, 0x0440, 0x0840,
     0x2020, 0x2080, 0x2480, 0x0820, 0x1080, 0x0080, 0x0480, 0x0880,
@@ -46,23 +46,23 @@ inline auto lookup(uint8_t index) -> uint16_t {
 
 //
 
-inline auto encode(uint8_t data) -> uint16_t {
+inline auto encode(u8 data) -> u16 {
   return lookup(data);
 }
 
 //
 
-inline auto decode(uint16_t data) -> maybe<uint8_t> {
-  static uint16_t table[1 << 14];
+inline auto decode(u16 data) -> maybe<u8> {
+  static u16 table[1 << 14];
   static bool once = true;
   if(once) {
     once = false;
-    for(uint n : range(1 << 14)) table[n] = 0xffff;
-    for(uint n : range(1 <<  8)) table[lookup(n)] = n;
+    for(u32 n : range(1 << 14)) table[n] = 0xffff;
+    for(u32 n : range(1 <<  8)) table[lookup(n)] = n;
   }
-  uint16_t result = table[data & 0x3fff];
+  u16 result = table[data & 0x3fff];
   if(result == 0xffff) return {};
-  return (uint8_t)result;
+  return (u8)result;
 }
 
 }

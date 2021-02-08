@@ -10,7 +10,7 @@ auto mHorizontalSlider::doChange() const -> void {
   if(state.onChange) return state.onChange();
 }
 
-auto mHorizontalSlider::length() const -> unsigned {
+auto mHorizontalSlider::length() const -> u32 {
   return state.length;
 }
 
@@ -19,17 +19,17 @@ auto mHorizontalSlider::onChange(const function<void ()>& callback) -> type& {
   return *this;
 }
 
-auto mHorizontalSlider::position() const -> unsigned {
+auto mHorizontalSlider::position() const -> u32 {
   return state.position;
 }
 
-auto mHorizontalSlider::setLength(unsigned length) -> type& {
+auto mHorizontalSlider::setLength(u32 length) -> type& {
   state.length = length;
   signal(setLength, length);
   return *this;
 }
 
-auto mHorizontalSlider::setPosition(unsigned position) -> type& {
+auto mHorizontalSlider::setPosition(u32 position) -> type& {
   state.position = position;
   signal(setPosition, position);
   return *this;

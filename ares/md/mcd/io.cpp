@@ -1,5 +1,5 @@
-auto MCD::readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 {
-  address = 0xff8000 | (uint9)address;
+auto MCD::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
+  address = 0xff8000 | (n9)address;
 
   if(address == 0xff8000) {
     data.bit(0)     = 1;  //peripheral ready
@@ -57,12 +57,12 @@ auto MCD::readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint1
   }
 
   if(address >= 0xff8010 && address <= 0xff801f) {
-    uint3 index = address - 0xff8010 >> 1;
+    n3 index = address - 0xff8010 >> 1;
     data = communication.command[index];
   }
 
   if(address >= 0xff8020 && address <= 0xff802f) {
-    uint3 index = address - 0xff8020 >> 1;
+    n3 index = address - 0xff8020 >> 1;
     data = communication.status[index];
   }
 
@@ -97,7 +97,7 @@ auto MCD::readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint1
   }
 
   if(address >= 0xff8038 && address <= 0xff8041) {
-    uint index = address - 0xff8038;
+    u32 index = address - 0xff8038;
     data.bit( 0, 3) = cdd.status[index | 1];
     data.bit( 4, 7) = Unmapped;
     data.bit( 8,11) = cdd.status[index | 0];
@@ -105,7 +105,7 @@ auto MCD::readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint1
   }
 
   if(address >= 0xff8042 && address <= 0xff804b) {
-    uint index = address - 0xff8042;
+    u32 index = address - 0xff8042;
     data.bit( 0, 3) = cdd.command[index | 1];
     data.bit( 4, 7) = Unmapped;
     data.bit( 8,11) = cdd.command[index | 0];
@@ -123,7 +123,7 @@ auto MCD::readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint1
   }
 
   if(address >= 0xff8050 && address <= 0xff8057) {
-    uint index = 12 - (address - 0xff8050 << 1);
+    u32 index = 12 - (address - 0xff8050 << 1);
     auto foreground = gpu.font.color.foreground;
     auto background = gpu.font.color.background;
     data.bit( 0, 3) = gpu.font.data.bit(index | 0) ? foreground : background;
@@ -183,8 +183,8 @@ auto MCD::readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint1
   return data;
 }
 
-auto MCD::writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void {
-  address = 0xff8000 | (uint9)address;
+auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
+  address = 0xff8000 | (n9)address;
 
   if(address == 0xff8000) {
     if(lower) {
@@ -244,7 +244,7 @@ auto MCD::writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void
   }
 
   if(address >= 0xff8020 && address <= 0xff802f) {
-    uint3 index = address - 0xff8020 >> 1;
+    n3 index = address - 0xff8020 >> 1;
     if(lower) communication.status[index].byte(0) = data.byte(0);
     if(upper) communication.status[index].byte(1) = data.byte(1);
   }
@@ -288,7 +288,7 @@ auto MCD::writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void
   }
 
   if(address >= 0xff8042 && address <= 0xff804b) {
-    uint index = address - 0xff8042;
+    u32 index = address - 0xff8042;
     if(lower) cdd.command[index | 1] = data.bit(0, 3);
     if(upper) cdd.command[index | 0] = data.bit(8,11);
     if(lower && (index | 1) == 9) {  //unconfirmed

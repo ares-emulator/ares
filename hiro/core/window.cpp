@@ -57,11 +57,11 @@ auto mWindow::doDrop(vector<string> names) const -> void {
   if(state.onDrop) return state.onDrop(names);
 }
 
-auto mWindow::doKeyPress(signed key) const -> void {
+auto mWindow::doKeyPress(s32 key) const -> void {
   if(state.onKeyPress) return state.onKeyPress(key);
 }
 
-auto mWindow::doKeyRelease(signed key) const -> void {
+auto mWindow::doKeyRelease(s32 key) const -> void {
   if(state.onKeyRelease) return state.onKeyRelease(key);
 }
 
@@ -121,7 +121,7 @@ auto mWindow::modal() const -> bool {
   return state.modal;
 }
 
-auto mWindow::monitor() const -> uint {
+auto mWindow::monitor() const -> u32 {
   return signal(monitor);
 }
 
@@ -135,12 +135,12 @@ auto mWindow::onDrop(const function<void (vector<string>)>& callback) -> type& {
   return *this;
 }
 
-auto mWindow::onKeyPress(const function<void (signed)>& callback) -> type& {
+auto mWindow::onKeyPress(const function<void (s32)>& callback) -> type& {
   state.onKeyPress = callback;
   return *this;
 }
 
-auto mWindow::onKeyRelease(const function<void (signed)>& callback) -> type& {
+auto mWindow::onKeyRelease(const function<void (s32)>& callback) -> type& {
   state.onKeyRelease = callback;
   return *this;
 }
@@ -192,7 +192,7 @@ auto mWindow::setAlignment(Alignment alignment) -> type& {
   auto geometry = frameGeometry();
   auto x = workspace.x() + alignment.horizontal() * (workspace.width() - geometry.width());
   auto y = workspace.y() + alignment.vertical() * (workspace.height() - geometry.height());
-  setFramePosition({(int)x, (int)y});
+  setFramePosition({(s32)x, (s32)y});
   return *this;
 }
 
@@ -211,7 +211,7 @@ auto mWindow::setAlignment(sWindow relativeTo, Alignment alignment) -> type& {
   if(signbit(alignment.vertical())) {
     y = (parent.y() - window.height()) + abs(alignment.vertical()) * (parent.height() + window.height());
   }
-  setFramePosition({(int)x, (int)y});
+  setFramePosition({(s32)x, (s32)y});
   return *this;
 }
 
@@ -286,7 +286,7 @@ auto mWindow::setGeometry(Alignment alignment, Size size) -> type& {
   auto workspace = Monitor::workspace();
   auto x = workspace.x() + alignment.horizontal() * (workspace.width() - width);
   auto y = workspace.y() + alignment.vertical() * (workspace.height() - height);
-  setFrameGeometry({(int)x, (int)y, (int)width, (int)height});
+  setFrameGeometry({(s32)x, (s32)y, (s32)width, (s32)height});
   return *this;
 }
 

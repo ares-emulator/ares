@@ -10,19 +10,19 @@ struct pTabFrame : pWidget {
   auto remove(sTabFrameItem item) -> void;
   auto setFont(const Font& font) -> void override;
   auto setGeometry(Geometry geometry) -> void override;
-  auto setItemClosable(uint position, bool closable) -> void;
-  auto setItemIcon(uint position, const image& icon) -> void;
-  auto setItemMovable(uint position, bool movable) -> void;
-  auto setItemSelected(uint position) -> void;
-  auto setItemSizable(uint position, sSizable sizable) -> void;
-  auto setItemText(uint position, const string& text) -> void;
+  auto setItemClosable(u32 position, bool closable) -> void;
+  auto setItemIcon(u32 position, const image& icon) -> void;
+  auto setItemMovable(u32 position, bool movable) -> void;
+  auto setItemSelected(u32 position) -> void;
+  auto setItemSizable(u32 position, sSizable sizable) -> void;
+  auto setItemText(u32 position, const string& text) -> void;
   auto setNavigation(Navigation navigation) -> void;
 
   auto _append() -> void;
   auto _synchronizeLayout() -> void;
-  auto _synchronizeTab(uint position) -> void;
-  auto _tabHeight() -> uint;
-  auto _tabWidth() -> uint;
+  auto _synchronizeTab(u32 position) -> void;
+  auto _tabHeight() -> u32;
+  auto _tabWidth() -> u32;
 
   struct Tab {
     GtkWidget* child = nullptr;

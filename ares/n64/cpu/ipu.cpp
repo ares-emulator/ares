@@ -290,14 +290,14 @@ auto CPU::instructionLBU(r64& rt, cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::instructionLD(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto data = readDouble(rs.u32 + imm)) rt.u64 = *data;
+  if(auto data = readDual(rs.u32 + imm)) rt.u64 = *data;
 }
 
 auto CPU::instructionLDL(r64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = u64(0) - 1 << shift;
-  if(auto data = readDouble(address & ~7)) {
+  if(auto data = readDual(address & ~7)) {
     rt.u64 = rt.u64 & ~mask | *data << shift;
   }
 }
@@ -306,7 +306,7 @@ auto CPU::instructionLDR(r64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = u64(0) - 1 >> shift;
-  if(auto data = readDouble(address & ~7)) {
+  if(auto data = readDual(address & ~7)) {
     rt.u64 = rt.u64 & ~mask | *data >> shift;
   }
 }
@@ -328,7 +328,7 @@ auto CPU::instructionLL(r64& rt, cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::instructionLLD(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto data = readDouble(rs.u32 + imm)) {
+  if(auto data = readDual(rs.u32 + imm)) {
     rt.u64 = *data;
     scc.ll = tlb.physicalAddress >> 4;
     scc.llbit = 1;
@@ -421,22 +421,22 @@ auto CPU::instructionSC(r64& rt, cr64& rs, s16 imm) -> void {
 auto CPU::instructionSCD(r64& rt, cr64& rs, s16 imm) -> void {
   if(scc.llbit) {
     scc.llbit = 0;
-    rt.u64 = writeDouble(rs.u32 + imm, rt.u64);
+    rt.u64 = writeDual(rs.u32 + imm, rt.u64);
   } else {
     rt.u64 = 0;
   }
 }
 
 auto CPU::instructionSD(cr64& rt, cr64& rs, s16 imm) -> void {
-  writeDouble(rs.u32 + imm, rt.u64);
+  writeDual(rs.u32 + imm, rt.u64);
 }
 
 auto CPU::instructionSDL(cr64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = u64(0) - 1 >> shift;
-  if(auto data = readDouble(address & ~7)) {
-    writeDouble(address & ~7, *data & ~mask | rt.u64 >> shift);
+  if(auto data = readDual(address & ~7)) {
+    writeDual(address & ~7, *data & ~mask | rt.u64 >> shift);
   }
 }
 
@@ -444,8 +444,8 @@ auto CPU::instructionSDR(cr64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = u64(0) - 1 << shift;
-  if(auto data = readDouble(address & ~7)) {
-    writeDouble(address & ~7, *data & ~mask | rt.u64 << shift);
+  if(auto data = readDual(address & ~7)) {
+    writeDual(address & ~7, *data & ~mask | rt.u64 << shift);
   }
 }
 

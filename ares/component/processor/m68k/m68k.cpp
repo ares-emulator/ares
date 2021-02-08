@@ -3,7 +3,7 @@
 
 namespace ares {
 
-enum : uint { Byte, Word, Long };
+enum : u32  { Byte, Word, Long };
 enum : bool { Reverse = 1 };
 
 #include "registers.cpp"
@@ -48,7 +48,7 @@ auto M68K::supervisor() -> bool {
   return false;
 }
 
-auto M68K::exception(uint exception, uint vector, uint priority) -> void {
+auto M68K::exception(u32 exception, u32 vector, u32 priority) -> void {
   idle(10);  //todo: not accurate
 
   auto pc = r.pc;
@@ -69,7 +69,7 @@ auto M68K::exception(uint exception, uint vector, uint priority) -> void {
   prefetch();
 }
 
-auto M68K::interrupt(uint vector, uint priority) -> void {
+auto M68K::interrupt(u32 vector, u32 priority) -> void {
   return exception(Exception::Interrupt, vector, priority);
 }
 

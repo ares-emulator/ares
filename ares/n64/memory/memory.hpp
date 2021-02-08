@@ -1,6 +1,6 @@
 namespace Memory {
-  #include "readable.hpp"
-  #include "writable.hpp"
+  #include "lsb-readable.hpp"
+  #include "lsb-writable.hpp"
   #include "io.hpp"
 }
 
@@ -9,11 +9,11 @@ struct Bus {
   auto readByte(u32 address) -> u8;
   auto readHalf(u32 address) -> u16;
   auto readWord(u32 address) -> u32;
-  auto readDouble(u32 address) -> u64;
-  auto writeByte(u32 address, u8 data) -> void;
+  auto readDual(u32 address) -> u64;
+  auto writeByte(u32 address, u8  data) -> void;
   auto writeHalf(u32 address, u16 data) -> void;
   auto writeWord(u32 address, u32 data) -> void;
-  auto writeDouble(u32 address, u64 data) -> void;
+  auto writeDual(u32 address, u64 data) -> void;
 };
 
 extern Bus bus;

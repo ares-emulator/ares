@@ -6,7 +6,7 @@ struct pProgressBar : pWidget {
   Declare(ProgressBar, Widget)
 
   auto minimumSize() const -> Size override;
-  auto setPosition(unsigned position) -> void;
+  auto setPosition(u32 position) -> void;
 
   auto _setState() -> void;
 

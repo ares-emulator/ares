@@ -3,12 +3,16 @@
 
 #define DeclareClass(Type, Name) \
   static inline const string identifier = Name; \
-  virtual auto identity() const -> string { return Name; } \
   static auto create() -> Node::Object { return new Type; } \
+  auto identity() const -> string override { return Name; } \
   private: static inline Class::Register<Type> register; public: \
 
 struct Object : shared_pointer_this<Object> {
-  DeclareClass(Object, "object")
+  static inline const string identifier = "Object";
+  static auto create() -> Node::Object { return new Object; }
+  virtual auto identity() const -> string { return "Object"; }
+  private: static inline Class::Register<Object> register; public:
+//DeclareClass(Object, "object")
 
   Object(string name = {}) : _name(name) {}
   virtual ~Object() = default;

@@ -36,7 +36,7 @@ auto pTimer::setEnabled(bool enabled) -> void {
   }
 }
 
-auto pTimer::setInterval(uint interval) -> void {
+auto pTimer::setInterval(u32 interval) -> void {
   //destroy and recreate timer if interval changed
   setEnabled(self().enabled(true));
 }

@@ -19,7 +19,7 @@ struct VI : Thread, Memory::IO<VI> {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto refresh() -> void;
   auto power(bool reset) -> void;
 
@@ -31,38 +31,38 @@ struct VI : Thread, Memory::IO<VI> {
   auto serialize(serializer&) -> void;
 
   struct IO {
-     uint2 colorDepth = 0;
-     uint1 gammaDither = 0;
-     uint1 gamma = 0;
-     uint1 divot = 0;
-     uint1 serrate = 0;
-     uint2 antialias = 0;
-    uint32 reserved = 0;
-    uint24 dramAddress = 0;
-    uint12 width = 0;
-    uint10 coincidence = 256;
-     uint8 hsyncWidth = 0;
-     uint8 colorBurstWidth = 0;
-     uint4 vsyncWidth = 0;
-    uint10 colorBurstHsync = 0;
-    uint10 halfLinesPerField = 0;
-    uint12 quarterLineDuration = 0;
-     uint5 palLeapPattern = 0;
-    uint12 hsyncLeap[2] = {};
-    uint10 hend = 0;
-    uint10 hstart = 0;
-    uint10 vend = 0;
-    uint10 vstart = 0;
-    uint10 colorBurstEnd = 0;
-    uint10 colorBurstStart = 0;
-    uint12 xscale = 0;
-    uint12 xsubpixel = 0;
-    uint12 yscale = 0;
-    uint12 ysubpixel = 0;
+    n2  colorDepth = 0;
+    n1  gammaDither = 0;
+    n1  gamma = 0;
+    n1  divot = 0;
+    n1  serrate = 0;
+    n2  antialias = 0;
+    n32 reserved = 0;
+    n24 dramAddress = 0;
+    n12 width = 0;
+    n10 coincidence = 256;
+    n8  hsyncWidth = 0;
+    n8  colorBurstWidth = 0;
+    n4  vsyncWidth = 0;
+    n10 colorBurstHsync = 0;
+    n10 halfLinesPerField = 0;
+    n12 quarterLineDuration = 0;
+    n5  palLeapPattern = 0;
+    n12 hsyncLeap[2] = {};
+    n10 hend = 0;
+    n10 hstart = 0;
+    n10 vend = 0;
+    n10 vstart = 0;
+    n10 colorBurstEnd = 0;
+    n10 colorBurstStart = 0;
+    n12 xscale = 0;
+    n12 xsubpixel = 0;
+    n12 yscale = 0;
+    n12 ysubpixel = 0;
 
   //internal:
-     uint9 vcounter = 0;
-     uint1 field = 0;
+    n9  vcounter = 0;
+    n1  field = 0;
   } io;
 
 //unserialized:

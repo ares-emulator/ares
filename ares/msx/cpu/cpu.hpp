@@ -1,6 +1,6 @@
 struct CPU : Z80, Z80::Bus, Thread {
   Node::Object node;
-  Memory::Writable<uint8> ram;  //MSX = 64KB, MSX2 = 256KB
+  Memory::Writable<n8> ram;  //MSX = 64KB, MSX2 = 256KB
 
   struct Debugger {
     //debugger.cpp
@@ -25,36 +25,36 @@ struct CPU : Z80, Z80::Bus, Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void override;
+  auto step(u32 clocks) -> void override;
 
   auto power() -> void;
   auto setIRQ(bool) -> void;
 
   //memory.cpp
-  auto read(uint16 address) -> uint8 override;
-  auto write(uint16 address, uint8 data) -> void override;
+  auto read(n16 address) -> n8 override;
+  auto write(n16 address, n8 data) -> void override;
 
-  auto in(uint16 address) -> uint8 override;
-  auto out(uint16 address, uint8 data) -> void override;
+  auto in(n16 address) -> n8 override;
+  auto out(n16 address, n8 data) -> void override;
 
-  auto readPrimarySlot() -> uint8;
-  auto writePrimarySlot(uint8 data) -> void;
+  auto readPrimarySlot() -> n8;
+  auto writePrimarySlot(n8 data) -> void;
 
-  auto readSecondarySlot() -> uint8;
-  auto writeSecondarySlot(uint8 data) -> void;
+  auto readSecondarySlot() -> n8;
+  auto writeSecondarySlot(n8 data) -> void;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void;
+  auto serialize(serializer&) -> void override;
 
 private:
   struct Slot {
-    uint8 memory;
-    uint2 primary;
-    uint2 secondary[4];
+    n8 memory;
+    n2 primary;
+    n2 secondary[4];
   } slot[4];
 
   struct IO {
-    uint1 irqLine;
+    n1 irqLine;
   } io;
 };
 

@@ -4,37 +4,37 @@ struct DAC {
   //dac.cpp
   auto prepare() -> void;
   auto render() -> void;
-  auto pixel(uint8 x, Pixel above, Pixel below) const -> uint15;
-  auto blend(uint15 x, uint15 y, bool halve) const -> uint15;
-  auto plotAbove(uint8 x, uint8 source, uint8 priority, uint15 color) -> void;
-  auto plotBelow(uint8 x, uint8 source, uint8 priority, uint15 color) -> void;
-  auto directColor(uint8 palette, uint3 paletteGroup) const -> uint15;
-  auto fixedColor() const -> uint15;
+  auto pixel(n8 x, Pixel above, Pixel below) const -> n15;
+  auto blend(n15 x, n15 y, bool halve) const -> n15;
+  auto plotAbove(n8 x, n8 source, n8 priority, n15 color) -> void;
+  auto plotBelow(n8 x, n8 source, n8 priority, n15 color) -> void;
+  auto directColor(n8 palette, n3 paletteGroup) const -> n15;
+  auto fixedColor() const -> n15;
   auto power() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint15 cgram[256];
+  n15 cgram[256];
 
   struct IO {
-    uint1 directColor;
-    uint1 blendMode;
-    uint1 colorEnable[7];
-    uint1 colorHalve;
-    uint1 colorMode;
-    uint5 colorRed;
-    uint5 colorGreen;
-    uint5 colorBlue;
+    n1 directColor;
+    n1 blendMode;
+    n1 colorEnable[7];
+    n1 colorHalve;
+    n1 colorMode;
+    n5 colorRed;
+    n5 colorGreen;
+    n5 colorBlue;
   } io;
 
   PPU::Window::Color window;
 
 //unserialized:
   struct Pixel {
-     uint8 source;
-     uint8 priority;
-    uint15 color;
+    n8  source;
+    n8  priority;
+    n15 color;
   } above[256], below[256];
 
   bool windowAbove[256];

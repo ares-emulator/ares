@@ -14,17 +14,17 @@ struct Gamepad : Controller {
 
   Gamepad(Node::Port);
 
-  auto data() -> uint2;
-  auto latch(bool data) -> void;
+  auto data() -> n2;
+  auto latch(n1 data) -> void;
 
 private:
-  bool latched = 0;
-  uint counter = 0;
+  n1 latched;
+  n8 counter;
 
-  bool yHold = 0;
-  bool upLatch = 0;
-  bool downLatch = 0;
-  bool xHold = 0;
-  bool leftLatch = 0;
-  bool rightLatch = 0;
+  n1 yHold;
+  n1 upLatch;
+  n1 downLatch;
+  n1 xHold;
+  n1 leftLatch;
+  n1 rightLatch;
 };

@@ -15,8 +15,8 @@ struct pHorizontalScrollBar : pWidget {
   Declare(HorizontalScrollBar, Widget)
 
   auto minimumSize() const -> Size override;
-  auto setLength(uint length) -> void;
-  auto setPosition(uint position) -> void;
+  auto setLength(u32 length) -> void;
+  auto setPosition(u32 position) -> void;
 
   CocoaHorizontalScrollBar* cocoaHorizontalScrollBar = nullptr;
 };

@@ -38,7 +38,7 @@ auto ARMDSP::main() -> void {
   instruction();
 }
 
-auto ARMDSP::step(uint clocks) -> void {
+auto ARMDSP::step(u32 clocks) -> void {
   if(bridge.timer && --bridge.timer == 0);
   Thread::step(clocks);
   Thread::synchronize(cpu);

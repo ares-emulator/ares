@@ -4,7 +4,7 @@ namespace hiro {
 
 auto pTabFrame::construct() -> void {
   qtWidget = qtTabFrame = new QtTabFrame(*this);
-  qtTabFrame->connect(qtTabFrame, SIGNAL(currentChanged(int)), SLOT(onChange(int)));
+  qtTabFrame->connect(qtTabFrame, SIGNAL(currentChanged(s32)), SLOT(onChange(s32)));
 
   pWidget::construct();
   _setState();
@@ -53,7 +53,7 @@ auto QtTabFrame::showEvent(QShowEvent* event) -> void {
   p._setState();  //needed to capture geometry of TabFrame for TabFrameItem layouts
 }
 
-auto QtTabFrame::onChange(int selection) -> void {
+auto QtTabFrame::onChange(s32 selection) -> void {
   //geometry of tab frames is only valid once said tab frame is visible
   //as such, as need to call _setState() to update the TabFrameItem's geometry here
   if(auto item = p.self().item(selection)) {

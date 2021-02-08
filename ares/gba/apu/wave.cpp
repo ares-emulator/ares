@@ -6,7 +6,7 @@ auto APU::Wave::run() -> void {
   }
 
   output = patternsample;
-  static uint multiplier[] = {0, 4, 2, 1, 3, 3, 3, 3};
+  static u32 multiplier[] = {0, 4, 2, 1, 3, 3, 3, 3};
   output = (output * multiplier[volume]) / 4;
   if(enable == false) output = 0;
 }
@@ -17,7 +17,7 @@ auto APU::Wave::clockLength() -> void {
   }
 }
 
-auto APU::Wave::read(uint addr) const -> uint8 {
+auto APU::Wave::read(u32 addr) const -> n8 {
   switch(addr) {
   case 0: return (mode << 5) | (bank << 6) | (dacenable << 7);
   case 1: return 0;
@@ -28,7 +28,7 @@ auto APU::Wave::read(uint addr) const -> uint8 {
   return 0;
 }
 
-auto APU::Wave::write(uint addr, uint8 byte) -> void {
+auto APU::Wave::write(u32 addr, n8 byte) -> void {
   switch(addr) {
   case 0:  //NR30
     mode      = byte >> 5;
@@ -58,21 +58,21 @@ auto APU::Wave::write(uint addr, uint8 byte) -> void {
       enable = dacenable;
       period = 1 * (2048 - frequency);
       patternaddr = 0;
-      patternbank = mode ? (uint1)0 : bank;
+      patternbank = mode ? (n1)0 : bank;
     }
 
     break;
   }
 }
 
-auto APU::Wave::readRAM(uint addr) const -> uint8 {
-  uint8 byte = 0;
+auto APU::Wave::readRAM(u32 addr) const -> n8 {
+  n8 byte = 0;
   byte |= pattern[!bank << 5 | addr << 1 | 0] << 4;
   byte |= pattern[!bank << 5 | addr << 1 | 1] << 0;
   return byte;
 }
 
-auto APU::Wave::writeRAM(uint addr, uint8 byte) -> void {
+auto APU::Wave::writeRAM(u32 addr, n8 byte) -> void {
   pattern[!bank << 5 | addr << 1 | 0] = byte >> 4;
   pattern[!bank << 5 | addr << 1 | 1] = byte >> 0;
 }

@@ -1,4 +1,4 @@
-auto APU::Channel4::noiseSample() -> uint4 {
+auto APU::Channel4::noiseSample() -> n4 {
   return s.noiseOutput ? 0xf : 0x0;
 }
 
@@ -17,7 +17,7 @@ auto APU::Channel4::run() -> void {
     }
 
     if(r.noiseUpdate) {
-      static const int taps[8] = {14, 10, 13, 4, 8, 6, 9, 11};
+      static const s32 taps[8] = {14, 10, 13, 4, 8, 6, 9, 11};
       auto tap = taps[r.noiseMode];
 
       s.noiseOutput = (1 ^ (s.noiseLFSR >> 7) ^ (s.noiseLFSR >> tap)) & 1;

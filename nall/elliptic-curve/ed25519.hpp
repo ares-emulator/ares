@@ -9,34 +9,34 @@
 
 namespace nall::EllipticCurve {
 
-static const uint256_t L = (1_u256 << 252) + 27742317777372353535851937790883648493_u256;
+static const u256 L = (1_u256 << 252) + 27742317777372353535851937790883648493_u256;
 
 struct Ed25519 {
-  auto publicKey(uint256_t privateKey) const -> uint256_t {
+  auto publicKey(u256 privateKey) const -> u256 {
     return compress(scalarMultiply(B, clamp(hash(privateKey)) % L));
   }
 
-  auto sign(array_view<uint8_t> message, uint256_t privateKey) const -> uint512_t {
-    uint512_t H = hash(privateKey);
-    uint256_t a = clamp(H) % L;
-    uint256_t A = compress(scalarMultiply(B, a));
+  auto sign(array_view<u8> message, u256 privateKey) const -> u512 {
+    u512 H = hash(privateKey);
+    u256 a = clamp(H) % L;
+    u256 A = compress(scalarMultiply(B, a));
 
-    uint512_t r = hash(upper(H), message) % L;
-    uint256_t R = compress(scalarMultiply(B, r));
+    u512 r = hash(upper(H), message) % L;
+    u256 R = compress(scalarMultiply(B, r));
 
-    uint512_t k = hash(R, A, message) % L;
-    uint256_t S = (k * a + r) % L;
+    u512 k = hash(R, A, message) % L;
+    u256 S = (k * a + r) % L;
 
-    return uint512_t(S) << 256 | R;
+    return u512(S) << 256 | R;
   }
 
-  auto verify(array_view<uint8_t> message, uint512_t signature, uint256_t publicKey) const -> bool {
+  auto verify(array_view<u8> message, u512 signature, u256 publicKey) const -> bool {
     auto R = decompress(lower(signature));
     auto A = decompress(publicKey);
     if(!R || !A) return false;
 
-    uint256_t S = upper(signature) % L;
-    uint512_t r = hash(lower(signature), publicKey, message) % L;
+    u256 S = upper(signature) % L;
+    u512 r = hash(lower(signature), publicKey, message) % L;
 
     auto p = scalarMultiply(B, S);
     auto q = edwardsAdd(R(), scalarMultiply(A(), r));
@@ -55,25 +55,25 @@ private:
 
   auto input(Hash::SHA512&) const -> void {}
 
-  template<typename... P> auto input(Hash::SHA512& hash, uint256_t value, P&&... p) const -> void {
-    for(uint byte : range(32)) hash.input(uint8_t(value >> byte * 8));
+  template<typename... P> auto input(Hash::SHA512& hash, u256 value, P&&... p) const -> void {
+    for(u32 byte : range(32)) hash.input(u8(value >> byte * 8));
     input(hash, forward<P>(p)...);
   }
 
-  template<typename... P> auto input(Hash::SHA512& hash, array_view<uint8_t> value, P&&... p) const -> void {
+  template<typename... P> auto input(Hash::SHA512& hash, array_view<u8> value, P&&... p) const -> void {
     hash.input(value);
     input(hash, forward<P>(p)...);
   }
 
-  template<typename... P> auto hash(P&&... p) const -> uint512_t {
+  template<typename... P> auto hash(P&&... p) const -> u512 {
     Hash::SHA512 hash;
     input(hash, forward<P>(p)...);
-    uint512_t result;
+    u512 result;
     for(auto byte : reverse(hash.output())) result = result << 8 | byte;
     return result;
   }
 
-  auto clamp(uint256_t p) const -> uint256_t {
+  auto clamp(u256 p) const -> u256 {
     p &= (1_u256 << 254) - 8;
     p |= (1_u256 << 254);
     return p;
@@ -86,7 +86,7 @@ private:
     return true;
   }
 
-  auto decompress(uint256_t c) const -> maybe<point> {
+  auto decompress(u256 c) const -> maybe<point> {
     field y = c & ~0_u256 >> 1;
     field x = squareRoot((square(y) - 1) * reciprocal(D * square(y) + 1));
     if(c >> 255) x = -x;
@@ -95,7 +95,7 @@ private:
     return p;
   }
 
-  auto compress(point p) const -> uint256_t {
+  auto compress(point p) const -> u256 {
     field r = reciprocal(p.z);
     field x = p.x * r;
     field y = p.y * r;
@@ -126,9 +126,9 @@ private:
     return {e * f, g * h, f * g, e * h};
   }
 
-  auto scalarMultiply(point q, uint256_t exponent) const -> point {
+  auto scalarMultiply(point q, u256 exponent) const -> point {
     point p{0, 1, 1, 0}, c;
-    for(uint bit : reverse(range(253))) {
+    for(u32 bit : reverse(range(253))) {
       p = edwardsDouble(p);
       c = edwardsAdd(p, q);
       bool condition = exponent >> bit & 1;

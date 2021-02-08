@@ -2,7 +2,7 @@
 
 namespace hiro {
 
-static auto Window_close(GtkWidget* widget, GdkEvent* event, pWindow* p) -> int {
+static auto Window_close(GtkWidget* widget, GdkEvent* event, pWindow* p) -> s32 {
   if(p->state().onClose) {
     p->self().doClose();
   } else {
@@ -13,12 +13,12 @@ static auto Window_close(GtkWidget* widget, GdkEvent* event, pWindow* p) -> int 
 }
 
 //GTK3 draw: called into by GTK2 expose-event
-static auto Window_draw(GtkWidget* widget, cairo_t* context, pWindow* p) -> int {
+static auto Window_draw(GtkWidget* widget, cairo_t* context, pWindow* p) -> s32 {
   if(auto color = p->state().backgroundColor) {
-    double red   = (double)color.red()   / 255.0;
-    double green = (double)color.green() / 255.0;
-    double blue  = (double)color.blue()  / 255.0;
-    double alpha = (double)color.alpha() / 255.0;
+    f64 red   = (f64)color.red()   / 255.0;
+    f64 green = (f64)color.green() / 255.0;
+    f64 blue  = (f64)color.blue()  / 255.0;
+    f64 alpha = (f64)color.alpha() / 255.0;
 
     if(gdk_screen_is_composited(gdk_screen_get_default())
     && gdk_screen_get_rgba_visual(gdk_screen_get_default())
@@ -43,41 +43,41 @@ static auto Window_draw(GtkWidget* widget, cairo_t* context, pWindow* p) -> int 
 }
 
 //GTK2 expose-event
-static auto Window_expose(GtkWidget* widget, GdkEvent* event, pWindow* p) -> int {
+static auto Window_expose(GtkWidget* widget, GdkEvent* event, pWindow* p) -> s32 {
   cairo_t* context = gdk_cairo_create(gtk_widget_get_window(widget));
   Window_draw(widget, context, p);
   cairo_destroy(context);
   return false;
 }
 
-static auto Window_configure(GtkWidget* widget, GdkEvent* event, pWindow* p) -> int {
+static auto Window_configure(GtkWidget* widget, GdkEvent* event, pWindow* p) -> s32 {
   p->_synchronizeMargin();
   return false;
 }
 
-static auto Window_drop(GtkWidget* widget, GdkDragContext* context, int x, int y,
-GtkSelectionData* data, uint type, uint timestamp, pWindow* p) -> void {
+static auto Window_drop(GtkWidget* widget, GdkDragContext* context, s32 x, s32 y,
+GtkSelectionData* data, u32 type, u32 timestamp, pWindow* p) -> void {
   if(!p->state().droppable) return;
   auto paths = DropPaths(data);
   if(!paths) return;
   p->self().doDrop(paths);
 }
 
-static auto Window_getPreferredWidth(GtkWidget* widget, int* minimalWidth, int* naturalWidth) -> void {
+static auto Window_getPreferredWidth(GtkWidget* widget, s32* minimalWidth, s32* naturalWidth) -> void {
   if(auto p = (pWindow*)g_object_get_data(G_OBJECT(widget), "hiro::window")) {
     *minimalWidth = 1;
     *naturalWidth = p->state().geometry.width();
   }
 }
 
-static auto Window_getPreferredHeight(GtkWidget* widget, int* minimalHeight, int* naturalHeight) -> void {
+static auto Window_getPreferredHeight(GtkWidget* widget, s32* minimalHeight, s32* naturalHeight) -> void {
   if(auto p = (pWindow*)g_object_get_data(G_OBJECT(widget), "hiro::window")) {
     *minimalHeight = 1;
     *naturalHeight = p->state().geometry.height();
   }
 }
 
-static auto Window_keyPress(GtkWidget* widget, GdkEventKey* event, pWindow* p) -> int {
+static auto Window_keyPress(GtkWidget* widget, GdkEventKey* event, pWindow* p) -> s32 {
   if(auto key = pKeyboard::_translate(event->keyval)) {
     p->self().doKeyPress(key);
   }
@@ -92,7 +92,7 @@ static auto Window_keyPress(GtkWidget* widget, GdkEventKey* event, pWindow* p) -
   return false;
 }
 
-static auto Window_keyRelease(GtkWidget* widget, GdkEventKey* event, pWindow* p) -> int {
+static auto Window_keyRelease(GtkWidget* widget, GdkEventKey* event, pWindow* p) -> s32 {
   if(auto key = pKeyboard::_translate(event->keyval)) {
     p->self().doKeyRelease(key);
   }
@@ -211,7 +211,7 @@ auto pWindow::construct() -> void {
 }
 
 auto pWindow::destruct() -> void {
-  for(uint offset : range(pApplication::state().windows.size())) {
+  for(u32 offset : range(pApplication::state().windows.size())) {
     if(pApplication::state().windows[offset] == this) {
       pApplication::state().windows.remove(offset);
       break;
@@ -255,7 +255,7 @@ auto pWindow::frameMargin() const -> Geometry {
   };
 }
 
-auto pWindow::handle() const -> uintptr_t {
+auto pWindow::handle() const -> uintptr {
   #if defined(DISPLAY_WINDOWS)
   return (uintptr)GDK_WINDOW_HWND(gtk_widget_get_window(widget));
   #endif
@@ -267,7 +267,7 @@ auto pWindow::handle() const -> uintptr_t {
   return (uintptr)nullptr;
 }
 
-auto pWindow::monitor() const -> uint {
+auto pWindow::monitor() const -> u32 {
   if(!gtk_widget_get_realized(widget)) return 0;
   auto window = gtk_widget_get_window(widget);
   return gdk_screen_get_monitor_at_window(gdk_screen_get_default(), window);
@@ -447,7 +447,7 @@ auto pWindow::_append(mMenu& menu) -> void {
   }
 }
 
-auto pWindow::_menuHeight() const -> int {
+auto pWindow::_menuHeight() const -> s32 {
   if(auto& menuBar = state().menuBar) {
     if(menuBar->visible()) {
       return settings.geometry.menuHeight + _menuTextHeight();
@@ -456,8 +456,8 @@ auto pWindow::_menuHeight() const -> int {
   return 0;
 }
 
-auto pWindow::_menuTextHeight() const -> int {
-  int height = 0;
+auto pWindow::_menuTextHeight() const -> s32 {
+  s32 height = 0;
   if(auto& menuBar = state().menuBar) {
     for(auto& menu : menuBar->state.menus) {
       height = max(height, menu->font(true).size(menu->text()).height());
@@ -519,7 +519,7 @@ auto pWindow::_setStatusVisible(bool visible) -> void {
   setResizable(self().resizable());
 }
 
-auto pWindow::_statusHeight() const -> int {
+auto pWindow::_statusHeight() const -> s32 {
   if(auto& statusBar = state().statusBar) {
     if(statusBar->visible()) {
       return settings.geometry.statusHeight + _statusTextHeight();
@@ -528,8 +528,8 @@ auto pWindow::_statusHeight() const -> int {
   return 0;
 }
 
-auto pWindow::_statusTextHeight() const -> int {
-  int height = 0;
+auto pWindow::_statusTextHeight() const -> s32 {
+  s32 height = 0;
   if(auto& statusBar = state().statusBar) {
     height = statusBar->font(true).size(statusBar->text()).height();
   }
@@ -653,14 +653,14 @@ auto pWindow::_synchronizeState() -> void {
 
   #if defined(DISPLAY_XORG)
   auto display = XOpenDisplay(nullptr);
-  int screen = DefaultScreen(display);
+  s32 screen = DefaultScreen(display);
   auto window = GDK_WINDOW_XID(gtk_widget_get_window(widget));
   XlibAtom wmState = XInternAtom(display, "_NET_WM_STATE", XlibTrue);
   XlibAtom atom;
-  int format;
+  s32 format;
   unsigned long items, after;
   unsigned char* data = nullptr;
-  int result = XGetWindowProperty(
+  s32 result = XGetWindowProperty(
     display, window, wmState, 0, LONG_MAX, XlibFalse, AnyPropertyType, &atom, &format, &items, &after, &data
   );
   auto atoms = (unsigned long*)data;

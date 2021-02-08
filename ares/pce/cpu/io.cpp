@@ -1,5 +1,5 @@
-auto CPU::read(uint8 bank, uint13 address) -> uint8 {
-  uint8 data = 0xff;
+auto CPU::read(n8 bank, n13 address) -> n8 {
+  n8 data = 0xff;
 
   //$00-7f  HuCard or PC Engine Duo
   //$80-87  CD WRAM
@@ -99,7 +99,7 @@ auto CPU::read(uint8 bank, uint13 address) -> uint8 {
   return data;
 }
 
-auto CPU::write(uint8 bank, uint13 address, uint8 data) -> void {
+auto CPU::write(n8 bank, n13 address, n8 data) -> void {
   //$00-7f  HuCard or PC Engine Duo
   //$80-87  CD WRAM
   //$f7     CD BRAM
@@ -186,7 +186,7 @@ auto CPU::write(uint8 bank, uint13 address, uint8 data) -> void {
 }
 
 //ST0, ST1, ST2
-auto CPU::store(uint2 address, uint8 data) -> void {
+auto CPU::store(n2 address, n8 data) -> void {
   if(address) address++;  //0,1,2 => 0,2,3
   if(Model::SuperGrafx() == 0) vdp.vdc0.write(address, data);
   if(Model::SuperGrafx() == 1) vdp.vpc.store(address, data);

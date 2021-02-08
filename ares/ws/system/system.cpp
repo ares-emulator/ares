@@ -2,7 +2,17 @@
 
 namespace ares::WonderSwan {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[Bandai] WonderSwan",
+    "[Bandai] WonderSwan Color",
+    "[Bandai] SwanCrystal",
+    "[Benesse] Pocket Challenge V2",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -33,13 +43,28 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
+  if(name.find("WonderSwan")) {
+    information.name = "WonderSwan";
+    information.soc = SoC::ASWAN;
+    information.model = Model::WonderSwan;
+  }
+  if(name.find("WonderSwan Color")) {
+    information.name = "WonderSwan Color";
+    information.soc = SoC::SPHINX;
+    information.model = Model::WonderSwanColor;
+  }
+  if(name.find("SwanCrystal")) {
+    information.name = "SwanCrystal";
+    information.soc = SoC::SPHINX2;
+    information.model = Model::SwanCrystal;
+  }
+  if(name.find("Pocket Challenge V2")) {
+    information.name = "Pocket Challenge V2";
+    information.soc = SoC::ASWAN;
+    information.model = Model::PocketChallengeV2;
+  }
 
-  if(name == "WonderSwan"         ) information.soc = SoC::ASWAN,   information.model = Model::WonderSwan;
-  if(name == "WonderSwan Color"   ) information.soc = SoC::SPHINX,  information.model = Model::WonderSwanColor;
-  if(name == "SwanCrystal"        ) information.soc = SoC::SPHINX2, information.model = Model::SwanCrystal;
-  if(name == "Pocket Challenge V2") information.soc = SoC::ASWAN,   information.model = Model::PocketChallengeV2;
-
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});
@@ -61,7 +86,7 @@ auto System::load(Node::System& root, string name) -> bool {
   //none of this can be considered 100% verified; direct EEPROM dumps from new-old stock would be required.
   auto initializeName = [&](string name) {
     //16-character limit, 'A'-'Z' only!
-    for(uint index : range(name.size())) {
+    for(u32 index : range(name.size())) {
       eeprom.program(0x60 + index, name[index] - 'A' + 0x0b);
     }
   };

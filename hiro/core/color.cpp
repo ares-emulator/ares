@@ -4,7 +4,7 @@ Color::Color() {
   setColor(0, 0, 0, 0);
 }
 
-Color::Color(signed red, signed green, signed blue, signed alpha) {
+Color::Color(s32 red, s32 green, s32 blue, s32 alpha) {
   setColor(red, green, blue, alpha);
 }
 
@@ -20,19 +20,19 @@ auto Color::operator!=(const Color& source) const -> bool {
   return !operator==(source);
 }
 
-auto Color::alpha() const -> uint8_t {
+auto Color::alpha() const -> u8 {
   return state.alpha;
 }
 
-auto Color::blue() const -> uint8_t {
+auto Color::blue() const -> u8 {
   return state.blue;
 }
 
-auto Color::green() const -> uint8_t {
+auto Color::green() const -> u8 {
   return state.green;
 }
 
-auto Color::red() const -> uint8_t {
+auto Color::red() const -> u8 {
   return state.red;
 }
 
@@ -40,12 +40,12 @@ auto Color::reset() -> type& {
   return setColor(0, 0, 0, 0);
 }
 
-auto Color::setAlpha(signed alpha) -> type& {
+auto Color::setAlpha(s32 alpha) -> type& {
   state.alpha = max(0, min(255, alpha));
   return *this;
 }
 
-auto Color::setBlue(signed blue) -> type& {
+auto Color::setBlue(s32 blue) -> type& {
   state.blue = max(0, min(255, blue));
   return *this;
 }
@@ -54,7 +54,7 @@ auto Color::setColor(Color color) -> type& {
   return setColor(color.red(), color.green(), color.blue(), color.alpha());
 }
 
-auto Color::setColor(signed red, signed green, signed blue, signed alpha) -> type& {
+auto Color::setColor(s32 red, s32 green, s32 blue, s32 alpha) -> type& {
   state.red   = max(0, min(255, red  ));
   state.green = max(0, min(255, green));
   state.blue  = max(0, min(255, blue ));
@@ -62,17 +62,17 @@ auto Color::setColor(signed red, signed green, signed blue, signed alpha) -> typ
   return *this;
 }
 
-auto Color::setGreen(signed green) -> type& {
+auto Color::setGreen(s32 green) -> type& {
   state.green = max(0, min(255, green));
   return *this;
 }
 
-auto Color::setRed(signed red) -> type& {
+auto Color::setRed(s32 red) -> type& {
   state.red = max(0, min(255, red));
   return *this;
 }
 
-auto Color::setValue(uint32_t value) -> type& {
+auto Color::setValue(u32 value) -> type& {
   state.alpha = value >> 24 & 255;
   state.red   = value >> 16 & 255;
   state.green = value >>  8 & 255;
@@ -80,7 +80,7 @@ auto Color::setValue(uint32_t value) -> type& {
   return *this;
 }
 
-auto Color::value() const -> uint32_t {
+auto Color::value() const -> u32 {
   return state.alpha << 24 | state.red << 16 | state.green << 8 | state.blue << 0;
 }
 

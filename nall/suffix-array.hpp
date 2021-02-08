@@ -92,54 +92,54 @@ suffix_array_lpf:
 
 // suffix array via induced sorting
 // O(n)
-inline auto suffix_array(array_view<uint8_t> input) -> vector<int> {
+inline auto suffix_array(array_view<u8> input) -> vector<s32> {
   return induced_sort(input);
 }
 
 // inverse
 // O(n)
-inline auto suffix_array_invert(array_view<int> sa) -> vector<int> {
-  vector<int> isa;
+inline auto suffix_array_invert(array_view<s32> sa) -> vector<s32> {
+  vector<s32> isa;
   isa.reallocate(sa.size());
-  for(int i : range(sa.size())) isa[sa[i]] = i;
+  for(s32 i : range(sa.size())) isa[sa[i]] = i;
   return isa;
 }
 
 // auxiliary data structure for plcp and lpf computation
 // O(n)
-inline auto suffix_array_phi(array_view<int> sa) -> vector<int> {
-  vector<int> phi;
+inline auto suffix_array_phi(array_view<s32> sa) -> vector<s32> {
+  vector<s32> phi;
   phi.reallocate(sa.size());
   phi[sa[0]] = 0;
-  for(int i : range(1, sa.size())) phi[sa[i]] = sa[i - 1];
+  for(s32 i : range(1, sa.size())) phi[sa[i]] = sa[i - 1];
   return phi;
 }
 
 // longest common prefix: lcp(l, r)
 // O(n)
-inline auto suffix_array_lcp(int l, int r, array_view<int> sa, array_view<uint8_t> input) -> int {
-  int i = sa[l], j = sa[r], k = 0, size = input.size();
+inline auto suffix_array_lcp(s32 l, s32 r, array_view<s32> sa, array_view<u8> input) -> s32 {
+  s32 i = sa[l], j = sa[r], k = 0, size = input.size();
   while(i + k < size && j + k < size && input[i + k] == input[j + k]) k++;
   return k;
 }
 
 // longest common prefix: lcp(i, j, k)
 // O(n)
-inline auto suffix_array_lcp(int i, int j, int k, array_view<uint8_t> input) -> int {
-  int size = input.size();
+inline auto suffix_array_lcp(s32 i, s32 j, s32 k, array_view<u8> input) -> s32 {
+  s32 size = input.size();
   while(i + k < size && j + k < size && input[i + k] == input[j + k]) k++;
   return k;
 }
 
 // longest common prefix: lcp[n] == lcp(n, n-1)
 // O(n)
-inline auto suffix_array_lcp(array_view<int> sa, array_view<int> isa, array_view<uint8_t> input) -> vector<int> {
-  int k = 0, size = input.size();
-  vector<int> lcp;
+inline auto suffix_array_lcp(array_view<s32> sa, array_view<s32> isa, array_view<u8> input) -> vector<s32> {
+  s32 k = 0, size = input.size();
+  vector<s32> lcp;
   lcp.reallocate(size + 1);
-  for(int i : range(size)) {
+  for(s32 i : range(size)) {
     if(isa[i] == size) { k = 0; continue; }  //the next substring is empty; ignore it
-    int j = sa[isa[i] + 1];
+    s32 j = sa[isa[i] + 1];
     while(i + k < size && j + k < size && input[i + k] == input[j + k]) k++;
     lcp[1 + isa[i]] = k;
     if(k) k--;
@@ -150,21 +150,21 @@ inline auto suffix_array_lcp(array_view<int> sa, array_view<int> isa, array_view
 
 // longest common prefix (from permuted longest common prefix)
 // O(n)
-inline auto suffix_array_lcp(array_view<int> plcp, array_view<int> sa) -> vector<int> {
-  vector<int> lcp;
+inline auto suffix_array_lcp(array_view<s32> plcp, array_view<s32> sa) -> vector<s32> {
+  vector<s32> lcp;
   lcp.reallocate(plcp.size());
-  for(int i : range(plcp.size())) lcp[i] = plcp[sa[i]];
+  for(s32 i : range(plcp.size())) lcp[i] = plcp[sa[i]];
   return lcp;
 }
 
 // permuted longest common prefix
 // O(n)
-inline auto suffix_array_plcp(array_view<int> phi, array_view<uint8_t> input) -> vector<int> {
-  vector<int> plcp;
+inline auto suffix_array_plcp(array_view<s32> phi, array_view<u8> input) -> vector<s32> {
+  vector<s32> plcp;
   plcp.reallocate(phi.size());
-  int k = 0, size = input.size();
-  for(int i : range(size)) {
-    int j = phi[i];
+  s32 k = 0, size = input.size();
+  for(s32 i : range(size)) {
+    s32 j = phi[i];
     while(i + k < size && j + k < size && input[i + k] == input[j + k]) k++;
     plcp[i] = k;
     if(k) k--;
@@ -174,10 +174,10 @@ inline auto suffix_array_plcp(array_view<int> phi, array_view<uint8_t> input) ->
 
 // permuted longest common prefix (from longest common prefix)
 // O(n)
-inline auto suffix_array_plcp(array_view<int> lcp, array_view<int> sa) -> vector<int> {
-  vector<int> plcp;
+inline auto suffix_array_plcp(array_view<s32> lcp, array_view<s32> sa) -> vector<s32> {
+  vector<s32> plcp;
   plcp.reallocate(lcp.size());
-  for(int i : range(lcp.size())) plcp[sa[i]] = lcp[i];
+  for(s32 i : range(lcp.size())) plcp[sa[i]] = lcp[i];
   return plcp;
 }
 
@@ -186,18 +186,18 @@ inline auto suffix_array_plcp(array_view<int> lcp, array_view<int> sa) -> vector
 // rlcp[m] == lcp(m, r)
 // O(n)
 // requires: lcp -or- plcp+sa
-inline auto suffix_array_lrcp(vector<int>& llcp, vector<int>& rlcp, array_view<int> lcp, array_view<int> plcp, array_view<int> sa, array_view<uint8_t> input) -> void {
-  int size = input.size();
+inline auto suffix_array_lrcp(vector<s32>& llcp, vector<s32>& rlcp, array_view<s32> lcp, array_view<s32> plcp, array_view<s32> sa, array_view<u8> input) -> void {
+  s32 size = input.size();
   llcp.reset(), llcp.reallocate(size + 1);
   rlcp.reset(), rlcp.reallocate(size + 1);
 
-  function<int (int, int)> recurse = [&](int l, int r) -> int {
+  function<s32 (s32, s32)> recurse = [&](s32 l, s32 r) -> s32 {
     if(l >= r - 1) {
       if(l >= size) return 0;
       if(lcp) return lcp[l];
       return plcp[sa[l]];
     }
-    int m = l + r >> 1;
+    s32 m = l + r >> 1;
     llcp[m - 1] = recurse(l, m);
     rlcp[m - 1] = recurse(m, r);
     return min(llcp[m - 1], rlcp[m - 1]);
@@ -211,12 +211,12 @@ inline auto suffix_array_lrcp(vector<int>& llcp, vector<int>& rlcp, array_view<i
 // longest previous factor
 // O(n)
 // optional: plcp
-inline auto suffix_array_lpf(vector<int>& lengths, vector<int>& offsets, array_view<int> phi, array_view<int> plcp, array_view<uint8_t> input) -> void {
-  int k = 0, size = input.size();
+inline auto suffix_array_lpf(vector<s32>& lengths, vector<s32>& offsets, array_view<s32> phi, array_view<s32> plcp, array_view<u8> input) -> void {
+  s32 k = 0, size = input.size();
   lengths.reset(), lengths.resize(size + 1, -1);
   offsets.reset(), offsets.resize(size + 1, -1);
 
-  function<void (int, int, int)> recurse = [&](int i, int j, int k) -> void {
+  function<void (s32, s32, s32)> recurse = [&](s32 i, s32 j, s32 k) -> void {
     if(lengths[i] < 0) {
       lengths[i] = k;
       offsets[i] = j;
@@ -237,8 +237,8 @@ inline auto suffix_array_lpf(vector<int>& lengths, vector<int>& offsets, array_v
     }
   };
 
-  for(int i : range(size)) {
-    int j = phi[i];
+  for(s32 i : range(size)) {
+    s32 j = phi[i];
     if(plcp) k = plcp[i];
     else while(i + k < size && j + k < size && input[i + k] == input[j + k]) k++;
     if(i > j) {
@@ -254,15 +254,15 @@ inline auto suffix_array_lpf(vector<int>& lengths, vector<int>& offsets, array_v
 }
 
 // O(n log m)
-inline auto suffix_array_find(int& length, int& offset, array_view<int> sa, array_view<uint8_t> input, array_view<uint8_t> match) -> bool {
+inline auto suffix_array_find(s32& length, s32& offset, array_view<s32> sa, array_view<u8> input, array_view<u8> match) -> bool {
   length = 0, offset = 0;
-  int l = 0, r = input.size();
+  s32 l = 0, r = input.size();
 
   while(l < r - 1) {
-    int m = l + r >> 1;
-    int s = sa[m];
+    s32 m = l + r >> 1;
+    s32 s = sa[m];
 
-    int k = 0;
+    s32 k = 0;
     while(k < match.size() && s + k < input.size()) {
       if(match[k] != input[s + k]) break;
       k++;
@@ -287,13 +287,13 @@ inline auto suffix_array_find(int& length, int& offset, array_view<int> sa, arra
 }
 
 // O(n + log m)
-inline auto suffix_array_find(int& length, int& offset, array_view<int> llcp, array_view<int> rlcp, array_view<int> sa, array_view<uint8_t> input, array_view<uint8_t> match) -> bool {
+inline auto suffix_array_find(s32& length, s32& offset, array_view<s32> llcp, array_view<s32> rlcp, array_view<s32> sa, array_view<u8> input, array_view<u8> match) -> bool {
   length = 0, offset = 0;
-  int l = 0, r = input.size(), k = 0;
+  s32 l = 0, r = input.size(), k = 0;
 
   while(l < r - 1) {
-    int m = l + r >> 1;
-    int s = sa[m];
+    s32 m = l + r >> 1;
+    s32 s = sa[m];
 
     while(k < match.size() && s + k < input.size()) {
       if(match[k] != input[s + k]) break;
@@ -328,7 +328,7 @@ struct SuffixArray {
   using type = SuffixArray;
 
   //O(n)
-  SuffixArray(array_view<uint8_t> input) : input(input) {
+  SuffixArray(array_view<u8> input) : input(input) {
     sa = suffix_array(input);
   }
 
@@ -351,36 +351,36 @@ struct SuffixArray {
     return *this;
   }
 
-  auto operator[](int offset) const -> int {
+  auto operator[](s32 offset) const -> s32 {
     return sa[offset];
   }
 
   //O(n log m)
   //O(n + log m) with lrcp()
-  auto find(int& length, int& offset, array_view<uint8_t> match) -> bool {
+  auto find(s32& length, s32& offset, array_view<u8> match) -> bool {
     if(!llcp || !rlcp) return suffix_array_find(length, offset, sa, input, match);  //O(n log m)
     return suffix_array_find(length, offset, llcp, rlcp, sa, input, match);  //O(n + log m)
   }
 
   //O(n) with lpf()
-  auto previous(int& length, int& offset, int address) -> void {
+  auto previous(s32& length, s32& offset, s32 address) -> void {
     length = lengths[address];
     offset = offsets[address];
   }
 
   //non-owning reference: SuffixArray is invalidated if memory is freed
-  array_view<uint8_t> input;
+  array_view<u8> input;
 
   //suffix array and auxiliary data structures
-  vector<int> sa;       //suffix array
-  vector<int> isa;      //inverted suffix array
-  vector<int> phi;      //phi
-  vector<int> plcp;     //permuted longest common prefixes
-  vector<int> lcp;      //longest common prefixes
-  vector<int> llcp;     //longest common prefixes - left
-  vector<int> rlcp;     //longest common prefixes - right
-  vector<int> lengths;  //longest previous factors
-  vector<int> offsets;  //longest previous factors
+  vector<s32> sa;       //suffix array
+  vector<s32> isa;      //inverted suffix array
+  vector<s32> phi;      //phi
+  vector<s32> plcp;     //permuted longest common prefixes
+  vector<s32> lcp;      //longest common prefixes
+  vector<s32> llcp;     //longest common prefixes - left
+  vector<s32> rlcp;     //longest common prefixes - right
+  vector<s32> lengths;  //longest previous factors
+  vector<s32> offsets;  //longest previous factors
 };
 
 }

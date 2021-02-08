@@ -76,10 +76,10 @@ struct VirtualPad {
   InputButton r2{"R2"};
   InputButton lt{"LT"};
   InputButton rt{"RT"};
-    InputAxis lx{"LX"};
-    InputAxis ly{"LY"};
-    InputAxis rx{"RX"};
-    InputAxis ry{"RY"};
+  InputAxis   lx{"LX"};
+  InputAxis   ly{"LY"};
+  InputAxis   rx{"RX"};
+  InputAxis   ry{"RY"};
 
   vector<InputMapping*> mappings;
 };

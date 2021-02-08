@@ -12,7 +12,7 @@ struct mTreeViewItem : mObject {
   auto foregroundColor(bool recursive = false) const -> Color;
   auto icon() const -> image;
   auto item(const string& path) const -> TreeViewItem;
-  auto itemCount() const -> uint;
+  auto itemCount() const -> u32;
   auto items() const -> vector<TreeViewItem>;
   auto path() const -> string;
   auto remove() -> type& override;
@@ -25,7 +25,7 @@ struct mTreeViewItem : mObject {
   auto setFocused() -> type& override;
   auto setForegroundColor(Color color = {}) -> type&;
   auto setIcon(const image& icon = {}) -> type&;
-  auto setParent(mObject* parent = nullptr, int offset = -1) -> type&;
+  auto setParent(mObject* parent = nullptr, s32 offset = -1) -> type& override;
   auto setSelected() -> type&;
   auto setText(const string& text = "") -> type&;
   auto text() const -> string;

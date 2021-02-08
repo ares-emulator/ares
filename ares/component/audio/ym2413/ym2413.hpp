@@ -7,102 +7,102 @@ namespace ares {
 
 struct YM2413 {
   //ym2413.cpp
-  auto clock() -> double;
-  auto reload(uint4 voice) -> void;
+  auto clock() -> f64;
+  auto reload(n4 voice) -> void;
   auto power(bool isVRC7 = false) -> void;
 
   //io.cpp
-  auto address(uint8 data) -> void;
-  auto write(uint8 data) -> void;
+  auto address(n8 data) -> void;
+  auto write(n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 protected:
-  static const   int8 levelScaling[16];
-  static const uint64 envelopeSteps[17][2];
-  static const  uint8 melodicTonesOPLL[15][8];
-  static const  uint8 rhythmTonesOPLL[3][8];
-  static const  uint8 melodicTonesVRC7[15][8];
-  static const  uint8 rhythmTonesVRC7[3][8];
-  static uint13 sinTable[1 << 10];
-  static  int12 expTable[1 <<  9];
-  uint8 melodicTones[15][8];
-  uint8 rhythmTones[3][8];
-  uint8 customTone[8];
+  static const i8  levelScaling[16];
+  static const n64 envelopeSteps[17][2];
+  static const n8  melodicTonesOPLL[15][8];
+  static const n8  rhythmTonesOPLL[3][8];
+  static const n8  melodicTonesVRC7[15][8];
+  static const n8  rhythmTonesVRC7[3][8];
+  static n13 sinTable[1 << 10];
+  static i12 expTable[1 <<  9];
+  n8 melodicTones[15][8];
+  n8 rhythmTones[3][8];
+  n8 customTone[8];
 
-  enum : uint { Trigger, Attack, Decay, Sustain, Release };
+  enum : u32 { Trigger, Attack, Decay, Sustain, Release };
 
   struct Operator {
     //operator.cpp
-    auto releaseRate() const -> uint4;
-    auto update(maybe<uint> state = {}) -> void;
-    auto synchronize(uint1 hard, maybe<Operator&> modulator = {}) -> void;
-    auto trigger(uint1 key, uint1 sustain = 0) -> void;
-    auto clock(natural clock, integer offset, integer modulation = 0) -> int12;
+    auto releaseRate() const -> n4;
+    auto update(maybe<u32> state = {}) -> void;
+    auto synchronize(n1 hard, maybe<Operator&> modulator = {}) -> void;
+    auto trigger(n1 key, n1 sustain = 0) -> void;
+    auto clock(natural clock, integer offset, integer modulation = 0) -> i12;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint5 slot;  //1-18
-    uint1 keyOn;
-    uint1 sustainOn;
-    uint4 multiple;
-    uint1 scaleRate;
-    uint1 sustainable;
-    uint1 vibrato;
-    uint1 tremolo;
-    uint2 scaleLevel;
-    uint1 waveform;
-    uint4 attack;
-    uint4 decay;
-    uint4 sustain;
-    uint4 release;
-    uint6 totalLevel;
-    uint1 audible;
+    n5 slot;  //1-18
+    n1 keyOn;
+    n1 sustainOn;
+    n4 multiple;
+    n1 scaleRate;
+    n1 sustainable;
+    n1 vibrato;
+    n1 tremolo;
+    n2 scaleLevel;
+    n1 waveform;
+    n4 attack;
+    n4 decay;
+    n4 sustain;
+    n4 release;
+    n6 totalLevel;
+    n1 audible;
 
     //envelope generator
-     uint3 state = Release;
-     uint7 rate;
-     uint4 divider;
-    uint64 sequence;
-     uint7 envelope = 0x7f;
-     uint7 level;
+    n3  state = Release;
+    n7  rate;
+    n4  divider;
+    n64 sequence;
+    n7  envelope = 0x7f;
+    n7  level;
 
     //phase generator
-     uint9 fnumber;
-     uint3 block;
-    uint19 pitch[8];
-    uint19 phase;
+    n9  fnumber;
+    n3  block;
+    n19 pitch[8];
+    n19 phase;
 
     //output
-    int12 output;
-    int12 prior;
+    i12 output;
+    i12 prior;
   };
 
   struct Voice {
     //voice.cpp
-    auto update(const uint8* data = nullptr) -> void;
+    auto update(const n8* data = nullptr) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint4 tone;
-    uint9 fnumber;
-    uint3 block;
-    uint4 level;
-    uint3 feedback;
+    n4 tone;
+    n9 fnumber;
+    n3 block;
+    n4 level;
+    n3 feedback;
 
     Operator modulator;
     Operator carrier;
   } voices[9];
 
   struct IO {
-    uint32 clock;
-     uint8 address;
-     uint1 rhythmMode;
-    uint23 noise = 1;
-     uint1 isVRC7 = 0;
+    n32 clock;
+    n8  address;
+    n1  rhythmMode;
+    n23 noise = 1;
+    n1  isVRC7 = 0;
   } io;
 
   Voice& bass      = voices[6];

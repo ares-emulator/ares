@@ -1,4 +1,4 @@
-auto PPU::readVRAM(uint mode, uint32 addr) -> uint32 {
+auto PPU::readVRAM(u32 mode, n32 addr) -> n32 {
   addr &= (addr & 0x10000) ? 0x17fff : 0x0ffff;
 
   if(mode & Word) {
@@ -14,7 +14,7 @@ auto PPU::readVRAM(uint mode, uint32 addr) -> uint32 {
   unreachable;
 }
 
-auto PPU::writeVRAM(uint mode, uint32 addr, uint32 word) -> void {
+auto PPU::writeVRAM(u32 mode, n32 addr, n32 word) -> void {
   addr &= (addr & 0x10000) ? 0x17fff : 0x0ffff;
 
   if(mode & Word) {
@@ -33,18 +33,18 @@ auto PPU::writeVRAM(uint mode, uint32 addr, uint32 word) -> void {
     if(Background::IO::mode <= 5 && addr >= 0x14000) return;
 
     addr &= ~1;
-    vram[addr + 0] = (uint8)word;
-    vram[addr + 1] = (uint8)word;
+    vram[addr + 0] = (n8)word;
+    vram[addr + 1] = (n8)word;
   }
 }
 
-auto PPU::readPRAM(uint mode, uint32 addr) -> uint32 {
+auto PPU::readPRAM(u32 mode, n32 addr) -> n32 {
   if(mode & Word) return readPRAM(Half, addr & ~2) << 0 | readPRAM(Half, addr | 2) << 16;
   if(mode & Byte) return readPRAM(Half, addr) >> ((addr & 1) * 8);
   return pram[addr >> 1 & 511];
 }
 
-auto PPU::writePRAM(uint mode, uint32 addr, uint32 word) -> void {
+auto PPU::writePRAM(u32 mode, n32 addr, n32 word) -> void {
   if(mode & Word) {
     writePRAM(Half, addr & ~2, word >>  0);
     writePRAM(Half, addr |  2, word >> 16);
@@ -52,14 +52,14 @@ auto PPU::writePRAM(uint mode, uint32 addr, uint32 word) -> void {
   }
 
   if(mode & Byte) {
-    word = (uint8)word;
+    word = (n8)word;
     return writePRAM(Half, addr, word << 8 | word << 0);
   }
 
-  pram[addr >> 1 & 511] = (uint16)word;
+  pram[addr >> 1 & 511] = (n16)word;
 }
 
-auto PPU::readOAM(uint mode, uint32 addr) -> uint32 {
+auto PPU::readOAM(u32 mode, n32 addr) -> n32 {
   if(mode & Word) return readOAM(Half, addr & ~2) << 0 | readOAM(Half, addr | 2) << 16;
   if(mode & Byte) return readOAM(Half, addr) >> ((addr & 1) * 8);
 
@@ -105,7 +105,7 @@ auto PPU::readOAM(uint mode, uint32 addr) -> uint32 {
   unreachable;
 }
 
-auto PPU::writeOAM(uint mode, uint32 addr, uint32 word) -> void {
+auto PPU::writeOAM(u32 mode, n32 addr, n32 word) -> void {
   if(mode & Word) {
     writeOAM(Half, addr & ~2, word >>  0);
     writeOAM(Half, addr |  2, word >> 16);
@@ -152,14 +152,14 @@ auto PPU::writeOAM(uint mode, uint32 addr, uint32 word) -> void {
 
   }
 
-  static uint widths[] = {
+  static u32 widths[] = {
      8, 16, 32, 64,
     16, 32, 32, 64,
      8,  8, 16, 32,
      8,  8,  8,  8,  //invalid modes
   };
 
-  static uint heights[] = {
+  static u32 heights[] = {
      8, 16, 32, 64,
      8,  8, 16, 32,
     16, 32, 32, 64,
@@ -170,7 +170,7 @@ auto PPU::writeOAM(uint mode, uint32 addr, uint32 word) -> void {
   obj.height = heights[obj.shape * 4 + obj.size];
 }
 
-auto PPU::readObjectVRAM(uint addr) const -> uint8 {
+auto PPU::readObjectVRAM(u32 addr) const -> n8 {
   if(Background::IO::mode == 3 || Background::IO::mode == 4 || Background::IO::mode == 5) {
     if(addr <= 0x3fff) return 0u;
   }

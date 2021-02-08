@@ -1,11 +1,11 @@
-auto PPU::color(uint32 color) -> uint64 {
-  uint b = color.bit(0, 3);
-  uint g = color.bit(4, 7);
-  uint r = color.bit(8,11);
+auto PPU::color(n32 color) -> n64 {
+  u32 b = color.bit(0, 3);
+  u32 g = color.bit(4, 7);
+  u32 r = color.bit(8,11);
 
-  uint64_t R = image::normalize(r, 4, 16);
-  uint64_t G = image::normalize(g, 4, 16);
-  uint64_t B = image::normalize(b, 4, 16);
+  u64 R = image::normalize(r, 4, 16);
+  u64 G = image::normalize(g, 4, 16);
+  u64 B = image::normalize(b, 4, 16);
 
   if(colorEmulation->value()) {
     R = (r * 26 + g *  4 + b *  2);

@@ -21,8 +21,8 @@ auto CPU::idle() -> void {
   step();
 }
 
-auto CPU::read(uint16 address) -> uint8 {
-  uint8 data = 0xff;
+auto CPU::read(n16 address) -> n8 {
+  n8 data = 0xff;
   if(r.ei) r.ei = 0, r.ime = 1;
   data &= bus.read(0, address, data);
   step();
@@ -37,7 +37,7 @@ auto CPU::read(uint16 address) -> uint8 {
   return data;
 }
 
-auto CPU::write(uint16 address, uint8 data) -> void {
+auto CPU::write(n16 address, n8 data) -> void {
   if(r.ei) r.ei = 0, r.ime = 1;
   bus.write(0, address, data);
   step();
@@ -52,7 +52,7 @@ auto CPU::write(uint16 address, uint8 data) -> void {
 }
 
 //VRAM DMA source can only be ROM or RAM
-auto CPU::readDMA(uint16 address, uint8 data) -> uint8 {
+auto CPU::readDMA(n16 address, n8 data) -> n8 {
   if(address < 0x8000) return bus.read(address, data);  //0000-7fff
   if(address < 0xa000) return data;                     //8000-9fff
   if(address < 0xe000) return bus.read(address, data);  //a000-dfff
@@ -60,10 +60,10 @@ auto CPU::readDMA(uint16 address, uint8 data) -> uint8 {
 }
 
 //VRAM DMA target is always VRAM
-auto CPU::writeDMA(uint13 address, uint8 data) -> void {
+auto CPU::writeDMA(n13 address, n8 data) -> void {
   return bus.write(0x8000 | address, data);
 }
 
-auto CPU::readDebugger(uint16 address) -> uint8 {
+auto CPU::readDebugger(n16 address) -> n8 {
   return bus.read(address, 0xff);
 }

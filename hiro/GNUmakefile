@@ -26,7 +26,7 @@ ifeq ($(platform),macos)
 
   ifeq ($(hiro),cocoa)
     hiro.flags   = $(flags.objcpp) -w -DHIRO_COCOA
-    hiro.options = -framework Cocoa -framework Carbon -framework Security
+    hiro.options = -framework Cocoa -framework Carbon -framework IOKit -framework Security
   endif
 endif
 

@@ -14,8 +14,8 @@ auto mCanvas::color() const -> Color {
   return state.color;
 }
 
-auto mCanvas::data() -> uint32_t* {
-  return (uint32_t*)state.icon.data();
+auto mCanvas::data() -> u32* {
+  return (u32*)state.icon.data();
 }
 
 auto mCanvas::gradient() const -> Gradient {
@@ -63,7 +63,7 @@ auto mCanvas::setSize(Size size) -> type& {
 }
 
 auto mCanvas::size() const -> Size {
-  return {(int)state.icon.width(), (int)state.icon.height()};
+  return {(s32)state.icon.width(), (s32)state.icon.height()};
 }
 
 auto mCanvas::update() -> type& {

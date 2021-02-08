@@ -36,16 +36,16 @@ auto VPU::unload() -> void {
 
 auto VPU::main() -> void {
   if(io.vcounter < 152) {
-    uint8 y = io.vcounter;
+    n8 y = io.vcounter;
     auto line = screen->pixels().data() + y * 160;
     cacheSprites(y);
-    for(uint8 x : range(160)) {
+    for(n8 x : range(160)) {
       bool validPlane1 = renderPlane(x, y, plane1);
       bool validPlane2 = renderPlane(x, y, plane2);
       bool validSprite = renderSprite(x);
       bool validWindow = renderWindow(x, y);
 
-      uint12 color;
+      n12 color;
       //the dev manual says only background.mode = 0b10 enables background.color
       //Ogre Battle however sets 0b00 and expects the background color to be used
       //as such, it appears that only the lower bit of background.mode matters?
@@ -104,7 +104,7 @@ auto VPU::main() -> void {
   cpu.pollPowerButton();
 }
 
-auto VPU::step(uint clocks) -> void {
+auto VPU::step(u32 clocks) -> void {
   Thread::step(clocks);
   synchronize(cpu);
 }

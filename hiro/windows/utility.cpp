@@ -1,38 +1,38 @@
 namespace hiro {
 
-static const uint Windows2000  = 0x0500;
-static const uint WindowsXP    = 0x0501;
-static const uint WindowsVista = 0x0600;
-static const uint Windows7     = 0x0601;
+static constexpr u32 Windows2000  = 0x0500;
+static constexpr u32 WindowsXP    = 0x0501;
+static constexpr u32 WindowsVista = 0x0600;
+static constexpr u32 Windows7     = 0x0601;
 
-static auto Button_CustomDraw(HWND, PAINTSTRUCT&, bool, bool, bool, unsigned, const Font&, const image&, Orientation, const string&) -> void;
+static auto Button_CustomDraw(HWND, PAINTSTRUCT&, bool, bool, bool, u32, const Font&, const image&, Orientation, const string&) -> void;
 
-static auto OsVersion() -> uint {
+static auto OsVersion() -> u32 {
   OSVERSIONINFO versionInfo{0};
   versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
   GetVersionEx(&versionInfo);
   return (versionInfo.dwMajorVersion << 8) + (versionInfo.dwMajorVersion << 0);
 }
 
-static auto CreateBitmap(HDC hdc, uint width, uint height, uint32_t*& data) -> HBITMAP {
+static auto CreateBitmap(HDC hdc, u32 width, u32 height, u32*& data) -> HBITMAP {
   BITMAPINFO info{};
   info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
   info.bmiHeader.biWidth = width;
-  info.bmiHeader.biHeight = -(int)height;  //bitmaps are stored upside down unless we negate height
+  info.bmiHeader.biHeight = -(s32)height;  //bitmaps are stored upside down unless we negate height
   info.bmiHeader.biPlanes = 1;
   info.bmiHeader.biBitCount = 32;
   info.bmiHeader.biCompression = BI_RGB;
-  info.bmiHeader.biSizeImage = width * height * sizeof(uint32_t);
+  info.bmiHeader.biSizeImage = width * height * sizeof(u32);
   void* bits = nullptr;
   auto bitmap = CreateDIBSection(hdc, &info, DIB_RGB_COLORS, &bits, nullptr, 0);
-  data = (uint32_t*)bits;
+  data = (u32*)bits;
   return bitmap;
 }
 
 static auto CreateBitmap(image icon) -> HBITMAP {
   icon.alphaMultiply();  //Windows AlphaBlend() requires premultiplied image data
   icon.transform();
-  uint32_t* data = nullptr;
+  u32* data = nullptr;
   auto hdc = GetDC(nullptr);
   auto bitmap = CreateBitmap(hdc, icon.width(), icon.height(), data);
   memory::copy(data, icon.data(), icon.size());
@@ -78,13 +78,13 @@ static auto EnumVisibleChildWindows(HWND hwnd) -> vector<HWND> {
   return children;
 }
 
-static auto GetWindowZOrder(HWND hwnd) -> unsigned {
-  uint z = 0;
+static auto GetWindowZOrder(HWND hwnd) -> u32 {
+  u32 z = 0;
   for(HWND next = hwnd; next != nullptr; next = GetWindow(next, GW_HWNDPREV)) z++;
   return z;
 }
 
-static auto ImageList_Append(HIMAGELIST imageList, image icon, unsigned scale) -> void {
+static auto ImageList_Append(HIMAGELIST imageList, image icon, u32 scale) -> void {
   if(icon) {
     icon.scale(scale, scale);
   } else {
@@ -104,7 +104,7 @@ static auto PostMessageOnce(HWND hwnd, UINT id, WPARAM wparam, LPARAM lparam) ->
   }
 }
 
-static auto ScrollEvent(HWND hwnd, WPARAM wparam) -> unsigned {
+static auto ScrollEvent(HWND hwnd, WPARAM wparam) -> u32 {
   SCROLLINFO info;
   memset(&info, 0, sizeof(SCROLLINFO));
   info.cbSize = sizeof(SCROLLINFO);

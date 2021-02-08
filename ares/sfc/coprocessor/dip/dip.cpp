@@ -7,9 +7,9 @@ DIP dip;
 auto DIP::power() -> void {
 }
 
-auto DIP::read(uint24, uint8) -> uint8 {
+auto DIP::read(n24, n8) -> n8 {
   return value;
 }
 
-auto DIP::write(uint24, uint8) -> void {
+auto DIP::write(n24, n8) -> void {
 }

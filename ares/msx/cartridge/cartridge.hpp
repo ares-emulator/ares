@@ -3,8 +3,8 @@ struct Cartridge;
 
 struct Cartridge : Thread {
   Node::Peripheral node;
-  Memory::Readable<uint8> rom;
-  Memory::Writable<uint8> ram;
+  Memory::Readable<n8> rom;
+  Memory::Writable<n8> ram;
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
@@ -17,11 +17,11 @@ struct Cartridge : Thread {
 
   auto save() -> void;
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power() -> void;
 
-  auto read(uint16 address) -> uint8;
-  auto write(uint16 address, uint8 data) -> void;
+  auto read(n16 address) -> n8;
+  auto write(n16 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

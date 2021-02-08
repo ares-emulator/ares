@@ -1,12 +1,12 @@
-inline auto VDP::Object::width() const -> uint {
+inline auto VDP::Object::width() const -> u32 {
   return 1 + tileWidth << 3;
 }
 
-inline auto VDP::Object::height() const -> uint {
+inline auto VDP::Object::height() const -> u32 {
   return 1 + tileHeight << 3 + (vdp.io.interlaceMode == 3);
 }
 
-auto VDP::Sprite::write(uint9 address, uint16 data) -> void {
+auto VDP::Sprite::write(n9 address, n16 data) -> void {
   if(address > 320) return;
 
   auto& object = oam[address >> 2];
@@ -41,15 +41,15 @@ auto VDP::Sprite::write(uint9 address, uint16 data) -> void {
   }
 }
 
-auto VDP::Sprite::scanline(uint y) -> void {
+auto VDP::Sprite::scanline(u32 y) -> void {
   bool interlace = vdp.io.interlaceMode == 3;
   y += 128;
   if(interlace) y = y << 1 | vdp.state.field;
 
   objects.reset();
-  uint7 link = 0;
-  uint tiles = 0;
-  uint count = 0;
+  n7  link = 0;
+  u32 tiles = 0;
+  u32 count = 0;
 
   do {
     auto& object = oam[link];
@@ -68,7 +68,7 @@ auto VDP::Sprite::scanline(uint y) -> void {
   } while(++count < linkLimit());
 }
 
-auto VDP::Sprite::run(uint x, uint y) -> void {
+auto VDP::Sprite::run(u32 x, u32 y) -> void {
   bool interlace = vdp.io.interlaceMode == 3;
   x += 128;
   y += 128;
@@ -81,21 +81,21 @@ auto VDP::Sprite::run(uint x, uint y) -> void {
     if(x <  object.x) continue;
     if(x >= object.x + object.width()) continue;
 
-    uint objectX = x - object.x;
-    uint objectY = y - object.y;
+    u32 objectX = x - object.x;
+    u32 objectY = y - object.y;
     if(object.horizontalFlip) objectX = (object.width() - 1) - objectX;
     if(object.verticalFlip) objectY = (object.height() - 1) - objectY;
 
-    uint tileX = objectX >> 3;
-    uint tileY = objectY >> 3 + interlace;
-    uint tileNumber = tileX * (object.height() >> 3 + interlace) + tileY;
-    uint15 tileAddress = object.address + tileNumber << 4 + interlace;
-    uint pixelX = objectX & 7;
-    uint pixelY = objectY & 7 + interlace * 8;
+    u32 tileX = objectX >> 3;
+    u32 tileY = objectY >> 3 + interlace;
+    u32 tileNumber = tileX * (object.height() >> 3 + interlace) + tileY;
+    n15 tileAddress = object.address + tileNumber << 4 + interlace;
+    u32 pixelX = objectX & 7;
+    u32 pixelY = objectY & 7 + interlace * 8;
     tileAddress += pixelY << 1 | pixelX >> 2;
 
-    uint16 tileData = vdp.vram.read(io.generatorAddress | tileAddress);
-    uint4 color = tileData >> (((pixelX & 3) ^ 3) << 2);
+    n16 tileData = vdp.vram.read(io.generatorAddress | tileAddress);
+    n4  color = tileData >> (((pixelX & 3) ^ 3) << 2);
     if(!color) continue;
 
     output.color = object.palette << 4 | color;

@@ -29,7 +29,7 @@ auto PSG::main() -> void {
   step(1);
 }
 
-auto PSG::step(uint clocks) -> void {
+auto PSG::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }
@@ -38,18 +38,18 @@ auto PSG::power() -> void {
   AY38910::power();
   Thread::create(system.colorburst() / 16.0, {&PSG::main, this});
 
-  for(uint level : range(16)) {
+  for(u32 level : range(16)) {
     volume[level] = 1.0 / pow(2, 1.0 / 2 * (15 - level));
   }
 }
 
-auto PSG::readIO(uint1 port) -> uint8 {
+auto PSG::readIO(n1 port) -> n8 {
   if(port == 0) return controllerPort1.read() | 0x40;
   if(port == 1) return controllerPort2.read() | 0xc0;
   unreachable;
 }
 
-auto PSG::writeIO(uint1 port, uint8 data) -> void {
+auto PSG::writeIO(n1 port, n8 data) -> void {
   if(port == 0) return controllerPort1.write(data);
   if(port == 1) return controllerPort2.write(data);
 }

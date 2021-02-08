@@ -15,7 +15,7 @@
 
 namespace nall {
 
-inline auto string::operator[](uint position) const -> const char& {
+inline auto string::operator[](u32 position) const -> const char& {
   #ifdef DEBUG
   struct out_of_bounds {};
   if(position >= size() + 1) throw out_of_bounds{};
@@ -23,7 +23,7 @@ inline auto string::operator[](uint position) const -> const char& {
   return data()[position];
 }
 
-inline auto string::operator()(uint position, char fallback) const -> char {
+inline auto string::operator()(u32 position, char fallback) const -> char {
   if(position >= size() + 1) return fallback;
   return data()[position];
 }
@@ -68,7 +68,7 @@ template<typename T> inline auto string::_append(const stringify<T>& source) -> 
   return *this;
 }
 
-inline auto string::length() const -> uint {
+inline auto string::length() const -> u32 {
   return strlen(data());
 }
 

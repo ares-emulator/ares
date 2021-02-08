@@ -62,7 +62,7 @@ auto VDP::main() -> void {
     vdc0.hclock(); if(Model::SuperGrafx())
     vdc1.hclock();
 
-    uint10 color;
+    n10 color;
     if(Model::SuperGrafx() == 0) color = vdc0.bus();
     if(Model::SuperGrafx() == 1) color = vpc.bus(io.hcounter);
     color = vce.io.grayscale << 9 | vce.cram.read(color);
@@ -89,7 +89,7 @@ auto VDP::main() -> void {
   }
 }
 
-auto VDP::step(uint clocks) -> void {
+auto VDP::step(u32 clocks) -> void {
   io.hcounter += clocks;
   vdc0.dma.step(clocks); if(Model::SuperGrafx())
   vdc1.dma.step(clocks);

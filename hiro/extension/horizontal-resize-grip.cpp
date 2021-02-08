@@ -3,7 +3,7 @@
 mHorizontalResizeGrip::mHorizontalResizeGrip() {
   image icon;
   icon.allocate(5, 15);
-  for(uint y : range(icon.height())) {
+  for(u32 y : range(icon.height())) {
     auto data = icon.data() + y * icon.pitch();
     icon.write(data, 0x00000000); data += icon.stride();
     icon.write(data, 0xff9f9f9f); data += icon.stride();
@@ -33,7 +33,7 @@ auto mHorizontalResizeGrip::doActivate() const -> void {
   if(state.onActivate) state.onActivate();
 }
 
-auto mHorizontalResizeGrip::doResize(int offset) const -> void {
+auto mHorizontalResizeGrip::doResize(s32 offset) const -> void {
   if(state.onResize) state.onResize(offset);
 }
 
@@ -42,7 +42,7 @@ auto mHorizontalResizeGrip::onActivate(const function<void ()>& callback) -> typ
   return *this;
 }
 
-auto mHorizontalResizeGrip::onResize(const function<void (int)>& callback) -> type& {
+auto mHorizontalResizeGrip::onResize(const function<void (s32)>& callback) -> type& {
   state.onResize = callback;
   return *this;
 }

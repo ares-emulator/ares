@@ -54,9 +54,9 @@ auto SuperFX::power() -> void {
   ramMask = ram.size() - 1;
   bramMask = bram.size() - 1;
 
-  for(uint n : range(512)) cache.buffer[n] = 0x00;
-  for(uint n : range(32)) cache.valid[n] = false;
-  for(uint n : range(2)) {
+  for(u32 n : range(512)) cache.buffer[n] = 0x00;
+  for(u32 n : range(32)) cache.valid[n] = false;
+  for(u32 n : range(2)) {
     pixelcache[n].offset = ~0;
     pixelcache[n].bitpend = 0x00;
   }

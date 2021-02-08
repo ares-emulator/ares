@@ -84,7 +84,7 @@ struct HVC_SxROM : Interface {  //MMC1
     Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto main() -> void {
+  auto main() -> void override {
     if(writeDelay) writeDelay--;
     tick();
   }
@@ -201,13 +201,13 @@ struct HVC_SxROM : Interface {  //MMC1
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
     programMode = 1;
     programSize = 1;
     characterBank[1] = 1;
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programRAM);
     s(characterRAM);
     s(writeDelay);

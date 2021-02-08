@@ -44,6 +44,12 @@ auto pApplication::processEvents() -> void {
       Application_processDialogMessage(msg);
     }
   }
+
+  //process any deferred menu updates
+  for(auto menu : pApplication::state().menuBarsToRebuild) {
+    menu->_rebuild();
+  }
+  pApplication::state().menuBarsToRebuild.reset();
 }
 
 auto Application_processDialogMessage(MSG& msg) -> void {

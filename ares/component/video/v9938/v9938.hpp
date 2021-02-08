@@ -7,7 +7,7 @@ namespace ares {
 struct V9938 {
   Node::Video::Screen screen_;
 
-  virtual auto step(uint clocks) -> void = 0;
+  virtual auto step(u32 clocks) -> void = 0;
   virtual auto irq(bool line) -> void = 0;
   virtual auto frame() -> void = 0;
 
@@ -16,8 +16,8 @@ struct V9938 {
   auto interlace() const -> bool { return latch.interlace; }
   auto field() const -> bool { return latch.field; }
 
-  auto vtotal() const -> uint { return !latch.timing ? 262 : 313; }
-  auto vlines() const -> uint { return !latch.overscan ? 192 : 212; }
+  auto vtotal() const -> u32 { return !latch.timing ? 262 : 313; }
+  auto vlines() const -> u32 { return !latch.overscan ? 192 : 212; }
 
   auto t1() const -> bool { return screen.mode == 0b00001; }
   auto t2() const -> bool { return screen.mode == 0b01001; }
@@ -39,29 +39,29 @@ struct V9938 {
 
   auto main() -> void;
   auto poll() -> void;
-  auto tick(uint clocks) -> void;
+  auto tick(u32 clocks) -> void;
   auto power() -> void;
 
   //io.cpp
-  auto status() -> uint8;
-  auto data() -> uint8;
+  auto status() -> n8;
+  auto data() -> n8;
 
-  auto data(uint8 data) -> void;
-  auto control(uint8 data) -> void;
-  auto palette(uint8 data) -> void;
-  auto register(uint8 data) -> void;
+  auto data(n8 data) -> void;
+  auto control(n8 data) -> void;
+  auto palette(n8 data) -> void;
+  auto register(n8 data) -> void;
 
-  auto register(uint6 register, uint8 data) -> void;
+  auto register(n6 register, n8 data) -> void;
 
   //commands.cpp
-  auto command(uint8 data) -> void;
+  auto command(n8 data) -> void;
   auto command() -> void;
   auto relatch() -> void;
   auto advance() -> bool;
-  auto address(uint9 x, uint10 y) -> uint17;
-  auto read(uint1 source, uint9 x, uint10 y) -> uint8;
-  auto write(uint1 source, uint9 x, uint10 y, uint8 data) -> void;
-  auto logic(uint8 dc, uint8 sc) -> uint8;
+  auto address(n9 x, n10 y) -> n17;
+  auto read(n1 source, n9 x, n10 y) -> n8;
+  auto write(n1 source, n9 x, n10 y, n8 data) -> void;
+  auto logic(n8 dc, n8 sc) -> n8;
   auto point() -> void;
   auto pset() -> void;
   auto srch() -> void;
@@ -76,161 +76,161 @@ struct V9938 {
   auto hmmc() -> void;
 
   //graphic1.cpp
-  auto graphic1(uint4& color, uint8 hoffset, uint8 voffset) -> void;
+  auto graphic1(n4& color, n8 hoffset, n8 voffset) -> void;
 
   //graphic2.cpp
-  auto graphic2(uint4& color, uint8 hoffset, uint8 voffset) -> void;
+  auto graphic2(n4& color, n8 hoffset, n8 voffset) -> void;
 
   //graphic3.cpp
-  auto graphic3(uint4& color, uint8 hoffset, uint8 voffset) -> void;
+  auto graphic3(n4& color, n8 hoffset, n8 voffset) -> void;
 
   //graphic4.cpp
-  auto graphic4(uint4& color, uint8 hoffset, uint8 voffset) -> void;
+  auto graphic4(n4& color, n8 hoffset, n8 voffset) -> void;
 
   //sprite1.cpp
-  auto sprite1(uint8 voffset) -> void;
-  auto sprite1(uint4& color, uint8 hoffset, uint8 voffset) -> void;
+  auto sprite1(n8 voffset) -> void;
+  auto sprite1(n4& color, n8 hoffset, n8 voffset) -> void;
 
   //sprite2.cpp
-  auto sprite2(uint8 voffset) -> void;
-  auto sprite2(uint4& color, uint8 hoffset, uint8 voffset) -> void;
+  auto sprite2(n8 voffset) -> void;
+  auto sprite2(n4& color, n8 hoffset, n8 voffset) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 protected:
-  Memory::Writable<uint8> videoRAM;
-  Memory::Writable<uint8> expansionRAM;
-  uint9 paletteRAM[16];
+  Memory::Writable<n8> videoRAM;
+  Memory::Writable<n8> expansionRAM;
+  n9 paletteRAM[16];
 
   struct VerticalScanIRQ {
-    uint1 enable;
-    uint1 pending;
+    n1 enable;
+    n1 pending;
   } virq;
 
   struct HorizontalScanIRQ {
-    uint1 enable;
-    uint1 pending;
-    uint8 coincidence;
+    n1 enable;
+    n1 pending;
+    n8 coincidence;
   } hirq;
 
   struct LightPenIRQ {
-    uint1 enable;
-    uint1 pending;
+    n1 enable;
+    n1 pending;
   } lirq;
 
   struct Latch {
-    uint1 timing;
-    uint1 overscan;
-    uint1 interlace;
-    uint1 field;
+    n1 timing;
+    n1 overscan;
+    n1 interlace;
+    n1 field;
   } latch;
 
   struct Screen {
-    uint1 enable;
-    uint1 digitize;   //unemulated
-    uint1 grayscale;  //unemulated
-    uint5 mode;
-    uint1 interlace;
-    uint1 overscan;   //0 = 192, 1 = 212
-    uint1 timing;     //0 = 262, 1 = 313
-     int4 hadjust;
-     int4 vadjust;
-    uint8 vscroll;
+    n1 enable;
+    n1 digitize;   //unemulated
+    n1 grayscale;  //unemulated
+    n5 mode;
+    n1 interlace;
+    n1 overscan;   //0 = 192, 1 = 212
+    n1 timing;     //0 = 262, 1 = 313
+    i4 hadjust;
+    i4 vadjust;
+    n8 vscroll;
   } screen;
 
   struct Table {
-    uint17 patternLayout;
-    uint17 patternGenerator;
-    uint17 spriteAttribute;
-    uint17 spritePatternGenerator;
-    uint17 color;
+    n17 patternLayout;
+    n17 patternGenerator;
+    n17 spriteAttribute;
+    n17 spritePatternGenerator;
+    n17 color;
   } table;
 
   struct SpriteIO {
-    uint1 magnify;
-    uint1 size;  //0 = 8x8, 1 = 16x16
-    uint1 disable;
+    n1 magnify;
+    n1 size;  //0 = 8x8, 1 = 16x16
+    n1 disable;
 
-    uint1 collision;
-    uint1 overflow;
-    uint5 last;
+    n1 collision;
+    n1 overflow;
+    n5 last;
   } sprite;
 
   struct SpriteObject {
-    uint8 x;
-    uint8 y;
-    uint8 pattern;
-    uint4 color;
-    uint1 collision;
-    uint1 priority;
+    n8 x;
+    n8 y;
+    n8 pattern;
+    n4 color;
+    n1 collision;
+    n1 priority;
   } sprites[8];
 
   struct IO {
-    uint16 vcounter;
-    uint16 hcounter;
+    n16 vcounter;
+    n16 hcounter;
 
-     uint1 controlLatch;
-    uint16 controlValue;
+    n1  controlLatch;
+    n16 controlValue;
 
-     uint4 colorBackground;
-     uint4 colorForeground;
+    n4  colorBackground;
+    n4  colorForeground;
 
-     uint4 blinkColorBackground;
-     uint4 blinkColorForeground;
+    n4  blinkColorBackground;
+    n4  blinkColorForeground;
 
-     uint4 blinkPeriodBackground;
-     uint4 blinkPeriodForeground;
+    n4  blinkPeriodBackground;
+    n4  blinkPeriodForeground;
 
-     uint4 statusIndex;
+    n4  statusIndex;
 
-     uint4 paletteIndex;
-     uint1 paletteLatch;
-    uint16 paletteValue;
+    n4  paletteIndex;
+    n1  paletteLatch;
+    n16 paletteValue;
 
-     uint6 registerIndex;
-     uint1 registerFixed;  //0 = auto-increment
+    n6  registerIndex;
+    n1  registerFixed;  //0 = auto-increment
 
-     uint1 ramSelect;  //0 = video RAM, 1 = expansion RAM
-     uint3 ramBank;
-     uint8 ramLatch;
+    n1  ramSelect;  //0 = video RAM, 1 = expansion RAM
+    n3  ramBank;
+    n8  ramLatch;
   } io;
 
   struct Operation {
     //a very rough, inaccurate approximation of command timing
-    uint32 counter;
+    n32 counter;
 
-     uint1 executing;
-     uint1 ready;
-     uint4 command;
+    n1  executing;
+    n1  ready;
+    n4  command;
 
-     uint1 mxs;
-     uint9 sx;
-    uint10 sy;
+    n1  mxs;
+    n9  sx;
+    n10 sy;
 
-     uint1 mxd;
-     uint9 dx;
-    uint10 dy;
+    n1  mxd;
+    n9  dx;
+    n10 dy;
 
-     uint9 nx;
-    uint10 ny;
+    n9  nx;
+    n10 ny;
 
-     uint1 dix;  //0 = right, 1 = left
-     uint1 diy;  //0 = down, 1 = up
+    n1  dix;  //0 = right, 1 = left
+    n1  diy;  //0 = down, 1 = up
 
-     uint8 cr;
-     uint9 match;
-     uint1 found;
-     uint1 eq;
-     uint1 maj;
+    n8  cr;
+    n9  match;
+    n1  found;
+    n1  eq;
+    n1  maj;
 
-     uint4 logic;
+    n4  logic;
 
     //internal latches
-      uint3 lgm;
-      uint9 lsx;
-      uint9 ldx;
-      uint9 lnx;
+    n3  lgm;
+    n9  lsx;
+    n9  ldx;
+    n9  lnx;
   } op;
 };
 

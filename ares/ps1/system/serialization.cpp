@@ -1,7 +1,7 @@
 auto System::serialize(bool synchronize) -> serializer {
   serializer s;
 
-  uint signature = SerializerSignature;
+  u32  signature = SerializerSignature;
   char version[16] = {};
   char description[512] = {};
   memory::copy(&version, (const char*)SerializerVersion, SerializerVersion.size());
@@ -16,7 +16,7 @@ auto System::serialize(bool synchronize) -> serializer {
 }
 
 auto System::unserialize(serializer& s) -> bool {
-  uint signature = 0;
+  u32  signature = 0;
   bool synchronize = true;
   char version[16] = {};
   char description[512] = {};

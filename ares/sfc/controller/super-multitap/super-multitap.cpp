@@ -12,7 +12,7 @@ port4{"Controller Port 4"}
   port4.load(node);
 }
 
-auto SuperMultitap::data() -> uint2 {
+auto SuperMultitap::data() -> n2 {
   if(latched) return 2;  //Super Multitap device detection
 
   if(iobit()) {
@@ -22,7 +22,7 @@ auto SuperMultitap::data() -> uint2 {
   }
 }
 
-auto SuperMultitap::latch(bool data) -> void {
+auto SuperMultitap::latch(n1 data) -> void {
   latched = data;
   port1.latch(data);
   port2.latch(data);

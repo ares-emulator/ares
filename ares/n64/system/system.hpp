@@ -1,12 +1,11 @@
 struct System {
   Node::System node;
-  Node::Setting::String regionNode;
 
-  enum class Region : uint { NTSC, PAL };
+  enum class Region : u32 { NTSC, PAL };
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto region() const -> Region { return information.region; }
-  auto frequency() const -> uint { return information.frequency; }
+  auto frequency() const -> u32 { return information.frequency; }
 
   //system.cpp
   auto game() -> string;
@@ -22,8 +21,9 @@ struct System {
 
 private:
   struct Information {
+    string name = "Nintendo 64";
     Region region = Region::NTSC;
-    uint frequency = 93'750'000;
+    u32 frequency = 93'750'000;
   } information;
 
   //serialization.cpp

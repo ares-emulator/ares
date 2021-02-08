@@ -60,7 +60,7 @@ auto pLineEdit::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) ->
 //
 
 auto pLineEdit::_text() -> string {
-  unsigned length = GetWindowTextLength(hwnd);
+  u32 length = GetWindowTextLength(hwnd);
   wchar_t text[length + 1];
   GetWindowText(hwnd, text, length + 1);
   text[length] = 0;

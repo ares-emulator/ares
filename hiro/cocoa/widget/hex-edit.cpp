@@ -26,22 +26,22 @@ auto pHexEdit::destruct() -> void {
   }
 }
 
-auto pHexEdit::setAddress(uint offset) -> void {
+auto pHexEdit::setAddress(u32 offset) -> void {
 }
 
 auto pHexEdit::setBackgroundColor(Color color) -> void {
 }
 
-auto pHexEdit::setColumns(uint columns) -> void {
+auto pHexEdit::setColumns(u32 columns) -> void {
 }
 
 auto pHexEdit::setForegroundColor(Color color) -> void {
 }
 
-auto pHexEdit::setLength(uint length) -> void {
+auto pHexEdit::setLength(u32 length) -> void {
 }
 
-auto pHexEdit::setRows(uint rows) -> void {
+auto pHexEdit::setRows(u32 rows) -> void {
 }
 
 auto pHexEdit::update() -> void {

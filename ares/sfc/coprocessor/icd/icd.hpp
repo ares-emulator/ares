@@ -4,7 +4,7 @@ struct ICD : Platform, GameBoy::SuperGameBoyInterface, Thread {
   Node::System node;
 
   //icd.cpp
-  auto clockFrequency() const -> double;
+  auto clockFrequency() const -> f64;
 
   auto load(Node::Peripheral) -> void;
   auto unload() -> void;
@@ -15,52 +15,52 @@ struct ICD : Platform, GameBoy::SuperGameBoyInterface, Thread {
   //interface.cpp
   auto ppuHreset() -> void override;
   auto ppuVreset() -> void override;
-  auto ppuWrite(uint2 color) -> void override;
-  auto joypWrite(uint1 p14, uint1 p15) -> void override;
+  auto ppuWrite(n2 color) -> void override;
+  auto joypWrite(n1 p14, n1 p15) -> void override;
 
   //io.cpp
-  auto readIO(uint24 address, uint8 data) -> uint8;
-  auto writeIO(uint24 address, uint8 data) -> void;
+  auto readIO(n24 address, n8 data) -> n8;
+  auto writeIO(n24 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint Revision = 0;
-  uint Frequency = 0;
+  n32 Revision = 0;
+  n32 Frequency = 0;
 
 private:
   struct Packet {
-    auto operator[](uint4 address) -> uint8& { return data[address]; }
-    uint8 data[16];
+    auto operator[](n4 address) -> n8& { return data[address]; }
+    n8 data[16];
   };
   Packet packet[64];
-  uint7 packetSize;
+  n7 packetSize;
 
-  uint2 joypID;
-  uint1 joypLock;
-  uint1 pulseLock;
-  uint1 strobeLock;
-  uint1 packetLock;
+  n2 joypID;
+  n1 joypLock;
+  n1 pulseLock;
+  n1 strobeLock;
+  n1 packetLock;
   Packet joypPacket;
-  uint4 packetOffset;
-  uint8 bitData;
-  uint3 bitOffset;
+  n4 packetOffset;
+  n8 bitData;
+  n3 bitOffset;
 
-  uint8 output[4 * 512];
-  uint2 readBank;
-  uint9 readAddress;
-  uint2 writeBank;
+  n8 output[4 * 512];
+  n2 readBank;
+  n9 readAddress;
+  n2 writeBank;
 
-  uint8 r6003;      //control port
-  uint8 r6004;      //joypad 1
-  uint8 r6005;      //joypad 2
-  uint8 r6006;      //joypad 3
-  uint8 r6007;      //joypad 4
-  uint8 r7000[16];  //JOYP packet data
-  uint8 mltReq;     //number of active joypads
+  n8 r6003;      //control port
+  n8 r6004;      //joypad 1
+  n8 r6005;      //joypad 2
+  n8 r6006;      //joypad 3
+  n8 r6007;      //joypad 4
+  n8 r7000[16];  //JOYP packet data
+  n8 mltReq;     //number of active joypads
 
-  uint8 hcounter;
-  uint8 vcounter;
+  n8 hcounter;
+  n8 vcounter;
 };
 
 #else
@@ -78,13 +78,13 @@ struct ICD : Thread {
   auto disconnect() -> void {}
   auto power(bool reset = false) -> void {}
 
-  auto readIO(uint24, uint8) -> uint8 { return 0; }
-  auto writeIO(uint24, uint8) -> void { return; }
+  auto readIO(n24, n8) -> n8 { return 0; }
+  auto writeIO(n24, n8) -> void { return; }
 
   auto serialize(serializer&) -> void {}
 
-  uint Revision = 0;
-  uint Frequency = 0;
+  n32 Revision = 0;
+  n32 Frequency = 0;
 };
 
 #endif

@@ -22,7 +22,7 @@ auto RDP::main() -> void {
   step(93'750'000);
 }
 
-auto RDP::step(uint clocks) -> void {
+auto RDP::step(u32 clocks) -> void {
   clock += clocks;
 }
 

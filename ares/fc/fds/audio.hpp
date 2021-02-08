@@ -17,11 +17,11 @@ struct FDSAudio {
     auto clockEnvelope() -> bool;
     auto reloadPeriod() -> void;
 
-    n08 masterSpeed = 0xff;
-    n06 speed;
-    n06 gain;
-    n01 direction;  //0 = decrease, 1 = increase
-    n01 envelope;   //0 = disable,  1 = enable
+    n8  masterSpeed = 0xff;
+    n6  speed;
+    n6  gain;
+    n1  direction;  //0 = decrease, 1 = increase
+    n1  envelope;   //0 = disable,  1 = enable
     n12 frequency;
     n32 period;
   };
@@ -37,24 +37,24 @@ struct FDSAudio {
       n6 index;
     };
 
-    n01 disabled;
-    i08 counter;
+    n1  disabled;
+    i8  counter;
     n16 overflow;
     i32 output;
     Table table;
   };
 
   struct Waveform {
-    n01 halt;
-    n01 writable;
+    n1  halt;
+    n1  writable;
     n16 overflow;
-    n06 data[64];
-    n06 index;
+    n6  data[64];
+    n6  index;
   };
 
-  n01 enable;
-  n01 envelopes;  //0 = disable, 1 = enable
-  n02 masterVolume;
+  n1 enable;
+  n1 envelopes;  //0 = disable, 1 = enable
+  n2 masterVolume;
   Operator carrier;
   Modulator modulator;
   Waveform waveform;

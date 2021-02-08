@@ -2,7 +2,15 @@
 
 namespace ares::NeoGeoPocket {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[SNK] Neo Geo Pocket",
+    "[SNK] Neo Geo Pocket Color",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -27,10 +35,16 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(name == "Neo Geo Pocket"      ) information.model = Model::NeoGeoPocket;
-  if(name == "Neo Geo Pocket Color") information.model = Model::NeoGeoPocketColor;
+  if(name.find("Neo Geo Pocket")) {
+    information.name = "Neo Geo Pocket";
+    information.model = Model::NeoGeoPocket;
+  }
+  if(name.find("Neo Geo Pocket Color")) {
+    information.name = "Neo Geo Pocket Color";
+    information.model = Model::NeoGeoPocketColor;
+  }
 
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});

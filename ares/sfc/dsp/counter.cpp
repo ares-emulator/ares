@@ -2,7 +2,7 @@
 //all rates are evenly divisible by counter_range (0x7800, 30720, or 2048 * 5 * 3)
 //note that rate[0] is a special case, which never triggers
 
-const uint16 DSP::CounterRate[32] = {
+const n16 DSP::CounterRate[32] = {
      0, 2048, 1536,
   1280, 1024,  768,
    640,  512,  384,
@@ -20,7 +20,7 @@ const uint16 DSP::CounterRate[32] = {
 //counter offset from zero
 //counters do not appear to be aligned at zero for all rates
 
-const uint16 DSP::CounterOffset[32] = {
+const n16 DSP::CounterOffset[32] = {
     0, 0, 1040,
   536, 0, 1040,
   536, 0, 1040,
@@ -42,7 +42,7 @@ inline auto DSP::counterTick() -> void {
 
 //return true if counter event should trigger
 
-inline auto DSP::counterPoll(uint rate) -> bool {
+inline auto DSP::counterPoll(u32 rate) -> bool {
   if(rate == 0) return false;
   return (clock.counter + CounterOffset[rate]) % CounterRate[rate] == 0;
 }

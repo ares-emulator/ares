@@ -4,8 +4,8 @@ struct mGroup : mObject {
   using mObject::remove;
 
   auto append(sObject object) -> type&;
-  auto object(uint offset) const -> Object;
-  auto objectCount() const -> uint;
+  auto object(u32 offset) const -> Object;
+  auto objectCount() const -> u32;
   auto objects() const -> vector<Object>;
   auto remove(sObject object) -> type&;
 

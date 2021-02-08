@@ -5,7 +5,7 @@ auto EpsonRTC::serialize(serializer& s) -> void {
   s(seconds);
 
   s(chipselect);
-  s((uint&)state);
+  s((u32&)state);
   s(mdr);
   s(offset);
   s(wait);

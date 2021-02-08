@@ -1,12 +1,12 @@
-auto VPU::read(uint24 address) -> uint8 {
-  address = 0x8000 | (uint14)address;
+auto VPU::read(n24 address) -> n8 {
+  address = 0x8000 | (n14)address;
   if(address >= 0x8200 && address <= 0x83ff && Model::NeoGeoPocketColor()) return readColor(address);
   if(address >= 0x8800 && address <= 0x88ff) return readSprite(address);
   if(address >= 0x8c00 && address <= 0x8c3f && Model::NeoGeoPocketColor()) return readSpriteColor(address);
   if(address >= 0x9000 && address <= 0x9fff) return readAttribute(address);
   if(address >= 0xa000 && address <= 0xbfff) return readCharacter(address);
 
-  uint8 data = 0x00;
+  n8 data = 0x00;
 
   switch(address) {
   case 0x8000:
@@ -93,8 +93,8 @@ auto VPU::read(uint24 address) -> uint8 {
   return data;
 }
 
-auto VPU::write(uint24 address, uint8 data) -> void {
-  address = 0x8000 | (uint14)address;
+auto VPU::write(n24 address, n8 data) -> void {
+  address = 0x8000 | (n14)address;
   if(address >= 0x8200 && address <= 0x83ff && Model::NeoGeoPocketColor()) return writeColor(address, data);
   if(address >= 0x8800 && address <= 0x88ff) return writeSprite(address, data);
   if(address >= 0x8c00 && address <= 0x8cff && Model::NeoGeoPocketColor()) return writeSpriteColor(address, data);
@@ -180,7 +180,7 @@ auto VPU::write(uint24 address, uint8 data) -> void {
   }
 }
 
-auto VPU::readSprite(uint8 address) -> uint8 {
+auto VPU::readSprite(n8 address) -> n8 {
   auto& s = sprites[address >> 2];
   switch(address & 3) {
   case 0: return s.character;
@@ -191,7 +191,7 @@ auto VPU::readSprite(uint8 address) -> uint8 {
   unreachable;
 }
 
-auto VPU::writeSprite(uint8 address, uint8 data) -> void {
+auto VPU::writeSprite(n8 address, n8 data) -> void {
   auto& s = sprites[address >> 2];
   switch(address & 3) {
   case 0:
@@ -215,15 +215,15 @@ auto VPU::writeSprite(uint8 address, uint8 data) -> void {
   }
 }
 
-auto VPU::readSpriteColor(uint6 address) -> uint8 {
+auto VPU::readSpriteColor(n6 address) -> n8 {
   return sprites[address].code;  //d4-d7 = 0
 }
 
-auto VPU::writeSpriteColor(uint6 address, uint8 data) -> void {
+auto VPU::writeSpriteColor(n6 address, n8 data) -> void {
   sprites[address].code = data.bit(0,3);
 }
 
-auto VPU::readColor(uint9 address) -> uint8 {
+auto VPU::readColor(n9 address) -> n8 {
   auto& p = colors[address >> 1];
   if(!address.bit(0)) {
     return p.bit(0, 7);
@@ -232,7 +232,7 @@ auto VPU::readColor(uint9 address) -> uint8 {
   }
 }
 
-auto VPU::writeColor(uint9 address, uint8 data) -> void {
+auto VPU::writeColor(n9 address, n8 data) -> void {
   auto& p = colors[address >> 1];
   if(!address.bit(0)) {
     p.bit(0, 7) = data.bit(0,7);
@@ -241,7 +241,7 @@ auto VPU::writeColor(uint9 address, uint8 data) -> void {
   }
 }
 
-auto VPU::readAttribute(uint12 address) -> uint8 {
+auto VPU::readAttribute(n12 address) -> n8 {
   auto& a = attributes[address >> 1];
   if(!address.bit(0)) {
     return a.character.bit(0,7);
@@ -250,7 +250,7 @@ auto VPU::readAttribute(uint12 address) -> uint8 {
   }
 }
 
-auto VPU::writeAttribute(uint12 address, uint8 data) -> void {
+auto VPU::writeAttribute(n12 address, n8 data) -> void {
   auto& a = attributes[address >> 1];
   if(!address.bit(0)) {
     a.character.bit(0,7) = data.bit(0,7);
@@ -263,11 +263,11 @@ auto VPU::writeAttribute(uint12 address, uint8 data) -> void {
   }
 }
 
-auto VPU::readCharacter(uint13 address) -> uint8 {
+auto VPU::readCharacter(n13 address) -> n8 {
   auto& c = characters[address >> 4];
-  uint3 y = address >> 1;
-  uint3 x = address >> 0 << 2;
-  uint8 data;
+  n3 y = address >> 1;
+  n3 x = address >> 0 << 2;
+  n8 data;
   data.bit(0,1) = c[y][x++];
   data.bit(2,3) = c[y][x++];
   data.bit(4,5) = c[y][x++];
@@ -275,10 +275,10 @@ auto VPU::readCharacter(uint13 address) -> uint8 {
   return data;
 }
 
-auto VPU::writeCharacter(uint13 address, uint8 data) -> void {
+auto VPU::writeCharacter(n13 address, n8 data) -> void {
   auto& c = characters[address >> 4];
-  uint3 y = address >> 1;
-  uint3 x = address >> 0 << 2;
+  n3 y = address >> 1;
+  n3 x = address >> 0 << 2;
   c[y][x++] = data.bit(0,1);
   c[y][x++] = data.bit(2,3);
   c[y][x++] = data.bit(4,5);

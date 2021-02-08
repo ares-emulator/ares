@@ -10,12 +10,12 @@ struct mObject {
   explicit operator bool() const;
 
   auto abstract() const -> bool;
-  auto adjustOffset(int displacement) -> type&;
+  auto adjustOffset(s32 displacement) -> type&;
   auto enabled(bool recursive = false) const -> bool;
   virtual auto focused() const -> bool;
   auto font(bool recursive = false) const -> Font;
   virtual auto group() const -> Group;
-  auto offset() const -> int;
+  auto offset() const -> s32;
   auto parent() const -> mObject*;
   auto parentComboButton(bool recursive = false) const -> mComboButton*;
   auto parentComboEdit(bool recursive = false) const -> mComboEdit*;
@@ -39,7 +39,7 @@ struct mObject {
   virtual auto setFocused() -> type&;
   virtual auto setFont(const Font& font = {}) -> type&;
   virtual auto setGroup(sGroup group = {}) -> type&;
-  virtual auto setParent(mObject* parent = nullptr, int offset = -1) -> type&;
+  virtual auto setParent(mObject* parent = nullptr, s32 offset = -1) -> type&;
   virtual auto setVisible(bool visible = true) -> type&;
   auto visible(bool recursive = false) const -> bool;
 
@@ -73,7 +73,7 @@ struct mObject {
     set<Attribute> attributes;
     Font font;
     mObject* parent = nullptr;
-    int offset = -1;
+    s32 offset = -1;
     char enabled = true;
     char visible = true;
   } state;

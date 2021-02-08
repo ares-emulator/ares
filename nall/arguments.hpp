@@ -12,10 +12,10 @@ struct Arguments {
   Arguments(vector<string> arguments);
 
   explicit operator bool() const { return (bool)arguments; }
-  auto size() const -> uint { return arguments.size(); }
+  auto size() const -> u32 { return arguments.size(); }
 
-  auto operator[](uint index) -> string& { return arguments[index]; }
-  auto operator[](uint index) const -> const string& { return arguments[index]; }
+  auto operator[](u32 index) -> string& { return arguments[index]; }
+  auto operator[](u32 index) const -> const string& { return arguments[index]; }
 
   auto programPath() const -> string;
   auto programName() const -> string;
@@ -67,7 +67,7 @@ inline Arguments::Arguments(int argc, char** argv) {
   #if defined(PLATFORM_WINDOWS)
   utf8_arguments(argc, argv);
   #endif
-  for(uint index : range(argc)) arguments.append(argv[index]);
+  for(u32 index : range(argc)) arguments.append(argv[index]);
   construct();
 }
 
@@ -89,7 +89,7 @@ inline auto Arguments::programLocation() const -> string {
 }
 
 inline auto Arguments::find(string_view name) const -> bool {
-  for(uint index : range(arguments.size())) {
+  for(u32 index : range(arguments.size())) {
     if(arguments[index].match(name)) {
       return true;
     }
@@ -98,7 +98,7 @@ inline auto Arguments::find(string_view name) const -> bool {
 }
 
 inline auto Arguments::find(string_view name, bool& argument) const -> bool {
-  for(uint index : range(arguments.size())) {
+  for(u32 index : range(arguments.size())) {
     if(arguments[index].match(name) && arguments.size() >= index
     && (arguments[index + 1] == "true" || arguments[index + 1] == "false")) {
       argument = arguments[index + 1] == "true";
@@ -109,7 +109,7 @@ inline auto Arguments::find(string_view name, bool& argument) const -> bool {
 }
 
 inline auto Arguments::find(string_view name, string& argument) const -> bool {
-  for(uint index : range(arguments.size())) {
+  for(u32 index : range(arguments.size())) {
     if(arguments[index].match(name) && arguments.size() >= index) {
       argument = arguments[index + 1];
       return true;
@@ -126,7 +126,7 @@ inline auto Arguments::take() -> string {
 }
 
 inline auto Arguments::take(string_view name) -> bool {
-  for(uint index : range(arguments.size())) {
+  for(u32 index : range(arguments.size())) {
     if(arguments[index].match(name)) {
       arguments.remove(index);
       return true;
@@ -136,7 +136,7 @@ inline auto Arguments::take(string_view name) -> bool {
 }
 
 inline auto Arguments::take(string_view name, bool& argument) -> bool {
-  for(uint index : range(arguments.size())) {
+  for(u32 index : range(arguments.size())) {
     if(arguments[index].match(name) && arguments.size() > index + 1
     && (arguments[index + 1] == "true" || arguments[index + 1] == "false")) {
       arguments.remove(index);
@@ -148,7 +148,7 @@ inline auto Arguments::take(string_view name, bool& argument) -> bool {
 }
 
 inline auto Arguments::take(string_view name, string& argument) -> bool {
-  for(uint index : range(arguments.size())) {
+  for(u32 index : range(arguments.size())) {
     if(arguments[index].match(name) && arguments.size() > index + 1) {
       arguments.remove(index);
       argument = arguments.take(index);

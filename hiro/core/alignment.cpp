@@ -6,7 +6,7 @@ Alignment::Alignment() {
   setAlignment(-1.0, -1.0);
 }
 
-Alignment::Alignment(float horizontal, float vertical) {
+Alignment::Alignment(f32 horizontal, f32 vertical) {
   setAlignment(horizontal, vertical);
 }
 
@@ -15,7 +15,7 @@ Alignment::operator bool() const {
       && state.vertical   >= 0.0 && state.vertical   <= 1.0;
 }
 
-auto Alignment::horizontal() const -> float {
+auto Alignment::horizontal() const -> f32 {
   return state.horizontal;
 }
 
@@ -23,23 +23,23 @@ auto Alignment::reset() -> type& {
   return setAlignment(-1.0, -1.0);
 }
 
-auto Alignment::setAlignment(float horizontal, float vertical) -> type& {
+auto Alignment::setAlignment(f32 horizontal, f32 vertical) -> type& {
   state.horizontal = horizontal;
   state.vertical   = vertical;
   return *this;
 }
 
-auto Alignment::setHorizontal(float horizontal) -> type& {
+auto Alignment::setHorizontal(f32 horizontal) -> type& {
   state.horizontal = horizontal;
   return *this;
 }
 
-auto Alignment::setVertical(float vertical) -> type& {
+auto Alignment::setVertical(f32 vertical) -> type& {
   state.vertical = vertical;
   return *this;
 }
 
-auto Alignment::vertical() const -> float {
+auto Alignment::vertical() const -> f32 {
   return state.vertical;
 }
 

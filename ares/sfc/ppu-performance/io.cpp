@@ -5,8 +5,8 @@ auto PPU::latchCounters() -> void {
   latch.counters = 1;
 }
 
-alwaysinline auto PPU::addressVRAM() const -> uint16 {
-  uint16 address = vram.address;
+alwaysinline auto PPU::addressVRAM() const -> n16 {
+  n16 address = vram.address;
   switch(vram.mapping) {
   case 0: return address;
   case 1: return address.bit( 8,15) <<  8 | address.bit(0,4) << 3 | address.bit(5,7);
@@ -16,29 +16,29 @@ alwaysinline auto PPU::addressVRAM() const -> uint16 {
   unreachable;
 }
 
-alwaysinline auto PPU::readVRAM() -> uint16 {
+alwaysinline auto PPU::readVRAM() -> n16 {
   if(!io.displayDisable && cpu.vcounter() < vdisp()) return 0x0000;
   auto address = addressVRAM();
   return vram[address];
 }
 
-alwaysinline auto PPU::writeVRAM(uint1 byte, uint8 data) -> void {
+alwaysinline auto PPU::writeVRAM(n1 byte, n8 data) -> void {
   if(!io.displayDisable && cpu.vcounter() < vdisp()) return;
   auto address = addressVRAM();
   vram[address].byte(byte) = data;
 }
 
-alwaysinline auto PPU::readOAM(uint10 address) -> uint8 {
+alwaysinline auto PPU::readOAM(n10 address) -> n8 {
   if(!io.displayDisable && cpu.vcounter() < vdisp()) address = 0x0218;
   return obj.oam.read(address);
 }
 
-alwaysinline auto PPU::writeOAM(uint10 address, uint8 data) -> void {
+alwaysinline auto PPU::writeOAM(n10 address, n8 data) -> void {
   if(!io.displayDisable && cpu.vcounter() < vdisp()) address = 0x0218;
   return obj.oam.write(address, data);
 }
 
-alwaysinline auto PPU::readCGRAM(uint1 byte, uint8 address) -> uint8 {
+alwaysinline auto PPU::readCGRAM(n1 byte, n8 address) -> n8 {
   if(!io.displayDisable
   && cpu.vcounter() > 0 && cpu.vcounter() < vdisp()
   && cpu.hcounter() >= 88 && cpu.hcounter() < 1096
@@ -46,7 +46,7 @@ alwaysinline auto PPU::readCGRAM(uint1 byte, uint8 address) -> uint8 {
   return dac.cgram[address].byte(byte);
 }
 
-alwaysinline auto PPU::writeCGRAM(uint8 address, uint15 data) -> void {
+alwaysinline auto PPU::writeCGRAM(n8 address, n15 data) -> void {
   if(!io.displayDisable
   && cpu.vcounter() > 0 && cpu.vcounter() < vdisp()
   && cpu.hcounter() >= 88 && cpu.hcounter() < 1096
@@ -54,10 +54,10 @@ alwaysinline auto PPU::writeCGRAM(uint8 address, uint15 data) -> void {
   dac.cgram[address] = data;
 }
 
-auto PPU::readIO(uint24 address, uint8 data) -> uint8 {
+auto PPU::readIO(n24 address, n8 data) -> n8 {
   cpu.synchronize(ppu);
 
-  switch((uint16)address) {
+  switch((n16)address) {
 
   case 0x2104: case 0x2105: case 0x2106: case 0x2108:
   case 0x2109: case 0x210a: case 0x2114: case 0x2115:
@@ -69,19 +69,19 @@ auto PPU::readIO(uint24 address, uint8 data) -> uint8 {
 
   //MPYL
   case 0x2134: {
-    uint24 result = (int16)mode7.a * (int8)(mode7.b >> 8);
+    n24 result = (i16)mode7.a * (i8)(mode7.b >> 8);
     return ppu1.mdr = result.byte(0);
   }
 
   //MPYM
   case 0x2135: {
-    uint24 result = (int16)mode7.a * (int8)(mode7.b >> 8);
+    n24 result = (i16)mode7.a * (i8)(mode7.b >> 8);
     return ppu1.mdr = result.byte(1);
   }
 
   //MYPH
   case 0x2136: {
-    uint24 result = (int16)mode7.a * (int8)(mode7.b >> 8);
+    n24 result = (i16)mode7.a * (i8)(mode7.b >> 8);
     return ppu1.mdr = result.byte(2);
   }
 
@@ -178,10 +178,10 @@ auto PPU::readIO(uint24 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto PPU::writeIO(uint24 address, uint8 data) -> void {
+auto PPU::writeIO(n24 address, n8 data) -> void {
   cpu.synchronize(ppu);
 
-  switch((uint16)address) {
+  switch((n16)address) {
 
   //INIDISP
   case 0x2100: {
@@ -216,8 +216,8 @@ auto PPU::writeIO(uint24 address, uint8 data) -> void {
 
   //OAMDATA
   case 0x2104: {
-    uint1 latchBit = io.oamAddress.bit(0);
-    uint10 address = io.oamAddress++;
+    n1 latchBit = io.oamAddress.bit(0);
+    n10 address = io.oamAddress++;
     if(latchBit == 0) latch.oam = data;
     if(address.bit(9)) {
       writeOAM(address, data);
@@ -366,7 +366,7 @@ auto PPU::writeIO(uint24 address, uint8 data) -> void {
 
   //VMAIN
   case 0x2115: {
-    static const uint size[4] = {1, 32, 128, 128};
+    static constexpr u32 size[4] = {1, 32, 128, 128};
     vram.increment = size[data.bit(0,1)];
     vram.mapping   = data.bit(2,3);
     vram.mode      = data.bit(7);

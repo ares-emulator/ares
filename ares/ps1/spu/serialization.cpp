@@ -128,7 +128,7 @@ auto SPU::serialize(serializer& s) -> void {
     s(v.release.exponential);
     s(v.release.rate);
 
-    s((uint&)v.adsr.phase);
+    s((u32&)v.adsr.phase);
     s(v.adsr.volume);
     s(v.adsr.lastVolume);
     s(v.adsr.target);

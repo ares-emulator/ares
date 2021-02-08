@@ -1,6 +1,5 @@
 struct System {
   Node::System node;
-  Node::Setting::String regionNode;
 
   struct Controls {
     Node::Object node;
@@ -11,13 +10,13 @@ struct System {
     auto poll() -> void;
   } controls;
 
-  enum class Model : uint { ColecoVision, ColecoAdam };
-  enum class Region : uint { NTSC, PAL };
+  enum class Model : u32 { ColecoVision, ColecoAdam };
+  enum class Region : u32 { NTSC, PAL };
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto model() const -> Model { return information.model; }
   auto region() const -> Region { return information.region; }
-  auto colorburst() const -> double { return information.colorburst; }
+  auto colorburst() const -> f64 { return information.colorburst; }
 
   //system.cpp
   auto game() -> string;
@@ -32,13 +31,14 @@ struct System {
   auto serialize(bool synchronize) -> serializer;
   auto unserialize(serializer&) -> bool;
 
-  uint8 bios[0x2000];
+  u8 bios[0x2000];
 
 private:
   struct Information {
+    string name = "ColecoVision";
     Model model = Model::ColecoVision;
     Region region = Region::NTSC;
-    double colorburst = Constants::Colorburst::NTSC;
+    f64 colorburst = Constants::Colorburst::NTSC;
   } information;
 
   //serialization.cpp

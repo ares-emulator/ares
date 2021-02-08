@@ -19,7 +19,7 @@ struct AI : Thread, Memory::IO<AI> {
   auto unload() -> void;
   auto main() -> void;
   auto sample() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -30,16 +30,16 @@ struct AI : Thread, Memory::IO<AI> {
   auto serialize(serializer&) -> void;
 
   struct FIFO {
-    uint24 address;
+    n24 address;
   } fifo[2];
 
   struct IO {
-     uint1 dmaEnable;
-    uint24 dmaAddress[2];
-    uint18 dmaLength[2];
-     uint2 dmaCount;
-    uint14 dacRate;
-     uint4 bitRate;
+    n1  dmaEnable;
+    n24 dmaAddress[2];
+    n18 dmaLength[2];
+    n2  dmaCount;
+    n14 dacRate;
+    n4  bitRate;
   } io;
 
   struct DAC {

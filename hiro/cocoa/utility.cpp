@@ -9,7 +9,7 @@ auto NSMakeCursor(const hiro::MouseCursor& mouseCursor) -> NSCursor* {
   return nil;
 }
 
-auto NSMakeImage(image icon, uint scaleWidth = 0, uint scaleHeight = 0) -> NSImage* {
+auto NSMakeImage(image icon, u32 scaleWidth = 0, u32 scaleHeight = 0) -> NSImage* {
   if(!icon) return nil;
 
   if(scaleWidth && scaleHeight) icon.scale(scaleWidth, scaleHeight);
@@ -25,7 +25,7 @@ auto NSMakeImage(image icon, uint scaleWidth = 0, uint scaleHeight = 0) -> NSIma
     bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
     bytesPerRow:(4 * icon.width()) bitsPerPixel:32
   ] autorelease];
-  memory::copy<uint32_t>([bitmap bitmapData], icon.data(), icon.width() * icon.height());
+  memory::copy<u32>([bitmap bitmapData], icon.data(), icon.width() * icon.height());
   [cocoaImage addRepresentation:bitmap];
   return cocoaImage;
 }
@@ -45,7 +45,7 @@ auto DropPaths(id<NSDraggingInfo> sender) -> vector<string> {
   NSPasteboard* pboard = [sender draggingPasteboard];
   if([[pboard types] containsObject:NSFilenamesPboardType]) {
     NSArray* files = [pboard propertyListForType:NSFilenamesPboardType];
-    for(uint n = 0; n < [files count]; n++) {
+    for(u32 n = 0; n < [files count]; n++) {
       string path = [[files objectAtIndex:n] UTF8String];
       if(directory::exists(path) && !path.endsWith("/")) path.append("/");
       paths.append(path);

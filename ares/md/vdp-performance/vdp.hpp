@@ -20,70 +20,70 @@ struct VDP : Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto render() -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
-  auto read(uint24 address, uint16 data) -> uint16;
-  auto write(uint24 address, uint16 data) -> void;
+  auto read(n24 address, n16 data) -> n16;
+  auto write(n24 address, n16 data) -> void;
 
-  auto readDataPort() -> uint16;
-  auto writeDataPort(uint16 data) -> void;
+  auto readDataPort() -> n16;
+  auto writeDataPort(n16 data) -> void;
 
-  auto readControlPort() -> uint16;
-  auto writeControlPort(uint16 data) -> void;
+  auto readControlPort() -> n16;
+  auto writeControlPort(n16 data) -> void;
 
   //color.cpp
-  auto color(uint32) -> uint64;
+  auto color(n32) -> n64;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 private:
-  auto pixelWidth() const -> uint { return latch.displayWidth ? 4 : 5; }
-  auto screenWidth() const -> uint { return latch.displayWidth ? 320 : 256; }
-  auto screenHeight() const -> uint { return latch.overscan ? 240 : 224; }
-  auto frameHeight() const -> uint { return Region::PAL() ? 312 : 262; }
+  auto pixelWidth() const -> u32 { return latch.displayWidth ? 4 : 5; }
+  auto screenWidth() const -> u32 { return latch.displayWidth ? 320 : 256; }
+  auto screenHeight() const -> u32 { return latch.overscan ? 240 : 224; }
+  auto frameHeight() const -> u32 { return Region::PAL() ? 312 : 262; }
 
   struct VRAM {
     //memory.cpp
-    auto read(uint16 address) const -> uint16;
-    auto write(uint16 address, uint16 data) -> void;
+    auto read(n16 address) const -> n16;
+    auto write(n16 address, n16 data) -> void;
 
-    auto readByte(uint17 address) const -> uint8;
-    auto writeByte(uint17 address, uint8 data) -> void;
+    auto readByte(n17 address) const -> n8;
+    auto writeByte(n17 address, n8 data) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-     uint8 pixels[131072];
-    uint16 memory[65536];
-    uint32 size = 32768;
-     uint1 mode;  //0 = 64KB, 1 = 128KB
+    n8  pixels[131072];
+    n16 memory[65536];
+    n32 size = 32768;
+    n1  mode;  //0 = 64KB, 1 = 128KB
   } vram;
 
   struct VSRAM {
     //memory.cpp
-    auto read(uint6 address) const -> uint10;
-    auto write(uint6 address, uint10 data) -> void;
+    auto read(n6 address) const -> n10;
+    auto write(n6 address, n10 data) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint10 memory[40];
+    n10 memory[40];
   } vsram;
 
   struct CRAM {
     //memory.cpp
-    auto read(uint6 address) const -> uint9;
-    auto write(uint6 address, uint9 data) -> void;
+    auto read(n6 address) const -> n9;
+    auto write(n6 address, n9 data) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-     uint9 memory[64];
-    uint32 palette[3 * 128];
+    n9  memory[64];
+    n32 palette[3 * 128];
   } cram;
 
   struct DMA {
@@ -98,48 +98,48 @@ private:
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint1 active;
+    n1 active;
 
     struct IO {
-       uint2 mode;
-      uint22 source;
-      uint16 length;
-       uint8 fill;
-       uint1 enable;
-       uint1 wait;
+      n2  mode;
+      n22 source;
+      n16 length;
+      n8  fill;
+      n1  enable;
+      n1  wait;
     } io;
   } dma;
 
   struct Background {
-    enum class ID : uint { PlaneA, Window, PlaneB } id;
+    enum class ID : u32 { PlaneA, Window, PlaneB } id;
 
     //background.cpp
-    auto renderScreen(uint from, uint to) -> void;
-    auto renderWindow(uint from, uint to) -> void;
+    auto renderScreen(u32 from, u32 to) -> void;
+    auto renderWindow(u32 from, u32 to) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
     struct IO {
-      uint16 generatorAddress;
-      uint16 nametableAddress;
+      n16 generatorAddress;
+      n16 nametableAddress;
 
       //PlaneA, PlaneB
-       uint2 nametableWidth;
-       uint2 nametableHeight;
-      uint15 horizontalScrollAddress;
-       uint2 horizontalScrollMode;
-       uint1 verticalScrollMode;
+      n2  nametableWidth;
+      n2  nametableHeight;
+      n15 horizontalScrollAddress;
+      n2  horizontalScrollMode;
+      n1  verticalScrollMode;
 
       //Window
-      uint10 horizontalOffset;
-       uint1 horizontalDirection;
-      uint10 verticalOffset;
-       uint1 verticalDirection;
+      n10 horizontalOffset;
+      n1  horizontalDirection;
+      n10 verticalOffset;
+      n1  verticalDirection;
     } io;
 
   //unserialized:
-    uint7 pixels[320];
+    n7 pixels[320];
   };
   Background planeA{Background::ID::PlaneA};
   Background window{Background::ID::Window};
@@ -147,113 +147,113 @@ private:
 
   struct Object {
     //object.cpp
-    auto width() const -> uint;
-    auto height() const -> uint;
+    auto width() const -> u32;
+    auto height() const -> u32;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-     uint9 x;
-    uint10 y;
-     uint2 tileWidth;
-     uint2 tileHeight;
-     uint1 horizontalFlip;
-     uint1 verticalFlip;
-     uint2 palette;
-     uint1 priority;
-    uint11 address;
-     uint7 link;
+    n9  x;
+    n10 y;
+    n2  tileWidth;
+    n2  tileHeight;
+    n1  horizontalFlip;
+    n1  verticalFlip;
+    n2  palette;
+    n1  priority;
+    n11 address;
+    n7  link;
   };
 
   struct Sprite {
     VDP& vdp;
 
-    auto objectLimit() const -> uint { return vdp.io.displayWidth ? 20 : 16; }
-    auto tileLimit()   const -> uint { return vdp.io.displayWidth ? 40 : 32; }
-    auto linkLimit()   const -> uint { return vdp.io.displayWidth ? 80 : 64; }
+    auto objectLimit() const -> u32 { return vdp.io.displayWidth ? 20 : 16; }
+    auto tileLimit()   const -> u32 { return vdp.io.displayWidth ? 40 : 32; }
+    auto linkLimit()   const -> u32 { return vdp.io.displayWidth ? 80 : 64; }
 
     //sprite.cpp
     auto render() -> void;
-    auto write(uint9 address, uint16 data) -> void;
+    auto write(n9 address, n16 data) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
     struct IO {
-      uint16 generatorAddress;
-      uint16 nametableAddress;
+      n16 generatorAddress;
+      n16 nametableAddress;
     } io;
 
     Object oam[80];
     Object objects[20];
 
   //unserialized:
-    uint7 pixels[512];
+    n7 pixels[512];
   } sprite{*this};
 
   struct State {
-    uint16 hdot;
-    uint16 hcounter;
-    uint16 vcounter;
-     uint1 field;
+    n16 hdot;
+    n16 hcounter;
+    n16 vcounter;
+    n1  field;
   } state;
 
   struct IO {
     //status
-     uint1 vblankIRQ;  //true after VIRQ triggers; cleared at start of next frame
+    n1  vblankIRQ;  //true after VIRQ triggers; cleared at start of next frame
 
     //command
-     uint6 command;
-    uint17 address;
-     uint1 commandPending;
+    n6  command;
+    n17 address;
+    n1  commandPending;
 
     //$00  mode register 1
-     uint1 displayOverlayEnable;
-     uint1 counterLatch;
-     uint1 horizontalBlankInterruptEnable;
-     uint1 leftColumnBlank;
+    n1  displayOverlayEnable;
+    n1  counterLatch;
+    n1  horizontalBlankInterruptEnable;
+    n1  leftColumnBlank;
 
     //$01  mode register 2
-     uint1 videoMode;  //0 = Master System; 1 = Mega Drive
-     uint1 overscan;   //0 = 224 lines; 1 = 240 lines
-     uint1 verticalBlankInterruptEnable;
-     uint1 displayEnable;
+    n1  videoMode;  //0 = Master System; 1 = Mega Drive
+    n1  overscan;   //0 = 224 lines; 1 = 240 lines
+    n1  verticalBlankInterruptEnable;
+    n1  displayEnable;
 
     //$07  background color
-     uint7 backgroundColor;
+    n7  backgroundColor;
 
     //$0a  horizontal interrupt counter
-     uint8 horizontalInterruptCounter;
+    n8  horizontalInterruptCounter;
 
     //$0b  mode register 3
-     uint1 externalInterruptEnable;
+    n1  externalInterruptEnable;
 
     //$0c  mode register 4
-     uint2 displayWidth;
-     uint2 interlaceMode;
-     uint1 shadowHighlightEnable;
-     uint1 externalColorEnable;
-     uint1 horizontalSync;
-     uint1 verticalSync;
+    n2  displayWidth;
+    n2  interlaceMode;
+    n1  shadowHighlightEnable;
+    n1  externalColorEnable;
+    n1  horizontalSync;
+    n1  verticalSync;
 
     //$0f  data port auto-increment value
-     uint8 dataIncrement;
+    n8  dataIncrement;
   } io;
 
   struct Latch {
     //per-frame
-     uint1 field;
-     uint1 interlace;
-     uint1 overscan;
-     uint8 horizontalInterruptCounter;
+    n1  field;
+    n1  interlace;
+    n1  overscan;
+    n8  horizontalInterruptCounter;
 
     //per-scanline
-     uint2 displayWidth;
+    n2  displayWidth;
   } latch;
 
 //unserialized:
-  uint8 lookupBG[1 << 10];
-  uint8 lookupFG[1 << 15];
+  n8 lookupBG[1 << 10];
+  n8 lookupFG[1 << 15];
 
   friend class CPU;
   friend class APU;

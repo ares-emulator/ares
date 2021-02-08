@@ -3,7 +3,6 @@ extern Random random;
 struct System {
   Node::System node;
   Node::Setting::Boolean tmss;
-  Node::Setting::String regionNode;
 
   struct Controls {
     Node::Object node;
@@ -14,9 +13,9 @@ struct System {
     auto poll() -> void;
   } controls;
 
-  enum class Region : uint { NTSCJ, NTSCU, PAL };
+  enum class Region : u32 { NTSCJ, NTSCU, PAL };
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto region() const -> Region { return information.region; }
   auto megaCD() const -> bool { return information.megaCD; }
   auto frequency() const -> double { return information.frequency; }
@@ -35,6 +34,7 @@ struct System {
 
 private:
   struct Information {
+    string name = "Mega Drive";
     Region region = Region::NTSCJ;
     bool megaCD = false;
     double frequency = Constants::Colorburst::NTSC * 15.0;

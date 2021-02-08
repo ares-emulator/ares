@@ -77,7 +77,7 @@ auto CPU::Interrupt::operator=(bool value) -> void {
   set(value);
 }
 
-auto CPU::Interrupt::poll(uint8& vector, uint3& priority) -> void {
+auto CPU::Interrupt::poll(n8& vector, n3& priority) -> void {
   if(!enable || !pending) return;
   if(!maskable) { priority = 7; vector = this->vector; return; }
   if(dmaAllowed && cpu.r.iff <= 6) {
@@ -90,7 +90,7 @@ auto CPU::Interrupt::poll(uint8& vector, uint3& priority) -> void {
   if(this->priority >= priority) { priority = this->priority; vector = this->vector; return; }
 }
 
-auto CPU::Interrupt::fire(uint8 vector) -> void {
+auto CPU::Interrupt::fire(n8 vector) -> void {
   if(this->vector != vector) return;
   if(line == 0 && !level.low ) pending = 0;
   if(line == 1 && !level.high) pending = 0;
@@ -128,19 +128,19 @@ auto CPU::Interrupt::clear() -> void {
   cpu.interrupts.poll();
 }
 
-auto CPU::Interrupt::setEnable(uint1 enable) -> void {
+auto CPU::Interrupt::setEnable(n1 enable) -> void {
   if(this->enable == enable) return;
   this->enable = enable;
   cpu.interrupts.poll();
 }
 
-auto CPU::Interrupt::setPriority(uint3 priority) -> void {
+auto CPU::Interrupt::setPriority(n3 priority) -> void {
   if(this->priority == priority) return;
   this->priority = priority;
   cpu.interrupts.poll();
 }
 
-auto CPU::Interrupt::power(uint8 vector) -> void {
+auto CPU::Interrupt::power(n8 vector) -> void {
   this->vector = vector;
 
   //set up defaults that apply to most vectors

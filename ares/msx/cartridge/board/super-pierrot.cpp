@@ -3,7 +3,7 @@
 
 struct SuperPierrot : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
+  Memory::Readable<n8> rom;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -16,13 +16,13 @@ struct SuperPierrot : Interface {
   auto unload() -> void override {
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
-    if(address >= 0x4000 && address <= 0x7fff) data = rom.read(bank[0] << 14 | (uint14)address);
-    if(address >= 0x8000 && address <= 0xbfff) data = rom.read(bank[1] << 14 | (uint14)address);
+  auto read(n16 address, n8 data) -> n8 override {
+    if(address >= 0x4000 && address <= 0x7fff) data = rom.read(bank[0] << 14 | (n14)address);
+    if(address >= 0x8000 && address <= 0xbfff) data = rom.read(bank[1] << 14 | (n14)address);
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     if(address >= 0x4000 && address <= 0x4fff) bank[0] = data;
     if(address >= 0x6000 && address <= 0x6fff) bank[0] = data;
     if(address >= 0x8000 && address <= 0x8fff) bank[0] = data;
@@ -43,5 +43,5 @@ struct SuperPierrot : Interface {
     s(bank);
   }
 
-  uint8 bank[2];
+  n8 bank[2];
 };

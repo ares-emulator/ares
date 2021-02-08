@@ -8,7 +8,7 @@ Geometry::Geometry(Position position, Size size) {
   setGeometry(position, size);
 }
 
-Geometry::Geometry(float x, float y, float width, float height) {
+Geometry::Geometry(f32 x, f32 y, f32 width, f32 height) {
   setGeometry(x, y, width, height);
 }
 
@@ -24,7 +24,7 @@ auto Geometry::operator!=(const Geometry& source) const -> bool {
   return !operator==(source);
 }
 
-auto Geometry::height() const -> float {
+auto Geometry::height() const -> f32 {
   return state.height;
 }
 
@@ -36,7 +36,7 @@ auto Geometry::reset() -> type& {
   return setGeometry(0, 0, 0, 0);
 }
 
-auto Geometry::setHeight(float height) -> type& {
+auto Geometry::setHeight(f32 height) -> type& {
   state.height = height;
   return *this;
 }
@@ -50,7 +50,7 @@ auto Geometry::setGeometry(Position position, Size size) -> type& {
   return *this;
 }
 
-auto Geometry::setGeometry(float x, float y, float width, float height) -> type& {
+auto Geometry::setGeometry(f32 x, f32 y, f32 width, f32 height) -> type& {
   state.x = x;
   state.y = y;
   state.width = width;
@@ -62,7 +62,7 @@ auto Geometry::setPosition(Position position) -> type& {
   return setPosition(position.x(), position.y());
 }
 
-auto Geometry::setPosition(float x, float y) -> type& {
+auto Geometry::setPosition(f32 x, f32 y) -> type& {
   state.x = x;
   state.y = y;
   return *this;
@@ -72,23 +72,23 @@ auto Geometry::setSize(Size size) -> type& {
   return setSize(size.width(), size.height());
 }
 
-auto Geometry::setSize(float width, float height) -> type& {
+auto Geometry::setSize(f32 width, f32 height) -> type& {
   state.width = width;
   state.height = height;
   return *this;
 }
 
-auto Geometry::setWidth(float width) -> type& {
+auto Geometry::setWidth(f32 width) -> type& {
   state.width = width;
   return *this;
 }
 
-auto Geometry::setX(float x) -> type& {
+auto Geometry::setX(f32 x) -> type& {
   state.x = x;
   return *this;
 }
 
-auto Geometry::setY(float y) -> type& {
+auto Geometry::setY(f32 y) -> type& {
   state.y = y;
   return *this;
 }
@@ -97,15 +97,15 @@ auto Geometry::size() const -> Size {
   return {state.width, state.height};
 }
 
-auto Geometry::width() const -> float {
+auto Geometry::width() const -> f32 {
   return state.width;
 }
 
-auto Geometry::x() const -> float {
+auto Geometry::x() const -> f32 {
   return state.x;
 }
 
-auto Geometry::y() const -> float {
+auto Geometry::y() const -> f32 {
   return state.y;
 }
 

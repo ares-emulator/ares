@@ -31,7 +31,7 @@ auto mFrame::reset() -> type& {
   return *this;
 }
 
-auto mFrame::setParent(mObject* object, int offset) -> type& {
+auto mFrame::setParent(mObject* object, s32 offset) -> type& {
   if(auto& sizable = state.sizable) sizable->destruct();
   mObject::setParent(object, offset);
   if(auto& sizable = state.sizable) sizable->setParent(this, 0);

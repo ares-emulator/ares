@@ -62,7 +62,7 @@ auto pTextEdit::textCursor() const -> TextCursor {
 
 auto pTextEdit::_setState() -> void {
   QTextCursor cursor = qtTextEdit->textCursor();
-  signed lastCharacter = strlen(qtTextEdit->toPlainText().toUtf8().constData());
+  s32 lastCharacter = strlen(qtTextEdit->toPlainText().toUtf8().constData());
   cursor.setPosition(max(0, min(lastCharacter, state().textCursor.offset())));
   cursor.setPosition(max(0, min(lastCharacter, state().textCursor.offset() + state().textCursor.length())), QTextCursor::KeepAnchor);
   qtTextEdit->setTextCursor(cursor);

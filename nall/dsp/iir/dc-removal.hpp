@@ -1,18 +1,16 @@
 #pragma once
 
-#include <nall/dsp/dsp.hpp>
-
 //DC offset removal IIR filter
 
 namespace nall::DSP::IIR {
 
 struct DCRemoval {
   auto reset() -> void;
-  auto process(double in) -> double;  //normalized sample (-1.0 to +1.0)
+  auto process(f64 in) -> f64;  //normalized sample (-1.0 to +1.0)
 
 private:
-  double x;
-  double y;
+  f64 x;
+  f64 y;
 };
 
 inline auto DCRemoval::reset() -> void {
@@ -20,7 +18,7 @@ inline auto DCRemoval::reset() -> void {
   y = 0.0;
 }
 
-inline auto DCRemoval::process(double in) -> double {
+inline auto DCRemoval::process(f64 in) -> f64 {
   x = 0.999 * x + in - y;
   y = in;
   return x;

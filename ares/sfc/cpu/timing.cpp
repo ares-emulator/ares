@@ -1,16 +1,16 @@
 //DMA clock divider
-inline auto CPU::dmaCounter() const -> uint {
+inline auto CPU::dmaCounter() const -> u32 {
   return counter.cpu & 7;
 }
 
 //joypad auto-poll clock divider
-inline auto CPU::joypadCounter() const -> uint {
+inline auto CPU::joypadCounter() const -> u32 {
   return counter.cpu & 127;
 }
 
-auto CPU::step(uint clocks) -> void {
+auto CPU::step(u32 clocks) -> void {
   status.irqLock = 0;
-  uint ticks = clocks >> 1;
+  u32 ticks = clocks >> 1;
   while(ticks--) {
     counter.cpu += 2;
     tick();
@@ -169,8 +169,8 @@ alwaysinline auto CPU::joypadEdge() -> void {
 
   if(status.autoJoypadCounter >= 2 && !(status.autoJoypadCounter & 1)) {
     //sixteen bits are shifted into joy{1-4}, one bit per 256 clocks
-    uint2 port0 = controllerPort1.data();
-    uint2 port1 = controllerPort2.data();
+    n2 port0 = controllerPort1.data();
+    n2 port1 = controllerPort2.data();
 
     io.joy1 = io.joy1 << 1 | port0.bit(0);
     io.joy2 = io.joy2 << 1 | port1.bit(0);

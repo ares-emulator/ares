@@ -142,7 +142,7 @@ auto PPU::main() -> void {
   }
 }
 
-auto PPU::mode(uint2 mode) -> void {
+auto PPU::mode(n2 mode) -> void {
   if(status.mode == 0 && mode != 0) {
     if(Model::SuperGameBoy()) superGameBoy->ppuHreset();
   }
@@ -166,18 +166,18 @@ auto PPU::stat() -> void {
 }
 
 auto PPU::coincidence() -> bool {
-  uint ly = status.ly;
+  u32 ly = status.ly;
   if(ly == 153 && status.lx >= 92) ly = 0;  //LYC=0 triggers early during LY=153
   return ly == status.lyc;
 }
 
-auto PPU::step(uint clocks) -> void {
+auto PPU::step(u32 clocks) -> void {
   while(clocks--) {
     history.mode = history.mode << 2 | status.mode;
     stat();
     if(status.dmaActive) {
-      uint hi = status.dmaClock++;
-      uint lo = hi & (cpu.status.speedDouble ? 1 : 3);
+      u32 hi = status.dmaClock++;
+      u32 lo = hi & (cpu.status.speedDouble ? 1 : 3);
       hi >>= cpu.status.speedDouble ? 1 : 2;
       if(lo == 0) {
         if(hi == 0) {
@@ -186,10 +186,10 @@ auto PPU::step(uint clocks) -> void {
           //cool-down; disable
           status.dmaActive = 0;
         } else {
-          uint8 bank = status.dmaBank;
+          n8 bank = status.dmaBank;
           if(bank == 0xfe) bank = 0xde;  //OAM DMA cannot reference OAM, I/O, or HRAM:
           if(bank == 0xff) bank = 0xdf;  //it accesses HRAM instead.
-          uint8 data = bus.read(bank << 8 | hi - 1, 0xff);
+          n8 data = bus.read(bank << 8 | hi - 1, 0xff);
           oam[hi - 1] = data;
         }
       }
@@ -202,7 +202,7 @@ auto PPU::step(uint clocks) -> void {
 }
 
 //flips 2bpp tiledata line horizontally
-auto PPU::hflip(uint16 tiledata) const -> uint16 {
+auto PPU::hflip(n16 tiledata) const -> n16 {
   return tiledata >> 7 & 0x0101
        | tiledata >> 5 & 0x0202
        | tiledata >> 3 & 0x0404

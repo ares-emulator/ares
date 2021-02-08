@@ -12,7 +12,7 @@ auto PCD::SCSI::clockSector() -> void {
   if(!drive->read()) return;
 
   response.reset();
-  for(uint offset : range(2048)) {
+  for(u32 offset : range(2048)) {
     response.write(drive->sector[16 + offset]);
   }
 
@@ -21,15 +21,15 @@ auto PCD::SCSI::clockSector() -> void {
   dataTransferCompleted = drive->inactive();
 }
 
-auto PCD::SCSI::clockSample() -> maybe<uint8> {
+auto PCD::SCSI::clockSample() -> maybe<n8> {
   if(pin.request && !pin.acknowledge && !pin.control && pin.input) {
     return readData();
   }
   return {};
 }
 
-auto PCD::SCSI::readData() -> uint8 {
-  uint8 result = bus.data;
+auto PCD::SCSI::readData() -> n8 {
+  n8 result = bus.data;
 
   if(pin.request && !pin.acknowledge && !pin.control && pin.input) {
     pin.acknowledge = 1;
@@ -219,7 +219,7 @@ auto PCD::SCSI::commandReadData() -> void {
 auto PCD::SCSI::commandAudioSetStartPosition() -> void {
   if(!pcd.fd) return reply(Status::CheckCondition);
 
-  maybe<int> lba;
+  maybe<s32> lba;
 
   if(request.data[9].bit(6,7) == 0) {
     lba = request.data[3] << 16 | request.data[4] << 8 | request.data[5] << 0;
@@ -269,7 +269,7 @@ auto PCD::SCSI::commandAudioSetStartPosition() -> void {
 auto PCD::SCSI::commandAudioSetStopPosition() -> void {
   if(!pcd.fd) return reply(Status::CheckCondition);
 
-  maybe<int> lba;
+  maybe<s32> lba;
 
   if(request.data[9].bit(6,7) == 0) {
     lba = request.data[3] << 16 | request.data[4] << 8 | request.data[5] << 0;
@@ -337,12 +337,12 @@ auto PCD::SCSI::commandReadSubchannel() -> void {
   //1 = inactive
   //2 = paused
   //3 = stopped
-  uint8 mode = 1;
+  n8 mode = 1;
   if(drive->playing()) mode = 0;
   if(drive->paused())  mode = 2;
   if(drive->stopped()) mode = 3;
 
-  array_view<uint8_t> q{pcd.drive.sector + 2364, 12};
+  array_view<u8> q{pcd.drive.sector + 2364, 12};
   response.write(mode);  //CDDA mode
   response.write(q[0]);  //control + address
   response.write(q[1]);  //track#

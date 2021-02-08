@@ -16,11 +16,11 @@ M68K::M68K() {
   }
 
   #define pattern(s) \
-    std::integral_constant<uint16_t, bit::test(s)>::value
+    std::integral_constant<u16, bit::test(s)>::value
 
   //ABCD
-  for(uint3 treg : range(8))
-  for(uint3 sreg : range(8)) {
+  for(n3 treg : range(8))
+  for(n3 sreg : range(8)) {
     auto opcode = pattern("1100 ---1 0000 ----") | treg << 9 | sreg << 0;
 
     EffectiveAddress dataWith{DataRegisterDirect, treg};
@@ -33,9 +33,9 @@ M68K::M68K() {
   }
 
   //ADD
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1101 ---0 ++-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 7 && reg >= 5) continue;
 
@@ -49,9 +49,9 @@ M68K::M68K() {
   }
 
   //ADD
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1101 ---1 ++-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -63,9 +63,9 @@ M68K::M68K() {
   }
 
   //ADDA
-  for(uint3 areg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 areg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1101 ---+ 11-- ----") | areg << 9 | mode << 3 | reg << 0;
     if(mode == 7 && reg >= 5) continue;
 
@@ -76,8 +76,8 @@ M68K::M68K() {
   }
 
   //ADDI
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 0110 ++-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -88,13 +88,13 @@ M68K::M68K() {
   }
 
   //ADDQ
-  for(uint3 data : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 data : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0101 ---0 ++-- ----") | data << 9 | mode << 3 | reg << 0;
     if(mode == 7 && reg >= 2) continue;
 
-    uint4 immediate = data ? (uint4)data : (uint4)8;
+    n4 immediate = data ? (n4)data : (n4)8;
     if(mode != 1) {
       EffectiveAddress with{mode, reg};
       bind(opcode | 0 << 6, ADDQ<Byte>, immediate, with);
@@ -108,8 +108,8 @@ M68K::M68K() {
   }
 
   //ADDX
-  for(uint3 xreg : range(8))
-  for(uint3 yreg : range(8)) {
+  for(n3 xreg : range(8))
+  for(n3 yreg : range(8)) {
     auto opcode = pattern("1101 ---1 ++00 ----") | xreg << 9 | yreg << 0;
 
     EffectiveAddress dataWith{DataRegisterDirect, xreg};
@@ -126,9 +126,9 @@ M68K::M68K() {
   }
 
   //AND
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1100 ---0 ++-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 5)) continue;
 
@@ -140,9 +140,9 @@ M68K::M68K() {
   }
 
   //AND
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1100 ---1 ++-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -154,8 +154,8 @@ M68K::M68K() {
   }
 
   //ANDI
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 0010 ++-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -178,11 +178,11 @@ M68K::M68K() {
   }
 
   //ASL (immediate)
-  for(uint3 immediate : range(8))
-  for(uint3 dreg      : range(8)) {
+  for(n3 immediate : range(8))
+  for(n3 dreg      : range(8)) {
     auto opcode = pattern("1110 ---1 ++00 0---") | immediate << 9 | dreg << 0;
 
-    auto count = immediate ? (uint4)immediate : (uint4)8;
+    auto count = immediate ? (n4)immediate : (n4)8;
     DataRegister with{dreg};
     bind(opcode | 0 << 6, ASL<Byte>, count, with);
     bind(opcode | 1 << 6, ASL<Word>, count, with);
@@ -190,8 +190,8 @@ M68K::M68K() {
   }
 
   //ASL (register)
-  for(uint3 sreg : range(8))
-  for(uint3 dreg : range(8)) {
+  for(n3 sreg : range(8))
+  for(n3 dreg : range(8)) {
     auto opcode = pattern("1110 ---1 ++10 0---") | sreg << 9 | dreg << 0;
 
     DataRegister from{sreg};
@@ -202,8 +202,8 @@ M68K::M68K() {
   }
 
   //ASL (effective address)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1110 0001 11-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -212,11 +212,11 @@ M68K::M68K() {
   }
 
   //ASR (immediate)
-  for(uint3 immediate : range(8))
-  for(uint3 dreg      : range(8)) {
+  for(n3 immediate : range(8))
+  for(n3 dreg      : range(8)) {
     auto opcode = pattern("1110 ---0 ++00 0---") | immediate << 9 | dreg << 0;
 
-    auto count = immediate ? (uint4)immediate : (uint4)8;
+    auto count = immediate ? (n4)immediate : (n4)8;
     DataRegister with{dreg};
     bind(opcode | 0 << 6, ASR<Byte>, count, with);
     bind(opcode | 1 << 6, ASR<Word>, count, with);
@@ -224,8 +224,8 @@ M68K::M68K() {
   }
 
   //ASR (register)
-  for(uint3 sreg : range(8))
-  for(uint3 dreg : range(8)) {
+  for(n3 sreg : range(8))
+  for(n3 dreg : range(8)) {
     auto opcode = pattern("1110 ---0 ++10 0---") | sreg << 9 | dreg << 0;
 
     DataRegister from{sreg};
@@ -236,8 +236,8 @@ M68K::M68K() {
   }
 
   //ASR (effective address)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1110 0000 11-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -246,8 +246,8 @@ M68K::M68K() {
   }
 
   //BCC
-  for(uint4 test         : range( 16))
-  for(uint8 displacement : range(256)) {
+  for(n4 test         : range( 16))
+  for(n8 displacement : range(256)) {
     if(test <= 1) continue;
 
     auto opcode = pattern("0110 ---- ---- ----") | test << 8 | displacement << 0;
@@ -256,9 +256,9 @@ M68K::M68K() {
   }
 
   //BCHG (register)
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 ---1 01-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -269,8 +269,8 @@ M68K::M68K() {
   }
 
   //BCHG (immediate)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 1000 01-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -280,9 +280,9 @@ M68K::M68K() {
   }
 
   //BCLR (register)
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 ---1 10-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -293,8 +293,8 @@ M68K::M68K() {
   }
 
   //BCLR (immediate)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 1000 10-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -304,16 +304,16 @@ M68K::M68K() {
   }
 
   //BRA
-  for(uint8 displacement : range(256)) {
+  for(n8 displacement : range(256)) {
     auto opcode = pattern("0110 0000 ---- ----") | displacement << 0;
 
     bind(opcode, BRA, displacement);
   }
 
   //BSET (register)
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 ---1 11-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -324,8 +324,8 @@ M68K::M68K() {
   }
 
   //BSET (immediate)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 1000 11-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -335,16 +335,16 @@ M68K::M68K() {
   }
 
   //BSR
-  for(uint8 displacement : range(256)) {
+  for(n8 displacement : range(256)) {
     auto opcode = pattern("0110 0001 ---- ----") | displacement << 0;
 
     bind(opcode, BSR, displacement);
   }
 
   //BTST (register)
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 ---1 00-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 5)) continue;
 
@@ -355,8 +355,8 @@ M68K::M68K() {
   }
 
   //BTST (immediate)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 1000 00-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 4)) continue;
 
@@ -366,9 +366,9 @@ M68K::M68K() {
   }
 
   //CHK
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 ---1 10-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 5)) continue;
 
@@ -378,8 +378,8 @@ M68K::M68K() {
   }
 
   //CLR
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 0010 ++-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -390,9 +390,9 @@ M68K::M68K() {
   }
 
   //CMP
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1011 ---0 ++-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 7 && reg >= 5) continue;
 
@@ -406,9 +406,9 @@ M68K::M68K() {
   }
 
   //CMPA
-  for(uint3 areg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 areg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1011 ---+ 11-- ----") | areg << 9 | mode << 3 | reg << 0;
 
     AddressRegister with{areg};
@@ -418,8 +418,8 @@ M68K::M68K() {
   }
 
   //CMPI
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 1100 ++-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -430,8 +430,8 @@ M68K::M68K() {
   }
 
   //CMPM
-  for(uint3 xreg : range(8))
-  for(uint3 yreg : range(8)) {
+  for(n3 xreg : range(8))
+  for(n3 yreg : range(8)) {
     auto opcode = pattern("1011 ---1 ++00 1---") | xreg << 9 | yreg << 0;
 
     EffectiveAddress with{AddressRegisterIndirectWithPostIncrement, xreg};
@@ -442,8 +442,8 @@ M68K::M68K() {
   }
 
   //DBCC
-  for(uint4 condition : range(16))
-  for(uint3 dreg      : range( 8)) {
+  for(n4 condition : range(16))
+  for(n3 dreg      : range( 8)) {
     auto opcode = pattern("0101 ---- 1100 1---") | condition << 8 | dreg << 0;
 
     DataRegister with{dreg};
@@ -451,9 +451,9 @@ M68K::M68K() {
   }
 
   //DIVS
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1000 ---1 11-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 5)) continue;
 
@@ -463,9 +463,9 @@ M68K::M68K() {
   }
 
   //DIVU
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1000 ---0 11-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 5)) continue;
 
@@ -475,9 +475,9 @@ M68K::M68K() {
   }
 
   //EOR
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1011 ---1 ++-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -489,8 +489,8 @@ M68K::M68K() {
   }
 
   //EORI
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 1010 ++-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -513,8 +513,8 @@ M68K::M68K() {
   }
 
   //EXG
-  for(uint3 xreg : range(8))
-  for(uint3 yreg : range(8)) {
+  for(n3 xreg : range(8))
+  for(n3 yreg : range(8)) {
     auto opcode = pattern("1100 ---1 0100 0---") | xreg << 9 | yreg << 0;
 
     DataRegister x{xreg};
@@ -523,8 +523,8 @@ M68K::M68K() {
   }
 
   //EXG
-  for(uint3 xreg : range(8))
-  for(uint3 yreg : range(8)) {
+  for(n3 xreg : range(8))
+  for(n3 yreg : range(8)) {
     auto opcode = pattern("1100 ---1 0100 1---") | xreg << 9 | yreg << 0;
 
     AddressRegister x{xreg};
@@ -533,8 +533,8 @@ M68K::M68K() {
   }
 
   //EXG
-  for(uint3 xreg : range(8))
-  for(uint3 yreg : range(8)) {
+  for(n3 xreg : range(8))
+  for(n3 yreg : range(8)) {
     auto opcode = pattern("1100 ---1 1000 1---") | xreg << 9 | yreg << 0;
 
     DataRegister x{xreg};
@@ -543,7 +543,7 @@ M68K::M68K() {
   }
 
   //EXT
-  for(uint3 dreg : range(8)) {
+  for(n3 dreg : range(8)) {
     auto opcode = pattern("0100 1000 1+00 0---") | dreg << 0;
 
     DataRegister with{dreg};
@@ -558,8 +558,8 @@ M68K::M68K() {
   }
 
   //JMP
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 1110 11-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || mode == 3 || mode == 4 || (mode == 7 && reg >= 4)) continue;
 
@@ -568,8 +568,8 @@ M68K::M68K() {
   }
 
   //JSR
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 1110 10-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || mode == 3 || mode == 4 || (mode == 7 && reg >= 4)) continue;
 
@@ -578,9 +578,9 @@ M68K::M68K() {
   }
 
   //LEA
-  for(uint3 areg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 areg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 ---1 11-- ----") | areg << 9 | mode << 3 | reg << 0;
     if(mode <= 1 || mode == 3 || mode == 4 || (mode == 7 && reg >= 4)) continue;
 
@@ -590,7 +590,7 @@ M68K::M68K() {
   }
 
   //LINK
-  for(uint3 areg : range(8)) {
+  for(n3 areg : range(8)) {
     auto opcode = pattern("0100 1110 0101 0---") | areg << 0;
 
     AddressRegister with{areg};
@@ -598,11 +598,11 @@ M68K::M68K() {
   }
 
   //LSL (immediate)
-  for(uint3 immediate : range(8))
-  for(uint3 dreg      : range(8)) {
+  for(n3 immediate : range(8))
+  for(n3 dreg      : range(8)) {
     auto opcode = pattern("1110 ---1 ++00 1---") | immediate << 9 | dreg << 0;
 
-    auto count = immediate ? (uint4)immediate : (uint4)8;
+    auto count = immediate ? (n4)immediate : (n4)8;
     DataRegister with{dreg};
     bind(opcode | 0 << 6, LSL<Byte>, count, with);
     bind(opcode | 1 << 6, LSL<Word>, count, with);
@@ -610,8 +610,8 @@ M68K::M68K() {
   }
 
   //LSL (register)
-  for(uint3 sreg : range(8))
-  for(uint3 dreg : range(8)) {
+  for(n3 sreg : range(8))
+  for(n3 dreg : range(8)) {
     auto opcode = pattern("1110 ---1 ++10 1---") | sreg << 9 | dreg << 0;
 
     DataRegister from{sreg};
@@ -622,8 +622,8 @@ M68K::M68K() {
   }
 
   //LSL (effective address)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1110 0011 11-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -632,11 +632,11 @@ M68K::M68K() {
   }
 
   //LSR (immediate)
-  for(uint3 immediate : range(8))
-  for(uint3 dreg      : range(8)) {
+  for(n3 immediate : range(8))
+  for(n3 dreg      : range(8)) {
     auto opcode = pattern("1110 ---0 ++00 1---") | immediate << 9 | dreg << 0;
 
-    auto count = immediate ? (uint4)immediate : (uint4)8;
+    auto count = immediate ? (n4)immediate : (n4)8;
     DataRegister with{dreg};
     bind(opcode | 0 << 6, LSR<Byte>, count, with);
     bind(opcode | 1 << 6, LSR<Word>, count, with);
@@ -644,8 +644,8 @@ M68K::M68K() {
   }
 
   //LSR (register)
-  for(uint3 sreg : range(8))
-  for(uint3 dreg : range(8)) {
+  for(n3 sreg : range(8))
+  for(n3 dreg : range(8)) {
     auto opcode = pattern("1110 ---0 ++10 1---") | sreg << 9 | dreg << 0;
 
     DataRegister from{sreg};
@@ -656,8 +656,8 @@ M68K::M68K() {
   }
 
   //LSR (effective address)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1110 0010 11-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -666,10 +666,10 @@ M68K::M68K() {
   }
 
   //MOVE
-  for(uint3 toReg    : range(8))
-  for(uint3 toMode   : range(8))
-  for(uint3 fromMode : range(8))
-  for(uint3 fromReg  : range(8)) {
+  for(n3 toReg    : range(8))
+  for(n3 toMode   : range(8))
+  for(n3 fromMode : range(8))
+  for(n3 fromReg  : range(8)) {
     auto opcode = pattern("00++ ---- ---- ----") | toReg << 9 | toMode << 6 | fromMode << 3 | fromReg << 0;
     if(toMode == 1 || (toMode == 7 && toReg >= 2)) continue;
     if(fromMode == 7 && fromReg >= 5) continue;
@@ -684,9 +684,9 @@ M68K::M68K() {
   }
 
   //MOVEA
-  for(uint3 areg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 areg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("00++ ---0 01-- ----") | areg << 9 | mode << 3 | reg << 0;
     if(mode == 7 && reg >= 5) continue;
 
@@ -697,8 +697,8 @@ M68K::M68K() {
   }
 
   //MOVEM
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 1000 1+-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || mode == 3 || (mode == 7 && reg >= 2)) continue;
 
@@ -708,8 +708,8 @@ M68K::M68K() {
   }
 
   //MOVEM
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 1100 1+-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || mode == 4 || (mode == 7 && reg >= 4)) continue;
 
@@ -719,8 +719,8 @@ M68K::M68K() {
   }
 
   //MOVEP
-  for(uint3 dreg : range(8))
-  for(uint3 areg : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 areg : range(8)) {
     auto opcode = pattern("0000 ---1 1+00 1---") | dreg << 9 | areg << 0;
 
     DataRegister from{dreg};
@@ -730,8 +730,8 @@ M68K::M68K() {
   }
 
   //MOVEP
-  for(uint3 dreg : range(8))
-  for(uint3 areg : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 areg : range(8)) {
     auto opcode = pattern("0000 ---1 0+00 1---") | dreg << 9 | areg << 0;
 
     DataRegister to{dreg};
@@ -741,8 +741,8 @@ M68K::M68K() {
   }
 
   //MOVEQ
-  for(uint3 dreg      : range(  8))
-  for(uint8 immediate : range(256)) {
+  for(n3 dreg      : range(  8))
+  for(n8 immediate : range(256)) {
     auto opcode = pattern("0111 ---0 ---- ----") | dreg << 9 | immediate << 0;
 
     DataRegister to{dreg};
@@ -750,8 +750,8 @@ M68K::M68K() {
   }
 
   //MOVE_FROM_SR
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 0000 11-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -760,8 +760,8 @@ M68K::M68K() {
   }
 
   //MOVE_TO_CCR
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 0100 11-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 5)) continue;
 
@@ -770,8 +770,8 @@ M68K::M68K() {
   }
 
   //MOVE_TO_SR
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 0110 11-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 5)) continue;
 
@@ -780,7 +780,7 @@ M68K::M68K() {
   }
 
   //MOVE_FROM_USP
-  for(uint3 areg : range(8)) {
+  for(n3 areg : range(8)) {
     auto opcode = pattern("0100 1110 0110 1---") | areg << 0;
 
     AddressRegister to{areg};
@@ -788,7 +788,7 @@ M68K::M68K() {
   }
 
   //MOVE_TO_USP
-  for(uint3 areg : range(8)) {
+  for(n3 areg : range(8)) {
     auto opcode = pattern("0100 1110 0110 0---") | areg << 0;
 
     AddressRegister from{areg};
@@ -796,9 +796,9 @@ M68K::M68K() {
   }
 
   //MULS
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1100 ---1 11-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 5)) continue;
 
@@ -808,9 +808,9 @@ M68K::M68K() {
   }
 
   //MULU
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1100 ---0 11-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 5)) continue;
 
@@ -820,8 +820,8 @@ M68K::M68K() {
   }
 
   //NBCD
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 1000 00-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -830,8 +830,8 @@ M68K::M68K() {
   }
 
   //NEG
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 0100 ++-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -842,8 +842,8 @@ M68K::M68K() {
   }
 
   //NEGX
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 0000 ++-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -860,8 +860,8 @@ M68K::M68K() {
   }
 
   //NOT
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 0110 ++-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -872,9 +872,9 @@ M68K::M68K() {
   }
 
   //OR
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1000 ---0 ++-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 5)) continue;
 
@@ -886,9 +886,9 @@ M68K::M68K() {
   }
 
   //OR
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1000 ---1 ++-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -900,8 +900,8 @@ M68K::M68K() {
   }
 
   //ORI
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 0000 ++-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -924,8 +924,8 @@ M68K::M68K() {
   }
 
   //PEA
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 1000 01-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || mode == 3 || mode == 4 || (mode == 7 && reg >= 4)) continue;
 
@@ -940,11 +940,11 @@ M68K::M68K() {
   }
 
   //ROL (immediate)
-  for(uint3 immediate : range(8))
-  for(uint3 dreg      : range(8)) {
+  for(n3 immediate : range(8))
+  for(n3 dreg      : range(8)) {
     auto opcode = pattern("1110 ---1 ++01 1---") | immediate << 9 | dreg << 0;
 
-    auto count = immediate ? (uint4)immediate : (uint4)8;
+    auto count = immediate ? (n4)immediate : (n4)8;
     DataRegister with{dreg};
     bind(opcode | 0 << 6, ROL<Byte>, count, with);
     bind(opcode | 1 << 6, ROL<Word>, count, with);
@@ -952,8 +952,8 @@ M68K::M68K() {
   }
 
   //ROL (register)
-  for(uint3 sreg : range(8))
-  for(uint3 dreg : range(8)) {
+  for(n3 sreg : range(8))
+  for(n3 dreg : range(8)) {
     auto opcode = pattern("1110 ---1 ++11 1---") | sreg << 9 | dreg << 0;
 
     DataRegister from{sreg};
@@ -964,8 +964,8 @@ M68K::M68K() {
   }
 
   //ROL (effective address)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1110 0111 11-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -974,11 +974,11 @@ M68K::M68K() {
   }
 
   //ROR (immediate)
-  for(uint3 immediate : range(8))
-  for(uint3 dreg      : range(8)) {
+  for(n3 immediate : range(8))
+  for(n3 dreg      : range(8)) {
     auto opcode = pattern("1110 ---0 ++01 1---") | immediate << 9 | dreg << 0;
 
-    auto count = immediate ? (uint4)immediate : (uint4)8;
+    auto count = immediate ? (n4)immediate : (n4)8;
     DataRegister with{dreg};
     bind(opcode | 0 << 6, ROR<Byte>, count, with);
     bind(opcode | 1 << 6, ROR<Word>, count, with);
@@ -986,8 +986,8 @@ M68K::M68K() {
   }
 
   //ROR (register)
-  for(uint3 sreg : range(8))
-  for(uint3 dreg : range(8)) {
+  for(n3 sreg : range(8))
+  for(n3 dreg : range(8)) {
     auto opcode = pattern("1110 ---0 ++11 1---") | sreg << 9 | dreg << 0;
 
     DataRegister from{sreg};
@@ -998,8 +998,8 @@ M68K::M68K() {
   }
 
   //ROR (effective address)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1110 0110 11-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -1008,11 +1008,11 @@ M68K::M68K() {
   }
 
   //ROXL (immediate)
-  for(uint3 immediate : range(8))
-  for(uint3 dreg      : range(8)) {
+  for(n3 immediate : range(8))
+  for(n3 dreg      : range(8)) {
     auto opcode = pattern("1110 ---1 ++01 0---") | immediate << 9 | dreg << 0;
 
-    auto count = immediate ? (uint4)immediate : (uint4)8;
+    auto count = immediate ? (n4)immediate : (n4)8;
     DataRegister with{dreg};
     bind(opcode | 0 << 6, ROXL<Byte>, count, with);
     bind(opcode | 1 << 6, ROXL<Word>, count, with);
@@ -1020,8 +1020,8 @@ M68K::M68K() {
   }
 
   //ROXL (register)
-  for(uint3 sreg : range(8))
-  for(uint3 dreg : range(8)) {
+  for(n3 sreg : range(8))
+  for(n3 dreg : range(8)) {
     auto opcode = pattern("1110 ---1 ++11 0---") | sreg << 9 | dreg << 0;
 
     DataRegister from{sreg};
@@ -1032,8 +1032,8 @@ M68K::M68K() {
   }
 
   //ROXL (effective address)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1110 0101 11-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -1042,11 +1042,11 @@ M68K::M68K() {
   }
 
   //ROXR (immediate)
-  for(uint3 immediate : range(8))
-  for(uint3 dreg      : range(8)) {
+  for(n3 immediate : range(8))
+  for(n3 dreg      : range(8)) {
     auto opcode = pattern("1110 ---0 ++01 0---") | immediate << 9 | dreg << 0;
 
-    auto count = immediate ? (uint4)immediate : (uint4)8;
+    auto count = immediate ? (n4)immediate : (n4)8;
     DataRegister with{dreg};
     bind(opcode | 0 << 6, ROXR<Byte>, count, with);
     bind(opcode | 1 << 6, ROXR<Word>, count, with);
@@ -1054,8 +1054,8 @@ M68K::M68K() {
   }
 
   //ROXR (register)
-  for(uint3 sreg : range(8))
-  for(uint3 dreg : range(8)) {
+  for(n3 sreg : range(8))
+  for(n3 dreg : range(8)) {
     auto opcode = pattern("1110 ---0 ++11 0---") | sreg << 9 | dreg << 0;
 
     DataRegister from{sreg};
@@ -1066,8 +1066,8 @@ M68K::M68K() {
   }
 
   //ROXR (effective address)
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1110 0100 11-- ----") | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -1094,8 +1094,8 @@ M68K::M68K() {
   }
 
   //SBCD
-  for(uint3 treg : range(8))
-  for(uint3 sreg : range(8)) {
+  for(n3 treg : range(8))
+  for(n3 sreg : range(8)) {
     auto opcode = pattern("1000 ---1 0000 ----") | treg << 9 | sreg << 0;
 
     EffectiveAddress dataWith{DataRegisterDirect, treg};
@@ -1108,9 +1108,9 @@ M68K::M68K() {
   }
 
   //SCC
-  for(uint4 test : range(16))
-  for(uint3 mode : range( 8))
-  for(uint3 reg  : range( 8)) {
+  for(n4 test : range(16))
+  for(n3 mode : range( 8))
+  for(n3 reg  : range( 8)) {
     auto opcode = pattern("0101 ---- 11-- ----") | test << 8 | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -1125,9 +1125,9 @@ M68K::M68K() {
   }
 
   //SUB
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1001 ---0 ++-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode == 7 && reg >= 5) continue;
 
@@ -1141,9 +1141,9 @@ M68K::M68K() {
   }
 
   //SUB
-  for(uint3 dreg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 dreg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1001 ---1 ++-- ----") | dreg << 9 | mode << 3 | reg << 0;
     if(mode <= 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -1155,9 +1155,9 @@ M68K::M68K() {
   }
 
   //SUBA
-  for(uint3 areg : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 areg : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("1001 ---+ 11-- ----") | areg << 9 | mode << 3 | reg << 0;
     if(mode == 7 && reg >= 5) continue;
 
@@ -1168,8 +1168,8 @@ M68K::M68K() {
   }
 
   //SUBI
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0000 0100 ++-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -1180,13 +1180,13 @@ M68K::M68K() {
   }
 
   //SUBQ
-  for(uint3 data : range(8))
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 data : range(8))
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0101 ---1 ++-- ----") | data << 9 | mode << 3 | reg << 0;
     if(mode == 7 && reg >= 2) continue;
 
-    auto immediate = data ? (uint4)data : (uint4)8;
+    auto immediate = data ? (n4)data : (n4)8;
     if(mode != 1) {
       EffectiveAddress with{mode, reg};
       bind(opcode | 0 << 6, SUBQ<Byte>, immediate, with);
@@ -1200,8 +1200,8 @@ M68K::M68K() {
   }
 
   //SUBX
-  for(uint3 treg : range(8))
-  for(uint3 sreg : range(8)) {
+  for(n3 treg : range(8))
+  for(n3 sreg : range(8)) {
     auto opcode = pattern("1001 ---1 ++00 ----") | treg << 9 | sreg << 0;
 
     EffectiveAddress dataWith{DataRegisterDirect, treg};
@@ -1218,7 +1218,7 @@ M68K::M68K() {
   }
 
   //SWAP
-  for(uint3 dreg : range(8)) {
+  for(n3 dreg : range(8)) {
     auto opcode = pattern("0100 1000 0100 0---") | dreg << 0;
 
     DataRegister with{dreg};
@@ -1226,8 +1226,8 @@ M68K::M68K() {
   }
 
   //TAS
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 1010 11-- ----") | mode << 3 | reg << 0;
     if(mode == 1 || (mode == 7 && reg >= 2)) continue;
 
@@ -1236,7 +1236,7 @@ M68K::M68K() {
   }
 
   //TRAP
-  for(uint4 vector : range(16)) {
+  for(n4 vector : range(16)) {
     auto opcode = pattern("0100 1110 0100 ----") | vector << 0;
 
     bind(opcode, TRAP, vector);
@@ -1249,8 +1249,8 @@ M68K::M68K() {
   }
 
   //TST
-  for(uint3 mode : range(8))
-  for(uint3 reg  : range(8)) {
+  for(n3 mode : range(8))
+  for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 1010 ++-- ----") | mode << 3 | reg << 0;
     if(mode == 7 && reg >= 2) continue;
 
@@ -1263,7 +1263,7 @@ M68K::M68K() {
   }
 
   //UNLK
-  for(uint3 areg : range(8)) {
+  for(n3 areg : range(8)) {
     auto opcode = pattern("0100 1110 0101 1---") | areg << 0;
 
     AddressRegister with{areg};
@@ -1271,7 +1271,7 @@ M68K::M68K() {
   }
 
   //ILLEGAL
-  for(uint16 opcode : range(65536)) {
+  for(n16 opcode : range(65536)) {
     if(instructionTable[opcode]) continue;
     bind(opcode, ILLEGAL, opcode);
   }

@@ -1,4 +1,4 @@
-auto SA1::readIOCPU(uint24 address, uint8 data) -> uint8 {
+auto SA1::readIOCPU(n24 address, n8 data) -> n8 {
   cpu.synchronize(sa1);
 
   switch(0x2200 | address.bit(0,8)) {
@@ -21,7 +21,7 @@ auto SA1::readIOCPU(uint24 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto SA1::readIOSA1(uint24 address, uint8 data) -> uint8 {
+auto SA1::readIOSA1(n24 address, n8 data) -> n8 {
   synchronize(cpu);
 
   switch(0x2200 | address.bit(0,8)) {
@@ -61,7 +61,7 @@ auto SA1::readIOSA1(uint24 address, uint8 data) -> uint8 {
 
   //(VDPL) variable-length data read port low
   case 0x230c: {
-    uint24 data;
+    n24 data;
     data.byte(0) = readVBR(io.va + 0);
     data.byte(1) = readVBR(io.va + 1);
     data.byte(2) = readVBR(io.va + 2);
@@ -72,7 +72,7 @@ auto SA1::readIOSA1(uint24 address, uint8 data) -> uint8 {
 
   //(VDPH) variable-length data read port high
   case 0x230d: {
-    uint24 data;
+    n24 data;
     data.byte(0) = readVBR(io.va + 0);
     data.byte(1) = readVBR(io.va + 1);
     data.byte(2) = readVBR(io.va + 2);
@@ -93,7 +93,7 @@ auto SA1::readIOSA1(uint24 address, uint8 data) -> uint8 {
   return 0xff;  //unverified
 }
 
-auto SA1::writeIOCPU(uint24 address, uint8 data) -> void {
+auto SA1::writeIOCPU(n24 address, n8 data) -> void {
   cpu.synchronize(sa1);
 
   switch(0x2200 | address.bit(0,8)) {
@@ -216,7 +216,7 @@ auto SA1::writeIOCPU(uint24 address, uint8 data) -> void {
   }
 }
 
-auto SA1::writeIOSA1(uint24 address, uint8 data) -> void {
+auto SA1::writeIOSA1(n24 address, n8 data) -> void {
   synchronize(cpu);
 
   switch(0x2200 | address.bit(0,8)) {
@@ -390,17 +390,17 @@ auto SA1::writeIOSA1(uint24 address, uint8 data) -> void {
     if(io.acm == 0) {
       if(io.md == 0) {
         //signed multiplication
-        io.mr = uint32((int16)io.ma * (int16)io.mb);
+        io.mr = n32((i16)io.ma * (i16)io.mb);
         io.mb = 0;
       } else {
         //unsigned division
         if(io.mb == 0) {
           io.mr = 0;
         } else {
-          int16 dividend = io.ma;
-          uint16 divisor = io.mb;
-          uint16 remainder = dividend >= 0 ? uint16(dividend % divisor) : uint16((dividend % divisor + divisor) % divisor);
-          uint16 quotient = (dividend - remainder) / divisor;
+          i16 dividend = io.ma;
+          n16 divisor = io.mb;
+          n16 remainder = dividend >= 0 ? n16(dividend % divisor) : n16((dividend % divisor + divisor) % divisor);
+          n16 quotient = (dividend - remainder) / divisor;
           io.mr = remainder << 16 | quotient;
         }
         io.ma = 0;
@@ -408,9 +408,9 @@ auto SA1::writeIOSA1(uint24 address, uint8 data) -> void {
       }
     } else {
       //sigma (accumulative multiplication)
-      io.mr += (int16)io.ma * (int16)io.mb;
+      io.mr += (i16)io.ma * (i16)io.mb;
       io.overflow = io.mr >> 40;
-      io.mr = (uint40)io.mr;
+      io.mr = (n40)io.mr;
       io.mb = 0;
     }
     return;
@@ -438,7 +438,7 @@ auto SA1::writeIOSA1(uint24 address, uint8 data) -> void {
   }
 }
 
-auto SA1::writeIOShared(uint24 address, uint8 data) -> void {
+auto SA1::writeIOShared(n24 address, n8 data) -> void {
   switch(0x2200 | address.bit(0,8)) {
 
   //(CDMA) character conversion DMA parameters

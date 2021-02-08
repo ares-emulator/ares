@@ -1,4 +1,4 @@
-auto MCD::external_readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 {
+auto MCD::external_readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   address.bit(6,7) = 0;  //a12040-a120ff mirrors a12000-a1203f
 
   if(address == 0xa12000) {
@@ -47,19 +47,19 @@ auto MCD::external_readIO(uint1 upper, uint1 lower, uint24 address, uint16 data)
   }
 
   if(address >= 0xa12010 && address <= 0xa1201f) {
-    uint3 index = address - 0xa12010 >> 1;
+    n3 index = address - 0xa12010 >> 1;
     data = communication.command[index];
   }
 
   if(address >= 0xa12020 && address <= 0xa1202f) {
-    uint3 index = address - 0xa12020 >> 1;
+    n3 index = address - 0xa12020 >> 1;
     data = communication.status[index];
   }
 
   return data;
 }
 
-auto MCD::external_writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void {
+auto MCD::external_writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   address.bit(6,7) = 0;  //a12040-a120ff mirrors a12000-a1203f
 
   if(address == 0xa12000) {
@@ -112,7 +112,7 @@ auto MCD::external_writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data
   }
 
   if(address >= 0xa12010 && address <= 0xa1201f) {
-    uint3 index = address - 0xa12010 >> 1;
+    n3 index = address - 0xa12010 >> 1;
     if(lower) communication.command[index].byte(0) = data.byte(0);
     if(upper) communication.command[index].byte(1) = data.byte(1);
   }

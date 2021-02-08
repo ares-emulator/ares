@@ -18,9 +18,9 @@ auto pProgressBar::minimumSize() const -> Size {
   return {0, 25};
 }
 
-auto pProgressBar::setPosition(uint position) -> void {
+auto pProgressBar::setPosition(u32 position) -> void {
   position = position <= 100 ? position : 0;
-  gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(gtkWidget), (double)position / 100.0);
+  gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(gtkWidget), (f64)position / 100.0);
 }
 
 }

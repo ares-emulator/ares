@@ -1,5 +1,5 @@
 //used by JMP and JSR: as PC is guaranteed to change, avoid performing any unnecessary prefetches
-auto M68K::prefetched(EffectiveAddress& ea) -> uint32 {
+auto M68K::prefetched(EffectiveAddress& ea) -> n32 {
   if(ea.valid) return ea.address;
   ea.valid = true;
 
@@ -11,20 +11,20 @@ auto M68K::prefetched(EffectiveAddress& ea) -> uint32 {
 
   case AddressRegisterIndirectWithDisplacement: {
     idle(2);
-    return ea.address = r.a[ea.reg] + (int16)prefetched();
+    return ea.address = r.a[ea.reg] + (i16)prefetched();
   }
 
   case AddressRegisterIndirectWithIndex: {
     idle(6);
     auto extension = prefetched();
     auto index = extension & 0x8000 ? r.a[extension >> 12 & 7] : r.d[extension >> 12 & 7];
-    if(!(extension & 0x800)) index = (int16)index;
-    return ea.address = r.a[ea.reg] + index + (int8)extension;
+    if(!(extension & 0x800)) index = (i16)index;
+    return ea.address = r.a[ea.reg] + index + (i8)extension;
   }
 
   case AbsoluteShortIndirect: {
     idle(2);
-    return ea.address = (int16)prefetched();
+    return ea.address = (i16)prefetched();
   }
 
   case AbsoluteLongIndirect: {
@@ -36,7 +36,7 @@ auto M68K::prefetched(EffectiveAddress& ea) -> uint32 {
   case ProgramCounterIndirectWithDisplacement: {
     idle(2);
     auto base = r.pc - 2;
-    return ea.address = base + (int16)prefetched();
+    return ea.address = base + (i16)prefetched();
   }
 
   case ProgramCounterIndirectWithIndex: {
@@ -44,8 +44,8 @@ auto M68K::prefetched(EffectiveAddress& ea) -> uint32 {
     auto base = r.pc - 2;
     auto extension = prefetched();
     auto index = extension & 0x8000 ? r.a[extension >> 12 & 7] : r.d[extension >> 12 & 7];
-    if(!(extension & 0x800)) index = (int16)index;
-    return ea.address = base + index + (int8)extension;
+    if(!(extension & 0x800)) index = (i16)index;
+    return ea.address = base + index + (i8)extension;
   }
 
   }
@@ -53,7 +53,7 @@ auto M68K::prefetched(EffectiveAddress& ea) -> uint32 {
   return ea.address = 0;  //should never occur
 }
 
-template<uint Size> auto M68K::fetch(EffectiveAddress& ea) -> uint32 {
+template<u32 Size> auto M68K::fetch(EffectiveAddress& ea) -> n32 {
   if(ea.valid) return ea.address;
   ea.valid = true;
 
@@ -80,7 +80,7 @@ template<uint Size> auto M68K::fetch(EffectiveAddress& ea) -> uint32 {
   }
 
   case AddressRegisterIndirectWithDisplacement: {
-    return ea.address = read(AddressRegister{ea.reg}) + (int16)extension<Word>();
+    return ea.address = read(AddressRegister{ea.reg}) + (i16)extension<Word>();
   }
 
   case AddressRegisterIndirectWithIndex: {
@@ -89,12 +89,12 @@ template<uint Size> auto M68K::fetch(EffectiveAddress& ea) -> uint32 {
     auto index = data & 0x8000
     ? read(AddressRegister{data >> 12})
     : read(DataRegister{data >> 12});
-    if(!(data & 0x800)) index = (int16)index;
-    return ea.address = read(AddressRegister{ea.reg}) + index + (int8)data;
+    if(!(data & 0x800)) index = (i16)index;
+    return ea.address = read(AddressRegister{ea.reg}) + index + (i8)data;
   }
 
   case AbsoluteShortIndirect: {
-    return ea.address = (int16)extension<Word>();
+    return ea.address = (i16)extension<Word>();
   }
 
   case AbsoluteLongIndirect: {
@@ -103,7 +103,7 @@ template<uint Size> auto M68K::fetch(EffectiveAddress& ea) -> uint32 {
 
   case ProgramCounterIndirectWithDisplacement: {
     auto base = r.pc - 2;
-    return ea.address = base + (int16)extension<Word>();
+    return ea.address = base + (i16)extension<Word>();
   }
 
   case ProgramCounterIndirectWithIndex: {
@@ -113,8 +113,8 @@ template<uint Size> auto M68K::fetch(EffectiveAddress& ea) -> uint32 {
     auto index = data & 0x8000
     ? read(AddressRegister{data >> 12})
     : read(DataRegister{data >> 12});
-    if(!(data & 0x800)) index = (int16)index;
-    return ea.address = base + index + (int8)data;
+    if(!(data & 0x800)) index = (i16)index;
+    return ea.address = base + index + (i8)data;
   }
 
   case Immediate: {
@@ -126,7 +126,7 @@ template<uint Size> auto M68K::fetch(EffectiveAddress& ea) -> uint32 {
   return ea.address = 0;  //should never occur
 }
 
-template<uint Size, bool hold, bool fast> auto M68K::read(EffectiveAddress& ea) -> uint32 {
+template<u32 Size, bool hold, bool fast> auto M68K::read(EffectiveAddress& ea) -> n32 {
   fetch<Size>(ea);
 
   switch(ea.mode) {
@@ -191,7 +191,7 @@ template<uint Size, bool hold, bool fast> auto M68K::read(EffectiveAddress& ea) 
   return 0;
 }
 
-template<uint Size, bool hold> auto M68K::write(EffectiveAddress& ea, uint32 data) -> void {
+template<u32 Size, bool hold> auto M68K::write(EffectiveAddress& ea, n32 data) -> void {
   fetch<Size>(ea);
 
   switch(ea.mode) {

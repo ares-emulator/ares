@@ -80,6 +80,7 @@ auto Famicom::heuristicsINES(vector<u8>& data, string location) -> string {
   s +={"  sha256: ", digest, "\n"};
   s +={"  name:   ", Media::name(location), "\n"};
   s +={"  label:  ", Media::name(location), "\n"};
+  s += "  region: NTSC-J, NTSC-U, PAL\n";  //database required to detect region
 
   //Family BASIC (Japan)
   if(digest == "c8c0b6c21bdda7503bab7592aea0f945a0259c18504bb241aafb1eabe65846f3") {
@@ -404,9 +405,10 @@ auto Famicom::heuristicsUNIF(vector<u8>& data, string location) -> string {
 
   string s;
   s += "game\n";
-  s +={"  name:  ", Media::name(location), "\n"};
-  s +={"  label: ", Media::name(location), "\n"};
-  s +={"  board: ", board, "\n"};
+  s +={"  name:   ", Media::name(location), "\n"};
+  s +={"  label:  ", Media::name(location), "\n"};
+  s +={"  region: ", region, "\n"};
+  s +={"  board:  ", board, "\n"};
   if(mirroring) {
     s +={"    mirror mode=", mirroring, "\n"};
   }

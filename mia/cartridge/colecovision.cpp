@@ -16,6 +16,7 @@ auto ColecoVision::heuristics(vector<u8>& data, string location) -> string {
   s += "game\n";
   s +={"  name:  ", Media::name(location), "\n"};
   s +={"  label: ", Media::name(location), "\n"};
+  s += "  region: NTSC, PAL\n";  //database required to detect region
   s += "  board\n";
   s += "    memory\n";
   s += "      type: ROM\n";

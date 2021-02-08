@@ -1,20 +1,20 @@
 struct Interface {
   virtual ~Interface() = default;
 
-  template<uint Size> auto wait() const -> uint {
+  template<u32 Size> auto wait() const -> u32 {
     if constexpr(Size == Byte) return waitStates.byte;
     if constexpr(Size == Half) return waitStates.half;
     if constexpr(Size == Word) return waitStates.word;
   }
 
-  template<uint Size> auto read(u32 address) -> u32 {
+  template<u32 Size> auto read(u32 address) -> u32 {
     if constexpr(Size == Byte) return readByte(address);
     if constexpr(Size == Half) return readHalf(address);
     if constexpr(Size == Word) return readWord(address);
     unreachable;
   }
 
-  template<uint Size> auto write(u32 address, u32 data) -> void {
+  template<u32 Size> auto write(u32 address, u32 data) -> void {
     if constexpr(Size == Byte) return writeByte(address, data);
     if constexpr(Size == Half) return writeHalf(address, data);
     if constexpr(Size == Word) return writeWord(address, data);
@@ -27,7 +27,7 @@ struct Interface {
   virtual auto writeHalf(u32 address, u32 data) -> void = 0;
   virtual auto writeWord(u32 address, u32 data) -> void = 0;
 
-  auto setWaitStates(uint byte, uint half, uint word) -> void {
+  auto setWaitStates(u32 byte, u32 half, u32 word) -> void {
     waitStates.byte = byte;
     waitStates.half = half;
     waitStates.word = word;
@@ -35,9 +35,9 @@ struct Interface {
 
   //additional clock cycles required to access memory
   struct WaitStates {
-    uint byte = 0;
-    uint half = 0;
-    uint word = 0;
+    u32 byte = 0;
+    u32 half = 0;
+    u32 word = 0;
   } waitStates;
 
   std::mutex mutex;

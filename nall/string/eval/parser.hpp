@@ -29,28 +29,28 @@ inline auto whitespace(char n) -> bool {
 //  a<<<b a>>>b a<<<=b a>>>=b rotation operators were added
 //  a~b a~=b concatenation operators were added
 //  a??b coalesce operator was added
-inline auto parse(Node*& node, const char*& s, uint depth) -> void {
-  auto unaryPrefix = [&](Node::Type type, uint seek, uint depth) {
+inline auto parse(Node*& node, const char*& s, u32 depth) -> void {
+  auto unaryPrefix = [&](Node::Type type, u32 seek, u32 depth) {
     auto parent = new Node(type);
     parse(parent->link(0) = new Node, s += seek, depth);
     node = parent;
   };
 
-  auto unarySuffix = [&](Node::Type type, uint seek, uint depth) {
+  auto unarySuffix = [&](Node::Type type, u32 seek, u32 depth) {
     auto parent = new Node(type);
     parent->link(0) = node;
     parse(parent, s += seek, depth);
     node = parent;
   };
 
-  auto binary = [&](Node::Type type, uint seek, uint depth) {
+  auto binary = [&](Node::Type type, u32 seek, u32 depth) {
     auto parent = new Node(type);
     parent->link(0) = node;
     parse(parent->link(1) = new Node, s += seek, depth);
     node = parent;
   };
 
-  auto ternary = [&](Node::Type type, uint seek, uint depth) {
+  auto ternary = [&](Node::Type type, u32 seek, u32 depth) {
     auto parent = new Node(type);
     parent->link(0) = node;
     parse(parent->link(1) = new Node, s += seek, depth);
@@ -59,9 +59,9 @@ inline auto parse(Node*& node, const char*& s, uint depth) -> void {
     node = parent;
   };
 
-  auto separator = [&](Node::Type type, uint seek, uint depth) {
+  auto separator = [&](Node::Type type, u32 seek, u32 depth) {
     if(node->type != Node::Type::Separator) return binary(type, seek, depth);
-    uint n = node->link.size();
+    u32 n = node->link.size();
     parse(node->link(n) = new Node, s += seek, depth);
   };
 

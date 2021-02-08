@@ -99,9 +99,9 @@ auto MessageDialog::_run() -> string {
     button.setFocused();  //the last button will have effective focus
   }
 
-  int widthMessage = 5_sx + 16 + 5_sx + Font().size(state.text).width() + 5_sx;
-  int widthButtons = 5_sx + state.buttons.size() * 85_sx;
-  int width = max(320_sx, widthMessage, widthButtons);
+  s32 widthMessage = 5_sx + 16 + 5_sx + Font().size(state.text).width() + 5_sx;
+  s32 widthButtons = 5_sx + state.buttons.size() * 85_sx;
+  s32 width = max(320_sx, widthMessage, widthButtons);
 
   window.onClose([&] {
     //if the dialog is dismissed (escape pressed, or window manager close button clicked),

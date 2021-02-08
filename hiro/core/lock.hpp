@@ -46,5 +46,5 @@ struct Lock {
     --locks;
   }
 
-  mutable int locks = 0;
+  mutable s32 locks = 0;
 };

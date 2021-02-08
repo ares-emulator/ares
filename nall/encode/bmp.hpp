@@ -3,16 +3,16 @@
 namespace nall::Encode {
 
 struct BMP {
-  static auto create(const string& filename, const void* data, uint pitch, uint width, uint height, bool alpha) -> bool {
+  static auto create(const string& filename, const void* data, u32 pitch, u32 width, u32 height, bool alpha) -> bool {
     auto fp = file::open(filename, file::mode::write);
     if(!fp) return false;
 
-    uint bitsPerPixel  = alpha ? 32 : 24;
-    uint bytesPerPixel = bitsPerPixel / 8;
-    uint alignedWidth  = width * bytesPerPixel;
-    uint paddingLength = 0;
-    uint imageSize     = alignedWidth * height;
-    uint fileSize      = 0x36 + imageSize;
+    u32 bitsPerPixel  = alpha ? 32 : 24;
+    u32 bytesPerPixel = bitsPerPixel / 8;
+    u32 alignedWidth  = width * bytesPerPixel;
+    u32 paddingLength = 0;
+    u32 imageSize     = alignedWidth * height;
+    u32 fileSize      = 0x36 + imageSize;
     while(alignedWidth % 4) alignedWidth++, paddingLength++;
 
     fp.writel(0x4d42, 2);        //signature
@@ -35,7 +35,7 @@ struct BMP {
 
     pitch >>= 2;
     for(auto y : range(height)) {
-      auto p = (const uint32_t*)data + y * pitch;
+      auto p = (const u32*)data + y * pitch;
       for(auto x : range(width)) fp.writel(*p++, bytesPerPixel);
       if(paddingLength) fp.writel(0, paddingLength);
     }

@@ -2,7 +2,16 @@
 
 namespace ares::PlayStation {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[Sony] PlayStation (NTSC-J)",
+    "[Sony] PlayStation (NTSC-U)",
+    "[Sony] PlayStation (PAL)",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -26,8 +35,20 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
+  if(name.find("PlayStation")) {
+    information.name = "PlayStation";
+  }
+  if(name.find("NTSC-J")) {
+    information.region = Region::NTSCJ;
+  }
+  if(name.find("NTSC-U")) {
+    information.region = Region::NTSCU;
+  }
+  if(name.find("PAL")) {
+    information.region = Region::PAL;
+  }
 
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});
@@ -36,17 +57,6 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
-
-  regionNode = node->append<Node::Setting::String>("Region", "NTSC-J → NTSC-U → PAL");
-  regionNode->setAllowedValues({
-    "NTSC-J → NTSC-U → PAL",
-    "NTSC-U → NTSC-J → PAL",
-    "PAL → NTSC-J → NTSC-U",
-    "PAL → NTSC-U → NTSC-J",
-    "NTSC-J",
-    "NTSC-U",
-    "PAL"
-  });
 
   fastBoot = node->append<Node::Setting::Boolean>("Fast Boot", false);
 
@@ -85,7 +95,6 @@ auto System::unload() -> void {
   dma.unload();
   timer.unload();
   fastBoot.reset();
-  regionNode.reset();
   node.reset();
 }
 
@@ -95,23 +104,6 @@ auto System::save() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
-  auto setRegion = [&](string region) {
-    if(region == "NTSC-J") {
-      information.region = Region::NTSCJ;
-    }
-    if(region == "NTSC-U") {
-      information.region = Region::NTSCU;
-    }
-    if(region == "PAL") {
-      information.region = Region::PAL;
-    }
-  };
-  auto regionsHave = regionNode->latch().split("→").strip();
-  setRegion(regionsHave.first());
-  for(auto& have : reverse(regionsHave)) {
-    if(have == disc.region()) setRegion(have);
-  }
 
   bios.allocate(512_KiB);
   bios.setWaitStates(6, 12, 24);

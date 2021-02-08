@@ -22,7 +22,7 @@
 
 -(void) updateInDock:(NSTimer*)timer {
   NSArray* windows = [NSApp windows];
-  for(uint n = 0; n < [windows count]; n++) {
+  for(u32 n = 0; n < [windows count]; n++) {
     NSWindow* window = [windows objectAtIndex:n];
     if([window isMiniaturized]) {
       [window updateInDock];

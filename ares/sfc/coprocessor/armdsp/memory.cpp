@@ -5,10 +5,10 @@ auto ARMDSP::sleep() -> void {
   step(1);
 }
 
-auto ARMDSP::get(uint mode, uint32 address) -> uint32 {
+auto ARMDSP::get(u32 mode, n32 address) -> n32 {
   step(1);
 
-  static auto memory = [&](const uint8* memory, uint mode, uint32 address) -> uint32 {
+  static auto memory = [&](const n8* memory, u32 mode, n32 address) -> n32 {
     if(mode & Word) {
       memory += address & ~3;
       return memory[0] << 0 | memory[1] << 8 | memory[2] << 16 | memory[3] << 24;
@@ -46,10 +46,10 @@ auto ARMDSP::get(uint mode, uint32 address) -> uint32 {
   return 0;
 }
 
-auto ARMDSP::set(uint mode, uint32 address, uint32 word) -> void {
+auto ARMDSP::set(u32 mode, n32 address, n32 word) -> void {
   step(1);
 
-  static auto memory = [](uint8* memory, uint mode, uint32 address, uint32 word) {
+  static auto memory = [](n8* memory, u32 mode, n32 address, n32 word) {
     if(mode & Word) {
       memory += address & ~3;
       *memory++ = word >>  0;

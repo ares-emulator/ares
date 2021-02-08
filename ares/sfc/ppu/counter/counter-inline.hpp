@@ -7,7 +7,7 @@ alwaysinline auto PPUcounter::tick() -> void {
   }
 }
 
-alwaysinline auto PPUcounter::tick(uint clocks) -> void {
+alwaysinline auto PPUcounter::tick(u32 clocks) -> void {
   time.hcounter += clocks;
   if(time.hcounter >= hperiod()) {
     last.hperiod = hperiod();
@@ -42,18 +42,18 @@ alwaysinline auto PPUcounter::tickScanline() -> void {
 
 alwaysinline auto PPUcounter::interlace() const -> bool { return time.interlace; }
 alwaysinline auto PPUcounter::field() const -> bool { return time.field; }
-alwaysinline auto PPUcounter::vcounter() const -> uint { return time.vcounter; }
-alwaysinline auto PPUcounter::hcounter() const -> uint { return time.hcounter; }
-alwaysinline auto PPUcounter::vperiod() const -> uint { return time.vperiod; }
-alwaysinline auto PPUcounter::hperiod() const -> uint { return time.hperiod; }
+alwaysinline auto PPUcounter::vcounter() const -> u32 { return time.vcounter; }
+alwaysinline auto PPUcounter::hcounter() const -> u32 { return time.hcounter; }
+alwaysinline auto PPUcounter::vperiod() const -> u32 { return time.vperiod; }
+alwaysinline auto PPUcounter::hperiod() const -> u32 { return time.hperiod; }
 
-alwaysinline auto PPUcounter::vcounter(uint offset) const -> uint {
+alwaysinline auto PPUcounter::vcounter(u32 offset) const -> u32 {
   if(offset <= hcounter()) return vcounter();
   if(vcounter() > 0) return vcounter() - 1;
   return last.vperiod - 1;
 }
 
-alwaysinline auto PPUcounter::hcounter(uint offset) const -> uint {
+alwaysinline auto PPUcounter::hcounter(u32 offset) const -> u32 {
   if(offset <= hcounter()) return hcounter() - offset;
   return hcounter() + last.hperiod - offset;
 }
@@ -68,7 +68,7 @@ alwaysinline auto PPUcounter::hcounter(uint offset) const -> uint {
 //dot 323 range = {1292, 1294, 1296}
 //dot 327 range = {1310, 1312, 1314}
 
-alwaysinline auto PPUcounter::hdot() const -> uint {
+alwaysinline auto PPUcounter::hdot() const -> u32 {
   if(hperiod() == 1360) {
     return hcounter() >> 2;
   } else {

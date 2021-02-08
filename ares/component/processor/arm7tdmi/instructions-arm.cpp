@@ -1,5 +1,5 @@
-auto ARM7TDMI::armALU(uint4 mode, uint4 d, uint4 n, uint32 rm) -> void {
-  uint32 rn = r(n);
+auto ARM7TDMI::armALU(n4 mode, n4 d, n4 n, n32 rm) -> void {
+  n32 rn = r(n);
 
   switch(mode) {
   case  0: r(d) = BIT(rn & rm); break;  //AND
@@ -25,7 +25,7 @@ auto ARM7TDMI::armALU(uint4 mode, uint4 d, uint4 n, uint32 rm) -> void {
   }
 }
 
-auto ARM7TDMI::armMoveToStatus(uint4 field, uint1 mode, uint32 data) -> void {
+auto ARM7TDMI::armMoveToStatus(n4 field, n1 mode, n32 data) -> void {
   if(mode && (cpsr().m == PSR::USR || cpsr().m == PSR::SYS)) return;
   PSR& psr = mode ? spsr() : cpsr();
 
@@ -50,35 +50,35 @@ auto ARM7TDMI::armMoveToStatus(uint4 field, uint1 mode, uint32 data) -> void {
 //
 
 auto ARM7TDMI::armInstructionBranch
-(int24 displacement, uint1 link) -> void {
+(i24 displacement, n1 link) -> void {
   if(link) r(14) = r(15) - 4;
   r(15) = r(15) + displacement * 4;
 }
 
 auto ARM7TDMI::armInstructionBranchExchangeRegister
-(uint4 m) -> void {
-  uint32 address = r(m);
+(n4 m) -> void {
+  n32 address = r(m);
   cpsr().t = address.bit(0);
   r(15) = address;
 }
 
 auto ARM7TDMI::armInstructionDataImmediate
-(uint8 immediate, uint4 shift, uint4 d, uint4 n, uint1 save, uint4 mode) -> void {
-  uint32 data = immediate;
+(n8 immediate, n4 shift, n4 d, n4 n, n1 save, n4 mode) -> void {
+  n32 data = immediate;
   carry = cpsr().c;
   if(shift) data = ROR(data, shift << 1);
   armALU(mode, d, n, data);
 }
 
 auto ARM7TDMI::armInstructionDataImmediateShift
-(uint4 m, uint2 type, uint5 shift, uint4 d, uint4 n, uint1 save, uint4 mode) -> void {
-  uint32 rm = r(m);
+(n4 m, n2 type, n5 shift, n4 d, n4 n, n1 save, n4 mode) -> void {
+  n32 rm = r(m);
   carry = cpsr().c;
 
   switch(type) {
   case 0: rm = LSL(rm, shift); break;
-  case 1: rm = LSR(rm, shift ? (uint)shift : 32); break;
-  case 2: rm = ASR(rm, shift ? (uint)shift : 32); break;
+  case 1: rm = LSR(rm, shift ? (u32)shift : 32); break;
+  case 2: rm = ASR(rm, shift ? (u32)shift : 32); break;
   case 3: rm = shift ? ROR(rm, shift) : RRX(rm); break;
   }
 
@@ -86,25 +86,25 @@ auto ARM7TDMI::armInstructionDataImmediateShift
 }
 
 auto ARM7TDMI::armInstructionDataRegisterShift
-(uint4 m, uint2 type, uint4 s, uint4 d, uint4 n, uint1 save, uint4 mode) -> void {
-  uint8 rs = r(s) + (s == 15 ? 4 : 0);
-  uint32 rm = r(m) + (m == 15 ? 4 : 0);
+(n4 m, n2 type, n4 s, n4 d, n4 n, n1 save, n4 mode) -> void {
+  n8  rs = r(s) + (s == 15 ? 4 : 0);
+  n32 rm = r(m) + (m == 15 ? 4 : 0);
   carry = cpsr().c;
 
   switch(type) {
-  case 0: rm = LSL(rm, rs < 33 ? rs : (uint8)33); break;
-  case 1: rm = LSR(rm, rs < 33 ? rs : (uint8)33); break;
-  case 2: rm = ASR(rm, rs < 32 ? rs : (uint8)32); break;
-  case 3: if(rs) rm = ROR(rm, rs & 31 ? uint(rs & 31) : 32); break;
+  case 0: rm = LSL(rm, rs < 33 ? rs : (n8)33); break;
+  case 1: rm = LSR(rm, rs < 33 ? rs : (n8)33); break;
+  case 2: rm = ASR(rm, rs < 32 ? rs : (n8)32); break;
+  case 3: if(rs) rm = ROR(rm, rs & 31 ? u32(rs & 31) : 32); break;
   }
 
   armALU(mode, d, n, rm);
 }
 
 auto ARM7TDMI::armInstructionLoadImmediate
-(uint8 immediate, uint1 half, uint4 d, uint4 n, uint1 writeback, uint1 up, uint1 pre) -> void {
-  uint32 rn = r(n);
-  uint32 rd = r(d);
+(n8 immediate, n1 half, n4 d, n4 n, n1 writeback, n1 up, n1 pre) -> void {
+  n32 rn = r(n);
+  n32 rd = r(d);
 
   if(pre == 1) rn = up ? rn + immediate : rn - immediate;
   rd = load((half ? Half : Byte) | Nonsequential | Signed, rn);
@@ -115,10 +115,10 @@ auto ARM7TDMI::armInstructionLoadImmediate
 }
 
 auto ARM7TDMI::armInstructionLoadRegister
-(uint4 m, uint1 half, uint4 d, uint4 n, uint1 writeback, uint1 up, uint1 pre) -> void {
-  uint32 rn = r(n);
-  uint32 rm = r(m);
-  uint32 rd = r(d);
+(n4 m, n1 half, n4 d, n4 n, n1 writeback, n1 up, n1 pre) -> void {
+  n32 rn = r(n);
+  n32 rm = r(m);
+  n32 rd = r(d);
 
   if(pre == 1) rn = up ? rn + rm : rn - rm;
   rd = load((half ? Half : Byte) | Nonsequential | Signed, rn);
@@ -129,16 +129,16 @@ auto ARM7TDMI::armInstructionLoadRegister
 }
 
 auto ARM7TDMI::armInstructionMemorySwap
-(uint4 m, uint4 d, uint4 n, uint1 byte) -> void {
-  uint32 word = load((byte ? Byte : Word) | Nonsequential, r(n));
+(n4 m, n4 d, n4 n, n1 byte) -> void {
+  n32 word = load((byte ? Byte : Word) | Nonsequential, r(n));
   store((byte ? Byte : Word) | Nonsequential, r(n), r(m));
   r(d) = word;
 }
 
 auto ARM7TDMI::armInstructionMoveHalfImmediate
-(uint8 immediate, uint4 d, uint4 n, uint1 mode, uint1 writeback, uint1 up, uint1 pre) -> void {
-  uint32 rn = r(n);
-  uint32 rd = r(d);
+(n8 immediate, n4 d, n4 n, n1 mode, n1 writeback, n1 up, n1 pre) -> void {
+  n32 rn = r(n);
+  n32 rd = r(d);
 
   if(pre == 1) rn = up ? rn + immediate : rn - immediate;
   if(mode == 1) rd = load(Half | Nonsequential, rn);
@@ -150,10 +150,10 @@ auto ARM7TDMI::armInstructionMoveHalfImmediate
 }
 
 auto ARM7TDMI::armInstructionMoveHalfRegister
-(uint4 m, uint4 d, uint4 n, uint1 mode, uint1 writeback, uint1 up, uint1 pre) -> void {
-  uint32 rn = r(n);
-  uint32 rm = r(m);
-  uint32 rd = r(d);
+(n4 m, n4 d, n4 n, n1 mode, n1 writeback, n1 up, n1 pre) -> void {
+  n32 rn = r(n);
+  n32 rm = r(m);
+  n32 rd = r(d);
 
   if(pre == 1) rn = up ? rn + rm : rn - rm;
   if(mode == 1) rd = load(Half | Nonsequential, rn);
@@ -165,9 +165,9 @@ auto ARM7TDMI::armInstructionMoveHalfRegister
 }
 
 auto ARM7TDMI::armInstructionMoveImmediateOffset
-(uint12 immediate, uint4 d, uint4 n, uint1 mode, uint1 writeback, uint1 byte, uint1 up, uint1 pre) -> void {
-  uint32 rn = r(n);
-  uint32 rd = r(d);
+(n12 immediate, n4 d, n4 n, n1 mode, n1 writeback, n1 byte, n1 up, n1 pre) -> void {
+  n32 rn = r(n);
+  n32 rd = r(d);
 
   if(pre == 1) rn = up ? rn + immediate : rn - immediate;
   if(mode == 1) rd = load((byte ? Byte : Word) | Nonsequential, rn);
@@ -179,8 +179,8 @@ auto ARM7TDMI::armInstructionMoveImmediateOffset
 }
 
 auto ARM7TDMI::armInstructionMoveMultiple
-(uint16 list, uint4 n, uint1 mode, uint1 writeback, uint1 type, uint1 up, uint1 pre) -> void {
-  uint32 rn = r(n);
+(n16 list, n4 n, n1 mode, n1 writeback, n1 type, n1 up, n1 pre) -> void {
+  n32 rn = r(n);
   if(pre == 0 && up == 1) rn = rn + 0;  //IA
   if(pre == 1 && up == 1) rn = rn + 4;  //IB
   if(pre == 1 && up == 0) rn = rn - bit::count(list) * 4 + 0;  //DB
@@ -197,8 +197,8 @@ auto ARM7TDMI::armInstructionMoveMultiple
   if(type && mode == 0) usr = true;
   if(usr) cpsr().m = PSR::USR;
 
-  uint sequential = Nonsequential;
-  for(uint m : range(16)) {
+  u32 sequential = Nonsequential;
+  for(u32 m : range(16)) {
     if(!list.bit(m)) continue;
     if(mode == 1) r(m) = read(Word | sequential, rn);
     if(mode == 0) write(Word | sequential, rn, r(m));
@@ -224,16 +224,16 @@ auto ARM7TDMI::armInstructionMoveMultiple
 }
 
 auto ARM7TDMI::armInstructionMoveRegisterOffset
-(uint4 m, uint2 type, uint5 shift, uint4 d, uint4 n, uint1 mode, uint1 writeback, uint1 byte, uint1 up, uint1 pre) -> void {
-  uint32 rm = r(m);
-  uint32 rd = r(d);
-  uint32 rn = r(n);
+(n4 m, n2 type, n5 shift, n4 d, n4 n, n1 mode, n1 writeback, n1 byte, n1 up, n1 pre) -> void {
+  n32 rm = r(m);
+  n32 rd = r(d);
+  n32 rn = r(n);
   carry = cpsr().c;
 
   switch(type) {
   case 0: rm = LSL(rm, shift); break;
-  case 1: rm = LSR(rm, shift ? (uint)shift : 32); break;
-  case 2: rm = ASR(rm, shift ? (uint)shift : 32); break;
+  case 1: rm = LSR(rm, shift ? (u32)shift : 32); break;
+  case 2: rm = ASR(rm, shift ? (u32)shift : 32); break;
   case 3: rm = shift ? ROR(rm, shift) : RRX(rm); break;
   }
 
@@ -247,33 +247,33 @@ auto ARM7TDMI::armInstructionMoveRegisterOffset
 }
 
 auto ARM7TDMI::armInstructionMoveToRegisterFromStatus
-(uint4 d, uint1 mode) -> void {
+(n4 d, n1 mode) -> void {
   if(mode && (cpsr().m == PSR::USR || cpsr().m == PSR::SYS)) return;
   r(d) = mode ? spsr() : cpsr();
 }
 
 auto ARM7TDMI::armInstructionMoveToStatusFromImmediate
-(uint8 immediate, uint4 rotate, uint4 field, uint1 mode) -> void {
-  uint32 data = immediate;
+(n8 immediate, n4 rotate, n4 field, n1 mode) -> void {
+  n32 data = immediate;
   if(rotate) data = ROR(data, rotate << 1);
   armMoveToStatus(field, mode, data);
 }
 
 auto ARM7TDMI::armInstructionMoveToStatusFromRegister
-(uint4 m, uint4 field, uint1 mode) -> void {
+(n4 m, n4 field, n1 mode) -> void {
   armMoveToStatus(field, mode, r(m));
 }
 
 auto ARM7TDMI::armInstructionMultiply
-(uint4 m, uint4 s, uint4 n, uint4 d, uint1 save, uint1 accumulate) -> void {
+(n4 m, n4 s, n4 n, n4 d, n1 save, n1 accumulate) -> void {
   if(accumulate) idle();
   r(d) = MUL(accumulate ? r(n) : 0, r(m), r(s));
 }
 
 auto ARM7TDMI::armInstructionMultiplyLong
-(uint4 m, uint4 s, uint4 l, uint4 h, uint1 save, uint1 accumulate, uint1 sign) -> void {
-  uint64 rm = r(m);
-  uint64 rs = r(s);
+(n4 m, n4 s, n4 l, n4 h, n1 save, n1 accumulate, n1 sign) -> void {
+  n64 rm = r(m);
+  n64 rs = r(s);
 
   idle();
   idle();
@@ -283,16 +283,16 @@ auto ARM7TDMI::armInstructionMultiplyLong
     if(rs >>  8 && rs >>  8 != 0xffffff) idle();
     if(rs >> 16 && rs >> 16 !=   0xffff) idle();
     if(rs >> 24 && rs >> 24 !=     0xff) idle();
-    rm = (int32)rm;
-    rs = (int32)rs;
+    rm = (i32)rm;
+    rs = (i32)rs;
   } else {
     if(rs >>  8) idle();
     if(rs >> 16) idle();
     if(rs >> 24) idle();
   }
 
-  uint64 rd = rm * rs;
-  if(accumulate) rd += (uint64)r(h) << 32 | (uint64)r(l) << 0;
+  n64 rd = rm * rs;
+  if(accumulate) rd += (n64)r(h) << 32 | (n64)r(l) << 0;
 
   r(h) = rd >> 32;
   r(l) = rd >>  0;
@@ -304,7 +304,7 @@ auto ARM7TDMI::armInstructionMultiplyLong
 }
 
 auto ARM7TDMI::armInstructionSoftwareInterrupt
-(uint24 immediate) -> void {
+(n24 immediate) -> void {
   exception(PSR::SVC, 0x08);
 }
 

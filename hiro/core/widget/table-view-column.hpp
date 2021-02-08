@@ -8,7 +8,7 @@ struct mTableViewColumn : mObject {
   auto editable() const -> bool;
   auto expandable() const -> bool;
   auto foregroundColor() const -> Color;
-  auto horizontalAlignment() const -> float;
+  auto horizontalAlignment() const -> f32;
   auto icon() const -> image;
   auto remove() -> type& override;
   auto resizable() const -> bool;
@@ -18,19 +18,19 @@ struct mTableViewColumn : mObject {
   auto setEditable(bool editable = true) -> type&;
   auto setExpandable(bool expandable = true) -> type&;
   auto setForegroundColor(Color color = {}) -> type&;
-  auto setHorizontalAlignment(float alignment = 0.0) -> type&;
+  auto setHorizontalAlignment(f32 alignment = 0.0) -> type&;
   auto setIcon(const image& icon = {}) -> type&;
   auto setResizable(bool resizable = true) -> type&;
   auto setSorting(Sort sorting = Sort::None) -> type&;
   auto setText(const string& text = "") -> type&;
-  auto setVerticalAlignment(float alignment = 0.5) -> type&;
-  auto setVisible(bool visible = true) -> type&;
-  auto setWidth(float width = 0) -> type&;
+  auto setVerticalAlignment(f32 alignment = 0.5) -> type&;
+  auto setVisible(bool visible = true) -> type& override;
+  auto setWidth(f32 width = 0) -> type&;
   auto sort(Sort sorting) -> type&;
   auto sorting() const -> Sort;
   auto text() const -> string;
-  auto verticalAlignment() const -> float;
-  auto width() const -> float;
+  auto verticalAlignment() const -> f32;
+  auto width() const -> f32;
 
 //private:
   struct State {
@@ -40,14 +40,14 @@ struct mTableViewColumn : mObject {
     bool editable = false;
     bool expandable = false;
     Color foregroundColor;
-    float horizontalAlignment = 0.0;
+    f32 horizontalAlignment = 0.0;
     image icon;
     bool resizable = true;
     Sort sorting = Sort::None;
     string text;
-    float verticalAlignment = 0.5;
+    f32 verticalAlignment = 0.5;
     bool visible = true;
-    float width = 0;
+    f32 width = 0;
   } state;
 };
 #endif

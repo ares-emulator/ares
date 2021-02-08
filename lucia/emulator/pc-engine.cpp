@@ -32,12 +32,9 @@ PCEngine::PCEngine() {
 }
 
 auto PCEngine::load() -> bool {
-  if(!ares::PCEngine::load(root, "PC Engine")) return false;
-
-  if(auto region = root->find<ares::Node::Setting::String>("Region")) {
-    if(settings.boot.prefer != "NTSC-J") region->setValue("NTSC-U → NTSC-J");
-    if(settings.boot.prefer == "NTSC-J") region->setValue("NTSC-J → NTSC-U");
-  }
+  auto region = Emulator::region();
+  string system = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
+  if(!ares::PCEngine::load(root, {"[NEC] ", system, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -106,20 +103,13 @@ PCEngineCD::PCEngineCD() {
 }
 
 auto PCEngineCD::load() -> bool {
-  if(!ares::PCEngine::load(root, "PC Engine")) return false;
+  auto region = Emulator::region();
+  auto system = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
+  if(!ares::PCEngine::load(root, {"[NEC] ", system, " (", region, ")"})) return false;
 
-  if(auto region = root->find<ares::Node::Setting::String>("Region")) {
-    if(settings.boot.prefer != "NTSC-J") region->setValue("NTSC-U → NTSC-J"), regionID = 0;
-    if(settings.boot.prefer == "NTSC-J") region->setValue("NTSC-J → NTSC-U"), regionID = 1;
-  }
-
-  if(auto manifest = medium->manifest(game.location)) {
-    auto document = BML::unserialize(manifest);
-    auto region = document["game/region"].string();
-    //if statements below are ordered by lowest to highest priority
-    if(region == "NTSC-J") regionID = 1;
-    if(region == "NTSC-U") regionID = 0;
-  }
+  //if statements below are ordered by lowest to highest priority
+  if(region == "NTSC-J") regionID = 1;
+  if(region == "NTSC-U") regionID = 0;
 
   if(!file::exists(firmware[regionID].location)) {
     errorFirmwareRequired(firmware[regionID]);
@@ -215,12 +205,7 @@ SuperGrafx::SuperGrafx() {
 }
 
 auto SuperGrafx::load() -> bool {
-  if(!ares::PCEngine::load(root, "SuperGrafx")) return false;
-
-  if(auto region = root->find<ares::Node::Setting::String>("Region")) {
-    if(settings.boot.prefer != "NTSC-J") region->setValue("NTSC-U → NTSC-J");
-    if(settings.boot.prefer == "NTSC-J") region->setValue("NTSC-J → NTSC-U");
-  }
+  if(!ares::PCEngine::load(root, "[NEC] SuperGrafx (NTSC-J)")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

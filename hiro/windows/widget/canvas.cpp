@@ -13,7 +13,7 @@ auto pCanvas::destruct() -> void {
 }
 
 auto pCanvas::minimumSize() const -> Size {
-  if(auto& icon = state().icon) return {(int)icon.width(), (int)icon.height()};
+  if(auto& icon = state().icon) return {(s32)icon.width(), (s32)icon.height()};
   return {0, 0};
 }
 
@@ -57,7 +57,7 @@ auto pCanvas::doMouseLeave() -> void {
   return self().doMouseLeave();
 }
 
-auto pCanvas::doMouseMove(int x, int y) -> void {
+auto pCanvas::doMouseMove(s32 x, s32 y) -> void {
   return self().doMouseMove({x, y});
 }
 
@@ -93,9 +93,9 @@ auto pCanvas::_paint() -> void {
   PAINTSTRUCT ps;
   BeginPaint(hwnd, &ps);
 
-  int sx = 0, sy = 0, dx = 0, dy = 0;
-  int width = this->width;
-  int height = this->height;
+  s32 sx = 0, sy = 0, dx = 0, dy = 0;
+  s32 width = this->width;
+  s32 height = this->height;
   auto geometry = self().geometry();
   auto alignment = state().alignment ? state().alignment : Alignment{0.5, 0.5};
 
@@ -125,14 +125,14 @@ auto pCanvas::_paint() -> void {
   bmi.bmiHeader.biCompression = BI_RGB;
   bmi.bmiHeader.biWidth = width;
   bmi.bmiHeader.biHeight = -height;  //GDI stores bitmaps upside now; negative height flips bitmap
-  bmi.bmiHeader.biSizeImage = width * height * sizeof(uint32_t);
+  bmi.bmiHeader.biSizeImage = width * height * sizeof(u32);
   void* bits = nullptr;
   HBITMAP bitmap = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
   if(bits) {
-    for(uint y : range(height)) {
-      auto source = (const uint8_t*)pixels.data() + (sy + y) * this->width * sizeof(uint32_t) + sx * sizeof(uint32_t);
-      auto target = (uint8_t*)bits + y * width * sizeof(uint32_t);
-      for(uint x : range(width)) {
+    for(u32 y : range(height)) {
+      auto source = (const u8*)pixels.data() + (sy + y) * this->width * sizeof(u32) + sx * sizeof(u32);
+      auto target = (u8*)bits + y * width * sizeof(u32);
+      for(u32 x : range(width)) {
         target[0] = (source[0] * source[3]) / 255;
         target[1] = (source[1] * source[3]) / 255;
         target[2] = (source[2] * source[3]) / 255;
@@ -170,7 +170,7 @@ auto pCanvas::_rasterize() -> void {
   pixels.resize(width * height);
 
   if(auto& icon = state().icon) {
-    memory::copy<uint32_t>(pixels.data(), icon.data(), width * height);
+    memory::copy<u32>(pixels.data(), icon.data(), width * height);
   } else if(auto& gradient = state().gradient) {
     auto& colors = gradient.state.colors;
     image fill;
@@ -178,7 +178,7 @@ auto pCanvas::_rasterize() -> void {
     fill.gradient(colors[0].value(), colors[1].value(), colors[2].value(), colors[3].value());
     memory::copy(pixels.data(), fill.data(), fill.size());
   } else {
-    uint32_t color = state().color.value();
+    u32 color = state().color.value();
     for(auto& pixel : pixels) pixel = color;
   }
 }

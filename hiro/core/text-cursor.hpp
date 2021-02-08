@@ -2,22 +2,22 @@
 struct TextCursor {
   using type = TextCursor;
 
-  TextCursor(int offset = 0, int length = 0);
+  TextCursor(s32 offset = 0, s32 length = 0);
 
   explicit operator bool() const;
   auto operator==(const TextCursor& source) const -> bool;
   auto operator!=(const TextCursor& source) const -> bool;
 
-  auto length() const -> int;
-  auto offset() const -> int;
-  auto setLength(int length = 0) -> type&;
-  auto setOffset(int offset = 0) -> type&;
-  auto setTextCursor(int offset = 0, int length = 0) -> type&;
+  auto length() const -> s32;
+  auto offset() const -> s32;
+  auto setLength(s32 length = 0) -> type&;
+  auto setOffset(s32 offset = 0) -> type&;
+  auto setTextCursor(s32 offset = 0, s32 length = 0) -> type&;
 
 //private:
   struct State {
-    int offset;
-    int length;
+    s32 offset;
+    s32 length;
   } state;
 };
 #endif

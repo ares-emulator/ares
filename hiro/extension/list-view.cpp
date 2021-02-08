@@ -37,7 +37,7 @@ auto mListView::doToggle(ListViewItem item) const -> void {
   if(state.onToggle) state.onToggle(item);
 }
 
-auto mListView::item(uint position) const -> ListViewItem {
+auto mListView::item(u32 position) const -> ListViewItem {
   return ListViewItem{mTableView::item(position)};
 }
 

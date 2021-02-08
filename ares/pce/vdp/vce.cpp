@@ -1,6 +1,6 @@
-auto VCE::read(uint3 address) -> uint8 {
+auto VCE::read(n3 address) -> n8 {
   cpu.idle();  //penalty cycle
-  uint8 data = 0xff;
+  n8 data = 0xff;
 
   if(address == 0x4) {
     //CTR
@@ -18,7 +18,7 @@ auto VCE::read(uint3 address) -> uint8 {
   return data;
 }
 
-auto VCE::write(uint3 address, uint8 data) -> void {
+auto VCE::write(n3 address, n8 data) -> void {
   cpu.idle();  //penalty cycle
 
   if(address == 0x0) {
@@ -65,11 +65,11 @@ auto VCE::power() -> void {
   io = {};
 }
 
-auto VCE::CRAM::read(uint9 address) -> uint9 {
+auto VCE::CRAM::read(n9 address) -> n9 {
   return memory[address];
 }
 
-auto VCE::CRAM::write(uint9 address, uint1 a0, uint8 data) -> void {
+auto VCE::CRAM::write(n9 address, n1 a0, n8 data) -> void {
   if(a0 == 0) memory[address].bit(0,7) = data.bit(0,7);
   if(a0 == 1) memory[address].bit(8)   = data.bit(0);
 }

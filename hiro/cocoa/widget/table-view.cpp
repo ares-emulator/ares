@@ -48,7 +48,7 @@
   if(font) [font release];
   font = fontPointer;
 
-  uint fontHeight = hiro::pFont::size(font, " ").height();
+  u32 fontHeight = hiro::pFont::size(font, " ").height();
   [content setFont:font];
   [content setRowHeight:fontHeight];
   [self reloadColumns];
@@ -112,9 +112,9 @@
 }
 
 -(IBAction) doubleAction:(id)sender {
-  int row = [content clickedRow];
+  s32 row = [content clickedRow];
   if(row >= 0 && row < tableView->state.items.size()) {
-    int column = [content clickedColumn];
+    s32 column = [content clickedColumn];
     if(column >= 0 && column < tableView->state.columns.size()) {
       auto item = tableView->state.items[row];
       auto cell = item->cell(column);
@@ -143,9 +143,9 @@
 -(void) keyDown:(NSEvent*)event {
   auto character = [[event characters] characterAtIndex:0];
   if(character == NSEnterCharacter || character == NSCarriageReturnCharacter) {
-    int row = [self selectedRow];
+    s32 row = [self selectedRow];
     if(row >= 0 && row < tableView->state.items.size()) {
-      int column = max(0, [self selectedColumn]);  //can be -1?
+      s32 column = max(0, [self selectedColumn]);  //can be -1?
       if(column >= 0 && column < tableView->state.columns.size()) {
         auto item = tableView->state.items[row];
         auto cell = item->cell(column);
@@ -337,25 +337,25 @@ auto pTableView::remove(sTableViewItem item) -> void {
 
 auto pTableView::resizeColumns() -> void {
   @autoreleasepool {
-    vector<int> widths;
-    int minimumWidth = 0;
-    int expandable = 0;
-    for(uint column : range(self().columnCount())) {
-      int width = _width(column);
+    vector<s32> widths;
+    s32 minimumWidth = 0;
+    s32 expandable = 0;
+    for(u32 column : range(self().columnCount())) {
+      s32 width = _width(column);
       widths.append(width);
       minimumWidth += width;
       if(state().columns[column]->expandable()) expandable++;
     }
 
-    int maximumWidth = self().geometry().width() - 18;  //include margin for vertical scroll bar
-    int expandWidth = 0;
+    s32 maximumWidth = self().geometry().width() - 18;  //include margin for vertical scroll bar
+    s32 expandWidth = 0;
     if(expandable && maximumWidth > minimumWidth) {
       expandWidth = (maximumWidth - minimumWidth) / expandable;
     }
 
-    for(uint column : range(self().columnCount())) {
+    for(u32 column : range(self().columnCount())) {
       if(auto self = state().columns[column]->self()) {
-        int width = widths[column];
+        s32 width = widths[column];
         if(self->state().expandable) width += expandWidth;
         NSTableColumn* tableColumn = [[cocoaView content] tableColumnWithIdentifier:[[NSNumber numberWithInteger:column] stringValue]];
         [tableColumn setWidth:width];
@@ -409,8 +409,8 @@ auto pTableView::setSortable(bool sortable) -> void {
   //TODO
 }
 
-auto pTableView::_cellWidth(uint row, uint column) -> uint {
-  uint width = 8;
+auto pTableView::_cellWidth(u32 row, u32 column) -> u32 {
+  u32 width = 8;
   if(auto pTableViewItem = self().item(row)) {
     if(auto pTableViewCell = pTableViewItem->cell(column)) {
       if(pTableViewCell->state.checkable) {
@@ -427,8 +427,8 @@ auto pTableView::_cellWidth(uint row, uint column) -> uint {
   return width;
 }
 
-auto pTableView::_columnWidth(uint column_) -> uint {
-  uint width = 8;
+auto pTableView::_columnWidth(u32 column_) -> u32 {
+  u32 width = 8;
   if(auto column = self().column(column_)) {
     if(auto& icon = column->state.icon) {
       width += icon.width() + 2;
@@ -443,9 +443,9 @@ auto pTableView::_columnWidth(uint column_) -> uint {
   return width;
 }
 
-auto pTableView::_width(uint column) -> uint {
+auto pTableView::_width(u32 column) -> u32 {
   if(auto width = self().column(column).width()) return width;
-  uint width = 1;
+  u32 width = 1;
   if(!self().column(column).visible()) return width;
   if(state().headered) width = max(width, _columnWidth(column));
   for(auto row : range(state().items.size())) {
@@ -463,7 +463,7 @@ auto pTableView::setSelected(bool selected) -> void {
   }
 }
 
-auto pTableView::setSelection(unsigned selection) -> void {
+auto pTableView::setSelection(u32 selection) -> void {
   @autoreleasepool {
     [[cocoaView content] selectRowIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(selection, 1)] byExtendingSelection:NO];
   }

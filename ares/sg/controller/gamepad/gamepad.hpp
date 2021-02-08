@@ -8,13 +8,13 @@ struct Gamepad : Controller {
 
   Gamepad(Node::Port);
 
-  auto read() -> uint8 override;
+  auto read() -> n8 override;
 
 private:
-  bool yHold = 0;
-  bool upLatch = 0;
-  bool downLatch = 0;
-  bool xHold = 0;
-  bool leftLatch = 0;
-  bool rightLatch = 0;
+  b1 yHold;
+  b1 upLatch;
+  b1 downLatch;
+  b1 xHold;
+  b1 leftLatch;
+  b1 rightLatch;
 };

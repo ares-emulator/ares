@@ -8,28 +8,28 @@
 
 namespace nall::Encode {
 
-inline auto LZSA(array_view<uint8_t> input) -> vector<uint8_t> {
-  vector<uint8_t> output;
-  for(uint byte : range(8)) output.append(input.size() >> byte * 8);
+inline auto LZSA(array_view<u8> input) -> vector<u8> {
+  vector<u8> output;
+  for(u32 byte : range(8)) output.append(input.size() >> byte * 8);
 
   auto suffixArray = SuffixArray(input).lpf();
-  uint index = 0;
-  vector<uint8_t> flags;
-  vector<uint8_t> literals;
-  vector<uint8_t> stringLengths;
-  vector<uint8_t> stringOffsets;
+  u32 index = 0;
+  vector<u8> flags;
+  vector<u8> literals;
+  vector<u8> stringLengths;
+  vector<u8> stringOffsets;
 
-  uint byte = 0, bits = 0;
+  u32 byte = 0, bits = 0;
   auto flagWrite = [&](bool bit) {
     byte = byte << 1 | bit;
     if(++bits == 8) flags.append(byte), bits = 0;
   };
 
-  auto literalWrite = [&](uint8_t literal) {
+  auto literalWrite = [&](u8 literal) {
     literals.append(literal);
   };
 
-  auto lengthWrite = [&](uint64_t length) {
+  auto lengthWrite = [&](u64 length) {
          if(length < 1 <<  7) length = length << 1 |     0b1;
     else if(length < 1 << 14) length = length << 2 |    0b10;
     else if(length < 1 << 21) length = length << 3 |   0b100;
@@ -38,7 +38,7 @@ inline auto LZSA(array_view<uint8_t> input) -> vector<uint8_t> {
     while(length) stringLengths.append(length), length >>= 8;
   };
 
-  auto offsetWrite = [&](uint offset) {
+  auto offsetWrite = [&](u32 offset) {
     stringOffsets.append(offset >>  0); if(index < 1 <<  8) return;
     stringOffsets.append(offset >>  8); if(index < 1 << 16) return;
     stringOffsets.append(offset >> 16); if(index < 1 << 24) return;
@@ -46,11 +46,11 @@ inline auto LZSA(array_view<uint8_t> input) -> vector<uint8_t> {
   };
 
   while(index < input.size()) {
-    int length, offset;
+    s32 length, offset;
     suffixArray.previous(length, offset, index);
 
-/*  for(uint ahead = 1; ahead <= 2; ahead++) {
-      int aheadLength, aheadOffset;
+/*  for(u32 ahead = 1; ahead <= 2; ahead++) {
+      s32 aheadLength, aheadOffset;
       suffixArray.previous(aheadLength, aheadOffset, index + ahead);
       if(aheadLength > length && aheadOffset >= 0) {
         length = 0;
@@ -70,8 +70,8 @@ inline auto LZSA(array_view<uint8_t> input) -> vector<uint8_t> {
   }
   while(bits) flagWrite(0);
 
-  auto save = [&](const vector<uint8_t>& buffer) {
-    for(uint byte : range(8)) output.append(buffer.size() >> byte * 8);
+  auto save = [&](const vector<u8>& buffer) {
+    for(u32 byte : range(8)) output.append(buffer.size() >> byte * 8);
     output.append(buffer);
   };
 

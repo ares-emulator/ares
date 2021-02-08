@@ -1,10 +1,12 @@
 #pragma once
 
+#include <nall/memory.hpp>
+
 namespace nall {
 
 struct bump_allocator {
-  static constexpr uint32_t executable = 1 << 0;
-  static constexpr uint32_t zero_fill  = 1 << 1;
+  static constexpr u32 executable = 1 << 0;
+  static constexpr u32 zero_fill  = 1 << 1;
 
   ~bump_allocator() {
     reset();
@@ -15,15 +17,15 @@ struct bump_allocator {
   }
 
   auto reset() -> void {
-    free(_memory);
+    memory::free<u8, 4096>(_memory);
     _memory = nullptr;
   }
 
-  auto resize(uint32_t capacity, uint32_t flags = 0) -> bool {
+  auto resize(u32 capacity, u32 flags = 0) -> bool {
     reset();
     _offset = 0;
-    _capacity = capacity + 4095 & ~4095;  //alignment
-    _memory = (uint8_t*)malloc(_capacity);
+    _capacity = capacity + 4095 & ~4095;              //capacity alignment
+    _memory = memory::allocate<u8, 4096>(_capacity);  //_SC_PAGESIZE alignment
     if(!_memory) return false;
 
     if(flags & executable) {
@@ -43,21 +45,21 @@ struct bump_allocator {
   }
 
   //release all acquired memory
-  auto release(uint32_t flags = 0) -> void {
+  auto release(u32 flags = 0) -> void {
     _offset = 0;
     if(flags & zero_fill) memset(_memory, 0x00, _capacity);
   }
 
-  auto capacity() const -> uint32_t {
+  auto capacity() const -> u32 {
     return _capacity;
   }
 
-  auto available() const -> uint32_t {
+  auto available() const -> u32 {
     return _capacity - _offset;
   }
 
   //for allocating blocks of known size
-  auto acquire(uint32_t size) -> uint8_t* {
+  auto acquire(u32 size) -> u8* {
     #ifdef DEBUG
     struct out_of_memory {};
     if((_offset + size + 15 & ~15) > _capacity) throw out_of_memory{};
@@ -68,7 +70,7 @@ struct bump_allocator {
   }
 
   //for allocating blocks of unknown size (eg for a dynamic recompiler code block)
-  auto acquire() -> uint8_t* {
+  auto acquire() -> u8* {
     #ifdef DEBUG
     struct out_of_memory {};
     if(_offset > _capacity) throw out_of_memory{};
@@ -77,7 +79,7 @@ struct bump_allocator {
   }
 
   //size can be reserved once the block size is known
-  auto reserve(uint32_t size) -> void {
+  auto reserve(u32 size) -> void {
     #ifdef DEBUG
     struct out_of_memory {};
     if((_offset + size + 15 & ~15) > _capacity) throw out_of_memory{};
@@ -86,9 +88,9 @@ struct bump_allocator {
   }
 
 private:
-  uint8_t* _memory = nullptr;
-  uint32_t _capacity = 0;
-  uint32_t _offset = 0;
+  u8* _memory = nullptr;
+  u32 _capacity = 0;
+  u32 _offset = 0;
 };
 
 }

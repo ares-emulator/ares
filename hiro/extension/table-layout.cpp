@@ -17,11 +17,11 @@ auto mTableLayout::append(sSizable sizable, Size size) -> type& {
   return *this;
 }
 
-auto mTableLayout::cell(uint position) const -> TableLayoutCell {
+auto mTableLayout::cell(u32 position) const -> TableLayoutCell {
   return state.cells(position, {});
 }
 
-auto mTableLayout::cell(uint x, uint y) const -> TableLayoutCell {
+auto mTableLayout::cell(u32 x, u32 y) const -> TableLayoutCell {
   if(auto cell = state.cells(y * columnCount() + x, {})) return cell;
   return {};
 }
@@ -37,11 +37,11 @@ auto mTableLayout::cells() const -> vector<TableLayoutCell> {
   return state.cells;
 }
 
-auto mTableLayout::cellCount() const -> uint {
+auto mTableLayout::cellCount() const -> u32 {
   return state.cells.size();
 }
 
-auto mTableLayout::column(uint position) const -> TableLayoutColumn {
+auto mTableLayout::column(u32 position) const -> TableLayoutColumn {
   return state.columns(position, {});
 }
 
@@ -49,7 +49,7 @@ auto mTableLayout::columns() const -> vector<TableLayoutColumn> {
   return state.columns;
 }
 
-auto mTableLayout::columnCount() const -> uint {
+auto mTableLayout::columnCount() const -> u32 {
   return state.columns.size();
 }
 
@@ -61,11 +61,11 @@ auto mTableLayout::destruct() -> void {
 }
 
 auto mTableLayout::minimumSize() const -> Size {
-  float minimumWidth = 0;
-  for(uint x : range(columnCount())) {
-    float width = 0;
+  f32 minimumWidth = 0;
+  for(u32 x : range(columnCount())) {
+    f32 width = 0;
     auto column = this->column(x);
-    for(uint y : range(rowCount())) {
+    for(u32 y : range(rowCount())) {
       auto row = this->row(y);
       auto cell = this->cell(x, y);
       if(cell.size().width() == Size::Minimum || cell.size().width() == Size::Maximum) {
@@ -78,11 +78,11 @@ auto mTableLayout::minimumSize() const -> Size {
     if(x != columnCount() - 1) minimumWidth += column.spacing();
   }
 
-  float minimumHeight = 0;
-  for(uint y : range(rowCount())) {
-    float height = 0;
+  f32 minimumHeight = 0;
+  for(u32 y : range(rowCount())) {
+    f32 height = 0;
     auto row = this->row(y);
-    for(uint x : range(columnCount())) {
+    for(u32 x : range(columnCount())) {
       auto column = this->column(x);
       auto cell = this->cell(x, y);
       if(cell.size().height() == Size::Minimum || cell.size().height() == Size::Maximum) {
@@ -117,7 +117,7 @@ auto mTableLayout::remove(sTableLayoutCell cell) -> type& {
   auto offset = cell->offset();
   cell->setParent();
   state.cells.remove(offset);
-  for(uint n : range(offset, cellCount())) state.cells[n]->adjustOffset(-1);
+  for(u32 n : range(offset, cellCount())) state.cells[n]->adjustOffset(-1);
   return synchronize();
 }
 
@@ -131,7 +131,7 @@ auto mTableLayout::resize() -> type& {
   return *this;
 }
 
-auto mTableLayout::row(uint position) const -> TableLayoutRow {
+auto mTableLayout::row(u32 position) const -> TableLayoutRow {
   return state.rows(position, {});
 }
 
@@ -139,7 +139,7 @@ auto mTableLayout::rows() const -> vector<TableLayoutRow> {
   return state.rows;
 }
 
-auto mTableLayout::rowCount() const -> uint {
+auto mTableLayout::rowCount() const -> u32 {
   return state.rows.size();
 }
 
@@ -169,13 +169,13 @@ auto mTableLayout::setGeometry(Geometry requestedGeometry) -> type& {
   geometry.setWidth (geometry.width()  - padding().x() - padding().width());
   geometry.setHeight(geometry.height() - padding().y() - padding().height());
 
-  vector<float> widths;
+  vector<f32> widths;
   widths.resize(columnCount());
-  uint maximumWidths = 0;
-  for(uint x : range(columnCount())) {
-    float width = 0;
+  u32 maximumWidths = 0;
+  for(u32 x : range(columnCount())) {
+    f32 width = 0;
     auto column = this->column(x);
-    for(uint y : range(rowCount())) {
+    for(u32 y : range(rowCount())) {
       auto row = this->row(y);
       auto cell = this->cell(x, y);
       if(cell.size().width() == Size::Maximum) {
@@ -192,13 +192,13 @@ auto mTableLayout::setGeometry(Geometry requestedGeometry) -> type& {
     widths[x] = width;
   }
 
-  vector<float> heights;
+  vector<f32> heights;
   heights.resize(rowCount());
-  uint maximumHeights = 0;
-  for(uint y : range(rowCount())) {
-    float height = 0;
+  u32 maximumHeights = 0;
+  for(u32 y : range(rowCount())) {
+    f32 height = 0;
     auto row = this->row(y);
-    for(uint x : range(columnCount())) {
+    for(u32 x : range(columnCount())) {
       auto column = this->column(x);
       auto cell = this->cell(x, y);
       if(cell.size().height() == Size::Maximum) {
@@ -215,51 +215,51 @@ auto mTableLayout::setGeometry(Geometry requestedGeometry) -> type& {
     heights[y] = height;
   }
 
-  float fixedWidth = 0;
-  for(uint x : range(columnCount())) {
+  f32 fixedWidth = 0;
+  for(u32 x : range(columnCount())) {
     if(widths[x] != Size::Maximum) fixedWidth += widths[x];
     if(x != columnCount() - 1) fixedWidth += column(x)->spacing();
   }
-  float maximumWidth = (geometry.width() - fixedWidth) / maximumWidths;
+  f32 maximumWidth = (geometry.width() - fixedWidth) / maximumWidths;
   for(auto& width : widths) {
     if(width == Size::Maximum) width = maximumWidth;
   }
 
-  float fixedHeight = 0;
-  for(uint y : range(rowCount())) {
+  f32 fixedHeight = 0;
+  for(u32 y : range(rowCount())) {
     if(heights[y] != Size::Maximum) fixedHeight += heights[y];
     if(y != rowCount() - 1) fixedHeight += row(y)->spacing();
   }
-  float maximumHeight = (geometry.height() - fixedHeight) / maximumHeights;
+  f32 maximumHeight = (geometry.height() - fixedHeight) / maximumHeights;
   for(auto& height : heights) {
     if(height == Size::Maximum) height = maximumHeight;
   }
 
-  float geometryY = geometry.y();
-  for(uint y : range(rowCount())) {
-    float geometryX = geometry.x();
+  f32 geometryY = geometry.y();
+  for(u32 y : range(rowCount())) {
+    f32 geometryX = geometry.x();
     auto row = this->row(y);
-    for(uint x : range(columnCount())) {
+    for(u32 x : range(columnCount())) {
       auto column = this->column(x);
       auto cell = this->cell(x, y);
-      float geometryWidth  = widths [x];
-      float geometryHeight = heights[y];
+      f32 geometryWidth  = widths [x];
+      f32 geometryHeight = heights[y];
       auto alignment = cell.alignment();
       if(!alignment) alignment = column.alignment();
       if(!alignment) alignment = row.alignment();
       if(!alignment) alignment = this->alignment();
       if(!alignment) alignment = {0.0, 0.5};
 
-      float cellWidth = cell.size().width();
+      f32 cellWidth = cell.size().width();
       if(cellWidth == Size::Minimum) cellWidth = cell.sizable()->minimumSize().width();
       if(cellWidth == Size::Maximum) cellWidth = geometryWidth;
       cellWidth = min(cellWidth, geometryWidth);
-      float cellHeight = cell.size().height();
+      f32 cellHeight = cell.size().height();
       if(cellHeight == Size::Minimum) cellHeight = cell.sizable()->minimumSize().height();
       if(cellHeight == Size::Maximum) cellHeight = geometryHeight;
       cellHeight = min(cellHeight, geometryHeight);
-      float cellX = geometryX + alignment.horizontal() * (geometryWidth  - cellWidth);
-      float cellY = geometryY + alignment.vertical()   * (geometryHeight - cellHeight);
+      f32 cellX = geometryX + alignment.horizontal() * (geometryWidth  - cellWidth);
+      f32 cellY = geometryY + alignment.vertical()   * (geometryHeight - cellHeight);
       cell.sizable()->setGeometry({cellX, cellY, cellWidth, cellHeight});
 
       geometryX += widths[x] + column.spacing();
@@ -276,7 +276,7 @@ auto mTableLayout::setPadding(Geometry padding) -> type& {
   return synchronize();
 }
 
-auto mTableLayout::setParent(mObject* parent, int offset) -> type& {
+auto mTableLayout::setParent(mObject* parent, s32 offset) -> type& {
   for(auto& cell : reverse(state.cells)) cell->destruct();
   for(auto& column : reverse(state.columns)) column->destruct();
   for(auto& row : reverse(state.rows)) row->destruct();
@@ -322,12 +322,12 @@ auto mTableLayoutColumn::setAlignment(Alignment alignment) -> type& {
   return synchronize();
 }
 
-auto mTableLayoutColumn::setSpacing(float spacing) -> type& {
+auto mTableLayoutColumn::setSpacing(f32 spacing) -> type& {
   state.spacing = spacing;
   return synchronize();
 }
 
-auto mTableLayoutColumn::spacing() const -> float {
+auto mTableLayoutColumn::spacing() const -> f32 {
   return state.spacing;
 }
 
@@ -351,12 +351,12 @@ auto mTableLayoutRow::setAlignment(Alignment alignment) -> type& {
   return synchronize();
 }
 
-auto mTableLayoutRow::setSpacing(float spacing) -> type& {
+auto mTableLayoutRow::setSpacing(f32 spacing) -> type& {
   state.spacing = spacing;
   return synchronize();
 }
 
-auto mTableLayoutRow::spacing() const -> float {
+auto mTableLayoutRow::spacing() const -> f32 {
   return state.spacing;
 }
 
@@ -397,7 +397,7 @@ auto mTableLayoutCell::setFont(const Font& font) -> type& {
   return *this;
 }
 
-auto mTableLayoutCell::setParent(mObject* parent, int offset) -> type& {
+auto mTableLayoutCell::setParent(mObject* parent, s32 offset) -> type& {
   state.sizable->destruct();
   mObject::setParent(parent, offset);
   state.sizable->setParent(this, 0);

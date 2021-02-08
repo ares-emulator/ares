@@ -1,4 +1,4 @@
-auto V30MZ::interrupt(uint8 vector) -> void {
+auto V30MZ::interrupt(n8 vector) -> void {
   wait(32);
 
   state.halt = false;
@@ -240,10 +240,10 @@ auto V30MZ::instruction() -> void {
   op(0xcd, IntImm)
   op(0xce, Into)
   op(0xcf, ReturnInt)
-  op(0xd0, Group2MemImm, Byte, (uint8)1)
-  op(0xd1, Group2MemImm, Word, (uint8)1)
-  op(0xd2, Group2MemImm, Byte, (uint8)r.cl)
-  op(0xd3, Group2MemImm, Word, (uint8)r.cl)
+  op(0xd0, Group2MemImm, Byte, (n8)1)
+  op(0xd1, Group2MemImm, Word, (n8)1)
+  op(0xd2, Group2MemImm, Byte, (n8)r.cl)
+  op(0xd3, Group2MemImm, Word, (n8)r.cl)
   op(0xd4, AdjustAfterMultiply)
   op(0xd5, AdjustAfterDivide)
   op(0xd6, Translate)  //xlat (undocumented mirror)

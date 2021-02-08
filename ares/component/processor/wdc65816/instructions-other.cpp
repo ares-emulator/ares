@@ -25,7 +25,7 @@ L idle();
   NF = A.l & 0x80;
 }
 
-auto WDC65816::instructionBlockMove8(int adjust) -> void {
+auto WDC65816::instructionBlockMove8(s32 adjust) -> void {
   U.b = fetch();
   V.b = fetch();
   B = U.b;
@@ -38,7 +38,7 @@ L idle();
   if(A.w--) PC.w -= 3;
 }
 
-auto WDC65816::instructionBlockMove16(int adjust) -> void {
+auto WDC65816::instructionBlockMove16(s32 adjust) -> void {
   U.b = fetch();
   V.b = fetch();
   B = U.b;
@@ -240,7 +240,7 @@ auto WDC65816::instructionPushEffectiveRelativeAddress() -> void {
   V.l = fetch();
   V.h = fetch();
   idle();
-  W.w = PC.d + (int16)V.w;
+  W.w = PC.d + (i16)V.w;
   pushN(W.h);
 L pushN(W.l);
 E S.h = 0x01;

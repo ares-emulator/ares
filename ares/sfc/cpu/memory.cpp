@@ -5,7 +5,7 @@ auto CPU::idle() -> void {
   aluEdge();
 }
 
-auto CPU::read(uint24 address) -> uint8 {
+auto CPU::read(n24 address) -> n8 {
   status.clockCount = wait(address);
   dmaEdge();
   r.mar = address;
@@ -18,7 +18,7 @@ auto CPU::read(uint24 address) -> uint8 {
   return data;
 }
 
-auto CPU::write(uint24 address, uint8 data) -> void {
+auto CPU::write(n24 address, n8 data) -> void {
   aluEdge();
   status.clockCount = wait(address);
   dmaEdge();
@@ -27,7 +27,7 @@ auto CPU::write(uint24 address, uint8 data) -> void {
   bus.write(address, r.mdr = data);
 }
 
-alwaysinline auto CPU::wait(uint24 address) const -> uint {
+alwaysinline auto CPU::wait(n24 address) const -> u32 {
   //00-3f,80-bf:8000-ffff; 40-7f,c0-ff:0000-ffff
   if(address & 0x408000) return address & 0x800000 ? io.romSpeed : 8;
 
@@ -41,6 +41,6 @@ alwaysinline auto CPU::wait(uint24 address) const -> uint {
   return 12;
 }
 
-auto CPU::readDisassembler(uint24 address) -> uint8 {
+auto CPU::readDisassembler(n24 address) -> n8 {
   return bus.read(address, r.mdr);
 }

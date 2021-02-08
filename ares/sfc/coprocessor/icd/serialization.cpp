@@ -2,7 +2,7 @@ auto ICD::serialize(serializer& s) -> void {
   Thread::serialize(s);
   GameBoy::system.serialize(s, scheduler.getSynchronize());
 
-  for(uint n : range(64)) s(packet[n].data);
+  for(u32 n : range(64)) s(packet[n].data);
   s(packetSize);
 
   s(joypID);

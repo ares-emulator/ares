@@ -7,12 +7,12 @@ struct Settings {
   vector<uint16_t> keycodes;
 
   struct Geometry {
-    int frameX = 4;
-    int frameY = 24;
-    int frameWidth = 8;
-    int frameHeight = 28;
-    int menuHeight = 9;
-    int statusHeight = 9;
+    s32 frameX = 4;
+    s32 frameY = 24;
+    s32 frameWidth = 8;
+    s32 frameHeight = 28;
+    s32 menuHeight = 9;
+    s32 statusHeight = 9;
   } geometry;
 };
 

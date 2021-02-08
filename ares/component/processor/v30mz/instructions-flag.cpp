@@ -13,12 +13,12 @@ auto V30MZ::instructionComplementCarry() -> void {
   r.f.c = !r.f.c;
 }
 
-auto V30MZ::instructionClearFlag(uint bit) -> void {
+auto V30MZ::instructionClearFlag(u32 bit) -> void {
   wait(3);
   r.f &= ~(1 << bit);
 }
 
-auto V30MZ::instructionSetFlag(uint bit) -> void {
+auto V30MZ::instructionSetFlag(u32 bit) -> void {
   wait(3);
   r.f |= 1 << bit;
   if(bit == r.f.i.bit()) state.poll = false;

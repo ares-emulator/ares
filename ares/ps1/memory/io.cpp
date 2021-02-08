@@ -2,21 +2,21 @@
 //$fffe:0130 CACHE_CTRL
 
 auto MemoryControl::readByte(u32 address) -> u32 {
-  uint32 data;
+  n32 data;
   if((address & ~3) == 0x1f80'1060) data = readWord(address & ~3) >> 8 * (address & 3);
   if(address == 0xfffe'0130) data = readWord(address);  //must be word-aligned
   return data;
 }
 
 auto MemoryControl::readHalf(u32 address) -> u32 {
-  uint32 data;
+  n32 data;
   if((address & ~3) == 0x1f80'1060) data = readWord(address & ~3) >> 8 * (address & 3);
   if(address == 0xfffe'0130) data = readWord(address);  //must be word-aligned
   return data;
 }
 
 auto MemoryControl::readWord(u32 address) -> u32 {
-  uint32 data;
+  n32 data;
 
   if(address == 0x1f80'1060) {
     data = ram.value;
@@ -58,7 +58,7 @@ auto MemoryControl::writeHalf(u32 address, u32 data) -> void {
 }
 
 auto MemoryControl::writeWord(u32 address, u32 value) -> void {
-  uint32 data = value;
+  n32 data = value;
 
   if(address == 0x1f80'1060) {
     ram.value = data;

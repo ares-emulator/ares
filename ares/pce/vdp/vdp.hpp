@@ -17,11 +17,11 @@ struct VDP : Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power() -> void;
 
   //color.cpp
-  auto color(uint32) -> uint64;
+  auto color(n32) -> n64;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -32,8 +32,8 @@ struct VDP : Thread {
   VPC vpc;
 
   struct IO {
-    uint16 hcounter;
-    uint16 vcounter;
+    n16 hcounter;
+    n16 vcounter;
   } io;
 };
 

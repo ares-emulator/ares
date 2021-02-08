@@ -11,23 +11,23 @@ struct Response : Message {
   Response(const Request& request) { setRequest(request); }
 
   explicit operator bool() const { return responseType() != 0; }
-  auto operator()(uint responseType) -> type& { return setResponseType(responseType); }
+  auto operator()(u32 responseType) -> type& { return setResponseType(responseType); }
 
-  auto head(const function<bool (const uint8_t* data, uint size)>& callback) const -> bool override;
+  auto head(const function<bool (const u8* data, u32 size)>& callback) const -> bool override;
   auto setHead() -> bool override;
 
-  auto body(const function<bool (const uint8_t* data, uint size)>& callback) const -> bool override;
+  auto body(const function<bool (const u8* data, u32 size)>& callback) const -> bool override;
   auto setBody() -> bool override;
 
   auto request() const -> const Request* { return _request; }
   auto setRequest(const Request& value) -> type& { _request = &value; return *this; }
 
-  auto responseType() const -> uint { return _responseType; }
-  auto setResponseType(uint value) -> type& { _responseType = value; return *this; }
+  auto responseType() const -> u32 { return _responseType; }
+  auto setResponseType(u32 value) -> type& { _responseType = value; return *this; }
 
   auto hasData() const -> bool { return (bool)_data; }
-  auto data() const -> const vector<uint8_t>& { return _data; }
-  auto setData(const vector<uint8_t>& value) -> type&;
+  auto data() const -> const vector<u8>& { return _data; }
+  auto setData(const vector<u8>& value) -> type&;
 
   auto hasFile() const -> bool { return (bool)_file; }
   auto file() const -> const string& { return _file; }
@@ -38,7 +38,7 @@ struct Response : Message {
   auto setText(const string& value) -> type&;
 
   auto hasBody() const -> bool;
-  auto findContentLength() const -> uint;
+  auto findContentLength() const -> u32;
   auto findContentType() const -> string;
   auto findContentType(const string& suffix) const -> string;
   auto findResponseType() const -> string;
@@ -46,13 +46,13 @@ struct Response : Message {
   auto setFileETag() -> void;
 
   const Request* _request = nullptr;
-  uint _responseType = 0;
-  vector<uint8_t> _data;
+  u32 _responseType = 0;
+  vector<u8> _data;
   string _file;
   string _text;
 };
 
-inline auto Response::head(const function<bool (const uint8_t*, uint)>& callback) const -> bool {
+inline auto Response::head(const function<bool (const u8*, u32)>& callback) const -> bool {
   if(!callback) return false;
   string output;
 
@@ -62,7 +62,7 @@ inline auto Response::head(const function<bool (const uint8_t*, uint)>& callback
         output.append("HTTP/1.1 304 Not Modified\r\n");
         output.append("Connection: close\r\n");
         output.append("\r\n");
-        return callback(output.data<uint8_t>(), output.size());
+        return callback(output.data<u8>(), output.size());
       }
     }
   }
@@ -84,7 +84,7 @@ inline auto Response::head(const function<bool (const uint8_t*, uint)>& callback
   }
   output.append("\r\n");
 
-  return callback(output.data<uint8_t>(), output.size());
+  return callback(output.data<u8>(), output.size());
 }
 
 inline auto Response::setHead() -> bool {
@@ -107,33 +107,33 @@ inline auto Response::setHead() -> bool {
   return true;
 }
 
-inline auto Response::body(const function<bool (const uint8_t*, uint)>& callback) const -> bool {
+inline auto Response::body(const function<bool (const u8*, u32)>& callback) const -> bool {
   if(!callback) return false;
   if(!hasBody()) return true;
   bool chunked = header["Transfer-Encoding"].value() == "chunked";
 
   if(chunked) {
     string prefix = {hex(findContentLength()), "\r\n"};
-    if(!callback(prefix.data<uint8_t>(), prefix.size())) return false;
+    if(!callback(prefix.data<u8>(), prefix.size())) return false;
   }
 
   if(_body) {
-    if(!callback(_body.data<uint8_t>(), _body.size())) return false;
+    if(!callback(_body.data<u8>(), _body.size())) return false;
   } else if(hasData()) {
     if(!callback(data().data(), data().size())) return false;
   } else if(hasFile()) {
     file_map map(file(), file_map::mode::read);
     if(!callback(map.data(), map.size())) return false;
   } else if(hasText()) {
-    if(!callback(text().data<uint8_t>(), text().size())) return false;
+    if(!callback(text().data<u8>(), text().size())) return false;
   } else {
     string response = findResponseType();
-    if(!callback(response.data<uint8_t>(), response.size())) return false;
+    if(!callback(response.data<u8>(), response.size())) return false;
   }
 
   if(chunked) {
     string suffix = {"\r\n0\r\n\r\n"};
-    if(!callback(suffix.data<uint8_t>(), suffix.size())) return false;
+    if(!callback(suffix.data<u8>(), suffix.size())) return false;
   }
 
   return true;
@@ -155,7 +155,7 @@ inline auto Response::hasBody() const -> bool {
   return true;
 }
 
-inline auto Response::findContentLength() const -> uint {
+inline auto Response::findContentLength() const -> u32 {
   if(auto contentLength = header["Content-Length"]) return contentLength.value().natural();
   if(_body) return _body.size();
   if(hasData()) return data().size();
@@ -240,7 +240,7 @@ inline auto Response::findResponseTypeVerbose() const -> string {
   return findResponseType();  //fallback for uncommon responses
 }
 
-inline auto Response::setData(const vector<uint8_t>& value) -> type& {
+inline auto Response::setData(const vector<u8>& value) -> type& {
   _data = value;
   header.assign("Content-Length", value.size());
   return *this;
@@ -249,7 +249,7 @@ inline auto Response::setData(const vector<uint8_t>& value) -> type& {
 inline auto Response::setFile(const string& value) -> type& {
   //block path escalation exploits ("../" and "..\" in the file location)
   bool valid = true;
-  for(uint n : range(value.size())) {
+  for(u32 n : range(value.size())) {
     if(value(n + 0, '\0') != '.') continue;
     if(value(n + 1, '\0') != '.') continue;
     if(value(n + 2, '\0') != '/' && value(n + 2, '\0') != '\\') continue;
@@ -260,7 +260,7 @@ inline auto Response::setFile(const string& value) -> type& {
 
   //cache images for seven days
   auto suffix = Location::suffix(value);
-  uint maxAge = 0;
+  u32 maxAge = 0;
   if(suffix == ".svg"
   || suffix == ".ico"
   || suffix == ".png"

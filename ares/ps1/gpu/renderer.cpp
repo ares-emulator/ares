@@ -5,18 +5,18 @@ auto GPU::generateTables() -> void {
     {-3, +1, -4, +0},
     {+3, -1, +2, -2},
   };
-  for(uint y : range(4)) {
-    for(uint x : range(4)) {
+  for(u32 y : range(4)) {
+    for(u32 x : range(4)) {
       for(s32 c : range(256)) {
         ditherTable[y][x][c] = uclamp<8>(c + table[y][x]);
       }
     }
   }
 
-  for(uint a : range(2)) {
-    for(uint r : range(32)) {
-      for(uint g : range(32)) {
-        for(uint b : range(32)) {
+  for(u32 a : range(2)) {
+    for(u32 r : range(32)) {
+      for(u32 g : range(32)) {
+        for(u32 b : range(32)) {
           Color color;
           color.r = r << 3 | r >> 2;
           color.g = g << 3 | g >> 2;
@@ -104,9 +104,9 @@ auto GPU::Render::alpha(Color above, Color below) const -> Color {
     above.b = min(255, below.b + above.b);
     break;
   case 2:
-    above.r = max(0, (int)below.r - above.r);
-    above.g = max(0, (int)below.g - above.g);
-    above.b = max(0, (int)below.b - above.b);
+    above.r = max(0, (s32)below.r - above.r);
+    above.g = max(0, (s32)below.g - above.g);
+    above.b = max(0, (s32)below.b - above.b);
     break;
   case 3:
     above.r = min(255, below.r + (above.r >> 2));
@@ -117,7 +117,7 @@ auto GPU::Render::alpha(Color above, Color below) const -> Color {
   return above;
 }
 
-template<uint Flags>
+template<u32 Flags>
 auto GPU::Render::pixel(Point point, Color rgb, Point uv) -> void {
   Color above;
   bool transparent;
@@ -151,7 +151,7 @@ auto GPU::Render::pixel(Point point, Color rgb, Point uv) -> void {
   gpu.vram2D[point.y][point.x] = above.to16() | forceMaskBit << 15;
 }
 
-template<uint Flags>
+template<u32 Flags>
 auto GPU::Render::line() -> void {
   v0.x += drawingAreaOffsetX, v0.y += drawingAreaOffsetY;
   v1.x += drawingAreaOffsetX, v1.y += drawingAreaOffsetY;
@@ -189,9 +189,9 @@ auto GPU::Render::line() -> void {
   }
 }
 
-template<uint Flags>
+template<u32 Flags>
 auto GPU::Render::triangle() -> void {
-  static constexpr uint Dithering = ((
+  static constexpr u32 Dithering = ((
     (Flags & Shade) || ((Flags & Texture) && (Flags & Alpha))
   ) && !(Flags & Rectangle)) ? Dither : 0;
 
@@ -286,7 +286,7 @@ auto GPU::Render::triangle() -> void {
 //io.pcounter += cost<Flags>(pixels);
 }
 
-template<uint Flags>
+template<u32 Flags>
 auto GPU::Render::quadrilateral() -> void {
   auto c1 = v1, c2 = v2, c3 = v3;
   triangle<Flags>();
@@ -294,7 +294,7 @@ auto GPU::Render::quadrilateral() -> void {
   triangle<Flags>();
 }
 
-template<uint Flags>
+template<u32 Flags>
 auto GPU::Render::rectangle() -> void {
   v1 = Vertex(v0).setPoint(v0.x + size.w, v0.y).setTexel(v0.u + size.w, v0.v);
   v2 = Vertex(v0).setPoint(v0.x, v0.y + size.h).setTexel(v0.u, v0.v + size.h);
@@ -302,18 +302,18 @@ auto GPU::Render::rectangle() -> void {
   quadrilateral<Flags | Rectangle>();
 }
 
-template<uint Flags>
+template<u32 Flags>
 auto GPU::Render::fill() -> void {
   auto color = v0.to16();
-  for(uint y : range(size.h)) {
-    for(uint x : range(size.w)) {
+  for(u32 y : range(size.h)) {
+    for(u32 x : range(size.w)) {
       gpu.vram2D[y + v0.y & 511][x + v0.x & 1023] = color;
     }
   }
 //io.pcounter += cost<Flags>(size.width * size.height);
 }
 
-template<uint Flags>
+template<u32 Flags>
 auto GPU::Render::cost(u32 pixels) const -> u32 {
   //for now, do not emulate GPU overhead timing ...
   return 1;

@@ -20,7 +20,7 @@ struct RDP : Thread, Memory::IO<RDP> {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
 
   //render.cpp
@@ -71,32 +71,32 @@ struct RDP : Thread, Memory::IO<RDP> {
   auto serialize(serializer&) -> void;
 
   struct Command {
-    uint24 start;
-    uint24 end;
-    uint24 current;
-    uint24 clock;
-    uint24 bufferBusy;
-    uint24 pipeBusy;
-    uint24 tmemBusy;
-     uint1 source;  //0 = RDRAM, 1 = DMEM
-     uint1 freeze;
-     uint1 flush;
-     uint1 ready;
+    n24 start;
+    n24 end;
+    n24 current;
+    n24 clock;
+    n24 bufferBusy;
+    n24 pipeBusy;
+    n24 tmemBusy;
+    n1  source;  //0 = RDRAM, 1 = DMEM
+    n1  freeze;
+    n1  flush;
+    n1  ready;
   } command;
 
   struct Point {
-    uint16 i;  //integer
-    uint16 f;  //fraction
+    n16 i;  //integer
+    n16 f;  //fraction
   };
 
   struct Edge {
-     uint1 lmajor;
-     uint3 level;
-     uint3 tile;
+    n1 lmajor;
+    n3 level;
+    n3 tile;
     struct Y {
-      uint14 hi;
-      uint14 md;
-      uint14 lo;
+      n14 hi;
+      n14 md;
+      n14 lo;
     } y;
     struct X {
       struct {
@@ -132,197 +132,197 @@ struct RDP : Thread, Memory::IO<RDP> {
   } zbuffer;
 
   struct TextureRectangle {
-    uint3 tile;
+    n3 tile;
     struct {
-      uint12 hi;
-      uint12 lo;
+      n12 hi;
+      n12 lo;
     } x, y;
     Point s;
     Point t;
   } rectangle;
 
   struct OtherModes {
-    uint1 atomicPrimitive;
-    uint1 reserved1;
-    uint2 cycleType;
-    uint1 perspective;
-    uint1 detailTexture;
-    uint1 sharpenTexture;
-    uint1 lodTexture;
-    uint1 tlut;
-    uint1 tlutType;
-    uint1 sampleType;
-    uint1 midTexel;
-    uint1 bilerp[2];
-    uint1 convertOne;
-    uint1 colorKey;
-    uint2 colorDitherMode;
-    uint2 alphaDitherMode;
-    uint4 reserved2;
-    uint2 blend1a[2];
-    uint2 blend1b[2];
-    uint2 blend2a[2];
-    uint2 blend2b[2];
-    uint1 reserved3;
-    uint1 forceBlend;
-    uint1 alphaCoverage;
-    uint1 coverageXalpha;
-    uint2 zMode;
-    uint2 coverageMode;
-    uint1 colorOnCoverage;
-    uint1 imageRead;
-    uint1 zUpdate;
-    uint1 zCompare;
-    uint1 antialias;
-    uint1 zSource;
-    uint1 ditherAlpha;
-    uint1 alphaCompare;
+    n1 atomicPrimitive;
+    n1 reserved1;
+    n2 cycleType;
+    n1 perspective;
+    n1 detailTexture;
+    n1 sharpenTexture;
+    n1 lodTexture;
+    n1 tlut;
+    n1 tlutType;
+    n1 sampleType;
+    n1 midTexel;
+    n1 bilerp[2];
+    n1 convertOne;
+    n1 colorKey;
+    n2 colorDitherMode;
+    n2 alphaDitherMode;
+    n4 reserved2;
+    n2 blend1a[2];
+    n2 blend1b[2];
+    n2 blend2a[2];
+    n2 blend2b[2];
+    n1 reserved3;
+    n1 forceBlend;
+    n1 alphaCoverage;
+    n1 coverageXalpha;
+    n2 zMode;
+    n2 coverageMode;
+    n1 colorOnCoverage;
+    n1 imageRead;
+    n1 zUpdate;
+    n1 zCompare;
+    n1 antialias;
+    n1 zSource;
+    n1 ditherAlpha;
+    n1 alphaCompare;
   } other;
 
   struct FogColor {
-    uint8 red;
-    uint8 green;
-    uint8 blue;
-    uint8 alpha;
+    n8 red;
+    n8 green;
+    n8 blue;
+    n8 alpha;
   } fog;
 
   struct Blend {
-    uint8 red;
-    uint8 green;
-    uint8 blue;
-    uint8 alpha;
+    n8 red;
+    n8 green;
+    n8 blue;
+    n8 alpha;
   } blend;
 
   struct PrimitiveColor {
-    uint5 minimum;
-    uint8 fraction;
-    uint8 red;
-    uint8 green;
-    uint8 blue;
-    uint8 alpha;
+    n5 minimum;
+    n8 fraction;
+    n8 red;
+    n8 green;
+    n8 blue;
+    n8 alpha;
   } primitive;
 
   struct EnvironmentColor {
-    uint8 red;
-    uint8 green;
-    uint8 blue;
-    uint8 alpha;
+    n8 red;
+    n8 green;
+    n8 blue;
+    n8 alpha;
   } environment;
 
   struct CombineMode {
     struct MUL {
-      uint5 color[2];
-      uint3 alpha[2];
+      n5 color[2];
+      n3 alpha[2];
     } mul;
     struct ADD {
-      uint3 color[2];
-      uint3 alpha[2];
+      n3 color[2];
+      n3 alpha[2];
     } add;
     struct SUB {
-      uint4 color[2];
-      uint3 alpha[2];
+      n4 color[2];
+      n3 alpha[2];
     } sba, sbb;
   } combine;
 
   struct TLUT {
-    uint3 index;
+    n3 index;
     struct {
-      uint12 lo;
-      uint12 hi;
+      n12 lo;
+      n12 hi;
     } s, t;
   } tlut;
 
   struct Load {
     struct Block {
-      uint3 index;
+      n3 index;
       struct {
-        uint12 lo;
-        uint12 hi;
+        n12 lo;
+        n12 hi;
       } s, t;
     } block;
     struct Tile {
-      uint3 index;
+      n3 index;
       struct {
-        uint12 lo;
-        uint12 hi;
+        n12 lo;
+        n12 hi;
       } s, t;
     } tile;
   } load_;
 
   struct TileSize {
-    uint3 index;
+    n3 index;
     struct {
-      uint12 lo;
-      uint12 hi;
+      n12 lo;
+      n12 hi;
     } s, t;
   } tileSize;
 
   struct Tile {
-    uint3 format;
-    uint2 size;
-    uint9 line;
-    uint9 address;
-    uint3 index;
-    uint4 palette;
+    n3 format;
+    n2 size;
+    n9 line;
+    n9 address;
+    n3 index;
+    n4 palette;
     struct {
-      uint1 clamp;
-      uint1 mirror;
-      uint4 mask;
-      uint4 shift;
+      n1 clamp;
+      n1 mirror;
+      n4 mask;
+      n4 shift;
     } s, t;
   } tile;
 
   struct Set {
     struct Fill {
-      uint32 color = 0;
+      n32 color = 0;
     } fill;
     struct Texture {
-       uint3 format = 0;
-       uint2 size = 0;
-      uint10 width = 0;
-      uint26 dramAddress = 0;
+      n3  format = 0;
+      n2  size = 0;
+      n10 width = 0;
+      n26 dramAddress = 0;
     } texture;
     struct Mask {
-      uint26 dramAddress = 0;
+      n26 dramAddress = 0;
     } mask;
     struct Color {
-       uint3 format = 0;
-       uint2 size = 0;
-      uint10 width = 0;
-      uint26 dramAddress = 0;
+      n3  format = 0;
+      n2  size = 0;
+      n10 width = 0;
+      n26 dramAddress = 0;
     } color;
   } set;
 
   struct PrimitiveDepth {
-    uint16 z;
-    uint16 deltaZ;
+    n16 z;
+    n16 deltaZ;
   } primitiveDepth;
 
   struct Scissor {
-    uint1 field;
-    uint1 odd;
+    n1 field;
+    n1 odd;
     struct {
-      uint12 lo;
-      uint12 hi;
+      n12 lo;
+      n12 hi;
     } x, y;
   } scissor;
 
   struct Convert {
-    uint9 k[6];
+    n9 k[6];
   } convert;
 
   struct Key {
     struct {
-      uint12 width;
-       uint8 center;
-       uint8 scale;
+      n12 width;
+      n8  center;
+      n8  scale;
     } r, g, b;
   } key;
 
   struct FillRectangle {
     struct {
-      uint12 lo;
-      uint12 hi;
+      n12 lo;
+      n12 hi;
     } x, y;
   } fillRectangle_;
 
@@ -335,15 +335,15 @@ struct RDP : Thread, Memory::IO<RDP> {
     auto writeWord(u32 address, u32 data) -> void;
 
     struct BIST {
-      uint1 check;
-      uint1 go;
-      uint1 done;
-      uint8 fail;
+      n1 check;
+      n1 go;
+      n1 done;
+      n8 fail;
     } bist;
     struct Test {
-       uint1 enable;
-       uint7 address;
-      uint32 data;
+      n1  enable;
+      n7  address;
+      n32 data;
     } test;
   } io{*this};
 };

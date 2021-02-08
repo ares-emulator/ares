@@ -72,10 +72,10 @@ auto pWidget::setGeometry(Geometry geometry) -> void {
   @autoreleasepool {
     CGFloat windowHeight = [[cocoaView superview] frame].size.height;
     //round coordinates
-    uint x = geometry.x();
-    uint y = windowHeight - geometry.y() - geometry.height();
-    uint width = geometry.width();
-    uint height = geometry.height();
+    u32 x = geometry.x();
+    u32 y = windowHeight - geometry.y() - geometry.height();
+    u32 width = geometry.width();
+    u32 height = geometry.height();
     [cocoaView setFrame:NSMakeRect(x, y, width, height)];
     [[cocoaView superview] setNeedsDisplay:YES];
   }

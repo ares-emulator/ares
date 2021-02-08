@@ -11,8 +11,8 @@ namespace nall::Encode {
 //if nall gains a deflate implementation one day, then this can be improved to offer integrated compression.
 
 struct PNG {
-  static auto RGB8 (const string& filename, const void* data, uint pitch, uint width, uint height) -> bool;
-  static auto RGBA8(const string& filename, const void* data, uint pitch, uint width, uint height) -> bool;
+  static auto RGB8 (const string& filename, const void* data, u32 pitch, u32 width, u32 height) -> bool;
+  static auto RGBA8(const string& filename, const void* data, u32 pitch, u32 width, u32 height) -> bool;
 
 private:
   auto compress(const string& filename) -> bool;
@@ -20,31 +20,31 @@ private:
   auto close() -> void;
   auto header() -> void;
   auto footer() -> void;
-  auto information(uint width, uint height, uint depth, uint type) -> void;
-  auto dataHeader(uint width, uint height, uint bitsPerPixel) -> void;
+  auto information(u32 width, u32 height, u32 depth, u32 type) -> void;
+  auto dataHeader(u32 width, u32 height, u32 bitsPerPixel) -> void;
   auto dataLine(bool lastLine) -> void;
   auto dataFooter() -> void;
-  auto write(uint8_t data) -> void;
-  auto adler(uint8_t data) -> void;
+  auto write(u8 data) -> void;
+  auto adler(u8 data) -> void;
 
   file_buffer fp;
   Hash::CRC32 crc32;
-  uint16_t adler1 = 1;
-  uint16_t adler2 = 0;
-  uint16_t bytesPerLine = 0;
+  u16 adler1 = 1;
+  u16 adler2 = 0;
+  u16 bytesPerLine = 0;
 };
 
-inline auto PNG::RGB8(const string& filename, const void* data, uint pitch, uint width, uint height) -> bool {
+inline auto PNG::RGB8(const string& filename, const void* data, u32 pitch, u32 width, u32 height) -> bool {
   PNG png;
   if(!png.open(filename)) return false;
 
   png.header();
   png.information(width, height, 8, 2);
   png.dataHeader(width, height, 24);
-  for(uint y : range(height)) {
-    const auto input = (const uint32_t*)data + y * (pitch >> 2);
+  for(u32 y : range(height)) {
+    const auto input = (const u32*)data + y * (pitch >> 2);
     png.dataLine(y == height - 1);
-    for(uint x : range(width)) {
+    for(u32 x : range(width)) {
       auto pixel = input[x];   //RGB
       png.adler(pixel >> 16);  //R
       png.adler(pixel >>  8);  //G
@@ -58,17 +58,17 @@ inline auto PNG::RGB8(const string& filename, const void* data, uint pitch, uint
   return true;
 }
 
-inline auto PNG::RGBA8(const string& filename, const void* data, uint pitch, uint width, uint height) -> bool {
+inline auto PNG::RGBA8(const string& filename, const void* data, u32 pitch, u32 width, u32 height) -> bool {
   PNG png;
   if(!png.open(filename)) return false;
 
   png.header();
   png.information(width, height, 8, 6);
   png.dataHeader(width, height, 32);
-  for(uint y : range(height)) {
-    const auto input = (const uint32_t*)data + y * (pitch >> 2);
+  for(u32 y : range(height)) {
+    const auto input = (const u32*)data + y * (pitch >> 2);
     png.dataLine(y == height - 1);
-    for(uint x : range(width)) {
+    for(u32 x : range(width)) {
       auto pixel = input[x];   //ARGB
       png.adler(pixel >> 16);  //R
       png.adler(pixel >>  8);  //G
@@ -122,7 +122,7 @@ inline auto PNG::footer() -> void {
   fp.writem(crc32.value(), 4L);
 }
 
-inline auto PNG::information(uint width, uint height, uint depth, uint type) -> void {
+inline auto PNG::information(u32 width, u32 height, u32 depth, u32 type) -> void {
   fp.writem(13, 4L);
   crc32.reset();
   write('I');
@@ -145,9 +145,9 @@ inline auto PNG::information(uint width, uint height, uint depth, uint type) -> 
   fp.writem(crc32.value(), 4L);
 }
 
-inline auto PNG::dataHeader(uint width, uint height, uint bitsPerPixel) -> void {
+inline auto PNG::dataHeader(u32 width, u32 height, u32 bitsPerPixel) -> void {
   bytesPerLine = 1 + width * (bitsPerPixel / 8);
-  uint idatSize = 2 + height * (5 + bytesPerLine) + 4;
+  u32 idatSize = 2 + height * (5 + bytesPerLine) + 4;
   fp.writem(idatSize, 4L);
   crc32.reset();
   write('I');
@@ -175,12 +175,12 @@ inline auto PNG::dataFooter() -> void {
   fp.writem(crc32.value(), 4L);
 }
 
-inline auto PNG::write(uint8_t data) -> void {
+inline auto PNG::write(u8 data) -> void {
   fp.write(data);
   crc32.input(data);
 }
 
-inline auto PNG::adler(uint8_t data) -> void {
+inline auto PNG::adler(u8 data) -> void {
   write(data);
   adler1 = (adler1 + data  ) % 65521;
   adler2 = (adler2 + adler1) % 65521;

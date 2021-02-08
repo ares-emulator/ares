@@ -37,7 +37,7 @@ auto pMenuItem::destruct() -> void {
 
 auto pMenuItem::setIcon(const image& icon) -> void {
   @autoreleasepool {
-    uint size = 15;  //there is no API to retrieve the optimal size
+    u32 size = 15;  //there is no API to retrieve the optimal size
     [cocoaAction setImage:NSMakeImage(icon, size, size)];
   }
 }

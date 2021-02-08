@@ -9,26 +9,26 @@ namespace nall::Decode {
 
 struct CUE {
   struct Index {
-    auto sectorCount() const -> uint;
+    auto sectorCount() const -> u32;
 
-    int number;  //01-99
-    int lba = -1;
-    int end = -1;
+    s32 number;  //01-99
+    s32 lba = -1;
+    s32 end = -1;
   };
 
   struct Track {
-    auto sectorCount() const -> uint;
-    auto sectorSize() const -> uint;
+    auto sectorCount() const -> u32;
+    auto sectorSize() const -> u32;
 
-    int number;  //01-99
+    s32 number;  //01-99
     string type;
     vector<Index> indices;
-    maybe<int> pregap;
-    maybe<int> postgap;
+    maybe<s32> pregap;
+    maybe<s32> postgap;
   };
 
   struct File {
-    auto sectorCount() const -> uint;
+    auto sectorCount() const -> u32;
     auto scan(const string& pathname) -> bool;
 
     string name;
@@ -37,21 +37,21 @@ struct CUE {
   };
 
   auto load(const string& location) -> bool;
-  auto sectorCount() const -> uint;
+  auto sectorCount() const -> u32;
 
   vector<File> files;
 
 private:
-  auto loadFile(vector<string>& lines, uint& offset) -> File;
-  auto loadTrack(vector<string>& lines, uint& offset) -> Track;
-  auto loadIndex(vector<string>& lines, uint& offset) -> Index;
-  auto toLBA(const string& msf) -> uint;
+  auto loadFile(vector<string>& lines, u32& offset) -> File;
+  auto loadTrack(vector<string>& lines, u32& offset) -> Track;
+  auto loadIndex(vector<string>& lines, u32& offset) -> Index;
+  auto toLBA(const string& msf) -> u32;
 };
 
 inline auto CUE::load(const string& location) -> bool {
   auto lines = string::read(location).replace("\r", "").split("\n");
 
-  uint offset = 0;
+  u32 offset = 0;
   while(offset < lines.size()) {
     lines[offset].strip();
     if(lines[offset].ibeginsWith("FILE ")) {
@@ -84,7 +84,7 @@ inline auto CUE::load(const string& location) -> bool {
   return true;
 }
 
-inline auto CUE::loadFile(vector<string>& lines, uint& offset) -> File {
+inline auto CUE::loadFile(vector<string>& lines, u32& offset) -> File {
   File file;
 
   lines[offset].itrimLeft("FILE ", 1L).strip();
@@ -108,7 +108,7 @@ inline auto CUE::loadFile(vector<string>& lines, uint& offset) -> File {
   return file;
 }
 
-inline auto CUE::loadTrack(vector<string>& lines, uint& offset) -> Track {
+inline auto CUE::loadTrack(vector<string>& lines, u32& offset) -> Track {
   Track track;
 
   lines[offset].itrimLeft("TRACK ", 1L).strip();
@@ -141,7 +141,7 @@ inline auto CUE::loadTrack(vector<string>& lines, uint& offset) -> Track {
   return track;
 }
 
-inline auto CUE::loadIndex(vector<string>& lines, uint& offset) -> Index {
+inline auto CUE::loadIndex(vector<string>& lines, u32& offset) -> Index {
   Index index;
 
   lines[offset].itrimLeft("INDEX ", 1L);
@@ -155,15 +155,15 @@ inline auto CUE::loadIndex(vector<string>& lines, uint& offset) -> Index {
   return index;
 }
 
-inline auto CUE::toLBA(const string& msf) -> uint {
-  uint m = msf.split(":")(0).natural();
-  uint s = msf.split(":")(1).natural();
-  uint f = msf.split(":")(2).natural();
+inline auto CUE::toLBA(const string& msf) -> u32 {
+  u32 m = msf.split(":")(0).natural();
+  u32 s = msf.split(":")(1).natural();
+  u32 f = msf.split(":")(2).natural();
   return m * 60 * 75 + s * 75 + f;
 }
 
-inline auto CUE::sectorCount() const -> uint {
-  uint count = 0;
+inline auto CUE::sectorCount() const -> u32 {
+  u32 count = 0;
   for(auto& file : files) count += file.sectorCount();
   return count;
 }
@@ -172,7 +172,7 @@ inline auto CUE::File::scan(const string& pathname) -> bool {
   string location = {Location::path(pathname), name};
   if(!file::exists(location)) return false;
 
-  uint64_t size = 0;
+  u64 size = 0;
 
   if(type == "binary") {
     size = file::size(location);
@@ -200,19 +200,19 @@ inline auto CUE::File::scan(const string& pathname) -> bool {
   return true;
 }
 
-inline auto CUE::File::sectorCount() const -> uint {
-  uint count = 0;
+inline auto CUE::File::sectorCount() const -> u32 {
+  u32 count = 0;
   for(auto& track : tracks) count += track.sectorCount();
   return count;
 }
 
-inline auto CUE::Track::sectorCount() const -> uint {
-  uint count = 0;
+inline auto CUE::Track::sectorCount() const -> u32 {
+  u32 count = 0;
   for(auto& index : indices) count += index.sectorCount();
   return count;
 }
 
-inline auto CUE::Track::sectorSize() const -> uint {
+inline auto CUE::Track::sectorSize() const -> u32 {
   if(type == "mode1/2048") return 2048;
   if(type == "mode1/2352") return 2352;
   if(type == "mode2/2352") return 2352;
@@ -220,7 +220,7 @@ inline auto CUE::Track::sectorSize() const -> uint {
   return 0;
 }
 
-inline auto CUE::Index::sectorCount() const -> uint {
+inline auto CUE::Index::sectorCount() const -> u32 {
   if(end < 0) return 0;
   return end - lba + 1;
 }

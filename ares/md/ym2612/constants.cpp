@@ -1,4 +1,4 @@
-const uint8_t YM2612::lfoDividers[8] = {
+const u8 YM2612::lfoDividers[8] = {
   108,
    77,
    71,
@@ -9,7 +9,7 @@ const uint8_t YM2612::lfoDividers[8] = {
     5,
 };
 
-const uint8_t YM2612::vibratos[8][16] = {
+const u8 YM2612::vibratos[8][16] = {
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
   {0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 0, 0, 0},
@@ -20,14 +20,14 @@ const uint8_t YM2612::vibratos[8][16] = {
   {0, 0, 8,12,16,16,20,24,24,20,16,16,12, 8, 0, 0},
 };
 
-const uint8_t YM2612::tremolos[4] = {
+const u8 YM2612::tremolos[4] = {
   7,
   3,
   1,
   0,
 };
 
-const uint8_t YM2612::detunes[3][8] = {
+const u8 YM2612::detunes[3][8] = {
   { 5,  6,  6,  7,  8,  8,  9, 10},
   {11, 12, 13, 14, 16, 17, 18, 20},
   {16, 17, 19, 20, 22, 24, 26, 28},

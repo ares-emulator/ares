@@ -3,11 +3,11 @@
 namespace hiro {
 
 struct pMonitor {
-  static auto count() -> uint;
-  static auto dpi(uint monitor) -> Position;
-  static auto geometry(uint monitor) -> Geometry;
-  static auto primary() -> uint;
-  static auto workspace(uint monitor) -> Geometry;
+  static auto count() -> u32;
+  static auto dpi(u32 monitor) -> Position;
+  static auto geometry(u32 monitor) -> Geometry;
+  static auto primary() -> u32;
+  static auto workspace(u32 monitor) -> Geometry;
 };
 
 }

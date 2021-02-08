@@ -20,9 +20,9 @@ struct GPU : Thread, Memory::Interface {
     } graphics;
   } debugger;
 
-  auto vtotal() const -> uint { return Region::PAL() ? 314 : 263; }
-  auto vstart() const -> uint { return io.displayRangeY1; }
-  auto vend() const -> uint { return io.displayRangeY2; }
+  auto vtotal() const -> u32 { return Region::PAL() ? 314 : 263; }
+  auto vstart() const -> u32 { return io.displayRangeY1; }
+  auto vend() const -> u32 { return io.displayRangeY2; }
   auto vblank() const -> bool { return io.vcounter < vstart() || io.vcounter >= vend(); }
   auto interlace() const -> bool { return io.verticalResolution && io.interlace; }
 
@@ -32,7 +32,7 @@ struct GPU : Thread, Memory::Interface {
 
   auto main() -> void;
   auto frame() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -71,7 +71,7 @@ struct GPU : Thread, Memory::Interface {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  enum class Mode : uint {
+  enum class Mode : u32 {
     Normal,
     Status,
     CopyToVRAM,
@@ -79,9 +79,9 @@ struct GPU : Thread, Memory::Interface {
   };
 
   struct Display {
-    uint dotclock;
-    uint width;
-    uint height;
+    u32  dotclock;
+    u32  width;
+    u32  height;
     bool interlace;
     struct Previous {
       s32 x;
@@ -94,103 +94,103 @@ struct GPU : Thread, Memory::Interface {
   struct IO {
     Mode mode = Mode::Normal;
 
-     uint1 field;     //even or odd scanline
-    uint16 hcounter;  //horizontal counter
-    uint16 vcounter;  //vertical counter
-     int32 pcounter;  //pixel drawing counter
+    n1  field;     //even or odd scanline
+    n16 hcounter;  //horizontal counter
+    n16 vcounter;  //vertical counter
+    i32 pcounter;  //pixel drawing counter
 
     //GP0(a0): copy rectangle (CPU to VRAM)
     //GP0(c0): copy rectangle (VRAM to CPU)
     struct Copy {
-      uint16 x;
-      uint16 y;
-      uint16 width;
-      uint16 height;
+      n16 x;
+      n16 y;
+      n16 width;
+      n16 height;
     //internal:
-      uint16 px;
-      uint16 py;
+      n16 px;
+      n16 py;
     } copy;
 
     //GP0(e1): draw mode
-     uint4 texturePageBaseX;
-     uint1 texturePageBaseY;
-     uint2 semiTransparency;
-     uint2 textureDepth;
-     uint1 dithering;
-     uint1 drawToDisplay;
-     uint1 textureDisable;
-     uint1 textureFlipX;
-     uint1 textureFlipY;
+    n4 texturePageBaseX;
+    n1 texturePageBaseY;
+    n2 semiTransparency;
+    n2 textureDepth;
+    n1 dithering;
+    n1 drawToDisplay;
+    n1 textureDisable;
+    n1 textureFlipX;
+    n1 textureFlipY;
 
     //GP0(e2): texture window
-     uint5 textureWindowMaskX;
-     uint5 textureWindowMaskY;
-     uint5 textureWindowOffsetX;
-     uint5 textureWindowOffsetY;
+    n5 textureWindowMaskX;
+    n5 textureWindowMaskY;
+    n5 textureWindowOffsetX;
+    n5 textureWindowOffsetY;
 
     //GP0(e3): set drawing area (top left)
-    uint10 drawingAreaOriginX1;
-    uint10 drawingAreaOriginY1;
+    n10 drawingAreaOriginX1;
+    n10 drawingAreaOriginY1;
 
     //GP0(e4): set drawing area (bottom right)
-    uint10 drawingAreaOriginX2;
-    uint10 drawingAreaOriginY2;
+    n10 drawingAreaOriginX2;
+    n10 drawingAreaOriginY2;
 
     //GP0(e5): set drawing offset
-     int11 drawingAreaOffsetX;
-     int11 drawingAreaOffsetY;
+    i11 drawingAreaOffsetX;
+    i11 drawingAreaOffsetY;
 
     //GP0(e6): mask bit
-     uint1 forceMaskBit;
-     uint1 checkMaskBit;
+    n1 forceMaskBit;
+    n1 checkMaskBit;
 
     //GP1(02): acknowledge interrupt
-     uint1 interrupt;
+    n1 interrupt;
 
     //GP1(03): display disable
-     uint1 displayDisable;
+    n1 displayDisable;
 
     //GP1(04): DMA direction
-     uint2 dmaDirection;
+    n2 dmaDirection;
 
     //GP1(05): start of display area
-    uint10 displayStartX;
-     uint9 displayStartY;
+    n10 displayStartX;
+    n9  displayStartY;
 
     //GP1(06): horizontal display range
-    uint12 displayRangeX1;
-    uint12 displayRangeX2;
+    n12 displayRangeX1;
+    n12 displayRangeX2;
 
     //GP1(07): vertical display range
-    uint12 displayRangeY1;
-    uint12 displayRangeY2;
+    n12 displayRangeY1;
+    n12 displayRangeY2;
 
     //GP1(08): display mode
-     uint3 horizontalResolution;
-     uint1 verticalResolution;
-     uint1 videoMode;
-     uint1 colorDepth;  //0 = 15bpp, 1 = 24bpp
-     uint1 interlace;
-     uint1 reverseFlag;
+    n3 horizontalResolution;
+    n1 verticalResolution;
+    n1 videoMode;
+    n1 colorDepth;  //0 = 15bpp, 1 = 24bpp
+    n1 interlace;
+    n1 reverseFlag;
 
     //GP1(10): get GPU information
-    uint24 status;
+    n24 status;
 
     //internal:
-     uint6 texturePaletteX;
-     uint9 texturePaletteY;
+    n6 texturePaletteX;
+    n9 texturePaletteY;
   } io;
 
   struct Queue {
     auto reset() -> void { length = counterX = counterY = 0; }
     auto empty() const -> bool { return length == 0; }
-    auto write(uint32 value) -> uint8 { data[length++] = value; return length; }
+    auto write(n32 value) -> n8 { data[length++] = value; return length; }
 
-     uint8 command;
-     uint8 length;
-    uint32 data[256];
-    uint10 counterX;
-     uint9 counterY;
+    n8  command;
+    n8  length;
+    n32 data[256];
+    n10 counterX;
+    n9  counterY;
   };
 
   struct {
@@ -214,7 +214,7 @@ struct GPU : Thread, Memory::Interface {
     }
 
     auto to16() const -> u16 {
-      return {(r >> 3) << 0 | (g >> 3) << 5 | (b >> 3) << 10};
+      return (r >> 3) << 0 | (g >> 3) << 5 | (b >> 3) << 10;
     }
 
     u8 r, g, b;
@@ -277,7 +277,7 @@ struct GPU : Thread, Memory::Interface {
   };
 
   //rendering flags
-  enum : uint {
+  enum : u32 {
     None      = 0,
     Raw       = 1 << 0,
     Alpha     = 1 << 1,
@@ -300,36 +300,36 @@ struct GPU : Thread, Memory::Interface {
     auto dither(Point p, Color c) const -> Color;
     auto modulate(Color above, Color below) const -> Color;
     auto alpha(Color above, Color below) const -> Color;
-    template<uint Flags> auto pixel(Point, Color, Point = {}) -> void;
-    template<uint Flags> auto line() -> void;
-    template<uint Flags> auto triangle() -> void;
-    template<uint Flags> auto quadrilateral() -> void;
-    template<uint Flags> auto rectangle() -> void;
-    template<uint Flags> auto fill() -> void;
-    template<uint Flags> auto cost(u32 pixels) const -> u32;
+    template<u32 Flags> auto pixel(Point, Color, Point = {}) -> void;
+    template<u32 Flags> auto line() -> void;
+    template<u32 Flags> auto triangle() -> void;
+    template<u32 Flags> auto quadrilateral() -> void;
+    template<u32 Flags> auto rectangle() -> void;
+    template<u32 Flags> auto fill() -> void;
+    template<u32 Flags> auto cost(u32 pixels) const -> u32;
     auto execute() -> void;
 
-    uint command;
-    uint flags;
+    u32  command;
+    u32  flags;
     bool dithering;
-    uint semiTransparency;
+    u32  semiTransparency;
     bool checkMaskBit;
     bool forceMaskBit;
-    sint drawingAreaOriginX1;
-    sint drawingAreaOriginY1;
-    sint drawingAreaOriginX2;
-    sint drawingAreaOriginY2;
-    uint drawingAreaOffsetX;
-    uint drawingAreaOffsetY;
-    uint textureDepth;
-    uint texturePageBaseX;
-    uint texturePageBaseY;
-    uint texturePaletteX;
-    uint texturePaletteY;
-    uint texelMaskX;
-    uint texelMaskY;
-    uint texelOffsetX;
-    uint texelOffsetY;
+    s32  drawingAreaOriginX1;
+    s32  drawingAreaOriginY1;
+    s32  drawingAreaOriginX2;
+    s32  drawingAreaOriginY2;
+    u32  drawingAreaOffsetX;
+    u32  drawingAreaOffsetY;
+    u32  textureDepth;
+    u32  texturePageBaseX;
+    u32  texturePageBaseY;
+    u32  texturePaletteX;
+    u32  texturePaletteY;
+    u32  texelMaskX;
+    u32  texelMaskY;
+    u32  texelOffsetX;
+    u32  texelOffsetY;
 
     Vertex v0;
     Vertex v1;
@@ -363,19 +363,19 @@ struct GPU : Thread, Memory::Interface {
     auto power() -> void;
 
     bool blank;
-    uint depth;
-    uint width;
-    uint height;
-    sint sx;
-    sint sy;
-    sint tx;
-    sint ty;
-    sint tw;
-    sint th;
+    u32  depth;
+    u32  width;
+    u32  height;
+    s32  sx;
+    s32  sy;
+    s32  tx;
+    s32  ty;
+    s32  tw;
+    s32  th;
   } blitter{*this};
 
   u16* vram2D[512];
-   u8  ditherTable[4][4][256];
+  u8   ditherTable[4][4][256];
   bool refreshed;
 };
 

@@ -1,15 +1,15 @@
 auto DSP::brrDecode(Voice& v) -> void {
   //brr._byte = apuram[v.brrAddress + v.brrOffset] cached from previous clock cycle
-  int nybbles = brr._byte << 8 | apuram[uint16(v.brrAddress + v.brrOffset + 1)];
+  s32 nybbles = brr._byte << 8 | apuram[n16(v.brrAddress + v.brrOffset + 1)];
 
-  const int filter = brr._header.bit(2,3);
-  const int scale  = brr._header.bit(4,7);
+  const s32 filter = brr._header.bit(2,3);
+  const s32 scale  = brr._header.bit(4,7);
 
   //decode four samples
-  for(uint n : range(4)) {
+  for(u32 n : range(4)) {
     //bits 12-15 = current nybble; sign extend, then shift right to 4-bit precision
     //result: s = 4-bit sign-extended sample value
-    int s = (int16)nybbles >> 12;
+    s32 s = (i16)nybbles >> 12;
     nybbles <<= 4; //slide nybble so that on next loop iteration, bits 12-15 = current nybble
 
     if(scale <= 12) {
@@ -20,9 +20,9 @@ auto DSP::brrDecode(Voice& v) -> void {
     }
 
     //apply IIR filter (2 is the most commonly used)
-    int offset = v.bufferOffset;
-    if(--offset < 0) offset = 11; const int p1 = v.buffer[offset];
-    if(--offset < 0) offset = 11; const int p2 = v.buffer[offset] >> 1;
+    s32 offset = v.bufferOffset;
+    if(--offset < 0) offset = 11; const s32 p1 = v.buffer[offset];
+    if(--offset < 0) offset = 11; const s32 p2 = v.buffer[offset] >> 1;
 
     switch(filter) {
     case 0:
@@ -53,7 +53,7 @@ auto DSP::brrDecode(Voice& v) -> void {
 
     //adjust and write sample (mirror the written sample for wrapping)
     s = sclamp<16>(s);
-    s = (int16)(s << 1);
+    s = (i16)(s << 1);
     v.buffer[v.bufferOffset] = s;
     if(++v.bufferOffset >= 12) v.bufferOffset = 0;
   }

@@ -21,7 +21,7 @@ auto uPD96050::power() -> void {
     regs.dp.resize(11);
   }
 
-  for(uint n : range(16)) regs.stack[n] = 0x0000;
+  for(u32 n : range(16)) regs.stack[n] = 0x0000;
   regs.pc = 0x0000;
   regs.rp = 0x0000;
   regs.dp = 0x0000;

@@ -4,14 +4,14 @@
 
 //input manager
 
-auto SDD1::Decompressor::IM::init(uint offset_) -> void {
+auto SDD1::Decompressor::IM::init(n32 offset_) -> void {
   offset = offset_;
   bitCount = 4;
 }
 
-auto SDD1::Decompressor::IM::getCodeWord(uint8 codeLength) -> uint8 {
-  uint8 codeWord;
-  uint8 compCount;
+auto SDD1::Decompressor::IM::getCodeWord(n8 codeLength) -> n8 {
+  n8 codeWord;
+  n8 compCount;
 
   codeWord = sdd1.mmcRead(offset) << bitCount;
   bitCount++;
@@ -31,7 +31,7 @@ auto SDD1::Decompressor::IM::getCodeWord(uint8 codeLength) -> uint8 {
 
 //golomb-code decoder
 
-const uint8 SDD1::Decompressor::GCD::runCount[] = {
+const n8 SDD1::Decompressor::GCD::runCount[] = {
   0x00, 0x00, 0x01, 0x00, 0x03, 0x01, 0x02, 0x00,
   0x07, 0x03, 0x05, 0x01, 0x06, 0x02, 0x04, 0x00,
   0x0f, 0x07, 0x0b, 0x03, 0x0d, 0x05, 0x09, 0x01,
@@ -66,8 +66,8 @@ const uint8 SDD1::Decompressor::GCD::runCount[] = {
   0x70, 0x30, 0x50, 0x10, 0x60, 0x20, 0x40, 0x00,
 };
 
-auto SDD1::Decompressor::GCD::getRunCount(uint8 codeNumber, uint8& mpsCount, bool& lpsIndex) -> void {
-  uint8 codeWord = self.im.getCodeWord(codeNumber);
+auto SDD1::Decompressor::GCD::getRunCount(n8 codeNumber, n8& mpsCount, bool& lpsIndex) -> void {
+  n8 codeWord = self.im.getCodeWord(codeNumber);
 
   if(codeWord & 0x80) {
     lpsIndex = 1;
@@ -84,10 +84,10 @@ auto SDD1::Decompressor::BG::init() -> void {
   lpsIndex = 0;
 }
 
-auto SDD1::Decompressor::BG::getBit(bool& endOfRun) -> uint8 {
+auto SDD1::Decompressor::BG::getBit(bool& endOfRun) -> n8 {
   if(!(mpsCount || lpsIndex)) self.gcd.getRunCount(codeNumber, mpsCount, lpsIndex);
 
-  uint8 bit;
+  n8 bit;
   if(mpsCount) {
     bit = 0;
     mpsCount--;
@@ -145,13 +145,13 @@ auto SDD1::Decompressor::PEM::init() -> void {
   }
 }
 
-auto SDD1::Decompressor::PEM::getBit(uint8 context) -> uint8 {
+auto SDD1::Decompressor::PEM::getBit(n8 context) -> n8 {
   ContextInfo& info = contextInfo[context];
-  uint8 currentStatus = info.status;
-  uint8 currentMps = info.mps;
+  n8 currentStatus = info.status;
+  n8 currentMps = info.mps;
   const State& s = SDD1::Decompressor::PEM::evolutionTable[currentStatus];
 
-  uint8 bit;
+  n8 bit;
   bool endOfRun;
   switch(s.codeNumber) {
   case 0: bit = self.bg0.getBit(endOfRun); break;
@@ -178,7 +178,7 @@ auto SDD1::Decompressor::PEM::getBit(uint8 context) -> uint8 {
 
 //context model
 
-auto SDD1::Decompressor::CM::init(uint offset) -> void {
+auto SDD1::Decompressor::CM::init(n32 offset) -> void {
   bitplanesInfo = sdd1.mmcRead(offset) & 0xc0;
   contextBitsInfo = sdd1.mmcRead(offset) & 0x30;
   bitNumber = 0;
@@ -190,7 +190,7 @@ auto SDD1::Decompressor::CM::init(uint offset) -> void {
   }
 }
 
-auto SDD1::Decompressor::CM::getBit() -> uint8 {
+auto SDD1::Decompressor::CM::getBit() -> n8 {
   switch(bitplanesInfo) {
   case 0x00:
     currentBitplane ^= 0x01;
@@ -208,8 +208,8 @@ auto SDD1::Decompressor::CM::getBit() -> uint8 {
     break;
   }
 
-  uint16& contextBits = previousBitplaneBits[currentBitplane];
-  uint8 currentContext = (currentBitplane & 0x01) << 4;
+  n16& contextBits = previousBitplaneBits[currentBitplane];
+  n8 currentContext = (currentBitplane & 0x01) << 4;
   switch(contextBitsInfo) {
   case 0x00: currentContext |= ((contextBits & 0x01c0) >> 5) | (contextBits & 0x0001); break;
   case 0x10: currentContext |= ((contextBits & 0x0180) >> 5) | (contextBits & 0x0001); break;
@@ -217,7 +217,7 @@ auto SDD1::Decompressor::CM::getBit() -> uint8 {
   case 0x30: currentContext |= ((contextBits & 0x0180) >> 5) | (contextBits & 0x0003); break;
   }
 
-  uint8 bit = self.pem.getBit(currentContext);
+  n8 bit = self.pem.getBit(currentContext);
   contextBits <<= 1;
   contextBits |= bit;
   bitNumber++;
@@ -226,12 +226,12 @@ auto SDD1::Decompressor::CM::getBit() -> uint8 {
 
 //output logic
 
-auto SDD1::Decompressor::OL::init(uint offset) -> void {
+auto SDD1::Decompressor::OL::init(n32 offset) -> void {
   bitplanesInfo = sdd1.mmcRead(offset) & 0xc0;
   r0 = 0x01;
 }
 
-auto SDD1::Decompressor::OL::decompress() -> uint8 {
+auto SDD1::Decompressor::OL::decompress() -> n8 {
   switch(bitplanesInfo) {
   case 0x00: case 0x40: case 0x80:
     if(r0 == 0) {
@@ -262,7 +262,7 @@ bg4(*this, 4), bg5(*this, 5), bg6(*this, 6), bg7(*this, 7),
 pem(*this), cm(*this), ol(*this) {
 }
 
-auto SDD1::Decompressor::init(uint offset) -> void {
+auto SDD1::Decompressor::init(n32 offset) -> void {
   im.init(offset);
   bg0.init();
   bg1.init();
@@ -277,6 +277,6 @@ auto SDD1::Decompressor::init(uint offset) -> void {
   ol.init(offset);
 }
 
-auto SDD1::Decompressor::read() -> uint8 {
+auto SDD1::Decompressor::read() -> n8 {
   return ol.decompress();
 }

@@ -51,7 +51,7 @@ auto WonderSwan::load(Menu menu) -> void {
 }
 
 auto WonderSwan::load() -> bool {
-  if(!ares::WonderSwan::load(root, "WonderSwan")) return false;
+  if(!ares::WonderSwan::load(root, "[Bandai] WonderSwan")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -142,7 +142,7 @@ auto WonderSwanColor::load(Menu menu) -> void {
 }
 
 auto WonderSwanColor::load() -> bool {
-  if(!ares::WonderSwan::load(root, "WonderSwan Color")) return false;
+  if(!ares::WonderSwan::load(root, "[Bandai] WonderSwan Color")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -221,7 +221,7 @@ auto PocketChallengeV2::load(Menu menu) -> void {
 }
 
 auto PocketChallengeV2::load() -> bool {
-  if(!ares::WonderSwan::load(root, "Pocket Challenge V2")) return false;
+  if(!ares::WonderSwan::load(root, "[Benesse] Pocket Challenge V2")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

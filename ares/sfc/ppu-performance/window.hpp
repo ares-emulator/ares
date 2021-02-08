@@ -4,33 +4,33 @@ struct Window {
 
   //window.cpp
   auto render(Layer&, bool enable, bool output[256]) -> void;
-  auto render(Color&, uint mask, bool output[256]) -> void;
+  auto render(Color&, u32 mask, bool output[256]) -> void;
   auto power() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
   struct Layer {
-    uint1 oneInvert;
-    uint1 oneEnable;
-    uint1 twoInvert;
-    uint1 twoEnable;
-    uint2 mask;
-    uint1 aboveEnable;
-    uint1 belowEnable;
+    n1 oneInvert;
+    n1 oneEnable;
+    n1 twoInvert;
+    n1 twoEnable;
+    n2 mask;
+    n1 aboveEnable;
+    n1 belowEnable;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
   };
 
   struct Color {
-    uint1 oneInvert;
-    uint1 oneEnable;
-    uint1 twoInvert;
-    uint1 twoEnable;
-    uint2 mask;
-    uint2 aboveMask;
-    uint2 belowMask;
+    n1 oneInvert;
+    n1 oneEnable;
+    n1 twoInvert;
+    n1 twoEnable;
+    n2 mask;
+    n2 aboveMask;
+    n2 belowMask;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -38,16 +38,16 @@ struct Window {
 
   struct IO {
     //$2126  WH0
-    uint8 oneLeft;
+    n8 oneLeft;
 
     //$2127  WH1
-    uint8 oneRight;
+    n8 oneRight;
 
     //$2128  WH2
-    uint8 twoLeft;
+    n8 twoLeft;
 
     //$2129  WH3
-    uint8 twoRight;
+    n8 twoRight;
   } io;
 
   friend class PPU;

@@ -136,7 +136,7 @@ auto SA1::power() -> void {
   cpu.coprocessors.append(this);
 
   bwram.dma = false;
-  for(uint address : range(iram.size())) {
+  for(u32 address : range(iram.size())) {
     iram.write(address, 0x00);
   }
 

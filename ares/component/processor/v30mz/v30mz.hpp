@@ -45,9 +45,9 @@
 namespace ares {
 
 struct V30MZ {
-  using Size = uint;
-  enum : uint { Byte = 1, Word = 2, Long = 4 };
-  enum : uint {
+  using Size = u32;
+  enum : u32 { Byte = 1, Word = 2, Long = 4 };
+  enum : u32 {
     SegmentOverrideES  = 0x26,
     SegmentOverrideCS  = 0x2e,
     SegmentOverrideSS  = 0x36,
@@ -57,75 +57,75 @@ struct V30MZ {
     RepeatWhileZeroHi  = 0xf3,
   };
 
-  virtual auto wait(uint clocks = 1) -> void = 0;
-  virtual auto read(uint20 addr) -> uint8 = 0;
-  virtual auto write(uint20 addr, uint8 data) -> void = 0;
-  virtual auto in(uint16 port) -> uint8 = 0;
-  virtual auto out(uint16 port, uint8 data) -> void = 0;
+  virtual auto wait(u32 clocks = 1) -> void = 0;
+  virtual auto read(n20 address) -> n8 = 0;
+  virtual auto write(n20 address, n8 data) -> void = 0;
+  virtual auto in(n16 port) -> n8 = 0;
+  virtual auto out(n16 port, n8 data) -> void = 0;
 
   auto warning(string text) -> void;
   auto power() -> void;
   auto exec() -> void;
 
   //instruction.cpp
-  auto interrupt(uint8 vector) -> void;
+  auto interrupt(n8 vector) -> void;
   auto instruction() -> void;
 
   //registers.cpp
-  auto repeat() -> uint8;
-  auto segment(uint16) -> uint16;
+  auto repeat() -> n8;
+  auto segment(n16) -> n16;
 
-  auto getAcc(Size) -> uint32;
-  auto setAcc(Size, uint32) -> void;
+  auto getAcc(Size) -> n32;
+  auto setAcc(Size, n32) -> void;
 
   //modrm.cpp
   auto modRM() -> void;
 
-  auto getMem(Size, uint offset = 0) -> uint16;
-  auto setMem(Size, uint16) -> void;
+  auto getMem(Size, u32 offset = 0) -> n16;
+  auto setMem(Size, n16) -> void;
 
-  auto getReg(Size) -> uint16;
-  auto setReg(Size, uint16) -> void;
+  auto getReg(Size) -> n16;
+  auto setReg(Size, n16) -> void;
 
-  auto getSeg() -> uint16;
-  auto setSeg(uint16) -> void;
+  auto getSeg() -> n16;
+  auto setSeg(n16) -> void;
 
   //memory.cpp
-  auto read(Size, uint16, uint16) -> uint32;
-  auto write(Size, uint16, uint16, uint16) -> void;
+  auto read(Size, n16, n16) -> n32;
+  auto write(Size, n16, n16, n16) -> void;
 
-  auto in(Size, uint16) -> uint16;
-  auto out(Size, uint16, uint16) -> void;
+  auto in(Size, n16) -> n16;
+  auto out(Size, n16, n16) -> void;
 
-  auto fetch(Size = Byte) -> uint16;
-  auto pop() -> uint16;
-  auto push(uint16) -> void;
+  auto fetch(Size = Byte) -> n16;
+  auto pop() -> n16;
+  auto push(n16) -> void;
 
   //algorithms.cpp
-  auto parity(uint8) const -> bool;
-  auto ADC (Size, uint16, uint16) -> uint16;
-  auto ADD (Size, uint16, uint16) -> uint16;
-  auto AND (Size, uint16, uint16) -> uint16;
-  auto DEC (Size, uint16        ) -> uint16;
-  auto DIV (Size, uint32, uint32) -> uint32;
-  auto DIVI(Size,  int32,  int32) -> uint32;
-  auto INC (Size, uint16        ) -> uint16;
-  auto MUL (Size, uint16, uint16) -> uint32;
-  auto MULI(Size,  int16,  int16) -> uint32;
-  auto NEG (Size, uint16        ) -> uint16;
-  auto NOT (Size, uint16        ) -> uint16;
-  auto OR  (Size, uint16, uint16) -> uint16;
-  auto RCL (Size, uint16,  uint5) -> uint16;
-  auto RCR (Size, uint16,  uint5) -> uint16;
-  auto ROL (Size, uint16,  uint4) -> uint16;
-  auto ROR (Size, uint16,  uint4) -> uint16;
-  auto SAL (Size, uint16,  uint5) -> uint16;
-  auto SAR (Size, uint16,  uint5) -> uint16;
-  auto SBB (Size, uint16, uint16) -> uint16;
-  auto SUB (Size, uint16, uint16) -> uint16;
-  auto SHL (Size, uint16,  uint5) -> uint16;
-  auto SHR (Size, uint16,  uint5) -> uint16;
-  auto XOR (Size, uint16, uint16) -> uint16;
+  auto parity(n8) const -> bool;
+  auto ADC (Size, n16, n16) -> n16;
+  auto ADD (Size, n16, n16) -> n16;
+  auto AND (Size, n16, n16) -> n16;
+  auto DEC (Size, n16     ) -> n16;
+  auto DIV (Size, n32, n32) -> n32;
+  auto DIVI(Size, i32, i32) -> n32;
+  auto INC (Size, n16     ) -> n16;
+  auto MUL (Size, n16, n16) -> n32;
+  auto MULI(Size, i16, i16) -> n32;
+  auto NEG (Size, n16     ) -> n16;
+  auto NOT (Size, n16     ) -> n16;
+  auto OR  (Size, n16, n16) -> n16;
+  auto RCL (Size, n16, n5 ) -> n16;
+  auto RCR (Size, n16, n5 ) -> n16;
+  auto ROL (Size, n16, n4 ) -> n16;
+  auto ROR (Size, n16, n4 ) -> n16;
+  auto SAL (Size, n16, n5 ) -> n16;
+  auto SAR (Size, n16, n5 ) -> n16;
+  auto SBB (Size, n16, n16) -> n16;
+  auto SUB (Size, n16, n16) -> n16;
+  auto SHL (Size, n16, n5 ) -> n16;
+  auto SHR (Size, n16, n5 ) -> n16;
+  auto XOR (Size, n16, n16) -> n16;
 
   //instructions-adjust.cpp
   auto instructionDecimalAdjust(bool) -> void;
@@ -161,8 +161,8 @@ struct V30MZ {
   auto instructionTestMemReg(Size) -> void;
   auto instructionTestAcc(Size) -> void;
   auto instructionMultiplySignedRegMemImm(Size) -> void;
-  auto instructionIncReg(uint16_t&) -> void;
-  auto instructionDecReg(uint16_t&) -> void;
+  auto instructionIncReg(u16&) -> void;
+  auto instructionDecReg(u16&) -> void;
   auto instructionSignExtendByte() -> void;
   auto instructionSignExtendWord() -> void;
 
@@ -185,8 +185,8 @@ struct V30MZ {
   auto instructionInto() -> void;
   auto instructionEnter() -> void;
   auto instructionLeave() -> void;
-  auto instructionPushReg(uint16_t&) -> void;
-  auto instructionPopReg(uint16_t&) -> void;
+  auto instructionPushReg(u16&) -> void;
+  auto instructionPopReg(u16&) -> void;
   auto instructionPushFlags() -> void;
   auto instructionPopFlags() -> void;
   auto instructionPushAll() -> void;
@@ -198,17 +198,17 @@ struct V30MZ {
   auto instructionStoreFlagsAcc() -> void;
   auto instructionLoadAccFlags() -> void;
   auto instructionComplementCarry() -> void;
-  auto instructionClearFlag(uint) -> void;
-  auto instructionSetFlag(uint) -> void;
+  auto instructionClearFlag(u32) -> void;
+  auto instructionSetFlag(u32) -> void;
 
   //instructions-group.cpp
   auto instructionGroup1MemImm(Size, bool) -> void;
-  auto instructionGroup2MemImm(Size, maybe<uint8> = {}) -> void;
+  auto instructionGroup2MemImm(Size, maybe<n8> = {}) -> void;
   auto instructionGroup3MemImm(Size) -> void;
   auto instructionGroup4MemImm(Size) -> void;
 
   //instructions-misc.cpp
-  auto instructionSegment(uint16) -> void;
+  auto instructionSegment(n16) -> void;
   auto instructionRepeat() -> void;
   auto instructionLock() -> void;
   auto instructionWait() -> void;
@@ -228,13 +228,13 @@ struct V30MZ {
   auto instructionMoveSegMem() -> void;
   auto instructionMoveAccMem(Size) -> void;
   auto instructionMoveMemAcc(Size) -> void;
-  auto instructionMoveRegImm(uint8_t&) -> void;
-  auto instructionMoveRegImm(uint16_t&) -> void;
+  auto instructionMoveRegImm(u8&) -> void;
+  auto instructionMoveRegImm(u16&) -> void;
   auto instructionMoveMemImm(Size) -> void;
-  auto instructionExchange(uint16_t&, uint16_t&) -> void;
+  auto instructionExchange(u16&, u16&) -> void;
   auto instructionExchangeMemReg(Size) -> void;
   auto instructionLoadEffectiveAddressRegMem() -> void;
-  auto instructionLoadSegmentMem(uint16_t&) -> void;
+  auto instructionLoadSegmentMem(u16&) -> void;
 
   //instructions-string.cpp
   auto instructionInString(Size) -> void;
@@ -249,7 +249,7 @@ struct V30MZ {
   auto serialize(serializer&) -> void;
 
   //disassembler.cpp
-  auto disassembleInstruction(uint16 cs, uint16 ip) -> string;
+  auto disassembleInstruction(n16 cs, n16 ip) -> string;
   auto disassembleInstruction() -> string;
   auto disassembleContext() -> string;
 
@@ -259,39 +259,39 @@ struct V30MZ {
     bool prefix;  //set to true for prefix instructions; prevents flushing of Prefix struct
   } state;
 
-  uint8 opcode;
-  vector<uint8> prefixes;
+  n8 opcode;
+  vector<n8> prefixes;
 
   struct ModRM {
-    uint2 mod;
-    uint3 reg;
-    uint3 mem;
+    n2 mod;
+    n3 reg;
+    n3 mem;
 
-    uint16 segment;
-    uint16 address;
+    n16 segment;
+    n16 address;
   } modrm;
 
   struct Registers {
-    union { uint16_t ax; struct { uint8_t order_lsb2(al, ah); }; };
-    union { uint16_t cx; struct { uint8_t order_lsb2(cl, ch); }; };
-    union { uint16_t dx; struct { uint8_t order_lsb2(dl, dh); }; };
-    union { uint16_t bx; struct { uint8_t order_lsb2(bl, bh); }; };
-    uint16_t sp;
-    uint16_t bp;
-    uint16_t si;
-    uint16_t di;
-    uint16_t es;
-    uint16_t cs;
-    uint16_t ss;
-    uint16_t ds;
-    uint16_t ip;
+    union { u16 ax; struct { u8 order_lsb2(al, ah); }; };
+    union { u16 cx; struct { u8 order_lsb2(cl, ch); }; };
+    union { u16 dx; struct { u8 order_lsb2(dl, dh); }; };
+    union { u16 bx; struct { u8 order_lsb2(bl, bh); }; };
+    u16 sp;
+    u16 bp;
+    u16 si;
+    u16 di;
+    u16 es;
+    u16 cs;
+    u16 ss;
+    u16 ds;
+    u16 ip;
 
-    uint8_t*  b[8]{&al, &cl, &dl, &bl, &ah, &ch, &dh, &bh};
-    uint16_t* w[8]{&ax, &cx, &dx, &bx, &sp, &bp, &si, &di};
-    uint16_t* s[8]{&es, &cs, &ss, &ds, &es, &cs, &ss, &ds};
+    u8*  b[8]{&al, &cl, &dl, &bl, &ah, &ch, &dh, &bh};
+    u16* w[8]{&ax, &cx, &dx, &bx, &sp, &bp, &si, &di};
+    u16* s[8]{&es, &cs, &ss, &ds, &es, &cs, &ss, &ds};
 
     struct Flags {
-      uint16 data;
+      n16 data;
       BitField<16, 0> c{&data};  //carry
       BitField<16, 2> p{&data};  //parity
       BitField<16, 4> h{&data};  //half-carry
@@ -303,11 +303,11 @@ struct V30MZ {
       BitField<16,11> v{&data};  //overflow
       BitField<16,15> m{&data};  //mode
 
-      operator uint() const { return data & 0x8fd5 | 0x7002; }
-      auto& operator =(uint value) { return data  = value, *this; }
-      auto& operator&=(uint value) { return data &= value, *this; }
-      auto& operator^=(uint value) { return data ^= value, *this; }
-      auto& operator|=(uint value) { return data |= value, *this; }
+      operator u32() const { return data & 0x8fd5 | 0x7002; }
+      auto& operator =(u32 value) { return data  = value, *this; }
+      auto& operator&=(u32 value) { return data &= value, *this; }
+      auto& operator^=(u32 value) { return data ^= value, *this; }
+      auto& operator|=(u32 value) { return data |= value, *this; }
     } f;
   } r;
 };

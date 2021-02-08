@@ -11,7 +11,7 @@ static const vector<string> registerNamesSCC = {
 
 auto RDP::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
-  uint32 data;
+  n32 data;
 
   if(address == 0) {
     //DPC_START
@@ -71,7 +71,7 @@ auto RDP::readWord(u32 address) -> u32 {
 
 auto RDP::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0xfffff) >> 2;
-  uint32 data = data_;
+  n32 data = data_;
 
   if(address == 0) {
     //DPC_START
@@ -138,7 +138,7 @@ static const vector<string> registerNamesIO = {
 
 auto RDP::IO::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
-  uint32 data;
+  n32 data;
 
   if(address == 0) {
     //DPS_TBIST
@@ -171,7 +171,7 @@ auto RDP::IO::readWord(u32 address) -> u32 {
 
 auto RDP::IO::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0xfffff) >> 2;
-  uint32 data = data_;
+  n32 data = data_;
 
   if(address == 0) {
     //DPS_TBIST

@@ -7,7 +7,7 @@ struct pWindow : pObject {
 
   static auto initialize() -> void;
 
-  static uint minimumStatusHeight;
+  static u32 minimumStatusHeight;
 
   auto append(sMenuBar menuBar) -> void;
   auto append(sSizable sizable) -> void;
@@ -15,7 +15,7 @@ struct pWindow : pObject {
   auto focused() const -> bool override;
   auto frameMargin() const -> Geometry;
   auto handle() const -> uintptr_t;
-  auto monitor() const -> uint;
+  auto monitor() const -> u32;
   auto remove(sMenuBar menuBar) -> void;
   auto remove(sSizable sizable) -> void;
   auto remove(sStatusBar statusBar) -> void;
@@ -41,10 +41,10 @@ struct pWindow : pObject {
   auto windowProc(HWND, UINT, WPARAM, LPARAM) -> maybe<LRESULT>;
 
   auto _geometry() -> Geometry;
-  auto _modalityCount() -> unsigned;
+  auto _modalityCount() -> u32;
   auto _modalityDisabled() -> bool;
   auto _modalityUpdate() -> void;
-  auto _statusHeight() const -> int;
+  auto _statusHeight() const -> s32;
 
   HWND hwnd = nullptr;
   HFONT hstatusfont = nullptr;

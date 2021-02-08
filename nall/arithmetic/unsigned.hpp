@@ -34,8 +34,8 @@ inline auto ror(T lhs, U rhs, enable_if_t<is_unsigned<T>::value>* = 0) -> T {
 }
 
 #if INTMAX_BITS >= 128
-inline auto operator"" _u128(const char* s) -> uint128_t {
-  uint128_t p = 0;
+inline auto operator"" _u128(const char* s) -> u128 {
+  u128 p = 0;
   if(s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
     s += 2;
     while(*s) {

@@ -1,8 +1,8 @@
 auto V30MZ::instructionGroup1MemImm(Size size, bool sign) -> void {
   modRM();
   auto mem = getMem(size);
-  uint16 imm = 0;
-  if(sign) imm = (int8)fetch();
+  n16 imm = 0;
+  if(sign) imm = (i8)fetch();
   else if(size == Byte) imm = fetch();
   else imm = fetch(Word);
   switch(modrm.reg) {
@@ -17,7 +17,7 @@ auto V30MZ::instructionGroup1MemImm(Size size, bool sign) -> void {
   }
 }
 
-auto V30MZ::instructionGroup2MemImm(Size size, maybe<uint8> imm) -> void {
+auto V30MZ::instructionGroup2MemImm(Size size, maybe<n8> imm) -> void {
   modRM();
   auto mem = getMem(size);
   if(!imm) {

@@ -1,5 +1,5 @@
-auto CPU::read(uint16 address) -> uint8 {
-  uint8 data = 0xff;
+auto CPU::read(n16 address) -> n8 {
+  n8 data = 0xff;
   if(address >= 0x0000 && address <= 0x1fff && io.replaceBIOS) return expansion.read(address);
   if(address >= 0x2000 && address <= 0x7fff && io.replaceRAM ) return expansion.read(address);
   if(address >= 0x0000 && address <= 0x1fff) return system.bios[address & 0x1fff];
@@ -8,23 +8,23 @@ auto CPU::read(uint16 address) -> uint8 {
   return data;
 }
 
-auto CPU::write(uint16 address, uint8 data) -> void {
+auto CPU::write(n16 address, n8 data) -> void {
   if(address >= 0x0000 && address <= 0x1fff && io.replaceBIOS) return expansion.write(address, data);
   if(address >= 0x2000 && address <= 0x7fff && io.replaceRAM)  return expansion.write(address, data);
   if(address >= 0x6000 && address <= 0x7fff) return ram.write(address - 0x6000, data);
   if(address >= 0x8000 && address <= 0xffff) return;
 }
 
-auto CPU::in(uint16 address) -> uint8 {
+auto CPU::in(n16 address) -> n8 {
   address &= 0xff;
-  uint8 data = 0xff;
+  n8 data = 0xff;
   if(address >= 0xa0 && address <= 0xbf) return !address.bit(0) ? vdp.data() : vdp.status();
   if(address >= 0xe0 && address <= 0xff && address.bit(1) == 0) return controllerPort1.read();
   if(address >= 0xe0 && address <= 0xff && address.bit(1) == 1) return controllerPort2.read();
   return data;
 }
 
-auto CPU::out(uint16 address, uint8 data) -> void {
+auto CPU::out(n16 address, n8 data) -> void {
   address &= 0xff;
   if(address == 0x53) io.replaceRAM  = data.bit(0);
   if(address == 0x7f) io.replaceBIOS = data.bit(1);

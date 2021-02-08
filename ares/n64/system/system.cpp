@@ -2,7 +2,15 @@
 
 namespace ares::Nintendo64 {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[Nintendo] Nintendo 64 (NTSC)",
+    "[Nintendo] Nintendo 64 (PAL)",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -27,8 +35,17 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
+  if(name.find("Nintendo 64")) {
+    information.name = "Nintendo 64";
+  }
+  if(name.find("NTSC")) {
+    information.region = Region::NTSC;
+  }
+  if(name.find("PAL")) {
+    information.region = Region::PAL;
+  }
 
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});
@@ -37,14 +54,6 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
-
-  regionNode = node->append<Node::Setting::String>("Region", "NTSC → PAL");
-  regionNode->setAllowedValues({
-    "NTSC → PAL",
-    "PAL → NTSC",
-    "NTSC",
-    "PAL"
-  });
 
   mi.load(node);
   vi.load(node);
@@ -94,20 +103,6 @@ auto System::save() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
-  auto setRegion = [&](string region) {
-    if(region == "NTSC") {
-      information.region = Region::NTSC;
-    }
-    if(region == "PAL") {
-      information.region = Region::PAL;
-    }
-  };
-  auto regionsHave = regionNode->latch().split("→").strip();
-  setRegion(regionsHave.first());
-  for(auto& have : reverse(regionsHave)) {
-    if(have == cartridge.region()) setRegion(have);
-  }
 
   //zero-initialization
   if(!reset) {

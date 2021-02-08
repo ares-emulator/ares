@@ -323,7 +323,7 @@ auto SM83::instructionCB() -> void {
   }
 
   //opcodes 0x40-0xff [op(0x00 - 0x07) declared above]
-  uint3 bit = opcode.bit(3,5);
+  n3 bit = opcode.bit(3,5);
   switch(opcode.bit(6,7) << 3 | opcode.bit(0,2)) {
   op(0x08, BIT_Index_Direct, bit, B)
   op(0x09, BIT_Index_Direct, bit, C)

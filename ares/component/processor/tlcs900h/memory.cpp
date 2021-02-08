@@ -1,40 +1,40 @@
 #define PC r.pc.l.l0
 
-template<> auto TLCS900H::fetch< uint8>() ->  uint8 {
+template<> auto TLCS900H::fetch<n8 >() -> n8  {
 //while(p.valid < 3) prefetch();
   if(p.valid == 0) prefetch();
-  uint8 data = p.data;
+  n8 data = p.data;
   p.data >>= 8;
   p.valid--;
   return PC++, data;
 }
 
-template<> auto TLCS900H::fetch<uint16>() -> uint16 {
-  uint16 data = fetch<uint8>() << 0;
-  return data | fetch<uint8>() << 8;
+template<> auto TLCS900H::fetch<n16>() -> n16 {
+  n16    data = fetch<n8>() << 0;
+  return data | fetch<n8>() << 8;
 }
 
-template<> auto TLCS900H::fetch<uint24>() -> uint24 {
-  uint24 data  = fetch<uint8>() <<  0;
-         data |= fetch<uint8>() <<  8;
-  return data |= fetch<uint8>() << 16;
+template<> auto TLCS900H::fetch<n24>() -> n24 {
+  n24    data  = fetch<n8>() <<  0;
+         data |= fetch<n8>() <<  8;
+  return data |= fetch<n8>() << 16;
 }
 
-template<> auto TLCS900H::fetch<uint32>() -> uint32 {
-  uint32 data  = fetch<uint8>() <<  0;
-         data |= fetch<uint8>() <<  8;
-         data |= fetch<uint8>() << 16;
-  return data |= fetch<uint8>() << 24;
+template<> auto TLCS900H::fetch<n32>() -> n32 {
+  n32    data  = fetch<n8>() <<  0;
+         data |= fetch<n8>() <<  8;
+         data |= fetch<n8>() << 16;
+  return data |= fetch<n8>() << 24;
 }
 
 #undef PC
 
-template<> auto TLCS900H::fetch< int8>() ->  int8 { return ( int8)fetch< uint8>(); }
-template<> auto TLCS900H::fetch<int16>() -> int16 { return (int16)fetch<uint16>(); }
-template<> auto TLCS900H::fetch<int24>() -> int24 { return (int24)fetch<uint24>(); }
-template<> auto TLCS900H::fetch<int32>() -> int32 { return (int32)fetch<uint32>(); }
+template<> auto TLCS900H::fetch<i8 >() -> i8  { return (i8 )fetch<n8 >(); }
+template<> auto TLCS900H::fetch<i16>() -> i16 { return (i16)fetch<n16>(); }
+template<> auto TLCS900H::fetch<i24>() -> i24 { return (i24)fetch<n24>(); }
+template<> auto TLCS900H::fetch<i32>() -> i32 { return (i32)fetch<n32>(); }
 
-template<typename T> auto TLCS900H::fetchRegister() -> Register<T> { return Register<T>{fetch<uint8>()}; }
+template<typename T> auto TLCS900H::fetchRegister() -> Register<T> { return Register<T>{fetch<n8>()}; }
 template<typename T, typename U> auto TLCS900H::fetchMemory() -> Memory<T> { return Memory<T>{fetch<U>()}; }
 template<typename T> auto TLCS900H::fetchImmediate() -> Immediate<T> { return Immediate<T>{fetch<T>()}; }
 
@@ -63,14 +63,14 @@ template<typename T> auto TLCS900H::push(T data) -> void {
 
 //
 
-template<> auto TLCS900H::load(Memory< uint8> memory) ->  uint8 { return read(Byte, memory.address); }
-template<> auto TLCS900H::load(Memory<uint16> memory) -> uint16 { return read(Word, memory.address); }
-template<> auto TLCS900H::load(Memory<uint32> memory) -> uint32 { return read(Long, memory.address); }
+template<> auto TLCS900H::load(Memory<n8 > memory) -> n8  { return read(Byte, memory.address); }
+template<> auto TLCS900H::load(Memory<n16> memory) -> n16 { return read(Word, memory.address); }
+template<> auto TLCS900H::load(Memory<n32> memory) -> n32 { return read(Long, memory.address); }
 
-template<> auto TLCS900H::load(Memory< int8> memory) ->  int8 { return  (int8)read(Byte, memory.address); }
-template<> auto TLCS900H::load(Memory<int16> memory) -> int16 { return (int16)read(Word, memory.address); }
-template<> auto TLCS900H::load(Memory<int32> memory) -> int32 { return (int32)read(Long, memory.address); }
+template<> auto TLCS900H::load(Memory<i8 > memory) -> i8  { return (i8 )read(Byte, memory.address); }
+template<> auto TLCS900H::load(Memory<i16> memory) -> i16 { return (i16)read(Word, memory.address); }
+template<> auto TLCS900H::load(Memory<i32> memory) -> i32 { return (i32)read(Long, memory.address); }
 
-template<> auto TLCS900H::store(Memory< uint8> memory, uint32 data) -> void { write(Byte, memory.address, data); }
-template<> auto TLCS900H::store(Memory<uint16> memory, uint32 data) -> void { write(Word, memory.address, data); }
-template<> auto TLCS900H::store(Memory<uint32> memory, uint32 data) -> void { write(Long, memory.address, data); }
+template<> auto TLCS900H::store(Memory<n8 > memory, n32 data) -> void { write(Byte, memory.address, data); }
+template<> auto TLCS900H::store(Memory<n16> memory, n32 data) -> void { write(Word, memory.address, data); }
+template<> auto TLCS900H::store(Memory<n32> memory, n32 data) -> void { write(Long, memory.address, data); }

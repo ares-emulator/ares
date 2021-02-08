@@ -4,7 +4,7 @@
 
 namespace nall::Decode {
 
-template<uint Bits, typename T> inline auto Base(const string& value) -> T {
+template<u32 Bits, typename T> inline auto Base(const string& value) -> T {
   static const string format =
     Bits ==  2 ? "01"
   : Bits ==  8 ? "01234567"
@@ -19,10 +19,10 @@ template<uint Bits, typename T> inline auto Base(const string& value) -> T {
   : Bits == 85 ? "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%()+,-.:;=@[]^_`{|}~"  //\ "&'*/<>?
   : "";
   static bool initialized = false;
-  static uint8_t lookup[256] = {0};
+  static u8 lookup[256] = {};
   if(!initialized) {
     initialized = true;
-    for(uint n : range(format.size())) {
+    for(u32 n : range(format.size())) {
       lookup[format[n]] = n;
     }
   }

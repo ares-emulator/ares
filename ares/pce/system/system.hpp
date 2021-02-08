@@ -1,14 +1,13 @@
 struct System {
   Node::System node;
-  Node::Setting::String regionNode;
 
-  enum class Model : uint { PCEngine, PCEngineDuo, SuperGrafx };
-  enum class Region : uint { NTSCJ, NTSCU };
+  enum class Model : u32 { PCEngine, PCEngineDuo, SuperGrafx };
+  enum class Region : u32 { NTSCJ, NTSCU };
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto model() const -> Model { return information.model; }
   auto region() const -> Region { return information.region; }
-  auto colorburst() const -> double { return information.colorburst; }
+  auto colorburst() const -> f64 { return information.colorburst; }
 
   //system.cpp
   auto game() -> string;
@@ -25,9 +24,10 @@ struct System {
 
 private:
   struct Information {
+    string name = "PC Engine";
     Model model = Model::PCEngine;
     Region region = Region::NTSCU;  //more compatible
-    double colorburst = Constants::Colorburst::NTSC;
+    f64 colorburst = Constants::Colorburst::NTSC;
   } information;
 
   //serialization.cpp

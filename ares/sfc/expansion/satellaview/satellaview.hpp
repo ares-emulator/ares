@@ -2,21 +2,21 @@ struct Satellaview : Expansion {
   Satellaview(Node::Port);
   ~Satellaview();
 
-  auto read(uint24 addr, uint8 data) -> uint8;
-  auto write(uint24 addr, uint8 data) -> void;
+  auto read(n24 address, n8 data) -> n8;
+  auto write(n24 address, n8 data) -> void;
 
 private:
   struct {
-    uint8 r2188, r2189, r218a, r218b;
-    uint8 r218c, r218d, r218e, r218f;
-    uint8 r2190, r2191, r2192, r2193;
-    uint8 r2194, r2195, r2196, r2197;
-    uint8 r2198, r2199, r219a, r219b;
-    uint8 r219c, r219d, r219e, r219f;
+    n8 r2188, r2189, r218a, r218b;
+    n8 r218c, r218d, r218e, r218f;
+    n8 r2190, r2191, r2192, r2193;
+    n8 r2194, r2195, r2196, r2197;
+    n8 r2198, r2199, r219a, r219b;
+    n8 r219c, r219d, r219e, r219f;
 
-    uint8 rtcCounter;
-    uint8 rtcHour;
-    uint8 rtcMinute;
-    uint8 rtcSecond;
+    n8 rtcCounter;
+    n8 rtcHour;
+    n8 rtcMinute;
+    n8 rtcSecond;
   } regs;
 };

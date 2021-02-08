@@ -1,12 +1,12 @@
-auto HitachiDSP::isROM(uint24 address) -> bool {
+auto HitachiDSP::isROM(n24 address) -> bool {
   return (bool)addressROM(address);
 }
 
-auto HitachiDSP::isRAM(uint24 address) -> bool {
+auto HitachiDSP::isRAM(n24 address) -> bool {
   return (bool)addressRAM(address);
 }
 
-auto HitachiDSP::read(uint24 address) -> uint8 {
+auto HitachiDSP::read(n24 address) -> n8 {
   if(auto linear = addressROM (address)) return readROM (*linear);
   if(auto linear = addressRAM (address)) return readRAM (*linear);
   if(auto linear = addressDRAM(address)) return readDRAM(*linear);
@@ -14,7 +14,7 @@ auto HitachiDSP::read(uint24 address) -> uint8 {
   return 0x00;
 }
 
-auto HitachiDSP::write(uint24 address, uint8 data) -> void {
+auto HitachiDSP::write(n24 address, n8 data) -> void {
   if(auto linear = addressROM (address)) return writeROM (*linear, data);
   if(auto linear = addressRAM (address)) return writeRAM (*linear, data);
   if(auto linear = addressDRAM(address)) return writeDRAM(*linear, data);
@@ -23,7 +23,7 @@ auto HitachiDSP::write(uint24 address, uint8 data) -> void {
 
 //
 
-auto HitachiDSP::addressROM(uint24 address) const -> maybe<uint24> {
+auto HitachiDSP::addressROM(n24 address) const -> maybe<n24> {
   if(Mapping == 0) {
     //00-3f,80-bf:8000-ffff; c0-ff:0000-ffff
     if((address & 0x408000) == 0x008000 || (address & 0xc00000) == 0xc00000) {
@@ -39,7 +39,7 @@ auto HitachiDSP::addressROM(uint24 address) const -> maybe<uint24> {
   return {};
 }
 
-auto HitachiDSP::readROM(uint24 address, uint8 data) -> uint8 {
+auto HitachiDSP::readROM(n24 address, n8 data) -> n8 {
   if(hitachidsp.active() || !busy()) {
     address = bus.mirror(address, rom.size());
   //if(Roms == 2 && mmio.r1f52 == 1 && address >= (bit::round(rom.size()) >> 1)) return 0x00;
@@ -51,12 +51,12 @@ auto HitachiDSP::readROM(uint24 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto HitachiDSP::writeROM(uint24 address, uint8 data) -> void {
+auto HitachiDSP::writeROM(n24 address, n8 data) -> void {
 }
 
 //
 
-auto HitachiDSP::addressRAM(uint24 address) const -> maybe<uint24> {
+auto HitachiDSP::addressRAM(n24 address) const -> maybe<n24> {
   if(Mapping == 0) {
     //70-77:0000-7fff
     if((address & 0xf88000) == 0x700000) {
@@ -73,19 +73,19 @@ auto HitachiDSP::addressRAM(uint24 address) const -> maybe<uint24> {
   return {};
 }
 
-auto HitachiDSP::readRAM(uint24 address, uint8 data) -> uint8 {
+auto HitachiDSP::readRAM(n24 address, n8 data) -> n8 {
   if(ram.size() == 0) return 0x00;  //not open bus
   return ram.read(bus.mirror(address, ram.size()), data);
 }
 
-auto HitachiDSP::writeRAM(uint24 address, uint8 data) -> void {
+auto HitachiDSP::writeRAM(n24 address, n8 data) -> void {
   if(ram.size() == 0) return;
   return ram.write(bus.mirror(address, ram.size()), data);
 }
 
 //
 
-auto HitachiDSP::addressDRAM(uint24 address) const -> maybe<uint24> {
+auto HitachiDSP::addressDRAM(n24 address) const -> maybe<n24> {
   if(Mapping == 0) {
     //00-3f,80-bf:6000-6bff,7000-7bff
     if((address & 0x40e000) == 0x006000 && (address & 0x0c00) != 0x0c00) {
@@ -100,13 +100,13 @@ auto HitachiDSP::addressDRAM(uint24 address) const -> maybe<uint24> {
   return {};
 }
 
-auto HitachiDSP::readDRAM(uint24 address, uint8 data) -> uint8 {
+auto HitachiDSP::readDRAM(n24 address, n8 data) -> n8 {
   address &= 0xfff;
   if(address >= 0xc00) return data;
   return dataRAM[address];
 }
 
-auto HitachiDSP::writeDRAM(uint24 address, uint8 data) -> void {
+auto HitachiDSP::writeDRAM(n24 address, n8 data) -> void {
   address &= 0xfff;
   if(address >= 0xc00) return;
   dataRAM[address] = data;
@@ -114,7 +114,7 @@ auto HitachiDSP::writeDRAM(uint24 address, uint8 data) -> void {
 
 //
 
-auto HitachiDSP::addressIO(uint24 address) const -> maybe<uint24> {
+auto HitachiDSP::addressIO(n24 address) const -> maybe<n24> {
   if(Mapping == 0) {
     //00-3f,80-bf:6c00-6fff,7c00-7fff
     if((address & 0x40ec00) == 0x006c00) {
@@ -129,7 +129,7 @@ auto HitachiDSP::addressIO(uint24 address) const -> maybe<uint24> {
   return {};
 }
 
-auto HitachiDSP::readIO(uint24 address, uint8 data) -> uint8 {
+auto HitachiDSP::readIO(n24 address, n8 data) -> n8 {
   address = 0x7c00 | (address & 0x03ff);
 
   //IO
@@ -180,7 +180,7 @@ auto HitachiDSP::readIO(uint24 address, uint8 data) -> uint8 {
   return 0x00;
 }
 
-auto HitachiDSP::writeIO(uint24 address, uint8 data) -> void {
+auto HitachiDSP::writeIO(n24 address, n8 data) -> void {
   address = 0x7c00 | (address & 0x03ff);
 
   //IO

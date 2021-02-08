@@ -13,8 +13,8 @@ struct M93LCx6 {
   //m93lcx6.cpp
   explicit operator bool() const;
   auto reset() -> void;
-  auto allocate(uint size, uint width, bool endian, uint8 fill) -> bool;
-  auto program(uint11 address, uint8 data) -> void;
+  auto allocate(u32 size, u32 width, bool endian, n8 fill) -> bool;
+  auto program(n11 address, n8 data) -> void;
   auto clock() -> void;
   auto power() -> void;
   auto edge() -> void;
@@ -32,37 +32,37 @@ struct M93LCx6 {
   auto serialize(serializer&) -> void;
 
   //it is awkward no matter if data is uint1[bits], uint8[bytes], or uint16[words]
-  uint8 data[2048];  //uint8 was chosen solely for easier serialization and saving
-  uint size;         //in bytes
-  uint width;        //8-bit (ORG=0) or 16-bit (ORG=1) configuration
-  bool endian;       //16-bit mode: 0 = little-endian; 1 = big-endian
+  n8   data[2048];  //uint8 was chosen solely for easier serialization and saving
+  u32  size;        //in bytes
+  u32  width;       //8-bit (ORG=0) or 16-bit (ORG=1) configuration
+  bool endian;      //16-bit mode: 0 = little-endian; 1 = big-endian
 
-  boolean writable;  //EWEN, EWDS
-  uint busy;         //busy cycles in milliseconds remaining for programming (write) operations to complete
+  b1   writable;    //EWEN, EWDS
+  u32  busy;        //busy cycles in milliseconds remaining for programming (write) operations to complete
 
   struct ShiftRegister {
     auto flush() -> void;
-    auto edge() -> uint1;
-    auto read() -> uint1;
-    auto write(uint1 data) -> void;
+    auto edge() -> n1;
+    auto read() -> n1;
+    auto write(n1 data) -> void;
 
-    uint32 value;
-    uint32 count;
+    n32 value;
+    n32 count;
   };
 
   struct InputShiftRegister : ShiftRegister {
-    auto start() -> maybe<uint1>;
-    auto opcode() -> maybe<uint2>;
-    auto mode() -> maybe<uint2>;
-    auto address() -> maybe<uint11>;
-    auto data() -> maybe<uint16>;
+    auto start() -> maybe<n1>;
+    auto opcode() -> maybe<n2>;
+    auto mode() -> maybe<n2>;
+    auto address() -> maybe<n11>;
+    auto data() -> maybe<n16>;
     auto increment() -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint32 addressLength;
-    uint32 dataLength;
+    n32 addressLength;
+    n32 dataLength;
   } input;
 
   struct OutputShiftRegister : ShiftRegister {

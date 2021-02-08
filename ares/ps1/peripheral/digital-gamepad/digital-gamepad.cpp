@@ -26,8 +26,8 @@ auto DigitalGamepad::acknowledge() -> bool {
 }
 
 auto DigitalGamepad::bus(u8 data) -> u8 {
-  uint8 input  = data;
-  uint8 output = 0xff;
+  n8 input  = data;
+  n8 output = 0xff;
 
   switch(state) {
 

@@ -1,5 +1,5 @@
 auto Disc::status() -> u8 {
-  uint8 data;
+  n8 data;
   data.bit(0) = ssr.error;
   data.bit(1) = ssr.motorOn;
   data.bit(2) = ssr.seekError;
@@ -275,7 +275,7 @@ auto Disc::commandSetFilter() -> void {
 
 //0x0e
 auto Disc::commandSetMode() -> void {
-  uint8 data = fifo.parameter.read(0);
+  n8 data = fifo.parameter.read(0);
   drive.mode.cdda       = data.bit(0);
   drive.mode.autoPause  = data.bit(1);
   drive.mode.report     = data.bit(2);
@@ -293,10 +293,10 @@ auto Disc::commandSetMode() -> void {
 
 //0x11
 auto Disc::commandGetLocationPlaying() -> void {
-  int lba = drive.lba.current;
-  int lbaTrack = 0;
-  int lbaTrackID = 0;
-  int lbaIndexID = 0;
+  s32 lba = drive.lba.current;
+  s32 lbaTrack = 0;
+  s32 lbaTrackID = 0;
+  s32 lbaIndexID = 0;
   if(auto trackID = session.inTrack(lba)) {
     lbaTrackID = *trackID;
     if(auto track = session.track(*trackID)) {
@@ -367,7 +367,7 @@ auto Disc::commandGetFirstAndLastTrackNumbers() -> void {
 auto Disc::commandGetTrackStart() -> void {
   u8 trackID = fifo.parameter.read(0);
 
-  int lba = 0;
+  s32 lba = 0;
   if(!trackID) {
     lba = session.leadOut.lba;
   } else if(auto track = session.track(trackID)) {

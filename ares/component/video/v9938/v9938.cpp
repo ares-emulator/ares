@@ -23,8 +23,8 @@ auto V9938::unload() -> void {
 
 auto V9938::main() -> void {
   if(io.vcounter < vlines()) {
-    uint9 y = io.vcounter;
-    uint9 ycenter = y + (!overscan() ? 10 : 0);  //centers output within buffer
+    n9 y = io.vcounter;
+    n9 ycenter = y + (!overscan() ? 10 : 0);  //centers output within buffer
     auto line = screen_->pixels().data() + ycenter * 1024;
     if(interlace() && field()) line += 512;
 
@@ -32,8 +32,8 @@ auto V9938::main() -> void {
     if(s2()) sprite2(y);
 
     while(io.hcounter < 256) {
-      uint9 x = io.hcounter;
-      uint4 color;
+      n9 x = io.hcounter;
+      n4 color;
       if(screen.enable) {
         color = io.colorBackground;
         if(g1()) graphic1(color, x, y);
@@ -71,7 +71,7 @@ auto V9938::poll() -> void {
   irq(virq.pending || hirq.pending || lirq.pending);
 }
 
-auto V9938::tick(uint clocks) -> void {
+auto V9938::tick(u32 clocks) -> void {
   io.hcounter += clocks;
   while(clocks--) {
     command();

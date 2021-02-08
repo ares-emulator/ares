@@ -188,7 +188,7 @@ auto DSP::tick() -> void {
   Thread::synchronize(smp);
 }
 
-auto DSP::sample(int16 left, int16 right) -> void {
+auto DSP::sample(i16 left, i16 right) -> void {
   stream->frame(left / 32768.0, right / 32768.0);
 }
 
@@ -205,7 +205,7 @@ auto DSP::power(bool reset) -> void {
   noise = {};
   brr = {};
   latch = {};
-  for(uint n : range(8)) {
+  for(u32 n : range(8)) {
     voice[n] = {};
     voice[n].index = n << 4;
   }

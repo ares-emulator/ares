@@ -38,7 +38,7 @@ auto PPU::Window::run() -> void {
   output.below.colorEnable = array[io.col.belowMask];
 }
 
-auto PPU::Window::test(bool oneEnable, bool one, bool twoEnable, bool two, uint mask) -> bool {
+auto PPU::Window::test(bool oneEnable, bool one, bool twoEnable, bool two, u32 mask) -> bool {
   if(!oneEnable) return two && twoEnable;
   if(!twoEnable) return one;
   if(mask == 0) return (one | two);

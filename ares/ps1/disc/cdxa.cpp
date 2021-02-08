@@ -10,21 +10,21 @@ auto Disc::CDXA::unload() -> void {
 }
 
 auto Disc::CDXA::clockSector() -> void {
-  uint8 subMode     = drive->sector.data[18];
-  uint1 endOfRecord = subMode.bit(0);
-  uint1 video       = subMode.bit(1);
-  uint1 audio       = subMode.bit(2);
-  uint1 data        = subMode.bit(3);
-  uint1 trigger     = subMode.bit(4);
-  uint1 form2       = subMode.bit(5);
-  uint1 realTime    = subMode.bit(6);
-  uint1 endOfFile   = subMode.bit(7);
+  n8 subMode     = drive->sector.data[18];
+  n1 endOfRecord = subMode.bit(0);
+  n1 video       = subMode.bit(1);
+  n1 audio       = subMode.bit(2);
+  n1 data        = subMode.bit(3);
+  n1 trigger     = subMode.bit(4);
+  n1 form2       = subMode.bit(5);
+  n1 realTime    = subMode.bit(6);
+  n1 endOfFile   = subMode.bit(7);
 
-   uint8 codingInfo    = drive->sector.data[19];
-   uint1 stereo        = codingInfo.bit(0);
-  uint16 sampleRate    = codingInfo.bit(2) ? 18900 : 37800;
-  uint32 bitsPerSample = codingInfo.bit(4) ? 8 : 4;
-   uint1 emphasis      = codingInfo.bit(6);
+  n8  codingInfo    = drive->sector.data[19];
+  n1  stereo        = codingInfo.bit(0);
+  n16 sampleRate    = codingInfo.bit(2) ? 18900 : 37800;
+  n32 bitsPerSample = codingInfo.bit(4) ? 8 : 4;
+  n1  emphasis      = codingInfo.bit(6);
 
   if(stereo == 0 && bitsPerSample == 4) decodeADPCM<0, 0>();
   if(stereo == 0 && bitsPerSample == 8) decodeADPCM<0, 1>();
@@ -65,7 +65,7 @@ auto Disc::CDXA::decodeADPCM() -> void {
   const u32 SamplesPerBlock = WordsPerBlock * (is8bit ? 4 : 8);
 
   s16 output[SamplesPerBlock];
-  for(uint block : range(Blocks)) {
+  for(u32 block : range(Blocks)) {
     decodeBlock<isStereo, is8bit>(output, 24 + block * BlockSize);
     for(auto sample : output) {
       if(!samples.full()) samples.write(sample);
@@ -80,15 +80,15 @@ auto Disc::CDXA::decodeBlock(s16* output, u16 address) -> void {
   static constexpr u32 Blocks = is8bit ? 4 : 8;
   static constexpr u32 WordsPerBlock = 28;
 
-  for(uint block : range(Blocks)) {
-     u8 header   = drive->sector.data[address + 4 + block];
-     u8 shift    = (header & 0x0f) > 12 ? 9 : (header & 0x0f);
-     u8 filter   = (header & 0x30) >> 4;
+  for(u32 block : range(Blocks)) {
+    u8  header   = drive->sector.data[address + 4 + block];
+    u8  shift    = (header & 0x0f) > 12 ? 9 : (header & 0x0f);
+    u8  filter   = (header & 0x30) >> 4;
     s32 positive = filterPositive[filter];
     s32 negative = filterNegative[filter];
     u16 index    = isStereo ? (block >> 1) * (WordsPerBlock << 1) + (block & 1) : block * WordsPerBlock;
 
-    for(uint word : range(WordsPerBlock)) {
+    for(u32 word : range(WordsPerBlock)) {
       u32 data = 0;
       data |= drive->sector.data[address + 16 + word * 4 + 0] <<  0;
       data |= drive->sector.data[address + 16 + word * 4 + 1] <<  8;

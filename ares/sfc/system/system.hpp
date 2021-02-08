@@ -2,7 +2,6 @@ extern Random random;
 
 struct System {
   Node::System node;
-  Node::Setting::String regionNode;
 
   struct Controls {
     Node::Object node;
@@ -13,9 +12,9 @@ struct System {
     auto poll() -> void;
   } controls;
 
-  enum class Region : uint { NTSC, PAL };
+  enum class Region : u32 { NTSC, PAL };
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto region() const -> Region { return information.region; }
   auto cpuFrequency() const -> double { return information.cpuFrequency; }
   auto apuFrequency() const -> double { return information.apuFrequency; }
@@ -34,9 +33,10 @@ struct System {
 
 private:
   struct Information {
+    string name = "Super Famicom";
     Region region = Region::NTSC;
-    double cpuFrequency = Constants::Colorburst::NTSC * 6.0;
-    double apuFrequency = 32040.0 * 768.0;
+    f64 cpuFrequency = Constants::Colorburst::NTSC * 6.0;
+    f64 apuFrequency = 32040.0 * 768.0;
   } information;
 
   //serialization.cpp

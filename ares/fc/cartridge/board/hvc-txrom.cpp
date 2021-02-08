@@ -182,12 +182,12 @@ struct HVC_TxROM : Interface {  //MMC3
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
     ramEnable = 1;
     ramWritable = 1;
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programRAM);
     s(characterRAM);
     s(characterMode);
@@ -206,18 +206,18 @@ struct HVC_TxROM : Interface {  //MMC3
     s(characterAddress);
   }
 
-  n01 characterMode;
-  n01 programMode;
-  n03 bankSelect;
-  n06 programBank[2];
-  n08 characterBank[6];
-  n01 mirror;
-  n01 ramEnable;
-  n01 ramWritable;
-  n08 irqLatch;
-  n08 irqCounter;
-  n01 irqEnable;
-  n08 irqDelay;
-  n01 irqLine;
+  n1  characterMode;
+  n1  programMode;
+  n3  bankSelect;
+  n6  programBank[2];
+  n8  characterBank[6];
+  n1  mirror;
+  n1  ramEnable;
+  n1  ramWritable;
+  n8  irqLatch;
+  n8  irqCounter;
+  n1  irqEnable;
+  n8  irqDelay;
+  n1  irqLine;
   n16 characterAddress;
 };

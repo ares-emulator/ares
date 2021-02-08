@@ -9,6 +9,8 @@
 
 namespace ares::SG1000 {
   #include <ares/inline.hpp>
+  auto enumerate() -> vector<string>;
+  auto load(Node::System& node, string name) -> bool;
 
   struct Model {
     inline static auto SG1000() -> bool;

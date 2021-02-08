@@ -1,11 +1,10 @@
 struct System {
   Node::System node;
-  Node::Setting::String regionNode;
   Node::Setting::Boolean fastBoot;
 
-  enum class Region : uint { NTSCJ, NTSCU, PAL };
+  enum class Region : u32 { NTSCJ, NTSCU, PAL };
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto region() const -> Region { return information.region; }
 
   //system.cpp
@@ -22,6 +21,7 @@ struct System {
 
 private:
   struct Information {
+    string name = "PlayStation";
     Region region = Region::NTSCJ;
   } information;
 

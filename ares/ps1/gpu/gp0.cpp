@@ -1,6 +1,6 @@
 //GPUREAD
 auto GPU::readGP0() -> u32 {
-  uint32 data;
+  n32 data;
 
   if(io.mode == Mode::Status) {
     data = io.status;
@@ -9,9 +9,9 @@ auto GPU::readGP0() -> u32 {
 
   if(io.mode == Mode::CopyFromVRAM) {
     vram.mutex.lock();
-    for(uint loop : range(2)) {
-      uint10 x = io.copy.x + io.copy.px;
-       uint9 y = io.copy.y + io.copy.py;
+    for(u32 loop : range(2)) {
+      n10 x = io.copy.x + io.copy.px;
+      n9  y = io.copy.y + io.copy.py;
       data = vram2D[y][x] << 16 | data >> 16;
       if(++io.copy.px >= io.copy.width) {
         io.copy.px = 0;
@@ -34,9 +34,9 @@ auto GPU::readGP0() -> u32 {
 auto GPU::writeGP0(u32 value, bool isThread) -> void {
   if(io.mode == Mode::CopyToVRAM) {
     vram.mutex.lock();
-    for(uint loop : range(2)) {
-      uint10 x = io.copy.x + io.copy.px;
-       uint9 y = io.copy.y + io.copy.py;
+    for(u32 loop : range(2)) {
+      n10 x = io.copy.x + io.copy.px;
+      n9  y = io.copy.y + io.copy.py;
       vram2D[y][x] = value;
       value >>= 16;
       if(++io.copy.px >= io.copy.width) {
@@ -55,8 +55,8 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
 
   auto& queue = this->queue.gp0;
 
-   uint8 command = value >> 24;
-  uint24 data    = value >>  0;
+  n8  command = value >> 24;
+  n24 data    = value >>  0;
 
   if(queue.empty()) {
     queue.command = command;
@@ -265,7 +265,7 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
   || command == 0x4c || command == 0x4d || command == 0x4e || command == 0x4f) {
     if((value & 0xf000f000) != 0x50005000) return (void)queue.write(value);
     render.v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
-    for(uint n = 2; n < queue.length; n += 1) {
+    for(u32 n = 2; n < queue.length; n += 1) {
       render.v1 = Vertex().setColor(queue.data[0]).setPoint(queue.data[n]);
       renderer.queue(render);
       render.v0 = render.v1;
@@ -288,7 +288,7 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
   || command == 0x5c || command == 0x5d || command == 0x5e || command == 0x5f) {
     if((value & 0xf000f000) != 0x50005000) return (void)queue.write(value);
     render.v0 = Vertex().setColor(queue.data[0]).setPoint(queue.data[1]);
-    for(uint n = 2; n + 1 < queue.length; n += 2) {
+    for(u32 n = 2; n + 1 < queue.length; n += 2) {
       render.v1 = Vertex().setColor(queue.data[n + 0]).setPoint(queue.data[n + 1]);
       renderer.queue(render);
       render.v0 = render.v1;
@@ -387,8 +387,8 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
     u16 targetY = queue.data[2].bit(16,31);
     u16 width   = queue.data[3].bit( 0,15);
     u16 height  = queue.data[3].bit(16,31);
-    for(uint y : range(height)) {
-      for(uint x : range(width)) {
+    for(u32 y : range(height)) {
+      for(u32 x : range(width)) {
         u16 data = vram2D[y + sourceY & 511][x + sourceX & 1023];
         vram2D[y + targetY & 511][x + targetX & 1023] = data;
       }

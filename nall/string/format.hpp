@@ -6,15 +6,15 @@ namespace nall {
 //each {#} token will be replaced with its appropriate format parameter
 
 inline auto string::format(const nall::string_format& params) -> type& {
-  auto size = (int)this->size();
+  auto size = (s32)this->size();
   auto data = memory::allocate<char>(size);
   memory::copy(data, this->data(), size);
 
-  int x = 0;
+  s32 x = 0;
   while(x < size - 2) {  //2 = minimum tag length
     if(data[x] != '{') { x++; continue; }
 
-    int y = x + 1;
+    s32 y = x + 1;
     while(y < size - 1) {  //-1 avoids going out of bounds on test after this loop
       if(data[y] != '}') { y++; continue; }
       break;
@@ -32,19 +32,19 @@ inline auto string::format(const nall::string_format& params) -> type& {
     };
     if(!isNumeric(&data[x + 1], &data[y - 1])) { x++; continue; }
 
-    uint index = toNatural(&data[x + 1]);
+    u32 index = toNatural(&data[x + 1]);
     if(index >= params.size()) { x++; continue; }
 
-    uint sourceSize = y - x;
-    uint targetSize = params[index].size();
-    uint remaining = size - x;
+    u32 sourceSize = y - x;
+    u32 targetSize = params[index].size();
+    u32 remaining = size - x;
 
     if(sourceSize > targetSize) {
-      uint difference = sourceSize - targetSize;
+      u32 difference = sourceSize - targetSize;
       memory::move(&data[x], &data[x + difference], remaining - difference);
       size -= difference;
     } else if(targetSize > sourceSize) {
-      uint difference = targetSize - sourceSize;
+      u32 difference = targetSize - sourceSize;
       data = (char*)realloc(data, size + difference);
       size += difference;
       memory::move(&data[x + difference], &data[x], remaining);
@@ -86,14 +86,14 @@ template<typename T> inline auto pad(const T& value, long precision, char padcha
   return buffer;
 }
 
-inline auto hex(uintmax value, long precision, char padchar) -> string {
+inline auto hex(u64 value, long precision, char padchar) -> string {
   string buffer;
-  buffer.resize(sizeof(uintmax) * 2);
+  buffer.resize(sizeof(u64) * 2);
   char* p = buffer.get();
 
-  uint size = 0;
+  u32 size = 0;
   do {
-    uint n = value & 15;
+    u32 n = value & 15;
     p[size++] = n < 10 ? '0' + n : 'a' + n - 10;
     value >>= 4;
   } while(value);
@@ -103,12 +103,12 @@ inline auto hex(uintmax value, long precision, char padchar) -> string {
   return buffer;
 }
 
-inline auto octal(uintmax value, long precision, char padchar) -> string {
+inline auto octal(u64 value, long precision, char padchar) -> string {
   string buffer;
-  buffer.resize(sizeof(uintmax) * 3);
+  buffer.resize(sizeof(u64) * 3);
   char* p = buffer.get();
 
-  uint size = 0;
+  u32 size = 0;
   do {
     p[size++] = '0' + (value & 7);
     value >>= 3;
@@ -119,12 +119,12 @@ inline auto octal(uintmax value, long precision, char padchar) -> string {
   return buffer;
 }
 
-inline auto binary(uintmax value, long precision, char padchar) -> string {
+inline auto binary(u64 value, long precision, char padchar) -> string {
   string buffer;
-  buffer.resize(sizeof(uintmax) * 8);
+  buffer.resize(sizeof(u64) * 8);
   char* p = buffer.get();
 
-  uint size = 0;
+  u32 size = 0;
   do {
     p[size++] = '0' + (value & 1);
     value >>= 1;

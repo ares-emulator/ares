@@ -22,22 +22,22 @@ struct pTableView : pWidget {
   auto setHeadered(bool headered) -> void;
   auto setSortable(bool sortable) -> void;
 
-  auto _cellWidth(uint row, uint column) -> uint;
-  auto _columnWidth(uint column) -> uint;
+  auto _cellWidth(u32 row, u32 column) -> u32;
+  auto _columnWidth(u32 column) -> u32;
   auto _createModel() -> void;
   auto _doActivate(GtkTreePath* = nullptr, GtkTreeViewColumn* = nullptr) -> void;
   auto _doChange() -> void;
   auto _doContext() -> void;
   auto _doDataFunc(GtkTreeViewColumn* column, GtkCellRenderer* renderer, GtkTreeIter* iter) -> void;
   auto _doEdit(GtkCellRendererText* gtkCellRendererText, const char* path, const char* text) -> void;
-  auto _doEvent(GdkEventButton* event) -> int;
+  auto _doEvent(GdkEventButton* event) -> s32;
   auto _doHeaderActivate(GtkTreeViewColumn* column) -> void;
   auto _doKeyPress(GdkEventKey* event) -> bool;
-  auto _doMouseMove() -> int;
+  auto _doMouseMove() -> s32;
   auto _doToggle(GtkCellRendererToggle* gtkCellRendererToggle, const char* path) -> void;
   auto _updateRulesHint() -> void;
   auto _updateSelected() -> void;
-  auto _width(uint column) -> uint;
+  auto _width(u32 column) -> u32;
 
   GtkScrolledWindow* gtkScrolledWindow = nullptr;
   GtkWidget* gtkWidgetChild = nullptr;
@@ -46,7 +46,7 @@ struct pTableView : pWidget {
   GtkListStore* gtkListStore = nullptr;
   GtkTreeModel* gtkTreeModel = nullptr;
   GtkEntry* gtkEntry = nullptr;
-  vector<uint> currentSelection;
+  vector<u32> currentSelection;
   bool suppressChange = false;
 };
 

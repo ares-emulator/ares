@@ -10,7 +10,7 @@ auto mVerticalSlider::doChange() const -> void {
   if(state.onChange) return state.onChange();
 }
 
-auto mVerticalSlider::length() const -> unsigned {
+auto mVerticalSlider::length() const -> u32 {
   return state.length;
 }
 
@@ -19,17 +19,17 @@ auto mVerticalSlider::onChange(const function<void ()>& callback) -> type& {
   return *this;
 }
 
-auto mVerticalSlider::position() const -> unsigned {
+auto mVerticalSlider::position() const -> u32 {
   return state.position;
 }
 
-auto mVerticalSlider::setLength(unsigned length) -> type& {
+auto mVerticalSlider::setLength(u32 length) -> type& {
   state.length = length;
   signal(setLength, length);
   return *this;
 }
 
-auto mVerticalSlider::setPosition(unsigned position) -> type& {
+auto mVerticalSlider::setPosition(u32 position) -> type& {
   state.position = position;
   signal(setPosition, position);
   return *this;

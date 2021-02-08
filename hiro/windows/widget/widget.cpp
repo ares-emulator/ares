@@ -107,7 +107,7 @@ auto pWidget::doMouseHover() -> void {
 auto pWidget::doMouseLeave() -> void {
 }
 
-auto pWidget::doMouseMove(int x, int y) -> void {
+auto pWidget::doMouseMove(s32 x, s32 y) -> void {
 }
 
 auto pWidget::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> maybe<LRESULT> {

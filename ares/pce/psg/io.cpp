@@ -1,4 +1,4 @@
-auto PSG::write(uint4 address, uint8 data) -> void {
+auto PSG::write(n4 address, n8 data) -> void {
   if(address == 0x00) {
     io.channel = data.bit(0,2);
   }
@@ -29,7 +29,7 @@ auto PSG::write(uint4 address, uint8 data) -> void {
   }
 }
 
-auto PSG::Channel::write(uint4 address, uint8 data) -> void {
+auto PSG::Channel::write(n4 address, n8 data) -> void {
   if(address == 0x02) {
     io.waveFrequency.bit(0,7) = data.bit(0,7);
     io.wavePeriod = io.waveFrequency;

@@ -1,5 +1,5 @@
-auto PPU::portRead(uint16 address) -> uint8 {
-  uint8 data;
+auto PPU::portRead(n16 address) -> n8 {
+  n8 data;
 
   //DISP_CTRL
   if(address == 0x0000) {
@@ -205,7 +205,7 @@ auto PPU::portRead(uint16 address) -> uint8 {
   return data;
 }
 
-auto PPU::portWrite(uint16 address, uint8 data) -> void {
+auto PPU::portWrite(n16 address, n8 data) -> void {
   //DISP_CTRL
   if(address == 0x0000) {
     r.screenOneEnable       = data.bit(0);

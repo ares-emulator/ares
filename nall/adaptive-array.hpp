@@ -7,17 +7,17 @@
 
 namespace nall {
 
-template<typename T, uint Capacity>
+template<typename T, u32 Capacity>
 struct adaptive_array {
-  auto capacity() const -> uint { return Capacity; }
-  auto size() const -> uint { return _size; }
+  auto capacity() const -> u32 { return Capacity; }
+  auto size() const -> u32 { return _size; }
 
   auto reset() -> void {
-    for(uint n : range(_size)) _pool.t[n].~T();
+    for(u32 n : range(_size)) _pool.t[n].~T();
     _size = 0;
   }
 
-  auto operator[](uint index) -> T& {
+  auto operator[](u32 index) -> T& {
     #ifdef DEBUG
     struct out_of_bounds {};
     if(index >= Capacity) throw out_of_bounds{};
@@ -25,7 +25,7 @@ struct adaptive_array {
     return _pool.t[index];
   }
 
-  auto operator[](uint index) const -> const T& {
+  auto operator[](u32 index) const -> const T& {
     #ifdef DEBUG
     struct out_of_bounds {};
     if(index >= Capacity) throw out_of_bounds{};
@@ -58,7 +58,7 @@ private:
     ~U() {}
     T t[Capacity];
   } _pool;
-  uint _size = 0;
+  u32 _size = 0;
 };
 
 }

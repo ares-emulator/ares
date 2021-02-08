@@ -2,7 +2,7 @@
 
 namespace nall {
 
-template<typename T> auto vector<T>::operator[](uint64_t offset) -> T& {
+template<typename T> auto vector<T>::operator[](u64 offset) -> T& {
   #ifdef DEBUG
   struct out_of_bounds {};
   if(offset >= size()) throw out_of_bounds{};
@@ -10,7 +10,7 @@ template<typename T> auto vector<T>::operator[](uint64_t offset) -> T& {
   return _pool[offset];
 }
 
-template<typename T> auto vector<T>::operator[](uint64_t offset) const -> const T& {
+template<typename T> auto vector<T>::operator[](u64 offset) const -> const T& {
   #ifdef DEBUG
   struct out_of_bounds {};
   if(offset >= size()) throw out_of_bounds{};
@@ -18,12 +18,12 @@ template<typename T> auto vector<T>::operator[](uint64_t offset) const -> const 
   return _pool[offset];
 }
 
-template<typename T> auto vector<T>::operator()(uint64_t offset) -> T& {
+template<typename T> auto vector<T>::operator()(u64 offset) -> T& {
   while(offset >= size()) append(T());
   return _pool[offset];
 }
 
-template<typename T> auto vector<T>::operator()(uint64_t offset, const T& value) const -> const T& {
+template<typename T> auto vector<T>::operator()(u64 offset, const T& value) const -> const T& {
   if(offset >= size()) return value;
   return _pool[offset];
 }

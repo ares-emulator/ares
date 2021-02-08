@@ -19,8 +19,8 @@
 }
 
 -(void) update {
-  double d = 1.0 / horizontalScrollBar->state.length;
-  double f = d * horizontalScrollBar->state.position;
+  f64 d = 1.0 / horizontalScrollBar->state.length;
+  f64 f = d * horizontalScrollBar->state.position;
 
   [self setDoubleValue:f];
   [self setKnobProportion:d];
@@ -73,17 +73,17 @@ auto pHorizontalScrollBar::destruct() -> void {
 
 auto pHorizontalScrollBar::minimumSize() const -> Size {
   @autoreleasepool {
-    return {32, (int)[NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy]};
+    return {32, (s32)[NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy]};
   }
 }
 
-auto pHorizontalScrollBar::setLength(uint length) -> void {
+auto pHorizontalScrollBar::setLength(u32 length) -> void {
   @autoreleasepool {
     [cocoaView update];
   }
 }
 
-auto pHorizontalScrollBar::setPosition(uint position) -> void {
+auto pHorizontalScrollBar::setPosition(u32 position) -> void {
   @autoreleasepool {
     [cocoaView update];
   }

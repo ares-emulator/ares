@@ -2,10 +2,10 @@
 //3800-3807 mirrored throughout
 //a0 ignored
 
-auto ARMDSP::read(uint24 address, uint8) -> uint8 {
+auto ARMDSP::read(n24 address, n8) -> n8 {
   cpu.synchronize(*this);
 
-  uint8 data = 0x00;
+  n8 data = 0x00;
   address &= 0xff06;
 
   if(address == 0x3800) {
@@ -26,7 +26,7 @@ auto ARMDSP::read(uint24 address, uint8) -> uint8 {
   return data;
 }
 
-auto ARMDSP::write(uint24 address, uint8 data) -> void {
+auto ARMDSP::write(n24 address, n8 data) -> void {
   cpu.synchronize(*this);
 
   address &= 0xff06;

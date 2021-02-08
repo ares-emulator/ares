@@ -20,8 +20,8 @@ struct pCanvas : pWidget {
 
   QtCanvas* qtCanvas = nullptr;
   QImage* qtImage = nullptr;
-  unsigned qtImageWidth = 0;
-  unsigned qtImageHeight = 0;
+  u32 qtImageWidth = 0;
+  u32 qtImageHeight = 0;
 };
 
 }

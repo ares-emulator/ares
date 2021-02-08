@@ -2,7 +2,7 @@
 
 namespace nall {
 
-template<uint Bits> struct BarrettReduction {
+template<u32 Bits> struct BarrettReduction {
   using type = typename ArithmeticNatural<1 * Bits>::type;
   using pair = typename ArithmeticNatural<2 * Bits>::type;
 
@@ -21,7 +21,7 @@ private:
   const pair factor;
 };
 
-template<typename T, uint Bits> auto operator%(T value, const BarrettReduction<Bits>& modulo) {
+template<typename T, u32 Bits> auto operator%(T value, const BarrettReduction<Bits>& modulo) {
   return modulo(value);
 }
 

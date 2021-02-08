@@ -32,21 +32,21 @@ struct PI : Memory::IO<PI> {
   auto serialize(serializer&) -> void;
 
   struct IO {
-     uint1 dmaBusy;
-     uint1 ioBusy;
-     uint1 error;
-     uint1 interrupt;
-    uint32 dramAddress;
-    uint32 pbusAddress;
-    uint32 readLength;
-    uint32 writeLength;
+    n1  dmaBusy;
+    n1  ioBusy;
+    n1  error;
+    n1  interrupt;
+    n32 dramAddress;
+    n32 pbusAddress;
+    n32 readLength;
+    n32 writeLength;
   } io;
 
   struct BSD {
-    uint8 latency;
-    uint8 pulseWidth;
-    uint8 pageSize;
-    uint8 releaseDuration;
+    n8 latency;
+    n8 pulseWidth;
+    n8 pageSize;
+    n8 releaseDuration;
   } bsd1, bsd2;
 };
 

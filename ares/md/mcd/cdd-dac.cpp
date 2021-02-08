@@ -10,9 +10,9 @@ auto MCD::CDD::DAC::unload() -> void {
   stream = {};
 }
 
-auto MCD::CDD::DAC::sample(int16 left, int16 right) -> void {
-  left  = (left  * (int)attenuated) / 0x4000 >> 1;
-  right = (right * (int)attenuated) / 0x4000 >> 1;
+auto MCD::CDD::DAC::sample(i16 left, i16 right) -> void {
+  left  = (left  * (i32)attenuated) / 0x4000 >> 1;
+  right = (right * (i32)attenuated) / 0x4000 >> 1;
 
   stream->frame(left / 32768.0, right / 32768.0);
 
@@ -23,7 +23,7 @@ auto MCD::CDD::DAC::sample(int16 left, int16 right) -> void {
 
 auto MCD::CDD::DAC::reconfigure() -> void {
   stream->resetFilters();
-  double inputFrequency = 0.0;
+  f64 inputFrequency = 0.0;
   if(deemphasis == 0) return;  //no de-emphasis
   if(deemphasis == 1) inputFrequency = 44100.0;
   if(deemphasis == 2) inputFrequency = 32000.0;  //unverified behavior

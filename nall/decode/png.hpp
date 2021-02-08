@@ -10,48 +10,48 @@ struct PNG {
   ~PNG();
 
   auto load(const string& filename) -> bool;
-  auto load(const uint8_t* sourceData, uint sourceSize) -> bool;
-  auto readbits(const uint8_t*& data) -> uint;
+  auto load(const u8* sourceData, u32 sourceSize) -> bool;
+  auto readbits(const u8*& data) -> u32;
 
   struct Info {
-    uint width;
-    uint height;
-    uint bitDepth;
+    u32 width;
+    u32 height;
+    u32 bitDepth;
     //colorType:
     //0 = L (luma)
     //2 = R,G,B
     //3 = P (palette)
     //4 = L,A
     //6 = R,G,B,A
-    uint colorType;
-    uint compressionMethod;
-    uint filterType;
-    uint interlaceMethod;
+    u32 colorType;
+    u32 compressionMethod;
+    u32 filterType;
+    u32 interlaceMethod;
 
-    uint bytesPerPixel;
-    uint pitch;
+    u32 bytesPerPixel;
+    u32 pitch;
 
-    uint8_t palette[256][3];
+    u8 palette[256][3];
   } info;
 
-  uint8_t* data = nullptr;
-  uint size = 0;
+  u8* data = nullptr;
+  u32 size = 0;
 
-  uint bitpos = 0;
+  u32 bitpos = 0;
 
 protected:
-  enum class FourCC : uint {
+  enum class FourCC : u32 {
     IHDR = 0x49484452,
     PLTE = 0x504c5445,
     IDAT = 0x49444154,
     IEND = 0x49454e44,
   };
 
-  auto interlace(uint pass, uint index) -> uint;
-  auto inflateSize() -> uint;
-  auto deinterlace(const uint8_t*& inputData, uint pass) -> bool;
-  auto filter(uint8_t* outputData, const uint8_t* inputData, uint width, uint height) -> bool;
-  auto read(const uint8_t* data, uint length) -> uint;
+  auto interlace(u32 pass, u32 index) -> u32;
+  auto inflateSize() -> u32;
+  auto deinterlace(const u8*& inputData, u32 pass) -> bool;
+  auto filter(u8* outputData, const u8* inputData, u32 width, u32 height) -> bool;
+  auto read(const u8* data, u32 length) -> u32;
 };
 
 inline PNG::PNG() {
@@ -68,21 +68,21 @@ inline auto PNG::load(const string& filename) -> bool {
   return false;
 }
 
-inline auto PNG::load(const uint8_t* sourceData, uint sourceSize) -> bool {
+inline auto PNG::load(const u8* sourceData, u32 sourceSize) -> bool {
   if(sourceSize < 8) return false;
   if(read(sourceData + 0, 4) != 0x89504e47) return false;
   if(read(sourceData + 4, 4) != 0x0d0a1a0a) return false;
 
-  uint8_t* compressedData = nullptr;
-  uint compressedSize = 0;
+  u8* compressedData = nullptr;
+  u32 compressedSize = 0;
 
-  uint offset = 8;
+  u32 offset = 8;
   while(offset < sourceSize) {
-    uint length   = read(sourceData + offset + 0, 4);
-    uint fourCC   = read(sourceData + offset + 4, 4);
-    uint checksum = read(sourceData + offset + 8 + length, 4);
+    u32 length   = read(sourceData + offset + 0, 4);
+    u32 fourCC   = read(sourceData + offset + 4, 4);
+    u32 checksum = read(sourceData + offset + 8 + length, 4);
 
-    if(fourCC == (uint)FourCC::IHDR) {
+    if(fourCC == (u32)FourCC::IHDR) {
       info.width             = read(sourceData + offset +  8, 4);
       info.height            = read(sourceData + offset + 12, 4);
       info.bitDepth          = read(sourceData + offset + 16, 1);
@@ -112,33 +112,33 @@ inline auto PNG::load(const uint8_t* sourceData, uint sourceSize) -> bool {
       if(info.colorType == 3 && info.bitDepth == 16) return false;
 
       info.bytesPerPixel = (info.bytesPerPixel + 7) / 8;
-      info.pitch = (int)info.width * info.bytesPerPixel;
+      info.pitch = (s32)info.width * info.bytesPerPixel;
     }
 
-    if(fourCC == (uint)FourCC::PLTE) {
+    if(fourCC == (u32)FourCC::PLTE) {
       if(length % 3) return false;
-      for(uint n = 0, p = offset + 8; n < length / 3; n++) {
+      for(u32 n = 0, p = offset + 8; n < length / 3; n++) {
         info.palette[n][0] = sourceData[p++];
         info.palette[n][1] = sourceData[p++];
         info.palette[n][2] = sourceData[p++];
       }
     }
 
-    if(fourCC == (uint)FourCC::IDAT) {
-      compressedData = (uint8_t*)realloc(compressedData, compressedSize + length);
+    if(fourCC == (u32)FourCC::IDAT) {
+      compressedData = (u8*)realloc(compressedData, compressedSize + length);
       memcpy(compressedData + compressedSize, sourceData + offset + 8, length);
       compressedSize += length;
     }
 
-    if(fourCC == (uint)FourCC::IEND) {
+    if(fourCC == (u32)FourCC::IEND) {
       break;
     }
 
     offset += 4 + 4 + length + 4;
   }
 
-  uint interlacedSize = inflateSize();
-  auto interlacedData = new uint8_t[interlacedSize];
+  u32  interlacedSize = inflateSize();
+  auto interlacedData = new u8[interlacedSize];
 
   bool result = inflate(interlacedData, interlacedSize, compressedData + 2, compressedSize - 6);
   free(compressedData);
@@ -149,7 +149,7 @@ inline auto PNG::load(const uint8_t* sourceData, uint sourceSize) -> bool {
   }
 
   size = info.width * info.height * info.bytesPerPixel;
-  data = new uint8_t[size];
+  data = new u8[size];
 
   if(info.interlaceMethod == 0) {
     if(filter(data, interlacedData, info.width, info.height) == false) {
@@ -159,8 +159,8 @@ inline auto PNG::load(const uint8_t* sourceData, uint sourceSize) -> bool {
       return false;
     }
   } else {
-    const uint8_t* passData = interlacedData;
-    for(uint pass = 0; pass < 7; pass++) {
+    const u8* passData = interlacedData;
+    for(u32 pass = 0; pass < 7; pass++) {
       if(deinterlace(passData, pass) == false) {
         delete[] interlacedData;
         delete[] data;
@@ -174,8 +174,8 @@ inline auto PNG::load(const uint8_t* sourceData, uint sourceSize) -> bool {
   return true;
 }
 
-inline auto PNG::interlace(uint pass, uint index) -> uint {
-  static const uint data[7][4] = {
+inline auto PNG::interlace(u32 pass, u32 index) -> u32 {
+  static const u32 data[7][4] = {
     //x-distance, y-distance, x-origin, y-origin
     {8, 8, 0, 0},
     {8, 8, 4, 0},
@@ -188,39 +188,39 @@ inline auto PNG::interlace(uint pass, uint index) -> uint {
   return data[pass][index];
 }
 
-inline auto PNG::inflateSize() -> uint {
+inline auto PNG::inflateSize() -> u32 {
   if(info.interlaceMethod == 0) {
     return info.width * info.height * info.bytesPerPixel + info.height;
   }
 
-  uint size = 0;
-  for(uint pass = 0; pass < 7; pass++) {
-    uint xd = interlace(pass, 0), yd = interlace(pass, 1);
-    uint xo = interlace(pass, 2), yo = interlace(pass, 3);
-    uint width  = (info.width  + (xd - xo - 1)) / xd;
-    uint height = (info.height + (yd - yo - 1)) / yd;
+  u32 size = 0;
+  for(u32 pass = 0; pass < 7; pass++) {
+    u32 xd = interlace(pass, 0), yd = interlace(pass, 1);
+    u32 xo = interlace(pass, 2), yo = interlace(pass, 3);
+    u32 width  = (info.width  + (xd - xo - 1)) / xd;
+    u32 height = (info.height + (yd - yo - 1)) / yd;
     if(width == 0 || height == 0) continue;
     size += width * height * info.bytesPerPixel + height;
   }
   return size;
 }
 
-inline auto PNG::deinterlace(const uint8_t*& inputData, uint pass) -> bool {
-  uint xd = interlace(pass, 0), yd = interlace(pass, 1);
-  uint xo = interlace(pass, 2), yo = interlace(pass, 3);
-  uint width  = (info.width  + (xd - xo - 1)) / xd;
-  uint height = (info.height + (yd - yo - 1)) / yd;
+inline auto PNG::deinterlace(const u8*& inputData, u32 pass) -> bool {
+  u32 xd = interlace(pass, 0), yd = interlace(pass, 1);
+  u32 xo = interlace(pass, 2), yo = interlace(pass, 3);
+  u32 width  = (info.width  + (xd - xo - 1)) / xd;
+  u32 height = (info.height + (yd - yo - 1)) / yd;
   if(width == 0 || height == 0) return true;
 
-  uint outputSize = width * height * info.bytesPerPixel;
-  auto outputData = new uint8_t[outputSize];
+  u32 outputSize = width * height * info.bytesPerPixel;
+  auto outputData = new u8[outputSize];
   bool result = filter(outputData, inputData, width, height);
 
-  const uint8_t* rd = outputData;
-  for(uint y = yo; y < info.height; y += yd) {
-    uint8_t* wr = data + y * info.pitch;
-    for(uint x = xo; x < info.width; x += xd) {
-      for(uint b = 0; b < info.bytesPerPixel; b++) {
+  const u8* rd = outputData;
+  for(u32 y = yo; y < info.height; y += yd) {
+    u8* wr = data + y * info.pitch;
+    for(u32 x = xo; x < info.width; x += xd) {
+      for(u32 b = 0; b < info.bytesPerPixel; b++) {
         wr[x * info.bytesPerPixel + b] = *rd++;
       }
     }
@@ -231,53 +231,53 @@ inline auto PNG::deinterlace(const uint8_t*& inputData, uint pass) -> bool {
   return result;
 }
 
-inline auto PNG::filter(uint8_t* outputData, const uint8_t* inputData, uint width, uint height) -> bool {
-  uint8_t* wr = outputData;
-  const uint8_t* rd = inputData;
-  int bpp = info.bytesPerPixel, pitch = width * bpp;
-  for(int y = 0; y < height; y++) {
-    uint8_t filter = *rd++;
+inline auto PNG::filter(u8* outputData, const u8* inputData, u32 width, u32 height) -> bool {
+  u8* wr = outputData;
+  const u8* rd = inputData;
+  s32 bpp = info.bytesPerPixel, pitch = width * bpp;
+  for(s32 y = 0; y < height; y++) {
+    u8 filter = *rd++;
 
     switch(filter) {
     case 0x00:  //None
-      for(int x = 0; x < pitch; x++) {
+      for(s32 x = 0; x < pitch; x++) {
         wr[x] = rd[x];
       }
       break;
 
     case 0x01:  //Subtract
-      for(int x = 0; x < pitch; x++) {
+      for(s32 x = 0; x < pitch; x++) {
         wr[x] = rd[x] + (x - bpp < 0 ? 0 : wr[x - bpp]);
       }
       break;
 
     case 0x02:  //Above
-      for(int x = 0; x < pitch; x++) {
+      for(s32 x = 0; x < pitch; x++) {
         wr[x] = rd[x] + (y - 1 < 0 ? 0 : wr[x - pitch]);
       }
       break;
 
     case 0x03:  //Average
-      for(int x = 0; x < pitch; x++) {
-        short a = x - bpp < 0 ? 0 : wr[x - bpp];
-        short b = y - 1 < 0 ? 0 : wr[x - pitch];
+      for(s32 x = 0; x < pitch; x++) {
+        s16 a = x - bpp < 0 ? 0 : wr[x - bpp];
+        s16 b = y - 1 < 0 ? 0 : wr[x - pitch];
 
-        wr[x] = rd[x] + (uint8_t)((a + b) / 2);
+        wr[x] = rd[x] + (u8)((a + b) / 2);
       }
       break;
 
     case 0x04:  //Paeth
-      for(int x = 0; x < pitch; x++) {
-        short a = x - bpp < 0 ? 0 : wr[x - bpp];
-        short b = y - 1 < 0 ? 0 : wr[x - pitch];
-        short c = x - bpp < 0 || y - 1 < 0 ? 0 : wr[x - pitch - bpp];
+      for(s32 x = 0; x < pitch; x++) {
+        s16 a = x - bpp < 0 ? 0 : wr[x - bpp];
+        s16 b = y - 1 < 0 ? 0 : wr[x - pitch];
+        s16 c = x - bpp < 0 || y - 1 < 0 ? 0 : wr[x - pitch - bpp];
 
-        short p = a + b - c;
-        short pa = p > a ? p - a : a - p;
-        short pb = p > b ? p - b : b - p;
-        short pc = p > c ? p - c : c - p;
+        s16 p = a + b - c;
+        s16 pa = p > a ? p - a : a - p;
+        s16 pb = p > b ? p - b : b - p;
+        s16 pc = p > c ? p - c : c - p;
 
-        auto paeth = (uint8_t)((pa <= pb && pa <= pc) ? a : (pb <= pc) ? b : c);
+        auto paeth = (u8)((pa <= pb && pa <= pc) ? a : (pb <= pc) ? b : c);
 
         wr[x] = rd[x] + paeth;
       }
@@ -294,14 +294,14 @@ inline auto PNG::filter(uint8_t* outputData, const uint8_t* inputData, uint widt
   return true;
 }
 
-inline auto PNG::read(const uint8_t* data, uint length) -> uint {
-  uint result = 0;
+inline auto PNG::read(const u8* data, u32 length) -> u32 {
+  u32 result = 0;
   while(length--) result = (result << 8) | (*data++);
   return result;
 }
 
-inline auto PNG::readbits(const uint8_t*& data) -> uint {
-  uint result = 0;
+inline auto PNG::readbits(const u8*& data) -> u32 {
+  u32 result = 0;
   switch(info.bitDepth) {
   case 1:
     result = (*data >> bitpos) & 1;

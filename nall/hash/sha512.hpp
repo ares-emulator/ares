@@ -7,7 +7,7 @@ namespace nall::Hash {
 struct SHA512 : Hash {
   using Hash::input;
 
-  SHA512(array_view<uint8_t> buffer = {}) {
+  SHA512(array_view<u8> buffer = {}) {
     reset();
     input(buffer);
   }
@@ -19,50 +19,50 @@ struct SHA512 : Hash {
     queued = length = 0;
   }
 
-  auto input(uint8_t data) -> void override {
+  auto input(u8 data) -> void override {
     byte(data);
     length++;
   }
 
-  auto output() const -> vector<uint8_t> override {
+  auto output() const -> vector<u8> override {
     SHA512 self(*this);
     self.finish();
-    vector<uint8_t> result;
+    vector<u8> result;
     for(auto h : self.h) {
       for(auto n : reverse(range(8))) result.append(h >> n * 8);
     }
     return result;
   }
 
-  auto value() const -> uint512_t {
-    uint512_t value = 0;
+  auto value() const -> u512 {
+    u512 value = 0;
     for(auto byte : output()) value = value << 8 | byte;
     return value;
   }
 
 private:
-  auto byte(uint8_t data) -> void {
-    uint64_t shift = (7 - (queued & 7)) * 8;
-    queue[queued >> 3] &=~((uint64_t)0xff << shift);
-    queue[queued >> 3] |= ((uint64_t)data << shift);
+  auto byte(u8 data) -> void {
+    u64 shift = (7 - (queued & 7)) * 8;
+    queue[queued >> 3] &=~((u64)0xff << shift);
+    queue[queued >> 3] |= ((u64)data << shift);
     if(++queued == 128) block(), queued = 0;
   }
 
   auto block() -> void {
     for(auto n : range(16)) w[n] = queue[n];
     for(auto n : range(16, 80)) {
-      uint64_t a = ror(w[n - 15],  1) ^ ror(w[n - 15],  8) ^ (w[n - 15] >> 7);
-      uint64_t b = ror(w[n -  2], 19) ^ ror(w[n -  2], 61) ^ (w[n -  2] >> 6);
+      u64 a = ror(w[n - 15],  1) ^ ror(w[n - 15],  8) ^ (w[n - 15] >> 7);
+      u64 b = ror(w[n -  2], 19) ^ ror(w[n -  2], 61) ^ (w[n -  2] >> 6);
       w[n] = w[n - 16] + w[n - 7] + a + b;
     }
-    uint64_t t[8];
+    u64 t[8];
     for(auto n : range(8)) t[n] = h[n];
     for(auto n : range(80)) {
-      uint64_t a = ror(t[0], 28) ^ ror(t[0], 34) ^ ror(t[0], 39);
-      uint64_t b = ror(t[4], 14) ^ ror(t[4], 18) ^ ror(t[4], 41);
-      uint64_t c = (t[0] & t[1]) ^ (t[0] & t[2]) ^ (t[1] & t[2]);
-      uint64_t d = (t[4] & t[5]) ^ (~t[4] & t[6]);
-      uint64_t e = t[7] + w[n] + cube(n) + b + d;
+      u64 a = ror(t[0], 28) ^ ror(t[0], 34) ^ ror(t[0], 39);
+      u64 b = ror(t[4], 14) ^ ror(t[4], 18) ^ ror(t[4], 41);
+      u64 c = (t[0] & t[1]) ^ (t[0] & t[2]) ^ (t[1] & t[2]);
+      u64 d = (t[4] & t[5]) ^ (~t[4] & t[6]);
+      u64 e = t[7] + w[n] + cube(n) + b + d;
       t[7] = t[6]; t[6] = t[5]; t[5] = t[4]; t[4] = t[3] + e;
       t[3] = t[2]; t[2] = t[1]; t[1] = t[0]; t[0] = a + c + e;
     }
@@ -75,16 +75,16 @@ private:
     for(auto n : range(16)) byte(length * 8 >> (15 - n) * 8);
   }
 
-  auto square(uint n) -> uint64_t {
-    static const uint64_t data[8] = {
+  auto square(u32 n) -> u64 {
+    static const u64 data[8] = {
       0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
       0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179,
     };
     return data[n];
   }
 
-  auto cube(uint n) -> uint64_t {
-    static const uint64_t data[80] = {
+  auto cube(u32 n) -> u64 {
+    static const u64 data[80] = {
       0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
       0x3956c25bf348b538, 0x59f111f1b605d019, 0x923f82a4af194f9b, 0xab1c5ed5da6d8118,
       0xd807aa98a3030242, 0x12835b0145706fbe, 0x243185be4ee4b28c, 0x550c7dc3d5ffb4e2,
@@ -109,11 +109,11 @@ private:
     return data[n];
   }
 
-  uint64_t queue[16] = {0};
-  uint64_t w[80] = {0};
-  uint64_t h[8] = {0};
-  uint64_t queued = 0;
-  uint128_t length = 0;
+  u64  queue[16] = {};
+  u64  w[80] = {};
+  u64  h[8] = {};
+  u64  queued = 0;
+  u128 length = 0;
 };
 
 }

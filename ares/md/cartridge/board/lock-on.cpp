@@ -1,7 +1,7 @@
 struct LockOn : Interface {
   using Interface::Interface;
-  Memory::Readable<uint16> rom;
-  Memory::Readable<uint16> patch;
+  Memory::Readable<n16> rom;
+  Memory::Readable<n16> patch;
   CartridgeSlot slot{"Cartridge Slot"};
 
   auto load(Markup::Node document) -> void override {
@@ -16,23 +16,23 @@ struct LockOn : Interface {
     auto board = document["game/board"];
   }
 
-  auto read(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16 override {
+  auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {
     if(address < 0x200000) return data = rom[address >> 1];
     if(address >= 0x300000 && patchEnable) return data = patch[address >> 1];
     if(slot.connected()) return data = slot.cartridge.read(upper, lower, address, data);
     return data;
   }
 
-  auto write(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void override {
+  auto write(n1 upper, n1 lower, n22 address, n16 data) -> void override {
     if(slot.connected()) slot.cartridge.write(upper, lower, address, data);
   }
 
-  auto readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 override {
+  auto readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 override {
     if(slot.connected()) slot.cartridge.readIO(upper, lower, address, data);
     return data;
   }
 
-  auto writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void override {
+  auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void override {
     if(slot.connected()) slot.cartridge.writeIO(upper, lower, address, data);
     if(!lower) return;  //todo: unconfirmed
     if(address == 0xa130f0) patchEnable = data.bit(0);
@@ -48,5 +48,5 @@ struct LockOn : Interface {
     s(patchEnable);
   }
 
-  uint1 patchEnable;
+  n1 patchEnable;
 };

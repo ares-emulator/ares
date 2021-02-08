@@ -6,13 +6,13 @@ namespace ares {
 
 struct MSM5205 {
   //msm5205.cpp
-  auto sample() const -> int12;
-  auto scaler() const -> uint;
+  auto sample() const -> i12;
+  auto scaler() const -> u32;
 
-  auto setReset(uint1 reset) -> void;
-  auto setWidth(uint1 width) -> void;
-  auto setScaler(uint2 frequency) -> void;
-  auto setData(uint4 data) -> void;
+  auto setReset(n1 reset) -> void;
+  auto setWidth(n1 width) -> void;
+  auto setScaler(n2 frequency) -> void;
+  auto setData(n4 data) -> void;
 
   auto clock() -> void;
   auto power() -> void;
@@ -21,16 +21,16 @@ struct MSM5205 {
   auto serialize(serializer&) -> void;
 
   struct IO {
-    uint1 reset;   //RESET
-    uint1 width;   //4B
-    uint2 scaler;  //S0-S1
-    uint4 data;    //D0-D7
-    int12 sample;  //DAOUT
-     int8 step;
+    n1  reset;   //RESET
+    n1  width;   //4B
+    n2  scaler;  //S0-S1
+    n4  data;    //D0-D7
+    i12 sample;  //DAOUT
+    i8  step;
   } io;
 
 //unserialized:
-  int lookup[49 * 16];
+  s32 lookup[49 * 16];
 };
 
 }

@@ -1,4 +1,4 @@
-auto EpsonRTC::irq(uint2 period) -> void {
+auto EpsonRTC::irq(n2 period) -> void {
   if(stop || pause) return;
 
   if(period == irqperiod) irqflag = 1;
@@ -109,12 +109,12 @@ auto EpsonRTC::tickDay() -> void {
   weekday = (weekday + 1) + (weekday == 6);
 
   //January - December = 0x01 - 0x09; 0x10 - 0x12
-  static const uint daysinmonth[32] = {
+  static constexpr u32 daysinmonth[32] = {
     30, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 30, 31, 30,
     31, 30, 31, 30, 31, 30, 31, 30, 31, 30, 31, 30, 31, 30, 31, 30,
   };
 
-  uint days = daysinmonth[monthhi << 4 | monthlo];
+  u32 days = daysinmonth[monthhi << 4 | monthlo];
   if(days == 28) {
     //add one day for leap years
     if((yearhi & 1) == 0 && ((yearlo - 0) & 3) == 0) days++;

@@ -11,7 +11,7 @@ static const vector<string> registerNamesSCC = {
 
 auto RSP::readWord(u32 address) -> u32 {
   address = (address & 0x3ffff) >> 2;
-  uint32 data;
+  n32 data;
 
   if(address == 0) {
     //SP_PBUS_ADDRESS
@@ -81,7 +81,7 @@ auto RSP::readWord(u32 address) -> u32 {
 
 auto RSP::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0x3ffff) >> 2;
-  uint32 data = data_;
+  n32 data = data_;
 
   if(address == 0) {
     //SP_PBUS_ADDRESS
@@ -184,7 +184,7 @@ static const vector<string> registerNamesIO = {
 
 auto RSP::Status::readWord(u32 address) -> u32 {
   address = (address & 0x7ffff) >> 2;
-  uint32 data;
+  n32 data;
 
   if(address == 0) {
     //SP_PC_REG
@@ -203,7 +203,7 @@ auto RSP::Status::readWord(u32 address) -> u32 {
 
 auto RSP::Status::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0x7ffff) >> 2;
-  uint32 data = data_;
+  n32 data = data_;
 
   if(address == 0) {
     //SP_PC_REG

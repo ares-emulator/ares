@@ -7,7 +7,7 @@ auto APU::DMA::run() -> void {
   if(r.rate == 3 && ++s.clock < 128) return;  //24000hz
   s.clock = 0;
 
-  uint8 data = bus.read(s.source);
+  n8 data = bus.read(s.source);
   if(r.direction == 0) s.source++;
   if(r.direction == 1) s.source--;
 

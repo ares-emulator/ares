@@ -1,10 +1,10 @@
 #include "decompressor.cpp"
 
 auto SPC7110::dcuLoadAddress() -> void {
-  uint table = r4801 | r4802 << 8 | r4803 << 16;
-  uint index = r4804 << 2;
+  n24 table = r4801 | r4802 << 8 | r4803 << 16;
+  n24 index = r4804 << 2;
 
-  uint address = table + index;
+  n24 address = table + index;
   dcuMode     = dataromRead(address + 0);
   dcuAddress  = dataromRead(address + 1) << 16;
   dcuAddress |= dataromRead(address + 2) <<  8;
@@ -18,14 +18,14 @@ auto SPC7110::dcuBeginTransfer() -> void {
   decompressor->initialize(dcuMode, dcuAddress);
   decompressor->decode();
 
-  uint seek = r480b & 2 ? r4805 | r4806 << 8 : 0;
+  n16 seek = r480b & 2 ? r4805 | r4806 << 8 : 0;
   while(seek--) decompressor->decode();
 
   r480c |= 0x80;
   dcuOffset = 0;
 }
 
-auto SPC7110::dcuRead() -> uint8 {
+auto SPC7110::dcuRead() -> n8 {
   if((r480c & 0x80) == 0) return 0x00;
 
   if(dcuOffset == 0) {
@@ -46,12 +46,12 @@ auto SPC7110::dcuRead() -> uint8 {
         break;
       }
 
-      uint seek = r480b & 1 ? r4807 : (uint8)1;
+      n8 seek = r480b & 1 ? r4807 : (n8)1;
       while(seek--) decompressor->decode();
     }
   }
 
-  uint8 data = dcuTile[dcuOffset++];
+  n8 data = dcuTile[dcuOffset++];
   dcuOffset &= 8 * decompressor->bpp - 1;
   return data;
 }

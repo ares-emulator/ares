@@ -15,7 +15,7 @@ auto CPU::Debugger::load(Node::Object parent) -> void {
 }
 
 auto CPU::Debugger::instruction() -> void {
-  if(tracer.instruction->enabled() && tracer.instruction->address(uint20(cpu.V30MZ::r.cs * 16 + cpu.V30MZ::r.ip))) {
+  if(tracer.instruction->enabled() && tracer.instruction->address(n20(cpu.V30MZ::r.cs * 16 + cpu.V30MZ::r.ip))) {
     if(auto instruction = cpu.disassembleInstruction()) {
       tracer.instruction->notify(instruction, cpu.disassembleContext());
     }

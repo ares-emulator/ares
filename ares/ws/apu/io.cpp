@@ -1,5 +1,5 @@
-auto APU::portRead(uint16 address) -> uint8 {
-  uint8 data;
+auto APU::portRead(n16 address) -> n8 {
+  n8 data;
 
   //SDMA_SRC
   if(address == 0x004a) return dma.s.source.bit( 0, 7);
@@ -154,7 +154,7 @@ auto APU::portRead(uint16 address) -> uint8 {
   return data;
 }
 
-auto APU::portWrite(uint16 address, uint8 data) -> void {
+auto APU::portWrite(n16 address, n8 data) -> void {
   //SDMA_SRC
   if(address == 0x004a) { dma.r.source.bit( 0, 7) = data.bit(0,7); return; }
   if(address == 0x004b) { dma.r.source.bit( 8,15) = data.bit(0,7); return; }

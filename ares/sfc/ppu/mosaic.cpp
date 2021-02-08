@@ -6,7 +6,7 @@ alwaysinline auto PPU::Mosaic::enable() const -> bool {
   return false;
 }
 
-alwaysinline auto PPU::Mosaic::voffset() const -> uint {
+alwaysinline auto PPU::Mosaic::voffset() const -> u32 {
   return size - vcounter;
 }
 
@@ -21,6 +21,6 @@ auto PPU::Mosaic::scanline() -> void {
 }
 
 auto PPU::Mosaic::power() -> void {
-  size = (uint4)random() + 1;
+  size = (n4)random() + 1;
   vcounter = 0;
 }

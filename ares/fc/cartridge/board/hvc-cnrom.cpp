@@ -51,10 +51,10 @@ struct HVC_CNROM : Interface {
     if(characterRAM) return characterRAM.write(address, data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(characterRAM);
     s(mirror);
     s(characterBank);

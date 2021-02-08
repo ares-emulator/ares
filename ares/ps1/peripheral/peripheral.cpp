@@ -32,7 +32,7 @@ auto Peripheral::main() -> void {
   step(8);
 }
 
-auto Peripheral::step(uint clocks) -> void {
+auto Peripheral::step(u32 clocks) -> void {
   Thread::clock += clocks;
 }
 

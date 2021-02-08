@@ -95,7 +95,7 @@ struct Group : sGroup {
   template<typename... P> Group(P&&... p) : Group() { _append(std::forward<P>(p)...); }
 
   auto append(sObject object) -> type& { return self().append(object), *this; }
-  auto object(unsigned position) const { return self().object(position); }
+  auto object(u32 position) const { return self().object(position); }
   auto objectCount() const { return self().objectCount(); }
   template<typename T = Object> auto objects() const -> vector<T> {
     vector<T> objects;
@@ -122,7 +122,7 @@ struct Timer : sTimer {
   auto doActivate() const { return self().doActivate(); }
   auto interval() const { return self().interval(); }
   auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
-  auto setInterval(unsigned interval = 0) { return self().setInterval(interval), *this; }
+  auto setInterval(u32 interval = 0) { return self().setInterval(interval), *this; }
 };
 #endif
 
@@ -136,7 +136,7 @@ struct Action : sAction {
 struct Menu : sMenu {
   DeclareSharedAction(Menu)
 
-  auto action(unsigned position) const { return self().action(position); }
+  auto action(u32 position) const { return self().action(position); }
   auto actionCount() const { return self().actionCount(); }
   auto actions() const { return self().actions(); }
   auto append(sAction action) { return self().append(action), *this; }
@@ -293,14 +293,14 @@ struct ComboButton : sComboButton {
 
   auto append(sComboButtonItem item) { return self().append(item), *this; }
   auto doChange() const { return self().doChange(); }
-  auto item(unsigned position) const { return self().item(position); }
+  auto item(u32 position) const { return self().item(position); }
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
   auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto remove(sComboButtonItem item) { return self().remove(item), *this; }
   auto reset() { return self().reset(), *this; }
   auto selected() const { return self().selected(); }
-  auto setParent(mObject* parent = nullptr, signed offset = -1) { return self().setParent(parent, offset), *this; }
+  auto setParent(mObject* parent = nullptr, s32 offset = -1) { return self().setParent(parent, offset), *this; }
 };
 #endif
 
@@ -325,7 +325,7 @@ struct ComboEdit : sComboEdit {
   auto doChange() const { return self().doChange(); }
   auto editable() const { return self().editable(); }
   auto foregroundColor() const { return self().foregroundColor(); }
-  auto item(uint position) const { return self().item(position); }
+  auto item(u32 position) const { return self().item(position); }
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
   auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
@@ -377,19 +377,19 @@ struct HexEdit : sHexEdit {
   auto address() const { return self().address(); }
   auto backgroundColor() const { return self().backgroundColor(); }
   auto columns() const { return self().columns(); }
-  auto doRead(unsigned offset) const { return self().doRead(offset); }
-  auto doWrite(unsigned offset, uint8_t data) const { return self().doWrite(offset, data); }
+  auto doRead(u32 offset) const { return self().doRead(offset); }
+  auto doWrite(u32 offset, u8 data) const { return self().doWrite(offset, data); }
   auto foregroundColor() const { return self().foregroundColor(); }
   auto length() const { return self().length(); }
-  auto onRead(const function<uint8_t (unsigned)>& callback = {}) { return self().onRead(callback), *this; }
-  auto onWrite(const function<void (unsigned, uint8_t)>& callback = {}) { return self().onWrite(callback), *this; }
+  auto onRead(const function<u8 (u32)>& callback = {}) { return self().onRead(callback), *this; }
+  auto onWrite(const function<void (u32, u8)>& callback = {}) { return self().onWrite(callback), *this; }
   auto rows() const { return self().rows(); }
-  auto setAddress(unsigned address) { return self().setAddress(address), *this; }
+  auto setAddress(u32 address) { return self().setAddress(address), *this; }
   auto setBackgroundColor(Color color = {}) { return self().setBackgroundColor(color), *this; }
-  auto setColumns(unsigned columns = 16) { return self().setColumns(columns), *this; }
+  auto setColumns(u32 columns = 16) { return self().setColumns(columns), *this; }
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
-  auto setLength(unsigned length) { return self().setLength(length), *this; }
-  auto setRows(unsigned rows = 16) { return self().setRows(rows), *this; }
+  auto setLength(u32 length) { return self().setLength(length), *this; }
+  auto setRows(u32 rows = 16) { return self().setRows(rows), *this; }
   auto update() { return self().update(), *this; }
 };
 #endif
@@ -402,8 +402,8 @@ struct HorizontalScrollBar : sHorizontalScrollBar {
   auto length() const { return self().length(); }
   auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto position() const { return self().position(); }
-  auto setLength(unsigned length = 101) { return self().setLength(length), *this; }
-  auto setPosition(unsigned position = 0) { return self().setPosition(position), *this; }
+  auto setLength(u32 length = 101) { return self().setLength(length), *this; }
+  auto setPosition(u32 position = 0) { return self().setPosition(position), *this; }
 };
 #endif
 
@@ -415,8 +415,8 @@ struct HorizontalSlider : sHorizontalSlider {
   auto length() const { return self().length(); }
   auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto position() const { return self().position(); }
-  auto setLength(unsigned length = 101) { return self().setLength(length), *this; }
-  auto setPosition(unsigned position = 0) { return self().setPosition(position), *this; }
+  auto setLength(u32 length = 101) { return self().setLength(length), *this; }
+  auto setPosition(u32 position = 0) { return self().setPosition(position), *this; }
 };
 #endif
 
@@ -446,7 +446,7 @@ struct IconView : sIconView {
   auto doContext() const { return self().doContext(); }
   auto flow() const { return self().flow(); }
   auto foregroundColor() const { return self().foregroundColor(); }
-  auto item(unsigned position) const { return self().item(position); }
+  auto item(u32 position) const { return self().item(position); }
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
   auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
@@ -461,7 +461,7 @@ struct IconView : sIconView {
   auto setFlow(Orientation orientation = Orientation::Vertical) { return self().setFlow(orientation), *this; }
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
   auto setOrientation(Orientation orientation = Orientation::Horizontal) { return self().setOrientation(orientation), *this; }
-  auto setSelected(const vector<signed>& selections) { return self().setSelected(selections), *this; }
+  auto setSelected(const vector<s32>& selections) { return self().setSelected(selections), *this; }
 };
 #endif
 
@@ -504,7 +504,7 @@ struct ProgressBar : sProgressBar {
   DeclareSharedWidget(ProgressBar)
 
   auto position() const { return self().position(); }
-  auto setPosition(unsigned position = 0) { return self().setPosition(position), *this; }
+  auto setPosition(u32 position = 0) { return self().setPosition(position), *this; }
 };
 #endif
 
@@ -596,7 +596,7 @@ struct TabFrame : sTabFrame {
   auto doChange() const { return self().doChange(); }
   auto doClose(sTabFrameItem item) const { return self().doClose(item); }
   auto doMove(sTabFrameItem from, sTabFrameItem to) const { return self().doMove(from, to); }
-  auto item(unsigned position) const { return self().item(position); }
+  auto item(u32 position) const { return self().item(position); }
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
   auto navigation() const { return self().navigation(); }
@@ -629,13 +629,13 @@ struct TableViewColumn : sTableViewColumn {
   auto setEditable(bool editable = true) { return self().setEditable(editable), *this; }
   auto setExpandable(bool expandable = true) { return self().setExpandable(expandable), *this; }
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
-  auto setHorizontalAlignment(float alignment = 0.0) { return self().setHorizontalAlignment(alignment), *this; }
+  auto setHorizontalAlignment(f32 alignment = 0.0) { return self().setHorizontalAlignment(alignment), *this; }
   auto setIcon(const image& icon = {}) { return self().setIcon(icon), *this; }
   auto setResizable(bool resizable = true) { return self().setResizable(resizable), *this; }
   auto setSorting(Sort sorting = Sort::None) { return self().setSorting(sorting), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
-  auto setVerticalAlignment(float alignment = 0.5) { return self().setVerticalAlignment(alignment), *this; }
-  auto setWidth(float width = 0) { return self().setWidth(width), *this; }
+  auto setVerticalAlignment(f32 alignment = 0.5) { return self().setVerticalAlignment(alignment), *this; }
+  auto setWidth(f32 width = 0) { return self().setWidth(width), *this; }
   auto sort(Sort sorting) { return self().sort(sorting), *this; }
   auto sorting() const { return self().sorting(); }
   auto text() const { return self().text(); }
@@ -672,7 +672,7 @@ struct TableViewItem : sTableViewItem {
   auto alignment() const { return self().alignment(); }
   auto append(sTableViewCell cell) { return self().append(cell), *this; }
   auto backgroundColor() const { return self().backgroundColor(); }
-  auto cell(unsigned position) const { return self().cell(position); }
+  auto cell(u32 position) const { return self().cell(position); }
   auto cellCount() const { return self().cellCount(); }
   auto cells() const { return self().cells(); }
   auto foregroundColor() const { return self().foregroundColor(); }
@@ -697,7 +697,7 @@ struct TableView : sTableView {
   auto batchable() const { return self().batchable(); }
   auto batched() const { return self().batched(); }
   auto bordered() const { return self().bordered(); }
-  auto column(uint position) const { return self().column(position); }
+  auto column(u32 position) const { return self().column(position); }
   auto columnCount() const { return self().columnCount(); }
   auto columns() const { return self().columns(); }
   auto doActivate(sTableViewCell cell) const { return self().doActivate(cell); }
@@ -708,7 +708,7 @@ struct TableView : sTableView {
   auto doToggle(sTableViewCell cell) const { return self().doToggle(cell); }
   auto foregroundColor() const { return self().foregroundColor(); }
   auto headered() const { return self().headered(); }
-  auto item(unsigned position) const { return self().item(position); }
+  auto item(u32 position) const { return self().item(position); }
   auto itemCount() const { return self().itemCount(); }
   auto items() const { return self().items(); }
   auto onActivate(const function<void (TableViewCell)>& callback = {}) { return self().onActivate(callback), *this; }
@@ -829,8 +829,8 @@ struct VerticalScrollBar : sVerticalScrollBar {
   auto length() const { return self().length(); }
   auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto position() const { return self().position(); }
-  auto setLength(unsigned length = 101) { return self().setLength(length), *this; }
-  auto setPosition(unsigned position = 0) { return self().setPosition(position), *this; }
+  auto setLength(u32 length = 101) { return self().setLength(length), *this; }
+  auto setPosition(u32 position = 0) { return self().setPosition(position), *this; }
 };
 #endif
 
@@ -842,8 +842,8 @@ struct VerticalSlider : sVerticalSlider {
   auto length() const { return self().length(); }
   auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto position() const { return self().position(); }
-  auto setLength(unsigned length = 101) { return self().setLength(length), *this; }
-  auto setPosition(unsigned position = 0) { return self().setPosition(position), *this; }
+  auto setLength(u32 length = 101) { return self().setLength(length), *this; }
+  auto setPosition(u32 position = 0) { return self().setPosition(position), *this; }
 };
 #endif
 
@@ -868,7 +868,7 @@ struct StatusBar : sStatusBar {
 struct PopupMenu : sPopupMenu {
   DeclareSharedObject(PopupMenu)
 
-  auto action(unsigned position) const { return self().action(position); }
+  auto action(u32 position) const { return self().action(position); }
   auto actionCount() const { return self().actionCount(); }
   auto actions() const { return self().actions(); }
   auto append(sAction action) { return self().append(action), *this; }
@@ -882,7 +882,7 @@ struct MenuBar : sMenuBar {
   DeclareSharedObject(MenuBar)
 
   auto append(sMenu menu) { return self().append(menu), *this; }
-  auto menu(unsigned position) const { return self().menu(position); }
+  auto menu(u32 position) const { return self().menu(position); }
   auto menuCount() const { return self().menuCount(); }
   auto menus() const { return self().menus(); }
   auto remove(sMenu menu) { return self().remove(menu), *this; }
@@ -901,8 +901,8 @@ struct Window : sWindow {
   auto dismissable() const { return self().dismissable(); }
   auto doClose() const { return self().doClose(); }
   auto doDrop(vector<string> names) const { return self().doDrop(names); }
-  auto doKeyPress(signed key) const { return self().doKeyPress(key); }
-  auto doKeyRelease(signed key) const { return self().doKeyRelease(key); }
+  auto doKeyPress(s32 key) const { return self().doKeyPress(key); }
+  auto doKeyRelease(s32 key) const { return self().doKeyRelease(key); }
   auto doMove() const { return self().doMove(); }
   auto doSize() const { return self().doSize(); }
   auto droppable() const { return self().droppable(); }
@@ -919,8 +919,8 @@ struct Window : sWindow {
   auto monitor() const { return self().monitor(); }
   auto onClose(const function<void ()>& callback = {}) { return self().onClose(callback), *this; }
   auto onDrop(const function<void (vector<string>)>& callback = {}) { return self().onDrop(callback), *this; }
-  auto onKeyPress(const function<void (signed)>& callback = {}) { return self().onKeyPress(callback), *this; }
-  auto onKeyRelease(const function<void (signed)>& callback = {}) { return self().onKeyRelease(callback), *this; }
+  auto onKeyPress(const function<void (s32)>& callback = {}) { return self().onKeyPress(callback), *this; }
+  auto onKeyRelease(const function<void (s32)>& callback = {}) { return self().onKeyRelease(callback), *this; }
   auto onMove(const function<void ()>& callback = {}) { return self().onMove(callback), *this; }
   auto onSize(const function<void ()>& callback = {}) { return self().onSize(callback), *this; }
   auto remove(sMenuBar menuBar) { return self().remove(menuBar), *this; }

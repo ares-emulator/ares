@@ -7,6 +7,7 @@ auto pMenuBar::construct() -> void {
 }
 
 auto pMenuBar::destruct() -> void {
+  pApplication::state().menuBarsToRebuild.removeByValue(this);
   if(hmenu) { DestroyMenu(hmenu); hmenu = nullptr; }
   if(auto parent = _parent()) {
     SetMenu(parent->hwnd, nullptr);
@@ -43,7 +44,7 @@ auto pMenuBar::_parent() -> maybe<pWindow&> {
   return nothing;
 }
 
-auto pMenuBar::_update() -> void {
+auto pMenuBar::_rebuild() -> void {
   if(hmenu) DestroyMenu(hmenu);
   hmenu = CreateMenu();
 
@@ -52,11 +53,11 @@ auto pMenuBar::_update() -> void {
   mi.dwStyle = MNS_NOTIFYBYPOS;  //| MNS_MODELESS;
   SetMenuInfo(hmenu, &mi);
 
-  unsigned position = 0;
+  u32 position = 0;
 
   #if defined(Hiro_Menu)
   for(auto& menu : state().menus) {
-    unsigned enabled = menu->enabled() ? 0 : MF_GRAYED;
+    u32 enabled = menu->enabled() ? 0 : MF_GRAYED;
 
     MENUITEMINFO mii{sizeof(MENUITEMINFO)};
     mii.fMask = MIIM_DATA;
@@ -76,6 +77,17 @@ auto pMenuBar::_update() -> void {
     SetMenu(parent->hwnd, self().visible(true) ? hmenu : nullptr);
     parent->setGeometry(parent->state().geometry);
   }
+}
+
+auto pMenuBar::_update() -> void {
+  //if there is no menu bar, build it immediately to ensure correct window geometry calculations
+  if(auto parent = _parent()) {
+    if(!GetMenu(parent->hwnd)) return _rebuild();
+  }
+
+  //otherwise, defer the menu bar update for later to reduce flickering
+  pApplication::state().menuBarsToRebuild.removeByValue(this);
+  pApplication::state().menuBarsToRebuild.append(this);
 }
 
 }

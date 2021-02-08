@@ -27,7 +27,9 @@ Famicom::Famicom() {
 }
 
 auto Famicom::load() -> bool {
-  if(!ares::Famicom::load(root, "Famicom")) return false;
+  auto region = Emulator::region();
+  auto system = region == "NTSC-J" ? "Famicom" : "Nintendo";
+  if(!ares::Famicom::load(root, {"[Nintendo] ", system, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -119,7 +121,7 @@ auto FamicomDiskSystem::load(Menu menu) -> void {
 }
 
 auto FamicomDiskSystem::load() -> bool {
-  if(!ares::Famicom::load(root, "Famicom")) return false;
+  if(!ares::Famicom::load(root, "[Nintendo] Famicom (NTSC-J)")) return false;
 
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);

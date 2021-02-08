@@ -101,8 +101,8 @@ struct HVC_ExROM : Interface {  //MMC5
     Envelope envelope;
     n16 lengthCounter;
     n16 periodCounter;
-    n02 duty;
-    n03 dutyCounter;
+    n2  duty;
+    n3  dutyCounter;
     n11 period;
   };
 
@@ -694,13 +694,13 @@ struct HVC_ExROM : Interface {  //MMC5
     }
   }
 
-  auto power() -> void {
+  auto power() -> void override {
     for(auto& byte : exram) byte = 0xff;
     programMode = 3;
     programBank[3] = 0xff;
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programRAM);
     s(exram);
     s(pulse1);
@@ -756,54 +756,54 @@ struct HVC_ExROM : Interface {  //MMC5
   Pin cl3;  //$5207-5208
   Pin sl3;  //$5207-5208
 
-  n02 programMode;    //$5100
-  n02 characterMode;  //$5101
+  n2  programMode;    //$5100
+  n2  characterMode;  //$5101
 
-  n02 ramWriteProtect[2];  //$5102-$5103
+  n2  ramWriteProtect[2];  //$5102-$5103
 
-  n02 exramMode;         //$5104
-  n02 nametableMode[4];  //$5105
-  n08 fillmodeTile;      //$5106
-  n08 fillmodeColor;     //$5107
+  n2  exramMode;         //$5104
+  n2  nametableMode[4];  //$5105
+  n8  fillmodeTile;      //$5106
+  n8  fillmodeColor;     //$5107
 
-  n01 ramSelect;                   //$5113
-  n02 ramBank;                     //$5113
-  n08 programBank[4];              //$5114-5117
+  n1  ramSelect;                   //$5113
+  n2  ramBank;                     //$5113
+  n8  programBank[4];              //$5114-5117
   n10 characterSpriteBank[8];      //$5120-5127
   n10 characterBackgroundBank[4];  //$5128-512b
-  n02 characterBankHi;             //$5130
+  n2  characterBankHi;             //$5130
 
-  n01 vsplitEnable;  //$5200
-  n01 vsplitSide;    //$5200
-  n05 vsplitTile;    //$5200
-  n08 vsplitScroll;  //$5201
-  n08 vsplitBank;    //$5202
+  n1  vsplitEnable;  //$5200
+  n1  vsplitSide;    //$5200
+  n5  vsplitTile;    //$5200
+  n8  vsplitScroll;  //$5201
+  n8  vsplitBank;    //$5202
 
-  n08 irqCoincidence;  //$5203
-  n01 irqEnable;       //$5204
+  n8  irqCoincidence;  //$5203
+  n1  irqEnable;       //$5204
 
-  n08 multiplicand;  //$5205
-  n08 multiplier;    //$5206
+  n8  multiplicand;  //$5205
+  n8  multiplier;    //$5206
 
   n16 timerCounter;  //$5209-520a
-  n01 timerLine;
+  n1  timerLine;
 
   //status registers
 
-  n08 cycleCounter;
-  n01 irqLine;
-  n01 inFrame;
+  n8  cycleCounter;
+  n1  irqLine;
+  n1  inFrame;
 
   n16 vcounter;
   n16 hcounter;
   n16 characterAccess[4];
-  n01 characterActive;
-  n01 sprite8x16;
+  n1  characterActive;
+  n1  sprite8x16;
 
-  n08 exbank;
-  n08 exattr;
+  n8  exbank;
+  n8  exattr;
 
-  n01 vsplitFetch;
-  n08 vsplitVoffset;
-  n08 vsplitHoffset;
+  n1  vsplitFetch;
+  n8  vsplitVoffset;
+  n8  vsplitHoffset;
 };

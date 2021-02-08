@@ -18,10 +18,10 @@ auto TMS9918::unload() -> void {
 
 auto TMS9918::main() -> void {
   if(io.vcounter < 192) {
-    uint8 y = io.vcounter;
+    n8 y = io.vcounter;
     sprite(y);
     auto line = screen->pixels().data() + y * 256;
-    for(uint8 x : range(256)) {
+    for(n8 x : range(256)) {
       background(x, y);
       sprite(x, y);
       line[x] = output.color;

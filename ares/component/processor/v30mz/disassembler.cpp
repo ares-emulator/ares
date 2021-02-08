@@ -1,15 +1,15 @@
-auto V30MZ::disassembleInstruction(uint16 cs, uint16 ip) -> string {
+auto V30MZ::disassembleInstruction(n16 cs, n16 ip) -> string {
   //hack: prefixes execute as separate instructions; combine them instead
-  static uint32 suppress = 0xffffffff;
+  static n32 suppress = 0xffffffff;
   if((cs << 16 | ip) == suppress) return {};
 
   string output, repeat, prefix;
 
-  auto read = [&](uint offset) -> uint8 {
+  auto read = [&](u32 offset) -> n8 {
     return V30MZ::read(Byte, cs, ip + offset);
   };
 
-  auto modRM = [&](uint offset = 1) -> uint {
+  auto modRM = [&](u32 offset = 1) -> u32 {
     auto modRM = read(offset++);
     if((modRM & 0xc7) == 0x06) return offset + 2;
     if((modRM & 0xc0) == 0x40) return offset + 1;
@@ -32,72 +32,72 @@ auto V30MZ::disassembleInstruction(uint16 cs, uint16 ip) -> string {
     return {opcode};
   };
 
-  auto segmentRegister = [&](uint offset = 1) -> string {
+  auto segmentRegister = [&](u32 offset = 1) -> string {
     auto modRM = read(offset);
     static const string seg[] = {"es", "cs", "ss", "ds"};
     return {seg[modRM >> 3 & 2]};
   };
 
-  auto readByte = [&](uint offset) -> string {
+  auto readByte = [&](u32 offset) -> string {
     return hex(read(offset), 2L);
   };
 
-  auto immediateByte = [&](uint offset = 1) -> string {
+  auto immediateByte = [&](u32 offset = 1) -> string {
     return {"0x", readByte(offset)};
   };
 
-  auto immediateWord = [&](uint offset = 1) -> string {
+  auto immediateWord = [&](u32 offset = 1) -> string {
     return {"0x", readByte(offset + 1), readByte(offset + 0)};
   };
 
-  auto immediateLong = [&](uint offset = 1) -> string {
+  auto immediateLong = [&](u32 offset = 1) -> string {
     return {"0x", readByte(offset + 3), readByte(offset + 2), ":",
             "0x", readByte(offset + 1), readByte(offset + 0)};
   };
 
-  auto indirectByte = [&](uint offset = 1) -> string {
+  auto indirectByte = [&](u32 offset = 1) -> string {
     return {"[", immediateByte(), "]"};
   };
 
-  auto indirectWord = [&](uint offset = 1) -> string {
+  auto indirectWord = [&](u32 offset = 1) -> string {
     return {"[", immediateWord(), "]"};
   };
 
-  auto relativeByte = [&](uint offset = 1) -> string {
-    int8 displacement = read(offset);
+  auto relativeByte = [&](u32 offset = 1) -> string {
+    i8 displacement = read(offset);
     return {"cs:0x", hex(ip + offset + 1 + displacement, 4L)};
   };
 
-  auto relativeWord = [&](uint offset = 1) -> string {
-    int16 displacement = read(offset + 1) << 8 | read(offset + 0) << 0;
+  auto relativeWord = [&](u32 offset = 1) -> string {
+    i16 displacement = read(offset + 1) << 8 | read(offset + 0) << 0;
     return {"cs:0x", hex(ip + offset + 2 + displacement, 4L)};
   };
 
-  auto adjustByte = [&](uint offset = 2) -> string {
-    int8 displacement = read(offset);
+  auto adjustByte = [&](u32 offset = 2) -> string {
+    i8 displacement = read(offset);
     if(displacement >= 0) return {"+0x", hex(displacement, 2L)};
     return {"-0x", hex(abs(displacement), 2L)};
   };
 
-  auto adjustWord = [&](uint offset = 2) -> string {
-    int16 displacement = read(offset + 1) << 8 | read(offset + 0) << 0;
+  auto adjustWord = [&](u32 offset = 2) -> string {
+    i16 displacement = read(offset + 1) << 8 | read(offset + 0) << 0;
     if(displacement >= 0) return {"+0x", hex(displacement, 4L)};
     return {"-0x", hex(abs(displacement), 2L)};
   };
 
-  auto registerByte = [&](uint offset = 1) -> string {
+  auto registerByte = [&](u32 offset = 1) -> string {
     auto modRM = read(offset);
     static const string reg[] = {"al", "cl", "dl", "bl", "ah", "ch", "dh", "bh"};
     return reg[modRM >> 3 & 7];
   };
 
-  auto registerWord = [&](uint offset = 1) -> string {
+  auto registerWord = [&](u32 offset = 1) -> string {
     auto modRM = read(offset);
     static const string reg[] = {"ax", "cx", "dx", "bx", "sp", "bp", "si", "di"};
     return reg[modRM >> 3 & 7];
   };
 
-  auto memoryByte = [&](uint offset = 1) -> string {
+  auto memoryByte = [&](u32 offset = 1) -> string {
     auto modRM = read(offset);
     if(modRM >= 0xc0) {
       static const string reg[] = {"al", "cl", "dl", "bl", "ah", "ch", "dh", "bh"};
@@ -111,7 +111,7 @@ auto V30MZ::disassembleInstruction(uint16 cs, uint16 ip) -> string {
     return {"byte[", segment(seg[modRM & 7]), mem[modRM & 7], "]"};
   };
 
-  auto memoryWord = [&](uint offset = 1) -> string {
+  auto memoryWord = [&](u32 offset = 1) -> string {
     auto modRM = read(offset);
     if(modRM >= 0xc0) {
       static const string reg[] = {"ax", "cx", "dx", "bx", "sp", "bp", "si", "di"};
@@ -125,25 +125,25 @@ auto V30MZ::disassembleInstruction(uint16 cs, uint16 ip) -> string {
     return {"word[", segment(seg[modRM & 7]), mem[modRM & 7], "]"};
   };
 
-  auto group1 = [&](uint offset = 1) -> string {
+  auto group1 = [&](u32 offset = 1) -> string {
     auto modRM = read(offset);
     static const string opcode[] = {"add", "or", "adc", "sbb", "and", "sub", "xor", "cmp"};
     return opcode[modRM >> 3 & 7];
   };
 
-  auto group2 = [&](uint offset = 1) -> string {
+  auto group2 = [&](u32 offset = 1) -> string {
     auto modRM = read(offset);
     static const string opcode[] = {"rol", "ror", "rcl", "rcr", "shl", "shr", "sal", "sar"};
     return opcode[modRM >> 3 & 7];
   };
 
-  auto group3 = [&](uint offset = 1) -> string {
+  auto group3 = [&](u32 offset = 1) -> string {
     auto modRM = read(offset);
     static const string opcode[] = {"test", "test", "not", "neg", "mul", "imul", "div", "idiv"};
     return opcode[modRM >> 3 & 7];
   };
 
-  auto group4 = [&](uint offset = 1) -> string {
+  auto group4 = [&](u32 offset = 1) -> string {
     auto modRM = read(offset);
     static const string opcode[] = {"inc", "dec", "call", "callf", "jmp", "jmpf", "push", "push"};
     return opcode[modRM >> 3 & 7];
@@ -154,7 +154,7 @@ auto V30MZ::disassembleInstruction(uint16 cs, uint16 ip) -> string {
     break
 
   auto opcode = read(0);
-  for(uint index : range(7)) {
+  for(u32 index : range(7)) {
     if(opcode == 0x26) { prefix = "es";    ip++; opcode = read(0); suppress = cs << 16 | ip; continue; }
     if(opcode == 0x2e) { prefix = "cs";    ip++; opcode = read(0); suppress = cs << 16 | ip; continue; }
     if(opcode == 0x36) { prefix = "ss";    ip++; opcode = read(0); suppress = cs << 16 | ip; continue; }

@@ -40,7 +40,7 @@ struct CPU : Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto synchronize() -> void;
 
   auto instruction() -> void;
@@ -65,9 +65,9 @@ struct CPU : Thread {
 
     //branch delay slots
     struct Branch {
-       uint1 slot;
-       uint1 take;
-      uint32 address;
+      n1  slot;
+      n1  take;
+      n32 address;
     } branch[2];
 
     //interrupt delay counter
@@ -77,15 +77,15 @@ struct CPU : Thread {
   auto load(u32& target) const -> u32;
   auto load(u32& target, u32 source) -> void;
   auto store(u32& target, u32 source) -> void;
-  template<uint N = 1> auto branch(u32 address, bool take = true) -> void;
+  template<u32 N = 1> auto branch(u32 address, bool take = true) -> void;
   auto processDelayLoad() -> void;
   auto processDelayBranch() -> void;
 
   //memory.cpp
   auto fetch(u32 address) -> u32;
 
-  template<uint Size> auto read(u32 address) -> u32;
-  template<uint Size> auto write(u32 address, u32 data) -> void;
+  template<u32 Size> auto read(u32 address) -> u32;
+  template<u32 Size> auto write(u32 address, u32 data) -> void;
 
   //cache.cpp
   struct InstructionCache {
@@ -108,11 +108,11 @@ struct CPU : Thread {
     Exception(CPU& self) : self(self) {}
 
     auto operator()() -> bool;
-    auto trigger(uint code) -> void;
+    auto trigger(u32 code) -> void;
 
     auto interruptsPending() -> u8;
     auto interrupt() -> void;
-    template<uint Mode> auto address(u32 address) -> void;
+    template<u32 Mode> auto address(u32 address) -> void;
     auto busInstruction() -> void;
     auto busData() -> void;
     auto systemCall() -> void;
@@ -131,7 +131,7 @@ struct CPU : Thread {
     Breakpoint(CPU& self) : self(self) {}
 
     auto testCode(u32 address) -> bool;
-    template<uint Mode, uint Size> auto testData(u32 address) -> bool;
+    template<u32 Mode, u32 Size> auto testData(u32 address) -> bool;
 
     u32 lastPC;
   } breakpoint{*this};
@@ -243,27 +243,27 @@ struct CPU : Thread {
 
       // 7: Breakpoint Control
       struct Status {
-        uint1 any;
-        uint1 code;
-        uint1 data;
-        uint1 read;
-        uint1 write;
-        uint1 trace;
+        n1 any;
+        n1 code;
+        n1 data;
+        n1 read;
+        n1 write;
+        n1 trace;
       } status;
-      uint2 redirection;
-      uint2 unknown;
+      n2 redirection;
+      n2 unknown;
       struct Test {
-        uint1 code;
-        uint1 data;
-        uint1 read;
-        uint1 write;
-        uint1 trace;
+        n1 code;
+        n1 data;
+        n1 read;
+        n1 write;
+        n1 trace;
       } test;
       struct Enable {
-        uint1 master;
-        uint1 kernel;
-        uint1 user;
-        uint1 trap;
+        n1 master;
+        n1 kernel;
+        n1 user;
+        n1 trap;
       } enable;
     } breakpoint;
 
@@ -276,35 +276,35 @@ struct CPU : Thread {
     //12: Status
     struct Status {
       struct Frame {
-        uint1 interruptEnable;
-        uint1 userMode;
+        n1 interruptEnable;
+        n1 userMode;
       } frame[3];
-      uint8 interruptMask;
+      n8 interruptMask;
       struct Cache {
-        uint1 isolate;
-        uint1 swap;
-        uint1 parityZero;
-        uint1 loadWasData;
-        uint1 parityError;
+        n1 isolate;
+        n1 swap;
+        n1 parityZero;
+        n1 loadWasData;
+        n1 parityError;
       } cache;
-      uint1 tlbShutdown;
-      uint1 vectorLocation;
-      uint1 reverseEndian;
+      n1 tlbShutdown;
+      n1 vectorLocation;
+      n1 reverseEndian;
       struct Enable {
-        uint1 coprocessor0;
-        uint1 coprocessor1;
-        uint1 coprocessor2;
-        uint1 coprocessor3;
+        n1 coprocessor0;
+        n1 coprocessor1;
+        n1 coprocessor2;
+        n1 coprocessor3;
       } enable;
     } status;
 
     //13: Cause
     struct Cause {
-      uint5 exceptionCode;
-      uint8 interruptPending;
-      uint2 coprocessorError;
-      uint1 branchTaken;
-      uint1 branchDelay;
+      n5 exceptionCode;
+      n8 interruptPending;
+      n2 coprocessorError;
+      n1 branchTaken;
+      n1 branchDelay;
     } cause;
 
     //14: Exception Program Counter
@@ -368,23 +368,23 @@ struct CPU : Thread {
     //gte.cpp
     auto constructTable() -> void;
 
-    auto countLeadingZeroes16(u16) -> uint;
-    auto countLeadingZeroes32(u32) -> uint;
+    auto countLeadingZeroes16(u16) -> u32;
+    auto countLeadingZeroes32(u32) -> u32;
 
-    auto getDataRegister(uint) -> u32;
-    auto setDataRegister(uint, u32) -> void;
+    auto getDataRegister(u32) -> u32;
+    auto setDataRegister(u32, u32) -> void;
 
-    auto getControlRegister(uint) -> u32;
-    auto setControlRegister(uint, u32) -> void;
+    auto getControlRegister(u32) -> u32;
+    auto setControlRegister(u32, u32) -> void;
 
-    template<uint> auto checkMac(s64 value) -> s64;
-    template<uint> auto extend(s64 mac) -> s64;
-    template<uint> auto saturateIr(s32 value, bool lm = 0) -> s32;
-    template<uint> auto saturateColor(s32 value) -> u8;
+    template<u32> auto checkMac(s64 value) -> s64;
+    template<u32> auto extend(s64 mac) -> s64;
+    template<u32> auto saturateIr(s32 value, bool lm = 0) -> s32;
+    template<u32> auto saturateColor(s32 value) -> u8;
 
-    template<uint> auto setMac(s64 value) -> s64;
-    template<uint> auto setIr(s32 value, bool lm = 0) -> void;
-    template<uint> auto setMacAndIr(s64 value, bool lm = 0) -> void;
+    template<u32> auto setMac(s64 value) -> s64;
+    template<u32> auto setIr(s32 value, bool lm = 0) -> void;
+    template<u32> auto setMacAndIr(s64 value, bool lm = 0) -> void;
     auto setMacAndIr(const v64& vector) -> void;
     auto setOtz(s64 value) -> void;
 
@@ -419,7 +419,7 @@ struct CPU : Thread {
     auto MFC2(u32& rt, u8 rd) -> void;
     auto MTC2(cu32& rt, u8 rd) -> void;
     auto MVMVA(bool lm, u8 tv, u8 mv, u8 mm, u8 sf) -> void;
-    template<uint> auto NC(const v16&) -> void;
+    template<u32> auto NC(const v16&) -> void;
     auto NCCS(bool lm, u8 sf) -> void;
     auto NCCT(bool lm, u8 sf) -> void;
     auto NCDS(bool lm, u8 sf) -> void;

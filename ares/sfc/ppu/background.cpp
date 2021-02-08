@@ -27,13 +27,13 @@ auto PPU::Background::begin() -> void {
 auto PPU::Background::fetchNameTable() -> void {
   if(ppu.vcounter() == 0) return;
 
-  uint nameTableIndex = ppu.hcounter() >> 5 << hires();
-  int x = (ppu.hcounter() & ~31) >> 2;
+  u32 nameTableIndex = ppu.hcounter() >> 5 << hires();
+  s32 x = (ppu.hcounter() & ~31) >> 2;
 
-  uint hpixel = x << hires();
-  uint vpixel = ppu.vcounter();
-  uint hscroll = io.hoffset;
-  uint vscroll = io.voffset;
+  u32 hpixel = x << hires();
+  u32 vpixel = ppu.vcounter();
+  u32 hscroll = io.hoffset;
+  u32 vscroll = io.voffset;
 
   if(hires()) {
     hscroll <<= 1;
@@ -46,13 +46,13 @@ auto PPU::Background::fetchNameTable() -> void {
   bool repeated = false;
   repeat:
 
-  uint hoffset = hpixel + hscroll;
-  uint voffset = vpixel + vscroll;
+  u32 hoffset = hpixel + hscroll;
+  u32 voffset = vpixel + vscroll;
 
   if(ppu.io.bgMode == 2 || ppu.io.bgMode == 4 || ppu.io.bgMode == 6) {
     auto hlookup = ppu.bg3.opt.hoffset;
     auto vlookup = ppu.bg3.opt.voffset;
-    uint valid = 13 + id;
+    u32  valid = 13 + id;
 
     if(ppu.io.bgMode == 4) {
       if(hlookup.bit(valid)) {
@@ -68,28 +68,28 @@ auto PPU::Background::fetchNameTable() -> void {
     }
   }
 
-  uint width = 256 << hires();
-  uint hsize = width << io.tileSize << io.screenSize.bit(0);
-  uint vsize = width << io.tileSize << io.screenSize.bit(1);
+  u32 width = 256 << hires();
+  u32 hsize = width << io.tileSize << io.screenSize.bit(0);
+  u32 vsize = width << io.tileSize << io.screenSize.bit(1);
 
   hoffset &= hsize - 1;
   voffset &= vsize - 1;
 
-  uint vtiles = 3 + io.tileSize;
-  uint htiles = !hires() ? vtiles : 4;
+  u32 vtiles = 3 + io.tileSize;
+  u32 htiles = !hires() ? vtiles : 4;
 
-  uint htile = hoffset >> htiles;
-  uint vtile = voffset >> vtiles;
+  u32 htile = hoffset >> htiles;
+  u32 vtile = voffset >> vtiles;
 
-  uint hscreen = io.screenSize.bit(0) ? 32 << 5 : 0;
-  uint vscreen = io.screenSize.bit(1) ? 32 << 5 + io.screenSize.bit(0) : 0;
+  u32 hscreen = io.screenSize.bit(0) ? 32 << 5 : 0;
+  u32 vscreen = io.screenSize.bit(1) ? 32 << 5 + io.screenSize.bit(0) : 0;
 
-  uint16 offset = (uint5)htile << 0 | (uint5)vtile << 5;
+  n16 offset = (n5)htile << 0 | (n5)vtile << 5;
   if(htile & 0x20) offset += hscreen;
   if(vtile & 0x20) offset += vscreen;
 
-  uint16 address = io.screenAddress + offset;
-  uint16 attributes = ppu.vram[address];
+  n16 address = io.screenAddress + offset;
+  n16 attributes = ppu.vram[address];
 
   auto& tile = tiles[nameTableIndex];
   tile.character = attributes.bit(0,9);
@@ -101,15 +101,15 @@ auto PPU::Background::fetchNameTable() -> void {
   if(htiles == 4 && bool(hoffset & 8) != tile.hmirror) tile.character +=  1;
   if(vtiles == 4 && bool(voffset & 8) != tile.vmirror) tile.character += 16;
 
-  uint characterMask = ppu.vram.mask >> 3 + io.mode;
-  uint characterIndex = io.tiledataAddress >> 3 + io.mode;
-  uint16 origin = tile.character + characterIndex & characterMask;
+  u32 characterMask = ppu.vram.mask >> 3 + io.mode;
+  u32 characterIndex = io.tiledataAddress >> 3 + io.mode;
+  n16 origin = tile.character + characterIndex & characterMask;
 
   if(tile.vmirror) voffset ^= 7;
   tile.address = (origin << 3 + io.mode) + (voffset & 7);
 
-  uint paletteOffset = ppu.io.bgMode == 0 ? id << 5 : 0;
-  uint paletteSize = 2 << io.mode;
+  u32 paletteOffset = ppu.io.bgMode == 0 ? id << 5 : 0;
+  u32 paletteSize = 2 << io.mode;
   tile.palette = paletteOffset + (tile.paletteGroup << paletteSize);
 
   nameTableIndex++;
@@ -120,40 +120,40 @@ auto PPU::Background::fetchNameTable() -> void {
   }
 }
 
-auto PPU::Background::fetchOffset(uint y) -> void {
+auto PPU::Background::fetchOffset(u32 y) -> void {
   if(ppu.vcounter() == 0) return;
 
-  uint characterIndex = ppu.hcounter() >> 5 << hires();
-  uint x = characterIndex << 3;
+  u32 characterIndex = ppu.hcounter() >> 5 << hires();
+  u32 x = characterIndex << 3;
 
-  uint hoffset = x + (io.hoffset & ~7);
-  uint voffset = y + (io.voffset);
+  u32 hoffset = x + (io.hoffset & ~7);
+  u32 voffset = y + (io.voffset);
 
-  uint vtiles = 3 + io.tileSize;
-  uint htiles = !hires() ? vtiles : 4;
+  u32 vtiles = 3 + io.tileSize;
+  u32 htiles = !hires() ? vtiles : 4;
 
-  uint htile = hoffset >> htiles;
-  uint vtile = voffset >> vtiles;
+  u32 htile = hoffset >> htiles;
+  u32 vtile = voffset >> vtiles;
 
-  uint hscreen = io.screenSize.bit(0) ? 32 << 5 : 0;
-  uint vscreen = io.screenSize.bit(1) ? 32 << 5 + io.screenSize.bit(0) : 0;
+  u32 hscreen = io.screenSize.bit(0) ? 32 << 5 : 0;
+  u32 vscreen = io.screenSize.bit(1) ? 32 << 5 + io.screenSize.bit(0) : 0;
 
-  uint16 offset = (uint5)htile << 0 | (uint5)vtile << 5;
+  n16 offset = (n5)htile << 0 | (n5)vtile << 5;
   if(htile & 0x20) offset += hscreen;
   if(vtile & 0x20) offset += vscreen;
 
-  uint16 address = io.screenAddress + offset;
+  n16 address = io.screenAddress + offset;
   if(y == 0) opt.hoffset = ppu.vram[address];
   if(y == 8) opt.voffset = ppu.vram[address];
 }
 
-auto PPU::Background::fetchCharacter(uint index, bool half) -> void {
+auto PPU::Background::fetchCharacter(u32 index, bool half) -> void {
   if(ppu.vcounter() == 0) return;
 
-  uint characterIndex = (ppu.hcounter() >> 5 << hires()) + half;
+  u32 characterIndex = (ppu.hcounter() >> 5 << hires()) + half;
 
   auto& tile = tiles[characterIndex];
-  uint16 data = ppu.vram[tile.address + (index << 3)];
+  n16 data = ppu.vram[tile.address + (index << 3)];
 
   //reverse bits so that the lowest bit is the left-most pixel
   if(!tile.hmirror) {
@@ -164,8 +164,8 @@ auto PPU::Background::fetchCharacter(uint index, bool half) -> void {
 
   //interleave two bitplanes for faster planar decoding later
   tile.data[index] = (
-    ((uint8(data >> 0) * 0x0101010101010101ull & 0x8040201008040201ull) * 0x0102040810204081ull >> 49) & 0x5555
-  | ((uint8(data >> 8) * 0x0101010101010101ull & 0x8040201008040201ull) * 0x0102040810204081ull >> 48) & 0xaaaa
+    ((n8(data >> 0) * 0x0101010101010101ull & 0x8040201008040201ull) * 0x0102040810204081ull >> 49) & 0x5555
+  | ((n8(data >> 8) * 0x0101010101010101ull & 0x8040201008040201ull) * 0x0102040810204081ull >> 48) & 0xaaaa
   );
 }
 
@@ -181,7 +181,7 @@ auto PPU::Background::run(bool screen) -> void {
   if(io.mode == Mode::Mode7) return runMode7();
 
   auto& tile = tiles[renderingIndex];
-  uint8 color;
+  n8 color;
   if(io.mode >= Mode::BPP2) color.bit(0,1) = tile.data[0] & 3; tile.data[0] >>= 2;
   if(io.mode >= Mode::BPP4) color.bit(2,3) = tile.data[1] & 3; tile.data[1] >>= 2;
   if(io.mode >= Mode::BPP8) color.bit(4,5) = tile.data[2] & 3; tile.data[2] >>= 2;
@@ -189,11 +189,11 @@ auto PPU::Background::run(bool screen) -> void {
 
   Pixel pixel;
   pixel.priority = tile.priority;
-  pixel.palette = color ? uint(tile.palette + color) : 0;
+  pixel.palette = color ? u32(tile.palette + color) : 0;
   pixel.paletteGroup = tile.paletteGroup;
   if(++pixelCounter == 0) renderingIndex++;
 
-  uint x = ppu.hcounter() - 56 >> 2;
+  u32 x = ppu.hcounter() - 56 >> 2;
   if(x == 0 && (!hires() || screen == Screen::Below)) {
     mosaic.hcounter = ppu.mosaic.size;
     mosaic.pixel = pixel;

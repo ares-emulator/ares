@@ -14,20 +14,20 @@ struct mTreeView : mWidget {
   auto expand(bool recursive = true) -> type&;
   auto foregroundColor() const -> Color;
   auto item(const string& path) const -> TreeViewItem;
-  auto itemCount() const -> uint;
+  auto itemCount() const -> u32;
   auto items() const -> vector<TreeViewItem>;
   auto onActivate(const function<void ()>& callback = {}) -> type&;
   auto onChange(const function<void ()>& callback = {}) -> type&;
   auto onContext(const function<void ()>& callback = {}) -> type&;
   auto onToggle(const function<void (sTreeViewItem)>& callback = {}) -> type&;
   auto remove(sTreeViewItem item) -> type&;
-  auto reset() -> type&;
+  auto reset() -> type& override;
   auto selectNone() -> type&;
   auto selected() const -> TreeViewItem;
   auto setActivation(Mouse::Click activation = Mouse::Click::Double) -> type&;
   auto setBackgroundColor(Color color = {}) -> type&;
   auto setForegroundColor(Color color = {}) -> type&;
-  auto setParent(mObject* parent = nullptr, int offset = -1) -> type&;
+  auto setParent(mObject* parent = nullptr, s32 offset = -1) -> type& override;
 
 //private:
   struct State {

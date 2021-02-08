@@ -18,7 +18,8 @@ ColecoVision::ColecoVision() {
 }
 
 auto ColecoVision::load() -> bool {
-  if(!ares::ColecoVision::load(root, "ColecoVision")) return false;
+  auto region = Emulator::region();
+  if(!ares::ColecoVision::load(root, {"[Coleco] ColecoVision (", region, ")"})) return false;
 
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);

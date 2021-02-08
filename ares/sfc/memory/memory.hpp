@@ -3,18 +3,18 @@ struct AbstractMemory {
   explicit operator bool() const { return size() > 0; }
 
   virtual auto reset() -> void {}
-  virtual auto allocate(uint, uint8 = 0xff) -> void {}
+  virtual auto allocate(u32, n8 = 0xff) -> void {}
 
   virtual auto load(shared_pointer<vfs::file> fp) -> void {}
   virtual auto save(shared_pointer<vfs::file> fp) -> void {}
 
-  virtual auto data() -> uint8* = 0;
-  virtual auto size() const -> uint = 0;
+  virtual auto data() -> n8* = 0;
+  virtual auto size() const -> u32 = 0;
 
-  virtual auto read(uint24 address, uint8 data = 0) -> uint8 = 0;
-  virtual auto write(uint24 address, uint8 data) -> void = 0;
+  virtual auto read(n24 address, n8 data = 0) -> n8 = 0;
+  virtual auto write(n24 address, n8 data) -> void = 0;
 
-  uint id = 0;
+  u32 id = 0;
 };
 
 #include "readable.hpp"
@@ -22,29 +22,29 @@ struct AbstractMemory {
 #include "protectable.hpp"
 
 struct Bus {
-  static auto mirror(uint address, uint size) -> uint;
-  static auto reduce(uint address, uint mask) -> uint;
+  static auto mirror(u32 address, u32 size) -> u32;
+  static auto reduce(u32 address, u32 mask) -> u32;
 
   ~Bus();
 
-  auto read(uint24 address, uint8 data) -> uint8;
-  auto write(uint24 address, uint8 data) -> void;
+  auto read(n24 address, n8 data) -> n8;
+  auto write(n24 address, n8 data) -> void;
 
   auto reset() -> void;
   auto map(
-    const function<uint8 (uint24, uint8)>& read,
-    const function<void  (uint24, uint8)>& write,
-    const string& address, uint size = 0, uint base = 0, uint mask = 0
-  ) -> uint;
+    const function<n8   (n24, n8)>& read,
+    const function<void (n24, n8)>& write,
+    const string& address, u32 size = 0, u32 base = 0, u32 mask = 0
+  ) -> u32;
   auto unmap(const string& address) -> void;
 
 private:
-  uint8* lookup = nullptr;
-  uint32* target = nullptr;
+  n8*  lookup = nullptr;
+  n32* target = nullptr;
 
-  function<uint8 (uint24, uint8)> reader[256];
-  function<void  (uint24, uint8)> writer[256];
-  uint24 counter[256];
+  function<n8   (n24, n8)> reader[256];
+  function<void (n24, n8)> writer[256];
+  n24 counter[256];
 };
 
 extern Bus bus;

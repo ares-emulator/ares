@@ -7,7 +7,7 @@ Mouse::Mouse(Node::Port parent) {
   right = node->append<Node::Input::Button>("Right");
 }
 
-auto Mouse::data() -> uint2 {
+auto Mouse::data() -> n2 {
   if(latched == 1) {
     speed = (speed + 1) % 3;
     return 0;
@@ -56,7 +56,7 @@ auto Mouse::data() -> uint2 {
   return 1;
 }
 
-auto Mouse::latch(bool data) -> void {
+auto Mouse::latch(n1 data) -> void {
   if(latched == data) return;
   latched = data;
   counter = 0;
@@ -75,11 +75,11 @@ auto Mouse::latch(bool data) -> void {
   if(cx < 0) cx = -cx;  //abs(position_x)
   if(cy < 0) cy = -cy;  //abs(position_y)
 
-  double multiplier = 1.0;
+  f64 multiplier = 1.0;
   if(speed == 1) multiplier = 1.5;
   if(speed == 2) multiplier = 2.0;
-  cx = (double)cx * multiplier;
-  cy = (double)cy * multiplier;
+  cx = (f64)cx * multiplier;
+  cy = (f64)cy * multiplier;
 
   cx = min(127, cx);
   cy = min(127, cy);

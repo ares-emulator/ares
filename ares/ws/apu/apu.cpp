@@ -38,15 +38,15 @@ auto APU::main() -> void {
   step(1);
 }
 
-auto APU::sample(uint channel, uint5 index) -> uint4 {
-  uint8 data = iram.read((r.waveBase << 6) + (--channel << 4) + (index >> 1));
+auto APU::sample(u32 channel, n5 index) -> n4 {
+  n8 data = iram.read((r.waveBase << 6) + (--channel << 4) + (index >> 1));
   if(index.bit(0) == 0) return data.bit(0,3);
   if(index.bit(0) == 1) return data.bit(4,7);
   unreachable;
 }
 
 auto APU::dacRun() -> void {
-  int left = 0;
+  s32 left = 0;
   if(channel1.r.enable) left += channel1.o.left;
   if(channel2.r.enable) left += channel2.o.left;
   if(channel3.r.enable) left += channel3.o.left;
@@ -54,7 +54,7 @@ auto APU::dacRun() -> void {
   if(channel5.r.enable) left += channel5.o.left * r.headphonesConnected;
   left = sclamp<16>(left << 5);
 
-  int right = 0;
+  s32 right = 0;
   if(channel1.r.enable) right += channel1.o.right;
   if(channel2.r.enable) right += channel2.o.right;
   if(channel3.r.enable) right += channel3.o.right;
@@ -80,7 +80,7 @@ auto APU::dacRun() -> void {
   stream->frame(left / 32768.0 * amplitude, right / 32768.0 * amplitude);
 }
 
-auto APU::step(uint clocks) -> void {
+auto APU::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }

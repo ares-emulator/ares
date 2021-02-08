@@ -11,7 +11,7 @@
 #define DIVOUT vpu.divout
 #define DIVDP  vpu.divdp
 
-auto RSP::r128::operator()(uint index) const -> r128 {
+auto RSP::r128::operator()(u32 index) const -> r128 {
   if constexpr(Accuracy::RSP::SISD) {
     r128 v{*this};
     switch(index) {
@@ -23,14 +23,14 @@ auto RSP::r128::operator()(uint index) const -> r128 {
     case  5: v.u16(0) = v.u16(2) = v.u16(3) = v.u16(1); v.u16(4) = v.u16(6) = v.u16(7) = v.u16(5); break;
     case  6: v.u16(0) = v.u16(1) = v.u16(3) = v.u16(2); v.u16(4) = v.u16(5) = v.u16(7) = v.u16(6); break;
     case  7: v.u16(0) = v.u16(1) = v.u16(2) = v.u16(3); v.u16(4) = v.u16(5) = v.u16(6) = v.u16(7); break;
-    case  8: for(uint n : range(8)) v.u16(n) = v.u16(0); break;
-    case  9: for(uint n : range(8)) v.u16(n) = v.u16(1); break;
-    case 10: for(uint n : range(8)) v.u16(n) = v.u16(2); break;
-    case 11: for(uint n : range(8)) v.u16(n) = v.u16(3); break;
-    case 12: for(uint n : range(8)) v.u16(n) = v.u16(4); break;
-    case 13: for(uint n : range(8)) v.u16(n) = v.u16(5); break;
-    case 14: for(uint n : range(8)) v.u16(n) = v.u16(6); break;
-    case 15: for(uint n : range(8)) v.u16(n) = v.u16(7); break;
+    case  8: for(u32 n : range(8)) v.u16(n) = v.u16(0); break;
+    case  9: for(u32 n : range(8)) v.u16(n) = v.u16(1); break;
+    case 10: for(u32 n : range(8)) v.u16(n) = v.u16(2); break;
+    case 11: for(u32 n : range(8)) v.u16(n) = v.u16(3); break;
+    case 12: for(u32 n : range(8)) v.u16(n) = v.u16(4); break;
+    case 13: for(u32 n : range(8)) v.u16(n) = v.u16(5); break;
+    case 14: for(u32 n : range(8)) v.u16(n) = v.u16(6); break;
+    case 15: for(u32 n : range(8)) v.u16(n) = v.u16(7); break;
     }
     return v;
   }
@@ -63,17 +63,17 @@ auto RSP::r128::operator()(uint index) const -> r128 {
   }
 }
 
-auto RSP::accumulatorGet(uint index) const -> u64 {
+auto RSP::accumulatorGet(u32 index) const -> u64 {
   return (u64)ACCH.u16(index) << 32 | (u64)ACCM.u16(index) << 16 | (u64)ACCL.u16(index) << 0;
 }
 
-auto RSP::accumulatorSet(uint index, u64 value) -> void {
+auto RSP::accumulatorSet(u32 index, u64 value) -> void {
   ACCH.u16(index) = value >> 32;
   ACCM.u16(index) = value >> 16;
   ACCL.u16(index) = value >>  0;
 }
 
-auto RSP::accumulatorSaturate(uint index, bool slice, u16 negative, u16 positive) const -> u16 {
+auto RSP::accumulatorSaturate(u32 index, bool slice, u16 negative, u16 positive) const -> u16 {
   if(ACCH.s16(index) < 0) {
     if(ACCH.u16(index) != 0xffff) return negative;
     if(ACCM.s16(index) >= 0) return negative;
@@ -95,7 +95,7 @@ auto RSP::instructionCFC2(r32& rt, u8 rd) -> void {
 
   if constexpr(Accuracy::RSP::SISD) {
     rt.u32 = 0;
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       rt.u32 |= lo.get(n) << 0 + n;
       rt.u32 |= hi.get(n) << 8 + n;
     }
@@ -119,7 +119,7 @@ auto RSP::instructionCTC2(cr32& rt, u8 rd) -> void {
   }
 
   if constexpr(Accuracy::RSP::SISD) {
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       lo->set(n, rt.u32 & 1 << 0 + n);
       hi->set(n, rt.u32 & 1 << 8 + n);
     }
@@ -141,7 +141,7 @@ auto RSP::instructionLDV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   auto start = e;
   auto end = start + 8;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     vt.byte(offset & 15) = dmem.readByte(address++);
   }
 }
@@ -150,7 +150,7 @@ auto RSP::instructionLFV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = e >> 1;
   auto end = start + 4;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     vt.element(offset & 7) = dmem.readByte(address) << 7;
     address += 4;
   }
@@ -158,7 +158,7 @@ auto RSP::instructionLFV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
 
 auto RSP::instructionLHV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
-  for(uint offset = 0; offset < 8; offset++) {
+  for(u32 offset = 0; offset < 8; offset++) {
     vt.element(offset) = dmem.readByte(address + (16 - e + offset * 2 & 15)) << 7;
   }
 }
@@ -167,14 +167,14 @@ auto RSP::instructionLLV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 4;
   auto start = e;
   auto end = start + 4;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     vt.byte(offset & 15) = dmem.readByte(address++);
   }
 }
 
 auto RSP::instructionLPV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
-  for(uint offset = 0; offset < 8; offset++) {
+  for(u32 offset = 0; offset < 8; offset++) {
     vt.element(offset) = dmem.readByte(address + (16 - e + offset & 15)) << 8;
   }
 }
@@ -183,7 +183,7 @@ auto RSP::instructionLQV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = e;
   auto end = 16 - (address & 15);
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     vt.byte(offset & 15) = dmem.readByte(address++);
   }
 }
@@ -193,7 +193,7 @@ auto RSP::instructionLRV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto index = e;
   auto start = 16 - ((address & 15) - index);
   address &= ~15;
-  for(uint offset = start; offset < 16; offset++) {
+  for(u32 offset = start; offset < 16; offset++) {
     vt.byte(offset & 15) = dmem.readByte(address++);
   }
 }
@@ -202,7 +202,7 @@ auto RSP::instructionLSV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 2;
   auto start = e;
   auto end = start + 2;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     vt.byte(offset & 15) = dmem.readByte(address++);
   }
 }
@@ -212,7 +212,7 @@ auto RSP::instructionLTV(u8 vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = vt;
   auto end = min(32, start + 8);
   address = (address + 8 & ~15) + (e & 1);
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     auto byte = (8 - (e >> 1) + (offset - start)) << 1;
     vpu.r[offset].byte(byte + 0 & 15) = dmem.readByte(address++);
     vpu.r[offset].byte(byte + 1 & 15) = dmem.readByte(address++);
@@ -221,7 +221,7 @@ auto RSP::instructionLTV(u8 vt, u8 e, cr32& rs, s8 imm) -> void {
 
 auto RSP::instructionLUV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
-  for(uint offset = 0; offset < 8; offset++) {
+  for(u32 offset = 0; offset < 8; offset++) {
     vt.element(offset) = dmem.readByte(address + (16 - e + offset & 15)) << 7;
   }
 }
@@ -230,7 +230,7 @@ auto RSP::instructionLWV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = 16 - e;
   auto end = e + 16;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     vt.byte(offset & 15) = dmem.readByte(address);
     address += 4;
   }
@@ -256,7 +256,7 @@ auto RSP::instructionSDV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   auto start = e;
   auto end = start + 8;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     dmem.writeByte(address++, vt.byte(offset & 15));
   }
 }
@@ -267,7 +267,7 @@ auto RSP::instructionSFV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto end = start + 4;
   auto base = address & 15;
   address &= ~15;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     dmem.writeByte(address + (base & 15), vt.element(offset & 7) >> 7);
     base += 4;
   }
@@ -275,7 +275,7 @@ auto RSP::instructionSFV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
 
 auto RSP::instructionSHV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
-  for(uint offset = 0; offset < 8; offset++) {
+  for(u32 offset = 0; offset < 8; offset++) {
     auto byte = e + offset * 2;
     auto value = vt.byte(byte + 0 & 15) << 1 | vt.byte(byte + 1 & 15) >> 7;
     dmem.writeByte(address, value);
@@ -287,7 +287,7 @@ auto RSP::instructionSLV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 4;
   auto start = e;
   auto end = start + 4;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     dmem.writeByte(address++, vt.byte(offset & 15));
   }
 }
@@ -296,7 +296,7 @@ auto RSP::instructionSPV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   auto start = e;
   auto end = start + 8;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     if((offset & 15) < 8) {
       dmem.writeByte(address++, vt.byte((offset & 7) << 1));
     } else {
@@ -309,7 +309,7 @@ auto RSP::instructionSQV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = e;
   auto end = start + (16 - (address & 15));
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     dmem.writeByte(address++, vt.byte(offset & 15));
   }
 }
@@ -320,7 +320,7 @@ auto RSP::instructionSRV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto end = start + (address & 15);
   auto base = 16 - (address & 15);
   address &= ~15;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     dmem.writeByte(address++, vt.byte(offset + base & 15));
   }
 }
@@ -329,7 +329,7 @@ auto RSP::instructionSSV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 2;
   auto start = e;
   auto end = start + 2;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     dmem.writeByte(address++, vt.byte(offset & 15));
   }
 }
@@ -341,7 +341,7 @@ auto RSP::instructionSTV(u8 vt, u8 e, cr32& rs, s8 imm) -> void {
   auto element = 8 - (e >> 1);
   auto base = (address & 15) + (element << 1);
   address &= ~15;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     dmem.writeHalfUnaligned(address + (base & 15), vpu.r[offset].element(element++ & 7));
     base += 2;
   }
@@ -351,7 +351,7 @@ auto RSP::instructionSUV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   auto start = e;
   auto end = start + 8;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     if((offset & 15) < 8) {
       dmem.writeByte(address++, vt.element(offset & 7) >> 7);
     } else {
@@ -366,7 +366,7 @@ auto RSP::instructionSWV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto end = start + 16;
   auto base = address & 15;
   address &= ~15;
-  for(uint offset = start; offset < end; offset++) {
+  for(u32 offset = start; offset < end; offset++) {
     dmem.writeByte(address + (base++ & 15), vt.byte(offset & 15));
   }
 }
@@ -374,7 +374,7 @@ auto RSP::instructionSWV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
 auto RSP::instructionVABS(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     r128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       if(vs.s16(n) < 0) {
         if(vte.s16(n) == -32768) vte.s16(n) = -32767;
         ACCL.s16(n) = -vte.s16(n);
@@ -401,7 +401,7 @@ auto RSP::instructionVABS(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVADD(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       s32 result = vs.s16(n) + vte.s16(n) + VCOL.get(n);
       ACCL.s16(n) = result;
       vd.s16(n) = sclamp<16>(result);
@@ -426,7 +426,7 @@ auto RSP::instructionVADD(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVADDC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       u32 result = vs.u16(n) + vte.u16(n);
       ACCL.u16(n) = result;
       VCOL.set(n, result >> 16);
@@ -449,7 +449,7 @@ auto RSP::instructionVADDC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     r128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       ACCL.u16(n) = vs.u16(n) & vte.u16(n);
     }
     vd = ACCL;
@@ -464,7 +464,7 @@ auto RSP::instructionVAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVCH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       if((vs.s16(n) ^ vte.s16(n)) < 0) {
         s16 result = vs.s16(n) + vte.s16(n);
         ACCL.s16(n) = (result <= 0 ? -vte.s16(n) : vs.s16(n));
@@ -513,7 +513,7 @@ auto RSP::instructionVCH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVCL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       if(VCOL.get(n)) {
         if(VCOH.get(n)) {
           ACCL.u16(n) = VCCL.get(n) ? -vte.u16(n) : vs.u16(n);
@@ -570,7 +570,7 @@ auto RSP::instructionVCL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVCR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       if((vs.s16(n) ^ vte.s16(n)) < 0) {
         VCCH.set(n, vte.s16(n) < 0);
         ACCL.u16(n) = VCCL.set(n, vs.s16(n) + vte.s16(n) + 1 <= 0) ? ~vte.u16(n) : vs.u16(n);
@@ -608,7 +608,7 @@ auto RSP::instructionVCR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVEQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       ACCL.u16(n) = VCCL.set(n, !VCE.get(n) && vs.u16(n) == vte.u16(n)) ? vs.u16(n) : vte.u16(n);
     }
     VCCH = zero;  //unverified
@@ -633,7 +633,7 @@ auto RSP::instructionVEQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVGE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       ACCL.u16(n) = VCCL.set(n, vs.s16(n) > vte.s16(n) || (vs.s16(n) == vte.s16(n) && (!VCOL.get(n) || VCE.get(n)))) ? vs.u16(n) : vte.u16(n);
     }
     VCCH = zero;  //unverified
@@ -661,7 +661,7 @@ auto RSP::instructionVGE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVLT(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       ACCL.u16(n) = VCCL.set(n, vs.s16(n) < vte.s16(n) || (vs.s16(n) == vte.s16(n) && VCOL.get(n) && !VCE.get(n))) ? vs.u16(n) : vte.u16(n);
     }
     VCCH = zero;  //unverified
@@ -690,7 +690,7 @@ template<bool U>
 auto RSP::instructionVMACF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       accumulatorSet(n, accumulatorGet(n) + vs.s16(n) * vte.s16(n) * 2);
       if constexpr(U == 0) {
         vd.u16(n) = accumulatorSaturate(n, 1, 0x8000, 0x7fff);
@@ -741,7 +741,7 @@ auto RSP::instructionVMACF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 }
 
 auto RSP::instructionVMACQ(r128& vd) -> void {
-  for(uint n : range(8)) {
+  for(u32 n : range(8)) {
     s32 product = ACCH.element(n) << 16 | ACCM.element(n) << 0;
     if(product < 0 && !(product & 1 << 5)) product += 32;
     else if(product >= 0 && !(product & 1 << 5)) product -= 32;
@@ -755,7 +755,7 @@ auto RSP::instructionVMACQ(r128& vd) -> void {
 auto RSP::instructionVMADH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       s32 result = (accumulatorGet(n) >> 16) + vs.s16(n) * vte.s16(n);
       ACCH.u16(n) = result >> 16;
       ACCM.u16(n) = result >>  0;
@@ -782,7 +782,7 @@ auto RSP::instructionVMADH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVMADL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       u32 r1 = vs.u16(n) * vte.u16(n);
       u32 r2 = ACCL.u16(n) + (r1 >> 16);
       u32 r3 = ACCM.u16(n) + (r2 >> 16);
@@ -819,7 +819,7 @@ auto RSP::instructionVMADL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVMADM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       u32 r1 = vs.s16(n) * vte.u16(n);
       u32 r2 = ACCL.u16(n) + u16(r1);
       u32 r3 = ACCM.u16(n) + (r1 >> 16) + (r2 >> 16);
@@ -858,7 +858,7 @@ auto RSP::instructionVMADM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVMADN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       accumulatorSet(n, accumulatorGet(n) + s64(vs.u16(n) * vte.s16(n)));
       vd.u16(n) = accumulatorSaturate(n, 0, 0x0000, 0xffff);
     }
@@ -909,7 +909,7 @@ auto RSP::instructionVMOV(r128& vd, u8 de, cr128& vt, u8 e) -> void {
 auto RSP::instructionVMRG(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       ACCL.u16(n) = VCCL.get(n) ? vs.u16(n) : vte.u16(n);
     }
     vd = ACCL;
@@ -926,7 +926,7 @@ auto RSP::instructionVMRG(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVMUDH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       accumulatorSet(n, s64(vs.s16(n) * vte.s16(n)) << 16);
       vd.u16(n) = accumulatorSaturate(n, 1, 0x8000, 0x7fff);
     }
@@ -946,7 +946,7 @@ auto RSP::instructionVMUDH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVMUDL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       accumulatorSet(n, u16(vs.u16(n) * vte.u16(n) >> 16));
     }
     vd = ACCL;
@@ -963,7 +963,7 @@ auto RSP::instructionVMUDL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVMUDM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       accumulatorSet(n, s32(vs.s16(n) * vte.u16(n)));
     }
     vd = ACCM;
@@ -984,7 +984,7 @@ auto RSP::instructionVMUDM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVMUDN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       accumulatorSet(n, s32(vs.u16(n) * vte.s16(n)));
     }
     vd = ACCL;
@@ -1006,7 +1006,7 @@ template<bool U>
 auto RSP::instructionVMULF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       accumulatorSet(n, vs.s16(n) * vte.s16(n) * 2 + 0x8000);
       if constexpr(U == 0) {
         vd.u16(n) = ACCM.u16(n);
@@ -1046,7 +1046,7 @@ auto RSP::instructionVMULF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 
 auto RSP::instructionVMULQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   cr128 vte = vt(e);
-  for(uint n : range(8)) {
+  for(u32 n : range(8)) {
     s32 product = (s16)vs.element(n) * (s16)vte.element(n);
     if(product < 0) product += 31;  //round
     ACCH.element(n) = product >> 16;
@@ -1059,7 +1059,7 @@ auto RSP::instructionVMULQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVNAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       ACCL.u16(n) = ~(vs.u16(n) & vte.u16(n));
     }
     vd = ACCL;
@@ -1075,7 +1075,7 @@ auto RSP::instructionVNAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVNE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       ACCL.u16(n) = VCCL.set(n, vs.u16(n) != vte.u16(n) || VCE.get(n)) ? vs.u16(n) : vte.u16(n);
     }
     VCCH = zero;  //unverified
@@ -1105,7 +1105,7 @@ auto RSP::instructionVNOP() -> void {
 auto RSP::instructionVNOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       ACCL.u16(n) = ~(vs.u16(n) | vte.u16(n));
     }
     vd = ACCL;
@@ -1121,7 +1121,7 @@ auto RSP::instructionVNOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVNXOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       ACCL.u16(n) = ~(vs.u16(n) ^ vte.u16(n));
     }
     vd = ACCL;
@@ -1137,7 +1137,7 @@ auto RSP::instructionVNXOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       ACCL.u16(n) = vs.u16(n) | vte.u16(n);
     }
     vd = ACCL;
@@ -1183,7 +1183,7 @@ auto RSP::instructionVRCPH(r128& vd, u8 de, cr128& vt, u8 e) -> void {
 template<bool D>
 auto RSP::instructionVRND(r128& vd, u8 vs, cr128& vt, u8 e) -> void {
   cr128 vte = vt(e);
-  for(uint n : range(8)) {
+  for(u32 n : range(8)) {
     s32 product = (s16)vte.element(n);
     if(vs & 1) product <<= 16;
     s64 acc = 0;
@@ -1243,7 +1243,7 @@ auto RSP::instructionVSAR(r128& vd, cr128& vs, u8 e) -> void {
 auto RSP::instructionVSUB(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       s32 result = vs.s16(n) - vte.s16(n) - VCOL.get(n);
       ACCL.s16(n) = result;
       vd.s16(n) = sclamp<16>(result);
@@ -1268,7 +1268,7 @@ auto RSP::instructionVSUB(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVSUBC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       u32 result = vs.u16(n) - vte.u16(n);
       ACCL.u16(n) = result;
       VCOL.set(n, result >> 16);
@@ -1292,7 +1292,7 @@ auto RSP::instructionVSUBC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::instructionVXOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
-    for(uint n : range(8)) {
+    for(u32 n : range(8)) {
       ACCL.u16(n) = vs.u16(n) ^ vte.u16(n);
     }
     vd = ACCL;

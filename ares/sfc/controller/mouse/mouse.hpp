@@ -6,16 +6,16 @@ struct Mouse : Controller {
 
   Mouse(Node::Port);
 
-  auto data() -> uint2;
-  auto latch(bool data) -> void;
+  auto data() -> n2;
+  auto latch(n1 data) -> void;
 
 private:
-  bool latched = 0;
-  uint counter = 0;
+  n1  latched;
+  n32 counter;
 
-  uint2 speed;  //0 = slow, 1 = normal, 2 = fast
-  int32 cx;     //x-coordinate
-  int32 cy;     //y-coordinate
-  uint1 dx;     //x-direction
-  uint1 dy;     //y-direction
+  n2  speed;  //0 = slow, 1 = normal, 2 = fast
+  i32 cx;     //x-coordinate
+  i32 cy;     //y-coordinate
+  n1  dx;     //x-direction
+  n1  dy;     //y-direction
 };

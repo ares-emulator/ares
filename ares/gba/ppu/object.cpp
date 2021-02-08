@@ -1,40 +1,40 @@
-auto PPU::Objects::scanline(uint y) -> void {
+auto PPU::Objects::scanline(u32 y) -> void {
   mosaicOffset = 0;
   for(auto& pixel : buffer) pixel = {};
   if(ppu.blank() || !io.enable) return;
 
   for(auto& object : ppu.object) {
-    uint8 py = y - object.y;
+    n8 py = y - object.y;
     if(object.affine == 0 && object.affineSize == 1) continue;  //hidden
     if(py >= object.height << object.affineSize) continue;  //offscreen
 
-    uint rowSize = io.mapping == 0 ? 32 >> object.colors : object.width >> 3;
-    uint baseAddress = object.character << 5;
+    u32 rowSize = io.mapping == 0 ? 32 >> object.colors : object.width >> 3;
+    u32 baseAddress = object.character << 5;
 
     if(object.mosaic && io.mosaicHeight) {
-      int mosaicY = (y / (1 + io.mosaicHeight)) * (1 + io.mosaicHeight);
-      py = object.y >= 160 || mosaicY - object.y >= 0 ? uint(mosaicY - object.y) : 0;
+      s32 mosaicY = (y / (1 + io.mosaicHeight)) * (1 + io.mosaicHeight);
+      py = object.y >= 160 || mosaicY - object.y >= 0 ? u32(mosaicY - object.y) : 0;
     }
 
-    int16 pa = ppu.objectParam[object.affineParam].pa;
-    int16 pb = ppu.objectParam[object.affineParam].pb;
-    int16 pc = ppu.objectParam[object.affineParam].pc;
-    int16 pd = ppu.objectParam[object.affineParam].pd;
+    i16 pa = ppu.objectParam[object.affineParam].pa;
+    i16 pb = ppu.objectParam[object.affineParam].pb;
+    i16 pc = ppu.objectParam[object.affineParam].pc;
+    i16 pd = ppu.objectParam[object.affineParam].pd;
 
     //center-of-sprite coordinates
-    int16 centerX = object.width  >> 1;
-    int16 centerY = object.height >> 1;
+    i16 centerX = object.width  >> 1;
+    i16 centerY = object.height >> 1;
 
     //origin coordinates (top-left of sprite)
-    int28 originX = -(centerX << object.affineSize);
-    int28 originY = -(centerY << object.affineSize) + py;
+    i28 originX = -(centerX << object.affineSize);
+    i28 originY = -(centerY << object.affineSize) + py;
 
     //fractional pixel coordinates
-    int28 fx = originX * pa + originY * pb;
-    int28 fy = originX * pc + originY * pd;
+    i28 fx = originX * pa + originY * pb;
+    i28 fy = originX * pc + originY * pd;
 
-    for(uint px : range(object.width << object.affineSize)) {
-      uint sx, sy;
+    for(u32 px : range(object.width << object.affineSize)) {
+      u32 sx, sy;
       if(!object.affine) {
         sx = px ^ (object.hflip ? object.width  - 1 : 0);
         sy = py ^ (object.vflip ? object.height - 1 : 0);
@@ -43,12 +43,12 @@ auto PPU::Objects::scanline(uint y) -> void {
         sy = (fy >> 8) + centerY;
       }
 
-      uint9 bx = object.x + px;
+      n9 bx = object.x + px;
       if(bx < 240 && sx < object.width && sy < object.height) {
-        uint offset = (sy >> 3) * rowSize + (sx >> 3);
+        u32 offset = (sy >> 3) * rowSize + (sx >> 3);
         offset = offset * 64 + (sy & 7) * 8 + (sx & 7);
 
-        uint8 color = ppu.readObjectVRAM(baseAddress + (offset >> !object.colors));
+        n8 color = ppu.readObjectVRAM(baseAddress + (offset >> !object.colors));
         if(object.colors == 0) color = sx & 1 ? color >> 4 : color & 15;
         if(object.mode & 2) {
           if(color) {
@@ -72,7 +72,7 @@ auto PPU::Objects::scanline(uint y) -> void {
   }
 }
 
-auto PPU::Objects::run(uint x, uint y) -> void {
+auto PPU::Objects::run(u32 x, u32 y) -> void {
   output = {};
   if(ppu.blank() || !io.enable) {
     mosaic = {};

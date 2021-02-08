@@ -38,7 +38,7 @@ auto CPU::main() -> void {
   synchronize();
 }
 
-auto CPU::step(uint clocks) -> void {
+auto CPU::step(u32 clocks) -> void {
   Thread::clock += clocks;
 }
 
@@ -134,7 +134,7 @@ auto CPU::instructionHook() -> void {
 
         ipu.pd = pc;
         ipu.r[28] = gp;
-        for(uint address : range(exe.size - source)) {
+        for(u32 address : range(exe.size - source)) {
           ram.writeByte(target + address, exe.readByte(source + address));
         }
       }
@@ -155,7 +155,7 @@ auto CPU::instructionDebug() -> void {
   if(mask[ipu.pc >> 2 & 0x07ff'ffff]) return;
   mask[ipu.pc >> 2 & 0x07ff'ffff] = 1;
 
-  static uint counter = 0;
+  static u32 counter = 0;
 //if(++counter > 100) return;
   print(
     disassembler.hint(hex(pipeline.address, 8L)), "  ",

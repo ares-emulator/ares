@@ -14,8 +14,8 @@ struct AvenuePad : Controller {
 
   AvenuePad(Node::Port);
 
-  auto read() -> uint4 override;
-  auto write(uint2 data) -> void override;
+  auto read() -> n4 override;
+  auto write(n2 data) -> void override;
 
 private:
   bool sel = 0;

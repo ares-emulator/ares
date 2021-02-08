@@ -34,7 +34,7 @@ auto SMP::serialize(serializer& s) -> void {
   s(timer2);
 }
 
-template<uint Frequency>
+template<u32 Frequency>
 auto SMP::Timer<Frequency>::serialize(serializer& s) -> void {
   s(stage0);
   s(stage1);

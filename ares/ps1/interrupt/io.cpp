@@ -7,7 +7,7 @@ auto Interrupt::readHalf(u32 address) -> u32 {
 }
 
 auto Interrupt::readWord(u32 address) -> u32 {
-  uint32 data;
+  n32 data;
 
   //I_STAT
   if(address == 0x1f80'1070) {
@@ -51,7 +51,7 @@ auto Interrupt::writeHalf(u32 address, u32 data) -> void {
 }
 
 auto Interrupt::writeWord(u32 address, u32 value) -> void {
-  uint32 data = value;
+  n32 data = value;
 
   //I_STAT
   if(address == 0x1f80'1070) {

@@ -7,7 +7,7 @@ auto pKeyboard::poll() -> vector<bool> {
   return result;
 }
 
-auto pKeyboard::pressed(uint code) -> bool {
+auto pKeyboard::pressed(u32 code) -> bool {
   return false;
 }
 

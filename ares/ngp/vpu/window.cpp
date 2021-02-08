@@ -1,4 +1,4 @@
-auto VPU::renderWindow(uint8 x, uint8 y) -> bool {
+auto VPU::renderWindow(n8 x, n8 y) -> bool {
   if(x >= window.hoffset
   && y >= window.voffset
   && x <  window.hoffset + window.hlength

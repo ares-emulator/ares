@@ -25,12 +25,12 @@ auto PPU::latchRegisters() -> void {
   l.spriteWindowY1 = r.spriteWindowY1;
 }
 
-auto PPU::latchSprites(uint8 y) -> void {
+auto PPU::latchSprites(n8 y) -> void {
   l.spriteCount = 0;
   if(!l.spriteEnable) return;
-  for(uint index : range(l.oamCount)) {
-    uint32 attributes = l.oam[!s.field][index];
-    if((uint8)(y - attributes.bit(16,23)) > 7) continue;
+  for(u32 index : range(l.oamCount)) {
+    n32 attributes = l.oam[!s.field][index];
+    if((n8)(y - attributes.bit(16,23)) > 7) continue;
     l.sprite[l.spriteCount] = attributes;
     if(++l.spriteCount >= 32) break;
   }
@@ -38,11 +38,11 @@ auto PPU::latchSprites(uint8 y) -> void {
 
 //note: this implicitly latches spriteBase, spriteFirst, spriteCount
 auto PPU::latchOAM() -> void {
-  uint7 spriteIndex = r.spriteFirst;
-  uint8 spriteCount = min(128, (uint)r.spriteCount);
-  uint16 spriteBase = r.spriteBase.bit(0, depth() == 2 ? 4 : 5) << 9;
+  n7  spriteIndex = r.spriteFirst;
+  n8  spriteCount = min(128, (u32)r.spriteCount);
+  n16 spriteBase = r.spriteBase.bit(0, depth() == 2 ? 4 : 5) << 9;
   l.oamCount = spriteCount;
-  for(uint index : range(spriteCount)) {
+  for(u32 index : range(spriteCount)) {
     l.oam[s.field][index] = iram.read32(spriteBase + (spriteIndex++ << 2));
   }
 }

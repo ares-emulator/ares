@@ -10,7 +10,7 @@ struct Disc : Thread, Memory::Interface {
     auto load(Node::Object) -> void;
     auto commandPrologue(u8 operation, maybe<u8> suboperation = nothing) -> void;
     auto commandEpilogue(u8 operation, maybe<u8> suboperation = nothing) -> void;
-    auto read(int lba) -> void;
+    auto read(s32 lba) -> void;
 
     struct Tracer {
       Node::Debugger::Tracer::Notification command;
@@ -36,7 +36,7 @@ struct Disc : Thread, Memory::Interface {
   auto disconnect() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -93,39 +93,39 @@ struct Disc : Thread, Memory::Interface {
     maybe<CDXA&> cdxa;
 
     //drive.cpp
-    auto distance() const -> uint;
+    auto distance() const -> u32;
     auto clockSector() -> void;
 
     struct LBA {
-      int current;
-      int request;
-      int seeking;
+      s32 current;
+      s32 request;
+      s32 seeking;
     } lba;
 
     struct Sector {
-       u8 data[2448];
+      u8  data[2448];
       u16 offset;
     } sector;
 
     struct Mode {
-      uint1 cdda;
-      uint1 autoPause;
-      uint1 report;
-      uint1 xaFilter;
-      uint1 ignore;
-      uint1 sectorSize;
-      uint1 xaADPCM;
-      uint1 speed;
+      n1 cdda;
+      n1 autoPause;
+      n1 report;
+      n1 xaFilter;
+      n1 ignore;
+      n1 sectorSize;
+      n1 xaADPCM;
+      n1 speed;
     } mode;
 
-    uint32 seeking;
+    n32 seeking;
   } drive{*this};
 
   struct Audio {
-    uint1 mute;
-    uint1 muteADPCM;
-    uint8 volume[4];
-    uint8 volumeLatch[4];
+    n1 mute;
+    n1 muteADPCM;
+    n8 volume[4];
+    n8 volumeLatch[4];
   } audio;
 
   struct CDDA {
@@ -142,7 +142,7 @@ struct Disc : Thread, Memory::Interface {
     auto clockSector() -> void;
     auto clockSample() -> void;
 
-    enum class PlayMode : uint {
+    enum class PlayMode : u32 {
       Normal,
       FastForward,
       Rewind,
@@ -171,8 +171,8 @@ struct Disc : Thread, Memory::Interface {
     template<bool isStereo, bool is8bit> auto decodeBlock(s16* output, u16 address) -> void;
 
     struct Filter {
-      uint8 file;
-      uint8 channel;
+      n8 file;
+      n8 channel;
     } filter;
 
     struct Sample {
@@ -197,12 +197,12 @@ struct Disc : Thread, Memory::Interface {
     auto poll() -> void;
 
     struct Source {
-      uint1 enable;
-      uint1 flag;
+      n1 enable;
+      n1 flag;
     };
 
-    uint5 flag;
-    uint5 mask;
+    n5 flag;
+    n5 mask;
 
     Source ready;        //INT1
     Source complete;     //INT2
@@ -223,18 +223,18 @@ struct Disc : Thread, Memory::Interface {
   } psr;
 
   struct SecondaryStatusRegister {
-    uint1 error;
-    uint1 motorOn;
-    uint1 seekError;
-    uint1 idError;
-    uint1 shellOpen;
-    uint1 reading;
-    uint1 seeking;
-    uint1 playingCDDA;
+    n1 error;
+    n1 motorOn;
+    n1 seekError;
+    n1 idError;
+    n1 shellOpen;
+    n1 reading;
+    n1 seeking;
+    n1 playingCDDA;
   } ssr;
 
   struct IO {
-    uint2 index;
+    n2 index;
   } io;
 
   struct Counter {

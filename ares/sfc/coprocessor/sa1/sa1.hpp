@@ -32,32 +32,32 @@ struct SA1 : WDC65816, Thread {
 
   //dma.cpp
   struct DMA {
-    enum CDEN : uint { DmaNormal = 0, DmaCharConversion = 1 };
-    enum SD : uint { SourceROM = 0, SourceBWRAM = 1, SourceIRAM = 2 };
-    enum DD : uint { DestIRAM = 0, DestBWRAM = 1 };
-    uint line;
+    enum CDEN : u32 { DmaNormal = 0, DmaCharConversion = 1 };
+    enum SD : u32 { SourceROM = 0, SourceBWRAM = 1, SourceIRAM = 2 };
+    enum DD : u32 { DestIRAM = 0, DestBWRAM = 1 };
+    u32 line;
   };
 
   auto dmaNormal() -> void;
   auto dmaCC1() -> void;
-  auto dmaCC1Read(uint address) -> uint8;
+  auto dmaCC1Read(n24 address) -> n8;
   auto dmaCC2() -> void;
 
   //memory.cpp
   auto idle() -> void override;
   auto idleJump() -> void override;
   auto idleBranch() -> void override;
-  auto read(uint24 address) -> uint8 override;
-  auto write(uint24 address, uint8 data) -> void override;
-  auto readVBR(uint24 address, uint8 data = 0) -> uint8;
-  auto readDisassembler(uint24 address) -> uint8 override;
+  auto read(n24 address) -> n8 override;
+  auto write(n24 address, n8 data) -> void override;
+  auto readVBR(n24 address, n8 data = 0) -> n8;
+  auto readDisassembler(n24 address) -> n8 override;
 
   //io.cpp
-  auto readIOCPU(uint24 address, uint8 data) -> uint8;
-  auto readIOSA1(uint24 address, uint8 data) -> uint8;
-  auto writeIOCPU(uint24 address, uint8 data) -> void;
-  auto writeIOSA1(uint24 address, uint8 data) -> void;
-  auto writeIOShared(uint24 address, uint8 data) -> void;
+  auto readIOCPU(n24 address, n8 data) -> n8;
+  auto readIOSA1(n24 address, n8 data) -> n8;
+  auto writeIOCPU(n24 address, n8 data) -> void;
+  auto writeIOSA1(n24 address, n8 data) -> void;
+  auto writeIOShared(n24 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -66,34 +66,34 @@ struct SA1 : WDC65816, Thread {
     //rom.cpp
     auto conflict() const -> bool;
 
-    auto read(uint24 address, uint8 data = 0) -> uint8 override;
-    auto write(uint24 address, uint8 data) -> void override;
+    auto read(n24 address, n8 data = 0) -> n8 override;
+    auto write(n24 address, n8 data) -> void override;
 
-    auto readCPU(uint24 address, uint8 data = 0) -> uint8;
-    auto writeCPU(uint24 address, uint8 data) -> void;
+    auto readCPU(n24 address, n8 data = 0) -> n8;
+    auto writeCPU(n24 address, n8 data) -> void;
 
-    auto readSA1(uint24 address, uint8 data = 0) -> uint8;
-    auto writeSA1(uint24 address, uint8 data) -> void;
+    auto readSA1(n24 address, n8 data = 0) -> n8;
+    auto writeSA1(n24 address, n8 data) -> void;
   } rom;
 
   struct BWRAM : WritableMemory {
     //bwram.cpp
     auto conflict() const -> bool;
 
-    auto read(uint24 address, uint8 data = 0) -> uint8 override;
-    auto write(uint24 address, uint8 data) -> void override;
+    auto read(n24 address, n8 data = 0) -> n8 override;
+    auto write(n24 address, n8 data) -> void override;
 
-    auto readCPU(uint24 address, uint8 data = 0) -> uint8;
-    auto writeCPU(uint24 address, uint8 data) -> void;
+    auto readCPU(n24 address, n8 data = 0) -> n8;
+    auto writeCPU(n24 address, n8 data) -> void;
 
-    auto readSA1(uint24 address, uint8 data = 0) -> uint8;
-    auto writeSA1(uint24 address, uint8 data) -> void;
+    auto readSA1(n24 address, n8 data = 0) -> n8;
+    auto writeSA1(n24 address, n8 data) -> void;
 
-    auto readLinear(uint24 address, uint8 data = 0) -> uint8;
-    auto writeLinear(uint24 address, uint8 data) -> void;
+    auto readLinear(n24 address, n8 data = 0) -> n8;
+    auto writeLinear(n24 address, n8 data) -> void;
 
-    auto readBitmap(uint20 address, uint8 data = 0) -> uint8;
-    auto writeBitmap(uint20 address, uint8 data) -> void;
+    auto readBitmap(n20 address, n8 data = 0) -> n8;
+    auto writeBitmap(n20 address, n8 data) -> void;
 
     bool dma;
   } bwram;
@@ -102,27 +102,27 @@ struct SA1 : WDC65816, Thread {
     //iram.cpp
     auto conflict() const -> bool;
 
-    auto read(uint24 address, uint8 data = 0) -> uint8 override;
-    auto write(uint24 address, uint8 data) -> void override;
+    auto read(n24 address, n8 data = 0) -> n8 override;
+    auto write(n24 address, n8 data) -> void override;
 
-    auto readCPU(uint24 address, uint8 data) -> uint8;
-    auto writeCPU(uint24 address, uint8 data) -> void;
+    auto readCPU(n24 address, n8 data) -> n8;
+    auto writeCPU(n24 address, n8 data) -> void;
 
-    auto readSA1(uint24 address, uint8 data = 0) -> uint8;
-    auto writeSA1(uint24 address, uint8 data) -> void;
+    auto readSA1(n24 address, n8 data = 0) -> n8;
+    auto writeSA1(n24 address, n8 data) -> void;
   } iram;
 
 private:
   DMA dma;
 
   struct Status {
-    uint8 counter;
+    n8 counter;
 
     bool interruptPending;
 
-    uint16 scanlines;
-    uint16 vcounter;
-    uint16 hcounter;
+    n16 scanlines;
+    n16 vcounter;
+    n16 hcounter;
   } status;
 
   struct IO {
@@ -131,7 +131,7 @@ private:
     bool sa1_rdyb;
     bool sa1_resb;
     bool sa1_nmi;
-    uint8 smeg;
+    n8 smeg;
 
     //$2201 SIE
     bool cpu_irqen;
@@ -142,19 +142,19 @@ private:
     bool chdma_irqcl;
 
     //$2203,$2204 CRV
-    uint16 crv;
+    n16 crv;
 
     //$2205,$2206 CNV
-    uint16 cnv;
+    n16 cnv;
 
     //$2207,$2208 CIV
-    uint16 civ;
+    n16 civ;
 
     //$2209 SCNT
     bool cpu_irq;
     bool cpu_ivsw;
     bool cpu_nvsw;
-    uint8 cmeg;
+    n8 cmeg;
 
     //$220a CIE
     bool sa1_irqen;
@@ -169,10 +169,10 @@ private:
     bool sa1_nmicl;
 
     //$220c,$220d SNV
-    uint16 snv;
+    n16 snv;
 
     //$220e,$220f SIV
-    uint16 siv;
+    n16 siv;
 
     //$2210 TMC
     bool hvselb;
@@ -180,33 +180,33 @@ private:
     bool hen;
 
     //$2212,$2213
-    uint16 hcnt;
+    n16 hcnt;
 
     //$2214,$2215
-    uint16 vcnt;
+    n16 vcnt;
 
     //$2220 CXB
     bool cbmode;
-    uint cb;
+    n32 cb;
 
     //$2221 DXB
     bool dbmode;
-    uint db;
+    n32 db;
 
     //$2222 EXB
     bool ebmode;
-    uint eb;
+    n32 eb;
 
     //$2223 FXB
     bool fbmode;
-    uint fb;
+    n32 fb;
 
     //$2224 BMAPS
-    uint8 sbm;
+    n8 sbm;
 
     //$2225 BMAP
     bool sw46;
-    uint8 cbm;
+    n8 cbm;
 
     //$2226 SBWE
     bool swen;
@@ -215,13 +215,13 @@ private:
     bool cwen;
 
     //$2228 BWPA
-    uint8 bwp;
+    n8 bwp;
 
     //$2229 SIWP
-    uint8 siwp;
+    n8 siwp;
 
     //$222a CIWP
-    uint8 ciwp;
+    n8 ciwp;
 
     //$2230 DCNT
     bool dmaen;
@@ -229,45 +229,45 @@ private:
     bool cden;
     bool cdsel;
     bool dd;
-    uint8 sd;
+    n8 sd;
 
     //$2231 CDMA
     bool chdend;
-    uint8 dmasize;
-    uint8 dmacb;
+    n8 dmasize;
+    n8 dmacb;
 
     //$2232-$2234 SDA
-    uint24 dsa;
+    n24 dsa;
 
     //$2235-$2237 DDA
-    uint24 dda;
+    n24 dda;
 
     //$2238,$2239 DTC
-    uint16 dtc;
+    n16 dtc;
 
     //$223f BBF
     bool bbf;
 
     //$2240-224f BRF
-    uint8 brf[16];
+    n8 brf[16];
 
     //$2250 MCNT
     bool acm;
     bool md;
 
     //$2251,$2252 MA
-    uint16 ma;
+    n16 ma;
 
     //$2253,$2254 MB
-    uint16 mb;
+    n16 mb;
 
     //$2258 VBD
     bool hl;
-    uint8 vb;
+    n8 vb;
 
     //$2259-$225b VDA
-    uint24 va;
-    uint8 vbit;
+    n24 va;
+    n8 vbit;
 
     //$2300 SFR
     bool cpu_irqfl;
@@ -280,13 +280,13 @@ private:
     bool sa1_nmifl;
 
     //$2302,$2303 HCR
-    uint16 hcr;
+    n16 hcr;
 
     //$2304,$2305 VCR
-    uint16 vcr;
+    n16 vcr;
 
     //$2306-230a MR
-    uint64 mr;
+    n64 mr;
 
     //$230b OF
     bool overflow;

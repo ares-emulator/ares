@@ -94,7 +94,7 @@ auto VDP::main() -> void {
   latch.displayWidth = io.displayWidth;
 }
 
-auto VDP::step(uint clocks) -> void {
+auto VDP::step(u32 clocks) -> void {
   state.hcounter += clocks;
   while(clocks--) {
     dma.run();

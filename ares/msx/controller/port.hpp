@@ -8,8 +8,8 @@ struct ControllerPort {
   auto unload() -> void;
   auto allocate(string name) -> Node::Peripheral;
 
-  auto read() -> uint6 { if(device) return device->read(); return 0x3f; }
-  auto write(uint8 data) { if(device) return device->write(data); }
+  auto read() -> n6 { if(device) return device->read(); return 0x3f; }
+  auto write(n8 data) { if(device) return device->write(data); }
 
   auto serialize(serializer&) -> void;
 

@@ -5,7 +5,7 @@
 
 namespace hiro {
 
-auto pMonitor::count() -> uint {
+auto pMonitor::count() -> u32 {
   #if HIRO_GTK==2 || 1
   return gdk_screen_get_n_monitors(gdk_screen_get_default());
   #elif HIRO_GTK==3
@@ -13,7 +13,7 @@ auto pMonitor::count() -> uint {
   #endif
 }
 
-auto pMonitor::dpi(uint monitor) -> Position {
+auto pMonitor::dpi(u32 monitor) -> Position {
   #if HIRO_GTK==2 || 1
   //GTK2 does not support either per-monitor or per-axis DPI reporting
   float dpi = round(gdk_screen_get_resolution(gdk_screen_get_default()));
@@ -27,7 +27,7 @@ auto pMonitor::dpi(uint monitor) -> Position {
   #endif
 }
 
-auto pMonitor::geometry(uint monitor) -> Geometry {
+auto pMonitor::geometry(u32 monitor) -> Geometry {
   GdkRectangle rectangle = {};
   #if HIRO_GTK==2 || 1
   gdk_screen_get_monitor_geometry(gdk_screen_get_default(), monitor, &rectangle);
@@ -38,7 +38,7 @@ auto pMonitor::geometry(uint monitor) -> Geometry {
   return {rectangle.x, rectangle.y, rectangle.width, rectangle.height};
 }
 
-auto pMonitor::primary() -> uint {
+auto pMonitor::primary() -> u32 {
   #if HIRO_GTK==2 || 1
   return gdk_screen_get_primary_monitor(gdk_screen_get_default());
   #elif HIRO_GTK==3
@@ -46,7 +46,7 @@ auto pMonitor::primary() -> uint {
   #endif
 }
 
-auto pMonitor::workspace(uint monitor) -> Geometry {
+auto pMonitor::workspace(u32 monitor) -> Geometry {
   #if HIRO_GTK==2 || 1
   if(Monitor::count() == 1) {
     return Desktop::workspace();

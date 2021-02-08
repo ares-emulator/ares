@@ -3,7 +3,7 @@ struct Object {
   auto setFirstSprite() -> void;
   auto frame() -> void;
   auto scanline() -> void;
-  auto evaluate(uint7 index) -> void;
+  auto evaluate(n7 index) -> void;
   auto run() -> void;
   auto fetch() -> void;
   auto power() -> void;
@@ -15,45 +15,45 @@ struct Object {
   OAM oam;
 
   struct IO {
-     uint1 aboveEnable;
-     uint1 belowEnable;
-     uint1 interlace;
+    n1  aboveEnable;
+    n1  belowEnable;
+    n1  interlace;
 
-    uint16 tiledataAddress;
-     uint2 nameselect;
-     uint3 baseSize;
-     uint7 firstSprite;
+    n16 tiledataAddress;
+    n2  nameselect;
+    n3  baseSize;
+    n7  firstSprite;
 
-     uint8 priority[4];
+    n8  priority[4];
 
-     uint1 rangeOver;
-     uint1 timeOver;
+    n1  rangeOver;
+    n1  timeOver;
   } io;
 
   struct Latch {
-     uint7 firstSprite;
+    n7  firstSprite;
   } latch;
 
   struct Item {
-     uint1 valid;
-     uint7 index;
+    n1  valid;
+    n7  index;
   };
 
   struct Tile {
-     uint1 valid;
-     uint9 x;
-     uint2 priority;
-     uint8 palette;
-     uint1 hflip;
-    uint32 data;
+    n1  valid;
+    n9  x;
+    n2  priority;
+    n8  palette;
+    n1  hflip;
+    n32 data;
   };
 
   struct State {
-    uint x;
-    uint y;
+    u32  x;
+    u32  y;
 
-    uint itemCount;
-    uint tileCount;
+    u32  itemCount;
+    u32  tileCount;
 
     bool active;
     Item item[2][32];
@@ -62,8 +62,8 @@ struct Object {
 
   struct Output {
     struct Pixel {
-      uint8 priority;  //0 = none (transparent)
-      uint8 palette;
+      n8 priority;  //0 = none (transparent)
+      n8 palette;
     } above, below;
   } output;
 

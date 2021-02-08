@@ -12,9 +12,9 @@ struct MDEC : Thread, Memory::Interface {
   //decoder.cpp
   auto decodeMacroblocks() -> void;
   auto decodeBlock(s16 block[64], u8 table[64]) -> bool;
-  template<uint Pass> auto decodeIDCT(s16 source[64], s16 target[64]) -> void;
+  template<u32 Pass> auto decodeIDCT(s16 source[64], s16 target[64]) -> void;
   auto convertY(u32 output[64], s16 luma[64]) -> void;
-  auto convertYUV(u32 output[256], s16 luma[64], uint bx, uint by) -> void;
+  auto convertYUV(u32 output[256], s16 luma[64], u32 bx, u32 by) -> void;
 
   //io.cpp
   auto readDMA() -> u32;
@@ -36,28 +36,28 @@ struct MDEC : Thread, Memory::Interface {
   } fifo;
 
   struct Status {
-    uint16 remaining;
-     uint3 currentBlock;
-     uint1 outputMaskBit;
-     uint1 outputSigned;
-     uint2 outputDepth;
-     uint1 outputRequest;
-     uint1 inputRequest;
-     uint1 commandBusy;
-     uint1 inputFull;
-     uint1 outputEmpty;
+    n16 remaining;
+    n3  currentBlock;
+    n1  outputMaskBit;
+    n1  outputSigned;
+    n2  outputDepth;
+    n1  outputRequest;
+    n1  inputRequest;
+    n1  commandBusy;
+    n1  inputFull;
+    n1  outputEmpty;
   } status;
 
-  enum Mode : uint { Idle, DecodeMacroblock, SetQuantTable, SetScaleTable };
+  enum Mode : u32 { Idle, DecodeMacroblock, SetQuantTable, SetScaleTable };
 
   struct IO {
-      Mode mode;
-    uint32 offset;
+    Mode mode;
+    n32  offset;
   } io;
 
   struct Block {
-     u8 luma[64];
-     u8 chroma[64];
+    u8  luma[64];
+    u8  chroma[64];
     s16 scale[64];
     s16 cr[64];
     s16 cb[64];

@@ -1,4 +1,4 @@
-auto SMP::portRead(uint2 port) const -> uint8 {
+auto SMP::portRead(n2 port) const -> n8 {
   if(port == 0) return io.cpu0;
   if(port == 1) return io.cpu1;
   if(port == 2) return io.cpu2;
@@ -6,15 +6,15 @@ auto SMP::portRead(uint2 port) const -> uint8 {
   unreachable;
 }
 
-auto SMP::portWrite(uint2 port, uint8 data) -> void {
+auto SMP::portWrite(n2 port, n8 data) -> void {
   if(port == 0) io.apu0 = data;
   if(port == 1) io.apu1 = data;
   if(port == 2) io.apu2 = data;
   if(port == 3) io.apu3 = data;
 }
 
-inline auto SMP::readIO(uint16 address) -> uint8 {
-  uint8 data;
+inline auto SMP::readIO(n16 address) -> n8 {
+  n8 data;
 
   switch(address) {
   case 0xf0:  //TEST (write-only register)
@@ -76,7 +76,7 @@ inline auto SMP::readIO(uint16 address) -> uint8 {
   return data;  //unreachable
 }
 
-inline auto SMP::writeIO(uint16 address, uint8 data) -> void {
+inline auto SMP::writeIO(n16 address, n8 data) -> void {
   switch(address) {
   case 0xf0:  //TEST
     if(r.p.p) break;  //writes only valid when P flag is clear

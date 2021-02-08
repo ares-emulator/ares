@@ -43,7 +43,7 @@ auto CPU::main() -> void {
   instruction();
 }
 
-auto CPU::step(uint clocks) -> void {
+auto CPU::step(u32 clocks) -> void {
   timer.counter -= clocks;
   while(timer.counter < 0) {
     synchronize(psg);
@@ -63,8 +63,8 @@ auto CPU::power() -> void {
   HuC6280::power();
   Thread::create(system.colorburst() * 6.0, {&CPU::main, this});
 
-  r.pc.byte(0) = read(r.mpr[reset.vector >> 13], uint13(reset.vector + 0));
-  r.pc.byte(1) = read(r.mpr[reset.vector >> 13], uint13(reset.vector + 1));
+  r.pc.byte(0) = read(r.mpr[reset.vector >> 13], n13(reset.vector + 0));
+  r.pc.byte(1) = read(r.mpr[reset.vector >> 13], n13(reset.vector + 1));
 
   ram.fill(0x00);
 

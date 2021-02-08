@@ -2,7 +2,7 @@ auto DMA::Debugger::load(Node::Object parent) -> void {
   tracer.dma = parent->append<Node::Debugger::Tracer::Notification>("Transfer", "DMA");
 }
 
-auto DMA::Debugger::transfer(uint channelID) -> void {
+auto DMA::Debugger::transfer(u32 channelID) -> void {
   if(tracer.dma->enabled()) {
     static const char* channelName[7] = {
       "MDEC", "MDEC", " GPU", "  CD", " SPU", " PIO", " OTC"

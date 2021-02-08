@@ -13,7 +13,7 @@ inline auto string::read(string_view filename) -> string {
   if(!fp) return result;
 
   fseek(fp, 0, SEEK_END);
-  int filesize = ftell(fp);
+  s32 filesize = ftell(fp);
   if(filesize < 0) return fclose(fp), result;
 
   rewind(fp);
@@ -22,7 +22,7 @@ inline auto string::read(string_view filename) -> string {
   return fclose(fp), result;
 }
 
-inline auto string::repeat(string_view pattern, uint times) -> string {
+inline auto string::repeat(string_view pattern, u32 times) -> string {
   string result;
   while(times--) result.append(pattern.data());
   return result;
@@ -33,15 +33,15 @@ inline auto string::fill(char fill) -> string& {
   return *this;
 }
 
-inline auto string::hash() const -> uint {
+inline auto string::hash() const -> u32 {
   const char* p = data();
-  uint length = size();
-  uint result = 5381;
+  u32 length = size();
+  u32 result = 5381;
   while(length--) result = (result << 5) + result + *p++;
   return result;
 }
 
-inline auto string::remove(uint offset, uint length) -> string& {
+inline auto string::remove(u32 offset, u32 length) -> string& {
   char* p = get();
   length = min(length, size());
   memory::move(p + offset, p + offset + length, size() - length);
@@ -50,16 +50,16 @@ inline auto string::remove(uint offset, uint length) -> string& {
 
 inline auto string::reverse() -> string& {
   char* p = get();
-  uint length = size();
-  uint pivot = length >> 1;
-  for(int x = 0, y = length - 1; x < pivot && y >= 0; x++, y--) std::swap(p[x], p[y]);
+  u32 length = size();
+  u32 pivot = length >> 1;
+  for(s32 x = 0, y = length - 1; x < pivot && y >= 0; x++, y--) std::swap(p[x], p[y]);
   return *this;
 }
 
 //+length => insert/delete from start (right justify)
 //-length => insert/delete from end (left justify)
-inline auto string::size(int length, char fill) -> string& {
-  uint size = this->size();
+inline auto string::size(s32 length, char fill) -> string& {
+  u32 size = this->size();
   if(size == length) return *this;
 
   bool right = length >= 0;
@@ -68,13 +68,13 @@ inline auto string::size(int length, char fill) -> string& {
   if(size < length) {  //expand
     resize(length);
     char* p = get();
-    uint displacement = length - size;
+    u32 displacement = length - size;
     if(right) memory::move(p + displacement, p, size);
     else p += size;
     while(displacement--) *p++ = fill;
   } else {  //shrink
     char* p = get();
-    uint displacement = size - length;
+    u32 displacement = size - length;
     if(right) memory::move(p, p + displacement, length);
     resize(length);
   }
@@ -82,7 +82,7 @@ inline auto string::size(int length, char fill) -> string& {
   return *this;
 }
 
-inline auto slice(string_view self, int offset, int length) -> string {
+inline auto slice(string_view self, s32 offset, s32 length) -> string {
   string result;
   if(offset < 0) offset = self.size() - abs(offset);
   if(offset >= 0 && offset < self.size()) {
@@ -95,7 +95,7 @@ inline auto slice(string_view self, int offset, int length) -> string {
   return result;
 }
 
-inline auto string::slice(int offset, int length) const -> string {
+inline auto string::slice(s32 offset, s32 length) const -> string {
   return nall::slice(*this, offset, length);
 }
 
@@ -104,31 +104,50 @@ template<typename T> inline auto fromInteger(char* result, T value) -> char* {
   if(!negative) value = -value;  //negate positive integers to support eg INT_MIN
 
   char buffer[1 + sizeof(T) * 3];
-  uint size = 0;
+  u32 size = 0;
 
   do {
-    int n = value % 10;  //-0 to -9
+    s32 n = value % 10;  //-0 to -9
     buffer[size++] = '0' - n;  //'0' to '9'
     value /= 10;
   } while(value);
   if(negative) buffer[size++] = '-';
 
-  for(int x = size - 1, y = 0; x >= 0 && y < size; x--, y++) result[x] = buffer[y];
+  for(s32 x = size - 1, y = 0; x >= 0 && y < size; x--, y++) result[x] = buffer[y];
   result[size] = 0;
   return result;
 }
 
 template<typename T> inline auto fromNatural(char* result, T value) -> char* {
   char buffer[1 + sizeof(T) * 3];
-  uint size = 0;
+  u32 size = 0;
 
   do {
-    uint n = value % 10;
+    u32 n = value % 10;
     buffer[size++] = '0' + n;
     value /= 10;
   } while(value);
 
-  for(int x = size - 1, y = 0; x >= 0 && y < size; x--, y++) result[x] = buffer[y];
+  for(s32 x = size - 1, y = 0; x >= 0 && y < size; x--, y++) result[x] = buffer[y];
+  result[size] = 0;
+  return result;
+}
+
+template<typename T> inline auto fromHex(char* result, T value) -> char* {
+  char buffer[1 + sizeof(T) * 2];
+  u32 size = 0;
+
+  do {
+    u32 n = value & 15;
+    if(n <= 9) {
+      buffer[size++] = '0' + n;
+    } else {
+      buffer[size++] = 'a' + n - 10;
+    }
+    value >>= 4;
+  } while(value);
+
+  for(s32 x = size - 1, y = 0; x >= 0 && y < size; x--, y++) result[x] = buffer[y];
   result[size] = 0;
   return result;
 }
@@ -136,7 +155,7 @@ template<typename T> inline auto fromNatural(char* result, T value) -> char* {
 //using sprintf is certainly not the most ideal method to convert
 //a double to a string ... but attempting to parse a double by
 //hand, digit-by-digit, results in subtle rounding errors.
-template<typename T> inline auto fromReal(char* result, T value) -> uint {
+template<typename T> inline auto fromReal(char* result, T value) -> u32 {
   char buffer[256];
   #ifdef _WIN32
   //Windows C-runtime does not support long double via sprintf()
@@ -157,7 +176,7 @@ template<typename T> inline auto fromReal(char* result, T value) -> uint {
     }
   }
 
-  uint length = strlen(buffer);
+  u32 length = strlen(buffer);
   if(result) strcpy(result, buffer);
   return length + 1;
 }

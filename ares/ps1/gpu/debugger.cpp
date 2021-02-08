@@ -13,8 +13,8 @@ auto GPU::Debugger::load(Node::Object parent) -> void {
   graphics.vram15bpp->setCapture([&]() -> vector<u32> {
     vector<u32> output;
     output.resize(1024 * 512);
-    for(uint y : range(512)) {
-      for(uint x : range(1024)) {
+    for(u32 y : range(512)) {
+      for(u32 x : range(1024)) {
         u16 pixel = gpu.vram.readHalf(y * 2048 + x * 2);
         u8 r = pixel >>  0 & 31; r = r << 3 | r >> 2;
         u8 g = pixel >>  5 & 31; g = g << 3 | g >> 2;
@@ -31,8 +31,8 @@ auto GPU::Debugger::load(Node::Object parent) -> void {
   graphics.vram24bpp->setCapture([&]() -> vector<u32> {
     vector<u32> output;
     output.resize(682 * 512);
-    for(uint y : range(512)) {
-      for(uint x : range(682)) {
+    for(u32 y : range(512)) {
+      for(u32 x : range(682)) {
         u32 pixel = gpu.vram.readWordUnaligned(y * 2048 + x * 3);
         u8 r = pixel >>  0;
         u8 g = pixel >>  8;

@@ -27,7 +27,7 @@ auto YM2612::serialize(serializer& s) -> void {
   s(timerB.counter);
   s(timerB.divider);
 
-  for(uint n : range(6)) s(channels[n]);
+  for(u32 n : range(6)) s(channels[n]);
 }
 
 auto YM2612::Channel::serialize(serializer& s) -> void {
@@ -39,7 +39,7 @@ auto YM2612::Channel::serialize(serializer& s) -> void {
   s(tremolo);
   s(mode);
 
-  for(uint n : range(4)) s(operators[n]);
+  for(u32 n : range(4)) s(operators[n]);
 }
 
 auto YM2612::Channel::Operator::serialize(serializer& s) -> void {

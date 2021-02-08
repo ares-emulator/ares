@@ -23,30 +23,30 @@
 namespace nall {
 
 struct file_map {
-  struct mode { enum : uint { read, write, modify, append }; };
+  struct mode { enum : u32 { read, write, modify, append }; };
 
   file_map(const file_map&) = delete;
   auto operator=(const file_map&) = delete;
 
   file_map() = default;
   file_map(file_map&& source) { operator=(move(source)); }
-  file_map(const string& filename, uint mode) { open(filename, mode); }
+  file_map(const string& filename, u32 mode) { open(filename, mode); }
 
   ~file_map() { close(); }
 
   explicit operator bool() const { return _open; }
-  auto size() const -> uint64_t { return _size; }
-  auto data() -> uint8_t* { return _data; }
-  auto data() const -> const uint8_t* { return _data; }
+  auto size() const -> u64 { return _size; }
+  auto data() -> u8* { return _data; }
+  auto data() const -> const u8* { return _data; }
 
 //auto operator=(file_map&& source) -> file_map&;
-//auto open(const string& filename, uint mode) -> bool;
+//auto open(const string& filename, u32 mode) -> bool;
 //auto close() -> void;
 
 private:
   bool _open = false;  //zero-byte files return _data = nullptr, _size = 0
-  uint8_t* _data = nullptr;
-  uint64_t _size = 0;
+  u8* _data = nullptr;
+  u64 _size = 0;
 
   #if defined(API_WINDOWS)
 
@@ -70,11 +70,11 @@ public:
     return *this;
   }
 
-  auto open(const string& filename, uint mode_) -> bool {
+  auto open(const string& filename, u32 mode_) -> bool {
     close();
     if(file::exists(filename) && file::size(filename) == 0) return _open = true;
 
-    int desiredAccess, creationDisposition, protection, mapAccess;
+    s32 desiredAccess, creationDisposition, protection, mapAccess;
 
     switch(mode_) {
     default: return false;
@@ -118,7 +118,7 @@ public:
       return false;
     }
 
-    _data = (uint8_t*)MapViewOfFile(_map, mapAccess, 0, 0, _size);
+    _data = (u8*)MapViewOfFile(_map, mapAccess, 0, 0, _size);
     return _open = true;
   }
 
@@ -143,7 +143,7 @@ public:
 
   #else
 
-  int _fd = -1;
+  s32 _fd = -1;
 
 public:
   auto operator=(file_map&& source) -> file_map& {
@@ -160,12 +160,12 @@ public:
     return *this;
   }
 
-  auto open(const string& filename, uint mode_) -> bool {
+  auto open(const string& filename, u32 mode_) -> bool {
     close();
     if(file::exists(filename) && file::size(filename) == 0) return _open = true;
 
-    int openFlags = 0;
-    int mmapFlags = 0;
+    s32 openFlags = 0;
+    s32 mmapFlags = 0;
 
     switch(mode_) {
     default: return false;
@@ -194,7 +194,7 @@ public:
     fstat(_fd, &_stat);
     _size = _stat.st_size;
 
-    _data = (uint8_t*)mmap(nullptr, _size, mmapFlags, MAP_SHARED | MAP_NORESERVE, _fd, 0);
+    _data = (u8*)mmap(nullptr, _size, mmapFlags, MAP_SHARED | MAP_NORESERVE, _fd, 0);
     if(_data == MAP_FAILED) {
       _data = nullptr;
       ::close(_fd);

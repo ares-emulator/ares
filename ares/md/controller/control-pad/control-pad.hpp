@@ -10,17 +10,17 @@ struct ControlPad : Controller {
 
   ControlPad(Node::Port);
 
-  auto readData() -> uint8 override;
-  auto writeData(uint8 data) -> void override;
+  auto readData() -> n8 override;
+  auto writeData(n8 data) -> void override;
 
 private:
-  uint1 select = 1;
-  uint1 latch;
+  n1 select = 1;
+  n1 latch;
 
-  bool yHold = 0;
-  bool upLatch = 0;
-  bool downLatch = 0;
-  bool xHold = 0;
-  bool leftLatch = 0;
-  bool rightLatch = 0;
+  b1 yHold;
+  b1 upLatch;
+  b1 downLatch;
+  b1 xHold;
+  b1 leftLatch;
+  b1 rightLatch;
 };

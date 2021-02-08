@@ -1,11 +1,11 @@
-template<> auto TLCS900H::parity< uint8>( uint8 data) const -> bool {
+template<> auto TLCS900H::parity<n8 >(n8  data) const -> bool {
   data ^= data >> 4;
   data ^= data >> 2;
   data ^= data >> 1;
   return !(data & 1);
 }
 
-template<> auto TLCS900H::parity<uint16>(uint16 data) const -> bool {
+template<> auto TLCS900H::parity<n16>(n16 data) const -> bool {
   data ^= data >> 8;
   data ^= data >> 4;
   data ^= data >> 2;
@@ -13,13 +13,13 @@ template<> auto TLCS900H::parity<uint16>(uint16 data) const -> bool {
   return !(data & 1);
 }
 
-template<> auto TLCS900H::parity<uint32>(uint32 data) const -> bool {
+template<> auto TLCS900H::parity<n32>(n32 data) const -> bool {
   return Undefined;
 }
 
 //
 
-template<typename T> auto TLCS900H::algorithmAdd(T target, T source, uint1 carry) -> T {
+template<typename T> auto TLCS900H::algorithmAdd(T target, T source, n1 carry) -> T {
   T result = target + source + carry;
   T carries = target ^ source ^ result;
   T overflow = (target ^ result) & (source ^ result);
@@ -93,7 +93,7 @@ template<typename T> auto TLCS900H::algorithmShifted(T result) -> T {
   return result;
 }
 
-template<typename T> auto TLCS900H::algorithmSubtract(T target, T source, uint1 carry) -> T {
+template<typename T> auto TLCS900H::algorithmSubtract(T target, T source, n1 carry) -> T {
   T result = target - source - carry;
   T carries = target ^ source ^ result;
   T overflow = (target ^ result) & (source ^ target);

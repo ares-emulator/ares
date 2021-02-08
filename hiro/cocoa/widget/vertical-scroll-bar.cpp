@@ -19,8 +19,8 @@
 }
 
 -(void) update {
-  double d = 1.0 / verticalScrollBar->state.length;
-  double f = d * verticalScrollBar->state.position;
+  f64 d = 1.0 / verticalScrollBar->state.length;
+  f64 f = d * verticalScrollBar->state.position;
 
   [self setDoubleValue:f];
   [self setKnobProportion:d];
@@ -73,17 +73,17 @@ auto pVerticalScrollBar::destruct() -> void {
 
 auto pVerticalScrollBar::minimumSize() const -> Size {
   @autoreleasepool {
-    return {(int)[NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy], 32};
+    return {(s32)[NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy], 32};
   }
 }
 
-auto pVerticalScrollBar::setLength(uint length) -> void {
+auto pVerticalScrollBar::setLength(u32 length) -> void {
   @autoreleasepool {
     [cocoaView update];
   }
 }
 
-auto pVerticalScrollBar::setPosition(uint position) -> void {
+auto pVerticalScrollBar::setPosition(u32 position) -> void {
   @autoreleasepool {
     [cocoaView update];
   }

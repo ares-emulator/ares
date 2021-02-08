@@ -3,20 +3,20 @@ auto SPC7110::aluMultiply() -> void {
 
   if(r482e & 1) {
     //signed 16-bit x 16-bit multiplication
-    int16 r0 = (int16)(r4824 | r4825 << 8);
-    int16 r1 = (int16)(r4820 | r4821 << 8);
+    i16 r0 = (i16)(r4824 | r4825 << 8);
+    i16 r1 = (i16)(r4820 | r4821 << 8);
 
-    int result = r0 * r1;
+    i32 result = r0 * r1;
     r4828 = result;
     r4829 = result >> 8;
     r482a = result >> 16;
     r482b = result >> 24;
   } else {
     //unsigned 16-bit x 16-bit multiplication
-    uint16 r0 = (uint16)(r4824 | r4825 << 8);
-    uint16 r1 = (uint16)(r4820 | r4821 << 8);
+    n16 r0 = (n16)(r4824 | r4825 << 8);
+    n16 r1 = (n16)(r4820 | r4821 << 8);
 
-    uint result = r0 * r1;
+    n32 result = r0 * r1;
     r4828 = result;
     r4829 = result >> 8;
     r482a = result >> 16;
@@ -31,15 +31,15 @@ auto SPC7110::aluDivide() -> void {
 
   if(r482e & 1) {
     //signed 32-bit x 16-bit division
-    int32 dividend = (int32)(r4820 | r4821 << 8 | r4822 << 16 | r4823 << 24);
-    int16 divisor  = (int16)(r4826 | r4827 << 8);
+    i32 dividend = (i32)(r4820 | r4821 << 8 | r4822 << 16 | r4823 << 24);
+    i16 divisor  = (i16)(r4826 | r4827 << 8);
 
-    int32 quotient;
-    int16 remainder;
+    i32 quotient;
+    i16 remainder;
 
     if(divisor) {
-      quotient  = (int32)(dividend / divisor);
-      remainder = (int32)(dividend % divisor);
+      quotient  = (i32)(dividend / divisor);
+      remainder = (i32)(dividend % divisor);
     } else {
       //illegal division by zero
       quotient  = 0;
@@ -55,15 +55,15 @@ auto SPC7110::aluDivide() -> void {
     r482d = remainder >> 8;
   } else {
     //unsigned 32-bit x 16-bit division
-    uint32 dividend = (uint32)(r4820 | r4821 << 8 | r4822 << 16 | r4823 << 24);
-    uint16 divisor  = (uint16)(r4826 | r4827 << 8);
+    n32 dividend = (n32)(r4820 | r4821 << 8 | r4822 << 16 | r4823 << 24);
+    n16 divisor  = (n16)(r4826 | r4827 << 8);
 
-    uint32 quotient;
-    uint16 remainder;
+    n32 quotient;
+    n16 remainder;
 
     if(divisor) {
-      quotient  = (uint32)(dividend / divisor);
-      remainder = (uint16)(dividend % divisor);
+      quotient  = (n32)(dividend / divisor);
+      remainder = (n16)(dividend % divisor);
     } else {
       //illegal division by zero
       quotient  = 0;

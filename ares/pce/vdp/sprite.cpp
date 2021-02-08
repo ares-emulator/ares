@@ -1,18 +1,18 @@
-auto VDC::Sprite::scanline(uint y) -> void {
+auto VDC::Sprite::scanline(u32 y) -> void {
   objects.reset();
   if(!enable) return;
 
   y += 64;
 
-  static const uint widths [2] = {15, 31};
-  static const uint heights[4] = {15, 31, 63, 63};
+  static const u32 widths [2] = {15, 31};
+  static const u32 heights[4] = {15, 31, 63, 63};
 
-  uint count = 0;
-  for(uint index : range(64)) {
-    uint16 d0 = vdc->satb.read(index << 2 | 0);
-    uint16 d1 = vdc->satb.read(index << 2 | 1);
-    uint16 d2 = vdc->satb.read(index << 2 | 2);
-    uint16 d3 = vdc->satb.read(index << 2 | 3);
+  u32 count = 0;
+  for(u32 index : range(64)) {
+    n16 d0 = vdc->satb.read(index << 2 | 0);
+    n16 d1 = vdc->satb.read(index << 2 | 1);
+    n16 d2 = vdc->satb.read(index << 2 | 2);
+    n16 d3 = vdc->satb.read(index << 2 | 3);
 
     Object object;
     object.y = d0.bit(0,9);
@@ -52,7 +52,7 @@ auto VDC::Sprite::scanline(uint y) -> void {
   }
 }
 
-auto VDC::Sprite::run(uint x, uint y) -> void {
+auto VDC::Sprite::run(u32 x, u32 y) -> void {
   color = 0;
   palette = 0;
   priority = 0;
@@ -66,18 +66,18 @@ auto VDC::Sprite::run(uint x, uint y) -> void {
     if(x < object.x) continue;
     if(x > object.x + object.width) continue;
 
-    uint10 hoffset = x - object.x;
-    uint10 voffset = y - object.y;
+    n10 hoffset = x - object.x;
+    n10 voffset = y - object.y;
     if(object.hflip) hoffset ^= object.width;
     if(object.vflip) voffset ^= object.height;
 
-    uint16 patternAddress = object.pattern;
+    n16 patternAddress = object.pattern;
     patternAddress  += (voffset >> 4) << 1;
     patternAddress  += (hoffset >> 4);
     patternAddress <<= 6;
     patternAddress  += (voffset & 15);
 
-    uint16 d0 = 0, d1 = 0, d2 = 0, d3 = 0;
+    n16 d0 = 0, d1 = 0, d2 = 0, d3 = 0;
     if(latch.vramMode != 1) {
       d0 = vdc->vram.read(patternAddress +  0);
       d1 = vdc->vram.read(patternAddress + 16);
@@ -95,8 +95,8 @@ auto VDC::Sprite::run(uint x, uint y) -> void {
       }
     }
 
-    uint4 index = 15 - (hoffset & 15);
-    uint4 color;
+    n4 index = 15 - (hoffset & 15);
+    n4 color;
     color.bit(0) = d0.bit(index);
     color.bit(1) = d1.bit(index);
     color.bit(2) = d2.bit(index);

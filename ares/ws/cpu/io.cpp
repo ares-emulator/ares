@@ -1,5 +1,5 @@
-auto CPU::keypadRead() -> uint4 {
-  uint4 data;
+auto CPU::keypadRead() -> n4 {
+  n4 data;
   bool horizontal = ppu.screen->rotation() == 0;
 
   if(Model::WonderSwan() || Model::WonderSwanColor() || Model::SwanCrystal()) {
@@ -64,8 +64,8 @@ auto CPU::keypadRead() -> uint4 {
   return data;
 }
 
-auto CPU::portRead(uint16 address) -> uint8 {
-  uint8 data;
+auto CPU::portRead(n16 address) -> n8 {
+  n8 data;
 
   //DMA_SRC
   if(address == 0x0040) return r.dmaSource.byte(0);
@@ -142,7 +142,7 @@ auto CPU::portRead(uint16 address) -> uint8 {
   return data;
 }
 
-auto CPU::portWrite(uint16 address, uint8 data) -> void {
+auto CPU::portWrite(n16 address, n8 data) -> void {
   //DMA_SRC
   if(address == 0x0040) { r.dmaSource.byte(0) = data & ~1; return; }
   if(address == 0x0041) { r.dmaSource.byte(1) = data;      return; }

@@ -1,27 +1,27 @@
-auto WDC65816::disassembleInstruction(uint24 address, bool e, bool m, bool x) -> string {
+auto WDC65816::disassembleInstruction(n24 address, bool e, bool m, bool x) -> string {
   string s;
 
-  uint24 pc = address;
+  n24 pc = address;
   string name;
   string operand;
-  maybe<uint24> effective;
+  maybe<n24> effective;
 
-  auto read = [&](uint24 address) -> uint8 {
+  auto read = [&](n24 address) -> n8 {
     //$00-3f,80-bf:2000-5fff: do not attempt to read I/O registers from the disassembler:
     //this is because such reads are much more likely to have side effects to emulation.
     if((address & 0x40ffff) >= 0x2000 && (address & 0x40ffff) <= 0x5fff) return 0x00;
     return readDisassembler(address);
   };
 
-  auto readByte = [&](uint24 address) -> uint8 {
+  auto readByte = [&](n24 address) -> n8 {
     return read(address);
   };
-  auto readWord = [&](uint24 address) -> uint16 {
-    uint16 data = readByte(address + 0) << 0;
+  auto readWord = [&](n24 address) -> n16 {
+    n16    data = readByte(address + 0) << 0;
     return data | readByte(address + 1) << 8;
   };
-  auto readLong = [&](uint24 address) -> uint24 {
-    uint24 data = readByte(address + 0) << 0;
+  auto readLong = [&](n24 address) -> n24 {
+    n24    data = readByte(address + 0) << 0;
     return data | readWord(address + 1) << 8;
   };
 
@@ -30,9 +30,9 @@ auto WDC65816::disassembleInstruction(uint24 address, bool e, bool m, bool x) ->
   auto operand1 = read(address); address.bit(0,15)++;
   auto operand2 = read(address); address.bit(0,15)++;
 
-   uint8 operandByte = operand0 << 0;
-  uint16 operandWord = operand0 << 0 | operand1 << 8;
-  uint24 operandLong = operand0 << 0 | operand1 << 8 | operand2 << 16;
+  n8  operandByte = operand0 << 0;
+  n16 operandWord = operand0 << 0 | operand1 << 8;
+  n24 operandLong = operand0 << 0 | operand1 << 8 | operand2 << 16;
 
   auto absolute = [&]() -> string {
     effective = r.b << 16 | operandWord;
@@ -65,17 +65,17 @@ auto WDC65816::disassembleInstruction(uint24 address, bool e, bool m, bool x) ->
   };
 
   auto direct = [&]() -> string {
-    effective = uint16(r.d.w + operandByte);
+    effective = n16(r.d.w + operandByte);
     return {"$", hex(operandByte, 2L)};
   };
 
   auto directX = [&]() -> string {
-    effective = uint16(r.d.w + operandByte + r.x.w);
+    effective = n16(r.d.w + operandByte + r.x.w);
     return {"$", hex(operandByte, 2L), ",x"};
   };
 
   auto directY = [&]() -> string {
-    effective = uint16(r.d.w + operandByte + r.y.w);
+    effective = n16(r.d.w + operandByte + r.y.w);
     return {"$", hex(operandByte, 2L), ",y"};
   };
 
@@ -96,13 +96,13 @@ auto WDC65816::disassembleInstruction(uint24 address, bool e, bool m, bool x) ->
   };
 
   auto indexedIndirectX = [&]() -> string {
-    effective = uint16(r.d.w + operandByte + r.x.w);
+    effective = n16(r.d.w + operandByte + r.x.w);
     effective = r.b << 16 | readWord(*effective);
     return {"($", hex(operandByte, 2L), ",x)"};
   };
 
   auto indirect = [&]() -> string {
-    effective = uint16(r.d.w + operandByte);
+    effective = n16(r.d.w + operandByte);
     effective = (r.b << 16) + readWord(*effective);
     return {"($", hex(operandByte, 2L), ")"};
   };
@@ -115,19 +115,19 @@ auto WDC65816::disassembleInstruction(uint24 address, bool e, bool m, bool x) ->
 
   auto indirectX = [&]() -> string {
     effective = operandWord;
-    effective = pc.mask(16,23) | uint16(*effective + r.x.w);
+    effective = pc.mask(16,23) | n16(*effective + r.x.w);
     effective = pc.mask(16,23) | readWord(*effective);
     return {"($", hex(operandWord, 4L), ",x)"};
   };
 
   auto indirectIndexedY = [&]() -> string {
-    effective = uint16(r.d.w + operandByte);
+    effective = n16(r.d.w + operandByte);
     effective = (r.b << 16) + readWord(*effective) + r.y.w;
     return {"($", hex(operandByte, 2L), "),y"};
   };
 
   auto indirectLong = [&]() -> string {
-    effective = uint16(r.d.w + operandByte);
+    effective = n16(r.d.w + operandByte);
     effective = readLong(*effective);
     return {"[$", hex(operandByte, 2L), "]"};
   };
@@ -138,7 +138,7 @@ auto WDC65816::disassembleInstruction(uint24 address, bool e, bool m, bool x) ->
   };
 
   auto indirectLongY = [&]() -> string {
-    effective = uint16(r.d.w + operandByte);
+    effective = n16(r.d.w + operandByte);
     effective = readLong(*effective) + r.y.w;
     return {"[$", hex(operandByte, 2L), "],y"};
   };
@@ -148,22 +148,22 @@ auto WDC65816::disassembleInstruction(uint24 address, bool e, bool m, bool x) ->
   };
 
   auto relative = [&]() -> string {
-    effective = pc.mask(16,23) | uint16(pc + 2 + (int8)operandByte);
+    effective = pc.mask(16,23) | n16(pc + 2 + (i8)operandByte);
     return {"$", hex(*effective, 4L)};
   };
 
   auto relativeWord = [&]() -> string {
-    effective = pc.mask(16,23) | uint16(pc + 3 + (int16)operandWord);
+    effective = pc.mask(16,23) | n16(pc + 3 + (i16)operandWord);
     return {"$", hex(*effective, 4L)};
   };
 
   auto stack = [&]() -> string {
-    effective = uint16(r.s.w + operandByte);
+    effective = n16(r.s.w + operandByte);
     return {"$", hex(operandByte, 2L), ",s"};
   };
 
   auto stackIndirect = [&]() -> string {
-    effective = uint16(operandByte + r.s.w);
+    effective = n16(operandByte + r.s.w);
     effective = (r.b << 16) + readWord(*effective) + r.y.w;
     return {"($", hex(operandByte, 2L), ",s),y"};
   };

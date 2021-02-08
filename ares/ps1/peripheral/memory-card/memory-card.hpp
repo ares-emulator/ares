@@ -11,13 +11,13 @@ struct MemoryCard : PeripheralDevice {
   auto read(u8 data) -> u8;
   auto write(u8 data) -> u8;
 
-  enum class State : uint {
+  enum class State : u32 {
     Idle,
     Select,
     Active,
   } state = State::Idle;
 
-  enum class Command : uint {
+  enum class Command : u32 {
     None,
     Identify,
     Read,
@@ -31,8 +31,8 @@ struct MemoryCard : PeripheralDevice {
     BitField<8,4> unknown{&value};
   } flag;
 
-   u8 phase = 0;
-   u8 checksum = 0;
-   u8 response = 0;
+  u8  phase = 0;
+  u8  checksum = 0;
+  u8  response = 0;
   u16 address = 0;
 };

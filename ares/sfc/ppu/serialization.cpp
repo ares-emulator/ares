@@ -6,7 +6,7 @@ auto PPU::serialize(serializer& s) -> void {
   s(self.overscan);
   s(self.vdisp);
 
-  s(array_span<uint16_t>{vram.data, vram.mask + 1});
+  s(array_span<u16>{vram.data, vram.mask + 1});
 
   s(ppu1.version);
   s(ppu1.mdr);
@@ -165,12 +165,12 @@ auto PPU::Object::serialize(serializer& s) -> void {
   s(t.tileCount);
 
   s(t.active);
-  for(uint p : range(2)) {
-    for(uint n : range(32)) {
+  for(u32 p : range(2)) {
+    for(u32 n : range(32)) {
       s(t.item[p][n].valid);
       s(t.item[p][n].index);
     }
-    for(uint n : range(34)) {
+    for(u32 n : range(34)) {
       s(t.tile[p][n].valid);
       s(t.tile[p][n].x);
       s(t.tile[p][n].priority);

@@ -7,7 +7,7 @@ inline auto CPU::Timer::run() -> void {
 
   if(!enable || cascade) return;
 
-  static const uint mask[] = {0, 63, 255, 1023};
+  static const u32 mask[] = {0, 63, 255, 1023};
   if((cpu.clock() & mask[frequency]) == 0) step();
 }
 
@@ -26,7 +26,7 @@ auto CPU::Timer::step() -> void {
   }
 }
 
-auto CPU::runFIFO(uint n) -> void {
+auto CPU::runFIFO(u32 n) -> void {
   synchronize(apu);
   apu.fifo[n].read();
   if(apu.fifo[n].size > 16) return;

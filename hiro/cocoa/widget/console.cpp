@@ -13,28 +13,28 @@
 
 namespace hiro {
 
-void pConsole::print(string text) {
+auto pConsole::print(string text) -> void {
 }
 
-void pConsole::reset() {
+auto pConsole::reset() -> void {
 }
 
-void pConsole::setBackgroundColor(Color color) {
+auto pConsole::setBackgroundColor(Color color) -> void {
 }
 
-void pConsole::setForegroundColor(Color color) {
+auto pConsole::setForegroundColor(Color color) -> void {
 }
 
-void pConsole::setPrompt(string prompt) {
+auto pConsole::setPrompt(string prompt) -> void {
 }
 
-void pConsole::constructor() {
+auto pConsole::constructor() -> void {
   @autoreleasepool {
     cocoaView = cocoaConsole = [[CocoaConsole alloc] initWith:console];
   }
 }
 
-void pConsole::destructor() {
+auto pConsole::destructor() -> void {
   @autoreleasepool {
     [cocoaView removeFromSuperview];
     [cocoaView release];

@@ -43,7 +43,7 @@ auto pComboButton::append(sComboButtonItem item) -> void {
 
 auto pComboButton::minimumSize() const -> Size {
   auto font = self().font(true);
-  int maximumWidth = 0;
+  s32 maximumWidth = 0;
   for(auto& item : state().items) {
     maximumWidth = max(maximumWidth, pFont::size(font, item->state.text).width());
   }

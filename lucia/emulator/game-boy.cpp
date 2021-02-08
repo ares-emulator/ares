@@ -23,7 +23,7 @@ GameBoy::GameBoy() {
 }
 
 auto GameBoy::load() -> bool {
-  if(!ares::GameBoy::load(root, "Game Boy")) return false;
+  if(!ares::GameBoy::load(root, "[Nintendo] Game Boy")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -110,7 +110,7 @@ GameBoyColor::GameBoyColor() {
 }
 
 auto GameBoyColor::load() -> bool {
-  if(!ares::GameBoy::load(root, "Game Boy Color")) return false;
+  if(!ares::GameBoy::load(root, "[Nintendo] Game Boy Color")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

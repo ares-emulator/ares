@@ -11,8 +11,8 @@ ControlPad::ControlPad(Node::Port parent) {
   start = node->append<Node::Input::Button>("Start");
 }
 
-auto ControlPad::readData() -> uint8 {
-  uint6 data;
+auto ControlPad::readData() -> n8 {
+  n6 data;
 
   platform->input(up);
   platform->input(down);
@@ -54,7 +54,7 @@ auto ControlPad::readData() -> uint8 {
   return latch << 7 | select << 6 | data;
 }
 
-auto ControlPad::writeData(uint8 data) -> void {
+auto ControlPad::writeData(n8 data) -> void {
   select = data.bit(6);
   latch = data.bit(7);
 }

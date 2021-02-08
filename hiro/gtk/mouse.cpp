@@ -4,15 +4,15 @@ namespace hiro {
 
 auto pMouse::position() -> Position {
   #if defined(DISPLAY_WINDOWS)
-  POINT point{0};
+  POINT point{};
   GetCursorPos(&point);
   return {point.x, point.y};
   #endif
 
   #if defined(DISPLAY_XORG)
   XlibWindow root, child;
-  int rootx, rooty, winx, winy;
-  uint mask;
+  s32 rootx, rooty, winx, winy;
+  u32 mask;
   XQueryPointer(pApplication::state().display, DefaultRootWindow(pApplication::state().display), &root, &child, &rootx, &rooty, &winx, &winy, &mask);
   return {rootx, rooty};
   #endif
@@ -29,8 +29,8 @@ auto pMouse::pressed(Mouse::Button button) -> bool {
 
   #if defined(DISPLAY_XORG)
   XlibWindow root, child;
-  int rootx, rooty, winx, winy;
-  uint mask;
+  s32 rootx, rooty, winx, winy;
+  u32 mask;
   XQueryPointer(pApplication::state().display, DefaultRootWindow(pApplication::state().display), &root, &child, &rootx, &rooty, &winx, &winy, &mask);
   switch(button) {
   case Mouse::Button::Left: return mask & Button1Mask;

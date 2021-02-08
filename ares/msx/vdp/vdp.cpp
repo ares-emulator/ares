@@ -36,7 +36,7 @@ auto VDP::unload() -> void {
   node.reset();
 }
 
-auto VDP::step(uint clocks) -> void {
+auto VDP::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }
@@ -74,7 +74,7 @@ auto VDP::power() -> void {
 
 /* Z80 I/O ports 0x98 - 0x9b */
 
-auto VDP::read(uint2 port) -> uint8 {
+auto VDP::read(n2 port) -> n8 {
   if(Model::MSX())
   switch(port) {
   case 0: return TMS9918::data();
@@ -90,7 +90,7 @@ auto VDP::read(uint2 port) -> uint8 {
   return 0xff;
 }
 
-auto VDP::write(uint2 port, uint8 data) -> void {
+auto VDP::write(n2 port, n8 data) -> void {
   if(Model::MSX())
   switch(port) {
   case 0: return TMS9918::data(data);

@@ -1,7 +1,7 @@
 struct MBC5 : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
-  Memory::Writable<uint8> ram;
+  Memory::Readable<n8> rom;
+  Memory::Writable<n8> ram;
   Node::Input::Rumble rumble;
 
   auto load(Markup::Node document) -> void override {
@@ -20,24 +20,24 @@ struct MBC5 : Interface {
     cartridge.node->remove(rumble);
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(address >= 0x0000 && address <= 0x3fff) {
-      return rom.read((uint14)address);
+      return rom.read((n14)address);
     }
 
     if(address >= 0x4000 && address <= 0x7fff) {
-      return rom.read(io.rom.bank << 14 | (uint14)address);
+      return rom.read(io.rom.bank << 14 | (n14)address);
     }
 
     if(address >= 0xa000 && address <= 0xbfff) {
       if(!ram || !io.ram.enable) return 0xff;
-      return ram.read(io.ram.bank << 13 | (uint13)address);
+      return ram.read(io.ram.bank << 13 | (n13)address);
     }
 
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     if(address >= 0x0000 && address <= 0x1fff) {
       io.ram.enable = data.bit(0,3) == 0x0a;
       return;
@@ -63,7 +63,7 @@ struct MBC5 : Interface {
 
     if(address >= 0xa000 && address <= 0xbfff) {
       if(!ram || !io.ram.enable) return;
-      return ram.write(io.ram.bank << 13 | (uint13)address, data);
+      return ram.write(io.ram.bank << 13 | (n13)address, data);
     }
   }
 
@@ -80,11 +80,11 @@ struct MBC5 : Interface {
 
   struct IO {
     struct ROM {
-      uint9 bank = 0x01;
+      n9 bank = 0x01;
     } rom;
     struct RAM {
-      uint1 enable;
-      uint4 bank;
+      n1 enable;
+      n4 bank;
     } ram;
   } io;
 };

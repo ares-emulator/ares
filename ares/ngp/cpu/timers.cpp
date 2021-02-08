@@ -1,4 +1,4 @@
-auto CPU::Prescaler::step(uint clocks) -> void {
+auto CPU::Prescaler::step(u32 clocks) -> void {
   if(!enable) return;
   while(clocks--) {
     auto latch = counter++;
@@ -166,9 +166,9 @@ auto CPU::Timer01::clockT0() -> void {
   }
   if(mode == 3) {
     ++cpu.t0.counter;
-    if(pwm == 1) cpu.t0.counter = (uint6)cpu.t0.counter;
-    if(pwm == 2) cpu.t0.counter = (uint7)cpu.t0.counter;
-    if(pwm == 3) cpu.t0.counter = (uint8)cpu.t0.counter;
+    if(pwm == 1) cpu.t0.counter = (n6)cpu.t0.counter;
+    if(pwm == 2) cpu.t0.counter = (n7)cpu.t0.counter;
+    if(pwm == 3) cpu.t0.counter = (n8)cpu.t0.counter;
     bool matchT0  = cpu.t0.counter == cpu.t0.compare;
     bool matchPWM = cpu.t0.counter == 0;
     if(matchT0 || matchPWM) {
@@ -251,9 +251,9 @@ auto CPU::Timer23::clockT2() -> void {
   }
   if(mode == 3) {
     ++cpu.t2.counter;
-    if(pwm == 1) cpu.t2.counter = (uint6)cpu.t2.counter;
-    if(pwm == 2) cpu.t2.counter = (uint7)cpu.t2.counter;
-    if(pwm == 3) cpu.t2.counter = (uint8)cpu.t2.counter;
+    if(pwm == 1) cpu.t2.counter = (n6)cpu.t2.counter;
+    if(pwm == 2) cpu.t2.counter = (n7)cpu.t2.counter;
+    if(pwm == 3) cpu.t2.counter = (n8)cpu.t2.counter;
     bool matchT2  = cpu.t2.counter == cpu.t2.compare;
     bool matchPWM = cpu.t2.counter == 0;
     if(matchT2 || matchPWM) {

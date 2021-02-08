@@ -12,6 +12,7 @@ struct pMenuBar : pObject {
   auto setVisible(bool visible) -> void override;
 
   auto _parent() -> maybe<pWindow&>;
+  auto _rebuild() -> void;
   auto _update() -> void;
 
   HMENU hmenu = 0;

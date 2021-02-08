@@ -20,17 +20,17 @@ auto pHorizontalScrollBar::minimumSize() const -> Size {
   return {0, 18_sy};
 }
 
-auto pHorizontalScrollBar::setLength(unsigned length) -> void {
+auto pHorizontalScrollBar::setLength(u32 length) -> void {
   length += (length == 0);
   SetScrollRange(hwnd, SB_CTL, 0, length - 1, TRUE);
 }
 
-auto pHorizontalScrollBar::setPosition(unsigned position) -> void {
+auto pHorizontalScrollBar::setPosition(u32 position) -> void {
   SetScrollPos(hwnd, SB_CTL, position, TRUE);
 }
 
 auto pHorizontalScrollBar::onChange(WPARAM wparam) -> void {
-  unsigned position = ScrollEvent(hwnd, wparam);
+  u32 position = ScrollEvent(hwnd, wparam);
   if(position == state().position) return;
   state().position = position;
   self().doChange();

@@ -151,10 +151,10 @@ struct KonamiVRC4 : Interface {
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programRAM);
     s(characterRAM);
     s(programMode);
@@ -170,19 +170,19 @@ struct KonamiVRC4 : Interface {
     s(irqLine);
   }
 
-  n01 programMode;
-  n05 programBank[2];
-  n02 mirror;
-  n08 characterBank[8];
-  n08 irqLatch;
-  n01 irqMode;
-  n01 irqEnable;
-  n01 irqAcknowledge;
-  n08 irqCounter;
+  n1  programMode;
+  n5  programBank[2];
+  n2  mirror;
+  n8  characterBank[8];
+  n8  irqLatch;
+  n1  irqMode;
+  n1  irqEnable;
+  n1  irqAcknowledge;
+  n8  irqCounter;
   i16 irqScalar;
-  n01 irqLine;
+  n1  irqLine;
 
 //unserialized:
-  n08 pinA0;
-  n08 pinA1;
+  n8  pinA0;
+  n8  pinA1;
 };

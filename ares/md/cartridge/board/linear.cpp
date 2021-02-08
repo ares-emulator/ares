@@ -1,8 +1,8 @@
 struct Linear : Interface {
   using Interface::Interface;
-  Memory::Readable<uint16> rom;
-  Memory::Writable<uint16> wram;
-  Memory::Writable< uint8> bram;
+  Memory::Readable<n16> rom;
+  Memory::Writable<n16> wram;
+  Memory::Writable<n8 > bram;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -17,7 +17,7 @@ struct Linear : Interface {
     Interface::save(bram, board["memory(type=RAM,content=Save)"]);
   }
 
-  auto read(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16 override {
+  auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {
     if(address >= 0x200000 && ramEnable) {
       if(wram) return data = wram[address >> 1];
       if(bram) return data = bram[address >> 1] * 0x0101;  //todo: unconfirmed
@@ -25,7 +25,7 @@ struct Linear : Interface {
     return data = rom[address >> 1];
   }
 
-  auto write(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void override {
+  auto write(n1 upper, n1 lower, n22 address, n16 data) -> void override {
     //emulating ramWritable will break commercial software:
     //it does not appear that many (any?) games actually connect $a130f1.d1 to /WE;
     //hence RAM ends up always being writable, and many games fail to set d1=1
@@ -42,11 +42,11 @@ struct Linear : Interface {
     }
   }
 
-  auto readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 override {
+  auto readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 override {
     return data;
   }
 
-  auto writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void override {
+  auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void override {
     if(!lower) return;  //todo: unconfirmed
     if(address == 0xa130f0) {
       ramEnable   = data.bit(0);
@@ -66,6 +66,6 @@ struct Linear : Interface {
     s(ramWritable);
   }
 
-  uint1 ramEnable = 1;
-  uint1 ramWritable = 1;
+  n1 ramEnable = 1;
+  n1 ramWritable = 1;
 };

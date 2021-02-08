@@ -26,7 +26,7 @@ struct APU : Z80, Z80::Bus, Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void override;
+  auto step(u32 clocks) -> void override;
 
   auto enable(bool) -> void;
   auto power(bool reset) -> void;
@@ -36,26 +36,26 @@ struct APU : Z80, Z80::Bus, Thread {
   auto setINT(bool value) -> void;
 
   //bus.cpp
-  auto read(uint16 address) -> uint8 override;
-  auto write(uint16 address, uint8 data) -> void override;
+  auto read(n16 address) -> n8 override;
+  auto write(n16 address, n8 data) -> void override;
 
-  auto in(uint16 address) -> uint8 override;
-  auto out(uint16 address, uint8 data) -> void override;
+  auto in(n16 address) -> n8 override;
+  auto out(n16 address, n8 data) -> void override;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void;
+  auto serialize(serializer&) -> void override;
 
 private:
-  Memory::Writable<uint8> ram;
+  Memory::Writable<n8> ram;
 
   struct IO {
-    uint9 bank;
+    n9 bank;
   } io;
 
   struct State {
-    uint1 enabled;
-    uint1 nmiLine;
-    uint1 intLine;
+    n1 enabled;
+    n1 nmiLine;
+    n1 intLine;
   } state;
 };
 

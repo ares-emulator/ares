@@ -17,9 +17,9 @@ struct Controller {
   virtual ~Controller() = default;
 
   auto iobit() -> bool;
-  auto iobit(bool data) -> void;
-  virtual auto data() -> uint2 { return 0; }
-  virtual auto latch(bool data) -> void {}
+  auto iobit(n1 data) -> void;
+  virtual auto data() -> n2 { return 0; }
+  virtual auto latch(n1 data) -> void {}
 };
 
 #include "port.hpp"

@@ -30,7 +30,7 @@ inline auto string::reset() -> type& {
   return *this;
 }
 
-inline auto string::reserve(uint capacity) -> type& {
+inline auto string::reserve(u32 capacity) -> type& {
   if(capacity > _capacity) {
     _capacity = bit::round(max(31u, capacity) + 1) - 1;
     _data = _data ? _copy() : _allocate();
@@ -38,7 +38,7 @@ inline auto string::reserve(uint capacity) -> type& {
   return *this;
 }
 
-inline auto string::resize(uint size) -> type& {
+inline auto string::resize(u32 size) -> type& {
   reserve(size);
   get()[_size = size] = 0;
   return *this;
@@ -72,19 +72,19 @@ inline auto string::operator=(string&& source) -> string& {
 }
 
 inline auto string::_allocate() -> char* {
-  auto _temp = memory::allocate<char>(_capacity + 1 + sizeof(uint));
+  auto _temp = memory::allocate<char>(_capacity + 1 + sizeof(u32));
   *_temp = 0;
-  _refs = (uint*)(_temp + _capacity + 1);  //this will always be aligned by 32 via reserve()
+  _refs = (u32*)(_temp + _capacity + 1);  //this will always be aligned by 32 via reserve()
   *_refs = 1;
   return _temp;
 }
 
 inline auto string::_copy() -> char* {
-  auto _temp = memory::allocate<char>(_capacity + 1 + sizeof(uint));
+  auto _temp = memory::allocate<char>(_capacity + 1 + sizeof(u32));
   memory::copy(_temp, _data, _size = min(_capacity, _size));
   _temp[_size] = 0;
   --*_refs;
-  _refs = (uint*)(_temp + _capacity + 1);
+  _refs = (u32*)(_temp + _capacity + 1);
   *_refs = 1;
   return _temp;
 }

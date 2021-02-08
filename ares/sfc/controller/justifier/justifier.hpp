@@ -9,15 +9,15 @@ struct Justifier : Controller, Thread {
   ~Justifier();
 
   auto main() -> void;
-  auto data() -> uint2;
-  auto latch(bool data) -> void;
+  auto data() -> n2;
+  auto latch(n1 data) -> void;
 
 private:
-  int  cx = 256 / 2;
-  int  cy = 240 / 2;
+  i32 cx = 256 / 2;
+  i32 cy = 240 / 2;
 
-  bool active = 0;  //0 = player 1; 1 = player 2 (disconnected)
-  uint latched = 0;
-  uint counter = 0;
-  uint previous = 0;
+  n1  active;  //0 = player 1; 1 = player 2 (disconnected)
+  n32 latched;
+  n32 counter;
+  n32 previous;
 };

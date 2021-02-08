@@ -29,12 +29,12 @@ auto Keyboard::append(Hotkey hotkey) -> void {
   state.hotkeys.append(hotkey);
 }
 
-auto Keyboard::hotkey(unsigned position) -> Hotkey {
+auto Keyboard::hotkey(u32 position) -> Hotkey {
   if(position < hotkeyCount()) return state.hotkeys[position];
   return {};
 }
 
-auto Keyboard::hotkeyCount() -> unsigned {
+auto Keyboard::hotkeyCount() -> u32 {
   return state.hotkeys.size();
 }
 

@@ -54,12 +54,12 @@ auto mIconView::foregroundColor() const -> Color {
   return state.foregroundColor;
 }
 
-auto mIconView::item(unsigned position) const -> IconViewItem {
+auto mIconView::item(u32 position) const -> IconViewItem {
   if(position < itemCount()) return state.items[position];
   return {};
 }
 
-auto mIconView::itemCount() const -> unsigned {
+auto mIconView::itemCount() const -> u32 {
   return state.items.size();
 }
 
@@ -142,14 +142,14 @@ auto mIconView::setOrientation(Orientation orientation) -> type& {
   return *this;
 }
 
-auto mIconView::setParent(mObject* parent, signed offset) -> type& {
+auto mIconView::setParent(mObject* parent, s32 offset) -> type& {
   for(auto& item : reverse(state.items)) item->destruct();
   mObject::setParent(parent, offset);
   for(auto& item : state.items) item->setParent(this, item->offset());
   return *this;
 }
 
-auto mIconView::setSelected(const vector<signed>& selections) -> type& {
+auto mIconView::setSelected(const vector<s32>& selections) -> type& {
   bool selectAll = selections(0, 0) == ~0;
   for(auto& item : state.items) item->state.selected = selectAll;
   if(selectAll) return signal(setItemSelectedAll), *this;

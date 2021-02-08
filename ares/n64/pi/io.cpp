@@ -16,7 +16,7 @@ static const vector<string> registerNames = {
 
 auto PI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
-  uint32 data;
+  n32 data;
 
   if(address == 0) {
     //PI_DRAM_ADDRESS
@@ -94,7 +94,7 @@ auto PI::readWord(u32 address) -> u32 {
 
 auto PI::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0xfffff) >> 2;
-  uint32 data = data_;
+  n32 data = data_;
 
   //only PI_STATUS can be written while PI is busy
   if(address != 4 && (io.dmaBusy || io.ioBusy)) {
@@ -104,17 +104,17 @@ auto PI::writeWord(u32 address, u32 data_) -> void {
 
   if(address == 0) {
     //PI_DRAM_ADDRESS
-    io.dramAddress = uint24(data) & ~7;
+    io.dramAddress = n24(data) & ~7;
   }
 
   if(address == 1) {
     //PI_PBUS_ADDRESS
-    io.pbusAddress = uint29(data) & ~1;
+    io.pbusAddress = n29(data) & ~1;
   }
 
   if(address == 2) {
     //PI_READ_LENGTH
-    io.readLength = (uint24(data) | 7) + 1;
+    io.readLength = (n24(data) | 7) + 1;
     for(u32 address = 0; address < io.readLength; address += 2) {
       u16 data = bus.readHalf(io.dramAddress + address);
       bus.writeHalf(io.pbusAddress + address, data);
@@ -125,7 +125,7 @@ auto PI::writeWord(u32 address, u32 data_) -> void {
 
   if(address == 3) {
     //PI_WRITE_LENGTH
-    io.writeLength = (uint24(data) | 7) + 1;
+    io.writeLength = (n24(data) | 7) + 1;
     for(u32 address = 0; address < io.writeLength; address += 2) {
       u16 data = bus.readHalf(io.pbusAddress + address);
       bus.writeHalf(io.dramAddress + address, data);

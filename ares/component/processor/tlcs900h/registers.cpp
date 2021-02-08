@@ -1,7 +1,7 @@
 #define a RFP
 #define p RFP - 1 & 3
 
-template<> auto TLCS900H::map(Register<uint8> register) const -> maybe<uint8&> {
+template<> auto TLCS900H::map(Register<n8> register) const -> maybe<n8&> {
   switch(register.id) {
   #define r(id, name) case id: return r.name;
   r(0x00, xwa[0].b.b0) r(0x01, xwa[0].b.b1) r(0x02, xwa[0].b.b2) r(0x03, xwa[0].b.b3)
@@ -37,7 +37,7 @@ template<> auto TLCS900H::map(Register<uint8> register) const -> maybe<uint8&> {
   return nothing;
 }
 
-template<> auto TLCS900H::map(Register<uint16> register) const -> maybe<uint16&> {
+template<> auto TLCS900H::map(Register<n16> register) const -> maybe<n16&> {
   switch(register.id & ~1) {
   #define r(id, name) case id: return r.name;
   r(0x00, xwa[0].w.w0) r(0x02, xwa[0].w.w1) r(0x04, xbc[0].w.w0) r(0x06, xbc[0].w.w1)
@@ -59,7 +59,7 @@ template<> auto TLCS900H::map(Register<uint16> register) const -> maybe<uint16&>
   return nothing;
 }
 
-template<> auto TLCS900H::map(Register<uint32> register) const -> maybe<uint32&> {
+template<> auto TLCS900H::map(Register<n32> register) const -> maybe<n32&> {
   switch(register.id & ~3) {
   #define r(id, name) case id: return r.name;
   r(0x00, xwa[0].l.l0) r(0x04, xbc[0].l.l0) r(0x08, xde[0].l.l0) r(0x0c, xhl[0].l.l0)
@@ -77,50 +77,50 @@ template<> auto TLCS900H::map(Register<uint32> register) const -> maybe<uint32&>
 #undef a
 #undef p
 
-template<> auto TLCS900H::load< uint8>(Register< uint8> register) const ->  uint8 { return map(register)(Undefined); }
-template<> auto TLCS900H::load<uint16>(Register<uint16> register) const -> uint16 { return map(register)(Undefined); }
-template<> auto TLCS900H::load<uint32>(Register<uint32> register) const -> uint32 { return map(register)(Undefined); }
+template<> auto TLCS900H::load<n8 >(Register<n8 > register) const -> n8  { return map(register)(Undefined); }
+template<> auto TLCS900H::load<n16>(Register<n16> register) const -> n16 { return map(register)(Undefined); }
+template<> auto TLCS900H::load<n32>(Register<n32> register) const -> n32 { return map(register)(Undefined); }
 
-template<> auto TLCS900H::store< uint8>(Register< uint8> register, uint32 data) -> void { if(auto r = map(register)) r() = data; }
-template<> auto TLCS900H::store<uint16>(Register<uint16> register, uint32 data) -> void { if(auto r = map(register)) r() = data; }
-template<> auto TLCS900H::store<uint32>(Register<uint32> register, uint32 data) -> void { if(auto r = map(register)) r() = data; }
+template<> auto TLCS900H::store<n8 >(Register<n8 > register, n32 data) -> void { if(auto r = map(register)) r() = data; }
+template<> auto TLCS900H::store<n16>(Register<n16> register, n32 data) -> void { if(auto r = map(register)) r() = data; }
+template<> auto TLCS900H::store<n32>(Register<n32> register, n32 data) -> void { if(auto r = map(register)) r() = data; }
 
-auto TLCS900H::expand(Register< uint8> register) const -> Register<uint16> { return {register.id & ~1}; }
-auto TLCS900H::expand(Register<uint16> register) const -> Register<uint32> { return {register.id & ~3}; }
+auto TLCS900H::expand(Register<n8 > register) const -> Register<n16> { return {register.id & ~1}; }
+auto TLCS900H::expand(Register<n16> register) const -> Register<n32> { return {register.id & ~3}; }
 
-auto TLCS900H::shrink(Register<uint32> register) const -> Register<uint16> { return {register.id}; }
-auto TLCS900H::shrink(Register<uint16> register) const -> Register< uint8> { return {register.id}; }
+auto TLCS900H::shrink(Register<n32> register) const -> Register<n16> { return {register.id}; }
+auto TLCS900H::shrink(Register<n16> register) const -> Register<n8 > { return {register.id}; }
 
-auto TLCS900H::load(FlagRegister f) const -> uint8 {
+auto TLCS900H::load(FlagRegister f) const -> n8 {
   switch(f.id) {
   case 0: return r.c  << 0 | r.n  << 1 | r.v  << 2 | r.h  << 4 | r.z  << 6 | r.s  << 7;
   case 1: return r.cp << 0 | r.np << 1 | r.vp << 2 | r.hp << 4 | r.zp << 6 | r.sp << 7;
   } unreachable;
 }
 
-auto TLCS900H::store(FlagRegister f, uint8 data) -> void {
+auto TLCS900H::store(FlagRegister f, n8 data) -> void {
   switch(f.id) {
   case 0: r.c  = data.bit(0); r.n  = data.bit(1); r.v  = data.bit(2); r.h  = data.bit(4); r.z  = data.bit(6); r.s  = data.bit(7); return;
   case 1: r.cp = data.bit(0); r.np = data.bit(1); r.vp = data.bit(2); r.hp = data.bit(4); r.zp = data.bit(6); r.sp = data.bit(7); return;
   } unreachable;
 }
 
-auto TLCS900H::load(StatusRegister) const -> uint16 {
+auto TLCS900H::load(StatusRegister) const -> n16 {
   //900/H: d10 = RFP2 (always 0); d11 = MAX (always 1); d15 = SYSM (always 1)
   return load(F) | r.rfp << 8 | 0 << 10 | 1 << 11 | r.iff << 12 | 1 << 15;
 }
 
-auto TLCS900H::store(StatusRegister, uint16 data) -> void {
+auto TLCS900H::store(StatusRegister, n16 data) -> void {
   store(F, data.bit(0,7));
   r.rfp = data.bit(8,9);
   r.iff = data.bit(12,14);
 }
 
-auto TLCS900H::load(ProgramCounter) const -> uint32 {
+auto TLCS900H::load(ProgramCounter) const -> n32 {
   return r.pc.l.l0;
 }
 
-auto TLCS900H::store(ProgramCounter, uint32 data) -> void {
+auto TLCS900H::store(ProgramCounter, n32 data) -> void {
   r.pc.l.l0 = data;
   invalidate();
 }

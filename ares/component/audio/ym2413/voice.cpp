@@ -1,4 +1,4 @@
-auto YM2413::Voice::update(const uint8* data) -> void {
+auto YM2413::Voice::update(const n8* data) -> void {
   if(data) {
     modulator.multiple    = data[0].bit(0,3);
     modulator.scaleRate   = data[0].bit(4);

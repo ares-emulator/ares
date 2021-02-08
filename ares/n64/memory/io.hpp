@@ -18,7 +18,7 @@ struct IO {
     } unreachable;
   }
 
-  auto readDouble(u32 address) -> u64 {
+  auto readDual(u32 address) -> u64 {
     u64 data = ((T*)this)->readWord(address);
     return data << 32 | ((T*)this)->readWord(address + 4);
   }
@@ -39,7 +39,7 @@ struct IO {
     } unreachable;
   }
 
-  auto writeDouble(u32 address, u64 data) -> void {
+  auto writeDual(u32 address, u64 data) -> void {
     ((T*)this)->writeWord(address + 0, data >> 32);
     ((T*)this)->writeWord(address + 4, data >>  0);
   }

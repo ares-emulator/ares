@@ -1,5 +1,5 @@
-auto CPU::read(uint16 address) -> uint8 {
-  uint8 data = 0xff;
+auto CPU::read(n16 address) -> n8 {
+  n8 data = 0xff;
   if(auto result = cartridge.read(address)) {
     data = result();
   } else if(address >= 0xc000) {
@@ -8,14 +8,14 @@ auto CPU::read(uint16 address) -> uint8 {
   return data;
 }
 
-auto CPU::write(uint16 address, uint8 data) -> void {
+auto CPU::write(n16 address, n8 data) -> void {
   if(cartridge.write(address, data)) {
   } else if(address >= 0xc000) {
     ram.write(address, data);
   }
 }
 
-auto CPU::in(uint16 address) -> uint8 {
+auto CPU::in(n16 address) -> n8 {
   switch(address.bit(6,7)) {
 
   case 0: {
@@ -45,7 +45,7 @@ auto CPU::in(uint16 address) -> uint8 {
   return 0xff;
 }
 
-auto CPU::out(uint16 address, uint8 data) -> void {
+auto CPU::out(n16 address, n8 data) -> void {
   switch(address.bit(6,7)) {
 
   case 1: {

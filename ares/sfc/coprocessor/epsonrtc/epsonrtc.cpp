@@ -87,19 +87,19 @@ auto EpsonRTC::power() -> void {
   holdtick = 0;
 }
 
-auto EpsonRTC::synchronize(uint64 timestamp) -> void {
+auto EpsonRTC::synchronize(n64 timestamp) -> void {
   time_t systime = timestamp;
   tm* timeinfo = localtime(&systime);
 
-  uint second = min(59, timeinfo->tm_sec);
+  u32 second = min(59, timeinfo->tm_sec);
   secondlo = second % 10;
   secondhi = second / 10;
 
-  uint minute = timeinfo->tm_min;
+  u32 minute = timeinfo->tm_min;
   minutelo = minute % 10;
   minutehi = minute / 10;
 
-  uint hour = timeinfo->tm_hour;
+  u32 hour = timeinfo->tm_hour;
   if(atime) {
     hourlo = hour % 10;
     hourhi = hour / 10;
@@ -111,15 +111,15 @@ auto EpsonRTC::synchronize(uint64 timestamp) -> void {
     hourhi = hour / 10;
   }
 
-  uint day = timeinfo->tm_mday;
+  u32 day = timeinfo->tm_mday;
   daylo = day % 10;
   dayhi = day / 10;
 
-  uint month = 1 + timeinfo->tm_mon;
+  u32 month = 1 + timeinfo->tm_mon;
   monthlo = month % 10;
   monthhi = month / 10;
 
-  uint year = timeinfo->tm_year % 100;
+  u32 year = timeinfo->tm_year % 100;
   yearlo = year % 10;
   yearhi = year / 10;
 
@@ -128,7 +128,7 @@ auto EpsonRTC::synchronize(uint64 timestamp) -> void {
   resync = true;  //alert program that time has changed
 }
 
-auto EpsonRTC::read(uint24 address, uint8 data) -> uint8 {
+auto EpsonRTC::read(n24 address, n8 data) -> n8 {
   cpu.synchronize(*this);
   address &= 3;
 
@@ -153,7 +153,7 @@ auto EpsonRTC::read(uint24 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto EpsonRTC::write(uint24 address, uint8 data) -> void {
+auto EpsonRTC::write(n24 address, n8 data) -> void {
   cpu.synchronize(*this);
   address &= 3, data &= 15;
 

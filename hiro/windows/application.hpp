@@ -14,9 +14,10 @@ struct pApplication {
   static auto initialize() -> void;
 
   struct State {
-    int modalCount = 0;           //number of modal loops
-    Timer modalTimer;             //to run Application during modal events
-    pToolTip* toolTip = nullptr;  //active toolTip
+    vector<pMenuBar*> menuBarsToRebuild;  //deferred menu bars to update
+    s32 modalCount = 0;                   //number of modal loops
+    Timer modalTimer;                     //to run Application during modal events
+    pToolTip* toolTip = nullptr;          //active toolTip
   };
   static auto state() -> State&;
 };

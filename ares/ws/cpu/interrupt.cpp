@@ -1,7 +1,7 @@
 auto CPU::poll() -> void {
   if(!state.poll) return;
 
-  for(int n = 7; n >= 0; n--) {
+  for(s32 n = 7; n >= 0; n--) {
     if(!r.interruptEnable.bit(n)) continue;
     if(!r.interruptStatus.bit(n)) continue;
     state.halt = false;
@@ -17,10 +17,10 @@ auto CPU::poll() -> void {
 }
 
 auto CPU::raise(Interrupt irq) -> void {
-  if(!r.interruptEnable.bit((uint)irq)) return;
-  r.interruptStatus.bit((uint)irq) = 1;
+  if(!r.interruptEnable.bit((u32)irq)) return;
+  r.interruptStatus.bit((u32)irq) = 1;
 }
 
 auto CPU::lower(Interrupt irq) -> void {
-  r.interruptStatus.bit((uint)irq) = 0;
+  r.interruptStatus.bit((u32)irq) = 0;
 }

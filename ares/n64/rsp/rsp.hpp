@@ -29,7 +29,7 @@ struct RSP : Thread, Memory::IO<RSP> {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
 
   auto instruction() -> void;
   auto instructionEpilogue() -> bool;
@@ -50,16 +50,16 @@ struct RSP : Thread, Memory::IO<RSP> {
   auto serialize(serializer&) -> void;
 
   struct DMA {
-     uint1 memSource;
-    uint12 memAddress;
-    uint24 dramAddress;
-     uint1 busy;
-     uint1 full;
+    n1  memSource;
+    n12 memAddress;
+    n24 dramAddress;
+    n1  busy;
+    n1  full;
 
     struct Transfer {
-      uint12 length;
-      uint12 skip;
-       uint8 count;
+      n12 length;
+      n12 skip;
+      n8  count;
     } read, write;
   } dma;
 
@@ -71,13 +71,13 @@ struct RSP : Thread, Memory::IO<RSP> {
     auto readWord(u32 address) -> u32;
     auto writeWord(u32 address, u32 data) -> void;
 
-    uint1 semaphore;
-    uint1 halted;
-    uint1 broken;
-    uint1 full;
-    uint1 singleStep;
-    uint1 interruptOnBreak;
-    uint1 signal[8];
+    n1 semaphore;
+    n1 halted;
+    n1 broken;
+    n1 full;
+    n1 singleStep;
+    n1 interruptOnBreak;
+    n1 signal[8];
   } status{*this};
 
   //ipu.cpp
@@ -88,7 +88,7 @@ struct RSP : Thread, Memory::IO<RSP> {
   using cr32 = const r32;
 
   struct IPU {
-    enum Register : uint {
+    enum Register : u32 {
       R0, AT, V0, V1, A0, A1, A2, A3,
       T0, T1, T2, T3, T4, T5, T6, T7,
       S0, S1, S2, S3, S4, S5, S6, S7,
@@ -169,27 +169,27 @@ struct RSP : Thread, Memory::IO<RSP> {
     operator __m128i() const { return v128; }
     auto operator=(__m128i value) { v128 = value; }
 
-    auto byte(uint index) -> uint8_t& { return ((uint8_t*)&u128)[15 - index]; }
-    auto byte(uint index) const -> uint8_t { return ((uint8_t*)&u128)[15 - index]; }
+    auto byte(u32 index) -> uint8_t& { return ((uint8_t*)&u128)[15 - index]; }
+    auto byte(u32 index) const -> uint8_t { return ((uint8_t*)&u128)[15 - index]; }
 
-    auto element(uint index) -> uint16_t& { return ((uint16_t*)&u128)[7 - index]; }
-    auto element(uint index) const -> uint16_t { return ((uint16_t*)&u128)[7 - index]; }
+    auto element(u32 index) -> uint16_t& { return ((uint16_t*)&u128)[7 - index]; }
+    auto element(u32 index) const -> uint16_t { return ((uint16_t*)&u128)[7 - index]; }
 
-    auto u8(uint index) -> uint8_t& { return ((uint8_t*)&u128)[15 - index]; }
-    auto u8(uint index) const -> uint8_t { return ((uint8_t*)&u128)[15 - index]; }
+    auto u8(u32 index) -> uint8_t& { return ((uint8_t*)&u128)[15 - index]; }
+    auto u8(u32 index) const -> uint8_t { return ((uint8_t*)&u128)[15 - index]; }
 
-    auto s16(uint index) -> int16_t& { return ((int16_t*)&u128)[7 - index]; }
-    auto s16(uint index) const -> int16_t { return ((int16_t*)&u128)[7 - index]; }
+    auto s16(u32 index) -> int16_t& { return ((int16_t*)&u128)[7 - index]; }
+    auto s16(u32 index) const -> int16_t { return ((int16_t*)&u128)[7 - index]; }
 
-    auto u16(uint index) -> uint16_t& { return ((uint16_t*)&u128)[7 - index]; }
-    auto u16(uint index) const -> uint16_t { return ((uint16_t*)&u128)[7 - index]; }
+    auto u16(u32 index) -> uint16_t& { return ((uint16_t*)&u128)[7 - index]; }
+    auto u16(u32 index) const -> uint16_t { return ((uint16_t*)&u128)[7 - index]; }
 
     //VCx registers
-    auto get(uint index) const -> bool { return u16(index) != 0; }
-    auto set(uint index, bool value) -> bool { return u16(index) = 0 - value, value; }
+    auto get(u32 index) const -> bool { return u16(index) != 0; }
+    auto set(u32 index, bool value) -> bool { return u16(index) = 0 - value, value; }
 
     //vu-registers.cpp
-    auto operator()(uint index) const -> r128;
+    auto operator()(u32 index) const -> r128;
   };
   using cr128 = const r128;
 
@@ -207,9 +207,9 @@ struct RSP : Thread, Memory::IO<RSP> {
   static constexpr r128 zero{0};
   static constexpr r128 invert{u128(0) - 1};
 
-  auto accumulatorGet(uint index) const -> u64;
-  auto accumulatorSet(uint index, u64 value) -> void;
-  auto accumulatorSaturate(uint index, bool slice, u16 negative, u16 positive) const -> u16;
+  auto accumulatorGet(u32 index) const -> u64;
+  auto accumulatorSet(u32 index, u64 value) -> void;
+  auto accumulatorSaturate(u32 index, bool slice, u16 negative, u16 positive) const -> u16;
 
   auto instructionCFC2(r32& rt, u8 rd) -> void;
   auto instructionCTC2(cr32& rt, u8 rd) -> void;
@@ -367,16 +367,16 @@ struct RSP : Thread, Memory::IO<RSP> {
     auto LWC2() -> vector<string>;
     auto SWC2() -> vector<string>;
     auto VU() -> vector<string>;
-    auto immediate(s64 value, uint bits = 0) const -> string;
-    auto ipuRegisterName(uint index) const -> string;
-    auto ipuRegisterValue(uint index) const -> string;
-    auto ipuRegisterIndex(uint index, s16 offset) const -> string;
-    auto sccRegisterName(uint index) const -> string;
-    auto sccRegisterValue(uint index) const -> string;
-    auto vpuRegisterName(uint index, uint element = 0) const -> string;
-    auto vpuRegisterValue(uint index, uint element = 0) const -> string;
-    auto ccrRegisterName(uint index) const -> string;
-    auto ccrRegisterValue(uint index) const -> string;
+    auto immediate(s64 value, u32 bits = 0) const -> string;
+    auto ipuRegisterName(u32 index) const -> string;
+    auto ipuRegisterValue(u32 index) const -> string;
+    auto ipuRegisterIndex(u32 index, s16 offset) const -> string;
+    auto sccRegisterName(u32 index) const -> string;
+    auto sccRegisterValue(u32 index) const -> string;
+    auto vpuRegisterName(u32 index, u32 element = 0) const -> string;
+    auto vpuRegisterValue(u32 index, u32 element = 0) const -> string;
+    auto ccrRegisterName(u32 index) const -> string;
+    auto ccrRegisterValue(u32 index) const -> string;
 
     u32 address;
     u32 instruction;

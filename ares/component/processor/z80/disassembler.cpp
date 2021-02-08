@@ -1,8 +1,8 @@
-auto Z80::disassembleInstruction(maybe<uint16> _pc) -> string {
+auto Z80::disassembleInstruction(maybe<n16> _pc) -> string {
   auto pc = _pc ? *_pc : r.pc;
   string s, output;
 
-  uint8 prefix = 0x00;
+  n8 prefix = 0x00;
   auto code = bus->read(pc++);
   if(code == 0xdd || code == 0xfd) {
     prefix = code;
@@ -21,7 +21,7 @@ auto Z80::disassembleInstruction(maybe<uint16> _pc) -> string {
   }
 
   if(code == 0xcb && prefix) {
-    auto d = (int8)bus->read(pc++);
+    auto d = (i8)bus->read(pc++);
     code = bus->read(pc++);
     output = disassembleCBd(pc, prefix, d, code);
   } else if(code == 0xcb) {
@@ -48,7 +48,7 @@ auto Z80::disassembleContext() -> string {
   s.append(" IX:", hex(r.ix.word, 4L));
   s.append(" IY:", hex(r.iy.word, 4L));
   s.append(" SP:", hex(r.sp, 4L));
-  s.append(" IFF:", (uint1)r.iff1, (uint1)r.iff2);
+  s.append(" IFF:", (n1)r.iff1, (n1)r.iff2);
   s.append(" IM:", r.im);
 
   return s;
@@ -96,24 +96,24 @@ auto Z80::disassembleContext() -> string {
 #define IHL string{"(", HL, displace(), ")"}
 #define ISP "(sp)"
 
-auto Z80::disassemble(uint16 pc, uint8 prefix, uint8 code) -> string {
+auto Z80::disassemble(n16 pc, n8 prefix, n8 code) -> string {
   auto byte = [&] {
     return bus->read(pc++);
   };
 
   auto word = [&] {
-    uint16 data = byte() << 0;
+    n16    data = byte() << 0;
     return data | byte() << 8;
   };
 
   auto branch = [&] {
     auto d = byte();
-    return pc + (int8)d;
+    return pc + (i8)d;
   };
 
   auto displace = [&] {
     if(!prefix) return string{};
-    auto d = (int8)byte();
+    auto d = (i8)byte();
     return d >= 0 ? string{"+$", hex(d, 2L)} : string{"-$", hex(-d, 2L)};
   };
 
@@ -379,29 +379,29 @@ auto Z80::disassemble(uint16 pc, uint8 prefix, uint8 code) -> string {
   unreachable;
 }
 
-auto Z80::disassembleCB(uint16 pc, uint8 prefix, uint8 code) -> string {
+auto Z80::disassembleCB(n16 pc, n8 prefix, n8 code) -> string {
   auto byte = [&] {
     return bus->read(pc++);
   };
 
   auto word = [&] {
-    uint16 data = byte() << 0;
+    n16    data = byte() << 0;
     return data | byte() << 8;
   };
 
   auto branch = [&] {
     auto d = byte();
-    return pc + (int8)d;
+    return pc + (i8)d;
   };
 
   auto displace = [&] {
     if(!prefix) return string{};
-    auto d = (int8)byte();
+    auto d = (i8)byte();
     return d >= 0 ? string{"+$", hex(d, 2L)} : string{"-$", hex(-d, 2L)};
   };
 
   if(prefix) {
-    auto d = (int8)code;
+    auto d = (i8)code;
     string ds = d >= 0 ? string{"+$", hex(d, 2L)} : string{"-$", hex(-d, 2L)};
     return {"rlc (", HL, ds, ")"};
   }
@@ -668,7 +668,7 @@ auto Z80::disassembleCB(uint16 pc, uint8 prefix, uint8 code) -> string {
   unreachable;
 }
 
-auto Z80::disassembleCBd(uint16 pc, uint8 prefix, int8 d, uint8 code) -> string {
+auto Z80::disassembleCBd(n16 pc, n8 prefix, i8 d, n8 code) -> string {
   auto displace = [&] {
     return d >= 0 ? string{"+$", hex(d, 2L)} : string{"-$", hex(-d, 2L)};
   };
@@ -935,24 +935,24 @@ auto Z80::disassembleCBd(uint16 pc, uint8 prefix, int8 d, uint8 code) -> string 
   unreachable;
 }
 
-auto Z80::disassembleED(uint16 pc, uint8 prefix, uint8 code) -> string {
+auto Z80::disassembleED(n16 pc, n8 prefix, n8 code) -> string {
   auto byte = [&] {
     return bus->read(pc++);
   };
 
   auto word = [&] {
-    uint16 data = byte() << 0;
+    n16    data = byte() << 0;
     return data | byte() << 8;
   };
 
   auto branch = [&] {
     auto d = byte();
-    return pc + (int8)d;
+    return pc + (i8)d;
   };
 
   auto displace = [&] {
     if(!prefix) return string{};
-    auto d = (int8)byte();
+    auto d = (i8)byte();
     return d >= 0 ? string{"+$", hex(d, 2L)} : string{"-$", hex(-d, 2L)};
   };
 

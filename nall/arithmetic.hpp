@@ -11,13 +11,13 @@
 #include <nall/arithmetic/unsigned.hpp>
 
 namespace nall {
-  template<uint Bits> struct ArithmeticNatural;
-  template<> struct ArithmeticNatural<  8> { using type =   uint8_t; };
-  template<> struct ArithmeticNatural< 16> { using type =  uint16_t; };
-  template<> struct ArithmeticNatural< 32> { using type =  uint32_t; };
-  template<> struct ArithmeticNatural< 64> { using type =  uint64_t; };
+  template<u32 Bits> struct ArithmeticNatural;
+  template<> struct ArithmeticNatural<  8> { using type = u8;   };
+  template<> struct ArithmeticNatural< 16> { using type = u16;  };
+  template<> struct ArithmeticNatural< 32> { using type = u32;  };
+  template<> struct ArithmeticNatural< 64> { using type = u64;  };
   #if INTMAX_BITS >= 128
-  template<> struct ArithmeticNatural<128> { using type = uint128_t; };
+  template<> struct ArithmeticNatural<128> { using type = u128; };
   #endif
 }
 
@@ -85,5 +85,5 @@ namespace nall {
   //however, they still allow more bits than expressed ...
   //some sort of wrapper needs to be devised to ensure these sizes are masked and wrap appropriately
 
-  using uint192_t = uint256_t;
+  using u192 = u256;
 }

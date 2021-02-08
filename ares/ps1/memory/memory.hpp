@@ -9,8 +9,8 @@ namespace Memory {
 struct Bus {
   //bus.hpp
   auto mmio(u32 address) -> Memory::Interface&;
-  template<uint Size> auto read(u32 address) -> u32;
-  template<uint Size> auto write(u32 address, u32 data) -> void;
+  template<u32 Size> auto read(u32 address) -> u32;
+  template<u32 Size> auto write(u32 address, u32 data) -> void;
 };
 
 struct MemoryControl : Memory::Interface {
@@ -33,32 +33,32 @@ struct MemoryControl : Memory::Interface {
   auto serialize(serializer&) -> void;
 
   struct RAM {
-    uint32 value;
-     uint1 delay;   //1 = add one cycle on simultaneous code+data fetches
-     uint3 window;  //size and mirroring/access control
+    n32 value;
+    n1  delay;   //1 = add one cycle on simultaneous code+data fetches
+    n3  window;  //size and mirroring/access control
   } ram;
 
   struct Cache {
-     uint1 lock;               //not emulated
-     uint1 invalidate;         //not emulated
-     uint1 tagTest;
-     uint1 scratchpadEnable;
-     uint2 dataSize;           //not emulated
-     uint1 dataEnable;
-     uint2 codeSize;           //not emulated
-     uint1 codeEnable;
-     uint1 interruptPolarity;  //not emulated
-     uint1 readPriority;       //not emulated
-     uint1 noWaitState;        //not emulated
-     uint1 busGrant;           //not emulated
-     uint1 loadScheduling;     //not emulated
-     uint1 noStreaming;        //not emulated
-    uint14 reserved;           //not used
+    n1  lock;               //not emulated
+    n1  invalidate;         //not emulated
+    n1  tagTest;
+    n1  scratchpadEnable;
+    n2  dataSize;           //not emulated
+    n1  dataEnable;
+    n2  codeSize;           //not emulated
+    n1  codeEnable;
+    n1  interruptPolarity;  //not emulated
+    n1  readPriority;       //not emulated
+    n1  noWaitState;        //not emulated
+    n1  busGrant;           //not emulated
+    n1  loadScheduling;     //not emulated
+    n1  noStreaming;        //not emulated
+    n14 reserved;           //not used
   } cache;
 };
 
 struct MemoryExpansion : Memory::Interface {
-  MemoryExpansion(uint byte, uint half, uint word) {
+  MemoryExpansion(u32 byte, u32 half, u32 word) {
     Memory::Interface::setWaitStates(byte, half, word);
   }
 

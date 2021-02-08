@@ -91,7 +91,7 @@ auto SPU::sample() -> void {
   stream->frame(lsum / 32768.0, rsum / 32768.0);
 }
 
-auto SPU::step(uint clocks) -> void {
+auto SPU::step(u32 clocks) -> void {
   Thread::clock += clocks;
 }
 

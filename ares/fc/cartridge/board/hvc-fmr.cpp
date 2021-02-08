@@ -57,11 +57,11 @@ struct HVC_FMR : Interface {
     return characterRAM.write(address, data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
     fds.power();
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(fds);
     s(programRAM);
     s(characterRAM);

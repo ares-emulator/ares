@@ -43,9 +43,9 @@ auto pTextEdit::setText(string text) -> void {
 }
 
 auto pTextEdit::setTextCursor(TextCursor cursor) -> void {
-  signed end = GetWindowTextLength(hwnd);
-  signed offset = max(0, min(end, cursor.offset()));
-  signed length = max(0, min(end, cursor.offset() + cursor.length()));
+  s32 end = GetWindowTextLength(hwnd);
+  s32 offset = max(0, min(end, cursor.offset()));
+  s32 length = max(0, min(end, cursor.offset() + cursor.length()));
   Edit_SetSel(hwnd, offset, length);
   Edit_ScrollCaret(hwnd);
 }
@@ -57,7 +57,7 @@ auto pTextEdit::setWordWrap(bool wordWrap) -> void {
 }
 
 auto pTextEdit::text() const -> string {
-  unsigned length = GetWindowTextLength(hwnd);
+  u32 length = GetWindowTextLength(hwnd);
   wchar_t buffer[length + 1];
   GetWindowText(hwnd, buffer, length + 1);
   buffer[length] = 0;

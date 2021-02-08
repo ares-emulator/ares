@@ -238,7 +238,7 @@ auto pWindow::focused() const -> bool {
 auto pWindow::frameMargin() const -> Geometry {
   @autoreleasepool {
     NSRect frame = [cocoaWindow frameRectForContentRect:NSMakeRect(0, 0, 640, 480)];
-    return {abs(frame.origin.x), (int)(frame.size.height - 480), (int)(frame.size.width - 640), abs(frame.origin.y)};
+    return {abs(frame.origin.x), (s32)(frame.size.height - 480), (s32)(frame.size.width - 640), abs(frame.origin.y)};
   }
 }
 
@@ -246,7 +246,7 @@ auto pWindow::handle() const -> uintptr_t {
   return (uintptr_t)cocoaWindow;
 }
 
-auto pWindow::monitor() const -> uint {
+auto pWindow::monitor() const -> u32 {
   //TODO
   return 0;
 }
@@ -421,7 +421,7 @@ auto pWindow::sizeEvent() -> void {
   if(!locked()) self().doSize();
 }
 
-auto pWindow::statusBarHeight() -> uint {
+auto pWindow::statusBarHeight() -> u32 {
   if(auto& statusBar = state().statusBar) {
     if(statusBar->visible()) {
       return pFont::size(statusBar->font(true), " ").height() + 6;
@@ -454,8 +454,8 @@ auto pWindow::_geometry() -> Geometry {
     NSRect area = [cocoaWindow contentRectForFrameRect:[cocoaWindow frame]];
     area.size.height -= statusBarHeight();
     return {
-      (int)area.origin.x, (int)(Monitor::geometry(Monitor::primary()).height() - area.origin.y - area.size.height),
-      (int)area.size.width, (int)area.size.height
+      (s32)area.origin.x, (s32)(Monitor::geometry(Monitor::primary()).height() - area.origin.y - area.size.height),
+      (s32)area.size.width, (s32)area.size.height
     };
   }
 }

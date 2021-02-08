@@ -4,13 +4,13 @@ inline auto SA1::BWRAM::conflict() const -> bool {
   return false;
 }
 
-inline auto SA1::BWRAM::read(uint24 address, uint8 data) -> uint8 {
+inline auto SA1::BWRAM::read(n24 address, n8 data) -> n8 {
   if(!size()) return data;
   address = bus.mirror(address, size());
   return WritableMemory::read(address, data);
 }
 
-inline auto SA1::BWRAM::write(uint24 address, uint8 data) -> void {
+inline auto SA1::BWRAM::write(n24 address, n8 data) -> void {
   if(!size()) return;
   address = bus.mirror(address, size());
   return WritableMemory::write(address, data);
@@ -19,7 +19,7 @@ inline auto SA1::BWRAM::write(uint24 address, uint8 data) -> void {
 //note: addresses are translated prior to invoking this function:
 //00-3f,80-bf:6000-7fff size=0x2000 => 00:0000-1fff
 //40-4f:0000-ffff => untranslated
-auto SA1::BWRAM::readCPU(uint24 address, uint8 data) -> uint8 {
+auto SA1::BWRAM::readCPU(n24 address, n8 data) -> n8 {
   cpu.synchronize(sa1);
 
   if(address < 0x2000) {  //$00-3f,80-bf:6000-7fff
@@ -30,18 +30,18 @@ auto SA1::BWRAM::readCPU(uint24 address, uint8 data) -> uint8 {
   return read(address, data);
 }
 
-auto SA1::BWRAM::writeCPU(uint24 address, uint8 data) -> void {
+auto SA1::BWRAM::writeCPU(n24 address, n8 data) -> void {
   cpu.synchronize(sa1);
 
   if(address < 0x2000) {  //$00-3f,80-bf:6000-7fff
     address = sa1.io.sbm * 0x2000 + (address & 0x1fff);
   }
 
-  if(!sa1.io.swen && (uint18)address < 0x100 << sa1.io.bwp) return;
+  if(!sa1.io.swen && (n18)address < 0x100 << sa1.io.bwp) return;
   return write(address, data);
 }
 
-auto SA1::BWRAM::readSA1(uint24 address, uint8 data) -> uint8 {
+auto SA1::BWRAM::readSA1(n24 address, n8 data) -> n8 {
   if(sa1.io.sw46 == 0) {
     //$40-43:0000-ffff x  32 projection
     address = (sa1.io.cbm & 0x1f) * 0x2000 + (address & 0x1fff);
@@ -58,7 +58,7 @@ auto SA1::BWRAM::readSA1(uint24 address, uint8 data) -> uint8 {
 //* CWEN = 00 (writes disabled)
 //KDL3 proceeds to write to 4001ax and 40032x which must succeed.
 
-auto SA1::BWRAM::writeSA1(uint24 address, uint8 data) -> void {
+auto SA1::BWRAM::writeSA1(n24 address, n8 data) -> void {
   if(sa1.io.sw46 == 0) {
     //$40-43:0000-ffff x  32 projection
     address = (sa1.io.cbm & 0x1f) * 0x2000 + (address & 0x1fff);
@@ -70,18 +70,18 @@ auto SA1::BWRAM::writeSA1(uint24 address, uint8 data) -> void {
   }
 }
 
-auto SA1::BWRAM::readLinear(uint24 address, uint8 data) -> uint8 {
+auto SA1::BWRAM::readLinear(n24 address, n8 data) -> n8 {
   return read(address, data);
 }
 
-auto SA1::BWRAM::writeLinear(uint24 address, uint8 data) -> void {
+auto SA1::BWRAM::writeLinear(n24 address, n8 data) -> void {
   return write(address, data);
 }
 
-auto SA1::BWRAM::readBitmap(uint20 address, uint8 data) -> uint8 {
+auto SA1::BWRAM::readBitmap(n20 address, n8 data) -> n8 {
   if(sa1.io.bbf == 0) {
     //4bpp
-    uint shift = address & 1;
+    u32 shift = address & 1;
     address >>= 1;
     switch(shift) {
     case 0: return read(address).bit(0,3);
@@ -89,7 +89,7 @@ auto SA1::BWRAM::readBitmap(uint20 address, uint8 data) -> uint8 {
     }
   } else {
     //2bpp
-    uint shift = address & 3;
+    u32 shift = address & 3;
     address >>= 2;
     switch(shift) {
     case 0: return read(address).bit(0,1);
@@ -101,10 +101,10 @@ auto SA1::BWRAM::readBitmap(uint20 address, uint8 data) -> uint8 {
   unreachable;
 }
 
-auto SA1::BWRAM::writeBitmap(uint20 address, uint8 data) -> void {
+auto SA1::BWRAM::writeBitmap(n20 address, n8 data) -> void {
   if(sa1.io.bbf == 0) {
     //4bpp
-    uint shift = address & 1;
+    u32 shift = address & 1;
     address >>= 1;
     switch(shift) {
     case 0: data = read(address) & 0xf0 | data.bit(0,3) << 0; break;
@@ -112,7 +112,7 @@ auto SA1::BWRAM::writeBitmap(uint20 address, uint8 data) -> void {
     }
   } else {
     //2bpp
-    uint shift = address & 3;
+    u32 shift = address & 3;
     address >>= 2;
     switch(shift) {
     case 0: data = read(address) & 0xfc | data.bit(0,1) << 0; break;

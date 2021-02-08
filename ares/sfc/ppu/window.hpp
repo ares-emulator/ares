@@ -2,46 +2,46 @@ struct Window {
   //window.cpp
   auto scanline() -> void;
   auto run() -> void;
-  auto test(bool oneEnable, bool one, bool twoEnable, bool two, uint mask) -> bool;
+  auto test(bool oneEnable, bool one, bool twoEnable, bool two, u32 mask) -> bool;
   auto power() -> void;
 
   auto serialize(serializer&) -> void;
 
   struct IO {
     struct Layer {
-      uint1 oneInvert;
-      uint1 oneEnable;
-      uint1 twoInvert;
-      uint1 twoEnable;
-      uint2 mask;
-      uint1 aboveEnable;
-      uint1 belowEnable;
+      n1 oneInvert;
+      n1 oneEnable;
+      n1 twoInvert;
+      n1 twoEnable;
+      n2 mask;
+      n1 aboveEnable;
+      n1 belowEnable;
     } bg1, bg2, bg3, bg4, obj;
 
     struct Color {
-      uint1 oneEnable;
-      uint1 oneInvert;
-      uint1 twoEnable;
-      uint1 twoInvert;
-      uint2 mask;
-      uint2 aboveMask;
-      uint2 belowMask;
+      n1 oneEnable;
+      n1 oneInvert;
+      n1 twoEnable;
+      n1 twoInvert;
+      n2 mask;
+      n2 aboveMask;
+      n2 belowMask;
     } col;
 
-    uint8 oneLeft;
-    uint8 oneRight;
-    uint8 twoLeft;
-    uint8 twoRight;
+    n8 oneLeft;
+    n8 oneRight;
+    n8 twoLeft;
+    n8 twoRight;
   } io;
 
   struct Output {
     struct Pixel {
-      uint1 colorEnable;
+      n1 colorEnable;
     } above, below;
   } output;
 
   struct {
-    uint x;
+    u32 x;
   };
 
   friend class PPU;

@@ -15,7 +15,7 @@ auto TLCS900H::instructionAnd(Target target, Source source) -> void {
 
 template<typename Source, typename Offset>
 auto TLCS900H::instructionAndCarry(Source source, Offset offset) -> void {
-  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<uint8>>) { if(load(offset).bit(3)) return (void)Undefined; }
+  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) { if(load(offset).bit(3)) return (void)Undefined; }
   CF &= load(source).bit(load(offset) & Source::bits - 1);
 }
 
@@ -28,17 +28,17 @@ auto TLCS900H::instructionBit(Source source, Offset offset) -> void {
   SF = Undefined;
 }
 
-auto TLCS900H::instructionBitSearch1Backward(Register<uint16> register) -> void {
+auto TLCS900H::instructionBitSearch1Backward(Register<n16> register) -> void {
   auto value = load(register);
-  for(uint index : reverse(range(16))) {
+  for(u32 index : reverse(range(16))) {
     if(value.bit(index)) return VF = 0, store(A, index);
   }
   VF = 1;
 }
 
-auto TLCS900H::instructionBitSearch1Forward(Register<uint16> register) -> void {
+auto TLCS900H::instructionBitSearch1Forward(Register<n16> register) -> void {
   auto value = load(register);
-  for(uint index : range(16)) {
+  for(u32 index : range(16)) {
     if(value.bit(index)) return VF = 0, store(A, index);
   }
   VF = 1;
@@ -70,9 +70,9 @@ auto TLCS900H::instructionChange(Target target, Offset offset) -> void {
   store(target, result);
 }
 
-template<typename Size, int Adjust, typename Target>
+template<typename Size, s32 Adjust, typename Target>
 auto TLCS900H::instructionCompare(Target target) -> void {
-  auto source = toRegister3<uint32>(r.prefix);
+  auto source = toRegister3<n32>(r.prefix);
   auto cf = CF;  //CF is not modified; but algorithmSubtract will modify it
   algorithmSubtract(load(target), load(toMemory<Size>(load(source))));
   store(source, load(source) + Adjust);
@@ -83,7 +83,7 @@ auto TLCS900H::instructionCompare(Target target) -> void {
 
 //note: unlike LDIR and LDDR, CPIR and CPDR do not appear to have the extra read when BC=0
 //however, the penalty cycle still exists and is emulated here.
-template<typename Size, int Adjust, typename Target>
+template<typename Size, s32 Adjust, typename Target>
 auto TLCS900H::instructionCompareRepeat(Target target) -> void {
   instructionCompare<Size, Adjust>(target);
   if(load(BC) && !ZF) return store(PC, load(PC) - 2);
@@ -102,15 +102,15 @@ auto TLCS900H::instructionComplement(Target target) -> void {
   HF = 1;
 }
 
-auto TLCS900H::instructionDecimalAdjustAccumulator(Register<uint8> register) -> void {
+auto TLCS900H::instructionDecimalAdjustAccumulator(Register<n8> register) -> void {
   prefetch();
   auto input = load(register), value = input;
-  if(CF || (uint8)value > 0x99) value += NF ? -0x60 : 0x60;
-  if(HF || (uint4)value > 0x09) value += NF ? -0x06 : 0x06;
+  if(CF || (n8)value > 0x99) value += NF ? -0x60 : 0x60;
+  if(HF || (n4)value > 0x09) value += NF ? -0x06 : 0x06;
   if(NF == 0) CF |= value < input;
   if(NF == 1) CF |= value > input;
   PF = parity(value);
-  HF = uint8(value ^ input).bit(4);
+  HF = n8(value ^ input).bit(4);
   ZF = value == 0;
   SF = value.bit(-1);
   store(register, value);
@@ -120,7 +120,7 @@ template<typename Target, typename Source>
 auto TLCS900H::instructionDecrement(Target target, Source source) -> void {
   auto immediate = load(source);
   if(!immediate) immediate = 8;
-  if constexpr(is_same_v<Target, Register<uint16>> || is_same_v<Target, Register<uint32>>) {
+  if constexpr(is_same_v<Target, Register<n16>> || is_same_v<Target, Register<n32>>) {
     //decw #n,r; decl #n,r: does not update flags
     store(target, load(target) - immediate);
   } else {
@@ -189,7 +189,7 @@ template<typename Target, typename Source>
 auto TLCS900H::instructionIncrement(Target target, Source source) -> void {
   auto immediate = load(source);
   if(!immediate) immediate = 8;
-  if constexpr(is_same_v<Target, Register<uint16>> || is_same_v<Target, Register<uint32>>) {
+  if constexpr(is_same_v<Target, Register<n16>> || is_same_v<Target, Register<n32>>) {
     //incw #n,r; incl #n,r: does not update flags
     store(target, load(target) + immediate);
   } else {
@@ -227,13 +227,13 @@ auto TLCS900H::instructionLoad(Target target, Source source) -> void {
 
 template<typename Source, typename Offset>
 auto TLCS900H::instructionLoadCarry(Source source, Offset offset) -> void {
-  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<uint8>>) { if(load(offset).bit(3)) return (void)Undefined; }
+  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) { if(load(offset).bit(3)) return (void)Undefined; }
   CF = load(source).bit(load(offset) & Source::bits - 1);
 }
 
-template<typename Size, int Adjust> auto TLCS900H::instructionLoad() -> void {
-  auto source = (uint3)r.prefix == 5 ? XIY : XHL;
-  auto target = (uint3)r.prefix == 5 ? XIX : XDE;
+template<typename Size, s32 Adjust> auto TLCS900H::instructionLoad() -> void {
+  auto source = (n3)r.prefix == 5 ? XIY : XHL;
+  auto target = (n3)r.prefix == 5 ? XIX : XDE;
   store(toMemory<Size>(load(target)), load(toMemory<Size>(load(source))));
   store(source, load(source) + Adjust);
   store(target, load(target) + Adjust);
@@ -250,7 +250,7 @@ template<typename Size, int Adjust> auto TLCS900H::instructionLoad() -> void {
 //or if it always occurs at the end of ever LDIR and LDDR instruction.
 //since I'm not sure how to emulate this, I don't try and guess here.
 //I do however add the extra penalty cycle at the end of the transfer.
-template<typename Size, int Adjust> auto TLCS900H::instructionLoadRepeat() -> void {
+template<typename Size, s32 Adjust> auto TLCS900H::instructionLoadRepeat() -> void {
   instructionLoad<Size, Adjust>();
   if(load(BC)) return store(PC, load(PC) - 2);
   idle(1);
@@ -258,7 +258,7 @@ template<typename Size, int Adjust> auto TLCS900H::instructionLoadRepeat() -> vo
 
 //reverse all bits in a 16-bit register
 //note: an 8-bit lookup table is faster (when in L1/L2 cache), but much more code
-auto TLCS900H::instructionMirror(Register<uint16> register) -> void {
+auto TLCS900H::instructionMirror(Register<n16> register) -> void {
   idle(1);
   auto data = load(register);
   data = data << 1 & 0xaaaa | data >> 1 & 0x5555;
@@ -267,7 +267,7 @@ auto TLCS900H::instructionMirror(Register<uint16> register) -> void {
   store(register, data << 8 | data >> 8);
 }
 
-template<uint Modulo, typename Target, typename Source>
+template<u32 Modulo, typename Target, typename Source>
 auto TLCS900H::instructionModuloDecrement(Target target, Source source) -> void {
   auto result = load(target);
   auto number = load(source);
@@ -279,7 +279,7 @@ auto TLCS900H::instructionModuloDecrement(Target target, Source source) -> void 
   store(target, result);
 }
 
-template<uint Modulo, typename Target, typename Source>
+template<u32 Modulo, typename Target, typename Source>
 auto TLCS900H::instructionModuloIncrement(Target target, Source source) -> void {
   auto result = load(target);
   auto number = load(source);
@@ -296,9 +296,9 @@ auto TLCS900H::instructionMultiply(Target target, Source source) -> void {
   store(expand(target), load(target) * load(source));
 }
 
-auto TLCS900H::instructionMultiplyAdd(Register<uint16> register) -> void {
-  auto xde = toMemory<int16>(load(XDE));
-  auto xhl = toMemory<int16>(load(XHL));
+auto TLCS900H::instructionMultiplyAdd(Register<n16> register) -> void {
+  auto xde = toMemory<i16>(load(XDE));
+  auto xhl = toMemory<i16>(load(XHL));
 
   auto source = load(expand(register));
   auto target = load(xde) * load(xhl);
@@ -306,7 +306,7 @@ auto TLCS900H::instructionMultiplyAdd(Register<uint16> register) -> void {
   store(XHL, load(XHL) - 2);
 
   auto result = load(expand(register));
-  VF = uint32((target ^ result) & (source ^ result)).bit(-1);
+  VF = n32((target ^ result) & (source ^ result)).bit(-1);
   ZF = result == 0;
   SF = result.bit(-1);
 }
@@ -331,7 +331,7 @@ auto TLCS900H::instructionOr(Target target, Source source) -> void {
 
 template<typename Source, typename Offset>
 auto TLCS900H::instructionOrCarry(Source source, Offset offset) -> void {
-  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<uint8>>) { if(load(offset).bit(3)) return (void)Undefined; }
+  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) { if(load(offset).bit(3)) return (void)Undefined; }
   CF |= load(source).bit(load(offset) & Source::bits - 1);
 }
 
@@ -407,8 +407,8 @@ auto TLCS900H::instructionRotateLeft(Target target, Amount amount) -> void {
   auto length = load(amount).clip(4);
   if(!length) length = 16;
   idle(length >> 2);
-  for(uint n : range(length)) {
-    uint cf = result.bit(-1);
+  for(u32 n : range(length)) {
+    u32 cf = result.bit(-1);
     result = result << 1 | CF;
     CF = cf;
   }
@@ -421,7 +421,7 @@ auto TLCS900H::instructionRotateLeftWithoutCarry(Target target, Amount amount) -
   auto length = load(amount).clip(4);
   if(!length) length = 16;
   idle(length >> 2);
-  for(uint n : range(length)) {
+  for(u32 n : range(length)) {
     CF = result.bit(-1);
     result = result << 1 | CF;
   }
@@ -451,8 +451,8 @@ auto TLCS900H::instructionRotateRight(Target target, Amount amount) -> void {
   auto length = load(amount).clip(4);
   if(!length) length = 16;
   idle(length >> 2);
-  for(uint n : range(length)) {
-    uint cf = result.bit(0);
+  for(u32 n : range(length)) {
+    u32 cf = result.bit(0);
     result = CF << Target::bits - 1 | result >> 1;
     CF = cf;
   }
@@ -465,7 +465,7 @@ auto TLCS900H::instructionRotateRightWithoutCarry(Target target, Amount amount) 
   auto length = load(amount).clip(4);
   if(!length) length = 16;
   idle(length >> 2);
-  for(uint n : range(length)) {
+  for(u32 n : range(length)) {
     CF = result.bit(0);
     result = CF << Target::bits - 1 | result >> 1;
   }
@@ -481,7 +481,7 @@ auto TLCS900H::instructionSet(Target target, Offset offset) -> void {
 
 //RCF: reset carry flag
 //SCF: set carry flag
-auto TLCS900H::instructionSetCarryFlag(uint1 value) -> void {
+auto TLCS900H::instructionSetCarryFlag(n1 value) -> void {
   CF = value;
   NF = 0;
   HF = 0;
@@ -489,23 +489,23 @@ auto TLCS900H::instructionSetCarryFlag(uint1 value) -> void {
 
 //CCF: complement carry flag
 //ZCF: complement zero flag to carry flag
-auto TLCS900H::instructionSetCarryFlagComplement(uint1 value) -> void {
+auto TLCS900H::instructionSetCarryFlagComplement(n1 value) -> void {
   CF = !value;
   NF = 0;
   HF = Undefined;
 }
 
 template<typename Target>
-auto TLCS900H::instructionSetConditionCode(uint4 code, Target target) -> void {
+auto TLCS900H::instructionSetConditionCode(n4 code, Target target) -> void {
   store(target, condition(code));
 }
 
-auto TLCS900H::instructionSetInterruptFlipFlop(uint3 value) -> void {
+auto TLCS900H::instructionSetInterruptFlipFlop(n3 value) -> void {
   idle(1 + (value == 7));
   IFF = value;
 }
 
-auto TLCS900H::instructionSetRegisterFilePointer(uint2 value) -> void {
+auto TLCS900H::instructionSetRegisterFilePointer(n2 value) -> void {
   RFP = value;
 }
 
@@ -515,7 +515,7 @@ auto TLCS900H::instructionShiftLeftArithmetic(Target target, Amount amount) -> v
   auto length = load(amount).clip(4);
   if(!length) length = 16;
   idle(length >> 2);
-  for(uint n : range(length)) {
+  for(u32 n : range(length)) {
     CF = result.bit(-1);
     result = result << 1;
   }
@@ -528,7 +528,7 @@ auto TLCS900H::instructionShiftLeftLogical(Target target, Amount amount) -> void
   auto length = load(amount).clip(4);
   if(!length) length = 16;
   idle(length >> 2);
-  for(uint n : range(length)) {
+  for(u32 n : range(length)) {
     CF = result.bit(-1);
     result = result << 1;
   }
@@ -541,7 +541,7 @@ auto TLCS900H::instructionShiftRightArithmetic(Target target, Amount amount) -> 
   auto length = load(amount).clip(4);
   if(!length) length = 16;
   idle(length >> 2);
-  for(uint n : range(length)) {
+  for(u32 n : range(length)) {
     CF = result.bit(0);
     result = result >> 1;
     result.bit(-1) = result.bit(-2);
@@ -555,7 +555,7 @@ auto TLCS900H::instructionShiftRightLogical(Target target, Amount amount) -> voi
   auto length = load(amount).clip(4);
   if(!length) length = 16;
   idle(length >> 2);
-  for(uint n : range(length)) {
+  for(u32 n : range(length)) {
     CF = result.bit(0);
     result = result >> 1;
   }
@@ -570,7 +570,7 @@ auto TLCS900H::instructionStoreCarry(Target target, Offset offset) -> void {
   store(target, result);
 }
 
-auto TLCS900H::instructionSoftwareInterrupt(uint3 vector) -> void {
+auto TLCS900H::instructionSoftwareInterrupt(n3 vector) -> void {
   idle(1);
   interrupt(vector << 2);
 }
@@ -611,6 +611,6 @@ auto TLCS900H::instructionXor(Target target, Source source) -> void {
 
 template<typename Source, typename Offset>
 auto TLCS900H::instructionXorCarry(Source source, Offset offset) -> void {
-  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<uint8>>) { if(load(offset).bit(3)) return (void)Undefined; }
+  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) { if(load(offset).bit(3)) return (void)Undefined; }
   CF ^= load(source).bit(load(offset) & Source::bits - 1);
 }

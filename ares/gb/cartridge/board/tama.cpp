@@ -8,12 +8,12 @@
 
 struct TAMA : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
-  Memory::Writable<uint8> ram;
-  Memory::Writable<uint8> rtc;
+  Memory::Readable<n8> rom;
+  Memory::Writable<n8> ram;
+  Memory::Writable<n8> rtc;
 
-  auto toBCD  (uint8 data) -> uint8 { return (data / 10) * 16 + (data % 10); }
-  auto fromBCD(uint8 data) -> uint8 { return (data / 16) * 10 + (data % 16); }
+  auto toBCD  (n8 data) -> n8 { return (data / 10) * 16 + (data % 10); }
+  auto fromBCD(n8 data) -> n8 { return (data / 16) * 10 + (data % 16); }
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -33,11 +33,11 @@ struct TAMA : Interface {
       io.rtc.hourMode = rtc[6].bit(3);
       io.rtc.test     = rtc[6].bit(4,7);
 
-      uint64 timestamp = 0;
-      for(uint index : range(8)) {
+      n64 timestamp = 0;
+      for(u32 index : range(8)) {
         timestamp.byte(index) = rtc[7 + index];
       }
-      uint64 diff = chrono::timestamp() - timestamp;
+      n64 diff = chrono::timestamp() - timestamp;
       if(diff < 32 * 365 * 24 * 60 * 60) {
         while(diff >= 24 * 60 * 60) { tickDay(); diff -= 24 * 60 * 60; }
         while(diff >= 60 * 60) { tickHour(); diff -= 60 * 60; }
@@ -61,8 +61,8 @@ struct TAMA : Interface {
       rtc[5] = toBCD(io.rtc.second);
       rtc[6] = io.rtc.meridian << 0 | io.rtc.leapYear << 1 | io.rtc.hourMode << 3 | io.rtc.test << 4;
 
-      uint64 timestamp = chrono::timestamp();
-      for(uint index : range(8)) {
+      n64 timestamp = chrono::timestamp();
+      for(u32 index : range(8)) {
         rtc[7 + index] = timestamp.byte(index);
       }
     }
@@ -76,13 +76,13 @@ struct TAMA : Interface {
     step(cartridge.frequency());
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(address >= 0x0000 && address <= 0x3fff) {
-      return rom.read((uint14)address);
+      return rom.read((n14)address);
     }
 
     if(address >= 0x4000 && address <= 0x7fff) {
-      return rom.read(io.rom.bank << 14 | (uint14)address);
+      return rom.read(io.rom.bank << 14 | (n14)address);
     }
 
     if(address >= 0xa000 && address <= 0xbfff && (address & 1) == 0) {
@@ -102,7 +102,7 @@ struct TAMA : Interface {
 
       if(io.mode == 2 || io.mode == 4) {
         if(io.select == 0x0c || io.select == 0x0d) {
-          uint4 data;
+          n4 data;
           if(io.rtc.index == 0) data = io.rtc.minute % 10;
           if(io.rtc.index == 1) data = io.rtc.minute / 10;
           if(io.rtc.index == 2) data = io.rtc.hour % 10;
@@ -126,7 +126,7 @@ struct TAMA : Interface {
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     if(address >= 0xa000 && address <= 0xbfff && (address & 1) == 0) {
       if(io.select == 0x00) {
         io.rom.bank.bit(0,3) = data.bit(0,3);
@@ -170,37 +170,37 @@ struct TAMA : Interface {
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0x7) {
-          uint8 day = toBCD(io.rtc.day);
+          n8 day = toBCD(io.rtc.day);
           day.bit(0,3) = io.input.bit(4,7);
           io.rtc.day = fromBCD(day);
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0x8) {
-          uint8 day = toBCD(io.rtc.day);
+          n8 day = toBCD(io.rtc.day);
           day.bit(4,7) = io.input.bit(4,7);
           io.rtc.day = fromBCD(day);
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0x9) {
-          uint8 month = toBCD(io.rtc.month);
+          n8 month = toBCD(io.rtc.month);
           month.bit(0,3) = io.input.bit(4,7);
           io.rtc.month = fromBCD(month);
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0xa) {
-          uint8 month = toBCD(io.rtc.month);
+          n8 month = toBCD(io.rtc.month);
           month.bit(4,7) = io.input.bit(4,7);
           io.rtc.month = fromBCD(month);
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0xb) {
-          uint8 year = toBCD(io.rtc.year);
+          n8 year = toBCD(io.rtc.year);
           year.bit(0,3) = io.input.bit(4,7);
           io.rtc.year = fromBCD(year);
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0xc) {
-          uint8 year = toBCD(io.rtc.year);
+          n8 year = toBCD(io.rtc.year);
           year.bit(4,7) = io.input.bit(4,7);
           io.rtc.year = fromBCD(year);
         }
@@ -303,7 +303,7 @@ struct TAMA : Interface {
   }
 
   auto tickDay() -> void {
-    uint days[12] = {31, 28, 31, 30, 31, 30, 30, 31, 30, 31, 30, 31};
+    u32 days[12] = {31, 28, 31, 30, 31, 30, 30, 31, 30, 31, 30, 31};
     if(io.rtc.leapYear == 0) days[1] = 29;  //extra day in February for leap years
 
     if(++io.rtc.day > days[(io.rtc.month - 1) % 12]) {
@@ -327,27 +327,27 @@ struct TAMA : Interface {
   }
 
   struct IO {
-    uint1 ready;
-    uint4 select;
-    uint3 mode;
-    uint5 index;
-    uint8 input;
-    uint8 output;
+    n1 ready;
+    n4 select;
+    n3 mode;
+    n5 index;
+    n8 input;
+    n8 output;
     struct ROM {
-      uint5 bank;
+      n5 bank;
     } rom;
     struct RTC {
-      uint8 year;      //0 - 99
-      uint8 month;     //1 - 12
-      uint8 day;       //1 - 31
-      uint8 hour;      //0 - 23
-      uint8 minute;    //0 - 59
-      uint8 second;    //0 - 59
-      uint1 meridian;  //0 = AM; 1 = PM
-      uint2 leapYear;  //0 = leap year; 1-3 = non-leap year
-      uint1 hourMode;  //0 = 12-hour; 1 = 24-hour
-      uint4 test;
-      uint8 index;
+      n8 year;      //0 - 99
+      n8 month;     //1 - 12
+      n8 day;       //1 - 31
+      n8 hour;      //0 - 23
+      n8 minute;    //0 - 59
+      n8 second;    //0 - 59
+      n1 meridian;  //0 = AM; 1 = PM
+      n2 leapYear;  //0 = leap year; 1-3 = non-leap year
+      n1 hourMode;  //0 = 12-hour; 1 = 24-hour
+      n4 test;
+      n8 index;
     } rtc;
   } io;
 };

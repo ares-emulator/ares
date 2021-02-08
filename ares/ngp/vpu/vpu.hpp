@@ -11,141 +11,141 @@ struct VPU : Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power() -> void;
 
   //memory.cpp
-  auto read(uint24 address) -> uint8;
-  auto write(uint24 address, uint8 data) -> void;
-  auto readSprite(uint8 address) -> uint8;
-  auto writeSprite(uint8 address, uint8 data) -> void;
-  auto readSpriteColor(uint6 address) -> uint8;
-  auto writeSpriteColor(uint6 address, uint8 data) -> void;
-  auto readColor(uint9 address) -> uint8;
-  auto writeColor(uint9 address, uint8 data) -> void;
-  auto readAttribute(uint12 address) -> uint8;
-  auto writeAttribute(uint12 address, uint8 data) -> void;
-  auto readCharacter(uint13 address) -> uint8;
-  auto writeCharacter(uint13 address, uint8 data) -> void;
+  auto read(n24 address) -> n8;
+  auto write(n24 address, n8 data) -> void;
+  auto readSprite(n8 address) -> n8;
+  auto writeSprite(n8 address, n8 data) -> void;
+  auto readSpriteColor(n6 address) -> n8;
+  auto writeSpriteColor(n6 address, n8 data) -> void;
+  auto readColor(n9 address) -> n8;
+  auto writeColor(n9 address, n8 data) -> void;
+  auto readAttribute(n12 address) -> n8;
+  auto writeAttribute(n12 address, n8 data) -> void;
+  auto readCharacter(n13 address) -> n8;
+  auto writeCharacter(n13 address, n8 data) -> void;
 
   //window.cpp
-  auto renderWindow(uint8 x, uint8 y) -> bool;
+  auto renderWindow(n8 x, n8 y) -> bool;
 
   //plane.cpp
   struct Plane;
-  auto renderPlane(uint8 x, uint8 y, Plane&) -> bool;
+  auto renderPlane(n8 x, n8 y, Plane&) -> bool;
 
   //sprite.cpp
-  auto cacheSprites(uint8 y) -> void;
-  auto renderSprite(uint8 x) -> bool;
+  auto cacheSprites(n8 y) -> void;
+  auto renderSprite(n8 x) -> bool;
 
   //color.cpp
-  auto colorNeoGeoPocket(uint32) -> uint64;
-  auto colorNeoGeoPocketColor(uint32) -> uint64;
+  auto colorNeoGeoPocket(n32) -> n64;
+  auto colorNeoGeoPocketColor(n32) -> n64;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 //private:
-  uint12 colors[256];
+  n12 colors[256];
 
   struct Background {
-    uint3 color;   //K2GE
-    uint3 unused;  //K2GE
-    uint2 mode;    //K2GE
+    n3 color;   //K2GE
+    n3 unused;  //K2GE
+    n2 mode;    //K2GE
   } background;
 
   struct Window {
-    uint8 hoffset;
-    uint8 voffset;
-    uint8 hlength;
-    uint8 vlength;
-    uint3 color;  //color drawn outside of window
+    n8 hoffset;
+    n8 voffset;
+    n8 hlength;
+    n8 vlength;
+    n3 color;  //color drawn outside of window
 
-    uint12 output;
+    n12 output;
   } window;
 
   struct Attribute {
-    uint9 character;
-    uint4 code;  //K2GE
-    uint1 palette;
-    uint1 vflip;
-    uint1 hflip;
+    n9 character;
+    n4 code;  //K2GE
+    n1 palette;
+    n1 vflip;
+    n1 hflip;
   } attributes[2048];
 
-  uint2 characters[512][8][8];
+  n2 characters[512][8][8];
 
   struct Plane {
-    uint12 address;
-    uint8  colorNative;      //K2GE
-    uint8  colorCompatible;  //K2GE
-    uint8  hscroll;
-    uint8  vscroll;
-    uint3  palette[2][4];
+    n12 address;
+    n8  colorNative;      //K2GE
+    n8  colorCompatible;  //K2GE
+    n8  hscroll;
+    n8  vscroll;
+    n3  palette[2][4];
 
-    uint12 output;
-    uint1  priority;
+    n12 output;
+    n1  priority;
   } plane1, plane2;
 
   struct Sprites {
-    uint8 colorNative;      //K2GE
-    uint8 colorCompatible;  //K2GE
-    uint8 hscroll;
-    uint8 vscroll;
-    uint3 palette[2][4];
+    n8 colorNative;      //K2GE
+    n8 colorCompatible;  //K2GE
+    n8 hscroll;
+    n8 vscroll;
+    n3 palette[2][4];
 
-    uint12 output;
-    uint2  priority;
+    n12 output;
+    n2  priority;
   } sprite;
 
   struct Sprite {
-    uint9 character;
-    uint1 vchain;
-    uint1 hchain;
-    uint2 priority;
-    uint1 palette;
-    uint1 vflip;
-    uint1 hflip;
-    uint8 hoffset;
-    uint8 voffset;
-    uint4 code;  //K2GE
+    n9 character;
+    n1 vchain;
+    n1 hchain;
+    n2 priority;
+    n1 palette;
+    n1 vflip;
+    n1 hflip;
+    n8 hoffset;
+    n8 voffset;
+    n4 code;  //K2GE
   } sprites[64];
 
   struct Tile {
-    uint8 x;
-    uint8 y;
-    uint9 character;
-    uint2 priority;
-    uint1 palette;
-    uint1 hflip;
-    uint4 code;  //K2GE
+    n8 x;
+    n8 y;
+    n9 character;
+    n2 priority;
+    n1 palette;
+    n1 hflip;
+    n4 code;  //K2GE
   } tiles[64];
 
-  uint8 tileCount;
+  n8 tileCount;
 
   struct LED {
-    uint8 control = 0x07;
-    uint8 frequency = 0x80;
+    n8 control = 0x07;
+    n8 frequency = 0x80;
   } led;
 
   struct DAC {
-    uint1 negate;     //0 = normal, 1 = inverted display
-    uint1 colorMode;  //0 = K2GE, 1 = K1GE compatible
+    n1 negate;     //0 = normal, 1 = inverted display
+    n1 colorMode;  //0 = K2GE, 1 = K1GE compatible
   } dac;
 
   struct IO {
-    uint8  vlines = 0xc6;
-    uint8  vcounter;
-    uint10 hcounter;
+    n8  vlines = 0xc6;
+    n8  vcounter;
+    n10 hcounter;
 
-    uint1 hblankEnableIRQ = 1;  //todo: should be 0
-    uint1 vblankEnableIRQ = 1;
-    uint1 hblankActive;
-    uint1 vblankActive;
+    n1 hblankEnableIRQ = 1;  //todo: should be 0
+    n1 vblankEnableIRQ = 1;
+    n1 hblankActive;
+    n1 vblankActive;
 
-    uint1 characterOver;
+    n1 characterOver;
 
-    uint1 planePriority;  //0 = plane1 > plane2; 1 = plane2 > plane1
+    n1 planePriority;  //0 = plane1 > plane2; 1 = plane2 > plane1
   } io;
 };
 

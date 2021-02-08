@@ -43,7 +43,7 @@ auto pTableViewColumn::setExpandable(bool expandable) -> void {
 auto pTableViewColumn::setForegroundColor(Color color) -> void {
 }
 
-auto pTableViewColumn::setHorizontalAlignment(double alignment) -> void {
+auto pTableViewColumn::setHorizontalAlignment(f64 alignment) -> void {
   _setState();
 }
 
@@ -63,10 +63,10 @@ auto pTableViewColumn::setText(const string& text) -> void {
   _setState();
 }
 
-auto pTableViewColumn::setVerticalAlignment(double alignment) -> void {
+auto pTableViewColumn::setVerticalAlignment(f64 alignment) -> void {
 }
 
-auto pTableViewColumn::setWidth(signed width) -> void {
+auto pTableViewColumn::setWidth(s32 width) -> void {
   _setState();
 }
 

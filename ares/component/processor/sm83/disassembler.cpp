@@ -1,4 +1,4 @@
-auto SM83::disassembleInstruction(maybe<uint16> _pc) -> string {
+auto SM83::disassembleInstruction(maybe<n16> _pc) -> string {
   auto pc = _pc ? *_pc : PC;
   return pad(disassembleOpcode(pc), -16, ' ');
 }
@@ -13,7 +13,7 @@ auto SM83::disassembleContext() -> string {
   };
 }
 
-auto SM83::disassembleOpcode(uint16 pc) -> string {
+auto SM83::disassembleOpcode(n16 pc) -> string {
   auto opcode = readDebugger(pc);
   auto lo = readDebugger(pc + 1);
   auto hi = readDebugger(pc + 2);
@@ -44,7 +44,7 @@ auto SM83::disassembleOpcode(uint16 pc) -> string {
   case 0x15: return {"dec  d"};
   case 0x16: return {"ld   d,$", hex(lo, 2L)};
   case 0x17: return {"rla"};
-  case 0x18: return {"jr   $", hex(pc + 2 + (int8)lo, 4L)};
+  case 0x18: return {"jr   $", hex(pc + 2 + (i8)lo, 4L)};
   case 0x19: return {"add  hl,de"};
   case 0x1a: return {"ld   a,(de)"};
   case 0x1b: return {"dec  de"};
@@ -52,7 +52,7 @@ auto SM83::disassembleOpcode(uint16 pc) -> string {
   case 0x1d: return {"dec  e"};
   case 0x1e: return {"ld   e,$", hex(lo, 2L)};
   case 0x1f: return {"rra"};
-  case 0x20: return {"jr   nz,$", hex(pc + 2 + (int8)lo, 4L)};
+  case 0x20: return {"jr   nz,$", hex(pc + 2 + (i8)lo, 4L)};
   case 0x21: return {"ld   hl,$", hex(word, 4L)};
   case 0x22: return {"ldi  (hl),a"};
   case 0x23: return {"inc  hl"};
@@ -60,7 +60,7 @@ auto SM83::disassembleOpcode(uint16 pc) -> string {
   case 0x25: return {"dec  h"};
   case 0x26: return {"ld   h,$", hex(lo, 2L)};
   case 0x27: return {"daa"};
-  case 0x28: return {"jr   z,$", hex(pc + 2 + (int8)lo, 4L)};
+  case 0x28: return {"jr   z,$", hex(pc + 2 + (i8)lo, 4L)};
   case 0x29: return {"add  hl,hl"};
   case 0x2a: return {"ldi  a,(hl)"};
   case 0x2b: return {"dec  hl"};
@@ -68,7 +68,7 @@ auto SM83::disassembleOpcode(uint16 pc) -> string {
   case 0x2d: return {"dec  l"};
   case 0x2e: return {"ld   l,$", hex(lo, 2L)};
   case 0x2f: return {"cpl"};
-  case 0x30: return {"jr   nc,$", hex(pc + 2 + (int8)lo, 4L)};
+  case 0x30: return {"jr   nc,$", hex(pc + 2 + (i8)lo, 4L)};
   case 0x31: return {"ld   sp,$", hex(word, 4L)};
   case 0x32: return {"ldd  (hl),a"};
   case 0x33: return {"inc  sp"};
@@ -76,7 +76,7 @@ auto SM83::disassembleOpcode(uint16 pc) -> string {
   case 0x35: return {"dec  (hl)"};
   case 0x36: return {"ld   (hl),$", hex(lo, 2L)};
   case 0x37: return {"scf"};
-  case 0x38: return {"jr   c,$", hex(pc + 2 + (int8)lo, 4L)};
+  case 0x38: return {"jr   c,$", hex(pc + 2 + (i8)lo, 4L)};
   case 0x39: return {"add  hl,sp"};
   case 0x3a: return {"ldd  a,(hl)"};
   case 0x3b: return {"dec  sp"};
@@ -247,7 +247,7 @@ auto SM83::disassembleOpcode(uint16 pc) -> string {
   case 0xe5: return {"push hl"};
   case 0xe6: return {"and  a,$", hex(lo, 2L)};
   case 0xe7: return {"rst  $0020"};
-  case 0xe8: return {"add  sp,$", hex((int8)lo, 4L)};
+  case 0xe8: return {"add  sp,$", hex((i8)lo, 4L)};
   case 0xe9: return {"jp   hl"};
   case 0xea: return {"ld   ($", hex(word, 4L), "),a"};
   case 0xee: return {"xor  a,$", hex(lo, 2L)};
@@ -259,7 +259,7 @@ auto SM83::disassembleOpcode(uint16 pc) -> string {
   case 0xf5: return {"push af"};
   case 0xf6: return {"or  a,$", hex(lo, 2L)};
   case 0xf7: return {"rst  $0030"};
-  case 0xf8: return {"ld   hl,sp+$", hex((int8)lo, 4L)};
+  case 0xf8: return {"ld   hl,sp+$", hex((i8)lo, 4L)};
   case 0xf9: return {"ld   sp,hl"};
   case 0xfa: return {"ld   a,($", hex(word, 4L), ")"};
   case 0xfb: return {"ei"};
@@ -270,7 +270,7 @@ auto SM83::disassembleOpcode(uint16 pc) -> string {
   return {"xx"};
 }
 
-auto SM83::disassembleOpcodeCB(uint16 pc) -> string {
+auto SM83::disassembleOpcodeCB(n16 pc) -> string {
   auto opcode = readDebugger(pc);
 
   switch(opcode) {

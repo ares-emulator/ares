@@ -6,7 +6,7 @@ inline auto PPU::Mosaic::enable() const -> bool {
   return false;
 }
 
-inline auto PPU::Mosaic::voffset() const -> uint {
+inline auto PPU::Mosaic::voffset() const -> u32 {
   return size - vcounter;
 }
 

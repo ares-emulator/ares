@@ -22,7 +22,7 @@ hiro.resource := resource/lucia.rc
 include $(hiro.path)/GNUmakefile
 
 profile := performance
-cores := fc sfc n64 sg ms md ps1 pce msx cv gb gba ws ngp
+cores := fc sfc sg ms md ps1 pce msx cv gb gba ws ngp
 
 ares.path := ../ares
 include $(ares.path)/GNUmakefile

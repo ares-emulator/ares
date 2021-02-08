@@ -23,7 +23,7 @@ struct Cartridge {
     string region;
   } information;
 
-  Memory::Readable<uint8> rom;
+  Memory::Readable<n8> rom;
 };
 
 #include "slot.hpp"

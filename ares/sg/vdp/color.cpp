@@ -1,4 +1,4 @@
-auto VDP::color(uint32 color) -> uint64 {
+auto VDP::color(n32 color) -> n64 {
   switch(color.bit(0,3)) {
   case  0: return 0x0000'0000'0000ull;  //transparent
   case  1: return 0x0000'0000'0000ull;  //black

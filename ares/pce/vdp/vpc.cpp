@@ -1,4 +1,4 @@
-inline auto VPC::bus(uint16 hcounter) const -> uint9 {
+inline auto VPC::bus(n16 hcounter) const -> n9 {
   //bus values are direct CRAM entry indexes:
   //d0-d3 => color (0 = neither background nor sprite)
   //d4-d7 => palette
@@ -9,7 +9,7 @@ inline auto VPC::bus(uint16 hcounter) const -> uint9 {
   bool window0 = window[0] >= 64 && (window[0] - 64) >= hcounter / 2;
   bool window1 = window[1] >= 64 && (window[1] - 64) >= hcounter / 2;
 
-  uint2 mode = !window0 << 0 | !window1 << 1;
+  n2 mode = !window0 << 0 | !window1 << 1;
   bool enableVDC0 = settings[mode].enableVDC0 && bus0.bit(0,3);
   bool enableVDC1 = settings[mode].enableVDC1 && bus1.bit(0,3);
   auto priority = settings[mode].priority;
@@ -41,12 +41,12 @@ inline auto VPC::bus(uint16 hcounter) const -> uint9 {
   return 0x000;
 }
 
-auto VPC::read(uint5 address) -> uint8 {
+auto VPC::read(n5 address) -> n8 {
   if(address >= 0x00 && address <= 0x07) return vdp.vdc0.read(address);
   if(address >= 0x10 && address <= 0x17) return vdp.vdc1.read(address);
   if(address >= 0x18 && address <= 0x1f) return 0xff;
 
-  uint8 data = 0x00;
+  n8 data = 0x00;
 
   if(address == 0x08) {
     data.bit(0)   = settings[0].enableVDC0;
@@ -101,7 +101,7 @@ auto VPC::read(uint5 address) -> uint8 {
   unreachable;
 }
 
-auto VPC::write(uint5 address, uint8 data) -> void {
+auto VPC::write(n5 address, n8 data) -> void {
   if(address >= 0x00 && address <= 0x07) return vdp.vdc0.write(address, data);
   if(address >= 0x10 && address <= 0x17) return vdp.vdc1.write(address, data);
   if(address >= 0x18 && address <= 0x1f) return;
@@ -157,7 +157,7 @@ auto VPC::write(uint5 address, uint8 data) -> void {
   }
 }
 
-auto VPC::store(uint2 address, uint8 data) -> void {
+auto VPC::store(n2 address, n8 data) -> void {
   if(select == 0) return vdp.vdc0.write(address, data);
   if(select == 1) return vdp.vdc1.write(address, data);
 }

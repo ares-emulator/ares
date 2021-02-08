@@ -7,10 +7,10 @@ struct APU : Thread, IO {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
 
-  auto readIO(uint32 address) -> uint8;
-  auto writeIO(uint32 address, uint8 byte) -> void;
+  auto readIO(n32 address) -> n8;
+  auto writeIO(n32 address, n8 byte) -> void;
   auto power() -> void;
 
   //sequencer.cpp
@@ -19,31 +19,31 @@ struct APU : Thread, IO {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint clock;
+  u32 clock;
 
   struct Bias {
-    uint10 level = 0x200;
-     uint2 amplitude = 0;
+    n10 level = 0x200;
+    n2  amplitude = 0;
   } bias;
 
   struct Sweep {
-    uint3 shift;
-    uint1 direction;
-    uint3 frequency;
+    n3 shift;
+    n1 direction;
+    n3 frequency;
 
-    uint1 enable;
-    uint1 negate;
-    uint3 period;
+    n1 enable;
+    n1 negate;
+    n3 period;
   };
 
   struct Envelope {
     auto dacEnable() const -> bool { return volume || direction; }
 
-    uint3 frequency;
-    uint1 direction;
-    uint4 volume;
+    n3 frequency;
+    n1 direction;
+    n4 volume;
 
-    uint3 period;
+    n3 period;
   };
 
   struct Square {
@@ -54,27 +54,27 @@ struct APU : Thread, IO {
 
     Envelope envelope;
 
-     uint1 enable;
-     uint6 length;
-     uint2 duty;
-    uint11 frequency;
-     uint1 counter;
-     uint1 initialize;
+    n1  enable;
+    n6  length;
+    n2  duty;
+    n11 frequency;
+    n1  counter;
+    n1  initialize;
 
-     int32 shadowfrequency;
-     uint1 signal;
-     uint4 output;
-    uint32 period;
-     uint3 phase;
-     uint4 volume;
+    i32 shadowfrequency;
+    n1  signal;
+    n4  output;
+    n32 period;
+    n3  phase;
+    n4  volume;
   };
 
   struct Square1 : Square {
     //square1.cpp
     auto runSweep(bool update) -> void;
     auto clockSweep() -> void;
-    auto read(uint addr) const -> uint8;
-    auto write(uint addr, uint8 byte) -> void;
+    auto read(u32 address) const -> n8;
+    auto write(u32 address, n8 byte) -> void;
     auto power() -> void;
 
     Sweep sweep;
@@ -82,8 +82,8 @@ struct APU : Thread, IO {
 
   struct Square2 : Square {
     //square2.cpp
-    auto read(uint addr) const -> uint8;
-    auto write(uint addr, uint8 byte) -> void;
+    auto read(u32 address) const -> n8;
+    auto write(u32 address, n8 byte) -> void;
     auto power() -> void;
   } square2;
 
@@ -91,100 +91,100 @@ struct APU : Thread, IO {
     //wave.cpp
     auto run() -> void;
     auto clockLength() -> void;
-    auto read(uint addr) const -> uint8;
-    auto write(uint addr, uint8 byte) -> void;
-    auto readRAM(uint addr) const -> uint8;
-    auto writeRAM(uint addr, uint8 byte) -> void;
+    auto read(u32 address) const -> n8;
+    auto write(u32 address, n8 byte) -> void;
+    auto readRAM(u32 address) const -> n8;
+    auto writeRAM(u32 address, n8 byte) -> void;
     auto power() -> void;
 
-     uint1 mode;
-     uint1 bank;
-     uint1 dacenable;
-     uint8 length;
-     uint3 volume;
-    uint11 frequency;
-     uint1 counter;
-     uint1 initialize;
-     uint4 pattern[2 * 32];
+    n1  mode;
+    n1  bank;
+    n1  dacenable;
+    n8  length;
+    n3  volume;
+    n11 frequency;
+    n1  counter;
+    n1  initialize;
+    n4  pattern[2 * 32];
 
-     uint1 enable;
-     uint4 output;
-     uint5 patternaddr;
-     uint1 patternbank;
-     uint4 patternsample;
-    uint32 period;
+    n1  enable;
+    n4  output;
+    n5  patternaddr;
+    n1  patternbank;
+    n4  patternsample;
+    n32 period;
   } wave;
 
   struct Noise {
     //noise.cpp
-    auto divider() const -> uint;
+    auto divider() const -> u32;
     auto run() -> void;
     auto clockLength() -> void;
     auto clockEnvelope() -> void;
-    auto read(uint addr) const -> uint8;
-    auto write(uint addr, uint8 byte) -> void;
+    auto read(u32 address) const -> n8;
+    auto write(u32 address, n8 byte) -> void;
     auto power() -> void;
 
     Envelope envelope;
 
-     uint6 length;
-     uint3 divisor;
-     uint1 narrowlfsr;
-     uint4 frequency;
-     uint1 counter;
-     uint1 initialize;
+    n6  length;
+    n3  divisor;
+    n1  narrowlfsr;
+    n4  frequency;
+    n1  counter;
+    n1  initialize;
 
-     uint1 enable;
-    uint15 lfsr;
-     uint4 output;
-    uint32 period;
-     uint4 volume;
+    n1  enable;
+    n15 lfsr;
+    n4  output;
+    n32 period;
+    n4  volume;
   } noise;
 
   struct Sequencer {
     //sequencer.cpp
     auto sample() -> void;
 
-    auto read(uint addr) const -> uint8;
-    auto write(uint addr, uint8 byte) -> void;
+    auto read(u32 address) const -> n8;
+    auto write(u32 address, n8 byte) -> void;
     auto power() -> void;
 
-     uint2 volume;
-     uint3 lvolume;
-     uint3 rvolume;
-     uint1 lenable[4];
-     uint1 renable[4];
-     uint1 masterenable;
+    n2  volume;
+    n3  lvolume;
+    n3  rvolume;
+    n1  lenable[4];
+    n1  renable[4];
+    n1  masterenable;
 
-    uint12 base;
-     uint3 step;
-     int16 lsample;
-     int16 rsample;
+    n12 base;
+    n3  step;
+    i16 lsample;
+    i16 rsample;
 
-    uint10 loutput;
-    uint10 routput;
+    n10 loutput;
+    n10 routput;
   } sequencer;
 
   struct FIFO {
     //fifo.cpp
     auto sample() -> void;
     auto read() -> void;
-    auto write(int8 byte) -> void;
+    auto write(i8 byte) -> void;
     auto reset() -> void;
     auto power() -> void;
 
-     int8 samples[32];
-     int8 active;
-     int8 output;
+    i8 samples[32];
+    i8 active;
+    i8 output;
 
-    uint5 rdoffset;
-    uint5 wroffset;
-    uint6 size;
+    n5 rdoffset;
+    n5 wroffset;
+    n6 size;
 
-    uint1 volume;  //0 = 50%, 1 = 100%
-    uint1 lenable;
-    uint1 renable;
-    uint1 timer;
+    n1 volume;  //0 = 50%, 1 = 100%
+    n1 lenable;
+    n1 renable;
+    n1 timer;
   } fifo[2];
 };
 

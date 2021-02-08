@@ -27,7 +27,7 @@ auto pHexEdit::destruct() -> void {
   DestroyWindow(hwnd);
 }
 
-auto pHexEdit::setAddress(unsigned address) -> void {
+auto pHexEdit::setAddress(u32 address) -> void {
   SetScrollPos(scrollBar, SB_CTL, address / state().columns, true);
   update();
 }
@@ -37,20 +37,20 @@ auto pHexEdit::setBackgroundColor(Color color) -> void {
   backgroundBrush = CreateSolidBrush(color ? CreateRGB(color) : GetSysColor(COLOR_WINDOW));
 }
 
-auto pHexEdit::setColumns(unsigned columns) -> void {
+auto pHexEdit::setColumns(u32 columns) -> void {
   update();
 }
 
 auto pHexEdit::setForegroundColor(Color color) -> void {
 }
 
-auto pHexEdit::setLength(unsigned length) -> void {
+auto pHexEdit::setLength(u32 length) -> void {
   SetScrollRange(scrollBar, SB_CTL, 0, rowsScrollable(), true);
   EnableWindow(scrollBar, rowsScrollable() > 0);
   update();
 }
 
-auto pHexEdit::setRows(unsigned rows) -> void {
+auto pHexEdit::setRows(u32 rows) -> void {
   update();
 }
 
@@ -60,10 +60,10 @@ auto pHexEdit::update() -> void {
     return;
   }
 
-  unsigned cursorPosition = Edit_GetSel(hwnd);
+  u32 cursorPosition = Edit_GetSel(hwnd);
 
   string output;
-  unsigned address = state().address;
+  u32 address = state().address;
   for(auto row : range(state().rows)) {
     output.append(hex(address, 8L));
     output.append("  ");
@@ -72,7 +72,7 @@ auto pHexEdit::update() -> void {
     string ansidata = " ";
     for(auto column : range(state().columns)) {
       if(address < state().length) {
-        uint8_t data = self().doRead(address++);
+        u8 data = self().doRead(address++);
         hexdata.append(hex(data, 2L));
         hexdata.append(" ");
         ansidata.append(data >= 0x20 && data <= 0x7e ? (char)data : '.');
@@ -92,22 +92,22 @@ auto pHexEdit::update() -> void {
   Edit_SetSel(hwnd, LOWORD(cursorPosition), HIWORD(cursorPosition));
 }
 
-auto pHexEdit::keyPress(unsigned scancode) -> bool {
+auto pHexEdit::keyPress(u32 scancode) -> bool {
   if(!state().onRead) return false;
 
-  signed position = LOWORD(Edit_GetSel(hwnd));
-  signed lineWidth = 10 + (state().columns * 3) + 1 + state().columns + 2;
-  signed cursorY = position / lineWidth;
-  signed cursorX = position % lineWidth;
+  s32 position = LOWORD(Edit_GetSel(hwnd));
+  s32 lineWidth = 10 + (state().columns * 3) + 1 + state().columns + 2;
+  s32 cursorY = position / lineWidth;
+  s32 cursorX = position % lineWidth;
 
   if(scancode == VK_HOME) {
-    signed offset = cursorY * lineWidth + 10;
+    s32 offset = cursorY * lineWidth + 10;
     Edit_SetSel(hwnd, offset, offset);
     return true;
   }
 
   if(scancode == VK_END) {
-    signed offset = cursorY * lineWidth + 57;
+    s32 offset = cursorY * lineWidth + 57;
     Edit_SetSel(hwnd, offset, offset);
     return true;
   }
@@ -150,10 +150,10 @@ auto pHexEdit::keyPress(unsigned scancode) -> bool {
       cursorX /= 3;
       if(cursorX < state().columns) {
         //not in ANSI region
-        unsigned address = state().address + (cursorY * state().columns + cursorX);
+        u32 address = state().address + (cursorY * state().columns + cursorX);
 
         if(address >= state().length) return false;  //do not edit past end of data
-        uint8_t data = self().doRead(address);
+        u8 data = self().doRead(address);
 
         //write modified value
         if(cursorNibble == 1) {
@@ -177,19 +177,19 @@ auto pHexEdit::keyPress(unsigned scancode) -> bool {
   return true;
 }
 
-auto pHexEdit::rows() -> int {
+auto pHexEdit::rows() -> s32 {
   return (max(1u, state().length) + state().columns - 1) / state().columns;
 }
 
-auto pHexEdit::rowsScrollable() -> int {
+auto pHexEdit::rowsScrollable() -> s32 {
   return max(0u, rows() - state().rows);
 }
 
-auto pHexEdit::scrollPosition() -> int {
+auto pHexEdit::scrollPosition() -> s32 {
   return state().address / state().columns;
 }
 
-auto pHexEdit::scrollTo(signed position) -> void {
+auto pHexEdit::scrollTo(s32 position) -> void {
   if(position > rowsScrollable()) position = rowsScrollable();
   if(position < 0) position = 0;
   if(position == scrollPosition()) return;
@@ -202,7 +202,7 @@ auto pHexEdit::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> 
   }
 
   if(msg == WM_MOUSEWHEEL) {
-    int offset = -((int16_t)HIWORD(wparam) / WHEEL_DELTA);
+    s32 offset = -((s16)HIWORD(wparam) / WHEEL_DELTA);
     scrollTo(scrollPosition() + offset);
     return true;
   }

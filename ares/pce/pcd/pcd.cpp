@@ -81,10 +81,10 @@ auto PCD::connect() -> void {
   if(!fd) return disconnect();
 
   //read TOC (table of contents) from disc lead-in
-  uint sectors = min(7500, fd->size() / 2448);
-  vector<uint8_t> subchannel;
+  u32 sectors = fd->size() / 2448;
+  vector<u8> subchannel;
   subchannel.resize(sectors * 96);
-  for(uint sector : range(sectors)) {
+  for(u32 sector : range(sectors)) {
     fd->seek(sector * 2448 + 2352);
     fd->read(subchannel.data() + sector * 96, 96);
   }
@@ -130,7 +130,7 @@ auto PCD::main() -> void {
   step(1);
 }
 
-auto PCD::step(uint clocks) -> void {
+auto PCD::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }

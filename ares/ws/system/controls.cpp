@@ -55,7 +55,7 @@ auto System::Controls::poll() -> void {
     bool volumeValue = volume->value();
     platform->input(volume);
     if(!volumeValue && volume->value()) {
-      //lower volume by one step. 0 wraps to 3 here (uint2 type.)
+      //lower volume by one step. 0 wraps to 3 here (n2 type.)
       apu.r.masterVolume--;
       //ASWAN has three volume steps; SPHINX and SPHINX2 have four.
       if(SoC::ASWAN() && apu.r.masterVolume == 3) apu.r.masterVolume = 2;

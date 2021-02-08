@@ -30,14 +30,14 @@ Justifiers::~Justifiers() {
 }
 
 auto Justifiers::main() -> void {
-  uint next = cpu.vcounter() * 1364 + cpu.hcounter();
+  u32 next = cpu.vcounter() * 1364 + cpu.hcounter();
 
-  int px = active == 0 ? x1->value() : x2->value();
-  int py = active == 0 ? y1->value() : y2->value();
+  s32 px = active == 0 ? x1->value() : x2->value();
+  s32 py = active == 0 ? y1->value() : y2->value();
   bool offscreen = px < 0 || py < 0 || px >= 256 || py >= ppu.vdisp();
 
   if(!offscreen) {
-    uint target = py * 1364 + (px + 24) * 4;
+    u32 target = py * 1364 + (px + 24) * 4;
     if(next >= target && previous < target) {
       //CRT raster detected, strobe iobit to latch counters
       iobit(0);
@@ -48,8 +48,8 @@ auto Justifiers::main() -> void {
   if(next < previous) {
     platform->input(x1);
     platform->input(y1);
-    int nx1 = x1->value() + cx1;
-    int ny1 = y1->value() + cy1;
+    s32 nx1 = x1->value() + cx1;
+    s32 ny1 = y1->value() + cy1;
     cx1 = max(-16, min(256 + 16, nx1));
     cy1 = max(-16, min(240 + 16, ny1));
     sprite1->setPosition(cx1 * 2 - 16, cy1 * 2 - 16);
@@ -57,8 +57,8 @@ auto Justifiers::main() -> void {
 
     platform->input(x2);
     platform->input(y2);
-    int nx2 = x2->value() + cx2;
-    int ny2 = y2->value() + cy2;
+    s32 nx2 = x2->value() + cx2;
+    s32 ny2 = y2->value() + cy2;
     cx2 = max(-16, min(256 + 16, nx2));
     cy2 = max(-16, min(240 + 16, ny2));
     sprite2->setPosition(cx2 * 2 - 16, cy2 * 2 - 16);
@@ -70,7 +70,7 @@ auto Justifiers::main() -> void {
   synchronize(cpu);
 }
 
-auto Justifiers::data() -> uint2 {
+auto Justifiers::data() -> n2 {
   if(counter == 0) {
     platform->input(trigger1);
     platform->input(start1);
@@ -121,7 +121,7 @@ auto Justifiers::data() -> uint2 {
   return 1;
 }
 
-auto Justifiers::latch(bool data) -> void {
+auto Justifiers::latch(n1 data) -> void {
   if(latched != data) {
     latched = data;
     counter = 0;

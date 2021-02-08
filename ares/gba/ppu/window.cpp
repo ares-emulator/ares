@@ -1,4 +1,4 @@
-auto PPU::Window::run(uint x, uint y) -> void {
+auto PPU::Window::run(u32 x, u32 y) -> void {
   auto x1 = io.x1, x2 = io.x2;
   auto y1 = io.y1, y2 = io.y2;
 
@@ -8,7 +8,7 @@ auto PPU::Window::run(uint x, uint y) -> void {
   output = (x >= x1 && x < x2 && y >= y1 && y < y2);
 }
 
-auto PPU::Window::power(uint id) -> void {
+auto PPU::Window::power(u32 id) -> void {
   this->id = id;
 
   io = {};

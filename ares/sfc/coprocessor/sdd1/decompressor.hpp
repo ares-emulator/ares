@@ -1,89 +1,89 @@
 struct Decompressor {
   struct IM {  //input manager
     IM(SDD1::Decompressor& self) : self(self) {}
-    auto init(uint offset) -> void;
-    auto getCodeWord(uint8 codeLength) -> uint8;
+    auto init(n32 offset) -> void;
+    auto getCodeWord(n8 codeLength) -> n8;
     auto serialize(serializer&) -> void;
 
   private:
     Decompressor& self;
-    uint offset;
-    uint bitCount;
+    n32 offset;
+    n32 bitCount;
   };
 
   struct GCD {  //golomb-code decoder
     GCD(SDD1::Decompressor& self) : self(self) {}
-    auto getRunCount(uint8 codeNumber, uint8& mpsCount, bool& lpsIndex) -> void;
+    auto getRunCount(n8 codeNumber, n8& mpsCount, bool& lpsIndex) -> void;
     auto serialize(serializer&) -> void;
 
   private:
     Decompressor& self;
-    static const uint8 runCount[256];
+    static const n8 runCount[256];
   };
 
   struct BG {  //bits generator
-    BG(SDD1::Decompressor& self, uint8 codeNumber) : self(self), codeNumber(codeNumber) {}
+    BG(SDD1::Decompressor& self, n8 codeNumber) : self(self), codeNumber(codeNumber) {}
     auto init() -> void;
-    auto getBit(bool& endOfRun) -> uint8;
+    auto getBit(bool& endOfRun) -> n8;
     auto serialize(serializer&) -> void;
 
   private:
     Decompressor& self;
-    const uint8 codeNumber;
-    uint8 mpsCount;
+    const n8 codeNumber;
+    n8 mpsCount;
     bool lpsIndex;
   };
 
   struct PEM {  //probability estimation module
     PEM(SDD1::Decompressor& self) : self(self) {}
     auto init() -> void;
-    auto getBit(uint8 context) -> uint8;
+    auto getBit(n8 context) -> n8;
     auto serialize(serializer&) -> void;
 
   private:
     Decompressor& self;
     struct State {
-      uint8 codeNumber;
-      uint8 nextIfMps;
-      uint8 nextIfLps;
+      n8 codeNumber;
+      n8 nextIfMps;
+      n8 nextIfLps;
     };
     static const State evolutionTable[33];
     struct ContextInfo {
-      uint8 status;
-      uint8 mps;
+      n8 status;
+      n8 mps;
     } contextInfo[32];
   };
 
   struct CM {  //context model
     CM(SDD1::Decompressor& self) : self(self) {}
-    auto init(uint offset) -> void;
-    auto getBit() -> uint8;
+    auto init(n32 offset) -> void;
+    auto getBit() -> n8;
     auto serialize(serializer&) -> void;
 
   private:
     Decompressor& self;
-    uint8 bitplanesInfo;
-    uint8 contextBitsInfo;
-    uint8 bitNumber;
-    uint8 currentBitplane;
-    uint16 previousBitplaneBits[8];
+    n8  bitplanesInfo;
+    n8  contextBitsInfo;
+    n8  bitNumber;
+    n8  currentBitplane;
+    n16 previousBitplaneBits[8];
   };
 
   struct OL {  //output logic
     OL(SDD1::Decompressor& self) : self(self) {}
-    auto init(uint offset) -> void;
-    auto decompress() -> uint8;
+    auto init(n32 offset) -> void;
+    auto decompress() -> n8;
     auto serialize(serializer&) -> void;
 
   private:
     Decompressor& self;
-    uint8 bitplanesInfo;
-    uint8 r0, r1, r2;
+    n8 bitplanesInfo;
+    n8 r0, r1, r2;
   };
 
   Decompressor();
-  auto init(uint offset) -> void;
-  auto read() -> uint8;
+  auto init(n32 offset) -> void;
+  auto read() -> n8;
   auto serialize(serializer&) -> void;
 
   IM  im;

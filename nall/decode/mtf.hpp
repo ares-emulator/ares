@@ -4,16 +4,16 @@
 
 namespace nall::Decode {
 
-inline auto MTF(array_view<uint8_t> input) -> vector<uint8_t> {
-  vector<uint8_t> output;
+inline auto MTF(array_view<u8> input) -> vector<u8> {
+  vector<u8> output;
   output.resize(input.size());
 
-  uint8_t order[256];
-  for(uint n : range(256)) order[n] = n;
+  u8 order[256];
+  for(u32 n : range(256)) order[n] = n;
 
-  for(uint offset : range(input.size())) {
-    uint data = input[offset];
-    uint value = order[data];
+  for(u32 offset : range(input.size())) {
+    u32 data = input[offset];
+    u32 value = order[data];
     output[offset] = value;
     memory::move(&order[1], &order[0], data);
     order[0] = value;

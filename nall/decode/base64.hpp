@@ -2,22 +2,22 @@
 
 namespace nall::Decode {
 
-inline auto Base64(const string& text) -> vector<uint8_t> {
+inline auto Base64(const string& text) -> vector<u8> {
   static bool initialized = false;
-  static uint8_t lookup[256] = {0};
+  static u8 lookup[256] = {};
   if(!initialized) {
     initialized = true;
-    for(uint n : range(26)) lookup['A' + n] = n;
-    for(uint n : range(26)) lookup['a' + n] = n + 26;
-    for(uint n : range(10)) lookup['0' + n] = n + 52;
+    for(u32 n : range(26)) lookup['A' + n] = n;
+    for(u32 n : range(26)) lookup['a' + n] = n + 26;
+    for(u32 n : range(10)) lookup['0' + n] = n + 52;
     lookup['+'] = lookup['-'] = 62;
     lookup['/'] = lookup['_'] = 63;
   }
 
-  vector<uint8_t> result;
-  uint8_t buffer, output;
-  for(uint n : range(text.size())) {
-    uint8_t buffer = lookup[text[n]];
+  vector<u8> result;
+  u8 buffer, output;
+  for(u32 n : range(text.size())) {
+    u8 buffer = lookup[text[n]];
 
     switch(n & 3) {
     case 0:

@@ -1,6 +1,5 @@
 struct System {
   Node::System node;
-  Node::Setting::String regionNode;
 
   struct Controls {
     Node::Object node;
@@ -11,10 +10,10 @@ struct System {
     auto poll() -> void;
   } controls;
 
-  enum class Model : uint { SG1000, SC3000 };
-  enum class Region : uint { NTSC, PAL };
+  enum class Model : u32 { SG1000, SC3000 };
+  enum class Region : u32 { NTSC, PAL };
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto model() const -> Model { return information.model; }
   auto region() const -> Region { return information.region; }
   auto colorburst() const -> double { return information.colorburst; }
@@ -34,9 +33,10 @@ struct System {
 
 private:
   struct Information {
+    string name = "SG-1000";
     Model model = Model::SG1000;
     Region region = Region::NTSC;
-    double colorburst = Constants::Colorburst::NTSC;
+    f64 colorburst = Constants::Colorburst::NTSC;
   } information;
 
   //serialization.cpp

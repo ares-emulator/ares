@@ -1,8 +1,8 @@
-auto Cartridge::EEPROM::read(uint address) -> bool {
+auto Cartridge::EEPROM::read(u32 address) -> bool {
   return data[address >> 3] & 0x80 >> (address & 7);
 }
 
-auto Cartridge::EEPROM::write(uint address, bool bit) -> void {
+auto Cartridge::EEPROM::write(u32 address, bool bit) -> void {
   if(bit == 0) data[address >> 3] &=~ (0x80 >> (address & 7));
   if(bit == 1) data[address >> 3] |=  (0x80 >> (address & 7));
 }

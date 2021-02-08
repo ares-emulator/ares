@@ -42,7 +42,7 @@ auto PCD::ADPCM::clock() -> void {
 }
 
 auto PCD::ADPCM::clockSample() -> void {
-  stream->frame((io.playing ? msm5205.sample() : (int12)0) * fader->adpcm() / 2048.0);
+  stream->frame((io.playing ? msm5205.sample() : (i12)0) * fader->adpcm() / 2048.0);
 
   if(++period < divider) return;
   period = 0;
@@ -65,7 +65,7 @@ auto PCD::ADPCM::clockSample() -> void {
   }
 }
 
-auto PCD::ADPCM::control(uint8 data) -> void {
+auto PCD::ADPCM::control(n8 data) -> void {
   io.writeOffset = data.bit(0);
   if(!io.writeLatch && data.bit(1)) {
     write.address = latch - !io.writeOffset;

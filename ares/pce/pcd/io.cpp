@@ -1,4 +1,4 @@
-auto PCD::read(uint8 bank, uint13 address, uint8 data) -> uint8 {
+auto PCD::read(n8 bank, n13 address, n8 data) -> n8 {
   if(bank >= 0x00 && bank <= 0x3f && Model::PCEngineDuo()) {
     return bios.read(address);
   }
@@ -18,7 +18,7 @@ auto PCD::read(uint8 bank, uint13 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto PCD::write(uint8 bank, uint13 address, uint8 data) -> void {
+auto PCD::write(n8 bank, n13 address, n8 data) -> void {
   if(bank >= 0x68 && bank <= 0x7f && Model::PCEngineDuo() && sramEnable()) {
     return sram.write(bank - 0x68 << 13 | address, data);
   }
@@ -32,7 +32,7 @@ auto PCD::write(uint8 bank, uint13 address, uint8 data) -> void {
   }
 }
 
-auto PCD::readIO(uint13 address, uint8 data) -> uint8 {
+auto PCD::readIO(n13 address, n8 data) -> n8 {
   if(address == 0x18c0 && Model::PCEngineDuo()) return 0x00;
   if(address == 0x18c1 && Model::PCEngineDuo()) return 0xaa;
   if(address == 0x18c2 && Model::PCEngineDuo()) return 0x55;
@@ -40,7 +40,7 @@ auto PCD::readIO(uint13 address, uint8 data) -> uint8 {
   if(address >= 0x18c4) return data;
 
   scsi.update();
-  address = (uint4)address;
+  address = (n4)address;
   data = io.mdr[address];
 
   if(address == 0x0) {
@@ -145,11 +145,11 @@ auto PCD::readIO(uint13 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto PCD::writeIO(uint13 address, uint8 data) -> void {
+auto PCD::writeIO(n13 address, n8 data) -> void {
   if(address == 0x18c0) io.sramEnable = io.sramEnable << 8 | data;
   if(address >= 0x18c4) return;
 
-  address = (uint4)address;
+  address = (n4)address;
 
 //print("* wr ff:180", hex(address, 1L), " = ", hex(data, 2L), "\n");
 

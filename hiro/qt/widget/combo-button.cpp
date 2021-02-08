@@ -4,7 +4,7 @@ namespace hiro {
 
 auto pComboButton::construct() -> void {
   qtWidget = qtComboButton = new QtComboButton(*this);
-  qtComboButton->connect(qtComboButton, SIGNAL(currentIndexChanged(int)), SLOT(onChange(int)));
+  qtComboButton->connect(qtComboButton, SIGNAL(currentIndexChanged(s32)), SLOT(onChange(s32)));
 
   pWidget::construct();
 }
@@ -35,7 +35,7 @@ auto pComboButton::reset() -> void {
   while(qtComboButton->count()) qtComboButton->removeItem(0);
 }
 
-auto QtComboButton::onChange(int offset) -> void {
+auto QtComboButton::onChange(s32 offset) -> void {
   for(auto& item : p.state().items) {
     item->state.selected = false;
   }

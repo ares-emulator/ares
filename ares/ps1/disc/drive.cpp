@@ -1,5 +1,5 @@
 //computes the distance between the current LBA and seeking LBA
-auto Disc::Drive::distance() const -> uint {
+auto Disc::Drive::distance() const -> u32 {
   return 0;
 }
 
@@ -16,7 +16,7 @@ auto Disc::Drive::clockSector() -> void {
 
     if(self.ssr.playingCDDA) {
       if(cdda->playMode == Disc::CDDA::PlayMode::FastForward) {
-        int end = 0;
+        s32 end = 0;
         if(auto trackID = session->inTrack(lba.current)) {
           if(auto track = session->track(*trackID)) {
             if(auto index = track->index(track->lastIndex)) {
@@ -28,7 +28,7 @@ auto Disc::Drive::clockSector() -> void {
         lba.current = min(end, lba.current + 10);
       }
       if(cdda->playMode == Disc::CDDA::PlayMode::Rewind) {
-        int start = 0;
+        s32 start = 0;
         if(auto trackID = session->inTrack(lba.current)) {
           if(auto track = session->track(*trackID)) {
             if(auto index = track->index(1)) {
@@ -60,13 +60,13 @@ auto Disc::Drive::clockSector() -> void {
     self.fifo.data.flush();
 
     if(mode.sectorSize == 0) {
-      for(uint offset : range(2048)) {
+      for(u32 offset : range(2048)) {
         self.fifo.data.write(sector.data[24 + offset]);
       }
     }
 
     if(mode.sectorSize == 1) {
-      for(uint offset : range(2340)) {
+      for(u32 offset : range(2340)) {
         self.fifo.data.write(sector.data[12 + offset]);
       }
     }

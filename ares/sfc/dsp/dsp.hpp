@@ -13,8 +13,8 @@ struct DSP : Thread {
     } memory;
   } debugger;
 
-  uint8 apuram[64 * 1024];
-  uint8 registers[128];
+  n8 apuram[64_KiB];
+  n8 registers[128];
 
   auto mute() const -> bool { return master.mute; }
 
@@ -26,14 +26,14 @@ struct DSP : Thread {
   auto power(bool reset) -> void;
 
   //memory.cpp
-  auto read(uint7 address) -> uint8;
-  auto write(uint7 address, uint8 data) -> void;
+  auto read(n7 address) -> n8;
+  auto write(n7 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 private:
-  struct Envelope { enum : uint {
+  struct Envelope { enum : u32 {
     Release,
     Attack,
     Decay,
@@ -41,111 +41,111 @@ private:
   };};
 
   struct Clock {
-    uint15 counter;
-     uint1 sample = 1;
+    n15 counter;
+    n1  sample = 1;
   } clock;
 
   struct Master {
-    uint1 reset = 1;
-    uint1 mute = 1;
-     int8 volume[2];
-    int17 output[2];
+    n1  reset = 1;
+    n1  mute = 1;
+    i8  volume[2];
+    i17 output[2];
   } master;
 
   struct Echo {
-     int8 feedback;
-     int8 volume[2];
-     int8 fir[8];
-    int16 history[2][8];
-    uint8 bank;
-    uint4 delay;
-    uint1 readonly = 1;
-    int17 input[2];
-    int17 output[2];
+    i8  feedback;
+    i8  volume[2];
+    i8  fir[8];
+    i16 history[2][8];
+    n8  bank;
+    n4  delay;
+    n1  readonly = 1;
+    i17 input[2];
+    i17 output[2];
 
-     uint8 _bank;
-     uint1 _readonly;
-    uint16 _address;
-    uint16 _offset;  //offset from ESA into echo buffer
-    uint16 _length;  //number of bytes that echo offset will stop at
-     uint3 _historyOffset;
+    n8  _bank;
+    n1  _readonly;
+    n16 _address;
+    n16 _offset;  //offset from ESA into echo buffer
+    n16 _length;  //number of bytes that echo offset will stop at
+    n3  _historyOffset;
   } echo;
 
   struct Noise {
-     uint5 frequency;
-    uint15 lfsr = 0x4000;
+    n5  frequency;
+    n15 lfsr = 0x4000;
   } noise;
 
   struct BRR {
-     uint8  bank;
+    n8  bank;
 
-     uint8 _bank;
-     uint8 _source;
-    uint16 _address;
-    uint16 _nextAddress;
-     uint8 _header;
-     uint8 _byte;
+    n8  _bank;
+    n8  _source;
+    n16 _address;
+    n16 _nextAddress;
+    n8  _header;
+    n8  _byte;
   } brr;
 
   struct Latch {
-     uint8 adsr0;
-     uint8 envx;
-     uint8 outx;
-    uint15 pitch;
-     int16 output;
+    n8  adsr0;
+    n8  envx;
+    n8  outx;
+    n15 pitch;
+    i16 output;
   } latch;
 
   struct Voice {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-     uint7 index;  //voice channel register index: 0x00 for voice 0, 0x10 for voice 1, etc
+    n7  index;  //voice channel register index: 0x00 for voice 0, 0x10 for voice 1, etc
 
-      int8 volume[2];
-    uint14 pitch;
-     uint8 source;
-     uint8 adsr0;
-     uint8 adsr1;
-     uint8 gain;
-     uint8 envx;
-     uint1 keyon;
-     uint1 keyoff;
-     uint1 modulate;  //0 = normal, 1 = modulate by previous voice pitch
-     uint1 noise;     //0 = BRR, 1 = noise
-     uint1 echo;      //0 = direct, 1 = echo
-     uint1 end;       //0 = keyed on, 1 = BRR end bit encountered
+    i8  volume[2];
+    n14 pitch;
+    n8  source;
+    n8  adsr0;
+    n8  adsr1;
+    n8  gain;
+    n8  envx;
+    n1  keyon;
+    n1  keyoff;
+    n1  modulate;  //0 = normal, 1 = modulate by previous voice pitch
+    n1  noise;     //0 = BRR, 1 = noise
+    n1  echo;      //0 = direct, 1 = echo
+    n1  end;       //0 = keyed on, 1 = BRR end bit encountered
 
-     int16 buffer[12];      //12 decoded samples (mirrored for wrapping)
-     uint4 bufferOffset;    //place in buffer where next samples will be decoded
-    uint16 gaussianOffset;  //relative fractional position in sample (0x1000 = 1.0)
-    uint16 brrAddress;      //address of current BRR block
-     uint4 brrOffset = 1;   //current decoding offset in BRR block (1-8)
-     uint3 keyonDelay;      //KON delay/current setup phase
-     uint2 envelopeMode;
-    uint11 envelope;        //current envelope level (0-2047)
+    i16 buffer[12];      //12 decoded samples (mirrored for wrapping)
+    n4  bufferOffset;    //place in buffer where next samples will be decoded
+    n16 gaussianOffset;  //relative fractional position in sample (0x1000 = 1.0)
+    n16 brrAddress;      //address of current BRR block
+    n4  brrOffset = 1;   //current decoding offset in BRR block (1-8)
+    n3  keyonDelay;      //KON delay/current setup phase
+    n2  envelopeMode;
+    n11 envelope;        //current envelope level (0-2047)
 
     //internal latches
-     int32 _envelope;       //used by GAIN mode 7, very obscure quirk
-     uint1 _keylatch;
-     uint1 _keyon;
-     uint1 _keyoff;
-     uint1 _modulate;
-     uint1 _noise;
-     uint1 _echo;
-     uint1 _end;
-     uint1 _looped;
+    i32 _envelope;       //used by GAIN mode 7, very obscure quirk
+    n1  _keylatch;
+    n1  _keyon;
+    n1  _keyoff;
+    n1  _modulate;
+    n1  _noise;
+    n1  _echo;
+    n1  _end;
+    n1  _looped;
   } voice[8];
 
   //gaussian.cpp
-  int16 gaussianTable[512];
+  i16 gaussianTable[512];
   auto gaussianConstructTable() -> void;
-  auto gaussianInterpolate(const Voice& v) -> int;
+  auto gaussianInterpolate(const Voice& v) -> s32;
 
   //counter.cpp
-  static const uint16 CounterRate[32];
-  static const uint16 CounterOffset[32];
+  static const n16 CounterRate[32];
+  static const n16 CounterOffset[32];
   auto counterTick() -> void;
-  auto counterPoll(uint rate) -> bool;
+  auto counterPoll(u32 rate) -> bool;
 
   //envelope.cpp
   auto envelopeRun(Voice& v) -> void;
@@ -160,7 +160,7 @@ private:
   auto misc30() -> void;
 
   //voice.cpp
-  auto voiceOutput(Voice& v, uint1 channel) -> void;
+  auto voiceOutput(Voice& v, n1 channel) -> void;
   auto voice1 (Voice& v) -> void;
   auto voice2 (Voice& v) -> void;
   auto voice3 (Voice& v) -> void;
@@ -175,10 +175,10 @@ private:
   auto voice9 (Voice& v) -> void;
 
   //echo.cpp
-  auto calculateFIR(uint1 channel, int index) -> int;
-  auto echoOutput(uint1 channel) const -> int16;
-  auto echoRead(uint1 channel) -> void;
-  auto echoWrite(uint1 channel) -> void;
+  auto calculateFIR(n1 channel, s32 index) -> s32;
+  auto echoOutput(n1 channel) const -> i16;
+  auto echoRead(n1 channel) -> void;
+  auto echoWrite(n1 channel) -> void;
   auto echo22() -> void;
   auto echo23() -> void;
   auto echo24() -> void;
@@ -191,7 +191,7 @@ private:
 
   //dsp.cpp
   auto tick() -> void;
-  auto sample(int16 left, int16 right) -> void;
+  auto sample(i16 left, i16 right) -> void;
 };
 
 extern DSP dsp;

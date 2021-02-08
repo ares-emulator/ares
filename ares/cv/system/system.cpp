@@ -2,7 +2,17 @@
 
 namespace ares::ColecoVision {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[Coleco] ColecoVision (NTSC)",
+    "[Coleco] ColecoVision (PAL)",
+    "[Coleco] ColecoAdam (NTSC)",
+    "[Coleco] ColecoAdam (PAL)",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -28,10 +38,24 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(name == "ColecoVision") information.model = Model::ColecoVision;
-  if(name == "ColecoAdam"  ) information.model = Model::ColecoAdam;
+  if(name.find("ColecoVision")) {
+    information.name = "ColecoVision";
+    information.model = Model::ColecoVision;
+  }
+  if(name.find("ColecoAdam")) {
+    information.name = "ColecoAdam";
+    information.model = Model::ColecoAdam;
+  }
+  if(name.find("NTSC")) {
+    information.region = Region::NTSC;
+    information.colorburst = Constants::Colorburst::NTSC;
+  }
+  if(name.find("PAL")) {
+    information.region = Region::PAL;
+    information.colorburst = Constants::Colorburst::PAL * 4.0 / 5.0;
+  }
 
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});
@@ -40,14 +64,6 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
-
-  regionNode = node->append<Node::Setting::String>("Region", "NTSC → PAL");
-  regionNode->setAllowedValues({
-    "NTSC → PAL",
-    "PAL → NTSC",
-    "NTSC",
-    "PAL"
-  });
 
   scheduler.reset();
   controls.load(node);
@@ -79,22 +95,6 @@ auto System::unload() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
-  auto setRegion = [&](string region) {
-    if(region == "NTSC") {
-      information.region = Region::NTSC;
-      information.colorburst = Constants::Colorburst::NTSC;
-    }
-    if(region == "PAL") {
-      information.region = Region::PAL;
-      information.colorburst = Constants::Colorburst::PAL * 4.0 / 5.0;
-    }
-  };
-  auto regions = regionNode->latch().split("→").strip();
-  setRegion(regions.first());
-  for(auto& requested : reverse(regions)) {
-    if(requested == cartridge.region()) setRegion(requested);
-  }
 
   if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
     fp->read(bios, 0x2000);

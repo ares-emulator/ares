@@ -2,8 +2,8 @@ auto APU::Square1::runSweep(bool update) -> void {
   if(!sweep.enable) return;
 
   sweep.negate = sweep.direction;
-  uint delta = shadowfrequency >> sweep.shift;
-  int updatefrequency = shadowfrequency + (sweep.negate ? -delta : delta);
+  u32 delta = shadowfrequency >> sweep.shift;
+  s32 updatefrequency = shadowfrequency + (sweep.negate ? -delta : delta);
 
   if(updatefrequency > 2047) {
     enable = false;
@@ -22,7 +22,7 @@ auto APU::Square1::clockSweep() -> void {
   }
 }
 
-auto APU::Square1::read(uint addr) const -> uint8 {
+auto APU::Square1::read(u32 addr) const -> n8 {
   switch(addr) {
   case 0: return (sweep.shift << 0) | (sweep.direction << 3) | (sweep.frequency << 4);
   case 1: return (duty << 6);
@@ -33,7 +33,7 @@ auto APU::Square1::read(uint addr) const -> uint8 {
   return 0;
 }
 
-auto APU::Square1::write(uint addr, uint8 byte) -> void {
+auto APU::Square1::write(u32 addr, n8 byte) -> void {
   switch(addr) {
   case 0:  //NR10
     if(sweep.negate && sweep.direction && !(byte & 0x08)) enable = false;

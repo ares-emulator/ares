@@ -285,11 +285,11 @@ auto CPU::Disassembler::GTE() -> vector<string> {
   case 0x06: return {"ctc2", rtValue(), crName()};
   }
   if(!(instruction >> 25 & 1)) return {};
-  uint lm = instruction >> 10 & 1;
-  uint tv = instruction >> 13 & 3;
-  uint mv = instruction >> 15 & 3;
-  uint mm = instruction >> 17 & 3;
-  uint sf = instruction >> 19 & 1;
+  u32 lm = instruction >> 10 & 1;
+  u32 tv = instruction >> 13 & 3;
+  u32 mv = instruction >> 15 & 3;
+  u32 mm = instruction >> 17 & 3;
+  u32 sf = instruction >> 19 & 1;
   switch(instruction & 0x3f) {
   case 0x00: return {"rtps", lm, sf};  //0x01 mirror?
   case 0x01: return {"rtps", lm, sf};

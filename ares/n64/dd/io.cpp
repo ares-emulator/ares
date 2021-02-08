@@ -1,5 +1,5 @@
 auto DD::readWord(u32 address) -> u32 {
-  uint32 data;
+  n32 data;
 
   return data;
 }

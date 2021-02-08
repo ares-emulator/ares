@@ -24,9 +24,9 @@ auto CPU::load(Node::Object parent) -> void {
     //for unknown reasons, the BIOS from (0xffff00) only writes 0x00dc.
     //it is not updated when language/color choices are made.
     //to prevent the setup from being run every boot, manually calculate and set this value.
-    uint16 data;
+    n16 data;
     data += ram[0x2f87];  //language: Japanese, English
-    for(uint address = 0x2c25; address <= 0x2c2b; address++) data += ram[address];  //always 0x00dc
+    for(u32 address = 0x2c25; address <= 0x2c2b; address++) data += ram[address];  //always 0x00dc
     if(Model::NeoGeoPocketColor()) {
       data += ram[0x2f94];  //K1GE color mode: Black & White, Blue, Green, Red, Classic
     }
@@ -77,7 +77,7 @@ auto CPU::main() -> void {
   instruction();
 }
 
-auto CPU::step(uint clocks) -> void {
+auto CPU::step(u32 clocks) -> void {
   clocks <<= clock.rate;
   prescaler.step(clocks);
   adc.step(clocks);
@@ -87,7 +87,7 @@ auto CPU::step(uint clocks) -> void {
   Thread::synchronize();
 }
 
-auto CPU::idle(uint clocks) -> void {
+auto CPU::idle(u32 clocks) -> void {
   clocks <<= clock.rate;
   prescaler.step(clocks);
   adc.step(clocks);
@@ -108,7 +108,7 @@ auto CPU::power() -> void {
   //halve the thread frequency instead of doubling the cycles for every instruction.
   Thread::create(system.frequency() / 2.0, {&CPU::main, this});
 
-  uint24 address;
+  n24 address;
   address.byte(0) = system.bios.read(0xff00);
   address.byte(1) = system.bios.read(0xff01);
   address.byte(2) = system.bios.read(0xff02);
@@ -272,54 +272,54 @@ auto CPU::power() -> void {
   io = {};
   io.width  = Byte;
   io.timing = 3;
-  io.reader = [](uint24 address) -> uint8 { return cpu.readIO(address); };
-  io.writer = [](uint24 address, uint8 data) { return cpu.writeIO(address, data); };
+  io.reader = [](n24 address) -> n8 { return cpu.readIO(address); };
+  io.writer = [](n24 address, n8 data) { return cpu.writeIO(address, data); };
 
   rom = {};
   rom.width  = Word;
   rom.timing = 3;
-  rom.reader = [](uint24 address) -> uint8 { return system.bios.read(address); };
-  rom.writer = [](uint24 address, uint8 data) { return system.bios.write(address, data); };
+  rom.reader = [](n24 address) -> n8 { return system.bios.read(address); };
+  rom.writer = [](n24 address, n8 data) { return system.bios.write(address, data); };
 
   cram = {};
   cram.width  = Word;
   cram.timing = 3;
-  cram.reader = [](uint24 address) -> uint8 { return cpu.ram.read(address); };
-  cram.writer = [](uint24 address, uint8 data) { return cpu.ram.write(address, data); };
+  cram.reader = [](n24 address) -> n8 { return cpu.ram.read(address); };
+  cram.writer = [](n24 address, n8 data) { return cpu.ram.write(address, data); };
 
   aram = {};
   aram.width  = Word;
   aram.timing = 3;
-  aram.reader = [](uint24 address) -> uint8 { return apu.ram.read(address); };
-  aram.writer = [](uint24 address, uint8 data) { return apu.ram.write(address, data); };
+  aram.reader = [](n24 address) -> n8 { return apu.ram.read(address); };
+  aram.writer = [](n24 address, n8 data) { return apu.ram.write(address, data); };
 
   vram = {};
   vram.width  = Word;
   vram.timing = 3;
-  vram.reader = [](uint24 address) -> uint8 { return vpu.read(address); };
-  vram.writer = [](uint24 address, uint8 data) { return vpu.write(address, data); };
+  vram.reader = [](n24 address) -> n8 { return vpu.read(address); };
+  vram.writer = [](n24 address, n8 data) { return vpu.write(address, data); };
 
   cs0 = {};
   cs0.width   = Word;
   cs0.timing  = 0;
-  cs0.reader  = [](uint24 address) -> uint8 { return cartridge.read(0, address); };
-  cs0.writer  = [](uint24 address, uint8 data) { return cartridge.write(0, address, data); };
+  cs0.reader  = [](n24 address) -> n8 { return cartridge.read(0, address); };
+  cs0.writer  = [](n24 address, n8 data) { return cartridge.write(0, address, data); };
   cs0.address = 0xff0000;
   cs0.mask    = 0x1fffff;
 
   cs1 = {};
   cs1.width   = Word;
   cs1.timing  = 0;
-  cs1.reader  = [](uint24 address) -> uint8 { return cartridge.read(1, address); };
-  cs1.writer  = [](uint24 address, uint8 data) { return cartridge.write(1, address, data); };
+  cs1.reader  = [](n24 address) -> n8 { return cartridge.read(1, address); };
+  cs1.writer  = [](n24 address, n8 data) { return cartridge.write(1, address, data); };
   cs1.address = 0xff0000;
   cs1.mask    = 0x3fffff;
 
   cs2 = {};
   cs2.width   = Word;
   cs2.timing  = 0;
-  cs2.reader  = [](uint24 address) -> uint8 { return 0x00; };
-  cs2.writer  = [](uint24 address, uint8 data) { return; };
+  cs2.reader  = [](n24 address) -> n8 { return 0x00; };
+  cs2.writer  = [](n24 address, n8 data) { return; };
   cs2.address = 0xff0000;
   cs2.mask    = 0x7fffff;
   cs2.mode    = 0;
@@ -327,8 +327,8 @@ auto CPU::power() -> void {
   cs3 = {};
   cs3.width   = Word;
   cs3.timing  = 0;
-  cs3.reader  = [](uint24 address) -> uint8 { return 0x00; };
-  cs3.writer  = [](uint24 address, uint8 data) { return; };
+  cs3.reader  = [](n24 address) -> n8 { return 0x00; };
+  cs3.writer  = [](n24 address, n8 data) { return; };
   cs3.address = 0xff0000;
   cs3.mask    = 0x7fffff;
   cs3.cas     = 0;
@@ -336,8 +336,8 @@ auto CPU::power() -> void {
   csx = {};
   csx.width  = Word;
   csx.timing = 0;
-  csx.reader = [](uint24 address) -> uint8 { return 0x00; };
-  csx.writer = [](uint24 address, uint8 data) { return; };
+  csx.reader = [](n24 address) -> n8 { return 0x00; };
+  csx.writer = [](n24 address, n8 data) { return; };
 
   clock = {};
 
@@ -347,7 +347,7 @@ auto CPU::power() -> void {
 //code to skip the BIOS boot sequence and load the game immediately.
 //note that this will not configure the language, color mode, or real-time clock.
 auto CPU::fastBoot() -> void {
-  uint32 address;
+  n32 address;
   address.byte(0) = cartridge.read(0, 0x1c);
   address.byte(1) = cartridge.read(0, 0x1d);
   address.byte(2) = cartridge.read(0, 0x1e);
@@ -408,8 +408,8 @@ auto CPU::fastBoot() -> void {
   vpu.write(0x8000, 0xc0);  //enable Vblank and Hblank interrupts
 
   //default color palette: Magical Drop relies on the BIOS to initialize this.
-  for(uint address = 0x8380; address < 0x8400; address++) {
-    static uint8 data[16] = {
+  for(u32 address = 0x8380; address < 0x8400; address++) {
+    static n8 data[16] = {
       0xff, 0x0f, 0xdd, 0x0d, 0xbb, 0x0b, 0x99, 0x09,
       0x77, 0x07, 0x44, 0x04, 0x33, 0x03, 0x00, 0x00,
     };

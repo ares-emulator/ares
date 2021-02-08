@@ -1,4 +1,4 @@
-auto CPU::readIO(uint32 addr) -> uint8 {
+auto CPU::readIO(n32 addr) -> n8 {
   auto dma = [&]() -> DMA& { return this->dma[addr / 12 & 3]; };
   auto timer = [&]() -> Timer& { return this->timer[addr.bit(2,3)]; };
 
@@ -69,7 +69,7 @@ auto CPU::readIO(uint32 addr) -> uint8 {
       if(auto result = player.keyinput()) return result() >> 0;
     }
     system.controls.poll();
-    uint8 result;
+    n8 result;
     result.bit(0) = !system.controls.a->value();
     result.bit(1) = !system.controls.b->value();
     result.bit(2) = !system.controls.select->value();
@@ -105,7 +105,7 @@ auto CPU::readIO(uint32 addr) -> uint8 {
       if(auto result = player.keyinput()) return result() >> 8;
     }
     system.controls.poll();
-    uint8 result;
+    n8 result;
     result.bit(0) = !system.controls.r->value();
     result.bit(1) = !system.controls.l->value();
     return result;
@@ -231,7 +231,7 @@ auto CPU::readIO(uint32 addr) -> uint8 {
   return cpu.pipeline.fetch.instruction.byte(addr & 1);
 }
 
-auto CPU::writeIO(uint32 addr, uint8 data) -> void {
+auto CPU::writeIO(n32 addr, n8 data) -> void {
   auto dma = [&]() -> DMA& { return this->dma[addr / 12 & 3]; };
   auto timer = [&]() -> Timer& { return this->timer[addr.bit(2,3)]; };
 

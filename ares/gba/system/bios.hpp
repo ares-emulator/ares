@@ -2,12 +2,12 @@ struct BIOS {
   BIOS();
   ~BIOS();
 
-  auto read(uint mode, uint32 addr) -> uint32;
-  auto write(uint mode, uint32 addr, uint32 word) -> void;
+  auto read(u32 mode, n32 address) -> n32;
+  auto write(u32 mode, n32 address, n32 word) -> void;
 
-  uint8* data = nullptr;
-  uint size = 0;
-  uint32 mdr = 0;
+  n8* data = nullptr;
+  u32 size = 0;
+  n32 mdr = 0;
 };
 
 extern BIOS bios;

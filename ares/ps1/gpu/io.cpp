@@ -17,7 +17,7 @@ auto GPU::readHalf(u32 address) -> u32 {
 }
 
 auto GPU::readWord(u32 address) -> u32 {
-  uint32 data;
+  n32 data;
   if(address == 0x1f80'1810) data = readGP0();
   if(address == 0x1f80'1814) data = readGP1();
   return data;

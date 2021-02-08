@@ -4,33 +4,21 @@
 #include <nall/serial.hpp>
 using namespace nall;
 
-using  int8 = Integer< 8>;
-using int16 = Integer<16>;
-using int24 = Integer<24>;
-using int32 = Integer<32>;
-using int64 = Integer<64>;
-
-using  uint8 = Natural< 8>;
-using uint16 = Natural<16>;
-using uint24 = Natural<24>;
-using uint32 = Natural<32>;
-using uint64 = Natural<64>;
-
 struct FX {
   auto open(Arguments& arguments) -> bool;
   auto close() -> void;
   auto readable() -> bool;
-  auto read() -> uint8_t;
+  auto read() -> u8;
   auto writable() -> bool;
-  auto write(uint8_t data) -> void;
+  auto write(u8 data) -> void;
 
-  auto read(uint offset, uint length) -> vector<uint8_t>;
-  auto write(uint offset, const void* buffer, uint length) -> void;
-  auto write(uint offset, const vector<uint8_t>& buffer) -> void { write(offset, buffer.data(), buffer.size()); }
-  auto execute(uint offset) -> void;
+  auto read(u32 offset, u32 length) -> vector<u8>;
+  auto write(u32 offset, const void* buffer, u32 length) -> void;
+  auto write(u32 offset, const vector<u8>& buffer) -> void { write(offset, buffer.data(), buffer.size()); }
+  auto execute(u32 offset) -> void;
 
-  auto read(uint offset) -> uint8_t;
-  auto write(uint offset, uint8_t data) -> void;
+  auto read(u32 offset) -> u8;
+  auto write(u32 offset, u8 data) -> void;
 
   serial device;
 };
@@ -64,9 +52,9 @@ inline auto FX::readable() -> bool {
 }
 
 //1000ns delay avoids burning CPU core at 100%; does not slow down max transfer rate at all
-inline auto FX::read() -> uint8_t {
+inline auto FX::read() -> u8 {
   while(!readable()) usleep(1000);
-  uint8_t buffer[1] = {0};
+  u8 buffer[1] = {0};
   device.read(buffer, 1);
   return buffer[0];
 }
@@ -75,15 +63,15 @@ inline auto FX::writable() -> bool {
   return device.writable();
 }
 
-inline auto FX::write(uint8_t data) -> void {
+inline auto FX::write(u8 data) -> void {
   while(!writable()) usleep(1000);
-  uint8_t buffer[1] = {data};
+  u8 buffer[1] = {data};
   device.write(buffer, 1);
 }
 
 //
 
-inline auto FX::read(uint offset, uint length) -> vector<uint8_t> {
+inline auto FX::read(u32 offset, u32 length) -> vector<u8> {
   write(0x21);
   write(0x66);
   write(0x78);
@@ -95,12 +83,12 @@ inline auto FX::read(uint offset, uint length) -> vector<uint8_t> {
   write(length >>  0);
   write(0x00);
 
-  vector<uint8_t> buffer;
+  vector<u8> buffer;
   while(length--) buffer.append(read());
   return buffer;
 }
 
-inline auto FX::write(uint offset, const void* data, uint length) -> void {
+inline auto FX::write(u32 offset, const void* data, u32 length) -> void {
   write(0x21);
   write(0x66);
   write(0x78);
@@ -112,12 +100,12 @@ inline auto FX::write(uint offset, const void* data, uint length) -> void {
   write(length >>  0);
   write(0x01);
 
-  auto buffer = (uint8_t*)data;
+  auto buffer = (u8*)data;
   for(auto n : range(length)) write(buffer[n]);
   write(0x00);
 }
 
-inline auto FX::execute(uint offset) -> void {
+inline auto FX::execute(u32 offset) -> void {
   write(0x21);
   write(0x66);
   write(0x78);
@@ -129,12 +117,12 @@ inline auto FX::execute(uint offset) -> void {
 
 //
 
-inline auto FX::read(uint offset) -> uint8_t {
+inline auto FX::read(u32 offset) -> u8 {
   auto buffer = read(offset, 1);
   return buffer[0];
 }
 
-inline auto FX::write(uint offset, uint8_t data) -> void {
-  vector<uint8_t> buffer = {data};
+inline auto FX::write(u32 offset, u8 data) -> void {
+  vector<u8> buffer = {data};
   write(offset, buffer);
 }

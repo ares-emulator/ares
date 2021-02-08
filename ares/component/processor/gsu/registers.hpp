@@ -1,31 +1,31 @@
 struct Register {
-  uint16 data = 0;
+  n16 data = 0;
   bool modified = false;
 
-  operator uint() const {
+  operator u32() const {
     return data;
   }
 
-  auto assign(uint value) -> uint16 {
+  auto assign(u32 value) -> n16 {
     modified = true;
     return data = value;
   }
 
   auto operator++() { return assign(data + 1); }
   auto operator--() { return assign(data - 1); }
-  auto operator++(int) { uint r = data; assign(data + 1); return r; }
-  auto operator--(int) { uint r = data; assign(data - 1); return r; }
-  auto operator   = (uint i) { return assign(i); }
-  auto operator  |= (uint i) { return assign(data | i); }
-  auto operator  ^= (uint i) { return assign(data ^ i); }
-  auto operator  &= (uint i) { return assign(data & i); }
-  auto operator <<= (uint i) { return assign(data << i); }
-  auto operator >>= (uint i) { return assign(data >> i); }
-  auto operator  += (uint i) { return assign(data + i); }
-  auto operator  -= (uint i) { return assign(data - i); }
-  auto operator  *= (uint i) { return assign(data * i); }
-  auto operator  /= (uint i) { return assign(data / i); }
-  auto operator  %= (uint i) { return assign(data % i); }
+  auto operator++(s32) { u32 r = data; assign(data + 1); return r; }
+  auto operator--(s32) { u32 r = data; assign(data - 1); return r; }
+  auto operator   = (u32 i) { return assign(i); }
+  auto operator  |= (u32 i) { return assign(data | i); }
+  auto operator  ^= (u32 i) { return assign(data ^ i); }
+  auto operator  &= (u32 i) { return assign(data & i); }
+  auto operator <<= (u32 i) { return assign(data << i); }
+  auto operator >>= (u32 i) { return assign(data >> i); }
+  auto operator  += (u32 i) { return assign(data + i); }
+  auto operator  -= (u32 i) { return assign(data - i); }
+  auto operator  *= (u32 i) { return assign(data * i); }
+  auto operator  /= (u32 i) { return assign(data / i); }
+  auto operator  %= (u32 i) { return assign(data % i); }
 
   auto operator   = (const Register& value) { return assign(value); }
 
@@ -34,7 +34,7 @@ struct Register {
 };
 
 struct SFR {
-  uint16 data;
+  n16 data;
   BitField<16, 1> z   {&data};  //zero flag
   BitField<16, 2> cy  {&data};  //carry flag
   BitField<16, 3> s   {&data};  //sign flag
@@ -54,21 +54,21 @@ struct SFR {
   SFR(const SFR&) = delete;
   auto operator=(const SFR&) = delete;
 
-  operator uint() const { return data & 0x9f7e; }
-  auto& operator=(const uint value) { return data = value, *this; }
+  operator u32() const { return data & 0x9f7e; }
+  auto& operator=(const u32 value) { return data = value, *this; }
 };
 
 struct SCMR {
-  uint ht;
+  u32  ht;
   bool ron;
   bool ran;
-  uint md;
+  u32  md;
 
-  operator uint() const {
+  operator u32() const {
     return ((ht >> 1) << 5) | (ron << 4) | (ran << 3) | ((ht & 1) << 2) | (md);
   }
 
-  auto& operator=(uint data) {
+  auto& operator=(u32 data) {
     ht  = (bool)(data & 0x20) << 1;
     ht |= (bool)(data & 0x04) << 0;
     ron = data & 0x10;
@@ -85,11 +85,11 @@ struct POR {
   bool dither;
   bool transparent;
 
-  operator uint() const {
+  operator u32() const {
     return (obj << 4) | (freezehigh << 3) | (highnibble << 2) | (dither << 1) | (transparent);
   }
 
-  auto& operator=(uint data) {
+  auto& operator=(u32 data) {
     obj         = data & 0x10;
     freezehigh  = data & 0x08;
     highnibble  = data & 0x04;
@@ -103,11 +103,11 @@ struct CFGR {
   bool irq;
   bool ms0;
 
-  operator uint() const {
+  operator u32() const {
     return (irq << 7) | (ms0 << 5);
   }
 
-  auto& operator=(uint data) {
+  auto& operator=(u32 data) {
     irq = data & 0x80;
     ms0 = data & 0x20;
     return *this;
@@ -115,33 +115,33 @@ struct CFGR {
 };
 
 struct Registers {
-  uint8 pipeline;
-  uint16 ramaddr;
+  n8 pipeline;
+  n16 ramaddr;
 
-  Register r[16];   //general purpose registers
-  SFR sfr;          //status flag register
-  uint8 pbr;        //program bank register
-  uint8 rombr;      //game pack ROM bank register
-  bool rambr;       //game pack RAM bank register
-  uint16 cbr;       //cache base register
-  uint8 scbr;       //screen base register
-  SCMR scmr;        //screen mode register
-  uint8 colr;       //color register
-  POR por;          //plot option register
-  bool bramr;       //back-up RAM register
-  uint8 vcr;        //version code register
-  CFGR cfgr;        //config register
-  bool clsr;        //clock select register
+  Register r[16];  //general purpose registers
+  SFR sfr;         //status flag register
+  n8 pbr;          //program bank register
+  n8 rombr;        //game pack ROM bank register
+  bool rambr;      //game pack RAM bank register
+  n16 cbr;         //cache base register
+  n8 scbr;         //screen base register
+  SCMR scmr;       //screen mode register
+  n8 colr;         //color register
+  POR por;         //plot option register
+  bool bramr;      //back-up RAM register
+  n8 vcr;          //version code register
+  CFGR cfgr;       //config register
+  bool clsr;       //clock select register
 
-  uint romcl;       //clock ticks until romdr is valid
-  uint8 romdr;      //ROM buffer data register
+  u32 romcl;       //clock ticks until romdr is valid
+  n8 romdr;        //ROM buffer data register
 
-  uint ramcl;       //clock ticks until ramdr is valid
-  uint16 ramar;     //RAM buffer address register
-  uint8 ramdr;      //RAM buffer data register
+  u32 ramcl;       //clock ticks until ramdr is valid
+  n16 ramar;       //RAM buffer address register
+  n8 ramdr;        //RAM buffer data register
 
-  uint sreg;
-  uint dreg;
+  u32 sreg;
+  u32 dreg;
   auto& sr() { return r[sreg]; }  //source register (from)
   auto& dr() { return r[dreg]; }  //destination register (to)
 
@@ -156,12 +156,12 @@ struct Registers {
 } regs;
 
 struct Cache {
-  uint8 buffer[512];
+  n8 buffer[512];
   bool valid[32];
 } cache;
 
 struct PixelCache {
-  uint16 offset;
-  uint8 bitpend;
-  uint8 data[8];
+  n16 offset;
+  n8 bitpend;
+  n8 data[8];
 } pixelcache[2];

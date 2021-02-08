@@ -16,7 +16,7 @@ auto SPU::writeRAM(u32 address, u16 data) -> void {
 
 auto SPU::readDMA() -> u32 {
   if(fifo.empty()) fifoReadBlock();
-  uint32 data = fifo.read(0) <<  0;
+  n32    data = fifo.read(0) <<  0;
   return data | fifo.read(0) << 16;
 }
 
@@ -27,12 +27,12 @@ auto SPU::writeDMA(u32 data) -> void {
 }
 
 auto SPU::readByte(u32 address) -> u32 {
-  uint16 data = readHalf(address & ~1);
+  n16    data = readHalf(address & ~1);
   return data >> 8 * (address & 1) & 0xff;
 }
 
 auto SPU::readHalf(u32 address) -> u32 {
-  uint16 data = 0;
+  n16 data = 0;
 
   u8 v = address >> 4 & 31;
 
@@ -110,42 +110,42 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //KON
   if(address == 0x1f80'1d88) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       data.bit(v) = voice[v].kon;
     }
   }
 
   //KOFF
   if(address == 0x1f80'1d8c) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       data.bit(v) = voice[v].koff;
     }
   }
 
   //PMON
   if(address == 0x1f80'1d90) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       data.bit(v) = voice[v].pmon;
     }
   }
 
   //NON
   if(address == 0x1f80'1d94) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       data.bit(v) = voice[v].non;
     }
   }
 
   //EON
   if(address == 0x1f80'1d98) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       data.bit(v) = voice[v].eon;
     }
   }
 
   //ENDX
   if(address == 0x1f80'1d9c) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       data.bit(v) = voice[v].endx;
     }
   }
@@ -413,7 +413,7 @@ auto SPU::readHalf(u32 address) -> u32 {
 }
 
 auto SPU::readWord(u32 address) -> u32 {
-  uint32 data = readHalf(address & ~3 | 0) <<  0;
+  n32    data = readHalf(address & ~3 | 0) <<  0;
   return data | readHalf(address & ~3 | 2) << 16;
 }
 
@@ -423,7 +423,7 @@ auto SPU::writeByte(u32 address, u32 value) -> void {
 }
 
 auto SPU::writeHalf(u32 address, u32 value) -> void {
-  uint16 data = value;
+  n16 data = value;
 
   u8 v = address >> 4 & 31;
 
@@ -534,42 +534,42 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //KON
   if(address == 0x1f80'1d88) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       voice[v].kon = data.bit(v);
     }
   }
 
   //KOFF
   if(address == 0x1f80'1d8c) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       voice[v].koff = data.bit(v);
     }
   }
 
   //PMON
   if(address == 0x1f80'1d90) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       voice[v].pmon = data.bit(v);
     }
   }
 
   //NON
   if(address == 0x1f80'1d94) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       voice[v].non = data.bit(v);
     }
   }
 
   //EON
   if(address == 0x1f80'1d98) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       voice[v].eon = data.bit(v);
     }
   }
 
   //ENDX
   if(address == 0x1f80'1d9c) {
-    for(uint v : range(24)) {
+    for(u32 v : range(24)) {
       voice[v].endx = data.bit(v);
     }
   }

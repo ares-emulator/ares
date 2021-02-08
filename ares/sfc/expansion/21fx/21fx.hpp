@@ -2,35 +2,35 @@ struct S21FX : Expansion {
   S21FX(Node::Port);
   ~S21FX();
 
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto main() -> void;
 
-  auto read(uint24 address, uint8 data) -> uint8;
-  auto write(uint24 address, uint8 data) -> void;
+  auto read(n24 address, n8 data) -> n8;
+  auto write(n24 address, n8 data) -> void;
 
 private:
   auto quit() -> bool;
-  auto usleep(uint) -> void;
+  auto usleep(u32) -> void;
   auto readable() -> bool;
   auto writable() -> bool;
-  auto read() -> uint8;
-  auto write(uint8) -> void;
+  auto read() -> n8;
+  auto write(n8) -> void;
 
-  bool booted = false;
-  uint16 resetVector;
-  uint8 ram[122];
+  n1  booted;
+  n16 resetVector;
+  n8  ram[122];
 
   nall::library link;
   function<void (
-    function<bool ()>,      //quit
-    function<void (uint)>,  //usleep
-    function<bool ()>,      //readable
-    function<bool ()>,      //writable
-    function<uint8 ()>,     //read
-    function<void (uint8)>  //write
+    function<bool ()>,     //quit
+    function<void (u32)>,  //usleep
+    function<bool ()>,     //readable
+    function<bool ()>,     //writable
+    function<n8 ()>,       //read
+    function<void (n8)>    //write
   )> linkInit;
   function<void (vector<string>)> linkMain;
 
-  vector<uint8> snesBuffer;  //SNES -> Link
-  vector<uint8> linkBuffer;  //Link -> SNES
+  vector<n8> snesBuffer;  //SNES -> Link
+  vector<n8> linkBuffer;  //Link -> SNES
 };

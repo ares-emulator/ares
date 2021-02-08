@@ -16,14 +16,14 @@ struct detour {
   static auto remove(const string& moduleName, const string& functionName, void*& source) -> bool;
 
 protected:
-  static auto length(const uint8* function) -> uint;
-  static auto mirror(uint8* target, const uint8* source) -> uint;
+  static auto length(const u8* function) -> u32;
+  static auto mirror(u8* target, const u8* source) -> u32;
 
   struct opcode {
-    uint16 prefix;
-    uint length;
-    uint mode;
-    uint16 modify;
+    u16 prefix;
+    u32 length;
+    u32 mode;
+    u16 modify;
   };
   static opcode opcodes[];
 };
@@ -65,28 +65,28 @@ inline auto detour::insert(const string& moduleName, const string& functionName,
   HMODULE module = GetModuleHandleW(utf16_t(moduleName));
   if(!module) return false;
 
-  uint8* sourceData = (uint8_t*)GetProcAddress(module, functionName);
+  u8* sourceData = (u8*)GetProcAddress(module, functionName);
   if(!sourceData) return false;
 
-  uint sourceLength = detour::length(sourceData);
+  u32 sourceLength = detour::length(sourceData);
   if(sourceLength < 5) {
     //unable to clone enough bytes to insert hook
     #if 1
     string output = {"detour::insert(", moduleName, "::", functionName, ") failed: "};
-    for(uint n = 0; n < 16; n++) output.append(hex<2>(sourceData[n]), " ");
+    for(u32 n = 0; n < 16; n++) output.append(hex<2>(sourceData[n]), " ");
     output.trimRight(" ", 1L);
     MessageBoxA(0, output, "nall::detour", MB_OK);
     #endif
     return false;
   }
 
-  auto mirrorData = new uint8[512]();
+  auto mirrorData = new u8[512]();
   detour::mirror(mirrorData, sourceData);
 
   DWORD privileges;
   VirtualProtect((void*)mirrorData, 512, PAGE_EXECUTE_READWRITE, &privileges);
   VirtualProtect((void*)sourceData, 256, PAGE_EXECUTE_READWRITE, &privileges);
-  uint64_t address = (uint64_t)target - ((uint64_t)sourceData + 5);
+  u64 address = (u64)target - ((u64)sourceData + 5);
   sourceData[0] = 0xe9;  //jmp target
   sourceData[1] = address >>  0;
   sourceData[2] = address >>  8;
@@ -102,18 +102,18 @@ inline auto detour::remove(const string& moduleName, const string& functionName,
   HMODULE module = GetModuleHandleW(utf16_t(moduleName));
   if(!module) return false;
 
-  auto sourceData = (uint8*)GetProcAddress(module, functionName);
+  auto sourceData = (u8*)GetProcAddress(module, functionName);
   if(!sourceData) return false;
 
-  auto mirrorData = (uint8*)source;
+  auto mirrorData = (u8*)source;
   if(mirrorData == sourceData) return false;  //hook was never installed
 
-  uint length = detour::length(256 + mirrorData);
+  u32 length = detour::length(256 + mirrorData);
   if(length < 5) return false;
 
   DWORD privileges;
   VirtualProtect((void*)sourceData, 256, PAGE_EXECUTE_READWRITE, &privileges);
-  for(uint n = 0; n < length; n++) sourceData[n] = mirrorData[256 + n];
+  for(u32 n = 0; n < length; n++) sourceData[n] = mirrorData[256 + n];
   VirtualProtect((void*)sourceData, 256, privileges, &privileges);
 
   source = (void*)sourceData;
@@ -121,8 +121,8 @@ inline auto detour::remove(const string& moduleName, const string& functionName,
   return true;
 }
 
-inline auto detour::length(const uint8* function) -> uint {
-  uint length = 0;
+inline auto detour::length(const u8* function) -> u32 {
+  u32 length = 0;
   while(length < 5) {
     detour::opcode *opcode = 0;
     foreach(op, detour::opcodes) {
@@ -137,11 +137,11 @@ inline auto detour::length(const uint8* function) -> uint {
   return length;
 }
 
-inline auto detour::mirror(uint8* target, const uint8* source) -> uint {
-  const uint8* entryPoint = source;
-  for(uint n = 0; n < 256; n++) target[256 + n] = source[n];
+inline auto detour::mirror(u8* target, const u8* source) -> u32 {
+  const u8* entryPoint = source;
+  for(u32 n = 0; n < 256; n++) target[256 + n] = source[n];
 
-  uint size = detour::length(source);
+  u32 size = detour::length(source);
   while(size) {
     detour::opcode* opcode = nullptr;
     foreach(op, detour::opcodes) {
@@ -153,15 +153,15 @@ inline auto detour::mirror(uint8* target, const uint8* source) -> uint {
 
     switch(opcode->mode) {
     case Copy:
-      for(uint n = 0; n < opcode->length; n++) *target++ = *source++;
+      for(u32 n = 0; n < opcode->length; n++) *target++ = *source++;
       break;
     case RelNear: {
       source++;
-      uint64_t sourceAddress = (uint64_t)source + 1 + (int8)*source;
+      u64 sourceAddress = (u64)source + 1 + (s8)*source;
       *target++ = opcode->modify;
       if(opcode->modify >> 8) *target++ = opcode->modify >> 8;
-      uint64_t targetAddress = (uint64_t)target + 4;
-      uint64_t address = sourceAddress - targetAddress;
+      u64 targetAddress = (u64)target + 4;
+      u64 address = sourceAddress - targetAddress;
       *target++ = address >>  0;
       *target++ = address >>  8;
       *target++ = address >> 16;
@@ -173,7 +173,7 @@ inline auto detour::mirror(uint8* target, const uint8* source) -> uint {
     size -= opcode->length;
   }
 
-  uint64_t address = (entryPoint + detour::length(entryPoint)) - (target + 5);
+  u64 address = (entryPoint + detour::length(entryPoint)) - (target + 5);
   *target++ = 0xe9;  //jmp entryPoint
   *target++ = address >>  0;
   *target++ = address >>  8;

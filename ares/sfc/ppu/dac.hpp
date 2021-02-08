@@ -3,41 +3,41 @@ struct DAC {
   auto run() -> void;
   auto power() -> void;
 
-  auto below(bool hires) -> uint16;
-  auto above() -> uint16;
+  auto below(bool hires) -> n16;
+  auto above() -> n16;
 
-  auto blend(uint x, uint y) const -> uint15;
-  auto paletteColor(uint8 palette) const -> uint15;
-  auto directColor(uint8 palette, uint3 paletteGroup) const -> uint15;
-  auto fixedColor() const -> uint15;
+  auto blend(u32 x, u32 y) const -> n15;
+  auto paletteColor(n8 palette) const -> n15;
+  auto directColor(n8 palette, n3 paletteGroup) const -> n15;
+  auto fixedColor() const -> n15;
 
   auto serialize(serializer&) -> void;
 
-  uint15 cgram[256];
+  n15 cgram[256];
 
   struct IO {
-    uint1 directColor;
-    uint1 blendMode;
+    n1 directColor;
+    n1 blendMode;
 
     struct Layer {
-      uint1 colorEnable;
+      n1 colorEnable;
     } bg1, bg2, bg3, bg4, obj, back;
-    uint1 colorHalve;
-    uint1 colorMode;
+    n1 colorHalve;
+    n1 colorMode;
 
-    uint5 colorRed;
-    uint5 colorGreen;
-    uint5 colorBlue;
+    n5 colorRed;
+    n5 colorGreen;
+    n5 colorBlue;
   } io;
 
   struct Math {
     struct Screen {
-      uint15 color;
-       uint1 colorEnable;
+      n15 color;
+      n1  colorEnable;
     } above, below;
-    uint1 transparent;
-    uint1 blendMode;
-    uint1 colorHalve;
+    n1 transparent;
+    n1 blendMode;
+    n1 colorHalve;
   } math;
 
   friend class PPU;

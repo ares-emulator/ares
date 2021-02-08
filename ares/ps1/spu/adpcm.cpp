@@ -1,7 +1,7 @@
 auto SPU::Voice::readBlock() -> void {
-  uint19 address = adpcm.currentAddress;
+  n19 address = adpcm.currentAddress;
 
-  uint16 header = self.readRAM(address);
+  n16 header = self.readRAM(address);
   block.shift      = header.bit(0,3) > 12 ? 9 : header.bit(0,3);
   block.filter     = header.bit(4,6) >  4 ? 4 : header.bit(4,6);
   block.loopEnd    = header.bit( 8);
@@ -9,8 +9,8 @@ auto SPU::Voice::readBlock() -> void {
   block.loopStart  = header.bit(10);
   address += 2;
 
-  for(uint word : range(7)) {
-    uint16 data = self.readRAM(address);
+  for(u32 word : range(7)) {
+    n16 data = self.readRAM(address);
     block.brr[word << 2 | 0] = data >>  0 & 15;
     block.brr[word << 2 | 1] = data >>  4 & 15;
     block.brr[word << 2 | 2] = data >>  8 & 15;
@@ -29,7 +29,7 @@ auto SPU::Voice::decodeBlock() -> void {
   adpcm.previousSamples[2] = adpcm.currentSamples[27];
 
   s16 lastSamples[2] = {adpcm.lastSamples[0], adpcm.lastSamples[1]};
-  for(uint nibble : range(28)) {
+  for(u32 nibble : range(28)) {
     s32 sample = s16(block.brr[nibble] << 12) >> block.shift;
     sample += lastSamples[0] * positive[block.filter] >> 6;
     sample += lastSamples[1] * negative[block.filter] >> 6;

@@ -29,9 +29,9 @@ auto pKeyboard::pressed(unsigned code) -> bool {
   return _pressed(state, code);
 }
 
-auto pKeyboard::_pressed(const char* state, uint16_t code) -> bool {
-  uint8_t lo = code >> 0;
-  uint8_t hi = code >> 8;
+auto pKeyboard::_pressed(const char* state, u16 code) -> bool {
+  u8 lo = code >> 0;
+  u8 hi = code >> 8;
 
   #if defined(DISPLAY_XORG)
   if(lo && state[lo >> 3] & (1 << (lo & 7))) return true;
@@ -42,10 +42,10 @@ auto pKeyboard::_pressed(const char* state, uint16_t code) -> bool {
 }
 
 auto pKeyboard::initialize() -> void {
-  auto append = [](unsigned lo, unsigned hi = 0) {
+  auto append = [](u32 lo, u32 hi = 0) {
     #if defined(DISPLAY_XORG)
-    lo = lo ? (uint8_t)XKeysymToKeycode(pApplication::state().display, lo) : 0;
-    hi = hi ? (uint8_t)XKeysymToKeycode(pApplication::state().display, hi) : 0;
+    lo = lo ? (u8)XKeysymToKeycode(pApplication::state().display, lo) : 0;
+    hi = hi ? (u8)XKeysymToKeycode(pApplication::state().display, hi) : 0;
     #endif
     settings.keycodes.append(lo << 0 | hi << 8);
   };

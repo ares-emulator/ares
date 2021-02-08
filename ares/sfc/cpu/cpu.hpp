@@ -7,7 +7,7 @@ struct CPU : WDC65816, Thread, PPUcounter {
     auto load(Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
-    auto dma(uint8 channelID, uint24 addressA, uint8 addressB, uint8 data) -> void;
+    auto dma(n8 channelID, n24 addressA, n8 addressB, n8 data) -> void;
 
     struct Memory {
       Node::Debugger::Memory wram;
@@ -21,7 +21,7 @@ struct CPU : WDC65816, Thread, PPUcounter {
   } debugger;
 
   auto interruptPending() const -> bool override { return status.interruptPending; }
-  auto pio() const -> uint8 { return io.pio; }
+  auto pio() const -> n8 { return io.pio; }
   auto refresh() const -> bool { return status.dramRefresh == 1; }
   auto synchronizing() const -> bool override { return scheduler.synchronizing(); }
 
@@ -45,26 +45,26 @@ struct CPU : WDC65816, Thread, PPUcounter {
 
   //memory.cpp
   auto idle() -> void override;
-  auto read(uint24 address) -> uint8 override;
-  auto write(uint24 address, uint8 data) -> void override;
-  auto wait(uint24 address) const -> uint;
-  auto readDisassembler(uint24 address) -> uint8 override;
+  auto read(n24 address) -> n8 override;
+  auto write(n24 address, n8 data) -> void override;
+  auto wait(n24 address) const -> u32;
+  auto readDisassembler(n24 address) -> n8 override;
 
   //io.cpp
-  auto readRAM(uint24 address, uint8 data) -> uint8;
-  auto readAPU(uint24 address, uint8 data) -> uint8;
-  auto readCPU(uint24 address, uint8 data) -> uint8;
-  auto readDMA(uint24 address, uint8 data) -> uint8;
-  auto writeRAM(uint24 address, uint8 data) -> void;
-  auto writeAPU(uint24 address, uint8 data) -> void;
-  auto writeCPU(uint24 address, uint8 data) -> void;
-  auto writeDMA(uint24 address, uint8 data) -> void;
+  auto readRAM(n24 address, n8 data) -> n8;
+  auto readAPU(n24 address, n8 data) -> n8;
+  auto readCPU(n24 address, n8 data) -> n8;
+  auto readDMA(n24 address, n8 data) -> n8;
+  auto writeRAM(n24 address, n8 data) -> void;
+  auto writeAPU(n24 address, n8 data) -> void;
+  auto writeCPU(n24 address, n8 data) -> void;
+  auto writeDMA(n24 address, n8 data) -> void;
 
   //timing.cpp
-  auto dmaCounter() const -> uint;
-  auto joypadCounter() const -> uint;
+  auto dmaCounter() const -> u32;
+  auto joypadCounter() const -> u32;
 
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto scanline() -> void;
 
   auto aluEdge() -> void;
@@ -74,7 +74,7 @@ struct CPU : WDC65816, Thread, PPUcounter {
   //irq.cpp
   auto nmiPoll() -> void;
   auto irqPoll() -> void;
-  auto nmitimenUpdate(uint8 data) -> void;
+  auto nmitimenUpdate(n8 data) -> void;
   auto rdnmi() -> bool;
   auto timeup() -> bool;
 
@@ -85,28 +85,28 @@ struct CPU : WDC65816, Thread, PPUcounter {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint8 wram[128 * 1024];
+  n8 wram[128_KiB];
   vector<Thread*> coprocessors;
   vector<Thread*> peripherals;
 
 private:
   struct Counter {
-    uint cpu = 0;
-    uint dma = 0;
+    u32 cpu = 0;
+    u32 dma = 0;
   } counter;
 
   struct Status {
-    uint clockCount = 0;
+    u32  clockCount = 0;
 
     bool irqLock = 0;
 
-    uint dramRefreshPosition = 0;
-    uint dramRefresh = 0;  //0 = not refreshed; 1 = refresh active; 2 = refresh inactive
+    u32  dramRefreshPosition = 0;
+    u32  dramRefresh = 0;  //0 = not refreshed; 1 = refresh active; 2 = refresh inactive
 
-    uint hdmaSetupPosition = 0;
+    u32  hdmaSetupPosition = 0;
     bool hdmaSetupTriggered = 0;
 
-    uint hdmaPosition = 0;
+    u32  hdmaPosition = 0;
     bool hdmaTriggered = 0;
 
     boolean nmiValid;
@@ -129,12 +129,12 @@ private:
     bool hdmaPending = 0;
     bool hdmaMode = 0;  //0 = init, 1 = run
 
-    uint autoJoypadCounter = 33;  //state machine; 4224 / 128 = 33 (inactive)
+    u32  autoJoypadCounter = 33;  //state machine; 4224 / 128 = 33 (inactive)
   } status;
 
   struct IO {
     //$2181-$2183
-    uint17 wramAddress;
+    n17 wramAddress;
 
     //$4200
     boolean hirqEnable;
@@ -144,54 +144,54 @@ private:
     boolean autoJoypadPoll;
 
     //$4201
-    uint8 pio = 0xff;
+    n8 pio = 0xff;
 
     //$4202-$4203
-    uint8 wrmpya = 0xff;
-    uint8 wrmpyb = 0xff;
+    n8 wrmpya = 0xff;
+    n8 wrmpyb = 0xff;
 
     //$4204-$4206
-    uint16 wrdiva = 0xffff;
-    uint8 wrdivb = 0xff;
+    n16 wrdiva = 0xffff;
+    n8  wrdivb = 0xff;
 
     //$4207-$420a
-    uint12 htime = 0x1ff + 1 << 2;
-    uint9  vtime = 0x1ff;
+    n12 htime = 0x1ff + 1 << 2;
+    n9  vtime = 0x1ff;
 
     //$420d
-    uint romSpeed = 8;
+    u32 romSpeed = 8;
 
     //$4210
-    uint4 version = 2;  //allowed values: 1, 2
+    n4 version = 2;  //allowed values: 1, 2
 
     //$4214-$4217
-    uint16 rddiv;
-    uint16 rdmpy;
+    n16 rddiv;
+    n16 rdmpy;
 
     //$4218-$421f
-    uint16 joy1;
-    uint16 joy2;
-    uint16 joy3;
-    uint16 joy4;
+    n16 joy1;
+    n16 joy2;
+    n16 joy3;
+    n16 joy4;
   } io;
 
   struct ALU {
-    uint mpyctr = 0;
-    uint divctr = 0;
-    uint shift = 0;
+    u32 mpyctr = 0;
+    u32 divctr = 0;
+    u32 shift = 0;
   } alu;
 
   struct Channel {
     //dma.cpp
-    auto step(uint clocks) -> void;
+    auto step(u32 clocks) -> void;
     auto edge() -> void;
 
-    auto validA(uint24 address) -> bool;
-    auto readA(uint24 address) -> uint8;
-    auto readB(uint8 address, bool valid) -> uint8;
-    auto writeA(uint24 address, uint8 data) -> void;
-    auto writeB(uint8 address, uint8 data, bool valid) -> void;
-    auto transfer(uint24 address, uint2 index) -> void;
+    auto validA(n24 address) -> bool;
+    auto readA(n24 address) -> n8;
+    auto readB(n8 address, bool valid) -> n8;
+    auto writeA(n24 address, n8 data) -> void;
+    auto writeB(n8 address, n8 data, bool valid) -> void;
+    auto transfer(n24 address, n2 index) -> void;
 
     auto dmaRun() -> void;
     auto hdmaActive() -> bool;
@@ -203,52 +203,52 @@ private:
     auto hdmaAdvance() -> void;
 
     //$420b
-    uint1 dmaEnable;
+    n1 dmaEnable;
 
     //$420c
-    uint1 hdmaEnable;
+    n1 hdmaEnable;
 
     //$43x0
-    uint3 transferMode = 7;
-    uint1 fixedTransfer = 1;
-    uint1 reverseTransfer = 1;
-    uint1 unused = 1;
-    uint1 indirect = 1;
-    uint1 direction = 1;
+    n3 transferMode = 7;
+    n1 fixedTransfer = 1;
+    n1 reverseTransfer = 1;
+    n1 unused = 1;
+    n1 indirect = 1;
+    n1 direction = 1;
 
     //$43x1
-    uint8 targetAddress = 0xff;
+    n8 targetAddress = 0xff;
 
     //$43x2-$43x3
-    uint16 sourceAddress = 0xffff;
+    n16 sourceAddress = 0xffff;
 
     //$43x4
-    uint8 sourceBank = 0xff;
+    n8 sourceBank = 0xff;
 
     //$43x5-$43x6
     union {
-      uint16 transferSize;
-      uint16 indirectAddress;
+      n16 transferSize;
+      n16 indirectAddress;
     };
 
     //$43x7
-    uint8 indirectBank = 0xff;
+    n8 indirectBank = 0xff;
 
     //$43x8-$43x9
-    uint16 hdmaAddress = 0xffff;
+    n16 hdmaAddress = 0xffff;
 
     //$43xa
-    uint8 lineCounter = 0xff;
+    n8 lineCounter = 0xff;
 
     //$43xb/$43xf
-    uint8 unknown = 0xff;
+    n8 unknown = 0xff;
 
     //internal state
-    uint1 hdmaCompleted;
-    uint1 hdmaDoTransfer;
+    n1 hdmaCompleted;
+    n1 hdmaDoTransfer;
 
     //unserialized:
-    uint8 id;
+    n8 id;
     maybe<Channel&> next;
 
     Channel() : transferSize(0xffff) {}

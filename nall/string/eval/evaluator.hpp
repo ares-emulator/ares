@@ -36,7 +36,7 @@ inline auto evaluateExpression(Node* node) -> string {
   throw "invalid operator";
 }
 
-inline auto evaluateInteger(Node* node) -> int64_t {
+inline auto evaluateInteger(Node* node) -> s64 {
   if(node->type == Node::Type::Literal) return toInteger(node->literal);
 
   #define p(n) evaluateInteger(node->link[n])
@@ -85,7 +85,7 @@ inline auto evaluateInteger(Node* node) -> int64_t {
   throw "invalid operator";
 }
 
-inline auto integer(const string& expression) -> maybe<int64_t> {
+inline auto integer(const string& expression) -> maybe<s64> {
   try {
     auto tree = new Node;
     const char* p = expression;
@@ -98,7 +98,7 @@ inline auto integer(const string& expression) -> maybe<int64_t> {
   }
 }
 
-inline auto evaluateReal(Node* node) -> long double {
+inline auto evaluateReal(Node* node) -> f64 {
   if(node->type == Node::Type::Literal) return toReal(node->literal);
 
   #define p(n) evaluateReal(node->link[n])
@@ -130,7 +130,7 @@ inline auto evaluateReal(Node* node) -> long double {
   throw "invalid operator";
 }
 
-inline auto real(const string& expression) -> maybe<long double> {
+inline auto real(const string& expression) -> maybe<f64> {
   try {
     auto tree = new Node;
     const char* p = expression;

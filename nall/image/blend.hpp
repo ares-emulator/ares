@@ -2,27 +2,27 @@
 
 namespace nall {
 
-inline auto image::impose(blend mode, uint targetX, uint targetY, image source, uint sourceX, uint sourceY, uint sourceWidth, uint sourceHeight) -> void {
+inline auto image::impose(blend mode, u32 targetX, u32 targetY, image source, u32 sourceX, u32 sourceY, u32 sourceWidth, u32 sourceHeight) -> void {
   source.transform(_endian, _depth, _alpha.mask(), _red.mask(), _green.mask(), _blue.mask());
 
-  for(uint y = 0; y < sourceHeight; y++) {
-    const uint8_t* sp = source._data + source.pitch() * (sourceY + y) + source.stride() * sourceX;
-    uint8_t* dp = _data + pitch() * (targetY + y) + stride() * targetX;
-    for(uint x = 0; x < sourceWidth; x++) {
-      uint64_t sourceColor = source.read(sp);
-      uint64_t targetColor = read(dp);
+  for(u32 y = 0; y < sourceHeight; y++) {
+    const u8* sp = source._data + source.pitch() * (sourceY + y) + source.stride() * sourceX;
+    u8* dp = _data + pitch() * (targetY + y) + stride() * targetX;
+    for(u32 x = 0; x < sourceWidth; x++) {
+      u64 sourceColor = source.read(sp);
+      u64 targetColor = read(dp);
 
-      int64_t sa = (sourceColor & _alpha.mask()) >> _alpha.shift();
-      int64_t sr = (sourceColor & _red.mask()  ) >> _red.shift();
-      int64_t sg = (sourceColor & _green.mask()) >> _green.shift();
-      int64_t sb = (sourceColor & _blue.mask() ) >> _blue.shift();
+      s64 sa = (sourceColor & _alpha.mask()) >> _alpha.shift();
+      s64 sr = (sourceColor & _red.mask()  ) >> _red.shift();
+      s64 sg = (sourceColor & _green.mask()) >> _green.shift();
+      s64 sb = (sourceColor & _blue.mask() ) >> _blue.shift();
 
-      int64_t da = (targetColor & _alpha.mask()) >> _alpha.shift();
-      int64_t dr = (targetColor & _red.mask()  ) >> _red.shift();
-      int64_t dg = (targetColor & _green.mask()) >> _green.shift();
-      int64_t db = (targetColor & _blue.mask() ) >> _blue.shift();
+      s64 da = (targetColor & _alpha.mask()) >> _alpha.shift();
+      s64 dr = (targetColor & _red.mask()  ) >> _red.shift();
+      s64 dg = (targetColor & _green.mask()) >> _green.shift();
+      s64 db = (targetColor & _blue.mask() ) >> _blue.shift();
 
-      uint64_t a, r, g, b;
+      u64 a, r, g, b;
 
       switch(mode) {
       case blend::add:

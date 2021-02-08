@@ -2,7 +2,16 @@
 
 namespace ares::MegaDrive {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[Sega] Mega Drive (NTSC-J)",
+    "[Sega] Genesis (NTSC-U)",
+    "[Sega] Mega Drive (PAL)",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -36,8 +45,26 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
+  if(name.find("Mega Drive")) {
+    information.name = "Mega Drive";
+  }
+  if(name.find("Genesis")) {
+    information.name = "Mega Drive";
+  }
+  if(name.find("NTSC-J")) {
+    information.region = Region::NTSCJ;
+    information.frequency = Constants::Colorburst::NTSC * 15.0;
+  }
+  if(name.find("NTSC-U")) {
+    information.region = Region::NTSCU;
+    information.frequency = Constants::Colorburst::NTSC * 15.0;
+  }
+  if(name.find("PAL")) {
+    information.region = Region::PAL;
+    information.frequency = Constants::Colorburst::PAL * 12.0;
+  }
 
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});
@@ -48,17 +75,6 @@ auto System::load(Node::System& root, string name) -> bool {
   root = node;
 
   tmss = node->append<Node::Setting::Boolean>("TMSS", false);
-
-  regionNode = node->append<Node::Setting::String>("Region", "NTSC-J → NTSC-U → PAL");
-  regionNode->setAllowedValues({
-    "NTSC-J → NTSC-U → PAL",
-    "NTSC-U → NTSC-J → PAL",
-    "PAL → NTSC-J → NTSC-U",
-    "PAL → NTSC-U → NTSC-J",
-    "NTSC-J",
-    "NTSC-U",
-    "PAL"
-  });
 
   scheduler.reset();
   controls.load(node);
@@ -101,28 +117,6 @@ auto System::save() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
-  auto setRegion = [&](string region) {
-    if(region == "NTSC-J") {
-      information.region = Region::NTSCJ;
-      information.frequency = Constants::Colorburst::NTSC * 15.0;
-    }
-    if(region == "NTSC-U") {
-      information.region = Region::NTSCU;
-      information.frequency = Constants::Colorburst::NTSC * 15.0;
-    }
-    if(region == "PAL") {
-      information.region = Region::PAL;
-      information.frequency = Constants::Colorburst::PAL * 12.0;
-    }
-  };
-  auto regionsHave = regionNode->latch().split("→").strip();
-  auto regionsWant = cartridge.bootable() ? cartridge.regions() : expansion.regions();
-  setRegion(regionsHave.first());
-  for(auto& have : reverse(regionsHave)) {
-    for(auto& want : reverse(regionsWant)) {
-      if(have == want) setRegion(have);
-    }
-  }
   information.megaCD = (bool)expansion.node;
 
   random.entropy(Random::Entropy::Low);

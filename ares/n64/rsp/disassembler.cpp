@@ -15,8 +15,8 @@ auto RSP::Disassembler::EXECUTE() -> vector<string> {
   auto rsValue = [&] { return ipuRegisterValue(instruction >> 21 & 31); };
   auto imm16i  = [&] { return immediate(s16(instruction)); };
   auto imm16u  = [&] { return immediate(u16(instruction), 16L); };
-  auto jump    = [&] { return immediate(uint12(address + 4 & 0xf000'0000 | (instruction & 0x03ff'ffff) << 2)); };
-  auto branch  = [&] { return immediate(uint12(address + 4 + (s16(instruction) << 2))); };
+  auto jump    = [&] { return immediate(n12(address + 4 & 0xf000'0000 | (instruction & 0x03ff'ffff) << 2)); };
+  auto branch  = [&] { return immediate(n12(address + 4 + (s16(instruction) << 2))); };
   auto offset  = [&] { return ipuRegisterIndex(instruction >> 21 & 31, s16(instruction)); };
 
   auto ADDI = [&](string_view add, string_view sub, string_view mov) -> vector<string> {
@@ -234,7 +234,7 @@ auto RSP::Disassembler::SPECIAL() -> vector<string> {
 
 auto RSP::Disassembler::REGIMM() -> vector<string> {
   auto rsValue = [&] { return ipuRegisterValue(instruction >> 21 & 31); };
-  auto branch  = [&] { return immediate(uint12(address + 4 + (s16(instruction) << 2))); };
+  auto branch  = [&] { return immediate(n12(address + 4 + (s16(instruction) << 2))); };
 
   auto BRANCH = [&](string_view name) -> vector<string> {
     return {name, rsValue(), branch()};
@@ -295,7 +295,7 @@ auto RSP::Disassembler::SCC() -> vector<string> {
 auto RSP::Disassembler::LWC2() -> vector<string> {
   auto vtName  = [&] { return vpuRegisterName  (instruction >> 16 & 31, instruction >> 7 & 15); };
   auto vtValue = [&] { return vpuRegisterValue (instruction >> 16 & 31, instruction >> 7 & 15); };
-  auto offset  = [&](uint multiplier) { return ipuRegisterIndex(instruction >> 21 & 31, int7(instruction) * multiplier); };
+  auto offset  = [&](u32 multiplier) { return ipuRegisterIndex(instruction >> 21 & 31, i7(instruction) * multiplier); };
 
   switch(instruction >> 11 & 31) {
   case 0x00: return {"lbv", vtName(), offset( 1)};
@@ -317,7 +317,7 @@ auto RSP::Disassembler::LWC2() -> vector<string> {
 auto RSP::Disassembler::SWC2() -> vector<string> {
   auto vtName  = [&] { return vpuRegisterName  (instruction >> 16 & 31); };
   auto vtValue = [&] { return vpuRegisterValue (instruction >> 16 & 31); };
-  auto offset  = [&](uint multiplier) { return ipuRegisterIndex(instruction >> 21 & 31, int7(instruction) * multiplier); };
+  auto offset  = [&](u32 multiplier) { return ipuRegisterIndex(instruction >> 21 & 31, i7(instruction) * multiplier); };
 
   switch(instruction >> 11 & 31) {
   case 0x00: return {"sbv", vtValue(), offset( 1)};
@@ -451,12 +451,12 @@ auto RSP::Disassembler::VU() -> vector<string> {
   return {};
 }
 
-auto RSP::Disassembler::immediate(s64 value, uint bits) const -> string {
+auto RSP::Disassembler::immediate(s64 value, u32 bits) const -> string {
   if(value < 0) return {"-$", hex(-value, bits >> 2)};
   return {"$", hex(value, bits >> 2)};
 };
 
-auto RSP::Disassembler::ipuRegisterName(uint index) const -> string {
+auto RSP::Disassembler::ipuRegisterName(u32 index) const -> string {
   static const string registers[32] = {
      "0", "at", "v0", "v1", "a0", "a1", "a2", "a3",
     "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
@@ -466,12 +466,12 @@ auto RSP::Disassembler::ipuRegisterName(uint index) const -> string {
   return registers[index];
 }
 
-auto RSP::Disassembler::ipuRegisterValue(uint index) const -> string {
+auto RSP::Disassembler::ipuRegisterValue(u32 index) const -> string {
   if(index && showValues) return {ipuRegisterName(index), hint("{$", hex(self.ipu.r[index].u32, 8L), "}")};
   return ipuRegisterName(index);
 }
 
-auto RSP::Disassembler::ipuRegisterIndex(uint index, s16 offset) const -> string {
+auto RSP::Disassembler::ipuRegisterIndex(u32 index, s16 offset) const -> string {
   string adjust;
   if(offset >= 0) adjust = {"+$", hex( offset)};
   if(offset <  0) adjust = {"-$", hex(-offset)};
@@ -479,7 +479,7 @@ auto RSP::Disassembler::ipuRegisterIndex(uint index, s16 offset) const -> string
   return {ipuRegisterName(index), adjust};
 }
 
-auto RSP::Disassembler::sccRegisterName(uint index) const -> string {
+auto RSP::Disassembler::sccRegisterName(u32 index) const -> string {
   static const string registers[32] = {
     "SP_PBUS_ADDRESS", "SP_DRAM_ADDRESS", "SP_READ_LENGTH", "SP_WRITE_LENGTH",
     "SP_STATUS",       "SP_DMA_FULL",     "SP_DMA_BUSY",    "SP_SEMAPHORE",
@@ -489,7 +489,7 @@ auto RSP::Disassembler::sccRegisterName(uint index) const -> string {
   return registers[index & 15];
 }
 
-auto RSP::Disassembler::sccRegisterValue(uint index) const -> string {
+auto RSP::Disassembler::sccRegisterValue(u32 index) const -> string {
   u32 value = 0;
   if(index <= 6) value = rsp.readWord((index & 7) << 2);
   if(index == 7) value = self.status.semaphore;  //rsp.readSCC(7) has side-effects
@@ -498,27 +498,27 @@ auto RSP::Disassembler::sccRegisterValue(uint index) const -> string {
   return sccRegisterName(index);
 }
 
-auto RSP::Disassembler::vpuRegisterName(uint index, uint element) const -> string {
+auto RSP::Disassembler::vpuRegisterName(u32 index, u32 element) const -> string {
   if(element) return {"v", index, "[", element, "]"};
   return {"v", index};
 }
 
-auto RSP::Disassembler::vpuRegisterValue(uint index, uint element) const -> string {
+auto RSP::Disassembler::vpuRegisterValue(u32 index, u32 element) const -> string {
   if(showValues) {
     vector<string> elements;
-    for(uint index : range(8)) elements.append(hex(self.vpu.r[index].element(index), 4L));
+    for(u32 index : range(8)) elements.append(hex(self.vpu.r[index].element(index), 4L));
     return {vpuRegisterName(index, element), hint("{$", elements.merge("|"), "}")};
   }
   return vpuRegisterName(index, element);
 }
 
-auto RSP::Disassembler::ccrRegisterName(uint index) const -> string {
+auto RSP::Disassembler::ccrRegisterName(u32 index) const -> string {
   static const string registers[32] = {"vco", "vcc", "vce"};
   if(index < 3) return registers[index];
   return {"vc", index};
 }
 
-auto RSP::Disassembler::ccrRegisterValue(uint index) const -> string {
+auto RSP::Disassembler::ccrRegisterValue(u32 index) const -> string {
   if(showValues) return {ccrRegisterName(index)};  //todo
   return ccrRegisterName(index);
 }

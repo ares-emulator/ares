@@ -15,7 +15,7 @@ Gamepad::Gamepad(Node::Port parent) {
   start  = node->append<Node::Input::Button>("Start");
 }
 
-auto Gamepad::data() -> uint2 {
+auto Gamepad::data() -> n2 {
   if(latched == 1) {
     platform->input(b);
     return b->value();
@@ -46,7 +46,7 @@ auto Gamepad::data() -> uint2 {
   return 1;
 }
 
-auto Gamepad::latch(bool data) -> void {
+auto Gamepad::latch(n1 data) -> void {
   if(latched == data) return;
   latched = data;
   counter = 0;

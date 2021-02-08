@@ -48,7 +48,7 @@ struct emitter {
   array_span<u8> span, origin;
 } emit;
 
-auto bind(array_span<uint8_t> span) {
+auto bind(array_span<u8> span) {
   emit.span = span;
   emit.origin = span;
 }

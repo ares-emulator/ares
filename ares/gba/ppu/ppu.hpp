@@ -4,8 +4,8 @@ struct PPU : Thread, IO {
   Node::Setting::Boolean colorEmulation;
   Node::Setting::Boolean interframeBlending;
   Node::Setting::String rotation;
-  Memory::Writable<uint8> vram;  //96KB
-  Memory::Writable<uint16> pram;
+  Memory::Writable<n8 > vram;  //96KB
+  Memory::Writable<n16> pram;
 
   struct Debugger {
     //debugger.cpp
@@ -23,7 +23,7 @@ struct PPU : Thread, IO {
 
   auto blank() -> bool;
 
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto main() -> void;
 
   auto frame() -> void;
@@ -31,23 +31,23 @@ struct PPU : Thread, IO {
   auto power() -> void;
 
   //io.cpp
-  auto readIO(uint32 addr) -> uint8;
-  auto writeIO(uint32 addr, uint8 byte) -> void;
+  auto readIO(n32 address) -> n8;
+  auto writeIO(n32 address, n8 byte) -> void;
 
   //memory.cpp
-  auto readVRAM(uint mode, uint32 addr) -> uint32;
-  auto writeVRAM(uint mode, uint32 addr, uint32 word) -> void;
+  auto readVRAM(u32 mode, n32 address) -> n32;
+  auto writeVRAM(u32 mode, n32 address, n32 word) -> void;
 
-  auto readPRAM(uint mode, uint32 addr) -> uint32;
-  auto writePRAM(uint mode, uint32 addr, uint32 word) -> void;
+  auto readPRAM(u32 mode, n32 address) -> n32;
+  auto writePRAM(u32 mode, n32 address, n32 word) -> void;
 
-  auto readOAM(uint mode, uint32 addr) -> uint32;
-  auto writeOAM(uint mode, uint32 addr, uint32 word) -> void;
+  auto readOAM(u32 mode, n32 address) -> n32;
+  auto writeOAM(u32 mode, n32 address, n32 word) -> void;
 
-  auto readObjectVRAM(uint addr) const -> uint8;
+  auto readObjectVRAM(u32 address) const -> n8;
 
   //color.cpp
-  auto color(uint32) -> uint64;
+  auto color(n32) -> n64;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -55,166 +55,166 @@ struct PPU : Thread, IO {
 private:
   //note: I/O register order is {BG0-BG3, OBJ, SFX}
   //however; layer ordering is {OBJ, BG0-BG3, SFX}
-  enum : uint { OBJ = 0, BG0 = 1, BG1 = 2, BG2 = 3, BG3 = 4, SFX = 5 };
-  enum : uint { IN0 = 0, IN1 = 1, IN2 = 2, OUT = 3 };
+  enum : u32 { OBJ = 0, BG0 = 1, BG1 = 2, BG2 = 3, BG3 = 4, SFX = 5 };
+  enum : u32 { IN0 = 0, IN1 = 1, IN2 = 2, OUT = 3 };
 
   struct IO {
-     uint1 gameBoyColorMode;
-     uint1 forceBlank;
-     uint1 greenSwap;
+    n1  gameBoyColorMode;
+    n1  forceBlank;
+    n1  greenSwap;
 
-     uint1 vblank;
-     uint1 hblank;
-     uint1 vcoincidence;
-     uint1 irqvblank;
-     uint1 irqhblank;
-     uint1 irqvcoincidence;
-     uint8 vcompare;
+    n1  vblank;
+    n1  hblank;
+    n1  vcoincidence;
+    n1  irqvblank;
+    n1  irqhblank;
+    n1  irqvcoincidence;
+    n8  vcompare;
 
-    uint16 vcounter;
+    n16 vcounter;
   } io;
 
   struct Pixel {
-     uint1 enable;
-     uint2 priority;
-    uint15 color;
+    n1  enable;
+    n2  priority;
+    n15 color;
 
     //OBJ only
-     uint1 translucent;
-     uint1 mosaic;
-     uint1 window;  //IN2
+    n1  translucent;
+    n1  mosaic;
+    n1  window;  //IN2
   };
 
   struct Background {
     //background.cpp
-    auto scanline(uint y) -> void;
-    auto run(uint x, uint y) -> void;
-    auto linear(uint x, uint y) -> void;
-    auto affine(uint x, uint y) -> void;
-    auto bitmap(uint x, uint y) -> void;
-    auto power(uint id) -> void;
+    auto scanline(u32 y) -> void;
+    auto run(u32 x, u32 y) -> void;
+    auto linear(u32 x, u32 y) -> void;
+    auto affine(u32 x, u32 y) -> void;
+    auto bitmap(u32 x, u32 y) -> void;
+    auto power(u32 id) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint id;  //BG0, BG1, BG2, BG3
+    u32 id;  //BG0, BG1, BG2, BG3
 
     struct IO {
-      static uint3 mode;
-      static uint1 frame;
-      static uint5 mosaicWidth;
-      static uint5 mosaicHeight;
+      static n3 mode;
+      static n1 frame;
+      static n5 mosaicWidth;
+      static n5 mosaicHeight;
 
-      uint1 enable;
+      n1 enable;
 
-      uint2 priority;
-      uint2 characterBase;
-      uint2 unused;
-      uint1 mosaic;
-      uint1 colorMode;
-      uint5 screenBase;
-      uint1 affineWrap;  //BG2, BG3 only
-      uint2 screenSize;
+      n2 priority;
+      n2 characterBase;
+      n2 unused;
+      n1 mosaic;
+      n1 colorMode;
+      n5 screenBase;
+      n1 affineWrap;  //BG2, BG3 only
+      n2 screenSize;
 
-      uint9 hoffset;
-      uint9 voffset;
+      n9 hoffset;
+      n9 voffset;
 
       //BG2, BG3 only
-      int16 pa;
-      int16 pb;
-      int16 pc;
-      int16 pd;
-      int28 x;
-      int28 y;
+      i16 pa;
+      i16 pb;
+      i16 pc;
+      i16 pd;
+      i28 x;
+      i28 y;
 
       //internal
-      int28 lx;
-      int28 ly;
+      i28 lx;
+      i28 ly;
     } io;
 
     struct Latch {
-      uint10 character;
-       uint1 hflip;
-       uint1 vflip;
-       uint4 palette;
+      n10 character;
+      n1 hflip;
+      n1 vflip;
+      n4 palette;
     } latch;
 
     Pixel output;
     Pixel mosaic;
-    uint mosaicOffset;
+    u32 mosaicOffset;
 
-    uint hmosaic;
-    uint vmosaic;
+    u32 hmosaic;
+    u32 vmosaic;
 
-    int28 fx;
-    int28 fy;
+    i28 fx;
+    i28 fy;
   } bg0, bg1, bg2, bg3;
 
   struct Objects {
     //object.cpp
-    auto scanline(uint y) -> void;
-    auto run(uint x, uint y) -> void;
+    auto scanline(u32 y) -> void;
+    auto run(u32 x, u32 y) -> void;
     auto power() -> void;
 
     //object.cpp
     auto serialize(serializer&) -> void;
 
     struct IO {
-      uint1 enable;
+      n1 enable;
 
-      uint1 hblank;   //1 = allow access to OAM during Hblank
-      uint1 mapping;  //0 = two-dimensional, 1 = one-dimensional
-      uint5 mosaicWidth;
-      uint5 mosaicHeight;
+      n1 hblank;   //1 = allow access to OAM during Hblank
+      n1 mapping;  //0 = two-dimensional, 1 = one-dimensional
+      n5 mosaicWidth;
+      n5 mosaicHeight;
     } io;
 
     Pixel buffer[240];
     Pixel output;
     Pixel mosaic;
-    uint mosaicOffset;
+    u32 mosaicOffset;
   } objects;
 
   struct Window {
     //window.cpp
-    auto run(uint x, uint y) -> void;
-    auto power(uint id) -> void;
+    auto run(u32 x, u32 y) -> void;
+    auto power(u32 id) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint id;  //IN0, IN1, IN2, OUT
+    u32 id;  //IN0, IN1, IN2, OUT
 
     struct IO {
-      uint1 enable;
-      uint1 active[6];
+      n1 enable;
+      n1 active[6];
 
       //IN0, IN1 only
-      uint8 x1;
-      uint8 x2;
-      uint8 y1;
-      uint8 y2;
+      n8 x1;
+      n8 x2;
+      n8 y1;
+      n8 y2;
     } io;
 
-    uint1 output;  //IN0, IN1, IN2 only
+    n1 output;  //IN0, IN1, IN2 only
   } window0, window1, window2, window3;
 
   struct DAC {
     //dac.cpp
-    auto run(uint x, uint y) -> uint15;
-    auto blend(uint15 above, uint eva, uint15 below, uint evb) -> uint15;
+    auto run(u32 x, u32 y) -> n15;
+    auto blend(n15 above, u32 eva, n15 below, u32 evb) -> n15;
     auto power() -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
     struct IO {
-      uint2 blendMode;
-      uint1 blendAbove[6];
-      uint1 blendBelow[6];
+      n2 blendMode;
+      n1 blendAbove[6];
+      n1 blendBelow[6];
 
-      uint5 blendEVA;
-      uint5 blendEVB;
-      uint5 blendEVY;
+      n5 blendEVA;
+      n5 blendEVB;
+      n5 blendEVY;
     } io;
   } dac;
 
@@ -222,37 +222,37 @@ private:
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-     uint8 y;
-     uint1 affine;
-     uint1 affineSize;
-     uint2 mode;
-     uint1 mosaic;
-     uint1 colors;  //0 = 16, 1 = 256
-     uint2 shape;   //0 = square, 1 = horizontal, 2 = vertical
+    n8  y;
+    n1  affine;
+    n1  affineSize;
+    n2  mode;
+    n1  mosaic;
+    n1  colors;  //0 = 16, 1 = 256
+    n2  shape;   //0 = square, 1 = horizontal, 2 = vertical
 
-     uint9 x;
-     uint5 affineParam;
-     uint1 hflip;
-     uint1 vflip;
-     uint2 size;
+    n9  x;
+    n5  affineParam;
+    n1  hflip;
+    n1  vflip;
+    n2  size;
 
-    uint10 character;
-     uint2 priority;
-     uint4 palette;
+    n10 character;
+    n2  priority;
+    n4  palette;
 
     //ancillary data
-    uint32 width;
-    uint32 height;
+    n32 width;
+    n32 height;
   } object[128];
 
   struct ObjectParam {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    int16 pa;
-    int16 pb;
-    int16 pc;
-    int16 pd;
+    i16 pa;
+    i16 pb;
+    i16 pc;
+    i16 pd;
   } objectParam[32];
 };
 

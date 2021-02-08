@@ -9,8 +9,8 @@ auto EEPROM::power() -> void {
   r = {};
 }
 
-auto EEPROM::read(uint port) -> uint8 {
-  uint8 data;
+auto EEPROM::read(u32 port) -> n8 {
+  n8 data;
   if(!size) return data = 0xff;
 
   if(port == DataLo) return r.data.byte(0);
@@ -34,7 +34,7 @@ auto EEPROM::read(uint port) -> uint8 {
   return data;
 }
 
-auto EEPROM::write(uint port, uint8 data) -> void {
+auto EEPROM::write(u32 port, n8 data) -> void {
   if(!size) return;
 
   if(port == DataLo) {
@@ -73,17 +73,17 @@ auto EEPROM::write(uint port, uint8 data) -> void {
     }
 
     //start bit + command bits + address bits
-    for(uint index : reverse(range(1 + 2 + input.addressLength))) input.write(r.address.bit(index));
+    for(u32 index : reverse(range(1 + 2 + input.addressLength))) input.write(r.address.bit(index));
 
     if(r.readPending) {
       edge();
       output.read();  //padding bit
-      for(uint index : reverse(range(input.dataLength))) r.data.bit(index) = output.read();
+      for(u32 index : reverse(range(input.dataLength))) r.data.bit(index) = output.read();
       r.readPending = 0;
     }
 
     if(r.writePending) {
-      for(uint index : reverse(range(input.dataLength))) input.write(r.data.bit(index));
+      for(u32 index : reverse(range(input.dataLength))) input.write(r.data.bit(index));
       edge();
       r.writePending = 0;
     }

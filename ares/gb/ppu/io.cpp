@@ -1,8 +1,8 @@
-auto PPU::vramAddress(uint13 address) const -> uint16 {
+auto PPU::vramAddress(n13 address) const -> n16 {
   return status.vramBank << 13 | address;
 }
 
-auto PPU::readIO(uint cycle, uint16 address, uint8 data) -> uint8 {
+auto PPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
   if(address >= 0x8000 && address <= 0x9fff && cycle == 2) {
     if(!canAccessVRAM()) return data;
     return vram[vramAddress(address)];
@@ -10,7 +10,7 @@ auto PPU::readIO(uint cycle, uint16 address, uint8 data) -> uint8 {
 
   if(address >= 0xfe00 && address <= 0xfe9f && cycle == 2) {
     if(!canAccessOAM()) return data;
-    return oam[(uint8)address];
+    return oam[(n8)address];
   }
 
   if(address < 0xff40 || address > 0xff7f) return data;
@@ -123,7 +123,7 @@ auto PPU::readIO(uint cycle, uint16 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto PPU::writeIO(uint cycle, uint16 address, uint8 data) -> void {
+auto PPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
   if(address >= 0x8000 && address <= 0x9fff && cycle == 2) {
     vram[vramAddress(address)] = data;
     return;
@@ -131,7 +131,7 @@ auto PPU::writeIO(uint cycle, uint16 address, uint8 data) -> void {
 
   if(address >= 0xfe00 && address <= 0xfe9f && cycle == 2) {
     if(status.dmaActive && status.dmaClock >= 8) return;
-    oam[(uint8)address] = data;
+    oam[(n8)address] = data;
     return;
   }
 

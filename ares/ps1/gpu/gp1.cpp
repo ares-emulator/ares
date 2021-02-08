@@ -1,6 +1,6 @@
 //GPUSTAT
 auto GPU::readGP1() -> u32 {
-  uint32 data;
+  n32 data;
   data.bit( 0, 3) = io.texturePageBaseX;
   data.bit( 4)    = io.texturePageBaseY;
   data.bit( 5, 6) = io.semiTransparency;
@@ -32,8 +32,8 @@ auto GPU::readGP1() -> u32 {
 auto GPU::writeGP1(u32 value) -> void {
 //thread.fifo.await_empty();
 
-   uint8 command = value >> 24;
-  uint24 data    = value >>  0;
+  n8  command = value >> 24;
+  n24 data    = value >>  0;
 
 //print("* GP1(", hex(command, 2L), ") = ", hex(data, 6L), "\n");
 

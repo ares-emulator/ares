@@ -40,7 +40,9 @@ struct VideoWGL : VideoDriver, OpenGL {
   }
 
   auto setBlocking(bool blocking) -> bool override {
+    acquireContext();
     if(wglSwapInterval) wglSwapInterval(blocking);
+    releaseContext();
     return true;
   }
 
@@ -49,20 +51,10 @@ struct VideoWGL : VideoDriver, OpenGL {
   }
 
   auto setShader(string shader) -> bool override {
+    acquireContext();
     OpenGL::setShader(self.shader);
+    releaseContext();
     return true;
-  }
-
-  auto acquireContext() -> bool override {
-    if(!_ready) return true;
-    if(wglMakeCurrent(_display, _wglContext)) return true;
-    return initialize();
-  }
-
-  auto releaseContext() -> bool override {
-    if(!_ready) return true;
-    if(wglMakeCurrent(_display, nullptr)) return true;
-    return terminate(), true;
   }
 
   auto focused() -> bool override {
@@ -72,8 +64,10 @@ struct VideoWGL : VideoDriver, OpenGL {
   }
 
   auto clear() -> void override {
+    acquireContext();
     OpenGL::clear();
     SwapBuffers(_display);
+    releaseContext();
   }
 
   auto size(u32& width, u32& height) -> void override {
@@ -89,14 +83,18 @@ struct VideoWGL : VideoDriver, OpenGL {
   }
 
   auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
+    acquireContext();
     OpenGL::size(width, height);
-    return OpenGL::lock(data, pitch);
+    bool result = OpenGL::lock(data, pitch);
+    releaseContext();
+    return result;
   }
 
   auto release() -> void override {
   }
 
   auto output(u32 width, u32 height) -> void override {
+    acquireContext();
     u32 windowWidth, windowHeight;
     size(windowWidth, windowHeight);
 
@@ -110,6 +108,7 @@ struct VideoWGL : VideoDriver, OpenGL {
 
     SwapBuffers(_display);
     if(self.flush) glFinish();
+    releaseContext();
   }
 
 private:
@@ -130,6 +129,16 @@ private:
 
   auto destruct() -> void {
     terminate();
+  }
+
+  auto acquireContext() -> void {
+    if(!_wglContext) return;
+    while(!wglMakeCurrent(_display, _wglContext)) spinloop();
+  }
+
+  auto releaseContext() -> void {
+    if(!_wglContext) return;
+    while(!wglMakeCurrent(_display, nullptr)) spinloop();
   }
 
   auto initialize() -> bool {
@@ -181,10 +190,13 @@ private:
     }
 
     if(wglSwapInterval) wglSwapInterval(self.blocking);
-    return _ready = OpenGL::initialize(self.shader);
+    _ready = OpenGL::initialize(self.shader);
+    releaseContext();
+    return _ready;
   }
 
   auto terminate() -> void {
+    acquireContext();
     _ready = false;
     OpenGL::terminate();
 

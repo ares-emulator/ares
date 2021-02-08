@@ -11,18 +11,18 @@ struct ControllerPort {
   auto connect(Node::Peripheral) -> void;
   auto disconnect() -> void;
 
-  auto readControl() -> uint8 { return control; }
-  auto writeControl(uint8 data) -> void { control = data; }
+  auto readControl() -> n8 { return control; }
+  auto writeControl(n8 data) -> void { control = data; }
 
-  auto readData() -> uint8 { if(device) return device->readData(); return 0xff; }
-  auto writeData(uint8 data) -> void { if(device) return device->writeData(data); }
+  auto readData() -> n8 { if(device) return device->readData(); return 0xff; }
+  auto writeData(n8 data) -> void { if(device) return device->writeData(data); }
 
   auto power() -> void;
   auto serialize(serializer&) -> void;
 
 protected:
   const string name;
-  uint8 control;
+  n8 control;
   friend class Controller;
 };
 

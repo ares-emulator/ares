@@ -1,19 +1,19 @@
-auto SPC700::disassembleInstruction(uint16 addr, uint1 p) -> string {
-  auto read = [&](uint16 addr) -> uint8 {
+auto SPC700::disassembleInstruction(n16 addr, n1 p) -> string {
+  auto read = [&](n16 addr) -> n8 {
     return readDisassembler(addr);
   };
 
-  auto relative = [&](uint length, int8 offset) -> uint16 {
-    uint16 pc = addr + length;
+  auto relative = [&](u32 length, i8 offset) -> n16 {
+    n16 pc = addr + length;
     return pc + offset;
   };
 
   auto a = [&] { return hex((read(addr + 1) << 0) + (read(addr + 2) << 8), 4L); };
-  auto b = [&](uint n) { return hex(read(addr + 1 + n), 2L); };
-  auto rel = [&](uint r, uint n = 0) { return hex(addr + r + (int8)read(addr + 1 + n), 4L); };
-  auto dp = [&](uint n) { return hex((p << 8) + read(addr + 1 + n), 3L); };
+  auto b = [&](u32 n) { return hex(read(addr + 1 + n), 2L); };
+  auto rel = [&](u32 r, u32 n = 0) { return hex(addr + r + (i8)read(addr + 1 + n), 4L); };
+  auto dp = [&](u32 n) { return hex((p << 8) + read(addr + 1 + n), 3L); };
   auto ab = [&] {
-    uint n = (read(addr + 1) << 0) + (read(addr + 2) << 8);
+    u32 n = (read(addr + 1) << 0) + (read(addr + 2) << 8);
     return string{hex(n & 0x1fff, 4L), ":", hex(n >> 13, 1L)};
   };
 

@@ -57,8 +57,8 @@ auto pCanvas::update() -> void {
 }
 
 auto pCanvas::_rasterize() -> void {
-  int width = 0;
-  int height = 0;
+  s32 width = 0;
+  s32 height = 0;
 
   if(auto& icon = state().icon) {
     width = icon.width();
@@ -74,10 +74,10 @@ auto pCanvas::_rasterize() -> void {
   qtImageHeight = height;
 
   if(!qtImage) qtImage = new QImage(width, height, QImage::Format_ARGB32);
-  auto buffer = (uint32_t*)qtImage->bits();
+  auto buffer = (u32*)qtImage->bits();
 
   if(auto& icon = state().icon) {
-    memory::copy<uint32_t>(buffer, state().icon.data(), width * height);
+    memory::copy<u32>(buffer, state().icon.data(), width * height);
   } else if(auto& gradient = state().gradient) {
     auto& colors = gradient.state.colors;
     image fill;
@@ -85,7 +85,7 @@ auto pCanvas::_rasterize() -> void {
     fill.gradient(colors[0].value(), colors[1].value(), colors[2].value(), colors[3].value());
     memory::copy(buffer, fill.data(), fill.size());
   } else {
-    uint32_t color = state().color.value();
+    u32 color = state().color.value();
     for(auto n : range(width * height)) buffer[n] = color;
   }
 }
@@ -136,9 +136,9 @@ auto QtCanvas::mouseReleaseEvent(QMouseEvent* event) -> void {
 auto QtCanvas::paintEvent(QPaintEvent* event) -> void {
   if(!p.qtImage) return;
 
-  signed sx = 0, sy = 0, dx = 0, dy = 0;
-  signed width = p.qtImageWidth;
-  signed height = p.qtImageHeight;
+  s32 sx = 0, sy = 0, dx = 0, dy = 0;
+  s32 width = p.qtImageWidth;
+  s32 height = p.qtImageHeight;
   auto geometry = p.pSizable::state().geometry;
   auto alignment = p.state().alignment ? p.state().alignment : Alignment{0.5, 0.5};
 

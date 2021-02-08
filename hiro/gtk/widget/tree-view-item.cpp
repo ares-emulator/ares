@@ -105,8 +105,8 @@ auto pTreeViewItem::setText(const string& text) -> void {
 //
 
 //recursive function to find the minimum (pre-computed / cached) width of a TreeViewItem tree
-auto pTreeViewItem::_minimumWidth(uint depth) -> uint {
-  uint width = TreeViewIndentation * depth + _width;
+auto pTreeViewItem::_minimumWidth(u32 depth) -> u32 {
+  u32 width = TreeViewIndentation * depth + _width;
   for(auto& item : state().items) {
     if(auto self = item->self()) {
       width = max(width, self->_minimumWidth(depth + 1));

@@ -6,7 +6,7 @@ auto PPU::Window::render(Layer& layer, bool enable, bool output[256]) -> void {
 
   if(layer.oneEnable && !layer.twoEnable) {
     bool set = 1 ^ layer.oneInvert, clear = !set;
-    for(uint x : range(256)) {
+    for(u32 x : range(256)) {
       output[x] = x >= io.oneLeft && x <= io.oneRight ? set : clear;
     }
     return;
@@ -14,13 +14,13 @@ auto PPU::Window::render(Layer& layer, bool enable, bool output[256]) -> void {
 
   if(layer.twoEnable && !layer.oneEnable) {
     bool set = 1 ^ layer.twoInvert, clear = !set;
-    for(uint x : range(256)) {
+    for(u32 x : range(256)) {
       output[x] = x >= io.twoLeft && x <= io.twoRight ? set : clear;
     }
     return;
   }
 
-  for(uint x : range(256)) {
+  for(u32 x : range(256)) {
     bool oneMask = (x >= io.oneLeft && x <= io.oneRight) ^ layer.oneInvert;
     bool twoMask = (x >= io.twoLeft && x <= io.twoRight) ^ layer.twoInvert;
     switch(layer.mask) {
@@ -32,7 +32,7 @@ auto PPU::Window::render(Layer& layer, bool enable, bool output[256]) -> void {
   }
 }
 
-auto PPU::Window::render(Color& color, uint mask, bool output[256]) -> void {
+auto PPU::Window::render(Color& color, u32 mask, bool output[256]) -> void {
   bool set, clear;
   switch(mask) {
   case 0: memory::fill<bool>(output, 256, 1); return;  //always
@@ -48,7 +48,7 @@ auto PPU::Window::render(Color& color, uint mask, bool output[256]) -> void {
 
   if(color.oneEnable && !color.twoEnable) {
     if(color.oneInvert) set ^= 1, clear ^= 1;
-    for(uint x : range(256)) {
+    for(u32 x : range(256)) {
       output[x] = x >= io.oneLeft && x <= io.oneRight ? set : clear;
     }
     return;
@@ -56,13 +56,13 @@ auto PPU::Window::render(Color& color, uint mask, bool output[256]) -> void {
 
   if(!color.oneEnable && color.twoEnable) {
     if(color.twoInvert) set ^= 1, clear ^= 1;
-    for(uint x : range(256)) {
+    for(u32 x : range(256)) {
       output[x] = x >= io.twoLeft && x <= io.twoRight ? set : clear;
     }
     return;
   }
 
-  for(uint x : range(256)) {
+  for(u32 x : range(256)) {
     bool oneMask = (x >= io.oneLeft && x <= io.oneRight) ^ color.oneInvert;
     bool twoMask = (x >= io.twoLeft && x <= io.twoRight) ^ color.twoInvert;
     switch(color.mask) {

@@ -18,8 +18,8 @@ auto CPU::Bus::wait() -> void {
   unreachable;
 }
 
-auto CPU::Bus::read(uint size, uint24 address) -> uint32 {
-  uint32 data;
+auto CPU::Bus::read(u32 size, n24 address) -> n32 {
+  n32 data;
 
   if(width == Byte) {
     if(size == Byte) {
@@ -88,7 +88,7 @@ auto CPU::Bus::read(uint size, uint24 address) -> uint32 {
   return data;
 }
 
-auto CPU::Bus::write(uint size, uint24 address, uint32 data) -> void {
+auto CPU::Bus::write(u32 size, n24 address, n32 data) -> void {
   if(width == Byte) {
     if(size == Byte) {
       wait();
@@ -157,35 +157,35 @@ auto CPU::Bus::write(uint size, uint24 address, uint32 data) -> void {
 /* IO: (internal I/O registers)
  */
 
-auto CPU::IO::select(uint24 compare) const -> bool {
+auto CPU::IO::select(n24 compare) const -> bool {
   return compare <= 0x0000ff;
 }
 
 /* ROM: (BIOS)
  */
 
-auto CPU::ROM::select(uint24 compare) const -> bool {
+auto CPU::ROM::select(n24 compare) const -> bool {
   return compare >= 0xff0000;
 }
 
 /* CRAM: (CPU memory)
  */
 
-auto CPU::CRAM::select(uint24 compare) const -> bool {
+auto CPU::CRAM::select(n24 compare) const -> bool {
   return compare >= 0x004000 && compare <= 0x006fff;
 }
 
 /* ARAM: (APU memory)
  */
 
-auto CPU::ARAM::select(uint24 compare) const -> bool {
+auto CPU::ARAM::select(n24 compare) const -> bool {
   return compare >= 0x007000 && compare <= 0x007fff;
 }
 
 /* VRAM: (VPU memory)
  */
 
-auto CPU::VRAM::select(uint24 compare) const -> bool {
+auto CPU::VRAM::select(n24 compare) const -> bool {
   return compare >= 0x008000 && compare <= 0x00bfff;
 }
 
@@ -193,47 +193,47 @@ auto CPU::VRAM::select(uint24 compare) const -> bool {
  * Connected to cartridge flash chip 0.
  */
 
-auto CPU::CS0::select(uint24 compare) const -> bool {
+auto CPU::CS0::select(n24 compare) const -> bool {
   if(!enable) return false;
-  return !(uint24)((compare ^ address) & ~mask);
+  return !(n24)((compare ^ address) & ~mask);
 }
 
 /* CS1: (chip select 1)
  * Connected to cartridge flash chip 1.
  */
 
-auto CPU::CS1::select(uint24 compare) const -> bool {
+auto CPU::CS1::select(n24 compare) const -> bool {
   if(!enable) return false;
-  return !(uint24)((compare ^ address) & ~mask);
+  return !(n24)((compare ^ address) & ~mask);
 }
 
 /* CS2: (chip select 2)
  * Not connected and not used.
  */
 
-auto CPU::CS2::select(uint24 compare) const -> bool {
+auto CPU::CS2::select(n24 compare) const -> bool {
   if(!enable) return false;
   //TMP95C061 range is 000080-ffffff
   //however, the Neo Geo Pocket maps I/O registers from 000000-0000ff
   //the exact range is unknown, so it is a guess that the range was expanded here
   if(!mode) return compare >= 0x000100;
-  return !(uint24)((compare ^ address) & ~mask);
+  return !(n24)((compare ^ address) & ~mask);
 }
 
 /* CS3: (chip select 3)
  * Not connected and not used.
  */
 
-auto CPU::CS3::select(uint24 compare) const -> bool {
+auto CPU::CS3::select(n24 compare) const -> bool {
   if(!enable) return false;
-  return !(uint24)((compare ^ address) & ~mask);
+  return !(n24)((compare ^ address) & ~mask);
 }
 
 /* CSX: (chip select external)
  * Not connected and not used.
  */
 
-auto CPU::width(uint24 address) -> uint {
+auto CPU::width(n24 address) -> u32 {
   if(  io.select(address)) return   io.width;
   if( rom.select(address)) return  rom.width;
   if(cram.select(address)) return cram.width;
@@ -246,7 +246,7 @@ auto CPU::width(uint24 address) -> uint {
                            return  csx.width;
 }
 
-auto CPU::read(uint size, uint24 address) -> uint32 {
+auto CPU::read(u32 size, n24 address) -> n32 {
   mar = address;
   if(  io.select(address)) return   io.read(size, address);
   if( rom.select(address)) return  rom.read(size, address);
@@ -260,7 +260,7 @@ auto CPU::read(uint size, uint24 address) -> uint32 {
                            return  csx.read(size, address);
 }
 
-auto CPU::write(uint size, uint24 address, uint32 data) -> void {
+auto CPU::write(u32 size, n24 address, n32 data) -> void {
   mar = address;
   mdr = data;
   if(  io.select(address)) return   io.write(size, address, data);

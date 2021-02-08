@@ -74,7 +74,7 @@ inline auto PPU::blank() -> bool {
   return io.forceBlank || cpu.stopped();
 }
 
-auto PPU::step(uint clocks) -> void {
+auto PPU::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }
@@ -105,14 +105,14 @@ auto PPU::main() -> void {
   }
 
   if(io.vcounter < 160) {
-    uint y = io.vcounter;
+    u32 y = io.vcounter;
     bg0.scanline(y);
     bg1.scanline(y);
     bg2.scanline(y);
     bg3.scanline(y);
     objects.scanline(y);
     auto line = screen->pixels().data() + y * 240;
-    for(uint x : range(240)) {
+    for(u32 x : range(240)) {
       bg0.run(x, y);
       bg1.run(x, y);
       bg2.run(x, y);
@@ -122,7 +122,7 @@ auto PPU::main() -> void {
       window1.run(x, y);
       window2.output = objects.output.window;
       window3.output = true;
-      uint15 color = dac.run(x, y);
+      n15 color = dac.run(x, y);
       line[x] = color;
       step(4);
     }
@@ -151,11 +151,11 @@ auto PPU::power() -> void {
   Thread::create(system.frequency(), {&PPU::main, this});
   screen->power();
 
-  for(uint n = 0x000; n <= 0x055; n++) bus.io[n] = this;
+  for(u32 n = 0x000; n <= 0x055; n++) bus.io[n] = this;
 
-  for(uint n = 0; n < 96 * 1024; n++) vram[n] = 0x00;
-  for(uint n = 0; n < 1024; n += 2) writePRAM(n, Half, 0x0000);
-  for(uint n = 0; n < 1024; n += 2) writeOAM(n, Half, 0x0000);
+  for(u32 n = 0; n < 96 * 1024; n++) vram[n] = 0x00;
+  for(u32 n = 0; n < 1024; n += 2) writePRAM(n, Half, 0x0000);
+  for(u32 n = 0; n < 1024; n += 2) writeOAM(n, Half, 0x0000);
 
   io = {};
   for(auto& object : this->object) object = {};

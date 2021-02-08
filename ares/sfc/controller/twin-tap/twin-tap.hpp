@@ -4,10 +4,10 @@ struct TwinTap : Controller {
 
   TwinTap(Node::Port);
 
-  auto data() -> uint2;
-  auto latch(bool data) -> void;
+  auto data() -> n2;
+  auto latch(n1 data) -> void;
 
 private:
-  bool latched = 0;
-  uint counter = 0;
+  n1 latched;
+  n8 counter;
 };

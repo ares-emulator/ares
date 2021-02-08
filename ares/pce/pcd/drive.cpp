@@ -1,6 +1,6 @@
 //computes the number of 75hz intervals required to seek to a given sector.
 //the logarithm is based on observed results from a TurboDuo, and errs on seeking too fast.
-auto PCD::Drive::distance() -> uint {
+auto PCD::Drive::distance() -> u32 {
   auto distance = abs(lba - start);
   return 17 + pow(sqrt(distance), 0.99) * 0.3;
 }

@@ -1,7 +1,7 @@
 struct MBC2 : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
-  Memory::Writable<uint8> ram;
+  Memory::Readable<n8> rom;
+  Memory::Writable<n8> ram;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -17,13 +17,13 @@ struct MBC2 : Interface {
   auto unload() -> void override {
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(address >= 0x0000 && address <= 0x3fff) {
-      return rom.read((uint14)address);
+      return rom.read((n14)address);
     }
 
     if(address >= 0x4000 && address <= 0x7fff) {
-      return rom.read(io.rom.bank << 14 | (uint14)address);
+      return rom.read(io.rom.bank << 14 | (n14)address);
     }
 
     if(address >= 0xa000 && address <= 0xa1ff) {
@@ -37,7 +37,7 @@ struct MBC2 : Interface {
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     if(address >= 0x0000 && address <= 0x1fff) {
       if(!address.bit(8)) io.ram.enable = data.bit(0,3) == 0x0a;
       return;
@@ -70,10 +70,10 @@ struct MBC2 : Interface {
 
   struct IO {
     struct ROM {
-      uint8 bank = 0x01;
+      n8 bank = 0x01;
     } rom;
     struct RAM {
-      uint1 enable = 0;
+      n1 enable = 0;
     } ram;
   } io;
 };

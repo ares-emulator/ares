@@ -15,8 +15,8 @@ inline auto URL(string_view input) -> string {
     if(c == ' ') { output.append('+'); continue; }
 
     //reserved characters
-    uint hi = (c >> 4) & 15;
-    uint lo = (c >> 0) & 15;
+    u32 hi = (c >> 4) & 15;
+    u32 lo = (c >> 0) & 15;
     output.append('%');
     output.append((char)(hi < 10 ? ('0' + hi) : ('a' + hi - 10)));
     output.append((char)(lo < 10 ? ('0' + lo) : ('a' + lo - 10)));

@@ -17,7 +17,7 @@ auto HG51B::halt() -> void {
   io.halt = 1;
 }
 
-auto HG51B::wait(uint24 address) -> uint {
+auto HG51B::wait(n24 address) -> u32 {
   if(isROM(address)) return 1 + io.wait.rom;
   if(isRAM(address)) return 1 + io.wait.ram;
   return 1;
@@ -32,7 +32,7 @@ auto HG51B::main() -> void {
   return execute();
 }
 
-auto HG51B::step(uint clocks) -> void {
+auto HG51B::step(u32 clocks) -> void {
   if(io.bus.enable) {
     if(io.bus.pending > clocks) {
       io.bus.pending -= clocks;
@@ -71,7 +71,7 @@ auto HG51B::suspend() -> void {
 }
 
 auto HG51B::cache() -> bool {
-  uint24 address = io.cache.base + r.pb * 512;
+  n24 address = io.cache.base + r.pb * 512;
 
   //try to use the current page ...
   if(io.cache.address[io.cache.page] == address) return io.cache.enable = 0, true;
@@ -84,7 +84,7 @@ auto HG51B::cache() -> bool {
   if(io.cache.lock[io.cache.page]) return io.cache.enable = 0, false;
 
   io.cache.address[io.cache.page] = address;
-  for(uint offset : range(256)) {
+  for(u32 offset : range(256)) {
     step(wait(address));
     programRAM[io.cache.page][offset].byte(0) = read(address++);
     programRAM[io.cache.page][offset].byte(1) = read(address++);
@@ -93,9 +93,9 @@ auto HG51B::cache() -> bool {
 }
 
 auto HG51B::dma() -> void {
-  for(uint offset : range(io.dma.length)) {
-    uint24 source = io.dma.source + offset;
-    uint24 target = io.dma.target + offset;
+  for(u32 offset : range(io.dma.length)) {
+    n24 source = io.dma.source + offset;
+    n24 target = io.dma.target + offset;
 
     if(isROM(source) && isROM(target)) return lock();
     if(isRAM(source) && isRAM(target)) return lock();

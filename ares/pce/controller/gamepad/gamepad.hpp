@@ -10,17 +10,17 @@ struct Gamepad : Controller {
 
   Gamepad(Node::Port);
 
-  auto read() -> uint4 override;
-  auto write(uint2 data) -> void override;
+  auto read() -> n4 override;
+  auto write(n2 data) -> void override;
 
 private:
-  bool sel = 0;
-  bool clr = 0;
+  b1 sel;
+  b1 clr;
 
-  bool yHold = 0;
-  bool upLatch = 0;
-  bool downLatch = 0;
-  bool xHold = 0;
-  bool leftLatch = 0;
-  bool rightLatch = 0;
+  b1 yHold;
+  b1 upLatch;
+  b1 downLatch;
+  b1 xHold;
+  b1 leftLatch;
+  b1 rightLatch;
 };

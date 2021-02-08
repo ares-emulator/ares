@@ -1,4 +1,4 @@
-auto CPU::readIWRAM(uint mode, uint32 addr) -> uint32 {
+auto CPU::readIWRAM(u32 mode, n32 addr) -> n32 {
   if(memory.disable) return cpu.pipeline.fetch.instruction;
 
   if(mode & Word) return readIWRAM(Half, addr &~ 2) << 0 | readIWRAM(Half, addr | 2) << 16;
@@ -7,7 +7,7 @@ auto CPU::readIWRAM(uint mode, uint32 addr) -> uint32 {
   return iwram[addr & 0x7fff];
 }
 
-auto CPU::writeIWRAM(uint mode, uint32 addr, uint32 word) -> void {
+auto CPU::writeIWRAM(u32 mode, n32 addr, n32 word) -> void {
   if(memory.disable) return;
 
   if(mode & Word) {
@@ -25,7 +25,7 @@ auto CPU::writeIWRAM(uint mode, uint32 addr, uint32 word) -> void {
   iwram[addr & 0x7fff] = word;
 }
 
-auto CPU::readEWRAM(uint mode, uint32 addr) -> uint32 {
+auto CPU::readEWRAM(u32 mode, n32 addr) -> n32 {
   if(memory.disable) return cpu.pipeline.fetch.instruction;
   if(!memory.ewram) return readIWRAM(mode, addr);
 
@@ -35,7 +35,7 @@ auto CPU::readEWRAM(uint mode, uint32 addr) -> uint32 {
   return ewram[addr & 0x3ffff];
 }
 
-auto CPU::writeEWRAM(uint mode, uint32 addr, uint32 word) -> void {
+auto CPU::writeEWRAM(u32 mode, n32 addr, n32 word) -> void {
   if(memory.disable) return;
   if(!memory.ewram) return writeIWRAM(mode, addr, word);
 

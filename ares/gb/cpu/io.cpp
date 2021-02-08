@@ -1,10 +1,10 @@
-auto CPU::wramAddress(uint13 address) const -> uint16 {
+auto CPU::wramAddress(n13 address) const -> n16 {
   if(address < 0x1000) return address;
   auto bank = status.wramBank + (status.wramBank == 0);
-  return bank << 12 | (uint12)address;
+  return bank << 12 | (n12)address;
 }
 
-auto CPU::input(uint4 data) -> void {
+auto CPU::input(n4 data) -> void {
   status.joyp = data;
 }
 
@@ -12,13 +12,13 @@ auto CPU::joypPoll() -> void {
   if(!Model::SuperGameBoy()) {
     system.controls.poll();
 
-    uint4 dpad;
+    n4 dpad;
     dpad.bit(0) = !system.controls.rightLatch;
     dpad.bit(1) = !system.controls.leftLatch;
     dpad.bit(2) = !system.controls.upLatch;
     dpad.bit(3) = !system.controls.downLatch;
 
-    uint4 button;
+    n4 button;
     button.bit(0) = !system.controls.a->value();
     button.bit(1) = !system.controls.b->value();
     button.bit(2) = !system.controls.select->value();
@@ -32,10 +32,10 @@ auto CPU::joypPoll() -> void {
   if(status.joyp != 0xf) raise(Interrupt::Joypad);
 }
 
-auto CPU::readIO(uint cycle, uint16 address, uint8 data) -> uint8 {
+auto CPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
   if(address <= 0xbfff) return data;
   if(address >= 0xc000 && address <= 0xfdff && cycle == 2) return wram[wramAddress(address)];
-  if(address >= 0xff80 && address <= 0xfffe && cycle == 2) return hram[(uint7)address];
+  if(address >= 0xff80 && address <= 0xfffe && cycle == 2) return hram[(n7)address];
 
   if(address == 0xff00 && cycle == 2) {  //JOYP
     joypPoll();
@@ -157,10 +157,10 @@ auto CPU::readIO(uint cycle, uint16 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto CPU::writeIO(uint cycle, uint16 address, uint8 data) -> void {
+auto CPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
   if(address <= 0xbfff) return;
   if(address >= 0xc000 && address <= 0xfdff && cycle == 2) { wram[wramAddress(address)] = data; return; }
-  if(address >= 0xff80 && address <= 0xfffe && cycle == 2) { hram[(uint7)address] = data; return; }
+  if(address >= 0xff80 && address <= 0xfffe && cycle == 2) { hram[(n7)address] = data; return; }
 
   if(address == 0xff00 && cycle == 2) {  //JOYP
     status.p14 = data.bit(4);
@@ -253,7 +253,7 @@ auto CPU::writeIO(uint cycle, uint16 address, uint8 data) -> void {
     //GDMA
     if(!data.bit(7)) {
       do {
-        for(uint loop : range(16)) {
+        for(u32 loop : range(16)) {
           writeDMA(status.dmaTarget++, readDMA(status.dmaSource++, 0xff));
         }
         step(8 << status.speedDouble);

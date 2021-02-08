@@ -2,7 +2,7 @@ auto GSU::serialize(serializer& s) -> void {
   s(regs.pipeline);
   s(regs.ramaddr);
 
-  for(uint n : range(16)) {
+  for(u32 n : range(16)) {
     s(regs.r[n].data);
     s(regs.r[n].modified);
   }
@@ -48,7 +48,7 @@ auto GSU::serialize(serializer& s) -> void {
   s(cache.buffer);
   s(cache.valid);
 
-  for(uint n : range(2)) {
+  for(u32 n : range(2)) {
     s(pixelcache[n].offset);
     s(pixelcache[n].bitpend);
     s(pixelcache[n].data);

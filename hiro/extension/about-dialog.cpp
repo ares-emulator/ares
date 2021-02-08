@@ -12,8 +12,9 @@ auto AboutDialog::setAlignment(sWindow relativeTo, Alignment alignment) -> type&
   return *this;
 }
 
-auto AboutDialog::setCopyright(const string& copyright) -> type& {
+auto AboutDialog::setCopyright(const string& copyright, const string& uri) -> type& {
   state.copyright = copyright;
+  state.copyrightURI = uri;
   return *this;
 }
 
@@ -104,11 +105,19 @@ auto AboutDialog::show() -> void {
   copyrightLabel.setFont(Font().setBold());
   copyrightLabel.setForegroundColor({0, 0, 0});
   copyrightLabel.setText("Copyright:");
-  Label copyrightValue{&copyrightLayout, Size{~0, 0}};
+  HorizontalLayout copyrightValueLayout{&copyrightLayout, Size{~0, 0}};
+  Label copyrightValue{&copyrightValueLayout, Size{~0, 0}};
   copyrightValue.setAlignment(0.0);
   copyrightValue.setFont(Font().setBold());
   copyrightValue.setForegroundColor({0, 0, 0});
   copyrightValue.setText(state.copyright);
+  if(state.copyrightURI) {
+    copyrightValue.setForegroundColor({0, 0, 240});
+    copyrightValue.setMouseCursor(MouseCursor::Hand);
+    copyrightValue.onMouseRelease([&](auto button) {
+      if(button == Mouse::Button::Left) invoke(state.copyrightURI);
+    });
+  }
   if(!state.copyright) copyrightLayout.setVisible(false);
 
   HorizontalLayout licenseLayout{&layout, Size{~0, 0}, 0};

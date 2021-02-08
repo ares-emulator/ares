@@ -17,7 +17,7 @@ auto CPU::Debugger::load(Node::Object parent) -> void {
 auto CPU::Debugger::instruction() -> void {
   if(tracer.instruction->enabled()) {
     auto bank = cpu.r.mpr[cpu.r.pc >> 13];
-    auto address = (uint13)cpu.r.pc;
+    auto address = (n13)cpu.r.pc;
     if(tracer.instruction->address(bank << 16 | address)) {
       tracer.instruction->notify(cpu.disassembleInstruction(), cpu.disassembleContext(), {
         "V:", pad(vdp.io.vcounter, 3L), " ", "H:", pad(vdp.io.hcounter, 4L)

@@ -6,11 +6,11 @@
 //sometimes the SMP will run far slower than expected
 //other times (and more likely), the SMP will deadlock until the system is reset
 //the timers are not affected by this and advance by their expected values
-inline auto SMP::wait(bool halve, maybe<uint16> address) -> void {
-  static const uint cycleWaitStates[4] = {2, 4, 10, 20};
-  static const uint timerWaitStates[4] = {2, 4,  8, 16};
+inline auto SMP::wait(bool halve, maybe<n16> address) -> void {
+  static constexpr u32 cycleWaitStates[4] = {2, 4, 10, 20};
+  static constexpr u32 timerWaitStates[4] = {2, 4,  8, 16};
 
-  uint waitStates = io.externalWaitStates;
+  u32 waitStates = io.externalWaitStates;
   if(!address) waitStates = io.internalWaitStates;  //idle cycles
   else if((*address & 0xfff0) == 0x00f0) waitStates = io.internalWaitStates;  //IO registers
   else if(*address >= 0xffc0 && io.iplromEnable) waitStates = io.internalWaitStates;  //IPLROM
@@ -19,19 +19,19 @@ inline auto SMP::wait(bool halve, maybe<uint16> address) -> void {
   stepTimers(timerWaitStates[waitStates] >> halve);
 }
 
-inline auto SMP::step(uint clocks) -> void {
+inline auto SMP::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
   Thread::synchronize(dsp);
 }
 
-inline auto SMP::stepTimers(uint clocks) -> void {
+inline auto SMP::stepTimers(u32 clocks) -> void {
   timer0.step(clocks);
   timer1.step(clocks);
   timer2.step(clocks);
 }
 
-template<uint Frequency> auto SMP::Timer<Frequency>::step(uint clocks) -> void {
+template<u32 Frequency> auto SMP::Timer<Frequency>::step(u32 clocks) -> void {
   //stage 0 increment
   stage0 += clocks;
   if(stage0 < Frequency) return;
@@ -42,7 +42,7 @@ template<uint Frequency> auto SMP::Timer<Frequency>::step(uint clocks) -> void {
   synchronizeStage1();
 }
 
-template<uint Frequency> auto SMP::Timer<Frequency>::synchronizeStage1() -> void {
+template<u32 Frequency> auto SMP::Timer<Frequency>::synchronizeStage1() -> void {
   bool level = stage1;
   if(!smp.io.timersEnable) level = false;
   if(smp.io.timersDisable) level = false;

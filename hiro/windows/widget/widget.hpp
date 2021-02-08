@@ -19,7 +19,7 @@ struct pWidget : pSizable {
 
   virtual auto doMouseHover() -> void;
   virtual auto doMouseLeave() -> void;
-  virtual auto doMouseMove(int x, int y) -> void;
+  virtual auto doMouseMove(s32 x, s32 y) -> void;
   virtual auto windowProc(HWND, UINT, WPARAM, LPARAM) -> maybe<LRESULT>;
 
   auto _parentHandle() -> HWND;

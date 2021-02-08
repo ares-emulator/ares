@@ -5,7 +5,7 @@ namespace nall::Decode {
 //returns empty string on malformed content
 inline auto URL(string_view input) -> string {
   string output;
-  for(uint n = 0; n < input.size();) {
+  for(u32 n = 0; n < input.size();) {
     char c = input[n];
 
     //unreserved characters

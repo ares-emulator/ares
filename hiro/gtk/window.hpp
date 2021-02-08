@@ -10,8 +10,8 @@ struct pWindow : pObject {
   auto append(sStatusBar statusBar) -> void;
   auto focused() const -> bool override;
   auto frameMargin() const -> Geometry;
-  auto handle() const -> uintptr_t;
-  auto monitor() const -> uint;
+  auto handle() const -> uintptr;
+  auto monitor() const -> u32;
   auto remove(sMenuBar menuBar) -> void;
   auto remove(sSizable sizable) -> void;
   auto remove(sStatusBar statusBar) -> void;
@@ -33,8 +33,8 @@ struct pWindow : pObject {
 
   auto _append(mWidget& widget) -> void;
   auto _append(mMenu& menu) -> void;
-  auto _menuHeight() const -> int;
-  auto _menuTextHeight() const -> int;
+  auto _menuHeight() const -> s32;
+  auto _menuTextHeight() const -> s32;
   auto _setIcon(const string& basename) -> bool;
   auto _setMenuEnabled(bool enabled) -> void;
   auto _setMenuFont(const Font& font) -> void;
@@ -43,8 +43,8 @@ struct pWindow : pObject {
   auto _setStatusFont(const Font& font) -> void;
   auto _setStatusText(const string& text) -> void;
   auto _setStatusVisible(bool visible) -> void;
-  auto _statusHeight() const -> int;
-  auto _statusTextHeight() const -> int;
+  auto _statusHeight() const -> s32;
+  auto _statusTextHeight() const -> s32;
   auto _synchronizeGeometry() -> void;
   auto _synchronizeMargin() -> void;
   auto _synchronizeState() -> void;
@@ -55,8 +55,8 @@ struct pWindow : pObject {
   GtkWidget* statusContainer = nullptr;
   GtkWidget* gtkMenu = nullptr;
   GtkWidget* gtkStatus = nullptr;
-  GtkAllocation lastMove = {0};
-  GtkAllocation lastSize = {0};
+  GtkAllocation lastMove = {};
+  GtkAllocation lastSize = {};
   bool screenSaver = true;
 };
 

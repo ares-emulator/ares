@@ -11,39 +11,39 @@ struct Object {
   OAM oam;
 
   struct IO {
-     uint1 interlace;
+    n1  interlace;
 
-    uint16 tiledataAddress;
-     uint2 nameselect;
-     uint3 baseSize;
-     uint7 firstSprite;
+    n16 tiledataAddress;
+    n2  nameselect;
+    n3  baseSize;
+    n7  firstSprite;
 
-     uint1 aboveEnable;
-     uint1 belowEnable;
+    n1  aboveEnable;
+    n1  belowEnable;
 
-     uint1 rangeOver;
-     uint1 timeOver;
+    n1  rangeOver;
+    n1  timeOver;
 
-     uint8 priority[4];
+    n8  priority[4];
   } io;
 
   PPU::Window::Layer window;
 
   //unserialized:
   struct Item {
-     uint1 valid;
-     uint7 index;
-     uint8 width;
-     uint8 height;
+    n1  valid;
+    n7  index;
+    n8  width;
+    n8  height;
   } items[32];
 
   struct Tile {
-     uint1 valid;
-     uint9 x;
-     uint2 priority;
-     uint8 palette;
-     uint1 hflip;
-    uint32 data;
+    n1  valid;
+    n9  x;
+    n2  priority;
+    n8  palette;
+    n1  hflip;
+    n32 data;
   } tiles[34];
 
   friend class PPU;

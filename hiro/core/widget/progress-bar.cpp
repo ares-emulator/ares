@@ -6,11 +6,11 @@ auto mProgressBar::allocate() -> pObject* {
 
 //
 
-auto mProgressBar::position() const -> unsigned {
+auto mProgressBar::position() const -> u32 {
   return state.position;
 }
 
-auto mProgressBar::setPosition(unsigned position) -> type& {
+auto mProgressBar::setPosition(u32 position) -> type& {
   state.position = position;
   signal(setPosition, position);
   return *this;

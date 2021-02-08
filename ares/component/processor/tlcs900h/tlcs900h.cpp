@@ -26,10 +26,10 @@ namespace ares {
 #include "serialization.cpp"
 #include "disassembler.cpp"
 
-auto TLCS900H::interrupt(uint8 vector) -> void {
+auto TLCS900H::interrupt(n8 vector) -> void {
   push(PC);
   push(SR);
-  store(PC, load(Memory<uint32>{0xffff00 | vector}));
+  store(PC, load(Memory<n32>{0xffff00 | vector}));
   store(INTNEST, load(INTNEST) + 1);
   idle(1);
   prefetch();

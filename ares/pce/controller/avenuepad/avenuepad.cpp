@@ -15,7 +15,7 @@ AvenuePad::AvenuePad(Node::Port parent) {
   run    = node->append<Node::Input::Button>("Run");
 }
 
-auto AvenuePad::read() -> uint4 {
+auto AvenuePad::read() -> n4 {
   if(clr) return 0;
 
   platform->input(up);
@@ -43,7 +43,7 @@ auto AvenuePad::read() -> uint4 {
     xHold = 1, swap(leftLatch, rightLatch);
   }
 
-  uint4 data;
+  n4 data;
 
   if(active == 0) {
     if(sel) {
@@ -76,7 +76,7 @@ auto AvenuePad::read() -> uint4 {
   return data;
 }
 
-auto AvenuePad::write(uint2 data) -> void {
+auto AvenuePad::write(n2 data) -> void {
   //there should be a small delay for this to take effect ...
   if(!sel && data.bit(0)) active ^= 1;
 

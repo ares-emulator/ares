@@ -1,7 +1,7 @@
 struct CPU : ARM7TDMI, Thread, IO {
   Node::Object node;
-  Memory::Writable<uint8> iwram;  // 32KB
-  Memory::Writable<uint8> ewram;  //256KB
+  Memory::Writable<n8> iwram;  // 32KB
+  Memory::Writable<n8> ewram;  //256KB
 
   struct Debugger {
     //debugger.cpp
@@ -20,7 +20,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     } tracer;
   } debugger;
 
-  struct Interrupt { enum : uint {
+  struct Interrupt { enum : u32 {
     VBlank       = 0x0001,
     HBlank       = 0x0002,
     VCoincidence = 0x0004,
@@ -37,7 +37,7 @@ struct CPU : ARM7TDMI, Thread, IO {
     Cartridge    = 0x2000,
   };};
 
-  auto clock() const -> uint { return context.clock; }
+  auto clock() const -> u32 { return context.clock; }
   auto halted() const -> bool { return context.halted; }
   auto stopped() const -> bool { return context.stopped; }
 
@@ -46,30 +46,30 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void override;
+  auto step(u32 clocks) -> void override;
   auto power() -> void;
 
   //prefetch.cpp
-  auto prefetchSync(uint32 addr) -> void;
-  auto prefetchStep(uint clocks) -> void;
+  auto prefetchSync(n32 address) -> void;
+  auto prefetchStep(u32 clocks) -> void;
   auto prefetchWait() -> void;
-  auto prefetchRead() -> uint16;
+  auto prefetchRead() -> n16;
 
   //bus.cpp
   auto sleep() -> void override;
-  auto get(uint mode, uint32 addr) -> uint32 override;
-  auto set(uint mode, uint32 addr, uint32 word) -> void override;
-  auto _wait(uint mode, uint32 addr) -> uint;
+  auto get(u32 mode, n32 address) -> n32 override;
+  auto set(u32 mode, n32 address, n32 word) -> void override;
+  auto _wait(u32 mode, n32 address) -> u32;
 
   //io.cpp
-  auto readIO(uint32 addr) -> uint8;
-  auto writeIO(uint32 addr, uint8 byte) -> void;
+  auto readIO(n32 address) -> n8 override;
+  auto writeIO(n32 address, n8 byte) -> void override;
 
-  auto readIWRAM(uint mode, uint32 addr) -> uint32;
-  auto writeIWRAM(uint mode, uint32 addr, uint32 word) -> void;
+  auto readIWRAM(u32 mode, n32 address) -> n32;
+  auto writeIWRAM(u32 mode, n32 address, n32 word) -> void;
 
-  auto readEWRAM(uint mode, uint32 addr) -> uint32;
-  auto writeEWRAM(uint mode, uint32 addr, uint32 word) -> void;
+  auto readEWRAM(u32 mode, n32 address) -> n32;
+  auto writeEWRAM(u32 mode, n32 address, n32 word) -> void;
 
   //dma.cpp
   auto dmaVblank() -> void;
@@ -77,23 +77,23 @@ struct CPU : ARM7TDMI, Thread, IO {
   auto dmaHDMA() -> void;
 
   //timer.cpp
-  auto runFIFO(uint n) -> void;
+  auto runFIFO(u32 n) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 //private:
   struct uintVN {
-    auto operator()() const -> uint32 { return data & mask; }
-    auto setBits(uint bits) -> void { mask = (1 << bits) - 1; }
+    auto operator()() const -> n32 { return data & mask; }
+    auto setBits(u32 bits) -> void { mask = (1 << bits) - 1; }
 
-    uint32 data;
-    uint32 mask;
+    n32 data;
+    n32 mask;
   };
 
   //DMA data bus shared between all DMA channels
   struct DMABus {
-    uint32 data;
+    n32 data;
   } dmabus;
 
   struct DMA {
@@ -101,19 +101,19 @@ struct CPU : ARM7TDMI, Thread, IO {
     auto run() -> bool;
     auto transfer() -> void;
 
-     uint2 id;
+    n2 id;
 
-     uint1 active;
-     int32 waiting;
+    n1 active;
+    i32 waiting;
 
-     uint2 targetMode;
-     uint2 sourceMode;
-     uint1 repeat;
-     uint1 size;
-     uint1 drq;
-     uint2 timingMode;
-     uint1 irq;
-     uint1 enable;
+    n2 targetMode;
+    n2 sourceMode;
+    n1 repeat;
+    n1 size;
+    n1 drq;
+    n2 timingMode;
+    n1 irq;
+    n1 enable;
 
     uintVN source;
     uintVN target;
@@ -131,104 +131,104 @@ struct CPU : ARM7TDMI, Thread, IO {
     auto run() -> void;
     auto step() -> void;
 
-     uint2 id;
+    n2  id;
 
-     uint1 pending;
+    n1  pending;
 
-    uint16 period;
-    uint16 reload;
+    n16 period;
+    n16 reload;
 
-     uint2 frequency;
-     uint1 cascade;
-     uint1 irq;
-     uint1 enable;
+    n2  frequency;
+    n1  cascade;
+    n1  irq;
+    n1  enable;
   } timer[4];
 
   struct Serial {
-     uint1 shiftClockSelect;
-     uint1 shiftClockFrequency;
-     uint1 transferEnableReceive;
-     uint1 transferEnableSend;
-     uint1 startBit;
-     uint1 transferLength;
-     uint1 irqEnable;
+    n1  shiftClockSelect;
+    n1  shiftClockFrequency;
+    n1  transferEnableReceive;
+    n1  transferEnableSend;
+    n1  startBit;
+    n1  transferLength;
+    n1  irqEnable;
 
-    uint16 data[4];
-     uint8 data8;
+    n16 data[4];
+    n8  data8;
   } serial;
 
   struct Keypad {
     //keypad.cpp
     auto run() -> void;
 
-    uint1 enable;
-    uint1 condition;
-    uint1 flag[10];
+    n1 enable;
+    n1 condition;
+    n1 flag[10];
   } keypad;
 
   struct Joybus {
-     uint1 sc;
-     uint1 sd;
-     uint1 si;
-     uint1 so;
-     uint1 scMode;
-     uint1 sdMode;
-     uint1 siMode;
-     uint1 soMode;
-     uint1 siIRQEnable;
-     uint2 mode;
+    n1  sc;
+    n1  sd;
+    n1  si;
+    n1  so;
+    n1  scMode;
+    n1  sdMode;
+    n1  siMode;
+    n1  soMode;
+    n1  siIRQEnable;
+    n2  mode;
 
-     uint1 resetSignal;
-     uint1 receiveComplete;
-     uint1 sendComplete;
-     uint1 resetIRQEnable;
+    n1  resetSignal;
+    n1  receiveComplete;
+    n1  sendComplete;
+    n1  resetIRQEnable;
 
-    uint32 receive;
-    uint32 transmit;
+    n32 receive;
+    n32 transmit;
 
-     uint1 receiveFlag;
-     uint1 sendFlag;
-     uint2 generalFlag;
+    n1  receiveFlag;
+    n1  sendFlag;
+    n2  generalFlag;
   } joybus;
 
   struct IRQ {
-     uint1 ime;
-    uint16 enable;
-    uint16 flag;
+    n1  ime;
+    n16 enable;
+    n16 flag;
   } irq;
 
   struct Wait {
-    uint2 nwait[4];
-    uint1 swait[4];
-    uint2 phi;
-    uint1 prefetch;
-    uint1 gameType;
+    n2 nwait[4];
+    n1 swait[4];
+    n2 phi;
+    n1 prefetch;
+    n1 gameType;
   } wait;
 
   struct Memory {
-    uint1 disable;
-    uint3 unknown1;
-    uint1 ewram = 1;
-    uint4 ewramWait = 13;
-    uint4 unknown2;
+    n1 disable;
+    n3 unknown1;
+    n1 ewram = 1;
+    n4 ewramWait = 13;
+    n4 unknown2;
   } memory;
 
   struct {
     auto empty() const { return addr == load; }
     auto full() const { return load - addr == 16; }
 
-    uint16 slot[8];
-    uint32 addr;       //read location of slot buffer
-    uint32 load;       //write location of slot buffer
-     int32 wait = 1;  //number of clocks before next slot load
+    n16 slot[8];
+    n32 addr;       //read location of slot buffer
+    n32 load;       //write location of slot buffer
+    i32 wait = 1;  //number of clocks before next slot load
   } prefetch;
 
   struct Context {
-    uint32 clock;
-     uint1 halted;
-     uint1 stopped;
-     uint1 booted;  //set to true by the GBA BIOS
-     uint1 dmaActive;
+    n32 clock;
+    n1  halted;
+    n1  stopped;
+    n1  booted;  //set to true by the GBA BIOS
+    n1  dmaActive;
   } context;
 };
 

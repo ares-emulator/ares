@@ -58,7 +58,7 @@ struct registry {
     HKEY handle, rootKey = root(part.takeLeft());
     string node = part.takeRight(), path;
     DWORD disposition;
-    for(uint n = 0; n < part.size(); n++) {
+    for(u32 n = 0; n < part.size(); n++) {
       path.append(part[n]);
       if(RegCreateKeyExW(rootKey, utf16_t(path), 0, nullptr, 0, NWR_FLAGS | KEY_ALL_ACCESS, nullptr, &handle, &disposition) == ERROR_SUCCESS) {
         if(n == part.size() - 1) {
@@ -88,13 +88,13 @@ struct registry {
     if(RegOpenKeyExW(rootKey, utf16_t(path), 0, NWR_FLAGS | KEY_READ, &handle) == ERROR_SUCCESS) {
       DWORD folders, nodes;
       RegQueryInfoKey(handle, nullptr, nullptr, nullptr, &folders, nullptr, nullptr, &nodes, nullptr, nullptr, nullptr, nullptr);
-      for(uint n = 0; n < folders; n++) {
+      for(u32 n = 0; n < folders; n++) {
         wchar_t name[NWR_SIZE] = L"";
         DWORD size = NWR_SIZE * sizeof(wchar_t);
         RegEnumKeyEx(handle, n, (wchar_t*)&name, &size, nullptr, nullptr, nullptr, nullptr);
         result.append(string{(const char*)utf8_t(name), "\\"});
       }
-      for(uint n = 0; n < nodes; n++) {
+      for(u32 n = 0; n < nodes; n++) {
         wchar_t name[NWR_SIZE] = L"";
         DWORD size = NWR_SIZE * sizeof(wchar_t);
         RegEnumValueW(handle, n, (wchar_t*)&name, &size, nullptr, nullptr, nullptr, nullptr);

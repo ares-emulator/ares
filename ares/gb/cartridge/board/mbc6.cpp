@@ -1,8 +1,8 @@
 struct MBC6 : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
-  Memory::Writable<uint8> ram;
-  Memory::Writable<uint8> flash;  //Macronix MX29F008TC-14 (writes unemulated)
+  Memory::Readable<n8> rom;
+  Memory::Writable<n8> ram;
+  Memory::Writable<n8> flash;  //Macronix MX29F008TC-14 (writes unemulated)
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -20,35 +20,35 @@ struct MBC6 : Interface {
   auto unload() -> void override {
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(address >= 0x0000 && address <= 0x3fff) {
-      return rom.read((uint14)address);
+      return rom.read((n14)address);
     }
 
     if(address >= 0x4000 && address <= 0x5fff) {
-      if(io.region[0].select == 0) return   rom.read(io.region[0].bank << 13 | (uint13)address);
-      if(io.region[0].select == 1) return flash.read(io.region[0].bank << 13 | (uint13)address);
+      if(io.region[0].select == 0) return   rom.read(io.region[0].bank << 13 | (n13)address);
+      if(io.region[0].select == 1) return flash.read(io.region[0].bank << 13 | (n13)address);
     }
 
     if(address >= 0x6000 && address <= 0x7fff) {
-      if(io.region[1].select == 0) return   rom.read(io.region[1].bank << 13 | (uint13)address);
-      if(io.region[1].select == 1) return flash.read(io.region[1].bank << 13 | (uint13)address);
+      if(io.region[1].select == 0) return   rom.read(io.region[1].bank << 13 | (n13)address);
+      if(io.region[1].select == 1) return flash.read(io.region[1].bank << 13 | (n13)address);
     }
 
     if(address >= 0xa000 && address <= 0xafff) {
       if(!ram || !io.ram.enable) return 0xff;
-      return ram.read(io.ram.bank[0] << 12 | (uint12)address);
+      return ram.read(io.ram.bank[0] << 12 | (n12)address);
     }
 
     if(address >= 0xb000 && address <= 0xbfff) {
       if(!ram || !io.ram.enable) return 0xff;
-      return ram.read(io.ram.bank[1] << 12 | (uint12)address);
+      return ram.read(io.ram.bank[1] << 12 | (n12)address);
     }
 
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     if(address >= 0x0000 && address <= 0x03ff) {
       io.ram.enable = data.bit(0,3) == 0xa;
       return;
@@ -96,12 +96,12 @@ struct MBC6 : Interface {
 
     if(address >= 0xa000 && address <= 0xafff) {
       if(!ram || !io.ram.enable) return;
-      return ram.write(io.ram.bank[0] << 12 | (uint12)address, data);
+      return ram.write(io.ram.bank[0] << 12 | (n12)address, data);
     }
 
     if(address >= 0xb000 && address <= 0xbfff) {
       if(!ram || !io.ram.enable) return;
-      return ram.write(io.ram.bank[1] << 12 | (uint12)address, data);
+      return ram.write(io.ram.bank[1] << 12 | (n12)address, data);
     }
   }
 
@@ -124,16 +124,16 @@ struct MBC6 : Interface {
 
   struct IO {
     struct Region {
-      uint1 select;  //0 = ROM, 1 = Flash
-      uint7 bank;
+      n1 select;  //0 = ROM, 1 = Flash
+      n7 bank;
     } region[2];
     struct RAM {
-      uint1 enable;
-      uint3 bank[2];
+      n1 enable;
+      n3 bank[2];
     } ram;
     struct Flash {
-      uint1 enable;    //unknown purpose
-      uint1 writable;  //flash /WE pin
+      n1 enable;    //unknown purpose
+      n1 writable;  //flash /WE pin
     } flash;
   } io;
 };

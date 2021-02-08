@@ -5,7 +5,7 @@ namespace hiro {
 struct pRadioLabel : pWidget {
   Declare(RadioLabel, Widget)
 
-  auto minimumSize() const -> Size;
+  auto minimumSize() const -> Size override;
   auto setChecked() -> void;
   auto setGroup(sGroup group) -> void;
   auto setText(const string& text) -> void;

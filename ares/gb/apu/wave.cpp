@@ -1,4 +1,4 @@
-auto APU::Wave::getPattern(uint5 offset) const -> uint4 {
+auto APU::Wave::getPattern(n5 offset) const -> n4 {
   return pattern[offset >> 1] >> (offset & 1 ? 0 : 4);
 }
 
@@ -11,8 +11,8 @@ auto APU::Wave::run() -> void {
     patternHold = 1;
   }
 
-  static const uint shift[] = {4, 0, 1, 2};  //0%, 100%, 50%, 25%
-  uint4 sample = patternSample >> shift[volume];
+  static const u32 shift[] = {4, 0, 1, 2};  //0%, 100%, 50%, 25%
+  n4 sample = patternSample >> shift[volume];
   if(!enable) sample = 0;
 
   output = sample;
@@ -51,7 +51,7 @@ auto APU::Wave::trigger() -> void {
   }
 }
 
-auto APU::Wave::readRAM(uint4 address, uint8 data) -> uint8 {
+auto APU::Wave::readRAM(n4 address, n8 data) -> n8 {
   if(enable) {
     if(!Model::GameBoyColor() && !patternHold) return data;
     return pattern[patternOffset >> 1];
@@ -60,7 +60,7 @@ auto APU::Wave::readRAM(uint4 address, uint8 data) -> uint8 {
   }
 }
 
-auto APU::Wave::writeRAM(uint4 address, uint8 data) -> void {
+auto APU::Wave::writeRAM(n4 address, n8 data) -> void {
   if(enable) {
     if(!Model::GameBoyColor() && !patternHold) return;
     pattern[patternOffset >> 1] = data;

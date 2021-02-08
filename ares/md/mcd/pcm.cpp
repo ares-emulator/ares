@@ -15,13 +15,13 @@ auto MCD::PCM::unload() -> void {
 }
 
 auto MCD::PCM::clock() -> void {
-  int left  = 0;
-  int right = 0;
+  s32 left  = 0;
+  s32 right = 0;
 
   if(io.enable)
   for(auto& channel : channels) {
     if(!channel.enable) continue;
-    int data = ram[channel.address >> 11];
+    s32 data = ram[channel.address >> 11];
     if(data == 0xff) {  //loop?
       channel.address = channel.loop << 11;
       data = ram[channel.loop];
@@ -33,8 +33,8 @@ auto MCD::PCM::clock() -> void {
     } else {
       data = -(data & 0x7f);
     }
-    left  += data * channel.envelope * uint4(channel.pan >> 0) >> 5;
-    right += data * channel.envelope * uint4(channel.pan >> 4) >> 5;
+    left  += data * channel.envelope * n4(channel.pan >> 0) >> 5;
+    right += data * channel.envelope * n4(channel.pan >> 4) >> 5;
   }
 
   //clamp to 10-bit DAC output rate
@@ -43,15 +43,15 @@ auto MCD::PCM::clock() -> void {
   stream->frame(left / 32768.0, right / 32768.0);
 }
 
-auto MCD::PCM::read(uint13 address, uint8 data) -> uint8 {
+auto MCD::PCM::read(n13 address, n8 data) -> n8 {
   if(address >= 0x1000 && address <= 0x1fff) {
-    data = ram[io.bank << 12 | (uint12)address];
+    data = ram[io.bank << 12 | (n12)address];
     return data;
   }
 
   if(address >= 0x0010 && address <= 0x001f) {
     auto& channel = channels[address >> 1 & 7];
-    uint16 offset = channel.address >> 11;
+    n16 offset = channel.address >> 11;
     data = offset.byte(address & 1);
     return data;
   }
@@ -59,9 +59,9 @@ auto MCD::PCM::read(uint13 address, uint8 data) -> uint8 {
   return data = 0xff;
 }
 
-auto MCD::PCM::write(uint13 address, uint8 data) -> void {
+auto MCD::PCM::write(n13 address, n8 data) -> void {
   if(address >= 0x1000 && address <= 0x1fff) {
-    ram[io.bank << 12 | (uint12)address] = data;
+    ram[io.bank << 12 | (n12)address] = data;
     return;
   }
 

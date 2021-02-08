@@ -57,16 +57,16 @@ struct CPU : MOS6502, Thread {
 
 //protected:
   struct IO {
-    n01 interruptPending;
-    n01 nmiPending;
-    n01 nmiLine;
-    n01 irqLine;
-    n01 apuLine;
-    n01 rdyLine;
-    n01 rdyAddressValid;
+    n1  interruptPending;
+    n1  nmiPending;
+    n1  nmiLine;
+    n1  irqLine;
+    n1  apuLine;
+    n1  rdyLine;
+    n1  rdyAddressValid;
     n16 rdyAddressValue;
-    n01 oamDMAPending;
-    n08 oamDMAPage;
+    n1  oamDMAPending;
+    n8  oamDMAPage;
   } io;
 };
 

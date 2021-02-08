@@ -11,7 +11,7 @@ struct pWindow : pObject {
   auto focused() const -> bool override;
   auto frameMargin() const -> Geometry;
   auto handle() const -> uintptr_t;
-  auto monitor() const -> uint;
+  auto monitor() const -> u32;
   auto remove(sMenuBar menuBar) -> void;
   auto remove(sSizable sizable) -> void;
   auto remove(sStatusBar statusBar) -> void;
@@ -32,10 +32,10 @@ struct pWindow : pObject {
   auto setVisible(bool visible) -> void;
 
   auto _append(mWidget& widget) -> void;
-  auto _menuHeight() const -> uint;
-  auto _menuTextHeight() const -> uint;
-  auto _statusHeight() const -> uint;
-  auto _statusTextHeight() const -> uint;
+  auto _menuHeight() const -> u32;
+  auto _menuTextHeight() const -> u32;
+  auto _statusHeight() const -> u32;
+  auto _statusTextHeight() const -> u32;
   auto _updateFrameGeometry() -> void;
 
   QtWindow* qtWindow = nullptr;

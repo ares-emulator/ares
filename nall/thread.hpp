@@ -26,7 +26,7 @@ namespace nall {
 struct thread {
   auto join() -> void;
 
-  static auto create(const function<void (uintptr)>& callback, uintptr parameter = 0, uint stacksize = 0) -> thread;
+  static auto create(const function<void (uintptr)>& callback, uintptr parameter = 0, u32 stacksize = 0) -> thread;
   static auto detach() -> void;
   static auto exit() -> void;
 
@@ -50,7 +50,7 @@ inline auto thread::join() -> void {
   pthread_join(handle, nullptr);
 }
 
-inline auto thread::create(const function<void (uintptr)>& callback, uintptr parameter, uint stacksize) -> thread {
+inline auto thread::create(const function<void (uintptr)>& callback, uintptr parameter, u32 stacksize) -> thread {
   thread instance;
 
   auto context = new thread::context;
@@ -83,7 +83,7 @@ struct thread {
   ~thread();
   auto join() -> void;
 
-  static auto create(const function<void (uintptr)>& callback, uintptr parameter = 0, uint stacksize = 0) -> thread;
+  static auto create(const function<void (uintptr)>& callback, uintptr parameter = 0, u32 stacksize = 0) -> thread;
   static auto detach() -> void;
   static auto exit() -> void;
 
@@ -118,7 +118,7 @@ inline auto thread::join() -> void {
   }
 }
 
-inline auto thread::create(const function<void (uintptr)>& callback, uintptr parameter, uint stacksize) -> thread {
+inline auto thread::create(const function<void (uintptr)>& callback, uintptr parameter, u32 stacksize) -> thread {
   thread instance;
 
   auto context = new thread::context;

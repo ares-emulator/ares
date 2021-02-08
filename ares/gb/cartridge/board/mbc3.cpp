@@ -1,8 +1,8 @@
 struct MBC3 : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
-  Memory::Writable<uint8> ram;
-  Memory::Writable<uint8> rtc;
+  Memory::Readable<n8> rom;
+  Memory::Writable<n8> ram;
+  Memory::Writable<n8> rtc;
   bool MBC30 = false;  //0 = MBC3, 1 = MBC30
   //MBC3  supports 128 ROM banks (2MB) and 4 RAM banks (32KB)
   //MBC30 supports 256 ROM banks (4MB) and 8 RAM banks (64KB)
@@ -23,11 +23,11 @@ struct MBC3 : Interface {
       io.rtc.halt         = rtc[4].bit(6);
       io.rtc.dayCarry     = rtc[4].bit(7);
 
-      uint64 timestamp = 0;
-      for(uint index : range(8)) {
+      n64 timestamp = 0;
+      for(u32 index : range(8)) {
         timestamp.byte(index) = rtc[5 + index];
       }
-      uint64 diff = chrono::timestamp() - timestamp;
+      n64 diff = chrono::timestamp() - timestamp;
       if(diff < 32 * 365 * 24 * 60 * 60) {
         while(diff >= 24 * 60 * 60) { tickDay(); diff -= 24 * 60 * 60; }
         while(diff >= 60 * 60) { tickHour(); diff -= 60 * 60; }
@@ -49,8 +49,8 @@ struct MBC3 : Interface {
       rtc[3] = io.rtc.day.bit(0,7);
       rtc[4] = io.rtc.day.bit(8) << 0 | io.rtc.halt << 6 | io.rtc.dayCarry << 7;
 
-      uint64 timestamp = chrono::timestamp();
-      for(uint index : range(8)) {
+      n64 timestamp = chrono::timestamp();
+      for(u32 index : range(8)) {
         rtc[5 + index] = timestamp.byte(index);
       }
     }
@@ -91,13 +91,13 @@ struct MBC3 : Interface {
     }
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(address >= 0x0000 && address <= 0x3fff) {
-      return rom.read((uint14)address);
+      return rom.read((n14)address);
     }
 
     if(address >= 0x4000 && address <= 0x7fff) {
-      return rom.read(io.rom.bank << 14 | (uint14)address);
+      return rom.read(io.rom.bank << 14 | (n14)address);
     }
 
     if(address >= 0xa000 && address <= 0xbfff) {
@@ -105,7 +105,7 @@ struct MBC3 : Interface {
       if(!io.ram.enable) return 0xff;
       if(io.ram.bank <= (!MBC30 ? 0x03 : 0x07)) {
         if(!ram) return 0xff;
-        return ram.read(io.ram.bank << 13 | (uint13)address);
+        return ram.read(io.ram.bank << 13 | (n13)address);
       }
       if(io.ram.bank == 0x08) return io.rtc.latchSecond;
       if(io.ram.bank == 0x09) return io.rtc.latchMinute;
@@ -118,7 +118,7 @@ struct MBC3 : Interface {
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     if(address >= 0x0000 && address <= 0x1fff) {
       io.ram.enable = data.bit(0,3) == 0x0a;
       return;
@@ -154,7 +154,7 @@ struct MBC3 : Interface {
       if(!io.ram.enable) return;
       if(io.ram.bank <= (!MBC30 ? 0x03 : 0x07)) {
         if(!ram) return;
-        ram.write(io.ram.bank << 13 | (uint13)address, data);
+        ram.write(io.ram.bank << 13 | (n13)address, data);
       } else if(io.ram.bank == 0x08) {
         if(data >= 60) data = 0;  //unverified
         io.rtc.second = data;
@@ -201,27 +201,27 @@ struct MBC3 : Interface {
 
   struct IO {
     struct ROM {
-      uint8 bank = 0x01;
+      n8 bank = 0x01;
     } rom;
     struct RAM {
-      uint1 enable;
-      uint8 bank;
+      n1 enable;
+      n8 bank;
     } ram;
     struct RTC {
-      uint8 second;
-      uint8 minute;
-      uint8 hour;
-      uint9 day;
-      uint1 halt;
-      uint1 dayCarry;
+      n8 second;
+      n8 minute;
+      n8 hour;
+      n9 day;
+      n1 halt;
+      n1 dayCarry;
 
-      uint1 latch;
-      uint8 latchSecond;
-      uint8 latchMinute;
-      uint8 latchHour;
-      uint9 latchDay;
-      uint1 latchHalt;
-      uint1 latchDayCarry;
+      n1 latch;
+      n8 latchSecond;
+      n8 latchMinute;
+      n8 latchHour;
+      n9 latchDay;
+      n1 latchHalt;
+      n1 latchDayCarry;
     } rtc;
   } io;
 };

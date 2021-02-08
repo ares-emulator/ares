@@ -1,5 +1,5 @@
 auto TLCS900H::serialize(serializer& s) -> void {
-  for(uint n : range(4)) {
+  for(u32 n : range(4)) {
     s(r.xwa[n].l.l0);
     s(r.xbc[n].l.l0);
     s(r.xde[n].l.l0);
@@ -11,7 +11,7 @@ auto TLCS900H::serialize(serializer& s) -> void {
   s(r.xsp.l.l0);
   s(r.pc.l.l0);
 
-  for(uint n : range(4)) {
+  for(u32 n : range(4)) {
     s(r.dmas[n].l.l0);
     s(r.dmad[n].l.l0);
     s(r.dmam[n].l.l0);

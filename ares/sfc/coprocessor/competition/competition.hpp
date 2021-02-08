@@ -19,11 +19,11 @@ struct Competition : Thread {
   auto unload() -> void;
   auto power() -> void;
 
-  auto mcuRead(uint24 address, uint8) -> uint8;
-  auto mcuWrite(uint24 address, uint8) -> void;
+  auto mcuRead(n24 address, n8) -> n8;
+  auto mcuWrite(n24 address, n8) -> void;
 
-  auto read(uint24 address, uint8 data) -> uint8;
-  auto write(uint24 address, uint8 data) -> void;
+  auto read(n24 address, n8 data) -> n8;
+  auto write(n24 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -31,18 +31,18 @@ struct Competition : Thread {
 public:
   ReadableMemory rom[4];
 
-  enum class Board : uint { Unknown, CampusChallenge92, PowerFest94 } board;
-  uint timer;
+  enum class Board : u32 { Unknown, CampusChallenge92, PowerFest94 } board;
+  u32 timer;
 
 private:
-  uint8 status;
-  uint8 select;
+  n8 status;
+  n8 select;
 
-  bool timerActive;
-  bool scoreActive;
+  n1 timerActive;
+  n1 scoreActive;
 
-  uint timerSecondsRemaining;
-  uint scoreSecondsRemaining;
+  u32 timerSecondsRemaining;
+  u32 scoreSecondsRemaining;
 };
 
 extern Competition competition;

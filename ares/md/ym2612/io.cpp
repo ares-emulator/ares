@@ -1,13 +1,13 @@
-auto YM2612::readStatus() -> uint8 {
+auto YM2612::readStatus() -> n8 {
   //d7 = busy (not emulated, requires cycle timing accuracy)
   return timerA.line << 0 | timerB.line << 1;
 }
 
-auto YM2612::writeAddress(uint9 data) -> void {
+auto YM2612::writeAddress(n9 data) -> void {
   io.address = data;
 }
 
-auto YM2612::writeData(uint8 data) -> void {
+auto YM2612::writeData(n8 data) -> void {
   switch(io.address) {
 
   //LFO
@@ -60,7 +60,7 @@ auto YM2612::writeData(uint8 data) -> void {
   //key on/off
   case 0x28: {
     //0,1,2,4,5,6 => 0,1,2,3,4,5
-    uint index = data.bit(0,2);
+    u32 index = data.bit(0,2);
     if(index == 3 || index == 7) break;
     if(index >= 4) index--;
 
@@ -87,8 +87,8 @@ auto YM2612::writeData(uint8 data) -> void {
   }
 
   if(io.address.bit(0,1) == 3) return;
-  uint3 voice = io.address.bit(8) * 3 + io.address.bit(0,1);
-  uint2 index = io.address.bit(2,3) >> 1 | io.address.bit(2,3) << 1;  //0,1,2,3 => 0,2,1,3
+  n3 voice = io.address.bit(8) * 3 + io.address.bit(0,1);
+  n2 index = io.address.bit(2,3) >> 1 | io.address.bit(2,3) << 1;  //0,1,2,3 => 0,2,1,3
 
   auto& channel = channels[voice];
   auto& op = channel.operators[index];
@@ -160,7 +160,7 @@ auto YM2612::writeData(uint8 data) -> void {
   case 0x0a0: {
     channel[3].pitch.reload = channel[3].pitch.latch | data;
     channel[3].octave.reload = channel[3].octave.latch;
-    for(uint index : range(4)) channel[index].updatePitch();
+    for(u32 index : range(4)) channel[index].updatePitch();
     break;
   }
 
@@ -205,7 +205,7 @@ auto YM2612::writeData(uint8 data) -> void {
     channel.tremolo = data.bit(4,5);
     channel.rightEnable = data.bit(6);
     channel.leftEnable = data.bit(7);
-    for(uint index : range(4)) {
+    for(u32 index : range(4)) {
       channel[index].updateLevel();
       channel[index].updatePhase();
     }

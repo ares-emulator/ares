@@ -56,7 +56,7 @@ auto mObject::abstract() const -> bool {
   return true;
 }
 
-auto mObject::adjustOffset(signed displacement) -> type& {
+auto mObject::adjustOffset(s32 displacement) -> type& {
   state.offset += displacement;
   return *this;
 }
@@ -81,7 +81,7 @@ auto mObject::group() const -> Group {
   return {};
 }
 
-auto mObject::offset() const -> signed {
+auto mObject::offset() const -> s32 {
   return state.offset;
 }
 
@@ -280,7 +280,7 @@ auto mObject::setGroup(sGroup group) -> type& {
   return *this;
 }
 
-auto mObject::setParent(mObject* parent, int offset) -> type& {
+auto mObject::setParent(mObject* parent, s32 offset) -> type& {
   destruct();
   state.parent = parent;
   state.offset = offset;

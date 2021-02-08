@@ -25,140 +25,140 @@ struct PPU : Thread, PPUcounter {
   auto hires() const -> bool { return io.pseudoHires || io.bgMode == 5 || io.bgMode == 6; }
   auto interlace() const -> bool { return state.interlace; }
   auto overscan() const -> bool { return state.overscan; }
-  auto vdisp() const -> uint { return state.vdisp; }
+  auto vdisp() const -> u32 { return state.vdisp; }
 
   //ppu.cpp
   auto load(Node::Object parent) -> void;
   auto unload() -> void;
 
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto main() -> void;
   auto map() -> void;
   auto power(bool reset) -> void;
   auto normalize() -> void;
-  auto draw(uint32_t* output) -> void;
+  auto draw(u32* output) -> void;
 
   //io.cpp
   auto latchCounters() -> void;
-  auto addressVRAM() const -> uint16;
-  auto readVRAM() -> uint16;
-  auto writeVRAM(uint1 byte, uint8 data) -> void;
-  auto readOAM(uint10 address) -> uint8;
-  auto writeOAM(uint10 address, uint8 data) -> void;
-  auto readCGRAM(uint1 byte, uint8 address) -> uint8;
-  auto writeCGRAM(uint8 address, uint15 data) -> void;
-  auto readIO(uint24 address, uint8 data) -> uint8;
-  auto writeIO(uint24 address, uint8 data) -> void;
+  auto addressVRAM() const -> n16;
+  auto readVRAM() -> n16;
+  auto writeVRAM(n1 byte, n8 data) -> void;
+  auto readOAM(n10 address) -> n8;
+  auto writeOAM(n10 address, n8 data) -> void;
+  auto readCGRAM(n1 byte, n8 address) -> n8;
+  auto writeCGRAM(n8 address, n15 data) -> void;
+  auto readIO(n24 address, n8 data) -> n8;
+  auto writeIO(n24 address, n8 data) -> void;
   auto updateVideoMode() -> void;
 
   //color.cpp
-  auto color(uint32 color) -> uint64;
+  auto color(n32 color) -> n64;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 private:
-  struct Source { enum : uint { BG1, BG2, BG3, BG4, OBJ1, OBJ2, COL }; };
+  struct Source { enum : u32 { BG1, BG2, BG3, BG4, OBJ1, OBJ2, COL }; };
 
-  uint32 renderingCycle;
+  n32 renderingCycle;
 
   struct {
-    uint4 version;
-    uint8 mdr;
+    n4 version;
+    n8 mdr;
   } ppu1, ppu2;
 
   struct VRAM {
-    auto& operator[](uint address) { return data[address & mask]; }
-    uint16 data[64_KiB];
-    uint16 mask = 0x7fff;
-    uint16 address;
-     uint8 increment;
-     uint2 mapping;
-     uint1 mode;
+    auto& operator[](u32 address) { return data[address & mask]; }
+    n16 data[64_KiB];
+    n16 mask = 0x7fff;
+    n16 address;
+    n8  increment;
+    n2  mapping;
+    n1  mode;
   } vram;
 
   struct State {
-    uint1 interlace;
-    uint1 overscan;
-    uint9 vdisp;
+    n1 interlace;
+    n1 overscan;
+    n9 vdisp;
   } state;
 
   struct Latches {
-    uint16 vram;
-     uint8 oam;
-     uint8 cgram;
-     uint8 bgofsPPU1;
-     uint8 bgofsPPU2;
-     uint8 mode7;
-     uint1 counters;
-     uint1 hcounter;
-     uint1 vcounter;
+    n16 vram;
+    n8  oam;
+    n8  cgram;
+    n8  bgofsPPU1;
+    n8  bgofsPPU2;
+    n8  mode7;
+    n1  counters;
+    n1  hcounter;
+    n1  vcounter;
 
-    uint10 oamAddress;
-     uint8 cgramAddress;
+    n10 oamAddress;
+    n8  cgramAddress;
   } latch;
 
   struct IO {
     //$2100  INIDISP
-    uint4 displayBrightness;
-    uint1 displayDisable;
+    n4  displayBrightness;
+    n1  displayDisable;
 
     //$2102  OAMADDL
     //$2103  OAMADDH
-    uint10 oamBaseAddress;
-    uint10 oamAddress;
-     uint1 oamPriority;
+    n10 oamBaseAddress;
+    n10 oamAddress;
+    n1  oamPriority;
 
     //$2105  BGMODE
-     uint3 bgMode;
-     uint1 bgPriority;
+    n3  bgMode;
+    n1  bgPriority;
 
     //$2121  CGADD
-     uint8 cgramAddress;
-     uint1 cgramAddressLatch;
+    n8  cgramAddress;
+    n1  cgramAddressLatch;
 
     //$2133  SETINI
-     uint1 interlace;
-     uint1 overscan;
-     uint1 pseudoHires;
-     uint1 extbg;
+    n1  interlace;
+    n1  overscan;
+    n1  pseudoHires;
+    n1  extbg;
 
     //$213c  OPHCT
-    uint16 hcounter;
+    n16 hcounter;
 
     //$213d  OPVCT
-    uint16 vcounter;
+    n16 vcounter;
   } io;
 
   struct Mode7 {
     //$210d  BG1HOFS
-    uint16 hoffset;
+    n16 hoffset;
 
     //$210e  BG1VOFS
-    uint16 voffset;
+    n16 voffset;
 
     //$211a  M7SEL
-     uint1 hflip;
-     uint1 vflip;
-     uint2 repeat;
+    n1  hflip;
+    n1  vflip;
+    n2  repeat;
 
     //$211b  M7A
-    uint16 a;
+    n16 a;
 
     //$211c  M7B
-    uint16 b;
+    n16 b;
 
     //$211d  M7C
-    uint16 c;
+    n16 c;
 
     //$211e  M7D
-    uint16 d;
+    n16 d;
 
     //$211f  M7X
-    uint16 hcenter;
+    n16 hcenter;
 
     //$2120  M7Y
-    uint16 vcenter;
+    n16 vcenter;
   } mode7;
 
   #include "window.hpp"
@@ -177,9 +177,9 @@ private:
   Object obj;
   DAC dac;
 
-   uint1 width256;
-   uint1 width512;
-  uint16 widths[240];
+  n1  width256;
+  n1  width512;
+  n16 widths[240];
 
   friend class PPU::Window;
   friend class PPU::Mosaic;

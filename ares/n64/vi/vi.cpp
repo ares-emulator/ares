@@ -12,7 +12,7 @@ auto VI::load(Node::Object parent) -> void {
 
   screen = node->append<Node::Video::Screen>("Screen", 640, 478);
   screen->setRefresh({&VI::refresh, this});
-  screen->colors((1 << 24) + (1 << 15), [&](uint32 color) -> uint64 {
+  screen->colors((1 << 24) + (1 << 15), [&](n32 color) -> n64 {
     if(color < (1 << 24)) {
       u64 a = 65535;
       u64 r = image::normalize(color >> 16 & 255, 8, 16);
@@ -53,22 +53,22 @@ auto VI::main() -> void {
   step(93'750'000 / 60 / 262);
 }
 
-auto VI::step(uint clocks) -> void {
+auto VI::step(u32 clocks) -> void {
   clock += clocks;
 }
 
 auto VI::refresh() -> void {
-  uint pitch  = vi.io.width;
-  uint width  = vi.io.width;  //vi.io.xscale <= 0x300 ? 320 : 640;
-  uint height = vi.io.yscale <= 0x400 ? 239 : 478;
+  u32 pitch  = vi.io.width;
+  u32 width  = vi.io.width;  //vi.io.xscale <= 0x300 ? 320 : 640;
+  u32 height = vi.io.yscale <= 0x400 ? 239 : 478;
   screen->setViewport(0, 0, width, height);
 
   if(vi.io.colorDepth == 2) {
     //15bpp
-    for(uint y : range(height)) {
+    for(u32 y : range(height)) {
       u32 address = vi.io.dramAddress + y * pitch * 2;
       auto line = screen->pixels(1).data() + y * 640;
-      for(uint x : range(min(width, pitch))) {
+      for(u32 x : range(min(width, pitch))) {
         u16 data = bus.readHalf(address + x * 2);
         *line++ = 1 << 24 | data >> 1;
       }
@@ -77,10 +77,10 @@ auto VI::refresh() -> void {
 
   if(vi.io.colorDepth == 3) {
     //24bpp
-    for(uint y : range(height)) {
+    for(u32 y : range(height)) {
       u32 address = vi.io.dramAddress + y * pitch * 4;
       auto line = screen->pixels(1).data() + y * 640;
-      for(uint x : range(min(width, pitch))) {
+      for(u32 x : range(min(width, pitch))) {
         u32 data = bus.readWord(address + x * 4);
         *line++ = data >> 8;
       }

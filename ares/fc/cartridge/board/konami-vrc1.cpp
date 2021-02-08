@@ -79,10 +79,10 @@ struct KonamiVRC1 : Interface {
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(characterRAM);
     s(programBank);
     s(characterBank);

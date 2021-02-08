@@ -60,11 +60,11 @@ struct PPU : Thread {
 
   struct IO {
     //internal
-    n08 mdr;
-    n01 field;
+    n8  mdr;
+    n1  field;
     n16 lx;
     n16 ly;
-    n08 busData;
+    n8  busData;
 
     struct Union {
       n19 data;
@@ -81,31 +81,31 @@ struct PPU : Thread {
       BitRange<19,16,18> fineX     {&data};
     } v, t;
 
-    n01 nmiHold;
-    n01 nmiFlag;
+    n1  nmiHold;
+    n1  nmiFlag;
 
     //$2000
-    n06 vramIncrement;  //1 or 32
+    n6  vramIncrement;  //1 or 32
     n16 spriteAddress;  //0x0000 or 0x1000
     n16 bgAddress;      //0x0000 or 0x1000
-    n05 spriteHeight;   //8 or 16
-    n01 masterSelect;
-    n01 nmiEnable;
+    n5  spriteHeight;   //8 or 16
+    n1  masterSelect;
+    n1  nmiEnable;
 
     //$2001
-    n01 grayscale;
-    n01 bgEdgeEnable;
-    n01 spriteEdgeEnable;
-    n01 bgEnable;
-    n01 spriteEnable;
-    n03 emphasis;
+    n1  grayscale;
+    n1  bgEdgeEnable;
+    n1  spriteEdgeEnable;
+    n1  bgEnable;
+    n1  spriteEnable;
+    n3  emphasis;
 
     //$2002
-    n01 spriteOverflow;
-    n01 spriteZeroHit;
+    n1  spriteOverflow;
+    n1  spriteZeroHit;
 
     //$2003
-    n08 oamAddress;
+    n8  oamAddress;
   } io;
 
   struct OAM {

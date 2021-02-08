@@ -1,25 +1,25 @@
-auto DSP::calculateFIR(uint1 channel, int index) -> int {
-  int sample = echo.history[channel][(uint3)(echo._historyOffset + index + 1)];
+auto DSP::calculateFIR(n1 channel, s32 index) -> s32 {
+  s32 sample = echo.history[channel][(n3)(echo._historyOffset + index + 1)];
   return (sample * echo.fir[index]) >> 6;
 }
 
-auto DSP::echoOutput(uint1 channel) const -> int16 {
-  int16 masterOutput = master.output[channel] * master.volume[channel] >> 7;
-    int16 echoOutput =    echo.input[channel] *   echo.volume[channel] >> 7;
+auto DSP::echoOutput(n1 channel) const -> i16 {
+  i16 masterOutput = master.output[channel] * master.volume[channel] >> 7;
+    i16 echoOutput =    echo.input[channel] *   echo.volume[channel] >> 7;
   return sclamp<16>(masterOutput + echoOutput);
 }
 
-auto DSP::echoRead(uint1 channel) -> void {
-  uint16 address = echo._address + channel * 2;
-  uint8 lo = apuram[address++];
-  uint8 hi = apuram[address++];
-  int s = (int16)((hi << 8) + lo);
+auto DSP::echoRead(n1 channel) -> void {
+  n16 address = echo._address + channel * 2;
+  n8 lo = apuram[address++];
+  n8 hi = apuram[address++];
+  s32 s = (i16)((hi << 8) + lo);
   echo.history[channel][echo._historyOffset] = s >> 1;
 }
 
-auto DSP::echoWrite(uint1 channel) -> void {
+auto DSP::echoWrite(n1 channel) -> void {
   if(!echo._readonly) {
-    uint16 address = echo._address + channel * 2;
+    n16 address = echo._address + channel * 2;
     auto sample = echo.output[channel];
     apuram[address++] = sample.byte(0);
     apuram[address++] = sample.byte(1);
@@ -35,16 +35,16 @@ auto DSP::echo22() -> void {
   echoRead(0);
 
   //FIR
-  int l = calculateFIR(0, 0);
-  int r = calculateFIR(1, 0);
+  s32 l = calculateFIR(0, 0);
+  s32 r = calculateFIR(1, 0);
 
   echo.input[0] = l;
   echo.input[1] = r;
 }
 
 auto DSP::echo23() -> void {
-  int l = calculateFIR(0, 1) + calculateFIR(0, 2);
-  int r = calculateFIR(1, 1) + calculateFIR(1, 2);
+  s32 l = calculateFIR(0, 1) + calculateFIR(0, 2);
+  s32 r = calculateFIR(1, 1) + calculateFIR(1, 2);
 
   echo.input[0] += l;
   echo.input[1] += r;
@@ -53,22 +53,22 @@ auto DSP::echo23() -> void {
 }
 
 auto DSP::echo24() -> void {
-  int l = calculateFIR(0, 3) + calculateFIR(0, 4) + calculateFIR(0, 5);
-  int r = calculateFIR(1, 3) + calculateFIR(1, 4) + calculateFIR(1, 5);
+  s32 l = calculateFIR(0, 3) + calculateFIR(0, 4) + calculateFIR(0, 5);
+  s32 r = calculateFIR(1, 3) + calculateFIR(1, 4) + calculateFIR(1, 5);
 
   echo.input[0] += l;
   echo.input[1] += r;
 }
 
 auto DSP::echo25() -> void {
-  int l = echo.input[0] + calculateFIR(0, 6);
-  int r = echo.input[1] + calculateFIR(1, 6);
+  s32 l = echo.input[0] + calculateFIR(0, 6);
+  s32 r = echo.input[1] + calculateFIR(1, 6);
 
-  l = (int16)l;
-  r = (int16)r;
+  l = (i16)l;
+  r = (i16)r;
 
-  l += (int16)calculateFIR(0, 7);
-  r += (int16)calculateFIR(1, 7);
+  l += (i16)calculateFIR(0, 7);
+  r += (i16)calculateFIR(1, 7);
 
   echo.input[0] = sclamp<16>(l) & ~1;
   echo.input[1] = sclamp<16>(r) & ~1;
@@ -80,16 +80,16 @@ auto DSP::echo26() -> void {
   master.output[0] = echoOutput(0);
 
   //echo feedback
-  int l = echo.output[0] + int16(echo.input[0] * echo.feedback >> 7);
-  int r = echo.output[1] + int16(echo.input[1] * echo.feedback >> 7);
+  s32 l = echo.output[0] + i16(echo.input[0] * echo.feedback >> 7);
+  s32 r = echo.output[1] + i16(echo.input[1] * echo.feedback >> 7);
 
   echo.output[0] = sclamp<16>(l) & ~1;
   echo.output[1] = sclamp<16>(r) & ~1;
 }
 
 auto DSP::echo27() -> void {
-  int outl = master.output[0];
-  int outr = echoOutput(1);
+  s32 outl = master.output[0];
+  s32 outr = echoOutput(1);
   master.output[0] = 0;
   master.output[1] = 0;
 

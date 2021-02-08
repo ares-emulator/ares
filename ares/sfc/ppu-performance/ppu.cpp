@@ -47,7 +47,7 @@ auto PPU::unload() -> void {
   debugger = {};
 }
 
-auto PPU::step(uint clocks) -> void {
+auto PPU::step(u32 clocks) -> void {
   tick(clocks);
   Thread::step(clocks);
   Thread::synchronize(cpu);
@@ -64,7 +64,7 @@ auto PPU::main() -> void {
   }
 
   if(vcounter() && vcounter() < vdisp() && !runAhead()) {
-    uint width = hires() ? 512 : 256;
+    u32 width = hires() ? 512 : 256;
     if(width == 256) width256 = 1;
     if(width == 512) width512 = 1;
     widths[vcounter()] = width;
@@ -100,8 +100,8 @@ auto PPU::main() -> void {
 }
 
 auto PPU::map() -> void {
-  function<uint8 (uint24, uint8)> reader{&PPU::readIO, this};
-  function<void (uint24, uint8)> writer{&PPU::writeIO, this};
+  function<n8   (n24, n8)> reader{&PPU::readIO, this};
+  function<void (n24, n8)> writer{&PPU::writeIO, this};
   bus.map(reader, writer, "00-3f,80-bf:2100-213f");
 }
 
@@ -131,7 +131,7 @@ auto PPU::power(bool reset) -> void {
   updateVideoMode();
 
   string title;
-  for(uint index : range(21)) {
+  for(u32 index : range(21)) {
     char byte = bus.read(0xffc0 + index, 0x00);
     if(byte == 0x00) break;
     if(byte == 0xff) break;
@@ -150,12 +150,12 @@ auto PPU::power(bool reset) -> void {
 auto PPU::normalize() -> void {
   if(width256 && width512) {
     //this frame contains mixed resolutions: normalize every scanline to 512-width
-    for(uint y : range(1, 240)) {
+    for(u32 y : range(1, 240)) {
       auto line = screen->pixels().data() + 1024 * y + (interlace() && field() ? 512 : 0);
       if(widths[y] == 256) {
         auto source = &line[256];
         auto target = &line[512];
-        for(uint x : range(256)) {
+        for(u32 x : range(256)) {
           auto color = *--source;
           *--target = color;
           *--target = color;

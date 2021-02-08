@@ -157,6 +157,14 @@ auto Emulator::manifest() -> shared_pointer<vfs::file> {
     game.manifest = cartridge->manifest(game.image, game.location);
     return vfs::memory::open(game.manifest.data<u8>(), game.manifest.size());
   }
+  if(auto floppyDisk = medium.cast<mia::FloppyDisk>()) {
+    game.manifest = floppyDisk->manifest(game.image, game.location);
+    return vfs::memory::open(game.manifest.data<u8>(), game.manifest.size());
+  }
+  if(auto compactDisc = medium.cast<mia::CompactDisc>()) {
+    game.manifest = compactDisc->manifest(game.location);
+    return vfs::memory::open(game.manifest.data<u8>(), game.manifest.size());
+  }
 
   return {};
 }
@@ -191,11 +199,28 @@ auto Emulator::manifest(const string& type, const string& location) -> shared_po
   return {};
 }
 
+auto Emulator::region() -> string {
+  auto document = BML::unserialize(game.manifest);
+  auto regions = document["game/region"].string().split(",").strip();
+  if(!regions) return {};
+  if(settings.boot.prefer == "NTSC-U" && regions.find("NTSC-U")) return "NTSC-U";
+  if(settings.boot.prefer == "NTSC-J" && regions.find("NTSC-J")) return "NTSC-J";
+  if(settings.boot.prefer == "NTSC-U" && regions.find("NTSC"  )) return "NTSC";
+  if(settings.boot.prefer == "NTSC-J" && regions.find("NTSC"  )) return "NTSC";
+  if(settings.boot.prefer == "PAL"    && regions.find("PAL"   )) return "PAL";
+  if(regions.first()) return regions.first();
+  if(settings.boot.prefer == "NTSC-J") return "NTSC-J";
+  if(settings.boot.prefer == "NTSC-U") return "NTSC-U";
+  if(settings.boot.prefer == "PAL"   ) return "PAL";
+  return {};
+}
+
 auto Emulator::load(const string& location, const vector<u8>& image) -> bool {
   configuration.game = Location::dir(location);
 
   game.location = location;
   game.image = image;
+  if(!manifest()) return false;
 
   latch = {};
 

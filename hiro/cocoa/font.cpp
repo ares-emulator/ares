@@ -16,7 +16,7 @@ auto pFont::size(NSFont* font, const string& text) -> Size {
     NSString* cocoaText = [NSString stringWithUTF8String:text];
     NSDictionary* fontAttributes = [NSDictionary dictionaryWithObjectsAndKeys:font, NSFontAttributeName, nil];
     NSSize size = [cocoaText sizeWithAttributes:fontAttributes];
-    return {(int)size.width, (int)size.height};
+    return {(s32)size.width, (s32)size.height};
   }
 }
 

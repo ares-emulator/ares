@@ -30,8 +30,8 @@ struct JalecoJF : Interface {
         switch(irqMode) {
         case 0: irqCounter = n16(irqReload); break;
         case 1: irqCounter = n12(irqReload); break;
-        case 2: irqCounter = n08(irqReload); break;
-        case 3: irqCounter = n04(irqReload); break;
+        case 2: irqCounter = n8 (irqReload); break;
+        case 3: irqCounter = n4 (irqReload); break;
         }
       }
     }
@@ -118,7 +118,6 @@ struct JalecoJF : Interface {
   auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
     return characterROM.read(addressCHR(address));
-    return data;
   }
 
   auto writeCHR(n32 address, n8 data) -> void override {
@@ -142,12 +141,12 @@ struct JalecoJF : Interface {
     s(mirror);
   }
 
-  n06 programBank[3];
-  n08 characterBank[8];
-  n01 irqLine;
+  n6  programBank[3];
+  n8  characterBank[8];
+  n1  irqLine;
   n16 irqCounter;
   n16 irqReload;
-  n01 irqEnable;
-  n03 irqMode;
-  n02 mirror;
+  n1  irqEnable;
+  n3  irqMode;
+  n2  mirror;
 };

@@ -6,7 +6,7 @@ auto mHexEdit::allocate() -> pObject* {
 
 //
 
-auto mHexEdit::address() const -> unsigned {
+auto mHexEdit::address() const -> u32 {
   return state.address;
 }
 
@@ -14,16 +14,16 @@ auto mHexEdit::backgroundColor() const -> Color {
   return state.backgroundColor;
 }
 
-auto mHexEdit::columns() const -> unsigned {
+auto mHexEdit::columns() const -> u32 {
   return state.columns;
 }
 
-auto mHexEdit::doRead(unsigned offset) const -> uint8_t {
+auto mHexEdit::doRead(u32 offset) const -> u8 {
   if(state.onRead) return state.onRead(offset);
   return 0x00;
 }
 
-auto mHexEdit::doWrite(unsigned offset, uint8_t data) const -> void {
+auto mHexEdit::doWrite(u32 offset, u8 data) const -> void {
   if(state.onWrite) return state.onWrite(offset, data);
 }
 
@@ -31,25 +31,25 @@ auto mHexEdit::foregroundColor() const -> Color {
   return state.foregroundColor;
 }
 
-auto mHexEdit::length() const -> unsigned {
+auto mHexEdit::length() const -> u32 {
   return state.length;
 }
 
-auto mHexEdit::onRead(const function<uint8_t (unsigned)>& callback) -> type& {
+auto mHexEdit::onRead(const function<u8 (u32)>& callback) -> type& {
   state.onRead = callback;
   return *this;
 }
 
-auto mHexEdit::onWrite(const function<void (unsigned, uint8_t)>& callback) -> type& {
+auto mHexEdit::onWrite(const function<void (u32, u8)>& callback) -> type& {
   state.onWrite = callback;
   return *this;
 }
 
-auto mHexEdit::rows() const -> unsigned {
+auto mHexEdit::rows() const -> u32 {
   return state.rows;
 }
 
-auto mHexEdit::setAddress(unsigned address) -> type& {
+auto mHexEdit::setAddress(u32 address) -> type& {
   state.address = address;
   signal(setAddress, address);
   return *this;
@@ -61,7 +61,7 @@ auto mHexEdit::setBackgroundColor(Color color) -> type& {
   return *this;
 }
 
-auto mHexEdit::setColumns(unsigned columns) -> type& {
+auto mHexEdit::setColumns(u32 columns) -> type& {
   state.columns = columns;
   signal(setColumns, columns);
   return *this;
@@ -73,13 +73,13 @@ auto mHexEdit::setForegroundColor(Color color) -> type& {
   return *this;
 }
 
-auto mHexEdit::setLength(unsigned length) -> type& {
+auto mHexEdit::setLength(u32 length) -> type& {
   state.length = length;
   signal(setLength, length);
   return *this;
 }
 
-auto mHexEdit::setRows(unsigned rows) -> type& {
+auto mHexEdit::setRows(u32 rows) -> type& {
   state.rows = rows;
   signal(setRows, rows);
   return *this;

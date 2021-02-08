@@ -58,7 +58,7 @@ auto pTimer::setEnabled(bool enabled) -> void {
   }
 }
 
-auto pTimer::setInterval(uint interval) -> void {
+auto pTimer::setInterval(u32 interval) -> void {
   @autoreleasepool {
     [cocoaTimer update];
   }

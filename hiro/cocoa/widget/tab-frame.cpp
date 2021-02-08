@@ -30,11 +30,11 @@
 
 -(NSSize) sizeOfLabel:(BOOL)shouldTruncateLabel {
   NSSize sizeOfLabel = [super sizeOfLabel:shouldTruncateLabel];
-  int selection = [cocoaTabFrame indexOfTabViewItem:self];
+  s32 selection = [cocoaTabFrame indexOfTabViewItem:self];
   if(selection >= 0) {
     if(auto item = tabFrame->item(selection)) {
       if(item->state.icon) {
-        uint iconSize = hiro::pFont::size(tabFrame->font(true), " ").height();
+        u32 iconSize = hiro::pFont::size(tabFrame->font(true), " ").height();
         sizeOfLabel.width += iconSize + 2;
       }
     }
@@ -43,11 +43,11 @@
 }
 
 -(void) drawLabel:(BOOL)shouldTruncateLabel inRect:(NSRect)tabRect {
-  int selection = [cocoaTabFrame indexOfTabViewItem:self];
+  s32 selection = [cocoaTabFrame indexOfTabViewItem:self];
   if(selection >= 0) {
     if(auto item = tabFrame->item(selection)) {
       if(item->state.icon) {
-        uint iconSize = hiro::pFont::size(tabFrame->font(true), " ").height();
+        u32 iconSize = hiro::pFont::size(tabFrame->font(true), " ").height();
         NSImage* image = NSMakeImage(item->state.icon);
 
         [[NSGraphicsContext currentContext] saveGraphicsState];
@@ -151,7 +151,7 @@ auto pTabFrame::setVisible(bool visible) -> void {
 auto pTabFrame::_synchronizeSizable() -> void {
   @autoreleasepool {
     NSTabViewItem* tabViewItem = [cocoaView selectedTabViewItem];
-    int selected = tabViewItem ? [cocoaView indexOfTabViewItem:tabViewItem] : -1;
+    s32 selected = tabViewItem ? [cocoaView indexOfTabViewItem:tabViewItem] : -1;
     for(auto& item : state().items) {
       item->state.selected = item->offset() == selected;
       if(auto& sizable = item->state.sizable) sizable->setVisible(item->selected());

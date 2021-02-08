@@ -3,7 +3,7 @@
  * byte writes to word memory areas that are addressable as bytes cannot enjoy this optimization.
  */
 
-auto CPU::read(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 {
+auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   if(address >= 0x000000 && address <= 0x3fffff) {
   //if(refresh.external >= 126) idle(min(2, 128 - refresh.external));
     if(!io.romEnable) return tmss[address >> 1];
@@ -57,7 +57,7 @@ auto CPU::read(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 
   return data;
 }
 
-auto CPU::write(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void {
+auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   if(address >= 0x000000 && address <= 0x3fffff) {
   //if(refresh.external >= 126) idle(min(2, 128 - refresh.external));
     if(cartridge.bootable()) {

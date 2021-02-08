@@ -28,8 +28,6 @@ struct VideoDriver {
   virtual auto setFormat(string format) -> bool { return true; }
   virtual auto setShader(string shader) -> bool { return true; }
 
-  virtual auto acquireContext() -> bool { return true; }
-  virtual auto releaseContext() -> bool { return true; }
   virtual auto focused() -> bool { return true; }
   virtual auto clear() -> void {}
   virtual auto size(u32& width, u32& height) -> void {}
@@ -111,8 +109,6 @@ struct Video {
   auto setFormat(string format) -> bool;
   auto setShader(string shader) -> bool;
 
-  auto acquireContext() -> bool;
-  auto releaseContext() -> bool;
   auto focused() -> bool;
   auto clear() -> void;
   struct Size {

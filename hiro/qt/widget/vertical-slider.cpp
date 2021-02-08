@@ -6,11 +6,11 @@ auto pVerticalSlider::minimumSize() const -> Size {
   return {20, 0};
 }
 
-auto pVerticalSlider::setLength(unsigned length) -> void {
+auto pVerticalSlider::setLength(u32 length) -> void {
   _setState();
 }
 
-auto pVerticalSlider::setPosition(unsigned position) -> void {
+auto pVerticalSlider::setPosition(u32 position) -> void {
   _setState();
 }
 
@@ -19,7 +19,7 @@ auto pVerticalSlider::construct() -> void {
   qtVerticalSlider->setInvertedAppearance(true);
   qtVerticalSlider->setRange(0, 100);
   qtVerticalSlider->setPageStep(101 >> 3);
-  qtVerticalSlider->connect(qtVerticalSlider, SIGNAL(valueChanged(int)), SLOT(onChange()));
+  qtVerticalSlider->connect(qtVerticalSlider, SIGNAL(valueChanged(s32)), SLOT(onChange()));
 
   pWidget::construct();
   _setState();
@@ -31,7 +31,7 @@ auto pVerticalSlider::destruct() -> void {
 }
 
 auto pVerticalSlider::_setState() -> void {
-  signed length = state().length + (state().length == 0);
+  s32 length = state().length + (state().length == 0);
   qtVerticalSlider->setRange(0, length - 1);
   qtVerticalSlider->setPageStep(length >> 3);
   qtVerticalSlider->setValue(state().position);

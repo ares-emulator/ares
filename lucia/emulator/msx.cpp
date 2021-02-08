@@ -23,7 +23,8 @@ MSX::MSX() {
 }
 
 auto MSX::load() -> bool {
-  if(!ares::MSX::load(root, "MSX")) return false;
+  auto region = Emulator::region();
+  if(!ares::MSX::load(root, {"[Microsoft] MSX (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -80,7 +81,8 @@ MSX2::MSX2() {
 }
 
 auto MSX2::load() -> bool {
-  if(!ares::MSX::load(root, "MSX2")) return false;
+  auto region = Emulator::region();
+  if(!ares::MSX::load(root, {"[Microsoft] MSX2 (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

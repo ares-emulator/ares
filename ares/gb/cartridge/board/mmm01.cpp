@@ -1,7 +1,7 @@
 struct MMM01 : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
-  Memory::Writable<uint8> ram;
+  Memory::Readable<n8> rom;
+  Memory::Writable<n8> ram;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -17,10 +17,10 @@ struct MMM01 : Interface {
   auto unload() -> void override {
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(io.mode == 0) {
       if(address >= 0x0000 && address <= 0x7fff) {
-        return rom.read(rom.size() - 0x8000 + (uint15)address);
+        return rom.read(rom.size() - 0x8000 + (n15)address);
       }
 
       return data;
@@ -28,16 +28,16 @@ struct MMM01 : Interface {
 
     if(io.mode == 1) {
       if(address >= 0x0000 && address <= 0x3fff) {
-        return rom.read((io.rom.base << 14) + (uint14)address);
+        return rom.read((io.rom.base << 14) + (n14)address);
       }
 
       if(address >= 0x4000 && address <= 0x7fff) {
-        return rom.read((io.rom.base << 14) + (io.rom.bank << 14) + (uint14)address);
+        return rom.read((io.rom.base << 14) + (io.rom.bank << 14) + (n14)address);
       }
 
       if(address >= 0xa000 && address <= 0xbfff) {
         if(!ram || !io.ram.enable) return 0xff;
-        return ram.read(io.ram.bank << 13 | (uint13)address);
+        return ram.read(io.ram.bank << 13 | (n13)address);
       }
 
       return data;
@@ -46,7 +46,7 @@ struct MMM01 : Interface {
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     if(io.mode == 0) {
       if(address >= 0x0000 && address <= 0x1fff) {
         io.mode = 1;
@@ -74,7 +74,7 @@ struct MMM01 : Interface {
 
       if(address >= 0xa000 && address <= 0xbfff) {
         if(!ram || !io.ram.enable) return;
-        ram.write(io.ram.bank << 13 | (uint13)address, data);
+        ram.write(io.ram.bank << 13 | (n13)address, data);
       }
 
       return;
@@ -95,14 +95,14 @@ struct MMM01 : Interface {
   }
 
   struct IO {
-    uint1 mode;
+    n1 mode;
     struct ROM {
-      uint6 base;
-      uint8 bank = 0x01;
+      n6 base;
+      n8 bank = 0x01;
     } rom;
     struct RAM {
-      uint1 enable;
-      uint8 bank;
+      n1 enable;
+      n8 bank;
     } ram;
   } io;
 };

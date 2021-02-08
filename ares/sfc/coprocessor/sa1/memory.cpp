@@ -18,9 +18,9 @@ inline auto SA1::idleBranch() -> void {
   if(r.pc.d & 1) idleJump();
 }
 
-auto SA1::read(uint24 address) -> uint8 {
+auto SA1::read(n24 address) -> n8 {
   r.mar = address;
-  uint8 data = r.mdr;
+  n8 data = r.mdr;
 
   if((address & 0x40fe00) == 0x002200  //00-3f,80-bf:2200-23ff
   ) {
@@ -62,7 +62,7 @@ auto SA1::read(uint24 address) -> uint8 {
   return data;
 }
 
-auto SA1::write(uint24 address, uint8 data) -> void {
+auto SA1::write(n24 address, n8 data) -> void {
   r.mar = address;
   r.mdr = data;
 
@@ -110,7 +110,7 @@ auto SA1::write(uint24 address, uint8 data) -> void {
 //this is used both to keep VBR-reads from accessing MMIO registers, and
 //to avoid syncing the S-CPU and SA-1*; as both chips are able to access
 //these ports.
-auto SA1::readVBR(uint24 address, uint8 data) -> uint8 {
+auto SA1::readVBR(n24 address, n8 data) -> n8 {
   if((address & 0x408000) == 0x008000  //00-3f,80-bf:8000-ffff
   || (address & 0xc00000) == 0xc00000  //c0-ff:0000-ffff
   ) {
@@ -132,8 +132,8 @@ auto SA1::readVBR(uint24 address, uint8 data) -> uint8 {
   return 0xff;
 }
 
-auto SA1::readDisassembler(uint24 address) -> uint8 {
-  uint8 data = r.mdr;
+auto SA1::readDisassembler(n24 address) -> n8 {
+  n8 data = r.mdr;
 
   if((address & 0x40fe00) == 0x002200  //00-3f,80-bf:2200-23ff
   ) {

@@ -19,7 +19,7 @@ struct MI : Memory::IO<MI> {
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
-  enum class IRQ : uint { SP, SI, AI, VI, PI, DP };
+  enum class IRQ : u32 { SP, SI, AI, VI, PI, DP };
   auto raise(IRQ) -> void;
   auto lower(IRQ) -> void;
   auto poll() -> void;

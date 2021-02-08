@@ -43,8 +43,8 @@ auto APU::main() -> void {
   //always run the output frequency at the maximum 262144hz
   if(++clock & 7) return;
 
-  int lsample = bias.level - 0x0200;
-  int rsample = bias.level - 0x0200;
+  s32 lsample = bias.level - 0x0200;
+  s32 rsample = bias.level - 0x0200;
 
   //amplitude: 0 = 32768hz; 1 = 65536hz; 2 = 131072hz; 3 = 262144hz
   if((clock & (63 >> (3 - bias.amplitude))) == 0) {
@@ -56,8 +56,8 @@ auto APU::main() -> void {
   lsample += sequencer.loutput;
   rsample += sequencer.routput;
 
-  int fifo0 = fifo[0].output << fifo[0].volume;
-  int fifo1 = fifo[1].output << fifo[1].volume;
+  s32 fifo0 = fifo[0].output << fifo[0].volume;
+  s32 fifo1 = fifo[1].output << fifo[1].volume;
 
   if(fifo[0].lenable) lsample += fifo0;
   if(fifo[1].lenable) lsample += fifo1;
@@ -79,7 +79,7 @@ auto APU::main() -> void {
   stream->frame((lsample << 5) / 32768.0, (rsample << 5) / 32768.0);
 }
 
-auto APU::step(uint clocks) -> void {
+auto APU::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }
@@ -97,7 +97,7 @@ auto APU::power() -> void {
   fifo[0].power();
   fifo[1].power();
 
-  for(uint n = 0x060; n <= 0x0a7; n++) bus.io[n] = this;
+  for(u32 n = 0x060; n <= 0x0a7; n++) bus.io[n] = this;
 }
 
 }

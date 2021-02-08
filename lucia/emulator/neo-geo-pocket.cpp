@@ -25,7 +25,7 @@ NeoGeoPocket::NeoGeoPocket() {
 }
 
 auto NeoGeoPocket::load() -> bool {
-  if(!ares::NeoGeoPocket::load(root, "Neo Geo Pocket")) return false;
+  if(!ares::NeoGeoPocket::load(root, "[SNK] Neo Geo Pocket")) return false;
 
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
@@ -91,7 +91,7 @@ NeoGeoPocketColor::NeoGeoPocketColor() {
 }
 
 auto NeoGeoPocketColor::load() -> bool {
-  if(!ares::NeoGeoPocket::load(root, "Neo Geo Pocket Color")) return false;
+  if(!ares::NeoGeoPocket::load(root, "[SNK] Neo Geo Pocket Color")) return false;
 
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);

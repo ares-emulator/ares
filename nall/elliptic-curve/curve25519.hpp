@@ -9,7 +9,7 @@
 namespace nall::EllipticCurve {
 
 struct Curve25519 {
-  auto sharedKey(uint256_t secretKey, uint256_t basepoint = 9) const -> uint256_t {
+  auto sharedKey(u256 secretKey, u256 basepoint = 9) const -> u256 {
     secretKey &= (1_u256 << 254) - 8;
     secretKey |= (1_u256 << 254);
     basepoint &= ~0_u256 >> 1;
@@ -39,9 +39,9 @@ private:
     };
   }
 
-  auto scalarMultiply(field b, uint256_t exponent) const -> point {
+  auto scalarMultiply(field b, u256 exponent) const -> point {
     point p{1, 0}, q{b, 1};
-    for(uint bit : reverse(range(255))) {
+    for(u32 bit : reverse(range(255))) {
       bool condition = exponent >> bit & 1;
       cswap(condition, p.x, q.x);
       cswap(condition, p.z, q.z);

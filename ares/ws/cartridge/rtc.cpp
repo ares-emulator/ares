@@ -1,7 +1,7 @@
 //calculate time between last play of game and current time;
 //increment RTC by said amount of seconds
 auto Cartridge::rtcLoad() -> void {
-  uint64 timestamp = 0;
+  n64 timestamp = 0;
   for(auto n : range(8)) timestamp.byte(n) = rtc.data[8 + n];
   if(!timestamp) return;  //new save file
 
@@ -11,7 +11,7 @@ auto Cartridge::rtcLoad() -> void {
 
 //save time when game is unloaded
 auto Cartridge::rtcSave() -> void {
-  uint64 timestamp = time(0);
+  n64 timestamp = time(0);
   for(auto n : range(8)) rtc.data[8 + n] = timestamp.byte(n);
 }
 
@@ -28,7 +28,7 @@ auto Cartridge::rtcTickSecond() -> void {
   rtc.weekday() += 1;
   rtc.weekday() %= 7;
 
-  uint daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  u32 daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   if(rtc.year() && (rtc.year() % 100) && !(rtc.year() % 4)) daysInMonth[1]++;
 
   if(++rtc.day() < daysInMonth[rtc.month()]) return;
@@ -50,11 +50,11 @@ auto Cartridge::rtcCheckAlarm() -> void {
   }
 }
 
-auto Cartridge::rtcStatus() -> uint8 {
+auto Cartridge::rtcStatus() -> n8 {
   return 0x80;
 }
 
-auto Cartridge::rtcCommand(uint8 data) -> void {
+auto Cartridge::rtcCommand(n8 data) -> void {
   rtc.command = data;
 
   //RESET
@@ -89,10 +89,10 @@ auto Cartridge::rtcCommand(uint8 data) -> void {
   }
 }
 
-auto Cartridge::rtcRead() -> uint8 {
-  uint8 data = 0;
+auto Cartridge::rtcRead() -> n8 {
+  n8 data = 0;
 
-  static auto encode = [](uint8 data) -> uint8 {
+  static auto encode = [](n8 data) -> n8 {
     return ((data / 10) << 4) + (data % 10);
   };
 
@@ -113,8 +113,8 @@ auto Cartridge::rtcRead() -> uint8 {
   return data;
 }
 
-auto Cartridge::rtcWrite(uint8 data) -> void {
-  static auto decode = [](uint8 data) -> uint8 {
+auto Cartridge::rtcWrite(n8 data) -> void {
+  static auto decode = [](n8 data) -> n8 {
     return (data >> 4) * 10 + (data & 0x0f);
   };
 

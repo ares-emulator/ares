@@ -7,8 +7,8 @@ auto Timer::readHalf(u32 address) -> u32 {
 }
 
 auto Timer::readWord(u32 address) -> u32 {
-  uint32 data;
-  uint c = address >> 4 & 3;
+  n32 data;
+  u32 c = address >> 4 & 3;
 
   if((address & 0xffff'ffcf) == 0x1f80'1100 && c <= 2) {
     data.bit(0,15) = timers[c].counter;
@@ -48,8 +48,8 @@ auto Timer::writeHalf(u32 address, u32 data) -> void {
 }
 
 auto Timer::writeWord(u32 address, u32 value) -> void {
-  uint32 data = value;
-  uint c = address >> 4 & 3;
+  n32 data = value;
+  u32 c = address >> 4 & 3;
 
   if((address & 0xffff'ffcf) == 0x1f80'1100 && c <= 2) {
     timers[c].reset();

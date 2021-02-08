@@ -1,4 +1,4 @@
-auto M68K::condition(uint4 condition) -> bool {
+auto M68K::condition(n4 condition) -> bool {
   switch(condition) {
   case  0: return true;   //T
   case  1: return false;  //F

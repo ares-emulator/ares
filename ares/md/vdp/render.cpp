@@ -55,7 +55,7 @@ auto VDP::run() -> void {
     auto color = cram.read(fg.color);
     outputPixel(1 << 9 | color);
   } else {
-    uint mode = a.priority || b.priority;  //0 = shadow, 1 = normal, 2 = highlight
+    u32 mode = a.priority || b.priority;  //0 = shadow, 1 = normal, 2 = highlight
 
     if(&fg == &s) switch(s.color) {
     case 0x0e:
@@ -71,8 +71,8 @@ auto VDP::run() -> void {
   }
 }
 
-auto VDP::outputPixel(uint32 color) -> void {
+auto VDP::outputPixel(n32 color) -> void {
   if(!state.output) return;
-  for(uint n : range(pixelWidth())) state.output[n] = color;
+  for(u32 n : range(pixelWidth())) state.output[n] = color;
   state.output += pixelWidth();
 }

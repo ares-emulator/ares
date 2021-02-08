@@ -45,7 +45,7 @@ inline auto CPU::fetch(u32 address) -> u32 {
 }
 
 //read data from the bus
-template<uint Size>
+template<u32 Size>
 inline auto CPU::read(u32 address) -> u32 {
   if constexpr(Accuracy::CPU::Breakpoints) {
     if(breakpoint.testData<Read, Size>(address)) return 0;  //nop
@@ -165,7 +165,7 @@ inline auto CPU::read(u32 address) -> u32 {
 }
 
 //write data to the bus
-template<uint Size>
+template<u32 Size>
 inline auto CPU::write(u32 address, u32 data) -> void {
   if constexpr(Accuracy::CPU::Breakpoints) {
     if(breakpoint.testData<Write, Size>(address)) return;

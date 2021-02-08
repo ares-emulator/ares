@@ -7,20 +7,20 @@ struct string_pascal {
 
   string_pascal(const char* text = nullptr) {
     if(text && *text) {
-      uint size = strlen(text);
-      _data = memory::allocate<char>(sizeof(uint) + size + 1);
-      ((uint*)_data)[0] = size;
-      memory::copy(_data + sizeof(uint), text, size);
-      _data[sizeof(uint) + size] = 0;
+      u32 size = strlen(text);
+      _data = memory::allocate<char>(sizeof(u32) + size + 1);
+      ((u32*)_data)[0] = size;
+      memory::copy(_data + sizeof(u32), text, size);
+      _data[sizeof(u32) + size] = 0;
     }
   }
 
   string_pascal(const string& text) {
     if(text.size()) {
-      _data = memory::allocate<char>(sizeof(uint) + text.size() + 1);
-      ((uint*)_data)[0] = text.size();
-      memory::copy(_data + sizeof(uint), text.data(), text.size());
-      _data[sizeof(uint) + text.size()] = 0;
+      _data = memory::allocate<char>(sizeof(u32) + text.size() + 1);
+      ((u32*)_data)[0] = text.size();
+      memory::copy(_data + sizeof(u32), text.data(), text.size());
+      _data[sizeof(u32) + text.size()] = 0;
     }
   }
 
@@ -32,16 +32,16 @@ struct string_pascal {
   }
 
   explicit operator bool() const { return _data; }
-  operator const char*() const { return _data ? _data + sizeof(uint) : nullptr; }
-  operator string() const { return _data ? string{_data + sizeof(uint)} : ""; }
+  operator const char*() const { return _data ? _data + sizeof(u32) : nullptr; }
+  operator string() const { return _data ? string{_data + sizeof(u32)} : ""; }
 
   auto operator=(const string_pascal& source) -> type& {
     if(this == &source) return *this;
     if(_data) { memory::free(_data); _data = nullptr; }
     if(source._data) {
-      uint size = source.size();
-      _data = memory::allocate<char>(sizeof(uint) + size);
-      memory::copy(_data, source._data, sizeof(uint) + size);
+      u32 size = source.size();
+      _data = memory::allocate<char>(sizeof(u32) + size);
+      memory::copy(_data, source._data, sizeof(u32) + size);
     }
     return *this;
   }
@@ -64,12 +64,12 @@ struct string_pascal {
 
   auto data() const -> char* {
     if(!_data) return nullptr;
-    return _data + sizeof(uint);
+    return _data + sizeof(u32);
   }
 
-  auto size() const -> uint {
+  auto size() const -> u32 {
     if(!_data) return 0;
-    return ((uint*)_data)[0];
+    return ((u32*)_data)[0];
   }
 
 protected:

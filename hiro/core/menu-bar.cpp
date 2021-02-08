@@ -18,12 +18,12 @@ auto mMenuBar::append(sMenu menu) -> type& {
   return *this;
 }
 
-auto mMenuBar::menu(unsigned position) const -> Menu {
+auto mMenuBar::menu(u32 position) const -> Menu {
   if(position < menuCount()) return state.menus[position];
   return {};
 }
 
-auto mMenuBar::menuCount() const -> unsigned {
+auto mMenuBar::menuCount() const -> u32 {
   return state.menus.size();
 }
 
@@ -39,7 +39,7 @@ auto mMenuBar::remove() -> type& {
 }
 
 auto mMenuBar::remove(sMenu menu) -> type& {
-  signed offset = menu->offset();
+  s32 offset = menu->offset();
   signal(remove, menu);
   state.menus.remove(offset);
   for(auto n : range(offset, menuCount())) {
@@ -54,7 +54,7 @@ auto mMenuBar::reset() -> type& {
   return *this;
 }
 
-auto mMenuBar::setParent(mObject* parent, signed offset) -> type& {
+auto mMenuBar::setParent(mObject* parent, s32 offset) -> type& {
   for(auto& menu : reverse(state.menus)) menu->destruct();
   mObject::setParent(parent, offset);
   for(auto& menu : state.menus) menu->setParent(this, menu->offset());

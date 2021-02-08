@@ -39,7 +39,7 @@ auto Peripheral::transmit(u8 data) -> void {
 }
 
 auto Peripheral::readByte(u32 address) -> u32 {
-  uint8 data;
+  n8 data;
 
   //JOY_RX_DATA
   if(address == 0x1f80'1040) {
@@ -50,7 +50,7 @@ auto Peripheral::readByte(u32 address) -> u32 {
 }
 
 auto Peripheral::readHalf(u32 address) -> u32 {
-  uint16 data;
+  n16 data;
 
   //JOY_RX_DATA
   if(address == 0x1f80'1040) {
@@ -105,7 +105,7 @@ auto Peripheral::readHalf(u32 address) -> u32 {
 }
 
 auto Peripheral::readWord(u32 address) -> u32 {
-  uint32 data;
+  n32 data;
 
   //JOY_RX_DATA
   if(address == 0x1f80'1040) {
@@ -130,7 +130,7 @@ auto Peripheral::readWord(u32 address) -> u32 {
 }
 
 auto Peripheral::writeByte(u32 address, u32 value) -> void {
-  uint8 data = value;
+  n8 data = value;
 
   //JOY_TX_DATA
   if(address == 0x1f80'1040) {
@@ -139,7 +139,7 @@ auto Peripheral::writeByte(u32 address, u32 value) -> void {
 }
 
 auto Peripheral::writeHalf(u32 address, u32 value) -> void {
-  uint16 data = value;
+  n16 data = value;
 
   //JOY_TX_DATA
   if(address == 0x1f80'1040) {

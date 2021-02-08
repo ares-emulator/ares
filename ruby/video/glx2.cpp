@@ -26,7 +26,7 @@ struct VideoGLX2 : VideoDriver {
   VideoGLX2(Video& super) : VideoDriver(super) { construct(); }
   ~VideoGLX2() { destruct(); }
 
-  auto create() -> bool {
+  auto create() -> bool override {
     VideoDriver::exclusive = true;
     VideoDriver::format = "ARGB24";
     return initialize();
@@ -61,7 +61,9 @@ struct VideoGLX2 : VideoDriver {
   }
 
   auto setBlocking(bool blocking) -> bool override {
+    acquireContext();
     if(glXSwapInterval) glXSwapInterval(blocking);
+    releaseContext();
     return true;
   }
 
@@ -83,28 +85,18 @@ struct VideoGLX2 : VideoDriver {
     return true;
   }
 
-  auto acquireContext() -> bool override {
-    if(!_ready) return true;
-    if(glXMakeCurrent(_display, _glXWindow, _glXContext)) return true;
-    return initialize();
-  }
-
-  auto releaseContext() -> bool override {
-    if(!_ready) return true;
-    if(glXMakeCurrent(_display, 0, nullptr)) return true;
-    return terminate(), true;
-  }
-
   auto focused() -> bool override {
     return true;
   }
 
   auto clear() -> void override {
+    acquireContext();
     memory::fill<u32>(_glBuffer, _glWidth * _glHeight);
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glFlush();
     if(_isDoubleBuffered) glXSwapBuffers(_display, _glXWindow);
+    releaseContext();
   }
 
   auto size(u32& width, u32& height) -> void override {
@@ -129,6 +121,7 @@ struct VideoGLX2 : VideoDriver {
   }
 
   auto output(u32 width, u32 height) -> void override {
+    acquireContext();
     XWindowAttributes window;
     XGetWindowAttributes(_display, _window, &window);
 
@@ -207,6 +200,7 @@ struct VideoGLX2 : VideoDriver {
 
     if(_isDoubleBuffered) glXSwapBuffers(_display, _glXWindow);
     if(self.flush) glFinish();
+    releaseContext();
   }
 
   auto poll() -> void override {
@@ -234,6 +228,16 @@ private:
   auto destruct() -> void {
     terminate();
     XCloseDisplay(_display);
+  }
+
+  auto acquireContext() -> void {
+    if(!_glXContext) return;
+    while(!glXMakeCurrent(_display, _glXWindow, _glXContext)) spinloop();
+  }
+
+  auto releaseContext() -> void {
+    if(!_glXContext) return;
+    while(!glXMakeCurrent(_display, 0, nullptr)) spinloop();
   }
 
   auto initialize() -> bool {
@@ -314,12 +318,14 @@ private:
 
     glEnable(GL_DITHER);
     glEnable(GL_TEXTURE_2D);
+    releaseContext();
 
     resize(256, 256);
     return _ready = true;
   }
 
   auto terminate() -> void {
+    acquireContext();
     _ready = false;
 
     if(_glTexture) {
@@ -352,6 +358,7 @@ private:
   }
 
   auto resize(u32 width, u32 height) -> void {
+    acquireContext();
     _width = width;
     _height = height;
 
@@ -364,6 +371,7 @@ private:
     glBindTexture(GL_TEXTURE_2D, _glTexture);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, _glWidth);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _glWidth, _glHeight, 0, GL_BGRA, _glFormat, _glBuffer);
+    releaseContext();
   }
 
   bool _ready = false;

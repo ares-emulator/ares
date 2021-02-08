@@ -2,7 +2,16 @@
 
 namespace ares::SuperFamicom {
 
+auto enumerate() -> vector<string> {
+  //todo: lucia can't distinguish "Super Famicom (NTSC)" from "Super Nintendo (NTSC)"
+  return {
+    "[Nintendo] Super Famicom (NTSC)",
+    "[Nintendo] Super Famicom (PAL)",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -53,8 +62,22 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
+  if(name.find("Super Famicom")) {
+    information.name = "Super Famicom";
+  }
+  if(name.find("Super Nintendo")) {
+    information.name = "Super Nintendo";
+  }
+  if(name.find("NTSC")) {
+    information.region = Region::NTSC;
+    information.cpuFrequency = Constants::Colorburst::NTSC * 6.0;
+  }
+  if(name.find("PAL")) {
+    information.region = Region::PAL;
+    information.cpuFrequency = Constants::Colorburst::PAL * 4.8;
+  }
 
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});
@@ -63,14 +86,6 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
-
-  regionNode = node->append<Node::Setting::String>("Region", "NTSC → PAL");
-  regionNode->setAllowedValues({
-    "NTSC → PAL",
-    "PAL → NTSC",
-    "NTSC",
-    "PAL"
-  });
 
   scheduler.reset();
   bus.reset();
@@ -107,22 +122,6 @@ auto System::save() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
-  auto setRegion = [&](string region) {
-    if(region == "NTSC") {
-      information.region = Region::NTSC;
-      information.cpuFrequency = Constants::Colorburst::NTSC * 6.0;
-    }
-    if(region == "PAL") {
-      information.region = Region::PAL;
-      information.cpuFrequency = Constants::Colorburst::PAL * 4.8;
-    }
-  };
-  auto regionsHave = regionNode->latch().split("→").strip();
-  setRegion(regionsHave.first());
-  for(auto& have : reverse(regionsHave)) {
-    if(have == cartridge.region()) setRegion(have);
-  }
 
   random.entropy(Random::Entropy::Low);
 

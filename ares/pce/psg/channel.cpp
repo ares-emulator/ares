@@ -1,4 +1,4 @@
-auto PSG::Channel::power(uint id) -> void {
+auto PSG::Channel::power(u32 id) -> void {
   this->id = id;
   io = {};
 }
@@ -24,6 +24,6 @@ auto PSG::Channel::run() -> void {
   return sample(io.noiseSample);
 }
 
-auto PSG::Channel::sample(uint5 sample) -> void {
+auto PSG::Channel::sample(n5 sample) -> void {
   io.output = sample;
 }

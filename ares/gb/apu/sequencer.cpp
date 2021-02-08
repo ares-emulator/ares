@@ -6,7 +6,7 @@ auto APU::Sequencer::run() -> void {
     return;
   }
 
-  int sample = 0;
+  s32 sample = 0;
   sample += apu.square1.output;
   sample += apu.square2.output;
   sample +=    apu.wave.output;

@@ -31,7 +31,7 @@ auto CPU::Breakpoint::testCode(u32 address) -> bool {
   return true;
 }
 
-template<uint Mode, uint Size>
+template<u32 Mode, u32 Size>
 auto CPU::Breakpoint::testData(u32 address) -> bool {
   if(!self.scc.breakpoint.enable.master) return false;
   if(!self.scc.breakpoint.enable.kernel && (address >> 31) == 1) return false;

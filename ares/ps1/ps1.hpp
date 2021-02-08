@@ -6,10 +6,11 @@
 #include <nall/recompiler/amd64/amd64.hpp>
 
 namespace ares::PlayStation {
+  auto enumerate() -> vector<string>;
   auto load(Node::System& node, string name) -> bool;
 
   enum : bool { Read = 0, Write = 1 };
-  enum : uint { Byte = 1, Half = 2, Word = 4 };
+  enum : u32  { Byte = 1, Half = 2, Word = 4 };
 
   struct Region {
     inline static auto NTSCJ() -> bool;

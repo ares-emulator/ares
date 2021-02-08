@@ -12,19 +12,19 @@
 
 struct PPUcounter {
   auto tick() -> void;
-  auto tick(uint clocks) -> void; private:
+  auto tick(u32 clocks) -> void; private:
   auto tickScanline() -> void; public:
 
   auto interlace() const -> bool;
   auto field() const -> bool;
-  auto vcounter() const -> uint;
-  auto hcounter() const -> uint;
-  auto hdot() const -> uint; private:
-  auto vperiod() const -> uint; public:
-  auto hperiod() const -> uint;
+  auto vcounter() const -> u32;
+  auto hcounter() const -> u32;
+  auto hdot() const -> u32; private:
+  auto vperiod() const -> u32; public:
+  auto hperiod() const -> u32;
 
-  auto vcounter(uint offset) const -> uint;
-  auto hcounter(uint offset) const -> uint;
+  auto vcounter(u32 offset) const -> u32;
+  auto hcounter(u32 offset) const -> u32;
 
   auto reset() -> void;
   auto serialize(serializer&) -> void;
@@ -35,14 +35,14 @@ private:
   struct {
     bool interlace = 0;
     bool field = 0;
-    uint vperiod = 0;
-    uint hperiod = 0;
-    uint vcounter = 0;
-    uint hcounter = 0;
+    u32  vperiod = 0;
+    u32  hperiod = 0;
+    u32  vcounter = 0;
+    u32  hcounter = 0;
   } time;
 
   struct {
-    uint vperiod = 0;
-    uint hperiod = 0;
+    u32  vperiod = 0;
+    u32  hperiod = 0;
   } last;
 };

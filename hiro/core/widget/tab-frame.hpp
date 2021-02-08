@@ -16,12 +16,12 @@ struct mTabFrame : mWidget {
   auto onClose(const function<void (TabFrameItem)>& callback = {}) -> type&;
   auto onMove(const function<void (TabFrameItem, TabFrameItem)>& callback = {}) -> type&;
   auto remove(sTabFrameItem item) -> type&;
-  auto reset() -> type&;
+  auto reset() -> type& override;
   auto selected() const -> TabFrameItem;
   auto setEnabled(bool enabled = true) -> type& override;
   auto setFont(const Font& font = {}) -> type& override;
   auto setNavigation(Navigation navigation = Navigation::Top) -> type&;
-  auto setParent(mObject* object = nullptr, int offset = -1) -> type& override;
+  auto setParent(mObject* object = nullptr, s32 offset = -1) -> type& override;
   auto setVisible(bool visible = true) -> type& override;
 
 //private:

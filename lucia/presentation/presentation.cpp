@@ -154,13 +154,14 @@ Presentation::Presentation() {
   });
 
   helpMenu.setText("Help");
-  aboutAction.setText("About lucia ...").setIcon(Icon::Prompt::Question).onActivate([&] {
+  aboutAction.setText("About ...").setIcon(Icon::Prompt::Question).onActivate([&] {
     image logo{Resource::Ares::Logo};
     logo.shrink();
     AboutDialog()
     .setLogo(logo)
-    .setDescription("lucia — a simplified multi-system emulator")
+    .setDescription({ares::Name, "/lucia — a simplified multi-system emulator"})
     .setVersion(ares::Version)
+    .setCopyright(ares::Copyright)
     .setLicense(ares::License, ares::LicenseURI)
     .setWebsite(ares::Website, ares::WebsiteURI)
     .setAlignment(presentation)
@@ -203,7 +204,7 @@ Presentation::Presentation() {
   });
 
   resizeWindow();
-  setTitle({"lucia v", ares::Version});
+  setTitle({ares::Name, " v", ares::Version});
   setBackgroundColor({0, 0, 0});
   setAlignment(Alignment::Center);
   setVisible();
@@ -415,7 +416,7 @@ auto Presentation::loadEmulator() -> void {
 }
 
 auto Presentation::unloadEmulator(bool reloading) -> void {
-  setTitle({"lucia v", ares::Version});
+  setTitle({ares::Name, " v", ares::Version});
 
   systemMenu.setVisible(false);
   systemMenu.reset();

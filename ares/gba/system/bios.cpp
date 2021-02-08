@@ -2,14 +2,14 @@ BIOS bios;
 
 BIOS::BIOS() {
   size = 16384;
-  data = new uint8[size]();
+  data = new n8[size]();
 }
 
 BIOS::~BIOS() {
   delete[] data;
 }
 
-auto BIOS::read(uint mode, uint32 addr) -> uint32 {
+auto BIOS::read(u32 mode, n32 addr) -> n32 {
   //unmapped memory
   if(addr >= 0x0000'4000) {
     if(cpu.context.dmaActive) return cpu.dmabus.data;
@@ -26,5 +26,5 @@ auto BIOS::read(uint mode, uint32 addr) -> uint32 {
   return mdr = data[addr];
 }
 
-auto BIOS::write(uint mode, uint32 addr, uint32 word) -> void {
+auto BIOS::write(u32 mode, n32 addr, n32 word) -> void {
 }

@@ -1,6 +1,6 @@
-auto CPU::readIO(uint8 address) -> uint8 {
+auto CPU::readIO(n8 address) -> n8 {
 //print("CPU::readIO(", hex(address, 2L), ")\n");
-  uint8 data = 0x00;
+  n8 data = 0x00;
 
   switch(address) {
 
@@ -495,7 +495,7 @@ auto CPU::readIO(uint8 address) -> uint8 {
   return data;
 }
 
-auto CPU::writeIO(uint8 address, uint8 data) -> void {
+auto CPU::writeIO(n8 address, n8 data) -> void {
 //print("CPU::writeIO(", hex(address, 2L), " = ", hex(data, 2L), ")\n");
 
   switch(address) {
@@ -980,9 +980,9 @@ auto CPU::writeIO(uint8 address, uint8 data) -> void {
 
   //ADMOD
   case 0x6d: {
-    uint1 busy = adc.busy;
+    n1 busy = adc.busy;
     adc.channel = data.bit(0,1);
-    uint1 start = data.bit(2);
+    n1 start = data.bit(2);
     adc.speed = data.bit(3);
     adc.scan = data.bit(4);
     adc.repeat = data.bit(5);

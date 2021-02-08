@@ -1,6 +1,6 @@
 auto V30MZ::instructionDecimalAdjust(bool negate) -> void {
   wait(9);
-  uint8 al = r.al;
+  n8 al = r.al;
   if(r.f.h || ((al & 0x0f) > 0x09)) {
     r.al += negate ? -0x06 : 0x06;
     r.f.h = 1;

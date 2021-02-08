@@ -10,7 +10,7 @@ auto X24C01::serialize(serializer& s) -> void {
   s(data.fall);
   s(data.rise);
   s(data.line);
-  s((uint&)mode);
+  s((u32&)mode);
   s(counter);
   s(address);
   s(input);

@@ -22,7 +22,7 @@ inline auto Bus::mmio(u32 address) -> Memory::Interface& {
   return unmapped;
 }
 
-template<uint Size>
+template<u32 Size>
 inline auto Bus::read(u32 address) -> u32 {
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) return cpu.ram.read<Size>(address);
@@ -30,7 +30,7 @@ inline auto Bus::read(u32 address) -> u32 {
   return mmio(address).read<Size>(address);
 }
 
-template<uint Size>
+template<u32 Size>
 inline auto Bus::write(u32 address, u32 data) -> void {
   address &= 0x1fff'ffff;
   if(address <= 0x007f'ffff) {

@@ -27,9 +27,9 @@ struct PPU : Thread, IO {
 
   auto planar() const -> bool { return system.mode().bit(0) == 0; }
   auto packed() const -> bool { return system.mode().bit(0) == 1; }
-  auto depth() const -> uint { return system.mode().bit(1,2) != 3 ? 2 : 4; }
+  auto depth() const -> u32 { return system.mode().bit(1,2) != 3 ? 2 : 4; }
   auto grayscale() const -> bool { return system.mode().bit(1,2) == 0; }
-  auto tilemask() const -> uint { return 1023 >> !system.mode().bit(2); }
+  auto tilemask() const -> u32 { return 1023 >> !system.mode().bit(2); }
 
   //ppu.cpp
   auto load(Node::Object) -> void;
@@ -38,197 +38,197 @@ struct PPU : Thread, IO {
   auto main() -> void;
   auto scanline() -> void;
   auto frame() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power() -> void;
   auto updateIcons() -> void;
   auto updateOrientation() -> void;
 
   //io.cpp
-  auto portRead(uint16 address) -> uint8 override;
-  auto portWrite(uint16 address, uint8 data) -> void override;
+  auto portRead(n16 address) -> n8 override;
+  auto portWrite(n16 address, n8 data) -> void override;
 
   //latch.cpp
   auto latchRegisters() -> void;
-  auto latchSprites(uint8 y) -> void;
+  auto latchSprites(n8 y) -> void;
   auto latchOAM() -> void;
 
   //render.cpp
-  auto renderFetch(uint10 tile, uint3 x, uint3 y) -> uint4;
-  auto renderTransparent(bool palette, uint4 color) -> bool;
-  auto renderPalette(uint4 palette, uint4 color) -> uint12;
+  auto renderFetch(n10 tile, n3 x, n3 y) -> n4;
+  auto renderTransparent(bool palette, n4 color) -> bool;
+  auto renderPalette(n4 palette, n4 color) -> n12;
   auto renderBack() -> void;
-  auto renderScreenOne(uint8 x, uint8 y) -> void;
-  auto renderScreenTwo(uint8 x, uint8 y) -> void;
-  auto renderSprite(uint8 x, uint8 y) -> void;
+  auto renderScreenOne(n8 x, n8 y) -> void;
+  auto renderScreenTwo(n8 x, n8 y) -> void;
+  auto renderSprite(n8 x, n8 y) -> void;
 
   //color.cpp
-  auto color(uint32) -> uint64;
+  auto color(n32) -> n64;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
   //state
   struct Pixel {
-    enum class Source : uint { Back, ScreenOne, ScreenTwo, Sprite };
+    enum class Source : u32 { Back, ScreenOne, ScreenTwo, Sprite };
     Source source;
-    uint12 color;
+    n12 color;
   };
 
   struct State {
-    uint1 field = 0;
-    uint8 vtime = 0;
+    n1 field = 0;
+    n8 vtime = 0;
     Pixel pixel;
   } s;
 
   struct Latches {
     //latchRegisters()
-    uint8 backColor;
+    n8 backColor;
 
-    uint1 screenOneEnable;
-    uint4 screenOneMapBase;
-    uint8 scrollOneX;
-    uint8 scrollOneY;
+    n1 screenOneEnable;
+    n4 screenOneMapBase;
+    n8 scrollOneX;
+    n8 scrollOneY;
 
-    uint1 screenTwoEnable;
-    uint4 screenTwoMapBase;
-    uint8 scrollTwoX;
-    uint8 scrollTwoY;
-    uint1 screenTwoWindowEnable;
-    uint1 screenTwoWindowInvert;
-    uint8 screenTwoWindowX0;
-    uint8 screenTwoWindowY0;
-    uint8 screenTwoWindowX1;
-    uint8 screenTwoWindowY1;
+    n1 screenTwoEnable;
+    n4 screenTwoMapBase;
+    n8 scrollTwoX;
+    n8 scrollTwoY;
+    n1 screenTwoWindowEnable;
+    n1 screenTwoWindowInvert;
+    n8 screenTwoWindowX0;
+    n8 screenTwoWindowY0;
+    n8 screenTwoWindowX1;
+    n8 screenTwoWindowY1;
 
-    uint1 spriteEnable;
-    uint1 spriteWindowEnable;
-    uint8 spriteWindowX0;
-    uint8 spriteWindowY0;
-    uint8 spriteWindowX1;
-    uint8 spriteWindowY1;
+    n1 spriteEnable;
+    n1 spriteWindowEnable;
+    n8 spriteWindowX0;
+    n8 spriteWindowY0;
+    n8 spriteWindowX1;
+    n8 spriteWindowY1;
 
     //latchSprites()
-    uint32 sprite[32];
-    uint spriteCount = 0;
+    n32 sprite[32];
+    u32 spriteCount = 0;
 
     //latchOAM()
-    uint32 oam[2][128];
-    uint oamCount = 0;
+    n32 oam[2][128];
+    u32 oamCount = 0;
 
     //updateOrientation()
-    uint1 orientation;
+    n1 orientation;
   } l;
 
   struct Registers {
     //$0000  DISP_CTRL
-    uint1 screenOneEnable;
-    uint1 screenTwoEnable;
-    uint1 spriteEnable;
-    uint1 spriteWindowEnable;
-    uint1 screenTwoWindowInvert;
-    uint1 screenTwoWindowEnable;
+    n1 screenOneEnable;
+    n1 screenTwoEnable;
+    n1 spriteEnable;
+    n1 spriteWindowEnable;
+    n1 screenTwoWindowInvert;
+    n1 screenTwoWindowEnable;
 
     //$0001  BACK_COLOR
-    uint8 backColor;
+    n8 backColor;
 
     //$0003  LINE_CMP
-    uint8 lineCompare;
+    n8 lineCompare;
 
     //$0004  SPR_BASE
-    uint6 spriteBase;
+    n6 spriteBase;
 
     //$0005  SPR_FIRST
-    uint7 spriteFirst;
+    n7 spriteFirst;
 
     //$0006  SPR_COUNT
-    uint8 spriteCount;  //0 - 128
+    n8 spriteCount;  //0 - 128
 
     //$0007  MAP_BASE
-    uint4 screenOneMapBase;
-    uint4 screenTwoMapBase;
+    n4 screenOneMapBase;
+    n4 screenTwoMapBase;
 
     //$0008  SCR2_WIN_X0
-    uint8 screenTwoWindowX0;
+    n8 screenTwoWindowX0;
 
     //$0009  SCR2_WIN_Y0
-    uint8 screenTwoWindowY0;
+    n8 screenTwoWindowY0;
 
     //$000a  SCR2_WIN_X1
-    uint8 screenTwoWindowX1;
+    n8 screenTwoWindowX1;
 
     //$000b  SCR2_WIN_Y1
-    uint8 screenTwoWindowY1;
+    n8 screenTwoWindowY1;
 
     //$000c  SPR_WIN_X0
-    uint8 spriteWindowX0;
+    n8 spriteWindowX0;
 
     //$000d  SPR_WIN_Y0
-    uint8 spriteWindowY0;
+    n8 spriteWindowY0;
 
     //$000e  SPR_WIN_X1
-    uint8 spriteWindowX1;
+    n8 spriteWindowX1;
 
     //$000f  SPR_WIN_Y1
-    uint8 spriteWindowY1;
+    n8 spriteWindowY1;
 
     //$0010  SCR1_X
-    uint8 scrollOneX;
+    n8 scrollOneX;
 
     //$0011  SCR1_Y
-    uint8 scrollOneY;
+    n8 scrollOneY;
 
     //$0012  SCR2_X
-    uint8 scrollTwoX;
+    n8 scrollTwoX;
 
     //$0013  SCR2_Y
-    uint8 scrollTwoY;
+    n8 scrollTwoY;
 
     //$0014  LCD_CTRL
-    uint1 lcdEnable;
-    uint1 lcdContrast;  //0 = low, 1 = high (WonderSwan Color only)
-    uint8 lcdUnknown;
+    n1 lcdEnable;
+    n1 lcdContrast;  //0 = low, 1 = high (WonderSwan Color only)
+    n8 lcdUnknown;
 
     //$0015  LCD_ICON
     struct Icon {
-      uint1 sleeping;
-      uint1 orientation1;
-      uint1 orientation0;
-      uint1 auxiliary0;
-      uint1 auxiliary1;
-      uint1 auxiliary2;
+      n1 sleeping;
+      n1 orientation1;
+      n1 orientation0;
+      n1 auxiliary0;
+      n1 auxiliary1;
+      n1 auxiliary2;
     } icon;
 
     //$0016  LCD_VTOTAL
-    uint8 vtotal = 158;
+    n8 vtotal = 158;
 
     //$0017  LCD_VSYNC
-    uint8 vsync = 155;
+    n8 vsync = 155;
 
     //$001c-001f  PALMONO_POOL
-    uint4 pool[8];
+    n4 pool[8];
 
     //$0020-003f  PALMONO
     struct Palette {
-      uint3 color[4];
+      n3 color[4];
     } palette[16];
 
     //$00a2  TMR_CTRL
-    uint1 htimerEnable;
-    uint1 htimerRepeat;
-    uint1 vtimerEnable;
-    uint1 vtimerRepeat;
+    n1 htimerEnable;
+    n1 htimerRepeat;
+    n1 vtimerEnable;
+    n1 vtimerRepeat;
 
     //$00a4,$00a5  HTMR_FREQ
-    uint16 htimerFrequency;
+    n16 htimerFrequency;
 
     //$00a6,$00a7  VTMR_FREQ
-    uint16 vtimerFrequency;
+    n16 vtimerFrequency;
 
     //$00a8,$00a9  HTMR_CTR
-    uint16 htimerCounter;
+    n16 htimerCounter;
 
     //$00aa,$00ab  VTMR_CTR
-    uint16 vtimerCounter;
+    n16 vtimerCounter;
   } r;
 };
 

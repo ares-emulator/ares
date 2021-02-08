@@ -23,77 +23,77 @@ struct SMP : SPC700, Thread {
   auto power(bool reset) -> void;
 
   //io.cpp
-  auto portRead(uint2 port) const -> uint8;
-  auto portWrite(uint2 port, uint8 data) -> void;
+  auto portRead(n2 port) const -> n8;
+  auto portWrite(n2 port, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint8 iplrom[64];
+  n8 iplrom[64];
 
 private:
   struct IO {
     //timing
-    uint clockCounter = 0;
-    uint dspCounter = 0;
+    u32 clockCounter = 0;
+    u32 dspCounter = 0;
 
     //external
-    uint8 apu0;
-    uint8 apu1;
-    uint8 apu2;
-    uint8 apu3;
+    n8 apu0;
+    n8 apu1;
+    n8 apu2;
+    n8 apu3;
 
     //$00f0
-    uint1 timersDisable;
-    uint1 ramWritable = true;
-    uint1 ramDisable;
-    uint1 timersEnable = true;
-    uint2 externalWaitStates;
-    uint2 internalWaitStates;
+    n1 timersDisable;
+    n1 ramWritable = true;
+    n1 ramDisable;
+    n1 timersEnable = true;
+    n2 externalWaitStates;
+    n2 internalWaitStates;
 
     //$00f1
-    uint1 iplromEnable = true;
+    n1 iplromEnable = true;
 
     //$00f2
-    uint8 dspAddress;
+    n8 dspAddress;
 
     //$00f4-00f7
-    uint8 cpu0;
-    uint8 cpu1;
-    uint8 cpu2;
-    uint8 cpu3;
+    n8 cpu0;
+    n8 cpu1;
+    n8 cpu2;
+    n8 cpu3;
 
     //$00f8-00f9
-    uint8 aux4;
-    uint8 aux5;
+    n8 aux4;
+    n8 aux5;
   } io;
 
   //memory.cpp
-  auto readRAM(uint16 address) -> uint8;
-  auto writeRAM(uint16 address, uint8 data) -> void;
+  auto readRAM(n16 address) -> n8;
+  auto writeRAM(n16 address, n8 data) -> void;
 
   auto idle() -> void override;
-  auto read(uint16 address) -> uint8 override;
-  auto write(uint16 address, uint8 data) -> void override;
+  auto read(n16 address) -> n8 override;
+  auto write(n16 address, n8 data) -> void override;
 
-  auto readDisassembler(uint16 address) -> uint8 override;
+  auto readDisassembler(n16 address) -> n8 override;
 
   //io.cpp
-  auto readIO(uint16 address) -> uint8;
-  auto writeIO(uint16 address, uint8 data) -> void;
+  auto readIO(n16 address) -> n8;
+  auto writeIO(n16 address, n8 data) -> void;
 
-  template<uint Frequency>
+  template<u32 Frequency>
   struct Timer {
-    uint8   stage0;
-    uint8   stage1;
-    uint8   stage2;
-    uint4   stage3;
-    boolean line;
-    boolean enable;
-    uint8   target;
+    n8 stage0;
+    n8 stage1;
+    n8 stage2;
+    n4 stage3;
+    b1 line;
+    b1 enable;
+    n8 target;
 
     //timing.cpp
-    auto step(uint clocks) -> void;
+    auto step(u32 clocks) -> void;
     auto synchronizeStage1() -> void;
 
     //serialization.cpp
@@ -105,9 +105,9 @@ private:
   Timer< 16> timer2;
 
   //timing.cpp
-  auto wait(bool halve, maybe<uint16> address = nothing) -> void;
-  auto step(uint clocks) -> void;
-  auto stepTimers(uint clocks) -> void;
+  auto wait(bool halve, maybe<n16> address = nothing) -> void;
+  auto step(u32 clocks) -> void;
+  auto stepTimers(u32 clocks) -> void;
 };
 
 extern SMP smp;

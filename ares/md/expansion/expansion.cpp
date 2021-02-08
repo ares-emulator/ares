@@ -42,20 +42,20 @@ auto Expansion::power() -> void {
 
 /* the only existing expansion port device is the Mega CD, which is hard-coded below for now */
 
-auto Expansion::read(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16 {
+auto Expansion::read(n1 upper, n1 lower, n22 address, n16 data) -> n16 {
   return mcd.external_read(upper, lower, address, data);
 }
 
-auto Expansion::write(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void {
+auto Expansion::write(n1 upper, n1 lower, n22 address, n16 data) -> void {
   return mcd.external_write(upper, lower, address, data);
 }
 
-auto Expansion::readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 {
+auto Expansion::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   if(!node) return data;
   return mcd.external_readIO(upper, lower, address, data);
 }
 
-auto Expansion::writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void {
+auto Expansion::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   if(!node) return;
   return mcd.external_writeIO(upper, lower, address, data);
 }

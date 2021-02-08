@@ -5,7 +5,7 @@ struct Timer : Memory::Interface {
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto hsync(bool line) -> void;
   auto vsync(bool line) -> void;
   auto power(bool reset) -> void;
@@ -28,33 +28,33 @@ struct Timer : Memory::Interface {
 
   struct Source {
     Timer& self;
-    const uint id;
-    Source(Timer& self, uint id) : self(self), id(id) {}
+    const u32 id;
+    Source(Timer& self, u32 id) : self(self), id(id) {}
 
     //timer.cpp
-    auto step(uint clocks = 1) -> void;
+    auto step(u32 clocks = 1) -> void;
     auto irq() -> void;
     auto reset() -> void;
 
-    uint16 counter;
-    uint16 target;
-     uint1 synchronize;
-     uint2 mode;
-     uint1 resetMode;
-     uint1 irqOnTarget;
-     uint1 irqOnSaturate;
-     uint1 irqRepeat;
-     uint1 irqMode;
-     uint1 clock;
-     uint1 divider;
-     uint1 irqLine;  //0 = active
-     uint1 reachedTarget;
-     uint1 reachedSaturate;
-     uint3 unknown;
+    n16 counter;
+    n16 target;
+    n1  synchronize;
+    n2  mode;
+    n1  resetMode;
+    n1  irqOnTarget;
+    n1  irqOnSaturate;
+    n1  irqRepeat;
+    n1  irqMode;
+    n1  clock;
+    n1  divider;
+    n1  irqLine;  //0 = active
+    n1  reachedTarget;
+    n1  reachedSaturate;
+    n3  unknown;
 
   //internal:
-     uint1 paused;
-     uint1 irqTriggered;
+    n1  paused;
+    n1  irqTriggered;
   } timers[3] = {{*this, 0}, {*this, 1}, {*this, 2}};
 };
 

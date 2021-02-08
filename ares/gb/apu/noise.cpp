@@ -2,8 +2,8 @@ auto APU::Noise::dacEnable() const -> bool {
   return (envelopeVolume || envelopeDirection);
 }
 
-auto APU::Noise::getPeriod() const -> uint {
-  static const uint table[] = {4, 8, 16, 24, 32, 40, 48, 56};
+auto APU::Noise::getPeriod() const -> u32 {
+  static const u32 table[] = {4, 8, 16, 24, 32, 40, 48, 56};
   return table[divisor] << frequency;
 }
 
@@ -16,7 +16,7 @@ auto APU::Noise::run() -> void {
     }
   }
 
-  uint4 sample = lfsr & 1 ? 0 : (uint)volume;
+  n4 sample = lfsr & 1 ? 0 : (u32)volume;
   if(!enable) sample = 0;
 
   output = sample;
@@ -30,7 +30,7 @@ auto APU::Noise::clockLength() -> void {
 
 auto APU::Noise::clockEnvelope() -> void {
   if(enable && envelopeFrequency && --envelopePeriod == 0) {
-    envelopePeriod = envelopeFrequency ? (uint)envelopeFrequency : 8;
+    envelopePeriod = envelopeFrequency ? (u32)envelopeFrequency : 8;
     if(envelopeDirection == 0 && volume >  0) volume--;
     if(envelopeDirection == 1 && volume < 15) volume++;
   }
@@ -39,7 +39,7 @@ auto APU::Noise::clockEnvelope() -> void {
 auto APU::Noise::trigger() -> void {
   enable = dacEnable();
   lfsr = -1;
-  envelopePeriod = envelopeFrequency ? (uint)envelopeFrequency : 8;
+  envelopePeriod = envelopeFrequency ? (u32)envelopeFrequency : 8;
   volume = envelopeVolume;
 
   if(!length) {

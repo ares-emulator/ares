@@ -4,7 +4,7 @@ struct mCanvas : mWidget {
 
   auto alignment() const -> Alignment;
   auto color() const -> Color;
-  auto data() -> uint32_t*;
+  auto data() -> u32*;
   auto gradient() const -> Gradient;
   auto icon() const -> image;
   auto setAlignment(Alignment alignment = {}) -> type&;

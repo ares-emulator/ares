@@ -9,7 +9,7 @@ namespace Board {
 #include "super-lode-runner.cpp"
 #include "super-pierrot.cpp"
 
-auto Interface::load(Memory::Readable<uint8>& memory, Markup::Node node) -> bool {
+auto Interface::load(Memory::Readable<n8>& memory, Markup::Node node) -> bool {
   if(!node) return false;
   memory.allocate(node["size"].natural());
   auto name = string{node["content"].string(), ".", node["type"].string()}.downcase();
@@ -20,7 +20,7 @@ auto Interface::load(Memory::Readable<uint8>& memory, Markup::Node node) -> bool
   return false;
 }
 
-auto Interface::load(Memory::Writable<uint8>& memory, Markup::Node node) -> bool {
+auto Interface::load(Memory::Writable<n8>& memory, Markup::Node node) -> bool {
   if(!node) return false;
   memory.allocate(node["size"].natural());
   if(node["volatile"]) return true;
@@ -32,7 +32,7 @@ auto Interface::load(Memory::Writable<uint8>& memory, Markup::Node node) -> bool
   return false;
 }
 
-auto Interface::save(Memory::Writable<uint8>& memory, Markup::Node node) -> bool {
+auto Interface::save(Memory::Writable<n8>& memory, Markup::Node node) -> bool {
   if(!node) return false;
   if(node["volatile"]) return true;
   auto name = string{node["content"].string(), ".", node["type"].string()}.downcase();

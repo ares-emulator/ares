@@ -8,21 +8,21 @@ inline auto image::loadBMP(const string& filename) -> bool {
   return loadBMP(buffer.data(), buffer.size());
 }
 
-inline auto image::loadBMP(const uint8_t* bmpData, uint bmpSize) -> bool {
+inline auto image::loadBMP(const u8* bmpData, u32 bmpSize) -> bool {
   Decode::BMP source;
   if(!source.load(bmpData, bmpSize)) return false;
 
   allocate(source.width(), source.height());
-  const uint32_t* sp = source.data();
-  uint8_t* dp = _data;
+  const u32* sp = source.data();
+  u8* dp = _data;
 
-  for(uint y = 0; y < _height; y++) {
-    for(uint x = 0; x < _width; x++) {
-      uint32_t color = *sp++;
-      uint64_t a = normalize((uint8_t)(color >> 24), 8, _alpha.depth());
-      uint64_t r = normalize((uint8_t)(color >> 16), 8, _red.depth());
-      uint64_t g = normalize((uint8_t)(color >>  8), 8, _green.depth());
-      uint64_t b = normalize((uint8_t)(color >>  0), 8, _blue.depth());
+  for(u32 y = 0; y < _height; y++) {
+    for(u32 x = 0; x < _width; x++) {
+      u32 color = *sp++;
+      u64 a = normalize((u8)(color >> 24), 8, _alpha.depth());
+      u64 r = normalize((u8)(color >> 16), 8, _red.depth());
+      u64 g = normalize((u8)(color >>  8), 8, _green.depth());
+      u64 b = normalize((u8)(color >>  0), 8, _blue.depth());
       write(dp, (a << _alpha.shift()) | (r << _red.shift()) | (g << _green.shift()) | (b << _blue.shift()));
       dp += stride();
     }
@@ -37,16 +37,16 @@ inline auto image::loadPNG(const string& filename) -> bool {
   return loadPNG(buffer.data(), buffer.size());
 }
 
-inline auto image::loadPNG(const uint8_t* pngData, uint pngSize) -> bool {
+inline auto image::loadPNG(const u8* pngData, u32 pngSize) -> bool {
   Decode::PNG source;
   if(!source.load(pngData, pngSize)) return false;
 
   allocate(source.info.width, source.info.height);
-  const uint8_t* sp = source.data;
-  uint8_t* dp = _data;
+  const u8* sp = source.data;
+  u8* dp = _data;
 
-  auto decode = [&]() -> uint64_t {
-    uint64_t p, r, g, b, a;
+  auto decode = [&]() -> u64 {
+    u64 p, r, g, b, a;
 
     switch(source.info.colorType) {
     case 0:  //L
@@ -86,8 +86,8 @@ inline auto image::loadPNG(const uint8_t* pngData, uint pngSize) -> bool {
     return (a << _alpha.shift()) | (r << _red.shift()) | (g << _green.shift()) | (b << _blue.shift());
   };
 
-  for(uint y = 0; y < _height; y++) {
-    for(uint x = 0; x < _width; x++) {
+  for(u32 y = 0; y < _height; y++) {
+    for(u32 x = 0; x < _width; x++) {
       write(dp, decode());
       dp += stride();
     }

@@ -71,8 +71,8 @@ auto PPU::unload() -> void {
 }
 
 auto PPU::map() -> void {
-  function<uint8 (uint24, uint8)> reader{&PPU::readIO, this};
-  function<void (uint24, uint8)> writer{&PPU::writeIO, this};
+  function<n8   (n24, n8)> reader{&PPU::readIO, this};
+  function<void (n24, n8)> writer{&PPU::writeIO, this};
   bus.map(reader, writer, "00-3f,80-bf:2100-213f");
 }
 
@@ -82,7 +82,7 @@ inline auto PPU::step() -> void {
   Thread::synchronize(cpu);
 }
 
-inline auto PPU::step(uint clocks) -> void {
+inline auto PPU::step(u32 clocks) -> void {
   clocks >>= 1;
   while(clocks--) {
     tick(2);
@@ -96,7 +96,7 @@ auto PPU::power(bool reset) -> void {
   PPUcounter::reset();
   screen->power();
 
-  if(!reset) random.array((uint8*)vram.data, sizeof(vram.data));
+  if(!reset) random.array({vram.data, sizeof(vram.data)});
 
   ppu1.version = versionPPU1->value();
   ppu1.mdr = random.bias(0xff);
@@ -104,7 +104,7 @@ auto PPU::power(bool reset) -> void {
   ppu2.version = versionPPU2->value();
   ppu2.mdr = random.bias(0xff);
 
-  vram.mask = vramSize->value() / sizeof(uint16) - 1;
+  vram.mask = vramSize->value() / sizeof(n16) - 1;
   if(vram.mask != 0xffff) vram.mask = 0x7fff;
 
   latch.vram = random();

@@ -6,9 +6,9 @@ struct SuperMultitap : Controller {
 
   SuperMultitap(Node::Port);
 
-  auto data() -> uint2;
-  auto latch(bool data) -> void;
+  auto data() -> n2;
+  auto latch(n1 data) -> void;
 
 private:
-  bool latched = false;
+  n1 latched;
 };

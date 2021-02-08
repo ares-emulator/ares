@@ -16,25 +16,25 @@ struct cdrom : file {
     return {};
   }
 
-  auto size() const -> uintmax override {
+  auto size() const -> u64 override {
     return _image.size();
   }
 
-  auto offset() const -> uintmax override {
+  auto offset() const -> u64 override {
     return _offset;
   }
 
-  auto seek(intmax offset, index mode) -> void override {
-    if(mode == index::absolute) _offset = (uintmax)offset;
-    if(mode == index::relative) _offset += (intmax)offset;
+  auto seek(s64 offset, index mode) -> void override {
+    if(mode == index::absolute) _offset  = (u64)offset;
+    if(mode == index::relative) _offset += (s64)offset;
   }
 
-  auto read() -> uint8_t override {
+  auto read() -> u8 override {
     if(_offset >= _image.size()) return 0x00;
     return _image[_offset++];
   }
 
-  auto write(uint8_t data) -> void override {
+  auto write(u8 data) -> void override {
     //CD-ROMs are read-only; but allow writing anyway if needed, since the image is in memory
     if(_offset >= _image.size()) return;
     _image[_offset++] = data;
@@ -48,8 +48,8 @@ private:
     CD::Session session;
     session.leadIn.lba = -LeadInSectors;
     session.leadIn.end = -1;
-    int lbaDisc = Track1Pregap;
-    int endDisc = lbaDisc;
+    s32 lbaDisc = Track1Pregap;
+    s32 endDisc = lbaDisc;
     for(auto& file : cuesheet.files) {
       for(auto& track : file.tracks) {
         session.tracks[track.number].control = track.type == "audio" ? 0b0000 : 0b0100;
@@ -65,10 +65,10 @@ private:
     session.leadOut.lba = endDisc;
     session.leadOut.end = endDisc + LeadOutSectors - 1;
 
-    for(uint track : range(100)) {
+    for(u32 track : range(100)) {
       if(!session.tracks[track]) continue;
       session.firstTrack = track;
-      for(uint index : range(100)) {
+      for(u32 index : range(100)) {
         if(!session.tracks[track].indices[index]) continue;
         session.tracks[track].firstIndex = index;
         break;
@@ -76,10 +76,10 @@ private:
       break;
     }
 
-    for(uint track : reverse(range(100))) {
+    for(u32 track : reverse(range(100))) {
       if(!session.tracks[track]) continue;
       session.lastTrack = track;
-      for(uint index : reverse(range(100))) {
+      for(u32 index : reverse(range(100))) {
         if(!session.tracks[track].indices[index]) continue;
         session.tracks[track].lastIndex = index;
         break;
@@ -97,10 +97,10 @@ private:
       auto location = string{Location::path(cueLocation), file.name};
       auto filedata = nall::file::open(location, nall::file::mode::read);
       if(file.type == "wave") filedata.seek(44);  //skip RIFF header
-      uint64_t offset = 0;
+      u64 offset = 0;
       for(auto& track : file.tracks) {
         for(auto& index : track.indices) {
-          for(int sector : range(index.sectorCount())) {
+          for(s32 sector : range(index.sectorCount())) {
             auto target = _image.data() + 2448ull * (LeadInSectors + lbaDisc + index.lba + sector);
             auto length = track.sectorSize();
             if(length == 2048) {
@@ -129,11 +129,11 @@ private:
     auto subchannel = session.encode(LeadInSectors + session.leadOut.end + 1);
     if(auto overlay = nall::file::read({Location::notsuffix(cueLocation), ".sub"})) {
       auto target = subchannel.data() + 96 * (LeadInSectors + Track1Pregap);
-      auto length = (int64_t)subchannel.size() - 96 * (LeadInSectors + Track1Pregap);
+      auto length = (s64)subchannel.size() - 96 * (LeadInSectors + Track1Pregap);
       memory::copy(target, length, overlay.data(), overlay.size());
     }
 
-    for(uint64_t sector : range(size() / 2448)) {
+    for(u64 sector : range(size() / 2448)) {
       auto source = subchannel.data() + sector * 96;
       auto target = _image.data() + sector * 2448 + 2352;
       memory::copy(target, source, 96);
@@ -142,12 +142,12 @@ private:
     return true;
   }
 
-  vector<uint8_t> _image;
-  uintmax _offset = 0;
+  vector<u8> _image;
+  u64 _offset = 0;
 
-  static constexpr int LeadInSectors  = 7500;
-  static constexpr int Track1Pregap   =  150;
-  static constexpr int LeadOutSectors = 6750;
+  static constexpr s32 LeadInSectors  = 7500;
+  static constexpr s32 Track1Pregap   =  150;
+  static constexpr s32 LeadOutSectors = 6750;
 };
 
 }

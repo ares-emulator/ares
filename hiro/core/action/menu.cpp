@@ -11,12 +11,12 @@ auto mMenu::destruct() -> void {
 
 //
 
-auto mMenu::action(unsigned position) const -> Action {
+auto mMenu::action(u32 position) const -> Action {
   if(position < actionCount()) return state.actions[position];
   return {};
 }
 
-auto mMenu::actionCount() const -> unsigned {
+auto mMenu::actionCount() const -> u32 {
   return state.actions.size();
 }
 
@@ -58,7 +58,7 @@ auto mMenu::setIcon(const image& icon) -> type& {
   return *this;
 }
 
-auto mMenu::setParent(mObject* parent, signed offset) -> type& {
+auto mMenu::setParent(mObject* parent, s32 offset) -> type& {
   for(auto& action : reverse(state.actions)) action->destruct();
   mObject::setParent(parent, offset);
   for(auto& action : state.actions) action->setParent(this, action->offset());

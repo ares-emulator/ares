@@ -8,6 +8,7 @@
 
 namespace ares::GameBoy {
   #include <ares/inline.hpp>
+  auto enumerate() -> vector<string>;
   auto load(Node::System& node, string name) -> bool;
 
   struct Model {
@@ -19,8 +20,8 @@ namespace ares::GameBoy {
   struct SuperGameBoyInterface {
     virtual auto ppuHreset() -> void = 0;
     virtual auto ppuVreset() -> void = 0;
-    virtual auto ppuWrite(uint2 color) -> void = 0;
-    virtual auto joypWrite(uint1 p14, uint1 p15) -> void = 0;
+    virtual auto ppuWrite(n2 color) -> void = 0;
+    virtual auto joypWrite(n1 p14, n1 p15) -> void = 0;
   };
 
   #include <gb/system/system.hpp>

@@ -66,7 +66,7 @@ auto Cartridge::main() -> void {
   board->main();
 }
 
-auto Cartridge::step(uint clocks) -> void {
+auto Cartridge::step(u32 clocks) -> void {
   Thread::step(clocks);
   synchronize(cpu);
 }

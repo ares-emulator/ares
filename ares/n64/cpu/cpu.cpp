@@ -31,7 +31,7 @@ auto CPU::main() -> void {
   synchronize();
 }
 
-auto CPU::step(uint clocks) -> void {
+auto CPU::step(u32 clocks) -> void {
   Thread::clock += clocks;
 }
 
@@ -110,7 +110,7 @@ auto CPU::instructionDebug() -> void {
   if(mask[(ipu.pc & 0x1fff'ffff) >> 2]) return;
   mask[(ipu.pc & 0x1fff'ffff) >> 2] = 1;
 
-  static uint counter = 0;
+  static u32 counter = 0;
 //if(++counter > 100) return;
   print(
     disassembler.hint(hex(pipeline.address, 8L)), "  ",

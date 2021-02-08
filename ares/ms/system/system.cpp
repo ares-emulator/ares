@@ -2,7 +2,20 @@
 
 namespace ares::MasterSystem {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[Sega] Mark III (NTSC-J)",
+    "[Sega] Master System (NTSC-J)",
+    "[Sega] Master System (NTSC-U)",
+    "[Sega] Master System (PAL)",
+    "[Sega] Master System II (NTSC-U)",
+    "[Sega] Master System II (PAL)",
+    "[Sega] Game Gear",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -28,12 +41,36 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(name == "Mark III"        ) information.model = Model::MarkIII;
-  if(name == "Master System I" ) information.model = Model::MasterSystemI;
-  if(name == "Master System II") information.model = Model::MasterSystemII;
-  if(name == "Game Gear"       ) information.model = Model::GameGear;
+  if(name.find("Mark III")) {
+    information.name = "Master System";
+    information.model = Model::MarkIII;
+  }
+  if(name.find("Master System")) {
+    information.name = "Master System";
+    information.model = Model::MasterSystemI;
+  }
+  if(name.find("Master System II")) {
+    information.name = "Master System";
+    information.model = Model::MasterSystemII;
+  }
+  if(name.find("Game Gear")) {
+    information.name = "Game Gear";
+    information.model = Model::GameGear;
+  }
+  if(name.find("NTSC-J")) {
+    information.region = Region::NTSCJ;
+    information.colorburst = Constants::Colorburst::NTSC;
+  }
+  if(name.find("NTSC-U")) {
+    information.region = Region::NTSCU;
+    information.colorburst = Constants::Colorburst::NTSC;
+  }
+  if(name.find("PAL")) {
+    information.region = Region::PAL;
+    information.colorburst = Constants::Colorburst::PAL * 4.0 / 5.0;
+  }
 
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});
@@ -42,17 +79,6 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
-
-  regionNode = node->append<Node::Setting::String>("Region", "NTSC-J → NTSC-U → PAL");
-  regionNode->setAllowedValues({
-    "NTSC-J → NTSC-U → PAL",
-    "NTSC-U → NTSC-J → PAL",
-    "PAL → NTSC-J → NTSC-U",
-    "PAL → NTSC-U → NTSC-J",
-    "NTSC-J",
-    "NTSC-U",
-    "PAL"
-  });
 
   scheduler.reset();
   controls.load(node);
@@ -111,26 +137,6 @@ auto System::unload() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
-  auto setRegion = [&](string region) {
-    if(region == "NTSC-J") {
-      information.region = Region::NTSCJ;
-      information.colorburst = Constants::Colorburst::NTSC;
-    }
-    if(region == "NTSC-U") {
-      information.region = Region::NTSCU;
-      information.colorburst = Constants::Colorburst::NTSC;
-    }
-    if(region == "PAL") {
-      information.region = Region::PAL;
-      information.colorburst = Constants::Colorburst::PAL * 4.0 / 5.0;
-    }
-  };
-  auto regionsHave = regionNode->latch().split("→").strip();
-  setRegion(regionsHave.first());
-  for(auto& have : reverse(regionsHave)) {
-    if(have == cartridge.region()) setRegion(have);
-  }
-
   cartridge.power();
   cpu.power();
   vdp.power();
@@ -148,13 +154,6 @@ auto System::power(bool reset) -> void {
     }
   }
   scheduler.power(cpu);
-
-  //todo: this is a hack because load() attaches the OPLL before the region is configured.
-  //this incorrect fix can crash the emulator if the region is changed without restarting!
-  //the correct fix will require games to set the system region before calling load()
-  if(opll.node && !MasterSystem::Region::NTSCJ()) {
-    opll.unload();
-  }
 }
 
 }

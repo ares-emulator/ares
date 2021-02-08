@@ -10,16 +10,16 @@ auto pKeyboard::poll() -> vector<bool> {
   return result;
 }
 
-auto pKeyboard::pressed(unsigned code) -> bool {
-  uint8_t lo = code >> 0;
-  uint8_t hi = code >> 8;
+auto pKeyboard::pressed(u32 code) -> bool {
+  u8 lo = code >> 0;
+  u8 hi = code >> 8;
   if(lo && GetAsyncKeyState(lo) & 0x8000) return true;
   if(hi && GetAsyncKeyState(hi) & 0x8000) return true;
   return false;
 }
 
 auto pKeyboard::initialize() -> void {
-  auto append = [](unsigned lo, unsigned hi = 0) {
+  auto append = [](u32 lo, u32 hi = 0) {
     keycodes.append(lo << 0 | hi << 8);
   };
 
@@ -32,7 +32,7 @@ auto pKeyboard::initialize() -> void {
   #undef map
 }
 
-auto pKeyboard::_translate(unsigned code, unsigned flags) -> signed {
+auto pKeyboard::_translate(u32 code, u32 flags) -> s32 {
   bool numLock = GetKeyState(VK_NUMLOCK);
   bool capsLock = GetKeyState(VK_CAPITAL);
   bool shifted = (GetAsyncKeyState(VK_LSHIFT) & 0x8000) || (GetAsyncKeyState(VK_RSHIFT) & 0x8000);

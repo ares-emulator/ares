@@ -25,21 +25,21 @@ struct System {
     bool rightLatch = 0;
   } controls;
 
-  enum class Model : uint {
+  enum class Model : u32 {
     GameBoy,
     GameBoyColor,
     SuperGameBoy,
   };
-  Memory::Readable<uint8> bootROM;
+  Memory::Readable<n8> bootROM;
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto model() const -> Model { return information.model; }
-  auto clocksExecuted() const -> uint { return information.clocksExecuted; }
+  auto clocksExecuted() const -> u32 { return information.clocksExecuted; }
 
   //system.cpp
   auto game() -> string;
   auto run() -> void;
-  auto clocksExecuted() -> uint;
+  auto clocksExecuted() -> u32;
 
   auto load(Node::System& node, string name) -> bool;
   auto unload() -> void;
@@ -51,8 +51,9 @@ struct System {
   auto unserialize(serializer&) -> bool;
 
   struct Information {
+    string name = "Game Boy";
     Model model = Model::GameBoy;
-    uint32 clocksExecuted;
+    n32 clocksExecuted;
   } information;
 
   //serialization.cpp

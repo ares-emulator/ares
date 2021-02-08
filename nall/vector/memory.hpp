@@ -8,7 +8,7 @@ namespace nall {
 template<typename T> auto vector<T>::reset() -> void {
   if(!_pool) return;
 
-  for(uint64_t n : range(_size)) _pool[n].~T();
+  for(u64 n : range(_size)) _pool[n].~T();
   memory::free(_pool - _left);
 
   _pool = nullptr;
@@ -19,7 +19,7 @@ template<typename T> auto vector<T>::reset() -> void {
 
 //acquire ownership of allocated memory
 
-template<typename T> auto vector<T>::acquire(const T* data, uint64_t size, uint64_t capacity) -> void {
+template<typename T> auto vector<T>::acquire(const T* data, u64 size, u64 capacity) -> void {
   reset();
   _pool = data;
   _size = size;
@@ -43,12 +43,12 @@ template<typename T> auto vector<T>::release() -> T* {
 //reserve will not actually shrink the capacity, only expand it
 //shrinking the capacity would destroy objects, and break amortized growth with reallocate and resize
 
-template<typename T> auto vector<T>::reserveLeft(uint64_t capacity) -> bool {
+template<typename T> auto vector<T>::reserveLeft(u64 capacity) -> bool {
   if(_size + _left >= capacity) return false;
 
-  uint64_t left = bit::round(capacity);
+  u64 left = bit::round(capacity);
   auto pool = memory::allocate<T>(left + _right) + (left - _size);
-  for(uint64_t n : range(_size)) new(pool + n) T(move(_pool[n]));
+  for(u64 n : range(_size)) new(pool + n) T(move(_pool[n]));
   memory::free(_pool - _left);
 
   _pool = pool;
@@ -57,12 +57,12 @@ template<typename T> auto vector<T>::reserveLeft(uint64_t capacity) -> bool {
   return true;
 }
 
-template<typename T> auto vector<T>::reserveRight(uint64_t capacity) -> bool {
+template<typename T> auto vector<T>::reserveRight(u64 capacity) -> bool {
   if(_size + _right >= capacity) return false;
 
-  uint64_t right = bit::round(capacity);
+  u64 right = bit::round(capacity);
   auto pool = memory::allocate<T>(_left + right) + _left;
-  for(uint64_t n : range(_size)) new(pool + n) T(move(_pool[n]));
+  for(u64 n : range(_size)) new(pool + n) T(move(_pool[n]));
   memory::free(_pool - _left);
 
   _pool = pool;
@@ -74,7 +74,7 @@ template<typename T> auto vector<T>::reserveRight(uint64_t capacity) -> bool {
 //reallocation is meant for POD types, to avoid the overhead of initialization
 //do not use with non-POD types, or they will not be properly constructed or destructed
 
-template<typename T> auto vector<T>::reallocateLeft(uint64_t size) -> bool {
+template<typename T> auto vector<T>::reallocateLeft(u64 size) -> bool {
   if(size < _size) {  //shrink
     _pool += _size - size;
     _left += _size - size;
@@ -91,7 +91,7 @@ template<typename T> auto vector<T>::reallocateLeft(uint64_t size) -> bool {
   return false;
 }
 
-template<typename T> auto vector<T>::reallocateRight(uint64_t size) -> bool {
+template<typename T> auto vector<T>::reallocateRight(u64 size) -> bool {
   if(size < _size) {  //shrink
     _right += _size - size;
     _size = size;
@@ -108,9 +108,9 @@ template<typename T> auto vector<T>::reallocateRight(uint64_t size) -> bool {
 
 //resize is meant for non-POD types, and will properly construct objects
 
-template<typename T> auto vector<T>::resizeLeft(uint64_t size, const T& value) -> bool {
+template<typename T> auto vector<T>::resizeLeft(u64 size, const T& value) -> bool {
   if(size < _size) {  //shrink
-    for(uint64_t n : range(_size - size)) _pool[n].~T();
+    for(u64 n : range(_size - size)) _pool[n].~T();
     _pool += _size - size;
     _left += _size - size;
     _size = size;
@@ -119,7 +119,7 @@ template<typename T> auto vector<T>::resizeLeft(uint64_t size, const T& value) -
   if(size > _size) {  //grow
     reserveLeft(size);
     _pool -= size - _size;
-    for(uint64_t n : nall::reverse(range(size - _size))) new(_pool + n) T(value);
+    for(u64 n : nall::reverse(range(size - _size))) new(_pool + n) T(value);
     _left -= size - _size;
     _size = size;
     return true;
@@ -127,16 +127,16 @@ template<typename T> auto vector<T>::resizeLeft(uint64_t size, const T& value) -
   return false;
 }
 
-template<typename T> auto vector<T>::resizeRight(uint64_t size, const T& value) -> bool {
+template<typename T> auto vector<T>::resizeRight(u64 size, const T& value) -> bool {
   if(size < _size) {  //shrink
-    for(uint64_t n : range(size, _size)) _pool[n].~T();
+    for(u64 n : range(size, _size)) _pool[n].~T();
     _right += _size - size;
     _size = size;
     return true;
   }
   if(size > _size) {  //grow
     reserveRight(size);
-    for(uint64_t n : range(_size, size)) new(_pool + n) T(value);
+    for(u64 n : range(_size, size)) new(_pool + n) T(value);
     _right -= size - _size;
     _size = size;
     return true;

@@ -9,12 +9,12 @@ namespace nall {
 
 template<typename T> struct array;
 
-//usage: int x[256] => array<int[256]> x
-template<typename T, uint Size> struct array<T[Size]> {
+//usage: s32 x[256] => array<s32[256]> x
+template<typename T, u32 Size> struct array<T[Size]> {
   array() = default;
 
   array(const initializer_list<T>& source) {
-    uint index = 0;
+    u32 index = 0;
     for(auto& value : source) {
       operator[](index++) = value;
     }
@@ -28,7 +28,7 @@ template<typename T, uint Size> struct array<T[Size]> {
     return {data(), size()};
   }
 
-  alwaysinline auto operator[](uint index) -> T& {
+  alwaysinline auto operator[](u32 index) -> T& {
     #ifdef DEBUG
     struct out_of_bounds {};
     if(index >= Size) throw out_of_bounds{};
@@ -36,7 +36,7 @@ template<typename T, uint Size> struct array<T[Size]> {
     return values[index];
   }
 
-  alwaysinline auto operator[](uint index) const -> const T& {
+  alwaysinline auto operator[](u32 index) const -> const T& {
     #ifdef DEBUG
     struct out_of_bounds {};
     if(index >= Size) throw out_of_bounds{};
@@ -44,7 +44,7 @@ template<typename T, uint Size> struct array<T[Size]> {
     return values[index];
   }
 
-  alwaysinline auto operator()(uint index, const T& fallback = {}) const -> const T& {
+  alwaysinline auto operator()(u32 index, const T& fallback = {}) const -> const T& {
     if(index >= Size) return fallback;
     return values[index];
   }
@@ -56,7 +56,7 @@ template<typename T, uint Size> struct array<T[Size]> {
 
   auto data() -> T* { return values; }
   auto data() const -> const T* { return values; }
-  auto size() const -> uint { return Size; }
+  auto size() const -> u32 { return Size; }
 
   auto begin() -> T* { return &values[0]; }
   auto end() -> T* { return &values[Size]; }
@@ -68,7 +68,7 @@ private:
   T values[Size];
 };
 
-template<typename T, T... p> inline auto from_array(uint index) -> T {
+template<typename T, T... p> inline auto from_array(u32 index) -> T {
   static const array<T[sizeof...(p)]> table{p...};
   struct out_of_bounds {};
   #if defined(DEBUG)
@@ -77,8 +77,8 @@ template<typename T, T... p> inline auto from_array(uint index) -> T {
   return table[index];
 }
 
-template<int64_t... p> inline auto from_array(uint index) -> int64_t {
-  static const array<int64_t[sizeof...(p)]> table{p...};
+template<s64... p> inline auto from_array(u32 index) -> s64 {
+  static const array<s64[sizeof...(p)]> table{p...};
   struct out_of_bounds {};
   #if defined(DEBUG)
   if(index >= sizeof...(p)) throw out_of_bounds{};

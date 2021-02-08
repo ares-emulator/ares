@@ -147,18 +147,18 @@ struct KonamiVRC7 : Interface {
     return data;
   }
 
-  auto writeCHR(n32 address, n8 data) -> void {
+  auto writeCHR(n32 address, n8 data) -> void override {
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
     ym2413.power();
     disableFM = 1;
     ramWritable = 1;
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programRAM);
     s(characterRAM);
     s(ym2413);
@@ -177,17 +177,17 @@ struct KonamiVRC7 : Interface {
     s(divider);
   }
 
-  n08 programBank[3];
-  n08 characterBank[8];
-  n02 mirror;
-  n01 disableFM;
-  n01 ramWritable;
-  n08 irqLatch;
-  n01 irqMode;
-  n01 irqEnable;
-  n01 irqAcknowledge;
-  n08 irqCounter;
+  n8  programBank[3];
+  n8  characterBank[8];
+  n2  mirror;
+  n1  disableFM;
+  n1  ramWritable;
+  n8  irqLatch;
+  n1  irqMode;
+  n1  irqEnable;
+  n1  irqAcknowledge;
+  n8  irqCounter;
   i16 irqScalar;
-  n01 irqLine;
-  n06 divider;
+  n1  irqLine;
+  n6  divider;
 };

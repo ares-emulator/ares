@@ -2,7 +2,7 @@
 
 struct CrossBlaim : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
+  Memory::Readable<n8> rom;
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -15,32 +15,32 @@ struct CrossBlaim : Interface {
   auto unload() -> void override {
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(mode == 0 || mode == 1) {
-      if(address >> 14 == 0) data = rom.read((uint14)address + 16_KiB);
-      if(address >> 14 == 1) data = rom.read((uint14)address);
-      if(address >> 14 == 2) data = rom.read((uint14)address + 16_KiB);
-      if(address >> 14 == 3) data = rom.read((uint14)address + 16_KiB);
+      if(address >> 14 == 0) data = rom.read((n14)address + 16_KiB);
+      if(address >> 14 == 1) data = rom.read((n14)address);
+      if(address >> 14 == 2) data = rom.read((n14)address + 16_KiB);
+      if(address >> 14 == 3) data = rom.read((n14)address + 16_KiB);
     }
 
     if(mode == 2) {
       if(address >> 14 == 0) data = 0xff;
-      if(address >> 14 == 1) data = rom.read((uint14)address);
-      if(address >> 14 == 2) data = rom.read((uint14)address + 32_KiB);
+      if(address >> 14 == 1) data = rom.read((n14)address);
+      if(address >> 14 == 2) data = rom.read((n14)address + 32_KiB);
       if(address >> 14 == 3) data = 0xff;
     }
 
     if(mode == 3) {
       if(address >> 14 == 0) data = 0xff;
-      if(address >> 14 == 1) data = rom.read((uint14)address);
-      if(address >> 14 == 2) data = rom.read((uint14)address + 48_KiB);
+      if(address >> 14 == 1) data = rom.read((n14)address);
+      if(address >> 14 == 2) data = rom.read((n14)address + 48_KiB);
       if(address >> 14 == 3) data = 0xff;
     }
 
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     mode = data;
   }
 
@@ -52,5 +52,5 @@ struct CrossBlaim : Interface {
     s(mode);
   }
 
-  uint2 mode;
+  n2 mode;
 };

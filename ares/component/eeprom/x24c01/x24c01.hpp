@@ -7,17 +7,17 @@ namespace ares {
 struct X24C01 {
   //x24c01.cpp
   auto reset() -> void;
-  auto read() -> uint1;
-  auto write(uint1 clock, uint1 data) -> void;
-  auto erase(uint8 fill = 0xff) -> void;
+  auto read() -> n1;
+  auto write(n1 clock, n1 data) -> void;
+  auto erase(n8 fill = 0xff) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint8 memory[128];
+  n8 memory[128];
 
 private:
-  enum class Mode : uint {
+  enum class Mode : u32 {
     Idle,
     Address, AddressAcknowledge,
     Read, ReadAcknowledge,
@@ -26,23 +26,23 @@ private:
 
   struct Line {
     //x24c01.cpp
-    auto write(uint1 data) -> void;
+    auto write(n1 data) -> void;
 
-    uint1 lo;
-    uint1 hi;
-    uint1 fall;
-    uint1 rise;
-    uint1 line;
+    n1 lo;
+    n1 hi;
+    n1 fall;
+    n1 rise;
+    n1 line;
   };
 
   Line clock;
   Line data;
   Mode mode;
-  uint8 counter;
-  uint8 address;
-  uint8 input;
-  uint8 output;
-  uint1 line;
+  n8 counter;
+  n8 address;
+  n8 input;
+  n8 output;
+  n1 line;
 };
 
 }

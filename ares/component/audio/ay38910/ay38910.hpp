@@ -5,14 +5,14 @@ namespace ares {
 //General Instrument AY-3-8910
 
 struct AY38910 {
-  virtual auto readIO(uint1 port) -> uint8 { return 0xff; }
-  virtual auto writeIO(uint1 port, uint8 data) -> void {}
+  virtual auto readIO(n1 port) -> n8 { return 0xff; }
+  virtual auto writeIO(n1 port, n8 data) -> void {}
 
   //ay38910.cpp
-  auto clock() -> array<uint4[3]>;
-  auto read() -> uint8;
-  auto write(uint8 data) -> void;
-  auto select(uint4 data) -> void;
+  auto clock() -> array<n4[3]>;
+  auto read() -> n8;
+  auto write(n8 data) -> void;
+  auto select(n4 data) -> void;
   auto power() -> void;
 
   //serialization.cpp
@@ -23,51 +23,51 @@ protected:
     //ay38910.cpp
     auto clock() -> void;
 
-    uint12 counter;
-    uint12 period;
-     uint1 output;
+    n12 counter;
+    n12 period;
+    n1  output;
   };
 
   struct Noise {
     //ay38910.cpp
     auto clock() -> void;
 
-     uint5 counter;
-     uint5 period;
-     uint1 flip;
-    uint17 lfsr = 1;
-     uint1 output;
+    n5  counter;
+    n5  period;
+    n1  flip;
+    n17 lfsr = 1;
+    n1  output;
   };
 
   struct Envelope {
     //ay38910.cpp
     auto clock() -> void;
 
-    uint16 counter;
-    uint16 period;
-     uint1 holding;
-     uint1 attacking;
-     uint1 hold;
-     uint1 alternate;
-     uint1 attack;
-     uint1 repeat;  //continue
-     uint4 output;
+    n16 counter;
+    n16 period;
+    n1  holding;
+    n1  attacking;
+    n1  hold;
+    n1  alternate;
+    n1  attack;
+    n1  repeat;  //continue
+    n4  output;
   };
 
   struct Channel {
-    uint1 tone;      //0 = enable, 1 = disable
-    uint1 noise;     //0 = enable, 1 = disable
-    uint1 envelope;  //0 = use fixed volume, 1 = use envelope phase
-    uint4 volume;
+    n1 tone;      //0 = enable, 1 = disable
+    n1 noise;     //0 = enable, 1 = disable
+    n1 envelope;  //0 = use fixed volume, 1 = use envelope phase
+    n4 volume;
   };
 
   struct Port {
-    uint1 direction;  //0 = input, 1 = output
-    uint8 data;
+    n1 direction;  //0 = input, 1 = output
+    n8 data;
   };
 
   struct IO {
-    uint4 register;
+    n4 register;
   };
 
   Tone toneA;

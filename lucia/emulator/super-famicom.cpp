@@ -16,7 +16,23 @@ SuperFamicom::SuperFamicom() {
 }
 
 auto SuperFamicom::load() -> bool {
-  if(!ares::SuperFamicom::load(root, "Super Famicom")) return false;
+  auto region = Emulator::region();
+  if(region.beginsWith("NTSC")
+  || region.endsWith("BRA")
+  || region.endsWith("CAN")
+  || region.endsWith("HKG")
+  || region.endsWith("JPN")
+  || region.endsWith("KOR")
+  || region.endsWith("LTN")
+  || region.endsWith("ROC")
+  || region.endsWith("USA")
+  || region.beginsWith("SHVC-")
+  ) {
+    region = "NTSC";
+  } else {
+    region = "PAL";
+  }
+  if(!ares::SuperFamicom::load(root, {"[Nintendo] Super Famicom (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

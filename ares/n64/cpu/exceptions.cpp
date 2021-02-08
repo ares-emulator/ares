@@ -1,4 +1,4 @@
-auto CPU::Exception::trigger(uint code, uint coprocessor) -> void {
+auto CPU::Exception::trigger(u32 code, u32 coprocessor) -> void {
   if(self.debugger.tracer.exception->enabled()) {
     if(code != 0) self.debugger.exception(hex(code, 2L));
   }

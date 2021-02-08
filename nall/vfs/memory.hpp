@@ -8,9 +8,9 @@ namespace nall::vfs {
 struct memory : file {
   ~memory() { delete[] _data; }
 
-  static auto open(const void* data, uintmax size) -> shared_pointer<memory> {
+  static auto open(const void* data, u64 size) -> shared_pointer<memory> {
     auto instance = shared_pointer<memory>{new memory};
-    instance->_open((const uint8_t*)data, size);
+    instance->_open((const u8*)data, size);
     return instance;
   }
 
@@ -29,21 +29,21 @@ struct memory : file {
     return instance;
   }
 
-  auto data() const -> const uint8_t* { return _data; }
-  auto size() const -> uintmax override { return _size; }
-  auto offset() const -> uintmax override { return _offset; }
+  auto data() const -> const u8* { return _data; }
+  auto size() const -> u64 override { return _size; }
+  auto offset() const -> u64 override { return _offset; }
 
-  auto seek(intmax offset, index mode) -> void override {
-    if(mode == index::absolute) _offset = (uintmax)offset;
-    if(mode == index::relative) _offset += (intmax)offset;
+  auto seek(s64 offset, index mode) -> void override {
+    if(mode == index::absolute) _offset  = (u64)offset;
+    if(mode == index::relative) _offset += (s64)offset;
   }
 
-  auto read() -> uint8_t override {
+  auto read() -> u8 override {
     if(_offset >= _size) return 0x00;
     return _data[_offset++];
   }
 
-  auto write(uint8_t data) -> void override {
+  auto write(u8 data) -> void override {
     if(_offset >= _size) return;
     _data[_offset++] = data;
   }
@@ -53,15 +53,15 @@ private:
   memory(const file&) = delete;
   auto operator=(const memory&) -> memory& = delete;
 
-  auto _open(const uint8_t* data, uintmax size) -> void {
+  auto _open(const u8* data, u64 size) -> void {
     _size = size;
-    _data = new uint8_t[size];
+    _data = new u8[size];
     nall::memory::copy(_data, data, size);
   }
 
-  uint8_t* _data = nullptr;
-  uintmax _size = 0;
-  uintmax _offset = 0;
+  u8* _data = nullptr;
+  u64 _size = 0;
+  u64 _offset = 0;
 };
 
 }

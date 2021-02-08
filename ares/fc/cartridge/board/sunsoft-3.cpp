@@ -106,7 +106,7 @@ struct Sunsoft3 : Interface {
   auto power() -> void override {
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programBank);
     s(characterBank);
     s(mirror);
@@ -115,10 +115,10 @@ struct Sunsoft3 : Interface {
     s(irqCounter);
   }
 
-  n05 programBank;
-  n06 characterBank[4];
-  n02 mirror;
-  n01 irqEnable;
-  n01 irqToggle;
+  n5  programBank;
+  n6  characterBank[4];
+  n2  mirror;
+  n1  irqEnable;
+  n1  irqToggle;
   n16 irqCounter;
 };

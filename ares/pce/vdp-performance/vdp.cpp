@@ -63,14 +63,14 @@ auto VDP::main() -> void {
     auto line = screen->pixels().data() + 1365 * io.vcounter;
 
     if(Model::SuperGrafx() == 0) {
-      for(uint x : range(vce.width())) {
+      for(u32 x : range(vce.width())) {
         line[x] = vce.io.grayscale << 9 | vce.cram.read(vdc0.output[x]);
       }
     }
 
     if(Model::SuperGrafx() == 1) {
       vpc.render();
-      for(uint x : range(vce.width())) {
+      for(u32 x : range(vce.width())) {
         line[x] = vce.io.grayscale << 9 | vce.cram.read(vpc.output[x]);
       }
     }
@@ -89,7 +89,7 @@ auto VDP::main() -> void {
   }
 }
 
-auto VDP::step(uint clocks) -> void {
+auto VDP::step(u32 clocks) -> void {
   io.hcounter += clocks;
   vdc0.dma.step(clocks); if(Model::SuperGrafx())
   vdc1.dma.step(clocks);
@@ -112,14 +112,14 @@ auto VDP::refresh() -> void {
   }
 
   //this frame contains mixed resolutions: normalize every scanline to 1024-width
-  for(uint y = 21; y < 239 + 21; y++) {
+  for(u32 y = 21; y < 239 + 21; y++) {
     auto output = screen->pixels(1).data() + 1365 * y;
     switch(widths[y]) {
 
     case 256: {
       auto source = &output[256];
       auto target = &output[256 * 4];
-      for(uint x : range(256)) {
+      for(u32 x : range(256)) {
         auto color = *--source;
         *--target = color;
         *--target = color;
@@ -131,7 +131,7 @@ auto VDP::refresh() -> void {
     case 344: {
       auto source = &output[344];
       auto target = &output[344 * 3];
-      for(uint x : range(344)) {
+      for(u32 x : range(344)) {
         auto color = *--source;
         *--target = color;
         *--target = color;
@@ -142,7 +142,7 @@ auto VDP::refresh() -> void {
     case 512: {
       auto source = &output[512];
       auto target = &output[512 * 2];
-      for(uint x : range(512)) {
+      for(u32 x : range(512)) {
         auto color = *--source;
         *--target = color;
         *--target = color;

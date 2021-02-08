@@ -30,7 +30,7 @@ NTTDataKeypad::NTTDataKeypad(Node::Port parent) {
   end   = node->append<Node::Input::Button>("End");
 }
 
-auto NTTDataKeypad::data() -> uint2 {
+auto NTTDataKeypad::data() -> n2 {
   if(latched == 1) {
     platform->input(b);
     return b->value();
@@ -77,7 +77,7 @@ auto NTTDataKeypad::data() -> uint2 {
   return 1;  //unverified (likely correct)
 }
 
-auto NTTDataKeypad::latch(bool data) -> void {
+auto NTTDataKeypad::latch(n1 data) -> void {
   if(latched == data) return;
   latched = data;
   counter = 0;

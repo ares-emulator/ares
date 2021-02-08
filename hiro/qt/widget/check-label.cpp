@@ -4,7 +4,7 @@ namespace hiro {
 
 auto pCheckLabel::construct() -> void {
   qtWidget = qtCheckLabel = new QtCheckLabel(*this);
-  qtCheckLabel->connect(qtCheckLabel, SIGNAL(stateChanged(int)), SLOT(onToggle()));
+  qtCheckLabel->connect(qtCheckLabel, SIGNAL(stateChanged(s32)), SLOT(onToggle()));
 
   pWidget::construct();
   _setState();

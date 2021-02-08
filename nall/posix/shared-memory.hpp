@@ -18,7 +18,7 @@ struct shared_memory {
     return _mode != mode::inactive;
   }
 
-  auto size() const -> uint {
+  auto size() const -> u32 {
     return _size;
   }
 
@@ -26,7 +26,7 @@ struct shared_memory {
     return _acquired;
   }
 
-  auto acquire() -> uint8_t* {
+  auto acquire() -> u8* {
     if(!acquired()) {
       sem_wait(_semaphore);
       _acquired = true;
@@ -47,7 +47,7 @@ struct shared_memory {
     if(_mode == mode::client) return close();
   }
 
-  auto create(const string& name, uint size) -> bool {
+  auto create(const string& name, u32 size) -> bool {
     reset();
 
     _name = {"/nall-", string{name}.transform("/:", "--")};
@@ -62,7 +62,7 @@ struct shared_memory {
 
     if(ftruncate(_descriptor, _size) != 0) return remove(), false;
 
-    _data = (uint8_t*)mmap(nullptr, _size, PROT_READ | PROT_WRITE, MAP_SHARED, _descriptor, 0);
+    _data = (u8*)mmap(nullptr, _size, PROT_READ | PROT_WRITE, MAP_SHARED, _descriptor, 0);
     if(_data == MAP_FAILED) return remove(), false;
 
     memory::fill(_data, _size);
@@ -94,7 +94,7 @@ struct shared_memory {
     _size = 0;
   }
 
-  auto open(const string& name, uint size) -> bool {
+  auto open(const string& name, u32 size) -> bool {
     reset();
 
     _name = {"/nall-", string{name}.transform("/:", "--")};
@@ -106,7 +106,7 @@ struct shared_memory {
     _descriptor = shm_open(_name, O_RDWR, 0644);
     if(_descriptor < 0) return close(), false;
 
-    _data = (uint8_t*)mmap(nullptr, _size, PROT_READ | PROT_WRITE, MAP_SHARED, _descriptor, 0);
+    _data = (u8*)mmap(nullptr, _size, PROT_READ | PROT_WRITE, MAP_SHARED, _descriptor, 0);
     if(_data == MAP_FAILED) return close(), false;
 
     _mode = mode::client;
@@ -135,12 +135,12 @@ struct shared_memory {
   }
 
 private:
-  enum class mode : uint { server, client, inactive } _mode = mode::inactive;
+  enum class mode : u32 { server, client, inactive } _mode = mode::inactive;
   string _name;
   sem_t* _semaphore = nullptr;
-  int _descriptor = -1;
-  uint8_t* _data = nullptr;
-  uint _size = 0;
+  s32 _descriptor = -1;
+  u8* _data = nullptr;
+  u32 _size = 0;
   bool _acquired = false;
 };
 

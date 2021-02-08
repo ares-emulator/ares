@@ -69,15 +69,15 @@ auto pLabel::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> ma
     SetBkMode(hdcMemory, TRANSPARENT);
     SelectObject(hdcMemory, hfont);
     DrawText(hdcMemory, text, -1, &rc, DT_CALCRECT | DT_END_ELLIPSIS);
-    uint height = rc.bottom;
+    u32 height = rc.bottom;
 
     GetClientRect(hwnd, &rc);
     rc.top = (rc.bottom - height) / 2;
     rc.bottom = rc.top + height;
-    uint horizontalAlignment = DT_CENTER;
+    u32 horizontalAlignment = DT_CENTER;
     if(state().alignment.horizontal() < 0.333) horizontalAlignment = DT_LEFT;
     if(state().alignment.horizontal() > 0.666) horizontalAlignment = DT_RIGHT;
-    uint verticalAlignment = DT_VCENTER;
+    u32 verticalAlignment = DT_VCENTER;
     if(state().alignment.vertical() < 0.333) verticalAlignment = DT_TOP;
     if(state().alignment.vertical() > 0.666) verticalAlignment = DT_BOTTOM;
     if(auto color = state().foregroundColor) {

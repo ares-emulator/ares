@@ -64,7 +64,7 @@ auto Cartridge::save() -> void {
 auto Cartridge::power() -> void {
 }
 
-auto Cartridge::read(uint16 address) -> maybe<uint8> {
+auto Cartridge::read(n16 address) -> maybe<n8> {
   if(!node) return nothing;
 
   if(address >= 0x0000 && address <= 0x7fff) {
@@ -78,7 +78,7 @@ auto Cartridge::read(uint16 address) -> maybe<uint8> {
   return nothing;
 }
 
-auto Cartridge::write(uint16 address, uint8 data) -> bool {
+auto Cartridge::write(n16 address, n8 data) -> bool {
   if(!node) return false;
 
   if(address >= 0x0000 && address <= 0x7fff) {

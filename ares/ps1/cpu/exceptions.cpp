@@ -3,7 +3,7 @@ auto CPU::Exception::operator()() -> bool {
   return triggered;
 }
 
-auto CPU::Exception::trigger(uint code) -> void {
+auto CPU::Exception::trigger(u32 code) -> void {
   triggered = true;
   self.debugger.exception(code);
 
@@ -43,7 +43,7 @@ auto CPU::Exception::interrupt() -> void {
   trigger(0);
 }
 
-template<uint Mode>
+template<u32 Mode>
 auto CPU::Exception::address(u32 address) -> void {
   if constexpr(Mode == Read ) trigger(4);
   if constexpr(Mode == Write) trigger(5);

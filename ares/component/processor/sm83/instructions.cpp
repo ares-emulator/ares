@@ -1,64 +1,64 @@
-auto SM83::instructionADC_Direct_Data(uint8& target) -> void {
+auto SM83::instructionADC_Direct_Data(n8& target) -> void {
   target = ADD(target, operand(), CF);
 }
 
-auto SM83::instructionADC_Direct_Direct(uint8& target, uint8& source) -> void {
+auto SM83::instructionADC_Direct_Direct(n8& target, n8& source) -> void {
   target = ADD(target, source, CF);
 }
 
-auto SM83::instructionADC_Direct_Indirect(uint8& target, uint16& source) -> void {
+auto SM83::instructionADC_Direct_Indirect(n8& target, n16& source) -> void {
   target = ADD(target, read(source), CF);
 }
 
-auto SM83::instructionADD_Direct_Data(uint8& target) -> void {
+auto SM83::instructionADD_Direct_Data(n8& target) -> void {
   target = ADD(target, operand());
 }
 
-auto SM83::instructionADD_Direct_Direct(uint8& target, uint8& source) -> void {
+auto SM83::instructionADD_Direct_Direct(n8& target, n8& source) -> void {
   target = ADD(target, source);
 }
 
-auto SM83::instructionADD_Direct_Direct(uint16& target, uint16& source) -> void {
+auto SM83::instructionADD_Direct_Direct(n16& target, n16& source) -> void {
   idle();
-  uint32 x = target + source;
-  uint32 y = (uint12)target + (uint12)source;
+  n32 x = target + source;
+  n32 y = (n12)target + (n12)source;
   target = x;
   CF = x > 0xffff;
   HF = y > 0x0fff;
   NF = 0;
 }
 
-auto SM83::instructionADD_Direct_Indirect(uint8& target, uint16& source) -> void {
+auto SM83::instructionADD_Direct_Indirect(n8& target, n16& source) -> void {
   target = ADD(target, read(source));
 }
 
-auto SM83::instructionADD_Direct_Relative(uint16& target) -> void {
+auto SM83::instructionADD_Direct_Relative(n16& target) -> void {
   auto data = operand();
   idle();
   idle();
-  CF = (uint8)target + (uint8)data > 0xff;
-  HF = (uint4)target + (uint4)data > 0x0f;
+  CF = (n8)target + (n8)data > 0xff;
+  HF = (n4)target + (n4)data > 0x0f;
   NF = ZF = 0;
-  target += (int8)data;
+  target += (i8)data;
 }
 
-auto SM83::instructionAND_Direct_Data(uint8& target) -> void {
+auto SM83::instructionAND_Direct_Data(n8& target) -> void {
   target = AND(target, operand());
 }
 
-auto SM83::instructionAND_Direct_Direct(uint8& target, uint8& source) -> void {
+auto SM83::instructionAND_Direct_Direct(n8& target, n8& source) -> void {
   target = AND(target, source);
 }
 
-auto SM83::instructionAND_Direct_Indirect(uint8& target, uint16& source) -> void {
+auto SM83::instructionAND_Direct_Indirect(n8& target, n16& source) -> void {
   target = AND(target, read(source));
 }
 
-auto SM83::instructionBIT_Index_Direct(uint3 index, uint8& data) -> void {
+auto SM83::instructionBIT_Index_Direct(n3 index, n8& data) -> void {
   BIT(index, data);
 }
 
-auto SM83::instructionBIT_Index_Indirect(uint3 index, uint16& address) -> void {
+auto SM83::instructionBIT_Index_Indirect(n3 index, n16& address) -> void {
   auto data = read(address);
   BIT(index, data);
 }
@@ -76,15 +76,15 @@ auto SM83::instructionCCF() -> void {
   HF = NF = 0;
 }
 
-auto SM83::instructionCP_Direct_Data(uint8& target) -> void {
+auto SM83::instructionCP_Direct_Data(n8& target) -> void {
   CP(target, operand());
 }
 
-auto SM83::instructionCP_Direct_Direct(uint8& target, uint8& source) -> void {
+auto SM83::instructionCP_Direct_Direct(n8& target, n8& source) -> void {
   CP(target, source);
 }
 
-auto SM83::instructionCP_Direct_Indirect(uint8& target, uint16& source) -> void {
+auto SM83::instructionCP_Direct_Indirect(n8& target, n16& source) -> void {
   CP(target, read(source));
 }
 
@@ -94,10 +94,10 @@ auto SM83::instructionCPL() -> void {
 }
 
 auto SM83::instructionDAA() -> void {
-  uint16 a = A;
+  n16 a = A;
   if(!NF) {
-    if(HF || (uint4)a > 0x09) a += 0x06;
-    if(CF || (uint8)a > 0x9f) a += 0x60;
+    if(HF || (n4)a > 0x09) a += 0x06;
+    if(CF || (n8)a > 0x9f) a += 0x60;
   } else {
     if(HF) {
       a -= 0x06;
@@ -111,16 +111,16 @@ auto SM83::instructionDAA() -> void {
   ZF = A == 0;
 }
 
-auto SM83::instructionDEC_Direct(uint8& data) -> void {
+auto SM83::instructionDEC_Direct(n8& data) -> void {
   data = DEC(data);
 }
 
-auto SM83::instructionDEC_Direct(uint16& data) -> void {
+auto SM83::instructionDEC_Direct(n16& data) -> void {
   idle();
   data--;
 }
 
-auto SM83::instructionDEC_Indirect(uint16& address) -> void {
+auto SM83::instructionDEC_Indirect(n16& address) -> void {
   auto data = read(address);
   write(address, DEC(data));
 }
@@ -138,16 +138,16 @@ auto SM83::instructionHALT() -> void {
   while(r.halt) halt();
 }
 
-auto SM83::instructionINC_Direct(uint8& data) -> void {
+auto SM83::instructionINC_Direct(n8& data) -> void {
   data = INC(data);
 }
 
-auto SM83::instructionINC_Direct(uint16& data) -> void {
+auto SM83::instructionINC_Direct(n16& data) -> void {
   idle();
   data++;
 }
 
-auto SM83::instructionINC_Indirect(uint16& address) -> void {
+auto SM83::instructionINC_Indirect(n16& address) -> void {
   auto data = read(address);
   write(address, INC(data));
 }
@@ -159,7 +159,7 @@ auto SM83::instructionJP_Condition_Address(bool take) -> void {
   PC = address;
 }
 
-auto SM83::instructionJP_Direct(uint16& data) -> void {
+auto SM83::instructionJP_Direct(n16& data) -> void {
   PC = data;
 }
 
@@ -167,124 +167,124 @@ auto SM83::instructionJR_Condition_Relative(bool take) -> void {
   auto data = operand();
   if(!take) return;
   idle();
-  PC += (int8)data;
+  PC += (i8)data;
 }
 
-auto SM83::instructionLD_Address_Direct(uint8& data) -> void {
+auto SM83::instructionLD_Address_Direct(n8& data) -> void {
   write(operands(), data);
 }
 
-auto SM83::instructionLD_Address_Direct(uint16& data) -> void {
+auto SM83::instructionLD_Address_Direct(n16& data) -> void {
   store(operands(), data);
 }
 
-auto SM83::instructionLD_Direct_Address(uint8& data) -> void {
+auto SM83::instructionLD_Direct_Address(n8& data) -> void {
   data = read(operands());
 }
 
-auto SM83::instructionLD_Direct_Data(uint8& target) -> void {
+auto SM83::instructionLD_Direct_Data(n8& target) -> void {
   target = operand();
 }
 
-auto SM83::instructionLD_Direct_Data(uint16& target) -> void {
+auto SM83::instructionLD_Direct_Data(n16& target) -> void {
   target = operands();
 }
 
-auto SM83::instructionLD_Direct_Direct(uint8& target, uint8& source) -> void {
+auto SM83::instructionLD_Direct_Direct(n8& target, n8& source) -> void {
   target = source;
 }
 
-auto SM83::instructionLD_Direct_Direct(uint16& target, uint16& source) -> void {
+auto SM83::instructionLD_Direct_Direct(n16& target, n16& source) -> void {
   idle();
   target = source;
 }
 
-auto SM83::instructionLD_Direct_DirectRelative(uint16& target, uint16& source) -> void {
+auto SM83::instructionLD_Direct_DirectRelative(n16& target, n16& source) -> void {
   auto data = operand();
   idle();
-  CF = (uint8)source + (uint8)data > 0xff;
-  HF = (uint4)source + (uint4)data > 0x0f;
+  CF = (n8)source + (n8)data > 0xff;
+  HF = (n4)source + (n4)data > 0x0f;
   NF = ZF = 0;
-  target = source + (int8)data;
+  target = source + (i8)data;
 }
 
-auto SM83::instructionLD_Direct_Indirect(uint8& target, uint16& source) -> void {
+auto SM83::instructionLD_Direct_Indirect(n8& target, n16& source) -> void {
   target = read(source);
 }
 
-auto SM83::instructionLD_Direct_IndirectDecrement(uint8& target, uint16& source) -> void {
+auto SM83::instructionLD_Direct_IndirectDecrement(n8& target, n16& source) -> void {
   target = read(source--);
 }
 
-auto SM83::instructionLD_Direct_IndirectIncrement(uint8& target, uint16& source) -> void {
+auto SM83::instructionLD_Direct_IndirectIncrement(n8& target, n16& source) -> void {
   target = read(source++);
 }
 
-auto SM83::instructionLD_Indirect_Data(uint16& target) -> void {
+auto SM83::instructionLD_Indirect_Data(n16& target) -> void {
   write(target, operand());
 }
 
-auto SM83::instructionLD_Indirect_Direct(uint16& target, uint8& source) -> void {
+auto SM83::instructionLD_Indirect_Direct(n16& target, n8& source) -> void {
   write(target, source);
 }
 
-auto SM83::instructionLD_IndirectDecrement_Direct(uint16& target, uint8& source) -> void {
+auto SM83::instructionLD_IndirectDecrement_Direct(n16& target, n8& source) -> void {
   write(target--, source);
 }
 
-auto SM83::instructionLD_IndirectIncrement_Direct(uint16& target, uint8& source) -> void {
+auto SM83::instructionLD_IndirectIncrement_Direct(n16& target, n8& source) -> void {
   write(target++, source);
 }
 
-auto SM83::instructionLDH_Address_Direct(uint8& data) -> void {
+auto SM83::instructionLDH_Address_Direct(n8& data) -> void {
   write(0xff00 | operand(), data);
 }
 
-auto SM83::instructionLDH_Direct_Address(uint8& data) -> void {
+auto SM83::instructionLDH_Direct_Address(n8& data) -> void {
   data = read(0xff00 | operand());
 }
 
-auto SM83::instructionLDH_Direct_Indirect(uint8& target, uint8& source) -> void {
+auto SM83::instructionLDH_Direct_Indirect(n8& target, n8& source) -> void {
   target = read(0xff00 | source);
 }
 
-auto SM83::instructionLDH_Indirect_Direct(uint8& target, uint8& source) -> void {
+auto SM83::instructionLDH_Indirect_Direct(n8& target, n8& source) -> void {
   write(0xff00 | target, source);
 }
 
 auto SM83::instructionNOP() -> void {
 }
 
-auto SM83::instructionOR_Direct_Data(uint8& target) -> void {
+auto SM83::instructionOR_Direct_Data(n8& target) -> void {
   target = OR(target, operand());
 }
 
-auto SM83::instructionOR_Direct_Direct(uint8& target, uint8& source) -> void {
+auto SM83::instructionOR_Direct_Direct(n8& target, n8& source) -> void {
   target = OR(target, source);
 }
 
-auto SM83::instructionOR_Direct_Indirect(uint8& target, uint16& source) -> void {
+auto SM83::instructionOR_Direct_Indirect(n8& target, n16& source) -> void {
   target = OR(target, read(source));
 }
 
-auto SM83::instructionPOP_Direct(uint16& data) -> void {
+auto SM83::instructionPOP_Direct(n16& data) -> void {
   data = pop();
 }
 
-auto SM83::instructionPOP_Direct_AF(uint16& data) -> void {
+auto SM83::instructionPOP_Direct_AF(n16& data) -> void {
   data = pop() & ~15;  //flag bits 0-3 are forced to zero
 }
 
-auto SM83::instructionPUSH_Direct(uint16& data) -> void {
+auto SM83::instructionPUSH_Direct(n16& data) -> void {
   idle();
   push(data);
 }
 
-auto SM83::instructionRES_Index_Direct(uint3 index, uint8& data) -> void {
+auto SM83::instructionRES_Index_Direct(n3 index, n8& data) -> void {
   data.bit(index) = 0;
 }
 
-auto SM83::instructionRES_Index_Indirect(uint3 index, uint16& address) -> void {
+auto SM83::instructionRES_Index_Indirect(n3 index, n16& address) -> void {
   auto data = read(address);
   data.bit(index) = 0;
   write(address, data);
@@ -310,11 +310,11 @@ auto SM83::instructionRETI() -> void {
   r.ime = 1;
 }
 
-auto SM83::instructionRL_Direct(uint8& data) -> void {
+auto SM83::instructionRL_Direct(n8& data) -> void {
   data = RL(data);
 }
 
-auto SM83::instructionRL_Indirect(uint16& address) -> void {
+auto SM83::instructionRL_Indirect(n16& address) -> void {
   auto data = read(address);
   write(address, RL(data));
 }
@@ -324,11 +324,11 @@ auto SM83::instructionRLA() -> void {
   ZF = 0;
 }
 
-auto SM83::instructionRLC_Direct(uint8& data) -> void {
+auto SM83::instructionRLC_Direct(n8& data) -> void {
   data = RLC(data);
 }
 
-auto SM83::instructionRLC_Indirect(uint16& address) -> void {
+auto SM83::instructionRLC_Indirect(n16& address) -> void {
   auto data = read(address);
   write(address, RLC(data));
 }
@@ -338,11 +338,11 @@ auto SM83::instructionRLCA() -> void {
   ZF = 0;
 }
 
-auto SM83::instructionRR_Direct(uint8& data) -> void {
+auto SM83::instructionRR_Direct(n8& data) -> void {
   data = RR(data);
 }
 
-auto SM83::instructionRR_Indirect(uint16& address) -> void {
+auto SM83::instructionRR_Indirect(n16& address) -> void {
   auto data = read(address);
   write(address, RR(data));
 }
@@ -352,11 +352,11 @@ auto SM83::instructionRRA() -> void {
   ZF = 0;
 }
 
-auto SM83::instructionRRC_Direct(uint8& data) -> void {
+auto SM83::instructionRRC_Direct(n8& data) -> void {
   data = RRC(data);
 }
 
-auto SM83::instructionRRC_Indirect(uint16& address) -> void {
+auto SM83::instructionRRC_Indirect(n16& address) -> void {
   auto data = read(address);
   write(address, RRC(data));
 }
@@ -366,21 +366,21 @@ auto SM83::instructionRRCA() -> void {
   ZF = 0;
 }
 
-auto SM83::instructionRST_Implied(uint8 vector) -> void {
+auto SM83::instructionRST_Implied(n8 vector) -> void {
   idle();
   push(PC);
   PC = vector;
 }
 
-auto SM83::instructionSBC_Direct_Data(uint8& target) -> void {
+auto SM83::instructionSBC_Direct_Data(n8& target) -> void {
   target = SUB(target, operand(), CF);
 }
 
-auto SM83::instructionSBC_Direct_Direct(uint8& target, uint8& source) -> void {
+auto SM83::instructionSBC_Direct_Direct(n8& target, n8& source) -> void {
   target = SUB(target, source, CF);
 }
 
-auto SM83::instructionSBC_Direct_Indirect(uint8& target, uint16& source) -> void {
+auto SM83::instructionSBC_Direct_Indirect(n8& target, n16& source) -> void {
   target = SUB(target, read(source), CF);
 }
 
@@ -389,39 +389,39 @@ auto SM83::instructionSCF() -> void {
   HF = NF = 0;
 }
 
-auto SM83::instructionSET_Index_Direct(uint3 index, uint8& data) -> void {
+auto SM83::instructionSET_Index_Direct(n3 index, n8& data) -> void {
   data.bit(index) = 1;
 }
 
-auto SM83::instructionSET_Index_Indirect(uint3 index, uint16& address) -> void {
+auto SM83::instructionSET_Index_Indirect(n3 index, n16& address) -> void {
   auto data = read(address);
   data.bit(index) = 1;
   write(address, data);
 }
 
-auto SM83::instructionSLA_Direct(uint8& data) -> void {
+auto SM83::instructionSLA_Direct(n8& data) -> void {
   data = SLA(data);
 }
 
-auto SM83::instructionSLA_Indirect(uint16& address) -> void {
+auto SM83::instructionSLA_Indirect(n16& address) -> void {
   auto data = read(address);
   write(address, SLA(data));
 }
 
-auto SM83::instructionSRA_Direct(uint8& data) -> void {
+auto SM83::instructionSRA_Direct(n8& data) -> void {
   data = SRA(data);
 }
 
-auto SM83::instructionSRA_Indirect(uint16& address) -> void {
+auto SM83::instructionSRA_Indirect(n16& address) -> void {
   auto data = read(address);
   write(address, SRA(data));
 }
 
-auto SM83::instructionSRL_Direct(uint8& data) -> void {
+auto SM83::instructionSRL_Direct(n8& data) -> void {
   data = SRL(data);
 }
 
-auto SM83::instructionSRL_Indirect(uint16& address) -> void {
+auto SM83::instructionSRL_Indirect(n16& address) -> void {
   auto data = read(address);
   write(address, SRL(data));
 }
@@ -432,35 +432,35 @@ auto SM83::instructionSTOP() -> void {
   while(r.stop) stop();
 }
 
-auto SM83::instructionSUB_Direct_Data(uint8& target) -> void {
+auto SM83::instructionSUB_Direct_Data(n8& target) -> void {
   target = SUB(target, operand());
 }
 
-auto SM83::instructionSUB_Direct_Direct(uint8& target, uint8& source) -> void {
+auto SM83::instructionSUB_Direct_Direct(n8& target, n8& source) -> void {
   target = SUB(target, source);
 }
 
-auto SM83::instructionSUB_Direct_Indirect(uint8& target, uint16& source) -> void {
+auto SM83::instructionSUB_Direct_Indirect(n8& target, n16& source) -> void {
   target = SUB(target, read(source));
 }
 
-auto SM83::instructionSWAP_Direct(uint8& data) -> void {
+auto SM83::instructionSWAP_Direct(n8& data) -> void {
   data = SWAP(data);
 }
 
-auto SM83::instructionSWAP_Indirect(uint16& address) -> void {
+auto SM83::instructionSWAP_Indirect(n16& address) -> void {
   auto data = read(address);
   write(address, SWAP(data));
 }
 
-auto SM83::instructionXOR_Direct_Data(uint8& target) -> void {
+auto SM83::instructionXOR_Direct_Data(n8& target) -> void {
   target = XOR(target, operand());
 }
 
-auto SM83::instructionXOR_Direct_Direct(uint8& target, uint8& source) -> void {
+auto SM83::instructionXOR_Direct_Direct(n8& target, n8& source) -> void {
   target = XOR(target, source);
 }
 
-auto SM83::instructionXOR_Direct_Indirect(uint8& target, uint16& source) -> void {
+auto SM83::instructionXOR_Direct_Indirect(n8& target, n16& source) -> void {
   target = XOR(target, read(source));
 }

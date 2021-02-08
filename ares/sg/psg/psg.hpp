@@ -7,14 +7,14 @@ struct PSG : SN76489, Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 private:
-  double volume[16];
+  f64 volume[16];
 };
 
 extern PSG psg;

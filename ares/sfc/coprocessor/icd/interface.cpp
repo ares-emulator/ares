@@ -1,7 +1,7 @@
 auto ICD::ppuHreset() -> void {
   hcounter = 0;
   vcounter++;
-  if((uint3)vcounter == 0) writeBank++;
+  if((n3)vcounter == 0) writeBank++;
 }
 
 auto ICD::ppuVreset() -> void {
@@ -9,17 +9,17 @@ auto ICD::ppuVreset() -> void {
   vcounter = 0;
 }
 
-auto ICD::ppuWrite(uint2 color) -> void {
-  auto x = (uint8)hcounter++;
-  auto y = (uint3)vcounter;
+auto ICD::ppuWrite(n2 color) -> void {
+  auto x = (n8)hcounter++;
+  auto y = (n3)vcounter;
   if(x >= 160) return;  //unverified behavior
 
-  uint11 address = writeBank * 512 + y * 2 + x / 8 * 16;
+  n11 address = writeBank * 512 + y * 2 + x / 8 * 16;
   output[address + 0] = output[address + 0] << 1 | color.bit(0);
   output[address + 1] = output[address + 1] << 1 | color.bit(1);
 }
 
-auto ICD::joypWrite(uint1 p14, uint1 p15) -> void {
+auto ICD::joypWrite(n1 p14, n1 p15) -> void {
   //joypad handling
   if(p14 == 1 && p15 == 1) {
     if(joypLock == 0) {
@@ -32,13 +32,13 @@ auto ICD::joypWrite(uint1 p14, uint1 p15) -> void {
     }
   }
 
-  uint8 joypad;
+  n8 joypad;
   if(joypID == 0) joypad = r6004;
   if(joypID == 1) joypad = r6005;
   if(joypID == 2) joypad = r6006;
   if(joypID == 3) joypad = r6007;
 
-  uint4 input = 0xf;
+  n4 input = 0xf;
   if(p14 == 1 && p15 == 1) input -= joypID;
   if(p14 == 0) input &= joypad.bit(0,3);  //d-pad
   if(p15 == 0) input &= joypad.bit(4,7);  //buttons

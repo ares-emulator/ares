@@ -12,7 +12,7 @@ auto GPU::serialize(serializer& s) -> void {
   s(display.previous.width);
   s(display.previous.height);
 
-  s((uint&)io.mode);
+  s((u32&)io.mode);
   s(io.field);
   s(io.hcounter);
   s(io.vcounter);

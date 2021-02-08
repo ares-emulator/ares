@@ -8,9 +8,9 @@ struct ControllerPort {
   auto allocate(string name) -> Node::Peripheral;
 
   auto iobit() -> bool { if(device) return device->iobit(); return 0; }
-  auto iobit(bool data) -> void { if(device) return device->iobit(data); }
-  auto data() -> uint2 { if(device) return device->data(); return 0; }
-  auto latch(bool data) -> void { if(device) return device->latch(data); }
+  auto iobit(n1 data) -> void { if(device) return device->iobit(data); }
+  auto data() -> n2 { if(device) return device->data(); return 0; }
+  auto latch(n1 data) -> void { if(device) return device->latch(data); }
 
   auto serialize(serializer&) -> void;
 

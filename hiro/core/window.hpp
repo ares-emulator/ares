@@ -12,8 +12,8 @@ struct mWindow : mObject {
   auto dismissable() const -> bool;
   auto doClose() const -> void;
   auto doDrop(vector<string>) const -> void;
-  auto doKeyPress(int) const -> void;
-  auto doKeyRelease(int) const -> void;
+  auto doKeyPress(s32) const -> void;
+  auto doKeyRelease(s32) const -> void;
   auto doMove() const -> void;
   auto doSize() const -> void;
   auto droppable() const -> bool;
@@ -27,11 +27,11 @@ struct mWindow : mObject {
   auto minimized() const -> bool;
   auto minimumSize() const -> Size;
   auto modal() const -> bool;
-  auto monitor() const -> uint;
+  auto monitor() const -> u32;
   auto onClose(const function<void ()>& callback = {}) -> type&;
   auto onDrop(const function<void (vector<string>)>& callback = {}) -> type&;
-  auto onKeyPress(const function<void (int)>& callback = {}) -> type&;
-  auto onKeyRelease(const function<void (int)>& callback = {}) -> type&;
+  auto onKeyPress(const function<void (s32)>& callback = {}) -> type&;
+  auto onKeyRelease(const function<void (s32)>& callback = {}) -> type&;
   auto onMove(const function<void ()>& callback = {}) -> type&;
   auto onSize(const function<void ()>& callback = {}) -> type&;
   auto remove(sMenuBar menuBar) -> type&;
@@ -60,7 +60,7 @@ struct mWindow : mObject {
   auto setResizable(bool resizable = true) -> type&;
   auto setSize(Size size) -> type&;
   auto setTitle(const string& title = "") -> type&;
-  auto setVisible(bool visible = true) -> type&;
+  auto setVisible(bool visible = true) -> type& override;
   auto sizable() const -> Sizable;
   auto statusBar() const -> StatusBar;
   auto title() const -> string;
@@ -80,8 +80,8 @@ struct mWindow : mObject {
     bool modal = false;
     function<void ()> onClose;
     function<void (vector<string>)> onDrop;
-    function<void (int)> onKeyPress;
-    function<void (int)> onKeyRelease;
+    function<void (s32)> onKeyPress;
+    function<void (s32)> onKeyRelease;
     function<void ()> onMove;
     function<void ()> onSize;
     bool resizable = true;
@@ -90,6 +90,6 @@ struct mWindow : mObject {
     string title;
   } state;
 
-  auto destruct() -> void;
+  auto destruct() -> void override;
 };
 #endif

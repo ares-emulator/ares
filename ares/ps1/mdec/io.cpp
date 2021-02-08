@@ -17,7 +17,7 @@ auto MDEC::readHalf(u32 address) -> u32 {
 }
 
 auto MDEC::readWord(u32 address) -> u32 {
-  uint32 data;
+  n32 data;
 
   if(address == 0x1f80'1820) {
     data = fifo.output.read(data);
@@ -52,7 +52,7 @@ auto MDEC::writeHalf(u32 address, u32 data) -> void {
 }
 
 auto MDEC::writeWord(u32 address, u32 value) -> void {
-  uint32 data = value;
+  n32 data = value;
 
   if(address == 0x1f80'1820) {
     if(io.mode == Mode::Idle) {

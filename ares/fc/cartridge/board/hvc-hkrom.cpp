@@ -23,7 +23,7 @@ struct HVC_HKROM : Interface {  //MMC6
     Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
-  auto main() -> void {
+  auto main() -> void override {
     if(irqDelay) irqDelay--;
     cpu.irqLine(irqLine);
     tick();
@@ -161,10 +161,10 @@ struct HVC_HKROM : Interface {  //MMC6
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(programRAM);
     s(characterRAM);
     s(characterMode);
@@ -184,19 +184,19 @@ struct HVC_HKROM : Interface {  //MMC6
     s(characterAddress);
   }
 
-  n01 characterMode;
-  n01 programMode;
-  n01 ramEnable;
-  n03 bankSelect;
-  n06 programBank[2];
-  n08 characterBank[6];
-  n01 mirror;
-  n01 ramReadable[2];
-  n01 ramWritable[2];
-  n08 irqLatch;
-  n08 irqCounter;
-  n01 irqEnable;
-  n01 irqDelay;
-  n01 irqLine;
+  n1  characterMode;
+  n1  programMode;
+  n1  ramEnable;
+  n3  bankSelect;
+  n6  programBank[2];
+  n8  characterBank[6];
+  n1  mirror;
+  n1  ramReadable[2];
+  n1  ramWritable[2];
+  n8  irqLatch;
+  n8  irqCounter;
+  n1  irqEnable;
+  n1  irqDelay;
+  n1  irqLine;
   n16 characterAddress;
 };

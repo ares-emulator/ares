@@ -1,4 +1,4 @@
-template<> auto TLCS900H::map(ControlRegister<uint8> register) const -> maybe<uint8&> {
+template<> auto TLCS900H::map(ControlRegister<n8> register) const -> maybe<n8&> {
   switch(register.id) {
   #define r(id, name) case id: return r.name;
   r(0x00, dmas[0].b.b0) r(0x01, dmas[0].b.b1) r(0x02, dmas[0].b.b2) r(0x03, dmas[0].b.b3)
@@ -19,7 +19,7 @@ template<> auto TLCS900H::map(ControlRegister<uint8> register) const -> maybe<ui
   return nothing;
 }
 
-template<> auto TLCS900H::map(ControlRegister<uint16> register) const -> maybe<uint16&> {
+template<> auto TLCS900H::map(ControlRegister<n16> register) const -> maybe<n16&> {
   switch(register.id & ~1) {
   #define r(id, name) case id: return r.name;
   r(0x00, dmas[0].w.w0) r(0x02, dmas[0].w.w1)
@@ -40,7 +40,7 @@ template<> auto TLCS900H::map(ControlRegister<uint16> register) const -> maybe<u
   return nothing;
 }
 
-template<> auto TLCS900H::map(ControlRegister<uint32> register) const -> maybe<uint32&> {
+template<> auto TLCS900H::map(ControlRegister<n32> register) const -> maybe<n32&> {
   switch(register.id & ~1) {
   #define r(id, name) case id: return r.name;
   r(0x00, dmas[0].l.l0)
@@ -61,20 +61,20 @@ template<> auto TLCS900H::map(ControlRegister<uint32> register) const -> maybe<u
   return nothing;
 }
 
-template<> auto TLCS900H::load< uint8>(ControlRegister< uint8> register) const ->  uint8 { return map(register)(Undefined); }
-template<> auto TLCS900H::load<uint16>(ControlRegister<uint16> register) const -> uint16 { return map(register)(Undefined); }
-template<> auto TLCS900H::load<uint32>(ControlRegister<uint32> register) const -> uint32 { return map(register)(Undefined); }
+template<> auto TLCS900H::load<n8 >(ControlRegister<n8 > register) const -> n8  { return map(register)(Undefined); }
+template<> auto TLCS900H::load<n16>(ControlRegister<n16> register) const -> n16 { return map(register)(Undefined); }
+template<> auto TLCS900H::load<n32>(ControlRegister<n32> register) const -> n32 { return map(register)(Undefined); }
 
-template<> auto TLCS900H::store<uint8>(ControlRegister<uint8> register, uint32 data) -> void {
+template<> auto TLCS900H::store<n8 >(ControlRegister<n8 > register, n32 data) -> void {
   if(auto r = map(register)) r() = data;
 }
 
-template<> auto TLCS900H::store<uint16>(ControlRegister<uint16> register, uint32 data) -> void {
+template<> auto TLCS900H::store<n16>(ControlRegister<n16> register, n32 data) -> void {
   if(auto r = map(register)) r() = data;
 }
 
-template<> auto TLCS900H::store<uint32>(ControlRegister<uint32> register, uint32 data) -> void {
+template<> auto TLCS900H::store<n32>(ControlRegister<n32> register, n32 data) -> void {
   //INTNEST is 16-bit: this isn't the nicest way to handle this, but ...
-  if((register.id & ~3) == 0x3c) data = (uint16)data;
+  if((register.id & ~3) == 0x3c) data = (n16)data;
   if(auto r = map(register)) r() = data;
 }

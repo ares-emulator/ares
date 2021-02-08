@@ -23,7 +23,8 @@ Nintendo64::Nintendo64() {
 }
 
 auto Nintendo64::load() -> bool {
-  if(!ares::Nintendo64::load(root, "Nintendo 64")) return false;
+  auto region = Emulator::region();
+  if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64 (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -103,7 +104,8 @@ Nintendo64DD::Nintendo64DD() {
 }
 
 auto Nintendo64DD::load() -> bool {
-  if(!ares::Nintendo64::load(root, "Nintendo 64")) return false;
+  auto region = Emulator::region();
+  if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64 (", region, ")"})) return false;
 
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);

@@ -1,15 +1,15 @@
-auto YM2413::Operator::releaseRate() const -> uint4 {
+auto YM2413::Operator::releaseRate() const -> n4 {
   if(state == Trigger) return 13;
   if(state == Attack) return attack;
   if(state == Decay) return decay;
-  if(state == Sustain) return sustainable ? (uint4)0 : release;
+  if(state == Sustain) return sustainable ? (n4)0 : release;
   // state == Release
   if(!audible) return 0;  //should never happen
   if(sustainOn) return 5;  //carrier only
-  return sustainable ? release : (uint4)7;
+  return sustainable ? release : (n4)7;
 }
 
-auto YM2413::Operator::update(maybe<uint> updateState) -> void {
+auto YM2413::Operator::update(maybe<u32> updateState) -> void {
   if(updateState) state = updateState();
 
   auto baseRate = releaseRate();
@@ -29,12 +29,12 @@ auto YM2413::Operator::update(maybe<uint> updateState) -> void {
   m += (m == 14) - (m == 13 || m == 11);  //unimplemented; maps to 15, 12, or 10
   m  = max(1, 2 * m);  //0 => 1/2, which truncates fnumber bit 0
 
-  for(uint n : range(8)) {
+  for(u32 n : range(8)) {
     pitch[n] = (fnumber + lfo[n]) * m / 2 << block;
   }
 }
 
-auto YM2413::Operator::synchronize(uint1 hard, maybe<Operator&> modulator) -> void {
+auto YM2413::Operator::synchronize(n1 hard, maybe<Operator&> modulator) -> void {
   if(state == Trigger && envelope.bit(2,6) == 31) {
     update(Attack);
     if(rate >= 60) update(Decay), envelope = 0;
@@ -51,15 +51,15 @@ auto YM2413::Operator::synchronize(uint1 hard, maybe<Operator&> modulator) -> vo
 }
 
 //only carriers (never modulators) call trigger()
-auto YM2413::Operator::trigger(uint1 key, uint1 sustain) -> void {
+auto YM2413::Operator::trigger(n1 key, n1 sustain) -> void {
   sustainOn = sustain;
   if(keyOn == key) return;
   keyOn = key;
   update(keyOn ? Trigger : Release);
 }
 
-auto YM2413::Operator::clock(natural clock, integer offset, integer modulation) -> int12 {
-  uint14 y = YM2413::sinTable[uint10(offset + modulation)];
+auto YM2413::Operator::clock(natural clock, integer offset, integer modulation) -> i12 {
+  n14 y = YM2413::sinTable[n10(offset + modulation)];
   if(waveform & ~y.bit(0)) y = sinTable[0];
   auto w = clock / 64 % 210 * tremolo;
   auto lfo = (w < 105 ? w : 210 - w) >> 3;
@@ -71,8 +71,8 @@ auto YM2413::Operator::clock(natural clock, integer offset, integer modulation) 
   phase += pitch[clock / 1024 % 8 * vibrato];
   auto lsbs = divider ? clock.bit(0, divider - 1) : 0;
   if(rate && (state == Attack ? lsbs & -4 : lsbs) == 0) {
-    natural msbs = uint4(clock >> divider);
-    integer step = uint4(sequence << 4 * msbs >> 60);
+    natural msbs = n4(clock >> divider);
+    integer step = n4(sequence << 4 * msbs >> 60);
     if(state == Attack) step = ~envelope * step >> 4;
     envelope = max(0x00, min(0x7f, envelope + step));
   }

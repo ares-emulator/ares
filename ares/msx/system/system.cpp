@@ -2,7 +2,17 @@
 
 namespace ares::MSX {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[Microsoft] MSX (NTSC)",
+    "[Microsoft] MSX (PAL)",
+    "[Microsoft] MSX2 (NTSC)",
+    "[Microsoft] MSX2 (PAL)",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -35,10 +45,24 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(name == "MSX" ) information.model = Model::MSX;
-  if(name == "MSX2") information.model = Model::MSX2;
+  if(name.find("MSX")) {
+    information.name = "MSX";
+    information.model = Model::MSX;
+  }
+  if(name.find("MSX2")) {
+    information.name = "MSX2";
+    information.model = Model::MSX2;
+  }
+  if(name.find("NTSC")) {
+    information.region = Region::NTSC;
+    information.colorburst = Constants::Colorburst::NTSC;
+  }
+  if(name.find("PAL")) {
+    information.region = Region::PAL;
+    information.colorburst = Constants::Colorburst::PAL;
+  }
 
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});
@@ -47,14 +71,6 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
-
-  regionNode = node->append<Node::Setting::String>("Region", "NTSC → PAL");
-  regionNode->setAllowedValues({
-    "NTSC → PAL",
-    "PAL → NTSC",
-    "NTSC",
-    "PAL"
-  });
 
   scheduler.reset();
   keyboard.load(node);
@@ -91,22 +107,6 @@ auto System::unload() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
-  auto setRegion = [&](string region) {
-    if(region == "NTSC") {
-      information.region = Region::NTSC;
-      information.colorburst = Constants::Colorburst::NTSC;
-    }
-    if(region == "PAL") {
-      information.region = Region::PAL;
-      information.colorburst = Constants::Colorburst::PAL;
-    }
-  };
-  auto regions = regionNode->latch().split("→").strip();
-  setRegion(regions.first());
-  for(auto& requested : reverse(regions)) {
-    if(requested == cartridge.region()) setRegion(requested);
-  }
 
   rom.bios.allocate(32_KiB);
   if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {

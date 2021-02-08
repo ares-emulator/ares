@@ -1,9 +1,9 @@
 struct MBC7 : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
+  Memory::Readable<n8> rom;
   Node::Input::Axis x;
   Node::Input::Axis y;
-  static constexpr int Center = 0x81d0;  //not 0x8000
+  static constexpr s32 Center = 0x81d0;  //not 0x8000
 
   auto load(Markup::Node document) -> void override {
     auto board = document["game/board"];
@@ -28,13 +28,13 @@ struct MBC7 : Interface {
     step(cartridge.frequency() / 1000);  //step by approximately one millisecond
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
+  auto read(n16 address, n8 data) -> n8 override {
     if(address >= 0x0000 && address <= 0x3fff) {
-      return rom.read((uint14)address);
+      return rom.read((n14)address);
     }
 
     if(address >= 0x4000 && address <= 0x7fff) {
-      return rom.read(io.rom.bank << 14 | (uint14)address);
+      return rom.read(io.rom.bank << 14 | (n14)address);
     }
 
     if(address >= 0xa000 && address <= 0xafff) {
@@ -56,7 +56,7 @@ struct MBC7 : Interface {
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     if(address >= 0x0000 && address <= 0x1fff) {
       io.ram.enable[0] = data.bit(0,3) == 0xa;
       if(!io.ram.enable[0]) io.ram.enable[1] = false;
@@ -119,8 +119,8 @@ struct MBC7 : Interface {
 
     auto load(Markup::Node document) -> void {
       if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-        uint size  = memory["size"].natural();
-        uint width = memory["width"].natural();
+        u32 size  = memory["size"].natural();
+        u32 width = memory["width"].natural();
         allocate(size, width, 0, 0xff);
 
         if(auto fp = platform->open(self.cartridge.node, "save.eeprom", File::Read, File::Optional)) {
@@ -147,8 +147,8 @@ struct MBC7 : Interface {
       M93LCx6::clock();  //clocked at ~1000hz
     }
 
-    auto readIO() -> uint8 {
-      uint8 data;
+    auto readIO() -> n8 {
+      n8 data;
       if(!select) {
         data.bit(0) = 1;  //high-z when the chip is idle (not selected)
       } else if(busy) {
@@ -168,7 +168,7 @@ struct MBC7 : Interface {
       return data;
     }
 
-    auto writeIO(uint8 data) -> void {
+    auto writeIO(n8 data) -> void {
       //chip enters idle state on falling CS edge
       if(select && !data.bit(7)) return power();
 
@@ -210,14 +210,14 @@ struct MBC7 : Interface {
 
   struct IO {
     struct ROM {
-      uint8 bank = 0x01;
+      n8 bank = 0x01;
     } rom;
     struct RAM {
-      uint1 enable[2];
+      n1 enable[2];
     } ram;
     struct Accelerometer {
-      uint16 x = Center;
-      uint16 y = Center;
+      n16 x = Center;
+      n16 y = Center;
     } accelerometer;
   } io;
 };

@@ -17,44 +17,44 @@ struct HitachiDSP : HG51B, Thread {
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
-  auto step(uint clocks) -> void override;
+  auto step(u32 clocks) -> void override;
   auto halt() -> void override;
 
   auto power() -> void;
 
-  auto isROM(uint24 address) -> bool override;
-  auto isRAM(uint24 address) -> bool override;
+  auto isROM(n24 address) -> bool override;
+  auto isRAM(n24 address) -> bool override;
 
   //HG51B read/write
-  auto read(uint24 address) -> uint8 override;
-  auto write(uint24 address, uint8 data) -> void override;
+  auto read(n24 address) -> n8 override;
+  auto write(n24 address, n8 data) -> void override;
 
   //CPU ROM read/write
-  auto addressROM(uint24 address) const -> maybe<uint24>;
-  auto readROM(uint24 address, uint8 data = 0) -> uint8;
-  auto writeROM(uint24 address, uint8 data) -> void;
+  auto addressROM(n24 address) const -> maybe<n24>;
+  auto readROM(n24 address, n8 data = 0) -> n8;
+  auto writeROM(n24 address, n8 data) -> void;
 
   //CPU RAM read/write
-  auto addressRAM(uint24 address) const -> maybe<uint24>;
-  auto readRAM(uint24 address, uint8 data = 0) -> uint8;
-  auto writeRAM(uint24 address, uint8 data) -> void;
+  auto addressRAM(n24 address) const -> maybe<n24>;
+  auto readRAM(n24 address, n8 data = 0) -> n8;
+  auto writeRAM(n24 address, n8 data) -> void;
 
   //HG51B data RAM read/write
-  auto addressDRAM(uint24 address) const -> maybe<uint24>;
-  auto readDRAM(uint24 address, uint8 data = 0) -> uint8;
-  auto writeDRAM(uint24 address, uint8 data) -> void;
+  auto addressDRAM(n24 address) const -> maybe<n24>;
+  auto readDRAM(n24 address, n8 data = 0) -> n8;
+  auto writeDRAM(n24 address, n8 data) -> void;
 
   //CPU IO read/write
-  auto addressIO(uint24 address) const -> maybe<uint24>;
-  auto readIO(uint24 address, uint8 data = 0) -> uint8;
-  auto writeIO(uint24 address, uint8 data) -> void;
+  auto addressIO(n24 address) const -> maybe<n24>;
+  auto readIO(n24 address, n8 data = 0) -> n8;
+  auto writeIO(n24 address, n8 data) -> void;
 
-  auto firmware() const -> vector<uint8>;
+  auto firmware() const -> vector<n8>;
   auto serialize(serializer&) -> void;
 
-  uint Frequency;
-  uint Roms;
-  bool Mapping;
+  n32 Frequency;
+  n32 Roms;
+  n1  Mapping;
 };
 
 extern HitachiDSP hitachidsp;

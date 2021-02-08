@@ -10,7 +10,7 @@ auto mHorizontalScrollBar::doChange() const -> void {
   if(state.onChange) return state.onChange();
 }
 
-auto mHorizontalScrollBar::length() const -> unsigned {
+auto mHorizontalScrollBar::length() const -> u32 {
   return state.length;
 }
 
@@ -19,17 +19,17 @@ auto mHorizontalScrollBar::onChange(const function<void ()>& callback) -> type& 
   return *this;
 }
 
-auto mHorizontalScrollBar::position() const -> unsigned {
+auto mHorizontalScrollBar::position() const -> u32 {
   return state.position;
 }
 
-auto mHorizontalScrollBar::setLength(unsigned length) -> type& {
+auto mHorizontalScrollBar::setLength(u32 length) -> type& {
   state.length = length;
   signal(setLength, length);
   return *this;
 }
 
-auto mHorizontalScrollBar::setPosition(unsigned position) -> type& {
+auto mHorizontalScrollBar::setPosition(u32 position) -> type& {
   state.position = position;
   signal(setPosition, position);
   return *this;

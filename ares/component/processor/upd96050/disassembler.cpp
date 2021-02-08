@@ -1,19 +1,19 @@
-auto uPD96050::disassembleInstruction(maybe<uint14> _ip) -> string {
-  uint14 ip = _ip ? *_ip : (uint14)regs.pc;
+auto uPD96050::disassembleInstruction(maybe<n14> _ip) -> string {
+  n14 ip = _ip ? *_ip : (n14)regs.pc;
 
   string output;
-  uint24 opcode = programROM[ip];
-  uint2 type = opcode >> 22;
+  n24 opcode = programROM[ip];
+  n2 type = opcode >> 22;
 
   if(type == 0 || type == 1) {  //OP,RT
-    uint2 pselect = opcode >> 20;
-    uint4 alu     = opcode >> 16;
-    uint1 asl     = opcode >> 15;
-    uint2 dpl     = opcode >> 13;
-    uint4 dphm    = opcode >>  9;
-    uint1 rpdcr   = opcode >>  8;
-    uint4 src     = opcode >>  4;
-    uint4 dst     = opcode >>  0;
+    n2 pselect = opcode >> 20;
+    n4 alu     = opcode >> 16;
+    n1 asl     = opcode >> 15;
+    n2 dpl     = opcode >> 13;
+    n4 dphm    = opcode >>  9;
+    n1 rpdcr   = opcode >>  8;
+    n4 src     = opcode >>  4;
+    n4 dst     = opcode >>  0;
 
     switch(alu) {
     case  0: output.append("nop     "); break;
@@ -111,11 +111,11 @@ auto uPD96050::disassembleInstruction(maybe<uint14> _ip) -> string {
   }
 
   if(type == 2) {  //JP
-    uint9 brch = opcode >> 13;
-    uint11 na  = opcode >>  2;
-    uint8 bank = opcode >>  0;
+    n9 brch = opcode >> 13;
+    n11 na  = opcode >>  2;
+    n8 bank = opcode >>  0;
 
-    uint14 jp = (regs.pc & 0x2000) | (bank << 11) | (na << 0);
+    n14 jp = (regs.pc & 0x2000) | (bank << 11) | (na << 0);
 
     switch(brch) {
     case 0x000: output.append("jmpso   "); jp = 0; break;
@@ -165,8 +165,8 @@ auto uPD96050::disassembleInstruction(maybe<uint14> _ip) -> string {
 
   if(type == 3) {  //LD
     output.append("ld      ");
-    uint16 id = opcode >> 6;
-    uint4 dst = opcode >> 0;
+    n16 id = opcode >> 6;
+    n4 dst = opcode >> 0;
 
     output.append("$", hex(id, 4L), ",");
 

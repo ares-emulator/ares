@@ -4,7 +4,7 @@ struct DMA : Thread, Memory::Interface {
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
-    auto transfer(uint channel) -> void;
+    auto transfer(u32 channel) -> void;
 
     struct Tracer {
       Node::Debugger::Tracer::Notification dma;
@@ -16,7 +16,7 @@ struct DMA : Thread, Memory::Interface {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -33,8 +33,8 @@ struct DMA : Thread, Memory::Interface {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  enum : uint { MDECin, MDECout, GPU, CDROM, SPU, PIO, OTC };  //channel IDs
-  enum : uint { Waiting, Running };  //channel states
+  enum : u32 { MDECin, MDECout, GPU, CDROM, SPU, PIO, OTC };  //channel IDs
+  enum : u32 { Waiting, Running };  //channel states
 
   struct IRQ {
     DMA& self;
@@ -43,53 +43,53 @@ struct DMA : Thread, Memory::Interface {
     //irq.cpp
     auto poll() -> void;
 
-    uint1 force;
-    uint1 enable;
-    uint1 flag;
-    uint6 unknown;
+    n1 force;
+    n1 enable;
+    n1 flag;
+    n6 unknown;
   } irq{*this};
 
   struct Channel {
-    const uint id;
+    const u32 id;
 
     //channel.cpp
-    auto step(uint clocks) -> bool;
+    auto step(u32 clocks) -> bool;
     auto transferBlock() -> void;
     auto transferChain() -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-     uint1 masterEnable;
-     uint3 priority;
-    uint24 address;
-    uint16 length;
-    uint16 blocks;
-     uint1 direction;
-     uint1 decrement;
-     uint2 synchronization;
+    n1  masterEnable;
+    n3  priority;
+    n24 address;
+    n16 length;
+    n16 blocks;
+    n1  direction;
+    n1  decrement;
+    n2  synchronization;
     struct Chopping {
-      uint1 enable;
-      uint3 dmaWindow;
-      uint3 cpuWindow;
+      n1 enable;
+      n3 dmaWindow;
+      n3 cpuWindow;
     } chopping;
-    uint1 enable;
-    uint1 trigger;
-    uint2 unknown;
+    n1 enable;
+    n1 trigger;
+    n2 unknown;
     struct IRQ {
-      uint1 enable;
-      uint1 flag;
+      n1 enable;
+      n1 flag;
     } irq;
     struct Chain {
-      uint24 address;
-       uint8 length;
+      n24 address;
+      n8  length;
     } chain;
 
-    uint8 state;
-    int32 counter;
+    n8  state;
+    i32 counter;
   } channels[7] = {{0}, {1}, {2}, {3}, {4}, {5}, {6}};
 
-  uint channelsByPriority[7];
+  u32 channelsByPriority[7];
 };
 
 extern DMA dma;

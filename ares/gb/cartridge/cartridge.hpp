@@ -15,12 +15,12 @@ struct Cartridge : Thread {
 
   auto save() -> void;
   auto main() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
   auto power() -> void;
 
   //memory.cpp
-  auto read(uint cycle, uint16 address, uint8 data) -> uint8;
-  auto write(uint cycle, uint16 address, uint8 data) -> void;
+  auto read(u32 cycle, n16 address, n8 data) -> n8;
+  auto write(u32 cycle, n16 address, n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

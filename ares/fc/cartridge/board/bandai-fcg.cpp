@@ -110,11 +110,11 @@ struct BandaiFCG : Interface {
     if(characterRAM) return characterRAM.write(address, data);
   }
 
-  auto power() -> void {
+  auto power() -> void override {
     eeprom.reset();
   }
 
-  auto serialize(serializer& s) -> void {
+  auto serialize(serializer& s) -> void override {
     s(characterRAM);
     s(eeprom);
     s(characterBank);
@@ -125,10 +125,10 @@ struct BandaiFCG : Interface {
     s(irqLatch);
   }
 
-  n08 characterBank[8];
-  n04 programBank;
-  n02 mirror;
-  n01 irqCounterEnable;
+  n8  characterBank[8];
+  n4  programBank;
+  n2  mirror;
+  n1  irqCounterEnable;
   n16 irqCounter;
   n16 irqLatch;
 };

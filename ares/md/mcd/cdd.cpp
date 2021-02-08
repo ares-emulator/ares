@@ -68,8 +68,8 @@ auto MCD::CDD::advance() -> void {
 }
 
 auto MCD::CDD::sample() -> void {
-  int16 left  = 0;
-  int16 right = 0;
+  i16 left  = 0;
+  i16 right = 0;
   if(io.status == Status::Playing) {
     if(session.tracks[io.track].isAudio()) {
       mcd.fd->seek((abs(session.leadIn.lba) + io.sector) * 2448 + io.sample);
@@ -83,11 +83,11 @@ auto MCD::CDD::sample() -> void {
 }
 
 //convert sector# to normalized sector position on the CD-ROM surface for seek latency calculation
-auto MCD::CDD::position(int sector) -> double {
-  static const double sectors = 7500.0 + 330000.0 + 6750.0;
-  static const double radius = 0.058 - 0.024;
-  static const double innerRadius = 0.024 * 0.024;  //in mm
-  static const double outerRadius = 0.058 * 0.058;  //in mm
+auto MCD::CDD::position(s32 sector) -> double {
+  static const f64 sectors = 7500.0 + 330000.0 + 6750.0;
+  static const f64 radius = 0.058 - 0.024;
+  static const f64 innerRadius = 0.024 * 0.024;  //in mm
+  static const f64 outerRadius = 0.058 * 0.058;  //in mm
 
   sector += session.leadIn.lba;  //convert to natural
   return sqrt(sector / sectors * (outerRadius - innerRadius) + innerRadius) / radius;
@@ -174,7 +174,7 @@ auto MCD::CDD::process() -> void {
 
     case Request::TrackStartTime: {
       if(command[4] > 9 || command[5] > 9) break;
-      uint track  = command[4] * 10 + command[5];
+      u32 track  = command[4] * 10 + command[5];
       auto [minute, second, frame] = CD::MSF(session.tracks[track].indices[1].lba);
       status[1] = command[3];
       status[2] = minute / 10; status[3] = minute % 10;
@@ -197,10 +197,10 @@ auto MCD::CDD::process() -> void {
   } break;
 
   case Command::SeekPlay: {
-    uint minute = command[2] * 10 + command[3];
-    uint second = command[4] * 10 + command[5];
-    uint frame  = command[6] * 10 + command[7];
-     int lba    = minute * 60 * 75 + second * 75 + frame - 3;
+    u32 minute = command[2] * 10 + command[3];
+    u32 second = command[4] * 10 + command[5];
+    u32 frame  = command[6] * 10 + command[7];
+    s32 lba    = minute * 60 * 75 + second * 75 + frame - 3;
 
     counter    = 0;
     io.status  = Status::Seeking;
@@ -217,10 +217,10 @@ auto MCD::CDD::process() -> void {
   } break;
 
   case Command::SeekPause: {
-    uint minute = command[2] * 10 + command[3];
-    uint second = command[4] * 10 + command[5];
-    uint frame  = command[6] * 10 + command[7];
-     int lba    = minute * 60 * 75 + second * 75 + frame - 3;
+    u32 minute = command[2] * 10 + command[3];
+    u32 second = command[4] * 10 + command[5];
+    u32 frame  = command[6] * 10 + command[7];
+    s32 lba    = minute * 60 * 75 + second * 75 + frame - 3;
 
     counter    = 0;
     io.status  = Status::Seeking;
@@ -252,15 +252,15 @@ auto MCD::CDD::process() -> void {
 }
 
 auto MCD::CDD::valid() -> bool {
-  uint4 checksum;
-  for(uint index : range(9)) checksum += command[index];
+  n4 checksum;
+  for(u32 index : range(9)) checksum += command[index];
   checksum = ~checksum;
   return checksum == command[9];
 }
 
 auto MCD::CDD::checksum() -> void {
-  uint4 checksum;
-  for(uint index : range(9)) checksum += status[index];
+  n4 checksum;
+  for(u32 index : range(9)) checksum += status[index];
   checksum = ~checksum;
   status[9] = checksum;
 }
@@ -272,10 +272,10 @@ auto MCD::CDD::insert() -> void {
   }
 
   //read TOC (table of contents) from disc lead-in
-  uint sectors = min(7500, mcd.fd->size() / 2448);
-  vector<uint8_t> sub;
+  u32 sectors = mcd.fd->size() / 2448;
+  vector<u8> sub;
   sub.resize(sectors * 96);
-  for(uint sector : range(sectors)) {
+  for(u32 sector : range(sectors)) {
     mcd.fd->seek(sector * 2448 + 2352);
     mcd.fd->read(sub.data() + sector * 96, 96);
   }

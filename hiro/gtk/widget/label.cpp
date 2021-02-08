@@ -2,17 +2,17 @@
 
 namespace hiro {
 
-static auto Label_draw(GtkWidget* widget, cairo_t* context, pLabel* p) -> int {
+static auto Label_draw(GtkWidget* widget, cairo_t* context, pLabel* p) -> s32 {
   auto color = p->state().backgroundColor;
   if(auto window = p->self().parentWindow(true)) {
     if(!color) color = window->backgroundColor();
   }
 
   if(color) {
-    double red   = (double)color.red()   / 255.0;
-    double green = (double)color.green() / 255.0;
-    double blue  = (double)color.blue()  / 255.0;
-    double alpha = (double)color.alpha() / 255.0;
+    f64 red   = (f64)color.red()   / 255.0;
+    f64 green = (f64)color.green() / 255.0;
+    f64 blue  = (f64)color.blue()  / 255.0;
+    f64 alpha = (f64)color.alpha() / 255.0;
 
     if(gdk_screen_is_composited(gdk_screen_get_default())
     && gdk_screen_get_rgba_visual(gdk_screen_get_default())
@@ -39,24 +39,24 @@ static auto Label_draw(GtkWidget* widget, cairo_t* context, pLabel* p) -> int {
   return false;
 }
 
-static auto Label_expose(GtkWidget* widget, GdkEvent* event, pLabel* p) -> int {
+static auto Label_expose(GtkWidget* widget, GdkEvent* event, pLabel* p) -> s32 {
   cairo_t* context = gdk_cairo_create(gtk_widget_get_window(widget));
   Label_draw(widget, context, p);
   cairo_destroy(context);
   return false;
 }
 
-static auto Label_mouseEnter(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> int {
+static auto Label_mouseEnter(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> s32 {
   Widget_mouseEnter(widget, event, p);
   return true;
 }
 
-static auto Label_mouseLeave(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> int {
+static auto Label_mouseLeave(GtkWidget* widget, GdkEventButton* event, pCanvas* p) -> s32 {
   Widget_mouseLeave(widget, event, p);
   return true;
 }
 
-static auto Label_mousePress(GtkWidget* widget, GdkEventButton* event, pLabel* p) -> int {
+static auto Label_mousePress(GtkWidget* widget, GdkEventButton* event, pLabel* p) -> s32 {
   switch(event->button) {
   case 1: p->self().doMousePress(Mouse::Button::Left); break;
   case 2: p->self().doMousePress(Mouse::Button::Middle); break;
@@ -65,7 +65,7 @@ static auto Label_mousePress(GtkWidget* widget, GdkEventButton* event, pLabel* p
   return true;
 }
 
-static auto Label_mouseRelease(GtkWidget* widget, GdkEventButton* event, pLabel* p) -> int {
+static auto Label_mouseRelease(GtkWidget* widget, GdkEventButton* event, pLabel* p) -> s32 {
   switch(event->button) {
   case 1: p->self().doMouseRelease(Mouse::Button::Left); break;
   case 2: p->self().doMouseRelease(Mouse::Button::Middle); break;

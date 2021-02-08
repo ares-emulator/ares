@@ -4,7 +4,7 @@ Position::Position() {
   setPosition(0, 0);
 }
 
-Position::Position(float x, float y) {
+Position::Position(f32 x, f32 y) {
   setPosition(x, y);
 }
 
@@ -28,27 +28,27 @@ auto Position::setPosition(Position position) -> type& {
   return setPosition(position.x(), position.y());
 }
 
-auto Position::setPosition(float x, float y) -> type& {
+auto Position::setPosition(f32 x, f32 y) -> type& {
   state.x = x;
   state.y = y;
   return *this;
 }
 
-auto Position::setX(float x) -> type& {
+auto Position::setX(f32 x) -> type& {
   state.x = x;
   return *this;
 }
 
-auto Position::setY(float y) -> type& {
+auto Position::setY(f32 y) -> type& {
   state.y = y;
   return *this;
 }
 
-auto Position::x() const -> float {
+auto Position::x() const -> f32 {
   return state.x;
 }
 
-auto Position::y() const -> float {
+auto Position::y() const -> f32 {
   return state.y;
 }
 

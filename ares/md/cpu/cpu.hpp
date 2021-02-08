@@ -19,7 +19,7 @@ struct CPU : M68K, Thread {
     } tracer;
   } debugger;
 
-  enum class Interrupt : uint {
+  enum class Interrupt : u32 {
     Reset,
     HorizontalBlank,
     VerticalBlank,
@@ -30,9 +30,9 @@ struct CPU : M68K, Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
-  auto idle(uint clocks) -> void override;
-  auto wait(uint clocks) -> void override;
+  auto step(u32 clocks) -> void;
+  auto idle(u32 clocks) -> void override;
+  auto wait(u32 clocks) -> void override;
 
   auto raise(Interrupt) -> void;
   auto lower(Interrupt) -> void;
@@ -40,35 +40,35 @@ struct CPU : M68K, Thread {
   auto power(bool reset) -> void;
 
   //bus.cpp
-  auto read(uint1 upper, uint1 lower, uint24 address, uint16 data = 0) -> uint16 override;
-  auto write(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void override;
+  auto read(n1 upper, n1 lower, n24 address, n16 data = 0) -> n16 override;
+  auto write(n1 upper, n1 lower, n24 address, n16 data) -> void override;
 
   //io.cpp
-  auto readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16;
-  auto writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void;
+  auto readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16;
+  auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 private:
-  Memory::Writable<uint16> ram;
-  Memory::Readable<uint16> tmss;
-  uint1 tmssEnable;
+  Memory::Writable<n16> ram;
+  Memory::Readable<n16> tmss;
+  n1 tmssEnable;
 
   struct IO {
-    boolean version;  //0 = Model 1; 1 = Model 2+
-    boolean romEnable;
-    boolean vdpEnable[2];
+    b1 version;  //0 = Model 1; 1 = Model 2+
+    b1 romEnable;
+    b1 vdpEnable[2];
   } io;
 
   struct Refresh {
-    uint32 ram;
-     uint7 external;
+    n32 ram;
+    n7  external;
   } refresh;
 
   struct State {
-    uint32 interruptLine;
-    uint32 interruptPending;
+    n32 interruptLine;
+    n32 interruptPending;
   } state;
 };
 

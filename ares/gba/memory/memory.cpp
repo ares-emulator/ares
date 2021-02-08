@@ -4,8 +4,8 @@ namespace ares::GameBoyAdvance {
 
 Bus bus;
 
-auto IO::readIO(uint mode, uint32 address) -> uint32 {
-  uint32 word;
+auto IO::readIO(u32 mode, n32 address) -> n32 {
+  n32 word;
 
   if(mode & Word) {
     address &= ~3;
@@ -24,7 +24,7 @@ auto IO::readIO(uint mode, uint32 address) -> uint32 {
   return word;
 }
 
-auto IO::writeIO(uint mode, uint32 address, uint32 word) -> void {
+auto IO::writeIO(u32 mode, n32 address, n32 word) -> void {
   if(mode & Word) {
     address &= ~3;
     writeIO(address + 0, word.byte(0));
@@ -41,20 +41,20 @@ auto IO::writeIO(uint mode, uint32 address, uint32 word) -> void {
 }
 
 struct UnmappedIO : IO {
-  auto readIO(uint32 address) -> uint8 override {
+  auto readIO(n32 address) -> n8 override {
     return cpu.pipeline.fetch.instruction.byte(address & 1);
   }
 
-  auto writeIO(uint32 address, uint8 byte) -> void override {
+  auto writeIO(n32 address, n8 byte) -> void override {
   }
 };
 
 static UnmappedIO unmappedIO;
 
-auto Bus::mirror(uint32 address, uint32 size) -> uint32 {
-  uint32 base = 0;
+auto Bus::mirror(n32 address, n32 size) -> n32 {
+  n32 base = 0;
   if(size) {
-    uint32 mask = 1 << 27;  //28-bit bus
+    n32 mask = 1 << 27;  //28-bit bus
     while(address >= size) {
       while(!(address & mask)) mask >>= 1;
       address -= mask;
@@ -70,7 +70,7 @@ auto Bus::mirror(uint32 address, uint32 size) -> uint32 {
 }
 
 auto Bus::power() -> void {
-  for(uint n : range(0x400)) io[n] = &unmappedIO;
+  for(u32 n : range(0x400)) io[n] = &unmappedIO;
 }
 
 }

@@ -24,18 +24,18 @@ auto pVerticalSlider::minimumSize() const -> Size {
   return {25_sx, 0};
 }
 
-auto pVerticalSlider::setLength(unsigned length) -> void {
+auto pVerticalSlider::setLength(u32 length) -> void {
   length += (length == 0);
   SendMessage(hwnd, TBM_SETRANGE, (WPARAM)true, (LPARAM)MAKELONG(0, length - 1));
   SendMessage(hwnd, TBM_SETPAGESIZE, 0, (LPARAM)(length >> 3));
 }
 
-auto pVerticalSlider::setPosition(unsigned position) -> void {
+auto pVerticalSlider::setPosition(u32 position) -> void {
   SendMessage(hwnd, TBM_SETPOS, (WPARAM)true, (LPARAM)position);
 }
 
 auto pVerticalSlider::onChange() -> void {
-  unsigned position = SendMessage(hwnd, TBM_GETPOS, 0, 0);
+  u32 position = SendMessage(hwnd, TBM_GETPOS, 0, 0);
   if(position == state().position) return;
   state().position = position;
   self().doChange();

@@ -9,7 +9,7 @@
 
 namespace nall::Encode {
 
-template<uint Bits, typename T> inline auto Base(T value) -> string {
+template<u32 Bits, typename T> inline auto Base(T value) -> string {
   static const string format =
     Bits ==  2 ? "01"
   : Bits ==  8 ? "01234567"
@@ -23,7 +23,7 @@ template<uint Bits, typename T> inline auto Base(T value) -> string {
   : Bits == 64 ? "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz{}"
   : Bits == 85 ? "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%()+,-.:;=@[]^_`{|}~"  //\ "&'*/<>?
   : "";
-  static const uint size = ceil(sizeof(T) * 8 / log2(Bits));
+  static const u32 size = ceil(sizeof(T) * 8 / log2(Bits));
 
   string result;
   result.resize(size);

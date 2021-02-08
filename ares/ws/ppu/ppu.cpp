@@ -14,8 +14,8 @@ auto PPU::load(Node::Object parent) -> void {
 
   //LCD display icons are simulated as an extended part of the LCD screen using sprites
   //this isn't ideal as the display icons are vectors, but it's the best we can do for now
-  const uint width  = 224 + (SoC::ASWAN() ? 0 : 13);
-  const uint height = 144 + (Model::WonderSwan() ? 13 : 0);
+  const u32 width  = 224 + (SoC::ASWAN() ? 0 : 13);
+  const u32 height = 144 + (Model::WonderSwan() ? 13 : 0);
 
   screen = node->append<Node::Video::Screen>("Screen", width, height);
   screen->colors(1 << 12, {&PPU::color, this});
@@ -175,11 +175,11 @@ auto PPU::main() -> void {
   }
 
   if(s.vtime < 144) {
-    uint y = s.vtime % (r.vtotal + 1);
+    u32 y = s.vtime % (r.vtotal + 1);
     auto line = screen->pixels().data() + y * screen->width();
     latchRegisters();
     latchSprites(y);
-    for(uint x : range(224)) {
+    for(u32 x : range(224)) {
       s.pixel = {Pixel::Source::Back, 0x000};
       if(r.lcdEnable) {
         renderBack();
@@ -247,7 +247,7 @@ auto PPU::frame() -> void {
   scheduler.exit(Event::Frame);
 }
 
-auto PPU::step(uint clocks) -> void {
+auto PPU::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }

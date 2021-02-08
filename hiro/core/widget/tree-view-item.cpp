@@ -75,13 +75,13 @@ auto mTreeViewItem::icon() const -> image {
 auto mTreeViewItem::item(const string& path) const -> TreeViewItem {
   if(!path) return {};
   auto paths = path.split("/");
-  unsigned position = paths.takeLeft().natural();
+  u32 position = paths.takeLeft().natural();
   if(position >= itemCount()) return {};
   if(!paths) return state.items[position];
   return state.items[position]->item(paths.merge("/"));
 }
 
-auto mTreeViewItem::itemCount() const -> unsigned {
+auto mTreeViewItem::itemCount() const -> u32 {
   return state.items.size();
 }
 
@@ -160,7 +160,7 @@ auto mTreeViewItem::setIcon(const image& icon) -> type& {
   return *this;
 }
 
-auto mTreeViewItem::setParent(mObject* parent, signed offset) -> type& {
+auto mTreeViewItem::setParent(mObject* parent, s32 offset) -> type& {
   for(auto& item : reverse(state.items)) item->destruct();
   mObject::setParent(parent, offset);
   for(auto& item : state.items) item->setParent(this, item->offset());

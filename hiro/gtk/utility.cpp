@@ -41,7 +41,7 @@ static auto DropPaths(GtkSelectionData* data) -> vector<string> {
   if(uris == nullptr) return {};
 
   vector<string> paths;
-  for(uint n = 0; uris[n] != nullptr; n++) {
+  for(u32 n = 0; uris[n] != nullptr; n++) {
     gchar* pathname = g_filename_from_uri(uris[n], nullptr, nullptr);
     if(pathname == nullptr) continue;
 

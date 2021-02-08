@@ -77,10 +77,10 @@ auto CPU::main() -> void {
       idle();
       r.ime = 0;
       write(--SP, PC >> 8);  //upper byte may write to IE before it is polled again
-      uint8 mask = status.interruptFlag & status.interruptEnable;
+      n8 mask = status.interruptFlag & status.interruptEnable;
       write(--SP, PC >> 0);  //lower byte write to IE has no effect
       if(mask) {
-        uint interruptID = bit::first(mask);  //find highest priority interrupt
+        u32 interruptID = bit::first(mask);  //find highest priority interrupt
         lower(interruptID);
         PC = 0x0040 + interruptID * 8;
       } else {
@@ -98,11 +98,11 @@ auto CPU::main() -> void {
   }
 }
 
-auto CPU::raised(uint interruptID) const -> bool {
+auto CPU::raised(u32 interruptID) const -> bool {
   return status.interruptFlag.bit(interruptID);
 }
 
-auto CPU::raise(uint interruptID) -> void {
+auto CPU::raise(u32 interruptID) -> void {
   status.interruptFlag.bit(interruptID) = 1;
   if(status.interruptEnable.bit(interruptID)) {
     r.halt = false;
@@ -110,7 +110,7 @@ auto CPU::raise(uint interruptID) -> void {
   }
 }
 
-auto CPU::lower(uint interruptID) -> void {
+auto CPU::lower(u32 interruptID) -> void {
   status.interruptFlag.bit(interruptID) = 0;
 }
 

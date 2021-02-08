@@ -9,7 +9,7 @@
 namespace nall {
 
 struct inode {
-  enum class time : uint { create, modify, access };
+  enum class time : u32 { create, modify, access };
 
   inode() = delete;
   inode(const inode&) = delete;
@@ -41,19 +41,19 @@ struct inode {
     #endif
   }
 
-  static auto mode(const string& name) -> uint {
+  static auto mode(const string& name) -> u32 {
     struct stat data{};
     stat(name, &data);
     return data.st_mode;
   }
 
-  static auto uid(const string& name) -> uint {
+  static auto uid(const string& name) -> u32 {
     struct stat data{};
     stat(name, &data);
     return data.st_uid;
   }
 
-  static auto gid(const string& name) -> uint {
+  static auto gid(const string& name) -> u32 {
     struct stat data{};
     stat(name, &data);
     return data.st_gid;
@@ -75,7 +75,7 @@ struct inode {
     return {};
   }
 
-  static auto timestamp(const string& name, time mode = time::modify) -> uint64_t {
+  static auto timestamp(const string& name, time mode = time::modify) -> u64 {
     struct stat data{};
     stat(name, &data);
     switch(mode) {
@@ -85,7 +85,7 @@ struct inode {
     #elif defined(PLATFORM_BSD) || defined(PLATFORM_MACOS)
     //st_birthtime may return -1 or st_atime if it is not supported by the file system
     //the best that can be done in this case is to return st_mtime if it's older
-    case time::create: return min((uint)data.st_birthtime, (uint)data.st_mtime);
+    case time::create: return min((u32)data.st_birthtime, (u32)data.st_mtime);
     #else
     //Linux simply doesn't support file creation time at all
     //this is also our fallback case for unsupported operating systems
@@ -94,12 +94,12 @@ struct inode {
     case time::modify: return data.st_mtime;
     //for performance reasons, last access time is usually not enabled on various filesystems
     //ensure that the last access time is not older than the last modify time (eg for NTFS)
-    case time::access: return max((uint)data.st_atime, data.st_mtime);
+    case time::access: return max((u32)data.st_atime, data.st_mtime);
     }
     return 0;
   }
 
-  static auto setMode(const string& name, uint mode) -> bool {
+  static auto setMode(const string& name, u32 mode) -> bool {
     #if !defined(PLATFORM_WINDOWS)
     return chmod(name, mode) == 0;
     #else
@@ -127,7 +127,7 @@ struct inode {
     #endif
   }
 
-  static auto setTimestamp(const string& name, uint64_t value, time mode = time::modify) -> bool {
+  static auto setTimestamp(const string& name, u64 value, time mode = time::modify) -> bool {
     struct utimbuf timeBuffer;
     timeBuffer.modtime = mode == time::modify ? value : inode::timestamp(name, time::modify);
     timeBuffer.actime  = mode == time::access ? value : inode::timestamp(name, time::access);
@@ -135,10 +135,10 @@ struct inode {
   }
 
   //returns true if 'name' already exists
-  static auto create(const string& name, uint permissions = 0755) -> bool {
+  static auto create(const string& name, u32 permissions = 0755) -> bool {
     if(exists(name)) return true;
     if(name.endsWith("/")) return mkdir(name, permissions) == 0;
-    int fd = open(name, O_CREAT | O_EXCL, permissions);
+    s32 fd = open(name, O_CREAT | O_EXCL, permissions);
     if(fd < 0) return false;
     return close(fd), true;
   }

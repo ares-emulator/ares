@@ -19,7 +19,7 @@ struct DigitalGamepad : PeripheralDevice {
   auto acknowledge() -> bool override;
   auto bus(u8 data) -> u8 override;
 
-  enum class State : uint {
+  enum class State : u32 {
     Idle,
     IDLower,
     IDUpper,

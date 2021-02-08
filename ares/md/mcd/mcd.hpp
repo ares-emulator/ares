@@ -5,10 +5,10 @@ struct MCD : M68K, Thread {
   Node::Port tray;
   Node::Peripheral disc;
   Shared::File fd;
-  Memory::Readable<uint16> bios;  //BIOS ROM
-  Memory::Writable<uint16> pram;  //program RAM
-  Memory::Writable<uint16> wram;  //work RAM
-  Memory::Writable< uint8> bram;  //backup RAM
+  Memory::Readable<n16> bios;  //BIOS ROM
+  Memory::Writable<n16> pram;  //program RAM
+  Memory::Writable<n16> wram;  //work RAM
+  Memory::Writable<n8 > bram;  //backup RAM
 
   struct Debugger {
     //debugger.cpp
@@ -40,26 +40,26 @@ struct MCD : M68K, Thread {
   auto disconnect() -> void;
 
   auto main() -> void;
-  auto step(uint clocks) -> void;
-  auto idle(uint clocks) -> void override;
-  auto wait(uint clocks) -> void override;
+  auto step(u32 clocks) -> void;
+  auto idle(u32 clocks) -> void override;
+  auto wait(u32 clocks) -> void override;
   auto power(bool reset) -> void;
 
   //bus.cpp
-  auto read(uint1 upper, uint1 lower, uint24 address, uint16 data = 0) -> uint16 override;
-  auto write(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void override;
+  auto read(n1 upper, n1 lower, n24 address, n16 data = 0) -> n16 override;
+  auto write(n1 upper, n1 lower, n24 address, n16 data) -> void override;
 
   //bus-external.cpp
-  auto external_read(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16;
-  auto external_write(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void;
+  auto external_read(n1 upper, n1 lower, n22 address, n16 data) -> n16;
+  auto external_write(n1 upper, n1 lower, n22 address, n16 data) -> void;
 
   //io.cpp
-  auto readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16;
-  auto writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void;
+  auto readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16;
+  auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void;
 
   //io-external.cpp
-  auto external_readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16;
-  auto external_writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void;
+  auto external_readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16;
+  auto external_writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -70,28 +70,28 @@ struct MCD : M68K, Thread {
   } information;
 
   struct Counter {
-    uint16 divider;
-    uint16 dma;
-    double pcm = 0.0;
+    n16 divider;
+    n16 dma;
+    f64 pcm = 0.0;
   } counter;
 
   struct IO {
-     uint1 run;
-     uint1 request;
-     uint1 halt = 1;
+    n1  run;
+    n1  request;
+    n1  halt = 1;
 
-    uint16 wramLatch;
-     uint1 wramMode;  //MODE: 0 = 2mbit mode, 1 = 1mbit mode
-     uint1 wramSwitch;
-     uint1 wramSelect;
-     uint2 wramPriority;
-     uint2 pramBank;
-     uint8 pramProtect;
+    n16 wramLatch;
+    n1  wramMode;  //MODE: 0 = 2mbit mode, 1 = 1mbit mode
+    n1  wramSwitch;
+    n1  wramSelect;
+    n2  wramPriority;
+    n2  pramBank;
+    n8  pramProtect;
   } io;
 
   struct LED {
-    uint1 red;
-    uint1 green;
+    n1 red;
+    n1 green;
   } led;
 
   struct IRQ {
@@ -103,12 +103,12 @@ struct MCD : M68K, Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint1 enable;
-    uint1 pending;
+    n1 enable;
+    n1 pending;
   };
 
   struct IRQs {
-    uint1 pending;
+    n1 pending;
 
     IRQ reset;
     IRQ subcode;
@@ -119,28 +119,28 @@ struct MCD : M68K, Thread {
   } external;
 
   struct Communcation {
-     uint8 cfm;
-     uint8 cfs;
-    uint16 command[8];
-    uint16 status [8];
+    n8  cfm;
+    n8  cfs;
+    n16 command[8];
+    n16 status [8];
   } communication;
 
   struct CDC {
     //cdc.cpp
     auto poll() -> void;
     auto clock() -> void;
-    auto decode(int sector) -> void;
-    auto read() -> uint8;
-    auto write(uint8 data) -> void;
+    auto decode(s32 sector) -> void;
+    auto read() -> n8;
+    auto write(n8 data) -> void;
     auto power(bool reset) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    Memory::Writable<uint16> ram;
+    Memory::Writable<n16> ram;
 
-     uint4 address;
-    uint12 stopwatch;
+    n4  address;
+    n12 stopwatch;
 
     struct IRQ : MCD::IRQ {
       MCD::IRQ decoder;   //DECEIN + DECI
@@ -149,27 +149,27 @@ struct MCD : M68K, Thread {
     } irq;
 
     struct Command {
-      uint8 fifo[8];  //COMIN
-      uint3 read;
-      uint3 write;
-      uint1 empty = 1;
+      n8 fifo[8];  //COMIN
+      n3 read;
+      n3 write;
+      n1 empty = 1;
     } command;
 
     struct Status {
-      uint8 fifo[8];    //SBOUT
-      uint3 read;
-      uint3 write;
-      uint1 empty = 1;
-      uint1 enable;     //SOUTEN
-      uint1 active;     //STEN
-      uint1 busy;       //STBSY
-      uint1 wait;       //STWAI
+      n8 fifo[8];    //SBOUT
+      n3 read;
+      n3 write;
+      n1 empty = 1;
+      n1 enable;     //SOUTEN
+      n1 active;     //STEN
+      n1 busy;       //STBSY
+      n1 wait;       //STWAI
     } status;
 
     struct Transfer {
       //cdc-transfer.cpp
       auto dma() -> void;
-      auto read() -> uint16;
+      auto read() -> n16;
       auto start() -> void;
       auto complete() -> void;
       auto stop() -> void;
@@ -177,70 +177,70 @@ struct MCD : M68K, Thread {
       //serialization.cpp
       auto serialize(serializer&) -> void;
 
-       uint3 destination;
-      uint19 address;
+      n3  destination;
+      n19 address;
 
-      uint16 source;
-      uint16 target;
-      uint16 pointer;
-      uint12 length;
+      n16 source;
+      n16 target;
+      n16 pointer;
+      n12 length;
 
-       uint1 enable;     //DOUTEN
-       uint1 active;     //DTEN
-       uint1 busy;       //DTBSY
-       uint1 wait;       //DTWAI
-       uint1 ready;      //DSR
-       uint1 completed;  //EDT
+      n1  enable;     //DOUTEN
+      n1  active;     //DTEN
+      n1  busy;       //DTBSY
+      n1  wait;       //DTWAI
+      n1  ready;      //DSR
+      n1  completed;  //EDT
     } transfer;
 
-    enum : uint { Mode1 = 0, Mode2 = 1 };
-    enum : uint { Form1 = 0, Form2 = 1 };
+    enum : u32 { Mode1 = 0, Mode2 = 1 };
+    enum : u32 { Form1 = 0, Form2 = 1 };
     struct Decoder {
-      uint1 enable;  //DECEN
-      uint1 mode;    //MODE
-      uint1 form;    //FORM
-      uint1 valid;   //!VALST
+      n1 enable;  //DECEN
+      n1 mode;    //MODE
+      n1 form;    //FORM
+      n1 valid;   //!VALST
     } decoder;
 
     struct Header {
-      uint8 minute;
-      uint8 second;
-      uint8 frame;
-      uint8 mode;
+      n8 minute;
+      n8 second;
+      n8 frame;
+      n8 mode;
     } header;
 
     struct Subheader {
-      uint8 file;
-      uint8 channel;
-      uint8 submode;
-      uint8 coding;
+      n8 file;
+      n8 channel;
+      n8 submode;
+      n8 coding;
     } subheader;
 
     struct Control {
-      uint1 head;               //SHDREN: 0 = read header, 1 = read subheader
-      uint1 mode;               //MODE
-      uint1 form;               //FORM
-      uint1 commandBreak;       //CMDBK
-      uint1 modeByteCheck;      //MBCKRQ
-      uint1 erasureRequest;     //ERAMRQ
-      uint1 writeRequest;       //WRRQ
-      uint1 pCodeCorrection;    //PRQ
-      uint1 qCodeCorrection;    //QRQ
-      uint1 autoCorrection;     //AUTOQ
-      uint1 errorCorrection;    //E01RQ
-      uint1 edcCorrection;      //EDCRQ
-      uint1 correctionWrite;    //COWREN
-      uint1 descramble;         //DSCREN
-      uint1 syncDetection;      //SYDEN
-      uint1 syncInterrupt;      //SYIEN
-      uint1 erasureCorrection;  //ERAMSL
-      uint1 statusTrigger;      //STENTRG
-      uint1 statusControl;      //STENCTL
+      n1 head;               //SHDREN: 0 = read header, 1 = read subheader
+      n1 mode;               //MODE
+      n1 form;               //FORM
+      n1 commandBreak;       //CMDBK
+      n1 modeByteCheck;      //MBCKRQ
+      n1 erasureRequest;     //ERAMRQ
+      n1 writeRequest;       //WRRQ
+      n1 pCodeCorrection;    //PRQ
+      n1 qCodeCorrection;    //QRQ
+      n1 autoCorrection;     //AUTOQ
+      n1 errorCorrection;    //E01RQ
+      n1 edcCorrection;      //EDCRQ
+      n1 correctionWrite;    //COWREN
+      n1 descramble;         //DSCREN
+      n1 syncDetection;      //SYDEN
+      n1 syncInterrupt;      //SYIEN
+      n1 erasureCorrection;  //ERAMSL
+      n1 statusTrigger;      //STENTRG
+      n1 statusControl;      //STENCTL
     } control;
   } cdc;
 
   struct CDD {
-    struct Status { enum : uint {
+    struct Status { enum : u32 {
       Stopped       = 0x0,  //motor disabled
       Playing       = 0x1,  //data or audio playback in progress
       Seeking       = 0x2,  //move to specified time
@@ -259,7 +259,7 @@ struct MCD : M68K, Thread {
       Test          = 0xf,  //in test mode
     };};
 
-    struct Command { enum : uint {
+    struct Command { enum : u32 {
       Idle      = 0x0,  //no operation
       Stop      = 0x1,  //stop motor
       Request   = 0x2,  //change report type
@@ -275,7 +275,7 @@ struct MCD : M68K, Thread {
       DoorOpen  = 0xd,  //open the door
     };};
 
-    struct Request { enum : uint {
+    struct Request { enum : u32 {
       AbsoluteTime       = 0x0,
       RelativeTime       = 0x1,
       TrackInformation   = 0x2,
@@ -294,7 +294,7 @@ struct MCD : M68K, Thread {
     auto clock() -> void;
     auto advance() -> void;
     auto sample() -> void;
-    auto position(int sector) -> double;
+    auto position(s32 sector) -> double;
     auto process() -> void;
     auto valid() -> bool;
     auto checksum() -> void;
@@ -307,7 +307,7 @@ struct MCD : M68K, Thread {
 
     CD::Session session;
     IRQ irq;
-    uint16 counter;
+    n16 counter;
 
     struct DAC {
       Node::Audio::Stream stream;
@@ -316,29 +316,29 @@ struct MCD : M68K, Thread {
       auto load(Node::Object) -> void;
       auto unload() -> void;
 
-      auto sample(int16 left, int16 right) -> void;
+      auto sample(i16 left, i16 right) -> void;
       auto reconfigure() -> void;
       auto power(bool reset) -> void;
 
-       uint1 rate;        //0 = normal, 1 = double
-       uint2 deemphasis;  //0 = off, 1 = 44100hz, 2 = 32000hz, 3 = 48000hz
-      uint16 attenuator;  //only d6-d15 are used for the coefficient
-      uint16 attenuated;  //current coefficent
+      n1  rate;        //0 = normal, 1 = double
+      n2  deemphasis;  //0 = off, 1 = 44100hz, 2 = 32000hz, 3 = 48000hz
+      n16 attenuator;  //only d6-d15 are used for the coefficient
+      n16 attenuated;  //current coefficent
     } dac;
 
     struct IO {
-       uint4 status = Status::NoDisc;
-       uint4 seeking;  //status after seeking (Playing or Paused)
-      uint16 latency;
-       int32 sector;   //current frame#
-      uint16 sample;   //current audio sample# within current frame
-       uint7 track;    //current track#
+      n4  status = Status::NoDisc;
+      n4  seeking;  //status after seeking (Playing or Paused)
+      n16 latency;
+      i32 sector;   //current frame#
+      n16 sample;   //current audio sample# within current frame
+      n7  track;    //current track#
     } io;
 
-    uint1 hostClockEnable;
-    uint1 statusPending;
-    uint4 status [10];
-    uint4 command[10];
+    n1 hostClockEnable;
+    n1 statusPending;
+    n4 status [10];
+    n4 command[10];
   } cdd;
 
   struct Timer {
@@ -350,15 +350,15 @@ struct MCD : M68K, Thread {
     auto serialize(serializer&) -> void;
 
     IRQ irq;
-    uint8 counter;
+    n8 counter;
   } timer;
 
   struct GPU {
     //gpu.cpp
-    auto step(uint clocks) -> void;
-    auto read(uint19 address) -> uint4;
-    auto write(uint19 address, uint4 data) -> void;
-    auto render(uint19 address, uint9 width) -> void;
+    auto step(u32 clocks) -> void;
+    auto read(n19 address) -> n4;
+    auto write(n19 address, n4 data) -> void;
+    auto render(n19 address, n9 width) -> void;
     auto start() -> void;
     auto power(bool reset) -> void;
 
@@ -369,76 +369,76 @@ struct MCD : M68K, Thread {
 
     struct Font {
       struct Color {
-        uint4 background;
-        uint4 foreground;
+        n4 background;
+        n4 foreground;
       } color;
-      uint16 data;
+      n16 data;
     } font;
 
     struct Stamp {
-      uint1 repeat;
+      n1 repeat;
       struct Tile {
-        uint1 size;  //0 = 16x16, 1 = 32x32
+        n1 size;  //0 = 16x16, 1 = 32x32
       } tile;
       struct Map {
-         uint1 size;  //0 = 1x1, 1 = 16x16
-        uint18 base;
-        uint19 address;
+        n1  size;  //0 = 1x1, 1 = 16x16
+        n18 base;
+        n19 address;
       } map;
     } stamp;
 
     struct Image {
-      uint18 base;
-       uint6 offset;
-       uint5 vcells;
-       uint8 vdots;
-       uint9 hdots;
-      uint19 address;
+      n18 base;
+      n6  offset;
+      n5  vcells;
+      n8  vdots;
+      n9  hdots;
+      n19 address;
     } image;
 
     struct Vector {
-      uint18 base;
-      uint17 address;
+      n18 base;
+      n17 address;
     } vector;
 
-     uint1 active;
-    uint32 counter;
-    uint32 period;
+    n1  active;
+    n32 counter;
+    n32 period;
   } gpu;
 
   struct PCM {
     Node::Audio::Stream stream;
-    Memory::Writable<uint8> ram;
+    Memory::Writable<n8> ram;
 
     //pcm.cpp
     auto load(Node::Object) -> void;
     auto unload() -> void;
 
     auto clock() -> void;
-    auto read(uint13 address, uint8 data) -> uint8;
-    auto write(uint13 address, uint8 data) -> void;
+    auto read(n13 address, n8 data) -> n8;
+    auto write(n13 address, n8 data) -> void;
     auto power(bool reset) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
     struct IO {
-      uint1 enable;
-      uint4 bank;
-      uint3 channel;
+      n1 enable;
+      n4 bank;
+      n3 channel;
     } io;
 
     struct Channel {
       //serialization.cpp
       auto serialize(serializer&) -> void;
 
-       uint1 enable;
-       uint8 envelope;
-       uint8 pan = 0xff;
-      uint16 step;
-      uint16 loop;
-       uint8 start;
-      uint27 address;
+      n1  enable;
+      n8  envelope;
+      n8  pan = 0xff;
+      n16 step;
+      n16 loop;
+      n8  start;
+      n27 address;
     } channels[8];
   } pcm;
 };

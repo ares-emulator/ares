@@ -1,4 +1,4 @@
-auto VDP::read(uint24 address, uint16) -> uint16 {
+auto VDP::read(n24 address, n16) -> n16 {
   switch(address & 0xc0001e) {
 
   //data port
@@ -26,7 +26,7 @@ auto VDP::read(uint24 address, uint16) -> uint16 {
   return 0x0000;
 }
 
-auto VDP::write(uint24 address, uint16 data) -> void {
+auto VDP::write(n24 address, n16 data) -> void {
   switch(address & 0xc0001e) {
 
   //data port
@@ -44,7 +44,7 @@ auto VDP::write(uint24 address, uint16 data) -> void {
 
 //
 
-auto VDP::readDataPort() -> uint16 {
+auto VDP::readDataPort() -> n16 {
   io.commandPending = false;
 
   //VRAM read
@@ -74,7 +74,7 @@ auto VDP::readDataPort() -> uint16 {
   return 0x0000;
 }
 
-auto VDP::writeDataPort(uint16 data) -> void {
+auto VDP::writeDataPort(n16 data) -> void {
   io.commandPending = false;
 
   //DMA VRAM fill
@@ -115,10 +115,10 @@ auto VDP::writeDataPort(uint16 data) -> void {
 
 //
 
-auto VDP::readControlPort() -> uint16 {
+auto VDP::readControlPort() -> n16 {
   io.commandPending = false;
 
-  uint16 result;
+  n16 result;
   result.bit( 0) = Region::PAL();
   result.bit( 1) = io.command.bit(5);  //DMA active
   result.bit( 2) = state.hcounter >= 1280;  //horizontal blank
@@ -138,7 +138,7 @@ auto VDP::readControlPort() -> uint16 {
   return result;
 }
 
-auto VDP::writeControlPort(uint16 data) -> void {
+auto VDP::writeControlPort(n16 data) -> void {
   //command write (lo)
   if(io.commandPending) {
     io.commandPending = false;

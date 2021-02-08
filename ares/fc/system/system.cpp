@@ -2,7 +2,16 @@
 
 namespace ares::Famicom {
 
+auto enumerate() -> vector<string> {
+  return {
+    "[Nintendo] Famicom (NTSC-J)",
+    "[Nintendo] Nintendo (NTSC-U)",
+    "[Nintendo] Nintendo (PAL)",
+  };
+}
+
 auto load(Node::System& node, string name) -> bool {
+  if(!enumerate().find(name)) return false;
   return system.load(node, name);
 }
 
@@ -35,8 +44,23 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
+  if(name.find("NTSC-J")) {
+    information.name = "Famicom";
+    information.region = Region::NTSCJ;
+    information.frequency = Constants::Colorburst::NTSC * 6.0;
+  }
+  if(name.find("NTSC-U")) {
+    information.name = "Famicom";
+    information.region = Region::NTSCU;
+    information.frequency = Constants::Colorburst::NTSC * 6.0;
+  }
+  if(name.find("PAL")) {
+    information.name = "Famicom";
+    information.region = Region::PAL;
+    information.frequency = Constants::Colorburst::PAL * 6.0;
+  }
 
-  node = Node::System::create(name);
+  node = Node::System::create(information.name);
   node->setGame({&System::game, this});
   node->setRun({&System::run, this});
   node->setPower({&System::power, this});
@@ -45,17 +69,6 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
-
-  regionNode = node->append<Node::Setting::String>("Region", "NTSC-J → NTSC-U → PAL");
-  regionNode->setAllowedValues({
-    "NTSC-J → NTSC-U → PAL",
-    "NTSC-U → NTSC-J → PAL",
-    "PAL → NTSC-J → NTSC-U",
-    "PAL → NTSC-U → NTSC-J",
-    "NTSC-J",
-    "NTSC-U",
-    "PAL"
-  });
 
   scheduler.reset();
   controls.load(node);
@@ -89,26 +102,6 @@ auto System::unload() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
-  auto setRegion = [&](string region) {
-    if(region == "NTSC-J") {
-      information.region = Region::NTSCJ;
-      information.frequency = Constants::Colorburst::NTSC * 6.0;
-    }
-    if(region == "NTSC-U") {
-      information.region = Region::NTSCU;
-      information.frequency = Constants::Colorburst::NTSC * 6.0;
-    }
-    if(region == "PAL") {
-      information.region = Region::PAL;
-      information.frequency = Constants::Colorburst::PAL * 6.0;
-    }
-  };
-  auto regionsHave = regionNode->latch().split("→").strip();
-  setRegion(regionsHave.first());
-  for(auto& have : reverse(regionsHave)) {
-    if(have == cartridge.region()) setRegion(have);
-  }
 
   //zero-initialization (breaks Super Mario Bros.)
   #if 0

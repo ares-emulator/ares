@@ -19,40 +19,40 @@ struct VDC {
   auto vsync() -> void;
   auto hclock() -> void;
   auto vclock() -> void;
-  auto read(uint2 address) -> uint8;
-  auto write(uint2 address, uint8 data) -> void;
+  auto read(n2 address) -> n8;
+  auto write(n2 address, n8 data) -> void;
   auto power() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  uint9 output[512];
+  n9 output[512];
 
   struct VRAM {
     //vdc.cpp
-    auto read(uint16 address) const -> uint16;
-    auto write(uint16 address, uint16 data) -> void;
+    auto read(n16 address) const -> n16;
+    auto write(n16 address, n16 data) -> void;
 
-    uint16 memory[0x8000];
+    n16 memory[0x8000];
 
-    uint16 addressRead;
-    uint16 addressWrite;
-    uint16 addressIncrement = 0x01;
+    n16 addressRead;
+    n16 addressWrite;
+    n16 addressIncrement = 0x01;
 
-    uint16 dataRead;
-    uint16 dataWrite;
+    n16 dataRead;
+    n16 dataWrite;
   } vram;
 
   struct SATB {
     //vdc.cpp
-    auto read(uint8 address) const -> uint16;
-    auto write(uint8 address, uint16 data) -> void;
+    auto read(n8 address) const -> n16;
+    auto write(n8 address, n16 data) -> void;
 
-    uint16 memory[0x100];
+    n16 memory[0x100];
   } satb;
 
   struct IRQ {
-    enum class Line : uint {
+    enum class Line : u32 {
       Collision,
       Overflow,
       Coincidence,
@@ -62,8 +62,8 @@ struct VDC {
     };
 
     struct Source {
-      uint1 enable;
-      uint1 pending;
+      n1 enable;
+      n1 pending;
     };
 
     //irq.cpp
@@ -71,7 +71,7 @@ struct VDC {
     auto raise(Line) -> void;
     auto lower() -> void;
 
-    uint1 line;
+    n1 line;
 
     Source collision;
     Source overflow;
@@ -85,98 +85,98 @@ struct VDC {
     maybe<VDC&> vdc;
 
     //dma.cpp
-    auto step(uint clocks) -> void;
+    auto step(u32 clocks) -> void;
     auto vramStart() -> void;
     auto satbStart() -> void;
     auto satbQueue() -> void;
 
-     uint1 sourceIncrementMode;
-     uint1 targetIncrementMode;
-     uint1 satbRepeat;
-    uint16 source;
-    uint16 target;
-    uint16 length;
-    uint16 satbSource;
+    n1  sourceIncrementMode;
+    n1  targetIncrementMode;
+    n1  satbRepeat;
+    n16 source;
+    n16 target;
+    n16 length;
+    n16 satbSource;
 
-     uint1 vramActive;
-     uint1 satbActive;
-     uint1 satbPending;
-     uint8 satbOffset;
+    n1  vramActive;
+    n1  satbActive;
+    n1  satbPending;
+    n8  satbOffset;
   } dma;
 
-  enum : uint { HDS, HDW, HDE, HSW };
-  enum : uint { VSW, VDS, VDW, VCR };
+  enum : u32 { HDS, HDW, HDE, HSW };
+  enum : u32 { VSW, VDS, VDW, VCR };
 
   struct Timing {
-     uint5 horizontalSyncWidth = 2;
-     uint7 horizontalDisplayStart = 2;
-     uint7 horizontalDisplayWidth = 31;
-     uint7 horizontalDisplayEnd = 4;
+    n5  horizontalSyncWidth = 2;
+    n7  horizontalDisplayStart = 2;
+    n7  horizontalDisplayWidth = 31;
+    n7  horizontalDisplayEnd = 4;
 
-     uint5 verticalSyncWidth = 2;
-     uint8 verticalDisplayStart = 15;
-     uint9 verticalDisplayWidth = 239;
-     uint8 verticalDisplayEnd = 4;
+    n5  verticalSyncWidth = 2;
+    n8  verticalDisplayStart = 15;
+    n9  verticalDisplayWidth = 239;
+    n8  verticalDisplayEnd = 4;
 
-     uint8 hstate = HDS;
-     uint8 vstate = VSW;
+    n8  hstate = HDS;
+    n8  vstate = VSW;
 
-    uint16 hoffset;
-    uint16 voffset;
+    n16 hoffset;
+    n16 voffset;
 
-    uint10 coincidence = 64;
+    n10 coincidence = 64;
   } timing;
 
   struct Latch {
-    uint16 horizontalSyncWidth;
-    uint16 horizontalDisplayStart;
-    uint16 horizontalDisplayWidth;
-    uint16 horizontalDisplayEnd;
+    n16 horizontalSyncWidth;
+    n16 horizontalDisplayStart;
+    n16 horizontalDisplayWidth;
+    n16 horizontalDisplayEnd;
 
-    uint16 verticalSyncWidth;
-    uint16 verticalDisplayStart;
-    uint16 verticalDisplayWidth;
-    uint16 verticalDisplayEnd;
+    n16 verticalSyncWidth;
+    n16 verticalDisplayStart;
+    n16 verticalDisplayWidth;
+    n16 verticalDisplayEnd;
 
-     uint1 burstMode = 1;
+    n1  burstMode = 1;
   } latch;
 
   struct IO {
-     uint5 address;
+    n5  address;
 
-     uint2 externalSync;
-     uint2 displayOutput;
-     uint1 dramRefresh;
-    uint10 coincidence;
+    n2  externalSync;
+    n2  displayOutput;
+    n1  dramRefresh;
+    n10 coincidence;
   } io;
 
   struct Background {
     maybe<VDC&> vdc;
 
     //background.cpp
-    auto scanline(uint16 y) -> void;
-    auto render(uint16 y) -> void;
+    auto scanline(n16 y) -> void;
+    auto render(n16 y) -> void;
 
-     uint1 enable;
-     uint2 vramMode;  //partially emulated
-     uint1 characterMode;
-    uint10 hscroll;
-     uint9 vscroll;
-     uint9 vcounter;
-     uint8 width = 32;
-     uint8 height = 32;
+    n1  enable;
+    n2  vramMode;  //partially emulated
+    n1  characterMode;
+    n10 hscroll;
+    n9  vscroll;
+    n9  vcounter;
+    n8  width = 32;
+    n8  height = 32;
 
-    uint10 hoffset;
-     uint9 voffset;
+    n10 hoffset;
+    n9  voffset;
 
     struct Latch {
-      uint2 vramMode;
-      uint1 characterMode;
+      n2 vramMode;
+      n1 characterMode;
     } latch;
 
     struct Output {
-      uint4 color;
-      uint4 palette;
+      n4 color;
+      n4 palette;
     } output[512];
   } background;
 
@@ -184,39 +184,39 @@ struct VDC {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint10 y;
-    uint10 x;
-     uint1 characterMode;
-    uint10 pattern;
-     uint4 palette;
-     uint1 priority;
-     uint8 width;
-     uint8 height;
-     uint1 hflip;
-     uint1 vflip;
-     uint1 first;
+    n10 y;
+    n10 x;
+    n1  characterMode;
+    n10 pattern;
+    n4  palette;
+    n1  priority;
+    n8  width;
+    n8  height;
+    n1  hflip;
+    n1  vflip;
+    n1  first;
   };
 
   struct Sprite {
     maybe<VDC&> vdc;
 
     //sprite.cpp
-    auto scanline(uint16 y) -> void;
-    auto render(uint16 y) -> void;
+    auto scanline(n16 y) -> void;
+    auto render(n16 y) -> void;
 
     adaptive_array<Object, 16> objects;
 
-    uint1 enable;
-    uint2 vramMode;  //partially emulated
+    n1 enable;
+    n2 vramMode;  //partially emulated
 
     struct Latch {
-      uint2 vramMode;
+      n2 vramMode;
     } latch;
 
     struct Output {
-      uint4 color;
-      uint4 palette;
-      uint1 priority;
+      n4 color;
+      n4 palette;
+      n1 priority;
     } output[512];
   } sprite;
 };

@@ -108,9 +108,9 @@ auto VDC::vclock() -> void {
   }
 }
 
-auto VDC::read(uint2 address) -> uint8 {
+auto VDC::read(n2 address) -> n8 {
   if(!burstMode()) cpu.idle();  //penalty cycle
-  uint8 data = 0x00;
+  n8 data = 0x00;
 
   if(address == 0x0) {
     //SR
@@ -130,7 +130,7 @@ auto VDC::read(uint2 address) -> uint8 {
     return data;
   }
 
-  uint1 a0 = address.bit(0);
+  n1 a0 = address.bit(0);
 
   if(io.address == 0x02) {
     //VRR
@@ -146,7 +146,7 @@ auto VDC::read(uint2 address) -> uint8 {
   return data;
 }
 
-auto VDC::write(uint2 address, uint8 data) -> void {
+auto VDC::write(n2 address, n8 data) -> void {
   if(!burstMode()) cpu.idle();  //penalty cycle
 
   if(address == 0x0) {
@@ -160,7 +160,7 @@ auto VDC::write(uint2 address, uint8 data) -> void {
     return;
   }
 
-  uint1 a0 = address.bit(0);
+  n1 a0 = address.bit(0);
 
   if(io.address == 0x00) {
     //MAWR
@@ -343,20 +343,20 @@ auto VDC::power() -> void {
   sprite.vdc = *this;
 }
 
-inline auto VDC::VRAM::read(uint16 address) const -> uint16 {
+inline auto VDC::VRAM::read(n16 address) const -> n16 {
   if(address.bit(15)) return 0x0000;  //todo: random data?
   return memory[address];
 }
 
-inline auto VDC::VRAM::write(uint16 address, uint16 data) -> void {
+inline auto VDC::VRAM::write(n16 address, n16 data) -> void {
   if(address.bit(15)) return;
   memory[address] = data;
 }
 
-inline auto VDC::SATB::read(uint8 address) const -> uint16 {
+inline auto VDC::SATB::read(n8 address) const -> n16 {
   return memory[address];
 }
 
-inline auto VDC::SATB::write(uint8 address, uint16 data) -> void {
+inline auto VDC::SATB::write(n8 address, n16 data) -> void {
   memory[address] = data;
 }

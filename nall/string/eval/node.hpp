@@ -3,7 +3,7 @@
 namespace nall::Eval {
 
 struct Node {
-  enum class Type : uint {
+  enum class Type : u32 {
     Null,
     Literal,
     Function, Subscript, Member, SuffixIncrement, SuffixDecrement,

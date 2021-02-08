@@ -1,6 +1,6 @@
 //analog-to-digital converter
 
-auto CPU::ADC::step(uint clocks) -> void {
+auto CPU::ADC::step(u32 clocks) -> void {
   if(!busy) return;
   counter += clocks;
   if(counter >= (!speed ? 160 : 320)) {

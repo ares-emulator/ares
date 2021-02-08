@@ -38,9 +38,9 @@ auto SI::main() -> void {
 
   if constexpr(Debug) {
     print("{\n");
-    for(uint y : range(8)) {
+    for(u32 y : range(8)) {
       print("  ");
-      for(uint x : range(8)) {
+      for(u32 x : range(8)) {
         print(hex(pi.ram.readByte(y * 8 + x), 2L), " ");
       }
       print("\n");
@@ -48,19 +48,19 @@ auto SI::main() -> void {
     print("}\n");
   }
 
-  uint3 channel = 0;
-  for(uint offset = 0; offset < 64;) {
+  n3 channel = 0;
+  for(u32 offset = 0; offset < 64;) {
     u8 send = pi.ram.readByte(offset++) & 0x3f;
     if(send == 0x00) { channel++; continue; }
     if(send == 0x3f) continue;
     if(send == 0x3e) break;
     u8 recvOffset = offset;
     u8 recv = pi.ram.readByte(offset++) & 0x3f;
-    uint8 input[256];
-    for(uint index = 0; index < send; index++) {
+    n8 input[256];
+    for(u32 index = 0; index < send; index++) {
       input[index] = pi.ram.readByte(offset++) & 0x3f;
     }
-    uint8 output[256];
+    n8 output[256];
     bool valid = 0;
     if(input[0] == 0x00 || input[0] == 0x3f) {
       if(channel < 4 && send == 1 && recv == 3) {
@@ -73,7 +73,7 @@ auto SI::main() -> void {
     if(input[0] == 0x01) {
       if(channel < 4 && controllers[channel]->device) {
         u32 data = controllers[channel]->device->read();
-        for(uint index = 0; index < min(4, recv); index++) {
+        for(u32 index = 0; index < min(4, recv); index++) {
           output[index] = data >> 24;
           data <<= 8;
         }
@@ -88,7 +88,7 @@ auto SI::main() -> void {
     if(!valid) {
       pi.ram.writeByte(recvOffset, 0x80 | recv & 0x3f);
     }
-    for(uint index = 0; index < recv; index++) {
+    for(u32 index = 0; index < recv; index++) {
       pi.ram.writeByte(offset++, output[index]);
     }
     channel++;
@@ -99,9 +99,9 @@ auto SI::main() -> void {
 
   if constexpr(Debug) {
     print("[\n");
-    for(uint y : range(8)) {
+    for(u32 y : range(8)) {
       print("  ");
-      for(uint x : range(8)) {
+      for(u32 x : range(8)) {
         print(hex(pi.ram.readByte(y * 8 + x), 2L), " ");
       }
       print("\n");

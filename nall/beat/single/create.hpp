@@ -4,16 +4,16 @@
 
 namespace nall::Beat::Single {
 
-inline auto create(array_view<uint8_t> source, array_view<uint8_t> target, string_view manifest = {}) -> vector<uint8_t> {
-  vector<uint8_t> beat;
+inline auto create(array_view<u8> source, array_view<u8> target, string_view manifest = {}) -> vector<u8> {
+  vector<u8> beat;
 
-  auto write = [&](uint8_t data) {
+  auto write = [&](u8 data) {
     beat.append(data);
   };
 
-  auto encode = [&](uint64_t data) {
+  auto encode = [&](u64 data) {
     while(true) {
-      uint64_t x = data & 0x7f;
+      u64 x = data & 0x7f;
       data >>= 7;
       if(data == 0) { write(0x80 | x); break; }
       write(x);
@@ -31,21 +31,21 @@ inline auto create(array_view<uint8_t> source, array_view<uint8_t> target, strin
   auto sourceArray = SuffixArray(source);
   auto targetArray = SuffixArray(target).lpf();
 
-  enum : uint { SourceRead, TargetRead, SourceCopy, TargetCopy };
-  uint outputOffset = 0, sourceRelativeOffset = 0, targetRelativeOffset = 0;
+  enum : u32 { SourceRead, TargetRead, SourceCopy, TargetCopy };
+  u32 outputOffset = 0, sourceRelativeOffset = 0, targetRelativeOffset = 0;
 
-  uint targetReadLength = 0;
+  u32 targetReadLength = 0;
   auto flush = [&] {
     if(!targetReadLength) return;
     encode(TargetRead | ((targetReadLength - 1) << 2));
-    uint offset = outputOffset - targetReadLength;
+    u32 offset = outputOffset - targetReadLength;
     while(targetReadLength) write(target[offset++]), targetReadLength--;
   };
 
-  uint overlap = min(source.size(), target.size());
+  u32 overlap = min(source.size(), target.size());
   while(outputOffset < target.size()) {
-    uint mode = TargetRead, longestLength = 3, longestOffset = 0;
-    int length = 0, offset = outputOffset;
+    u32 mode = TargetRead, longestLength = 3, longestOffset = 0;
+    s32 length = 0, offset = outputOffset;
 
     while(offset < overlap) {
       if(source[offset] != target[offset]) break;
@@ -72,12 +72,12 @@ inline auto create(array_view<uint8_t> source, array_view<uint8_t> target, strin
       flush();
       encode(mode | ((longestLength - 1) << 2));
       if(mode == SourceCopy) {
-        int relativeOffset = longestOffset - sourceRelativeOffset;
+        s32 relativeOffset = longestOffset - sourceRelativeOffset;
         sourceRelativeOffset = longestOffset + longestLength;
         encode(relativeOffset < 0 | abs(relativeOffset) << 1);
       }
       if(mode == TargetCopy) {
-        int relativeOffset = longestOffset - targetRelativeOffset;
+        s32 relativeOffset = longestOffset - targetRelativeOffset;
         targetRelativeOffset = longestOffset + longestLength;
         encode(relativeOffset < 0 | abs(relativeOffset) << 1);
       }
@@ -87,11 +87,11 @@ inline auto create(array_view<uint8_t> source, array_view<uint8_t> target, strin
   flush();
 
   auto sourceHash = Hash::CRC32(source);
-  for(uint shift : range(0, 32, 8)) write(sourceHash.value() >> shift);
+  for(u32 shift : range(0, 32, 8)) write(sourceHash.value() >> shift);
   auto targetHash = Hash::CRC32(target);
-  for(uint shift : range(0, 32, 8)) write(targetHash.value() >> shift);
+  for(u32 shift : range(0, 32, 8)) write(targetHash.value() >> shift);
   auto beatHash = Hash::CRC32(beat);
-  for(uint shift : range(0, 32, 8)) write(beatHash.value() >> shift);
+  for(u32 shift : range(0, 32, 8)) write(beatHash.value() >> shift);
 
   return beat;
 }

@@ -38,7 +38,7 @@ inline auto string::reset() -> type& {
   return *this;
 }
 
-inline auto string::reserve(uint capacity) -> type& {
+inline auto string::reserve(u32 capacity) -> type& {
   if(capacity > _capacity) {
     _capacity = bit::round(capacity + 1) - 1;
     _data = memory::resize<char>(_data, _capacity + 1);
@@ -47,7 +47,7 @@ inline auto string::reserve(uint capacity) -> type& {
   return *this;
 }
 
-inline auto string::resize(uint size) -> type& {
+inline auto string::resize(u32 size) -> type& {
   reserve(size);
   get()[_size = size] = 0;
   return *this;

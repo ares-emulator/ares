@@ -24,7 +24,7 @@ struct Instruction : Tracer {
     _depth = depth;
     _history.reset();
     _history.resize(depth);
-    for(auto& history : _history) history = ~0ull;
+    for(auto& history : _history) history = ~0;
   }
 
   auto address(u32 address) -> bool {

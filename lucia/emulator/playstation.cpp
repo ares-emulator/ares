@@ -22,22 +22,13 @@ PlayStation::PlayStation() {
 }
 
 auto PlayStation::load() -> bool {
-  if(!ares::PlayStation::load(root, "PlayStation")) return false;
+  auto region = Emulator::region();
+  if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return false;
 
-  if(auto region = root->find<ares::Node::Setting::String>("Region")) {
-    if(settings.boot.prefer == "NTSC-U") region->setValue("NTSC-U → NTSC-J → PAL"), regionID = 0;
-    if(settings.boot.prefer == "NTSC-J") region->setValue("NTSC-J → NTSC-U → PAL"), regionID = 1;
-    if(settings.boot.prefer == "PAL"   ) region->setValue("PAL → NTSC-U → NTSC-J"), regionID = 2;
-  }
-
-  if(auto manifest = medium->manifest(game.location)) {
-    auto document = BML::unserialize(manifest);
-    auto region = document["game/region"].string();
-    //if statements below are ordered by lowest to highest priority
-    if(region == "PAL"   ) regionID = 2;
-    if(region == "NTSC-J") regionID = 1;
-    if(region == "NTSC-U") regionID = 0;
-  }
+  //if statements below are ordered by lowest to highest priority
+  if(region == "PAL"   ) regionID = 2;
+  if(region == "NTSC-J") regionID = 1;
+  if(region == "NTSC-U") regionID = 0;
 
   if(!file::exists(firmware[regionID].location)) {
     errorFirmwareRequired(firmware[regionID]);

@@ -7,14 +7,14 @@ namespace nall {
 
 template<typename T> struct queue_spsc;
 
-template<typename T, uint Size>
+template<typename T, u32 Size>
 struct queue_spsc<T[Size]> {
   auto flush() -> void {
     _read  = 0;
     _write = 2 * Size;
   }
 
-  auto size() const -> uint {
+  auto size() const -> u32 {
     return (_write - _read) % (2 * Size);
   }
 
@@ -59,8 +59,8 @@ struct queue_spsc<T[Size]> {
 
 private:
   T _data[Size];
-  std::atomic<uint> _read  = 0;
-  std::atomic<uint> _write = 2 * Size;
+  std::atomic<u32> _read  = 0;
+  std::atomic<u32> _write = 2 * Size;
 };
 
 }

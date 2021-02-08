@@ -6,7 +6,7 @@
 namespace nall::HTTP {
 
 struct Server : Role, service {
-  auto open(uint port = 8080, const string& serviceName = "", const string& command = "") -> bool;
+  auto open(u16 port = 8080, const string& serviceName = "", const string& command = "") -> bool;
   auto main(const function<Response (Request&)>& function = {}) -> void;
   auto scan() -> string;
   auto close() -> void;
@@ -14,10 +14,10 @@ struct Server : Role, service {
 
 private:
   function<Response (Request&)> callback;
-  std::atomic<int> connections{0};
+  std::atomic<s32> connections{0};
 
-  int fd4 = -1;
-  int fd6 = -1;
+  s32 fd4 = -1;
+  s32 fd6 = -1;
   struct sockaddr_in addrin4 = {0};
   struct sockaddr_in6 addrin6 = {0};
 
@@ -31,7 +31,7 @@ private:
   auto ipv6_scan() -> bool;
 };
 
-inline auto Server::open(uint port, const string& serviceName, const string& command) -> bool {
+inline auto Server::open(u16 port, const string& serviceName, const string& command) -> bool {
   if(serviceName) {
     if(!service::command(serviceName, command)) return false;
   }
@@ -62,21 +62,21 @@ inline auto Server::open(uint port, const string& serviceName, const string& com
   #endif
 
   #if defined(SO_NOSIGPIPE)  //BSD, OSX
-  int nosigpipe = 1;
-  if(ipv4()) setsockopt(fd4, SOL_SOCKET, SO_NOSIGPIPE, &nosigpipe, sizeof(int));
-  if(ipv6()) setsockopt(fd6, SOL_SOCKET, SO_NOSIGPIPE, &nosigpipe, sizeof(int));
+  s32 nosigpipe = 1;
+  if(ipv4()) setsockopt(fd4, SOL_SOCKET, SO_NOSIGPIPE, &nosigpipe, sizeof(s32));
+  if(ipv6()) setsockopt(fd6, SOL_SOCKET, SO_NOSIGPIPE, &nosigpipe, sizeof(s32));
   #endif
 
   #if defined(SO_REUSEADDR)  //BSD, Linux, OSX
-  int reuseaddr = 1;
-  if(ipv4()) setsockopt(fd4, SOL_SOCKET, SO_REUSEADDR, &reuseaddr, sizeof(int));
-  if(ipv6()) setsockopt(fd6, SOL_SOCKET, SO_REUSEADDR, &reuseaddr, sizeof(int));
+  s32 reuseaddr = 1;
+  if(ipv4()) setsockopt(fd4, SOL_SOCKET, SO_REUSEADDR, &reuseaddr, sizeof(s32));
+  if(ipv6()) setsockopt(fd6, SOL_SOCKET, SO_REUSEADDR, &reuseaddr, sizeof(s32));
   #endif
 
   #if defined(SO_REUSEPORT)  //BSD, OSX
-  int reuseport = 1;
-  if(ipv4()) setsockopt(fd4, SOL_SOCKET, SO_REUSEPORT, &reuseport, sizeof(int));
-  if(ipv6()) setsockopt(fd6, SOL_SOCKET, SO_REUSEPORT, &reuseport, sizeof(int));
+  s32 reuseport = 1;
+  if(ipv4()) setsockopt(fd4, SOL_SOCKET, SO_REUSEPORT, &reuseport, sizeof(s32));
+  if(ipv6()) setsockopt(fd6, SOL_SOCKET, SO_REUSEPORT, &reuseport, sizeof(s32));
   #endif
   }
 
@@ -117,22 +117,22 @@ inline auto Server::ipv4_scan() -> bool {
     thread::create([&](uintptr) {
       thread::detach();
 
-      int clientfd = -1;
+      s32 clientfd = -1;
       struct sockaddr_in settings = {0};
       socklen_t socklen = sizeof(sockaddr_in);
 
       clientfd = accept(fd4, (struct sockaddr*)&settings, &socklen);
       if(clientfd < 0) return;
 
-      uint32_t ip = ntohl(settings.sin_addr.s_addr);
+      u32 ip = ntohl(settings.sin_addr.s_addr);
 
       Request request;
       request._ipv6 = false;
       request._ip = {
-        (uint8_t)(ip >> 24), ".",
-        (uint8_t)(ip >> 16), ".",
-        (uint8_t)(ip >>  8), ".",
-        (uint8_t)(ip >>  0)
+        (u8)(ip >> 24), ".",
+        (u8)(ip >> 16), ".",
+        (u8)(ip >>  8), ".",
+        (u8)(ip >>  0)
       };
 
       if(download(clientfd, request) && callback) {
@@ -164,25 +164,25 @@ inline auto Server::ipv6_scan() -> bool {
     thread::create([&](uintptr) {
       thread::detach();
 
-      int clientfd = -1;
+      s32 clientfd = -1;
       struct sockaddr_in6 settings = {0};
       socklen_t socklen = sizeof(sockaddr_in6);
 
       clientfd = accept(fd6, (struct sockaddr*)&settings, &socklen);
       if(clientfd < 0) return;
 
-      uint8_t* ip = settings.sin6_addr.s6_addr;
-      uint16_t ipSegment[8];
+      u8* ip = settings.sin6_addr.s6_addr;
+      u16 ipSegment[8];
       for(auto n : range(8)) ipSegment[n] = ip[n * 2 + 0] * 256 + ip[n * 2 + 1];
 
       Request request;
       request._ipv6 = true;
       //RFC5952 IPv6 encoding: the first longest 2+ consecutive zero-sequence is compressed to "::"
-      int zeroOffset  = -1;
-      int zeroLength  =  0;
-      int zeroCounter =  0;
+      s32 zeroOffset  = -1;
+      s32 zeroLength  =  0;
+      s32 zeroCounter =  0;
       for(auto n : range(8)) {
-        uint16_t value = ipSegment[n];
+        u16 value = ipSegment[n];
         if(value == 0) zeroCounter++;
         if(zeroCounter > zeroLength) {
           zeroLength = zeroCounter;
@@ -191,12 +191,12 @@ inline auto Server::ipv6_scan() -> bool {
         if(value != 0) zeroCounter = 0;
       }
       if(zeroLength == 1) zeroOffset = -1;
-      for(uint n = 0; n < 8;) {
+      for(u32 n = 0; n < 8;) {
         if(n == zeroOffset) {
           request._ip.append(n == 0 ? "::" : ":");
           n += zeroLength;
         } else {
-          uint16_t value = ipSegment[n];
+          u16 value = ipSegment[n];
           request._ip.append(hex(value), n++ != 7 ? ":" : "");
         }
       }

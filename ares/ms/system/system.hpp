@@ -1,6 +1,5 @@
 struct System {
   Node::System node;
-  Node::Setting::String regionNode;
 
   struct Controls {
     Node::Object node;
@@ -32,7 +31,7 @@ struct System {
   enum class Model : u32 { MarkIII, MasterSystemI, MasterSystemII, GameGear };
   enum class Region : u32 { NTSCJ, NTSCU, PAL };
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto model() const -> Model { return information.model; }
   auto region() const -> Region { return information.region; }
   auto colorburst() const -> double { return information.colorburst; }
@@ -52,7 +51,8 @@ struct System {
 
 private:
   struct Information {
-    Model model = Model::MasterSystemII;
+    string name = "Master System";
+    Model model = Model::MasterSystemI;
     Region region = Region::NTSCJ;
     f64 colorburst = Constants::Colorburst::NTSC;
   } information;

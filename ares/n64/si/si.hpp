@@ -27,16 +27,16 @@ struct SI : Memory::IO<SI> {
   auto serialize(serializer&) -> void;
 
   struct IO {
-    uint24 dramAddress;
-    uint32 readAddress;
-    uint32 writeAddress;
-     uint1 dmaBusy;
-     uint1 ioBusy;
-     uint1 readPending;
-     uint4 pchState;
-     uint4 dmaState;
-     uint1 dmaError;
-     uint1 interrupt;
+    n24 dramAddress;
+    n32 readAddress;
+    n32 writeAddress;
+    n1  dmaBusy;
+    n1  ioBusy;
+    n1  readPending;
+    n4  pchState;
+    n4  dmaState;
+    n1  dmaError;
+    n1  interrupt;
   } io;
 
   u64 resetStrobe;  //hack

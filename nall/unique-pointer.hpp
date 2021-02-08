@@ -84,8 +84,8 @@ struct unique_pointer<T[]> {
   auto operator()() -> T* { return pointer; }
   auto operator()() const -> T* { return pointer; }
 
-  auto operator[](uint offset) -> T& { return pointer[offset]; }
-  auto operator[](uint offset) const -> const T& { return pointer[offset]; }
+  auto operator[](u64 offset) -> T& { return pointer[offset]; }
+  auto operator[](u64 offset) const -> const T& { return pointer[offset]; }
 
   auto data() -> T* { return pointer; }
   auto data() const -> const T* { return pointer; }

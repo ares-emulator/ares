@@ -11,64 +11,64 @@ struct YM2612 : Thread {
 
   auto main() -> void;
   auto sample() -> void;
-  auto step(uint clocks) -> void;
+  auto step(u32 clocks) -> void;
 
   auto power(bool reset) -> void;
 
   //io.cpp
-  auto readStatus() -> uint8;
-  auto writeAddress(uint9 data) -> void;
-  auto writeData(uint8 data) -> void;
+  auto readStatus() -> n8;
+  auto writeAddress(n9 data) -> void;
+  auto writeData(n8 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 private:
   struct IO {
-    uint9 address = 0;
+    n9 address = 0;
   } io;
 
   struct LFO {
-    uint1  enable = 0;
-    uint3  rate = 0;
-    uint32 clock = 0;
-    uint32 divider = 0;
+    n1  enable = 0;
+    n3  rate = 0;
+    n32 clock = 0;
+    n32 divider = 0;
   } lfo;
 
   struct DAC {
-    uint1 enable = 0;
-    uint8 sample = 0x80;
+    n1 enable = 0;
+    n8 sample = 0x80;
   } dac;
 
   struct Envelope {
-    uint32 clock = 0;
-    uint32 divider = 0;
+    n32 clock = 0;
+    n32 divider = 0;
   } envelope;
 
   struct TimerA {
     //timer.cpp
     auto run() -> void;
 
-    uint1  enable = 0;
-    uint1  irq = 0;
-    uint1  line = 0;
-    uint10 period = 0;
-    uint10 counter = 0;
+    n1  enable = 0;
+    n1  irq = 0;
+    n1  line = 0;
+    n10 period = 0;
+    n10 counter = 0;
   } timerA;
 
   struct TimerB {
     //timer.cpp
     auto run() -> void;
 
-    uint1 enable = 0;
-    uint1 irq = 0;
-    uint1 line = 0;
-    uint8 period = 0;
-    uint8 counter = 0;
-    uint4 divider = 0;
+    n1 enable = 0;
+    n1 irq = 0;
+    n1 line = 0;
+    n8 period = 0;
+    n8 counter = 0;
+    n4 divider = 0;
   } timerB;
 
-  enum : uint { Attack, Decay, Sustain, Release };
+  enum : u32 { Attack, Decay, Sustain, Release };
 
   struct Channel {
     //channel.cpp
@@ -77,15 +77,15 @@ private:
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    uint1 leftEnable = 1;
-    uint1 rightEnable = 1;
+    n1 leftEnable = 1;
+    n1 rightEnable = 1;
 
-    uint3 algorithm = 0;
-    uint3 feedback = 0;
-    uint3 vibrato = 0;
-    uint2 tremolo = 0;
+    n3 algorithm = 0;
+    n3 feedback = 0;
+    n3 vibrato = 0;
+    n2 tremolo = 0;
 
-    uint2 mode = 0;
+    n2 mode = 0;
 
     struct Operator {
       Channel& channel;
@@ -105,73 +105,73 @@ private:
       //serialization.cpp
       auto serialize(serializer&) -> void;
 
-      uint1 keyOn = 0;
-      uint1 lfoEnable = 0;
-      uint3 detune = 0;
-      uint4 multiple = 0;
-      uint7 totalLevel = 0;
+      n1 keyOn = 0;
+      n1 lfoEnable = 0;
+      n3 detune = 0;
+      n4 multiple = 0;
+      n7 totalLevel = 0;
 
-      uint16 outputLevel = 0x1fff;
-      int16  output = 0;
-      int16  prior = 0;
+      n16 outputLevel = 0x1fff;
+      i16 output = 0;
+      i16 prior = 0;
 
       struct Pitch {
-        uint11 value = 0;
-        uint11 reload = 0;
-        uint11 latch = 0;
+        n11 value = 0;
+        n11 reload = 0;
+        n11 latch = 0;
       } pitch;
 
       struct Octave {
-        uint3 value = 0;
-        uint3 reload = 0;
-        uint3 latch = 0;
+        n3 value = 0;
+        n3 reload = 0;
+        n3 latch = 0;
       } octave;
 
       struct Phase {
-        uint20 value = 0;
-        uint20 delta = 0;
+        n20 value = 0;
+        n20 delta = 0;
       } phase;
 
       struct Envelope {
-        uint   state = Release;
-        int    rate = 0;
-        int    divider = 11;
-        uint32 steps = 0;
-        uint10 value = 0x3ff;
+        u32 state = Release;
+        s32 rate = 0;
+        s32 divider = 11;
+        n32 steps = 0;
+        n10 value = 0x3ff;
 
-        uint2  keyScale = 0;
-        uint5  attackRate = 0;
-        uint5  decayRate = 0;
-        uint5  sustainRate = 0;
-        uint4  sustainLevel = 0;
-        uint5  releaseRate = 1;
+        n2  keyScale = 0;
+        n5  attackRate = 0;
+        n5  decayRate = 0;
+        n5  sustainRate = 0;
+        n4  sustainLevel = 0;
+        n5  releaseRate = 1;
       } envelope;
 
       struct SSG {
-        uint1 enable = 0;
-        uint1 attack = 0;
-        uint1 alternate = 0;
-        uint1 hold = 0;
-        uint1 invert = 0;
+        n1 enable = 0;
+        n1 attack = 0;
+        n1 alternate = 0;
+        n1 hold = 0;
+        n1 invert = 0;
       } ssg;
     } operators[4]{*this, *this, *this, *this};
 
-    auto operator[](uint2 index) -> Operator& { return operators[index]; }
+    auto operator[](n2 index) -> Operator& { return operators[index]; }
   } channels[6];
 
-  uint16 sine[0x400];
-  int16  pow2[0x200];
+  n16 sine[0x400];
+  i16 pow2[0x200];
 
   //constants.cpp
   struct EnvelopeRate {
-    uint32_t divider;
-    uint32_t steps[4];
+    u32 divider;
+    u32 steps[4];
   };
 
-  static const uint8_t lfoDividers[8];
-  static const uint8_t vibratos[8][16];
-  static const uint8_t tremolos[4];
-  static const uint8_t detunes[3][8];
+  static const u8 lfoDividers[8];
+  static const u8 vibratos[8][16];
+  static const u8 tremolos[4];
+  static const u8 detunes[3][8];
   static const EnvelopeRate envelopeRates[16];
 };
 

@@ -11,10 +11,10 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 Cartridge::Cartridge() {
-  mrom.data = new uint8[mrom.size = 32 * 1024 * 1024];
-  sram.data = new uint8[sram.size = 32 * 1024];
-  eeprom.data = new uint8[eeprom.size = 8 * 1024];
-  flash.data = new uint8[flash.size = 128 * 1024];
+  mrom.data = new n8[mrom.size = 32 * 1024 * 1024];
+  sram.data = new n8[sram.size = 32 * 1024];
+  eeprom.data = new n8[eeprom.size = 8 * 1024];
+  flash.data = new n8[flash.size = 128 * 1024];
 }
 
 Cartridge::~Cartridge() {
@@ -99,10 +99,10 @@ auto Cartridge::connect() -> void {
 
 auto Cartridge::disconnect() -> void {
   if(!node) return;
-  memory::fill<uint8>(mrom.data, mrom.size);
-  memory::fill<uint8>(sram.data, sram.size);
-  memory::fill<uint8>(eeprom.data, eeprom.size);
-  memory::fill<uint8>(flash.data, flash.size);
+  memory::fill<u8>(mrom.data, mrom.size);
+  memory::fill<u8>(sram.data, sram.size);
+  memory::fill<u8>(eeprom.data, eeprom.size);
+  memory::fill<u8>(flash.data, flash.size);
   has = {};
   node = {};
 }
@@ -139,7 +139,7 @@ auto Cartridge::power() -> void {
 
 #define RAM_ANALYZE
 
-auto Cartridge::read(uint mode, uint32 address) -> uint32 {
+auto Cartridge::read(u32 mode, n32 address) -> n32 {
   if(address < 0x0e00'0000) {
     if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.read();
     return mrom.read(mode, address);
@@ -150,7 +150,7 @@ auto Cartridge::read(uint mode, uint32 address) -> uint32 {
   }
 }
 
-auto Cartridge::write(uint mode, uint32 address, uint32 word) -> void {
+auto Cartridge::write(u32 mode, n32 address, n32 word) -> void {
   if(address < 0x0e00'0000) {
     if(has.eeprom && (address & eeprom.mask) == eeprom.test) return eeprom.write(word & 1);
     return mrom.write(mode, address, word);

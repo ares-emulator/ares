@@ -2,23 +2,23 @@
 
 namespace nall {
 
-template<uint Precision> struct Real {
+template<u32 Precision> struct Real {
   static_assert(Precision == 32 || Precision == 64);
-  static constexpr auto bits() -> uint { return Precision; }
+  static constexpr auto bits() -> u32 { return Precision; }
   using ftype =
-    conditional_t<bits() == 32, float32_t,
-    conditional_t<bits() == 64, float64_t,
+    conditional_t<bits() == 32, f32,
+    conditional_t<bits() == 64, f64,
     void>>;
 
   Real() : data(0.0) {}
-  template<int Bits> Real(Real<Bits> value) : data((ftype)value) {}
+  template<s32 Bits> Real(Real<Bits> value) : data((ftype)value) {}
   template<typename T> Real(const T& value) : data((ftype)value) {}
   explicit Real(const char* value) : data((ftype)toReal(value)) {}
 
   operator ftype() const { return data; }
 
-  auto operator++(int) { auto value = *this; ++data; return value; }
-  auto operator--(int) { auto value = *this; --data; return value; }
+  auto operator++(s32) { auto value = *this; ++data; return value; }
+  auto operator--(s32) { auto value = *this; --data; return value; }
 
   auto& operator++() { data++; return *this; }
   auto& operator--() { data--; return *this; }

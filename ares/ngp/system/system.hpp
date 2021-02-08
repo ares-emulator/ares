@@ -26,12 +26,12 @@ struct System {
     bool rightLatch = 0;
   } controls;
 
-  enum class Model : uint { NeoGeoPocket, NeoGeoPocketColor };
-  Memory::Readable<uint8> bios;
+  enum class Model : u32 { NeoGeoPocket, NeoGeoPocketColor };
+  Memory::Readable<n8> bios;
 
-  auto name() const -> string { return node->name(); }
+  auto name() const -> string { return information.name; }
   auto model() const -> Model { return information.model; }
-  auto frequency() const -> double { return 6'144'000; }
+  auto frequency() const -> f64 { return 6'144'000; }
 
   //system.cpp
   auto game() -> string;
@@ -48,6 +48,7 @@ struct System {
 
 private:
   struct Information {
+    string name;
     Model model = Model::NeoGeoPocket;
   } information;
 

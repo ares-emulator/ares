@@ -3,69 +3,69 @@
 namespace nall {
 
 template<typename T, typename... P> struct variant_size {
-  static constexpr uint size = max(sizeof(T), variant_size<P...>::size);
+  static constexpr u32 size = max(sizeof(T), variant_size<P...>::size);
 };
 
 template<typename T> struct variant_size<T> {
-  static constexpr uint size = sizeof(T);
+  static constexpr u32 size = sizeof(T);
 };
 
-template<uint Index, typename F, typename T, typename... P> struct variant_index {
-  static constexpr uint index = is_same_v<F, T> ? Index : variant_index<Index + 1, F, P...>::index;
+template<u32 Index, typename F, typename T, typename... P> struct variant_index {
+  static constexpr u32 index = is_same_v<F, T> ? Index : variant_index<Index + 1, F, P...>::index;
 };
 
-template<uint Index, typename F, typename T> struct variant_index<Index, F, T> {
-  static constexpr uint index = is_same_v<F, T> ? Index : 0;
+template<u32 Index, typename F, typename T> struct variant_index<Index, F, T> {
+  static constexpr u32 index = is_same_v<F, T> ? Index : 0;
 };
 
 template<typename T, typename... P> struct variant_copy {
-  constexpr variant_copy(uint index, uint assigned, void* target, void* source) {
+  constexpr variant_copy(u32 index, u32 assigned, void* target, void* source) {
     if(index == assigned) new(target) T(*((T*)source));
     else variant_copy<P...>(index + 1, assigned, target, source);
   }
 };
 
 template<typename T> struct variant_copy<T> {
-  constexpr variant_copy(uint index, uint assigned, void* target, void* source) {
+  constexpr variant_copy(u32 index, u32 assigned, void* target, void* source) {
     if(index == assigned) new(target) T(*((T*)source));
   }
 };
 
 template<typename T, typename... P> struct variant_move {
-  constexpr variant_move(uint index, uint assigned, void* target, void* source) {
+  constexpr variant_move(u32 index, u32 assigned, void* target, void* source) {
     if(index == assigned) new(target) T(move(*((T*)source)));
     else variant_move<P...>(index + 1, assigned, target, source);
   }
 };
 
 template<typename T> struct variant_move<T> {
-  constexpr variant_move(uint index, uint assigned, void* target, void* source) {
+  constexpr variant_move(u32 index, u32 assigned, void* target, void* source) {
     if(index == assigned) new(target) T(move(*((T*)source)));
   }
 };
 
 template<typename T, typename... P> struct variant_destruct {
-  constexpr variant_destruct(uint index, uint assigned, void* data) {
+  constexpr variant_destruct(u32 index, u32 assigned, void* data) {
     if(index == assigned) ((T*)data)->~T();
     else variant_destruct<P...>(index + 1, assigned, data);
   }
 };
 
 template<typename T> struct variant_destruct<T> {
-  constexpr variant_destruct(uint index, uint assigned, void* data) {
+  constexpr variant_destruct(u32 index, u32 assigned, void* data) {
     if(index == assigned) ((T*)data)->~T();
   }
 };
 
 template<typename F, typename T, typename... P> struct variant_equals {
-  constexpr auto operator()(uint index, uint assigned) const -> bool {
+  constexpr auto operator()(u32 index, u32 assigned) const -> bool {
     if(index == assigned) return is_same_v<F, T>;
     return variant_equals<F, P...>()(index + 1, assigned);
   }
 };
 
 template<typename F, typename T> struct variant_equals<F, T> {
-  constexpr auto operator()(uint index, uint assigned) const -> bool {
+  constexpr auto operator()(u32 index, u32 assigned) const -> bool {
     if(index == assigned) return is_same_v<F, T>;
     return false;
   }
@@ -142,7 +142,7 @@ template<typename... P> struct variant final {  //final as destructor is not vir
 
 private:
   alignas(P...) char data[variant_size<P...>::size];
-  uint assigned;
+  u32 assigned;
 };
 
 }

@@ -8,8 +8,8 @@ inline auto CPU::DMA::run() -> bool {
 }
 
 auto CPU::DMA::transfer() -> void {
-  uint seek = size ? 4 : 2;
-  uint mode = size ? Word : Half;
+  u32 seek = size ? 4 : 2;
+  u32 mode = size ? Word : Half;
   mode |= latch.length() == length() ? Nonsequential : Sequential;
 
   if(mode & Nonsequential) {
@@ -24,7 +24,7 @@ auto CPU::DMA::transfer() -> void {
   if(latch.source() < 0x0200'0000) {
     cpu.idle();  //cannot access BIOS
   } else {
-    uint32 addr = latch.source();
+    n32 addr = latch.source();
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
     cpu.dmabus.data = cpu.get(mode, addr);
@@ -34,7 +34,7 @@ auto CPU::DMA::transfer() -> void {
   if(latch.target() < 0x0200'0000) {
     cpu.idle();  //cannot access BIOS
   } else {
-    uint32 addr = latch.target();
+    n32 addr = latch.target();
     if(mode & Word) addr &= ~3;
     if(mode & Half) addr &= ~1;
     cpu.set(mode, addr, cpu.dmabus.data);

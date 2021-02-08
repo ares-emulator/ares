@@ -10,7 +10,7 @@ inline image::image(image&& source) {
   operator=(forward<image>(source));
 }
 
-inline image::image(bool endian, uint depth, uint64_t alphaMask, uint64_t redMask, uint64_t greenMask, uint64_t blueMask) {
+inline image::image(bool endian, u32 depth, u64 alphaMask, u64 redMask, u64 greenMask, u64 blueMask) {
   _endian = endian;
   _depth  = depth;
 
@@ -24,17 +24,17 @@ inline image::image(const string& filename) {
   load(filename);
 }
 
-inline image::image(const void* data_, uint size) {
-  auto data = (const uint8_t*)data_;
+inline image::image(const void* data_, u32 size) {
+  auto data = (const u8*)data_;
   if(size < 4);
   else if(data[0] == 'B' && data[1] == 'M') loadBMP(data, size);
   else if(data[1] == 'P' && data[2] == 'N' && data[3] == 'G') loadPNG(data, size);
 }
 
-inline image::image(const vector<uint8_t>& buffer) : image(buffer.data(), buffer.size()) {
+inline image::image(const vector<u8>& buffer) : image(buffer.data(), buffer.size()) {
 }
 
-template<uint Size> inline image::image(const uint8_t (&Name)[Size]) : image(Name, Size) {
+template<u32 Size> inline image::image(const u8 (&Name)[Size]) : image(Name, Size) {
 }
 
 inline image::image() {
@@ -107,24 +107,24 @@ inline auto image::operator!=(const image& source) const -> bool {
   return !operator==(source);
 }
 
-inline auto image::read(const uint8_t* data) const -> uint64_t {
-  uint64_t result = 0;
+inline auto image::read(const u8* data) const -> u64 {
+  u64 result = 0;
   if(_endian == 0) {
-    for(int n = stride() - 1; n >= 0; n--) result = (result << 8) | data[n];
+    for(s32 n = stride() - 1; n >= 0; n--) result = (result << 8) | data[n];
   } else {
-    for(int n = 0; n < stride(); n++) result = (result << 8) | data[n];
+    for(s32 n = 0; n < stride(); n++) result = (result << 8) | data[n];
   }
   return result;
 }
 
-inline auto image::write(uint8_t* data, uint64_t value) const -> void {
+inline auto image::write(u8* data, u64 value) const -> void {
   if(_endian == 0) {
-    for(int n = 0; n < stride(); n++) {
+    for(s32 n = 0; n < stride(); n++) {
       data[n] = value;
       value >>= 8;
     }
   } else {
-    for(int n = stride() - 1; n >= 0; n--) {
+    for(s32 n = stride() - 1; n >= 0; n--) {
       data[n] = value;
       value >>= 8;
     }
@@ -143,16 +143,16 @@ inline auto image::load(const string& filename) -> bool {
 }
 
 //assumes image and data are in the same format; pitch is adapted to image
-inline auto image::copy(const void* data, uint pitch, uint width, uint height) -> void {
+inline auto image::copy(const void* data, u32 pitch, u32 width, u32 height) -> void {
   allocate(width, height);
-  for(uint y : range(height)) {
-    auto input = (const uint8_t*)data + y * pitch;
-    auto output = (uint8_t*)_data + y * this->pitch();
+  for(u32 y : range(height)) {
+    auto input = (const u8*)data + y * pitch;
+    auto output = (u8*)_data + y * this->pitch();
     memory::copy(output, input, width * stride());
   }
 }
 
-inline auto image::allocate(uint width, uint height) -> void {
+inline auto image::allocate(u32 width, u32 height) -> void {
   if(_data && _width == width && _height == height) return;
   free();
   _width = width;
@@ -161,11 +161,11 @@ inline auto image::allocate(uint width, uint height) -> void {
 }
 
 //private
-inline auto image::allocate(uint width, uint height, uint stride) -> uint8_t* {
+inline auto image::allocate(u32 width, u32 height, u32 stride) -> u8* {
   //allocate 1x1 larger than requested; so that linear interpolation does not require bounds-checking
-  uint size = width * height * stride;
-  uint padding = width * stride + stride;
-  auto data = new uint8_t[size + padding];
+  u32 size = width * height * stride;
+  u32 padding = width * stride + stride;
+  auto data = new u8[size + padding];
   memory::fill(data + size, padding);
   return data;
 }

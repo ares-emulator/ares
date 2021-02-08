@@ -1,4 +1,4 @@
-auto APU::readIO(uint cycle, uint16 address, uint8 data) -> uint8 {
+auto APU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
   if(address < 0xff10 || address > 0xff3f) return data;
 
   //NR10
@@ -163,7 +163,7 @@ auto APU::readIO(uint cycle, uint16 address, uint8 data) -> uint8 {
   return data;
 }
 
-auto APU::writeIO(uint cycle, uint16 address, uint8 data) -> void {
+auto APU::writeIO(u32 cycle, n16 address, n8 data) -> void {
   if(address < 0xff10 || address > 0xff3f) return;
 
   if(!sequencer.enable) {

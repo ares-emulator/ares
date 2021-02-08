@@ -2,7 +2,7 @@
 
 struct KonamiSCC : Interface {
   using Interface::Interface;
-  Memory::Readable<uint8> rom;
+  Memory::Readable<n8> rom;
   Node::Audio::Stream stream;
 
   auto load(Markup::Node document) -> void override {
@@ -22,7 +22,7 @@ struct KonamiSCC : Interface {
   }
 
   auto main() -> void override {
-    int sample = 256 * 5;
+    s32 sample = 256 * 5;
 
     for(auto& voice : voices) {
       if(voice.frequency <= 8) continue;  //voice is halted when frequency < 9
@@ -39,16 +39,16 @@ struct KonamiSCC : Interface {
     cartridge.step(16);
   }
 
-  auto read(uint16 address, uint8 data) -> uint8 override {
-    if(address >= 0x4000 && address <= 0x5fff) data = rom.read(bank[0] << 13 | (uint13)address);
-    if(address >= 0x6000 && address <= 0x7fff) data = rom.read(bank[1] << 13 | (uint13)address);
-    if(address >= 0x8000 && address <= 0x9fff) data = rom.read(bank[2] << 13 | (uint13)address);
-    if(address >= 0xa000 && address <= 0xbfff) data = rom.read(bank[3] << 13 | (uint13)address);
+  auto read(n16 address, n8 data) -> n8 override {
+    if(address >= 0x4000 && address <= 0x5fff) data = rom.read(bank[0] << 13 | (n13)address);
+    if(address >= 0x6000 && address <= 0x7fff) data = rom.read(bank[1] << 13 | (n13)address);
+    if(address >= 0x8000 && address <= 0x9fff) data = rom.read(bank[2] << 13 | (n13)address);
+    if(address >= 0xa000 && address <= 0xbfff) data = rom.read(bank[3] << 13 | (n13)address);
 
-    if(address >= 0xc000 && address <= 0xdfff) data = rom.read(bank[0] << 13 | (uint13)address);
-    if(address >= 0xe000 && address <= 0xffff) data = rom.read(bank[1] << 13 | (uint13)address);
-    if(address >= 0x0000 && address <= 0x1fff) data = rom.read(bank[2] << 13 | (uint13)address);
-    if(address >= 0x2000 && address <= 0x3fff) data = rom.read(bank[3] << 13 | (uint13)address);
+    if(address >= 0xc000 && address <= 0xdfff) data = rom.read(bank[0] << 13 | (n13)address);
+    if(address >= 0xe000 && address <= 0xffff) data = rom.read(bank[1] << 13 | (n13)address);
+    if(address >= 0x0000 && address <= 0x1fff) data = rom.read(bank[2] << 13 | (n13)address);
+    if(address >= 0x2000 && address <= 0x3fff) data = rom.read(bank[3] << 13 | (n13)address);
 
     address.bit(8) = 0;  //SCC ignores A8
 
@@ -84,7 +84,7 @@ struct KonamiSCC : Interface {
     return data;
   }
 
-  auto write(uint16 address, uint8 data) -> void override {
+  auto write(n16 address, n8 data) -> void override {
     if(address >= 0x5000 && address <= 0x57ff) bank[0] = data;
     if(address >= 0x7000 && address <= 0x77ff) bank[1] = data;
     if(address >= 0x9000 && address <= 0x97ff) bank[2] = data;
@@ -214,8 +214,8 @@ struct KonamiSCC : Interface {
 
     mixer.resize(512 * 5);
     auto table = mixer.data() + 256 * 5;
-    for(int n : range(256 * 5)) {
-      int16 volume = n * 8 * 16 / 5;
+    for(s32 n : range(256 * 5)) {
+      s16 volume = n * 8 * 16 / 5;
       table[+n] = +volume;
       table[-n] = -volume;
     }
@@ -234,19 +234,19 @@ struct KonamiSCC : Interface {
     s(test);
   }
 
-  uint8 bank[4];
+  n8 bank[4];
 
   struct Voice {
-    uint16 clock;
-    uint12 frequency;
-     uint5 counter;
-     uint4 volume;
-     uint1 key;
-      int8 wave[32];
+    n16 clock;
+    n12 frequency;
+    n5  counter;
+    n4  volume;
+    n1  key;
+    i8  wave[32];
   } voices[5];
 
-  uint8 test;
+  n8 test;
 
 //unserialized:
-  vector<int16> mixer;
+  vector<i16> mixer;
 };

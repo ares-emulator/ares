@@ -27,37 +27,37 @@ struct ODBC {
       return *this;
     }
 
-    auto columns() -> unsigned {
+    auto columns() -> u32 {
       SQLSMALLINT columns = 0;
       if(statement()) SQLNumResultCols(statement(), &columns);
       return columns;
     }
 
-    auto integer(unsigned column) -> int64_t {
-      if(auto value = _values(column)) return value.get<int64_t>(0);
-      int64_t value = 0;
+    auto integer(u32 column) -> s64 {
+      if(auto value = _values(column)) return value.get<s64>(0);
+      s64 value = 0;
       SQLGetData(statement(), 1 + column, SQL_C_SBIGINT, &value, 0, nullptr);
-      _values(column) = (int64_t)value;
+      _values(column) = (s64)value;
       return value;
     }
 
-    auto natural(unsigned column) -> uint64_t {
-      if(auto value = _values(column)) return value.get<uint64_t>(0);
-      uint64_t value = 0;
+    auto natural(u32 column) -> u64 {
+      if(auto value = _values(column)) return value.get<u64>(0);
+      u64 value = 0;
       SQLGetData(statement(), 1 + column, SQL_C_UBIGINT, &value, 0, nullptr);
-      _values(column) = (uint64_t)value;
+      _values(column) = (u64)value;
       return value;
     }
 
-    auto real(unsigned column) -> double {
-      if(auto value = _values(column)) return value.get<double>(0.0);
-      double value = 0.0;
+    auto real(u32 column) -> double {
+      if(auto value = _values(column)) return value.get<f64>(0.0);
+      f64 value = 0.0;
       SQLGetData(statement(), 1 + column, SQL_C_DOUBLE, &value, 0, nullptr);
-      _values(column) = (double)value;
+      _values(column) = (f64)value;
       return value;
     }
 
-    auto text(unsigned column) -> string {
+    auto text(u32 column) -> string {
       if(auto value = _values(column)) return value.get<string>({});
       string value;
       value.resize(65535);
@@ -68,28 +68,28 @@ struct ODBC {
       return value;
     }
 
-    auto data(unsigned column) -> vector<uint8_t> {
-      if(auto value = _values(column)) return value.get<vector<uint8_t>>({});
-      vector<uint8_t> value;
+    auto data(u32 column) -> vector<u8> {
+      if(auto value = _values(column)) return value.get<vector<u8>>({});
+      vector<u8> value;
       value.resize(65535);
       SQLLEN size = 0;
       SQLGetData(statement(), 1 + column, SQL_C_CHAR, value.data(), value.size(), &size);
       value.resize(size);
-      _values(column) = (vector<uint8_t>)value;
+      _values(column) = (vector<u8>)value;
       return value;
     }
 
-    auto integer() -> int64_t { return integer(_output++); }
-    auto natural() -> uint64_t { return natural(_output++); }
-    auto real() -> double { return real(_output++); }
+    auto integer() -> s64 { return integer(_output++); }
+    auto natural() -> u64 { return natural(_output++); }
+    auto real() -> f64 { return real(_output++); }
     auto text() -> string { return text(_output++); }
-    auto data() -> vector<uint8_t> { return data(_output++); }
+    auto data() -> vector<u8> { return data(_output++); }
 
   protected:
     virtual auto statement() -> SQLHANDLE { return _statement; }
 
     SQLHANDLE _statement = nullptr;
-    unsigned _output = 0;
+    u32 _output = 0;
     vector<any> _values;  //some ODBC drivers (eg MS-SQL) do not allow the same column to be read more than once
   };
 
@@ -129,23 +129,23 @@ struct ODBC {
     //if the bound paramters go out of scope before the query is executed, binding would reference dangling pointers
     //so to work around this, we cache all parameters inside Query until the query is executed
 
-    auto& bind(unsigned column, nullptr_t) { return _bindings.append({column, any{(nullptr_t)nullptr}}), *this; }
-    auto& bind(unsigned column, int32_t value) { return _bindings.append({column, any{(int32_t)value}}), *this; }
-    auto& bind(unsigned column, uint32_t value) { return _bindings.append({column, any{(uint32_t)value}}), *this; }
-    auto& bind(unsigned column, int64_t value) { return _bindings.append({column, any{(int64_t)value}}), *this; }
-    auto& bind(unsigned column, uint64_t value) { return _bindings.append({column, any{(uint64_t)value}}), *this; }
-    auto& bind(unsigned column, double value) { return _bindings.append({column, any{(double)value}}), *this; }
-    auto& bind(unsigned column, const string& value) { return _bindings.append({column, any{(string)value}}), *this; }
-    auto& bind(unsigned column, const vector<uint8_t>& value) { return _bindings.append({column, any{(vector<uint8_t>)value}}), *this; }
+    auto& bind(u32 column, nullptr_t) { return _bindings.append({column, any{(nullptr_t)nullptr}}), *this; }
+    auto& bind(u32 column, s32 value) { return _bindings.append({column, any{(s32)value}}), *this; }
+    auto& bind(u32 column, u32 value) { return _bindings.append({column, any{(u32)value}}), *this; }
+    auto& bind(u32 column, s64 value) { return _bindings.append({column, any{(s64)value}}), *this; }
+    auto& bind(u32 column, u64 value) { return _bindings.append({column, any{(u64)value}}), *this; }
+    auto& bind(u32 column, f64 value) { return _bindings.append({column, any{(f64)value}}), *this; }
+    auto& bind(u32 column, const string& value) { return _bindings.append({column, any{(string)value}}), *this; }
+    auto& bind(u32 column, const vector<u8>& value) { return _bindings.append({column, any{(vector<u8>)value}}), *this; }
 
     auto& bind(nullptr_t) { return bind(_input++, nullptr); }
-    auto& bind(int32_t value) { return bind(_input++, value); }
-    auto& bind(uint32_t value) { return bind(_input++, value); }
-    auto& bind(int64_t value) { return bind(_input++, value); }
-    auto& bind(uint64_t value) { return bind(_input++, value); }
-    auto& bind(double value) { return bind(_input++, value); }
+    auto& bind(s32 value) { return bind(_input++, value); }
+    auto& bind(u32 value) { return bind(_input++, value); }
+    auto& bind(s64 value) { return bind(_input++, value); }
+    auto& bind(u64 value) { return bind(_input++, value); }
+    auto& bind(f64 value) { return bind(_input++, value); }
     auto& bind(const string& value) { return bind(_input++, value); }
-    auto& bind(const vector<uint8_t>& value) { return bind(_input++, value); }
+    auto& bind(const vector<u8>& value) { return bind(_input++, value); }
 
     auto step() -> bool {
       if(!_stepped) {
@@ -153,22 +153,22 @@ struct ODBC {
           if(binding.value.is<nullptr_t>()) {
             SQLLEN length = SQL_NULL_DATA;
             SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_NUMERIC, SQL_NUMERIC, 0, 0, nullptr, 0, &length);
-          } else if(binding.value.is<int32_t>()) {
-            SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &binding.value.get<int32_t>(), 0, nullptr);
-          } else if(binding.value.is<uint32_t>()) {
-            SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &binding.value.get<uint32_t>(), 0, nullptr);
-          } else if(binding.value.is<int64_t>()) {
-            SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_SBIGINT, SQL_INTEGER, 0, 0, &binding.value.get<int64_t>(), 0, nullptr);
-          } else if(binding.value.is<uint64_t>()) {
-            SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_UBIGINT, SQL_INTEGER, 0, 0, &binding.value.get<uint64_t>(), 0, nullptr);
-          } else if(binding.value.is<double>()) {
-            SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_DOUBLE, SQL_DOUBLE, 0, 0, &binding.value.get<double>(), 0, nullptr);
+          } else if(binding.value.is<s32>()) {
+            SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, 0, 0, &binding.value.get<s32>(), 0, nullptr);
+          } else if(binding.value.is<u32>()) {
+            SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, &binding.value.get<u32>(), 0, nullptr);
+          } else if(binding.value.is<s64>()) {
+            SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_SBIGINT, SQL_INTEGER, 0, 0, &binding.value.get<s64>(), 0, nullptr);
+          } else if(binding.value.is<u64>()) {
+            SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_UBIGINT, SQL_INTEGER, 0, 0, &binding.value.get<u64>(), 0, nullptr);
+          } else if(binding.value.is<f64>()) {
+            SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_DOUBLE, SQL_DOUBLE, 0, 0, &binding.value.get<f64>(), 0, nullptr);
           } else if(binding.value.is<string>()) {
             auto& value = binding.value.get<string>();
             SQLLEN length = SQL_NTS;
             SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, value.size(), 0, (SQLPOINTER)value.data(), 0, &length);
-          } else if(binding.value.is<vector<uint8_t>>()) {
-            auto& value = binding.value.get<vector<uint8_t>>();
+          } else if(binding.value.is<vector<u8>>()) {
+            auto& value = binding.value.get<vector<u8>>();
             SQLLEN length = value.size();
             SQLBindParameter(_statement, 1 + binding.column, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARBINARY, value.size(), 0, (SQLPOINTER)value.data(), 0, &length);
           }
@@ -210,13 +210,13 @@ struct ODBC {
     }
 
     struct Binding {
-      unsigned column;
+      u32 column;
       any value;
     };
     vector<Binding> _bindings;
 
     SQLRETURN _result = SQL_SUCCESS;
-    unsigned _input = 0;
+    u32 _input = 0;
     bool _stepped = false;
   };
 

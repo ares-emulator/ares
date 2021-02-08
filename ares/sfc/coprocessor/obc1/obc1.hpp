@@ -2,21 +2,21 @@ struct OBC1 {
   auto unload() -> void;
   auto power() -> void;
 
-  auto read(uint24 address, uint8 data) -> uint8;
-  auto write(uint24 address, uint8 data) -> void;
+  auto read(n24 address, n8 data) -> n8;
+  auto write(n24 address, n8 data) -> void;
 
   auto serialize(serializer&) -> void;
 
   WritableMemory ram;
 
 private:
-  auto ramRead(uint address) -> uint8;
-  auto ramWrite(uint address, uint8 data) -> void;
+  auto ramRead(n13 address) -> n8;
+  auto ramWrite(n13 address, n8 data) -> void;
 
   struct {
-    uint16 address;
-    uint16 baseptr;
-    uint16 shift;
+    n16 address;
+    n16 baseptr;
+    n16 shift;
   } status;
 };
 

@@ -56,19 +56,19 @@ auto Cartridge::power() -> void {
   board->power();
 }
 
-auto Cartridge::read(uint1 upper, uint1 lower, uint22 address, uint16 data) -> uint16 {
+auto Cartridge::read(n1 upper, n1 lower, n22 address, n16 data) -> n16 {
   return board->read(upper, lower, address, data);
 }
 
-auto Cartridge::write(uint1 upper, uint1 lower, uint22 address, uint16 data) -> void {
+auto Cartridge::write(n1 upper, n1 lower, n22 address, n16 data) -> void {
   return board->write(upper, lower, address, data);
 }
 
-auto Cartridge::readIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> uint16 {
+auto Cartridge::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   return board->readIO(upper, lower, address, data);
 }
 
-auto Cartridge::writeIO(uint1 upper, uint1 lower, uint24 address, uint16 data) -> void {
+auto Cartridge::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   return board->writeIO(upper, lower, address, data);
 }
 

@@ -102,16 +102,6 @@ auto Video::setShader(string shader) -> bool {
 
 //
 
-auto Video::acquireContext() -> bool {
-  lock_guard<recursive_mutex> lock(mutex);
-  return instance->acquireContext();
-}
-
-auto Video::releaseContext() -> bool {
-  lock_guard<recursive_mutex> lock(mutex);
-  return instance->releaseContext();
-}
-
 auto Video::focused() -> bool {
   lock_guard<recursive_mutex> lock(mutex);
   return instance->focused();

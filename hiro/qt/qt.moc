@@ -614,7 +614,7 @@ static const uint qt_meta_data_hiro__QtComboButton[] = {
 };
 
 static const char qt_meta_stringdata_hiro__QtComboButton[] = {
-    "hiro::QtComboButton\0onChange(int)\0"
+    "hiro::QtComboButton\0onChange(s32)\0"
     "offset\0\0"
 };
 
@@ -624,7 +624,7 @@ void hiro::QtComboButton::qt_static_metacall(QObject *_o, QMetaObject::Call _c, 
         Q_ASSERT(staticMetaObject.cast(_o));
         QtComboButton *_t = static_cast<QtComboButton *>(_o);
         switch (_id) {
-        case 0: _t->onChange((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 0: _t->onChange((*reinterpret_cast< s32(*)>(_a[1]))); break;
         default: ;
         }
     }
@@ -1260,7 +1260,7 @@ static const uint qt_meta_data_hiro__QtTabFrame[] = {
 };
 
 static const char qt_meta_stringdata_hiro__QtTabFrame[] = {
-    "hiro::QtTabFrame\0onChange(int)\0selection\0"
+    "hiro::QtTabFrame\0onChange(s32)\0selection\0"
     "\0"
 };
 
@@ -1270,7 +1270,7 @@ void hiro::QtTabFrame::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int
         Q_ASSERT(staticMetaObject.cast(_o));
         QtTabFrame *_t = static_cast<QtTabFrame *>(_o);
         switch (_id) {
-        case 0: _t->onChange((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 0: _t->onChange((*reinterpret_cast< s32(*)>(_a[1]))); break;
         default: ;
         }
     }
@@ -1338,9 +1338,9 @@ static const uint qt_meta_data_hiro__QtTableView[] = {
 };
 
 static const char qt_meta_stringdata_hiro__QtTableView[] = {
-    "hiro::QtTableView\0onActivate(QTreeWidgetItem*,int)\0"
+    "hiro::QtTableView\0onActivate(QTreeWidgetItem*,s32)\0"
     "item,column\0\0onChange()\0onContext()\0"
-    "onSort(int)\0column\0onToggle(QTreeWidgetItem*,int)\0"
+    "onSort(s32)\0column\0onToggle(QTreeWidgetItem*,s32)\0"
 };
 
 void hiro::QtTableView::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -1349,11 +1349,11 @@ void hiro::QtTableView::qt_static_metacall(QObject *_o, QMetaObject::Call _c, in
         Q_ASSERT(staticMetaObject.cast(_o));
         QtTableView *_t = static_cast<QtTableView *>(_o);
         switch (_id) {
-        case 0: _t->onActivate((*reinterpret_cast< QTreeWidgetItem*(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
+        case 0: _t->onActivate((*reinterpret_cast< QTreeWidgetItem*(*)>(_a[1])),(*reinterpret_cast< s32(*)>(_a[2]))); break;
         case 1: _t->onChange(); break;
         case 2: _t->onContext(); break;
-        case 3: _t->onSort((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 4: _t->onToggle((*reinterpret_cast< QTreeWidgetItem*(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
+        case 3: _t->onSort((*reinterpret_cast< s32(*)>(_a[1]))); break;
+        case 4: _t->onToggle((*reinterpret_cast< QTreeWidgetItem*(*)>(_a[1])),(*reinterpret_cast< s32(*)>(_a[2]))); break;
         default: ;
         }
     }

@@ -1,6 +1,6 @@
 struct NECDSP : uPD96050, Thread {
   Node::Object node;
-  uint Frequency = 0;
+  n32 Frequency = 0;
 
   struct Debugger {
     //debugger.cpp
@@ -20,13 +20,13 @@ struct NECDSP : uPD96050, Thread {
   auto power() -> void;
 
   //memory.cpp
-  auto read(uint24 address, uint8 data) -> uint8;
-  auto write(uint24 address, uint8 data) -> void;
+  auto read(n24 address, n8 data) -> n8;
+  auto write(n24 address, n8 data) -> void;
 
-  auto readRAM(uint24 address, uint8 data) -> uint8;
-  auto writeRAM(uint24 address, uint8 data) -> void;
+  auto readRAM(n24 address, n8 data) -> n8;
+  auto writeRAM(n24 address, n8 data) -> void;
 
-  auto firmware() const -> vector<uint8>;
+  auto firmware() const -> vector<n8>;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

@@ -45,8 +45,10 @@ namespace nall {
 }
 
 namespace std {
-  #if INTMAX_BITS >= 128
-  template<> struct is_signed<int128_t> : true_type {};
-  template<> struct is_unsigned<uint128_t> : true_type {};
+  #if defined(__SIZEOF_INT128__)
+  template<> struct is_integral<s128> : true_type {};
+  template<> struct is_integral<u128> : true_type {};
+  template<> struct is_signed<s128> : true_type {};
+  template<> struct is_unsigned<u128> : true_type {};
   #endif
 }

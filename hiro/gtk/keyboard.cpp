@@ -16,7 +16,7 @@ auto pKeyboard::poll() -> vector<bool> {
   return result;
 }
 
-auto pKeyboard::pressed(uint code) -> bool {
+auto pKeyboard::pressed(u32 code) -> bool {
   char state[256];
   #if defined(DISPLAY_XORG)
   XQueryKeymap(pApplication::state().display, state);
@@ -24,9 +24,9 @@ auto pKeyboard::pressed(uint code) -> bool {
   return _pressed(state, code);
 }
 
-auto pKeyboard::_pressed(const char* state, uint16_t code) -> bool {
-  uint8_t lo = code >> 0;
-  uint8_t hi = code >> 8;
+auto pKeyboard::_pressed(const char* state, u16 code) -> bool {
+  u8 lo = code >> 0;
+  u8 hi = code >> 8;
 
   #if defined(DISPLAY_WINDOWS)
   if(lo && GetAsyncKeyState(lo) & 0x8000) return true;
@@ -41,7 +41,7 @@ auto pKeyboard::_pressed(const char* state, uint16_t code) -> bool {
   return false;
 }
 
-auto pKeyboard::_translate(uint code) -> int {
+auto pKeyboard::_translate(u32 code) -> s32 {
   switch(code) {
   case GDK_KEY_Escape: return 0;
   case GDK_KEY_F1: return 0;
@@ -224,10 +224,10 @@ auto pKeyboard::_translate(uint code) -> int {
 }
 
 auto pKeyboard::initialize() -> void {
-  auto append = [](uint lo, uint hi = 0) {
+  auto append = [](u32 lo, u32 hi = 0) {
     #if defined(DISPLAY_XORG)
-    lo = lo ? (uint8_t)XKeysymToKeycode(pApplication::state().display, lo) : 0;
-    hi = hi ? (uint8_t)XKeysymToKeycode(pApplication::state().display, hi) : 0;
+    lo = lo ? (u8)XKeysymToKeycode(pApplication::state().display, lo) : 0;
+    hi = hi ? (u8)XKeysymToKeycode(pApplication::state().display, hi) : 0;
     #endif
     settings.keycodes.append(lo | (hi << 8));
   };

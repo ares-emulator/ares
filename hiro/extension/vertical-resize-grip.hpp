@@ -9,15 +9,15 @@ struct mVerticalResizeGrip : mCanvas {
 
   mVerticalResizeGrip();
   auto doActivate() const -> void;
-  auto doResize(int offset) const -> void;
+  auto doResize(s32 offset) const -> void;
   auto onActivate(const function<void ()>& callback) -> type&;
-  auto onResize(const function<void (int)>& callback) -> type&;
+  auto onResize(const function<void (s32)>& callback) -> type&;
 
 //private:
   struct State {
     function<void ()> onActivate;
-    function<void (int)> onResize;
-    int offset = 0;
+    function<void (s32)> onResize;
+    s32 offset = 0;
     Position origin;
     Timer timer;
   } state;

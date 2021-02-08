@@ -2,14 +2,14 @@
 
 namespace nall::Encode {
 
-inline auto Base64(const void* vdata, uint size, const string& format = "MIME") -> string {
+inline auto Base64(const void* vdata, u32 size, const string& format = "MIME") -> string {
   static bool initialized = false;
-  static char lookup[65] = {0};
+  static char lookup[65] = {};
   if(!initialized) {
     initialized = true;
-    for(uint n : range(26)) lookup[n +  0] = 'A' + n;
-    for(uint n : range(26)) lookup[n + 26] = 'a' + n;
-    for(uint n : range(10)) lookup[n + 52] = '0' + n;
+    for(u32 n : range(26)) lookup[n +  0] = 'A' + n;
+    for(u32 n : range(26)) lookup[n + 26] = 'a' + n;
+    for(u32 n : range(10)) lookup[n + 52] = '0' + n;
   }
 
   if(format == "MIME") {
@@ -22,11 +22,11 @@ inline auto Base64(const void* vdata, uint size, const string& format = "MIME") 
     lookup[64] = 0;
   } else return "";
 
-  auto data = (const uint8_t*)vdata;
-  uint overflow = (3 - (size % 3)) % 3;  //bytes to round to nearest multiple of 3
+  auto data = (const u8*)vdata;
+  u32 overflow = (3 - (size % 3)) % 3;  //bytes to round to nearest multiple of 3
   string result;
-  uint8_t buffer;
-  for(uint n : range(size)) {
+  u8 buffer;
+  for(u32 n : range(size)) {
     switch(n % 3) {
     case 0:
       buffer = data[n] >> 2;
@@ -57,7 +57,7 @@ inline auto Base64(const void* vdata, uint size, const string& format = "MIME") 
   return result;
 }
 
-inline auto Base64(const vector<uint8_t>& buffer, const string& format = "MIME") -> string {
+inline auto Base64(const vector<u8>& buffer, const string& format = "MIME") -> string {
   return Base64(buffer.data(), buffer.size(), format);
 }
 

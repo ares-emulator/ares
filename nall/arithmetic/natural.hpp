@@ -1,4 +1,4 @@
-#define ConcatenateType(Size) uint##Size##_t
+#define ConcatenateType(Size) u##Size
 #define DeclareType(Size) ConcatenateType(Size)
 
 #define Pair DeclareType(PairBits)
@@ -28,8 +28,8 @@ struct Pair {
   auto operator++() -> Pair& { lo++; hi += lo == 0; return *this; }
   auto operator--() -> Pair& { hi -= lo == 0; lo--; return *this; }
 
-  auto operator++(int) -> Pair { Pair r = *this; lo++; hi += lo == 0; return r; }
-  auto operator--(int) -> Pair { Pair r = *this; hi -= lo == 0; lo--; return r; }
+  auto operator++(s32) -> Pair { Pair r = *this; lo++; hi += lo == 0; return r; }
+  auto operator--(s32) -> Pair { Pair r = *this; hi -= lo == 0; lo--; return r; }
 
   auto operator* (const Pair& rhs) const -> Pair { return mul(*this, rhs); }
   auto operator/ (const Pair& rhs) const -> Pair { Pair q, r; div(*this, rhs, q, r); return q; }
@@ -83,7 +83,7 @@ private:
 
   friend auto upper(const Pair&) -> Type;
   friend auto lower(const Pair&) -> Type;
-  friend auto bits(Pair) -> uint;
+  friend auto bits(Pair) -> u32;
   friend auto square(const Pair&) -> Pair;
   friend auto square(const Pair&, Pair&, Pair&) -> void;
   friend auto mul(const Pair&, const Pair&) -> Pair;
@@ -153,13 +153,13 @@ template<typename T> alwaysinline auto _get(const Pair& lhs, T& rhs) -> enable_i
 alwaysinline auto upper(const Pair& value) -> Type { return value.hi; }
 alwaysinline auto lower(const Pair& value) -> Type { return value.lo; }
 
-alwaysinline auto bits(Pair value) -> uint {
+alwaysinline auto bits(Pair value) -> u32 {
   if(value.hi) {
-    uint bits = TypeBits;
+    u32 bits = TypeBits;
     while(value.hi) value.hi >>= 1, bits++;
     return bits;
   } else {
-    uint bits = 0;
+    u32 bits = 0;
     while(value.lo) value.lo >>= 1, bits++;
     return bits;
   }
@@ -252,7 +252,7 @@ alwaysinline auto div(const Pair& lhs, const Pair& rhs, Pair& quotient, Pair& re
 
 template<typename T> alwaysinline auto shl(const Pair& lhs, const T& rhs) -> Pair {
   if(!rhs) return lhs;
-  auto shift = (uint)rhs;
+  auto shift = (u32)rhs;
   if(shift < TypeBits) {
     return {lhs.hi << shift | lhs.lo >> (TypeBits - shift), lhs.lo << shift};
   } else {
@@ -262,7 +262,7 @@ template<typename T> alwaysinline auto shl(const Pair& lhs, const T& rhs) -> Pai
 
 template<typename T> alwaysinline auto shr(const Pair& lhs, const T& rhs) -> Pair {
   if(!rhs) return lhs;
-  auto shift = (uint)rhs;
+  auto shift = (u32)rhs;
   if(shift < TypeBits) {
     return {lhs.hi >> shift, lhs.hi << (TypeBits - shift) | lhs.lo >> shift};
   } else {
@@ -323,13 +323,13 @@ template<> struct stringify<Pair> {
     } while(source);
     _size = p - _output;
     *p = 0;
-    for(int x = _size - 1, y = 0; x >= 0 && y < _size; x--, y++) _data[x] = _output[y];
+    for(s32 x = _size - 1, y = 0; x >= 0 && y < _size; x--, y++) _data[x] = _output[y];
   }
 
   auto data() const -> const char* { return _data; }
-  auto size() const -> uint { return _size; }
+  auto size() const -> u32 { return _size; }
   char _data[1 + sizeof(Pair) * 3];
-  uint _size;
+  u32  _size;
 };
 
 }

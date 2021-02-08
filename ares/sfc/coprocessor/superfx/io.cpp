@@ -1,4 +1,4 @@
-auto SuperFX::readIO(uint24 address, uint8) -> uint8 {
+auto SuperFX::readIO(n24 address, n8) -> n8 {
   cpu.synchronize(*this);
   address = 0x3000 | address.bit(0,9);
 
@@ -16,7 +16,7 @@ auto SuperFX::readIO(uint24 address, uint8) -> uint8 {
   }
 
   case 0x3031: {
-    uint8 r = regs.sfr >> 8;
+    n8 r = regs.sfr >> 8;
     regs.sfr.irq = 0;
     cpu.irq(0);
     return r;
@@ -50,7 +50,7 @@ auto SuperFX::readIO(uint24 address, uint8) -> uint8 {
   return 0x00;
 }
 
-auto SuperFX::writeIO(uint24 address, uint8 data) -> void {
+auto SuperFX::writeIO(n24 address, n8 data) -> void {
   cpu.synchronize(*this);
   address = 0x3000 | address.bit(0,9);
 
@@ -59,7 +59,7 @@ auto SuperFX::writeIO(uint24 address, uint8 data) -> void {
   }
 
   if(address >= 0x3000 && address <= 0x301f) {
-    uint n = address >> 1 & 15;
+    n4 n = address >> 1 & 15;
     if(!address.bit(0)) {
       regs.r[n] = (regs.r[n] & 0xff00) | data;
     } else {

@@ -68,10 +68,10 @@ auto Disc::connect() -> void {
     if(!fd) return disconnect();
 
     //read TOC (table of contents) from disc lead-in
-    uint sectors = min(7500, fd->size() / 2448);
-    vector<uint8_t> subchannel;
+    u32 sectors = fd->size() / 2448;
+    vector<u8> subchannel;
     subchannel.resize(sectors * 96);
-    for(uint sector : range(sectors)) {
+    for(u32 sector : range(sectors)) {
       fd->seek(sector * 2448 + 2352);
       fd->read(subchannel.data() + sector * 96, 96);
     }
@@ -125,10 +125,10 @@ auto Disc::main() -> void {
     if(counter.report <= 0) {
       counter.report += 33'868'800 / 75;
 
-      int lba = drive.lba.current;
-      int lbaTrack = 0;
-      u8 inTrack = 0;
-      u8 inIndex = 0;
+      s32 lba = drive.lba.current;
+      s32 lbaTrack = 0;
+      u8  inTrack = 0;
+      u8  inIndex = 0;
       if(auto trackID = session.inTrack(lba)) {
         inTrack = *trackID;
         if(auto track = session.track(inTrack)) {
@@ -169,7 +169,7 @@ auto Disc::main() -> void {
   step(128);
 }
 
-auto Disc::step(uint clocks) -> void {
+auto Disc::step(u32 clocks) -> void {
   Thread::clock += clocks;
 }
 

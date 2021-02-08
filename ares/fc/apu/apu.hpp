@@ -28,12 +28,12 @@ struct APU : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    n04 speed;
-    n01 useSpeedAsVolume;
-    n01 loopMode;
-    n01 reloadDecay;
-    n08 decayCounter;
-    n04 decayVolume;
+    n4 speed;
+    n1 useSpeedAsVolume;
+    n1 loopMode;
+    n1 reloadDecay;
+    n8 decayCounter;
+    n4 decayVolume;
   };
 
   struct Sweep {
@@ -44,12 +44,12 @@ struct APU : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    n08 shift;
-    n01 decrement;
-    n03 period;
-    n08 counter;
-    n01 enable;
-    n01 reload;
+    n8  shift;
+    n1  decrement;
+    n3  period;
+    n8  counter;
+    n1  enable;
+    n1  reload;
     n11 pulsePeriod;
   };
 
@@ -67,8 +67,8 @@ struct APU : Thread {
 
     n16 lengthCounter;
     n16 periodCounter;
-    n02 duty;
-    n03 dutyCounter;
+    n2  duty;
+    n3  dutyCounter;
     n11 period;
   } pulse1, pulse2;
 
@@ -83,12 +83,12 @@ struct APU : Thread {
 
     n16 lengthCounter;
     n16 periodCounter;
-    n08 linearLength;
-    n01 haltLengthCounter;
+    n8  linearLength;
+    n1  haltLengthCounter;
     n11 period;
-    n05 stepCounter;
-    n08 linearLengthCounter;
-    n01 reloadLinear;
+    n5  stepCounter;
+    n8  linearLengthCounter;
+    n1  reloadLinear;
   } triangle;
 
   struct Noise {
@@ -103,8 +103,8 @@ struct APU : Thread {
 
     n16 lengthCounter;
     n16 periodCounter;
-    n04 period;
-    n01 shortMode;
+    n4  period;
+    n1  shortMode;
     n15 lfsr;
   } noise;
 
@@ -120,19 +120,19 @@ struct APU : Thread {
     n16 lengthCounter;
     n16 periodCounter;
     n16 dmaDelayCounter;
-    n01 irqPending;
-    n04 period;
-    n01 irqEnable;
-    n01 loopMode;
-    n08 dacLatch;
-    n08 addressLatch;
-    n08 lengthLatch;
+    n1  irqPending;
+    n4  period;
+    n1  irqEnable;
+    n1  loopMode;
+    n8  dacLatch;
+    n8  addressLatch;
+    n8  lengthLatch;
     n15 readAddress;
-    n03 bitCounter;
-    n01 dmaBufferValid;
-    n08 dmaBuffer;
-    n01 sampleValid;
-    n08 sample;
+    n3  bitCounter;
+    n1  dmaBufferValid;
+    n8  dmaBuffer;
+    n1  sampleValid;
+    n8  sample;
   } dmc;
 
   struct FrameCounter {
@@ -141,9 +141,9 @@ struct APU : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    n01 irqPending;
-    n02 mode;
-    n02 counter;
+    n1  irqPending;
+    n2  mode;
+    n2  counter;
     i32 divider;
   } frame;
 
@@ -151,13 +151,13 @@ struct APU : Thread {
   auto clockFrameCounter() -> void;
   auto clockFrameCounterDivider() -> void;
 
-  n05 enabledChannels;
+  n5 enabledChannels;
 
 //unserialized:
   i16 pulseDAC[32];
   i16 dmcTriangleNoiseDAC[128][16][16];
 
-  static const n08 lengthCounterTable[32];
+  static const n8  lengthCounterTable[32];
   static const n16 dmcPeriodTableNTSC[16];
   static const n16 dmcPeriodTablePAL[16];
   static const n16 noisePeriodTableNTSC[16];

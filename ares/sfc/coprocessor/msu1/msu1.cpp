@@ -17,8 +17,8 @@ auto MSU1::unload() -> void {
 }
 
 auto MSU1::main() -> void {
-  double left  = 0.0;
-  double right = 0.0;
+  f64 left  = 0.0;
+  f64 right = 0.0;
 
   if(io.audioPlay) {
     if(audioFile) {
@@ -31,8 +31,8 @@ auto MSU1::main() -> void {
         }
       } else {
         io.audioPlayOffset += 4;
-        left  = (double)(int16)audioFile->readl(2) / 32768.0 * (double)io.audioVolume / 255.0;
-        right = (double)(int16)audioFile->readl(2) / 32768.0 * (double)io.audioVolume / 255.0;
+        left  = (f64)(s16)audioFile->readl(2) / 32768.0 * (f64)io.audioVolume / 255.0;
+        right = (f64)(s16)audioFile->readl(2) / 32768.0 * (f64)io.audioVolume / 255.0;
         if(dsp.mute()) left = 0, right = 0;
       }
     } else {
@@ -84,7 +84,7 @@ auto MSU1::audioOpen() -> void {
   string name = {"msu1/track-", io.audioTrack, ".pcm"};
   if(audioFile = platform->open(cartridge.node, name, File::Read)) {
     if(audioFile->size() >= 8) {
-      uint32 header = audioFile->readm(4);
+      n32 header = audioFile->readm(4);
       if(header == 0x4d535531) {  //"MSU1"
         io.audioLoopOffset = 8 + audioFile->readl(4) * 4;
         if(io.audioLoopOffset > audioFile->size()) io.audioLoopOffset = 8;
@@ -98,7 +98,7 @@ auto MSU1::audioOpen() -> void {
   io.audioError = true;
 }
 
-auto MSU1::readIO(uint24 address, uint8 data) -> uint8 {
+auto MSU1::readIO(n24 address, n8 data) -> n8 {
   cpu.synchronize(*this);
 
   switch(0x2000 | address & 7) {
@@ -127,7 +127,7 @@ auto MSU1::readIO(uint24 address, uint8 data) -> uint8 {
   return data;  //unreachable
 }
 
-auto MSU1::writeIO(uint24 address, uint8 data) -> void {
+auto MSU1::writeIO(n24 address, n8 data) -> void {
   cpu.synchronize(*this);
 
   switch(0x2000 | address & 7) {

@@ -78,7 +78,7 @@
 -(void) mouseMove:(NSEvent*)event {
   if([event window] == nil) return;
   NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
-  label->doMouseMove({(int)location.x, (int)([self frame].size.height - 1 - location.y)});
+  label->doMouseMove({(s32)location.x, (s32)([self frame].size.height - 1 - location.y)});
 }
 
 -(void) mouseDown:(NSEvent*)event {

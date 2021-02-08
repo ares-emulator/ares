@@ -6,10 +6,10 @@ struct FDSTimer {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  n01 enable;
+  n1  enable;
   n16 counter;
   n16 period;
-  n01 repeat;
-  n01 irq;
-  n01 pending;
+  n1  repeat;
+  n1  irq;
+  n1  pending;
 };

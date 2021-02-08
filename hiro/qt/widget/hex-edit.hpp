@@ -5,18 +5,18 @@ namespace hiro {
 struct pHexEdit : pWidget {
   Declare(HexEdit, Widget)
 
-  auto setAddress(unsigned address) -> void;
+  auto setAddress(u32 address) -> void;
   auto setBackgroundColor(Color color) -> void;
-  auto setColumns(unsigned columns) -> void;
+  auto setColumns(u32 columns) -> void;
   auto setForegroundColor(Color color) -> void;
-  auto setLength(unsigned length) -> void;
-  auto setRows(unsigned rows) -> void;
+  auto setLength(u32 length) -> void;
+  auto setRows(u32 rows) -> void;
   auto update() -> void;
 
   auto _keyPressEvent(QKeyEvent*) -> void;
-  auto _rows() -> signed;
-  auto _rowsScrollable() -> signed;
-  auto _scrollTo(signed position) -> void;
+  auto _rows() -> s32;
+  auto _rowsScrollable() -> s32;
+  auto _scrollTo(s32 position) -> void;
   auto _setState() -> void;
 
   QtHexEdit* qtHexEdit = nullptr;

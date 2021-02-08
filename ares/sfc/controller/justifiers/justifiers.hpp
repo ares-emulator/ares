@@ -14,17 +14,17 @@ struct Justifiers : Controller, Thread {
   ~Justifiers();
 
   auto main() -> void;
-  auto data() -> uint2;
-  auto latch(bool data) -> void;
+  auto data() -> n2;
+  auto latch(n1 data) -> void;
 
 private:
-  int  cx1 = 256 / 2 - 16;
-  int  cy1 = 240 / 2;
-  int  cx2 = 256 / 2 + 16;
-  int  cy2 = 240 / 2;
+  i32 cx1 = 256 / 2 - 16;
+  i32 cy1 = 240 / 2;
+  i32 cx2 = 256 / 2 + 16;
+  i32 cy2 = 240 / 2;
 
-  bool active = 0;  //0 = player 1; 1 = player 2
-  bool latched = 0;
-  uint counter = 0;
-  uint previous = 0;
+  n1  active;  //0 = player 1; 1 = player 2
+  n1  latched;
+  n32 counter;
+  n32 previous;
 };

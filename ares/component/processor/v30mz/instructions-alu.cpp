@@ -122,21 +122,21 @@ auto V30MZ::instructionTestMemReg(Size size) -> void {
 auto V30MZ::instructionMultiplySignedRegMemImm(Size size) -> void {
   wait(2);
   modRM();
-  setReg(Word, MULI(Word, getMem(Word), size == Word ? (int16_t)fetch(Word) : (int8_t)fetch(Byte)));
+  setReg(Word, MULI(Word, getMem(Word), size == Word ? (s16)fetch(Word) : (s8)fetch(Byte)));
 }
 
-auto V30MZ::instructionIncReg(uint16_t& reg) -> void {
+auto V30MZ::instructionIncReg(u16& reg) -> void {
   reg = INC(Word, reg);
 }
 
-auto V30MZ::instructionDecReg(uint16_t& reg) -> void {
+auto V30MZ::instructionDecReg(u16& reg) -> void {
   reg = DEC(Word, reg);
 }
 
 auto V30MZ::instructionSignExtendByte() -> void {
-  setAcc(Word, (int8)getAcc(Byte));
+  setAcc(Word, (i8)getAcc(Byte));
 }
 
 auto V30MZ::instructionSignExtendWord() -> void {
-  setAcc(Long, (int16)getAcc(Word));
+  setAcc(Long, (i16)getAcc(Word));
 }
