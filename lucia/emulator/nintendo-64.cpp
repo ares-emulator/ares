@@ -90,6 +90,8 @@ auto Nintendo64::input(ares::Node::Input::Input node) -> void {
       axis->setValue(value);
     }
     if(auto button = node->cast<ares::Node::Input::Button>()) {
+      if(name == "C-Up"   || name == "C-Left" ) return button->setValue(value < -16384);
+      if(name == "C-Down" || name == "C-Right") return button->setValue(value > +16384);
       button->setValue(value);
     }
   }
@@ -141,8 +143,8 @@ auto Nintendo64DD::open(ares::Node::Object node, string name, vfs::file::mode mo
 auto Nintendo64DD::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "X-axis" ) mapping = virtualPads[0].lx;
-  if(name == "Y-axis" ) mapping = virtualPads[0].ly;
+  if(name == "X-Axis" ) mapping = virtualPads[0].lx;
+  if(name == "Y-Axis" ) mapping = virtualPads[0].ly;
   if(name == "Up"     ) mapping = virtualPads[0].up;
   if(name == "Down"   ) mapping = virtualPads[0].down;
   if(name == "Left"   ) mapping = virtualPads[0].left;
@@ -164,6 +166,8 @@ auto Nintendo64DD::input(ares::Node::Input::Input node) -> void {
       axis->setValue(value);
     }
     if(auto button = node->cast<ares::Node::Input::Button>()) {
+      if(name == "C-Up"   || name == "C-Left" ) return button->setValue(value < -16384);
+      if(name == "C-Down" || name == "C-Right") return button->setValue(value > +16384);
       button->setValue(value);
     }
   }

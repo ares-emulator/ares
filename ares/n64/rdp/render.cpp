@@ -45,6 +45,10 @@ static const vector<string> commandNames = {
 };
 
 auto RDP::render() -> void {
+  #if defined(VULKAN)
+  if(vulkan.render()) return;
+  #endif
+
   auto& memory = !command.source ? rdram.ram : rsp.dmem;
 
   auto fetch = [&]() -> u64 {

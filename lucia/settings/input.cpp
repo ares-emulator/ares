@@ -2,7 +2,7 @@ auto InputSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
 
-  inputLabel.setText("Virtual Gamepad Bindings").setFont(Font().setBold());
+  systemList.append(ComboButtonItem().setText("Virtual Gamepads"));
   deviceList.append(ComboButtonItem().setText("Controller 1"));
   deviceList.append(ComboButtonItem().setText("Controller 2"));
   deviceList.onChange([&] { reload(); });

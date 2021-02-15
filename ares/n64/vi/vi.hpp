@@ -67,6 +67,13 @@ struct VI : Thread, Memory::IO<VI> {
 
 //unserialized:
   bool refreshed;
+
+  #if defined(VULKAN)
+  std::vector<::RDP::RGBA> gpuColorBuffer;
+  bool gpuOutputValid = false;
+  u32  gpuOutputWidth = 0;
+  u32  gpuOutputHeight = 0;
+  #endif
 };
 
 extern VI vi;

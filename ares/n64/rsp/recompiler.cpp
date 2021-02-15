@@ -22,9 +22,9 @@ auto RSP::Recompiler::pool() -> Pool* {
 }
 
 auto RSP::Recompiler::block(u32 address) -> Block* {
-  auto& block = pool()->blocks[address >> 2 & 0x3ff];
-  if(!block) block = emit(address);
-  return block;
+  if(auto block = pool()->blocks[address >> 2 & 0x3ff]) return block;
+  auto block = emit(address);
+  return pool()->blocks[address >> 2 & 0x3ff] = block;
 }
 
 auto RSP::Recompiler::emit(u32 address) -> Block* {
@@ -39,7 +39,7 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
   bind({block->code, allocator.available()});
 
   bool hasBranched = 0;
-  u32  instructions = 0;
+  u32 instructions = 0;
   do {
     u32 instruction = self.imem.readWord(address);
     bool branched = emitEXECUTE(instruction);

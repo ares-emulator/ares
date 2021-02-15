@@ -1,8 +1,8 @@
 Gamepad::Gamepad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Gamepad");
 
-  x           = node->append<Node::Input::Axis>  ("X-axis");
-  y           = node->append<Node::Input::Axis>  ("Y-axis");
+  x           = node->append<Node::Input::Axis>  ("X-Axis");
+  y           = node->append<Node::Input::Axis>  ("Y-Axis");
   up          = node->append<Node::Input::Button>("Up");
   down        = node->append<Node::Input::Button>("Down");
   left        = node->append<Node::Input::Button>("Left");
@@ -37,9 +37,17 @@ auto Gamepad::read() -> n32 {
   platform->input(z);
   platform->input(start);
 
+  //16-bit signed -> 8-bit signed
+  auto ay = sclamp<8>(-y->value() >> 8);
+  auto ax = sclamp<8>(+x->value() >> 8);
+
+  //dead-zone
+  if(abs(ay) < 32) ay = 0;
+  if(abs(ax) < 32) ax = 0;
+
   n32 data;
-  data.byte(0) = -y->value() >> 8;
-  data.byte(1) = +x->value() >> 8;
+  data.byte(0) = ay;
+  data.byte(1) = ax;
   data.bit(16) = cameraRight->value();
   data.bit(17) = cameraLeft->value();
   data.bit(18) = cameraDown->value();

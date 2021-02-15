@@ -112,7 +112,14 @@ inline thread::~thread() {
 
 inline auto thread::join() -> void {
   if(handle) {
-    WaitForSingleObject(handle, INFINITE);
+  //wait until the thread has finished executing ...
+  //WaitForSingleObject(handle, INFINITE);  //this hangs sometimes even after _threadCallback returns
+    while(true) {
+      DWORD exitCode;
+      GetExitCodeThread(handle, &exitCode);
+      if(exitCode != STILL_ACTIVE) break;
+      usleep(1);
+    }
     CloseHandle(handle);
     handle = 0;
   }

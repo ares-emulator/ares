@@ -1,5 +1,10 @@
 auto RSP::serialize(serializer& s) -> void {
   Thread::serialize(s);
+  s(dmem);
+  s(imem);
+
+  s(pipeline.address);
+  s(pipeline.instruction);
 
   s(dma.memSource);
   s(dma.memAddress);
@@ -20,9 +25,6 @@ auto RSP::serialize(serializer& s) -> void {
   s(status.singleStep);
   s(status.interruptOnBreak);
   s(status.signal);
-
-  s(pipeline.address);
-  s(pipeline.instruction);
 
   for(auto& r : ipu.r) s(r.u32);
   s(ipu.pc);

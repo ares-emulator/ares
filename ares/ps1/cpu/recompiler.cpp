@@ -5,9 +5,9 @@ auto CPU::Recompiler::pool(u32 address) -> Pool* {
 }
 
 auto CPU::Recompiler::block(u32 address) -> Block* {
-  auto& block = pool(address)->blocks[address >> 2 & 0x3f];
-  if(!block) block = emit(address);
-  return block;
+  if(auto block = pool(address)->blocks[address >> 2 & 0x3f]) return block;
+  auto block = emit(address);
+  return pool(address)->blocks[address >> 2 & 0x3f] = block;
 }
 
 auto CPU::Recompiler::emit(u32 address) -> Block* {

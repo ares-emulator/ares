@@ -18,9 +18,10 @@ auto AI::load(Node::Object parent) -> void {
 }
 
 auto AI::unload() -> void {
-  node = {};
-  stream = {};
   debugger = {};
+  node->remove(stream);
+  stream.reset();
+  node.reset();
 }
 
 auto AI::main() -> void {
@@ -53,7 +54,6 @@ auto AI::step(u32 clocks) -> void {
 
 auto AI::power(bool reset) -> void {
   Thread::reset();
-  stream->setFrequency(44100);
 
   dac.frequency = 44100;
   dac.precision = 16;

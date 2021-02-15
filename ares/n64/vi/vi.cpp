@@ -47,6 +47,12 @@ auto VI::main() -> void {
   if(++io.vcounter == 262) {
     io.vcounter = 0;
     refreshed = true;
+
+    #if defined(VULKAN)
+    gpuOutputValid = vulkan.scanout(gpuColorBuffer, gpuOutputWidth, gpuOutputHeight);
+    vulkan.frame();
+    #endif
+
     screen->frame();
   }
 
@@ -58,6 +64,25 @@ auto VI::step(u32 clocks) -> void {
 }
 
 auto VI::refresh() -> void {
+  #if defined(VULKAN)
+  if(gpuOutputValid) {
+    if(!gpuColorBuffer.empty()) {
+      screen->setViewport(0, 0, gpuOutputWidth, gpuOutputHeight);
+      for(u32 y : range(gpuOutputHeight)) {
+        auto target = screen->pixels(1).data() + y * 640;
+        auto source = gpuColorBuffer.data() + gpuOutputWidth * y;
+        for(u32 x : range(gpuOutputWidth)) {
+          target[x] = source[x].r << 16 | source[x].g << 8 | source[x].b << 0;
+        }
+      }
+    } else {
+      screen->setViewport(0, 0, 1, 1);
+      screen->pixels(1).data()[0] = 0;
+    }
+    return;
+  }
+  #endif
+
   u32 pitch  = vi.io.width;
   u32 width  = vi.io.width;  //vi.io.xscale <= 0x300 ? 320 : 640;
   u32 height = vi.io.yscale <= 0x400 ? 239 : 478;

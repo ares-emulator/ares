@@ -26,6 +26,7 @@ struct Disc : Thread, Memory::Interface {
   auto region() const -> string { return information.region; }
   auto audioCD() const -> bool { return information.audio; }
   auto executable() const -> bool { return information.executable; }
+  auto noDisc() const -> bool { return !name(); }
 
   //disc.cpp
   auto load(Node::Object) -> void;

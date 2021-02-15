@@ -1,19 +1,14 @@
 auto CPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s(context.mode);
-  s(context.segment);
-
   s(pipeline.address);
   s(pipeline.instruction);
 
-  for(auto& r : ipu.r) s(r.u64);
-  s(ipu.lo.u64);
-  s(ipu.hi.u64);
-  s(ipu.pc);
-
   s(branch.pc);
   s(branch.state);
+
+  s(context.mode);
+  s(context.segment);
 
   for(auto& e : tlb.entry) {
     s(e.global);
@@ -33,6 +28,11 @@ auto CPU::serialize(serializer& s) -> void {
     s(e.addressCompare);
   }
   s(tlb.physicalAddress);
+
+  for(auto& r : ipu.r) s(r.u64);
+  s(ipu.lo.u64);
+  s(ipu.hi.u64);
+  s(ipu.pc);
 
   s(scc.index.tlbEntry);
   s(scc.index.probeFailure);

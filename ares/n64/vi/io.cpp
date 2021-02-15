@@ -118,6 +118,10 @@ auto VI::writeWord(u32 address, u32 data_) -> void {
   address = (address & 0xfffff) >> 2;
   n32 data = data_;
 
+  #if defined(VULKAN)
+  vulkan.writeWord(address, data);
+  #endif
+
   if(address == 0) {
     //VI_CONTROL
     io.colorDepth          = data.bit( 0, 1);

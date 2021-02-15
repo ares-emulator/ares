@@ -13,7 +13,9 @@ auto GPU::Blitter::queue() -> void {
   height = self.display.height;
   if(self.overscan->value() == 0) {
     if(height == 240) height = 224;
+    if(height == 256) height = 240;
     if(height == 480) height = 448;
+    if(height == 512) height = 480;
   }
 
   s32 offsetX1 = 0;
@@ -25,7 +27,9 @@ auto GPU::Blitter::queue() -> void {
 
   s32 offsetY1 = 0;
   if(self.display.height == 240) offsetY1 = 0x10;
+  if(self.display.height == 256) offsetY1 = 0x20;
   if(self.display.height == 480) offsetY1 = 0x10;
+  if(self.display.height == 512) offsetY1 = 0x20;
 
   //target coordinates
   tx = max(((s32)self.io.displayRangeX1 - offsetX1) / (s32)self.display.dotclock, 0);
@@ -41,8 +45,8 @@ auto GPU::Blitter::queue() -> void {
 
   //overscan offset may send ty out of bounds, but the rendering below will skip drawing these lines
   if(self.overscan->value() == 0) {
-    if(self.display.height == 240) ty -=  8;
-    if(self.display.height == 480) ty -= 16;
+    if(self.display.height == 240 || self.display.height == 256) ty -=  8;
+    if(self.display.height == 480 || self.display.height == 512) ty -= 16;
   }
 
   if(tx != self.display.previous.x

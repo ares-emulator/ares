@@ -71,12 +71,18 @@ auto System::load(Node::System& root, string name) -> bool {
   controllerPort3.load(node);
   controllerPort4.load(node);
   dd.load(node);
+  #if defined(VULKAN)
+  vulkan.load(node);
+  #endif
   return true;
 }
 
 auto System::unload() -> void {
   if(!node) return;
   save();
+  #if defined(VULKAN)
+  vulkan.unload();
+  #endif
   mi.unload();
   vi.unload();
   ai.unload();

@@ -22,7 +22,7 @@ GPU::Color GPU::Color::table[65536];
 auto GPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("GPU");
 
-  screen = node->append<Node::Video::Screen>("Screen", 640, 480);
+  screen = node->append<Node::Video::Screen>("Screen", 640, 512);
   screen->setRefresh({&GPU::Blitter::refresh, &blitter});
   screen->colors((1 << 24) + (1 << 15), [&](n32 color) -> n64 {
     if(color < (1 << 24)) {
@@ -39,11 +39,11 @@ auto GPU::load(Node::Object parent) -> void {
       return a << 48 | r << 32 | g << 16 | b << 0;
     }
   });
-  screen->setSize(640, 480);
+  screen->setSize(640, 512);
 
   overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
-    if(value == 0) screen->setSize(640, 448);
-    if(value == 1) screen->setSize(640, 480);
+    if(value == 0) screen->setSize(640, 480);
+    if(value == 1) screen->setSize(640, 512);
   });
   overscan->setDynamic(true);
 
@@ -124,10 +124,10 @@ auto GPU::frame() -> void {
   }
 
   if(io.verticalResolution && io.interlace) {
-    display.height = 480;
+    display.height = io.videoMode ? 512 : 480;
     display.interlace = 1;
   } else {
-    display.height = 240;
+    display.height = io.videoMode ? 256 : 240;
     display.interlace = 0;
   }
 }

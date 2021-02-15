@@ -431,7 +431,21 @@ auto Disc::commandGetID() -> void {
   }
 
   if(event.invocation == 1) {
-    if(region() == "NTSC-J") {
+    if(noDisc()) {
+      ssr.idError = 1;
+
+      fifo.response.write(0x40);
+      fifo.response.write(0x00);
+      fifo.response.write(0x00);
+      fifo.response.write(0x00);
+      fifo.response.write(0x00);
+      fifo.response.write(0x00);
+      fifo.response.write(0x00);
+      fifo.response.write(0x00);
+
+      irq.error.flag = 1;
+      irq.poll();
+    } else if(region() == "NTSC-J" && Region::NTSCJ()) {
       ssr.idError = 0;
 
       fifo.response.write(status());
@@ -445,7 +459,7 @@ auto Disc::commandGetID() -> void {
 
       irq.complete.flag = 1;
       irq.poll();
-    } else if(region() == "NTSC-U") {
+    } else if(region() == "NTSC-U" && Region::NTSCU()) {
       ssr.idError = 0;
 
       fifo.response.write(status());
@@ -459,7 +473,7 @@ auto Disc::commandGetID() -> void {
 
       irq.complete.flag = 1;
       irq.poll();
-    } else if(region() == "PAL") {
+    } else if(region() == "PAL" && Region::PAL()) {
       ssr.idError = 0;
 
       fifo.response.write(status());
@@ -488,12 +502,12 @@ auto Disc::commandGetID() -> void {
       irq.error.flag = 1;
       irq.poll();
     } else {
-      //no disc inserted
+      //invalid disc inserted
       ssr.idError = 1;
 
-      fifo.response.write(0x40);
-      fifo.response.write(0x00);
-      fifo.response.write(0x00);
+      fifo.response.write(status());
+      fifo.response.write(0x80);
+      fifo.response.write(0x20);
       fifo.response.write(0x00);
       fifo.response.write(0x00);
       fifo.response.write(0x00);

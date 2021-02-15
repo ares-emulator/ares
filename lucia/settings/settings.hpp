@@ -136,7 +136,8 @@ struct InputSettings : VerticalLayout {
   auto setVisible(bool visible = true) -> InputSettings&;
 
   HorizontalLayout indexLayout{this, Size{~0, 0}};
-    Label inputLabel{&indexLayout, Size{~0, 0}};
+    ComboButton systemList{&indexLayout, Size{0, 0}};
+    Widget indexSpacer{&indexLayout, Size{~0, 0}};
     ComboButton deviceList{&indexLayout, Size{0, 0}};
   TableView inputList{this, Size{~0, ~0}};
   HorizontalLayout controlLayout{this, Size{~0, 0}};

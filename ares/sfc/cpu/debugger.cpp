@@ -43,6 +43,9 @@ auto CPU::Debugger::dma(n8 channelID, n24 addressA, n8 addressB, n8 data) -> voi
       output.append("($", hex(data, 2L), ") => ");
       output.append("$", hex(addressA, 6L));
     }
+    output.append(" V:", pad(cpu.vcounter(), 3L));
+    output.append(" H:", pad(cpu.hcounter(), 4L));
+    output.append(" I:", (u32)cpu.field());
     tracer.dma->notify(output);
   }
 }

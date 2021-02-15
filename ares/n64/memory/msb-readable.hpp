@@ -1,6 +1,6 @@
 struct Readable {
   auto reset() -> void {
-    delete[] data;
+    memory::free<u8, 64_KiB>(data);
     data = nullptr;
     size = 0;
     maskByte = 0;
@@ -19,7 +19,7 @@ struct Readable {
     maskWord = mask & ~3;
     maskDual = mask & ~7;
     maskQuad = mask & ~15;
-    data = new u8[mask + 1];
+    data = memory::allocate<u8, 64_KiB>(mask + 1);
     fill(fillWith);
   }
 
@@ -66,7 +66,7 @@ struct Readable {
   auto writeQuadUnaligned(u32 address, u128 value) -> void {}
 
   auto serialize(serializer& s) -> void {
-    s(array_span<u8>{data, size});
+  //s(array_span<u8>{data, size});
   }
 
 //private:

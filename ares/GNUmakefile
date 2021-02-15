@@ -14,6 +14,10 @@ ares.objects := ares
 
 $(object.path)/ares.o: $(ares.path)/ares/ares.cpp
 
+ifeq ($(vulkan),true)
+  flags += -DVULKAN
+endif
+
 ifeq ($(profile),accuracy)
   flags += -DPROFILE_ACCURACY
 endif

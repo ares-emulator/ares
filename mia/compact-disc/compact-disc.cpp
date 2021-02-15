@@ -15,8 +15,16 @@ auto CompactDisc::manifest(string location) -> string {
 }
 
 auto CompactDisc::import(string filename) -> string {
+  auto manifest = this->manifest(filename);
+  if(!manifest) return "failed to parse CD-ROM";
+
+  auto document = BML::unserialize(manifest);
   string location = {pathname, Location::prefix(filename), "/"};
   if(!directory::create(location)) return "output directory not writable";
+
+  if(settings.createManifests) {
+    file::write({location, "manifest.bml"}, manifest);
+  }
 
   auto cdrom = vfs::cdrom::open(filename);
   if(!cdrom) return "failed to parse CUE sheet";

@@ -20,7 +20,7 @@ struct GPU : Thread, Memory::Interface {
     } graphics;
   } debugger;
 
-  auto vtotal() const -> u32 { return Region::PAL() ? 314 : 263; }
+  auto vtotal() const -> u32 { return io.videoMode ? 314 : 263; }
   auto vstart() const -> u32 { return io.displayRangeY1; }
   auto vend() const -> u32 { return io.displayRangeY2; }
   auto vblank() const -> bool { return io.vcounter < vstart() || io.vcounter >= vend(); }
@@ -168,7 +168,7 @@ struct GPU : Thread, Memory::Interface {
     //GP1(08): display mode
     n3 horizontalResolution;
     n1 verticalResolution;
-    n1 videoMode;
+    n1 videoMode;   //0 = NTSC, 1 = PAL
     n1 colorDepth;  //0 = 15bpp, 1 = 24bpp
     n1 interlace;
     n1 reverseFlag;

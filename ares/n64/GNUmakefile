@@ -34,3 +34,21 @@ $(object.path)/ares-n64-rsp.o:        $(ares.path)/n64/rsp/rsp.cpp
 
 flags   += -msse4.2
 options += -msse4.2
+
+ifeq ($(vulkan),true)
+  ares.objects += ares-n64-vulkan
+  $(object.path)/ares-n64-vulkan.o: $(ares.path)/n64/vulkan/vulkan.cpp
+  PARALLEL_RDP_IMPLEMENTATION := $(ares.path)/n64/vulkan/parallel-rdp
+  include $(PARALLEL_RDP_IMPLEMENTATION)/config.mk
+  ares.objects += $(PARALLEL_RDP_SOURCES_CXX:$(PARALLEL_RDP_IMPLEMENTATION)/%.cpp=ares-n64-parallel-rdp/%)
+  ares.objects += $(PARALLEL_RDP_SOURCES_C:$(PARALLEL_RDP_IMPLEMENTATION)/%.c=ares-n64-parallel-rdp/%)
+  flags += $(PARALLEL_RDP_INCLUDE_DIRS) $(PARALLEL_RDP_CXXFLAGS) $(PARALLEL_RDP_CFLAGS)
+  $(object.path)/ares-n64-parallel-rdp/%.o: $(PARALLEL_RDP_IMPLEMENTATION)/%.cpp
+	$(info Compiling $(subst ../,,$<) ...)
+	@mkdir -p $(dir $@)
+	@$(call compile)
+  $(object.path)/ares-n64-parallel-rdp/%.o: $(PARALLEL_RDP_IMPLEMENTATION)/%.c
+	$(info Compiling $(subst ../,,$<) ...)
+	@mkdir -p $(dir $@)
+	@$(call compile)
+endif

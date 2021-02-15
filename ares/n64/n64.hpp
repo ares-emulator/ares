@@ -7,6 +7,10 @@
 #include <nmmintrin.h>
 using v128 = __m128i;
 
+#if defined(VULKAN)
+  #include <n64/vulkan/vulkan.hpp>
+#endif
+
 namespace ares::Nintendo64 {
   auto enumerate() -> vector<string>;
   auto load(Node::System& node, string name) -> bool;
