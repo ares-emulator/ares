@@ -59,15 +59,16 @@ auto PPU::load(Node::Object parent) -> void {
 }
 
 auto PPU::unload() -> void {
+  debugger = {};
+  colorEmulation.reset();
+  interframeBlending.reset();
+  rotation.reset();
   screen->quit();
+  node->remove(screen);
+  screen.reset();
+  node.reset();
   vram.reset();
   pram.reset();
-  node = {};
-  screen = {};
-  colorEmulation = {};
-  interframeBlending = {};
-  rotation = {};
-  debugger = {};
 }
 
 inline auto PPU::blank() -> bool {

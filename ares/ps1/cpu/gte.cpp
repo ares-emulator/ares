@@ -468,9 +468,9 @@ auto CPU::GTE::DPCS(bool lm, u8 sf) -> void {
 
 auto CPU::GTE::DPCT(bool lm, u8 sf) -> void {
   prologue(lm, sf);
-  DPC({u8(rgb[0] >> 0) << 4, u8(rgb[0] >> 8) << 4, u8(rgb[2] >> 16) << 4});
-  DPC({u8(rgb[0] >> 0) << 4, u8(rgb[0] >> 8) << 4, u8(rgb[2] >> 16) << 4});
-  DPC({u8(rgb[0] >> 0) << 4, u8(rgb[0] >> 8) << 4, u8(rgb[2] >> 16) << 4});
+  DPC({u8(rgb[0] >> 0) << 4, u8(rgb[0] >> 8) << 4, u8(rgb[0] >> 16) << 4});
+  DPC({u8(rgb[0] >> 0) << 4, u8(rgb[0] >> 8) << 4, u8(rgb[0] >> 16) << 4});
+  DPC({u8(rgb[0] >> 0) << 4, u8(rgb[0] >> 8) << 4, u8(rgb[0] >> 16) << 4});
   epilogue();
 }
 

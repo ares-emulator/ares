@@ -138,7 +138,7 @@ struct Disc : Thread, Memory::Interface {
 
     //cdda.cpp
     auto load(Node::Object) -> void;
-    auto unload() -> void;
+    auto unload(Node::Object) -> void;
 
     auto clockSector() -> void;
     auto clockSample() -> void;
@@ -164,7 +164,7 @@ struct Disc : Thread, Memory::Interface {
 
     //cdxa.cpp
     auto load(Node::Object) -> void;
-    auto unload() -> void;
+    auto unload(Node::Object) -> void;
 
     auto clockSector() -> void;
     auto clockSample() -> void;
@@ -225,7 +225,7 @@ struct Disc : Thread, Memory::Interface {
 
   struct SecondaryStatusRegister {
     n1 error;
-    n1 motorOn;
+    n1 motorOn = 1;
     n1 seekError;
     n1 idError;
     n1 shellOpen;

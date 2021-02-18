@@ -289,7 +289,7 @@ struct MCD : M68K, Thread {
 
     //cdd.cpp
     auto load(Node::Object) -> void;
-    auto unload() -> void;
+    auto unload(Node::Object) -> void;
 
     auto clock() -> void;
     auto advance() -> void;
@@ -314,7 +314,7 @@ struct MCD : M68K, Thread {
 
       //cdd-dac.cpp
       auto load(Node::Object) -> void;
-      auto unload() -> void;
+      auto unload(Node::Object) -> void;
 
       auto sample(i16 left, i16 right) -> void;
       auto reconfigure() -> void;
@@ -412,7 +412,7 @@ struct MCD : M68K, Thread {
 
     //pcm.cpp
     auto load(Node::Object) -> void;
-    auto unload() -> void;
+    auto unload(Node::Object) -> void;
 
     auto clock() -> void;
     auto read(n13 address, n8 data) -> n8;

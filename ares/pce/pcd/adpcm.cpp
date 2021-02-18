@@ -6,8 +6,9 @@ auto PCD::ADPCM::load(Node::Object parent) -> void {
   memory.allocate(64_KiB);
 }
 
-auto PCD::ADPCM::unload() -> void {
-  stream = {};
+auto PCD::ADPCM::unload(Node::Object parent) -> void {
+  parent->remove(stream);
+  stream.reset();
 
   memory.reset();
 }

@@ -61,7 +61,7 @@ auto Cartridge::disconnect() -> void {
   if(has.SPC7110) spc7110.unload();
   if(has.SDD1) sdd1.unload();
   if(has.OBC1) obc1.unload();
-  if(has.MSU1) msu1.unload();
+  if(has.MSU1) msu1.unload(node);
   if(has.BSMemorySlot) bsmemorySlot.unload();
   if(has.SufamiTurboSlotA) sufamiturboSlotA.unload();
   if(has.SufamiTurboSlotB) sufamiturboSlotB.unload();
@@ -69,7 +69,7 @@ auto Cartridge::disconnect() -> void {
   rom.reset();
   ram.reset();
   bus.reset();
-  node = {};
+  node.reset();
 }
 
 auto Cartridge::power(bool reset) -> void {

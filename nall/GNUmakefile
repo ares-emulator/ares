@@ -93,7 +93,10 @@ endif
 # link-time optimization
 ifeq ($(lto),true)
   flags   += -fwhole-program -flto -fno-fat-lto-objects
-  options += -fwhole-program -flto=jobserver
+  options += -fwhole-program
+  ifneq ($(platform),macos)
+    options += -flto=jobserver
+  endif
 endif
 
 # openmp support

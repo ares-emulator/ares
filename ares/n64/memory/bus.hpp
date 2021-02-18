@@ -25,7 +25,12 @@
   if(address <= 0x0500'05bf) return dd.ms.access(__VA_ARGS__); \
   if(address <= 0x05ff'ffff) return unmapped; \
   if(address <= 0x063f'ffff) return dd.iplrom.access(__VA_ARGS__); \
-  if(address <= 0x0fff'ffff) return unmapped; \
+  if(address <= 0x07ff'ffff) return unmapped; \
+  if(address <= 0x0fff'ffff) { \
+    if(cartridge.ram  ) return cartridge.ram.access(__VA_ARGS__); \
+    if(cartridge.flash) return cartridge.flash.access(__VA_ARGS__); \
+    return unmapped; \
+  } \
   if(address <= 0x1fbf'ffff) return cartridge.rom.access(__VA_ARGS__); \
   if(address <= 0x1fc0'07bf) return pi.rom.access(__VA_ARGS__); \
   if(address <= 0x1fc0'07ff) return pi.ram.access(__VA_ARGS__); \

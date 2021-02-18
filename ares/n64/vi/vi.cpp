@@ -10,7 +10,11 @@ VI vi;
 auto VI::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VI");
 
-  screen = node->append<Node::Video::Screen>("Screen", 640, 478);
+  #if defined(VULKAN)
+  screen = node->append<Node::Video::Screen>("Screen", Vulkan::outputUpscale * 640, Vulkan::outputUpscale * 480);
+  #else
+  screen = node->append<Node::Video::Screen>("Screen", 640, 480);
+  #endif
   screen->setRefresh({&VI::refresh, this});
   screen->colors((1 << 24) + (1 << 15), [&](n32 color) -> n64 {
     if(color < (1 << 24)) {
@@ -27,16 +31,21 @@ auto VI::load(Node::Object parent) -> void {
       return a << 48 | r << 32 | g << 16 | b << 0;
     }
   });
-  screen->setSize(640, 478);
+  #if defined(VULKAN)
+  screen->setSize(Vulkan::outputUpscale * 640, Vulkan::outputUpscale * 480);
+  #else
+  screen->setSize(640, 480);
+  #endif
 
   debugger.load(node);
 }
 
 auto VI::unload() -> void {
-  screen->quit();
-  node = {};
-  screen = {};
   debugger = {};
+  screen->quit();
+  node->remove(screen);
+  screen.reset();
+  node.reset();
 }
 
 auto VI::main() -> void {
@@ -44,19 +53,20 @@ auto VI::main() -> void {
     mi.raise(MI::IRQ::VI);
   }
 
-  if(++io.vcounter == 262) {
+  if(++io.vcounter == (Region::NTSC() ? 262 : 312)) {
     io.vcounter = 0;
     refreshed = true;
 
     #if defined(VULKAN)
-    gpuOutputValid = vulkan.scanout(gpuColorBuffer, gpuOutputWidth, gpuOutputHeight);
+    gpuOutputValid = vulkan.scanoutAsync();
     vulkan.frame();
     #endif
 
     screen->frame();
   }
 
-  step(93'750'000 / 60 / 262);
+  if(Region::NTSC()) step(93'750'000 / 60 / 262);
+  if(Region::PAL ()) step(93'750'000 / 50 / 312);
 }
 
 auto VI::step(u32 clocks) -> void {
@@ -66,19 +76,24 @@ auto VI::step(u32 clocks) -> void {
 auto VI::refresh() -> void {
   #if defined(VULKAN)
   if(gpuOutputValid) {
-    if(!gpuColorBuffer.empty()) {
-      screen->setViewport(0, 0, gpuOutputWidth, gpuOutputHeight);
-      for(u32 y : range(gpuOutputHeight)) {
-        auto target = screen->pixels(1).data() + y * 640;
-        auto source = gpuColorBuffer.data() + gpuOutputWidth * y;
-        for(u32 x : range(gpuOutputWidth)) {
-          target[x] = source[x].r << 16 | source[x].g << 8 | source[x].b << 0;
+    const u8* rgba = nullptr;
+    u32 width = 0, height = 0;
+    vulkan.mapScanoutRead(rgba, width, height);
+    if(rgba) {
+      screen->setViewport(0, 0, width, height);
+      for(u32 y : range(height)) {
+        auto target = screen->pixels(1).data() + y * Vulkan::outputUpscale * 640;
+        auto source = rgba + width * y * sizeof(u32);
+        for(u32 x : range(width)) {
+          target[x] = source[x * 4 + 0] << 16 | source[x * 4 + 1] << 8 | source[x * 4 + 2] << 0;
         }
       }
     } else {
       screen->setViewport(0, 0, 1, 1);
       screen->pixels(1).data()[0] = 0;
     }
+    vulkan.unmapScanoutRead();
+    vulkan.endScanout();
     return;
   }
   #endif
@@ -116,7 +131,12 @@ auto VI::refresh() -> void {
 auto VI::power(bool reset) -> void {
   Thread::reset();
   screen->power();
+  io = {};
   refreshed = false;
+
+  #if defined(VULKAN)
+  gpuOutputValid = false;
+  #endif
 }
 
 }

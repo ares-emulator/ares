@@ -4,7 +4,8 @@ auto Disc::CDDA::load(Node::Object parent) -> void {
 //stream->setFrequency(44100);
 }
 
-auto Disc::CDDA::unload() -> void {
+auto Disc::CDDA::unload(Node::Object parent) -> void {
+//parent->remove(stream);
 //stream.reset();
 }
 

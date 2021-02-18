@@ -58,11 +58,12 @@ auto GPU::load(Node::Object parent) -> void {
 }
 
 auto GPU::unload() -> void {
-  screen->quit();
   renderer.kill();
   debugger = {};
   vram.reset();
   overscan.reset();
+  screen->quit();
+  node->remove(screen);
   screen.reset();
   node.reset();
 }
@@ -145,14 +146,20 @@ auto GPU::power(bool reset) -> void {
   screen->power();
   refreshed = false;
 
-  io.displayDisable = 1;
-  io.displayRangeX1 = 512;
-  io.displayRangeX2 = 512 + 256 * 10;
-  io.displayRangeY1 =  16;
-  io.displayRangeY2 =  16 + 240;
-  io.horizontalResolution = 1;
-  frame();
+  vram.fill();
+  display.dotclock = 0;
+  display.width = 0;
+  display.height = 0;
+  display.interlace = 0;
+  display.previous.x = 0;
+  display.previous.y = 0;
+  display.previous.width = 0;
+  display.previous.height = 0;
+  io = {};
+  queue.gp0 = {};
+  queue.gp1 = {};
 
+  frame();
   renderer.power();
   blitter.power();
 }

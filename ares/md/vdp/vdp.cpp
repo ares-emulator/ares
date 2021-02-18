@@ -35,10 +35,11 @@ auto VDP::load(Node::Object parent) -> void {
 }
 
 auto VDP::unload() -> void {
-  screen->quit();
   debugger.unload();
-  screen.reset();
   overscan.reset();
+  screen->quit();
+  node->remove(screen);
+  screen.reset();
   node.reset();
 }
 

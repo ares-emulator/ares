@@ -62,8 +62,8 @@ struct CPU : Thread {
     auto exception() -> void { state = Exception; }
     auto discard() -> void { state = Discard; }
 
-    u64 pc;
-    u32 state;
+    u64 pc = 0;
+    u32 state = Step;
   } branch;
 
   //context.cpp
@@ -324,7 +324,7 @@ struct CPU : Thread {
 
     //1
     struct Random {
-      n5 index;
+      n5 index = 31;
       n1 unused;
     } random;
 
@@ -347,37 +347,37 @@ struct CPU : Thread {
     } wired;
 
     //8
-    u64 badVirtualAddress;
+    n64 badVirtualAddress;
 
     //9
-    u32 count;
+    n32 count;
 
     //11
-    u32 compare;
+    n32 compare;
 
     //12
     struct Status {
       n1 interruptEnable;
       n1 exceptionLevel;
-      n1 errorLevel;
+      n1 errorLevel = 1;
       n2 privilegeMode;
       n1 userExtendedAddressing;
       n1 supervisorExtendedAddressing;
       n1 kernelExtendedAddressing;
-      n8 interruptMask;
+      n8 interruptMask = 0xff;
       n1 de;  //unused
       n1 ce;  //unused
       n1 condition;
-      n1 softReset;
+      n1 softReset = 1;
       n1 tlbShutdown;
-      n1 vectorLocation;
+      n1 vectorLocation = 1;
       n1 instructionTracing;
       n1 reverseEndian;
-      n1 floatingPointMode;
+      n1 floatingPointMode = 1;
       n1 lowPowerMode;
       struct Enable {
-        n1 coprocessor0;
-        n1 coprocessor1;
+        n1 coprocessor0 = 1;
+        n1 coprocessor1 = 1;
         n1 coprocessor2;
         n1 coprocessor3;
       } enable;
@@ -392,7 +392,7 @@ struct CPU : Thread {
     } cause;
 
     //14: Exception Program Counter
-    u64 epc;
+    n64 epc;
 
     //15: Coprocessor Revision Identifier
     struct Coprocessor {
@@ -404,13 +404,13 @@ struct CPU : Thread {
     struct Configuration {
       n2 coherencyAlgorithmKSEG0;
       n2 cu;  //reserved
-      n1 bigEndian;
+      n1 bigEndian = 1;
       n2 sysadWritebackPattern;
-      n2 systemClockRatio;
+      n2 systemClockRatio = 6;
     } configuration;
 
     //17: Load Linked Address
-    u64 ll;
+    n64 ll;
     n1  llbit;
 
     //18
@@ -444,7 +444,7 @@ struct CPU : Thread {
     } tagLo;
 
     //31: Error Exception Program Counter
-    u64 epcError;
+    n64 epcError;
   } scc;
 
   auto getControlRegister(n5) -> u64;

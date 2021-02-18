@@ -1,4 +1,6 @@
 struct Gamepad : Controller {
+  Memory::Writable ram;  //Toshiba TC55257DFL-85V
+
   Node::Input::Axis x;
   Node::Input::Axis y;
   Node::Input::Button up;
@@ -17,5 +19,6 @@ struct Gamepad : Controller {
   Node::Input::Button start;
 
   Gamepad(Node::Port);
+  ~Gamepad();
   auto read() -> n32 override;
 };

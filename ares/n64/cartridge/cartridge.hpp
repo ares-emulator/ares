@@ -1,6 +1,21 @@
 struct Cartridge {
   Node::Peripheral node;
   Memory::Readable rom;
+  Memory::Writable ram;
+  Memory::Writable eeprom;
+  struct Flash : Memory::Writable {
+    //flash.cpp
+    auto readHalf(u32 address) -> u16;
+    auto readWord(u32 address) -> u32;
+    auto writeHalf(u32 address, u16 value) -> void;
+    auto writeWord(u32 address, u32 value) -> void;
+
+    enum class Mode : uint { Idle, Erase, Write, Read, Status };
+    Mode mode = Mode::Idle;
+    u64  status = 0;
+    u32  source = 0;
+    u32  offset = 0;
+  } flash;
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }

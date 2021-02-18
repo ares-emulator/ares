@@ -40,11 +40,13 @@ auto PPU::load(Node::Object parent) -> void {
 }
 
 auto PPU::unload() -> void {
-  screen->quit();
-  node = {};
-  screen = {};
-  colorEmulation = {};
   debugger = {};
+  overscanEnable.reset();
+  colorEmulation.reset();
+  screen->quit();
+  node->remove(screen);
+  screen.reset();
+  node.reset();
 }
 
 auto PPU::step(u32 clocks) -> void {

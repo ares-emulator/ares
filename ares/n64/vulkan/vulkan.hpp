@@ -9,10 +9,17 @@ struct Vulkan {
   auto render() -> bool;
   auto frame() -> void;
   auto writeWord(u32 address, u32 data) -> void;
-  auto scanout(std::vector<::RDP::RGBA>& colors, u32& width, u32& height) -> bool;
+  auto scanoutAsync() -> bool;
+  auto mapScanoutRead(const u8*& rgba, u32& width, u32& height) -> void;
+  auto unmapScanoutRead() -> void;
+  auto endScanout() -> void;
 
   struct Implementation;
   Implementation* implementation = nullptr;
+
+  static constexpr u32  internalUpscale = 1;  //1, 2, 4, 8
+  static constexpr bool supersampleScanout = false;
+  static constexpr u32  outputUpscale = supersampleScanout ? 1 : internalUpscale;
 };
 
 extern Vulkan vulkan;

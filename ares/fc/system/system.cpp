@@ -103,15 +103,6 @@ auto System::unload() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
-  //zero-initialization (breaks Super Mario Bros.)
-  #if 0
-  if(!reset) {
-    serializer s;
-    s.setReading();
-    serialize(s, true);
-  }
-  #endif
-
   random.entropy(Random::Entropy::Low);
   cartridge.power();
   cpu.power(reset);

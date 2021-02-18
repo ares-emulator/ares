@@ -55,11 +55,11 @@ auto PCD::unload() -> void {
     sram.reset();
   }
 
-  cdda.unload();
-  adpcm.unload();
+  cdda.unload(node);
+  adpcm.unload(node);
   disconnect();
-  node = {};
-  tray = {};
+  tray.reset();
+  node.reset();
 }
 
 auto PCD::allocate(Node::Port parent) -> Node::Peripheral {

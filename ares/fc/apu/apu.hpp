@@ -47,7 +47,7 @@ struct APU : Thread {
     n8  shift;
     n1  decrement;
     n3  period;
-    n8  counter;
+    n8  counter = 1;
     n1  enable;
     n1  reload;
     n11 pulsePeriod;
@@ -66,7 +66,7 @@ struct APU : Thread {
     Sweep sweep;
 
     n16 lengthCounter;
-    n16 periodCounter;
+    n16 periodCounter = 1;
     n2  duty;
     n3  dutyCounter;
     n11 period;
@@ -82,7 +82,7 @@ struct APU : Thread {
     auto serialize(serializer&) -> void;
 
     n16 lengthCounter;
-    n16 periodCounter;
+    n16 periodCounter = 1;
     n8  linearLength;
     n1  haltLengthCounter;
     n11 period;
@@ -102,10 +102,10 @@ struct APU : Thread {
     Envelope envelope;
 
     n16 lengthCounter;
-    n16 periodCounter;
+    n16 periodCounter = 1;
     n4  period;
     n1  shortMode;
-    n15 lfsr;
+    n15 lfsr = 1;
   } noise;
 
   struct DMC {
@@ -144,7 +144,7 @@ struct APU : Thread {
     n1  irqPending;
     n2  mode;
     n2  counter;
-    i32 divider;
+    i32 divider = 1;
   } frame;
 
   //apu.cpp

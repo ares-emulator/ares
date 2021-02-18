@@ -120,6 +120,17 @@ auto Interrupt::drive(u32 source, bool line) -> void {
 
 auto Interrupt::power(bool reset) -> void {
   Memory::Interface::setWaitStates(2, 3, 2);
+  vblank = {};
+  gpu = {};
+  cdrom = {};
+  dma = {};
+  timer0 = {};
+  timer1 = {};
+  timer2 = {};
+  peripheral = {};
+  sio = {};
+  spu = {};
+  pio = {};
 }
 
 }

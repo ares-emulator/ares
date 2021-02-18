@@ -5,8 +5,8 @@ auto MCD::CDD::load(Node::Object parent) -> void {
   dac.load(parent);
 }
 
-auto MCD::CDD::unload() -> void {
-  dac.unload();
+auto MCD::CDD::unload(Node::Object parent) -> void {
+  dac.unload(parent);
 }
 
 auto MCD::CDD::clock() -> void {

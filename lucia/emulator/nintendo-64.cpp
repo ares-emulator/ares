@@ -36,6 +36,11 @@ auto Nintendo64::load() -> bool {
     port->connect();
   }
 
+  if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
+    port->allocate("Gamepad");
+    port->connect();
+  }
+
   return true;
 }
 
@@ -56,33 +61,65 @@ auto Nintendo64::open(ares::Node::Object node, string name, vfs::file::mode mode
 
   auto document = BML::unserialize(game.manifest);
   auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
+  auto saveRAMVolatile = (bool)document["game/board/memory(content=Save,type=ROM)/volatile"];
 
   if(name == "program.rom") {
     return vfs::memory::open(game.image.data(), programROMSize);
+  }
+
+  if(name == "save.ram" && !saveRAMVolatile) {
+    auto location = locate(game.location, ".sav", settings.paths.saves);
+    if(auto result = vfs::disk::open(location, mode)) return result;
+  }
+
+  if(name == "save.eeprom") {
+    auto location = locate(game.location, ".sav", settings.paths.saves);
+    if(auto result = vfs::disk::open(location, mode)) return result;
+  }
+
+  if(name == "save.flash") {
+    auto location = locate(game.location, ".sav", settings.paths.saves);
+    if(auto result = vfs::disk::open(location, mode)) return result;
+  }
+
+  if(name == "save.pak") {
+    auto location = locate(game.location, ".pak", settings.paths.saves);
+    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};
 }
 
 auto Nintendo64::input(ares::Node::Input::Input node) -> void {
+  auto parent = ares::Node::parent(node);
+  if(!parent) return;
+
+  auto port = ares::Node::parent(parent);
+  if(!port) return;
+
+  maybe<u32> index;
+  if(port->name() == "Controller Port 1") index = 0;
+  if(port->name() == "Controller Port 2") index = 1;
+  if(!index) return;
+
   auto name = node->name();
   maybe<InputMapping&> mapping;
-  if(name == "X-Axis" ) mapping = virtualPads[0].lx;
-  if(name == "Y-Axis" ) mapping = virtualPads[0].ly;
-  if(name == "Up"     ) mapping = virtualPads[0].up;
-  if(name == "Down"   ) mapping = virtualPads[0].down;
-  if(name == "Left"   ) mapping = virtualPads[0].left;
-  if(name == "Right"  ) mapping = virtualPads[0].right;
-  if(name == "B"      ) mapping = virtualPads[0].a;
-  if(name == "A"      ) mapping = virtualPads[0].b;
-  if(name == "C-Up"   ) mapping = virtualPads[0].ry;
-  if(name == "C-Down" ) mapping = virtualPads[0].ry;
-  if(name == "C-Left" ) mapping = virtualPads[0].rx;
-  if(name == "C-Right") mapping = virtualPads[0].rx;
-  if(name == "L"      ) mapping = virtualPads[0].l1;
-  if(name == "R"      ) mapping = virtualPads[0].r1;
-  if(name == "Z"      ) mapping = virtualPads[0].z;
-  if(name == "Start"  ) mapping = virtualPads[0].start;
+  if(name == "X-Axis" ) mapping = virtualPads[*index].lx;
+  if(name == "Y-Axis" ) mapping = virtualPads[*index].ly;
+  if(name == "Up"     ) mapping = virtualPads[*index].up;
+  if(name == "Down"   ) mapping = virtualPads[*index].down;
+  if(name == "Left"   ) mapping = virtualPads[*index].left;
+  if(name == "Right"  ) mapping = virtualPads[*index].right;
+  if(name == "B"      ) mapping = virtualPads[*index].a;
+  if(name == "A"      ) mapping = virtualPads[*index].b;
+  if(name == "C-Up"   ) mapping = virtualPads[*index].ry;
+  if(name == "C-Down" ) mapping = virtualPads[*index].ry;
+  if(name == "C-Left" ) mapping = virtualPads[*index].rx;
+  if(name == "C-Right") mapping = virtualPads[*index].rx;
+  if(name == "L"      ) mapping = virtualPads[*index].l1;
+  if(name == "R"      ) mapping = virtualPads[*index].r1;
+  if(name == "Z"      ) mapping = virtualPads[*index].z;
+  if(name == "Start"  ) mapping = virtualPads[*index].start;
 
   if(mapping) {
     auto value = mapping->value();

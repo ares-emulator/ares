@@ -7,10 +7,11 @@ auto MSU1::load(Node::Object parent) -> void {
   stream->setFrequency(44100);
 }
 
-auto MSU1::unload() -> void {
-  stream = {};
-  dataFile = {};
-  audioFile = {};
+auto MSU1::unload(Node::Object parent) -> void {
+  parent->remove(stream);
+  stream.reset();
+  dataFile.reset();
+  audioFile.reset();
 
   cpu.coprocessors.removeByValue(this);
   Thread::destroy();

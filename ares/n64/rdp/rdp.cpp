@@ -14,8 +14,8 @@ auto RDP::load(Node::Object parent) -> void {
 }
 
 auto RDP::unload() -> void {
-  node = {};
   debugger = {};
+  node.reset();
 }
 
 auto RDP::main() -> void {
@@ -28,7 +28,30 @@ auto RDP::step(u32 clocks) -> void {
 
 auto RDP::power(bool reset) -> void {
   Thread::reset();
-  command.ready = 1;
+  command = {};
+  edge = {};
+  shade = {};
+  texture = {};
+  zbuffer = {};
+  rectangle = {};
+  other = {};
+  fog = {};
+  blend = {};
+  primitive = {};
+  environment = {};
+  combine = {};
+  tlut = {};
+  load_ = {};
+  tileSize = {};
+  tile = {};
+  set = {};
+  primitiveDepth = {};
+  scissor = {};
+  convert = {};
+  key = {};
+  fillRectangle_ = {};
+  io.bist = {};
+  io.test = {};
 }
 
 }

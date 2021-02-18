@@ -151,6 +151,11 @@ struct HVC_ExROM : Interface {  //MMC5
     Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
   }
 
+  auto unload() -> void override {
+    cartridge.node->remove(stream);
+    stream.reset();
+  }
+
   auto main() -> void override {
     //scanline() resets this; if no scanlines detected, enter video blanking period
     if(cycleCounter >= 200) blank();  //113-114 normal; ~2500 across Vblank period

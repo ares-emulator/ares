@@ -63,12 +63,7 @@ auto MI::poll() -> void {
 }
 
 auto MI::power(bool reset) -> void {
-  irq.sp.mask = 1;
-  irq.si.mask = 1;
-  irq.ai.mask = 1;
-  irq.vi.mask = 1;
-  irq.pi.mask = 1;
-  irq.dp.mask = 1;
+  irq = {};
 }
 
 }

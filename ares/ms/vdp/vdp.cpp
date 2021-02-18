@@ -41,13 +41,14 @@ auto VDP::load(Node::Object parent) -> void {
 }
 
 auto VDP::unload() -> void {
+  debugger = {};
+  interframeBlending.reset();
   screen->quit();
+  node->remove(screen);
+  screen.reset();
+  node.reset();
   vram.reset();
   cram.reset();
-  node = {};
-  screen = {};
-  interframeBlending = {};
-  debugger = {};
 }
 
 auto VDP::main() -> void {

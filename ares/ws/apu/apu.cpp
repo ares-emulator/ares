@@ -22,8 +22,9 @@ auto APU::load(Node::Object parent) -> void {
 }
 
 auto APU::unload() -> void {
-  node = {};
-  stream = {};
+  node->remove(stream);
+  stream.reset();
+  node.reset();
 }
 
 auto APU::main() -> void {

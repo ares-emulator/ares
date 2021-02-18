@@ -159,12 +159,13 @@ auto PPU::load(Node::Object parent) -> void {
 }
 
 auto PPU::unload() -> void {
-  screen->quit();
   icon = {};
   showIcons.reset();
   orientation.reset();
   interframeBlending.reset();
   colorEmulation.reset();
+  screen->quit();
+  node->remove(screen);
   screen.reset();
   node.reset();
 }

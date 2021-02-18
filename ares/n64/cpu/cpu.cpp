@@ -121,18 +121,21 @@ auto CPU::instructionDebug() -> void {
 
 auto CPU::power(bool reset) -> void {
   Thread::reset();
+
+  pipeline = {};
+  branch = {};
+  context.mode = Context::Mode::Kernel;
+  for(auto& segment : context.segment) segment = Context::Segment::Invalid;
+  for(auto& entry : tlb.entry) entry = {};
+  tlb.physicalAddress = 0;
+  for(auto& r : ipu.r) r.u64 = 0;
+  ipu.lo.u64 = 0;
+  ipu.hi.u64 = 0;
   ipu.r[29].u64 = u32(0xa400'1ff0);  //stack pointer
   ipu.pc = u32(0xbfc0'0000);
-  scc.random.index = 31;
-  scc.status.errorLevel = 1;
-  scc.status.interruptMask = 0xff;
-  scc.status.softReset = 1;  //reset;
-  scc.status.vectorLocation = 1;
-  scc.status.floatingPointMode = 1;
-  scc.status.enable.coprocessor0 = 1;
-  scc.status.enable.coprocessor1 = 1;
-  scc.configuration.bigEndian = 1;
-  scc.configuration.systemClockRatio = 6;
+  scc = {};
+  for(auto& r : fpu.r) r.u64 = 0;
+  fpu.csr = {};
   fesetround(FE_TONEAREST);
   context.setMode();
 

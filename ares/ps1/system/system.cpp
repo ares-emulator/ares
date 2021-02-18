@@ -74,6 +74,12 @@ auto System::load(Node::System& root, string name) -> bool {
   peripheral.load(node);
   dma.load(node);
   timer.load(node);
+
+  bios.allocate(512_KiB);
+  if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
+    bios.load(fp);
+  }
+
   return true;
 }
 
@@ -105,19 +111,7 @@ auto System::save() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
-  bios.allocate(512_KiB);
   bios.setWaitStates(6, 12, 24);
-  if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
-    bios.load(fp);
-  }
-
-  //zero-initialization
-  if(!reset) {
-    serializer s;
-    s.setReading();
-    serialize(s, true);
-  }
-
   memory.power(reset);
   cpu.power(reset);
   gpu.power(reset);

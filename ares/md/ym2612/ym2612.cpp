@@ -20,8 +20,9 @@ auto YM2612::load(Node::Object parent) -> void {
 }
 
 auto YM2612::unload() -> void {
-  node = {};
-  stream = {};
+  node->remove(stream);
+  stream.reset();
+  node.reset();
 }
 
 auto YM2612::main() -> void {

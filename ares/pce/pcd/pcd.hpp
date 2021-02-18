@@ -207,7 +207,7 @@ private:
 
     //cdda.cpp
     auto load(Node::Object) -> void;
-    auto unload() -> void;
+    auto unload(Node::Object) -> void;
 
     auto clockSector() -> void;
     auto clockSample() -> void;
@@ -237,7 +237,7 @@ private:
 
     //adpcm.cpp
     auto load(Node::Object) -> void;
-    auto unload() -> void;
+    auto unload(Node::Object) -> void;
 
     auto clock() -> void;
     auto clockSample() -> void;

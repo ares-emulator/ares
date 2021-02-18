@@ -58,16 +58,17 @@ auto PPU::load(Node::Object parent) -> void {
 }
 
 auto PPU::unload() -> void {
-  screen->quit();
-  node = {};
-  versionPPU1 = {};
-  versionPPU2 = {};
-  vramSize = {};
-  screen = {};
-  overscanEnable = {};
-  colorEmulation = {};
-  colorBleed = {};
   debugger = {};
+  overscanEnable.reset();
+  colorEmulation.reset();
+  colorBleed.reset();
+  screen->quit();
+  node->remove(screen);
+  screen.reset();
+  versionPPU1.reset();
+  versionPPU2.reset();
+  vramSize.reset();
+  node.reset();
 }
 
 auto PPU::map() -> void {

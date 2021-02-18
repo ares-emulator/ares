@@ -31,48 +31,45 @@ struct VI : Thread, Memory::IO<VI> {
   auto serialize(serializer&) -> void;
 
   struct IO {
-    n2  colorDepth = 0;
-    n1  gammaDither = 0;
-    n1  gamma = 0;
-    n1  divot = 0;
-    n1  serrate = 0;
-    n2  antialias = 0;
-    n32 reserved = 0;
-    n24 dramAddress = 0;
-    n12 width = 0;
+    n2  colorDepth;
+    n1  gammaDither;
+    n1  gamma;
+    n1  divot;
+    n1  serrate;
+    n2  antialias;
+    n32 reserved;
+    n24 dramAddress;
+    n12 width;
     n10 coincidence = 256;
-    n8  hsyncWidth = 0;
-    n8  colorBurstWidth = 0;
-    n4  vsyncWidth = 0;
-    n10 colorBurstHsync = 0;
-    n10 halfLinesPerField = 0;
-    n12 quarterLineDuration = 0;
-    n5  palLeapPattern = 0;
-    n12 hsyncLeap[2] = {};
-    n10 hend = 0;
-    n10 hstart = 0;
-    n10 vend = 0;
-    n10 vstart = 0;
-    n10 colorBurstEnd = 0;
-    n10 colorBurstStart = 0;
-    n12 xscale = 0;
-    n12 xsubpixel = 0;
-    n12 yscale = 0;
-    n12 ysubpixel = 0;
+    n8  hsyncWidth;
+    n8  colorBurstWidth;
+    n4  vsyncWidth;
+    n10 colorBurstHsync;
+    n10 halfLinesPerField;
+    n12 quarterLineDuration;
+    n5  palLeapPattern;
+    n12 hsyncLeap[2];
+    n10 hend;
+    n10 hstart;
+    n10 vend;
+    n10 vstart;
+    n10 colorBurstEnd;
+    n10 colorBurstStart;
+    n12 xscale;
+    n12 xsubpixel;
+    n12 yscale;
+    n12 ysubpixel;
 
   //internal:
-    n9  vcounter = 0;
-    n1  field = 0;
+    n9  vcounter;
+    n1  field;
   } io;
 
 //unserialized:
   bool refreshed;
 
   #if defined(VULKAN)
-  std::vector<::RDP::RGBA> gpuColorBuffer;
   bool gpuOutputValid = false;
-  u32  gpuOutputWidth = 0;
-  u32  gpuOutputHeight = 0;
   #endif
 };
 

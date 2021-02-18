@@ -32,6 +32,7 @@ auto VDP::unload() -> void {
   if(Model::MSX())  TMS9918::unload();
   if(Model::MSX2()) V9938::unload();
   screen_->quit();
+  node->remove(screen_);
   screen_.reset();
   node.reset();
 }

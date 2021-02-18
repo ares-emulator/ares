@@ -85,10 +85,10 @@ struct PPU : Thread {
     n1  nmiFlag;
 
     //$2000
-    n6  vramIncrement;  //1 or 32
-    n16 spriteAddress;  //0x0000 or 0x1000
-    n16 bgAddress;      //0x0000 or 0x1000
-    n5  spriteHeight;   //8 or 16
+    n6  vramIncrement = 1;  //1 or 32
+    n16 spriteAddress;      //0x0000 or 0x1000
+    n16 bgAddress;          //0x0000 or 0x1000
+    n5  spriteHeight = 8;   //8 or 16
     n1  masterSelect;
     n1  nmiEnable;
 

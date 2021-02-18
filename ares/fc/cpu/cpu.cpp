@@ -42,12 +42,14 @@ auto CPU::power(bool reset) -> void {
   MOS6502::power();
   Thread::create(system.frequency(), {&CPU::main, this});
 
-  if(!reset) for(auto& data : ram) data = 0xff;
+  if(!reset) {
+    ram.fill(0xff);
+  }
 
   r.pc.byte(0) = readBus(0xfffc);
   r.pc.byte(1) = readBus(0xfffd);
 
-  io.rdyLine = 1;
+  io = {};
 }
 
 }

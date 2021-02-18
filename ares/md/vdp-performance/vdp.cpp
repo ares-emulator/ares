@@ -32,9 +32,10 @@ auto VDP::load(Node::Object parent) -> void {
 }
 
 auto VDP::unload() -> void {
-  screen->quit();
   debugger = {};
   overscan.reset();
+  screen->quit();
+  node->remove(screen);
   screen.reset();
   node.reset();
 }

@@ -110,13 +110,6 @@ auto System::save() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
-  //zero-initialization
-  if(!reset) {
-    serializer s;
-    s.setReading();
-    serialize(s, true);
-  }
-
   cartridge.power(reset);
   dd.power(reset);
   mi.power(reset);

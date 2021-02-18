@@ -37,8 +37,8 @@ auto Disc::load(Node::Object parent) -> void {
 
 auto Disc::unload() -> void {
   debugger = {};
-  cdda.unload();
-  cdxa.unload();
+  cdda.unload(node);
+  cdxa.unload(node);
 
   disconnect();
   tray.reset();
@@ -82,6 +82,7 @@ auto Disc::connect() -> void {
 auto Disc::disconnect() -> void {
   fd.reset();
   cd.reset();
+  information = {};
 }
 
 auto Disc::main() -> void {
@@ -176,14 +177,44 @@ auto Disc::step(u32 clocks) -> void {
 auto Disc::power(bool reset) -> void {
   Thread::reset();
   Memory::Interface::setWaitStates(7, 13, 25);
-  audio.mute = 0;
-  audio.muteADPCM = 0;
+
+  drive.lba.current = 0;
+  drive.lba.request = 0;
+  drive.lba.seeking = 0;
+  for(auto& v : drive.sector.data) v = 0;
+  drive.sector.offset = 0;
+  drive.mode = {};
+  drive.seeking = 0;
+  audio = {};
   //configure for stereo sound at 100% volume level
   audio.volume[0] = audio.volumeLatch[0] = 0x80;
   audio.volume[1] = audio.volumeLatch[1] = 0x00;
   audio.volume[2] = audio.volumeLatch[2] = 0x00;
   audio.volume[3] = audio.volumeLatch[3] = 0x80;
-  ssr.motorOn = 1;
+  cdda.playMode = CDDA::PlayMode::Normal;
+  cdda.sample.left = 0;
+  cdda.sample.right = 0;
+  cdxa.filter = {};
+  cdxa.sample.left = 0;
+  cdxa.sample.right = 0;
+  cdxa.monaural = 0;
+  cdxa.samples.flush();
+  for(auto& v : cdxa.previousSamples) v = 0;
+  event.command = 0;
+  event.counter = 0;
+  event.invocation = 0;
+  event.queued = 0;
+  irq = {};
+  fifo.parameter.flush();
+  fifo.response.flush();
+  fifo.data.flush();
+  psr = {};
+  ssr = {};
+  io = {};
+  counter.sector = 0;
+  counter.cdda = 0;
+  counter.cdxa = 0;
+  counter.report = 0;
 }
 
 }

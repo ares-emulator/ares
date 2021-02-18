@@ -35,8 +35,8 @@ struct MI : Memory::IO<MI> {
 
 private:
   struct Interrupt {
-    bool line;
-    bool mask;
+    b1 line = 1;
+    b1 mask;
   };
 
   struct IRQs {

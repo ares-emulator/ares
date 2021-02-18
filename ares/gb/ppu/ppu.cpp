@@ -64,19 +64,20 @@ auto PPU::load(Node::Object parent) -> void {
 }
 
 auto PPU::unload() -> void {
+  debugger = {};
+  colorEmulationDMG.reset();
+  colorEmulationCGB.reset();
+  interframeBlending.reset();
   screen->quit();
+  node->remove(screen);
+  screen.reset();
+  node.reset();
   vram.reset();
   oam.reset();
   bgp.reset();
   obp.reset();
   bgpd.reset();
   obpd.reset();
-  node = {};
-  screen = {};
-  colorEmulationDMG = {};
-  colorEmulationCGB = {};
-  interframeBlending = {};
-  debugger = {};
 }
 
 auto PPU::main() -> void {

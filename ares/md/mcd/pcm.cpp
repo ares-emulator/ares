@@ -8,8 +8,9 @@ auto MCD::PCM::load(Node::Object parent) -> void {
   ram.allocate(64_KiB);
 }
 
-auto MCD::PCM::unload() -> void {
-  stream = {};
+auto MCD::PCM::unload(Node::Object parent) -> void {
+  parent->remove(stream);
+  stream.reset();
 
   ram.reset();
 }

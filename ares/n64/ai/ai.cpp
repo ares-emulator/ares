@@ -55,6 +55,9 @@ auto AI::step(u32 clocks) -> void {
 auto AI::power(bool reset) -> void {
   Thread::reset();
 
+  fifo[0] = {};
+  fifo[1] = {};
+  io = {};
   dac.frequency = 44100;
   dac.precision = 16;
   dac.period = 93'750'000 / 44'100;

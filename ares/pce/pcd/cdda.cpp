@@ -4,8 +4,9 @@ auto PCD::CDDA::load(Node::Object parent) -> void {
   stream->setFrequency(44100);
 }
 
-auto PCD::CDDA::unload() -> void {
-  stream = {};
+auto PCD::CDDA::unload(Node::Object parent) -> void {
+  parent->remove(stream);
+  stream.reset();
 }
 
 auto PCD::CDDA::clockSector() -> void {

@@ -100,6 +100,11 @@ struct KonamiVRC6 : Interface {
     Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
   }
 
+  auto unload() -> void override {
+    cartridge.node->remove(stream);
+    stream.reset();
+  }
+
   auto main() -> void override {
     if(irqEnable) {
       if(irqMode == 0) {

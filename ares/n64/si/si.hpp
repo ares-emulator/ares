@@ -16,6 +16,8 @@ struct SI : Memory::IO<SI> {
   //si.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
+  auto addressCRC(u16 address) const -> n5;
+  auto dataCRC(array_view<u8> data) const -> n8;
   auto main() -> void;
   auto power(bool reset) -> void;
 

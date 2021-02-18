@@ -62,7 +62,7 @@ struct CPU : MOS6502, Thread {
     n1  nmiLine;
     n1  irqLine;
     n1  apuLine;
-    n1  rdyLine;
+    n1  rdyLine = 1;
     n1  rdyAddressValid;
     n16 rdyAddressValue;
     n1  oamDMAPending;

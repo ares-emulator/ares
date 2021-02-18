@@ -6,8 +6,9 @@ auto MCD::CDD::DAC::load(Node::Object parent) -> void {
   stream->setFrequency(44100);
 }
 
-auto MCD::CDD::DAC::unload() -> void {
-  stream = {};
+auto MCD::CDD::DAC::unload(Node::Object parent) -> void {
+  parent->remove(stream);
+  stream.reset();
 }
 
 auto MCD::CDD::DAC::sample(i16 left, i16 right) -> void {

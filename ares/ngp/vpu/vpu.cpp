@@ -28,10 +28,11 @@ auto VPU::load(Node::Object parent) -> void {
 }
 
 auto VPU::unload() -> void {
+  interframeBlending.reset();
   screen->quit();
-  node = {};
-  screen = {};
-  interframeBlending = {};
+  node->remove(screen);
+  screen.reset();
+  node.reset();
 }
 
 auto VPU::main() -> void {

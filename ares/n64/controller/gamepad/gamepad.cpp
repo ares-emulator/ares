@@ -17,6 +17,24 @@ Gamepad::Gamepad(Node::Port parent) {
   r           = node->append<Node::Input::Button>("R");
   z           = node->append<Node::Input::Button>("Z");
   start       = node->append<Node::Input::Button>("Start");
+
+  if(parent->name() == "Controller Port 1") {
+    ram.allocate(32_KiB);
+  }
+
+  if(ram) {
+    if(auto fp = platform->open(node, "save.pak", File::Read)) {
+      ram.load(fp);
+    }
+  }
+}
+
+Gamepad::~Gamepad() {
+  if(ram) {
+    if(auto fp = platform->open(node, "save.pak", File::Write)) {
+      ram.save(fp);
+    }
+  }
 }
 
 auto Gamepad::read() -> n32 {
@@ -42,8 +60,8 @@ auto Gamepad::read() -> n32 {
   auto ax = sclamp<8>(+x->value() >> 8);
 
   //dead-zone
-  if(abs(ay) < 32) ay = 0;
-  if(abs(ax) < 32) ax = 0;
+  if(abs(ay) < 24) ay = 0;
+  if(abs(ax) < 24) ax = 0;
 
   n32 data;
   data.byte(0) = ay;

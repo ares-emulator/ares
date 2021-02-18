@@ -12,24 +12,27 @@ auto PI::load(Node::Object parent) -> void {
   rom.allocate(0x7c0);
   ram.allocate(0x040);
 
-  debugger.load(node);
-}
-
-auto PI::unload() -> void {
-  rom.reset();
-  ram.reset();
-  node = {};
-  debugger = {};
-}
-
-auto PI::power(bool reset) -> void {
-  rom.fill();
-
   string iplrom = cartridge.region() == "NTSC" ? "pif.ntsc.rom" : "pif.pal.rom";
   iplrom = "pif.rom";
   if(auto fp = platform->open(node, iplrom, File::Read, File::Required)) {
     rom.load(fp);
   }
+
+  debugger.load(node);
+}
+
+auto PI::unload() -> void {
+  debugger = {};
+  rom.reset();
+  ram.reset();
+  node.reset();
+}
+
+auto PI::power(bool reset) -> void {
+  ram.fill();
+  io = {};
+  bsd1 = {};
+  bsd2 = {};
 
   //write CIC seeds into PIF RAM so that cartridge checksum function passes
   string cic = cartridge.cic();

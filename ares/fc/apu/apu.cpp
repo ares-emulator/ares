@@ -44,8 +44,9 @@ auto APU::load(Node::Object parent) -> void {
 }
 
 auto APU::unload() -> void {
-  node.reset();
+  node->remove(stream);
   stream.reset();
+  node.reset();
 }
 
 auto APU::main() -> void {
@@ -75,20 +76,14 @@ auto APU::setIRQ() -> void {
 auto APU::power(bool reset) -> void {
   Thread::create(system.frequency(), {&APU::main, this});
 
-  pulse1.periodCounter = 1;
-  pulse1.sweep.counter = 1;
-
-  pulse2.periodCounter = 1;
-  pulse2.sweep.counter = 1;
-
-  triangle.periodCounter = 1;
-
-  noise.periodCounter = 1;
-  noise.lfsr = 1;
-
+  pulse1 = {};
+  pulse2 = {};
+  triangle = {};
+  noise = {};
+  dmc = {};
   dmc.periodCounter = Region::PAL() ? dmcPeriodTablePAL[0] : dmcPeriodTableNTSC[0];
-
-  frame.divider = 1;
+  frame = {};
+  enabledChannels = 0;
 
   setIRQ();
 }

@@ -5,7 +5,8 @@ auto Disc::CDXA::load(Node::Object parent) -> void {
 //stream->setResamplerFrequency(44100);
 }
 
-auto Disc::CDXA::unload() -> void {
+auto Disc::CDXA::unload(Node::Object parent) -> void {
+//parent->remove(stream);
 //stream.reset();
 }
 

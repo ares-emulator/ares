@@ -148,7 +148,7 @@ struct GPU : Thread, Memory::Interface {
     n1 interrupt;
 
     //GP1(03): display disable
-    n1 displayDisable;
+    n1 displayDisable = 1;
 
     //GP1(04): DMA direction
     n2 dmaDirection;
@@ -158,15 +158,15 @@ struct GPU : Thread, Memory::Interface {
     n9  displayStartY;
 
     //GP1(06): horizontal display range
-    n12 displayRangeX1;
-    n12 displayRangeX2;
+    n12 displayRangeX1 = 512;
+    n12 displayRangeX2 = 512 + 256 * 10;
 
     //GP1(07): vertical display range
-    n12 displayRangeY1;
-    n12 displayRangeY2;
+    n12 displayRangeY1 = 16;
+    n12 displayRangeY2 = 16 + 240;
 
     //GP1(08): display mode
-    n3 horizontalResolution;
+    n3 horizontalResolution = 1;
     n1 verticalResolution;
     n1 videoMode;   //0 = NTSC, 1 = PAL
     n1 colorDepth;  //0 = 15bpp, 1 = 24bpp

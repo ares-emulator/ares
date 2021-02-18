@@ -24,6 +24,9 @@ auto MemoryControl::power(bool reset) -> void {
   //timings are for $1f80:106x
   //timings for $fffe:xxxx are hardcoded as (0, 1, 1) in cpu/core/memory.cpp
   Memory::Interface::setWaitStates(2, 2, 2);
+
+  memory.ram = {};
+  memory.cache = {};
 }
 
 }

@@ -126,10 +126,12 @@ auto PI::writeWord(u32 address, u32 data_) -> void {
   if(address == 3) {
     //PI_WRITE_LENGTH
     io.writeLength = (n24(data) | 7) + 1;
+
     for(u32 address = 0; address < io.writeLength; address += 2) {
       u16 data = bus.readHalf(io.pbusAddress + address);
       bus.writeHalf(io.dramAddress + address, data);
     }
+
     io.interrupt = 1;
     mi.raise(MI::IRQ::PI);
   }

@@ -39,8 +39,7 @@ auto Peripheral::step(u32 clocks) -> void {
 auto Peripheral::power(bool reset) -> void {
   Thread::reset();
   Memory::Interface::setWaitStates(2, 2, 2);
-  io.transmitStarted = 1;
-  io.transmitFinished = 1;
+  io = {};
 }
 
 }

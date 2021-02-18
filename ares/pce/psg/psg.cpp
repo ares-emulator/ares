@@ -22,8 +22,9 @@ auto PSG::load(Node::Object parent) -> void {
 }
 
 auto PSG::unload() -> void {
-  node = {};
-  stream = {};
+  node->remove(stream);
+  stream.reset();
+  node.reset();
 }
 
 auto PSG::main() -> void {

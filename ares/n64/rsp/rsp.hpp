@@ -72,7 +72,7 @@ struct RSP : Thread, Memory::IO<RSP> {
     auto writeWord(u32 address, u32 data) -> void;
 
     n1 semaphore;
-    n1 halted;
+    n1 halted = 1;
     n1 broken;
     n1 full;
     n1 singleStep;
@@ -108,8 +108,8 @@ struct RSP : Thread, Memory::IO<RSP> {
     auto delaySlot() -> void { state = DelaySlot; }
     auto halt() -> void { state = Halt; }
 
-    u64 pc;
-    u32 state;
+    u64 pc = 0;
+    u32 state = Step;
   } branch;
 
   //cpu-instructions.cpp

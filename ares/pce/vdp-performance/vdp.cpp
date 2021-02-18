@@ -30,12 +30,13 @@ auto VDP::load(Node::Object parent) -> void {
 }
 
 auto VDP::unload() -> void {
-  screen->quit();
-  node = {};
-  screen = {};
   vce.debugger = {};
   vdc0.debugger = {}; if(Model::SuperGrafx())
   vdc1.debugger = {};
+  screen->quit();
+  node->remove(screen);
+  screen.reset();
+  node.reset();
 }
 
 auto VDP::main() -> void {

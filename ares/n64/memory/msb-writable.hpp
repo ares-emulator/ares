@@ -1,4 +1,8 @@
 struct Writable {
+  explicit operator bool() const {
+    return size > 0;
+  }
+
   auto reset() -> void {
     memory::free<u8, 64_KiB>(data);
     data = nullptr;

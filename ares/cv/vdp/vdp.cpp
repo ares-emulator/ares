@@ -22,6 +22,7 @@ auto VDP::load(Node::Object parent) -> void {
 auto VDP::unload() -> void {
   TMS9918::unload();
   screen->quit();
+  node->remove(screen);
   screen.reset();
   node.reset();
 }

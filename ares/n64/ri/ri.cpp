@@ -13,8 +13,8 @@ auto RI::load(Node::Object parent) -> void {
 }
 
 auto RI::unload() -> void {
-  node = {};
   debugger = {};
+  node.reset();
 }
 
 auto RI::power(bool reset) -> void {

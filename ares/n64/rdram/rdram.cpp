@@ -24,6 +24,7 @@ auto RDRAM::unload() -> void {
 }
 
 auto RDRAM::power(bool reset) -> void {
+  ram.fill();
 }
 
 }

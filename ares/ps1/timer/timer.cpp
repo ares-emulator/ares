@@ -77,8 +77,27 @@ auto Timer::vsync(bool line) -> void {
 
 auto Timer::power(bool reset) -> void {
   Memory::Interface::setWaitStates(2, 2, 2);
+
+  counter.dotclock = 0;
+  counter.divclock = 0;
   for(auto& timer : timers) {
+    timer.counter = 0;
+    timer.target = 0;
+    timer.synchronize = 0;
+    timer.mode = 0;
+    timer.resetMode = 0;
+    timer.irqOnTarget = 0;
+    timer.irqOnSaturate = 0;
+    timer.irqRepeat = 0;
+    timer.irqMode = 0;
+    timer.clock = 0;
+    timer.divider = 0;
     timer.irqLine = 1;
+    timer.reachedTarget = 0;
+    timer.reachedSaturate = 0;
+    timer.unknown = 0;
+    timer.paused = 0;
+    timer.irqTriggered = 0;
   }
 }
 

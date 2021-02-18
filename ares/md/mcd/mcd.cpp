@@ -57,8 +57,8 @@ auto MCD::unload() -> void {
     }
   }
 
-  cdd.unload();
-  pcm.unload();
+  cdd.unload(node);
+  pcm.unload(node);
 
   bios.reset();
   pram.reset();
@@ -66,9 +66,9 @@ auto MCD::unload() -> void {
   bram.reset();
   cdc.ram.reset();
 
-  node = {};
-  tray = {};
   debugger = {};
+  tray.reset();
+  node.reset();
 }
 
 auto MCD::allocate(Node::Port parent) -> Node::Peripheral {

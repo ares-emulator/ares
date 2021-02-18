@@ -51,8 +51,8 @@ struct CPU : Thread {
   auto power(bool reset) -> void;
 
   struct Pipeline {
-    u32 address;
-    u32 instruction;
+    u32 address = 0;
+    u32 instruction = 0;
   } pipeline;
 
   //delay-slots.cpp
@@ -227,18 +227,18 @@ struct CPU : Thread {
     struct Breakpoint {
       struct Address {
         // 3: Breakpoint Code Address
-        u32 code;
+        n32 code;
 
         // 5: Breakpoint Data Address
-        u32 data;
+        n32 data;
       } address;
 
       struct Mask {
         //11: Breakpoint Code Mask
-        u32 code;
+        n32 code;
 
         // 9: Breakpoint Data Mask
-        u32 data;
+        n32 data;
       } mask;
 
       // 7: Breakpoint Control
@@ -268,10 +268,10 @@ struct CPU : Thread {
     } breakpoint;
 
     // 6: Target Address
-    u32 targetAddress;
+    n32 targetAddress;
 
     // 8: Bad Virtual Address
-    u32 badVirtualAddress;
+    n32 badVirtualAddress;
 
     //12: Status
     struct Status {
@@ -291,9 +291,9 @@ struct CPU : Thread {
       n1 vectorLocation;
       n1 reverseEndian;
       struct Enable {
-        n1 coprocessor0;
+        n1 coprocessor0 = 1;
         n1 coprocessor1;
-        n1 coprocessor2;
+        n1 coprocessor2 = 1;
         n1 coprocessor3;
       } enable;
     } status;
@@ -308,7 +308,7 @@ struct CPU : Thread {
     } cause;
 
     //14: Exception Program Counter
-    u32 epc;
+    n32 epc;
 
     //15: Product ID
     struct ProductID {

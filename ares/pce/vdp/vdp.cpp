@@ -38,13 +38,14 @@ auto VDP::load(Node::Object parent) -> void {
 }
 
 auto VDP::unload() -> void {
-  screen->quit();
-  node = {};
-  screen = {};
-  overscan = {};
   vce.debugger = {};
   vdc0.debugger = {}; if(Model::SuperGrafx())
   vdc1.debugger = {};
+  overscan.reset();
+  screen->quit();
+  node->remove(screen);
+  screen.reset();
+  node.reset();
 }
 
 auto VDP::main() -> void {

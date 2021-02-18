@@ -25,9 +25,10 @@ auto DSP::load(Node::Object parent) -> void {
 }
 
 auto DSP::unload() -> void {
-  node = {};
-  stream = {};
   debugger = {};
+  node->remove(stream);
+  stream.reset();
+  node.reset();
 }
 
 auto DSP::main() -> void {

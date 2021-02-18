@@ -38,6 +38,7 @@ auto PPU::load(Node::Object parent) -> void {
 
 auto PPU::unload() -> void {
   screen->quit();
+  node->remove(screen);
   debugger.unload();
   colorEmulation.reset();
   overscan.reset();
@@ -94,14 +95,13 @@ auto PPU::power(bool reset) -> void {
   Thread::create(system.frequency(), {&PPU::main, this});
   screen->power();
 
-  io.vramIncrement = 1;
-  io.spriteHeight = 8;
-
   if(!reset) {
-    for(auto& data : ciram) data = 0;
-    for(auto& data : cgram) data = 0;
-    for(auto& data : oam  ) data = 0;
+    ciram.fill();
+    cgram.fill();
+    oam.fill();
   }
+
+  io = {};
 }
 
 }
