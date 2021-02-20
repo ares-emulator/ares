@@ -87,7 +87,7 @@ auto GameBoy::input(ares::Node::Input::Input node) -> void {
   if(name == "Select") mapping = virtualPads[0].select;
   if(name == "Start" ) mapping = virtualPads[0].start;
   //MBC5
-  if(name == "Rumble");  //todo
+  if(name == "Rumble") mapping = virtualPads[0].rumble;
   //MBC7
   if(name == "X"     ) mapping = virtualPads[0].lx;
   if(name == "Y"     ) mapping = virtualPads[0].ly;
@@ -99,6 +99,11 @@ auto GameBoy::input(ares::Node::Input::Input node) -> void {
     }
     if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
+    }
+    if(auto rumble = node->cast<ares::Node::Input::Rumble>()) {
+      if(auto target = dynamic_cast<InputRumble*>(mapping.data())) {
+        target->rumble(rumble->enable());
+      }
     }
   }
 }
@@ -174,7 +179,7 @@ auto GameBoyColor::input(ares::Node::Input::Input node) -> void {
   if(name == "Select") mapping = virtualPads[0].select;
   if(name == "Start" ) mapping = virtualPads[0].start;
   //MBC5
-  if(name == "Rumble");  //todo
+  if(name == "Rumble") mapping = virtualPads[0].rumble;
   //MBC7
   if(name == "X"     ) mapping = virtualPads[0].lx;
   if(name == "Y"     ) mapping = virtualPads[0].ly;
@@ -186,6 +191,11 @@ auto GameBoyColor::input(ares::Node::Input::Input node) -> void {
     }
     if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
+    }
+    if(auto rumble = node->cast<ares::Node::Input::Rumble>()) {
+      if(auto target = dynamic_cast<InputRumble*>(mapping.data())) {
+        target->rumble(rumble->enable());
+      }
     }
   }
 }

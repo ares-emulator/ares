@@ -20,7 +20,7 @@ auto BSMemoryCartridge::connect() -> void {
     ROM = memory["type"].text() == "ROM";
     this->memory.allocate(memory["size"].natural());
     if(auto fp = platform->open(node, {"program.", memory["type"].text().downcase()}, File::Read, File::Required)) {
-      fp->read(this->memory.data(), this->memory.size());
+      fp->read({this->memory.data(), this->memory.size()});
     }
   }
 
@@ -147,7 +147,7 @@ auto BSMemoryCartridge::save() -> void {
 
   if(auto memory = document["game/board/memory(type=Flash,content=Program)"]) {
     if(auto fp = platform->open(node, "program.flash", File::Write)) {
-      fp->write(this->memory.data(), this->memory.size());
+      fp->write({this->memory.data(), this->memory.size()});
     }
   }
 }

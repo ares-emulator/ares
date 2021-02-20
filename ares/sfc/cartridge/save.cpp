@@ -23,7 +23,7 @@ auto Cartridge::saveMemory(AbstractMemory& ram, Markup::Node node) -> void {
     if(auto architecture = memory["architecture"].text()) name.prepend(architecture, ".");
     name.downcase();
     if(auto fp = platform->open(Cartridge::node, name, File::Write)) {
-      fp->write(ram.data(), ram.size());
+      fp->write({ram.data(), ram.size()});
     }
   }
 }
@@ -117,7 +117,7 @@ auto Cartridge::saveEpsonRTC(Markup::Node node) -> void {
       if(auto fp = platform->open(Cartridge::node, "epson.time.rtc", File::Write)) {
         n8 data[16];
         epsonrtc.save(data);
-        fp->write(data, 16);
+        fp->write({data, 16});
       }
     }
   }
@@ -130,7 +130,7 @@ auto Cartridge::saveSharpRTC(Markup::Node node) -> void {
       if(auto fp = platform->open(Cartridge::node, "sharp.time.rtc", File::Write)) {
         n8 data[16];
         sharprtc.save(data);
-        fp->write(data, 16);
+        fp->write({data, 16});
       }
     }
   }

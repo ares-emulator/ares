@@ -222,8 +222,8 @@ struct GPU : Thread, Memory::Interface {
 
   struct Vertex : Point, Texel, Color {
     auto setPoint(u32 data) -> Vertex& {
-      x = s16(data >>  0);
-      y = s16(data >> 16);
+      x = i11(data >>  0);
+      y = i11(data >> 16);
       return *this;
     }
 

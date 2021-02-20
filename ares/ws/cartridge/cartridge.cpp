@@ -33,7 +33,7 @@ auto Cartridge::connect() -> void {
     rom.data = new n8[rom.mask + 1];
     memory::fill<u8>(rom.data, rom.mask + 1, 0xff);
     if(auto fp = platform->open(node, "program.rom", File::Read, File::Required)) {
-      fp->read(rom.data, rom.size);
+      fp->read({rom.data, rom.size});
     }
   }
 
@@ -44,7 +44,7 @@ auto Cartridge::connect() -> void {
     memory::fill<u8>(ram.data, ram.mask + 1, 0xff);
     if(!memory["volatile"]) {
       if(auto fp = platform->open(node, "save.ram", File::Read)) {
-        fp->read(ram.data, ram.size);
+        fp->read({ram.data, ram.size});
       }
     }
   }
@@ -52,7 +52,7 @@ auto Cartridge::connect() -> void {
   if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
     eeprom.allocate(memory["size"].natural(), 16, 1, 0xff);
     if(auto fp = platform->open(node, "save.eeprom", File::Read)) {
-      fp->read(eeprom.data, eeprom.size);
+      fp->read({eeprom.data, eeprom.size});
     }
   }
 
@@ -63,7 +63,7 @@ auto Cartridge::connect() -> void {
     memory::fill<u8>(rtc.data, rtc.mask + 1, 0x00);
     if(!memory["volatile"]) {
       if(auto fp = platform->open(node, "time.rtc", File::Read)) {
-        fp->read(rtc.data, rtc.size);
+        fp->read({rtc.data, rtc.size});
       }
     }
   }
@@ -102,21 +102,21 @@ auto Cartridge::save() -> void {
   if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
     if(!memory["volatile"]) {
       if(auto fp = platform->open(node, "save.ram", File::Write)) {
-        fp->write(ram.data, ram.size);
+        fp->write({ram.data, ram.size});
       }
     }
   }
 
   if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
     if(auto fp = platform->open(node, "save.eeprom", File::Write)) {
-      fp->write(eeprom.data, eeprom.size);
+      fp->write({eeprom.data, eeprom.size});
     }
   }
 
   if(auto memory = document["game/board/memory(type=RTC,content=Time)"]) {
     if(!memory["volatile"]) {
       if(auto fp = platform->open(node, "time.rtc", File::Write)) {
-        fp->write(rtc.data, rtc.size);
+        fp->write({rtc.data, rtc.size});
       }
     }
   }

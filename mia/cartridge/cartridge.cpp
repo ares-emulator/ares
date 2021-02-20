@@ -67,7 +67,7 @@ auto Cartridge::import(string location) -> string {
 
     if(size > buffer.size()) return {"missing ", filename};
 
-    file::write({location, filename}, {buffer, size});
+    file::write({location, filename}, {buffer.data(), size});
     buffer += size;
   }
 

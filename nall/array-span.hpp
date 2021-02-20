@@ -23,7 +23,23 @@ template<typename T> struct array_span : array_view<T> {
     super::_size = (s32)size;
   }
 
-  operator T*() { return (T*)super::operator const T*(); }
+  explicit operator bool() const {
+    return super::_data && super::_size > 0;
+  }
+
+  explicit operator T*() {
+    return (T*)super::_data;
+  }
+
+  T& operator*() const {
+    return (T&)*super::_data;
+  }
+
+  auto operator++() -> type& { super::_data++; super::_size--; return *this; }
+  auto operator--() -> type& { super::_data--; super::_size++; return *this; }
+
+  auto operator++(s32) -> type { auto copy = *this; ++(*this); return copy; }
+  auto operator--(s32) -> type { auto copy = *this; --(*this); return copy; }
 
   auto operator[](u32 index) -> T& { return (T&)super::operator[](index); }
 

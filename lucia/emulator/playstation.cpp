@@ -23,12 +23,11 @@ PlayStation::PlayStation() {
 
 auto PlayStation::load() -> bool {
   auto region = Emulator::region();
-  if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return false;
-
   //if statements below are ordered by lowest to highest priority
   if(region == "PAL"   ) regionID = 2;
   if(region == "NTSC-J") regionID = 1;
   if(region == "NTSC-U") regionID = 0;
+  if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return false;
 
   if(!file::exists(firmware[regionID].location)) {
     errorFirmwareRequired(firmware[regionID]);

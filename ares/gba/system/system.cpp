@@ -84,7 +84,7 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
-    fp->read(bios.data, bios.size);
+    fp->read({bios.data, bios.size});
   }
 
   bus.power();

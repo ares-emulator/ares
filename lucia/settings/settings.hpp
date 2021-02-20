@@ -26,6 +26,9 @@ struct Settings : Markup::Node {
     bool colorEmulation = true;
     bool interframeBlending = true;
     bool overscan = false;
+
+    string quality = "SD";
+    bool supersampling = false;
   } video;
 
   struct Audio {
@@ -109,6 +112,17 @@ struct VideoSettings : VerticalLayout {
     HorizontalLayout overscanLayout{this, Size{~0, 0}};
       CheckLabel overscanOption{&overscanLayout, Size{0, 0}, 2};
       Label overscanLabel{&overscanLayout, Size{~0, 0}};
+  //
+  Label renderSettingsLabel{this, Size{~0, 0}, 2};
+  HorizontalLayout renderQualityLayout{this, Size{~0, 0}, 2};
+    RadioLabel renderQualitySD{&renderQualityLayout, Size{0, 0}};
+    RadioLabel renderQualityHD{&renderQualityLayout, Size{0, 0}};
+    RadioLabel renderQualityUHD{&renderQualityLayout, Size{0, 0}};
+    Group renderQualityGroup{&renderQualitySD, &renderQualityHD, &renderQualityUHD};
+  HorizontalLayout renderSupersamplingLayout{this, Size{~0, 0}, 2};
+    CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 2};
+    Label renderSupersamplingHint{&renderSupersamplingLayout, Size{0, 0}};
+  Label renderSettingsHint{this, Size{0, 0}};
 };
 
 struct AudioSettings : VerticalLayout {

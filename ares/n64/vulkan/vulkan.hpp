@@ -17,9 +17,9 @@ struct Vulkan {
   struct Implementation;
   Implementation* implementation = nullptr;
 
-  static constexpr u32  internalUpscale = 1;  //1, 2, 4, 8
-  static constexpr bool supersampleScanout = false;
-  static constexpr u32  outputUpscale = supersampleScanout ? 1 : internalUpscale;
+  u32  internalUpscale = 1;  //1, 2, 4, 8
+  bool supersampleScanout = false;
+  u32  outputUpscale = supersampleScanout ? 1 : internalUpscale;
 };
 
 extern Vulkan vulkan;

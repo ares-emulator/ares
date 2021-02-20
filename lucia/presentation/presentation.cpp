@@ -370,6 +370,8 @@ auto Presentation::loadEmulator() -> void {
   emulator->load(systemMenu);
   if(systemMenu.actionCount() > 0) systemMenu.append(MenuSeparator());
 
+  //todo: enable this once controller selection is supported
+  #if 0
   u32 portsFound = 0;
   for(auto port : ares::Node::enumerate<ares::Node::Port>(emulator->root)) {
     if(!port->hotSwappable()) continue;
@@ -393,6 +395,7 @@ auto Presentation::loadEmulator() -> void {
     }
   }
   if(portsFound > 0) systemMenu.append(MenuSeparator());
+  #endif
 
   MenuItem reset{&systemMenu};
   reset.setText("Reset").setIcon(Icon::Action::Refresh).onActivate([&] {

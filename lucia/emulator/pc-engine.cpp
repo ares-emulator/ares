@@ -105,11 +105,10 @@ PCEngineCD::PCEngineCD() {
 auto PCEngineCD::load() -> bool {
   auto region = Emulator::region();
   auto system = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
-  if(!ares::PCEngine::load(root, {"[NEC] ", system, " (", region, ")"})) return false;
-
   //if statements below are ordered by lowest to highest priority
   if(region == "NTSC-J") regionID = 1;
   if(region == "NTSC-U") regionID = 0;
+  if(!ares::PCEngine::load(root, {"[NEC] ", system, " (", region, ")"})) return false;
 
   if(!file::exists(firmware[regionID].location)) {
     errorFirmwareRequired(firmware[regionID]);

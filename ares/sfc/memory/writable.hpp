@@ -12,11 +12,11 @@ struct WritableMemory : AbstractMemory {
   }
 
   auto load(shared_pointer<vfs::file> fp) -> void override {
-    fp->read(self.data, min(fp->size(), self.size));
+    fp->read({self.data, min(fp->size(), self.size)});
   }
 
   auto save(shared_pointer<vfs::file> fp) -> void override {
-    fp->write(self.data, self.size);
+    fp->write({self.data, self.size});
   }
 
   auto data() -> n8* override {

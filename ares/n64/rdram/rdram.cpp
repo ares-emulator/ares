@@ -25,6 +25,10 @@ auto RDRAM::unload() -> void {
 
 auto RDRAM::power(bool reset) -> void {
   ram.fill();
+  //hacks needed for expansion pak detection:
+  ram.writeWord(0x318, ram.size);  //CIC-NUS-6102
+  ram.writeWord(0x3f0, ram.size);  //CIC-NUS-6105
+  io = {};
 }
 
 }

@@ -1,5 +1,6 @@
 namespace ares::Nintendo64 {
   auto load(Node::System& node, string name) -> bool;
+  auto option(string name, string value) -> bool;
 }
 
 struct Nintendo64 : Emulator {
@@ -23,6 +24,9 @@ Nintendo64::Nintendo64() {
 }
 
 auto Nintendo64::load() -> bool {
+  ares::Nintendo64::option("Quality", settings.video.quality);
+  ares::Nintendo64::option("Supersampling", settings.video.supersampling);
+
   auto region = Emulator::region();
   if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64 (", region, ")"})) return false;
 
@@ -32,13 +36,27 @@ auto Nintendo64::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    port->allocate("Gamepad");
+    auto peripheral = port->allocate("Gamepad");
     port->connect();
+    if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+      auto document = BML::unserialize(game.manifest);
+      if(!document["game/board/memory(content=Save)"]) {
+        port->allocate("Controller Pak");
+        port->connect();
+      } else {
+        port->allocate("Rumble Pak");
+        port->connect();
+      }
+    }
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
-    port->allocate("Gamepad");
+    auto peripheral = port->allocate("Gamepad");
     port->connect();
+    if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+      port->allocate("Rumble Pak");
+      port->connect();
+    }
   }
 
   return true;
@@ -61,7 +79,7 @@ auto Nintendo64::open(ares::Node::Object node, string name, vfs::file::mode mode
 
   auto document = BML::unserialize(game.manifest);
   auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-  auto saveRAMVolatile = (bool)document["game/board/memory(content=Save,type=ROM)/volatile"];
+  auto saveRAMVolatile = (bool)document["game/board/memory(content=Save,type=RAM)/volatile"];
 
   if(name == "program.rom") {
     return vfs::memory::open(game.image.data(), programROMSize);
@@ -120,6 +138,7 @@ auto Nintendo64::input(ares::Node::Input::Input node) -> void {
   if(name == "R"      ) mapping = virtualPads[*index].r1;
   if(name == "Z"      ) mapping = virtualPads[*index].z;
   if(name == "Start"  ) mapping = virtualPads[*index].start;
+  if(name == "Rumble" ) mapping = virtualPads[*index].rumble;
 
   if(mapping) {
     auto value = mapping->value();
@@ -130,6 +149,11 @@ auto Nintendo64::input(ares::Node::Input::Input node) -> void {
       if(name == "C-Up"   || name == "C-Left" ) return button->setValue(value < -16384);
       if(name == "C-Down" || name == "C-Right") return button->setValue(value > +16384);
       button->setValue(value);
+    }
+    if(auto rumble = node->cast<ares::Node::Input::Rumble>()) {
+      if(auto target = dynamic_cast<InputRumble*>(mapping.data())) {
+        target->rumble(rumble->enable());
+      }
     }
   }
 }
@@ -143,6 +167,9 @@ Nintendo64DD::Nintendo64DD() {
 }
 
 auto Nintendo64DD::load() -> bool {
+  ares::Nintendo64::option("Quality", settings.video.quality);
+  ares::Nintendo64::option("Supersampling", settings.video.supersampling);
+
   auto region = Emulator::region();
   if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64 (", region, ")"})) return false;
 

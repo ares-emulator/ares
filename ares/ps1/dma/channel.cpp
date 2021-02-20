@@ -158,8 +158,9 @@ auto DMA::Channel::transferChain() -> void {
     if(!chain.length) {
       address = chain.address;
       if(address & 1 << 23) break;
+      if(clocks >= timeout) break;
     }
-  } while(clocks < timeout);
+  } while(true);
 
   this->counter = 1 + clocks;
   this->address = address;

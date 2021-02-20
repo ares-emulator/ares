@@ -29,6 +29,19 @@ struct RDRAM : Memory::IO<RDRAM> {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  struct IO {
+    u32 config = 0;
+    u32 deviceID = 0;
+    u32 delay = 0;
+    u32 mode = 0;
+    u32 refreshInterval = 0;
+    u32 refreshRow = 0;
+    u32 rasInterval = 0;
+    u32 minInterval = 0;
+    u32 addressSelect = 0;
+    u32 deviceManufacturer = 0;
+  } io;
 };
 
 extern RDRAM rdram;

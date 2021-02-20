@@ -154,7 +154,7 @@ auto System::load(Node::System& root, string name) -> bool {
   }
 
   if(auto fp = platform->open(node, "save.eeprom", File::Read)) {
-    fp->read(eeprom.data, eeprom.size);
+    fp->read({eeprom.data, eeprom.size});
   }
 
   scheduler.reset();
@@ -170,7 +170,7 @@ auto System::save() -> void {
   if(!node) return;
 
   if(auto fp = platform->open(node, "save.eeprom", File::Write)) {
-    fp->write(eeprom.data, eeprom.size);
+    fp->write({eeprom.data, eeprom.size});
   }
 
   cartridge.save();

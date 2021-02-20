@@ -121,12 +121,14 @@ template<u32 Flags>
 auto GPU::Render::pixel(Point point, Color rgb, Point uv) -> void {
   Color above;
   bool transparent;
+  bool maskBit = forceMaskBit;
 
   if constexpr(Flags & Texture) {
     u16 pixel = texel(uv);
     if(!pixel) return;
 
     transparent = pixel >> 15;
+    maskBit |= transparent;
     if constexpr(Flags & Raw) {
       above = Color::from16(pixel);
     } else if constexpr(true) {
@@ -148,7 +150,7 @@ auto GPU::Render::pixel(Point point, Color rgb, Point uv) -> void {
   }
 
   if(input >> 15 & checkMaskBit) return;
-  gpu.vram2D[point.y][point.x] = above.to16() | forceMaskBit << 15;
+  gpu.vram2D[point.y][point.x] = above.to16() | maskBit << 15;
 }
 
 template<u32 Flags>

@@ -85,7 +85,7 @@ auto Cartridge::loadMemory(AbstractMemory& ram, Markup::Node node, bool required
     if(auto architecture = memory["architecture"].text()) name.prepend(architecture, ".");
     name.downcase();
     if(auto fp = platform->open(Cartridge::node, name, File::Read, required)) {
-      fp->read(ram.data(), min(fp->size(), ram.size()));
+      fp->read({ram.data(), min(fp->size(), ram.size())});
     }
   }
 }

@@ -37,7 +37,7 @@ auto GameBoyAdvance::load(Menu menu) -> void {
 }
 
 auto GameBoyAdvance::load() -> bool {
-  if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Advance")) return false;
+  if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Player")) return false;
 
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
@@ -90,12 +90,17 @@ auto GameBoyAdvance::input(ares::Node::Input::Input node) -> void {
   if(name == "Select") mapping = virtualPads[0].select;
   if(name == "Start" ) mapping = virtualPads[0].start;
   //Game Boy Player
-  if(name == "Rumble");  //todo
+  if(name == "Rumble") mapping = virtualPads[0].rumble;
 
   if(mapping) {
     auto value = mapping->value();
     if(auto button = node->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
+    }
+    if(auto rumble = node->cast<ares::Node::Input::Rumble>()) {
+      if(auto target = dynamic_cast<InputRumble*>(mapping.data())) {
+        target->rumble(rumble->enable());
+      }
     }
   }
 }

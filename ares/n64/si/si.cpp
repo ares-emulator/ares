@@ -97,8 +97,8 @@ auto SI::main() -> void {
         output[2] = 0x02;  //0x02 = nothing present in controller slot
         if(auto& device = controllers[channel]->device) {
           if(auto gamepad = dynamic_cast<Gamepad*>(device.data())) {
-            if(auto& ram = gamepad->ram) {
-              output[2] = 0x01;  //0x01 = controller pak present
+            if(gamepad->ram || gamepad->motor) {
+              output[2] = 0x01;  //0x01 = pak present
             }
           }
         }
@@ -136,7 +136,18 @@ auto SI::main() -> void {
               u32 address = (input[1] << 8 | input[2] << 0) & ~31;
               if(addressCRC(address) == (n5)input[2]) {
                 for(u32 index : range(32)) {
-                  output[index] = ram.readByte(address++);
+                  if(address >> 15 == 0) output[index] = ram.readByte(address++);
+                  if(address >> 15 == 1) output[index] = 0x00;
+                }
+                output[32] = dataCRC({&output[0], 32});
+                valid = 1;
+              }
+            }
+            if(gamepad->motor) {
+              u32 address = (input[1] << 8 | input[2] << 0) & ~31;
+              if(addressCRC(address) == (n5)input[2]) {
+                for(u32 index : range(32)) {
+                  output[index] = 0x80;
                 }
                 output[32] = dataCRC({&output[0], 32});
                 valid = 1;
@@ -155,10 +166,18 @@ auto SI::main() -> void {
               u32 address = (input[1] << 8 | input[2] << 0) & ~31;
               if(addressCRC(address) == (n5)input[2]) {
                 for(u32 index : range(32)) {
-                  ram.writeByte(address++, input[3 + index]);
+                  if(address >> 15 == 0) ram.writeByte(address++, input[3 + index]);
                 }
                 output[0] = dataCRC({&input[3], 32});
                 valid = 1;
+              }
+            }
+            if(gamepad->motor) {
+              u32 address = (input[1] << 8 | input[2] << 0) & ~31;
+              if(addressCRC(address) == (n5)input[2]) {
+                output[0] = dataCRC({&input[3], 32});
+                valid = 1;
+                gamepad->rumble(input[3] & 1);
               }
             }
           }

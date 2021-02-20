@@ -166,13 +166,13 @@ Vulkan::Implementation::Implementation(u8* data, u32 size) {
   device.init_frame_contexts(3);
 
   ::RDP::CommandProcessorFlags flags = 0;
-  switch(internalUpscale) {
+  switch(vulkan.internalUpscale) {
   case 2: flags |= ::RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_2X_BIT; break;
   case 4: flags |= ::RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_4X_BIT; break;
   case 8: flags |= ::RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_8X_BIT; break;
   }
 
-  if(internalUpscale > 1) {
+  if(vulkan.internalUpscale > 1) {
     flags |= ::RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_DITHER_BIT;
     flags |= ::RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_READ_BACK_BIT;
   }

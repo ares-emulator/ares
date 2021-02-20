@@ -18,6 +18,7 @@ auto RI::unload() -> void {
 }
 
 auto RI::power(bool reset) -> void {
+  io = {};
 }
 
 }

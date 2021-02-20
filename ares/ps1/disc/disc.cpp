@@ -73,7 +73,7 @@ auto Disc::connect() -> void {
     subchannel.resize(sectors * 96);
     for(u32 sector : range(sectors)) {
       fd->seek(sector * 2448 + 2352);
-      fd->read(subchannel.data() + sector * 96, 96);
+      fd->read({subchannel.data() + sector * 96, 96});
     }
     session.decode(subchannel, 96);
   }

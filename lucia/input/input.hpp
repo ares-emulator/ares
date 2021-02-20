@@ -43,6 +43,14 @@ struct InputAxis : InputMapping {
   auto value() -> s16 override;
 };
 
+struct InputRumble : InputMapping {
+  using InputMapping::InputMapping;
+  using InputMapping::bind;
+  auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
+  auto value() -> s16 override;
+  auto rumble(bool enable) -> void;
+};
+
 struct InputHotkey : InputButton {
   using InputButton::InputButton;
   auto& onPress(function<void ()> press) { return this->press = press, *this; }
@@ -80,6 +88,7 @@ struct VirtualPad {
   InputAxis   ly{"LY"};
   InputAxis   rx{"RX"};
   InputAxis   ry{"RY"};
+  InputRumble rumble{"Rumble"};
 
   vector<InputMapping*> mappings;
 };

@@ -38,7 +38,7 @@ inline auto create(array_view<u8> input, array_span<u8> output) -> bool {
 
 inline auto createMode1(array_span<u8> sector) -> bool {
   if(sector.size() != 2352) return false;
-  return create({sector, 2064}, {sector + 2064, 4});
+  return create({sector.data(), 2064}, {sector.data() + 2064, 4});
 }
 
 //
@@ -59,7 +59,7 @@ inline auto verify(array_view<u8> input, array_view<u8> compare) -> bool {
 
 inline auto verifyMode1(array_view<u8> sector) -> bool {
   if(sector.size() != 2352) return false;
-  return verify({sector, 2064}, {sector + 2064, 4});
+  return verify({sector.data(), 2064}, {sector.data() + 2064, 4});
 }
 
 }

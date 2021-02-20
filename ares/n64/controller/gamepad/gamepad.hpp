@@ -1,5 +1,8 @@
 struct Gamepad : Controller {
+  Node::Port port;
+  Node::Peripheral pak;
   Memory::Writable ram;  //Toshiba TC55257DFL-85V
+  Node::Input::Rumble motor;
 
   Node::Input::Axis x;
   Node::Input::Axis y;
@@ -20,5 +23,10 @@ struct Gamepad : Controller {
 
   Gamepad(Node::Port);
   ~Gamepad();
+  auto allocate(string name) -> Node::Peripheral;
+  auto connect() -> void;
+  auto disconnect() -> void;
+  auto rumble(bool enable) -> void;
   auto read() -> n32 override;
+  auto serialize(serializer&) -> void override;
 };

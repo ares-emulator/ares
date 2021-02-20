@@ -277,7 +277,7 @@ auto MCD::CDD::insert() -> void {
   sub.resize(sectors * 96);
   for(u32 sector : range(sectors)) {
     mcd.fd->seek(sector * 2448 + 2352);
-    mcd.fd->read(sub.data() + sector * 96, 96);
+    mcd.fd->read({sub.data() + sector * 96, 96});
   }
   session.decode(sub, 96);
 

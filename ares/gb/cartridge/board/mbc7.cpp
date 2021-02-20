@@ -124,7 +124,7 @@ struct MBC7 : Interface {
         allocate(size, width, 0, 0xff);
 
         if(auto fp = platform->open(self.cartridge.node, "save.eeprom", File::Read, File::Optional)) {
-          fp->read(data, min(fp->size(), sizeof(data)));
+          fp->read({data, min(fp->size(), sizeof(data))});
         }
       }
     }
@@ -132,7 +132,7 @@ struct MBC7 : Interface {
     auto save(Markup::Node document) -> void {
       if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
         if(auto fp = platform->open(self.cartridge.node, "save.eeprom", File::Write)) {
-          fp->write(data, size);
+          fp->write({data, size});
         }
       }
     }

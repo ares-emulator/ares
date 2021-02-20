@@ -68,6 +68,8 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Video/ColorEmulation", video.colorEmulation);
   bind(boolean, "Video/InterframeBlending", video.interframeBlending);
   bind(boolean, "Video/Overscan", video.overscan);
+  bind(string,  "Video/Quality", video.quality);
+  bind(boolean, "Video/Supersampling", video.supersampling);
 
   bind(string,  "Audio/Driver", audio.driver);
   bind(string,  "Audio/Device", audio.device);

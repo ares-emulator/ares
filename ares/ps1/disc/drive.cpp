@@ -10,7 +10,7 @@ auto Disc::Drive::clockSector() -> void {
     if(likely(self.fd)) {  //there might not be a disc inserted here:
       self.debugger.read(lba.current);
       self.fd->seek(2448 * (abs(session->leadIn.lba) + lba.current++));
-      self.fd->read(sector.data, 2448);
+      self.fd->read({sector.data, 2448});
     }
     sector.offset = 0;
 

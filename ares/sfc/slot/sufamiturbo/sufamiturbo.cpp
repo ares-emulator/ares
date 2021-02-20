@@ -21,7 +21,7 @@ auto SufamiTurboCartridge::connect() -> void {
   if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
     rom.allocate(memory["size"].natural());
     if(auto fp = platform->open(node, "program.rom", File::Read, File::Required)) {
-      fp->read(rom.data(), rom.size());
+      fp->read({rom.data(), rom.size()});
     }
   }
 
@@ -29,7 +29,7 @@ auto SufamiTurboCartridge::connect() -> void {
     ram.allocate(memory["size"].natural());
     if(!(bool)memory["volatile"]) {
       if(auto fp = platform->open(node, "save.ram", File::Read)) {
-        fp->read(ram.data(), ram.size());
+        fp->read({ram.data(), ram.size()});
       }
     }
   }
@@ -53,7 +53,7 @@ auto SufamiTurboCartridge::save() -> void {
   if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
     if(!(bool)memory["volatile"]) {
       if(auto fp = platform->open(node, "save.ram", File::Write)) {
-        fp->write(ram.data(), ram.size());
+        fp->write({ram.data(), ram.size()});
       }
     }
   }

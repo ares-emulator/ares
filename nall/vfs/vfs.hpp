@@ -23,9 +23,8 @@ struct file {
     return offset() >= size();
   }
 
-  auto read(void* vdata, u64 bytes) -> void {
-    auto data = (u8*)vdata;
-    while(bytes--) *data++ = read();
+  auto read(array_span<u8> span) -> void {
+    while(span) *span++ = read();
   }
 
   auto readl(u32 bytes) -> u64 {
@@ -43,13 +42,12 @@ struct file {
   auto reads() -> string {
     string s;
     s.resize(size());
-    read(s.get<u8>(), s.size());
+    read(s);
     return s;
   }
 
-  auto write(const void* vdata, u64 bytes) -> void {
-    auto data = (const u8*)vdata;
-    while(bytes--) write(*data++);
+  auto write(array_view<u8> view) -> void {
+    while(view) write(*view++);
   }
 
   auto writel(u64 data, u32 bytes) -> void {
@@ -61,7 +59,7 @@ struct file {
   }
 
   auto writes(const string& s) -> void {
-    write(s.data<u8>(), s.size());
+    write(s);
   }
 };
 

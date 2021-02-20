@@ -14,6 +14,7 @@ using v128 = __m128i;
 namespace ares::Nintendo64 {
   auto enumerate() -> vector<string>;
   auto load(Node::System& node, string name) -> bool;
+  auto option(string name, string value) -> bool;
 
   struct Region {
     static inline auto NTSC() -> bool;

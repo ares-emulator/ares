@@ -3,6 +3,7 @@ struct Controller {
 
   virtual ~Controller() = default;
   virtual auto read() -> n32 { return 0; }
+  virtual auto serialize(serializer&) -> void {}
 };
 
 #include "port.hpp"

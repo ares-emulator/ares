@@ -215,6 +215,37 @@ auto InputAxis::value() -> s16 {
 
 //
 
+auto InputRumble::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+  string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
+
+  if(device->isNull()) {
+    return unbind(binding), true;
+  }
+
+  if(device->isKeyboard() && device->group(groupID).input(inputID).name() == "Escape") {
+    return unbind(binding), true;
+  }
+
+  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Button && oldValue == 0 && newValue == 1) {
+    return bind(binding, assignment), true;
+  }
+
+  return false;
+}
+
+auto InputRumble::value() -> s16 {
+  return 0;
+}
+
+auto InputRumble::rumble(bool enable) -> void {
+  for(auto& binding : bindings) {
+    if(!binding.device) continue;
+    ruby::input.rumble(binding.deviceID, enable);
+  }
+}
+
+//
+
 VirtualPad::VirtualPad() {
   mappings.append(&up);
   mappings.append(&down);
@@ -238,6 +269,7 @@ VirtualPad::VirtualPad() {
   mappings.append(&ly);
   mappings.append(&rx);
   mappings.append(&ry);
+  mappings.append(&rumble);
 }
 
 //

@@ -17,7 +17,7 @@ struct BandaiFCG : Interface {
     if(auto memory = board["memory(type=EEPROM,content=Save)"]) {
       eeprom.erase();
       if(auto fp = platform->open(cartridge.node, "save.eeprom", File::Read)) {
-        fp->read(eeprom.memory, min(128, fp->size()));
+        fp->read({eeprom.memory, min(128, fp->size())});
       }
     }
   }
@@ -27,7 +27,7 @@ struct BandaiFCG : Interface {
     Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
     if(auto memory = board["memory(type=EEPROM,content=Save)"]) {
       if(auto fp = platform->open(cartridge.node, "save.eeprom", File::Write)) {
-        fp->write(eeprom.memory, 128);
+        fp->write({eeprom.memory, 128});
       }
     }
   }

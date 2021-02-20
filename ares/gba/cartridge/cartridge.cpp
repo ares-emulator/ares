@@ -44,7 +44,7 @@ auto Cartridge::connect() -> void {
   if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
     mrom.size = min(32 * 1024 * 1024, memory["size"].natural());
     if(auto fp = platform->open(node, "program.rom", File::Read, File::Required)) {
-      fp->read(mrom.data, mrom.size);
+      fp->read({mrom.data, mrom.size});
     }
   }
 
@@ -56,7 +56,7 @@ auto Cartridge::connect() -> void {
 
     if(!memory["volatile"]) {
       if(auto fp = platform->open(node, "save.ram", File::Read)) {
-        fp->read(sram.data, sram.size);
+        fp->read({sram.data, sram.size});
       }
     }
   }
@@ -71,7 +71,7 @@ auto Cartridge::connect() -> void {
     for(auto n : range(eeprom.size)) eeprom.data[n] = 0xff;
 
     if(auto fp = platform->open(node, "save.eeprom", File::Read)) {
-      fp->read(eeprom.data, eeprom.size);
+      fp->read({eeprom.data, eeprom.size});
     }
   }
 
@@ -90,7 +90,7 @@ auto Cartridge::connect() -> void {
     if(flash.manufacturer == "SST"       && flash.size ==  64 * 1024) flash.id = 0xd4bf;
 
     if(auto fp = platform->open(node, "save.flash", File::Read)) {
-      fp->read(flash.data, flash.size);
+      fp->read({flash.data, flash.size});
     }
   }
 
@@ -114,20 +114,20 @@ auto Cartridge::save() -> void {
   if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
     if(!memory["volatile"]) {
       if(auto fp = platform->open(node, "save.ram", File::Write)) {
-        fp->write(sram.data, sram.size);
+        fp->write({sram.data, sram.size});
       }
     }
   }
 
   if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
     if(auto fp = platform->open(node, "save.eeprom", File::Write)) {
-      fp->write(eeprom.data, eeprom.size);
+      fp->write({eeprom.data, eeprom.size});
     }
   }
 
   if(auto memory = document["game/board/memory(type=Flash,content=Save)"]) {
     if(auto fp = platform->open(node, "save.flash", File::Write)) {
-      fp->write(flash.data, flash.size);
+      fp->write({flash.data, flash.size});
     }
   }
 }

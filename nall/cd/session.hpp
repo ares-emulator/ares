@@ -185,7 +185,7 @@ struct Session {
         q[7] = BCD::encode(msf.minute);
         q[8] = BCD::encode(msf.second);
         q[9] = BCD::encode(msf.frame);
-        auto crc16 = CRC16({q, 10});
+        auto crc16 = CRC16({q.data(), 10});
         q[10] = crc16 >> 8;
         q[11] = crc16 >> 0;
         if(++lba >= 0) break;
@@ -205,7 +205,7 @@ struct Session {
         q[7] = BCD::encode(firstTrack);
         q[8] = 0x00;
         q[9] = 0x00;
-        auto crc16 = CRC16({q, 10});
+        auto crc16 = CRC16({q.data(), 10});
         q[10] = crc16 >> 8;
         q[11] = crc16 >> 0;
         if(++lba >= 0) break;
@@ -225,7 +225,7 @@ struct Session {
         q[7] = BCD::encode(lastTrack);
         q[8] = 0x00;
         q[9] = 0x00;
-        auto crc16 = CRC16({q, 10});
+        auto crc16 = CRC16({q.data(), 10});
         q[10] = crc16 >> 8;
         q[11] = crc16 >> 0;
         if(++lba >= 0) break;
@@ -246,7 +246,7 @@ struct Session {
         q[7] = BCD::encode(msf.minute);
         q[8] = BCD::encode(msf.second);
         q[9] = BCD::encode(msf.frame);
-        auto crc16 = CRC16({q, 10});
+        auto crc16 = CRC16({q.data(), 10});
         q[10] = crc16 >> 8;
         q[11] = crc16 >> 0;
         if(++lba >= 0) break;
@@ -282,7 +282,7 @@ struct Session {
           q[7] = BCD::encode(msf.minute);
           q[8] = BCD::encode(msf.second);
           q[9] = BCD::encode(msf.frame);
-          auto crc16 = CRC16({q, 10});
+          auto crc16 = CRC16({q.data(), 10});
           q[10] = crc16 >> 8;
           q[11] = crc16 >> 0;
         }
@@ -317,7 +317,7 @@ struct Session {
       q[7] = BCD::encode(msf.minute);
       q[8] = BCD::encode(msf.second);
       q[9] = BCD::encode(msf.frame);
-      auto crc16 = CRC16({q, 10});
+      auto crc16 = CRC16({q.data(), 10});
       q[10] = crc16 >> 8;
       q[11] = crc16 >> 0;
     }
@@ -338,7 +338,7 @@ struct Session {
       if(size == 2448) offset += 12 + 2352;
       if(offset + 12 > data.size()) break;
       auto q = array_view<u8>{&data[offset], 12};
-      auto crc16 = CRC16({q, 10});
+      auto crc16 = CRC16({q.data(), 10});
       if(q[10] != u8(crc16 >> 8)) continue;
       if(q[11] != u8(crc16 >> 0)) continue;
 
@@ -366,7 +366,7 @@ struct Session {
     for(s32 lba = leadIn.lba; lba < 0; lba++) {
       auto q = toQ(lba);
       if(!q) break;
-      auto crc16 = CRC16({q, 10});
+      auto crc16 = CRC16({q.data(), 10});
       if(q[10] != u8(crc16 >> 8)) continue;
       if(q[11] != u8(crc16 >> 0)) continue;
 
@@ -403,7 +403,7 @@ struct Session {
     for(s32 lba = 0; lba < leadOut.lba; lba++) {
       auto q = toQ(lba);
       if(!q) break;
-      auto crc16 = CRC16({q, 10});
+      auto crc16 = CRC16({q.data(), 10});
       if(q[10] != u8(crc16 >> 8)) continue;
       if(q[11] != u8(crc16 >> 0)) continue;
 

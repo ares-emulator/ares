@@ -247,7 +247,7 @@ auto Screen::refresh() -> void {
       s32 pixelY = sprite->y() + y;
       if(pixelY < 0 || pixelY >= height) continue;
 
-      auto source = sprite->image() + y * sprite->width();
+      auto source = sprite->image().data() + y * sprite->width();
       auto target = &output[pixelY * width];
       for(s32 x : range(sprite->width())) {
         s32 pixelX = sprite->x() + x;

@@ -35,6 +35,11 @@ auto PI::power(bool reset) -> void {
   bsd2 = {};
 
   //write CIC seeds into PIF RAM so that cartridge checksum function passes
+  //d0-d7  = CIC IPL2 seed
+  //d8-d15 = CIC IPL3 seed
+  //d17    = osResetType (0 = power; 1 = reset (NMI))
+  //d18    = osVersion
+  //d19    = osRomType (0 = Gamepak; 1 = 64DD)
   string cic = cartridge.cic();
   if(reset == 0) {
     if(cic == "CIC-NUS-6101" || cic == "CIC-NUS-7102") ram.writeWord(0x24, 0x00043f3f);

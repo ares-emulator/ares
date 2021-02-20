@@ -30,7 +30,7 @@ auto SMP::main() -> void {
 
 auto SMP::power(bool reset) -> void {
   if(auto fp = platform->open(system.node, "ipl.rom", File::Read, File::Required)) {
-    fp->read(iplrom, 64);
+    fp->read({iplrom, 64});
   }
 
   SPC700::power();

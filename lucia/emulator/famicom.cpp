@@ -177,7 +177,7 @@ auto FamicomDiskSystem::open(ares::Node::Object node, string name, vfs::file::mo
           if(auto image = loadFirmware(firmware[0])) {
             vector<u8> bios;
             bios.resize(image->size());
-            image->read(bios.data(), bios.size());
+            image->read(bios);
             auto manifest = cartridge->manifest(bios, firmware[0].location);
             return vfs::memory::open(manifest.data<u8>(), manifest.size());
           }

@@ -11,7 +11,7 @@ auto VI::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VI");
 
   #if defined(VULKAN)
-  screen = node->append<Node::Video::Screen>("Screen", Vulkan::outputUpscale * 640, Vulkan::outputUpscale * 480);
+  screen = node->append<Node::Video::Screen>("Screen", vulkan.outputUpscale * 640, vulkan.outputUpscale * 480);
   #else
   screen = node->append<Node::Video::Screen>("Screen", 640, 480);
   #endif
@@ -32,7 +32,10 @@ auto VI::load(Node::Object parent) -> void {
     }
   });
   #if defined(VULKAN)
-  screen->setSize(Vulkan::outputUpscale * 640, Vulkan::outputUpscale * 480);
+  screen->setSize(vulkan.outputUpscale * 640, vulkan.outputUpscale * 480);
+  if(!vulkan.supersampleScanout) {
+    screen->setScale(1.0 / vulkan.outputUpscale, 1.0 / vulkan.outputUpscale);
+  }
   #else
   screen->setSize(640, 480);
   #endif
@@ -82,7 +85,7 @@ auto VI::refresh() -> void {
     if(rgba) {
       screen->setViewport(0, 0, width, height);
       for(u32 y : range(height)) {
-        auto target = screen->pixels(1).data() + y * Vulkan::outputUpscale * 640;
+        auto target = screen->pixels(1).data() + y * vulkan.outputUpscale * 640;
         auto source = rgba + width * y * sizeof(u32);
         for(u32 x : range(width)) {
           target[x] = source[x * 4 + 0] << 16 | source[x * 4 + 1] << 8 | source[x * 4 + 2] << 0;

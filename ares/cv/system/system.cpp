@@ -65,6 +65,10 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setUnserialize({&System::unserialize, this});
   root = node;
 
+  if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
+    fp->read({bios, 0x2000});
+  }
+
   scheduler.reset();
   controls.load(node);
   cpu.load(node);
@@ -95,10 +99,6 @@ auto System::unload() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
-  if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
-    fp->read(bios, 0x2000);
-  }
 
   cartridge.power();
   cpu.power();

@@ -40,8 +40,8 @@ inline auto encodeQ(array_view<u8> input, array_span<u8> parity) -> bool {
 
 inline auto encodeMode1(array_span<u8> sector) -> bool {
   if(sector.size() != 2352) return false;
-  if(!encodeP({sector + 12, 2064}, {sector + 2076, 172})) return false;
-  if(!encodeQ({sector + 12, 2236}, {sector + 2248, 104})) return false;
+  if(!encodeP({sector.data() + 12, 2064}, {sector.data() + 2076, 172})) return false;
+  if(!encodeQ({sector.data() + 12, 2236}, {sector.data() + 2248, 104})) return false;
   return true;
 }
 
@@ -117,8 +117,8 @@ inline auto decodeMode1(array_span<u8> sector) -> bool {
   //the more iterations, the more chances to correct errors, but the more computationally expensive it is.
   //there must be a limit on the amount of retries, or this function may get stuck in an infinite loop.
   for(u32 attempt : range(4)) {
-    auto p = decodeP({sector + 12, 2064}, {sector + 2076, 172});
-    auto q = decodeQ({sector + 12, 2236}, {sector + 2248, 104});
+    auto p = decodeP({sector.data() + 12, 2064}, {sector.data() + 2076, 172});
+    auto q = decodeQ({sector.data() + 12, 2236}, {sector.data() + 2248, 104});
     if(p == 0 && q == 0) return true;   //no errors remaining
     if(p <  0 && q <  0) return false;  //no more errors correctable
   }

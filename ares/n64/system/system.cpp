@@ -14,6 +14,18 @@ auto load(Node::System& node, string name) -> bool {
   return system.load(node, name);
 }
 
+auto option(string name, string value) -> bool {
+  #if defined(VULKAN)
+  if(name == "Quality" && value == "SD" ) vulkan.internalUpscale = 1;
+  if(name == "Quality" && value == "HD" ) vulkan.internalUpscale = 2;
+  if(name == "Quality" && value == "UHD") vulkan.internalUpscale = 4;
+  if(name == "Supersampling") vulkan.supersampleScanout = value.boolean();
+  if(vulkan.internalUpscale == 1) vulkan.supersampleScanout = false;
+  vulkan.outputUpscale = vulkan.supersampleScanout ? 1 : vulkan.internalUpscale;
+  #endif
+  return true;
+}
+
 System system;
 #include "serialization.cpp"
 

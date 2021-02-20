@@ -51,4 +51,26 @@ auto VideoSettings::construct() -> void {
     if(emulator) emulator->setOverscan(settings.video.overscan);
   });
   overscanLabel.setText("Shows extended PAL CRT lines, but these are usually blank in most games").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
+
+  renderSettingsLabel.setText("N64 Render Settings").setFont(Font().setBold());
+  renderQualitySD.setText("SD Quality").onActivate([&] {
+    settings.video.quality = "SD";
+    renderSupersamplingOption.setChecked(false).setEnabled(false);
+  });
+  renderQualityHD.setText("HD Quality").onActivate([&] {
+    settings.video.quality = "HD";
+    renderSupersamplingOption.setChecked(settings.video.supersampling).setEnabled(true);
+  });
+  renderQualityUHD.setText("UHD Quality").onActivate([&] {
+    settings.video.quality = "UHD";
+    renderSupersamplingOption.setChecked(settings.video.supersampling).setEnabled(true);
+  });
+  if(settings.video.quality == "SD") renderQualitySD.setChecked();
+  if(settings.video.quality == "HD") renderQualityHD.setChecked();
+  if(settings.video.quality == "UHD") renderQualityUHD.setChecked();
+  renderSupersamplingOption.setText("Supersampling").setChecked(settings.video.supersampling && settings.video.quality != "SD").setEnabled(settings.video.quality != "SD").onToggle([&] {
+    settings.video.supersampling = renderSupersamplingOption.checked();
+  });
+  renderSupersamplingHint.setText("Scales HD and UHD resolutions back down to SD").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
+  renderSettingsHint.setText("Note: render settings changes require a game reload to take effect").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
 }

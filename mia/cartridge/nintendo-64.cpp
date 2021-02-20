@@ -198,6 +198,8 @@ auto Nintendo64::heuristics(vector<u8>& data, string location) -> string {
   if(id == "SQ") flash = 128_KiB;  //StarCraft 64
   if(id == "T9") flash = 128_KiB;  //Tigger's Honey Hunt
   if(id == "W4") flash = 128_KiB;  //WWF No Mercy
+  //unlicensed
+  if(id == "DP") flash = 128_KiB;  //Dinosaur Planet
 
   string s;
   s += "game\n";

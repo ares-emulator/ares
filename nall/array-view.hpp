@@ -24,14 +24,16 @@ template<typename T> struct array_view {
     _size = (s32)size;
   }
 
-  explicit operator bool() const { return _data && _size > 0; }
+  explicit operator bool() const {
+    return _data && _size > 0;
+  }
 
-  operator const T*() const {
-    #ifdef DEBUG
-    struct out_of_bounds {};
-    if(_size < 0) throw out_of_bounds{};
-    #endif
+  explicit operator const T*() const {
     return _data;
+  }
+
+  const T& operator*() const {
+    return *_data;
   }
 
   auto operator++() -> type& { _data++; _size--; return *this; }
