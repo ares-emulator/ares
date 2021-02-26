@@ -32,6 +32,10 @@
   #include "nintendo-64.cpp"
 #endif
 
+#ifdef CORE_NG
+  #include "neo-geo.cpp"
+#endif
+
 #ifdef CORE_NGP
   #include "neo-geo-pocket.cpp"
 #endif
@@ -127,57 +131,27 @@ auto Emulator::construct() -> void {
   emulators.append(new PocketChallengeV2);
   #endif
 
+  #ifdef CORE_NG
+  emulators.append(new NeoGeoAES);
+  emulators.append(new NeoGeoMVS);
+  #endif
+
   #ifdef CORE_NGP
   emulators.append(new NeoGeoPocket);
   emulators.append(new NeoGeoPocketColor);
   #endif
 }
 
-auto Emulator::locate(const string& location, const string& suffix, const string& path) -> string {
+auto Emulator::locate(const string& location, const string& suffix, const string& path, maybe<string> system) -> string {
+  if(!system) system = root->name();
+
   //game path
   if(!path) return {Location::notsuffix(location), suffix};
 
   //path override
-  string pathname = {path, root->name(), "/"};
+  string pathname = {path, *system, "/"};
   directory::create(pathname);
   return {pathname, Location::prefix(location), suffix};
-}
-
-//this is used to load manifests for cartridges
-auto Emulator::manifest() -> shared_pointer<vfs::file> {
-  //use a user-provided manifest file if it exists
-  auto location = locate(game.location, ".bml");
-  if(file::exists(location)) {
-    game.manifest = file::read(location);
-    return vfs::memory::open(game.manifest.data<u8>(), game.manifest.size());
-  }
-
-  //generate the manifest dynamically if it does not exist
-  if(auto cartridge = medium.cast<mia::Cartridge>()) {
-    game.manifest = cartridge->manifest(game.image, game.location);
-    return vfs::memory::open(game.manifest.data<u8>(), game.manifest.size());
-  }
-  if(auto floppyDisk = medium.cast<mia::FloppyDisk>()) {
-    game.manifest = floppyDisk->manifest(game.image, game.location);
-    return vfs::memory::open(game.manifest.data<u8>(), game.manifest.size());
-  }
-  if(auto compactDisc = medium.cast<mia::CompactDisc>()) {
-    game.manifest = compactDisc->manifest(game.location);
-    return vfs::memory::open(game.manifest.data<u8>(), game.manifest.size());
-  }
-
-  return {};
-}
-
-//this is used to load manifests for audio CD-ROMs
-//it is a fallback when mia is unable to generate manifests for game CD-ROMs
-auto Emulator::manifest(const string& location) -> shared_pointer<vfs::file> {
-  string manifest;
-  manifest.append("game\n");
-  manifest.append("  name:  ", Location::prefix(location), "\n");
-  manifest.append("  label: ", Location::prefix(location), "\n");
-  manifest.append("  audio\n");
-  return vfs::memory::open(manifest.data<u8>(), manifest.size());
 }
 
 //this is used to load manifests for system BIOSes
@@ -189,12 +163,12 @@ auto Emulator::manifest(const string& type, const string& location) -> shared_po
         auto image = archive.extract(archive.file.first());
         if(auto cartridge = medium.cast<mia::Cartridge>()) {
           auto manifest = cartridge->manifest(image, location);
-          return vfs::memory::open(manifest.data<u8>(), manifest.size());
+          return vfs::memory::open(manifest);
         }
       }
     }
     auto manifest = medium->manifest(location);
-    return vfs::memory::open(manifest.data<u8>(), manifest.size());
+    return vfs::memory::open(manifest);
   }
   return {};
 }
@@ -215,16 +189,16 @@ auto Emulator::region() -> string {
   return {};
 }
 
-auto Emulator::load(const string& location, const vector<u8>& image) -> bool {
-  configuration.game = Location::dir(location);
-
+auto Emulator::load(const string& location) -> bool {
+  pak = medium->pak(location);
   game.location = location;
-  game.image = image;
-  if(!manifest()) return false;
+  game.manifest = {};
+  if(auto fp = pak->find<vfs::file>("manifest.bml")) game.manifest = fp->reads();
+  if(!game.manifest) return false;
 
   latch = {};
-
   if(!load()) return false;
+  configuration.game = Location::dir(location);
   setBoolean("Color Bleed", settings.video.colorBleed);
   setBoolean("Color Emulation", settings.video.colorEmulation);
   setBoolean("Interframe Blending", settings.video.interframeBlending);
@@ -234,27 +208,43 @@ auto Emulator::load(const string& location, const vector<u8>& image) -> bool {
   return true;
 }
 
+auto Emulator::save(const string& name, vfs::file::mode mode, const string& match, const string& suffix, maybe<string> system, maybe<string> source) -> shared_pointer<vfs::file> {
+  if(!system) system = root->name();
+  if(!source) source = game.location;
+
+  if(name != match) return {};
+  if(!settings.paths.saves && directory::exists(*source)) {
+    //pak mode
+    return vfs::disk::open({*source, name}, mode);
+  } else {
+    //rom mode
+    auto location = locate(*source, suffix, settings.paths.saves, system);
+    return vfs::disk::open(location, mode);
+  }
+}
+
 auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::file> {
   if(firmware.location.iendsWith(".zip")) {
     Decode::ZIP archive;
     if(archive.open(firmware.location) && archive.file) {
       auto image = archive.extract(archive.file.first());
-      return vfs::memory::open(image.data(), image.size());
+      return vfs::memory::open(image);
     }
   } else if(auto image = file::read(firmware.location)) {
-    return vfs::memory::open(image.data(), image.size());
+    return vfs::memory::open(image);
   }
   return {};
 }
 
-auto Emulator::save() -> void {
-  root->save();
-}
-
 auto Emulator::unload() -> void {
-  root->save();
+  save();
   root->unload();
   root.reset();
+  pak.reset();
+}
+
+auto Emulator::save() -> void {
+  root->save();
 }
 
 auto Emulator::refresh() -> void {

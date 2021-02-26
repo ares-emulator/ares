@@ -68,7 +68,7 @@ auto PPU::unload() -> void {
   colorEmulationDMG.reset();
   colorEmulationCGB.reset();
   interframeBlending.reset();
-  screen->quit();
+  if(screen) screen->quit();
   node->remove(screen);
   screen.reset();
   node.reset();
@@ -83,7 +83,7 @@ auto PPU::unload() -> void {
 auto PPU::main() -> void {
   if(!status.displayEnable) {
     step(456 * 154);
-    screen->frame();
+    if(screen) screen->frame();
     scheduler.exit(Event::Frame);
     return;
   }
@@ -134,7 +134,7 @@ auto PPU::main() -> void {
 
   if(status.ly == 144) {
     cpu.raise(CPU::Interrupt::VerticalBlank);
-    screen->frame();
+    if(screen) screen->frame();
     scheduler.exit(Event::Frame);
   }
 

@@ -6,32 +6,26 @@
 namespace nall::vfs {
 
 struct memory : file {
-  ~memory() { delete[] _data; }
+  ~memory() { nall::memory::free(_data); }
 
-  static auto open(const void* data, u64 size) -> shared_pointer<memory> {
-    auto instance = shared_pointer<memory>{new memory};
-    instance->_open((const u8*)data, size);
-    return instance;
+  static auto create() -> shared_pointer<memory> {
+    return shared_pointer<memory>{new memory};
   }
 
-  static auto open(string location, bool decompress = false) -> shared_pointer<memory> {
+  static auto open(array_view<u8> view) -> shared_pointer<memory> {
     auto instance = shared_pointer<memory>{new memory};
-    if(decompress && location.iendsWith(".zip")) {
-      Decode::ZIP archive;
-      if(archive.open(location) && archive.file.size() == 1) {
-        auto memory = archive.extract(archive.file.first());
-        instance->_open(memory.data(), memory.size());
-        return instance;
-      }
-    }
-    auto memory = nall::file::read(location);
-    instance->_open(memory.data(), memory.size());
+    instance->_open(view.data(), view.size());
     return instance;
   }
 
   auto data() const -> const u8* { return _data; }
   auto size() const -> u64 override { return _size; }
   auto offset() const -> u64 override { return _offset; }
+
+  auto resize(u64 size) -> void override {
+    _data = nall::memory::resize(_data, size);
+    _size = size;
+  }
 
   auto seek(s64 offset, index mode) -> void override {
     if(mode == index::absolute) _offset  = (u64)offset;
@@ -55,7 +49,7 @@ private:
 
   auto _open(const u8* data, u64 size) -> void {
     _size = size;
-    _data = new u8[size];
+    _data = nall::memory::allocate(size);
     nall::memory::copy(_data, data, size);
   }
 

@@ -1,11 +1,30 @@
 struct MegaDrive : Cartridge {
   auto name() -> string override { return "Mega Drive"; }
   auto extensions() -> vector<string> override { return {"md", "smd", "gen", "bin"}; }
-  auto export(string location) -> vector<u8> override;
+  auto pak(string location) -> shared_pointer<vfs::directory> override;
+  auto rom(string location) -> vector<u8> override;
   auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto MegaDrive::export(string location) -> vector<u8> {
+auto MegaDrive::pak(string location) -> shared_pointer<vfs::directory> {
+  if(auto pak = Media::pak(location)) return pak;
+  if(auto rom = Media::read(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    auto manifest = Cartridge::manifest(rom, location);
+    auto document = BML::unserialize(manifest);
+    pak->append("manifest.bml", manifest);
+    array_view<u8> view{rom};
+    for(auto node : document.find("game/board/memory(type=ROM)")) {
+      string name = {node["content"].string().downcase(), ".rom"};
+      pak->append(name, {view.data(), node["size"].natural()});
+      view += node["size"].natural();
+    }
+    return pak;
+  }
+  return {};
+}
+
+auto MegaDrive::rom(string location) -> vector<u8> {
   vector<u8> data;
   append(data, {location, "program.rom"});
   return data;

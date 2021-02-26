@@ -82,7 +82,7 @@ auto System::load(Node::System& root, string name) -> bool {
   apu.load(node);
   vdp.load(node);
   psg.load(node);
-  ym2612.load(node);
+  opn2.load(node);
   cartridgeSlot.load(node);
   expansionPort.load(node);
   controllerPort1.load(node);
@@ -98,14 +98,14 @@ auto System::unload() -> void {
   apu.unload();
   vdp.unload();
   psg.unload();
-  ym2612.unload();
+  opn2.unload();
   cartridgeSlot.unload();
   expansionPort.unload();
   controllerPort1.unload();
   controllerPort2.unload();
   extensionPort.unload();
-  mcd.unload();
-  node = {};
+  if(MegaCD()) mcd.unload();
+  node.reset();
 }
 
 auto System::save() -> void {
@@ -127,7 +127,7 @@ auto System::power(bool reset) -> void {
   apu.power(reset);
   vdp.power(reset);
   psg.power(reset);
-  ym2612.power(reset);
+  opn2.power(reset);
   if(MegaCD()) mcd.power(reset);
   scheduler.power(cpu);
 }

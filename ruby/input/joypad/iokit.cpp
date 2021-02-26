@@ -181,6 +181,8 @@ struct InputJoypadIOKit {
     IOHIDManagerRegisterDeviceRemovalCallback(manager, deviceRemovalCallback, this);
     IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 
+    CFRelease(matcher);
+
     if(IOHIDManagerOpen(manager, kIOHIDOptionsTypeNone) != kIOReturnSuccess) {
       releaseManager();
       return false;

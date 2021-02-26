@@ -6,53 +6,33 @@ auto CompactDisc::construct() -> void {
   Media::construct();
 }
 
+//audio CD fallback
 auto CompactDisc::manifest(string location) -> string {
-  vector<uint8_t> sector;
-  if(directory::exists(location)) sector = readDataSectorBCD(location, manifestSector());
-  if(file::exists(location)) sector = readDataSectorCUE(location, manifestSector());
-  if(sector) return manifest(sector, location);
-  return {};
+  string manifest;
+  manifest += "game\n";
+  manifest +={"  name:  ", Location::prefix(location), "\n"};
+  manifest +={"  label: ", Location::prefix(location), "\n"};
+  manifest += "  audio\n";
+  return manifest;
 }
 
-auto CompactDisc::import(string filename) -> string {
-  auto manifest = this->manifest(filename);
-  if(!manifest) return "failed to parse CD-ROM";
-
-  auto document = BML::unserialize(manifest);
-  string location = {pathname, Location::prefix(filename), "/"};
-  if(!directory::create(location)) return "output directory not writable";
-
-  if(settings.createManifests) {
-    file::write({location, "manifest.bml"}, manifest);
-  }
-
-  auto cdrom = vfs::cdrom::open(filename);
-  if(!cdrom) return "failed to parse CUE sheet";
-
-  if(auto fp = file::open({location, "cd.rom"}, file::mode::write)) {
-    while(!cdrom->end()) fp.write(cdrom->read());
-  }
-
-  return {};
-}
-
-auto CompactDisc::readDataSectorBCD(string pathname, uint sectorID) -> vector<uint8_t> {
+auto CompactDisc::readDataSectorBCD(string pathname, u32 sectorID) -> vector<u8> {
   auto fp = file::open({pathname, "cd.rom"}, file::mode::read);
   if(!fp) return {};
 
-  vector<uint8_t> toc;
+  vector<u8> toc;
   toc.resize(96 * 7500);
-  for(uint sector : range(7500)) {
+  for(u32 sector : range(7500)) {
     fp.read({toc.data() + 96 * sector, 96});
   }
   CD::Session session;
   session.decode(toc, 96);
 
-  for(uint trackID : range(100)) {
+  for(u32 trackID : range(100)) {
     if(auto& track = session.tracks[trackID]) {
       if(!track.isData()) continue;
       if(auto index = track.index(1)) {
-        vector<uint8_t> sector;
+        vector<u8> sector;
         sector.resize(2448);
         fp.seek(2448 * (abs(session.leadIn.lba) + index->lba + sectorID) + 16);
         fp.read({sector.data(), 2448});
@@ -64,12 +44,12 @@ auto CompactDisc::readDataSectorBCD(string pathname, uint sectorID) -> vector<ui
   return {};
 }
 
-auto CompactDisc::readDataSectorCUE(string filename, uint sectorID) -> vector<uint8_t> {
+auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> vector<u8> {
   Decode::CUE cuesheet;
   if(!cuesheet.load(filename)) return {};
 
   for(auto& file : cuesheet.files) {
-    uint64_t offset = 0;
+    u64 offset = 0;
     auto location = string{Location::path(filename), file.name};
 
     if(file.type == "binary") {
@@ -77,13 +57,13 @@ auto CompactDisc::readDataSectorCUE(string filename, uint sectorID) -> vector<ui
       if(!binary) continue;
       for(auto& track : file.tracks) {
         for(auto& index : track.indices) {
-          uint sectorSize = 0;
+          u32 sectorSize = 0;
           if(track.type == "mode1/2048") sectorSize = 2048;
           if(track.type == "mode1/2352") sectorSize = 2352;
           if(track.type == "mode2/2352") sectorSize = 2352;
           if(sectorSize && index.number == 1) {
             binary.seek(offset + (sectorSize * sectorID) + (sectorSize == 2352 ? 16 : 0));
-            vector<uint8_t> sector;
+            vector<u8> sector;
             sector.resize(2048);
             binary.read({sector.data(), sector.size()});
             return sector;

@@ -66,11 +66,11 @@ auto System::load(Node::System& root, string name) -> bool {
     node->setSerialize({&System::serialize, this});
     node->setUnserialize({&System::unserialize, this});
     root = node;
-    fastBoot = node->append<Node::Setting::Boolean>("Fast Boot", false);
   }
   if(information.name == "Super Game Boy") {
     node = root;
   }
+  fastBoot = node->append<Node::Setting::Boolean>("Fast Boot", false);
 
   scheduler.reset();
   controls.load(node);

@@ -41,6 +41,7 @@ auto construct() -> void {
   media.append(new MegaDrive);
   media.append(new MSX);
   media.append(new MSX2);
+  media.append(new NeoGeo);
   media.append(new NeoGeoPocket);
   media.append(new NeoGeoPocketColor);
   media.append(new Nintendo64);
@@ -94,6 +95,24 @@ auto identify(const string& filename) -> string {
   return {};  //unable to identify
 }
 
+auto import(shared_pointer<Media> medium, const string& filename) -> bool {
+  if(auto pak = medium->pak(filename)) {
+    if(!pak->count()) return false;
+    string pathname = {medium->pathname, Location::prefix(filename), ".", medium->extensions().first(), "/"};
+    if(!directory::create(pathname)) return false;
+    for(auto& node : *pak) {
+      if(auto input = node.cast<vfs::file>()) {
+        if(input->name() == "manifest.bml" && !settings.createManifests) continue;
+        if(auto output = file::open({pathname, input->name()}, file::mode::write)) {
+          while(!input->end()) output.write(input->read());
+        }
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
 auto main(Arguments arguments) -> void {
   #if !defined(MIA_LIBRARY)
   Application::setName("mia");
@@ -119,19 +138,11 @@ auto main(Arguments arguments) -> void {
 
       if(string manifest; arguments.take("--manifest", manifest)) {
         if(auto result = medium->manifest(manifest)) return print(result);
-        if(medium->extensions().find("cue")) {
-          //audio CD-ROM fallback
-          string result;
-          result.append("game\n");
-          result.append("  name:  ", medium->name(manifest), "\n");
-          result.append("  label: ", medium->name(manifest), "\n");
-          return print(result);
-        }
         return;
       }
 
       if(string import; arguments.take("--import", import)) {
-        return (void)medium->import(import);
+        return (void)mia::import(medium, import);
       }
 
       #if !defined(MIA_LIBRARY)
@@ -142,11 +153,11 @@ auto main(Arguments arguments) -> void {
         .setAlignment(Alignment::Center)
         .openFile()
         ) {
-          if(auto error = medium->import(import)) {
+          if(!mia::import(medium, import)) {
             MessageDialog()
             .setTitle("Error")
             .setAlignment(Alignment::Center)
-            .setText({"Failed to import: ", Location::file(import), "\n\nError: ", error, "."})
+            .setText({"Failed to import: ", Location::file(import)})
             .error();
           }
         }

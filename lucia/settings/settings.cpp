@@ -100,10 +100,11 @@ auto Settings::process(bool load) -> void {
   bind(natural, "Rewind/Frequency", rewind.frequency);
 
   bind(string,  "Paths/Saves", paths.saves);
-  bind(string,  "Paths/Patches", paths.patches);
   bind(string,  "Paths/Screenshots", paths.screenshots);
   bind(string,  "Paths/Debugging", paths.debugging);
-  bind(string,  "Paths/Firmware", paths.firmware);
+  bind(string,  "Paths/SuperFamicom/GameBoy", paths.superFamicom.gameBoy);
+  bind(string,  "Paths/SuperFamicom/BSMemory", paths.superFamicom.bsMemory);
+  bind(string,  "Paths/SuperFamicom/SufamiTurbo", paths.superFamicom.sufamiTurbo);
 
   for(u32 index : range(9)) {
     string name = {"Recent/Game-", 1 + index};

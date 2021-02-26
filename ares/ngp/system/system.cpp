@@ -81,7 +81,7 @@ auto System::unload() -> void {
   vpu.unload();
   psg.unload();
   cartridgeSlot.unload();
-  node = {};
+  node.reset();
 }
 
 auto System::power(bool reset) -> void {

@@ -49,6 +49,7 @@ auto MCD::load(Node::Object parent) -> void {
 }
 
 auto MCD::unload() -> void {
+  if(!node) return;
   disconnect();
 
   if(expansion.node) {
@@ -57,6 +58,7 @@ auto MCD::unload() -> void {
     }
   }
 
+  debugger = {};
   cdd.unload(node);
   pcm.unload(node);
 
@@ -66,7 +68,6 @@ auto MCD::unload() -> void {
   bram.reset();
   cdc.ram.reset();
 
-  debugger = {};
   tray.reset();
   node.reset();
 }

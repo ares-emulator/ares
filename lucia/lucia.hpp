@@ -8,7 +8,6 @@ using namespace hiro;
 #include <mia/mia.hpp>
 
 #include <nall/instance.hpp>
-#include <nall/beat/single/apply.hpp>
 #include <nall/encode/png.hpp>
 #include <nall/hash/crc16.hpp>
 

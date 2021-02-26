@@ -1,11 +1,23 @@
 struct GameBoyAdvance : Cartridge {
   auto name() -> string override { return "Game Boy Advance"; }
   auto extensions() -> vector<string> override { return {"gba"}; }
-  auto export(string location) -> vector<u8> override;
+  auto pak(string location) -> shared_pointer<vfs::directory> override;
+  auto rom(string location) -> vector<u8> override;
   auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto GameBoyAdvance::export(string location) -> vector<u8> {
+auto GameBoyAdvance::pak(string location) -> shared_pointer<vfs::directory> {
+  if(auto pak = Media::pak(location)) return pak;
+  if(auto rom = Media::read(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    pak->append("manifest.bml", Cartridge::manifest(rom, location));
+    pak->append("program.rom",  rom);
+    return pak;
+  }
+  return {};
+}
+
+auto GameBoyAdvance::rom(string location) -> vector<u8> {
   vector<u8> data;
   append(data, {location, "program.rom"});
   return data;

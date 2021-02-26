@@ -25,6 +25,7 @@ auto Cartridge::connect() -> void {
   information.name = document["game/label"].string();
   information.board = document["game/board"].string();
 
+  board.reset();
   if(information.board == "HuC1"  ) board = new Board::HuC1{*this};
   if(information.board == "HuC3"  ) board = new Board::HuC3{*this};
   if(information.board == "MBC1"  ) board = new Board::MBC1{*this};
@@ -44,7 +45,7 @@ auto Cartridge::connect() -> void {
 }
 
 auto Cartridge::disconnect() -> void {
-  if(!node || !board) return;
+  if(!node) return;
   board->unload();
   node.reset();
 }
@@ -59,6 +60,7 @@ auto Cartridge::power() -> void {
   Thread::create(4 * 1024 * 1024, {&Cartridge::main, this});
 
   bootromEnable = true;
+  if(!board) board = new Board::None{*this};
   board->power();
 }
 

@@ -1,7 +1,9 @@
 struct SuperFamicom : Cartridge {
   auto name() -> string override { return "Super Famicom"; }
   auto extensions() -> vector<string> override { return {"sfc", "smc", "swc", "fig"}; }
-  auto export(string location) -> vector<u8> override;
+  auto read(string location) -> vector<u8> override;
+  auto pak(string location) -> shared_pointer<vfs::directory> override;
+  auto rom(string location) -> vector<u8> override;
   auto heuristics(vector<u8>& data, string location) -> string override;
 
   auto region() const -> string;
@@ -31,7 +33,57 @@ struct SuperFamicom : Cartridge {
   natural headerAddress;
 };
 
-auto SuperFamicom::export(string location) -> vector<u8> {
+auto SuperFamicom::read(string location) -> vector<u8> {
+  if(auto rom = Media::read(location)) {
+    //append firmware to the ROM if it is missing
+    auto manifest = heuristics(rom, location);
+    auto document = BML::unserialize(manifest);
+    if(auto identifier = document["game/board/memory/identifier"]) {
+      if(!firmwareRomSize()) {
+        auto id = identifier.string();
+        array_view<u8> view;
+        if(id == "Cx4"  ) view = {Resource::SuperFamicom::Cx4,   sizeof(Resource::SuperFamicom::Cx4  )};
+        if(id == "DSP1" ) view = {Resource::SuperFamicom::DSP1,  sizeof(Resource::SuperFamicom::DSP1 )};
+        if(id == "DSP1B") view = {Resource::SuperFamicom::DSP1B, sizeof(Resource::SuperFamicom::DSP1B)};
+        if(id == "DSP2" ) view = {Resource::SuperFamicom::DSP2,  sizeof(Resource::SuperFamicom::DSP2 )};
+        if(id == "DSP3" ) view = {Resource::SuperFamicom::DSP3,  sizeof(Resource::SuperFamicom::DSP3 )};
+        if(id == "DSP4" ) view = {Resource::SuperFamicom::DSP4,  sizeof(Resource::SuperFamicom::DSP4 )};
+        if(id == "SGB1" ) view = {Resource::SuperFamicom::SGB1,  sizeof(Resource::SuperFamicom::SGB1 )};
+        if(id == "SGB2" ) view = {Resource::SuperFamicom::SGB2,  sizeof(Resource::SuperFamicom::SGB2 )};
+        if(id == "ST010") view = {Resource::SuperFamicom::ST010, sizeof(Resource::SuperFamicom::ST010)};
+        if(id == "ST011") view = {Resource::SuperFamicom::ST011, sizeof(Resource::SuperFamicom::ST011)};
+        if(id == "ST018") view = {Resource::SuperFamicom::ST018, sizeof(Resource::SuperFamicom::ST018)};
+        while(view) rom.append(*view++);
+      }
+    }
+    return rom;
+  }
+  return {};
+}
+
+auto SuperFamicom::pak(string location) -> shared_pointer<vfs::directory> {
+  if(auto pak = Media::pak(location)) return pak;
+  if(auto rom = SuperFamicom::read(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    auto manifest = Cartridge::manifest(rom, location);
+    auto document = BML::unserialize(manifest);
+    pak->append("manifest.bml", manifest);
+    array_view<u8> view{rom};
+    for(auto node : document.find("game/board/memory(type=ROM)")) {
+      string name;
+      if(auto architecture = node["architecture"].string()) name.append(architecture.downcase(), ".");
+      name.append(node["content"].string().downcase(), ".rom");
+      u32 size = node["size"].natural();
+      if(view.size() < size) break;  //missing firmware
+      pak->append(name, {view.data(), size});
+      view += size;
+    }
+    return pak;
+  }
+  return {};
+}
+
+auto SuperFamicom::rom(string location) -> vector<u8> {
   vector<u8> data;
   auto files = directory::files(location, "*.rom");
   append(data, {location, "program.rom"});

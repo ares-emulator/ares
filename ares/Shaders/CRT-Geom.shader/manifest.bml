@@ -1,5 +1,0 @@
-program
-  vertex: crt-geom.vs
-  fragment: crt-geom.fs
-  modulo: 2
-  

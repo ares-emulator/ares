@@ -77,9 +77,14 @@ auto PPU::runDMG() -> void {
     color = bg.color;
   }
 
-  auto output = screen->pixels().data() + status.ly * 160 + px++;
-  *output = color;
-  if(Model::SuperGameBoy()) superGameBoy->ppuWrite(color);
+  if(Model::GameBoy()) {
+    auto output = screen->pixels().data() + status.ly * 160 + px++;
+    *output = color;
+  }
+  if(Model::SuperGameBoy()) {
+    superGameBoy->ppuWrite(color);
+    px++;
+  }
 }
 
 auto PPU::runBackgroundDMG() -> void {

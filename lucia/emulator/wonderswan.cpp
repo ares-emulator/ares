@@ -62,35 +62,18 @@ auto WonderSwan::load() -> bool {
 }
 
 auto WonderSwan::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
   if(node->is<ares::Node::System>() && name == "boot.rom") {
-    return vfs::memory::open(Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot);
+    return vfs::memory::open({Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot});
   }
-
   if(node->is<ares::Node::System>() && name == "save.eeprom") {
     return {};
   }
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-  auto saveRAMVolatile = document["game/board/memory(content=Save)/volatile"];
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
+  if(node->name() == "WonderSwan") {
+    if(auto fp = pak->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.ram",    ".sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.eeprom", ".sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "time.rtc",    ".rtc")) return fp;
   }
-
-  if(name == "save.ram" || name == "save.eeprom") {
-    if(saveRAMVolatile) return {};
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "time.rtc") {
-    auto location = locate(game.location, ".rtc", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
   return {};
 }
 
@@ -153,35 +136,18 @@ auto WonderSwanColor::load() -> bool {
 }
 
 auto WonderSwanColor::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
   if(node->is<ares::Node::System>() && name == "boot.rom") {
-    return vfs::memory::open(Resource::WonderSwanColor::Boot, sizeof Resource::WonderSwanColor::Boot);
+    return vfs::memory::open({Resource::WonderSwanColor::Boot, sizeof Resource::WonderSwanColor::Boot});
   }
-
   if(node->is<ares::Node::System>() && name == "save.eeprom") {
     return {};
   }
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-  auto saveRAMVolatile = document["game/board/memory(content=Save)/volatile"];
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
+  if(node->name() == "WonderSwan Color") {
+    if(auto fp = pak->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.ram",    ".sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.eeprom", ".sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "time.rtc",    ".rtc")) return fp;
   }
-
-  if(name == "save.ram" || name == "save.eeprom") {
-    if(saveRAMVolatile) return {};
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "time.rtc") {
-    auto location = locate(game.location, ".rtc", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
   return {};
 }
 
@@ -232,35 +198,18 @@ auto PocketChallengeV2::load() -> bool {
 }
 
 auto PocketChallengeV2::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
   if(node->is<ares::Node::System>() && name == "boot.rom") {
-    return vfs::memory::open(Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot);
+    return vfs::memory::open({Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot});
   }
-
   if(node->is<ares::Node::System>() && name == "save.eeprom") {
     return {};
   }
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-  auto saveRAMVolatile = document["game/board/memory(content=Save)/volatile"];
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
+  if(node->name() == "Pocket Challenge V2") {
+    if(auto fp = pak->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.ram",    ".sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.eeprom", ".sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "time.rtc",    ".rtc")) return fp;
   }
-
-  if(name == "save.ram" || name == "save.eeprom") {
-    if(saveRAMVolatile) return {};
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "time.rtc") {
-    auto location = locate(game.location, ".rtc", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
   return {};
 }
 

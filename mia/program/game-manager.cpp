@@ -15,9 +15,16 @@ GameManager::GameManager(View* parent) : Panel(parent, Size{~0, ~0}) {
     }
   });
   importButton.setText("Import ...").onActivate([&] {
+    vector<string> extensions;
+    for(auto& medium : media) {
+      if(medium->name() != system) continue;
+      extensions = medium->extensions();
+    }
+    for(auto& extension : extensions) extension.prepend("*.");
     if(auto files = BrowserDialog()
     .setTitle({"Import ", system, " Games"})
     .setPath(settings.recent)
+    .setFilters({{system, "|", extensions.merge(":"), ":*.zip:", extensions.merge(":").upcase(), ":*.ZIP"}, "All|*"})
     .setAlignment(programWindow)
     .openFiles()
     ) {
@@ -51,5 +58,6 @@ auto GameManager::refresh() -> void {
   }
 
   programWindow.show(*this);
+  Application::processEvents();
   gameList.resizeColumn();
 }

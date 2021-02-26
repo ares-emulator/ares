@@ -40,19 +40,10 @@ auto MSX::load() -> bool {
 }
 
 auto MSX::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
-  if(name == "bios.rom") {
-    return vfs::memory::open(Resource::MSX::BIOS, sizeof Resource::MSX::BIOS);
+  if(name == "bios.rom") return vfs::memory::open({Resource::MSX::BIOS, sizeof Resource::MSX::BIOS});
+  if(node->name() == "MSX") {
+    if(auto fp = pak->find(name)) return fp;
   }
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
-  }
-
   return {};
 }
 
@@ -98,23 +89,10 @@ auto MSX2::load() -> bool {
 }
 
 auto MSX2::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
-  if(name == "bios.rom") {
-    return vfs::memory::open(Resource::MSX2::BIOS, sizeof Resource::MSX2::BIOS);
+  if(name == "bios.rom") return vfs::memory::open({Resource::MSX2::BIOS, sizeof Resource::MSX2::BIOS});
+  if(node->name() == "MSX2") {
+    if(auto fp = pak->find(name)) return fp;
   }
-
-  if(name == "sub.rom") {
-    return vfs::memory::open(Resource::MSX2::Sub, sizeof Resource::MSX2::Sub);
-  }
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
-  }
-
   return {};
 }
 

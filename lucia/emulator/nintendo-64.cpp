@@ -63,48 +63,20 @@ auto Nintendo64::load() -> bool {
 }
 
 auto Nintendo64::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
-  if(name == "pif.rom") {
-    return vfs::memory::open(Resource::Nintendo64::PIF::ROM, sizeof Resource::Nintendo64::PIF::ROM);
+  if(node->name() == "PI") {
+    if(name == "pif.rom"     ) return vfs::memory::open({Resource::Nintendo64::PIF::ROM,  sizeof Resource::Nintendo64::PIF::ROM });
+    if(name == "pif.ntsc.rom") return vfs::memory::open({Resource::Nintendo64::PIF::NTSC, sizeof Resource::Nintendo64::PIF::NTSC});
+    if(name == "pif.pal.rom" ) return vfs::memory::open({Resource::Nintendo64::PIF::PAL,  sizeof Resource::Nintendo64::PIF::PAL });
   }
-
-  if(name == "pif.ntsc.rom") {
-    return vfs::memory::open(Resource::Nintendo64::PIF::NTSC, sizeof Resource::Nintendo64::PIF::NTSC);
+  if(node->name() == "Nintendo 64") {
+    if(auto fp = pak->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.ram",    ".sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.eeprom", ".sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.flash",  ".sav")) return fp;
   }
-
-  if(name == "pif.pal.rom") {
-    return vfs::memory::open(Resource::Nintendo64::PIF::PAL, sizeof Resource::Nintendo64::PIF::PAL);
+  if(node->name() == "Gamepad") {
+    if(auto fp = Emulator::save(name, mode, "save.pak",    ".pak")) return fp;
   }
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-  auto saveRAMVolatile = (bool)document["game/board/memory(content=Save,type=RAM)/volatile"];
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
-  }
-
-  if(name == "save.ram" && !saveRAMVolatile) {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "save.eeprom") {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "save.flash") {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "save.pak") {
-    auto location = locate(game.location, ".pak", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
   return {};
 }
 
@@ -193,9 +165,7 @@ auto Nintendo64DD::load() -> bool {
 
 auto Nintendo64DD::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
   if(node->name() == "Disk Drive") {
-    if(name == "program.rom") {
-      return loadFirmware(firmware[0]);
-    }
+    if(auto fp = pak->find(name)) return fp;
   }
 
   if(node->name() == "Nintendo 64DD") {

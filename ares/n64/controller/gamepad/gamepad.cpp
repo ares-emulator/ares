@@ -32,6 +32,13 @@ Gamepad::~Gamepad() {
   disconnect();
 }
 
+auto Gamepad::save() -> void {
+  if(!pak) return;
+  if(pak->name() == "Controller Pak") {
+    ram.save(platform->open(node, "save.pak", File::Write));
+  }
+}
+
 auto Gamepad::allocate(string name) -> Node::Peripheral {
   if(name == "Controller Pak") return pak = port->append<Node::Peripheral>("Controller Pak");
   if(name == "Rumble Pak"    ) return pak = port->append<Node::Peripheral>("Rumble Pak");
@@ -42,9 +49,7 @@ auto Gamepad::connect() -> void {
   if(!pak) return;
   if(pak->name() == "Controller Pak") {
     ram.allocate(32_KiB);
-    if(auto fp = platform->open(node, "save.pak", File::Read)) {
-      ram.load(fp);
-    }
+    ram.load(platform->open(node, "save.pak", File::Read));
   }
   if(pak->name() == "Rumble Pak") {
     motor = node->append<Node::Input::Rumble>("Rumble");
@@ -54,9 +59,7 @@ auto Gamepad::connect() -> void {
 auto Gamepad::disconnect() -> void {
   if(!pak) return;
   if(pak->name() == "Controller Pak") {
-    if(auto fp = platform->open(node, "save.pak", File::Write)) {
-      ram.save(fp);
-    }
+    save();
     ram.reset();
   }
   if(pak->name() == "Rumble Pak") {
@@ -107,10 +110,10 @@ auto Gamepad::read() -> n32 {
   data.bit(17) = cameraLeft->value();
   data.bit(18) = cameraDown->value();
   data.bit(19) = cameraUp->value();
-  data.bit(20) = l->value();
-  data.bit(21) = r->value();
-  data.bit(22) = 0;
-  data.bit(23) = 0;
+  data.bit(20) = r->value();
+  data.bit(21) = l->value();
+  data.bit(22) = 0;  //GND
+  data.bit(23) = 0;  //RST
   data.bit(24) = right->value() & !left->value();
   data.bit(25) = left->value() & !right->value();
   data.bit(26) = down->value() & !up->value();
@@ -119,6 +122,15 @@ auto Gamepad::read() -> n32 {
   data.bit(29) = z->value();
   data.bit(30) = b->value();
   data.bit(31) = a->value();
+
+  //when L+R+Start are pressed: the X/Y axes are zeroed, RST is set, and Start is cleared
+  if(l->value() && r->value() && start->value()) {
+    data.byte(0) = 0;  //Y-Axis
+    data.byte(1) = 0;  //X-Axis
+    data.bit(23) = 1;  //RST
+    data.bit(28) = 0;  //Start
+  }
+
   return data;
 }
 

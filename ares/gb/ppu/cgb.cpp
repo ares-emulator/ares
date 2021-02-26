@@ -85,8 +85,10 @@ auto PPU::runCGB() -> void {
     color = bg.color;
   }
 
-  auto output = screen->pixels().data() + status.ly * 160 + px++;
-  *output = color;
+  if(Model::GameBoyColor()) {
+    auto output = screen->pixels().data() + status.ly * 160 + px++;
+    *output = color;
+  }
 }
 
 auto PPU::runBackgroundCGB() -> void {

@@ -15,8 +15,8 @@ auto ControllerPort::load(Node::Object parent) -> void {
 }
 
 auto ControllerPort::unload() -> void {
-  device = {};
-  port = {};
+  device.reset();
+  port.reset();
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {

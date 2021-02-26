@@ -110,44 +110,50 @@ auto SPU::readHalf(u32 address) -> u32 {
 
   //KON
   if(address == 0x1f80'1d88) {
-    for(u32 v : range(24)) {
-      data.bit(v) = voice[v].kon;
-    }
+    for(u32 v : range(16)) data.bit(v) = voice[v].kon;
+  }
+  if(address == 0x1f80'1d8a) {
+    for(u32 v : range( 8)) data.bit(v) = voice[v + 16].kon;
   }
 
   //KOFF
   if(address == 0x1f80'1d8c) {
-    for(u32 v : range(24)) {
-      data.bit(v) = voice[v].koff;
-    }
+    for(u32 v : range(16)) data.bit(v) = voice[v].koff;
+  }
+  if(address == 0x1f80'1d8e) {
+    for(u32 v : range( 8)) data.bit(v) = voice[v + 16].koff;
   }
 
   //PMON
   if(address == 0x1f80'1d90) {
-    for(u32 v : range(24)) {
-      data.bit(v) = voice[v].pmon;
-    }
+    for(u32 v : range(16)) data.bit(v) = voice[v].pmon;
+  }
+  if(address == 0x1f80'1d92) {
+    for(u32 v : range( 8)) data.bit(v) = voice[v + 16].pmon;
   }
 
   //NON
   if(address == 0x1f80'1d94) {
-    for(u32 v : range(24)) {
-      data.bit(v) = voice[v].non;
-    }
+    for(u32 v : range(16)) data.bit(v) = voice[v].non;
+  }
+  if(address == 0x1f80'1d96) {
+    for(u32 v : range( 8)) data.bit(v) = voice[v + 16].non;
   }
 
   //EON
   if(address == 0x1f80'1d98) {
-    for(u32 v : range(24)) {
-      data.bit(v) = voice[v].eon;
-    }
+    for(u32 v : range(16)) data.bit(v) = voice[v].eon;
+  }
+  if(address == 0x1f80'1d9a) {
+    for(u32 v : range( 8)) data.bit(v) = voice[v + 16].eon;
   }
 
   //ENDX
   if(address == 0x1f80'1d9c) {
-    for(u32 v : range(24)) {
-      data.bit(v) = voice[v].endx;
-    }
+    for(u32 v : range(16)) data.bit(v) = voice[v].endx;
+  }
+  if(address == 0x1f80'1d9e) {
+    for(u32 v : range( 8)) data.bit(v) = voice[v + 16].endx;
   }
 
   //mBASE
@@ -534,44 +540,50 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
 
   //KON
   if(address == 0x1f80'1d88) {
-    for(u32 v : range(24)) {
-      voice[v].kon = data.bit(v);
-    }
+    for(u32 v : range(16)) voice[v].kon = data.bit(v);
+  }
+  if(address == 0x1f80'1d8a) {
+    for(u32 v : range( 8)) voice[v + 16].kon = data.bit(v);
   }
 
   //KOFF
   if(address == 0x1f80'1d8c) {
-    for(u32 v : range(24)) {
-      voice[v].koff = data.bit(v);
-    }
+    for(u32 v : range(16)) voice[v].koff = data.bit(v);
+  }
+  if(address == 0x1f80'1d8e) {
+    for(u32 v : range( 8)) voice[v + 16].koff = data.bit(v);
   }
 
   //PMON
   if(address == 0x1f80'1d90) {
-    for(u32 v : range(24)) {
-      voice[v].pmon = data.bit(v);
-    }
+    for(u32 v : range(16)) voice[v].pmon = data.bit(v);
+  }
+  if(address == 0x1f80'1d92) {
+    for(u32 v : range( 8)) voice[v + 16].pmon = data.bit(v);
   }
 
   //NON
   if(address == 0x1f80'1d94) {
-    for(u32 v : range(24)) {
-      voice[v].non = data.bit(v);
-    }
+    for(u32 v : range(16)) voice[v].non = data.bit(v);
+  }
+  if(address == 0x1f80'1d96) {
+    for(u32 v : range( 8)) voice[v + 16].non = data.bit(v);
   }
 
   //EON
   if(address == 0x1f80'1d98) {
-    for(u32 v : range(24)) {
-      voice[v].eon = data.bit(v);
-    }
+    for(u32 v : range(16)) voice[v].eon = data.bit(v);
+  }
+  if(address == 0x1f80'1d9a) {
+    for(u32 v : range( 8)) voice[v + 16].eon = data.bit(v);
   }
 
   //ENDX
   if(address == 0x1f80'1d9c) {
-    for(u32 v : range(24)) {
-      voice[v].endx = data.bit(v);
-    }
+    for(u32 v : range(16)) voice[v].endx = data.bit(v);
+  }
+  if(address == 0x1f80'1d9e) {
+    for(u32 v : range( 8)) voice[v + 16].endx = data.bit(v);
   }
 
   //mBASE

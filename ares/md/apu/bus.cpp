@@ -8,7 +8,7 @@
 auto APU::read(n16 address) -> n8 {
   //$2000-3fff mirrors $0000-1fff
   if(address >= 0x0000 && address <= 0x3fff) return ram.read(address);
-  if(address >= 0x4000 && address <= 0x4003) return ym2612.readStatus();
+  if(address >= 0x4000 && address <= 0x4003) return opn2.readStatus();
   if(address >= 0x8000 && address <= 0xffff) {
     while(vdp.dma.active) {
       Thread::step(1);
@@ -37,10 +37,10 @@ auto APU::read(n16 address) -> n8 {
 auto APU::write(n16 address, n8 data) -> void {
   //$2000-3fff mirrors $0000-1fff
   if(address >= 0x0000 && address <= 0x3fff) return ram.write(address, data);
-  if(address == 0x4000) return ym2612.writeAddress(0 << 8 | data);
-  if(address == 0x4001) return ym2612.writeData(data);
-  if(address == 0x4002) return ym2612.writeAddress(1 << 8 | data);
-  if(address == 0x4003) return ym2612.writeData(data);
+  if(address == 0x4000) return opn2.writeAddress(0 << 8 | data);
+  if(address == 0x4001) return opn2.writeData(data);
+  if(address == 0x4002) return opn2.writeAddress(1 << 8 | data);
+  if(address == 0x4003) return opn2.writeData(data);
   if(address == 0x6000) return (void)(io.bank = data.bit(0) << 8 | io.bank >> 1);
   if(address == 0x7f11) return psg.write(data);
   if(address == 0x7f13) return psg.write(data);

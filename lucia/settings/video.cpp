@@ -73,4 +73,12 @@ auto VideoSettings::construct() -> void {
   });
   renderSupersamplingHint.setText("Scales HD and UHD resolutions back down to SD").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
   renderSettingsHint.setText("Note: render settings changes require a game reload to take effect").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
+
+  #if !defined(VULKAN)
+  //hide Vulkan-specific options if Vulkan is not available
+  renderSettingsLabel.setCollapsible(true).setVisible(false);
+  renderQualityLayout.setCollapsible(true).setVisible(false);
+  renderSupersamplingLayout.setCollapsible(true).setVisible(false);
+  renderSettingsHint.setCollapsible(true).setVisible(false);
+  #endif
 }

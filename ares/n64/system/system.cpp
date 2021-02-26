@@ -95,6 +95,10 @@ auto System::unload() -> void {
   #if defined(VULKAN)
   vulkan.unload();
   #endif
+  controllerPort1.unload();
+  controllerPort2.unload();
+  controllerPort3.unload();
+  controllerPort4.unload();
   mi.unload();
   vi.unload();
   ai.unload();
@@ -106,10 +110,6 @@ auto System::unload() -> void {
   rdp.unload();
   rsp.unload();
   cartridgeSlot.unload();
-  controllerPort1.unload();
-  controllerPort2.unload();
-  controllerPort3.unload();
-  controllerPort4.unload();
   dd.unload();
   node.reset();
 }
@@ -117,6 +117,10 @@ auto System::unload() -> void {
 auto System::save() -> void {
   if(!node) return;
   cartridge.save();
+  controllerPort1.save();
+  controllerPort2.save();
+  controllerPort3.save();
+  controllerPort4.save();
 }
 
 auto System::power(bool reset) -> void {

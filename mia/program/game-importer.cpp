@@ -22,14 +22,12 @@ auto GameImporter::import(string system, const vector<string>& files) -> void {
 
     for(auto& medium : media) {
       if(medium->name() != system) continue;
-      auto error = medium->import(file);
       ListViewItem item{&importList};
-      if(!error) {
+      if(mia::import(medium, file)) {
         item.setIcon(Icon::Action::Add);
       } else {
         item.setIcon(Icon::Action::Close);
         item.setForegroundColor({192, 0, 0});
-        item.setAttribute("error", error);
       }
       item.setText(Location::file(file));
       importList.resizeColumn();

@@ -38,6 +38,7 @@ auto pTableViewCell::setText(const string& text) -> void {
 
 auto pTableViewCell::_grandparent() -> maybe<pTableView&> {
   if(auto parent = _parent()) return parent->_parent();
+  return nothing;
 }
 
 auto pTableViewCell::_parent() -> maybe<pTableViewItem&> {

@@ -2,15 +2,14 @@ struct Emulator {
   struct Firmware;
   static auto construct() -> void;
   virtual ~Emulator() = default;
-  auto locate(const string& location, const string& suffix, const string& path = "") -> string;
-  auto manifest() -> shared_pointer<vfs::file>;
-  auto manifest(const string& location) -> shared_pointer<vfs::file>;
+  auto locate(const string& location, const string& suffix, const string& path = "", maybe<string> system = {}) -> string;
   auto manifest(const string& type, const string& location) -> shared_pointer<vfs::file>;
   auto region() -> string;
-  auto load(const string& location, const vector<u8>& image) -> bool;
+  auto load(const string& location) -> bool;
+  auto save(const string& name, vfs::file::mode, const string& match, const string& suffix, maybe<string> system = {}, maybe<string> source = {}) -> shared_pointer<vfs::file>;
   auto loadFirmware(const Firmware&) -> shared_pointer<vfs::file>;
-  auto save() -> void;
   auto unload() -> void;
+  auto save() -> void;
   auto refresh() -> void;
   auto setBoolean(const string& name, bool value) -> bool;
   auto setOverscan(bool value) -> bool;
@@ -32,7 +31,6 @@ struct Emulator {
   struct Game {
     string location;
     string manifest;
-    vector<u8> image;
   };
 
   shared_pointer<mia::Media> medium;
@@ -41,6 +39,7 @@ struct Emulator {
 
   ares::Node::System root;
   vector<Firmware> firmware;
+  shared_pointer<vfs::directory> pak;
   Game game;
 
   struct Configuration {

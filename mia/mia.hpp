@@ -1,8 +1,9 @@
 #include <nall/nall.hpp>
 #include <nall/cd.hpp>
+#include <nall/vfs.hpp>
+#include <nall/beat/single/apply.hpp>
 #include <nall/decode/cue.hpp>
 #include <nall/decode/wav.hpp>
-#include <nall/vfs.hpp>
 using namespace nall;
 
 #if !defined(MIA_LIBRARY)
@@ -12,12 +13,15 @@ using namespace hiro;
 
 #include <ares/information.hpp>
 #include <ares/resource/resource.hpp>
+#include <mia/resource/resource.hpp>
 
 namespace mia {
   #include "settings/settings.hpp"
   #include "media/media.hpp"
   #include "cartridge/cartridge.hpp"
   #include "compact-disc/compact-disc.hpp"
+  #include "compact-disc/mega-cd.hpp"
+  #include "compact-disc/pc-engine-cd.hpp"
   #include "compact-disc/playstation.hpp"
   #include "floppy-disk/floppy-disk.hpp"
   #if !defined(MIA_LIBRARY)
@@ -28,4 +32,5 @@ namespace mia {
   auto construct() -> void;
   auto medium(const string& name) -> shared_pointer<Media>;
   auto identify(const string& filename) -> string;
+  auto import(shared_pointer<Media>, const string& filename) -> bool;
 }

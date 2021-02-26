@@ -27,32 +27,24 @@ auto Cartridge::connect() -> void {
 
   if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
     rom.allocate(memory["size"].natural());
-    if(auto fp = platform->open(node, "program.rom", File::Read, File::Required)) {
-      rom.load(fp);
-    }
+    rom.load(platform->open(node, "program.rom", File::Read, File::Required));
   } else {
     rom.allocate(16);
   }
 
   if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
     ram.allocate(memory["size"].natural());
-    if(auto fp = platform->open(node, "save.ram", File::Read)) {
-      ram.load(fp);
-    }
+    ram.load(platform->open(node, "save.ram", File::Read));
   }
 
   if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
     eeprom.allocate(memory["size"].natural());
-    if(auto fp = platform->open(node, "save.eeprom", File::Read)) {
-      eeprom.load(fp);
-    }
+    eeprom.load(platform->open(node, "save.eeprom", File::Read));
   }
 
   if(auto memory = document["game/board/memory(type=Flash,content=Save)"]) {
     flash.allocate(memory["size"].natural());
-    if(auto fp = platform->open(node, "save.flash", File::Read)) {
-      flash.load(fp);
-    }
+    flash.load(platform->open(node, "save.flash", File::Read));
   }
 
   power(false);
@@ -73,21 +65,15 @@ auto Cartridge::save() -> void {
   auto document = BML::unserialize(information.manifest);
 
   if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
-    if(auto fp = platform->open(node, "save.ram", File::Write)) {
-      ram.save(fp);
-    }
+    ram.save(platform->open(node, "save.ram", File::Write));
   }
 
   if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    if(auto fp = platform->open(node, "save.eeprom", File::Write)) {
-      eeprom.save(fp);
-    }
+    eeprom.save(platform->open(node, "save.ram", File::Write));
   }
 
   if(auto memory = document["game/board/memory(type=Flash,content=Save)"]) {
-    if(auto fp = platform->open(node, "save.flash", File::Write)) {
-      flash.save(fp);
-    }
+    flash.save(platform->open(node, "save.eeprom", File::Write));
   }
 }
 

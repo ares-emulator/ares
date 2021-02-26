@@ -30,6 +30,7 @@ auto Disc::command(u8 operation) -> void {
   case 0x0c: commandUnmute(); break;
   case 0x0d: commandSetFilter(); break;
   case 0x0e: commandSetMode(); break;
+  case 0x10: commandGetLocationReading(); break;
   case 0x11: commandGetLocationPlaying(); break;
   case 0x12: commandSetSession(); break;
   case 0x13: commandGetFirstAndLastTrackNumbers(); break;
@@ -286,6 +287,16 @@ auto Disc::commandSetMode() -> void {
   drive.mode.speed      = data.bit(7);
 
   fifo.response.write(status());
+
+  irq.acknowledge.flag = 1;
+  irq.poll();
+}
+
+//0x10
+auto Disc::commandGetLocationReading() -> void {
+  for(auto offset : range(8)) {
+    fifo.response.write(drive.sector.data[12 + offset]);
+  }
 
   irq.acknowledge.flag = 1;
   irq.poll();

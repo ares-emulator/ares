@@ -7,6 +7,11 @@ struct SuperFamicom : Emulator {
   auto load() -> bool override;
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  struct Pak {
+    string location;
+    shared_pointer<vfs::directory> pak;
+  } gb, bs, stA, stB;
 };
 
 SuperFamicom::SuperFamicom() {
@@ -35,8 +40,50 @@ auto SuperFamicom::load() -> bool {
   if(!ares::SuperFamicom::load(root, {"[Nintendo] Super Famicom (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
-    port->allocate();
+    auto cartridge = port->allocate();
     port->connect();
+
+    #if defined(CORE_GB)
+    if(auto slot = cartridge->find<ares::Node::Port>("Super Game Boy/Cartridge Slot")) {
+      if(auto location = program.load(mia::medium("Game Boy"), settings.paths.superFamicom.gameBoy)) {
+        if(gb.pak = mia::medium("Game Boy")->pak(location)) {
+          gb.location = location;
+          slot->allocate();
+          slot->connect();
+        }
+      }
+    }
+    #endif
+
+    if(auto slot = cartridge->find<ares::Node::Port>("BS Memory Slot")) {
+      if(auto location = program.load(mia::medium("BS Memory"), settings.paths.superFamicom.bsMemory)) {
+        if(bs.pak = mia::medium("BS Memory")->pak(location)) {
+          bs.location = location;
+          slot->allocate();
+          slot->connect();
+        }
+      }
+    }
+
+    if(auto slot = cartridge->find<ares::Node::Port>("Sufami Turbo Slot A")) {
+      if(auto location = program.load(mia::medium("Sufami Turbo"), settings.paths.superFamicom.sufamiTurbo)) {
+        if(stA.pak = mia::medium("Sufami Turbo")->pak(location)) {
+          stA.location = location;
+          slot->allocate();
+          slot->connect();
+        }
+      }
+    }
+
+    if(auto slot = cartridge->find<ares::Node::Port>("Sufami Turbo Slot B")) {
+      if(auto location = program.load(mia::medium("Sufami Turbo"), settings.paths.superFamicom.sufamiTurbo)) {
+        if(stB.pak = mia::medium("Sufami Turbo")->pak(location)) {
+          stB.location = location;
+          slot->allocate();
+          slot->connect();
+        }
+      }
+    }
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
@@ -53,167 +100,60 @@ auto SuperFamicom::load() -> bool {
 }
 
 auto SuperFamicom::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
-  if(name == "boards.bml") {
-    return vfs::memory::open(Resource::SuperFamicom::Boards, sizeof Resource::SuperFamicom::Boards);
+  if(node->name() == "Super Famicom") {
+    if(name == "boards.bml") return vfs::memory::open({Resource::SuperFamicom::Boards, sizeof Resource::SuperFamicom::Boards});
+    if(name == "ipl.rom"   ) return vfs::memory::open({Resource::SuperFamicom::IPLROM, sizeof Resource::SuperFamicom::IPLROM});
   }
 
-  if(name == "ipl.rom") {
-    return vfs::memory::open(Resource::SuperFamicom::IPLROM, sizeof Resource::SuperFamicom::IPLROM);
+  if(node->name() == "Super Famicom") {
+    if(auto fp = pak->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.ram",           ".sav"    )) return fp;
+    if(auto fp = Emulator::save(name, mode, "download.ram",       ".psr"    )) return fp;
+    if(auto fp = Emulator::save(name, mode, "time.rtc",           ".rtc"    )) return fp;
+    if(auto fp = Emulator::save(name, mode, "upd7725.data.ram",   ".dsp.sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "upd96050.data.ram",  ".dsp.sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "hg51bs169.data.ram", ".cx4.sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "arm6.data.ram",      ".arm.sav")) return fp;
+    if(name == "msu1/data.rom") {
+      auto location = locate(game.location, ".msu");
+      if(auto result = vfs::disk::open(location, mode)) return result;
+    }
+    if(name.beginsWith("msu1/track-")) {
+      auto location = locate({game.location, string{name}.trimLeft("msu1/", 1L)}, ".pcm");
+      if(auto result = vfs::disk::open(location, mode)) return result;
+    }
   }
 
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-  auto dataROMSize = document["game/board/memory(content=Data,type=ROM)/size"].natural();
-  auto expansionROMSize = document["game/board/memory(content=Expansion.type=ROM)/size"].natural();
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
+  if(node->name() == "Super Game Boy") {
+    if(auto fp = pak->find(name)) return fp;
   }
 
-  if(name == "data.rom") {
-    return vfs::memory::open(game.image.data() + programROMSize, dataROMSize);
+  if(node->name() == "Game Boy") {
+    if(auto fp = gb.pak->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.ram",       ".sav", node->name(), gb.location)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.eeprom",    ".sav", node->name(), gb.location)) return fp;
+    if(auto fp = Emulator::save(name, mode, "download.flash", ".sav", node->name(), gb.location)) return fp;
+    if(auto fp = Emulator::save(name, mode, "time.rtc",       ".rtc", node->name(), gb.location)) return fp;
   }
 
-  if(name == "expansion.rom") {
-    return vfs::memory::open(game.image.data() + programROMSize + dataROMSize, expansionROMSize);
+  if(node->name() == "BS Memory") {
+    if(auto fp = Emulator::save(name, mode, "program.flash", ".flash", node->name(), bs.location)) return fp;
+    if(auto fp = bs.pak->find(name)) return fp;
   }
 
-  if(name == "save.ram") {
-    if((bool)document["game/board/memory(content=Save,type=RAM)/volatile"]) return {};
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "download.ram") {
-    auto location = locate(game.location, ".psr", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "time.rtc") {
-    auto location = locate(game.location, ".rtc", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name.beginsWith("upd7725.")) {
-    auto identifier = document["game/board/memory(architecture=uPD7725)/identifier"].string().downcase();
-    auto firmwareProgramROMSize = document["game/board/memory(content=Program,type=ROM,architecture=uPD7725)/size"].natural();
-    auto firmwareDataROMSize = document["game/board/memory(content=Data,type=ROM,architecture=uPD7725)/size"].natural();
-
-    if(name == "upd7725.program.rom") {
-      if(game.image.size() >= programROMSize + firmwareProgramROMSize) {
-        return vfs::memory::open(game.image.data() + programROMSize, firmwareProgramROMSize);
+  if(node->name() == "Sufami Turbo") {
+    if(auto parent = node->parent()) {
+      if(auto port = parent.acquire()) {
+        if(port->name() == "Sufami Turbo Slot A") {
+          if(auto fp = stA.pak->find(name)) return fp;
+          if(auto fp = Emulator::save(name, mode, "save.ram", ".slotA.sav", node->name(), stA.location)) return fp;
+        }
+        if(port->name() == "Sufami Turbo Slot B") {
+          if(auto fp = stB.pak->find(name)) return fp;
+          if(auto fp = Emulator::save(name, mode, "save.ram", ".slotB.sav", node->name(), stB.location)) return fp;
+        }
       }
-      auto location = locate({Location::dir(game.location), identifier, ".program.rom"}, ".rom", settings.paths.firmware);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-      error({"Missing required file: ", identifier, ".program.rom"});
     }
-
-    if(name == "upd7725.data.rom") {
-      if(game.image.size() >= programROMSize + firmwareProgramROMSize + firmwareDataROMSize) {
-        return vfs::memory::open(game.image.data() + programROMSize + firmwareProgramROMSize, firmwareDataROMSize);
-      }
-      auto location = locate({Location::dir(game.location), identifier, ".data.rom"}, ".rom", settings.paths.firmware);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-      error({"Missing required file: ", identifier, ".data.rom"});
-    }
-
-    if(name == "upd7725.data.ram") {
-      if((bool)document["game/board/memory(content=Data,type=RAM,architecture=uPD7725)/volatile"]) return {};
-      auto location = locate(game.location, ".upd7725.sav", settings.paths.saves);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-    }
-  }
-
-  if(name.beginsWith("upd96050.")) {
-    auto identifier = document["game/board/memory(architecture=uPD96050)/identifier"].string().downcase();
-    auto firmwareProgramROMSize = document["game/board/memory(content=Program,type=ROM,architecture=uPD96050)/size"].natural();
-    auto firmwareDataROMSize = document["game/board/memory(content=Program,type=ROM,architecture=uPD96050)/size"].natural();
-
-    if(name == "upd96050.program.rom") {
-      if(game.image.size() >= programROMSize + firmwareProgramROMSize) {
-        return vfs::memory::open(game.image.data() + programROMSize, firmwareProgramROMSize);
-      }
-      auto location = locate({Location::dir(game.location), identifier, ".program.rom"}, ".rom", settings.paths.firmware);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-      error({"Missing required file: ", identifier, ".program.rom"});
-    }
-
-    if(name == "upd96050.data.rom") {
-      if(game.image.size() >= programROMSize + firmwareProgramROMSize + firmwareDataROMSize) {
-        return vfs::memory::open(game.image.data() + programROMSize + firmwareProgramROMSize, firmwareDataROMSize);
-      }
-      auto location = locate({Location::dir(game.location), identifier, ".data.rom"}, ".rom", settings.paths.firmware);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-      error({"Missing required file: ", identifier, ".data.rom"});
-    }
-
-    if(name == "upd96050.data.ram") {
-      if((bool)document["game/board/memory(content=Data,type=RAM,architecture=uPD96050)/volatile"]) return {};
-      auto location = locate(game.location, ".upd96050.sav", settings.paths.saves);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-    }
-  }
-
-  if(name.beginsWith("hg51bs169.")) {
-    auto identifier = document["game/board/memory(architecture=HG51BS169)/identifier"].string().downcase();
-    auto firmwareDataROMSize = document["game/board/memory(content=Data,type=ROM,architecture=HG51BS169)/size"].natural();
-
-    if(name == "hg51bs169.data.rom") {
-      if(game.image.size() >= programROMSize + firmwareDataROMSize) {
-        return vfs::memory::open(game.image.data() + programROMSize, firmwareDataROMSize);
-      }
-      auto location = locate({Location::dir(game.location), identifier, ".data.rom"}, ".rom", settings.paths.firmware);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-      error({"Missing required file: ", identifier, ".data.rom"});
-    }
-
-    if(name == "hg51bs169.data.ram") {
-      if((bool)document["game/board/memory(content=Data,type=RAM,architecture=HG51BS169)/volatile"]) return {};
-      auto location = locate(game.location, ".hg51bs169.sav", settings.paths.saves);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-    }
-  }
-
-  if(name.beginsWith("arm6.")) {
-    auto identifier = document["game/board/memory(architecture=ARM6)/identifier"].string().downcase();
-    auto firmwareProgramROMSize = document["game/board/memory(content=Program,type=ROM,architecture=ARM6)/size"].natural();
-    auto firmwareDataROMSize = document["game/board/memory(content=Data,type=ROM,architecture=ARM6)/size"].natural();
-
-    if(name == "arm6.program.rom") {
-      if(game.image.size() >= programROMSize + firmwareProgramROMSize) {
-        return vfs::memory::open(game.image.data() + programROMSize, firmwareProgramROMSize);
-      }
-      auto location = locate({Location::dir(game.location), identifier, ".program.rom"}, ".rom", settings.paths.firmware);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-      error({"Missing required file: ", identifier, ".program.rom"});
-    }
-
-    if(name == "arm6.data.rom") {
-      if(game.image.size() >= programROMSize + firmwareProgramROMSize + firmwareDataROMSize) {
-        return vfs::memory::open(game.image.data() + programROMSize + firmwareProgramROMSize, firmwareDataROMSize);
-      }
-      auto location = locate({Location::dir(game.location), identifier, ".data.rom"}, ".rom", settings.paths.firmware);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-      error({"Missing required file: ", identifier, ".data.rom"});
-    }
-
-    if(name == "arm6.data.ram") {
-      if((bool)document["game/board/memory(content=Data,type=RAM,architecture=ARM6)/volatile"]) return {};
-      auto location = locate(game.location, ".arm6.sav", settings.paths.saves);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-    }
-  }
-
-  if(name == "msu1/data.rom") {
-    auto location = locate(game.location, ".msu");
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name.beginsWith("msu1/track-")) {
-    auto location = locate({game.location, string{name}.trimLeft("msu1/", 1L)}, ".pcm");
-    if(auto result = vfs::disk::open(location, mode)) return result;
   }
 
   return {};

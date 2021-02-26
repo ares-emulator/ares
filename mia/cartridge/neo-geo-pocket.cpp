@@ -1,12 +1,24 @@
 struct NeoGeoPocket : Cartridge {
   auto name() -> string override { return "Neo Geo Pocket"; }
   auto extensions() -> vector<string> override { return {"ngp"}; }
-  auto export(string location) -> vector<u8> override;
+  auto pak(string location) -> shared_pointer<vfs::directory> override;
+  auto rom(string location) -> vector<u8> override;
   auto heuristics(vector<u8>& data, string location) -> string override;
   auto title(vector<u8>& data) -> string;
 };
 
-auto NeoGeoPocket::export(string location) -> vector<u8> {
+auto NeoGeoPocket::pak(string location) -> shared_pointer<vfs::directory> {
+  if(auto pak = Media::pak(location)) return pak;
+  if(auto rom = Media::read(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    pak->append("manifest.bml",  Cartridge::manifest(rom, location));
+    pak->append("program.flash", rom);
+    return pak;
+  }
+  return {};
+}
+
+auto NeoGeoPocket::rom(string location) -> vector<u8> {
   vector<u8> data;
   append(data, {location, "program.flash"});
   return data;

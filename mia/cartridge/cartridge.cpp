@@ -9,6 +9,7 @@
 #include "game-gear.cpp"
 #include "msx.cpp"
 #include "msx2.cpp"
+#include "neo-geo.cpp"
 #include "neo-geo-pocket.cpp"
 #include "neo-geo-pocket-color.cpp"
 #include "nintendo-64.cpp"
@@ -26,58 +27,12 @@ auto Cartridge::construct() -> void {
   Media::construct();
 }
 
-auto Cartridge::append(vector<u8>& output, string filename) -> bool {
-  if(!file::exists(filename)) return false;
-  auto input = file::read(filename);
-  auto size = output.size();
-  output.resize(size + input.size());
-  memory::copy(output.data() + size, input.data(), input.size());
-  return true;
-}
 
-auto Cartridge::import(string location) -> string {
-  auto data = Media::read(location);
-  auto manifest = this->manifest(data, location);
-  if(!manifest) return "failed to parse ROM";
-
-  auto document = BML::unserialize(manifest);
-  location = {pathname, Location::prefix(location), "/"};
-  if(!directory::create(location)) return "output directory not writable";
-
-  if(settings.createManifests) {
-    file::write({location, "manifest.bml"}, manifest);
-  }
-
-  auto buffer = array_view<u8>{data};
-  for(auto memory : document.find("game/board/memory")) {
-    auto type = memory["type"].text();
-    auto size = memory["size"].natural();
-    auto content = memory["content"].text();
-    auto architecture = memory["architecture"].text();
-    auto identifier = memory["identifier"].text();
-
-    bool write = false;
-    if(type == "ROM") write = true;
-    if(type == "Flash" && content != "Save") write = true;
-    if(!write) continue;
-
-    string filename{content, ".", type};
-    if(architecture) filename.prepend(architecture, ".");
-    filename.downcase();
-
-    if(size > buffer.size()) return {"missing ", filename};
-
-    file::write({location, filename}, {buffer.data(), size});
-    buffer += size;
-  }
-
-  return {};
-}
 
 auto Cartridge::manifest(string location) -> string {
   vector<u8> data;
   if(directory::exists(location)) {
-    data = export(location);
+    data = rom(location);
   } else if(file::exists(location)) {
     data = file::read(location);
   }
@@ -87,7 +42,7 @@ auto Cartridge::manifest(string location) -> string {
 auto Cartridge::manifest(vector<u8>& data, string location) -> string {
   string digest = Hash::SHA256(data).digest();
   for(auto game : database.find("game")) {
-    if(game["sha256"].text() == digest) return BML::serialize(game);
+    if(game["sha256"].string() == digest) return BML::serialize(game);
   }
   return heuristics(data, location);
 }

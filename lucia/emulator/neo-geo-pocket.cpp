@@ -45,21 +45,11 @@ auto NeoGeoPocket::load() -> bool {
 }
 
 auto NeoGeoPocket::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
-  if(name == "bios.rom") {
-    return loadFirmware(firmware[0]);
+  if(name == "bios.rom") return loadFirmware(firmware[0]);
+  if(node->name() == "Neo Geo Pocket") {
+    if(auto fp = Emulator::save(name, mode, "program.flash", ".sav")) return fp;
+    if(auto fp = pak->find(name)) return fp;
   }
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=Flash)/size"].natural();
-
-  if(name == "program.flash") {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-    if(mode == vfs::file::mode::read) return vfs::memory::open(game.image.data(), programROMSize);
-  }
-
   return {};
 }
 
@@ -111,21 +101,11 @@ auto NeoGeoPocketColor::load() -> bool {
 }
 
 auto NeoGeoPocketColor::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
-  if(name == "bios.rom") {
-    return loadFirmware(firmware[0]);
+  if(name == "bios.rom") return loadFirmware(firmware[0]);
+  if(node->name() == "Neo Geo Pocket Color") {
+    if(auto fp = Emulator::save(name, mode, "program.flash", ".sav")) return fp;
+    if(auto fp = pak->find(name)) return fp;
   }
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=Flash)/size"].natural();
-
-  if(name == "program.flash") {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-    if(mode == vfs::file::mode::read) return vfs::memory::open(game.image.data(), programROMSize);
-  }
-
   return {};
 }
 

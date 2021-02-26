@@ -158,6 +158,7 @@ Presentation::Presentation() {
     image logo{Resource::Ares::Logo};
     logo.shrink();
     AboutDialog()
+    .setName({ares::Name, "/lucia"})
     .setLogo(logo)
     .setDescription({ares::Name, "/lucia — a simplified multi-system emulator"})
     .setVersion(ares::Version)
@@ -260,7 +261,7 @@ auto Presentation::loadEmulators() -> void {
     auto entry = settings.recent.game[index];
     auto system = entry.split(";", 1L)(0);
     auto location = entry.split(";", 1L)(1);
-    if(file::exists(location)) {  //remove missing files
+    if(inode::exists(location)) {  //remove missing games
       if(!recentGames.find(entry)) {  //remove duplicate entries
         recentGames.append(entry);
       }
@@ -281,7 +282,8 @@ auto Presentation::loadEmulators() -> void {
       auto entry = settings.recent.game[index];
       auto system = entry.split(";", 1L)(0);
       auto location = entry.split(";", 1L)(1);
-      item.setIcon(Icon::Emblem::File);
+      if(directory::exists(location)) item.setIcon(Icon::Action::Open);
+      if(file::exists(location)) item.setIcon(Icon::Emblem::File);
       item.setText(Location::prefix(location));
       item.onActivate([=] {
         for(auto& emulator : emulators) {

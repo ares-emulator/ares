@@ -1,11 +1,23 @@
 struct Nintendo64 : Cartridge {
   auto name() -> string override { return "Nintendo 64"; }
   auto extensions() -> vector<string> override { return {"n64", "v64", "z64"}; }
-  auto export(string location) -> vector<u8> override;
+  auto pak(string location) -> shared_pointer<vfs::directory> override;
+  auto rom(string location) -> vector<u8> override;
   auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto Nintendo64::export(string location) -> vector<u8> {
+auto Nintendo64::pak(string location) -> shared_pointer<vfs::directory> {
+  if(auto pak = Media::pak(location)) return pak;
+  if(auto rom = Media::read(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    pak->append("manifest.bml", Cartridge::manifest(rom, location));
+    pak->append("program.rom",  rom);
+    return pak;
+  }
+  return {};
+}
+
+auto Nintendo64::rom(string location) -> vector<u8> {
   vector<u8> data;
   append(data, {location, "program.rom"});
   return data;

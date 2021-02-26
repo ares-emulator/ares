@@ -96,6 +96,8 @@ ifeq ($(lto),true)
   options += -fwhole-program
   ifneq ($(platform),macos)
     options += -flto=jobserver
+  else
+    options += -flto=thin
   endif
 endif
 

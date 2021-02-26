@@ -21,7 +21,7 @@ auto Cartridge::connect() -> void {
   }
 
   auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].text();
+  information.name = document["game/label"].string();
 
   flash[0].reset(0);
   flash[1].reset(1);
@@ -43,6 +43,7 @@ auto Cartridge::disconnect() -> void {
   if(!node) return;
   flash[0].reset(0);
   flash[1].reset(1);
+  node.reset();
 }
 
 auto Cartridge::save() -> void {

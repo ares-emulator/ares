@@ -31,7 +31,8 @@ struct Writable {
   }
 
   auto load(shared_pointer<vfs::file> fp) -> void {
-    if(!self.size) return;
+    if(!self.size || !fp) return;
+    fp->seek(0);
     fp->read({self.data, min(fp->size(), self.size * sizeof(T))});
     for(u32 address = self.size; address <= self.mask; address++) {
       self.data[address] = self.data[mirror(address, self.size)];

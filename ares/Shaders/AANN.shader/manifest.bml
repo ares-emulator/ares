@@ -3,6 +3,6 @@ input
 
 program
   fragment: AANN.fs
-  
+
 output
   filter: nearest

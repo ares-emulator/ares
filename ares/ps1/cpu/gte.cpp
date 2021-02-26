@@ -21,7 +21,7 @@ auto CPU::GTE::countLeadingZeroes32(u32 value) -> u32 {
 //
 
 auto CPU::GTE::getDataRegister(u32 index) -> u32 {
-  u32 data;
+  u32 data = 0;
   switch(index) {
   case  0: data = u16(v.a.x) << 0 | u16(v.a.y) << 16; break;
   case  1: data = s16(v.a.z); break;
@@ -115,7 +115,7 @@ auto CPU::GTE::setDataRegister(u32 index, u32 data) -> void {
 }
 
 auto CPU::GTE::getControlRegister(u32 index) -> u32 {
-  u32 data;
+  u32 data = 0;
   switch(index) {
   case  0: data = u16(rotation.a.x) << 0 | u16(rotation.a.y) << 16; break;
   case  1: data = u16(rotation.a.z) << 0 | u16(rotation.b.x) << 16; break;

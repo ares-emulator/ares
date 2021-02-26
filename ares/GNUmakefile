@@ -78,6 +78,10 @@ ifneq ($(filter $(cores),ws),)
   include $(ares.path)/ws/GNUmakefile
 endif
 
+ifneq ($(filter $(cores),ng),)
+  include $(ares.path)/ng/GNUmakefile
+endif
+
 ifneq ($(filter $(cores),ngp),)
   include $(ares.path)/ngp/GNUmakefile
 endif

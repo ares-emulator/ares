@@ -5,19 +5,10 @@ auto FloppyDisk::construct() -> void {
   Media::construct();
 }
 
-auto FloppyDisk::append(vector<u8>& output, string filename) -> bool {
-  if(!file::exists(filename)) return false;
-  auto input = file::read(filename);
-  auto size = output.size();
-  output.resize(size + input.size());
-  memory::copy(output.data() + size, input.data(), input.size());
-  return true;
-}
-
 auto FloppyDisk::manifest(string location) -> string {
   vector<u8> data;
   if(directory::exists(location)) {
-    data = export(location);
+    data = rom(location);
   } else if(file::exists(location)) {
     data = file::read(location);
   }

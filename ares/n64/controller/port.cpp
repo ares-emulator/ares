@@ -20,6 +20,10 @@ auto ControllerPort::unload() -> void {
   port = {};
 }
 
+auto ControllerPort::save() -> void {
+  if(device) device->save();
+}
+
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
   if(name == "Gamepad") device = new Gamepad(port);
   if(device) return device->node;

@@ -1,11 +1,23 @@
 struct SG1000 : Cartridge {
   auto name() -> string override { return "SG-1000"; }
   auto extensions() -> vector<string> override { return {"sg1000", "sg"}; }
-  auto export(string location) -> vector<u8> override;
+  auto pak(string location) -> shared_pointer<vfs::directory> override;
+  auto rom(string location) -> vector<u8> override;
   auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto SG1000::export(string location) -> vector<u8> {
+auto SG1000::pak(string location) -> shared_pointer<vfs::directory> {
+  if(auto pak = Media::pak(location)) return pak;
+  if(auto rom = Media::read(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    pak->append("manifest.bml", Cartridge::manifest(rom, location));
+    pak->append("program.rom",  rom);
+    return pak;
+  }
+  return {};
+}
+
+auto SG1000::rom(string location) -> vector<u8> {
   vector<u8> data;
   append(data, {location, "program.rom"});
   return data;

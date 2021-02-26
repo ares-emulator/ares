@@ -53,26 +53,15 @@ auto GameBoyAdvance::load() -> bool {
 }
 
 auto GameBoyAdvance::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
   if(name == "bios.rom") {
     return loadFirmware(firmware[0]);
   }
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-  auto saveRAMVolatile = (bool)document["game/board/memory(Content=Save)/volatile"];
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
+  if(node->name() == "Game Boy Advance") {
+    if(auto fp = pak->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.ram",    ".sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.eeprom", ".sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.flash",  ".sav")) return fp;
   }
-
-  if(name == "save.ram" || name == "save.eeprom" || name == "save.flash") {
-    if(saveRAMVolatile) return {};
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
   return {};
 }
 

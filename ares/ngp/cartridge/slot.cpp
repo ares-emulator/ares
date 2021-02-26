@@ -14,5 +14,5 @@ auto CartridgeSlot::load(Node::Object parent) -> void {
 
 auto CartridgeSlot::unload() -> void {
   cartridge.disconnect();
-  port = {};
+  port.reset();
 }

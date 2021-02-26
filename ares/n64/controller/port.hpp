@@ -6,6 +6,7 @@ struct ControllerPort {
   ControllerPort(string name);
   auto load(Node::Object) -> void;
   auto unload() -> void;
+  auto save() -> void;
   auto allocate(string name) -> Node::Peripheral;
 
   auto serialize(serializer&) -> void;

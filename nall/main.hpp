@@ -17,7 +17,7 @@ namespace nall {
     _setmode(_fileno(stderr), O_BINARY);
     #endif
 
-    main(move(Arguments{argc, argv}));
+    main(Arguments{argc, argv});
 
     #if !defined(PLATFORM_WINDOWS)
     //when a program is running, input on the terminal queues in stdin

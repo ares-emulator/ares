@@ -6,6 +6,7 @@
 #include <component/processor/m68k/m68k.hpp>
 #include <component/processor/z80/z80.hpp>
 #include <component/audio/sn76489/sn76489.hpp>
+#include <component/audio/ym2612/ym2612.hpp>
 
 namespace ares::MegaDrive {
   #include <ares/inline.hpp>
@@ -31,7 +32,7 @@ namespace ares::MegaDrive {
   #include <md/apu/apu.hpp>
   #include <md/vdp/vdp.hpp>
   #include <md/psg/psg.hpp>
-  #include <md/ym2612/ym2612.hpp>
+  #include <md/opn2/opn2.hpp>
 
   #include <md/mcd/mcd.hpp>
 

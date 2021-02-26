@@ -26,13 +26,13 @@ ProgramWindow::ProgramWindow() {
   });
 
   helpMenu.setText("Help");
-  aboutAction.setIcon(Icon::Prompt::Question).setText("About mia ...").onActivate([&] {
+  aboutAction.setIcon(Icon::Prompt::Question).setText("About ...").onActivate([&] {
     image logo{Resource::Ares::Logo};
     logo.shrink();
     AboutDialog()
-    .setName("mia")
+    .setName({ares::Name, "/mia"})
     .setLogo(logo)
-    .setDescription("mia — a game analyzer and converter")
+    .setDescription({ares::Name, "/mia — a game analyzer and converter"})
     .setVersion(ares::Version)
     .setCopyright(ares::Copyright)
     .setLicense(ares::License, ares::LicenseURI)
@@ -60,7 +60,7 @@ ProgramWindow::ProgramWindow() {
 
   onClose(&Application::quit);
   setTitle({"mia v", ares::Version});
-  setSize({800_sx, 545_sy});
+  setSize({800_sx, 565_sy});
   setAlignment(Alignment::Center);
   setVisible();
 }

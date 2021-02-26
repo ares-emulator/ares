@@ -33,9 +33,9 @@ private:
         Button cancelButton{&controlLayout, Size{80_sx, 0}, 5_sx};
 
   PopupMenu contextMenu;
-    MenuItem createAction{&contextMenu};
     MenuItem renameAction{&contextMenu};
     MenuItem removeAction{&contextMenu};
+    MenuItem createAction{&contextMenu};
     MenuSeparator contextSeparator{&contextMenu};
     MenuCheckItem showHiddenOption{&contextMenu};
 
@@ -155,17 +155,17 @@ auto BrowserDialogWindow::change() -> void {
 auto BrowserDialogWindow::context() -> void {
   auto batched = view.batched();
   if(!batched) {
-    createAction.setVisible(true);
     renameAction.setVisible(false);
     removeAction.setVisible(false);
+    createAction.setVisible(true);
   } else if(batched.size() == 1) {
-    createAction.setVisible(false);
     renameAction.setVisible(true);
     removeAction.setVisible(true);
+    createAction.setVisible(true);
   } else {
-    createAction.setVisible(false);
     renameAction.setVisible(false);
     removeAction.setVisible(true);
+    createAction.setVisible(true);
   }
   contextMenu.setVisible();
 }
@@ -258,19 +258,6 @@ auto BrowserDialogWindow::run() -> BrowserDialog::Response {
     filters.append(part.right().split(":"));
   }
 
-  createAction.setIcon(Icon::Action::NewFolder).setText("Create Folder ...").onActivate([&] {
-    if(auto name = NameDialog()
-    .setTitle("Create Folder")
-    .setText("Enter a new folder name:")
-    .setIcon(Icon::Emblem::Folder)
-    .setAlignment(window)
-    .create()
-    ) {
-      directory::create({state.path, name});
-      pathRefresh.doActivate();
-    }
-  });
-
   renameAction.setIcon(Icon::Application::TextEditor).setText("Rename ...").onActivate([&] {
     auto batched = view.batched();
     if(batched.size() != 1) return;
@@ -337,6 +324,19 @@ auto BrowserDialogWindow::run() -> BrowserDialog::Response {
       }
     }
     pathRefresh.doActivate();
+  });
+
+  createAction.setIcon(Icon::Action::NewFolder).setText("Create Folder ...").onActivate([&] {
+    if(auto name = NameDialog()
+    .setTitle("Create Folder")
+    .setText("Enter a new folder name:")
+    .setIcon(Icon::Emblem::Folder)
+    .setAlignment(window)
+    .create()
+    ) {
+      directory::create({state.path, name});
+      pathRefresh.doActivate();
+    }
   });
 
   showHiddenOption.setChecked(settings.showHidden).setText("Show Hidden").onToggle([&] {

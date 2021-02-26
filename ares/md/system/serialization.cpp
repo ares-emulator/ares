@@ -43,7 +43,7 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(apu);
   s(vdp);
   s(psg);
-  s(ym2612);
+  s(opn2);
   if(MegaCD()) s(mcd);
   s(controllerPort1);
   s(controllerPort2);

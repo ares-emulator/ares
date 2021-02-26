@@ -72,10 +72,13 @@ struct Settings : Markup::Node {
 
   struct Paths {
     string saves;
-    string patches;
     string screenshots;
     string debugging;
-    string firmware;
+    struct SuperFamicom {
+      string gameBoy;
+      string bsMemory;
+      string sufamiTurbo;
+    } superFamicom;
   } paths;
 
   struct Recent {
@@ -242,11 +245,6 @@ struct PathSettings : VerticalLayout {
     LineEdit savesPath{&savesLayout, Size{~0, 0}};
     Button savesAssign{&savesLayout, Size{80, 0}};
     Button savesReset{&savesLayout, Size{80, 0}};
-  Label patchesLabel{this, Size{~0, 0}, 2};
-  HorizontalLayout patchesLayout{this, Size{~0, 0}};
-    LineEdit patchesPath{&patchesLayout, Size{~0, 0}};
-    Button patchesAssign{&patchesLayout, Size{80, 0}};
-    Button patchesReset{&patchesLayout, Size{80, 0}};
   Label screenshotsLabel{this, Size{~0, 0}, 2};
   HorizontalLayout screenshotsLayout{this, Size{~0, 0}};
     LineEdit screenshotsPath{&screenshotsLayout, Size{~0, 0}};
@@ -257,11 +255,6 @@ struct PathSettings : VerticalLayout {
     LineEdit debuggingPath{&debuggingLayout, Size{~0, 0}};
     Button debuggingAssign{&debuggingLayout, Size{80, 0}};
     Button debuggingReset{&debuggingLayout, Size{80, 0}};
-  Label firmwareLabel{this, Size{~0, 0}, 2};
-  HorizontalLayout firmwareLayout{this, Size{~0, 0}};
-    LineEdit firmwarePath{&firmwareLayout, Size{~0, 0}};
-    Button firmwareAssign{&firmwareLayout, Size{80, 0}};
-    Button firmwareReset{&firmwareLayout, Size{80, 0}};
 };
 
 struct DriverSettings : VerticalLayout {

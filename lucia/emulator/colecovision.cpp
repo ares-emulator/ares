@@ -40,17 +40,12 @@ auto ColecoVision::load() -> bool {
 }
 
 auto ColecoVision::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
   if(name == "bios.rom") {
     return loadFirmware(firmware[0]);
   }
 
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
+  if(node->name() == "ColecoVision") {
+    if(auto fp = pak->find(name)) return fp;
   }
 
   return {};

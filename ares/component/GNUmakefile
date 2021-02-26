@@ -6,6 +6,8 @@ ares.objects += $(if $(findstring sn76489,$(ares.components)),ares-audio-sn76489
 ares.objects += $(if $(findstring t6w28,$(ares.components)),ares-audio-t6w28)
 ares.objects += $(if $(findstring ym2149,$(ares.components)),ares-audio-ym2149)
 ares.objects += $(if $(findstring ym2413,$(ares.components)),ares-audio-ym2413)
+ares.objects += $(if $(findstring ym2610,$(ares.components)),ares-audio-ym2610)
+ares.objects += $(if $(findstring ym2612,$(ares.components)),ares-audio-ym2612)
 
 ares.objects += $(if $(findstring m93lcx6,$(ares.components)),ares-eeprom-m93lcx6)
 ares.objects += $(if $(findstring x24c01,$(ares.components)),ares-eeprom-x24c01)
@@ -33,6 +35,8 @@ $(object.path)/ares-audio-sn76489.o:      $(ares.path)/component/audio/sn76489/s
 $(object.path)/ares-audio-t6w28.o:        $(ares.path)/component/audio/t6w28/t6w28.cpp
 $(object.path)/ares-audio-ym2149.o:       $(ares.path)/component/audio/ym2149/ym2149.cpp
 $(object.path)/ares-audio-ym2413.o:       $(ares.path)/component/audio/ym2413/ym2413.cpp
+$(object.path)/ares-audio-ym2610.o:       $(ares.path)/component/audio/ym2610/ym2610.cpp
+$(object.path)/ares-audio-ym2612.o:       $(ares.path)/component/audio/ym2612/ym2612.cpp
 
 $(object.path)/ares-eeprom-m93lcx6.o:     $(ares.path)/component/eeprom/m93lcx6/m93lcx6.cpp
 $(object.path)/ares-eeprom-x24c01.o:      $(ares.path)/component/eeprom/x24c01/x24c01.cpp

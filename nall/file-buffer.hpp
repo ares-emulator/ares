@@ -181,6 +181,8 @@ struct file_buffer {
   auto open(const string& filename, u32 mode_) -> bool {
     close();
 
+print(filename, " ", mode_, "\n");
+
     switch(fileMode = mode_) {
     #if defined(API_POSIX)
     case mode::read:   fileHandle = fopen(filename, "rb" ); break;

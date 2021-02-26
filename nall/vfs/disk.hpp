@@ -19,6 +19,10 @@ struct disk : file {
     return _fp.offset();
   }
 
+  auto resize(u64 size) -> void override {
+    //todo
+  }
+
   auto seek(s64 offset_, index index_) -> void override {
     _fp.seek(offset_, (u32)index_);
   }

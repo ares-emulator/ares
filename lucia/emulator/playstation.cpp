@@ -60,39 +60,12 @@ auto PlayStation::open(ares::Node::Object node, string name, vfs::file::mode mod
   if(name == "bios.rom") {
     return Emulator::loadFirmware(firmware[regionID]);
   }
-
-  if(name == "manifest.bml") {
-    if(game.manifest = medium->manifest(game.location)) {
-      return vfs::memory::open(game.manifest.data<u8>(), game.manifest.size());
-    }
-    return Emulator::manifest(game.location);
+  if(node->name() == "PlayStation") {
+    if(auto fp = pak->find(name)) return fp;
   }
-
-  if(name == "cd.rom") {
-    if(game.location.iendsWith(".zip")) {
-      MessageDialog().setText(
-        "Sorry, compressed CD-ROM images are not currently supported.\n"
-        "Please extract the image prior to loading it."
-      ).setAlignment(presentation).error();
-      return {};
-    }
-
-    if(auto result = vfs::cdrom::open(game.location)) return result;
-
-    MessageDialog().setText(
-      "Failed to load CD-ROM image."
-    ).setAlignment(presentation).error();
+  if(node->name() == "Memory Card") {
+    if(auto fp = Emulator::save(name, mode, "save.card", ".sav")) return fp;
   }
-
-  if(name == "program.exe") {
-    return vfs::memory::open(game.image.data(), game.image.size());
-  }
-
-  if(name == "save.card") {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
   return {};
 }
 

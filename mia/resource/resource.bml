@@ -1,1 +1,13 @@
 namespace name=Resource
+  namespace name=SuperFamicom
+    binary name=Cx4 file="../Firmware/cx4.rom"
+    binary name=DSP1 file="../Firmware/dsp1.rom"
+    binary name=DSP1B file="../Firmware/dsp1b.rom"
+    binary name=DSP2 file="../Firmware/dsp2.rom"
+    binary name=DSP3 file="../Firmware/dsp3.rom"
+    binary name=DSP4 file="../Firmware/dsp4.rom"
+    binary name=SGB1 file="../Firmware/sgb1.rom"
+    binary name=SGB2 file="../Firmware/sgb2.rom"
+    binary name=ST010 file="../Firmware/st010.rom"
+    binary name=ST011 file="../Firmware/st011.rom"
+    binary name=ST018 file="../Firmware/st018.rom"

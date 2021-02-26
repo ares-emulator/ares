@@ -1,17 +1,42 @@
 struct Famicom : Cartridge {
   auto name() -> string override { return "Famicom"; }
-  auto extensions() -> vector<string> override { return {"nes", "unif"}; }
-  auto export(string location) -> vector<u8> override;
+  auto extensions() -> vector<string> override { return {"fc", "nes", "unif"}; }
+  auto pak(string location) -> shared_pointer<vfs::directory> override;
+  auto rom(string location) -> vector<u8> override;
   auto heuristics(vector<u8>& data, string location) -> string override;
   auto heuristicsFDS(vector<u8>& data, string location) -> string;
   auto heuristicsINES(vector<u8>& data, string location) -> string;
   auto heuristicsUNIF(vector<u8>& data, string location) -> string;
 };
 
-auto Famicom::export(string location) -> vector<u8> {
+auto Famicom::pak(string location) -> shared_pointer<vfs::directory> {
+  if(auto pak = Media::pak(location)) return pak;
+  if(auto rom = Media::read(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    auto manifest = Cartridge::manifest(rom, location);
+    auto document = BML::unserialize(manifest);
+    array_view<u8> view{rom};
+    pak->append("manifest.bml", heuristics(rom, location));
+    if(auto node = document["game/board/memory(type=ROM,content=iNES)"]) {
+      pak->append("ines.rom", {view.data(), node["size"].natural()});
+      view += node["size"].natural();
+    }
+    if(auto node = document["game/board/memory(type=ROM,content=Program)"]) {
+      pak->append("program.rom", {view.data(), node["size"].natural()});
+      view += node["size"].natural();
+    }
+    if(auto node = document["game/board/memory(type=ROM,content=Character)"]) {
+      pak->append("character.rom", {view.data(), node["size"].natural()});
+      view += node["size"].natural();
+    }
+    return pak;
+  }
+  return {};
+}
+
+auto Famicom::rom(string location) -> vector<u8> {
   vector<u8> data;
   append(data, {location, "ines.rom"});
-  append(data, {location, "unif.rom"});
   append(data, {location, "program.rom"});
   append(data, {location, "character.rom"});
   return data;

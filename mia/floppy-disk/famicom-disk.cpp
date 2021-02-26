@@ -1,4 +1,25 @@
-auto FamicomDisk::export(string location) -> vector<u8> {
+auto FamicomDisk::pak(string location) -> shared_pointer<vfs::directory> {
+  if(auto pak = Media::pak(location)) return pak;
+  if(auto input = Media::read(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    pak->append("manifest.bml", heuristics(input, location));
+    array_view<u8> view{input};
+    if(view.size() % 65500 == 16) view += 16;  //skip iNES / fwNES header
+    u32 index = 0;
+    while(auto output = transform(view)) {
+      string name;
+      name.append("disk", (char)('1' + index / 2), ".");
+      name.append("side", (char)('A' + index % 2));
+      pak->append(name, output);
+      view += 65500;
+      index++;
+    }
+    return pak;
+  }
+  return {};
+}
+
+auto FamicomDisk::rom(string location) -> vector<u8> {
   vector<u8> data;
   for(auto& filename : directory::files(location, "disk?*.side?*")) {
     append(data, {location, filename});
@@ -12,33 +33,6 @@ auto FamicomDisk::heuristics(vector<u8>& data, string location) -> string {
   s +={"  name:  ", Media::name(location), "\n"};
   s +={"  label: ", Media::name(location), "\n"};
   return s;
-}
-
-auto FamicomDisk::import(string location) -> string {
-  auto input = Media::read(location);
-  if(input.size() < 65500) return "disk image is too small";
-
-  location = {pathname, Location::prefix(location), "/"};
-  if(!directory::create(location)) return "output directory not writable";
-
-  if(input.size() % 65500 == 16) {
-    //iNES and fwNES headers are unnecessary
-    memory::move(&input[0], &input[16], input.size() - 16);
-    input.resize(input.size() - 16);
-  }
-
-  array_view<u8> view = input;
-  u32 disk = 0, side = 0;
-  while(auto output = transform(view)) {
-    string name{"disk", 1 + disk, ".", "side", !side ? "A" : "B"};
-    file::write({location, name}, output);
-
-    side ^= 1;
-    if(!side) disk++;
-    view += 65500;
-  }
-
-  return {};
 }
 
 auto FamicomDisk::transform(array_view<u8> input) -> vector<u8> {

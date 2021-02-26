@@ -23,6 +23,7 @@ struct Gamepad : Controller {
 
   Gamepad(Node::Port);
   ~Gamepad();
+  auto save() -> void override;
   auto allocate(string name) -> Node::Peripheral;
   auto connect() -> void;
   auto disconnect() -> void;

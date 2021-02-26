@@ -25,7 +25,7 @@ inline auto Base64(const void* vdata, u32 size, const string& format = "MIME") -
   auto data = (const u8*)vdata;
   u32 overflow = (3 - (size % 3)) % 3;  //bytes to round to nearest multiple of 3
   string result;
-  u8 buffer;
+  u8 buffer = 0;
   for(u32 n : range(size)) {
     switch(n % 3) {
     case 0:

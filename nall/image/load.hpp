@@ -46,7 +46,7 @@ inline auto image::loadPNG(const u8* pngData, u32 pngSize) -> bool {
   u8* dp = _data;
 
   auto decode = [&]() -> u64 {
-    u64 p, r, g, b, a;
+    u64 p = 0, r = 0, g = 0, b = 0, a = 0;
 
     switch(source.info.colorType) {
     case 0:  //L

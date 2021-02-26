@@ -16,8 +16,6 @@ struct FamicomDiskSystem : Emulator {
   auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
   auto input(ares::Node::Input::Input) -> void override;
   auto notify(const string& message) -> void override;
-
-  vector<u8> diskSide[4];
 };
 
 Famicom::Famicom() {
@@ -45,32 +43,10 @@ auto Famicom::load() -> bool {
 }
 
 auto Famicom::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
-  auto document = BML::unserialize(game.manifest);
-  auto iNESROMSize = document["game/board/memory(content=iNES,type=ROM)/size"].natural();
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-  auto characterROMSize = document["game/board/memory(content=Character,type=ROM)/size"].natural();
-  auto programRAMVolatile = (bool)document["game/board/memory(content=Program,type=RAM)/volatile"];
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data() + iNESROMSize, programROMSize);
+  if(node->name() == "Famicom") {
+    if(auto fp = pak->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.ram", ".sav")) return fp;
   }
-
-  if(name == "character.rom") {
-    return vfs::memory::open(game.image.data() + iNESROMSize + programROMSize, characterROMSize);
-  }
-
-  if(name == "save.ram" && !programRAMVolatile) {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "save.eeprom") {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
   return {};
 }
 
@@ -104,20 +80,34 @@ FamicomDiskSystem::FamicomDiskSystem() {
 }
 
 auto FamicomDiskSystem::load(Menu menu) -> void {
+  Group group;
   Menu diskMenu{&menu};
   diskMenu.setText("Disk Drive").setIcon(Icon::Media::Floppy);
+
   MenuRadioItem ejected{&diskMenu};
   ejected.setText("No Disk").onActivate([&] { emulator->notify("Ejected"); });
+  group.append(ejected);
+  if(pak->count() < 2) return (void)ejected.setChecked();
+
   MenuRadioItem disk1sideA{&diskMenu};
   disk1sideA.setText("Disk 1: Side A").onActivate([&] { emulator->notify("Disk 1: Side A"); });
+  group.append(disk1sideA);
+  if(pak->count() < 3) return (void)disk1sideA.setChecked();
+
   MenuRadioItem disk1sideB{&diskMenu};
   disk1sideB.setText("Disk 1: Side B").onActivate([&] { emulator->notify("Disk 1: Side B"); });
+  group.append(disk1sideB);
+  if(pak->count() < 4) return (void)disk1sideA.setChecked();
+
   MenuRadioItem disk2sideA{&diskMenu};
   disk2sideA.setText("Disk 2: Side A").onActivate([&] { emulator->notify("Disk 2: Side A"); });
+  group.append(disk2sideA);
+  if(pak->count() < 5) return (void)disk1sideA.setChecked();
+
   MenuRadioItem disk2sideB{&diskMenu};
   disk2sideB.setText("Disk 2: Side B").onActivate([&] { emulator->notify("Disk 2: Side B"); });
-  Group group{&ejected, &disk1sideA, &disk1sideB, &disk2sideA, &disk2sideB};
-  disk1sideA.setChecked();
+  group.append(disk2sideB);
+  return (void)disk1sideA.setChecked();
 }
 
 auto FamicomDiskSystem::load() -> bool {
@@ -126,24 +116,6 @@ auto FamicomDiskSystem::load() -> bool {
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
     return false;
-  }
-
-  for(auto& media : mia::media) {
-    if(media->name() != "Famicom Disk") continue;
-    if(auto famicomDisk = media.cast<mia::FamicomDisk>()) {
-      if(game.image.size() % 65500 == 16) {
-        //iNES and fwNES headers are unnecessary
-        memory::move(&game.image[0], &game.image[16], game.image.size() - 16);
-        game.image.resize(game.image.size() - 16);
-      }
-      array_view<u8> view = game.image;
-      u32 index = 0;
-      while(auto output = famicomDisk->transform(view)) {
-        diskSide[index++] = output;
-        view += 65500;
-        if(index >= 4) break;
-      }
-    }
   }
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -179,7 +151,7 @@ auto FamicomDiskSystem::open(ares::Node::Object node, string name, vfs::file::mo
             bios.resize(image->size());
             image->read(bios);
             auto manifest = cartridge->manifest(bios, firmware[0].location);
-            return vfs::memory::open(manifest.data<u8>(), manifest.size());
+            return vfs::memory::open(manifest);
           }
         }
       }
@@ -191,39 +163,11 @@ auto FamicomDiskSystem::open(ares::Node::Object node, string name, vfs::file::mo
   }
 
   if(node->name() == "Famicom Disk") {
-    if(name == "manifest.bml") {
-      for(auto& media : mia::media) {
-        if(media->name() != "Famicom Disk") continue;
-        if(auto floppyDisk = media.cast<mia::FloppyDisk>()) {
-          game.manifest = floppyDisk->manifest(game.image, game.location);
-        }
-      }
-      return vfs::memory::open(game.manifest.data<u8>(), game.manifest.size());
-    }
-
-    if(name == "disk1.sideA") {
-      auto location = locate(game.location, ".1A.sav", settings.paths.saves);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-      if(mode == vfs::file::mode::read) return vfs::memory::open(diskSide[0].data(), diskSide[0].size());
-    }
-
-    if(name == "disk1.sideB") {
-      auto location = locate(game.location, ".1B.sav", settings.paths.saves);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-      if(mode == vfs::file::mode::read) return vfs::memory::open(diskSide[1].data(), diskSide[1].size());
-    }
-
-    if(name == "disk2.sideA") {
-      auto location = locate(game.location, ".2A.sav", settings.paths.saves);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-      if(mode == vfs::file::mode::read) return vfs::memory::open(diskSide[2].data(), diskSide[2].size());
-    }
-
-    if(name == "disk2.sideB") {
-      auto location = locate(game.location, ".2B.sav", settings.paths.saves);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-      if(mode == vfs::file::mode::read) return vfs::memory::open(diskSide[3].data(), diskSide[3].size());
-    }
+    if(auto fp = Emulator::save(name, mode, "disk1.sideA", ".disk1.sideA.sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "disk1.sideB", ".disk1.sideB.sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "disk2.sideA", ".disk2.sideA.sav")) return fp;
+    if(auto fp = Emulator::save(name, mode, "disk2.sideB", ".disk2.sideB.sav")) return fp;
+    if(auto fp = pak->find(name)) return fp;
   }
 
   return {};

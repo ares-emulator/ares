@@ -13,14 +13,14 @@ auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
   return {};
 }
 
-auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
-  if(!filename) {
-    string location = emulator->configuration.game;
-    if(!location) location = Path::desktop();
+auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
+  if(!location) {
+    string pathname = emulator->configuration.game;
+    if(!pathname) pathname = Path::desktop();
 
     BrowserDialog dialog;
     dialog.setTitle({"Load ", emulator->name, " Game"});
-    dialog.setPath(location);
+    dialog.setPath(pathname);
     dialog.setAlignment(presentation);
     string filters{"*.zip:"};
     for(auto& extension : emulator->medium->extensions()) {
@@ -29,41 +29,15 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
     //support both uppercase and lowercase extensions
     filters.append(string{filters}.upcase());
     filters.trimRight(":", 1L);
-    filters.prepend(emulator->name, " Games|");
-    dialog.setFilters({filters, "All Files|*"});
-    filename = openFile(dialog);
+    filters.prepend(emulator->name, "|");
+    dialog.setFilters({filters, "All|*"});
+    location = openFile(dialog);
   }
-  if(!file::exists(filename)) return false;
-
-  vector<u8> filedata;
-  if(filename.iendsWith(".zip")) {
-    Decode::ZIP archive;
-    if(archive.open(filename)) {
-      for(auto& file : archive.file) {
-        auto extension = Location::suffix(file.name).trimLeft(".", 1L).downcase();
-        if(emulator->medium->extensions().find(extension)) {
-          filedata = archive.extract(file);
-          break;
-        }
-      }
-    }
-  } else {
-    filedata = file::read(filename);
-  }
-  if(!filedata) return false;
-
-  //apply patch (if one exists)
-  bool patchApplied = false;
-  if(auto patch = file::read(emulator->locate(filename, ".bps", settings.paths.patches))) {
-    if(auto output = Beat::Single::apply(filedata, patch)) {
-      filedata = output();
-      patchApplied = true;
-    }
-  }
+  if(!inode::exists(location)) return false;
 
   unload();
   ::emulator = emulator;
-  if(!emulator->load(filename, filedata)) {
+  if(!emulator->load(location)) {
     ::emulator.reset();
     if(settings.video.adaptiveSizing) presentation.resizeWindow();
     presentation.showIcon(true);
@@ -72,7 +46,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
 
   //this is a safeguard warning in case the user loads their games from a read-only location:
   string savesPath = settings.paths.saves;
-  if(!savesPath) savesPath = Location::path(filename);
+  if(!savesPath) savesPath = Location::path(location);
   if(!directory::writable(savesPath)) {
     MessageDialog().setTitle(ares::Name).setText({
       "The current save path is read-only; please choose a writable save path now.\n"
@@ -102,16 +76,35 @@ auto Program::load(shared_pointer<Emulator> emulator, string filename) -> bool {
   } else {
     pause(false);
   }
-  showMessage({"Loaded ", Location::prefix(emulator->game.location), patchApplied ? ", and patch applied" : ""});
+  showMessage({"Loaded ", Location::prefix(emulator->game.location)});
 
   //update recent games list
   for(s32 index = 7; index >= 0; index--) {
     settings.recent.game[index + 1] = settings.recent.game[index];
   }
-  settings.recent.game[0] = {emulator->name, ";", filename};
+  settings.recent.game[0] = {emulator->name, ";", location};
   presentation.loadEmulators();
 
   return true;
+}
+
+auto Program::load(shared_pointer<mia::Media> medium, string& path) -> string {
+  BrowserDialog dialog;
+  dialog.setTitle({"Load ", medium->name(), " Game"});
+  dialog.setPath(path ? path : Path::desktop());
+  dialog.setAlignment(presentation);
+  string filters{"*.zip:"};
+  for(auto& extension : medium->extensions()) {
+    filters.append("*.", extension, ":");
+  }
+  //support both uppercase and lowercase extensions
+  filters.append(string{filters}.upcase());
+  filters.trimRight(":", 1L);
+  filters.prepend(medium->name(), "|");
+  dialog.setFilters({filters, "All|*"});
+  string location = openFile(dialog);
+  if(location) path = Location::dir(location);
+  return location;
 }
 
 auto Program::unload() -> void {

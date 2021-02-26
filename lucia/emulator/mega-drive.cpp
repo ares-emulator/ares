@@ -16,6 +16,7 @@ struct MegaCD : Emulator {
   auto input(ares::Node::Input::Input) -> void override;
 
   u32 regionID = 0;
+  shared_pointer<vfs::directory> bios;
 };
 
 MegaDrive::MegaDrive() {
@@ -43,21 +44,10 @@ auto MegaDrive::load() -> bool {
 }
 
 auto MegaDrive::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-  auto saveRAMVolatile = (bool)document["game/board/memory(Content=Save,type=RAM)/volatile"];
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
+  if(node->name() == "Mega Drive") {
+    if(auto fp = pak->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.ram", ".sav")) return fp;
   }
-
-  if(name == "save.ram" && !saveRAMVolatile) {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
   return {};
 }
 
@@ -102,12 +92,12 @@ auto MegaCD::load() -> bool {
   if(region == "PAL"   ) regionID = 2;
   if(region == "NTSC-J") regionID = 1;
   if(region == "NTSC-U") regionID = 0;
-  if(!ares::MegaDrive::load(root, {"[Sega] ", system, " (", region, ")"})) return false;
-
   if(!file::exists(firmware[regionID].location)) {
     errorFirmwareRequired(firmware[regionID]);
     return false;
   }
+  bios = mia::medium("Mega Drive")->pak(firmware[regionID].location);
+  if(!ares::MegaDrive::load(root, {"[Sega] ", system, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Expansion Port")) {
     port->allocate();
@@ -129,45 +119,12 @@ auto MegaCD::load() -> bool {
 
 auto MegaCD::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
   if(node->name() == "Mega Drive") {
-    if(name == "manifest.bml") {
-      return Emulator::manifest("Mega Drive", firmware[regionID].location);
-    }
-
-    if(name == "program.rom") {
-      return Emulator::loadFirmware(firmware[regionID]);
-    }
-
-    if(name == "backup.ram") {
-      auto location = locate(game.location, ".sav", settings.paths.saves);
-      if(auto result = vfs::disk::open(location, mode)) return result;
-    }
+    if(auto fp = bios->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "backup.ram", ".sav")) return fp;
   }
-
   if(node->name() == "Mega CD") {
-    if(name == "manifest.bml") {
-      if(auto manifest = medium->manifest(game.location)) {
-        return vfs::memory::open(manifest.data<u8>(), manifest.size());
-      }
-      return Emulator::manifest(game.location);
-    }
-
-    if(name == "cd.rom") {
-      if(game.location.iendsWith(".zip")) {
-        MessageDialog().setText(
-          "Sorry, compressed CD-ROM images are not currently supported.\n"
-          "Please extract the image prior to loading it."
-        ).setAlignment(presentation).error();
-        return {};
-      }
-
-      if(auto result = vfs::cdrom::open(game.location)) return result;
-
-      MessageDialog().setText(
-        "Failed to load CD-ROM image."
-      ).setAlignment(presentation).error();
-    }
+    if(auto fp = pak->find(name)) return fp;
   }
-
   return {};
 }
 

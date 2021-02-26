@@ -60,7 +60,7 @@ auto pTableViewColumn::setText(const string& text) -> void {
       if(state().sorting == Sort::Ascending ) label.append(" \u25b4");
       if(state().sorting == Sort::Descending) label.append(" \u25be");
       NSTableColumn* tableColumn = [[parent->cocoaView content] tableColumnWithIdentifier:[[NSNumber numberWithInteger:self().offset()] stringValue]];
-      [[tableColumn headerCell] setStringValue:[NSString stringWithUTF8STring:label]];
+      [[tableColumn headerCell] setStringValue:[NSString stringWithUTF8String:label]];
       [[parent->cocoaView headerView] setNeedsDisplay:YES];
     }
   }

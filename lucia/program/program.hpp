@@ -15,7 +15,8 @@ struct Program : ares::Platform {
 
   //load.cpp
   auto identify(const string& filename) -> shared_pointer<Emulator>;
-  auto load(shared_pointer<Emulator> emulator, string filename = {}) -> bool;
+  auto load(shared_pointer<Emulator> emulator, string location = {}) -> bool;
+  auto load(shared_pointer<mia::Media> medium, string& path) -> string;
   auto unload() -> void;
 
   //states.cpp

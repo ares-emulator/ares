@@ -38,40 +38,14 @@ auto GameBoy::load() -> bool {
 }
 
 auto GameBoy::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
-  if(name == "boot.dmg-1.rom") {
-    return vfs::memory::open(Resource::GameBoy::BootDMG1, sizeof Resource::GameBoy::BootDMG1);
+  if(name == "boot.dmg-1.rom") return vfs::memory::open({Resource::GameBoy::BootDMG1, sizeof Resource::GameBoy::BootDMG1});
+  if(node->name() == "Game Boy") {
+    if(auto fp = pak->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.ram",       ".sav"  )) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.eeprom",    ".sav"  )) return fp;
+    if(auto fp = Emulator::save(name, mode, "download.flash", ".flash")) return fp;
+    if(auto fp = Emulator::save(name, mode, "time.rtc",       ".rtc"  )) return fp;
   }
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-  auto saveRAMVolatile = (bool)document["game/board/memory(Content=Save,type=RAM)/volatile"];
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
-  }
-
-  if(name == "save.ram" && !saveRAMVolatile) {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "save.eeprom") {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "download.flash") {
-    auto location = locate(game.location, ".flash", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "time.rtc") {
-    auto location = locate(game.location, ".rtc", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
   return {};
 }
 
@@ -130,40 +104,14 @@ auto GameBoyColor::load() -> bool {
 }
 
 auto GameBoyColor::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "manifest.bml") return Emulator::manifest();
-
-  if(name == "boot.cgb-0.rom") {
-    return vfs::memory::open(Resource::GameBoyColor::BootCGB0, sizeof Resource::GameBoyColor::BootCGB0);
+  if(name == "boot.cgb-0.rom") return vfs::memory::open({Resource::GameBoyColor::BootCGB0, sizeof Resource::GameBoyColor::BootCGB0});
+  if(node->name() == "Game Boy Color") {
+    if(auto fp = pak->find(name)) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.ram",       ".sav"  )) return fp;
+    if(auto fp = Emulator::save(name, mode, "save.eeprom",    ".sav"  )) return fp;
+    if(auto fp = Emulator::save(name, mode, "download.flash", ".flash")) return fp;
+    if(auto fp = Emulator::save(name, mode, "time.rtc",       ".rtc"  )) return fp;
   }
-
-  auto document = BML::unserialize(game.manifest);
-  auto programROMSize = document["game/board/memory(content=Program,type=ROM)/size"].natural();
-  auto saveRAMVolatile = (bool)document["game/board/memory(Content=Save,type=RAM)/volatile"];
-
-  if(name == "program.rom") {
-    return vfs::memory::open(game.image.data(), programROMSize);
-  }
-
-  if(name == "save.ram" && !saveRAMVolatile) {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "save.eeprom") {
-    auto location = locate(game.location, ".sav", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "download.flash") {
-    auto location = locate(game.location, ".flash", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
-  if(name == "time.rtc") {
-    auto location = locate(game.location, ".rtc", settings.paths.saves);
-    if(auto result = vfs::disk::open(location, mode)) return result;
-  }
-
   return {};
 }
 

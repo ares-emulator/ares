@@ -24,6 +24,10 @@ struct cdrom : file {
     return _offset;
   }
 
+  auto resize(u64 size) -> void override {
+    //unsupported
+  }
+
   auto seek(s64 offset, index mode) -> void override {
     if(mode == index::absolute) _offset  = (u64)offset;
     if(mode == index::relative) _offset += (s64)offset;
