@@ -1,6 +1,7 @@
 struct System : IO {
   Node::System node;
   Node::Setting::Boolean headphones;
+  Pak pak;
 
   enum class SoC : u32 {
     ASWAN,

@@ -4,17 +4,15 @@ struct MBC6 : Interface {
   Memory::Writable<n8> ram;
   Memory::Writable<n8> flash;  //Macronix MX29F008TC-14 (writes unemulated)
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
-    Interface::load(ram, board["memory(type=RAM,content=Save)"]);
-    Interface::load(flash, board["memory(type=Flash,content=Download)"]);
+  auto load() -> void override {
+    Interface::load(rom, "program.rom");
+    Interface::load(ram, "save.ram");
+    Interface::load(flash, "download.flash");
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(ram, board["memory(type=RAM,content=Save)"]);
-    Interface::save(flash, board["memory(type=Flash,content=Download)"]);
+  auto save() -> void override {
+    Interface::save(ram, "save.ram");
+    Interface::save(flash, "download.flash");
   }
 
   auto unload() -> void override {

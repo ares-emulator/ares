@@ -33,42 +33,43 @@ Gamepad::~Gamepad() {
 }
 
 auto Gamepad::save() -> void {
-  if(!pak) return;
-  if(pak->name() == "Controller Pak") {
-    ram.save(platform->open(node, "save.pak", File::Write));
+  if(!slot) return;
+  if(slot->name() == "Controller Pak") {
+    ram.save(pak->write("save.pak"));
   }
 }
 
 auto Gamepad::allocate(string name) -> Node::Peripheral {
-  if(name == "Controller Pak") return pak = port->append<Node::Peripheral>("Controller Pak");
-  if(name == "Rumble Pak"    ) return pak = port->append<Node::Peripheral>("Rumble Pak");
+  if(name == "Controller Pak") return slot = port->append<Node::Peripheral>("Controller Pak");
+  if(name == "Rumble Pak"    ) return slot = port->append<Node::Peripheral>("Rumble Pak");
   return {};
 }
 
 auto Gamepad::connect() -> void {
-  if(!pak) return;
-  if(pak->name() == "Controller Pak") {
+  if(!slot) return;
+  if(slot->name() == "Controller Pak") {
+    node->setPak(pak = platform->pak(node));
     ram.allocate(32_KiB);
-    ram.load(platform->open(node, "save.pak", File::Read));
+    ram.load(pak->read("save.pak"));
   }
-  if(pak->name() == "Rumble Pak") {
+  if(slot->name() == "Rumble Pak") {
     motor = node->append<Node::Input::Rumble>("Rumble");
   }
 }
 
 auto Gamepad::disconnect() -> void {
-  if(!pak) return;
-  if(pak->name() == "Controller Pak") {
+  if(!slot) return;
+  if(slot->name() == "Controller Pak") {
     save();
     ram.reset();
   }
-  if(pak->name() == "Rumble Pak") {
+  if(slot->name() == "Rumble Pak") {
     rumble(false);
     node->remove(motor);
     motor.reset();
   }
-  port->remove(pak);
-  pak.reset();
+  port->remove(slot);
+  slot.reset();
 }
 
 auto Gamepad::rumble(bool enable) -> void {

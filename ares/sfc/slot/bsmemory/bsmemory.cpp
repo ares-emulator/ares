@@ -7,9 +7,9 @@ auto BSMemoryCartridge::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto BSMemoryCartridge::connect() -> void {
-  node->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
-  if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
 
@@ -19,7 +19,7 @@ auto BSMemoryCartridge::connect() -> void {
   if(auto memory = document["game/board/memory(content=Program)"]) {
     ROM = memory["type"].text() == "ROM";
     this->memory.allocate(memory["size"].natural());
-    if(auto fp = platform->open(node, {"program.", memory["type"].text().downcase()}, File::Read, File::Required)) {
+    if(auto fp = pak->read({"program.", memory["type"].text().downcase()})) {
       fp->read({this->memory.data(), this->memory.size()});
     }
   }
@@ -49,7 +49,7 @@ auto BSMemoryCartridge::connect() -> void {
     block.locked = 1;
   }
 
-  if(auto fp = platform->open(node, "flash.bml", File::Read, File::Optional)) {
+  if(auto fp = pak->read("flash.bml")) {
     auto document = BML::unserialize(fp->reads());
     if(auto node = document["flash/vendor"]) {
       chip.vendor = node.natural();
@@ -79,7 +79,7 @@ auto BSMemoryCartridge::disconnect() -> void {
   if(!node) return;
 
   if(!ROM) {
-    if(auto fp = platform->open(node, "flash.bml", File::Write, File::Optional)) {
+    if(auto fp = pak->write("flash.bml")) {
       string manifest;
       manifest.append("flash\n");
       manifest.append("  vendor: 0x", hex(chip.vendor,  4L), "\n");
@@ -98,7 +98,8 @@ auto BSMemoryCartridge::disconnect() -> void {
   }
 
   memory.reset();
-  node = {};
+  pak.reset();
+  node.reset();
 }
 
 BSMemoryCartridge::BSMemoryCartridge() {
@@ -145,10 +146,8 @@ auto BSMemoryCartridge::save() -> void {
   if(!node) return;
   auto document = BML::unserialize(information.manifest);
 
-  if(auto memory = document["game/board/memory(type=Flash,content=Program)"]) {
-    if(auto fp = platform->open(node, "program.flash", File::Write)) {
-      fp->write({this->memory.data(), this->memory.size()});
-    }
+  if(auto fp = pak->write("program.flash")) {
+    fp->write({this->memory.data(), this->memory.size()});
   }
 }
 

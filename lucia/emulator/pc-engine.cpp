@@ -5,25 +5,32 @@ namespace ares::PCEngine {
 struct PCEngine : Emulator {
   PCEngine();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 struct PCEngineCD : Emulator {
   PCEngineCD();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
+  Pak system, bios;
   u32 regionID = 0;
-  shared_pointer<vfs::directory> bios;
 };
 
 struct SuperGrafx : Emulator {
   SuperGrafx();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 PCEngine::PCEngine() {
@@ -33,6 +40,8 @@ PCEngine::PCEngine() {
 }
 
 auto PCEngine::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+
   auto region = Emulator::region();
   string system = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
   if(!ares::PCEngine::load(root, {"[NEC] ", system, " (", region, ")"})) return false;
@@ -50,12 +59,14 @@ auto PCEngine::load() -> bool {
   return true;
 }
 
-auto PCEngine::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "PC Engine") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram",   ".sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "backup.ram", ".brm")) return fp;
-  }
+auto PCEngine::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto PCEngine::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "PC Engine") return game.pak;
   return {};
 }
 
@@ -89,16 +100,19 @@ PCEngineCD::PCEngineCD() {
 }
 
 auto PCEngineCD::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+
   auto region = Emulator::region();
   auto system = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
   //if statements below are ordered by lowest to highest priority
   if(region == "NTSC-J") regionID = 1;
   if(region == "NTSC-U") regionID = 0;
+
   if(!file::exists(firmware[regionID].location)) {
     errorFirmwareRequired(firmware[regionID]);
     return false;
   }
-  bios = mia::medium("PC Engine")->pak(firmware[regionID].location);
+  bios.pak = mia::medium("PC Engine")->load(firmware[regionID].location);
   if(!ares::PCEngine::load(root, {"[NEC] ", system, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -119,14 +133,15 @@ auto PCEngineCD::load() -> bool {
   return true;
 }
 
-auto PCEngineCD::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "PC Engine") {
-    if(auto fp = bios->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "backup.ram", ".brm")) return fp;
-  }
-  if(node->name() == "PC Engine CD") {
-    if(auto fp = pak->find(name)) return fp;
-  }
+auto PCEngineCD::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto PCEngineCD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "PC Engine") return bios.pak;
+  if(node->name() == "PC Engine CD") return game.pak;
   return {};
 }
 
@@ -157,6 +172,8 @@ SuperGrafx::SuperGrafx() {
 }
 
 auto SuperGrafx::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+
   if(!ares::PCEngine::load(root, "[NEC] SuperGrafx (NTSC-J)")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -172,11 +189,14 @@ auto SuperGrafx::load() -> bool {
   return true;
 }
 
-auto SuperGrafx::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "SuperGrafx") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram", ".sav")) return fp;
-  }
+auto SuperGrafx::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto SuperGrafx::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "SuperGrafx") return game.pak;
   return {};
 }
 

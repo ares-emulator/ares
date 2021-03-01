@@ -8,22 +8,25 @@ DD dd;
 
 auto DD::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("Disk Drive");
+  if(!node->setPak(pak = platform->pak(node))) return;
+
   iplrom.allocate(4_MiB);
   c2s.allocate(0x400);
   ds.allocate(0x100);
   ms.allocate(0x40);
 
-  if(auto fp = platform->open(node, "64dd.ipl.rom", File::Read)) {
+  if(auto fp = pak->read("64dd.ipl.rom")) {
     iplrom.load(fp);
   }
 }
 
 auto DD::unload() -> void {
+  iplrom.reset();
   c2s.reset();
   ds.reset();
   ms.reset();
+  pak.reset();
   node.reset();
-  iplrom.reset();
 }
 
 auto DD::power(bool reset) -> void {

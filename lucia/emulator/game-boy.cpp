@@ -5,15 +5,21 @@ namespace ares::GameBoy {
 struct GameBoy : Emulator {
   GameBoy();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 struct GameBoyColor : Emulator {
   GameBoyColor();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 GameBoy::GameBoy() {
@@ -23,6 +29,9 @@ GameBoy::GameBoy() {
 }
 
 auto GameBoy::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("boot.dmg-1.rom", {Resource::GameBoy::BootDMG1, sizeof Resource::GameBoy::BootDMG1});
+
   if(!ares::GameBoy::load(root, "[Nintendo] Game Boy")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -37,15 +46,14 @@ auto GameBoy::load() -> bool {
   return true;
 }
 
-auto GameBoy::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "boot.dmg-1.rom") return vfs::memory::open({Resource::GameBoy::BootDMG1, sizeof Resource::GameBoy::BootDMG1});
-  if(node->name() == "Game Boy") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram",       ".sav"  )) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.eeprom",    ".sav"  )) return fp;
-    if(auto fp = Emulator::save(name, mode, "download.flash", ".flash")) return fp;
-    if(auto fp = Emulator::save(name, mode, "time.rtc",       ".rtc"  )) return fp;
-  }
+auto GameBoy::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto GameBoy::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "Game Boy") return game.pak;
   return {};
 }
 
@@ -89,6 +97,9 @@ GameBoyColor::GameBoyColor() {
 }
 
 auto GameBoyColor::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("boot.cgb-0.rom", {Resource::GameBoyColor::BootCGB0, sizeof Resource::GameBoyColor::BootCGB0});
+
   if(!ares::GameBoy::load(root, "[Nintendo] Game Boy Color")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -103,15 +114,14 @@ auto GameBoyColor::load() -> bool {
   return true;
 }
 
-auto GameBoyColor::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "boot.cgb-0.rom") return vfs::memory::open({Resource::GameBoyColor::BootCGB0, sizeof Resource::GameBoyColor::BootCGB0});
-  if(node->name() == "Game Boy Color") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram",       ".sav"  )) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.eeprom",    ".sav"  )) return fp;
-    if(auto fp = Emulator::save(name, mode, "download.flash", ".flash")) return fp;
-    if(auto fp = Emulator::save(name, mode, "time.rtc",       ".rtc"  )) return fp;
-  }
+auto GameBoyColor::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto GameBoyColor::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "Game Boy Color") return game.pak;
   return {};
 }
 

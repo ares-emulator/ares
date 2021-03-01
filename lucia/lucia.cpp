@@ -22,6 +22,8 @@ auto nall::main(Arguments arguments) -> void {
   Application::setName("lucia");
   Application::setScreenSaver(false);
 
+  mia::setSaveLocation([] { return settings.paths.saves; });
+
   for(auto argument : arguments) {
     if(argument == "--fullscreen") {
       program.startFullScreen = true;

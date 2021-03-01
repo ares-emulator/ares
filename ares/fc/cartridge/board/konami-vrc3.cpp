@@ -8,18 +8,16 @@ struct KonamiVRC3 : Interface {
   Memory::Writable<n8> programRAM;
   Memory::Writable<n8> characterRAM;
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
-    mirror = board["mirror/mode"].string() == "vertical";
+  auto load() -> void override {
+    Interface::load(programROM, "program.rom");
+    Interface::load(programRAM, "save.ram");
+    Interface::load(characterRAM, "character.ram");
+    mirror = pak->attribute("mirror") == "vertical";
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
-    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+  auto save() -> void override {
+    Interface::save(programRAM, "save.ram");
+    Interface::save(characterRAM, "character.ram");
   }
 
   auto main() -> void override {

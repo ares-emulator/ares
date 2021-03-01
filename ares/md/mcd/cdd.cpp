@@ -273,13 +273,13 @@ auto MCD::CDD::insert() -> void {
 
   //read TOC (table of contents) from disc lead-in
   u32 sectors = mcd.fd->size() / 2448;
-  vector<u8> sub;
-  sub.resize(sectors * 96);
+  vector<u8> subchannel;
+  subchannel.resize(sectors * 96);
   for(u32 sector : range(sectors)) {
     mcd.fd->seek(sector * 2448 + 2352);
-    mcd.fd->read({sub.data() + sector * 96, 96});
+    mcd.fd->read({subchannel.data() + sector * 96, 96});
   }
-  session.decode(sub, 96);
+  session.decode(subchannel, 96);
 
   io.status = Status::ReadingTOC;
   io.sector = session.leadIn.lba;

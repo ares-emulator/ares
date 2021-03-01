@@ -15,16 +15,14 @@ struct ArcadeCardDuo : Interface {
     } memory;
   } debugger;
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
-    Interface::load(dram, board["memory(type=RAM,content=Dynamic)"]);
-
+  auto load() -> void override {
+    Interface::load(rom, "program.rom");
+    Interface::load(dram, "dynamic.ram");
     debugger.super = *this;
     debugger.load(cartridge.node);
   }
 
-  auto save(Markup::Node document) -> void override {
+  auto save() -> void override {
   }
 
   auto unload() -> void override {

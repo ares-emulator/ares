@@ -8,6 +8,7 @@ struct FDS {
   Node::Port port;
   Node::Peripheral node;
   Node::Setting::String state;
+  Pak pak;
   n1 present;
 
   auto manifest() const -> string { return information.manifest; }

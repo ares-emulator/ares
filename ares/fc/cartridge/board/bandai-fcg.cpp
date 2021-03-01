@@ -9,26 +9,20 @@ struct BandaiFCG : Interface {
   Memory::Writable<n8> characterRAM;
   X24C01 eeprom;
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
-    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
-    if(auto memory = board["memory(type=EEPROM,content=Save)"]) {
+  auto load() -> void override {
+    Interface::load(programROM, "program.rom");
+    Interface::load(characterROM, "character.rom");
+    Interface::load(characterRAM, "character.ram");
+    if(auto fp = pak->read("save.eeprom")) {
       eeprom.erase();
-      if(auto fp = platform->open(cartridge.node, "save.eeprom", File::Read)) {
-        fp->read({eeprom.memory, min(128, fp->size())});
-      }
+      fp->read({eeprom.memory, min(128, fp->size())});
     }
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
-    if(auto memory = board["memory(type=EEPROM,content=Save)"]) {
-      if(auto fp = platform->open(cartridge.node, "save.eeprom", File::Write)) {
-        fp->write({eeprom.memory, 128});
-      }
+  auto save() -> void override {
+    Interface::save(characterRAM, "save.ram");
+    if(auto fp = pak->write("save.eeprom")) {
+      fp->write({eeprom.memory, 128});
     }
   }
 

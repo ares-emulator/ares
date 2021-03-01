@@ -6,8 +6,11 @@ struct GameBoyAdvance : Emulator {
   GameBoyAdvance();
   auto load(Menu) -> void override;
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 GameBoyAdvance::GameBoyAdvance() {
@@ -37,12 +40,15 @@ auto GameBoyAdvance::load(Menu menu) -> void {
 }
 
 auto GameBoyAdvance::load() -> bool {
-  if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Player")) return false;
-
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
     return false;
   }
+
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("bios.rom", loadFirmware(firmware[0]));
+
+  if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Player")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -52,16 +58,14 @@ auto GameBoyAdvance::load() -> bool {
   return true;
 }
 
-auto GameBoyAdvance::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "bios.rom") {
-    return loadFirmware(firmware[0]);
-  }
-  if(node->name() == "Game Boy Advance") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram",    ".sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.eeprom", ".sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.flash",  ".sav")) return fp;
-  }
+auto GameBoyAdvance::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto GameBoyAdvance::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "Game Boy Advance") return game.pak;
   return {};
 }
 

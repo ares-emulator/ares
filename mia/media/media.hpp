@@ -16,14 +16,20 @@ struct Media {
   //the list of extensions used for this type of media
   virtual auto extensions() -> vector<string> = 0;
 
-  //create a virtual game pak directory from a game pak or game ROM
-  virtual auto pak(string location) -> shared_pointer<vfs::directory>;
+  //load a game pak or game ROM
+  virtual auto load(string location) -> shared_pointer<vfs::directory> { return {}; }
 
-  //create a vector from a game pak
-  virtual auto rom(string location) -> vector<u8> = 0;
+  //save a game pak or game ROM
+  virtual auto save(string location, shared_pointer<vfs::directory> pak) -> bool { return false; }
 
   //generate a manifest for a game pak or game ROM
-  virtual auto manifest(string location) -> string = 0;
+  virtual auto manifest(string location) -> string;
+
+  //load a file into a game pak if it exists; otherwise simply create empty save file
+  auto load(shared_pointer<vfs::directory> pak, string location, Markup::Node node, string extension) -> bool;
+
+  //save a file from a game pak
+  auto save(shared_pointer<vfs::directory> pak, string location, Markup::Node node, string extension) -> bool;
 
   //generate a filesystem-safe name for a game pak or game ROM
   auto name(string location) const -> string;

@@ -1,5 +1,6 @@
 struct Cartridge {
   Node::Peripheral node;
+  Pak pak;
   Memory::Readable rom;
   Memory::Writable ram;
   Memory::Writable eeprom;

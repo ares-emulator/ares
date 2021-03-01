@@ -8,17 +8,15 @@ struct HVC_CNROM : Interface {
   Memory::Readable<n8> characterROM;
   Memory::Writable<n8> characterRAM;
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
-    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
-    mirror = board["mirror/mode"].string() == "vertical";
+  auto load() -> void override {
+    Interface::load(programROM, "program.rom");
+    Interface::load(characterROM, "character.rom");
+    Interface::load(characterRAM, "character.ram");
+    mirror = pak->attribute("mirror") == "vertical";
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+  auto save() -> void override {
+    Interface::save(characterRAM, "character.ram");
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {

@@ -15,17 +15,15 @@ struct Sunsoft4 : Interface {
   Memory::Writable<n8> programRAM;
   Memory::Readable<n8> characterROM;
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Interface::load(optionROM, board["memory(type=ROM,content=Option)"]);
-    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
+  auto load() -> void override {
+    Interface::load(programROM, "program.rom");
+    Interface::load(optionROM, "option.rom");
+    Interface::load(programRAM, "save.ram");
+    Interface::load(characterROM, "character.rom");
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
+  auto save() -> void override {
+    Interface::save(programRAM, "save.ram");
   }
 
   auto main() -> void override {

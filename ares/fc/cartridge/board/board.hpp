@@ -1,13 +1,15 @@
 namespace Board {
 
 struct Interface {
+  Pak pak;
+
   static auto create(string manifest) -> Interface*;
 
   virtual ~Interface() = default;
 
-  virtual auto load() -> void;
-  virtual auto save() -> void;
-  virtual auto unload() -> void;
+  virtual auto load() -> void {}
+  virtual auto save() -> void {}
+  virtual auto unload() -> void {}
 
   virtual auto main() -> void;
   virtual auto tick() -> void;
@@ -25,12 +27,9 @@ struct Interface {
   virtual auto serialize(serializer&) -> void {}
 
 protected:
-  virtual auto load(Markup::Node) -> void {}
-  virtual auto save(Markup::Node) -> void {}
-
-  auto load(Memory::Readable<n8>& memory, Markup::Node node) -> bool;
-  auto load(Memory::Writable<n8>& memory, Markup::Node node) -> bool;
-  auto save(Memory::Writable<n8>& memory, Markup::Node node) -> bool;
+  auto load(Memory::Readable<n8>& memory, string name) -> bool;
+  auto load(Memory::Writable<n8>& memory, string name) -> bool;
+  auto save(Memory::Writable<n8>& memory, string name) -> bool;
 };
 
 }

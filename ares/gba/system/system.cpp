@@ -55,6 +55,7 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
 
   scheduler.reset();
   controls.load(node);
@@ -77,13 +78,14 @@ auto System::unload() -> void {
   ppu.unload();
   apu.unload();
   cartridgeSlot.unload();
-  node = {};
+  pak.reset();
+  node.reset();
 }
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
-  if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
+  if(auto fp = pak->read("bios.rom")) {
     fp->read({bios.data, bios.size});
   }
 

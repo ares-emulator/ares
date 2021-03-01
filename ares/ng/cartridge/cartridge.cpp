@@ -11,14 +11,12 @@ auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto Cartridge::connect() -> void {
-  node->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-
-  if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
-
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
 
@@ -27,12 +25,12 @@ auto Cartridge::connect() -> void {
 
 auto Cartridge::disconnect() -> void {
   if(!node) return;
+  pak.reset();
   node.reset();
 }
 
 auto Cartridge::save() -> void {
   if(!node) return;
-  auto document = BML::unserialize(information.manifest);
 }
 
 auto Cartridge::power() -> void {

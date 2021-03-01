@@ -4,6 +4,7 @@ struct MCD : M68K, Thread {
   Node::Object node;
   Node::Port tray;
   Node::Peripheral disc;
+  Pak pak;
   Shared::File fd;
   Memory::Readable<n16> bios;  //BIOS ROM
   Memory::Writable<n16> pram;  //program RAM

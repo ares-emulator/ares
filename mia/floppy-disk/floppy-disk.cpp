@@ -5,16 +5,6 @@ auto FloppyDisk::construct() -> void {
   Media::construct();
 }
 
-auto FloppyDisk::manifest(string location) -> string {
-  vector<u8> data;
-  if(directory::exists(location)) {
-    data = rom(location);
-  } else if(file::exists(location)) {
-    data = file::read(location);
-  }
-  return manifest(data, location);
-}
-
 auto FloppyDisk::manifest(vector<u8>& data, string location) -> string {
   string digest = Hash::SHA256(data).digest();
   for(auto game : database.find("game")) {

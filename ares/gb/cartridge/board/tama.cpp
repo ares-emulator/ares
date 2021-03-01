@@ -15,11 +15,10 @@ struct TAMA : Interface {
   auto toBCD  (n8 data) -> n8 { return (data / 10) * 16 + (data % 10); }
   auto fromBCD(n8 data) -> n8 { return (data / 16) * 10 + (data % 16); }
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
-    Interface::load(ram, board["memory(type=RAM,content=Save)"]);
-    Interface::load(rtc, board["memory(type=RTC,content=Time)"]);
+  auto load() -> void override {
+    Interface::load(rom, "program.rom");
+    Interface::load(ram, "save.ram");
+    Interface::load(rtc, "time.rtc");
 
     if(rtc.size() == 15) {
       io.rtc.year     = fromBCD(rtc[0]);
@@ -47,10 +46,9 @@ struct TAMA : Interface {
     }
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(ram, board["memory(type=RAM,content=Save)"]);
-    Interface::save(rtc, board["memory(type=RTC,content=Time)"]);
+  auto save() -> void override {
+    Interface::save(ram, "save.ram");
+    Interface::save(rtc, "time.rtc");
 
     if(rtc.size() == 15) {
       rtc[0] = toBCD(io.rtc.year);

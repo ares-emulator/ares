@@ -5,13 +5,11 @@ namespace ares::SuperFamicom {
 struct SuperFamicom : Emulator {
   SuperFamicom();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
-  struct Pak {
-    string location;
-    shared_pointer<vfs::directory> pak;
-  } gb, bs, stA, stB;
+  Pak system, gb, bs, stA, stB;
 };
 
 SuperFamicom::SuperFamicom() {
@@ -21,6 +19,10 @@ SuperFamicom::SuperFamicom() {
 }
 
 auto SuperFamicom::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("boards.bml", {Resource::SuperFamicom::Boards, sizeof Resource::SuperFamicom::Boards});
+  system.pak->append("ipl.rom",    {Resource::SuperFamicom::IPLROM, sizeof Resource::SuperFamicom::IPLROM});
+
   auto region = Emulator::region();
   if(region.beginsWith("NTSC")
   || region.endsWith("BRA")
@@ -46,7 +48,7 @@ auto SuperFamicom::load() -> bool {
     #if defined(CORE_GB)
     if(auto slot = cartridge->find<ares::Node::Port>("Super Game Boy/Cartridge Slot")) {
       if(auto location = program.load(mia::medium("Game Boy"), settings.paths.superFamicom.gameBoy)) {
-        if(gb.pak = mia::medium("Game Boy")->pak(location)) {
+        if(gb.pak = mia::medium("Game Boy")->load(location)) {
           gb.location = location;
           slot->allocate();
           slot->connect();
@@ -57,7 +59,7 @@ auto SuperFamicom::load() -> bool {
 
     if(auto slot = cartridge->find<ares::Node::Port>("BS Memory Slot")) {
       if(auto location = program.load(mia::medium("BS Memory"), settings.paths.superFamicom.bsMemory)) {
-        if(bs.pak = mia::medium("BS Memory")->pak(location)) {
+        if(bs.pak = mia::medium("BS Memory")->load(location)) {
           bs.location = location;
           slot->allocate();
           slot->connect();
@@ -67,7 +69,7 @@ auto SuperFamicom::load() -> bool {
 
     if(auto slot = cartridge->find<ares::Node::Port>("Sufami Turbo Slot A")) {
       if(auto location = program.load(mia::medium("Sufami Turbo"), settings.paths.superFamicom.sufamiTurbo)) {
-        if(stA.pak = mia::medium("Sufami Turbo")->pak(location)) {
+        if(stA.pak = mia::medium("Sufami Turbo")->load(location)) {
           stA.location = location;
           slot->allocate();
           slot->connect();
@@ -77,7 +79,7 @@ auto SuperFamicom::load() -> bool {
 
     if(auto slot = cartridge->find<ares::Node::Port>("Sufami Turbo Slot B")) {
       if(auto location = program.load(mia::medium("Sufami Turbo"), settings.paths.superFamicom.sufamiTurbo)) {
-        if(stB.pak = mia::medium("Sufami Turbo")->pak(location)) {
+        if(stB.pak = mia::medium("Sufami Turbo")->load(location)) {
           stB.location = location;
           slot->allocate();
           slot->connect();
@@ -99,63 +101,24 @@ auto SuperFamicom::load() -> bool {
   return true;
 }
 
-auto SuperFamicom::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "Super Famicom") {
-    if(name == "boards.bml") return vfs::memory::open({Resource::SuperFamicom::Boards, sizeof Resource::SuperFamicom::Boards});
-    if(name == "ipl.rom"   ) return vfs::memory::open({Resource::SuperFamicom::IPLROM, sizeof Resource::SuperFamicom::IPLROM});
-  }
+auto SuperFamicom::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
 
-  if(node->name() == "Super Famicom") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram",           ".sav"    )) return fp;
-    if(auto fp = Emulator::save(name, mode, "download.ram",       ".psr"    )) return fp;
-    if(auto fp = Emulator::save(name, mode, "time.rtc",           ".rtc"    )) return fp;
-    if(auto fp = Emulator::save(name, mode, "upd7725.data.ram",   ".dsp.sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "upd96050.data.ram",  ".dsp.sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "hg51bs169.data.ram", ".cx4.sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "arm6.data.ram",      ".arm.sav")) return fp;
-    if(name == "msu1/data.rom") {
-      auto location = locate(game.location, ".msu");
-      if(auto result = vfs::disk::open(location, mode)) return result;
-    }
-    if(name.beginsWith("msu1/track-")) {
-      auto location = locate({game.location, string{name}.trimLeft("msu1/", 1L)}, ".pcm");
-      if(auto result = vfs::disk::open(location, mode)) return result;
-    }
-  }
-
-  if(node->name() == "Super Game Boy") {
-    if(auto fp = pak->find(name)) return fp;
-  }
-
-  if(node->name() == "Game Boy") {
-    if(auto fp = gb.pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram",       ".sav", node->name(), gb.location)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.eeprom",    ".sav", node->name(), gb.location)) return fp;
-    if(auto fp = Emulator::save(name, mode, "download.flash", ".sav", node->name(), gb.location)) return fp;
-    if(auto fp = Emulator::save(name, mode, "time.rtc",       ".rtc", node->name(), gb.location)) return fp;
-  }
-
-  if(node->name() == "BS Memory") {
-    if(auto fp = Emulator::save(name, mode, "program.flash", ".flash", node->name(), bs.location)) return fp;
-    if(auto fp = bs.pak->find(name)) return fp;
-  }
-
+auto SuperFamicom::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>() && node->name() == "Super Famicom") return system.pak;
+  if(node->name() == "Super Famicom") return game.pak;
+  if(node->name() == "Game Boy") return gb.pak;
+  if(node->name() == "BS Memory") return bs.pak;
   if(node->name() == "Sufami Turbo") {
     if(auto parent = node->parent()) {
       if(auto port = parent.acquire()) {
-        if(port->name() == "Sufami Turbo Slot A") {
-          if(auto fp = stA.pak->find(name)) return fp;
-          if(auto fp = Emulator::save(name, mode, "save.ram", ".slotA.sav", node->name(), stA.location)) return fp;
-        }
-        if(port->name() == "Sufami Turbo Slot B") {
-          if(auto fp = stB.pak->find(name)) return fp;
-          if(auto fp = Emulator::save(name, mode, "save.ram", ".slotB.sav", node->name(), stB.location)) return fp;
-        }
+        if(port->name() == "Sufami Turbo Slot A") return stA.pak;
+        if(port->name() == "Sufami Turbo Slot B") return stB.pak;
       }
     }
   }
-
   return {};
 }
 

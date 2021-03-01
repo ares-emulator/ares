@@ -67,17 +67,16 @@ auto PCD::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto PCD::connect() -> void {
-  disc->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-  if(auto fp = platform->open(disc, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
-
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
 
-  fd = platform->open(disc, "cd.rom", File::Read, File::Required);
+  fd = pak->read("cd.rom");
   if(!fd) return disconnect();
 
   //read TOC (table of contents) from disc lead-in
@@ -92,8 +91,9 @@ auto PCD::connect() -> void {
 }
 
 auto PCD::disconnect() -> void {
-  disc = {};
-  fd = {};
+  fd.reset();
+  pak.reset();
+  disc.reset();
 }
 
 auto PCD::save() -> void {
@@ -154,7 +154,7 @@ auto PCD::power() -> void {
   io = {};
 
   if(Model::PCEngineDuo()) {
-    if(auto fp = platform->open(system.node, "bios.rom", File::Read, File::Required)) {
+    if(auto fp = system.pak->read("bios.rom")) {
       bios.load(fp);
     }
   }

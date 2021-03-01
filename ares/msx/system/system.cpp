@@ -71,6 +71,7 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
 
   scheduler.reset();
   keyboard.load(node);
@@ -100,7 +101,8 @@ auto System::unload() -> void {
   expansionSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
-  node = {};
+  pak.reset();
+  node.reset();
   rom.bios.reset();
   rom.sub.reset();
 }
@@ -109,13 +111,13 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   rom.bios.allocate(32_KiB);
-  if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
+  if(auto fp = pak->read("bios.rom")) {
     rom.bios.load(fp);
   }
 
   if(model() == Model::MSX2) {
     rom.sub.allocate(16_KiB);
-    if(auto fp = platform->open(node, "sub.rom", File::Read, File::Required)) {
+    if(auto fp = pak->read("sub.rom")) {
       rom.sub.load(fp);
     }
   }

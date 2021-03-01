@@ -66,9 +66,11 @@ auto System::load(Node::System& root, string name) -> bool {
     node->setSerialize({&System::serialize, this});
     node->setUnserialize({&System::unserialize, this});
     root = node;
+    if(!node->setPak(pak = platform->pak(node))) return false;
   }
   if(information.name == "Super Game Boy") {
     node = root;
+    if(!(pak = node->pak())) return false;
   }
   fastBoot = node->append<Node::Setting::Boolean>("Fast Boot", false);
 
@@ -94,7 +96,8 @@ auto System::unload() -> void {
   apu.unload();
   cartridgeSlot.unload();
   bootROM.reset();
-  node = {};
+  pak.reset();
+  node.reset();
 }
 
 auto System::power(bool reset) -> void {
@@ -127,7 +130,7 @@ auto System::power(bool reset) -> void {
     if(cpu.version->latch() == "CPU CGB E" ) name = "boot.cgb-1.rom";
   }
 
-  if(auto fp = platform->open(node, name, File::Read, File::Required)) {
+  if(auto fp = pak->read(name)) {
     bootROM.load(fp);
 
     if(fastBoot->latch()) {

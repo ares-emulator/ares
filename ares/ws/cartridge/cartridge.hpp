@@ -1,5 +1,6 @@
 struct Cartridge : Thread, IO {
   Node::Peripheral node;
+  Pak pak;
 
   auto manifest() const { return information.manifest; }
   auto name() const { return information.name; }

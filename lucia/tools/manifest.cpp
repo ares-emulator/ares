@@ -10,10 +10,13 @@ auto ManifestViewer::construct() -> void {
 auto ManifestViewer::reload() -> void {
   manifestList.reset();
   for(auto peripheral : ares::Node::enumerate<ares::Node::Peripheral>(emulator->root)) {
-    if(!peripheral->manifest()) continue;  //ignore peripherals with no manifest available
-    ComboButtonItem item{&manifestList};
-    item.setAttribute<ares::Node::Peripheral>("node", peripheral);
-    item.setText(peripheral->name());
+    if(auto pak = peripheral->pak()) {
+      if(auto fp = pak->read("manifest.bml")) {
+        ComboButtonItem item{&manifestList};
+        item.setAttribute<ares::Node::Peripheral>("node", peripheral);
+        item.setText(peripheral->name());
+      }
+    }
   }
   eventChange();
 }
@@ -26,7 +29,11 @@ auto ManifestViewer::unload() -> void {
 auto ManifestViewer::refresh() -> void {
   if(auto item = manifestList.selected()) {
     if(auto peripheral = item.attribute<ares::Node::Peripheral>("node")) {
-      manifestView.setText(peripheral->manifest());
+      if(auto pak = peripheral->pak()) {
+        if(auto fp = pak->read("manifest.bml")) {
+          manifestView.setText(fp->reads());
+        }
+      }
     }
   } else {
     manifestView.setText();

@@ -2,6 +2,7 @@
 
 struct System {
   Node::System node;
+  Pak pak;
 
   struct Controls {
     Node::Object node;

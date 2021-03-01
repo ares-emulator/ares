@@ -5,9 +5,11 @@ namespace ares::PlayStation {
 struct PlayStation : Emulator {
   PlayStation();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
+  Pak system;
   u32 regionID = 0;
 };
 
@@ -27,12 +29,15 @@ auto PlayStation::load() -> bool {
   if(region == "PAL"   ) regionID = 2;
   if(region == "NTSC-J") regionID = 1;
   if(region == "NTSC-U") regionID = 0;
-  if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return false;
 
   if(!file::exists(firmware[regionID].location)) {
     errorFirmwareRequired(firmware[regionID]);
     return false;
   }
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("bios.rom", loadFirmware(firmware[regionID]));
+
+  if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return false;
 
   if(auto fastBoot = root->find<ares::Node::Setting::Boolean>("Fast Boot")) {
     fastBoot->setValue(settings.boot.fast);
@@ -49,23 +54,26 @@ auto PlayStation::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Memory Card Port 1")) {
-    port->allocate("Memory Card");
+  //port->allocate("Memory Card");
+  //port->connect();
+  }
+
+  if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
+    port->allocate("Digital Gamepad");
     port->connect();
   }
 
   return true;
 }
 
-auto PlayStation::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "bios.rom") {
-    return Emulator::loadFirmware(firmware[regionID]);
-  }
-  if(node->name() == "PlayStation") {
-    if(auto fp = pak->find(name)) return fp;
-  }
-  if(node->name() == "Memory Card") {
-    if(auto fp = Emulator::save(name, mode, "save.card", ".sav")) return fp;
-  }
+auto PlayStation::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto PlayStation::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "PlayStation") return game.pak;
   return {};
 }
 

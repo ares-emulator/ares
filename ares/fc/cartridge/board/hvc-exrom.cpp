@@ -132,13 +132,12 @@ struct HVC_ExROM : Interface {  //MMC5
     n1 line;
   };
 
-  auto load(Markup::Node document) -> void override {
+  auto load() -> void override {
     chipRevision = ChipRevision::MMC5A;
 
-    auto board = document["game/board"];
-    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
+    Interface::load(programROM, "program.rom");
+    Interface::load(programRAM, "save.ram");
+    Interface::load(characterROM, "character.rom");
     exram.allocate(1_KiB);
 
     stream = cartridge.node->append<Node::Audio::Stream>("MMC5");
@@ -146,9 +145,8 @@ struct HVC_ExROM : Interface {  //MMC5
     stream->setFrequency(u32(system.frequency() + 0.5) / cartridge.rate());
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
+  auto save() -> void override {
+    Interface::save(programRAM, "save.ram");
   }
 
   auto unload() -> void override {

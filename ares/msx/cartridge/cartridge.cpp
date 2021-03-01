@@ -13,14 +13,12 @@ auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto Cartridge::connect() -> void {
-  node->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-
-  if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
-
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
   information.region = document["game/region"].string();
@@ -35,21 +33,24 @@ auto Cartridge::connect() -> void {
   if(information.board == "SuperLodeRunner") board = new Board::SuperLodeRunner{*this};
   if(information.board == "SuperPierrot") board = new Board::SuperPierrot{*this};
   if(!board) board = new Board::Konami{*this};
-  board->load(document);
+  board->pak = pak;
+  board->load();
 
   power();
 }
 
 auto Cartridge::disconnect() -> void {
   if(!node) return;
-  if(board) board->unload(), board.reset();
+  if(board) board->unload();
+  board.reset();
+  pak.reset();
   node.reset();
 }
 
 auto Cartridge::save() -> void {
   if(!node) return;
   auto document = BML::unserialize(information.manifest);
-  board->save(document);
+  board->save();
 }
 
 auto Cartridge::main() -> void {

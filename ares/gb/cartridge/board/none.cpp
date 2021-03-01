@@ -1,10 +1,10 @@
 struct None : Interface {
   using Interface::Interface;
 
-  auto load(Markup::Node document) -> void override {
+  auto load() -> void override {
   }
 
-  auto save(Markup::Node document) -> void override {
+  auto save() -> void override {
   }
 
   auto unload() -> void override {

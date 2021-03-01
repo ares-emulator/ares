@@ -12,14 +12,12 @@ auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto Cartridge::connect() -> void {
-  node->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-
-  if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
-
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
   information.region = document["game/region"].string();
@@ -34,9 +32,10 @@ auto Cartridge::connect() -> void {
   if(information.board == "Arcade Card Duo") board = new Board::ArcadeCardDuo{*this};
   if(information.board == "Arcade Card Pro") board = new Board::ArcadeCardPro{*this};
   if(!board) board = new Board::Interface{*this};
-  board->load(document);
+  board->pak = pak;
+  board->load();
 
-  if(auto fp = platform->open(node, "backup.ram", File::Read)) {
+  if(auto fp = pak->read("backup.ram")) {
     pcd.bram.load(fp);
   }
 
@@ -46,16 +45,16 @@ auto Cartridge::connect() -> void {
 auto Cartridge::disconnect() -> void {
   if(!node || !board) return;
   board->unload();
-  board = {};
-  node = {};
+  board->pak.reset();
+  board.reset();
+  node.reset();
 }
 
 auto Cartridge::save() -> void {
   if(!node) return;
-  auto document = BML::unserialize(information.manifest);
-  board->save(document);
+  board->save();
 
-  if(auto fp = platform->open(node, "backup.ram", File::Write)) {
+  if(auto fp = pak->write("backup.ram")) {
     pcd.bram.save(fp);
   }
 }

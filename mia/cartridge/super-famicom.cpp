@@ -2,8 +2,8 @@ struct SuperFamicom : Cartridge {
   auto name() -> string override { return "Super Famicom"; }
   auto extensions() -> vector<string> override { return {"sfc", "smc", "swc", "fig"}; }
   auto read(string location) -> vector<u8> override;
-  auto pak(string location) -> shared_pointer<vfs::directory> override;
-  auto rom(string location) -> vector<u8> override;
+  auto load(string location) -> shared_pointer<vfs::directory> override;
+  auto save(string location, shared_pointer<vfs::directory> pak) -> bool override;
   auto heuristics(vector<u8>& data, string location) -> string override;
 
   auto region() const -> string;
@@ -61,37 +61,75 @@ auto SuperFamicom::read(string location) -> vector<u8> {
   return {};
 }
 
-auto SuperFamicom::pak(string location) -> shared_pointer<vfs::directory> {
-  if(auto pak = Media::pak(location)) return pak;
-  if(auto rom = SuperFamicom::read(location)) {
-    auto pak = shared_pointer{new vfs::directory};
-    auto manifest = Cartridge::manifest(rom, location);
-    auto document = BML::unserialize(manifest);
-    pak->append("manifest.bml", manifest);
-    array_view<u8> view{rom};
-    for(auto node : document.find("game/board/memory(type=ROM)")) {
-      string name;
-      if(auto architecture = node["architecture"].string()) name.append(architecture.downcase(), ".");
-      name.append(node["content"].string().downcase(), ".rom");
-      u32 size = node["size"].natural();
-      if(view.size() < size) break;  //missing firmware
-      pak->append(name, {view.data(), size});
-      view += size;
-    }
-    return pak;
+auto SuperFamicom::load(string location) -> shared_pointer<vfs::directory> {
+  vector<u8> rom;
+  if(directory::exists(location)) {
+    auto files = directory::files(location, "*.rom");
+    append(rom, {location, "program.rom"  });
+    append(rom, {location, "data.rom"     });
+    append(rom, {location, "expansion.rom"});
+    for(auto& file : files.match("*.program.rom")) append(rom, {location, file});
+    for(auto& file : files.match("*.data.rom"   )) append(rom, {location, file});
+    for(auto& file : files.match("*.boot.rom"   )) append(rom, {location, file});
+  } else if(file::exists(location)) {
+    rom = SuperFamicom::read(location);
+  } else {
+    return {};
   }
-  return {};
+
+  auto pak = shared_pointer{new vfs::directory};
+  auto manifest = Cartridge::manifest(rom, location);
+  auto document = BML::unserialize(manifest);
+  pak->append("manifest.bml", manifest);
+
+  array_view<u8> view{rom};
+  for(auto node : document.find("game/board/memory(type=ROM)")) {
+    string name;
+    if(auto architecture = node["architecture"].string()) name.append(architecture.downcase(), ".");
+    name.append(node["content"].string().downcase(), ".rom");
+    u32 size = node["size"].natural();
+    if(view.size() < size) break;  //missing firmware
+    pak->append(name, {view.data(), size});
+    view += size;
+  }
+
+  if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
+    Media::load(pak, location, node, ".ram");
+  }
+  if(auto node = document["game/board/memory(type=RAM,content=Download)"]) {
+    Media::load(pak, location, node, ".bsx");
+  }
+  if(auto node = document["game/board/memory(type=RTC,content=Time)"]) {
+    Media::load(pak, location, node, ".rtc");
+  }
+  if(auto node = document["game/board/memory(type=RAM,content=Data)"]) {
+    Media::load(pak, location, node, ".data");
+  }
+
+  return pak;
 }
 
-auto SuperFamicom::rom(string location) -> vector<u8> {
-  vector<u8> data;
-  auto files = directory::files(location, "*.rom");
-  append(data, {location, "program.rom"});
-  append(data, {location, "data.rom"   });
-  for(auto& file : files.match("*.program.rom")) append(data, {location, file});
-  for(auto& file : files.match("*.data.rom"   )) append(data, {location, file});
-  for(auto& file : files.match("*.boot.rom"   )) append(data, {location, file});
-  return data;
+auto SuperFamicom::save(string location, shared_pointer<vfs::directory> pak) -> bool {
+  auto fp = pak->read("manifest.bml");
+  if(!fp) return false;
+
+  auto manifest = fp->reads();
+  auto document = BML::unserialize(manifest);
+
+  if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
+    Media::save(pak, location, node, ".ram");
+  }
+  if(auto node = document["game/board/memory(type=RAM,content=Download)"]) {
+    Media::save(pak, location, node, ".bsx");
+  }
+  if(auto node = document["game/board/memory(type=RTC,content=Time)"]) {
+    Media::save(pak, location, node, ".rtc");
+  }
+  if(auto node = document["game/board/memory(type=RAM,content=Data)"]) {
+    Media::save(pak, location, node, ".data");
+  }
+
+  return true;
 }
 
 auto SuperFamicom::heuristics(vector<u8>& data, string location) -> string {

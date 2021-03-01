@@ -66,6 +66,7 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
 
   mi.load(node);
   vi.load(node);
@@ -111,6 +112,7 @@ auto System::unload() -> void {
   rsp.unload();
   cartridgeSlot.unload();
   dd.unload();
+  pak.reset();
   node.reset();
 }
 

@@ -14,7 +14,7 @@ auto PI::load(Node::Object parent) -> void {
 
   string iplrom = cartridge.region() == "NTSC" ? "pif.ntsc.rom" : "pif.pal.rom";
   iplrom = "pif.rom";
-  if(auto fp = platform->open(node, iplrom, File::Read, File::Required)) {
+  if(auto fp = system.pak->read(iplrom)) {
     rom.load(fp);
   }
 

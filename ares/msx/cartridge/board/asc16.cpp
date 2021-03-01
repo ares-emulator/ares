@@ -4,12 +4,11 @@ struct ASC16 : Interface {
   using Interface::Interface;
   Memory::Readable<n8> rom;
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
+  auto load() -> void override {
+    Interface::load(rom, "program.rom");
   }
 
-  auto save(Markup::Node document) -> void override {
+  auto save() -> void override {
   }
 
   auto unload() -> void override {

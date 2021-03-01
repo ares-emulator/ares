@@ -12,14 +12,12 @@ auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto Cartridge::connect() -> void {
-  node->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-
-  if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
-
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
 
@@ -30,7 +28,7 @@ auto Cartridge::connect() -> void {
     auto size = memory["size"].natural();
     flash[0].allocate(min(16_Mibit, size));
     flash[1].allocate(size >= 16_Mibit ? size - 16_Mibit : 0);
-    if(auto fp = platform->open(node, "program.flash", File::Read, File::Required)) {
+    if(auto fp = pak->read("program.flash")) {
       flash[0].load(fp);
       flash[1].load(fp);
     };
@@ -43,6 +41,7 @@ auto Cartridge::disconnect() -> void {
   if(!node) return;
   flash[0].reset(0);
   flash[1].reset(1);
+  pak.reset();
   node.reset();
 }
 
@@ -52,7 +51,7 @@ auto Cartridge::save() -> void {
 
   if(auto memory = document["game/board/memory(type=Flash,content=Program)"]) {
     if(flash[0].modified || flash[1].modified) {
-      if(auto fp = platform->open(node, "program.flash", File::Write)) {
+      if(auto fp = pak->write("program.flash")) {
         flash[0].save(fp);
         flash[1].save(fp);
       }

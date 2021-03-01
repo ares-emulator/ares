@@ -18,19 +18,17 @@ struct KonamiVRC5 : Interface {
   Memory::Writable<n8> characterRAM;
   Memory::Writable<n8> qtram;
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
-    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+  auto load() -> void override {
+    Interface::load(programROM, "program.rom");
+    Interface::load(programRAM, "save.ram");
+    Interface::load(characterROM, "character.rom");
+    Interface::load(characterRAM, "character.ram");
     qtram.allocate(2_KiB);
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
-    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+  auto save() -> void override {
+    Interface::save(programRAM, "save.ram");
+    Interface::save(characterRAM, "character.ram");
   }
 
   auto main() -> void override {

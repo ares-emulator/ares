@@ -5,18 +5,20 @@ namespace ares::MegaDrive {
 struct MegaDrive : Emulator {
   MegaDrive();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
 struct MegaCD : Emulator {
   MegaCD();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
+  Pak bios;
   u32 regionID = 0;
-  shared_pointer<vfs::directory> bios;
 };
 
 MegaDrive::MegaDrive() {
@@ -43,11 +45,13 @@ auto MegaDrive::load() -> bool {
   return true;
 }
 
-auto MegaDrive::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "Mega Drive") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram", ".sav")) return fp;
-  }
+auto MegaDrive::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto MegaDrive::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->name() == "Mega Drive") return game.pak;
   return {};
 }
 
@@ -92,11 +96,13 @@ auto MegaCD::load() -> bool {
   if(region == "PAL"   ) regionID = 2;
   if(region == "NTSC-J") regionID = 1;
   if(region == "NTSC-U") regionID = 0;
+
   if(!file::exists(firmware[regionID].location)) {
     errorFirmwareRequired(firmware[regionID]);
     return false;
   }
-  bios = mia::medium("Mega Drive")->pak(firmware[regionID].location);
+  bios.pak = mia::medium("Mega Drive")->load(firmware[regionID].location);
+
   if(!ares::MegaDrive::load(root, {"[Sega] ", system, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Expansion Port")) {
@@ -117,14 +123,14 @@ auto MegaCD::load() -> bool {
   return true;
 }
 
-auto MegaCD::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "Mega Drive") {
-    if(auto fp = bios->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "backup.ram", ".sav")) return fp;
-  }
-  if(node->name() == "Mega CD") {
-    if(auto fp = pak->find(name)) return fp;
-  }
+auto MegaCD::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto MegaCD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->name() == "Mega Drive") return bios.pak;
+  if(node->name() == "Mega CD") return game.pak;
   return {};
 }
 

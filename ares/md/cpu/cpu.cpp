@@ -93,7 +93,7 @@ auto CPU::power(bool reset) -> void {
   tmssEnable = false;
   if(system.tmss->value()) {
     tmss.allocate(2_KiB >> 1);
-    if(auto fp = platform->open(system.node, "tmss.rom", File::Read, File::Required)) {
+    if(auto fp = system.pak->read("tmss.rom")) {
       for(u32 address : range(tmss.size())) tmss.program(address, fp->readm(2));
       tmssEnable = true;
     }

@@ -6,15 +6,21 @@ namespace ares::Nintendo64 {
 struct Nintendo64 : Emulator {
   Nintendo64();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 struct Nintendo64DD : Emulator {
   Nintendo64DD();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system, bios;
 };
 
 Nintendo64::Nintendo64() {
@@ -24,6 +30,11 @@ Nintendo64::Nintendo64() {
 }
 
 auto Nintendo64::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("pif.rom",      {Resource::Nintendo64::PIF::ROM,  sizeof Resource::Nintendo64::PIF::ROM });
+  system.pak->append("pif.ntsc.rom", {Resource::Nintendo64::PIF::NTSC, sizeof Resource::Nintendo64::PIF::NTSC});
+  system.pak->append("pif.pal.rom",  {Resource::Nintendo64::PIF::PAL,  sizeof Resource::Nintendo64::PIF::PAL });
+
   ares::Nintendo64::option("Quality", settings.video.quality);
   ares::Nintendo64::option("Supersampling", settings.video.supersampling);
 
@@ -40,7 +51,7 @@ auto Nintendo64::load() -> bool {
     port->connect();
     if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
       auto document = BML::unserialize(game.manifest);
-      if(!document["game/board/memory(content=Save)"]) {
+      if(0 && !document["game/board/memory(content=Save)"]) {
         port->allocate("Controller Pak");
         port->connect();
       } else {
@@ -62,21 +73,14 @@ auto Nintendo64::load() -> bool {
   return true;
 }
 
-auto Nintendo64::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "PI") {
-    if(name == "pif.rom"     ) return vfs::memory::open({Resource::Nintendo64::PIF::ROM,  sizeof Resource::Nintendo64::PIF::ROM });
-    if(name == "pif.ntsc.rom") return vfs::memory::open({Resource::Nintendo64::PIF::NTSC, sizeof Resource::Nintendo64::PIF::NTSC});
-    if(name == "pif.pal.rom" ) return vfs::memory::open({Resource::Nintendo64::PIF::PAL,  sizeof Resource::Nintendo64::PIF::PAL });
-  }
-  if(node->name() == "Nintendo 64") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram",    ".sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.eeprom", ".sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.flash",  ".sav")) return fp;
-  }
-  if(node->name() == "Gamepad") {
-    if(auto fp = Emulator::save(name, mode, "save.pak",    ".pak")) return fp;
-  }
+auto Nintendo64::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto Nintendo64::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "Nintendo 64") return game.pak;
   return {};
 }
 
@@ -139,16 +143,23 @@ Nintendo64DD::Nintendo64DD() {
 }
 
 auto Nintendo64DD::load() -> bool {
-  ares::Nintendo64::option("Quality", settings.video.quality);
-  ares::Nintendo64::option("Supersampling", settings.video.supersampling);
-
-  auto region = Emulator::region();
-  if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64 (", region, ")"})) return false;
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("pif.rom",      {Resource::Nintendo64::PIF::ROM,  sizeof Resource::Nintendo64::PIF::ROM });
+  system.pak->append("pif.ntsc.rom", {Resource::Nintendo64::PIF::NTSC, sizeof Resource::Nintendo64::PIF::NTSC});
+  system.pak->append("pif.pal.rom",  {Resource::Nintendo64::PIF::PAL,  sizeof Resource::Nintendo64::PIF::PAL });
 
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
     return false;
   }
+  bios.pak = shared_pointer{new vfs::directory};
+  bios.pak->append("program.rom", loadFirmware(firmware[0]));
+
+  ares::Nintendo64::option("Quality", settings.video.quality);
+  ares::Nintendo64::option("Supersampling", settings.video.supersampling);
+
+  auto region = Emulator::region();
+  if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64 (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -163,14 +174,15 @@ auto Nintendo64DD::load() -> bool {
   return true;
 }
 
-auto Nintendo64DD::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "Disk Drive") {
-    if(auto fp = pak->find(name)) return fp;
-  }
+auto Nintendo64DD::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
 
-  if(node->name() == "Nintendo 64DD") {
-  }
-
+auto Nintendo64DD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "Nintendo 64") return bios.pak;
+  if(node->name() == "Nintendo 64DD") return game.pak;
   return {};
 }
 

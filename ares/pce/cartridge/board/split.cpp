@@ -2,17 +2,15 @@ struct Split : Interface {
   using Interface::Interface;
   Memory::Readable<n8> rom;
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
-
+  auto load() -> void override {
+    Interface::load(rom, "program.rom");
     //every licensed HuCard follows this format;
-    //but ideally the manifest should list two separate ROMs ...
+    //but ideally this should be two separate ROMs ...
     romAddress[0] = 0;
     romAddress[1] = bit::round(rom.size()) >> 1;
   }
 
-  auto save(Markup::Node document) -> void override {
+  auto save() -> void override {
   }
 
   auto unload() -> void override {

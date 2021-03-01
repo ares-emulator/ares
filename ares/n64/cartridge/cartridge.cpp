@@ -12,14 +12,12 @@ auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto Cartridge::connect() -> void {
-  node->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-
-  if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
-
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
   information.region = document["game/region"].string();
@@ -27,24 +25,24 @@ auto Cartridge::connect() -> void {
 
   if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
     rom.allocate(memory["size"].natural());
-    rom.load(platform->open(node, "program.rom", File::Read, File::Required));
+    rom.load(pak->read("program.rom"));
   } else {
     rom.allocate(16);
   }
 
   if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
     ram.allocate(memory["size"].natural());
-    ram.load(platform->open(node, "save.ram", File::Read));
+    ram.load(pak->read("save.ram"));
   }
 
   if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
     eeprom.allocate(memory["size"].natural());
-    eeprom.load(platform->open(node, "save.eeprom", File::Read));
+    eeprom.load(pak->read("save.eeprom"));
   }
 
   if(auto memory = document["game/board/memory(type=Flash,content=Save)"]) {
     flash.allocate(memory["size"].natural());
-    flash.load(platform->open(node, "save.flash", File::Read));
+    flash.load(pak->read("save.flash"));
   }
 
   power(false);
@@ -57,6 +55,7 @@ auto Cartridge::disconnect() -> void {
   ram.reset();
   eeprom.reset();
   flash.reset();
+  pak.reset();
   node.reset();
 }
 
@@ -65,15 +64,15 @@ auto Cartridge::save() -> void {
   auto document = BML::unserialize(information.manifest);
 
   if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
-    ram.save(platform->open(node, "save.ram", File::Write));
+    ram.save(pak->write("save.ram"));
   }
 
   if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    eeprom.save(platform->open(node, "save.ram", File::Write));
+    eeprom.save(pak->write("save.ram"));
   }
 
   if(auto memory = document["game/board/memory(type=Flash,content=Save)"]) {
-    flash.save(platform->open(node, "save.eeprom", File::Write));
+    flash.save(pak->write("save.eeprom"));
   }
 }
 

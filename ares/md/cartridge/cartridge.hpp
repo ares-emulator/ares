@@ -3,6 +3,7 @@ struct Cartridge;
 
 struct Cartridge {
   Node::Peripheral node;
+  Pak pak;
 
   auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }

@@ -190,10 +190,10 @@ auto Emulator::region() -> string {
 }
 
 auto Emulator::load(const string& location) -> bool {
-  pak = medium->pak(location);
   game.location = location;
   game.manifest = {};
-  if(auto fp = pak->find<vfs::file>("manifest.bml")) game.manifest = fp->reads();
+  game.pak = medium->load(location);
+  if(auto fp = game.pak->read("manifest.bml")) game.manifest = fp->reads();
   if(!game.manifest) return false;
 
   latch = {};
@@ -206,21 +206,6 @@ auto Emulator::load(const string& location) -> bool {
 
   root->power();
   return true;
-}
-
-auto Emulator::save(const string& name, vfs::file::mode mode, const string& match, const string& suffix, maybe<string> system, maybe<string> source) -> shared_pointer<vfs::file> {
-  if(!system) system = root->name();
-  if(!source) source = game.location;
-
-  if(name != match) return {};
-  if(!settings.paths.saves && directory::exists(*source)) {
-    //pak mode
-    return vfs::disk::open({*source, name}, mode);
-  } else {
-    //rom mode
-    auto location = locate(*source, suffix, settings.paths.saves, system);
-    return vfs::disk::open(location, mode);
-  }
 }
 
 auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::file> {
@@ -240,11 +225,7 @@ auto Emulator::unload() -> void {
   save();
   root->unload();
   root.reset();
-  pak.reset();
-}
-
-auto Emulator::save() -> void {
-  root->save();
+  game = {};
 }
 
 auto Emulator::refresh() -> void {

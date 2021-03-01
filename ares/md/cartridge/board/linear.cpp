@@ -4,17 +4,15 @@ struct Linear : Interface {
   Memory::Writable<n16> wram;
   Memory::Writable<n8 > bram;
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
-    Interface::load(wram, board["memory(type=RAM,content=Save)"]);
-    Interface::load(bram, board["memory(type=RAM,content=Save)"]);
+  auto load() -> void override {
+    Interface::load(rom, "program.rom");
+    Interface::load(wram, "save.ram");
+    Interface::load(bram, "save.ram");
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(wram, board["memory(type=RAM,content=Save)"]);
-    Interface::save(bram, board["memory(type=RAM,content=Save)"]);
+  auto save() -> void override {
+    Interface::save(wram, "save.ram");
+    Interface::save(bram, "save.ram");
   }
 
   auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {

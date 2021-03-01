@@ -1,34 +1,44 @@
 struct BSMemory : Cartridge {
   auto name() -> string override { return "BS Memory"; }
   auto extensions() -> vector<string> override { return {"bs"}; }
-  auto pak(string location) -> shared_pointer<vfs::directory> override;
-  auto rom(string location) -> vector<u8> override;
+  auto load(string location) -> shared_pointer<vfs::directory> override;
+  auto save(string location, shared_pointer<vfs::directory> pak) -> bool override;
   auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto BSMemory::pak(string location) -> shared_pointer<vfs::directory> {
-  if(auto pak = Media::pak(location)) return pak;
-  if(auto rom = Media::read(location)) {
-    auto pak = shared_pointer{new vfs::directory};
-    auto manifest = Cartridge::manifest(rom, location);
-    auto document = BML::unserialize(manifest);
-    pak->append("manifest.bml", manifest);
-    if(document["game/board/memory(type=ROM)"]) {
-      pak->append("program.rom", rom);
-    }
-    if(document["game/board/memory(type=Flash)"]) {
-      pak->append("program.flash", rom);
-    }
-    return pak;
+auto BSMemory::load(string location) -> shared_pointer<vfs::directory> {
+  vector<u8> rom;
+  if(directory::exists(location)) {
+    append(rom, {location, "program.rom"});
+    append(rom, {location, "program.flash"});
+  } else if(file::exists(location)) {
+    rom = Cartridge::read(location);
+  } else {
+    return {};
   }
-  return {};
+
+  auto pak = shared_pointer{new vfs::directory};
+  auto manifest = Cartridge::manifest(rom, location);
+  auto document = BML::unserialize(manifest);
+  pak->append("manifest.bml", manifest);
+
+  if(document["game/board/memory(type=ROM)"]) {
+    pak->append("program.rom", rom);
+  }
+  if(document["game/board/memory(type=Flash)"]) {
+    pak->append("program.flash", rom);
+  }
+  return pak;
 }
 
-auto BSMemory::rom(string location) -> vector<u8> {
-  vector<u8> data;
-  append(data, {location, "program.rom"});
-  append(data, {location, "program.flash"});
-  return data;
+auto BSMemory::save(string location, shared_pointer<vfs::directory> pak) -> bool {
+  auto fp = pak->read("manifest.bml");
+  if(!fp) return false;
+
+  auto manifest = fp->reads();
+  auto document = BML::unserialize(manifest);
+
+  return true;
 }
 
 auto BSMemory::heuristics(vector<u8>& data, string location) -> string {

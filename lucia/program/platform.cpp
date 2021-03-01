@@ -22,8 +22,8 @@ auto Program::detach(ares::Node::Object node) -> void {
   }
 }
 
-auto Program::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  return emulator->open(node, name, mode, required);
+auto Program::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  return emulator->pak(node);
 }
 
 auto Program::event(ares::Event event) -> void {

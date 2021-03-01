@@ -1,12 +1,13 @@
 namespace nall::vfs {
 
 struct file : node {
-  enum class mode  : u32 { read, write, modify, create };
-  enum class index : u32 { absolute, relative };
+  virtual auto readable() const -> bool { return true; }
+  virtual auto writable() const -> bool { return false; }
 
+  virtual auto data() const -> const u8* = 0;
   virtual auto size() const -> u64 = 0;
   virtual auto offset() const -> u64 = 0;
-  virtual auto resize(u64 size) -> void = 0;
+  virtual auto resize(u64 size) -> bool = 0;
 
   virtual auto seek(s64 offset, index = index::absolute) -> void = 0;
   virtual auto read() -> u8 = 0;

@@ -1,26 +1,58 @@
 struct GameBoyAdvance : Cartridge {
   auto name() -> string override { return "Game Boy Advance"; }
   auto extensions() -> vector<string> override { return {"gba"}; }
-  auto pak(string location) -> shared_pointer<vfs::directory> override;
-  auto rom(string location) -> vector<u8> override;
+  auto load(string location) -> shared_pointer<vfs::directory> override;
+  auto save(string location, shared_pointer<vfs::directory> pak) -> bool override;
   auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto GameBoyAdvance::pak(string location) -> shared_pointer<vfs::directory> {
-  if(auto pak = Media::pak(location)) return pak;
-  if(auto rom = Media::read(location)) {
-    auto pak = shared_pointer{new vfs::directory};
-    pak->append("manifest.bml", Cartridge::manifest(rom, location));
-    pak->append("program.rom",  rom);
-    return pak;
+auto GameBoyAdvance::load(string location) -> shared_pointer<vfs::directory> {
+  vector<u8> rom;
+  if(directory::exists(location)) {
+    append(rom, {location, "program.rom"});
+  } else if(file::exists(location)) {
+    rom = Cartridge::read(location);
+  } else {
+    return {};
   }
-  return {};
+
+  auto pak = shared_pointer{new vfs::directory};
+  auto manifest = Cartridge::manifest(rom, location);
+  auto document = BML::unserialize(manifest);
+  pak->append("manifest.bml", manifest);
+  pak->append("program.rom",  rom);
+
+  if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
+    Media::load(pak, location, node, ".ram");
+  }
+  if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
+    Media::load(pak, location, node, ".eeprom");
+  }
+  if(auto node = document["game/board/memory(type=Flash,content=Save)"]) {
+    Media::load(pak, location, node, ".flash");
+  }
+
+  return pak;
 }
 
-auto GameBoyAdvance::rom(string location) -> vector<u8> {
-  vector<u8> data;
-  append(data, {location, "program.rom"});
-  return data;
+auto GameBoyAdvance::save(string location, shared_pointer<vfs::directory> pak) -> bool {
+  auto fp = pak->read("manifest.bml");
+  if(!fp) return false;
+
+  auto manifest = fp->reads();
+  auto document = BML::unserialize(manifest);
+
+  if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
+    Media::save(pak, location, node, ".ram");
+  }
+  if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
+    Media::save(pak, location, node, ".eeprom");
+  }
+  if(auto node = document["game/board/memory(type=Flash,content=Save)"]) {
+    Media::save(pak, location, node, ".flash");
+  }
+
+  return true;
 }
 
 auto GameBoyAdvance::heuristics(vector<u8>& data, string location) -> string {

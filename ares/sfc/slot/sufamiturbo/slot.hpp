@@ -1,5 +1,6 @@
 struct SufamiTurboSlot {
   Node::Port port;
+  Pak pak;
   SufamiTurboCartridge cartridge;
 
   //slot.cpp

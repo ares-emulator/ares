@@ -5,7 +5,8 @@ namespace ares::Famicom {
 struct Famicom : Emulator {
   Famicom();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
@@ -13,9 +14,12 @@ struct FamicomDiskSystem : Emulator {
   FamicomDiskSystem();
   auto load(Menu) -> void override;
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
   auto notify(const string& message) -> void override;
+
+  Pak bios;
 };
 
 Famicom::Famicom() {
@@ -42,11 +46,13 @@ auto Famicom::load() -> bool {
   return true;
 }
 
-auto Famicom::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "Famicom") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram", ".sav")) return fp;
-  }
+auto Famicom::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto Famicom::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->name() == "Famicom") return game.pak;
   return {};
 }
 
@@ -87,22 +93,22 @@ auto FamicomDiskSystem::load(Menu menu) -> void {
   MenuRadioItem ejected{&diskMenu};
   ejected.setText("No Disk").onActivate([&] { emulator->notify("Ejected"); });
   group.append(ejected);
-  if(pak->count() < 2) return (void)ejected.setChecked();
+  if(game.pak->count() < 2) return (void)ejected.setChecked();
 
   MenuRadioItem disk1sideA{&diskMenu};
   disk1sideA.setText("Disk 1: Side A").onActivate([&] { emulator->notify("Disk 1: Side A"); });
   group.append(disk1sideA);
-  if(pak->count() < 3) return (void)disk1sideA.setChecked();
+  if(game.pak->count() < 3) return (void)disk1sideA.setChecked();
 
   MenuRadioItem disk1sideB{&diskMenu};
   disk1sideB.setText("Disk 1: Side B").onActivate([&] { emulator->notify("Disk 1: Side B"); });
   group.append(disk1sideB);
-  if(pak->count() < 4) return (void)disk1sideA.setChecked();
+  if(game.pak->count() < 4) return (void)disk1sideA.setChecked();
 
   MenuRadioItem disk2sideA{&diskMenu};
   disk2sideA.setText("Disk 2: Side A").onActivate([&] { emulator->notify("Disk 2: Side A"); });
   group.append(disk2sideA);
-  if(pak->count() < 5) return (void)disk1sideA.setChecked();
+  if(game.pak->count() < 5) return (void)disk1sideA.setChecked();
 
   MenuRadioItem disk2sideB{&diskMenu};
   disk2sideB.setText("Disk 2: Side B").onActivate([&] { emulator->notify("Disk 2: Side B"); });
@@ -111,12 +117,18 @@ auto FamicomDiskSystem::load(Menu menu) -> void {
 }
 
 auto FamicomDiskSystem::load() -> bool {
-  if(!ares::Famicom::load(root, "[Nintendo] Famicom (NTSC-J)")) return false;
-
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
     return false;
   }
+
+  bios.location = firmware[0].location;
+  bios.manifest = {};
+  bios.pak = mia::medium("Famicom")->load(bios.location);
+  if(auto fp = bios.pak->read("manifest.bml")) bios.manifest = fp->reads();
+  if(!bios.manifest) return false;
+
+  if(!ares::Famicom::load(root, "[Nintendo] Famicom (NTSC-J)")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -140,36 +152,14 @@ auto FamicomDiskSystem::load() -> bool {
   return true;
 }
 
-auto FamicomDiskSystem::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "Famicom") {
-    if(name == "manifest.bml") {
-      for(auto& media : mia::media) {
-        if(media->name() != "Famicom") continue;
-        if(auto cartridge = media.cast<mia::Cartridge>()) {
-          if(auto image = loadFirmware(firmware[0])) {
-            vector<u8> bios;
-            bios.resize(image->size());
-            image->read(bios);
-            auto manifest = cartridge->manifest(bios, firmware[0].location);
-            return vfs::memory::open(manifest);
-          }
-        }
-      }
-    }
+auto FamicomDiskSystem::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
 
-    if(name == "program.rom") {
-      return loadFirmware(firmware[0]);
-    }
-  }
-
-  if(node->name() == "Famicom Disk") {
-    if(auto fp = Emulator::save(name, mode, "disk1.sideA", ".disk1.sideA.sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "disk1.sideB", ".disk1.sideB.sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "disk2.sideA", ".disk2.sideA.sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "disk2.sideB", ".disk2.sideB.sav")) return fp;
-    if(auto fp = pak->find(name)) return fp;
-  }
-
+auto FamicomDiskSystem::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->name() == "Famicom") return bios.pak;
+  if(node->name() == "Famicom Disk") return game.pak;
   return {};
 }
 

@@ -16,16 +16,14 @@ struct cdrom : file {
     return {};
   }
 
-  auto size() const -> u64 override {
-    return _image.size();
-  }
+  auto writable() const -> bool override { return false; }
+  auto data() const -> const u8* override { return _image.data(); }
+  auto size() const -> u64 override { return _image.size(); }
+  auto offset() const -> u64 override { return _offset; }
 
-  auto offset() const -> u64 override {
-    return _offset;
-  }
-
-  auto resize(u64 size) -> void override {
+  auto resize(u64 size) -> bool override {
     //unsupported
+    return false;
   }
 
   auto seek(s64 offset, index mode) -> void override {

@@ -50,13 +50,12 @@ auto Disc::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto Disc::connect() -> void {
-  cd->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-  if(auto fp = platform->open(cd, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
-
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
   information.region = document["game/region"].string();
@@ -64,7 +63,7 @@ auto Disc::connect() -> void {
   information.executable = (bool)document["game/executable"];
 
   if(!executable()) {
-    fd = platform->open(cd, "cd.rom", File::Read, File::Required);
+    fd = pak->read("cd.rom");
     if(!fd) return disconnect();
 
     //read TOC (table of contents) from disc lead-in
@@ -82,6 +81,7 @@ auto Disc::connect() -> void {
 auto Disc::disconnect() -> void {
   fd.reset();
   cd.reset();
+  pak.reset();
   information = {};
 }
 

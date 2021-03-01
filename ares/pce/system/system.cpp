@@ -77,6 +77,7 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
 
   scheduler.reset();
   cpu.load(node);
@@ -103,7 +104,8 @@ auto System::unload() -> void {
   cartridgeSlot.unload();
   controllerPort.unload();
   if(PCD::Present()) pcd.unload();
-  node = {};
+  pak.reset();
+  node.reset();
 }
 
 auto System::power(bool reset) -> void {

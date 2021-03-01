@@ -5,17 +5,15 @@ struct KonamiSCC : Interface {
   Memory::Readable<n8> rom;
   Node::Audio::Stream stream;
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
-
+  auto load() -> void override {
+    Interface::load(rom, "program.rom");
     stream = cartridge.node->append<Node::Audio::Stream>("SCC");
     stream->setChannels(1);
     stream->setFrequency(system.colorburst() / 16.0);
     stream->addHighPassFilter(20.0, 1);
   }
 
-  auto save(Markup::Node document) -> void override {
+  auto save() -> void override {
   }
 
   auto unload() -> void override {

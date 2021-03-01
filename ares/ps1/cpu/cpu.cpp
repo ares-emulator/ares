@@ -124,7 +124,7 @@ auto CPU::instructionHook() -> void {
     if(!disc.cd || disc.audioCD()) {
       //todo: is it possible to fast boot into the BIOS menu here?
     } else if(disc.executable()) {
-      if(auto fp = platform->open(disc.node, "program.exe", File::Read, File::Required)) {
+      if(auto fp = disc.pak->read("program.exe")) {
         Memory::Readable exe;
         exe.allocate(fp->size());
         exe.load(fp);

@@ -1,3 +1,4 @@
+[[clang::optnone]]
 auto Z80::disassembleInstruction(maybe<n16> _pc) -> string {
   auto pc = _pc ? *_pc : r.pc;
   string s, output;
@@ -38,6 +39,7 @@ finish:
   return pad(output, -18L);
 }
 
+[[clang::optnone]]
 auto Z80::disassembleContext() -> string {
   string s;
 
@@ -96,6 +98,7 @@ auto Z80::disassembleContext() -> string {
 #define IHL string{"(", HL, displace(), ")"}
 #define ISP "(sp)"
 
+[[clang::optnone]]
 auto Z80::disassemble(n16 pc, n8 prefix, n8 code) -> string {
   auto byte = [&] {
     return bus->read(pc++);
@@ -379,6 +382,7 @@ auto Z80::disassemble(n16 pc, n8 prefix, n8 code) -> string {
   unreachable;
 }
 
+[[clang::optnone]]
 auto Z80::disassembleCB(n16 pc, n8 prefix, n8 code) -> string {
   auto byte = [&] {
     return bus->read(pc++);
@@ -668,6 +672,7 @@ auto Z80::disassembleCB(n16 pc, n8 prefix, n8 code) -> string {
   unreachable;
 }
 
+[[clang::optnone]]
 auto Z80::disassembleCBd(n16 pc, n8 prefix, i8 d, n8 code) -> string {
   auto displace = [&] {
     return d >= 0 ? string{"+$", hex(d, 2L)} : string{"-$", hex(-d, 2L)};
@@ -935,6 +940,7 @@ auto Z80::disassembleCBd(n16 pc, n8 prefix, i8 d, n8 code) -> string {
   unreachable;
 }
 
+[[clang::optnone]]
 auto Z80::disassembleED(n16 pc, n8 prefix, n8 code) -> string {
   auto byte = [&] {
     return bus->read(pc++);

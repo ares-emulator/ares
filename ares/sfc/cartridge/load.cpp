@@ -7,7 +7,7 @@ auto Cartridge::loadBoard(string board) -> Markup::Node {
   if(board.beginsWith("EA-"  )) board.replace("EA-",   "SHVC-", 1L);
   if(board.beginsWith("WEI-" )) board.replace("WEI-",  "SHVC-", 1L);
 
-  if(auto fp = platform->open(system.node, "boards.bml", File::Read, File::Required)) {
+  if(auto fp = system.pak->read("boards.bml")) {
     auto document = BML::unserialize(fp->reads());
     for(auto leaf : document.find("board")) {
       auto id = leaf.text();
@@ -68,7 +68,7 @@ auto Cartridge::loadCartridge(Markup::Node node) -> void {
   if(auto node = board["processor(identifier=SDD1)"]) loadSDD1(node);
   if(auto node = board["processor(identifier=OBC1)"]) loadOBC1(node);
 
-  if(auto fp = platform->open(Cartridge::node, "msu1/data.rom", File::Read)) loadMSU1();
+  if(auto fp = pak->read("msu1.data.rom")) loadMSU1();
 
   debugger.memory.rom->setSize(rom.size());
   debugger.memory.ram->setSize(ram.size());
@@ -84,7 +84,7 @@ auto Cartridge::loadMemory(AbstractMemory& ram, Markup::Node node, bool required
     string name{memory["content"].text(), ".", memory["type"].text()};
     if(auto architecture = memory["architecture"].text()) name.prepend(architecture, ".");
     name.downcase();
-    if(auto fp = platform->open(Cartridge::node, name, File::Read, required)) {
+    if(auto fp = pak->read(name)) {
       fp->read({ram.data(), min(fp->size(), ram.size())});
     }
   }
@@ -112,13 +112,13 @@ auto Cartridge::loadMap(
 
 //memory(type=ROM,content=Program)
 auto Cartridge::loadROM(Markup::Node node) -> void {
-  loadMemory(rom, node, File::Required);
+  loadMemory(rom, node, vfs::required);
   for(auto leaf : node.find("map")) loadMap(leaf, rom);
 }
 
 //memory(type=RAM,content=Save)
 auto Cartridge::loadRAM(Markup::Node node) -> void {
-  loadMemory(ram, node, File::Optional);
+  loadMemory(ram, node, vfs::optional);
   for(auto leaf : node.find("map")) loadMap(leaf, ram);
 }
 
@@ -153,10 +153,10 @@ auto Cartridge::loadMCC(Markup::Node node) -> void {
       loadMap(map, {&MCC::mcuRead, &mcc}, {&MCC::mcuWrite, &mcc});
     }
     if(auto memory = mcu["memory(type=ROM,content=Program)"]) {
-      loadMemory(mcc.rom, memory, File::Required);
+      loadMemory(mcc.rom, memory, vfs::required);
     }
     if(auto memory = mcu["memory(type=RAM,content=Download)"]) {
-      loadMemory(mcc.psram, memory, File::Optional);
+      loadMemory(mcc.psram, memory, vfs::optional);
     }
     if(auto slot = mcu["slot(type=BSMemory)"]) {
       loadBSMemory(slot);
@@ -227,16 +227,16 @@ auto Cartridge::loadCompetition(Markup::Node node) -> void {
       loadMap(map, {&Competition::mcuRead, &competition}, {&Competition::mcuWrite, &competition});
     }
     if(auto memory = mcu["memory(type=ROM,content=Program)"]) {
-      loadMemory(competition.rom[0], memory, File::Required);
+      loadMemory(competition.rom[0], memory, vfs::required);
     }
     if(auto memory = mcu["memory(type=ROM,content=Level-1)"]) {
-      loadMemory(competition.rom[1], memory, File::Required);
+      loadMemory(competition.rom[1], memory, vfs::required);
     }
     if(auto memory = mcu["memory(type=ROM,content=Level-2)"]) {
-      loadMemory(competition.rom[2], memory, File::Required);
+      loadMemory(competition.rom[2], memory, vfs::required);
     }
     if(auto memory = mcu["memory(type=ROM,content=Level-3)"]) {
-      loadMemory(competition.rom[3], memory, File::Required);
+      loadMemory(competition.rom[3], memory, vfs::required);
     }
   }
 }
@@ -254,7 +254,7 @@ auto Cartridge::loadSA1(Markup::Node node) -> void {
       loadMap(map, {&SA1::ROM::readCPU, &sa1.rom}, {&SA1::ROM::writeCPU, &sa1.rom});
     }
     if(auto memory = mcu["memory(type=ROM,content=Program)"]) {
-      loadMemory(sa1.rom, memory, File::Required);
+      loadMemory(sa1.rom, memory, vfs::required);
     }
     if(auto slot = mcu["slot(type=BSMemory)"]) {
       loadBSMemory(slot);
@@ -262,14 +262,14 @@ auto Cartridge::loadSA1(Markup::Node node) -> void {
   }
 
   if(auto memory = node["memory(type=RAM,content=Save)"]) {
-    loadMemory(sa1.bwram, memory, File::Optional);
+    loadMemory(sa1.bwram, memory, vfs::optional);
     for(auto map : memory.find("map")) {
       loadMap(map, {&SA1::BWRAM::readCPU, &sa1.bwram}, {&SA1::BWRAM::writeCPU, &sa1.bwram});
     }
   }
 
   if(auto memory = node["memory(type=RAM,content=Internal)"]) {
-    loadMemory(sa1.iram, memory, File::Optional);
+    loadMemory(sa1.iram, memory, vfs::optional);
     for(auto map : memory.find("map")) {
       loadMap(map, {&SA1::IRAM::readCPU, &sa1.iram}, {&SA1::IRAM::writeCPU, &sa1.iram});
     }
@@ -291,21 +291,21 @@ auto Cartridge::loadSuperFX(Markup::Node node) -> void {
   }
 
   if(auto memory = node["memory(type=ROM,content=Program)"]) {
-    loadMemory(superfx.rom, memory, File::Required);
+    loadMemory(superfx.rom, memory, vfs::required);
     for(auto map : memory.find("map")) {
       loadMap(map, superfx.cpurom);
     }
   }
 
   if(auto memory = node["memory(type=RAM,content=Save)"]) {
-    loadMemory(superfx.ram, memory, File::Optional);
+    loadMemory(superfx.ram, memory, vfs::optional);
     for(auto map : memory.find("map")) {
       loadMap(map, superfx.cpuram);
     }
   }
 
   if(auto memory = node["memory(type=RAM,content=Backup)"]) {
-    loadMemory(superfx.bram, memory, File::Optional);
+    loadMemory(superfx.bram, memory, vfs::optional);
     for(auto map : memory.find("map")) {
       loadMap(map, superfx.cpubram);
     }
@@ -330,22 +330,16 @@ auto Cartridge::loadARMDSP(Markup::Node node) -> void {
     loadMap(map, {&ARMDSP::read, &armdsp}, {&ARMDSP::write, &armdsp});
   }
 
-  if(auto memory = node["memory(type=ROM,content=Program,architecture=ARM6)"]) {
-    if(auto fp = platform->open(Cartridge::node, "arm6.program.rom", File::Read, File::Required)) {
-      for(u32 n : range(128 * 1024)) armdsp.programROM[n] = fp->read();
-    }
+  if(auto fp = pak->read("arm6.program.rom")) {
+    for(u32 n : range(128 * 1024)) armdsp.programROM[n] = fp->read();
   }
 
-  if(auto memory = node["memory(type=ROM,content=Data,architecture=ARM6)"]) {
-    if(auto fp = platform->open(Cartridge::node, "arm6.data.rom", File::Read, File::Required)) {
-      for(u32 n : range(32 * 1024)) armdsp.dataROM[n] = fp->read();
-    }
+  if(auto fp = pak->read("arm6.data.rom")) {
+    for(u32 n : range(32 * 1024)) armdsp.dataROM[n] = fp->read();
   }
 
-  if(auto memory = node["memory(type=RAM,content=Data,architecture=ARM6)"]) {
-    if(auto fp = platform->open(Cartridge::node, "arm6.data.ram", File::Read)) {
-      for(u32 n : range(16 * 1024)) armdsp.programRAM[n] = fp->read();
-    }
+  if(auto fp = pak->read("arm6.data.ram")) {
+    for(u32 n : range(16 * 1024)) armdsp.programRAM[n] = fp->read();
   }
 }
 
@@ -369,27 +363,25 @@ auto Cartridge::loadHitachiDSP(Markup::Node node, n32 roms) -> void {
   }
 
   if(auto memory = node["memory(type=ROM,content=Program)"]) {
-    loadMemory(hitachidsp.rom, memory, File::Required);
+    loadMemory(hitachidsp.rom, memory, vfs::required);
     for(auto map : memory.find("map")) {
       loadMap(map, {&HitachiDSP::readROM, &hitachidsp}, {&HitachiDSP::writeROM, &hitachidsp});
     }
   }
 
   if(auto memory = node["memory(type=RAM,content=Save)"]) {
-    loadMemory(hitachidsp.ram, memory, File::Optional);
+    loadMemory(hitachidsp.ram, memory, vfs::optional);
     for(auto map : memory.find("map")) {
       loadMap(map, {&HitachiDSP::readRAM, &hitachidsp}, {&HitachiDSP::writeRAM, &hitachidsp});
     }
   }
 
-  if(auto memory = node["memory(type=ROM,content=Data,architecture=HG51BS169)"]) {
-    if(auto fp = platform->open(Cartridge::node, "hg51bs169.data.rom", File::Read, File::Required)) {
-      for(u32 n : range(1 * 1024)) hitachidsp.dataROM[n] = fp->readl(3);
-    }
+  if(auto fp = pak->read("hg51bs169.data.rom")) {
+    for(u32 n : range(1 * 1024)) hitachidsp.dataROM[n] = fp->readl(3);
   }
 
   if(auto memory = node["memory(type=RAM,content=Data,architecture=HG51BS169)"]) {
-    if(auto fp = platform->open(Cartridge::node, "hg51bs169.data.ram", File::Read)) {
+    if(auto fp = pak->read("hg51bs169.data.ram")) {
       for(u32 n : range(3 * 1024)) hitachidsp.dataRAM[n] = fp->readl(1);
     }
     for(auto map : memory.find("map")) {
@@ -417,20 +409,16 @@ auto Cartridge::loaduPD7725(Markup::Node node) -> void {
     loadMap(map, {&NECDSP::read, &necdsp}, {&NECDSP::write, &necdsp});
   }
 
-  if(auto memory = node["memory(type=ROM,content=Program,architecture=uPD7725)"]) {
-    if(auto fp = platform->open(Cartridge::node, "upd7725.program.rom", File::Read, File::Required)) {
-      for(u32 n : range(2048)) necdsp.programROM[n] = fp->readl(3);
-    }
+  if(auto fp = pak->read("upd7725.program.rom")) {
+    for(u32 n : range(2048)) necdsp.programROM[n] = fp->readl(3);
   }
 
-  if(auto memory = node["memory(type=ROM,content=Data,architecture=uPD7725)"]) {
-    if(auto fp = platform->open(Cartridge::node, "upd7725.data.rom", File::Read, File::Required)) {
-      for(u32 n : range(1024)) necdsp.dataROM[n] = fp->readl(2);
-    }
+  if(auto fp = pak->read("upd7725.data.rom")) {
+    for(u32 n : range(1024)) necdsp.dataROM[n] = fp->readl(2);
   }
 
   if(auto memory = node["memory(type=RAM,content=Data,architecture=uPD7725)"]) {
-    if(auto fp = platform->open(Cartridge::node, "upd7725.data.ram", File::Read)) {
+    if(auto fp = pak->read("upd7725.data.ram")) {
       for(u32 n : range(256)) necdsp.dataRAM[n] = fp->readl(2);
     }
     for(auto map : memory.find("map")) {
@@ -458,20 +446,16 @@ auto Cartridge::loaduPD96050(Markup::Node node) -> void {
     loadMap(map, {&NECDSP::read, &necdsp}, {&NECDSP::write, &necdsp});
   }
 
-  if(auto memory = node["memory(type=ROM,content=Program,architecture=uPD96050)"]) {
-    if(auto fp = platform->open(Cartridge::node, "upd96050.program.rom", File::Read, File::Required)) {
-      for(u32 n : range(16384)) necdsp.programROM[n] = fp->readl(3);
-    }
+  if(auto fp = pak->read("upd96050.program.rom")) {
+    for(u32 n : range(16384)) necdsp.programROM[n] = fp->readl(3);
   }
 
-  if(auto memory = node["memory(type=ROM,content=Data,architecture=uPD96050)"]) {
-    if(auto fp = platform->open(Cartridge::node, "upd96050.data.rom", File::Read, File::Required)) {
-      for(u32 n : range(2048)) necdsp.dataROM[n] = fp->readl(2);
-    }
+  if(auto fp = pak->read("upd96050.data.rom")) {
+    for(u32 n : range(2048)) necdsp.dataROM[n] = fp->readl(2);
   }
 
   if(auto memory = node["memory(type=RAM,content=Data,architecture=uPD96050)"]) {
-    if(auto fp = platform->open(Cartridge::node, "upd96050.data.ram", File::Read)) {
+    if(auto fp = pak->read("upd96050.data.ram")) {
       for(u32 n : range(2048)) necdsp.dataRAM[n] = fp->readl(2);
     }
     for(auto map : memory.find("map")) {
@@ -490,12 +474,10 @@ auto Cartridge::loadEpsonRTC(Markup::Node node) -> void {
     loadMap(map, {&EpsonRTC::read, &epsonrtc}, {&EpsonRTC::write, &epsonrtc});
   }
 
-  if(auto memory = node["memory(type=RTC,content=Time,manufacturer=Epson)"]) {
-    if(auto fp = platform->open(Cartridge::node, "epson.time.rtc", File::Read)) {
-      n8 data[16];
-      for(auto& byte : data) byte = fp->read();
-      epsonrtc.load(data);
-    }
+  if(auto fp = pak->read("time.rtc")) {
+    n8 data[16];
+    for(auto& byte : data) byte = fp->read();
+    epsonrtc.load(data);
   }
 }
 
@@ -509,12 +491,10 @@ auto Cartridge::loadSharpRTC(Markup::Node node) -> void {
     loadMap(map, {&SharpRTC::read, &sharprtc}, {&SharpRTC::write, &sharprtc});
   }
 
-  if(auto memory = node["memory(type=RTC,content=Time,manufacturer=Sharp)"]) {
-    if(auto fp = platform->open(Cartridge::node, "sharp.time.rtc", File::Read)) {
-      n8 data[16];
-      for(auto& byte : data) byte = fp->read();
-      sharprtc.load(data);
-    }
+  if(auto fp = pak->read("time.rtc")) {
+    n8 data[16];
+    for(auto& byte : data) byte = fp->read();
+    sharprtc.load(data);
   }
 }
 
@@ -531,15 +511,15 @@ auto Cartridge::loadSPC7110(Markup::Node node) -> void {
       loadMap(map, {&SPC7110::mcuromRead, &spc7110}, {&SPC7110::mcuromWrite, &spc7110});
     }
     if(auto memory = mcu["memory(type=ROM,content=Program)"]) {
-      loadMemory(spc7110.prom, memory, File::Required);
+      loadMemory(spc7110.prom, memory, vfs::required);
     }
     if(auto memory = mcu["memory(type=ROM,content=Data)"]) {
-      loadMemory(spc7110.drom, memory, File::Required);
+      loadMemory(spc7110.drom, memory, vfs::required);
     }
   }
 
   if(auto memory = node["memory(type=RAM,content=Save)"]) {
-    loadMemory(spc7110.ram, memory, File::Optional);
+    loadMemory(spc7110.ram, memory, vfs::optional);
     for(auto map : memory.find("map")) {
       loadMap(map, {&SPC7110::mcuramRead, &spc7110}, {&SPC7110::mcuramWrite, &spc7110});
     }
@@ -559,7 +539,7 @@ auto Cartridge::loadSDD1(Markup::Node node) -> void {
       loadMap(map, {&SDD1::mcuRead, &sdd1}, {&SDD1::mcuWrite, &sdd1});
     }
     if(auto memory = mcu["memory(type=ROM,content=Program)"]) {
-      loadMemory(sdd1.rom, memory, File::Required);
+      loadMemory(sdd1.rom, memory, vfs::required);
     }
   }
 }
@@ -573,11 +553,11 @@ auto Cartridge::loadOBC1(Markup::Node node) -> void {
   }
 
   if(auto memory = node["memory(type=RAM,content=Save)"]) {
-    loadMemory(obc1.ram, memory, File::Optional);
+    loadMemory(obc1.ram, memory, vfs::optional);
   }
 }
 
-//file::exists("msu1/data.rom")
+//file::exists("msu1.data.rom")
 auto Cartridge::loadMSU1() -> void {
   has.MSU1 = true;
 

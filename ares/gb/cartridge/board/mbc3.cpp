@@ -7,12 +7,11 @@ struct MBC3 : Interface {
   //MBC3  supports 128 ROM banks (2MB) and 4 RAM banks (32KB)
   //MBC30 supports 256 ROM banks (4MB) and 8 RAM banks (64KB)
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    MBC30 = board.string() == "MBC30";
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
-    Interface::load(ram, board["memory(type=RAM,content=Save)"]);
-    Interface::load(rtc, board["memory(type=RTC,content=Time)"]);
+  auto load() -> void override {
+    MBC30 = pak->attribute("board") == "MBC30";
+    Interface::load(rom, "program.rom");
+    Interface::load(ram, "save.ram");
+    Interface::load(rtc, "time.rtc");
 
     if(rtc.size() == 13) {
       io.rtc.second       = rtc[0];
@@ -37,10 +36,9 @@ struct MBC3 : Interface {
     }
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(ram, board["memory(type=RAM,content=Save)"]);
-    Interface::save(rtc, board["memory(type=RTC,content=Time)"]);
+  auto save() -> void override {
+    Interface::save(ram, "save.ram");
+    Interface::save(rtc, "time.rtc");
 
     if(rtc.size() == 13) {
       rtc[0] = io.rtc.second;

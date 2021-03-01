@@ -38,7 +38,7 @@ auto MCD::load(Node::Object parent) -> void {
   cdc.ram.allocate( 16_KiB >> 1);
 
   if(expansion.node) {
-    if(auto fp = platform->open(expansion.node, "backup.ram", File::Read)) {
+    if(auto fp = expansion.pak->read("backup.ram")) {
       bram.load(fp);
     }
   }
@@ -53,7 +53,7 @@ auto MCD::unload() -> void {
   disconnect();
 
   if(expansion.node) {
-    if(auto fp = platform->open(expansion.node, "backup.ram", File::Write)) {
+    if(auto fp = expansion.pak->write("backup.ram")) {
       bram.save(fp);
     }
   }
@@ -77,25 +77,25 @@ auto MCD::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto MCD::connect() -> void {
-  disc->setManifest([&] { return information.manifest; });
+  if(!disc->setPak(pak = platform->pak(node))) return;
 
   information = {};
-  if(auto fp = platform->open(disc, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
-
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
 
-  fd = platform->open(disc, "cd.rom", File::Read, File::Required);
+  fd = pak->read("cd.rom");
   cdd.insert();
 }
 
 auto MCD::disconnect() -> void {
   if(!disc) return;
   cdd.eject();
-  disc = {};
-  fd = {};
+  disc.reset();
+  fd.reset();
+  pak.reset();
   information = {};
 }
 
@@ -175,7 +175,7 @@ auto MCD::wait(u32 clocks) -> void {
 }
 
 auto MCD::power(bool reset) -> void {
-  if(auto fp = platform->open(expansion.node, "program.rom", File::Read, File::Required)) {
+  if(auto fp = expansion.pak->read("program.rom")) {
     for(u32 address : range(bios.size())) bios.program(address, fp->readm(2));
   }
 

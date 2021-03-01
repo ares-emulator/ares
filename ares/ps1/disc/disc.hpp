@@ -4,6 +4,7 @@ struct Disc : Thread, Memory::Interface {
   Node::Peripheral cd;
   Shared::File fd;
   CD::Session session;
+  Pak pak;
 
   struct Debugger {
     //debugger.cpp

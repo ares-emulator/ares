@@ -16,13 +16,13 @@ S21FX::S21FX(Node::Port parent) {
   ram[1] = 0xfc;
   ram[2] = 0xff;
 
-  if(auto fp = platform->open(node, "21fx.rom", File::Read, File::Required)) {
+  if(auto fp = cartridge.pak->read("21fx.rom")) {
     fp->read({ram, sizeof(ram)});
   }
 
   //dynamic libraries can only be loaded via filename ...
   //there's not really much choice but to copy the library to a temporary directory here
-  if(auto fp = platform->open(node, "21fx.so", File::Read, File::Required)) {
+  if(auto fp = cartridge.pak->read("21fx.so")) {
     if(auto buffer = file::open({Path::temporary(), "21fx.so"}, file::mode::write)) {
       for(u32 index : range(fp->size())) buffer.write(fp->read());
     }

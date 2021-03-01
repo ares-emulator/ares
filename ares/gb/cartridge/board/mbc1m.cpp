@@ -4,15 +4,13 @@ struct MBC1M : Interface {
   Memory::Readable<n8> rom;
   Memory::Writable<n8> ram;
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
-    Interface::load(ram, board["memory(type=RAM,content=Save)"]);
+  auto load() -> void override {
+    Interface::load(rom, "program.rom");
+    Interface::load(ram, "save.ram");
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(ram, board["memory(type=RAM,content=Save)"]);
+  auto save() -> void override {
+    Interface::save(ram, "save.ram");
   }
 
   auto unload() -> void override {

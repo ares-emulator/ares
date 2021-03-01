@@ -9,7 +9,7 @@ APU apu;
 
 auto APU::load(Node::Object parent) -> void {
   ram.allocate(4_KiB, 0x00);
-  if(auto fp = platform->open(system.node, "apu.ram", File::Read)) {
+  if(auto fp = system.pak->read("apu.ram")) {
     ram.load(fp);
   }
 
@@ -19,14 +19,14 @@ auto APU::load(Node::Object parent) -> void {
 }
 
 auto APU::save() -> void {
-  if(auto fp = platform->open(system.node, "apu.ram", File::Write)) {
+  if(auto fp = system.pak->write("apu.ram")) {
     ram.save(fp);
   }
 }
 
 auto APU::unload() -> void {
   ram.reset();
-  node = {};
+  node.reset();
   debugger = {};
 }
 

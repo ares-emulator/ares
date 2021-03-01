@@ -11,17 +11,15 @@ auto Expansion::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto Expansion::connect() -> void {
-  node->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-
-  if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
-
   auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].text();
-  information.regions = document["game/region"].text().split(",").strip();
+  information.name = document["game/label"].string();
+  information.regions = document["game/region"].string().split(",").strip();
 
   mcd.load(node);
 
@@ -30,7 +28,8 @@ auto Expansion::connect() -> void {
 
 auto Expansion::disconnect() -> void {
   if(!node) return;
-  node = {};
+  pak.reset();
+  node.reset();
 }
 
 auto Expansion::save() -> void {

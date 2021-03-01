@@ -4,16 +4,13 @@ struct LockOn : Interface {
   Memory::Readable<n16> patch;
   CartridgeSlot slot{"Cartridge Slot"};
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
-    Interface::load(patch, board["memory(type=ROM,content=Patch)"]);
-
+  auto load() -> void override {
+    Interface::load(rom, "program.rom");
+    Interface::load(patch, "patch.rom");
     slot.load(cartridge->node);
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
+  auto save() -> void override {
   }
 
   auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {

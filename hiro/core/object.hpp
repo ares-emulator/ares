@@ -50,6 +50,13 @@ struct mObject {
     return {};
   }
 
+  template<typename T = string> auto hasAttribute(const string& name) const -> bool {
+    if(auto attribute = state.attributes.find(name)) {
+      if(attribute->value().is<T>()) return true;
+    }
+    return false;
+  }
+
   //this template basically disables implicit template type deduction:
   //if setAttribute(name, value) is called without a type, the type will be a string, so attribute(name) will just work.
   //if setAttribute<T>(name, value) is called, the type will be T. as such, U must be cast to T on assignment.

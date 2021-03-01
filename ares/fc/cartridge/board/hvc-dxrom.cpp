@@ -18,15 +18,14 @@ struct HVC_DxROM : Interface {
 
   HVC_DxROM(Revision revision) : revision(revision) {}
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
-    Interface::load(characterCIRAM, board["memory(type=RAM,content=Character)"]);
+  auto load() -> void override {
+    Interface::load(programROM, "program.rom");
+    Interface::load(characterROM, "character.rom");
+    Interface::load(characterCIRAM, "character.ram");
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
+  auto save() -> void override {
+    Interface::save(characterCIRAM, "character.ram");
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {

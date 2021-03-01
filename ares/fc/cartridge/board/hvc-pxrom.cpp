@@ -17,18 +17,16 @@ struct HVC_PxROM : Interface {  //MMC2
 
   HVC_PxROM(Revision revision) : revision(revision) {}
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(programROM, board["memory(type=ROM,content=Program)"]);
-    Interface::load(programRAM, board["memory(type=RAM,content=Save)"]);
-    Interface::load(characterROM, board["memory(type=ROM,content=Character)"]);
-    Interface::load(characterRAM, board["memory(type=RAM,content=Character)"]);
+  auto load() -> void override {
+    Interface::load(programROM, "program.rom");
+    Interface::load(programRAM, "save.ram");
+    Interface::load(characterROM, "character.rom");
+    Interface::load(characterRAM, "character.ram");
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::save(programRAM, board["memory(type=RAM,content=Save)"]);
-    Interface::save(characterRAM, board["memory(type=RAM,content=Character)"]);
+  auto save() -> void override {
+    Interface::save(programRAM, "save.ram");
+    Interface::save(characterRAM, "character.ram");
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {

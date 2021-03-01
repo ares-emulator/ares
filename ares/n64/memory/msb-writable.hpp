@@ -35,7 +35,6 @@ struct Writable {
 
   auto load(Shared::File fp) -> void {
     if(!fp) return;
-    fp->seek(0);
     for(u32 address = 0; address < min(size, fp->size()); address += 4) {
       *(u32*)&data[address & maskWord] = bswap32(fp->readm(4L));
     }
@@ -43,7 +42,6 @@ struct Writable {
 
   auto save(Shared::File fp) -> void {
     if(!fp) return;
-    fp->seek(0);
     for(u32 address = 0; address < size; address += 4) {
       fp->writem(bswap32(*(u32*)&data[address & maskWord]), 4L);
     }

@@ -17,7 +17,7 @@ CPU cpu;
 auto CPU::load(Node::Object parent) -> void {
   ram.allocate(12_KiB, 0x00);
 
-  if(auto fp = platform->open(system.node, "cpu.ram", File::Read)) {
+  if(auto fp = system.pak->read("cpu.ram")) {
     ram.load(fp);
 
     //hack: the BIOS checks (0x6c14) to determine if the setup menu needs to be executed.
@@ -52,14 +52,14 @@ auto CPU::load(Node::Object parent) -> void {
 }
 
 auto CPU::save() -> void {
-  if(auto fp = platform->open(system.node, "cpu.ram", File::Write)) {
+  if(auto fp = system.pak->read("cpu.ram")) {
     ram.save(fp);
   }
 }
 
 auto CPU::unload() -> void {
   ram.reset();
-  node = {};
+  node.reset();
   debugger = {};
 }
 

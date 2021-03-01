@@ -1,7 +1,7 @@
 struct Cartridge {
   Node::Peripheral node;
+  Pak pak;
 
-  auto manifest() const -> string { return information.manifest; }
   auto name() const -> string { return information.name; }
   auto region() const -> string { return information.region; }
 
@@ -18,7 +18,6 @@ struct Cartridge {
 
 //private:
   struct Information {
-    string manifest;
     string name;
     string region;
   } information;

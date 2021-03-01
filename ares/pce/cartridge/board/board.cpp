@@ -10,34 +10,26 @@ namespace Board {
 #include "arcade-card-pro.cpp"
 #include "debugger.cpp"
 
-auto Interface::load(Memory::Readable<n8>& memory, Markup::Node node) -> bool {
-  if(!node) return false;
-  memory.allocate(node["size"].natural());
-  auto name = string{node["content"].string(), ".", node["type"].string()}.downcase();
-  if(auto fp = platform->open(cartridge.node, name, File::Read, File::Required)) {
+auto Interface::load(Memory::Readable<n8>& memory, string name) -> bool {
+  if(auto fp = pak->read(name)) {
+    memory.allocate(fp->size());
     memory.load(fp);
     return true;
   }
   return false;
 }
 
-auto Interface::load(Memory::Writable<n8>& memory, Markup::Node node) -> bool {
-  if(!node) return false;
-  memory.allocate(node["size"].natural());
-  if(node["volatile"]) return true;
-  auto name = string{node["content"].string(), ".", node["type"].string()}.downcase();
-  if(auto fp = platform->open(cartridge.node, name, File::Read)) {
+auto Interface::load(Memory::Writable<n8>& memory, string name) -> bool {
+  if(auto fp = pak->read(name)) {
+    memory.allocate(fp->size());
     memory.load(fp);
     return true;
   }
   return false;
 }
 
-auto Interface::save(Memory::Writable<n8>& memory, Markup::Node node) -> bool {
-  if(!node) return false;
-  if(node["volatile"]) return true;
-  auto name = string{node["content"].string(), ".", node["type"].string()}.downcase();
-  if(auto fp = platform->open(cartridge.node, name, File::Write)) {
+auto Interface::save(Memory::Writable<n8>& memory, string name) -> bool {
+  if(auto fp = pak->write(name)) {
     memory.save(fp);
     return true;
   }

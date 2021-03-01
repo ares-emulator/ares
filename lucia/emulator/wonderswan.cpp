@@ -6,24 +6,33 @@ struct WonderSwan : Emulator {
   WonderSwan();
   auto load(Menu) -> void override;
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 struct WonderSwanColor : Emulator {
   WonderSwanColor();
   auto load(Menu) -> void override;
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 struct PocketChallengeV2 : Emulator {
   PocketChallengeV2();
   auto load(Menu) -> void override;
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 WonderSwan::WonderSwan() {
@@ -51,6 +60,9 @@ auto WonderSwan::load(Menu menu) -> void {
 }
 
 auto WonderSwan::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("boot.rom", {Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot});
+
   if(!ares::WonderSwan::load(root, "[Bandai] WonderSwan")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -61,19 +73,14 @@ auto WonderSwan::load() -> bool {
   return true;
 }
 
-auto WonderSwan::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->is<ares::Node::System>() && name == "boot.rom") {
-    return vfs::memory::open({Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot});
-  }
-  if(node->is<ares::Node::System>() && name == "save.eeprom") {
-    return {};
-  }
-  if(node->name() == "WonderSwan") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram",    ".sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.eeprom", ".sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "time.rtc",    ".rtc")) return fp;
-  }
+auto WonderSwan::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto WonderSwan::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "WonderSwan") return game.pak;
   return {};
 }
 
@@ -125,6 +132,9 @@ auto WonderSwanColor::load(Menu menu) -> void {
 }
 
 auto WonderSwanColor::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("boot.rom", {Resource::WonderSwanColor::Boot, sizeof Resource::WonderSwanColor::Boot});
+
   if(!ares::WonderSwan::load(root, "[Bandai] WonderSwan Color")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -135,19 +145,14 @@ auto WonderSwanColor::load() -> bool {
   return true;
 }
 
-auto WonderSwanColor::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->is<ares::Node::System>() && name == "boot.rom") {
-    return vfs::memory::open({Resource::WonderSwanColor::Boot, sizeof Resource::WonderSwanColor::Boot});
-  }
-  if(node->is<ares::Node::System>() && name == "save.eeprom") {
-    return {};
-  }
-  if(node->name() == "WonderSwan Color") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram",    ".sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.eeprom", ".sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "time.rtc",    ".rtc")) return fp;
-  }
+auto WonderSwanColor::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto WonderSwanColor::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "WonderSwan Color") return game.pak;
   return {};
 }
 
@@ -187,6 +192,9 @@ auto PocketChallengeV2::load(Menu menu) -> void {
 }
 
 auto PocketChallengeV2::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("bios.rom", {Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot});
+
   if(!ares::WonderSwan::load(root, "[Benesse] Pocket Challenge V2")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -197,19 +205,14 @@ auto PocketChallengeV2::load() -> bool {
   return true;
 }
 
-auto PocketChallengeV2::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->is<ares::Node::System>() && name == "boot.rom") {
-    return vfs::memory::open({Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot});
-  }
-  if(node->is<ares::Node::System>() && name == "save.eeprom") {
-    return {};
-  }
-  if(node->name() == "Pocket Challenge V2") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram",    ".sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.eeprom", ".sav")) return fp;
-    if(auto fp = Emulator::save(name, mode, "time.rtc",    ".rtc")) return fp;
-  }
+auto PocketChallengeV2::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto PocketChallengeV2::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "Pocket Challenge V2") return game.pak;
   return {};
 }
 

@@ -1,5 +1,6 @@
 struct Cartridge {
   Node::Peripheral node;
+  Pak pak;
 
   #include "memory.hpp"
 

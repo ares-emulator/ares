@@ -12,20 +12,18 @@ auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto Cartridge::connect() -> void {
-  node->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-
-  if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
-
   auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].text();
+  information.name = document["game/label"].string();
 
   if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
     rom.allocate(memory["size"].natural());
-    if(auto fp = platform->open(node, "program.rom", File::Read, File::Required)) {
+    if(auto fp = pak->read("program.rom")) {
       rom.load(fp);
     }
   }
@@ -33,7 +31,7 @@ auto Cartridge::connect() -> void {
   if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
     ram.allocate(memory["size"].natural());
     if(!(bool)memory["volatile"]) {
-      if(auto fp = platform->open(node, "save.ram", File::Read)) {
+      if(auto fp = pak->read("save.ram")) {
         ram.load(fp);
       }
     }
@@ -46,7 +44,8 @@ auto Cartridge::disconnect() -> void {
   if(!node) return;
   rom.reset();
   ram.reset();
-  node = {};
+  pak.reset();
+  node.reset();
 }
 
 auto Cartridge::save() -> void {
@@ -54,7 +53,7 @@ auto Cartridge::save() -> void {
 
   if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
     if(!(bool)memory["volatile"]) {
-      if(auto fp = platform->open(node, "save.ram", File::Write)) {
+      if(auto fp = pak->write("save.ram")) {
         ram.save(fp);
       }
     }

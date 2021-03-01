@@ -64,8 +64,9 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
 
-  if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
+  if(auto fp = pak->read("bios.rom")) {
     fp->read({bios, 0x2000});
   }
 
@@ -94,7 +95,8 @@ auto System::unload() -> void {
   cartridgeSlot.unload();
   controllerPort1.port = {};
   controllerPort2.port = {};
-  node = {};
+  pak.reset();
+  node.reset();
 }
 
 auto System::power(bool reset) -> void {

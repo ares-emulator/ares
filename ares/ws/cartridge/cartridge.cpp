@@ -16,14 +16,12 @@ auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto Cartridge::connect() -> void {
-  node->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-
-  if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {
+  if(auto fp = pak->read("manifest.bml")) {
     information.manifest = fp->reads();
   }
-
   auto document = BML::unserialize(information.manifest);
   information.name = document["game/label"].string();
 
@@ -32,7 +30,7 @@ auto Cartridge::connect() -> void {
     rom.mask = bit::round(rom.size) - 1;
     rom.data = new n8[rom.mask + 1];
     memory::fill<u8>(rom.data, rom.mask + 1, 0xff);
-    if(auto fp = platform->open(node, "program.rom", File::Read, File::Required)) {
+    if(auto fp = pak->read("program.rom")) {
       fp->read({rom.data, rom.size});
     }
   }
@@ -43,7 +41,7 @@ auto Cartridge::connect() -> void {
     ram.data = new n8[ram.mask + 1];
     memory::fill<u8>(ram.data, ram.mask + 1, 0xff);
     if(!memory["volatile"]) {
-      if(auto fp = platform->open(node, "save.ram", File::Read)) {
+      if(auto fp = pak->read("save.ram")) {
         fp->read({ram.data, ram.size});
       }
     }
@@ -51,7 +49,7 @@ auto Cartridge::connect() -> void {
 
   if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
     eeprom.allocate(memory["size"].natural(), 16, 1, 0xff);
-    if(auto fp = platform->open(node, "save.eeprom", File::Read)) {
+    if(auto fp = pak->read("save.eeprom")) {
       fp->read({eeprom.data, eeprom.size});
     }
   }
@@ -62,7 +60,7 @@ auto Cartridge::connect() -> void {
     rtc.data = new n8[rtc.mask + 1];
     memory::fill<u8>(rtc.data, rtc.mask + 1, 0x00);
     if(!memory["volatile"]) {
-      if(auto fp = platform->open(node, "time.rtc", File::Read)) {
+      if(auto fp = pak->read("time.rtc")) {
         fp->read({rtc.data, rtc.size});
       }
     }
@@ -101,21 +99,21 @@ auto Cartridge::save() -> void {
 
   if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
     if(!memory["volatile"]) {
-      if(auto fp = platform->open(node, "save.ram", File::Write)) {
+      if(auto fp = pak->write("save.ram")) {
         fp->write({ram.data, ram.size});
       }
     }
   }
 
   if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    if(auto fp = platform->open(node, "save.eeprom", File::Write)) {
+    if(auto fp = pak->write("save.eeprom")) {
       fp->write({eeprom.data, eeprom.size});
     }
   }
 
   if(auto memory = document["game/board/memory(type=RTC,content=Time)"]) {
     if(!memory["volatile"]) {
-      if(auto fp = platform->open(node, "time.rtc", File::Write)) {
+      if(auto fp = pak->write("time.rtc")) {
         fp->write({rtc.data, rtc.size});
       }
     }

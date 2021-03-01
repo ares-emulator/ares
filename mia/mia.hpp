@@ -29,6 +29,7 @@ namespace mia {
   #endif
 
   extern vector<shared_pointer<Media>> media;
+  auto setSaveLocation(function<string ()>) -> void;
   auto construct() -> void;
   auto medium(const string& name) -> shared_pointer<Media>;
   auto identify(const string& filename) -> string;

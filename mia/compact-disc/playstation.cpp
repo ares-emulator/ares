@@ -1,21 +1,24 @@
-auto PlayStation::pak(string location) -> shared_pointer<vfs::directory> {
-  if(auto pak = Media::pak(location)) return pak;
-  auto pak = shared_pointer{new vfs::directory};
-  pak->append("manifest.bml", manifest(location));
-  if(location.iendsWith(".cue")) {
-    pak->append("cd.rom", vfs::cdrom::open(location));
+auto PlayStation::load(string location) -> shared_pointer<vfs::directory> {
+  if(directory::exists(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    pak->append("manifest.bml", manifest(location));
+    pak->append("cd.rom", vfs::disk::open({location, "cd.rom"}, vfs::read));
+    return pak;
   }
-  if(location.iendsWith(".exe")) {
-    pak->append("program.exe", vfs::disk::open(location, vfs::file::mode::read));
-  }
-  return pak;
-}
 
-auto PlayStation::rom(string location) -> vector<u8> {
-  vector<u8> data;
-  append(data, {location, "cd.rom"});
-  append(data, {location, "program.exe"});
-  return data;
+  if(file::exists(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    pak->append("manifest.bml", manifest(location));
+    if(location.iendsWith(".cue")) {
+      pak->append("cd.rom", vfs::cdrom::open(location));
+    }
+    if(location.iendsWith(".exe")) {
+      pak->append("program.exe", vfs::disk::open(location, vfs::read));
+    }
+    return pak;
+  }
+
+  return {};
 }
 
 auto PlayStation::manifest(string location) -> string {

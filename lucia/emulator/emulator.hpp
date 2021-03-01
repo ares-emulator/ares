@@ -6,10 +6,8 @@ struct Emulator {
   auto manifest(const string& type, const string& location) -> shared_pointer<vfs::file>;
   auto region() -> string;
   auto load(const string& location) -> bool;
-  auto save(const string& name, vfs::file::mode, const string& match, const string& suffix, maybe<string> system = {}, maybe<string> source = {}) -> shared_pointer<vfs::file>;
   auto loadFirmware(const Firmware&) -> shared_pointer<vfs::file>;
   auto unload() -> void;
-  auto save() -> void;
   auto refresh() -> void;
   auto setBoolean(const string& name, bool value) -> bool;
   auto setOverscan(bool value) -> bool;
@@ -17,7 +15,8 @@ struct Emulator {
   auto errorFirmwareRequired(const Firmware&) -> void;
   virtual auto load(Menu) -> void {}
   virtual auto load() -> bool = 0;
-  virtual auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> = 0;
+  virtual auto save() -> bool { return false; }
+  virtual auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> = 0;
   virtual auto input(ares::Node::Input::Input) -> void = 0;
   virtual auto notify(const string& message) -> void {}
 
@@ -28,9 +27,10 @@ struct Emulator {
     string location;
   };
 
-  struct Game {
+  struct Pak {
     string location;
     string manifest;
+    shared_pointer<vfs::directory> pak;
   };
 
   shared_pointer<mia::Media> medium;
@@ -39,8 +39,7 @@ struct Emulator {
 
   ares::Node::System root;
   vector<Firmware> firmware;
-  shared_pointer<vfs::directory> pak;
-  Game game;
+  Pak game;
 
   struct Configuration {
     bool visible = true;  //whether or not to show this emulator in the load menu

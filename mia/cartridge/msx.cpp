@@ -1,26 +1,35 @@
 struct MSX : Cartridge {
   auto name() -> string override { return "MSX"; }
   auto extensions() -> vector<string> override { return {"msx"}; }
-  auto pak(string location) -> shared_pointer<vfs::directory> override;
-  auto rom(string location) -> vector<u8> override;
+  auto load(string location) -> shared_pointer<vfs::directory> override;
+  auto save(string location, shared_pointer<vfs::directory> pak) -> bool override;
   auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto MSX::pak(string location) -> shared_pointer<vfs::directory> {
-  if(auto pak = Media::pak(location)) return pak;
-  if(auto rom = Media::read(location)) {
-    auto pak = shared_pointer{new vfs::directory};
-    pak->append("manifest.bml", Cartridge::manifest(rom, location));
-    pak->append("program.rom",  rom);
-    return pak;
+auto MSX::load(string location) -> shared_pointer<vfs::directory> {
+  vector<u8> rom;
+  if(directory::exists(location)) {
+    append(rom, {location, "program.rom"});
+  } else if(file::exists(location)) {
+    rom = Cartridge::read(location);
+  } else {
+    return {};
   }
-  return {};
+
+  auto pak = shared_pointer{new vfs::directory};
+  pak->append("manifest.bml", Cartridge::manifest(rom, location));
+  pak->append("program.rom",  rom);
+  return pak;
 }
 
-auto MSX::rom(string location) -> vector<u8> {
-  vector<u8> data;
-  append(data, {location, "program.rom"});
-  return data;
+auto MSX::save(string location, shared_pointer<vfs::directory> pak) -> bool {
+  auto fp = pak->read("manifest.bml");
+  if(!fp) return false;
+
+  auto manifest = fp->reads();
+  auto document = BML::unserialize(manifest);
+
+  return true;
 }
 
 auto MSX::heuristics(vector<u8>& data, string location) -> string {

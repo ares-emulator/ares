@@ -29,7 +29,7 @@ auto SMP::main() -> void {
 }
 
 auto SMP::power(bool reset) -> void {
-  if(auto fp = platform->open(system.node, "ipl.rom", File::Read, File::Required)) {
+  if(auto fp = system.pak->read("ipl.rom")) {
     fp->read({iplrom, 64});
   }
 

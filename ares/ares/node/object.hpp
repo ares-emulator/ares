@@ -134,12 +134,29 @@ struct Object : shared_pointer_this<Object> {
     for(auto& node : _nodes) node->enumerate<T>(objects);
   }
 
+  auto pak() -> Pak {
+    return _pak;
+  }
+
+  auto setPak(Pak pak) -> bool {
+    _pak = pak;
+    return (bool)_pak;
+  }
+
   template<typename T = string>
   auto attribute(const string& name) const -> T {
     if(auto attribute = _attributes.find(name)) {
       if(attribute->value.is<T>()) return attribute->value.get<T>();
     }
     return {};
+  }
+
+  template<typename T = string>
+  auto hasAttribute(const string& name) const -> bool {
+    if(auto attribute = _attributes.find(name)) {
+      if(attribute->value.is<T>()) return true;
+    }
+    return false;
   }
 
   template<typename T = string, typename U = string>
@@ -211,6 +228,7 @@ struct Object : shared_pointer_this<Object> {
 
 protected:
   string _name;
+  Pak _pak;
   set<Attribute> _attributes;
   shared_pointer_weak<Object> _parent;
   vector<Node::Object> _nodes;

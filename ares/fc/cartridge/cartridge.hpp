@@ -3,6 +3,7 @@ struct Cartridge;
 
 struct Cartridge : Thread {
   Node::Peripheral node;
+  Pak pak;
 
   auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
   auto manifest() const -> string { return information.manifest; }

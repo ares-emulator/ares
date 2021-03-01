@@ -4,6 +4,7 @@ struct PCD : Thread {
   Node::Object node;
   Node::Port tray;
   Node::Peripheral disc;
+  Pak pak;
   Shared::File fd;
   CD::Session session;
   Memory::Writable<n8> wram;  // 64KB

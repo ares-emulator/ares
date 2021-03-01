@@ -5,15 +5,21 @@ namespace ares::NeoGeoPocket {
 struct NeoGeoPocket : Emulator {
   NeoGeoPocket();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 struct NeoGeoPocketColor : Emulator {
   NeoGeoPocketColor();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 NeoGeoPocket::NeoGeoPocket() {
@@ -25,12 +31,14 @@ NeoGeoPocket::NeoGeoPocket() {
 }
 
 auto NeoGeoPocket::load() -> bool {
-  if(!ares::NeoGeoPocket::load(root, "[SNK] Neo Geo Pocket")) return false;
-
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
     return false;
   }
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("bios.rom", loadFirmware(firmware[0]));
+
+  if(!ares::NeoGeoPocket::load(root, "[SNK] Neo Geo Pocket")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -44,12 +52,14 @@ auto NeoGeoPocket::load() -> bool {
   return true;
 }
 
-auto NeoGeoPocket::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "bios.rom") return loadFirmware(firmware[0]);
-  if(node->name() == "Neo Geo Pocket") {
-    if(auto fp = Emulator::save(name, mode, "program.flash", ".sav")) return fp;
-    if(auto fp = pak->find(name)) return fp;
-  }
+auto NeoGeoPocket::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto NeoGeoPocket::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "Neo Geo Pocket") return game.pak;
   return {};
 }
 
@@ -81,12 +91,14 @@ NeoGeoPocketColor::NeoGeoPocketColor() {
 }
 
 auto NeoGeoPocketColor::load() -> bool {
-  if(!ares::NeoGeoPocket::load(root, "[SNK] Neo Geo Pocket Color")) return false;
-
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
     return false;
   }
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("bios.rom", loadFirmware(firmware[0]));
+
+  if(!ares::NeoGeoPocket::load(root, "[SNK] Neo Geo Pocket Color")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -100,12 +112,14 @@ auto NeoGeoPocketColor::load() -> bool {
   return true;
 }
 
-auto NeoGeoPocketColor::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "bios.rom") return loadFirmware(firmware[0]);
-  if(node->name() == "Neo Geo Pocket Color") {
-    if(auto fp = Emulator::save(name, mode, "program.flash", ".sav")) return fp;
-    if(auto fp = pak->find(name)) return fp;
-  }
+auto NeoGeoPocketColor::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto NeoGeoPocketColor::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "Neo Geo Pocket Color") return game.pak;
   return {};
 }
 

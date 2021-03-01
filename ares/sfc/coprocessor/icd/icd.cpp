@@ -12,6 +12,7 @@ auto ICD::clockFrequency() const -> f64 {
 
 auto ICD::load(Node::Peripheral parent) -> void {
   node = parent->append<Node::System>("Super Game Boy");
+  node->setPak(cartridge.pak);
   GameBoy::superGameBoy = this;
   GameBoy::system.load(node, "[Nintendo] Super Game Boy");
   GameBoy::cpu.version->setValue(!Frequency ? "SGB-CPU 01" : "CPU SGB2");
@@ -24,6 +25,8 @@ auto ICD::unload() -> void {
 
   cpu.coprocessors.removeByValue(this);
   Thread::destroy();
+
+  node.reset();
 }
 
 auto ICD::main() -> void {

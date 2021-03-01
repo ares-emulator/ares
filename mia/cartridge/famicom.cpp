@@ -1,45 +1,79 @@
 struct Famicom : Cartridge {
   auto name() -> string override { return "Famicom"; }
   auto extensions() -> vector<string> override { return {"fc", "nes", "unif"}; }
-  auto pak(string location) -> shared_pointer<vfs::directory> override;
-  auto rom(string location) -> vector<u8> override;
+  auto read(string location) -> vector<u8> override;
+  auto load(string location) -> shared_pointer<vfs::directory> override;
+  auto save(string location, shared_pointer<vfs::directory> pak) -> bool override;
   auto heuristics(vector<u8>& data, string location) -> string override;
   auto heuristicsFDS(vector<u8>& data, string location) -> string;
   auto heuristicsINES(vector<u8>& data, string location) -> string;
   auto heuristicsUNIF(vector<u8>& data, string location) -> string;
 };
 
-auto Famicom::pak(string location) -> shared_pointer<vfs::directory> {
-  if(auto pak = Media::pak(location)) return pak;
-  if(auto rom = Media::read(location)) {
-    auto pak = shared_pointer{new vfs::directory};
-    auto manifest = Cartridge::manifest(rom, location);
-    auto document = BML::unserialize(manifest);
-    array_view<u8> view{rom};
-    pak->append("manifest.bml", heuristics(rom, location));
-    if(auto node = document["game/board/memory(type=ROM,content=iNES)"]) {
-      pak->append("ines.rom", {view.data(), node["size"].natural()});
-      view += node["size"].natural();
-    }
-    if(auto node = document["game/board/memory(type=ROM,content=Program)"]) {
-      pak->append("program.rom", {view.data(), node["size"].natural()});
-      view += node["size"].natural();
-    }
-    if(auto node = document["game/board/memory(type=ROM,content=Character)"]) {
-      pak->append("character.rom", {view.data(), node["size"].natural()});
-      view += node["size"].natural();
-    }
-    return pak;
+auto Famicom::read(string location) -> vector<u8> {
+  if(directory::exists(location)) {
+    vector<u8> rom;
+    append(rom, {location, "ines.rom"});
+    append(rom, {location, "program.rom"});
+    append(rom, {location, "character.rom"});
+    return rom;
   }
-  return {};
+  return Cartridge::read(location);
 }
 
-auto Famicom::rom(string location) -> vector<u8> {
-  vector<u8> data;
-  append(data, {location, "ines.rom"});
-  append(data, {location, "program.rom"});
-  append(data, {location, "character.rom"});
-  return data;
+auto Famicom::load(string location) -> shared_pointer<vfs::directory> {
+  auto rom = read(location);
+  auto pak = shared_pointer{new vfs::directory};
+  auto manifest = Cartridge::manifest(rom, location);
+  auto document = BML::unserialize(manifest);
+  pak->append("manifest.bml", heuristics(rom, location));
+  pak->setAttribute("board", document["game/board"].string());
+  pak->setAttribute("mirror", document["game/board/mirror/mode"].string());
+  pak->setAttribute("pinout/a0", document["game/board/chip/pinout/a0"].natural());
+  pak->setAttribute("pinout/a1", document["game/board/chip/pinout/a1"].natural());
+
+  array_view<u8> view{rom};
+  if(auto node = document["game/board/memory(type=ROM,content=iNES)"]) {
+    pak->append("ines.rom", {view.data(), node["size"].natural()});
+    view += node["size"].natural();
+  }
+  if(auto node = document["game/board/memory(type=ROM,content=Program)"]) {
+    pak->append("program.rom", {view.data(), node["size"].natural()});
+    view += node["size"].natural();
+  }
+  if(auto node = document["game/board/memory(type=ROM,content=Character)"]) {
+    pak->append("character.rom", {view.data(), node["size"].natural()});
+    view += node["size"].natural();
+  }
+
+  if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
+    Media::load(pak, location, node, ".ram");
+  }
+  if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
+    Media::load(pak, location, node, ".eeprom");
+  }
+  if(auto node = document["game/board/memory(type=RAM,content=Character)"]) {
+    Media::load(pak, location, node, ".chr");
+  }
+
+  return pak;
+}
+
+auto Famicom::save(string location, shared_pointer<vfs::directory> pak) -> bool {
+  auto fp = pak->read("manifest.bml");
+  if(!fp) return false;
+
+  auto manifest = fp->reads();
+  auto document = BML::unserialize(manifest);
+
+  if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
+    Media::save(pak, location, node, ".ram");
+  }
+  if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
+    Media::save(pak, location, node, ".eeprom");
+  }
+
+  return true;
 }
 
 auto Famicom::heuristics(vector<u8>& data, string location) -> string {

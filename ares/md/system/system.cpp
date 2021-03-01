@@ -73,6 +73,7 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
 
   tmss = node->append<Node::Setting::Boolean>("TMSS", false);
 
@@ -105,6 +106,7 @@ auto System::unload() -> void {
   controllerPort2.unload();
   extensionPort.unload();
   if(MegaCD()) mcd.unload();
+  pak.reset();
   node.reset();
 }
 

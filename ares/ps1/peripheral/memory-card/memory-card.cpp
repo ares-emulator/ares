@@ -1,8 +1,9 @@
 MemoryCard::MemoryCard(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Memory Card");
+  node->setPak(pak = platform->pak(node));
 
   memory.allocate(128_KiB);
-  if(auto fp = platform->open(node, "save.card", File::Read)) {
+  if(auto fp = pak->read("save.card")) {
     memory.load(fp);
   }
 
@@ -13,7 +14,7 @@ MemoryCard::MemoryCard(Node::Port parent) {
 }
 
 MemoryCard::~MemoryCard() {
-  if(auto fp = platform->open(node, "save.card", File::Write)) {
+  if(auto fp = pak->write("save.card")) {
     memory.save(fp);
   }
 }

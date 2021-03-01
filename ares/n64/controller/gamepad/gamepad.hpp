@@ -1,6 +1,7 @@
 struct Gamepad : Controller {
   Node::Port port;
-  Node::Peripheral pak;
+  Node::Peripheral slot;
+  Pak pak;
   Memory::Writable ram;  //Toshiba TC55257DFL-85V
   Node::Input::Rumble motor;
 

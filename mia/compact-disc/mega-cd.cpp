@@ -1,15 +1,19 @@
-auto MegaCD::pak(string location) -> shared_pointer<vfs::directory> {
-  if(auto pak = Media::pak(location)) return pak;
-  auto pak = shared_pointer{new vfs::directory};
-  pak->append("manifest.bml", manifest(location));
-  pak->append("cd.rom", vfs::cdrom::open(location));
-  return pak;
-}
+auto MegaCD::load(string location) -> shared_pointer<vfs::directory> {
+  if(directory::exists(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    pak->append("manifest.bml", manifest(location));
+    pak->append("cd.rom", vfs::disk::open({location, "cd.rom"}, vfs::read));
+    return pak;
+  }
 
-auto MegaCD::rom(string location) -> vector<u8> {
-  vector<u8> data;
-  append(data, {location, "cd.rom"});
-  return data;
+  if(file::exists(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    pak->append("manifest.bml", manifest(location));
+    pak->append("cd.rom", vfs::cdrom::open(location));
+    return pak;
+  }
+
+  return {};
 }
 
 auto MegaCD::manifest(string location) -> string {

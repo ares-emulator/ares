@@ -3,6 +3,7 @@
 namespace mia {
 
 vector<shared_pointer<Media>> media;
+function<string ()> saveLocation = [] { return string{}; };
 
 auto locate(string name) -> string {
   string location = {Path::program(), name};
@@ -25,6 +26,10 @@ auto operator+=(string& lhs, const string& rhs) -> string& {
 #if !defined(MIA_LIBRARY)
 #include "program/program.cpp"
 #endif
+
+auto setSaveLocation(function<string ()> callback) -> void {
+  saveLocation = callback;
+}
 
 auto construct() -> void {
   if(media) return;  //only construct once
@@ -96,7 +101,7 @@ auto identify(const string& filename) -> string {
 }
 
 auto import(shared_pointer<Media> medium, const string& filename) -> bool {
-  if(auto pak = medium->pak(filename)) {
+  if(auto pak = medium->load(filename)) {
     if(!pak->count()) return false;
     string pathname = {medium->pathname, Location::prefix(filename), ".", medium->extensions().first(), "/"};
     if(!directory::create(pathname)) return false;

@@ -5,19 +5,17 @@ struct MBC7 : Interface {
   Node::Input::Axis y;
   static constexpr s32 Center = 0x81d0;  //not 0x8000
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
+  auto load() -> void override {
+    Interface::load(rom, "program.rom");
     x = cartridge.node->append<Node::Input::Axis>("X");
     y = cartridge.node->append<Node::Input::Axis>("Y");
-    eeprom.load(document);
+    eeprom.load();
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
+  auto save() -> void override {
     cartridge.node->remove(x);
     cartridge.node->remove(y);
-    eeprom.save(document);
+    eeprom.save();
   }
 
   auto unload() -> void override {
@@ -117,23 +115,18 @@ struct MBC7 : Interface {
     MBC7& self;
     EEPROM(MBC7& self) : self(self) {}
 
-    auto load(Markup::Node document) -> void {
-      if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-        u32 size  = memory["size"].natural();
-        u32 width = memory["width"].natural();
+    auto load() -> void {
+      if(auto fp = self.pak->read("save.eeprom")) {
+        u32 size  = fp->size();
+        u32 width = fp->attribute("width").natural();
         allocate(size, width, 0, 0xff);
-
-        if(auto fp = platform->open(self.cartridge.node, "save.eeprom", File::Read, File::Optional)) {
-          fp->read({data, min(fp->size(), sizeof(data))});
-        }
+        fp->read({data, min(fp->size(), sizeof(data))});
       }
     }
 
-    auto save(Markup::Node document) -> void {
-      if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-        if(auto fp = platform->open(self.cartridge.node, "save.eeprom", File::Write)) {
-          fp->write({data, size});
-        }
+    auto save() -> void {
+      if(auto fp = self.pak->write("save.eeprom")) {
+        fp->write({data, size});
       }
     }
 

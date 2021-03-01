@@ -3,15 +3,12 @@ struct GameGenie : Interface {
   Memory::Readable<n16> rom;
   CartridgeSlot slot{"Cartridge Slot"};
 
-  auto load(Markup::Node document) -> void override {
-    auto board = document["game/board"];
-    Interface::load(rom, board["memory(type=ROM,content=Program)"]);
-
+  auto load() -> void override {
+    Interface::load(rom, "program.rom");
     slot.load(cartridge->node);
   }
 
-  auto save(Markup::Node document) -> void override {
-    auto board = document["game/board"];
+  auto save() -> void override {
   }
 
   auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {

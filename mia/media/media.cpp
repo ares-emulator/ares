@@ -34,12 +34,6 @@ auto Media::read(string location) -> vector<u8> {
     }
   }
 
-  //support game paks
-  if(directory::exists(location)) {
-    memory = rom(location);
-    patch = file::read({location, "patch.bps"});
-  }
-
   //attempt to apply BPS patch if one was found
   if(patch) {
     if(auto output = Beat::Single::apply(memory, patch)) {
@@ -50,21 +44,68 @@ auto Media::read(string location) -> vector<u8> {
   return memory;
 }
 
-//handles game paks
-auto Media::pak(string location) -> shared_pointer<vfs::directory> {
-  if(directory::exists(location)) {
-    auto pak = shared_pointer{new vfs::directory};
-    //todo: handle recursive directories for eg "msu1/*"
-    for(auto& filename : directory::files(location)) {
-      pak->append(filename, vfs::disk::open({location, filename}, vfs::file::mode::read));
+auto Media::manifest(string location) -> string {
+  if(auto pak = load(location)) {
+    if(auto fp = pak->read("manifest.bml")) {
+      return fp->reads();
     }
-    //generate manifest for gamepak dynamically if it is not already present
-    if(!pak->find("manifest.bml")) {
-      pak->append("manifest.bml", manifest(location));
-    }
-    return pak;
   }
   return {};
+}
+
+auto Media::load(shared_pointer<vfs::directory> pak, string location, Markup::Node node, string extension) -> bool {
+  string name;
+  if(auto architecture = node["architecture"].string()) name.append(architecture, ".");
+  name.append(node["content"].string(), ".");
+  name.append(node["type"].string());
+  name.downcase();
+  auto size = node["size"].natural();
+
+  string saveLocation;
+  if(auto path = mia::saveLocation()) {
+    saveLocation = {path, this->name(), "/", Location::prefix(location), extension};
+  } else if(file::exists(location)) {
+    saveLocation = {Location::notsuffix(location), extension};
+  } else if(directory::exists(location)) {
+    saveLocation = {location, name};
+  } else {
+    return false;
+  }
+
+  auto save = memory::allocate<u8>(size, 0xff);
+  if(auto fp = file::open(saveLocation, file::mode::read)) {
+    fp.read({save, min(fp.size(), size)});
+  }
+  pak->append(name, {save, size});
+  return true;
+}
+
+auto Media::save(shared_pointer<vfs::directory> pak, string location, Markup::Node node, string extension) -> bool {
+  string name;
+  if(auto architecture = node["architecture"].string()) name.append(architecture, ".");
+  name.append(node["content"].string(), ".");
+  name.append(node["type"].string());
+  name.downcase();
+  auto size = node["size"].natural();
+
+  string saveLocation;
+  if(auto path = mia::saveLocation()) {
+    saveLocation = {path, this->name(), "/", Location::prefix(location), extension};
+  } else if(file::exists(location)) {
+    saveLocation = {Location::notsuffix(location), extension};
+  } else if(directory::exists(location)) {
+    saveLocation = {location, name};
+  } else {
+    return false;
+  }
+
+  if(auto save = pak->read<vfs::memory>(name)) {
+    if(auto fp = file::open(saveLocation, file::mode::write)) {
+      fp.write({save->data(), save->size()});
+      return true;
+    }
+  }
+  return false;
 }
 
 auto Media::name(string location) const -> string {

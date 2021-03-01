@@ -11,23 +11,15 @@ auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto Cartridge::connect() -> void {
-  node->setManifest([&] { return information.manifest; });
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
+  information.name = pak->attribute("title");
+  information.region = pak->attribute("region");
 
-  if(auto fp = platform->open(node, "manifest.bml", File::Read, File::Required)) {
-    information.manifest = fp->reads();
-  }
-
-  auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].text();
-  information.region = document["game/region"].text();
-
-  if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
-    rom.allocate(memory["size"].natural());
-    if(auto fp = platform->open(node, "program.rom", File::Read, File::Required)) {
-      rom.load(fp);
-    }
+  if(auto fp = pak->read("program.rom")) {
+    rom.allocate(fp->size());
+    rom.load(fp);
   }
 
   power();
@@ -36,7 +28,8 @@ auto Cartridge::connect() -> void {
 auto Cartridge::disconnect() -> void {
   if(!node) return;
   rom.reset();
-  node = {};
+  pak.reset();
+  node.reset();
 }
 
 auto Cartridge::save() -> void {

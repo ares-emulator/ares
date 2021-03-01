@@ -1,6 +1,7 @@
 struct System {
   Node::System node;
   Node::Setting::Boolean fastBoot;
+  Pak pak;
 
   enum class Region : u32 { NTSCJ, NTSCU, PAL };
 

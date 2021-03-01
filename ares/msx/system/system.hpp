@@ -5,6 +5,7 @@ struct ROM {
 
 struct System {
   Node::System node;
+  Pak pak;
 
   enum class Model : u32 { MSX, MSX2 };
   enum class Region : u32 { NTSC, PAL };

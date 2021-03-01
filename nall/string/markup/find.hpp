@@ -6,7 +6,7 @@ inline auto ManagedNode::_evaluate(string query) const -> bool {
   if(!query) return true;
 
   for(auto& rule : query.split(",")) {
-    enum class Comparator : u32 { ID, EQ, NE, LT, LE, GT, GE };
+    enum class Comparator : u32 { ID, EQ, NE, LT, LE, GT, GE, NF };
     auto comparator = Comparator::ID;
          if(rule.match("*!=*")) comparator = Comparator::NE;
     else if(rule.match("*<=*")) comparator = Comparator::LE;
@@ -14,10 +14,17 @@ inline auto ManagedNode::_evaluate(string query) const -> bool {
     else if(rule.match ("*=*")) comparator = Comparator::EQ;
     else if(rule.match ("*<*")) comparator = Comparator::LT;
     else if(rule.match ("*>*")) comparator = Comparator::GT;
+    else if(rule.match  ("!*")) comparator = Comparator::NF;
 
     if(comparator == Comparator::ID) {
       if(_find(rule).size()) continue;
       return false;
+    }
+
+    if(comparator == Comparator::NF) {
+      rule.trimLeft("!", 1L);
+      if(_find(rule).size()) return false;
+      continue;
     }
 
     vector<string> side;

@@ -13,7 +13,7 @@ enum class Event : u32 {
 struct Platform {
   virtual auto attach(Node::Object) -> void {}
   virtual auto detach(Node::Object) -> void {}
-  virtual auto open(Node::Object, string name, vfs::file::mode mode, bool required = false) -> shared_pointer<vfs::file> { return {}; }
+  virtual auto pak(Node::Object) -> shared_pointer<vfs::directory> { return {}; }
   virtual auto event(Event) -> void {}
   virtual auto log(string_view message) -> void {}
   virtual auto video(Node::Video::Screen, const u32* data, u32 pitch, u32 width, u32 height) -> void {}

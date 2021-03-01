@@ -30,10 +30,7 @@ namespace Board {
 #include "sunsoft-4.cpp"
 #include "sunsoft-5b.cpp"
 
-auto Interface::create(string manifest) -> Interface* {
-  auto document = BML::unserialize(manifest);
-  auto board = document["game/board"].string();
-
+auto Interface::create(string board) -> Interface* {
   Interface* p = nullptr;
   if(!p) p = BandaiFCG::create(board);
   if(!p) p = HVC_AxROM::create(board);
@@ -68,19 +65,6 @@ auto Interface::create(string manifest) -> Interface* {
   return p;
 }
 
-auto Interface::load() -> void {
-  auto document = BML::unserialize(cartridge.manifest());
-  load(document);
-}
-
-auto Interface::save() -> void {
-  auto document = BML::unserialize(cartridge.manifest());
-  save(document);
-}
-
-auto Interface::unload() -> void {
-}
-
 auto Interface::main() -> void {
   cartridge.step(cartridge.rate() * 4095);
   tick();
@@ -91,34 +75,26 @@ auto Interface::tick() -> void {
   cartridge.synchronize(cpu);
 }
 
-auto Interface::load(Memory::Readable<n8>& memory, Markup::Node node) -> bool {
-  if(!node) return false;
-  auto filename = string{node["content"].string(), ".", node["type"].string()}.downcase();
-  if(auto fp = platform->open(cartridge.node, filename, File::Read)) {
-    memory.allocate(node["size"].natural(), 0xff);
+auto Interface::load(Memory::Readable<n8>& memory, string name) -> bool {
+  if(auto fp = pak->read(name)) {
+    memory.allocate(fp->size(), 0xff);
     memory.load(fp);
     return true;
   }
   return false;
 }
 
-auto Interface::load(Memory::Writable<n8>& memory, Markup::Node node) -> bool {
-  if(!node) return false;
-  memory.allocate(node["size"].natural(), 0xff);
-  if(node["volatile"]) return true;
-  auto filename = string{node["content"].string(), ".", node["type"].string()}.downcase();
-  if(auto fp = platform->open(cartridge.node, filename, File::Read)) {
+auto Interface::load(Memory::Writable<n8>& memory, string name) -> bool {
+  if(auto fp = pak->read(name)) {
+    memory.allocate(fp->size(), 0xff);
     memory.load(fp);
     return true;
   }
   return false;
 }
 
-auto Interface::save(Memory::Writable<n8>& memory, Markup::Node node) -> bool {
-  if(!node) return false;
-  if(node["volatile"]) return true;
-  auto filename = string{node["content"].string(), ".", node["type"].string()}.downcase();
-  if(auto fp = platform->open(cartridge.node, filename, File::Write)) {
+auto Interface::save(Memory::Writable<n8>& memory, string name) -> bool {
+  if(auto fp = pak->write(name)) {
     memory.save(fp);
     return true;
   }

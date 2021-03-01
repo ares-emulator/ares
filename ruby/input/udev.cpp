@@ -22,7 +22,7 @@ struct InputUdev : InputDriver {
   }
 
   auto driver() -> string override { return "udev"; }
-  auto ready() -> bool { return isReady; }
+  auto ready() -> bool override { return isReady; }
 
   auto hasContext() -> bool override { return true; }
 

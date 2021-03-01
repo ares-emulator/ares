@@ -5,7 +5,16 @@ namespace ares::NeoGeo {
 struct NeoGeoAES : Emulator {
   NeoGeoAES();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto input(ares::Node::Input::Input) -> void override;
+};
+
+struct NeoGeoMVS : Emulator {
+  NeoGeoMVS();
+  auto load() -> bool override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
@@ -31,22 +40,18 @@ auto NeoGeoAES::load() -> bool {
   return true;
 }
 
-auto NeoGeoAES::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "Neo Geo") {
-    if(auto fp = pak->find(name)) return fp;
-  }
+auto NeoGeoAES::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto NeoGeoAES::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->name() == "Neo Geo") return game.pak;
   return {};
 }
 
 auto NeoGeoAES::input(ares::Node::Input::Input node) -> void {
 }
-
-struct NeoGeoMVS : Emulator {
-  NeoGeoMVS();
-  auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode, bool required) -> shared_pointer<vfs::file> override;
-  auto input(ares::Node::Input::Input) -> void override;
-};
 
 NeoGeoMVS::NeoGeoMVS() {
   medium = mia::medium("Neo Geo");
@@ -70,10 +75,13 @@ auto NeoGeoMVS::load() -> bool {
   return true;
 }
 
-auto NeoGeoMVS::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "Neo Geo") {
-    if(auto fp = pak->find(name)) return fp;
-  }
+auto NeoGeoMVS::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto NeoGeoMVS::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->name() == "Neo Geo") return game.pak;
   return {};
 }
 

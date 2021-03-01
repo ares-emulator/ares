@@ -5,7 +5,8 @@ namespace ares::SG1000 {
 struct SG1000 : Emulator {
   SG1000();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
@@ -32,11 +33,13 @@ auto SG1000::load() -> bool {
   return true;
 }
 
-auto SG1000::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "SG-1000") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram", ".sav")) return fp;
-  }
+auto SG1000::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto SG1000::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->name() == "SG-1000") return game.pak;
   return {};
 }
 

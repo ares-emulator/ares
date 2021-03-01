@@ -53,6 +53,7 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
 
   fastBoot = node->append<Node::Setting::Boolean>("Fast Boot", false);
 
@@ -81,6 +82,7 @@ auto System::unload() -> void {
   vpu.unload();
   psg.unload();
   cartridgeSlot.unload();
+  pak.reset();
   node.reset();
 }
 
@@ -88,7 +90,7 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   bios.allocate(64_KiB);
-  if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
+  if(auto fp = pak->read("bios.rom")) {
     bios.load(fp);
   }
 

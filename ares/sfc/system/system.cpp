@@ -86,6 +86,7 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
 
   scheduler.reset();
   bus.reset();
@@ -112,6 +113,7 @@ auto System::unload() -> void {
   controllerPort1.unload();
   controllerPort2.unload();
   expansionPort.unload();
+  pak.reset();
   node.reset();
 }
 

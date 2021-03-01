@@ -1,33 +1,46 @@
 struct ColecoVision : Cartridge {
   auto name() -> string override { return "ColecoVision"; }
   auto extensions() -> vector<string> override { return {"cv", "col"}; }
-  auto pak(string location) -> shared_pointer<vfs::directory> override;
-  auto rom(string location) -> vector<u8> override;
+  auto load(string location) -> shared_pointer<vfs::directory> override;
+  auto save(string location, shared_pointer<vfs::directory> pak) -> bool override;
   auto heuristics(vector<u8>& data, string location) -> string override;
 };
 
-auto ColecoVision::pak(string location) -> shared_pointer<vfs::directory> {
-  if(auto pak = Media::pak(location)) return pak;
-  if(auto rom = Media::read(location)) {
-    auto pak = shared_pointer{new vfs::directory};
-    pak->append("manifest.bml", Cartridge::manifest(rom, location));
-    pak->append("program.rom",  rom);
-    return pak;
+auto ColecoVision::load(string location) -> shared_pointer<vfs::directory> {
+  vector<u8> rom;
+  if(directory::exists(location)) {
+    append(rom, {location, "program.rom"});
+  } else if(file::exists(location)) {
+    rom = Cartridge::read(location);
+  } else {
+    return {};
   }
-  return {};
+
+  auto pak = shared_pointer{new vfs::directory};
+  auto manifest = Cartridge::manifest(rom, location);
+  auto document = BML::unserialize(manifest);
+  pak->append("manifest.bml", Cartridge::manifest(rom, location));
+  pak->append("program.rom",  rom);
+  pak->setAttribute("title", document["game/title"].string());
+  pak->setAttribute("region", document["game/region"].string());
+  return pak;
 }
 
-auto ColecoVision::rom(string location) -> vector<u8> {
-  vector<u8> data;
-  append(data, {location, "program.rom"});
-  return data;
+auto ColecoVision::save(string location, shared_pointer<vfs::directory> pak) -> bool {
+  auto fp = pak->read("manifest.bml");
+  if(!fp) return false;
+
+  auto manifest = fp->reads();
+  auto document = BML::unserialize(manifest);
+
+  return true;
 }
 
 auto ColecoVision::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:  ", Media::name(location), "\n"};
-  s +={"  label: ", Media::name(location), "\n"};
+  s +={"  title: ", Media::name(location), "\n"};
   s += "  region: NTSC, PAL\n";  //database required to detect region
   s += "  board\n";
   s += "    memory\n";

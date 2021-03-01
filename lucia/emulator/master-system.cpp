@@ -5,14 +5,16 @@ namespace ares::MasterSystem {
 struct MasterSystem : Emulator {
   MasterSystem();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
 struct GameGear : Emulator {
   GameGear();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 };
 
@@ -49,11 +51,13 @@ auto MasterSystem::load() -> bool {
   return true;
 }
 
-auto MasterSystem::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "Master System") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram", ".sav")) return fp;
-  }
+auto MasterSystem::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto MasterSystem::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->name() == "Master System") return game.pak;
   return {};
 }
 
@@ -107,11 +111,13 @@ auto GameGear::load() -> bool {
   return true;
 }
 
-auto GameGear::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(node->name() == "Game Gear") {
-    if(auto fp = pak->find(name)) return fp;
-    if(auto fp = Emulator::save(name, mode, "save.ram", ".sav")) return fp;
-  }
+auto GameGear::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto GameGear::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->name() == "Game Gear") return game.pak;
   return {};
 }
 

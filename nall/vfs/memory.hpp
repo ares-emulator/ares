@@ -18,16 +18,18 @@ struct memory : file {
     return instance;
   }
 
-  auto data() const -> const u8* { return _data; }
+  auto writable() const -> bool override { return true; }
+  auto data() const -> const u8* override { return _data; }
   auto size() const -> u64 override { return _size; }
   auto offset() const -> u64 override { return _offset; }
 
-  auto resize(u64 size) -> void override {
+  auto resize(u64 size) -> bool override {
     _data = nall::memory::resize(_data, size);
     _size = size;
+    return true;
   }
 
-  auto seek(s64 offset, index mode) -> void override {
+  auto seek(s64 offset, index mode = index::absolute) -> void override {
     if(mode == index::absolute) _offset  = (u64)offset;
     if(mode == index::relative) _offset += (s64)offset;
   }

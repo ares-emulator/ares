@@ -5,15 +5,21 @@ namespace ares::MSX {
 struct MSX : Emulator {
   MSX();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 struct MSX2 : Emulator {
   MSX2();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 MSX::MSX() {
@@ -23,6 +29,9 @@ MSX::MSX() {
 }
 
 auto MSX::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("bios.rom", {Resource::MSX::BIOS, sizeof Resource::MSX::BIOS});
+
   auto region = Emulator::region();
   if(!ares::MSX::load(root, {"[Microsoft] MSX (", region, ")"})) return false;
 
@@ -39,11 +48,14 @@ auto MSX::load() -> bool {
   return true;
 }
 
-auto MSX::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "bios.rom") return vfs::memory::open({Resource::MSX::BIOS, sizeof Resource::MSX::BIOS});
-  if(node->name() == "MSX") {
-    if(auto fp = pak->find(name)) return fp;
-  }
+auto MSX::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto MSX::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "MSX") return game.pak;
   return {};
 }
 
@@ -72,6 +84,10 @@ MSX2::MSX2() {
 }
 
 auto MSX2::load() -> bool {
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("bios.rom", {Resource::MSX2::BIOS, sizeof Resource::MSX2::BIOS});
+  system.pak->append("sub.rom",  {Resource::MSX2::Sub,  sizeof Resource::MSX2::Sub });
+
   auto region = Emulator::region();
   if(!ares::MSX::load(root, {"[Microsoft] MSX2 (", region, ")"})) return false;
 
@@ -88,11 +104,14 @@ auto MSX2::load() -> bool {
   return true;
 }
 
-auto MSX2::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "bios.rom") return vfs::memory::open({Resource::MSX2::BIOS, sizeof Resource::MSX2::BIOS});
-  if(node->name() == "MSX2") {
-    if(auto fp = pak->find(name)) return fp;
-  }
+auto MSX2::save() -> bool {
+  root->save();
+  return medium->save(game.location, game.pak);
+}
+
+auto MSX2::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "MSX2") return game.pak;
   return {};
 }
 

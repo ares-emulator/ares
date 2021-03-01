@@ -73,6 +73,7 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
 
   headphones = node->append<Node::Setting::Boolean>("Headphones", true, [&](auto value) {
     apu.r.headphonesConnected = value;
@@ -92,7 +93,7 @@ auto System::load(Node::System& root, string name) -> bool {
   };
 
   if(WonderSwan::Model::WonderSwan()) {
-    if(auto fp = platform->open(node, "boot.rom", File::Read, File::Required)) {
+    if(auto fp = pak->read("boot.rom")) {
       bootROM.allocate(4_KiB);
       bootROM.load(fp);
     }
@@ -105,7 +106,7 @@ auto System::load(Node::System& root, string name) -> bool {
   }
 
   if(WonderSwan::Model::WonderSwanColor()) {
-    if(auto fp = platform->open(node, "boot.rom", File::Read, File::Required)) {
+    if(auto fp = pak->read("boot.rom")) {
       bootROM.allocate(8_KiB);
       bootROM.load(fp);
     }
@@ -122,7 +123,7 @@ auto System::load(Node::System& root, string name) -> bool {
   }
 
   if(WonderSwan::Model::SwanCrystal()) {
-    if(auto fp = platform->open(node, "boot.rom", File::Read, File::Required)) {
+    if(auto fp = pak->read("boot.rom")) {
       bootROM.allocate(8_KiB);
       bootROM.load(fp);
     }
@@ -146,14 +147,14 @@ auto System::load(Node::System& root, string name) -> bool {
   }
 
   if(WonderSwan::Model::PocketChallengeV2()) {
-    if(auto fp = platform->open(node, "boot.rom", File::Read, File::Required)) {
+    if(auto fp = pak->read("boot.rom")) {
       bootROM.allocate(4_KiB);
       bootROM.load(fp);
     }
     //the internal EEPROM has been removed from the Pocket Challenge V2 PCB.
   }
 
-  if(auto fp = platform->open(node, "save.eeprom", File::Read)) {
+  if(auto fp = pak->read("save.eeprom")) {
     fp->read({eeprom.data, eeprom.size});
   }
 
@@ -169,7 +170,7 @@ auto System::load(Node::System& root, string name) -> bool {
 auto System::save() -> void {
   if(!node) return;
 
-  if(auto fp = platform->open(node, "save.eeprom", File::Write)) {
+  if(auto fp = pak->write("save.eeprom")) {
     fp->write({eeprom.data, eeprom.size});
   }
 
@@ -186,8 +187,9 @@ auto System::unload() -> void {
   ppu.unload();
   apu.unload();
   cartridgeSlot.unload();
-  node = {};
-  headphones = {};
+  headphones.reset();
+  pak.reset();
+  node.reset();
 }
 
 auto System::power(bool reset) -> void {

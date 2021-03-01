@@ -27,9 +27,9 @@ auto Keyboard::allocate(Node::Port parent, string name) -> Node::Peripheral {
 
 auto Keyboard::connect() -> void {
   Markup::Node document;
-  if(auto fp = platform->open(layout, "layout.bml", File::Read)) {
-    document = BML::unserialize(fp->reads());
-  }
+//if(auto fp = platform->open(layout, "layout.bml", File::Read)) {
+//  document = BML::unserialize(fp->reads());
+//}
   for(u32 column : range(12)) {
     for(u32 row : range(8)) {
       string label{column, ",", row};

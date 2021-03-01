@@ -5,8 +5,11 @@ namespace ares::ColecoVision {
 struct ColecoVision : Emulator {
   ColecoVision();
   auto load() -> bool override;
-  auto open(ares::Node::Object, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> override;
+  auto save() -> bool override;
+  auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  Pak system;
 };
 
 ColecoVision::ColecoVision() {
@@ -18,13 +21,15 @@ ColecoVision::ColecoVision() {
 }
 
 auto ColecoVision::load() -> bool {
-  auto region = Emulator::region();
-  if(!ares::ColecoVision::load(root, {"[Coleco] ColecoVision (", region, ")"})) return false;
-
   if(!file::exists(firmware[0].location)) {
     errorFirmwareRequired(firmware[0]);
     return false;
   }
+  system.pak = shared_pointer{new vfs::directory};
+  system.pak->append("bios.rom", loadFirmware(firmware[0]));
+
+  auto region = Emulator::region();
+  if(!ares::ColecoVision::load(root, {"[Coleco] ColecoVision (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -39,15 +44,13 @@ auto ColecoVision::load() -> bool {
   return true;
 }
 
-auto ColecoVision::open(ares::Node::Object node, string name, vfs::file::mode mode, bool required) -> shared_pointer<vfs::file> {
-  if(name == "bios.rom") {
-    return loadFirmware(firmware[0]);
-  }
+auto ColecoVision::save() -> bool {
+  return true;
+}
 
-  if(node->name() == "ColecoVision") {
-    if(auto fp = pak->find(name)) return fp;
-  }
-
+auto ColecoVision::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
+  if(node->is<ares::Node::System>()) return system.pak;
+  if(node->name() == "ColecoVision") return game.pak;
   return {};
 }
 

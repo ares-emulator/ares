@@ -1,7 +1,17 @@
-auto FamicomDisk::pak(string location) -> shared_pointer<vfs::directory> {
-  if(auto pak = Media::pak(location)) return pak;
-  if(auto input = Media::read(location)) {
+auto FamicomDisk::load(string location) -> shared_pointer<vfs::directory> {
+  if(directory::exists(location)) {
     auto pak = shared_pointer{new vfs::directory};
+    vector<u8> input;
+    pak->append("manifest.bml", heuristics(input, location));
+    for(auto& filename : directory::files(location, "disk?*.side?*")) {
+      pak->append(filename, file::read({location, filename}));
+    }
+    return pak;
+  }
+
+  if(file::exists(location)) {
+    auto pak = shared_pointer{new vfs::directory};
+    vector<u8> input = FloppyDisk::read(location);
     pak->append("manifest.bml", heuristics(input, location));
     array_view<u8> view{input};
     if(view.size() % 65500 == 16) view += 16;  //skip iNES / fwNES header
@@ -16,15 +26,18 @@ auto FamicomDisk::pak(string location) -> shared_pointer<vfs::directory> {
     }
     return pak;
   }
+
   return {};
 }
 
-auto FamicomDisk::rom(string location) -> vector<u8> {
-  vector<u8> data;
-  for(auto& filename : directory::files(location, "disk?*.side?*")) {
-    append(data, {location, filename});
-  }
-  return data;
+auto FamicomDisk::save(string location, shared_pointer<vfs::directory> pak) -> bool {
+  auto fp = pak->read("manifest.bml");
+  if(!fp) return false;
+
+  auto manifest = fp->reads();
+  auto document = BML::unserialize(manifest);
+
+  return true;
 }
 
 auto FamicomDisk::heuristics(vector<u8>& data, string location) -> string {

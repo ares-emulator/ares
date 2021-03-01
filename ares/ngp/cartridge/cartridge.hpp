@@ -2,6 +2,7 @@
 
 struct Cartridge {
   Node::Peripheral node;
+  Pak pak;
   Flash flash[2];
 
   auto manifest() const -> string { return information.manifest; }

@@ -9,11 +9,36 @@ struct directory : node {
     return (bool)_nodes.find(item);
   }
 
-  template<typename T = node>
-  auto find(const string& name) -> shared_pointer<T> {
+  auto find(const string& name) const -> bool {
+    for(auto& node : _nodes) {
+      if(node->name() == name) return true;
+    }
+    return false;
+  }
+
+  template<typename T = file>
+  auto read(const string& name) -> shared_pointer<T> {
     for(auto& node : _nodes) {
       if(node->name() == name) {
-        if(auto cast = node.cast<T>()) return cast;
+        if(auto fp = node.cast<T>()) {
+          if(!fp->readable()) return {};
+          fp->seek(0);
+          return fp;
+        }
+      }
+    }
+    return {};
+  }
+
+  template<typename T = file>
+  auto write(const string& name) -> shared_pointer<T> {
+    for(auto& node : _nodes) {
+      if(node->name() == name) {
+        if(auto fp = node.cast<T>()) {
+          if(!fp->writable()) return {};
+          fp->seek(0);
+          return fp;
+        }
       }
     }
     return {};

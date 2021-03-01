@@ -57,6 +57,7 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
 
   fastBoot = node->append<Node::Setting::Boolean>("Fast Boot", false);
 
@@ -76,7 +77,7 @@ auto System::load(Node::System& root, string name) -> bool {
   timer.load(node);
 
   bios.allocate(512_KiB);
-  if(auto fp = platform->open(node, "bios.rom", File::Read, File::Required)) {
+  if(auto fp = pak->read("bios.rom")) {
     bios.load(fp);
   }
 
@@ -101,6 +102,7 @@ auto System::unload() -> void {
   dma.unload();
   timer.unload();
   fastBoot.reset();
+  pak.reset();
   node.reset();
 }
 

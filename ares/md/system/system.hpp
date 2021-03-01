@@ -3,6 +3,7 @@ extern Random random;
 struct System {
   Node::System node;
   Node::Setting::Boolean tmss;
+  Pak pak;
 
   struct Controls {
     Node::Object node;

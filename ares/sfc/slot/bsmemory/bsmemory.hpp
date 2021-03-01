@@ -17,6 +17,7 @@
 
 struct BSMemoryCartridge : Thread {
   Node::Peripheral node;
+  Pak pak;
   u32 ROM = 1;
 
   auto manifest() const -> string { return information.manifest; }
