@@ -20,7 +20,7 @@ System system;
 
 auto System::game() -> string {
   if(disc.cd) {
-    return disc.name();
+    return disc.title();
   }
 
   return "(no disc inserted)";

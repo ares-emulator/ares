@@ -12,24 +12,27 @@ auto GameBoyAdvance::load(string location) -> shared_pointer<vfs::directory> {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
-  } else {
-    return {};
   }
+  if(!rom) return {};
 
   auto pak = shared_pointer{new vfs::directory};
   auto manifest = Cartridge::manifest(rom, location);
   auto document = BML::unserialize(manifest);
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
+  pak->setAttribute("title", document["game/title"].string());
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::load(pak, location, node, ".ram");
+    Media::load(location, pak, node, ".ram");
   }
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    Media::load(pak, location, node, ".eeprom");
+    Media::load(location, pak, node, ".eeprom");
   }
   if(auto node = document["game/board/memory(type=Flash,content=Save)"]) {
-    Media::load(pak, location, node, ".flash");
+    Media::load(location, pak, node, ".flash");
+    if(auto fp = pak->read("save.flash")) {
+      fp->setAttribute("manufacturer", node["manufacturer"].string());
+    }
   }
 
   return pak;
@@ -43,13 +46,13 @@ auto GameBoyAdvance::save(string location, shared_pointer<vfs::directory> pak) -
   auto document = BML::unserialize(manifest);
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::save(pak, location, node, ".ram");
+    Media::save(location, pak, node, ".ram");
   }
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    Media::save(pak, location, node, ".eeprom");
+    Media::save(location, pak, node, ".eeprom");
   }
   if(auto node = document["game/board/memory(type=Flash,content=Save)"]) {
-    Media::save(pak, location, node, ".flash");
+    Media::save(location, pak, node, ".flash");
   }
 
   return true;
@@ -86,7 +89,7 @@ auto GameBoyAdvance::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:  ", Media::name(location), "\n"};
-  s +={"  label: ", Media::name(location), "\n"};
+  s +={"  title: ", Media::name(location), "\n"};
   s += "  board\n";
 
   s += "    memory\n";

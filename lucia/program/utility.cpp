@@ -44,7 +44,8 @@ auto Program::openFile(BrowserDialog& dialog) -> string {
     window.setParent(dialog.alignmentWindow());
     return window.open();
   }
-  return dialog.openObject();
+  if(dialog.filters().size() > 1) return dialog.openObject();
+  return dialog.openFile();
 }
 
 auto Program::selectFolder(BrowserDialog& dialog) -> string {

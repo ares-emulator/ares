@@ -12,24 +12,25 @@ auto WonderSwan::load(string location) -> shared_pointer<vfs::directory> {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
-  } else {
-    return {};
   }
+  if(!rom) return {};
 
   auto pak = shared_pointer{new vfs::directory};
   auto manifest = Cartridge::manifest(rom, location);
   auto document = BML::unserialize(manifest);
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
+  pak->setAttribute("title", document["game/title"].string());
+  pak->setAttribute("orientation", document["game/orientation"].string());
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::load(pak, location, node, ".ram");
+    Media::load(location, pak, node, ".ram");
   }
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    Media::load(pak, location, node, ".eeprom");
+    Media::load(location, pak, node, ".eeprom");
   }
   if(auto node = document["game/board/memory(type=RTC,content=Time)"]) {
-    Media::load(pak, location, node, ".rtc");
+    Media::load(location, pak, node, ".rtc");
   }
 
   return pak;
@@ -43,13 +44,13 @@ auto WonderSwan::save(string location, shared_pointer<vfs::directory> pak) -> bo
   auto document = BML::unserialize(manifest);
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::save(pak, location, node, ".ram");
+    Media::save(location, pak, node, ".ram");
   }
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    Media::save(pak, location, node, ".eeprom");
+    Media::save(location, pak, node, ".eeprom");
   }
   if(auto node = document["game/board/memory(type=RTC,content=Time)"]) {
-    Media::save(pak, location, node, ".rtc");
+    Media::save(location, pak, node, ".rtc");
   }
 
   return true;
@@ -81,7 +82,7 @@ auto WonderSwan::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:        ", Media::name(location), "\n"};
-  s +={"  label:       ", Media::name(location), "\n"};
+  s +={"  title:       ", Media::name(location), "\n"};
   s +={"  orientation: ", !orientation ? "horizontal" : "vertical", "\n"};
   s += "  board\n";
 

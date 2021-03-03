@@ -12,62 +12,45 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
   string name = system.name();
   if(Model::SwanCrystal()) name = "WonderSwan Color";
-  return node = parent->append<Node::Peripheral>(name);
+  return node = parent->append<Node::Peripheral>(string{name, " Cartridge"});
 }
 
 auto Cartridge::connect() -> void {
   if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-  if(auto fp = pak->read("manifest.bml")) {
-    information.manifest = fp->reads();
-  }
-  auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].string();
+  information.title = pak->attribute("title");
+  if(pak->attribute("orientation") == "horizontal") information.orientation = "Horizontal";
+  if(pak->attribute("orientation") == "vertical"  ) information.orientation = "Vertical";
 
-  if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
-    rom.size = memory["size"].natural();
+  if(auto fp = pak->read("program.rom")) {
+    rom.size = fp->size();
     rom.mask = bit::round(rom.size) - 1;
     rom.data = new n8[rom.mask + 1];
     memory::fill<u8>(rom.data, rom.mask + 1, 0xff);
-    if(auto fp = pak->read("program.rom")) {
-      fp->read({rom.data, rom.size});
-    }
+    fp->read({rom.data, rom.size});
   }
 
-  if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
-    ram.size = memory["size"].natural();
+  if(auto fp = pak->read("save.ram")) {
+    ram.size = fp->size();
     ram.mask = bit::round(ram.size) - 1;
     ram.data = new n8[ram.mask + 1];
     memory::fill<u8>(ram.data, ram.mask + 1, 0xff);
-    if(!memory["volatile"]) {
-      if(auto fp = pak->read("save.ram")) {
-        fp->read({ram.data, ram.size});
-      }
-    }
+    fp->read({ram.data, ram.size});
   }
 
-  if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    eeprom.allocate(memory["size"].natural(), 16, 1, 0xff);
-    if(auto fp = pak->read("save.eeprom")) {
-      fp->read({eeprom.data, eeprom.size});
-    }
+  if(auto fp = pak->read("save.eeprom")) {
+    eeprom.allocate(fp->size(), 16, 1, 0xff);
+    fp->read({eeprom.data, eeprom.size});
   }
 
-  if(auto memory = document["game/board/memory(type=RTC,content=Time)"]) {
-    rtc.size = memory["size"].natural();
+  if(auto fp = pak->read("time.rtc")) {
+    rtc.size = fp->size();
     rtc.mask = bit::round(rtc.size) - 1;
     rtc.data = new n8[rtc.mask + 1];
     memory::fill<u8>(rtc.data, rtc.mask + 1, 0x00);
-    if(!memory["volatile"]) {
-      if(auto fp = pak->read("time.rtc")) {
-        fp->read({rtc.data, rtc.size});
-      }
-    }
+    fp->read({rtc.data, rtc.size});
   }
-
-  if(document["game/orientation"].string() == "horizontal") information.orientation = "Horizontal";
-  if(document["game/orientation"].string() == "vertical"  ) information.orientation = "Vertical";
 
   power();
 }
@@ -95,28 +78,16 @@ auto Cartridge::disconnect() -> void {
 auto Cartridge::save() -> void {
   if(!node) return;
 
-  auto document = BML::unserialize(information.manifest);
-
-  if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
-    if(!memory["volatile"]) {
-      if(auto fp = pak->write("save.ram")) {
-        fp->write({ram.data, ram.size});
-      }
-    }
+  if(auto fp = pak->write("save.ram")) {
+    fp->write({ram.data, ram.size});
   }
 
-  if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    if(auto fp = pak->write("save.eeprom")) {
-      fp->write({eeprom.data, eeprom.size});
-    }
+  if(auto fp = pak->write("save.eeprom")) {
+    fp->write({eeprom.data, eeprom.size});
   }
 
-  if(auto memory = document["game/board/memory(type=RTC,content=Time)"]) {
-    if(!memory["volatile"]) {
-      if(auto fp = pak->write("time.rtc")) {
-        fp->write({rtc.data, rtc.size});
-      }
-    }
+  if(auto fp = pak->write("time.rtc")) {
+    fp->write({rtc.data, rtc.size});
   }
 }
 

@@ -1,19 +1,28 @@
 auto PCEngineCD::load(string location) -> shared_pointer<vfs::directory> {
+  auto pak = shared_pointer{new vfs::directory};
+  auto manifest = PCEngineCD::manifest(location);
+  auto document = BML::unserialize(manifest);
+  pak->append("manifest.bml", manifest);
   if(directory::exists(location)) {
-    auto pak = shared_pointer{new vfs::directory};
-    pak->append("manifest.bml", manifest(location));
     pak->append("cd.rom", vfs::disk::open({location, "cd.rom"}, vfs::read));
-    return pak;
   }
-
   if(file::exists(location)) {
-    auto pak = shared_pointer{new vfs::directory};
-    pak->append("manifest.bml", manifest(location));
     pak->append("cd.rom", vfs::cdrom::open(location));
-    return pak;
   }
+  pak->setAttribute("title",  document["game/title"].string());
+  pak->setAttribute("region", document["game/region"].string());
 
-  return {};
+  return pak;
+}
+
+auto PCEngineCD::save(string location, shared_pointer<vfs::directory> pak) -> bool {
+  auto fp = pak->read("manifest.bml");
+  if(!fp) return false;
+
+  auto manifest = fp->reads();
+  auto document = BML::unserialize(manifest);
+
+  return true;
 }
 
 auto PCEngineCD::manifest(string location) -> string {
@@ -31,7 +40,7 @@ auto PCEngineCD::manifest(string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:   ", Media::name(location), "\n"};
-  s +={"  label:  ", Media::name(location), "\n"};
+  s +={"  title:  ", Media::name(location), "\n"};
   s +={"  region: ", region, "\n"};
   return s;
 }

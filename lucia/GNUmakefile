@@ -10,10 +10,10 @@ nall.path := ../nall
 include $(nall.path)/GNUmakefile
 
 ifeq ($(platform),windows)
-  vulkan := true
+  vulkan := $(if $(shell if exist ..\ares\n64\vulkan\parallel-rdp) echo 1),true,false)
   local := false
 else ifeq ($(platform),linux)
-  vulkan := true
+  vulkan := $(if $(shell test -e ../ares/n64/vulkan/parallel-rdp && echo 1),true,false)
 endif
 
 ifeq ($(local),true)

@@ -44,7 +44,15 @@ struct directory : node {
     return {};
   }
 
+  auto append(const string& name, u64 size) -> bool {
+    if(find(name)) return false;
+    auto item = memory::create(size);
+    item->setName(name);
+    return _nodes.append(item), true;
+  }
+
   auto append(const string& name, shared_pointer<node> item) -> bool {
+    if(!item) return false;
     if(_nodes.find(item)) return false;
     item->setName(name);
     return _nodes.append(item), true;

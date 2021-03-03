@@ -4,8 +4,8 @@ struct PCD : Thread {
   Node::Object node;
   Node::Port tray;
   Node::Peripheral disc;
-  Pak pak;
-  Shared::File fd;
+  VFS::Pak pak;
+  VFS::File fd;
   CD::Session session;
   Memory::Writable<n8> wram;  // 64KB
   Memory::Writable<n8> bram;  //  2KB
@@ -27,8 +27,7 @@ struct PCD : Thread {
 
   static auto Present() -> bool { return true; }
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
   auto sramEnable() const -> bool { return io.sramEnable == 0xaa55; }
   auto bramEnable() const -> bool { return io.bramEnable; }
 
@@ -316,8 +315,7 @@ private:
 
 //unserialized:
   struct Information {
-    string manifest;
-    string name;
+    string title;
   } information;
 };
 

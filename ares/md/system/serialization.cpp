@@ -38,13 +38,12 @@ auto System::unserialize(serializer& s) -> bool {
 auto System::serialize(serializer& s, bool synchronize) -> void {
   scheduler.setSynchronize(synchronize);
   if(cartridge.node) s(cartridge);
-  if(expansion.node) s(expansion);
+  if(MegaCD()) s(mcd);
   s(cpu);
   s(apu);
   s(vdp);
   s(psg);
   s(opn2);
-  if(MegaCD()) s(mcd);
   s(controllerPort1);
   s(controllerPort2);
   s(extensionPort);

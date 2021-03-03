@@ -48,6 +48,10 @@ auto PCD::load(Node::Object parent) -> void {
 }
 
 auto PCD::unload() -> void {
+  if(!node) return;
+  disconnect();
+
+  debugger = {};
   wram.reset();
   bram.reset();
   if(Model::PCEngineDuo()) {
@@ -57,24 +61,20 @@ auto PCD::unload() -> void {
 
   cdda.unload(node);
   adpcm.unload(node);
-  disconnect();
+
   tray.reset();
   node.reset();
 }
 
 auto PCD::allocate(Node::Port parent) -> Node::Peripheral {
-  return disc = parent->append<Node::Peripheral>("PC Engine CD");
+  return disc = parent->append<Node::Peripheral>("PC Engine CD Disc");
 }
 
 auto PCD::connect() -> void {
-  if(!node->setPak(pak = platform->pak(node))) return;
+  if(!disc->setPak(pak = platform->pak(disc))) return;
 
   information = {};
-  if(auto fp = pak->read("manifest.bml")) {
-    information.manifest = fp->reads();
-  }
-  auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].string();
+  information.title = pak->attribute("title");
 
   fd = pak->read("cd.rom");
   if(!fd) return disconnect();
@@ -88,15 +88,23 @@ auto PCD::connect() -> void {
     fd->read({subchannel.data() + sector * 96, 96});
   }
   session.decode(subchannel, 96);
+
+  if(auto fp = system.pak->read("backup.ram")) {
+    bram.load(fp);
+  }
 }
 
 auto PCD::disconnect() -> void {
+  save();
   fd.reset();
   pak.reset();
   disc.reset();
 }
 
 auto PCD::save() -> void {
+  if(auto fp = system.pak->write("backup.ram")) {
+    bram.save(fp);
+  }
 }
 
 auto PCD::main() -> void {

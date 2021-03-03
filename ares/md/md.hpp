@@ -33,10 +33,8 @@ namespace ares::MegaDrive {
   #include <md/vdp/vdp.hpp>
   #include <md/psg/psg.hpp>
   #include <md/opn2/opn2.hpp>
-
   #include <md/mcd/mcd.hpp>
 
   #include <md/system/system.hpp>
   #include <md/cartridge/cartridge.hpp>
-  #include <md/expansion/expansion.hpp>
 }

@@ -25,16 +25,15 @@ struct Readable : Interface {
     }
   }
 
-  auto load(Shared::File fp) -> void {
-    if(!fp) return;
+  auto load(VFS::File fp) -> void {
+    if(!size) allocate(fp->size());
     for(u32 address = 0; address < min(size, fp->size()); address += 4) {
       *(u32*)&data[address & maskWord] = fp->readl(4L);
     }
   }
 
-  auto save(Shared::File fp) -> void {
-    if(!fp) return;
-    for(u32 address = 0; address < size; address += 4) {
+  auto save(VFS::File fp) -> void {
+    for(u32 address = 0; address < min(size, fp->size()); address += 4) {
       fp->writel(*(u32*)&data[address & maskWord], 4L);
     }
   }

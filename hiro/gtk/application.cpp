@@ -106,6 +106,8 @@ auto pApplication::initialize() -> void {
   //prevent useless terminal messages:
   //GVFS-RemoteVolumeMonitor: "invoking List() failed for type GProxyVolumeMonitorHal: method not implemented"
   g_log_set_handler("GVFS-RemoteVolumeMonitor", G_LOG_LEVEL_MASK, Log_Ignore, nullptr);
+  //GLib-GIO: "excluding {path} from kernel notification, falling back to poll
+  g_log_set_handler("GLib-GIO", G_LOG_LEVEL_MASK, Log_Ignore, nullptr);
   //Gtk: "gtk_widget_size_allocate(): attempt to allocate widget with (width or height < 1)"
   g_log_set_handler("Gtk", G_LOG_LEVEL_MASK, Log_Filter, nullptr);
 

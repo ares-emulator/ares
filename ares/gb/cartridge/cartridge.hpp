@@ -3,11 +3,9 @@ struct Cartridge;
 
 struct Cartridge : Thread {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
-//auto board() const -> string { return information.board; }
+  auto title() const -> string { return information.title; }
 
   //cartridge.cpp
   auto allocate(Node::Port) -> Node::Peripheral;
@@ -27,8 +25,7 @@ struct Cartridge : Thread {
   auto serialize(serializer&) -> void;
 
   struct Information {
-    string manifest;
-    string name;
+    string title;
     string board;
   } information;
 

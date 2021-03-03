@@ -24,28 +24,28 @@ System system;
 auto System::game() -> string {
   #if defined(CORE_GB)
   if(cartridge.has.GameBoySlot && GameBoy::cartridge.node) {
-    return GameBoy::cartridge.name();
+    return GameBoy::cartridge.title();
   }
   #endif
 
   if(bsmemory.node) {
-    return {cartridge.name(), " + ", bsmemory.name()};
+    return {cartridge.title(), " + ", bsmemory.title()};
   }
 
   if(sufamiturboA.node && sufamiturboB.node) {
-    return {sufamiturboA.name(), " + ", sufamiturboB.name()};
+    return {sufamiturboA.title(), " + ", sufamiturboB.title()};
   }
 
   if(sufamiturboA.node) {
-    return sufamiturboA.name();
+    return sufamiturboA.title();
   }
 
   if(sufamiturboB.node) {
-    return sufamiturboB.name();
+    return sufamiturboB.title();
   }
 
   if(cartridge.node) {
-    return cartridge.name();
+    return cartridge.title();
   }
 
   return "(no cartridge connected)";

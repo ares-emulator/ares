@@ -1,7 +1,3 @@
-namespace ares::PlayStation {
-  auto load(Node::System& node, string name) -> bool;
-}
-
 struct PlayStation : Emulator {
   PlayStation();
   auto load() -> bool override;
@@ -9,7 +5,7 @@ struct PlayStation : Emulator {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
-  Pak system;
+  Pak memoryCard;
   u32 regionID = 0;
 };
 
@@ -34,7 +30,6 @@ auto PlayStation::load() -> bool {
     errorFirmwareRequired(firmware[regionID]);
     return false;
   }
-  system.pak = shared_pointer{new vfs::directory};
   system.pak->append("bios.rom", loadFirmware(firmware[regionID]));
 
   if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return false;
@@ -54,8 +49,10 @@ auto PlayStation::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Memory Card Port 1")) {
-  //port->allocate("Memory Card");
-  //port->connect();
+    memoryCard.pak = shared_pointer{new vfs::directory};
+    medium->load(game.location, memoryCard.pak, "save.card", ".card", 128_KiB);
+    port->allocate("Memory Card");
+    port->connect();
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
@@ -68,12 +65,15 @@ auto PlayStation::load() -> bool {
 
 auto PlayStation::save() -> bool {
   root->save();
-  return medium->save(game.location, game.pak);
+  if(memoryCard.pak) medium->save(game.location, memoryCard.pak, "save.card", ".card");
+  medium->save(game.location, game.pak);
+  return true;
 }
 
 auto PlayStation::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->is<ares::Node::System>()) return system.pak;
-  if(node->name() == "PlayStation") return game.pak;
+  if(node->name() == "PlayStation") return system.pak;
+  if(node->name() == "PlayStation Disc") return game.pak;
+  if(node->name() == "Memory Card") return memoryCard.pak;
   return {};
 }
 

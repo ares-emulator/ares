@@ -10,11 +10,8 @@ auto locate(const string& name) -> string {
   string location = {Path::program(), name};
   if(inode::exists(location)) return location;
 
-  location = {Path::userData(), "lucia/", name};
-  if(inode::exists(location)) return location;
-
-  directory::create({Path::userSettings(), "lucia/"});
-  return {Path::userSettings(), "lucia/", name};
+  directory::create({Path::userData(), "lucia/"});
+  return {Path::userData(), "lucia/", name};
 }
 
 #include <nall/main.hpp>

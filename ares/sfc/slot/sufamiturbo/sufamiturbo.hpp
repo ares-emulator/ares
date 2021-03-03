@@ -1,9 +1,8 @@
 struct SufamiTurboCartridge {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
 
   //sufamiturbo.cpp
   auto allocate(Node::Port) -> Node::Peripheral;
@@ -27,8 +26,7 @@ struct SufamiTurboCartridge {
   WritableMemory ram;
 
   struct {
-    string manifest;
-    string name;
+    string title;
   } information;
 };
 

@@ -1,7 +1,7 @@
 namespace Board {
 
 struct Interface {
-  Pak pak;
+  VFS::Pak pak;
 
   Interface(Cartridge& cartridge) : cartridge(cartridge) {}
   virtual ~Interface() = default;

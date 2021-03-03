@@ -2,7 +2,7 @@
 
 struct DD : Memory::IO<DD> {
   Node::Object node;
-  Pak pak;
+  VFS::Pak pak;
   Memory::Readable iplrom;
   Memory::Writable c2s;
   Memory::Writable ds;

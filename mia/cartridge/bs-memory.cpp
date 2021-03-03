@@ -13,14 +13,18 @@ auto BSMemory::load(string location) -> shared_pointer<vfs::directory> {
     append(rom, {location, "program.flash"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
-  } else {
-    return {};
   }
+  if(!rom) return {};
 
   auto pak = shared_pointer{new vfs::directory};
   auto manifest = Cartridge::manifest(rom, location);
   auto document = BML::unserialize(manifest);
   pak->append("manifest.bml", manifest);
+  pak->setAttribute("title", document["game/title"].string());
+  //todo: update boards database to use title: instead of label:
+  if(!document["game/title"]) {
+    pak->setAttribute("title", document["game/label"].string());
+  }
 
   if(document["game/board/memory(type=ROM)"]) {
     pak->append("program.rom", rom);
@@ -59,7 +63,7 @@ auto BSMemory::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:  ", Media::name(location), "\n"};
-  s +={"  label: ", Media::name(location), "\n"};
+  s +={"  title: ", Media::name(location), "\n"};
   s += "  board\n";
   s += "    memory\n";
   s +={"      type: ", type, "\n"};

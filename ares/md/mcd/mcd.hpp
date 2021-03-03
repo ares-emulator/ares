@@ -4,8 +4,8 @@ struct MCD : M68K, Thread {
   Node::Object node;
   Node::Port tray;
   Node::Peripheral disc;
-  Pak pak;
-  Shared::File fd;
+  VFS::Pak pak;
+  VFS::File fd;
   Memory::Readable<n16> bios;  //BIOS ROM
   Memory::Writable<n16> pram;  //program RAM
   Memory::Writable<n16> wram;  //work RAM
@@ -29,8 +29,7 @@ struct MCD : M68K, Thread {
     } tracer;
   } debugger;
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
 
   //mcd.cpp
   auto load(Node::Object) -> void;
@@ -40,6 +39,7 @@ struct MCD : M68K, Thread {
   auto connect() -> void;
   auto disconnect() -> void;
 
+  auto save() -> void;
   auto main() -> void;
   auto step(u32 clocks) -> void;
   auto idle(u32 clocks) -> void override;
@@ -66,8 +66,7 @@ struct MCD : M68K, Thread {
   auto serialize(serializer&) -> void;
 
   struct Information {
-    string manifest;
-    string name;
+    string title;
   } information;
 
   struct Counter {

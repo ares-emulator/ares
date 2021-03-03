@@ -53,59 +53,58 @@ auto Media::manifest(string location) -> string {
   return {};
 }
 
-auto Media::load(shared_pointer<vfs::directory> pak, string location, Markup::Node node, string extension) -> bool {
-  string name;
-  if(auto architecture = node["architecture"].string()) name.append(architecture, ".");
-  name.append(node["content"].string(), ".");
-  name.append(node["type"].string());
-  name.downcase();
-  auto size = node["size"].natural();
-
+auto Media::saveLocation(string location, string name, string extension) -> string {
   string saveLocation;
   if(auto path = mia::saveLocation()) {
     saveLocation = {path, this->name(), "/", Location::prefix(location), extension};
-  } else if(file::exists(location)) {
-    saveLocation = {Location::notsuffix(location), extension};
   } else if(directory::exists(location)) {
     saveLocation = {location, name};
-  } else {
-    return false;
+  } else if(file::exists(location)) {
+    saveLocation = {Location::notsuffix(location), extension};
   }
+  return saveLocation;
+}
 
+auto Media::load(string location, shared_pointer<vfs::directory> pak, string name, string extension, u64 size) -> bool {
+  if(!pak) return false;
   auto save = memory::allocate<u8>(size, 0xff);
-  if(auto fp = file::open(saveLocation, file::mode::read)) {
+  if(auto fp = file::open(saveLocation(location, name, extension), file::mode::read)) {
     fp.read({save, min(fp.size(), size)});
   }
   pak->append(name, {save, size});
   return true;
 }
 
-auto Media::save(shared_pointer<vfs::directory> pak, string location, Markup::Node node, string extension) -> bool {
+auto Media::load(string location, shared_pointer<vfs::directory> pak, Markup::Node node, string extension) -> bool {
   string name;
   if(auto architecture = node["architecture"].string()) name.append(architecture, ".");
   name.append(node["content"].string(), ".");
   name.append(node["type"].string());
   name.downcase();
   auto size = node["size"].natural();
+  return load(location, pak, name, extension, size);
+}
 
-  string saveLocation;
-  if(auto path = mia::saveLocation()) {
-    saveLocation = {path, this->name(), "/", Location::prefix(location), extension};
-  } else if(file::exists(location)) {
-    saveLocation = {Location::notsuffix(location), extension};
-  } else if(directory::exists(location)) {
-    saveLocation = {location, name};
-  } else {
-    return false;
-  }
-
-  if(auto save = pak->read<vfs::memory>(name)) {
-    if(auto fp = file::open(saveLocation, file::mode::write)) {
+auto Media::save(string location, shared_pointer<vfs::directory> pak, string name, string extension) -> bool {
+  if(!pak) return false;
+  if(auto save = pak->read(name)) {
+    directory::create(Location::dir(saveLocation(location, name, extension)));
+    if(auto fp = file::open(saveLocation(location, name, extension), file::mode::write)) {
       fp.write({save->data(), save->size()});
       return true;
     }
   }
-  return false;
+  return true;
+}
+
+auto Media::save(string location, shared_pointer<vfs::directory> pak, Markup::Node node, string extension) -> bool {
+  string name;
+  if(auto architecture = node["architecture"].string()) name.append(architecture, ".");
+  name.append(node["content"].string(), ".");
+  name.append(node["type"].string());
+  name.downcase();
+  auto size = node["size"].natural();
+  return save(location, pak, name, extension);
 }
 
 auto Media::name(string location) const -> string {

@@ -12,24 +12,27 @@ auto PCEngine::load(string location) -> shared_pointer<vfs::directory> {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
-  } else {
-    return {};
   }
+  if(!rom) return {};
 
   auto pak = shared_pointer{new vfs::directory};
   auto manifest = Cartridge::manifest(rom, location);
   auto document = BML::unserialize(manifest);
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
+  pak->append("backup.ram", 2_KiB);
+  pak->setAttribute("title",  document["game/title"].string());
+  pak->setAttribute("region", document["game/region"].string());
+  pak->setAttribute("board",  document["game/board"].string());
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::load(pak, location, node, ".ram");
+    Media::load(location, pak, node, ".ram");
   }
   if(auto node = document["game/board/memory(type=RAM,content=Dynamic)"]) {
-    Media::load(pak, location, node, ".dram");
+    Media::load(location, pak, node, ".dram");
   }
   if(auto node = document["game/board/memory(type=RAM,content=Work)"]) {
-    Media::load(pak, location, node, ".wram");
+    Media::load(location, pak, node, ".wram");
   }
 
   return pak;
@@ -43,7 +46,7 @@ auto PCEngine::save(string location, shared_pointer<vfs::directory> pak) -> bool
   auto document = BML::unserialize(manifest);
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::save(pak, location, node, ".ram");
+    Media::save(location, pak, node, ".ram");
   }
 
   return true;
@@ -96,7 +99,7 @@ auto PCEngine::heuristics(vector<u8>& data, string location) -> string {
   s += "game\n";
   s +={"  sha256: ", digest, "\n"};
   s +={"  name:   ", Media::name(location), "\n"};
-  s +={"  label:  ", Media::name(location), "\n"};
+  s +={"  title:  ", Media::name(location), "\n"};
   s +={"  region: ", region, "\n"};
   s +={"  board:  ", board, "\n"};
   s += "    memory\n";

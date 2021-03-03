@@ -9,19 +9,15 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>(parent->family());
+  return node = parent->append<Node::Peripheral>(string{parent->family(), " Cartridge"});
 }
 
 auto Cartridge::connect() -> void {
   if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-  if(auto fp = pak->read("manifest.bml")) {
-    information.manifest = fp->reads();
-  }
-  auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].string();
-  information.board = document["game/board"].string();
+  information.title = pak->attribute("title");
+  information.board = pak->attribute("board");
 
   board.reset();
   if(information.board == "HuC1"  ) board = new Board::HuC1{*this};

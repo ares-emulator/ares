@@ -1,146 +1,8 @@
 #include "../lucia.hpp"
-
-#ifdef CORE_CV
-  #include "colecovision.cpp"
-#endif
-
-#ifdef CORE_FC
-  #include "famicom.cpp"
-#endif
-
-#ifdef CORE_GB
-  #include "game-boy.cpp"
-#endif
-
-#ifdef CORE_GBA
-  #include "game-boy-advance.cpp"
-#endif
-
-#ifdef CORE_MD
-  #include "mega-drive.cpp"
-#endif
-
-#ifdef CORE_MS
-  #include "master-system.cpp"
-#endif
-
-#ifdef CORE_MSX
-  #include "msx.cpp"
-#endif
-
-#ifdef CORE_N64
-  #include "nintendo-64.cpp"
-#endif
-
-#ifdef CORE_NG
-  #include "neo-geo.cpp"
-#endif
-
-#ifdef CORE_NGP
-  #include "neo-geo-pocket.cpp"
-#endif
-
-#ifdef CORE_PCE
-  #include "pc-engine.cpp"
-#endif
-
-#ifdef CORE_PS1
-  #include "playstation.cpp"
-#endif
-
-#ifdef CORE_SFC
-  #include "super-famicom.cpp"
-#endif
-
-#ifdef CORE_SG
-  #include "sg-1000.cpp"
-#endif
-
-#ifdef CORE_WS
-  #include "wonderswan.cpp"
-#endif
+#include "emulators.cpp"
 
 vector<shared_pointer<Emulator>> emulators;
 shared_pointer<Emulator> emulator;
-
-auto Emulator::construct() -> void {
-  mia::construct();
-
-  #ifdef CORE_FC
-  emulators.append(new Famicom);
-  emulators.append(new FamicomDiskSystem);
-  #endif
-
-  #ifdef CORE_SFC
-  emulators.append(new SuperFamicom);
-  #endif
-
-  #ifdef CORE_N64
-  emulators.append(new Nintendo64);
-//emulators.append(new Nintendo64DD);
-  #endif
-
-  #ifdef CORE_SG
-  emulators.append(new SG1000);
-  #endif
-
-  #ifdef CORE_MS
-  emulators.append(new MasterSystem);
-  #endif
-
-  #ifdef CORE_MD
-  emulators.append(new MegaDrive);
-  emulators.append(new MegaCD);
-  #endif
-
-  #ifdef CORE_PS1
-  emulators.append(new PlayStation);
-  #endif
-
-  #ifdef CORE_PCE
-  emulators.append(new PCEngine);
-  emulators.append(new PCEngineCD);
-  emulators.append(new SuperGrafx);
-  #endif
-
-  #ifdef CORE_MSX
-  emulators.append(new MSX);
-  emulators.append(new MSX2);
-  #endif
-
-  #ifdef CORE_CV
-  emulators.append(new ColecoVision);
-  #endif
-
-  #ifdef CORE_GB
-  emulators.append(new GameBoy);
-  emulators.append(new GameBoyColor);
-  #endif
-
-  #ifdef CORE_GBA
-  emulators.append(new GameBoyAdvance);
-  #endif
-
-  #ifdef CORE_MS
-  emulators.append(new GameGear);
-  #endif
-
-  #ifdef CORE_WS
-  emulators.append(new WonderSwan);
-  emulators.append(new WonderSwanColor);
-  emulators.append(new PocketChallengeV2);
-  #endif
-
-  #ifdef CORE_NG
-  emulators.append(new NeoGeoAES);
-  emulators.append(new NeoGeoMVS);
-  #endif
-
-  #ifdef CORE_NGP
-  emulators.append(new NeoGeoPocket);
-  emulators.append(new NeoGeoPocketColor);
-  #endif
-}
 
 auto Emulator::locate(const string& location, const string& suffix, const string& path, maybe<string> system) -> string {
   if(!system) system = root->name();
@@ -174,8 +36,7 @@ auto Emulator::manifest(const string& type, const string& location) -> shared_po
 }
 
 auto Emulator::region() -> string {
-  auto document = BML::unserialize(game.manifest);
-  auto regions = document["game/region"].string().split(",").strip();
+  auto regions = game.pak->attribute("region").split(",").strip();
   if(!regions) return {};
   if(settings.boot.prefer == "NTSC-U" && regions.find("NTSC-U")) return "NTSC-U";
   if(settings.boot.prefer == "NTSC-J" && regions.find("NTSC-J")) return "NTSC-J";
@@ -190,11 +51,13 @@ auto Emulator::region() -> string {
 }
 
 auto Emulator::load(const string& location) -> bool {
+  system.location = {Path::userData(), "lucia/Saves/", name, "/"};
+  system.pak = shared_pointer{new vfs::directory};
+  directory::create(system.location);
+
   game.location = location;
-  game.manifest = {};
   game.pak = medium->load(location);
-  if(auto fp = game.pak->read("manifest.bml")) game.manifest = fp->reads();
-  if(!game.manifest) return false;
+  if(!game.pak) return false;
 
   latch = {};
   if(!load()) return false;
@@ -225,7 +88,25 @@ auto Emulator::unload() -> void {
   save();
   root->unload();
   root.reset();
+  system = {};
   game = {};
+}
+
+auto Emulator::load(Emulator::Pak& node, string name) -> bool {
+  if(auto fp = node.pak->read(name)) {
+    if(auto memory = file::read({node.location, name})) {
+      fp->read(memory);
+      return true;
+    }
+  }
+  return false;
+}
+
+auto Emulator::save(Emulator::Pak& node, string name) -> bool {
+  if(auto memory = node.pak->write(name)) {
+    return file::write({node.location, name}, {memory->data(), memory->size()});
+  }
+  return false;
 }
 
 auto Emulator::refresh() -> void {

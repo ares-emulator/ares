@@ -8,6 +8,7 @@ struct ICD : Platform, GameBoy::SuperGameBoyInterface, Thread {
 
   auto load(Node::Peripheral) -> void;
   auto unload() -> void;
+  auto save() -> void;
 
   auto main() -> void;
   auto power(bool reset = false) -> void;
@@ -73,9 +74,8 @@ struct ICD : Thread {
 
   auto load(Node::Peripheral) -> void {}
   auto unload() -> void {}
+  auto save() -> void {}
 
-  auto connect(Node::Peripheral) -> void {}
-  auto disconnect() -> void {}
   auto power(bool reset = false) -> void {}
 
   auto readIO(n24, n8) -> n8 { return 0; }

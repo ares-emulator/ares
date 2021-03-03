@@ -53,7 +53,7 @@ auto FDS::connect() -> void {
   }
 
   auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].text();
+  information.title = document["game/title"].string();
 
   if(auto fp = pak->read("disk1.sideA")) {
     disk1.sideA.allocate(fp->size());

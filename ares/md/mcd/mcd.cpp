@@ -23,7 +23,7 @@ MCD mcd;
 auto MCD::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("Mega CD");
 
-  tray = parent->append<Node::Port>("Disc Tray");
+  tray = node->append<Node::Port>("Disc Tray");
   tray->setFamily("Mega CD");
   tray->setType("Compact Disc");
   tray->setHotSwappable(true);
@@ -37,12 +37,6 @@ auto MCD::load(Node::Object parent) -> void {
   bram.allocate   (  8_KiB >> 0);
   cdc.ram.allocate( 16_KiB >> 1);
 
-  if(expansion.node) {
-    if(auto fp = expansion.pak->read("backup.ram")) {
-      bram.load(fp);
-    }
-  }
-
   cdd.load(node);
   pcm.load(node);
   debugger.load(node);
@@ -51,12 +45,6 @@ auto MCD::load(Node::Object parent) -> void {
 auto MCD::unload() -> void {
   if(!node) return;
   disconnect();
-
-  if(expansion.node) {
-    if(auto fp = expansion.pak->write("backup.ram")) {
-      bram.save(fp);
-    }
-  }
 
   debugger = {};
   cdd.unload(node);
@@ -73,30 +61,38 @@ auto MCD::unload() -> void {
 }
 
 auto MCD::allocate(Node::Port parent) -> Node::Peripheral {
-  return disc = parent->append<Node::Peripheral>("Mega CD");
+  return disc = parent->append<Node::Peripheral>("Mega CD Disc");
 }
 
 auto MCD::connect() -> void {
-  if(!disc->setPak(pak = platform->pak(node))) return;
+  if(!disc->setPak(pak = platform->pak(disc))) return;
 
   information = {};
-  if(auto fp = pak->read("manifest.bml")) {
-    information.manifest = fp->reads();
-  }
-  auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].string();
+  information.title = pak->attribute("title");
 
   fd = pak->read("cd.rom");
   cdd.insert();
+
+  if(auto fp = system.pak->read("backup.ram")) {
+    bram.load(fp);
+  }
 }
 
 auto MCD::disconnect() -> void {
   if(!disc) return;
+
+  save();
   cdd.eject();
   disc.reset();
   fd.reset();
   pak.reset();
   information = {};
+}
+
+auto MCD::save() -> void {
+  if(auto fp = system.pak->write("backup.ram")) {
+    bram.save(fp);
+  }
 }
 
 auto MCD::main() -> void {
@@ -175,7 +171,7 @@ auto MCD::wait(u32 clocks) -> void {
 }
 
 auto MCD::power(bool reset) -> void {
-  if(auto fp = expansion.pak->read("program.rom")) {
+  if(auto fp = system.pak->read("bios.rom")) {
     for(u32 address : range(bios.size())) bios.program(address, fp->readm(2));
   }
 

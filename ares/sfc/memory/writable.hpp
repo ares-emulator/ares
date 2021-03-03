@@ -11,12 +11,13 @@ struct WritableMemory : AbstractMemory {
     for(u32 address : range(size)) self.data[address] = fill;
   }
 
-  auto load(shared_pointer<vfs::file> fp) -> void override {
+  auto load(VFS::File fp) -> void override {
+    if(!self.size) allocate(fp->size());
     fp->read({self.data, min(fp->size(), self.size)});
   }
 
-  auto save(shared_pointer<vfs::file> fp) -> void override {
-    fp->write({self.data, self.size});
+  auto save(VFS::File fp) -> void override {
+    fp->write({self.data, min(fp->size(), self.size)});
   }
 
   auto data() -> n8* override {

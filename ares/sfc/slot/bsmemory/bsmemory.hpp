@@ -17,11 +17,10 @@
 
 struct BSMemoryCartridge : Thread {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
   u32 ROM = 1;
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
   auto size() const -> u32 { return memory.size(); }
   auto writable() const { return pin.writable; }
   auto writable(bool writable) { pin.writable = !ROM && writable; }
@@ -47,8 +46,7 @@ struct BSMemoryCartridge : Thread {
   WritableMemory memory;
 
   struct {
-    string manifest;
-    string name;
+    string title;
   } information;
 
 private:

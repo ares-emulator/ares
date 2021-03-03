@@ -11,15 +11,15 @@ auto NeoGeo::load(string location) -> shared_pointer<vfs::directory> {
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
-  } else {
-    return {};
   }
+  if(!rom) return {};
 
   auto pak = shared_pointer{new vfs::directory};
   auto manifest = Cartridge::manifest(rom, location);
   auto document = BML::unserialize(manifest);
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
+  pak->setAttribute("title", document["game/title"].string());
   return pak;
 }
 
@@ -37,7 +37,7 @@ auto NeoGeo::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:  ", Media::name(location), "\n"};
-  s +={"  label: ", Media::name(location), "\n"};
+  s +={"  title: ", Media::name(location), "\n"};
   s += "  board\n";
   s += "    memory\n";
   s += "      type: ROM\n";

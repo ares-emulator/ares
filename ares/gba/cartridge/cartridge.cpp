@@ -25,7 +25,7 @@ Cartridge::~Cartridge() {
 }
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>("Game Boy Advance");
+  return node = parent->append<Node::Peripheral>("Game Boy Advance Cartridge");
 }
 
 auto Cartridge::connect() -> void {
@@ -33,52 +33,37 @@ auto Cartridge::connect() -> void {
 
   information = {};
   has = {};
-  if(auto fp = pak->read("manifest.bml")) {
-    information.manifest = fp->reads();
-  }
-  auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].string();
+  information.title = pak->attribute("title");
 
-  if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
-    mrom.size = min(32 * 1024 * 1024, memory["size"].natural());
-    if(auto fp = pak->read("program.rom")) {
-      fp->read({mrom.data, mrom.size});
-    }
+  if(auto fp = pak->read("program.rom")) {
+    mrom.size = min(32_MiB, fp->size());
+    fp->read({mrom.data, mrom.size});
   }
 
-  if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
+  if(auto fp = pak->read("save.ram")) {
     has.sram = true;
-    sram.size = min(32 * 1024, memory["size"].natural());
+    sram.size = min(32_KiB, fp->size());
     sram.mask = sram.size - 1;
     for(auto n : range(sram.size)) sram.data[n] = 0xff;
-
-    if(!memory["volatile"]) {
-      if(auto fp = pak->read("save.ram")) {
-        fp->read({sram.data, sram.size});
-      }
-    }
+    fp->read({sram.data, sram.size});
   }
 
-  if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
+  if(auto fp = pak->read("save.eeprom")) {
     has.eeprom = true;
-    eeprom.size = min(8 * 1024, memory["size"].natural());
+    eeprom.size = min(8_KiB, fp->size());
     eeprom.bits = eeprom.size <= 512 ? 6 : 14;
     if(eeprom.size == 0) eeprom.size = 8192, eeprom.bits = 0;  //auto-detect size
     eeprom.mask = mrom.size > 16 * 1024 * 1024 ? 0x0fffff00 : 0x0f000000;
     eeprom.test = mrom.size > 16 * 1024 * 1024 ? 0x0dffff00 : 0x0d000000;
     for(auto n : range(eeprom.size)) eeprom.data[n] = 0xff;
-
-    if(auto fp = pak->read("save.eeprom")) {
-      fp->read({eeprom.data, eeprom.size});
-    }
+    fp->read({eeprom.data, eeprom.size});
   }
 
-  if(auto memory = document["game/board/memory(type=Flash,content=Save)"]) {
+  if(auto fp = pak->read("save.flash")) {
     has.flash = true;
-    flash.size = min(128 * 1024, memory["size"].natural());
-    flash.manufacturer = memory["manufacturer"].string();
+    flash.size = min(128_KiB, fp->size());
+    flash.manufacturer = fp->attribute("manufacturer");
     for(auto n : range(flash.size)) flash.data[n] = 0xff;
-
     flash.id = 0;
     if(flash.manufacturer == "Atmel"     && flash.size ==  64 * 1024) flash.id = 0x3d1f;
     if(flash.manufacturer == "Macronix"  && flash.size ==  64 * 1024) flash.id = 0x1cc2;
@@ -86,10 +71,7 @@ auto Cartridge::connect() -> void {
     if(flash.manufacturer == "Panasonic" && flash.size ==  64 * 1024) flash.id = 0x1b32;
     if(flash.manufacturer == "Sanyo"     && flash.size == 128 * 1024) flash.id = 0x1362;
     if(flash.manufacturer == "SST"       && flash.size ==  64 * 1024) flash.id = 0xd4bf;
-
-    if(auto fp = pak->read("save.flash")) {
-      fp->read({flash.data, flash.size});
-    }
+    fp->read({flash.data, flash.size});
   }
 
   power();
@@ -102,31 +84,23 @@ auto Cartridge::disconnect() -> void {
   memory::fill<u8>(eeprom.data, eeprom.size);
   memory::fill<u8>(flash.data, flash.size);
   has = {};
-  node = {};
+  pak.reset();
+  node.reset();
 }
 
 auto Cartridge::save() -> void {
   if(!node) return;
-  auto document = BML::unserialize(information.manifest);
 
-  if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
-    if(!memory["volatile"]) {
-      if(auto fp = pak->write("save.ram")) {
-        fp->write({sram.data, sram.size});
-      }
-    }
+  if(auto fp = pak->write("save.ram")) {
+    fp->write({sram.data, sram.size});
   }
 
-  if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    if(auto fp = pak->write("save.eeprom")) {
-      fp->write({eeprom.data, eeprom.size});
-    }
+  if(auto fp = pak->write("save.eeprom")) {
+    fp->write({eeprom.data, eeprom.size});
   }
 
-  if(auto memory = document["game/board/memory(type=Flash,content=Save)"]) {
-    if(auto fp = pak->write("save.flash")) {
-      fp->write({flash.data, flash.size});
-    }
+  if(auto fp = pak->write("save.flash")) {
+    fp->write({flash.data, flash.size});
   }
 }
 

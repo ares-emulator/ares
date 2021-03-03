@@ -1,7 +1,3 @@
-namespace ares::GameBoyAdvance {
-  auto load(Node::System& node, string name) -> bool;
-}
-
 struct GameBoyAdvance : Emulator {
   GameBoyAdvance();
   auto load(Menu) -> void override;
@@ -9,8 +5,6 @@ struct GameBoyAdvance : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
-
-  Pak system;
 };
 
 GameBoyAdvance::GameBoyAdvance() {
@@ -44,8 +38,6 @@ auto GameBoyAdvance::load() -> bool {
     errorFirmwareRequired(firmware[0]);
     return false;
   }
-
-  system.pak = shared_pointer{new vfs::directory};
   system.pak->append("bios.rom", loadFirmware(firmware[0]));
 
   if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Player")) return false;
@@ -60,12 +52,13 @@ auto GameBoyAdvance::load() -> bool {
 
 auto GameBoyAdvance::save() -> bool {
   root->save();
-  return medium->save(game.location, game.pak);
+  medium->save(game.location, game.pak);
+  return true;
 }
 
 auto GameBoyAdvance::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->is<ares::Node::System>()) return system.pak;
-  if(node->name() == "Game Boy Advance") return game.pak;
+  if(node->name() == "Game Boy Player") return system.pak;
+  if(node->name() == "Game Boy Advance Cartridge") return game.pak;
   return {};
 }
 

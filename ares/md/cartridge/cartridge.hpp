@@ -3,10 +3,9 @@ struct Cartridge;
 
 struct Cartridge {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
   auto regions() const -> vector<string> { return information.regions; }
   auto bootable() const -> boolean { return information.bootable; }  //CART_IN line
 
@@ -28,8 +27,7 @@ struct Cartridge {
   auto serialize(serializer&) -> void;
 
   struct Information {
-    string manifest;
-    string name;
+    string title;
     vector<string> regions;
     boolean bootable;
   } information;

@@ -7,6 +7,9 @@ auto enumerate() -> vector<string> {
     "[Sega] Mega Drive (NTSC-J)",
     "[Sega] Genesis (NTSC-U)",
     "[Sega] Mega Drive (PAL)",
+    "[Sega] Mega CD (NTSC-J)",
+    "[Sega] Sega CD (NTSC-U)",
+    "[Sega] Mega CD (PAL)",
   };
 }
 
@@ -22,13 +25,12 @@ System system;
 #include "serialization.cpp"
 
 auto System::game() -> string {
-  if(expansion.node && (!cartridge.node || !cartridge.bootable())) {
-    if(mcd.disc) return mcd.name();
-    return expansion.name();
+  if(mcd.node && (!cartridge.node || !cartridge.bootable())) {
+    return mcd.title();
   }
 
   if(cartridge.node && cartridge.bootable()) {
-    return cartridge.name();
+    return cartridge.title();
   }
 
   return "(no cartridge connected)";
@@ -47,9 +49,19 @@ auto System::load(Node::System& root, string name) -> bool {
   information = {};
   if(name.find("Mega Drive")) {
     information.name = "Mega Drive";
+    information.megaCD = 0;
   }
   if(name.find("Genesis")) {
     information.name = "Mega Drive";
+    information.megaCD = 0;
+  }
+  if(name.find("Mega CD")) {
+    information.name = "Mega Drive";
+    information.megaCD = 1;
+  }
+  if(name.find("Sega CD")) {
+    information.name = "Mega Drive";
+    information.megaCD = 1;
   }
   if(name.find("NTSC-J")) {
     information.region = Region::NTSCJ;
@@ -85,7 +97,7 @@ auto System::load(Node::System& root, string name) -> bool {
   psg.load(node);
   opn2.load(node);
   cartridgeSlot.load(node);
-  expansionPort.load(node);
+  if(MegaCD()) mcd.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
   extensionPort.load(node);
@@ -101,11 +113,10 @@ auto System::unload() -> void {
   psg.unload();
   opn2.unload();
   cartridgeSlot.unload();
-  expansionPort.unload();
+  if(MegaCD()) mcd.unload();
   controllerPort1.unload();
   controllerPort2.unload();
   extensionPort.unload();
-  if(MegaCD()) mcd.unload();
   pak.reset();
   node.reset();
 }
@@ -113,24 +124,21 @@ auto System::unload() -> void {
 auto System::save() -> void {
   if(!node) return;
   cartridge.save();
-  expansion.save();
+  if(MegaCD()) mcd.save();
 }
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
-  information.megaCD = (bool)expansion.node;
-
   random.entropy(Random::Entropy::Low);
 
   if(cartridge.node) cartridge.power();
-  if(expansion.node) expansion.power();
+  if(MegaCD()) mcd.power(reset);
   cpu.power(reset);
   apu.power(reset);
   vdp.power(reset);
   psg.power(reset);
   opn2.power(reset);
-  if(MegaCD()) mcd.power(reset);
   scheduler.power(cpu);
 }
 

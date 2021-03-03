@@ -9,7 +9,7 @@ struct SuperFamicom : Cartridge {
   auto region() const -> string;
   auto revision() const -> string;
   auto board() const -> string;
-  auto title() const -> string;
+  auto label() const -> string;
   auto serial() const -> string;
   auto romSize() const -> u32;
   auto programRomSize() const -> u32;
@@ -73,14 +73,41 @@ auto SuperFamicom::load(string location) -> shared_pointer<vfs::directory> {
     for(auto& file : files.match("*.boot.rom"   )) append(rom, {location, file});
   } else if(file::exists(location)) {
     rom = SuperFamicom::read(location);
-  } else {
-    return {};
   }
+  if(!rom) return {};
 
   auto pak = shared_pointer{new vfs::directory};
   auto manifest = Cartridge::manifest(rom, location);
   auto document = BML::unserialize(manifest);
   pak->append("manifest.bml", manifest);
+  pak->setAttribute("title", document["game/title"].string());
+  pak->setAttribute("region", document["game/region"].string());
+  pak->setAttribute("board", document["game/board"].string());
+  //todo: update boards database to use title: instead of label:
+  if(!document["game/title"]) {
+    pak->setAttribute("title", document["game/label"].string());
+  }
+  if(auto node = document["game/board/oscillator/frequency"]) {
+    pak->setAttribute("oscillator", node.natural());
+  }
+
+  auto region = pak->attribute("region");
+  if(region.endsWith("BRA")
+  || region.endsWith("CAN")
+  || region.endsWith("HKG")
+  || region.endsWith("JPN")
+  || region.endsWith("KOR")
+  || region.endsWith("LTN")
+  || region.endsWith("ROC")
+  || region.endsWith("USA")
+  || region.beginsWith("SHVC-")
+  || region == "NTSC"
+  ) {
+    region = "NTSC";
+  } else {
+    region = "PAL";
+  }
+  pak->setAttribute("region", region);
 
   array_view<u8> view{rom};
   for(auto node : document.find("game/board/memory(type=ROM)")) {
@@ -94,16 +121,16 @@ auto SuperFamicom::load(string location) -> shared_pointer<vfs::directory> {
   }
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::load(pak, location, node, ".ram");
+    Media::load(location, pak, node, ".ram");
   }
   if(auto node = document["game/board/memory(type=RAM,content=Download)"]) {
-    Media::load(pak, location, node, ".bsx");
+    Media::load(location, pak, node, ".bsx");
   }
   if(auto node = document["game/board/memory(type=RTC,content=Time)"]) {
-    Media::load(pak, location, node, ".rtc");
+    Media::load(location, pak, node, ".rtc");
   }
   if(auto node = document["game/board/memory(type=RAM,content=Data)"]) {
-    Media::load(pak, location, node, ".data");
+    Media::load(location, pak, node, ".data");
   }
 
   return pak;
@@ -117,16 +144,16 @@ auto SuperFamicom::save(string location, shared_pointer<vfs::directory> pak) -> 
   auto document = BML::unserialize(manifest);
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::save(pak, location, node, ".ram");
+    Media::save(location, pak, node, ".ram");
   }
   if(auto node = document["game/board/memory(type=RAM,content=Download)"]) {
-    Media::save(pak, location, node, ".bsx");
+    Media::save(location, pak, node, ".bsx");
   }
   if(auto node = document["game/board/memory(type=RTC,content=Time)"]) {
-    Media::save(pak, location, node, ".rtc");
+    Media::save(location, pak, node, ".rtc");
   }
   if(auto node = document["game/board/memory(type=RAM,content=Data)"]) {
-    Media::save(pak, location, node, ".data");
+    Media::save(location, pak, node, ".data");
   }
 
   return true;
@@ -161,8 +188,8 @@ auto SuperFamicom::heuristics(vector<u8>& data, string location) -> string {
   auto& output = s;
   s += "game\n";
   s +={"  name:     ", Media::name(location), "\n"};
-  s +={"  label:    ", Media::name(location), "\n"};
-  s +={"  title:    ", title(), "\n"};
+  s +={"  title:    ", Media::name(location), "\n"};
+  s +={"  label:    ", label(), "\n"};
   s +={"  region:   ", region(), "\n"};
   s +={"  revision: ", revision(), "\n"};
   s +={"  board:    ", board(), "\n"};
@@ -508,7 +535,7 @@ auto SuperFamicom::board() const -> string {
   return board;
 }
 
-auto SuperFamicom::title() const -> string {
+auto SuperFamicom::label() const -> string {
   string label;
 
   for(u32 n = 0; n < 0x15; n++) {
@@ -767,15 +794,15 @@ auto SuperFamicom::firmwareARM() const -> string {
 }
 
 auto SuperFamicom::firmwareEXNEC() const -> string {
-  if(title() == "EXHAUST HEAT2") return "ST010";
-  if(title() == "F1 ROC II") return "ST010";
-  if(title() == "2DAN MORITA SHOUGI") return "ST011";
+  if(label() == "EXHAUST HEAT2") return "ST010";
+  if(label() == "F1 ROC II") return "ST010";
+  if(label() == "2DAN MORITA SHOUGI") return "ST011";
   return "ST010";
 }
 
 auto SuperFamicom::firmwareGB() const -> string {
-  if(title() == "Super GAMEBOY") return "SGB1";
-  if(title() == "Super GAMEBOY2") return "SGB2";
+  if(label() == "Super GAMEBOY") return "SGB1";
+  if(label() == "Super GAMEBOY2") return "SGB2";
   return "SGB1";
 }
 
@@ -784,10 +811,10 @@ auto SuperFamicom::firmwareHITACHI() const -> string {
 }
 
 auto SuperFamicom::firmwareNEC() const -> string {
-  if(title() == "PILOTWINGS") return "DSP1";
-  if(title() == "DUNGEON MASTER") return "DSP2";
-  if(title() == "SDガンダムGX") return "DSP3";
-  if(title() == "PLANETS CHAMP TG3000") return "DSP4";
-  if(title() == "TOP GEAR 3000") return "DSP4";
+  if(label() == "PILOTWINGS") return "DSP1";
+  if(label() == "DUNGEON MASTER") return "DSP2";
+  if(label() == "SDガンダムGX") return "DSP3";
+  if(label() == "PLANETS CHAMP TG3000") return "DSP4";
+  if(label() == "TOP GEAR 3000") return "DSP4";
   return "DSP1B";
 }

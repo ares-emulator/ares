@@ -21,9 +21,11 @@ auto MasterSystem::load(string location) -> shared_pointer<vfs::directory> {
   auto document = BML::unserialize(manifest);
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
+  pak->setAttribute("title",  document["game/title"].string());
+  pak->setAttribute("region", document["game/region"].string());
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::load(pak, location, node, ".ram");
+    Media::load(location, pak, node, ".ram");
   }
 
   return pak;
@@ -37,7 +39,7 @@ auto MasterSystem::save(string location, shared_pointer<vfs::directory> pak) -> 
   auto document = BML::unserialize(manifest);
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::save(pak, location, node, ".ram");
+    Media::save(location, pak, node, ".ram");
   }
 
   return true;
@@ -47,7 +49,7 @@ auto MasterSystem::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:   ", Media::name(location), "\n"};
-  s +={"  label:  ", Media::name(location), "\n"};
+  s +={"  title:  ", Media::name(location), "\n"};
   s += "  region: NTSC-J, NTSC-U, PAL\n";  //database required to detect region
   s += "  board\n";
   s += "    memory\n";

@@ -10,7 +10,7 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  node = parent->append<Node::Peripheral>(system.name());
+  node = parent->append<Node::Peripheral>(string{system.name(), " Cartridge"});
   debugger.load(node);
   return node;
 }
@@ -20,16 +20,11 @@ auto Cartridge::connect() -> void {
 
   information = {};
   has = {};
+  information.title  = pak->attribute("title");
+  information.region = pak->attribute("region");
+  information.board  = pak->attribute("board");
 
-  if(auto fp = pak->read("manifest.bml")) {
-    information.manifest = fp->reads();
-    information.document = BML::unserialize(information.manifest);
-    information.name     = information.document["game/label"].string();
-    information.region   = information.document["game/region"].string();
-    information.board    = information.document["game/board"].string();
-  }
-
-  loadCartridge(information.document);
+  loadCartridge();
   if(has.SA1) sa1.load(node);
   if(has.SuperFX) superfx.load(node);
   if(has.ARMDSP) armdsp.load(node);
@@ -97,34 +92,11 @@ auto Cartridge::power(bool reset) -> void {
 auto Cartridge::save() -> void {
   if(!node) return;
 
-  saveCartridge(information.document);
-  if(has.GameBoySlot);  //todo
+  saveCartridge();
+  if(has.GameBoySlot) icd.save();
   if(has.BSMemorySlot) bsmemory.save();
   if(has.SufamiTurboSlotA) sufamiturboA.save();
   if(has.SufamiTurboSlotB) sufamiturboB.save();
-}
-
-auto Cartridge::lookupMemory(Markup::Node memory) -> Markup::Node {
-  for(auto node : information.document.find("game/board/memory")) {
-    if(memory["type"        ] && memory["type"        ].string()  != node["type"        ].string() ) continue;
-    if(memory["size"        ] && memory["size"        ].natural() != node["size"        ].natural()) continue;
-    if(memory["content"     ] && memory["content"     ].string()  != node["content"     ].string() ) continue;
-    if(memory["manufacturer"] && memory["manufacturer"].string()  != node["manufacturer"].string() ) continue;
-    if(memory["architecture"] && memory["architecture"].string()  != node["architecture"].string() ) continue;
-    if(memory["identifier"  ] && memory["identifier"  ].string()  != node["identifier"  ].string() ) continue;
-    return node;
-  }
-  return {};
-}
-
-//note: there are currently no oscillator identifiers:
-//it's presumed that there is never more than one oscillator on the same board,
-//and so the first oscillator is returned instead for now.
-auto Cartridge::lookupOscillator() -> Markup::Node {
-  for(auto node : information.document.find("game/board/oscillator")) {
-    return node;
-  }
-  return {};
 }
 
 }

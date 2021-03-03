@@ -1,24 +1,24 @@
 auto PlayStation::load(string location) -> shared_pointer<vfs::directory> {
+  auto pak = shared_pointer{new vfs::directory};
+  auto manifest = PlayStation::manifest(location);
+  auto document = BML::unserialize(manifest);
+  pak->append("manifest.bml", manifest);
   if(directory::exists(location)) {
-    auto pak = shared_pointer{new vfs::directory};
-    pak->append("manifest.bml", manifest(location));
     pak->append("cd.rom", vfs::disk::open({location, "cd.rom"}, vfs::read));
-    return pak;
   }
-
   if(file::exists(location)) {
-    auto pak = shared_pointer{new vfs::directory};
-    pak->append("manifest.bml", manifest(location));
     if(location.iendsWith(".cue")) {
       pak->append("cd.rom", vfs::cdrom::open(location));
     }
     if(location.iendsWith(".exe")) {
       pak->append("program.exe", vfs::disk::open(location, vfs::read));
     }
-    return pak;
   }
-
-  return {};
+  pak->setAttribute("title",  document["game/title"].string());
+  pak->setAttribute("region", document["game/region"].string());
+  pak->setAttribute("audio", (bool)document["game/audio"]);
+  pak->setAttribute("executable", (bool)document["game/executable"]);
+  return pak;
 }
 
 auto PlayStation::manifest(string location) -> string {
@@ -40,7 +40,7 @@ auto PlayStation::manifest(string location) -> string {
     string s;
     s += "game\n";
     s +={"  name:   ", Media::name(location), "\n"};
-    s +={"  label:  ", Media::name(location), "\n"};
+    s +={"  title:  ", Media::name(location), "\n"};
     s +={"  region: ", region, "\n"};
     return s;
   }
@@ -53,7 +53,7 @@ auto PlayStation::manifest(string location) -> string {
     string s;
     s += "game\n";
     s +={"  name:   ", Media::name(location), "\n"};
-    s +={"  label:  ", Media::name(location), "\n"};
+    s +={"  title:  ", Media::name(location), "\n"};
     s +={"  region: ", "NTSC-U", "\n"};
     s +={"  executable\n"};
     return s;

@@ -2,11 +2,10 @@
 
 struct Cartridge {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
   Flash flash[2];
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
 
   //cartridge.cpp
   auto allocate(Node::Port) -> Node::Peripheral;
@@ -23,8 +22,7 @@ struct Cartridge {
 
 private:
   struct Information {
-    string manifest;
-    string name;
+    string title;
   } information;
 };
 

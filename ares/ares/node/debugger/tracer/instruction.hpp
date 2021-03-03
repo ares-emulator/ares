@@ -28,6 +28,7 @@ struct Instruction : Tracer {
   }
 
   auto address(u32 address) -> bool {
+    address &= (1u << _addressBits) - 1;  //mask upper bits of address
     _address = address;
     address >>= _addressMask;  //clip unneeded alignment bits (to reduce _masks size)
 
@@ -63,6 +64,7 @@ struct Instruction : Tracer {
     }
 
     string output{
+      _component, "  ",
       hex(_address, _addressBits + 3 >> 2), "  ",
       instruction, "  ",
       context, "  ",
@@ -100,7 +102,7 @@ protected:
     return true;
   }
 
-  u32  _addressBits = 0;
+  u32  _addressBits = 32;
   u32  _addressMask = 0;
   bool _mask = false;
   u32  _depth = 4;

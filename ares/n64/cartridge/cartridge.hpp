@@ -1,6 +1,6 @@
 struct Cartridge {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
   Memory::Readable rom;
   Memory::Writable ram;
   Memory::Writable eeprom;
@@ -18,8 +18,7 @@ struct Cartridge {
     u32  offset = 0;
   } flash;
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
   auto cic() const -> string { return information.cic; }
 
@@ -36,8 +35,7 @@ struct Cartridge {
 
 private:
   struct Information {
-    string manifest;
-    string name;
+    string title;
     string region;
     string cic;
   } information;

@@ -4,7 +4,7 @@ struct NeoGeoPocket : Cartridge {
   auto load(string location) -> shared_pointer<vfs::directory> override;
   auto save(string location, shared_pointer<vfs::directory> pak) -> bool override;
   auto heuristics(vector<u8>& data, string location) -> string override;
-  auto title(vector<u8>& data) -> string;
+  auto label(vector<u8>& data) -> string;
 };
 
 auto NeoGeoPocket::load(string location) -> shared_pointer<vfs::directory> {
@@ -13,15 +13,15 @@ auto NeoGeoPocket::load(string location) -> shared_pointer<vfs::directory> {
     append(rom, {location, "program.flash"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
-  } else {
-    return {};
   }
+  if(!rom) return {};
 
   auto pak = shared_pointer{new vfs::directory};
   auto manifest = Cartridge::manifest(rom, location);
   auto document = BML::unserialize(manifest);
   pak->append("manifest.bml",  manifest);
   pak->append("program.flash", rom);
+  pak->setAttribute("title", document["game/title"].string());
   return pak;
 }
 
@@ -47,8 +47,8 @@ auto NeoGeoPocket::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:  ", Media::name(location), "\n"};
-  s +={"  label: ", Media::name(location), "\n"};
-  s +={"  title: ", title(data), "\n"};
+  s +={"  title: ", Media::name(location), "\n"};
+  s +={"  label: ", label(data), "\n"};
   s += "  board\n";
   s += "    memory\n";
   s += "      type: Flash\n";
@@ -57,12 +57,12 @@ auto NeoGeoPocket::heuristics(vector<u8>& data, string location) -> string {
   return s;
 }
 
-auto NeoGeoPocket::title(vector<u8>& data) -> string {
-  string title;
-  title.size(12);
+auto NeoGeoPocket::label(vector<u8>& data) -> string {
+  string label;
+  label.size(12);
   for(u32 index : range(12)) {
     char letter = data[0x24 + index];
-    if(letter >= 0x20 && letter <= 0x7e) title.get()[index] = letter;
+    if(letter >= 0x20 && letter <= 0x7e) label.get()[index] = letter;
   }
-  return title.strip();
+  return label.strip();
 }

@@ -8,26 +8,22 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>("Mega Drive");
+  return node = parent->append<Node::Peripheral>("Mega Drive Cartridge");
 }
 
 auto Cartridge::connect() -> void {
   if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-  if(auto fp = pak->read("manifest.bml")) {
-    information.manifest = fp->reads();
-  }
-  auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].string();
-  information.regions = document["game/region"].string().split(",").strip();
-  information.bootable = (bool)document["game/bootable"];
+  information.title    = pak->attribute("title");
+  information.regions  = pak->attribute("region").split(",").strip();
+  information.bootable = pak->attribute("bootable").boolean();
 
-  if(document["game/board/memory(type=ROM,content=Patch)"]) {
+  if(pak->read("patch.rom")) {
     board = new Board::LockOn(*this);
-  } else if(document["game/board/slot(type=Mega Drive)"]) {
+  } else if(pak->attribute("label") == "Game Genie") {
     board = new Board::GameGenie(*this);
-  } else if(document["game/board/memory(type=ROM,content=Program)/size"].natural() > 0x200000) {
+  } else if(pak->read("program.rom") && pak->read("program.rom")->size() > 0x200000) {
     board = new Board::Banked(*this);
   } else {
     board = new Board::Linear(*this);

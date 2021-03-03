@@ -1,15 +1,9 @@
-namespace ares::ColecoVision {
-  auto load(Node::System& node, string name) -> bool;
-}
-
 struct ColecoVision : Emulator {
   ColecoVision();
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
-
-  Pak system;
 };
 
 ColecoVision::ColecoVision() {
@@ -25,7 +19,6 @@ auto ColecoVision::load() -> bool {
     errorFirmwareRequired(firmware[0]);
     return false;
   }
-  system.pak = shared_pointer{new vfs::directory};
   system.pak->append("bios.rom", loadFirmware(firmware[0]));
 
   auto region = Emulator::region();
@@ -49,8 +42,8 @@ auto ColecoVision::save() -> bool {
 }
 
 auto ColecoVision::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->is<ares::Node::System>()) return system.pak;
-  if(node->name() == "ColecoVision") return game.pak;
+  if(node->name() == "ColecoVision") return system.pak;
+  if(node->name() == "ColecoVision Cartridge") return game.pak;
   return {};
 }
 

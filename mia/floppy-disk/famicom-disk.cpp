@@ -12,7 +12,12 @@ auto FamicomDisk::load(string location) -> shared_pointer<vfs::directory> {
   if(file::exists(location)) {
     auto pak = shared_pointer{new vfs::directory};
     vector<u8> input = FloppyDisk::read(location);
-    pak->append("manifest.bml", heuristics(input, location));
+
+    auto manifest = heuristics(input, location);
+    auto document = BML::unserialize(manifest);
+    pak->append("manifest.bml", manifest);
+    pak->setAttribute("title", document["game/title"].string());
+
     array_view<u8> view{input};
     if(view.size() % 65500 == 16) view += 16;  //skip iNES / fwNES header
     u32 index = 0;
@@ -44,7 +49,7 @@ auto FamicomDisk::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:  ", Media::name(location), "\n"};
-  s +={"  label: ", Media::name(location), "\n"};
+  s +={"  title: ", Media::name(location), "\n"};
   return s;
 }
 

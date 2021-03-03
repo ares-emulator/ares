@@ -1,6 +1,6 @@
 struct Cartridge {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
 
   struct Debugger {
     //debugger.cpp
@@ -12,8 +12,7 @@ struct Cartridge {
     } memory;
   } debugger;
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
 
   //cartridge.cpp
@@ -24,18 +23,14 @@ struct Cartridge {
   auto power(bool reset) -> void;
   auto save() -> void;
 
-  auto lookupMemory(Markup::Node) -> Markup::Node;
-  auto lookupOscillator() -> Markup::Node;
-
+  //serialization.cpp
   auto serialize(serializer&) -> void;
 
   ReadableMemory rom;
   WritableMemory ram;
 
   struct Information {
-    string manifest;
-    Markup::Node document;
-    string name;
+    string title;
     string region;
     string board;
   } information;
@@ -68,8 +63,8 @@ private:
 
   //load.cpp
   auto loadBoard(string) -> Markup::Node;
-  auto loadCartridge(Markup::Node) -> void;
-  auto loadMemory(AbstractMemory&, Markup::Node, bool required) -> void;
+  auto loadCartridge() -> void;
+  auto loadMemory(AbstractMemory&, Markup::Node) -> void;
   template<typename T> auto loadMap(Markup::Node, T&) -> n32;
   auto loadMap(Markup::Node, const function<n8 (n24, n8)>&, const function<void (n24, n8)>&) -> n32;
 
@@ -96,7 +91,7 @@ private:
   auto loadMSU1() -> void;
 
   //save.cpp
-  auto saveCartridge(Markup::Node) -> void;
+  auto saveCartridge() -> void;
   auto saveMemory(AbstractMemory&, Markup::Node) -> void;
 
   auto saveRAM(Markup::Node) -> void;

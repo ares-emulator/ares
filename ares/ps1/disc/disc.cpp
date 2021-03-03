@@ -46,21 +46,17 @@ auto Disc::unload() -> void {
 }
 
 auto Disc::allocate(Node::Port parent) -> Node::Peripheral {
-  return cd = parent->append<Node::Peripheral>("PlayStation");
+  return cd = parent->append<Node::Peripheral>("PlayStation Disc");
 }
 
 auto Disc::connect() -> void {
-  if(!node->setPak(pak = platform->pak(node))) return;
+  if(!cd->setPak(pak = platform->pak(cd))) return;
 
   information = {};
-  if(auto fp = pak->read("manifest.bml")) {
-    information.manifest = fp->reads();
-  }
-  auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].string();
-  information.region = document["game/region"].string();
-  information.audio = (bool)document["game/audio"];
-  information.executable = (bool)document["game/executable"];
+  information.title      = pak->attribute("title");
+  information.region     = pak->attribute("region");
+  information.audio      = pak->attribute("audio").boolean();
+  information.executable = pak->attribute("executable").boolean();
 
   if(!executable()) {
     fd = pak->read("cd.rom");

@@ -31,7 +31,7 @@ struct Writable {
   }
 
   auto load(shared_pointer<vfs::file> fp) -> void {
-    if(!self.size || !fp) return;
+    if(!self.size) allocate(fp->size());
     fp->read({self.data, min(fp->size(), self.size * sizeof(T))});
     for(u32 address = self.size; address <= self.mask; address++) {
       self.data[address] = self.data[mirror(address, self.size)];
@@ -39,8 +39,7 @@ struct Writable {
   }
 
   auto save(shared_pointer<vfs::file> fp) -> void {
-    if(!self.size || !fp) return;
-    fp->write({self.data, self.size * sizeof(T)});
+    fp->write({self.data, min(fp->size(), self.size * sizeof(T))});
   }
 
   explicit operator bool() const { return (bool)self.data; }

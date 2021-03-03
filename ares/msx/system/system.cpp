@@ -23,15 +23,15 @@ System system;
 
 auto System::game() -> string {
   if(cartridge.node && expansion.node) {
-    return {cartridge.name(), " + ", expansion.name()};
+    return {cartridge.title(), " + ", expansion.title()};
   }
 
   if(cartridge.node) {
-    return cartridge.name();
+    return cartridge.title();
   }
 
   if(expansion.node) {
-    return expansion.name();
+    return expansion.title();
   }
 
   return "(no cartridge connected)";

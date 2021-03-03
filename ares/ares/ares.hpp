@@ -35,7 +35,10 @@
 using namespace nall;
 
 namespace ares {
-  using Pak = shared_pointer<vfs::directory>;
+  namespace VFS {
+    using Pak = shared_pointer<vfs::directory>;
+    using File = shared_pointer<vfs::file>;
+  }
 
   namespace Video {
     static constexpr bool Threaded = true;
@@ -48,18 +51,9 @@ namespace ares {
     }
   }
 
-  namespace Shared {
-    using File = shared_pointer<vfs::file>;
-  }
-
   extern bool _runAhead;
   inline auto runAhead() -> bool { return _runAhead; }
   inline auto setRunAhead(bool runAhead) -> void { _runAhead = runAhead; }
-}
-
-namespace nall::vfs {
-  static constexpr bool optional = 0;
-  static constexpr bool required = 1;
 }
 
 #include <ares/information.hpp>

@@ -3,12 +3,10 @@ struct Cartridge;
 
 struct Cartridge {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
-//auto board() const -> string { return information.board; }
 
   //cartridge.cpp
   auto allocate(Node::Port) -> Node::Peripheral;
@@ -28,8 +26,7 @@ struct Cartridge {
 
 private:
   struct Information {
-    string manifest;
-    string name;
+    string title;
     string region;
     string board;
   } information;

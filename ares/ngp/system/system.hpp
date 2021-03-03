@@ -1,7 +1,7 @@
 struct System {
   Node::System node;
   Node::Setting::Boolean fastBoot;
-  Pak pak;
+  VFS::Pak pak;
 
   struct Controls {
     Node::Object node;

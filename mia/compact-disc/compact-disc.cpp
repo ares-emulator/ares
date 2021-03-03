@@ -11,7 +11,7 @@ auto CompactDisc::manifest(string location) -> string {
   string manifest;
   manifest += "game\n";
   manifest +={"  name:  ", Location::prefix(location), "\n"};
-  manifest +={"  label: ", Location::prefix(location), "\n"};
+  manifest +={"  title: ", Location::prefix(location), "\n"};
   manifest += "  audio\n";
   return manifest;
 }

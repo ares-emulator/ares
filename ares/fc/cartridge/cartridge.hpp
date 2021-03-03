@@ -3,11 +3,10 @@ struct Cartridge;
 
 struct Cartridge : Thread {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
 
   auto rate() const -> u32 { return Region::PAL() ? 16 : 12; }
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
 
   //cartridge.cpp
@@ -23,8 +22,7 @@ struct Cartridge : Thread {
   auto serialize(serializer&) -> void;
 
   struct Information {
-    string manifest;
-    string name;
+    string title;
     string region;
   } information;
 

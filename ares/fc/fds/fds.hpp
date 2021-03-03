@@ -8,11 +8,11 @@ struct FDS {
   Node::Port port;
   Node::Peripheral node;
   Node::Setting::String state;
-  Pak pak;
+  VFS::Pak pak;
   n1 present;
 
   auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
 
   struct Disk {
     Memory::Writable<n8> sideA;
@@ -48,7 +48,7 @@ struct FDS {
 private:
   struct Information {
     string manifest;
-    string name;
+    string title;
   } information;
 
   FDSDrive drive;

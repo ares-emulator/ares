@@ -1,5 +1,5 @@
 struct MemoryCard : PeripheralDevice {
-  Pak pak;
+  VFS::Pak pak;
   Memory::Writable memory;
 
   MemoryCard(Node::Port);

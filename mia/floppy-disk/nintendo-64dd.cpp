@@ -4,9 +4,8 @@ auto Nintendo64DD::load(string location) -> shared_pointer<vfs::directory> {
     append(input, {location, "program.disk"});
   } else if(file::exists(location)) {
     input = FloppyDisk::read(location);
-  } else {
-    return {};
   }
+  if(!input) return {};
 
   auto pak = shared_pointer{new vfs::directory};
   pak->append("manifest.bml", heuristics(input, location));

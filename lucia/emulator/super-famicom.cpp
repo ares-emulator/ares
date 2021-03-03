@@ -1,7 +1,3 @@
-namespace ares::SuperFamicom {
-  auto load(Node::System& node, string name) -> bool;
-}
-
 struct SuperFamicom : Emulator {
   SuperFamicom();
   auto load() -> bool override;
@@ -9,7 +5,7 @@ struct SuperFamicom : Emulator {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
-  Pak system, gb, bs, stA, stB;
+  Pak gb, bs, stA, stB;
 };
 
 SuperFamicom::SuperFamicom() {
@@ -19,7 +15,6 @@ SuperFamicom::SuperFamicom() {
 }
 
 auto SuperFamicom::load() -> bool {
-  system.pak = shared_pointer{new vfs::directory};
   system.pak->append("boards.bml", {Resource::SuperFamicom::Boards, sizeof Resource::SuperFamicom::Boards});
   system.pak->append("ipl.rom",    {Resource::SuperFamicom::IPLROM, sizeof Resource::SuperFamicom::IPLROM});
 
@@ -49,6 +44,10 @@ auto SuperFamicom::load() -> bool {
     if(auto slot = cartridge->find<ares::Node::Port>("Super Game Boy/Cartridge Slot")) {
       if(auto location = program.load(mia::medium("Game Boy"), settings.paths.superFamicom.gameBoy)) {
         if(gb.pak = mia::medium("Game Boy")->load(location)) {
+          gb.location = location;
+          slot->allocate();
+          slot->connect();
+        } else if(gb.pak = mia::medium("Game Boy Color")->load(location)) {
           gb.location = location;
           slot->allocate();
           slot->connect();
@@ -103,15 +102,21 @@ auto SuperFamicom::load() -> bool {
 
 auto SuperFamicom::save() -> bool {
   root->save();
-  return medium->save(game.location, game.pak);
+  medium->save(game.location, game.pak);
+  if(gb.pak) mia::medium("Game Boy")->save(gb.location, gb.pak);
+  if(bs.pak) mia::medium("BS Memory")->save(bs.location, bs.pak);
+  if(stA.pak) mia::medium("Sufami Turbo")->save(stA.location, stA.pak);
+  if(stB.pak) mia::medium("Sufami Turbo")->save(stB.location, stB.pak);
+  return true;
 }
 
 auto SuperFamicom::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->is<ares::Node::System>() && node->name() == "Super Famicom") return system.pak;
-  if(node->name() == "Super Famicom") return game.pak;
-  if(node->name() == "Game Boy") return gb.pak;
-  if(node->name() == "BS Memory") return bs.pak;
-  if(node->name() == "Sufami Turbo") {
+  if(node->name() == "Super Famicom") return system.pak;
+  if(node->name() == "Super Famicom Cartridge") return game.pak;
+  if(node->name() == "Game Boy Cartridge") return gb.pak;
+  if(node->name() == "Game Boy Color Cartridge") return gb.pak;
+  if(node->name() == "BS Memory Cartridge") return bs.pak;
+  if(node->name() == "Sufami Turbo Cartridge") {
     if(auto parent = node->parent()) {
       if(auto port = parent.acquire()) {
         if(port->name() == "Sufami Turbo Slot A") return stA.pak;

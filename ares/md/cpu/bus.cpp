@@ -10,7 +10,7 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     if(cartridge.bootable()) {
       if(cartridge.node) return cartridge.read(upper, lower, address, data);
     } else {
-      if(expansion.node) return expansion.read(upper, lower, address, data);
+      if(mcd.node) return mcd.external_read(upper, lower, address, data);
     }
     return data;
   }
@@ -20,7 +20,7 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     if(!cartridge.bootable()) {
       if(cartridge.node) return cartridge.read(upper, lower, address, data);
     } else {
-      if(expansion.node) return expansion.read(upper, lower, address, data);
+      if(mcd.node) return mcd.external_read(upper, lower, address, data);
     }
     return data;
   }
@@ -35,7 +35,7 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   if(address >= 0xa10000 && address <= 0xbfffff) {
     if(cartridge.node) data = cartridge.readIO(upper, lower, address, data);
-    if(expansion.node) data = expansion.readIO(upper, lower, address, data);
+    if(mcd.node) data = mcd.external_readIO(upper, lower, address, data);
     data = readIO(upper, lower, address, data);
     return data;
   }
@@ -63,7 +63,7 @@ auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
     if(cartridge.bootable()) {
       if(cartridge.node) return cartridge.write(upper, lower, address, data);
     } else {
-      if(expansion.node) return expansion.write(upper, lower, address, data);
+      if(mcd.node) return mcd.external_write(upper, lower, address, data);
     }
     return;
   }
@@ -73,7 +73,7 @@ auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
     if(!cartridge.bootable()) {
       if(cartridge.node) return cartridge.write(upper, lower, address, data);
     } else {
-      if(expansion.node) return expansion.write(upper, lower, address, data);
+      if(mcd.node) return mcd.external_write(upper, lower, address, data);
     }
     return;
   }
@@ -87,7 +87,7 @@ auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address >= 0xa10000 && address <= 0xbfffff) {
     if(cartridge.node) cartridge.writeIO(upper, lower, address, data);
-    if(expansion.node) expansion.writeIO(upper, lower, address, data);
+    if(mcd.node) mcd.external_writeIO(upper, lower, address, data);
     writeIO(upper, lower, address, data);
     return;
   }

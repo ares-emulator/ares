@@ -7,14 +7,14 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>(system.name());
+  return node = parent->append<Node::Peripheral>(string{system.name(), " Cartridge"});
 }
 
 auto Cartridge::connect() -> void {
   if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-  information.name = pak->attribute("title");
+  information.title  = pak->attribute("title");
   information.region = pak->attribute("region");
 
   if(auto fp = pak->read("program.rom")) {

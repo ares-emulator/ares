@@ -1,4 +1,4 @@
-auto Cartridge::saveCartridge(Markup::Node node) -> void {
+auto Cartridge::saveCartridge() -> void {
   if(auto node = board["memory(type=RAM,content=Save)"]) saveRAM(node);
   if(auto node = board["processor(identifier=MCC)"]) saveMCC(node);
   if(auto node = board["processor(architecture=W65C816S)"]) saveSA1(node);
@@ -16,15 +16,14 @@ auto Cartridge::saveCartridge(Markup::Node node) -> void {
 //
 
 auto Cartridge::saveMemory(AbstractMemory& ram, Markup::Node node) -> void {
-  if(auto memory = lookupMemory(node)) {
-    if(memory["type"].text() == "RAM" && memory["volatile"]) return;
-    if(memory["type"].text() == "RTC" && memory["volatile"]) return;
-    string name{memory["content"].text(), ".", memory["type"].text()};
-    if(auto architecture = memory["architecture"].text()) name.prepend(architecture, ".");
-    name.downcase();
-    if(auto fp = pak->write(name)) {
-      fp->write({ram.data(), ram.size()});
-    }
+  string name;
+  if(auto architecture = node["architecture"].string()) name.append(architecture, ".");
+  name.append(node["content"].string(), ".");
+  name.append(node["type"].string());
+  name.downcase();
+
+  if(auto fp = pak->write(name)) {
+    fp->write({ram.data(), ram.size()});
   }
 }
 

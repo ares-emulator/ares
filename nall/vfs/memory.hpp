@@ -8,8 +8,10 @@ namespace nall::vfs {
 struct memory : file {
   ~memory() { nall::memory::free(_data); }
 
-  static auto create() -> shared_pointer<memory> {
-    return shared_pointer<memory>{new memory};
+  static auto create(u64 size = 0) -> shared_pointer<memory> {
+    auto instance = shared_pointer<memory>{new memory};
+    instance->_create(size);
+    return instance;
   }
 
   static auto open(array_view<u8> view) -> shared_pointer<memory> {
@@ -48,6 +50,11 @@ private:
   memory() = default;
   memory(const file&) = delete;
   auto operator=(const memory&) -> memory& = delete;
+
+  auto _create(u64 size) -> void {
+    _size = size;
+    _data = nall::memory::allocate<u8>(size, 0x00);
+  }
 
   auto _open(const u8* data, u64 size) -> void {
     _size = size;

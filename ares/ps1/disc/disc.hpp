@@ -2,9 +2,9 @@ struct Disc : Thread, Memory::Interface {
   Node::Object node;
   Node::Port tray;
   Node::Peripheral cd;
-  Shared::File fd;
+  VFS::Pak pak;
+  VFS::File fd;
   CD::Session session;
-  Pak pak;
 
   struct Debugger {
     //debugger.cpp
@@ -22,12 +22,11 @@ struct Disc : Thread, Memory::Interface {
     string _command;
   } debugger;
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
   auto audioCD() const -> bool { return information.audio; }
   auto executable() const -> bool { return information.executable; }
-  auto noDisc() const -> bool { return !name(); }
+  auto noDisc() const -> bool { return !title(); }
 
   //disc.cpp
   auto load(Node::Object) -> void;
@@ -249,8 +248,7 @@ struct Disc : Thread, Memory::Interface {
 
 //unserialized:
   struct Information {
-    string manifest;
-    string name;
+    string title;
     string region;
     boolean audio;
     boolean executable;

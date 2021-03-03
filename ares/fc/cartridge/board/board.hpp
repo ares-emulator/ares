@@ -1,7 +1,7 @@
 namespace Board {
 
 struct Interface {
-  Pak pak;
+  VFS::Pak pak;
 
   static auto create(string manifest) -> Interface*;
 

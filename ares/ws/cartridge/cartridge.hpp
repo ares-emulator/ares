@@ -1,9 +1,8 @@
 struct Cartridge : Thread, IO {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
 
-  auto manifest() const { return information.manifest; }
-  auto name() const { return information.name; }
+  auto title() const { return information.title; }
   auto orientation() const { return information.orientation; }
 
   //cartridge.cpp
@@ -42,8 +41,7 @@ struct Cartridge : Thread, IO {
   auto serialize(serializer&) -> void;
 
   struct Information {
-    string manifest;
-    string name;
+    string title;
     string orientation = "Horizontal";
   } information;
 

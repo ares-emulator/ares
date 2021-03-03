@@ -1,7 +1,3 @@
-namespace ares::SG1000 {
-  auto load(Node::System& node, string name) -> bool;
-}
-
 struct SG1000 : Emulator {
   SG1000();
   auto load() -> bool override;
@@ -35,11 +31,12 @@ auto SG1000::load() -> bool {
 
 auto SG1000::save() -> bool {
   root->save();
-  return medium->save(game.location, game.pak);
+  medium->save(game.location, game.pak);
+  return true;
 }
 
 auto SG1000::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "SG-1000") return game.pak;
+  if(node->name() == "SG-1000 Cartridge") return game.pak;
   return {};
 }
 

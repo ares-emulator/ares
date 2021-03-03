@@ -23,11 +23,11 @@ System system;
 
 auto System::game() -> string {
   if(pcd.disc) {
-    return pcd.name();
+    return pcd.title();
   }
 
   if(cartridge.node) {
-    return cartridge.name();
+    return cartridge.title();
   }
 
   return "(no cartridge connected)";

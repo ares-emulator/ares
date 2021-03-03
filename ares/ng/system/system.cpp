@@ -20,7 +20,7 @@ System system;
 
 auto System::game() -> string {
   if(cartridge.node) {
-    return cartridge.name();
+    return cartridge.title();
   }
 
   return "(no cartridge connected)";

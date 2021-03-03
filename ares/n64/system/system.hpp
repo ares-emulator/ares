@@ -1,6 +1,6 @@
 struct System {
   Node::System node;
-  Pak pak;
+  VFS::Pak pak;
 
   enum class Region : u32 { NTSC, PAL };
 

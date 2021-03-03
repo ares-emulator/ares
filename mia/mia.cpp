@@ -125,7 +125,7 @@ auto main(Arguments arguments) -> void {
 
   construct();
 
-  if(auto document = file::read({Path::userSettings(), "mia/settings.bml"})) {
+  if(auto document = file::read(locate("settings.bml"))) {
     settings.unserialize(document);
   }
 
@@ -187,8 +187,7 @@ auto main(Arguments arguments) -> void {
   Instances::programWindow.destruct();
   #endif
 
-  directory::create({Path::userSettings(), "mia/"});
-  file::write({Path::userSettings(), "mia/settings.bml"}, settings.serialize());
+  file::write(locate("settings.bml"), settings.serialize());
 }
 
 }

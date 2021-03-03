@@ -25,11 +25,16 @@ struct Media {
   //generate a manifest for a game pak or game ROM
   virtual auto manifest(string location) -> string;
 
+  //get save file location on disk
+  auto saveLocation(string location, string name, string extension) -> string;
+
   //load a file into a game pak if it exists; otherwise simply create empty save file
-  auto load(shared_pointer<vfs::directory> pak, string location, Markup::Node node, string extension) -> bool;
+  auto load(string location, shared_pointer<vfs::directory> pak, string name, string extension, u64 size) -> bool;
+  auto load(string location, shared_pointer<vfs::directory> pak, Markup::Node node, string extension) -> bool;
 
   //save a file from a game pak
-  auto save(shared_pointer<vfs::directory> pak, string location, Markup::Node node, string extension) -> bool;
+  auto save(string location, shared_pointer<vfs::directory> pak, string name, string extension) -> bool;
+  auto save(string location, shared_pointer<vfs::directory> pak, Markup::Node node, string extension) -> bool;
 
   //generate a filesystem-safe name for a game pak or game ROM
   auto name(string location) const -> string;

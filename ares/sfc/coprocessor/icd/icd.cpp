@@ -29,6 +29,10 @@ auto ICD::unload() -> void {
   node.reset();
 }
 
+auto ICD::save() -> void {
+  GameBoy::system.save();
+}
+
 auto ICD::main() -> void {
   if(r6003.bit(7)) {
     GameBoy::system.run();

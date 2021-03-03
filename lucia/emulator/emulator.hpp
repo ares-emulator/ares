@@ -1,7 +1,12 @@
 struct Emulator {
-  struct Firmware;
+  //emulators.cpp
   static auto construct() -> void;
+
+  struct Firmware;
+  struct Pak;
   virtual ~Emulator() = default;
+
+  //emulator.cpp
   auto locate(const string& location, const string& suffix, const string& path = "", maybe<string> system = {}) -> string;
   auto manifest(const string& type, const string& location) -> shared_pointer<vfs::file>;
   auto region() -> string;
@@ -13,6 +18,8 @@ struct Emulator {
   auto setOverscan(bool value) -> bool;
   auto error(const string& text) -> void;
   auto errorFirmwareRequired(const Firmware&) -> void;
+  auto load(Pak& node, string name) -> bool;
+  auto save(Pak& node, string name) -> bool;
   virtual auto load(Menu) -> void {}
   virtual auto load() -> bool = 0;
   virtual auto save() -> bool { return false; }
@@ -29,7 +36,6 @@ struct Emulator {
 
   struct Pak {
     string location;
-    string manifest;
     shared_pointer<vfs::directory> pak;
   };
 
@@ -39,6 +45,7 @@ struct Emulator {
 
   ares::Node::System root;
   vector<Firmware> firmware;
+  Pak system;
   Pak game;
 
   struct Configuration {

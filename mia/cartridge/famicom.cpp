@@ -1,7 +1,6 @@
 struct Famicom : Cartridge {
   auto name() -> string override { return "Famicom"; }
   auto extensions() -> vector<string> override { return {"fc", "nes", "unif"}; }
-  auto read(string location) -> vector<u8> override;
   auto load(string location) -> shared_pointer<vfs::directory> override;
   auto save(string location, shared_pointer<vfs::directory> pak) -> bool override;
   auto heuristics(vector<u8>& data, string location) -> string override;
@@ -10,23 +9,23 @@ struct Famicom : Cartridge {
   auto heuristicsUNIF(vector<u8>& data, string location) -> string;
 };
 
-auto Famicom::read(string location) -> vector<u8> {
+auto Famicom::load(string location) -> shared_pointer<vfs::directory> {
+  vector<u8> rom;
   if(directory::exists(location)) {
-    vector<u8> rom;
     append(rom, {location, "ines.rom"});
     append(rom, {location, "program.rom"});
     append(rom, {location, "character.rom"});
-    return rom;
+  } else if(file::exists(location)) {
+    rom = Cartridge::read(location);
   }
-  return Cartridge::read(location);
-}
+  if(!rom) return {};
 
-auto Famicom::load(string location) -> shared_pointer<vfs::directory> {
-  auto rom = read(location);
   auto pak = shared_pointer{new vfs::directory};
   auto manifest = Cartridge::manifest(rom, location);
   auto document = BML::unserialize(manifest);
   pak->append("manifest.bml", heuristics(rom, location));
+  pak->setAttribute("title", document["game/title"].string());
+  pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("board", document["game/board"].string());
   pak->setAttribute("mirror", document["game/board/mirror/mode"].string());
   pak->setAttribute("pinout/a0", document["game/board/chip/pinout/a0"].natural());
@@ -47,13 +46,13 @@ auto Famicom::load(string location) -> shared_pointer<vfs::directory> {
   }
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::load(pak, location, node, ".ram");
+    Media::load(location, pak, node, ".ram");
   }
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    Media::load(pak, location, node, ".eeprom");
+    Media::load(location, pak, node, ".eeprom");
   }
   if(auto node = document["game/board/memory(type=RAM,content=Character)"]) {
-    Media::load(pak, location, node, ".chr");
+    Media::load(location, pak, node, ".chr");
   }
 
   return pak;
@@ -67,10 +66,10 @@ auto Famicom::save(string location, shared_pointer<vfs::directory> pak) -> bool 
   auto document = BML::unserialize(manifest);
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::save(pak, location, node, ".ram");
+    Media::save(location, pak, node, ".ram");
   }
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    Media::save(pak, location, node, ".eeprom");
+    Media::save(location, pak, node, ".eeprom");
   }
 
   return true;
@@ -103,9 +102,10 @@ auto Famicom::heuristics(vector<u8>& data, string location) -> string {
 auto Famicom::heuristicsFDS(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
-  s +={"  name:  ", Media::name(location), "\n"};
-  s +={"  label: ", Media::name(location), "\n"};
-  s += "  board: HVC-FMR\n";
+  s +={"  name:   ", Media::name(location), "\n"};
+  s +={"  title:  ", Media::name(location), "\n"};
+  s += "  region: NTSC-J\n";
+  s += "  board:  HVC-FMR\n";
   s += "    memory\n";
   s += "      type: ROM\n";
   s += "      size: 0x2000\n";
@@ -138,7 +138,7 @@ auto Famicom::heuristicsINES(vector<u8>& data, string location) -> string {
   s += "game\n";
   s +={"  sha256: ", digest, "\n"};
   s +={"  name:   ", Media::name(location), "\n"};
-  s +={"  label:  ", Media::name(location), "\n"};
+  s +={"  title:  ", Media::name(location), "\n"};
   s += "  region: NTSC-J, NTSC-U, PAL\n";  //database required to detect region
 
   //Family BASIC (Japan)
@@ -465,7 +465,7 @@ auto Famicom::heuristicsUNIF(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:   ", Media::name(location), "\n"};
-  s +={"  label:  ", Media::name(location), "\n"};
+  s +={"  title:  ", Media::name(location), "\n"};
   s +={"  region: ", region, "\n"};
   s +={"  board:  ", board, "\n"};
   if(mirroring) {

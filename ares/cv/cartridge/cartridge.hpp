@@ -1,8 +1,8 @@
 struct Cartridge {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
 
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
 
   //cartridge.cpp
@@ -18,7 +18,7 @@ struct Cartridge {
 
 //private:
   struct Information {
-    string name;
+    string title;
     string region;
   } information;
 

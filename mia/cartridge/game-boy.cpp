@@ -12,9 +12,8 @@ auto GameBoy::load(string location) -> shared_pointer<vfs::directory> {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
-  } else {
-    return {};
   }
+  if(!rom) return {};
 
   auto pak = shared_pointer{new vfs::directory};
   auto manifest = Cartridge::manifest(rom, location);
@@ -22,21 +21,23 @@ auto GameBoy::load(string location) -> shared_pointer<vfs::directory> {
   pak->setAttribute("board", document["game/board"].string());
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
+  pak->setAttribute("title", document["game/title"].string());
+  pak->setAttribute("board", document["game/board"].string());
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::load(pak, location, node, ".ram");
+    Media::load(location, pak, node, ".ram");
   }
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    Media::load(pak, location, node, ".eeprom");
+    Media::load(location, pak, node, ".eeprom");
     if(auto fp = pak->read("save.eeprom")) {
       fp->setAttribute("width", node["width"].natural());
     }
   }
   if(auto node = document["game/board/memory(type=Flash,content=Download)"]) {
-    Media::load(pak, location, node, ".flash");
+    Media::load(location, pak, node, ".flash");
   }
   if(auto node = document["game/board/memory(type=RTC,content=Time)"]) {
-    Media::load(pak, location, node, ".rtc");
+    Media::load(location, pak, node, ".rtc");
   }
 
   return pak;
@@ -50,16 +51,16 @@ auto GameBoy::save(string location, shared_pointer<vfs::directory> pak) -> bool 
   auto document = BML::unserialize(manifest);
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::save(pak, location, node, ".ram");
+    Media::save(location, pak, node, ".ram");
   }
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    Media::save(pak, location, node, ".eeprom");
+    Media::save(location, pak, node, ".eeprom");
   }
   if(auto node = document["game/board/memory(type=Flash,content=Download)"]) {
-    Media::save(pak, location, node, ".flash");
+    Media::save(location, pak, node, ".flash");
   }
   if(auto node = document["game/board/memory(type=RTC,content=Time)"]) {
-    Media::save(pak, location, node, ".rtc");
+    Media::save(location, pak, node, ".rtc");
   }
 
   return true;
@@ -255,17 +256,17 @@ auto GameBoy::heuristics(vector<u8>& data, string location) -> string {
     break;
   }
 
-  //Game Boy: title = $0134-0143
-  //Game Boy Color (early games): title = $0134-0142; model = $0143
-  //Game Boy Color (later games): title = $0134-013e; serial = $013f-0142; model = $0143
-  string title;
+  //Game Boy: label = $0134-0143
+  //Game Boy Color (early games): label = $0134-0142; model = $0143
+  //Game Boy Color (later games): label = $0134-013e; serial = $013f-0142; model = $0143
+  string label;
   for(u32 n : range(black || clear ? 15 : 16)) {
     char byte = read(0x0134 + n);
     if(byte < 0x20 || byte > 0x7e) byte = ' ';
-    title.append(byte);
+    label.append(byte);
   }
 
-  string serial = title.slice(-4);
+  string serial = label.slice(-4);
   if(!black && !clear) serial = "";
   for(auto& byte : serial) {
     if(byte >= 'A' && byte <= 'Z') continue;
@@ -273,8 +274,8 @@ auto GameBoy::heuristics(vector<u8>& data, string location) -> string {
     serial = "";
     break;
   }
-  title.trimRight(serial, 1L);  //remove the serial from the title, if it exists
-  title.strip();  //remove any excess whitespace from the title
+  label.trimRight(serial, 1L);  //remove the serial from the label, if it exists
+  label.strip();  //remove any excess whitespace from the label
 
   switch(read(0x0148)) { default:
   case 0x00: romSize =   2 * 16 * 1024; break;
@@ -305,16 +306,16 @@ auto GameBoy::heuristics(vector<u8>& data, string location) -> string {
   if(mapper == "TAMA" && ram) ramSize =  32;
   if(mapper == "MBC6" && flash) flashSize = 1_MiB;
 
-  //Game Boy header does not specify EEPROM size: detect via game title instead
+  //Game Boy header does not specify EEPROM size: detect via game label instead
   //Command Master:        EEPROM = 512 bytes
   //Kirby Tilt 'n' Tumble: EEPROM = 256 bytes
   //Korokoro Kirby:        EEPROM = 256 bytes
   if(mapper == "MBC7" && eeprom) {
     eepromSize = 256;  //fallback guess; supported values are 128, 256, 512, 1024, 2048
     eepromWidth = 16;  //93LCx6 supports 8-bit mode, but no licensed games use it
-    if(title == "CMASTER"     && serial == "KCEJ") eepromSize = 512;
-    if(title == "KIRBY TNT"   && serial == "KTNE") eepromSize = 256;
-    if(title == "KORO2 KIRBY" && serial == "KKKJ") eepromSize = 256;
+    if(label == "CMASTER"     && serial == "KCEJ") eepromSize = 512;
+    if(label == "KIRBY TNT"   && serial == "KTNE") eepromSize = 256;
+    if(label == "KORO2 KIRBY" && serial == "KKKJ") eepromSize = 256;
   }
 
   if(mapper == "MBC3" && rtc) rtcSize = 13;
@@ -323,8 +324,8 @@ auto GameBoy::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:   ", Media::name(location), "\n"};
-  s +={"  label:  ", Media::name(location), "\n"};
-  s +={"  title:  ", title, "\n"};
+  s +={"  title:  ", Media::name(location), "\n"};
+  s +={"  label:  ", label, "\n"};
   if(serial)
   s +={"  serial: ", serial, "\n"};
   if(mapper)

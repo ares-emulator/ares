@@ -8,41 +8,37 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>(system.name());
+  return node = parent->append<Node::Peripheral>(string{system.name(), " Cartridge"});
 }
 
 auto Cartridge::connect() -> void {
   if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
-  if(auto fp = pak->read("manifest.bml")) {
-    information.manifest = fp->reads();
-  }
-  auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].string();
-  information.region = document["game/region"].string();
-  information.cic = document["game/board/cic"].string();
+  information.title  = pak->attribute("title");
+  information.region = pak->attribute("region");
+  information.cic    = pak->attribute("cic");
 
-  if(auto memory = document["game/board/memory(type=ROM,content=Program)"]) {
-    rom.allocate(memory["size"].natural());
-    rom.load(pak->read("program.rom"));
+  if(auto fp = pak->read("program.rom")) {
+    rom.allocate(fp->size());
+    rom.load(fp);
   } else {
     rom.allocate(16);
   }
 
-  if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
-    ram.allocate(memory["size"].natural());
-    ram.load(pak->read("save.ram"));
+  if(auto fp = pak->read("save.ram")) {
+    ram.allocate(fp->size());
+    ram.load(fp);
   }
 
-  if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    eeprom.allocate(memory["size"].natural());
-    eeprom.load(pak->read("save.eeprom"));
+  if(auto fp = pak->read("save.eeprom")) {
+    eeprom.allocate(fp->size());
+    eeprom.load(fp);
   }
 
-  if(auto memory = document["game/board/memory(type=Flash,content=Save)"]) {
-    flash.allocate(memory["size"].natural());
-    flash.load(pak->read("save.flash"));
+  if(auto fp = pak->read("save.flash")) {
+    flash.allocate(fp->size());
+    flash.load(fp);
   }
 
   power(false);
@@ -61,18 +57,17 @@ auto Cartridge::disconnect() -> void {
 
 auto Cartridge::save() -> void {
   if(!node) return;
-  auto document = BML::unserialize(information.manifest);
 
-  if(auto memory = document["game/board/memory(type=RAM,content=Save)"]) {
-    ram.save(pak->write("save.ram"));
+  if(auto fp = pak->write("save.ram")) {
+    ram.save(fp);
   }
 
-  if(auto memory = document["game/board/memory(type=EEPROM,content=Save)"]) {
-    eeprom.save(pak->write("save.ram"));
+  if(auto fp = pak->write("save.eeprom")) {
+    eeprom.save(fp);
   }
 
-  if(auto memory = document["game/board/memory(type=Flash,content=Save)"]) {
-    flash.save(pak->write("save.eeprom"));
+  if(auto fp = pak->write("save.flash")) {
+    flash.save(fp);
   }
 }
 

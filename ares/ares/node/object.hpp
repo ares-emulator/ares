@@ -134,11 +134,11 @@ struct Object : shared_pointer_this<Object> {
     for(auto& node : _nodes) node->enumerate<T>(objects);
   }
 
-  auto pak() -> Pak {
+  auto pak() -> VFS::Pak {
     return _pak;
   }
 
-  auto setPak(Pak pak) -> bool {
+  auto setPak(VFS::Pak pak) -> bool {
     _pak = pak;
     return (bool)_pak;
   }
@@ -228,7 +228,7 @@ struct Object : shared_pointer_this<Object> {
 
 protected:
   string _name;
-  Pak _pak;
+  VFS::Pak _pak;
   set<Attribute> _attributes;
   shared_pointer_weak<Object> _parent;
   vector<Node::Object> _nodes;

@@ -1,11 +1,10 @@
 struct Cartridge {
   Node::Peripheral node;
-  Pak pak;
+  VFS::Pak pak;
   Memory::Readable<n8> rom;
   Memory::Writable<n8> ram;
 
-  auto manifest() const -> string { return information.manifest; }
-  auto name() const -> string { return information.name; }
+  auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }
 
   //cartridge.cpp
@@ -24,8 +23,7 @@ struct Cartridge {
 
 //private:
   struct Information {
-    string manifest;
-    string name;
+    string title;
     string region;
   } information;
 };

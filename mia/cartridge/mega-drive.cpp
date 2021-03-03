@@ -12,14 +12,16 @@ auto MegaDrive::load(string location) -> shared_pointer<vfs::directory> {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
-  } else {
-    return {};
   }
+  if(!rom) return {};
 
   auto pak = shared_pointer{new vfs::directory};
   auto manifest = Cartridge::manifest(rom, location);
   auto document = BML::unserialize(manifest);
   pak->append("manifest.bml", manifest);
+  pak->setAttribute("title",  document["game/title"].string());
+  pak->setAttribute("region", document["game/region"].string());
+  pak->setAttribute("bootable", (bool)document["game/bootable"]);
 
   array_view<u8> view{rom};
   for(auto node : document.find("game/board/memory(type=ROM)")) {
@@ -29,7 +31,7 @@ auto MegaDrive::load(string location) -> shared_pointer<vfs::directory> {
   }
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::load(pak, location, node, ".ram");
+    Media::load(location, pak, node, ".ram");
     if(auto fp = pak->read("save.ram")) {
       pak->setAttribute("mode", node["mode"].string());
       pak->setAttribute("offset", node["offset"].natural());
@@ -47,7 +49,7 @@ auto MegaDrive::save(string location, shared_pointer<vfs::directory> pak) -> boo
   auto document = BML::unserialize(manifest);
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
-    Media::save(pak, location, node, ".ram");
+    Media::save(location, pak, node, ".ram");
   }
 
   return true;
@@ -121,8 +123,8 @@ auto MegaDrive::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:   ", Media::name(location), "\n"};
-  s +={"  label:  ", Media::name(location), "\n"};
-  s +={"  title:  ", domesticName, "\n"};
+  s +={"  title:  ", Media::name(location), "\n"};
+  s +={"  label:  ", domesticName, "\n"};
   s +={"  region: ", regions.merge(", "), "\n"};
   s += "  board\n";
 

@@ -1,7 +1,7 @@
 struct MSU1 : Thread {
   Node::Audio::Stream stream;
-  Shared::File dataFile;
-  Shared::File audioFile;
+  VFS::File dataFile;
+  VFS::File audioFile;
 
   auto load(Node::Object) -> void;
   auto unload(Node::Object) -> void;

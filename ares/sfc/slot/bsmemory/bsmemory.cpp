@@ -3,25 +3,24 @@ BSMemoryCartridge& bsmemory = bsmemorySlot.cartridge;
 #include "serialization.cpp"
 
 auto BSMemoryCartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>("BS Memory");
+  return node = parent->append<Node::Peripheral>("BS Memory Cartridge");
 }
 
 auto BSMemoryCartridge::connect() -> void {
   if(!node->setPak(pak = platform->pak(node))) return;
+  information = {};
+  information.title = pak->attribute("title");
 
-  if(auto fp = pak->read("manifest.bml")) {
-    information.manifest = fp->reads();
+  if(auto fp = pak->read("program.rom")) {
+    ROM = 1;
+    memory.allocate(fp->size());
+    fp->read({memory.data(), memory.size()});
   }
 
-  auto document = BML::unserialize(information.manifest);
-  information.name = document["game/label"].text();
-
-  if(auto memory = document["game/board/memory(content=Program)"]) {
-    ROM = memory["type"].text() == "ROM";
-    this->memory.allocate(memory["size"].natural());
-    if(auto fp = pak->read({"program.", memory["type"].text().downcase()})) {
-      fp->read({this->memory.data(), this->memory.size()});
-    }
+  if(auto fp = pak->read("program.flash")) {
+    ROM = 0;
+    memory.allocate(fp->size());
+    fp->read({memory.data(), memory.size()});
   }
 
   //some BS Memory cassetes use ROM chips rather than Flash chips ...
@@ -144,10 +143,9 @@ auto BSMemoryCartridge::power() -> void {
 
 auto BSMemoryCartridge::save() -> void {
   if(!node) return;
-  auto document = BML::unserialize(information.manifest);
 
   if(auto fp = pak->write("program.flash")) {
-    fp->write({this->memory.data(), this->memory.size()});
+    fp->write({memory.data(), memory.size()});
   }
 }
 

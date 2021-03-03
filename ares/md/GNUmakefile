@@ -11,7 +11,6 @@ ares.objects += ares-md-opn2
 ares.objects += ares-md-mcd
 ares.objects += ares-md-system
 ares.objects += ares-md-cartridge
-ares.objects += ares-md-expansion
 ares.objects += ares-md-controller
 
 $(object.path)/ares-md-cpu.o:        $(ares.path)/md/cpu/cpu.cpp
@@ -22,5 +21,4 @@ $(object.path)/ares-md-opn2.o:       $(ares.path)/md/opn2/opn2.cpp
 $(object.path)/ares-md-mcd.o:        $(ares.path)/md/mcd/mcd.cpp
 $(object.path)/ares-md-system.o:     $(ares.path)/md/system/system.cpp
 $(object.path)/ares-md-cartridge.o:  $(ares.path)/md/cartridge/cartridge.cpp
-$(object.path)/ares-md-expansion.o:  $(ares.path)/md/expansion/expansion.cpp
 $(object.path)/ares-md-controller.o: $(ares.path)/md/controller/controller.cpp

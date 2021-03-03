@@ -12,13 +12,17 @@ auto MSX::load(string location) -> shared_pointer<vfs::directory> {
     append(rom, {location, "program.rom"});
   } else if(file::exists(location)) {
     rom = Cartridge::read(location);
-  } else {
-    return {};
   }
+  if(!rom) return {};
 
   auto pak = shared_pointer{new vfs::directory};
-  pak->append("manifest.bml", Cartridge::manifest(rom, location));
+  auto manifest = Cartridge::manifest(rom, location);
+  auto document = BML::unserialize(manifest);
+  pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
+  pak->setAttribute("title",  document["game/title"].string());
+  pak->setAttribute("region", document["game/region"].string());
+  pak->setAttribute("board",  document["game/board"].string());
   return pak;
 }
 
@@ -36,7 +40,7 @@ auto MSX::heuristics(vector<u8>& data, string location) -> string {
   string s;
   s += "game\n";
   s +={"  name:   ", Media::name(location), "\n"};
-  s +={"  label:  ", Media::name(location), "\n"};
+  s +={"  title:  ", Media::name(location), "\n"};
   s += "  region: NTSC\n";  //database required to detect region
   s += "  board\n";
   s += "    memory\n";
