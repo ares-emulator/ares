@@ -69,7 +69,7 @@ auto PPU::main() -> void {
     u32 width = hires() ? 512 : 256;
     if(width == 256) width256 = 1;
     if(width == 512) width512 = 1;
-    widths[vcounter()] = width;
+    widths[vcounter() + !state.overscan * 8] = width;
 
     step(renderingCycle);
     mosaic.scanline();

@@ -2,8 +2,8 @@
 
 namespace mia {
 
-vector<shared_pointer<Media>> media;
 function<string ()> saveLocation = [] { return string{}; };
+vector<string> media;
 
 auto locate(string name) -> string {
   string location = {Path::program(), name};
@@ -19,57 +19,15 @@ auto operator+=(string& lhs, const string& rhs) -> string& {
 }
 
 #include "settings/settings.cpp"
-#include "media/media.cpp"
-#include "cartridge/cartridge.cpp"
-#include "compact-disc/compact-disc.cpp"
-#include "floppy-disk/floppy-disk.cpp"
+#include "system/system.cpp"
+#include "medium/medium.cpp"
+#include "pak/pak.cpp"
 #if !defined(MIA_LIBRARY)
 #include "program/program.cpp"
 #endif
 
 auto setSaveLocation(function<string ()> callback) -> void {
   saveLocation = callback;
-}
-
-auto construct() -> void {
-  if(media) return;  //only construct once
-  media.append(new BSMemory);
-  media.append(new ColecoVision);
-  media.append(new Famicom);
-  media.append(new FamicomDisk);
-  media.append(new GameBoy);
-  media.append(new GameBoyAdvance);
-  media.append(new GameBoyColor);
-  media.append(new GameGear);
-  media.append(new MasterSystem);
-  media.append(new MegaCD);
-  media.append(new MegaDrive);
-  media.append(new MSX);
-  media.append(new MSX2);
-  media.append(new NeoGeo);
-  media.append(new NeoGeoPocket);
-  media.append(new NeoGeoPocketColor);
-  media.append(new Nintendo64);
-  media.append(new Nintendo64DD);
-  media.append(new PCEngine);
-  media.append(new PCEngineCD);
-  media.append(new PlayStation);
-  media.append(new PocketChallengeV2);
-  media.append(new SC3000);
-  media.append(new SG1000);
-  media.append(new SufamiTurbo);
-  media.append(new SuperFamicom);
-  media.append(new SuperGrafx);
-  media.append(new WonderSwan);
-  media.append(new WonderSwanColor);
-  for(auto& medium : media) medium->construct();
-}
-
-auto medium(const string& name) -> shared_pointer<Media> {
-  for(auto& medium : media) {
-    if(medium->name() == name) return medium;
-  }
-  return {};
 }
 
 auto identify(const string& filename) -> string {
@@ -81,7 +39,8 @@ auto identify(const string& filename) -> string {
       for(auto& file : archive.file) {
         auto match = Location::suffix(file.name).trimLeft(".", 1L).downcase();
         for(auto& medium : media) {
-          if(medium->extensions().find(match)) {
+          auto pak = mia::Medium::create(medium);
+          if(pak->extensions().find(match)) {
             extension = match;
           }
         }
@@ -90,22 +49,20 @@ auto identify(const string& filename) -> string {
   }
 
   for(auto& medium : media) {
-    if(medium->extensions().find(extension)) {
-      if(auto manifest = medium->manifest(filename)) {
-        return medium->name();
-      }
+    auto pak = mia::Medium::create(medium);
+    if(pak->extensions().find(extension)) {
+      return pak->name();
     }
   }
 
   return {};  //unable to identify
 }
 
-auto import(shared_pointer<Media> medium, const string& filename) -> bool {
-  if(auto pak = medium->load(filename)) {
-    if(!pak->count()) return false;
-    string pathname = {medium->pathname, Location::prefix(filename), ".", medium->extensions().first(), "/"};
+auto import(shared_pointer<Pak> pak, const string& filename) -> bool {
+  if(pak->load(filename)) {
+    string pathname = {Path::user(), "Emulation/", pak->name(), "/", Location::prefix(filename), ".", pak->extensions().first(), "/"};
     if(!directory::create(pathname)) return false;
-    for(auto& node : *pak) {
+    for(auto& node : *pak->pak) {
       if(auto input = node.cast<vfs::file>()) {
         if(input->name() == "manifest.bml" && !settings.createManifests) continue;
         if(auto output = file::open({pathname, input->name()}, file::mode::write)) {
@@ -123,7 +80,35 @@ auto main(Arguments arguments) -> void {
   Application::setName("mia");
   #endif
 
-  construct();
+  media.append("BS Memory");
+  media.append("ColecoVision");
+  media.append("Famicom");
+  media.append("Famicom Disk");
+  media.append("Game Boy");
+  media.append("Game Boy Color");
+  media.append("Game Boy Advance");
+  media.append("Game Gear");
+  media.append("Master System");
+  media.append("Mega Drive");
+  media.append("Mega CD");
+  media.append("MSX");
+  media.append("MSX2");
+  media.append("Neo Geo");
+  media.append("Neo Geo Pocket");
+  media.append("Neo Geo Pocket Color");
+  media.append("Nintendo 64");
+  media.append("Nintendo 64DD");
+  media.append("PC Engine");
+  media.append("PC Engine CD");
+  media.append("PlayStation");
+  media.append("Pocket Challenge V2");
+  media.append("SC-3000");
+  media.append("SG-1000");
+  media.append("Sufami Turbo");
+  media.append("Super Famicom");
+  media.append("SuperGrafx");
+  media.append("WonderSwan");
+  media.append("WonderSwan Color");
 
   if(auto document = file::read(locate("settings.bml"))) {
     settings.unserialize(document);
@@ -138,38 +123,39 @@ auto main(Arguments arguments) -> void {
   }
 
   if(string system; arguments.take("--system", system)) {
-    for(auto& medium : media) {
-      if(medium->name() != system) continue;
+    auto pak = mia::Medium::create(system);
+    if(!pak) return;
 
-      if(string manifest; arguments.take("--manifest", manifest)) {
-        if(auto result = medium->manifest(manifest)) return print(result);
-        return;
+    if(string manifest; arguments.take("--manifest", manifest)) {
+      if(pak->load(manifest)) {
+        if(auto fp = pak->pak->read("manifest.bml")) return print(fp->reads());
       }
-
-      if(string import; arguments.take("--import", import)) {
-        return (void)mia::import(medium, import);
-      }
-
-      #if !defined(MIA_LIBRARY)
-      if(arguments.take("--import")) {
-        if(auto import = BrowserDialog()
-        .setTitle({"Import ", system, " Game"})
-        .setPath(settings.recent)
-        .setAlignment(Alignment::Center)
-        .openFile()
-        ) {
-          if(!mia::import(medium, import)) {
-            MessageDialog()
-            .setTitle("Error")
-            .setAlignment(Alignment::Center)
-            .setText({"Failed to import: ", Location::file(import)})
-            .error();
-          }
-        }
-        return;
-      }
-      #endif
+      return;
     }
+
+    if(string import; arguments.take("--import", import)) {
+      return (void)mia::import(pak, import);
+    }
+
+    #if !defined(MIA_LIBRARY)
+    if(arguments.take("--import")) {
+      if(auto import = BrowserDialog()
+      .setTitle({"Import ", system, " Game"})
+      .setPath(settings.recent)
+      .setAlignment(Alignment::Center)
+      .openFile()
+      ) {
+        if(!mia::import(pak, import)) {
+          MessageDialog()
+          .setTitle("Error")
+          .setAlignment(Alignment::Center)
+          .setText({"Failed to import: ", Location::file(import)})
+          .error();
+        }
+      }
+      return;
+    }
+    #endif
   }
 
   #if !defined(MIA_LIBRARY)
@@ -193,7 +179,6 @@ auto main(Arguments arguments) -> void {
 }
 
 #if !defined(MIA_LIBRARY)
-#include <ares/resource/resource.cpp>
 #include <nall/main.hpp>
 
 auto nall::main(Arguments arguments) -> void {

@@ -8,7 +8,6 @@ struct WonderSwan : Emulator {
 };
 
 WonderSwan::WonderSwan() {
-  medium = mia::medium("WonderSwan");
   manufacturer = "Bandai";
   name = "WonderSwan";
 }
@@ -32,9 +31,11 @@ auto WonderSwan::load(Menu menu) -> void {
 }
 
 auto WonderSwan::load() -> bool {
-  system.pak->append("boot.rom", {Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot});
-  system.pak->append("save.eeprom", 128);
-  Emulator::load(system, "save.eeprom");
+  game = mia::Medium::create("WonderSwan");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("WonderSwan");
+  if(!system->load()) return false;
 
   if(!ares::WonderSwan::load(root, "[Bandai] WonderSwan")) return false;
 
@@ -48,14 +49,14 @@ auto WonderSwan::load() -> bool {
 
 auto WonderSwan::save() -> bool {
   root->save();
-  Emulator::save(system, "save.eeprom");
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto WonderSwan::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "WonderSwan") return system.pak;
-  if(node->name() == "WonderSwan Cartridge") return game.pak;
+  if(node->name() == "WonderSwan") return system->pak;
+  if(node->name() == "WonderSwan Cartridge") return game->pak;
   return {};
 }
 

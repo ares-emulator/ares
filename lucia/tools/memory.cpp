@@ -75,7 +75,7 @@ auto MemoryEditor::eventExport() -> void {
     if(auto memory = item.attribute<ares::Node::Debugger::Memory>("node")) {
       auto identifier = memory->name().downcase().replace(" ", "-");
       auto datetime = chrono::local::datetime().replace("-", "").replace(":", "").replace(" ", "-");
-      auto location = emulator->locate({Location::notsuffix(emulator->game.location), "-", identifier, "-", datetime, ".bin"}, ".bin", settings.paths.debugging);
+      auto location = emulator->locate({Location::notsuffix(emulator->game->location), "-", identifier, "-", datetime, ".bin"}, ".bin", settings.paths.debugging);
       if(auto fp = file::open(location, file::mode::write)) {
         for(u32 address : range(memory->size())) {
           fp.write(memory->read(address));

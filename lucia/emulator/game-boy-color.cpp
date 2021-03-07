@@ -7,13 +7,16 @@ struct GameBoyColor : Emulator {
 };
 
 GameBoyColor::GameBoyColor() {
-  medium = mia::medium("Game Boy Color");
   manufacturer = "Nintendo";
   name = "Game Boy Color";
 }
 
 auto GameBoyColor::load() -> bool {
-  system.pak->append("boot.cgb-0.rom", {Resource::GameBoyColor::BootCGB0, sizeof Resource::GameBoyColor::BootCGB0});
+  game = mia::Medium::create("Game Boy Color");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Game Boy Color");
+  if(!system->load()) return false;
 
   if(!ares::GameBoy::load(root, "[Nintendo] Game Boy Color")) return false;
 
@@ -31,13 +34,14 @@ auto GameBoyColor::load() -> bool {
 
 auto GameBoyColor::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto GameBoyColor::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Game Boy Color") return system.pak;
-  if(node->name() == "Game Boy Color Cartridge") return game.pak;
+  if(node->name() == "Game Boy Color") return system->pak;
+  if(node->name() == "Game Boy Color Cartridge") return game->pak;
   return {};
 }
 

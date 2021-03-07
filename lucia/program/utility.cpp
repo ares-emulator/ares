@@ -27,7 +27,7 @@ auto Program::runAheadUpdate() -> void {
 }
 
 auto Program::captureScreenshot(const u32* data, u32 pitch, u32 width, u32 height) -> void {
-  string filename{emulator->locate({Location::notsuffix(emulator->game.location), " ", chrono::local::datetime().transform(":", "-"), ".png"}, ".png", settings.paths.screenshots)};
+  string filename{emulator->locate({Location::notsuffix(emulator->game->location), " ", chrono::local::datetime().transform(":", "-"), ".png"}, ".png", settings.paths.screenshots)};
   if(Encode::PNG::RGB8(filename, data, pitch, width, height)) {
     showMessage("Captured screenshot");
   } else {

@@ -54,20 +54,30 @@ auto PathSettings::construct() -> void {
 }
 
 auto PathSettings::refresh() -> void {
+  //simplifies pathnames by abbreviating the home folder and trailing slash
+  auto pathname = [](string name) -> string {
+    if(name.beginsWith(Path::user())) {
+      name.trimLeft(Path::user(), 1L);
+      name.prepend("~/");
+    }
+    if(name != "/") name.trimRight("/", 1L);
+    return name;
+  };
+
   if(settings.paths.saves) {
-    savesPath.setText(settings.paths.saves).setForegroundColor();
+    savesPath.setText(pathname(settings.paths.saves)).setForegroundColor();
   } else {
     savesPath.setText("(same as game path)").setForegroundColor({80, 80, 80});
   }
 
   if(settings.paths.screenshots) {
-    screenshotsPath.setText(settings.paths.screenshots).setForegroundColor();
+    screenshotsPath.setText(pathname(settings.paths.screenshots)).setForegroundColor();
   } else {
     screenshotsPath.setText("(same as game path)").setForegroundColor({80, 80, 80});
   }
 
   if(settings.paths.debugging) {
-    debuggingPath.setText(settings.paths.debugging).setForegroundColor();
+    debuggingPath.setText(pathname(settings.paths.debugging)).setForegroundColor();
   } else {
     debuggingPath.setText("(same as game path)").setForegroundColor({80, 80, 80});
   }

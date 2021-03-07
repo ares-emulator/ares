@@ -7,12 +7,19 @@ struct NeoGeoMVS : Emulator {
 };
 
 NeoGeoMVS::NeoGeoMVS() {
-  medium = mia::medium("Neo Geo");
   manufacturer = "SNK";
   name = "Neo Geo MVS";
+
+  firmware.append({"BIOS", "World"});
 }
 
 auto NeoGeoMVS::load() -> bool {
+  game = mia::Medium::create("Neo Geo");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Neo Geo MVS");
+  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
+
   if(!ares::NeoGeo::load(root, "[SNK] Neo Geo MVS")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -30,12 +37,14 @@ auto NeoGeoMVS::load() -> bool {
 
 auto NeoGeoMVS::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto NeoGeoMVS::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Neo Geo Cartridge") return game.pak;
+  if(node->name() == "Neo Geo MVS") return system->pak;
+  if(node->name() == "Neo Geo Cartridge") return game->pak;
   return {};
 }
 

@@ -7,12 +7,17 @@ struct GameGear : Emulator {
 };
 
 GameGear::GameGear() {
-  medium = mia::medium("Game Gear");
   manufacturer = "Sega";
   name = "Game Gear";
 }
 
 auto GameGear::load() -> bool {
+  game = mia::Medium::create("Game Gear");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Game Gear");
+  if(!system->load()) return false;
+
   if(!ares::MasterSystem::load(root, "[Sega] Game Gear")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -25,12 +30,14 @@ auto GameGear::load() -> bool {
 
 auto GameGear::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto GameGear::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Game Gear Cartridge") return game.pak;
+  if(node->name() == "Game Gear") return system->pak;
+  if(node->name() == "Game Gear Cartridge") return game->pak;
   return {};
 }
 

@@ -7,15 +7,20 @@ struct MegaDrive : Emulator {
 };
 
 MegaDrive::MegaDrive() {
-  medium = mia::medium("Mega Drive");
   manufacturer = "Sega";
   name = "Mega Drive";
 }
 
 auto MegaDrive::load() -> bool {
+  game = mia::Medium::create("Mega Drive");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Mega Drive");
+  if(!system->load()) return false;
+
   auto region = Emulator::region();
-  auto system = region == "NTSC-U" ? "Genesis" : "Mega Drive";
-  if(!ares::MegaDrive::load(root, {"[Sega] ", system, " (", region, ")"})) return false;
+  auto name = region == "NTSC-U" ? "Genesis" : "Mega Drive";
+  if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -32,13 +37,14 @@ auto MegaDrive::load() -> bool {
 
 auto MegaDrive::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto MegaDrive::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Mega Drive") return system.pak;
-  if(node->name() == "Mega Drive Cartridge") return game.pak;
+  if(node->name() == "Mega Drive") return system->pak;
+  if(node->name() == "Mega Drive Cartridge") return game->pak;
   return {};
 }
 

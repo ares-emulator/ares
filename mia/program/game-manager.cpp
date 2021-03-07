@@ -5,21 +5,18 @@ GameManager::GameManager(View* parent) : Panel(parent, Size{~0, ~0}) {
     if(!path || button != Mouse::Button::Left) return;
     if(auto location = BrowserDialog()
     .setTitle({"Set ", system, " Games Location"})
-    .setPath(*path)
+    .setPath(path)
     .setAlignment(programWindow)
     .selectFolder()
     ) {
-      *path = location;
-      pathLabel.setText(*path);
+      path = location;
+      pathLabel.setText(string{path}.replace(Path::user(), "~/"));
       refresh();
     }
   });
   importButton.setText("Import ...").onActivate([&] {
-    vector<string> extensions;
-    for(auto& medium : media) {
-      if(medium->name() != system) continue;
-      extensions = medium->extensions();
-    }
+    auto pak = mia::Medium::create(system);
+    auto extensions = pak->extensions();
     for(auto& extension : extensions) extension.prepend("*.");
     if(auto files = BrowserDialog()
     .setTitle({"Import ", system, " Games"})
@@ -35,14 +32,8 @@ GameManager::GameManager(View* parent) : Panel(parent, Size{~0, ~0}) {
 }
 
 auto GameManager::select(string system) -> void {
-  path.reset();
-  for(auto& medium : media) {
-    if(medium->name() != system) continue;
-    path = medium->pathname;
-  }
-  if(!path) return;
-
-  pathLabel.setText(*path);
+  path = {Path::user(), "Emulation/", system, "/"};
+  pathLabel.setText(string{path}.replace(Path::user(), "~/"));
   this->system = system;
   refresh();
 }
@@ -51,7 +42,7 @@ auto GameManager::refresh() -> void {
   gameList.reset();
   if(!path) return;
 
-  for(auto& name : directory::folders(*path)) {
+  for(auto& name : directory::folders(path)) {
     ListViewItem item{&gameList};
     item.setIcon(Icon::Emblem::Folder);
     item.setText(string{name}.trimRight("/", 1L));

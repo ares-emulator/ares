@@ -7,12 +7,17 @@ struct SuperGrafx : Emulator {
 };
 
 SuperGrafx::SuperGrafx() {
-  medium = mia::medium("SuperGrafx");
   manufacturer = "NEC";
   name = "SuperGrafx";
 }
 
 auto SuperGrafx::load() -> bool {
+  game = mia::Medium::create("SuperGrafx");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("SuperGrafx");
+  if(!system->load()) return false;
+
   if(!ares::PCEngine::load(root, "[NEC] SuperGrafx (NTSC-J)")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
@@ -30,13 +35,14 @@ auto SuperGrafx::load() -> bool {
 
 auto SuperGrafx::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(game->location);
+  game->save(game->location);
   return true;
 }
 
 auto SuperGrafx::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "SuperGrafx") return system.pak;
-  if(node->name() == "SuperGrafx Card") return game.pak;
+  if(node->name() == "SuperGrafx") return system->pak;
+  if(node->name() == "SuperGrafx Card") return game->pak;
   return {};
 }
 

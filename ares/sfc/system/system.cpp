@@ -66,7 +66,7 @@ auto System::load(Node::System& root, string name) -> bool {
     information.name = "Super Famicom";
   }
   if(name.find("Super Nintendo")) {
-    information.name = "Super Nintendo";
+    information.name = "Super Famicom";
   }
   if(name.find("NTSC")) {
     information.region = Region::NTSC;

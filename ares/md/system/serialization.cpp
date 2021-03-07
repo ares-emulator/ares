@@ -38,6 +38,7 @@ auto System::unserialize(serializer& s) -> bool {
 auto System::serialize(serializer& s, bool synchronize) -> void {
   scheduler.setSynchronize(synchronize);
   if(cartridge.node) s(cartridge);
+  if(expansion.node) s(expansion);
   if(MegaCD()) s(mcd);
   s(cpu);
   s(apu);

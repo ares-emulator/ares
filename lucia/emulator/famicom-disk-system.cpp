@@ -7,11 +7,10 @@ struct FamicomDiskSystem : Emulator {
   auto input(ares::Node::Input::Input) -> void override;
   auto notify(const string& message) -> void override;
 
-  Pak bios;
+  shared_pointer<mia::Pak> bios;
 };
 
 FamicomDiskSystem::FamicomDiskSystem() {
-  medium = mia::medium("Famicom Disk");
   manufacturer = "Nintendo";
   name = "Famicom Disk System";
 
@@ -26,22 +25,22 @@ auto FamicomDiskSystem::load(Menu menu) -> void {
   MenuRadioItem ejected{&diskMenu};
   ejected.setText("No Disk").onActivate([&] { emulator->notify("Ejected"); });
   group.append(ejected);
-  if(game.pak->count() < 2) return (void)ejected.setChecked();
+  if(game->pak->count() < 2) return (void)ejected.setChecked();
 
   MenuRadioItem disk1sideA{&diskMenu};
   disk1sideA.setText("Disk 1: Side A").onActivate([&] { emulator->notify("Disk 1: Side A"); });
   group.append(disk1sideA);
-  if(game.pak->count() < 3) return (void)disk1sideA.setChecked();
+  if(game->pak->count() < 3) return (void)disk1sideA.setChecked();
 
   MenuRadioItem disk1sideB{&diskMenu};
   disk1sideB.setText("Disk 1: Side B").onActivate([&] { emulator->notify("Disk 1: Side B"); });
   group.append(disk1sideB);
-  if(game.pak->count() < 4) return (void)disk1sideA.setChecked();
+  if(game->pak->count() < 4) return (void)disk1sideA.setChecked();
 
   MenuRadioItem disk2sideA{&diskMenu};
   disk2sideA.setText("Disk 2: Side A").onActivate([&] { emulator->notify("Disk 2: Side A"); });
   group.append(disk2sideA);
-  if(game.pak->count() < 5) return (void)disk1sideA.setChecked();
+  if(game->pak->count() < 5) return (void)disk1sideA.setChecked();
 
   MenuRadioItem disk2sideB{&diskMenu};
   disk2sideB.setText("Disk 2: Side B").onActivate([&] { emulator->notify("Disk 2: Side B"); });
@@ -50,13 +49,14 @@ auto FamicomDiskSystem::load(Menu menu) -> void {
 }
 
 auto FamicomDiskSystem::load() -> bool {
-  if(!file::exists(firmware[0].location)) {
-    errorFirmwareRequired(firmware[0]);
-    return false;
-  }
-  bios.location = firmware[0].location;
-  bios.pak = mia::medium("Famicom")->load(bios.location);
-  if(!bios.pak) return false;
+  game = mia::Medium::create("Famicom Disk");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  bios = mia::Medium::create("Famicom");
+  if(!bios->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
+
+  system = mia::System::create("Famicom");
+  if(!system->load()) return false;
 
   if(!ares::Famicom::load(root, "[Nintendo] Famicom (NTSC-J)")) return false;
 
@@ -84,13 +84,16 @@ auto FamicomDiskSystem::load() -> bool {
 
 auto FamicomDiskSystem::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  bios->save(bios->location);
+  game->save(game->location);
   return true;
 }
 
 auto FamicomDiskSystem::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Famicom Cartridge") return bios.pak;
-  if(node->name() == "Famicom Disk") return game.pak;
+  if(node->name() == "Famicom") return system->pak;
+  if(node->name() == "Famicom Cartridge") return bios->pak;
+  if(node->name() == "Famicom Disk") return game->pak;
   return {};
 }
 

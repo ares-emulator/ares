@@ -3,12 +3,13 @@
 namespace ares::MegaDrive {
 
 Cartridge& cartridge = cartridgeSlot.cartridge;
+Cartridge& expansion = expansionSlot.cartridge;
 #include "board/board.cpp"
 #include "slot.cpp"
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>("Mega Drive Cartridge");
+  return node = parent->append<Node::Peripheral>(string{"Mega Drive ", parent->type()});
 }
 
 auto Cartridge::connect() -> void {
@@ -30,6 +31,11 @@ auto Cartridge::connect() -> void {
   }
   board->pak = pak;
   board->load();
+
+  if(auto fp = pak->read("backup.ram")) {
+    mcd.bram.load(fp);
+  }
+
   power();
 }
 
@@ -45,6 +51,10 @@ auto Cartridge::disconnect() -> void {
 auto Cartridge::save() -> void {
   if(!node) return;
   board->save();
+
+  if(auto fp = pak->write("backup.ram")) {
+    mcd.bram.save(fp);
+  }
 }
 
 auto Cartridge::power() -> void {

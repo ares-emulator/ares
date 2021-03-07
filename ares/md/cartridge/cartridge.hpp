@@ -37,3 +37,4 @@ struct Cartridge {
 
 #include "slot.hpp"
 extern Cartridge& cartridge;
+extern Cartridge& expansion;

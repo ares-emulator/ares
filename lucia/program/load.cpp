@@ -1,9 +1,11 @@
 auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
+#if 0
   if(auto system = mia::identify(filename)) {
     for(auto& emulator : emulators) {
       if(emulator->name == system) return emulator;
     }
   }
+#endif
 
   MessageDialog().setTitle(ares::Name).setText({
     "Filename: ", Location::file(filename), "\n\n"
@@ -14,28 +16,8 @@ auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
 }
 
 auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
-  if(!location) {
-    string pathname = emulator->configuration.game;
-    if(!pathname) pathname = Path::desktop();
-
-    BrowserDialog dialog;
-    dialog.setTitle({"Load ", emulator->name, " Game"});
-    dialog.setPath(pathname);
-    dialog.setAlignment(presentation);
-    string filters{"*.zip:"};
-    for(auto& extension : emulator->medium->extensions()) {
-      filters.append("*.", extension, ":");
-    }
-    //support both uppercase and lowercase extensions
-    filters.append(string{filters}.upcase());
-    filters.trimRight(":", 1L);
-    filters.prepend(emulator->name, "|");
-    dialog.setFilters({filters, "All|*"});
-    location = openFile(dialog);
-  }
-  if(!inode::exists(location)) return false;
-
   unload();
+
   ::emulator = emulator;
   if(!emulator->load(location)) {
     ::emulator.reset();
@@ -76,9 +58,10 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
   } else {
     pause(false);
   }
-  showMessage({"Loaded ", Location::prefix(emulator->game.location)});
+  showMessage({"Loaded ", Location::prefix(emulator->game->location)});
 
   //update recent games list
+  location = emulator->game->location;
   for(s32 index = 7; index >= 0; index--) {
     settings.recent.game[index + 1] = settings.recent.game[index];
   }
@@ -88,30 +71,11 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
   return true;
 }
 
-auto Program::load(shared_pointer<mia::Media> medium, string& path) -> string {
-  BrowserDialog dialog;
-  dialog.setTitle({"Load ", medium->name(), " Game"});
-  dialog.setPath(path ? path : Path::desktop());
-  dialog.setAlignment(presentation);
-  string filters{"*.zip:"};
-  for(auto& extension : medium->extensions()) {
-    filters.append("*.", extension, ":");
-  }
-  //support both uppercase and lowercase extensions
-  filters.append(string{filters}.upcase());
-  filters.trimRight(":", 1L);
-  filters.prepend(medium->name(), "|");
-  dialog.setFilters({filters, "All|*"});
-  string location = openFile(dialog);
-  if(location) path = Location::dir(location);
-  return location;
-}
-
 auto Program::unload() -> void {
   if(!emulator) return;
 
   settings.save();
-  showMessage({"Unloaded ", Location::prefix(emulator->game.location)});
+  showMessage({"Unloaded ", Location::prefix(emulator->game->location)});
   emulator->unload();
   screens.reset();
   streams.reset();

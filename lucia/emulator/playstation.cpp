@@ -5,12 +5,11 @@ struct PlayStation : Emulator {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
-  Pak memoryCard;
+  shared_pointer<mia::Pak> memoryCard;
   u32 regionID = 0;
 };
 
 PlayStation::PlayStation() {
-  medium = mia::medium("PlayStation");
   manufacturer = "Sony";
   name = "PlayStation";
 
@@ -20,17 +19,17 @@ PlayStation::PlayStation() {
 }
 
 auto PlayStation::load() -> bool {
+  game = mia::Medium::create("PlayStation");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
   if(region == "PAL"   ) regionID = 2;
   if(region == "NTSC-J") regionID = 1;
   if(region == "NTSC-U") regionID = 0;
 
-  if(!file::exists(firmware[regionID].location)) {
-    errorFirmwareRequired(firmware[regionID]);
-    return false;
-  }
-  system.pak->append("bios.rom", loadFirmware(firmware[regionID]));
+  system = mia::System::create("PlayStation");
+  if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID]), false;
 
   if(!ares::PlayStation::load(root, {"[Sony] PlayStation (", region, ")"})) return false;
 
@@ -49,8 +48,9 @@ auto PlayStation::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Memory Card Port 1")) {
-    memoryCard.pak = shared_pointer{new vfs::directory};
-    medium->load(game.location, memoryCard.pak, "save.card", ".card", 128_KiB);
+    memoryCard = mia::Pak::create("PlayStation");
+    memoryCard->pak->append("save.card", 128_KiB);
+    memoryCard->load("save.card", ".card", game->location);
     port->allocate("Memory Card");
     port->connect();
   }
@@ -65,15 +65,16 @@ auto PlayStation::load() -> bool {
 
 auto PlayStation::save() -> bool {
   root->save();
-  if(memoryCard.pak) medium->save(game.location, memoryCard.pak, "save.card", ".card");
-  medium->save(game.location, game.pak);
+  system->save(game->location);
+  game->save(game->location);
+  if(memoryCard) memoryCard->save("save.card", ".card", game->location);
   return true;
 }
 
 auto PlayStation::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "PlayStation") return system.pak;
-  if(node->name() == "PlayStation Disc") return game.pak;
-  if(node->name() == "Memory Card") return memoryCard.pak;
+  if(node->name() == "PlayStation") return system->pak;
+  if(node->name() == "PlayStation Disc") return game->pak;
+  if(node->name() == "Memory Card") return memoryCard->pak;
   return {};
 }
 

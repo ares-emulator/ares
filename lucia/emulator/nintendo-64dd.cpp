@@ -7,11 +7,10 @@ struct Nintendo64DD : Emulator {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
-  Pak bios;
+  shared_pointer<mia::Pak> bios;
 };
 
 Nintendo64DD::Nintendo64DD() {
-  medium = mia::medium("Nintendo 64DD");
   manufacturer = "Nintendo";
   name = "Nintendo 64DD";
 
@@ -19,16 +18,14 @@ Nintendo64DD::Nintendo64DD() {
 }
 
 auto Nintendo64DD::load() -> bool {
-  system.pak->append("pif.rom",      {Resource::Nintendo64::PIF::ROM,  sizeof Resource::Nintendo64::PIF::ROM });
-  system.pak->append("pif.ntsc.rom", {Resource::Nintendo64::PIF::NTSC, sizeof Resource::Nintendo64::PIF::NTSC});
-  system.pak->append("pif.pal.rom",  {Resource::Nintendo64::PIF::PAL,  sizeof Resource::Nintendo64::PIF::PAL });
+  game = mia::Medium::create("Nintendo 64DD");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
 
-  if(!file::exists(firmware[0].location)) {
-    errorFirmwareRequired(firmware[0]);
-    return false;
-  }
-  bios.pak = shared_pointer{new vfs::directory};
-  bios.pak->append("program.rom", loadFirmware(firmware[0]));
+  bios = mia::Medium::create("Nintendo 64");
+  if(!bios->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
+
+  system = mia::System::create("Nintendo 64");
+  if(!system->load()) return false;
 
   ares::Nintendo64::option("Quality", settings.video.quality);
   ares::Nintendo64::option("Supersampling", settings.video.supersampling);
@@ -51,14 +48,16 @@ auto Nintendo64DD::load() -> bool {
 
 auto Nintendo64DD::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  bios->save(bios->location);
+  game->save(game->location);
   return true;
 }
 
 auto Nintendo64DD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Nintendo 64") return system.pak;
-  if(node->name() == "Nintendo 64 Cartridge") return bios.pak;
-  if(node->name() == "Nintendo 64DD Disk") return game.pak;
+  if(node->name() == "Nintendo 64") return system->pak;
+  if(node->name() == "Nintendo 64 Cartridge") return bios->pak;
+  if(node->name() == "Nintendo 64DD Disk") return game->pak;
   return {};
 }
 

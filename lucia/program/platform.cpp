@@ -36,7 +36,7 @@ auto Program::log(string_view message) -> void {
   if(traceLogger.traceToFile.checked()) {
     if(!traceLogger.fp) {
       auto datetime = chrono::local::datetime().replace("-", "").replace(":", "").replace(" ", "-");
-      auto location = emulator->locate({Location::notsuffix(emulator->game.location), "-", datetime, ".log"}, ".log", settings.paths.debugging);
+      auto location = emulator->locate({Location::notsuffix(emulator->game->location), "-", datetime, ".log"}, ".log", settings.paths.debugging);
       traceLogger.fp.open(location, file::mode::write);
     }
     traceLogger.fp.print(message);

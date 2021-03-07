@@ -7,13 +7,16 @@ struct GameBoy : Emulator {
 };
 
 GameBoy::GameBoy() {
-  medium = mia::medium("Game Boy");
   manufacturer = "Nintendo";
   name = "Game Boy";
 }
 
 auto GameBoy::load() -> bool {
-  system.pak->append("boot.dmg-1.rom", {Resource::GameBoy::BootDMG1, sizeof Resource::GameBoy::BootDMG1});
+  game = mia::Medium::create("Game Boy");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Game Boy");
+  if(!system->load()) return false;
 
   if(!ares::GameBoy::load(root, "[Nintendo] Game Boy")) return false;
 
@@ -31,13 +34,14 @@ auto GameBoy::load() -> bool {
 
 auto GameBoy::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto GameBoy::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Game Boy") return system.pak;
-  if(node->name() == "Game Boy Cartridge") return game.pak;
+  if(node->name() == "Game Boy") return system->pak;
+  if(node->name() == "Game Boy Cartridge") return game->pak;
   return {};
 }
 

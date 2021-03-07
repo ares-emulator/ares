@@ -35,6 +35,18 @@
 using namespace nall;
 
 namespace ares {
+  static const string Name       = "ares";
+  static const string Version    = "118.4";
+  static const string Copyright  = "Near";
+  static const string License    = "CC BY-NC-ND 4.0";
+  static const string LicenseURI = "https://creativecommons.org/licenses/by-nc-nd/4.0/";
+  static const string Website    = "ares.dev";
+  static const string WebsiteURI = "https://ares.dev";
+
+  //incremented only when serialization format changes
+  static const u32    SerializerSignature = 0x31545342;  //"BST1" (little-endian)
+  static const string SerializerVersion   = "118";
+
   namespace VFS {
     using Pak = shared_pointer<vfs::directory>;
     using File = shared_pointer<vfs::file>;
@@ -56,7 +68,6 @@ namespace ares {
   inline auto setRunAhead(bool runAhead) -> void { _runAhead = runAhead; }
 }
 
-#include <ares/information.hpp>
 #include <ares/types.hpp>
 #include <ares/random.hpp>
 #include <ares/debug/debug.hpp>

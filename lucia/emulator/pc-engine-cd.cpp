@@ -5,12 +5,11 @@ struct PCEngineCD : Emulator {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
-  Pak bios;
+  shared_pointer<mia::Pak> bios;
   u32 regionID = 0;
 };
 
 PCEngineCD::PCEngineCD() {
-  medium = mia::medium("PC Engine CD");
   manufacturer = "NEC";
   name = "PC Engine CD";
 
@@ -19,20 +18,22 @@ PCEngineCD::PCEngineCD() {
 }
 
 auto PCEngineCD::load() -> bool {
+  game = mia::Medium::create("PC Engine CD");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
   auto region = Emulator::region();
-  auto system = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
   //if statements below are ordered by lowest to highest priority
   if(region == "NTSC-J") regionID = 1;
   if(region == "NTSC-U") regionID = 0;
 
-  if(!file::exists(firmware[regionID].location)) {
-    errorFirmwareRequired(firmware[regionID]);
-    return false;
-  }
-  medium->load(game.location, this->system.pak, "backup.ram", ".bram", 2_KiB);
-  bios.pak = mia::medium("PC Engine")->load(firmware[regionID].location);
+  bios = mia::Medium::create("PC Engine");
+  if(!bios->load(firmware[regionID].location)) return errorFirmware(firmware[regionID]), false;
 
-  if(!ares::PCEngine::load(root, {"[NEC] ", system, " (", region, ")"})) return false;
+  system = mia::System::create("PC Engine");
+  if(!system->load()) return false;
+
+  auto name = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
+  if(!ares::PCEngine::load(root, {"[NEC] ", name, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -54,15 +55,16 @@ auto PCEngineCD::load() -> bool {
 
 auto PCEngineCD::save() -> bool {
   root->save();
-  medium->save(game.location, system.pak, "backup.ram", ".bram");
-  medium->save(game.location, game.pak);
+  system->save(game->location);
+  bios->save(game->location);
+  game->save(game->location);
   return true;
 }
 
 auto PCEngineCD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "PC Engine") return system.pak;
-  if(node->name() == "PC Engine Card") return bios.pak;
-  if(node->name() == "PC Engine CD Disc") return game.pak;
+  if(node->name() == "PC Engine") return system->pak;
+  if(node->name() == "PC Engine Card") return bios->pak;
+  if(node->name() == "PC Engine CD Disc") return game->pak;
   return {};
 }
 

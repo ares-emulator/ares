@@ -7,15 +7,20 @@ struct Famicom : Emulator {
 };
 
 Famicom::Famicom() {
-  medium = mia::medium("Famicom");
   manufacturer = "Nintendo";
   name = "Famicom";
 }
 
 auto Famicom::load() -> bool {
+  game = mia::Medium::create("Famicom");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Famicom");
+  if(!system->load()) return false;
+
   auto region = Emulator::region();
-  auto system = region == "NTSC-J" ? "Famicom" : "Nintendo";
-  if(!ares::Famicom::load(root, {"[Nintendo] ", system, " (", region, ")"})) return false;
+  auto name = region == "NTSC-J" ? "Famicom" : "Nintendo";
+  if(!ares::Famicom::load(root, {"[Nintendo] ", name, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -32,12 +37,14 @@ auto Famicom::load() -> bool {
 
 auto Famicom::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto Famicom::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Famicom Cartridge") return game.pak;
+  if(node->name() == "Famicom") return system->pak;
+  if(node->name() == "Famicom Cartridge") return game->pak;
   return {};
 }
 

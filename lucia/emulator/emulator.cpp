@@ -4,6 +4,10 @@
 vector<shared_pointer<Emulator>> emulators;
 shared_pointer<Emulator> emulator;
 
+auto Emulator::location() -> string {
+  return {Path::userData(), "lucia/Saves/", name, "/"};
+}
+
 auto Emulator::locate(const string& location, const string& suffix, const string& path, maybe<string> system) -> string {
   if(!system) system = root->name();
 
@@ -16,27 +20,9 @@ auto Emulator::locate(const string& location, const string& suffix, const string
   return {pathname, Location::prefix(location), suffix};
 }
 
-//this is used to load manifests for system BIOSes
-auto Emulator::manifest(const string& type, const string& location) -> shared_pointer<vfs::file> {
-  if(auto medium = mia::medium(type)) {
-    if(location.iendsWith(".zip")) {
-      Decode::ZIP archive;
-      if(archive.open(location) && archive.file) {
-        auto image = archive.extract(archive.file.first());
-        if(auto cartridge = medium.cast<mia::Cartridge>()) {
-          auto manifest = cartridge->manifest(image, location);
-          return vfs::memory::open(manifest);
-        }
-      }
-    }
-    auto manifest = medium->manifest(location);
-    return vfs::memory::open(manifest);
-  }
-  return {};
-}
-
+//handles region selection when games support multiple regions
 auto Emulator::region() -> string {
-  auto regions = game.pak->attribute("region").split(",").strip();
+  auto regions = game->pak->attribute("region").split(",").strip();
   if(!regions) return {};
   if(settings.boot.prefer == "NTSC-U" && regions.find("NTSC-U")) return "NTSC-U";
   if(settings.boot.prefer == "NTSC-J" && regions.find("NTSC-J")) return "NTSC-J";
@@ -51,24 +37,45 @@ auto Emulator::region() -> string {
 }
 
 auto Emulator::load(const string& location) -> bool {
-  system.location = {Path::userData(), "lucia/Saves/", name, "/"};
-  system.pak = shared_pointer{new vfs::directory};
-  directory::create(system.location);
+  if(inode::exists(location)) locationQueue.append(location);
 
-  game.location = location;
-  game.pak = medium->load(location);
-  if(!game.pak) return false;
-
-  latch = {};
   if(!load()) return false;
-  configuration.game = Location::dir(location);
   setBoolean("Color Bleed", settings.video.colorBleed);
   setBoolean("Color Emulation", settings.video.colorEmulation);
   setBoolean("Interframe Blending", settings.video.interframeBlending);
   setOverscan(settings.video.overscan);
 
+  latch = {};
   root->power();
   return true;
+}
+
+auto Emulator::load(shared_pointer<mia::Pak> pak, string& path) -> string {
+  string location;
+  if(locationQueue) {
+    location = locationQueue.takeFirst();  //pull from the game queue if an entry is available
+  } else {
+    BrowserDialog dialog;
+    dialog.setTitle({"Load ", pak->name(), " Game"});
+    dialog.setPath(path ? path : Path::desktop());
+    dialog.setAlignment(presentation);
+    string filters{"*.zip:"};
+    for(auto& extension : pak->extensions()) {
+      filters.append("*.", extension, ":");
+    }
+    //support both uppercase and lowercase extensions
+    filters.append(string{filters}.upcase());
+    filters.trimRight(":", 1L);
+    filters.prepend(pak->name(), "|");
+    dialog.setFilters({filters, "All|*"});
+    location = program.openFile(dialog);
+  }
+
+  if(location) {
+    path = Location::dir(location);
+    return location;
+  }
+  return {};
 }
 
 auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::file> {
@@ -87,12 +94,13 @@ auto Emulator::loadFirmware(const Firmware& firmware) -> shared_pointer<vfs::fil
 auto Emulator::unload() -> void {
   save();
   root->unload();
-  root.reset();
-  system = {};
   game = {};
+  system = {};
+  root.reset();
+  locationQueue.reset();
 }
 
-auto Emulator::load(Emulator::Pak& node, string name) -> bool {
+auto Emulator::load(mia::Pak& node, string name) -> bool {
   if(auto fp = node.pak->read(name)) {
     if(auto memory = file::read({node.location, name})) {
       fp->read(memory);
@@ -102,7 +110,7 @@ auto Emulator::load(Emulator::Pak& node, string name) -> bool {
   return false;
 }
 
-auto Emulator::save(Emulator::Pak& node, string name) -> bool {
+auto Emulator::save(mia::Pak& node, string name) -> bool {
   if(auto memory = node.pak->write(name)) {
     return file::write({node.location, name}, {memory->data(), memory->size()});
   }
@@ -138,8 +146,9 @@ auto Emulator::error(const string& text) -> void {
   MessageDialog().setTitle("Error").setText(text).setAlignment(presentation).error();
 }
 
-auto Emulator::errorFirmwareRequired(const Firmware& firmware) -> void {
+auto Emulator::errorFirmware(const Firmware& firmware, const string& message) -> void {
   if(MessageDialog().setText({
+    "Error: firmware is ", message, ".\n",
     emulator->name, " - ", firmware.type, " (", firmware.region, ") is required to play this game.\n"
     "Would you like to configure firmware settings now?"
   }).question() == "Yes") {

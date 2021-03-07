@@ -8,7 +8,6 @@ struct GameBoyAdvance : Emulator {
 };
 
 GameBoyAdvance::GameBoyAdvance() {
-  medium = mia::medium("Game Boy Advance");
   manufacturer = "Nintendo";
   name = "Game Boy Advance";
 
@@ -34,11 +33,11 @@ auto GameBoyAdvance::load(Menu menu) -> void {
 }
 
 auto GameBoyAdvance::load() -> bool {
-  if(!file::exists(firmware[0].location)) {
-    errorFirmwareRequired(firmware[0]);
-    return false;
-  }
-  system.pak->append("bios.rom", loadFirmware(firmware[0]));
+  game = mia::Medium::create("Game Boy Advance");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Game Boy Advance");
+  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
 
   if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Player")) return false;
 
@@ -52,13 +51,14 @@ auto GameBoyAdvance::load() -> bool {
 
 auto GameBoyAdvance::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto GameBoyAdvance::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Game Boy Player") return system.pak;
-  if(node->name() == "Game Boy Advance Cartridge") return game.pak;
+  if(node->name() == "Game Boy Player") return system->pak;
+  if(node->name() == "Game Boy Advance Cartridge") return game->pak;
   return {};
 }
 

@@ -191,7 +191,7 @@ SettingsWindow::SettingsWindow() {
 
   setDismissable();
   setTitle("Configuration");
-  setSize({690_sx, 405_sy});
+  setSize({700_sx, 405_sy});
   setAlignment({0.0, 1.0});
 }
 

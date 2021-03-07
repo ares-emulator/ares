@@ -1,13 +1,41 @@
 namespace name=Resource
+  namespace name=GameBoy
+    binary name=BootDMG0 file="../Firmware/Game Boy/boot.dmg-0.rom"
+    binary name=BootDMG1 file="../Firmware/Game Boy/boot.dmg-1.rom"
+    binary name=BootMGB file="../Firmware/Game Boy/boot.mgb.rom"
+  namespace name=GameBoyColor
+    binary name=BootCGB0 file="../Firmware/Game Boy Color/boot.cgb-0.rom"
+    binary name=BootCGB1 file="../Firmware/Game Boy Color/boot.cgb-1.rom"
+  namespace name=MegaDrive
+    binary name=TMSS file="../Firmware/Mega Drive/tmss.rom"
+    binary name=SVP file="../Firmware/Mega Drive/svp.rom"
+  namespace name=MSX
+    binary name=BIOS file="../Firmware/MSX/bios.rom"
+  namespace name=MSX2
+    binary name=BIOS file="../Firmware/MSX2/bios.rom"
+    binary name=Sub file="../Firmware/MSX2/sub.rom"
+  namespace name=Nintendo64
+    binary name=PIF file="../Firmware/Nintendo 64/pif.rom"
+    binary name=PIFNTSC file="../Firmware/Nintendo 64/pif.ntsc.rom"
+    binary name=PIFPAL file="../Firmware/Nintendo 64/pif.pal.rom"
   namespace name=SuperFamicom
-    binary name=Cx4 file="../Firmware/cx4.rom"
-    binary name=DSP1 file="../Firmware/dsp1.rom"
-    binary name=DSP1B file="../Firmware/dsp1b.rom"
-    binary name=DSP2 file="../Firmware/dsp2.rom"
-    binary name=DSP3 file="../Firmware/dsp3.rom"
-    binary name=DSP4 file="../Firmware/dsp4.rom"
-    binary name=SGB1 file="../Firmware/sgb1.rom"
-    binary name=SGB2 file="../Firmware/sgb2.rom"
-    binary name=ST010 file="../Firmware/st010.rom"
-    binary name=ST011 file="../Firmware/st011.rom"
-    binary name=ST018 file="../Firmware/st018.rom"
+    binary name=IPLROM file="../Firmware/Super Famicom/ipl.rom"
+    binary name=Cx4 file="../Firmware/Super Famicom/cx4.rom"
+    binary name=DSP1 file="../Firmware/Super Famicom/dsp1.rom"
+    binary name=DSP1B file="../Firmware/Super Famicom/dsp1b.rom"
+    binary name=DSP2 file="../Firmware/Super Famicom/dsp2.rom"
+    binary name=DSP3 file="../Firmware/Super Famicom/dsp3.rom"
+    binary name=DSP4 file="../Firmware/Super Famicom/dsp4.rom"
+    binary name=SGB1 file="../Firmware/Super Famicom/sgb1.rom"
+    binary name=SGB2 file="../Firmware/Super Famicom/sgb2.rom"
+    binary name=ST010 file="../Firmware/Super Famicom/st010.rom"
+    binary name=ST011 file="../Firmware/Super Famicom/st011.rom"
+    binary name=ST018 file="../Firmware/Super Famicom/st018.rom"
+    binary name=S21FX file="../Firmware/Super Famicom/21fx.rom"
+    binary name=Boards file="../Database/Super Famicom Boards.bml"
+  namespace name=WonderSwan
+    binary name=Boot file="../Firmware/WonderSwan/boot.rom"
+  namespace name=WonderSwanColor
+    binary name=Boot file="../Firmware/WonderSwan Color/boot.rom"
+  namespace name=PocketChallengeV2
+    binary name=Boot file="../Firmware/Pocket Challenge V2/boot.rom"

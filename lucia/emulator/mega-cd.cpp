@@ -5,11 +5,11 @@ struct MegaCD : Emulator {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
+  shared_pointer<mia::Pak> base;
   u32 regionID = 0;
 };
 
 MegaCD::MegaCD() {
-  medium = mia::medium("Mega CD");
   manufacturer = "Sega";
   name = "Mega CD";
 
@@ -19,21 +19,28 @@ MegaCD::MegaCD() {
 }
 
 auto MegaCD::load() -> bool {
+  game = mia::Medium::create("Mega CD");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
   auto region = Emulator::region();
-  auto system = region == "NTSC-U" ? "Sega CD" : "Mega CD";
   //if statements below are ordered by lowest to highest priority
   if(region == "PAL"   ) regionID = 2;
   if(region == "NTSC-J") regionID = 1;
   if(region == "NTSC-U") regionID = 0;
 
-  if(!file::exists(firmware[regionID].location)) {
-    errorFirmwareRequired(firmware[regionID]);
-    return false;
-  }
-  this->system.pak->append("bios.rom", loadFirmware(firmware[regionID]));
-  medium->load(game.location, this->system.pak, "backup.ram", ".bram", 8_KiB);
+  base = mia::Medium::create("Mega Drive");
+  if(!base->load(firmware[regionID].location)) return errorFirmware(firmware[regionID]), false;
 
-  if(!ares::MegaDrive::load(root, {"[Sega] ", system, " (", region, ")"})) return false;
+  system = mia::System::create("Mega CD");
+  if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID]), false;
+
+  auto name = region == "NTSC-U" ? "Sega CD" : "Mega CD";
+  if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return false;
+
+  if(auto port = root->find<ares::Node::Port>("Expansion Slot")) {
+    port->allocate();
+    port->connect();
+  }
 
   if(auto port = root->find<ares::Node::Port>("Mega CD/Disc Tray")) {
     port->allocate();
@@ -50,14 +57,16 @@ auto MegaCD::load() -> bool {
 
 auto MegaCD::save() -> bool {
   root->save();
-  medium->save(game.location, system.pak, "backup.ram", ".bram");
-  medium->save(game.location, game.pak);
+  system->save(game->location);
+  base->save(game->location);
+  game->save(game->location);
   return true;
 }
 
 auto MegaCD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Mega Drive") return system.pak;
-  if(node->name() == "Mega CD Disc") return game.pak;
+  if(node->name() == "Mega Drive") return system->pak;
+  if(node->name() == "Mega Drive Expansion") return base->pak;
+  if(node->name() == "Mega CD Disc") return game->pak;
   return {};
 }
 

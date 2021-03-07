@@ -3,7 +3,7 @@ SystemSelection::SystemSelection(View* view) : Panel(view, Size{155_sx, ~0}) {
 
   for(auto& medium : media) {
     ListViewItem item{&systemList};
-    item.setText(medium->name());
+    item.setText(medium);
   }
 
   systemList.onChange([&] { eventChange(); });

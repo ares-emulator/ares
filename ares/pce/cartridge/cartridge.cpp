@@ -30,11 +30,6 @@ auto Cartridge::connect() -> void {
   if(!board) board = new Board::Interface{*this};
   board->pak = pak;
   board->load();
-
-  if(auto fp = pak->read("backup.ram")) {
-    pcd.bram.load(fp);
-  }
-
   power();
 }
 
@@ -49,10 +44,6 @@ auto Cartridge::disconnect() -> void {
 auto Cartridge::save() -> void {
   if(!node) return;
   board->save();
-
-  if(auto fp = pak->write("backup.ram")) {
-    pcd.bram.save(fp);
-  }
 }
 
 auto Cartridge::power() -> void {

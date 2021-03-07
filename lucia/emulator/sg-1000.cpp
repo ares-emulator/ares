@@ -7,12 +7,17 @@ struct SG1000 : Emulator {
 };
 
 SG1000::SG1000() {
-  medium = mia::medium("SG-1000");
   manufacturer = "Sega";
   name = "SG-1000";
 }
 
 auto SG1000::load() -> bool {
+  game = mia::Medium::create("SG-1000");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("SG-1000");
+  if(!system->load()) return false;
+
   auto region = Emulator::region();
   if(!ares::SG1000::load(root, {"[Sega] SG-1000 (", region, ")"})) return false;
 
@@ -31,12 +36,14 @@ auto SG1000::load() -> bool {
 
 auto SG1000::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto SG1000::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "SG-1000 Cartridge") return game.pak;
+  if(node->name() == "SG-1000") return system->pak;
+  if(node->name() == "SG-1000 Cartridge") return game->pak;
   return {};
 }
 

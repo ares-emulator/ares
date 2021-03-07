@@ -5,19 +5,20 @@ struct Nintendo64 : Emulator {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
-  Pak gamepad;
+  shared_pointer<mia::Pak> gamepad;
 };
 
 Nintendo64::Nintendo64() {
-  medium = mia::medium("Nintendo 64");
   manufacturer = "Nintendo";
   name = "Nintendo 64";
 }
 
 auto Nintendo64::load() -> bool {
-  system.pak->append("pif.rom",      {Resource::Nintendo64::PIF::ROM,  sizeof Resource::Nintendo64::PIF::ROM });
-  system.pak->append("pif.ntsc.rom", {Resource::Nintendo64::PIF::NTSC, sizeof Resource::Nintendo64::PIF::NTSC});
-  system.pak->append("pif.pal.rom",  {Resource::Nintendo64::PIF::PAL,  sizeof Resource::Nintendo64::PIF::PAL });
+  game = mia::Medium::create("Nintendo 64");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Nintendo 64");
+  if(!system->load()) return false;
 
   ares::Nintendo64::option("Quality", settings.video.quality);
   ares::Nintendo64::option("Supersampling", settings.video.supersampling);
@@ -34,13 +35,17 @@ auto Nintendo64::load() -> bool {
     auto peripheral = port->allocate("Gamepad");
     port->connect();
     if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-      if(!game.pak->read("save.ram") && !game.pak->read("save.eeprom") && !game.pak->read("save.flash")) {
-        gamepad.pak = shared_pointer{new vfs::directory};
-        medium->load(game.location, gamepad.pak, "save.pak", ".pak", 32_KiB);
+      if(!game->pak->read("save.ram")
+      && !game->pak->read("save.eeprom")
+      && !game->pak->read("save.flash")
+      ) {
+        gamepad = mia::Pak::create("Nintendo 64");
+        gamepad->pak->append("save.pak", 32_KiB);
+        gamepad->load("save.pak", ".pak", game->location);
         port->allocate("Controller Pak");
         port->connect();
       } else {
-        gamepad = {};
+        gamepad.reset();
         port->allocate("Rumble Pak");
         port->connect();
       }
@@ -61,15 +66,16 @@ auto Nintendo64::load() -> bool {
 
 auto Nintendo64::save() -> bool {
   root->save();
-  if(gamepad.pak) medium->save(game.location, gamepad.pak, "save.pak", ".pak");
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
+  if(gamepad) gamepad->save("save.pak", ".pak", game->location);
   return true;
 }
 
 auto Nintendo64::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Nintendo 64") return system.pak;
-  if(node->name() == "Nintendo 64 Cartridge") return game.pak;
-  if(node->name() == "Gamepad") return gamepad.pak;
+  if(node->name() == "Nintendo 64") return system->pak;
+  if(node->name() == "Nintendo 64 Cartridge") return game->pak;
+  if(node->name() == "Gamepad") return gamepad->pak;
   return {};
 }
 

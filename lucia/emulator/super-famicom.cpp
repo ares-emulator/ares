@@ -5,84 +5,65 @@ struct SuperFamicom : Emulator {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
 
-  Pak gb, bs, stA, stB;
+  shared_pointer<mia::Pak> gb, bs, stA, stB;
 };
 
 SuperFamicom::SuperFamicom() {
-  medium = mia::medium("Super Famicom");
   manufacturer = "Nintendo";
   name = "Super Famicom";
 }
 
 auto SuperFamicom::load() -> bool {
-  system.pak->append("boards.bml", {Resource::SuperFamicom::Boards, sizeof Resource::SuperFamicom::Boards});
-  system.pak->append("ipl.rom",    {Resource::SuperFamicom::IPLROM, sizeof Resource::SuperFamicom::IPLROM});
+  game = mia::Medium::create("Super Famicom");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Super Famicom");
+  if(!system->load()) return false;
 
   auto region = Emulator::region();
-  if(region.beginsWith("NTSC")
-  || region.endsWith("BRA")
-  || region.endsWith("CAN")
-  || region.endsWith("HKG")
-  || region.endsWith("JPN")
-  || region.endsWith("KOR")
-  || region.endsWith("LTN")
-  || region.endsWith("ROC")
-  || region.endsWith("USA")
-  || region.beginsWith("SHVC-")
-  ) {
-    region = "NTSC";
-  } else {
-    region = "PAL";
-  }
   if(!ares::SuperFamicom::load(root, {"[Nintendo] Super Famicom (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     auto cartridge = port->allocate();
     port->connect();
 
-    #if defined(CORE_GB)
     if(auto slot = cartridge->find<ares::Node::Port>("Super Game Boy/Cartridge Slot")) {
-      if(auto location = program.load(mia::medium("Game Boy"), settings.paths.superFamicom.gameBoy)) {
-        if(gb.pak = mia::medium("Game Boy")->load(location)) {
-          gb.location = location;
-          slot->allocate();
-          slot->connect();
-        } else if(gb.pak = mia::medium("Game Boy Color")->load(location)) {
-          gb.location = location;
-          slot->allocate();
-          slot->connect();
-        }
+      gb = mia::Medium::create("Game Boy");
+      if(gb->load(Emulator::load(gb, settings.paths.superFamicom.gameBoy))) {
+        slot->allocate();
+        slot->connect();
+      } else {
+        gb.reset();
       }
     }
-    #endif
 
     if(auto slot = cartridge->find<ares::Node::Port>("BS Memory Slot")) {
-      if(auto location = program.load(mia::medium("BS Memory"), settings.paths.superFamicom.bsMemory)) {
-        if(bs.pak = mia::medium("BS Memory")->load(location)) {
-          bs.location = location;
-          slot->allocate();
-          slot->connect();
-        }
+      bs = mia::Medium::create("BS Memory");
+      if(bs->load(Emulator::load(bs, settings.paths.superFamicom.bsMemory))) {
+        slot->allocate();
+        slot->connect();
+      } else {
+        bs.reset();
       }
     }
 
     if(auto slot = cartridge->find<ares::Node::Port>("Sufami Turbo Slot A")) {
-      if(auto location = program.load(mia::medium("Sufami Turbo"), settings.paths.superFamicom.sufamiTurbo)) {
-        if(stA.pak = mia::medium("Sufami Turbo")->load(location)) {
-          stA.location = location;
-          slot->allocate();
-          slot->connect();
-        }
+      stA = mia::Medium::create("Sufami Turbo");
+      if(stA->load(Emulator::load(stA, settings.paths.superFamicom.sufamiTurbo))) {
+        slot->allocate();
+        slot->connect();
+      } else {
+        stA.reset();
       }
     }
 
     if(auto slot = cartridge->find<ares::Node::Port>("Sufami Turbo Slot B")) {
-      if(auto location = program.load(mia::medium("Sufami Turbo"), settings.paths.superFamicom.sufamiTurbo)) {
-        if(stB.pak = mia::medium("Sufami Turbo")->load(location)) {
-          stB.location = location;
-          slot->allocate();
-          slot->connect();
-        }
+      stB = mia::Medium::create("Sufami Turbo");
+      if(stB->load(Emulator::load(stB, settings.paths.superFamicom.sufamiTurbo))) {
+        slot->allocate();
+        slot->connect();
+      } else {
+        stB.reset();
       }
     }
   }
@@ -102,25 +83,26 @@ auto SuperFamicom::load() -> bool {
 
 auto SuperFamicom::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
-  if(gb.pak) mia::medium("Game Boy")->save(gb.location, gb.pak);
-  if(bs.pak) mia::medium("BS Memory")->save(bs.location, bs.pak);
-  if(stA.pak) mia::medium("Sufami Turbo")->save(stA.location, stA.pak);
-  if(stB.pak) mia::medium("Sufami Turbo")->save(stB.location, stB.pak);
+  system->save(system->location);
+  game->save(game->location);
+  if(gb) gb->save(gb->location);
+  if(bs) bs->save(bs->location);
+  if(stA) stA->save(stA->location);
+  if(stB) stB->save(stB->location);
   return true;
 }
 
 auto SuperFamicom::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Super Famicom") return system.pak;
-  if(node->name() == "Super Famicom Cartridge") return game.pak;
-  if(node->name() == "Game Boy Cartridge") return gb.pak;
-  if(node->name() == "Game Boy Color Cartridge") return gb.pak;
-  if(node->name() == "BS Memory Cartridge") return bs.pak;
+  if(node->name() == "Super Famicom") return system->pak;
+  if(node->name() == "Super Famicom Cartridge") return game->pak;
+  if(node->name() == "Game Boy Cartridge") return gb->pak;
+  if(node->name() == "Game Boy Color Cartridge") return gb->pak;
+  if(node->name() == "BS Memory Cartridge") return bs->pak;
   if(node->name() == "Sufami Turbo Cartridge") {
     if(auto parent = node->parent()) {
       if(auto port = parent.acquire()) {
-        if(port->name() == "Sufami Turbo Slot A") return stA.pak;
-        if(port->name() == "Sufami Turbo Slot B") return stB.pak;
+        if(port->name() == "Sufami Turbo Slot A") return stA->pak;
+        if(port->name() == "Sufami Turbo Slot B") return stB->pak;
       }
     }
   }

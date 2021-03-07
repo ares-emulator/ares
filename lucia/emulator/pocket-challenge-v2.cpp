@@ -8,7 +8,6 @@ struct PocketChallengeV2 : Emulator {
 };
 
 PocketChallengeV2::PocketChallengeV2() {
-  medium = mia::medium("Pocket Challenge V2");
   manufacturer = "Benesse";
   name = "Pocket Challenge V2";
 }
@@ -20,7 +19,11 @@ auto PocketChallengeV2::load(Menu menu) -> void {
 }
 
 auto PocketChallengeV2::load() -> bool {
-  system.pak->append("bios.rom", {Resource::WonderSwan::Boot, sizeof Resource::WonderSwan::Boot});
+  game = mia::Medium::create("Pocket Challenge V2");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Pocket Challenge V2");
+  if(!system->load()) return false;
 
   if(!ares::WonderSwan::load(root, "[Benesse] Pocket Challenge V2")) return false;
 
@@ -34,13 +37,14 @@ auto PocketChallengeV2::load() -> bool {
 
 auto PocketChallengeV2::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto PocketChallengeV2::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Pocket Challenge V2") return system.pak;
-  if(node->name() == "Pocket Challenge V2 Cartridge") return game.pak;
+  if(node->name() == "Pocket Challenge V2") return system->pak;
+  if(node->name() == "Pocket Challenge V2 Cartridge") return game->pak;
   return {};
 }
 

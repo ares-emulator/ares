@@ -117,8 +117,6 @@
 #endif
 
 auto Emulator::construct() -> void {
-  mia::construct();
-
   #ifdef CORE_FC
   emulators.append(new Famicom);
   emulators.append(new FamicomDiskSystem);

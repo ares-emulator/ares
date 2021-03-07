@@ -7,12 +7,17 @@ struct MasterSystem : Emulator {
 };
 
 MasterSystem::MasterSystem() {
-  medium = mia::medium("Master System");
   manufacturer = "Sega";
   name = "Master System";
 }
 
 auto MasterSystem::load() -> bool {
+  game = mia::Medium::create("Master System");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Master System");
+  if(!system->load()) return false;
+
   auto region = Emulator::region();
   if(!ares::MasterSystem::load(root, {"[Sega] Master System (", region, ")"})) return false;
 
@@ -41,12 +46,14 @@ auto MasterSystem::load() -> bool {
 
 auto MasterSystem::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto MasterSystem::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Master System Cartridge") return game.pak;
+  if(node->name() == "Master System") return system->pak;
+  if(node->name() == "Master System Cartridge") return game->pak;
   return {};
 }
 

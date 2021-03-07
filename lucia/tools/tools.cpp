@@ -44,7 +44,7 @@ ToolsWindow::ToolsWindow() {
 
   setDismissable();
   setTitle("Tools");
-  setSize({690_sx, 405_sy});
+  setSize({700_sx, 405_sy});
   setAlignment({1.0, 1.0});
 }
 

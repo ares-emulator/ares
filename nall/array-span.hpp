@@ -23,6 +23,11 @@ template<typename T> struct array_span : array_view<T> {
     super::_size = (s32)size;
   }
 
+  template<s32 size> array_span(T (&data)[size]) {
+    super::_data = data;
+    super::_size = size;
+  }
+
   explicit operator bool() const {
     return super::_data && super::_size > 0;
   }

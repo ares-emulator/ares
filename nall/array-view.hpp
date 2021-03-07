@@ -24,6 +24,11 @@ template<typename T> struct array_view {
     _size = (s32)size;
   }
 
+  template<s32 size> array_view(const T (&data)[size]) {
+    _data = data;
+    _size = size;
+  }
+
   explicit operator bool() const {
     return _data && _size > 0;
   }

@@ -7,7 +7,6 @@ struct NeoGeoPocketColor : Emulator {
 };
 
 NeoGeoPocketColor::NeoGeoPocketColor() {
-  medium = mia::medium("Neo Geo Pocket Color");
   manufacturer = "SNK";
   name = "Neo Geo Pocket Color";
 
@@ -15,15 +14,11 @@ NeoGeoPocketColor::NeoGeoPocketColor() {
 }
 
 auto NeoGeoPocketColor::load() -> bool {
-  if(!file::exists(firmware[0].location)) {
-    errorFirmwareRequired(firmware[0]);
-    return false;
-  }
-  system.pak->append("bios.rom", loadFirmware(firmware[0]));
-  system.pak->append("cpu.ram", 12_KiB);
-  system.pak->append("apu.ram", 4_KiB);
-  Emulator::load(system, "cpu.ram");
-  Emulator::load(system, "apu.ram");
+  game = mia::Medium::create("Neo Geo Pocket Color");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("Neo Geo Pocket Color");
+  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
 
   if(!ares::NeoGeoPocket::load(root, "[SNK] Neo Geo Pocket Color")) return false;
 
@@ -41,15 +36,14 @@ auto NeoGeoPocketColor::load() -> bool {
 
 auto NeoGeoPocketColor::save() -> bool {
   root->save();
-  Emulator::save(system, "cpu.ram");
-  Emulator::save(system, "apu.ram");
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto NeoGeoPocketColor::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Neo Geo Pocket Color") return system.pak;
-  if(node->name() == "Neo Geo Pocket Color Cartridge") return game.pak;
+  if(node->name() == "Neo Geo Pocket Color") return system->pak;
+  if(node->name() == "Neo Geo Pocket Color Cartridge") return game->pak;
   return {};
 }
 

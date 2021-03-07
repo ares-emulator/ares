@@ -97,6 +97,7 @@ auto System::load(Node::System& root, string name) -> bool {
   psg.load(node);
   opn2.load(node);
   cartridgeSlot.load(node);
+  expansionSlot.load(node);
   if(MegaCD()) mcd.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
@@ -112,8 +113,9 @@ auto System::unload() -> void {
   vdp.unload();
   psg.unload();
   opn2.unload();
-  cartridgeSlot.unload();
   if(MegaCD()) mcd.unload();
+  cartridgeSlot.unload();
+  expansionSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
   extensionPort.unload();
@@ -133,6 +135,7 @@ auto System::power(bool reset) -> void {
   random.entropy(Random::Entropy::Low);
 
   if(cartridge.node) cartridge.power();
+  if(expansion.node) expansion.power();
   if(MegaCD()) mcd.power(reset);
   cpu.power(reset);
   apu.power(reset);

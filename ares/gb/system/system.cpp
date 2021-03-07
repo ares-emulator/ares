@@ -103,7 +103,7 @@ auto System::unload() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
-  string name = "boot.rom";  //fallback name (should not be used)
+  string name = "boot.rom";
 
   if(GameBoy::Model::GameBoy()) {
     bootROM.allocate(256);
@@ -130,7 +130,7 @@ auto System::power(bool reset) -> void {
     if(cpu.version->latch() == "CPU CGB E" ) name = "boot.cgb-1.rom";
   }
 
-  if(auto fp = pak->read(name)) {
+  if(auto fp = pak->read(!GameBoy::Model::SuperGameBoy() ? "boot.rom" : "sm83.boot.rom")) {
     bootROM.load(fp);
 
     if(fastBoot->latch()) {

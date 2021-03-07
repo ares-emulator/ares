@@ -72,10 +72,6 @@ auto MCD::connect() -> void {
 
   fd = pak->read("cd.rom");
   cdd.insert();
-
-  if(auto fp = system.pak->read("backup.ram")) {
-    bram.load(fp);
-  }
 }
 
 auto MCD::disconnect() -> void {
@@ -90,9 +86,6 @@ auto MCD::disconnect() -> void {
 }
 
 auto MCD::save() -> void {
-  if(auto fp = system.pak->write("backup.ram")) {
-    bram.save(fp);
-  }
 }
 
 auto MCD::main() -> void {
@@ -171,7 +164,7 @@ auto MCD::wait(u32 clocks) -> void {
 }
 
 auto MCD::power(bool reset) -> void {
-  if(auto fp = system.pak->read("bios.rom")) {
+  if(auto fp = expansion.pak->read("bios.rom")) {
     for(u32 address : range(bios.size())) bios.program(address, fp->readm(2));
   }
 

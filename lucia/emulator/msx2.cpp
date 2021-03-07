@@ -7,14 +7,16 @@ struct MSX2 : Emulator {
 };
 
 MSX2::MSX2() {
-  medium = mia::medium("MSX2");
   manufacturer = "Microsoft";
   name = "MSX2";
 }
 
 auto MSX2::load() -> bool {
-  system.pak->append("bios.rom", {Resource::MSX2::BIOS, sizeof Resource::MSX2::BIOS});
-  system.pak->append("sub.rom",  {Resource::MSX2::Sub,  sizeof Resource::MSX2::Sub });
+  game = mia::Medium::create("MSX2");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("MSX2");
+  if(!system->load()) return false;
 
   auto region = Emulator::region();
   if(!ares::MSX::load(root, {"[Microsoft] MSX2 (", region, ")"})) return false;
@@ -34,13 +36,14 @@ auto MSX2::load() -> bool {
 
 auto MSX2::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto MSX2::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "MSX2") return system.pak;
-  if(node->name() == "MSX2 Cartridge") return game.pak;
+  if(node->name() == "MSX2") return system->pak;
+  if(node->name() == "MSX2 Cartridge") return game->pak;
   return {};
 }
 

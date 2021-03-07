@@ -14,11 +14,13 @@ hiro.path := ../hiro
 hiro.resource := resource/$(name).rc
 include $(hiro.path)/GNUmakefile
 
+ares.path := ../ares
 mia.path := ../mia
 
-objects := mia resource
+objects := ares mia resource
 objects := $(objects:%=$(object.path)/%.o)
 
+$(object.path)/ares.o: $(ares.path)/ares/ares.cpp
 $(object.path)/mia.o: $(mia.path)/mia.cpp
 $(object.path)/resource.o: $(mia.path)/resource/resource.cpp
 

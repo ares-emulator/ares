@@ -7,7 +7,6 @@ struct ColecoVision : Emulator {
 };
 
 ColecoVision::ColecoVision() {
-  medium = mia::medium("ColecoVision");
   manufacturer = "Coleco";
   name = "ColecoVision";
 
@@ -15,11 +14,11 @@ ColecoVision::ColecoVision() {
 }
 
 auto ColecoVision::load() -> bool {
-  if(!file::exists(firmware[0].location)) {
-    errorFirmwareRequired(firmware[0]);
-    return false;
-  }
-  system.pak->append("bios.rom", loadFirmware(firmware[0]));
+  game = mia::Medium::create("ColecoVision");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("ColecoVision");
+  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
 
   auto region = Emulator::region();
   if(!ares::ColecoVision::load(root, {"[Coleco] ColecoVision (", region, ")"})) return false;
@@ -38,12 +37,15 @@ auto ColecoVision::load() -> bool {
 }
 
 auto ColecoVision::save() -> bool {
+  root->save();
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto ColecoVision::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "ColecoVision") return system.pak;
-  if(node->name() == "ColecoVision Cartridge") return game.pak;
+  if(node->name() == "ColecoVision") return system->pak;
+  if(node->name() == "ColecoVision Cartridge") return game->pak;
   return {};
 }
 

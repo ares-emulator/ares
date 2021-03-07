@@ -104,9 +104,15 @@ auto SI::main() -> void {
         }
         valid = 1;
       }
-      if(channel >= 4 && send == 1 && recv == 3 && cartridge.eeprom) {
+      if(channel >= 4 && send == 1 && recv == 3 && cartridge.eeprom.size == 512) {
         output[0] = 0x00;
         output[1] = 0x80;
+        output[2] = 0x00;
+        valid = 1;
+      }
+      if(channel >= 4 && send == 1 && recv == 3 && cartridge.eeprom.size == 2048) {
+        output[0] = 0x00;
+        output[1] = 0xc0;
         output[2] = 0x00;
         valid = 1;
       }
@@ -186,9 +192,16 @@ auto SI::main() -> void {
     }
     if(input[0] == 0x04) {
       //read EEPROM
-      if(cartridge.eeprom && send == 2 && recv == 8) {
+      if(send == 2 && recv == 8 && cartridge.eeprom.size == 512) {
         u32 address = input[1] * 8;
         for(u32 index : range(8)) {
+          output[index] = cartridge.eeprom.readByte(address++);
+        }
+        valid = 1;
+      }
+      if(send == 2 && recv == 32 && cartridge.eeprom.size == 2048) {
+        u32 address = input[1] * 32;
+        for(u32 index : range(32)) {
           output[index] = cartridge.eeprom.readByte(address++);
         }
         valid = 1;
@@ -196,9 +209,17 @@ auto SI::main() -> void {
     }
     if(input[0] == 0x05) {
       //write EEPROM
-      if(cartridge.eeprom && recv == 1 && send == 10) {
+      if(recv == 1 && send == 10 && cartridge.eeprom.size == 512) {
         u32 address = input[1] * 8;
         for(u32 index : range(8)) {
+          cartridge.eeprom.writeByte(address++, input[2 + index]);
+        }
+        output[0] = 0x00;
+        valid = 1;
+      }
+      if(recv == 1 && send == 34 && cartridge.eeprom.size == 2048) {
+        u32 address = input[1] * 32;
+        for(u32 index : range(32)) {
           cartridge.eeprom.writeByte(address++, input[2 + index]);
         }
         output[0] = 0x00;

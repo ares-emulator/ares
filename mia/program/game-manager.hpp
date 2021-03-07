@@ -10,7 +10,7 @@ struct GameManager : Panel {
     Button importButton{&controlLayout, Size{80_sx, 0}};
 
   string system;
-  maybe<string&> path;
+  string path;
 };
 
 extern GameManager& gameManager;

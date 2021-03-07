@@ -7,15 +7,20 @@ struct PCEngine : Emulator {
 };
 
 PCEngine::PCEngine() {
-  medium = mia::medium("PC Engine");
   manufacturer = "NEC";
   name = "PC Engine";
 }
 
 auto PCEngine::load() -> bool {
+  game = mia::Medium::create("PC Engine");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("PC Engine");
+  if(!system->load()) return false;
+
   auto region = Emulator::region();
-  string system = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
-  if(!ares::PCEngine::load(root, {"[NEC] ", system, " (", region, ")"})) return false;
+  string name = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
+  if(!ares::PCEngine::load(root, {"[NEC] ", name, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -32,13 +37,14 @@ auto PCEngine::load() -> bool {
 
 auto PCEngine::save() -> bool {
   root->save();
-  medium->save(game.location, game.pak);
+  system->save(game->location);
+  game->save(game->location);
   return true;
 }
 
 auto PCEngine::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "PC Engine") return system.pak;
-  if(node->name() == "PC Engine Card") return game.pak;
+  if(node->name() == "PC Engine") return system->pak;
+  if(node->name() == "PC Engine Card") return game->pak;
   return {};
 }
 

@@ -8,7 +8,6 @@ struct WonderSwanColor : Emulator {
 };
 
 WonderSwanColor::WonderSwanColor() {
-  medium = mia::medium("WonderSwan Color");
   manufacturer = "Bandai";
   name = "WonderSwan Color";
 }
@@ -32,9 +31,11 @@ auto WonderSwanColor::load(Menu menu) -> void {
 }
 
 auto WonderSwanColor::load() -> bool {
-  system.pak->append("boot.rom", {Resource::WonderSwanColor::Boot, sizeof Resource::WonderSwanColor::Boot});
-  system.pak->append("save.eeprom", 2048);
-  Emulator::load(system, "save.eeprom");
+  game = mia::Medium::create("WonderSwan Color");
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
+
+  system = mia::System::create("WonderSwan Color");
+  if(!system->load()) return false;
 
   if(!ares::WonderSwan::load(root, "[Bandai] WonderSwan Color")) return false;
 
@@ -48,14 +49,14 @@ auto WonderSwanColor::load() -> bool {
 
 auto WonderSwanColor::save() -> bool {
   root->save();
-  Emulator::save(system, "save.eeprom");
-  medium->save(game.location, game.pak);
+  system->save(system->location);
+  game->save(game->location);
   return true;
 }
 
 auto WonderSwanColor::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "WonderSwan Color") return system.pak;
-  if(node->name() == "WonderSwan Color Cartridge") return game.pak;
+  if(node->name() == "WonderSwan Color") return system->pak;
+  if(node->name() == "WonderSwan Color Cartridge") return game->pak;
   return {};
 }
 
