@@ -2,8 +2,18 @@ namespace Board {
 
 #include "linear.cpp"
 #include "banked.cpp"
+#include "svp.cpp"
 #include "lock-on.cpp"
 #include "game-genie.cpp"
+#include "debugger.cpp"
+
+auto Interface::main() -> void {
+  step(cartridge->frequency());
+}
+
+auto Interface::step(u32 clocks) -> void {
+  cartridge->step(clocks);
+}
 
 auto Interface::load(Memory::Readable<n16>& memory, string name) -> bool {
   if(auto fp = pak->read(name)) {

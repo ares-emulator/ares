@@ -20,7 +20,9 @@ auto Cartridge::connect() -> void {
   information.regions  = pak->attribute("region").split(",").strip();
   information.bootable = pak->attribute("bootable").boolean();
 
-  if(pak->read("patch.rom")) {
+  if(pak->read("svp.rom")) {
+    board = new Board::SVP(*this);
+  } else if(pak->read("patch.rom")) {
     board = new Board::LockOn(*this);
   } else if(pak->attribute("label") == "Game Genie") {
     board = new Board::GameGenie(*this);
@@ -41,6 +43,7 @@ auto Cartridge::connect() -> void {
 
 auto Cartridge::disconnect() -> void {
   if(!node) return;
+  board->unload();
   board->pak.reset();
   board.reset();
   pak.reset();
@@ -57,7 +60,17 @@ auto Cartridge::save() -> void {
   }
 }
 
+auto Cartridge::main() -> void {
+  board->main();
+}
+
+auto Cartridge::step(u32 clocks) -> void {
+  Thread::step(clocks);
+  Thread::synchronize(cpu);
+}
+
 auto Cartridge::power() -> void {
+  Thread::create(board->frequency(), {&Cartridge::main, this});
   board->power();
 }
 

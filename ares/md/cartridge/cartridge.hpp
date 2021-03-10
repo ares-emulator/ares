@@ -1,7 +1,7 @@
 struct Cartridge;
 #include "board/board.hpp"
 
-struct Cartridge {
+struct Cartridge : Thread {
   Node::Peripheral node;
   VFS::Pak pak;
 
@@ -15,6 +15,8 @@ struct Cartridge {
   auto disconnect() -> void;
 
   auto save() -> void;
+  auto main() -> void;
+  auto step(u32 clocks) -> void;
   auto power() -> void;
 
   auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16;

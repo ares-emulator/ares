@@ -5,6 +5,7 @@
 
 #include <component/processor/m68k/m68k.hpp>
 #include <component/processor/z80/z80.hpp>
+#include <component/processor/ssp1601/ssp1601.hpp>
 #include <component/audio/sn76489/sn76489.hpp>
 #include <component/audio/ym2612/ym2612.hpp>
 

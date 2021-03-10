@@ -132,7 +132,7 @@ auto System::save() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
-  random.entropy(Random::Entropy::Low);
+  random.entropy(Random::Entropy::None);
 
   if(cartridge.node) cartridge.power();
   if(expansion.node) expansion.power();
@@ -142,6 +142,9 @@ auto System::power(bool reset) -> void {
   vdp.power(reset);
   psg.power(reset);
   opn2.power(reset);
+  controllerPort1.power();
+  controllerPort2.power();
+  extensionPort.power();
   scheduler.power(cpu);
 }
 

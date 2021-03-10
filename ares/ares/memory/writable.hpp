@@ -30,7 +30,7 @@ struct Writable {
     }
   }
 
-  auto load(shared_pointer<vfs::file> fp) -> void {
+  auto load(VFS::File fp) -> void {
     if(!self.size) allocate(fp->size());
     fp->read({self.data, min(fp->size(), self.size * sizeof(T))});
     for(u32 address = self.size; address <= self.mask; address++) {
@@ -38,7 +38,7 @@ struct Writable {
     }
   }
 
-  auto save(shared_pointer<vfs::file> fp) -> void {
+  auto save(VFS::File fp) -> void {
     fp->write({self.data, min(fp->size(), self.size * sizeof(T))});
   }
 

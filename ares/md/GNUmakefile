@@ -1,5 +1,6 @@
 ares.components += m68k
 ares.components += z80
+ares.components += ssp1601
 ares.components += sn76489
 ares.components += ym2612
 
