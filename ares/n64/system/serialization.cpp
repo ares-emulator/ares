@@ -35,6 +35,11 @@ auto System::unserialize(serializer& s) -> bool {
 }
 
 auto System::serialize(serializer& s, bool synchronize) -> void {
+  s(cartridge);
+  s(controllerPort1);
+  s(controllerPort2);
+  s(controllerPort3);
+  s(controllerPort4);
   s(mi);
   s(vi);
   s(ai);
@@ -45,10 +50,5 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(cpu);
   s(rdp);
   s(rsp);
-  s(cartridge);
-  s(controllerPort1);
-  s(controllerPort2);
-  s(controllerPort3);
-  s(controllerPort4);
   s(dd);
 }

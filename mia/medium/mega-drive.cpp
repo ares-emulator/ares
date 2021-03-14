@@ -21,9 +21,9 @@ auto MegaDrive::load(string location) -> bool {
   if(!document) return false;
 
   pak = new vfs::directory;
-  pak->setAttribute("title",  document["game/title"].string());
-  pak->setAttribute("region", document["game/region"].string());
-  pak->setAttribute("bootable", (bool)document["game/bootable"]);
+  pak->setAttribute("title",    document["game/title"].string());
+  pak->setAttribute("region",   document["game/region"].string());
+  pak->setAttribute("bootable", true);
   pak->append("manifest.bml", manifest);
 
   //add SVP ROM to image if it is missing
@@ -46,13 +46,9 @@ auto MegaDrive::load(string location) -> bool {
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
     Medium::load(node, ".ram");
     if(auto fp = pak->read("save.ram")) {
-      pak->setAttribute("mode", node["mode"].string());
-      pak->setAttribute("offset", node["offset"].natural());
+      fp->setAttribute("mode",   node["mode"].string());
+      fp->setAttribute("offset", node["offset"].natural());
     }
-  }
-
-  if(auto node = document["game/board/memory(type=RAM,content=Backup)"]) {
-    Medium::load(node, ".bram");
   }
 
   return true;
@@ -63,10 +59,6 @@ auto MegaDrive::save(string location) -> bool {
 
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
     Medium::save(node, ".ram");
-  }
-
-  if(auto node = document["game/board/memory(type=RAM,content=Backup)"]) {
-    Medium::save(node, ".bram");
   }
 
   return true;
@@ -102,7 +94,7 @@ auto MegaDrive::analyze(vector<u8>& data) -> string {
   if(ramMode == "none") ramSize = 0;
 
   vector<string> regions;
-  string region = slice((const char*)&data[0x1f0], 0, 16).trimRight(" ");
+  string region = slice((const char*)&data[0x01f0], 0, 16).trimRight(" ");
   if(!regions) {
     if(region == "JAPAN" ) regions.append("NTSC-J");
     if(region == "EUROPE") regions.append("PAL");
@@ -146,24 +138,7 @@ auto MegaDrive::analyze(vector<u8>& data) -> string {
   s +={"  region: ", regions.merge(", "), "\n"};
   s += "  board\n";
 
-  if(internationalName == "CD2 BOOT ROM"
-  || internationalName == "CDX BOOT ROM"
-  || internationalName == "MEGA-CD BOOT ROM"
-  || internationalName == "MEGA-LD BOOT ROM"
-  || internationalName == "SEGA-CD BOOT ROM"
-  || internationalName == "WONDER-MEGA BOOT"
-  || internationalName == "WONDERMEGA2 BOOT"
-  || internationalName == "X EYE BOOT for(MP)"
-  ) {
-    s += "    memory\n";
-    s += "      type: ROM\n";
-    s +={"      size: 0x", hex(data.size()), "\n"};
-    s += "      content: BIOS\n";
-    s += "    memory\n";
-    s += "      type: RAM\n";
-    s += "      size: 0x2000\n";
-    s += "      content: Backup\n";
-  } else if(domesticName == "Game Genie") {
+  if(domesticName == "Game Genie") {
     s += "    memory\n";
     s += "      type: ROM\n";
     s +={"      size: 0x", hex(data.size()), "\n"};
@@ -205,8 +180,6 @@ auto MegaDrive::analyze(vector<u8>& data) -> string {
     s +={"      mode: ", ramMode, "\n"};
     s +={"      offset: 0x", hex(ramFrom), "\n"};
   }
-
-  s += "  bootable\n";
 
   return s;
 }

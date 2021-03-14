@@ -124,7 +124,8 @@ auto SSP1601::instruction() -> void {
   //mpys
   case 0x1b: {
     A -= updateP();
-    updateZN();
+    Z = A == 0;
+    N = A >> 31;
     X = readPR1(op >> 0, 0, op >> 2);
     Y = readPR1(op >> 4, 1, op >> 6);
     break;
@@ -133,7 +134,8 @@ auto SSP1601::instruction() -> void {
   //mpya (rj),(ri),b
   case 0x4b: {
     A += updateP();
-    updateZN();
+    Z = A == 0;
+    N = A >> 31;
     X = readPR1(op >> 0, 0, op >> 2);
     Y = readPR1(op >> 4, 1, op >> 6);
     break;
@@ -142,7 +144,7 @@ auto SSP1601::instruction() -> void {
   //mld (rj),(ri),b
   case 0x5b: {
     A = 0;
-    L = 0;
+    C = 0;
     Z = 1;
     V = 0;
     N = 0;

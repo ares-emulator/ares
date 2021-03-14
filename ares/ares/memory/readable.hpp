@@ -15,7 +15,7 @@ struct Readable {
     self.mask = 0;
   }
 
-  auto allocate(u32 size, T fill = ~0ull) -> void {
+  auto allocate(u32 size, T fill = (T)~0ull) -> void {
     if(!size) return reset();
     delete[] self.data;
     self.size = size;

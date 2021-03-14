@@ -68,6 +68,11 @@ auto System::load(Node::System& root, string name) -> bool {
   root = node;
   if(!node->setPak(pak = platform->pak(node))) return false;
 
+  cartridgeSlot.load(node);
+  controllerPort1.load(node);
+  controllerPort2.load(node);
+  controllerPort3.load(node);
+  controllerPort4.load(node);
   mi.load(node);
   vi.load(node);
   ai.load(node);
@@ -78,11 +83,6 @@ auto System::load(Node::System& root, string name) -> bool {
   cpu.load(node);
   rdp.load(node);
   rsp.load(node);
-  cartridgeSlot.load(node);
-  controllerPort1.load(node);
-  controllerPort2.load(node);
-  controllerPort3.load(node);
-  controllerPort4.load(node);
   dd.load(node);
   #if defined(VULKAN)
   vulkan.load(node);
@@ -96,6 +96,7 @@ auto System::unload() -> void {
   #if defined(VULKAN)
   vulkan.unload();
   #endif
+  cartridgeSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
   controllerPort3.unload();
@@ -110,7 +111,6 @@ auto System::unload() -> void {
   cpu.unload();
   rdp.unload();
   rsp.unload();
-  cartridgeSlot.unload();
   dd.unload();
   pak.reset();
   node.reset();

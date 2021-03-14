@@ -19,7 +19,7 @@ struct SVP : Interface, SSP1601 {
   } debugger;
 
   auto frequency() -> u32 override {
-    return 25'000'000 / 2;
+    return 23'000'000;
   }
 
   auto load() -> void override {
@@ -41,7 +41,6 @@ struct SVP : Interface, SSP1601 {
   auto main() -> void override {
     debugger.instruction();
     SSP1601::instruction();
-    step(1);
   }
 
   auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {
@@ -131,10 +130,9 @@ struct SVP : Interface, SSP1601 {
   //SSP1601
 
   auto read(u16 address) -> u16 override {
-    step(1);
-    if(address <= 0x03ff) return iram[address];
-    if(address >= 0xfc00) return srom[address];
-    return rom[address];
+    if(address <= 0x03ff) return step(1), iram[address];
+    if(address >= 0xfc00) return step(1), srom[address];
+    return step(4), rom[address];
   }
 
   auto getIncrement(u16 mode) -> s32 {

@@ -5,8 +5,8 @@ namespace ares::Famicom {
 auto enumerate() -> vector<string> {
   return {
     "[Nintendo] Famicom (NTSC-J)",
-    "[Nintendo] Nintendo (NTSC-U)",
-    "[Nintendo] Nintendo (PAL)",
+    "[Nintendo] Famicom (NTSC-U)",
+    "[Nintendo] Famicom (PAL)",
   };
 }
 

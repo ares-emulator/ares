@@ -3,7 +3,6 @@
 namespace ares::SuperFamicom {
 
 auto enumerate() -> vector<string> {
-  //todo: lucia can't distinguish "Super Famicom (NTSC)" from "Super Nintendo (NTSC)"
   return {
     "[Nintendo] Super Famicom (NTSC)",
     "[Nintendo] Super Famicom (PAL)",
@@ -63,9 +62,6 @@ auto System::load(Node::System& root, string name) -> bool {
 
   information = {};
   if(name.find("Super Famicom")) {
-    information.name = "Super Famicom";
-  }
-  if(name.find("Super Nintendo")) {
     information.name = "Super Famicom";
   }
   if(name.find("NTSC")) {

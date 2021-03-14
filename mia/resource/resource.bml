@@ -9,13 +9,16 @@ namespace name=Resource
   namespace name=MegaDrive
     binary name=TMSS file="../Firmware/Mega Drive/tmss.rom"
     binary name=SVP file="../Firmware/Mega Drive/svp.rom"
+  namespace name=Mega32X
+    binary name=Boot file="../Firmware/Mega 32X/boot.rom"
+    binary name=SH2BootMaster file="../Firmware/Mega 32X/sh2.boot.master.rom"
+    binary name=SH2BootSlave file="../Firmware/Mega 32X/sh2.boot.slave.rom"
   namespace name=MSX
     binary name=BIOS file="../Firmware/MSX/bios.rom"
   namespace name=MSX2
     binary name=BIOS file="../Firmware/MSX2/bios.rom"
     binary name=Sub file="../Firmware/MSX2/sub.rom"
   namespace name=Nintendo64
-    binary name=PIF file="../Firmware/Nintendo 64/pif.rom"
     binary name=PIFNTSC file="../Firmware/Nintendo 64/pif.ntsc.rom"
     binary name=PIFPAL file="../Firmware/Nintendo 64/pif.pal.rom"
   namespace name=SuperFamicom

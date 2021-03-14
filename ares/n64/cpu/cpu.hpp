@@ -350,10 +350,10 @@ struct CPU : Thread {
     n64 badVirtualAddress;
 
     //9
-    n32 count;
+    n33 count;  //32-bit; +1 to count half-cycles
 
     //11
-    n32 compare;
+    n33 compare;
 
     //12
     struct Status {

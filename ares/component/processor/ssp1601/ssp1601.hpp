@@ -13,16 +13,14 @@ struct SSP1601 {
   auto power() -> void;
 
   //algorithms.cpp
-  auto updateZN() -> void;
-  auto updateLZVN() -> void;
   auto test(u16 op) -> bool;
 
-  auto sub(u32 v) -> void;
-  auto cmp(u32 v) -> void;
-  auto add(u32 v) -> void;
-  auto and(u32 v) -> void;
-  auto or (u32 v) -> void;
-  auto eor(u32 v) -> void;
+  auto add(u32) -> void;
+  auto sub(u32) -> void;
+  auto cmp(u32) -> void;
+  auto and(u32) -> void;
+  auto or (u32) -> void;
+  auto eor(u32) -> void;
   auto shr() -> void;
   auto shl() -> void;
   auto neg() -> void;

@@ -33,7 +33,9 @@
     auto load(Node::System& node, string name) -> bool;
   }
   #include "mega-drive.cpp"
+  #include "mega-32x.cpp"
   #include "mega-cd.cpp"
+  #include "mega-cd-32x.cpp"
 #endif
 
 #ifdef CORE_MS
@@ -128,7 +130,7 @@ auto Emulator::construct() -> void {
 
   #ifdef CORE_N64
   emulators.append(new Nintendo64);
-//emulators.append(new Nintendo64DD);
+  emulators.append(new Nintendo64DD);
   #endif
 
   #ifdef CORE_SG
@@ -141,7 +143,9 @@ auto Emulator::construct() -> void {
 
   #ifdef CORE_MD
   emulators.append(new MegaDrive);
+  emulators.append(new Mega32X);
   emulators.append(new MegaCD);
+  emulators.append(new MegaCD32X);
   #endif
 
   #ifdef CORE_PS1

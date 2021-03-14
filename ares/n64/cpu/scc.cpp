@@ -38,7 +38,7 @@ auto CPU::getControlRegister(n5 index) -> u64 {
     data = scc.badVirtualAddress;
     break;
   case  9:  //count
-    data.bit(0,31) = scc.count;
+    data.bit(0,31) = scc.count >> 1;
     break;
   case 10:  //entryhi
     data.bit( 0, 7) = scc.tlb.addressSpaceID;
@@ -47,7 +47,7 @@ auto CPU::getControlRegister(n5 index) -> u64 {
     data.bit(62,63) = scc.tlb.region;
     break;
   case 11:  //compare
-    data.bit(0,31) = scc.compare;
+    data.bit(0,31) = scc.compare >> 1;
     break;
   case 12:  //status
     data.bit( 0)    = scc.status.interruptEnable;
@@ -168,7 +168,7 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
   //scc.badVirtualAddress = data;  //read-only
     break;
   case  9:  //count
-    scc.count = data.bit(0,31);
+    scc.count = data.bit(0,31) << 1;
     break;
   case 10:  //entryhi
     scc.tlb.addressSpaceID            = data.bit( 0, 7);
@@ -178,7 +178,7 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     scc.tlb.synchronize();
     break;
   case 11:  //compare
-    scc.compare = data.bit(0,31);
+    scc.compare = data.bit(0,31) << 1;
     scc.cause.interruptPending.bit(Interrupt::Timer) = 0;
     break;
   case 12: {//status

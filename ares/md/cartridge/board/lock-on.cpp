@@ -2,7 +2,7 @@ struct LockOn : Interface {
   using Interface::Interface;
   Memory::Readable<n16> rom;
   Memory::Readable<n16> patch;
-  CartridgeSlot slot{"Cartridge Slot", "Cartridge"};
+  CartridgeSlot slot{"Cartridge Slot"};
 
   auto load() -> void override {
     Interface::load(rom, "program.rom");

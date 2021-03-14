@@ -8,6 +8,7 @@ namespace Media {
   #include "master-system.cpp"
   #include "game-gear.cpp"
   #include "mega-drive.cpp"
+  #include "mega-32x.cpp"
   #include "mega-cd.cpp"
   #include "msx.cpp"
   #include "msx2.cpp"
@@ -45,6 +46,7 @@ auto Medium::create(string name) -> shared_pointer<Pak> {
   if(name == "Master System") return new Media::MasterSystem;
   if(name == "Game Gear") return new Media::GameGear;
   if(name == "Mega Drive") return new Media::MegaDrive;
+  if(name == "Mega 32X") return new Media::Mega32X;
   if(name == "Mega CD") return new Media::MegaCD;
   if(name == "MSX") return new Media::MSX;
   if(name == "MSX2") return new Media::MSX2;

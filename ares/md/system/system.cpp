@@ -4,12 +4,22 @@ namespace ares::MegaDrive {
 
 auto enumerate() -> vector<string> {
   return {
+    //Mega Drive
     "[Sega] Mega Drive (NTSC-J)",
-    "[Sega] Genesis (NTSC-U)",
+    "[Sega] Mega Drive (NTSC-U)",
     "[Sega] Mega Drive (PAL)",
+    //Mega 32X
+    "[Sega] Mega 32X (NTSC-J)",
+    "[Sega] Mega 32X (NTSC-U)",
+    "[Sega] Mega 32X (PAL)",
+    //Mega CD
     "[Sega] Mega CD (NTSC-J)",
-    "[Sega] Sega CD (NTSC-U)",
+    "[Sega] Mega CD (NTSC-U)",
     "[Sega] Mega CD (PAL)",
+    //Mega CD 32X
+    "[Sega] Mega CD 32X (NTSC-J)",
+    "[Sega] Mega CD 32X (NTSC-U)",
+    "[Sega] Mega CD 32X (PAL)",
   };
 }
 
@@ -49,18 +59,22 @@ auto System::load(Node::System& root, string name) -> bool {
   information = {};
   if(name.find("Mega Drive")) {
     information.name = "Mega Drive";
+    information.mega32X = 0;
     information.megaCD = 0;
   }
-  if(name.find("Genesis")) {
+  if(name.find("Mega 32X")) {
     information.name = "Mega Drive";
+    information.mega32X = 1;
     information.megaCD = 0;
   }
   if(name.find("Mega CD")) {
     information.name = "Mega Drive";
+    information.mega32X = 0;
     information.megaCD = 1;
   }
-  if(name.find("Sega CD")) {
+  if(name.find("Mega CD 32X")) {
     information.name = "Mega Drive";
+    information.mega32X = 1;
     information.megaCD = 1;
   }
   if(name.find("NTSC-J")) {
@@ -97,7 +111,7 @@ auto System::load(Node::System& root, string name) -> bool {
   psg.load(node);
   opn2.load(node);
   cartridgeSlot.load(node);
-  expansionSlot.load(node);
+  if(Mega32X()) m32x.load(node);
   if(MegaCD()) mcd.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
@@ -113,9 +127,9 @@ auto System::unload() -> void {
   vdp.unload();
   psg.unload();
   opn2.unload();
+  if(Mega32X()) m32x.unload();
   if(MegaCD()) mcd.unload();
   cartridgeSlot.unload();
-  expansionSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
   extensionPort.unload();
@@ -126,6 +140,7 @@ auto System::unload() -> void {
 auto System::save() -> void {
   if(!node) return;
   cartridge.save();
+  if(Mega32X()) m32x.save();
   if(MegaCD()) mcd.save();
 }
 
@@ -135,7 +150,7 @@ auto System::power(bool reset) -> void {
   random.entropy(Random::Entropy::None);
 
   if(cartridge.node) cartridge.power();
-  if(expansion.node) expansion.power();
+  if(Mega32X()) m32x.power(reset);
   if(MegaCD()) mcd.power(reset);
   cpu.power(reset);
   apu.power(reset);

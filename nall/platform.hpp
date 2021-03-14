@@ -163,12 +163,15 @@ inline auto spinloop() -> void {
 #endif
 
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
+  #define no_optimize __attribute__((optnone))
   #define noinline   __attribute__((noinline))
   #define alwaysinline  inline __attribute__((always_inline))
 #elif defined(COMPILER_MICROSOFT)
+  #define no_optimize
   #define noinline   __declspec(noinline)
   #define alwaysinline  inline __forceinline
 #else
+  #define no_optimize
   #define noinline
   #define alwaysinline  inline
 #endif

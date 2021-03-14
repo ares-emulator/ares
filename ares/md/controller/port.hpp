@@ -22,7 +22,7 @@ struct ControllerPort {
 
 protected:
   const string name;
-  n8 control;
+  n8 control;  //d0-d6 = PC0-PC6 (0 = input; 1 = output); d7 = TH-INT enable
   friend class Controller;
 };
 

@@ -17,7 +17,7 @@ struct Emulator {
   auto setBoolean(const string& name, bool value) -> bool;
   auto setOverscan(bool value) -> bool;
   auto error(const string& text) -> void;
-  auto errorFirmware(const Firmware&, const string& message = "missing or invalid") -> void;
+  auto errorFirmware(const Firmware&, string system = "") -> void;
   auto load(mia::Pak& node, string name) -> bool;
   auto save(mia::Pak& node, string name) -> bool;
   virtual auto load(Menu) -> void {}

@@ -25,6 +25,11 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     return data;
   }
 
+  if(address >= 0x800000 && address <= 0x9fffff) {
+    if(m32x.node) return m32x.readExternal(upper, lower, address, data);
+    return data;
+  }
+
   if(address >= 0xa00000 && address <= 0xa0ffff) {
     if(!apu.granted()) return data;
     address.bit(15) = 0;  //a080000-a0ffff mirrors a00000-a07fff
@@ -75,6 +80,11 @@ auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
     } else {
       if(mcd.node) return mcd.external_write(upper, lower, address, data);
     }
+    return;
+  }
+
+  if(address >= 0x800000 && address <= 0x9fffff) {
+    if(m32x.node) return m32x.writeExternalIO(upper, lower, address, data);
     return;
   }
 

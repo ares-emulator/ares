@@ -19,8 +19,7 @@ auto MegaDrive::load() -> bool {
   if(!system->load()) return false;
 
   auto region = Emulator::region();
-  auto name = region == "NTSC-U" ? "Genesis" : "Mega Drive";
-  if(!ares::MegaDrive::load(root, {"[Sega] ", name, " (", region, ")"})) return false;
+  if(!ares::MegaDrive::load(root, {"[Sega] Mega Drive (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

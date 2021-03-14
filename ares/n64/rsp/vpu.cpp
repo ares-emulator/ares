@@ -696,7 +696,7 @@ auto RSP::instructionVMACF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
         vd.u16(n) = accumulatorSaturate(n, 1, 0x8000, 0x7fff);
       }
       if constexpr(U == 1) {
-        vd.u16(n) = ACCH.s16(n) < 0 ? 0x0000 : (ACCH.s16(n) ^ ACCM.s16(n)) < 0 ? 0xffff : ACCM.u16(n);
+        vd.u16(n) = ACCH.s16(n) < 0 ? 0x0000 : ACCH.s16(n) || ACCM.s16(n) < 0 ? 0xffff : ACCM.u16(n);
       }
     }
   }
@@ -783,12 +783,7 @@ auto RSP::instructionVMADL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
-      u32 r1 = vs.u16(n) * vte.u16(n);
-      u32 r2 = ACCL.u16(n) + (r1 >> 16);
-      u32 r3 = ACCM.u16(n) + (r2 >> 16);
-      ACCL.u16(n)  = r2;
-      ACCM.u16(n)  = r3;
-      ACCH.u16(n) += s16(r3 >> 16);
+      accumulatorSet(n, accumulatorGet(n) + (u32(vs.u16(n) * vte.u16(n)) >> 16));
       vd.u16(n) = accumulatorSaturate(n, 0, 0x0000, 0xffff);
     }
   }
@@ -820,12 +815,7 @@ auto RSP::instructionVMADM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
-      u32 r1 = vs.s16(n) * vte.u16(n);
-      u32 r2 = ACCL.u16(n) + u16(r1);
-      u32 r3 = ACCM.u16(n) + (r1 >> 16) + (r2 >> 16);
-      ACCL.u16(n)  = r2;
-      ACCM.u16(n)  = r3;
-      ACCH.u16(n) += (r3 >> 16) - (s32(r1) < 0);
+      accumulatorSet(n, accumulatorGet(n) + vs.s16(n) * vte.u16(n));
       vd.u16(n) = accumulatorSaturate(n, 1, 0x8000, 0x7fff);
     }
   }

@@ -19,8 +19,7 @@ auto Famicom::load() -> bool {
   if(!system->load()) return false;
 
   auto region = Emulator::region();
-  auto name = region == "NTSC-J" ? "Famicom" : "Nintendo";
-  if(!ares::Famicom::load(root, {"[Nintendo] ", name, " (", region, ")"})) return false;
+  if(!ares::Famicom::load(root, {"[Nintendo] Famicom (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

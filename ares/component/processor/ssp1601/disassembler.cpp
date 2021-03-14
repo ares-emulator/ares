@@ -357,7 +357,7 @@ auto SSP1601::disassembleContext() -> string {
   s.append("R6:", hex(R[6], 2L), " ");
   s.append("R7:", hex(R[7], 2L), " ");
 
-  s.append(L ? "L" : "l");
+  s.append(C ? "C" : "c");
   s.append(Z ? "Z" : "z");
   s.append(V ? "V" : "v");
   s.append(N ? "N" : "n");

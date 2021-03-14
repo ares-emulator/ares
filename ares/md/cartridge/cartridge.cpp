@@ -3,13 +3,12 @@
 namespace ares::MegaDrive {
 
 Cartridge& cartridge = cartridgeSlot.cartridge;
-Cartridge& expansion = expansionSlot.cartridge;
 #include "board/board.cpp"
 #include "slot.cpp"
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>(string{"Mega Drive ", parent->type()});
+  return node = parent->append<Node::Peripheral>("Mega Drive Cartridge");
 }
 
 auto Cartridge::connect() -> void {
@@ -20,7 +19,9 @@ auto Cartridge::connect() -> void {
   information.regions  = pak->attribute("region").split(",").strip();
   information.bootable = pak->attribute("bootable").boolean();
 
-  if(pak->read("svp.rom")) {
+  if(pak->attribute("32x").boolean()) {
+    board = new Board::Mega32X{*this};
+  } else if(pak->read("svp.rom")) {
     board = new Board::SVP(*this);
   } else if(pak->read("patch.rom")) {
     board = new Board::LockOn(*this);

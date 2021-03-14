@@ -146,13 +146,14 @@ auto Emulator::error(const string& text) -> void {
   MessageDialog().setTitle("Error").setText(text).setAlignment(presentation).error();
 }
 
-auto Emulator::errorFirmware(const Firmware& firmware, const string& message) -> void {
+auto Emulator::errorFirmware(const Firmware& firmware, string system) -> void {
+  if(!system) system = emulator->name;
   if(MessageDialog().setText({
-    "Error: firmware is ", message, ".\n",
-    emulator->name, " - ", firmware.type, " (", firmware.region, ") is required to play this game.\n"
+    "Error: firmware is missing or invalid.\n",
+    system, " - ", firmware.type, " (", firmware.region, ") is required to play this game.\n"
     "Would you like to configure firmware settings now?"
   }).question() == "Yes") {
     settingsWindow.show("Firmware");
-    firmwareSettings.select(emulator->name, firmware.type, firmware.region);
+    firmwareSettings.select(system, firmware.type, firmware.region);
   }
 }

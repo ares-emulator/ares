@@ -12,12 +12,6 @@ auto PI::load(Node::Object parent) -> void {
   rom.allocate(0x7c0);
   ram.allocate(0x040);
 
-  string iplrom = cartridge.region() == "NTSC" ? "pif.ntsc.rom" : "pif.pal.rom";
-  iplrom = "pif.rom";
-  if(auto fp = system.pak->read(iplrom)) {
-    rom.load(fp);
-  }
-
   debugger.load(node);
 }
 
@@ -29,6 +23,11 @@ auto PI::unload() -> void {
 }
 
 auto PI::power(bool reset) -> void {
+  string pifrom = cartridge.region() == "NTSC" ? "pif.ntsc.rom" : "pif.pal.rom";
+  if(auto fp = system.pak->read(pifrom)) {
+    rom.load(fp);
+  }
+
   ram.fill();
   io = {};
   bsd1 = {};

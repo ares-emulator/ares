@@ -90,6 +90,7 @@ auto main(Arguments arguments) -> void {
   media.append("Game Gear");
   media.append("Master System");
   media.append("Mega Drive");
+  media.append("Mega 32X");
   media.append("Mega CD");
   media.append("MSX");
   media.append("MSX2");

@@ -5,13 +5,11 @@ struct CartridgeSlot {
   auto connected() const -> bool { return (bool)cartridge.node; }
 
   //slot.cpp
-  CartridgeSlot(string name, string type);
+  CartridgeSlot(string name);
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
   const string name;
-  const string type;
 };
 
 extern CartridgeSlot cartridgeSlot;
-extern CartridgeSlot expansionSlot;

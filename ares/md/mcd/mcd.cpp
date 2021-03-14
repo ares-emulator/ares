@@ -164,7 +164,7 @@ auto MCD::wait(u32 clocks) -> void {
 }
 
 auto MCD::power(bool reset) -> void {
-  if(auto fp = expansion.pak->read("bios.rom")) {
+  if(auto fp = system.pak->read("bios.rom")) {
     for(u32 address : range(bios.size())) bios.program(address, fp->readm(2));
   }
 
