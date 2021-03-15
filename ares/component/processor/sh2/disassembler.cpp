@@ -14,22 +14,22 @@ auto SH2::disassembleInstruction() -> string {
     return {"@r", r, "+"};
   };
   auto indirectIndexedRegister = [&](u32 r) -> string {
-    return {"@(R0,R", r, ")"};
+    return {"@(r0,r", r, ")"};
   };
   auto immediate = [&](u32 i) -> string {
     return {"#0x", hex(i, 2L)};
   };
   auto pcRelativeDisplacement = [&](u32 d) -> string {
-    return {"@(0x", hex(d, 2L), ",PC)"};
+    return {"@(0x", hex(d, 2L), ",pc)"};
   };
   auto gbrIndirectDisplacement = [&](u32 d) -> string {
-    return {"@(0x", hex(d, 2L), ",GBR)"};
+    return {"@(0x", hex(d, 2L), ",gbr)"};
   };
   auto gbrIndirectIndexed = [&]() -> string {
-    return {"@(R0,GBR)"};
+    return {"@(r0,gbr)"};
   };
   auto indirectRegisterDisplacement = [&](u32 d, u32 r) -> string {
-    return {"@(0x", hex(d, 1L), ",R", r, ")"};
+    return {"@(0x", hex(d, 1L), ",r", r, ")"};
   };
   auto displacement8 = [&](u32 d) -> string {
     return {"0x", hex(d, 2L)};
@@ -38,7 +38,7 @@ auto SH2::disassembleInstruction() -> string {
     return {"0x", hex(d, 3L)};
   };
 
-  u16 opcode = readWord(PC);
+  u16 opcode = readWord(PC - 4);
 
   #define n   (opcode >> 8 & 0x00f)
   #define m   (opcode >> 4 & 0x00f)
@@ -247,9 +247,6 @@ auto SH2::disassembleInstruction() -> string {
   #define d4 (opcode >> 0 & 0x0f)
   #define d8 (opcode >> 0 & 0xff)
   switch(opcode >> 8) {
-  case 0x00 ... 0x0f:  //MOVT Rn
-    s = {"movt", register(n)};
-    break;
   case 0x80:  //MOV.B R0,@(disp,Rn)
     s = {"mov.b", register(0), indirectRegisterDisplacement(d4, m)};
     break;
@@ -261,9 +258,6 @@ auto SH2::disassembleInstruction() -> string {
     break;
   case 0x85:  //MOV.W @(disp,Rm),R0
     s = {"mov.w", indirectRegisterDisplacement(m, d4), register(0)};
-    break;
-  case 0x87:  //MOVA @(disp,PC),R0
-    s = {"mova", pcRelativeDisplacement(d8), register(0)};
     break;
   case 0x88:  //CMP/EQ #imm,R0
     s = {"cmp/eq", immediate(i), register(0)};
@@ -301,6 +295,9 @@ auto SH2::disassembleInstruction() -> string {
   case 0xc6:  //MOV.L @(disp,GBR),R0
     s = {"mov.l", gbrIndirectDisplacement(d8), register(0)};
     break;
+  case 0xc7:  //MOVA @(disp,PC),R0
+    s = {"mova", pcRelativeDisplacement(d8), register(0)};
+    break;
   case 0xc8:  //TST #imm,R0
     s = {"tst", immediate(i), register(0)};
     break;
@@ -336,28 +333,31 @@ auto SH2::disassembleInstruction() -> string {
   #define m (opcode >> 8 & 0xf)
   switch(opcode >> 4 & 0x0f00 | opcode & 0x00ff) {
   case 0x002:  //STC SR,Rn
-    s = {"stc", "SR", register(n)};
+    s = {"stc", "sr", register(n)};
     break;
   case 0x003:  //BSRF Rm
     s = {"bsrf", register(m)};
     break;
   case 0x00a:  //STS MACH,Rn
-    s = {"sts", "MACH", register(n)};
+    s = {"sts", "mach", register(n)};
     break;
   case 0x012:  //STC GBR,Rn
-    s = {"stc", "GBR", register(n)};
+    s = {"stc", "gbr", register(n)};
     break;
   case 0x01a:  //STS MACL,Rn
-    s = {"sts", "MACL", register(n)};
+    s = {"sts", "macl", register(n)};
     break;
   case 0x022:  //STC VBR,Rn
-    s = {"stc", "VBR", register(n)};
+    s = {"stc", "vbr", register(n)};
     break;
   case 0x023:  //BRAF Rm
     s = {"braf", register(m)};
     break;
+  case 0x029:  //MOVT Rn
+    s = {"movt", register(n)};
+    break;
   case 0x02a:  //STS PR,Rn
-    s = {"sts", "PR", register(n)};
+    s = {"sts", "pr", register(n)};
     break;
   case 0x400:  //SHLL Rn
     s = {"shll", register(n)};
@@ -366,10 +366,10 @@ auto SH2::disassembleInstruction() -> string {
     s = {"shlr", register(n)};
     break;
   case 0x402:  //STS.L MACH,@-Rn
-    s = {"sts.l", "MACH", predecrementIndirectRegister(n)};
+    s = {"sts.l", "mach", predecrementIndirectRegister(n)};
     break;
   case 0x403:  //STC.L SR,@-Rn
-    s = {"stc.l", "SR", predecrementIndirectRegister(n)};
+    s = {"stc.l", "sr", predecrementIndirectRegister(n)};
     break;
   case 0x404:  //ROTL Rn
     s = {"rotl", register(n)};
@@ -378,10 +378,10 @@ auto SH2::disassembleInstruction() -> string {
     s = {"rotr", register(n)};
     break;
   case 0x406:  //LDS.L @Rm+,MACH
-    s = {"lds.l", postincrementIndirectRegister(m), "MACH"};
+    s = {"lds.l", postincrementIndirectRegister(m), "mach"};
     break;
   case 0x407:  //LDC.L @Rm+,SR
-    s = {"ldc.l", postincrementIndirectRegister(m), "SR"};
+    s = {"ldc.l", postincrementIndirectRegister(m), "sr"};
     break;
   case 0x408:  //SHLL2 Rn
     s = {"shll2", register(n)};
@@ -390,13 +390,13 @@ auto SH2::disassembleInstruction() -> string {
     s = {"shlr2", register(n)};
     break;
   case 0x40a:  //LDS Rm,MACH
-    s = {"lds", register(m), "MACH"};
+    s = {"lds", register(m), "mach"};
     break;
   case 0x40b:  //JSR @Rm
     s = {"jsr", indirectRegister(m)};
     break;
   case 0x40e:  //LDC Rm,SR
-    s = {"ldc", register(m), "SR"};
+    s = {"ldc", register(m), "sr"};
     break;
   case 0x410:  //DT Rn
     s = {"dt", register(n)};
@@ -405,19 +405,19 @@ auto SH2::disassembleInstruction() -> string {
     s = {"cmp/pz", register(n)};
     break;
   case 0x412:  //STS.L MACL,@-Rn
-    s = {"sts.l", "MACL", predecrementIndirectRegister(n)};
+    s = {"sts.l", "macl", predecrementIndirectRegister(n)};
     break;
   case 0x413:  //STC.L GBR,@-Rn
-    s = {"stc.l", "GBR", predecrementIndirectRegister(n)};
+    s = {"stc.l", "gbr", predecrementIndirectRegister(n)};
     break;
   case 0x415:  //CMP/PL Rn
     s = {"cmp/pl", register(n)};
     break;
   case 0x416:  //LDS.L @Rm+,MACL
-    s = {"lds.l", postincrementIndirectRegister(m), "MACL"};
+    s = {"lds.l", postincrementIndirectRegister(m), "macl"};
     break;
   case 0x417:  //LDC.L @Rm+,GBR
-    s = {"ldc.l", postincrementIndirectRegister(m), "GBR"};
+    s = {"ldc.l", postincrementIndirectRegister(m), "gbr"};
     break;
   case 0x418:  //SHLL8 Rn
     s = {"shll8", register(n)};
@@ -426,13 +426,13 @@ auto SH2::disassembleInstruction() -> string {
     s = {"shlr8", register(n)};
     break;
   case 0x41a:  //LDS Rm,MACL
-    s = {"lds", register(m), "MACL"};
+    s = {"lds", register(m), "macl"};
     break;
   case 0x41b:  //TAS.B @Rn
     s = {"tas.b", indirectRegister(n)};
     break;
   case 0x41e:  //LDC Rm,GBR
-    s = {"ldc", register(m), "GBR"};
+    s = {"ldc", register(m), "gbr"};
     break;
   case 0x420:  //SHAL Rn
     s = {"shal", register(n)};
@@ -441,10 +441,10 @@ auto SH2::disassembleInstruction() -> string {
     s = {"shar", register(n)};
     break;
   case 0x422:  //STS.L PR,@-Rn
-    s = {"sts.l", "PR", predecrementIndirectRegister(n)};
+    s = {"sts.l", "pr", predecrementIndirectRegister(n)};
     break;
   case 0x423:  //STC.L VBR,@-Rn
-    s = {"stc.l", "VBR", predecrementIndirectRegister(n)};
+    s = {"stc.l", "vbr", predecrementIndirectRegister(n)};
     break;
   case 0x424:  //ROTCL Rn
     s = {"rotcl", register(n)};
@@ -453,10 +453,10 @@ auto SH2::disassembleInstruction() -> string {
     s = {"rotcr", register(n)};
     break;
   case 0x426:  //LDS.L @Rm+,PR
-    s = {"lds.l", postincrementIndirectRegister(m), "PR"};
+    s = {"lds.l", postincrementIndirectRegister(m), "pr"};
     break;
   case 0x427:  //LDC.L @Rm+,VBR
-    s = {"ldc.l", postincrementIndirectRegister(m), "VBR"};
+    s = {"ldc.l", postincrementIndirectRegister(m), "vbr"};
     break;
   case 0x428:  //SHLL16 Rn
     s = {"shll16", register(n)};
@@ -465,13 +465,13 @@ auto SH2::disassembleInstruction() -> string {
     s = {"shlr16", register(n)};
     break;
   case 0x42a:  //LDS Rm,PR
-    s = {"lds", register(m), "PR"};
+    s = {"lds", register(m), "pr"};
     break;
   case 0x42b:  //JMP @Rm
     s = {"jmp", indirectRegister(m)};
     break;
   case 0x42e:  //LDC Rm,VBR
-    s = {"ldc", register(m), "VBR"};
+    s = {"ldc", register(m), "vbr"};
     break;
   }
   #undef n
@@ -504,7 +504,7 @@ auto SH2::disassembleInstruction() -> string {
     break;
   }
 
-  if(!s) s.append(hex(opcode, 4L));
+  if(!s) s = {"illegal", {"0x", hex(opcode, 4L)}};
   auto name = s.takeFirst();
   while(name.size() < 8) name.append(" ");
   string r = {name, s.merge(",")};

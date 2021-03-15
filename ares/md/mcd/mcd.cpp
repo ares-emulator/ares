@@ -40,6 +40,10 @@ auto MCD::load(Node::Object parent) -> void {
   cdd.load(node);
   pcm.load(node);
   debugger.load(node);
+
+  if(auto fp = system.pak->read("bios.rom")) {
+    for(auto address : range(bios.size())) bios.program(address, fp->readm(2));
+  }
 }
 
 auto MCD::unload() -> void {
@@ -164,28 +168,27 @@ auto MCD::wait(u32 clocks) -> void {
 }
 
 auto MCD::power(bool reset) -> void {
-  if(auto fp = system.pak->read("bios.rom")) {
-    for(u32 address : range(bios.size())) bios.program(address, fp->readm(2));
-  }
-
   M68K::power();
   Thread::create(12'500'000, {&MCD::main, this});
   counter = {};
-  if(!reset) {
-    io = {};
-    led = {};
-    irq = {};
-    external = {};
-    communication = {};
-    cdc.power(reset);
-    cdd.power(reset);
-    timer.power(reset);
-    gpu.power(reset);
-    pcm.power(reset);
-  }
+  io = {};
+  led = {};
+  irq = {};
+  external = {};
+  communication = {};
+  cdc.power(reset);
+  cdd.power(reset);
+  timer.power(reset);
+  gpu.power(reset);
+  pcm.power(reset);
+
   irq.reset.enable = 1;
   irq.reset.raise();
-  bios.program(0x72 >> 1, 0xffff);
+
+  io.vectorLevel4.byte(3) = bios[0x70 >> 1].byte(1);
+  io.vectorLevel4.byte(2) = bios[0x70 >> 1].byte(0);
+  io.vectorLevel4.byte(1) = bios[0x72 >> 1].byte(1);
+  io.vectorLevel4.byte(0) = bios[0x72 >> 1].byte(0);
 }
 
 }

@@ -46,8 +46,8 @@ struct GameGenie : Interface {
     if(slot.connected()) slot.cartridge.writeIO(upper, lower, address, data);
   }
 
-  auto power() -> void override {
-    if(slot.connected()) slot.cartridge.power();
+  auto power(bool reset) -> void override {
+    if(slot.connected()) slot.cartridge.power(reset);
     enable = 0;
     for(auto& code : codes) code = {};
   }

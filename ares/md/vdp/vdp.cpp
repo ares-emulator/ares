@@ -48,11 +48,13 @@ auto VDP::main() -> void {
 
   cpu.lower(CPU::Interrupt::HorizontalBlank);
   apu.setINT(false);
+  if(Mega32X()) m32x.hblank(0);
 
   if(state.vcounter == 0) {
     latch.horizontalInterruptCounter = io.horizontalInterruptCounter;
     io.vblankIRQ = false;
     cpu.lower(CPU::Interrupt::VerticalBlank);
+    if(Mega32X()) m32x.vblank(0);
   }
 
   if(state.vcounter == screenHeight()) {
@@ -62,6 +64,7 @@ auto VDP::main() -> void {
     }
     //todo: should only stay high for ~2573/2 clocks
     apu.setINT(true);
+    if(Mega32X()) m32x.vblank(1);
   }
 
   if(state.vcounter < screenHeight()) {
@@ -70,6 +73,7 @@ auto VDP::main() -> void {
       state.hdot++;
       step(pixelWidth());
     }
+    if(Mega32X()) m32x.scanline(pixels(), state.vcounter);
 
     if(latch.horizontalInterruptCounter-- == 0) {
       latch.horizontalInterruptCounter = io.horizontalInterruptCounter;
@@ -77,10 +81,13 @@ auto VDP::main() -> void {
         cpu.raise(CPU::Interrupt::HorizontalBlank);
       }
     }
+    if(Mega32X()) m32x.hblank(1);
 
     step(430);
   } else {
-    step(1710);
+    step(1280);
+    if(Mega32X()) m32x.hblank(1);
+    step(430);
   }
 
   state.hdot = 0;

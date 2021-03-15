@@ -1,6 +1,4 @@
 auto SH2::serialize(serializer& s) -> void {
-  s(branch.pc);
-  s(branch.state);
   s(R);
   s(SR.T);
   s(SR.S);
@@ -13,4 +11,6 @@ auto SH2::serialize(serializer& s) -> void {
   s(MACL);
   s(PR);
   s(PC);
+  s(PPC);
+  s(PPM);
 }

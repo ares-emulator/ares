@@ -35,8 +35,8 @@ struct LockOn : Interface {
     if(address == 0xa130f0) patchEnable = data.bit(0);
   }
 
-  auto power() -> void override {
-    if(slot.connected()) slot.cartridge.power();
+  auto power(bool reset) -> void override {
+    if(slot.connected()) slot.cartridge.power(reset);
     patchEnable = 1;
   }
 

@@ -149,7 +149,7 @@ auto System::power(bool reset) -> void {
 
   random.entropy(Random::Entropy::None);
 
-  if(cartridge.node) cartridge.power();
+  if(cartridge.node) cartridge.power(reset);
   if(Mega32X()) m32x.power(reset);
   if(MegaCD()) mcd.power(reset);
   cpu.power(reset);
@@ -157,9 +157,9 @@ auto System::power(bool reset) -> void {
   vdp.power(reset);
   psg.power(reset);
   opn2.power(reset);
-  controllerPort1.power();
-  controllerPort2.power();
-  extensionPort.power();
+  controllerPort1.power(reset);
+  controllerPort2.power(reset);
+  extensionPort.power(reset);
   scheduler.power(cpu);
 }
 

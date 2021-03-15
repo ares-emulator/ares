@@ -66,6 +66,7 @@ struct VDP : Thread {
   } dma;
 
   //render.cpp
+  auto pixels() -> u32*;
   auto scanline() -> void;
   auto run() -> void;
   auto outputPixel(n32 color) -> void;

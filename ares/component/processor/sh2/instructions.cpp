@@ -8,8 +8,7 @@ auto SH2::ADDC(u32 m, u32 n) -> void {
   u32 a = R[n];
   u32 b = a + R[m];
   R[n] = b + SR.T;
-  SR.T = a > b;
-  if(b > R[n]) SR.T = 1;
+  SR.T = a > b || b > R[n];
 }
 
 //ADD #imm,Rn
@@ -23,7 +22,7 @@ auto SH2::ADDV(u32 m, u32 n) -> void {
   u32 s = ((s32)R[m] < 0) + d;
   R[n] += R[m];
   u32 r = ((s32)R[n] < 0) + d;
-  SR.T = s == 0 || s == 2 ? r == 1 : 0;
+  SR.T = s & 1 ? 0 : r == 1;
 }
 
 //AND Rm,Rn
@@ -45,57 +44,56 @@ auto SH2::ANDM(u32 i) -> void {
 //BF disp
 auto SH2::BF(u32 d) -> void {
   if(SR.T == 0) {
-    PC = (PC - 2) + (s8)d * 2 + 4;
+    branch(PC + (s8)d * 2 + 4);
   }
 }
 
 //BF/S disp
 auto SH2::BFS(u32 d) -> void {
   if(SR.T == 0) {
-    branch.take((PC - 2) + (s8)d * 2 + 4);
+    delaySlot(PC + (s8)d * 2 + 4);
   }
 }
 
 //BRA disp
 auto SH2::BRA(u32 d) -> void {
-  branch.take(PC = (PC - 2) + (i12)d * 2 + 4);
+  delaySlot(PC + (i12)d * 2 + 4);
 }
 
 //BRAF disp
 auto SH2::BRAF(u32 m) -> void {
-  branch.take((PC - 2) + R[m]);
+  delaySlot(PC + R[m] + 4);
 }
 
 //BSR disp
 auto SH2::BSR(u32 d) -> void {
-  PR = PC - 2;
-  branch.take((PC - 2) + d * 2 + 4);
+  PR = PC;
+  delaySlot(PC + (i12)d * 2 + 4);
 }
 
-//BSRF disp
+//BSRF Rm
 auto SH2::BSRF(u32 m) -> void {
-  PR = PC - 2;
-  branch.take((PC - 2) + R[m]);
+  PR = PC;
+  delaySlot(PC + R[m] + 4);
 }
 
 //BT disp
 auto SH2::BT(u32 d) -> void {
   if(SR.T == 1) {
-    PC = (PC - 2) + (s8)d * 2 + 4;
+    branch(PC + (s8)d * 2 + 4);
   }
 }
 
 //BT/S disp
 auto SH2::BTS(u32 d) -> void {
   if(SR.T == 1) {
-    branch.take((PC - 2) + (s8)d * 2 + 4);
+    delaySlot(PC + (s8)d * 2 + 4);
   }
 }
 
 //CLRMAC
 auto SH2::CLRMAC() -> void {
-  MACL = 0;
-  MACH = 0;
+  MAC = 0;
 }
 
 //CLRT
@@ -146,11 +144,11 @@ auto SH2::CMPPZ(u32 n) -> void {
 //CMP/STR Rm,Rn
 auto SH2::CMPSTR(u32 m, u32 n) -> void {
   u32 t = R[n] ^ R[m];
-  u8 a = t >> 12;
-  u8 b = t >>  8;
-  u8 c = t >>  4;
+  u8 a = t >> 24;
+  u8 b = t >> 16;
+  u8 c = t >>  8;
   u8 d = t >>  0;
-  SR.T = (a && b && c && d) == 0;
+  SR.T = !a || !b || !c || !d;
 }
 
 //DIV0S Rm,Rn
@@ -169,45 +167,45 @@ auto SH2::DIV0U() -> void {
 
 //DIV1 Rm,Rn
 auto SH2::DIV1(u32 m, u32 n) -> void {
-  u8 q = SR.Q;
+  bool q = SR.Q;
   SR.Q = R[n] >> 31;
   R[n] = R[n] << 1 | SR.T;
   u32 t = R[n];
-  if(q == 0) {
-    if(SR.M == 0) {
+  if(!q) {
+    if(!SR.M) {
       R[n] -= R[m];
-      bool c = R[n] > t;
-      SR.Q = SR.Q == 0 ? c == 1 : c == 0;
+      SR.Q = R[n] > t ^ SR.Q;
+    //bool c = R[n] > t;
+    //SR.Q = !SR.Q ? c == 1 : c == 0;
     } else {
       R[n] += R[m];
-      bool c = R[n] < t;
-      SR.Q = SR.Q == 0 ? c == 0 : c == 1;
+      SR.Q = R[n] < t ^ !SR.Q;
+    //bool c = R[n] < t;
+    //SR.Q = !SR.Q ? c == 0 : c == 1;
     }
   } else {
-    if(SR.M == 0) {
+    if(!SR.M) {
       R[n] += R[m];
-      bool c = R[n] < t;
-      SR.Q = SR.Q == 0 ? c == 1 : c == 0;
+      SR.Q = R[n] < t ^ SR.Q;
+    //bool c = R[n] < t;
+    //SR.Q = !SR.Q ? c == 1 : c == 0;
     } else {
       R[n] -= R[m];
-      bool c = R[n] > t;
-      SR.Q = SR.Q == 0 ? c == 0 : c == 1;
+      SR.Q = R[n] > t ^ !SR.Q;
+    //bool c = R[n] > t;
+    //SR.Q = !SR.Q ? c == 0 : c == 1;
     }
   }
 }
 
 //DMULS.L Rm,Rn
 auto SH2::DMULS(u32 m, u32 n) -> void {
-  u64 p = (s32)R[m] * (s32)R[n];
-  MACL = p >>  0;
-  MACH = p >> 32;
+  MAC = (s32)R[n] * (s32)R[m];
 }
 
 //DMULU.L Rm,Rn
 auto SH2::DMULU(u32 m, u32 n) -> void {
-  u64 p = R[m] * R[m];
-  MACL = p >>  0;
-  MACH = p >> 32;
+  MAC = R[n] * R[m];
 }
 
 //DT Rn
@@ -237,13 +235,13 @@ auto SH2::EXTUW(u32 m, u32 n) -> void {
 
 //JMP @Rm
 auto SH2::JMP(u32 m) -> void {
-  branch.take(R[m] + 4);
+  delaySlot(R[m] + 4);
 }
 
 //JSR @Rm
 auto SH2::JSR(u32 m) -> void {
   PR = PC;
-  branch.take(R[m] + 4);
+  delaySlot(R[m] + 4);
 }
 
 //LDC Rm,SR
@@ -297,29 +295,19 @@ auto SH2::LDSPR(u32 m) -> void {
 //LDS.L @Rm+,MACH
 auto SH2::LDSMMACH(u32 m) -> void {
   MACH = readLong(R[m]);
+  R[m] += 4;
 }
 
 //LDS.L @Rm+,MACL
 auto SH2::LDSMMACL(u32 m) -> void {
   MACL = readLong(R[m]);
+  R[m] += 4;
 }
 
-//LDS.L @RM+,PR
+//LDS.L @Rm+,PR
 auto SH2::LDSMPR(u32 m) -> void {
   PR = readLong(R[m]);
-}
-
-//MAC.L @Rm+,@Rn+
-auto SH2::MACL_(u32 m, u32 n) -> void {
-  s32 a = readLong(R[n]);
-  s32 b = readLong(R[m]);
-  R[n] += 4;
   R[m] += 4;
-  u64 t = (u64)MACH << 32 | (u64)MACL << 0;
-  u64 p = (u64)t + (s64)a * (s64)b;
-  if(SR.S) p = sclamp<48>(p);
-  MACL = p >>  0;
-  MACH = p >> 32;
 }
 
 //MAC.w @Rm+,@Rn+
@@ -329,16 +317,22 @@ auto SH2::MACW(u32 m, u32 n) -> void {
   R[n] += 2;
   R[m] += 2;
   if(!SR.S) {
-    u64 t = (u64)MACL;
-    u64 p = (u64)t + (s64)a * (s64)b;
+    MAC = MAC + (s64)a * (s64)b;
+  } else {
+    u64 p = (u64)MACL + (s64)a * (s64)b;
     if(p != sclamp<32>(p)) MACH |= 1;
     MACL = sclamp<32>(p);
-  } else {
-    u64 t = (u64)MACH << 32 | (u64)MACL << 0;
-    u64 p = (u64)t + (s64)a * (s64)b;
-    MACL = p >>  0;
-    MACH = p >> 32;
   }
+}
+
+//MAC.L @Rm+,@Rn+
+auto SH2::MACL_(u32 m, u32 n) -> void {
+  s32 a = readLong(R[n]);
+  s32 b = readLong(R[m]);
+  R[n] += 4;
+  R[m] += 4;
+  MAC = MAC + (s64)a * (s64)b;
+  if(SR.S) MAC = sclamp<48>(MAC);
 }
 
 //MOV Rm,Rn
@@ -437,7 +431,7 @@ auto SH2::MOVWS(u32 m, u32 n) -> void {
 
 //MOV.W Rm,@(R0,Rn)
 auto SH2::MOVWS0(u32 m, u32 n) -> void {
-  writeWord(R[n] + R[0], R[n]);
+  writeWord(R[n] + R[0], R[m]);
 }
 
 //MOV.W R0,@(disp,Rn)
@@ -467,7 +461,7 @@ auto SH2::MOVLL4(u32 m, u32 d, u32 n) -> void {
 
 //MOV.L @(disp,GBR),R0
 auto SH2::MOVLLG(u32 d) -> void {
-  R[0] = readWord(GBR + d * 4);
+  R[0] = readLong(GBR + d * 4);
 }
 
 //MOV.L Rm,@-Rn
@@ -509,17 +503,17 @@ auto SH2::MOVI(u32 i, u32 n) -> void {
 
 //MOV.W @(disp,PC),Rn
 auto SH2::MOVWI(u32 d, u32 n) -> void {
-  R[n] = (s16)readWord((PC - 2) + d * 2);
+  R[n] = (s16)readWord(PC + d * 2);
 }
 
 //MOV.L @(disp,PC),Rn
 auto SH2::MOVLI(u32 d, u32 n) -> void {
-  R[n] = readLong((PC - 2 & ~3) + d * 4);
+  R[n] = readLong((PC & ~3) + d * 4);
 }
 
 //MOVA @(disp,PC),R0
 auto SH2::MOVA(u32 d) -> void {
-  R[0] = (PC - 2 & ~3) + d * 4;
+  R[0] = (PC & ~3) + d * 4;
 }
 
 //MOVT Rn
@@ -551,8 +545,7 @@ auto SH2::NEG(u32 m, u32 n) -> void {
 auto SH2::NEGC(u32 m, u32 n) -> void {
   u32 t = 0 - R[m];
   R[n] = t - SR.T;
-  SR.T = (s32)t >= 0;
-  if(t < R[n]) SR.T = 1;
+  SR.T = (s32)t >= 0 || t < R[n];
 }
 
 //NOP
@@ -596,24 +589,26 @@ auto SH2::ROTCR(u32 n) -> void {
 
 //ROTL Rn
 auto SH2::ROTL(u32 n) -> void {
+  SR.T = R[n] >> 31;
   R[n] = R[n] << 1 | R[n] >> 31;
 }
 
 //ROTR Rn
 auto SH2::ROTR(u32 n) -> void {
+  SR.T = R[n] & 1;
   R[n] = R[n] >> 1 | R[n] << 31;
 }
 
 //RTE
 auto SH2::RTE() -> void {
-  branch.take(readLong(SP + 0));
+  delaySlot(readLong(SP + 0));
   SR = readLong(SP + 4);
   SP += 8;
 }
 
 //RTS
 auto SH2::RTS() -> void {
-  branch.take(PR + 4);
+  delaySlot(PR + 4);
 }
 
 //SETT
@@ -756,8 +751,7 @@ auto SH2::SUBC(u32 m, u32 n) -> void {
   u32 a = R[n];
   u32 b = a - R[m];
   R[n] = b - SR.T;
-  SR.T = a < b;
-  if(b < R[n]) SR.T = 1;
+  SR.T = a < b || b < R[n];
 }
 
 //SUBV Rm,Rn
@@ -771,7 +765,7 @@ auto SH2::SUBV(u32 m, u32 n) -> void {
 
 //SWAP.B Rm,Rn
 auto SH2::SWAPB(u32 m, u32 n) -> void {
-  R[n] = R[m] & 0xffff0000 | R[m] >> 8 & 0x00ff | R[m] << 8 & 0x00ff;
+  R[n] = R[m] & ~0xffff | R[m] >> 8 & 0x00ff | R[m] << 8 & 0xff00;
 }
 
 //SWAP.W Rm,Rn
@@ -789,9 +783,9 @@ auto SH2::TAS(u32 n) -> void {
 //TRAPA #imm
 auto SH2::TRAPA(u32 i) -> void {
   writeLong(SP - 4, SR);
-  writeLong(SP - 8, PC - 4);
+  writeLong(SP - 8, PC - 2);
   SP -= 8;
-  PC = readLong(VBR + i * 4) + 4;
+  branch(readLong(VBR + i * 4) + 4);
 }
 
 //TST Rm,Rn

@@ -94,7 +94,7 @@ auto M68K::_condition(n4 condition) -> string {
 
 auto M68K::disassembleInstruction(n32 pc) -> string {
   _pc = pc;
-  return pad(disassembleTable[_readPC()](), -60);  //todo: exact maximum length unknown (and sub-optimal)
+  return {hex(_read<Word>(_pc), 4L), "  ", pad(disassembleTable[_readPC()](), -60)};  //todo: exact maximum length unknown (and sub-optimal)
 }
 
 auto M68K::disassembleContext() -> string {

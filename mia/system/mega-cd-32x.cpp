@@ -12,8 +12,9 @@ auto MegaCD32X::load(string location) -> bool {
   pak = new vfs::directory;
   pak->append("tmss.rom", Resource::MegaDrive::TMSS);
   pak->append("bios.rom", bios);
-  pak->append("sh2.boot.master.rom", Resource::Mega32X::SH2BootMaster);
-  pak->append("sh2.boot.slave.rom", Resource::Mega32X::SH2BootSlave);
+  pak->append("vector.rom", Resource::Mega32X::Vector);
+  pak->append("sh2.boot.mrom", Resource::Mega32X::SH2BootM);
+  pak->append("sh2.boot.srom", Resource::Mega32X::SH2BootS);
   pak->append("backup.ram", 8_KiB);
 
   Pak::load("backup.ram", ".bram");

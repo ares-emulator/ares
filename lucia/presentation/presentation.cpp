@@ -401,7 +401,7 @@ auto Presentation::loadEmulator() -> void {
 
   MenuItem reset{&systemMenu};
   reset.setText("Reset").setIcon(Icon::Action::Refresh).onActivate([&] {
-    emulator->root->power();
+    emulator->root->power(true);
     program.showMessage("System reset");
   });
   systemMenu.append(MenuSeparator());

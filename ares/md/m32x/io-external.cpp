@@ -13,23 +13,26 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     data.bit( 0) = io.adapterEnable;
     data.bit( 1) = io.adapterReset;
     data.bit( 7) = io.resetEnable;
-    data.bit(15) = io.framebufferAccess;
+    data.bit(15) = vdp.framebufferAccess;
   }
 
   //interrupt control
   if(address == 0xa15102) {
-    data.bit(0) = io.intm;
-    data.bit(1) = io.ints;
+    data.bit(0) = shm.irq.cmd.active;
+    data.bit(1) = shs.irq.cmd.active;
   }
 
   //bank set
   if(address == 0xa15104) {
-    data.bit(0) = io.bank0;
-    data.bit(1) = io.bank1;
+    data.bit(0,1) = io.romBank;
   }
 
   //data request control
   if(address == 0xa15106) {
+    data.bit( 0) = dreq.vram;
+    data.bit( 1) = dreq.dma;
+    data.bit( 2) = dreq.active;
+    data.bit(15) = dreq.fifo.full();
   }
 
   //68K to SH2 DREQ source address
@@ -66,9 +69,47 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     data = communication[address >> 1 & 7];
   }
 
+  //bitmap mode
+  if(address == 0xa15180) {
+    data.bit( 0) = vdp.mode.bit(0);
+    data.bit( 1) = vdp.mode.bit(1);
+    data.bit( 6) = vdp.lines;
+    data.bit( 7) = vdp.priority;
+    data.bit(15) = !Region::PAL();
+  }
+
+  //packed pixel control
+  if(address == 0xa15182) {
+    data.bit(0) = vdp.dotshift;
+  }
+
+  //autofill length
+  if(address == 0xa15184) {
+    data.byte(0) = vdp.autofillLength;
+  }
+
+  //autofill address
+  if(address == 0xa15186) {
+    data = vdp.autofillAddress;
+  }
+
+  //autofill data
+  if(address == 0xa15188) {
+    data = vdp.autofillData;
+  }
+
+  //frame buffer control
+  if(address == 0xa1518a) {
+    data.bit( 0) = vdp.framebufferSwap;
+  //data.bit( 1) = vdp.framebufferAccess;
+    data.bit(13) = 0;  //0 = framebuffer access allowed
+    data.bit(14) = vdp.hblank;
+    data.bit(15) = vdp.vblank;
+  }
+
   //palette
   if(address >= 0xa15200 && address <= 0xa153ff) {
-    return data = palette[address >> 1 & 0xff];
+    return data = cram[address >> 1 & 0xff];
   }
 
   return data;
@@ -79,58 +120,76 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   //adapter control
   if(address == 0xa15100) {
-    io.adapterEnable = data.bit(0);
-    io.adapterReset  = data.bit(1);
+    if(lower) {
+      io.adapterEnable = data.bit(0);
+      io.adapterReset  = data.bit(1);
+    }
+    if(upper) {
+      vdp.framebufferAccess = data.bit(15);
+    }
   }
 
   //interrupt control
   if(address == 0xa15102) {
-    io.intm = data.bit(0);
-    io.ints = data.bit(1);
+    if(lower) {
+      shm.irq.cmd.active = data.bit(0);
+      shs.irq.cmd.active = data.bit(1);
+    }
   }
 
   //bank set
   if(address == 0xa15104) {
-    io.bank0 = data.bit(0);
-    io.bank1 = data.bit(1);
+    if(lower) {
+      io.romBank = data.bit(0,1);
+    }
   }
 
   //data request control
   if(address == 0xa15106) {
+    if(lower) {
+      dreq.vram   = data.bit(0);
+      dreq.dma    = data.bit(1);
+      dreq.active = data.bit(2);
+      if(dreq.active && dreq.dma) vdpDMA();
+    }
   }
 
   //68K to SH2 DREQ source address
   if(address == 0xa15108) {
-    dreq.source.byte(2) = data.byte(0);
+    if(lower) dreq.source.byte(2) = data.byte(0);
   }
   if(address == 0xa1510a) {
-    dreq.source.byte(1) = data.byte(1);
-    dreq.source.byte(0) = data.byte(0) & ~1;
+    if(upper) dreq.source.byte(1) = data.byte(1);
+    if(lower) dreq.source.byte(0) = data.byte(0) & ~1;
   }
 
   //68K to SH2 DREQ target address
   if(address == 0xa1510c) {
-    dreq.target.byte(2) = data.byte(0);
+    if(lower) dreq.target.byte(2) = data.byte(0);
   }
   if(address == 0xa1510e) {
-    dreq.target.byte(1) = data.byte(1);
-    dreq.target.byte(0) = data.byte(0) & ~1;
+    if(upper) dreq.target.byte(1) = data.byte(1);
+    if(lower) dreq.target.byte(0) = data.byte(0) & ~1;
   }
 
   //68K to SH2 DREQ length
   if(address == 0xa15110) {
-    dreq.length.byte(1) = data.byte(1);
-    dreq.length.byte(0) = data.byte(0) & ~3;
+    if(upper) dreq.length.byte(1) = data.byte(1);
+    if(lower) dreq.length.byte(0) = data.byte(0) & ~3;
   }
 
   //FIFO
   if(address == 0xa15112) {
-    //todo
+    if(dreq.active && !dreq.dma) {
+      dreq.fifo.write(data);
+    }
   }
 
   //TV register
   if(address == 0xa1511a) {
-    io.cartridgeMode = data.bit(0);
+    if(lower) {
+      io.cartridgeMode = data.bit(0);
+    }
   }
 
   //communication
@@ -139,9 +198,52 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
     if(lower) communication[address >> 1 & 7].byte(0) = data.byte(0);
   }
 
+  //bitmap mode
+  if(address == 0xa15180) {
+    if(lower) {
+      vdp.mode     = data.bit(0,1);
+      vdp.lines    = data.bit(6);
+      vdp.priority = data.bit(7);
+    }
+  }
+
+  //packed pixel control
+  if(address == 0xa15182) {
+    if(lower) {
+      vdp.dotshift = data.bit(0);
+    }
+  }
+
+  //autofill length
+  if(address == 0xa15184) {
+    if(lower) {
+      vdp.autofillLength = data.byte(0);
+    }
+  }
+
+  //autofill address
+  if(address == 0xa15186) {
+    if(upper) vdp.autofillAddress.byte(1) = data.byte(1);
+    if(lower) vdp.autofillAddress.byte(0) = data.byte(0);
+  }
+
+  //autofill data
+  if(address == 0xa15188) {
+    if(upper) vdp.autofillData.byte(1) = data.byte(1);
+    if(lower) vdp.autofillData.byte(0) = data.byte(0);
+    vdpFill();
+  }
+
+  //frame buffer control
+  if(address == 0xa1518a) {
+    if(lower) {
+      vdp.framebufferSwap = data.bit(0);
+    }
+  }
+
   //palette
   if(address >= 0xa15200 && address <= 0xa153ff) {
-    if(upper) palette[address >> 1 & 0xff].byte(1) = data.byte(1);
-    if(lower) palette[address >> 1 & 0xff].byte(0) = data.byte(0);
+    if(upper) cram[address >> 1 & 0xff].byte(1) = data.byte(1);
+    if(lower) cram[address >> 1 & 0xff].byte(0) = data.byte(0);
   }
 }

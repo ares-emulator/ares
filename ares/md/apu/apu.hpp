@@ -2,6 +2,7 @@
 
 struct APU : Z80, Z80::Bus, Thread {
   Node::Object node;
+  Memory::Writable<n8> ram;
 
   struct Debugger {
     //debugger.cpp
@@ -46,8 +47,6 @@ struct APU : Z80, Z80::Bus, Thread {
   auto serialize(serializer&) -> void override;
 
 private:
-  Memory::Writable<n8> ram;
-
   struct IO {
     n9 bank;
   } io;

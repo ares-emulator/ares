@@ -13,9 +13,9 @@ extern const unsigned char TMSS[2048];
 extern const unsigned char SVP[2048];
 }
 namespace Mega32X {
-extern const unsigned char Boot[256];
-extern const unsigned char SH2BootMaster[2048];
-extern const unsigned char SH2BootSlave[1024];
+extern const unsigned char Vector[256];
+extern const unsigned char SH2BootM[2048];
+extern const unsigned char SH2BootS[1024];
 }
 namespace MSX {
 extern const unsigned char BIOS[32768];

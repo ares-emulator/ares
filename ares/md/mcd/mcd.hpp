@@ -87,6 +87,9 @@ struct MCD : M68K, Thread {
     n2  wramPriority;
     n2  pramBank;
     n8  pramProtect;
+
+    //$000070
+    n32 vectorLevel4;
   } io;
 
   struct LED {

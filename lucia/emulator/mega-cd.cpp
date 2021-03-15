@@ -26,6 +26,7 @@ auto MegaCD::load() -> bool {
   if(region == "PAL"   ) regionID = 2;
   if(region == "NTSC-J") regionID = 1;
   if(region == "NTSC-U") regionID = 0;
+regionID=1;
 
   system = mia::System::create("Mega CD");
   if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID]), false;

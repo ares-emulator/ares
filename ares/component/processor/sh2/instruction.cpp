@@ -1,11 +1,29 @@
+auto SH2::branch(u32 pc) -> void {
+  PPC = pc;
+  PPM = Branch::Take;
+}
+
+auto SH2::delaySlot(u32 pc) -> void {
+  PPC = pc;
+  PPM = Branch::Slot;
+}
+
+auto SH2::interrupt(u32 level, u32 vector) -> void {
+  writeLong(SP - 4, SR);
+  writeLong(SP - 8, PC);
+  SP -= 8;
+  SR.I = level;
+  PC = readLong(VBR + vector * 4) + 4;
+}
+
 auto SH2::instruction() -> void {
-  u16 opcode = readWord(PC);
+  u16 opcode = readWord(PC - 4);
   execute(opcode);
 
-  switch(branch.state) {
-  case Branch::Step: PC += 2; break;
-  case Branch::Take: PC += 2; branch.delaySlot(); break;
-  case Branch::DelaySlot: PC = branch.pc; branch.reset(); break;
+  switch(PPM) {
+  case Branch::Step: PC = PC + 2; break;
+  case Branch::Slot: PC = PC + 2; PPM = Branch::Take; break;
+  case Branch::Take: PC = PPC;    PPM = Branch::Step; break;
   }
 }
 
@@ -93,12 +111,10 @@ auto SH2::execute(u16 opcode) -> void {
   #define d4 (opcode >> 0 & 0x0f)
   #define d8 (opcode >> 0 & 0xff)
   switch(opcode >> 8) {
-  case 0x00 ... 0x0f: return MOVT(n);  //MOVT   Rn
   case 0x80: return MOVBS4(d4, m);     //MOV.B  R0,@(disp,Rn)
   case 0x81: return MOVWS4(d4, m);     //MOV.W  R0,@(disp,Rn)
   case 0x84: return MOVBL4(m, d4);     //MOV.B  @(disp,Rm),R0
   case 0x85: return MOVWL4(m, d4);     //MOV.W  @(disp,Rm),R0
-  case 0x87: return MOVA(d8);          //MOVA   @(disp,PC),R0
   case 0x88: return CMPIM(i);          //CMP/EQ #imm,R0
   case 0x89: return BT(d8);            //BT     disp
   case 0x8b: return BF(d8);            //BF     disp
@@ -111,6 +127,7 @@ auto SH2::execute(u16 opcode) -> void {
   case 0xc4: return MOVBLG(d8);        //MOV.B  @(disp,GBR),R0
   case 0xc5: return MOVWLG(d8);        //MOV.W  @(disp,GBR),R0
   case 0xc6: return MOVLLG(d8);        //MOV.L  @(disp,GBR),R0
+  case 0xc7: return MOVA(d8);          //MOVA   @(disp,PC),R0
   case 0xc8: return TSTI(i);           //TST    #imm,R0
   case 0xc9: return ANDI(i);           //AND    #imm,R0
   case 0xca: return XORI(i);           //XOR    #imm,R0
@@ -136,6 +153,7 @@ auto SH2::execute(u16 opcode) -> void {
   case 0x01a: return STSMACL(n);   //STS    MACL,Rn
   case 0x022: return STCVBR(n);    //STC    VBR,Rn
   case 0x023: return BRAF(m);      //BRAF   Rm
+  case 0x029: return MOVT(n);      //MOVT   Rn
   case 0x02a: return STSPR(m);     //STS    PR,Rn
   case 0x400: return SHLL(n);      //SHLL   Rn
   case 0x401: return SHLR(n);      //SHLR   Rn
@@ -189,4 +207,6 @@ auto SH2::execute(u16 opcode) -> void {
   case 0x0028: return CLRMAC();  //CLRMAC
   case 0x002b: return RTE();     //RTE
   }
+
+//interrupt(15, 4);
 }

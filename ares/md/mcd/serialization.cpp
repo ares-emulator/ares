@@ -20,6 +20,7 @@ auto MCD::serialize(serializer& s) -> void {
   s(io.wramPriority);
   s(io.pramBank);
   s(io.pramProtect);
+  s(io.vectorLevel4);
 
   s(led.red);
   s(led.green);

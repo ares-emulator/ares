@@ -11,9 +11,8 @@ namespace ares {
 #include "disassembler.cpp"
 
 auto SH2::power() -> void {
-  u32 undefined = 0;
+  const u32 undefined = 0;
 
-  branch.reset();
   for(auto& r : R) r = undefined;
   SR.T = undefined;
   SR.S = undefined;
@@ -25,8 +24,10 @@ auto SH2::power() -> void {
   MACH = undefined;
   MACL = undefined;
   PR = undefined;
-  PC = 0;
   SP = 0;
+  PC = 0;
+  PPC = 0;
+  PPM = Branch::Step;
 }
 
 }

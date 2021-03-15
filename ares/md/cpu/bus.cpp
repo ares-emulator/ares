@@ -84,7 +84,7 @@ auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address >= 0x800000 && address <= 0x9fffff) {
-    if(m32x.node) return m32x.writeExternalIO(upper, lower, address, data);
+    if(m32x.node) return m32x.writeExternal(upper, lower, address, data);
     return;
   }
 

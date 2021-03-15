@@ -39,7 +39,7 @@ auto Cartridge::connect() -> void {
     mcd.bram.load(fp);
   }
 
-  power();
+  power(false);
 }
 
 auto Cartridge::disconnect() -> void {
@@ -70,9 +70,9 @@ auto Cartridge::step(u32 clocks) -> void {
   Thread::synchronize(cpu);
 }
 
-auto Cartridge::power() -> void {
+auto Cartridge::power(bool reset) -> void {
   Thread::create(board->frequency(), {&Cartridge::main, this});
-  board->power();
+  board->power(reset);
 }
 
 auto Cartridge::read(n1 upper, n1 lower, n22 address, n16 data) -> n16 {

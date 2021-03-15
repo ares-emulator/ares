@@ -2,6 +2,8 @@
 
 struct CPU : M68K, Thread {
   Node::Object node;
+  Memory::Readable<n16> tmss;
+  Memory::Writable<n16> ram;
 
   struct Debugger {
     //debugger.cpp
@@ -51,8 +53,6 @@ struct CPU : M68K, Thread {
   auto serialize(serializer&) -> void;
 
 private:
-  Memory::Writable<n16> ram;
-  Memory::Readable<n16> tmss;
   n1 tmssEnable;
 
   struct IO {

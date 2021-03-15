@@ -9,13 +9,14 @@ APU apu;
 
 auto APU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("APU");
-
+  ram.allocate(8_KiB);
   debugger.load(node);
 }
 
 auto APU::unload() -> void {
   debugger = {};
-  node = {};
+  ram.reset();
+  node.reset();
 }
 
 auto APU::main() -> void {
@@ -64,7 +65,7 @@ auto APU::power(bool reset) -> void {
   Z80::power();
   bus->grant(false);
   Thread::create(system.frequency() / 15.0, {&APU::main, this});
-  if(!reset) ram.allocate(8_KiB);
+  if(!reset) ram.fill();
   state = {};
 }
 

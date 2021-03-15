@@ -32,7 +32,7 @@ struct Banked : Interface {
     if(address == 0xa130fe) romBank[7] = data.bit(0,5);
   }
 
-  auto power() -> void override {
+  auto power(bool reset) -> void override {
     for(u32 index : range(8)) romBank[index] = index;
   }
 

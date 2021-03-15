@@ -14,6 +14,23 @@ auto M32X::SHS::unload() -> void {
 }
 
 auto M32X::SHS::main() -> void {
+  if(irq.vint.active && irq.vint.enable && SR.I < 12) {
+    debugger.interrupt("VINT");
+    return irq.raised = 1, interrupt(12, 70);
+  }
+  if(irq.hint.active && irq.hint.enable && SR.I < 10) {
+    debugger.interrupt("HINT");
+    return irq.raised = 1, interrupt(10, 69);
+  }
+  if(irq.cmd.active && irq.cmd.enable && SR.I < 8) {
+    debugger.interrupt("CMD");
+    return irq.raised = 1, interrupt(8, 68);
+  }
+  if(irq.pwm.active && irq.pwm.enable && SR.I < 6) {
+    debugger.interrupt("PWM");
+    return irq.raised = 1, interrupt(6, 67);
+  }
+
   debugger.instruction();
   instruction();
   step(1);
@@ -25,14 +42,16 @@ auto M32X::SHS::step(u32 clocks) -> void {
 }
 
 auto M32X::SHS::exception() -> bool {
+  if(irq.raised) return irq.raised = 1, true;
   return false;
 }
 
 auto M32X::SHS::power(bool reset) -> void {
   Thread::create(23'000'000, {&M32X::SHS::main, this});
   SH2::power();
-  SH2::PC    = bootROM[0] << 16 | bootROM[1] << 0;
-  SH2::R[15] = bootROM[2] << 16 | bootROM[3] << 0;
+  SH2::PC    = (bootROM[0] << 16 | bootROM[1] << 0) + 4;
+  SH2::R[15] = (bootROM[2] << 16 | bootROM[3] << 0);
+  irq = {};
 }
 
 auto M32X::SHS::readByte(u32 address) -> u32 {

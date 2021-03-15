@@ -17,7 +17,7 @@ struct ControllerPort {
   auto readData() -> n8 { if(device) return device->readData(); return 0xff; }
   auto writeData(n8 data) -> void { if(device) return device->writeData(data); }
 
-  auto power() -> void;
+  auto power(bool reset) -> void;
   auto serialize(serializer&) -> void;
 
 protected:

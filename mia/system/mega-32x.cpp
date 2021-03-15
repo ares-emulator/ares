@@ -8,9 +8,9 @@ auto Mega32X::load(string location) -> bool {
   this->location = locate();
   pak = new vfs::directory;
   pak->append("tmss.rom", Resource::MegaDrive::TMSS);
-  pak->append("boot.rom", Resource::Mega32X::Boot);
-  pak->append("sh2.boot.mrom", Resource::Mega32X::SH2BootMaster);
-  pak->append("sh2.boot.srom", Resource::Mega32X::SH2BootSlave);
+  pak->append("vector.rom", Resource::Mega32X::Vector);
+  pak->append("sh2.boot.mrom", Resource::Mega32X::SH2BootM);
+  pak->append("sh2.boot.srom", Resource::Mega32X::SH2BootS);
   return true;
 }
 

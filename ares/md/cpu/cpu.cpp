@@ -10,13 +10,20 @@ CPU cpu;
 
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("CPU");
-
+  tmss.allocate(2_KiB >> 1);
+  ram.allocate(64_KiB >> 1);
   debugger.load(node);
+
+  if(auto fp = system.pak->read("tmss.rom")) {
+    for(auto address : range(tmss.size())) tmss.program(address, fp->readm(2));
+  }
 }
 
 auto CPU::unload() -> void {
   debugger = {};
-  node = {};
+  tmss.reset();
+  ram.reset();
+  node.reset();
 }
 
 auto CPU::main() -> void {
@@ -88,18 +95,8 @@ auto CPU::power(bool reset) -> void {
   M68K::power();
   Thread::create(system.frequency() / 7.0, {&CPU::main, this});
 
-  ram.allocate(64_KiB >> 1);
-
-  tmssEnable = false;
-  if(system.tmss->value()) {
-    tmss.allocate(2_KiB >> 1);
-    if(auto fp = system.pak->read("tmss.rom")) {
-      for(u32 address : range(tmss.size())) tmss.program(address, fp->readm(2));
-      tmssEnable = true;
-    }
-  }
-
-  if(!reset) memory::fill(ram.data(), sizeof(ram));
+  tmssEnable = system.tmss->value();
+  if(!reset) ram.fill();
 
   io = {};
   io.version = tmssEnable;

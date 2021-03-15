@@ -21,6 +21,9 @@ struct SH2 {
   auto serialize(serializer&) -> void;
 
   //instruction.cpp
+  auto branch(u32 pc) -> void;
+  auto delaySlot(u32 pc) -> void;
+  auto interrupt(u32 level, u32 vector) -> void;
   auto instruction() -> void;
   auto execute(u16 opcode) -> void;
 
@@ -75,8 +78,8 @@ struct SH2 {
   inline auto LDSMMACH(u32 m) -> void;
   inline auto LDSMMACL(u32 m) -> void;
   inline auto LDSMPR(u32 m) -> void;
-  inline auto MACL_(u32 m, u32 n) -> void;
   inline auto MACW(u32 m, u32 n) -> void;
+  inline auto MACL_(u32 m, u32 n) -> void;
   inline auto MOV(u32 m, u32 n) -> void;
   inline auto MOVBL(u32 m, u32 n) -> void;
   inline auto MOVBL0(u32 m, u32 n) -> void;
@@ -173,16 +176,8 @@ struct SH2 {
   auto disassembleContext() -> string;
 
   struct Branch {
-    enum : u32 { Step, Take, DelaySlot };
-
-    auto inDelaySlot() const -> bool { return state == DelaySlot; }
-    auto reset() -> void { state = Step; }
-    auto take(u32 address) -> void { state = Take; pc = address; }
-    auto delaySlot() -> void { state = DelaySlot; }
-
-    u32 pc = 0;
-    u32 state = Step;
-  } branch;
+    enum : u32 { Step, Slot, Take };
+  };
 
   struct S32 {
     operator u32() const {
@@ -209,10 +204,16 @@ struct SH2 {
   S32 SR;     //status register
   u32 GBR;    //global base register
   u32 VBR;    //vector base register
-  u32 MACH;   //multiply-and-accumulate hi
-  u32 MACL;   //multiply-and-accumulate lo
+  union {
+    u64 MAC;  //multiply-and-accumulate register
+    struct { u32 order_msb2(MACH, MACL); };
+  };
   u32 PR;     //procedure register
   u32 PC;     //program counter
+  u32 PPC;    //program counter for delay slots
+  u32 PPM;    //delay slot mode
+
+  n16 cache[4_KiB >> 1];
 };
 
 }

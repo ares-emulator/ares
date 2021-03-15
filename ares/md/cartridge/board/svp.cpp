@@ -94,7 +94,7 @@ struct SVP : Interface, SSP1601 {
     }
   }
 
-  auto power() -> void override {
+  auto power(bool reset) -> void override {
     SSP1601::power();
     iram.fill();
     dram.fill();

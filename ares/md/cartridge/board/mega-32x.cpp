@@ -6,10 +6,6 @@ struct Mega32X : Interface {
       m32x.rom.allocate(fp->size() >> 1);
       for(auto address : range(fp->size() >> 1)) m32x.rom.program(address, fp->readm(2L));
     }
-    if(auto fp = system.pak->read("boot.rom")) {
-      m32x.vectors.allocate(fp->size() >> 1);
-      for(auto address : range(fp->size() >> 1)) m32x.vectors.program(address, fp->readm(2L));
-    }
   }
 
   auto save() -> void override {
@@ -31,7 +27,7 @@ struct Mega32X : Interface {
     return m32x.writeExternalIO(upper, lower, address, data);
   }
 
-  auto power() -> void override {
+  auto power(bool reset) -> void override {
   }
 
   auto serialize(serializer& s) -> void override {

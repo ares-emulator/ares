@@ -52,7 +52,7 @@ struct Linear : Interface {
     }
   }
 
-  auto power() -> void override {
+  auto power(bool reset) -> void override {
     ramEnable = 1;
     ramWritable = 1;
   }
