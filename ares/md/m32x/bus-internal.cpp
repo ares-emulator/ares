@@ -17,21 +17,11 @@ auto M32X::readInternal(n1 upper, n1 lower, n32 address, n16 data) -> n16 {
   }
 
   if(address >= 0x0400'0000 && address <= 0x0403'ffff) {
-    return dram[address >> 1];
+    return dram[address >> 1 & 0xffff];
   }
 
   if(address >= 0x0600'0000 && address <= 0x0603'ffff) {
-    return sdram[address >> 1];
-  }
-
-  if(address >= 0xc000'0000 && address <= 0xc000'0fff) {
-    if(shm.active()) return shm.cache[address >> 1 & 0x7ff];
-    if(shs.active()) return shs.cache[address >> 1 & 0x7ff];
-  }
-
-  //SH2 internal registers
-  if(address >= 0xffff'fe00 && address <= 0xffff'ffff) {
-  //print("* r", hex(address, 8L), "\n");
+    return sdram[address >> 1 & 0x1ffff];
   }
 
   return data;
@@ -59,24 +49,8 @@ auto M32X::writeInternal(n1 upper, n1 lower, n32 address, n16 data) -> void {
   }
 
   if(address >= 0x0600'0000 && address <= 0x0603'ffff) {
-    if(upper) sdram[address >> 1].byte(1) = data.byte(1);
-    if(lower) sdram[address >> 1].byte(0) = data.byte(0);
+    if(upper) sdram[address >> 1 & 0x1ffff].byte(1) = data.byte(1);
+    if(lower) sdram[address >> 1 & 0x1ffff].byte(0) = data.byte(0);
     return;
-  }
-
-  if(address >= 0xc000'0000 && address <= 0xc000'0fff) {
-    if(shm.active()) {
-      if(upper) shm.cache[address >> 1 & 0x7ff].byte(1) = data.byte(1);
-      if(lower) shm.cache[address >> 1 & 0x7ff].byte(0) = data.byte(0);
-    }
-    if(shs.active()) {
-      if(upper) shs.cache[address >> 1 & 0x7ff].byte(1) = data.byte(1);
-      if(lower) shs.cache[address >> 1 & 0x7ff].byte(0) = data.byte(0);
-    }
-  }
-
-  //SH2 internal registers
-  if(address >= 0xffff'fe00 && address <= 0xffff'ffff) {
-  //print("* w", hex(address, 8L), " = ", hex(data, 4L), "\n");
   }
 }

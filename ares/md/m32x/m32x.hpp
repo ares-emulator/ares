@@ -41,12 +41,12 @@ struct M32X {
     auto main() -> void;
     auto step(u32 clocks) -> void override;
     auto exception() -> bool override;
-    auto readByte(u32 address) -> u32 override;
-    auto readWord(u32 address) -> u32 override;
-    auto readLong(u32 address) -> u32 override;
-    auto writeByte(u32 address, u32 data) -> void override;
-    auto writeWord(u32 address, u32 data) -> void override;
-    auto writeLong(u32 address, u32 data) -> void override;
+    auto busReadByte(u32 address) -> u32 override;
+    auto busReadWord(u32 address) -> u32 override;
+    auto busReadLong(u32 address) -> u32 override;
+    auto busWriteByte(u32 address, u32 data) -> void override;
+    auto busWriteWord(u32 address, u32 data) -> void override;
+    auto busWriteLong(u32 address, u32 data) -> void override;
     auto power(bool reset) -> void;
 
     //serialization.cpp
@@ -88,12 +88,12 @@ struct M32X {
     auto main() -> void;
     auto step(u32 clocks) -> void override;
     auto exception() -> bool override;
-    auto readByte(u32 address) -> u32 override;
-    auto readWord(u32 address) -> u32 override;
-    auto readLong(u32 address) -> u32 override;
-    auto writeByte(u32 address, u32 data) -> void override;
-    auto writeWord(u32 address, u32 data) -> void override;
-    auto writeLong(u32 address, u32 data) -> void override;
+    auto busReadByte(u32 address) -> u32 override;
+    auto busReadWord(u32 address) -> u32 override;
+    auto busReadLong(u32 address) -> u32 override;
+    auto busWriteByte(u32 address, u32 data) -> void override;
+    auto busWriteWord(u32 address, u32 data) -> void override;
+    auto busWriteLong(u32 address, u32 data) -> void override;
     auto power(bool reset) -> void;
 
     //serialization.cpp
@@ -142,6 +142,7 @@ struct M32X {
 
   //vdp.cpp
   auto scanline(u32 pixels[1280], u32 y) -> void;
+  auto plot(u32* output, u16 color) -> void;
   auto scanlineMode1(u32 pixels[1280], u32 y) -> void;
   auto scanlineMode2(u32 pixels[1280], u32 y) -> void;
   auto scanlineMode3(u32 pixels[1280], u32 y) -> void;

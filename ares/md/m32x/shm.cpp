@@ -14,6 +14,11 @@ auto M32X::SHM::unload() -> void {
 }
 
 auto M32X::SHM::main() -> void {
+  if(irq.vres.active && irq.vres.enable) {
+    debugger.interrupt("VRES");
+    irq.vres.active = 0;
+    return irq.raised = 1, interrupt(14, 71);
+  }
   if(irq.vint.active && irq.vint.enable && SR.I < 12) {
     debugger.interrupt("VINT");
     return irq.raised = 1, interrupt(12, 70);
@@ -30,6 +35,23 @@ auto M32X::SHM::main() -> void {
     debugger.interrupt("PWM");
     return irq.raised = 1, interrupt(6, 67);
   }
+
+#if 1
+  for(u32 n : range(2)) {
+    if(dmac[n].chcr.de && m32x.dreq.fifo.size() >= 2) {
+      u32 data = 0;
+      data |= m32x.dreq.fifo.read(0) << 16;
+      data |= m32x.dreq.fifo.read(0) <<  0;
+      busWriteLong(dmac[n].dar, data);
+      dmac[n].dar += 4;
+      dmac[n].tcr -= 2;
+      if(!dmac[n].tcr) {
+        dmac[n].chcr.de = 0;
+        dmac[n].chcr.te = 1;
+      }
+    }
+  }
+#endif
 
   debugger.instruction();
   instruction();
@@ -52,9 +74,10 @@ auto M32X::SHM::power(bool reset) -> void {
   SH2::PC    = (bootROM[0] << 16 | bootROM[1] << 0) + 4;
   SH2::R[15] = (bootROM[2] << 16 | bootROM[3] << 0);
   irq = {};
+  irq.vres.enable = 1;
 }
 
-auto M32X::SHM::readByte(u32 address) -> u32 {
+auto M32X::SHM::busReadByte(u32 address) -> u32 {
   if(address & 1) {
     return m32x.readInternal(0, 1, address & ~1).byte(0);
   } else {
@@ -62,16 +85,16 @@ auto M32X::SHM::readByte(u32 address) -> u32 {
   }
 }
 
-auto M32X::SHM::readWord(u32 address) -> u32 {
+auto M32X::SHM::busReadWord(u32 address) -> u32 {
   return m32x.readInternal(1, 1, address & ~1);
 }
 
-auto M32X::SHM::readLong(u32 address) -> u32 {
+auto M32X::SHM::busReadLong(u32 address) -> u32 {
   u32    data = m32x.readInternal(1, 1, address & ~3 | 0) << 16;
   return data | m32x.readInternal(1, 1, address & ~3 | 2) <<  0;
 }
 
-auto M32X::SHM::writeByte(u32 address, u32 data) -> void {
+auto M32X::SHM::busWriteByte(u32 address, u32 data) -> void {
   if(address & 1) {
     m32x.writeInternal(0, 1, address & ~1, data << 8 | (u8)data << 0);
   } else {
@@ -79,11 +102,11 @@ auto M32X::SHM::writeByte(u32 address, u32 data) -> void {
   }
 }
 
-auto M32X::SHM::writeWord(u32 address, u32 data) -> void {
+auto M32X::SHM::busWriteWord(u32 address, u32 data) -> void {
   m32x.writeInternal(1, 1, address & ~1, data);
 }
 
-auto M32X::SHM::writeLong(u32 address, u32 data) -> void {
+auto M32X::SHM::busWriteLong(u32 address, u32 data) -> void {
   m32x.writeInternal(1, 1, address & ~3 | 0, data >> 16);
   m32x.writeInternal(1, 1, address & ~3 | 2, data >>  0);
 }

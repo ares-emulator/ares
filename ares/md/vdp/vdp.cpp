@@ -20,7 +20,7 @@ auto VDP::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VDP");
 
   screen = node->append<Node::Video::Screen>("Screen", 1280, 480);
-  screen->colors(3 * (1 << 9), {&VDP::color, this});
+  screen->colors(3 * (1 << 9) + (1 << 15), {&VDP::color, this});
   screen->setSize(1280, 480);
   screen->setScale(0.25, 0.50);
   screen->setAspect(1.0, 1.0);

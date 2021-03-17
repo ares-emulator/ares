@@ -91,7 +91,7 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
     if(region.find("W")) regions.append("NTSC-J", "NTSC-U", "PAL");
   }
   if(!regions && region.size() == 1) {
-    u8 field = region.hex();
+    u8 field = region[0];
     if(field & 0x01) regions.append("NTSC-J");
     if(field & 0x04) regions.append("NTSC-U");
     if(field & 0x08) regions.append("PAL");
@@ -120,7 +120,7 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
   s +={"  title:  ", Pak::name(location), "\n"};
   s +={"  label:  ", domesticName, "\n"};
   s +={"  label:  ", internationalName, "\n"};
-  s += "  region: NTSC-J\n";
+  s +={"  region: ", regions.merge(", "), "\n"};
   s += "  board\n";
   s += "    memory\n";
   s += "      type: ROM\n";

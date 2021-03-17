@@ -106,7 +106,7 @@ auto MegaDrive::analyze(vector<u8>& data) -> string {
     if(region.find("W")) regions.append("NTSC-J", "NTSC-U", "PAL");
   }
   if(!regions && region.size() == 1) {
-    u8 field = region.hex();
+    u8 field = region[0];
     if(field & 0x01) regions.append("NTSC-J");
     if(field & 0x04) regions.append("NTSC-U");
     if(field & 0x08) regions.append("PAL");

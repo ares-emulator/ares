@@ -12,8 +12,9 @@ auto SH2::interrupt(u32 level, u32 vector) -> void {
   writeLong(SP - 4, SR);
   writeLong(SP - 8, PC);
   SP -= 8;
+  PC  = 4 + readLong(VBR + vector * 4);
+  PPM = Branch::Step;
   SR.I = level;
-  PC = readLong(VBR + vector * 4) + 4;
 }
 
 auto SH2::instruction() -> void {

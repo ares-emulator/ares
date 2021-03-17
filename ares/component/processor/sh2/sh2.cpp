@@ -5,14 +5,13 @@ namespace ares {
 
 #define SP R[15]
 
+#include "memory.cpp"
 #include "instruction.cpp"
 #include "instructions.cpp"
 #include "serialization.cpp"
 #include "disassembler.cpp"
 
 auto SH2::power() -> void {
-  const u32 undefined = 0;
-
   for(auto& r : R) r = undefined;
   SR.T = undefined;
   SR.S = undefined;
@@ -28,6 +27,17 @@ auto SH2::power() -> void {
   PC = 0;
   PPC = 0;
   PPM = Branch::Step;
+
+  for(auto& byte : cache) byte = 0;
+
+  dmac[0] = {};
+  dmac[1] = {};
+  dmaor = {};
+  frt = {};
+  bsc = {};
+  ccr = {};
+  sbycr = {};
+  divu = {};
 }
 
 }

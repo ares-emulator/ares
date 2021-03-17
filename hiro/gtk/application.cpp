@@ -115,7 +115,7 @@ auto pApplication::initialize() -> void {
   auto name = Application::state().name ? Application::state().name : string{"hiro"};
   gdk_set_program_class(name);
 
-  #if defined(BUILD_DEBUG)
+  #if 0 && defined(BUILD_DEBUG)
   //force a trap on Gtk-CRITICAL and Gtk-WARNING messages
   //this allows gdb to perform a backtrace to find an error's origin point
   int argc = 3;
