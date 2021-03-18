@@ -13,6 +13,7 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
       data.bit(2) = shs.irq.hint.enable;
       data.bit(3) = shs.irq.vint.enable;
     }
+    data.bit( 7) = io.hintVblank;
     data.bit( 8) = !(bool)cartridge.node;  //0 = cartridge connected
     data.bit( 9) = io.adapterEnable | 1;
     data.bit(15) = vdp.framebufferAccess;
@@ -20,7 +21,7 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 
   //hcount
   if(address == 0x4004) {
-    data.byte(0) = io.hcounter;
+    data.byte(0) = io.hperiod;
   }
 
   //dreq control register
@@ -59,11 +60,45 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
   //FIFO
   if(address == 0x4012) {
     data = dreq.fifo.read(data);
+    shm.dmac.dreq = !dreq.fifo.empty();
+    shs.dmac.dreq = !dreq.fifo.empty();
   }
 
   //communication
   if(address >= 0x4020 && address <= 0x402f) {
     data = communication[address >> 1 & 7];
+  }
+
+  //PWM control
+  if(address == 0x4030) {
+    data.bit(0,1)  = pwm.lmode;
+    data.bit(2,3)  = pwm.rmode;
+    data.bit(4)    = pwm.mono;
+    data.bit(7)    = pwm.dreqIRQ;
+    data.bit(8,11) = pwm.timer;
+  }
+
+  //PWM cycle
+  if(address == 0x4032) {
+    data.bit(0,11) = pwm.cycle;
+  }
+
+  //PWM left channel pulse width
+  if(address == 0x4034) {
+    data.bit(14) = pwm.lfifo.empty();
+    data.bit(15) = pwm.lfifo.full();
+  }
+
+  //PWM right channel pulse width
+  if(address == 0x4036) {
+    data.bit(14) = pwm.rfifo.empty();
+    data.bit(15) = pwm.rfifo.full();
+  }
+
+  //PWM mono pulse width
+  if(address == 0x4038) {
+    data.bit(14) = pwm.lfifo.empty() && pwm.rfifo.empty();
+    data.bit(15) = pwm.lfifo.full()  || pwm.rfifo.full();
   }
 
   //bitmap mode
@@ -97,16 +132,16 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 
   //frame buffer control
   if(address == 0x410a) {
-    data.bit( 0) = vdp.framebufferSwap;
-  //data.bit( 1) = vdp.framebufferAccess;
-    data.bit(13) = 0;  //0 = framebuffer access allowed
+    data.bit( 0) = vdp.framebufferSelect;
+    data.bit( 1) = !vdp.framebufferAccess;
+    data.bit(13) = !vdp.framebufferAccess;
     data.bit(14) = vdp.hblank;
     data.bit(15) = vdp.vblank;
   }
 
   //palette
   if(address >= 0x4200 && address <= 0x43ff) {
-    data = cram[address >> 1 & 0xff];
+    data = vdp.cram[address >> 1 & 0xff];
   }
 
   return data;
@@ -127,6 +162,9 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
       shs.irq.hint.enable = data.bit(2);
       shs.irq.vint.enable = data.bit(3);
     }
+    if(lower) {
+      io.hintVblank = data.bit(7);
+    }
     if(upper) {
       vdp.framebufferAccess = data.bit(15);
     }
@@ -139,7 +177,7 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
   //hcount
   if(address == 0x4004) {
     if(lower) {
-      io.htarget = data.byte(0);
+      io.hperiod = data.byte(0);
     }
   }
 
@@ -179,6 +217,41 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
     if(lower) communication[address >> 1 & 7].byte(0) = data.byte(0);
   }
 
+  //PWM control
+  if(address == 0x4030) {
+    if(lower) {
+      pwm.lmode   = data.bit(0,1);
+      pwm.rmode   = data.bit(2,3);
+      pwm.mono    = data.bit(4);
+      pwm.dreqIRQ = data.bit(7);
+    }
+    if(upper) {
+      pwm.timer = data.bit(8,11);
+    }
+  }
+
+  //PWM cycle
+  if(address == 0x4032) {
+    if(lower) pwm.cycle.bit(0, 7) = data.bit(0, 7);
+    if(upper) pwm.cycle.bit(8,11) = data.bit(8,11);
+  }
+
+  //PWM left channel pulse width
+  if(address == 0x4034) {
+    pwm.lfifo.write(data);
+  }
+
+  //PWM right channel pulse width
+  if(address == 0x4036) {
+    pwm.rfifo.write(data);
+  }
+
+  //PWM mono pulse width
+  if(address == 0x4038) {
+    pwm.lfifo.write(data);
+    pwm.rfifo.write(data);
+  }
+
   //bitmap mode
   if(address == 0x4100) {
     if(lower) {
@@ -212,19 +285,19 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
   if(address == 0x4108) {
     if(upper) vdp.autofillData.byte(1) = data.byte(1);
     if(lower) vdp.autofillData.byte(0) = data.byte(0);
-    vdpFill();
+    vdp.fill();
   }
 
   //frame buffer control
   if(address == 0x410a) {
     if(lower) {
-      vdp.framebufferSwap = data.bit(0);
+      vdp.selectFramebuffer(data.bit(0));
     }
   }
 
   //palette
   if(address >= 0x4200 && address <= 0x43ff) {
-    if(upper) cram[address >> 1 & 0xff].byte(1) = data.byte(1);
-    if(lower) cram[address >> 1 & 0xff].byte(0) = data.byte(0);
+    if(upper) vdp.cram[address >> 1 & 0xff].byte(1) = data.byte(1);
+    if(lower) vdp.cram[address >> 1 & 0xff].byte(0) = data.byte(0);
   }
 }

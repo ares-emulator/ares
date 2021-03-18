@@ -3,8 +3,7 @@
 namespace ares::MegaDrive {
 
 M32X m32x;
-#include "shm.cpp"
-#include "shs.cpp"
+#include "sh7604.cpp"
 #include "bus-internal.cpp"
 #include "bus-external.cpp"
 #include "io-internal.cpp"
@@ -16,16 +15,16 @@ M32X m32x;
 
 auto M32X::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("Mega 32X");
-  vectors.allocate(256 >> 1);
-  dram.allocate(256_KiB >> 1);
   sdram.allocate(256_KiB >> 1);
-  cram.allocate(512 >> 1);
-  shm.load(node);
-  shs.load(node);
+  shm.load(node, "SHM", "sh2.boot.mrom");
+  shs.load(node, "SHS", "sh2.boot.srom");
+  vdp.load(node);
+  pwm.load(node);
   debugger.load(node);
 
   if(auto fp = system.pak->read("vector.rom")) {
-    for(auto address : range(256 >> 1)) vectors.program(address, fp->readm(2L));
+    vectors.allocate(fp->size() >> 1);
+    for(auto address : range(vectors.size())) vectors.program(address, fp->readm(2L));
   }
 }
 
@@ -33,26 +32,23 @@ auto M32X::unload() -> void {
   debugger = {};
   shm.unload();
   shs.unload();
+  vdp.unload();
+  pwm.unload(node);
   rom.reset();
   vectors.reset();
-  dram.reset();
   sdram.reset();
-  cram.reset();
   node.reset();
 }
 
 auto M32X::save() -> void {
 }
 
-auto M32X::main() -> void {
-}
-
 auto M32X::power(bool reset) -> void {
-  dram.fill(0);
   sdram.fill(0);
-  cram.fill(0);
   shm.power(reset);
   shs.power(reset);
+  vdp.power(reset);
+  pwm.power(reset);
   io = {};
   dreq = {};
   for(auto& word : communication) word = 0;
@@ -71,10 +67,12 @@ auto M32X::vblank(bool line) -> void {
 
 auto M32X::hblank(bool line) -> void {
   vdp.hblank = line;
-  if(io.hcounter++ >= io.htarget) {
-    io.hcounter = 0;
-    shm.irq.hint.active = line;
-    shs.irq.hint.active = line;
+  if(!vdp.vblank || io.hintVblank) {
+    if(io.hcounter++ >= io.hperiod) {
+      io.hcounter = 0;
+      shm.irq.hint.active = line;
+      shs.irq.hint.active = line;
+    }
   }
 }
 

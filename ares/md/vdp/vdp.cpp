@@ -73,7 +73,7 @@ auto VDP::main() -> void {
       state.hdot++;
       step(pixelWidth());
     }
-    if(Mega32X()) m32x.scanline(pixels(), state.vcounter);
+    if(Mega32X()) m32x.vdp.scanline(pixels(), state.vcounter);
 
     if(latch.horizontalInterruptCounter-- == 0) {
       latch.horizontalInterruptCounter = io.horizontalInterruptCounter;

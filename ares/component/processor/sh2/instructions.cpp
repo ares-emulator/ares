@@ -64,13 +64,13 @@ auto SH2::BRAF(u32 m) -> void {
 
 //BSR disp
 auto SH2::BSR(u32 d) -> void {
-  PR = PC + 4;
+  PR = PC;
   delaySlot(PC + 4 + (i12)d * 2);
 }
 
 //BSRF Rm
 auto SH2::BSRF(u32 m) -> void {
-  PR = PC + 4;
+  PR = PC;
   delaySlot(PC + 4 + R[m]);
 }
 
@@ -219,7 +219,7 @@ auto SH2::JMP(u32 m) -> void {
 
 //JSR @Rm
 auto SH2::JSR(u32 m) -> void {
-  PR = PC + 4;
+  PR = PC;
   delaySlot(R[m] + 4);
 }
 
@@ -587,7 +587,7 @@ auto SH2::RTE() -> void {
 
 //RTS
 auto SH2::RTS() -> void {
-  delaySlot(PR);
+  delaySlot(PR + 4);
 }
 
 //SETT

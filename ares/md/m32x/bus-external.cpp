@@ -10,7 +10,7 @@ auto M32X::readExternal(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address >= 0x840000 && address <= 0x87ffff) {
-    return dram[address >> 1];
+    return vdp.bbram[address >> 1 & 0xffff];
   }
 
   if(address >= 0x880000 && address <= 0x8fffff) {
@@ -39,14 +39,18 @@ auto M32X::writeExternal(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address >= 0x840000 && address <= 0x85ffff) {
-    if(upper) dram[address >> 1 & 0xffff].byte(1) = data.byte(1);
-    if(lower) dram[address >> 1 & 0xffff].byte(0) = data.byte(0);
+    shm.debugger.tracer.instruction->invalidate(0x0400'0000 | address & 0x1fffe);
+    shs.debugger.tracer.instruction->invalidate(0x0400'0000 | address & 0x1fffe);
+    if(upper) vdp.bbram[address >> 1 & 0xffff].byte(1) = data.byte(1);
+    if(lower) vdp.bbram[address >> 1 & 0xffff].byte(0) = data.byte(0);
     return;
   }
 
   if(address >= 0x860000 && address <= 0x87ffff) {
-    if(upper && data.byte(1)) dram[address >> 1 & 0xffff].byte(1) = data.byte(1);
-    if(lower && data.byte(0)) dram[address >> 1 & 0xffff].byte(0) = data.byte(0);
+    shm.debugger.tracer.instruction->invalidate(0x0402'0000 | address & 0x1fffe);
+    shs.debugger.tracer.instruction->invalidate(0x0402'0000 | address & 0x1fffe);
+    if(upper && data.byte(1)) vdp.bbram[address >> 1 & 0xffff].byte(1) = data.byte(1);
+    if(lower && data.byte(0)) vdp.bbram[address >> 1 & 0xffff].byte(0) = data.byte(0);
     return;
   }
 }

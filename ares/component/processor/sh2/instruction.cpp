@@ -8,13 +8,26 @@ auto SH2::delaySlot(u32 pc) -> void {
   PPM = Branch::Slot;
 }
 
-auto SH2::interrupt(u32 level, u32 vector) -> void {
+auto SH2::interrupt(u8 level, u8 vector) -> void {
   writeLong(SP - 4, SR);
   writeLong(SP - 8, PC);
   SP -= 8;
   PC  = 4 + readLong(VBR + vector * 4);
   PPM = Branch::Step;
   SR.I = level;
+}
+
+auto SH2::exception(u8 vector) -> void {
+  writeLong(SP - 4, SR);
+  writeLong(SP - 8, PC - 2);
+  SP -= 8;
+  PC  = 4 + readLong(VBR + vector * 4);
+  PPM = Branch::Step;
+}
+
+auto SH2::illegal(u16 opcode) -> void {
+  exception(0x04);
+  debug(unusual, "[SH2] illegal instruction: 0x", hex(opcode, 4L));
 }
 
 auto SH2::instruction() -> void {
@@ -174,7 +187,7 @@ auto SH2::execute(u16 opcode) -> void {
   case 0x412: return STSMMACL(n);  //STS.L  MACL,@-Rn
   case 0x413: return STCMGBR(n);   //STC.L  GBR,@-Rn
   case 0x415: return CMPPL(n);     //CMP/PL Rn
-  case 0x416: return LDSMMACH(m);  //LDS.L  @Rm+,MACL
+  case 0x416: return LDSMMACL(m);  //LDS.L  @Rm+,MACL
   case 0x417: return LDCMGBR(m);   //LDC.L  @Rm+,GBR
   case 0x418: return SHLL8(n);     //SHLL8  Rn
   case 0x419: return SHLR8(n);     //SHLR8  Rn
@@ -209,5 +222,5 @@ auto SH2::execute(u16 opcode) -> void {
   case 0x002b: return RTE();     //RTE
   }
 
-//interrupt(15, 4);
+  illegal(opcode);
 }

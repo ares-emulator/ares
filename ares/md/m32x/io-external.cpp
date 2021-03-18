@@ -29,10 +29,10 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //data request control
   if(address == 0xa15106) {
-    data.bit( 0) = dreq.vram;
-    data.bit( 1) = dreq.dma;
-    data.bit( 2) = dreq.active;
-    data.bit(15) = dreq.fifo.full();
+    data.bit(0) = dreq.vram;
+    data.bit(1) = dreq.dma;
+    data.bit(2) = dreq.active;
+    data.bit(7) = dreq.fifo.full();
   }
 
   //68K to SH2 DREQ source address
@@ -69,6 +69,38 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     data = communication[address >> 1 & 7];
   }
 
+  //PWM control
+  if(address == 0xa15130) {
+    data.bit(0,1)  = pwm.lmode;
+    data.bit(2,3)  = pwm.rmode;
+    data.bit(4)    = pwm.mono;
+    data.bit(7)    = pwm.dreqIRQ;
+    data.bit(8,11) = pwm.timer;
+  }
+
+  //PWM cycle
+  if(address == 0xa15132) {
+    data.bit(0,11) = pwm.cycle;
+  }
+
+  //PWM left channel pulse width
+  if(address == 0xa15134) {
+    data.bit(14) = pwm.lfifo.empty();
+    data.bit(15) = pwm.lfifo.full();
+  }
+
+  //PWM right channel pulse width
+  if(address == 0xa15136) {
+    data.bit(14) = pwm.rfifo.empty();
+    data.bit(15) = pwm.rfifo.full();
+  }
+
+  //PWM mono pulse width
+  if(address == 0xa15138) {
+    data.bit(14) = pwm.lfifo.empty() && pwm.rfifo.empty();
+    data.bit(15) = pwm.lfifo.full()  || pwm.rfifo.full();
+  }
+
   //bitmap mode
   if(address == 0xa15180) {
     data.bit( 0) = vdp.mode.bit(0);
@@ -100,7 +132,7 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //frame buffer control
   if(address == 0xa1518a) {
-    data.bit( 0) = vdp.framebufferSwap;
+    data.bit( 0) = vdp.framebufferSelect;
   //data.bit( 1) = vdp.framebufferAccess;
     data.bit(13) = 0;  //0 = framebuffer access allowed
     data.bit(14) = vdp.hblank;
@@ -109,7 +141,7 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //palette
   if(address >= 0xa15200 && address <= 0xa153ff) {
-    return data = cram[address >> 1 & 0xff];
+    return vdp.cram[address >> 1 & 0xff];
   }
 
   return data;
@@ -150,7 +182,7 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
       dreq.vram   = data.bit(0);
       dreq.dma    = data.bit(1);
       dreq.active = data.bit(2);
-      if(dreq.active && dreq.dma) vdpDMA();
+      if(!dreq.active) dreq.fifo.flush();
     }
   }
 
@@ -160,7 +192,7 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
   if(address == 0xa1510a) {
     if(upper) dreq.source.byte(1) = data.byte(1);
-    if(lower) dreq.source.byte(0) = data.byte(0) & ~1;
+    if(lower) dreq.source.byte(0) = data.byte(0);
   }
 
   //68K to SH2 DREQ target address
@@ -169,19 +201,21 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
   if(address == 0xa1510e) {
     if(upper) dreq.target.byte(1) = data.byte(1);
-    if(lower) dreq.target.byte(0) = data.byte(0) & ~1;
+    if(lower) dreq.target.byte(0) = data.byte(0);
   }
 
   //68K to SH2 DREQ length
   if(address == 0xa15110) {
     if(upper) dreq.length.byte(1) = data.byte(1);
-    if(lower) dreq.length.byte(0) = data.byte(0) & ~3;
+    if(lower) dreq.length.byte(0) = data.byte(0);
   }
 
   //FIFO
   if(address == 0xa15112) {
-    if(dreq.active && !dreq.dma) {
+    if(dreq.active) {
       dreq.fifo.write(data);
+      shm.dmac.dreq = !dreq.fifo.empty();
+      shs.dmac.dreq = !dreq.fifo.empty();
     }
   }
 
@@ -194,8 +228,43 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   //communication
   if(address >= 0xa15120 && address <= 0xa1512f) {
-    if(upper) communication[address >> 1 & 7].byte(1) = data.byte(1);
     if(lower) communication[address >> 1 & 7].byte(0) = data.byte(0);
+    if(upper) communication[address >> 1 & 7].byte(1) = data.byte(1);
+  }
+
+  //PWM control
+  if(address == 0xa15130) {
+    if(lower) {
+      pwm.lmode   = data.bit(0,1);
+      pwm.rmode   = data.bit(2,3);
+      pwm.mono    = data.bit(4);
+    //pwm.dreqIRQ = data.bit(7) = readonly;
+    }
+    if(upper) {
+      pwm.timer = data.bit(8,11);
+    }
+  }
+
+  //PWM cycle
+  if(address == 0xa15132) {
+    if(lower) pwm.cycle.bit(0, 7) = data.bit(0, 7);
+    if(upper) pwm.cycle.bit(8,11) = data.bit(8,11);
+  }
+
+  //PWM left channel pulse width
+  if(address == 0xa15134) {
+    pwm.lfifo.write(data);
+  }
+
+  //PWM right channel pulse width
+  if(address == 0xa15136) {
+    pwm.rfifo.write(data);
+  }
+
+  //PWM mono pulse width
+  if(address == 0xa15138) {
+    pwm.lfifo.write(data);
+    pwm.rfifo.write(data);
   }
 
   //bitmap mode
@@ -231,19 +300,19 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   if(address == 0xa15188) {
     if(upper) vdp.autofillData.byte(1) = data.byte(1);
     if(lower) vdp.autofillData.byte(0) = data.byte(0);
-    vdpFill();
+    vdp.fill();
   }
 
   //frame buffer control
   if(address == 0xa1518a) {
     if(lower) {
-      vdp.framebufferSwap = data.bit(0);
+      vdp.selectFramebuffer(data.bit(0));
     }
   }
 
   //palette
   if(address >= 0xa15200 && address <= 0xa153ff) {
-    if(upper) cram[address >> 1 & 0xff].byte(1) = data.byte(1);
-    if(lower) cram[address >> 1 & 0xff].byte(0) = data.byte(0);
+    if(upper) vdp.cram[address >> 1 & 0xff].byte(1) = data.byte(1);
+    if(lower) vdp.cram[address >> 1 & 0xff].byte(0) = data.byte(0);
   }
 }

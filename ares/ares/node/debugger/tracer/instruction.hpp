@@ -53,6 +53,16 @@ struct Instruction : Tracer {
     return true;
   }
 
+  //mark an already-executed address as not executed yet for trace masking.
+  //call when writing to executable RAM to support self-modifying code.
+  auto invalidate(u32 address) -> void {
+    if(unlikely(_mask && updateMasks())) {
+      address &= (1u << _addressBits) - 1;
+      address >>= _addressMask;
+      _masks[address >> 3] &= ~(1 << (address & 7));
+    }
+  }
+
   auto notify(string_view instruction, string_view context, string_view extra = {}) -> void {
     if(!enabled()) return;
 
