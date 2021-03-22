@@ -17,7 +17,7 @@ auto MCD::external_read(n1 upper, n1 lower, n22 address, n16 data) -> n16 {
     //if(io.wramSwitch == 1) return data;
       address = (n18)address;
     } else {
-      address = (n17)address << 1 | io.wramSelect == 0;
+      address = !io.wramSelect << 17 | (n17)address;
     }
     if(!vdp.active()) return wram[address >> 1];
 
@@ -55,7 +55,7 @@ auto MCD::external_write(n1 upper, n1 lower, n22 address, n16 data) -> void {
     //if(io.wramSwitch == 1) return;
       address = (n18)address;
     } else {
-      address = (n17)address << 1 | io.wramSelect == 0;
+      address = !io.wramSelect << 17 | (n17)address;
     }
     if(upper) wram[address >> 1].byte(1) = data.byte(1);
     if(lower) wram[address >> 1].byte(0) = data.byte(0);
