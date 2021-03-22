@@ -353,6 +353,7 @@ struct MCD : M68K, Thread {
     auto serialize(serializer&) -> void;
 
     IRQ irq;
+    n8 frequency;
     n8 counter;
   } timer;
 

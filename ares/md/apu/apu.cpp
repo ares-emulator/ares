@@ -20,7 +20,15 @@ auto APU::unload() -> void {
 }
 
 auto APU::main() -> void {
-  if(!state.enabled) {
+  //handle a bus switching request from the CPU
+  if(state.resLine) {
+    //switching requires a minimum of 9 cycles to allow the 68K to read back unavailable bus state
+    if(state.busreqLine && !state.busreqLatch) step(9);
+    state.busreqLatch = state.busreqLine;
+  }
+
+  //stall the APU until the CPU relinquishes control of the bus
+  if(!state.resLine || !busownerAPU()) {
     return step(1);
   }
 
@@ -45,35 +53,37 @@ auto APU::step(u32 clocks) -> void {
   Thread::synchronize(cpu, vdp, psg, opn2);
 }
 
-auto APU::setNMI(bool value) -> void {
-  state.nmiLine = value;
+auto APU::setNMI(n1 line) -> void {
+  state.nmiLine = line;
 }
 
-auto APU::setINT(bool value) -> void {
-  state.intLine = value;
+auto APU::setINT(n1 line) -> void {
+  state.intLine = line;
 }
 
-auto APU::enable(bool value) -> void {
-  //68K cannot disable the Z80 without bus access
-  if(!bus->granted() && !value) return;
-  if(state.enabled && !value) reset();
-  state.enabled = value;
+auto APU::setRES(n1 line) -> void {
+  if(!state.resLine && line) power(true);
+  state.resLine = line;
+}
+
+auto APU::setBUSREQ(n1 line) -> void {
+  state.busreqLine = line;
 }
 
 auto APU::power(bool reset) -> void {
   Z80::bus = this;
   Z80::power();
-  bus->grant(false);
   Thread::create(system.frequency() / 15.0, {&APU::main, this});
-  if(!reset) ram.fill();
-  state = {};
-}
-
-auto APU::reset() -> void {
-  Z80::power();
-  bus->grant(false);
-  Thread::create(system.frequency() / 15.0, {&APU::main, this});
-  state = {};
+  if(!reset) {
+    ram.fill();
+    state.resLine = 0;
+    state.busreqLine = 0;
+    state.busreqLatch = 0;
+  }
+  state.nmiLine = 0;
+  state.intLine = 0;
+  state.bank = 0;
+  opn2.power(reset);
 }
 
 }

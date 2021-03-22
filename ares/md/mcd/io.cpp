@@ -67,7 +67,7 @@ auto MCD::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address == 0xff8030) {
-    data.bit(0, 7) = timer.counter;
+    data.bit(0, 7) = timer.frequency;
     data.bit(8,15) = Unmapped;
   }
 
@@ -251,7 +251,7 @@ auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address == 0xff8030) {
     if(lower) {
-      timer.counter = data.byte(0);
+      timer.frequency = data.byte(0);
     }
   }
 

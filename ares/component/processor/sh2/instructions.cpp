@@ -754,7 +754,10 @@ auto SH2::SWAPW(u32 m, u32 n) -> void {
 
 //TAS.B @Rn
 auto SH2::TAS(u32 n) -> void {
+  auto cacheEnable = cache.enable;
+  cache.enable = 0;
   u8 b = readByte(R[n]);
+  cache.enable = cacheEnable;
   SR.T = b == 0;
   writeByte(R[n], b | 0x80);
 }

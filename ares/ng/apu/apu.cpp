@@ -24,7 +24,6 @@ auto APU::step(u32 clocks) -> void {
 auto APU::power(bool reset) -> void {
   Z80::bus = this;
   Z80::power();
-  bus->grant(false);
   Thread::create(4'000'000, {&APU::main, this});
 }
 

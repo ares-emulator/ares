@@ -149,6 +149,7 @@ auto MCD::CDD::serialize(serializer& s) -> void {
 
 auto MCD::Timer::serialize(serializer& s) -> void {
   s(irq);
+  s(frequency);
   s(counter);
 }
 

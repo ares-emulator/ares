@@ -19,7 +19,7 @@ auto APU::read(n16 address) -> n8 {
     cpu.idle(11);
     step(3);
 
-    n24 location = io.bank << 15 | (n15)address & ~1;
+    n24 location = state.bank << 15 | (n15)address & ~1;
     if(location >= 0xa00000 && location <= 0xffffff) {
       //todo: apparently *some* I/O addresses can be read or written from the Z80.
       //it is not currently known which addresses are accepted.
@@ -41,7 +41,7 @@ auto APU::write(n16 address, n8 data) -> void {
   if(address == 0x4001) return opn2.writeData(data);
   if(address == 0x4002) return opn2.writeAddress(1 << 8 | data);
   if(address == 0x4003) return opn2.writeData(data);
-  if(address == 0x6000) return (void)(io.bank = data.bit(0) << 8 | io.bank >> 1);
+  if(address == 0x6000) return (void)(state.bank = data.bit(0) << 8 | state.bank >> 1);
   if(address == 0x7f11) return psg.write(data);
   if(address == 0x7f13) return psg.write(data);
   if(address == 0x7f15) return psg.write(data);
@@ -56,7 +56,7 @@ auto APU::write(n16 address, n8 data) -> void {
     cpu.idle(11);
     step(3);
 
-    n24 location = io.bank << 15 | (n15)address;
+    n24 location = state.bank << 15 | (n15)address;
     if(location >= 0xa00000 && location <= 0xdfffff) return;
     if(address & 1) {
       return cpu.write(0, 1, location & ~1, data << 8 | data << 0);

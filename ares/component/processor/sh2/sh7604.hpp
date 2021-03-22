@@ -3,10 +3,84 @@
 //Hitachi SH7604
 
 //struct SH2 {
+  enum : u32 { Byte, Word, Long };
+
+  struct Area { enum : u32 {
+    Cached   = 0,
+    Uncached = 1,
+    Purge    = 2,
+    Address  = 3,
+    Data     = 6,
+    IO       = 7,
+  };};
+
+  //sh7604-bus.cpp
+  auto readByte(u32 address) -> u32;
+  auto readWord(u32 address) -> u32;
+  auto readLong(u32 address) -> u32;
+  auto writeByte(u32 address, u32 data) -> void;
+  auto writeWord(u32 address, u32 data) -> void;
+  auto writeLong(u32 address, u32 data) -> void;
+
+  //sh7604-io.cpp
+  auto internalReadByte(u32 address, n8 data = 0) -> n8;
+  auto internalWriteByte(u32 address, n8 data) -> void;
+
+  struct Cache {
+    maybe<SH2&> self;
+
+    //sh7604-cache.cpp
+    template<u32 Size> auto read(u32 address) -> u32;
+    template<u32 Size> auto write(u32 address, u32 data) -> void;
+    template<u32 Size> auto readData(u32 address) -> u32;
+    template<u32 Size> auto writeData(u32 address, u32 data) -> void;
+    auto readAddress(u32 address) -> u32;
+    auto writeAddress(u32 address, u32 data) -> void;
+    auto purge(u32 address) -> void;
+    template<u32 Count> auto purge() -> void;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    enum : u32 {
+      Way0 = 0 * 64,
+      Way1 = 1 * 64,
+      Way2 = 2 * 64,
+      Way3 = 3 * 64,
+      Invalid = 1 << 19,
+    };
+
+    union Line {
+      u8  bytes[16];
+      u16 words[8];
+      u32 longs[4];
+    };
+
+    u8   lrus[64];
+    u32  tags[4 * 64];
+    Line lines[4 * 64];
+
+    n1 enable;
+    n1 disableCode;
+    n1 disableData;
+    n2 twoWay;  //0 = 4-way, 2 = 2-way (forces ways 2 and 3)
+    n2 waySelect;
+
+  //internal:
+    n2 lruSelect[64];
+    n6 lruUpdate[4][64];
+  } cache;
+
   //interrupt controller
   struct INTC {
     maybe<SH2&> self;
+
+    //sh7604-intc.cpp
     auto run() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
     struct ICR {    //interrupt control register
       n1 vecmd;     //IRL interrupt vector mode select
@@ -46,7 +120,13 @@
   //DMA controller
   struct DMAC {
     maybe<SH2&> self;
+
+    //sh7604-dmac.cpp
     auto run() -> void;
+    auto transfer(bool c) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
     n32 sar[2];     //DMA source address registers
     n32 dar[2];     //DMA destination address registers
@@ -74,12 +154,23 @@
       n1 ae;        //address error flag bit
       n1 pr;        //priority mode bit
     } dmaor;
+
     //internal:
     n1 dreq;
+    n2 pendingIRQ;
   } dmac;
 
   //serial communication interface
   struct SCI {
+    maybe<SH2&> self;
+    maybe<SH2&> link;
+
+    //sh7604-sci.cpp
+    auto run() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     struct SMR {    //serial mode register
       n2 cks;       //clock select
       n1 mp;        //multi-processor mode
@@ -111,10 +202,17 @@
     n8 brr = 0xff;  //bit rate register
     n8 tdr = 0xff;  //transmit data register
     n8 rdr = 0x00;  //receive data register
+
+    //internal:
+    n1 pendingTransmitEmptyIRQ;
+    n1 pendingReceiveFullIRQ;
   } sci;
 
   //watchdog timer
   struct WDT {
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     struct WTCSR {  //watchdog timer control/status register
       n3 cks;       //clock select
       n1 tme;       //timer enable
@@ -131,6 +229,9 @@
 
   //user break controller
   struct UBC {
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n32 bara;       //break address register A
     n32 bamra;      //break address mask register A
     struct BBRA {   //break bus register A
@@ -166,7 +267,12 @@
   //16-bit free-running timer
   struct FRT {
     maybe<SH2&> self;
+
+    //sh7604-frt.cpp
     auto run() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
     struct TIER {   //timer interrupt enable register
       n1 ovie;      //timer overflow interrupt enable
@@ -196,14 +302,15 @@
     n16 ficr;       //input capture register
 
     //internal:
-    struct Context {
-      n32 counter;
-      n1 pendingOutputIRQ;
-    } context;
+    n32 counter;
+    n1  pendingOutputIRQ;
   } frt;
 
   //bus state controller
   struct BSC {
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     struct BCR1 {   //bus control register 1
       n3 dram;      //enable for DRAM and other memory
       n2 a0lw;      //long wait specification for area 0
@@ -250,18 +357,11 @@
     n8 rtcor;       //refresh time constant register
   } bsc;
 
-  //cache control register
-  struct CCR {
-    n1 ce;          //cache enable
-    n1 id;          //instruction replacement disable
-    n1 od;          //data replacement disable
-    n1 tw;          //two-way mode
-    n1 cp;          //cache purge
-    n2 w;           //way specification
-  } ccr;
-
   //standby control register
   struct SBYCR {
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n1 sci;         //SCI halted
     n1 frt;         //FRT halted
     n1 divu;        //DIVU halted
@@ -273,6 +373,9 @@
 
   //division unit
   struct DIVU {
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     n32 dvsr;       //divisor register
     struct DVCR {   //division control register
       n1 ovf;       //overflow flag

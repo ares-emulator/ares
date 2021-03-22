@@ -59,6 +59,7 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 
   //FIFO
   if(address == 0x4012) {
+    dreq.length--;
     data = dreq.fifo.read(data);
     shm.dmac.dreq = !dreq.fifo.empty();
     shs.dmac.dreq = !dreq.fifo.empty();
@@ -134,7 +135,7 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
   if(address == 0x410a) {
     data.bit( 0) = vdp.framebufferSelect;
     data.bit( 1) = !vdp.framebufferAccess;
-    data.bit(13) = !vdp.framebufferAccess;
+    data.bit(13) = vdp.vblank;  //palette access
     data.bit(14) = vdp.hblank;
     data.bit(15) = vdp.vblank;
   }
@@ -177,7 +178,8 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
   //hcount
   if(address == 0x4004) {
     if(lower) {
-      io.hperiod = data.byte(0);
+      io.hperiod  = data.byte(0);
+      io.hcounter = 0;
     }
   }
 

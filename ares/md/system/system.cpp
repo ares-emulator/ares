@@ -153,10 +153,9 @@ auto System::power(bool reset) -> void {
   if(Mega32X()) m32x.power(reset);
   if(MegaCD()) mcd.power(reset);
   cpu.power(reset);
-  apu.power(reset);
+  apu.power(reset);  //apu.power() calls opn2.power()
   vdp.power(reset);
   psg.power(reset);
-  opn2.power(reset);
   controllerPort1.power(reset);
   controllerPort2.power(reset);
   extensionPort.power(reset);

@@ -31,7 +31,7 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address >= 0xa00000 && address <= 0xa0ffff) {
-    if(!apu.granted()) return data;
+    if(!apu.busownerCPU()) return data;
     address.bit(15) = 0;  //a080000-a0ffff mirrors a00000-a07fff
     //word reads load the even input byte into both output bytes
     auto byte = apu.read(address | !upper);  //upper==0 only on odd byte reads
@@ -89,7 +89,7 @@ auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address >= 0xa00000 && address <= 0xa0ffff) {
-    if(!apu.granted()) return;
+    if(!apu.busownerCPU()) return;
     address.bit(15) = 0;  //a08000-a0ffff mirrors a00000-a07fff
     //word writes store the upper input byte into the lower output byte
     return apu.write(address | !upper, data.byte(upper));  //upper==0 only on odd byte reads

@@ -24,14 +24,6 @@ struct SH2 {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  //memory.cpp
-  auto readByte(u32 address) -> u32;
-  auto readWord(u32 address) -> u32;
-  auto readLong(u32 address) -> u32;
-  auto writeByte(u32 address, u32 data) -> void;
-  auto writeWord(u32 address, u32 data) -> void;
-  auto writeLong(u32 address, u32 data) -> void;
-
   //instruction.cpp
   auto branch(u32 pc) -> void;
   auto delaySlot(u32 pc) -> void;
@@ -230,11 +222,6 @@ struct SH2 {
   u32 PPC;    //program counter for delay slots
   u32 PPM;    //delay slot mode
 
-  u8 cache[4_KiB];
-
-  //sh7604.cpp
-  auto internalReadByte(u32 address, n8 data = 0) -> n8;
-  auto internalWriteByte(u32 address, n8 data) -> void;
   #include "sh7604.hpp"
 };
 

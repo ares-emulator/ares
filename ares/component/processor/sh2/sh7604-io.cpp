@@ -177,12 +177,12 @@ auto SH2::internalReadByte(u32 address, n8 data) -> n8 {
 
   //CCR: cache control register
   case 0xffff'fe92:
-    data.bit(0)   = ccr.ce;
-    data.bit(1)   = ccr.id;
-    data.bit(2)   = ccr.od;
-    data.bit(3)   = ccr.tw;
-    data.bit(4)   = ccr.cp;
-    data.bit(6,7) = ccr.w;
+    data.bit(0)   = cache.enable;
+    data.bit(1)   = cache.disableCode;
+    data.bit(2)   = cache.disableData;
+    data.bit(3)   = cache.twoWay == 2;
+    data.bit(4)   = 0;  //cache purge always reads as 0
+    data.bit(6,7) = cache.waySelect;
     return data;
 
   //ICR: interrupt control register
@@ -241,16 +241,16 @@ auto SH2::internalReadByte(u32 address, n8 data) -> n8 {
     return data;
 
   //DVDNTH: dividend register H
-  case 0xffff'ff10: return divu.dvdnth.byte(3);
-  case 0xffff'ff11: return divu.dvdnth.byte(2);
-  case 0xffff'ff12: return divu.dvdnth.byte(1);
-  case 0xffff'ff13: return divu.dvdnth.byte(0);
+  case 0xffff'ff10: case 0xffff'ff18: return divu.dvdnth.byte(3);
+  case 0xffff'ff11: case 0xffff'ff19: return divu.dvdnth.byte(2);
+  case 0xffff'ff12: case 0xffff'ff1a: return divu.dvdnth.byte(1);
+  case 0xffff'ff13: case 0xffff'ff1b: return divu.dvdnth.byte(0);
 
   //DVDNTL: dividend register L
-  case 0xffff'ff14: return divu.dvdntl.byte(3);
-  case 0xffff'ff15: return divu.dvdntl.byte(2);
-  case 0xffff'ff16: return divu.dvdntl.byte(1);
-  case 0xffff'ff17: return divu.dvdntl.byte(0);
+  case 0xffff'ff14: case 0xffff'ff1c: return divu.dvdntl.byte(3);
+  case 0xffff'ff15: case 0xffff'ff1d: return divu.dvdntl.byte(2);
+  case 0xffff'ff16: case 0xffff'ff1e: return divu.dvdntl.byte(1);
+  case 0xffff'ff17: case 0xffff'ff1f: return divu.dvdntl.byte(0);
 
   //BARA: break address register A
   case 0xffff'ff40: return ubc.bara.byte(3);
@@ -519,7 +519,7 @@ auto SH2::internalReadByte(u32 address, n8 data) -> n8 {
 
   }
 
-print("bad read ", hex(address, 8L), "\n");
+  debug(unusual, "[SH2] read(0x", hex(address, 8L), ")");
   return data;
 }
 
@@ -543,7 +543,8 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
     return;
 
   //SCR: serial control register
-  case 0xffff'fe02:
+  case 0xffff'fe02: {
+    bool te = sci.scr.te;
     sci.scr.cke  = data.bit(0,1);
     sci.scr.teie = data.bit(2);
     sci.scr.mpie = data.bit(3);
@@ -551,7 +552,9 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
     sci.scr.te   = data.bit(5);
     sci.scr.rie  = data.bit(6);
     sci.scr.tie  = data.bit(7);
+    if(!te && sci.scr.te) sci.run();
     return;
+  }
 
   //TDR: transmit data register
   case 0xffff'fe03:
@@ -568,6 +571,7 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
     sci.ssr.orer &= data.bit(5);
     sci.ssr.rdrf &= data.bit(6);
     sci.ssr.tdre &= data.bit(7);
+    if(sci.scr.te) sci.run();
     return;
 
   //RDR: receive data register
@@ -703,12 +707,13 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
 
   //CCR: cache control register
   case 0xffff'fe92:
-    ccr.ce = data.bit(0);
-    ccr.id = data.bit(1);
-    ccr.od = data.bit(2);
-    ccr.tw = data.bit(3);
-    ccr.cp = data.bit(4);
-    ccr.w  = data.bit(6,7);
+    cache.enable      = data.bit(0);
+    cache.disableCode = data.bit(1);
+    cache.disableData = data.bit(2);
+    cache.twoWay      = data.bit(3) ? 2 : 0;
+    cache.waySelect   = data.bit(6,7);
+    if(data.bit(3)) cache.purge<2 * 64>();  //purge ways 0-1
+    if(data.bit(4)) cache.purge<4 * 64>();  //purge ways 0-3
     return;
 
   //ICR: interrupt control register
@@ -749,12 +754,14 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
   case 0xffff'ff06: divu.dvdntl.byte(1) = data; return;
   case 0xffff'ff07: divu.dvdntl.byte(0) = data; {
     if(divu.dvsr) {
-      s32 dividend = (s32)divu.dvdntl;
-      divu.dvdntl = dividend / (s32)divu.dvsr;
-      divu.dvdnth = dividend % (s32)divu.dvsr;
+      s32 dividend  = (s32)divu.dvdntl;
+      s32 quotient  = dividend / (s32)divu.dvsr;
+      s32 remainder = dividend % (s32)divu.dvsr;
+      divu.dvdntl = quotient;
+      divu.dvdnth = remainder;
     } else {
-      divu.dvdntl = 0x8000'0000;
-      divu.dvdnth = 0x7fff'ffff;
+      //division by zero
+      divu.dvdntl = +0x7fff'ffff;
       divu.dvcr.ovf = 1;
     }
     return;
@@ -778,23 +785,35 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
     return;
 
   //DVDNTH: dividend register H
-  case 0xffff'ff10: divu.dvdnth.byte(3) = data; return;
-  case 0xffff'ff11: divu.dvdnth.byte(2) = data; return;
-  case 0xffff'ff12: divu.dvdnth.byte(1) = data; return;
-  case 0xffff'ff13: divu.dvdnth.byte(0) = data; return;
+  case 0xffff'ff10: case 0xffff'ff18: divu.dvdnth.byte(3) = data; return;
+  case 0xffff'ff11: case 0xffff'ff19: divu.dvdnth.byte(2) = data; return;
+  case 0xffff'ff12: case 0xffff'ff1a: divu.dvdnth.byte(1) = data; return;
+  case 0xffff'ff13: case 0xffff'ff1b: divu.dvdnth.byte(0) = data; return;
 
   //DVDNTL: dividend register L
-  case 0xffff'ff14: divu.dvdntl.byte(3) = data; return;
-  case 0xffff'ff15: divu.dvdntl.byte(2) = data; return;
-  case 0xffff'ff16: divu.dvdntl.byte(1) = data; return;
-  case 0xffff'ff17: divu.dvdntl.byte(0) = data; {
+  case 0xffff'ff14: case 0xffff'ff1c: divu.dvdntl.byte(3) = data; return;
+  case 0xffff'ff15: case 0xffff'ff1d: divu.dvdntl.byte(2) = data; return;
+  case 0xffff'ff16: case 0xffff'ff1e: divu.dvdntl.byte(1) = data; return;
+  case 0xffff'ff17: case 0xffff'ff1f: divu.dvdntl.byte(0) = data; {
     if(divu.dvsr) {
-      s64 dividend = (s64)divu.dvdnth << 32 | (s64)divu.dvdntl << 0;
-      divu.dvdntl = dividend / (s32)divu.dvsr;
-      divu.dvdnth = dividend % (s32)divu.dvsr;
+      s64 dividend  = (s64)divu.dvdnth << 32 | (s64)divu.dvdntl << 0;
+      s64 quotient  = dividend / (s32)divu.dvsr;
+      s32 remainder = dividend % (s32)divu.dvsr;
+      divu.dvdntl = quotient;
+      divu.dvdnth = remainder;
+      if(quotient > +0x7fff'7fffLL) {
+        //overflow
+        divu.dvdntl = +0x7fff'ffff;
+        divu.dvcr.ovf = 1;
+      }
+      if(quotient < -0x8000'0000LL) {
+        //underflow
+        divu.dvdntl = -0x8000'0000;
+        divu.dvcr.ovf = 1;
+      }
     } else {
-      divu.dvdntl = 0x8000'0000;
-      divu.dvdnth = 0x7fff'ffff;
+      //division by zero
+      divu.dvdntl = +0x7fff'ffff;
       divu.dvcr.ovf = 1;
     }
     return;
@@ -1064,4 +1083,6 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
     return;
 
   }
+
+  debug(unusual, "[SH2] write(0x", hex(address, 8L), ", 0x", hex(data, 2L), ")");
 }

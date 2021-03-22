@@ -40,7 +40,7 @@ struct CPU : Z80, Z80::Bus, Thread {
   auto out(n16 address, n8 data) -> void override;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void override;
+  auto serialize(serializer&) -> void;
 
 private:
   n8 mdr;

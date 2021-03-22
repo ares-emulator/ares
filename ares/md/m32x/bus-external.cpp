@@ -39,6 +39,7 @@ auto M32X::writeExternal(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address >= 0x840000 && address <= 0x85ffff) {
+    if(!data && (!upper || !lower)) return;  //8-bit 0x00 writes do not go through
     shm.debugger.tracer.instruction->invalidate(0x0400'0000 | address & 0x1fffe);
     shs.debugger.tracer.instruction->invalidate(0x0400'0000 | address & 0x1fffe);
     if(upper) vdp.bbram[address >> 1 & 0xffff].byte(1) = data.byte(1);

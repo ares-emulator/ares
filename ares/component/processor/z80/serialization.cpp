@@ -23,8 +23,3 @@ auto Z80::serialize(serializer& s) -> void {
   s(r.iff2);
   s(r.im);
 }
-
-auto Z80::Bus::serialize(serializer& s) -> void {
-  s(_requested);
-  s(_granted);
-}

@@ -21,6 +21,8 @@ struct APU : Z80, Z80::Bus, Thread {
   } debugger;
 
   auto synchronizing() const -> bool override { return scheduler.synchronizing(); }
+  auto busownerAPU() const -> bool { return (state.resLine & state.busreqLatch) == 0; }  //Z80 has bus access
+  auto busownerCPU() const -> bool { return (state.resLine & state.busreqLatch) == 1; }  //68K has bus access
 
   //z80.cpp
   auto load(Node::Object) -> void;
@@ -28,13 +30,12 @@ struct APU : Z80, Z80::Bus, Thread {
 
   auto main() -> void;
   auto step(u32 clocks) -> void override;
-
-  auto enable(bool) -> void;
   auto power(bool reset) -> void;
-  auto reset() -> void;
 
-  auto setNMI(bool value) -> void;
-  auto setINT(bool value) -> void;
+  auto setNMI(n1 line) -> void;
+  auto setINT(n1 line) -> void;
+  auto setRES(n1 line) -> void;
+  auto setBUSREQ(n1 line) -> void;
 
   //bus.cpp
   auto read(n16 address) -> n8 override;
@@ -44,17 +45,16 @@ struct APU : Z80, Z80::Bus, Thread {
   auto out(n16 address, n8 data) -> void override;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void override;
+  auto serialize(serializer&) -> void;
 
 private:
-  struct IO {
-    n9 bank;
-  } io;
-
   struct State {
-    n1 enabled;
     n1 nmiLine;
     n1 intLine;
+    n1 resLine;
+    n1 busreqLine;
+    n1 busreqLatch;
+    n9 bank;
   } state;
 };
 

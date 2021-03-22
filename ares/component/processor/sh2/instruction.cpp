@@ -125,31 +125,31 @@ auto SH2::execute(u16 opcode) -> void {
   #define d4 (opcode >> 0 & 0x0f)
   #define d8 (opcode >> 0 & 0xff)
   switch(opcode >> 8) {
-  case 0x80: return MOVBS4(d4, m);     //MOV.B  R0,@(disp,Rn)
-  case 0x81: return MOVWS4(d4, m);     //MOV.W  R0,@(disp,Rn)
-  case 0x84: return MOVBL4(m, d4);     //MOV.B  @(disp,Rm),R0
-  case 0x85: return MOVWL4(m, d4);     //MOV.W  @(disp,Rm),R0
-  case 0x88: return CMPIM(i);          //CMP/EQ #imm,R0
-  case 0x89: return BT(d8);            //BT     disp
-  case 0x8b: return BF(d8);            //BF     disp
-  case 0x8d: return BTS(d8);           //BT/S   disp
-  case 0x8f: return BFS(d8);           //BF/S   disp
-  case 0xc0: return MOVBSG(d8);        //MOV.B  R0,@(disp,GBR)
-  case 0xc1: return MOVWSG(d8);        //MOV.W  R0,@(disp,GBR)
-  case 0xc2: return MOVLSG(d8);        //MOV.L  R0,@(disp,GBR)
-  case 0xc3: return TRAPA(i);          //TRAPA  #imm
-  case 0xc4: return MOVBLG(d8);        //MOV.B  @(disp,GBR),R0
-  case 0xc5: return MOVWLG(d8);        //MOV.W  @(disp,GBR),R0
-  case 0xc6: return MOVLLG(d8);        //MOV.L  @(disp,GBR),R0
-  case 0xc7: return MOVA(d8);          //MOVA   @(disp,PC),R0
-  case 0xc8: return TSTI(i);           //TST    #imm,R0
-  case 0xc9: return ANDI(i);           //AND    #imm,R0
-  case 0xca: return XORI(i);           //XOR    #imm,R0
-  case 0xcb: return ORI(i);            //OR     #imm,R0
-  case 0xcc: return TSTM(i);           //TST.B  #imm,@(R0,GBR)
-  case 0xcd: return ANDM(i);           //AND.B  #imm,@(R0,GBR)
-  case 0xce: return XORM(i);           //XOR.B  #imm,@(R0,GBR)
-  case 0xcf: return ORM(i);            //OR.B   #imm,@(R0,GBR)
+  case 0x80: return MOVBS4(d4, m);  //MOV.B  R0,@(disp,Rn)
+  case 0x81: return MOVWS4(d4, m);  //MOV.W  R0,@(disp,Rn)
+  case 0x84: return MOVBL4(m, d4);  //MOV.B  @(disp,Rm),R0
+  case 0x85: return MOVWL4(m, d4);  //MOV.W  @(disp,Rm),R0
+  case 0x88: return CMPIM(i);       //CMP/EQ #imm,R0
+  case 0x89: return BT(d8);         //BT     disp
+  case 0x8b: return BF(d8);         //BF     disp
+  case 0x8d: return BTS(d8);        //BT/S   disp
+  case 0x8f: return BFS(d8);        //BF/S   disp
+  case 0xc0: return MOVBSG(d8);     //MOV.B  R0,@(disp,GBR)
+  case 0xc1: return MOVWSG(d8);     //MOV.W  R0,@(disp,GBR)
+  case 0xc2: return MOVLSG(d8);     //MOV.L  R0,@(disp,GBR)
+  case 0xc3: return TRAPA(i);       //TRAPA  #imm
+  case 0xc4: return MOVBLG(d8);     //MOV.B  @(disp,GBR),R0
+  case 0xc5: return MOVWLG(d8);     //MOV.W  @(disp,GBR),R0
+  case 0xc6: return MOVLLG(d8);     //MOV.L  @(disp,GBR),R0
+  case 0xc7: return MOVA(d8);       //MOVA   @(disp,PC),R0
+  case 0xc8: return TSTI(i);        //TST    #imm,R0
+  case 0xc9: return ANDI(i);        //AND    #imm,R0
+  case 0xca: return XORI(i);        //XOR    #imm,R0
+  case 0xcb: return ORI(i);         //OR     #imm,R0
+  case 0xcc: return TSTM(i);        //TST.B  #imm,@(R0,GBR)
+  case 0xcd: return ANDM(i);        //AND.B  #imm,@(R0,GBR)
+  case 0xce: return XORM(i);        //XOR.B  #imm,@(R0,GBR)
+  case 0xcf: return ORM(i);         //OR.B   #imm,@(R0,GBR)
   }
   #undef n
   #undef m

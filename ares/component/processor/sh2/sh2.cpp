@@ -5,10 +5,12 @@ namespace ares {
 
 #define SP R[15]
 
-#include "memory.cpp"
-#include "sh7604.cpp"
+#include "sh7604-bus.cpp"
+#include "sh7604-io.cpp"
+#include "sh7604-cache.cpp"
 #include "sh7604-intc.cpp"
 #include "sh7604-dmac.cpp"
+#include "sh7604-sci.cpp"
 #include "sh7604-frt.cpp"
 #include "instruction.cpp"
 #include "instructions.cpp"
@@ -32,18 +34,18 @@ auto SH2::power() -> void {
   PPC = 0;
   PPM = Branch::Step;
 
-  for(auto& byte : cache) byte = 0;
-
+  cache = {*this};
   intc = {*this};
   dmac = {*this};
-  sci = {};
+  sci = {*this};
   wdt = {};
   ubc = {};
   frt = {*this};
   bsc = {};
-  ccr = {};
   sbycr = {};
   divu = {};
+
+  cache.power();
 }
 
 }

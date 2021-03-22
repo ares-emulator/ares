@@ -6,32 +6,18 @@ namespace ares {
 
 struct Z80 {
   struct Bus {
-    virtual auto requested() -> bool { return _requested; }
-    virtual auto granted() -> bool { return _granted; }
-
-    virtual auto request(bool value) -> void { _requested = value; }
-    virtual auto grant(bool value) -> void { _granted = value; }
-
     virtual auto read(n16 address) -> n8 = 0;
     virtual auto write(n16 address, n8 data) -> void = 0;
 
     virtual auto in(n16 address) -> n8 = 0;
     virtual auto out(n16 address, n8 data) -> void = 0;
-
-    //serialization.cpp
-    virtual auto serialize(serializer&) -> void;
-
-  private:
-    bool _requested;
-    bool _granted;
   };
 
   virtual auto step(u32 clocks) -> void = 0;
   virtual auto synchronizing() const -> bool = 0;
 
   //CMOS: out (c) writes 0x00
-  //NMOS: out (c) writes 0xff;
-  //      if an interrupt fires during "ld a,i" or "ld a,r", PF is cleared
+  //NMOS: out (c) writes 0xff; if an interrupt fires during "ld a,i" or "ld a,r", PF is cleared
   enum class MOSFET : u32 { CMOS, NMOS };
 
   //z80.cpp
@@ -41,7 +27,6 @@ struct Z80 {
   auto parity(n8) const -> bool;
 
   //memory.cpp
-  auto yield() -> void;
   auto wait(u32 clocks = 1) -> void;
   auto opcode() -> n8;
   auto operand() -> n8;

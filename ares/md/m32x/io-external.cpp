@@ -5,7 +5,6 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     if(address == 0xa130ec && lower) data.byte(0) = 'A';
     if(address == 0xa130ee && upper) data.byte(1) = 'R';
     if(address == 0xa130ee && lower) data.byte(0) = 'S';
-    return data;
   }
 
   //adapter control
@@ -133,15 +132,15 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   //frame buffer control
   if(address == 0xa1518a) {
     data.bit( 0) = vdp.framebufferSelect;
-  //data.bit( 1) = vdp.framebufferAccess;
-    data.bit(13) = 0;  //0 = framebuffer access allowed
+    data.bit( 1) = vdp.framebufferAccess;
+    data.bit(13) = vdp.vblank;  //palette access
     data.bit(14) = vdp.hblank;
     data.bit(15) = vdp.vblank;
   }
 
   //palette
   if(address >= 0xa15200 && address <= 0xa153ff) {
-    return vdp.cram[address >> 1 & 0xff];
+    data = vdp.cram[address >> 1 & 0xff];
   }
 
   return data;
@@ -182,7 +181,11 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
       dreq.vram   = data.bit(0);
       dreq.dma    = data.bit(1);
       dreq.active = data.bit(2);
-      if(!dreq.active) dreq.fifo.flush();
+      if(!dreq.active) {
+        dreq.fifo.flush();
+        shm.dmac.dreq = 0;
+        shs.dmac.dreq = 0;
+      }
     }
   }
 
@@ -207,12 +210,12 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   //68K to SH2 DREQ length
   if(address == 0xa15110) {
     if(upper) dreq.length.byte(1) = data.byte(1);
-    if(lower) dreq.length.byte(0) = data.byte(0);
+    if(lower) dreq.length.byte(0) = data.byte(0) & ~3;
   }
 
   //FIFO
   if(address == 0xa15112) {
-    if(dreq.active) {
+    if(dreq.active && !dreq.fifo.full()) {
       dreq.fifo.write(data);
       shm.dmac.dreq = !dreq.fifo.empty();
       shs.dmac.dreq = !dreq.fifo.empty();

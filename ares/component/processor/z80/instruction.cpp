@@ -22,7 +22,7 @@ auto Z80::instruction() -> void {
 
   if(code == 0xcb && prefix != Prefix::hl) {
     WZ = HL + (i8)operand();
-    wait(1);
+    wait(2);  //+1 fetch, +1 memory read
   //R is not incremented here
     instructionCBd(WZ, opcode());
   } else if(code == 0xcb) {

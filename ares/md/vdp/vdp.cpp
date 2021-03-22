@@ -47,7 +47,6 @@ auto VDP::main() -> void {
   scanline();
 
   cpu.lower(CPU::Interrupt::HorizontalBlank);
-  apu.setINT(false);
   if(Mega32X()) m32x.hblank(0);
 
   if(state.vcounter == 0) {
@@ -55,16 +54,6 @@ auto VDP::main() -> void {
     io.vblankIRQ = false;
     cpu.lower(CPU::Interrupt::VerticalBlank);
     if(Mega32X()) m32x.vblank(0);
-  }
-
-  if(state.vcounter == screenHeight()) {
-    if(io.verticalBlankInterruptEnable) {
-      io.vblankIRQ = true;
-      cpu.raise(CPU::Interrupt::VerticalBlank);
-    }
-    //todo: should only stay high for ~2573/2 clocks
-    apu.setINT(true);
-    if(Mega32X()) m32x.vblank(1);
   }
 
   if(state.vcounter < screenHeight()) {
@@ -84,6 +73,18 @@ auto VDP::main() -> void {
     if(Mega32X()) m32x.hblank(1);
 
     step(430);
+  } else if(state.vcounter == screenHeight()) {
+    if(io.verticalBlankInterruptEnable) {
+      io.vblankIRQ = true;
+      cpu.raise(CPU::Interrupt::VerticalBlank);
+    }
+
+    if(Mega32X()) m32x.vblank(1);
+    apu.setINT(true);
+    step(1286);
+    if(Mega32X()) m32x.hblank(1);
+    apu.setINT(false);
+    step(424);
   } else {
     step(1280);
     if(Mega32X()) m32x.hblank(1);

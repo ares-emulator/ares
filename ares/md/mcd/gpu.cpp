@@ -90,7 +90,7 @@ auto MCD::GPU::start() -> void {
   if(mcd.io.wramMode) return;  //must be in 2mbit WRAM mode
 
   active = 1;
-  period = 4 * 5 * image.hdots;
+  period = 5 * image.hdots;
   counter = 0;
 
   image.address = (image.base << 1) + image.offset;
