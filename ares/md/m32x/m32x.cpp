@@ -74,11 +74,11 @@ auto M32X::hblank(bool line) -> void {
   vdp.hblank = line;
   shm.irq.hint.active = 0;
   shs.irq.hint.active = 0;
-  if(!vdp.vblank || io.hintVblank) {
-    if(++io.hcounter >= io.hperiod) {
+  if(line && (!vdp.vblank || io.hintVblank)) {
+    if(io.hcounter++ >= io.hperiod) {
       io.hcounter = 0;
-      shm.irq.hint.active = line;
-      shs.irq.hint.active = line;
+      shm.irq.hint.active = 1;
+      shs.irq.hint.active = 1;
     }
   }
 }

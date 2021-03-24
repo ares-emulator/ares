@@ -884,16 +884,14 @@ auto RSP::instructionVMADN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 }
 
 auto RSP::instructionVMOV(r128& vd, u8 de, cr128& vt, u8 e) -> void {
-  if constexpr(Accuracy::RSP::SISD) {
-    cr128 vte = vt(e);
-    ACCL = vte;
-    vd.u16(de) = vte.u16(de);
+  switch(e) {
+  case 0x0 ... 0x1: e = e & 0b000 | de & 0b111; break;  //hardware glitch
+  case 0x2 ... 0x3: e = e & 0b001 | de & 0b110; break;  //hardware glitch
+  case 0x4 ... 0x7: e = e & 0b011 | de & 0b100; break;  //hardware glitch
+  case 0x8 ... 0xf: e = e & 0b111 | de & 0b000; break;  //normal behavior
   }
-
-  if constexpr(Accuracy::RSP::SIMD) {
-    ACCL = vt(e);
-    vd.element(de) = ACCL.element(de);
-  }
+  vd.u16(de) = vt.u16(e);
+  ACCL = vt(e);
 }
 
 auto RSP::instructionVMRG(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {

@@ -88,6 +88,7 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
     if(region.find("J")) regions.append("NTSC-J");
     if(region.find("U")) regions.append("NTSC-U");
     if(region.find("E")) regions.append("PAL");
+    if(region.find("A")) regions.append("PAL");
     if(region.find("W")) regions.append("NTSC-J", "NTSC-U", "PAL");
   }
   if(!regions && region.size() == 1) {

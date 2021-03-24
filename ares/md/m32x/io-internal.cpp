@@ -134,7 +134,7 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
   //frame buffer control
   if(address == 0x410a) {
     data.bit( 0) = vdp.framebufferSelect;
-    data.bit( 1) = !vdp.framebufferAccess;
+    data.bit( 1) = vdp.framebufferAccess == 0;
     data.bit(13) = vdp.vblank;  //palette access
     data.bit(14) = vdp.hblank;
     data.bit(15) = vdp.vblank;

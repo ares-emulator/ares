@@ -56,7 +56,8 @@ auto M32X::VDP::scanlineMode3(u32 pixels[1280], u32 y) -> void {
 
 auto M32X::VDP::plot(u32* target, u16 color) -> void {
   n9 source = target[0];   //get Mega Drive M2B3G3R3 pixel and clip M2 bits
-  n1 alpha = color >> 15;  //extract A1R5G5B5 alpha bit
+  n1 alpha = color >> 15;  //extract A1B5G5R5 alpha bit
+  color &= 0x7fff;         //clamp to B5G5R5
   color += 3 * (1 << 9);   //add Mega 32X palette index offset
 
   if(priority == 0) {

@@ -85,7 +85,7 @@ auto RSP::writeWord(u32 address, u32 data_) -> void {
 
   if(address == 0) {
     //SP_PBUS_ADDRESS
-    dma.memAddress = data.bit( 0,11) & ~3;
+    dma.memAddress = data.bit( 0,11) & ~7;
     dma.memSource  = data.bit(12);
   }
 
