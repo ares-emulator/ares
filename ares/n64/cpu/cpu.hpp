@@ -396,7 +396,7 @@ struct CPU : Thread {
 
     //15: Coprocessor Revision Identifier
     struct Coprocessor {
-      static constexpr u8 revision = 0x00;
+      static constexpr u8 revision = 0x22;
       static constexpr u8 implementation = 0x0b;
     } coprocessor;
 

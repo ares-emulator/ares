@@ -131,7 +131,7 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //frame buffer control
   if(address == 0xa1518a) {
-    data.bit( 0) = vdp.framebufferSelect;
+    data.bit( 0) = vdp.framebufferActive;
     data.bit( 1) = vdp.framebufferAccess == 1;
     data.bit(13) = vdp.vblank;  //palette access
     data.bit(14) = vdp.hblank;
@@ -217,6 +217,7 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   if(address == 0xa15112) {
     if(dreq.active && !dreq.fifo.full()) {
       dreq.fifo.write(data);
+      if(!--dreq.length) dreq.active = 0;
       shm.dmac.dreq = !dreq.fifo.empty();
       shs.dmac.dreq = !dreq.fifo.empty();
     }

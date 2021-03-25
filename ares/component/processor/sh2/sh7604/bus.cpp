@@ -86,6 +86,10 @@ auto SH2::readLong(u32 address) -> u32 {
 }
 
 auto SH2::writeByte(u32 address, u32 data) -> void {
+  if constexpr(Accuracy::Recompiler) {
+    recompiler.invalidate(address);
+  }
+
   switch(address >> 29) {
 
   case Area::Cached: {
@@ -113,6 +117,10 @@ auto SH2::writeByte(u32 address, u32 data) -> void {
 }
 
 auto SH2::writeWord(u32 address, u32 data) -> void {
+  if constexpr(Accuracy::Recompiler) {
+    recompiler.invalidate(address);
+  }
+
   switch(address >> 29) {
 
   case Area::Cached: {
@@ -142,6 +150,11 @@ auto SH2::writeWord(u32 address, u32 data) -> void {
 }
 
 auto SH2::writeLong(u32 address, u32 data) -> void {
+  if constexpr(Accuracy::Recompiler) {
+    recompiler.invalidate(address + 0);
+    recompiler.invalidate(address + 2);
+  }
+
   switch(address >> 29) {
 
   case Area::Cached: {

@@ -5,15 +5,10 @@ namespace ares {
 
 #define SP R[15]
 
-#include "sh7604-bus.cpp"
-#include "sh7604-io.cpp"
-#include "sh7604-cache.cpp"
-#include "sh7604-intc.cpp"
-#include "sh7604-dmac.cpp"
-#include "sh7604-sci.cpp"
-#include "sh7604-frt.cpp"
+#include "sh7604/sh7604.cpp"
 #include "instruction.cpp"
 #include "instructions.cpp"
+#include "recompiler.cpp"
 #include "serialization.cpp"
 #include "disassembler.cpp"
 
@@ -46,6 +41,12 @@ auto SH2::power() -> void {
   divu = {};
 
   cache.power();
+
+  if constexpr(Accuracy::Recompiler) {
+    recompiler.allocator.resize(512_MiB, bump_allocator::executable | bump_allocator::zero_fill);
+    recompiler.reset();
+    recompiler.clock = 0;
+  }
 }
 
 }

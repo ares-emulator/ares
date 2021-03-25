@@ -14,7 +14,7 @@
     IO       = 7,
   };};
 
-  //sh7604-bus.cpp
+  //bus.cpp
   auto readByte(u32 address) -> u32;
   auto readWord(u32 address) -> u32;
   auto readLong(u32 address) -> u32;
@@ -22,14 +22,14 @@
   auto writeWord(u32 address, u32 data) -> void;
   auto writeLong(u32 address, u32 data) -> void;
 
-  //sh7604-io.cpp
+  //io.cpp
   auto internalReadByte(u32 address, n8 data = 0) -> n8;
   auto internalWriteByte(u32 address, n8 data) -> void;
 
   struct Cache {
     maybe<SH2&> self;
 
-    //sh7604-cache.cpp
+    //cache.cpp
     template<u32 Size> auto read(u32 address) -> u32;
     template<u32 Size> auto write(u32 address, u32 data) -> void;
     template<u32 Size> auto readData(u32 address) -> u32;
@@ -76,7 +76,7 @@
   struct INTC {
     maybe<SH2&> self;
 
-    //sh7604-intc.cpp
+    //interrupts.cpp
     auto run() -> void;
 
     //serialization.cpp
@@ -121,7 +121,7 @@
   struct DMAC {
     maybe<SH2&> self;
 
-    //sh7604-dmac.cpp
+    //dma.cpp
     auto run() -> void;
     auto transfer(bool c) -> void;
 
@@ -165,7 +165,7 @@
     maybe<SH2&> self;
     maybe<SH2&> link;
 
-    //sh7604-sci.cpp
+    //serial.cpp
     auto run() -> void;
 
     //serialization.cpp
@@ -268,7 +268,7 @@
   struct FRT {
     maybe<SH2&> self;
 
-    //sh7604-frt.cpp
+    //timer.cpp
     auto run() -> void;
 
     //serialization.cpp

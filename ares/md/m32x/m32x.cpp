@@ -58,16 +58,19 @@ auto M32X::power(bool reset) -> void {
   io.vectorLevel4.byte(1) = vectors[0x72 >> 1].byte(1);
   io.vectorLevel4.byte(0) = vectors[0x72 >> 1].byte(0);
 
-  //connect SCI interfaces
+  //connect interfaces
   shm.sci.link = shs;
   shs.sci.link = shm;
+  shm.debugger.self = shm;
+  shs.debugger.self = shs;
+  vdp.self = *this;
 }
 
 auto M32X::vblank(bool line) -> void {
   vdp.vblank = line;
-  vdp.selectFramebuffer(vdp.framebufferSelect);
   shm.irq.vint.active = line;
   shs.irq.vint.active = line;
+  if(line) vdp.selectFramebuffer(vdp.framebufferSelect);
 }
 
 auto M32X::hblank(bool line) -> void {

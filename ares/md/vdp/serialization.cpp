@@ -74,6 +74,7 @@ auto VDP::Background::serialize(serializer& s) -> void {
 
   s(output.color);
   s(output.priority);
+  s(output.backdrop);
 }
 
 auto VDP::Object::serialize(serializer& s) -> void {
@@ -95,6 +96,7 @@ auto VDP::Sprite::serialize(serializer& s) -> void {
 
   s(output.color);
   s(output.priority);
+  s(output.backdrop);
 
   for(u32 n : range(80)) s(oam[n]);
   for(u32 n : range(20)) s(objects[n]);

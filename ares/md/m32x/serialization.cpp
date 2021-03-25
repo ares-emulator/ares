@@ -51,6 +51,7 @@ auto M32X::VDP::serialize(serializer& s) -> void {
   s(autofillAddress);
   s(autofillData);
   s(framebufferAccess);
+  s(framebufferActive);
   s(framebufferSelect);
   s(hblank);
   s(vblank);

@@ -1,7 +1,15 @@
 auto SH2::DMAC::run() -> void {
   for(auto c : range(2)) {
-    if(chcr[c].de && !chcr[c].te && dmaor.dme && dreq) {
-      transfer(c);
+    if(chcr[c].de && !chcr[c].te && dmaor.dme && !dmaor.nmif && !dmaor.ae) {
+      if(chcr[c].ar) {
+        transfer(c);
+      } else if(drcr[c] == 0) {
+        if(dreq) transfer(c);
+      } else if(drcr[c] == 1) {
+        debug(unimplemented, "[SH2] DMA RXI");
+      } else if(drcr[c] == 2) {
+        debug(unimplemented, "[SH2] DMA TXI");
+      }
     }
   }
 }
@@ -24,6 +32,7 @@ auto SH2::DMAC::transfer(bool c) -> void {
     self->writeLong(dar[c] +  8, self->readLong(sar[c] +  8));
     self->writeLong(dar[c] + 12, self->readLong(sar[c] + 12));
     sar[c] += 16;  //always increments regardless of chcr[c].sm
+    tcr[c] -= 3;   //always decrements by four instead of by one
     break;
   }
 

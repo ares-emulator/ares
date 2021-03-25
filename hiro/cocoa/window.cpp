@@ -156,13 +156,13 @@
     | kAuthorizationFlagPreAuthorize
     | kAuthorizationFlagExtendRights, nullptr);
     if(status == errAuthorizationSuccess) {
-      { const char program[] = "/usr/sbin/spctl";
-        const char* arguments[] = {"--master-disable", nullptr};
+      { char program[] = "/usr/sbin/spctl";
+        char* arguments[] = {"--master-disable", nullptr};
         FILE* pipe = nullptr;
         AuthorizationExecuteWithPrivileges(authorization, program, kAuthorizationFlagDefaults, arguments, &pipe);
       }
-      { const char program[] = "/usr/bin/defaults";
-        const char* arguments[] = {"write /Library/Preferences/com.apple.security GKAutoRearm -bool NO"};
+      { char program[] = "/usr/bin/defaults";
+        char* arguments[] = {"write /Library/Preferences/com.apple.security GKAutoRearm -bool NO"};
         FILE* pipe = nullptr;
         AuthorizationExecuteWithPrivileges(authorization, program, kAuthorizationFlagDefaults, arguments, &pipe);
       }

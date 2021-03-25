@@ -362,6 +362,7 @@ auto SH2::internalReadByte(u32 address, n8 data) -> n8 {
     data.bit(5) = dmac.chcr[0].dl;
     data.bit(6) = dmac.chcr[0].ds;
     data.bit(7) = dmac.chcr[0].al;
+    return data;
 
   //SAR1: DMA source address register 1
   case 0xffff'ff90: return dmac.sar[1].byte(3);

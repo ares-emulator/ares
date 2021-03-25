@@ -48,7 +48,7 @@ auto VDP::run() -> void {
   planeB.run(state.hdot, state.vcounter);
   sprite.run(state.hdot, state.vcounter);
 
-  Pixel g = {io.backgroundColor, 0};
+  Pixel g = {io.backgroundColor, 0, 1};
   Pixel a = planeA.output;
   Pixel b = planeB.output;
   Pixel s = sprite.output;
@@ -58,7 +58,8 @@ auto VDP::run() -> void {
 
   if(!io.shadowHighlightEnable) {
     auto color = cram.read(fg.color);
-    outputPixel(1 << 9 | color);
+    auto backdrop = fg.backdrop || !fg.color;
+    outputPixel(backdrop << 11 | 1 << 9 | color);
   } else {
     u32 mode = a.priority || b.priority;  //0 = shadow, 1 = normal, 2 = highlight
 
@@ -72,7 +73,8 @@ auto VDP::run() -> void {
     }
 
     auto color = cram.read(fg.color);
-    outputPixel(mode << 9 | color);
+    auto backdrop = fg.backdrop || !fg.color;
+    outputPixel(backdrop << 11 | mode << 9 | color);
   }
 }
 

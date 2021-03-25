@@ -77,6 +77,7 @@ struct VDP : Thread {
 
     n6 color;
     n1 priority;
+    n1 backdrop;
   };
 
   struct Background {
@@ -289,10 +290,10 @@ private:
 
   struct State {
     u32* output = nullptr;
-    n16 hdot;
-    n16 hcounter;
-    n16 vcounter;
-    n1  field;
+    n16  hdot;
+    n16  hcounter;
+    n16  vcounter;
+    n1   field;
   } state;
 
   friend class Interface;

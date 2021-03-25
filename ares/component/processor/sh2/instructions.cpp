@@ -179,12 +179,12 @@ auto SH2::DIV1(u32 m, u32 n) -> void {
 
 //DMULS.L Rm,Rn
 auto SH2::DMULS(u32 m, u32 n) -> void {
-  MAC = (s32)R[n] * (s32)R[m];
+  MAC = (s64)(s32)R[n] * (s32)R[m];
 }
 
 //DMULU.L Rm,Rn
 auto SH2::DMULU(u32 m, u32 n) -> void {
-  MAC = R[n] * R[m];
+  MAC = (u64)R[n] * R[m];
 }
 
 //DT Rn

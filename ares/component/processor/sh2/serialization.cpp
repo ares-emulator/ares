@@ -24,6 +24,10 @@ auto SH2::serialize(serializer& s) -> void {
   s(bsc);
   s(sbycr);
   s(divu);
+
+  if constexpr(Accuracy::Recompiler) {
+    recompiler.reset();
+  }
 }
 
 auto SH2::Cache::serialize(serializer& s) -> void {

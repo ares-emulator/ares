@@ -14,7 +14,7 @@ auto M32X::VDP::power(bool reset) -> void {
   dram.fill(0);
   cram.fill(0);
   vblank = 1;
-  selectFramebuffer(0);
+  selectFramebuffer(framebufferSelect);
 }
 
 auto M32X::VDP::scanline(u32 pixels[1280], u32 y) -> void {
@@ -54,27 +54,26 @@ auto M32X::VDP::scanlineMode3(u32 pixels[1280], u32 y) -> void {
   }
 }
 
-auto M32X::VDP::plot(u32* target, u16 color) -> void {
-  n9 source = target[0];   //get Mega Drive M2B3G3R3 pixel and clip M2 bits
-  n1 alpha = color >> 15;  //extract A1B5G5R5 alpha bit
-  color &= 0x7fff;         //clamp to B5G5R5
-  color += 3 * (1 << 9);   //add Mega 32X palette index offset
+auto M32X::VDP::plot(u32* output, u16 color) -> void {
+  n1 backdrop = output[0] >> 11;
+  n1 throughbit = color >> 15;
+  b1 opaque = color & 0x7fff;
 
   if(priority == 0) {
     //Mega Drive has priority
-    if(source == 0 || alpha == 1) {
-      target[0] = color;
-      target[1] = color;
-      target[2] = color;
-      target[3] = color;
+    if(throughbit || backdrop) {
+      output[0] = color | 1 << 15;
+      output[1] = color | 1 << 15;
+      output[2] = color | 1 << 15;
+      output[3] = color | 1 << 15;
     }
   } else {
-    //Megas 32X has priority
-    if(alpha == 0 || source == 0) {
-      target[0] = color;
-      target[1] = color;
-      target[2] = color;
-      target[3] = color;
+    //Mega 32X has priority
+    if(!throughbit || backdrop) {
+      output[0] = color | 1 << 15;
+      output[1] = color | 1 << 15;
+      output[2] = color | 1 << 15;
+      output[3] = color | 1 << 15;
     }
   }
 }
@@ -86,8 +85,11 @@ auto M32X::VDP::fill() -> void {
   }
 }
 
-auto M32X::VDP::selectFramebuffer(n1 active) -> void {
-  framebufferSelect = active;
-  fbram = {dram.data() + 0x10000 * (framebufferSelect == 0), 0x10000};
-  bbram = {dram.data() + 0x10000 * (framebufferSelect == 1), 0x10000};
+auto M32X::VDP::selectFramebuffer(n1 select) -> void {
+  framebufferSelect = select;
+  if(!vblank && mode) return;
+
+  framebufferActive = select;
+  fbram = {dram.data() + 0x10000 * (select == 0), 0x10000};
+  bbram = {dram.data() + 0x10000 * (select == 1), 0x10000};
 }

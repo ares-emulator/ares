@@ -1,5 +1,5 @@
 auto CPU::Recompiler::pool(u32 address) -> Pool* {
-  auto& pool = pools[address >> 8 & 0x1ffff];
+  auto& pool = pools[address >> 8 & 0x1fffff];
   if(!pool) pool = (Pool*)allocator.acquire(sizeof(Pool));
   return pool;
 }

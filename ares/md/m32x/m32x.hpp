@@ -31,7 +31,7 @@ struct M32X {
         Node::Debugger::Tracer::Instruction instruction;
         Node::Debugger::Tracer::Notification interrupt;
       } tracer;
-    } debugger{*this};
+    } debugger;
 
     //sh.cpp
     auto load(Node::Object, string name, string bootROM) -> void;
@@ -67,6 +67,7 @@ struct M32X {
   };
 
   struct VDP {
+    maybe<M32X&> self;
     Memory::Writable<n16> dram;
     Memory::Writable<n16> cram;
     array_span<n16> fbram;  //VDP-side active DRAM bank
@@ -106,6 +107,7 @@ struct M32X {
     n16 autofillAddress;
     n16 autofillData;
     n1  framebufferAccess;
+    n1  framebufferActive;
     n1  framebufferSelect;
     n1  hblank;
     n1  vblank;

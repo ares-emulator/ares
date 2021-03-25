@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nall/recompiler/amd64/amd64.hpp>
+
 //Hitachi SH-2
 
 namespace ares {
@@ -28,6 +30,7 @@ struct SH2 {
   auto branch(u32 pc) -> void;
   auto delaySlot(u32 pc) -> void;
   auto interrupt(u8 level, u8 vector) -> void;
+  auto instructionEpilogue() -> bool;
   auto exception(u8 vector) -> void;
   auto illegal(u16 opcode) -> void;
   auto instruction() -> void;
@@ -185,7 +188,7 @@ struct SH2 {
   static constexpr u32 undefined = 0;
 
   struct Branch {
-    enum : u32 { Step, Slot, Take };
+    enum : u32 { Step, Slot, Take, Exception };
   };
 
   struct S32 {
@@ -222,7 +225,42 @@ struct SH2 {
   u32 PPC;    //program counter for delay slots
   u32 PPM;    //delay slot mode
 
-  #include "sh7604.hpp"
+  struct Recompiler : recompiler::amd64 {
+    SH2& self;
+    Recompiler(SH2& self) : self(self) {}
+
+    struct Block {
+      auto execute() -> void {
+        ((void (*)())code)();
+      }
+
+      u8* code;
+    };
+
+    struct Pool {
+      Block* blocks[1 << 7];
+    };
+
+    auto reset() -> void {
+      for(u32 index : range(1 << 24)) pools[index] = nullptr;
+    }
+
+    auto invalidate(u32 address) -> void {
+      pools[address >> 8 & 0xffffff] = nullptr;
+    }
+
+    auto pool(u32 address) -> Pool*;
+    auto block(u32 address) -> Block*;
+    auto emit(u32 address) -> Block*;
+    auto emitInstruction(u16 opcode) -> bool;
+
+    bump_allocator allocator;
+    Pool* pools[1 << 24];
+    u32 clock;
+  } recompiler{*this};
+
+  #include "sh7604/sh7604.hpp"
+  #include "accuracy.hpp"
 };
 
 }

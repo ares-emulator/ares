@@ -9,6 +9,10 @@ auto M32X::readExternal(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     return vectors[address >> 1];
   }
 
+  if(address >= 0x000100 && address <= 0x3fffff) {
+    if(dreq.vram) return rom[address >> 1];
+  }
+
   if(address >= 0x840000 && address <= 0x87ffff) {
     return vdp.bbram[address >> 1 & 0xffff];
   }
