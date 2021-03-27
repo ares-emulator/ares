@@ -27,6 +27,14 @@ struct Mega32X : Interface {
     return m32x.writeExternalIO(upper, lower, address, data);
   }
 
+  auto vblank(bool line) -> void override {
+    return m32x.vblank(line);
+  }
+
+  auto hblank(bool line) -> void override {
+    return m32x.hblank(line);
+  }
+
   auto power(bool reset) -> void override {
   }
 

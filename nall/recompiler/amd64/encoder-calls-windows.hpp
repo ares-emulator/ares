@@ -1,6 +1,11 @@
 #pragma once
 
 //{
+  static constexpr reg64 cr0 = rcx;
+  static constexpr reg64 cr1 = rdx;
+  static constexpr reg64 cr2 = r8;
+  static constexpr reg64 cr3 = r9;
+
   //virtual instructions to call member functions
   template<typename C, typename R, typename... P>
   auto call(auto (C::*function)(P...) -> R, C* object) {

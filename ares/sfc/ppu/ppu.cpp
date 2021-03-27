@@ -23,6 +23,12 @@ PPU ppu;
 auto PPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PPU");
 
+  screen = node->append<Node::Video::Screen>("Screen", 512, 480);
+  screen->colors(1 << 19, {&PPU::color, this});
+  screen->setSize(512, 480);
+  screen->setScale(0.5, 0.5);
+  screen->setAspect(8.0, 7.0);
+
   versionPPU1 = node->append<Node::Setting::Natural>("PPU1 Version", 1);
   versionPPU1->setAllowedValues({1});
 
@@ -31,12 +37,6 @@ auto PPU::load(Node::Object parent) -> void {
 
   vramSize = node->append<Node::Setting::Natural>("VRAM", 64_KiB);
   vramSize->setAllowedValues({64_KiB, 128_KiB});
-
-  screen = node->append<Node::Video::Screen>("Screen", 512, 480);
-  screen->colors(1 << 19, {&PPU::color, this});
-  screen->setSize(512, 480);
-  screen->setScale(0.5, 0.5);
-  screen->setAspect(8.0, 7.0);
 
   overscanEnable = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
     if(value == 0) screen->setSize(512, 448);
@@ -59,15 +59,15 @@ auto PPU::load(Node::Object parent) -> void {
 
 auto PPU::unload() -> void {
   debugger = {};
+  versionPPU1.reset();
+  versionPPU2.reset();
+  vramSize.reset();
   overscanEnable.reset();
   colorEmulation.reset();
   colorBleed.reset();
   screen->quit();
   node->remove(screen);
   screen.reset();
-  versionPPU1.reset();
-  versionPPU2.reset();
-  vramSize.reset();
   node.reset();
 }
 

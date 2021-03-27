@@ -91,6 +91,7 @@ auto VDP::writeDataPort(n16 data) -> void {
     if(io.address.bit(0)) data = data >> 8 | data << 8;
     vram.write(address, data);
     io.address += io.dataIncrement;
+    dma.poll();
     return;
   }
 
@@ -148,6 +149,7 @@ auto VDP::writeControlPort(n16 data) -> void {
 
     if(!dma.io.enable) io.command.bit(5) = 0;
     if(dma.io.mode == 3) dma.io.wait = false;
+    dma.poll();
     return;
   }
 
@@ -182,6 +184,7 @@ auto VDP::writeControlPort(n16 data) -> void {
     io.displayEnable = data.bit(6);
     vram.mode = data.bit(7);
     if(!dma.io.enable) io.command.bit(5) = 0;
+    dma.poll();
     return;
   }
 
@@ -322,6 +325,7 @@ auto VDP::writeControlPort(n16 data) -> void {
     dma.io.source.bit(16,21) = data.bit(0,5);
     dma.io.mode = data.bit(6,7);
     dma.io.wait = dma.io.mode.bit(1);
+    dma.poll();
     return;
   }
 

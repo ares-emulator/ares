@@ -25,6 +25,9 @@ struct Cartridge : Thread {
   auto readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16;
   auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void;
 
+  auto vblank(bool line) -> void;
+  auto hblank(bool line) -> void;
+
   //serialization.cpp
   auto serialize(serializer&) -> void;
 

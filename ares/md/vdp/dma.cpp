@@ -11,7 +11,8 @@ auto VDP::DMA::run() -> void {
 auto VDP::DMA::load() -> void {
   active = 1;
 
-  auto data = cpu.read(1, 1, io.mode.bit(0) << 23 | io.source << 1);
+  auto address = io.mode.bit(0) << 23 | io.source << 1;
+  auto data = cpu.read(1, 1, address);
   vdp.writeDataPort(data);
 
   io.source.bit(0,15)++;

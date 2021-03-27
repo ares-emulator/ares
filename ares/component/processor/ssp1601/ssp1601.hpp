@@ -39,6 +39,7 @@ struct SSP1601 {
   auto readPR2(u16 op) -> u16;
 
   //instructions.cpp
+  auto interrupt() -> u16;
   auto instruction() -> void;
 
   //serialization.cpp
@@ -64,6 +65,7 @@ struct SSP1601 {
   n16 PC;
   n32 P;
   n8  R[8];
+  n4  IRQ;
 };
 
 }

@@ -25,6 +25,9 @@ auto PPU::load(Node::Object parent) -> void {
   screen->setScale(0.5, 0.5);
   screen->setAspect(8.0, 7.0);
 
+  vramSize = node->append<Node::Setting::Natural>("VRAM", 64_KiB);
+  vramSize->setAllowedValues({64_KiB, 128_KiB});
+
   overscanEnable = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
     if(value == 0) screen->setSize(512, 448);
     if(value == 1) screen->setSize(512, 480);
@@ -36,13 +39,20 @@ auto PPU::load(Node::Object parent) -> void {
   });
   colorEmulation->setDynamic(true);
 
+  colorBleed = screen->append<Node::Setting::Boolean>("Color Bleed", true, [&](auto value) {
+    screen->setColorBleed(value);
+  });
+  colorBleed->setDynamic(true);
+
   debugger.load(node);
 }
 
 auto PPU::unload() -> void {
   debugger = {};
+  vramSize.reset();
   overscanEnable.reset();
   colorEmulation.reset();
+  colorBleed.reset();
   screen->quit();
   node->remove(screen);
   screen.reset();
@@ -61,16 +71,9 @@ auto PPU::main() -> void {
     state.overscan = io.overscan;
     obj.io.rangeOver = 0;
     obj.io.timeOver = 0;
-    width256 = 0;
-    width512 = 0;
   }
 
   if(vcounter() && vcounter() < vdisp() && !runAhead()) {
-    u32 width = hires() ? 512 : 256;
-    if(width == 256) width256 = 1;
-    if(width == 512) width512 = 1;
-    widths[vcounter() + !state.overscan * 8] = width;
-
     step(renderingCycle);
     mosaic.scanline();
     dac.prepare();
@@ -89,11 +92,10 @@ auto PPU::main() -> void {
   }
 
   if(vcounter() == 240) {
-    normalize();
     if(state.interlace == 0) screen->setProgressive(1);
     if(state.interlace == 1) screen->setInterlace(field());
-    if(overscanEnable->value() == 0) screen->setViewport(0, 18, 256 << width512, 448);
-    if(overscanEnable->value() == 1) screen->setViewport(0,  0, 256 << width512, 480);
+    if(overscanEnable->value() == 0) screen->setViewport(0, 18, 512, 448);
+    if(overscanEnable->value() == 1) screen->setViewport(0,  0, 512, 480);
     screen->frame();
     scheduler.exit(Event::Frame);
   }
@@ -115,7 +117,9 @@ auto PPU::power(bool reset) -> void {
   ppu1.version = 1, ppu1.mdr = 0x00;
   ppu2.version = 3, ppu2.mdr = 0x00;
 
-  for(auto& word : vram.data) word = 0;
+  if(!reset) for(auto& word : vram.data) word = 0;
+  vram.mask = vramSize->value() / sizeof(n16) - 1;
+  if(vram.mask != 0xffff) vram.mask = 0x7fff;
 
   state = {};
   latch = {};
@@ -147,24 +151,6 @@ auto PPU::power(bool reset) -> void {
   if(title == "FIREPOWER 2000" || title == "SUPER SWIV") renderingCycle = 32;
   if(title == "NHL '94" || title == "NHL PROHOCKEY'94") renderingCycle = 32;
   if(title == "Suguro Quest++") renderingCycle = 128;
-}
-
-auto PPU::normalize() -> void {
-  if(width256 && width512) {
-    //this frame contains mixed resolutions: normalize every scanline to 512-width
-    for(u32 y : range(1, 240)) {
-      auto line = screen->pixels().data() + 1024 * y + (interlace() && field() ? 512 : 0);
-      if(widths[y] == 256) {
-        auto source = &line[256];
-        auto target = &line[512];
-        for(u32 x : range(256)) {
-          auto color = *--source;
-          *--target = color;
-          *--target = color;
-        }
-      }
-    }
-  }
 }
 
 }

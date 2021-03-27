@@ -15,6 +15,11 @@ auto SH2::readByte(u32 address) -> u32 {
   }
 
   case Area::IO: {
+    if constexpr(Accuracy::AddressErrors) {
+      if(unlikely(address >= 0xffff'ff00 && address <= 0xffff'ffff)) {
+        return exceptions |= AddressErrorCPU, 0;
+      }
+    }
     return internalReadByte(address);
   }
 
@@ -24,6 +29,10 @@ auto SH2::readByte(u32 address) -> u32 {
 }
 
 auto SH2::readWord(u32 address) -> u32 {
+  if constexpr(Accuracy::AddressErrors) {
+    if(unlikely(address & 1)) return exceptions |= AddressErrorCPU, 0;
+  }
+
   switch(address >> 29) {
 
   case Area::Cached: {
@@ -52,6 +61,10 @@ auto SH2::readWord(u32 address) -> u32 {
 }
 
 auto SH2::readLong(u32 address) -> u32 {
+  if constexpr(Accuracy::AddressErrors) {
+    if(unlikely(address & 3)) return exceptions |= AddressErrorCPU, 0;
+  }
+
   switch(address >> 29) {
 
   case Area::Cached: {
@@ -72,6 +85,12 @@ auto SH2::readLong(u32 address) -> u32 {
   }
 
   case Area::IO: {
+    if constexpr(Accuracy::AddressErrors) {
+      if(unlikely(address >= 0xffff'fe00 && address <= 0xffff'feff)) {
+        return exceptions |= AddressErrorCPU, 0;
+      }
+    }
+
     u32 data = 0;
     data |= internalReadByte(address & ~3 | 0) << 24;
     data |= internalReadByte(address & ~3 | 1) << 16;
@@ -110,6 +129,11 @@ auto SH2::writeByte(u32 address, u32 data) -> void {
   }
 
   case Area::IO: {
+    if constexpr(Accuracy::AddressErrors) {
+      if(unlikely(address >= 0xffff'ff00 && address <= 0xffff'ffff)) {
+        return (void)(exceptions |= AddressErrorCPU);
+      }
+    }
     return internalWriteByte(address, data);
   }
 
@@ -117,6 +141,10 @@ auto SH2::writeByte(u32 address, u32 data) -> void {
 }
 
 auto SH2::writeWord(u32 address, u32 data) -> void {
+  if constexpr(Accuracy::AddressErrors) {
+    if(unlikely(address & 1)) return (void)(exceptions |= AddressErrorCPU);
+  }
+
   if constexpr(Accuracy::Recompiler) {
     recompiler.invalidate(address);
   }
@@ -150,6 +178,10 @@ auto SH2::writeWord(u32 address, u32 data) -> void {
 }
 
 auto SH2::writeLong(u32 address, u32 data) -> void {
+  if constexpr(Accuracy::AddressErrors) {
+    if(unlikely(address & 3)) return (void)(exceptions |= AddressErrorCPU);
+  }
+
   if constexpr(Accuracy::Recompiler) {
     recompiler.invalidate(address + 0);
     recompiler.invalidate(address + 2);
@@ -179,6 +211,11 @@ auto SH2::writeLong(u32 address, u32 data) -> void {
   }
 
   case Area::IO: {
+    if constexpr(Accuracy::AddressErrors) {
+      if(unlikely(address >= 0xffff'fe00 && address <= 0xffff'feff)) {
+        return (void)(exceptions |= AddressErrorCPU);
+      }
+    }
     internalWriteByte(address & ~3 | 0, data >> 24);
     internalWriteByte(address & ~3 | 1, data >> 16);
     internalWriteByte(address & ~3 | 2, data >>  8);

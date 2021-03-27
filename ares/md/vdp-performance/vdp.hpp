@@ -15,14 +15,23 @@ struct VDP : Thread {
     } memory;
   } debugger;
 
+  //overrides Thread::active() for VDP DMA wait cycle detection:
+  //this is needed as vdp-performace runs VDP DMA from CPU thread
+  auto active() const -> bool { return dma.active; }
+
   //vdp.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(u32 clocks) -> void;
-  auto render() -> void;
+  auto step(s32 clocks) -> void;
   auto power(bool reset) -> void;
+
+  //render.cpp
+  auto pixels() -> u32*;
+  auto scanline() -> void;
+  auto render() -> void;
+  auto outputPixel(n32 color) -> void;
 
   //io.cpp
   auto read(n24 address, n16 data) -> n16;
@@ -88,7 +97,8 @@ private:
 
   struct DMA {
     //dma.cpp
-    auto run() -> void;
+    auto poll() -> void;
+    auto run() -> bool;
     auto load() -> void;
     auto fill() -> void;
     auto copy() -> void;
@@ -192,10 +202,11 @@ private:
   } sprite{*this};
 
   struct State {
-    n16 hdot;
-    n16 hcounter;
-    n16 vcounter;
-    n1  field;
+    u32* output = nullptr;
+    n16  hdot;
+    n16  hcounter;
+    n16  vcounter;
+    n1   field;
   } state;
 
   struct IO {

@@ -68,10 +68,12 @@ auto VDP::main() -> void {
     if(Model::SuperGrafx() == 1) color = vpc.bus(io.hcounter);
     color = vce.io.grayscale << 9 | vce.cram.read(color);
 
-    if(vce.clock() >= 2) *output++ = color;
-    if(vce.clock() >= 2) *output++ = color;
-    if(vce.clock() >= 3) *output++ = color;
-    if(vce.clock() >= 4) *output++ = color;
+    switch(vce.clock()) {
+    case 4: *output++ = color;
+    case 3: *output++ = color;
+    case 2: *output++ = color;
+    case 1: *output++ = color;
+    }
 
     step(vce.clock());
   }

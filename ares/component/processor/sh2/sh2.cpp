@@ -6,13 +6,14 @@ namespace ares {
 #define SP R[15]
 
 #include "sh7604/sh7604.cpp"
+#include "exceptions.cpp"
 #include "instruction.cpp"
 #include "instructions.cpp"
 #include "recompiler.cpp"
 #include "serialization.cpp"
 #include "disassembler.cpp"
 
-auto SH2::power() -> void {
+auto SH2::power(bool reset) -> void {
   for(auto& r : R) r = undefined;
   SR.T = undefined;
   SR.S = undefined;
@@ -28,6 +29,8 @@ auto SH2::power() -> void {
   PC = 0;
   PPC = 0;
   PPM = Branch::Step;
+  ID = 0;
+  exceptions = !reset ? ResetCold : ResetWarm;
 
   cache = {*this};
   intc = {*this};

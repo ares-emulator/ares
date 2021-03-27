@@ -1,8 +1,10 @@
 struct PPU : Thread, PPUcounter {
   Node::Object node;
   Node::Video::Screen screen;
+  Node::Setting::Natural vramSize;
   Node::Setting::Boolean overscanEnable;
   Node::Setting::Boolean colorEmulation;
+  Node::Setting::Boolean colorBleed;
 
   struct Debugger {
     //debugger.cpp
@@ -35,7 +37,6 @@ struct PPU : Thread, PPUcounter {
   auto main() -> void;
   auto map() -> void;
   auto power(bool reset) -> void;
-  auto normalize() -> void;
   auto draw(u32* output) -> void;
 
   //io.cpp
@@ -176,10 +177,6 @@ private:
   Background bg4{Background::ID::BG4};
   Object obj;
   DAC dac;
-
-  n1  width256;
-  n1  width512;
-  n16 widths[240];
 
   friend class PPU::Window;
   friend class PPU::Mosaic;

@@ -46,21 +46,21 @@ struct MCD : M68K, Thread {
   auto wait(u32 clocks) -> void override;
   auto power(bool reset) -> void;
 
-  //bus.cpp
+  //bus-internal.cpp
   auto read(n1 upper, n1 lower, n24 address, n16 data = 0) -> n16 override;
   auto write(n1 upper, n1 lower, n24 address, n16 data) -> void override;
 
   //bus-external.cpp
-  auto external_read(n1 upper, n1 lower, n22 address, n16 data) -> n16;
-  auto external_write(n1 upper, n1 lower, n22 address, n16 data) -> void;
+  auto readExternal(n1 upper, n1 lower, n22 address, n16 data) -> n16;
+  auto writeExternal(n1 upper, n1 lower, n22 address, n16 data) -> void;
 
-  //io.cpp
+  //io-internal.cpp
   auto readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16;
   auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void;
 
   //io-external.cpp
-  auto external_readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16;
-  auto external_writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void;
+  auto readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16;
+  auto writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

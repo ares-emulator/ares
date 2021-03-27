@@ -14,7 +14,7 @@ auto M32X::SH7604::unload() -> void {
 }
 
 auto M32X::SH7604::main() -> void {
-  if(!SH2::inDelaySlot()) {
+  if(!SH2::inDelaySlot() && !SH2::ID) {
     if(irq.vres.active && irq.vres.enable) {
       debugger.interrupt("VRES");
       irq.vres.active = 0;
@@ -52,9 +52,7 @@ auto M32X::SH7604::step(u32 clocks) -> void {
 
 auto M32X::SH7604::power(bool reset) -> void {
   Thread::create(23'000'000, {&M32X::SH7604::main, this});
-  SH2::power();
-  SH2::PC    = (bootROM[0] << 16 | bootROM[1] << 0) + 4;
-  SH2::R[15] = (bootROM[2] << 16 | bootROM[3] << 0);
+  SH2::power(reset);
   irq = {};
   irq.vres.enable = 1;
 }

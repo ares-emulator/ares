@@ -36,6 +36,19 @@
     u64 data;
   };
 
+  struct mem32 {
+    explicit mem32(u64 data) : data(data) {}
+    template<typename T> explicit mem32(T* pointer) : data((u64)pointer) {}
+    template<typename T, typename C> explicit mem32(T C::*variable, C* object) {
+      union force_cast_ub {
+        T C::*variable;
+        u64 pointer;
+      } cast{variable};
+      data = cast.pointer + u64(object);
+    }
+    u64 data;
+  };
+
   struct mem64 {
     explicit mem64(u64 data) : data(data) {}
     template<typename T> explicit mem64(T* pointer) : data((u64)pointer) {}
@@ -52,6 +65,9 @@
   enum class reg8 : u32 {
     al, cl, dl, bl, ah, ch, dh, bh, r8b, r9b, r10b, r11b, r12b, r13b, r14b, r15b,
   };
+  friend auto operator&(reg8 r, u32 m) -> u32 {
+    return (u32)r & m;
+  }
   static constexpr reg8 al   = reg8::al;
   static constexpr reg8 cl   = reg8::cl;
   static constexpr reg8 dl   = reg8::dl;
@@ -72,6 +88,9 @@
   enum class reg16 : u32 {
     ax, cx, dx, bx, sp, bp, si, di, r8w, r9w, r10w, r11w, r12w, r13w, r14w, r15w,
   };
+  friend auto operator&(reg16 r, u32 m) -> u32 {
+    return (u32)r & m;
+  }
   static constexpr reg16 ax   = reg16::ax;
   static constexpr reg16 cx   = reg16::cx;
   static constexpr reg16 dx   = reg16::dx;
@@ -92,6 +111,9 @@
   enum class reg32 : u32 {
     eax, ecx, edx, ebx, esp, ebp, esi, edi, r8d, r9d, r10d, r11d, r12d, r13d, r14d, r15d,
   };
+  friend auto operator&(reg32 r, u32 m) -> u32 {
+    return (u32)r & m;
+  }
   static constexpr reg32 eax  = reg32::eax;
   static constexpr reg32 ecx  = reg32::ecx;
   static constexpr reg32 edx  = reg32::edx;
@@ -112,6 +134,9 @@
   enum class reg64 : u32 {
     rax, rcx, rdx, rbx, rsp, rbp, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15,
   };
+  friend auto operator&(reg64 r, u32 m) -> u32 {
+    return (u32)r & m;
+  }
   static constexpr reg64 rax = reg64::rax;
   static constexpr reg64 rcx = reg64::rcx;
   static constexpr reg64 rdx = reg64::rdx;
@@ -129,9 +154,20 @@
   static constexpr reg64 r14 = reg64::r14;
   static constexpr reg64 r15 = reg64::r15;
 
-  struct dis64 {
-    explicit dis64(reg64 base, s32 offset) : base(base), offset(offset) {}
-    reg64 base;
-    s32 offset;
+  struct dis {
+    explicit dis(reg64 reg) : reg(reg) {}
+    reg64 reg;
+  };
+
+  struct dis8 {
+    explicit dis8(reg64 reg, s8 imm) : reg(reg), imm(imm) {}
+    reg64 reg;
+    s8 imm;
+  };
+
+  struct dis32 {
+    explicit dis32(reg64 reg, s32 imm) : reg(reg), imm(imm) {}
+    reg64 reg;
+    s32 imm;
   };
 //};

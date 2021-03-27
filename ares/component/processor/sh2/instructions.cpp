@@ -212,6 +212,11 @@ auto SH2::EXTUW(u32 m, u32 n) -> void {
   R[n] = (u16)R[m];
 }
 
+//ILLEGAL
+auto SH2::ILLEGAL() -> void {
+  illegalInstruction();
+}
+
 //JMP @Rm
 auto SH2::JMP(u32 m) -> void {
   delaySlot(R[m] + 4);
@@ -226,67 +231,79 @@ auto SH2::JSR(u32 m) -> void {
 //LDC Rm,SR
 auto SH2::LDCSR(u32 m) -> void {
   SR = R[m];
+  ID = 1;
 }
 
 //LDC Rm,GBR
 auto SH2::LDCGBR(u32 m) -> void {
   GBR = R[m];
+  ID = 1;
 }
 
 //LDC Rm,VBR
 auto SH2::LDCVBR(u32 m) -> void {
   VBR = R[m];
+  ID = 1;
 }
 
 //LDC.L @Rm+,SR
 auto SH2::LDCMSR(u32 m) -> void {
   SR = readLong(R[m]);
   R[m] += 4;
+  ID = 1;
 }
 
 //LDC.L @Rm+,GBR
 auto SH2::LDCMGBR(u32 m) -> void {
   GBR = readLong(R[m]);
   R[m] += 4;
+  ID = 1;
 }
 
 //LDC.L @Rm+,VBR
 auto SH2::LDCMVBR(u32 m) -> void {
   VBR = readLong(R[m]);
   R[m] += 4;
+  ID = 1;
 }
 
 //LDS Rm,MACH
 auto SH2::LDSMACH(u32 m) -> void {
   MACH = R[m];
+  ID = 1;
 }
 
 //LDS Rm,MACL
 auto SH2::LDSMACL(u32 m) -> void {
   MACL = R[m];
+  ID = 1;
 }
 
 //LDS Rm,PR
 auto SH2::LDSPR(u32 m) -> void {
   PR = R[m];
+  ID = 1;
 }
 
 //LDS.L @Rm+,MACH
 auto SH2::LDSMMACH(u32 m) -> void {
   MACH = readLong(R[m]);
   R[m] += 4;
+  ID = 1;
 }
 
 //LDS.L @Rm+,MACL
 auto SH2::LDSMMACL(u32 m) -> void {
   MACL = readLong(R[m]);
   R[m] += 4;
+  ID = 1;
 }
 
 //LDS.L @Rm+,PR
 auto SH2::LDSMPR(u32 m) -> void {
   PR = readLong(R[m]);
   R[m] += 4;
+  ID = 1;
 }
 
 //MAC.w @Rm+,@Rn+
@@ -492,7 +509,7 @@ auto SH2::MOVLI(u32 d, u32 n) -> void {
 
 //MOVA @(disp,PC),R0
 auto SH2::MOVA(u32 d) -> void {
-  R[0] = (PC & ~3) + d * 4;
+  R[0] = (PC & ~3) + d * 4 - inDelaySlot() * 2;
 }
 
 //MOVT Rn
@@ -657,67 +674,79 @@ auto SH2::SLEEP() -> void {
 //STC SR,Rn
 auto SH2::STCSR(u32 n) -> void {
   R[n] = SR;
+  ID = 1;
 }
 
 //STC GBR,Rn
 auto SH2::STCGBR(u32 n) -> void {
   R[n] = GBR;
+  ID = 1;
 }
 
 //STC VBR,Rn
 auto SH2::STCVBR(u32 n) -> void {
   R[n] = VBR;
+  ID = 1;
 }
 
 //STC.L SR,@-Rn
 auto SH2::STCMSR(u32 n) -> void {
   R[n] -= 4;
   writeLong(R[n], SR);
+  ID = 1;
 }
 
 //STC.L GBR,@-Rn
 auto SH2::STCMGBR(u32 n) -> void {
   R[n] -= 4;
   writeLong(R[n], GBR);
+  ID = 1;
 }
 
 //STC.L VBR,@-Rn
 auto SH2::STCMVBR(u32 n) -> void {
   R[n] -= 4;
   writeLong(R[n], VBR);
+  ID = 1;
 }
 
 //STS MACH,Rn
 auto SH2::STSMACH(u32 n) -> void {
   R[n] = MACH;
+  ID = 1;
 }
 
 //STS MACL,Rn
 auto SH2::STSMACL(u32 n) -> void {
   R[n] = MACL;
+  ID = 1;
 }
 
 //STS PR,Rn
 auto SH2::STSPR(u32 n) -> void {
   R[n] = PR;
+  ID = 1;
 }
 
 //STS.L MACH,@-Rn
 auto SH2::STSMMACH(u32 n) -> void {
   R[n] -= 4;
   writeLong(R[n], MACH);
+  ID = 1;
 }
 
 //STS.L MACL,@-Rn
 auto SH2::STSMMACL(u32 n) -> void {
   R[n] -= 4;
   writeLong(R[n], MACL);
+  ID = 1;
 }
 
 //STS.L PR,@-Rn
 auto SH2::STSMPR(u32 n) -> void {
   R[n] -= 4;
   writeLong(R[n], PR);
+  ID = 1;
 }
 
 //SUB Rm,Rn
@@ -754,6 +783,14 @@ auto SH2::SWAPW(u32 m, u32 n) -> void {
 
 //TAS.B @Rn
 auto SH2::TAS(u32 n) -> void {
+  if constexpr(Accuracy::AddressErrors) {
+    if(R[n] >> 29 == Area::Purge
+    || R[n] >> 29 == Area::Address
+    || R[n] >> 29 == Area::Data
+    || R[n] >> 29 == Area::IO
+    ) return (void)(exceptions |= AddressErrorCPU);
+  }
+
   auto cacheEnable = cache.enable;
   cache.enable = 0;
   u8 b = readByte(R[n]);
@@ -764,11 +801,9 @@ auto SH2::TAS(u32 n) -> void {
 
 //TRAPA #imm
 auto SH2::TRAPA(u32 i) -> void {
-  writeLong(SP - 4, SR);
-  writeLong(SP - 8, PC);
-  SP -= 8;
-  PC  = 4 + readLong(VBR + i * 4);
-  PPM = Branch::Step;
+  push(SR);
+  push(PC + 2);
+  branch(readLong(VBR + i * 4) + 4);
 }
 
 //TST Rm,Rn

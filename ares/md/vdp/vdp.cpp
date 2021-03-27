@@ -22,7 +22,7 @@ auto VDP::load(Node::Object parent) -> void {
   screen = node->append<Node::Video::Screen>("Screen", 1280, 480);
   screen->colors(1 << 16, {&VDP::color, this});
   screen->setSize(1280, 480);
-  screen->setScale(0.25, 0.50);
+  screen->setScale(0.25, 0.5);
   screen->setAspect(1.0, 1.0);
 
   overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {

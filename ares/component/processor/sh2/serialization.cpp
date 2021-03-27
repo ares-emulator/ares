@@ -13,6 +13,8 @@ auto SH2::serialize(serializer& s) -> void {
   s(PC);
   s(PPC);
   s(PPM);
+  s(ID);
+  s(exceptions);
 
   s(cache);
   s(intc);

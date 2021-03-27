@@ -91,4 +91,12 @@ auto Cartridge::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   return board->writeIO(upper, lower, address, data);
 }
 
+auto Cartridge::vblank(bool line) -> void {
+  return board->vblank(line);
+}
+
+auto Cartridge::hblank(bool line) -> void {
+  return board->hblank(line);
+}
+
 }

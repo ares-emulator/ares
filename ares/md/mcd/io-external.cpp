@@ -1,4 +1,4 @@
-auto MCD::external_readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
+auto MCD::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   address.bit(6,7) = 0;  //a12040-a120ff mirrors a12000-a1203f
 
   if(address == 0xa12000) {
@@ -59,7 +59,7 @@ auto MCD::external_readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   return data;
 }
 
-auto MCD::external_writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
+auto MCD::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   address.bit(6,7) = 0;  //a12040-a120ff mirrors a12000-a1203f
 
   if(address == 0xa12000) {

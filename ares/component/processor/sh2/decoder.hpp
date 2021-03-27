@@ -179,5 +179,7 @@
   br(0x002b, RTE);     //RTE
   }
 
-//illegal(opcode);
+  switch(0) {
+  op(0, ILLEGAL);
+  }
 }

@@ -21,18 +21,26 @@ struct SH2 {
   }
 
   //sh2.cpp
-  auto power() -> void;
+  auto power(bool reset) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  //exceptions.cpp
+  auto exceptionHandler() -> void;
+  auto push(u32 data) -> void;
+  auto interrupt(u8 level, u8 vector) -> void;
+  auto exception(u8 vector) -> void;
+  auto addressErrorCPU() -> void;
+  auto addressErrorDMA() -> void;
+  auto illegalInstruction() -> void;
+  auto illegalSlotInstruction() -> void;
+
   //instruction.cpp
+  auto jump(u32 pc) -> void;
   auto branch(u32 pc) -> void;
   auto delaySlot(u32 pc) -> void;
-  auto interrupt(u8 level, u8 vector) -> void;
   auto instructionEpilogue() -> bool;
-  auto exception(u8 vector) -> void;
-  auto illegal(u16 opcode) -> void;
   auto instruction() -> void;
   auto execute(u16 opcode) -> void;
 
@@ -73,6 +81,7 @@ struct SH2 {
   inline auto EXTSW(u32 m, u32 n) -> void;
   inline auto EXTUB(u32 m, u32 n) -> void;
   inline auto EXTUW(u32 m, u32 n) -> void;
+  inline auto ILLEGAL() -> void;
   inline auto JMP(u32 m) -> void;
   inline auto JSR(u32 m) -> void;
   inline auto LDCSR(u32 m) -> void;
@@ -188,7 +197,7 @@ struct SH2 {
   static constexpr u32 undefined = 0;
 
   struct Branch {
-    enum : u32 { Step, Slot, Take, Exception };
+    enum : u32 { Idle, Step, Slot, Take };
   };
 
   struct S32 {
@@ -224,6 +233,15 @@ struct SH2 {
   u32 PC;     //program counter
   u32 PPC;    //program counter for delay slots
   u32 PPM;    //delay slot mode
+  bool ID;    //interrupts disabled flag
+
+  enum : u32 {
+    ResetCold       = 1 << 0,
+    ResetWarm       = 1 << 1,
+    AddressErrorCPU = 1 << 2,
+    AddressErrorDMA = 1 << 3,
+  };
+  u32 exceptions = 0;  //delayed exception flags
 
   struct Recompiler : recompiler::amd64 {
     SH2& self;

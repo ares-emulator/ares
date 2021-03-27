@@ -21,12 +21,30 @@ auto SH2::DMAC::transfer(bool c) -> void {
     self->writeByte(dar[c], self->readByte(sar[c]));
     break;
   case 1:  //16-bit
+    if constexpr(Accuracy::AddressErrors) {
+      if(unlikely(dar[c] & 1 || sar[c] & 1)) {
+        self->exceptions |= AddressErrorDMA;
+        break;
+      }
+    }
     self->writeWord(dar[c], self->readWord(sar[c]));
     break;
   case 2:  //32-bit
+    if constexpr(Accuracy::AddressErrors) {
+      if(unlikely(dar[c] & 3 || sar[c] & 3)) {
+        self->exceptions |= AddressErrorDMA;
+        break;
+      }
+    }
     self->writeLong(dar[c], self->readLong(sar[c]));
     break;
   case 3:  //32-bit x4
+    if constexpr(Accuracy::AddressErrors) {
+      if(unlikely(dar[c] & 3 || sar[c] & 3)) {
+        self->exceptions |= AddressErrorDMA;
+        break;
+      }
+    }
     self->writeLong(dar[c] +  0, self->readLong(sar[c] +  0));
     self->writeLong(dar[c] +  4, self->readLong(sar[c] +  4));
     self->writeLong(dar[c] +  8, self->readLong(sar[c] +  8));

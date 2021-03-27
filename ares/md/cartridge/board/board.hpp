@@ -15,6 +15,8 @@ struct Interface {
   virtual auto write(n1 upper, n1 lower, n22 address, n16 data) -> void {}
   virtual auto readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 { return 0; }
   virtual auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {}
+  virtual auto vblank(bool line) -> void {}
+  virtual auto hblank(bool line) -> void {}
   virtual auto power(bool reset) -> void {}
   virtual auto serialize(serializer&) -> void {}
 

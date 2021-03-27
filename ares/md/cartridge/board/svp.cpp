@@ -12,9 +12,11 @@ struct SVP : Interface, SSP1601 {
     auto load(Node::Object) -> void;
     auto unload(Node::Object) -> void;
     auto instruction() -> void;
+    auto interrupt(string_view type) -> void;
 
     struct Tracer {
       Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
     } tracer;
   } debugger;
 
@@ -39,6 +41,14 @@ struct SVP : Interface, SSP1601 {
   }
 
   auto main() -> void override {
+    if(auto vector = SSP1601::interrupt()) {
+      switch(vector) {
+      case 0xfffc: debugger.interrupt("RES");  break;
+      case 0xfffd: debugger.interrupt("INT0"); break;
+      case 0xfffe: debugger.interrupt("INT1"); break;
+      case 0xffff: debugger.interrupt("INT2"); break;
+      }
+    }
     debugger.instruction();
     SSP1601::instruction();
   }
@@ -92,6 +102,13 @@ struct SVP : Interface, SSP1601 {
       XST = data;
       PM0 |= 2;
     }
+  }
+
+  auto vblank(bool line) -> void override {
+  }
+
+  auto hblank(bool line) -> void override {
+    IRQ.bit(2) = line;  //INT1
   }
 
   auto power(bool reset) -> void override {

@@ -3,10 +3,10 @@
 #else
 struct PPU : Thread, PPUcounter {
   Node::Object node;
+  Node::Video::Screen screen;
   Node::Setting::Natural versionPPU1;
   Node::Setting::Natural versionPPU2;
   Node::Setting::Natural vramSize;
-  Node::Video::Screen screen;
   Node::Setting::Boolean overscanEnable;
   Node::Setting::Boolean colorEmulation;
   Node::Setting::Boolean colorBleed;

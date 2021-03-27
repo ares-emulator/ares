@@ -35,9 +35,11 @@ auto SSP1601::power() -> void {
   A = 0;
   ST = 0;
   STACK = 0;
-  PC = 0xfc08;
+  PC = 0;
   P = 0;
   for(auto& byte : R) byte = 0;
+  IE = 1;
+  IRQ = 1;
 }
 
 }

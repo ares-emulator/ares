@@ -1,3 +1,19 @@
+//0xfff8 = reset
+//0xfffa = int0 (unknown)
+//0xfffc = int1 (hblank)
+//0xfffe = int2 (unknown)
+auto SSP1601::interrupt() -> u16 {
+  if(!IE || !IRQ) return false;
+  IE = 0;
+  if(STACK >= 6) STACK = 0;
+  FRAME[STACK++] = PC;
+  if(IRQ.bit(0)) { PC = read(0xfffc); IRQ.bit(0) = 0; STACK = 0; return 0xfffc; }
+  if(IRQ.bit(1)) { PC = read(0xfffd); IRQ.bit(1) = 0; return 0xfffd; }
+  if(IRQ.bit(2)) { PC = read(0xfffe); IRQ.bit(2) = 0; return 0xfffe; }
+  if(IRQ.bit(3)) { PC = read(0xffff); IRQ.bit(3) = 0; return 0xffff; }
+  return false;
+}
+
 auto SSP1601::instruction() -> void {
   u16 op = fetch();
 

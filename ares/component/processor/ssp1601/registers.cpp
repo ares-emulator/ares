@@ -42,5 +42,5 @@ auto SSP1601::writeGR(n4 r, u16 v) -> void {
 }
 
 auto SSP1601::updateP() -> n32 {
-  return P = (s16)X * (s16)Y * 2;
+  return P = (s16)X * (s16)Y << !MACS;
 }

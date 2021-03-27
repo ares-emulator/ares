@@ -14,7 +14,6 @@ struct VDP : Thread {
 
   auto main() -> void;
   auto step(u32 clocks) -> void;
-  auto refresh() -> void;
   auto power() -> void;
 
   //color.cpp
@@ -32,11 +31,6 @@ struct VDP : Thread {
     n16 hcounter;
     n16 vcounter;
   } io;
-
-  n1 width256;
-  n1 width344;
-  n1 width512;
-  n9 widths[263];
 };
 
 extern VDP vdp;

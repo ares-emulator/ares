@@ -5,9 +5,9 @@ namespace ares::MegaDrive {
 static n16 Unmapped = 0;
 
 MCD mcd;
-#include "bus.cpp"
+#include "bus-internal.cpp"
 #include "bus-external.cpp"
-#include "io.cpp"
+#include "io-internal.cpp"
 #include "io-external.cpp"
 #include "irq.cpp"
 #include "cdc.cpp"
