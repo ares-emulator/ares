@@ -37,7 +37,7 @@
     auto readAddress(u32 address) -> u32;
     auto writeAddress(u32 address, u32 data) -> void;
     auto purge(u32 address) -> void;
-    template<u32 Count> auto purge() -> void;
+    template<u32 Ways> auto purge() -> void;
     auto power() -> void;
 
     //serialization.cpp

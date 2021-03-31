@@ -50,6 +50,10 @@ ifneq ($(filter $(cores),md),)
   include $(ares.path)/md/GNUmakefile
 endif
 
+ifneq ($(filter $(cores),saturn),)
+  include $(ares.path)/saturn/GNUmakefile
+endif
+
 ifneq ($(filter $(cores),ps1),)
   include $(ares.path)/ps1/GNUmakefile
 endif

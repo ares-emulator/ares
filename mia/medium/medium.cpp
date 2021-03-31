@@ -1,4 +1,5 @@
 namespace Media {
+  vector<Database> databases;
   #include "colecovision.cpp"
   #include "famicom.cpp"
   #include "famicom-disk.cpp"
@@ -19,6 +20,7 @@ namespace Media {
   #include "nintendo-64dd.cpp"
   #include "pc-engine.cpp"
   #include "pc-engine-cd.cpp"
+  #include "saturn.cpp"
   #include "supergrafx.cpp"
   #include "playstation.cpp"
   #include "sg-1000.cpp"
@@ -57,6 +59,7 @@ auto Medium::create(string name) -> shared_pointer<Pak> {
   if(name == "Nintendo 64DD") return new Media::Nintendo64DD;
   if(name == "PC Engine") return new Media::PCEngine;
   if(name == "PC Engine CD") return new Media::PCEngineCD;
+  if(name == "Saturn") return new Media::Saturn;
   if(name == "SuperGrafx") return new Media::SuperGrafx;
   if(name == "PlayStation") return new Media::PlayStation;
   if(name == "SG-1000") return new Media::SG1000;
@@ -67,6 +70,35 @@ auto Medium::create(string name) -> shared_pointer<Pak> {
   if(name == "WonderSwan") return new Media::WonderSwan;
   if(name == "WonderSwan Color") return new Media::WonderSwanColor;
   if(name == "Pocket Challenge V2") return new Media::PocketChallengeV2;
+  return {};
+}
+
+//search game database for manifest, if one exists
+auto Medium::manifestDatabase(string sha256) -> string {
+  //load the database on the first time it's needed for a given media type
+  bool found = false;
+  for(auto& database : Media::databases) {
+    if(database.name == name()) found = true;
+  }
+  if(!found) {
+    Database database;
+    database.name = name();
+    database.list = BML::unserialize(file::read(locate({"Database/", name(), ".bml"})));
+    Media::databases.append(move(database));
+  }
+
+  //search the database for a given sha256 game entry
+  for(auto& database : Media::databases) {
+    if(database.name == name()) {
+      for(auto node : database.list) {
+        if(node["sha256"].string() == sha256) {
+          return BML::serialize(node);
+        }
+      }
+    }
+  }
+
+  //database or game entry not found
   return {};
 }
 

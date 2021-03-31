@@ -80,6 +80,16 @@
     emit.qword(pt.data);
   }
 
+  //mov [mem64+imm8],imm8
+  auto movb(dis8 dt, imm8 is) {
+    emit.rex(0, 0, 0, dt.reg & 8);
+    emit.byte(0xc6);
+    emit.modrm(1, 0, dt.reg & 7);
+    if(dt.reg == rsp || dt.reg == r12) emit.sib(0, 4, 4);
+    emit.byte(dt.imm);
+    emit.byte(is.data);
+  }
+
   //mov [mem64],reg16
   auto mov(mem64 pt, reg16 rs) {
     if(unlikely(rs != ax)) throw;
@@ -101,6 +111,24 @@
     emit.byte(0xa3);
     emit.qword(pt.data);
   }
+
+  //op reg8,[reg64+imm8]
+  #define op(code) \
+    emit.rex(0, rt & 8, 0, ds.reg & 8); \
+    emit.byte(code); \
+    emit.modrm(1, rt & 7, ds.reg & 7); \
+    if(ds.reg == rsp || ds.reg == r12) emit.sib(0, 4, 4); \
+    emit.byte(ds.imm);
+  auto adc(reg8 rt, dis8 ds) { op(0x12); }
+  auto add(reg8 rt, dis8 ds) { op(0x02); }
+  auto and(reg8 rt, dis8 ds) { op(0x22); }
+  auto cmp(reg8 rt, dis8 ds) { op(0x3a); }
+  auto mov(reg8 rt, dis8 ds) { op(0x8a); }
+  auto or (reg8 rt, dis8 ds) { op(0x0a); }
+  auto sbb(reg8 rt, dis8 ds) { op(0x1a); }
+  auto sub(reg8 rt, dis8 ds) { op(0x2a); }
+  auto xor(reg8 rt, dis8 ds) { op(0x32); }
+  #undef op
 
   //op reg32,[reg64]
   #define op(code) \
@@ -188,6 +216,42 @@
   auto sbb(reg64 rt, dis32 ds) { op(0x1b); }
   auto sub(reg64 rt, dis32 ds) { op(0x2b); }
   auto xor(reg64 rt, dis32 ds) { op(0x33); }
+  #undef op
+
+  //op [reg64+imm8],reg8
+  #define op(code) \
+    emit.rex(0, rs & 8, 0, dt.reg & 8); \
+    emit.byte(code); \
+    emit.modrm(1, rs & 7, dt.reg & 7); \
+    if(dt.reg == rsp || dt.reg == r12) emit.sib(0, 4, 4); \
+    emit.byte(dt.imm);
+  auto adc(dis8 dt, reg8 rs) { op(0x10); }
+  auto add(dis8 dt, reg8 rs) { op(0x00); }
+  auto and(dis8 dt, reg8 rs) { op(0x20); }
+  auto cmp(dis8 dt, reg8 rs) { op(0x38); }
+  auto mov(dis8 dt, reg8 rs) { op(0x88); }
+  auto or (dis8 dt, reg8 rs) { op(0x08); }
+  auto sbb(dis8 dt, reg8 rs) { op(0x18); }
+  auto sub(dis8 dt, reg8 rs) { op(0x28); }
+  auto xor(dis8 dt, reg8 rs) { op(0x30); }
+  #undef op
+
+  //op.d [reg64+imm8],imm8
+  #define op(group) \
+    emit.rex(0, 0, 0, dt.reg & 8); \
+    emit.byte(0x83); \
+    emit.modrm(1, group, dt.reg & 7); \
+    if(dt.reg == rsp || dt.reg == r12) emit.sib(0, 4, 4); \
+    emit.byte(dt.imm); \
+    emit.byte(is.data);
+  auto addd(dis8 dt, imm8 is) { op(0); }
+  auto ord (dis8 dt, imm8 is) { op(1); }
+  auto adcd(dis8 dt, imm8 is) { op(2); }
+  auto sbbd(dis8 dt, imm8 is) { op(3); }
+  auto andd(dis8 dt, imm8 is) { op(4); }
+  auto subd(dis8 dt, imm8 is) { op(5); }
+  auto xord(dis8 dt, imm8 is) { op(6); }
+  auto cmpd(dis8 dt, imm8 is) { op(7); }
   #undef op
 
   //op [reg64],reg32
@@ -296,6 +360,30 @@
   auto movzx(reg32 rt, reg16 rs) { op(0xb7); }
   #undef op
 
+  auto movsxd(reg64 rt, reg32 rs) {
+    emit.rex(1, rt & 8, 0, rs & 8);
+    emit.byte(0x63);
+    emit.modrm(3, rt & 7, rs & 7);
+  }
+
+  //incd [reg64+imm8]
+  auto incd(dis8 dt) {
+    emit.rex(0, 0, 0, dt.reg & 8);
+    emit.byte(0xff);
+    emit.modrm(1, 0, dt.reg & 7);
+    if(dt.reg == rsp || dt.reg == r12) emit.sib(0, 4, 4);
+    emit.byte(dt.imm);
+  }
+
+  //decd [reg64+imm8]
+  auto decd(dis8 dt) {
+    emit.rex(0, 0, 0, dt.reg & 8);
+    emit.byte(0xff);
+    emit.modrm(1, 1, dt.reg & 7);
+    if(dt.reg == rsp || dt.reg == r12) emit.sib(0, 4, 4);
+    emit.byte(dt.imm);
+  }
+
   //inc reg32
   auto inc(reg32 rt) {
     emit.rex(0, 0, 0, rt & 8);
@@ -336,6 +424,50 @@
   auto shr(reg8 rt) { op(5); }
   auto sal(reg8 rt) { op(6); }
   auto sar(reg8 rt) { op(7); }
+  #undef op
+
+  #define op(code) \
+    emit.rex(0, 0, 0, rt & 8); \
+    emit.byte(0xd1); \
+    emit.modrm(3, code, rt & 7);
+  auto rol(reg32 rt) { op(0); }
+  auto ror(reg32 rt) { op(1); }
+  auto rcl(reg32 rt) { op(2); }
+  auto rcr(reg32 rt) { op(3); }
+  auto shl(reg32 rt) { op(4); }
+  auto shr(reg32 rt) { op(5); }
+  auto sal(reg32 rt) { op(6); }
+  auto sar(reg32 rt) { op(7); }
+  #undef op
+
+  #define op(code) \
+    emit.rex(0, 0, 0, rt & 8); \
+    emit.byte(0xc1); \
+    emit.modrm(3, code, rt & 7); \
+    emit.byte(is.data);
+  auto rol(reg32 rt, imm8 is) { op(0); }
+  auto ror(reg32 rt, imm8 is) { op(1); }
+  auto rcl(reg32 rt, imm8 is) { op(2); }
+  auto rcr(reg32 rt, imm8 is) { op(3); }
+  auto shl(reg32 rt, imm8 is) { op(4); }
+  auto shr(reg32 rt, imm8 is) { op(5); }
+  auto sal(reg32 rt, imm8 is) { op(6); }
+  auto sar(reg32 rt, imm8 is) { op(7); }
+  #undef op
+
+  #define op(code) \
+    emit.rex(1, 0, 0, rt & 8); \
+    emit.byte(0xc1); \
+    emit.modrm(3, code, rt & 7); \
+    emit.byte(is.data);
+  auto rol(reg64 rt, imm8 is) { op(0); }
+  auto ror(reg64 rt, imm8 is) { op(1); }
+  auto rcl(reg64 rt, imm8 is) { op(2); }
+  auto rcr(reg64 rt, imm8 is) { op(3); }
+  auto shl(reg64 rt, imm8 is) { op(4); }
+  auto shr(reg64 rt, imm8 is) { op(5); }
+  auto sal(reg64 rt, imm8 is) { op(6); }
+  auto sar(reg64 rt, imm8 is) { op(7); }
   #undef op
 
   //push reg
@@ -445,70 +577,159 @@
   auto xor(reg64 rt, imm8 is) { op(6); }
   #undef op
 
-  #define op(code) \
-    if(unlikely(rt != al)) throw; \
-    emit.byte(code); \
-    emit.byte(is.data);
-  auto adc(reg8 rt, imm8 is) { op(0x14); }
-  auto add(reg8 rt, imm8 is) { op(0x04); }
-  auto and(reg8 rt, imm8 is) { op(0x24); }
-  auto cmp(reg8 rt, imm8 is) { op(0x3c); }
-  auto or (reg8 rt, imm8 is) { op(0x0c); }
-  auto sbb(reg8 rt, imm8 is) { op(0x1c); }
-  auto sub(reg8 rt, imm8 is) { op(0x2c); }
-  auto xor(reg8 rt, imm8 is) { op(0x34); }
+  #define op(code, group) \
+    if(rt == al) { \
+      emit.byte(code); \
+      emit.byte(is.data); \
+    } else { \
+      emit.rex(0, 0, 0, rt & 8); \
+      emit.byte(0x80); \
+      emit.modrm(3, group, rt & 7); \
+      emit.byte(is.data); \
+    }
+  auto adc(reg8 rt, imm8 is) { op(0x14, 2); }
+  auto add(reg8 rt, imm8 is) { op(0x04, 0); }
+  auto and(reg8 rt, imm8 is) { op(0x24, 4); }
+  auto cmp(reg8 rt, imm8 is) { op(0x3c, 7); }
+  auto or (reg8 rt, imm8 is) { op(0x0c, 1); }
+  auto sbb(reg8 rt, imm8 is) { op(0x1c, 3); }
+  auto sub(reg8 rt, imm8 is) { op(0x2c, 5); }
+  auto xor(reg8 rt, imm8 is) { op(0x34, 6); }
+  #undef op
+
+  #define op(code, group) \
+    if(rt == eax) { \
+      emit.byte(code); \
+      emit.dword(is.data); \
+    } else { \
+      emit.rex(0, 0, 0, rt & 8); \
+      emit.byte(0x81); \
+      emit.modrm(3, group, rt & 7); \
+      emit.dword(is.data); \
+    }
+  auto adc(reg32 rt, imm32 is) { op(0x15, 2); }
+  auto add(reg32 rt, imm32 is) { op(0x05, 0); }
+  auto and(reg32 rt, imm32 is) { op(0x25, 4); }
+  auto cmp(reg32 rt, imm32 is) { op(0x3d, 7); }
+  auto or (reg32 rt, imm32 is) { op(0x0d, 1); }
+  auto sbb(reg32 rt, imm32 is) { op(0x1d, 3); }
+  auto sub(reg32 rt, imm32 is) { op(0x2d, 5); }
+  auto xor(reg32 rt, imm32 is) { op(0x35, 6); }
   #undef op
 
   #define op(code) \
-    if(unlikely(rt != eax)) throw; \
-    emit.byte(code); \
-    emit.dword(is.data);
-  auto adc(reg32 rt, imm32 is) { op(0x15); }
-  auto add(reg32 rt, imm32 is) { op(0x05); }
-  auto and(reg32 rt, imm32 is) { op(0x25); }
-  auto cmp(reg32 rt, imm32 is) { op(0x3d); }
-  auto or (reg32 rt, imm32 is) { op(0x0d); }
-  auto sbb(reg32 rt, imm32 is) { op(0x1d); }
-  auto sub(reg32 rt, imm32 is) { op(0x2d); }
-  auto xor(reg32 rt, imm32 is) { op(0x35); }
+    emit.rex(0, 0, 0, rt & 8); \
+    emit.byte(0xf7); \
+    emit.modrm(3, code, rt & 7);
+  auto not (reg32 rt) { op(2); }
+  auto neg (reg32 rt) { op(3); }
+  auto mul (reg32 rt) { op(4); }
+  auto imul(reg32 rt) { op(5); }
+  auto div (reg32 rt) { op(6); }
+  auto idiv(reg32 rt) { op(7); }
+  #undef op
+
+  #define op(code) \
+    emit.rex(1, 0, 0, rt & 8); \
+    emit.byte(0xf7); \
+    emit.modrm(3, code, rt & 7);
+  auto not (reg64 rt) { op(2); }
+  auto neg (reg64 rt) { op(3); }
+  auto mul (reg64 rt) { op(4); }
+  auto imul(reg64 rt) { op(5); }
+  auto div (reg64 rt) { op(6); }
+  auto idiv(reg64 rt) { op(7); }
   #undef op
 
   #define op(code) \
     emit.byte(code); \
     emit.byte(it.data);
+  auto jmp(imm8 it) { op(0xeb); }
   auto jnz(imm8 it) { op(0x75); }
   auto jz (imm8 it) { op(0x74); }
   #undef op
 
-  //op [reg64]
+  //op reg8
   #define op(code) \
-    emit.rex(0, 0, 0, rt.reg & 8); \
+    emit.rex(0, 0, 0, rt & 8); \
     emit.byte(0x0f); \
     emit.byte(code); \
-    if(rt.reg == rsp || rt.reg == r12) { \
-      emit.modrm(0, 0, rt.reg & 7); \
+    emit.modrm(3, 0, rt & 7);
+  auto seta (reg8 rt) { op(0x97); }
+  auto setbe(reg8 rt) { op(0x96); }
+  auto setc (reg8 rt) { op(0x92); }
+  auto setg (reg8 rt) { op(0x9f); }
+  auto setge(reg8 rt) { op(0x9d); }
+  auto setl (reg8 rt) { op(0x9c); }
+  auto setle(reg8 rt) { op(0x9e); }
+  auto setnc(reg8 rt) { op(0x93); }
+  auto setno(reg8 rt) { op(0x91); }
+  auto setnp(reg8 rt) { op(0x9b); }
+  auto setns(reg8 rt) { op(0x99); }
+  auto setnz(reg8 rt) { op(0x95); }
+  auto seto (reg8 rt) { op(0x90); }
+  auto setp (reg8 rt) { op(0x9a); }
+  auto sets (reg8 rt) { op(0x98); }
+  auto setz (reg8 rt) { op(0x94); }
+  #undef op
+
+  //op [reg64]
+  #define op(code) \
+    emit.rex(0, 0, 0, dt.reg & 8); \
+    emit.byte(0x0f); \
+    emit.byte(code); \
+    if(dt.reg == rsp || dt.reg == r12) { \
+      emit.modrm(0, 0, dt.reg & 7); \
       emit.sib(0, 4, 4); \
-    } else if(rt.reg == rbp || rt.reg == r13) { \
-      emit.modrm(1, 0, rt.reg & 7); \
+    } else if(dt.reg == rbp || dt.reg == r13) { \
+      emit.modrm(1, 0, dt.reg & 7); \
       emit.byte(0x00); \
     } else { \
-      emit.modrm(0, 0, rt.reg & 7); \
+      emit.modrm(0, 0, dt.reg & 7); \
     }
-  auto seta (dis rt) { op(0x97); }
-  auto setbe(dis rt) { op(0x96); }
-  auto setc (dis rt) { op(0x92); }
-  auto setg (dis rt) { op(0x9f); }
-  auto setge(dis rt) { op(0x9d); }
-  auto setl (dis rt) { op(0x9c); }
-  auto setle(dis rt) { op(0x9e); }
-  auto setnc(dis rt) { op(0x93); }
-  auto setno(dis rt) { op(0x91); }
-  auto setnp(dis rt) { op(0x9b); }
-  auto setns(dis rt) { op(0x99); }
-  auto setnz(dis rt) { op(0x95); }
-  auto seto (dis rt) { op(0x90); }
-  auto setp (dis rt) { op(0x9a); }
-  auto sets (dis rt) { op(0x98); }
-  auto setz (dis rt) { op(0x94); }
+  auto seta (dis dt) { op(0x97); }
+  auto setbe(dis dt) { op(0x96); }
+  auto setc (dis dt) { op(0x92); }
+  auto setg (dis dt) { op(0x9f); }
+  auto setge(dis dt) { op(0x9d); }
+  auto setl (dis dt) { op(0x9c); }
+  auto setle(dis dt) { op(0x9e); }
+  auto setnc(dis dt) { op(0x93); }
+  auto setno(dis dt) { op(0x91); }
+  auto setnp(dis dt) { op(0x9b); }
+  auto setns(dis dt) { op(0x99); }
+  auto setnz(dis dt) { op(0x95); }
+  auto seto (dis dt) { op(0x90); }
+  auto setp (dis dt) { op(0x9a); }
+  auto sets (dis dt) { op(0x98); }
+  auto setz (dis dt) { op(0x94); }
+  #undef op
+
+  //op [reg64+imm8]
+  #define op(code) \
+    emit.rex(0, 0, 0, dt.reg & 8); \
+    emit.byte(0x0f); \
+    emit.byte(code); \
+    emit.modrm(1, 0, dt.reg & 7); \
+    if(dt.reg == rsp || dt.reg == r12) { \
+      emit.sib(0, 4, 4); \
+    } \
+    emit.byte(dt.imm);
+  auto seta (dis8 dt) { op(0x97); }
+  auto setbe(dis8 dt) { op(0x96); }
+  auto setc (dis8 dt) { op(0x92); }
+  auto setg (dis8 dt) { op(0x9f); }
+  auto setge(dis8 dt) { op(0x9d); }
+  auto setl (dis8 dt) { op(0x9c); }
+  auto setle(dis8 dt) { op(0x9e); }
+  auto setnc(dis8 dt) { op(0x93); }
+  auto setno(dis8 dt) { op(0x91); }
+  auto setnp(dis8 dt) { op(0x9b); }
+  auto setns(dis8 dt) { op(0x99); }
+  auto setnz(dis8 dt) { op(0x95); }
+  auto seto (dis8 dt) { op(0x90); }
+  auto setp (dis8 dt) { op(0x9a); }
+  auto sets (dis8 dt) { op(0x98); }
+  auto setz (dis8 dt) { op(0x94); }
   #undef op
 //};

@@ -140,12 +140,7 @@ auto SH2::CMPPZ(u32 n) -> void {
 
 //CMP/STR Rm,Rn
 auto SH2::CMPSTR(u32 m, u32 n) -> void {
-  u32 t = R[n] ^ R[m];
-  u8 a = t >> 24;
-  u8 b = t >> 16;
-  u8 c = t >>  8;
-  u8 d = t >>  0;
-  SR.T = !a || !b || !c || !d;
+  SR.T = bool(R[n] ^ R[m]);
 }
 
 //DIV0S Rm,Rn
@@ -173,7 +168,7 @@ auto SH2::DIV1(u32 m, u32 n) -> void {
     r += R[m];
   }
   R[n] = r;
-  SR.Q = (SR.Q ^ SR.M) ^ (r >> 32);
+  SR.Q = (SR.Q ^ SR.M) ^ (r >> 32 & 1);
   SR.T = 1 - (SR.Q ^ SR.M);
 }
 
@@ -184,7 +179,7 @@ auto SH2::DMULS(u32 m, u32 n) -> void {
 
 //DMULU.L Rm,Rn
 auto SH2::DMULU(u32 m, u32 n) -> void {
-  MAC = (u64)R[n] * R[m];
+  MAC = (u64)R[n] * (u64)R[m];
 }
 
 //DT Rn
@@ -306,7 +301,7 @@ auto SH2::LDSMPR(u32 m) -> void {
   ID = 1;
 }
 
-//MAC.w @Rm+,@Rn+
+//MAC.W @Rm+,@Rn+
 auto SH2::MACW(u32 m, u32 n) -> void {
   s16 a = readWord(R[n]);
   s16 b = readWord(R[m]);
@@ -668,7 +663,11 @@ auto SH2::SHLR16(u32 n) -> void {
 
 //SLEEP
 auto SH2::SLEEP() -> void {
-  if(!exception()) PC -= 2;
+  if(!ET) {
+    PC -= 2;
+  } else {
+    ET = 0;
+  }
 }
 
 //STC SR,Rn

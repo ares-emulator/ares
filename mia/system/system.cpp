@@ -18,6 +18,7 @@ namespace Systems {
   #include "neo-geo-pocket-color.cpp"
   #include "nintendo-64.cpp"
   #include "pc-engine.cpp"
+  #include "saturn.cpp"
   #include "supergrafx.cpp"
   #include "playstation.cpp"
   #include "sg-1000.cpp"
@@ -48,6 +49,7 @@ auto System::create(string name) -> shared_pointer<Pak> {
   if(name == "Neo Geo Pocket Color") return new Systems::NeoGeoPocketColor;
   if(name == "Nintendo 64") return new Systems::Nintendo64;
   if(name == "PC Engine") return new Systems::PCEngine;
+  if(name == "Saturn") return new Systems::Saturn;
   if(name == "SuperGrafx") return new Systems::SuperGrafx;
   if(name == "PlayStation") return new Systems::PlayStation;
   if(name == "SG-1000") return new Systems::SG1000;
@@ -60,7 +62,7 @@ auto System::create(string name) -> shared_pointer<Pak> {
 }
 
 auto System::locate() -> string {
-  string location = {Path::user(), "Emulation/System/", name(), ".sys/"};
+  string location = {mia::homeLocation(), name(), ".sys/"};
   directory::create(location);
   return location;
 }

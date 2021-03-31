@@ -2,6 +2,22 @@ auto PathSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
 
+  homeLabel.setText("Home").setFont(Font().setBold());
+  homePath.setEditable(false);
+  homeAssign.setText("Assign ...").onActivate([&] {
+    BrowserDialog dialog;
+    dialog.setTitle("Select Home Path");
+    dialog.setPath(Path::desktop());
+    if(auto location = program.selectFolder(dialog)) {
+      settings.paths.home = location;
+      refresh();
+    }
+  });
+  homeReset.setText("Reset").onActivate([&] {
+    settings.paths.home = "";
+    refresh();
+  });
+
   savesLabel.setText("Saves").setFont(Font().setBold());
   savesPath.setEditable(false);
   savesAssign.setText("Assign ...").onActivate([&] {
@@ -64,21 +80,27 @@ auto PathSettings::refresh() -> void {
     return name;
   };
 
+  if(settings.paths.home) {
+    homePath.setText(pathname(settings.paths.home)).setForegroundColor();
+  } else {
+    homePath.setText(pathname(mia::homeLocation())).setForegroundColor({96, 96, 96});
+  }
+
   if(settings.paths.saves) {
     savesPath.setText(pathname(settings.paths.saves)).setForegroundColor();
   } else {
-    savesPath.setText("(same as game path)").setForegroundColor({80, 80, 80});
+    savesPath.setText("(same as game path)").setForegroundColor({96, 96, 96});
   }
 
   if(settings.paths.screenshots) {
     screenshotsPath.setText(pathname(settings.paths.screenshots)).setForegroundColor();
   } else {
-    screenshotsPath.setText("(same as game path)").setForegroundColor({80, 80, 80});
+    screenshotsPath.setText("(same as game path)").setForegroundColor({96, 96, 96});
   }
 
   if(settings.paths.debugging) {
     debuggingPath.setText(pathname(settings.paths.debugging)).setForegroundColor();
   } else {
-    debuggingPath.setText("(same as game path)").setForegroundColor({80, 80, 80});
+    debuggingPath.setText("(same as game path)").setForegroundColor({96, 96, 96});
   }
 }

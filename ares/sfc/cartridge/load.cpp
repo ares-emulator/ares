@@ -26,7 +26,7 @@ auto Cartridge::loadBoard(string board) -> Markup::Node {
 }
 
 auto Cartridge::loadCartridge() -> void {
-  auto board = loadBoard(information.board);
+  board = loadBoard(information.board);
 
   if(auto node = board["memory(type=ROM,content=Program)"]) loadROM(node);
   if(auto node = board["memory(type=ROM,content=Expansion)"]) loadROM(node);  //todo: handle this better

@@ -41,7 +41,6 @@ struct M32X {
     auto step(u32 clocks) -> void override;
     auto power(bool reset) -> void;
 
-    auto exception() -> bool override;
     auto busReadByte(u32 address) -> u32 override;
     auto busReadWord(u32 address) -> u32 override;
     auto busReadLong(u32 address) -> u32 override;
@@ -62,7 +61,6 @@ struct M32X {
       Source hint;  //10
       Source vint;  //12
       Source vres;  //14
-      n1 raised;
     } irq;
   };
 

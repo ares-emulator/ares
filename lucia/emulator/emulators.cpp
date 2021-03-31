@@ -95,6 +95,13 @@
   #include "playstation.cpp"
 #endif
 
+#ifdef CORE_SATURN
+  namespace ares::Saturn {
+    auto load(Node::System& node, string name) -> bool;
+  }
+  #include "saturn.cpp"
+#endif
+
 #ifdef CORE_SFC
   namespace ares::SuperFamicom {
     auto load(Node::System& node, string name) -> bool;
@@ -148,6 +155,10 @@ auto Emulator::construct() -> void {
   emulators.append(new MegaCD32X);
   #endif
 
+  #ifdef CORE_SATURN
+  emulators.append(new Saturn);
+  #endif
+
   #ifdef CORE_PS1
   emulators.append(new PlayStation);
   #endif
@@ -156,6 +167,11 @@ auto Emulator::construct() -> void {
   emulators.append(new PCEngine);
   emulators.append(new PCEngineCD);
   emulators.append(new SuperGrafx);
+  #endif
+
+  #ifdef CORE_NG
+  emulators.append(new NeoGeoAES);
+  emulators.append(new NeoGeoMVS);
   #endif
 
   #ifdef CORE_MSX
@@ -184,11 +200,6 @@ auto Emulator::construct() -> void {
   emulators.append(new WonderSwan);
   emulators.append(new WonderSwanColor);
   emulators.append(new PocketChallengeV2);
-  #endif
-
-  #ifdef CORE_NG
-  emulators.append(new NeoGeoAES);
-  emulators.append(new NeoGeoMVS);
   #endif
 
   #ifdef CORE_NGP

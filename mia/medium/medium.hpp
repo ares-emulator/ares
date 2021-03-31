@@ -1,5 +1,13 @@
+struct Database {
+  string name;
+  Markup::Node list;
+};
+
 struct Medium : Pak {
   static auto create(string name) -> shared_pointer<Pak>;
+  auto manifestDatabase(string sha256) -> string;
+
+  string sha256;
 };
 
 struct Cartridge : Medium {

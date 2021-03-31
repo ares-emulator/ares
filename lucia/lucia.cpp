@@ -19,7 +19,14 @@ auto nall::main(Arguments arguments) -> void {
   Application::setName("lucia");
   Application::setScreenSaver(false);
 
-  mia::setSaveLocation([] { return settings.paths.saves; });
+  mia::setHomeLocation([]() -> string {
+    if(auto location = settings.paths.home) return location;
+    return {Path::user(), "Emulation/Systems/"};
+  });
+
+  mia::setSaveLocation([]() -> string {
+    return settings.paths.saves;
+  });
 
   for(auto argument : arguments) {
     if(argument == "--fullscreen") {

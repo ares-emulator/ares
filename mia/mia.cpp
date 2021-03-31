@@ -2,6 +2,7 @@
 
 namespace mia {
 
+function<string ()> homeLocation = [] { return string{Path::user(), "Emulation/Systems/"}; };
 function<string ()> saveLocation = [] { return string{}; };
 vector<string> media;
 
@@ -26,11 +27,54 @@ auto operator+=(string& lhs, const string& rhs) -> string& {
 #include "program/program.cpp"
 #endif
 
+auto setHomeLocation(function<string ()> callback) -> void {
+  homeLocation = callback;
+}
+
 auto setSaveLocation(function<string ()> callback) -> void {
   saveLocation = callback;
 }
 
+auto construct() -> void {
+  static bool initialized = false;
+  if(initialized) return;
+  initialized = true;
+
+  media.append("BS Memory");
+  media.append("ColecoVision");
+  media.append("Famicom");
+  media.append("Famicom Disk");
+  media.append("Game Boy");
+  media.append("Game Boy Color");
+  media.append("Game Boy Advance");
+  media.append("Game Gear");
+  media.append("Master System");
+  media.append("Mega Drive");
+  media.append("Mega 32X");
+  media.append("Mega CD");
+  media.append("MSX");
+  media.append("MSX2");
+  media.append("Neo Geo");
+  media.append("Neo Geo Pocket");
+  media.append("Neo Geo Pocket Color");
+  media.append("Nintendo 64");
+  media.append("Nintendo 64DD");
+  media.append("PC Engine");
+  media.append("PC Engine CD");
+  media.append("PlayStation");
+  media.append("Pocket Challenge V2");
+  media.append("Saturn");
+  media.append("SC-3000");
+  media.append("SG-1000");
+  media.append("Sufami Turbo");
+  media.append("Super Famicom");
+  media.append("SuperGrafx");
+  media.append("WonderSwan");
+  media.append("WonderSwan Color");
+}
+
 auto identify(const string& filename) -> string {
+  construct();
   auto extension = Location::suffix(filename).trimLeft(".", 1L).downcase();
 
   if(extension == "zip") {
@@ -80,36 +124,7 @@ auto main(Arguments arguments) -> void {
   Application::setName("mia");
   #endif
 
-  media.append("BS Memory");
-  media.append("ColecoVision");
-  media.append("Famicom");
-  media.append("Famicom Disk");
-  media.append("Game Boy");
-  media.append("Game Boy Color");
-  media.append("Game Boy Advance");
-  media.append("Game Gear");
-  media.append("Master System");
-  media.append("Mega Drive");
-  media.append("Mega 32X");
-  media.append("Mega CD");
-  media.append("MSX");
-  media.append("MSX2");
-  media.append("Neo Geo");
-  media.append("Neo Geo Pocket");
-  media.append("Neo Geo Pocket Color");
-  media.append("Nintendo 64");
-  media.append("Nintendo 64DD");
-  media.append("PC Engine");
-  media.append("PC Engine CD");
-  media.append("PlayStation");
-  media.append("Pocket Challenge V2");
-  media.append("SC-3000");
-  media.append("SG-1000");
-  media.append("Sufami Turbo");
-  media.append("Super Famicom");
-  media.append("SuperGrafx");
-  media.append("WonderSwan");
-  media.append("WonderSwan Color");
+  construct();
 
   if(auto document = file::read(locate("settings.bml"))) {
     settings.unserialize(document);

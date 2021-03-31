@@ -14,5 +14,5 @@ auto BSMemorySlot::load(Node::Object parent) -> void {
 
 auto BSMemorySlot::unload() -> void {
   cartridge.disconnect();
-  port = {};
+  port.reset();
 }

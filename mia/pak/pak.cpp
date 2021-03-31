@@ -67,18 +67,6 @@ auto Pak::append(vector<u8>& output, string filename) -> bool {
   return true;
 }
 
-auto Pak::saveLocation(string location, string name, string extension) -> string {
-  string saveLocation;
-  if(auto path = mia::saveLocation()) {
-    saveLocation = {path, this->name(), "/", Location::prefix(location), extension};
-  } else if(directory::exists(location)) {
-    saveLocation = {location, name};
-  } else if(file::exists(location)) {
-    saveLocation = {Location::notsuffix(location), extension};
-  }
-  return saveLocation;
-}
-
 auto Pak::load(string name, string extension, string location) -> bool {
   if(!pak) return false;
   if(!location) location = this->location;
@@ -123,4 +111,23 @@ auto Pak::save(Markup::Node node, string extension, string location) -> bool {
   name.downcase();
   auto size = node["size"].natural();
   return save(name, extension, location);
+}
+
+auto Pak::saveLocation(string location, string name, string extension) -> string {
+  string saveLocation;
+  if(auto path = mia::saveLocation()) {
+    //if the user has chosen a specific location to save files to ...
+  } else if(directory::exists(location)) {
+    //if this is a pak ...
+    saveLocation = {location, name};
+  } else if(file::exists(location)) {
+    //if this is a ROM ...
+    saveLocation = {Location::notsuffix(location), extension};
+  } else {
+    //if no path information is available ...
+    saveLocation = {mia::homeLocation(), "Saves/", this->name(), ".", extension, "/", name};
+  }
+  //try to ensure the directory exists ...
+  directory::create(Location::path(saveLocation));
+  return saveLocation;
 }

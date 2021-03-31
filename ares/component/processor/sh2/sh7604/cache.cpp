@@ -90,10 +90,10 @@ auto SH2::Cache::purge(u32 address) -> void {
   if(tags[Way3 | entry] == tag) tags[Way3 | entry] |= Invalid;
 }
 
-template<u32 Count>
+template<u32 Ways>
 auto SH2::Cache::purge() -> void {
-  for(auto index : range(Count)) lrus[index] = 0;
-  for(auto index : range(Count)) tags[index] |= Invalid;
+  for(auto index : range(64)) lrus[index] = 0;
+  for(auto index : range(64 * Ways)) tags[index] |= Invalid;
 }
 
 auto SH2::Cache::power() -> void {

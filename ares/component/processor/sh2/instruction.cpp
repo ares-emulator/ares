@@ -33,15 +33,14 @@ auto SH2::instruction() -> void {
     exceptionHandler();
     auto block = recompiler.block(PC - 4);
     block->execute();
-    step(recompiler.clock);
-    recompiler.clock = 0;
+    step(CCR);
+    CCR = 0;
     ID = 0;
   }
 }
 
 auto SH2::instructionEpilogue() -> bool {
   switch(PPM) {
-  case Branch::Idle: PPM = Branch::Step; return 0;
   case Branch::Step: PC = PC + 2; return 0;
   case Branch::Slot: PC = PC + 2; PPM = Branch::Take; return 0;
   case Branch::Take: PC = PPC;    PPM = Branch::Step; return 1;

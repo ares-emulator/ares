@@ -1,11 +1,9 @@
 auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
-#if 0
   if(auto system = mia::identify(filename)) {
     for(auto& emulator : emulators) {
       if(emulator->name == system) return emulator;
     }
   }
-#endif
 
   MessageDialog().setTitle(ares::Name).setText({
     "Filename: ", Location::file(filename), "\n\n"
@@ -15,6 +13,7 @@ auto Program::identify(const string& filename) -> shared_pointer<Emulator> {
   return {};
 }
 
+//location is an optional game to load automatically (for command-line loading)
 auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
   unload();
 
@@ -25,6 +24,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
     presentation.showIcon(true);
     return false;
   }
+  location = emulator->game->location;
 
   //this is a safeguard warning in case the user loads their games from a read-only location:
   string savesPath = settings.paths.saves;
@@ -58,10 +58,9 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
   } else {
     pause(false);
   }
-  showMessage({"Loaded ", Location::prefix(emulator->game->location)});
+  showMessage({"Loaded ", Location::prefix(location)});
 
   //update recent games list
-  location = emulator->game->location;
   for(s32 index = 7; index >= 0; index--) {
     settings.recent.game[index + 1] = settings.recent.game[index];
   }

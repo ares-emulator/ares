@@ -15,5 +15,5 @@ auto SufamiTurboSlot::load(Node::Object parent) -> void {
 
 auto SufamiTurboSlot::unload() -> void {
   cartridge.disconnect();
-  port = {};
+  port.reset();
 }

@@ -34,7 +34,7 @@
   op(0x32, CMPHS, m, n);                //CMP/HS  Rm,Rn
   op(0x33, CMPGE, m, n);                //CMP/GE  Rm,Rn
   op(0x34, DIV1, m, n);                 //DIV1    Rm,Rn
-  op(0x35, DMULU, m, n);                //DMULU.L RM,Rn
+  op(0x35, DMULU, m, n);                //DMULU.L Rm,Rn
   op(0x36, CMPHI, m, n);                //CMP/HI  Rm,Rn
   op(0x37, CMPGT, m, n);                //CMP/GT  Rm,Rn
   op(0x38, SUB, m, n);                  //SUB     Rm,Rn
@@ -180,6 +180,6 @@
   }
 
   switch(0) {
-  op(0, ILLEGAL);
+  br(0, ILLEGAL);
   }
 }

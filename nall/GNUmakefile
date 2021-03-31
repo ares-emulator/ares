@@ -85,7 +85,7 @@ else ifeq ($(build),minified)
 else ifeq ($(build),release)
   flags += -O2 -DBUILD_RELEASE
 else ifeq ($(build),optimized)
-  flags += -O3 -DBUILD_OPTIMIZED
+  flags += -O3 -fomit-frame-pointer -DBUILD_OPTIMIZED
 else
   $(error unrecognized build type.)
 endif

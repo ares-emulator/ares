@@ -71,6 +71,7 @@ struct Settings : Markup::Node {
   } rewind;
 
   struct Paths {
+    string home;
     string saves;
     string screenshots;
     string debugging;
@@ -240,6 +241,11 @@ struct PathSettings : VerticalLayout {
   auto construct() -> void;
   auto refresh() -> void;
 
+  Label homeLabel{this, Size{~0, 0}, 2};
+  HorizontalLayout homeLayout{this, Size{~0, 0}};
+    LineEdit homePath{&homeLayout, Size{~0, 0}};
+    Button homeAssign{&homeLayout, Size{80, 0}};
+    Button homeReset{&homeLayout, Size{80, 0}};
   Label savesLabel{this, Size{~0, 0}, 2};
   HorizontalLayout savesLayout{this, Size{~0, 0}};
     LineEdit savesPath{&savesLayout, Size{~0, 0}};

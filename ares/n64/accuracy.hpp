@@ -1,6 +1,6 @@
 struct Accuracy {
   //enable all accuracy flags
-  static constexpr bool Reference = 1;
+  static constexpr bool Reference = 0;
 
   struct CPU {
     //0 = dynamic recompiler; 1 = interpreter

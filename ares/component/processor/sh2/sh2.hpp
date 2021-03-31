@@ -7,7 +7,6 @@
 namespace ares {
 
 struct SH2 {
-  virtual auto exception() -> bool = 0;
   virtual auto step(u32 clocks) -> void = 0;
   virtual auto busReadByte(u32 address) -> u32 = 0;
   virtual auto busReadWord(u32 address) -> u32 = 0;
@@ -197,7 +196,7 @@ struct SH2 {
   static constexpr u32 undefined = 0;
 
   struct Branch {
-    enum : u32 { Idle, Step, Slot, Take };
+    enum : u32 { Step, Slot, Take };
   };
 
   struct S32 {
@@ -206,34 +205,36 @@ struct SH2 {
     }
 
     auto& operator=(u32 d) {
-      T = d >> 0;
-      S = d >> 1;
-      I = d >> 4;
-      Q = d >> 8;
-      M = d >> 9;
+      T = d >> 0 & 1;
+      S = d >> 1 & 1;
+      I = d >> 4 & 15;
+      Q = d >> 8 & 1;
+      M = d >> 9 & 1;
       return *this;
     }
 
-    n1 T;
-    n1 S;
-    n4 I;
-    n1 Q;
-    n1 M;
+    u32 T;
+    u32 S;
+    u32 I;
+    u32 Q;
+    u32 M;
   };
 
   u32 R[16];  //general purpose registers
-  S32 SR;     //status register
+  u32 PC;     //program counter
+  u32 PR;     //procedure register
   u32 GBR;    //global base register
   u32 VBR;    //vector base register
   union {
     u64 MAC;  //multiply-and-accumulate register
     struct { u32 order_msb2(MACH, MACL); };
   };
-  u32 PR;     //procedure register
-  u32 PC;     //program counter
+  u32 CCR;    //clock counter register
+  S32 SR;     //status register
   u32 PPC;    //program counter for delay slots
   u32 PPM;    //delay slot mode
-  bool ID;    //interrupts disabled flag
+  u32 ET;     //exception triggered flag
+  u32 ID;     //interrupts disabled flag
 
   enum : u32 {
     ResetCold       = 1 << 0,
@@ -244,6 +245,7 @@ struct SH2 {
   u32 exceptions = 0;  //delayed exception flags
 
   struct Recompiler : recompiler::amd64 {
+    using recompiler::amd64::call;
     SH2& self;
     Recompiler(SH2& self) : self(self) {}
 
@@ -270,11 +272,11 @@ struct SH2 {
     auto pool(u32 address) -> Pool*;
     auto block(u32 address) -> Block*;
     auto emit(u32 address) -> Block*;
+    template<typename R, typename... P> auto call(R (SH2::*function)(P...)) -> void;
     auto emitInstruction(u16 opcode) -> bool;
 
     bump_allocator allocator;
     Pool* pools[1 << 24];
-    u32 clock;
   } recompiler{*this};
 
   #include "sh7604/sh7604.hpp"

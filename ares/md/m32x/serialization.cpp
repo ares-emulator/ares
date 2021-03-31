@@ -37,7 +37,6 @@ auto M32X::SH7604::serialize(serializer& s) -> void {
   s(irq.vint.active);
   s(irq.vres.enable);
   s(irq.vres.active);
-  s(irq.raised);
 }
 
 auto M32X::VDP::serialize(serializer& s) -> void {

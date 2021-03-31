@@ -23,8 +23,11 @@ namespace mia {
   #include "program/program.hpp"
   #endif
 
+  extern function<string ()> homeLocation;
   extern function<string ()> saveLocation;
+  auto setHomeLocation(function<string ()>) -> void;
   auto setSaveLocation(function<string ()>) -> void;
+  auto construct() -> void;
   auto identify(const string& filename) -> string;
   auto import(shared_pointer<Pak>, const string& filename) -> bool;
 }

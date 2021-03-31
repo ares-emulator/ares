@@ -18,23 +18,23 @@ auto M32X::SH7604::main() -> void {
     if(irq.vres.active && irq.vres.enable) {
       debugger.interrupt("VRES");
       irq.vres.active = 0;
-      return irq.raised = 1, interrupt(14, 71);
+      return ET = 1, interrupt(14, 71);
     }
     if(irq.vint.active && irq.vint.enable && SR.I < 12) {
       debugger.interrupt("VINT");
-      return irq.raised = 1, interrupt(12, 70);
+      return ET = 1, interrupt(12, 70);
     }
     if(irq.hint.active && irq.hint.enable && SR.I < 10) {
       debugger.interrupt("HINT");
-      return irq.raised = 1, interrupt(10, 69);
+      return ET = 1, interrupt(10, 69);
     }
     if(irq.cmd.active && irq.cmd.enable && SR.I < 8) {
       debugger.interrupt("CMD");
-      return irq.raised = 1, interrupt(8, 68);
+      return ET = 1, interrupt(8, 68);
     }
     if(irq.pwm.active && irq.pwm.enable && SR.I < 6) {
       debugger.interrupt("PWM");
-      return irq.raised = 1, interrupt(6, 67);
+      return ET = 1, interrupt(6, 67);
     }
   }
 
@@ -55,11 +55,6 @@ auto M32X::SH7604::power(bool reset) -> void {
   SH2::power(reset);
   irq = {};
   irq.vres.enable = 1;
-}
-
-auto M32X::SH7604::exception() -> bool {
-  if(irq.raised) return irq.raised = 1, true;
-  return false;
 }
 
 auto M32X::SH7604::busReadByte(u32 address) -> u32 {

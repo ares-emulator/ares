@@ -39,6 +39,7 @@ namespace nall {
   #pragma clang diagnostic ignored "-Wshift-count-overflow"
   #pragma clang diagnostic ignored "-Wtrigraphs"
   #pragma clang diagnostic ignored "-Wnarrowing"
+  #pragma clang diagnostic ignored "-Wattributes"
 #elif defined(__GNUC__)
   #define COMPILER_GCC
   constexpr auto compiler() -> Compiler { return Compiler::GCC; }
@@ -49,6 +50,7 @@ namespace nall {
   #pragma GCC diagnostic ignored "-Wswitch-bool"
   #pragma GCC diagnostic ignored "-Wtrigraphs"
   #pragma GCC diagnostic ignored "-Wnarrowing"
+  #pragma GCC diagnostic ignored "-Wattributes"
 #elif defined(_MSC_VER)
   #define COMPILER_MICROSOFT
   constexpr auto compiler() -> Compiler { return Compiler::Microsoft; }
