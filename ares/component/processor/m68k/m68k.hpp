@@ -43,24 +43,27 @@ struct M68K {
   };};
 
   struct Vector { enum : u32 {
-    Reset              =  1,
-    BusError           =  2,
-    AddressError       =  3,
-    IllegalInstruction =  4,
-    DivisionByZero     =  5,
-    BoundsCheck        =  6,
-    Overflow           =  7,
-    Unprivileged       =  8,
-    Trace              =  9,
-    IllegalLineA       = 10,
-    IllegalLineF       = 11,
-    Level1             = 25,
-    Level2             = 26,
-    Level3             = 27,
-    Level4             = 28,
-    Level5             = 29,
-    Level6             = 30,
-    Level7             = 31,
+    ResetSP            =  0,  //0x00
+    ResetPC            =  1,  //0x04
+    BusError           =  2,  //0x08
+    AddressError       =  3,  //0x0c
+    IllegalInstruction =  4,  //0x10
+    DivisionByZero     =  5,  //0x14
+    BoundsCheck        =  6,  //0x18
+    Overflow           =  7,  //0x1c
+    Unprivileged       =  8,  //0x20
+    Trace              =  9,  //0x24
+    IllegalLineA       = 10,  //0x28
+    IllegalLineF       = 11,  //0x2c
+    Spurious           = 24,  //0x60
+    Level1             = 25,  //0x64
+    Level2             = 26,  //0x68
+    Level3             = 27,  //0x6c
+    Level4             = 28,  //0x70
+    Level5             = 29,  //0x74
+    Level6             = 30,  //0x78
+    Level7             = 31,  //0x7c
+    Trap               = 32,  //0x80-0xbc (#0-#15)
   };};
 
   M68K();

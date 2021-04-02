@@ -28,7 +28,8 @@ auto VDP::Background::renderScreen(u32 from, u32 to) -> void {
   s32 incrementX = flipX ? -1 : +1;
 
   while(w < to) {
-    pixels[w] = *tileData | tileAttributes >> 13;
+    pixels[w].color = *tileData ? tileAttributes >> 9 & 0x30 | *tileData : 0;
+    pixels[w].priority = tileAttributes >> 15;
     tileData += incrementX;
 
     if((w++ & 15) == 15 && io.verticalScrollMode) {
@@ -86,7 +87,8 @@ auto VDP::Background::renderWindow(u32 from, u32 to) -> void {
   s32 incrementX = flipX ? -1 : +1;
 
   while(x < to) {
-    vdp.planeA.pixels[x] = *tileData | tileAttributes >> 13;
+    vdp.planeA.pixels[x].color = *tileData ? tileAttributes >> 9 & 0x30 | *tileData : 0;
+    vdp.planeA.pixels[x].priority = tileAttributes >> 15;
     tileData += incrementX;
 
     if((x++ & 7) == 7) {

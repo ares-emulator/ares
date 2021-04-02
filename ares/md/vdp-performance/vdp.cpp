@@ -46,7 +46,7 @@ auto VDP::main() -> void {
     step(1280);
     if(!runAhead()) {
       render();
-      if(Mega32X()) m32x.vdp.scanline(pixels(), state.vcounter);
+      m32x.vdp.scanline(pixels(), state.vcounter);
     }
     if(latch.horizontalInterruptCounter-- == 0) {
       latch.horizontalInterruptCounter = io.horizontalInterruptCounter;
@@ -118,7 +118,6 @@ auto VDP::power(bool reset) -> void {
   for(auto& data : vsram.memory) data = 0;
 
   for(auto& data : cram.memory) data = 0;
-  for(auto& data : cram.palette) data = 0;
 
   dma.power();
 
@@ -133,33 +132,6 @@ auto VDP::power(bool reset) -> void {
   state = {};
   io = {};
   latch = {};
-
-  static bool initialized = false;
-  if(!initialized) {
-    initialized = true;
-
-    for(u32 a = 0; a < 32; a++) {
-      for(u32 b = 0; b < 32; b++) {
-        u32 ap = a & 1, ac = a >> 1;
-        u32 bp = b & 1, bc = b >> 1;
-        u32 bg = (ap && ac) || ac && !(bp && bc) ? 0 : bc ? 1 : 3;
-        lookupBG[a << 5 | b] = bg;
-      }
-    }
-
-    for(u32 a = 0; a < 32; a++) {
-      for(u32 b = 0; b < 32; b++) {
-        for(u32 s = 0; s < 32; s++) {
-          u32 ap = a & 1, ac = a >> 1;
-          u32 bp = b & 1, bc = b >> 1;
-          u32 sp = s & 1, sc = s >> 1;
-          u32 bg = (ap && ac) || ac && !(bp && bc) ? 0 : bc ? 1 : 3;
-          u32 fg = (sp && sc) || sc && !(bp && bc) && !(ap && ac) ? 2 : bg;
-          lookupFG[a << 10 | b << 5 | s] = fg;
-        }
-      }
-    }
-  }
 }
 
 }

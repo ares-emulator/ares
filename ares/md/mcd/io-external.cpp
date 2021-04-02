@@ -1,4 +1,5 @@
 auto MCD::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
+  if(!MegaCD()) return data;
   address.bit(6,7) = 0;  //a12040-a120ff mirrors a12000-a1203f
 
   if(address == 0xa12000) {
@@ -60,6 +61,7 @@ auto MCD::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 }
 
 auto MCD::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
+  if(!MegaCD()) return;
   address.bit(6,7) = 0;  //a12040-a120ff mirrors a12000-a1203f
 
   if(address == 0xa12000) {

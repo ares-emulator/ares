@@ -47,13 +47,13 @@ auto VDP::main() -> void {
   scanline();
 
   cpu.lower(CPU::Interrupt::HorizontalBlank);
-  if(Mega32X()) m32x.hblank(0);
+  cartridge.hblank(0);
 
   if(state.vcounter == 0) {
     latch.horizontalInterruptCounter = io.horizontalInterruptCounter;
     io.vblankIRQ = false;
     cpu.lower(CPU::Interrupt::VerticalBlank);
-    if(Mega32X()) m32x.vblank(0);
+    cartridge.vblank(0);
   }
 
   if(state.vcounter < screenHeight()) {
@@ -62,7 +62,7 @@ auto VDP::main() -> void {
       state.hdot++;
       step(pixelWidth());
     }
-    if(Mega32X()) m32x.vdp.scanline(pixels(), state.vcounter);
+    m32x.vdp.scanline(pixels(), state.vcounter);
 
     if(latch.horizontalInterruptCounter-- == 0) {
       latch.horizontalInterruptCounter = io.horizontalInterruptCounter;
@@ -70,7 +70,7 @@ auto VDP::main() -> void {
         cpu.raise(CPU::Interrupt::HorizontalBlank);
       }
     }
-    if(Mega32X()) m32x.hblank(1);
+    cartridge.hblank(1);
 
     step(430);
   } else if(state.vcounter == screenHeight()) {
@@ -79,15 +79,15 @@ auto VDP::main() -> void {
       cpu.raise(CPU::Interrupt::VerticalBlank);
     }
 
-    if(Mega32X()) m32x.vblank(1);
+    cartridge.vblank(1);
     apu.setINT(true);
     step(1286);
-    if(Mega32X()) m32x.hblank(1);
+    cartridge.hblank(1);
     apu.setINT(false);
     step(424);
   } else {
     step(1280);
-    if(Mega32X()) m32x.hblank(1);
+    cartridge.hblank(1);
     step(430);
   }
 

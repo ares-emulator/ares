@@ -58,8 +58,7 @@ auto VDP::run() -> void {
 
   if(!io.shadowHighlightEnable) {
     auto color = cram.read(fg.color);
-    auto backdrop = fg.backdrop || !fg.color;
-    outputPixel(backdrop << 11 | 1 << 9 | color);
+    outputPixel(fg.backdrop << 11 | 1 << 9 | color);
   } else {
     u32 mode = a.priority || b.priority;  //0 = shadow, 1 = normal, 2 = highlight
 
@@ -73,8 +72,7 @@ auto VDP::run() -> void {
     }
 
     auto color = cram.read(fg.color);
-    auto backdrop = fg.backdrop || !fg.color;
-    outputPixel(backdrop << 11 | mode << 9 | color);
+    outputPixel(fg.backdrop << 11 | mode << 9 | color);
   }
 }
 

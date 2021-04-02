@@ -40,10 +40,30 @@ auto VDP::VSRAM::write(n6 address, n10 data) -> void {
   memory[address] = data;
 }
 
+auto VDP::VSRAM::readByte(n7 address) const -> n8 {
+  return read(address >> 1).byte(!address.bit(0));
+}
+
+auto VDP::VSRAM::writeByte(n7 address, n8 data) -> void {
+  auto word = read(address >> 1);
+  word.byte(!address.bit(0)) = data;
+  write(address >> 1, word);
+}
+
 auto VDP::CRAM::read(n6 address) const -> n9 {
   return memory[address];
 }
 
 auto VDP::CRAM::write(n6 address, n9 data) -> void {
   memory[address] = data;
+}
+
+auto VDP::CRAM::readByte(n7 address) const -> n8 {
+  return read(address >> 1).byte(!address.bit(0));
+}
+
+auto VDP::CRAM::writeByte(n7 address, n8 data) -> void {
+  auto word = read(address >> 1);
+  word.byte(!address.bit(0)) = data;
+  write(address >> 1, word);
 }

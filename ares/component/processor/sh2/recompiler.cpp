@@ -51,7 +51,7 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
     u16 instruction = self.readWord(address);
     bool branched = emitInstruction(instruction);
   //incd(CCR);
-    addd(CCR, imm8(3));  //underclocking hack
+    addd(CCR, imm8(2));  //underclocking hack
     call(&SH2::instructionEpilogue);
     address += 2;
     if(hasBranched || (address & 0xfe) == 0) break;  //block boundary
@@ -96,12 +96,14 @@ auto SH2::Recompiler::call(V (SH2::*function)(P...)) -> void {
 }
 
 auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
-  #define Rn  dis8(rbx,(opcode >> 8 & 0x00f)*4)
-  #define Rm  dis8(rbx,(opcode >> 4 & 0x00f)*4)
+  #define n   (opcode >> 8 & 0x00f)
+  #define m   (opcode >> 4 & 0x00f)
   #define i   (opcode >> 0 & 0x0ff)
   #define d4  (opcode >> 0 & 0x00f)
   #define d8  (opcode >> 0 & 0x0ff)
   #define d12 (opcode >> 0 & 0xfff)
+  #define Rn  dis8(rbx, n * 4)
+  #define Rm  dis8(rbx, m * 4)
   switch(opcode >> 8 & 0x00f0 | opcode & 0x000f) {
 
   //MOV.B Rm,@(R0,Rn)
@@ -172,11 +174,13 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MAC.L @Rm+,@Rn+
   case 0x0f: {
     mov(esi, Rn);
+    addd(Rn, imm8(4));
     call(readLong);
     movsxd(rax, eax);
     push(rax);
     push(rax);
     mov(esi, Rm);
+    addd(Rm, imm8(4));
     call(readLong);
     movsxd(rax, eax);
     pop(rdx);
@@ -190,8 +194,6 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     sal(rdx, imm8(16));
     sar(rdx, imm8(16));
     mov(MAC, rdx);
-    addd(Rn, imm8(4));
-    addd(Rm, imm8(4));
     return 0;
   }
 
@@ -502,11 +504,13 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MAC.W @Rm+,@Rn+
   case 0x4f: {
     mov(esi, Rn);
+    addd(Rn, imm8(2));
     call(readWord);
     movsx(eax, ax);
     push(rax);
     push(rax);
     mov(esi, Rm);
+    addd(Rm, imm8(2));
     call(readWord);
     movsx(eax, ax);
     pop(rdx);
@@ -520,8 +524,6 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     jz(imm8(3));
     movsxd(rdx, edx);
     mov(MAC, rdx);
-    addd(Rn, imm8(2));
-    addd(Rm, imm8(2));
     return 0;
   }
 
@@ -570,29 +572,29 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.B @Rm+,Rn
   case 0x64: {
     mov(esi, Rm);
+    if(n != m) addd(Rm, imm8(1));
     call(readByte);
     movsx(eax, al);
     mov(Rn, eax);
-    addd(Rm, imm8(1));
     return 0;
   }
 
   //MOV.W @Rm+,Rn
   case 0x65: {
     mov(esi, Rm);
+    if(n != m) addd(Rm, imm8(2));
     call(readWord);
     movsx(eax, ax);
     mov(Rn, eax);
-    addd(Rm, imm8(2));
     return 0;
   }
 
   //MOV.L @Rm+,Rn
   case 0x66: {
     mov(esi, Rm);
+    if(n != m) addd(Rm, imm8(4));
     call(readLong);
     mov(Rn, eax);
-    addd(Rm, imm8(4));
     return 0;
   }
 
@@ -703,7 +705,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     add(esi, imm32(4 + (i12)d12 * 2));
     mov(PPC, esi);
     movb(PPM, imm8(Branch::Slot));
-    return 0;
+    return 1;
   }
 
   //BSR disp
@@ -713,7 +715,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     add(esi, imm32(4 + (i12)d12 * 2));
     mov(PPC, esi);
     movb(PPM, imm8(Branch::Slot));
-    return 0;
+    return 1;
   }
 
   //MOV.L @(disp,PC),Rn
@@ -734,18 +736,22 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   }
 
   }
-  #undef Rn
-  #undef Rm
+  #undef n
+  #undef m
   #undef i
   #undef d4
   #undef d8
   #undef d12
+  #undef Rn
+  #undef Rm
 
-  #define Rn dis8(rbx,(opcode >> 8 & 0x0f)*4)
-  #define Rm dis8(rbx,(opcode >> 4 & 0x0f)*4)  //n for MOVBS4, MOVWS4
+  #define n  (opcode >> 8 & 0x0f)
+  #define m  (opcode >> 4 & 0x0f)  //n for 0x80,0x81,0x84,0x85
   #define i  (opcode >> 0 & 0xff)
   #define d4 (opcode >> 0 & 0x0f)
   #define d8 (opcode >> 0 & 0xff)
+  #define Rn dis8(rbx, n * 4)
+  #define Rm dis8(rbx, m * 4)
   switch(opcode >> 8) {
 
   //MOV.B R0,@(disp,Rn)
@@ -827,7 +833,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     add(esi, imm32(4 + (s8)d8 * 2));
     mov(PPC, esi);
     movb(PPM, imm8(Branch::Slot));
-    return 0;
+    return 1;
   }
 
   //BF/S disp
@@ -839,7 +845,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     add(esi, imm32(4 + (s8)d8 * 2));
     mov(PPC, esi);
     movb(PPM, imm8(Branch::Slot));
-    return 0;
+    return 1;
   }
 
   //MOV.B R0,@(disp,GBR)
@@ -888,13 +894,13 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     shl(eax, imm8(9));
     or(edx, eax);
     mov(esi, R15);
+    addd(R15, imm8(4));
     call(writeLong);
     mov(edx, PC);
     add(edx, imm8(2));
     mov(esi, R15);
-    add(esi, imm8(4));
+    addd(R15, imm8(4));
     call(writeLong);
-    addd(R15, imm8(8));
     mov(esi, VBR);
     add(esi, imm32(i * 4));
     call(readLong);
@@ -985,7 +991,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     mov(esi, GBR);
     add(esi, R0);
     call(readByte);
-    cmp(al, imm8(i));
+    and(al, imm8(i));
     setz(T);
     return 0;
   }
@@ -1030,14 +1036,18 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   }
 
   }
-  #undef Rn
-  #undef Rm
+  #undef n
+  #undef m
   #undef i
   #undef d4
   #undef d8
+  #undef Rn
+  #undef Rm
 
-  #define Rn dis8(rbx,(opcode >> 8 & 0xf)*4)
-  #define Rm dis8(rbx,(opcode >> 8 & 0xf)*4)
+  #define n  (opcode >> 8 & 0xf)
+  #define m  (opcode >> 8 & 0xf)
+  #define Rn dis8(rbx, n * 4)
+  #define Rm dis8(rbx, m * 4)
   switch(opcode >> 4 & 0x0f00 | opcode & 0x00ff) {
 
   //STC SR,Rn
@@ -1072,7 +1082,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     add(esi, imm8(4));
     mov(PPC, esi);
     movb(PPM, imm8(Branch::Slot));
-    return 0;
+    return 1;
   }
 
   //STS MACH,Rn
@@ -1110,7 +1120,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     add(esi, imm8(4));
     mov(PPC, esi);
     movb(PPM, imm8(Branch::Slot));
-    return 0;
+    return 1;
   }
 
   //MOVT Rn
@@ -1212,15 +1222,16 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //LDS.L @Rm+,MACH
   case 0x406: {
     mov(esi, Rn);
+    addd(Rn, imm8(4));
     call(readLong);
     mov(MACH, rax);
-    addd(Rn, imm8(4));
     return 0;
   }
 
   //LDC.L @Rm+,SR
   case 0x407: {
     mov(esi, Rn);
+    addd(Rn, imm8(4));
     call(readLong);
     mov(edx, eax);
     and(al, imm8(1));
@@ -1241,7 +1252,6 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     shr(eax, imm8(9));
     and(al, imm8(1));
     mov(M, al);
-    addd(Rn, imm8(4));
     return 0;
   }
 
@@ -1276,7 +1286,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     add(esi, imm8(4));
     mov(PPC, esi);
     movb(PPM, imm8(Branch::Slot));
-    return 0;
+    return 1;
   }
 
   //LDC Rm,SR
@@ -1353,18 +1363,18 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //LDS.L @Rm+,MACL
   case 0x416: {
     mov(esi, Rm);
+    addd(Rm, imm8(4));
     call(readLong);
     mov(MACL, eax);
-    addd(Rm, imm8(4));
     return 0;
   }
 
   //LDS.L @Rm+,GBR
   case 0x417: {
     mov(esi, Rm);
+    addd(Rm, imm8(4));
     call(readLong);
     mov(GBR, eax);
-    addd(Rm, imm8(4));
     return 0;
   }
 
@@ -1495,18 +1505,18 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //LDS.L @Rm+,PR
   case 0x426: {
     mov(esi, Rm);
+    addd(Rm, imm8(4));
     call(readLong);
     mov(PR, eax);
-    addd(Rm, imm8(4));
     return 0;
   }
 
   //LDC.L @Rm+,VBR
   case 0x427: {
     mov(esi, Rm);
+    addd(Rm, imm8(4));
     call(readLong);
     mov(VBR, eax);
-    addd(Rm, imm8(4));
     return 0;
   }
 
@@ -1539,7 +1549,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     add(esi, imm8(4));
     mov(PPC, esi);
     movb(PPM, imm8(Branch::Slot));
-    return 0;
+    return 1;
   }
 
   //LDC Rm,VBR
@@ -1550,6 +1560,8 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   }
 
   }
+  #undef n
+  #undef m
   #undef Rn
   #undef Rm
 
@@ -1573,7 +1585,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     add(esi, imm8(4));
     mov(PPC, esi);
     movb(PPM, imm8(Branch::Slot));
-    return 0;
+    return 1;
   }
 
   //SETT
@@ -1613,11 +1625,12 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //RTE
   case 0x002b: {
     mov(esi, R15);
+    addd(R15, imm8(4));
     call(readLong);
     mov(PPC, eax);
     movb(PPM, imm8(Branch::Slot));
     mov(esi, R15);
-    add(esi, imm8(4));
+    addd(R15, imm8(4));
     call(readLong);
     mov(edx, eax);
     and(al, imm8(1));
@@ -1638,8 +1651,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     shr(eax, imm8(9));
     and(al, imm8(1));
     mov(M, al);
-    addd(R15, imm8(8));
-    return 0;
+    return 1;
   }
 
   }

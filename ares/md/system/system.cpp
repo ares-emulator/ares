@@ -149,7 +149,7 @@ auto System::power(bool reset) -> void {
 
   random.entropy(Random::Entropy::None);
 
-  if(cartridge.node) cartridge.power(reset);
+  cartridge.power(reset);
   if(Mega32X()) m32x.power(reset);
   if(MegaCD()) mcd.power(reset);
   cpu.power(reset);

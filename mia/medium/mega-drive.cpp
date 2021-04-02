@@ -103,16 +103,19 @@ auto MegaDrive::analyze(vector<u8>& data) -> string {
     if(region.find("J")) regions.append("NTSC-J");
     if(region.find("U")) regions.append("NTSC-U");
     if(region.find("E")) regions.append("PAL");
-    if(region.find("W")) regions.append("NTSC-J", "NTSC-U", "PAL");
   }
   if(!regions && region.size() == 1) {
+    maybe<u8> bits;
     u8 field = region[0];
-    if(field & 0x01) regions.append("NTSC-J");
-    if(field & 0x04) regions.append("NTSC-U");
-    if(field & 0x08) regions.append("PAL");
+    if(field >= '0' && field <= '9') bits = field - '0';
+    if(field >= 'A' && field <= 'F') bits = field - 'A' + 10;
+    if(bits && *bits & 1) regions.append("NTSC-J");  //domestic 60hz
+    if(bits && *bits & 2);                           //domestic 50hz
+    if(bits && *bits & 4) regions.append("NTSC-U");  //overseas 60hz
+    if(bits && *bits & 8) regions.append("PAL");     //overseas 50hz
   }
   if(!regions) {
-    regions.append("NTSC-J");
+    regions.append("NTSC-J", "NTSC-U", "PAL");
   }
 
   string domesticName;

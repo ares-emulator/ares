@@ -27,10 +27,18 @@ auto VDP::Debugger::load(Node::Object parent) -> void {
   memory.cram->setWrite([&](u32 address, u8 data) -> void {
     self.cram.memory[n6(address >> 1)].byte(!(address & 1)) = data;
   });
+
+  tracer.dma = parent->append<Node::Debugger::Tracer::Notification>("DMA", "VDP");
 }
 
 auto VDP::Debugger::unload() -> void {
   memory.vram.reset();
   memory.vsram.reset();
   memory.cram.reset();
+}
+
+auto VDP::Debugger::dma(string_view line) -> void {
+  if(tracer.dma->enabled()) {
+    tracer.dma->notify(line);
+  }
 }

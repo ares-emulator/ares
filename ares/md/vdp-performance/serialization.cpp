@@ -57,7 +57,6 @@ auto VDP::VSRAM::serialize(serializer& s) -> void {
 
 auto VDP::CRAM::serialize(serializer& s) -> void {
   s(memory);
-  s(palette);
 }
 
 auto VDP::DMA::serialize(serializer& s) -> void {

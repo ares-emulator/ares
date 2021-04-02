@@ -77,6 +77,9 @@ private:
     auto read(n6 address) const -> n10;
     auto write(n6 address, n10 data) -> void;
 
+    auto readByte(n7 address) const -> n8;
+    auto writeByte(n7 address, n8 data) -> void;
+
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
@@ -88,11 +91,13 @@ private:
     auto read(n6 address) const -> n9;
     auto write(n6 address, n9 data) -> void;
 
+    auto readByte(n7 address) const -> n8;
+    auto writeByte(n7 address, n8 data) -> void;
+
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    n9  memory[64];
-    n32 palette[3 * 128];
+    n9 memory[64];
   } cram;
 
   struct DMA {
@@ -119,6 +124,15 @@ private:
       n1  wait;
     } io;
   } dma;
+
+  struct Pixel {
+    auto above() const -> bool { return priority == 1 && color; }
+    auto below() const -> bool { return priority == 0 && color; }
+
+    n6 color;
+    n1 priority;
+    n1 backdrop;
+  };
 
   struct Background {
     enum class ID : u32 { PlaneA, Window, PlaneB } id;
@@ -149,7 +163,7 @@ private:
     } io;
 
   //unserialized:
-    n7 pixels[320];
+    Pixel pixels[320];
   };
   Background planeA{Background::ID::PlaneA};
   Background window{Background::ID::Window};
@@ -198,7 +212,7 @@ private:
     Object objects[20];
 
   //unserialized:
-    n7 pixels[512];
+    Pixel pixels[512];
   } sprite{*this};
 
   struct State {
@@ -261,10 +275,6 @@ private:
     //per-scanline
     n2  displayWidth;
   } latch;
-
-//unserialized:
-  n8 lookupBG[1 << 10];
-  n8 lookupFG[1 << 15];
 
   friend class CPU;
   friend class APU;

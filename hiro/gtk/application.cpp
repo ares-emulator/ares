@@ -172,7 +172,15 @@ auto pApplication::initialize() -> void {
     widget_class "*.<GtkNotebook>.<GtkHBox>.<GtkButton>" style "HiroTabFrameCloseButton"
   )");
   #elif HIRO_GTK==3
-  //TODO: is there any alternative here with GTK3?
+  GtkCssProvider* provider = gtk_css_provider_new();
+  gtk_css_provider_load_from_data(GTK_CSS_PROVIDER(provider), R"(
+    * { font-size: 8pt; padding-top: 0px; padding-bottom: 0px; }
+    menu { border-width: 0px; }
+    menuitem { padding: 3px 5px; }
+    entry { min-height: 0px; }
+  )", -1, nullptr);
+  GdkScreen* screen = gdk_screen_get_default();
+  gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   #endif
 
   pKeyboard::initialize();

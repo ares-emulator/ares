@@ -58,7 +58,7 @@ auto CPU::main() -> void {
   instruction();
 }
 
-inline auto CPU::step(u32 clocks) -> void {
+auto CPU::step(u32 clocks) -> void {
   refresh.ram += clocks;
   while(refresh.ram >= 133) refresh.ram -= 133;
   refresh.external += clocks;

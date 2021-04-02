@@ -304,8 +304,8 @@ auto SH2::LDSMPR(u32 m) -> void {
 //MAC.W @Rm+,@Rn+
 auto SH2::MACW(u32 m, u32 n) -> void {
   s16 a = readWord(R[n]);
-  s16 b = readWord(R[m]);
   R[n] += 2;
+  s16 b = readWord(R[m]);
   R[m] += 2;
   if(!SR.S) {
     MAC = MAC + (s64)a * (s64)b;
@@ -319,8 +319,8 @@ auto SH2::MACW(u32 m, u32 n) -> void {
 //MAC.L @Rm+,@Rn+
 auto SH2::MACL_(u32 m, u32 n) -> void {
   s32 a = readLong(R[n]);
-  s32 b = readLong(R[m]);
   R[n] += 4;
+  s32 b = readLong(R[m]);
   R[m] += 4;
   MAC = MAC + (s64)a * (s64)b;
   if(SR.S) MAC = sclamp<48>(MAC);

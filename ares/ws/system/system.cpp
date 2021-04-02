@@ -155,7 +155,9 @@ auto System::load(Node::System& root, string name) -> bool {
   }
 
   if(auto fp = pak->read("save.eeprom")) {
-    fp->read({eeprom.data, eeprom.size});
+    if(fp->attribute("loaded").boolean()) {
+      fp->read({eeprom.data, eeprom.size});
+    }
   }
 
   scheduler.reset();

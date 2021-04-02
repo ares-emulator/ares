@@ -8,9 +8,9 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   //if(refresh.external >= 126) idle(min(2, 128 - refresh.external));
     if(!io.romEnable) return tmss[address >> 1];
     if(cartridge.bootable()) {
-      if(cartridge.node) return cartridge.read(upper, lower, address, data);
+      return cartridge.read(upper, lower, address, data);
     } else {
-      if(mcd.node) return mcd.readExternal(upper, lower, address, data);
+      return mcd.readExternal(upper, lower, address, data);
     }
     return data;
   }
@@ -18,9 +18,9 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   if(address >= 0x400000 && address <= 0x7fffff) {
   //if(refresh.external >= 126) idle(min(2, 128 - refresh.external));
     if(!cartridge.bootable()) {
-      if(cartridge.node) return cartridge.read(upper, lower, address, data);
+      return cartridge.read(upper, lower, address, data);
     } else {
-      if(mcd.node) return mcd.readExternal(upper, lower, address, data);
+      return mcd.readExternal(upper, lower, address, data);
     }
     return data;
   }
@@ -39,8 +39,8 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address >= 0xa10000 && address <= 0xbfffff) {
-    if(cartridge.node) data = cartridge.readIO(upper, lower, address, data);
-    if(mcd.node) data = mcd.readExternalIO(upper, lower, address, data);
+    data = cartridge.readIO(upper, lower, address, data);
+    data = mcd.readExternalIO(upper, lower, address, data);
     data = readIO(upper, lower, address, data);
     return data;
   }
@@ -66,9 +66,9 @@ auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   if(address >= 0x000000 && address <= 0x3fffff) {
   //if(refresh.external >= 126) idle(min(2, 128 - refresh.external));
     if(cartridge.bootable()) {
-      if(cartridge.node) return cartridge.write(upper, lower, address, data);
+      return cartridge.write(upper, lower, address, data);
     } else {
-      if(mcd.node) return mcd.writeExternal(upper, lower, address, data);
+      return mcd.writeExternal(upper, lower, address, data);
     }
     return;
   }
@@ -76,9 +76,9 @@ auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   if(address >= 0x400000 && address <= 0x7fffff) {
   //if(refresh.external >= 126) idle(min(2, 128 - refresh.external));
     if(!cartridge.bootable()) {
-      if(cartridge.node) return cartridge.write(upper, lower, address, data);
+      return cartridge.write(upper, lower, address, data);
     } else {
-      if(mcd.node) return mcd.writeExternal(upper, lower, address, data);
+      return mcd.writeExternal(upper, lower, address, data);
     }
     return;
   }
@@ -96,8 +96,8 @@ auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address >= 0xa10000 && address <= 0xbfffff) {
-    if(cartridge.node) cartridge.writeIO(upper, lower, address, data);
-    if(mcd.node) mcd.writeExternalIO(upper, lower, address, data);
+    cartridge.writeIO(upper, lower, address, data);
+    mcd.writeExternalIO(upper, lower, address, data);
     writeIO(upper, lower, address, data);
     return;
   }

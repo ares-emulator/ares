@@ -71,6 +71,7 @@ auto VDP::readDataPort() -> n16 {
     return data.bit(0,2) << 1 | data.bit(3,5) << 5 | data.bit(6,8) << 9;
   }
 
+  debug(unusual, "[VDP] readDataPort: io.command = 0b", binary(io.command, 6L));
   return 0x0000;
 }
 
@@ -112,6 +113,8 @@ auto VDP::writeDataPort(n16 data) -> void {
     io.address += io.dataIncrement;
     return;
   }
+
+  debug(unusual, "[VDP] writeDataPort: io.command = 0b", binary(io.command, 6L));
 }
 
 //

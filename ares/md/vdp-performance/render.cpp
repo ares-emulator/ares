@@ -41,9 +41,36 @@ auto VDP::render() -> void {
   state.output = pixels();
   if(!state.output) return;
 
-  auto A = &planeA.pixels[0];
-  auto B = &planeB.pixels[0];
-  auto S = &sprite.pixels[0];
+  for(u32 x : range(screenWidth())) {
+    Pixel g = {io.backgroundColor, 0, 1};
+    Pixel a = planeA.pixels[x];
+    Pixel b = planeB.pixels[x];
+    Pixel s = sprite.pixels[x];
+
+    auto& bg = a.above() || a.color && !b.above() ? a : b.color ? b : g;
+    auto& fg = s.above() || s.color && !b.above() && !a.above() ? s : bg;
+
+    if(!io.shadowHighlightEnable) {
+      auto color = cram.read(fg.color);
+      outputPixel(fg.backdrop << 11 | 1 << 9 | color);
+    } else {
+      u32 mode = a.priority || b.priority;  //0 = shadow, 1 = normal, 2 = highlight
+
+      if(&fg == &s) switch(s.color) {
+      case 0x0e:
+      case 0x1e:
+      case 0x2e: mode  = 1; break;
+      case 0x3e: mode += 1; fg = bg; break;
+      case 0x3f: mode  = 0; fg = bg; break;
+      default:   mode |= s.priority; break;
+      }
+
+      auto color = cram.read(fg.color);
+      outputPixel(fg.backdrop << 11 | mode << 9 | color);
+    }
+  }
+
+/*
   n7 c[4] = {0, 0, 0, io.backgroundColor};
   if(!io.shadowHighlightEnable) {
     auto p = &cram.palette[1 << 7];
@@ -75,6 +102,7 @@ auto VDP::render() -> void {
       outputPixel(p[mode << 7 | c[l]] | (l == 3) << 11);
     }
   }
+*/
 }
 
 auto VDP::outputPixel(n32 color) -> void {

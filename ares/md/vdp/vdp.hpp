@@ -14,12 +14,17 @@ struct VDP : Thread {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto unload() -> void;
+    auto dma(string_view) -> void;
 
     struct Memory {
       Node::Debugger::Memory vram;
       Node::Debugger::Memory vsram;
       Node::Debugger::Memory cram;
     } memory;
+
+    struct Tracer {
+      Node::Debugger::Tracer::Notification dma;
+    } tracer;
   } debugger{*this};
 
   //vdp.cpp
@@ -192,6 +197,21 @@ private:
   auto screenHeight() const -> u32 { return latch.overscan ? 240 : 224; }
   auto frameHeight() const -> u32 { return Region::PAL() ? 312 : 262; }
 
+  struct Slot {
+    auto serialize(serializer& s) {
+      s(address);
+      s(data);
+      s(target);
+      s(half);
+    }
+
+    n16 address;
+    n16 data;
+    n6  target;
+    n1  half;
+  };
+  queue<Slot[4]> fifo;
+
   //video RAM
   struct VRAM {
     //memory.cpp
@@ -217,6 +237,9 @@ private:
     auto read(n6 address) const -> n10;
     auto write(n6 address, n10 data) -> void;
 
+    auto readByte(n7 address) const -> n8;
+    auto writeByte(n7 address, n8 data) -> void;
+
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
@@ -228,6 +251,9 @@ private:
     //memory.cpp
     auto read(n6 address) const -> n9;
     auto write(n6 address, n9 data) -> void;
+
+    auto readByte(n7 address) const -> n8;
+    auto writeByte(n7 address, n8 data) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;

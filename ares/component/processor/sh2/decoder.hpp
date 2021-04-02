@@ -77,7 +77,7 @@
   #undef d12
 
   #define n  (opcode >> 8 & 0x0f)
-  #define m  (opcode >> 4 & 0x0f)  //n for MOVBS4, MOVWS4
+  #define m  (opcode >> 4 & 0x0f)  //n for 0x80,0x81,0x84,0x85
   #define i  (opcode >> 0 & 0xff)
   #define d4 (opcode >> 0 & 0x0f)
   #define d8 (opcode >> 0 & 0xff)

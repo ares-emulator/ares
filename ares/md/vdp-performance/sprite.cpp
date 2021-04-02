@@ -24,7 +24,7 @@ auto VDP::Sprite::render() -> void {
     if(tiles >= tileLimit()) break;
   } while(++count < linkLimit());
 
-  memory::fill<u8>(pixels, vdp.screenWidth());
+  memory::fill<Pixel>(pixels, vdp.screenWidth());
   u32 shiftY = interlace ? 4 : 3;
   u32 maskY = interlace ? 15 : 7;
   u32 tileShift = interlace ? 7 : 6;
@@ -41,7 +41,8 @@ auto VDP::Sprite::render() -> void {
     s32 incrementX = object.horizontalFlip ? -1 : +1;
     for(u32 objectX = 0; objectX < object.width();) {
       if(u32 color = tileData[objectX & 7]) {
-        pixels[w & 511] = object.palette << 0 | object.priority << 2 | color;
+        pixels[w & 511].color = object.palette << 4 | color;
+        pixels[w & 511].priority = object.priority;
       }
       w += incrementX;
       if((objectX++ & 7) == 7) {

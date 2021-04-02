@@ -11,9 +11,9 @@ struct Interface {
   virtual auto save() -> void {}
   virtual auto main() -> void;
   virtual auto step(u32 clocks) -> void;
-  virtual auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 { return 0; }
+  virtual auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 { return data; }
   virtual auto write(n1 upper, n1 lower, n22 address, n16 data) -> void {}
-  virtual auto readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 { return 0; }
+  virtual auto readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 { return data; }
   virtual auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {}
   virtual auto vblank(bool line) -> void {}
   virtual auto hblank(bool line) -> void {}

@@ -71,6 +71,7 @@ auto Cartridge::step(u32 clocks) -> void {
 }
 
 auto Cartridge::power(bool reset) -> void {
+  if(!board) board = new Board::Interface(*this);
   Thread::create(board->frequency(), {&Cartridge::main, this});
   board->power(reset);
 }

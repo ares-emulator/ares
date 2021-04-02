@@ -115,7 +115,7 @@ auto PPU::Background::render() -> void {
         mosaicPalette = color;
         mosaicPriority = tilePriority;
         if(directColorMode) {
-          mosaicColor = ppu.dac.directColor(paletteNumber, mosaicPalette);
+          mosaicColor = ppu.dac.directColor(mosaicPalette, paletteNumber);
         } else {
           mosaicColor = ppu.dac.cgram[paletteIndex + mosaicPalette];
         }

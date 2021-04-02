@@ -32,10 +32,14 @@ auto VDP::DMA::load() -> void {
   }
 }
 
-//todo: supposedly, this can also write to VSRAM and CRAM (undocumented)
 auto VDP::DMA::fill() -> void {
-  if(vdp.io.command.bit(0,3) == 1) {
-    vdp.vram.writeByte(vdp.io.address, io.fill);
+  switch(vdp.io.command.bit(0,3)) {
+  case 1: vdp.vram .writeByte(vdp.io.address, io.fill); break;
+  case 5: vdp.vsram.writeByte(vdp.io.address, io.fill); break;
+  case 3: vdp.cram .writeByte(vdp.io.address, io.fill); break;
+  default:
+    debug(unusual, "[VDP] DMA::fill: io.command = 0b", binary(vdp.io.command, 6L));
+    break;
   }
 
   io.source.bit(0,15)++;

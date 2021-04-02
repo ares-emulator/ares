@@ -7,6 +7,7 @@ auto VDP::serialize(serializer& s) -> void {
   s(planeB);
   s(sprite);
 
+  s(fifo);
   s(vram);
   s(vsram);
   s(cram);

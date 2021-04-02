@@ -71,6 +71,7 @@ auto VDP::readDataPort() -> n16 {
     return data.bit(0,2) << 1 | data.bit(3,5) << 5 | data.bit(6,8) << 9;
   }
 
+  debug(unusual, "[VDP] readDataPort: io.command = 0b", binary(io.command, 6L));
   return 0x0000;
 }
 
@@ -111,6 +112,8 @@ auto VDP::writeDataPort(n16 data) -> void {
     io.address += io.dataIncrement;
     return;
   }
+
+  debug(unusual, "[VDP] writeDataPort: io.command = 0b", binary(io.command, 6L));
 }
 
 //
@@ -127,8 +130,8 @@ auto VDP::readControlPort() -> n16 {
   result.bit( 5) = 0;  //SCOL
   result.bit( 6) = 0;  //SOVR
   result.bit( 7) = io.vblankIRQ;
-  result.bit( 8) = 0;  //FIFO full
-  result.bit( 9) = 1;  //FIFO empty
+  result.bit( 8) = fifo.full();
+  result.bit( 9) = fifo.empty();
   result.bit(10) = 1;  //constants (bits 10-15)
   result.bit(11) = 0;
   result.bit(12) = 1;

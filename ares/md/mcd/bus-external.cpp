@@ -1,4 +1,5 @@
 auto MCD::readExternal(n1 upper, n1 lower, n22 address, n16 data) -> n16 {
+  if(!MegaCD()) return data;
   address.bit(18,20) = 0;  //mirrors
 
   if(address >= 0x000000 && address <= 0x01ffff) {
@@ -33,6 +34,7 @@ auto MCD::readExternal(n1 upper, n1 lower, n22 address, n16 data) -> n16 {
 }
 
 auto MCD::writeExternal(n1 upper, n1 lower, n22 address, n16 data) -> void {
+  if(!MegaCD()) return;
   address.bit(18,20) = 0;  //mirrors
 
   if(address >= 0x000000 && address <= 0x01ffff) {

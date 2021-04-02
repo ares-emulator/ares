@@ -17,10 +17,10 @@ auto VDP::VRAM::write(n16 address, n16 data) -> void {
   }
 
   n15 offset = address;
-  pixels[offset << 2 | 0] = data >> 9 & 0x78;
-  pixels[offset << 2 | 1] = data >> 5 & 0x78;
-  pixels[offset << 2 | 2] = data >> 1 & 0x78;
-  pixels[offset << 2 | 3] = data << 3 & 0x78;
+  pixels[offset << 2 | 0] = data >> 12 & 15;
+  pixels[offset << 2 | 1] = data >>  8 & 15;
+  pixels[offset << 2 | 2] = data >>  4 & 15;
+  pixels[offset << 2 | 3] = data >>  0 & 15;
 
   if(address < vdp.sprite.io.nametableAddress) return;
   if(address > vdp.sprite.io.nametableAddress + 319) return;
@@ -47,16 +47,30 @@ auto VDP::VSRAM::write(n6 address, n10 data) -> void {
   memory[address] = data;
 }
 
+auto VDP::VSRAM::readByte(n7 address) const -> n8 {
+  return read(address >> 1).byte(!address.bit(0));
+}
+
+auto VDP::VSRAM::writeByte(n7 address, n8 data) -> void {
+  auto word = read(address >> 1);
+  word.byte(!address.bit(0)) = data;
+  write(address >> 1, word);
+}
+
 auto VDP::CRAM::read(n6 address) const -> n9 {
   return memory[address];
 }
 
 auto VDP::CRAM::write(n6 address, n9 data) -> void {
   memory[address] = data;
+}
 
-  //ppcccc -> cccc-pp
-  n7 offset = (address >> 4 | address << 3) & 0x7b;
-  palette[0 << 7 | 0 << 2 | offset] = palette[0 << 7 | 1 << 2 | offset] = 0 << 9 | data;
-  palette[1 << 7 | 0 << 2 | offset] = palette[1 << 7 | 1 << 2 | offset] = 1 << 9 | data;
-  palette[2 << 7 | 0 << 2 | offset] = palette[2 << 7 | 1 << 2 | offset] = 2 << 9 | data;
+auto VDP::CRAM::readByte(n7 address) const -> n8 {
+  return read(address >> 1).byte(!address.bit(0));
+}
+
+auto VDP::CRAM::writeByte(n7 address, n8 data) -> void {
+  auto word = read(address >> 1);
+  word.byte(!address.bit(0)) = data;
+  write(address >> 1, word);
 }

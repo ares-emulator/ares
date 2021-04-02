@@ -8,7 +8,7 @@ auto WonderSwanColor::load(string location) -> bool {
   this->location = locate();
   pak = new vfs::directory;
   pak->append("boot.rom", Resource::WonderSwanColor::Boot);
-  pak->append("save.eeprom", 128);
+  pak->append("save.eeprom", 2048);
 
   Pak::load("save.eeprom", ".eeprom");
 
