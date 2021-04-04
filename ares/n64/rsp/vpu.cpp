@@ -900,6 +900,8 @@ auto RSP::instructionVMRG(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
     for(u32 n : range(8)) {
       ACCL.u16(n) = VCCL.get(n) ? vs.u16(n) : vte.u16(n);
     }
+    VCOH = zero;
+    VCOL = zero;
     vd = ACCL;
   }
 

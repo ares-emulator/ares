@@ -20,7 +20,7 @@ auto MCD::readExternal(n1 upper, n1 lower, n22 address, n16 data) -> n16 {
     } else {
       address = !io.wramSelect << 17 | (n17)address;
     }
-    if(!vdp.active()) return wram[address >> 1];
+    if(!vdp.dma.active) return wram[address >> 1];
 
     //VDP DMA from Mega CD word RAM to VDP VRAM responds with a one-access delay
     //note: it is believed that the first transfer is the CPU prefetch, which isn't emulated here

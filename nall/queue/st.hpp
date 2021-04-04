@@ -29,7 +29,7 @@ struct queue<T[Size]> {
     return size() == Size;
   }
 
-  auto peek(u32 index) const -> T {
+  auto peek(u32 index = 0) const -> T {
     return _data[(_read + index) % Size];
   }
 
@@ -140,7 +140,7 @@ struct queue {
     for(u32 n : range(_capacity)) _data[n] = value;
   }
 
-  auto peek(u32 index) const -> T {
+  auto peek(u32 index = 0) const -> T {
     return _data[(_read + index) % _capacity];
   }
 

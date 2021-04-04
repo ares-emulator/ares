@@ -6,6 +6,8 @@
 namespace ares::MegaDrive {
 
 VDP vdp;
+#include "main.cpp"
+#include "fifo.cpp"
 #include "memory.cpp"
 #include "io.cpp"
 #include "dma.cpp"
@@ -43,75 +45,6 @@ auto VDP::unload() -> void {
   node.reset();
 }
 
-auto VDP::main() -> void {
-  scanline();
-
-  cpu.lower(CPU::Interrupt::HorizontalBlank);
-  cartridge.hblank(0);
-
-  if(state.vcounter == 0) {
-    latch.horizontalInterruptCounter = io.horizontalInterruptCounter;
-    io.vblankIRQ = false;
-    cpu.lower(CPU::Interrupt::VerticalBlank);
-    cartridge.vblank(0);
-  }
-
-  if(state.vcounter < screenHeight()) {
-    while(state.hcounter < 1280) {
-      run();
-      state.hdot++;
-      step(pixelWidth());
-    }
-    m32x.vdp.scanline(pixels(), state.vcounter);
-
-    if(latch.horizontalInterruptCounter-- == 0) {
-      latch.horizontalInterruptCounter = io.horizontalInterruptCounter;
-      if(io.horizontalBlankInterruptEnable) {
-        cpu.raise(CPU::Interrupt::HorizontalBlank);
-      }
-    }
-    cartridge.hblank(1);
-
-    step(430);
-  } else if(state.vcounter == screenHeight()) {
-    if(io.verticalBlankInterruptEnable) {
-      io.vblankIRQ = true;
-      cpu.raise(CPU::Interrupt::VerticalBlank);
-    }
-
-    cartridge.vblank(1);
-    apu.setINT(true);
-    step(1286);
-    cartridge.hblank(1);
-    apu.setINT(false);
-    step(424);
-  } else {
-    step(1280);
-    cartridge.hblank(1);
-    step(430);
-  }
-
-  state.hdot = 0;
-  state.hcounter = 0;
-  if(++state.vcounter >= frameHeight()) {
-    state.vcounter = 0;
-    state.field ^= 1;
-    latch.field = state.field;
-    latch.interlace = io.interlaceMode == 3;
-    latch.overscan = io.overscan;
-  }
-  latch.displayWidth = io.displayWidth;
-}
-
-auto VDP::step(u32 clocks) -> void {
-  state.hcounter += clocks;
-  while(clocks--) {
-    dma.run();
-    Thread::step(1);
-    Thread::synchronize(cpu, apu);
-  }
-}
-
 auto VDP::power(bool reset) -> void {
   Thread::create(system.frequency() / 2.0, {&VDP::main, this});
   screen->power();
@@ -122,6 +55,7 @@ auto VDP::power(bool reset) -> void {
     for(auto& data : cram.memory ) data = 0;
   }
 
+  fifo.slots.flush();
   vram.mode = 0;
   io = {};
   latch = {};

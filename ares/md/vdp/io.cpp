@@ -86,34 +86,11 @@ auto VDP::writeDataPort(n16 data) -> void {
     //causes extra transfer to occur on VRAM fill operations
   }
 
-  //VRAM write
-  if(io.command.bit(0,3) == 1) {
-    auto address = io.address.bit(1,16);
-    if(io.address.bit(0)) data = data >> 8 | data << 8;
-    vram.write(address, data);
-    io.address += io.dataIncrement;
-    return;
-  }
-
-  //VSRAM write
-  if(io.command.bit(0,3) == 5) {
-    auto address = io.address.bit(1,6);
-    //data format: ---- --yy yyyy yyyy
-    vsram.write(address, data.bit(0,9));
-    io.address += io.dataIncrement;
-    return;
-  }
-
-  //CRAM write
-  if(io.command.bit(0,3) == 3) {
-    auto address = io.address.bit(1,6);
-    //data format: ---- bbb- ggg- rrr-
-    cram.write(address, data.bit(1,3) << 0 | data.bit(5,7) << 3 | data.bit(9,11) << 6);
-    io.address += io.dataIncrement;
-    return;
-  }
-
-  debug(unusual, "[VDP] writeDataPort: io.command = 0b", binary(io.command, 6L));
+  auto address = io.address.bit(1,16);
+  if(io.address.bit(0)) data = data >> 8 | data << 8;
+  fifo.write(address << 1 | 0, data >> 8, io.command);
+  fifo.write(address << 1 | 1, data >> 0, io.command);
+  io.address += io.dataIncrement;
 }
 
 //
@@ -125,13 +102,13 @@ auto VDP::readControlPort() -> n16 {
   result.bit( 0) = Region::PAL();
   result.bit( 1) = io.command.bit(5);  //DMA active
   result.bit( 2) = state.hcounter >= 1280;  //horizontal blank
-  result.bit( 3) = state.vcounter >= screenHeight();  //vertical blank
+  result.bit( 3) = state.vcounter >= screenHeight() || !io.displayEnable;  //vertical blank
   result.bit( 4) = io.interlaceMode.bit(0) && state.field;
   result.bit( 5) = 0;  //SCOL
   result.bit( 6) = 0;  //SOVR
   result.bit( 7) = io.vblankIRQ;
-  result.bit( 8) = fifo.full();
-  result.bit( 9) = fifo.empty();
+  result.bit( 8) = fifo.slots.full();
+  result.bit( 9) = fifo.slots.empty();
   result.bit(10) = 1;  //constants (bits 10-15)
   result.bit(11) = 0;
   result.bit(12) = 1;
@@ -154,17 +131,16 @@ auto VDP::writeControlPort(n16 data) -> void {
     return;
   }
 
+  io.command.bit(0,1) = data.bit(14,15);
+  io.address.bit(0,13) = data.bit(0,13);
+
   //command write (hi)
   if(data.bit(14,15) != 2) {
     io.commandPending = true;
-
-    io.command.bit(0,1) = data.bit(14,15);
-    io.address.bit(0,13) = data.bit(0,13);
     return;
   }
 
   //register write (d13 is ignored)
-  if(data.bit(14,15) == 2)
   switch(data.bit(8,12)) {
 
   //mode register 1

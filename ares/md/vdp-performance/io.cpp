@@ -126,7 +126,7 @@ auto VDP::readControlPort() -> n16 {
   result.bit( 0) = Region::PAL();
   result.bit( 1) = io.command.bit(5);  //DMA active
   result.bit( 2) = state.hcounter >= 1280;  //horizontal blank
-  result.bit( 3) = state.vcounter >= screenHeight();  //vertical blank
+  result.bit( 3) = state.vcounter >= screenHeight() || !io.displayEnable;  //vertical blank
   result.bit( 4) = io.interlaceMode.bit(0) && state.field;
   result.bit( 5) = 0;  //SCOL
   result.bit( 6) = 0;  //SOVR
@@ -156,17 +156,16 @@ auto VDP::writeControlPort(n16 data) -> void {
     return;
   }
 
+  io.command.bit(0,1) = data.bit(14,15);
+  io.address.bit(0,13) = data.bit(0,13);
+
   //command write (hi)
   if(data.bit(14,15) != 2) {
     io.commandPending = true;
-
-    io.command.bit(0,1) = data.bit(14,15);
-    io.address.bit(0,13) = data.bit(0,13);
     return;
   }
 
   //register write (d13 is ignored)
-  if(data.bit(14,15) == 2)
   switch(data.bit(8,12)) {
 
   //mode register 1
@@ -223,7 +222,7 @@ auto VDP::writeControlPort(n16 data) -> void {
 
   //background color
   case 0x07: {
-    io.backgroundColor = data.bit(4,5) << 0 | data.bit(0,3) << 3;
+    io.backgroundColor = data.bit(0,5);
     return;
   }
 

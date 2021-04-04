@@ -86,16 +86,21 @@ template<typename T> inline auto pad(const T& value, long precision, char padcha
   return buffer;
 }
 
-inline auto hex(u64 value, long precision, char padchar) -> string {
+template<typename T> inline auto hex(T value, long precision, char padchar) -> string {
   string buffer;
-  buffer.resize(sizeof(u64) * 2);
+  buffer.resize(sizeof(T) * 2);
   char* p = buffer.get();
+
+  //create a mask to clear the upper four bits after shifting right in case T is a signed type
+  T mask = 1;
+  mask <<= sizeof(T) * 8 - 4;
+  mask -= 1;
 
   u32 size = 0;
   do {
     u32 n = value & 15;
     p[size++] = n < 10 ? '0' + n : 'a' + n - 10;
-    value >>= 4;
+    value = value >> 4 & mask;
   } while(value);
   buffer.resize(size);
   buffer.reverse();
@@ -103,15 +108,20 @@ inline auto hex(u64 value, long precision, char padchar) -> string {
   return buffer;
 }
 
-inline auto octal(u64 value, long precision, char padchar) -> string {
+template<typename T> inline auto octal(T value, long precision, char padchar) -> string {
   string buffer;
-  buffer.resize(sizeof(u64) * 3);
+  buffer.resize(sizeof(T) * 3);
   char* p = buffer.get();
+
+  //create a mask to clear the upper three bits
+  T mask = 1;
+  mask <<= sizeof(T) * 8 - 3;
+  mask -= 1;
 
   u32 size = 0;
   do {
     p[size++] = '0' + (value & 7);
-    value >>= 3;
+    value = value >> 3 & mask;
   } while(value);
   buffer.resize(size);
   buffer.reverse();
@@ -119,15 +129,20 @@ inline auto octal(u64 value, long precision, char padchar) -> string {
   return buffer;
 }
 
-inline auto binary(u64 value, long precision, char padchar) -> string {
+template<typename T> inline auto binary(T value, long precision, char padchar) -> string {
   string buffer;
-  buffer.resize(sizeof(u64) * 8);
+  buffer.resize(sizeof(T) * 8);
   char* p = buffer.get();
+
+  //create a mask to clear the upper one bit
+  T mask = 1;
+  mask <<= sizeof(T) * 8 - 1;
+  mask -= 1;
 
   u32 size = 0;
   do {
     p[size++] = '0' + (value & 1);
-    value >>= 1;
+    value = value >> 1 & mask;
   } while(value);
   buffer.resize(size);
   buffer.reverse();

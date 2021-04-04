@@ -31,10 +31,11 @@ struct VDP : Thread {
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
+  auto power(bool reset) -> void;
+
+  //main.cpp
   auto main() -> void;
   auto step(u32 clocks) -> void;
-
-  auto power(bool reset) -> void;
 
   //io.cpp
   auto read(n24 address, n16 data) -> n16;
@@ -197,20 +198,21 @@ private:
   auto screenHeight() const -> u32 { return latch.overscan ? 240 : 224; }
   auto frameHeight() const -> u32 { return Region::PAL() ? 312 : 262; }
 
-  struct Slot {
-    auto serialize(serializer& s) {
-      s(address);
-      s(data);
-      s(target);
-      s(half);
-    }
+  struct FIFO {
+    //fifo.cpp
+    auto slot() -> void;
+    auto write(n17 address, n8 data, n4 target) -> void;
 
-    n16 address;
-    n16 data;
-    n6  target;
-    n1  half;
-  };
-  queue<Slot[4]> fifo;
+    struct Slot {
+      //serialization.cpp
+      auto serialize(serializer&) -> void;
+
+      n17 address;
+      n8  data;
+      n4  target;
+    };
+    queue<Slot[8]> slots;
+  } fifo;
 
   //video RAM
   struct VRAM {
@@ -237,9 +239,6 @@ private:
     auto read(n6 address) const -> n10;
     auto write(n6 address, n10 data) -> void;
 
-    auto readByte(n7 address) const -> n8;
-    auto writeByte(n7 address, n8 data) -> void;
-
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
@@ -251,9 +250,6 @@ private:
     //memory.cpp
     auto read(n6 address) const -> n9;
     auto write(n6 address, n9 data) -> void;
-
-    auto readByte(n7 address) const -> n8;
-    auto writeByte(n7 address, n8 data) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -321,8 +317,6 @@ private:
     n16  vcounter;
     n1   field;
   } state;
-
-  friend class Interface;
 };
 
 extern VDP vdp;

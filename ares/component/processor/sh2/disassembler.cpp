@@ -540,7 +540,7 @@ auto SH2::disassembleContext() -> string {
   s.append("r13:",  hex(R[13], 8L), " ");
   s.append("r14:",  hex(R[14], 8L), " ");
   s.append("r15:",  hex(R[15], 8L), " ");
-  s.append("sr:",   hex(SR, 8L), " ");
+  s.append("sr:",   hex((u32)SR, 8L), " ");
   s.append("gbr:",  hex(GBR, 8L), " ");
   s.append("vbr:",  hex(VBR, 8L), " ");
   s.append("mach:", hex(MACH, 8L), " ");

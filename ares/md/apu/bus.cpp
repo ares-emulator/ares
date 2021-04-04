@@ -10,27 +10,28 @@ auto APU::read(n16 address) -> n8 {
   if(address >= 0x0000 && address <= 0x3fff) return ram.read(address);
   if(address >= 0x4000 && address <= 0x4003) return opn2.readStatus();
   if(address >= 0x8000 && address <= 0xffff) {
-    while(vdp.dma.active) {
-      Thread::step(1);
-      Thread::synchronize(vdp);
-    }
-
     //bus arbiter delay rough approximation
-    cpu.idle(11);
     step(3);
+    while(MegaDrive::bus.acquired()) step(1);
+    MegaDrive::bus.acquire(MegaDrive::Bus::APU);
 
     n24 location = state.bank << 15 | (n15)address & ~1;
-    if(location >= 0xa00000 && location <= 0xffffff) {
-      //todo: apparently *some* I/O addresses can be read or written from the Z80.
-      //it is not currently known which addresses are accepted.
-      if(location != 0xa10000) return 0xff;  //version register can be read
+    n8 data = 0xff;
+    switch(location) {
+    case 0x000000 ... 0x9fffff:
+    case 0xa10000:  //version register can be read
+      if(address & 1) {
+        data = MegaDrive::bus.read(0, 1, location & ~1, 0x00).byte(0);
+      } else {
+        data = MegaDrive::bus.read(1, 0, location & ~1, 0x00).byte(1);
+      }
+      break;
     }
-    if(address & 1) {
-      return cpu.read(0, 1, location & ~1, 0x00).byte(0);
-    } else {
-      return cpu.read(1, 0, location & ~1, 0x00).byte(1);
-    }
+
+    MegaDrive::bus.release(MegaDrive::Bus::APU);
+    return data;
   }
+
   return 0x00;
 }
 
@@ -47,22 +48,24 @@ auto APU::write(n16 address, n8 data) -> void {
   if(address == 0x7f15) return psg.write(data);
   if(address == 0x7f17) return psg.write(data);
   if(address >= 0x8000 && address <= 0xffff) {
-    while(vdp.dma.active) {
-      Thread::step(1);
-      Thread::synchronize(vdp);
-    }
-
     //bus arbiter delay rough approximation
-    cpu.idle(11);
     step(3);
+    while(MegaDrive::bus.acquired()) step(1);
+    MegaDrive::bus.acquire(MegaDrive::Bus::APU);
 
     n24 location = state.bank << 15 | (n15)address;
-    if(location >= 0xa00000 && location <= 0xdfffff) return;
-    if(address & 1) {
-      return cpu.write(0, 1, location & ~1, data << 8 | data << 0);
-    } else {
-      return cpu.write(1, 0, location & ~1, data << 8 | data << 0);
+    switch(location) {
+    case 0x000000 ... 0x9fffff:
+    case 0xe00000 ... 0xffffff:
+      if(address & 1) {
+        MegaDrive::bus.write(0, 1, location & ~1, data << 8 | data << 0);
+      } else {
+        MegaDrive::bus.write(1, 0, location & ~1, data << 8 | data << 0);
+      }
+      break;
     }
+
+    MegaDrive::bus.release(MegaDrive::Bus::APU);
   }
 }
 

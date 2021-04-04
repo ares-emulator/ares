@@ -5,6 +5,7 @@ ares.components += ssp1601
 ares.components += sn76489
 ares.components += ym2612
 
+ares.objects += ares-md-bus
 ares.objects += ares-md-cpu
 ares.objects += ares-md-apu
 ares.objects += ares-md-vdp
@@ -16,6 +17,7 @@ ares.objects += ares-md-system
 ares.objects += ares-md-cartridge
 ares.objects += ares-md-controller
 
+$(object.path)/ares-md-bus.o:        $(ares.path)/md/bus/bus.cpp
 $(object.path)/ares-md-cpu.o:        $(ares.path)/md/cpu/cpu.cpp
 $(object.path)/ares-md-apu.o:        $(ares.path)/md/apu/apu.cpp
 $(object.path)/ares-md-vdp.o:        $(ares.path)/md/vdp/vdp.cpp

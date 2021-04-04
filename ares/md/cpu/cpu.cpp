@@ -70,11 +70,6 @@ inline auto CPU::idle(u32 clocks) -> void {
 }
 
 auto CPU::wait(u32 clocks) -> void {
-  while(vdp.dma.active) {
-    Thread::step(1);
-    Thread::synchronize(vdp);
-  }
-
   step(clocks);
   Thread::synchronize();
 }

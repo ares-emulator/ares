@@ -22,7 +22,7 @@ auto VDP::DMA::load() -> void {
   active = 1;
 
   auto address = io.mode.bit(0) << 23 | io.source << 1;
-  auto data = cpu.read(1, 1, address);
+  auto data = bus.read(1, 1, address);
   vdp.writeDataPort(data);
 
   io.source.bit(0,15)++;

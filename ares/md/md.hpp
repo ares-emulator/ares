@@ -30,7 +30,7 @@ namespace ares::MegaDrive {
   inline static auto MegaCD() -> bool;
 
   #include <md/controller/controller.hpp>
-
+  #include <md/bus/bus.hpp>
   #include <md/cpu/cpu.hpp>
   #include <md/apu/apu.hpp>
   #include <md/vdp/vdp.hpp>
@@ -38,7 +38,7 @@ namespace ares::MegaDrive {
   #include <md/opn2/opn2.hpp>
   #include <md/m32x/m32x.hpp>
   #include <md/mcd/mcd.hpp>
-
   #include <md/system/system.hpp>
   #include <md/cartridge/cartridge.hpp>
+  #include <md/bus/inline.hpp>
 }

@@ -7,7 +7,7 @@ auto VDP::serialize(serializer& s) -> void {
   s(planeB);
   s(sprite);
 
-  s(fifo);
+  s(fifo.slots);
   s(vram);
   s(vsram);
   s(cram);
@@ -45,6 +45,12 @@ auto VDP::serialize(serializer& s) -> void {
   s(state.hcounter);
   s(state.vcounter);
   s(state.field);
+}
+
+auto VDP::FIFO::Slot::serialize(serializer& s) -> void {
+  s(address);
+  s(data);
+  s(target);
 }
 
 auto VDP::DMA::serialize(serializer& s) -> void {

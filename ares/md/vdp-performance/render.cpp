@@ -69,40 +69,6 @@ auto VDP::render() -> void {
       outputPixel(fg.backdrop << 11 | mode << 9 | color);
     }
   }
-
-/*
-  n7 c[4] = {0, 0, 0, io.backgroundColor};
-  if(!io.shadowHighlightEnable) {
-    auto p = &cram.palette[1 << 7];
-    for(u32 x : range(screenWidth())) {
-      c[0] = *A++;
-      c[1] = *B++;
-      c[2] = *S++;
-      u32 l = lookupFG[c[0] >> 2 << 10 | c[1] >> 2 << 5 | c[2] >> 2];
-      outputPixel(p[c[l]] | (l == 3) << 11);
-    }
-  } else {
-    auto p = &cram.palette[0 << 7];
-    for(u32 x : range(screenWidth())) {
-      c[0] = *A++;
-      c[1] = *B++;
-      c[2] = *S++;
-      u32 l = lookupFG[c[0] >> 2 << 10 | c[1] >> 2 << 5 | c[2] >> 2];
-      u32 mode = (c[0] | c[1]) >> 2 & 1;  //0 = shadow, 1 = normal, 2 = highlight
-      if(l == 2) {
-        if(c[2] >= 0x70) {
-          if(c[2] <= 0x72) mode = 1;
-          else if(c[2] == 0x73) l = lookupBG[c[0] >> 2 << 5 | c[1] >> 2], mode++;
-          else if(c[2] == 0x7b) l = lookupBG[c[0] >> 2 << 5 | c[1] >> 2], mode = 0;
-          else mode |= c[2] >> 2 & 1;
-        } else {
-          mode |= c[2] >> 2 & 1;
-        }
-      }
-      outputPixel(p[mode << 7 | c[l]] | (l == 3) << 11);
-    }
-  }
-*/
 }
 
 auto VDP::outputPixel(n32 color) -> void {

@@ -107,7 +107,6 @@ private:
   auto saveSPC7110(Markup::Node) -> void;
   auto saveOBC1(Markup::Node) -> void;
 
-  friend class Interface;
   friend class ICD;
 };
 

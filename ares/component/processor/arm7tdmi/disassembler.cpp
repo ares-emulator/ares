@@ -30,7 +30,7 @@ auto ARM7TDMI::disassembleInstruction(maybe<n32> pc, maybe<boolean> thumb) -> st
 auto ARM7TDMI::disassembleContext() -> string {
   string output;
   for(u32 n : range(16)) {
-    output.append(_r[n], ":", hex(r(n), 8L), " ");
+    output.append(_r[n], ":", hex((u32)r(n), 8L), " ");
   }
 
   output.append("cpsr:");

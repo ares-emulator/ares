@@ -348,7 +348,7 @@ auto RSP::Disassembler::VU() -> vector<string> {
   case 0x00: return {"mfc2", rtName(), rdValue()};
   case 0x02: return {"cfc2", rtName(), cdValue()};
   case 0x04: return {"mtc2", rtValue(), rdName()};
-  case 0x06: return {"cfc2", rtValue(), cdName()};
+  case 0x06: return {"ctc2", rtValue(), cdName()};
   }
   if(!(instruction >> 25 & 1)) return {};
 

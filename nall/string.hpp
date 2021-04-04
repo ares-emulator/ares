@@ -77,9 +77,9 @@ template<typename T> struct stringify;
 template<typename... P> auto print(P&&...) -> void;
 template<typename... P> auto print(FILE*, P&&...) -> void;
 template<typename T> auto pad(const T& value, long precision = 0, char padchar = ' ') -> string;
-auto hex(u64 value, long precision = 0, char padchar = '0') -> string;
-auto octal(u64 value, long precision = 0, char padchar = '0') -> string;
-auto binary(u64 value, long precision = 0, char padchar = '0') -> string;
+template<typename T> auto hex(T value, long precision = 0, char padchar = '0') -> string;
+template<typename T> auto octal(T value, long precision = 0, char padchar = '0') -> string;
+template<typename T> auto binary(T value, long precision = 0, char padchar = '0') -> string;
 
 //match.hpp
 auto tokenize(const char* s, const char* p) -> bool;

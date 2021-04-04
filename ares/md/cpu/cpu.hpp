@@ -52,7 +52,6 @@ struct CPU : M68K, Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-private:
   n1 tmssEnable;
 
   struct IO {

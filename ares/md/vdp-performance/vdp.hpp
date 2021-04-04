@@ -49,6 +49,31 @@ struct VDP : Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  struct DMA {
+    //dma.cpp
+    auto poll() -> void;
+    auto run() -> bool;
+    auto load() -> void;
+    auto fill() -> void;
+    auto copy() -> void;
+
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n1 active;
+
+    struct IO {
+      n2  mode;
+      n22 source;
+      n16 length;
+      n8  fill;
+      n1  enable;
+      n1  wait;
+    } io;
+  } dma;
+
 private:
   auto pixelWidth() const -> u32 { return latch.displayWidth ? 4 : 5; }
   auto screenWidth() const -> u32 { return latch.displayWidth ? 320 : 256; }
@@ -99,31 +124,6 @@ private:
 
     n9 memory[64];
   } cram;
-
-  struct DMA {
-    //dma.cpp
-    auto poll() -> void;
-    auto run() -> bool;
-    auto load() -> void;
-    auto fill() -> void;
-    auto copy() -> void;
-
-    auto power() -> void;
-
-    //serialization.cpp
-    auto serialize(serializer&) -> void;
-
-    n1 active;
-
-    struct IO {
-      n2  mode;
-      n22 source;
-      n16 length;
-      n8  fill;
-      n1  enable;
-      n1  wait;
-    } io;
-  } dma;
 
   struct Pixel {
     auto above() const -> bool { return priority == 1 && color; }
@@ -245,7 +245,7 @@ private:
     n1  displayEnable;
 
     //$07  background color
-    n7  backgroundColor;
+    n6  backgroundColor;
 
     //$0a  horizontal interrupt counter
     n8  horizontalInterruptCounter;

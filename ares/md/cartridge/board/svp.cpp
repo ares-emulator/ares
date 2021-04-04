@@ -73,7 +73,7 @@ struct SVP : Interface, SSP1601 {
     }
 
     //VDP DMA from SVP to VDP VRAM responds with a one-access delay
-    if(vdp.active()) swap(data, WRAM);
+    if(vdp.dma.active) swap(data, WRAM);
     return data;
   }
 
