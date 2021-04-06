@@ -11,34 +11,31 @@ auto VDP::Sprite::write(n9 address, n16 data) -> void {
 
   auto& object = oam[address >> 2];
   switch(address.bit(0,1)) {
-
-  case 0: {
+  case 0:
     object.y = data.bit(0,9);
     break;
-  }
-
-  case 1: {
-    object.link = data.bit(0,6);
+  case 1:
+    object.link       = data.bit(0,6);
     object.tileHeight = data.bit(8,9);
-    object.tileWidth = data.bit(10,11);
+    object.tileWidth  = data.bit(10,11);
     break;
-  }
-
-  case 2: {
-    object.address = data.bit(0,10);
-    object.horizontalFlip = data.bit(11);
-    object.verticalFlip = data.bit(12);
-    object.palette = data.bit(13,14);
+  case 2:
+    object.address  = data.bit(0,10);
+    object.hflip    = data.bit(11);
+    object.vflip    = data.bit(12);
+    object.palette  = data.bit(13,14);
     object.priority = data.bit(15);
     break;
-  }
-
-  case 3: {
+  case 3:
     object.x = data.bit(0,8);
     break;
   }
+}
 
-  }
+auto VDP::Sprite::mappingFetch() -> void {
+}
+
+auto VDP::Sprite::patternFetch() -> void {
 }
 
 auto VDP::Sprite::scanline(u32 y) -> void {
@@ -47,7 +44,7 @@ auto VDP::Sprite::scanline(u32 y) -> void {
   if(interlace) y = y << 1 | vdp.state.field;
 
   objects.reset();
-  n7  link = 0;
+  n7  link  = 0;
   u32 tiles = 0;
   u32 count = 0;
 
@@ -59,12 +56,14 @@ auto VDP::Sprite::scanline(u32 y) -> void {
     if(y >= object.y + object.height()) continue;
     if(object.x == 0) break;
 
+    if(objects.size() >= objectLimit() || tiles >= tileLimit()) {
+      overflow = 1;
+      break;
+    }
+
     objects.append(object);
     tiles += object.width() >> 3;
-
     if(!link || link >= linkLimit()) break;
-    if(objects.size() >= objectLimit()) break;
-    if(tiles >= tileLimit()) break;
   } while(++count < linkLimit());
 }
 
@@ -83,8 +82,8 @@ auto VDP::Sprite::run(u32 x, u32 y) -> void {
 
     u32 objectX = x - object.x;
     u32 objectY = y - object.y;
-    if(object.horizontalFlip) objectX = (object.width() - 1) - objectX;
-    if(object.verticalFlip) objectY = (object.height() - 1) - objectY;
+    if(object.hflip) objectX = (object.width() - 1) - objectX;
+    if(object.vflip) objectY = (object.height() - 1) - objectY;
 
     u32 tileX = objectX >> 3;
     u32 tileY = objectY >> 3 + interlace;
@@ -94,9 +93,13 @@ auto VDP::Sprite::run(u32 x, u32 y) -> void {
     u32 pixelY = objectY & 7 + interlace * 8;
     tileAddress += pixelY << 1 | pixelX >> 2;
 
-    n16 tileData = vdp.vram.read(io.generatorAddress | tileAddress);
+    n16 tileData = vdp.vram.read(generatorAddress | tileAddress);
     n4  color = tileData >> (((pixelX & 3) ^ 3) << 2);
     if(!color) continue;
+
+    if(output.color) {
+      collision = 1;
+    }
 
     output.color = object.palette << 4 | color;
     output.priority = object.priority;
@@ -104,6 +107,10 @@ auto VDP::Sprite::run(u32 x, u32 y) -> void {
   }
 }
 
-auto VDP::Sprite::power() -> void {
-  io = {};
+auto VDP::Sprite::power(bool reset) -> void {
+  generatorAddress = 0;
+  nametableAddress = 0;
+  collision = 0;
+  overflow = 0;
+  output = {};
 }

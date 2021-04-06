@@ -21,16 +21,13 @@ auto VDP::pixels() -> u32* {
 }
 
 auto VDP::scanline() -> void {
-  if(state.vcounter < screenHeight()) {
-    planeA.scanline(state.vcounter);
-    window.scanline(state.vcounter);
-    planeB.scanline(state.vcounter);
-    sprite.scanline(state.vcounter);
+  if(vcounter() < screenHeight()) {
+    sprite.scanline(vcounter());
   }
 
-  if(state.vcounter == 240) {
+  if(vcounter() == 240) {
     if(latch.interlace == 0) screen->setProgressive(1);
-    if(latch.interlace == 1) screen->setInterlace(latch.field);
+    if(latch.interlace == 1) screen->setInterlace(state.field);
     screen->setViewport(0, 0, screen->width(), screen->height());
     screen->frame();
     scheduler.exit(Event::Frame);
@@ -41,16 +38,18 @@ auto VDP::scanline() -> void {
 
 auto VDP::run() -> void {
   if(!io.displayEnable) return outputPixel(0);
-  if(state.vcounter >= screenHeight()) return outputPixel(0);
+  if(vcounter() >= screenHeight()) return outputPixel(0);
 
-  auto& planeA = window.isWindowed(state.hdot, state.vcounter) ? window : this->planeA;
-  planeA.run(state.hdot, state.vcounter);
-  planeB.run(state.hdot, state.vcounter);
-  sprite.run(state.hdot, state.vcounter);
+  auto x = hdot();
+  auto y = vcounter();
+  layers.vscrollFetch(x);
+  layerA.run(x, y, window.test(x, y) ? window.attributes() : layerA.attributes());
+  layerB.run(x, y, layerB.attributes());
+  sprite.run(x, y);
 
   Pixel g = {io.backgroundColor, 0, 1};
-  Pixel a = planeA.output;
-  Pixel b = planeB.output;
+  Pixel a = layerA.output;
+  Pixel b = layerB.output;
   Pixel s = sprite.output;
 
   auto& bg = a.above() || a.color && !b.above() ? a : b.color ? b : g;
@@ -77,7 +76,10 @@ auto VDP::run() -> void {
 }
 
 auto VDP::outputPixel(n32 color) -> void {
-  if(!state.output) return;
-  for(u32 n : range(pixelWidth())) state.output[n] = color;
-  state.output += pixelWidth();
+  *state.output++ = color;
+  *state.output++ = color;
+  *state.output++ = color;
+  *state.output++ = color;
+  if(h40()) return;
+  *state.output++ = color;
 }

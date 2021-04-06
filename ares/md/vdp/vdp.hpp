@@ -27,6 +27,19 @@ struct VDP : Thread {
     } tracer;
   } debugger{*this};
 
+  inline auto hdot() const -> u32 { return state.hdot; }
+  inline auto hcounter() const -> u32 { return state.hcounter; }
+  inline auto vcounter() const -> u32 { return state.vcounter; }
+  inline auto field() const -> bool { return state.field; }
+  inline auto hsync() const -> bool { return state.hsync; }
+  inline auto vsync() const -> bool { return state.vsync; }
+
+  inline auto h32() const -> bool { return io.displayWidth == 0; }  //256-width
+  inline auto h40() const -> bool { return io.displayWidth == 1; }  //320-width
+
+  inline auto dclk()  const -> bool { return io.clockSelect == 0; }  //internal clock
+  inline auto edclk() const -> bool { return io.clockSelect == 1; }  //external clock
+
   //vdp.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
@@ -34,8 +47,15 @@ struct VDP : Thread {
   auto power(bool reset) -> void;
 
   //main.cpp
-  auto main() -> void;
   auto step(u32 clocks) -> void;
+  auto tick() -> void;
+  auto main() -> void;
+  auto hsync(bool) -> void;
+  auto vsync(bool) -> void;
+  auto mainH32() -> void;
+  auto mainH40() -> void;
+  auto mainBlankH32() -> void;
+  auto mainBlankH40() -> void;
 
   //io.cpp
   auto read(n24 address, n16 data) -> n16;
@@ -53,22 +73,18 @@ struct VDP : Thread {
     auto load() -> void;
     auto fill() -> void;
     auto copy() -> void;
-
-    auto power() -> void;
+    auto power(bool reset) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    n1 active;
-
-    struct IO {
-      n2  mode;
-      n22 source;
-      n16 length;
-      n8  fill;
-      n1  enable;
-      n1  wait;
-    } io;
+    n1  active;
+    n2  mode;
+    n22 source;
+    n16 length;
+    n8  filldata;
+    n1  enable;
+    n1  wait;
   } dma;
 
   //render.cpp
@@ -86,55 +102,64 @@ struct VDP : Thread {
     n1 backdrop;
   };
 
-  struct Background {
-    enum class ID : u32 { PlaneA, Window, PlaneB } id;
-
-    //background.cpp
-    auto isWindowed(u32 x, u32 y) -> bool;
-
-    auto updateHorizontalScroll(u32 y) -> void;
-    auto updateVerticalScroll(u32 x) -> void;
-
-    auto nametableAddress() -> n15;
-    auto nametableWidth() -> u32;
-    auto nametableHeight() -> u32;
-
-    auto scanline(u32 y) -> void;
-    auto run(u32 x, u32 y) -> void;
-
-    auto power() -> void;
+  struct Layers {
+    //layers.cpp
+    auto hscrollFetch() -> void;
+    auto vscrollFetch(u32 x) -> void;
+    auto power(bool reset) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    struct IO {
-      n16 generatorAddress;
-      n16 nametableAddress;
+    n2  hscrollMode;
+    n15 hscrollAddress;
+    n1  vscrollMode;
+    n2  nametableWidth;
+    n2  nametableHeight;
+  } layers;
 
-      //PlaneA, PlaneB
-      n2  nametableWidth;
-      n2  nametableHeight;
-      n15 horizontalScrollAddress;
-      n2  horizontalScrollMode;
-      n1  verticalScrollMode;
-
-      //Window
-      n10 horizontalOffset;
-      n1  horizontalDirection;
-      n10 verticalOffset;
-      n1  verticalDirection;
-    } io;
-
-    struct State {
-      n10 horizontalScroll;
-      n10 verticalScroll;
-    } state;
-
-    Pixel output;
+  struct Attributes {
+    n15 address;
+    n16 width;
+    n16 height;
+    n10 hscroll;
+    n10 vscroll;
   };
-  Background planeA{Background::ID::PlaneA};
-  Background window{Background::ID::Window};
-  Background planeB{Background::ID::PlaneB};
+
+  struct Window {
+    //window.cpp
+    auto test(u32 x, u32 y) const -> bool;
+    auto attributes() const -> Attributes;
+    auto power(bool reset) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n10 hoffset;
+    n1  hdirection;
+    n10 voffset;
+    n1  vdirection;
+    n16 nametableAddress;
+  } window;
+
+  struct Layer {
+    //layer.cpp
+    auto mappingFetch() -> void;
+    auto patternFetch() -> void;
+
+    auto attributes() const -> Attributes;
+    auto run(u32 x, u32 y, const Attributes&) -> void;
+    auto power(bool reset) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n10 hscroll;
+    n10 vscroll;
+    n16 generatorAddress;
+    n16 nametableAddress;
+    Pixel output;
+  } layerA, layerB;
 
   struct Object {
     //sprite.cpp
@@ -148,8 +173,8 @@ struct VDP : Thread {
     n10 y;
     n2  tileWidth;
     n2  tileHeight;
-    n1  horizontalFlip;
-    n1  verticalFlip;
+    n1  hflip;
+    n1  vflip;
     n2  palette;
     n1  priority;
     n11 address;
@@ -160,27 +185,26 @@ struct VDP : Thread {
     VDP& vdp;
 
     //the per-scanline sprite limits are different between H40 and H32 modes
-    auto objectLimit() const -> u32 { return vdp.io.displayWidth ? 20 : 16; }
-    auto tileLimit()   const -> u32 { return vdp.io.displayWidth ? 40 : 32; }
-    auto linkLimit()   const -> u32 { return vdp.io.displayWidth ? 80 : 64; }
+    auto objectLimit() const -> u32 { return vdp.latch.displayWidth ? 20 : 16; }
+    auto tileLimit()   const -> u32 { return vdp.latch.displayWidth ? 40 : 32; }
+    auto linkLimit()   const -> u32 { return vdp.latch.displayWidth ? 80 : 64; }
 
     //sprite.cpp
     auto write(n9 address, n16 data) -> void;
+    auto mappingFetch() -> void;
+    auto patternFetch() -> void;
     auto scanline(u32 y) -> void;
     auto run(u32 x, u32 y) -> void;
-
-    auto power() -> void;
+    auto power(bool reset) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    struct IO {
-      n16 generatorAddress;
-      n16 nametableAddress;
-    } io;
-
+    n16 generatorAddress;
+    n16 nametableAddress;
+    n1  collision;
+    n1  overflow;
     Pixel output;
-
     adaptive_array<Object, 80> oam;
     adaptive_array<Object, 20> objects;
   };
@@ -201,17 +225,25 @@ private:
   struct FIFO {
     //fifo.cpp
     auto slot() -> void;
-    auto write(n17 address, n8 data, n4 target) -> void;
+    auto read(n4 target, n17 address) -> void;
+    auto write(n4 target, n17 address, n8 data) -> void;
+    auto power(bool reset) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
     struct Slot {
       //serialization.cpp
       auto serialize(serializer&) -> void;
 
+      n4  target;
       n17 address;
       n8  data;
-      n4  target;
     };
+
     queue<Slot[8]> slots;
+    queue<Slot[2]> requests;
+    n16 response;
   } fifo;
 
   //video RAM
@@ -259,7 +291,7 @@ private:
 
   struct IO {
     //status
-    n1  vblankIRQ;  //true after VIRQ triggers; cleared at start of next frame
+    n1  vblankInterruptTriggered;  //true after VIRQ triggers; cleared at start of next frame
 
     //command
     n6  command;
@@ -269,31 +301,32 @@ private:
     //$00  mode register 1
     n1  displayOverlayEnable;
     n1  counterLatch;
-    n1  horizontalBlankInterruptEnable;
+    n1  hblankInterruptEnable;
     n1  leftColumnBlank;
 
     //$01  mode register 2
     n1  videoMode;  //0 = Master System; 1 = Mega Drive
     n1  overscan;   //0 = 224 lines; 1 = 240 lines
-    n1  verticalBlankInterruptEnable;
+    n1  vblankInterruptEnable;
     n1  displayEnable;
 
     //$07  background color
     n6  backgroundColor;
 
     //$0a  horizontal interrupt counter
-    n8  horizontalInterruptCounter;
+    n8  hblankInterruptCounter;
 
     //$0b  mode register 3
     n1  externalInterruptEnable;
 
     //$0c  mode register 4
-    n2  displayWidth;
+    n1  displayWidth;  //0 = H32; 1 = H40
     n2  interlaceMode;
     n1  shadowHighlightEnable;
     n1  externalColorEnable;
-    n1  horizontalSync;
-    n1  verticalSync;
+    n1  hsync;
+    n1  vsync;
+    n1  clockSelect;  //0 = DCLK; 1 = EDCLK
 
     //$0f  data port auto-increment value
     n8  dataIncrement;
@@ -301,13 +334,13 @@ private:
 
   struct Latch {
     //per-frame
-    n1 field;
     n1 interlace;
     n1 overscan;
-    n8 horizontalInterruptCounter;
 
     //per-scanline
-    n2 displayWidth;
+    n8 hblankInterruptCounter;
+    n1 displayWidth;
+    n1 clockSelect;
   } latch;
 
   struct State {
@@ -315,7 +348,10 @@ private:
     n16  hdot;
     n16  hcounter;
     n16  vcounter;
+    n16  ecounter;
     n1   field;
+    n1   hsync;
+    n1   vsync;
   } state;
 };
 

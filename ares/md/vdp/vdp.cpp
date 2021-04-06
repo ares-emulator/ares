@@ -12,7 +12,9 @@ VDP vdp;
 #include "io.cpp"
 #include "dma.cpp"
 #include "render.cpp"
-#include "background.cpp"
+#include "layers.cpp"
+#include "window.cpp"
+#include "layer.cpp"
 #include "sprite.cpp"
 #include "color.cpp"
 #include "debugger.cpp"
@@ -46,7 +48,7 @@ auto VDP::unload() -> void {
 }
 
 auto VDP::power(bool reset) -> void {
-  Thread::create(system.frequency() / 2.0, {&VDP::main, this});
+  Thread::create(system.frequency(), {&VDP::main, this});
   screen->power();
 
   if(!reset) {
@@ -55,17 +57,18 @@ auto VDP::power(bool reset) -> void {
     for(auto& data : cram.memory ) data = 0;
   }
 
-  fifo.slots.flush();
   vram.mode = 0;
   io = {};
   latch = {};
   state = {};
 
-  planeA.power();
-  window.power();
-  planeB.power();
-  sprite.power();
-  dma.power();
+  fifo.power(reset);
+  dma.power(reset);
+  layers.power(reset);
+  window.power(reset);
+  layerA.power(reset);
+  layerB.power(reset);
+  sprite.power(reset);
 }
 
 }

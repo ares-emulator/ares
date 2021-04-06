@@ -19,7 +19,7 @@ auto Cartridge::connect() -> void {
   information.regions  = pak->attribute("region").split(",").strip();
   information.bootable = pak->attribute("bootable").boolean();
 
-  if(pak->attribute("32x").boolean()) {
+  if(pak->attribute("mega32x").boolean()) {
     board = new Board::Mega32X{*this};
   } else if(pak->read("svp.rom")) {
     board = new Board::SVP(*this);

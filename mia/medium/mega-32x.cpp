@@ -24,7 +24,8 @@ auto Mega32X::load(string location) -> bool {
   pak->setAttribute("title",    document["game/title"].string());
   pak->setAttribute("region",   document["game/region"].string());
   pak->setAttribute("bootable", true);
-  pak->setAttribute("32x",      true);
+  pak->setAttribute("mega32x",  true);
+  pak->setAttribute("megacd",   (bool)document["game/device"].string().split(", ").find("Mega CD"));
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
 
@@ -78,6 +79,28 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
   if(ramMode != "none") ramSize = bit::round(min(0x20000, ramSize));
   if(ramMode == "none") ramSize = 0;
 
+  vector<string> devices;
+  string device = slice((const char*)&rom[0x1a0], 0, 16).trimRight(" ");
+  for(auto& id : device) {
+    if(id == '0');  //Master System controller
+    if(id == '4');  //multitap
+    if(id == '6');  //6-button controller
+    if(id == 'A');  //analog joystick
+    if(id == 'B');  //trackball
+    if(id == 'C') devices.append("Mega CD");
+    if(id == 'D');  //download?
+    if(id == 'F');  //floppy drive
+    if(id == 'G');  //light gun
+    if(id == 'J');  //3-button controller
+    if(id == 'K');  //keyboard
+    if(id == 'L');  //Activator
+    if(id == 'M');  //mouse
+    if(id == 'P');  //printer
+    if(id == 'R');  //RS-232 modem
+    if(id == 'T');  //tablet
+    if(id == 'V');  //paddle
+  }
+
   vector<string> regions;
   string region = slice((const char*)&rom[0x01f0], 0, 16).trimRight(" ");
   if(!regions) {
@@ -124,6 +147,8 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
   s +={"  label:  ", domesticName, "\n"};
   s +={"  label:  ", internationalName, "\n"};
   s +={"  region: ", regions.merge(", "), "\n"};
+  if(devices)
+  s +={"  device: ", devices.merge(", "), "\n"};
   s += "  board\n";
   s += "    memory\n";
   s += "      type: ROM\n";

@@ -12,6 +12,8 @@ struct Bus {
   //inline.hpp
   auto read(n1 upper, n1 lower, n24 address, n16 data = 0) -> n16;
   auto write(n1 upper, n1 lower, n24 address, n16 data) -> void;
+  auto waitRefreshExternal() -> void;
+  auto waitRefreshRAM() -> void;
 
   //bus.cpp
   auto load(Node::Object) -> void;

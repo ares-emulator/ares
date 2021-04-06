@@ -1,32 +1,28 @@
-/* byte reads to word memory areas discard the unselected byte inside the M68K core.
- * as an optimization, the entire word is returned anyway.
- * byte writes to word memory areas that are addressable as bytes cannot enjoy this optimization.
- */
-
 inline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   if(address >= 0x000000 && address <= 0x3fffff) {
-  //if(refresh.external >= 126) idle(min(2, 128 - refresh.external));
-    if(!cpu.io.romEnable) return cpu.tmss[address >> 1];
-    if(cartridge.bootable()) {
-      return cartridge.read(upper, lower, address, data);
+    waitRefreshExternal();
+    if(!cpu.io.romEnable) {
+      data = cpu.tmss[address >> 1];
+    } else if(cartridge.bootable()) {
+      data = cartridge.read(upper, lower, address, data);
     } else {
-      return mcd.readExternal(upper, lower, address, data);
+      data = mcd.readExternal(upper, lower, address, data);
     }
     return data;
   }
 
   if(address >= 0x400000 && address <= 0x7fffff) {
-  //if(refresh.external >= 126) idle(min(2, 128 - refresh.external));
+    waitRefreshExternal();
     if(!cartridge.bootable()) {
-      return cartridge.read(upper, lower, address, data);
+      data = cartridge.read(upper, lower, address, data);
     } else {
-      return mcd.readExternal(upper, lower, address, data);
+      data = mcd.readExternal(upper, lower, address, data);
     }
     return data;
   }
 
   if(address >= 0x800000 && address <= 0x9fffff) {
-    if(m32x.node) return m32x.readExternal(upper, lower, address, data);
+    data = m32x.readExternal(upper, lower, address, data);
     return data;
   }
 
@@ -55,7 +51,7 @@ inline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address >= 0xe00000 && address <= 0xffffff) {
-  //if(refresh.ram >= 116) idle(min(3, 133 - refresh.ram));
+    waitRefreshRAM();
     return cpu.ram[address >> 1];
   }
 
@@ -64,27 +60,27 @@ inline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
 inline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   if(address >= 0x000000 && address <= 0x3fffff) {
-  //if(refresh.external >= 126) idle(min(2, 128 - refresh.external));
+    waitRefreshExternal();
     if(cartridge.bootable()) {
-      return cartridge.write(upper, lower, address, data);
+      cartridge.write(upper, lower, address, data);
     } else {
-      return mcd.writeExternal(upper, lower, address, data);
+      mcd.writeExternal(upper, lower, address, data);
     }
     return;
   }
 
   if(address >= 0x400000 && address <= 0x7fffff) {
-  //if(refresh.external >= 126) idle(min(2, 128 - refresh.external));
+    waitRefreshExternal();
     if(!cartridge.bootable()) {
-      return cartridge.write(upper, lower, address, data);
+      cartridge.write(upper, lower, address, data);
     } else {
-      return mcd.writeExternal(upper, lower, address, data);
+      mcd.writeExternal(upper, lower, address, data);
     }
     return;
   }
 
   if(address >= 0x800000 && address <= 0x9fffff) {
-    if(m32x.node) return m32x.writeExternal(upper, lower, address, data);
+    m32x.writeExternal(upper, lower, address, data);
     return;
   }
 
@@ -114,9 +110,27 @@ inline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address >= 0xe00000 && address <= 0xffffff) {
-  //if(refresh.ram >= 116) idle(min(3, 133 - refresh.ram));
+    waitRefreshRAM();
     if(upper) cpu.ram[address >> 1].byte(1) = data.byte(1);
     if(lower) cpu.ram[address >> 1].byte(0) = data.byte(0);
     return;
+  }
+}
+
+inline auto Bus::waitRefreshExternal() -> void {
+  while(cpu.refresh.external >= 126) {
+    if(cpu.active()) cpu.wait(1);
+    if(scheduler.synchronizing()) break;
+    if(apu.active()) apu.step(1);
+    if(vdp.active()) break;
+  }
+}
+
+inline auto Bus::waitRefreshRAM() -> void {
+  while(cpu.refresh.ram >= 116) {
+    if(cpu.active()) cpu.wait(1);
+    if(scheduler.synchronizing()) break;
+    if(apu.active()) apu.step(1);
+    if(vdp.active()) break;
   }
 }

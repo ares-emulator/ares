@@ -35,6 +35,7 @@ auto VDP::serialize(serializer& s) -> void {
   s(io.externalColorEnable);
   s(io.horizontalSync);
   s(io.verticalSync);
+  s(io.clockSelect);
   s(io.dataIncrement);
 
   s(latch.field);
@@ -42,6 +43,7 @@ auto VDP::serialize(serializer& s) -> void {
   s(latch.overscan);
   s(latch.horizontalInterruptCounter);
   s(latch.displayWidth);
+  s(latch.clockSelect);
 }
 
 auto VDP::VRAM::serialize(serializer& s) -> void {

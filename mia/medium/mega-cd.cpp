@@ -42,6 +42,28 @@ auto MegaCD::analyze(string location) -> string {
     return CompactDisc::manifestAudio(location);
   }
 
+  vector<string> devices;
+  string device = slice((const char*)(sector.data() + 0x1a0), 0, 16).trimRight(" ");
+  for(auto& id : device) {
+    if(id == '0');  //Master System controller
+    if(id == '4');  //multitap
+    if(id == '6');  //6-button controller
+    if(id == 'A');  //analog joystick
+    if(id == 'B');  //trackball
+    if(id == 'C');  //CD-ROM drive
+    if(id == 'D');  //download?
+    if(id == 'F');  //floppy drive
+    if(id == 'G');  //light gun
+    if(id == 'J');  //3-button controller
+    if(id == 'K');  //keyboard
+    if(id == 'L');  //Activator
+    if(id == 'M');  //mouse
+    if(id == 'P');  //printer
+    if(id == 'R');  //RS-232 modem
+    if(id == 'T');  //tablet
+    if(id == 'V');  //paddle
+  }
+
   vector<string> regions;
   string region = slice((const char*)(sector.data() + 0x1f0), 0, 16).trimRight(" ");
   if(!regions) {
@@ -72,5 +94,7 @@ auto MegaCD::analyze(string location) -> string {
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
   s +={"  region: ", regions.merge(", "), "\n"};
+  if(devices)
+  s +={"  device: ", devices.merge(", "), "\n"};
   return s;
 }

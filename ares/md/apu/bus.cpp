@@ -12,7 +12,7 @@ auto APU::read(n16 address) -> n8 {
   if(address >= 0x8000 && address <= 0xffff) {
     //bus arbiter delay rough approximation
     step(3);
-    while(MegaDrive::bus.acquired()) step(1);
+    while(MegaDrive::bus.acquired() && !scheduler.synchronizing()) step(1);
     MegaDrive::bus.acquire(MegaDrive::Bus::APU);
 
     n24 location = state.bank << 15 | (n15)address & ~1;
@@ -50,7 +50,7 @@ auto APU::write(n16 address, n8 data) -> void {
   if(address >= 0x8000 && address <= 0xffff) {
     //bus arbiter delay rough approximation
     step(3);
-    while(MegaDrive::bus.acquired()) step(1);
+    while(MegaDrive::bus.acquired() && !scheduler.synchronizing()) step(1);
     MegaDrive::bus.acquire(MegaDrive::Bus::APU);
 
     n24 location = state.bank << 15 | (n15)address;

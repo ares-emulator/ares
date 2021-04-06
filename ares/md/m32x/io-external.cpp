@@ -132,8 +132,8 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   //frame buffer control
   if(address == 0xa1518a) {
     data.bit( 0) = vdp.framebufferActive;
-    data.bit( 1) = vdp.framebufferAccess == 1;
-    data.bit(13) = vdp.vblank;  //palette access
+    data.bit( 1) = cpu.refresh.external >= 126 || cpu.refresh.ram >= 116;  //framebuffer access
+    data.bit(13) = vdp.vblank || vdp.hblank;  //palette access
     data.bit(14) = vdp.hblank;
     data.bit(15) = vdp.vblank;
   }

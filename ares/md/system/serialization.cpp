@@ -40,6 +40,7 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(cartridge);
   if(Mega32X()) s(m32x);
   if(MegaCD()) s(mcd);
+  s(bus);
   s(cpu);
   s(apu);
   s(vdp);

@@ -61,8 +61,8 @@ struct CPU : M68K, Thread {
   } io;
 
   struct Refresh {
-    n32 ram;
-    n7  external;
+    n8 ram;
+    n7 external;
   } refresh;
 
   struct State {

@@ -26,7 +26,7 @@ auto M32X::VDP::scanline(u32 pixels[1280], u32 y) -> void {
 
 auto M32X::VDP::scanlineMode1(u32 pixels[1280], u32 y) -> void {
   u16 address = fbram[y];
-  for(u32 x : range(320)) {
+  for(u32 x = dotshift; x < 320 + dotshift; x++) {
     u8 color = fbram[address + (x >> 1) & 0xffff].byte(!(x & 1));
     plot(&pixels[x * 4], cram[color]);
   }

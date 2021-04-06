@@ -25,6 +25,7 @@ private:
   auto _unusual(const string&) -> void;
   auto _unverified(const string&) -> void;
 
+  u64 _totalNotices = 0;
   vector<string> _unhandledNotices;
   vector<string> _unimplementedNotices;
   vector<string> _unusualNotices;

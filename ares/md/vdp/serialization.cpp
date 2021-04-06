@@ -2,83 +2,99 @@ auto VDP::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
   s(dma);
-  s(planeA);
+  s(layers);
   s(window);
-  s(planeB);
+  s(layerA);
+  s(layerB);
   s(sprite);
 
-  s(fifo.slots);
+  s(fifo);
   s(vram);
   s(vsram);
   s(cram);
 
-  s(io.vblankIRQ);
+  s(io.vblankInterruptTriggered);
   s(io.command);
   s(io.address);
   s(io.commandPending);
   s(io.displayOverlayEnable);
   s(io.counterLatch);
-  s(io.horizontalBlankInterruptEnable);
+  s(io.hblankInterruptEnable);
   s(io.leftColumnBlank);
   s(io.videoMode);
   s(io.overscan);
-  s(io.verticalBlankInterruptEnable);
+  s(io.vblankInterruptEnable);
   s(io.displayEnable);
   s(io.backgroundColor);
-  s(io.horizontalInterruptCounter);
+  s(io.hblankInterruptCounter);
   s(io.externalInterruptEnable);
   s(io.displayWidth);
   s(io.interlaceMode);
   s(io.shadowHighlightEnable);
   s(io.externalColorEnable);
-  s(io.horizontalSync);
-  s(io.verticalSync);
+  s(io.hsync);
+  s(io.vsync);
+  s(io.clockSelect);
   s(io.dataIncrement);
 
-  s(latch.field);
   s(latch.interlace);
   s(latch.overscan);
-  s(latch.horizontalInterruptCounter);
+  s(latch.hblankInterruptCounter);
   s(latch.displayWidth);
+  s(latch.clockSelect);
 
   s(state.hdot);
   s(state.hcounter);
   s(state.vcounter);
+  s(state.ecounter);
   s(state.field);
+  s(state.hsync);
+  s(state.vsync);
+}
+
+auto VDP::FIFO::serialize(serializer& s) -> void {
+  s(slots);
+  s(requests);
+  s(response);
 }
 
 auto VDP::FIFO::Slot::serialize(serializer& s) -> void {
+  s(target);
   s(address);
   s(data);
-  s(target);
 }
 
 auto VDP::DMA::serialize(serializer& s) -> void {
   s(active);
-  s(io.mode);
-  s(io.source);
-  s(io.length);
-  s(io.fill);
-  s(io.enable);
-  s(io.wait);
+  s(mode);
+  s(source);
+  s(length);
+  s(filldata);
+  s(enable);
+  s(wait);
 }
 
-auto VDP::Background::serialize(serializer& s) -> void {
-  s(io.generatorAddress);
-  s(io.nametableAddress);
-  s(io.nametableWidth);
-  s(io.nametableHeight);
-  s(io.horizontalScrollAddress);
-  s(io.horizontalScrollMode);
-  s(io.verticalScrollMode);
-  s(io.horizontalOffset);
-  s(io.horizontalDirection);
-  s(io.verticalOffset);
-  s(io.verticalDirection);
+auto VDP::Layers::serialize(serializer& s) -> void {
+  s(hscrollMode);
+  s(hscrollAddress);
+  s(vscrollMode);
+  s(nametableWidth);
+  s(nametableHeight);
+}
 
-  s(state.horizontalScroll);
-  s(state.verticalScroll);
+auto VDP::Window::serialize(serializer& s) -> void {
+  s(hoffset);
+  s(hdirection);
+  s(voffset);
+  s(vdirection);
+  s(nametableAddress);
+}
 
+auto VDP::Layer::serialize(serializer& s) -> void {
+  s(hscroll);
+  s(vscroll);
+  s(generatorAddress);
+  s(nametableAddress);
   s(output.color);
   s(output.priority);
   s(output.backdrop);
@@ -89,8 +105,8 @@ auto VDP::Object::serialize(serializer& s) -> void {
   s(y);
   s(tileWidth);
   s(tileHeight);
-  s(horizontalFlip);
-  s(verticalFlip);
+  s(hflip);
+  s(vflip);
   s(palette);
   s(priority);
   s(address);
@@ -98,15 +114,15 @@ auto VDP::Object::serialize(serializer& s) -> void {
 }
 
 auto VDP::Sprite::serialize(serializer& s) -> void {
-  s(io.generatorAddress);
-  s(io.nametableAddress);
-
+  s(generatorAddress);
+  s(nametableAddress);
+  s(collision);
+  s(overflow);
   s(output.color);
   s(output.priority);
   s(output.backdrop);
-
-  for(u32 n : range(80)) s(oam[n]);
-  for(u32 n : range(20)) s(objects[n]);
+  for(auto n : range(80)) s(oam[n]);
+  for(auto n : range(20)) s(objects[n]);
 }
 
 auto VDP::VRAM::serialize(serializer& s) -> void {

@@ -254,12 +254,13 @@ private:
     n1  externalInterruptEnable;
 
     //$0c  mode register 4
-    n2  displayWidth;
+    n1  displayWidth;  //0 = H32; 1 = H40
     n2  interlaceMode;
     n1  shadowHighlightEnable;
     n1  externalColorEnable;
     n1  horizontalSync;
     n1  verticalSync;
+    n1  clockSelect;  //0 = DCLK; 1 = EDCLK
 
     //$0f  data port auto-increment value
     n8  dataIncrement;
@@ -273,7 +274,8 @@ private:
     n8  horizontalInterruptCounter;
 
     //per-scanline
-    n2  displayWidth;
+    n1  displayWidth;
+    n1  clockSelect;
   } latch;
 
   friend class CPU;

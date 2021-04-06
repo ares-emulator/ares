@@ -57,22 +57,22 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(name.find("Mega Drive")) {
+  if(name.match("[Sega] Mega Drive (*)")) {
     information.name = "Mega Drive";
     information.mega32X = 0;
     information.megaCD = 0;
   }
-  if(name.find("Mega 32X")) {
+  if(name.match("[Sega] Mega 32X (*)")) {
     information.name = "Mega Drive";
     information.mega32X = 1;
     information.megaCD = 0;
   }
-  if(name.find("Mega CD")) {
+  if(name.match("[Sega] Mega CD (*)")) {
     information.name = "Mega Drive";
     information.mega32X = 0;
     information.megaCD = 1;
   }
-  if(name.find("Mega CD 32X")) {
+  if(name.match("[Sega] Mega CD 32X (*)")) {
     information.name = "Mega Drive";
     information.mega32X = 1;
     information.megaCD = 1;
@@ -105,6 +105,7 @@ auto System::load(Node::System& root, string name) -> bool {
 
   scheduler.reset();
   controls.load(node);
+  bus.load(node);
   cpu.load(node);
   apu.load(node);
   vdp.load(node);
@@ -122,6 +123,7 @@ auto System::load(Node::System& root, string name) -> bool {
 auto System::unload() -> void {
   if(!node) return;
   save();
+  bus.unload();
   cpu.unload();
   apu.unload();
   vdp.unload();
@@ -152,6 +154,7 @@ auto System::power(bool reset) -> void {
   cartridge.power(reset);
   if(Mega32X()) m32x.power(reset);
   if(MegaCD()) mcd.power(reset);
+  bus.power(reset);
   cpu.power(reset);
   apu.power(reset);  //apu.power() calls opn2.power()
   vdp.power(reset);

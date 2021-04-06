@@ -1,4 +1,6 @@
 auto M32X::readExternal(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
+  if(!Mega32X()) return data;
+
   if(!io.adapterEnable) {
     return rom[address >> 1];
   }
@@ -30,6 +32,8 @@ auto M32X::readExternal(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 }
 
 auto M32X::writeExternal(n1 upper, n1 lower, n24 address, n16 data) -> void {
+  if(!Mega32X()) return;
+
   if(!io.adapterEnable) {
     return;
   }
