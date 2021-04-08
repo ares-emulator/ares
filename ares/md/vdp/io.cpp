@@ -1,4 +1,4 @@
-auto VDP::read(n24 address, n16) -> n16 {
+auto VDP::read(n24 address, n16 data) -> n16 {
   switch(address & 0xc0001e) {
 
   //data port
@@ -18,12 +18,15 @@ auto VDP::read(n24 address, n16) -> n16 {
       if(io.interlaceMode.bit(1)) vcounter <<= 1;
       vcounter.bit(0) = vcounter.bit(8);
     }
-    return vcounter << 8 | (state.hdot >> 1) << 0;
+    auto hdot = state.hdot;
+    if(h32()) hdot = min(hdot, 255);
+    if(h40()) hdot = min(hdot, 319);
+    return vcounter << 8 | (hdot >> 1) << 0;
   }
 
   }
 
-  return 0x0000;
+  return data;
 }
 
 auto VDP::write(n24 address, n16 data) -> void {
@@ -45,51 +48,42 @@ auto VDP::write(n24 address, n16 data) -> void {
 //
 
 auto VDP::readDataPort() -> n16 {
-  io.commandPending = false;
+  command.latch = 0;
+  command.ready = 0;
 
-  auto address = io.address.bit(1,16);
-  fifo.read(io.command, address << 1 | 0);
-  fifo.read(io.command, address << 1 | 1);
-  io.address += io.dataIncrement;
+  fifo.read(command.target, command.address);
+  command.address += command.increment;
 
-  while(!fifo.requests.empty()) cpu.wait(1);
-  return fifo.response;
+  while(fifo.cache.reading) cpu.wait(1);
+  command.ready = 0;
+  return fifo.cache.read();
 }
 
 auto VDP::writeDataPort(n16 data) -> void {
-  io.commandPending = false;
+  command.latch = 0;
+  command.ready = 1;
 
-  //DMA VRAM fill
-  if(dma.wait) {
-    dma.wait = false;
-    dma.filldata = data >> 8;
-    //falls through to memory write
-    //causes extra transfer to occur on VRAM fill operations
-  }
-
-  auto address = io.address.bit(1,16);
-  if(io.address.bit(0)) data = data >> 8 | data << 8;
-  fifo.write(io.command, address << 1 | 0, data >> 8);
-  fifo.write(io.command, address << 1 | 1, data >> 0);
-  io.address += io.dataIncrement;
+  dma.wait = 0;
+  fifo.write(command.target, command.address, data);
+  command.address += command.increment;
 }
 
 //
 
 auto VDP::readControlPort() -> n16 {
-  io.commandPending = false;
+  command.latch = 0;
 
   n16 result;
   result.bit( 0) = Region::PAL();
-  result.bit( 1) = io.command.bit(5);  //DMA active
+  result.bit( 1) = command.pending;
   result.bit( 2) = hsync();
   result.bit( 3) = vsync() || !io.displayEnable;
   result.bit( 4) = io.interlaceMode.bit(0) && field();
   result.bit( 5) = sprite.collision;
   result.bit( 6) = sprite.overflow;
   result.bit( 7) = io.vblankInterruptTriggered;
-  result.bit( 8) = fifo.slots.full();
-  result.bit( 9) = fifo.slots.empty();
+  result.bit( 8) = fifo.full();
+  result.bit( 9) = fifo.empty();
   result.bit(10) = 1;  //constants (bits 10-15)
   result.bit(11) = 0;
   result.bit(12) = 1;
@@ -104,25 +98,29 @@ auto VDP::readControlPort() -> n16 {
 
 auto VDP::writeControlPort(n16 data) -> void {
   //command write (lo)
-  if(io.commandPending) {
-    io.commandPending = false;
+  if(command.latch) {
+    command.latch = 0;
 
-    io.command.bit(2,5) = data.bit(4,7);
-    io.address.bit(14,16) = data.bit(0,2);
+    command.address.bit(14,16) = data.bit(0,2);
+    command.target.bit(2,3)    = data.bit(4,5);
+    command.ready              = data.bit(6) | command.target.bit(0);
+    command.pending            = data.bit(7);
 
-    if(!dma.enable) io.command.bit(5) = 0;
-    if(dma.mode == 3) dma.wait = false;
+    if(!dma.enable) command.pending = 0;
     return;
   }
 
-  io.command.bit(0,1) = data.bit(14,15);
-  io.address.bit(0,13) = data.bit(0,13);
+  command.address.bit(0,13) = data.bit(0,13);
+  command.target.bit(0,1)   = data.bit(14,15);
+  command.ready             = 1;
 
   //command write (hi)
   if(data.bit(14,15) != 2) {
-    io.commandPending = true;
+    command.latch = 1;
     return;
   }
+
+  debugger.io(n5(data >> 8), n8(data));
 
   //register write (d13 is ignored)
   switch(data.bit(8,12)) {
@@ -144,7 +142,8 @@ auto VDP::writeControlPort(n16 data) -> void {
     io.vblankInterruptEnable = data.bit(5);
     io.displayEnable         = data.bit(6);
     vram.mode                = data.bit(7);
-    if(!dma.enable) io.command.bit(5) = 0;
+
+    if(!dma.enable) command.pending = 0;
     return;
   }
 
@@ -200,12 +199,13 @@ auto VDP::writeControlPort(n16 data) -> void {
 
   //mode register 4
   case 0x0c: {
-    io.displayWidth = data.bit(0) | data.bit(7) << 1;
-    io.interlaceMode = data.bit(1,2);
+    io.displayWidth          = data.bit(0);
+    io.interlaceMode         = data.bit(1,2);
     io.shadowHighlightEnable = data.bit(3);
-    io.externalColorEnable = data.bit(4);
-    io.hsync = data.bit(5);
-    io.vsync = data.bit(6);
+    io.externalColorEnable   = data.bit(4);
+    io.hsync                 = data.bit(5);
+    io.vsync                 = data.bit(6);
+    io.clockSelect           = data.bit(7);
     return;
   }
 
@@ -226,13 +226,13 @@ auto VDP::writeControlPort(n16 data) -> void {
 
   //data port auto-increment value
   case 0x0f: {
-    io.dataIncrement = data.bit(0,7);
+    command.increment = data.bit(0,7);
     return;
   }
 
   //layer size
   case 0x10: {
-    layers.nametableWidth = data.bit(0,1);
+    layers.nametableWidth  = data.bit(0,1);
     layers.nametableHeight = data.bit(4,5);
     return;
   }
@@ -278,8 +278,8 @@ auto VDP::writeControlPort(n16 data) -> void {
   //DMA source
   case 0x17: {
     dma.source.bit(16,21) = data.bit(0,5);
-    dma.mode = data.bit(6,7);
-    dma.wait = dma.mode.bit(1);
+    dma.mode              = data.bit(6,7);
+    dma.wait              = dma.mode == 2;
     return;
   }
 

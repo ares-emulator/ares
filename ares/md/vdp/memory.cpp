@@ -40,10 +40,16 @@ auto VDP::VSRAM::write(n6 address, n10 data) -> void {
   memory[address] = data;
 }
 
-auto VDP::CRAM::read(n6 address) const -> n9 {
+auto VDP::CRAM::color(n6 address) const -> n9 {
   return memory[address];
 }
 
-auto VDP::CRAM::write(n6 address, n9 data) -> void {
+auto VDP::CRAM::read(n6 address) const -> n16 {
+  n16 data = memory[address];
+  return data.bit(0,2) << 1 | data.bit(3,5) << 5 | data.bit(6,8) << 9;
+}
+
+auto VDP::CRAM::write(n6 address, n16 data) -> void {
+  data = data.bit(1,3) << 0 | data.bit(5,7) << 3 | data.bit(9,11) << 6;
   memory[address] = data;
 }

@@ -15,6 +15,7 @@ struct VDP : Thread {
     auto load(Node::Object) -> void;
     auto unload() -> void;
     auto dma(string_view) -> void;
+    auto io(n5 register, n8 data) -> void;
 
     struct Memory {
       Node::Debugger::Memory vram;
@@ -24,6 +25,7 @@ struct VDP : Thread {
 
     struct Tracer {
       Node::Debugger::Tracer::Notification dma;
+      Node::Debugger::Tracer::Notification io;
     } tracer;
   } debugger{*this};
 
@@ -67,6 +69,52 @@ struct VDP : Thread {
   auto readControlPort() -> n16;
   auto writeControlPort(n16 data) -> void;
 
+  struct Cache {
+    auto empty() const -> bool { return !upper && !lower; }
+    auto full() const -> bool { return upper && lower; }
+    auto read() -> n16 { return reading = 0, upper = 0, lower = 0, data; }
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n1  reading;  //1 = active
+    n16 data;     //read data
+    n1  upper;    //1 = data.byte(1) valid
+    n1  lower;    //1 = data.byte(0) valid
+  };
+
+  struct Slot {
+    auto empty() const -> bool { return !upper && !lower; }
+    auto full() const -> bool { return upper && lower; }
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n4  target;   //read/write flag + VRAM/VSRAM/CRAM select
+    n16 address;  //word address
+    n16 data;     //write data
+    n1  upper;    //1 = data.byte(1) valid
+    n1  lower;    //1 = data.byte(0) valid
+  };
+
+  struct FIFO {
+    //fifo.cpp
+    auto empty() const -> bool;
+    auto full() const -> bool;
+    auto advance() -> void;
+
+    auto slot() -> void;
+    auto read(n4 target, n17 address) -> void;
+    auto write(n4 target, n17 address, n16 data) -> void;
+    auto power(bool reset) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    Cache cache;
+    Slot  slots[4];
+  } fifo;
+
   struct DMA {
     //dma.cpp
     auto run() -> void;
@@ -78,13 +126,15 @@ struct VDP : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
+    n17 address;
+
     n1  active;
     n2  mode;
     n22 source;
     n16 length;
-    n8  filldata;
-    n1  enable;
+    n8  data;
     n1  wait;
+    n1  enable;
   } dma;
 
   //render.cpp
@@ -222,30 +272,6 @@ private:
   auto screenHeight() const -> u32 { return latch.overscan ? 240 : 224; }
   auto frameHeight() const -> u32 { return Region::PAL() ? 312 : 262; }
 
-  struct FIFO {
-    //fifo.cpp
-    auto slot() -> void;
-    auto read(n4 target, n17 address) -> void;
-    auto write(n4 target, n17 address, n8 data) -> void;
-    auto power(bool reset) -> void;
-
-    //serialization.cpp
-    auto serialize(serializer&) -> void;
-
-    struct Slot {
-      //serialization.cpp
-      auto serialize(serializer&) -> void;
-
-      n4  target;
-      n17 address;
-      n8  data;
-    };
-
-    queue<Slot[8]> slots;
-    queue<Slot[2]> requests;
-    n16 response;
-  } fifo;
-
   //video RAM
   struct VRAM {
     //memory.cpp
@@ -280,8 +306,9 @@ private:
   //color RAM
   struct CRAM {
     //memory.cpp
-    auto read(n6 address) const -> n9;
-    auto write(n6 address, n9 data) -> void;
+    auto color(n6 address) const -> n9;
+    auto read(n6 address) const -> n16;
+    auto write(n6 address, n16 data) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -289,14 +316,19 @@ private:
     n9 memory[64];
   } cram;
 
+  //FIFO / DMA command
+  struct Command {
+    n1  latch;      //write half toggle
+    n4  target;     //CD0-CD3
+    n1  ready;      //CD4
+    n1  pending;    //CD5
+    n17 address;    //A0-A16
+    n8  increment;  //data increment amount
+  } command;
+
   struct IO {
     //status
     n1  vblankInterruptTriggered;  //true after VIRQ triggers; cleared at start of next frame
-
-    //command
-    n6  command;
-    n17 address;
-    n1  commandPending;
 
     //$00  mode register 1
     n1  displayOverlayEnable;
@@ -327,9 +359,6 @@ private:
     n1  hsync;
     n1  vsync;
     n1  clockSelect;  //0 = DCLK; 1 = EDCLK
-
-    //$0f  data port auto-increment value
-    n8  dataIncrement;
   } io;
 
   struct Latch {

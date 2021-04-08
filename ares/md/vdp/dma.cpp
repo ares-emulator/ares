@@ -1,10 +1,9 @@
 auto VDP::DMA::run() -> void {
-  if(!enable || wait) return;
-  if(!vdp.io.command.bit(5)) return;
-  if(mode <= 1) return load();
-  if(mode == 2) return fill();
-  if(!vdp.io.command.bit(4)) return;
-  if(mode == 3) return copy();
+  if(enable && !wait && vdp.command.pending) {
+    if(mode <= 1) return load();
+    if(mode == 2) return fill();
+    if(mode == 3) return copy();
+  }
 }
 
 auto VDP::DMA::load() -> void {
@@ -17,30 +16,42 @@ auto VDP::DMA::load() -> void {
 
   source.bit(0,15)++;
   if(--length == 0) {
-    vdp.io.command.bit(5) = 0;
+    vdp.command.pending = 0;
     active = 0;
     bus.release(Bus::VDPDMA);
   }
 }
 
 auto VDP::DMA::fill() -> void {
-  vdp.fifo.write(vdp.io.command, vdp.io.address, filldata);
+  auto data = vdp.fifo.slots[3].data;
+  switch(vdp.command.target) {
+  case 1: vdp.vram.writeByte(vdp.command.address, data >> 8); break;
+  case 3: vdp.cram.write(vdp.command.address, data); break;
+  case 5: vdp.vsram.write(vdp.command.address, data); break;
+  }
 
   source.bit(0,15)++;
-  vdp.io.address += vdp.io.dataIncrement;
+  vdp.command.address += vdp.command.increment;
   if(--length == 0) {
-    vdp.io.command.bit(5) = 0;
+    vdp.command.pending = 0;
   }
 }
 
+//VRAM only
 auto VDP::DMA::copy() -> void {
-  auto data = vdp.vram.readByte(source);
-  vdp.fifo.write(1, vdp.io.address, data);  //VRAM only
+  if(!wait) {
+    wait = 1;
+    data = vdp.vram.readByte(source);
+    return;
+  }
+
+  wait = 0;
+  vdp.vram.writeByte(vdp.command.address, data);
 
   source.bit(0,15)++;
-  vdp.io.address += vdp.io.dataIncrement;
+  vdp.command.address += vdp.command.increment;
   if(--length == 0) {
-    vdp.io.command.bit(5) = 0;
+    vdp.command.pending = 0;
   }
 }
 
@@ -49,7 +60,6 @@ auto VDP::DMA::power(bool reset) -> void {
   mode = 0;
   source = 0;
   length = 0;
-  filldata = 0;
-  enable = 0;
   wait = 0;
+  enable = 0;
 }

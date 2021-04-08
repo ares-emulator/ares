@@ -62,7 +62,7 @@ auto APU::setINT(n1 line) -> void {
 }
 
 auto APU::setRES(n1 line) -> void {
-  if(!state.resLine && line) power(true);
+  if(!state.resLine && line) restart();
   state.resLine = line;
 }
 
@@ -84,6 +84,15 @@ auto APU::power(bool reset) -> void {
   state.intLine = 0;
   state.bank = 0;
   opn2.power(reset);
+}
+
+auto APU::restart() -> void {
+  Z80::power();
+  Thread::restart({&APU::main, this});
+  state.nmiLine = 0;
+  state.intLine = 0;
+  state.bank = 0;
+  opn2.power(true);
 }
 
 }

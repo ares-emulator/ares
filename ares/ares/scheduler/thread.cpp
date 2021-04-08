@@ -57,6 +57,12 @@ inline auto Thread::create(double frequency, function<void ()> entryPoint) -> vo
   scheduler.append(*this);
 }
 
+//returns a thread to its entry point (eg for a reset), without resetting the clock value
+inline auto Thread::restart(function<void()> entryPoint) -> void {
+  co_derive(_handle, Thread::Size, &Thread::Enter);
+  EntryPoints().append({_handle, entryPoint});
+}
+
 inline auto Thread::destroy() -> void {
   scheduler.remove(*this);
   if(_handle) co_delete(_handle);

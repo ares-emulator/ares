@@ -5,6 +5,7 @@ auto VDP::step(u32 clocks) -> void {
 }
 
 auto VDP::tick() -> void {
+  state.hdot++;
   if(h32()) step(20);
   if(h40()) step(16);
   if(edclk() && ++state.ecounter == 7) {
@@ -15,13 +16,15 @@ auto VDP::tick() -> void {
 
 auto VDP::main() -> void {
   scanline();
-  if(vcounter() == 0) vsync(0);
+  if(vcounter() == frameHeight() - 1) vsync(0);
   if(vcounter() == screenHeight()) vsync(1);
 
   if(vcounter() < screenHeight() && io.displayEnable) {
     if(h32()) mainH32();
     if(h40()) mainH40();
+    u32 hdot = state.hdot;
     for(state.hdot = 0; state.hdot < screenWidth(); state.hdot++) run();
+    state.hdot = hdot;
     m32x.vdp.scanline(pixels(), vcounter());
   } else {
     if(h32()) mainBlankH32();
@@ -58,9 +61,6 @@ auto VDP::hsync(bool line) -> void {
         }
       }
     }
-    if(vcounter() == 0 || vcounter() > screenHeight()) {
-      latch.hblankInterruptCounter = io.hblankInterruptCounter;
-    }
   }
 }
 
@@ -68,6 +68,7 @@ auto VDP::vsync(bool line) -> void {
   state.vsync = line;
   if(line == 0) {
     io.vblankInterruptTriggered = false;
+    latch.hblankInterruptCounter = io.hblankInterruptCounter;
     cartridge.vblank(0);
     cpu.lower(CPU::Interrupt::VerticalBlank);
   } else {

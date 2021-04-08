@@ -30,6 +30,7 @@ struct Thread {
   auto setClock(uintmax clock) -> void;
 
   auto create(double frequency, function<void ()> entryPoint) -> void;
+  auto restart(function<void ()> entryPoint) -> void;
   auto destroy() -> void;
 
   auto step(u32 clocks) -> void;

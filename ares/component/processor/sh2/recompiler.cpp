@@ -50,8 +50,8 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   while(true) {
     u16 instruction = self.readWord(address);
     bool branched = emitInstruction(instruction);
-  //incd(CCR);
-    addd(CCR, imm8(2));  //underclocking hack
+    incd(CCR);
+  //addd(CCR, imm8(2));  //underclocking hack
     call(&SH2::instructionEpilogue);
     address += 2;
     if(hasBranched || (address & 0xfe) == 0) break;  //block boundary

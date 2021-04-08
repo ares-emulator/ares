@@ -117,6 +117,7 @@ inline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 }
 
+//0-127
 inline auto Bus::waitRefreshExternal() -> void {
   while(cpu.refresh.external >= 126) {
     if(cpu.active()) cpu.wait(1);
@@ -126,8 +127,9 @@ inline auto Bus::waitRefreshExternal() -> void {
   }
 }
 
+//0-132
 inline auto Bus::waitRefreshRAM() -> void {
-  while(cpu.refresh.ram >= 116) {
+  while(cpu.refresh.ram >= 130) {
     if(cpu.active()) cpu.wait(1);
     if(scheduler.synchronizing()) break;
     if(apu.active()) apu.step(1);

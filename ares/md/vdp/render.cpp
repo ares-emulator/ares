@@ -56,7 +56,7 @@ auto VDP::run() -> void {
   auto& fg = s.above() || s.color && !b.above() && !a.above() ? s : bg;
 
   if(!io.shadowHighlightEnable) {
-    auto color = cram.read(fg.color);
+    auto color = cram.color(fg.color);
     outputPixel(fg.backdrop << 11 | 1 << 9 | color);
   } else {
     u32 mode = a.priority || b.priority;  //0 = shadow, 1 = normal, 2 = highlight
@@ -70,12 +70,13 @@ auto VDP::run() -> void {
     default:   mode |= s.priority; break;
     }
 
-    auto color = cram.read(fg.color);
+    auto color = cram.color(fg.color);
     outputPixel(fg.backdrop << 11 | mode << 9 | color);
   }
 }
 
 auto VDP::outputPixel(n32 color) -> void {
+  if(!state.output) return;
   *state.output++ = color;
   *state.output++ = color;
   *state.output++ = color;

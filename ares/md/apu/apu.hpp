@@ -31,6 +31,7 @@ struct APU : Z80, Z80::Bus, Thread {
   auto main() -> void;
   auto step(u32 clocks) -> void override;
   auto power(bool reset) -> void;
+  auto restart() -> void;
 
   auto setNMI(n1 line) -> void;
   auto setINT(n1 line) -> void;

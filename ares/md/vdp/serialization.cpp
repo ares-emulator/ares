@@ -13,10 +13,14 @@ auto VDP::serialize(serializer& s) -> void {
   s(vsram);
   s(cram);
 
+  s(command.latch);
+  s(command.target);
+  s(command.ready);
+  s(command.pending);
+  s(command.address);
+  s(command.increment);
+
   s(io.vblankInterruptTriggered);
-  s(io.command);
-  s(io.address);
-  s(io.commandPending);
   s(io.displayOverlayEnable);
   s(io.counterLatch);
   s(io.hblankInterruptEnable);
@@ -35,7 +39,6 @@ auto VDP::serialize(serializer& s) -> void {
   s(io.hsync);
   s(io.vsync);
   s(io.clockSelect);
-  s(io.dataIncrement);
 
   s(latch.interlace);
   s(latch.overscan);
@@ -52,16 +55,24 @@ auto VDP::serialize(serializer& s) -> void {
   s(state.vsync);
 }
 
-auto VDP::FIFO::serialize(serializer& s) -> void {
-  s(slots);
-  s(requests);
-  s(response);
+auto VDP::Cache::serialize(serializer& s) -> void {
+  s(reading);
+  s(data);
+  s(upper);
+  s(lower);
 }
 
-auto VDP::FIFO::Slot::serialize(serializer& s) -> void {
+auto VDP::Slot::serialize(serializer& s) -> void {
   s(target);
   s(address);
   s(data);
+  s(upper);
+  s(lower);
+}
+
+auto VDP::FIFO::serialize(serializer& s) -> void {
+  s(cache);
+  s(slots);
 }
 
 auto VDP::DMA::serialize(serializer& s) -> void {
@@ -69,9 +80,9 @@ auto VDP::DMA::serialize(serializer& s) -> void {
   s(mode);
   s(source);
   s(length);
-  s(filldata);
-  s(enable);
+  s(data);
   s(wait);
+  s(enable);
 }
 
 auto VDP::Layers::serialize(serializer& s) -> void {
