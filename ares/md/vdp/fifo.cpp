@@ -1,11 +1,3 @@
-auto VDP::FIFO::empty() const -> bool {
-  return slots[0].empty();
-}
-
-auto VDP::FIFO::full() const -> bool {
-  return !slots[3].empty();
-}
-
 auto VDP::FIFO::advance() -> void {
   slots[0].upper = 0;
   slots[0].lower = 0;
@@ -15,77 +7,79 @@ auto VDP::FIFO::advance() -> void {
 }
 
 auto VDP::FIFO::slot() -> void {
-  if(vdp.command.target == 0 && cache.reading) {
-    if(!cache.lower) {
-      cache.lower = 1;
-      cache.data.byte(0) = vdp.vram.readByte(vdp.command.address & ~1 | 1);
-      vdp.command.ready = 1;
-      return;
+  if(!cache.full()) {
+    if(vdp.command.target == 0) {
+      if(!cache.lower) {
+        cache.lower = 1;
+        cache.data.byte(0) = vdp.vram.readByte(vdp.command.address & ~1 | 1);
+        vdp.command.ready = 1;
+        return;
+      }
+      if(!cache.upper) {
+        cache.upper = 1;
+        cache.data.byte(1) = vdp.vram.readByte(vdp.command.address & ~1 | 0);
+        vdp.command.ready = 1;
+        return;
+      }
     }
-    if(!cache.upper) {
-      cache.upper = 1;
-      cache.data.byte(1) = vdp.vram.readByte(vdp.command.address & ~1 | 0);
-      vdp.command.ready = 1;
-      return;
-    }
-  }
 
-  if(vdp.command.target == 4 && cache.reading) {
-    if(!cache.lower || !cache.upper) {
+    if(vdp.command.target == 4) {
       cache.lower = 1;
       cache.upper = 1;
       cache.data = vdp.vsram.read(vdp.command.address);
       vdp.command.ready = 1;
       return;
     }
-  }
 
-  if(vdp.command.target == 8 && cache.reading) {
-    if(!cache.lower || !cache.upper) {
+    if(vdp.command.target == 8) {
       cache.lower = 1;
       cache.upper = 1;
       cache.data = vdp.cram.read(vdp.command.address);
       vdp.command.ready = 1;
       return;
     }
+
+    cache.lower = 1;
+    cache.upper = 1;
+    vdp.command.ready = 1;
+    debug(unusual, "[VDP::FIFO] read target = 0x", hex(vdp.command.target));
+    return;
   }
 
-  if(slots[0].target == 1) {
-    if(slots[0].lower) {
-      slots[0].lower = 0;
-      vdp.vram.writeByte(slots[0].address << 1 | 1, slots[0].data.byte(0));
-      return;
+  if(!slots[0].empty()) {
+    if(slots[0].target == 1) {
+      if(slots[0].lower) {
+        slots[0].lower = 0;
+        vdp.vram.writeByte(slots[0].address << 1 | 1, slots[0].data.byte(0));
+        return;
+      }
+      if(slots[0].upper) {
+        slots[0].upper = 0;
+        vdp.vram.writeByte(slots[0].address << 1 | 0, slots[0].data.byte(1));
+        return advance();
+      }
     }
-    if(slots[0].upper) {
-      slots[0].upper = 0;
-      vdp.vram.writeByte(slots[0].address << 1 | 0, slots[0].data.byte(1));
-      return advance();
-    }
-  }
 
-  if(slots[0].target == 3) {
-    if(slots[0].full()) {
+    if(slots[0].target == 3) {
       vdp.cram.write(slots[0].address, slots[0].data);
       return advance();
     }
-  }
 
-  if(slots[0].target == 5) {
-    if(slots[0].full()) {
+    if(slots[0].target == 5) {
       vdp.vsram.write(slots[0].address, slots[0].data);
       return advance();
     }
+
+    slots[0].lower = 0;
+    slots[0].upper = 0;
+    debug(unusual, "[VDP::FIFO] write target = 0x", hex(slots[0].target));
+    return advance();
   }
 
   vdp.dma.run();
 }
 
 auto VDP::FIFO::read(n4 target, n17 address) -> void {
-  if(cache.reading) {
-    bus.acquire(Bus::VDPFIFO);
-    while(cache.reading) cpu.wait(1);
-    bus.release(Bus::VDPFIFO);
-  }
   cache.upper = address.bit(0) && target == 0;
   cache.lower = 0;
 }
@@ -115,6 +109,8 @@ auto VDP::FIFO::write(n4 target, n17 address, n16 data) -> void {
 
 auto VDP::FIFO::power(bool reset) -> void {
   cache = {};
+  cache.upper = 1;
+  cache.lower = 1;
   slots[0] = {};
   slots[1] = {};
   slots[2] = {};

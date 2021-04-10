@@ -101,6 +101,11 @@ auto Pak::load(Markup::Node node, string extension, string location) -> bool {
   name.downcase();
   auto size = node["size"].natural();
   pak->append(name, size);
+  if(auto fp = pak->write(name)) {
+    //pak->append() will allocate memory using 0x00 bytes.
+    //but it's more compatible to initialize RAM to 0xff bytes.
+    memory::fill<u8>(fp->data(), fp->size(), 0xff);
+  }
   return load(name, extension, location);
 }
 

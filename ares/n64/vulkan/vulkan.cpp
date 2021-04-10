@@ -4,6 +4,15 @@ namespace ares::Nintendo64 {
 
 Vulkan vulkan;
 
+struct LoggingInterface : Util::LoggingInterface {
+  auto log(const char* tag, const char* fmt, va_list va) -> bool {
+    char buffer[8192];
+    vsnprintf(buffer, sizeof(buffer), fmt, va);
+  //print(terminal::color::yellow(tag), buffer);
+    return true;
+  }
+} loggingInterface;
+
 struct Vulkan::Implementation {
   Implementation(u8* data, u32 size);
   ~Implementation();
@@ -26,6 +35,7 @@ struct Vulkan::Implementation {
 };
 
 auto Vulkan::load(Node::Object) -> bool {
+  Util::set_thread_logging_interface(&loggingInterface);
   delete implementation;
   implementation = new Vulkan::Implementation(rdram.ram.data, rdram.ram.size);
   if(!implementation->processor) {

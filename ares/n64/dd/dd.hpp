@@ -8,10 +8,19 @@ struct DD : Memory::IO<DD> {
   Memory::Writable ds;
   Memory::Writable ms;
 
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto io(bool mode, u32 address, u32 data) -> void;
+
+    struct Tracer {
+      Node::Debugger::Tracer::Notification io;
+    } tracer;
+  } debugger;
+
   //dd.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
-
   auto power(bool reset) -> void;
 
   //io.cpp

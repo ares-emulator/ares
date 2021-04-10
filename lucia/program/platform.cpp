@@ -40,6 +40,11 @@ auto Program::log(string_view message) -> void {
       traceLogger.fp.open(location, file::mode::write);
     }
     traceLogger.fp.print(message);
+    //if the trace log file size grows beyond 1GiB, close the file handle so a new log file will be started.
+    //this is done because few text editors can open logs beyond a certain file size.
+    if(traceLogger.fp.size() >= 1_GiB) {
+      traceLogger.fp.close();
+    }
   }
 }
 

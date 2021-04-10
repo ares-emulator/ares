@@ -36,6 +36,8 @@ auto VDP::load(Node::Object parent) -> void {
   overscan->setDynamic(true);
 
   debugger.load(node);
+
+  generateCycleTimings();
 }
 
 auto VDP::unload() -> void {

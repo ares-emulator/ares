@@ -47,6 +47,7 @@ auto VDP::serialize(serializer& s) -> void {
   s(latch.clockSelect);
 
   s(state.hdot);
+  s(state.hclock);
   s(state.hcounter);
   s(state.vcounter);
   s(state.ecounter);
@@ -56,7 +57,6 @@ auto VDP::serialize(serializer& s) -> void {
 }
 
 auto VDP::Cache::serialize(serializer& s) -> void {
-  s(reading);
   s(data);
   s(upper);
   s(lower);

@@ -1,14 +1,3 @@
-static const vector<string> registerNames = {
-  "RI_MODE",
-  "RI_CONFIG",
-  "RI_CURRENT_LOAD",
-  "RI_SELECT",
-  "RI_REFRESH",
-  "RI_LATENCY",
-  "RI_RERROR",
-  "RI_WERROR",
-};
-
 auto RI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   n32 data = 0;
@@ -53,9 +42,7 @@ auto RI::readWord(u32 address) -> u32 {
     data = io.writeError;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "RI_UNKNOWN"), " => ", hex(data, 8L)});
-  }
+  debugger.io(Read, address, data);
   return data;
 }
 
@@ -103,7 +90,5 @@ auto RI::writeWord(u32 address, u32 data_) -> void {
     io.writeError = data;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "RI_UNKNOWN"), " <= ", hex(data, 8L)});
-  }
+  debugger.io(Write, address, data);
 }

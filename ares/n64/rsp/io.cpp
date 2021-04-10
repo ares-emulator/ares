@@ -1,14 +1,3 @@
-static const vector<string> registerNamesSCC = {
-  "SP_PBUS_ADDRESS",
-  "SP_DRAM_ADDRESS",
-  "SP_READ_LENGTH",
-  "SP_WRITE_LENGTH",
-  "SP_STATUS",
-  "SP_DMA_FULL",
-  "SP_DMA_BUSY",
-  "SP_SEMAPHORE",
-};
-
 auto RSP::readWord(u32 address) -> u32 {
   address = (address & 0x3ffff) >> 2;
   n32 data;
@@ -73,9 +62,7 @@ auto RSP::readWord(u32 address) -> u32 {
     status.semaphore = 1;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNamesSCC(address, "SP_UNKNOWN"), " => ", hex(data, 8L)});
-  }
+  debugger.ioSCC(Read, address, data);
   return data;
 }
 
@@ -172,15 +159,8 @@ auto RSP::writeWord(u32 address, u32 data_) -> void {
     if(!data.bit(0)) status.semaphore = 0;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNamesSCC(address, "SP_UNKNOWN"), " <= ", hex(data, 8L)});
-  }
+  debugger.ioSCC(Write, address, data);
 }
-
-static const vector<string> registerNamesIO = {
-  "SP_PC_REG",
-  "SP_IBIST",
-};
 
 auto RSP::Status::readWord(u32 address) -> u32 {
   address = (address & 0x7ffff) >> 2;
@@ -195,9 +175,7 @@ auto RSP::Status::readWord(u32 address) -> u32 {
     //SP_IBIST
   }
 
-  if(self.debugger.tracer.io->enabled()) {
-    self.debugger.io({registerNamesIO(address, "SP_UNKNOWN"), " => ", hex(data, 8L)});
-  }
+  self.debugger.ioStatus(Read, address, data);
   return data;
 }
 
@@ -218,7 +196,5 @@ auto RSP::Status::writeWord(u32 address, u32 data_) -> void {
     //SP_IBIST
   }
 
-  if(self.debugger.tracer.io->enabled()) {
-    self.debugger.io({registerNamesIO(address, "SP_UNKNOWN"), " <= ", hex(data, 8L)});
-  }
+  self.debugger.ioStatus(Write, address, data);
 }

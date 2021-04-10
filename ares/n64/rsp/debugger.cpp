@@ -44,8 +44,46 @@ auto RSP::Debugger::instruction() -> void {
   }
 }
 
-auto RSP::Debugger::io(string_view message) -> void {
+auto RSP::Debugger::ioSCC(bool mode, u32 address, u32 data) -> void {
+  static const vector<string> registerNames = {
+    "SP_PBUS_ADDRESS",
+    "SP_DRAM_ADDRESS",
+    "SP_READ_LENGTH",
+    "SP_WRITE_LENGTH",
+    "SP_STATUS",
+    "SP_DMA_FULL",
+    "SP_DMA_BUSY",
+    "SP_SEMAPHORE",
+  };
+
   if(tracer.io->enabled()) {
+    string message;
+    string name = registerNames(address, "SP_UNKNOWN");
+    if(mode == Read) {
+      message = {name.split("|").first(), " => ", hex(data, 8L)};
+    }
+    if(mode == Write) {
+      message = {name.split("|").last(), " <= ", hex(data, 8L)};
+    }
+    tracer.io->notify(message);
+  }
+}
+
+auto RSP::Debugger::ioStatus(bool mode, u32 address, u32 data) -> void {
+  static const vector<string> registerNames = {
+    "SP_PC_REG",
+    "SP_IBIST",
+  };
+
+  if(tracer.io->enabled()) {
+    string message;
+    string name = registerNames(address, "SP_UNKNOWN");
+    if(mode == Read) {
+      message = {name.split("|").first(), " => ", hex(data, 8L)};
+    }
+    if(mode == Write) {
+      message = {name.split("|").last(), " <= ", hex(data, 8L)};
+    }
     tracer.io->notify(message);
   }
 }

@@ -7,7 +7,7 @@ struct RDRAM : Memory::IO<RDRAM> {
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
-    auto io(string_view) -> void;
+    auto io(bool mode, u32 address, u32 data) -> void;
 
     struct Memory {
       Node::Debugger::Memory ram;

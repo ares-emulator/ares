@@ -1,15 +1,5 @@
 auto Cartridge::Flash::readHalf(u32 address) -> u16 {
-  u16 data = 0;
-
-  if(mode == Mode::Status) {
-    data = status >> ((address >> 1 & 3) ^ 3) * 16;
-  }
-
-  if(mode == Mode::Read) {
-    data = Memory::Writable::readHalf(address);
-  }
-
-  return data;
+  return Memory::Writable::readHalf(address);
 }
 
 auto Cartridge::Flash::readWord(u32 address) -> u32 {
@@ -24,6 +14,13 @@ auto Cartridge::Flash::writeHalf(u32 address, u16 data) -> void {
 }
 
 auto Cartridge::Flash::writeWord(u32 address, u32 data) -> void {
+  address = (address & 0x7ff'ffff) >> 2;
+
+  if(address == 0) {
+    debug(unusual, "[Cartridge::Flash] ignoring write to status register");
+    return;
+  }
+
   u8 command = data >> 24;
 
   //set erase offset

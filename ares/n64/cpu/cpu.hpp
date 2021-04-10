@@ -89,6 +89,7 @@ struct CPU : Thread {
     auto load(u32 address) -> maybe<u32>;
     auto store(u32 address) -> maybe<u32>;
     auto exception(u32 address) -> void;
+    auto information() -> void;
 
     struct Entry {
       //scc-tlb.cpp
@@ -136,11 +137,13 @@ struct CPU : Thread {
   //exception.cpp
   struct Exception {
     CPU& self;
-    auto trigger(u32 code, u32 coprocessor = 0) -> void;
+    auto trigger(u32 code, u32 coprocessor = 0, bool tlbMiss = 0) -> void;
     auto interrupt() -> void;
     auto tlbModification() -> void;
-    auto tlbLoad() -> void;
-    auto tlbStore() -> void;
+    auto tlbLoadInvalid() -> void;
+    auto tlbLoadMiss() -> void;
+    auto tlbStoreInvalid() -> void;
+    auto tlbStoreMiss() -> void;
     auto addressLoad() -> void;
     auto addressStore() -> void;
     auto busInstruction() -> void;

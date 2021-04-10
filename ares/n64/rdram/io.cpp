@@ -1,16 +1,3 @@
-static const vector<string> registerNames = {
-  "RDRAM_CONFIG",
-  "RDRAM_DEVICE_ID",
-  "RDRAM_DELAY",
-  "RDRAM_MODE",
-  "RDRAM_REF_INTERVAL",
-  "RDRAM_REF_ROW",
-  "RDRAM_RAS_INTERVAL",
-  "RDRAM_MIN_INTERVAL",
-  "RDRAM_ADDR_SELECT",
-  "RDRAM_DEVICE_MANUF",
-};
-
 auto RDRAM::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   u32 data = 0;
@@ -65,9 +52,7 @@ auto RDRAM::readWord(u32 address) -> u32 {
     data = io.deviceManufacturer;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "RDRAM_UNKNOWN"), " => ", hex(data, 8L)});
-  }
+  debugger.io(Read, address, data);
   return data;
 }
 
@@ -124,7 +109,5 @@ auto RDRAM::writeWord(u32 address, u32 data) -> void {
     io.deviceManufacturer = data;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "RDRAM_UNKNOWN"), " <= ", hex(data, 8L)});
-  }
+  debugger.io(Write, address, data);
 }

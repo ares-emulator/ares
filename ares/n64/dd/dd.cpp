@@ -4,6 +4,7 @@ namespace ares::Nintendo64 {
 
 DD dd;
 #include "io.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto DD::load(Node::Object parent) -> void {
@@ -14,14 +15,17 @@ auto DD::load(Node::Object parent) -> void {
   ds.allocate(0x100);
   ms.allocate(0x40);
 
-  if(!node->setPak(pak = platform->pak(node))) return;
-
-  if(auto fp = pak->read("64dd.ipl.rom")) {
-    iplrom.load(fp);
+  if(node->setPak(pak = platform->pak(node))) {
+    if(auto fp = pak->read("64dd.ipl.rom")) {
+      iplrom.load(fp);
+    }
   }
+
+  debugger.load(node);
 }
 
 auto DD::unload() -> void {
+  debugger = {};
   iplrom.reset();
   c2s.reset();
   ds.reset();

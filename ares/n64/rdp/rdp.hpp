@@ -7,7 +7,8 @@ struct RDP : Thread, Memory::IO<RDP> {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto command(string_view) -> void;
-    auto io(string_view) -> void;
+    auto ioDPC(bool mode, u32 address, u32 data) -> void;
+    auto ioDPS(bool mode, u32 address, u32 data) -> void;
 
     struct Tracer {
       Node::Debugger::Tracer::Notification command;

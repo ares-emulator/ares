@@ -313,5 +313,5 @@ auto CPU::instructionTLBWI() -> void {
 
 auto CPU::instructionTLBWR() -> void {
   if(scc.random.index >= TLB::Entries) return;
-  tlb.entry[scc.index.tlbEntry] = scc.tlb;
+  tlb.entry[scc.random.index] = scc.tlb;
 }

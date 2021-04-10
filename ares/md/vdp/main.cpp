@@ -5,13 +5,15 @@ auto VDP::step(u32 clocks) -> void {
 }
 
 auto VDP::tick() -> void {
-  state.hdot++;
-  if(h32()) step(20);
-  if(h40()) step(16);
-  if(edclk() && ++state.ecounter == 7) {
-    state.ecounter = 0;
-    step(2);
+  if(h32()) {
+    auto cycles = &cyclesH32[edclk()][state.hclock];
+    step(cycles[0] + cycles[1]);
   }
+  if(h40()) {
+    auto cycles = &cyclesH40[edclk()][state.hclock];
+    step(cycles[0] + cycles[1]);
+  }
+  state.hclock += 2;
 }
 
 auto VDP::main() -> void {
@@ -22,9 +24,7 @@ auto VDP::main() -> void {
   if(vcounter() < screenHeight() && io.displayEnable) {
     if(h32()) mainH32();
     if(h40()) mainH40();
-    u32 hdot = state.hdot;
     for(state.hdot = 0; state.hdot < screenWidth(); state.hdot++) run();
-    state.hdot = hdot;
     m32x.vdp.scanline(pixels(), vcounter());
   } else {
     if(h32()) mainBlankH32();
@@ -32,6 +32,7 @@ auto VDP::main() -> void {
   }
 
   state.hdot = 0;
+  state.hclock = 0;
   state.hcounter = 0;
   state.ecounter = 0;
   latch.displayWidth = io.displayWidth;
@@ -263,4 +264,64 @@ auto VDP::mainBlankH40() -> void {
   tick();
   tick();
   tick();
+}
+
+//timings are approximations; exact positions of slow/normal/fast cycles are not known
+auto VDP::generateCycleTimings() -> void {
+  //full lines
+  //==========
+
+  //H32/DCLK: 342 slow + 0 normal +   0 fast = 3420 cycles
+  for(auto cycle : range(342)) cyclesH32[0][cycle *  1] = 10;
+
+  //H32/EDCLK: 21 slow + 3 normal + 318 fast = 2781 cycles
+  for(auto cycle : range(342)) cyclesH32[1][cycle *  1] =  8;
+  for(auto cycle : range( 24)) cyclesH32[1][cycle * 14] = 10;
+  for(auto cycle : range(  3)) cyclesH32[1][cycle * 14] =  9;
+
+  //H40/DCLK:   0 slow + 0 normal + 420 fast = 3360 cycles
+  for(auto cycle : range(420)) cyclesH40[0][cycle *  1] =  8;
+
+  //H40/EDCLK: 28 slow + 4 normal + 388 fast = 3420 cycles
+  for(auto cycle : range(420)) cyclesH40[1][cycle *  1] =  8;
+  for(auto cycle : range( 32)) cyclesH40[1][cycle * 13] = 10;
+  for(auto cycle : range(  4)) cyclesH40[1][cycle * 13] =  9;
+
+  //half lines
+  //==========
+
+  //H32/DCLK: 171 slow + 0 normal +   0 fast = 1710 cycles
+  for(auto cycle : range(171)) halvesH32[0][cycle *  1] = 10;
+
+  //H32/EDCLK: 10 slow + 2 normal + 159 fast = 1390 cycles
+  for(auto cycle : range(171)) halvesH32[1][cycle *  1] =  8;
+  for(auto cycle : range( 12)) halvesH32[1][cycle * 14] = 10;
+  for(auto cycle : range(  2)) halvesH32[1][cycle * 14] =  9;
+
+  //H40/DCLK:   0 slow + 0 normal + 210 fast = 1680 cycles
+  for(auto cycle : range(210)) halvesH40[0][cycle *  1] =  8;
+
+  //H40/EDCLK: 14 slow + 2 normal + 194 fast = 1710 cycles
+  for(auto cycle : range(210)) halvesH40[1][cycle *  1] =  8;
+  for(auto cycle : range( 16)) halvesH40[1][cycle * 13] = 10;
+  for(auto cycle : range(  2)) halvesH40[1][cycle * 13] =  9;
+
+  //active even lines
+  //=================
+
+  //H32/DCLK: 171 slow + 0 normal +   0 fast = 1710 cycles
+  for(auto cycle : range(171)) extrasH32[0][cycle *  1] = 10;
+
+  //H32/EDCLK: 21 slow + 3 normal + 147 fast = 1413 cycles
+  for(auto cycle : range(171)) extrasH32[1][cycle *  1] =  8;
+  for(auto cycle : range( 24)) extrasH32[1][cycle *  7] = 10;
+  for(auto cycle : range(  3)) extrasH32[1][cycle *  7] =  9;
+
+  //H40/DCLK:   0 slow + 0 normal + 210 fast = 1680 cycles
+  for(auto cycle : range(171)) extrasH40[0][cycle *  1] =  8;
+
+  //H40/EDCLK: 28 slow + 4 normal + 178 fast = 1740 cycles
+  for(auto cycle : range(171)) extrasH40[1][cycle *  1] =  8;
+  for(auto cycle : range( 32)) extrasH40[1][cycle *  5] = 10;
+  for(auto cycle : range(  4)) extrasH40[1][cycle *  5] =  9;
 }

@@ -30,6 +30,7 @@ struct VDP : Thread {
   } debugger{*this};
 
   inline auto hdot() const -> u32 { return state.hdot; }
+  inline auto hclock() const -> u32 { return state.hclock; }
   inline auto hcounter() const -> u32 { return state.hcounter; }
   inline auto vcounter() const -> u32 { return state.vcounter; }
   inline auto field() const -> bool { return state.field; }
@@ -58,6 +59,7 @@ struct VDP : Thread {
   auto mainH40() -> void;
   auto mainBlankH32() -> void;
   auto mainBlankH40() -> void;
+  auto generateCycleTimings() -> void;
 
   //io.cpp
   auto read(n24 address, n16 data) -> n16;
@@ -72,12 +74,10 @@ struct VDP : Thread {
   struct Cache {
     auto empty() const -> bool { return !upper && !lower; }
     auto full() const -> bool { return upper && lower; }
-    auto read() -> n16 { return reading = 0, upper = 0, lower = 0, data; }
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    n1  reading;  //1 = active
     n16 data;     //read data
     n1  upper;    //1 = data.byte(1) valid
     n1  lower;    //1 = data.byte(0) valid
@@ -98,9 +98,10 @@ struct VDP : Thread {
   };
 
   struct FIFO {
+    auto empty() const -> bool { return slots[0].empty(); }
+    auto full() const -> bool { return !slots[3].empty(); }
+
     //fifo.cpp
-    auto empty() const -> bool;
-    auto full() const -> bool;
     auto advance() -> void;
 
     auto slot() -> void;
@@ -375,6 +376,7 @@ private:
   struct State {
     u32* output = nullptr;
     n16  hdot;
+    n16  hclock;
     n16  hcounter;
     n16  vcounter;
     n16  ecounter;
@@ -382,6 +384,10 @@ private:
     n1   hsync;
     n1   vsync;
   } state;
+
+//unserialized:
+  u8 cyclesH32[2][342], halvesH32[2][171], extrasH32[2][171];
+  u8 cyclesH40[2][420], halvesH40[2][210], extrasH40[2][210];
 };
 
 extern VDP vdp;

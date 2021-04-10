@@ -1,13 +1,3 @@
-static const vector<string> registerNames = {
-  "SI_DRAM_ADDRESS",
-  "SI_PIF_ADDRESS_READ64B",
-  "SI_INT_ADDRESS_WRITE64B",
-  "SI_RESERVED",
-  "SI_PIF_ADDRESS_WRITE64B",
-  "SI_INT_ADDRESS_READ64B",
-  "SI_STATUS",
-};
-
 auto SI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   n32 data;
@@ -50,9 +40,7 @@ auto SI::readWord(u32 address) -> u32 {
     data.bit(12)    = io.interrupt;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "SI_UNKNOWN"), " => ", hex(data, 8L)});
-  }
+  debugger.io(Read, address, data);
   return data;
 }
 
@@ -107,7 +95,5 @@ auto SI::writeWord(u32 address, u32 data_) -> void {
     mi.lower(MI::IRQ::SI);
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "SI_UNKNOWN"), " <= ", hex(data, 8L)});
-  }
+  debugger.io(Write, address, data);
 }

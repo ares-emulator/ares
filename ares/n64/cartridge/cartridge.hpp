@@ -11,12 +11,25 @@ struct Cartridge {
     auto writeHalf(u32 address, u16 value) -> void;
     auto writeWord(u32 address, u32 value) -> void;
 
-    enum class Mode : uint { Idle, Erase, Write, Read, Status };
+    enum class Mode : u32 { Idle, Erase, Write, Read, Status };
     Mode mode = Mode::Idle;
     u64  status = 0;
     u32  source = 0;
     u32  offset = 0;
   } flash;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
+
+    struct Memory {
+      Node::Debugger::Memory rom;
+      Node::Debugger::Memory ram;
+      Node::Debugger::Memory eeprom;
+      Node::Debugger::Memory flash;
+    } memory;
+  } debugger;
 
   auto title() const -> string { return information.title; }
   auto region() const -> string { return information.region; }

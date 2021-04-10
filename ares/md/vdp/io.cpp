@@ -18,10 +18,10 @@ auto VDP::read(n24 address, n16 data) -> n16 {
       if(io.interlaceMode.bit(1)) vcounter <<= 1;
       vcounter.bit(0) = vcounter.bit(8);
     }
-    auto hdot = state.hdot;
-    if(h32()) hdot = min(hdot, 255);
-    if(h40()) hdot = min(hdot, 319);
-    return vcounter << 8 | (hdot >> 1) << 0;
+    auto hclock = state.hclock;
+    if(h32()) hclock = min(hclock, 511);
+    if(h40()) hclock = min(hclock, 639);
+    return vcounter << 8 | hclock >> 2;
   }
 
   }
@@ -52,11 +52,10 @@ auto VDP::readDataPort() -> n16 {
   command.ready = 0;
 
   fifo.read(command.target, command.address);
+  while(!fifo.cache.full()) cpu.wait(1);
   command.address += command.increment;
-
-  while(fifo.cache.reading) cpu.wait(1);
   command.ready = 0;
-  return fifo.cache.read();
+  return fifo.cache.data;
 }
 
 auto VDP::writeDataPort(n16 data) -> void {

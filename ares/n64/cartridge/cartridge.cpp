@@ -5,6 +5,7 @@ namespace ares::Nintendo64 {
 Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "slot.cpp"
 #include "flash.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
@@ -41,12 +42,15 @@ auto Cartridge::connect() -> void {
     flash.load(fp);
   }
 
+  debugger.load(node);
+
   power(false);
 }
 
 auto Cartridge::disconnect() -> void {
   if(!node) return;
   save();
+  debugger.unload(node);
   rom.reset();
   ram.reset();
   eeprom.reset();

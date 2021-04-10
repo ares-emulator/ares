@@ -1,10 +1,3 @@
-static const vector<string> registerNames = {
-  "MI_INIT_MODE",
-  "MI_VERSION",
-  "MI_INTR",
-  "MI_INTR_MASK",
-};
-
 auto MI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   n32 data;
@@ -41,9 +34,7 @@ auto MI::readWord(u32 address) -> u32 {
     data.bit(5) = irq.dp.mask;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "MI_UNKNOWN"), " => ", hex(data, 8L)});
-  }
+  debugger.io(Read, address, data);
   return data;
 }
 
@@ -81,7 +72,5 @@ auto MI::writeWord(u32 address, u32 data_) -> void {
     poll();
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "MI_UNKNOWN"), " <= ", hex(data, 8L)});
-  }
+  debugger.io(Write, address, data);
 }

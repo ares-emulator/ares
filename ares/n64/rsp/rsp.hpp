@@ -11,7 +11,8 @@ struct RSP : Thread, Memory::IO<RSP> {
     auto unload() -> void;
 
     auto instruction() -> void;
-    auto io(string_view) -> void;
+    auto ioSCC(bool mode, u32 address, u32 data) -> void;
+    auto ioStatus(bool mode, u32 address, u32 data) -> void;
 
     struct Memory {
       Node::Debugger::Memory dmem;

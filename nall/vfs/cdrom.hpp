@@ -18,6 +18,7 @@ struct cdrom : file {
 
   auto writable() const -> bool override { return false; }
   auto data() const -> const u8* override { return _image.data(); }
+  auto data() -> u8* override { return _image.data(); }
   auto size() const -> u64 override { return _image.size(); }
   auto offset() const -> u64 override { return _offset; }
 

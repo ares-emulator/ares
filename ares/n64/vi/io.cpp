@@ -1,20 +1,3 @@
-static const vector<string> registerNames = {
-  "VI_CONTROL",
-  "VI_DRAM_ADDRESS",
-  "VI_H_WIDTH",
-  "VI_V_INTR",
-  "VI_V_CURRENT_LINE",
-  "VI_TIMING",
-  "VI_V_SYNC",
-  "VI_H_SYNC",
-  "VI_H_SYNC_LEAP",
-  "VI_H_VIDEO",
-  "VI_V_VIDEO",
-  "VI_V_BURST",
-  "VI_X_SCALE",
-  "VI_Y_SCALE",
-};
-
 auto VI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   n32 data;
@@ -108,9 +91,7 @@ auto VI::readWord(u32 address) -> u32 {
     data.bit(16,27) = io.ysubpixel;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "VI_UNKNOWN"), " => ", hex(data, 8L)});
-  }
+  debugger.io(Read, address, data);
   return data;
 }
 
@@ -210,7 +191,5 @@ auto VI::writeWord(u32 address, u32 data_) -> void {
     io.ysubpixel = data.bit(16,27);
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "VI_UNKNOWN"), " <= ", hex(data, 8L)});
-  }
+  debugger.io(Write, address, data);
 }

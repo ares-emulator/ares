@@ -9,8 +9,23 @@ auto MI::Debugger::interrupt(string_view type) -> void {
   }
 }
 
-auto MI::Debugger::io(string_view message) -> void {
+auto MI::Debugger::io(bool mode, u32 address, u32 data) -> void {
+  static const vector<string> registerNames = {
+    "MI_INIT_MODE",
+    "MI_VERSION",
+    "MI_INTR",
+    "MI_INTR_MASK",
+  };
+
   if(tracer.io->enabled()) {
+    string message;
+    string name = registerNames(address, "MI_UNKNOWN");
+    if(mode == Read) {
+      message = {name.split("|").first(), " => ", hex(data, 8L)};
+    }
+    if(mode == Write) {
+      message = {name.split("|").last(), " <= ", hex(data, 8L)};
+    }
     tracer.io->notify(message);
   }
 }

@@ -16,6 +16,8 @@ namespace ares::Nintendo64 {
   auto load(Node::System& node, string name) -> bool;
   auto option(string name, string value) -> bool;
 
+  enum : u32 { Read, Write };
+
   struct Region {
     static inline auto NTSC() -> bool;
     static inline auto PAL() -> bool;

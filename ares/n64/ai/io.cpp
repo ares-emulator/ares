@@ -1,12 +1,3 @@
-static const vector<string> registerNames = {
-  "AI_DRAM_ADDRESS",
-  "AI_LENGTH",
-  "AI_CONTROL",
-  "AI_STATUS",
-  "AI_DACRATE",
-  "AI_BITRATE",
-};
-
 auto AI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   n32 data;
@@ -25,9 +16,7 @@ auto AI::readWord(u32 address) -> u32 {
     data.bit(31) = io.dmaCount > 1;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "AI_UNKNOWN"), " => ", hex(data, 8L)});
-  }
+  debugger.io(Read, address, data);
   return data;
 }
 
@@ -76,7 +65,5 @@ auto AI::writeWord(u32 address, u32 data_) -> void {
     dac.precision = io.bitRate + 1;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "AI_UNKNOWN"), " <= ", hex(data, 8L)});
-  }
+  debugger.io(Write, address, data);
 }

@@ -1,19 +1,3 @@
-static const vector<string> registerNames = {
-  "PI_DRAM_ADDRESS",
-  "PI_PBUS_ADDRESS",
-  "PI_READ_LENGTH",
-  "PI_WRITE_LENGTH",
-  "PI_STATUS",
-  "PI_BSD_DOM1_LAT",
-  "PI_BSD_DOM1_PWD",
-  "PI_BSD_DOM1_PGS",
-  "PI_BSD_DOM1_RLS",
-  "PI_BSD_DOM2_LAT",
-  "PI_BSD_DOM2_PWD",
-  "PI_BSD_DOM2_PGS",
-  "PI_BSD_DOM2_RLS",
-};
-
 auto PI::readWord(u32 address) -> u32 {
   address = (address & 0xfffff) >> 2;
   n32 data;
@@ -86,9 +70,7 @@ auto PI::readWord(u32 address) -> u32 {
     data.bit(0,7) = bsd2.releaseDuration;
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "PI_UNKNOWN"), " => ", hex(data, 8L)});
-  }
+  debugger.io(Read, address, data);
   return data;
 }
 
@@ -180,7 +162,5 @@ auto PI::writeWord(u32 address, u32 data_) -> void {
     bsd2.releaseDuration = data.bit(0,7);
   }
 
-  if(debugger.tracer.io->enabled()) {
-    debugger.io({registerNames(address, "PI_UNKNOWN"), " <= ", hex(data, 8L)});
-  }
+  debugger.io(Write, address, data);
 }

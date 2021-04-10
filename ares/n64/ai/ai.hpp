@@ -7,7 +7,7 @@ struct AI : Thread, Memory::IO<AI> {
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
-    auto io(string_view) -> void;
+    auto io(bool mode, u32 address, u32 data) -> void;
 
     struct Tracer {
       Node::Debugger::Tracer::Notification io;

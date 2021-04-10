@@ -5,6 +5,7 @@ struct file : node {
   virtual auto writable() const -> bool { return false; }
 
   virtual auto data() const -> const u8* = 0;
+  virtual auto data() -> u8* = 0;
   virtual auto size() const -> u64 = 0;
   virtual auto offset() const -> u64 = 0;
   virtual auto resize(u64 size) -> bool = 0;
