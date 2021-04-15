@@ -1,3 +1,17 @@
+//test if the 68K bus should be acquired immediately for 68K->VDP DMA
+auto VDP::DMA::synchronize() -> void {
+  if(enable && !wait && vdp.command.pending && mode <= 1) {
+    active = 1;
+    bus.acquire(Bus::VDPDMA);
+  } else {
+    active = 0;
+    bus.release(Bus::VDPDMA);
+  }
+  if(!enable) {
+    vdp.command.pending = 0;
+  }
+}
+
 auto VDP::DMA::run() -> void {
   if(enable && !wait && vdp.command.pending) {
     if(mode <= 1) return load();
@@ -7,9 +21,6 @@ auto VDP::DMA::run() -> void {
 }
 
 auto VDP::DMA::load() -> void {
-  active = 1;
-  bus.acquire(Bus::VDPDMA);
-
   auto address = mode.bit(0) << 23 | source << 1;
   auto data = bus.read(1, 1, address);
   vdp.writeDataPort(data);
@@ -17,8 +28,7 @@ auto VDP::DMA::load() -> void {
   source.bit(0,15)++;
   if(--length == 0) {
     vdp.command.pending = 0;
-    active = 0;
-    bus.release(Bus::VDPDMA);
+    synchronize();
   }
 }
 
@@ -34,6 +44,7 @@ auto VDP::DMA::fill() -> void {
   vdp.command.address += vdp.command.increment;
   if(--length == 0) {
     vdp.command.pending = 0;
+    synchronize();
   }
 }
 
@@ -52,7 +63,11 @@ auto VDP::DMA::copy() -> void {
   vdp.command.address += vdp.command.increment;
   if(--length == 0) {
     vdp.command.pending = 0;
+    synchronize();
   }
+}
+
+auto VDP::DMA::step() -> void {
 }
 
 auto VDP::DMA::power(bool reset) -> void {

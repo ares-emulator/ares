@@ -1,16 +1,20 @@
-//returns true if x,y are within the layer A window area
-auto VDP::Window::test(u32 x, u32 y) const -> bool {
-  if(x < hoffset ^ hdirection) return true;
-  if(y < voffset ^ vdirection) return true;
-  return false;
+auto VDP::Window::begin() -> void {
+  attributesIndex = 0;
 }
 
-auto VDP::Window::attributes() const -> Attributes {
-  Attributes attributes;
-  attributes.address = vdp.h40() ? nametableAddress & ~0x400 : nametableAddress & ~0;
-  attributes.width   = vdp.h40() ? 64 : 32;
-  attributes.height  = 32;
-  return attributes;
+//called 17 (H32) or 21 (H40) times
+auto VDP::Window::attributesFetch() -> void {
+  u32 x = attributesIndex++ << 4;
+  u32 y = vdp.vcounter();
+  vdp.layerA.windowed[0] = vdp.layerA.windowed[1];
+  vdp.layerA.windowed[1] = x < hoffset ^ hdirection || y < voffset ^ vdirection;
+  if(!vdp.layerA.windowed[1]) return;
+
+  vdp.layerA.attributes.address = vdp.h40() ? nametableAddress & ~0x400 : nametableAddress & ~0;
+  vdp.layerA.attributes.width   = vdp.h40() ? 63 : 31;
+  vdp.layerA.attributes.height  = 31;
+  vdp.layerA.attributes.hscroll = 0;
+  vdp.layerA.attributes.vscroll = 0;
 }
 
 auto VDP::Window::power(bool reset) -> void {
@@ -19,4 +23,5 @@ auto VDP::Window::power(bool reset) -> void {
   voffset = 0;
   vdirection = 0;
   nametableAddress = 0;
+  attributesIndex = 0;
 }

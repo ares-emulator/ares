@@ -1,110 +1,142 @@
-inline auto VDP::Object::width() const -> u32 {
-  return 1 + tileWidth << 3;
-}
-
-inline auto VDP::Object::height() const -> u32 {
-  return 1 + tileHeight << 3 + (vdp.io.interlaceMode == 3);
-}
-
 auto VDP::Sprite::write(n9 address, n16 data) -> void {
-  if(address > 320) return;
-
-  auto& object = oam[address >> 2];
-  switch(address.bit(0,1)) {
-  case 0:
-    object.y = data.bit(0,9);
-    break;
-  case 1:
-    object.link       = data.bit(0,6);
-    object.tileHeight = data.bit(8,9);
-    object.tileWidth  = data.bit(10,11);
-    break;
-  case 2:
-    object.address  = data.bit(0,10);
-    object.hflip    = data.bit(11);
-    object.vflip    = data.bit(12);
-    object.palette  = data.bit(13,14);
-    object.priority = data.bit(15);
-    break;
-  case 3:
-    object.x = data.bit(0,8);
-    break;
+  auto& object = cache[address >> 2];
+  switch(address & 3) {
+  case 0: object.y      = data.bit( 0,10); break;
+  case 1: object.link   = data.bit( 0, 6);
+          object.height = data.bit( 8, 9);
+          object.width  = data.bit(10,11); break;
   }
 }
 
+//called before mapping fetches
+auto VDP::Sprite::begin() -> void {
+  for(auto& mapping : mappings) mapping.valid = 0;
+  mappingCount = 0;
+  pixelIndex = 0;
+  vcounter = vdp.vcounter();
+}
+
+//called before pattern fetches
+auto VDP::Sprite::end() -> void {
+  for(auto& pixel : pixels) pixel.color = 0;
+  visibleLink  = 0;
+  visibleCount = 0;
+  visibleStop  = 0;
+  patternIndex = 0;
+  patternSlice = 0;
+  patternCount = 0;
+  patternStop  = 0;
+}
+
+//called 16 (H32) or 20 (H40) times
 auto VDP::Sprite::mappingFetch() -> void {
+  //mapping fetches are delayed when less than 16/20 objects are visible
+  if(visibleCount++ < objectLimit()) return;
+
+  auto interlace = vdp.io.interlaceMode == 3;
+  auto y = 128 + vcounter;
+  if(interlace) y = y << 1 | vdp.field();
+
+  auto id = visible[mappingCount];
+  auto& object = cache[id];
+  auto height = 1 + object.height << 3 + interlace;
+
+  auto& mapping = mappings[mappingCount++];
+  auto address = vdp.sprite.nametableAddress + id * 4 + 2;
+  n16 d2 = vdp.vram.read(address++);
+  n16 d3 = vdp.vram.read(address++);
+
+  mapping.valid    = 1;
+  mapping.width    = object.width;
+  mapping.height   = object.height;
+  mapping.address  = d2.bit(0,10) << 4 + interlace;
+  mapping.hflip    = d2.bit(11);
+  mapping.palette  = d2.bit(13,14);
+  mapping.priority = d2.bit(15);
+  mapping.x        = d3.bit(0,8);
+
+  y = y - object.y;
+  if(d2.bit(12)) y = (height - 1) - y;
+  mapping.address += (y >> 3 + interlace) << 4 + interlace;
+  mapping.address += (y & 7 + interlace * 8) << 1;
 }
 
+//called 32 (H32) or 40 (H40) times
 auto VDP::Sprite::patternFetch() -> void {
-}
+  auto interlace = vdp.io.interlaceMode == 3;
+  auto y = 128 + vcounter;
+  if(interlace) y = y << 1 | vdp.field();
 
-auto VDP::Sprite::scanline(u32 y) -> void {
-  bool interlace = vdp.io.interlaceMode == 3;
-  y += 128;
-  if(interlace) y = y << 1 | vdp.state.field;
-
-  objects.reset();
-  n7  link  = 0;
-  u32 tiles = 0;
-  u32 count = 0;
-
-  do {
-    auto& object = oam[link];
-    link = object.link;
-
-    if(y <  object.y) continue;
-    if(y >= object.y + object.height()) continue;
-    if(object.x == 0) break;
-
-    if(objects.size() >= objectLimit() || tiles >= tileLimit()) {
-      overflow = 1;
-      break;
-    }
-
-    objects.append(object);
-    tiles += object.width() >> 3;
-    if(!link || link >= linkLimit()) break;
-  } while(++count < linkLimit());
-}
-
-auto VDP::Sprite::run(u32 x, u32 y) -> void {
-  bool interlace = vdp.io.interlaceMode == 3;
-  x += 128;
-  y += 128;
-  if(interlace) y = y << 1 | vdp.state.field;
-
-  output.priority = 0;
-  output.color = 0;
-
-  for(auto& object : objects) {
-    if(x <  object.x) continue;
-    if(x >= object.x + object.width()) continue;
-
-    u32 objectX = x - object.x;
-    u32 objectY = y - object.y;
-    if(object.hflip) objectX = (object.width() - 1) - objectX;
-    if(object.vflip) objectY = (object.height() - 1) - objectY;
-
-    u32 tileX = objectX >> 3;
-    u32 tileY = objectY >> 3 + interlace;
-    u32 tileNumber = tileX * (object.height() >> 3 + interlace) + tileY;
-    n15 tileAddress = object.address + tileNumber << 4 + interlace;
-    u32 pixelX = objectX & 7;
-    u32 pixelY = objectY & 7 + interlace * 8;
-    tileAddress += pixelY << 1 | pixelX >> 2;
-
-    n16 tileData = vdp.vram.read(generatorAddress | tileAddress);
-    n4  color = tileData >> (((pixelX & 3) ^ 3) << 2);
-    if(!color) continue;
-
-    if(output.color) {
-      collision = 1;
-    }
-
-    output.color = object.palette << 4 | color;
-    output.priority = object.priority;
-    break;
+  if(!patternStop && mappings[patternIndex].valid) {
+    auto& object = mappings[patternIndex];
+    if(patternX && !object.x) patternStop = 1;
+    patternX = object.x;
+  } else {
+    patternX = 0;
   }
+
+  if(!patternStop && mappings[patternIndex].valid) {
+    auto& object = mappings[patternIndex];
+    auto width  = 1 + object.width  << 3;
+    auto height = 1 + object.height << 3 + interlace;
+
+    u32 x = patternSlice * 8;
+    if(object.hflip) x = (width - 1) - x;
+
+    u32 tileX = x >> 3;
+    u32 tileNumber = tileX * (height >> 3 + interlace);
+    n15 tileAddress = object.address + (tileNumber << 4 + interlace);
+
+    u16 hi = vdp.vram.read(generatorAddress | tileAddress++);
+    u16 lo = vdp.vram.read(generatorAddress | tileAddress++);
+    u32 data = hi << 16 | lo << 0;
+    if(object.hflip) data = hflip(data);
+    for(auto index : range(8)) {
+      n9 x = object.x + patternSlice * 8 + index - 128;
+      if(x >= vdp.screenWidth()) continue;
+      n6 color = data >> 28;
+      data <<= 4;
+      if(!color) continue;
+      if(pixels[x].color) {
+        collision = 1;
+      } else {
+        color |= object.palette << 4;
+        pixels[x] = {color, object.priority};
+      }
+    }
+
+    if(++patternSlice >= 1 + object.width) {
+      patternSlice = 0;
+      if(++patternIndex >= objectLimit()) patternStop = 1;
+    }
+    if(++patternCount >= tileLimit()) patternStop = 1;
+    if(patternX && !object.x) patternStop = 1;
+    patternX = object.x;
+  } else {
+    patternX = 0;
+  }
+
+  y = 129 + vcounter;
+  if(interlace) y = y << 1 | vdp.field();
+
+  for(auto index : range(2)) {
+    if(visibleStop) break;
+    auto id = visibleLink;
+    auto& object = cache[id];
+    visibleLink = object.link;
+    if(!visibleLink) visibleStop = 1;
+
+    auto height = 1 + object.height << 3 + interlace;
+    if(y <  object.y) continue;
+    if(y >= object.y + height) continue;
+
+    visible[visibleCount++] = id;
+    if(visibleCount >= objectLimit()) visibleStop = 1;
+  }
+}
+
+auto VDP::Sprite::pixel() -> Pixel {
+  return pixels[pixelIndex++];
 }
 
 auto VDP::Sprite::power(bool reset) -> void {
@@ -112,5 +144,19 @@ auto VDP::Sprite::power(bool reset) -> void {
   nametableAddress = 0;
   collision = 0;
   overflow = 0;
-  output = {};
+  for(auto& pixel : pixels) pixel = {};
+  for(auto& cache : this->cache) cache = {};
+  for(auto& mapping : mappings) mapping = {};
+  mappingCount = 0;
+  patternX = 0;
+  patternIndex = 0;
+  patternSlice = 0;
+  patternCount = 0;
+  patternStop = 0;
+  for(auto& visible : this->visible) visible = {};
+  visibleLink = 0;
+  visibleCount = 0;
+  visibleStop = 0;
+  pixelIndex = 0;
+  vcounter = 0;
 }

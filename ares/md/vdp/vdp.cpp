@@ -5,17 +5,24 @@
 
 namespace ares::MegaDrive {
 
+inline auto hflip(u32 data) -> u32 {
+  data = data >> 16 & 0x0000ffff | data << 16 & 0xffff0000;
+  data = data >>  8 & 0x00ff00ff | data <<  8 & 0xff00ff00;
+  data = data >>  4 & 0x0f0f0f0f | data <<  4 & 0xf0f0f0f0;
+  return data;
+}
+
 VDP vdp;
 #include "main.cpp"
 #include "fifo.cpp"
 #include "memory.cpp"
 #include "io.cpp"
 #include "dma.cpp"
-#include "render.cpp"
 #include "layers.cpp"
 #include "window.cpp"
 #include "layer.cpp"
 #include "sprite.cpp"
+#include "dac.cpp"
 #include "color.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
@@ -47,6 +54,38 @@ auto VDP::unload() -> void {
   node->remove(screen);
   screen.reset();
   node.reset();
+}
+
+auto VDP::pixels() -> u32* {
+  u32* output = nullptr;
+  if(overscan->value() == 0 && latch.overscan == 0) {
+    if(state.vcounter >= 224) return nullptr;
+    output = screen->pixels().data() + (state.vcounter - 0) * 2 * 1280;
+  }
+  if(overscan->value() == 0 && latch.overscan == 1) {
+    if(state.vcounter <=   7) return nullptr;
+    if(state.vcounter >= 232) return nullptr;
+    output = screen->pixels().data() + (state.vcounter - 8) * 2 * 1280;
+  }
+  if(overscan->value() == 1 && latch.overscan == 0) {
+    if(state.vcounter >= 232) return nullptr;
+    output = screen->pixels().data() + (state.vcounter + 8) * 2 * 1280;
+  }
+  if(overscan->value() == 1 && latch.overscan == 1) {
+    output = screen->pixels().data() + (state.vcounter + 0) * 2 * 1280;
+  }
+  if(latch.interlace) output += state.field * 1280;
+  return output;
+}
+
+auto VDP::scanline() -> void {
+  if(vcounter() == 240) {
+    if(latch.interlace == 0) screen->setProgressive(1);
+    if(latch.interlace == 1) screen->setInterlace(state.field);
+    screen->setViewport(0, 0, screen->width(), screen->height());
+    screen->frame();
+    scheduler.exit(Event::Frame);
+  }
 }
 
 auto VDP::power(bool reset) -> void {

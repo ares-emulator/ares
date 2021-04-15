@@ -105,7 +105,7 @@ auto VDP::writeControlPort(n16 data) -> void {
     command.ready              = data.bit(6) | command.target.bit(0);
     command.pending            = data.bit(7);
 
-    if(!dma.enable) command.pending = 0;
+    dma.synchronize();
     return;
   }
 
@@ -142,7 +142,7 @@ auto VDP::writeControlPort(n16 data) -> void {
     io.displayEnable         = data.bit(6);
     vram.mode                = data.bit(7);
 
-    if(!dma.enable) command.pending = 0;
+    dma.synchronize();
     return;
   }
 
@@ -279,6 +279,8 @@ auto VDP::writeControlPort(n16 data) -> void {
     dma.source.bit(16,21) = data.bit(0,5);
     dma.mode              = data.bit(6,7);
     dma.wait              = dma.mode == 2;
+
+    dma.synchronize();
     return;
   }
 

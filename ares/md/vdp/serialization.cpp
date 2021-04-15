@@ -46,11 +46,9 @@ auto VDP::serialize(serializer& s) -> void {
   s(latch.displayWidth);
   s(latch.clockSelect);
 
-  s(state.hdot);
   s(state.hclock);
   s(state.hcounter);
   s(state.vcounter);
-  s(state.ecounter);
   s(state.field);
   s(state.hsync);
   s(state.vsync);
@@ -85,12 +83,27 @@ auto VDP::DMA::serialize(serializer& s) -> void {
   s(enable);
 }
 
+auto VDP::Pixel::serialize(serializer& s) -> void {
+  s(color);
+  s(priority);
+  s(backdrop);
+}
+
 auto VDP::Layers::serialize(serializer& s) -> void {
   s(hscrollMode);
   s(hscrollAddress);
   s(vscrollMode);
   s(nametableWidth);
   s(nametableHeight);
+  s(vscrollIndex);
+}
+
+auto VDP::Attributes::serialize(serializer& s) -> void {
+  s(address);
+  s(width);
+  s(height);
+  s(hscroll);
+  s(vscroll);
 }
 
 auto VDP::Window::serialize(serializer& s) -> void {
@@ -99,6 +112,7 @@ auto VDP::Window::serialize(serializer& s) -> void {
   s(voffset);
   s(vdirection);
   s(nametableAddress);
+  s(attributesIndex);
 }
 
 auto VDP::Layer::serialize(serializer& s) -> void {
@@ -106,22 +120,23 @@ auto VDP::Layer::serialize(serializer& s) -> void {
   s(vscroll);
   s(generatorAddress);
   s(nametableAddress);
-  s(output.color);
-  s(output.priority);
-  s(output.backdrop);
+  s(attributes);
+  s(pixels);
+  s(colors);
+  s(extras);
+  s(windowed);
+  s(mappings);
+  s(mappingIndex);
+  s(patternIndex);
+  s(pixelCount);
+  s(pixelIndex);
 }
 
-auto VDP::Object::serialize(serializer& s) -> void {
-  s(x);
-  s(y);
-  s(tileWidth);
-  s(tileHeight);
+auto VDP::Layer::Mapping::serialize(serializer& s) -> void {
+  s(address);
   s(hflip);
-  s(vflip);
   s(palette);
   s(priority);
-  s(address);
-  s(link);
 }
 
 auto VDP::Sprite::serialize(serializer& s) -> void {
@@ -129,11 +144,42 @@ auto VDP::Sprite::serialize(serializer& s) -> void {
   s(nametableAddress);
   s(collision);
   s(overflow);
-  s(output.color);
-  s(output.priority);
-  s(output.backdrop);
-  for(auto n : range(80)) s(oam[n]);
-  for(auto n : range(20)) s(objects[n]);
+  s(pixels);
+  s(cache);
+  s(mappings);
+  s(mappingCount);
+  s(patternX);
+  s(patternIndex);
+  s(patternSlice);
+  s(patternCount);
+  s(patternStop);
+  s(visible);
+  s(visibleLink);
+  s(visibleCount);
+  s(visibleStop);
+  s(pixelIndex);
+  s(vcounter);
+}
+
+auto VDP::Sprite::Cache::serialize(serializer& s) -> void {
+  s(y);
+  s(link);
+  s(height);
+  s(width);
+}
+
+auto VDP::Sprite::Mapping::serialize(serializer& s) -> void {
+  s(valid);
+  s(width);
+  s(height);
+  s(address);
+  s(hflip);
+  s(palette);
+  s(priority);
+  s(x);
+}
+
+auto VDP::DAC::serialize(serializer& s) -> void {
 }
 
 auto VDP::VRAM::serialize(serializer& s) -> void {

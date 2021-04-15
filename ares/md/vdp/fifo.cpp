@@ -26,7 +26,7 @@ auto VDP::FIFO::slot() -> void {
     if(vdp.command.target == 4) {
       cache.lower = 1;
       cache.upper = 1;
-      cache.data = vdp.vsram.read(vdp.command.address);
+      cache.data = vdp.vsram.read(vdp.command.address >> 1);
       vdp.command.ready = 1;
       return;
     }
@@ -34,7 +34,7 @@ auto VDP::FIFO::slot() -> void {
     if(vdp.command.target == 8) {
       cache.lower = 1;
       cache.upper = 1;
-      cache.data = vdp.cram.read(vdp.command.address);
+      cache.data = vdp.cram.read(vdp.command.address >> 1);
       vdp.command.ready = 1;
       return;
     }
