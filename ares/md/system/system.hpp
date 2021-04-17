@@ -49,6 +49,7 @@ private:
 
 extern System system;
 
+auto Region::NTSC() -> bool { return system.region() != System::Region::PAL; }
 auto Region::NTSCJ() -> bool { return system.region() == System::Region::NTSCJ; }
 auto Region::NTSCU() -> bool { return system.region() == System::Region::NTSCU; }
 auto Region::PAL() -> bool { return system.region() == System::Region::PAL; }

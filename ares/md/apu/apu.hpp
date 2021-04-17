@@ -41,6 +41,8 @@ struct APU : Z80, Z80::Bus, Thread {
   //bus.cpp
   auto read(n16 address) -> n8 override;
   auto write(n16 address, n8 data) -> void override;
+  auto readExternal(n24 address) -> n8;
+  auto writeExternal(n24 address, n8 data) -> void;
 
   auto in(n16 address) -> n8 override;
   auto out(n16 address, n8 data) -> void override;

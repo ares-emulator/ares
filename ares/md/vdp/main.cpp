@@ -1,7 +1,7 @@
 auto VDP::step(u32 clocks) -> void {
   state.hcounter += clocks;
   Thread::step(clocks);
-  Thread::synchronize(cpu, apu);
+  Thread::synchronize(cpu);
 }
 
 auto VDP::tick() -> void {
@@ -81,6 +81,7 @@ auto VDP::vsync(bool line) -> void {
 }
 
 auto VDP::mainH32() -> void {
+  hsync(0);
   layerA.begin();
   layerB.begin();
 
@@ -89,7 +90,7 @@ auto VDP::mainH32() -> void {
   tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch(); hsync(0);
+  tick(); sprite.patternFetch();
 
   layerA.attributesFetch();
   layerB.attributesFetch();
@@ -126,6 +127,7 @@ auto VDP::mainH32() -> void {
     tick(); layerB.patternFetch();
   }
 
+  hsync(1);
   sprite.end();
 
   //142-171
@@ -136,7 +138,7 @@ auto VDP::mainH32() -> void {
   tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch(); hsync(1);
+  tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
@@ -162,13 +164,14 @@ auto VDP::mainH32() -> void {
 }
 
 auto VDP::mainH40() -> void {
+  hsync(0);
   layerA.begin();
   layerB.begin();
 
   //1-5
   tick(); layers.hscrollFetch();
   tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch(); hsync(0);
+  tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
 
@@ -207,6 +210,7 @@ auto VDP::mainH40() -> void {
     tick(); layerB.patternFetch();
   }
 
+  hsync(1);
   sprite.end();
 
   //174-210
@@ -232,7 +236,7 @@ auto VDP::mainH40() -> void {
   tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch(); hsync(1);
+  tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
   tick(); sprite.patternFetch();
   tick(); fifo.slot();

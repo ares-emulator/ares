@@ -14,14 +14,18 @@ auto VDP::read(n24 address, n16 data) -> n16 {
   //counter
   case 0xc00008: case 0xc0000a: case 0xc0000c: case 0xc0000e: {
     auto vcounter = state.vcounter;
+    if(Region::NTSC() && io.overscan == 0 && vcounter >= 0x0eb) vcounter -= 0x0eb - 0x0e5;
+    if(Region::PAL () && io.overscan == 0 && vcounter >= 0x103) vcounter -= 0x103 - 0x0ca;
+    if(Region::PAL () && io.overscan == 1 && vcounter >= 0x10b) vcounter -= 0x10b - 0x0d2;
     if(io.interlaceMode.bit(0)) {
       if(io.interlaceMode.bit(1)) vcounter <<= 1;
       vcounter.bit(0) = vcounter.bit(8);
     }
     auto hclock = state.hclock;
-    if(h32()) hclock = min(hclock, 511);
-    if(h40()) hclock = min(hclock, 639);
-    return vcounter << 8 | hclock >> 2;
+    if(h32() && hclock > 0x127 + 0x018) hclock += 0x1d2 - 0x127 - 1;
+    if(h40() && hclock > 0x16c + 0x018) hclock += 0x1c9 - 0x16c - 1;
+    hclock -= 0x018;
+    return vcounter << 8 | hclock >> 1 & 0xff;
   }
 
   }

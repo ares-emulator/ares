@@ -21,6 +21,7 @@ namespace ares::MegaDrive {
   };
 
   struct Region {
+    inline static auto NTSC() -> bool;
     inline static auto NTSCJ() -> bool;
     inline static auto NTSCU() -> bool;
     inline static auto PAL() -> bool;
