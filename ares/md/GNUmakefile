@@ -9,7 +9,6 @@ ares.objects += ares-md-bus
 ares.objects += ares-md-cpu
 ares.objects += ares-md-apu
 ares.objects += ares-md-vdp
-ares.objects += ares-md-psg
 ares.objects += ares-md-opn2
 ares.objects += ares-md-m32x
 ares.objects += ares-md-mcd
@@ -21,7 +20,6 @@ $(object.path)/ares-md-bus.o:        $(ares.path)/md/bus/bus.cpp
 $(object.path)/ares-md-cpu.o:        $(ares.path)/md/cpu/cpu.cpp
 $(object.path)/ares-md-apu.o:        $(ares.path)/md/apu/apu.cpp
 $(object.path)/ares-md-vdp.o:        $(ares.path)/md/vdp/vdp.cpp
-$(object.path)/ares-md-psg.o:        $(ares.path)/md/psg/psg.cpp
 $(object.path)/ares-md-opn2.o:       $(ares.path)/md/opn2/opn2.cpp
 $(object.path)/ares-md-m32x.o:       $(ares.path)/md/m32x/m32x.cpp
 $(object.path)/ares-md-mcd.o:        $(ares.path)/md/mcd/mcd.cpp

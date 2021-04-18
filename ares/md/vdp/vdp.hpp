@@ -14,6 +14,7 @@ struct VDP : Thread {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto unload() -> void;
+    auto interrupt(string_view) -> void;
     auto dma(string_view) -> void;
     auto io(n5 register, n8 data) -> void;
 
@@ -24,6 +25,7 @@ struct VDP : Thread {
     } memory;
 
     struct Tracer {
+      Node::Debugger::Tracer::Notification interrupt;
       Node::Debugger::Tracer::Notification dma;
       Node::Debugger::Tracer::Notification io;
     } tracer;
@@ -63,14 +65,39 @@ struct VDP : Thread {
   auto generateCycleTimings() -> void;
 
   //io.cpp
-  auto read(n24 address, n16 data) -> n16;
-  auto write(n24 address, n16 data) -> void;
+  auto read(n1 upper, n1 lower, n24 address, n16 data) -> n16;
+  auto write(n1 upper, n1 lower, n24 address, n16 data) -> void;
 
   auto readDataPort() -> n16;
   auto writeDataPort(n16 data) -> void;
 
   auto readControlPort() -> n16;
   auto writeControlPort(n16 data) -> void;
+
+  struct PSG : SN76489, Thread {
+    Node::Object node;
+    Node::Audio::Stream stream;
+
+    //psg.cpp
+    auto load(Node::Object) -> void;
+    auto unload() -> void;
+
+    auto main() -> void;
+    auto step(u32 clocks) -> void;
+
+    auto power(bool reset) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct IO {
+      n1 debugVolumeOverride;
+      n2 debugVolumeChannel;
+    } io;
+
+  private:
+    double volume[16];
+  } psg;
 
   struct IRQ {
     //irq.cpp
@@ -105,9 +132,9 @@ struct VDP : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    n16 data;     //read data
-    n1  upper;    //1 = data.byte(1) valid
-    n1  lower;    //1 = data.byte(0) valid
+    n16 data;   //read data
+    n1  upper;  //1 = data.byte(1) valid
+    n1  lower;  //1 = data.byte(0) valid
   };
 
   struct Slot {
@@ -174,6 +201,7 @@ struct VDP : Thread {
 
     n6 color;
     n1 priority;
+    n1 backdrop;
   };
 
   struct Layers {
@@ -417,10 +445,11 @@ private:
     //$00  mode register 1
     n1 displayOverlayEnable;
     n1 counterLatch;
+    n1 videoMode4;
     n1 leftColumnBlank;
 
     //$01  mode register 2
-    n1 videoMode;  //0 = Master System; 1 = Mega Drive
+    n1 videoMode5;
     n1 overscan;   //0 = 224 lines; 1 = 240 lines
     n1 displayEnable;
 

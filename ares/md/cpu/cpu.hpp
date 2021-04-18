@@ -23,6 +23,7 @@ struct CPU : M68K, Thread {
 
   enum class Interrupt : u32 {
     Reset,
+    External,
     HorizontalBlank,
     VerticalBlank,
   };
@@ -36,6 +37,7 @@ struct CPU : M68K, Thread {
   auto idle(u32 clocks) -> void override;
   auto wait(u32 clocks) -> void override;
 
+  auto query(Interrupt) -> bool;
   auto raise(Interrupt) -> void;
   auto lower(Interrupt) -> void;
 
@@ -66,7 +68,6 @@ struct CPU : M68K, Thread {
   } refresh;
 
   struct State {
-    n32 interruptLine;
     n32 interruptPending;
   } state;
 };

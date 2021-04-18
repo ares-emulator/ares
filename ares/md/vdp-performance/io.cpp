@@ -1,18 +1,18 @@
-auto VDP::read(n24 address, n16) -> n16 {
-  switch(address & 0xc0001e) {
+auto VDP::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
+  switch(address) {
 
   //data port
-  case 0xc00000: case 0xc00002: {
+  case 0xc00000 ... 0xc00003: {
     return readDataPort();
   }
 
   //control port
-  case 0xc00004: case 0xc00006: {
+  case 0xc00004 ... 0xc00007: {
     return readControlPort();
   }
 
   //counter
-  case 0xc00008: case 0xc0000a: case 0xc0000c: case 0xc0000e: {
+  case 0xc00008 ... 0xc0000f: {
     auto vcounter = state.vcounter;
     if(io.interlaceMode.bit(0)) {
       if(io.interlaceMode.bit(1)) vcounter <<= 1;
@@ -21,22 +21,39 @@ auto VDP::read(n24 address, n16) -> n16 {
     return vcounter << 8 | (state.hdot >> 1) << 0;
   }
 
+  //PSG
+  case 0xc00010 ... 0xc00017: {
+    //reading from the PSG should deadlock the machine
+    return data;
+  }
+
   }
 
   return 0x0000;
 }
 
-auto VDP::write(n24 address, n16 data) -> void {
-  switch(address & 0xc0001e) {
+auto VDP::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
+  switch(address) {
 
   //data port
-  case 0xc00000: case 0xc00002: {
+  case 0xc00000 ... 0xc00003: {
     return writeDataPort(data);
   }
 
   //control port
-  case 0xc00004: case 0xc00006: {
+  case 0xc00004 ... 0xc00007: {
     return writeControlPort(data);
+  }
+
+  //counter (read-only)
+  case 0xc00008 ... 0xc0000f: {
+    return;
+  }
+
+  //PSG
+  case 0xc00010 ... 0xc00017: {
+    if(!lower) return;  //byte writes to even PSG registers have no effect
+    return psg.write(data);
   }
 
   }

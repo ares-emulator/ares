@@ -3,6 +3,7 @@
 namespace ares::MegaDrive {
 
 VDP vdp;
+#include "psg.cpp"
 #include "render.cpp"
 #include "memory.cpp"
 #include "io.cpp"
@@ -29,11 +30,13 @@ auto VDP::load(Node::Object parent) -> void {
   });
   overscan->setDynamic(true);
 
+  psg.load(node);
   debugger.load(node);
 }
 
 auto VDP::unload() -> void {
   debugger = {};
+  psg.unload();
   overscan.reset();
   screen->quit();
   node->remove(screen);
@@ -119,6 +122,7 @@ auto VDP::power(bool reset) -> void {
 
   for(auto& data : cram.memory) data = 0;
 
+  psg.power(reset);
   dma.power();
 
   planeA.io = {};

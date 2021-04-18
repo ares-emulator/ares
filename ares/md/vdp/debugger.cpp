@@ -28,6 +28,7 @@ auto VDP::Debugger::load(Node::Object parent) -> void {
     self.cram.memory[n6(address >> 1)].byte(!(address & 1)) = data;
   });
 
+  tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "VDP");
   tracer.dma = parent->append<Node::Debugger::Tracer::Notification>("DMA", "VDP");
   tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "VDP");
 }
@@ -36,6 +37,13 @@ auto VDP::Debugger::unload() -> void {
   memory.vram.reset();
   memory.vsram.reset();
   memory.cram.reset();
+}
+
+auto VDP::Debugger::interrupt(string_view type) -> void {
+  if(tracer.interrupt->enabled()) {
+    string message = {type, " @ ", vdp.vcounter(), ",", vdp.hclock()};
+    tracer.interrupt->notify(message);
+  }
 }
 
 auto VDP::Debugger::dma(string_view line) -> void {

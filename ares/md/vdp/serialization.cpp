@@ -1,6 +1,7 @@
 auto VDP::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
+  s(psg);
   s(irq);
   s(dma);
   s(layers);
@@ -23,8 +24,9 @@ auto VDP::serialize(serializer& s) -> void {
 
   s(io.displayOverlayEnable);
   s(io.counterLatch);
+  s(io.videoMode4);
   s(io.leftColumnBlank);
-  s(io.videoMode);
+  s(io.videoMode5);
   s(io.overscan);
   s(io.displayEnable);
   s(io.backgroundColor);
@@ -53,6 +55,14 @@ auto VDP::serialize(serializer& s) -> void {
   s(state.hblank);
   s(state.vblank);
   s(state.hclock);
+}
+
+auto VDP::PSG::serialize(serializer& s) -> void {
+  SN76489::serialize(s);
+  Thread::serialize(s);
+
+  s(io.debugVolumeOverride);
+  s(io.debugVolumeChannel);
 }
 
 auto VDP::IRQ::serialize(serializer& s) -> void {
@@ -98,6 +108,7 @@ auto VDP::DMA::serialize(serializer& s) -> void {
 auto VDP::Pixel::serialize(serializer& s) -> void {
   s(color);
   s(priority);
+  s(backdrop);
 }
 
 auto VDP::Layers::serialize(serializer& s) -> void {

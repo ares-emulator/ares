@@ -44,7 +44,6 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(cpu);
   s(apu);
   s(vdp);
-  s(psg);
   s(opn2);
   s(controllerPort1);
   s(controllerPort2);

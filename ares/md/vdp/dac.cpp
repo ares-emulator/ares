@@ -3,10 +3,11 @@ auto VDP::DAC::begin() -> void {
 }
 
 auto VDP::DAC::pixel() -> void {
+  if(!pixels) return;
   if(!vdp.io.displayEnable) return output(0);
   if(vdp.vcounter() >= vdp.screenHeight()) return output(0);
 
-  Pixel g = {vdp.io.backgroundColor, 0};
+  Pixel g = {vdp.io.backgroundColor, 0, 1};
   Pixel a = vdp.layerA.pixel();
   Pixel b = vdp.layerB.pixel();
   Pixel s = vdp.sprite.pixel();
@@ -23,7 +24,7 @@ auto VDP::DAC::pixel() -> void {
   auto& bg = a.above() || a.color && !b.above() ? a : b.color ? b : g;
   auto& fg = s.above() || s.color && !b.above() && !a.above() ? s : bg;
 
-  auto color = fg.color;
+  auto pixel = fg;
   auto mode  = 1;  //0 = shadow, 1 = normal, 2 = highlight
 
   if(vdp.io.shadowHighlightEnable) {
@@ -32,24 +33,32 @@ auto VDP::DAC::pixel() -> void {
     case 0x0e:
     case 0x1e:
     case 0x2e: mode  = 1; break;
-    case 0x3e: mode += 1; color = bg.color; break;
-    case 0x3f: mode  = 0; color = bg.color; break;
+    case 0x3e: mode += 1; pixel = bg; break;
+    case 0x3f: mode  = 0; pixel = bg; break;
     default:   mode |= s.priority; break;
     }
   }
 
   if(vdp.io.debugDisableLayers == 0) {
-    if(vdp.io.debugForceLayer == 1) color &= s.color;
-    if(vdp.io.debugForceLayer == 2) color &= a.color;
-    if(vdp.io.debugForceLayer == 3) color &= b.color;
+    if(vdp.io.debugForceLayer == 1) {
+      if(pixel.backdrop) pixel = s;
+      pixel.color &= s.color;
+    }
+    if(vdp.io.debugForceLayer == 2) {
+      if(pixel.backdrop) pixel = a;
+      pixel.color &= a.color;
+    }
+    if(vdp.io.debugForceLayer == 3) {
+      if(pixel.backdrop) pixel = b;
+      pixel.color &= b.color;
+    }
   }
 
-  bool backdrop = &fg == &g;
-  output(backdrop << 11 | mode << 9 | vdp.cram.color(color));
+  auto color = vdp.cram.color(pixel.color);
+  output(pixel.backdrop << 11 | mode << 9 | color);
 }
 
 auto VDP::DAC::output(n32 color) -> void {
-  if(!pixels) return;
   *pixels++ = color;
   *pixels++ = color;
   *pixels++ = color;
@@ -59,4 +68,5 @@ auto VDP::DAC::output(n32 color) -> void {
 }
 
 auto VDP::DAC::power(bool reset) -> void {
+  pixels = nullptr;
 }

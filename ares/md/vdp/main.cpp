@@ -51,13 +51,17 @@ auto VDP::hblank(bool line) -> void {
     cartridge.hblank(0);
   } else {
     cartridge.hblank(1);
-    apu.setINT(false);
-    if(vcounter() < screenHeight()) {
+    apu.setINT(0);
+    if(vcounter() < screenHeight() - 1
+    || vcounter() == frameHeight() - 1
+    ) {
       if(irq.hblank.counter-- == 0) {
         irq.hblank.counter = irq.hblank.frequency;
         irq.hblank.pending = 1;
         irq.poll();
       }
+    } else {
+      irq.hblank.counter = irq.hblank.frequency;
     }
   }
 }
@@ -65,11 +69,10 @@ auto VDP::hblank(bool line) -> void {
 auto VDP::vblank(bool line) -> void {
   state.vblank = line;
   if(line == 0) {
-    irq.hblank.counter = irq.hblank.frequency;
     cartridge.vblank(0);
   } else {
     cartridge.vblank(1);
-    apu.setINT(true);
+    apu.setINT(1);
     irq.vblank.pending = 1;
     irq.poll();
   }
@@ -109,7 +112,7 @@ auto VDP::mainH32() -> void {
 
   //14-141
   for(auto block : range(16)) {
-    layers.vscrollFetch();
+    if(layers.vscrollMode == 1) layers.vscrollFetch();
     layerA.attributesFetch();
     layerB.attributesFetch();
     window.attributesFetch();
@@ -124,6 +127,7 @@ auto VDP::mainH32() -> void {
     tick(); layerB.patternFetch();
   }
 
+  if(layers.vscrollMode == 0) layers.vscrollFetch();
   render();
   hblank(1);
   sprite.end();
@@ -195,7 +199,7 @@ auto VDP::mainH40() -> void {
 
   //14-173
   for(auto block : range(20)) {
-    layers.vscrollFetch();
+    if(layers.vscrollMode == 1) layers.vscrollFetch();
     layerA.attributesFetch();
     layerB.attributesFetch();
     window.attributesFetch();
@@ -210,6 +214,7 @@ auto VDP::mainH40() -> void {
     tick(); layerB.patternFetch();
   }
 
+  if(layers.vscrollMode == 0) layers.vscrollFetch();
   render();
   hblank(1);
   sprite.end();

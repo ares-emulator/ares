@@ -28,7 +28,7 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   if(state.interruptPending) {
-    if(state.interruptPending.bit((u32)Interrupt::Reset)) {
+    if(query(Interrupt::Reset)) {
       r.a[7] = read(1, 1, 0) << 16 | read(1, 1, 2) << 0;
       r.pc   = read(1, 1, 4) << 16 | read(1, 1, 6) << 0;
       prefetch();
@@ -37,21 +37,27 @@ auto CPU::main() -> void {
       debugger.interrupt("Reset");
     }
 
-    if(state.interruptPending.bit((u32)Interrupt::HorizontalBlank)) {
+    if(query(Interrupt::VerticalBlank)) {
+      if(6 > r.i) {
+        debugger.interrupt("Vblank");
+        lower(Interrupt::VerticalBlank);
+        return interrupt(Vector::Level6, 6);
+      }
+    }
+
+    if(query(Interrupt::HorizontalBlank)) {
       if(4 > r.i) {
-        state.interruptPending.bit((u32)Interrupt::HorizontalBlank) = 0;
         debugger.interrupt("Hblank");
         lower(Interrupt::HorizontalBlank);
         return interrupt(Vector::Level4, 4);
       }
     }
 
-    if(state.interruptPending.bit((u32)Interrupt::VerticalBlank)) {
-      if(6 > r.i) {
-        state.interruptPending.bit((u32)Interrupt::VerticalBlank) = 0;
-        debugger.interrupt("Vblank");
-        lower(Interrupt::VerticalBlank);
-        return interrupt(Vector::Level6, 6);
+    if(query(Interrupt::External)) {
+      if(2 > r.i) {
+        debugger.interrupt("External");
+        lower(Interrupt::External);
+        return interrupt(Vector::Level2, 2);
       }
     }
   }
@@ -76,15 +82,15 @@ auto CPU::wait(u32 clocks) -> void {
   Thread::synchronize();
 }
 
+auto CPU::query(Interrupt interrupt) -> bool {
+  return state.interruptPending.bit((u32)interrupt);
+}
+
 auto CPU::raise(Interrupt interrupt) -> void {
-  if(!state.interruptLine.bit((u32)interrupt)) {
-    state.interruptLine.bit((u32)interrupt) = 1;
-    state.interruptPending.bit((u32)interrupt) = 1;
-  }
+  state.interruptPending.bit((u32)interrupt) = 1;
 }
 
 auto CPU::lower(Interrupt interrupt) -> void {
-  state.interruptLine.bit((u32)interrupt) = 0;
   state.interruptPending.bit((u32)interrupt) = 0;
 }
 

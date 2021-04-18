@@ -109,7 +109,6 @@ auto System::load(Node::System& root, string name) -> bool {
   cpu.load(node);
   apu.load(node);
   vdp.load(node);
-  psg.load(node);
   opn2.load(node);
   cartridgeSlot.load(node);
   if(Mega32X()) m32x.load(node);
@@ -127,7 +126,6 @@ auto System::unload() -> void {
   cpu.unload();
   apu.unload();
   vdp.unload();
-  psg.unload();
   opn2.unload();
   if(Mega32X()) m32x.unload();
   if(MegaCD()) mcd.unload();
@@ -157,8 +155,7 @@ auto System::power(bool reset) -> void {
   bus.power(reset);
   cpu.power(reset);
   apu.power(reset);  //apu.power() calls opn2.power()
-  vdp.power(reset);
-  psg.power(reset);
+  vdp.power(reset);  //vdp.power() calls vdp.psg.power()
   controllerPort1.power(reset);
   controllerPort2.power(reset);
   extensionPort.power(reset);

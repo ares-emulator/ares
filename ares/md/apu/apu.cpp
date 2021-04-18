@@ -50,7 +50,7 @@ auto APU::main() -> void {
 
 auto APU::step(u32 clocks) -> void {
   Thread::step(clocks);
-  Thread::synchronize(cpu, vdp, psg, opn2);
+  Thread::synchronize(cpu, vdp, vdp.psg, opn2);
 }
 
 auto APU::setNMI(n1 line) -> void {

@@ -35,7 +35,6 @@ namespace ares::MegaDrive {
   #include <md/cpu/cpu.hpp>
   #include <md/apu/apu.hpp>
   #include <md/vdp/vdp.hpp>
-  #include <md/psg/psg.hpp>
   #include <md/opn2/opn2.hpp>
   #include <md/m32x/m32x.hpp>
   #include <md/mcd/mcd.hpp>

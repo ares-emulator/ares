@@ -1,11 +1,4 @@
-#include <md/md.hpp>
-
-namespace ares::MegaDrive {
-
-PSG psg;
-#include "serialization.cpp"
-
-auto PSG::load(Node::Object parent) -> void {
+auto VDP::PSG::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PSG");
 
   stream = node->append<Node::Audio::Stream>("PSG");
@@ -15,13 +8,13 @@ auto PSG::load(Node::Object parent) -> void {
   stream->addLowPassFilter (2840.0, 1);
 }
 
-auto PSG::unload() -> void {
+auto VDP::PSG::unload() -> void {
   node->remove(stream);
   stream.reset();
   node.reset();
 }
 
-auto PSG::main() -> void {
+auto VDP::PSG::main() -> void {
   auto channels = SN76489::clock();
   if(io.debugVolumeOverride) {
     channels[0] = channels[io.debugVolumeChannel];
@@ -39,12 +32,12 @@ auto PSG::main() -> void {
   step(16);
 }
 
-auto PSG::step(u32 clocks) -> void {
+auto VDP::PSG::step(u32 clocks) -> void {
   Thread::step(clocks);
   Thread::synchronize(cpu, apu);
 }
 
-auto PSG::power(bool reset) -> void {
+auto VDP::PSG::power(bool reset) -> void {
   SN76489::power();
   Thread::create(system.frequency() / 15.0, {&PSG::main, this});
 
@@ -54,6 +47,4 @@ auto PSG::power(bool reset) -> void {
     volume[level] = pow(2, level * -2.0 / 6.0);
   }
   volume[15] = 0;
-}
-
 }

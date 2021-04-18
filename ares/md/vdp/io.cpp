@@ -1,18 +1,18 @@
-auto VDP::read(n24 address, n16 data) -> n16 {
-  switch(address & 0xc0001e) {
+auto VDP::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
+  switch(address) {
 
   //data port
-  case 0xc00000: case 0xc00002: {
+  case 0xc00000 ... 0xc00003: {
     return readDataPort();
   }
 
   //control port
-  case 0xc00004: case 0xc00006: {
+  case 0xc00004 ... 0xc00007: {
     return readControlPort();
   }
 
   //counter
-  case 0xc00008: case 0xc0000a: case 0xc0000c: case 0xc0000e: {
+  case 0xc00008 ... 0xc0000f: {
     auto vcounter = state.vcounter;
     auto hclock   = state.hclock;
     if(h32() && hclock >> 1 >= 132) vcounter += 1;
@@ -31,13 +31,19 @@ auto VDP::read(n24 address, n16 data) -> n16 {
     return vcounter << 8 | hclock >> 1 & 0xff;
   }
 
+  //PSG
+  case 0xc00010 ... 0xc00017: {
+    //reading from the PSG should deadlock the machine
+    return data;
+  }
+
   //debug address port (write-only)
-  case 0xc00018: case 0xc0001a: {
+  case 0xc00018 ... 0xc0001b: {
     return data;
   }
 
   //debug data port
-  case 0xc0001c: case 0xc0001e: {
+  case 0xc0001c ... 0xc0001f: {
     switch(io.debugAddress) {
 
     //unknown
@@ -54,27 +60,38 @@ auto VDP::read(n24 address, n16 data) -> n16 {
   return data;
 }
 
-auto VDP::write(n24 address, n16 data) -> void {
-  switch(address & 0xc0001e) {
+auto VDP::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
+  switch(address) {
 
   //data port
-  case 0xc00000: case 0xc00002: {
+  case 0xc00000 ... 0xc00003: {
     return writeDataPort(data);
   }
 
   //control port
-  case 0xc00004: case 0xc00006: {
+  case 0xc00004 ... 0xc00007: {
     return writeControlPort(data);
   }
 
+  //counter (read-only)
+  case 0xc00008 ... 0xc0000f: {
+    return;
+  }
+
+  //PSG
+  case 0xc00010 ... 0xc00017: {
+    if(!lower) return;  //byte writes to even PSG registers have no effect
+    return psg.write(data);
+  }
+
   //debug address port
-  case 0xc00018: case 0xc0001a: {
+  case 0xc00018 ... 0xc0001b: {
     io.debugAddress = data.bit(0,3);
     return;
   }
 
   //debug data port
-  case 0xc0001c: case 0xc0001e: {
+  case 0xc0001c ... 0xc0001f: {
     switch(io.debugAddress) {
 
     case 0x0: {
@@ -196,16 +213,18 @@ auto VDP::writeControlPort(n16 data) -> void {
   case 0x00: {
     io.displayOverlayEnable  = data.bit(0);
     io.counterLatch          = data.bit(1);
+    io.videoMode4            = data.bit(2);
     irq.hblank.enable        = data.bit(4);
     io.leftColumnBlank       = data.bit(5);
 
     irq.poll();
+    if(!io.videoMode4) debug(unimplemented, "[VDP] M4=0");
     return;
   }
 
   //mode register 2
   case 0x01: {
-    io.videoMode             = data.bit(2);
+    io.videoMode5            = data.bit(2);
     io.overscan              = data.bit(3);
     dma.enable               = data.bit(4);
     irq.vblank.enable        = data.bit(5);
@@ -214,6 +233,7 @@ auto VDP::writeControlPort(n16 data) -> void {
 
     dma.synchronize();
     irq.poll();
+    if(!io.videoMode5) debug(unimplemented, "[VDP] M5=0");
     return;
   }
 

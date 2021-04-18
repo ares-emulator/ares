@@ -3,6 +3,7 @@ auto VDP::serialize(serializer& s) -> void {
   s(vram);
   s(vsram);
   s(cram);
+  s(psg);
   s(dma);
   s(planeA);
   s(window);
@@ -44,6 +45,11 @@ auto VDP::serialize(serializer& s) -> void {
   s(latch.horizontalInterruptCounter);
   s(latch.displayWidth);
   s(latch.clockSelect);
+}
+
+auto VDP::PSG::serialize(serializer& s) -> void {
+  SN76489::serialize(s);
+  Thread::serialize(s);
 }
 
 auto VDP::VRAM::serialize(serializer& s) -> void {
