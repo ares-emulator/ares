@@ -14,6 +14,11 @@ struct PSG : SN76489, Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  struct IO {
+    n1 debugVolumeOverride;
+    n2 debugVolumeChannel;
+  } io;
+
 private:
   double volume[16];
 };

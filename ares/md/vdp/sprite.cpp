@@ -30,6 +30,8 @@ auto VDP::Sprite::end() -> void {
 
 //called 16 (H32) or 20 (H40) times
 auto VDP::Sprite::mappingFetch() -> void {
+  if(vdp.io.debugDisableSpritePhase2) return;
+
   //mapping fetches are delayed when less than 16/20 objects are visible
   if(visibleCount++ < objectLimit()) return;
 
@@ -63,6 +65,8 @@ auto VDP::Sprite::mappingFetch() -> void {
 
 //called 32 (H32) or 40 (H40) times
 auto VDP::Sprite::patternFetch() -> void {
+  if(vdp.io.debugDisableSpritePhase3) patternStop = 1;
+
   auto interlace = vdp.io.interlaceMode == 3;
   auto y = 128 + vcounter;
   if(interlace) y = y << 1 | vdp.field();
@@ -118,6 +122,8 @@ auto VDP::Sprite::patternFetch() -> void {
 
   y = 129 + vcounter;
   if(interlace) y = y << 1 | vdp.field();
+
+  if(vdp.io.debugDisableSpritePhase1) visibleStop = 1;
 
   for(auto index : range(2)) {
     if(visibleStop) break;

@@ -29,12 +29,12 @@ struct VDP : Thread {
     } tracer;
   } debugger{*this};
 
-  inline auto hclock() const -> u32 { return state.hclock; }
   inline auto hcounter() const -> u32 { return state.hcounter; }
   inline auto vcounter() const -> u32 { return state.vcounter; }
   inline auto field() const -> bool { return state.field; }
-  inline auto hsync() const -> bool { return state.hsync; }
-  inline auto vsync() const -> bool { return state.vsync; }
+  inline auto hblank() const -> bool { return state.hblank; }
+  inline auto vblank() const -> bool { return state.vblank; }
+  inline auto hclock() const -> u32 { return state.hclock; }
 
   inline auto h32() const -> bool { return io.displayWidth == 0; }  //256-width
   inline auto h40() const -> bool { return io.displayWidth == 1; }  //320-width
@@ -53,8 +53,9 @@ struct VDP : Thread {
   auto step(u32 clocks) -> void;
   auto tick() -> void;
   auto main() -> void;
-  auto hsync(bool) -> void;
-  auto vsync(bool) -> void;
+  auto render() -> void;
+  auto hblank(bool) -> void;
+  auto vblank(bool) -> void;
   auto mainH32() -> void;
   auto mainH40() -> void;
   auto mainBlankH32() -> void;
@@ -70,6 +71,32 @@ struct VDP : Thread {
 
   auto readControlPort() -> n16;
   auto writeControlPort(n16 data) -> void;
+
+  struct IRQ {
+    //irq.cpp
+    auto poll() -> void;
+    auto power(bool reset) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct External {
+      n1 enable;
+      n1 pending;
+    } external;
+
+    struct Hblank {
+      n1 enable;
+      n1 pending;
+      n8 counter;
+      n8 frequency;
+    } hblank;
+
+    struct Vblank {
+      n1 enable;
+      n1 pending;
+    } vblank;
+  } irq;
 
   struct Cache {
     auto empty() const -> bool { return !upper && !lower; }
@@ -147,7 +174,6 @@ struct VDP : Thread {
 
     n6 color;
     n1 priority;
-    n1 backdrop;
   };
 
   struct Layers {
@@ -313,6 +339,7 @@ struct VDP : Thread {
     auto begin() -> void;
     auto pixel() -> void;
     auto output(n32 color) -> void;
+    auto power(bool reset) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
@@ -387,29 +414,18 @@ private:
   } command;
 
   struct IO {
-    //status
-    n1 vblankInterruptTriggered;  //true after VIRQ triggers; cleared at start of next frame
-
     //$00  mode register 1
     n1 displayOverlayEnable;
     n1 counterLatch;
-    n1 hblankInterruptEnable;
     n1 leftColumnBlank;
 
     //$01  mode register 2
     n1 videoMode;  //0 = Master System; 1 = Mega Drive
     n1 overscan;   //0 = 224 lines; 1 = 240 lines
-    n1 vblankInterruptEnable;
     n1 displayEnable;
 
     //$07  background color
     n6 backgroundColor;
-
-    //$0a  horizontal interrupt counter
-    n8 hblankInterruptCounter;
-
-    //$0b  mode register 3
-    n1 externalInterruptEnable;
 
     //$0c  mode register 4
     n1 displayWidth;  //0 = H32; 1 = H40
@@ -419,6 +435,14 @@ private:
     n1 hsync;
     n1 vsync;
     n1 clockSelect;  //0 = DCLK; 1 = EDCLK
+
+    //debug registers
+    n4 debugAddress;
+    n1 debugDisableLayers;
+    n2 debugForceLayer;
+    n1 debugDisableSpritePhase1;
+    n1 debugDisableSpritePhase2;
+    n1 debugDisableSpritePhase3;
   } io;
 
   struct Latch {
@@ -427,18 +451,17 @@ private:
     n1 overscan;
 
     //per-scanline
-    n8 hblankInterruptCounter;
     n1 displayWidth;
     n1 clockSelect;
   } latch;
 
   struct State {
-    n16 hclock;
     n16 hcounter;
     n16 vcounter;
     n1  field;
-    n1  hsync;
-    n1  vsync;
+    n1  hblank;
+    n1  vblank;
+    n16 hclock;
   } state;
 
 //unserialized:

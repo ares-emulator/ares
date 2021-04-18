@@ -1,7 +1,7 @@
 auto VDP::step(u32 clocks) -> void {
   state.hcounter += clocks;
   Thread::step(clocks);
-  Thread::synchronize(cpu);
+  Thread::synchronize(cpu, apu);
 }
 
 auto VDP::tick() -> void {
@@ -18,14 +18,10 @@ auto VDP::tick() -> void {
 
 auto VDP::main() -> void {
   scanline();
-  if(vcounter() == frameHeight() - 1) vsync(0);
-  if(vcounter() == screenHeight()) vsync(1);
 
   if(vcounter() < screenHeight() && io.displayEnable) {
     if(h32()) mainH32();
     if(h40()) mainH40();
-    for(auto pixel : range(screenWidth())) dac.pixel();
-    m32x.vdp.scanline(pixels(), vcounter());
   } else {
     if(h32()) mainBlankH32();
     if(h40()) mainBlankH40();
@@ -44,44 +40,44 @@ auto VDP::main() -> void {
   }
 }
 
-auto VDP::hsync(bool line) -> void {
-  state.hsync = line;
+auto VDP::render() -> void {
+  for(auto pixel : range(screenWidth())) dac.pixel();
+  m32x.vdp.scanline(pixels(), vcounter());
+}
+
+auto VDP::hblank(bool line) -> void {
+  state.hblank = line;
   if(line == 0) {
     cartridge.hblank(0);
-    cpu.lower(CPU::Interrupt::HorizontalBlank);
   } else {
     cartridge.hblank(1);
     apu.setINT(false);
     if(vcounter() < screenHeight()) {
-      if(latch.hblankInterruptCounter-- == 0) {
-        latch.hblankInterruptCounter = io.hblankInterruptCounter;
-        if(io.hblankInterruptEnable) {
-          cpu.raise(CPU::Interrupt::HorizontalBlank);
-        }
+      if(irq.hblank.counter-- == 0) {
+        irq.hblank.counter = irq.hblank.frequency;
+        irq.hblank.pending = 1;
+        irq.poll();
       }
     }
   }
 }
 
-auto VDP::vsync(bool line) -> void {
-  state.vsync = line;
+auto VDP::vblank(bool line) -> void {
+  state.vblank = line;
   if(line == 0) {
-    io.vblankInterruptTriggered = false;
-    latch.hblankInterruptCounter = io.hblankInterruptCounter;
+    irq.hblank.counter = irq.hblank.frequency;
     cartridge.vblank(0);
-    cpu.lower(CPU::Interrupt::VerticalBlank);
   } else {
     cartridge.vblank(1);
     apu.setINT(true);
-    if(io.vblankInterruptEnable) {
-      io.vblankInterruptTriggered = true;
-      cpu.raise(CPU::Interrupt::VerticalBlank);
-    }
+    irq.vblank.pending = 1;
+    irq.poll();
   }
 }
 
 auto VDP::mainH32() -> void {
-  hsync(0);
+  //0
+  hblank(0);
   layerA.begin();
   layerB.begin();
 
@@ -124,10 +120,12 @@ auto VDP::mainH32() -> void {
     tick(); layerB.mappingFetch();
     tick(); sprite.mappingFetch();
     tick(); layerB.patternFetch();
+    if(hclock() >> 1 == 132 && vcounter() == screenHeight() - 1) vblank(1);
     tick(); layerB.patternFetch();
   }
 
-  hsync(1);
+  render();
+  hblank(1);
   sprite.end();
 
   //142-171
@@ -164,7 +162,8 @@ auto VDP::mainH32() -> void {
 }
 
 auto VDP::mainH40() -> void {
-  hsync(0);
+  //0
+  hblank(0);
   layerA.begin();
   layerB.begin();
 
@@ -207,10 +206,12 @@ auto VDP::mainH40() -> void {
     tick(); layerB.mappingFetch();
     tick(); sprite.mappingFetch();
     tick(); layerB.patternFetch();
+    if(hclock() >> 1 == 164 && vcounter() == screenHeight() - 1) vblank(1);
     tick(); layerB.patternFetch();
   }
 
-  hsync(1);
+  render();
+  hblank(1);
   sprite.end();
 
   //174-210
@@ -254,25 +255,27 @@ auto VDP::mainH40() -> void {
 }
 
 auto VDP::mainBlankH32() -> void {
+  //0
+  hblank(0);
+
   //1-5
   tick();
   tick();
   tick(); fifo.slot();
   tick(); fifo.slot();
-  tick(); fifo.slot(); hsync(0);
+  tick(); fifo.slot();
 
-  //6-148
-  for(auto cycle : range(143)) {
+  if(vcounter() < 240) dac.begin();
+
+  //6-169
+  for(auto cycle : range(164)) {
     tick(); fifo.slot();
+    if(hclock() >> 1 == 132 && vcounter() == screenHeight() - 1) vblank(1);
+    if(hclock() >> 1 == 132 && vcounter() == frameHeight()  - 1) vblank(0);
+    if(hclock() >> 1 == 142) hblank(1);
   }
 
-  //149
-  tick(); fifo.slot(); hsync(1);
-
-  //150-169
-  for(auto cycle : range(20)) {
-    tick(); fifo.slot();
-  }
+  if(vcounter() < 240) render();
 
   //170-171
   tick();
@@ -280,23 +283,25 @@ auto VDP::mainBlankH32() -> void {
 }
 
 auto VDP::mainBlankH40() -> void {
+  //0
+  hblank(0);
+
   //1-3
   tick();
-  tick(); hsync(0);
+  tick();
   tick();
 
-  //4-195
-  for(auto cycle : range(192)) {
+  if(vcounter() < 240) dac.begin();
+
+  //4-207
+  for(auto cycle : range(204)) {
     tick(); fifo.slot();
+    if(hclock() >> 1 == 164 && vcounter() == screenHeight() - 1) vblank(1);
+    if(hclock() >> 1 == 164 && vcounter() == frameHeight()  - 1) vblank(0);
+    if(hclock() >> 1 == 174) hblank(1);
   }
 
-  //196
-  tick(); hsync(1);
-
-  //197-207
-  for(auto cycle : range(11)) {
-    tick(); fifo.slot();
-  }
+  if(vcounter() < 240) render();
 
   //208-210
   tick();

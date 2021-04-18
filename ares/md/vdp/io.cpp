@@ -14,6 +14,10 @@ auto VDP::read(n24 address, n16 data) -> n16 {
   //counter
   case 0xc00008: case 0xc0000a: case 0xc0000c: case 0xc0000e: {
     auto vcounter = state.vcounter;
+    auto hclock   = state.hclock;
+    if(h32() && hclock >> 1 >= 132) vcounter += 1;
+    if(h40() && hclock >> 1 >= 164) vcounter += 1;
+    if(vcounter >= frameHeight()) vcounter = 0;
     if(Region::NTSC() && io.overscan == 0 && vcounter >= 0x0eb) vcounter -= 0x0eb - 0x0e5;
     if(Region::PAL () && io.overscan == 0 && vcounter >= 0x103) vcounter -= 0x103 - 0x0ca;
     if(Region::PAL () && io.overscan == 1 && vcounter >= 0x10b) vcounter -= 0x10b - 0x0d2;
@@ -21,11 +25,28 @@ auto VDP::read(n24 address, n16 data) -> n16 {
       if(io.interlaceMode.bit(1)) vcounter <<= 1;
       vcounter.bit(0) = vcounter.bit(8);
     }
-    auto hclock = state.hclock;
     if(h32() && hclock > 0x127 + 0x018) hclock += 0x1d2 - 0x127 - 1;
     if(h40() && hclock > 0x16c + 0x018) hclock += 0x1c9 - 0x16c - 1;
     hclock -= 0x018;
     return vcounter << 8 | hclock >> 1 & 0xff;
+  }
+
+  //debug address port (write-only)
+  case 0xc00018: case 0xc0001a: {
+    return data;
+  }
+
+  //debug data port
+  case 0xc0001c: case 0xc0001e: {
+    switch(io.debugAddress) {
+
+    //unknown
+    case 0x8 ... 0xf: {
+      return data;
+    }
+
+    }
+    return data;
   }
 
   }
@@ -44,6 +65,49 @@ auto VDP::write(n24 address, n16 data) -> void {
   //control port
   case 0xc00004: case 0xc00006: {
     return writeControlPort(data);
+  }
+
+  //debug address port
+  case 0xc00018: case 0xc0001a: {
+    io.debugAddress = data.bit(0,3);
+    return;
+  }
+
+  //debug data port
+  case 0xc0001c: case 0xc0001e: {
+    switch(io.debugAddress) {
+
+    case 0x0: {
+      //bit(0,5) is unknown
+      io.debugDisableLayers       = data.bit(6);
+      io.debugForceLayer          = data.bit(7,8);
+      psg.io.debugVolumeOverride  = data.bit(9);
+      psg.io.debugVolumeChannel   = data.bit(10,11);
+      io.debugDisableSpritePhase1 = data.bit(12);
+      io.debugDisableSpritePhase2 = data.bit(13);
+      io.debugDisableSpritePhase3 = data.bit(14);
+      return;
+    }
+
+    case 0x1: {
+      //bit(0) affects Z80 clock (ZCLK)
+      //bit(1-15) is unknown
+      return;
+    }
+
+    case 0x2: {
+      //appears to reset video signal generator whenever any value is written
+      return;
+    }
+
+    //unknown
+    case 0x3 ... 0x7: {
+      return;
+    }
+
+    }
+
+    return;
   }
 
   }
@@ -79,12 +143,12 @@ auto VDP::readControlPort() -> n16 {
   n16 result;
   result.bit( 0) = Region::PAL();
   result.bit( 1) = command.pending;
-  result.bit( 2) = hsync();
-  result.bit( 3) = vsync() || !io.displayEnable;
+  result.bit( 2) = hblank();
+  result.bit( 3) = vblank() || !io.displayEnable;
   result.bit( 4) = io.interlaceMode.bit(0) && field();
   result.bit( 5) = sprite.collision;
   result.bit( 6) = sprite.overflow;
-  result.bit( 7) = io.vblankInterruptTriggered;
+  result.bit( 7) = irq.vblank.pending;
   result.bit( 8) = fifo.full();
   result.bit( 9) = fifo.empty();
   result.bit(10) = 1;  //constants (bits 10-15)
@@ -132,8 +196,10 @@ auto VDP::writeControlPort(n16 data) -> void {
   case 0x00: {
     io.displayOverlayEnable  = data.bit(0);
     io.counterLatch          = data.bit(1);
-    io.hblankInterruptEnable = data.bit(4);
+    irq.hblank.enable        = data.bit(4);
     io.leftColumnBlank       = data.bit(5);
+
+    irq.poll();
     return;
   }
 
@@ -142,11 +208,12 @@ auto VDP::writeControlPort(n16 data) -> void {
     io.videoMode             = data.bit(2);
     io.overscan              = data.bit(3);
     dma.enable               = data.bit(4);
-    io.vblankInterruptEnable = data.bit(5);
+    irq.vblank.enable        = data.bit(5);
     io.displayEnable         = data.bit(6);
     vram.mode                = data.bit(7);
 
     dma.synchronize();
+    irq.poll();
     return;
   }
 
@@ -188,15 +255,15 @@ auto VDP::writeControlPort(n16 data) -> void {
 
   //horizontal interrupt counter
   case 0x0a: {
-    io.hblankInterruptCounter = data.bit(0,7);
+    irq.hblank.frequency = data.bit(0,7);
     return;
   }
 
   //mode register 3
   case 0x0b: {
-    layers.hscrollMode         = data.bit(0,1);
-    layers.vscrollMode         = data.bit(2);
-    io.externalInterruptEnable = data.bit(3);
+    layers.hscrollMode  = data.bit(0,1);
+    layers.vscrollMode  = data.bit(2);
+    irq.external.enable = data.bit(3);
     return;
   }
 

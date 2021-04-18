@@ -1,6 +1,7 @@
 auto VDP::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
+  s(irq);
   s(dma);
   s(layers);
   s(window);
@@ -20,18 +21,13 @@ auto VDP::serialize(serializer& s) -> void {
   s(command.address);
   s(command.increment);
 
-  s(io.vblankInterruptTriggered);
   s(io.displayOverlayEnable);
   s(io.counterLatch);
-  s(io.hblankInterruptEnable);
   s(io.leftColumnBlank);
   s(io.videoMode);
   s(io.overscan);
-  s(io.vblankInterruptEnable);
   s(io.displayEnable);
   s(io.backgroundColor);
-  s(io.hblankInterruptCounter);
-  s(io.externalInterruptEnable);
   s(io.displayWidth);
   s(io.interlaceMode);
   s(io.shadowHighlightEnable);
@@ -39,19 +35,35 @@ auto VDP::serialize(serializer& s) -> void {
   s(io.hsync);
   s(io.vsync);
   s(io.clockSelect);
+  s(io.debugAddress);
+  s(io.debugDisableLayers);
+  s(io.debugForceLayer);
+  s(io.debugDisableSpritePhase1);
+  s(io.debugDisableSpritePhase2);
+  s(io.debugDisableSpritePhase3);
 
   s(latch.interlace);
   s(latch.overscan);
-  s(latch.hblankInterruptCounter);
   s(latch.displayWidth);
   s(latch.clockSelect);
 
-  s(state.hclock);
   s(state.hcounter);
   s(state.vcounter);
   s(state.field);
-  s(state.hsync);
-  s(state.vsync);
+  s(state.hblank);
+  s(state.vblank);
+  s(state.hclock);
+}
+
+auto VDP::IRQ::serialize(serializer& s) -> void {
+  s(external.enable);
+  s(external.pending);
+  s(hblank.enable);
+  s(hblank.pending);
+  s(hblank.counter);
+  s(hblank.frequency);
+  s(vblank.enable);
+  s(vblank.pending);
 }
 
 auto VDP::Cache::serialize(serializer& s) -> void {
@@ -86,7 +98,6 @@ auto VDP::DMA::serialize(serializer& s) -> void {
 auto VDP::Pixel::serialize(serializer& s) -> void {
   s(color);
   s(priority);
-  s(backdrop);
 }
 
 auto VDP::Layers::serialize(serializer& s) -> void {

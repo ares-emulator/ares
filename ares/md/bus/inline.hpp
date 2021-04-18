@@ -47,7 +47,7 @@ inline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     if(address.bit(16,18)) return cpu.ird();  //should deadlock the machine
     address.bit(8,15) = 0;  //mirrors
     if(address.bit(2,3) == 3) return cpu.ird();  //should return VDP open bus
-    if(address.bit(4)) return cpu.ird();  //reading the PSG should deadlock the machine
+    if(address.bit(4) && address.bit(0,3) < 0x8) return cpu.ird();  //reading the PSG should deadlock the machine
     return vdp.read(address, data);
   }
 
@@ -104,7 +104,7 @@ inline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
     if(address.bit(5,7)) return;  //should deadlock the machine
     if(address.bit(16,18)) return;  //should deadlock the machine
     address.bit(8,15) = 0;  //mirrors
-    if(address.bit(4)) {
+    if(address.bit(4) && address.bit(0,3) < 0x8) {
       if(!lower) return;  //byte writes to even PSG registers has no effect
       return psg.write(data.byte(0));
     }

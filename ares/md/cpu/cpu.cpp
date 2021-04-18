@@ -29,11 +29,11 @@ auto CPU::unload() -> void {
 auto CPU::main() -> void {
   if(state.interruptPending) {
     if(state.interruptPending.bit((u32)Interrupt::Reset)) {
-      state.interruptPending.bit((u32)Interrupt::Reset) = 0;
       r.a[7] = read(1, 1, 0) << 16 | read(1, 1, 2) << 0;
       r.pc   = read(1, 1, 4) << 16 | read(1, 1, 6) << 0;
       prefetch();
       prefetch();
+      lower(Interrupt::Reset);
       debugger.interrupt("Reset");
     }
 
@@ -41,6 +41,7 @@ auto CPU::main() -> void {
       if(4 > r.i) {
         state.interruptPending.bit((u32)Interrupt::HorizontalBlank) = 0;
         debugger.interrupt("Hblank");
+        lower(Interrupt::HorizontalBlank);
         return interrupt(Vector::Level4, 4);
       }
     }
@@ -49,6 +50,7 @@ auto CPU::main() -> void {
       if(6 > r.i) {
         state.interruptPending.bit((u32)Interrupt::VerticalBlank) = 0;
         debugger.interrupt("Vblank");
+        lower(Interrupt::VerticalBlank);
         return interrupt(Vector::Level6, 6);
       }
     }

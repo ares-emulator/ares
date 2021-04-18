@@ -14,6 +14,7 @@ inline auto hflip(u32 data) -> u32 {
 
 VDP vdp;
 #include "main.cpp"
+#include "irq.cpp"
 #include "fifo.cpp"
 #include "memory.cpp"
 #include "io.cpp"
@@ -104,6 +105,7 @@ auto VDP::power(bool reset) -> void {
   latch = {};
   state = {};
 
+  irq.power(reset);
   fifo.power(reset);
   dma.power(reset);
   layers.power(reset);
@@ -111,6 +113,7 @@ auto VDP::power(bool reset) -> void {
   layerA.power(reset);
   layerB.power(reset);
   sprite.power(reset);
+  dac.power(reset);
 }
 
 }
