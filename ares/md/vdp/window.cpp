@@ -1,10 +1,6 @@
-auto VDP::Window::begin() -> void {
-  attributesIndex = 0;
-}
-
 //called 17 (H32) or 21 (H40) times
-auto VDP::Window::attributesFetch() -> void {
-  u32 x = attributesIndex++ << 4;
+auto VDP::Window::attributesFetch(u32 attributesIndex) -> void {
+  u32 x = attributesIndex << 4;
   u32 y = vdp.vcounter();
   vdp.layerA.windowed[0] = vdp.layerA.windowed[1];
   vdp.layerA.windowed[1] = x < hoffset ^ hdirection || y < voffset ^ vdirection;
@@ -23,5 +19,4 @@ auto VDP::Window::power(bool reset) -> void {
   voffset = 0;
   vdirection = 0;
   nametableAddress = 0;
-  attributesIndex = 0;
 }

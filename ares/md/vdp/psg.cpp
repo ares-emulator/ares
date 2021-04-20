@@ -16,11 +16,11 @@ auto VDP::PSG::unload() -> void {
 
 auto VDP::PSG::main() -> void {
   auto channels = SN76489::clock();
-  if(io.debugVolumeOverride) {
-    channels[0] = channels[io.debugVolumeChannel];
-    channels[1] = channels[io.debugVolumeChannel];
-    channels[2] = channels[io.debugVolumeChannel];
-    channels[3] = channels[io.debugVolumeChannel];
+  if(test.volumeOverride) {
+    channels[0] = channels[test.volumeChannel];
+    channels[1] = channels[test.volumeChannel];
+    channels[2] = channels[test.volumeChannel];
+    channels[3] = channels[test.volumeChannel];
   }
 
   double output = 0.0;
@@ -41,7 +41,7 @@ auto VDP::PSG::power(bool reset) -> void {
   SN76489::power();
   Thread::create(system.frequency() / 15.0, {&PSG::main, this});
 
-  io = {};
+  test = {};
 
   for(u32 level : range(15)) {
     volume[level] = pow(2, level * -2.0 / 6.0);

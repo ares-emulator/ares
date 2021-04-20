@@ -3,14 +3,15 @@ auto VDP::serialize(serializer& s) -> void {
 
   s(psg);
   s(irq);
+  s(fifo);
   s(dma);
   s(layers);
   s(window);
   s(layerA);
   s(layerB);
   s(sprite);
+  s(dac);
 
-  s(fifo);
   s(vram);
   s(vsram);
   s(cram);
@@ -37,12 +38,8 @@ auto VDP::serialize(serializer& s) -> void {
   s(io.hsync);
   s(io.vsync);
   s(io.clockSelect);
-  s(io.debugAddress);
-  s(io.debugDisableLayers);
-  s(io.debugForceLayer);
-  s(io.debugDisableSpritePhase1);
-  s(io.debugDisableSpritePhase2);
-  s(io.debugDisableSpritePhase3);
+
+  s(test.address);
 
   s(latch.interlace);
   s(latch.overscan);
@@ -61,8 +58,8 @@ auto VDP::PSG::serialize(serializer& s) -> void {
   SN76489::serialize(s);
   Thread::serialize(s);
 
-  s(io.debugVolumeOverride);
-  s(io.debugVolumeChannel);
+  s(test.volumeOverride);
+  s(test.volumeChannel);
 }
 
 auto VDP::IRQ::serialize(serializer& s) -> void {
@@ -102,6 +99,7 @@ auto VDP::DMA::serialize(serializer& s) -> void {
   s(length);
   s(data);
   s(wait);
+  s(read);
   s(enable);
 }
 
@@ -117,7 +115,6 @@ auto VDP::Layers::serialize(serializer& s) -> void {
   s(vscrollMode);
   s(nametableWidth);
   s(nametableHeight);
-  s(vscrollIndex);
 }
 
 auto VDP::Attributes::serialize(serializer& s) -> void {
@@ -134,7 +131,6 @@ auto VDP::Window::serialize(serializer& s) -> void {
   s(voffset);
   s(vdirection);
   s(nametableAddress);
-  s(attributesIndex);
 }
 
 auto VDP::Layer::serialize(serializer& s) -> void {
@@ -148,10 +144,6 @@ auto VDP::Layer::serialize(serializer& s) -> void {
   s(extras);
   s(windowed);
   s(mappings);
-  s(mappingIndex);
-  s(patternIndex);
-  s(pixelCount);
-  s(pixelIndex);
 }
 
 auto VDP::Layer::Mapping::serialize(serializer& s) -> void {
@@ -179,8 +171,11 @@ auto VDP::Sprite::serialize(serializer& s) -> void {
   s(visibleLink);
   s(visibleCount);
   s(visibleStop);
-  s(pixelIndex);
   s(vcounter);
+  s(field);
+  s(test.disablePhase1);
+  s(test.disablePhase2);
+  s(test.disablePhase3);
 }
 
 auto VDP::Sprite::Cache::serialize(serializer& s) -> void {
@@ -202,10 +197,13 @@ auto VDP::Sprite::Mapping::serialize(serializer& s) -> void {
 }
 
 auto VDP::DAC::serialize(serializer& s) -> void {
+  s(test.disableLayers);
+  s(test.forceLayer);
 }
 
 auto VDP::VRAM::serialize(serializer& s) -> void {
   s(memory);
+  s(size);
   s(mode);
 }
 

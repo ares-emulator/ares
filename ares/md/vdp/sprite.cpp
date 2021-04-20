@@ -1,4 +1,10 @@
-auto VDP::Sprite::write(n9 address, n16 data) -> void {
+auto VDP::Sprite::write(n16 address, n16 data) -> void {
+  auto baseAddress = nametableAddress;
+  if(vdp.h40()) baseAddress &= ~0x1ff;
+
+  address -= baseAddress;
+  if(address >= 320) return;
+
   auto& object = cache[address >> 2];
   switch(address & 3) {
   case 0: object.y      = data.bit( 0,10); break;
@@ -9,11 +15,11 @@ auto VDP::Sprite::write(n9 address, n16 data) -> void {
 }
 
 //called before mapping fetches
-auto VDP::Sprite::begin() -> void {
+auto VDP::Sprite::begin(s32 y, bool f) -> void {
   for(auto& mapping : mappings) mapping.valid = 0;
   mappingCount = 0;
-  pixelIndex = 0;
-  vcounter = vdp.vcounter();
+  vcounter = y;
+  field = f;
 }
 
 //called before pattern fetches
@@ -29,22 +35,25 @@ auto VDP::Sprite::end() -> void {
 }
 
 //called 16 (H32) or 20 (H40) times
-auto VDP::Sprite::mappingFetch() -> void {
-  if(vdp.io.debugDisableSpritePhase2) return;
+auto VDP::Sprite::mappingFetch(u32) -> void {
+  if(test.disablePhase2) return;
 
   //mapping fetches are delayed when less than 16/20 objects are visible
   if(visibleCount++ < objectLimit()) return;
 
   auto interlace = vdp.io.interlaceMode == 3;
-  auto y = 128 + vcounter;
-  if(interlace) y = y << 1 | vdp.field();
+  auto y = 129 + vcounter;
+  if(interlace) y = y << 1 | field;
 
   auto id = visible[mappingCount];
   auto& object = cache[id];
   auto height = 1 + object.height << 3 + interlace;
 
+  auto baseAddress = nametableAddress;
+  if(vdp.h40()) baseAddress &= ~0x1ff;
+
   auto& mapping = mappings[mappingCount++];
-  auto address = vdp.sprite.nametableAddress + id * 4 + 2;
+  auto address = baseAddress + id * 4 + 2;
   n16 d2 = vdp.vram.read(address++);
   n16 d3 = vdp.vram.read(address++);
 
@@ -64,12 +73,12 @@ auto VDP::Sprite::mappingFetch() -> void {
 }
 
 //called 32 (H32) or 40 (H40) times
-auto VDP::Sprite::patternFetch() -> void {
-  if(vdp.io.debugDisableSpritePhase3) patternStop = 1;
+auto VDP::Sprite::patternFetch(u32) -> void {
+  if(test.disablePhase3) patternStop = 1;
 
   auto interlace = vdp.io.interlaceMode == 3;
-  auto y = 128 + vcounter;
-  if(interlace) y = y << 1 | vdp.field();
+  auto y = 129 + vcounter;
+  if(interlace) y = y << 1 | field;
 
   if(!patternStop && mappings[patternIndex].valid) {
     auto& object = mappings[patternIndex];
@@ -97,7 +106,6 @@ auto VDP::Sprite::patternFetch() -> void {
     if(object.hflip) data = hflip(data);
     for(auto index : range(8)) {
       n9 x = object.x + patternSlice * 8 + index - 128;
-      if(x >= vdp.screenWidth()) continue;
       n6 color = data >> 28;
       data <<= 4;
       if(!color) continue;
@@ -120,10 +128,10 @@ auto VDP::Sprite::patternFetch() -> void {
     patternX = 0;
   }
 
-  y = 129 + vcounter;
-  if(interlace) y = y << 1 | vdp.field();
+  y = 130 + vcounter;
+  if(interlace) y = y << 1 | field;
 
-  if(vdp.io.debugDisableSpritePhase1) visibleStop = 1;
+  if(test.disablePhase1) visibleStop = 1;
 
   for(auto index : range(2)) {
     if(visibleStop) break;
@@ -141,8 +149,8 @@ auto VDP::Sprite::patternFetch() -> void {
   }
 }
 
-auto VDP::Sprite::pixel() -> Pixel {
-  return pixels[pixelIndex++];
+auto VDP::Sprite::pixel(u32 pixelIndex) -> Pixel {
+  return pixels[pixelIndex];
 }
 
 auto VDP::Sprite::power(bool reset) -> void {
@@ -163,6 +171,6 @@ auto VDP::Sprite::power(bool reset) -> void {
   visibleLink = 0;
   visibleCount = 0;
   visibleStop = 0;
-  pixelIndex = 0;
   vcounter = 0;
+  test = {};
 }

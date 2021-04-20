@@ -22,6 +22,7 @@ auto CPU::Debugger::instruction() -> void {
 
 auto CPU::Debugger::interrupt(string_view type) -> void {
   if(tracer.interrupt->enabled()) {
-    tracer.interrupt->notify(type);
+    string message = {type, " SR=", cpu.r.i, " @ ", vdp.vcounter(), ",", vdp.hclock()};
+    tracer.interrupt->notify(message);
   }
 }

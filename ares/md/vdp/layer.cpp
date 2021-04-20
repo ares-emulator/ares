@@ -1,10 +1,3 @@
-auto VDP::Layer::begin() -> void {
-  mappingIndex = -1;
-  patternIndex = 0;
-  pixelCount = 0;
-  pixelIndex = 0;
-}
-
 //called 17 (H32) or 21 (H40) times
 auto VDP::Layer::attributesFetch() -> void {
   attributes.address = nametableAddress;
@@ -25,9 +18,9 @@ auto VDP::Layer::attributesFetch() -> void {
 }
 
 //called 17 (H32) ot 21 (H40) times
-auto VDP::Layer::mappingFetch() -> void {
+auto VDP::Layer::mappingFetch(s32 mappingIndex) -> void {
   auto interlace = vdp.io.interlaceMode == 3;
-  auto x = mappingIndex++ * 16;
+  auto x = mappingIndex * 16;
   auto y = vdp.vcounter();
   if(interlace) y = y << 1 | vdp.field();
 
@@ -57,7 +50,7 @@ auto VDP::Layer::mappingFetch() -> void {
 }
 
 //called 34 (H32) or 42 (H40) times
-auto VDP::Layer::patternFetch() -> void {
+auto VDP::Layer::patternFetch(u32 patternIndex) -> void {
   auto interlace = vdp.io.interlaceMode == 3;
   auto y = vdp.vcounter() + attributes.vscroll;
   if(interlace) y = y << 1 | vdp.field();
@@ -70,7 +63,8 @@ auto VDP::Layer::patternFetch() -> void {
   if(mapping.hflip) data = hflip(data);
   colors = colors << 32 | data;
 
-  if(patternIndex++ & 1) {
+  if(patternIndex & 1) {
+    u32 pixelCount = (patternIndex >> 1) << 4;
     for(auto index : reverse(range(16))) {
       n8 shift = (index + (attributes.hscroll & 15)) * 4;
       if(windowed[0] && !windowed[1] && hscroll & 15) {
@@ -85,8 +79,8 @@ auto VDP::Layer::patternFetch() -> void {
   }
 }
 
-auto VDP::Layer::pixel() -> Pixel {
-  return pixels[16 + pixelIndex++];
+auto VDP::Layer::pixel(u32 pixelIndex) -> Pixel {
+  return pixels[16 + pixelIndex];
 }
 
 auto VDP::Layer::power(bool reset) -> void {
@@ -97,8 +91,4 @@ auto VDP::Layer::power(bool reset) -> void {
   attributes = {};
   for(auto& pixel : pixels) pixel = {};
   for(auto& mapping : mappings) mapping = {};
-  mappingIndex = 0;
-  patternIndex = 0;
-  pixelCount = 0;
-  pixelIndex = 0;
 }

@@ -105,6 +105,7 @@ auto VDP::power(bool reset) -> void {
   vram.mode = 0;
   command = {};
   io = {};
+  test = {};
   latch = {};
   state = {};
 

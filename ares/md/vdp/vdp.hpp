@@ -55,13 +55,13 @@ struct VDP : Thread {
   auto step(u32 clocks) -> void;
   auto tick() -> void;
   auto main() -> void;
-  auto render() -> void;
+  auto render(bool) -> void;
   auto hblank(bool) -> void;
   auto vblank(bool) -> void;
-  auto mainH32() -> void;
-  auto mainH40() -> void;
-  auto mainBlankH32() -> void;
-  auto mainBlankH40() -> void;
+  auto mainH32Active() -> void;
+  auto mainH32Blank() -> void;
+  auto mainH40Active() -> void;
+  auto mainH40Blank() -> void;
   auto generateCycleTimings() -> void;
 
   //io.cpp
@@ -90,10 +90,10 @@ struct VDP : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    struct IO {
-      n1 debugVolumeOverride;
-      n2 debugVolumeChannel;
-    } io;
+    struct Test {
+      n1 volumeOverride;
+      n2 volumeChannel;
+    } test;
 
   private:
     double volume[16];
@@ -145,7 +145,7 @@ struct VDP : Thread {
     auto serialize(serializer&) -> void;
 
     n4  target;   //read/write flag + VRAM/VSRAM/CRAM select
-    n16 address;  //word address
+    n17 address;  //write address
     n16 data;     //write data
     n1  upper;    //1 = data.byte(1) valid
     n1  lower;    //1 = data.byte(0) valid
@@ -189,6 +189,7 @@ struct VDP : Thread {
     n16 length;
     n8  data;
     n1  wait;
+    n1  read;
     n1  enable;
   } dma;
 
@@ -206,9 +207,9 @@ struct VDP : Thread {
 
   struct Layers {
     //layers.cpp
-    auto begin() -> void;
     auto hscrollFetch() -> void;
     auto vscrollFetch() -> void;
+    auto vscrollFetch(s32) -> void;
     auto power(bool reset) -> void;
 
     //serialization.cpp
@@ -219,8 +220,6 @@ struct VDP : Thread {
     n1  vscrollMode;
     n2  nametableWidth;
     n2  nametableHeight;
-
-    i8  vscrollIndex;
   } layers;
 
   struct Attributes {
@@ -236,8 +235,7 @@ struct VDP : Thread {
 
   struct Window {
     //window.cpp
-    auto begin() -> void;
-    auto attributesFetch() -> void;
+    auto attributesFetch(u32) -> void;
     auto test() const -> bool;
     auto power(bool reset) -> void;
 
@@ -249,18 +247,15 @@ struct VDP : Thread {
     n10 voffset;
     n1  vdirection;
     n16 nametableAddress;
-
-    i8  attributesIndex;
   } window;
 
   struct Layer {
     //layer.cpp
-    auto begin() -> void;
     auto attributesFetch() -> void;
-    auto mappingFetch() -> void;
-    auto patternFetch() -> void;
+    auto mappingFetch(s32) -> void;
+    auto patternFetch(u32) -> void;
 
-    auto pixel() -> Pixel;
+    auto pixel(u32 x) -> Pixel;
     auto power(bool reset) -> void;
 
     //serialization.cpp
@@ -286,10 +281,6 @@ struct VDP : Thread {
       n1  priority;
     };
     Mapping mappings[2];
-    i8  mappingIndex;
-    n8  patternIndex;
-    n9  pixelCount;
-    n9  pixelIndex;
   } layerA, layerB;
 
   struct Sprite {
@@ -300,12 +291,12 @@ struct VDP : Thread {
     auto tileLimit()   const -> u32 { return vdp.latch.displayWidth ? 40 : 32; }
 
     //sprite.cpp
-    auto write(n9 address, n16 data) -> void;
-    auto begin() -> void;
+    auto write(n16 address, n16 data) -> void;
+    auto begin(s32, bool) -> void;
     auto end() -> void;
-    auto mappingFetch() -> void;
-    auto patternFetch() -> void;
-    auto pixel() -> Pixel;
+    auto mappingFetch(u32) -> void;
+    auto patternFetch(u32) -> void;
+    auto pixel(u32 x) -> Pixel;
     auto power(bool reset) -> void;
 
     //serialization.cpp
@@ -315,7 +306,7 @@ struct VDP : Thread {
     n16 nametableAddress;
     n1  collision;
     n1  overflow;
-    Pixel pixels[320];
+    Pixel pixels[512];
 
     struct Cache {
       //serialization.cpp
@@ -356,21 +347,29 @@ struct VDP : Thread {
     n8  visibleCount;
     n1  visibleStop;
 
-    n9  pixelIndex;
+    s16 vcounter;
+    n1  field;
 
-    n10 vcounter;
-  };
-  Sprite sprite{*this};
+    struct Test {
+      n1 disablePhase1;
+      n1 disablePhase2;
+      n1 disablePhase3;
+    } test;
+  } sprite{*this};
 
   struct DAC {
     //dac.cpp
-    auto begin() -> void;
-    auto pixel() -> void;
+    auto pixel(u32 x) -> void;
     auto output(n32 color) -> void;
     auto power(bool reset) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
+
+    struct Test {
+      n1 disableLayers;
+      n2 forceLayer;
+    } test;
 
     u32* pixels = nullptr;
   } dac;
@@ -464,15 +463,11 @@ private:
     n1 hsync;
     n1 vsync;
     n1 clockSelect;  //0 = DCLK; 1 = EDCLK
-
-    //debug registers
-    n4 debugAddress;
-    n1 debugDisableLayers;
-    n2 debugForceLayer;
-    n1 debugDisableSpritePhase1;
-    n1 debugDisableSpritePhase2;
-    n1 debugDisableSpritePhase3;
   } io;
+
+  struct Test {
+    n4 address;
+  } test;
 
   struct Latch {
     //per-frame

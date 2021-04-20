@@ -37,9 +37,8 @@ struct CPU : M68K, Thread {
   auto idle(u32 clocks) -> void override;
   auto wait(u32 clocks) -> void override;
 
-  auto query(Interrupt) -> bool;
   auto raise(Interrupt) -> void;
-  auto lower(Interrupt) -> void;
+  auto lower(Interrupt) -> bool;
 
   auto power(bool reset) -> void;
 

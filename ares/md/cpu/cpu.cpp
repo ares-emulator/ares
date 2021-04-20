@@ -28,37 +28,27 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   if(state.interruptPending) {
-    if(query(Interrupt::Reset)) {
+    if(lower(Interrupt::Reset)) {
       r.a[7] = read(1, 1, 0) << 16 | read(1, 1, 2) << 0;
       r.pc   = read(1, 1, 4) << 16 | read(1, 1, 6) << 0;
       prefetch();
       prefetch();
-      lower(Interrupt::Reset);
       debugger.interrupt("Reset");
     }
 
-    if(query(Interrupt::VerticalBlank)) {
-      if(6 > r.i) {
-        debugger.interrupt("Vblank");
-        lower(Interrupt::VerticalBlank);
-        return interrupt(Vector::Level6, 6);
-      }
+    if(6 > r.i && lower(Interrupt::VerticalBlank)) {
+      debugger.interrupt("Vblank");
+      return interrupt(Vector::Level6, 6);
     }
 
-    if(query(Interrupt::HorizontalBlank)) {
-      if(4 > r.i) {
-        debugger.interrupt("Hblank");
-        lower(Interrupt::HorizontalBlank);
-        return interrupt(Vector::Level4, 4);
-      }
+    if(4 > r.i && lower(Interrupt::HorizontalBlank)) {
+      debugger.interrupt("Hblank");
+      return interrupt(Vector::Level4, 4);
     }
 
-    if(query(Interrupt::External)) {
-      if(2 > r.i) {
-        debugger.interrupt("External");
-        lower(Interrupt::External);
-        return interrupt(Vector::Level2, 2);
-      }
+    if(2 > r.i && lower(Interrupt::External)) {
+      debugger.interrupt("External");
+      return interrupt(Vector::Level2, 2);
     }
   }
 
@@ -82,16 +72,13 @@ auto CPU::wait(u32 clocks) -> void {
   Thread::synchronize();
 }
 
-auto CPU::query(Interrupt interrupt) -> bool {
-  return state.interruptPending.bit((u32)interrupt);
-}
-
 auto CPU::raise(Interrupt interrupt) -> void {
   state.interruptPending.bit((u32)interrupt) = 1;
 }
 
-auto CPU::lower(Interrupt interrupt) -> void {
-  state.interruptPending.bit((u32)interrupt) = 0;
+auto CPU::lower(Interrupt interrupt) -> bool {
+  if(!state.interruptPending.bit((u32)interrupt)) return false;
+  return state.interruptPending.bit((u32)interrupt) = 0, true;
 }
 
 auto CPU::power(bool reset) -> void {

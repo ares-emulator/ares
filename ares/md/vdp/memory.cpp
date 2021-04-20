@@ -3,7 +3,7 @@ auto VDP::VRAM::read(n16 address) const -> n16 {
     return memory[(n15)address];
   } else {
     n15 offset = address >> 1 & 0x7e00 | address & 0x01fe | address >> 9 & 1;
-    n8  data = memory[offset].byte(!address.bit(0));
+    n8  data = memory[offset].byte(address.bit(0));
     return data << 8 | data << 0;
   }
 }
@@ -13,11 +13,9 @@ auto VDP::VRAM::write(n16 address, n16 data) -> void {
     memory[(n15)address] = data;
   } else {
     n15 offset = address >> 1 & 0x7e00 | address & 0x01fe | address >> 9 & 1;
-    memory[offset].byte(!address.bit(0)) = data.byte(0);
+    memory[offset].byte(address.bit(0)) = data.byte(0);
   }
-  if(address < vdp.sprite.nametableAddress) return;
-  if(address > vdp.sprite.nametableAddress + 319) return;
-  vdp.sprite.write(address - vdp.sprite.nametableAddress, data);
+  vdp.sprite.write(address, data);
 }
 
 auto VDP::VRAM::readByte(n17 address) const -> n8 {

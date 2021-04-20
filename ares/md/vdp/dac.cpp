@@ -1,21 +1,16 @@
-auto VDP::DAC::begin() -> void {
-  pixels = vdp.pixels();
-}
-
-auto VDP::DAC::pixel() -> void {
-  if(!pixels) return;
+auto VDP::DAC::pixel(u32 x) -> void {
   if(!vdp.io.displayEnable) return output(0);
   if(vdp.vcounter() >= vdp.screenHeight()) return output(0);
 
   Pixel g = {vdp.io.backgroundColor, 0, 1};
-  Pixel a = vdp.layerA.pixel();
-  Pixel b = vdp.layerB.pixel();
-  Pixel s = vdp.sprite.pixel();
+  Pixel a = vdp.layerA.pixel(x);
+  Pixel b = vdp.layerB.pixel(x);
+  Pixel s = vdp.sprite.pixel(x);
 
-  if(vdp.io.debugDisableLayers == 1) {
-    if(vdp.io.debugForceLayer == 1) g = s;
-    if(vdp.io.debugForceLayer == 2) g = a;
-    if(vdp.io.debugForceLayer == 3) g = b;
+  if(test.disableLayers == 1) {
+    if(test.forceLayer == 1) g = s;
+    if(test.forceLayer == 2) g = a;
+    if(test.forceLayer == 3) g = b;
     a = {};
     b = {};
     s = {};
@@ -39,16 +34,16 @@ auto VDP::DAC::pixel() -> void {
     }
   }
 
-  if(vdp.io.debugDisableLayers == 0) {
-    if(vdp.io.debugForceLayer == 1) {
+  if(test.disableLayers == 0) {
+    if(test.forceLayer == 1) {
       if(pixel.backdrop) pixel = s;
       pixel.color &= s.color;
     }
-    if(vdp.io.debugForceLayer == 2) {
+    if(test.forceLayer == 2) {
       if(pixel.backdrop) pixel = a;
       pixel.color &= a.color;
     }
-    if(vdp.io.debugForceLayer == 3) {
+    if(test.forceLayer == 3) {
       if(pixel.backdrop) pixel = b;
       pixel.color &= b.color;
     }
@@ -68,5 +63,6 @@ auto VDP::DAC::output(n32 color) -> void {
 }
 
 auto VDP::DAC::power(bool reset) -> void {
+  test = {};
   pixels = nullptr;
 }

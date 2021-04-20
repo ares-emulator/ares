@@ -6,11 +6,11 @@ auto VDP::step(u32 clocks) -> void {
 
 auto VDP::tick() -> void {
   if(h32()) {
-    auto cycles = &cyclesH32[edclk()][state.hclock];
+    auto cycles = &cyclesH32[edclk()][hclock()];
     step(cycles[0] + cycles[1]);
   }
   if(h40()) {
-    auto cycles = &cyclesH40[edclk()][state.hclock];
+    auto cycles = &cyclesH40[edclk()][hclock()];
     step(cycles[0] + cycles[1]);
   }
   state.hclock += 2;
@@ -19,12 +19,12 @@ auto VDP::tick() -> void {
 auto VDP::main() -> void {
   scanline();
 
-  if(vcounter() < screenHeight() && io.displayEnable) {
-    if(h32()) mainH32();
-    if(h40()) mainH40();
+  if((vcounter() < screenHeight() || vcounter() >= frameHeight() - 2) && io.displayEnable) {
+    if(h32()) mainH32Active();
+    if(h40()) mainH40Active();
   } else {
-    if(h32()) mainBlankH32();
-    if(h40()) mainBlankH40();
+    if(h32()) mainH32Blank();
+    if(h40()) mainH40Blank();
   }
 
   state.hclock = 0;
@@ -40,8 +40,14 @@ auto VDP::main() -> void {
   }
 }
 
-auto VDP::render() -> void {
-  for(auto pixel : range(screenWidth())) dac.pixel();
+auto VDP::render(bool displayEnable) -> void {
+  dac.pixels = pixels();
+  if(!dac.pixels) return;
+  if(displayEnable) {
+    for(auto x : range(screenWidth())) dac.pixel(x);
+  } else {
+    for(auto x : range(screenWidth())) dac.output(0);
+  }
   m32x.vdp.scanline(pixels(), vcounter());
 }
 
@@ -78,216 +84,176 @@ auto VDP::vblank(bool line) -> void {
   }
 }
 
-auto VDP::mainH32() -> void {
+auto VDP::mainH32Active() -> void {
   //0
   hblank(0);
-  layerA.begin();
-  layerB.begin();
 
   //1-5
   tick(); layers.hscrollFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
+  tick(); sprite.patternFetch(26);
+  tick(); sprite.patternFetch(27);
+  tick(); sprite.patternFetch(28);
+  tick(); sprite.patternFetch(29);
 
+  //6
+  layers.vscrollFetch(-1);
   layerA.attributesFetch();
   layerB.attributesFetch();
-  window.attributesFetch();
+  window.attributesFetch(0);
 
   //6-13
-  tick(); layerA.mappingFetch();
-  tick(); sprite.patternFetch();
-  tick(); layerA.patternFetch();
-  tick(); layerA.patternFetch();
-  tick(); layerB.mappingFetch();
-  tick(); sprite.patternFetch();
-  tick(); layerB.patternFetch();
-  tick(); layerB.patternFetch();
+  tick(); layerA.mappingFetch(-1);
+  tick(); sprite.patternFetch(30);
+  tick(); layerA.patternFetch( 0);
+  tick(); layerA.patternFetch( 1);
+  tick(); layerB.mappingFetch(-1);
+  tick(); sprite.patternFetch(31);
+  tick(); layerB.patternFetch( 0);
+  tick(); layerB.patternFetch( 1);
 
-  layers.begin();
-  window.begin();
-  sprite.begin();
-  dac.begin();
+  //14
+  if(vcounter() < frameHeight() - 2) {
+    sprite.begin(vcounter(), field());
+  } else if(vcounter() == frameHeight() - 2) {
+    sprite.begin(-2, field() ^ 1);
+  } else {
+    sprite.begin(-1, field() ^ 1);
+  }
 
   //14-141
   for(auto block : range(16)) {
-    if(layers.vscrollMode == 1) layers.vscrollFetch();
+    layers.vscrollFetch(block);
     layerA.attributesFetch();
     layerB.attributesFetch();
-    window.attributesFetch();
-    tick(); layerA.mappingFetch();
+    window.attributesFetch(block + 1);
+    tick(); layerA.mappingFetch(block);
     tick(); if((block & 3) != 3) fifo.slot();
-    tick(); layerA.patternFetch();
-    tick(); layerA.patternFetch();
-    tick(); layerB.mappingFetch();
-    tick(); sprite.mappingFetch();
-    tick(); layerB.patternFetch();
+    tick(); layerA.patternFetch(block * 2 + 2);
+    tick(); layerA.patternFetch(block * 2 + 3);
+    tick(); layerB.mappingFetch(block);
+    tick(); sprite.mappingFetch(block);
+    tick(); layerB.patternFetch(block * 2 + 2);
     if(hclock() >> 1 == 132 && vcounter() == screenHeight() - 1) vblank(1);
-    tick(); layerB.patternFetch();
+    if(hclock() >> 1 == 132 && vcounter() == frameHeight()  - 2) vblank(0);
+    tick(); layerB.patternFetch(block * 2 + 3);
   }
 
-  if(layers.vscrollMode == 0) layers.vscrollFetch();
-  render();
+  //142
+  layers.vscrollFetch();
+  render(1);
   hblank(1);
   sprite.end();
 
   //142-171
   tick(); fifo.slot();
   tick(); fifo.slot();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); fifo.slot();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); fifo.slot();
-}
-
-auto VDP::mainH40() -> void {
-  //0
-  hblank(0);
-  layerA.begin();
-  layerB.begin();
-
-  //1-5
-  tick(); layers.hscrollFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-
-  layerA.attributesFetch();
-  layerB.attributesFetch();
-  window.attributesFetch();
-
-  //6-13
-  tick(); layerA.mappingFetch();
-  tick(); sprite.patternFetch();
-  tick(); layerA.patternFetch();
-  tick(); layerA.patternFetch();
-  tick(); layerB.mappingFetch();
-  tick(); sprite.patternFetch();
-  tick(); layerB.patternFetch();
-  tick(); layerB.patternFetch();
-
-  layers.begin();
-  window.begin();
-  sprite.begin();
-  dac.begin();
-
-  //14-173
-  for(auto block : range(20)) {
-    if(layers.vscrollMode == 1) layers.vscrollFetch();
-    layerA.attributesFetch();
-    layerB.attributesFetch();
-    window.attributesFetch();
-    tick(); layerA.mappingFetch();
-    tick(); if((block & 3) != 3) fifo.slot();
-    tick(); layerA.patternFetch();
-    tick(); layerA.patternFetch();
-    tick(); layerB.mappingFetch();
-    tick(); sprite.mappingFetch();
-    tick(); layerB.patternFetch();
-    if(hclock() >> 1 == 164 && vcounter() == screenHeight() - 1) vblank(1);
-    tick(); layerB.patternFetch();
+  for(auto cycle : range(13)) {
+    tick(); sprite.patternFetch(cycle + 0);
   }
-
-  if(layers.vscrollMode == 0) layers.vscrollFetch();
-  render();
-  hblank(1);
-  sprite.end();
-
-  //174-210
   tick(); fifo.slot();
+  for(auto cycle : range(13)) {
+    tick(); sprite.patternFetch(cycle + 13);
+  }
   tick(); fifo.slot();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); fifo.slot();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
-  tick(); sprite.patternFetch();
 }
 
-auto VDP::mainBlankH32() -> void {
+auto VDP::mainH32Blank() -> void {
   //0
   hblank(0);
 
-  //1-5
+  //1-2
   tick();
   tick();
-  tick(); fifo.slot();
-  tick(); fifo.slot();
-  tick(); fifo.slot();
 
-  if(vcounter() < 240) dac.begin();
-
-  //6-169
-  for(auto cycle : range(164)) {
+  //3-169
+  for(auto cycle : range(167)) {
     tick(); fifo.slot();
     if(hclock() >> 1 == 132 && vcounter() == screenHeight() - 1) vblank(1);
-    if(hclock() >> 1 == 132 && vcounter() == frameHeight()  - 1) vblank(0);
+    if(hclock() >> 1 == 132 && vcounter() == frameHeight()  - 2) vblank(0);
     if(hclock() >> 1 == 142) hblank(1);
   }
 
-  if(vcounter() < 240) render();
+  //170
+  render(0);
 
   //170-171
   tick();
   tick();
 }
 
-auto VDP::mainBlankH40() -> void {
+auto VDP::mainH40Active() -> void {
+  //0
+  hblank(0);
+
+  //1-5
+  tick(); layers.hscrollFetch();
+  tick(); sprite.patternFetch(34);
+  tick(); sprite.patternFetch(35);
+  tick(); sprite.patternFetch(36);
+  tick(); sprite.patternFetch(37);
+
+  //6
+  layers.vscrollFetch(-1);
+  layerA.attributesFetch();
+  layerB.attributesFetch();
+  window.attributesFetch(0);
+
+  //6-13
+  tick(); layerA.mappingFetch(-1);
+  tick(); sprite.patternFetch(38);
+  tick(); layerA.patternFetch( 0);
+  tick(); layerA.patternFetch( 1);
+  tick(); layerB.mappingFetch(-1);
+  tick(); sprite.patternFetch(39);
+  tick(); layerB.patternFetch( 0);
+  tick(); layerB.patternFetch( 1);
+
+  //14
+  if(vcounter() < frameHeight() - 2) {
+    sprite.begin(vcounter(), field());
+  } else if(vcounter() == frameHeight() - 2) {
+    sprite.begin(-2, field() ^ 1);
+  } else {
+    sprite.begin(-1, field() ^ 1);
+  }
+
+  //14-173
+  for(auto block : range(20)) {
+    layers.vscrollFetch(block);
+    layerA.attributesFetch();
+    layerB.attributesFetch();
+    window.attributesFetch(block + 1);
+    tick(); layerA.mappingFetch(block);
+    tick(); if((block & 3) != 3) fifo.slot();
+    tick(); layerA.patternFetch(block * 2 + 2);
+    tick(); layerA.patternFetch(block * 2 + 3);
+    tick(); layerB.mappingFetch(block);
+    tick(); sprite.mappingFetch(block);
+    tick(); layerB.patternFetch(block * 2 + 2);
+    if(hclock() >> 1 == 164 && vcounter() == screenHeight() - 1) vblank(1);
+    if(hclock() >> 1 == 164 && vcounter() == frameHeight()  - 2) vblank(0);
+    tick(); layerB.patternFetch(block * 2 + 3);
+  }
+
+  //174
+  layers.vscrollFetch();
+  render(1);
+  hblank(1);
+  sprite.end();
+
+  //174-210
+  tick(); fifo.slot();
+  tick(); fifo.slot();
+  for(auto cycle : range(23)) {
+    tick(); sprite.patternFetch(cycle + 0);
+  }
+  tick(); fifo.slot();
+  for(auto cycle : range(11)) {
+    tick(); sprite.patternFetch(cycle + 23);
+  }
+}
+
+auto VDP::mainH40Blank() -> void {
   //0
   hblank(0);
 
@@ -296,17 +262,16 @@ auto VDP::mainBlankH40() -> void {
   tick();
   tick();
 
-  if(vcounter() < 240) dac.begin();
-
   //4-207
   for(auto cycle : range(204)) {
     tick(); fifo.slot();
     if(hclock() >> 1 == 164 && vcounter() == screenHeight() - 1) vblank(1);
-    if(hclock() >> 1 == 164 && vcounter() == frameHeight()  - 1) vblank(0);
+    if(hclock() >> 1 == 164 && vcounter() == frameHeight()  - 2) vblank(0);
     if(hclock() >> 1 == 174) hblank(1);
   }
 
-  if(vcounter() < 240) render();
+  //208
+  render(0);
 
   //208-210
   tick();
@@ -354,8 +319,8 @@ auto VDP::generateCycleTimings() -> void {
   for(auto cycle : range( 16)) halvesH40[1][cycle * 13] = 10;
   for(auto cycle : range(  2)) halvesH40[1][cycle * 13] =  9;
 
-  //active even lines
-  //=================
+  //active even half lines
+  //======================
 
   //H32/DCLK: 171 slow + 0 normal +   0 fast = 1710 cycles
   for(auto cycle : range(171)) extrasH32[0][cycle *  1] = 10;

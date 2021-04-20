@@ -37,14 +37,14 @@ auto VDP::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     return data;
   }
 
-  //debug address port (write-only)
+  //test address port (write-only)
   case 0xc00018 ... 0xc0001b: {
     return data;
   }
 
-  //debug data port
+  //test data port
   case 0xc0001c ... 0xc0001f: {
-    switch(io.debugAddress) {
+    switch(test.address) {
 
     //unknown
     case 0x8 ... 0xf: {
@@ -84,25 +84,25 @@ auto VDP::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
     return psg.write(data);
   }
 
-  //debug address port
+  //test address port
   case 0xc00018 ... 0xc0001b: {
-    io.debugAddress = data.bit(0,3);
+    test.address = data.bit(0,3);
     return;
   }
 
-  //debug data port
+  //test data port
   case 0xc0001c ... 0xc0001f: {
-    switch(io.debugAddress) {
+    switch(test.address) {
 
     case 0x0: {
       //bit(0,5) is unknown
-      io.debugDisableLayers       = data.bit(6);
-      io.debugForceLayer          = data.bit(7,8);
-      psg.io.debugVolumeOverride  = data.bit(9);
-      psg.io.debugVolumeChannel   = data.bit(10,11);
-      io.debugDisableSpritePhase1 = data.bit(12);
-      io.debugDisableSpritePhase2 = data.bit(13);
-      io.debugDisableSpritePhase3 = data.bit(14);
+      dac.test.disableLayers    = data.bit(6);
+      dac.test.forceLayer       = data.bit(7,8);
+      psg.test.volumeOverride   = data.bit(9);
+      psg.test.volumeChannel    = data.bit(10,11);
+      sprite.test.disablePhase1 = data.bit(12);
+      sprite.test.disablePhase2 = data.bit(13);
+      sprite.test.disablePhase3 = data.bit(14);
       return;
     }
 
@@ -147,7 +147,7 @@ auto VDP::writeDataPort(n16 data) -> void {
   command.latch = 0;
   command.ready = 1;
 
-  dma.wait = 0;
+  if(dma.mode == 2) dma.wait = 0;
   fifo.write(command.target, command.address, data);
   command.address += command.increment;
 }
@@ -188,8 +188,9 @@ auto VDP::writeControlPort(n16 data) -> void {
     command.address.bit(14,16) = data.bit(0,2);
     command.target.bit(2,3)    = data.bit(4,5);
     command.ready              = data.bit(6) | command.target.bit(0);
-    command.pending            = data.bit(7);
+    command.pending            = data.bit(7) & dma.enable;
 
+    dma.wait = dma.mode == 2;
     dma.synchronize();
     return;
   }
@@ -224,14 +225,13 @@ auto VDP::writeControlPort(n16 data) -> void {
 
   //mode register 2
   case 0x01: {
-    io.videoMode5            = data.bit(2);
-    io.overscan              = data.bit(3);
-    dma.enable               = data.bit(4);
-    irq.vblank.enable        = data.bit(5);
-    io.displayEnable         = data.bit(6);
-    vram.mode                = data.bit(7);
+    io.videoMode5      = data.bit(2);
+    io.overscan        = data.bit(3);
+    dma.enable         = data.bit(4);
+    irq.vblank.enable  = data.bit(5);
+    io.displayEnable   = data.bit(6);
+    vram.mode          = data.bit(7);
 
-    dma.synchronize();
     irq.poll();
     if(!io.videoMode5) debug(unimplemented, "[VDP] M5=0");
     return;
@@ -369,9 +369,6 @@ auto VDP::writeControlPort(n16 data) -> void {
   case 0x17: {
     dma.source.bit(16,21) = data.bit(0,5);
     dma.mode              = data.bit(6,7);
-    dma.wait              = dma.mode == 2;
-
-    dma.synchronize();
     return;
   }
 

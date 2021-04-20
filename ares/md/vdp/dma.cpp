@@ -1,19 +1,16 @@
 //test if the 68K bus should be acquired immediately for 68K->VDP DMA
 auto VDP::DMA::synchronize() -> void {
-  if(enable && !wait && vdp.command.pending && mode <= 1) {
+  if(vdp.command.pending && !wait && mode <= 1) {
     active = 1;
     bus.acquire(Bus::VDPDMA);
   } else {
     active = 0;
     bus.release(Bus::VDPDMA);
   }
-  if(!enable) {
-    vdp.command.pending = 0;
-  }
 }
 
 auto VDP::DMA::run() -> void {
-  if(enable && !wait && vdp.command.pending) {
+  if(vdp.command.pending && !wait) {
     if(mode <= 1) return load();
     if(mode == 2) return fill();
     if(mode == 3) return copy();
@@ -50,13 +47,13 @@ auto VDP::DMA::fill() -> void {
 
 //VRAM only
 auto VDP::DMA::copy() -> void {
-  if(!wait) {
-    wait = 1;
+  if(!read) {
+    read = 1;
     data = vdp.vram.readByte(source);
     return;
   }
 
-  wait = 0;
+  read = 0;
   vdp.vram.writeByte(vdp.command.address, data);
 
   source.bit(0,15)++;
@@ -75,6 +72,7 @@ auto VDP::DMA::power(bool reset) -> void {
   mode = 0;
   source = 0;
   length = 0;
-  wait = 0;
+  wait = 1;
+  read = 0;
   enable = 0;
 }

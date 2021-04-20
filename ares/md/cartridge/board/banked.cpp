@@ -22,7 +22,11 @@ struct Banked : Interface {
   }
 
   auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void override {
-    if(!lower) return;  //todo: unconfirmed
+    if(!lower) {
+      //todo: unconfirmed
+      debug(unusual, "[Cartridge::Banked::writeIO] lower=0");
+      return;
+    }
     if(address == 0xa130f2) romBank[1] = data.bit(0,5);
     if(address == 0xa130f4) romBank[2] = data.bit(0,5);
     if(address == 0xa130f6) romBank[3] = data.bit(0,5);
@@ -33,7 +37,7 @@ struct Banked : Interface {
   }
 
   auto power(bool reset) -> void override {
-    for(u32 index : range(8)) romBank[index] = index;
+    for(auto index : range(8)) romBank[index] = index;
   }
 
   auto serialize(serializer& s) -> void override {
