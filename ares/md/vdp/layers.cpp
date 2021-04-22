@@ -1,7 +1,11 @@
 auto VDP::Layers::hscrollFetch() -> void {
+  if(!vdp.displayEnable()) {
+    return vdp.fifo.slot();
+  }
+
   static const u32 mask[] = {0u, 7u, ~7u, ~0u};
   n16 address = hscrollAddress;
-  address += (vdp.vcounter() & mask[hscrollMode]) << 1;
+  address += ((u8)vdp.vcounter() & mask[hscrollMode]) << 1;
   vdp.layerA.hscroll = vdp.vram.read(address++);
   vdp.layerB.hscroll = vdp.vram.read(address++);
 }

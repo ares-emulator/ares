@@ -51,7 +51,6 @@ auto VDP::serialize(serializer& s) -> void {
   s(state.field);
   s(state.hblank);
   s(state.vblank);
-  s(state.hclock);
 }
 
 auto VDP::PSG::serialize(serializer& s) -> void {
@@ -88,6 +87,7 @@ auto VDP::Slot::serialize(serializer& s) -> void {
 }
 
 auto VDP::FIFO::serialize(serializer& s) -> void {
+  s(refreshing);
   s(cache);
   s(slots);
 }
@@ -144,6 +144,8 @@ auto VDP::Layer::serialize(serializer& s) -> void {
   s(extras);
   s(windowed);
   s(mappings);
+  s(vcounter);
+  s(field);
 }
 
 auto VDP::Layer::Mapping::serialize(serializer& s) -> void {

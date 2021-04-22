@@ -15,11 +15,11 @@ auto VDP::Sprite::write(n16 address, n16 data) -> void {
 }
 
 //called before mapping fetches
-auto VDP::Sprite::begin(s32 y, bool f) -> void {
+auto VDP::Sprite::begin(i9 y, n1 odd) -> void {
   for(auto& mapping : mappings) mapping.valid = 0;
   mappingCount = 0;
   vcounter = y;
-  field = f;
+  field = odd;
 }
 
 //called before pattern fetches
@@ -36,6 +36,10 @@ auto VDP::Sprite::end() -> void {
 
 //called 16 (H32) or 20 (H40) times
 auto VDP::Sprite::mappingFetch(u32) -> void {
+  if(!vdp.displayEnable()) {
+    return vdp.fifo.slot();
+  }
+
   if(test.disablePhase2) return;
 
   //mapping fetches are delayed when less than 16/20 objects are visible
@@ -74,6 +78,10 @@ auto VDP::Sprite::mappingFetch(u32) -> void {
 
 //called 32 (H32) or 40 (H40) times
 auto VDP::Sprite::patternFetch(u32) -> void {
+  if(!vdp.displayEnable()) {
+    return vdp.fifo.slot();
+  }
+
   if(test.disablePhase3) patternStop = 1;
 
   auto interlace = vdp.io.interlaceMode == 3;

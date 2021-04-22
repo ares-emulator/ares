@@ -1,73 +1,77 @@
 auto VDP::step(u32 clocks) -> void {
-  state.hcounter += clocks;
   Thread::step(clocks);
   Thread::synchronize(cpu, apu);
 }
 
 auto VDP::tick() -> void {
+  step(cycles[0] + cycles[1]);
+  cycles += 2;
+  state.hcounter++;
   if(h32()) {
-    auto cycles = &cyclesH32[edclk()][hclock()];
-    step(cycles[0] + cycles[1]);
+    if(state.hcounter == 0x05) hblank(0);
+    if(state.hcounter == 0x81) vpoll();
+    if(state.hcounter == 0x85) vtick();
+    if(state.hcounter == 0x93) hblank(1);
+    if(state.hcounter == 0x94) state.hcounter = 0xe9;
   }
   if(h40()) {
-    auto cycles = &cyclesH40[edclk()][hclock()];
-    step(cycles[0] + cycles[1]);
+    if(state.hcounter == 0x06) hblank(0);
+    if(state.hcounter == 0xa1) vpoll();
+    if(state.hcounter == 0xa5) vtick();
+    if(state.hcounter == 0xb3) hblank(1);
+    if(state.hcounter == 0xb6) state.hcounter = 0xe4;
   }
-  state.hclock += 2;
+}
+
+auto VDP::vpoll() -> void {
+  if(v28()) {
+    if(state.vcounter == 0x0e0) vblank(1);
+    if(state.vcounter == 0x1ff) vblank(0);
+  }
+  if(v30()) {
+    if(state.vcounter == 0x0f0) vblank(1);
+    if(state.vcounter == 0x1ff) vblank(0);
+  }
+}
+
+auto VDP::vtick() -> void {
+  state.vcounter++;
+  if(v28()) {
+    if(state.vcounter == 0x0eb && Region::NTSC()) state.vcounter = 0x1e5;
+    if(state.vcounter == 0x103 && Region::PAL ()) state.vcounter = 0x1ca;
+  }
+  if(v30()) {
+    if(state.vcounter == 0x200 && Region::NTSC()) state.vcounter = 0x000;
+    if(state.vcounter == 0x10b && Region::PAL ()) state.vcounter = 0x1d2;
+  }
 }
 
 auto VDP::main() -> void {
-  scanline();
-
-  if((vcounter() < screenHeight() || vcounter() >= frameHeight() - 2) && io.displayEnable) {
-    if(h32()) mainH32Active();
-    if(h40()) mainH40Active();
-  } else {
-    if(h32()) mainH32Blank();
-    if(h40()) mainH40Blank();
-  }
-
-  state.hclock = 0;
-  state.hcounter = 0;
   latch.displayWidth = io.displayWidth;
-  latch.clockSelect = io.clockSelect;
-
-  if(++state.vcounter >= frameHeight()) {
-    state.vcounter = 0;
+  latch.clockSelect  = io.clockSelect;
+  if(h32()) mainH32();
+  if(h40()) mainH40();
+  if(state.vcounter == 0) {
     state.field ^= 1;
     latch.interlace = io.interlaceMode == 3;
-    latch.overscan = io.overscan;
+    latch.overscan  = io.overscan;
+    frame();
   }
-}
-
-auto VDP::render(bool displayEnable) -> void {
-  dac.pixels = pixels();
-  if(!dac.pixels) return;
-  if(displayEnable) {
-    for(auto x : range(screenWidth())) dac.pixel(x);
-  } else {
-    for(auto x : range(screenWidth())) dac.output(0);
-  }
-  m32x.vdp.scanline(pixels(), vcounter());
 }
 
 auto VDP::hblank(bool line) -> void {
   state.hblank = line;
   if(line == 0) {
     cartridge.hblank(0);
+    apu.setINT(0);
   } else {
     cartridge.hblank(1);
-    apu.setINT(0);
-    if(vcounter() < screenHeight() - 1
-    || vcounter() == frameHeight() - 1
-    ) {
-      if(irq.hblank.counter-- == 0) {
-        irq.hblank.counter = irq.hblank.frequency;
-        irq.hblank.pending = 1;
-        irq.poll();
-      }
-    } else {
+    if(vblank()) {
       irq.hblank.counter = irq.hblank.frequency;
+    } else if(irq.hblank.counter-- == 0) {
+      irq.hblank.counter = irq.hblank.frequency;
+      irq.hblank.pending = 1;
+      irq.poll();
     }
   }
 }
@@ -84,12 +88,19 @@ auto VDP::vblank(bool line) -> void {
   }
 }
 
-auto VDP::mainH32Active() -> void {
-  //0
-  hblank(0);
+auto VDP::mainH32() -> void {
+  auto vcounter = state.vcounter;
+  auto field    = state.field;
+  auto pixels   = vdp.pixels();
+  cycles = &cyclesH32[edclk()][0];
+  dac.pixels = pixels;
+
+  //1
+  layerA.begin(vcounter, field);
+  layerB.begin(vcounter, field);
 
   //1-5
-  tick(); layers.hscrollFetch();
+          layers.hscrollFetch();
   tick(); sprite.patternFetch(26);
   tick(); sprite.patternFetch(27);
   tick(); sprite.patternFetch(28);
@@ -99,7 +110,7 @@ auto VDP::mainH32Active() -> void {
   layers.vscrollFetch(-1);
   layerA.attributesFetch();
   layerB.attributesFetch();
-  window.attributesFetch(0);
+  window.attributesFetch(-1);
 
   //6-13
   tick(); layerA.mappingFetch(-1);
@@ -112,36 +123,28 @@ auto VDP::mainH32Active() -> void {
   tick(); layerB.patternFetch( 1);
 
   //14
-  if(vcounter() < frameHeight() - 2) {
-    sprite.begin(vcounter(), field());
-  } else if(vcounter() == frameHeight() - 2) {
-    sprite.begin(-2, field() ^ 1);
-  } else {
-    sprite.begin(-1, field() ^ 1);
-  }
+  sprite.begin(vcounter, field);
 
   //14-141
   for(auto block : range(16)) {
     layers.vscrollFetch(block);
     layerA.attributesFetch();
     layerB.attributesFetch();
-    window.attributesFetch(block + 1);
+    window.attributesFetch(block);
     tick(); layerA.mappingFetch(block);
-    tick(); if((block & 3) != 3) fifo.slot();
+    tick(); (block & 3) != 3 ? fifo.slot() : fifo.refresh();
     tick(); layerA.patternFetch(block * 2 + 2);
     tick(); layerA.patternFetch(block * 2 + 3);
     tick(); layerB.mappingFetch(block);
     tick(); sprite.mappingFetch(block);
     tick(); layerB.patternFetch(block * 2 + 2);
-    if(hclock() >> 1 == 132 && vcounter() == screenHeight() - 1) vblank(1);
-    if(hclock() >> 1 == 132 && vcounter() == frameHeight()  - 2) vblank(0);
     tick(); layerB.patternFetch(block * 2 + 3);
+    for(auto pixel : range(16)) dac.pixel(block * 16 + pixel);
   }
 
   //142
+  m32x.vdp.scanline(pixels, vcounter);
   layers.vscrollFetch();
-  render(1);
-  hblank(1);
   sprite.end();
 
   //142-171
@@ -150,43 +153,28 @@ auto VDP::mainH32Active() -> void {
   for(auto cycle : range(13)) {
     tick(); sprite.patternFetch(cycle + 0);
   }
-  tick(); fifo.slot();
+  tick(); fifo.refresh();
   for(auto cycle : range(13)) {
     tick(); sprite.patternFetch(cycle + 13);
   }
   tick(); fifo.slot();
-}
 
-auto VDP::mainH32Blank() -> void {
-  //0
-  hblank(0);
-
-  //1-2
-  tick();
-  tick();
-
-  //3-169
-  for(auto cycle : range(167)) {
-    tick(); fifo.slot();
-    if(hclock() >> 1 == 132 && vcounter() == screenHeight() - 1) vblank(1);
-    if(hclock() >> 1 == 132 && vcounter() == frameHeight()  - 2) vblank(0);
-    if(hclock() >> 1 == 142) hblank(1);
-  }
-
-  //170
-  render(0);
-
-  //170-171
-  tick();
   tick();
 }
 
-auto VDP::mainH40Active() -> void {
-  //0
-  hblank(0);
+auto VDP::mainH40() -> void {
+  auto vcounter = state.vcounter;
+  auto field    = state.field;
+  auto pixels   = vdp.pixels();
+  cycles = &cyclesH40[edclk()][0];
+  dac.pixels = pixels;
+
+  //1
+  layerA.begin(vcounter, field);
+  layerB.begin(vcounter, field);
 
   //1-5
-  tick(); layers.hscrollFetch();
+          layers.hscrollFetch();
   tick(); sprite.patternFetch(34);
   tick(); sprite.patternFetch(35);
   tick(); sprite.patternFetch(36);
@@ -196,7 +184,7 @@ auto VDP::mainH40Active() -> void {
   layers.vscrollFetch(-1);
   layerA.attributesFetch();
   layerB.attributesFetch();
-  window.attributesFetch(0);
+  window.attributesFetch(-1);
 
   //6-13
   tick(); layerA.mappingFetch(-1);
@@ -209,36 +197,28 @@ auto VDP::mainH40Active() -> void {
   tick(); layerB.patternFetch( 1);
 
   //14
-  if(vcounter() < frameHeight() - 2) {
-    sprite.begin(vcounter(), field());
-  } else if(vcounter() == frameHeight() - 2) {
-    sprite.begin(-2, field() ^ 1);
-  } else {
-    sprite.begin(-1, field() ^ 1);
-  }
+  sprite.begin(vcounter, field);
 
   //14-173
   for(auto block : range(20)) {
     layers.vscrollFetch(block);
     layerA.attributesFetch();
     layerB.attributesFetch();
-    window.attributesFetch(block + 1);
+    window.attributesFetch(block);
     tick(); layerA.mappingFetch(block);
-    tick(); if((block & 3) != 3) fifo.slot();
+    tick(); (block & 3) != 3 ? fifo.slot() : fifo.refresh();
     tick(); layerA.patternFetch(block * 2 + 2);
     tick(); layerA.patternFetch(block * 2 + 3);
     tick(); layerB.mappingFetch(block);
     tick(); sprite.mappingFetch(block);
     tick(); layerB.patternFetch(block * 2 + 2);
-    if(hclock() >> 1 == 164 && vcounter() == screenHeight() - 1) vblank(1);
-    if(hclock() >> 1 == 164 && vcounter() == frameHeight()  - 2) vblank(0);
     tick(); layerB.patternFetch(block * 2 + 3);
+    for(auto pixel : range(16)) dac.pixel(block * 16 + pixel);
   }
 
   //174
+  m32x.vdp.scanline(pixels, vcounter);
   layers.vscrollFetch();
-  render(1);
-  hblank(1);
   sprite.end();
 
   //174-210
@@ -247,35 +227,11 @@ auto VDP::mainH40Active() -> void {
   for(auto cycle : range(23)) {
     tick(); sprite.patternFetch(cycle + 0);
   }
-  tick(); fifo.slot();
+  tick(); fifo.refresh();
   for(auto cycle : range(11)) {
     tick(); sprite.patternFetch(cycle + 23);
   }
-}
 
-auto VDP::mainH40Blank() -> void {
-  //0
-  hblank(0);
-
-  //1-3
-  tick();
-  tick();
-  tick();
-
-  //4-207
-  for(auto cycle : range(204)) {
-    tick(); fifo.slot();
-    if(hclock() >> 1 == 164 && vcounter() == screenHeight() - 1) vblank(1);
-    if(hclock() >> 1 == 164 && vcounter() == frameHeight()  - 2) vblank(0);
-    if(hclock() >> 1 == 174) hblank(1);
-  }
-
-  //208
-  render(0);
-
-  //208-210
-  tick();
-  tick();
   tick();
 }
 
@@ -337,4 +293,6 @@ auto VDP::generateCycleTimings() -> void {
   for(auto cycle : range(171)) extrasH40[1][cycle *  1] =  8;
   for(auto cycle : range( 32)) extrasH40[1][cycle *  5] = 10;
   for(auto cycle : range(  4)) extrasH40[1][cycle *  5] =  9;
+
+  cycles = nullptr;
 }

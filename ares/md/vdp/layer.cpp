@@ -1,3 +1,9 @@
+auto VDP::Layer::begin(i9 y, n1 odd) -> void {
+  for(auto& pixel : pixels) pixel = {};
+  vcounter = y;
+  field = odd;
+}
+
 //called 17 (H32) or 21 (H40) times
 auto VDP::Layer::attributesFetch() -> void {
   attributes.address = nametableAddress;
@@ -19,10 +25,14 @@ auto VDP::Layer::attributesFetch() -> void {
 
 //called 17 (H32) ot 21 (H40) times
 auto VDP::Layer::mappingFetch(s32 mappingIndex) -> void {
+  if(!vdp.displayEnable()) {
+    return vdp.fifo.slot();
+  }
+
   auto interlace = vdp.io.interlaceMode == 3;
   auto x = mappingIndex * 16;
-  auto y = vdp.vcounter();
-  if(interlace) y = y << 1 | vdp.field();
+  auto y = vcounter;
+  if(interlace) y = y << 1 | field;
 
   x -= attributes.hscroll & ~15;
   y += attributes.vscroll;
@@ -51,9 +61,13 @@ auto VDP::Layer::mappingFetch(s32 mappingIndex) -> void {
 
 //called 34 (H32) or 42 (H40) times
 auto VDP::Layer::patternFetch(u32 patternIndex) -> void {
+  if(!vdp.displayEnable()) {
+    return vdp.fifo.slot();
+  }
+
   auto interlace = vdp.io.interlaceMode == 3;
-  auto y = vdp.vcounter() + attributes.vscroll;
-  if(interlace) y = y << 1 | vdp.field();
+  auto y = vcounter + attributes.vscroll;
+  if(interlace) y = y << 1 | field;
 
   auto& mapping = mappings[patternIndex & 1];
   n15 address = mapping.address;

@@ -1,6 +1,5 @@
 auto VDP::DAC::pixel(u32 x) -> void {
-  if(!vdp.io.displayEnable) return output(0);
-  if(vdp.vcounter() >= vdp.screenHeight()) return output(0);
+  if(!pixels) return;
 
   Pixel g = {vdp.io.backgroundColor, 0, 1};
   Pixel a = vdp.layerA.pixel(x);

@@ -1,12 +1,20 @@
 auto VDP::FIFO::advance() -> void {
-  slots[0].upper = 0;
-  slots[0].lower = 0;
   swap(slots[0], slots[1]);
   swap(slots[1], slots[2]);
   swap(slots[2], slots[3]);
+  vdp.dma.run();
+}
+
+auto VDP::FIFO::refresh() -> void {
+  refreshing = !vdp.displayEnable();
 }
 
 auto VDP::FIFO::slot() -> void {
+  if(refreshing) {
+    refreshing = 0;
+    return;
+  }
+
   if(!cache.full()) {
     if(vdp.command.target == 0 && vdp.vram.mode == 0) {
       if(!cache.lower) {
@@ -70,16 +78,22 @@ auto VDP::FIFO::slot() -> void {
     }
 
     if(slots[0].target == 1 && vdp.vram.mode == 1) {
+      slots[0].lower = 0;
+      slots[0].upper = 0;
       vdp.vram.writeByte(slots[0].address | 1, slots[0].data.byte(0));
       return advance();
     }
 
     if(slots[0].target == 3) {
+      slots[0].lower = 0;
+      slots[0].upper = 0;
       vdp.cram.write(slots[0].address >> 1, slots[0].data);
       return advance();
     }
 
     if(slots[0].target == 5) {
+      slots[0].lower = 0;
+      slots[0].upper = 0;
       vdp.vsram.write(slots[0].address >> 1, slots[0].data);
       return advance();
     }

@@ -31,37 +31,52 @@ struct VDP : Thread {
     } tracer;
   } debugger{*this};
 
-  inline auto hcounter() const -> u32 { return state.hcounter; }
-  inline auto vcounter() const -> u32 { return state.vcounter; }
-  inline auto field() const -> bool { return state.field; }
-  inline auto hblank() const -> bool { return state.hblank; }
-  inline auto vblank() const -> bool { return state.vblank; }
-  inline auto hclock() const -> u32 { return state.hclock; }
+  auto hcounter() const -> u32 { return state.hcounter; }
+  auto vcounter() const -> u32 { return state.vcounter; }
+  auto field() const -> bool { return state.field; }
+  auto hblank() const -> bool { return state.hblank; }
+  auto vblank() const -> bool { return state.vblank; }
 
-  inline auto h32() const -> bool { return io.displayWidth == 0; }  //256-width
-  inline auto h40() const -> bool { return io.displayWidth == 1; }  //320-width
+  auto h32() const -> bool { return latch.displayWidth == 0; }  //256-width
+  auto h40() const -> bool { return latch.displayWidth == 1; }  //320-width
 
-  inline auto dclk()  const -> bool { return io.clockSelect == 0; }  //internal clock
-  inline auto edclk() const -> bool { return io.clockSelect == 1; }  //external clock
+  auto v28() const -> bool { return io.overscan == 0; }  //224-height
+  auto v30() const -> bool { return io.overscan == 1; }  //240-height
+
+  auto dclk()  const -> bool { return io.clockSelect == 0; }  //internal clock
+  auto edclk() const -> bool { return io.clockSelect == 1; }  //external clock
+
+  auto pixelWidth() const -> u32 { return latch.displayWidth ? 4 : 5; }
+  auto screenWidth() const -> u32 { return latch.displayWidth ? 320 : 256; }
+  auto screenHeight() const -> u32 { return io.overscan ? 240 : 224; }
+  auto frameHeight() const -> u32 { return Region::PAL() ? 312 : 262; }
+
+  auto displayEnable() const -> bool {
+    if(!io.displayEnable) return false;
+    if(vcounter() < screenHeight() - 1) return true;
+    if(vcounter() == screenHeight()) return !hblank();
+    if(vcounter() >= 0x1fe) return true;
+    return false;
+  }
 
   //vdp.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
   auto pixels() -> u32*;
-  auto scanline() -> void;
+  auto frame() -> void;
   auto power(bool reset) -> void;
 
   //main.cpp
   auto step(u32 clocks) -> void;
   auto tick() -> void;
+  auto vpoll() -> void;
+  auto vtick() -> void;
   auto main() -> void;
-  auto render(bool) -> void;
+  auto render() -> void;
   auto hblank(bool) -> void;
   auto vblank(bool) -> void;
-  auto mainH32Active() -> void;
-  auto mainH32Blank() -> void;
-  auto mainH40Active() -> void;
-  auto mainH40Blank() -> void;
+  auto mainH32() -> void;
+  auto mainH40() -> void;
   auto generateCycleTimings() -> void;
 
   //io.cpp
@@ -158,6 +173,7 @@ struct VDP : Thread {
     //fifo.cpp
     auto advance() -> void;
 
+    auto refresh() -> void;
     auto slot() -> void;
     auto read(n4 target, n17 address) -> void;
     auto write(n4 target, n17 address, n16 data) -> void;
@@ -166,6 +182,7 @@ struct VDP : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
+    n1    refreshing;
     Cache cache;
     Slot  slots[4];
   } fifo;
@@ -235,7 +252,7 @@ struct VDP : Thread {
 
   struct Window {
     //window.cpp
-    auto attributesFetch(u32) -> void;
+    auto attributesFetch(s32) -> void;
     auto test() const -> bool;
     auto power(bool reset) -> void;
 
@@ -251,6 +268,7 @@ struct VDP : Thread {
 
   struct Layer {
     //layer.cpp
+    auto begin(i9, n1) -> void;
     auto attributesFetch() -> void;
     auto mappingFetch(s32) -> void;
     auto patternFetch(u32) -> void;
@@ -281,6 +299,9 @@ struct VDP : Thread {
       n1  priority;
     };
     Mapping mappings[2];
+
+    i16 vcounter;
+    n1  field;
   } layerA, layerB;
 
   struct Sprite {
@@ -292,7 +313,7 @@ struct VDP : Thread {
 
     //sprite.cpp
     auto write(n16 address, n16 data) -> void;
-    auto begin(s32, bool) -> void;
+    auto begin(i9, n1) -> void;
     auto end() -> void;
     auto mappingFetch(u32) -> void;
     auto patternFetch(u32) -> void;
@@ -347,7 +368,7 @@ struct VDP : Thread {
     n8  visibleCount;
     n1  visibleStop;
 
-    s16 vcounter;
+    i16 vcounter;
     n1  field;
 
     struct Test {
@@ -381,11 +402,6 @@ struct VDP : Thread {
   auto serialize(serializer&) -> void;
 
 private:
-  auto pixelWidth() const -> u32 { return latch.displayWidth ? 4 : 5; }
-  auto screenWidth() const -> u32 { return latch.displayWidth ? 320 : 256; }
-  auto screenHeight() const -> u32 { return latch.overscan ? 240 : 224; }
-  auto frameHeight() const -> u32 { return Region::PAL() ? 312 : 262; }
-
   //video RAM
   struct VRAM {
     //memory.cpp
@@ -480,17 +496,17 @@ private:
   } latch;
 
   struct State {
-    n16 hcounter;
-    n16 vcounter;
-    n1  field;
-    n1  hblank;
-    n1  vblank;
-    n16 hclock;
+    n8 hcounter;
+    n9 vcounter;
+    n1 field;
+    n1 hblank;
+    n1 vblank;
   } state;
 
 //unserialized:
   u8 cyclesH32[2][342], halvesH32[2][171], extrasH32[2][171];
   u8 cyclesH40[2][420], halvesH40[2][210], extrasH40[2][210];
+  u8* cycles = nullptr;
 };
 
 extern VDP vdp;

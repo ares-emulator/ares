@@ -5,6 +5,7 @@
 
 namespace ares::MegaDrive {
 
+//flips 4-bit nibble ordering in 8-pixel row
 inline auto hflip(u32 data) -> u32 {
   data = data >> 16 & 0x0000ffff | data << 16 & 0xffff0000;
   data = data >>  8 & 0x00ff00ff | data <<  8 & 0xff00ff00;
@@ -82,14 +83,12 @@ auto VDP::pixels() -> u32* {
   return output;
 }
 
-auto VDP::scanline() -> void {
-  if(vcounter() == 240) {
-    if(latch.interlace == 0) screen->setProgressive(1);
-    if(latch.interlace == 1) screen->setInterlace(field());
-    screen->setViewport(0, 0, screen->width(), screen->height());
-    screen->frame();
-    scheduler.exit(Event::Frame);
-  }
+auto VDP::frame() -> void {
+  if(latch.interlace == 0) screen->setProgressive(1);
+  if(latch.interlace == 1) screen->setInterlace(field());
+  screen->setViewport(0, 0, screen->width(), screen->height());
+  screen->frame();
+  scheduler.exit(Event::Frame);
 }
 
 auto VDP::power(bool reset) -> void {
