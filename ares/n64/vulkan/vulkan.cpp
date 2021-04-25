@@ -118,7 +118,7 @@ auto Vulkan::writeWord(u32 address, u32 data) -> void {
   implementation->processor->set_vi_register(::RDP::VIRegister(address), data);
 }
 
-auto Vulkan::scanoutAsync() -> bool {
+auto Vulkan::scanoutAsync(bool field) -> bool {
   if(!implementation) return false;
 
   { //wait until we're done reading in thread before we clobber the readback buffer
@@ -128,10 +128,13 @@ auto Vulkan::scanoutAsync() -> bool {
     });
   }
 
+  implementation->processor->set_vi_register(::RDP::VIRegister::VCurrentLine, field);
+
   //0 steps if scanning out at upscaled resolution.
   //each downscale step reduces output resolution to [width, height] * max(1, upscale >> downscale_steps)
   ::RDP::ScanoutOptions options;
-  options.downscale_steps = supersampleScanout ? 32 : 0;
+  options.downscale_steps = supersampleScanout ? 16 : 0;
+  options.persist_frame_on_invalid_input = true;  //this is a compatibility hack, but I'm not sure what for ...
 
   if(implementation->scanout.fence) {
     implementation->scanout.fence->wait();

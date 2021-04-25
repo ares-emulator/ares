@@ -9,7 +9,7 @@ struct Vulkan {
   auto render() -> bool;
   auto frame() -> void;
   auto writeWord(u32 address, u32 data) -> void;
-  auto scanoutAsync() -> bool;
+  auto scanoutAsync(bool field) -> bool;
   auto mapScanoutRead(const u8*& rgba, u32& width, u32& height) -> void;
   auto unmapScanoutRead() -> void;
   auto endScanout() -> void;

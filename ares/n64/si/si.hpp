@@ -19,6 +19,8 @@ struct SI : Memory::IO<SI> {
   auto addressCRC(u16 address) const -> n5;
   auto dataCRC(array_view<u8> data) const -> n8;
   auto main() -> void;
+  auto scan() -> void;
+  auto challenge() -> void;
   auto power(bool reset) -> void;
 
   //io.cpp
@@ -40,8 +42,6 @@ struct SI : Memory::IO<SI> {
     n1  dmaError;
     n1  interrupt;
   } io;
-
-  u64 resetStrobe;  //hack
 };
 
 extern SI si;

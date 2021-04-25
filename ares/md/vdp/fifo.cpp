@@ -5,10 +5,6 @@ auto VDP::FIFO::advance() -> void {
   vdp.dma.run();
 }
 
-auto VDP::FIFO::refresh() -> void {
-  refreshing = !vdp.displayEnable();
-}
-
 auto VDP::FIFO::slot() -> void {
   if(refreshing) {
     refreshing = 0;

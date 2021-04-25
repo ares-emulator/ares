@@ -135,8 +135,8 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
     if(shm.active()) shm.synchronize(cpu);
     if(shs.active()) shs.synchronize(cpu);
     data.bit( 0) = vdp.framebufferActive;
-    data.bit( 1) = cpu.refresh.external >= 126 || cpu.refresh.ram >= 116;  //framebuffer access
-    data.bit(13) = vdp.vblank || vdp.hblank;  //palette access
+    data.bit( 1) = MegaDrive::vdp.refreshing();  //framebuffer access
+    data.bit(13) = vdp.vblank || vdp.hblank;     //palette access
     data.bit(14) = vdp.hblank;
     data.bit(15) = vdp.vblank;
   }

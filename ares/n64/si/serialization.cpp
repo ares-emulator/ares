@@ -9,6 +9,4 @@ auto SI::serialize(serializer& s) -> void {
   s(io.dmaState);
   s(io.dmaError);
   s(io.interrupt);
-
-  s(resetStrobe);
 }

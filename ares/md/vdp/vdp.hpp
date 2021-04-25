@@ -36,6 +36,7 @@ struct VDP : Thread {
   auto field() const -> bool { return state.field; }
   auto hblank() const -> bool { return state.hblank; }
   auto vblank() const -> bool { return state.vblank; }
+  auto refreshing() const -> bool { return vram.refreshing; }
 
   auto h32() const -> bool { return latch.displayWidth == 0; }  //256-width
   auto h40() const -> bool { return latch.displayWidth == 1; }  //320-width
@@ -53,10 +54,8 @@ struct VDP : Thread {
 
   auto displayEnable() const -> bool {
     if(!io.displayEnable) return false;
-    if(vcounter() < screenHeight() - 1) return true;
-    if(vcounter() == screenHeight()) return !hblank();
-    if(vcounter() >= 0x1fe) return true;
-    return false;
+    if(vcounter() == 0x1ff) return true;
+    return !state.vblank;
   }
 
   //vdp.cpp
@@ -71,6 +70,7 @@ struct VDP : Thread {
   auto tick() -> void;
   auto vpoll() -> void;
   auto vtick() -> void;
+  auto refresh() -> void;
   auto main() -> void;
   auto render() -> void;
   auto hblank(bool) -> void;
@@ -173,7 +173,6 @@ struct VDP : Thread {
     //fifo.cpp
     auto advance() -> void;
 
-    auto refresh() -> void;
     auto slot() -> void;
     auto read(n4 target, n17 address) -> void;
     auto write(n4 target, n17 address, n16 data) -> void;
@@ -268,7 +267,7 @@ struct VDP : Thread {
 
   struct Layer {
     //layer.cpp
-    auto begin(i9, n1) -> void;
+    auto begin() -> void;
     auto attributesFetch() -> void;
     auto mappingFetch(s32) -> void;
     auto patternFetch(u32) -> void;
@@ -299,9 +298,6 @@ struct VDP : Thread {
       n1  priority;
     };
     Mapping mappings[2];
-
-    i16 vcounter;
-    n1  field;
   } layerA, layerB;
 
   struct Sprite {
@@ -313,7 +309,7 @@ struct VDP : Thread {
 
     //sprite.cpp
     auto write(n16 address, n16 data) -> void;
-    auto begin(i9, n1) -> void;
+    auto begin() -> void;
     auto end() -> void;
     auto mappingFetch(u32) -> void;
     auto patternFetch(u32) -> void;
@@ -368,9 +364,6 @@ struct VDP : Thread {
     n8  visibleCount;
     n1  visibleStop;
 
-    i16 vcounter;
-    n1  field;
-
     struct Test {
       n1 disablePhase1;
       n1 disablePhase2;
@@ -419,6 +412,7 @@ private:
     n16 memory[65536];  //stored in 16-bit words
     n32 size = 32768;
     n1  mode;  //0 = 64KB, 1 = 128KB
+    n1  refreshing;
   } vram;
 
   //vertical scroll RAM

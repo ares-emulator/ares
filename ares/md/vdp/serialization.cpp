@@ -144,8 +144,6 @@ auto VDP::Layer::serialize(serializer& s) -> void {
   s(extras);
   s(windowed);
   s(mappings);
-  s(vcounter);
-  s(field);
 }
 
 auto VDP::Layer::Mapping::serialize(serializer& s) -> void {
@@ -173,8 +171,6 @@ auto VDP::Sprite::serialize(serializer& s) -> void {
   s(visibleLink);
   s(visibleCount);
   s(visibleStop);
-  s(vcounter);
-  s(field);
   s(test.disablePhase1);
   s(test.disablePhase2);
   s(test.disablePhase3);
@@ -207,6 +203,7 @@ auto VDP::VRAM::serialize(serializer& s) -> void {
   s(memory);
   s(size);
   s(mode);
+  s(refreshing);
 }
 
 auto VDP::VSRAM::serialize(serializer& s) -> void {

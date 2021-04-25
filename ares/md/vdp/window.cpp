@@ -1,7 +1,7 @@
 //called 17 (H32) or 21 (H40) times
 auto VDP::Window::attributesFetch(s32 attributesIndex) -> void {
-  u32 x = attributesIndex << 4;
-  u32 y = vdp.vcounter();
+  s32 x = attributesIndex << 4;
+  s32 y = vdp.vcounter();
   vdp.layerA.windowed[0] = vdp.layerA.windowed[1];
   vdp.layerA.windowed[1] = x < hoffset ^ hdirection || y < voffset ^ vdirection;
   if(!vdp.layerA.windowed[1]) return;

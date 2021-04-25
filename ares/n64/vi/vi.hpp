@@ -35,7 +35,7 @@ struct VI : Thread, Memory::IO<VI> {
     n1  gammaDither;
     n1  gamma;
     n1  divot;
-    n1  serrate;
+    n1  serrate;  //interlace
     n2  antialias;
     n32 reserved;
     n24 dramAddress;

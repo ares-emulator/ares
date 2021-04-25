@@ -32,7 +32,7 @@ auto VI::readWord(u32 address) -> u32 {
 
   if(address == 4) {
     //VI_V_CURRENT_LINE
-    data.bit(0)   = io.field;
+    data.bit(0)   = io.field & io.serrate;
     data.bit(1,9) = io.vcounter;
   }
 

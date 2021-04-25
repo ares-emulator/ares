@@ -1,7 +1,5 @@
-auto VDP::Layer::begin(i9 y, n1 odd) -> void {
+auto VDP::Layer::begin() -> void {
   for(auto& pixel : pixels) pixel = {};
-  vcounter = y;
-  field = odd;
 }
 
 //called 17 (H32) or 21 (H40) times
@@ -31,8 +29,8 @@ auto VDP::Layer::mappingFetch(s32 mappingIndex) -> void {
 
   auto interlace = vdp.io.interlaceMode == 3;
   auto x = mappingIndex * 16;
-  auto y = vcounter;
-  if(interlace) y = y << 1 | field;
+  auto y = vdp.vcounter();
+  if(interlace) y = y << 1 | vdp.field();
 
   x -= attributes.hscroll & ~15;
   y += attributes.vscroll;
@@ -66,8 +64,8 @@ auto VDP::Layer::patternFetch(u32 patternIndex) -> void {
   }
 
   auto interlace = vdp.io.interlaceMode == 3;
-  auto y = vcounter + attributes.vscroll;
-  if(interlace) y = y << 1 | field;
+  auto y = vdp.vcounter() + attributes.vscroll;
+  if(interlace) y = y << 1 | vdp.field();
 
   auto& mapping = mappings[patternIndex & 1];
   n15 address = mapping.address;

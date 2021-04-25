@@ -15,11 +15,9 @@ auto VDP::Sprite::write(n16 address, n16 data) -> void {
 }
 
 //called before mapping fetches
-auto VDP::Sprite::begin(i9 y, n1 odd) -> void {
+auto VDP::Sprite::begin() -> void {
   for(auto& mapping : mappings) mapping.valid = 0;
   mappingCount = 0;
-  vcounter = y;
-  field = odd;
 }
 
 //called before pattern fetches
@@ -46,8 +44,8 @@ auto VDP::Sprite::mappingFetch(u32) -> void {
   if(visibleCount++ < objectLimit()) return;
 
   auto interlace = vdp.io.interlaceMode == 3;
-  auto y = 129 + vcounter;
-  if(interlace) y = y << 1 | field;
+  auto y = 129 + (i9)vdp.vcounter();
+  if(interlace) y = y << 1 | vdp.field();
 
   auto id = visible[mappingCount];
   auto& object = cache[id];
@@ -85,8 +83,8 @@ auto VDP::Sprite::patternFetch(u32) -> void {
   if(test.disablePhase3) patternStop = 1;
 
   auto interlace = vdp.io.interlaceMode == 3;
-  auto y = 129 + vcounter;
-  if(interlace) y = y << 1 | field;
+  auto y = 129 + (i9)vdp.vcounter();
+  if(interlace) y = y << 1 | vdp.field();
 
   if(!patternStop && mappings[patternIndex].valid) {
     auto& object = mappings[patternIndex];
@@ -136,8 +134,8 @@ auto VDP::Sprite::patternFetch(u32) -> void {
     patternX = 0;
   }
 
-  y = 130 + vcounter;
-  if(interlace) y = y << 1 | field;
+  y = 129 + (i9)vdp.vcounter();
+  if(interlace) y = y << 1 | vdp.field();
 
   if(test.disablePhase1) visibleStop = 1;
 
@@ -179,6 +177,5 @@ auto VDP::Sprite::power(bool reset) -> void {
   visibleLink = 0;
   visibleCount = 0;
   visibleStop = 0;
-  vcounter = 0;
   test = {};
 }
