@@ -91,8 +91,8 @@ auto RSP::writeWord(u32 address, u32 data_) -> void {
     auto length = (dma.read.length | 7) + 1;
     for(u32 count : range(dma.read.count + 1)) {
       for(u32 offset = 0; offset < length; offset += 4) {
-        u32 data = bus.readWord(dma.dramAddress + offset);
-        bus.writeWord(dma.memAddress + target + offset, data);
+        u32 data = bus.read<Word>(dma.dramAddress + offset);
+        bus.write<Word>(dma.memAddress + target + offset, data);
       }
       dma.dramAddress += length + dma.read.skip;
       dma.memAddress += length;
@@ -109,8 +109,8 @@ auto RSP::writeWord(u32 address, u32 data_) -> void {
     auto length = (dma.write.length | 7) + 1;
     for(u32 count : range(dma.write.count + 1)) {
       for(u32 offset = 0; offset < length; offset += 4) {
-        u32 data = bus.readWord(dma.memAddress + source + offset);
-        bus.writeWord(dma.dramAddress + offset, data);
+        u32 data = bus.read<Word>(dma.memAddress + source + offset);
+        bus.write<Word>(dma.dramAddress + offset, data);
       }
       dma.dramAddress += length + dma.write.skip;
       dma.memAddress += length;

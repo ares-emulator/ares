@@ -1,89 +1,105 @@
-auto CPU::readAddress(u32 address) -> maybe<u32> {
+auto CPU::devirtualize(u32 address) -> maybe<u32> {
   switch(context.segment[address >> 29]) {
   case Context::Segment::Invalid:
     exception.addressLoad();
     return nothing;
   case Context::Segment::Mapped:
-    if(auto lookup = tlb.load(address)) return lookup();
+    if(auto match = tlb.load(address)) return match.address;
     tlb.exception(address);
     return nothing;
   case Context::Segment::Cached:
   case Context::Segment::Uncached:
-  default:
     return address;
   }
+  unreachable;
 }
 
-auto CPU::writeAddress(u32 address) -> maybe<u32> {
+auto CPU::fetch(u32 address) -> u32 {
   switch(context.segment[address >> 29]) {
   case Context::Segment::Invalid:
-    exception.addressStore();
+    step(1);
+    exception.addressLoad();
+    return 0;  //nop
+  case Context::Segment::Mapped:
+    if(auto match = tlb.load(address)) {
+      if(match.cache) return icache.fetch(match.address);
+      step(1);
+      return bus.read<Word>(match.address);
+    }
+    step(1);
+    tlb.exception(address);
+    return 0;  //nop
+  case Context::Segment::Cached:
+    return icache.fetch(address);
+  case Context::Segment::Uncached:
+    step(1);
+    return bus.read<Word>(address);
+  }
+  unreachable;
+}
+
+template<u32 Size>
+auto CPU::read(u32 address) -> maybe<u64> {
+  if constexpr(Accuracy::CPU::AddressErrors) {
+    if(unlikely(address & Size - 1)) {
+      step(1);
+      exception.addressLoad();
+      return nothing;
+    }
+  }
+
+  switch(context.segment[address >> 29]) {
+  case Context::Segment::Invalid:
+    step(1);
+    exception.addressLoad();
     return nothing;
   case Context::Segment::Mapped:
-    if(auto lookup = tlb.store(address)) return lookup();
+    if(auto match = tlb.load(address)) {
+    //if(match.cache) return dcache.read<Size>(match.address);
+      step(1);
+      return bus.read<Size>(match.address);
+    }
+    step(1);
     tlb.exception(address);
     return nothing;
   case Context::Segment::Cached:
+  //return dcache.read<Size>(address);
   case Context::Segment::Uncached:
-  default:
-    return address;
+    step(1);
+    return bus.read<Size>(address);
   }
+  unreachable;
 }
 
-auto CPU::readByte(u32 address) -> maybe<u32> {
-  if(auto physical = readAddress(address)) return bus.readByte(physical());
-  return nothing;
-}
-
-auto CPU::readHalf(u32 address) -> maybe<u32> {
+template<u32 Size>
+auto CPU::write(u32 address, u64 data) -> bool {
   if constexpr(Accuracy::CPU::AddressErrors) {
-    if(unlikely(address & 1)) return exception.addressLoad(), nothing;
+    if(unlikely(address & Size - 1)) {
+      step(1);
+      exception.addressStore();
+      return false;
+    }
   }
-  if(auto physical = readAddress(address)) return bus.readHalf(physical());
-  return nothing;
-}
 
-auto CPU::readWord(u32 address) -> maybe<u32> {
-  if constexpr(Accuracy::CPU::AddressErrors) {
-    if(unlikely(address & 3)) return exception.addressLoad(), nothing;
+  switch(context.segment[address >> 29]) {
+  case Context::Segment::Invalid:
+    step(1);
+    exception.addressStore();
+    return false;
+  case Context::Segment::Mapped:
+    if(auto match = tlb.store(address)) {
+    //if(match.cache) return dcache.write<Size>(match.address, data), true;
+      step(1);
+      return bus.write<Size>(match.address, data), true;
+    }
+    step(1);
+    tlb.exception(address);
+    return false;
+  case Context::Segment::Cached:
+  //return dcache.write<Size>(address, data), true;
+  case Context::Segment::Uncached:
+    step(1);
+    return bus.write<Size>(address, data), true;
   }
-  if(auto physical = readAddress(address)) return bus.readWord(physical());
-  return nothing;
-}
-
-auto CPU::readDual(u32 address) -> maybe<u64> {
-  if constexpr(Accuracy::CPU::AddressErrors) {
-    if(unlikely(address & 7)) return exception.addressLoad(), nothing;
-  }
-  if(auto physical = readAddress(address)) return bus.readDual(physical());
-  return nothing;
-}
-
-auto CPU::writeByte(u32 address, u8 data) -> bool {
-  if(auto physical = writeAddress(address)) return bus.writeByte(physical(), data), true;
-  return false;
-}
-
-auto CPU::writeHalf(u32 address, u16 data) -> bool {
-  if constexpr(Accuracy::CPU::AddressErrors) {
-    if(unlikely(address & 1)) return exception.addressStore(), false;
-  }
-  if(auto physical = writeAddress(address)) return bus.writeHalf(physical(), data), true;
-  return false;
-}
-
-auto CPU::writeWord(u32 address, u32 data) -> bool {
-  if constexpr(Accuracy::CPU::AddressErrors) {
-    if(unlikely(address & 3)) return exception.addressStore(), false;
-  }
-  if(auto physical = writeAddress(address)) return bus.writeWord(physical(), data), true;
-  return false;
-}
-
-auto CPU::writeDual(u32 address, u64 data) -> bool {
-  if constexpr(Accuracy::CPU::AddressErrors) {
-    if(unlikely(address & 7)) return exception.addressStore(), false;
-  }
-  if(auto physical = writeAddress(address)) return bus.writeDual(physical(), data), true;
-  return false;
+  unreachable;
 }

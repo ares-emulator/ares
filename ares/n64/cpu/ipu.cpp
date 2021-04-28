@@ -109,52 +109,129 @@ auto CPU::instructionBREAK() -> void {
   exception.breakpoint();
 }
 
-auto CPU::instructionCACHE(u8 cache, u8 operation) -> void {
-  //todo
-  if(cache == 0) {
-    //instruction
-    if(operation == 0) {
-      //index invalidate
-    }
-    if(operation == 1) {
-      //index load tag
-    }
-    if(operation == 2) {
-      //index store tag
-    }
-    if(operation == 4) {
-      //hit invalidate
-    }
-    if(operation == 5) {
-      //fill
-    }
-    if(operation == 6) {
-      //hit write back
-    }
+auto CPU::instructionCACHE(u8 operation, cr64& rs, s16 imm) -> void {
+  if(operation & 1) return;
+  u32 address = rs.u64 + imm;
+
+  switch(operation) {
+
+  case 0x00: {  //icache index invalidate
+    auto& line = icache.line(address);
+    line.valid = 0;
+    break;
   }
-  if(cache == 1) {
-    //data
-    if(operation == 0) {
-      //index write back invalidate
+
+  case 0x04: {  //icache load tag
+    auto& line = icache.line(address);
+    scc.tagLo.primaryCacheState = line.valid ? 0b10 : 0b00;
+    scc.tagLo.physicalAddress   = line.tag;
+    break;
+  }
+
+  case 0x08: {  //icache store tag
+    auto& line = icache.line(address);
+    line.valid = scc.tagLo.primaryCacheState == 0b10;
+    line.tag   = scc.tagLo.physicalAddress;
+    if(scc.tagLo.primaryCacheState == 0b01) debug(unusual, "[CPU] CACHE CPCS=1");
+    if(scc.tagLo.primaryCacheState == 0b11) debug(unusual, "[CPU] CACHE CPCS=3");
+    break;
+  }
+
+  case 0x10: {  //icache hit invalidate
+    if(auto physicalAddress = devirtualize(address)) {
+      address = physicalAddress();
+      auto& line = icache.line(address);
+      if(line.hit(address)) line.valid = 0;
     }
-    if(operation == 1) {
-      //index load tag
+    break;
+  }
+
+  case 0x14: {  //icache fill
+    if(auto physicalAddress = devirtualize(address)) {
+      address = physicalAddress();
+      auto& line = icache.line(address);
+      line.tag = address & ~0xfff;
+      line.fill();
+      line.valid = 1;
     }
-    if(operation == 2) {
-      //index store tag
+    break;
+  }
+
+  case 0x18: {  //icache hit write back
+    if(auto physicalAddress = devirtualize(address)) {
+      address = physicalAddress();
+      auto& line = icache.line(address);
+      if(line.hit(address)) line.writeBack();
     }
-    if(operation == 3) {
-      //create dirty exclusive
+    break;
+  }
+
+  case 0x01: {  //dcache index write back invalidate
+    auto& line = dcache.line(address);
+    if(line.valid && line.dirty) line.writeBack();
+    line.valid = 0;
+    break;
+  }
+
+  case 0x05: {  //dcache index load tag
+    auto& line = dcache.line(address);
+    scc.tagLo.primaryCacheState = line.valid ? 0b11 : 0b00;
+    scc.tagLo.physicalAddress   = line.tag;
+    break;
+  }
+
+  case 0x09: {  //dcache index store tag
+    auto& line = dcache.line(address);
+    line.valid = scc.tagLo.primaryCacheState == 0b11;
+    line.dirty = scc.tagLo.primaryCacheState == 0b11;
+    line.tag   = scc.tagLo.physicalAddress;
+    if(scc.tagLo.primaryCacheState == 0b01) debug(unusual, "[CPU] CACHE DPCS=1");
+    if(scc.tagLo.primaryCacheState == 0b10) debug(unusual, "[CPU] CACHE DPCS=2");
+    break;
+  }
+
+  case 0x0d: {  //dcache create dirty exclusive
+    if(auto physicalAddress = devirtualize(address)) {
+      address = physicalAddress();
+      auto& line = dcache.line(address);
+      if(!line.hit(address) && line.dirty) line.writeBack();
+      line.tag   = address & ~0xfff;
+      line.valid = 1;
+      line.dirty = 1;
     }
-    if(operation == 4) {
-      //hit invalidate
+    break;
+  }
+
+  case 0x11: {  //dcache hit invalidate
+    if(auto physicalAddress = devirtualize(address)) {
+      address = physicalAddress();
+      auto& line = dcache.line(address);
+      if(line.hit(address)) line.valid = 0;
     }
-    if(operation == 5) {
-      //hit write back invalidate
+    break;
+  }
+
+  case 0x15: {  //dcache hit write back invalidate
+    if(auto physicalAddress = devirtualize(address)) {
+      address = physicalAddress();
+      auto& line = dcache.line(address);
+      if(line.hit(address)) {
+        if(line.dirty) line.writeBack();
+        line.valid = 0;
+      }
     }
-    if(operation == 6) {
-      //hit write back
+    break;
+  }
+
+  case 0x19: {  //dcache hit write back
+    if(auto physicalAddress = devirtualize(address)) {
+      address = physicalAddress();
+      auto& line = dcache.line(address);
+      if(line.hit(address) && line.dirty) line.writeBack();
     }
+    break;
+  }
+
   }
 }
 
@@ -282,22 +359,22 @@ auto CPU::instructionJR(cr64& rs) -> void {
 }
 
 auto CPU::instructionLB(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto data = readByte(rs.u32 + imm)) rt.u64 = s8(*data);
+  if(auto data = read<Byte>(rs.u32 + imm)) rt.u64 = s8(*data);
 }
 
 auto CPU::instructionLBU(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto data = readByte(rs.u32 + imm)) rt.u64 = u8(*data);
+  if(auto data = read<Byte>(rs.u32 + imm)) rt.u64 = u8(*data);
 }
 
 auto CPU::instructionLD(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto data = readDual(rs.u32 + imm)) rt.u64 = *data;
+  if(auto data = read<Dual>(rs.u32 + imm)) rt.u64 = *data;
 }
 
 auto CPU::instructionLDL(r64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = u64(0) - 1 << shift;
-  if(auto data = readDual(address & ~7)) {
+  if(auto data = read<Dual>(address & ~7)) {
     rt.u64 = rt.u64 & ~mask | *data << shift;
   }
 }
@@ -306,21 +383,21 @@ auto CPU::instructionLDR(r64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = u64(0) - 1 >> shift;
-  if(auto data = readDual(address & ~7)) {
+  if(auto data = read<Dual>(address & ~7)) {
     rt.u64 = rt.u64 & ~mask | *data >> shift;
   }
 }
 
 auto CPU::instructionLH(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto data = readHalf(rs.u32 + imm)) rt.u64 = s16(*data);
+  if(auto data = read<Half>(rs.u32 + imm)) rt.u64 = s16(*data);
 }
 
 auto CPU::instructionLHU(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto data = readHalf(rs.u32 + imm)) rt.u64 = u16(*data);
+  if(auto data = read<Half>(rs.u32 + imm)) rt.u64 = u16(*data);
 }
 
 auto CPU::instructionLL(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto data = readWord(rs.u32 + imm)) {
+  if(auto data = read<Word>(rs.u32 + imm)) {
     rt.u64 = s32(*data);
     scc.ll = tlb.physicalAddress >> 4;
     scc.llbit = 1;
@@ -328,7 +405,7 @@ auto CPU::instructionLL(r64& rt, cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::instructionLLD(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto data = readDual(rs.u32 + imm)) {
+  if(auto data = read<Dual>(rs.u32 + imm)) {
     rt.u64 = *data;
     scc.ll = tlb.physicalAddress >> 4;
     scc.llbit = 1;
@@ -340,14 +417,14 @@ auto CPU::instructionLUI(r64& rt, u16 imm) -> void {
 }
 
 auto CPU::instructionLW(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto data = readWord(rs.u32 + imm)) rt.u64 = s32(*data);
+  if(auto data = read<Word>(rs.u32 + imm)) rt.u64 = s32(*data);
 }
 
 auto CPU::instructionLWL(r64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipLE) & 3);
   auto mask = u32(0) - 1 << shift;
-  if(auto data = readWord(address & ~3)) {
+  if(auto data = read<Word>(address & ~3)) {
     rt.u64 = s32(rt.u32 & ~mask | *data << shift);
   }
 }
@@ -356,13 +433,13 @@ auto CPU::instructionLWR(r64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipBE) & 3);
   auto mask = u32(0) - 1 >> shift;
-  if(auto data = readWord(address & ~3)) {
+  if(auto data = read<Word>(address & ~3)) {
     rt.u64 = s32(rt.u32 & ~mask | *data >> shift);
   }
 }
 
 auto CPU::instructionLWU(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto data = readWord(rs.u32 + imm)) rt.u64 = u32(*data);
+  if(auto data = read<Word>(rs.u32 + imm)) rt.u64 = u32(*data);
 }
 
 auto CPU::instructionMFHI(r64& rd) -> void {
@@ -406,13 +483,13 @@ auto CPU::instructionORI(r64& rt, cr64& rs, u16 imm) -> void {
 }
 
 auto CPU::instructionSB(cr64& rt, cr64& rs, s16 imm) -> void {
-  writeByte(rs.u32 + imm, rt.u32);
+  write<Byte>(rs.u32 + imm, rt.u32);
 }
 
 auto CPU::instructionSC(r64& rt, cr64& rs, s16 imm) -> void {
   if(scc.llbit) {
     scc.llbit = 0;
-    rt.u64 = writeWord(rs.u32 + imm, rt.u32);
+    rt.u64 = write<Word>(rs.u32 + imm, rt.u32);
   } else {
     rt.u64 = 0;
   }
@@ -421,22 +498,22 @@ auto CPU::instructionSC(r64& rt, cr64& rs, s16 imm) -> void {
 auto CPU::instructionSCD(r64& rt, cr64& rs, s16 imm) -> void {
   if(scc.llbit) {
     scc.llbit = 0;
-    rt.u64 = writeDual(rs.u32 + imm, rt.u64);
+    rt.u64 = write<Dual>(rs.u32 + imm, rt.u64);
   } else {
     rt.u64 = 0;
   }
 }
 
 auto CPU::instructionSD(cr64& rt, cr64& rs, s16 imm) -> void {
-  writeDual(rs.u32 + imm, rt.u64);
+  write<Dual>(rs.u32 + imm, rt.u64);
 }
 
 auto CPU::instructionSDL(cr64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipLE) & 7);
   auto mask = u64(0) - 1 >> shift;
-  if(auto data = readDual(address & ~7)) {
-    writeDual(address & ~7, *data & ~mask | rt.u64 >> shift);
+  if(auto data = read<Dual>(address & ~7)) {
+    write<Dual>(address & ~7, *data & ~mask | rt.u64 >> shift);
   }
 }
 
@@ -444,13 +521,13 @@ auto CPU::instructionSDR(cr64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipBE) & 7);
   auto mask = u64(0) - 1 << shift;
-  if(auto data = readDual(address & ~7)) {
-    writeDual(address & ~7, *data & ~mask | rt.u64 << shift);
+  if(auto data = read<Dual>(address & ~7)) {
+    write<Dual>(address & ~7, *data & ~mask | rt.u64 << shift);
   }
 }
 
 auto CPU::instructionSH(cr64& rt, cr64& rs, s16 imm) -> void {
-  writeHalf(rs.u32 + imm, rt.u32);
+  write<Half>(rs.u32 + imm, rt.u32);
 }
 
 auto CPU::instructionSLL(r64& rd, cr64& rt, u8 sa) -> void {
@@ -503,15 +580,15 @@ auto CPU::instructionSUBU(r64& rd, cr64& rs, cr64& rt) -> void {
 }
 
 auto CPU::instructionSW(cr64& rt, cr64& rs, s16 imm) -> void {
-  writeWord(rs.u32 + imm, rt.u32);
+  write<Word>(rs.u32 + imm, rt.u32);
 }
 
 auto CPU::instructionSWL(cr64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipLE) & 3);
   auto mask = u32(0) - 1 >> shift;
-  if(auto data = readWord(address & ~3)) {
-    writeWord(address & ~3, *data & ~mask | rt.u32 >> shift);
+  if(auto data = read<Word>(address & ~3)) {
+    write<Word>(address & ~3, *data & ~mask | rt.u32 >> shift);
   }
 }
 
@@ -519,8 +596,8 @@ auto CPU::instructionSWR(cr64& rt, cr64& rs, s16 imm) -> void {
   auto address = rs.u32 + imm;
   auto shift = 8 * ((address ^ FlipBE) & 3);
   auto mask = u32(0) - 1 << shift;
-  if(auto data = readWord(address & ~3)) {
-    writeWord(address & ~3, *data & ~mask | rt.u32 << shift);
+  if(auto data = read<Word>(address & ~3)) {
+    write<Word>(address & ~3, *data & ~mask | rt.u32 << shift);
   }
 }
 

@@ -10,6 +10,21 @@ auto CPU::serialize(serializer& s) -> void {
   s(context.mode);
   s(context.segment);
 
+  for(auto& line : icache.lines) {
+    s(line.index);
+    s(line.words);
+    s(line.tag);
+    s(line.valid);
+  }
+
+  for(auto& line : dcache.lines) {
+    s(line.index);
+    s(line.words);
+    s(line.tag);
+    s(line.valid);
+    s(line.dirty);
+  }
+
   for(auto& e : tlb.entry) {
     s(e.global);
     s(e.valid);
@@ -126,7 +141,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(fpu.csr.compare);
   s(fpu.csr.flushed);
 
-  if constexpr(Accuracy::CPU::Interpreter == 0) {
+  if constexpr(Accuracy::CPU::Recompiler) {
     recompiler.reset();
   }
 }

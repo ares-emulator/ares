@@ -4,6 +4,8 @@ namespace ares::Nintendo64 {
 
 CPU cpu;
 #include "context.cpp"
+#include "icache.cpp"
+#include "dcache.cpp"
 #include "tlb.cpp"
 #include "memory.cpp"
 #include "exceptions.cpp"
@@ -38,7 +40,7 @@ auto CPU::step(u32 clocks) -> void {
 auto CPU::synchronize() -> void {
    vi.clock -= Thread::clock;
    ai.clock -= Thread::clock;
-  rsp.clock -= Thread::clock;
+  rsp.clock -= Thread::clock * 3;
   rdp.clock -= Thread::clock;
   while( vi.clock < 0)  vi.main();
   while( ai.clock < 0)  ai.main();
@@ -59,31 +61,32 @@ auto CPU::instruction() -> void {
       if(debugger.tracer.interrupt->enabled()) {
         debugger.interrupt(hex(scc.cause.interruptPending, 2L));
       }
-      step(2);
+      step(1);
       return exception.interrupt();
     }
   }
 
-  //devirtualize the program counter
-  auto address = readAddress(ipu.pc)(0);
-
-  if constexpr(Accuracy::CPU::Interpreter == 0) {
+  if constexpr(Accuracy::CPU::Recompiler) {
+    auto address = devirtualize(ipu.pc)(0);
     auto block = recompiler.block(address);
     block->execute();
   }
 
-  if constexpr(Accuracy::CPU::Interpreter == 1) {
+  if constexpr(Accuracy::CPU::Interpreter) {
     pipeline.address = ipu.pc;
-    pipeline.instruction = bus.readWord(address);
+    pipeline.instruction = fetch(ipu.pc);
     debugger.instruction();
   //instructionDebug();
     decoderEXECUTE();
     instructionEpilogue();
-    step(2);
   }
 }
 
 auto CPU::instructionEpilogue() -> bool {
+  if constexpr(Accuracy::CPU::Recompiler) {
+    icache.step(ipu.pc);  //simulates timings without performing actual icache loads
+  }
+
   ipu.r[0].u64 = 0;
 
   if(--scc.random.index < scc.wired.index) {
@@ -103,7 +106,7 @@ auto CPU::instructionEpilogue() -> bool {
 
 auto CPU::instructionDebug() -> void {
   pipeline.address = ipu.pc;
-  pipeline.instruction = readWord(pipeline.address)(0);
+  pipeline.instruction = read<Word>(pipeline.address)(0);
 
   static vector<bool> mask;
   if(!mask) mask.resize(0x0800'0000);
@@ -126,6 +129,8 @@ auto CPU::power(bool reset) -> void {
   branch = {};
   context.mode = Context::Mode::Kernel;
   for(auto& segment : context.segment) segment = Context::Segment::Invalid;
+  icache.power(reset);
+  dcache.power(reset);
   for(auto& entry : tlb.entry) entry = {};
   tlb.physicalAddress = 0;
   for(auto& r : ipu.r) r.u64 = 0;
@@ -139,7 +144,7 @@ auto CPU::power(bool reset) -> void {
   fesetround(FE_TONEAREST);
   context.setMode();
 
-  if constexpr(Accuracy::CPU::Interpreter == 0) {
+  if constexpr(Accuracy::CPU::Recompiler) {
     recompiler.allocator.resize(512_MiB, bump_allocator::executable | bump_allocator::zero_fill);
     recompiler.reset();
   }

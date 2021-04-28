@@ -23,7 +23,7 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
 
   bool hasBranched = 0;
   while(true) {
-    u32 instruction = bus.readWord(address);
+    u32 instruction = bus.read<Word>(address);
     bool branched = emitEXECUTE(instruction);
     mov(rax, mem64{&self.clock});
     if(unlikely(instruction == 0x1000'ffff)) {

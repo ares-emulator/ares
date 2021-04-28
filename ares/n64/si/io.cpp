@@ -58,8 +58,8 @@ auto SI::writeWord(u32 address, u32 data_) -> void {
     main();
     io.readAddress = data.bit(0,31) & ~1;
     for(u32 offset = 0; offset < 64; offset += 2) {
-      u16 data = bus.readHalf(io.readAddress + offset);
-      bus.writeHalf(io.dramAddress + offset, data);
+      u16 data = bus.read<Half>(io.readAddress + offset);
+      bus.write<Half>(io.dramAddress + offset, data);
     }
     io.interrupt = 1;
     mi.raise(MI::IRQ::SI);
@@ -77,8 +77,8 @@ auto SI::writeWord(u32 address, u32 data_) -> void {
     //SI_PIF_ADDRESS_WRITE64B
     io.writeAddress = data.bit(0,31) & ~1;
     for(u32 offset = 0; offset < 64; offset += 2) {
-      u16 data = bus.readHalf(io.dramAddress + offset);
-      bus.writeHalf(io.writeAddress + offset, data);
+      u16 data = bus.read<Half>(io.dramAddress + offset);
+      bus.write<Half>(io.writeAddress + offset, data);
     }
     io.interrupt = 1;
     mi.raise(MI::IRQ::SI);

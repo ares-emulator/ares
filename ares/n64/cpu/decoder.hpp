@@ -61,7 +61,7 @@
   op(0x2c, SDL, RT, RS, IMMi16);
   op(0x2d, SDR, RT, RS, IMMi16);
   op(0x2e, SWR, RT, RS, IMMi16);
-  op(0x2f, CACHE, OP >> 16 & 3, OP >> 18 & 3);
+  op(0x2f, CACHE, OP >> 16 & 31, RS, IMMi16);
   op(0x30, LL, RT, RS, IMMi16);
   op(0x31, LWC1, FT, RS, IMMi16);
   op(0x32, COP2);  //LWC2

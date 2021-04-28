@@ -113,11 +113,17 @@ auto CPU::getControlRegister(n5 index) -> u64 {
   case 26:  //parity error
     data.bit(0,7) = scc.parityError.diagnostic;
     break;
+  case 27:  //cache error (unused)
+    data.bit(0,31) = 0;
+    break;
   case 28:  //taglo
     data.bit(6, 7) = scc.tagLo.primaryCacheState;
     data.bit(8,27) = scc.tagLo.physicalAddress.bit(12,31);
     break;
-  case 31:  //error exception program counter
+  case 29:  //taghi
+    data.bit(0,31) = 0;
+    break;
+  case 30:  //error exception program counter
     data = scc.epcError;
     break;
   }
@@ -246,11 +252,15 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
   case 26:  //parity error
     scc.parityError.diagnostic = data.bit(0,7);
     break;
+  case 27:  //cache error (unused)
+    break;
   case 28:  //taglo
     scc.tagLo.primaryCacheState          = data.bit(6, 7);
     scc.tagLo.physicalAddress.bit(12,31) = data.bit(8,27);
     break;
-  case 31:  //error exception program counter
+  case 29:  //taghi
+    break;
+  case 30:  //error exception program counter
     scc.epcError = data;
     break;
   }
@@ -309,9 +319,11 @@ auto CPU::instructionTLBR() -> void {
 auto CPU::instructionTLBWI() -> void {
   if(scc.index.tlbEntry >= TLB::Entries) return;
   tlb.entry[scc.index.tlbEntry] = scc.tlb;
+  debugger.tlbWrite(scc.index.tlbEntry);
 }
 
 auto CPU::instructionTLBWR() -> void {
   if(scc.random.index >= TLB::Entries) return;
   tlb.entry[scc.random.index] = scc.tlb;
+  debugger.tlbWrite(scc.random.index);
 }

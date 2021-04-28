@@ -286,12 +286,12 @@ auto CPU::instructionFTRUNC_W_D(u8 fd, u8 fs) -> void { FD(s32) = FS(f64) < 0 ? 
 
 auto CPU::instructionLDC1(u8 ft, cr64& rs, s16 imm) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  if(auto data = readDual(rs.u32 + imm)) FT(u64) = *data;
+  if(auto data = read<Dual>(rs.u32 + imm)) FT(u64) = *data;
 }
 
 auto CPU::instructionLWC1(u8 ft, cr64& rs, s16 imm) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  if(auto data = readWord(rs.u32 + imm)) FT(u32) = *data;
+  if(auto data = read<Word>(rs.u32 + imm)) FT(u32) = *data;
 }
 
 auto CPU::instructionMFC1(r64& rt, u8 fs) -> void {
@@ -304,12 +304,12 @@ auto CPU::instructionMTC1(cr64& rt, u8 fs) -> void {
 
 auto CPU::instructionSDC1(u8 ft, cr64& rs, s16 imm) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  writeDual(rs.u32 + imm, FT(u64));
+  write<Dual>(rs.u32 + imm, FT(u64));
 }
 
 auto CPU::instructionSWC1(u8 ft, cr64& rs, s16 imm) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  writeWord(rs.u32 + imm, FT(u32));
+  write<Word>(rs.u32 + imm, FT(u32));
 }
 
 #undef CF

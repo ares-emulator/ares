@@ -96,6 +96,7 @@ struct CPU : Thread {
     auto enable(bool) -> void;
     auto power(bool reset) -> void;
 
+    //4KB
     struct Line {
       u32 words[4];
       u32 tag;

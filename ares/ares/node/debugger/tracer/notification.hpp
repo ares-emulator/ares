@@ -4,7 +4,7 @@ struct Notification : Tracer {
   Notification(string name = {}, string component = {}) : Tracer(name, component) {
   }
 
-  auto notify(string_view message = {}) -> void {
+  auto notify(const string& message = {}) -> void {
     if(!enabled()) return;
 
     if(message) {

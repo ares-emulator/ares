@@ -33,23 +33,23 @@ auto RSP::main() -> void {
 }
 
 auto RSP::step(u32 clocks) -> void {
-  clock += clocks;
+  clock += clocks * 2;
 }
 
 auto RSP::instruction() -> void {
-  if constexpr(Accuracy::RSP::Interpreter == 0) {
+  if constexpr(Accuracy::RSP::Recompiler) {
     auto block = recompiler.block(ipu.pc);
     block->execute();
   }
 
-  if constexpr(Accuracy::RSP::Interpreter == 1) {
+  if constexpr(Accuracy::RSP::Interpreter) {
     pipeline.address = ipu.pc;
     pipeline.instruction = imem.readWord(pipeline.address);
     debugger.instruction();
   //instructionDebug();
     decoderEXECUTE();
     instructionEpilogue();
-    step(3);
+    step(1);
   }
 }
 
@@ -124,7 +124,7 @@ auto RSP::power(bool reset) -> void {
     inverseSquareRoots[index] = u16(b >> 1);
   }
 
-  if constexpr(Accuracy::RSP::Interpreter == 0) {
+  if constexpr(Accuracy::RSP::Recompiler) {
     recompiler.allocator.resize(512_MiB, bump_allocator::executable | bump_allocator::zero_fill);
     recompiler.reset();
   }

@@ -39,25 +39,23 @@ auto CPU::Disassembler::EXECUTE() -> vector<string> {
   };
 
   auto CACHE = [&](string_view name) -> vector<string> {
-    auto cache  = instruction >> 16 & 3;
-    auto op     = instruction >> 18 & 7;
+    auto operation = instruction >> 16 & 31;
     string type = "reserved";
-    if(cache == 0) switch(op) {
-    case 0: type = "code(IndexInvalidate)"; break;
-    case 1: type = "code(IndexLoadTag)"; break;
-    case 2: type = "code(IndexStoreTag)"; break;
-    case 4: type = "code(HitInvalidate)"; break;
-    case 5: type = "code(Fill)"; break;
-    case 6: type = "code(HitWriteBack)"; break;
-    }
-    if(cache == 1) switch(op) {
-    case 0: type = "data(IndexWriteBackInvalidate)"; break;
-    case 1: type = "data(IndexLoadTag)"; break;
-    case 2: type = "data(IndexStoreTag)"; break;
-    case 3: type = "data(CreateDirtyExclusive)"; break;
-    case 4: type = "data(HitInvalidate)"; break;
-    case 5: type = "data(HitWriteBackInvalidate)"; break;
-    case 6: type = "data(HitWriteBack)"; break;
+    switch(operation) {
+    case 0x00: type = "code(IndexInvalidate)"; break;
+    case 0x04: type = "code(IndexLoadTag)"; break;
+    case 0x08: type = "code(IndexStoreTag)"; break;
+    case 0x10: type = "code(HitInvalidate)"; break;
+    case 0x14: type = "code(Fill)"; break;
+    case 0x18: type = "code(HitWriteBack)"; break;
+    case 0x01: type = "data(IndexWriteBackInvalidate)"; break;
+    case 0x05: type = "data(IndexLoadTag)"; break;
+    case 0x09: type = "data(IndexStoreTag)"; break;
+    case 0x0d: type = "data(CreateDirtyExclusive)"; break;
+    case 0x11: type = "data(HitInvalidate)"; break;
+    case 0x15: type = "data(HitWriteBackInvalidate)"; break;
+    case 0x19: type = "data(HitWriteBack)"; break;
+    default:   type ={"reserved(0x", hex(operation, 2L), ")"}; break;
     }
     return {name, type, offset()};
   };

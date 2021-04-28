@@ -115,7 +115,7 @@ auto VI::refresh() -> void {
       u32 address = vi.io.dramAddress + y * pitch * 2;
       auto line = screen->pixels(1).data() + y * 640;
       for(u32 x : range(min(width, pitch))) {
-        u16 data = bus.readHalf(address + x * 2);
+        u16 data = bus.read<Half>(address + x * 2);
         *line++ = 1 << 24 | data >> 1;
       }
     }
@@ -127,7 +127,7 @@ auto VI::refresh() -> void {
       u32 address = vi.io.dramAddress + y * pitch * 4;
       auto line = screen->pixels(1).data() + y * 640;
       for(u32 x : range(min(width, pitch))) {
-        u32 data = bus.readWord(address + x * 4);
+        u32 data = bus.read<Word>(address + x * 4);
         *line++ = data >> 8;
       }
     }

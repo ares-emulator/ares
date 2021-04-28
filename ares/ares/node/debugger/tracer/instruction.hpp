@@ -63,7 +63,7 @@ struct Instruction : Tracer {
     }
   }
 
-  auto notify(string_view instruction, string_view context, string_view extra = {}) -> void {
+  auto notify(const string& instruction, const string& context, const string& extra = {}) -> void {
     if(!enabled()) return;
 
     if(_omitted) {

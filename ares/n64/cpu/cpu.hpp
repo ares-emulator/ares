@@ -10,11 +10,20 @@ struct CPU : Thread {
     auto instruction() -> void;
     auto exception(string_view) -> void;
     auto interrupt(string_view) -> void;
+    auto tlbWrite(u32 index) -> void;
+    auto tlbModification(u64 address) -> void;
+    auto tlbLoad(u64 address, u64 physical) -> void;
+    auto tlbLoadInvalid(u64 address) -> void;
+    auto tlbLoadMiss(u64 address) -> void;
+    auto tlbStore(u64 address, u64 physical) -> void;
+    auto tlbStoreInvalid(u64 address) -> void;
+    auto tlbStoreMiss(u64 address) -> void;
 
     struct Tracer {
       Node::Debugger::Tracer::Instruction instruction;
       Node::Debugger::Tracer::Notification exception;
       Node::Debugger::Tracer::Notification interrupt;
+      Node::Debugger::Tracer::Notification tlb;
     } tracer;
   } debugger;
 
@@ -79,17 +88,72 @@ struct CPU : Thread {
     auto setMode() -> void;
   } context{*this};
 
+  //icache.cpp
+  struct InstructionCache {
+    struct Line;
+    auto line(u32 address) -> Line&;
+    auto step(u32 address) -> void;
+    auto fetch(u32 address) -> u32;
+    auto read(u32 address) -> u32;
+    auto power(bool reset) -> void;
+
+    //16KB
+    struct Line {
+      auto hit(u32 address) const -> bool;
+      auto fill() -> void;
+      auto writeBack() -> void;
+      auto read(u32 address) const -> u32;
+
+      u32  index;
+      u32  words[8];
+      u32  tag;
+      bool valid;
+    } lines[512];
+  } icache;
+
+  //dcache.cpp
+  struct DataCache {
+    struct Line;
+    auto line(u32 address) -> Line&;
+    template<u32 Size> auto read(u32 address) -> u64;
+    template<u32 Size> auto write(u32 address, u64 data) -> void;
+    auto power(bool reset) -> void;
+
+    //8KB
+    struct Line {
+      auto hit(u32 address) const -> bool;
+      template<u32 Size> auto fill(u32 address, u64 data) -> void;
+      auto fill(u32 address) -> void;
+      auto writeBack() -> void;
+      template<u32 Size> auto read(u32 address) const -> u64;
+      template<u32 Size> auto write(u32 address, u64 data) -> void;
+
+      u32  index;
+      u32  words[4];
+      u32  tag;
+      bool valid;
+      bool dirty;
+    } lines[512];
+  } dcache;
+
   //tlb.cpp: Translation Lookaside Buffer
   struct TLB {
     CPU& self;
     TLB(CPU& self) : self(self) {}
     static constexpr u32 Entries = 32;
 
+    struct Match {
+      explicit operator bool() const { return found; }
+
+      bool found;
+      bool cache;
+      u32  address;
+    };
+
     //tlb.cpp
-    auto load(u32 address) -> maybe<u32>;
-    auto store(u32 address) -> maybe<u32>;
+    auto load(u32 address) -> Match;
+    auto store(u32 address) -> Match;
     auto exception(u32 address) -> void;
-    auto information() -> void;
 
     struct Entry {
       //scc-tlb.cpp
@@ -118,18 +182,10 @@ struct CPU : Thread {
   } tlb{*this};
 
   //memory.cpp
-  auto readAddress (u32 address) -> maybe<u32>;
-  auto writeAddress(u32 address) -> maybe<u32>;
-
-  auto readByte(u32 address) -> maybe<u32>;
-  auto readHalf(u32 address) -> maybe<u32>;
-  auto readWord(u32 address) -> maybe<u32>;
-  auto readDual(u32 address) -> maybe<u64>;
-
-  auto writeByte(u32 address, u8  data) -> bool;
-  auto writeHalf(u32 address, u16 data) -> bool;
-  auto writeWord(u32 address, u32 data) -> bool;
-  auto writeDual(u32 address, u64 data) -> bool;
+  auto devirtualize(u32 address) -> maybe<u32>;
+  auto fetch(u32 address) -> u32;
+  template<u32 Size> auto read(u32 address) -> maybe<u64>;
+  template<u32 Size> auto write(u32 address, u64 data) -> bool;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -232,7 +288,7 @@ struct CPU : Thread {
   auto instructionBAL(bool take, s16 imm) -> void;
   auto instructionBALL(bool take, s16 imm) -> void;
   auto instructionBREAK() -> void;
-  auto instructionCACHE(u8 cache, u8 operation) -> void;
+  auto instructionCACHE(u8 operation, cr64& rs, s16 imm) -> void;
   auto instructionDADD(r64& rd, cr64& rs, cr64& rt) -> void;
   auto instructionDADDI(r64& rt, cr64& rs, s16 imm) -> void;
   auto instructionDADDIU(r64& rt, cr64& rs, s16 imm) -> void;
@@ -446,7 +502,7 @@ struct CPU : Thread {
       n32 physicalAddress;
     } tagLo;
 
-    //31: Error Exception Program Counter
+    //30: Error Exception Program Counter
     n64 epcError;
   } scc;
 

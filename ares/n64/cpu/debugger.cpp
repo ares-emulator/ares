@@ -4,16 +4,18 @@ auto CPU::Debugger::load(Node::Object parent) -> void {
 
   tracer.exception = parent->append<Node::Debugger::Tracer::Notification>("Exception", "CPU");
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "CPU");
+  tracer.tlb = parent->append<Node::Debugger::Tracer::Notification>("TLB", "CPU");
 }
 
 auto CPU::Debugger::unload() -> void {
   tracer.instruction.reset();
   tracer.exception.reset();
   tracer.interrupt.reset();
+  tracer.tlb.reset();
 }
 
 auto CPU::Debugger::instruction() -> void {
-  if(tracer.instruction->enabled()) {
+  if(unlikely(tracer.instruction->enabled())) {
     u32 address = cpu.pipeline.address;
     u32 instruction = cpu.pipeline.instruction;
     if(tracer.instruction->address(address)) {
@@ -25,13 +27,68 @@ auto CPU::Debugger::instruction() -> void {
 }
 
 auto CPU::Debugger::exception(string_view type) -> void {
-  if(tracer.exception->enabled()) {
+  if(unlikely(tracer.exception->enabled())) {
     tracer.exception->notify(type);
   }
 }
 
 auto CPU::Debugger::interrupt(string_view type) -> void {
-  if(tracer.interrupt->enabled()) {
+  if(unlikely(tracer.interrupt->enabled())) {
     tracer.interrupt->notify(type);
+  }
+}
+
+auto CPU::Debugger::tlbWrite(u32 index) -> void {
+  if(unlikely(tracer.tlb->enabled())) {
+    auto entry = cpu.tlb.entry[index & 31];
+    tracer.tlb->notify({"write: ", index, " {"});
+    tracer.tlb->notify({"  global:           ", entry.global[0], ",", entry.global[1]});
+    tracer.tlb->notify({"  physical address: 0x", hex(entry.physicalAddress[0]), ",0x", hex(entry.physicalAddress[1])});
+    tracer.tlb->notify({"  page mask:        0x", hex(entry.pageMask)});
+    tracer.tlb->notify({"  virtual address:  0x", hex(entry.virtualAddress)});
+    tracer.tlb->notify({"  address space ID: 0x", hex(entry.addressSpaceID)});
+    tracer.tlb->notify({"}"});
+  }
+}
+
+auto CPU::Debugger::tlbModification(u64 address) -> void {
+  if(unlikely(tracer.tlb->enabled())) {
+    tracer.tlb->notify({"modification: 0x", hex(address)});
+  }
+}
+
+auto CPU::Debugger::tlbLoad(u64 address, u64 physical) -> void {
+  if(unlikely(tracer.tlb->enabled())) {
+    tracer.tlb->notify({"load: 0x", hex(address), " => 0x", hex(physical)});
+  }
+}
+
+auto CPU::Debugger::tlbLoadInvalid(u64 address) -> void {
+  if(unlikely(tracer.tlb->enabled())) {
+    tracer.tlb->notify({"load invalid: 0x", hex(address)});
+  }
+}
+
+auto CPU::Debugger::tlbLoadMiss(u64 address) -> void {
+  if(unlikely(tracer.tlb->enabled())) {
+    tracer.tlb->notify({"load miss: 0x", hex(address)});
+  }
+}
+
+auto CPU::Debugger::tlbStore(u64 address, u64 physical) -> void {
+  if(unlikely(tracer.tlb->enabled())) {
+    tracer.tlb->notify({"store: 0x", hex(address), " => 0x", hex(physical)});
+  }
+}
+
+auto CPU::Debugger::tlbStoreInvalid(u64 address) -> void {
+  if(unlikely(tracer.tlb->enabled())) {
+    tracer.tlb->notify({"store invalid: 0x", hex(address)});
+  }
+}
+
+auto CPU::Debugger::tlbStoreMiss(u64 address) -> void {
+  if(unlikely(tracer.tlb->enabled())) {
+    tracer.tlb->notify({"store miss: 0x", hex(address)});
   }
 }

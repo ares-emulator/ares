@@ -29,6 +29,7 @@ inline string_view::string_view(const char* data) {
   _size = -1;  //defer length calculation, as it is often unnecessary
 }
 
+//todo: this collides with eg: {"value: ", (u32)0}
 inline string_view::string_view(const char* data, u32 size) {
   _string = nullptr;
   _data = data;

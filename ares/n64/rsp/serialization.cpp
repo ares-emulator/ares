@@ -45,7 +45,7 @@ auto RSP::serialize(serializer& s) -> void {
   s(vpu.divout);
   s(vpu.divdp);
 
-  if constexpr(Accuracy::RSP::Interpreter == 0) {
+  if constexpr(Accuracy::RSP::Recompiler) {
     recompiler.reset();
   }
 }
