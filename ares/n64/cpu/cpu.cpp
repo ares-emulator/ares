@@ -58,9 +58,7 @@ auto CPU::synchronize() -> void {
 auto CPU::instruction() -> void {
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
-      if(debugger.tracer.interrupt->enabled()) {
-        debugger.interrupt(hex(scc.cause.interruptPending, 2L));
-      }
+      debugger.interrupt(scc.cause.interruptPending);
       step(1);
       return exception.interrupt();
     }
@@ -76,7 +74,6 @@ auto CPU::instruction() -> void {
     pipeline.address = ipu.pc;
     pipeline.instruction = fetch(ipu.pc);
     debugger.instruction();
-  //instructionDebug();
     decoderEXECUTE();
     instructionEpilogue();
   }
@@ -102,24 +99,6 @@ auto CPU::instructionEpilogue() -> bool {
   }
 
   unreachable;
-}
-
-auto CPU::instructionDebug() -> void {
-  pipeline.address = ipu.pc;
-  pipeline.instruction = read<Word>(pipeline.address)(0);
-
-  static vector<bool> mask;
-  if(!mask) mask.resize(0x0800'0000);
-  if(mask[(ipu.pc & 0x1fff'ffff) >> 2]) return;
-  mask[(ipu.pc & 0x1fff'ffff) >> 2] = 1;
-
-  static u32 counter = 0;
-//if(++counter > 100) return;
-  print(
-    disassembler.hint(hex(pipeline.address, 8L)), "  ",
-  //disassembler.hint(hex(pipeline.instruction, 8L)), "  ",
-    disassembler.disassemble(pipeline.address, pipeline.instruction), "\n"
-  );
 }
 
 auto CPU::power(bool reset) -> void {

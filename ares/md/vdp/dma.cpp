@@ -9,12 +9,14 @@ auto VDP::DMA::synchronize() -> void {
   }
 }
 
-auto VDP::DMA::run() -> void {
+auto VDP::DMA::run() -> bool {
   if(vdp.command.pending && !wait) {
-    if(mode <= 1) return load();
-    if(mode == 2) return fill();
-    if(mode == 3) return copy();
+    if(vdp.fifo.full()) return false;
+    if(mode <= 1) return load(), true;
+    if(mode == 2) return fill(), true;
+    if(mode == 3) return copy(), true;
   }
+  return false;
 }
 
 auto VDP::DMA::load() -> void {
@@ -62,9 +64,6 @@ auto VDP::DMA::copy() -> void {
     vdp.command.pending = 0;
     synchronize();
   }
-}
-
-auto VDP::DMA::step() -> void {
 }
 
 auto VDP::DMA::power(bool reset) -> void {

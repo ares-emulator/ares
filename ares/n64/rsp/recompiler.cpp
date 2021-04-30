@@ -44,7 +44,7 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
     u32 instruction = self.imem.readWord(address);
     bool branched = emitEXECUTE(instruction);
     mov(rax, mem64{&self.clock});
-    add(rax, imm8{3});
+    add(rax, imm8{2});
     mov(mem64{&self.clock}, rax);
     call(&RSP::instructionEpilogue, &self);
     test(rax, rax);

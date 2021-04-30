@@ -25,7 +25,7 @@ auto DD::Debugger::io(bool mode, u32 address, u32 data) -> void {
     "ASIC_TEST_PIN_SEL",
   };
 
-  if(tracer.io->enabled()) {
+  if(unlikely(tracer.io->enabled())) {
     string message;
     string name = registerNames(address, "ASIC_UNKNOWN");
     if(mode == Read) {

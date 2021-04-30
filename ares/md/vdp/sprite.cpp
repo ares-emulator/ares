@@ -35,7 +35,7 @@ auto VDP::Sprite::end() -> void {
 //called 16 (H32) or 20 (H40) times
 auto VDP::Sprite::mappingFetch(u32) -> void {
   if(!vdp.displayEnable()) {
-    return vdp.fifo.slot();
+    return vdp.slot();
   }
 
   if(test.disablePhase2) return;
@@ -70,6 +70,7 @@ auto VDP::Sprite::mappingFetch(u32) -> void {
 
   y = y - object.y;
   if(d2.bit(12)) y = (height - 1) - y;
+  y &= 31;  //only the lower 5-bits are considered by the VDP in phase 2
   mapping.address += (y >> 3 + interlace) << 4 + interlace;
   mapping.address += (y & 7 + interlace * 8) << 1;
 }
@@ -77,7 +78,7 @@ auto VDP::Sprite::mappingFetch(u32) -> void {
 //called 32 (H32) or 40 (H40) times
 auto VDP::Sprite::patternFetch(u32) -> void {
   if(!vdp.displayEnable()) {
-    return vdp.fifo.slot();
+    return vdp.slot();
   }
 
   if(test.disablePhase3) patternStop = 1;

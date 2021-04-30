@@ -8,21 +8,22 @@ auto CPU::serialize(serializer& s) -> void {
   s(branch.state);
 
   s(context.mode);
+  s(context.bits);
   s(context.segment);
 
   for(auto& line : icache.lines) {
+    s(line.valid);
+    s(line.tag);
     s(line.index);
     s(line.words);
-    s(line.tag);
-    s(line.valid);
   }
 
   for(auto& line : dcache.lines) {
-    s(line.index);
-    s(line.words);
-    s(line.tag);
     s(line.valid);
     s(line.dirty);
+    s(line.tag);
+    s(line.index);
+    s(line.words);
   }
 
   for(auto& e : tlb.entry) {

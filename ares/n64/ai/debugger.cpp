@@ -12,7 +12,7 @@ auto AI::Debugger::io(bool mode, u32 address, u32 data) -> void {
     "AI_BITRATE",
   };
 
-  if(tracer.io->enabled()) {
+  if(unlikely(tracer.io->enabled())) {
     string message;
     string name = registerNames(address, "AI_UNKNOWN");
     if(mode == Read) {

@@ -3,6 +3,7 @@ auto VDP::serialize(serializer& s) -> void {
 
   s(psg);
   s(irq);
+  s(prefetch);
   s(fifo);
   s(dma);
   s(layers);
@@ -51,6 +52,7 @@ auto VDP::serialize(serializer& s) -> void {
   s(state.field);
   s(state.hblank);
   s(state.vblank);
+  s(state.refreshing);
 }
 
 auto VDP::PSG::serialize(serializer& s) -> void {
@@ -70,12 +72,7 @@ auto VDP::IRQ::serialize(serializer& s) -> void {
   s(hblank.frequency);
   s(vblank.enable);
   s(vblank.pending);
-}
-
-auto VDP::Cache::serialize(serializer& s) -> void {
-  s(data);
-  s(upper);
-  s(lower);
+  s(vblank.transitioned);
 }
 
 auto VDP::Slot::serialize(serializer& s) -> void {
@@ -86,9 +83,11 @@ auto VDP::Slot::serialize(serializer& s) -> void {
   s(lower);
 }
 
+auto VDP::Prefetch::serialize(serializer& s) -> void {
+  s(slot);
+}
+
 auto VDP::FIFO::serialize(serializer& s) -> void {
-  s(refreshing);
-  s(cache);
   s(slots);
 }
 
@@ -119,8 +118,8 @@ auto VDP::Layers::serialize(serializer& s) -> void {
 
 auto VDP::Attributes::serialize(serializer& s) -> void {
   s(address);
-  s(width);
-  s(height);
+  s(hmask);
+  s(vmask);
   s(hscroll);
   s(vscroll);
 }

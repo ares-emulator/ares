@@ -20,7 +20,7 @@ auto VI::Debugger::io(bool mode, u32 address, u32 data) -> void {
     "VI_Y_SCALE",
   };
 
-  if(tracer.io->enabled()) {
+  if(unlikely(tracer.io->enabled())) {
     string message;
     string name = registerNames(address, "VI_UNKNOWN");
     if(mode == Read) {

@@ -8,8 +8,8 @@ struct CPU : Thread {
     auto load(Node::Object) -> void;
     auto unload() -> void;
     auto instruction() -> void;
-    auto exception(string_view) -> void;
-    auto interrupt(string_view) -> void;
+    auto exception(u8 code) -> void;
+    auto interrupt(u8 mask) -> void;
     auto tlbWrite(u32 index) -> void;
     auto tlbModification(u64 address) -> void;
     auto tlbLoad(u64 address, u64 physical) -> void;
@@ -37,7 +37,6 @@ struct CPU : Thread {
 
   auto instruction() -> void;
   auto instructionEpilogue() -> bool;
-  auto instructionDebug() -> void;
 
   auto power(bool reset) -> void;
 
@@ -83,6 +82,7 @@ struct CPU : Thread {
     enum Mode : u32 { Kernel, Supervisor, User };
     enum Segment : u32 { Invalid, Mapped, Cached, Uncached };
     u32 mode;
+    u32 bits;
     u32 segment[8];  //512_MiB chunks
 
     auto setMode() -> void;
@@ -100,14 +100,14 @@ struct CPU : Thread {
     //16KB
     struct Line {
       auto hit(u32 address) const -> bool;
-      auto fill() -> void;
+      auto fill(u32 address) -> void;
       auto writeBack() -> void;
       auto read(u32 address) const -> u32;
 
-      u32  index;
-      u32  words[8];
-      u32  tag;
       bool valid;
+      u32  tag;
+      u16  index;
+      u32  words[8];
     } lines[512];
   } icache;
 
@@ -128,11 +128,15 @@ struct CPU : Thread {
       template<u32 Size> auto read(u32 address) const -> u64;
       template<u32 Size> auto write(u32 address, u64 data) -> void;
 
-      u32  index;
-      u32  words[4];
-      u32  tag;
       bool valid;
       bool dirty;
+      u32  tag;
+      u16  index;
+      union {
+        u8  bytes[16];
+        u16 halfs[8];
+        u32 words[4];
+      };
     } lines[512];
   } dcache;
 
@@ -193,7 +197,10 @@ struct CPU : Thread {
   //exception.cpp
   struct Exception {
     CPU& self;
+    Exception(CPU& self) : self(self) {}
+
     auto trigger(u32 code, u32 coprocessor = 0, bool tlbMiss = 0) -> void;
+
     auto interrupt() -> void;
     auto tlbModification() -> void;
     auto tlbLoadInvalid() -> void;

@@ -126,11 +126,14 @@ auto VDP::readDataPort() -> n16 {
   command.latch = 0;
   command.ready = 0;
 
-  fifo.read(command.target, command.address);
-  while(!fifo.cache.full()) cpu.wait(1);
+  while(!prefetch.full()) {
+    if(cpu.active()) cpu.wait(1);
+    if(apu.active()) apu.step(1);
+  }
   command.address += command.increment;
   command.ready = 0;
-  return fifo.cache.data;
+  prefetch.read(command.target, command.address);
+  return prefetch.slot.data;
 }
 
 auto VDP::writeDataPort(n16 data) -> void {
@@ -179,6 +182,10 @@ auto VDP::writeControlPort(n16 data) -> void {
     command.target.bit(2,3)    = data.bit(4,5);
     command.ready              = data.bit(6) | command.target.bit(0);
     command.pending            = data.bit(7) & dma.enable;
+
+    if(prefetch.full()) {
+      prefetch.read(command.target, command.address);
+    }
 
     dma.wait = dma.mode == 2;
     dma.synchronize();

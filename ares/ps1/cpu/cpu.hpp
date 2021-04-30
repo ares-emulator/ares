@@ -46,7 +46,6 @@ struct CPU : Thread {
   auto instruction() -> void;
   auto instructionEpilogue() -> bool;
   auto instructionHook() -> void;
-  auto instructionDebug() -> void;
 
   auto power(bool reset) -> void;
 
@@ -87,7 +86,7 @@ struct CPU : Thread {
   template<u32 Size> auto read(u32 address) -> u32;
   template<u32 Size> auto write(u32 address, u32 data) -> void;
 
-  //cache.cpp
+  //icache.cpp
   struct InstructionCache {
     auto step(u32 address) -> void;
     auto fetch(u32 address) -> u32;

@@ -13,7 +13,7 @@ auto SI::Debugger::io(bool mode, u32 address, u32 data) -> void {
     "SI_STATUS",
   };
 
-  if(tracer.io->enabled()) {
+  if(unlikely(tracer.io->enabled())) {
     string message;
     string name = registerNames(address, "SI_UNKNOWN");
     if(mode == Read) {

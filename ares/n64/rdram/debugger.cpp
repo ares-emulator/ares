@@ -25,7 +25,7 @@ auto RDRAM::Debugger::io(bool mode, u32 address, u32 data) -> void {
     "RDRAM_DEVICE_MANUF",
   };
 
-  if(tracer.io->enabled()) {
+  if(unlikely(tracer.io->enabled())) {
     string message;
     string name = registerNames(address, "RDRAM_UNKNOWN");
     if(mode == Read) {

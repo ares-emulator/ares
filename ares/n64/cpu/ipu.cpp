@@ -110,7 +110,6 @@ auto CPU::instructionBREAK() -> void {
 }
 
 auto CPU::instructionCACHE(u8 operation, cr64& rs, s16 imm) -> void {
-  if(operation & 1) return;
   u32 address = rs.u64 + imm;
 
   switch(operation) {
@@ -123,14 +122,14 @@ auto CPU::instructionCACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x04: {  //icache load tag
     auto& line = icache.line(address);
-    scc.tagLo.primaryCacheState = line.valid ? 0b10 : 0b00;
+    scc.tagLo.primaryCacheState = line.valid << 1;
     scc.tagLo.physicalAddress   = line.tag;
     break;
   }
 
   case 0x08: {  //icache store tag
     auto& line = icache.line(address);
-    line.valid = scc.tagLo.primaryCacheState == 0b10;
+    line.valid = scc.tagLo.primaryCacheState.bit(1);
     line.tag   = scc.tagLo.physicalAddress;
     if(scc.tagLo.primaryCacheState == 0b01) debug(unusual, "[CPU] CACHE CPCS=1");
     if(scc.tagLo.primaryCacheState == 0b11) debug(unusual, "[CPU] CACHE CPCS=3");
@@ -138,31 +137,20 @@ auto CPU::instructionCACHE(u8 operation, cr64& rs, s16 imm) -> void {
   }
 
   case 0x10: {  //icache hit invalidate
-    if(auto physicalAddress = devirtualize(address)) {
-      address = physicalAddress();
-      auto& line = icache.line(address);
-      if(line.hit(address)) line.valid = 0;
-    }
+    auto& line = icache.line(address);
+    if(line.hit(address)) line.valid = 0;
     break;
   }
 
   case 0x14: {  //icache fill
-    if(auto physicalAddress = devirtualize(address)) {
-      address = physicalAddress();
-      auto& line = icache.line(address);
-      line.tag = address & ~0xfff;
-      line.fill();
-      line.valid = 1;
-    }
+    auto& line = icache.line(address);
+    line.fill(address);
     break;
   }
 
   case 0x18: {  //icache hit write back
-    if(auto physicalAddress = devirtualize(address)) {
-      address = physicalAddress();
-      auto& line = icache.line(address);
-      if(line.hit(address)) line.writeBack();
-    }
+    auto& line = icache.line(address);
+    if(line.hit(address)) line.writeBack();
     break;
   }
 
@@ -175,15 +163,15 @@ auto CPU::instructionCACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x05: {  //dcache index load tag
     auto& line = dcache.line(address);
-    scc.tagLo.primaryCacheState = line.valid ? 0b11 : 0b00;
+    scc.tagLo.primaryCacheState = line.valid << 1 | line.dirty << 0;
     scc.tagLo.physicalAddress   = line.tag;
     break;
   }
 
   case 0x09: {  //dcache index store tag
     auto& line = dcache.line(address);
-    line.valid = scc.tagLo.primaryCacheState == 0b11;
-    line.dirty = scc.tagLo.primaryCacheState == 0b11;
+    line.valid = scc.tagLo.primaryCacheState.bit(1);
+    line.dirty = scc.tagLo.primaryCacheState.bit(0);
     line.tag   = scc.tagLo.physicalAddress;
     if(scc.tagLo.primaryCacheState == 0b01) debug(unusual, "[CPU] CACHE DPCS=1");
     if(scc.tagLo.primaryCacheState == 0b10) debug(unusual, "[CPU] CACHE DPCS=2");
@@ -191,43 +179,36 @@ auto CPU::instructionCACHE(u8 operation, cr64& rs, s16 imm) -> void {
   }
 
   case 0x0d: {  //dcache create dirty exclusive
-    if(auto physicalAddress = devirtualize(address)) {
-      address = physicalAddress();
-      auto& line = dcache.line(address);
-      if(!line.hit(address) && line.dirty) line.writeBack();
-      line.tag   = address & ~0xfff;
-      line.valid = 1;
-      line.dirty = 1;
-    }
+    auto& line = dcache.line(address);
+    if(!line.hit(address) && line.dirty) line.writeBack();
+    line.tag   = address & ~0xfff;
+    line.valid = 1;
+    line.dirty = 1;
     break;
   }
 
   case 0x11: {  //dcache hit invalidate
-    if(auto physicalAddress = devirtualize(address)) {
-      address = physicalAddress();
-      auto& line = dcache.line(address);
-      if(line.hit(address)) line.valid = 0;
+    auto& line = dcache.line(address);
+    if(line.hit(address)) {
+      line.valid = 0;
+      line.dirty = 0;
     }
     break;
   }
 
   case 0x15: {  //dcache hit write back invalidate
-    if(auto physicalAddress = devirtualize(address)) {
-      address = physicalAddress();
-      auto& line = dcache.line(address);
-      if(line.hit(address)) {
-        if(line.dirty) line.writeBack();
-        line.valid = 0;
-      }
+    auto& line = dcache.line(address);
+    if(line.hit(address)) {
+      if(line.dirty) line.writeBack();
+      line.valid = 0;
     }
     break;
   }
 
   case 0x19: {  //dcache hit write back
-    if(auto physicalAddress = devirtualize(address)) {
-      address = physicalAddress();
-      auto& line = dcache.line(address);
-      if(line.hit(address) && line.dirty) line.writeBack();
+    auto& line = dcache.line(address);
+    if(line.hit(address)) {
+      if(line.dirty) line.writeBack();
     }
     break;
   }
@@ -371,21 +352,93 @@ auto CPU::instructionLD(r64& rt, cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::instructionLDL(r64& rt, cr64& rs, s16 imm) -> void {
-  auto address = rs.u32 + imm;
-  auto shift = 8 * ((address ^ FlipLE) & 7);
-  auto mask = u64(0) - 1 << shift;
-  if(auto data = read<Dual>(address & ~7)) {
-    rt.u64 = rt.u64 & ~mask | *data << shift;
+  u64 address = rs.u32 + imm;
+  u64 data = rt.u64;
+  switch(address & 7) {
+  case 0:
+    data &= 0x0000000000000000ull;
+    if(auto dual = read<Dual>(address & ~7 | 0)) data |= dual() <<  0; else return;
+    break;
+  case 1:
+    data &= 0x00000000000000ffull;
+    if(auto byte = read<Byte>(address & ~7 | 1)) data |= byte() << 56; else return;
+    if(auto half = read<Half>(address & ~7 | 2)) data |= half() << 40; else return;
+    if(auto word = read<Word>(address & ~7 | 4)) data |= word() <<  8; else return;
+    break;
+  case 2:
+    data &= 0x000000000000ffffull;
+    if(auto half = read<Half>(address & ~7 | 2)) data |= half() << 48; else return;
+    if(auto word = read<Word>(address & ~7 | 4)) data |= word() << 16; else return;
+    break;
+  case 3:
+    data &= 0x0000000000ffffffull;
+    if(auto byte = read<Byte>(address & ~7 | 3)) data |= byte() << 56; else return;
+    if(auto word = read<Word>(address & ~7 | 4)) data |= word() << 24; else return;
+    break;
+  case 4:
+    data &= 0x00000000ffffffffull;
+    if(auto word = read<Word>(address & ~7 | 4)) data |= word() << 32; else return;
+    break;
+  case 5:
+    data &= 0x000000ffffffffffull;
+    if(auto byte = read<Byte>(address & ~7 | 5)) data |= byte() << 56; else return;
+    if(auto half = read<Half>(address & ~7 | 6)) data |= half() << 40; else return;
+    break;
+  case 6:
+    data &= 0x0000ffffffffffffull;
+    if(auto half = read<Half>(address & ~7 | 6)) data |= half() << 48; else return;
+    break;
+  case 7:
+    data &= 0x00ffffffffffffffull;
+    if(auto byte = read<Byte>(address & ~7 | 7)) data |= byte() << 56; else return;
+    break;
   }
+  rt.u64 = data;
 }
 
 auto CPU::instructionLDR(r64& rt, cr64& rs, s16 imm) -> void {
-  auto address = rs.u32 + imm;
-  auto shift = 8 * ((address ^ FlipBE) & 7);
-  auto mask = u64(0) - 1 >> shift;
-  if(auto data = read<Dual>(address & ~7)) {
-    rt.u64 = rt.u64 & ~mask | *data >> shift;
+  u64 address = rs.u64 + imm;
+  u64 data = rt.u64;
+  switch(address & 7) {
+  case 0:
+    data &= 0xffffffffffffff00ull;
+    if(auto byte = read<Byte>(address & ~7 | 0)) data |= byte() <<  0; else return;
+    break;
+  case 1:
+    data &= 0xffffffffffff0000ull;
+    if(auto half = read<Half>(address & ~7 | 0)) data |= half() <<  0; else return;
+    break;
+  case 2:
+    data &= 0xffffffffff000000ull;
+    if(auto half = read<Half>(address & ~7 | 0)) data |= half() <<  8; else return;
+    if(auto byte = read<Byte>(address & ~7 | 2)) data |= byte() <<  0; else return;
+    break;
+  case 3:
+    data &= 0xffffffff00000000ull;
+    if(auto word = read<Word>(address & ~7 | 0)) data |= word() <<  0; else return;
+    break;
+  case 4:
+    data &= 0xffffff0000000000ull;
+    if(auto word = read<Word>(address & ~7 | 0)) data |= word() <<  8; else return;
+    if(auto byte = read<Byte>(address & ~7 | 4)) data |= byte() <<  0; else return;
+    break;
+  case 5:
+    data &= 0xffff000000000000ull;
+    if(auto word = read<Word>(address & ~7 | 0)) data |= word() << 16; else return;
+    if(auto half = read<Half>(address & ~7 | 4)) data |= half() <<  0; else return;
+    break;
+  case 6:
+    data &= 0xff00000000000000ull;
+    if(auto word = read<Word>(address & ~7 | 0)) data |= word() << 24; else return;
+    if(auto half = read<Half>(address & ~7 | 4)) data |= half() <<  8; else return;
+    if(auto byte = read<Byte>(address & ~7 | 6)) data |= byte() <<  0; else return;
+    break;
+  case 7:
+    data &= 0x0000000000000000ull;
+    if(auto dual = read<Dual>(address & ~7 | 0)) data |= dual() <<  0; else return;
+    break;
   }
+  rt.u64 = data;
 }
 
 auto CPU::instructionLH(r64& rt, cr64& rs, s16 imm) -> void {
@@ -421,20 +474,58 @@ auto CPU::instructionLW(r64& rt, cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::instructionLWL(r64& rt, cr64& rs, s16 imm) -> void {
-  auto address = rs.u32 + imm;
-  auto shift = 8 * ((address ^ FlipLE) & 3);
-  auto mask = u32(0) - 1 << shift;
-  if(auto data = read<Word>(address & ~3)) {
-    rt.u64 = s32(rt.u32 & ~mask | *data << shift);
+  u32 address = rs.u32 + imm;
+  u32 data = rt.u32;
+  switch(address & 3) {
+  case 0:
+    data &= 0x00000000;
+    if(auto word = read<Word>(address & ~3 | 0)) data |= word() <<  0; else return;
+    break;
+  case 1:
+    data &= 0x000000ff;
+    if(auto byte = read<Byte>(address & ~3 | 1)) data |= byte() << 24; else return;
+    if(auto half = read<Half>(address & ~3 | 2)) data |= half() <<  8; else return;
+    break;
+  case 2:
+    data &= 0x0000ffff;
+    if(auto half = read<Half>(address & ~3 | 2)) data |= half() << 16; else return;
+    break;
+  case 3:
+    data &= 0x00ffffff;
+    if(auto byte = read<Byte>(address & ~3 | 3)) data |= byte() << 24; else return;
+    break;
   }
+  rt.s64 = (s32)data;
 }
 
 auto CPU::instructionLWR(r64& rt, cr64& rs, s16 imm) -> void {
-  auto address = rs.u32 + imm;
-  auto shift = 8 * ((address ^ FlipBE) & 3);
-  auto mask = u32(0) - 1 >> shift;
-  if(auto data = read<Word>(address & ~3)) {
-    rt.u64 = s32(rt.u32 & ~mask | *data >> shift);
+  u32 address = rs.u32 + imm;
+  u32 data = rt.u32;
+  switch(address & 3) {
+  case 0:
+    data &= 0xffffff00;
+    if(auto byte = read<Byte>(address & ~3 | 0)) data |= byte() <<  0; else return;
+    if(context.bits == 32) rt.u32 = data;
+    if(context.bits == 64) rt.s64 = (s32)data;
+    break;
+  case 1:
+    data &= 0xffff0000;
+    if(auto half = read<Half>(address & ~3 | 0)) data |= half() <<  0; else return;
+    if(context.bits == 32) rt.u32 = data;
+    if(context.bits == 64) rt.s64 = (s32)data;
+    break;
+  case 2:
+    data &= 0xff000000;
+    if(auto half = read<Half>(address & ~3 | 0)) data |= half() <<  8; else return;
+    if(auto byte = read<Byte>(address & ~3 | 2)) data |= byte() <<  0; else return;
+    if(context.bits == 32) rt.u32 = data;
+    if(context.bits == 64) rt.s64 = (s32)data;
+    break;
+  case 3:
+    data &= 0x00000000;
+    if(auto word = read<Word>(address & ~3 | 0)) data |= word() <<  0; else return;
+    rt.s64 = (s32)data;
+    break;
   }
 }
 

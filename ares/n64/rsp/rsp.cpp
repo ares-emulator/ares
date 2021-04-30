@@ -28,7 +28,7 @@ auto RSP::unload() -> void {
 }
 
 auto RSP::main() -> void {
-  if(status.halted) return step(96);
+  if(status.halted) return step(48);
   instruction();
 }
 
@@ -46,7 +46,6 @@ auto RSP::instruction() -> void {
     pipeline.address = ipu.pc;
     pipeline.instruction = imem.readWord(pipeline.address);
     debugger.instruction();
-  //instructionDebug();
     decoderEXECUTE();
     instructionEpilogue();
     step(1);
@@ -64,19 +63,6 @@ auto RSP::instructionEpilogue() -> bool {
   }
 
   unreachable;
-}
-
-auto RSP::instructionDebug() -> void {
-  pipeline.address = ipu.pc;
-  pipeline.instruction = imem.readWord(pipeline.address);
-
-  static u32 counter = 0;
-//if(++counter > 100) return;
-  print(
-    disassembler.hint(hex(pipeline.address, 3L)), "  ",
-  //disassembler.hint(hex(pipeline.instruction, 8L)), "  ",
-    disassembler.disassemble(pipeline.address, pipeline.instruction), "\n"
-  );
 }
 
 auto RSP::power(bool reset) -> void {

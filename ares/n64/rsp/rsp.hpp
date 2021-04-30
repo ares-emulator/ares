@@ -34,7 +34,6 @@ struct RSP : Thread, Memory::IO<RSP> {
 
   auto instruction() -> void;
   auto instructionEpilogue() -> bool;
-  auto instructionDebug() -> void;
 
   auto power(bool reset) -> void;
 

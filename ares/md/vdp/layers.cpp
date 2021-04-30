@@ -1,6 +1,6 @@
 auto VDP::Layers::hscrollFetch() -> void {
   if(!vdp.displayEnable()) {
-    return vdp.fifo.slot();
+    return vdp.slot();
   }
 
   static const u32 mask[] = {0u, 7u, ~7u, ~0u};

@@ -29,8 +29,6 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
     if(unlikely(instruction == 0x1000'ffff)) {
       //accelerate idle loops
       add(rax, imm8{64});
-    } else {
-      add(rax, imm8{2});
     }
     mov(mem64{&self.clock}, rax);
     call(&CPU::instructionEpilogue, &self);

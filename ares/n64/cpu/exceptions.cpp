@@ -1,7 +1,5 @@
 auto CPU::Exception::trigger(u32 code, u32 coprocessor, bool tlbMiss) -> void {
-  if(self.debugger.tracer.exception->enabled()) {
-    if(code != 0) self.debugger.exception(hex(code, 2L));
-  }
+  self.debugger.exception(code);
 
   u64 vectorBase = !self.scc.status.vectorLocation ? s32(0x8000'0000) : s32(0xbfc0'0200);
   u32 vectorOffset = 0x0180;

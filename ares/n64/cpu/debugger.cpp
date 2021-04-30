@@ -26,15 +26,44 @@ auto CPU::Debugger::instruction() -> void {
   }
 }
 
-auto CPU::Debugger::exception(string_view type) -> void {
+auto CPU::Debugger::exception(u8 code) -> void {
   if(unlikely(tracer.exception->enabled())) {
+    if(code == 0) return;  //ignore interrupt exceptions
+    string type = {"unknown(0x", hex(code, 2L), ")"};
+    switch(code) {
+    case  0: type = "interrupt"; break;
+    case  1: type = "TLB modification"; break;
+    case  2: type = "TLB load"; break;
+    case  3: type = "TLB store"; break;
+    case  4: type = "address load"; break;
+    case  5: type = "address store"; break;
+    case  6: type = "bus instruction"; break;
+    case  7: type = "bus data"; break;
+    case  8: type = "system call"; break;
+    case  9: type = "breakpoint"; break;
+    case 10: type = "reserved instruction"; break;
+    case 11: type = "coprocessor"; break;
+    case 12: type = "arithmetic overflow"; break;
+    case 13: type = "trap"; break;
+    case 15: type = "floating point"; break;
+    case 23: type = "watch address"; break;
+    }
     tracer.exception->notify(type);
   }
 }
 
-auto CPU::Debugger::interrupt(string_view type) -> void {
+auto CPU::Debugger::interrupt(u8 mask) -> void {
   if(unlikely(tracer.interrupt->enabled())) {
-    tracer.interrupt->notify(type);
+    vector<string> sources;
+    if(mask & 0x01) sources.append("software 0");
+    if(mask & 0x02) sources.append("software 1");
+    if(mask & 0x04) sources.append("RCP");
+    if(mask & 0x08) sources.append("cartridge");
+    if(mask & 0x10) sources.append("reset");
+    if(mask & 0x20) sources.append("read RDB");
+    if(mask & 0x40) sources.append("write RDB");
+    if(mask & 0x80) sources.append("timer");
+    tracer.interrupt->notify(sources.merge(","));
   }
 }
 

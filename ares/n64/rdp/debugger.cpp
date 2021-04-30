@@ -4,7 +4,7 @@ auto RDP::Debugger::load(Node::Object parent) -> void {
 }
 
 auto RDP::Debugger::command(string_view message) -> void {
-  if(tracer.command->enabled()) {
+  if(unlikely(tracer.command->enabled())) {
     tracer.command->notify(message);
   }
 }
@@ -21,7 +21,7 @@ auto RDP::Debugger::ioDPC(bool mode, u32 address, u32 data) -> void {
     "DPC_TMEM_BUSY",
   };
 
-  if(tracer.io->enabled()) {
+  if(unlikely(tracer.io->enabled())) {
     string message;
     string name = registerNames(address, "DPC_UNKNOWN");
     if(mode == Read) {
@@ -42,7 +42,7 @@ auto RDP::Debugger::ioDPS(bool mode, u32 address, u32 data) -> void {
     "DPS_BUFTEST_DATA",
   };
 
-  if(tracer.io->enabled()) {
+  if(unlikely(tracer.io->enabled())) {
     string message;
     string name = registerNames(address, "DPS_UNKNOWN");
     if(mode == Read) {

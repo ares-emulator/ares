@@ -8,84 +8,66 @@ auto VDP::tick() -> void {
   cycles += 2;
   state.hcounter++;
   if(h32()) {
-    if(state.hcounter == 0x00) hblank(0);
-    if(state.hcounter == 0x81) vpoll();
-    if(state.hcounter == 0x82) vtick();
-    if(state.hcounter == 0x93) hblank(1);
-    if(state.hcounter == 0x94) state.hcounter = 0xe9;
+    if(hcounter() == 0x00) hblank(0), vedge();
+    if(hcounter() == 0x81) vtick();
+    if(hcounter() == 0x93) hblank(1);
+    if(hcounter() == 0x94) state.hcounter = 0xe9;
   }
   if(h40()) {
-    if(state.hcounter == 0x00) hblank(0);
-    if(state.hcounter == 0xa1) vpoll();
-    if(state.hcounter == 0xa2) vtick();
-    if(state.hcounter == 0xb3) hblank(1);
-    if(state.hcounter == 0xb6) state.hcounter = 0xe4;
+    if(hcounter() == 0x00) hblank(0), vedge();
+    if(hcounter() == 0xa1) vtick();
+    if(hcounter() == 0xb3) hblank(1);
+    if(hcounter() == 0xb6) state.hcounter = 0xe4;
   }
   vram.refreshing = 0;
 }
 
-auto VDP::vpoll() -> void {
-  if(v28()) {
-    if(state.vcounter == 0x0e0) vblank(1);
-    if(state.vcounter == 0x1ff) vblank(0);
-  }
-  if(v30()) {
-    if(state.vcounter == 0x0f0) vblank(1);
-    if(state.vcounter == 0x1ff) vblank(0);
-  }
-}
-
 auto VDP::vtick() -> void {
+  if(vblank()) {
+    irq.hblank.counter = irq.hblank.frequency;
+  } else if(irq.hblank.counter-- == 0) {
+    irq.hblank.counter = irq.hblank.frequency;
+    irq.hblank.pending = 1;
+    irq.poll();
+  }
+
   state.vcounter++;
   if(v28()) {
-    if(state.vcounter == 0x0eb && Region::NTSC()) state.vcounter = 0x1e5;
-    if(state.vcounter == 0x103 && Region::PAL ()) state.vcounter = 0x1ca;
+    if(vcounter() == 0x0e0) vblank(1);
+    if(vcounter() == 0x0eb && Region::NTSC()) state.vcounter = 0x1e5;
+    if(vcounter() == 0x103 && Region::PAL ()) state.vcounter = 0x1ca;
+    if(vcounter() == 0x1ff) vblank(0);
   }
   if(v30()) {
-    if(state.vcounter == 0x200 && Region::NTSC()) state.vcounter = 0x000;
-    if(state.vcounter == 0x10b && Region::PAL ()) state.vcounter = 0x1d2;
-  }
-}
-
-auto VDP::refresh() -> void {
-  vram.refreshing = 1;
-  fifo.refreshing = !displayEnable();
-}
-
-auto VDP::main() -> void {
-  latch.displayWidth = io.displayWidth;
-  latch.clockSelect  = io.clockSelect;
-  if(h32()) mainH32();
-  if(h40()) mainH40();
-  if(state.vcounter == 0) {
-    state.field ^= 1;
-    latch.interlace = io.interlaceMode == 3;
-    latch.overscan  = io.overscan;
-    frame();
+    if(vcounter() == 0x0f0) vblank(1);
+    if(vcounter() == 0x200 && Region::NTSC()) state.vcounter = 0x000;
+    if(vcounter() == 0x10b && Region::PAL ()) state.vcounter = 0x1d2;
+    if(vcounter() == 0x1ff) vblank(0);
   }
 }
 
 auto VDP::hblank(bool line) -> void {
   state.hblank = line;
-  if(line == 0) {
+  if(hblank() == 0) {
     cartridge.hblank(0);
-    apu.setINT(0);
   } else {
     cartridge.hblank(1);
-    if(vblank()) {
-      irq.hblank.counter = irq.hblank.frequency;
-    } else if(irq.hblank.counter-- == 0) {
-      irq.hblank.counter = irq.hblank.frequency;
-      irq.hblank.pending = 1;
-      irq.poll();
-    }
+    apu.setINT(0);  //timing hack
   }
 }
 
 auto VDP::vblank(bool line) -> void {
   state.vblank = line;
-  if(line == 0) {
+  irq.vblank.transitioned = 1;
+}
+
+auto VDP::vedge() -> void {
+  if(!irq.vblank.transitioned) return;
+  irq.vblank.transitioned = 0;
+
+  if(vblank() == 0) {
     cartridge.vblank(0);
+  //apu.setINT(0);
   } else {
     cartridge.vblank(1);
     apu.setINT(1);
@@ -94,8 +76,37 @@ auto VDP::vblank(bool line) -> void {
   }
 }
 
+auto VDP::slot() -> void {
+  if(state.refreshing) {
+    state.refreshing = 0;
+    return;
+  }
+  if(dma.run());
+  if(fifo.run()) return;
+  if(prefetch.run()) return;
+}
+
+auto VDP::refresh() -> void {
+  vram.refreshing  = 1;
+  state.refreshing = !displayEnable();
+}
+
+auto VDP::main() -> void {
+  latch.displayWidth = io.displayWidth;
+  latch.clockSelect  = io.clockSelect;
+  if(h32()) mainH32();
+  if(h40()) mainH40();
+  if(vcounter() == 0) {
+    state.field ^= 1;
+    latch.interlace = io.interlaceMode == 3;
+    latch.overscan  = io.overscan;
+    frame();
+  }
+}
+
 auto VDP::mainH32() -> void {
   auto pixels = dac.pixels = vdp.pixels();
+  auto scanline = vcounter();
   cycles = &cyclesH32[edclk()][0];
 
   sprite.begin();
@@ -105,7 +116,7 @@ auto VDP::mainH32() -> void {
     layerB.attributesFetch();
     window.attributesFetch(block);
     tick(); layerA.mappingFetch(block);
-    tick(); (block & 3) != 3 ? fifo.slot() : refresh();
+    tick(); (block & 3) != 3 ? slot() : refresh();
     tick(); layerA.patternFetch(block * 2 + 2);
     tick(); layerA.patternFetch(block * 2 + 3);
     tick(); layerB.mappingFetch(block);
@@ -114,20 +125,22 @@ auto VDP::mainH32() -> void {
     tick(); layerB.patternFetch(block * 2 + 3);
     for(auto pixel : range(16)) dac.pixel(block * 16 + pixel);
   }
-  m32x.vdp.scanline(pixels, vcounter());
+  m32x.vdp.scanline(pixels, scanline);
+
+  tick(); slot();
+  tick(); slot();
+
   layers.vscrollFetch();
   sprite.end();
 
-  tick(); fifo.slot();
-  tick(); fifo.slot();
   for(auto cycle : range(13)) {
     tick(); sprite.patternFetch(cycle + 0);
   }
-  tick(); displayEnable() ? fifo.slot() : refresh();
+  tick(); displayEnable() ? slot() : refresh();
   for(auto cycle : range(13)) {
     tick(); sprite.patternFetch(cycle + 13);
   }
-  tick(); fifo.slot();
+  tick(); slot();
 
   layerA.begin();
   layerB.begin();
@@ -164,7 +177,7 @@ auto VDP::mainH40() -> void {
     layerB.attributesFetch();
     window.attributesFetch(block);
     tick(); layerA.mappingFetch(block);
-    tick(); (block & 3) != 3 ? fifo.slot() : refresh();
+    tick(); (block & 3) != 3 ? slot() : refresh();
     tick(); layerA.patternFetch(block * 2 + 2);
     tick(); layerA.patternFetch(block * 2 + 3);
     tick(); layerB.mappingFetch(block);
@@ -174,15 +187,17 @@ auto VDP::mainH40() -> void {
     for(auto pixel : range(16)) dac.pixel(block * 16 + pixel);
   }
   m32x.vdp.scanline(pixels, vcounter());
+
+  tick(); slot();
+  tick(); slot();
+
   layers.vscrollFetch();
   sprite.end();
 
-  tick(); fifo.slot();
-  tick(); fifo.slot();
   for(auto cycle : range(23)) {
     tick(); sprite.patternFetch(cycle + 0);
   }
-  tick(); displayEnable() ? fifo.slot() : refresh();
+  tick(); displayEnable() ? slot() : refresh();
   for(auto cycle : range(11)) {
     tick(); sprite.patternFetch(cycle + 23);
   }

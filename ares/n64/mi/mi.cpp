@@ -19,15 +19,7 @@ auto MI::unload() -> void {
 }
 
 auto MI::raise(IRQ source) -> void {
-  if(debugger.tracer.interrupt->enabled()) {
-    if(!irq.sp.line && source == IRQ::SP) debugger.interrupt("SP");
-    if(!irq.si.line && source == IRQ::SI) debugger.interrupt("SI");
-    if(!irq.ai.line && source == IRQ::AI) debugger.interrupt("AI");
-    if(!irq.vi.line && source == IRQ::VI) debugger.interrupt("VI");
-    if(!irq.pi.line && source == IRQ::PI) debugger.interrupt("PI");
-    if(!irq.dp.line && source == IRQ::DP) debugger.interrupt("DP");
-  }
-
+  debugger.interrupt((u32)source);
   switch(source) {
   case IRQ::SP: irq.sp.line = 1; break;
   case IRQ::SI: irq.si.line = 1; break;

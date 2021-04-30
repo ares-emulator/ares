@@ -5,26 +5,27 @@ auto VDP::Layer::begin() -> void {
 //called 17 (H32) or 21 (H40) times
 auto VDP::Layer::attributesFetch() -> void {
   attributes.address = nametableAddress;
-  attributes.width   = 32 * (1 + vdp.layers.nametableWidth ) - 1;
-  attributes.height  = 32 * (1 + vdp.layers.nametableHeight) - 1;
+  attributes.hmask   = 32 * (1 + vdp.layers.nametableWidth ) - 1;
+  attributes.vmask   = 32 * (1 + vdp.layers.nametableHeight) - 1;
   attributes.hscroll = hscroll;
   attributes.vscroll = vscroll;
 
   //prohibited vsize=2 acts like vsize=3 but ignores a6
   if(vdp.layers.nametableHeight == 2) {
-    attributes.height = 32 * (1 + 3) - 1 & ~(1 << 6);
+    attributes.vmask = 32 * (1 + 3) - 1 & ~(1 << 6);
   }
 
   //prohibited hsize=2 causes first row to repeat (overrides all vsize modes)
   if(vdp.layers.nametableWidth == 2) {
-    attributes.height = 1;
+    attributes.hmask = 31;  //todo: this is not 100% accurate (but is close)
+    attributes.vmask =  0;
   }
 }
 
 //called 17 (H32) ot 21 (H40) times
 auto VDP::Layer::mappingFetch(s32 mappingIndex) -> void {
   if(!vdp.displayEnable()) {
-    return vdp.fifo.slot();
+    return vdp.slot();
   }
 
   auto interlace = vdp.io.interlaceMode == 3;
@@ -35,9 +36,9 @@ auto VDP::Layer::mappingFetch(s32 mappingIndex) -> void {
   x -= attributes.hscroll & ~15;
   y += attributes.vscroll;
 
-  auto tileX = x >> 3 & attributes.width;
-  auto tileY = y >> 3 + interlace & attributes.height;
-  n15 address = attributes.address + n12(tileY * (1 + attributes.width) + tileX);
+  auto tileX = x >> 3 & attributes.hmask;
+  auto tileY = y >> 3 + interlace & attributes.vmask;
+  n15 address = attributes.address + n12(tileY * (1 + attributes.hmask) + tileX);
   for(auto& mapping : mappings) {
     auto data = vdp.vram.read(address++);
     mapping.address  = data.bit(0,10) << 4 + interlace;
@@ -60,7 +61,7 @@ auto VDP::Layer::mappingFetch(s32 mappingIndex) -> void {
 //called 34 (H32) or 42 (H40) times
 auto VDP::Layer::patternFetch(u32 patternIndex) -> void {
   if(!vdp.displayEnable()) {
-    return vdp.fifo.slot();
+    return vdp.slot();
   }
 
   auto interlace = vdp.io.interlaceMode == 3;

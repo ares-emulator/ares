@@ -33,7 +33,7 @@ auto RSP::Debugger::unload() -> void {
 }
 
 auto RSP::Debugger::instruction() -> void {
-  if(tracer.instruction->enabled()) {
+  if(unlikely(tracer.instruction->enabled())) {
     u32 address = rsp.pipeline.address & 0xfff;
     u32 instruction = rsp.pipeline.instruction;
     if(tracer.instruction->address(address)) {
@@ -56,7 +56,7 @@ auto RSP::Debugger::ioSCC(bool mode, u32 address, u32 data) -> void {
     "SP_SEMAPHORE",
   };
 
-  if(tracer.io->enabled()) {
+  if(unlikely(tracer.io->enabled())) {
     string message;
     string name = registerNames(address, "SP_UNKNOWN");
     if(mode == Read) {
@@ -75,7 +75,7 @@ auto RSP::Debugger::ioStatus(bool mode, u32 address, u32 data) -> void {
     "SP_IBIST",
   };
 
-  if(tracer.io->enabled()) {
+  if(unlikely(tracer.io->enabled())) {
     string message;
     string name = registerNames(address, "SP_UNKNOWN");
     if(mode == Read) {

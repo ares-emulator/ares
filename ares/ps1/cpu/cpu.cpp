@@ -5,7 +5,7 @@ namespace ares::PlayStation {
 CPU cpu;
 #include "delay-slots.cpp"
 #include "memory.cpp"
-#include "cache.cpp"
+#include "icache.cpp"
 #include "exceptions.cpp"
 #include "breakpoints.cpp"
 #include "ipu.cpp"
@@ -79,7 +79,6 @@ auto CPU::instruction() -> void {
     if(exception()) return (void)instructionEpilogue();
 
     debugger.instruction();
-  //instructionDebug();
     decoderEXECUTE();
     instructionEpilogue();
   }
@@ -143,26 +142,6 @@ auto CPU::instructionHook() -> void {
       ipu.pd = ipu.r[31];
     }
   }
-}
-
-auto CPU::instructionDebug() -> void {
-  if constexpr(Accuracy::CPU::Recompiler) {
-    pipeline.address = ipu.pc;
-    pipeline.instruction = bus.read<Word>(pipeline.address);
-  }
-
-  static vector<bool> mask;
-  if(!mask) mask.resize(0x0800'0000);
-  if(mask[ipu.pc >> 2 & 0x07ff'ffff]) return;
-  mask[ipu.pc >> 2 & 0x07ff'ffff] = 1;
-
-  static u32 counter = 0;
-//if(++counter > 100) return;
-  print(
-    disassembler.hint(hex(pipeline.address, 8L)), "  ",
-    disassembler.hint(hex(pipeline.instruction, 8L)), "  ",
-    disassembler.disassemble(pipeline.address, pipeline.instruction), "\n"
-  );
 }
 
 auto CPU::power(bool reset) -> void {

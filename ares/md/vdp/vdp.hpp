@@ -37,6 +37,7 @@ struct VDP : Thread {
   auto hblank() const -> bool { return state.hblank; }
   auto vblank() const -> bool { return state.vblank; }
   auto refreshing() const -> bool { return vram.refreshing; }
+  auto displayEnable() const -> bool { return io.displayEnable && !state.vblank; }
 
   auto h32() const -> bool { return latch.displayWidth == 0; }  //256-width
   auto h40() const -> bool { return latch.displayWidth == 1; }  //320-width
@@ -47,16 +48,9 @@ struct VDP : Thread {
   auto dclk()  const -> bool { return io.clockSelect == 0; }  //internal clock
   auto edclk() const -> bool { return io.clockSelect == 1; }  //external clock
 
-  auto pixelWidth() const -> u32 { return latch.displayWidth ? 4 : 5; }
   auto screenWidth() const -> u32 { return latch.displayWidth ? 320 : 256; }
   auto screenHeight() const -> u32 { return io.overscan ? 240 : 224; }
   auto frameHeight() const -> u32 { return Region::PAL() ? 312 : 262; }
-
-  auto displayEnable() const -> bool {
-    if(!io.displayEnable) return false;
-    if(vcounter() == 0x1ff) return true;
-    return !state.vblank;
-  }
 
   //vdp.cpp
   auto load(Node::Object) -> void;
@@ -68,13 +62,14 @@ struct VDP : Thread {
   //main.cpp
   auto step(u32 clocks) -> void;
   auto tick() -> void;
-  auto vpoll() -> void;
   auto vtick() -> void;
+  auto hblank(bool line) -> void;
+  auto vblank(bool line) -> void;
+  auto vedge() -> void;
+  auto slot() -> void;
   auto refresh() -> void;
   auto main() -> void;
   auto render() -> void;
-  auto hblank(bool) -> void;
-  auto vblank(bool) -> void;
   auto mainH32() -> void;
   auto mainH40() -> void;
   auto generateCycleTimings() -> void;
@@ -137,20 +132,9 @@ struct VDP : Thread {
     struct Vblank {
       n1 enable;
       n1 pending;
+      n1 transitioned;
     } vblank;
   } irq;
-
-  struct Cache {
-    auto empty() const -> bool { return !upper && !lower; }
-    auto full() const -> bool { return upper && lower; }
-
-    //serialization.cpp
-    auto serialize(serializer&) -> void;
-
-    n16 data;   //read data
-    n1  upper;  //1 = data.byte(1) valid
-    n1  lower;  //1 = data.byte(0) valid
-  };
 
   struct Slot {
     auto empty() const -> bool { return !upper && !lower; }
@@ -166,34 +150,44 @@ struct VDP : Thread {
     n1  lower;    //1 = data.byte(0) valid
   };
 
+  struct Prefetch {
+    auto empty() const -> bool { return slot.empty(); }
+    auto full() const -> bool { return slot.full(); }
+
+    //prefetch.cpp
+    auto run() -> bool;
+    auto read(n4 target, n17 address) -> void;
+    auto power(bool reset) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    Slot slot;
+  } prefetch;
+
   struct FIFO {
     auto empty() const -> bool { return slots[0].empty(); }
     auto full() const -> bool { return !slots[3].empty(); }
 
     //fifo.cpp
     auto advance() -> void;
-
-    auto slot() -> void;
-    auto read(n4 target, n17 address) -> void;
+    auto run() -> bool;
     auto write(n4 target, n17 address, n16 data) -> void;
     auto power(bool reset) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    n1    refreshing;
-    Cache cache;
-    Slot  slots[4];
+    Slot slots[4];
   } fifo;
 
   struct DMA {
     //dma.cpp
     auto synchronize() -> void;
-    auto run() -> void;
+    auto run() -> bool;
     auto load() -> void;
     auto fill() -> void;
     auto copy() -> void;
-    auto step() -> void;
     auto power(bool reset) -> void;
 
     //serialization.cpp
@@ -243,8 +237,8 @@ struct VDP : Thread {
     auto serialize(serializer&) -> void;
 
     n15 address;
-    n16 width;
-    n16 height;
+    n16 hmask;
+    n16 vmask;
     n10 hscroll;
     n10 vscroll;
   };
@@ -495,6 +489,7 @@ private:
     n1 field;
     n1 hblank;
     n1 vblank;
+    n1 refreshing;
   } state;
 
 //unserialized:

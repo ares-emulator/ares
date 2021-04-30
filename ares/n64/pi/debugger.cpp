@@ -28,7 +28,7 @@ auto PI::Debugger::io(bool mode, u32 address, u32 data) -> void {
     "PI_BSD_DOM2_RLS",
   };
 
-  if(tracer.io->enabled()) {
+  if(unlikely(tracer.io->enabled())) {
     string message;
     string name = registerNames(address, "PI_UNKNOWN");
     if(mode == Read) {

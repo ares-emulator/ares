@@ -1,9 +1,11 @@
 auto CPU::InstructionCache::Line::hit(u32 address) const -> bool {
-  return tag == (address & ~0xfff);
+  return valid && tag == (address & ~0xfff);
 }
 
-auto CPU::InstructionCache::Line::fill() -> void {
-//  cpu.step(48);
+auto CPU::InstructionCache::Line::fill(u32 address) -> void {
+  cpu.step(48);
+  valid = 1;
+  tag   = address & ~0xfff;
   words[0] = bus.read<Word>(tag | index | 0x00);
   words[1] = bus.read<Word>(tag | index | 0x04);
   words[2] = bus.read<Word>(tag | index | 0x08);
@@ -15,7 +17,7 @@ auto CPU::InstructionCache::Line::fill() -> void {
 }
 
 auto CPU::InstructionCache::Line::writeBack() -> void {
-//  cpu.step(48);
+  cpu.step(48);
   bus.write<Word>(tag | index | 0x00, words[0]);
   bus.write<Word>(tag | index | 0x04, words[1]);
   bus.write<Word>(tag | index | 0x08, words[2]);
@@ -37,32 +39,30 @@ auto CPU::InstructionCache::line(u32 address) -> Line& {
 //used by the recompiler to simulate instruction cache fetch timing
 auto CPU::InstructionCache::step(u32 address) -> void {
   auto& line = this->line(address);
-  if(!line.hit(address) || !line.valid) {
+  if(!line.hit(address)) {
     cpu.step(48);
-    line.tag = address & ~0xfff;
     line.valid = 1;
+    line.tag   = address & ~0xfff;
   }
-  cpu.step(1);
+  cpu.step(2);
 }
 
 //used by the interpreter to fully emulate the instruction cache
 auto CPU::InstructionCache::fetch(u32 address) -> u32 {
   auto& line = this->line(address);
-  if(!line.hit(address) || !line.valid) {
-    line.tag = address & ~0xfff;
-    line.fill();
-    line.valid = 1;
+  if(!line.hit(address)) {
+    line.fill(address);
   }
-  cpu.step(1);
+  cpu.step(2);
   return line.read(address);
 }
 
 auto CPU::InstructionCache::power(bool reset) -> void {
   u32 index = 0;
   for(auto& line : lines) {
-    line.index = index++ << 5;
-    for(auto& word : line.words) word = 0;
-    line.tag = 0;
     line.valid = 0;
+    line.tag   = 0;
+    line.index = index++ << 5 & 0xfe0;
+    for(auto& word : line.words) word = 0;
   }
 }

@@ -55,7 +55,7 @@ auto CPU::read(u32 address) -> maybe<u64> {
     return nothing;
   case Context::Segment::Mapped:
     if(auto match = tlb.load(address)) {
-    //if(match.cache) return dcache.read<Size>(match.address);
+      if(match.cache) return dcache.read<Size>(match.address);
       step(1);
       return bus.read<Size>(match.address);
     }
@@ -63,7 +63,7 @@ auto CPU::read(u32 address) -> maybe<u64> {
     tlb.exception(address);
     return nothing;
   case Context::Segment::Cached:
-  //return dcache.read<Size>(address);
+    return dcache.read<Size>(address);
   case Context::Segment::Uncached:
     step(1);
     return bus.read<Size>(address);
@@ -88,7 +88,7 @@ auto CPU::write(u32 address, u64 data) -> bool {
     return false;
   case Context::Segment::Mapped:
     if(auto match = tlb.store(address)) {
-    //if(match.cache) return dcache.write<Size>(match.address, data), true;
+      if(match.cache) return dcache.write<Size>(match.address, data), true;
       step(1);
       return bus.write<Size>(match.address, data), true;
     }
@@ -96,7 +96,7 @@ auto CPU::write(u32 address, u64 data) -> bool {
     tlb.exception(address);
     return false;
   case Context::Segment::Cached:
-  //return dcache.write<Size>(address, data), true;
+    return dcache.write<Size>(address, data), true;
   case Context::Segment::Uncached:
     step(1);
     return bus.write<Size>(address, data), true;

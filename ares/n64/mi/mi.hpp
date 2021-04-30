@@ -6,7 +6,7 @@ struct MI : Memory::IO<MI> {
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
-    auto interrupt(string_view) -> void;
+    auto interrupt(u8 source) -> void;
     auto io(bool mode, u32 address, u32 data) -> void;
 
     struct Tracer {

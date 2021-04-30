@@ -12,17 +12,20 @@ auto CPU::Context::setMode() -> void {
     segment[5] = Segment::Uncached;
     segment[6] = Segment::Mapped;
     segment[7] = Segment::Mapped;
+    bits = self.scc.status.kernelExtendedAddressing ? 64 : 32;
   }
   if(mode == Mode::Supervisor) {
     segment[4] = Segment::Invalid;
     segment[5] = Segment::Invalid;
     segment[6] = Segment::Mapped;
     segment[7] = Segment::Invalid;
+    bits = self.scc.status.supervisorExtendedAddressing ? 64 : 32;
   }
   if(mode == Mode::User) {
     segment[4] = Segment::Invalid;
     segment[5] = Segment::Invalid;
     segment[6] = Segment::Invalid;
     segment[7] = Segment::Invalid;
+    bits = self.scc.status.userExtendedAddressing ? 64 : 32;
   }
 }

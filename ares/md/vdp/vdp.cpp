@@ -17,6 +17,7 @@ VDP vdp;
 #include "psg.cpp"
 #include "main.cpp"
 #include "irq.cpp"
+#include "prefetch.cpp"
 #include "fifo.cpp"
 #include "memory.cpp"
 #include "io.cpp"
@@ -110,6 +111,7 @@ auto VDP::power(bool reset) -> void {
 
   psg.power(reset);
   irq.power(reset);
+  prefetch.power(reset);
   fifo.power(reset);
   dma.power(reset);
   layers.power(reset);
