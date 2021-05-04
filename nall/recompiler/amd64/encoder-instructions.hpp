@@ -15,6 +15,24 @@
     emit.modrm(3, 2, rt & 7);
   }
 
+  //lea reg64,[reg64+imm8]
+  auto lea(reg64 rt, dis8 ds) {
+    emit.rex(1, rt & 8, 0, ds.reg & 8);
+    emit.byte(0x8d);
+    emit.modrm(1, rt & 7, ds.reg & 7);
+    if(ds.reg == rsp || ds.reg == r12) emit.sib(0, 4, 4);
+    emit.byte(ds.imm);
+  }
+
+  //lea reg64,[reg64+imm32]
+  auto lea(reg64 rt, dis32 ds) {
+    emit.rex(1, rt & 8, 0, ds.reg & 8);
+    emit.byte(0x8d);
+    emit.modrm(2, rt & 7, ds.reg & 7);
+    if(ds.reg == rsp || ds.reg == r12) emit.sib(0, 4, 4);
+    emit.dword(ds.imm);
+  }
+
   //mov reg8,imm8
   auto mov(reg8 rt, imm8 is) {
     emit.rex(0, 0, 0, rt & 8);
@@ -111,6 +129,23 @@
     emit.byte(0xa3);
     emit.qword(pt.data);
   }
+
+  //op reg8,[reg64]
+  #define op(code) \
+    emit.rex(0, rt & 8, 0, ds.reg & 8); \
+    emit.byte(code); \
+    emit.modrm(0, rt & 7, ds.reg & 7); \
+    if(ds.reg == rsp || ds.reg == r12) emit.sib(0, 4, 4);
+  auto adc(reg8 rt, dis ds) { op(0x12); }
+  auto add(reg8 rt, dis ds) { op(0x02); }
+  auto and(reg8 rt, dis ds) { op(0x22); }
+  auto cmp(reg8 rt, dis ds) { op(0x3a); }
+  auto mov(reg8 rt, dis ds) { op(0x8a); }
+  auto or (reg8 rt, dis ds) { op(0x0a); }
+  auto sbb(reg8 rt, dis ds) { op(0x1a); }
+  auto sub(reg8 rt, dis ds) { op(0x2a); }
+  auto xor(reg8 rt, dis ds) { op(0x32); }
+  #undef op
 
   //op reg8,[reg64+imm8]
   #define op(code) \
@@ -456,6 +491,21 @@
   #undef op
 
   #define op(code) \
+    if(unlikely(rs != cl)) throw; \
+    emit.rex(0, 0, 0, rt & 8); \
+    emit.byte(0xd3); \
+    emit.modrm(3, code, rt & 7);
+  auto rol(reg32 rt, reg8 rs) { op(0); }
+  auto ror(reg32 rt, reg8 rs) { op(1); }
+  auto rcl(reg32 rt, reg8 rs) { op(2); }
+  auto rcr(reg32 rt, reg8 rs) { op(3); }
+  auto shl(reg32 rt, reg8 rs) { op(4); }
+  auto shr(reg32 rt, reg8 rs) { op(5); }
+  auto sal(reg32 rt, reg8 rs) { op(6); }
+  auto sar(reg32 rt, reg8 rs) { op(7); }
+  #undef op
+
+  #define op(code) \
     emit.rex(1, 0, 0, rt & 8); \
     emit.byte(0xc1); \
     emit.modrm(3, code, rt & 7); \
@@ -468,6 +518,21 @@
   auto shr(reg64 rt, imm8 is) { op(5); }
   auto sal(reg64 rt, imm8 is) { op(6); }
   auto sar(reg64 rt, imm8 is) { op(7); }
+  #undef op
+
+  #define op(code) \
+    if(unlikely(rs != cl)) throw; \
+    emit.rex(1, 0, 0, rt & 8); \
+    emit.byte(0xd3); \
+    emit.modrm(3, code, rt & 7);
+  auto rol(reg64 rt, reg8 rs) { op(0); }
+  auto ror(reg64 rt, reg8 rs) { op(1); }
+  auto rcl(reg64 rt, reg8 rs) { op(2); }
+  auto rcr(reg64 rt, reg8 rs) { op(3); }
+  auto shl(reg64 rt, reg8 rs) { op(4); }
+  auto shr(reg64 rt, reg8 rs) { op(5); }
+  auto sal(reg64 rt, reg8 rs) { op(6); }
+  auto sar(reg64 rt, reg8 rs) { op(7); }
   #undef op
 
   //push reg
@@ -657,6 +722,7 @@
     emit.modrm(3, 0, rt & 7);
   auto seta (reg8 rt) { op(0x97); }
   auto setbe(reg8 rt) { op(0x96); }
+  auto setb (reg8 rt) { op(0x92); }
   auto setc (reg8 rt) { op(0x92); }
   auto setg (reg8 rt) { op(0x9f); }
   auto setge(reg8 rt) { op(0x9d); }
@@ -689,6 +755,7 @@
     }
   auto seta (dis dt) { op(0x97); }
   auto setbe(dis dt) { op(0x96); }
+  auto setb (dis dt) { op(0x92); }
   auto setc (dis dt) { op(0x92); }
   auto setg (dis dt) { op(0x9f); }
   auto setge(dis dt) { op(0x9d); }
@@ -717,6 +784,7 @@
     emit.byte(dt.imm);
   auto seta (dis8 dt) { op(0x97); }
   auto setbe(dis8 dt) { op(0x96); }
+  auto setb (dis8 dt) { op(0x92); }
   auto setc (dis8 dt) { op(0x92); }
   auto setg (dis8 dt) { op(0x9f); }
   auto setge(dis8 dt) { op(0x9d); }

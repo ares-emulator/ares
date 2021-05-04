@@ -61,7 +61,7 @@
   op(0x2c, INVALID);  //SDL
   op(0x2d, INVALID);  //SDR
   op(0x2e, INVALID);  //SWR
-  op(0x2f, CACHE, OP >> 16 & 3, OP >> 18 & 3);
+  op(0x2f, INVALID);  //CACHE
   op(0x30, INVALID);  //LL
   op(0x31, INVALID);  //LWC1
   jp(0x32, LWC2);

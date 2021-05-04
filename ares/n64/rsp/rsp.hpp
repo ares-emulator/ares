@@ -126,7 +126,6 @@ struct RSP : Thread, Memory::IO<RSP> {
   auto instructionBLTZAL(cr32& rs, s16 imm) -> void;
   auto instructionBNE(cr32& rs, cr32& rt, s16 imm) -> void;
   auto instructionBREAK() -> void;
-  auto instructionCACHE(u8 cache, u8 operation) -> void;
   auto instructionJ(u32 imm) -> void;
   auto instructionJAL(u32 imm) -> void;
   auto instructionJALR(r32& rd, cr32& rs) -> void;
@@ -301,6 +300,7 @@ struct RSP : Thread, Memory::IO<RSP> {
 
   //recompiler.cpp
   struct Recompiler : recompiler::amd64 {
+    using recompiler::amd64::call;
     RSP& self;
     Recompiler(RSP& self) : self(self) {}
 
@@ -341,6 +341,8 @@ struct RSP : Thread, Memory::IO<RSP> {
     auto emitVU(u32 instruction) -> bool;
     auto emitLWC2(u32 instruction) -> bool;
     auto emitSWC2(u32 instruction) -> bool;
+
+    template<typename R, typename... P> auto call(R (RSP::*function)(P...)) -> void;
 
     bump_allocator allocator;
     Pool* context = nullptr;

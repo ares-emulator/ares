@@ -4,9 +4,9 @@ namespace ares::Nintendo64 {
 
 RSP rsp;
 #include "io.cpp"
-#include "ipu.cpp"
-#include "scc.cpp"
-#include "vpu.cpp"
+#include "interpreter-ipu.cpp"
+#include "interpreter-scc.cpp"
+#include "interpreter-vpu.cpp"
 #include "decoder.cpp"
 #include "recompiler.cpp"
 #include "debugger.cpp"

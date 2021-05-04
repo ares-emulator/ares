@@ -42,7 +42,7 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   bind({block->code, allocator.available()});
   push(rbx);
   push(rbp);
-  sub(rsp, imm8(8));
+  sub(rsp, imm8(16));
   mov(rbx, imm64(&self.R[0]));
   mov(rbp, imm64(&self));
 
@@ -58,12 +58,12 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
     hasBranched = branched;
     test(rax, rax);
     jz(imm8(7));
-    add(rsp, imm8(8));
+    add(rsp, imm8(16));
     pop(rbp);
     pop(rbx);
     ret();
   }
-  add(rsp, imm8(8));
+  add(rsp, imm8(16));
   pop(rbp);
   pop(rbx);
   ret();
@@ -1669,15 +1669,11 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 #if 0
   #define op(id, name, ...) \
     case id: \
-      sub(rsp, imm8(8)); \
       call(&SH2::name, &self, ##__VA_ARGS__); \
-      add(rsp, imm8(8)); \
       return 0;
   #define br(id, name, ...) \
     case id: \
-      sub(rsp, imm8(8)); \
       call(&SH2::name, &self, ##__VA_ARGS__); \
-      add(rsp, imm8(8)); \
       return 1;
   #include "decoder.hpp"
   #undef op

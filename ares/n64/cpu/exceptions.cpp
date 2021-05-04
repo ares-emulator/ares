@@ -1,11 +1,16 @@
 auto CPU::Exception::trigger(u32 code, u32 coprocessor, bool tlbMiss) -> void {
   self.debugger.exception(code);
 
-  u64 vectorBase = !self.scc.status.vectorLocation ? s32(0x8000'0000) : s32(0xbfc0'0200);
-  u32 vectorOffset = 0x0180;
+  u64 vectorBase = !self.scc.status.vectorLocation ? 0x8000'0000 : 0xbfc0'0200;
+  if(self.context.bits == 64) vectorBase = (s32)vectorBase;
+
+  u16 vectorOffset = 0x0180;
   if(tlbMiss) {
     //use special vector offset for TLB load/store miss exceptions when EXL=0
-    if(!self.scc.status.exceptionLevel) vectorOffset = 0x0000;
+    if(!self.scc.status.exceptionLevel) {
+      if(self.context.bits == 32) vectorOffset = 0x0000;
+      if(self.context.bits == 64) vectorOffset = 0x0080;
+    }
   }
 
   if(!self.scc.status.exceptionLevel) {

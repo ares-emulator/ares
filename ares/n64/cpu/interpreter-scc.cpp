@@ -42,8 +42,8 @@ auto CPU::getControlRegister(n5 index) -> u64 {
     break;
   case 10:  //entryhi
     data.bit( 0, 7) = scc.tlb.addressSpaceID;
-    data.bit(13,39) = scc.tlb.virtualAddress.bit(13,31);
-    data.bit(40,61) = scc.tlb.unused;
+    data.bit(13,39) = scc.tlb.virtualAddress.bit(13,39);
+    data.bit(40,61) = 0;
     data.bit(62,63) = scc.tlb.region;
     break;
   case 11:  //compare
@@ -178,8 +178,7 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     break;
   case 10:  //entryhi
     scc.tlb.addressSpaceID            = data.bit( 0, 7);
-    scc.tlb.virtualAddress.bit(13,31) = data.bit(13,39);
-    scc.tlb.unused                    = data.bit(40,61);
+    scc.tlb.virtualAddress.bit(13,39) = data.bit(13,39);
     scc.tlb.region                    = data.bit(62,63);
     scc.tlb.synchronize();
     break;
@@ -214,6 +213,10 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     if(floatingPointMode != scc.status.floatingPointMode) {
       fpu.setFloatingPointMode(scc.status.floatingPointMode);
     }
+    context.setMode();
+    if(scc.status.instructionTracing) {
+      debug(unimplemented, "[CPU::setControlRegister] instructionTracing=1");
+    }
   } break;
   case 13:  //cause
     scc.cause.interruptPending.bit(0) = data.bit(8);
@@ -232,6 +235,7 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     scc.configuration.bigEndian               = data.bit(15);
     scc.configuration.sysadWritebackPattern   = data.bit(24,27);
   //scc.configuration.systemClockRatio        = data.bit(28,30);  //read-only
+    context.setMode();
     break;
   case 17:  //load linked address
     scc.ll = data;
@@ -267,10 +271,12 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
 }
 
 auto CPU::instructionDMFC0(r64& rt, u8 rd) -> void {
+  if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
   rt.u64 = getControlRegister(rd);
 }
 
 auto CPU::instructionDMTC0(cr64& rt, u8 rd) -> void {
+  if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
   setControlRegister(rd, rt.u64);
 }
 

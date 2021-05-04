@@ -9,9 +9,9 @@ CPU cpu;
 #include "tlb.cpp"
 #include "memory.cpp"
 #include "exceptions.cpp"
-#include "ipu.cpp"
-#include "scc.cpp"
-#include "fpu.cpp"
+#include "interpreter-ipu.cpp"
+#include "interpreter-scc.cpp"
+#include "interpreter-fpu.cpp"
 #include "decoder.cpp"
 #include "recompiler.cpp"
 #include "debugger.cpp"
@@ -106,7 +106,9 @@ auto CPU::power(bool reset) -> void {
 
   pipeline = {};
   branch = {};
+  context.endian = Context::Endian::Big;
   context.mode = Context::Mode::Kernel;
+  context.bits = 64;
   for(auto& segment : context.segment) segment = Context::Segment::Invalid;
   icache.power(reset);
   dcache.power(reset);

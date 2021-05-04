@@ -79,13 +79,23 @@ struct CPU : Thread {
     CPU& self;
     Context(CPU& self) : self(self) {}
 
+    enum Endian : bool { Little, Big };
     enum Mode : u32 { Kernel, Supervisor, User };
-    enum Segment : u32 { Invalid, Mapped, Cached, Uncached };
-    u32 mode;
-    u32 bits;
-    u32 segment[8];  //512_MiB chunks
+    enum Segment : u32 { Invalid, Mapped32, Mapped64, Cached, Uncached, Kernel64, Supervisor64, User64 };
+
+    auto littleEndian() const -> bool { return endian == Endian::Little; }
+    auto bigEndian() const -> bool { return endian == Endian::Big; }
+
+    auto kernelMode() const -> bool { return mode == Mode::Kernel; }
+    auto supervisorMode() const -> bool { return mode == Mode::Supervisor; }
+    auto userMode() const -> bool { return mode == Mode::User; }
 
     auto setMode() -> void;
+
+    bool endian;
+    u32  mode;
+    u32  bits;
+    u32  segment[8];  //512_MiB chunks
   } context{*this};
 
   //icache.cpp
@@ -155,9 +165,13 @@ struct CPU : Thread {
     };
 
     //tlb.cpp
-    auto load(u32 address) -> Match;
-    auto store(u32 address) -> Match;
-    auto exception(u32 address) -> void;
+    auto load32(u32 address) -> Match;
+    auto store32(u32 address) -> Match;
+    auto exception32(u32 address) -> void;
+
+    auto load64(u64 address) -> Match;
+    auto store64(u64 address) -> Match;
+    auto exception64(u64 address) -> void;
 
     struct Entry {
       //scc-tlb.cpp
@@ -169,27 +183,33 @@ struct CPU : Thread {
       n3  cacheAlgorithm[2];
       n32 physicalAddress[2];
       n32 pageMask;
-      n32 virtualAddress;
+      n40 virtualAddress;
       n8  addressSpaceID;
-    //unimplemented:
-      n22 unused;
       n2  region;
     //internal:
       n1  globals;
       n32 addressMaskHi;
       n32 addressMaskLo;
       n32 addressSelect;
-      n32 addressCompare;
+      n40 addressCompare;
     } entry[TLB::Entries];
 
     u32 physicalAddress;
   } tlb{*this};
 
   //memory.cpp
-  auto devirtualize(u32 address) -> maybe<u32>;
-  auto fetch(u32 address) -> u32;
-  template<u32 Size> auto read(u32 address) -> maybe<u64>;
-  template<u32 Size> auto write(u32 address, u64 data) -> bool;
+  auto kernelSegment32(u32 address) const -> Context::Segment;
+  auto supervisorSegment32(u32 address) const -> Context::Segment;
+  auto userSegment32(u32 address) const -> Context::Segment;
+
+  auto kernelSegment64(u64 address) const -> Context::Segment;
+  auto supervisorSegment64(u64 address) const -> Context::Segment;
+  auto userSegment64(u64 address) const -> Context::Segment;
+
+  auto devirtualize(u64 address) -> maybe<u64>;
+  auto fetch(u64 address) -> u32;
+  template<u32 Size> auto read(u64 address) -> maybe<u64>;
+  template<u32 Size> auto write(u64 address, u64 data) -> bool;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -669,6 +689,7 @@ struct CPU : Thread {
 
   //recompiler.cpp
   struct Recompiler : recompiler::amd64 {
+    using recompiler::amd64::call;
     CPU& self;
     Recompiler(CPU& self) : self(self) {}
 
@@ -701,7 +722,8 @@ struct CPU : Thread {
     auto emitREGIMM(u32 instruction) -> bool;
     auto emitSCC(u32 instruction) -> bool;
     auto emitFPU(u32 instruction) -> bool;
-    auto emitCheckFPU() -> bool;
+
+    template<typename R, typename... P> auto call(R (CPU::*function)(P...)) -> void;
 
     bump_allocator allocator;
     Pool* pools[1 << 21];  //2_MiB * sizeof(void*) == 16_MiB
@@ -739,9 +761,9 @@ struct CPU : Thread {
     u32 instruction;
   } disassembler{*this};
 
-  static constexpr bool Endian = 1;  //0 = little, 1 = big
-  static constexpr u32  FlipLE = (Endian == 0 ? 7 : 0);
-  static constexpr u32  FlipBE = (Endian == 1 ? 7 : 0);
+//  static constexpr bool Endian = 1;  //0 = little, 1 = big
+//  static constexpr u32  FlipLE = (Endian == 0 ? 7 : 0);
+//  static constexpr u32  FlipBE = (Endian == 1 ? 7 : 0);
 };
 
 extern CPU cpu;

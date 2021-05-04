@@ -7,6 +7,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(branch.pc);
   s(branch.state);
 
+  s(context.endian);
   s(context.mode);
   s(context.bits);
   s(context.segment);
@@ -35,7 +36,6 @@ auto CPU::serialize(serializer& s) -> void {
     s(e.pageMask);
     s(e.virtualAddress);
     s(e.addressSpaceID);
-    s(e.unused);
     s(e.region);
     s(e.globals);
     s(e.addressMaskHi);
@@ -62,7 +62,6 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.tlb.pageMask);
   s(scc.tlb.virtualAddress);
   s(scc.tlb.addressSpaceID);
-  s(scc.tlb.unused);
   s(scc.tlb.region);
   s(scc.tlb.globals);
   s(scc.tlb.addressMaskHi);

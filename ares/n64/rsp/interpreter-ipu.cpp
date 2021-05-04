@@ -58,10 +58,6 @@ auto RSP::instructionBREAK() -> void {
   branch.halt();
 }
 
-auto RSP::instructionCACHE(u8 cache, u8 operation) -> void {
-  //todo
-}
-
 auto RSP::instructionJ(u32 imm) -> void {
   branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
 }

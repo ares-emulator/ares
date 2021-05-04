@@ -32,8 +32,8 @@
   op(0x0f, LUI, RT, IMMu16);
   jp(0x10, SCC);
   jp(0x11, FPU);
-  op(0x12, COP2);
-  op(0x13, COP3);
+  br(0x12, COP2);
+  br(0x13, COP3);
   br(0x14, BEQL, RS, RT, IMMi16);
   br(0x15, BNEL, RS, RT, IMMi16);
   br(0x16, BLEZL, RS, IMMi16);
@@ -42,10 +42,10 @@
   op(0x19, DADDIU, RT, RS, IMMi16);
   op(0x1a, LDL, RT, RS, IMMi16);
   op(0x1b, LDR, RT, RS, IMMi16);
-  op(0x1c, INVALID);
-  op(0x1d, INVALID);
-  op(0x1e, INVALID);
-  op(0x1f, INVALID);
+  br(0x1c, INVALID);
+  br(0x1d, INVALID);
+  br(0x1e, INVALID);
+  br(0x1f, INVALID);
   op(0x20, LB, RT, RS, IMMi16);
   op(0x21, LH, RT, RS, IMMi16);
   op(0x22, LWL, RT, RS, IMMi16);
@@ -64,19 +64,19 @@
   op(0x2f, CACHE, OP >> 16 & 31, RS, IMMi16);
   op(0x30, LL, RT, RS, IMMi16);
   op(0x31, LWC1, FT, RS, IMMi16);
-  op(0x32, COP2);  //LWC2
-  op(0x33, COP3);  //LWC3
+  br(0x32, COP2);  //LWC2
+  br(0x33, COP3);  //LWC3
   op(0x34, LLD, RT, RS, IMMi16);
   op(0x35, LDC1, FT, RS, IMMi16);
-  op(0x36, COP2);  //LDC2
+  br(0x36, COP2);  //LDC2
   op(0x37, LD, RT, RS, IMMi16);
   op(0x38, SC, RT, RS, IMMi16);
   op(0x39, SWC1, FT, RS, IMMi16);
-  op(0x3a, COP2);  //SWC2
-  op(0x3b, COP3);  //SWC3
+  br(0x3a, COP2);  //SWC2
+  br(0x3b, COP3);  //SWC3
   op(0x3c, SCD, RT, RS, IMMi16);
   op(0x3d, SDC1, FT, RS, IMMi16);
-  op(0x3e, COP2);  //SDC2
+  br(0x3e, COP2);  //SDC2
   op(0x3f, SD, RT, RS, IMMi16);
   }
 }
@@ -87,27 +87,27 @@
 {
   switch(OP & 0x3f) {
   op(0x00, SLL, RD, RT, SA);
-  op(0x01, INVALID);
+  br(0x01, INVALID);
   op(0x02, SRL, RD, RT, SA);
   op(0x03, SRA, RD, RT, SA);
   op(0x04, SLLV, RD, RT, RS);
-  op(0x05, INVALID);
+  br(0x05, INVALID);
   op(0x06, SRLV, RD, RT, RS);
   op(0x07, SRAV, RD, RT, RS);
   br(0x08, JR, RS);
   br(0x09, JALR, RD, RS);
-  op(0x0a, INVALID);
-  op(0x0b, INVALID);
+  br(0x0a, INVALID);
+  br(0x0b, INVALID);
   br(0x0c, SYSCALL);
   br(0x0d, BREAK);
-  op(0x0e, INVALID);
+  br(0x0e, INVALID);
   op(0x0f, SYNC);
   op(0x10, MFHI, RD);
   op(0x11, MTHI, RS);
   op(0x12, MFLO, RD);
   op(0x13, MTLO, RS);
   op(0x14, DSLLV, RD, RT, RS);
-  op(0x15, INVALID);
+  br(0x15, INVALID);
   op(0x16, DSRLV, RD, RT, RS);
   op(0x17, DSRAV, RD, RT, RS);
   op(0x18, MULT, RS, RT);
@@ -126,8 +126,8 @@
   op(0x25, OR, RD, RS, RT);
   op(0x26, XOR, RD, RS, RT);
   op(0x27, NOR, RD, RS, RT);
-  op(0x28, INVALID);
-  op(0x29, INVALID);
+  br(0x28, INVALID);
+  br(0x29, INVALID);
   op(0x2a, SLT, RD, RS, RT);
   op(0x2b, SLTU, RD, RS, RT);
   op(0x2c, DADD, RD, RS, RT);
@@ -139,15 +139,15 @@
   op(0x32, TLT, RS, RT);
   op(0x33, TLTU, RS, RT);
   op(0x34, TEQ, RS, RT);
-  op(0x35, INVALID);
+  br(0x35, INVALID);
   op(0x36, TNE, RS, RT);
-  op(0x37, INVALID);
+  br(0x37, INVALID);
   op(0x38, DSLL, RD, RT, SA);
-  op(0x39, INVALID);
+  br(0x39, INVALID);
   op(0x3a, DSRL, RD, RT, SA);
   op(0x3b, DSRA, RD, RT, SA);
   op(0x3c, DSLL, RD, RT, SA + 32);
-  op(0x3d, INVALID);
+  br(0x3d, INVALID);
   op(0x3e, DSRL, RD, RT, SA + 32);
   op(0x3f, DSRA, RD, RT, SA + 32);
   }
@@ -162,34 +162,34 @@
   br(0x01, BGEZ, RS, IMMi16);
   br(0x02, BLTZL, RS, IMMi16);
   br(0x03, BGEZL, RS, IMMi16);
-  op(0x04, INVALID);
-  op(0x05, INVALID);
-  op(0x06, INVALID);
-  op(0x07, INVALID);
+  br(0x04, INVALID);
+  br(0x05, INVALID);
+  br(0x06, INVALID);
+  br(0x07, INVALID);
   op(0x08, TGEI, RS, IMMi16);
   op(0x09, TGEIU, RS, IMMi16);
   op(0x0a, TLTI, RS, IMMi16);
   op(0x0b, TLTIU, RS, IMMi16);
   op(0x0c, TEQI, RS, IMMi16);
-  op(0x0d, INVALID);
+  br(0x0d, INVALID);
   op(0x0e, TNEI, RS, IMMi16);
-  op(0x0f, INVALID);
+  br(0x0f, INVALID);
   br(0x10, BLTZAL, RS, IMMi16);
   br(0x11, BGEZAL, RS, IMMi16);
   br(0x12, BLTZALL, RS, IMMi16);
   br(0x13, BGEZALL, RS, IMMi16);
-  op(0x14, INVALID);
-  op(0x15, INVALID);
-  op(0x16, INVALID);
-  op(0x17, INVALID);
-  op(0x18, INVALID);
-  op(0x19, INVALID);
-  op(0x1a, INVALID);
-  op(0x1b, INVALID);
-  op(0x1c, INVALID);
-  op(0x1d, INVALID);
-  op(0x1e, INVALID);
-  op(0x1f, INVALID);
+  br(0x14, INVALID);
+  br(0x15, INVALID);
+  br(0x16, INVALID);
+  br(0x17, INVALID);
+  br(0x18, INVALID);
+  br(0x19, INVALID);
+  br(0x1a, INVALID);
+  br(0x1b, INVALID);
+  br(0x1c, INVALID);
+  br(0x1d, INVALID);
+  br(0x1e, INVALID);
+  br(0x1f, INVALID);
   }
 }
 #undef DECODER_REGIMM
@@ -200,20 +200,20 @@
   switch(OP >> 21 & 0x1f) {
   op(0x00, MFC0, RT, RDn);
   op(0x01, DMFC0, RT, RDn);
-  op(0x02, INVALID);  //CFC0
-  op(0x03, INVALID);
+  br(0x02, INVALID);  //CFC0
+  br(0x03, INVALID);
   op(0x04, MTC0, RT, RDn);
   op(0x05, DMTC0, RT, RDn);
-  op(0x06, INVALID);  //CTC0
-  op(0x07, INVALID);
-  op(0x08, INVALID);  //BC0
-  op(0x09, INVALID);
-  op(0x0a, INVALID);
-  op(0x0b, INVALID);
-  op(0x0c, INVALID);
-  op(0x0d, INVALID);
-  op(0x0e, INVALID);
-  op(0x0f, INVALID);
+  br(0x06, INVALID);  //CTC0
+  br(0x07, INVALID);
+  br(0x08, INVALID);  //BC0
+  br(0x09, INVALID);
+  br(0x0a, INVALID);
+  br(0x0b, INVALID);
+  br(0x0c, INVALID);
+  br(0x0d, INVALID);
+  br(0x0e, INVALID);
+  br(0x0f, INVALID);
   }
 
   switch(OP & 0x3f) {
@@ -233,19 +233,19 @@
   op(0x00, MFC1, RT, FS);
   op(0x01, DMFC1, RT, FS);
   op(0x02, CFC1, RT, RDn);
-  op(0x03, INVALID);
+  br(0x03, INVALID);
   op(0x04, MTC1, RT, FS);
   op(0x05, DMTC1, RT, FS);
   op(0x06, CTC1, RT, RDn);
-  op(0x07, INVALID);
+  br(0x07, INVALID);
   br(0x08, BC1, OP >> 16 & 1, OP >> 17 & 1, IMMi16);
-  op(0x09, INVALID);
-  op(0x0a, INVALID);
-  op(0x0b, INVALID);
-  op(0x0c, INVALID);
-  op(0x0d, INVALID);
-  op(0x0e, INVALID);
-  op(0x0f, INVALID);
+  br(0x09, INVALID);
+  br(0x0a, INVALID);
+  br(0x0b, INVALID);
+  br(0x0c, INVALID);
+  br(0x0d, INVALID);
+  br(0x0e, INVALID);
+  br(0x0f, INVALID);
   }
 
   if((OP >> 21 & 31) == 16)
