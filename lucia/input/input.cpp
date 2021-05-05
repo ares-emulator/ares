@@ -144,17 +144,7 @@ auto InputButton::value() -> s16 {
       output = value != 0;
     }
 
-    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Hat) {
-      if(qualifier == Qualifier::Lo) output = value < -16384;
-      if(qualifier == Qualifier::Hi) output = value > +16384;
-    }
-
-    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis) {
-      if(qualifier == Qualifier::Lo) output = value < -16384;
-      if(qualifier == Qualifier::Hi) output = value > +16384;
-    }
-
-    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Trigger) {
+    if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button) {
       if(qualifier == Qualifier::Lo) output = value < -16384;
       if(qualifier == Qualifier::Hi) output = value > +16384;
     }
@@ -163,6 +153,71 @@ auto InputButton::value() -> s16 {
   }
 
   return result;
+}
+
+//
+
+auto InputAnalog::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
+  string assignment = {"0x", hex(device->id()), "/", groupID, "/", inputID};
+
+  if(device->isNull()) {
+    return unbind(binding), true;
+  }
+
+  if(device->isKeyboard() && device->group(groupID).input(inputID).name() == "Escape") {
+    return unbind(binding), true;
+  }
+
+  if(device->isKeyboard() && oldValue == 0 && newValue == 1) {
+    return bind(binding, assignment), true;
+  }
+
+  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Button && oldValue == 0 && newValue == 1) {
+    return bind(binding, assignment), true;
+  }
+
+  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button && (
+    (oldValue >= -16384 && newValue < -16384) || (oldValue <= -16384 && newValue > -16384)
+  )) {
+    return bind(binding, {assignment, "/Lo"}), true;
+  }
+
+  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button && (
+    (oldValue <= +16384 && newValue > +16384) || (oldValue >= +16384 && newValue < +16384)
+  )) {
+    return bind(binding, {assignment, "/Hi"}), true;
+  }
+
+  return false;
+}
+
+auto InputAnalog::value() -> s16 {
+  s32 result = 0;
+
+  for(auto& binding : bindings) {
+    if(!binding.device) continue;  //unbound
+
+    auto& device = binding.device;
+    auto& groupID = binding.groupID;
+    auto& inputID = binding.inputID;
+    auto& qualifier = binding.qualifier;
+    s16 value = device->group(groupID).input(inputID).value();
+
+    if(device->isKeyboard() && groupID == HID::Keyboard::GroupID::Button) {
+      result += value != 0 ? 32767 : 0;
+    }
+
+    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Button) {
+      result += value != 0 ? 32767 : 0;
+    }
+
+    if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button) {
+      if(qualifier == Qualifier::Lo && value < 0) result += abs(value);
+      if(qualifier == Qualifier::Hi && value > 0) result += abs(value);
+    }
+  }
+
+  return sclamp<16>(result);
 }
 
 //
@@ -194,7 +249,7 @@ auto InputAxis::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupI
 }
 
 auto InputAxis::value() -> s16 {
-  s16 result = 0;
+  s32 result = 0;
 
   for(auto& binding : bindings) {
     if(!binding.device) continue;  //unbound
@@ -210,7 +265,7 @@ auto InputAxis::value() -> s16 {
     }
   }
 
-  return result;
+  return sclamp<16>(result);
 }
 
 //
@@ -265,10 +320,14 @@ VirtualPad::VirtualPad() {
   mappings.append(&r2);
   mappings.append(&lt);
   mappings.append(&rt);
-  mappings.append(&lx);
-  mappings.append(&ly);
-  mappings.append(&rx);
-  mappings.append(&ry);
+  mappings.append(&lup);
+  mappings.append(&ldown);
+  mappings.append(&lleft);
+  mappings.append(&lright);
+  mappings.append(&rup);
+  mappings.append(&rdown);
+  mappings.append(&rleft);
+  mappings.append(&rright);
   mappings.append(&rumble);
 }
 

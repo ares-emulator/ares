@@ -1,4 +1,4 @@
-auto CPU::getControlRegister(u8 index) -> u32 {
+auto CPU::getControlRegisterSCC(u8 index) -> u32 {
   n32 data = 0;
 
   switch(index & 15) {
@@ -93,7 +93,7 @@ auto CPU::getControlRegister(u8 index) -> u32 {
   return data;
 }
 
-auto CPU::setControlRegister(u8 index, u32 value) -> void {
+auto CPU::setControlRegisterSCC(u8 index, u32 value) -> void {
   n32 data = value;
 
   switch(index & 15) {
@@ -189,17 +189,17 @@ auto CPU::setControlRegister(u8 index, u32 value) -> void {
   }
 }
 
-auto CPU::SCC::MFC0(u32& rt, u8 rd) -> void {
-  if(&rt == &self.ipu.r[0]) return cpu.exception.reservedInstruction();
-  cpu.load(rt, cpu.getControlRegister(rd));
+auto CPU::MFC0(u32& rt, u8 rd) -> void {
+  if(&rt == &ipu.r[0]) return exception.reservedInstruction();
+  load(rt, getControlRegisterSCC(rd));
 }
 
-auto CPU::SCC::MTC0(cu32& rt, u8 rd) -> void {
-  cpu.setControlRegister(rd, rt);
+auto CPU::MTC0(cu32& rt, u8 rd) -> void {
+  setControlRegisterSCC(rd, rt);
 }
 
-auto CPU::SCC::RFE() -> void {
-  cpu.scc.status.frame[0] = cpu.scc.status.frame[1];
-  cpu.scc.status.frame[1] = cpu.scc.status.frame[2];
-//cpu.scc.status.frame[2] remains unchanged
+auto CPU::RFE() -> void {
+  scc.status.frame[0] = scc.status.frame[1];
+  scc.status.frame[1] = scc.status.frame[2];
+//scc.status.frame[2] remains unchanged
 }

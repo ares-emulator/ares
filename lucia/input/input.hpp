@@ -36,6 +36,13 @@ struct InputButton : InputMapping {
   auto value() -> s16 override;
 };
 
+struct InputAnalog : InputMapping {
+  using InputMapping::InputMapping;
+  using InputMapping::bind;
+  auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
+  auto value() -> s16 override;
+};
+
 struct InputAxis : InputMapping {
   using InputMapping::InputMapping;
   using InputMapping::bind;
@@ -84,10 +91,14 @@ struct VirtualPad {
   InputButton r2{"R2"};
   InputButton lt{"LT"};
   InputButton rt{"RT"};
-  InputAxis   lx{"LX"};
-  InputAxis   ly{"LY"};
-  InputAxis   rx{"RX"};
-  InputAxis   ry{"RY"};
+  InputAnalog lup{"L-Up"};
+  InputAnalog ldown{"L-Down"};
+  InputAnalog lleft{"L-Left"};
+  InputAnalog lright{"L-Right"};
+  InputAnalog rup{"R-Up"};
+  InputAnalog rdown{"R-Down"};
+  InputAnalog rleft{"R-Left"};
+  InputAnalog rright{"R-Right"};
   InputRumble rumble{"Rumble"};
 
   vector<InputMapping*> mappings;

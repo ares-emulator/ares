@@ -47,31 +47,32 @@ auto GameBoy::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
 
 auto GameBoy::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
-  maybe<InputMapping&> mapping;
-  if(name == "Up"    ) mapping = virtualPads[0].up;
-  if(name == "Down"  ) mapping = virtualPads[0].down;
-  if(name == "Left"  ) mapping = virtualPads[0].left;
-  if(name == "Right" ) mapping = virtualPads[0].right;
-  if(name == "B"     ) mapping = virtualPads[0].a;
-  if(name == "A"     ) mapping = virtualPads[0].b;
-  if(name == "Select") mapping = virtualPads[0].select;
-  if(name == "Start" ) mapping = virtualPads[0].start;
+  maybe<InputMapping&> mappings[2];
+  if(name == "Up"    ) mappings[0] = virtualPads[0].up;
+  if(name == "Down"  ) mappings[0] = virtualPads[0].down;
+  if(name == "Left"  ) mappings[0] = virtualPads[0].left;
+  if(name == "Right" ) mappings[0] = virtualPads[0].right;
+  if(name == "B"     ) mappings[0] = virtualPads[0].a;
+  if(name == "A"     ) mappings[0] = virtualPads[0].b;
+  if(name == "Select") mappings[0] = virtualPads[0].select;
+  if(name == "Start" ) mappings[0] = virtualPads[0].start;
   //MBC5
-  if(name == "Rumble") mapping = virtualPads[0].rumble;
+  if(name == "Rumble") mappings[0] = virtualPads[0].rumble;
   //MBC7
-  if(name == "X"     ) mapping = virtualPads[0].lx;
-  if(name == "Y"     ) mapping = virtualPads[0].ly;
+  if(name == "X"     ) mappings[0] = virtualPads[0].lleft, mappings[1] = virtualPads[0].lright;
+  if(name == "Y"     ) mappings[0] = virtualPads[0].lup,   mappings[1] = virtualPads[0].ldown;
 
-  if(mapping) {
-    auto value = mapping->value();
+  if(mappings[0]) {
     if(auto axis = node->cast<ares::Node::Input::Axis>()) {
+      auto value = mappings[1]->value() - mappings[0]->value();
       axis->setValue(value);
     }
     if(auto button = node->cast<ares::Node::Input::Button>()) {
+      auto value = mappings[0]->value();
       button->setValue(value);
     }
     if(auto rumble = node->cast<ares::Node::Input::Rumble>()) {
-      if(auto target = dynamic_cast<InputRumble*>(mapping.data())) {
+      if(auto target = dynamic_cast<InputRumble*>(mappings[0].data())) {
         target->rumble(rumble->enable());
       }
     }

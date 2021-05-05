@@ -1,4 +1,14 @@
-//shares instruction decoding between interpreter and dynamic recompiler
+#define OP pipeline.instruction
+#define RD ipu.r[RDn]
+#define RT ipu.r[RTn]
+#define RS ipu.r[RSn]
+#define VD vpu.r[VDn]
+#define VS vpu.r[VSn]
+#define VT vpu.r[VTn]
+
+#define jp(id, name, ...) case id: return decoder##name(__VA_ARGS__)
+#define op(id, name, ...) case id: return name(__VA_ARGS__)
+#define br(id, name, ...) case id: return name(__VA_ARGS__)
 
 #define SA     (OP >>  6 & 31)
 #define RDn    (OP >> 11 & 31)
@@ -11,8 +21,7 @@
 #define IMMu16 u16(OP)
 #define IMMu26 (OP & 0x03ff'ffff)
 
-#ifdef DECODER_EXECUTE
-{
+auto RSP::decoderEXECUTE() -> void {
   switch(OP >> 26) {
   jp(0x00, SPECIAL);
   jp(0x01, REGIMM);
@@ -80,11 +89,8 @@
   op(0x3f, INVALID);  //SD
   }
 }
-#undef DECODER_EXECUTE
-#endif
 
-#ifdef DECODER_SPECIAL
-{
+auto RSP::decoderSPECIAL() -> void {
   switch(OP & 0x3f) {
   op(0x00, SLL, RD, RT, SA);
   op(0x01, INVALID);
@@ -152,11 +158,8 @@
   op(0x3f, INVALID);  //DSRA32
   }
 }
-#undef DECODER_SPECIAL
-#endif
 
-#ifdef DECODER_REGIMM
-{
+auto RSP::decoderREGIMM() -> void {
   switch(OP >> 16 & 0x1f) {
   br(0x00, BLTZ, RS, IMMi16);
   br(0x01, BGEZ, RS, IMMi16);
@@ -192,11 +195,8 @@
   op(0x1f, INVALID);
   }
 }
-#undef DECODER_REGIMM
-#endif
 
-#ifdef DECODER_SCC
-{
+auto RSP::decoderSCC() -> void {
   switch(OP >> 21 & 0x1f) {
   op(0x00, MFC0, RT, RDn);
   op(0x01, INVALID);  //DMFC0
@@ -216,11 +216,8 @@
   op(0x0f, INVALID);
   }
 }
-#undef DECODER_SCC
-#endif
 
-#ifdef DECODER_VU
-{
+auto RSP::decoderVU() -> void {
   #define E (OP >> 7 & 15)
   switch(OP >> 21 & 0x1f) {
   op(0x00, MFC2, RT, VS, E);
@@ -313,11 +310,8 @@
   #undef E
   #undef DE
 }
-#undef DECODER_VU
-#endif
 
-#ifdef DECODER_LWC2
-{
+auto RSP::decoderLWC2() -> void {
   #define E     (OP >> 7 & 15)
   #define IMMi7 i7(OP)
   switch(OP >> 11 & 0x1f) {
@@ -337,11 +331,8 @@
   #undef E
   #undef IMMi7
 }
-#undef DECODER_LWC2
-#endif
 
-#ifdef DECODER_SWC2
-{
+auto RSP::decoderSWC2() -> void {
   #define E     (OP >> 7 & 15)
   #define IMMi7 i7(OP)
   switch(OP >> 11 & 0x1f) {
@@ -361,8 +352,9 @@
   #undef E
   #undef IMMi7
 }
-#undef DECODER_SWC2
-#endif
+
+auto RSP::INVALID() -> void {
+}
 
 #undef SA
 #undef RDn
@@ -374,3 +366,15 @@
 #undef IMMi16
 #undef IMMu16
 #undef IMMu26
+
+#undef jp
+#undef op
+#undef br
+
+#undef OP
+#undef RD
+#undef RT
+#undef RS
+#undef VD
+#undef VS
+#undef VT

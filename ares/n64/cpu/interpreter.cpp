@@ -1,4 +1,11 @@
-//shares instruction decoding between interpreter and dynamic recompiler
+#define OP pipeline.instruction
+#define RD ipu.r[RDn]
+#define RT ipu.r[RTn]
+#define RS ipu.r[RSn]
+
+#define jp(id, name, ...) case id: return decoder##name(__VA_ARGS__)
+#define op(id, name, ...) case id: return name(__VA_ARGS__)
+#define br(id, name, ...) case id: return name(__VA_ARGS__)
 
 #define SA     (OP >>  6 & 31)
 #define RDn    (OP >> 11 & 31)
@@ -11,8 +18,7 @@
 #define IMMu16 u16(OP)
 #define IMMu26 (OP & 0x03ff'ffff)
 
-#ifdef DECODER_EXECUTE
-{
+auto CPU::decoderEXECUTE() -> void {
   switch(OP >> 26) {
   jp(0x00, SPECIAL);
   jp(0x01, REGIMM);
@@ -80,11 +86,8 @@
   op(0x3f, SD, RT, RS, IMMi16);
   }
 }
-#undef DECODER_EXECUTE
-#endif
 
-#ifdef DECODER_SPECIAL
-{
+auto CPU::decoderSPECIAL() -> void {
   switch(OP & 0x3f) {
   op(0x00, SLL, RD, RT, SA);
   br(0x01, INVALID);
@@ -152,11 +155,8 @@
   op(0x3f, DSRA, RD, RT, SA + 32);
   }
 }
-#undef DECODER_SPECIAL
-#endif
 
-#ifdef DECODER_REGIMM
-{
+auto CPU::decoderREGIMM() -> void {
   switch(OP >> 16 & 0x1f) {
   br(0x00, BLTZ, RS, IMMi16);
   br(0x01, BGEZ, RS, IMMi16);
@@ -192,11 +192,8 @@
   br(0x1f, INVALID);
   }
 }
-#undef DECODER_REGIMM
-#endif
 
-#ifdef DECODER_SCC
-{
+auto CPU::decoderSCC() -> void {
   switch(OP >> 21 & 0x1f) {
   op(0x00, MFC0, RT, RDn);
   op(0x01, DMFC0, RT, RDn);
@@ -223,12 +220,11 @@
   op(0x08, TLBP);
   br(0x18, ERET);
   }
-}
-#undef DECODER_SCC
-#endif
 
-#ifdef DECODER_FPU
-{
+  //undefined instructions do not throw a reserved instruction exception
+}
+
+auto CPU::decoderFPU() -> void {
   switch(OP >> 21 & 0x1f) {
   op(0x00, MFC1, RT, FS);
   op(0x01, DMFC1, RT, FS);
@@ -337,9 +333,21 @@
   op(0x20, FCVT_S_L, FD, FS);
   op(0x21, FCVT_D_L, FD, FS);
   }
+
+  //undefined instructions do not throw a reserved instruction exception
 }
-#undef DECODER_FPU
-#endif
+
+auto CPU::COP2() -> void {
+  exception.coprocessor2();
+}
+
+auto CPU::COP3() -> void {
+  exception.coprocessor3();
+}
+
+auto CPU::INVALID() -> void {
+  exception.reservedInstruction();
+}
 
 #undef SA
 #undef RDn
@@ -351,3 +359,12 @@
 #undef IMMi16
 #undef IMMu16
 #undef IMMu26
+
+#undef jp
+#undef op
+#undef br
+
+#undef OP
+#undef RD
+#undef RT
+#undef RS

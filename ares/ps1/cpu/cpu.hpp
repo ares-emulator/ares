@@ -139,69 +139,9 @@ struct CPU : Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  //ipu.cpp
   struct IPU {
     CPU& self;
     IPU(CPU& self) : self(self) {}
-
-    auto ADD(u32& rd, cu32& rs, cu32& rt) -> void;
-    auto ADDI(u32& rt, cu32& rs, s16 imm) -> void;
-    auto ADDIU(u32& rt, cu32& rs, s16 imm) -> void;
-    auto ADDU(u32& rd, cu32& rs, cu32& rt) -> void;
-    auto AND(u32& rd, cu32& rs, cu32& rt) -> void;
-    auto ANDI(u32& rt, cu32& rs, u16 imm) -> void;
-    auto BEQ(cu32& rs, cu32& rt, s16 imm) -> void;
-    auto BGEZ(cs32& rs, s16 imm) -> void;
-    auto BGEZAL(cs32& rs, s16 imm) -> void;
-    auto BGTZ(cs32& rs, s16 imm) -> void;
-    auto BLEZ(cs32& rs, s16 imm) -> void;
-    auto BLTZ(cs32& rs, s16 imm) -> void;
-    auto BLTZAL(cs32& rs, s16 imm) -> void;
-    auto BNE(cu32& rs, cu32& rt, s16 imm) -> void;
-    auto BREAK() -> void;
-    auto DIV(cs32& rs, cs32& rt) -> void;
-    auto DIVU(cu32& rs, cu32& rt) -> void;
-    auto J(u32 imm) -> void;
-    auto JAL(u32 imm) -> void;
-    auto JALR(u32& rd, cu32& rs) -> void;
-    auto JR(cu32& rs) -> void;
-    auto LB(u32& rt, cu32& rs, s16 imm) -> void;
-    auto LBU(u32& rt, cu32& rs, s16 imm) -> void;
-    auto LH(u32& rt, cu32& rs, s16 imm) -> void;
-    auto LHU(u32& rt, cu32& rs, s16 imm) -> void;
-    auto LUI(u32& rt, u16 imm) -> void;
-    auto LW(u32& rt, cu32& rs, s16 imm) -> void;
-    auto LWL(u32& rt, cu32& rs, s16 imm) -> void;
-    auto LWR(u32& rt, cu32& rs, s16 imm) -> void;
-    auto MFHI(u32& rd) -> void;
-    auto MFLO(u32& rd) -> void;
-    auto MTHI(cu32& rs) -> void;
-    auto MTLO(cu32& rs) -> void;
-    auto MULT(cs32& rs, cs32& rt) -> void;
-    auto MULTU(cu32& rs, cu32& rt) -> void;
-    auto NOR(u32& rd, cu32& rs, cu32& rt) -> void;
-    auto OR(u32& rd, cu32& rs, cu32& rt) -> void;
-    auto ORI(u32& rt, cu32& rs, u16 imm) -> void;
-    auto SB(cu32& rt, cu32& rs, s16 imm) -> void;
-    auto SH(cu32& rt, cu32& rs, s16 imm) -> void;
-    auto SLL(u32& rd, cu32& rt, u8 sa) -> void;
-    auto SLLV(u32& rd, cu32& rt, cu32& rs) -> void;
-    auto SLT(u32& rd, cs32& rs, cs32& rt) -> void;
-    auto SLTI(u32& rt, cs32& rs, s16 imm) -> void;
-    auto SLTIU(u32& rt, cu32& rs, s16 imm) -> void;
-    auto SLTU(u32& rd, cu32& rs, cu32& rt) -> void;
-    auto SRA(u32& rd, cs32& rt, u8 sa) -> void;
-    auto SRAV(u32& rd, cs32& rt, cu32& rs) -> void;
-    auto SRL(u32& rd, cu32& rt, u8 sa) -> void;
-    auto SRLV(u32& rd, cu32& rt, cu32& rs) -> void;
-    auto SUB(u32& rd, cu32& rs, cu32& rt) -> void;
-    auto SUBU(u32& rd, cu32& rs, cu32& rt) -> void;
-    auto SW(cu32& rt, cu32& rs, s16 imm) -> void;
-    auto SWL(cu32& rt, cu32& rs, s16 imm) -> void;
-    auto SWR(cu32& rt, cu32& rs, s16 imm) -> void;
-    auto SYSCALL() -> void;
-    auto XOR(u32& rd, cu32& rs, cu32& rt) -> void;
-    auto XORI(u32& rt, cu32& rs, u16 imm) -> void;
 
     u32 r[32];
     u32 lo;
@@ -211,18 +151,69 @@ struct CPU : Thread {
     u32 pd;  //next PC
   } ipu{*this};
 
-  //scc.cpp: System Control Coprocessor
-  auto getControlRegister(u8) -> u32;
-  auto setControlRegister(u8, u32) -> void;
+  //interpreter-ipu.cpp
+  auto ADD(u32& rd, cu32& rs, cu32& rt) -> void;
+  auto ADDI(u32& rt, cu32& rs, s16 imm) -> void;
+  auto ADDIU(u32& rt, cu32& rs, s16 imm) -> void;
+  auto ADDU(u32& rd, cu32& rs, cu32& rt) -> void;
+  auto AND(u32& rd, cu32& rs, cu32& rt) -> void;
+  auto ANDI(u32& rt, cu32& rs, u16 imm) -> void;
+  auto BEQ(cu32& rs, cu32& rt, s16 imm) -> void;
+  auto BGEZ(cs32& rs, s16 imm) -> void;
+  auto BGEZAL(cs32& rs, s16 imm) -> void;
+  auto BGTZ(cs32& rs, s16 imm) -> void;
+  auto BLEZ(cs32& rs, s16 imm) -> void;
+  auto BLTZ(cs32& rs, s16 imm) -> void;
+  auto BLTZAL(cs32& rs, s16 imm) -> void;
+  auto BNE(cu32& rs, cu32& rt, s16 imm) -> void;
+  auto BREAK() -> void;
+  auto DIV(cs32& rs, cs32& rt) -> void;
+  auto DIVU(cu32& rs, cu32& rt) -> void;
+  auto J(u32 imm) -> void;
+  auto JAL(u32 imm) -> void;
+  auto JALR(u32& rd, cu32& rs) -> void;
+  auto JR(cu32& rs) -> void;
+  auto LB(u32& rt, cu32& rs, s16 imm) -> void;
+  auto LBU(u32& rt, cu32& rs, s16 imm) -> void;
+  auto LH(u32& rt, cu32& rs, s16 imm) -> void;
+  auto LHU(u32& rt, cu32& rs, s16 imm) -> void;
+  auto LUI(u32& rt, u16 imm) -> void;
+  auto LW(u32& rt, cu32& rs, s16 imm) -> void;
+  auto LWL(u32& rt, cu32& rs, s16 imm) -> void;
+  auto LWR(u32& rt, cu32& rs, s16 imm) -> void;
+  auto MFHI(u32& rd) -> void;
+  auto MFLO(u32& rd) -> void;
+  auto MTHI(cu32& rs) -> void;
+  auto MTLO(cu32& rs) -> void;
+  auto MULT(cs32& rs, cs32& rt) -> void;
+  auto MULTU(cu32& rs, cu32& rt) -> void;
+  auto NOR(u32& rd, cu32& rs, cu32& rt) -> void;
+  auto OR(u32& rd, cu32& rs, cu32& rt) -> void;
+  auto ORI(u32& rt, cu32& rs, u16 imm) -> void;
+  auto SB(cu32& rt, cu32& rs, s16 imm) -> void;
+  auto SH(cu32& rt, cu32& rs, s16 imm) -> void;
+  auto SLL(u32& rd, cu32& rt, u8 sa) -> void;
+  auto SLLV(u32& rd, cu32& rt, cu32& rs) -> void;
+  auto SLT(u32& rd, cs32& rs, cs32& rt) -> void;
+  auto SLTI(u32& rt, cs32& rs, s16 imm) -> void;
+  auto SLTIU(u32& rt, cu32& rs, s16 imm) -> void;
+  auto SLTU(u32& rd, cu32& rs, cu32& rt) -> void;
+  auto SRA(u32& rd, cs32& rt, u8 sa) -> void;
+  auto SRAV(u32& rd, cs32& rt, cu32& rs) -> void;
+  auto SRL(u32& rd, cu32& rt, u8 sa) -> void;
+  auto SRLV(u32& rd, cu32& rt, cu32& rs) -> void;
+  auto SUB(u32& rd, cu32& rs, cu32& rt) -> void;
+  auto SUBU(u32& rd, cu32& rs, cu32& rt) -> void;
+  auto SW(cu32& rt, cu32& rs, s16 imm) -> void;
+  auto SWL(cu32& rt, cu32& rs, s16 imm) -> void;
+  auto SWR(cu32& rt, cu32& rs, s16 imm) -> void;
+  auto SYSCALL() -> void;
+  auto XOR(u32& rd, cu32& rs, cu32& rt) -> void;
+  auto XORI(u32& rt, cu32& rs, u16 imm) -> void;
 
   struct SCC {
     CPU& self;
     SCC(CPU& self) : self(self) {}
-
-    //scc.cpp
-    auto MFC0(u32& rt, u8 rd) -> void;
-    auto MTC0(cu32& rt, u8 rd) -> void;
-    auto RFE() -> void;
 
     struct Breakpoint {
       struct Address {
@@ -317,7 +308,14 @@ struct CPU : Thread {
     } productID;
   } scc{*this};
 
-  //gte.cpp: Geometry Transformation Engine
+  //interpreter-scc.cpp
+  auto getControlRegisterSCC(u8) -> u32;
+  auto setControlRegisterSCC(u8, u32) -> void;
+
+  auto MFC0(u32& rt, u8 rd) -> void;
+  auto MTC0(cu32& rt, u8 rd) -> void;
+  auto RFE() -> void;
+
   struct GTE {
     CPU& self;
     GTE(CPU& self) : self(self) {}
@@ -365,7 +363,7 @@ struct CPU : Thread {
       v16 a, b, c;
     };
 
-    //gte.cpp
+    //interpreter-gte.cpp
     auto constructTable() -> void;
 
     auto countLeadingZeroes16(u16) -> u32;
@@ -401,38 +399,6 @@ struct CPU : Thread {
     auto prologue() -> void;
     auto prologue(bool lm, u8 sf) -> void;
     auto epilogue() -> void;
-
-    auto AVSZ3() -> void;
-    auto AVSZ4() -> void;
-    auto CC(bool lm, u8 sf) -> void;
-    auto CDP(bool lm, u8 sf) -> void;
-    auto CFC2(u32& rt, u8 rd) -> void;
-    auto CTC2(cu32& rt, u8 rd) -> void;
-    auto DCPL(bool lm, u8 sf) -> void;
-    auto DPC(const v16&) -> void;
-    auto DPCS(bool lm, u8 sf) -> void;
-    auto DPCT(bool lm, u8 sf) -> void;
-    auto GPF(bool lm, u8 sf) -> void;
-    auto GPL(bool lm, u8 sf) -> void;
-    auto INTPL(bool lm, u8 sf) -> void;
-    auto LWC2(u8 rt, cu32& rs, s16 imm) -> void;
-    auto MFC2(u32& rt, u8 rd) -> void;
-    auto MTC2(cu32& rt, u8 rd) -> void;
-    auto MVMVA(bool lm, u8 tv, u8 mv, u8 mm, u8 sf) -> void;
-    template<u32> auto NC(const v16&) -> void;
-    auto NCCS(bool lm, u8 sf) -> void;
-    auto NCCT(bool lm, u8 sf) -> void;
-    auto NCDS(bool lm, u8 sf) -> void;
-    auto NCDT(bool lm, u8 sf) -> void;
-    auto NCLIP() -> void;
-    auto NCS(bool lm, u8 sf) -> void;
-    auto NCT(bool lm, u8 sf) -> void;
-    auto OP(bool lm, u8 sf) -> void;
-    auto RTP(v16, bool last) -> void;
-    auto RTPS(bool lm, u8 sf) -> void;
-    auto RTPT(bool lm, u8 sf) -> void;
-    auto SQR(bool lm, u8 sf) -> void;
-    auto SWC2(u8 rt, cu32& rs, s16 imm) -> void;
 
     m16  v;                //VX, VY, VZ
     c32  rgbc;
@@ -478,16 +444,47 @@ struct CPU : Thread {
       BitField<32, 31> error          {&value};
     } flag;
     bool lm;
-      u8 tv;
-      u8 mv;
-      u8 mm;
-      u8 sf;
+    u8   tv;
+    u8   mv;
+    u8   mm;
+    u8   sf;
 
   //unserialized:
     u8 unsignedNewtonRaphsonTable[257];
   } gte{*this};
 
-  auto constructTableGTE() -> void;
+  //interpreter-gte.cpp
+  auto AVSZ3() -> void;
+  auto AVSZ4() -> void;
+  auto CC(bool lm, u8 sf) -> void;
+  auto CDP(bool lm, u8 sf) -> void;
+  auto CFC2(u32& rt, u8 rd) -> void;
+  auto CTC2(cu32& rt, u8 rd) -> void;
+  auto DCPL(bool lm, u8 sf) -> void;
+  auto DPC(const GTE::v16&) -> void;
+  auto DPCS(bool lm, u8 sf) -> void;
+  auto DPCT(bool lm, u8 sf) -> void;
+  auto GPF(bool lm, u8 sf) -> void;
+  auto GPL(bool lm, u8 sf) -> void;
+  auto INTPL(bool lm, u8 sf) -> void;
+  auto LWC2(u8 rt, cu32& rs, s16 imm) -> void;
+  auto MFC2(u32& rt, u8 rd) -> void;
+  auto MTC2(cu32& rt, u8 rd) -> void;
+  auto MVMVA(bool lm, u8 tv, u8 mv, u8 mm, u8 sf) -> void;
+  template<u32> auto NC(const GTE::v16&) -> void;
+  auto NCCS(bool lm, u8 sf) -> void;
+  auto NCCT(bool lm, u8 sf) -> void;
+  auto NCDS(bool lm, u8 sf) -> void;
+  auto NCDT(bool lm, u8 sf) -> void;
+  auto NCLIP() -> void;
+  auto NCS(bool lm, u8 sf) -> void;
+  auto NCT(bool lm, u8 sf) -> void;
+  auto OP(bool lm, u8 sf) -> void;
+  auto RTP(GTE::v16, bool last) -> void;
+  auto RTPS(bool lm, u8 sf) -> void;
+  auto RTPT(bool lm, u8 sf) -> void;
+  auto SQR(bool lm, u8 sf) -> void;
+  auto SWC2(u8 rt, cu32& rs, s16 imm) -> void;
 
   //decoder.cpp
   auto decoderEXECUTE() -> void;
@@ -496,18 +493,19 @@ struct CPU : Thread {
   auto decoderSCC() -> void;
   auto decoderGTE() -> void;
 
-  auto instructionCOP1() -> void;
-  auto instructionCOP3() -> void;
-  auto instructionLWC0(u8 rt, cu32& rs, s16 imm) -> void;
-  auto instructionLWC1(u8 rt, cu32& rs, s16 imm) -> void;
-  auto instructionLWC3(u8 rt, cu32& rs, s16 imm) -> void;
-  auto instructionSWC0(u8 rt, cu32& rs, s16 imm) -> void;
-  auto instructionSWC1(u8 rt, cu32& rs, s16 imm) -> void;
-  auto instructionSWC3(u8 rt, cu32& rs, s16 imm) -> void;
-  auto instructionINVALID() -> void;
+  auto COP1() -> void;
+  auto COP3() -> void;
+  auto LWC0(u8 rt, cu32& rs, s16 imm) -> void;
+  auto LWC1(u8 rt, cu32& rs, s16 imm) -> void;
+  auto LWC3(u8 rt, cu32& rs, s16 imm) -> void;
+  auto SWC0(u8 rt, cu32& rs, s16 imm) -> void;
+  auto SWC1(u8 rt, cu32& rs, s16 imm) -> void;
+  auto SWC3(u8 rt, cu32& rs, s16 imm) -> void;
+  auto INVALID() -> void;
 
   //recompiler.cpp
   struct Recompiler : recompiler::amd64 {
+    using recompiler::amd64::call;
     CPU& self;
     Recompiler(CPU& self) : self(self) {}
 
@@ -540,6 +538,8 @@ struct CPU : Thread {
     auto emitREGIMM(u32 instruction) -> bool;
     auto emitSCC(u32 instruction) -> bool;
     auto emitGTE(u32 instruction) -> bool;
+
+    template<typename R, typename... P> auto call(R (CPU::*function)(P...)) -> void;
 
     bump_allocator allocator;
     Pool* pools[1 << 21];  //2_MiB * sizeof(void*) = 16_MiB

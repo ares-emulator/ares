@@ -389,19 +389,65 @@ inline auto CPU::GTE::epilogue() -> void {
 
 //
 
-auto CPU::GTE::AVSZ3() -> void {
+#define v16 GTE::v16
+#define v32 GTE::v32
+#define v64 GTE::v64
+#define m16 GTE::m16
+
+#define getDataRegister gte.getDataRegister
+#define setDataRegister gte.setDataRegister
+#define getControlRegister gte.getControlRegister
+#define setControlRegister gte.setControlRegister
+#define checkMac gte.checkMac
+#define extend gte.extend
+#define saturateIr gte.saturateIr
+#define setMac gte.setMac
+#define setIr gte.setIr
+#define setMacAndIr gte.setMacAndIr
+#define setOtz gte.setOtz
+#define matrixMultiply gte.matrixMultiply
+#define vectorMultiply gte.vectorMultiply
+#define divide gte.divide
+#define pushScreenX gte.pushScreenX
+#define pushScreenY gte.pushScreenY
+#define pushScreenZ gte.pushScreenZ
+#define pushColor gte.pushColor
+#define prologue gte.prologue
+#define epilogue gte.epilogue
+
+#define v gte.v
+#define rgbc gte.rgbc
+#define ir gte.ir
+#define screen gte.screen
+#define rgb gte.rgb
+#define mac gte.mac
+#define rotation gte.rotation
+#define translation gte.translation
+#define light gte.light
+#define backgroundColor gte.backgroundColor
+#define color gte.color
+#define farColor gte.farColor
+#define ofx gte.ofx
+#define ofy gte.ofy
+#define h gte.h
+#define dqa gte.dqa
+#define dqb gte.dqb
+#define zsf3 gte.zsf3
+#define zsf4 gte.zsf4
+
+auto CPU::AVSZ3() -> void {
   prologue();
   setOtz(setMac<0>(s64(zsf3) * (screen[1].z + screen[2].z + screen[3].z)));
   epilogue();
 }
 
-auto CPU::GTE::AVSZ4() -> void {
+auto CPU::AVSZ4() -> void {
   prologue();
   setOtz(setMac<0>(s64(zsf4) * (screen[0].z + screen[1].z + screen[2].z + screen[3].z)));
   epilogue();
 }
 
-auto CPU::GTE::CC(bool lm, u8 sf) -> void {
+auto CPU::CC(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   setMacAndIr(matrixMultiply(color, ir, backgroundColor));
   setMacAndIr(vectorMultiply({rgbc.r << 4, rgbc.g << 4, rgbc.b << 4}, ir));
@@ -409,7 +455,7 @@ auto CPU::GTE::CC(bool lm, u8 sf) -> void {
   epilogue();
 }
 
-auto CPU::GTE::CDP(bool lm, u8 sf) -> void {
+auto CPU::CDP(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   setMacAndIr(matrixMultiply(color, ir, backgroundColor));
 
@@ -425,48 +471,48 @@ auto CPU::GTE::CDP(bool lm, u8 sf) -> void {
   epilogue();
 }
 
-auto CPU::GTE::CFC2(u32& rt, u8 rd) -> void {
-  if(!self.scc.status.enable.coprocessor2) return self.exception.coprocessor();
-  self.load(rt, getControlRegister(rd));
+auto CPU::CFC2(u32& rt, u8 rd) -> void {
+  if(!scc.status.enable.coprocessor2) return exception.coprocessor();
+  load(rt, getControlRegister(rd));
 }
 
-auto CPU::GTE::CTC2(cu32& rt, u8 rd) -> void {
-  if(!self.scc.status.enable.coprocessor2) return self.exception.coprocessor();
+auto CPU::CTC2(cu32& rt, u8 rd) -> void {
+  if(!scc.status.enable.coprocessor2) return exception.coprocessor();
   setControlRegister(rd, rt);
 }
 
-auto CPU::GTE::DCPL(bool lm, u8 sf) -> void {
+auto CPU::DCPL(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   v16 i = ir;
-  v16 color = {rgbc.r << 4, rgbc.g << 4, rgbc.b << 4};
-  setMacAndIr<1>((s64(farColor.r) << 12) - color.r * i.x);
-  setMacAndIr<2>((s64(farColor.g) << 12) - color.g * i.y);
-  setMacAndIr<3>((s64(farColor.b) << 12) - color.b * i.z);
+  v16 col = {rgbc.r << 4, rgbc.g << 4, rgbc.b << 4};
+  setMacAndIr<1>((s64(farColor.r) << 12) - col.r * i.x);
+  setMacAndIr<2>((s64(farColor.g) << 12) - col.g * i.y);
+  setMacAndIr<3>((s64(farColor.b) << 12) - col.b * i.z);
 
-  setMacAndIr<1>(color.r * i.x + ir.t * ir.x, lm);
-  setMacAndIr<2>(color.g * i.y + ir.t * ir.y, lm);
-  setMacAndIr<3>(color.b * i.z + ir.t * ir.z, lm);
+  setMacAndIr<1>(col.r * i.x + ir.t * ir.x, lm);
+  setMacAndIr<2>(col.g * i.y + ir.t * ir.y, lm);
+  setMacAndIr<3>(col.b * i.z + ir.t * ir.z, lm);
   pushColor();
   epilogue();
 }
 
 //meta-instruction
-auto CPU::GTE::DPC(const v16& color) -> void {
-  setMacAndIr<1>((s64(farColor.r) << 12) - (color.r << 12));
-  setMacAndIr<2>((s64(farColor.g) << 12) - (color.g << 12));
-  setMacAndIr<3>((s64(farColor.b) << 12) - (color.b << 12));
+auto CPU::DPC(const v16& col) -> void {
+  setMacAndIr<1>((s64(farColor.r) << 12) - (col.r << 12));
+  setMacAndIr<2>((s64(farColor.g) << 12) - (col.g << 12));
+  setMacAndIr<3>((s64(farColor.b) << 12) - (col.b << 12));
 
-  setMacAndIr(vectorMultiply({ir.t, ir.t, ir.t}, ir, color));
+  setMacAndIr(vectorMultiply({ir.t, ir.t, ir.t}, ir, col));
   pushColor();
 }
 
-auto CPU::GTE::DPCS(bool lm, u8 sf) -> void {
+auto CPU::DPCS(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   DPC({rgbc.r << 4, rgbc.g << 4, rgbc.b << 4});
   epilogue();
 }
 
-auto CPU::GTE::DPCT(bool lm, u8 sf) -> void {
+auto CPU::DPCT(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   DPC({u8(rgb[0] >> 0) << 4, u8(rgb[0] >> 8) << 4, u8(rgb[0] >> 16) << 4});
   DPC({u8(rgb[0] >> 0) << 4, u8(rgb[0] >> 8) << 4, u8(rgb[0] >> 16) << 4});
@@ -474,14 +520,14 @@ auto CPU::GTE::DPCT(bool lm, u8 sf) -> void {
   epilogue();
 }
 
-auto CPU::GTE::GPF(bool lm, u8 sf) -> void {
+auto CPU::GPF(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   setMacAndIr(vectorMultiply(ir, ir.t));
   pushColor();
   epilogue();
 }
 
-auto CPU::GTE::GPL(bool lm, u8 sf) -> void {
+auto CPU::GPL(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   setMacAndIr<1>((s64(mac.x) << sf) + ir.t * ir.x, lm);
   setMacAndIr<2>((s64(mac.y) << sf) + ir.t * ir.y, lm);
@@ -490,7 +536,7 @@ auto CPU::GTE::GPL(bool lm, u8 sf) -> void {
   epilogue();
 }
 
-auto CPU::GTE::INTPL(bool lm, u8 sf) -> void {
+auto CPU::INTPL(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   v16 i = ir;
   setMacAndIr<1>((s64(farColor.r) << 12) - (i.x << 12));
@@ -505,24 +551,24 @@ auto CPU::GTE::INTPL(bool lm, u8 sf) -> void {
   epilogue();
 }
 
-auto CPU::GTE::LWC2(u8 rt, cu32& rs, s16 imm) -> void {
-  if(!self.scc.status.enable.coprocessor2) return self.exception.coprocessor();
-  auto data = self.read<Word>(rs + imm);
-  if(self.exception()) return;
+auto CPU::LWC2(u8 rt, cu32& rs, s16 imm) -> void {
+  if(!scc.status.enable.coprocessor2) return exception.coprocessor();
+  auto data = read<Word>(rs + imm);
+  if(exception()) return;
   setDataRegister(rt, data);
 }
 
-auto CPU::GTE::MFC2(u32& rt, u8 rd) -> void {
-  if(!self.scc.status.enable.coprocessor2) return self.exception.coprocessor();
-  self.load(rt, getDataRegister(rd));
+auto CPU::MFC2(u32& rt, u8 rd) -> void {
+  if(!scc.status.enable.coprocessor2) return exception.coprocessor();
+  load(rt, getDataRegister(rd));
 }
 
-auto CPU::GTE::MTC2(cu32& rt, u8 rd) -> void {
-  if(!self.scc.status.enable.coprocessor2) return self.exception.coprocessor();
+auto CPU::MTC2(cu32& rt, u8 rd) -> void {
+  if(!scc.status.enable.coprocessor2) return exception.coprocessor();
   setDataRegister(rd, rt);
 }
 
-auto CPU::GTE::MVMVA(bool lm, u8 tv, u8 mv, u8 mm, u8 sf) -> void {
+auto CPU::MVMVA(bool lm, u8 tv, u8 mv, u8 mm, u8 sf) -> void {
   prologue(lm, sf);
   v32 tr;
   switch(tv) {
@@ -570,7 +616,7 @@ auto CPU::GTE::MVMVA(bool lm, u8 tv, u8 mv, u8 mm, u8 sf) -> void {
 
 //meta-instruction
 template<u32 m>
-auto CPU::GTE::NC(const v16& vector) -> void {
+auto CPU::NC(const v16& vector) -> void {
   setMacAndIr(matrixMultiply(light, vector));
   setMacAndIr(matrixMultiply(color, ir, backgroundColor));
 
@@ -586,21 +632,21 @@ auto CPU::GTE::NC(const v16& vector) -> void {
     setMacAndIr<2>((s64(farColor.g) << 12) - (rgbc.g << 4) * i.y);
     setMacAndIr<3>((s64(farColor.b) << 12) - (rgbc.b << 4) * i.z);
 
-    setMacAndIr<1>((rgbc.r << 4) * i.x + ir.t * ir.x, lm);
-    setMacAndIr<2>((rgbc.g << 4) * i.y + ir.t * ir.y, lm);
-    setMacAndIr<3>((rgbc.b << 4) * i.z + ir.t * ir.z, lm);
+    setMacAndIr<1>((rgbc.r << 4) * i.x + ir.t * ir.x, gte.lm);
+    setMacAndIr<2>((rgbc.g << 4) * i.y + ir.t * ir.y, gte.lm);
+    setMacAndIr<3>((rgbc.b << 4) * i.z + ir.t * ir.z, gte.lm);
   }
 
   pushColor();
 }
 
-auto CPU::GTE::NCCS(bool lm, u8 sf) -> void {
+auto CPU::NCCS(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   NC<1>(v.a);
   epilogue();
 }
 
-auto CPU::GTE::NCCT(bool lm, u8 sf) -> void {
+auto CPU::NCCT(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   NC<1>(v.a);
   NC<1>(v.b);
@@ -608,13 +654,13 @@ auto CPU::GTE::NCCT(bool lm, u8 sf) -> void {
   epilogue();
 }
 
-auto CPU::GTE::NCDS(bool lm, u8 sf) -> void {
+auto CPU::NCDS(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   NC<2>(v.a);
   epilogue();
 }
 
-auto CPU::GTE::NCDT(bool lm, u8 sf) -> void {
+auto CPU::NCDT(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   NC<2>(v.a);
   NC<2>(v.b);
@@ -622,7 +668,7 @@ auto CPU::GTE::NCDT(bool lm, u8 sf) -> void {
   epilogue();
 }
 
-auto CPU::GTE::NCLIP() -> void {
+auto CPU::NCLIP() -> void {
   prologue();
   s64 p0 = s64(screen[0].x) * s64(screen[1].y);
   s64 p1 = s64(screen[1].x) * s64(screen[2].y);
@@ -634,13 +680,13 @@ auto CPU::GTE::NCLIP() -> void {
   epilogue();
 }
 
-auto CPU::GTE::NCS(bool lm, u8 sf) -> void {
+auto CPU::NCS(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   NC<0>(v.a);
   epilogue();
 }
 
-auto CPU::GTE::NCT(bool lm, u8 sf) -> void {
+auto CPU::NCT(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   NC<0>(v.a);
   NC<0>(v.b);
@@ -648,7 +694,7 @@ auto CPU::GTE::NCT(bool lm, u8 sf) -> void {
   epilogue();
 }
 
-auto CPU::GTE::OP(bool lm, u8 sf) -> void {
+auto CPU::OP(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   setMac<1>(rotation.b.y * ir.z - rotation.c.z * ir.y);
   setMac<2>(rotation.c.z * ir.x - rotation.a.x * ir.z);
@@ -661,13 +707,13 @@ auto CPU::GTE::OP(bool lm, u8 sf) -> void {
 }
 
 //meta-instruction: rotation, translation, and perspective transformation
-auto CPU::GTE::RTP(v16 vector, bool last) -> void {
+auto CPU::RTP(v16 vector, bool last) -> void {
   auto [x, y, z] = matrixMultiply(rotation, vector, translation);
-  setMacAndIr<1>(x, lm);
-  setMacAndIr<2>(y, lm);
+  setMacAndIr<1>(x, gte.lm);
+  setMacAndIr<2>(y, gte.lm);
   setMac<3>(z);
   saturateIr<3>(z >> 12);
-  ir.z = std::clamp(mac.z, lm ? 0x0000 : -0x8000, +0x7fff);
+  ir.z = std::clamp(mac.z, gte.lm ? 0x0000 : -0x8000, +0x7fff);
 
   pushScreenZ(z >> 12);
   s64 dv = divide(h, screen[3].z);
@@ -681,13 +727,13 @@ auto CPU::GTE::RTP(v16 vector, bool last) -> void {
   ir.t = saturateIr<0>(sz >> 12);
 }
 
-auto CPU::GTE::RTPS(bool lm, u8 sf) -> void {
+auto CPU::RTPS(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   RTP(v.a, 1);
   epilogue();
 }
 
-auto CPU::GTE::RTPT(bool lm, u8 sf) -> void {
+auto CPU::RTPT(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   RTP(v.a, 0);
   RTP(v.b, 0);
@@ -695,14 +741,60 @@ auto CPU::GTE::RTPT(bool lm, u8 sf) -> void {
   epilogue();
 }
 
-auto CPU::GTE::SQR(bool lm, u8 sf) -> void {
+auto CPU::SQR(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   setMacAndIr(vectorMultiply(ir, ir));
   epilogue();
 }
 
-auto CPU::GTE::SWC2(u8 rt, cu32& rs, s16 imm) -> void {
-  if(!self.scc.status.enable.coprocessor2) return self.exception.coprocessor();
+auto CPU::SWC2(u8 rt, cu32& rs, s16 imm) -> void {
+  if(!scc.status.enable.coprocessor2) return exception.coprocessor();
   auto data = getDataRegister(rt);
-  self.write<Word>(rs + imm, data);
+  write<Word>(rs + imm, data);
 }
+
+#undef v16
+#undef v32
+#undef v64
+#undef m16
+
+#undef getDataRegister
+#undef setDataRegister
+#undef getControlRegister
+#undef setControlRegister
+#undef checkMac
+#undef extend
+#undef saturateIr
+#undef setMac
+#undef setIr
+#undef setMacAndIr
+#undef setOtz
+#undef matrixMultiply
+#undef vectorMultiply
+#undef divide
+#undef pushScreenX
+#undef pushScreenY
+#undef pushScreenZ
+#undef pushColor
+#undef prologue
+#undef epilogue
+
+#undef v
+#undef rgbc
+#undef ir
+#undef screen
+#undef rgb
+#undef mac
+#undef rotation
+#undef translation
+#undef light
+#undef backgroundColor
+#undef color
+#undef farColor
+#undef ofx
+#undef ofy
+#undef h
+#undef dqa
+#undef dqb
+#undef zsf3
+#undef zsf4

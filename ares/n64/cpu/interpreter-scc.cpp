@@ -270,17 +270,26 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
   }
 }
 
-auto CPU::instructionDMFC0(r64& rt, u8 rd) -> void {
-  if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
+auto CPU::DMFC0(r64& rt, u8 rd) -> void {
+  if(!context.kernelMode()) {
+    if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
+    if(context.bits == 32) return exception.reservedInstruction();
+  }
   rt.u64 = getControlRegister(rd);
 }
 
-auto CPU::instructionDMTC0(cr64& rt, u8 rd) -> void {
-  if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
+auto CPU::DMTC0(cr64& rt, u8 rd) -> void {
+  if(!context.kernelMode()) {
+    if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
+    if(context.bits == 32) return exception.reservedInstruction();
+  }
   setControlRegister(rd, rt.u64);
 }
 
-auto CPU::instructionERET() -> void {
+auto CPU::ERET() -> void {
+  if(!context.kernelMode()) {
+    if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
+  }
   branch.exception();
   if(scc.status.errorLevel) {
     ipu.pc = scc.epcError;
@@ -293,15 +302,24 @@ auto CPU::instructionERET() -> void {
   context.setMode();
 }
 
-auto CPU::instructionMFC0(r64& rt, u8 rd) -> void {
+auto CPU::MFC0(r64& rt, u8 rd) -> void {
+  if(!context.kernelMode()) {
+    if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
+  }
   rt.u64 = s32(getControlRegister(rd));
 }
 
-auto CPU::instructionMTC0(cr64& rt, u8 rd) -> void {
+auto CPU::MTC0(cr64& rt, u8 rd) -> void {
+  if(!context.kernelMode()) {
+    if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
+  }
   setControlRegister(rd, s32(rt.u32));
 }
 
-auto CPU::instructionTLBP() -> void {
+auto CPU::TLBP() -> void {
+  if(!context.kernelMode()) {
+    if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
+  }
   scc.index.tlbEntry = 0;  //technically undefined
   scc.index.probeFailure = 1;
   for(u32 index : range(TLB::Entries)) {
@@ -317,18 +335,27 @@ auto CPU::instructionTLBP() -> void {
   }
 }
 
-auto CPU::instructionTLBR() -> void {
+auto CPU::TLBR() -> void {
+  if(!context.kernelMode()) {
+    if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
+  }
   if(scc.index.tlbEntry >= TLB::Entries) return;
   scc.tlb = tlb.entry[scc.index.tlbEntry];
 }
 
-auto CPU::instructionTLBWI() -> void {
+auto CPU::TLBWI() -> void {
+  if(!context.kernelMode()) {
+    if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
+  }
   if(scc.index.tlbEntry >= TLB::Entries) return;
   tlb.entry[scc.index.tlbEntry] = scc.tlb;
   debugger.tlbWrite(scc.index.tlbEntry);
 }
 
-auto CPU::instructionTLBWR() -> void {
+auto CPU::TLBWR() -> void {
+  if(!context.kernelMode()) {
+    if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
+  }
   if(scc.random.index >= TLB::Entries) return;
   tlb.entry[scc.random.index] = scc.tlb;
   debugger.tlbWrite(scc.random.index);

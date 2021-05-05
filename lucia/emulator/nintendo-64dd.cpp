@@ -63,33 +63,40 @@ auto Nintendo64DD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory
 
 auto Nintendo64DD::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
-  maybe<InputMapping&> mapping;
-  if(name == "X-Axis" ) mapping = virtualPads[0].lx;
-  if(name == "Y-Axis" ) mapping = virtualPads[0].ly;
-  if(name == "Up"     ) mapping = virtualPads[0].up;
-  if(name == "Down"   ) mapping = virtualPads[0].down;
-  if(name == "Left"   ) mapping = virtualPads[0].left;
-  if(name == "Right"  ) mapping = virtualPads[0].right;
-  if(name == "B"      ) mapping = virtualPads[0].a;
-  if(name == "A"      ) mapping = virtualPads[0].b;
-  if(name == "C-Up"   ) mapping = virtualPads[0].ry;
-  if(name == "C-Down" ) mapping = virtualPads[0].ry;
-  if(name == "C-Left" ) mapping = virtualPads[0].rx;
-  if(name == "C-Right") mapping = virtualPads[0].rx;
-  if(name == "L"      ) mapping = virtualPads[0].l1;
-  if(name == "R"      ) mapping = virtualPads[0].r1;
-  if(name == "Z"      ) mapping = virtualPads[0].z;
-  if(name == "Start"  ) mapping = virtualPads[0].start;
+  maybe<InputMapping&> mappings[2];
+  if(name == "X-Axis" ) mappings[0] = virtualPads[0].lleft, mappings[1] = virtualPads[0].lright;
+  if(name == "Y-Axis" ) mappings[0] = virtualPads[0].lup,   mappings[1] = virtualPads[1].ldown;
+  if(name == "Up"     ) mappings[0] = virtualPads[0].up;
+  if(name == "Down"   ) mappings[0] = virtualPads[0].down;
+  if(name == "Left"   ) mappings[0] = virtualPads[0].left;
+  if(name == "Right"  ) mappings[0] = virtualPads[0].right;
+  if(name == "B"      ) mappings[0] = virtualPads[0].a;
+  if(name == "A"      ) mappings[0] = virtualPads[0].b;
+  if(name == "C-Up"   ) mappings[0] = virtualPads[0].rup;
+  if(name == "C-Down" ) mappings[0] = virtualPads[0].rdown;
+  if(name == "C-Left" ) mappings[0] = virtualPads[0].rleft;
+  if(name == "C-Right") mappings[0] = virtualPads[0].rright;
+  if(name == "L"      ) mappings[0] = virtualPads[0].l1;
+  if(name == "R"      ) mappings[0] = virtualPads[0].r1;
+  if(name == "Z"      ) mappings[0] = virtualPads[0].z;
+  if(name == "Start"  ) mappings[0] = virtualPads[0].start;
+  if(name == "Rumble" ) mappings[0] = virtualPads[0].rumble;
 
-  if(mapping) {
-    auto value = mapping->value();
+  if(mappings[0]) {
     if(auto axis = node->cast<ares::Node::Input::Axis>()) {
+      auto value = mappings[1]->value() - mappings[0]->value();
       axis->setValue(value);
     }
     if(auto button = node->cast<ares::Node::Input::Button>()) {
+      auto value = mappings[0]->value();
       if(name == "C-Up"   || name == "C-Left" ) return button->setValue(value < -16384);
       if(name == "C-Down" || name == "C-Right") return button->setValue(value > +16384);
       button->setValue(value);
+    }
+    if(auto rumble = node->cast<ares::Node::Input::Rumble>()) {
+      if(auto target = dynamic_cast<InputRumble*>(mappings[0].data())) {
+        target->rumble(rumble->enable());
+      }
     }
   }
 }

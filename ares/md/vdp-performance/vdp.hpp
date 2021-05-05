@@ -15,6 +15,10 @@ struct VDP : Thread {
     } memory;
   } debugger;
 
+  auto hcounter() const -> u32 { return state.hcounter; }
+  auto vcounter() const -> u32 { return state.vcounter; }
+  auto refreshing() const -> bool { return false; }
+
   //overrides Thread::active() for VDP DMA wait cycle detection:
   //this is needed as vdp-performace runs VDP DMA from CPU thread
   auto active() const -> bool { return dma.active; }

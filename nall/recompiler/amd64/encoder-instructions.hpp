@@ -202,7 +202,7 @@
 
   //op reg64,[reg64]
   #define op(code) \
-    emit.rex(0, rt & 8, 0, ds.reg & 8); \
+    emit.rex(1, rt & 8, 0, ds.reg & 8); \
     emit.byte(code); \
     emit.modrm(0, rt & 7, ds.reg & 7); \
     if(ds.reg == rsp || ds.reg == r12) emit.sib(0, 4, 4);
@@ -269,6 +269,22 @@
   auto sbb(dis8 dt, reg8 rs) { op(0x18); }
   auto sub(dis8 dt, reg8 rs) { op(0x28); }
   auto xor(dis8 dt, reg8 rs) { op(0x30); }
+  #undef op
+
+  //op reg64,imm32
+  #define op(group) \
+    emit.rex(1, 0, 0, rt & 8); \
+    emit.byte(0x81); \
+    emit.modrm(3, group, rt & 7); \
+    emit.dword(is.data);
+  auto add(reg64 rt, imm32 is) { op(0); }
+  auto or (reg64 rt, imm32 is) { op(1); }
+  auto adc(reg64 rt, imm32 is) { op(2); }
+  auto sbb(reg64 rt, imm32 is) { op(3); }
+  auto and(reg64 rt, imm32 is) { op(4); }
+  auto sub(reg64 rt, imm32 is) { op(5); }
+  auto xor(reg64 rt, imm32 is) { op(6); }
+  auto cmp(reg64 rt, imm32 is) { op(7); }
   #undef op
 
   //op.d [reg64+imm8],imm8
