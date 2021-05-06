@@ -5,6 +5,7 @@ namespace nall {
 
   enum class Compiler : u32 { Clang, GCC, Microsoft, Unknown };
   enum class Platform : u32 { Windows, MacOS, Linux, BSD, Android, Unknown };
+  enum class ABI : u32 { Windows, SystemV, Unknown };
   enum class API : u32 { Windows, Posix, Unknown };
   enum class DisplayServer : u32 { Windows, Quartz, Xorg, Unknown };
   enum class Architecture : u32 { x86, amd64, ARM32, ARM64, PPC32, PPC64, Unknown };
@@ -13,6 +14,7 @@ namespace nall {
 
   static inline constexpr auto compiler() -> Compiler;
   static inline constexpr auto platform() -> Platform;
+  static inline constexpr auto abi() -> ABI;
   static inline constexpr auto api() -> API;
   static inline constexpr auto display() -> DisplayServer;
   static inline constexpr auto architecture() -> Architecture;
@@ -69,45 +71,57 @@ namespace nall {
 
 #if defined(_WIN32)
   #define PLATFORM_WINDOWS
+  #define ABI_WINDOWS
   #define API_WINDOWS
   #define DISPLAY_WINDOWS
   constexpr auto platform() -> Platform { return Platform::Windows; }
+  constexpr auto abi() -> ABI { return ABI::Windows; }
   constexpr auto api() -> API { return API::Windows; }
   constexpr auto display() -> DisplayServer { return DisplayServer::Windows; }
 #elif defined(__APPLE__)
   #define PLATFORM_MACOS
+  #define ABI_SYSTEMV
   #define API_POSIX
   #define DISPLAY_QUARTZ
   constexpr auto platform() -> Platform { return Platform::MacOS; }
+  constexpr auto abi() -> ABI { return ABI::SystemV; }
   constexpr auto api() -> API { return API::Posix; }
   constexpr auto display() -> DisplayServer { return DisplayServer::Quartz; }
 #elif defined(__ANDROID__)
   #define PLATFORM_ANDROID
+  #define ABI_SYSTEMV
   #define API_POSIX
   #define DISPLAY_UNKNOWN
   constexpr auto platform() -> Platform { return Platform::Android; }
+  constexpr auto abi() -> ABI { return ABI::SystemV; }
   constexpr auto api() -> API { return API::Posix; }
   constexpr auto display() -> DisplayServer { return DisplayServer::Unknown; }
 #elif defined(linux) || defined(__linux__)
   #define PLATFORM_LINUX
+  #define ABI_SYSTEMV
   #define API_POSIX
   #define DISPLAY_XORG
   constexpr auto platform() -> Platform { return Platform::Linux; }
+  constexpr auto abi() -> ABI { return ABI::SystemV; }
   constexpr auto api() -> API { return API::Posix; }
   constexpr auto display() -> DisplayServer { return DisplayServer::Xorg; }
 #elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__NetBSD__) || defined(__OpenBSD__)
   #define PLATFORM_BSD
+  #define ABI_SYSTEMV
   #define API_POSIX
   #define DISPLAY_XORG
   constexpr auto platform() -> Platform { return Platform::BSD; }
+  constexpr auto abi() -> ABI { return ABI::SystemV; }
   constexpr auto api() -> API { return API::Posix; }
   constexpr auto display() -> DisplayServer { return DisplayServer::Xorg; }
 #else
   #warning "unable to detect platform"
   #define PLATFORM_UNKNOWN
+  #define ABI_UNKNOWN
   #define API_UNKNOWN
   #define DISPLAY_UNKNOWN
   constexpr auto platform() -> Platform { return Platform::Unknown; }
+  constexpr auto abi() -> ABI { return ABI::Unknown; }
   constexpr auto api() -> API { return API::Unknown; }
   constexpr auto display() -> DisplayServer { return DisplayServer::Unknown; }
 #endif

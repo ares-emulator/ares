@@ -95,10 +95,12 @@ auto SI::scan() -> void {
 
   n3 channel = 0;
   for(u32 offset = 0; offset < 64;) {
-    n6 send = pi.ram.readByte(offset++);
+    n8 send = pi.ram.readByte(offset++);
     if(send == 0x00) { channel++; continue; }
-    if(send == 0x3e) break;
-    if(send == 0x3f) continue;
+    if(send == 0xfd) continue;  //channel reset
+    if(send == 0xfe) break;     //end of packets
+    if(send == 0xff) continue;  //alignment padding
+    send &= 0x3f;
     n8 recvOffset = offset;
     n6 recv = pi.ram.readByte(offset++);
     n8 input[64];

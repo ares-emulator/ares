@@ -118,8 +118,7 @@ auto Nintendo64::input(ares::Node::Input::Input node) -> void {
     }
     if(auto button = node->cast<ares::Node::Input::Button>()) {
       auto value = mappings[0]->value();
-      if(name == "C-Up"   || name == "C-Left" ) return button->setValue(value < -16384);
-      if(name == "C-Down" || name == "C-Right") return button->setValue(value > +16384);
+      if(name.beginsWith("C-")) value = abs(value) > +16384;
       button->setValue(value);
     }
     if(auto rumble = node->cast<ares::Node::Input::Rumble>()) {

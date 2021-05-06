@@ -36,7 +36,7 @@ using namespace nall;
 
 namespace ares {
   static const string Name       = "ares";
-  static const string Version    = "119.16";
+  static const string Version    = "120";
   static const string Copyright  = "Near";
   static const string License    = "CC BY-NC-ND 4.0";
   static const string LicenseURI = "https://creativecommons.org/licenses/by-nc-nd/4.0/";
@@ -45,7 +45,7 @@ namespace ares {
 
   //incremented only when serialization format changes
   static const u32    SerializerSignature = 0x31545342;  //"BST1" (little-endian)
-  static const string SerializerVersion   = "119.2";
+  static const string SerializerVersion   = "120";
 
   namespace VFS {
     using Pak = shared_pointer<vfs::directory>;

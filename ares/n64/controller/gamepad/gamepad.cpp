@@ -96,17 +96,25 @@ auto Gamepad::read() -> n32 {
   platform->input(z);
   platform->input(start);
 
-  //16-bit signed -> 8-bit signed
-  auto ay = sclamp<8>(-y->value() >> 8);
-  auto ax = sclamp<8>(+x->value() >> 8);
+  //scale {-32768 ... +32767} to {-84 ... +84}
+  auto ax = x->value() * 85.0 / 32767.0;
+  auto ay = y->value() * 85.0 / 32767.0;
 
-  //dead-zone
-  if(abs(ay) < 24) ay = 0;
-  if(abs(ax) < 24) ax = 0;
+  //bound diagonals to an octagonal range {-68 ... +68}
+  if(ax != 0.0 && ay != 0.0) {
+    auto slope = ay / ax;
+    ax = copysign(min(abs(ax), 85.0 / (abs(slope) + 16.0 / 69.0)), ax);
+    ay = copysign(min(abs(ax * slope), 85.0 / (1.0 / abs(slope) + 16.0 / 69.0)), ay);
+    ax = ay / slope;
+  }
+
+  //create dead-zone in range {-15 ... +15}
+  if(abs(ax) < 16) ax = 0;
+  if(abs(ay) < 16) ay = 0;
 
   n32 data;
-  data.byte(0) = ay;
-  data.byte(1) = ax;
+  data.byte(0) = -ay;
+  data.byte(1) = +ax;
   data.bit(16) = cameraRight->value();
   data.bit(17) = cameraLeft->value();
   data.bit(18) = cameraDown->value();

@@ -272,8 +272,9 @@ struct SH2 {
     auto pool(u32 address) -> Pool*;
     auto block(u32 address) -> Block*;
     auto emit(u32 address) -> Block*;
-    template<typename R, typename... P> auto call(R (SH2::*function)(P...)) -> void;
     auto emitInstruction(u16 opcode) -> bool;
+
+    template<typename R, typename... P> auto call(R (SH2::*function)(P...)) -> void;
 
     bump_allocator allocator;
     Pool* pools[1 << 24];

@@ -18,6 +18,9 @@ auto CPU::Context::setMode() -> void {
     break;
   }
 
+  //todo: 64-bit mode breaks libdragon software, so disable it for now ...
+  bits = 32;
+
   if(bits == 32) {
     segment[0] = Segment::Mapped32;
     segment[1] = Segment::Mapped32;

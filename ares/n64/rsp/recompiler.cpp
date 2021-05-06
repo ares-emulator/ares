@@ -40,6 +40,11 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
   push(rbx);
   push(rbp);
   push(r13);
+  if constexpr(abi() == ABI::Windows) {
+    push(rsi);
+    push(rdi);
+    sub(rsp, imm8(0x40));
+  }
   mov(rbx, imm64(&self.ipu.r[0]));
   mov(rbp, imm64(&self));
   mov(r13, imm64(&self.vpu.r[0]));
@@ -56,11 +61,24 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
     if(hasBranched || (address & 0xffc) == 0) break;  //IMEM boundary
     hasBranched = branched;
     test(rax, rax);
-    jz(imm8(5));
+    if constexpr(abi() == ABI::SystemV) {
+      jz(imm8(5));
+    }
+    if constexpr(abi() == ABI::Windows) {
+      jz(imm8(11));
+      add(rsp, imm8(0x40));
+      pop(rdi);
+      pop(rsi);
+    }
     pop(r13);
     pop(rbp);
     pop(rbx);
     ret();
+  }
+  if constexpr(abi() == ABI::Windows) {
+    add(rsp, imm8(0x40));
+    pop(rdi);
+    pop(rsi);
   }
   pop(r13);
   pop(rbp);
@@ -1428,16 +1446,18 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
 template<typename V, typename... P>
 auto RSP::Recompiler::call(V (RSP::*function)(P...)) -> void {
-  #if defined(PLATFORM_WINDOWS)
-  mov(r8, rdx);
-  mov(r9, rcx);
-  mov(rdx, rsi);
-  mov(rcx, rbp);
+  static_assert(sizeof...(P) <= 5);
   mov(rax, imm64(function));
+  if constexpr(abi() == ABI::SystemV) {
+    mov(rdi, rbp);
+  }
+  if constexpr(abi() == ABI::Windows) {
+    if constexpr(sizeof...(P) >= 5) mov(dis8(rsp, 0x28), r9);
+    if constexpr(sizeof...(P) >= 4) mov(dis8(rsp, 0x20), r8);
+    if constexpr(sizeof...(P) >= 3) mov(r9, rcx);
+    if constexpr(sizeof...(P) >= 2) mov(r8, rdx);
+    if constexpr(sizeof...(P) >= 1) mov(rdx, rsi);
+    mov(rcx, rbp);
+  }
   call(rax);
-  #else
-  mov(rdi, rbp);
-  mov(rax, imm64(function));
-  call(rax);
-  #endif
 }
