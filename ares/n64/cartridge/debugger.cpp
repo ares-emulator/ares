@@ -2,20 +2,20 @@ auto Cartridge::Debugger::load(Node::Object parent) -> void {
   memory.rom = parent->append<Node::Debugger::Memory>("Cartridge ROM");
   memory.rom->setSize(cartridge.rom.size);
   memory.rom->setRead([&](u32 address) -> u8 {
-    return cartridge.rom.readByte(address);
+    return cartridge.rom.read<Byte>(address);
   });
   memory.rom->setWrite([&](u32 address, u8 data) -> void {
-    return cartridge.rom.writeByte(address, data);
+    return cartridge.rom.write<Byte>(address, data);
   });
 
   if(cartridge.ram) {
     memory.ram = parent->append<Node::Debugger::Memory>("Cartridge SRAM");
     memory.ram->setSize(cartridge.ram.size);
     memory.ram->setRead([&](u32 address) -> u8 {
-      return cartridge.ram.readByte(address);
+      return cartridge.ram.read<Byte>(address);
     });
     memory.ram->setWrite([&](u32 address, u8 data) -> void {
-      return cartridge.ram.writeByte(address, data);
+      return cartridge.ram.write<Byte>(address, data);
     });
   }
 
@@ -23,10 +23,10 @@ auto Cartridge::Debugger::load(Node::Object parent) -> void {
     memory.eeprom = parent->append<Node::Debugger::Memory>("Cartridge EEPROM");
     memory.eeprom->setSize(cartridge.eeprom.size);
     memory.eeprom->setRead([&](u32 address) -> u8 {
-      return cartridge.eeprom.readByte(address);
+      return cartridge.eeprom.read<Byte>(address);
     });
     memory.eeprom->setWrite([&](u32 address, u8 data) -> void {
-      return cartridge.eeprom.writeByte(address, data);
+      return cartridge.eeprom.write<Byte>(address, data);
     });
   }
 
@@ -34,10 +34,10 @@ auto Cartridge::Debugger::load(Node::Object parent) -> void {
     memory.flash = parent->append<Node::Debugger::Memory>("Cartridge Flash");
     memory.flash->setSize(cartridge.flash.size);
     memory.flash->setRead([&](u32 address) -> u8 {
-      return cartridge.flash.readByte(address);
+      return cartridge.flash.read<Byte>(address);
     });
     memory.flash->setWrite([&](u32 address, u8 data) -> void {
-      return cartridge.flash.writeByte(address, data);
+      return cartridge.flash.write<Byte>(address, data);
     });
   }
 }

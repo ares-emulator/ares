@@ -26,14 +26,14 @@ struct RI : Memory::IO<RI> {
   auto serialize(serializer&) -> void;
 
   struct IO {
-    n32 mode = 0x0e;
-    n32 config = 0x40;
-    n32 currentLoad = 0x00;
-    n32 select = 0x14;
-    n32 refresh = 0x0006'3634;
-    n32 latency = 0;
-    n32 readError = 0;
-    n32 writeError = 0;
+    n32 mode;
+    n32 config;
+    n32 currentLoad;
+    n32 select;
+    n32 refresh;
+    n32 latency;
+    n32 readError;
+    n32 writeError;
   } io;
 };
 

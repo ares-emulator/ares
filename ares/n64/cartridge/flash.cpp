@@ -1,5 +1,5 @@
 auto Cartridge::Flash::readHalf(u32 address) -> u16 {
-  return Memory::Writable::readHalf(address);
+  return Memory::Writable::read<Half>(address);
 }
 
 auto Cartridge::Flash::readWord(u32 address) -> u32 {
@@ -53,13 +53,13 @@ auto Cartridge::Flash::writeWord(u32 address, u32 data) -> void {
   if(command == 0xd2) {
     if(mode == Mode::Erase) {
       for(u32 index = 0; index < 128; index += 2) {
-        Memory::Writable::writeHalf(offset + index, 0xffff);
+        Memory::Writable::write<Half>(offset + index, 0xffff);
       }
     }
     if(mode == Mode::Write) {
       for(u32 index = 0; index < 128; index += 2) {
-        u16 half = rdram.ram.readHalf(source + index);
-        Memory::Writable::writeHalf(offset + index, half);
+        u16 half = rdram.ram.read<Half>(source + index);
+        Memory::Writable::write<Half>(offset + index, half);
       }
     }
     return;

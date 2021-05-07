@@ -56,6 +56,7 @@ auto MI::poll() -> void {
 
 auto MI::power(bool reset) -> void {
   irq = {};
+  io = {};
 }
 
 }

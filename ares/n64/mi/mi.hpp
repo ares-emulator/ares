@@ -48,6 +48,13 @@ private:
     Interrupt dp;
   } irq;
 
+  struct IO {
+    n7 initializeLength;
+    n1 initializeMode;
+    n1 ebusTestMode;
+    n1 rdramRegisterSelect;
+  } io;
+
   struct Revision {
     static constexpr u8 io  = 0x02;  //I/O interface
     static constexpr u8 rac = 0x01;  //RAMBUS ASIC cell

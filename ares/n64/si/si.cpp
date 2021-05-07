@@ -45,7 +45,7 @@ auto SI::dataCRC(array_view<u8> data) const -> n8 {
 }
 
 auto SI::main() -> void {
-  auto flags = pi.ram.readByte(0x3f);
+  auto flags = pi.ram.read<Byte>(0x3f);
 
   if(flags & 0x01) {
   //todo: this flag is supposed to be cleared, but doing so breaks inputs
@@ -68,7 +68,7 @@ auto SI::main() -> void {
   //initialization
   }
 
-  pi.ram.writeByte(0x3f, flags);
+  pi.ram.write<Byte>(0x3f, flags);
 }
 
 auto SI::scan() -> void {
@@ -86,7 +86,7 @@ auto SI::scan() -> void {
     for(u32 y : range(8)) {
       print("  ");
       for(u32 x : range(8)) {
-        print(hex(pi.ram.readByte(y * 8 + x), 2L), " ");
+        print(hex(pi.ram.read<Byte>(y * 8 + x), 2L), " ");
       }
       print("\n");
     }
@@ -95,17 +95,17 @@ auto SI::scan() -> void {
 
   n3 channel = 0;
   for(u32 offset = 0; offset < 64;) {
-    n8 send = pi.ram.readByte(offset++);
+    n8 send = pi.ram.read<Byte>(offset++);
     if(send == 0x00) { channel++; continue; }
     if(send == 0xfd) continue;  //channel reset
     if(send == 0xfe) break;     //end of packets
     if(send == 0xff) continue;  //alignment padding
     send &= 0x3f;
     n8 recvOffset = offset;
-    n6 recv = pi.ram.readByte(offset++);
+    n6 recv = pi.ram.read<Byte>(offset++);
     n8 input[64];
     for(u32 index : range(send)) {
-      input[index] = pi.ram.readByte(offset++);
+      input[index] = pi.ram.read<Byte>(offset++);
     }
     n8 output[64];
     b1 valid = 0;
@@ -146,9 +146,9 @@ auto SI::scan() -> void {
           data <<= 8;
         }
         if(recv <= 4) {
-          pi.ram.writeByte(recvOffset, 0x00 | recv & 0x3f);
+          pi.ram.write<Byte>(recvOffset, 0x00 | recv & 0x3f);
         } else {
-          pi.ram.writeByte(recvOffset, 0x40 | recv & 0x3f);
+          pi.ram.write<Byte>(recvOffset, 0x40 | recv & 0x3f);
         }
         valid = 1;
       }
@@ -162,7 +162,7 @@ auto SI::scan() -> void {
               u32 address = (input[1] << 8 | input[2] << 0) & ~31;
               if(addressCRC(address) == (n5)input[2]) {
                 for(u32 index : range(32)) {
-                  if(address >> 15 == 0) output[index] = ram.readByte(address++);
+                  if(address >> 15 == 0) output[index] = ram.read<Byte>(address++);
                   if(address >> 15 == 1) output[index] = 0x00;
                 }
                 output[32] = dataCRC({&output[0], 32});
@@ -192,7 +192,7 @@ auto SI::scan() -> void {
               u32 address = (input[1] << 8 | input[2] << 0) & ~31;
               if(addressCRC(address) == (n5)input[2]) {
                 for(u32 index : range(32)) {
-                  if(address >> 15 == 0) ram.writeByte(address++, input[3 + index]);
+                  if(address >> 15 == 0) ram.write<Byte>(address++, input[3 + index]);
                 }
                 output[0] = dataCRC({&input[3], 32});
                 valid = 1;
@@ -215,14 +215,14 @@ auto SI::scan() -> void {
       if(send == 2 && recv == 8) {
         u32 address = input[1] * 8;
         for(u32 index : range(8)) {
-          output[index] = cartridge.eeprom.readByte(address++);
+          output[index] = cartridge.eeprom.read<Byte>(address++);
         }
         valid = 1;
       }
       if(send == 2 && recv == 32) {
         u32 address = input[1] * 32;
         for(u32 index : range(32)) {
-          output[index] = cartridge.eeprom.readByte(address++);
+          output[index] = cartridge.eeprom.read<Byte>(address++);
         }
         valid = 1;
       }
@@ -232,7 +232,7 @@ auto SI::scan() -> void {
       if(recv == 1 && send == 10) {
         u32 address = input[1] * 8;
         for(u32 index : range(8)) {
-          cartridge.eeprom.writeByte(address++, input[2 + index]);
+          cartridge.eeprom.write<Byte>(address++, input[2 + index]);
         }
         output[0] = 0x00;
         valid = 1;
@@ -240,17 +240,17 @@ auto SI::scan() -> void {
       if(recv == 1 && send == 34) {
         u32 address = input[1] * 32;
         for(u32 index : range(32)) {
-          cartridge.eeprom.writeByte(address++, input[2 + index]);
+          cartridge.eeprom.write<Byte>(address++, input[2 + index]);
         }
         output[0] = 0x00;
         valid = 1;
       }
     }
     if(!valid) {
-      pi.ram.writeByte(recvOffset, 0x80 | recv & 0x3f);
+      pi.ram.write<Byte>(recvOffset, 0x80 | recv & 0x3f);
     }
     for(u32 index : range(recv)) {
-      pi.ram.writeByte(offset++, output[index]);
+      pi.ram.write<Byte>(offset++, output[index]);
     }
     channel++;
   }
@@ -260,7 +260,7 @@ auto SI::scan() -> void {
     for(u32 y : range(8)) {
       print("  ");
       for(u32 x : range(8)) {
-        print(hex(pi.ram.readByte(y * 8 + x), 2L), " ");
+        print(hex(pi.ram.read<Byte>(y * 8 + x), 2L), " ");
       }
       print("\n");
     }
@@ -282,7 +282,7 @@ auto SI::challenge() -> void {
 
   //15 bytes -> 30 nibbles
   for(u32 address : range(15)) {
-    auto data = pi.ram.readByte(0x30 + address);
+    auto data = pi.ram.read<Byte>(0x30 + address);
     challenge[address << 1 | 0] = data >> 4;
     challenge[address << 1 | 1] = data >> 0;
   }
@@ -309,7 +309,7 @@ auto SI::challenge() -> void {
     n8 data = 0;
     data |= response[address << 1 | 0] << 4;
     data |= response[address << 1 | 1] << 0;
-    pi.ram.writeByte(0x30 + address, data);
+    pi.ram.write<Byte>(0x30 + address, data);
   }
 }
 

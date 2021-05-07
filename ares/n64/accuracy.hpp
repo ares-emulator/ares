@@ -18,4 +18,8 @@ struct Accuracy {
     static constexpr bool SISD = 0 | Reference;
     static constexpr bool SIMD = !SISD;
   };
+
+  struct RDRAM {
+    static constexpr bool Broadcasting = 1;
+  };
 };

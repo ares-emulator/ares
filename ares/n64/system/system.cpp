@@ -73,13 +73,13 @@ auto System::load(Node::System& root, string name) -> bool {
   controllerPort2.load(node);
   controllerPort3.load(node);
   controllerPort4.load(node);
+  rdram.load(node);
   mi.load(node);
   vi.load(node);
   ai.load(node);
   pi.load(node);
   ri.load(node);
   si.load(node);
-  rdram.load(node);
   cpu.load(node);
   rdp.load(node);
   rsp.load(node);
@@ -101,13 +101,13 @@ auto System::unload() -> void {
   controllerPort2.unload();
   controllerPort3.unload();
   controllerPort4.unload();
+  rdram.unload();
   mi.unload();
   vi.unload();
   ai.unload();
   pi.unload();
   ri.unload();
   si.unload();
-  rdram.unload();
   cpu.unload();
   rdp.unload();
   rsp.unload();
@@ -129,6 +129,7 @@ auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
   cartridge.power(reset);
+  rdram.power(reset);
   dd.power(reset);
   mi.power(reset);
   vi.power(reset);
@@ -136,7 +137,6 @@ auto System::power(bool reset) -> void {
   pi.power(reset);
   ri.power(reset);
   si.power(reset);
-  rdram.power(reset);
   cpu.power(reset);
   rdp.power(reset);
   rsp.power(reset);

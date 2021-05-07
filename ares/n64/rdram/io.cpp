@@ -1,113 +1,127 @@
 auto RDRAM::readWord(u32 address) -> u32 {
-  address = (address & 0xfffff) >> 2;
+  u32 chipID = address >> 13 & 3;
+  auto& chip = chips[chipID];
+  address = (address & 0x3ff) >> 2;
   u32 data = 0;
 
   if(address == 0) {
-    //RDRAM_CONFIG
-    data = io.config;
+    //RDRAM_DEVICE_TYPE
+    data = chip.deviceType;
   }
 
   if(address == 1) {
     //RDRAM_DEVICE_ID
-    data = io.deviceID;
+    data = chip.deviceID;
   }
 
   if(address == 2) {
     //RDRAM_DELAY
-    data = io.delay;
+    data = chip.delay;
   }
 
   if(address == 3) {
     //RDRAM_MODE
-    data = io.mode;
+    data = chip.mode ^ 0xc0c0c0c0;
   }
 
   if(address == 4) {
     //RDRAM_REF_INTERVAL
-    data = io.refreshInterval;
+    data = chip.refreshInterval;
   }
 
   if(address == 5) {
     //RDRAM_REF_ROW
-    data = io.refreshRow;
+    data = chip.refreshRow;
   }
 
   if(address == 6) {
     //RDRAM_RAS_INTERVAL
-    data = io.rasInterval;
+    data = chip.rasInterval;
   }
 
   if(address == 7) {
     //RDRAM_MIN_INTERVAL
-    data = io.minInterval;
+    data = chip.minInterval;
   }
 
   if(address == 8) {
-    //RDRAM_ADDR_SELECT
-    data = io.addressSelect;
+    //RDRAM_ADDRESS_SELECT
+    data = chip.addressSelect;
   }
 
   if(address == 9) {
-    //RDRAM_DEVICE_MANUF
-    data = io.deviceManufacturer;
+    //RDRAM_DEVICE_MANUFACTURER
+    data = chip.deviceManufacturer;
   }
 
-  debugger.io(Read, address, data);
+  if(address == 10) {
+    //RDRAM_CURRENT_CONTROL
+    data = chip.currentControl;
+  }
+
+  debugger.io(Read, chipID, address, data);
   return data;
 }
 
 auto RDRAM::writeWord(u32 address, u32 data) -> void {
-  address = (address & 0xfffff) >> 2;
+  u32 chipID = address >> 13 & 3;
+  auto& chip = chips[chipID];
+  address = (address & 0x3ff) >> 2;
 
   if(address == 0) {
-    //RDRAM_CONFIG
-    io.config = data;
+    //RDRAM_DEVICE_TYPE
+    chip.deviceType = data;
   }
 
   if(address == 1) {
     //RDRAM_DEVICE_ID
-    io.deviceID = data;
+    chip.deviceID = data;
   }
 
   if(address == 2) {
     //RDRAM_DELAY
-    io.delay = data;
+    chip.delay = data;
   }
 
   if(address == 3) {
     //RDRAM_MODE
-    io.mode = data;
+    chip.mode = data;
   }
 
   if(address == 4) {
     //RDRAM_REF_INTERVAL
-    io.refreshInterval = data;
+    chip.refreshInterval = data;
   }
 
   if(address == 5) {
     //RDRAM_REF_ROW
-    io.refreshRow = data;
+    chip.refreshRow = data;
   }
 
   if(address == 6) {
     //RDRAM_RAS_INTERVAL
-    io.rasInterval = data;
+    chip.rasInterval = data;
   }
 
   if(address == 7) {
     //RDRAM_MIN_INTERVAL
-    io.minInterval = data;
+    chip.minInterval = data;
   }
 
   if(address == 8) {
-    //RDRAM_ADDR_SELECT
-    io.addressSelect = data;
+    //RDRAM_ADDRESS_SELECT
+    chip.addressSelect = data;
   }
 
   if(address == 9) {
-    //RDRAM_DEVICE_MANUF
-    io.deviceManufacturer = data;
+    //RDRAM_DEVICE_MANUFACTURER
+    chip.deviceManufacturer = data;
   }
 
-  debugger.io(Write, address, data);
+  if(address == 10) {
+    //RDRAM_CURRENT_CONTROL
+    chip.currentControl = data;
+  }
+
+  debugger.io(Write, chipID, address, data);
 }

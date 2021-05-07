@@ -108,9 +108,15 @@ auto Gamepad::read() -> n32 {
     ax = ay / slope;
   }
 
-  //create dead-zone in range {-15 ... +15}
-  if(abs(ax) < 16) ax = 0;
-  if(abs(ay) < 16) ay = 0;
+  //create scaled circular dead-zone in range {-15 ... +15}
+  auto length = sqrt(ax * ax + ay * ay);
+  if(length < 16.0) {
+    length = 0.0;
+  } else {
+    length = min(1.0, (length - 16.0) * 85.0 / 69.0 / length);
+  }
+  ax *= length;
+  ay *= length;
 
   n32 data;
   data.byte(0) = -ay;

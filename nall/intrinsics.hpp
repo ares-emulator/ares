@@ -1,34 +1,24 @@
 #pragma once
 
+#if defined(__APPLE__)
+  #include <machine/endian.h>
+#elif defined(linux) || defined(__linux__)
+  #include <endian.h>
+#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__NetBSD__) || defined(__OpenBSD__)
+  #include <sys/endian.h>
+#endif
+
 namespace nall {
-  using u32 = unsigned int;
-
-  enum class Compiler : u32 { Clang, GCC, Microsoft, Unknown };
-  enum class Platform : u32 { Windows, MacOS, Linux, BSD, Android, Unknown };
-  enum class ABI : u32 { Windows, SystemV, Unknown };
-  enum class API : u32 { Windows, Posix, Unknown };
-  enum class DisplayServer : u32 { Windows, Quartz, Xorg, Unknown };
-  enum class Architecture : u32 { x86, amd64, ARM32, ARM64, PPC32, PPC64, Unknown };
-  enum class Endian : u32 { LSB, MSB, Unknown };
-  enum class Build : u32 { Debug, Stable, Minified, Release, Optimized };
-
-  static inline constexpr auto compiler() -> Compiler;
-  static inline constexpr auto platform() -> Platform;
-  static inline constexpr auto abi() -> ABI;
-  static inline constexpr auto api() -> API;
-  static inline constexpr auto display() -> DisplayServer;
-  static inline constexpr auto architecture() -> Architecture;
-  static inline constexpr auto endian() -> Endian;
-  static inline constexpr auto build() -> Build;
-}
 
 /* Compiler detection */
 
-namespace nall {
-
 #if defined(__clang__)
   #define COMPILER_CLANG
-  constexpr auto compiler() -> Compiler { return Compiler::Clang; }
+  struct Compiler {
+    static constexpr bool Clang     = 1;
+    static constexpr bool GCC       = 0;
+    static constexpr bool Microsoft = 0;
+  };
   #pragma clang diagnostic warning "-Wreturn-type"
   #pragma clang diagnostic ignored "-Wunused-result"
   #pragma clang diagnostic ignored "-Wunknown-pragmas"
@@ -44,7 +34,11 @@ namespace nall {
   #pragma clang diagnostic ignored "-Wattributes"
 #elif defined(__GNUC__)
   #define COMPILER_GCC
-  constexpr auto compiler() -> Compiler { return Compiler::GCC; }
+  struct Compiler {
+    static constexpr bool Clang     = 0;
+    static constexpr bool GCC       = 1;
+    static constexpr bool Microsoft = 0;
+  };
   #pragma GCC diagnostic warning "-Wreturn-type"
   #pragma GCC diagnostic ignored "-Wunused-result"
   #pragma GCC diagnostic ignored "-Wunknown-pragmas"
@@ -55,161 +49,269 @@ namespace nall {
   #pragma GCC diagnostic ignored "-Wattributes"
 #elif defined(_MSC_VER)
   #define COMPILER_MICROSOFT
-  constexpr auto compiler() -> Compiler { return Compiler::Microsoft; }
+  struct Compiler {
+    static constexpr bool Clang     = 0;
+    static constexpr bool GCC       = 0;
+    static constexpr bool Microsoft = 1;
+  };
   #pragma warning(disable:4996)  //libc "deprecation" warnings
 #else
-  #warning "unable to detect compiler"
-  #define COMPILER_UNKNOWN
-  constexpr auto compiler() -> Compiler { return Compiler::Unknown; }
+  #error "unable to detect compiler"
 #endif
-
-}
 
 /* Platform detection */
 
-namespace nall {
-
 #if defined(_WIN32)
   #define PLATFORM_WINDOWS
-  #define ABI_WINDOWS
-  #define API_WINDOWS
-  #define DISPLAY_WINDOWS
-  constexpr auto platform() -> Platform { return Platform::Windows; }
-  constexpr auto abi() -> ABI { return ABI::Windows; }
-  constexpr auto api() -> API { return API::Windows; }
-  constexpr auto display() -> DisplayServer { return DisplayServer::Windows; }
+  struct Platform {
+    static constexpr bool Windows = 1;
+    static constexpr bool MacOS   = 0;
+    static constexpr bool Android = 0;
+    static constexpr bool Linux   = 0;
+    static constexpr bool BSD     = 0;
+  };
 #elif defined(__APPLE__)
   #define PLATFORM_MACOS
-  #define ABI_SYSTEMV
-  #define API_POSIX
-  #define DISPLAY_QUARTZ
-  constexpr auto platform() -> Platform { return Platform::MacOS; }
-  constexpr auto abi() -> ABI { return ABI::SystemV; }
-  constexpr auto api() -> API { return API::Posix; }
-  constexpr auto display() -> DisplayServer { return DisplayServer::Quartz; }
+  struct Platform {
+    static constexpr bool Windows = 0;
+    static constexpr bool MacOS   = 1;
+    static constexpr bool Android = 0;
+    static constexpr bool Linux   = 0;
+    static constexpr bool BSD     = 0;
+  };
 #elif defined(__ANDROID__)
   #define PLATFORM_ANDROID
-  #define ABI_SYSTEMV
-  #define API_POSIX
-  #define DISPLAY_UNKNOWN
-  constexpr auto platform() -> Platform { return Platform::Android; }
-  constexpr auto abi() -> ABI { return ABI::SystemV; }
-  constexpr auto api() -> API { return API::Posix; }
-  constexpr auto display() -> DisplayServer { return DisplayServer::Unknown; }
+  struct Platform {
+    static constexpr bool Windows = 0;
+    static constexpr bool MacOS   = 0;
+    static constexpr bool Android = 1;
+    static constexpr bool Linux   = 0;
+    static constexpr bool BSD     = 0;
+  };
 #elif defined(linux) || defined(__linux__)
   #define PLATFORM_LINUX
-  #define ABI_SYSTEMV
-  #define API_POSIX
-  #define DISPLAY_XORG
-  constexpr auto platform() -> Platform { return Platform::Linux; }
-  constexpr auto abi() -> ABI { return ABI::SystemV; }
-  constexpr auto api() -> API { return API::Posix; }
-  constexpr auto display() -> DisplayServer { return DisplayServer::Xorg; }
+  struct Platform {
+    static constexpr bool Windows = 0;
+    static constexpr bool MacOS   = 0;
+    static constexpr bool Android = 0;
+    static constexpr bool Linux   = 1;
+    static constexpr bool BSD     = 0;
+  };
 #elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__NetBSD__) || defined(__OpenBSD__)
   #define PLATFORM_BSD
-  #define ABI_SYSTEMV
-  #define API_POSIX
-  #define DISPLAY_XORG
-  constexpr auto platform() -> Platform { return Platform::BSD; }
-  constexpr auto abi() -> ABI { return ABI::SystemV; }
-  constexpr auto api() -> API { return API::Posix; }
-  constexpr auto display() -> DisplayServer { return DisplayServer::Xorg; }
+  struct Platform {
+    static constexpr bool Windows = 0;
+    static constexpr bool MacOS   = 0;
+    static constexpr bool Android = 0;
+    static constexpr bool Linux   = 0;
+    static constexpr bool BSD     = 1;
+  };
 #else
-  #warning "unable to detect platform"
-  #define PLATFORM_UNKNOWN
-  #define ABI_UNKNOWN
-  #define API_UNKNOWN
-  #define DISPLAY_UNKNOWN
-  constexpr auto platform() -> Platform { return Platform::Unknown; }
-  constexpr auto abi() -> ABI { return ABI::Unknown; }
-  constexpr auto api() -> API { return API::Unknown; }
-  constexpr auto display() -> DisplayServer { return DisplayServer::Unknown; }
+  #error "unable to detect platform"
 #endif
 
-}
+/* ABI detection */
 
-#if defined(PLATFORM_MACOS)
-  #include <machine/endian.h>
-#elif defined(PLATFORM_LINUX)
-  #include <endian.h>
-#elif defined(PLATFORM_BSD)
-  #include <sys/endian.h>
+#if defined(_WIN32)
+  #define ABI_WINDOWS
+  struct ABI {
+    static constexpr bool Windows = 1;
+    static constexpr bool SystemV = 0;
+  };
+#else
+  #define ABI_SYSTEMV
+  struct ABI {
+    static constexpr bool Windows = 0;
+    static constexpr bool SystemV = 1;
+  };
+#endif
+
+/* API detection */
+
+#if defined(_WIN32)
+  #define API_WINDOWS
+  struct API {
+    static constexpr bool Windows = 1;
+    static constexpr bool Posix   = 0;
+  };
+#else
+  #define API_POSIX
+  struct API {
+    static constexpr bool Windows = 0;
+    static constexpr bool Posix   = 1;
+  };
+#endif
+
+/* Display server detection */
+
+#if defined(_WIN32)
+  #define DISPLAY_WINDOWS
+  struct DisplayServer {
+    static constexpr bool Windows = 1;
+    static constexpr bool Quartz  = 0;
+    static constexpr bool Xorg    = 0;
+  };
+#elif defined(__APPLE__)
+  #define DISPLAY_QUARTZ
+  struct DisplayServer {
+    static constexpr bool Windows = 0;
+    static constexpr bool Quartz  = 1;
+    static constexpr bool Xorg    = 0;
+  };
+#else
+  #define DISPLAY_XORG
+  struct DisplayServer {
+    static constexpr bool Windows = 0;
+    static constexpr bool Quartz  = 0;
+    static constexpr bool Xorg    = 1;
+  };
 #endif
 
 /* Architecture detection */
 
-namespace nall {
-
 #if defined(__i386__) || defined(_M_IX86)
   #define ARCHITECTURE_X86
-  constexpr auto architecture() -> Architecture { return Architecture::x86; }
+  struct Architecture {
+    static constexpr bool x86   = 1;
+    static constexpr bool amd64 = 0;
+    static constexpr bool arm64 = 0;
+    static constexpr bool arm32 = 0;
+    static constexpr bool ppc64 = 0;
+    static constexpr bool ppc32 = 0;
+  };
 #elif defined(__amd64__) || defined(_M_AMD64)
   #define ARCHITECTURE_AMD64
-  constexpr auto architecture() -> Architecture { return Architecture::amd64; }
+  struct Architecture {
+    static constexpr bool x86   = 0;
+    static constexpr bool amd64 = 1;
+    static constexpr bool arm64 = 0;
+    static constexpr bool arm32 = 0;
+    static constexpr bool ppc64 = 0;
+    static constexpr bool ppc32 = 0;
+  };
 #elif defined(__aarch64__)
   #define ARCHITECTURE_ARM64
-  constexpr auto architecture() -> Architecture { return Architecture::ARM64; }
+  struct Architecture {
+    static constexpr bool x86   = 0;
+    static constexpr bool amd64 = 0;
+    static constexpr bool arm64 = 1;
+    static constexpr bool arm32 = 0;
+    static constexpr bool ppc64 = 0;
+    static constexpr bool ppc32 = 0;
+  };
 #elif defined(__arm__)
   #define ARCHITECTURE_ARM32
-  constexpr auto architecture() -> Architecture { return Architecture::ARM32; }
+  struct Architecture {
+    static constexpr bool x86   = 0;
+    static constexpr bool amd64 = 0;
+    static constexpr bool arm64 = 0;
+    static constexpr bool arm32 = 1;
+    static constexpr bool ppc64 = 0;
+    static constexpr bool ppc32 = 0;
+  };
 #elif defined(__ppc64__) || defined(_ARCH_PPC64)
   #define ARCHITECTURE_PPC64
-  constexpr auto architecture() -> Architecture { return Architecture::PPC64; }
+  struct Architecture {
+    static constexpr bool x86   = 0;
+    static constexpr bool amd64 = 0;
+    static constexpr bool arm64 = 0;
+    static constexpr bool arm32 = 0;
+    static constexpr bool ppc64 = 1;
+    static constexpr bool ppc32 = 0;
+  };
 #elif defined(__ppc__) || defined(_ARCH_PPC) || defined(_M_PPC)
   #define ARCHITECTURE_PPC32
-  constexpr auto architecture() -> Architecture { return Architecture::PPC32; }
+  struct Architecture {
+    static constexpr bool x86   = 0;
+    static constexpr bool amd64 = 0;
+    static constexpr bool arm64 = 0;
+    static constexpr bool arm32 = 0;
+    static constexpr bool ppc64 = 0;
+    static constexpr bool ppc32 = 1;
+  };
 #else
-  #warning "unable to detect architecture"
-  #define ARCHITECTURE_UNKNOWN
-  constexpr auto architecture() -> Architecture { return Architecture::Unknown; }
+  #error "unable to detect architecture"
 #endif
-
-}
 
 /* Endian detection */
 
-namespace nall {
-
 #if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && __BYTE_ORDER == __LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__) || defined(__i386__) || defined(__amd64__) || defined(_M_IX86) || defined(_M_AMD64)
-  #define ENDIAN_LSB
-  constexpr auto endian() -> Endian { return Endian::LSB; }
+  #define ENDIAN_LITTLE
+  struct Endian {
+    static constexpr bool Little = 1;
+    static constexpr bool Big    = 0;
+  };
 #elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && __BYTE_ORDER == __BIG_ENDIAN) || defined(__BIG_ENDIAN__) || defined(__powerpc__) || defined(_M_PPC)
-  #define ENDIAN_MSB
-  constexpr auto endian() -> Endian { return Endian::MSB; }
+  #define ENDIAN_BIG
+  struct Endian {
+    static constexpr bool Little = 0;
+    static constexpr bool Big    = 1;
+  };
 #else
-  #warning "unable to detect endian"
-  #define ENDIAN_UNKNOWN
-  constexpr auto endian() -> Endian { return Endian::Unknown; }
+  #error "unable to detect endian"
 #endif
-
-}
 
 /* Build optimization level detection */
 
 #undef DEBUG
 #undef NDEBUG
 
-namespace nall {
-
 #if defined(BUILD_DEBUG)
   #define DEBUG
-  constexpr auto build() -> Build { return Build::Debug; }
+  struct Build {
+    static constexpr bool Debug     = 1;
+    static constexpr bool Stable    = 0;
+    static constexpr bool Minified  = 0;
+    static constexpr bool Release   = 0;
+    static constexpr bool Optimized = 0;
+  };
 #elif defined(BUILD_STABLE)
   #define DEBUG
-  constexpr auto build() -> Build { return Build::Stable; }
+  struct Build {
+    static constexpr bool Debug     = 0;
+    static constexpr bool Stable    = 1;
+    static constexpr bool Minified  = 0;
+    static constexpr bool Release   = 0;
+    static constexpr bool Optimized = 0;
+  };
 #elif defined(BUILD_MINIFIED)
   #define NDEBUG
-  constexpr auto build() -> Build { return Build::Minified; }
+  struct Build {
+    static constexpr bool Debug     = 0;
+    static constexpr bool Stable    = 0;
+    static constexpr bool Minified  = 1;
+    static constexpr bool Release   = 0;
+    static constexpr bool Optimized = 0;
+  };
 #elif defined(BUILD_RELEASE)
   #define NDEBUG
-  constexpr auto build() -> Build { return Build::Release; }
+  struct Build {
+    static constexpr bool Debug     = 0;
+    static constexpr bool Stable    = 0;
+    static constexpr bool Minified  = 0;
+    static constexpr bool Release   = 1;
+    static constexpr bool Optimized = 0;
+  };
 #elif defined(BUILD_OPTIMIZED)
   #define NDEBUG
-  constexpr auto build() -> Build { return Build::Optimized; }
+  struct Build {
+    static constexpr bool Debug     = 0;
+    static constexpr bool Stable    = 0;
+    static constexpr bool Minified  = 0;
+    static constexpr bool Release   = 0;
+    static constexpr bool Optimized = 1;
+  };
 #else
   //default to debug mode
+  #define BUILD_DEBUG
   #define DEBUG
-  constexpr auto build() -> Build { return Build::Debug; }
+  struct Build {
+    static constexpr bool Debug     = 1;
+    static constexpr bool Stable    = 0;
+    static constexpr bool Minified  = 0;
+    static constexpr bool Release   = 0;
+    static constexpr bool Optimized = 0;
+  };
 #endif
 
 }

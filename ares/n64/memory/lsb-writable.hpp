@@ -11,7 +11,6 @@ struct Writable {
     maskHalf = 0;
     maskWord = 0;
     maskDual = 0;
-    maskQuad = 0;
   }
 
   auto allocate(u32 capacity, u32 fillWith = ~0) -> void {
@@ -22,7 +21,6 @@ struct Writable {
     maskHalf = mask & ~1;
     maskWord = mask & ~3;
     maskDual = mask & ~7;
-    maskQuad = mask & ~15;
     data = memory::allocate<u8, 64_KiB>(mask + 1);
     fill(fillWith);
   }
@@ -47,69 +45,67 @@ struct Writable {
   }
 
   //N64 CPU requires aligned memory accesses
-  auto readByte(u32 address) -> u8  { return *(u8* )&data[address & maskByte ^ 3]; }
-  auto readHalf(u32 address) -> u16 { return *(u16*)&data[address & maskHalf ^ 2]; }
-  auto readWord(u32 address) -> u32 { return *(u32*)&data[address & maskWord ^ 0]; }
-  auto readDual(u32 address) -> u64 {
-    u64 upper = readWord(address + 0);
-    u64 lower = readWord(address + 4);
-    return upper << 32 | lower << 0;
-  }
-  auto readQuad(u32 address) -> u128 {
-    u128 upper = readDual(address + 0);
-    u128 lower = readDual(address + 8);
-    return upper << 64 | lower << 0;
+  template<u32 Size>
+  auto read(u32 address) -> u64 {
+    if constexpr(Size == Byte) return *(u8* )&data[address & maskByte ^ 3];
+    if constexpr(Size == Half) return *(u16*)&data[address & maskHalf ^ 2];
+    if constexpr(Size == Word) return *(u32*)&data[address & maskWord ^ 0];
+    if constexpr(Size == Dual) {
+      u64 upper = read<Word>(address + 0);
+      u64 lower = read<Word>(address + 4);
+      return upper << 32 | lower << 0;
+    }
+    unreachable;
   }
 
-  auto writeByte(u32 address, u8  value) -> void { *(u8* )&data[address & maskByte ^ 3] = value; }
-  auto writeHalf(u32 address, u16 value) -> void { *(u16*)&data[address & maskHalf ^ 2] = value; }
-  auto writeWord(u32 address, u32 value) -> void { *(u32*)&data[address & maskWord ^ 0] = value; }
-  auto writeDual(u32 address, u64 value) -> void {
-    writeWord(address + 0, value >> 32);
-    writeWord(address + 4, value >>  0);
-  }
-  auto writeQuad(u32 address, u128 value) -> void {
-    writeDual(address + 0, value >> 64);
-    writeDual(address + 8, value >>  0);
+  template<u32 Size>
+  auto write(u32 address, u64 value) -> void {
+    if constexpr(Size == Byte) *(u8* )&data[address & maskByte ^ 3] = value;
+    if constexpr(Size == Half) *(u16*)&data[address & maskHalf ^ 2] = value;
+    if constexpr(Size == Word) *(u32*)&data[address & maskWord ^ 0] = value;
+    if constexpr(Size == Dual) {
+      write<Word>(address + 0, value >> 32);
+      write<Word>(address + 4, value >>  0);
+    }
   }
 
   //N64 RSP allows unaligned memory accesses in certain cases
-  auto readHalfUnaligned(u32 address) -> u16 {
-    u16 upper = readByte(address + 0);
-    u16 lower = readByte(address + 1);
-    return upper << 8 | lower << 0;
-  }
-  auto readWordUnaligned(u32 address) -> u32 {
-    u32 upper = readHalfUnaligned(address + 0);
-    u32 lower = readHalfUnaligned(address + 2);
-    return upper << 16 | lower << 0;
-  }
-  auto readDualUnaligned(u32 address) -> u64 {
-    u64 upper = readWordUnaligned(address + 0);
-    u64 lower = readWordUnaligned(address + 4);
-    return upper << 32 | lower << 0;
-  }
-  auto readQuadUnaligned(u32 address) -> u128 {
-    u128 upper = readDualUnaligned(address + 0);
-    u128 lower = readDualUnaligned(address + 8);
-    return upper << 64 | lower << 0;
+  template<u32 Size>
+  auto readUnaligned(u32 address) -> u64 {
+    static_assert(Size != Byte);
+    if constexpr(Size == Half) {
+      u16 upper = read<Byte>(address + 0);
+      u16 lower = read<Byte>(address + 1);
+      return upper << 8 | lower << 0;
+    }
+    if constexpr(Size == Word) {
+      u32 upper = readUnaligned<Half>(address + 0);
+      u32 lower = readUnaligned<Half>(address + 2);
+      return upper << 16 | lower << 0;
+    }
+    if constexpr(Size == Dual) {
+      u64 upper = readUnaligned<Word>(address + 0);
+      u64 lower = readUnaligned<Word>(address + 4);
+      return upper << 32 | lower << 0;
+    }
+    unreachable;
   }
 
-  auto writeHalfUnaligned(u32 address, u16 value) -> void {
-    writeByte(address + 0, value >> 8);
-    writeByte(address + 1, value >> 0);
-  }
-  auto writeWordUnaligned(u32 address, u32 value) -> void {
-    writeHalfUnaligned(address + 0, value >> 16);
-    writeHalfUnaligned(address + 2, value >>  0);
-  }
-  auto writeDualUnaligned(u32 address, u64 value) -> void {
-    writeWordUnaligned(address + 0, value >> 32);
-    writeWordUnaligned(address + 4, value >>  0);
-  }
-  auto writeQuadUnaligned(u32 address, u128 value) -> void {
-    writeDualUnaligned(address + 0, value >> 64);
-    writeDualUnaligned(address + 8, value >>  0);
+  template<u32 Size>
+  auto writeUnaligned(u32 address, u64 value) -> void {
+    static_assert(Size != Byte);
+    if constexpr(Size == Half) {
+      write<Byte>(address + 0, value >> 8);
+      write<Byte>(address + 1, value >> 0);
+    }
+    if constexpr(Size == Word) {
+      writeUnaligned<Half>(address + 0, value >> 16);
+      writeUnaligned<Half>(address + 2, value >>  0);
+    }
+    if constexpr(Size == Dual) {
+      writeUnaligned<Word>(address + 0, value >> 32);
+      writeUnaligned<Word>(address + 4, value >>  0);
+    }
   }
 
   auto serialize(serializer& s) -> void {
@@ -123,5 +119,4 @@ struct Writable {
   u32 maskHalf = 0;
   u32 maskWord = 0;
   u32 maskDual = 0;
-  u32 maskQuad = 0;
 };

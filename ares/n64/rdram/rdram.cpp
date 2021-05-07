@@ -25,11 +25,7 @@ auto RDRAM::unload() -> void {
 
 auto RDRAM::power(bool reset) -> void {
   ram.fill();
-  //the PIF ROM RDRAM self-test is not working yet,
-  //so this hack is needed for expansion pak detection:
-  ram.writeWord(0x318, ram.size);  //CIC-NUS-6102
-  ram.writeWord(0x3f0, ram.size);  //CIC-NUS-6105
-  io = {};
+  for(auto& chip : chips) chip = {};
 }
 
 }

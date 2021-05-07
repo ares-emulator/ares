@@ -7,7 +7,7 @@ struct RDRAM : Memory::IO<RDRAM> {
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
-    auto io(bool mode, u32 address, u32 data) -> void;
+    auto io(bool mode, u32 chipID, u32 address, u32 data) -> void;
 
     struct Memory {
       Node::Debugger::Memory ram;
@@ -30,18 +30,19 @@ struct RDRAM : Memory::IO<RDRAM> {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  struct IO {
-    u32 config = 0;
-    u32 deviceID = 0;
-    u32 delay = 0;
-    u32 mode = 0;
-    u32 refreshInterval = 0;
-    u32 refreshRow = 0;
-    u32 rasInterval = 0;
-    u32 minInterval = 0;
-    u32 addressSelect = 0;
-    u32 deviceManufacturer = 0;
-  } io;
+  struct Chip {
+    n32 deviceType;
+    n32 deviceID;
+    n32 delay;
+    n32 mode;
+    n32 refreshInterval;
+    n32 refreshRow;
+    n32 rasInterval;
+    n32 minInterval;
+    n32 addressSelect;
+    n32 deviceManufacturer;
+    n32 currentControl;
+  } chips[4];
 };
 
 extern RDRAM rdram;

@@ -2,7 +2,7 @@
 
 #include <nall/intrinsics.hpp>
 
-#if defined(ENDIAN_LSB)
+#if defined(ENDIAN_LITTLE)
   //little-endian: uint8_t[] { 0x01, 0x02, 0x03, 0x04 } == 0x04030201
   #define order_lsb1(a)               a
   #define order_lsb2(a,b)             a,b
@@ -20,7 +20,7 @@
   #define order_msb6(a,b,c,d,e,f)     f,e,d,c,b,a
   #define order_msb7(a,b,c,d,e,f,g)   g,f,e,d,c,b,a
   #define order_msb8(a,b,c,d,e,f,g,h) h,g,f,e,d,c,b,a
-#elif defined(ENDIAN_MSB)
+#elif defined(ENDIAN_BIG)
   //big-endian:    uint8_t[] { 0x01, 0x02, 0x03, 0x04 } == 0x01020304
   #define order_lsb1(a)               a
   #define order_lsb2(a,b)             b,a

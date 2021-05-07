@@ -1,13 +1,16 @@
 auto RDRAM::serialize(serializer& s) -> void {
   s(ram);
-  s(io.config);
-  s(io.deviceID);
-  s(io.delay);
-  s(io.mode);
-  s(io.refreshInterval);
-  s(io.refreshRow);
-  s(io.rasInterval);
-  s(io.minInterval);
-  s(io.addressSelect);
-  s(io.deviceManufacturer);
+  for(auto& chip : chips) {
+    s(chip.deviceType);
+    s(chip.deviceID);
+    s(chip.delay);
+    s(chip.mode);
+    s(chip.refreshInterval);
+    s(chip.refreshRow);
+    s(chip.rasInterval);
+    s(chip.minInterval);
+    s(chip.addressSelect);
+    s(chip.deviceManufacturer);
+    s(chip.currentControl);
+  }
 }

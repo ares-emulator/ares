@@ -4,7 +4,7 @@ auto RSP::Recompiler::pool() -> Pool* {
   context = (Pool*)allocator.acquire();
   u32 hashcode = 0;
   for(u32 offset : range(4096)) {
-    hashcode = (hashcode << 5) + hashcode + self.imem.readByte(offset);
+    hashcode = (hashcode << 5) + hashcode + self.imem.read<Byte>(offset);
   }
   context->hashcode = hashcode;
 
@@ -40,7 +40,7 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
   push(rbx);
   push(rbp);
   push(r13);
-  if constexpr(abi() == ABI::Windows) {
+  if constexpr(ABI::Windows) {
     push(rsi);
     push(rdi);
     sub(rsp, imm8(0x40));
@@ -51,7 +51,7 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
 
   bool hasBranched = 0;
   while(true) {
-    u32 instruction = self.imem.readWord(address);
+    u32 instruction = self.imem.read<Word>(address);
     bool branched = emitEXECUTE(instruction);
     mov(rax, mem64(&self.clock));
     add(rax, imm8(2));
@@ -61,11 +61,8 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
     if(hasBranched || (address & 0xffc) == 0) break;  //IMEM boundary
     hasBranched = branched;
     test(rax, rax);
-    if constexpr(abi() == ABI::SystemV) {
-      jz(imm8(5));
-    }
-    if constexpr(abi() == ABI::Windows) {
-      jz(imm8(11));
+    jz(imm8(ABI::Windows ? 11 : 5));
+    if constexpr(ABI::Windows) {
       add(rsp, imm8(0x40));
       pop(rdi);
       pop(rsi);
@@ -75,7 +72,7 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
     pop(rbx);
     ret();
   }
-  if constexpr(abi() == ABI::Windows) {
+  if constexpr(ABI::Windows) {
     add(rsp, imm8(0x40));
     pop(rdi);
     pop(rsi);
@@ -1448,10 +1445,10 @@ template<typename V, typename... P>
 auto RSP::Recompiler::call(V (RSP::*function)(P...)) -> void {
   static_assert(sizeof...(P) <= 5);
   mov(rax, imm64(function));
-  if constexpr(abi() == ABI::SystemV) {
+  if constexpr(ABI::SystemV) {
     mov(rdi, rbp);
   }
-  if constexpr(abi() == ABI::Windows) {
+  if constexpr(ABI::Windows) {
     if constexpr(sizeof...(P) >= 5) mov(dis8(rsp, 0x28), r9);
     if constexpr(sizeof...(P) >= 4) mov(dis8(rsp, 0x20), r8);
     if constexpr(sizeof...(P) >= 3) mov(r9, rcx);

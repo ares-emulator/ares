@@ -134,7 +134,7 @@ auto RSP::CTC2(cr32& rt, u8 rd) -> void {
 
 auto RSP::LBV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm;
-  vt.byte(e) = dmem.readByte(address);
+  vt.byte(e) = dmem.read<Byte>(address);
 }
 
 auto RSP::LDV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
@@ -142,7 +142,7 @@ auto RSP::LDV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = e;
   auto end = start + 8;
   for(u32 offset = start; offset < end; offset++) {
-    vt.byte(offset & 15) = dmem.readByte(address++);
+    vt.byte(offset & 15) = dmem.read<Byte>(address++);
   }
 }
 
@@ -151,7 +151,7 @@ auto RSP::LFV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = e >> 1;
   auto end = start + 4;
   for(u32 offset = start; offset < end; offset++) {
-    vt.element(offset & 7) = dmem.readByte(address) << 7;
+    vt.element(offset & 7) = dmem.read<Byte>(address) << 7;
     address += 4;
   }
 }
@@ -159,7 +159,7 @@ auto RSP::LFV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
 auto RSP::LHV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   for(u32 offset = 0; offset < 8; offset++) {
-    vt.element(offset) = dmem.readByte(address + (16 - e + offset * 2 & 15)) << 7;
+    vt.element(offset) = dmem.read<Byte>(address + (16 - e + offset * 2 & 15)) << 7;
   }
 }
 
@@ -168,14 +168,14 @@ auto RSP::LLV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = e;
   auto end = start + 4;
   for(u32 offset = start; offset < end; offset++) {
-    vt.byte(offset & 15) = dmem.readByte(address++);
+    vt.byte(offset & 15) = dmem.read<Byte>(address++);
   }
 }
 
 auto RSP::LPV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   for(u32 offset = 0; offset < 8; offset++) {
-    vt.element(offset) = dmem.readByte(address + (16 - e + offset & 15)) << 8;
+    vt.element(offset) = dmem.read<Byte>(address + (16 - e + offset & 15)) << 8;
   }
 }
 
@@ -184,7 +184,7 @@ auto RSP::LQV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = e;
   auto end = 16 - (address & 15);
   for(u32 offset = start; offset < end; offset++) {
-    vt.byte(offset & 15) = dmem.readByte(address++);
+    vt.byte(offset & 15) = dmem.read<Byte>(address++);
   }
 }
 
@@ -194,7 +194,7 @@ auto RSP::LRV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = 16 - ((address & 15) - index);
   address &= ~15;
   for(u32 offset = start; offset < 16; offset++) {
-    vt.byte(offset & 15) = dmem.readByte(address++);
+    vt.byte(offset & 15) = dmem.read<Byte>(address++);
   }
 }
 
@@ -203,7 +203,7 @@ auto RSP::LSV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = e;
   auto end = start + 2;
   for(u32 offset = start; offset < end; offset++) {
-    vt.byte(offset & 15) = dmem.readByte(address++);
+    vt.byte(offset & 15) = dmem.read<Byte>(address++);
   }
 }
 
@@ -214,15 +214,15 @@ auto RSP::LTV(u8 vt, u8 e, cr32& rs, s8 imm) -> void {
   address = (address + 8 & ~15) + (e & 1);
   for(u32 offset = start; offset < end; offset++) {
     auto byte = (8 - (e >> 1) + (offset - start)) << 1;
-    vpu.r[offset].byte(byte + 0 & 15) = dmem.readByte(address++);
-    vpu.r[offset].byte(byte + 1 & 15) = dmem.readByte(address++);
+    vpu.r[offset].byte(byte + 0 & 15) = dmem.read<Byte>(address++);
+    vpu.r[offset].byte(byte + 1 & 15) = dmem.read<Byte>(address++);
   }
 }
 
 auto RSP::LUV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   for(u32 offset = 0; offset < 8; offset++) {
-    vt.element(offset) = dmem.readByte(address + (16 - e + offset & 15)) << 7;
+    vt.element(offset) = dmem.read<Byte>(address + (16 - e + offset & 15)) << 7;
   }
 }
 
@@ -231,7 +231,7 @@ auto RSP::LWV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = 16 - e;
   auto end = e + 16;
   for(u32 offset = start; offset < end; offset++) {
-    vt.byte(offset & 15) = dmem.readByte(address);
+    vt.byte(offset & 15) = dmem.read<Byte>(address);
     address += 4;
   }
 }
@@ -249,7 +249,7 @@ auto RSP::MTC2(cr32& rt, r128& vs, u8 e) -> void {
 
 auto RSP::SBV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm;
-  dmem.writeByte(address, vt.byte(e));
+  dmem.write<Byte>(address, vt.byte(e));
 }
 
 auto RSP::SDV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
@@ -257,7 +257,7 @@ auto RSP::SDV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = e;
   auto end = start + 8;
   for(u32 offset = start; offset < end; offset++) {
-    dmem.writeByte(address++, vt.byte(offset & 15));
+    dmem.write<Byte>(address++, vt.byte(offset & 15));
   }
 }
 
@@ -268,7 +268,7 @@ auto RSP::SFV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto base = address & 15;
   address &= ~15;
   for(u32 offset = start; offset < end; offset++) {
-    dmem.writeByte(address + (base & 15), vt.element(offset & 7) >> 7);
+    dmem.write<Byte>(address + (base & 15), vt.element(offset & 7) >> 7);
     base += 4;
   }
 }
@@ -278,7 +278,7 @@ auto RSP::SHV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   for(u32 offset = 0; offset < 8; offset++) {
     auto byte = e + offset * 2;
     auto value = vt.byte(byte + 0 & 15) << 1 | vt.byte(byte + 1 & 15) >> 7;
-    dmem.writeByte(address, value);
+    dmem.write<Byte>(address, value);
     address += 2;
   }
 }
@@ -288,7 +288,7 @@ auto RSP::SLV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = e;
   auto end = start + 4;
   for(u32 offset = start; offset < end; offset++) {
-    dmem.writeByte(address++, vt.byte(offset & 15));
+    dmem.write<Byte>(address++, vt.byte(offset & 15));
   }
 }
 
@@ -298,9 +298,9 @@ auto RSP::SPV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto end = start + 8;
   for(u32 offset = start; offset < end; offset++) {
     if((offset & 15) < 8) {
-      dmem.writeByte(address++, vt.byte((offset & 7) << 1));
+      dmem.write<Byte>(address++, vt.byte((offset & 7) << 1));
     } else {
-      dmem.writeByte(address++, vt.element(offset & 7) >> 7);
+      dmem.write<Byte>(address++, vt.element(offset & 7) >> 7);
     }
   }
 }
@@ -310,7 +310,7 @@ auto RSP::SQV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = e;
   auto end = start + (16 - (address & 15));
   for(u32 offset = start; offset < end; offset++) {
-    dmem.writeByte(address++, vt.byte(offset & 15));
+    dmem.write<Byte>(address++, vt.byte(offset & 15));
   }
 }
 
@@ -321,7 +321,7 @@ auto RSP::SRV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto base = 16 - (address & 15);
   address &= ~15;
   for(u32 offset = start; offset < end; offset++) {
-    dmem.writeByte(address++, vt.byte(offset + base & 15));
+    dmem.write<Byte>(address++, vt.byte(offset + base & 15));
   }
 }
 
@@ -330,7 +330,7 @@ auto RSP::SSV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto start = e;
   auto end = start + 2;
   for(u32 offset = start; offset < end; offset++) {
-    dmem.writeByte(address++, vt.byte(offset & 15));
+    dmem.write<Byte>(address++, vt.byte(offset & 15));
   }
 }
 
@@ -342,7 +342,7 @@ auto RSP::STV(u8 vt, u8 e, cr32& rs, s8 imm) -> void {
   auto base = (address & 15) + (element << 1);
   address &= ~15;
   for(u32 offset = start; offset < end; offset++) {
-    dmem.writeHalfUnaligned(address + (base & 15), vpu.r[offset].element(element++ & 7));
+    dmem.writeUnaligned<Half>(address + (base & 15), vpu.r[offset].element(element++ & 7));
     base += 2;
   }
 }
@@ -353,9 +353,9 @@ auto RSP::SUV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto end = start + 8;
   for(u32 offset = start; offset < end; offset++) {
     if((offset & 15) < 8) {
-      dmem.writeByte(address++, vt.element(offset & 7) >> 7);
+      dmem.write<Byte>(address++, vt.element(offset & 7) >> 7);
     } else {
-      dmem.writeByte(address++, vt.byte((offset & 7) << 1));
+      dmem.write<Byte>(address++, vt.byte((offset & 7) << 1));
     }
   }
 }
@@ -367,7 +367,7 @@ auto RSP::SWV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   auto base = address & 15;
   address &= ~15;
   for(u32 offset = start; offset < end; offset++) {
-    dmem.writeByte(address + (base++ & 15), vt.byte(offset & 15));
+    dmem.write<Byte>(address + (base++ & 15), vt.byte(offset & 15));
   }
 }
 

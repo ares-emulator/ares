@@ -4,19 +4,19 @@ auto RSP::Debugger::load(Node::Object parent) -> void {
   memory.dmem = parent->append<Node::Debugger::Memory>("RSP DMEM");
   memory.dmem->setSize(4_KiB);
   memory.dmem->setRead([&](u32 address) -> u8 {
-    return rsp.dmem.readByte(address);
+    return rsp.dmem.read<Byte>(address);
   });
   memory.dmem->setWrite([&](u32 address, u8 data) -> void {
-    return rsp.dmem.writeByte(address, data);
+    return rsp.dmem.write<Byte>(address, data);
   });
 
   memory.imem = parent->append<Node::Debugger::Memory>("RSP IMEM");
   memory.imem->setSize(4_KiB);
   memory.imem->setRead([&](u32 address) -> u8 {
-    return rsp.imem.readByte(address);
+    return rsp.imem.read<Byte>(address);
   });
   memory.imem->setWrite([&](u32 address, u8 data) -> void {
-    return rsp.imem.writeByte(address, data);
+    return rsp.imem.write<Byte>(address, data);
   });
 
   tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "RSP");

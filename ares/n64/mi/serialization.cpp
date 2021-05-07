@@ -11,4 +11,9 @@ auto MI::serialize(serializer& s) -> void {
   s(irq.pi.mask);
   s(irq.dp.line);
   s(irq.dp.mask);
+
+  s(io.initializeLength);
+  s(io.initializeMode);
+  s(io.ebusTestMode);
+  s(io.rdramRegisterSelect);
 }

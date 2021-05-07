@@ -17,7 +17,7 @@ namespace ares::Nintendo64 {
   auto option(string name, string value) -> bool;
 
   enum : u32 { Read, Write };
-  enum : u32 { Byte = 1, Half = 2, Word = 4, Dual = 8, Quad = 16 };
+  enum : u32 { Byte = 1, Half = 2, Word = 4, Dual = 8 };
 
   struct Region {
     static inline auto NTSC() -> bool;

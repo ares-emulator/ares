@@ -23,7 +23,7 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
   push(rbx);
   push(rbp);
   push(r13);
-  if constexpr(abi() == ABI::Windows) {
+  if constexpr(ABI::Windows) {
     push(rsi);
     push(rdi);
     sub(rsp, imm8(0x40));
@@ -42,11 +42,8 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
     if(hasBranched || (address & 0xfc) == 0) break;  //block boundary
     hasBranched = branched;
     test(rax, rax);
-    if constexpr(abi() == ABI::SystemV) {
-      jz(imm8(5));
-    }
-    if constexpr(abi() == ABI::Windows) {
-      jz(imm8(11));
+    jz(imm8(ABI::Windows ? 11 : 5));
+    if constexpr(ABI::Windows) {
       add(rsp, imm8(0x40));
       pop(rdi);
       pop(rsi);
@@ -56,7 +53,7 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
     pop(rbx);
     ret();
   }
-  if constexpr(abi() == ABI::Windows) {
+  if constexpr(ABI::Windows) {
     add(rsp, imm8(0x40));
     pop(rdi);
     pop(rsi);
@@ -1118,10 +1115,10 @@ template<typename V, typename... P>
 auto CPU::Recompiler::call(V (CPU::*function)(P...)) -> void {
   static_assert(sizeof...(P) <= 5);
   mov(rax, imm64(function));
-  if constexpr(abi() == ABI::SystemV) {
+  if constexpr(ABI::SystemV) {
     mov(rdi, rbp);
   }
-  if constexpr(abi() == ABI::Windows) {
+  if constexpr(ABI::Windows) {
     if constexpr(sizeof...(P) >= 5) mov(dis8(rsp, 0x28), r9);
     if constexpr(sizeof...(P) >= 4) mov(dis8(rsp, 0x20), r8);
     if constexpr(sizeof...(P) >= 3) mov(r9, rcx);

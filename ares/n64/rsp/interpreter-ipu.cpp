@@ -77,19 +77,19 @@ auto RSP::JR(cr32& rs) -> void {
 }
 
 auto RSP::LB(r32& rt, cr32& rs, s16 imm) -> void {
-  rt.u32 = s8(dmem.readByte(rs.u32 + imm));
+  rt.u32 = s8(dmem.read<Byte>(rs.u32 + imm));
 }
 
 auto RSP::LBU(r32& rt, cr32& rs, s16 imm) -> void {
-  rt.u32 = u8(dmem.readByte(rs.u32 + imm));
+  rt.u32 = u8(dmem.read<Byte>(rs.u32 + imm));
 }
 
 auto RSP::LH(r32& rt, cr32& rs, s16 imm) -> void {
-  rt.u32 = s16(dmem.readHalfUnaligned(rs.u32 + imm));
+  rt.u32 = s16(dmem.readUnaligned<Half>(rs.u32 + imm));
 }
 
 auto RSP::LHU(r32& rt, cr32& rs, s16 imm) -> void {
-  rt.u32 = u16(dmem.readHalfUnaligned(rs.u32 + imm));
+  rt.u32 = u16(dmem.readUnaligned<Half>(rs.u32 + imm));
 }
 
 auto RSP::LUI(r32& rt, u16 imm) -> void {
@@ -97,7 +97,7 @@ auto RSP::LUI(r32& rt, u16 imm) -> void {
 }
 
 auto RSP::LW(r32& rt, cr32& rs, s16 imm) -> void {
-  rt.u32 = s32(dmem.readWordUnaligned(rs.u32 + imm));
+  rt.u32 = s32(dmem.readUnaligned<Word>(rs.u32 + imm));
 }
 
 auto RSP::NOR(r32& rd, cr32& rs, cr32& rt) -> void {
@@ -113,11 +113,11 @@ auto RSP::ORI(r32& rt, cr32& rs, u16 imm) -> void {
 }
 
 auto RSP::SB(cr32& rt, cr32& rs, s16 imm) -> void {
-  dmem.writeByte(rs.u32 + imm, rt.u32);
+  dmem.write<Byte>(rs.u32 + imm, rt.u32);
 }
 
 auto RSP::SH(cr32& rt, cr32& rs, s16 imm) -> void {
-  dmem.writeHalfUnaligned(rs.u32 + imm, rt.u32);
+  dmem.writeUnaligned<Half>(rs.u32 + imm, rt.u32);
 }
 
 auto RSP::SLL(r32& rd, cr32& rt, u8 sa) -> void {
@@ -165,7 +165,7 @@ auto RSP::SUBU(r32& rd, cr32& rs, cr32& rt) -> void {
 }
 
 auto RSP::SW(cr32& rt, cr32& rs, s16 imm) -> void {
-  dmem.writeWordUnaligned(rs.u32 + imm, rt.u32);
+  dmem.writeUnaligned<Word>(rs.u32 + imm, rt.u32);
 }
 
 auto RSP::XOR(r32& rd, cr32& rs, cr32& rt) -> void {

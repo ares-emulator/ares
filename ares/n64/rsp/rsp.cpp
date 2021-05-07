@@ -44,7 +44,7 @@ auto RSP::instruction() -> void {
 
   if constexpr(Accuracy::RSP::Interpreter) {
     pipeline.address = ipu.pc;
-    pipeline.instruction = imem.readWord(pipeline.address);
+    pipeline.instruction = imem.read<Word>(pipeline.address);
     debugger.instruction();
     decoderEXECUTE();
     instructionEpilogue();
