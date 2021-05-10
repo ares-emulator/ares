@@ -23,6 +23,7 @@ auto VDP::DMA::load() -> void {
   auto address = mode.bit(0) << 23 | source << 1;
   auto data = bus.read(1, 1, address);
   vdp.writeDataPort(data);
+  vdp.debugger.dmaLoad(address, vdp.command.target, vdp.command.address, data);
 
   source.bit(0,15)++;
   if(--length == 0) {
@@ -38,6 +39,7 @@ auto VDP::DMA::fill() -> void {
   case 3: vdp.cram.write(vdp.command.address, data); break;
   case 5: vdp.vsram.write(vdp.command.address, data); break;
   }
+  vdp.debugger.dmaFill(vdp.command.target, vdp.command.address, data);
 
   source.bit(0,15)++;
   vdp.command.address += vdp.command.increment;
@@ -57,6 +59,7 @@ auto VDP::DMA::copy() -> void {
 
   read = 0;
   vdp.vram.writeByte(vdp.command.address, data);
+  vdp.debugger.dmaCopy(source, vdp.command.target, vdp.command.address, data);
 
   source.bit(0,15)++;
   vdp.command.address += vdp.command.increment;

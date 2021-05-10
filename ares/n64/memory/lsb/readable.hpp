@@ -15,7 +15,7 @@ struct Readable {
 
   auto allocate(u32 capacity, u32 fillWith = ~0) -> void {
     reset();
-    size = capacity & ~15;
+    size = capacity & ~7;
     u32 mask = bit::round(size) - 1;
     maskByte = mask & ~0;
     maskHalf = mask & ~1;
@@ -44,17 +44,12 @@ struct Readable {
     }
   }
 
-  //N64 CPU requires aligned memory accesses
   template<u32 Size>
   auto read(u32 address) -> u64 {
     if constexpr(Size == Byte) return *(u8* )&data[address & maskByte ^ 3];
     if constexpr(Size == Half) return *(u16*)&data[address & maskHalf ^ 2];
     if constexpr(Size == Word) return *(u32*)&data[address & maskWord ^ 0];
-    if constexpr(Size == Dual) {
-      u64 upper = read<Word>(address + 0);
-      u64 lower = read<Word>(address + 4);
-      return upper << 32 | lower << 0;
-    }
+    if constexpr(Size == Dual) return *(u64*)&data[address & maskDual ^ 0];
     unreachable;
   }
 
@@ -62,7 +57,6 @@ struct Readable {
   auto write(u32 address, u64 value) -> void {
   }
 
-  //N64 RSP allows unaligned memory accesses in certain cases
   template<u32 Size>
   auto readUnaligned(u32 address) -> u64 {
     static_assert(Size != Byte);

@@ -1,4 +1,4 @@
-struct Readable {
+struct Writable {
   explicit operator bool() const {
     return size > 0;
   }
@@ -15,7 +15,7 @@ struct Readable {
 
   auto allocate(u32 capacity, u32 fillWith = ~0) -> void {
     reset();
-    size = capacity & ~15;
+    size = capacity & ~7;
     u32 mask = bit::round(size) - 1;
     maskByte = mask & ~0;
     maskHalf = mask & ~1;
@@ -44,7 +44,6 @@ struct Readable {
     }
   }
 
-  //N64 CPU requires aligned memory accesses
   template<u32 Size>
   auto read(u32 address) -> u64 {
     if constexpr(Size == Byte) return        (*(u8* )&data[address & maskByte]);
@@ -53,12 +52,14 @@ struct Readable {
     if constexpr(Size == Dual) return bswap64(*(u64*)&data[address & maskDual]);
     unreachable;
   }
-
   template<u32 Size>
   auto write(u32 address, u64 value) -> void {
+    if constexpr(Size == Byte) *(u8* )&data[address & maskByte] =        (value);
+    if constexpr(Size == Half) *(u16*)&data[address & maskHalf] = bswap16(value);
+    if constexpr(Size == Word) *(u32*)&data[address & maskWord] = bswap32(value);
+    if constexpr(Size == Dual) *(u64*)&data[address & maskDual] = bswap64(value);
   }
 
-  //N64 RSP allows unaligned memory accesses in certain cases
   template<u32 Size>
   auto readUnaligned(u32 address) -> u64 {
     static_assert(Size != Byte);
@@ -71,10 +72,13 @@ struct Readable {
   template<u32 Size>
   auto writeUnaligned(u32 address, u64 value) -> void {
     static_assert(Size != Byte);
+    if constexpr(Size == Half) *(u16*)&data[address & maskByte] = bswap16(value);
+    if constexpr(Size == Word) *(u32*)&data[address & maskByte] = bswap32(value);
+    if constexpr(Size == Dual) *(u64*)&data[address & maskByte] = bswap64(value);
   }
 
   auto serialize(serializer& s) -> void {
-  //s(array_span<u8>{data, size});
+    s(array_span<u8>{data, size});
   }
 
 //private:

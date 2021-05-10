@@ -14,8 +14,10 @@ struct VDP : Thread {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto unload() -> void;
-    auto interrupt(string_view) -> void;
-    auto dma(string_view) -> void;
+    auto interrupt(CPU::Interrupt) -> void;
+    auto dmaLoad(n24 source, n4 target, n17 address, n16 data) -> void;
+    auto dmaFill(n4 target, n17 address, n16 data) -> void;
+    auto dmaCopy(n22 source, n4 target, n17 address, n16 data) -> void;
     auto io(n5 register, n8 data) -> void;
 
     struct Memory {

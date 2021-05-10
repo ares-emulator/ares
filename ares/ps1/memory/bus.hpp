@@ -1,5 +1,7 @@
 inline auto Bus::mmio(u32 address) -> Memory::Interface& {
   address &= 0x1fff'ffff;
+  if(address <= 0x007f'ffff) return cpu.ram;
+  if(address >= 0x1fc0'0000) return bios;
   if(address <= 0x1eff'ffff) return unmapped;
   if(address <= 0x1f7f'ffff) return expansion1;
   if(address <= 0x1f80'03ff) return cpu.scratchpad;
@@ -24,19 +26,11 @@ inline auto Bus::mmio(u32 address) -> Memory::Interface& {
 
 template<u32 Size>
 inline auto Bus::read(u32 address) -> u32 {
-  address &= 0x1fff'ffff;
-  if(address <= 0x007f'ffff) return cpu.ram.read<Size>(address);
-  if(address >= 0x1fc0'0000) return bios.read<Size>(address);
   return mmio(address).read<Size>(address);
 }
 
 template<u32 Size>
 inline auto Bus::write(u32 address, u32 data) -> void {
-  address &= 0x1fff'ffff;
-  if(address <= 0x007f'ffff) {
-    if constexpr(Accuracy::CPU::Recompiler) cpu.recompiler.invalidate(address);
-    return cpu.ram.write<Size>(address, data);
-  }
-  if(address >= 0x1fc0'0000) return bios.write<Size>(address, data);
+  if constexpr(Accuracy::CPU::Recompiler) cpu.recompiler.invalidate(address);
   return mmio(address).write<Size>(address, data);
 }

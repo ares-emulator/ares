@@ -1,9 +1,12 @@
 template<u32 Size, bool extend> auto M68K::ADD(n32 source, n32 target) -> n32 {
-  auto result = (n64)source + target;
-  if(extend) result += r.x;
+  target = clip<Size>(target);
+  source = clip<Size>(source);
+  u32 result   = target + source + (extend ? r.x : 0);
+  u32 carries  = target ^ source ^ result;
+  u32 overflow = (target ^ result) & (source ^ result);
 
-  r.c = sign<Size>(result >> 1) < 0;
-  r.v = sign<Size>(~(target ^ source) & (target ^ result)) < 0;
+  r.c = (carries ^ overflow) & msb<Size>();
+  r.v = overflow & msb<Size>();
   r.z = clip<Size>(result) ? 0 : (extend ? r.z : 1);
   r.n = sign<Size>(result) < 0;
   r.x = r.c;
@@ -12,7 +15,7 @@ template<u32 Size, bool extend> auto M68K::ADD(n32 source, n32 target) -> n32 {
 }
 
 template<u32 Size> auto M68K::AND(n32 source, n32 target) -> n32 {
-  n32 result = target & source;
+  u32 result = target & source;
 
   r.c = 0;
   r.v = 0;
@@ -24,10 +27,10 @@ template<u32 Size> auto M68K::AND(n32 source, n32 target) -> n32 {
 
 template<u32 Size> auto M68K::ASL(n32 result, u32 shift) -> n32 {
   bool carry = false;
-  n32 overflow = 0;
+  u32 overflow = 0;
   for(auto _ : range(shift)) {
     carry = result & msb<Size>();
-    n32 before = result;
+    u32 before = result;
     result <<= 1;
     overflow |= before ^ result;
   }
@@ -43,10 +46,10 @@ template<u32 Size> auto M68K::ASL(n32 result, u32 shift) -> n32 {
 
 template<u32 Size> auto M68K::ASR(n32 result, u32 shift) -> n32 {
   bool carry = false;
-  n32 overflow = 0;
+  u32 overflow = 0;
   for(auto _ : range(shift)) {
     carry = result & lsb<Size>();
-    n32 before = result;
+    u32 before = result;
     result = sign<Size>(result) >> 1;
     overflow |= before ^ result;
   }
@@ -61,10 +64,14 @@ template<u32 Size> auto M68K::ASR(n32 result, u32 shift) -> n32 {
 }
 
 template<u32 Size> auto M68K::CMP(n32 source, n32 target) -> n32 {
-  auto result = (n64)target - source;
+  target = clip<Size>(target);
+  source = clip<Size>(source);
+  u32 result   = target - source;
+  u32 carries  = target ^ source ^ result;
+  u32 overflow = (target ^ result) & (source ^ target);
 
-  r.c = sign<Size>(result >> 1) < 0;
-  r.v = sign<Size>((target ^ source) & (target ^ result)) < 0;
+  r.c = (carries ^ overflow) & msb<Size>();
+  r.v = overflow & msb<Size>();
   r.z = clip<Size>(result) == 0;
   r.n = sign<Size>(result) < 0;
 
@@ -72,7 +79,7 @@ template<u32 Size> auto M68K::CMP(n32 source, n32 target) -> n32 {
 }
 
 template<u32 Size> auto M68K::EOR(n32 source, n32 target) -> n32 {
-  n32 result = target ^ source;
+  u32 result = target ^ source;
 
   r.c = 0;
   r.v = 0;
@@ -115,7 +122,7 @@ template<u32 Size> auto M68K::LSR(n32 result, u32 shift) -> n32 {
 }
 
 template<u32 Size> auto M68K::OR(n32 source, n32 target) -> n32 {
-  auto result = target | source;
+  u32 result = target | source;
 
   r.c = 0;
   r.v = 0;
@@ -192,11 +199,14 @@ template<u32 Size> auto M68K::ROXR(n32 result, u32 shift) -> n32 {
 }
 
 template<u32 Size, bool extend> auto M68K::SUB(n32 source, n32 target) -> n32 {
-  auto result = (n64)target - source;
-  if(extend) result -= r.x;
+  target = clip<Size>(target);
+  source = clip<Size>(source);
+  u32 result   = target - source - (extend ? r.x : 0);
+  u32 carries  = target ^ source ^ result;
+  u32 overflow = (target ^ result) & (source ^ target);
 
-  r.c = sign<Size>(result >> 1) < 0;
-  r.v = sign<Size>((target ^ source) & (target ^ result)) < 0;
+  r.c = (carries ^ overflow) & msb<Size>();
+  r.v = overflow & msb<Size>();
   r.z = clip<Size>(result) ? 0 : (extend ? r.z : 1);
   r.n = sign<Size>(result) < 0;
   r.x = r.c;

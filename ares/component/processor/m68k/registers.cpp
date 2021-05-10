@@ -1,31 +1,41 @@
 template<u32 Size> auto M68K::read(DataRegister reg) -> n32 {
-  return clip<Size>(r.d[reg.number]);
+  if constexpr(Size == Byte) return (u8 )r.d[reg.number];
+  if constexpr(Size == Word) return (u16)r.d[reg.number];
+  if constexpr(Size == Long) return (u32)r.d[reg.number];
+  unreachable;
 }
 
 template<u32 Size> auto M68K::write(DataRegister reg, n32 data) -> void {
-  r.d[reg.number] = (r.d[reg.number] & ~mask<Size>()) | (data & mask<Size>());
+  if constexpr(Size == Byte) r.d[reg.number] = r.d[reg.number] &   ~0xff | data &   0xff;
+  if constexpr(Size == Word) r.d[reg.number] = r.d[reg.number] & ~0xffff | data & 0xffff;
+  if constexpr(Size == Long) r.d[reg.number] = data;
 }
 
 //
 
 template<u32 Size> auto M68K::read(AddressRegister reg) -> n32 {
-  return sign<Size>(r.a[reg.number]);
+  if constexpr(Size == Byte) return (s8 )r.a[reg.number];
+  if constexpr(Size == Word) return (s16)r.a[reg.number];
+  if constexpr(Size == Long) return (s32)r.a[reg.number];
+  unreachable;
 }
 
 template<u32 Size> auto M68K::write(AddressRegister reg, n32 data) -> void {
-  r.a[reg.number] = sign<Size>(data);
+  if constexpr(Size == Byte) r.a[reg.number] = (s8 )data;
+  if constexpr(Size == Word) r.a[reg.number] = (s16)data;
+  if constexpr(Size == Long) r.a[reg.number] = (s32)data;
 }
 
 //
 
-//CCR,SR unused bits cannot be set; always read out as 0
+//CCR/SR unused bits cannot be set; always read out as 0
 
 auto M68K::readCCR() -> n8 {
   return r.c << 0 | r.v << 1 | r.z << 2 | r.n << 3 | r.x << 4;
 }
 
 auto M68K::readSR() -> n16 {
-  return readCCR() << 0 | r.i << 8 | r.s << 13 | r.t << 15;
+  return r.c << 0 | r.v << 1 | r.z << 2 | r.n << 3 | r.x << 4 | r.i << 8 | r.s << 13 | r.t << 15;
 }
 
 auto M68K::writeCCR(n8 ccr) -> void {

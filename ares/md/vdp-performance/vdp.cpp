@@ -4,6 +4,8 @@ namespace ares::MegaDrive {
 
 VDP vdp;
 #include "psg.cpp"
+#include "main.cpp"
+#include "irq.cpp"
 #include "render.cpp"
 #include "memory.cpp"
 #include "io.cpp"
@@ -44,69 +46,12 @@ auto VDP::unload() -> void {
   node.reset();
 }
 
-auto VDP::main() -> void {
-  if(state.vcounter < screenHeight()) {
-    step(1280);
-    if(!runAhead()) {
-      render();
-      m32x.vdp.scanline(pixels(), state.vcounter);
-    }
-    if(latch.horizontalInterruptCounter-- == 0) {
-      latch.horizontalInterruptCounter = io.horizontalInterruptCounter;
-      if(io.horizontalBlankInterruptEnable) {
-        cpu.raise(CPU::Interrupt::HorizontalBlank);
-      }
-    }
-    cartridge.hblank(1);
-    step(430);
-  } else if(state.vcounter == screenHeight()) {
-    if(io.verticalBlankInterruptEnable) {
-      io.vblankIRQ = true;
-      cpu.raise(CPU::Interrupt::VerticalBlank);
-    }
-    cartridge.vblank(1);
-    apu.setINT(true);
-    step(1286);
-    cartridge.hblank(1);
-    apu.setINT(false);
-    step(424);
-  } else {
-    step(1280);
-    cartridge.hblank(1);
-    step(430);
-  }
-
-  cpu.lower(CPU::Interrupt::HorizontalBlank);
-  cartridge.hblank(0);
-
-  state.hdot = 0;
-  state.hcounter = 0;
-  state.vcounter++;
-
-  if(state.vcounter == 240) {
-    if(latch.interlace == 0) screen->setProgressive(1);
-    if(latch.interlace == 1) screen->setInterlace(latch.field);
-    screen->setViewport(0, 0, screen->width(), screen->height());
-    screen->frame();
-    scheduler.exit(Event::Frame);
-  } else if(state.vcounter >= frameHeight()) {
-    state.vcounter = 0;
-    state.field ^= 1;
-    latch.field = state.field;
-    latch.interlace = io.interlaceMode == 3;
-    latch.overscan = io.overscan;
-    latch.displayWidth = io.displayWidth;
-    latch.horizontalInterruptCounter = io.horizontalInterruptCounter;
-    io.vblankIRQ = false;
-    cpu.lower(CPU::Interrupt::VerticalBlank);
-    cartridge.vblank(0);
-  }
-}
-
-auto VDP::step(s32 clocks) -> void {
-  state.hcounter += clocks;
-  Thread::step(clocks);
-  Thread::synchronize(cpu, apu);
+auto VDP::frame() -> void {
+  if(latch.interlace == 0) screen->setProgressive(1);
+  if(latch.interlace == 1) screen->setInterlace(field());
+  screen->setViewport(0, 0, screen->width(), screen->height());
+  screen->frame();
+  scheduler.exit(Event::Frame);
 }
 
 auto VDP::power(bool reset) -> void {
@@ -123,6 +68,7 @@ auto VDP::power(bool reset) -> void {
   for(auto& data : cram.memory) data = 0;
 
   psg.power(reset);
+  irq.power(reset);
   dma.power();
 
   planeA.io = {};
@@ -133,9 +79,10 @@ auto VDP::power(bool reset) -> void {
   for(auto& object : sprite.oam) object = {};
   for(auto& object : sprite.objects) object = {};
 
-  state = {};
+  command = {};
   io = {};
   latch = {};
+  state = {};
 }
 
 }

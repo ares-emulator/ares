@@ -281,6 +281,8 @@ auto VDP::writeControlPort(n16 data) -> void {
     layers.hscrollMode  = data.bit(0,1);
     layers.vscrollMode  = data.bit(2);
     irq.external.enable = data.bit(3);
+
+    irq.poll();
     return;
   }
 

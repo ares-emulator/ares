@@ -94,7 +94,7 @@ auto M68K::_condition(n4 condition) -> string {
 
 auto M68K::disassembleInstruction(n32 pc) -> string {
   _pc = pc;
-  return {hex(_read<Word>(_pc), 4L), "  ", pad(disassembleTable[_readPC()](), -60)};  //todo: exact maximum length unknown (and sub-optimal)
+  return {hex(_read<Word>(_pc), 4L), "  ", pad(disassembleTable[_readPC()](), -49)};
 }
 
 auto M68K::disassembleContext() -> string {
@@ -374,16 +374,32 @@ template<u32 Size> auto M68K::disassembleMOVEA(EffectiveAddress from, AddressReg
   return {"movea   ", _effectiveAddress<Size>(from), ",", _addressRegister(to)};
 }
 
+//longest register list: "d0-d1,d3-d4,d6-d7/a0-a1,a3-a4,a6-a7"
 template<u32 Size> auto M68K::disassembleMOVEM_TO_MEM(EffectiveAddress to) -> string {
   string op{"movem", _suffix<Size>(), " "};
 
   n16 list = _readPC();
   string regs;
-  for(u32 n : range(8)) if(list.bit(0 + n)) regs.append(_dataRegister(DataRegister{n}), ",");
+  for(u32 lhs = 0; lhs < 8; lhs++) {
+    if(!list.bit(0 + lhs)) continue;
+    regs.append(_dataRegister(DataRegister{lhs}));
+    if(lhs == 7 || !list.bit(1 + lhs)) { regs.append(","); continue; }
+    for(u32 rhs = lhs; rhs < 8; rhs++) {
+      if(rhs == 7 || !list.bit(1 + rhs)) { regs.append("-", _dataRegister(DataRegister{rhs}), ","); lhs = rhs; break; }
+    }
+  }
   regs.trimRight(",");
   if(regs && list >> 8) regs.append("/");
-  for(u32 n : range(8)) if(list.bit(8 + n)) regs.append(_addressRegister(AddressRegister{n}), ",");
+  for(u32 lhs = 0; lhs < 8; lhs++) {
+    if(!list.bit(8 + lhs)) continue;
+    regs.append(_addressRegister(AddressRegister{lhs}));
+    if(lhs == 7 || !list.bit(9 + lhs)) { regs.append(","); continue; }
+    for(u32 rhs = lhs; rhs < 8; rhs++) {
+      if(rhs == 7 || !list.bit(9 + rhs)) { regs.append("-", _addressRegister(AddressRegister{rhs}), ","); lhs = rhs; break; }
+    }
+  }
   regs.trimRight(",");
+  if(!regs) regs = "-";
 
   return {op, regs, ",", _effectiveAddress<Size>(to)};
 }
@@ -393,11 +409,26 @@ template<u32 Size> auto M68K::disassembleMOVEM_TO_REG(EffectiveAddress from) -> 
 
   n16 list = _readPC();
   string regs;
-  for(u32 n : range(8)) if(list.bit(0 + n)) regs.append(_dataRegister(DataRegister{n}), ",");
+  for(u32 lhs = 0; lhs < 8; lhs++) {
+    if(!list.bit(0 + lhs)) continue;
+    regs.append(_dataRegister(DataRegister{lhs}));
+    if(lhs == 7 || !list.bit(1 + lhs)) { regs.append(","); continue; }
+    for(u32 rhs = lhs; rhs < 8; rhs++) {
+      if(rhs == 7 || !list.bit(1 + rhs)) { regs.append("-", _dataRegister(DataRegister{rhs}), ","); lhs = rhs; break; }
+    }
+  }
   regs.trimRight(",");
   if(regs && list >> 8) regs.append("/");
-  for(u32 n : range(8)) if(list.bit(8 + n)) regs.append(_addressRegister(AddressRegister{n}), ",");
+  for(u32 lhs = 0; lhs < 8; lhs++) {
+    if(!list.bit(8 + lhs)) continue;
+    regs.append(_addressRegister(AddressRegister{lhs}));
+    if(lhs == 7 || !list.bit(9 + lhs)) { regs.append(","); continue; }
+    for(u32 rhs = lhs; rhs < 8; rhs++) {
+      if(rhs == 7 || !list.bit(9 + rhs)) { regs.append("-", _addressRegister(AddressRegister{rhs}), ","); lhs = rhs; break; }
+    }
+  }
   regs.trimRight(",");
+  if(!regs) regs = "-";
 
   return {op, _effectiveAddress<Size>(from), ",", regs};
 }

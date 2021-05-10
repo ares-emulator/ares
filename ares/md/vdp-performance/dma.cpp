@@ -9,12 +9,11 @@ auto VDP::DMA::poll() -> void {
 }
 
 auto VDP::DMA::run() -> bool {
-  if(!io.enable || io.wait) return false;
-  if(!vdp.io.command.bit(5)) return false;
-  if(io.mode <= 1) return load(), true;
-  if(io.mode == 2) return fill(), true;
-  if(!vdp.io.command.bit(4)) return false;
-  if(io.mode == 3) return copy(), true;
+  if(vdp.command.pending && !io.wait) {
+    if(io.mode <= 1) return load(), true;
+    if(io.mode == 2) return fill(), true;
+    if(io.mode == 3) return copy(), true;
+  }
   return false;
 }
 
@@ -27,37 +26,37 @@ auto VDP::DMA::load() -> void {
 
   io.source.bit(0,15)++;
   if(--io.length == 0) {
-    vdp.io.command.bit(5) = 0;
+    vdp.command.pending = 0;
     active = 0;
   }
 }
 
 auto VDP::DMA::fill() -> void {
-  switch(vdp.io.command.bit(0,3)) {
-  case 1: vdp.vram .writeByte(vdp.io.address, io.fill); break;
-  case 5: vdp.vsram.writeByte(vdp.io.address, io.fill); break;
-  case 3: vdp.cram .writeByte(vdp.io.address, io.fill); break;
+  switch(vdp.command.target) {
+  case 1: vdp.vram .writeByte(vdp.command.address, io.fill); break;
+  case 5: vdp.vsram.writeByte(vdp.command.address, io.fill); break;
+  case 3: vdp.cram .writeByte(vdp.command.address, io.fill); break;
   default:
-    debug(unusual, "[VDP] DMA::fill: io.command = 0b", binary(vdp.io.command, 6L));
+    debug(unusual, "[VDP::DMA::fill]: command.target = 0x", hex(vdp.command.target));
     break;
   }
 
   io.source.bit(0,15)++;
-  vdp.io.address += vdp.io.dataIncrement;
+  vdp.command.address += vdp.command.increment;
   if(--io.length == 0) {
-    vdp.io.command.bit(5) = 0;
+    vdp.command.pending = 0;
   }
 }
 
 //note: this can only copy to VRAM
 auto VDP::DMA::copy() -> void {
   auto data = vdp.vram.readByte(io.source);
-  vdp.vram.writeByte(vdp.io.address, data);
+  vdp.vram.writeByte(vdp.command.address, data);
 
   io.source.bit(0,15)++;
-  vdp.io.address += vdp.io.dataIncrement;
+  vdp.command.address += vdp.command.increment;
   if(--io.length == 0) {
-    vdp.io.command.bit(5) = 0;
+    vdp.command.pending = 0;
   }
 }
 

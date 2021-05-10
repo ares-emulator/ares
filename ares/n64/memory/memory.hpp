@@ -1,6 +1,6 @@
 namespace Memory {
-  #include "lsb-readable.hpp"
-  #include "lsb-writable.hpp"
+  #include "lsb/readable.hpp"
+  #include "lsb/writable.hpp"
   #include "io.hpp"
 }
 

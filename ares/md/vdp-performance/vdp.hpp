@@ -17,19 +17,30 @@ struct VDP : Thread {
 
   auto hcounter() const -> u32 { return state.hcounter; }
   auto vcounter() const -> u32 { return state.vcounter; }
+  auto field() const -> bool { return state.field; }
+  auto hblank() const -> bool { return state.hblank; }
+  auto vblank() const -> bool { return state.vblank; }
   auto refreshing() const -> bool { return false; }
 
-  //overrides Thread::active() for VDP DMA wait cycle detection:
-  //this is needed as vdp-performace runs VDP DMA from CPU thread
-  auto active() const -> bool { return dma.active; }
+  auto h32() const -> bool { return latch.displayWidth == 0; }  //256-width
+  auto h40() const -> bool { return latch.displayWidth == 1; }  //320-width
+
+  auto v28() const -> bool { return io.overscan == 0; }  //224-height
+  auto v30() const -> bool { return io.overscan == 1; }  //240-height
 
   //vdp.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
-
-  auto main() -> void;
-  auto step(s32 clocks) -> void;
+  auto frame() -> void;
   auto power(bool reset) -> void;
+
+  //main.cpp
+  auto step(u32 clocks) -> void;
+  auto vtick() -> void;
+  auto hblank(bool line) -> void;
+  auto vblank(bool line) -> void;
+  auto vedge() -> void;
+  auto main() -> void;
 
   //render.cpp
   auto pixels() -> u32*;
@@ -72,6 +83,33 @@ struct VDP : Thread {
   private:
     double volume[16];
   } psg;
+
+  struct IRQ {
+    //irq.cpp
+    auto poll() -> void;
+    auto power(bool reset) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct External {
+      n1 enable;
+      n1 pending;
+    } external;
+
+    struct Hblank {
+      n1 enable;
+      n1 pending;
+      n8 counter;
+      n8 frequency;
+    } hblank;
+
+    struct Vblank {
+      n1 enable;
+      n1 pending;
+      n1 transitioned;
+    } vblank;
+  } irq;
 
   struct DMA {
     //dma.cpp
@@ -239,71 +277,58 @@ private:
     Pixel pixels[512];
   } sprite{*this};
 
-  struct State {
-    u32* output = nullptr;
-    n16  hdot;
-    n16  hcounter;
-    n16  vcounter;
-    n1   field;
-  } state;
+  struct Command {
+    n1  latch;
+    n4  target;
+    n1  ready;
+    n1  pending;
+    n17 address;
+    n8  increment;
+  } command;
 
   struct IO {
-    //status
-    n1  vblankIRQ;  //true after VIRQ triggers; cleared at start of next frame
-
-    //command
-    n6  command;
-    n17 address;
-    n1  commandPending;
-
     //$00  mode register 1
-    n1  displayOverlayEnable;
-    n1  counterLatch;
-    n1  horizontalBlankInterruptEnable;
-    n1  leftColumnBlank;
+    n1 displayOverlayEnable;
+    n1 counterLatch;
+    n1 videoMode4;
+    n1 leftColumnBlank;
 
     //$01  mode register 2
-    n1  videoMode;  //0 = Master System; 1 = Mega Drive
-    n1  overscan;   //0 = 224 lines; 1 = 240 lines
-    n1  verticalBlankInterruptEnable;
-    n1  displayEnable;
+    n1 videoMode5;
+    n1 overscan;
+    n1 displayEnable;
 
     //$07  background color
-    n6  backgroundColor;
-
-    //$0a  horizontal interrupt counter
-    n8  horizontalInterruptCounter;
-
-    //$0b  mode register 3
-    n1  externalInterruptEnable;
+    n6 backgroundColor;
 
     //$0c  mode register 4
-    n1  displayWidth;  //0 = H32; 1 = H40
-    n2  interlaceMode;
-    n1  shadowHighlightEnable;
-    n1  externalColorEnable;
-    n1  horizontalSync;
-    n1  verticalSync;
-    n1  clockSelect;  //0 = DCLK; 1 = EDCLK
-
-    //$0f  data port auto-increment value
-    n8  dataIncrement;
+    n1 displayWidth;  //0 = H32; 1 = H40
+    n2 interlaceMode;
+    n1 shadowHighlightEnable;
+    n1 externalColorEnable;
+    n1 hsync;
+    n1 vsync;
+    n1 clockSelect;  //0 = DCLK; 1 = EDCLK
   } io;
 
   struct Latch {
     //per-frame
-    n1  field;
-    n1  interlace;
-    n1  overscan;
-    n8  horizontalInterruptCounter;
+    n1 interlace;
+    n1 overscan;
 
     //per-scanline
-    n1  displayWidth;
-    n1  clockSelect;
+    n1 displayWidth;
+    n1 clockSelect;
   } latch;
 
-  friend class CPU;
-  friend class APU;
+  struct State {
+    u32* output = nullptr;
+    n8   hcounter;
+    n9   vcounter;
+    n1   field;
+    n1   hblank;
+    n1   vblank;
+  } state;
 };
 
 extern VDP vdp;

@@ -1,55 +1,67 @@
 auto VDP::serialize(serializer& s) -> void {
   Thread::serialize(s);
+
   s(vram);
   s(vsram);
   s(cram);
   s(psg);
+  s(irq);
   s(dma);
   s(planeA);
   s(window);
   s(planeB);
   s(sprite);
 
-  s(state.hdot);
-  s(state.hcounter);
-  s(state.vcounter);
-  s(state.field);
+  s(command.latch);
+  s(command.target);
+  s(command.ready);
+  s(command.pending);
+  s(command.address);
+  s(command.increment);
 
-  s(io.vblankIRQ);
-  s(io.command);
-  s(io.address);
-  s(io.commandPending);
   s(io.displayOverlayEnable);
   s(io.counterLatch);
-  s(io.horizontalBlankInterruptEnable);
+  s(io.videoMode4);
   s(io.leftColumnBlank);
-  s(io.videoMode);
+  s(io.videoMode5);
   s(io.overscan);
-  s(io.verticalBlankInterruptEnable);
   s(io.displayEnable);
   s(io.backgroundColor);
-  s(io.horizontalInterruptCounter);
-  s(io.externalInterruptEnable);
   s(io.displayWidth);
   s(io.interlaceMode);
   s(io.shadowHighlightEnable);
   s(io.externalColorEnable);
-  s(io.horizontalSync);
-  s(io.verticalSync);
+  s(io.hsync);
+  s(io.vsync);
   s(io.clockSelect);
-  s(io.dataIncrement);
 
-  s(latch.field);
   s(latch.interlace);
   s(latch.overscan);
-  s(latch.horizontalInterruptCounter);
   s(latch.displayWidth);
   s(latch.clockSelect);
+
+  s(state.hcounter);
+  s(state.vcounter);
+  s(state.field);
+  s(state.hblank);
+  s(state.vblank);
 }
 
 auto VDP::PSG::serialize(serializer& s) -> void {
   SN76489::serialize(s);
   Thread::serialize(s);
+}
+
+auto VDP::IRQ::serialize(serializer& s) -> void {
+  s(external.enable);
+  s(external.pending);
+  s(hblank.enable);
+  s(hblank.pending);
+  s(hblank.counter);
+  s(hblank.frequency);
+  s(vblank.enable);
+  s(vblank.pending);
+  s(vblank.transitioned);
 }
 
 auto VDP::VRAM::serialize(serializer& s) -> void {

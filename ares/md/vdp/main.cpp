@@ -81,9 +81,9 @@ auto VDP::slot() -> void {
     state.refreshing = 0;
     return;
   }
-  if(dma.run());
   if(fifo.run()) return;
   if(prefetch.run()) return;
+  dma.run();
 }
 
 auto VDP::refresh() -> void {

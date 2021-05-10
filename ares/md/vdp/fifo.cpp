@@ -44,6 +44,7 @@ auto VDP::FIFO::run() -> bool {
   slots[0].lower = 0;
   slots[0].upper = 0;
   debug(unusual, "[VDP::FIFO] write target = 0x", hex(slots[0].target));
+  cpu.debugger.interrupt({"VDP FIFO ", hex(slots[0].target)});
   return advance(), true;
 }
 

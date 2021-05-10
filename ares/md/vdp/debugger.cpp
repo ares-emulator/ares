@@ -39,21 +39,37 @@ auto VDP::Debugger::unload() -> void {
   memory.cram.reset();
 }
 
-auto VDP::Debugger::interrupt(string_view type) -> void {
-  if(tracer.interrupt->enabled()) {
-    string message = {type, " SR=", cpu.r.i, " @ ", vdp.vcounter(), ",", vdp.hcounter()};
+auto VDP::Debugger::interrupt(CPU::Interrupt type) -> void {
+  if(unlikely(tracer.interrupt->enabled())) {
+    string name;
+    if(type == CPU::Interrupt::External       ) name = "external";
+    if(type == CPU::Interrupt::HorizontalBlank) name = "hblank";
+    if(type == CPU::Interrupt::VerticalBlank  ) name = "vblank";
+    string message = {name, " SR=", cpu.r.i, " @ ", vdp.vcounter(), ",", vdp.hcounter()};
     tracer.interrupt->notify(message);
   }
 }
 
-auto VDP::Debugger::dma(string_view line) -> void {
-  if(tracer.dma->enabled()) {
-    tracer.dma->notify(line);
+auto VDP::Debugger::dmaLoad(n24 source, n4 target, n17 address, n16 data) -> void {
+  if(unlikely(tracer.dma->enabled())) {
+    tracer.dma->notify({"load(", hex(source, 6L), ", ", hex(target, 1L), ":", hex(address, 5L), ", ", hex(data, 4L), ")"});
+  }
+}
+
+auto VDP::Debugger::dmaFill(n4 target, n17 address, n16 data) -> void {
+  if(unlikely(tracer.dma->enabled())) {
+    tracer.dma->notify({"fill(", hex(target, 1L), ":", hex(address, 5L), ", ", hex(data, 4L), ")"});
+  }
+}
+
+auto VDP::Debugger::dmaCopy(n22 source, n4 target, n17 address, n16 data) -> void {
+  if(unlikely(tracer.dma->enabled())) {
+    tracer.dma->notify({"copy(", hex(source, 6L), ", ", hex(target, 1L), ":", hex(address, 5L), ", ", hex(data, 4L), ")"});
   }
 }
 
 auto VDP::Debugger::io(n5 register, n8 data) -> void {
-  if(tracer.io->enabled()) {
+  if(unlikely(tracer.io->enabled())) {
     static const string name[32] = {
       /* $00 */ "mode register 1",
       /* $01 */ "mode register 2",
