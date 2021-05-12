@@ -74,8 +74,8 @@ auto Vulkan::render() -> bool {
   if(queueSize + length >= 0x8000) return true;
 
   do {
-    buffer[queueSize * 2 + 0] = memory.readWord(current); current += 4;
-    buffer[queueSize * 2 + 1] = memory.readWord(current); current += 4;
+    buffer[queueSize * 2 + 0] = memory.read<Word>(current); current += 4;
+    buffer[queueSize * 2 + 1] = memory.read<Word>(current); current += 4;
     queueSize++;
   } while(--length);
 

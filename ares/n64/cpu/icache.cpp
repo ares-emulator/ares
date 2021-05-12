@@ -43,8 +43,9 @@ auto CPU::InstructionCache::step(u32 address) -> void {
     cpu.step(48);
     line.valid = 1;
     line.tag   = address & ~0xfff;
+  } else {
+    cpu.step(2);
   }
-  cpu.step(2);
 }
 
 //used by the interpreter to fully emulate the instruction cache
@@ -52,8 +53,9 @@ auto CPU::InstructionCache::fetch(u32 address) -> u32 {
   auto& line = this->line(address);
   if(!line.hit(address)) {
     line.fill(address);
+  } else {
+    cpu.step(2);
   }
-  cpu.step(2);
   return line.read(address);
 }
 

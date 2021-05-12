@@ -20,6 +20,6 @@ struct Accuracy {
   };
 
   struct RDRAM {
-    static constexpr bool Broadcasting = 1;
+    static constexpr bool Broadcasting = 0;
   };
 };

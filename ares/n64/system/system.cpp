@@ -27,6 +27,7 @@ auto option(string name, string value) -> bool {
 }
 
 System system;
+Queue queue;
 #include "serialization.cpp"
 
 auto System::game() -> string {
@@ -128,6 +129,7 @@ auto System::save() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
+  queue.reset();
   cartridge.power(reset);
   rdram.power(reset);
   dd.power(reset);

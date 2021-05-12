@@ -49,7 +49,11 @@ struct Writable {
     if constexpr(Size == Byte) return *(u8* )&data[address & maskByte ^ 3];
     if constexpr(Size == Half) return *(u16*)&data[address & maskHalf ^ 2];
     if constexpr(Size == Word) return *(u32*)&data[address & maskWord ^ 0];
-    if constexpr(Size == Dual) return *(u64*)&data[address & maskDual ^ 0];
+    if constexpr(Size == Dual) {
+      u64 upper = read<Word>(address + 0);
+      u64 lower = read<Word>(address + 4);
+      return upper << 32 | lower << 0;
+    }
     unreachable;
   }
 
@@ -58,7 +62,10 @@ struct Writable {
     if constexpr(Size == Byte) *(u8* )&data[address & maskByte ^ 3] = value;
     if constexpr(Size == Half) *(u16*)&data[address & maskHalf ^ 2] = value;
     if constexpr(Size == Word) *(u32*)&data[address & maskWord ^ 0] = value;
-    if constexpr(Size == Dual) *(u64*)&data[address & maskDual ^ 0] = value;
+    if constexpr(Size == Dual) {
+      write<Word>(address + 0, value >> 32);
+      write<Word>(address + 4, value >>  0);
+    }
   }
 
   template<u32 Size>

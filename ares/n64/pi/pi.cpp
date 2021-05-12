@@ -3,6 +3,7 @@
 namespace ares::Nintendo64 {
 
 PI pi;
+#include "dma.cpp"
 #include "io.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"

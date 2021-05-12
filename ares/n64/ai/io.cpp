@@ -54,8 +54,8 @@ auto AI::writeWord(u32 address, u32 data_) -> void {
     //AI_DACRATE
     auto frequency = dac.frequency;
     io.dacRate = data.bit(0,13);
-    dac.frequency = max(1, 93'750'000 / 2 / (io.dacRate + 1)) * 1.037;
-    dac.period = 93'750'000 / dac.frequency;
+    dac.frequency = max(1, system.frequency() / 4 / (io.dacRate + 1)) * 1.037;
+    dac.period = system.frequency() / dac.frequency;
     if(frequency != dac.frequency) stream->setFrequency(dac.frequency);
   }
 

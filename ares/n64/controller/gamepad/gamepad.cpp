@@ -50,7 +50,12 @@ auto Gamepad::connect() -> void {
   if(slot->name() == "Controller Pak") {
     node->setPak(pak = platform->pak(node));
     ram.allocate(32_KiB);
-    ram.load(pak->read("save.pak"));
+    formatControllerPak();
+    if(auto fp = pak->read("save.pak")) {
+      if(fp->attribute("loaded").boolean()) {
+        ram.load(pak->read("save.pak"));
+      }
+    }
   }
   if(slot->name() == "Rumble Pak") {
     motor = node->append<Node::Input::Rumble>("Rumble");
@@ -100,23 +105,29 @@ auto Gamepad::read() -> n32 {
   auto ax = x->value() * 85.0 / 32767.0;
   auto ay = y->value() * 85.0 / 32767.0;
 
-  //bound diagonals to an octagonal range {-68 ... +68}
-  if(ax != 0.0 && ay != 0.0) {
-    auto slope = ay / ax;
-    ax = copysign(min(abs(ax), 85.0 / (abs(slope) + 16.0 / 69.0)), ax);
-    ay = copysign(min(abs(ax * slope), 85.0 / (1.0 / abs(slope) + 16.0 / 69.0)), ay);
-    ax = ay / slope;
-  }
-
   //create scaled circular dead-zone in range {-15 ... +15}
   auto length = sqrt(ax * ax + ay * ay);
   if(length < 16.0) {
     length = 0.0;
+  } else if(length > 85.0) {
+    length = 85.0 / length;
   } else {
-    length = min(1.0, (length - 16.0) * 85.0 / 69.0 / length);
+    length = (length - 16.0) * 85.0 / 69.0 / length;
   }
   ax *= length;
   ay *= length;
+
+  //bound diagonals to an octagonal range {-68 ... +68}
+  if(ax != 0.0 && ay != 0.0) {
+    auto slope = ay / ax;
+    auto edgex = copysign(85.0 / (abs(slope) + 16.0 / 69.0), ax);
+    auto edgey = copysign(min(abs(edgex * slope), 85.0 / (1.0 / abs(slope) + 16.0 / 69.0)), ay);
+    edgex = edgey / slope;
+
+    auto scale = sqrt(edgex * edgex + edgey * edgey) / 85.0;
+    ax *= scale;
+    ay *= scale;
+  }
 
   n32 data;
   data.byte(0) = -ay;
@@ -147,6 +158,50 @@ auto Gamepad::read() -> n32 {
   }
 
   return data;
+}
+
+//controller paks contain 32KB of SRAM split into 128 pages of 256 bytes each.
+//the first 5 pages are for storing system data, and the remaining 123 for game data.
+auto Gamepad::formatControllerPak() -> void {
+  ram.fill(0x00);
+
+  //page 0 (system area)
+  ram.write<Byte>(0x01,  (n6)random());
+  ram.write<Word>(0x04, (n19)random());
+  ram.write<Word>(0x08, (n27)random());
+  ram.write<Word>(0x18, (n32)0x00010100);  //constant
+  ram.write<Word>(0x1c, (n32)random());
+  u64 seed     = random();
+  u64 serialHi = random();
+  u64 serialLo = random();
+  for(u32 area : array<u8[4]>{1,3,4,6}) {
+    ram.write<Dual>(area * 0x20 + 0x00, seed);      //seed
+    ram.write<Dual>(area * 0x20 + 0x08, serialHi);  //serial# hi
+    ram.write<Dual>(area * 0x20 + 0x10, serialLo);  //serial# lo
+    ram.write<Half>(area * 0x20 + 0x18, 0x0001);    //device ID
+    ram.write<Byte>(area * 0x20 + 0x1a, 0x01);      //banks (0x01 = 32KB)
+    ram.write<Byte>(area * 0x20 + 0x1b, 0x00);      //version#
+    u16 checksum = 0;
+    u16 inverted = 0;
+    for(u32 half : range(14)) {
+      u16 data = ram.read<Half>(area * 0x20 + half * 2);
+      checksum +=  data;
+      inverted += ~data;
+    }
+    ram.write<Half>(area * 0x20 + 0x1c, checksum);
+    ram.write<Half>(area * 0x20 + 0x1e, inverted);
+  }
+
+  //pages 1+2 (inode table)
+  for(u32 page : array<u8[2]>{1,2}) {
+    ram.write<Byte>(0x100 * page + 0x01, 0x71);  //unknown
+    for(u32 slot : range(5,128)) {
+      ram.write<Byte>(0x100 * page + slot * 2 + 0x01, 0x03);  //0x01 = stop, 0x03 = empty
+    }
+  }
+
+  //pages 3+4 (note table)
+  //pages 5-127 (game saves)
 }
 
 auto Gamepad::serialize(serializer& s) -> void {

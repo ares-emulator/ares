@@ -24,7 +24,7 @@ private:
   struct Information {
     string name = "Nintendo 64";
     Region region = Region::NTSC;
-    u32 frequency = 93'750'000;
+    u32 frequency = 93'750'000 * 2;
   } information;
 
   //serialization.cpp

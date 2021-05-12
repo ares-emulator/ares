@@ -97,23 +97,15 @@ auto PI::writeWord(u32 address, u32 data_) -> void {
   if(address == 2) {
     //PI_READ_LENGTH
     io.readLength = (n24(data) | 1) + 1;
-    for(u32 address = 0; address < io.readLength; address += 2) {
-      u16 data = bus.read<Half>(io.dramAddress + address);
-      bus.write<Half>(io.pbusAddress + address, data);
-    }
-    io.interrupt = 1;
-    mi.raise(MI::IRQ::PI);
+    io.dmaBusy = 1;
+    queue.append(80000, Queue::PI_DMA_Read);
   }
 
   if(address == 3) {
     //PI_WRITE_LENGTH
     io.writeLength = (n24(data) | 1) + 1;
-    for(u32 address = 0; address < io.writeLength; address += 2) {
-      u16 data = bus.read<Half>(io.pbusAddress + address);
-      bus.write<Half>(io.dramAddress + address, data);
-    }
-    io.interrupt = 1;
-    mi.raise(MI::IRQ::PI);
+    io.dmaBusy = 1;
+    queue.append(80000, Queue::PI_DMA_Write);
   }
 
   if(address == 4) {

@@ -33,7 +33,10 @@ inline auto Bus::read(u32 address) -> u64 {
     return unmapped;
   }
   if(address <= 0x1fbf'ffff) return cartridge.rom.read<Size>(address);
-  if(address <= 0x1fc0'07bf) return pi.rom.read<Size>(address);
+  if(address <= 0x1fc0'07bf) {
+    if(pi.io.romLockout) return unmapped;
+    return pi.rom.read<Size>(address);
+  }
   if(address <= 0x1fc0'07ff) return pi.ram.read<Size>(address);
   return unmapped;
 }
@@ -74,7 +77,10 @@ inline auto Bus::write(u32 address, u64 data) -> void {
     return;
   }
   if(address <= 0x1fbf'ffff) return cartridge.rom.write<Size>(address, data);
-  if(address <= 0x1fc0'07bf) return pi.rom.write<Size>(address, data);
+  if(address <= 0x1fc0'07bf) {
+    if(pi.io.romLockout) return;
+    return pi.rom.write<Size>(address, data);
+  }
   if(address <= 0x1fc0'07ff) return pi.ram.write<Size>(address, data);
   return;
 }

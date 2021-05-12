@@ -95,8 +95,9 @@ auto CPU::DataCache::read(u32 address) -> u64 {
   if(!line.hit(address)) {
     if(line.valid && line.dirty) line.writeBack();
     line.fill(address);
+  } else {
+    cpu.step(1);
   }
-  cpu.step(1);
   return line.read<Size>(address);
 }
 
@@ -106,8 +107,9 @@ auto CPU::DataCache::write(u32 address, u64 data) -> void {
   if(!line.hit(address)) {
     if(line.valid && line.dirty) line.writeBack();
     return line.fill<Size>(address, data);
+  } else {
+    cpu.step(1);
   }
-  cpu.step(1);
   line.write<Size>(address, data);
 }
 

@@ -23,7 +23,7 @@ namespace nall {
 
 template<typename Base> struct RNG {
   template<typename T = u64> auto random() -> T {
-    T value = 0;
+    u64 value = 0;
     for(u32 n : range((sizeof(T) + 3) / 4)) {
       value = value << 32 | (u32)static_cast<Base*>(this)->read();
     }
@@ -160,9 +160,13 @@ private:
 
 //
 
+inline auto pcgSingleton() -> PRNG::PCG& {
+  static PRNG::PCG pcg;
+  return pcg;
+}
+
 template<typename T = u64> inline auto random() -> T {
-  static PRNG::PCG pcg;  //note: unseeded
-  return pcg.random<T>();
+  return pcgSingleton().random<T>();
 }
 
 }

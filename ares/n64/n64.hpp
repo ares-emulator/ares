@@ -36,6 +36,16 @@ namespace ares::Nintendo64 {
     s64 clock;
   };
 
+  struct Queue : priority_queue<u32[512]> {
+    enum : u32 {
+      PI_DMA_Read,
+      PI_DMA_Write,
+      SI_DMA_Read,
+      SI_DMA_Write,
+    };
+  };
+  extern Queue queue;
+
   #include <n64/accuracy.hpp>
   #include <n64/memory/memory.hpp>
   #include <n64/system/system.hpp>

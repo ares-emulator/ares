@@ -41,19 +41,19 @@ auto APU::portRead(n16 address) -> n8 {
 
   //SND_CH1_PITCH
   if(address == 0x0080) return channel1.r.pitch.bit(0, 7);
-  if(address == 0x0081) return channel1.r.pitch.bit(8,11);
+  if(address == 0x0081) return channel1.r.pitch.bit(8,10);
 
   //SND_CH2_PITCH
   if(address == 0x0082) return channel2.r.pitch.bit(0, 7);
-  if(address == 0x0083) return channel2.r.pitch.bit(8,11);
+  if(address == 0x0083) return channel2.r.pitch.bit(8,10);
 
   //SND_CH3_PITCH
   if(address == 0x0084) return channel3.r.pitch.bit(0, 7);
-  if(address == 0x0085) return channel3.r.pitch.bit(8,11);
+  if(address == 0x0085) return channel3.r.pitch.bit(8,10);
 
   //SND_CH4_PITCH
   if(address == 0x0086) return channel4.r.pitch.bit(0, 7);
-  if(address == 0x0087) return channel4.r.pitch.bit(8,11);
+  if(address == 0x0087) return channel4.r.pitch.bit(8,10);
 
   //SND_CH1_VOL
   if(address == 0x0088) {
@@ -200,19 +200,19 @@ auto APU::portWrite(n16 address, n8 data) -> void {
 
   //SND_CH1_PITCH
   if(address == 0x0080) { channel1.r.pitch.bit(0, 7) = data.bit(0,7); return; }
-  if(address == 0x0081) { channel1.r.pitch.bit(8,11) = data.bit(0,3); return; }
+  if(address == 0x0081) { channel1.r.pitch.bit(8,10) = data.bit(0,2); return; }
 
   //SND_CH2_PITCH
   if(address == 0x0082) { channel2.r.pitch.bit(0, 7) = data.bit(0,7); return; }
-  if(address == 0x0083) { channel2.r.pitch.bit(8,11) = data.bit(0,3); return; }
+  if(address == 0x0083) { channel2.r.pitch.bit(8,10) = data.bit(0,2); return; }
 
   //SND_CH3_PITCH
   if(address == 0x0084) { channel3.r.pitch.bit(0, 7) = data.bit(0,7); return; }
-  if(address == 0x0085) { channel3.r.pitch.bit(8,11) = data.bit(0,3); return; }
+  if(address == 0x0085) { channel3.r.pitch.bit(8,10) = data.bit(0,2); return; }
 
   //SND_CH4_PITCH
   if(address == 0x0086) { channel4.r.pitch.bit(0, 7) = data.bit(0,7); return; }
-  if(address == 0x0087) { channel4.r.pitch.bit(8,11) = data.bit(0,3); return; }
+  if(address == 0x0087) { channel4.r.pitch.bit(8,10) = data.bit(0,2); return; }
 
   //SND_CH1_VOL
   if(address == 0x0088) {

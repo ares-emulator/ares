@@ -19,11 +19,11 @@ auto RDP::unload() -> void {
 }
 
 auto RDP::main() -> void {
-  step(93'750'000);
+  step(system.frequency());
 }
 
 auto RDP::step(u32 clocks) -> void {
-  clock += clocks;
+  Thread::clock += clocks;
 }
 
 auto RDP::power(bool reset) -> void {

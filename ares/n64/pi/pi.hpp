@@ -24,6 +24,10 @@ struct PI : Memory::IO<PI> {
   auto unload() -> void;
   auto power(bool reset) -> void;
 
+  //dma.cpp
+  auto dmaRead() -> void;
+  auto dmaWrite() -> void;
+
   //io.cpp
   auto readWord(u32 address) -> u32;
   auto writeWord(u32 address, u32 data) -> void;
@@ -40,6 +44,7 @@ struct PI : Memory::IO<PI> {
     n32 pbusAddress;
     n32 readLength;
     n32 writeLength;
+    n1  romLockout;
   } io;
 
   struct BSD {

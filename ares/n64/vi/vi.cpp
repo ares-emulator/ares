@@ -71,12 +71,12 @@ auto VI::main() -> void {
     }
   }
 
-  if(Region::NTSC()) step(93'750'000 / 60 / 262);
-  if(Region::PAL ()) step(93'750'000 / 50 / 312);
+  if(Region::NTSC()) step(system.frequency() / 60 / 262);
+  if(Region::PAL ()) step(system.frequency() / 50 / 312);
 }
 
 auto VI::step(u32 clocks) -> void {
-  clock += clocks;
+  Thread::clock += clocks;
 }
 
 auto VI::refresh() -> void {

@@ -43,6 +43,7 @@
 #include <nall/path.hpp>
 #include <nall/pointer.hpp>
 #include <nall/primitives.hpp>
+#include <nall/priority-queue.hpp>
 #include <nall/queue.hpp>
 #include <nall/random.hpp>
 #include <nall/range.hpp>

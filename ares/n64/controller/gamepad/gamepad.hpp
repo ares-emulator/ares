@@ -30,5 +30,6 @@ struct Gamepad : Controller {
   auto disconnect() -> void;
   auto rumble(bool enable) -> void;
   auto read() -> n32 override;
+  auto formatControllerPak() -> void;
   auto serialize(serializer&) -> void override;
 };

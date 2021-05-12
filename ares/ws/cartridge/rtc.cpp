@@ -22,7 +22,7 @@ auto Cartridge::rtcTickSecond() -> void {
   if(++rtc.minute() < 60) return;
   rtc.minute() = 0;
 
-  if(++rtc.hour() < 60) return;
+  if(++rtc.hour() < 24) return;
   rtc.hour() = 0;
 
   rtc.weekday() += 1;

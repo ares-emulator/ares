@@ -49,7 +49,7 @@ auto AI::sample() -> void {
 }
 
 auto AI::step(u32 clocks) -> void {
-  clock += clocks;
+  Thread::clock += clocks;
 }
 
 auto AI::power(bool reset) -> void {
@@ -60,7 +60,7 @@ auto AI::power(bool reset) -> void {
   io = {};
   dac.frequency = 44100;
   dac.precision = 16;
-  dac.period = 93'750'000 / 44'100;
+  dac.period    = system.frequency() / dac.frequency;
 }
 
 }

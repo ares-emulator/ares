@@ -38,21 +38,31 @@ auto CPU::step(u32 clocks) -> void {
 }
 
 auto CPU::synchronize() -> void {
-   vi.clock -= Thread::clock;
-   ai.clock -= Thread::clock;
-  rsp.clock -= Thread::clock * 3;
-  rdp.clock -= Thread::clock;
+  auto clocks = Thread::clock * 2;
+  Thread::clock = 0;
+
+   vi.clock -= clocks;
+   ai.clock -= clocks;
+  rsp.clock -= clocks;
+  rdp.clock -= clocks;
   while( vi.clock < 0)  vi.main();
   while( ai.clock < 0)  ai.main();
   while(rsp.clock < 0) rsp.main();
   while(rdp.clock < 0) rdp.main();
 
-  if(scc.count < scc.compare && scc.count + Thread::clock >= scc.compare) {
+  queue.step(clocks, [](u32 event) {
+    switch(event) {
+    case Queue::PI_DMA_Read:  return pi.dmaRead();
+    case Queue::PI_DMA_Write: return pi.dmaWrite();
+    case Queue::SI_DMA_Read:  return si.dmaRead();
+    case Queue::SI_DMA_Write: return si.dmaWrite();
+    }
+  });
+
+  if(scc.count < scc.compare && scc.count + clocks >= scc.compare) {
     scc.cause.interruptPending.bit(Interrupt::Timer) = 1;
   }
-  scc.count += Thread::clock;
-
-  Thread::clock = 0;
+  scc.count += clocks;
 }
 
 auto CPU::instruction() -> void {

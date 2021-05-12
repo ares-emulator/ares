@@ -28,12 +28,12 @@ auto RSP::unload() -> void {
 }
 
 auto RSP::main() -> void {
-  if(status.halted) return step(48);
+  if(status.halted) return step(128);
   instruction();
 }
 
 auto RSP::step(u32 clocks) -> void {
-  clock += clocks * 2;
+  Thread::clock += clocks;
 }
 
 auto RSP::instruction() -> void {
@@ -48,7 +48,7 @@ auto RSP::instruction() -> void {
     debugger.instruction();
     decoderEXECUTE();
     instructionEpilogue();
-    step(1);
+    step(3);
   }
 }
 
