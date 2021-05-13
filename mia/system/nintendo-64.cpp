@@ -9,6 +9,7 @@ auto Nintendo64::load(string location) -> bool {
   pak = new vfs::directory;
   pak->append("pif.ntsc.rom", Resource::Nintendo64::PIFNTSC);
   pak->append("pif.pal.rom",  Resource::Nintendo64::PIFPAL );
+  pak->append("pif.sm5.rom",  Resource::Nintendo64::PIFSM5 );
   return true;
 }
 

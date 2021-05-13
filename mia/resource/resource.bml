@@ -21,6 +21,7 @@ namespace name=Resource
   namespace name=Nintendo64
     binary name=PIFNTSC file="../Firmware/Nintendo 64/pif.ntsc.rom"
     binary name=PIFPAL file="../Firmware/Nintendo 64/pif.pal.rom"
+    binary name=PIFSM5 file="../Firmware/Nintendo 64/pif.sm5.rom"
   namespace name=SuperFamicom
     binary name=IPLROM file="../Firmware/Super Famicom/ipl.rom"
     binary name=Cx4 file="../Firmware/Super Famicom/cx4.rom"

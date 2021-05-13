@@ -57,7 +57,7 @@ auto SI::writeWord(u32 address, u32 data_) -> void {
     //SI_PIF_ADDRESS_READ64B
     io.readAddress = data.bit(0,31) & ~1;
     io.dmaBusy = 1;
-    queue.append(80000, Queue::SI_DMA_Read);
+    queue.insert(131072, Queue::SI_DMA_Read);
   }
 
   if(address == 2) {
@@ -72,7 +72,7 @@ auto SI::writeWord(u32 address, u32 data_) -> void {
     //SI_PIF_ADDRESS_WRITE64B
     io.writeAddress = data.bit(0,31) & ~1;
     io.dmaBusy = 1;
-    queue.append(80000, Queue::SI_DMA_Write);
+    queue.insert(131072, Queue::SI_DMA_Write);
   }
 
   if(address == 5) {

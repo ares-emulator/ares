@@ -31,7 +31,7 @@ struct priority_queue<T[Size]> {
     }
   }
 
-  auto append(u32 clock, T event) -> bool {
+  auto insert(u32 clock, T event) -> bool {
     if(size >= Size) return false;
 
     u32 child = size++;

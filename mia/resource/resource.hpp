@@ -27,6 +27,7 @@ extern const unsigned char Sub[16384];
 namespace Nintendo64 {
 extern const unsigned char PIFNTSC[1984];
 extern const unsigned char PIFPAL[1984];
+extern const unsigned char PIFSM5[1024];
 }
 namespace SuperFamicom {
 extern const unsigned char IPLROM[64];

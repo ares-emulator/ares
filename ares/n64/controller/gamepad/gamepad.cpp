@@ -166,21 +166,16 @@ auto Gamepad::formatControllerPak() -> void {
   ram.fill(0x00);
 
   //page 0 (system area)
-  ram.write<Byte>(0x01,  (n6)random());
-  ram.write<Word>(0x04, (n19)random());
-  ram.write<Word>(0x08, (n27)random());
-  ram.write<Word>(0x18, (n32)0x00010100);  //constant
-  ram.write<Word>(0x1c, (n32)random());
-  u64 seed     = random();
-  u64 serialHi = random();
-  u64 serialLo = random();
+  n6  fieldA = random();
+  n19 fieldB = random();
+  n27 fieldC = random();
   for(u32 area : array<u8[4]>{1,3,4,6}) {
-    ram.write<Dual>(area * 0x20 + 0x00, seed);      //seed
-    ram.write<Dual>(area * 0x20 + 0x08, serialHi);  //serial# hi
-    ram.write<Dual>(area * 0x20 + 0x10, serialLo);  //serial# lo
-    ram.write<Half>(area * 0x20 + 0x18, 0x0001);    //device ID
-    ram.write<Byte>(area * 0x20 + 0x1a, 0x01);      //banks (0x01 = 32KB)
-    ram.write<Byte>(area * 0x20 + 0x1b, 0x00);      //version#
+    ram.write<Byte>(area * 0x20 + 0x01, fieldA);  //unknown
+    ram.write<Word>(area * 0x20 + 0x04, fieldB);  //serial# hi
+    ram.write<Word>(area * 0x20 + 0x08, fieldC);  //serial# lo
+    ram.write<Half>(area * 0x20 + 0x18, 0x0001);  //device ID
+    ram.write<Byte>(area * 0x20 + 0x1a, 0x01);    //banks (0x01 = 32KB)
+    ram.write<Byte>(area * 0x20 + 0x1b, 0x00);    //version#
     u16 checksum = 0;
     u16 inverted = 0;
     for(u32 half : range(14)) {
