@@ -65,8 +65,18 @@ auto MegaDrive::save(string location) -> bool {
   return true;
 }
 
-auto MegaDrive::analyze(vector<u8>& data) -> string {
+auto MegaDrive::analyze(vector<u8>& rom) -> string {
+  auto& data = rom;
   if(data.size() < 0x800) return {};
+
+  //copy-protection
+  string hash = Hash::SHA256(data).digest();
+
+  //Super Bubble Bobble (Taiwan)
+  if(hash == "e0a310c89961d781432715f71ce92d2d559fc272a7b46ea7b77383365b27ce21") {
+    rom[0x0123e4] = 0x60;
+    rom[0x0123e5] = 0x2a;
+  }
 
   string ramMode = "none";
 
@@ -157,6 +167,7 @@ auto MegaDrive::analyze(vector<u8>& data) -> string {
 
   string s;
   s += "game\n";
+  s +={"  sha256: ", hash, "\n"};
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
   s +={"  label:  ", domesticName, "\n"};
