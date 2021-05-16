@@ -85,6 +85,57 @@ namespace bit {
     while(x & (x - 1)) x &= x - 1;
     return x << 1;
   }
+
+  template<typename T>
+  constexpr inline auto reverse(T x) -> T {
+    static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8);
+    if constexpr(sizeof(T) == 1) {
+      #if __has_builtin(__builtin_bitreverse8)
+      return __builtin_bitreverse8(x);
+      #else
+      x = x & 0xaa >> 1 | x & 0x55 << 1;
+      x = x & 0xcc >> 2 | x & 0x33 << 2;
+      x = x & 0xf0 >> 4 | x & 0x0f << 4;
+      return x;
+      #endif
+    }
+    if constexpr(sizeof(T) == 2) {
+      #if __has_builtin(__builtin_bitreverse16)
+      return __builtin_bitreverse16(x);
+      #else
+      x = x & 0xaaaa >> 1 | x & 0x5555 << 1;
+      x = x & 0xcccc >> 2 | x & 0x3333 << 2;
+      x = x & 0xf0f0 >> 4 | x & 0x0f0f << 4;
+      x = x & 0xff00 >> 8 | x & 0x00ff << 8;
+      return x;
+      #endif
+    }
+    if constexpr(sizeof(T) == 4) {
+      #if __has_builtin(__builtin_bitreverse32)
+      return __builtin_bitreverse32(x);
+      #else
+      x = x & 0xaaaaaaaa >>  1 | x & 0x55555555 <<  1;
+      x = x & 0xcccccccc >>  2 | x & 0x33333333 <<  2;
+      x = x & 0xf0f0f0f0 >>  4 | x & 0x0f0f0f0f <<  4;
+      x = x & 0xff00ff00 >>  8 | x & 0x00ff00ff <<  8;
+      x = x & 0xffff0000 >> 16 | x & 0x0000ffff << 16;
+      return x;
+      #endif
+    }
+    if constexpr(sizeof(T) == 8) {
+      #if __has_builtin(__builtin_bitreverse64)
+      return __builtin_bitreverse64(x);
+      #else
+      x = x & 0xaaaaaaaaaaaaaaaaULL >>  1 | x & 0x5555555555555555ULL <<  1;
+      x = x & 0xccccccccccccccccULL >>  2 | x & 0x3333333333333333ULL <<  2;
+      x = x & 0xf0f0f0f0f0f0f0f0ULL >>  4 | x & 0x0f0f0f0f0f0f0f0fULL <<  4;
+      x = x & 0xff00ff00ff00ff00ULL >>  8 | x & 0x00ff00ff00ff00ffULL <<  8;
+      x = x & 0xffff0000ffff0000ULL >> 16 | x & 0x0000ffff0000ffffULL << 16;
+      x = x & 0xffffffff00000000ULL >> 32 | x & 0x00000000ffffffffULL << 32;
+      return x;
+      #endif
+    }
+  }
 }
 
 }

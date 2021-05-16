@@ -3,6 +3,7 @@
 namespace ares::Nintendo64 {
 
 RSP rsp;
+#include "dma.cpp"
 #include "io.cpp"
 #include "interpreter.cpp"
 #include "interpreter-ipu.cpp"

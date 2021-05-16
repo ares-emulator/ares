@@ -1,5 +1,6 @@
-auto X24C01::serialize(serializer& s) -> void {
-  s(bytes);
+auto M24Cxx::serialize(serializer& s) -> void {
+  s((u32&)type);
+  s(array_span<u8>{bytes, size()});
   s(clock.lo);
   s(clock.hi);
   s(clock.fall);
@@ -12,6 +13,7 @@ auto X24C01::serialize(serializer& s) -> void {
   s(data.line);
   s((u32&)mode);
   s(counter);
+  s(control);
   s(address);
   s(input);
   s(output);

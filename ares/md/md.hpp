@@ -9,6 +9,8 @@
 #include <component/processor/ssp1601/ssp1601.hpp>
 #include <component/audio/sn76489/sn76489.hpp>
 #include <component/audio/ym2612/ym2612.hpp>
+#include <component/eeprom/m24cxx/m24cxx.hpp>
+#include <component/eeprom/x24c01/x24c01.hpp>
 
 namespace ares::MegaDrive {
   #include <ares/inline.hpp>

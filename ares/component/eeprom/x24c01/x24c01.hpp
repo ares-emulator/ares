@@ -2,11 +2,21 @@
 
 namespace ares {
 
-//X24C01 => 1024 cells => 128 x 8-bit
-
 struct X24C01 {
+  auto size() const -> u32 {
+    return 128;
+  }
+
+  auto addressBits() const -> u32 {
+    return 8;
+  }
+
+  auto dataBits() const -> u32 {
+    return 8;
+  }
+
   //x24c01.cpp
-  auto reset() -> void;
+  auto power() -> void;
   auto read() -> n1;
   auto write(n1 clock, n1 data) -> void;
   auto erase(n8 fill = 0xff) -> void;
@@ -14,14 +24,17 @@ struct X24C01 {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  n8 memory[128];
+  u8 bytes[128];
 
 private:
   enum class Mode : u32 {
     Idle,
-    Address, AddressAcknowledge,
-    Read, ReadAcknowledge,
-    Write, WriteAcknowledge,
+    Address,
+    AddressAcknowledge,
+    Read,
+    ReadAcknowledge,
+    Write,
+    WriteAcknowledge,
   };
 
   struct Line {
@@ -42,7 +55,6 @@ private:
   n8 address;
   n8 input;
   n8 output;
-  n1 line;
 };
 
 }

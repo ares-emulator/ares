@@ -4,6 +4,8 @@ ares.components += sh2
 ares.components += ssp1601
 ares.components += sn76489
 ares.components += ym2612
+ares.components += m24cxx
+ares.components += x24c01
 
 ares.objects += ares-md-bus
 ares.objects += ares-md-cpu

@@ -4,6 +4,24 @@ struct Mega32X : Cartridge {
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
+  auto analyzeStorage(vector<u8>& rom, string hash) -> void;
+
+  struct RAM {
+    explicit operator bool() const { return mode && size != 0; }
+
+    string mode;
+    u32 size = 0;
+  } ram;
+
+  struct EEPROM {
+    explicit operator bool() const { return mode && size != 0; }
+
+    string mode;
+    u32 size = 0;
+    u8 rsda = 0;
+    u8 wsda = 0;
+    u8 wscl = 0;
+  } eeprom;
 };
 
 auto Mega32X::load(string location) -> bool {
@@ -32,8 +50,17 @@ auto Mega32X::load(string location) -> bool {
   if(auto node = document["game/board/memory(type=RAM,content=Save)"]) {
     Pak::load(node, ".ram");
     if(auto fp = pak->read("save.ram")) {
-      fp->setAttribute("mode",   node["mode"].string());
-      fp->setAttribute("offset", node["offset"].natural());
+      fp->setAttribute("mode", node["mode"].string());
+    }
+  }
+
+  if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
+    Pak::load(node, ".eeprom");
+    if(auto fp = pak->read("save.eeprom")) {
+      fp->setAttribute("mode", node["mode"].string());
+      fp->setAttribute("rsda", node["rsda"].natural());
+      fp->setAttribute("wsda", node["wsda"].natural());
+      fp->setAttribute("wscl", node["wscl"].natural());
     }
   }
 
@@ -47,37 +74,21 @@ auto Mega32X::save(string location) -> bool {
     Pak::save(node, ".ram");
   }
 
+  if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
+    Pak::save(node, ".eeprom");
+  }
+
   return true;
 }
 
 auto Mega32X::analyze(vector<u8>& rom) -> string {
   if(rom.size() < 0x800) return {};
 
-  string ramMode = "none";
+  ram = {};
+  eeprom = {};
 
-  u32 ramFrom = 0;
-  ramFrom |= rom[0x01b4] << 24;
-  ramFrom |= rom[0x01b5] << 16;
-  ramFrom |= rom[0x01b6] <<  8;
-  ramFrom |= rom[0x01b7] <<  0;
-
-  u32 ramTo = 0;
-  ramTo |= rom[0x01b8] << 24;
-  ramTo |= rom[0x01b9] << 16;
-  ramTo |= rom[0x01ba] <<  8;
-  ramTo |= rom[0x01bb] <<  0;
-
-  if(!(ramFrom & 1) && !(ramTo & 1)) ramMode = "hi";
-  if( (ramFrom & 1) &&  (ramTo & 1)) ramMode = "lo";
-  if(!(ramFrom & 1) &&  (ramTo & 1)) ramMode = "word";
-  if(rom[0x01b0] != 'R' || rom[0x01b1] != 'A') ramMode = "none";
-
-  u32 ramSize = ramTo - ramFrom + 1;
-  if(ramMode == "hi") ramSize = (ramTo >> 1) - (ramFrom >> 1) + 1;
-  if(ramMode == "lo") ramSize = (ramTo >> 1) - (ramFrom >> 1) + 1;
-  if(ramMode == "word") ramSize = ramTo - ramFrom + 1;
-  if(ramMode != "none") ramSize = bit::round(min(0x20000, ramSize));
-  if(ramMode == "none") ramSize = 0;
+  auto hash = Hash::SHA256(rom).digest();
+  analyzeStorage(rom, hash);
 
   vector<string> devices;
   string device = slice((const char*)&rom[0x1a0], 0, 16).trimRight(" ");
@@ -142,6 +153,7 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
 
   string s;
   s += "game\n";
+  s +={"  sha256: ", hash, "\n"};
   s +={"  name:   ", Pak::name(location), "\n"};
   s +={"  title:  ", Pak::name(location), "\n"};
   s +={"  label:  ", domesticName, "\n"};
@@ -154,12 +166,73 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
   s += "      type: ROM\n";
   s +={"      size: 0x", hex(rom.size()), "\n"};
   s += "      content: Program\n";
-  if(!ramSize || ramMode == "none") return s;
-  s += "    memory\n";
-  s += "      type: RAM\n";
-  s +={"      size: 0x", hex(ramSize), "\n"};
-  s += "      content: Save\n";
-  s +={"      mode: ", ramMode, "\n"};
-  s +={"      offset: 0x", hex(ramFrom), "\n"};
+
+  if(eeprom) {
+    s += "    memory\n";
+    s += "      type: EEPROM\n";
+    s +={"      size: 0x", hex(eeprom.size), "\n"};
+    s += "      content: Save\n";
+    s +={"      mode: ", eeprom.mode, "\n"};
+    s +={"      rsda: ", eeprom.rsda, "\n"};
+    s +={"      wsda: ", eeprom.wsda, "\n"};
+    s +={"      wscl: ", eeprom.wscl, "\n"};
+  } else if(ram) {
+    s += "    memory\n";
+    s += "      type: RAM\n";
+    s +={"      size: 0x", hex(ram.size), "\n"};
+    s += "      content: Save\n";
+    s +={"      mode: ", ram.mode, "\n"};
+  }
   return s;
+}
+
+auto Mega32X::analyzeStorage(vector<u8>& rom, string hash) -> void {
+  //SRAM
+  //====
+
+  if(rom[0x01b0] == 'R' && rom[0x01b1] == 'A') {
+    u32 ramFrom = 0;
+    ramFrom |= rom[0x01b4] << 24;
+    ramFrom |= rom[0x01b5] << 16;
+    ramFrom |= rom[0x01b6] <<  8;
+    ramFrom |= rom[0x01b7] <<  0;
+
+    u32 ramTo = 0;
+    ramTo |= rom[0x01b8] << 24;
+    ramTo |= rom[0x01b9] << 16;
+    ramTo |= rom[0x01ba] <<  8;
+    ramTo |= rom[0x01bb] <<  0;
+
+    if(!(ramFrom & 1) && !(ramTo & 1)) ram.mode = "upper";
+    if( (ramFrom & 1) &&  (ramTo & 1)) ram.mode = "lower";
+    if(!(ramFrom & 1) &&  (ramTo & 1)) ram.mode = "word";
+
+    if(ram.mode == "upper") ram.size = (ramTo - ramFrom + 2) >> 1;
+    if(ram.mode == "lower") ram.size = (ramTo - ramFrom + 2) >> 1;
+    if(ram.mode == "word" ) ram.size = (ramTo - ramFrom + 1);
+  }
+
+  //24C02
+  //=====
+
+  //NFL Quarterback Club (World)
+  if(hash == "092ad8896ea7784d2feb7f17b1a348562588a361c50de6ade722a5c5cce698d5") {
+    eeprom.mode = "24C02";
+    eeprom.size = 256;
+    eeprom.rsda = 0;
+    eeprom.wsda = 0;
+    eeprom.wscl = 8;
+  }
+
+  //24C04
+  //=====
+
+  //NBA Jam: Tournament Edition (World)
+  if(hash == "7f7e1059671a99405e3782cd9b4e5d4025ee4bb122a89357b95b0fcac512f74f") {
+    eeprom.mode = "24C04";
+    eeprom.size = 512;
+    eeprom.rsda = 0;
+    eeprom.wsda = 0;
+    eeprom.wscl = 8;
+  }
 }

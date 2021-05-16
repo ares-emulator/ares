@@ -42,6 +42,10 @@ struct RSP : Thread, Memory::IO<RSP> {
     u32 instruction;
   } pipeline;
 
+  //dma.cpp
+  auto dmaRead() -> void;
+  auto dmaWrite() -> void;
+
   //io.cpp
   auto readWord(u32 address) -> u32;
   auto writeWord(u32 address, u32 data) -> void;

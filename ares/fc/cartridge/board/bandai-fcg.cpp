@@ -15,14 +15,14 @@ struct BandaiFCG : Interface {
     Interface::load(characterRAM, "character.ram");
     if(auto fp = pak->read("save.eeprom")) {
       eeprom.erase();
-      fp->read({eeprom.memory, min(128, fp->size())});
+      fp->read({eeprom.bytes, min(128, fp->size())});
     }
   }
 
   auto save() -> void override {
     Interface::save(characterRAM, "save.ram");
     if(auto fp = pak->write("save.eeprom")) {
-      fp->write({eeprom.memory, 128});
+      fp->write({eeprom.bytes, 128});
     }
   }
 
@@ -105,7 +105,7 @@ struct BandaiFCG : Interface {
   }
 
   auto power() -> void override {
-    eeprom.reset();
+    eeprom.power();
   }
 
   auto serialize(serializer& s) -> void override {

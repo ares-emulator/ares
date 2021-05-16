@@ -2,8 +2,9 @@
 
 //priority queue implementation using binary min-heap array:
 //O(1)     find
-//O(log n) append
-//O(log n) remove
+//O(log n) insert
+//O(log n) remove(first)
+//O(n)     remove(event)
 
 #include <nall/function.hpp>
 #include <nall/serializer.hpp>
@@ -27,11 +28,11 @@ struct priority_queue<T[Size]> {
   auto step(u32 clocks, const F& callback) -> void {
     clock += clocks;
     while(size && ge(clock, heap[0].clock)) {
-      callback(remove());
+      if(auto event = remove()) callback(*event);
     }
   }
 
-  auto insert(u32 clock, T event) -> bool {
+  auto insert(const T& event, u32 clock) -> bool {
     if(size >= Size) return false;
 
     u32 child = size++;
@@ -43,16 +44,20 @@ struct priority_queue<T[Size]> {
 
       heap[child].clock = heap[parent].clock;
       heap[child].event = heap[parent].event;
+      heap[child].valid = heap[parent].valid;
       child = parent;
     }
 
     heap[child].clock = clock;
     heap[child].event = event;
+    heap[child].valid = true;
     return true;
   }
 
-  auto remove() -> T {
+  auto remove() -> maybe<T> {
     T event = heap[0].event;
+    bool valid = heap[0].valid;
+
     u32 parent = 0;
     u32 clock = heap[--size].clock;
 
@@ -65,12 +70,22 @@ struct priority_queue<T[Size]> {
 
       heap[parent].clock = heap[child].clock;
       heap[parent].event = heap[child].event;
+      heap[parent].valid = heap[child].valid;
       parent = child;
     }
 
     heap[parent].clock = clock;
     heap[parent].event = heap[size].event;
-    return event;
+    heap[parent].valid = heap[size].valid;
+
+    if(valid) return event;
+    return nothing;
+  }
+
+  auto remove(const T& event) -> void {
+    for(auto& entry : heap) {
+      if(entry.event == event) entry.valid = false;
+    }
   }
 
   auto serialize(serializer& s) -> void {
@@ -79,6 +94,7 @@ struct priority_queue<T[Size]> {
     for(auto& entry : heap) {
       s(entry.clock);
       s(entry.event);
+      s(entry.valid);
     }
   }
 
@@ -91,8 +107,9 @@ private:
   u32 clock = 0;
   u32 size = 0;
   struct Entry {
-    u32 clock;
-    T   event;
+    u32  clock;
+    T    event;
+    bool valid;
   } heap[Size];
 };
 
