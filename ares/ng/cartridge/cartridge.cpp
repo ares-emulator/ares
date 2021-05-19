@@ -4,6 +4,7 @@ namespace ares::NeoGeo {
 
 Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "slot.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
@@ -16,11 +17,53 @@ auto Cartridge::connect() -> void {
   information = {};
   information.title = pak->attribute("title");
 
+  if(auto fp = pak->read("program.rom")) {
+    prom.allocate(fp->size() >> 1);
+    for(auto address : range(prom.size())) {
+      prom.program(address, fp->readm(2L));
+    }
+  }
+
+  if(auto fp = pak->read("music.rom")) {
+    mrom.allocate(fp->size());
+    for(auto address : range(mrom.size())) {
+      mrom.program(address, fp->readl(1L));
+    }
+  }
+
+  if(auto fp = pak->read("character.rom")) {
+    crom.allocate(fp->size() >> 1);
+    for(auto address : range(crom.size())) {
+      crom.program(address, fp->readm(2L));
+    }
+  }
+
+  if(auto fp = pak->read("static.rom")) {
+    srom.allocate(fp->size());
+    for(auto address : range(srom.size())) {
+      srom.program(address, fp->readm(1L));
+    }
+  }
+
+  if(auto fp = pak->read("voice.rom")) {
+    vrom.allocate(fp->size());
+    for(auto address : range(vrom.size())) {
+      vrom.program(address, fp->readm(1L));
+    }
+  }
+
+  debugger.load(node);
   power();
 }
 
 auto Cartridge::disconnect() -> void {
   if(!node) return;
+  debugger.unload(node);
+  prom.reset();
+  mrom.reset();
+  crom.reset();
+  srom.reset();
+  vrom.reset();
   pak.reset();
   node.reset();
 }

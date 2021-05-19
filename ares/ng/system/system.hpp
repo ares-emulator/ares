@@ -1,5 +1,23 @@
 struct System {
   Node::System node;
+  VFS::Pak pak;
+  Memory::Readable<n16> bios;
+  Memory::Readable<n16> srom;
+  Memory::Writable<n16> wram;
+  Memory::Writable<n16> sram;  //MVS only
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
+
+    struct Memory {
+      Node::Debugger::Memory bios;
+      Node::Debugger::Memory srom;
+      Node::Debugger::Memory wram;
+      Node::Debugger::Memory sram;
+    } memory;
+  } debugger;
 
   enum class Model : u32 { NeoGeoAES, NeoGeoMVS };
 
@@ -18,6 +36,18 @@ struct System {
   //serialization.cpp
   auto serialize(bool synchronize) -> serializer;
   auto unserialize(serializer&) -> bool;
+
+  struct IO {
+    n2 memoryCardLock = 3;
+    n1 memoryCardRegisterSelect;
+    n3 memoryCardBank;
+    n1 sramLock = 1;
+    n3 slotSelect;
+    n1 ledMarquee;
+    n1 ledLatch1;
+    n1 ledLatch2;
+    n8 ledData;
+  } io;
 
 private:
   struct Information {

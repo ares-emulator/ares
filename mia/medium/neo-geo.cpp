@@ -5,6 +5,8 @@ struct NeoGeo : Cartridge {
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& v) -> string;
+  auto halveSwap(vector<u8>&) -> void;
+  auto endianSwap(vector<u8>&) -> void;
 };
 
 auto NeoGeo::read(string location, string match) -> vector<u8> {
@@ -53,6 +55,9 @@ auto NeoGeo::load(string location) -> bool {
     characterROM = NeoGeo::read(location, "*.c*");
     staticROM    = NeoGeo::read(location, "*.s*");
     voiceROM     = NeoGeo::read(location, "*.v*");
+    halveSwap(programROM);
+    endianSwap(programROM);
+    endianSwap(characterROM);
   }
   if(!programROM  ) return false;
   if(!musicROM    ) return false;
@@ -103,4 +108,18 @@ auto NeoGeo::analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s,
   manifest +={"    memory type=ROM size=0x", hex(s.size(), 8L), " content=Static\n"};
   manifest +={"    memory type=ROM size=0x", hex(v.size(), 8L), " content=Voice\n"};
   return manifest;
+}
+
+auto NeoGeo::halveSwap(vector<u8>& memory) -> void {
+  u32 lower = 0;
+  u32 upper = memory.size() >> 1;
+  for(u32 address : range(upper)) {
+    swap(memory[address + lower], memory[address + upper]);
+  }
+}
+
+auto NeoGeo::endianSwap(vector<u8>& memory) -> void {
+  for(u32 address = 0; address < memory.size(); address += 2) {
+    swap(memory[address + 0], memory[address + 1]);
+  }
 }

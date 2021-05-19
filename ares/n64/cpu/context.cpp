@@ -18,34 +18,32 @@ auto CPU::Context::setMode() -> void {
     break;
   }
 
-  //todo: 64-bit mode breaks libdragon software, so disable it for now ...
-  bits = 32;
-
-  if(bits == 32) {
-    segment[0] = Segment::Mapped32;
-    segment[1] = Segment::Mapped32;
-    segment[2] = Segment::Mapped32;
-    segment[3] = Segment::Mapped32;
+  if(bits == 32 || bits == 64) {
+    segment[0] = Segment::Mapped;
+    segment[1] = Segment::Mapped;
+    segment[2] = Segment::Mapped;
+    segment[3] = Segment::Mapped;
     switch(mode) {
     case Mode::Kernel:
       segment[4] = Segment::Cached;
-      segment[5] = Segment::Uncached;
-      segment[6] = Segment::Mapped32;
-      segment[7] = Segment::Mapped32;
+      segment[5] = Segment::Direct;
+      segment[6] = Segment::Mapped;
+      segment[7] = Segment::Mapped;
       break;
     case Mode::Supervisor:
-      segment[4] = Segment::Invalid;
-      segment[5] = Segment::Invalid;
-      segment[6] = Segment::Mapped32;
-      segment[7] = Segment::Invalid;
+      segment[4] = Segment::Unused;
+      segment[5] = Segment::Unused;
+      segment[6] = Segment::Mapped;
+      segment[7] = Segment::Unused;
       break;
     case Mode::User:
-      segment[4] = Segment::Invalid;
-      segment[5] = Segment::Invalid;
-      segment[6] = Segment::Invalid;
-      segment[7] = Segment::Invalid;
+      segment[4] = Segment::Unused;
+      segment[5] = Segment::Unused;
+      segment[6] = Segment::Unused;
+      segment[7] = Segment::Unused;
       break;
     }
+    return;
   }
 
   if(bits == 64) {

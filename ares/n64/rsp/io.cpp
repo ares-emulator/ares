@@ -4,8 +4,8 @@ auto RSP::readWord(u32 address) -> u32 {
 
   if(address == 0) {
     //SP_PBUS_ADDRESS
-    data.bit( 0,11) = dma.memAddress;
-    data.bit(12)    = dma.memSource;
+    data.bit( 0,11) = dma.pbusAddress;
+    data.bit(12)    = dma.pbusRegion;
   }
 
   if(address == 1) {
@@ -31,8 +31,8 @@ auto RSP::readWord(u32 address) -> u32 {
     //SP_STATUS
     data.bit( 0) = status.halted;
     data.bit( 1) = status.broken;
-    data.bit( 2) = dma.busy;
-    data.bit( 3) = dma.full;
+    data.bit( 2) = !dma.requests.empty();
+    data.bit( 3) = dma.requests.full();
     data.bit( 4) = status.full;
     data.bit( 5) = status.singleStep;
     data.bit( 6) = status.interruptOnBreak;
@@ -48,12 +48,12 @@ auto RSP::readWord(u32 address) -> u32 {
 
   if(address == 5) {
     //SP_DMA_FULL
-    data.bit(0) = dma.full;
+    data.bit(0) = dma.requests.full();
   }
 
   if(address == 6) {
     //SP_DMA_BUSY
-    data.bit(0) = dma.busy;
+    data.bit(0) = !dma.requests.empty();
   }
 
   if(address == 7) {
@@ -72,13 +72,13 @@ auto RSP::writeWord(u32 address, u32 data_) -> void {
 
   if(address == 0) {
     //SP_PBUS_ADDRESS
-    dma.memAddress = data.bit( 0,11) & ~7;
-    dma.memSource  = data.bit(12);
+    dma.pbusAddress = data.bit( 0,11);
+    dma.pbusRegion  = data.bit(12);
   }
 
   if(address == 1) {
     //SP_DRAM_ADDRESS
-    dma.dramAddress = data.bit(0,23) & ~7;
+    dma.dramAddress = data.bit(0,23);
   }
 
   if(address == 2) {
@@ -86,11 +86,18 @@ auto RSP::writeWord(u32 address, u32 data_) -> void {
     dma.read.length = data.bit( 0,11);
     dma.read.count  = data.bit(12,19);
     dma.read.skip   = data.bit(20,31);
-    dma.busy        = 1;
-    u32 blocks = dma.read.count + 1;
-    u32 cycles = ((dma.read.length | 7) + 1) * blocks;
-  //queue.insert(Queue::RSP_DMA_Read, cycles);
-    dmaRead();
+    if(!dma.requests.full()) {
+      DMA::Request request;
+      request.type        = DMA::Request::Type::Read;
+      request.pbusRegion  = dma.pbusRegion;
+      request.pbusAddress = dma.pbusAddress & ~7;
+      request.dramAddress = dma.dramAddress & ~7;
+      request.length      = 1 + (dma.read.length | 7);
+      request.count       = 1 + (dma.read.count);
+      request.skip        = dma.read.skip & ~7;
+      dma.requests.write(request);
+      queue.insert(Queue::RSP_DMA, request.length * request.count / 4);
+    }
   }
 
   if(address == 3) {
@@ -98,11 +105,18 @@ auto RSP::writeWord(u32 address, u32 data_) -> void {
     dma.write.length = data.bit( 0,11);
     dma.write.count  = data.bit(12,19);
     dma.write.skip   = data.bit(20,31);
-    dma.busy         = 1;
-    u32 blocks = dma.write.count + 1;
-    u32 cycles = ((dma.write.length | 7) + 1) * blocks;
-  //queue.insert(Queue::RSP_DMA_Write, cycles);
-    dmaWrite();
+    if(!dma.requests.full()) {
+      DMA::Request request;
+      request.type        = DMA::Request::Type::Write;
+      request.pbusRegion  = dma.pbusRegion;
+      request.pbusAddress = dma.pbusAddress & ~7;
+      request.dramAddress = dma.dramAddress & ~7;
+      request.length      = 1 + (dma.write.length | 7);
+      request.count       = 1 + (dma.write.count);
+      request.skip        = dma.write.skip & ~7;
+      dma.requests.write(request);
+      queue.insert(Queue::RSP_DMA, request.length * request.count / 4);
+    }
   }
 
   if(address == 4) {

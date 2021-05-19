@@ -1,8 +1,9 @@
-//Yama YM2610
+//Yamaha YM2610
 
 struct OPNB : YM2610, Thread {
   Node::Object node;
-  Node::Audio::Stream stream;
+  Node::Audio::Stream streamFM;
+  Node::Audio::Stream streamSSG;
 
   //opnb.cpp
   auto load(Node::Object) -> void;
@@ -14,6 +15,9 @@ struct OPNB : YM2610, Thread {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+private:
+  f64 volume[16];
 };
 
 extern OPNB opnb;

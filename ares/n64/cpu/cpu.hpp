@@ -81,7 +81,7 @@ struct CPU : Thread {
 
     enum Endian : bool { Little, Big };
     enum Mode : u32 { Kernel, Supervisor, User };
-    enum Segment : u32 { Invalid, Mapped32, Mapped64, Cached, Uncached, Kernel64, Supervisor64, User64 };
+    enum Segment : u32 { Unused, Mapped, Cached, Direct, Kernel64, Supervisor64, User64 };
 
     auto littleEndian() const -> bool { return endian == Endian::Little; }
     auto bigEndian() const -> bool { return endian == Endian::Big; }
@@ -165,13 +165,9 @@ struct CPU : Thread {
     };
 
     //tlb.cpp
-    auto load32(u32 address) -> Match;
-    auto store32(u32 address) -> Match;
-    auto exception32(u32 address) -> void;
-
-    auto load64(u64 address) -> Match;
-    auto store64(u64 address) -> Match;
-    auto exception64(u64 address) -> void;
+    auto load(u32 address) -> Match;
+    auto store(u32 address) -> Match;
+    auto exception(u32 address) -> void;
 
     struct Entry {
       //scc-tlb.cpp
@@ -206,6 +202,7 @@ struct CPU : Thread {
   auto supervisorSegment64(u64 address) const -> Context::Segment;
   auto userSegment64(u64 address) const -> Context::Segment;
 
+  auto segment(u64 address) -> Context::Segment;
   auto devirtualize(u64 address) -> maybe<u64>;
   auto fetch(u64 address) -> u32;
   template<u32 Size> auto read(u64 address) -> maybe<u64>;

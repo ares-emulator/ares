@@ -32,6 +32,11 @@ auto NeoGeoAES::load() -> bool {
     port->connect();
   }
 
+  if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
+    port->allocate("Arcade Stick");
+    port->connect();
+  }
+
   return true;
 }
 
@@ -49,4 +54,36 @@ auto NeoGeoAES::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
 }
 
 auto NeoGeoAES::input(ares::Node::Input::Input node) -> void {
+  auto parent = ares::Node::parent(node);
+  if(!parent) return;
+
+  auto port = ares::Node::parent(parent);
+  if(!port) return;
+
+  maybe<u32> index;
+  if(port->name() == "Controller Port 1") index = 0;
+  if(port->name() == "Controller Port 2") index = 1;
+  if(!index) return;
+
+  if(parent->name() == "Arcade Stick") {
+    auto name = node->name();
+    maybe<InputMapping&> mapping;
+    if(name == "Up"    ) mapping = virtualPads[*index].up;
+    if(name == "Down"  ) mapping = virtualPads[*index].down;
+    if(name == "Left"  ) mapping = virtualPads[*index].left;
+    if(name == "Right" ) mapping = virtualPads[*index].right;
+    if(name == "A"     ) mapping = virtualPads[*index].a;
+    if(name == "B"     ) mapping = virtualPads[*index].b;
+    if(name == "C"     ) mapping = virtualPads[*index].x;
+    if(name == "D"     ) mapping = virtualPads[*index].y;
+    if(name == "Select") mapping = virtualPads[*index].select;
+    if(name == "Start" ) mapping = virtualPads[*index].start;
+
+    if(mapping) {
+      auto value = mapping->value();
+      if(auto button = node->cast<ares::Node::Input::Button>()) {
+        button->setValue(value);
+      }
+    }
+  }
 }

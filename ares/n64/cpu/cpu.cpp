@@ -52,8 +52,7 @@ auto CPU::synchronize() -> void {
 
   queue.step(clocks, [](u32 event) {
     switch(event) {
-    case Queue::RSP_DMA_Read:  return rsp.dmaRead();
-    case Queue::RSP_DMA_Write: return rsp.dmaWrite();
+    case Queue::RSP_DMA:       return rsp.dmaTransfer();
     case Queue::PI_DMA_Read:   return pi.dmaRead();
     case Queue::PI_DMA_Write:  return pi.dmaWrite();
     case Queue::SI_DMA_Read:   return si.dmaRead();
@@ -121,7 +120,7 @@ auto CPU::power(bool reset) -> void {
   context.endian = Context::Endian::Big;
   context.mode = Context::Mode::Kernel;
   context.bits = 64;
-  for(auto& segment : context.segment) segment = Context::Segment::Invalid;
+  for(auto& segment : context.segment) segment = Context::Segment::Unused;
   icache.power(reset);
   dcache.power(reset);
   for(auto& entry : tlb.entry) entry = {};

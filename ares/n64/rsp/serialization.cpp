@@ -6,17 +6,16 @@ auto RSP::serialize(serializer& s) -> void {
   s(pipeline.address);
   s(pipeline.instruction);
 
-  s(dma.memSource);
-  s(dma.memAddress);
+  s(dma.pbusRegion);
+  s(dma.pbusAddress);
   s(dma.dramAddress);
-  s(dma.busy);
-  s(dma.full);
   s(dma.read.length);
   s(dma.read.skip);
   s(dma.read.count);
   s(dma.write.length);
   s(dma.write.skip);
   s(dma.write.count);
+  s(dma.requests);
 
   s(status.semaphore);
   s(status.halted);
@@ -48,4 +47,14 @@ auto RSP::serialize(serializer& s) -> void {
   if constexpr(Accuracy::RSP::Recompiler) {
     recompiler.reset();
   }
+}
+
+auto RSP::DMA::Request::serialize(serializer& s) -> void {
+  s((u32&)type);
+  s(pbusRegion);
+  s(pbusAddress);
+  s(dramAddress);
+  s(length);
+  s(skip);
+  s(count);
 }

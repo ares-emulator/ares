@@ -97,7 +97,7 @@ auto CPU::power(bool reset) -> void {
   refresh = {};
 
   state = {};
-  state.interruptPending.bit((u32)Interrupt::Reset) = 1;
+  raise(Interrupt::Reset);
 }
 
 }

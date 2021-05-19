@@ -235,7 +235,7 @@ auto Presentation::resizeWindow() -> void {
 
     u32 multiplierX = viewportWidth / videoWidth;
     u32 multiplierY = viewportHeight / videoHeight;
-    u32 multiplier = min(multiplierX, multiplierY);
+    u32 multiplier = max(1, min(multiplierX, multiplierY));
 
     viewportWidth = videoWidth * multiplier;
     viewportHeight = videoHeight * multiplier;

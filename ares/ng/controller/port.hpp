@@ -11,6 +11,10 @@ struct ControllerPort {
   auto connect(Node::Peripheral) -> void;
   auto disconnect() -> void;
 
+  auto readButtons() -> n8 { if(device) return device->readButtons(); return 0; }
+  auto readControls() -> n2 { if(device) return device->readControls(); return 0; }
+  auto writeOutputs(n3 data) -> void { if(device) return device->writeOutputs(data); }
+
   auto power() -> void;
   auto serialize(serializer&) -> void;
 

@@ -2,6 +2,24 @@
 
 struct APU : Z80, Z80::Bus, Thread {
   Node::Object node;
+  Memory::Readable<n8> ram;
+
+  struct Debugger {
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
+    auto instruction() -> void;
+    auto interrupt(string_view) -> void;
+
+    struct Memory {
+      Node::Debugger::Memory ram;
+    } memory;
+
+    struct Tracer {
+      Node::Debugger::Tracer::Instruction instruction;
+      Node::Debugger::Tracer::Notification interrupt;
+    } tracer;
+  } debugger;
 
   auto synchronizing() const -> bool override { return false; }
 
@@ -13,14 +31,27 @@ struct APU : Z80, Z80::Bus, Thread {
   auto step(u32 clocks) -> void override;
   auto power(bool reset) -> void;
 
-  auto read(n16 address) -> n8 override { return 0; }
-  auto write(n16 address, n8 data) -> void override {}
+  //memory.cpp
+  auto read(n16 address) -> n8 override;
+  auto write(n16 address, n8 data) -> void override;
 
-  auto in(n16 address) -> n8 override { return 0; }
-  auto out(n16 address, n8 data) -> void override { return; }
+  auto in(n16 address) -> n8 override;
+  auto out(n16 address, n8 data) -> void override;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  struct Communication {
+    n8 input;
+    n8 output;
+  } communication;
+
+  struct IO {
+    n1 nmiEnable;
+    n1 nmiLine;
+    n1 irqLine;
+    n8 romBank[4];
+  } io;
 };
 
 extern APU apu;

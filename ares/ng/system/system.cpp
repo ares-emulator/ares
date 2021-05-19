@@ -16,6 +16,7 @@ auto load(Node::System& node, string name) -> bool {
 
 Scheduler scheduler;
 System system;
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto System::game() -> string {
@@ -52,6 +53,12 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
+
+  wram.allocate(64_KiB >> 1);
+  if(NeoGeo::Model::NeoGeoMVS()) {
+    sram.allocate(64_KiB >> 1);
+  }
 
   scheduler.reset();
   cpu.load(node);
@@ -61,12 +68,14 @@ auto System::load(Node::System& root, string name) -> bool {
   cartridgeSlot.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
+  debugger.load(node);
   return true;
 }
 
 auto System::unload() -> void {
   if(!node) return;
   save();
+  debugger.unload(node);
   cpu.unload();
   apu.unload();
   gpu.unload();
@@ -74,6 +83,9 @@ auto System::unload() -> void {
   cartridgeSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
+  wram.reset();
+  sram.reset();
+  pak.reset();
   node.reset();
 }
 
@@ -85,12 +97,30 @@ auto System::save() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
+  if(auto fp = pak->read("bios.rom")) {
+    bios.allocate(fp->size() >> 1);
+    for(auto address : range(bios.size())) {
+      bios.program(address, fp->readm(2L));
+    }
+  }
+
+  if(NeoGeo::Model::NeoGeoMVS()) {
+    if(auto fp = pak->read("static.rom")) {
+      srom.allocate(fp->size() >> 1);
+      for(auto address : range(srom.size())) {
+        srom.program(address, fp->readl(2L));
+      }
+    }
+  }
+
   if(cartridge.node) cartridge.power();
   cpu.power(reset);
   apu.power(reset);
   gpu.power(reset);
   opnb.power(reset);
   scheduler.power(cpu);
+
+  io = {};
 }
 
 };
