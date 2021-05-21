@@ -63,6 +63,10 @@ namespace Math {
   #include <immintrin.h>
 #endif
 
+#if !defined(__has_builtin)
+  #define __has_builtin(x) 0
+#endif
+
 #if defined(COMPILER_MICROSOFT)
   #define va_copy(dest, src) ((dest) = (src))
 #endif

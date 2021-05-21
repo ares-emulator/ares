@@ -63,11 +63,12 @@ auto System::load(Node::System& root, string name) -> bool {
   scheduler.reset();
   cpu.load(node);
   apu.load(node);
-  gpu.load(node);
+  lspc.load(node);
   opnb.load(node);
   cartridgeSlot.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
+  cardSlot.load(node);
   debugger.load(node);
   return true;
 }
@@ -78,11 +79,12 @@ auto System::unload() -> void {
   debugger.unload(node);
   cpu.unload();
   apu.unload();
-  gpu.unload();
+  lspc.unload();
   opnb.unload();
   cartridgeSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
+  cardSlot.unload();
   wram.reset();
   sram.reset();
   pak.reset();
@@ -92,6 +94,7 @@ auto System::unload() -> void {
 auto System::save() -> void {
   if(!node) return;
   cartridge.save();
+  cardSlot.save();
 }
 
 auto System::power(bool reset) -> void {
@@ -114,9 +117,10 @@ auto System::power(bool reset) -> void {
   }
 
   if(cartridge.node) cartridge.power();
+  cardSlot.power(reset);
   cpu.power(reset);
   apu.power(reset);
-  gpu.power(reset);
+  lspc.power(reset);
   opnb.power(reset);
   scheduler.power(cpu);
 

@@ -15,7 +15,7 @@ auto CPU::Debugger::instruction() -> void {
 
 auto CPU::Debugger::interrupt(string_view type) -> void {
   if(unlikely(tracer.interrupt->enabled())) {
-    string message = {type, " SR=", cpu.r.i, " @ ", gpu.io.vcounter, ",", gpu.io.hcounter};
+    string message = {type, " SR=", cpu.r.i, " @ ", lspc.io.vcounter, ",", lspc.io.hcounter};
     tracer.interrupt->notify(message);
   }
 }

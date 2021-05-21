@@ -38,9 +38,6 @@ struct System {
   auto unserialize(serializer&) -> bool;
 
   struct IO {
-    n2 memoryCardLock = 3;
-    n1 memoryCardRegisterSelect;
-    n3 memoryCardBank;
     n1 sramLock = 1;
     n3 slotSelect;
     n1 ledMarquee;

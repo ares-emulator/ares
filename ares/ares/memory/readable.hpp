@@ -62,7 +62,7 @@ struct Readable {
     s(array_span<T>{self.data, self.size});
   }
 
-private:
+//private:
   struct {
     T* data = nullptr;
     u32 size = 0;

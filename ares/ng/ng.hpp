@@ -20,8 +20,9 @@ namespace ares::NeoGeo {
   #include <ng/system/system.hpp>
   #include <ng/cartridge/cartridge.hpp>
   #include <ng/controller/controller.hpp>
+  #include <ng/card/card.hpp>
   #include <ng/cpu/cpu.hpp>
   #include <ng/apu/apu.hpp>
-  #include <ng/gpu/gpu.hpp>
+  #include <ng/lspc/lspc.hpp>
   #include <ng/opnb/opnb.hpp>
 }

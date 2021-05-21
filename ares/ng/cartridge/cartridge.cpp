@@ -27,28 +27,28 @@ auto Cartridge::connect() -> void {
   if(auto fp = pak->read("music.rom")) {
     mrom.allocate(fp->size());
     for(auto address : range(mrom.size())) {
-      mrom.program(address, fp->readl(1L));
+      mrom.program(address, fp->read());
     }
   }
 
   if(auto fp = pak->read("character.rom")) {
-    crom.allocate(fp->size() >> 1);
+    crom.allocate(fp->size());
     for(auto address : range(crom.size())) {
-      crom.program(address, fp->readm(2L));
+      crom.program(address, fp->read());
     }
   }
 
   if(auto fp = pak->read("static.rom")) {
     srom.allocate(fp->size());
     for(auto address : range(srom.size())) {
-      srom.program(address, fp->readm(1L));
+      srom.program(address, fp->read());
     }
   }
 
   if(auto fp = pak->read("voice.rom")) {
     vrom.allocate(fp->size());
     for(auto address : range(vrom.size())) {
-      vrom.program(address, fp->readm(1L));
+      vrom.program(address, fp->read());
     }
   }
 

@@ -46,12 +46,21 @@ struct APU : Z80, Z80::Bus, Thread {
     n8 output;
   } communication;
 
-  struct IO {
-    n1 nmiEnable;
-    n1 nmiLine;
-    n1 irqLine;
-    n8 romBank[4];
-  } io;
+  struct NMI {
+    n1 pending;
+    n1 enable;
+  } nmi;
+
+  struct IRQ {
+    n1 pending;
+  } irq;
+
+  struct ROM {
+    n8 bankA = 0x02;
+    n8 bankB = 0x06;
+    n8 bankC = 0x0e;
+    n8 bankD = 0x1e;
+  } rom;
 };
 
 extern APU apu;

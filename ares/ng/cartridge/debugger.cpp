@@ -18,12 +18,12 @@ auto Cartridge::Debugger::load(Node::Object parent) -> void {
   });
 
   memory.crom = parent->append<Node::Debugger::Memory>("Cartridge Character ROM");
-  memory.crom->setSize(cartridge.crom.size() << 1);
+  memory.crom->setSize(cartridge.crom.size());
   memory.crom->setRead([&](u32 address) -> u8 {
-    return cartridge.crom[address >> 1].byte(!(address & 1));
+    return cartridge.crom[address];
   });
   memory.crom->setWrite([&](u32 address, u8 data) -> void {
-    cartridge.crom[address].byte(!(address & 1)) = data;
+    cartridge.crom[address] = data;
   });
 
   memory.srom = parent->append<Node::Debugger::Memory>("Cartridge Sprite ROM");

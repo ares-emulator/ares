@@ -1,7 +1,7 @@
 struct NeoGeo : Cartridge {
   auto name() -> string override { return "Neo Geo"; }
   auto extensions() -> vector<string> override { return {"ng"}; }
-  auto read(string location, string match) -> vector<u8>;
+  auto read(string location, string match, bool interleave = false) -> vector<u8>;
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& v) -> string;
@@ -9,7 +9,7 @@ struct NeoGeo : Cartridge {
   auto endianSwap(vector<u8>&) -> void;
 };
 
-auto NeoGeo::read(string location, string match) -> vector<u8> {
+auto NeoGeo::read(string location, string match, bool interleave) -> vector<u8> {
   vector<u8> output;
   //parse Neo Geo ROM images in MAME ZIP file format:
   if(location.iendsWith(".zip")) {
@@ -21,6 +21,12 @@ auto NeoGeo::read(string location, string match) -> vector<u8> {
         if(file.name.imatch(match)) filenames.append(file.name);
       }
       filenames.sort();
+      if(interleave) {
+        vector<string> interleaved;
+        for(u32 index = 0; index < filenames.size(); index += 2) interleaved.append(filenames[index]);
+        for(u32 index = 1; index < filenames.size(); index += 2) interleaved.append(filenames[index]);
+        filenames = interleaved;
+      }
 
       //build the concatenated ROM image
       for(auto& filename : filenames) {
@@ -52,12 +58,11 @@ auto NeoGeo::load(string location) -> bool {
   } else if(file::exists(location)) {
     programROM   = NeoGeo::read(location, "*.p*");
     musicROM     = NeoGeo::read(location, "*.m*");
-    characterROM = NeoGeo::read(location, "*.c*");
+    characterROM = NeoGeo::read(location, "*.c*", true);
     staticROM    = NeoGeo::read(location, "*.s*");
     voiceROM     = NeoGeo::read(location, "*.v*");
     halveSwap(programROM);
     endianSwap(programROM);
-    endianSwap(characterROM);
   }
   if(!programROM  ) return false;
   if(!musicROM    ) return false;

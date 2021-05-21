@@ -40,7 +40,7 @@ auto OPNB::main() -> void {
   output += volume[channels[2]];
   streamSSG->frame(output / 3.0);
 
-  apu.io.irqLine = fm.readStatus();
+  apu.irq.pending = fm.readStatus();
 }
 
 auto OPNB::step(u32 clocks) -> void {

@@ -37,6 +37,11 @@ auto NeoGeoAES::load() -> bool {
     port->connect();
   }
 
+  if(auto port = root->find<ares::Node::Port>("Memory Card Slot")) {
+    port->allocate("Memory Card");
+    port->connect();
+  }
+
   return true;
 }
 

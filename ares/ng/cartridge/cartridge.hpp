@@ -3,7 +3,7 @@ struct Cartridge {
   VFS::Pak pak;
   Memory::Readable<n16> prom;
   Memory::Readable<n8 > mrom;
-  Memory::Readable<n16> crom;
+  Memory::Readable<n8 > crom;
   Memory::Readable<n8 > srom;
   Memory::Readable<n8 > vrom;
 

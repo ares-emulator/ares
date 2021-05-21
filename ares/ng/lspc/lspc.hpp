@@ -1,6 +1,6 @@
-//custom chipset
+//line sprite controller
 
-struct GPU : Thread {
+struct LSPC : Thread {
   Node::Object node;
   Node::Video::Screen screen;
   Memory::Writable<n16> vram;
@@ -17,7 +17,7 @@ struct GPU : Thread {
     } memory;
   } debugger;
 
-  //gpu.cpp
+  //lspc.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
@@ -35,6 +35,29 @@ struct GPU : Thread {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  struct Animation {
+    n1 disable;
+    n8 speed;
+    n8 counter;
+    n3 frame;
+  } animation;
+
+  struct Timer {
+    n1  interruptEnable;
+    n1  reloadOnChange;
+    n1  reloadOnVblank;
+    n1  reloadOnZero;
+    n32 reload;
+    n32 counter;
+    n1  stopPAL;  //todo
+  } timer;
+
+  struct IRQ {
+    n1 powerAcknowledge;
+    n1 timerAcknowledge;
+    n1 vblankAcknowledge;
+  } irq;
+
   struct IO {
     n9  hcounter;
     n9  vcounter;
@@ -42,23 +65,10 @@ struct GPU : Thread {
     n16 vramAddress;
     n16 vramIncrement;
     n1  pramBank;
-    n1  autoAnimationDisable;
-    n8  autoAnimationSpeed;
-    n3  autoAnimationCounter;
-    n1  timerInterruptEnable;
-    n1  timerReloadOnChange;
-    n1  timerReloadOnVblank;
-    n1  timerReloadOnZero;
-    n32 timerReload;
-    n32 timerCounter;
-    n1  timerStopPAL;
   } io;
 
-  struct IRQ {
-    n1 powerAcknowledge;
-    n1 timerAcknowledge;
-    n1 vblankAcknowledge;
-  } irq;
+  n8 vscale[256][256];
+  n1 hscale[16][16];
 };
 
-extern GPU gpu;
+extern LSPC lspc;

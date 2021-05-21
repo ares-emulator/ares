@@ -48,9 +48,9 @@ auto Z80::irq(bool maskable, n16 pc, n8 extbus) -> bool {
 
   case 2: {
     //vector table with external data bus
-    n16 addr = I << 8 | extbus;
-    WZL = read(addr + 0);
-    WZH = read(addr + 1);
+    n16 address = I << 8 | extbus;
+    WZL = read(address + 0);
+    WZH = read(address + 1);
     wait(7);
     break;
   }

@@ -20,20 +20,22 @@ auto APU::unload() -> void {
 }
 
 auto APU::main() -> void {
-  if(io.nmiLine && io.nmiEnable) {
-    io.nmiLine = 0;  //edge-sensitive
-    debugger.interrupt("NMI");
-    irq(0, 0x0066, 0xff);
+  if(nmi.pending && nmi.enable) {
+    if(Z80::irq(0, 0x0066, 0xff)) {
+      nmi.pending = 0;  //edge-sensitive
+      debugger.interrupt("NMI");
+    }
   }
 
-  if(io.irqLine) {
-    //level-sensitive
-    debugger.interrupt("IRQ");
-    irq(1, 0x0038, 0xff);
+  if(irq.pending) {
+    if(Z80::irq(1, 0x0038, 0xff)) {
+      //level-sensitive
+      debugger.interrupt("IRQ");
+    }
   }
 
   debugger.instruction();
-  instruction();
+  Z80::instruction();
 }
 
 auto APU::step(u32 clocks) -> void {
@@ -46,7 +48,9 @@ auto APU::power(bool reset) -> void {
   Z80::power();
   Thread::create(4'000'000, {&APU::main, this});
   communication = {};
-  io = {};
+  nmi = {};
+  irq = {};
+  rom = {};
 }
 
 }

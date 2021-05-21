@@ -40,8 +40,9 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(cartridge);
   s(controllerPort1);
   s(controllerPort2);
+  s(cardSlot);
   s(cpu);
   s(apu);
-  s(gpu);
+  s(lspc);
   s(opnb);
 }
