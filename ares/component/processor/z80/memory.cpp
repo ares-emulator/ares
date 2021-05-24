@@ -4,12 +4,12 @@ auto Z80::wait(u32 clocks) -> void {
 
 auto Z80::opcode() -> n8 {
   step(4);
-  return bus->read(r.pc++);
+  return bus->read(PC++);
 }
 
 auto Z80::operand() -> n8 {
   step(3);
-  return bus->read(r.pc++);
+  return bus->read(PC++);
 }
 
 auto Z80::operands() -> n16 {
@@ -28,7 +28,7 @@ auto Z80::pop() -> n16 {
 }
 
 auto Z80::displace(n16& x) -> n16 {
-  if(&x != &r.ix.word && &x != &r.iy.word) return x;
+  if(&x != &ix.word && &x != &iy.word) return x;
   auto d = operand();
   wait(5);
   WZ = x + (i8)d;

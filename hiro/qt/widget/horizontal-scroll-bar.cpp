@@ -6,7 +6,7 @@ auto pHorizontalScrollBar::construct() -> void {
   qtWidget = qtHorizontalScrollBar = new QtHorizontalScrollBar(*this);
   qtHorizontalScrollBar->setRange(0, 100);
   qtHorizontalScrollBar->setPageStep(101 >> 3);
-  qtHorizontalScrollBar->connect(qtHorizontalScrollBar, SIGNAL(valueChanged(s32)), SLOT(onChange()));
+  qtHorizontalScrollBar->connect(qtHorizontalScrollBar, SIGNAL(valueChanged(int)), SLOT(onChange()));
 
   pWidget::construct();
   _setState();

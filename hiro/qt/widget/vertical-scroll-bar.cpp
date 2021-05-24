@@ -6,7 +6,7 @@ auto pVerticalScrollBar::construct() -> void {
   qtWidget = qtVerticalScrollBar = new QtVerticalScrollBar(*this);
   qtVerticalScrollBar->setRange(0, 100);
   qtVerticalScrollBar->setPageStep(101 >> 3);
-  qtVerticalScrollBar->connect(qtVerticalScrollBar, SIGNAL(valueChanged(s32)), SLOT(onChange()));
+  qtVerticalScrollBar->connect(qtVerticalScrollBar, SIGNAL(valueChanged(int)), SLOT(onChange()));
 
   pWidget::construct();
   _setState();

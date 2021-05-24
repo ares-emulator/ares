@@ -17,11 +17,11 @@ auto pTableView::construct() -> void {
   qtTableViewDelegate = new QtTableViewDelegate(*this);
   qtTableView->setItemDelegate(qtTableViewDelegate);
 
-  qtTableView->connect(qtTableView, SIGNAL(itemActivated(QTreeWidgetItem*, s32)), SLOT(onActivate(QTreeWidgetItem*, s32)));
+  qtTableView->connect(qtTableView, SIGNAL(itemActivated(QTreeWidgetItem*, int)), SLOT(onActivate(QTreeWidgetItem*, int)));
   qtTableView->connect(qtTableView, SIGNAL(itemSelectionChanged()), SLOT(onChange()));
   qtTableView->connect(qtTableView, SIGNAL(customContextMenuRequested(const QPoint&)), SLOT(onContext()));
-  qtTableView->connect(qtTableView->header(), SIGNAL(sectionClicked(s32)), SLOT(onSort(s32)));
-  qtTableView->connect(qtTableView, SIGNAL(itemChanged(QTreeWidgetItem*, s32)), SLOT(onToggle(QTreeWidgetItem*, s32)));
+  qtTableView->connect(qtTableView->header(), SIGNAL(sectionClicked(int)), SLOT(onSort(int)));
+  qtTableView->connect(qtTableView, SIGNAL(itemChanged(QTreeWidgetItem*, int)), SLOT(onToggle(QTreeWidgetItem*, int)));
 
   setBackgroundColor(state().backgroundColor);
   setBatchable(state().batchable);
@@ -186,7 +186,7 @@ auto pTableView::_widthOfCell(u32 _row, u32 _column) -> u32 {
   return width;
 }
 
-auto QtTableView::onActivate(QTreeWidgetItem* qtItem, s32 column) -> void {
+auto QtTableView::onActivate(QTreeWidgetItem* qtItem, int column) -> void {
   if(p.locked()) return;
 
   for(auto& item : p.state().items) {
@@ -216,13 +216,13 @@ auto QtTableView::onContext() -> void {
   if(!p.locked()) p.self().doContext();
 }
 
-auto QtTableView::onSort(s32 columnNumber) -> void {
+auto QtTableView::onSort(int columnNumber) -> void {
   if(auto column = p.self().column(columnNumber)) {
     if(!p.locked() && p.state().sortable) p.self().doSort(column);
   }
 }
 
-auto QtTableView::onToggle(QTreeWidgetItem* qtItem, s32 column) -> void {
+auto QtTableView::onToggle(QTreeWidgetItem* qtItem, int column) -> void {
   for(auto& item : p.state().items) {
     if(auto self = item->self()) {
       if(qtItem == self->qtItem) {

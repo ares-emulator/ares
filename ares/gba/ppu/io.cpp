@@ -1,5 +1,5 @@
-auto PPU::readIO(n32 addr) -> n8 {
-  switch(addr) {
+auto PPU::readIO(n32 address) -> n8 {
+  switch(address) {
 
   //DISPCNT
   case 0x0400'0000: return (
@@ -99,12 +99,12 @@ auto PPU::readIO(n32 addr) -> n8 {
 
   }
 
-  if(cpu.context.dmaActive) return cpu.dmabus.data.byte(addr & 3);
-  return cpu.pipeline.fetch.instruction.byte(addr & 1);
+  if(cpu.context.dmaActive) return cpu.dmabus.data.byte(address & 3);
+  return cpu.pipeline.fetch.instruction.byte(address & 1);
 }
 
-auto PPU::writeIO(n32 addr, n8 data) -> void {
-  switch(addr) {
+auto PPU::writeIO(n32 address, n8 data) -> void {
+  switch(address) {
 
   //DISPCNT
   case 0x0400'0000:

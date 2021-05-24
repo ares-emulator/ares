@@ -3,9 +3,9 @@
 struct VDP : Thread {
   Node::Object node;
   Node::Video::Screen screen;
-  Node::Setting::Boolean interframeBlending;  //Game Gear
+  Node::Setting::Boolean interframeBlending;  //Game Gear only
   Memory::Writable<n8> vram;  //16KB
-  Memory::Writable<n8> cram;  //SG + MS = 32, GG = 64
+  Memory::Writable<n8> cram;  //Master System = 32, Game Gear = 64
 
   struct Debugger {
     //debugger.cpp

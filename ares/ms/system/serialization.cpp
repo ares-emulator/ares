@@ -37,6 +37,7 @@ auto System::unserialize(serializer& s) -> bool {
 
 auto System::serialize(serializer& s, bool synchronize) -> void {
   scheduler.setSynchronize(synchronize);
+  s(bios);
   s(cartridge);
   s(cpu);
   s(vdp);

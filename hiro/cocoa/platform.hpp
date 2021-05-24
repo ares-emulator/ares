@@ -55,6 +55,8 @@
 #include "widget/table-view-item.hpp"
 #include "widget/table-view-cell.hpp"
 #include "widget/text-edit.hpp"
+#include "widget/tree-view.hpp"
+#include "widget/tree-view-item.hpp"
 #include "widget/vertical-scroll-bar.hpp"
 #include "widget/vertical-slider.hpp"
 #include "widget/viewport.hpp"

@@ -20,13 +20,19 @@ auto load(Node::System& node, string name) -> bool {
 }
 
 Scheduler scheduler;
+BIOS bios;
 System system;
+#include "bios.cpp"
 #include "controls.cpp"
 #include "serialization.cpp"
 
 auto System::game() -> string {
-  if(cartridge.node) {
+  if(cartridge.pak) {
     return cartridge.title();
+  }
+
+  if(bios.rom) {
+    return "(BIOS)";
   }
 
   return "(no cartridge connected)";
@@ -69,6 +75,9 @@ auto System::load(Node::System& root, string name) -> bool {
     information.region = Region::PAL;
     information.colorburst = Constants::Colorburst::PAL * 4.0 / 5.0;
   }
+  if(MasterSystem::Model::GameGear()) {
+    information.region = Region::NTSCJ;
+  }
 
   node = Node::System::create(information.name);
   node->setGame({&System::game, this});
@@ -79,13 +88,15 @@ auto System::load(Node::System& root, string name) -> bool {
   node->setSerialize({&System::serialize, this});
   node->setUnserialize({&System::unserialize, this});
   root = node;
+  if(!node->setPak(pak = platform->pak(node))) return false;
 
   scheduler.reset();
   controls.load(node);
+  bios.load(node);
+  cartridgeSlot.load(node);
   cpu.load(node);
   vdp.load(node);
   psg.load(node);
-  cartridgeSlot.load(node);
   if(MasterSystem::Model::MasterSystem()) {
     controllerPort1.load(node);
     controllerPort2.load(node);
@@ -112,10 +123,10 @@ auto System::save() -> void {
 auto System::unload() -> void {
   if(!node) return;
   save();
+  cartridgeSlot.unload();
   cpu.unload();
   vdp.unload();
   psg.unload();
-  cartridgeSlot.unload();
   if(MasterSystem::Model::MasterSystem()) {
     controllerPort1.unload();
     controllerPort2.unload();
@@ -131,12 +142,18 @@ auto System::unload() -> void {
       opll.unload();
     }
   }
+  bios.unload();
   node.reset();
 }
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
+  if(cartridge.pak) {
+    information.ms = cartridge.pak->attribute("ms").boolean();
+  }
+
+  bios.power();
   cartridge.power();
   cpu.power();
   vdp.power();

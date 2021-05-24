@@ -5,8 +5,12 @@ struct MasterSystem : System {
 };
 
 auto MasterSystem::load(string location) -> bool {
+  auto bios = Pak::read(location);  //optional
+
   this->location = locate();
   pak = new vfs::directory;
+  if(bios) pak->append("bios.rom", bios);
+
   return true;
 }
 

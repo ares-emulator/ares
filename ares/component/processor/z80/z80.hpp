@@ -220,32 +220,30 @@ struct Z80 {
   MOSFET mosfet = MOSFET::NMOS;
   enum class Prefix : u32 { hl, ix, iy } prefix = Prefix::hl;
 
-  struct Registers {
-    union Pair {
-      Pair() : word(0) {}
-      n16 word;
-      struct Byte { n8 order_msb2(hi, lo); } byte;
-    };
+  union Pair {
+    Pair() : word(0) {}
+    n16 word;
+    struct Byte { n8 order_msb2(hi, lo); } byte;
+  };
 
-    Pair af, af_;
-    Pair bc, bc_;
-    Pair de, de_;
-    Pair hl, hl_;
-    Pair ix;
-    Pair iy;
-    Pair ir;
-    Pair wz;
-    n16 sp;
-    n16 pc;
+  Pair af, af_;
+  Pair bc, bc_;
+  Pair de, de_;
+  Pair hl, hl_;
+  Pair ix;
+  Pair iy;
+  Pair ir;
+  Pair wz;
 
-    b1 ei;    //"ei" executed last
-    b1 p;     //"ld a,i" or "ld a,r" executed last
-    b1 q;     //opcode that updated flag registers executed last
-    b1 halt;  //HALT instruction executed
-    b1 iff1;  //interrupt flip-flop 1
-    b1 iff2;  //interrupt flip-flop 2
-    n2 im;    //interrupt mode (0-2)
-  } r;
+  n16 SP;
+  n16 PC;
+  b1  EI;    //"ei" executed last
+  b1  P;     //"ld a,i" or "ld a,r" executed last
+  b1  Q;     //opcode that updated flag registers executed last
+  b1  HALT;  //"halt" instruction executed
+  b1  IFF1;  //interrupt flip-flop 1
+  b1  IFF2;  //interrupt flip-flop 2
+  n2  IM;    //interrupt mode (0-2)
 
   Bus* bus = nullptr;
 };

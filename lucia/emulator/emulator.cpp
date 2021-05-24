@@ -22,14 +22,16 @@ auto Emulator::locate(const string& location, const string& suffix, const string
 
 //handles region selection when games support multiple regions
 auto Emulator::region() -> string {
-  auto regions = game->pak->attribute("region").split(",").strip();
-  if(!regions) return {};
-  if(settings.boot.prefer == "NTSC-U" && regions.find("NTSC-U")) return "NTSC-U";
-  if(settings.boot.prefer == "NTSC-J" && regions.find("NTSC-J")) return "NTSC-J";
-  if(settings.boot.prefer == "NTSC-U" && regions.find("NTSC"  )) return "NTSC";
-  if(settings.boot.prefer == "NTSC-J" && regions.find("NTSC"  )) return "NTSC";
-  if(settings.boot.prefer == "PAL"    && regions.find("PAL"   )) return "PAL";
-  if(regions.first()) return regions.first();
+  if(game && game->pak) {
+    if(auto regions = game->pak->attribute("region").split(",").strip()) {
+      if(settings.boot.prefer == "NTSC-U" && regions.find("NTSC-U")) return "NTSC-U";
+      if(settings.boot.prefer == "NTSC-J" && regions.find("NTSC-J")) return "NTSC-J";
+      if(settings.boot.prefer == "NTSC-U" && regions.find("NTSC"  )) return "NTSC";
+      if(settings.boot.prefer == "NTSC-J" && regions.find("NTSC"  )) return "NTSC";
+      if(settings.boot.prefer == "PAL"    && regions.find("PAL"   )) return "PAL";
+      if(regions.first()) return regions.first();
+    }
+  }
   if(settings.boot.prefer == "NTSC-J") return "NTSC-J";
   if(settings.boot.prefer == "NTSC-U") return "NTSC-U";
   if(settings.boot.prefer == "PAL"   ) return "PAL";

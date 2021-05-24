@@ -19,7 +19,7 @@ auto pHexEdit::construct() -> void {
   qtScrollBar->setSingleStep(1);
   qtLayout->addWidget(qtScrollBar);
 
-  qtScrollBar->connect(qtScrollBar, SIGNAL(actionTriggered(s32)), SLOT(onScroll()));
+  qtScrollBar->connect(qtScrollBar, SIGNAL(actionTriggered(int)), SLOT(onScroll()));
 
   pWidget::construct();
   setBackgroundColor(state().backgroundColor);

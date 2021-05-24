@@ -55,8 +55,13 @@ auto CPU::power() -> void {
   Z80::bus = this;
   Z80::power();
   Thread::create(system.colorburst(), {&CPU::main, this});
-  r.pc = 0x0000;  //reset vector address
+  PC = 0x0000;  //reset vector address
+  SP = 0xfffd;  //initial stack pointer location
+  ram.write(0xc000, 0x00);  //$3E initial value
   state = {};
+  bus = {};
+  bus.biosEnable = (bool)bios;
+  bus.cartridgeEnable = !(bool)bios;
 }
 
 }

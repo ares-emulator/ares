@@ -5,4 +5,10 @@ auto CPU::serialize(serializer& s) -> void {
   s(mdr);
   s(state.nmiLine);
   s(state.irqLine);
+  s(bus.ioEnable);
+  s(bus.biosEnable);
+  s(bus.ramEnable);
+  s(bus.cardEnable);
+  s(bus.cartridgeEnable);
+  s(bus.expansionEnable);
 }

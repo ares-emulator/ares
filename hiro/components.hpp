@@ -82,7 +82,6 @@
   #undef Hiro_Console
   #undef Hiro_IconView
   #undef Hiro_SourceEdit
-  #undef Hiro_TreeView
 #endif
 
 //extensions

@@ -23,7 +23,7 @@ static auto CreateIcon(const image& icon, bool scale = false) -> QIcon {
   if(!icon) return QIcon();
   auto qtBuffer = icon;
   qtBuffer.transform();
-  if(scale) qtBuffer.scale(16, 16, Interpolation::Linear);
+  if(scale) qtBuffer.scale(16, 16, true);
   QImage qtImage(qtBuffer.data(), qtBuffer.width(), qtBuffer.height(), QImage::Format_ARGB32);
   return QIcon(QPixmap::fromImage(qtImage));
 }

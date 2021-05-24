@@ -81,10 +81,10 @@ auto VDP::main() -> void {
     vedge();
 
     if(vcounter() == 0) {
-      state.field ^= 1;
       latch.interlace = io.interlaceMode == 3;
       latch.overscan  = io.overscan;
       frame();
+      state.field ^= 1;
     }
   }
 }

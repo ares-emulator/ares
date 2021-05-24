@@ -55,6 +55,7 @@ private:
   n8 address;
   n8 input;
   n8 output;
+  n1 line;
 };
 
 }

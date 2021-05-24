@@ -136,7 +136,7 @@ public:
   QtComboButton(pComboButton& p) : p(p) {}
   pComboButton& p;
 public slots:
-  void onChange(s32 offset);
+  void onChange(int offset);
 };
 #endif
 
@@ -238,7 +238,7 @@ public:
   pTabFrame& p;
   auto showEvent(QShowEvent*) -> void override;
 public slots:
-  void onChange(s32 selection);
+  void onChange(int selection);
 };
 #endif
 
@@ -252,11 +252,11 @@ public:
   auto showEvent(QShowEvent*) -> void override;
   pTableView& p;
 public slots:
-  void onActivate(QTreeWidgetItem* item, s32 column);
+  void onActivate(QTreeWidgetItem* item, int column);
   void onChange();
   void onContext();
-  void onSort(s32 column);
-  void onToggle(QTreeWidgetItem* item, s32 column);
+  void onSort(int column);
+  void onToggle(QTreeWidgetItem* item, int column);
 };
 
 struct QtTableViewDelegate : public QStyledItemDelegate {

@@ -51,6 +51,8 @@
 #include "widget/table-view-item.cpp"
 #include "widget/table-view-cell.cpp"
 #include "widget/text-edit.cpp"
+#include "widget/tree-view.cpp"
+#include "widget/tree-view-item.cpp"
 #include "widget/vertical-scroll-bar.cpp"
 #include "widget/vertical-slider.cpp"
 #include "widget/viewport.cpp"

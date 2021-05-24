@@ -15,6 +15,7 @@ auto load(Node::System& node, string name) -> bool {
 }
 
 Scheduler scheduler;
+BIOS bios;
 System system;
 #include "bios.cpp"
 #include "controls.cpp"
@@ -59,6 +60,7 @@ auto System::load(Node::System& root, string name) -> bool {
 
   scheduler.reset();
   controls.load(node);
+  bios.load(node);
   cpu.load(node);
   ppu.load(node);
   apu.load(node);
@@ -74,6 +76,7 @@ auto System::save() -> void {
 auto System::unload() -> void {
   if(!node) return;
   save();
+  bios.unload();
   cpu.unload();
   ppu.unload();
   apu.unload();
@@ -84,10 +87,6 @@ auto System::unload() -> void {
 
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
-
-  if(auto fp = pak->read("bios.rom")) {
-    fp->read({bios.data, bios.size});
-  }
 
   bus.power();
   player.power();

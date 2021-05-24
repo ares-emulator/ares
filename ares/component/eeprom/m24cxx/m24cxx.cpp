@@ -15,10 +15,11 @@ auto M24Cxx::power(Type typeID) -> void {
   address = 0;
   input   = 0;
   output  = 0;
+  line    = 1;
 }
 
 auto M24Cxx::read() -> n1 {
-  return data.line;
+  return line;
 }
 
 auto M24Cxx::write(n1 scl, n1 sda) -> void {
@@ -26,12 +27,14 @@ auto M24Cxx::write(n1 scl, n1 sda) -> void {
   data.write(sda);
 
   if(clock.hi && data.fall) {
+    line = 1;
     mode = Mode::Control;
     counter = 0;
     return;
   }
 
   if(clock.hi && data.rise) {
+    line = 1;
     mode = Mode::Idle;
     return;
   }
@@ -50,7 +53,7 @@ auto M24Cxx::write(n1 scl, n1 sda) -> void {
     }
 
     if(mode == Mode::Read && counter < dataBits()) {
-      data.line = output & 1;
+      line = output & 1;
       output >>= 1;
       counter++;
       return;
@@ -61,16 +64,41 @@ auto M24Cxx::write(n1 scl, n1 sda) -> void {
       counter++;
       return;
     }
+
+    if(mode == Mode::ControlAcknowledge) {
+      line = 0;
+      return;
+    }
+
+    if(mode == Mode::AddressAcknowledge) {
+      line = 0;
+      return;
+    }
+
+    if(mode == Mode::ReadAcknowledge) {
+      line = 0;
+      return;
+    }
+
+    if(mode == Mode::WriteAcknowledge) {
+      line = 0;
+      return;
+    }
   }
 
   if(clock.fall) {
     if(mode == Mode::Control && counter == controlBits()) {
+      line = 1;
       mode = Mode::ControlAcknowledge;
-      if(control.bit(0,3) != 0b0101) mode = Mode::Idle;  //device type ID
+      if(control.bit(0,3) != 0b0101) {
+        mode = Mode::Idle;
+        debug(unusual, "[M24Cxx::write] deviceTypeID mismatch");
+      }
       return;
     }
 
     if(mode == Mode::Address && counter == addressBits()) {
+      line = 1;
       mode = Mode::AddressAcknowledge;
       return;
     }
@@ -101,16 +129,14 @@ auto M24Cxx::write(n1 scl, n1 sda) -> void {
     }
 
     if(mode == Mode::ReadAcknowledge) {
-      mode = Mode::Read;
+      mode = data.line ? Mode::Read : Mode::Idle;
       address++;
-      if(!data.line) mode = Mode::Idle;
       return;
     }
 
     if(mode == Mode::WriteAcknowledge) {
-      mode = Mode::Write;
+      mode = data.line ? Mode::Write : Mode::Idle;
       address++;
-      if(!data.line) mode = Mode::Idle;
       return;
     }
   }

@@ -4,21 +4,33 @@ struct MasterSystem : Emulator {
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
+
+  u32 regionID = 0;
 };
 
 MasterSystem::MasterSystem() {
   manufacturer = "Sega";
   name = "Master System";
+
+  firmware.append({"BIOS", "US"});      //NTSC-U
+  firmware.append({"BIOS", "Japan"});   //NTSC-J
+  firmware.append({"BIOS", "Europe"});  //PAL
 }
 
 auto MasterSystem::load() -> bool {
   game = mia::Medium::create("Master System");
-  if(!game->load(Emulator::load(game, configuration.game))) return false;
-
-  system = mia::System::create("Master System");
-  if(!system->load()) return false;
+  game->load(Emulator::load(game, configuration.game));
 
   auto region = Emulator::region();
+  //if statements below are ordered by lowest to highest priority
+  if(region == "PAL"   ) regionID = 2;
+  if(region == "NTSC-J") regionID = 1;
+  if(region == "NTSC-U") regionID = 0;
+
+  system = mia::System::create("Master System");
+  if(!system->load(firmware[regionID].location)) return false;
+  if(!game->pak && !system->pak->read("bios.rom")) return false;
+
   if(!ares::MasterSystem::load(root, {"[Sega] Master System (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {

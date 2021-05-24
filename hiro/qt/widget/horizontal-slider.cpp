@@ -18,7 +18,7 @@ auto pHorizontalSlider::construct() -> void {
   qtWidget = qtHorizontalSlider = new QtHorizontalSlider(*this);
   qtHorizontalSlider->setRange(0, 100);
   qtHorizontalSlider->setPageStep(101 >> 3);
-  qtHorizontalSlider->connect(qtHorizontalSlider, SIGNAL(valueChanged(s32)), SLOT(onChange()));
+  qtHorizontalSlider->connect(qtHorizontalSlider, SIGNAL(valueChanged(int)), SLOT(onChange()));
 
   pWidget::construct();
   _setState();

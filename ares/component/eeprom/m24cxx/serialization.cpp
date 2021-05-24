@@ -17,4 +17,5 @@ auto M24Cxx::serialize(serializer& s) -> void {
   s(address);
   s(input);
   s(output);
+  s(line);
 }

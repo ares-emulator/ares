@@ -62,8 +62,11 @@ auto VDP::data(n8 data) -> void {
   if(io.code <= 2) {
     vram[io.address++] = data;
   } else {
-    if(Model::MasterSystem()) cram[io.address++ & 0x1f] = data;
-    if(Model::GameGear())     cram[io.address++ & 0x3f] = data;
+    if(Model::MasterSystem() || Model::GameGearMS()) {
+      cram[io.address++ & 0x1f] = data;
+    } else if(Model::GameGear()) {
+      cram[io.address++ & 0x3f] = data;
+    }
   }
 }
 

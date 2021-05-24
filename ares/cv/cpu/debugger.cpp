@@ -24,7 +24,7 @@ auto CPU::Debugger::load(Node::Object parent) -> void {
 }
 
 auto CPU::Debugger::instruction() -> void {
-  if(tracer.instruction->enabled() && tracer.instruction->address(cpu.r.pc)) {
+  if(tracer.instruction->enabled() && tracer.instruction->address(cpu.PC)) {
     tracer.instruction->notify(cpu.disassembleInstruction(), cpu.disassembleContext());
   }
 }

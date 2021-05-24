@@ -19,7 +19,7 @@ auto pVerticalSlider::construct() -> void {
   qtVerticalSlider->setInvertedAppearance(true);
   qtVerticalSlider->setRange(0, 100);
   qtVerticalSlider->setPageStep(101 >> 3);
-  qtVerticalSlider->connect(qtVerticalSlider, SIGNAL(valueChanged(s32)), SLOT(onChange()));
+  qtVerticalSlider->connect(qtVerticalSlider, SIGNAL(valueChanged(int)), SLOT(onChange()));
 
   pWidget::construct();
   _setState();

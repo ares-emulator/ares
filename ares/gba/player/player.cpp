@@ -106,14 +106,14 @@ auto Player::read() -> maybe<n32> {
   return nothing;
 }
 
-auto Player::write(n2 addr, n8 byte) -> void {
+auto Player::write(n2 address, n8 byte) -> void {
   if(!status.enable) return;
 
-  u32 shift = addr << 3;
+  u32 shift = address << 3;
   status.recv &= ~(255 << shift);
   status.recv |= byte << shift;
 
-  if(addr == 3 && status.packet == 15) {
+  if(address == 3 && status.packet == 15) {
     status.rumble = (status.recv & 0xff) == 0x26;  //on = 0x26, off = 0x04
     system.controls.rumble(status.rumble);
     if(status.rumble) status.timeout = 500;  //stop rumble manually after 500ms

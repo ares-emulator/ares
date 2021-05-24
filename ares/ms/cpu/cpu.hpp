@@ -49,6 +49,15 @@ private:
     n1 nmiLine;
     n1 irqLine;
   } state;
+
+  struct Bus {
+    n1 ioEnable = 1;
+    n1 biosEnable = 1;
+    n1 ramEnable = 1;
+    n1 cardEnable = 1;
+    n1 cartridgeEnable = 1;
+    n1 expansionEnable = 1;
+  } bus;
 };
 
 extern CPU cpu;

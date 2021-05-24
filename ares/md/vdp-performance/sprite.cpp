@@ -12,8 +12,9 @@ auto VDP::Sprite::render() -> void {
     auto& object = oam[link];
     link = object.link;
 
-    if(y <  object.y) continue;
-    if(y >= object.y + object.height()) continue;
+    auto objectY = object.y & (interlace ? 1023 : 511);
+    if(y <  objectY) continue;
+    if(y >= objectY + object.height()) continue;
     if(object.x == 0) break;
 
     objects[objectSize++] = object;
@@ -31,7 +32,7 @@ auto VDP::Sprite::render() -> void {
 
   for(s32 index = objectSize - 1; index >= 0; index--) {
     auto& object = objects[index];
-    u32 objectY = y - object.y;
+    u32 objectY = y - (object.y & (interlace ? 1023 : 511));
     if(object.verticalFlip) objectY = (object.height() - 1) - objectY;
     u32 tileIncrement = (object.height() >> interlace) >> 3 << tileShift;
     u32 tileAddress = object.address + (objectY >> shiftY) << tileShift;

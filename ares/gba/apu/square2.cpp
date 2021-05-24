@@ -1,5 +1,5 @@
-auto APU::Square2::read(u32 addr) const -> n8 {
-  switch(addr) {
+auto APU::Square2::read(u32 address) const -> n8 {
+  switch(address) {
   case 1: return (duty << 6);
   case 2: return (envelope.frequency << 0) | (envelope.direction << 3) | (envelope.volume << 4);
   case 3: return 0;
@@ -8,8 +8,8 @@ auto APU::Square2::read(u32 addr) const -> n8 {
   return 0;
 }
 
-auto APU::Square2::write(u32 addr, n8 byte) -> void {
-  switch(addr) {
+auto APU::Square2::write(u32 address, n8 byte) -> void {
+  switch(address) {
   case 1:  //NR21
     length = byte >> 0;
     duty   = byte >> 6;

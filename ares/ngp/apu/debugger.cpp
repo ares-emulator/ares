@@ -15,7 +15,7 @@ auto APU::Debugger::load(Node::Object parent) -> void {
 }
 
 auto APU::Debugger::instruction() -> void {
-  if(tracer.instruction->enabled() && tracer.instruction->address(apu.r.pc)) {
+  if(tracer.instruction->enabled() && tracer.instruction->address(apu.PC)) {
     tracer.instruction->notify(apu.disassembleInstruction(), apu.disassembleContext());
   }
 }

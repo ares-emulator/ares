@@ -1,6 +1,6 @@
 no_optimize
 auto Z80::disassembleInstruction(maybe<n16> _pc) -> string {
-  auto pc = _pc ? *_pc : r.pc;
+  auto pc = _pc ? *_pc : PC;
   string s, output;
 
   n8 prefix = 0x00;
@@ -43,15 +43,15 @@ no_optimize
 auto Z80::disassembleContext() -> string {
   string s;
 
-  s.append( "AF:", hex(r.af.word, 4L));
-  s.append(" BC:", hex(r.bc.word, 4L));
-  s.append(" DE:", hex(r.de.word, 4L));
-  s.append(" HL:", hex(r.hl.word, 4L));
-  s.append(" IX:", hex(r.ix.word, 4L));
-  s.append(" IY:", hex(r.iy.word, 4L));
-  s.append(" SP:", hex(r.sp, 4L));
-  s.append(" IFF:", (n1)r.iff1, (n1)r.iff2);
-  s.append(" IM:", r.im);
+  s.append( "AF:", hex(af.word, 4L));
+  s.append(" BC:", hex(bc.word, 4L));
+  s.append(" DE:", hex(de.word, 4L));
+  s.append(" HL:", hex(hl.word, 4L));
+  s.append(" IX:", hex(ix.word, 4L));
+  s.append(" IY:", hex(iy.word, 4L));
+  s.append(" SP:", hex(SP, 4L));
+  s.append(" IFF:", (n1)IFF1, (n1)IFF2);
+  s.append(" IM:", IM);
 
   return s;
 }

@@ -206,7 +206,7 @@ struct CPU : ARM7TDMI, Thread, IO {
   } wait;
 
   struct Memory {
-    n1 disable;
+    n1 biosSwap;
     n3 unknown1;
     n1 ewram = 1;
     n4 ewramWait = 13;

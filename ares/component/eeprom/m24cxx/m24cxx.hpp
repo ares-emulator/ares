@@ -114,6 +114,7 @@ private:
   n16  address;
   n8   input;
   n8   output;
+  n1   line;
 };
 
 }

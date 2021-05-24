@@ -1,19 +1,16 @@
 auto CPU::read(n16 address) -> n8 {
   n8 data = 0xff;
-  if(auto result = cartridge.read(address)) {
-    data = result();
-  } else if(address >= 0xc000) {
-    data = ram.read(address);
-  }
+  if(address >= 0xc000 && bus.ramEnable) data = ram.read(address);
+  if(bus.biosEnable) data = bios.read(address, data);
+  if(bus.cartridgeEnable) data = cartridge.read(address, data);
   return mdr = data;
 }
 
 auto CPU::write(n16 address, n8 data) -> void {
   mdr = data;
-  if(cartridge.write(address, data)) {
-  } else if(address >= 0xc000) {
-    ram.write(address, data);
-  }
+  if(address >= 0xc000 && bus.ramEnable) ram.write(address, data);
+  if(bus.biosEnable) bios.write(address, data);
+  if(bus.cartridgeEnable) cartridge.write(address, data);
 }
 
 auto CPU::in(n16 address) -> n8 {
@@ -85,6 +82,20 @@ auto CPU::in(n16 address) -> n8 {
     return data;
   }
 
+  if((address & 0xc1) == 0xc0 && Model::GameGear()) {
+    system.controls.poll();
+    n8 data;
+    data.bit(0) = !system.controls.upLatch;
+    data.bit(1) = !system.controls.downLatch;
+    data.bit(2) = !system.controls.leftLatch;
+    data.bit(3) = !system.controls.rightLatch;
+    data.bit(4) = !system.controls.one->value();
+    data.bit(5) = !system.controls.two->value();
+    data.bit(6) = 1;
+    data.bit(7) = 1;
+    return data;
+  }
+
   if((address & 0xc1) == 0xc1 && Model::MasterSystem()) {
     platform->input(system.controls.reset);
     bool reset = !system.controls.reset->value();
@@ -101,20 +112,6 @@ auto CPU::in(n16 address) -> n8 {
       if(!controllerPort1.io.thInputEnable) data.bit(6) = controllerPort1.io.thOutputLevel;
       if(!controllerPort2.io.thInputEnable) data.bit(7) = controllerPort2.io.thOutputLevel;
     }
-    return data;
-  }
-
-  if((address & 0xc1) == 0xc0 && Model::GameGear()) {
-    system.controls.poll();
-    n8 data;
-    data.bit(0) = !system.controls.upLatch;
-    data.bit(1) = !system.controls.downLatch;
-    data.bit(2) = !system.controls.leftLatch;
-    data.bit(3) = !system.controls.rightLatch;
-    data.bit(4) = !system.controls.one->value();
-    data.bit(5) = !system.controls.two->value();
-    data.bit(6) = 1;
-    data.bit(7) = 1;
     return data;
   }
 
@@ -151,6 +148,16 @@ auto CPU::out(n16 address, n8 data) -> void {
 
   if((address & 0xff) == 0x06 && Model::GameGear()) {
     return psg.balance(data);
+  }
+
+  if((address & 0xff) == 0x3e) {
+    bus.ioEnable        = !data.bit(2);
+    bus.biosEnable      = !data.bit(3);
+    bus.ramEnable       = !data.bit(4);
+    bus.cardEnable      = !data.bit(5);
+    bus.cartridgeEnable = !data.bit(6);
+    bus.expansionEnable = !data.bit(7);
+    return;
   }
 
   if((address & 0xc0) == 0x40) {

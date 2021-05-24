@@ -18,6 +18,7 @@ namespace ares::MasterSystem {
     inline static auto MasterSystemII() -> bool;
     inline static auto MasterSystem() -> bool;
     inline static auto GameGear() -> bool;
+    inline static auto GameGearMS() -> bool;
   };
 
   struct Region {

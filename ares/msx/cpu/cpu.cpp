@@ -42,7 +42,7 @@ auto CPU::power() -> void {
   Z80::power();
   Thread::create(system.colorburst(), {&CPU::main, this});
 
-  r.pc = 0x0000;  //reset vector address
+  PC = 0x0000;  //reset vector address
 
   slot[0] = {3, 0, {0, 0, 0, 0}};
   slot[1] = {2, 1, {0, 0, 0, 0}};

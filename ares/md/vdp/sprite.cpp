@@ -7,7 +7,7 @@ auto VDP::Sprite::write(n16 address, n16 data) -> void {
 
   auto& object = cache[address >> 2];
   switch(address & 3) {
-  case 0: object.y      = data.bit( 0,10); break;
+  case 0: object.y      = data.bit( 0, 9); break;
   case 1: object.link   = data.bit( 0, 6);
           object.height = data.bit( 8, 9);
           object.width  = data.bit(10,11); break;
@@ -68,9 +68,10 @@ auto VDP::Sprite::mappingFetch(u32) -> void {
   mapping.priority = d2.bit(15);
   mapping.x        = d3.bit(0,8);
 
-  y = y - object.y;
+  y = y - (object.y & (interlace ? 1023 : 511));
   if(d2.bit(12)) y = (height - 1) - y;
   y &= 31;  //only the lower 5-bits are considered by the VDP in phase 2
+
   mapping.address += (y >> 3 + interlace) << 4 + interlace;
   mapping.address += (y & 7 + interlace * 8) << 1;
 }
@@ -147,9 +148,10 @@ auto VDP::Sprite::patternFetch(u32) -> void {
     visibleLink = object.link;
     if(!visibleLink) visibleStop = 1;
 
+    auto objectY = object.y & (interlace ? 1023 : 511);
     auto height = 1 + object.height << 3 + interlace;
-    if(y <  object.y) continue;
-    if(y >= object.y + height) continue;
+    if(y <  objectY) continue;
+    if(y >= objectY + height) continue;
 
     visible[visibleCount++] = id;
     if(visibleCount >= objectLimit()) visibleStop = 1;

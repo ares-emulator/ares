@@ -1,8 +1,8 @@
-auto CPU::readIO(n32 addr) -> n8 {
-  auto dma = [&]() -> DMA& { return this->dma[addr / 12 & 3]; };
-  auto timer = [&]() -> Timer& { return this->timer[addr.bit(2,3)]; };
+auto CPU::readIO(n32 address) -> n8 {
+  auto dma = [&]() -> DMA& { return this->dma[address / 12 & 3]; };
+  auto timer = [&]() -> Timer& { return this->timer[address.bit(2,3)]; };
 
-  switch(addr) {
+  switch(address) {
 
   //DMA0CNT_L, DMA1CNT_L, DMA2CNT_L, DMA3CNT_L
   case 0x0400'00b8: case 0x0400'00c4: case 0x0400'00d0: case 0x0400'00dc: return 0x00;
@@ -38,12 +38,12 @@ auto CPU::readIO(n32 addr) -> n8 {
 
   //SIOMULTI0 (SIODATA32_L), SIOMULTI1 (SIODATA32_H), SIOMULTI2, SIOMULTI3
   case 0x0400'0120: case 0x0400'0122: case 0x0400'0124: case 0x0400'0126: {
-    if(auto data = player.read()) return data().byte(addr.bit(0,1));
-    return serial.data[addr.bit(1,2)].byte(0);
+    if(auto data = player.read()) return data().byte(address.bit(0,1));
+    return serial.data[address.bit(1,2)].byte(0);
   }
   case 0x0400'0121: case 0x0400'0123: case 0x0400'0125: case 0x0400'0127: {
-    if(auto data = player.read()) return data().byte(addr.bit(0,1));
-    return serial.data[addr.bit(1,2)].byte(1);
+    if(auto data = player.read()) return data().byte(address.bit(0,1));
+    return serial.data[address.bit(1,2)].byte(1);
   }
 
   //SIOCNT
@@ -212,7 +212,7 @@ auto CPU::readIO(n32 addr) -> n8 {
 
   //MEMCNT_L
   case 0x0400'0800: return (
-    memory.disable  << 0
+    memory.biosSwap << 0
   | memory.unknown1 << 1
   | memory.ewram    << 5
   );
@@ -227,15 +227,15 @@ auto CPU::readIO(n32 addr) -> n8 {
 
   }
 
-  if(cpu.context.dmaActive) return cpu.dmabus.data.byte(addr & 3);
-  return cpu.pipeline.fetch.instruction.byte(addr & 1);
+  if(cpu.context.dmaActive) return cpu.dmabus.data.byte(address & 3);
+  return cpu.pipeline.fetch.instruction.byte(address & 1);
 }
 
-auto CPU::writeIO(n32 addr, n8 data) -> void {
-  auto dma = [&]() -> DMA& { return this->dma[addr / 12 & 3]; };
-  auto timer = [&]() -> Timer& { return this->timer[addr.bit(2,3)]; };
+auto CPU::writeIO(n32 address, n8 data) -> void {
+  auto dma = [&]() -> DMA& { return this->dma[address / 12 & 3]; };
+  auto timer = [&]() -> Timer& { return this->timer[address.bit(2,3)]; };
 
-  switch(addr) {
+  switch(address) {
 
   //DMA0SAD, DMA1SAD, DMA2SAD, DMA3SAD
   case 0x0400'00b0: case 0x0400'00bc: case 0x0400'00c8: case 0x0400'00d4: dma().source.data.byte(0) = data; return;
@@ -260,7 +260,7 @@ auto CPU::writeIO(n32 addr, n8 data) -> void {
     return;
   case 0x0400'00bb: case 0x0400'00c7: case 0x0400'00d3: case 0x0400'00df: {
     bool enable = dma().enable;
-    if(addr != 0x0400'00df) data.bit(3) = 0;  //gamepad DRQ valid for DMA3 only
+    if(address != 0x0400'00df) data.bit(3) = 0;  //gamepad DRQ valid for DMA3 only
 
     dma().sourceMode.bit(1) = data.bit(0);
     dma().repeat            = data.bit(1);
@@ -307,12 +307,12 @@ auto CPU::writeIO(n32 addr, n8 data) -> void {
 
   //SIOMULTI0 (SIODATA32_L), SIOMULTI1 (SIODATA32_H), SIOMULTI2, SIOMULTI3
   case 0x0400'0120: case 0x0400'0122: case 0x0400'0124: case 0x0400'0126:
-    player.write(addr.bit(0,1), data);
-    serial.data[addr.bit(1,2)].byte(0) = data;
+    player.write(address.bit(0,1), data);
+    serial.data[address.bit(1,2)].byte(0) = data;
     return;
   case 0x0400'0121: case 0x0400'0123: case 0x0400'0125: case 0x0400'0127:
-    player.write(addr.bit(0,1), data);
-    serial.data[addr.bit(1,2)].byte(1) = data;
+    player.write(address.bit(0,1), data);
+    serial.data[address.bit(1,2)].byte(1) = data;
     return;
 
   //SIOCNT
@@ -440,7 +440,7 @@ auto CPU::writeIO(n32 addr, n8 data) -> void {
   //MEMCNT_L
   //MEMCNT_H
   case 0x0400'0800:
-    memory.disable  = data.bit(0);
+    memory.biosSwap = data.bit(0);
     memory.unknown1 = data.bit(1,3);
     memory.ewram    = data.bit(5);
     return;

@@ -23,10 +23,13 @@ auto System::Controls::poll() -> void {
     platform->input(pause);
     platform->input(reset);
 
-    if(!paused && pause->value()) cpu.setNMI(1);
+    if(!paused && pause->value()) {
+      cpu.setNMI(1);
+    }
   }
 
   if(MasterSystem::Model::GameGear()) {
+    auto paused = start->value();
     platform->input(up);
     platform->input(down);
     platform->input(left);
@@ -34,6 +37,10 @@ auto System::Controls::poll() -> void {
     platform->input(one);
     platform->input(two);
     platform->input(start);
+
+    if(!paused && start->value()) {
+      if(MasterSystem::Model::GameGearMS()) cpu.setNMI(1);
+    }
 
     if(!(up->value() & down->value())) {
       yHold = 0, upLatch = up->value(), downLatch = down->value();

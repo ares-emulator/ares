@@ -22,8 +22,8 @@ auto APU::Square1::clockSweep() -> void {
   }
 }
 
-auto APU::Square1::read(u32 addr) const -> n8 {
-  switch(addr) {
+auto APU::Square1::read(u32 address) const -> n8 {
+  switch(address) {
   case 0: return (sweep.shift << 0) | (sweep.direction << 3) | (sweep.frequency << 4);
   case 1: return (duty << 6);
   case 2: return (envelope.frequency << 0) | (envelope.direction << 3) | (envelope.volume << 4);
@@ -33,8 +33,8 @@ auto APU::Square1::read(u32 addr) const -> n8 {
   return 0;
 }
 
-auto APU::Square1::write(u32 addr, n8 byte) -> void {
-  switch(addr) {
+auto APU::Square1::write(u32 address, n8 byte) -> void {
+  switch(address) {
   case 0:  //NR10
     if(sweep.negate && sweep.direction && !(byte & 0x08)) enable = false;
     sweep.shift     = byte >> 0;

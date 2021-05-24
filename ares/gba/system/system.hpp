@@ -1,4 +1,15 @@
-#include "bios.hpp"
+struct BIOS {
+  Memory::Readable<n8> rom;
+
+  //bios.cpp
+  auto load(Node::Object) -> void;
+  auto unload() -> void;
+  auto read(u32 mode, n25 address) -> n32;
+  auto write(u32 mode, n25 address, n32 word) -> void;
+  auto serialize(serializer&) -> void;
+
+  n32 mdr = 0;
+};
 
 struct System {
   Node::System node;
@@ -59,6 +70,7 @@ private:
   auto serialize(serializer&, bool synchronize) -> void;
 };
 
+extern BIOS bios;
 extern System system;
 
 auto Model::GameBoyAdvance() -> bool { return system.model() == System::Model::GameBoyAdvance; }

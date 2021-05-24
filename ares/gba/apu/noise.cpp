@@ -30,8 +30,8 @@ auto APU::Noise::clockEnvelope() -> void {
   }
 }
 
-auto APU::Noise::read(u32 addr) const -> n8 {
-  switch(addr) {
+auto APU::Noise::read(u32 address) const -> n8 {
+  switch(address) {
   case 1: return 0;
   case 2: return (envelope.frequency << 0) | (envelope.direction << 3) | (envelope.volume << 4);
   case 3: return (divisor << 0) | (narrowlfsr << 3) | (frequency << 4);
@@ -40,8 +40,8 @@ auto APU::Noise::read(u32 addr) const -> n8 {
   return 0;
 }
 
-auto APU::Noise::write(u32 addr, n8 byte) -> void {
-  switch(addr) {
+auto APU::Noise::write(u32 address, n8 byte) -> void {
+  switch(address) {
   case 1:  //NR41
     length = byte >> 0;
     break;

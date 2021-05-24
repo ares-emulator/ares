@@ -1,8 +1,8 @@
-auto CPU::prefetchSync(n32 addr) -> void {
-  if(addr == prefetch.addr) return;
+auto CPU::prefetchSync(n32 address) -> void {
+  if(address == prefetch.addr) return;
 
-  prefetch.addr = addr;
-  prefetch.load = addr;
+  prefetch.addr = address;
+  prefetch.load = address;
   prefetch.wait = _wait(Half | Nonsequential, prefetch.load);
 }
 

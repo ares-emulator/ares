@@ -1,63 +1,51 @@
-#define AF r.af.word
-#define BC r.bc.word
-#define DE r.de.word
-#define HL (prefix == Prefix::ix ? r.ix.word : prefix == Prefix::iy ? r.iy.word : r.hl.word)
+#define AF af.word
+#define BC bc.word
+#define DE de.word
+#define HL (prefix == Prefix::ix ? ix.word : prefix == Prefix::iy ? iy.word : hl.word)
 
-#define A r.af.byte.hi
-#define F r.af.byte.lo
-#define B r.bc.byte.hi
-#define C r.bc.byte.lo
-#define D r.de.byte.hi
-#define E r.de.byte.lo
-#define H (prefix == Prefix::ix ? r.ix.byte.hi : prefix == Prefix::iy ? r.iy.byte.hi : r.hl.byte.hi)
-#define L (prefix == Prefix::ix ? r.ix.byte.lo : prefix == Prefix::iy ? r.iy.byte.lo : r.hl.byte.lo)
+#define A af.byte.hi
+#define F af.byte.lo
+#define B bc.byte.hi
+#define C bc.byte.lo
+#define D de.byte.hi
+#define E de.byte.lo
+#define H (prefix == Prefix::ix ? ix.byte.hi : prefix == Prefix::iy ? iy.byte.hi : hl.byte.hi)
+#define L (prefix == Prefix::ix ? ix.byte.lo : prefix == Prefix::iy ? iy.byte.lo : hl.byte.lo)
 
-#define _HL r.hl.word  //true HL (ignores IX/IY prefixes)
-#define _H r.hl.byte.hi
-#define _L r.hl.byte.lo
+#define _HL hl.word  //true HL (ignores IX/IY prefixes)
+#define _H  hl.byte.hi
+#define _L  hl.byte.lo
 
-#define AF_ r.af_.word  //shadow registers
-#define BC_ r.bc_.word
-#define DE_ r.de_.word
-#define HL_ r.hl_.word
+#define AF_ af_.word  //shadow registers
+#define BC_ bc_.word
+#define DE_ de_.word
+#define HL_ hl_.word
 
-#define A_ r.af_.byte.hi
-#define F_ r.af_.byte.lo
-#define B_ r.bc_.byte.hi
-#define C_ r.bc_.byte.lo
-#define D_ r.de_.byte.hi
-#define E_ r.de_.byte.lo
-#define H_ r.hl_.byte.hi
-#define L_ r.hl_.byte.lo
+#define A_ af_.byte.hi
+#define F_ af_.byte.lo
+#define B_ bc_.byte.hi
+#define C_ bc_.byte.lo
+#define D_ de_.byte.hi
+#define E_ de_.byte.lo
+#define H_ hl_.byte.hi
+#define L_ hl_.byte.lo
 
-#define SP r.sp
-#define PC r.pc
+#define IX  ix.word
+#define IY  iy.word
+#define IR  ir.word
+#define WZ  wz.word
+#define WZH wz.byte.hi
+#define WZL wz.byte.lo
 
-#define IX r.ix.word
-#define IY r.iy.word
-#define IR r.ir.word
-#define WZ r.wz.word
-#define WZH r.wz.byte.hi
-#define WZL r.wz.byte.lo
+#define I ir.byte.hi
+#define R ir.byte.lo
 
-#define I r.ir.byte.hi
-#define R r.ir.byte.lo
-
-#define CF r.af.byte.lo.bit(0)
-#define NF r.af.byte.lo.bit(1)
-#define PF r.af.byte.lo.bit(2)
-#define VF r.af.byte.lo.bit(2)
-#define XF r.af.byte.lo.bit(3)
-#define HF r.af.byte.lo.bit(4)
-#define YF r.af.byte.lo.bit(5)
-#define ZF r.af.byte.lo.bit(6)
-#define SF r.af.byte.lo.bit(7)
-
-#define EI r.ei
-#define P r.p
-#define Q r.q
-#define QL r.ql
-#define HALT r.halt
-#define IFF1 r.iff1
-#define IFF2 r.iff2
-#define IM r.im
+#define CF af.byte.lo.bit(0)
+#define NF af.byte.lo.bit(1)
+#define PF af.byte.lo.bit(2)
+#define VF af.byte.lo.bit(2)
+#define XF af.byte.lo.bit(3)
+#define HF af.byte.lo.bit(4)
+#define YF af.byte.lo.bit(5)
+#define ZF af.byte.lo.bit(6)
+#define SF af.byte.lo.bit(7)

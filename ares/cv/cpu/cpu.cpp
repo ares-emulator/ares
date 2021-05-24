@@ -58,7 +58,7 @@ auto CPU::power() -> void {
   Z80::power();
   Thread::create(system.colorburst(), {&CPU::main, this});
 
-  r.pc = 0x0000;  //reset vector address
+  PC = 0x0000;  //reset vector address
   state = {};
   io = {};
 }

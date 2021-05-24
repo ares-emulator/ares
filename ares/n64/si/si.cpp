@@ -196,8 +196,7 @@ auto SI::scan() -> void {
             u32 address = (input[1] << 8 | input[2] << 0) & ~31;
             if(addressCRC(address) == (n5)input[2]) {
               for(u32 index : range(recv - 1)) {
-                if(address >> 15 == 0) output[index] = ram.read<Byte>(address++);
-                if(address >> 15 == 1) output[index] = 0x00;
+                output[index] = ram.read<Byte>(address++);
               }
               output[recv - 1] = dataCRC({&output[0], recv - 1});
               valid = 1;
@@ -228,7 +227,7 @@ auto SI::scan() -> void {
             u32 address = (input[1] << 8 | input[2] << 0) & ~31;
             if(addressCRC(address) == (n5)input[2]) {
               for(u32 index : range(send - 3)) {
-                if(address >> 15 == 0) ram.write<Byte>(address++, input[3 + index]);
+                ram.write<Byte>(address++, input[3 + index]);
               }
               output[0] = dataCRC({&input[3], send - 3});
               valid = 1;

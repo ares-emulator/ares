@@ -15,9 +15,20 @@ auto Z80::power(MOSFET mosfet) -> void {
   this->mosfet = mosfet;
 
   prefix = Prefix::hl;
-  r = {};
-  AF = 0xffff;
+  af.word = 0xffff; af_.word = 0x0000;
+  bc.word = 0x0000; bc_.word = 0x0000;
+  de.word = 0x0000; de_.word = 0x0000;
+  hl.word = 0x0000; hl_.word = 0x0000;
+  ix.word = 0x0000;
+  iy.word = 0x0000;
+  ir.word = 0x0000;
+  wz.word = 0x0000;
   SP = 0xffff;
+  PC = 0x0000;
+  EI = 0;
+  P = 0;
+  Q = 0;
+  HALT = 0;
   IFF1 = 0;
   IFF2 = 0;
   IM = 1;

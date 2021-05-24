@@ -17,8 +17,8 @@ auto APU::Wave::clockLength() -> void {
   }
 }
 
-auto APU::Wave::read(u32 addr) const -> n8 {
-  switch(addr) {
+auto APU::Wave::read(u32 address) const -> n8 {
+  switch(address) {
   case 0: return (mode << 5) | (bank << 6) | (dacenable << 7);
   case 1: return 0;
   case 2: return (volume << 5);
@@ -28,8 +28,8 @@ auto APU::Wave::read(u32 addr) const -> n8 {
   return 0;
 }
 
-auto APU::Wave::write(u32 addr, n8 byte) -> void {
-  switch(addr) {
+auto APU::Wave::write(u32 address, n8 byte) -> void {
+  switch(address) {
   case 0:  //NR30
     mode      = byte >> 5;
     bank      = byte >> 6;
@@ -65,16 +65,16 @@ auto APU::Wave::write(u32 addr, n8 byte) -> void {
   }
 }
 
-auto APU::Wave::readRAM(u32 addr) const -> n8 {
+auto APU::Wave::readRAM(u32 address) const -> n8 {
   n8 byte = 0;
-  byte |= pattern[!bank << 5 | addr << 1 | 0] << 4;
-  byte |= pattern[!bank << 5 | addr << 1 | 1] << 0;
+  byte |= pattern[!bank << 5 | address << 1 | 0] << 4;
+  byte |= pattern[!bank << 5 | address << 1 | 1] << 0;
   return byte;
 }
 
-auto APU::Wave::writeRAM(u32 addr, n8 byte) -> void {
-  pattern[!bank << 5 | addr << 1 | 0] = byte >> 4;
-  pattern[!bank << 5 | addr << 1 | 1] = byte >> 0;
+auto APU::Wave::writeRAM(u32 address, n8 byte) -> void {
+  pattern[!bank << 5 | address << 1 | 0] = byte >> 4;
+  pattern[!bank << 5 | address << 1 | 1] = byte >> 0;
 }
 
 auto APU::Wave::power() -> void {
