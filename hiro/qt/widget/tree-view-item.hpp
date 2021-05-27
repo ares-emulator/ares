@@ -12,10 +12,16 @@ struct pTreeViewItem : pObject {
   auto setChecked(bool checked) -> void;
   auto setExpanded(bool expanded) -> void;
   auto setFocused() -> void override;
+  auto setFont(const string& font) -> void;
   auto setForegroundColor(Color color) -> void;
   auto setIcon(const image& icon) -> void;
   auto setSelected() -> void;
   auto setText(const string& text) -> void;
+
+  auto _parentItem() -> pTreeViewItem*;
+  auto _parentWidget() -> pTreeView*;
+
+  QStandardItem* qtStandardItem = nullptr;
 };
 
 }

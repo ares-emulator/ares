@@ -212,24 +212,24 @@ auto Mega32X::analyzeStorage(vector<u8>& rom, string hash) -> void {
     if(ram.mode == "word" ) ram.size = (ramTo - ramFrom + 1);
   }
 
-  //24C02
-  //=====
+  //M24C02
+  //======
 
   //NFL Quarterback Club (World)
   if(hash == "092ad8896ea7784d2feb7f17b1a348562588a361c50de6ade722a5c5cce698d5") {
-    eeprom.mode = "24C02";
+    eeprom.mode = "M24C02";
     eeprom.size = 256;
     eeprom.rsda = 0;
     eeprom.wsda = 0;
     eeprom.wscl = 8;
   }
 
-  //24C04
-  //=====
+  //M24C04
+  //======
 
   //NBA Jam: Tournament Edition (World)
   if(hash == "7f7e1059671a99405e3782cd9b4e5d4025ee4bb122a89357b95b0fcac512f74f") {
-    eeprom.mode = "24C04";
+    eeprom.mode = "M24C04";
     eeprom.size = 512;
     eeprom.rsda = 0;
     eeprom.wsda = 0;

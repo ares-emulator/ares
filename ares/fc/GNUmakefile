@@ -1,7 +1,7 @@
 ares.components += mos6502
 ares.components += ym2149
 ares.components += ym2413
-ares.components += x24c01
+ares.components += m24cx
 
 ares.objects += ares-fc-system
 ares.objects += ares-fc-controller

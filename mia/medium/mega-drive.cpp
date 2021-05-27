@@ -442,15 +442,6 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     eeprom.wscl = 6;
   }
 
-  //Rockman: Mega World (Japan) (1.0)
-  if(hash == "d626a322b72bd0291207315649067a1579206cf6ca263e64636914fdb8f78fed") {
-    eeprom.mode = "X24C01";
-    eeprom.size = 128;
-    eeprom.rsda = 0;
-    eeprom.wsda = 0;
-    eeprom.wscl = 1;
-  }
-
   //Rockman: Mega World (Japan) (1.1)
   if(hash == "390dcd13bbde5e5aab352c456c3ab7d40df60edaae65687cda4598cb1387a3d6") {
     eeprom.mode = "X24C01";
@@ -508,36 +499,45 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     eeprom.wscl = 1;
   }
 
-  //24C02
-  //=====
+  //M24C02
+  //======
 
   //NFL Quarterback Club (World)
   if(hash == "a24174cdbe188efabda887f4c7ad492d0cb36b74265a90b2af8c2a5b480f4e7f") {
-    eeprom.mode = "24C02";
+    eeprom.mode = "M24C02";
     eeprom.size = 256;
     eeprom.rsda = 0;
     eeprom.wsda = 0;
     eeprom.wscl = 8;
   }
 
-  //24C04
-  //=====
+  //M24C04
+  //======
 
-  //NBA Jam: Tournament Edition (World)
-  if(hash == "5b735b443102f771bc7db49dcf34de640c10d212f5cb4af1251d956751f21072") {
-    eeprom.mode = "24C04";
+  //Blockbuster World Video Game Championship II (USA)
+  if(hash == "8bdd2fa68e70f727f6c86f8266ec703457e09c2940cbd8f82c3760e2177b88fe") {
+    eeprom.mode = "M24C04";
     eeprom.size = 512;
     eeprom.rsda = 0;
     eeprom.wsda = 0;
     eeprom.wscl = 8;
   }
 
-  //24C08
-  //=====
+  //NBA Jam: Tournament Edition (World)
+  if(hash == "5b735b443102f771bc7db49dcf34de640c10d212f5cb4af1251d956751f21072") {
+    eeprom.mode = "M24C04";
+    eeprom.size = 512;
+    eeprom.rsda = 0;
+    eeprom.wsda = 0;
+    eeprom.wscl = 8;
+  }
+
+  //M24C08
+  //======
 
   //Brian Lara Cricket (Europe) (1.0)
   if(hash == "d52223c45d0c29a00003a9782227b775b66640dbfc92bdb9346565c4f97b8cad") {
-    eeprom.mode = "24C08";
+    eeprom.mode = "M24C08";
     eeprom.size = 1024;
     eeprom.rsda = 7;
     eeprom.wsda = 0;
@@ -546,7 +546,7 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
 
   //Brian Lara Cricket (Europe) (1.1)
   if(hash == "1b28d7f1a8eb4c43afa06de8ea98290368b6ec00ec0c1c16de27ce33d892a051") {
-    eeprom.mode = "24C08";
+    eeprom.mode = "M24C08";
     eeprom.size = 1024;
     eeprom.rsda = 7;
     eeprom.wsda = 0;
@@ -555,19 +555,19 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
 
   //Micro Machines: Military (Europe)
   if(hash == "43e68f99620bb3dd0ff3b28d232ae43c5b6489716c4cde09725ab4b71704937e") {
-    eeprom.mode = "24C08";
+    eeprom.mode = "M24C08";
     eeprom.size = 1024;
     eeprom.rsda = 7;
     eeprom.wsda = 0;
     eeprom.wscl = 1;
   }
 
-  //24C16
-  //=====
+  //M24C16
+  //======
 
   //Micro Machines: Turbo Tournament '96 (Europe) (1.0)
   if(hash == "ec3b97adf166b2e4e9ef402ac79ce9d458a932996b7fd259cd55db81adb496a6") {
-    eeprom.mode = "24C16";
+    eeprom.mode = "M24C16";
     eeprom.size = 2048;
     eeprom.rsda = 7;
     eeprom.wsda = 0;
@@ -576,7 +576,7 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
 
   //Micro Machines: Turbo Tournament '96 (Europe) (1.1)
   if(hash == "77ff023aa9f88aeb1605d3060b1331b816752b12b64ff2fe95d4a9f3c5dff946") {
-    eeprom.mode = "24C16";
+    eeprom.mode = "M24C16";
     eeprom.size = 2048;
     eeprom.rsda = 7;
     eeprom.wsda = 0;
@@ -585,7 +585,7 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
 
   //Micro Machines 2: Turbo Tournament (Europe) (1.0)
   if(hash == "57fa3662f589929d180648090104f8c802894602a6f660755121cb44918f382c") {
-    eeprom.mode = "24C16";
+    eeprom.mode = "M24C16";
     eeprom.size = 2048;
     eeprom.rsda = 7;
     eeprom.wsda = 0;
@@ -594,7 +594,7 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
 
   //Micro Machines 2: Turbo Tournament (Europe) (1.1)
   if(hash == "9209241472f0e78f23405bb265c7c108c25413d9a01ec1455f4e2d17d80c188c") {
-    eeprom.mode = "24C16";
+    eeprom.mode = "M24C16";
     eeprom.size = 2048;
     eeprom.rsda = 7;
     eeprom.wsda = 0;
@@ -603,19 +603,19 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
 
   //NFL Quarterback Club '96 (USA, Europe)
   if(hash == "162edaaaf77a3ccdb693c46cf63fdd273eab31ac6b64bc2f450b0c09db9ceef7") {
-    eeprom.mode = "24C16";
+    eeprom.mode = "M24C16";
     eeprom.size = 2048;
     eeprom.rsda = 0;
     eeprom.wsda = 0;
     eeprom.wscl = 8;
   }
 
-  //24C65
-  //=====
+  //M24C65
+  //======
 
   //Brian Lara Cricket '96 (Europe) (1.0)
   if(hash == "2de062b59934a4dc7a4bbc0a012b86a7674597be7ef04f8cb78d088cee8a9eee") {
-    eeprom.mode = "24C65";
+    eeprom.mode = "M24C65";
     eeprom.size = 8192;
     eeprom.rsda = 7;
     eeprom.wsda = 0;
@@ -624,7 +624,7 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
 
   //Brian Lara Cricket '96 (Europe) (1.1)
   if(hash == "1d36e581171c29cae09457954589916d9e0cfeee193a049f358be428fc7c6421") {
-    eeprom.mode = "24C65";
+    eeprom.mode = "M24C65";
     eeprom.size = 8192;
     eeprom.rsda = 7;
     eeprom.wsda = 0;
@@ -633,7 +633,7 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
 
   //College Slam (USA)
   if(hash == "52cc1c3e7abed5bb3887fe5a5af96a763a8072faad19a1042a61a2567026d705") {
-    eeprom.mode = "24C65";
+    eeprom.mode = "M24C65";
     eeprom.size = 8192;
     eeprom.rsda = 0;
     eeprom.wsda = 0;
@@ -642,31 +642,31 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
 
   //Frank Thomas' Big Hurt Baseball (USA, Europe)
   if(hash == "8aa5b0aa8f550a42aa0dfe5c200dcf4bc344e9b114a0c056acced3374441ece0") {
-    eeprom.mode = "24C65";
+    eeprom.mode = "M24C65";
     eeprom.size = 8192;
     eeprom.rsda = 0;
     eeprom.wsda = 0;
     eeprom.wscl = 8;
   }
 
-  //28C16
-  //=====
+  //M28C16
+  //======
 
   //Barkley Shut Up and Jam 2 (USA)
   if(hash == "637b400fe79830368feb52c3d21fd5badeddfe6cea08b7e07fa8f6d34822e5b8") {
-    eeprom.mode = "28C16";
+    eeprom.mode = "M28C16";
     eeprom.size = 2_KiB;
   }
 
   //Barkley Shut Up and Jam 2 (USA) (Beta)
   if(hash == "3b94a16d93f8d6656a0d4f5e3370dffe510e3d985e20c26b71873beb5403dfd0") {
-    eeprom.mode = "28C16";
+    eeprom.mode = "M28C16";
     eeprom.size = 2_KiB;
   }
 
   //Unnecessary Roughness '95
   if(hash == "7d99fe9dd35dc5c9a124cefe60204f3c0cc74e81269c57e635e1029dd68274f7") {
-    eeprom.mode = "28C16";
+    eeprom.mode = "M28C16";
     eeprom.size = 2_KiB;
   }
 }

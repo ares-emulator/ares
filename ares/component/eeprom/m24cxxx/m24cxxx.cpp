@@ -1,11 +1,11 @@
 #include <ares/ares.hpp>
-#include "m24cxx.hpp"
+#include "m24cxxx.hpp"
 
 namespace ares {
 
 #include "serialization.cpp"
 
-auto M24Cxx::power(Type typeID, n3 enableID) -> void {
+auto M24Cxxx::power(Type typeID, n3 enableID) -> void {
   type     = typeID;
   mode     = Mode::Standby;
   clock    = {};
@@ -18,14 +18,15 @@ auto M24Cxx::power(Type typeID, n3 enableID) -> void {
   output   = 0;
   response = Acknowledge;
   writable = 1;
+  locked   = 0;
 }
 
-auto M24Cxx::read() -> n1 {
+auto M24Cxxx::read() -> n1 {
   if(mode == Mode::Standby) return data.line;
   return response;
 }
 
-auto M24Cxx::write(maybe<n1> scl, maybe<n1> sda) -> void {
+auto M24Cxxx::write(maybe<n1> scl, maybe<n1> sda) -> void {
   auto phase = mode;
   clock.write(scl(clock.line));
   data.write(sda(data.line));
@@ -50,12 +51,21 @@ auto M24Cxx::write(maybe<n1> scl, maybe<n1> sda) -> void {
       mode = Mode::Read;
       response = load();
     } else {
-      mode = Mode::Address;
+      mode = Mode::AddressUpper;
       response = Acknowledge;
     }
     break;
 
-  case Mode::Address:
+  case Mode::AddressUpper:
+    if(counter <= 8) {
+      address = address << 1 | data.line;
+    } else {
+      mode = Mode::AddressLower;
+      response = Acknowledge;
+    }
+    break;
+
+  case Mode::AddressLower:
     if(counter <= 8) {
       address = address << 1 | data.line;
     } else {
@@ -86,29 +96,50 @@ auto M24Cxx::write(maybe<n1> scl, maybe<n1> sda) -> void {
   }
 }
 
-auto M24Cxx::select() -> bool {
-  if(device >> 4 != 0b1010) return !Acknowledge;
-  n3 mask = size() - 1 >> 8 ^ 7;
-//if((device >> 1 & mask) != (enable & mask)) return !Acknowledge;
+auto M24Cxxx::select() -> bool {
+  if(device >> 4 != 0b1010 && device >> 4 != 0b1011) return !Acknowledge;
+//if((device >> 1 & 0b111) != enable) return !Acknowledge;
   return Acknowledge;
 }
 
-auto M24Cxx::load() -> bool {
-  output = memory[(device >> 1 << 8 | address) & size() - 1];
-  return Acknowledge;
+auto M24Cxxx::load() -> bool {
+  switch(device >> 4) {
+  case 0b1010:
+    output = memory[address & size() - 1];
+    return Acknowledge;
+  case 0b1011:
+    output = idpage[address & sizeof(idpage) - 1];
+    return Acknowledge;
+  }
+  return !Acknowledge;
 }
 
-auto M24Cxx::store() -> bool {
-  if(!writable) return !Acknowledge;
-  memory[(device >> 1 << 8 | address) & size() - 1] = input;
-  return Acknowledge;
+auto M24Cxxx::store() -> bool {
+  switch(device >> 4) {
+  case 0b1010:
+    if(!writable) return !Acknowledge;
+    memory[address & size() - 1] = input;
+    return Acknowledge;
+  case 0b1011:
+    if(!writable) return !Acknowledge;
+    if(address.bit(10)) {
+      locked |= input.bit(1);
+      return Acknowledge;
+    } else if(!locked) {
+      idpage[address & sizeof(idpage) - 1] = input;
+      return Acknowledge;
+    } else {
+      return !Acknowledge;
+    }
+  }
+  return !Acknowledge;
 }
 
-auto M24Cxx::erase(n8 fill) -> void {
+auto M24Cxxx::erase(n8 fill) -> void {
   for(auto& byte : memory) byte = fill;
 }
 
-auto M24Cxx::Line::write(n1 data) -> void {
+auto M24Cxxx::Line::write(n1 data) -> void {
   lo   = !line && !data;
   hi   =  line &&  data;
   fall =  line && !data;

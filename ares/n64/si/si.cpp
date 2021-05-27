@@ -124,6 +124,7 @@ auto SI::scan() -> void {
     if(send == 0xff) continue;  //alignment padding
     n8 recvOffset = offset;
     n8 recv = pi.ram.read<Byte>(offset++);
+    if(recv == 0xfe) break;     //end of packets
 
     //clear flags from lengths
     send &= 0x3f;

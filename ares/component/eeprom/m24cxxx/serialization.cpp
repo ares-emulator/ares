@@ -1,4 +1,4 @@
-auto M24Cxx::serialize(serializer& s) -> void {
+auto M24Cxxx::serialize(serializer& s) -> void {
   s((u32&)type);
   s((u32&)mode);
   s(clock.lo);
@@ -19,5 +19,7 @@ auto M24Cxx::serialize(serializer& s) -> void {
   s(output);
   s(response);
   s(writable);
+  s(locked);
   s(array_span<u8>{memory, size()});
+  s(idpage);
 }

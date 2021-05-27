@@ -6,7 +6,7 @@
 #include <component/processor/mos6502/mos6502.hpp>
 #include <component/audio/ym2149/ym2149.hpp>
 #include <component/audio/ym2413/ym2413.hpp>
-#include <component/eeprom/x24c01/x24c01.hpp>
+#include <component/eeprom/m24cx/m24cx.hpp>
 
 namespace ares::Famicom {
   #include <ares/inline.hpp>

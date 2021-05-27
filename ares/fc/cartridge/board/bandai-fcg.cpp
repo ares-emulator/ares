@@ -7,7 +7,7 @@ struct BandaiFCG : Interface {
   Memory::Readable<n8> programROM;
   Memory::Readable<n8> characterROM;
   Memory::Writable<n8> characterRAM;
-  X24C01 eeprom;
+  M24Cx eeprom;
 
   auto load() -> void override {
     Interface::load(programROM, "program.rom");
@@ -15,14 +15,14 @@ struct BandaiFCG : Interface {
     Interface::load(characterRAM, "character.ram");
     if(auto fp = pak->read("save.eeprom")) {
       eeprom.erase();
-      fp->read({eeprom.bytes, min(128, fp->size())});
+      fp->read({eeprom.memory, 128});
     }
   }
 
   auto save() -> void override {
     Interface::save(characterRAM, "save.ram");
     if(auto fp = pak->write("save.eeprom")) {
-      fp->write({eeprom.bytes, 128});
+      fp->write({eeprom.memory, 128});
     }
   }
 

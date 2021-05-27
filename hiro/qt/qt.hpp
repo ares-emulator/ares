@@ -277,6 +277,15 @@ public slots:
 };
 #endif
 
+#if defined(Hiro_TreeView)
+struct QtTreeView : public QTreeView {
+  Q_OBJECT
+public:
+  QtTreeView(pTreeView& p) : p(p) {}
+  pTreeView& p;
+};
+#endif
+
 #if defined(Hiro_VerticalScrollBar)
 struct QtVerticalScrollBar : public QScrollBar {
   Q_OBJECT
