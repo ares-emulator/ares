@@ -313,6 +313,27 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     ram.size = 32768;
   }
 
+  //M28C16
+  //======
+
+  //Barkley Shut Up and Jam 2 (USA)
+  if(hash == "637b400fe79830368feb52c3d21fd5badeddfe6cea08b7e07fa8f6d34822e5b8") {
+    ram.mode = "lower";
+    ram.size = 2_KiB;
+  }
+
+  //Barkley Shut Up and Jam 2 (USA) (Beta)
+  if(hash == "3b94a16d93f8d6656a0d4f5e3370dffe510e3d985e20c26b71873beb5403dfd0") {
+    ram.mode = "lower";
+    ram.size = 2_KiB;
+  }
+
+  //Unnecessary Roughness '95
+  if(hash == "7d99fe9dd35dc5c9a124cefe60204f3c0cc74e81269c57e635e1029dd68274f7") {
+    ram.mode = "lower";
+    ram.size = 2_KiB;
+  }
+
   //X24C01
   //======
 
@@ -647,27 +668,6 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     eeprom.rsda = 0;
     eeprom.wsda = 0;
     eeprom.wscl = 8;
-  }
-
-  //M28C16
-  //======
-
-  //Barkley Shut Up and Jam 2 (USA)
-  if(hash == "637b400fe79830368feb52c3d21fd5badeddfe6cea08b7e07fa8f6d34822e5b8") {
-    eeprom.mode = "M28C16";
-    eeprom.size = 2_KiB;
-  }
-
-  //Barkley Shut Up and Jam 2 (USA) (Beta)
-  if(hash == "3b94a16d93f8d6656a0d4f5e3370dffe510e3d985e20c26b71873beb5403dfd0") {
-    eeprom.mode = "M28C16";
-    eeprom.size = 2_KiB;
-  }
-
-  //Unnecessary Roughness '95
-  if(hash == "7d99fe9dd35dc5c9a124cefe60204f3c0cc74e81269c57e635e1029dd68274f7") {
-    eeprom.mode = "M28C16";
-    eeprom.size = 2_KiB;
   }
 }
 

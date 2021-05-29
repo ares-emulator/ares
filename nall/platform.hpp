@@ -61,6 +61,7 @@ namespace Math {
 
 #if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_AMD64)
   #include <immintrin.h>
+  #undef _serialize
 #endif
 
 #if !defined(__has_builtin)

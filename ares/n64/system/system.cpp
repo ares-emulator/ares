@@ -41,7 +41,7 @@ auto System::game() -> string {
 auto System::run() -> void {
   while(!vi.refreshed) cpu.main();
   vi.refreshed = false;
-  si.main();
+  si.run();
 }
 
 auto System::load(Node::System& root, string name) -> bool {

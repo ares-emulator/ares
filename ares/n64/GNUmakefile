@@ -1,3 +1,5 @@
+ares.components += sm5k
+
 ares.objects += ares-n64-memory
 ares.objects += ares-n64-system
 ares.objects += ares-n64-cartridge

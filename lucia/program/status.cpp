@@ -3,6 +3,11 @@ auto Program::updateMessage() -> void {
     presentation.statusLeft.setText();
   }
 
+  if(message.framesPerSecond) {
+    presentation.statusRight.setText({message.framesPerSecond(), " FPS"});
+    message.framesPerSecond.reset();
+  }
+
   if(!emulator) {
     presentation.statusRight.setText("Unloaded");
   }

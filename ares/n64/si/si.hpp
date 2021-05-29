@@ -1,6 +1,6 @@
 //Serial Interface
 
-struct SI : Memory::IO<SI> {
+struct SI : SM5K, Thread, Memory::IO<SI> {
   Node::Object node;
 
   struct Debugger {
@@ -19,6 +19,8 @@ struct SI : Memory::IO<SI> {
   auto addressCRC(u16 address) const -> n5;
   auto dataCRC(array_view<u8> data) const -> n8;
   auto main() -> void;
+  auto step(u32 clocks) -> void;
+  auto run() -> void;
   auto scan() -> void;
   auto challenge() -> void;
   auto power(bool reset) -> void;

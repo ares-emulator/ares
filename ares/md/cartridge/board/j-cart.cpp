@@ -7,7 +7,6 @@ struct JCart : Linear {
       data.bit( 6)    = jcartSelect;  //TH state
       data.bit( 8,13) = 0b111111;     //controller port 2
       data.bit(14)    = 0;            //forced low
-      if(storage == Storage::None) return data;
     }
     return Linear::read(upper, lower, address, data);
   }

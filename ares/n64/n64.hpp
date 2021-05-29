@@ -4,6 +4,8 @@
 #include <ares/ares.hpp>
 #include <nall/hashset.hpp>
 #include <nall/recompiler/amd64/amd64.hpp>
+#include <component/processor/sm5k/sm5k.hpp>
+
 #include <nmmintrin.h>
 using v128 = __m128i;
 

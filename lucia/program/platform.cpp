@@ -108,7 +108,7 @@ auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, 
   current = chrono::timestamp();
   if(current != previous) {
     previous = current;
-    presentation.statusRight.setText({frameCounter, " FPS"});
+    message.framesPerSecond = frameCounter;
     frameCounter = 0;
   }
 }

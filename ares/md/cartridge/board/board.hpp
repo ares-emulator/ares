@@ -20,12 +20,12 @@ struct Interface {
   virtual auto power(bool reset) -> void {}
   virtual auto serialize(serializer&) -> void {}
 
-  auto load(Memory::Readable<n16>& memory, string name) -> bool;
-  auto load(Memory::Writable<n16>& memory, string name) -> bool;
-  auto load(Memory::Writable<n8 >& memory, string name) -> bool;
+  auto load(Memory::Readable<n16>& rom, string name) -> bool;
+  auto load(Memory::Writable<n16>& wram, Memory::Writable<n8>& uram, Memory::Writable<n8>& lram, string name) -> bool;
+  auto load(M24C& m24c, string name) -> bool;
 
-  auto save(Memory::Writable<n16>& memory, string name) -> bool;
-  auto save(Memory::Writable<n8 >& memory, string name) -> bool;
+  auto save(Memory::Writable<n16>& wram, Memory::Writable<n8>& uram, Memory::Writable<n8>& lram, string name) -> bool;
+  auto save(M24C& m24c, string name) -> bool;
 
   maybe<Cartridge&> cartridge;
 };
