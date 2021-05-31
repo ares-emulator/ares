@@ -90,6 +90,9 @@ auto Model::MasterSystem() -> bool { return MarkIII() || MasterSystemI() || Mast
 auto Model::GameGear() -> bool { return system.model() == System::Model::GameGear; }
 auto Model::GameGearMS() -> bool { return system.model() == System::Model::GameGear && system.ms(); }
 
+auto Display::CRT() -> bool { return system.model() != System::Model::GameGear; }
+auto Display::LCD() -> bool { return system.model() == System::Model::GameGear; }
+
 auto Region::NTSCJ() -> bool { return system.region() == System::Region::NTSCJ; }
 auto Region::NTSCU() -> bool { return system.region() == System::Region::NTSCU; }
 auto Region::PAL() -> bool { return system.region() == System::Region::PAL; }

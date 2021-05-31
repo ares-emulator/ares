@@ -51,6 +51,20 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   string region = "NTSC-J, NTSC-U, PAL";  //database required to detect region
   u32 ram       = 32_KiB;                 //database required to detect RAM size
 
+  //Region
+  //======
+
+  //PGA Tour Golf (Europe)
+  if(hash == "a3856f0d15511f7a6d48fa6c47da2c81adf372e6a04f83298a10cd45b6711530") {
+    region = "PAL";
+  }
+
+  //Ys (Japan)
+  if(hash == "816ddb63d3aa30e7c4fc0efb706ff5e66f4b6f17cf331d5fc97f6681d1905a61") {
+    //relies on SMS1 VDP bug
+    region = "NTSC-J";
+  }
+
   //Codemasters
   //===========
 

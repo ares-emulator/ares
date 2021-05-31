@@ -10,20 +10,23 @@ struct ControllerPort {
 
   auto power() -> void;
 
-  auto read() -> n8 { if(device) return device->read(); return 0xff; }
+  auto read() -> n7 { if(device) return device->read(); return 0x7f; }
   auto write(n8 data) -> void { if(device) return device->write(data); }
 
   auto serialize(serializer&) -> void;
 
   const string name;
 
-  struct IO {
-    n1 trInputEnable = 1;
-    n1 thInputEnable = 1;
-    n1 trOutputLevel;
-    n1 thOutputLevel;
-    n1 thPreviousLevel;
-  } io;
+  auto trInput() const -> bool { return trDirection == 1; }
+  auto thInput() const -> bool { return thDirection == 1; }
+
+  auto trOutput() const -> bool { return trDirection == 0; }
+  auto thOutput() const -> bool { return thDirection == 0; }
+
+  n1 trDirection;
+  n1 thDirection;
+  n1 trLevel;
+  n1 thLevel;
 };
 
 extern ControllerPort controllerPort1;

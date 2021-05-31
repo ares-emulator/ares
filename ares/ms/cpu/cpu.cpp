@@ -57,11 +57,15 @@ auto CPU::power() -> void {
   Thread::create(system.colorburst(), {&CPU::main, this});
   PC = 0x0000;  //reset vector address
   SP = 0xfffd;  //initial stack pointer location
-  ram.write(0xc000, 0x00);  //$3E initial value
+  ram.write(0xc000, 0x00);  //$3e initial value
   state = {};
   bus = {};
   bus.biosEnable = (bool)bios;
   bus.cartridgeEnable = !(bool)bios;
+  if(Model::MasterSystemII()) bus.pullup = 0xff;
+  if(Model::GameGear()) bus.pullup = 0xff;
+  if(Model::GameGearMS()) bus.pullup = 0xff;
+  sio = {};
 }
 
 }

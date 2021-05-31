@@ -1,6 +1,12 @@
+auto VDP::Background::setup(n9 voffset) -> void {
+  latch.nameTableAddress = io.nameTableAddress;
+  latch.hscroll = io.hscroll;
+  latch.vscroll = io.vscroll;
+}
+
 auto VDP::Background::run(n8 hoffset, n9 voffset) -> void {
   output = {};
-  switch(vdp.io.mode) {
+  switch(vdp.mode()) {
   case 0b0000: return graphics1(hoffset, voffset);
   case 0b0001: return;
   case 0b0010: return graphics2(hoffset, voffset);
@@ -24,17 +30,17 @@ auto VDP::Background::graphics1(n8 hoffset, n9 voffset) -> void {
   n14 nameTableAddress;
   nameTableAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameTableAddress.bit( 5, 9) = voffset.bit(3,7);
-  nameTableAddress.bit(10,13) = vdp.io.nameTableAddress;
+  nameTableAddress.bit(10,13) = latch.nameTableAddress;
   n8 pattern = vdp.vram[nameTableAddress];
 
   n14 patternAddress;
   patternAddress.bit( 0, 2) = voffset.bit(0,2);
   patternAddress.bit( 3,10) = pattern;
-  patternAddress.bit(11,13) = vdp.io.patternTableAddress;
+  patternAddress.bit(11,13) = io.patternTableAddress;
 
   n14 colorAddress;  //d5 = 0
   colorAddress.bit(0, 4) = pattern.bit(3,7);
-  colorAddress.bit(6,13) = vdp.io.colorTableAddress;
+  colorAddress.bit(6,13) = io.colorTableAddress;
 
   n8 color = vdp.vram[colorAddress];
   n3 index = hoffset ^ 7;
@@ -49,19 +55,19 @@ auto VDP::Background::graphics2(n8 hoffset, n9 voffset) -> void {
   n14 nameTableAddress;
   nameTableAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameTableAddress.bit( 5, 9) = voffset.bit(3,7);
-  nameTableAddress.bit(10,13) = vdp.io.nameTableAddress;
+  nameTableAddress.bit(10,13) = latch.nameTableAddress;
   n8 pattern = vdp.vram[nameTableAddress];
 
   n14 patternAddress;
   patternAddress.bit(0, 2) = voffset.bit(0,2);
   patternAddress.bit(3,10) = pattern;
-  if(voffset >=  64 && voffset <= 127) patternAddress.bit(11) = vdp.io.patternTableAddress.bit(0);
-  if(voffset >= 128 && voffset <= 191) patternAddress.bit(12) = vdp.io.patternTableAddress.bit(1);
+  if(voffset >=  64 && voffset <= 127) patternAddress.bit(11) = io.patternTableAddress.bit(0);
+  if(voffset >= 128 && voffset <= 191) patternAddress.bit(12) = io.patternTableAddress.bit(1);
   n14 colorAddress = patternAddress;
-  patternAddress.bit(13) = vdp.io.patternTableAddress.bit(2);
-  colorAddress.bit(13) = vdp.io.colorTableAddress.bit(7);
+  patternAddress.bit(13) = io.patternTableAddress.bit(2);
+  colorAddress.bit(13) = io.colorTableAddress.bit(7);
 
-  n8 colorMask = vdp.io.colorTableAddress.bit(0,6) << 1 | 1;
+  n8 colorMask = io.colorTableAddress.bit(0,6) << 1 | 1;
   n8 color = vdp.vram[colorAddress];
   n3 index = hoffset ^ 7;
   if(!vdp.vram[patternAddress].bit(index)) {
@@ -72,22 +78,26 @@ auto VDP::Background::graphics2(n8 hoffset, n9 voffset) -> void {
 }
 
 auto VDP::Background::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
-  if(hoffset < vdp.io.hscroll.bit(0,2)) return;
+  if(hoffset < latch.hscroll.bit(0,2)) return;
 
-  if(!vdp.io.horizontalScrollLock || voffset >=  16) hoffset -= vdp.io.hscroll;
-  if(!vdp.io.verticalScrollLock   || hoffset <= 191) voffset += vdp.io.vscroll;
+  if(!io.hscrollLock || voffset >=  16) hoffset -= latch.hscroll;
+  if(!io.vscrollLock || hoffset <= 191) voffset += latch.vscroll;
 
   n14 nameTableAddress;
   if(vlines == 192) {
-    if(voffset >= 224) voffset -= 224;
-    nameTableAddress.bit( 1, 5) = hoffset.bit(3,7);
-    nameTableAddress.bit( 6,10) = voffset.bit(3,7);
-    nameTableAddress.bit(11,13) = vdp.io.nameTableAddress.bit(1,3);
+    voffset %= 224;
+    nameTableAddress  = latch.nameTableAddress >> 1 << 11;
+    nameTableAddress += voffset >> 3 << 6;
+    nameTableAddress += hoffset >> 3 << 1;
+    if(vdp.revision->value() == 1) {
+      //SMS1 quirk: bit 0 of name table base address acts as a mask
+      nameTableAddress.bit(10) &= latch.nameTableAddress.bit(0);
+    }
   } else {
-    voffset += 224;
-    nameTableAddress.bit( 1, 5) = hoffset.bit(3,7);
-    nameTableAddress.bit( 6,11) = voffset.bit(3,8);
-    nameTableAddress.bit(12,13) = vdp.io.nameTableAddress.bit(2,3);
+    voffset %= 256;
+    nameTableAddress  = latch.nameTableAddress >> 2 << 12 | 0x0700;
+    nameTableAddress += voffset >> 3 << 6;
+    nameTableAddress += hoffset >> 3 << 1;
   }
 
   n16 pattern;
@@ -113,5 +123,7 @@ auto VDP::Background::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
 }
 
 auto VDP::Background::power() -> void {
+  io = {};
+  latch = {};
   output = {};
 }

@@ -9,7 +9,7 @@ Gamepad::Gamepad(Node::Port parent) {
   two   = node->append<Node::Input::Button>("2");
 }
 
-auto Gamepad::read() -> n8 {
+auto Gamepad::read() -> n7 {
   platform->input(up);
   platform->input(down);
   platform->input(left);
@@ -29,12 +29,13 @@ auto Gamepad::read() -> n8 {
     xHold = 1, swap(leftLatch, rightLatch);
   }
 
-  n8 data = 0xff;
+  n7 data;
   data.bit(0) = !upLatch;
   data.bit(1) = !downLatch;
   data.bit(2) = !leftLatch;
   data.bit(3) = !rightLatch;
   data.bit(4) = !one->value();
   data.bit(5) = !two->value();
+  data.bit(6) = 1;
   return data;
 }

@@ -19,7 +19,8 @@ auto GameGear::load() -> bool {
   if(!game->load(Emulator::load(game, configuration.game))) return false;
 
   system = mia::System::create("Game Gear");
-  if(!system->load(firmware[0].location)) return false;
+  if(!system->load()) return false;
+//if(!system->load(firmware[0].location)) return false;
 
   if(!ares::MasterSystem::load(root, "[Sega] Game Gear")) return false;
 

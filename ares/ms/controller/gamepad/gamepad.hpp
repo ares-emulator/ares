@@ -8,7 +8,7 @@ struct Gamepad : Controller {
 
   Gamepad(Node::Port);
 
-  auto read() -> n8 override;
+  auto read() -> n7 override;
 
 private:
   n1 yHold;

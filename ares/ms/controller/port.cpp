@@ -10,28 +10,31 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setType("Controller");
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
-  port->setSupported({"Gamepad"});
+  port->setSupported({"Gamepad", "Light Phaser"});
 }
 
 auto ControllerPort::unload() -> void {
-  device = {};
-  port = {};
+  device.reset();
+  port.reset();
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
   if(name == "Gamepad") device = new Gamepad(port);
+  if(name == "Light Phaser") device = new LightPhaser(port);
   if(device) return device->node;
   return {};
 }
 
 auto ControllerPort::power() -> void {
-  io = {};
+  trDirection = 1;
+  thDirection = 1;
+  trLevel = 1;
+  thLevel = 1;
 }
 
 auto ControllerPort::serialize(serializer& s) -> void {
-  s(io.trInputEnable);
-  s(io.thInputEnable);
-  s(io.trOutputLevel);
-  s(io.thOutputLevel);
-  s(io.thPreviousLevel);
+  s(trDirection);
+  s(thDirection);
+  s(trLevel);
+  s(thLevel);
 }

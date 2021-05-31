@@ -6,6 +6,7 @@ VDP vdp;
 #include "io.cpp"
 #include "background.cpp"
 #include "sprite.cpp"
+#include "dac.cpp"
 #include "color.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
@@ -18,14 +19,19 @@ auto VDP::load(Node::Object parent) -> void {
 
   screen = node->append<Node::Video::Screen>("Screen", 256, 264);
 
-  if(Model::MasterSystem()) {
+  u32 defaultRevision = 2;
+  if((Model::MarkIII() || Model::MasterSystemI()) && Region::NTSCJ()) defaultRevision = 1;
+  revision = node->append<Node::Setting::Natural>("Revision", defaultRevision);
+  revision->setAllowedValues({1, 2});
+
+  if(Display::CRT()) {
     screen->colors(1 << 6, {&VDP::colorMasterSystem, this});
     screen->setSize(256, 240);
     screen->setScale(1.0, 1.0);
     screen->setAspect(8.0, 7.0);
   }
 
-  if(Model::GameGear()) {
+  if(Display::LCD()) {
     screen->colors(1 << 12, {&VDP::colorGameGear, this});
     screen->setSize(160, 144);
     screen->setScale(1.0, 1.0);
@@ -43,6 +49,7 @@ auto VDP::load(Node::Object parent) -> void {
 auto VDP::unload() -> void {
   debugger = {};
   interframeBlending.reset();
+  revision.reset();
   screen->quit();
   node->remove(screen);
   screen.reset();
@@ -54,37 +61,28 @@ auto VDP::unload() -> void {
 auto VDP::main() -> void {
   if(io.vcounter <= vlines()) {
     if(io.lcounter-- == 0) {
-      io.lcounter = io.lineCounter;
-      io.intLine = 1;
+      io.lcounter = irq.line.counter;
+      irq.line.pending = 1;
     }
   } else {
-    io.lcounter = io.lineCounter;
+    io.lcounter = irq.line.counter;
   }
 
   if(io.vcounter == vlines() + 1) {
-    io.intFrame = 1;
+    irq.frame.pending = 1;
   }
 
   //684 clocks/scanline
   u32 y = io.vcounter;
+  background.setup(y);
   sprite.setup(y);
+  dac.setup(y);
   if(y < vlines()) {
-    auto line = screen->pixels().data() + (24 + y) * 256;
     for(u32 x : range(256)) {
       background.run(x, y);
       sprite.run(x, y);
+      dac.run(x, y);
       step(2);
-
-      n12 color = palette(16 | io.backdropColor);
-      if(!io.leftClip || x >= 8) {
-        if(background.output.priority || !sprite.output.color) {
-          color = palette(background.output.palette << 4 | background.output.color);
-        } else if(sprite.output.color) {
-          color = palette(16 | sprite.output.color);
-        }
-      }
-      if(!io.displayEnable) color = 0;
-      *line++ = color;
     }
   } else {
     //Vblank
@@ -115,7 +113,9 @@ auto VDP::step(u32 clocks) -> void {
       }
     }
 
-    cpu.setIRQ((io.lineInterrupts && io.intLine) || (io.frameInterrupts && io.intFrame));
+    bool line = irq.line.pending & irq.line.enable;
+    bool frame = irq.frame.pending & irq.frame.enable;
+    cpu.setIRQ(line | frame);
     Thread::step(1);
     Thread::synchronize(cpu);
   }
@@ -139,41 +139,13 @@ auto VDP::power() -> void {
 
   for(auto& byte : vram) byte = 0x00;
   for(auto& byte : cram) byte = 0x00;
+
+  irq = {};
   io = {};
 
   background.power();
   sprite.power();
-}
-
-auto VDP::palette(n5 index) -> n12 {
-  //Master System and Game Gear approximate TMS9918A colors by converting to RGB6 palette colors
-  static const n6 palette[16] = {
-    0x00, 0x00, 0x08, 0x0c, 0x10, 0x30, 0x01, 0x3c,
-    0x02, 0x03, 0x05, 0x0f, 0x04, 0x33, 0x15, 0x3f,
-  };
-  if(Model::MasterSystem()) {
-    if(!io.mode.bit(3)) return palette[index.bit(0,3)];
-    return cram[index];
-  }
-  if(Model::GameGearMS()) {
-    n6 color = cram[index];
-    if(!io.mode.bit(3)) color = palette[index.bit(0,3)];
-    n4 r = color.bit(0,1) << 0 | color.bit(0,1) << 2;
-    n4 g = color.bit(2,3) << 0 | color.bit(2,3) << 2;
-    n4 b = color.bit(4,5) << 0 | color.bit(4,5) << 2;
-    return r << 0 | g << 4 | b << 8;
-  }
-  if(Model::GameGear()) {
-    if(!io.mode.bit(3)) {
-      n6 color = palette[index.bit(0,3)];
-      n4 r = color.bit(0,1) << 0 | color.bit(0,1) << 2;
-      n4 g = color.bit(2,3) << 0 | color.bit(2,3) << 2;
-      n4 b = color.bit(4,5) << 0 | color.bit(4,5) << 2;
-      return r << 0 | g << 4 | b << 8;
-    }
-    return cram[index * 2 + 0] << 0 | cram[index * 2 + 1] << 8;
-  }
-  return 0;
+  dac.power();
 }
 
 }

@@ -21,6 +21,11 @@ namespace ares::MasterSystem {
     inline static auto GameGearMS() -> bool;
   };
 
+  struct Display {
+    inline static auto CRT() -> bool;
+    inline static auto LCD() -> bool;
+  };
+
   struct Region {
     inline static auto NTSCJ() -> bool;
     inline static auto NTSCU() -> bool;
