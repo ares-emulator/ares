@@ -5,22 +5,17 @@ auto VDP::serialize(serializer& s) -> void {
   s(background);
   s(sprite);
   s(dac);
-  s(irq.line.enable);
-  s(irq.line.pending);
-  s(irq.line.counter);
-  s(irq.frame.enable);
-  s(irq.frame.pending);
-  s(io.mode);
+  s(irq);
+  s(io.videoMode);
   s(io.vcounter);
   s(io.hcounter);
-  s(io.pcounter);
-  s(io.lcounter);
   s(io.ccounter);
   s(io.controlLatch);
   s(io.controlData);
   s(io.code);
   s(io.address);
   s(io.vramLatch);
+  s(latch.hcounter);
 }
 
 auto VDP::Background::serialize(serializer& s) -> void {
@@ -40,22 +35,21 @@ auto VDP::Background::serialize(serializer& s) -> void {
 }
 
 auto VDP::Sprite::serialize(serializer& s) -> void {
-  s(io.zoom);
-  s(io.size);
-  s(io.shift);
-  s(io.attributeTableAddress);
-  s(io.patternTableAddress);
-  s(io.overflow);
-  s(io.collision);
-  s(io.fifth);
-  s(output.color);
   for(auto& object : objects) {
     s(object.x);
     s(object.y);
     s(object.pattern);
     s(object.color);
   }
-  s(objectsValid);
+  s(io.zoom);
+  s(io.size);
+  s(io.shift);
+  s(io.attributeTableAddress);
+  s(io.patternTableAddress);
+  s(io.overflowIndex);
+  s(io.overflow);
+  s(io.collision);
+  s(output.color);
 }
 
 auto VDP::DAC::serialize(serializer& s) -> void {
@@ -63,4 +57,13 @@ auto VDP::DAC::serialize(serializer& s) -> void {
   s(io.externalSync);
   s(io.leftClip);
   s(io.backdropColor);
+}
+
+auto VDP::IRQ::serialize(serializer& s) -> void {
+  s(line.enable);
+  s(line.pending);
+  s(line.counter);
+  s(line.coincidence);
+  s(frame.enable);
+  s(frame.pending);
 }

@@ -5,10 +5,14 @@ auto V9938::status() -> n8 {
   switch(io.statusIndex) {
 
   case 0:
-    data.bit(0,4) = sprite.last;
-    data.bit(5) = sprite.collision;
-    data.bit(6) = sprite.overflow;
-    data.bit(7) = virq.pending;
+    data.bit(0,4) = sprite.io.overflowIndex;
+    data.bit(5)   = sprite.io.collision;
+    data.bit(6)   = sprite.io.overflow;
+    data.bit(7)   = virq.pending;
+
+    sprite.io.overflowIndex = 0b11111;
+    sprite.io.collision = 0;
+    sprite.io.overflow = 0;
     virq.pending = 0;
     poll();
     return data;
@@ -65,9 +69,9 @@ auto V9938::data() -> n8 {
   if(!io.controlValue.bit(0,13)) io.ramBank++;  //unconfirmed
   n8 data = io.ramLatch;
   if(io.ramSelect == 0) {
-    io.ramLatch = videoRAM.read(address);
+    io.ramLatch = vram.read(address);
   } else {
-    io.ramLatch = expansionRAM.read(address);
+    io.ramLatch = xram.read(address);
   }
   return data;
 }
@@ -79,9 +83,9 @@ auto V9938::data(n8 data) -> void {
   n17 address = io.ramBank << 14 | io.controlValue.bit(0,13)++;
   if(!io.controlValue.bit(0,13)) io.ramBank++;  //unconfirmed
   if(io.ramSelect == 0) {
-    videoRAM.write(address, data);
+    vram.write(address, data);
   } else {
-    expansionRAM.write(address, data);
+    xram.write(address, data);
   }
 }
 
@@ -97,9 +101,9 @@ auto V9938::control(n8 data) -> void {
 auto V9938::palette(n8 data) -> void {
   io.paletteValue.byte(io.paletteLatch++) = data;
   if(io.paletteLatch) return;
-  paletteRAM[io.paletteIndex].bit(0,2) = io.paletteValue.bit(0, 2);  //B
-  paletteRAM[io.paletteIndex].bit(3,5) = io.paletteValue.bit(4, 6);  //R
-  paletteRAM[io.paletteIndex].bit(6,8) = io.paletteValue.bit(8,10);  //G
+  pram[io.paletteIndex].bit(0,2) = io.paletteValue.bit(0, 2);  //B
+  pram[io.paletteIndex].bit(3,5) = io.paletteValue.bit(4, 6);  //R
+  pram[io.paletteIndex].bit(6,8) = io.paletteValue.bit(8,10);  //G
   io.paletteIndex++;
 }
 
@@ -109,52 +113,49 @@ auto V9938::register(n8 data) -> void {
   if(!io.registerFixed) io.registerIndex++;
 }
 
-//
-
 auto V9938::register(n6 register, n8 data) -> void {
   switch(register) {
-
   case 0x00:
-    screen.mode.bit(2) = data.bit(1);
-    screen.mode.bit(3) = data.bit(2);
-    screen.mode.bit(4) = data.bit(3);
+    io.videoMode.bit(2) = data.bit(1);
+    io.videoMode.bit(3) = data.bit(2);
+    io.videoMode.bit(4) = data.bit(3);
     hirq.enable = data.bit(4);
     lirq.enable = data.bit(5);
-    screen.digitize = data.bit(6);
+    dac.io.digitize = data.bit(6);
     hirq.pending &= hirq.enable;
     lirq.pending &= lirq.enable;
     poll();
     return;
 
   case 0x01:
-    sprite.magnify = data.bit(0);
-    sprite.size = data.bit(1);
-    screen.mode.bit(1) = data.bit(3);
-    screen.mode.bit(0) = data.bit(4);
+    sprite.io.zoom = data.bit(0);
+    sprite.io.size = data.bit(1);
+    io.videoMode.bit(1) = data.bit(3);
+    io.videoMode.bit(0) = data.bit(4);
     virq.enable = data.bit(5);
-    screen.enable = data.bit(6);
+    dac.io.enable = data.bit(6);
     virq.pending &= virq.enable;
     poll();
     return;
 
   case 0x02:
-    table.patternLayout.bit(10,16) = data.bit(0,6);
+    background.io.nameTableAddress.bit(10,16) = data.bit(0,6);
     return;
 
   case 0x03:
-    table.color.bit(6,13) = data.bit(0,7);
+    background.io.colorTableAddress.bit(6,13) = data.bit(0,7);
     return;
 
   case 0x04:
-    table.patternGenerator.bit(11,16) = data.bit(0,5);
+    background.io.patternTableAddress.bit(11,16) = data.bit(0,5);
     return;
 
   case 0x05:
-    table.spriteAttribute.bit(7,14) = data.bit(0,7);
+    sprite.io.nameTableAddress.bit(7,14) = data.bit(0,7);
     return;
 
   case 0x06:
-    table.spritePatternGenerator.bit(11,16) = data.bit(0,5);
+    sprite.io.patternTableAddress.bit(11,16) = data.bit(0,5);
     return;
 
   case 0x07:
@@ -163,22 +164,22 @@ auto V9938::register(n6 register, n8 data) -> void {
     return;
 
   case 0x08:
-    screen.grayscale = data.bit(0);
-    sprite.disable = data.bit(1);
+    dac.io.grayscale = data.bit(0);
+    sprite.io.disable = data.bit(1);
     return;
 
   case 0x09:
-    screen.timing = data.bit(1);
-    screen.interlace = data.bit(3);
-    screen.overscan = data.bit(7);
+    io.timing = data.bit(1);
+    io.interlace = data.bit(3);
+    io.overscan = data.bit(7);
     return;
 
   case 0x0a:
-    table.color.bit(14,16) = data.bit(0,2);
+    background.io.colorTableAddress.bit(14,16) = data.bit(0,2);
     return;
 
   case 0x0b:
-    table.spriteAttribute.bit(15,16) = data.bit(0,1);
+    sprite.io.nameTableAddress.bit(15,16) = data.bit(0,1);
     return;
 
   case 0x0c:
@@ -209,8 +210,8 @@ auto V9938::register(n6 register, n8 data) -> void {
     return;
 
   case 0x12:
-    screen.hadjust = data.bit(0,3);
-    screen.vadjust = data.bit(4,7);
+    background.io.hadjust = data.bit(0,3);
+    background.io.vadjust = data.bit(4,7);
     return;
 
   case 0x13:
@@ -218,7 +219,7 @@ auto V9938::register(n6 register, n8 data) -> void {
     return;
 
   case 0x17:
-    screen.vscroll = data;
+    background.io.vscroll = data;
     return;
 
   case 0x20: op.sx.bit(0,7) = data.bit(0,7); return;
@@ -248,8 +249,5 @@ auto V9938::register(n6 register, n8 data) -> void {
   case 0x2e:
     command(data);
     return;
-
   }
-
-//print("* w", hex(register,2),"=", hex(data,2),"\n");
 }

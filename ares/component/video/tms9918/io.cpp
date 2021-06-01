@@ -1,16 +1,24 @@
 auto TMS9918::status() -> n8 {
   io.controlLatch = 0;
+
   n8 data = 0x00;
-  data.bit(0,4) = io.spriteOverflowIndex;
-  data.bit(5) = io.spriteCollision;
-  data.bit(6) = io.spriteOverflow;
-  data.bit(7) = io.irqLine;
-  irq(io.irqLine = 0);
+  data.bit(0,4) = sprite.io.overflowIndex;
+  data.bit(5)   = sprite.io.collision;
+  data.bit(6)   = sprite.io.overflow;
+  data.bit(7)   = irqFrame.pending;
+
+  sprite.io.overflowIndex = 0b11111;
+  sprite.io.collision = 0;
+  sprite.io.overflow = 0;
+  irqFrame.pending = 0;
+  irq(0);
+
   return data;
 }
 
 auto TMS9918::data() -> n8 {
   io.controlLatch = 0;
+
   n14 address = io.controlValue.bit(0,13)++;
   n8  data = io.vramLatch;
   io.vramLatch = vram.read(address);
@@ -19,6 +27,7 @@ auto TMS9918::data() -> n8 {
 
 auto TMS9918::data(n8 data) -> void {
   io.controlLatch = 0;
+
   n14 address = io.controlValue.bit(0,13)++;
   vram.write(address, data);
 }
@@ -35,36 +44,44 @@ auto TMS9918::control(n8 data) -> void {
 auto TMS9918::register(n3 register, n8 data) -> void {
   switch(register) {
   case 0:
-    io.externalInput = data.bit(0);
+    dac.io.externalSync = data.bit(0);
     io.videoMode.bit(2) = data.bit(1);
     break;
+
   case 1:
-    io.spriteZoom = data.bit(0);
-    io.spriteSize = data.bit(1);
-    io.videoMode.bit(1) = data.bit(3);
-    io.videoMode.bit(0) = data.bit(4);
-    io.irqEnable = data.bit(5);
-    io.displayEnable = data.bit(6);
-    io.ramMode = data.bit(7);
+    sprite.io.zoom       = data.bit(0);
+    sprite.io.size       = data.bit(1);
+    io.videoMode.bit(1)  = data.bit(3);
+    io.videoMode.bit(0)  = data.bit(4);
+    irqFrame.enable      = data.bit(5);
+    dac.io.displayEnable = data.bit(6);
+    io.vramMode          = data.bit(7);
+    if(!irqFrame.enable) irqFrame.pending = 0;
     break;
+
   case 2:
-    io.nameTableAddress = data.bit(0,3);
+    background.io.nameTableAddress = data.bit(0,3);
     break;
+
   case 3:
-    io.colorTableAddress = data.bit(0,7);
+    background.io.colorTableAddress = data.bit(0,7);
     break;
+
   case 4:
-    io.patternTableAddress = data.bit(0,2);
+    background.io.patternTableAddress = data.bit(0,2);
     break;
+
   case 5:
-    io.spriteAttributeTableAddress = data.bit(0,6);
+    sprite.io.attributeTableAddress = data.bit(0,6);
     break;
+
   case 6:
-    io.spritePatternTableAddress = data.bit(0,2);
+    sprite.io.patternTableAddress = data.bit(0,2);
     break;
+
   case 7:
-    io.colorBackground = data.bit(0,3);
-    io.colorForeground = data.bit(4,7);
+    dac.io.colorBackground = data.bit(0,3);
+    dac.io.colorForeground = data.bit(4,7);
     break;
   }
 }

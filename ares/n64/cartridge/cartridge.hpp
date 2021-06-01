@@ -5,11 +5,28 @@ struct Cartridge {
   Memory::Writable ram;
   Memory::Writable eeprom;
   struct Flash : Memory::Writable {
+    template<u32 Size>
+    auto read(u32 address) -> u64 {
+      if constexpr(Size == Byte) return Memory::Writable::read<Byte>(address);
+      if constexpr(Size == Half) return readHalf(address);
+      if constexpr(Size == Word) return readWord(address);
+      if constexpr(Size == Dual) return Memory::Writable::read<Dual>(address);
+      unreachable;
+    }
+
+    template<u32 Size>
+    auto write(u32 address, u64 data) -> void {
+      if constexpr(Size == Byte) return Memory::Writable::write<Byte>(address, data);
+      if constexpr(Size == Half) return writeHalf(address, data);
+      if constexpr(Size == Word) return writeWord(address, data);
+      if constexpr(Size == Dual) return Memory::Writable::write<Dual>(address, data);
+    }
+
     //flash.cpp
-    auto readHalf(u32 address) -> u16;
-    auto readWord(u32 address) -> u32;
-    auto writeHalf(u32 address, u16 value) -> void;
-    auto writeWord(u32 address, u32 value) -> void;
+    auto readHalf(u32 address) -> u64;
+    auto readWord(u32 address) -> u64;
+    auto writeHalf(u32 address, u64 data) -> void;
+    auto writeWord(u32 address, u64 data) -> void;
 
     enum class Mode : u32 { Idle, Erase, Write, Read, Status };
     Mode mode = Mode::Idle;

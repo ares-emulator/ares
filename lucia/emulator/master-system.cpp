@@ -73,6 +73,21 @@ auto MasterSystem::input(ares::Node::Input::Input node) -> void {
   auto parent = ares::Node::parent(node);
   if(!parent) return;
 
+  if(parent->name() == "Controls") {
+    auto name = node->name();
+    maybe<InputMapping&> mapping;
+    if(name == "Pause") mapping = virtualPads[0].start;
+    if(name == "Reset") mapping = nothing;
+
+    if(mapping) {
+      auto value = mapping->value();
+      if(auto button = node->cast<ares::Node::Input::Button>()) {
+        button->setValue(value);
+      }
+    }
+    return;
+  }
+
   auto port = ares::Node::parent(parent);
   if(!port) return;
 
@@ -84,8 +99,6 @@ auto MasterSystem::input(ares::Node::Input::Input node) -> void {
   if(parent->name() == "Gamepad") {
     auto name = node->name();
     maybe<InputMapping&> mapping;
-    if(name == "Pause") mapping = virtualPads[*index].start;
-    if(name == "Reset") mapping = nothing;
     if(name == "Up"   ) mapping = virtualPads[*index].up;
     if(name == "Down" ) mapping = virtualPads[*index].down;
     if(name == "Left" ) mapping = virtualPads[*index].left;

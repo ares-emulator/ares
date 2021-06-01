@@ -1,6 +1,6 @@
 auto VDP::vcounterQuery() -> n8 {
   if(Region::NTSCJ() || Region::NTSCU()) {
-    switch(mode()) {
+    switch(videoMode()) {
     default:     return io.vcounter <= 218 ? io.vcounter : io.vcounter - 6;  //256x192
     case 0b1011: return io.vcounter <= 234 ? io.vcounter : io.vcounter - 6;  //256x224
     case 0b1110: return io.vcounter;  //256x240
@@ -8,7 +8,7 @@ auto VDP::vcounterQuery() -> n8 {
   }
 
   if(Region::PAL()) {
-    switch(mode()) {
+    switch(videoMode()) {
     default:     return io.vcounter <= 242 ? io.vcounter : io.vcounter - 57;  //256x192
     case 0b1011: return io.vcounter <= 258 ? io.vcounter : io.vcounter - 57;  //256x224
     case 0b1110: return io.vcounter <= 266 ? io.vcounter : io.vcounter - 56;  //256x240
@@ -19,11 +19,11 @@ auto VDP::vcounterQuery() -> n8 {
 }
 
 auto VDP::hcounterQuery() -> n8 {
-  return io.pcounter - 94 >> 2;
+  return latch.hcounter - 94 >> 2;
 }
 
 auto VDP::hcounterLatch() -> void {
-  io.pcounter = io.hcounter;
+  latch.hcounter = io.hcounter;
 }
 
 auto VDP::ccounter() -> n12 {
@@ -42,16 +42,17 @@ auto VDP::status() -> n8 {
   io.controlLatch = 0;
 
   n8 data;
-  data.bit(0,4) = sprite.io.fifth;
+  data.bit(0,4) = sprite.io.overflowIndex;
   data.bit(5)   = sprite.io.collision;
   data.bit(6)   = sprite.io.overflow;
   data.bit(7)   = irq.frame.pending;
 
-  sprite.io.fifth = 0;
+  sprite.io.overflowIndex = 0b11111;
   sprite.io.collision = 0;
   sprite.io.overflow = 0;
   irq.frame.pending = 0;
   irq.line.pending = 0;
+  irq.poll();
 
   return data;
 }
@@ -96,22 +97,26 @@ auto VDP::registerWrite(n4 address, n8 data) -> void {
   switch(address) {
   case 0x0:  //mode control 1
     dac.io.externalSync       = data.bit(0);
-    io.mode.bit(1)            = data.bit(1);
-    io.mode.bit(3)            = data.bit(2);
+    io.videoMode.bit(1)       = data.bit(1);
+    io.videoMode.bit(3)       = data.bit(2);
     sprite.io.shift           = data.bit(3);
     irq.line.enable           = data.bit(4);
     dac.io.leftClip           = data.bit(5);
     background.io.hscrollLock = data.bit(6);
     background.io.vscrollLock = data.bit(7);
+    irq.line.pending &= irq.line.enable;
+    irq.poll();
     return;
 
   case 0x1:  //mode control 2
     sprite.io.zoom       = data.bit(0);
     sprite.io.size       = data.bit(1);
-    io.mode.bit(2)       = data.bit(3);
-    io.mode.bit(0)       = data.bit(4);
+    io.videoMode.bit(2)  = data.bit(3);
+    io.videoMode.bit(0)  = data.bit(4);
     irq.frame.enable     = data.bit(5);
     dac.io.displayEnable = data.bit(6);
+    irq.frame.pending &= irq.frame.enable;
+    irq.poll();
     return;
 
   case 0x2:  //name table base address
@@ -147,7 +152,7 @@ auto VDP::registerWrite(n4 address, n8 data) -> void {
     return;
 
   case 0xa:  //line counter
-    irq.line.counter = data.bit(0,7);
+    irq.line.coincidence = data.bit(0,7);
     return;
   }
 }

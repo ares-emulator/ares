@@ -10,7 +10,8 @@ struct SM5K {
   auto power() -> void;
 
   //timer.cpp
-  auto tick() -> void;
+  auto timerStep() -> void;
+  auto timerIncrement() -> void;
 
   //memory.cpp
   auto fetch() -> n8;
@@ -28,6 +29,7 @@ struct SM5K {
   auto instructionCALL(n12 address) -> void;
   auto instructionCOMA() -> void;
   auto instructionDECB() -> void;
+  auto instructionDR() -> void;
   auto instructionDTA(n8) -> void;
   auto instructionEX() -> void;
   auto instructionEXAX() -> void;
@@ -68,6 +70,7 @@ struct SM5K {
   auto instructionTPB(n2 port) -> void;
   auto instructionTR(n6 address) -> void;
   auto instructionTRS(n5 address) -> void;
+  auto instructionTT() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -77,7 +80,7 @@ struct SM5K {
 
   n4  A;      //accumulator
   n4  X;      //auxiliary accumulator
-  n8 B;       //RAM bank register
+  n8  B;      //RAM bank register
   BitRange<8,0,3> BL{&B};
   BitRange<8,4,7> BM{&B};
   n1  C;      //carry flag
@@ -108,7 +111,7 @@ struct SM5K {
   n1  SKIP;   //skip next instruction flag
   n1  STOP;   //STOP instruction executed flag
   n1  HALT;   //HALT instruction executed flag
-  n15 DIV;    //divider for timer
+  n16 DIV;    //divider for timer
 
   //disassembler.cpp
   auto disassembleInstruction() -> string;

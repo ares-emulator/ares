@@ -11,7 +11,6 @@ struct FDS {
   VFS::Pak pak;
   n1 present;
 
-  auto manifest() const -> string { return information.manifest; }
   auto title() const -> string { return information.title; }
 
   struct Disk {
@@ -46,14 +45,13 @@ struct FDS {
   auto serialize(serializer&) -> void;
 
 private:
-  struct Information {
-    string manifest;
-    string title;
-  } information;
-
   FDSDrive drive;
   FDSTimer timer;
   FDSAudio audio;
+
+  struct Information {
+    string title;
+  } information;
 };
 
 extern FDS fds;

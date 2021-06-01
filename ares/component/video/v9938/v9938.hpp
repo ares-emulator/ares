@@ -5,33 +5,26 @@ namespace ares {
 //Yamaha V9938
 
 struct V9938 {
-  Node::Video::Screen screen_;
+  Node::Video::Screen screen;
+  Memory::Writable<n8> vram;  //video RAM
+  Memory::Writable<n8> xram;  //expansion RAM
+  Memory::Writable<n9> pram;  //palette RAM
 
   virtual auto step(u32 clocks) -> void = 0;
   virtual auto irq(bool line) -> void = 0;
   virtual auto frame() -> void = 0;
+
+  auto videoMode() const -> n5 { return io.videoMode; }
+  auto vcounter() const -> n16 { return io.vcounter; }
+  auto hcounter() const -> n16 { return io.hcounter; }
 
   auto timing() const -> bool { return latch.timing; }
   auto overscan() const -> bool { return latch.overscan; }
   auto interlace() const -> bool { return latch.interlace; }
   auto field() const -> bool { return latch.field; }
 
-  auto vtotal() const -> u32 { return !latch.timing ? 262 : 313; }
+  auto vtotal() const -> u32 { return !latch.timing   ? 262 : 313; }
   auto vlines() const -> u32 { return !latch.overscan ? 192 : 212; }
-
-  auto t1() const -> bool { return screen.mode == 0b00001; }
-  auto t2() const -> bool { return screen.mode == 0b01001; }
-  auto mc() const -> bool { return screen.mode == 0b00010; }
-  auto g1() const -> bool { return screen.mode == 0b00000; }
-  auto g2() const -> bool { return screen.mode == 0b00100; }
-  auto g3() const -> bool { return screen.mode == 0b01000; }
-  auto g4() const -> bool { return screen.mode == 0b01100; }
-  auto g5() const -> bool { return screen.mode == 0b10000; }
-  auto g6() const -> bool { return screen.mode == 0b10100; }
-  auto g7() const -> bool { return screen.mode == 0b11100; }
-
-  auto s1() const -> bool { return mc() || g1() || g2(); }
-  auto s2() const -> bool { return g3() || g4() || g5() || g6() || g7(); }
 
   //v9938.cpp
   auto load(Node::Video::Screen) -> void;
@@ -45,12 +38,10 @@ struct V9938 {
   //io.cpp
   auto status() -> n8;
   auto data() -> n8;
-
   auto data(n8 data) -> void;
   auto control(n8 data) -> void;
   auto palette(n8 data) -> void;
   auto register(n8 data) -> void;
-
   auto register(n6 register, n8 data) -> void;
 
   //commands.cpp
@@ -75,126 +66,112 @@ struct V9938 {
   auto ymmm() -> void;
   auto hmmc() -> void;
 
-  //graphic1.cpp
-  auto graphic1(n4& color, n8 hoffset, n8 voffset) -> void;
-
-  //graphic2.cpp
-  auto graphic2(n4& color, n8 hoffset, n8 voffset) -> void;
-
-  //graphic3.cpp
-  auto graphic3(n4& color, n8 hoffset, n8 voffset) -> void;
-
-  //graphic4.cpp
-  auto graphic4(n4& color, n8 hoffset, n8 voffset) -> void;
-
-  //sprite1.cpp
-  auto sprite1(n8 voffset) -> void;
-  auto sprite1(n4& color, n8 hoffset, n8 voffset) -> void;
-
-  //sprite2.cpp
-  auto sprite2(n8 voffset) -> void;
-  auto sprite2(n4& color, n8 hoffset, n8 voffset) -> void;
-
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 protected:
-  Memory::Writable<n8> videoRAM;
-  Memory::Writable<n8> expansionRAM;
-  n9 paletteRAM[16];
+  struct Background {
+    V9938& self;
 
-  struct VerticalScanIRQ {
-    n1 enable;
-    n1 pending;
-  } virq;
+    //background.cpp
+    auto setup(n8 voffset) -> void;
+    auto run(n8 hoffset, n8 voffset) -> void;
+    auto text1(n8 hoffset, n8 voffset) -> void;
+    auto text2(n8 hoffset, n8 voffset) -> void;
+    auto graphic1(n8 hoffset, n8 voffset) -> void;
+    auto graphic2(n8 hoffset, n8 voffset) -> void;
+    auto graphic3(n8 hoffset, n8 voffset) -> void;
+    auto graphic4(n8 hoffset, n8 voffset) -> void;
+    auto graphic5(n8 hoffset, n8 voffset) -> void;
+    auto graphic6(n8 hoffset, n8 voffset) -> void;
+    auto graphic7(n8 hoffset, n8 voffset) -> void;
+    auto multicolor(n8 hoffset, n8 voffset) -> void;
+    auto power() -> void;
 
-  struct HorizontalScanIRQ {
-    n1 enable;
-    n1 pending;
-    n8 coincidence;
-  } hirq;
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
-  struct LightPenIRQ {
-    n1 enable;
-    n1 pending;
-  } lirq;
+    struct IO {
+      n17 nameTableAddress;
+      n17 patternTableAddress;
+      n17 colorTableAddress;
+      i4 hadjust;  //todo
+      i4 vadjust;  //todo
+      n8 vscroll;  //todo
+    } io;
 
-  struct Latch {
-    n1 timing;
-    n1 overscan;
-    n1 interlace;
-    n1 field;
-  } latch;
+    struct Latch {
+      i4 hadjust;
+      i4 vadjust;
+      n8 vscroll;
+    } latch;
 
-  struct Screen {
-    n1 enable;
-    n1 digitize;   //unemulated
-    n1 grayscale;  //unemulated
-    n5 mode;
-    n1 interlace;
-    n1 overscan;   //0 = 192, 1 = 212
-    n1 timing;     //0 = 262, 1 = 313
-    i4 hadjust;
-    i4 vadjust;
-    n8 vscroll;
-  } screen;
+    struct Output {
+      n4 color;
+    } output;
+  } background{*this};
 
-  struct Table {
-    n17 patternLayout;
-    n17 patternGenerator;
-    n17 spriteAttribute;
-    n17 spritePatternGenerator;
-    n17 color;
-  } table;
+  struct Sprite {
+    V9938& self;
 
-  struct SpriteIO {
-    n1 magnify;
-    n1 size;  //0 = 8x8, 1 = 16x16
-    n1 disable;
+    //sprite.cpp
+    auto setup(n8 voffset) -> void;
+    auto run(n8 hoffset, n8 voffset) -> void;
+    auto sprite1(n8 hoffset, n8 voffset) -> void;
+    auto sprite2(n8 hoffset, n8 voffset) -> void;
+    auto power() -> void;
 
-    n1 collision;
-    n1 overflow;
-    n5 last;
-  } sprite;
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
-  struct SpriteObject {
-    n8 x;
-    n8 y;
-    n8 pattern;
-    n4 color;
-    n1 collision;
-    n1 priority;
-  } sprites[8];
+    struct Object {
+      n8 x;
+      n8 y = 0xd0;
+      n8 pattern;
+      n4 color;
+      n1 collision;
+      n1 priority;
+    } objects[8];
 
-  struct IO {
-    n16 vcounter;
-    n16 hcounter;
+    struct IO {
+      n17 nameTableAddress;
+      n17 patternTableAddress;
 
-    n1  controlLatch;
-    n16 controlValue;
+      n1 zoom;
+      n1 size;  //0 = 8x8, 1 = 16x16
+      n1 disable;
 
-    n4  colorBackground;
-    n4  colorForeground;
+      //flags
+      n5 overflowIndex;
+      n1 overflow;
+      n1 collision;
+    } io;
 
-    n4  blinkColorBackground;
-    n4  blinkColorForeground;
+    struct Output {
+      n4 color;
+    } output;
+  } sprite{*this};
 
-    n4  blinkPeriodBackground;
-    n4  blinkPeriodForeground;
+  struct DAC {
+    V9938& self;
 
-    n4  statusIndex;
+    //dac.cpp
+    auto setup(n8 voffset) -> void;
+    auto run(n8 hoffset, n8 voffset) -> void;
+    auto power() -> void;
 
-    n4  paletteIndex;
-    n1  paletteLatch;
-    n16 paletteValue;
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
 
-    n6  registerIndex;
-    n1  registerFixed;  //0 = auto-increment
+    struct IO {
+      n1 enable;
+      n1 digitize;   //todo
+      n1 grayscale;  //todo
+    } io;
 
-    n1  ramSelect;  //0 = video RAM, 1 = expansion RAM
-    n3  ramBank;
-    n8  ramLatch;
-  } io;
+  //unserialized:
+    u32* output = nullptr;
+  } dac{*this};
 
   struct Operation {
     //a very rough, inaccurate approximation of command timing
@@ -232,6 +209,64 @@ protected:
     n9  ldx;
     n9  lnx;
   } op;
+
+  struct VerticalScanIRQ {
+    n1 enable;
+    n1 pending;
+  } virq;
+
+  struct HorizontalScanIRQ {
+    n1 enable;
+    n1 pending;
+    n8 coincidence;
+  } hirq;
+
+  struct LightPenIRQ {
+    n1 enable;
+    n1 pending;
+  } lirq;
+
+  struct IO {
+    n16 vcounter;
+    n16 hcounter;
+
+    n1  controlLatch;
+    n16 controlValue;
+
+    n5  videoMode;
+    n1  timing;     //0 = 262, 1 = 313
+    n1  interlace;  //0 = progressive, 1 = interlaced
+    n1  overscan;   //0 = 192, 1 = 212
+
+    n4  colorBackground;
+    n4  colorForeground;
+
+    n4  blinkColorBackground;
+    n4  blinkColorForeground;
+
+    n4  blinkPeriodBackground;
+    n4  blinkPeriodForeground;
+
+    n4  statusIndex;
+
+    n4  paletteIndex;
+    n1  paletteLatch;
+    n16 paletteValue;
+
+    n6  registerIndex;
+    n1  registerFixed;  //0 = auto-increment
+
+    n1  ramSelect;  //0 = video RAM, 1 = expansion RAM
+    n3  ramBank;
+    n8  ramLatch;
+  } io;
+
+  struct Latch {
+    n1 timing;
+    n1 interlace;
+    n1 overscan;
+    n1 field;
+  } latch;
 };
 
 }

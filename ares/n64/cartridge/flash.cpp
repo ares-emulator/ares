@@ -1,23 +1,23 @@
-auto Cartridge::Flash::readHalf(u32 address) -> u16 {
+auto Cartridge::Flash::readHalf(u32 address) -> u64 {
   return Memory::Writable::read<Half>(address);
 }
 
-auto Cartridge::Flash::readWord(u32 address) -> u32 {
+auto Cartridge::Flash::readWord(u32 address) -> u64 {
   return status >> 32;
 }
 
-auto Cartridge::Flash::writeHalf(u32 address, u16 data) -> void {
+auto Cartridge::Flash::writeHalf(u32 address, u64 data) -> void {
   if(mode == Mode::Write) {
     //writes are deferred until the flash execute command is sent later
     source = pi.io.dramAddress;
   }
 }
 
-auto Cartridge::Flash::writeWord(u32 address, u32 data) -> void {
+auto Cartridge::Flash::writeWord(u32 address, u64 data) -> void {
   address = (address & 0x7ff'ffff) >> 2;
 
   if(address == 0) {
-    debug(unusual, "[Cartridge::Flash] ignoring write to status register");
+    debug(unusual, "[Cartridge::Flash::writeWord] ignoring write to status register");
     return;
   }
 

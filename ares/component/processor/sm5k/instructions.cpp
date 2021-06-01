@@ -40,7 +40,16 @@ auto SM5K::instructionDECB() -> void {
   if(!--BL) SKIP = 1;
 }
 
-auto SM5K::instructionDTA(n8) -> void {
+auto SM5K::instructionDR() -> void {
+  DIV = 0;
+}
+
+auto SM5K::instructionDTA(n8 operand) -> void {
+  switch(operand) {
+  case 0x02: instructionTT(); break;
+  case 0x03: instructionDR(); break;
+  }
+
   static constexpr u8 rom[8] = {0xfc, 0xfc, 0xa5, 0x6c, 0x03, 0x8f, 0x1b, 0x9a};
   if(BM >= 4 && BM <= 7) {
     SKIP = rom[BM << 1 | BL >> 3] >> n3(BL) & 1;
@@ -258,4 +267,9 @@ auto SM5K::instructionTRS(n5 address) -> void {
   SR[SP++] = PC;
   PU = 1;
   PL = address << 1;
+}
+
+auto SM5K::instructionTT() -> void {
+  if(IFT) SKIP = 1;
+  IFT = 0;
 }

@@ -15,8 +15,8 @@ auto SM5K::instruction() -> void {
   if(IFA & RE.bit(0) & IME) return interrupt(0);
   if(IFB & RE.bit(1) & IME) return interrupt(1);
   if(IFT & RE.bit(2) & IME) return interrupt(2);
-  if(HALT) return tick();
-  if(STOP) return tick();
+  if(HALT) return timerStep();
+  if(STOP) return timerStep();
 
   n8 opcode = fetch();
   switch(opcode) {

@@ -1,66 +1,10 @@
 auto V9938::serialize(serializer& s) -> void {
-  s(videoRAM);
-  s(expansionRAM);
-  s(paletteRAM);
-  s(virq.enable);
-  s(virq.pending);
-  s(hirq.enable);
-  s(hirq.pending);
-  s(hirq.coincidence);
-  s(lirq.enable);
-  s(lirq.pending);
-  s(latch.timing);
-  s(latch.overscan);
-  s(latch.interlace);
-  s(latch.field);
-  s(screen.enable);
-  s(screen.digitize);
-  s(screen.grayscale);
-  s(screen.mode);
-  s(screen.interlace);
-  s(screen.overscan);
-  s(screen.timing);
-  s(screen.hadjust);
-  s(screen.vadjust);
-  s(screen.vscroll);
-  s(table.patternLayout);
-  s(table.patternGenerator);
-  s(table.spriteAttribute);
-  s(table.spritePatternGenerator);
-  s(table.color);
-  s(sprite.magnify);
-  s(sprite.size);
-  s(sprite.disable);
-  s(sprite.collision);
-  s(sprite.overflow);
-  s(sprite.last);
-  for(auto& o : sprites) {
-    s(o.x);
-    s(o.y);
-    s(o.pattern);
-    s(o.color);
-    s(o.collision);
-    s(o.priority);
-  }
-  s(io.vcounter);
-  s(io.hcounter);
-  s(io.controlLatch);
-  s(io.controlValue);
-  s(io.colorBackground);
-  s(io.colorForeground);
-  s(io.blinkColorBackground);
-  s(io.blinkColorForeground);
-  s(io.blinkPeriodBackground);
-  s(io.blinkPeriodForeground);
-  s(io.statusIndex);
-  s(io.paletteIndex);
-  s(io.paletteLatch);
-  s(io.paletteValue);
-  s(io.registerIndex);
-  s(io.registerFixed);
-  s(io.ramSelect);
-  s(io.ramBank);
-  s(io.ramLatch);
+  s(vram);
+  s(xram);
+  s(pram);
+  s(background);
+  s(sprite);
+  s(dac);
   s(op.counter);
   s(op.executing);
   s(op.ready);
@@ -85,4 +29,77 @@ auto V9938::serialize(serializer& s) -> void {
   s(op.lsx);
   s(op.ldx);
   s(op.lnx);
+  s(virq.enable);
+  s(virq.pending);
+  s(hirq.enable);
+  s(hirq.pending);
+  s(hirq.coincidence);
+  s(lirq.enable);
+  s(lirq.pending);
+  s(io.vcounter);
+  s(io.hcounter);
+  s(io.controlLatch);
+  s(io.controlValue);
+  s(io.videoMode);
+  s(io.timing);
+  s(io.interlace);
+  s(io.overscan);
+  s(io.colorBackground);
+  s(io.colorForeground);
+  s(io.blinkColorBackground);
+  s(io.blinkColorForeground);
+  s(io.blinkPeriodBackground);
+  s(io.blinkPeriodForeground);
+  s(io.statusIndex);
+  s(io.paletteIndex);
+  s(io.paletteLatch);
+  s(io.paletteValue);
+  s(io.registerIndex);
+  s(io.registerFixed);
+  s(io.ramSelect);
+  s(io.ramBank);
+  s(io.ramLatch);
+  s(latch.timing);
+  s(latch.interlace);
+  s(latch.overscan);
+  s(latch.field);
+}
+
+auto V9938::Background::serialize(serializer& s) -> void {
+  s(io.nameTableAddress);
+  s(io.patternTableAddress);
+  s(io.colorTableAddress);
+  s(io.hadjust);
+  s(io.vadjust);
+  s(io.vscroll);
+  s(latch.hadjust);
+  s(latch.vadjust);
+  s(latch.vscroll);
+  s(output.color);
+}
+
+auto V9938::Sprite::serialize(serializer& s) -> void {
+  for(auto& object : objects) {
+    s(object.x);
+    s(object.y);
+    s(object.pattern);
+    s(object.color);
+    s(object.collision);
+    s(object.priority);
+  }
+  s(io.nameTableAddress);
+  s(io.patternTableAddress);
+  s(io.zoom);
+  s(io.size);
+  s(io.disable);
+  s(io.overflowIndex);
+  s(io.overflow);
+  s(io.collision);
+  s(output.color);
+}
+
+auto V9938::DAC::serialize(serializer& s) -> void {
+  s(io.enable);
+  s(io.digitize);
+  s(io.grayscale);
 }

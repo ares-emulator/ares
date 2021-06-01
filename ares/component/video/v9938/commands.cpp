@@ -3,10 +3,10 @@ auto V9938::command(n8 data) -> void {
   if(op.executing) return;  //busy
 
   op.lgm = 0;
-  if(g4()) op.lgm = 4;
-  if(g5()) op.lgm = 5;
-  if(g6()) op.lgm = 6;
-  if(g7()) op.lgm = 7;
+  if(videoMode() == 0b01100) op.lgm = 4;
+  if(videoMode() == 0b10000) op.lgm = 5;
+  if(videoMode() == 0b10100) op.lgm = 6;
+  if(videoMode() == 0b11100) op.lgm = 7;
   if(!op.lgm) return;  //invalid
 
   op.logic     = data.bit(0,3);
@@ -105,7 +105,7 @@ auto V9938::address(n9 x, n10 y) -> n17 {
 }
 
 auto V9938::read(n1 source, n9 x, n10 y) -> n8 {
-  auto& ram = !source ? videoRAM : expansionRAM;
+  auto& ram = !source ? vram : xram;
   n8 byte = ram.read(address(x, y));
   if(op.lgm == 4) return n4(byte >> (~x & 1) * 4);
   if(op.lgm == 5) return n2(byte >> (~x & 3) * 2);
@@ -115,7 +115,7 @@ auto V9938::read(n1 source, n9 x, n10 y) -> n8 {
 }
 
 auto V9938::write(n1 source, n9 x, n10 y, n8 data) -> void {
-  auto& ram = !source ? videoRAM : expansionRAM;
+  auto& ram = !source ? vram : xram;
   n8 byte = ram.read(address(x, y));
   n8 lo, hi;
   if(op.lgm == 4) lo = (~x & 1) * 4, hi = lo + 3;

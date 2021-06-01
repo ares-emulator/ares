@@ -1,6 +1,4 @@
 auto SI::serialize(serializer& s) -> void {
-  SM5K::serialize(s);
-  Thread::serialize(s);
   s(io.dramAddress);
   s(io.readAddress);
   s(io.writeAddress);

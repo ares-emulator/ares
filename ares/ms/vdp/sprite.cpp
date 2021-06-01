@@ -1,17 +1,19 @@
 auto VDP::Sprite::setup(n9 voffset) -> void {
-  objectsValid = 0;
+  if(!self.displayEnable()) return;
+  n8 valid = 0;
   n5 limit = (8 << io.size << io.zoom) - 1;
+  for(auto& object : objects) object.y = 0xd0;
 
-  if(!vdp.io.mode.bit(3)) {
+  if(!self.videoMode().bit(3)) {
     n14 attributeAddress;
     attributeAddress.bit(7,13) = io.attributeTableAddress;
     for(u32 index : range(32)) {
-      n8 y = vdp.vram[attributeAddress++];
+      n8 y = self.vram[attributeAddress++];
       if(y == 0xd0) break;
 
-      n8 x = vdp.vram[attributeAddress++];
-      n8 pattern = vdp.vram[attributeAddress++];
-      n8 extra = vdp.vram[attributeAddress++];
+      n8 x = self.vram[attributeAddress++];
+      n8 pattern = self.vram[attributeAddress++];
+      n8 extra = self.vram[attributeAddress++];
 
       if(extra.bit(7)) x -= 32;
       y += 1;
@@ -20,22 +22,23 @@ auto VDP::Sprite::setup(n9 voffset) -> void {
 
       if(limit == 15) pattern.bit(0,1) = 0;
 
-      if(objectsValid == 4) {
+      if(valid == 4) {
         io.overflow = 1;
-        io.fifth = index;
+        io.overflowIndex = index;
         break;
       }
 
-      objects[objectsValid++] = {x, y, pattern, extra.bit(0,3)};
+      objects[valid++] = {x, y, pattern, extra.bit(0,3)};
     }
   } else {
     n14 attributeAddress;
     attributeAddress.bit(8,13) = io.attributeTableAddress.bit(1,6);
+
     for(u32 index : range(64)) {
-      n8 y = vdp.vram[attributeAddress + index];
-      n8 x = vdp.vram[attributeAddress + 0x80 + (index << 1)];
-      n8 pattern = vdp.vram[attributeAddress + 0x81 + (index << 1)];
-      if(vdp.vlines() == 192 && y == 0xd0) break;
+      n8 y = self.vram[attributeAddress + index];
+      n8 x = self.vram[attributeAddress + 0x80 + (index << 1)];
+      n8 pattern = self.vram[attributeAddress + 0x81 + (index << 1)];
+      if(self.vlines() == 192 && y == 0xd0) break;
 
       if(io.shift) x -= 8;
       y += 1;
@@ -44,20 +47,21 @@ auto VDP::Sprite::setup(n9 voffset) -> void {
 
       if(limit == 15) pattern.bit(0) = 0;
 
-      if(objectsValid == 8) {
+      if(valid == 8) {
         io.overflow = 1;
-      //todo: set io.fifth to something here?
+        io.overflowIndex = index;
         break;
       }
 
-      objects[objectsValid++] = {x, y, pattern};
+      objects[valid++] = {x, y, pattern};
     }
   }
 }
 
 auto VDP::Sprite::run(n8 hoffset, n9 voffset) -> void {
   output = {};
-  switch(vdp.io.mode) {
+  if(!self.displayEnable()) return;
+  switch(self.videoMode()) {
   case 0b0000: return graphics1(hoffset, voffset);
   case 0b0001: return;
   case 0b0010: return graphics2(hoffset, voffset);
@@ -84,8 +88,8 @@ auto VDP::Sprite::graphics1(n8 hoffset, n9 voffset) -> void {
 
 auto VDP::Sprite::graphics2(n8 hoffset, n9 voffset) -> void {
   n5 limit = (8 << io.size << io.zoom) - 1;
-  for(u32 objectIndex : range(objectsValid)) {
-    auto& o = objects[objectIndex];
+  for(auto& o : objects) {
+    if(o.y == 0xd0) continue;
     if(hoffset < o.x) continue;
     if(hoffset > o.x + limit) continue;
 
@@ -97,8 +101,8 @@ auto VDP::Sprite::graphics2(n8 hoffset, n9 voffset) -> void {
     address.bit(11,13) = io.patternTableAddress;
 
     n3 index = x ^ 7;
-    if(vdp.vram[address].bit(index)) {
-      if(output.color && vdp.dac.io.displayEnable) { io.collision = 1; break; }
+    if(self.vram[address].bit(index)) {
+      if(output.color && self.dac.io.displayEnable) { io.collision = 1; break; }
       output.color = o.color;
     }
   }
@@ -106,8 +110,8 @@ auto VDP::Sprite::graphics2(n8 hoffset, n9 voffset) -> void {
 
 auto VDP::Sprite::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
   n5 limit = (8 << io.size << io.zoom) - 1;
-  for(u32 objectIndex : range(objectsValid)) {
-    auto& o = objects[objectIndex];
+  for(auto& o : objects) {
+    if(o.y == 0xd0) continue;
     if(hoffset < o.x) continue;
     if(hoffset > o.x + 7) continue;
 
@@ -120,19 +124,19 @@ auto VDP::Sprite::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
 
     n3 index = x ^ 7;
     n4 color;
-    color.bit(0) = vdp.vram[address | 0].bit(index);
-    color.bit(1) = vdp.vram[address | 1].bit(index);
-    color.bit(2) = vdp.vram[address | 2].bit(index);
-    color.bit(3) = vdp.vram[address | 3].bit(index);
+    color.bit(0) = self.vram[address | 0].bit(index);
+    color.bit(1) = self.vram[address | 1].bit(index);
+    color.bit(2) = self.vram[address | 2].bit(index);
+    color.bit(3) = self.vram[address | 3].bit(index);
     if(color == 0) continue;
 
-    if(output.color && vdp.dac.io.displayEnable) { io.collision = 1; break; }
+    if(output.color && self.dac.io.displayEnable) { io.collision = 1; break; }
     output.color = color;
   }
 }
 
 auto VDP::Sprite::power() -> void {
+  for(auto& object : objects) object = {};
   io = {};
   output = {};
-  objectsValid = 0;
 }

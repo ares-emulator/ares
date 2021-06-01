@@ -25,7 +25,8 @@ struct VDP : Thread {
     } tracer;
   } debugger;
 
-  auto mode() const -> n4 { return io.mode; }
+  auto displayEnable() const -> n1 { return dac.io.displayEnable; }
+  auto videoMode() const -> n4 { return io.videoMode; }
   auto vcounter() const -> u32 { return io.vcounter; }
   auto hcounter() const -> u32 { return io.hcounter; }
 
@@ -54,13 +55,14 @@ struct VDP : Thread {
   auto registerWrite(n4 addr, n8 data) -> void;
 
   struct Background {
+    VDP& self;
+
     //background.cpp
     auto setup(n9 voffset) -> void;
     auto run(n8 hoffset, n9 voffset) -> void;
     auto graphics1(n8 hoffset, n9 voffset) -> void;
     auto graphics2(n8 hoffset, n9 voffset) -> void;
     auto graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void;
-
     auto power() -> void;
 
     //serialization.cpp
@@ -87,16 +89,17 @@ struct VDP : Thread {
       n1 palette;
       n1 priority;
     } output;
-  } background;
+  } background{*this};
 
   struct Sprite {
+    VDP& self;
+
     //sprite.cpp
     auto setup(n9 voffset) -> void;
     auto run(n8 hoffset, n9 voffset) -> void;
     auto graphics1(n8 hoffset, n9 voffset) -> void;
     auto graphics2(n8 hoffset, n9 voffset) -> void;
     auto graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void;
-
     auto power() -> void;
 
     //serialization.cpp
@@ -104,10 +107,10 @@ struct VDP : Thread {
 
     struct Object {
       n8 x;
-      n8 y;
+      n8 y = 0xd0;
       n8 pattern;
       n4 color;
-    };
+    } objects[8];
 
     struct IO {
       n1 zoom;
@@ -117,20 +120,19 @@ struct VDP : Thread {
       n3 patternTableAddress;
 
       //flags
+      n5 overflowIndex = 0b11111;
       n1 overflow;
       n1 collision;
-      n5 fifth;
     } io;
 
     struct Output {
       n4 color;
     } output;
-
-    array<Object[8]> objects;
-    u32 objectsValid;
-  } sprite;
+  } sprite{*this};
 
   struct DAC {
+    VDP& self;
+
     //dac.cpp
     auto setup(n8 voffset) -> void;
     auto run(n8 hoffset, n8 voffset) -> void;
@@ -149,7 +151,7 @@ struct VDP : Thread {
 
   //unserialized:
     u32* output = nullptr;
-  } dac;
+  } dac{*this};
 
   //color.cpp
   auto colorMasterSystem(n32) -> n64;
@@ -160,25 +162,33 @@ struct VDP : Thread {
 
 private:
   struct IRQ {
+    VDP& self;
+
+    //irq.cpp
+    auto poll() -> void;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
     struct Line {
       n1 enable;
       n1 pending;
       n8 counter;
+      n8 coincidence = 0xff;
     } line;
     struct Frame {
       n1 enable;
       n1 pending;
     } frame;
-  } irq;
+  } irq{*this};
 
   struct IO {
-    n4  mode;
+    n4  videoMode;
 
     //counters
     u32 vcounter = 0;  //vertical counter
     u32 hcounter = 0;  //horizontal counter
-    u32 pcounter = 0;  //horizontal counter (latched)
-    u32 lcounter = 0;  //line counter
     n12 ccounter = 0;  //csync counter
 
     //latches
@@ -188,6 +198,10 @@ private:
     n14 address;
     n8  vramLatch;
   } io;
+
+  struct Latch {
+    n8 hcounter;
+  } latch;
 };
 
 extern VDP vdp;

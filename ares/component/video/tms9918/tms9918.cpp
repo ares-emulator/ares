@@ -5,7 +5,8 @@ namespace ares {
 
 #include "io.cpp"
 #include "background.cpp"
-#include "sprites.cpp"
+#include "sprite.cpp"
+#include "dac.cpp"
 #include "serialization.cpp"
 
 auto TMS9918::load(Node::Video::Screen screen) -> void {
@@ -19,12 +20,13 @@ auto TMS9918::unload() -> void {
 auto TMS9918::main() -> void {
   if(io.vcounter < 192) {
     n8 y = io.vcounter;
-    sprite(y);
-    auto line = screen->pixels().data() + y * 256;
+    background.setup(y);
+    sprite.setup(y);
+    dac.setup(y);
     for(n8 x : range(256)) {
-      background(x, y);
-      sprite(x, y);
-      line[x] = output.color;
+      background.run(x, y);
+      sprite.run(x, y);
+      dac.run(x, y);
       step(1);
     }
     step(200);
@@ -34,11 +36,14 @@ auto TMS9918::main() -> void {
 
   io.vcounter++;
   if(io.vcounter == 262) io.vcounter = 0;
-  if(io.vcounter ==   0) io.irqLine = 0;
-  if(io.vcounter == 192) io.irqLine = 1, irq(io.irqEnable), frame();
+  if(io.vcounter ==   0) irqFrame.pending = 0;
+  if(io.vcounter == 192) irqFrame.pending = 1, irq(irqFrame.enable), frame();
 }
 
 auto TMS9918::power() -> void {
+  background.power();
+  sprite.power();
+  dac.power();
   io = {};
 }
 

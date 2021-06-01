@@ -41,19 +41,13 @@ auto FDS::allocate(Node::Port parent) -> Node::Peripheral {
 auto FDS::connect() -> void {
   if(!node->setPak(pak = platform->pak(node))) return;
 
+  information = {};
+  information.title = pak->attribute("title");
+
   state = node->append<Node::Setting::String>("State", "Ejected", [&](auto value) {
     change(value);
   });
   vector<string> states = {"Ejected"};
-
-  information = {};
-
-  if(auto fp = pak->read("manifest.bml")) {
-    information.manifest = fp->reads();
-  }
-
-  auto document = BML::unserialize(information.manifest);
-  information.title = document["game/title"].string();
 
   if(auto fp = pak->read("disk1.sideA")) {
     disk1.sideA.allocate(fp->size());

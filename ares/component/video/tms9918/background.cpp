@@ -1,28 +1,29 @@
-auto TMS9918::background(n8 hoffset, n8 voffset) -> void {
-  if(!io.displayEnable) {
-    output.color = io.colorBackground;
-    return;
-  }
+auto TMS9918::Background::setup(n8 voffset) -> void {
+}
 
-  switch(io.videoMode) {
-  case 0: return graphics1(hoffset, voffset);
-//case 1: return text1(hoffset, voffset);
-//case 2: return multicolor(hoffset, voffset);
-  case 4: return graphics2(hoffset, voffset);
-  default: output.color = 8; return;  //medium red color to identify unimplemented modes
+auto TMS9918::Background::run(n8 hoffset, n8 voffset) -> void {
+  output = {};
+
+  switch(self.videoMode()) {
+  case 0:  return graphics1(hoffset, voffset);
+  case 1:  return text1(hoffset, voffset);
+  case 2:  return multicolor(hoffset, voffset);
+  case 4:  return graphics2(hoffset, voffset);
+  default: return;
   }
 }
 
-auto TMS9918::text1(n8 hoffset, n8 voffset) -> void {
+auto TMS9918::Background::text1(n8 hoffset, n8 voffset) -> void {
+  debug(unimplemented, "[TMS9918::Background::text1]");
 }
 
-auto TMS9918::graphics1(n8 hoffset, n8 voffset) -> void {
+auto TMS9918::Background::graphics1(n8 hoffset, n8 voffset) -> void {
   n14 nameAddress;
   nameAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameAddress.bit( 5, 9) = voffset.bit(3,7);
   nameAddress.bit(10,13) = io.nameTableAddress;
 
-  n8 pattern = vram.read(nameAddress);
+  n8 pattern = self.vram.read(nameAddress);
 
   n14 patternAddress;
   patternAddress.bit( 0, 2) = voffset.bit(0,2);
@@ -33,22 +34,22 @@ auto TMS9918::graphics1(n8 hoffset, n8 voffset) -> void {
   colorAddress.bit(0, 4) = pattern.bit(3,7);
   colorAddress.bit(6,13) = io.colorTableAddress;
 
-  n8 color = vram.read(colorAddress);
+  n8 color = self.vram.read(colorAddress);
   n3 index = hoffset ^ 7;
-  if(!vram.read(patternAddress).bit(index)) {
+  if(!self.vram.read(patternAddress).bit(index)) {
     output.color = color.bit(0,3);
   } else {
     output.color = color.bit(4,7);
   }
 }
 
-auto TMS9918::graphics2(n8 hoffset, n8 voffset) -> void {
+auto TMS9918::Background::graphics2(n8 hoffset, n8 voffset) -> void {
   n14 nameAddress;
   nameAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameAddress.bit( 5, 9) = voffset.bit(3,7);
   nameAddress.bit(10,13) = io.nameTableAddress;
 
-  n8 pattern = vram.read(nameAddress);
+  n8 pattern = self.vram.read(nameAddress);
 
   n14 patternAddress;
   patternAddress.bit(0, 2) = voffset.bit(0,2);
@@ -60,17 +61,20 @@ auto TMS9918::graphics2(n8 hoffset, n8 voffset) -> void {
   colorAddress.bit(13) = io.colorTableAddress.bit(7);
 
   n8 colorMask = io.colorTableAddress.bit(0,6) << 1 | 1;
-  n8 color = vram.read(colorAddress);
+  n8 color = self.vram.read(colorAddress);
   n3 index = hoffset ^ 7;
-  if(!vram.read(patternAddress).bit(index)) {
+  if(!self.vram.read(patternAddress).bit(index)) {
     output.color = color.bit(0,3);
   } else {
     output.color = color.bit(4,7);
   }
-  if(!output.color) {
-    output.color = io.colorBackground;
-  }
 }
 
-auto TMS9918::multicolor(n8 hoffset, n8 voffset) -> void {
+auto TMS9918::Background::multicolor(n8 hoffset, n8 voffset) -> void {
+  debug(unimplemented, "[TMS9918::Background::multicolor]");
+}
+
+auto TMS9918::Background::power() -> void {
+  io = {};
+  output = {};
 }

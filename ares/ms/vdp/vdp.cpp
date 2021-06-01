@@ -4,6 +4,7 @@ namespace ares::MasterSystem {
 
 VDP vdp;
 #include "io.cpp"
+#include "irq.cpp"
 #include "background.cpp"
 #include "sprite.cpp"
 #include "dac.cpp"
@@ -60,16 +61,18 @@ auto VDP::unload() -> void {
 
 auto VDP::main() -> void {
   if(io.vcounter <= vlines()) {
-    if(io.lcounter-- == 0) {
-      io.lcounter = irq.line.counter;
+    if(irq.line.counter-- == 0) {
+      irq.line.counter = irq.line.coincidence;
       irq.line.pending = 1;
+      irq.poll();
     }
   } else {
-    io.lcounter = irq.line.counter;
+    irq.line.counter = irq.line.coincidence;
   }
 
   if(io.vcounter == vlines() + 1) {
     irq.frame.pending = 1;
+    irq.poll();
   }
 
   //684 clocks/scanline
@@ -113,16 +116,16 @@ auto VDP::step(u32 clocks) -> void {
       }
     }
 
-    bool line = irq.line.pending & irq.line.enable;
-    bool frame = irq.frame.pending & irq.frame.enable;
-    cpu.setIRQ(line | frame);
+    irq.poll();
     Thread::step(1);
     Thread::synchronize(cpu);
   }
 }
 
 auto VDP::vlines() -> u32 {
-  switch(io.mode) {
+  if(revision->value() == 1) return 192;
+
+  switch(videoMode()) {
   default:     return 192;
   case 0b1011: return 224;
   case 0b1110: return 240;
@@ -140,12 +143,12 @@ auto VDP::power() -> void {
   for(auto& byte : vram) byte = 0x00;
   for(auto& byte : cram) byte = 0x00;
 
-  irq = {};
-  io = {};
-
   background.power();
   sprite.power();
   dac.power();
+  irq.power();
+  io = {};
+  latch = {};
 }
 
 }

@@ -47,6 +47,7 @@ namespace nall {
   #pragma GCC diagnostic ignored "-Wtrigraphs"
   #pragma GCC diagnostic ignored "-Wnarrowing"
   #pragma GCC diagnostic ignored "-Wattributes"
+  #pragma GCC diagnostic ignored "-Wstringop-overflow"  //GCC 10.2 warning heuristic is buggy
 #elif defined(_MSC_VER)
   #define COMPILER_MICROSOFT
   struct Compiler {

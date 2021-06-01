@@ -44,15 +44,19 @@ protected:
     n1  output;
   };
 
-  struct IO {
-    n3 register;
+  struct Latch {
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n1 type;
+    n2 channel;
   };
 
-  Tone tone0;
-  Tone tone1;
-  Tone tone2;
+  Tone  tone0;
+  Tone  tone1;
+  Tone  tone2;
   Noise noise;
-  IO io;
+  Latch latch;
 };
 
 }

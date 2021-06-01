@@ -1,6 +1,6 @@
 struct VDP : TMS9918, V9938, Thread {
   Node::Object node;
-  Node::Video::Screen screen_;
+  Node::Video::Screen screen;
 
   //vdp.cpp
   auto load(Node::Object) -> void;

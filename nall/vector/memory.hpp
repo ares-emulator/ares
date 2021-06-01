@@ -19,7 +19,7 @@ template<typename T> auto vector<T>::reset() -> void {
 
 //acquire ownership of allocated memory
 
-template<typename T> auto vector<T>::acquire(const T* data, u64 size, u64 capacity) -> void {
+template<typename T> auto vector<T>::acquire(T* data, u64 size, u64 capacity) -> void {
   reset();
   _pool = data;
   _size = size;

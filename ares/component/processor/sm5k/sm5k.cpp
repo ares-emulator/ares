@@ -13,6 +13,7 @@ namespace ares {
 auto SM5K::setP1(n4 data) -> void {
   if(P1.bit(0) && !data.bit(0)) IFA = 1;
   if(P1.bit(1) && !data.bit(1)) IFB = 1;
+  if(P1.bit(1) && !data.bit(1) && RC == 3) timerIncrement();
   P1 = data;
 }
 

@@ -1,4 +1,4 @@
 auto SM5K::fetch() -> n8 {
-  tick();
+  timerStep();
   return ROM[PC++];
 }

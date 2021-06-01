@@ -43,12 +43,10 @@ auto CPU::synchronize() -> void {
 
    vi.clock -= clocks;
    ai.clock -= clocks;
-   si.clock -= clocks;
   rsp.clock -= clocks;
   rdp.clock -= clocks;
   while( vi.clock < 0)  vi.main();
   while( ai.clock < 0)  ai.main();
-  while( si.clock < 0)  si.main();
   while(rsp.clock < 0) rsp.main();
   while(rdp.clock < 0) rdp.main();
 

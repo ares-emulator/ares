@@ -1,4 +1,5 @@
 auto VDP::Background::setup(n9 voffset) -> void {
+  if(!self.displayEnable()) return;
   latch.nameTableAddress = io.nameTableAddress;
   latch.hscroll = io.hscroll;
   latch.vscroll = io.vscroll;
@@ -6,7 +7,8 @@ auto VDP::Background::setup(n9 voffset) -> void {
 
 auto VDP::Background::run(n8 hoffset, n9 voffset) -> void {
   output = {};
-  switch(vdp.mode()) {
+  if(!self.displayEnable()) return;
+  switch(self.videoMode()) {
   case 0b0000: return graphics1(hoffset, voffset);
   case 0b0001: return;
   case 0b0010: return graphics2(hoffset, voffset);
@@ -31,7 +33,7 @@ auto VDP::Background::graphics1(n8 hoffset, n9 voffset) -> void {
   nameTableAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameTableAddress.bit( 5, 9) = voffset.bit(3,7);
   nameTableAddress.bit(10,13) = latch.nameTableAddress;
-  n8 pattern = vdp.vram[nameTableAddress];
+  n8 pattern = self.vram[nameTableAddress];
 
   n14 patternAddress;
   patternAddress.bit( 0, 2) = voffset.bit(0,2);
@@ -42,9 +44,9 @@ auto VDP::Background::graphics1(n8 hoffset, n9 voffset) -> void {
   colorAddress.bit(0, 4) = pattern.bit(3,7);
   colorAddress.bit(6,13) = io.colorTableAddress;
 
-  n8 color = vdp.vram[colorAddress];
+  n8 color = self.vram[colorAddress];
   n3 index = hoffset ^ 7;
-  if(!vdp.vram[patternAddress].bit(index)) {
+  if(!self.vram[patternAddress].bit(index)) {
     output.color = color.bit(0,3);
   } else {
     output.color = color.bit(4,7);
@@ -56,7 +58,7 @@ auto VDP::Background::graphics2(n8 hoffset, n9 voffset) -> void {
   nameTableAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameTableAddress.bit( 5, 9) = voffset.bit(3,7);
   nameTableAddress.bit(10,13) = latch.nameTableAddress;
-  n8 pattern = vdp.vram[nameTableAddress];
+  n8 pattern = self.vram[nameTableAddress];
 
   n14 patternAddress;
   patternAddress.bit(0, 2) = voffset.bit(0,2);
@@ -68,9 +70,9 @@ auto VDP::Background::graphics2(n8 hoffset, n9 voffset) -> void {
   colorAddress.bit(13) = io.colorTableAddress.bit(7);
 
   n8 colorMask = io.colorTableAddress.bit(0,6) << 1 | 1;
-  n8 color = vdp.vram[colorAddress];
+  n8 color = self.vram[colorAddress];
   n3 index = hoffset ^ 7;
-  if(!vdp.vram[patternAddress].bit(index)) {
+  if(!self.vram[patternAddress].bit(index)) {
     output.color = color.bit(0,3);
   } else {
     output.color = color.bit(4,7);
@@ -89,7 +91,7 @@ auto VDP::Background::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
     nameTableAddress  = latch.nameTableAddress >> 1 << 11;
     nameTableAddress += voffset >> 3 << 6;
     nameTableAddress += hoffset >> 3 << 1;
-    if(vdp.revision->value() == 1) {
+    if(self.revision->value() == 1) {
       //SMS1 quirk: bit 0 of name table base address acts as a mask
       nameTableAddress.bit(10) &= latch.nameTableAddress.bit(0);
     }
@@ -101,8 +103,8 @@ auto VDP::Background::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
   }
 
   n16 pattern;
-  pattern.byte(0) = vdp.vram[nameTableAddress | 0];
-  pattern.byte(1) = vdp.vram[nameTableAddress | 1];
+  pattern.byte(0) = self.vram[nameTableAddress | 0];
+  pattern.byte(1) = self.vram[nameTableAddress | 1];
 
   if(pattern.bit( 9)) hoffset ^= 7;  //hflip
   if(pattern.bit(10)) voffset ^= 7;  //vflip
@@ -114,10 +116,10 @@ auto VDP::Background::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
   patternAddress.bit(5,13) = pattern.bit(0,8);
 
   n3 index = hoffset ^ 7;
-  output.color.bit(0) = vdp.vram[patternAddress | 0].bit(index);
-  output.color.bit(1) = vdp.vram[patternAddress | 1].bit(index);
-  output.color.bit(2) = vdp.vram[patternAddress | 2].bit(index);
-  output.color.bit(3) = vdp.vram[patternAddress | 3].bit(index);
+  output.color.bit(0) = self.vram[patternAddress | 0].bit(index);
+  output.color.bit(1) = self.vram[patternAddress | 1].bit(index);
+  output.color.bit(2) = self.vram[patternAddress | 2].bit(index);
+  output.color.bit(3) = self.vram[patternAddress | 3].bit(index);
 
   if(output.color == 0) output.priority = 0;
 }

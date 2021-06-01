@@ -6,10 +6,15 @@ namespace ares {
 
 struct TMS9918 {
   Node::Video::Screen screen;
+  Memory::Writable<n8> vram;
 
   virtual auto step(u32 clocks) -> void = 0;
   virtual auto irq(bool line) -> void = 0;
   virtual auto frame() -> void = 0;
+
+  auto videoMode() const -> n4 { return io.videoMode; }
+  auto vcounter() const -> n8 { return io.vcounter; }
+  auto hcounter() const -> n8 { return io.hcounter; }
 
   //tms9918.cpp
   auto load(Node::Video::Screen) -> void;
@@ -26,62 +31,109 @@ struct TMS9918 {
   auto control(n8) -> void;
   auto register(n3, n8) -> void;
 
-  //background.cpp
-  auto background(n8 hoffset, n8 voffset) -> void;
-  auto text1(n8 hoffset, n8 voffset) -> void;
-  auto graphics1(n8 hoffset, n8 voffset) -> void;
-  auto graphics2(n8 hoffset, n8 voffset) -> void;
-  auto multicolor(n8 hoffset, n8 voffset) -> void;
-
-  //sprites.cpp
-  auto sprite(n8 voffset) -> void;
-  auto sprite(n8 hoffset, n8 voffset) -> void;
-
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
 protected:
-  Memory::Writable<n8> vram;
+  struct Background {
+    TMS9918& self;
+
+    //background.cpp
+    auto setup(n8 voffset) -> void;
+    auto run(n8 hoffset, n8 voffset) -> void;
+    auto text1(n8 hoffset, n8 voffset) -> void;
+    auto graphics1(n8 hoffset, n8 voffset) -> void;
+    auto graphics2(n8 hoffset, n8 voffset) -> void;
+    auto multicolor(n8 hoffset, n8 voffset) -> void;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct IO {
+      n4 nameTableAddress;
+      n8 colorTableAddress;
+      n3 patternTableAddress;
+    } io;
+
+    struct Output {
+      n4 color;
+    } output;
+  } background{*this};
+
+  struct Sprite {
+    TMS9918& self;
+
+    //sprite.cpp
+    auto setup(n8 voffset) -> void;
+    auto run(n8 hoffset, n8 voffset) -> void;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct Object {
+      n8 x;
+      n8 y = 0xd0;
+      n8 pattern;
+      n4 color;
+    } objects[4];
+
+    struct IO {
+      n1 zoom;
+      n1 size;
+      n7 attributeTableAddress;
+      n3 patternTableAddress;
+
+      //flags
+      n5 overflowIndex = 0b11111;
+      n1 overflow;
+      n1 collision;
+    } io;
+
+    struct Output {
+      n4 color;
+    } output;
+  } sprite{*this};
+
+  struct DAC {
+    TMS9918& self;
+
+    //dac.cpp
+    auto setup(n8 voffset) -> void;
+    auto run(n8 hoffset, n8 voffset) -> void;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct IO {
+      n1 displayEnable;
+      n1 externalSync;  //todo
+      n4 colorBackground;
+      n4 colorForeground;  //todo
+    } io;
+
+  //unserialized:
+    u32* output = nullptr;
+  } dac{*this};
+
+  struct IRQFrame {
+    n1 enable;
+    n1 pending;
+  } irqFrame;
 
   struct IO {
-    u32 vcounter = 0;
-    u32 hcounter = 0;
+    n8  vcounter;
+    n8  hcounter;
 
     n1  controlLatch;
     n16 controlValue;
     n8  vramLatch;
 
-    n5  spriteOverflowIndex;
-    n1  spriteCollision;
-    n1  spriteOverflow;
-    n1  irqLine;
-
-    n1  externalInput;
     n3  videoMode;
-    n1  spriteZoom;
-    n1  spriteSize;
-    n1  irqEnable;
-    n1  displayEnable;
-    n1  ramMode = 1;  //0 = 4KB; 1 = 16KB
-    n4  nameTableAddress;
-    n8  colorTableAddress;
-    n3  patternTableAddress;
-    n7  spriteAttributeTableAddress;
-    n3  spritePatternTableAddress;
-    n4  colorBackground;
-    n4  colorForeground;
+    n1  vramMode = 1;  //0 = 4KB; 1 = 16KB
   } io;
-
-  struct Sprite {
-    n8  x;
-    n8  y;
-    n8  pattern;
-    n4  color;
-  } sprites[4];
-
-  struct Output {
-    n4  color;
-  } output;
 };
 
 }
