@@ -1,6 +1,6 @@
 //Motorola 68000
 
-struct CPU : M68K, Thread {
+struct CPU : M68000, Thread {
   Node::Object node;
 
   struct Debugger {

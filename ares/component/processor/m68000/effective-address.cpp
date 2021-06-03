@@ -1,5 +1,5 @@
 //used by JMP and JSR: as PC is guaranteed to change, avoid performing any unnecessary prefetches
-auto M68K::prefetched(EffectiveAddress& ea) -> n32 {
+auto M68000::prefetched(EffectiveAddress& ea) -> n32 {
   if(ea.valid) return ea.address;
   ea.valid = true;
 
@@ -53,7 +53,7 @@ auto M68K::prefetched(EffectiveAddress& ea) -> n32 {
   return ea.address = 0;  //should never occur
 }
 
-template<u32 Size> auto M68K::fetch(EffectiveAddress& ea) -> n32 {
+template<u32 Size> auto M68000::fetch(EffectiveAddress& ea) -> n32 {
   if(ea.valid) return ea.address;
   ea.valid = true;
 
@@ -126,7 +126,7 @@ template<u32 Size> auto M68K::fetch(EffectiveAddress& ea) -> n32 {
   return ea.address = 0;  //should never occur
 }
 
-template<u32 Size, bool hold, bool fast> auto M68K::read(EffectiveAddress& ea) -> n32 {
+template<u32 Size, bool hold, bool fast> auto M68000::read(EffectiveAddress& ea) -> n32 {
   fetch<Size>(ea);
 
   switch(ea.mode) {
@@ -191,7 +191,7 @@ template<u32 Size, bool hold, bool fast> auto M68K::read(EffectiveAddress& ea) -
   return 0;
 }
 
-template<u32 Size, bool hold> auto M68K::write(EffectiveAddress& ea, n32 data) -> void {
+template<u32 Size, bool hold> auto M68000::write(EffectiveAddress& ea, n32 data) -> void {
   fetch<Size>(ea);
 
   switch(ea.mode) {

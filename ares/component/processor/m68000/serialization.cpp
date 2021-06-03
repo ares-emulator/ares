@@ -1,4 +1,4 @@
-auto M68K::serialize(serializer& s) -> void {
+auto M68000::serialize(serializer& s) -> void {
   s(r.d);
   s(r.a);
   s(r.sp);

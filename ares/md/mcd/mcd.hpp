@@ -1,6 +1,6 @@
 //Mega CD
 
-struct MCD : M68K, Thread {
+struct MCD : M68000, Thread {
   Node::Object node;
   Node::Port tray;
   Node::Peripheral disc;

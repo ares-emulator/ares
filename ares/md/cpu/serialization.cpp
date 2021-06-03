@@ -1,5 +1,5 @@
 auto CPU::serialize(serializer& s) -> void {
-  M68K::serialize(s);
+  M68000::serialize(s);
   Thread::serialize(s);
   s(ram);
   s(io.version);

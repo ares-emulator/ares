@@ -168,7 +168,7 @@ auto MCD::wait(u32 clocks) -> void {
 }
 
 auto MCD::power(bool reset) -> void {
-  M68K::power();
+  M68000::power();
   Thread::create(12'500'000, {&MCD::main, this});
   counter = {};
   io = {};

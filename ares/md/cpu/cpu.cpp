@@ -82,7 +82,7 @@ auto CPU::lower(Interrupt interrupt) -> bool {
 }
 
 auto CPU::power(bool reset) -> void {
-  M68K::power();
+  M68000::power();
   Thread::create(system.frequency() / 7.0, {&CPU::main, this});
 
   tmssEnable = system.tmss->value();

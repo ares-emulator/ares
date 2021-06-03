@@ -1,9 +1,9 @@
-auto M68K::instruction() -> void {
+auto M68000::instruction() -> void {
   r.ird = r.ir;
   return instructionTable[r.ird]();
 }
 
-M68K::M68K() {
+M68000::M68000() {
   #define bind(id, name, ...) { \
     assert(!instructionTable[id]); \
     instructionTable[id] = [=] { return instruction##name(__VA_ARGS__); }; \

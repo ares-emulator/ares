@@ -1,4 +1,4 @@
-ares.components += m68k
+ares.components += m68000
 ares.components += z80
 ares.components += sh2
 ares.components += ssp1601

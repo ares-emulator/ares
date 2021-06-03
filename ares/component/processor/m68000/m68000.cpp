@@ -1,5 +1,5 @@
 #include <ares/ares.hpp>
-#include "m68k.hpp"
+#include "m68000.hpp"
 
 namespace ares {
 
@@ -17,7 +17,7 @@ enum : bool { Reverse = 1 };
 #include "instruction.cpp"
 #include "serialization.cpp"
 
-auto M68K::power() -> void {
+auto M68000::power() -> void {
   for(auto& dr : r.d) dr = 0;
   for(auto& ar : r.a) ar = 0;
   r.sp = 0;
@@ -40,7 +40,7 @@ auto M68K::power() -> void {
   r.reset = false;
 }
 
-auto M68K::supervisor() -> bool {
+auto M68000::supervisor() -> bool {
   if(r.s) return true;
 
   r.pc -= 4;
@@ -48,7 +48,7 @@ auto M68K::supervisor() -> bool {
   return false;
 }
 
-auto M68K::exception(u32 exception, u32 vector, u32 priority) -> void {
+auto M68000::exception(u32 exception, u32 vector, u32 priority) -> void {
   idle(10);  //todo: not accurate
 
   auto pc = r.pc;
@@ -69,7 +69,7 @@ auto M68K::exception(u32 exception, u32 vector, u32 priority) -> void {
   prefetch();
 }
 
-auto M68K::interrupt(u32 vector, u32 priority) -> void {
+auto M68000::interrupt(u32 vector, u32 priority) -> void {
   return exception(Exception::Interrupt, vector, priority);
 }
 

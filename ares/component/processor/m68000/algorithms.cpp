@@ -1,4 +1,4 @@
-template<u32 Size, bool extend> auto M68K::ADD(n32 source, n32 target) -> n32 {
+template<u32 Size, bool extend> auto M68000::ADD(n32 source, n32 target) -> n32 {
   target = clip<Size>(target);
   source = clip<Size>(source);
   u32 result   = target + source + (extend ? r.x : 0);
@@ -14,7 +14,7 @@ template<u32 Size, bool extend> auto M68K::ADD(n32 source, n32 target) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::AND(n32 source, n32 target) -> n32 {
+template<u32 Size> auto M68000::AND(n32 source, n32 target) -> n32 {
   u32 result = target & source;
 
   r.c = 0;
@@ -25,7 +25,7 @@ template<u32 Size> auto M68K::AND(n32 source, n32 target) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::ASL(n32 result, u32 shift) -> n32 {
+template<u32 Size> auto M68000::ASL(n32 result, u32 shift) -> n32 {
   bool carry = false;
   u32 overflow = 0;
   for(auto _ : range(shift)) {
@@ -44,7 +44,7 @@ template<u32 Size> auto M68K::ASL(n32 result, u32 shift) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::ASR(n32 result, u32 shift) -> n32 {
+template<u32 Size> auto M68000::ASR(n32 result, u32 shift) -> n32 {
   bool carry = false;
   u32 overflow = 0;
   for(auto _ : range(shift)) {
@@ -63,7 +63,7 @@ template<u32 Size> auto M68K::ASR(n32 result, u32 shift) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::CMP(n32 source, n32 target) -> n32 {
+template<u32 Size> auto M68000::CMP(n32 source, n32 target) -> n32 {
   target = clip<Size>(target);
   source = clip<Size>(source);
   u32 result   = target - source;
@@ -78,7 +78,7 @@ template<u32 Size> auto M68K::CMP(n32 source, n32 target) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::EOR(n32 source, n32 target) -> n32 {
+template<u32 Size> auto M68000::EOR(n32 source, n32 target) -> n32 {
   u32 result = target ^ source;
 
   r.c = 0;
@@ -89,7 +89,7 @@ template<u32 Size> auto M68K::EOR(n32 source, n32 target) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::LSL(n32 result, u32 shift) -> n32 {
+template<u32 Size> auto M68000::LSL(n32 result, u32 shift) -> n32 {
   bool carry = false;
   for(auto _ : range(shift)) {
     carry = result & msb<Size>();
@@ -105,7 +105,7 @@ template<u32 Size> auto M68K::LSL(n32 result, u32 shift) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::LSR(n32 result, u32 shift) -> n32 {
+template<u32 Size> auto M68000::LSR(n32 result, u32 shift) -> n32 {
   bool carry = false;
   for(auto _ : range(shift)) {
     carry = result & lsb<Size>();
@@ -121,7 +121,7 @@ template<u32 Size> auto M68K::LSR(n32 result, u32 shift) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::OR(n32 source, n32 target) -> n32 {
+template<u32 Size> auto M68000::OR(n32 source, n32 target) -> n32 {
   u32 result = target | source;
 
   r.c = 0;
@@ -132,7 +132,7 @@ template<u32 Size> auto M68K::OR(n32 source, n32 target) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::ROL(n32 result, u32 shift) -> n32 {
+template<u32 Size> auto M68000::ROL(n32 result, u32 shift) -> n32 {
   bool carry = false;
   for(auto _ : range(shift)) {
     carry = result & msb<Size>();
@@ -147,7 +147,7 @@ template<u32 Size> auto M68K::ROL(n32 result, u32 shift) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::ROR(n32 result, u32 shift) -> n32 {
+template<u32 Size> auto M68000::ROR(n32 result, u32 shift) -> n32 {
   bool carry = false;
   for(auto _ : range(shift)) {
     carry = result & lsb<Size>();
@@ -163,7 +163,7 @@ template<u32 Size> auto M68K::ROR(n32 result, u32 shift) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::ROXL(n32 result, u32 shift) -> n32 {
+template<u32 Size> auto M68000::ROXL(n32 result, u32 shift) -> n32 {
   bool carry = r.x;
   for(auto _ : range(shift)) {
     bool extend = carry;
@@ -180,7 +180,7 @@ template<u32 Size> auto M68K::ROXL(n32 result, u32 shift) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size> auto M68K::ROXR(n32 result, u32 shift) -> n32 {
+template<u32 Size> auto M68000::ROXR(n32 result, u32 shift) -> n32 {
   bool carry = r.x;
   for(auto _ : range(shift)) {
     bool extend = carry;
@@ -198,7 +198,7 @@ template<u32 Size> auto M68K::ROXR(n32 result, u32 shift) -> n32 {
   return clip<Size>(result);
 }
 
-template<u32 Size, bool extend> auto M68K::SUB(n32 source, n32 target) -> n32 {
+template<u32 Size, bool extend> auto M68000::SUB(n32 source, n32 target) -> n32 {
   target = clip<Size>(target);
   source = clip<Size>(source);
   u32 result   = target - source - (extend ? r.x : 0);

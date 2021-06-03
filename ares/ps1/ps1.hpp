@@ -4,6 +4,7 @@
 #include <ares/ares.hpp>
 #include <nall/hashset.hpp>
 #include <nall/recompiler/amd64/amd64.hpp>
+#include <component/processor/m68hc05/m68hc05.hpp>
 
 namespace ares::PlayStation {
   auto enumerate() -> vector<string>;

@@ -1,3 +1,5 @@
+ares.components += m68hc05
+
 ares.objects += ares-ps1-memory
 ares.objects += ares-ps1-system
 ares.objects += ares-ps1-disc

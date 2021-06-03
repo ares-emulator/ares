@@ -4,7 +4,7 @@
 
 namespace ares {
 
-struct M68K {
+struct M68000 {
   virtual auto idle(u32 clocks) -> void = 0;
   virtual auto wait(u32 clocks) -> void = 0;
   virtual auto read(n1 upper, n1 lower, n24 address, n16 data = 0) -> n16 = 0;
@@ -66,7 +66,8 @@ struct M68K {
     Trap               = 32,  //0x80-0xbc (#0-#15)
   };};
 
-  M68K();
+  //m68000.cpp
+  M68000();
   auto power() -> void;
   auto supervisor() -> bool;
   auto exception(u32 exception, u32 vector, u32 priority = 7) -> void;

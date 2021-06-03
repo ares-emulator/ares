@@ -16,7 +16,8 @@ ares.objects += $(if $(findstring arm7tdmi,$(ares.components)),ares-processor-ar
 ares.objects += $(if $(findstring gsu,$(ares.components)),ares-processor-gsu)
 ares.objects += $(if $(findstring hg51b,$(ares.components)),ares-processor-hg51b)
 ares.objects += $(if $(findstring huc6280,$(ares.components)),ares-processor-huc6280)
-ares.objects += $(if $(findstring m68k,$(ares.components)),ares-processor-m68k)
+ares.objects += $(if $(findstring m68hc05,$(ares.components)),ares-processor-m68hc05)
+ares.objects += $(if $(findstring m68000,$(ares.components)),ares-processor-m68000)
 ares.objects += $(if $(findstring mos6502,$(ares.components)),ares-processor-mos6502)
 ares.objects += $(if $(findstring sh2,$(ares.components)),ares-processor-sh2)
 ares.objects += $(if $(findstring sm5k,$(ares.components)),ares-processor-sm5k)
@@ -48,7 +49,8 @@ $(object.path)/ares-processor-arm7tdmi.o: $(ares.path)/component/processor/arm7t
 $(object.path)/ares-processor-gsu.o:      $(ares.path)/component/processor/gsu/gsu.cpp
 $(object.path)/ares-processor-hg51b.o:    $(ares.path)/component/processor/hg51b/hg51b.cpp
 $(object.path)/ares-processor-huc6280.o:  $(ares.path)/component/processor/huc6280/huc6280.cpp
-$(object.path)/ares-processor-m68k.o:     $(ares.path)/component/processor/m68k/m68k.cpp
+$(object.path)/ares-processor-m68hc05.o:  $(ares.path)/component/processor/m68hc05/m68hc05.cpp
+$(object.path)/ares-processor-m68000.o:   $(ares.path)/component/processor/m68000/m68000.cpp
 $(object.path)/ares-processor-mos6502.o:  $(ares.path)/component/processor/mos6502/mos6502.cpp
 $(object.path)/ares-processor-sh2.o:      $(ares.path)/component/processor/sh2/sh2.cpp
 $(object.path)/ares-processor-sm5k.o:     $(ares.path)/component/processor/sm5k/sm5k.cpp

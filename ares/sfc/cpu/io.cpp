@@ -126,6 +126,7 @@ auto CPU::writeCPU(n24 address, n8 data) -> void {
 
   case 0x4200:  //NMITIMEN
     io.autoJoypadPoll = data.bit(0);
+    if(!io.autoJoypadPoll) status.autoJoypadCounter = 33;  //disable polling
     nmitimenUpdate(data);
     return;
 

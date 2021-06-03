@@ -66,7 +66,7 @@ auto CPU::lower(Interrupt interrupt) -> bool {
 }
 
 auto CPU::power(bool reset) -> void {
-  M68K::power();
+  M68000::power();
   Thread::create(12'000'000, {&CPU::main, this});
   io = {};
   raise(Interrupt::Reset);
