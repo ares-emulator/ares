@@ -97,19 +97,19 @@ auto System::load(Node::System& root, string name) -> bool {
   cpu.load(node);
   vdp.load(node);
   psg.load(node);
-  if(MasterSystem::Model::MasterSystem()) {
+  if(Device::MasterSystem()) {
     controllerPort1.load(node);
     controllerPort2.load(node);
-  }
-  if(MasterSystem::Region::NTSCJ()) {
-    if(MasterSystem::Model::MarkIII()) {
-      expansionPort.load(node);
-    }
-    if(MasterSystem::Model::MasterSystemI()) {
-      opll.load(node);
-    }
-    if(MasterSystem::Model::MasterSystemII()) {
-      opll.load(node);
+    if(MasterSystem::Region::NTSCJ()) {
+      if(MasterSystem::Model::MarkIII()) {
+        expansionPort.load(node);
+      }
+      if(MasterSystem::Model::MasterSystemI()) {
+        opll.load(node);
+      }
+      if(MasterSystem::Model::MasterSystemII()) {
+        opll.load(node);
+      }
     }
   }
   return true;
@@ -127,19 +127,19 @@ auto System::unload() -> void {
   cpu.unload();
   vdp.unload();
   psg.unload();
-  if(MasterSystem::Model::MasterSystem()) {
+  if(Device::MasterSystem()) {
     controllerPort1.unload();
     controllerPort2.unload();
-  }
-  if(MasterSystem::Region::NTSCJ()) {
-    if(MasterSystem::Model::MarkIII()) {
-      expansionPort.unload();
-    }
-    if(MasterSystem::Model::MasterSystemI()) {
-      opll.unload();
-    }
-    if(MasterSystem::Model::MasterSystemII()) {
-      opll.unload();
+    if(MasterSystem::Region::NTSCJ()) {
+      if(MasterSystem::Model::MarkIII()) {
+        expansionPort.unload();
+      }
+      if(MasterSystem::Model::MasterSystemI()) {
+        opll.unload();
+      }
+      if(MasterSystem::Model::MasterSystemII()) {
+        opll.unload();
+      }
     }
   }
   bios.unload();
@@ -158,16 +158,19 @@ auto System::power(bool reset) -> void {
   cpu.power();
   vdp.power();
   psg.power();
-  if(MasterSystem::Model::MasterSystem()) {
+  if(Device::MasterSystem()) {
     controllerPort1.power();
     controllerPort2.power();
-  }
-  if(MasterSystem::Region::NTSCJ()) {
-    if(MasterSystem::Model::MasterSystemI()) {
-      opll.power();
-    }
-    if(MasterSystem::Model::MasterSystemII()) {
-      opll.power();
+    if(MasterSystem::Region::NTSCJ()) {
+      if(MasterSystem::Model::MarkIII()) {
+        expansionPort.power();
+      }
+      if(MasterSystem::Model::MasterSystemI()) {
+        opll.power();
+      }
+      if(MasterSystem::Model::MasterSystemII()) {
+        opll.power();
+      }
     }
   }
   scheduler.power(cpu);

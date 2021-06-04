@@ -31,15 +31,15 @@ auto VDP::ccounter() -> n12 {
 }
 
 auto VDP::data() -> n8 {
-  io.controlLatch = 0;
+  latch.control = 0;
 
-  auto data = io.vramLatch;
-  io.vramLatch = vram[io.address++];
+  auto data = latch.vram;
+  latch.vram = vram[io.address++];
   return data;
 }
 
 auto VDP::status() -> n8 {
-  io.controlLatch = 0;
+  latch.control = 0;
 
   n8 data;
   data.bit(0,4) = sprite.io.overflowIndex;
@@ -58,32 +58,40 @@ auto VDP::status() -> n8 {
 }
 
 auto VDP::data(n8 data) -> void {
-  io.controlLatch = 0;
+  latch.control = 0;
 
   if(io.code <= 2) {
-    vram[io.address++] = data;
+    vram[io.address] = data;
   } else {
-    if(Model::MasterSystem() || Model::GameGearMS()) {
-      cram[io.address++ & 0x1f] = data;
-    } else if(Model::GameGear()) {
-      cram[io.address++ & 0x3f] = data;
+    if(Mode::MasterSystem()) {
+      //writes immediate store 6-bits into CRAM
+      cram[io.address] = data.bit(0,5);
+    }
+    if(Mode::GameGear()) {
+      //even writes store 8-bit data into a latch; odd writes store 12-bits into CRAM
+      if(io.address.bit(0) == 0) {
+        latch.cram = data;
+      } else {
+        cram[io.address >> 1] = data.bit(0,3) << 8 | latch.cram;
+      }
     }
   }
+  io.address++;
 }
 
 auto VDP::control(n8 data) -> void {
-  if(io.controlLatch == 0) {
-    io.controlLatch = 1;
+  if(latch.control == 0) {
+    latch.control = 1;
     io.address.bit(0,7) = data.bit(0,7);
     return;
   }
 
-  io.controlLatch = 0;
+  latch.control = 0;
   io.address.bit(8,13) = data.bit(0,5);
   io.code.bit(0,1)     = data.bit(6,7);
 
   if(io.code == 0) {
-    io.vramLatch = vram[io.address++];
+    latch.vram = vram[io.address++];
   }
 
   if(io.code == 2) {
@@ -114,7 +122,7 @@ auto VDP::registerWrite(n4 address, n8 data) -> void {
     io.videoMode.bit(2)  = data.bit(3);
     io.videoMode.bit(0)  = data.bit(4);
     irq.frame.enable     = data.bit(5);
-    dac.io.displayEnable = data.bit(6);
+    io.displayEnable     = data.bit(6);
     irq.frame.pending &= irq.frame.enable;
     irq.poll();
     return;

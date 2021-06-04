@@ -87,6 +87,7 @@ struct VDP : Thread {
   struct IRQ {
     //irq.cpp
     auto poll() -> void;
+    auto acknowledge(u8 level) -> void;
     auto power(bool reset) -> void;
 
     //serialization.cpp

@@ -6,16 +6,17 @@ auto VDP::serialize(serializer& s) -> void {
   s(sprite);
   s(dac);
   s(irq);
+  s(io.code);
+  s(io.address);
+  s(io.displayEnable);
   s(io.videoMode);
   s(io.vcounter);
   s(io.hcounter);
   s(io.ccounter);
-  s(io.controlLatch);
-  s(io.controlData);
-  s(io.code);
-  s(io.address);
-  s(io.vramLatch);
+  s(latch.control);
   s(latch.hcounter);
+  s(latch.vram);
+  s(latch.cram);
 }
 
 auto VDP::Background::serialize(serializer& s) -> void {
@@ -53,7 +54,6 @@ auto VDP::Sprite::serialize(serializer& s) -> void {
 }
 
 auto VDP::DAC::serialize(serializer& s) -> void {
-  s(io.displayEnable);
   s(io.externalSync);
   s(io.leftClip);
   s(io.backdropColor);

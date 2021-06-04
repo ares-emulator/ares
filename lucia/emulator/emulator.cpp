@@ -4,6 +4,21 @@
 vector<shared_pointer<Emulator>> emulators;
 shared_pointer<Emulator> emulator;
 
+auto Emulator::enumeratePorts(string name) -> vector<InputPort>& {
+  for(auto& emulator : emulators) {
+    if(emulator->name == name && emulator->ports) return emulator->ports;
+  }
+  static vector<InputPort> ports;
+  if(!ports) {
+    for(auto id : range(2)) {
+      InputPort port{string{"Controller Port ", 1 + id}};
+      port.append(virtualPads[id]);
+      ports.append(port);
+    }
+  }
+  return ports;
+}
+
 auto Emulator::location() -> string {
   return {Path::userData(), "lucia/Saves/", name, "/"};
 }

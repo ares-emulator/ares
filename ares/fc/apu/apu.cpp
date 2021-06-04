@@ -89,7 +89,7 @@ auto APU::power(bool reset) -> void {
 }
 
 auto APU::readIO(n16 address) -> n8 {
-  n8 data = cpu.mdr();
+  n8 data = cpu.MDR;
 
   switch(address) {
 

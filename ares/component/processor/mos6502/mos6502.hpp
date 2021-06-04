@@ -5,6 +5,8 @@
 namespace ares {
 
 struct MOS6502 {
+  n1 BCD = 1;  //set to 0 to disable BCD mode in ADC, SBC instructions
+
   virtual auto read(n16 addr) -> n8 = 0;
   virtual auto write(n16 addr, n8 data) -> void = 0;
   virtual auto lastCycle() -> void = 0;
@@ -12,7 +14,6 @@ struct MOS6502 {
   virtual auto readDebugger(n16 addr) -> n8 { return 0; }
 
   //mos6502.cpp
-  auto mdr() const -> n8;
   auto power() -> void;
 
   //memory.cpp
@@ -91,10 +92,7 @@ struct MOS6502 {
   noinline auto disassembleInstruction(maybe<n16> pc = {}) -> string;
   noinline auto disassembleContext() -> string;
 
-  //set to false to disable BCD mode in ADC, SBC instructions
-  bool BCD = true;
-
-  struct Flags {
+  struct PR {
     bool c;  //carry
     bool z;  //zero
     bool i;  //interrupt disable
@@ -106,26 +104,24 @@ struct MOS6502 {
       return c << 0 | z << 1 | i << 2 | d << 3 | v << 6 | n << 7;
     }
 
-    auto& operator=(n8 data) {
-      c = data.bit(0);
-      z = data.bit(1);
-      i = data.bit(2);
-      d = data.bit(3);
-      v = data.bit(6);
-      n = data.bit(7);
+    auto& operator=(u8 data) {
+      c = data >> 0 & 1;
+      z = data >> 1 & 1;
+      i = data >> 2 & 1;
+      d = data >> 3 & 1;
+      v = data >> 6 & 1;
+      n = data >> 7 & 1;
       return *this;
     }
   };
 
-  struct Registers {
-    n8 a;
-    n8 x;
-    n8 y;
-    n8 s;
-    n16 pc;
-    Flags p;
-    n8 mdr;
-  } r;
+  n8  A;
+  n8  X;
+  n8  Y;
+  n8  S;
+  PR  P;
+  n16 PC;
+  n8  MDR;
 };
 
 }

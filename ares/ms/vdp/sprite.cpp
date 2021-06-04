@@ -36,9 +36,10 @@ auto VDP::Sprite::setup(n9 voffset) -> void {
 
     for(u32 index : range(64)) {
       n8 y = self.vram[attributeAddress + index];
+      if(self.vlines() == 192 && y == 0xd0) break;
+
       n8 x = self.vram[attributeAddress + 0x80 + (index << 1)];
       n8 pattern = self.vram[attributeAddress + 0x81 + (index << 1)];
-      if(self.vlines() == 192 && y == 0xd0) break;
 
       if(io.shift) x -= 8;
       y += 1;
@@ -102,7 +103,7 @@ auto VDP::Sprite::graphics2(n8 hoffset, n9 voffset) -> void {
 
     n3 index = x ^ 7;
     if(self.vram[address].bit(index)) {
-      if(output.color && self.dac.io.displayEnable) { io.collision = 1; break; }
+      if(output.color && self.displayEnable()) { io.collision = 1; break; }
       output.color = o.color;
     }
   }
@@ -130,7 +131,7 @@ auto VDP::Sprite::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
     color.bit(3) = self.vram[address | 3].bit(index);
     if(color == 0) continue;
 
-    if(output.color && self.dac.io.displayEnable) { io.collision = 1; break; }
+    if(output.color && self.displayEnable()) { io.collision = 1; break; }
     output.color = color;
   }
 }

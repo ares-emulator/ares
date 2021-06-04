@@ -41,7 +41,7 @@ auto VDP::Debugger::io(n4 register, n8 data) -> void {
       /* $f */ "unused",
     };
     tracer.io->notify({
-      "$", hex(register, 1L), " = #$", hex(data, 2L),
+      "$", hex(register, 2L), " = #$", hex(data, 2L),
       " @ ", pad(vdp.vcounter(), 3L), ",", pad(vdp.hcounter(), 3L),
       " ", name[register]
     });

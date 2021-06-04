@@ -11,6 +11,34 @@ struct Nintendo64 : Emulator {
 Nintendo64::Nintendo64() {
   manufacturer = "Nintendo";
   name = "Nintendo 64";
+
+  for(auto id : range(2)) {
+    InputPort port{string{"Controller Port ", 1 + id}};
+
+    InputDevice device{"Gamepad"};
+    device.analog("L-Up",    virtualPads[id].lup);
+    device.analog("L-Down",  virtualPads[id].ldown);
+    device.analog("L-Left",  virtualPads[id].lleft);
+    device.analog("L-Right", virtualPads[id].lright);
+    device.button("Up",      virtualPads[id].up);
+    device.button("Down",    virtualPads[id].down);
+    device.button("Left",    virtualPads[id].left);
+    device.button("Right",   virtualPads[id].right);
+    device.button("B",       virtualPads[id].a);
+    device.button("A",       virtualPads[id].b);
+    device.button("C-Up",    virtualPads[id].rup);
+    device.button("C-Down",  virtualPads[id].rdown);
+    device.button("C-Left",  virtualPads[id].rleft);
+    device.button("C-Right", virtualPads[id].rright);
+    device.button("L",       virtualPads[id].l1);
+    device.button("R",       virtualPads[id].r1);
+    device.button("Z",       virtualPads[id].z);
+    device.button("Start",   virtualPads[id].start);
+    device.rumble("Rumble",  virtualPads[id].rumble);
+    port.append(device);
+
+    ports.append(port);
+  }
 }
 
 auto Nintendo64::load() -> bool {

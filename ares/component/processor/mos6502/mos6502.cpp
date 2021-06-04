@@ -3,21 +3,15 @@
 
 namespace ares {
 
-#define A r.a
-#define X r.x
-#define Y r.y
-#define S r.s
-#define P r.p
-#define PC r.pc
-#define PCH r.pc.byte(1)
-#define PCL r.pc.byte(0)
+#define PCH PC.byte(1)
+#define PCL PC.byte(0)
 #define ALU (this->*alu)
-#define C r.p.c
-#define Z r.p.z
-#define I r.p.i
-#define D r.p.d
-#define V r.p.v
-#define N r.p.n
+#define C P.c
+#define Z P.z
+#define I P.i
+#define D P.d
+#define V P.v
+#define N P.n
 #define L lastCycle();
 
 #include "memory.cpp"
@@ -27,12 +21,6 @@ namespace ares {
 #include "disassembler.cpp"
 #include "serialization.cpp"
 
-#undef A
-#undef X
-#undef Y
-#undef S
-#undef P
-#undef PC
 #undef PCH
 #undef PCL
 #undef ALU
@@ -44,17 +32,13 @@ namespace ares {
 #undef N
 #undef L
 
-auto MOS6502::mdr() const -> n8 {
-  return r.mdr;
-}
-
 auto MOS6502::power() -> void {
-  r.a = 0x00;
-  r.x = 0x00;
-  r.y = 0x00;
-  r.s = 0xff;
-  r.p = 0x04;
-  r.mdr = 0x00;
+  A   = 0x00;
+  X   = 0x00;
+  Y   = 0x00;
+  S   = 0xff;
+  P   = 0x04;
+  MDR = 0x00;
 }
 
 }

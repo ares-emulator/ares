@@ -149,7 +149,6 @@ auto CPU::in(n16 address) -> n8 {
     data.bit(5) = !system.controls.two->value();
     data.bit(6) = sio.dataDirection.bit(0) ? 1 : sio.parallelData.bit(0);
     data.bit(7) = sio.dataDirection.bit(1) ? 1 : sio.parallelData.bit(1);
-    if(controllerPort1.trOutput()) data.bit(5) = controllerPort1.trLevel;
   }
 
   else if(((address & 0xff) == 0xc1 || (address & 0xff) == 0xdd) && Display::LCD()) {

@@ -24,14 +24,16 @@ auto CPU::unload() -> void {
 auto CPU::main() -> void {
   if(state.nmiLine) {
     state.nmiLine = 0;  //edge-sensitive
-    debugger.interrupt("NMI");
-    irq(0, 0x0066, 0xff);
+    if(irq(0, 0x0066, 0xff)) {
+      debugger.interrupt("NMI");
+    }
   }
 
   if(state.irqLine) {
     //level-sensitive
-    debugger.interrupt("IRQ");
-    irq(1, 0x0038, 0xff);
+    if(irq(1, 0x0038, 0xff)) {
+      debugger.interrupt("IRQ");
+    }
   }
 
   debugger.instruction();
@@ -65,7 +67,6 @@ auto CPU::power() -> void {
   bus.cartridgeEnable = !(bool)bios;
   if(Model::MasterSystemII()) bus.pullup = 0xff;
   if(Model::GameGear()) bus.pullup = 0xff;
-  if(Model::GameGearMS()) bus.pullup = 0xff;
   sio = {};
 }
 

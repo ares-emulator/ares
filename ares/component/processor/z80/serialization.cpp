@@ -5,14 +5,14 @@ auto Z80::serialize(serializer& s) -> void {
   s(bc.word);
   s(de.word);
   s(hl.word);
-  s(ix.word);
-  s(iy.word);
-  s(ir.word);
-  s(wz.word);
   s(af_.word);
   s(bc_.word);
   s(de_.word);
   s(hl_.word);
+  s(ix.word);
+  s(iy.word);
+  s(ir.word);
+  s(wz.word);
   s(SP);
   s(PC);
   s(EI);

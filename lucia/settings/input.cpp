@@ -3,15 +3,18 @@ auto InputSettings::construct() -> void {
   setVisible(false);
 
   systemList.append(ComboButtonItem().setText("Virtual Gamepads"));
-  deviceList.append(ComboButtonItem().setText("Controller 1"));
-  deviceList.append(ComboButtonItem().setText("Controller 2"));
-  deviceList.onChange([&] { reload(); });
+  for(auto& emulator : emulators) {
+    systemList.append(ComboButtonItem().setText(emulator->name));
+  }
+  systemList.onChange([&] { systemChange(); });
+  portList.onChange([&] { portChange(); });
+  deviceList.onChange([&] { deviceChange(); });
   inputList.setBatchable();
   inputList.setHeadered();
   inputList.onChange([&] { eventChange(); });
   inputList.onActivate([&](auto cell) { eventAssign(cell); });
 
-  reload();
+  systemChange();
 
   assignLabel.setFont(Font().setBold());
   spacer.setFocusable();
@@ -19,17 +22,38 @@ auto InputSettings::construct() -> void {
   clearButton.setText("Clear").onActivate([&] { eventClear(); });
 }
 
-auto InputSettings::reload() -> void {
+auto InputSettings::systemChange() -> void {
+  portList.reset();
+  auto& ports = Emulator::enumeratePorts(systemList.selected().text());
+  for(auto& port : ports) {
+    portList.append(ComboButtonItem().setText(port.name));
+  }
+  portChange();
+}
+
+auto InputSettings::portChange() -> void {
+  deviceList.reset();
+  auto& ports = Emulator::enumeratePorts(systemList.selected().text());
+  auto& port = ports[portList.selected().offset()];
+  for(auto& device : port.devices) {
+    deviceList.append(ComboButtonItem().setText(device.name));
+  }
+  deviceChange();
+}
+
+auto InputSettings::deviceChange() -> void {
   inputList.reset();
   inputList.append(TableViewColumn().setText("Name"));
   for(u32 binding : range(BindingLimit)) {
     inputList.append(TableViewColumn().setText({"Mapping #", 1 + binding}).setExpandable());
   }
 
-  auto& virtualPad = virtualPads[deviceList.selected().offset()];
-  for(auto& mapping : virtualPad.mappings) {
+  auto& ports = Emulator::enumeratePorts(systemList.selected().text());
+  auto& port = ports[portList.selected().offset()];
+  auto& device = port.devices[deviceList.selected().offset()];
+  for(auto& input : device.inputs) {
     TableViewItem item{&inputList};
-    item.append(TableViewCell().setText(mapping->name).setFont(Font().setBold()));
+    item.append(TableViewCell().setText(input.name).setFont(Font().setBold()));
     for(u32 binding : range(BindingLimit)) item.append(TableViewCell());
   }
 
@@ -41,14 +65,16 @@ auto InputSettings::reload() -> void {
 
 auto InputSettings::refresh() -> void {
   u32 index = 0;
-  auto& virtualPad = virtualPads[deviceList.selected().offset()];
-  for(auto& mapping : virtualPad.mappings) {
+  auto& ports = Emulator::enumeratePorts(systemList.selected().text());
+  auto& port = ports[portList.selected().offset()];
+  auto& device = port.devices[deviceList.selected().offset()];
+  for(auto& input : device.inputs) {
     for(u32 binding : range(BindingLimit)) {
       //do not remove identifier from mappings currently being assigned
-      if(activeMapping && &activeMapping() == mapping && activeBinding == binding) continue;
+      if(activeMapping && &activeMapping() == &input && activeBinding == binding) continue;
       auto cell = inputList.item(index).cell(1 + binding);
-      cell.setIcon(mapping->bindings[binding].icon());
-      cell.setText(mapping->bindings[binding].text());
+      cell.setIcon(input.mapping->bindings[binding].icon());
+      cell.setText(input.mapping->bindings[binding].text());
     }
     index++;
   }
@@ -60,9 +86,11 @@ auto InputSettings::eventChange() -> void {
 }
 
 auto InputSettings::eventClear() -> void {
-  auto& virtualPad = virtualPads[deviceList.selected().offset()];
+  auto& ports = Emulator::enumeratePorts(systemList.selected().text());
+  auto& port = ports[portList.selected().offset()];
+  auto& device = port.devices[deviceList.selected().offset()];
   for(auto& item : inputList.batched()) {
-    auto& mapping = *virtualPad.mappings[item.offset()];
+    auto& mapping = *device.inputs[item.offset()].mapping;
     mapping.unbind();
   }
   refresh();
@@ -76,10 +104,12 @@ auto InputSettings::eventAssign(TableViewCell cell) -> void {
     "Please go to driver settings and activate an input driver first."
   ).setAlignment(settingsWindow).error();
 
-  auto& virtualPad = virtualPads[deviceList.selected().offset()];
+  auto& ports = Emulator::enumeratePorts(systemList.selected().text());
+  auto& port = ports[portList.selected().offset()];
+  auto& device = port.devices[deviceList.selected().offset()];
   if(auto item = inputList.selected()) {
     if(activeMapping) refresh();  //clear any previous assign arrow prompts
-    activeMapping = *virtualPad.mappings[item.offset()];
+    activeMapping = device.inputs[item.offset()];
     activeBinding = max(0, (s32)cell.offset() - 1);
 
     item.cell(1 + activeBinding).setIcon(Icon::Go::Right).setText("(assign ...)");
@@ -95,7 +125,7 @@ auto InputSettings::eventInput(shared_pointer<HID::Device> device, u32 groupID, 
   if(!activeMapping) return;
   if(!settingsWindow.focused()) return;
 
-  if(activeMapping->bind(activeBinding, device, groupID, inputID, oldValue, newValue)) {
+  if(activeMapping->mapping->bind(activeBinding, device, groupID, inputID, oldValue, newValue)) {
     activeMapping.reset();
     assignLabel.setText();
     refresh();
@@ -108,7 +138,15 @@ auto InputSettings::eventInput(shared_pointer<HID::Device> device, u32 groupID, 
 }
 
 auto InputSettings::setVisible(bool visible) -> InputSettings& {
-  if(visible == 1) refresh();
+  if(visible == 1) {
+    systemList.items().first().setSelected();
+    if(emulator) {
+      for(auto item : systemList.items()) {
+        if(item.text() == emulator->name) item.setSelected();
+      }
+    }
+    systemList.doChange();
+  }
   if(visible == 0) activeMapping.reset(), assignLabel.setText(), settingsWindow.setDismissable(true);
   VerticalLayout::setVisible(visible);
   return *this;

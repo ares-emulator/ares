@@ -113,12 +113,12 @@ auto Settings::process(bool load) -> void {
   }
 
   for(u32 index : range(2)) {
-    for(auto& mapping : virtualPads[index].mappings) {
-      string name = {"VirtualPad", 1 + index, "/", mapping->name}, value;
-      if(load == 0) for(auto& assignment : mapping->assignments) value.append(assignment, ";");
+    for(auto& input : virtualPads[index].inputs) {
+      string name = {"VirtualPad", 1 + index, "/", input.name}, value;
+      if(load == 0) for(auto& assignment : input.mapping->assignments) value.append(assignment, ";");
       if(load == 0) value.trimRight(";", 1L);
       bind(string, name, value);
-      if(load == 1) for(u32 binding : range(BindingLimit)) mapping->assignments[binding] = value.split(";")(binding);
+      if(load == 1) for(u32 binding : range(BindingLimit)) input.mapping->assignments[binding] = value.split(";")(binding);
     }
   }
 

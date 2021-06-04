@@ -86,9 +86,13 @@ extern System system;
 auto Model::MarkIII() -> bool { return system.model() == System::Model::MarkIII; }
 auto Model::MasterSystemI() -> bool { return system.model() == System::Model::MasterSystemI; }
 auto Model::MasterSystemII() -> bool { return system.model() == System::Model::MasterSystemII; }
-auto Model::MasterSystem() -> bool { return MarkIII() || MasterSystemI() || MasterSystemII(); }
 auto Model::GameGear() -> bool { return system.model() == System::Model::GameGear; }
-auto Model::GameGearMS() -> bool { return system.model() == System::Model::GameGear && system.ms(); }
+
+auto Device::MasterSystem() -> bool { return system.model() != System::Model::GameGear; }
+auto Device::GameGear() -> bool { return system.model() == System::Model::GameGear; }
+
+auto Mode::MasterSystem() -> bool { return !Mode::GameGear(); }
+auto Mode::GameGear() -> bool { return system.model() == System::Model::GameGear && !system.ms(); }
 
 auto Display::CRT() -> bool { return system.model() != System::Model::GameGear; }
 auto Display::LCD() -> bool { return system.model() == System::Model::GameGear; }

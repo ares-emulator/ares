@@ -7,8 +7,8 @@ struct VDP : Thread {
   Node::Video::Screen screen;
   Node::Setting::Natural revision;
   Node::Setting::Boolean interframeBlending;  //Game Gear only
-  Memory::Writable<n8> vram;  //16KB
-  Memory::Writable<n8> cram;  //Master System = 32, Game Gear = 64
+  Memory::Writable<n8 > vram;  //16KB
+  Memory::Writable<n12> cram;  //Master System = 6-bit; Game Gear = 12-bit
 
   struct Debugger {
     //debugger.cpp
@@ -25,7 +25,7 @@ struct VDP : Thread {
     } tracer;
   } debugger;
 
-  auto displayEnable() const -> n1 { return dac.io.displayEnable; }
+  auto displayEnable() const -> n1 { return io.displayEnable; }
   auto videoMode() const -> n4 { return io.videoMode; }
   auto vcounter() const -> u32 { return io.vcounter; }
   auto hcounter() const -> u32 { return io.hcounter; }
@@ -143,7 +143,6 @@ struct VDP : Thread {
     auto serialize(serializer&) -> void;
 
     struct IO {
-      n1 displayEnable;
       n1 externalSync;  //todo
       n1 leftClip;
       n4 backdropColor;
@@ -177,6 +176,7 @@ private:
       n8 counter;
       n8 coincidence = 0xff;
     } line;
+
     struct Frame {
       n1 enable;
       n1 pending;
@@ -184,23 +184,23 @@ private:
   } irq{*this};
 
   struct IO {
+    n2  code;
+    n14 address;
+
+    n1  displayEnable;
     n4  videoMode;
 
     //counters
     u32 vcounter = 0;  //vertical counter
     u32 hcounter = 0;  //horizontal counter
     n12 ccounter = 0;  //csync counter
-
-    //latches
-    n1  controlLatch;
-    n16 controlData;
-    n2  code;
-    n14 address;
-    n8  vramLatch;
   } io;
 
   struct Latch {
+    n1 control;
     n8 hcounter;
+    n8 vram;
+    n8 cram;  //Game Gear only
   } latch;
 };
 

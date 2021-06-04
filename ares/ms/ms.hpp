@@ -16,9 +16,17 @@ namespace ares::MasterSystem {
     inline static auto MarkIII() -> bool;
     inline static auto MasterSystemI() -> bool;
     inline static auto MasterSystemII() -> bool;
+    inline static auto GameGear() -> bool;
+  };
+
+  struct Device {
     inline static auto MasterSystem() -> bool;
     inline static auto GameGear() -> bool;
-    inline static auto GameGearMS() -> bool;
+  };
+
+  struct Mode {
+    inline static auto MasterSystem() -> bool;
+    inline static auto GameGear() -> bool;
   };
 
   struct Display {

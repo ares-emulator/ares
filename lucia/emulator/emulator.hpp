@@ -6,6 +6,7 @@ struct Emulator {
   virtual ~Emulator() = default;
 
   //emulator.cpp
+  static auto enumeratePorts(string name) -> vector<InputPort>&;
   auto location() -> string;
   auto locate(const string& location, const string& suffix, const string& path = "", maybe<string> system = {}) -> string;
   auto region() -> string;
@@ -40,6 +41,7 @@ struct Emulator {
   vector<Firmware> firmware;
   shared_pointer<mia::Pak> system;
   shared_pointer<mia::Pak> game;
+  vector<InputPort> ports;
 
   struct Configuration {
     bool visible = true;  //whether or not to show this emulator in the load menu

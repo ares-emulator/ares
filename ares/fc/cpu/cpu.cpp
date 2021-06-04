@@ -46,8 +46,8 @@ auto CPU::power(bool reset) -> void {
     ram.fill(0xff);
   }
 
-  r.pc.byte(0) = readBus(0xfffc);
-  r.pc.byte(1) = readBus(0xfffd);
+  PC.byte(0) = readBus(0xfffc);
+  PC.byte(1) = readBus(0xfffd);
 
   io = {};
 }

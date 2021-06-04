@@ -6,22 +6,22 @@ auto CPU::read(n16 address) -> n8 {
   }
 
   while(io.rdyLine == 0) {
-    r.mdr = readBus(io.rdyAddressValid ? io.rdyAddressValue : address);
+    MDR = readBus(io.rdyAddressValid ? io.rdyAddressValue : address);
     step(rate());
   }
 
-  r.mdr = readBus(address);
+  MDR = readBus(address);
   step(rate());
-  return r.mdr;
+  return MDR;
 }
 
 auto CPU::write(n16 address, n8 data) -> void {
-  writeBus(address, r.mdr = data);
+  writeBus(address, MDR = data);
   step(rate());
 }
 
 auto CPU::lastCycle() -> void {
-  io.interruptPending = ((io.irqLine | io.apuLine) & ~r.p.i) | io.nmiPending;
+  io.interruptPending = ((io.irqLine | io.apuLine) & ~P.i) | io.nmiPending;
 }
 
 auto CPU::nmi(n16& vector) -> void {

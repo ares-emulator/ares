@@ -36,8 +36,8 @@ auto nall::main(Arguments arguments) -> void {
     }
   }
 
-  Emulator::construct();
   inputManager.create();
+  Emulator::construct();
   settings.load();
   Instances::presentation.construct();
   Instances::settingsWindow.construct();

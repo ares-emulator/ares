@@ -11,6 +11,27 @@ struct SuperFamicom : Emulator {
 SuperFamicom::SuperFamicom() {
   manufacturer = "Nintendo";
   name = "Super Famicom";
+
+  for(auto id : range(2)) {
+    InputPort port{string{"Controller Port ", 1 + id}};
+
+    InputDevice device{"Gamepad"};
+    device.button("Up",     virtualPads[id].up);
+    device.button("Down",   virtualPads[id].down);
+    device.button("Left",   virtualPads[id].left);
+    device.button("Right",  virtualPads[id].right);
+    device.button("B",      virtualPads[id].a);
+    device.button("A",      virtualPads[id].b);
+    device.button("Y",      virtualPads[id].x);
+    device.button("X",      virtualPads[id].y);
+    device.button("L",      virtualPads[id].l1);
+    device.button("R",      virtualPads[id].r1);
+    device.button("Select", virtualPads[id].select);
+    device.button("Start",  virtualPads[id].start);
+    port.append(device);
+
+    ports.append(port);
+  }
 }
 
 auto SuperFamicom::load() -> bool {

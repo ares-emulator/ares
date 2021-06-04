@@ -162,7 +162,7 @@ auto VDP::readControlPort() -> n16 {
   result.bit( 8) = fifo.full();
   result.bit( 9) = fifo.empty();
   result.bit(10) = 1;  //constants (bits 10-15)
-  result.bit(11) = 0;
+  result.bit(11) = 0;  //todo: should these bits be open bus instead?
   result.bit(12) = 1;
   result.bit(13) = 1;
   result.bit(14) = 0;

@@ -65,7 +65,7 @@ auto Nintendo64DD::input(ares::Node::Input::Input node) -> void {
   auto name = node->name();
   maybe<InputMapping&> mappings[2];
   if(name == "X-Axis" ) mappings[0] = virtualPads[0].lleft, mappings[1] = virtualPads[0].lright;
-  if(name == "Y-Axis" ) mappings[0] = virtualPads[0].lup,   mappings[1] = virtualPads[1].ldown;
+  if(name == "Y-Axis" ) mappings[0] = virtualPads[0].lup,   mappings[1] = virtualPads[0].ldown;
   if(name == "Up"     ) mappings[0] = virtualPads[0].up;
   if(name == "Down"   ) mappings[0] = virtualPads[0].down;
   if(name == "Left"   ) mappings[0] = virtualPads[0].left;

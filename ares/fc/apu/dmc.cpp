@@ -24,7 +24,7 @@ auto APU::DMC::clock() -> n8 {
       cpu.rdyLine(1);
       cpu.rdyAddress(false);
 
-      dmaBuffer = cpu.mdr();
+      dmaBuffer = cpu.MDR;
       dmaBufferValid = true;
       lengthCounter--;
       readAddress++;

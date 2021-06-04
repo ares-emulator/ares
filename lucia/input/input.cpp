@@ -302,33 +302,34 @@ auto InputRumble::rumble(bool enable) -> void {
 //
 
 VirtualPad::VirtualPad() {
-  mappings.append(&up);
-  mappings.append(&down);
-  mappings.append(&left);
-  mappings.append(&right);
-  mappings.append(&select);
-  mappings.append(&start);
-  mappings.append(&a);
-  mappings.append(&b);
-  mappings.append(&c);
-  mappings.append(&x);
-  mappings.append(&y);
-  mappings.append(&z);
-  mappings.append(&l1);
-  mappings.append(&r1);
-  mappings.append(&l2);
-  mappings.append(&r2);
-  mappings.append(&lt);
-  mappings.append(&rt);
-  mappings.append(&lup);
-  mappings.append(&ldown);
-  mappings.append(&lleft);
-  mappings.append(&lright);
-  mappings.append(&rup);
-  mappings.append(&rdown);
-  mappings.append(&rleft);
-  mappings.append(&rright);
-  mappings.append(&rumble);
+  InputDevice::name = "Xbox 360 Gamepad";
+  InputDevice::button("Up",      up);
+  InputDevice::button("Down",    down);
+  InputDevice::button("Left",    left);
+  InputDevice::button("Right",   right);
+  InputDevice::button("Select",  select);
+  InputDevice::button("Start",   start);
+  InputDevice::button("A",       a);
+  InputDevice::button("B",       b);
+  InputDevice::button("C",       c);
+  InputDevice::button("X",       x);
+  InputDevice::button("Y",       y);
+  InputDevice::button("Z",       z);
+  InputDevice::button("L1",      l1);
+  InputDevice::button("R1",      r1);
+  InputDevice::button("L2",      l2);
+  InputDevice::button("R2",      r2);
+  InputDevice::button("LT",      lt);
+  InputDevice::button("RT",      rt);
+  InputDevice::analog("L-Up",    lup);
+  InputDevice::analog("L-Down",  ldown);
+  InputDevice::analog("L-Left",  lleft);
+  InputDevice::analog("L-Right", lright);
+  InputDevice::analog("R-Up",    rup);
+  InputDevice::analog("R-Down",  rdown);
+  InputDevice::analog("R-Left",  rleft);
+  InputDevice::analog("R-Right", rright);
+  InputDevice::rumble("Rumble",  rumble);
 }
 
 //
@@ -339,7 +340,7 @@ auto InputManager::create() -> void {
 
 auto InputManager::bind() -> void {
   for(auto& virtualPad : virtualPads) {
-    for(auto& mapping : virtualPad.mappings) mapping->bind();
+    for(auto& input : virtualPad.inputs) input.mapping->bind();
   }
   for(auto& mapping : hotkeys) mapping.bind();
 }

@@ -9,7 +9,7 @@ auto PSG::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PSG");
 
   stream = node->append<Node::Audio::Stream>("PSG");
-  stream->setChannels(Model::MasterSystem() ? 1 : 2);
+  stream->setChannels(Device::MasterSystem() ? 1 : 2);
   stream->setFrequency(system.colorburst() / 16.0);
   stream->addHighPassFilter(20.0, 1);
 }
@@ -23,7 +23,7 @@ auto PSG::unload() -> void {
 auto PSG::main() -> void {
   auto channels = SN76489::clock();
 
-  if(Model::MasterSystem()) {
+  if(Device::MasterSystem()) {
     f64 output = 0.0;
     output += volume[channels[0]];
     output += volume[channels[1]];
@@ -34,7 +34,7 @@ auto PSG::main() -> void {
     stream->frame(output / 4.0);
   }
 
-  if(Model::GameGear()) {
+  if(Device::GameGear()) {
     f64 left = 0.0;
     if(io.enable.bit(4)) left  += volume[channels[0]];
     if(io.enable.bit(5)) left  += volume[channels[1]];
@@ -59,7 +59,7 @@ auto PSG::step(u32 clocks) -> void {
 }
 
 auto PSG::balance(n8 data) -> void {
-  if(Model::GameGear()) {
+  if(Device::GameGear()) {
     io.enable = data;
   }
 }

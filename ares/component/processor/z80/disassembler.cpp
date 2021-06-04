@@ -43,15 +43,15 @@ no_optimize
 auto Z80::disassembleContext() -> string {
   string s;
 
-  s.append( "AF:", hex(af.word, 4L));
-  s.append(" BC:", hex(bc.word, 4L));
-  s.append(" DE:", hex(de.word, 4L));
-  s.append(" HL:", hex(hl.word, 4L));
-  s.append(" IX:", hex(ix.word, 4L));
-  s.append(" IY:", hex(iy.word, 4L));
-  s.append(" SP:", hex(SP, 4L));
-  s.append(" IFF:", (n1)IFF1, (n1)IFF2);
-  s.append(" IM:", IM);
+  s.append("AF:", hex(af.word, 4L), " ");
+  s.append("BC:", hex(bc.word, 4L), " ");
+  s.append("DE:", hex(de.word, 4L), " ");
+  s.append("HL:", hex(hl.word, 4L), " ");
+  s.append("IX:", hex(ix.word, 4L), " ");
+  s.append("IY:", hex(iy.word, 4L), " ");
+  s.append("SP:", hex(SP, 4L), " ");
+  s.append("IFF:", (n1)IFF1, (n1)IFF2, " ");
+  s.append("IM:", IM);
 
   return s;
 }
@@ -320,7 +320,7 @@ auto Z80::disassemble(n16 pc, n8 prefix, n8 code) -> string {
   op(0xc4, "call", "nz", NN)
   op(0xc5, "push", BC)
   op(0xc6, "add ", A, N)
-  op(0xc7, "rst ", "0")
+  op(0xc7, "rst ", "$0000")
   op(0xc8, "ret ", "z")
   op(0xc9, "ret ")
   op(0xca, "jp  ", "z", NN)
@@ -328,7 +328,7 @@ auto Z80::disassemble(n16 pc, n8 prefix, n8 code) -> string {
   op(0xcc, "call", "z", NN)
   op(0xcd, "call", NN)
   op(0xce, "adc ", A, N)
-  op(0xcf, "rst ", "1")
+  op(0xcf, "rst ", "$0008")
   op(0xd0, "ret ", "nc")
   op(0xd1, "pop ", DE)
   op(0xd2, "jp  ", "nc", NN)
@@ -336,7 +336,7 @@ auto Z80::disassemble(n16 pc, n8 prefix, n8 code) -> string {
   op(0xd4, "call", "nc", NN)
   op(0xd5, "push", DE)
   op(0xd6, "sub ", A, N)
-  op(0xd7, "rst ", "2")
+  op(0xd7, "rst ", "$0010")
   op(0xd8, "ret ", "c")
   op(0xd9, "exx ")
   op(0xda, "jp  ", "c", NN)
@@ -344,7 +344,7 @@ auto Z80::disassemble(n16 pc, n8 prefix, n8 code) -> string {
   op(0xdc, "call", "c", NN)
   op(0xdd, "ix: ")
   op(0xde, "sbc ", A, N)
-  op(0xdf, "rst ", "3")
+  op(0xdf, "rst ", "$0018")
   op(0xe0, "ret ", "po")
   op(0xe1, "pop ", HL)
   op(0xe2, "jp  ", "po", NN)
@@ -352,7 +352,7 @@ auto Z80::disassemble(n16 pc, n8 prefix, n8 code) -> string {
   op(0xe4, "call", "po", NN)
   op(0xe5, "push", HL)
   op(0xe6, "and ", A, N)
-  op(0xe7, "rst ", "4")
+  op(0xe7, "rst ", "$0020")
   op(0xe8, "ret ", "pe")
   op(0xe9, "jp  ", HL)  //officially jp (hl); but as read is not indirect, use jp hl
   op(0xea, "jp  ", "pe", NN)
@@ -360,7 +360,7 @@ auto Z80::disassemble(n16 pc, n8 prefix, n8 code) -> string {
   op(0xec, "call", "pe", NN)
   op(0xed, "ed: ")
   op(0xee, "xor ", A, N)
-  op(0xef, "rst ", "5")
+  op(0xef, "rst ", "$0028")
   op(0xf0, "ret ", "p")
   op(0xf1, "pop ", AF)
   op(0xf2, "jp  ", "p", NN)
@@ -368,7 +368,7 @@ auto Z80::disassemble(n16 pc, n8 prefix, n8 code) -> string {
   op(0xf4, "call", "p", NN)
   op(0xf5, "push", AF)
   op(0xf6, "or  ", A, N)
-  op(0xf7, "rst ", "6")
+  op(0xf7, "rst ", "$0030")
   op(0xf8, "ret ", "m")
   op(0xf9, "ld  ", SP, HL)
   op(0xfa, "jp  ", "m", NN)
@@ -376,7 +376,7 @@ auto Z80::disassemble(n16 pc, n8 prefix, n8 code) -> string {
   op(0xfc, "call", "m", NN)
   op(0xfd, "iy: ")
   op(0xfe, "cp  ", A, N)
-  op(0xff, "rst ", "7")
+  op(0xff, "rst ", "$0038")
   }
 
   unreachable;

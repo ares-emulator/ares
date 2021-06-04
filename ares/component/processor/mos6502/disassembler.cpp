@@ -1,5 +1,5 @@
 auto MOS6502::disassembleInstruction(maybe<n16> _pc) -> string {
-  n16 pc = _pc ? *_pc : r.pc;
+  n16 pc = _pc ? *_pc : PC;
   string s;
 
   auto absolute = [&]() -> string {

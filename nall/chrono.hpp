@@ -62,7 +62,7 @@ inline auto timestamp(const string& datetime) -> u64 {
       timestamp += daysInYear * 24 * 60 * 60;
     }
   }
-  if(datetime.match("????-??*")) {
+  if(datetime.match(R"(????-??*)")) {
     u32 y = datetime.slice(0, 4).natural();
     u32 month = datetime.slice(5, 2).natural();
     if(month < 1 || month > 12) return 0;
@@ -72,22 +72,22 @@ inline auto timestamp(const string& datetime) -> u64 {
       timestamp += daysInMonth * 24 * 60 * 60;
     }
   }
-  if(datetime.match("????-??-??*")) {
+  if(datetime.match(R"(????-??-??*)")) {
     u32 day = datetime.slice(8, 2).natural();
     if(day < 1 || day > 31) return 0;
     timestamp += (day - 1) * 24 * 60 * 60;
   }
-  if(datetime.match("????-??-?? ??*")) {
+  if(datetime.match(R"(????-??-?? ??*)")) {
     u32 hour = datetime.slice(11, 2).natural();
     if(hour > 23) return 0;
     timestamp += hour * 60 * 60;
   }
-  if(datetime.match("????-??-?? ??:??*")) {
+  if(datetime.match(R"(????-??-?? ??:??*)")) {
     u32 minute = datetime.slice(14, 2).natural();
     if(minute > 59) return 0;
     timestamp += minute * 60;
   }
-  if(datetime.match("????-??-?? ??:??:??*")) {
+  if(datetime.match(R"(????-??-?? ??:??:??*)")) {
     u32 second = datetime.slice(17, 2).natural();
     if(second > 59) return 0;
     timestamp += second;

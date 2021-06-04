@@ -3,8 +3,6 @@ enum : u32 { BindingLimit = 3 };
 struct InputMapping {
   enum class Qualifier : u32 { None, Lo, Hi, Rumble };
 
-  InputMapping(const string& name) : name(name) {}
-
   auto bind() -> void;
   auto bind(u32 binding, string assignment) -> void;
   auto unbind() -> void;
@@ -13,7 +11,6 @@ struct InputMapping {
   virtual auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool = 0;
   virtual auto value() -> s16 = 0;
 
-  const string name;
   string assignments[BindingLimit];
 
   struct Binding {
@@ -30,28 +27,24 @@ struct InputMapping {
 };
 
 struct InputButton : InputMapping {
-  using InputMapping::InputMapping;
   using InputMapping::bind;
   auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
 };
 
 struct InputAnalog : InputMapping {
-  using InputMapping::InputMapping;
   using InputMapping::bind;
   auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
 };
 
 struct InputAxis : InputMapping {
-  using InputMapping::InputMapping;
   using InputMapping::bind;
   auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
 };
 
 struct InputRumble : InputMapping {
-  using InputMapping::InputMapping;
   using InputMapping::bind;
   auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
@@ -59,9 +52,11 @@ struct InputRumble : InputMapping {
 };
 
 struct InputHotkey : InputButton {
-  using InputButton::InputButton;
+  InputHotkey(string name) : name(name) {}
   auto& onPress(function<void ()> press) { return this->press = press, *this; }
   auto& onRelease(function<void ()> release) { return this->release = release, *this; }
+
+  const string name;
 
 private:
   function<void ()> press;
@@ -70,38 +65,69 @@ private:
   friend class InputManager;
 };
 
-struct VirtualPad {
+struct InputNode {
+  enum class Type : u32 { Analog, Button, Rumble };
+  Type type;
+  string name;
+  InputMapping* mapping;
+};
+
+struct InputDevice {
+  auto analog(string name, InputMapping& mapping) -> void {
+    inputs.append({InputNode::Type::Analog, name, &mapping});
+  }
+
+  auto button(string name, InputMapping& mapping) -> void {
+    inputs.append({InputNode::Type::Button, name, &mapping});
+  }
+
+  auto rumble(string name, InputMapping& mapping) -> void {
+    inputs.append({InputNode::Type::Rumble, name, &mapping});
+  }
+
+  string name;
+  vector<InputNode> inputs;
+};
+
+struct InputPort {
+  auto append(InputDevice& device) -> void {
+    devices.append(device);
+  }
+
+  string name;
+  vector<InputDevice> devices;
+};
+
+struct VirtualPad : InputDevice {
   VirtualPad();
 
-  InputButton up{"Up"};
-  InputButton down{"Down"};
-  InputButton left{"Left"};
-  InputButton right{"Right"};
-  InputButton select{"Select"};
-  InputButton start{"Start"};
-  InputButton a{"A"};
-  InputButton b{"B"};
-  InputButton c{"C"};
-  InputButton x{"X"};
-  InputButton y{"Y"};
-  InputButton z{"Z"};
-  InputButton l1{"L1"};
-  InputButton r1{"R1"};
-  InputButton l2{"L2"};
-  InputButton r2{"R2"};
-  InputButton lt{"LT"};
-  InputButton rt{"RT"};
-  InputAnalog lup{"L-Up"};
-  InputAnalog ldown{"L-Down"};
-  InputAnalog lleft{"L-Left"};
-  InputAnalog lright{"L-Right"};
-  InputAnalog rup{"R-Up"};
-  InputAnalog rdown{"R-Down"};
-  InputAnalog rleft{"R-Left"};
-  InputAnalog rright{"R-Right"};
-  InputRumble rumble{"Rumble"};
-
-  vector<InputMapping*> mappings;
+  InputButton up;
+  InputButton down;
+  InputButton left;
+  InputButton right;
+  InputButton select;
+  InputButton start;
+  InputButton a;
+  InputButton b;
+  InputButton c;
+  InputButton x;
+  InputButton y;
+  InputButton z;
+  InputButton l1;
+  InputButton r1;
+  InputButton l2;
+  InputButton r2;
+  InputButton lt;
+  InputButton rt;
+  InputAnalog lup;
+  InputAnalog ldown;
+  InputAnalog lleft;
+  InputAnalog lright;
+  InputAnalog rup;
+  InputAnalog rdown;
+  InputAnalog rleft;
+  InputAnalog rright;
+  InputRumble rumble;
 };
 
 struct InputManager {

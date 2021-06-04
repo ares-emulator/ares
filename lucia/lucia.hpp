@@ -18,9 +18,9 @@ namespace ruby {
 }
 
 #include "resource/resource.hpp"
+#include "input/input.hpp"
 #include "emulator/emulator.hpp"
 #include "program/program.hpp"
-#include "input/input.hpp"
 #include "presentation/presentation.hpp"
 #include "settings/settings.hpp"
 #include "tools/tools.hpp"

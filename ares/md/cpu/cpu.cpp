@@ -15,7 +15,7 @@ auto CPU::load(Node::Object parent) -> void {
   debugger.load(node);
 
   if(auto fp = system.pak->read("tmss.rom")) {
-    for(auto address : range(tmss.size())) tmss.program(address, fp->readm(2));
+    for(auto address : range(tmss.size())) tmss.program(address, fp->readm(2L));
   }
 }
 
@@ -38,16 +38,19 @@ auto CPU::main() -> void {
 
     if(6 > r.i && lower(Interrupt::VerticalBlank)) {
       debugger.interrupt("Vblank");
+      vdp.irq.acknowledge(6);
       return interrupt(Vector::Level6, 6);
     }
 
     if(4 > r.i && lower(Interrupt::HorizontalBlank)) {
       debugger.interrupt("Hblank");
+      vdp.irq.acknowledge(4);
       return interrupt(Vector::Level4, 4);
     }
 
     if(2 > r.i && lower(Interrupt::External)) {
       debugger.interrupt("External");
+      vdp.irq.acknowledge(2);
       return interrupt(Vector::Level2, 2);
     }
   }

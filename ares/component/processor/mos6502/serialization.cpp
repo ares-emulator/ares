@@ -1,15 +1,15 @@
 auto MOS6502::serialize(serializer& s) -> void {
   s(BCD);
-  s(r.a);
-  s(r.x);
-  s(r.y);
-  s(r.s);
-  s(r.pc);
-  s(r.p.c);
-  s(r.p.z);
-  s(r.p.i);
-  s(r.p.d);
-  s(r.p.v);
-  s(r.p.n);
-  s(r.mdr);
+  s(A);
+  s(X);
+  s(Y);
+  s(S);
+  s(P.c);
+  s(P.z);
+  s(P.i);
+  s(P.d);
+  s(P.v);
+  s(P.n);
+  s(PC);
+  s(MDR);
 }
