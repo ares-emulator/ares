@@ -79,7 +79,7 @@ auto CPU::Interrupt::operator=(bool value) -> void {
 
 auto CPU::Interrupt::poll(n8& vector, n3& priority) -> void {
   if(!enable || !pending) return;
-  if(!maskable) { priority = 7; vector = this->vector; return; }
+  if(!maskable) { priority = this->priority; vector = this->vector; return; }
   if(dmaAllowed && cpu.r.iff <= 6) {
     if(this->vector == cpu.dma0.vector) { priority = 6; vector = this->vector; return; }
     if(this->vector == cpu.dma1.vector) { priority = 6; vector = this->vector; return; }
@@ -145,14 +145,14 @@ auto CPU::Interrupt::power(n8 vector) -> void {
 
   //set up defaults that apply to most vectors
   //CPU::power() will perform specialization as needed later
-  dmaAllowed = 1;
-  enable = 1;
-  maskable = 1;
-  priority = 0;
-  line = 0;
-  pending = 0;
-  level.high = 0;
-  level.low = 0;
-  edge.rising = 1;
+  dmaAllowed   = 1;
+  enable       = 1;
+  maskable     = 1;
+  priority     = 0;
+  line         = 0;
+  pending      = 0;
+  level.high   = 0;
+  level.low    = 0;
+  edge.rising  = 1;
   edge.falling = 0;
 }

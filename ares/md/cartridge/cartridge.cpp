@@ -37,10 +37,6 @@ auto Cartridge::connect() -> void {
   board->pak = pak;
   board->load();
 
-  if(auto fp = pak->read("backup.ram")) {
-    mcd.bram.load(fp);
-  }
-
   power(false);
 }
 
@@ -57,10 +53,6 @@ auto Cartridge::disconnect() -> void {
 auto Cartridge::save() -> void {
   if(!node) return;
   board->save();
-
-  if(auto fp = pak->write("backup.ram")) {
-    mcd.bram.save(fp);
-  }
 }
 
 auto Cartridge::main() -> void {

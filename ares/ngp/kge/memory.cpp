@@ -1,12 +1,14 @@
-auto VPU::read(n24 address) -> n8 {
+auto KGE::read(n24 address) -> n8 {
   address = 0x8000 | (n14)address;
-  if(address >= 0x8200 && address <= 0x83ff && Model::NeoGeoPocketColor()) return readColor(address);
-  if(address >= 0x8800 && address <= 0x88ff) return readSprite(address);
-  if(address >= 0x8c00 && address <= 0x8c3f && Model::NeoGeoPocketColor()) return readSpriteColor(address);
-  if(address >= 0x9000 && address <= 0x9fff) return readAttribute(address);
-  if(address >= 0xa000 && address <= 0xbfff) return readCharacter(address);
+  switch(address) {
+  case 0x8200 ... 0x83ff: return readColor(address);  //K2GE only
+  case 0x8800 ... 0x88ff: return readObject(address);
+  case 0x8c00 ... 0x8c3f: return readObjectColor(address);  //K2GE only
+  case 0x9000 ... 0x9fff: return readAttribute(address);
+  case 0xa000 ... 0xbfff: return readCharacter(address);
+  }
 
-  n8 data = 0x00;
+  n8 data;
 
   switch(address) {
   case 0x8000:
@@ -31,7 +33,7 @@ auto VPU::read(n24 address) -> n8 {
 
   case 0x8012:
     data.bit(0,2) = window.color;
-    data.bit(7) = dac.negate;
+    data.bit(7)   = dac.negate;
     break;
 
   case 0x8020: data = sprite.hscroll; break;
@@ -83,8 +85,8 @@ auto VPU::read(n24 address) -> n8 {
 
   case 0x87e2:
     if(!Model::NeoGeoPocketColor()) break;
-    data.bit(0,6) = 0b000000;
-    data.bit(7) = dac.colorMode;
+    data.bit(0,6) = 0;
+    data.bit(7)   = dac.colorMode;
     break;
 
   case 0x87fe: data = 0x3f; break;  //input port register (reserved)
@@ -93,13 +95,15 @@ auto VPU::read(n24 address) -> n8 {
   return data;
 }
 
-auto VPU::write(n24 address, n8 data) -> void {
+auto KGE::write(n24 address, n8 data) -> void {
   address = 0x8000 | (n14)address;
-  if(address >= 0x8200 && address <= 0x83ff && Model::NeoGeoPocketColor()) return writeColor(address, data);
-  if(address >= 0x8800 && address <= 0x88ff) return writeSprite(address, data);
-  if(address >= 0x8c00 && address <= 0x8cff && Model::NeoGeoPocketColor()) return writeSpriteColor(address, data);
-  if(address >= 0x9000 && address <= 0x9fff) return writeAttribute(address, data);
-  if(address >= 0xa000 && address <= 0xbfff) return writeCharacter(address, data);
+  switch(address) {
+  case 0x8200 ... 0x83ff: return writeColor(address, data);  //K2GE only
+  case 0x8800 ... 0x88ff: return writeObject(address, data);
+  case 0x8c00 ... 0x8cff: return writeObjectColor(address, data);  //K2GE only
+  case 0x9000 ... 0x9fff: return writeAttribute(address, data);
+  case 0xa000 ... 0xbfff: return writeCharacter(address, data);
+  }
 
   switch(address) {
   case 0x8000:
@@ -118,7 +122,7 @@ auto VPU::write(n24 address, n8 data) -> void {
 
   case 0x8012:
     window.color = data.bit(0,2);
-    dac.negate = data.bit(7);
+    dac.negate   = data.bit(7);
     break;
 
   case 0x8020: sprite.hscroll = data; break;
@@ -159,7 +163,6 @@ auto VPU::write(n24 address, n8 data) -> void {
   case 0x8117: plane2.palette[1][3] = data.bit(0,2); break;
 
   case 0x8118:
-    if(!Model::NeoGeoPocketColor()) break;
     background.color  = data.bit(0,2);
     background.unused = data.bit(3,5);
     background.mode   = data.bit(6,7);
@@ -180,107 +183,165 @@ auto VPU::write(n24 address, n8 data) -> void {
   }
 }
 
-auto VPU::readSprite(n8 address) -> n8 {
-  auto& s = sprites[address >> 2];
-  switch(address & 3) {
-  case 0: return s.character;
-  case 1: return s.character >> 8 | s.vchain << 1 | s.hchain << 2 | s.priority << 3 | s.palette << 5 | s.vflip << 6 | s.hflip << 7;
-  case 2: return s.hoffset;
-  case 3: return s.voffset;
-  }
-  unreachable;
-}
-
-auto VPU::writeSprite(n8 address, n8 data) -> void {
-  auto& s = sprites[address >> 2];
+auto KGE::readObject(n8 address) -> n8 {
+  n8 data;
+  auto& object = sprite.objects[address >> 2];
   switch(address & 3) {
   case 0:
-    s.character.bit(0,7) = data;
+    data = object.character.bit(0,7);
     break;
   case 1:
-    s.character.bit(8) = data.bit(0);
-    s.vchain = data.bit(1);
-    s.hchain = data.bit(2);
-    s.priority = data.bit(3,4);
-    s.palette = data.bit(5);
-    s.vflip = data.bit(6);
-    s.hflip = data.bit(7);
+    data.bit(0)   = object.character.bit(8);
+    data.bit(1)   = object.vchain;
+    data.bit(2)   = object.hchain;
+    data.bit(3,4) = object.priority;
+    data.bit(5)   = object.palette;
+    data.bit(6)   = object.vflip;
+    data.bit(7)   = object.hflip;
     break;
   case 2:
-    s.hoffset = data;
+    data = object.hoffset;
     break;
   case 3:
-    s.voffset = data;
+    data = object.voffset;
     break;
   }
-}
-
-auto VPU::readSpriteColor(n6 address) -> n8 {
-  return sprites[address].code;  //d4-d7 = 0
-}
-
-auto VPU::writeSpriteColor(n6 address, n8 data) -> void {
-  sprites[address].code = data.bit(0,3);
-}
-
-auto VPU::readColor(n9 address) -> n8 {
-  auto& p = colors[address >> 1];
-  if(!address.bit(0)) {
-    return p.bit(0, 7);
-  } else {
-    return p.bit(8,11);  //d4-d7 = 0
-  }
-}
-
-auto VPU::writeColor(n9 address, n8 data) -> void {
-  auto& p = colors[address >> 1];
-  if(!address.bit(0)) {
-    p.bit(0, 7) = data.bit(0,7);
-  } else {
-    p.bit(8,11) = data.bit(0,3);
-  }
-}
-
-auto VPU::readAttribute(n12 address) -> n8 {
-  auto& a = attributes[address >> 1];
-  if(!address.bit(0)) {
-    return a.character.bit(0,7);
-  } else {
-    return a.character.bit(8) << 0 | a.code << 1 | a.palette << 5 | a.vflip << 6 | a.hflip << 7;
-  }
-}
-
-auto VPU::writeAttribute(n12 address, n8 data) -> void {
-  auto& a = attributes[address >> 1];
-  if(!address.bit(0)) {
-    a.character.bit(0,7) = data.bit(0,7);
-  } else {
-    a.character.bit(8) = data.bit(0);
-    a.code = data.bit(1,4);
-    a.palette = data.bit(5);
-    a.vflip = data.bit(6);
-    a.hflip = data.bit(7);
-  }
-}
-
-auto VPU::readCharacter(n13 address) -> n8 {
-  auto& c = characters[address >> 4];
-  n3 y = address >> 1;
-  n3 x = address >> 0 << 2;
-  n8 data;
-  data.bit(0,1) = c[y][x++];
-  data.bit(2,3) = c[y][x++];
-  data.bit(4,5) = c[y][x++];
-  data.bit(6,7) = c[y][x++];
   return data;
 }
 
-auto VPU::writeCharacter(n13 address, n8 data) -> void {
-  auto& c = characters[address >> 4];
+auto KGE::writeObject(n8 address, n8 data) -> void {
+  auto& object = sprite.objects[address >> 2];
+  switch(address & 3) {
+  case 0:
+    object.character.bit(0,7) = data;
+    break;
+  case 1:
+    object.character.bit(8) = data.bit(0);
+    object.vchain           = data.bit(1);
+    object.hchain           = data.bit(2);
+    object.priority         = data.bit(3,4);
+    object.palette          = data.bit(5);
+    object.vflip            = data.bit(6);
+    object.hflip            = data.bit(7);
+    break;
+  case 2:
+    object.hoffset = data;
+    break;
+  case 3:
+    object.voffset = data;
+    break;
+  }
+}
+
+auto KGE::readObjectColor(n6 address) -> n8 {
+  if(!Model::NeoGeoPocketColor()) return 0x00;
+  return sprite.objects[address].code;  //d4-d7 = 0
+}
+
+auto KGE::writeObjectColor(n6 address, n8 data) -> void {
+  if(!Model::NeoGeoPocketColor()) return;
+  sprite.objects[address].code = data.bit(0,3);
+}
+
+auto KGE::readColor(n9 address) -> n8 {
+  if(!Model::NeoGeoPocketColor()) return 0x00;
+  n8 data;
+  auto& color = dac.colors[address >> 1];
+  switch(address & 1) {
+  case 0:
+    data = color.bit(0,7);
+    break;
+  case 1:
+    data.bit(0,3) = color.bit(8,11);
+    data.bit(4,7) = 0;
+    break;
+  }
+  return data;
+}
+
+auto KGE::writeColor(n9 address, n8 data) -> void {
+  if(!Model::NeoGeoPocketColor()) return;
+  auto& color = dac.colors[address >> 1];
+  switch(address & 1) {
+  case 0:
+    color.bit(0, 7) = data.bit(0,7);
+    break;
+  case 1:
+    color.bit(8,11) = data.bit(0,3);
+    break;
+  }
+}
+
+auto KGE::readAttribute(n12 address) -> n8 {
+  n8 data;
+  auto& attribute = attributes[address >> 1];
+  switch(address & 1) {
+  case 0:
+    data = attribute.character.bit(0,7);
+    break;
+  case 1:
+    data.bit(0)   = attribute.character.bit(8);
+    data.bit(1,4) = attribute.code;
+    data.bit(5)   = attribute.palette;
+    data.bit(6)   = attribute.vflip;
+    data.bit(7)   = attribute.hflip;
+    break;
+  }
+  return data;
+}
+
+auto KGE::writeAttribute(n12 address, n8 data) -> void {
+  auto& attribute = attributes[address >> 1];
+  switch(address & 1) {
+  case 0:
+    attribute.character.bit(0,7) = data.bit(0,7);
+    break;
+  case 1:
+    attribute.character.bit(8) = data.bit(0);
+    attribute.code             = data.bit(1,4);
+    attribute.palette          = data.bit(5);
+    attribute.vflip            = data.bit(6);
+    attribute.hflip            = data.bit(7);
+    break;
+  }
+}
+
+auto KGE::readCharacter(n13 address) -> n8 {
+  n8 data;
+  auto& character = characters[address >> 4];
   n3 y = address >> 1;
-  n3 x = address >> 0 << 2;
-  c[y][x++] = data.bit(0,1);
-  c[y][x++] = data.bit(2,3);
-  c[y][x++] = data.bit(4,5);
-  c[y][x++] = data.bit(6,7);
+  switch(address & 1) {
+  case 0:
+    data.bit(0,1) = character[y][7];
+    data.bit(2,3) = character[y][6];
+    data.bit(4,5) = character[y][5];
+    data.bit(6,7) = character[y][4];
+    break;
+  case 1:
+    data.bit(0,1) = character[y][3];
+    data.bit(2,3) = character[y][2];
+    data.bit(4,5) = character[y][1];
+    data.bit(6,7) = character[y][0];
+    break;
+  }
+  return data;
+}
+
+auto KGE::writeCharacter(n13 address, n8 data) -> void {
+  auto& character = characters[address >> 4];
+  n3 y = address >> 1;
+  switch(address & 1) {
+  case 0:
+    character[y][7] = data.bit(0,1);
+    character[y][6] = data.bit(2,3);
+    character[y][5] = data.bit(4,5);
+    character[y][4] = data.bit(6,7);
+    break;
+  case 1:
+    character[y][3] = data.bit(0,1);
+    character[y][2] = data.bit(2,3);
+    character[y][1] = data.bit(4,5);
+    character[y][0] = data.bit(6,7);
+    break;
+  }
 }

@@ -8,6 +8,7 @@ CPU cpu;
 #include "ports.cpp"
 #include "interrupts.cpp"
 #include "timers.cpp"
+#include "serial.cpp"
 #include "adc.cpp"
 #include "rtc.cpp"
 #include "watchdog.cpp"
@@ -265,9 +266,14 @@ auto CPU::power() -> void {
   t4 = {};
   ff6 = {};
   t5 = {};
+  pg0 = {};
+  pg1 = {};
+  sc0 = {};
+  sc1 = {};
   adc = {};
   rtc = {};
   watchdog = {};
+  dram = {};
 
   io = {};
   io.width  = Byte;
@@ -296,8 +302,8 @@ auto CPU::power() -> void {
   vram = {};
   vram.width  = Word;
   vram.timing = 3;
-  vram.reader = [](n24 address) -> n8 { return vpu.read(address); };
-  vram.writer = [](n24 address, n8 data) { return vpu.write(address, data); };
+  vram.reader = [](n24 address) -> n8 { return kge.read(address); };
+  vram.writer = [](n24 address, n8 data) { return kge.write(address, data); };
 
   cs0 = {};
   cs0.width   = Word;
@@ -405,7 +411,7 @@ auto CPU::fastBoot() -> void {
   writeIO(0xba, 0xfc);
   writeIO(0xbc, 0x03);
 
-  vpu.write(0x8000, 0xc0);  //enable Vblank and Hblank interrupts
+  kge.write(0x8000, 0xc0);  //enable Vblank and Hblank interrupts
 
   //default color palette: Magical Drop relies on the BIOS to initialize this.
   for(u32 address = 0x8380; address < 0x8400; address++) {
@@ -413,7 +419,7 @@ auto CPU::fastBoot() -> void {
       0xff, 0x0f, 0xdd, 0x0d, 0xbb, 0x0b, 0x99, 0x09,
       0x77, 0x07, 0x44, 0x04, 0x33, 0x03, 0x00, 0x00,
     };
-    vpu.write(address, data[address & 15]);
+    kge.write(address, data[address & 15]);
   }
 
   ram[0x2c55] = 0x01;  //game type (0x01 = game)

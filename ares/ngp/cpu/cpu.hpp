@@ -206,11 +206,18 @@ struct CPU : TLCS900H, Thread {
     n1 latch;
   } p81, p84;
 
-  struct P8M : PortFlow, PortMode {
+  struct P8MA : PortFlow, PortMode {
     operator bool() const;
     auto operator=(bool) -> void;
     n1 latch;
-  } p80, p82, p83, p85;
+    n1 drain;  //0 = CMOS output, 1 = open-drain output
+  } p80, p83;
+
+  struct P8MB : PortFlow, PortMode {
+    operator bool() const;
+    auto operator=(bool) -> void;
+    n1 latch;
+  } p82, p85;
 
   // P90-P93, AN0-AN3
   struct P9 {
@@ -531,6 +538,45 @@ struct CPU : TLCS900H, Thread {
     } buffer;
   } t5;
 
+  struct PatternGenerator {
+    n1 shiftTrigger;  //0 = 8-bit (timer 0,1 or 2,3), 1 = 16-bit (timer 4 or 5)
+
+    n4 shiftAlternateRegister;
+    n4 patternGenerationOutput;
+
+    n1 triggerInputEnable;
+    n1 excitationMode;     //0 = 1 or 2 (full step), 1 = 1-2 (half step)
+    n1 rotatingDirection;  //0 = normal rotation, 1 = reverse rotation
+    n1 writeMode;          //0 = 8-bit, 1 = 4-bit
+  } pg0, pg1;
+
+  //serial.cpp
+  struct SerialChannel {
+    auto receive() -> n8;
+    auto transmit(n8 data) -> void;
+
+    n8 buffer;
+
+    n4 baudRateDividend;  //0 = 16, 1 = invalid, 2-15 = 2-15
+    n2 baudRateDivider;   //0 = T0, 1 = T2, 2 = T8, 3 = T32
+
+    n1 inputClock;      //0 = baud rate generator, 1 = SCLK pin input
+    n1 clockEdge;       //0 = rising edge, 1 = falling edge
+    n1 framingError;
+    n1 parityError;
+    n1 overrunError;
+    n1 parityAddition;  //1 = enable
+    n1 parity;          //0 = odd, 1 = even
+    n1 receiveBit8;
+
+    n2 clock;           //0 = TO2, 1 = baud rate generator, 2 = internal clock, 3 = don't care
+    n2 mode;            //0 = I/O interface, 1 = 7-bit UART, 2 = 8-bit, 3 = 9-bit
+    n1 wakeUp;          //1 = enable
+    n1 receiving;       //1 = enable
+    n1 handshake;       //0 = CTS disable, 1 = CTS enable
+    n1 transferBit8;    //0 = no, 1 = yes
+  } sc0, sc1;
+
   //adc.cpp
   struct ADC {
     auto step(u32 clocks) -> void;
@@ -574,6 +620,20 @@ struct CPU : TLCS900H, Thread {
     n1  warmup;
     n2  frequency;
   } watchdog;
+
+  struct DRAM {
+    n1 refreshCycle;           //0 = not inserted, 1 = inserted
+    n3 refreshCycleWidth;      //2-9 states
+    n3 refreshCycleInsertion;  //31,62,78,97,109,124,154,195 states
+    n1 dummyCycle;             //0 = prohibit, 1 = execute
+
+    n1 memoryAccessEnable;      //1 = enable
+    n2 multiplexAddressLength;  //8-11 bits
+    n1 multiplexAddressEnable;  //1 = enable
+    n1 memoryAccessSpeed;       //0 = normal, 1 = slow
+    n1 busReleaseMode;          //DRAM control signals: 0 = also released, 1 = not released
+    n1 selfRefresh = 1;         //0 = execute, 1 = release
+  } dram;
 
   //memory.cpp
   struct Bus {
@@ -659,9 +719,14 @@ struct CPU : TLCS900H, Thread {
   struct Misc {
     n1 p5;  //Port 5: 0 = PSRAM mode, 1 = (not PSRAM mode?) [unemulated]
     n1 rtsDisable;
+  } misc;
+
+  struct Unknown {
     n8 b4;
     n8 b5;
-  } misc;
+    n8 b6;
+    n8 b7;
+  } unknown;
 };
 
 extern CPU cpu;

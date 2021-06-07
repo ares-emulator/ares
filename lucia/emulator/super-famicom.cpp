@@ -130,37 +130,37 @@ auto SuperFamicom::pak(ares::Node::Object node) -> shared_pointer<vfs::directory
   return {};
 }
 
-auto SuperFamicom::input(ares::Node::Input::Input node) -> void {
-  auto parent = ares::Node::parent(node);
-  if(!parent) return;
+auto SuperFamicom::input(ares::Node::Input::Input input) -> void {
+  auto device = ares::Node::parent(input);
+  if(!device) return;
 
-  auto port = ares::Node::parent(parent);
+  auto port = ares::Node::parent(device);
   if(!port) return;
 
-  maybe<u32> index;
-  if(port->name() == "Controller Port 1") index = 0;
-  if(port->name() == "Controller Port 2") index = 1;
-  if(!index) return;
+  maybe<u32> id;
+  if(port->name() == "Controller Port 1") id = 0;
+  if(port->name() == "Controller Port 2") id = 1;
+  if(!id) return;
 
-  if(parent->name() == "Gamepad") {
-    auto name = node->name();
+  if(device->name() == "Gamepad") {
+    auto name = input->name();
     maybe<InputMapping&> mapping;
-    if(name == "Up"    ) mapping = virtualPads[*index].up;
-    if(name == "Down"  ) mapping = virtualPads[*index].down;
-    if(name == "Left"  ) mapping = virtualPads[*index].left;
-    if(name == "Right" ) mapping = virtualPads[*index].right;
-    if(name == "B"     ) mapping = virtualPads[*index].a;
-    if(name == "A"     ) mapping = virtualPads[*index].b;
-    if(name == "Y"     ) mapping = virtualPads[*index].x;
-    if(name == "X"     ) mapping = virtualPads[*index].y;
-    if(name == "L"     ) mapping = virtualPads[*index].l1;
-    if(name == "R"     ) mapping = virtualPads[*index].r1;
-    if(name == "Select") mapping = virtualPads[*index].select;
-    if(name == "Start" ) mapping = virtualPads[*index].start;
+    if(name == "Up"    ) mapping = virtualPads[*id].up;
+    if(name == "Down"  ) mapping = virtualPads[*id].down;
+    if(name == "Left"  ) mapping = virtualPads[*id].left;
+    if(name == "Right" ) mapping = virtualPads[*id].right;
+    if(name == "B"     ) mapping = virtualPads[*id].a;
+    if(name == "A"     ) mapping = virtualPads[*id].b;
+    if(name == "Y"     ) mapping = virtualPads[*id].x;
+    if(name == "X"     ) mapping = virtualPads[*id].y;
+    if(name == "L"     ) mapping = virtualPads[*id].l1;
+    if(name == "R"     ) mapping = virtualPads[*id].r1;
+    if(name == "Select") mapping = virtualPads[*id].select;
+    if(name == "Start" ) mapping = virtualPads[*id].start;
 
     if(mapping) {
       auto value = mapping->value();
-      if(auto button = node->cast<ares::Node::Input::Button>()) {
+      if(auto button = input->cast<ares::Node::Input::Button>()) {
         button->setValue(value);
       }
     }

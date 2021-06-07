@@ -7,20 +7,14 @@ Bus bus;
 
 auto InternalRAM::power() -> void {
   for(auto& byte : memory) byte = 0x00;
+  size = SoC::ASWAN() ? 16_KiB : 64_KiB;
+  maskByte = size - 1;
+  maskWord = size - 2;
+  maskLong = size - 4;
 }
 
 auto InternalRAM::serialize(serializer& s) -> void {
   s(array_span<u8>{memory, SoC::ASWAN() ? 16_KiB : 64_KiB});
-}
-
-auto InternalRAM::read(n16 address) -> n8 {
-  if(address >= system.memory()) return 0x90;
-  return memory[address];
-}
-
-auto InternalRAM::write(n16 address, n8 data) -> void {
-  if(address >= system.memory()) return;
-  memory[address] = data;
 }
 
 auto Bus::power() -> void {

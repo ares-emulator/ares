@@ -11,6 +11,25 @@ NeoGeoAES::NeoGeoAES() {
   name = "Neo Geo AES";
 
   firmware.append({"BIOS", "World"});
+
+  for(auto id : range(2)) {
+    InputPort port{string{"Controller Port ", 1 + id}};
+
+    InputDevice device{"Arcade Stick"};
+    device.button("Up",     virtualPads[id].up);
+    device.button("Down",   virtualPads[id].down);
+    device.button("Left",   virtualPads[id].left);
+    device.button("Right",  virtualPads[id].right);
+    device.button("A",      virtualPads[id].a);
+    device.button("B",      virtualPads[id].b);
+    device.button("C",      virtualPads[id].x);
+    device.button("D",      virtualPads[id].y);
+    device.button("Select", virtualPads[id].select);
+    device.button("Start",  virtualPads[id].start);
+    port.append(device);
+
+    ports.append(port);
+  }
 }
 
 auto NeoGeoAES::load() -> bool {
@@ -58,35 +77,35 @@ auto NeoGeoAES::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   return {};
 }
 
-auto NeoGeoAES::input(ares::Node::Input::Input node) -> void {
-  auto parent = ares::Node::parent(node);
-  if(!parent) return;
+auto NeoGeoAES::input(ares::Node::Input::Input input) -> void {
+  auto device = ares::Node::parent(input);
+  if(!device) return;
 
-  auto port = ares::Node::parent(parent);
+  auto port = ares::Node::parent(device);
   if(!port) return;
 
-  maybe<u32> index;
-  if(port->name() == "Controller Port 1") index = 0;
-  if(port->name() == "Controller Port 2") index = 1;
-  if(!index) return;
+  maybe<u32> id;
+  if(port->name() == "Controller Port 1") id = 0;
+  if(port->name() == "Controller Port 2") id = 1;
+  if(!id) return;
 
-  if(parent->name() == "Arcade Stick") {
-    auto name = node->name();
+  if(device->name() == "Arcade Stick") {
+    auto name = input->name();
     maybe<InputMapping&> mapping;
-    if(name == "Up"    ) mapping = virtualPads[*index].up;
-    if(name == "Down"  ) mapping = virtualPads[*index].down;
-    if(name == "Left"  ) mapping = virtualPads[*index].left;
-    if(name == "Right" ) mapping = virtualPads[*index].right;
-    if(name == "A"     ) mapping = virtualPads[*index].a;
-    if(name == "B"     ) mapping = virtualPads[*index].b;
-    if(name == "C"     ) mapping = virtualPads[*index].x;
-    if(name == "D"     ) mapping = virtualPads[*index].y;
-    if(name == "Select") mapping = virtualPads[*index].select;
-    if(name == "Start" ) mapping = virtualPads[*index].start;
+    if(name == "Up"    ) mapping = virtualPads[*id].up;
+    if(name == "Down"  ) mapping = virtualPads[*id].down;
+    if(name == "Left"  ) mapping = virtualPads[*id].left;
+    if(name == "Right" ) mapping = virtualPads[*id].right;
+    if(name == "A"     ) mapping = virtualPads[*id].a;
+    if(name == "B"     ) mapping = virtualPads[*id].b;
+    if(name == "C"     ) mapping = virtualPads[*id].x;
+    if(name == "D"     ) mapping = virtualPads[*id].y;
+    if(name == "Select") mapping = virtualPads[*id].select;
+    if(name == "Start" ) mapping = virtualPads[*id].start;
 
     if(mapping) {
       auto value = mapping->value();
-      if(auto button = node->cast<ares::Node::Input::Button>()) {
+      if(auto button = input->cast<ares::Node::Input::Button>()) {
         button->setValue(value);
       }
     }

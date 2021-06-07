@@ -11,6 +11,21 @@ NeoGeoPocketColor::NeoGeoPocketColor() {
   name = "Neo Geo Pocket Color";
 
   firmware.append({"BIOS", "World", "8fb845a2f71514cec20728e2f0fecfade69444f8d50898b92c2259f1ba63e10d"});
+
+  { InputPort port{"Hardware"};
+
+    InputDevice device{"Controls"};
+    device.button("Up",     virtualPads[0].up);
+    device.button("Down",   virtualPads[0].down);
+    device.button("Left",   virtualPads[0].left);
+    device.button("Right",  virtualPads[0].right);
+    device.button("A",      virtualPads[0].a);
+    device.button("B",      virtualPads[0].b);
+    device.button("Option", virtualPads[0].start);
+    port.append(device);
+
+    ports.append(port);
+  }
 }
 
 auto NeoGeoPocketColor::load() -> bool {
@@ -47,8 +62,8 @@ auto NeoGeoPocketColor::pak(ares::Node::Object node) -> shared_pointer<vfs::dire
   return {};
 }
 
-auto NeoGeoPocketColor::input(ares::Node::Input::Input node) -> void {
-  auto name = node->name();
+auto NeoGeoPocketColor::input(ares::Node::Input::Input input) -> void {
+  auto name = input->name();
   maybe<InputMapping&> mapping;
   if(name == "Up"    ) mapping = virtualPads[0].up;
   if(name == "Down"  ) mapping = virtualPads[0].down;
@@ -60,7 +75,7 @@ auto NeoGeoPocketColor::input(ares::Node::Input::Input node) -> void {
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Input::Button>()) {
+    if(auto button = input->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }

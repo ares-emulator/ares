@@ -5,6 +5,7 @@ namespace ares::Nintendo64 {
 Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "slot.cpp"
 #include "flash.cpp"
+#include "isviewer.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
 
@@ -42,6 +43,8 @@ auto Cartridge::connect() -> void {
     flash.load(fp);
   }
 
+  isviewer.ram.allocate(64_KiB);
+
   debugger.load(node);
 
   power(false);
@@ -55,6 +58,7 @@ auto Cartridge::disconnect() -> void {
   ram.reset();
   eeprom.reset();
   flash.reset();
+  isviewer.ram.reset();
   pak.reset();
   node.reset();
 }
@@ -80,6 +84,7 @@ auto Cartridge::power(bool reset) -> void {
   flash.status = 0;
   flash.source = 0;
   flash.offset = 0;
+  isviewer.ram.fill(0);
 }
 
 }

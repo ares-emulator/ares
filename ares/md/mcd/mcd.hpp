@@ -82,6 +82,7 @@ struct MCD : M68000, Thread {
 
     n16 wramLatch;
     n1  wramMode;  //MODE: 0 = 2mbit mode, 1 = 1mbit mode
+    n1  wramSwitchRequest;
     n1  wramSwitch;
     n1  wramSelect;
     n2  wramPriority;

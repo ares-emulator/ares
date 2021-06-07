@@ -10,6 +10,25 @@ struct WonderSwanColor : Emulator {
 WonderSwanColor::WonderSwanColor() {
   manufacturer = "Bandai";
   name = "WonderSwan Color";
+
+  { InputPort port{"Hardware"};
+
+    InputDevice device{"Controls"};
+    device.button("Y1",    virtualPads[0].l1);
+    device.button("Y2",    virtualPads[0].l2);
+    device.button("Y3",    virtualPads[0].r1);
+    device.button("Y4",    virtualPads[0].r2);
+    device.button("X1",    virtualPads[0].up);
+    device.button("X2",    virtualPads[0].right);
+    device.button("X3",    virtualPads[0].down);
+    device.button("X4",    virtualPads[0].left);
+    device.button("B",     virtualPads[0].a);
+    device.button("A",     virtualPads[0].b);
+    device.button("Start", virtualPads[0].start);
+    port.append(device);
+
+    ports.append(port);
+  }
 }
 
 auto WonderSwanColor::load(Menu menu) -> void {
@@ -60,8 +79,8 @@ auto WonderSwanColor::pak(ares::Node::Object node) -> shared_pointer<vfs::direct
   return {};
 }
 
-auto WonderSwanColor::input(ares::Node::Input::Input node) -> void {
-  auto name = node->name();
+auto WonderSwanColor::input(ares::Node::Input::Input input) -> void {
+  auto name = input->name();
   maybe<InputMapping&> mapping;
   if(name == "Y1"   ) mapping = virtualPads[0].l1;
   if(name == "Y2"   ) mapping = virtualPads[0].l2;
@@ -77,7 +96,7 @@ auto WonderSwanColor::input(ares::Node::Input::Input node) -> void {
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Input::Button>()) {
+    if(auto button = input->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }

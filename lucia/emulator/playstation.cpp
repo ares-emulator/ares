@@ -16,6 +16,29 @@ PlayStation::PlayStation() {
   firmware.append({"BIOS", "US"});      //NTSC-U
   firmware.append({"BIOS", "Japan"});   //NTSC-J
   firmware.append({"BIOS", "Europe"});  //PAL
+
+  for(auto id : range(2)) {
+    InputPort port{string{"Controller Port ", 1 + id}};
+
+    InputDevice device{"Digital Gamepad"};
+    device.button("Up",       virtualPads[id].up);
+    device.button("Down",     virtualPads[id].down);
+    device.button("Left",     virtualPads[id].left);
+    device.button("Right",    virtualPads[id].right);
+    device.button("Cross",    virtualPads[id].a);
+    device.button("Circle",   virtualPads[id].b);
+    device.button("Square",   virtualPads[id].x);
+    device.button("Triangle", virtualPads[id].y);
+    device.button("L1",       virtualPads[id].l1);
+    device.button("L2",       virtualPads[id].l2);
+    device.button("R1",       virtualPads[id].r1);
+    device.button("R2",       virtualPads[id].r2);
+    device.button("Select",   virtualPads[id].select);
+    device.button("Start",    virtualPads[id].start);
+    port.append(device);
+
+    ports.append(port);
+  }
 }
 
 auto PlayStation::load() -> bool {
@@ -78,42 +101,42 @@ auto PlayStation::pak(ares::Node::Object node) -> shared_pointer<vfs::directory>
   return {};
 }
 
-auto PlayStation::input(ares::Node::Input::Input node) -> void {
-  auto parent = ares::Node::parent(node);
-  if(!parent) return;
+auto PlayStation::input(ares::Node::Input::Input input) -> void {
+  auto device = ares::Node::parent(input);
+  if(!device) return;
 
-  auto port = ares::Node::parent(parent);
+  auto port = ares::Node::parent(device);
   if(!port) return;
 
-  maybe<u32> index;
-  if(port->name() == "Controller Port 1") index = 0;
-  if(port->name() == "Controller Port 2") index = 1;
-  if(!index) return;
+  maybe<u32> id;
+  if(port->name() == "Controller Port 1") id = 0;
+  if(port->name() == "Controller Port 2") id = 1;
+  if(!id) return;
 
-  if(parent->name() == "Digital Gamepad") {
-    auto name = node->name();
+  if(device->name() == "Digital Gamepad") {
+    auto name = input->name();
     maybe<InputMapping&> mapping;
-    if(name == "Up"      ) mapping = virtualPads[*index].up;
-    if(name == "Down"    ) mapping = virtualPads[*index].down;
-    if(name == "Left"    ) mapping = virtualPads[*index].left;
-    if(name == "Right"   ) mapping = virtualPads[*index].right;
-    if(name == "Cross"   ) mapping = virtualPads[*index].a;
-    if(name == "Circle"  ) mapping = virtualPads[*index].b;
-    if(name == "Square"  ) mapping = virtualPads[*index].x;
-    if(name == "Triangle") mapping = virtualPads[*index].y;
-    if(name == "L1"      ) mapping = virtualPads[*index].l1;
-    if(name == "L2"      ) mapping = virtualPads[*index].l2;
-    if(name == "R1"      ) mapping = virtualPads[*index].r1;
-    if(name == "R2"      ) mapping = virtualPads[*index].r2;
-    if(name == "Select"  ) mapping = virtualPads[*index].select;
-    if(name == "Start"   ) mapping = virtualPads[*index].start;
+    if(name == "Up"      ) mapping = virtualPads[*id].up;
+    if(name == "Down"    ) mapping = virtualPads[*id].down;
+    if(name == "Left"    ) mapping = virtualPads[*id].left;
+    if(name == "Right"   ) mapping = virtualPads[*id].right;
+    if(name == "Cross"   ) mapping = virtualPads[*id].a;
+    if(name == "Circle"  ) mapping = virtualPads[*id].b;
+    if(name == "Square"  ) mapping = virtualPads[*id].x;
+    if(name == "Triangle") mapping = virtualPads[*id].y;
+    if(name == "L1"      ) mapping = virtualPads[*id].l1;
+    if(name == "L2"      ) mapping = virtualPads[*id].l2;
+    if(name == "R1"      ) mapping = virtualPads[*id].r1;
+    if(name == "R2"      ) mapping = virtualPads[*id].r2;
+    if(name == "Select"  ) mapping = virtualPads[*id].select;
+    if(name == "Start"   ) mapping = virtualPads[*id].start;
 
     if(mapping) {
       auto value = mapping->value();
-      if(auto axis = node->cast<ares::Node::Input::Axis>()) {
+      if(auto axis = input->cast<ares::Node::Input::Axis>()) {
         axis->setValue(value);
       }
-      if(auto button = node->cast<ares::Node::Input::Button>()) {
+      if(auto button = input->cast<ares::Node::Input::Button>()) {
         button->setValue(value);
       }
     }

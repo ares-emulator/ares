@@ -16,6 +16,9 @@ auto CPU::readIO(n8 address) -> n8 {
     data.bit(7) = p17;
     return data;
 
+  //P1CR (write-only)
+  case 0x04: return data;
+
   //P2
   case 0x06:
     data.bit(0) = p20;
@@ -28,6 +31,9 @@ auto CPU::readIO(n8 address) -> n8 {
     data.bit(7) = p27;
     return data;
 
+  //P2FC (write-only)
+  case 0x09: return data;
+
   //P5
   case 0x0d:
     data.bit(0) = misc.p5;
@@ -36,6 +42,12 @@ auto CPU::readIO(n8 address) -> n8 {
     data.bit(4) = p54;
     data.bit(5) = p55;
     return data;
+
+  //P5CR (write-only)
+  case 0x10: return data;
+
+  //P5SC (write-only)
+  case 0x11: return data;
 
   //P6
   case 0x12:
@@ -59,6 +71,12 @@ auto CPU::readIO(n8 address) -> n8 {
     data.bit(7) = p77;
     return data;
 
+  //P6FC (write-only)
+  case 0x15: return data;
+
+  //P7FC (write-only)
+  case 0x17: return data;
+
   //P8
   case 0x18:
     data.bit(0) = p80;
@@ -76,6 +94,12 @@ auto CPU::readIO(n8 address) -> n8 {
     data.bit(2) = p92;
     data.bit(3) = p93;
     return data;
+
+  //P8CR (write-only)
+  case 0x1a: return data;
+
+  //P8FC (write-only)
+  case 0x1b: return data;
 
   //PA
   case 0x1e:
@@ -124,11 +148,11 @@ auto CPU::readIO(n8 address) -> n8 {
 
   //TFFCR
   case 0x25:
-    data.bit(0) = ff1.source;
-    data.bit(1) = ff1.invert;
+    data.bit(0)   = ff1.source;
+    data.bit(1)   = ff1.invert;
     data.bit(2,3) = 0b11;  //write-only
-    data.bit(4) = ff3.source;
-    data.bit(5) = ff3.invert;
+    data.bit(4)   = ff3.source;
+    data.bit(5)   = ff3.invert;
     data.bit(6,7) = 0b11;  //write-only
     return data;
 
@@ -152,6 +176,18 @@ auto CPU::readIO(n8 address) -> n8 {
     data.bit(1) = t23.buffer.enable;
     return data;
 
+  //PACR (write-only)
+  case 0x2c: return data;
+
+  //PAFC (write-only)
+  case 0x2d: return data;
+
+  //PBCR (write-only)
+  case 0x2e: return data;
+
+  //PBFC (write-only)
+  case 0x2f: return data;
+
   //TREG4 (write-only?)
   case 0x30: return data;
   case 0x31: return data;
@@ -171,21 +207,29 @@ auto CPU::readIO(n8 address) -> n8 {
   //T4MOD
   case 0x38:
     data.bit(0,1) = t4.mode;
-    data.bit(2) = t4.clearOnCompare5;
+    data.bit(2)   = t4.clearOnCompare5;
     data.bit(3,4) = t4.captureMode;
-    data.bit(5) = 1;
-    data.bit(6) = ff5.flipOnCompare5;
-    data.bit(7) = ff5.flipOnCapture2;
+    data.bit(5)   = 1;
+    data.bit(6)   = ff5.flipOnCompare5;
+    data.bit(7)   = ff5.flipOnCapture2;
     return data;
 
   //T4FFCR
   case 0x39:
     data.bit(0,1) = 0b11;
-    data.bit(2) = ff4.flipOnCompare4;
-    data.bit(3) = ff4.flipOnCompare5;
-    data.bit(4) = ff4.flipOnCapture1;
-    data.bit(5) = ff4.flipOnCapture2;
+    data.bit(2)   = ff4.flipOnCompare4;
+    data.bit(3)   = ff4.flipOnCompare5;
+    data.bit(4)   = ff4.flipOnCapture1;
+    data.bit(5)   = ff4.flipOnCapture2;
     data.bit(6,7) = 0b11;
+    return data;
+
+  //T45CR
+  case 0x3a:
+    data.bit(0) = t4.buffer.enable;
+    data.bit(1) = t5.buffer.enable;
+    data.bit(2) = pg0.shiftTrigger;
+    data.bit(3) = pg1.shiftTrigger;
     return data;
 
   //MSAR0
@@ -229,19 +273,136 @@ auto CPU::readIO(n8 address) -> n8 {
   //T5MOD
   case 0x48:
     data.bit(0,1) = t5.mode;
-    data.bit(2) = t5.clearOnCompare7;
+    data.bit(2)   = t5.clearOnCompare7;
     data.bit(3,4) = t5.captureMode;
-    data.bit(5) = 1;
+    data.bit(5)   = 1;
     return data;
 
   //T5FFCR
   case 0x49:
     data.bit(0,1) = 0b11;
-    data.bit(2) = ff6.flipOnCompare6;
-    data.bit(3) = ff6.flipOnCompare7;
-    data.bit(4) = ff6.flipOnCapture3;
-    data.bit(5) = ff6.flipOnCapture4;
+    data.bit(2)   = ff6.flipOnCompare6;
+    data.bit(3)   = ff6.flipOnCompare7;
+    data.bit(4)   = ff6.flipOnCapture3;
+    data.bit(5)   = ff6.flipOnCapture4;
     data.bit(6,7) = 0b11;
+    return data;
+
+  //PG0REG
+  case 0x4c:
+    data.bit(0,3) = pg0.shiftAlternateRegister;
+    return data;
+
+  //PG1REG
+  case 0x4d:
+    data.bit(0,3) = pg1.shiftAlternateRegister;
+    return data;
+
+  //PG01CR
+  case 0x4e:
+    data.bit(0) = pg0.triggerInputEnable;
+    data.bit(1) = pg0.excitationMode;
+    data.bit(2) = pg0.rotatingDirection;
+    data.bit(3) = pg0.writeMode;
+    data.bit(4) = pg1.triggerInputEnable;
+    data.bit(5) = pg1.excitationMode;
+    data.bit(6) = pg1.rotatingDirection;
+    data.bit(7) = pg1.writeMode;
+    return data;
+
+  //SC0BUF
+  case 0x50:
+    data = sc0.receive();
+    return data;
+
+  //SC0CR
+  case 0x51:
+    data.bit(0) = sc0.inputClock;
+    data.bit(1) = sc0.clockEdge;
+    data.bit(2) = sc0.framingError;
+    data.bit(3) = sc0.parityError;
+    data.bit(4) = sc0.overrunError;
+    data.bit(5) = sc0.parityAddition;
+    data.bit(6) = sc0.parity;
+    data.bit(7) = sc0.receiveBit8;
+    sc0.framingError = 0;
+    sc0.parityError  = 0;
+    sc0.overrunError = 0;
+    return data;
+
+  //SC0MOD
+  case 0x52:
+    data.bit(0,1) = sc0.clock;
+    data.bit(2,3) = sc0.mode;
+    data.bit(4)   = sc0.wakeUp;
+    data.bit(5)   = sc0.receiving;
+    data.bit(6)   = sc0.handshake;
+    data.bit(7)   = sc0.transferBit8;
+    return data;
+
+  //BR0CR
+  case 0x53:
+    data.bit(0,3) = sc0.baudRateDividend;
+    data.bit(4,5) = sc0.baudRateDivider;
+    return data;
+
+  //SC1BUF
+  case 0x54:
+    data = sc1.receive();
+    return data;
+
+  //SC1CR
+  case 0x55:
+    data.bit(0) = sc1.inputClock;
+    data.bit(1) = sc1.clockEdge;
+    data.bit(2) = sc1.framingError;
+    data.bit(3) = sc1.parityError;
+    data.bit(4) = sc1.overrunError;
+    data.bit(5) = sc1.parityAddition;
+    data.bit(6) = sc1.parity;
+    data.bit(7) = sc1.receiveBit8;
+    sc1.framingError = 0;
+    sc1.parityError  = 0;
+    sc1.overrunError = 0;
+    return data;
+
+  //SC1MOD
+  case 0x56:
+    data.bit(0,1) = sc1.clock;
+    data.bit(2,3) = sc1.mode;
+    data.bit(4)   = sc1.wakeUp;
+    data.bit(5)   = sc1.receiving;
+    data.bit(6)   = sc1.handshake;  //always 0
+    data.bit(7)   = sc1.transferBit8;
+    return data;
+
+  //BR1CR
+  case 0x57:
+    data.bit(0,3) = sc1.baudRateDividend;
+    data.bit(4,5) = sc1.baudRateDivider;
+    return data;
+
+  //ODE
+  case 0x58:
+    data.bit(0) = p80.drain;
+    data.bit(1) = p83.drain;
+    return data;
+
+  //DREFCR
+  case 0x5a:
+    data.bit(0)   = dram.refreshCycle;
+    data.bit(1,3) = dram.refreshCycleWidth;
+    data.bit(4,6) = dram.refreshCycleInsertion;
+    data.bit(7)   = dram.dummyCycle;
+    return data;
+
+  //DMEMCR
+  case 0x5b:
+    data.bit(0)   = dram.memoryAccessEnable;
+    data.bit(1,2) = dram.multiplexAddressLength;
+    data.bit(3)   = dram.multiplexAddressEnable;
+    data.bit(4)   = dram.memoryAccessSpeed;
+    data.bit(5)   = dram.busReleaseMode;
     return data;
 
   //MSAR2
@@ -320,25 +481,40 @@ auto CPU::readIO(n8 address) -> n8 {
     intad.clear();
     return data;
 
+  //B0CS (write-only)
+  case 0x68: return data;
+
+  //B1CS (write-only)
+  case 0x69: return data;
+
+  //B2CS (write-only)
+  case 0x6a: return data;
+
+  //B3CS (write-only)
+  case 0x6b: return data;
+
+  //BEXCS (write-only)
+  case 0x6c: return data;
+
   //ADMOD
   case 0x6d:
     data.bit(0,1) = adc.channel;
-    data.bit(2) = 0;  //always reads as zero
-    data.bit(3) = adc.speed;
-    data.bit(4) = adc.scan;
-    data.bit(5) = adc.repeat;
-    data.bit(6) = adc.busy;
-    data.bit(7) = adc.end;
+    data.bit(2)   = 0;  //always reads as zero
+    data.bit(3)   = adc.speed;
+    data.bit(4)   = adc.scan;
+    data.bit(5)   = adc.repeat;
+    data.bit(6)   = adc.busy;
+    data.bit(7)   = adc.end;
     return data;
 
   //WDMOD
   case 0x6e:
-    data.bit(0) = watchdog.drive;
-    data.bit(1) = watchdog.reset;
+    data.bit(0)   = watchdog.drive;
+    data.bit(1)   = watchdog.reset;
     data.bit(2,3) = watchdog.standby;
-    data.bit(4) = watchdog.warmup;
+    data.bit(4)   = watchdog.warmup;
     data.bit(5,6) = watchdog.frequency;
-    data.bit(7) = watchdog.enable;
+    data.bit(7)   = watchdog.enable;
     return data;
 
   //WDCR (write-only)
@@ -347,89 +523,89 @@ auto CPU::readIO(n8 address) -> n8 {
   //INTE0AD
   case 0x70:
     data.bit(0,2) = 0b000;
-    data.bit(3) = int0.pending;
+    data.bit(3)   = int0.pending;
     data.bit(4,6) = 0b000;
-    data.bit(7) = intad.pending;
+    data.bit(7)   = intad.pending;
     return data;
 
   //INTE45
   case 0x71:
     data.bit(0,2) = 0b000;
-    data.bit(3) = int4.pending;
+    data.bit(3)   = int4.pending;
     data.bit(4,6) = 0b000;
-    data.bit(7) = int5.pending;
+    data.bit(7)   = int5.pending;
     return data;
 
   //INTE67
   case 0x72:
     data.bit(0,2) = 0b000;
-    data.bit(3) = int6.pending;
+    data.bit(3)   = int6.pending;
     data.bit(4,6) = 0b000;
-    data.bit(7) = int7.pending;
+    data.bit(7)   = int7.pending;
     return data;
 
   //INTET01
   case 0x73:
     data.bit(0,2) = 0b000;
-    data.bit(3) = intt0.pending;
+    data.bit(3)   = intt0.pending;
     data.bit(4,6) = 0b000;
-    data.bit(7) = intt1.pending;
+    data.bit(7)   = intt1.pending;
     return data;
 
   //INTET23
   case 0x74:
     data.bit(0,2) = 0b000;
-    data.bit(3) = intt2.pending;
+    data.bit(3)   = intt2.pending;
     data.bit(4,6) = 0b000;
-    data.bit(7) = intt3.pending;
+    data.bit(7)   = intt3.pending;
     return data;
 
   //INTET45
   case 0x75:
     data.bit(0,2) = 0b000;
-    data.bit(3) = inttr4.pending;
+    data.bit(3)   = inttr4.pending;
     data.bit(4,6) = 0b000;
-    data.bit(7) = inttr5.pending;
+    data.bit(7)   = inttr5.pending;
     return data;
 
   //INTET67
   case 0x76:
     data.bit(0,2) = 0b000;
-    data.bit(3) = inttr6.pending;
+    data.bit(3)   = inttr6.pending;
     data.bit(4,6) = 0b000;
-    data.bit(7) = inttr7.pending;
+    data.bit(7)   = inttr7.pending;
     return data;
 
   //INTE50
   case 0x77:
     data.bit(0,2) = 0b000;
-    data.bit(3) = intrx0.pending;
+    data.bit(3)   = intrx0.pending;
     data.bit(4,6) = 0b000;
-    data.bit(7) = inttx0.pending;
+    data.bit(7)   = inttx0.pending;
     return data;
 
   //INTE51
   case 0x78:
     data.bit(0,2) = 0b000;
-    data.bit(3) = intrx1.pending;
+    data.bit(3)   = intrx1.pending;
     data.bit(4,6) = 0b000;
-    data.bit(7) = inttx1.pending;
+    data.bit(7)   = inttx1.pending;
     return data;
 
   //INTETC01
   case 0x79:
     data.bit(0,2) = 0b000;
-    data.bit(3) = inttc0.pending;
+    data.bit(3)   = inttc0.pending;
     data.bit(4,6) = 0b000;
-    data.bit(7) = inttc1.pending;
+    data.bit(7)   = inttc1.pending;
     return data;
 
   //INTETC23
   case 0x7a:
     data.bit(0,2) = 0b000;
-    data.bit(3) = inttc2.pending;
+    data.bit(3)   = inttc2.pending;
     data.bit(4,6) = 0b000;
-    data.bit(7) = inttc3.pending;
+    data.bit(7)   = inttc3.pending;
     return data;
 
   //IIMC
@@ -438,6 +614,18 @@ auto CPU::readIO(n8 address) -> n8 {
     data.bit(1) = int0.level.high;
     data.bit(2) = int0.enable;
     return data;
+
+  //DMA0V (write-only)
+  case 0x7c: return data;
+
+  //DMA1V (write-only)
+  case 0x7d: return data;
+
+  //DMA2V (write-only)
+  case 0x7e: return data;
+
+  //DMA3V (write-only)
+  case 0x7f: return data;
 
   case 0x80:
     data.bit(0,2) = clock.rate;  //unconfirmed
@@ -482,8 +670,10 @@ auto CPU::readIO(n8 address) -> n8 {
     data.bit(2) = nmi.enable;
     return data;
 
-  case 0xb4: return misc.b4;
-  case 0xb5: return misc.b5;
+  case 0xb4: return unknown.b4;
+  case 0xb5: return unknown.b5;
+  case 0xb6: return unknown.b6;
+  case 0xb7: return unknown.b7;
 
   case 0xbc:
     data = apu.port.data;
@@ -551,10 +741,10 @@ auto CPU::writeIO(n8 address, n8 data) -> void {
   //P5
   case 0x0d:
     misc.p5 = data.bit(0);
-    p52 = data.bit(2);
-    p53 = data.bit(3);
-    p54 = data.bit(4);
-    p55 = data.bit(5);
+    p52     = data.bit(2);
+    p53     = data.bit(3);
+    p54     = data.bit(4);
+    p55     = data.bit(5);
     return;
 
   //P5CR
@@ -638,6 +828,9 @@ auto CPU::writeIO(n8 address, n8 data) -> void {
     p84 = data.bit(4);
     p85 = data.bit(5);
     return;
+
+  //P9 (read-only)
+  case 0x19: return;
 
   //P8CR
   case 0x1a:
@@ -804,9 +997,9 @@ auto CPU::writeIO(n8 address, n8 data) -> void {
 
   //T4MOD
   case 0x38:
-    t4.mode = data.bit(0,1);
+    t4.mode            = data.bit(0,1);
     t4.clearOnCompare5 = data.bit(2);
-    t4.captureMode = data.bit(3,4);
+    t4.captureMode     = data.bit(3,4);
     if(!data.bit(5)) t4.captureTo1();
     ff5.flipOnCompare5 = data.bit(6);
     ff5.flipOnCapture2 = data.bit(7);
@@ -832,6 +1025,8 @@ auto CPU::writeIO(n8 address, n8 data) -> void {
   case 0x3a:
     t4.buffer.enable = data.bit(0);
     t5.buffer.enable = data.bit(1);
+    pg0.shiftTrigger = data.bit(2);
+    pg1.shiftTrigger = data.bit(3);
     return;
 
   //MSAR0
@@ -903,9 +1098,9 @@ auto CPU::writeIO(n8 address, n8 data) -> void {
 
   //T5MOD
   case 0x48:
-    t5.mode = data.bit(0,1);
+    t5.mode            = data.bit(0,1);
     t5.clearOnCompare7 = data.bit(2);
-    t5.captureMode = data.bit(3,4);
+    t5.captureMode     = data.bit(3,4);
     if(!data.bit(5)) t5.captureTo3();
     int6.edge.rising  = t5.captureMode != 2;
     int6.edge.falling = t5.captureMode == 2;
@@ -920,6 +1115,112 @@ auto CPU::writeIO(n8 address, n8 data) -> void {
     ff6.flipOnCompare7 = data.bit(3);
     ff6.flipOnCapture3 = data.bit(4);
     ff6.flipOnCapture4 = data.bit(5);
+    return;
+
+  //PG0REG
+  case 0x4c:
+    pg0.shiftAlternateRegister  = data.bit(0,3);
+    pg0.patternGenerationOutput = data.bit(4,7);
+    return;
+
+  //PG1REG
+  case 0x4d:
+    pg1.shiftAlternateRegister  = data.bit(0,3);
+    pg1.patternGenerationOutput = data.bit(4,7);
+    return;
+
+  //PG01CR
+  case 0x4e:
+    pg0.triggerInputEnable = data.bit(0);
+    pg0.excitationMode     = data.bit(1);
+    pg0.rotatingDirection  = data.bit(2);
+    pg0.writeMode          = data.bit(3);
+    pg1.triggerInputEnable = data.bit(4);
+    pg1.excitationMode     = data.bit(5);
+    pg1.rotatingDirection  = data.bit(6);
+    pg1.writeMode          = data.bit(7);
+    return;
+
+  //SC0BUF
+  case 0x50:
+    sc0.transmit(data);
+    return;
+
+  //SC0CR
+  case 0x51:
+    sc0.inputClock     = data.bit(0);
+    sc0.clockEdge      = data.bit(1);
+    sc0.parityAddition = data.bit(5);
+    sc0.parity         = data.bit(6);
+    return;
+
+  //SC0MOD
+  case 0x52:
+    sc0.clock        = data.bit(0,1);
+    sc0.mode         = data.bit(2,3);
+    sc0.wakeUp       = data.bit(4);
+    sc0.receiving    = data.bit(5);
+    sc0.handshake    = data.bit(6);
+    sc0.transferBit8 = data.bit(7);
+    return;
+
+  //BR0CR
+  case 0x53:
+    sc0.baudRateDividend = data.bit(0,3);
+    sc0.baudRateDivider  = data.bit(4,5);
+    return;
+
+  //SC1BUF
+  case 0x54:
+    sc1.transmit(data);
+    return;
+
+  //SC1CR
+  case 0x55:
+    sc1.inputClock     = data.bit(0);
+    sc1.clockEdge      = data.bit(1);
+    sc1.parityAddition = data.bit(5);
+    sc1.parity         = data.bit(6);
+    return;
+
+  //SC1MOD
+  case 0x56:
+    sc1.clock        = data.bit(0,1);
+    sc1.mode         = data.bit(2,3);
+    sc1.wakeUp       = data.bit(4);
+    sc1.receiving    = data.bit(5);
+  //sc1.handshake    = 0;  //fixed at 0
+    sc1.transferBit8 = data.bit(7);
+    return;
+
+  //BR1CR
+  case 0x57:
+    sc1.baudRateDividend = data.bit(0,3);
+    sc1.baudRateDivider  = data.bit(4,5);
+    return;
+
+  //ODE
+  case 0x58:
+    p80.drain = data.bit(0);
+    p83.drain = data.bit(1);
+    return;
+
+  //DREFCR
+  case 0x5a:
+    dram.refreshCycle          = data.bit(0);
+    dram.refreshCycleWidth     = data.bit(1,3);
+    dram.refreshCycleInsertion = data.bit(4,6);
+    dram.dummyCycle            = data.bit(7);
+    return;
+
+  //DMEMCR
+  case 0x5b:
+    dram.memoryAccessEnable     = data.bit(0);
+    dram.multiplexAddressLength = data.bit(1,2);
+    dram.multiplexAddressEnable = data.bit(3);
+    dram.memoryAccessSpeed      = data.bit(4);
+    dram.busReleaseMode         = data.bit(5);
+    dram.selfRefresh            = data.bit(7);
     return;
 
   //MSAR2
@@ -942,50 +1243,74 @@ auto CPU::writeIO(n8 address, n8 data) -> void {
     cs3.mask.bit(15,22) = data;
     return;
 
+  //ADREG04L (read-only)
+  case 0x60: return;
+
+  //ADREG04H (read-only)
+  case 0x61: return;
+
+  //ADREG15L (read-only)
+  case 0x62: return;
+
+  //ADREG15H (read-only)
+  case 0x63: return;
+
+  //ADREG2L (read-only)
+  case 0x64: return;
+
+  //ADREG2H (read-only)
+  case 0x65: return;
+
+  //ADREG3L (read-only)
+  case 0x66: return;
+
+  //ADREG3H (read-only)
+  case 0x67: return;
+
   //B0CS
   case 0x68:
     cs0.timing = data.bit(0,1);
-    cs0.width = data.bit(2) ? Byte : Word;
+    cs0.width  = data.bit(2) ? Byte : Word;
     cs0.enable = data.bit(4);
     return;
 
   //B1CS
   case 0x69:
     cs1.timing = data.bit(0,1);
-    cs1.width = data.bit(2) ? Byte : Word;
+    cs1.width  = data.bit(2) ? Byte : Word;
     cs1.enable = data.bit(4);
     return;
 
   //B2CS
   case 0x6a:
     cs2.timing = data.bit(0,1);
-    cs2.width = data.bit(2) ? Byte : Word;
-    cs2.mode = data.bit(3);
+    cs2.width  = data.bit(2) ? Byte : Word;
+    cs2.mode   = data.bit(3);
     cs2.enable = data.bit(4);
     return;
 
   //B3CS
   case 0x6b:
     cs3.timing = data.bit(0,1);
-    cs3.width = data.bit(2) ? Byte : Word;
-    cs3.cas = data.bit(3);
+    cs3.width  = data.bit(2) ? Byte : Word;
+    cs3.cas    = data.bit(3);
     cs3.enable = data.bit(4);
     return;
 
   //BEXCS
   case 0x6c:
     csx.timing = data.bit(0,1);
-    csx.width = data.bit(2) ? Byte : Word;
+    csx.width  = data.bit(2) ? Byte : Word;
     return;
 
   //ADMOD
   case 0x6d: {
-    n1 busy = adc.busy;
+    n1 busy     = adc.busy;
     adc.channel = data.bit(0,1);
-    n1 start = data.bit(2);
-    adc.speed = data.bit(3);
-    adc.scan = data.bit(4);
-    adc.repeat = data.bit(5);
+    n1 start    = data.bit(2);
+    adc.speed   = data.bit(3);
+    adc.scan    = data.bit(4);
+    adc.repeat  = data.bit(5);
 
     if(!busy && start) {
       adc.busy = 1;
@@ -995,12 +1320,12 @@ auto CPU::writeIO(n8 address, n8 data) -> void {
 
   //WDMOD
   case 0x6e:
-    watchdog.drive = data.bit(0);
-    watchdog.reset = data.bit(1);
-    watchdog.standby = data.bit(2,3);
-    watchdog.warmup = data.bit(4);
+    watchdog.drive     = data.bit(0);
+    watchdog.reset     = data.bit(1);
+    watchdog.standby   = data.bit(2,3);
+    watchdog.warmup    = data.bit(4);
     watchdog.frequency = data.bit(5,6);
-    watchdog.enable = data.bit(7);
+    watchdog.enable    = data.bit(7);
     if(watchdog.enable) watchdog.counter = 0;  //todo: is this only on 0->1 transitions?
     return;
 
@@ -1100,9 +1425,9 @@ auto CPU::writeIO(n8 address, n8 data) -> void {
 
   //IIMC
   case 0x7b:
-    nmi.edge.rising = data.bit(0);
+    nmi.edge.rising  =  data.bit(0);
     int0.edge.rising = !data.bit(1);
-    int0.level.high = data.bit(1);
+    int0.level.high  =  data.bit(1);
     int0.setEnable(data.bit(2));
     interrupts.poll();
     return;
@@ -1169,11 +1494,19 @@ auto CPU::writeIO(n8 address, n8 data) -> void {
     return;
 
   case 0xb4:
-    misc.b4 = data;
+    unknown.b4 = data;
     return;
 
   case 0xb5:
-    misc.b5 = data;
+    unknown.b5 = data;
+    return;
+
+  case 0xb6:
+    unknown.b6 = data;
+    return;
+
+  case 0xb7:
+    unknown.b7 = data;
     return;
 
   case 0xb8:

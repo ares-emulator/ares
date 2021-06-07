@@ -61,7 +61,7 @@ auto PPU::renderScreenOne(n8 x, n8 y) -> void {
   n15 tilemapOffset = 0;
   tilemapOffset.bit( 1, 5) = scrollX >> 3;
   tilemapOffset.bit( 6,10) = scrollY >> 3;
-  tilemapOffset.bit(11,14) = l.screenOneMapBase.bit(0, depth() == 2 ? 2 : 3);
+  tilemapOffset.bit(11,14) = l.screenOneMapBase;
 
   n16 attributes = iram.read16(tilemapOffset);
   n10 tile = attributes.bit(13) << 9 | attributes.bit(0,8);
@@ -92,7 +92,7 @@ auto PPU::renderScreenTwo(n8 x, n8 y) -> void {
   n15 tilemapOffset = 0;
   tilemapOffset.bit( 1, 5) = scrollX >> 3;
   tilemapOffset.bit( 6,10) = scrollY >> 3;
-  tilemapOffset.bit(11,14) = l.screenTwoMapBase.bit(0, depth() == 2 ? 2 : 3);
+  tilemapOffset.bit(11,14) = l.screenTwoMapBase;
 
   n16 attributes = iram.read16(tilemapOffset);
   n10 tile = attributes.bit(13) << 9 | attributes.bit(0,8);

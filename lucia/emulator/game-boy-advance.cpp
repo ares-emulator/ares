@@ -12,6 +12,25 @@ GameBoyAdvance::GameBoyAdvance() {
   name = "Game Boy Advance";
 
   firmware.append({"BIOS", "World", "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"});
+
+  { InputPort port{string{"Hardware"}};
+
+    InputDevice device{"Controls"};
+    device.button("Up",     virtualPads[0].up);
+    device.button("Down",   virtualPads[0].down);
+    device.button("Left",   virtualPads[0].left);
+    device.button("Right",  virtualPads[0].right);
+    device.button("B",      virtualPads[0].a);
+    device.button("A",      virtualPads[0].b);
+    device.button("L",      virtualPads[0].l1);
+    device.button("R",      virtualPads[0].r1);
+    device.button("Select", virtualPads[0].select);
+    device.button("Start",  virtualPads[0].start);
+    device.rumble("Rumble", virtualPads[0].rumble);
+    port.append(device);
+
+    ports.append(port);
+  }
 }
 
 auto GameBoyAdvance::load(Menu menu) -> void {
@@ -62,8 +81,8 @@ auto GameBoyAdvance::pak(ares::Node::Object node) -> shared_pointer<vfs::directo
   return {};
 }
 
-auto GameBoyAdvance::input(ares::Node::Input::Input node) -> void {
-  auto name = node->name();
+auto GameBoyAdvance::input(ares::Node::Input::Input input) -> void {
+  auto name = input->name();
   maybe<InputMapping&> mapping;
   if(name == "Up"    ) mapping = virtualPads[0].up;
   if(name == "Down"  ) mapping = virtualPads[0].down;
@@ -80,10 +99,10 @@ auto GameBoyAdvance::input(ares::Node::Input::Input node) -> void {
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Input::Button>()) {
+    if(auto button = input->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
-    if(auto rumble = node->cast<ares::Node::Input::Rumble>()) {
+    if(auto rumble = input->cast<ares::Node::Input::Rumble>()) {
       if(auto target = dynamic_cast<InputRumble*>(mapping.data())) {
         target->rumble(rumble->enable());
       }

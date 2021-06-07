@@ -18,7 +18,7 @@ auto CPU::write(n16 address, n8 data) -> void {
 }
 
 auto CPU::in(n16 address) -> n8 {
-  n8 data;
+  n8 data = mdr();
   if(0);
 
  else if((address & 0xff) == 0x00 && Display::LCD()) {

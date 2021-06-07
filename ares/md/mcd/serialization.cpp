@@ -15,6 +15,7 @@ auto MCD::serialize(serializer& s) -> void {
   s(io.halt);
   s(io.wramLatch);
   s(io.wramMode);
+  s(io.wramSwitchRequest);
   s(io.wramSwitch);
   s(io.wramSelect);
   s(io.wramPriority);

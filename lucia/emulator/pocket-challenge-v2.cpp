@@ -10,6 +10,23 @@ struct PocketChallengeV2 : Emulator {
 PocketChallengeV2::PocketChallengeV2() {
   manufacturer = "Benesse";
   name = "Pocket Challenge V2";
+
+  { InputPort port{"Hardware"};
+
+    InputDevice device{"Controls"};
+    device.button("Up",     virtualPads[0].up);
+    device.button("Down",   virtualPads[0].down);
+    device.button("Left",   virtualPads[0].left);
+    device.button("Right",  virtualPads[0].right);
+    device.button("Pass",   virtualPads[0].a);
+    device.button("Circle", virtualPads[0].b);
+    device.button("Clear",  virtualPads[0].y);
+    device.button("View",   virtualPads[0].start);
+    device.button("Escape", virtualPads[0].select);
+    port.append(device);
+
+    ports.append(port);
+  }
 }
 
 auto PocketChallengeV2::load(Menu menu) -> void {
@@ -48,8 +65,8 @@ auto PocketChallengeV2::pak(ares::Node::Object node) -> shared_pointer<vfs::dire
   return {};
 }
 
-auto PocketChallengeV2::input(ares::Node::Input::Input node) -> void {
-  auto name = node->name();
+auto PocketChallengeV2::input(ares::Node::Input::Input input) -> void {
+  auto name = input->name();
   maybe<InputMapping&> mapping;
   if(name == "Up"    ) mapping = virtualPads[0].up;
   if(name == "Down"  ) mapping = virtualPads[0].down;
@@ -63,7 +80,7 @@ auto PocketChallengeV2::input(ares::Node::Input::Input node) -> void {
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Input::Button>()) {
+    if(auto button = input->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }

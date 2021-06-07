@@ -9,6 +9,22 @@ struct SuperGrafx : Emulator {
 SuperGrafx::SuperGrafx() {
   manufacturer = "NEC";
   name = "SuperGrafx";
+
+  { InputPort port{"Controller Port"};
+
+    InputDevice device{"Gamepad"};
+    device.button("Up",     virtualPads[0].up);
+    device.button("Down",   virtualPads[0].down);
+    device.button("Left",   virtualPads[0].left);
+    device.button("Right",  virtualPads[0].right);
+    device.button("II",     virtualPads[0].a);
+    device.button("I",      virtualPads[0].b);
+    device.button("Select", virtualPads[0].select);
+    device.button("Run",    virtualPads[0].start);
+    port.append(device);
+
+    ports.append(port);
+  }
 }
 
 auto SuperGrafx::load() -> bool {
@@ -46,8 +62,8 @@ auto SuperGrafx::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> 
   return {};
 }
 
-auto SuperGrafx::input(ares::Node::Input::Input node) -> void {
-  auto name = node->name();
+auto SuperGrafx::input(ares::Node::Input::Input input) -> void {
+  auto name = input->name();
   maybe<InputMapping&> mapping;
   if(name == "Up"    ) mapping = virtualPads[0].up;
   if(name == "Down"  ) mapping = virtualPads[0].down;
@@ -60,7 +76,7 @@ auto SuperGrafx::input(ares::Node::Input::Input node) -> void {
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Input::Button>()) {
+    if(auto button = input->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }

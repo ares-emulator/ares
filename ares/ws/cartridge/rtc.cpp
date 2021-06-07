@@ -2,7 +2,7 @@
 //increment RTC by said amount of seconds
 auto Cartridge::rtcLoad() -> void {
   n64 timestamp = 0;
-  for(auto n : range(8)) timestamp.byte(n) = rtc.data[8 + n];
+  for(auto n : range(8)) timestamp.byte(n) = rtc.read(8 + n);
   if(!timestamp) return;  //new save file
 
   timestamp = time(0) - timestamp;
@@ -12,7 +12,7 @@ auto Cartridge::rtcLoad() -> void {
 //save time when game is unloaded
 auto Cartridge::rtcSave() -> void {
   n64 timestamp = time(0);
-  for(auto n : range(8)) rtc.data[8 + n] = timestamp.byte(n);
+  for(auto n : range(8)) rtc.write(8 + n, timestamp.byte(n));
 }
 
 auto Cartridge::rtcTickSecond() -> void {

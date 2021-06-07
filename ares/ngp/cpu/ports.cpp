@@ -70,11 +70,19 @@ auto CPU::P8F::operator=(bool value) -> void {
   latch = value;
 }
 
-CPU::P8M::operator bool() const {
+CPU::P8MA::operator bool() const {
   return latch;
 }
 
-auto CPU::P8M::operator=(bool value) -> void {
+auto CPU::P8MA::operator=(bool value) -> void {
+  latch = value;
+}
+
+CPU::P8MB::operator bool() const {
+  return latch;
+}
+
+auto CPU::P8MB::operator=(bool value) -> void {
   latch = value;
 }
 

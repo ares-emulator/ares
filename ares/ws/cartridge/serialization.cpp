@@ -1,11 +1,10 @@
 auto Cartridge::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s(array_span<u8>{ram.data, ram.size});
+  s(ram);
   s(eeprom);
-  s(array_span<u8>{rtc.data, rtc.size});
-
-  if(rtc.size) {
+  s(rtc);
+  if(rtc) {
     s(rtc.command);
     s(rtc.index);
     s(rtc.alarm);

@@ -45,26 +45,30 @@ auto Flash::read(n21 address) -> n8 {
     }
     return 0xff;  //invalid ReadID address; todo: actual return value unknown
   }
+  if(mode == Acknowledge) {
+    status(Read);
+    return 0xff;
+  }
   return rom.read(address);  //todo: what happens when mode != Read here?
 }
 
 auto Flash::write(n21 address, n8 data) -> void {
   if(mode == Write) return program(address, data);
   if(data == 0xf0) return status(Read);
-  n15 addr = (n15)address;
-  if(index == 0 && addr == 0x5555 && data == 0xaa) return status(Index);
-  if(index == 1 && addr == 0x2aaa && data == 0x55) return status(Index);
+  n15 command = (n15)address;
+  if(index == 0 && command == 0x5555 && data == 0xaa) return status(Index);
+  if(index == 1 && command == 0x2aaa && data == 0x55) return status(Index);
   //todo: erase and protect diverge here; but they're treated the same for simplicity for now
-  if(index == 2 && addr == 0x5555 && data == 0x80) return status(Index);
-  if(index == 2 && addr == 0x5555 && data == 0x9a) return status(Index);
-  if(index == 2 && addr == 0x5555 && data == 0x90) return status(ReadID);
-  if(index == 2 && addr == 0x5555 && data == 0xa0) return status(Write);
-  if(index == 2 && addr == 0x5555 && data == 0xf0) return status(Read);
-  if(index == 3 && addr == 0x5555 && data == 0xaa) return status(Index);
-  if(index == 4 && addr == 0x2aaa && data == 0x55) return status(Index);
-  if(index == 5 && addr == 0x5555 && data == 0x10) return eraseAll();
-  if(index == 5                   && data == 0x30) return erase(address);
-  if(index == 5                   && data == 0x9a) return protect(address);
+  if(index == 2 && command == 0x5555 && data == 0x80) return status(Index);
+  if(index == 2 && command == 0x5555 && data == 0x9a) return status(Index);
+  if(index == 2 && command == 0x5555 && data == 0x90) return status(ReadID);
+  if(index == 2 && command == 0x5555 && data == 0xa0) return status(Write);
+  if(index == 2 && command == 0x5555 && data == 0xf0) return status(Read);
+  if(index == 3 && command == 0x5555 && data == 0xaa) return status(Index);
+  if(index == 4 && command == 0x2aaa && data == 0x55) return status(Index);
+  if(index == 5 && command == 0x5555 && data == 0x10) return eraseAll();
+  if(index == 5                      && data == 0x30) return erase(address);
+  if(index == 5                      && data == 0x9a) return protect(address);
   return status(Read);
 }
 
@@ -112,7 +116,7 @@ auto Flash::erase(n21 address) -> void {
     for(u32 offset : range(length)) rom.write(address + offset, 0xff);
     modified = true;
   }
-  return status(Read);
+  return status(Acknowledge);
 }
 
 auto Flash::eraseAll() -> void {

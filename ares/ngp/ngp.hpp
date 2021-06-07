@@ -21,6 +21,6 @@ namespace ares::NeoGeoPocket {
   #include <ngp/cartridge/cartridge.hpp>
   #include <ngp/cpu/cpu.hpp>
   #include <ngp/apu/apu.hpp>
-  #include <ngp/vpu/vpu.hpp>
+  #include <ngp/kge/kge.hpp>
   #include <ngp/psg/psg.hpp>
 }

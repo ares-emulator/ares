@@ -95,6 +95,8 @@ auto PCD::connect() -> void {
 }
 
 auto PCD::disconnect() -> void {
+  if(!disc) return;
+
   save();
   fd.reset();
   pak.reset();

@@ -36,7 +36,7 @@ struct Flash {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  enum : u32 { Read, Index, ReadID, Write };
+  enum : u32 { Read, Index, ReadID, Write, Acknowledge };
   natural mode;
   natural index;
 

@@ -58,13 +58,13 @@ auto Saturn::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   return {};
 }
 
-auto Saturn::input(ares::Node::Input::Input node) -> void {
-  auto name = node->name();
+auto Saturn::input(ares::Node::Input::Input input) -> void {
+  auto name = input->name();
   maybe<InputMapping&> mapping;
 
   if(mapping) {
     auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Input::Button>()) {
+    if(auto button = input->cast<ares::Node::Input::Button>()) {
       button->setValue(value);
     }
   }

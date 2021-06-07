@@ -9,6 +9,27 @@ struct GameBoyColor : Emulator {
 GameBoyColor::GameBoyColor() {
   manufacturer = "Nintendo";
   name = "Game Boy Color";
+
+  { InputPort port{"Hardware"};
+
+    InputDevice device{"Controls"};
+    device.button("Up",      virtualPads[0].up);
+    device.button("Down",    virtualPads[0].down);
+    device.button("Left",    virtualPads[0].left);
+    device.button("Right",   virtualPads[0].right);
+    device.button("B",       virtualPads[0].a);
+    device.button("A",       virtualPads[0].b);
+    device.button("Select",  virtualPads[0].select);
+    device.button("Start",   virtualPads[0].start);
+    device.analog("A-Up",    virtualPads[0].lup);
+    device.analog("A-Down",  virtualPads[0].ldown);
+    device.analog("A-Left",  virtualPads[0].lleft);
+    device.analog("A-Right", virtualPads[0].lright);
+    device.rumble("Rumble",  virtualPads[0].rumble);
+    port.append(device);
+
+    ports.append(port);
+  }
 }
 
 auto GameBoyColor::load() -> bool {
@@ -45,8 +66,8 @@ auto GameBoyColor::pak(ares::Node::Object node) -> shared_pointer<vfs::directory
   return {};
 }
 
-auto GameBoyColor::input(ares::Node::Input::Input node) -> void {
-  auto name = node->name();
+auto GameBoyColor::input(ares::Node::Input::Input input) -> void {
+  auto name = input->name();
   maybe<InputMapping&> mappings[2];
   if(name == "Up"    ) mappings[0] = virtualPads[0].up;
   if(name == "Down"  ) mappings[0] = virtualPads[0].down;
@@ -63,15 +84,15 @@ auto GameBoyColor::input(ares::Node::Input::Input node) -> void {
   if(name == "Y"     ) mappings[0] = virtualPads[0].lup,   mappings[1] = virtualPads[0].ldown;
 
   if(mappings[0]) {
-    if(auto axis = node->cast<ares::Node::Input::Axis>()) {
+    if(auto axis = input->cast<ares::Node::Input::Axis>()) {
       auto value = mappings[1]->value() - mappings[0]->value();
       axis->setValue(value);
     }
-    if(auto button = node->cast<ares::Node::Input::Button>()) {
+    if(auto button = input->cast<ares::Node::Input::Button>()) {
       auto value = mappings[0]->value();
       button->setValue(value);
     }
-    if(auto rumble = node->cast<ares::Node::Input::Rumble>()) {
+    if(auto rumble = input->cast<ares::Node::Input::Rumble>()) {
       if(auto target = dynamic_cast<InputRumble*>(mappings[0].data())) {
         target->rumble(rumble->enable());
       }

@@ -40,6 +40,6 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(cartridge);
   s(cpu);
   s(apu);
-  s(vpu);
+  s(kge);
   s(psg);
 }

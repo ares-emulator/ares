@@ -14,7 +14,7 @@ auto MCD::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   if(address == 0xa12002) {
     data.bit(0)    =!io.wramMode ? !io.wramSwitch : +io.wramSelect;
-    data.bit(1)    = io.wramSwitch;
+    data.bit(1)    =!io.wramMode ?  io.wramSwitch :  io.wramSwitchRequest;
     data.bit(2)    = io.wramMode;
     data.bit(3, 5) = Unmapped;
     data.bit(6, 7) = io.pramBank;
@@ -22,7 +22,7 @@ auto MCD::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address == 0xa12004) {
-    print("* read a12004\n");
+    debug(unusual, "[MCD::readExternalIO] address=0xa12004");
   }
 
   if(address == 0xa12006) {
@@ -30,11 +30,11 @@ auto MCD::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address == 0xa12008) {
-    print("* read a12008\n");
+    debug(unusual, "[MCD::readExternalIO] address=0xa12008");
   }
 
   if(address == 0xa1200a) {
-    print("* read a1200a\n");
+    debug(unusual, "[MCD::readExternalIO] address=0xa1200a");
   }
 
   if(address == 0xa1200c) {
@@ -78,7 +78,8 @@ auto MCD::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address == 0xa12002) {
     if(lower) {
-      if(data.bit(1)) io.wramSwitch = 1;
+      if(data.bit(1) == 0) io.wramSwitchRequest = 1;
+      if(data.bit(1) == 1) io.wramSwitch = 1;
       io.pramBank = data.bit(6,7);
     }
     if(upper) {
@@ -100,7 +101,7 @@ auto MCD::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address == 0xa1200a) {
     //reserved
-    print("* write a1200a\n");
+    debug(unusual, "[MCD::writeExternalIO] address=0xa1200a");
   }
 
   if(address == 0xa1200c) {

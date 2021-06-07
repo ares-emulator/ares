@@ -12,7 +12,7 @@ auto MCD::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   if(address == 0xff8002) {
     data.bit(0)    =!io.wramMode ? !io.wramSwitch : +io.wramSelect;
-    data.bit(1)    = io.wramSwitch;
+    data.bit(1)    =!io.wramMode ?  io.wramSwitch :  io.wramSwitchRequest;
     data.bit(2)    = io.wramMode;
     data.bit(3, 4) = io.wramPriority;
     data.bit(5, 7) = Unmapped;
@@ -38,7 +38,7 @@ auto MCD::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address == 0xff8008) {
-    if(!upper || !lower) print("* read ff8008 (byte)\n");
+    if(!upper || !lower) debug(unusual, "[MCD::readIO] address=0xff8008 size=byte");
     data = cdc.transfer.read();
   }
 
@@ -177,7 +177,7 @@ auto MCD::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address >= 0xff8100 && address <= 0xff81ff) {
-    print("* read ", hex(address, 6L), "\n");
+    debug(unusual, "[MCD::readIO] address=0x", hex(address, 6L));
   }
 
   return data;
@@ -198,6 +198,7 @@ auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address == 0xff8002) {
     if(lower) {
+      if(io.wramSelect != data.bit(0)) io.wramSwitchRequest = 0;
       io.wramSelect   = data.bit(0);
       io.wramMode     = data.bit(2);
       io.wramPriority = data.bit(3,4);
@@ -284,7 +285,7 @@ auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address >= 0xff8038 && address <= 0xff8041) {
     //read-only
-    print("* write ", hex(address, 6L), "\n");
+    debug(unusual, "[MCD::writeIO] address=0x", hex(address, 6L));
   }
 
   if(address >= 0xff8042 && address <= 0xff804b) {
@@ -350,6 +351,6 @@ auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address >= 0xff8100 && address <= 0xff81ff) {
-    print("* write ", hex(address, 6L), "=", hex(data, 4L), "\n");
+    debug(unusual, "[MCD::writeIO] address=0x", hex(address, 6L));
   }
 }

@@ -76,10 +76,10 @@ auto CPU::serialize(serializer& s) -> void {
   s(p76.latch); s(p76.flow); s(p76.mode);
   s(p77.latch); s(p77.flow); s(p77.mode);
 
-  s(p80.latch); s(p80.flow); s(p80.mode);
+  s(p80.latch); s(p80.flow); s(p80.mode); s(p80.drain);
   s(p81.latch); s(p81.flow);
   s(p82.latch); s(p82.flow); s(p82.mode);
-  s(p83.latch); s(p83.flow); s(p83.mode);
+  s(p83.latch); s(p83.flow); s(p83.mode); s(p83.drain);
   s(p84.latch); s(p84.flow);
   s(p85.latch); s(p85.flow); s(p85.mode);
 
@@ -195,6 +195,58 @@ auto CPU::serialize(serializer& s) -> void {
   s(t5.buffer.enable);
   s(t5.buffer.compare);
 
+  s(pg0.shiftTrigger);
+  s(pg0.shiftAlternateRegister);
+  s(pg0.patternGenerationOutput);
+  s(pg0.triggerInputEnable);
+  s(pg0.excitationMode);
+  s(pg0.rotatingDirection);
+  s(pg0.writeMode);
+
+  s(pg1.shiftTrigger);
+  s(pg1.shiftAlternateRegister);
+  s(pg1.patternGenerationOutput);
+  s(pg1.triggerInputEnable);
+  s(pg1.excitationMode);
+  s(pg1.rotatingDirection);
+  s(pg1.writeMode);
+
+  s(sc0.buffer);
+  s(sc0.baudRateDividend);
+  s(sc0.baudRateDivider);
+  s(sc0.inputClock);
+  s(sc0.clockEdge);
+  s(sc0.framingError);
+  s(sc0.parityError);
+  s(sc0.overrunError);
+  s(sc0.parityAddition);
+  s(sc0.parity);
+  s(sc0.receiveBit8);
+  s(sc0.clock);
+  s(sc0.mode);
+  s(sc0.wakeUp);
+  s(sc0.receiving);
+  s(sc0.handshake);
+  s(sc0.transferBit8);
+
+  s(sc1.buffer);
+  s(sc1.baudRateDividend);
+  s(sc1.baudRateDivider);
+  s(sc1.inputClock);
+  s(sc1.clockEdge);
+  s(sc1.framingError);
+  s(sc1.parityError);
+  s(sc1.overrunError);
+  s(sc1.parityAddition);
+  s(sc1.parity);
+  s(sc1.receiveBit8);
+  s(sc1.clock);
+  s(sc1.mode);
+  s(sc1.wakeUp);
+  s(sc1.receiving);
+  s(sc1.handshake);
+  s(sc1.transferBit8);
+
   s(adc.counter);
   s(adc.channel);
   s(adc.speed);
@@ -221,6 +273,17 @@ auto CPU::serialize(serializer& s) -> void {
   s(watchdog.standby);
   s(watchdog.warmup);
   s(watchdog.frequency);
+
+  s(dram.refreshCycle);
+  s(dram.refreshCycleWidth);
+  s(dram.refreshCycleInsertion);
+  s(dram.dummyCycle);
+  s(dram.memoryAccessEnable);
+  s(dram.multiplexAddressLength);
+  s(dram.multiplexAddressEnable);
+  s(dram.memoryAccessSpeed);
+  s(dram.busReleaseMode);
+  s(dram.selfRefresh);
 
   s(io.width);
   s(io.timing);
@@ -270,8 +333,11 @@ auto CPU::serialize(serializer& s) -> void {
 
   s(misc.p5);
   s(misc.rtsDisable);
-  s(misc.b4);
-  s(misc.b5);
+
+  s(unknown.b4);
+  s(unknown.b5);
+  s(unknown.b6);
+  s(unknown.b7);
 }
 
 auto CPU::Interrupt::serialize(serializer& s) -> void {

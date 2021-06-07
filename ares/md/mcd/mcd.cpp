@@ -75,7 +75,13 @@ auto MCD::connect() -> void {
   information.title = pak->attribute("title");
 
   fd = pak->read("cd.rom");
+  if(!fd) return disconnect();
+
   cdd.insert();
+
+  if(auto fp = system.pak->read("backup.ram")) {
+    bram.load(fp);
+  }
 }
 
 auto MCD::disconnect() -> void {
@@ -90,6 +96,9 @@ auto MCD::disconnect() -> void {
 }
 
 auto MCD::save() -> void {
+  if(auto fp = system.pak->write("backup.ram")) {
+    bram.save(fp);
+  }
 }
 
 auto MCD::main() -> void {

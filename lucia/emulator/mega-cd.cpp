@@ -15,6 +15,27 @@ MegaCD::MegaCD() {
   firmware.append({"BIOS", "US"});      //NTSC-U
   firmware.append({"BIOS", "Japan"});   //NTSC-J
   firmware.append({"BIOS", "Europe"});  //PAL
+
+  for(auto id : range(2)) {
+    InputPort port{string{"Controller Port ", 1 + id}};
+
+    InputDevice device{"Fighting Pad"};
+    device.button("Up",    virtualPads[id].up);
+    device.button("Down",  virtualPads[id].down);
+    device.button("Left",  virtualPads[id].left);
+    device.button("Right", virtualPads[id].right);
+    device.button("A",     virtualPads[id].a);
+    device.button("B",     virtualPads[id].b);
+    device.button("C",     virtualPads[id].c);
+    device.button("X",     virtualPads[id].x);
+    device.button("Y",     virtualPads[id].y);
+    device.button("Z",     virtualPads[id].z);
+    device.button("Mode",  virtualPads[id].select);
+    device.button("Start", virtualPads[id].start);
+    port.append(device);
+
+    ports.append(port);
+  }
 }
 
 auto MegaCD::load() -> bool {
@@ -42,6 +63,11 @@ auto MegaCD::load() -> bool {
     port->connect();
   }
 
+  if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
+    port->allocate("Fighting Pad");
+    port->connect();
+  }
+
   return true;
 }
 
@@ -58,26 +84,39 @@ auto MegaCD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   return {};
 }
 
-auto MegaCD::input(ares::Node::Input::Input node) -> void {
-  auto name = node->name();
-  maybe<InputMapping&> mapping;
-  if(name == "Up"   ) mapping = virtualPads[0].up;
-  if(name == "Down" ) mapping = virtualPads[0].down;
-  if(name == "Left" ) mapping = virtualPads[0].left;
-  if(name == "Right") mapping = virtualPads[0].right;
-  if(name == "A"    ) mapping = virtualPads[0].a;
-  if(name == "B"    ) mapping = virtualPads[0].b;
-  if(name == "C"    ) mapping = virtualPads[0].c;
-  if(name == "X"    ) mapping = virtualPads[0].x;
-  if(name == "Y"    ) mapping = virtualPads[0].y;
-  if(name == "Z"    ) mapping = virtualPads[0].z;
-  if(name == "Mode" ) mapping = virtualPads[0].select;
-  if(name == "Start") mapping = virtualPads[0].start;
+auto MegaCD::input(ares::Node::Input::Input input) -> void {
+  auto device = ares::Node::parent(input);
+  if(!device) return;
 
-  if(mapping) {
-    auto value = mapping->value();
-    if(auto button = node->cast<ares::Node::Input::Button>()) {
-      button->setValue(value);
+  auto port = ares::Node::parent(device);
+  if(!port) return;
+
+  maybe<u32> id;
+  if(port->name() == "Controller Port 1") id = 0;
+  if(port->name() == "Controller Port 2") id = 1;
+  if(!id) return;
+
+  if(device->name() == "Fighting Pad") {
+    auto name = input->name();
+    maybe<InputMapping&> mapping;
+    if(name == "Up"   ) mapping = virtualPads[*id].up;
+    if(name == "Down" ) mapping = virtualPads[*id].down;
+    if(name == "Left" ) mapping = virtualPads[*id].left;
+    if(name == "Right") mapping = virtualPads[*id].right;
+    if(name == "A"    ) mapping = virtualPads[*id].a;
+    if(name == "B"    ) mapping = virtualPads[*id].b;
+    if(name == "C"    ) mapping = virtualPads[*id].c;
+    if(name == "X"    ) mapping = virtualPads[*id].x;
+    if(name == "Y"    ) mapping = virtualPads[*id].y;
+    if(name == "Z"    ) mapping = virtualPads[*id].z;
+    if(name == "Mode" ) mapping = virtualPads[*id].select;
+    if(name == "Start") mapping = virtualPads[*id].start;
+
+    if(mapping) {
+      auto value = mapping->value();
+      if(auto button = input->cast<ares::Node::Input::Button>()) {
+        button->setValue(value);
+      }
     }
   }
 }

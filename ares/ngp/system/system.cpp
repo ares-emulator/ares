@@ -61,7 +61,7 @@ auto System::load(Node::System& root, string name) -> bool {
   controls.load(node);
   cpu.load(node);
   apu.load(node);
-  vpu.load(node);
+  kge.load(node);
   psg.load(node);
   cartridgeSlot.load(node);
   return true;
@@ -79,7 +79,7 @@ auto System::unload() -> void {
   bios.reset();
   cpu.unload();
   apu.unload();
-  vpu.unload();
+  kge.unload();
   psg.unload();
   cartridgeSlot.unload();
   pak.reset();
@@ -97,7 +97,7 @@ auto System::power(bool reset) -> void {
   cartridge.power();
   cpu.power();
   apu.power();
-  vpu.power();
+  kge.power();
   psg.power();
   scheduler.power(cpu);
 

@@ -24,6 +24,7 @@ System system;
 #undef Model
 #undef SoC
 #include "io.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto System::game() -> string {
@@ -166,6 +167,7 @@ auto System::load(Node::System& root, string name) -> bool {
   ppu.load(node);
   apu.load(node);
   cartridgeSlot.load(node);
+  debugger.load(node);
   return true;
 }
 
@@ -183,6 +185,7 @@ auto System::unload() -> void {
   if(!node) return;
 
   save();
+  debugger.unload(node);
   bootROM.reset();
   eeprom.reset();
   cpu.unload();

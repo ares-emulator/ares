@@ -98,7 +98,7 @@ auto MCD::CDD::process() -> void {
 
   if(!valid()) {
     //unverified
-    print("CDD checksum error\n");
+    debug(unusual, "[MCD::CDD::process] CDD checksum error");
     io.status = Status::ChecksumError;
   }
 

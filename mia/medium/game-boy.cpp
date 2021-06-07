@@ -64,18 +64,20 @@ auto GameBoy::save(string location) -> bool {
   return true;
 }
 
-auto GameBoy::analyze(vector<u8>& data) -> string {
-  if(data.size() < 0x4000) return {};
+auto GameBoy::analyze(vector<u8>& rom) -> string {
+  if(rom.size() < 0x4000) return {};
 
-  u32 headerAddress = data.size() < 0x8000 ? data.size() : data.size() - 0x8000;
-  auto read = [&](u32 offset) { return data[headerAddress + offset]; };
+  auto hash = Hash::SHA256(rom).digest();
+
+  u32 headerAddress = rom.size() < 0x8000 ? rom.size() : rom.size() - 0x8000;
+  auto read = [&](u32 offset) { return rom[headerAddress + offset]; };
 
   if(read(0x0104) == 0xce && read(0x0105) == 0xed && read(0x0106) == 0x66 && read(0x0107) == 0x66
   && read(0x0108) == 0xcc && read(0x0109) == 0x0d && read(0x0147) >= 0x0b && read(0x0147) <= 0x0d
   ) {
-    //MMM01 stores header at bottom of data[]
+    //MMM01 stores header at bottom of rom[]
   } else {
-    //all other mappers store header at top of data[]
+    //all other mappers store header at top of rom[]
     headerAddress = 0;
   }
 
@@ -298,6 +300,31 @@ auto GameBoy::analyze(vector<u8>& data) -> string {
   case 0x05: ramSize =  64_KiB; break;
   }
 
+  //Bomber Man Collection (Japan)
+  if(hash == "85f6b7b2eb182f53b00ac3e9e4a86ef8f7496550a0b2f64573ab61f670e30245") {
+    mapper = "MBC1#M";
+  }
+
+  //Genjin Collection (Japan)
+  if(hash == "40c3b05b76355d9a4e244cb22c074648f03933571b023f77f667e8b2e4b48513") {
+    mapper = "MBC1#M";
+  }
+
+  //Momotarou Collection (Japan)
+  if(hash == "db3a45363490b8cb56274f260358c7b8dc0ffc0a41517123d6c5d78c2c54dc38") {
+    mapper = "MBC1#M";
+  }
+
+  //Mortal Kombat I & II (Japan)
+  if(hash == "c6c43dce0514016a4a635db3ec250bfa5790422042599457cd30841ec92f5979") {
+    mapper = "MBC1#M";
+  }
+
+  //Mortal Kombat I & II (USA, Europe)
+  if(hash == "cacace0974a588c68766bbf21a631be9fa234335e0607ebfa9de77b3dd0cbf18") {
+    mapper = "MBC1#M";
+  }
+
   if(mapper == "MBC2" && ram) ramSize = 256;
   if(mapper == "MBC3" && (romSize > 2_MiB || ramSize > 32_KiB)) mapper = "MBC30";
   if(mapper == "MBC6" && ram) ramSize =  32_KiB;
@@ -321,6 +348,7 @@ auto GameBoy::analyze(vector<u8>& data) -> string {
 
   string s;
   s += "game\n";
+  s +={"  sha256: ", hash, "\n"};
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
   s +={"  label:  ", label, "\n"};
@@ -333,7 +361,7 @@ auto GameBoy::analyze(vector<u8>& data) -> string {
 
   s += "    memory\n";
   s += "      type: ROM\n";
-  s +={"      size: 0x", hex(data.size()), "\n"};
+  s +={"      size: 0x", hex(rom.size()), "\n"};
   s += "      content: Program\n";
 
   if(ram && ramSize) {

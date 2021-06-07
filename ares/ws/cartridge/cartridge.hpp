@@ -1,6 +1,39 @@
 struct Cartridge : Thread, IO {
   Node::Peripheral node;
   VFS::Pak pak;
+  Memory::Readable<n8> rom;
+  Memory::Writable<n8> ram;
+  EEPROM eeprom;
+  struct RTC : Memory::Writable<n8> {
+    n8 command;
+    n4 index;
+
+    n8 alarm;
+    n8 alarmHour;
+    n8 alarmMinute;
+
+    auto year()    -> n8& { return operator[](0); }
+    auto month()   -> n8& { return operator[](1); }
+    auto day()     -> n8& { return operator[](2); }
+    auto weekday() -> n8& { return operator[](3); }
+    auto hour()    -> n8& { return operator[](4); }
+    auto minute()  -> n8& { return operator[](5); }
+    auto second()  -> n8& { return operator[](6); }
+  } rtc;
+
+  struct Debugger {
+    Cartridge& self;
+
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
+
+    struct Memory {
+      Node::Debugger::Memory rom;
+      Node::Debugger::Memory ram;
+      Node::Debugger::Memory eeprom;
+    } memory;
+  } debugger{*this};
 
   auto title() const { return information.title; }
   auto orientation() const { return information.orientation; }
@@ -64,34 +97,6 @@ struct Cartridge : Thread, IO {
     //$00cd  GPO_DATA
     n8 gpoData;
   } r;
-
-  struct Memory {
-    n8* data = nullptr;
-    u32 size = 0;
-    u32 mask = 0;
-  };
-
-  struct RTC : Memory {
-    n8 command;
-    n4 index;
-
-    n8 alarm;
-    n8 alarmHour;
-    n8 alarmMinute;
-
-    auto year()    -> n8& { return data[0]; }
-    auto month()   -> n8& { return data[1]; }
-    auto day()     -> n8& { return data[2]; }
-    auto weekday() -> n8& { return data[3]; }
-    auto hour()    -> n8& { return data[4]; }
-    auto minute()  -> n8& { return data[5]; }
-    auto second()  -> n8& { return data[6]; }
-  };
-
-  Memory rom;
-  Memory ram;
-  EEPROM eeprom;
-  RTC rtc;
 };
 
 #include "slot.hpp"

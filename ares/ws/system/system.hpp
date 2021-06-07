@@ -56,6 +56,18 @@ struct System : IO {
     bool rightLatch = 0;
   } controls;
 
+  struct Debugger {
+    System& self;
+
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
+
+    struct Memory {
+      Node::Debugger::Memory eeprom;
+    } memory;
+  } debugger{*this};
+
   auto name() const -> string { return information.name; }
   auto model() const -> Model { return information.model; }
   auto soc() const -> SoC { return information.soc; }

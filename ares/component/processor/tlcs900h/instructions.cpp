@@ -85,8 +85,9 @@ auto TLCS900H::instructionCompare(Target target) -> void {
 //however, the penalty cycle still exists and is emulated here.
 template<typename Size, s32 Adjust, typename Target>
 auto TLCS900H::instructionCompareRepeat(Target target) -> void {
-  instructionCompare<Size, Adjust>(target);
-  if(load(BC) && !ZF) return store(PC, load(PC) - 2);
+  do {
+    instructionCompare<Size, Adjust>(target);
+  } while(load(BC) && !ZF);
   idle(1);
 }
 
@@ -251,8 +252,9 @@ template<typename Size, s32 Adjust> auto TLCS900H::instructionLoad() -> void {
 //since I'm not sure how to emulate this, I don't try and guess here.
 //I do however add the extra penalty cycle at the end of the transfer.
 template<typename Size, s32 Adjust> auto TLCS900H::instructionLoadRepeat() -> void {
-  instructionLoad<Size, Adjust>();
-  if(load(BC)) return store(PC, load(PC) - 2);
+  do {
+    instructionLoad<Size, Adjust>();
+  } while(load(BC));
   idle(1);
 }
 
