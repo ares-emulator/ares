@@ -8,6 +8,23 @@
  * CS2 has an additional fixed addressing mode setting.
  */
 
+/* Default memory layout: (hardware remappable, but not usually done)
+ * 0x000000 ... 0x0000ff: internal I/O
+ * 0x000100 ... 0x003fff: reserved
+ * 0x004000 ... 0x006fff: 12KB CPU RAM
+ * 0x007000 ... 0x007fff:  4KB APU RAM
+ * 0x008000 ... 0x0087ff: KxGE I/O registers
+ * 0x008800 ... 0x008fff: object VRAM
+ * 0x009000 ... 0x009fff: scroll VRAM
+ * 0x00a000 ... 0x00bfff: character RAM
+ * 0x00c000 ... 0x01ffff: reserved
+ * 0x020000 ... 0x03ffff: program flash ROM (CS0)
+ * 0x040000 ... 0x07ffff: reserved
+ * 0x080000 ... 0x09ffff: program flash ROM (CS1)
+ * 0x0a0000 ... 0xfeffff: reserved
+ * 0xff0000 ... 0xffffff: BIOS ROM
+ */
+
 auto CPU::Bus::wait() -> void {
   switch(timing) {
   case 0: return cpu.step(2 + 1);  //1 state
@@ -247,7 +264,7 @@ auto CPU::width(n24 address) -> u32 {
 }
 
 auto CPU::read(u32 size, n24 address) -> n32 {
-  mar = address;
+  MAR = address;
   if(  io.select(address)) return   io.read(size, address);
   if( rom.select(address)) return  rom.read(size, address);
   if(cram.select(address)) return cram.read(size, address);
@@ -261,8 +278,8 @@ auto CPU::read(u32 size, n24 address) -> n32 {
 }
 
 auto CPU::write(u32 size, n24 address, n32 data) -> void {
-  mar = address;
-  mdr = data;
+  MAR = address;
+  MDR = data;
   if(  io.select(address)) return   io.write(size, address, data);
   if( rom.select(address)) return  rom.write(size, address, data);
   if(cram.select(address)) return cram.write(size, address, data);

@@ -1,29 +1,29 @@
 auto PPU::Debugger::load(Node::Object parent) -> void {
   memory.vram = parent->append<Node::Debugger::Memory>("PPU VRAM");
-  memory.vram->setSize(ppu.vram.mask + 1 << 1);
+  memory.vram->setSize(self.vram.mask + 1 << 1);
   memory.vram->setRead([&](u32 address) -> u8 {
-    return ppu.vram.data[address >> 1 & ppu.vram.mask].byte(address & 1);
+    return self.vram.data[address >> 1 & self.vram.mask].byte(address & 1);
   });
   memory.vram->setWrite([&](u32 address, u8 data) -> void {
-    ppu.vram.data[address >> 1 & ppu.vram.mask].byte(address & 1) = data;
+    self.vram.data[address >> 1 & self.vram.mask].byte(address & 1) = data;
   });
 
   memory.oam = parent->append<Node::Debugger::Memory>("PPU OAM");
   memory.oam->setSize(512 + 32);
   memory.oam->setRead([&](u32 address) -> u8 {
-    return ppu.obj.oam.read(address);
+    return self.obj.oam.read(address);
   });
   memory.oam->setWrite([&](u32 address, u8 data) -> void {
-    return ppu.obj.oam.write(address, data);
+    return self.obj.oam.write(address, data);
   });
 
   memory.cgram = parent->append<Node::Debugger::Memory>("PPU CGRAM");
   memory.cgram->setSize(256 << 1);
   memory.cgram->setRead([&](u32 address) -> u8 {
-    return ppu.dac.cgram[address >> 1 & 255].byte(address & 1);
+    return self.dac.cgram[address >> 1 & 255].byte(address & 1);
   });
   memory.cgram->setWrite([&](u32 address, u8 data) -> void {
-    ppu.dac.cgram[address >> 1 & 255].byte(address & 1) = data;
+    self.dac.cgram[address >> 1 & 255].byte(address & 1) = data;
   });
 
   graphics.tiles2bpp = parent->append<Node::Debugger::Graphics>("2 BPP Tiles");
@@ -35,7 +35,7 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
       for(u32 tileX : range(64)) {
         n15 address = tileY * 64 + tileX << 3;
         for(u32 y : range(8)) {
-          n16 d0 = ppu.vram.data[address + y];
+          n16 d0 = self.vram.data[address + y];
           for(u32 x : range(8)) {
             n2 color;
             color.bit(0) = d0.bit( 7 - x);
@@ -57,8 +57,8 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
       for(u32 tileX : range(64)) {
         n15 address = tileY * 64 + tileX << 4;
         for(u32 y : range(8)) {
-          n16 d0 = ppu.vram.data[address + y + 0];
-          n16 d1 = ppu.vram.data[address + y + 8];
+          n16 d0 = self.vram.data[address + y + 0];
+          n16 d1 = self.vram.data[address + y + 8];
           for(u32 x : range(8)) {
             n4 color;
             color.bit(0) = d0.bit( 7 - x);
@@ -82,10 +82,10 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
       for(u32 tileX : range(64)) {
         n15 address = tileY * 64 + tileX << 5;
         for(u32 y : range(8)) {
-          n16 d0 = ppu.vram.data[address + y +  0];
-          n16 d1 = ppu.vram.data[address + y +  8];
-          n16 d2 = ppu.vram.data[address + y + 16];
-          n16 d3 = ppu.vram.data[address + y + 24];
+          n16 d0 = self.vram.data[address + y +  0];
+          n16 d1 = self.vram.data[address + y +  8];
+          n16 d2 = self.vram.data[address + y + 16];
+          n16 d3 = self.vram.data[address + y + 24];
           for(u32 x : range(8)) {
             n8 color;
             color.bit(0) = d0.bit( 7 - x);
@@ -114,7 +114,7 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
         n15 address = tileY * 16 + tileX << 6;
         for(u32 y : range(8)) {
           for(u32 x : range(8)) {
-            n8 color = ppu.vram.data[address + y * 8 + x].byte(1);
+            n8 color = self.vram.data[address + y * 8 + x].byte(1);
             output[(tileY * 8 + y) * 128 + (tileX * 8 + x)] = color << 16 | color << 8 | color << 0;
           }
         }
@@ -122,4 +122,21 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
     }
     return output;
   });
+}
+
+auto PPU::Debugger::unload(Node::Object parent) -> void {
+  parent->remove(memory.vram);
+  parent->remove(memory.oam);
+  parent->remove(memory.cgram);
+  parent->remove(graphics.tiles2bpp);
+  parent->remove(graphics.tiles4bpp);
+  parent->remove(graphics.tiles8bpp);
+  parent->remove(graphics.tilesMode7);
+  memory.vram.reset();
+  memory.oam.reset();
+  memory.cgram.reset();
+  graphics.tiles2bpp.reset();
+  graphics.tiles4bpp.reset();
+  graphics.tiles8bpp.reset();
+  graphics.tilesMode7.reset();
 }

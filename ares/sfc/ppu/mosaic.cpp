@@ -1,18 +1,18 @@
-alwaysinline auto PPU::Mosaic::enable() const -> bool {
-  if(ppu.bg1.mosaic.enable) return true;
-  if(ppu.bg2.mosaic.enable) return true;
-  if(ppu.bg3.mosaic.enable) return true;
-  if(ppu.bg4.mosaic.enable) return true;
+inline auto PPU::Mosaic::enable() const -> bool {
+  if(self.bg1.mosaic.enable) return true;
+  if(self.bg2.mosaic.enable) return true;
+  if(self.bg3.mosaic.enable) return true;
+  if(self.bg4.mosaic.enable) return true;
   return false;
 }
 
-alwaysinline auto PPU::Mosaic::voffset() const -> u32 {
+inline auto PPU::Mosaic::voffset() const -> u32 {
   return size - vcounter;
 }
 
 //H = 0
 auto PPU::Mosaic::scanline() -> void {
-  if(ppu.vcounter() == 1) {
+  if(self.vcounter() == 1) {
     vcounter = enable() ? size + 1 : 0;
   }
   if(vcounter && !--vcounter) {

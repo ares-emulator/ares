@@ -1,12 +1,12 @@
 auto PPU::DAC::scanline() -> void {
   line = nullptr;
 
-  auto vcounter = ppu.vcounter();
-  auto output = ppu.screen->pixels().data();
-  if(!ppu.self.overscan) vcounter += 8;
+  auto vcounter = self.vcounter();
+  auto output = self.screen->pixels().data();
+  if(!self.overscan()) vcounter += 8;
   if(vcounter < 240) {
     line = output + vcounter * 2 * 512;
-    if(ppu.self.interlace && ppu.field()) line += 512;
+    if(self.interlace() && self.field()) line += 512;
   }
 
   //the first hires pixel of each scanline is transparent
@@ -23,44 +23,44 @@ auto PPU::DAC::scanline() -> void {
 }
 
 auto PPU::DAC::run() -> void {
-  if(ppu.vcounter() == 0) return;
+  if(self.vcounter() == 0) return;
 
-  bool hires      = ppu.io.pseudoHires || ppu.io.bgMode == 5 || ppu.io.bgMode == 6;
+  bool hires      = self.io.pseudoHires || self.io.bgMode == 5 || self.io.bgMode == 6;
   auto belowColor = below(hires);
   auto aboveColor = above();
 
   if(!line) return;
-  *line++ = ppu.io.displayBrightness << 15 | (hires ? belowColor : aboveColor);
-  *line++ = ppu.io.displayBrightness << 15 | (aboveColor);
+  *line++ = self.io.displayBrightness << 15 | (hires ? belowColor : aboveColor);
+  *line++ = self.io.displayBrightness << 15 | (aboveColor);
 }
 
 auto PPU::DAC::below(bool hires) -> n16 {
-  if(ppu.io.displayDisable || (!ppu.io.overscan && ppu.vcounter() >= 225)) return 0;
+  if(self.io.displayDisable || (!self.io.overscan && self.vcounter() >= 225)) return 0;
 
   u32 priority = 0;
-  if(ppu.bg1.output.below.priority) {
-    priority = ppu.bg1.output.below.priority;
-    if(io.directColor && (ppu.io.bgMode == 3 || ppu.io.bgMode == 4 || ppu.io.bgMode == 7)) {
-      math.below.color = directColor(ppu.bg1.output.below.palette, ppu.bg1.output.below.paletteGroup);
+  if(bg1.output.below.priority) {
+    priority = bg1.output.below.priority;
+    if(io.directColor && (self.io.bgMode == 3 || self.io.bgMode == 4 || self.io.bgMode == 7)) {
+      math.below.color = directColor(bg1.output.below.palette, bg1.output.below.paletteGroup);
     } else {
-      math.below.color = paletteColor(ppu.bg1.output.below.palette);
+      math.below.color = paletteColor(bg1.output.below.palette);
     }
   }
-  if(ppu.bg2.output.below.priority > priority) {
-    priority = ppu.bg2.output.below.priority;
-    math.below.color = paletteColor(ppu.bg2.output.below.palette);
+  if(bg2.output.below.priority > priority) {
+    priority = bg2.output.below.priority;
+    math.below.color = paletteColor(bg2.output.below.palette);
   }
-  if(ppu.bg3.output.below.priority > priority) {
-    priority = ppu.bg3.output.below.priority;
-    math.below.color = paletteColor(ppu.bg3.output.below.palette);
+  if(bg3.output.below.priority > priority) {
+    priority = bg3.output.below.priority;
+    math.below.color = paletteColor(bg3.output.below.palette);
   }
-  if(ppu.bg4.output.below.priority > priority) {
-    priority = ppu.bg4.output.below.priority;
-    math.below.color = paletteColor(ppu.bg4.output.below.palette);
+  if(bg4.output.below.priority > priority) {
+    priority = bg4.output.below.priority;
+    math.below.color = paletteColor(bg4.output.below.palette);
   }
-  if(ppu.obj.output.below.priority > priority) {
-    priority = ppu.obj.output.below.priority;
-    math.below.color = paletteColor(ppu.obj.output.below.palette);
+  if(obj.output.below.priority > priority) {
+    priority = obj.output.below.priority;
+    math.below.color = paletteColor(obj.output.below.palette);
   }
   if(math.transparent = (priority == 0)) math.below.color = paletteColor(0);
 
@@ -74,45 +74,45 @@ auto PPU::DAC::below(bool hires) -> n16 {
 }
 
 auto PPU::DAC::above() -> n16 {
-  if(ppu.io.displayDisable || (!ppu.io.overscan && ppu.vcounter() >= 225)) return 0;
+  if(self.io.displayDisable || (!self.io.overscan && self.vcounter() >= 225)) return 0;
 
   u32 priority = 0;
-  if(ppu.bg1.output.above.priority) {
-    priority = ppu.bg1.output.above.priority;
-    if(io.directColor && (ppu.io.bgMode == 3 || ppu.io.bgMode == 4 || ppu.io.bgMode == 7)) {
-      math.above.color = directColor(ppu.bg1.output.above.palette, ppu.bg1.output.above.paletteGroup);
+  if(bg1.output.above.priority) {
+    priority = bg1.output.above.priority;
+    if(io.directColor && (self.io.bgMode == 3 || self.io.bgMode == 4 || self.io.bgMode == 7)) {
+      math.above.color = directColor(bg1.output.above.palette, bg1.output.above.paletteGroup);
     } else {
-      math.above.color = paletteColor(ppu.bg1.output.above.palette);
+      math.above.color = paletteColor(bg1.output.above.palette);
     }
     math.below.colorEnable = io.bg1.colorEnable;
   }
-  if(ppu.bg2.output.above.priority > priority) {
-    priority = ppu.bg2.output.above.priority;
-    math.above.color = paletteColor(ppu.bg2.output.above.palette);
+  if(bg2.output.above.priority > priority) {
+    priority = bg2.output.above.priority;
+    math.above.color = paletteColor(bg2.output.above.palette);
     math.below.colorEnable = io.bg2.colorEnable;
   }
-  if(ppu.bg3.output.above.priority > priority) {
-    priority = ppu.bg3.output.above.priority;
-    math.above.color = paletteColor(ppu.bg3.output.above.palette);
+  if(bg3.output.above.priority > priority) {
+    priority = bg3.output.above.priority;
+    math.above.color = paletteColor(bg3.output.above.palette);
     math.below.colorEnable = io.bg3.colorEnable;
   }
-  if(ppu.bg4.output.above.priority > priority) {
-    priority = ppu.bg4.output.above.priority;
-    math.above.color = paletteColor(ppu.bg4.output.above.palette);
+  if(bg4.output.above.priority > priority) {
+    priority = bg4.output.above.priority;
+    math.above.color = paletteColor(bg4.output.above.palette);
     math.below.colorEnable = io.bg4.colorEnable;
   }
-  if(ppu.obj.output.above.priority > priority) {
-    priority = ppu.obj.output.above.priority;
-    math.above.color = paletteColor(ppu.obj.output.above.palette);
-    math.below.colorEnable = io.obj.colorEnable && ppu.obj.output.above.palette >= 192;
+  if(obj.output.above.priority > priority) {
+    priority = obj.output.above.priority;
+    math.above.color = paletteColor(obj.output.above.palette);
+    math.below.colorEnable = io.obj.colorEnable && obj.output.above.palette >= 192;
   }
   if(priority == 0) {
     math.above.color = paletteColor(0);
     math.below.colorEnable = io.back.colorEnable;
   }
 
-  if(!ppu.window.output.below.colorEnable) math.below.colorEnable = false;
-  math.above.colorEnable = ppu.window.output.above.colorEnable;
+  if(!window.output.below.colorEnable) math.below.colorEnable = false;
+  math.above.colorEnable = window.output.above.colorEnable;
   if(!math.below.colorEnable) return math.above.colorEnable ? math.above.color : (n15)0;
 
   if(io.blendMode && math.transparent) {
@@ -149,12 +149,12 @@ auto PPU::DAC::blend(u32 x, u32 y) const -> n15 {
   }
 }
 
-alwaysinline auto PPU::DAC::paletteColor(n8 palette) const -> n15 {
-  ppu.latch.cgramAddress = palette;
+inline auto PPU::DAC::paletteColor(n8 palette) const -> n15 {
+  self.latch.cgramAddress = palette;
   return cgram[palette];
 }
 
-alwaysinline auto PPU::DAC::directColor(n8 palette, n3 paletteGroup) const -> n15 {
+inline auto PPU::DAC::directColor(n8 palette, n3 paletteGroup) const -> n15 {
   //palette = -------- BBGGGRRR
   //group   = -------- -----bgr
   //output  = 0BBb00GG Gg0RRRr0
@@ -163,14 +163,11 @@ alwaysinline auto PPU::DAC::directColor(n8 palette, n3 paletteGroup) const -> n1
        + (palette << 2 & 0x001c) + (paletteGroup <<  1 & 0x0002);
 }
 
-alwaysinline auto PPU::DAC::fixedColor() const -> n15 {
+inline auto PPU::DAC::fixedColor() const -> n15 {
   return io.colorRed << 0 | io.colorGreen << 5 | io.colorBlue << 10;
 }
 
 auto PPU::DAC::power() -> void {
-  random.array({cgram, sizeof(cgram)});
-  for(auto& word : cgram) word &= 0x7fff;
-
   io.blendMode = random();
   io.directColor = random();
   io.colorMode = random();

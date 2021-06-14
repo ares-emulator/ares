@@ -3,7 +3,6 @@ struct MasterSystem : Emulator {
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
-  auto input(ares::Node::Input::Input) -> void override;
 
   u32 regionID = 0;
 };
@@ -16,12 +15,12 @@ MasterSystem::MasterSystem() {
   firmware.append({"BIOS", "Japan"});   //NTSC-J
   firmware.append({"BIOS", "Europe"});  //PAL
 
-  { InputPort port{"Hardware"};
+  { InputPort port{"Master System"};
 
-    InputDevice device{"Controls"};
-    device.button("Pause", virtualPads[0].start);
-    device.button("Reset", virtualPads[0].rt);
-    port.append(device);
+  { InputDevice device{"Controls"};
+    device.digital("Pause", virtualPorts[0].pad.start);
+    device.digital("Reset", virtualPorts[0].pad.rt);
+    port.append(device); }
 
     ports.append(port);
   }
@@ -29,14 +28,14 @@ MasterSystem::MasterSystem() {
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
-    InputDevice device{"Gamepad"};
-    device.button("Up",    virtualPads[id].up);
-    device.button("Down",  virtualPads[id].down);
-    device.button("Left",  virtualPads[id].left);
-    device.button("Right", virtualPads[id].right);
-    device.button("1",     virtualPads[id].a);
-    device.button("2",     virtualPads[id].b);
-    port.append(device);
+  { InputDevice device{"Gamepad"};
+    device.digital("Up",    virtualPorts[id].pad.up);
+    device.digital("Down",  virtualPorts[id].pad.down);
+    device.digital("Left",  virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("1",     virtualPorts[id].pad.a);
+    device.digital("2",     virtualPorts[id].pad.b);
+    port.append(device); }
 
     ports.append(port);
   }
@@ -92,50 +91,4 @@ auto MasterSystem::pak(ares::Node::Object node) -> shared_pointer<vfs::directory
   if(node->name() == "Master System") return system->pak;
   if(node->name() == "Master System Cartridge") return game->pak;
   return {};
-}
-
-auto MasterSystem::input(ares::Node::Input::Input input) -> void {
-  auto device = ares::Node::parent(input);
-  if(!device) return;
-
-  if(device->name() == "Controls") {
-    auto name = input->name();
-    maybe<InputMapping&> mapping;
-    if(name == "Pause") mapping = virtualPads[0].start;
-    if(name == "Reset") mapping = virtualPads[0].rt;
-
-    if(mapping) {
-      auto value = mapping->value();
-      if(auto button = input->cast<ares::Node::Input::Button>()) {
-        button->setValue(value);
-      }
-    }
-    return;
-  }
-
-  auto port = ares::Node::parent(device);
-  if(!port) return;
-
-  maybe<u32> id;
-  if(port->name() == "Controller Port 1") id = 0;
-  if(port->name() == "Controller Port 2") id = 1;
-  if(!id) return;
-
-  if(device->name() == "Gamepad") {
-    auto name = input->name();
-    maybe<InputMapping&> mapping;
-    if(name == "Up"   ) mapping = virtualPads[*id].up;
-    if(name == "Down" ) mapping = virtualPads[*id].down;
-    if(name == "Left" ) mapping = virtualPads[*id].left;
-    if(name == "Right") mapping = virtualPads[*id].right;
-    if(name == "1"    ) mapping = virtualPads[*id].a;
-    if(name == "2"    ) mapping = virtualPads[*id].b;
-
-    if(mapping) {
-      auto value = mapping->value();
-      if(auto button = input->cast<ares::Node::Input::Button>()) {
-        button->setValue(value);
-      }
-    }
-  }
 }

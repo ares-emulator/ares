@@ -3,7 +3,6 @@ struct Saturn : Emulator {
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
-  auto input(ares::Node::Input::Input) -> void override;
 
   u32 regionID = 0;
 };
@@ -56,16 +55,4 @@ auto Saturn::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == "Saturn") return system->pak;
   if(node->name() == "Saturn Disc") return game->pak;
   return {};
-}
-
-auto Saturn::input(ares::Node::Input::Input input) -> void {
-  auto name = input->name();
-  maybe<InputMapping&> mapping;
-
-  if(mapping) {
-    auto value = mapping->value();
-    if(auto button = input->cast<ares::Node::Input::Button>()) {
-      button->setValue(value);
-    }
-  }
 }

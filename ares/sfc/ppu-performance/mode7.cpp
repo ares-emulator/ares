@@ -1,16 +1,16 @@
 auto PPU::Background::renderMode7() -> void {
-  s32 Y = ppu.vcounter();
-  if(io.mosaicEnable) Y -= ppu.mosaic.voffset();  //BG2 vertical mosaic uses BG1 mosaic enable
-  s32 y = !ppu.mode7.vflip ? Y : 255 - Y;
+  s32 Y = self.vcounter();
+  if(io.mosaicEnable) Y -= self.mosaic.voffset();  //BG2 vertical mosaic uses BG1 mosaic enable
+  s32 y = !self.mode7.vflip ? Y : 255 - Y;
 
-  s32 a = (i16)ppu.mode7.a;
-  s32 b = (i16)ppu.mode7.b;
-  s32 c = (i16)ppu.mode7.c;
-  s32 d = (i16)ppu.mode7.d;
-  s32 hcenter = (i13)ppu.mode7.hcenter;
-  s32 vcenter = (i13)ppu.mode7.vcenter;
-  s32 hoffset = (i13)ppu.mode7.hoffset;
-  s32 voffset = (i13)ppu.mode7.voffset;
+  s32 a = (i16)self.mode7.a;
+  s32 b = (i16)self.mode7.b;
+  s32 c = (i16)self.mode7.c;
+  s32 d = (i16)self.mode7.d;
+  s32 hcenter = (i13)self.mode7.hcenter;
+  s32 vcenter = (i13)self.mode7.vcenter;
+  s32 hoffset = (i13)self.mode7.hoffset;
+  s32 voffset = (i13)self.mode7.voffset;
 
   u32 mosaicCounter = 1;
   u32 mosaicPalette = 0;
@@ -21,13 +21,18 @@ auto PPU::Background::renderMode7() -> void {
   s32 originX = (a * clip(hoffset - hcenter) & ~63) + (b * clip(voffset - vcenter) & ~63) + (b * y & ~63) + (hcenter << 8);
   s32 originY = (c * clip(hoffset - hcenter) & ~63) + (d * clip(voffset - vcenter) & ~63) + (d * y & ~63) + (vcenter << 8);
 
-  bool windowAbove[256];
-  bool windowBelow[256];
-  ppu.window.render(window, window.aboveEnable, windowAbove);
-  ppu.window.render(window, window.belowEnable, windowBelow);
+  bool windowAbove[448];
+  bool windowBelow[448];
+  self.window.render(window, window.aboveEnable, windowAbove);
+  self.window.render(window, window.belowEnable, windowBelow);
 
-  for(s32 X : range(256)) {
-    s32 x = !ppu.mode7.hflip ? X : 255 - X;
+  s32 x1 =   0;
+  s32 x2 = 255;
+  if(self.width() == 352) x1 = -48, x2 = 303;
+  if(self.width() == 448) x1 = -96, x2 = 351;
+
+  for(s32 X = x1; X <= x2; X++) {
+    s32 x = !self.mode7.hflip ? X : x2 - X;
 
     s32 pixelX = originX + a * x >> 8;
     s32 pixelY = originY + c * x >> 8;
@@ -40,8 +45,8 @@ auto PPU::Background::renderMode7() -> void {
     n16 tileAddress = tileY << 7 | tileX;
     n16 paletteAddress = (n3)pixelY << 3 | (n3)pixelX;
 
-    n8 tile = ppu.mode7.repeat == 3 && outOfBounds ? 0 : ppu.vram[tileAddress] >> 0;
-    n8 palette = ppu.mode7.repeat == 2 && outOfBounds ? 0 : ppu.vram[tile << 6 | paletteAddress] >> 8;
+    n8 tile = self.mode7.repeat == 3 && outOfBounds ? 0 : self.vram[tileAddress] >> 0;
+    n8 palette = self.mode7.repeat == 2 && outOfBounds ? 0 : self.vram[tile << 6 | paletteAddress] >> 8;
 
     n8 priority;
     if(id == ID::BG1) {
@@ -52,18 +57,19 @@ auto PPU::Background::renderMode7() -> void {
     }
 
     if(--mosaicCounter == 0) {
-      mosaicCounter = io.mosaicEnable ? (u32)ppu.mosaic.size : 1;
+      mosaicCounter = io.mosaicEnable ? (u32)self.mosaic.size : 1;
       mosaicPalette = palette;
       mosaicPriority = priority;
-      if(ppu.dac.io.directColor && id == ID::BG1) {
-        mosaicColor = ppu.dac.directColor(palette, 0);
+      if(self.dac.io.directColor && id == ID::BG1) {
+        mosaicColor = self.dac.directColor(palette, 0);
       } else {
-        mosaicColor = ppu.dac.cgram[palette];
+        mosaicColor = self.dac.cgram[palette];
       }
     }
     if(!mosaicPalette) continue;
 
-    if(io.aboveEnable && !windowAbove[X]) ppu.dac.plotAbove(X, id, mosaicPriority, mosaicColor);
-    if(io.belowEnable && !windowBelow[X]) ppu.dac.plotBelow(X, id, mosaicPriority, mosaicColor);
+    u32 Xp = X + abs(x1);
+    if(io.aboveEnable && !windowAbove[Xp]) self.dac.plotAbove(Xp, id, mosaicPriority, mosaicColor);
+    if(io.belowEnable && !windowBelow[Xp]) self.dac.plotBelow(Xp, id, mosaicPriority, mosaicColor);
   }
 }

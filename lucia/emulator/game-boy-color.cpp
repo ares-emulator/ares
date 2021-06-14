@@ -3,30 +3,29 @@ struct GameBoyColor : Emulator {
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
-  auto input(ares::Node::Input::Input) -> void override;
 };
 
 GameBoyColor::GameBoyColor() {
   manufacturer = "Nintendo";
   name = "Game Boy Color";
 
-  { InputPort port{"Hardware"};
+  { InputPort port{"Game Boy Color"};
 
-    InputDevice device{"Controls"};
-    device.button("Up",      virtualPads[0].up);
-    device.button("Down",    virtualPads[0].down);
-    device.button("Left",    virtualPads[0].left);
-    device.button("Right",   virtualPads[0].right);
-    device.button("B",       virtualPads[0].a);
-    device.button("A",       virtualPads[0].b);
-    device.button("Select",  virtualPads[0].select);
-    device.button("Start",   virtualPads[0].start);
-    device.analog("A-Up",    virtualPads[0].lup);
-    device.analog("A-Down",  virtualPads[0].ldown);
-    device.analog("A-Left",  virtualPads[0].lleft);
-    device.analog("A-Right", virtualPads[0].lright);
-    device.rumble("Rumble",  virtualPads[0].rumble);
-    port.append(device);
+  { InputDevice device{"Controls"};
+    device.digital("Up",      virtualPorts[0].pad.up);
+    device.digital("Down",    virtualPorts[0].pad.down);
+    device.digital("Left",    virtualPorts[0].pad.left);
+    device.digital("Right",   virtualPorts[0].pad.right);
+    device.digital("B",       virtualPorts[0].pad.a);
+    device.digital("A",       virtualPorts[0].pad.b);
+    device.digital("Select",  virtualPorts[0].pad.select);
+    device.digital("Start",   virtualPorts[0].pad.start);
+    device.analog ("A-Up",    virtualPorts[0].pad.lup);
+    device.analog ("A-Down",  virtualPorts[0].pad.ldown);
+    device.analog ("A-Left",  virtualPorts[0].pad.lleft);
+    device.analog ("A-Right", virtualPorts[0].pad.lright);
+    device.rumble ("Rumble",  virtualPorts[0].pad.rumble);
+    port.append(device); }
 
     ports.append(port);
   }
@@ -64,38 +63,4 @@ auto GameBoyColor::pak(ares::Node::Object node) -> shared_pointer<vfs::directory
   if(node->name() == "Game Boy Color") return system->pak;
   if(node->name() == "Game Boy Color Cartridge") return game->pak;
   return {};
-}
-
-auto GameBoyColor::input(ares::Node::Input::Input input) -> void {
-  auto name = input->name();
-  maybe<InputMapping&> mappings[2];
-  if(name == "Up"    ) mappings[0] = virtualPads[0].up;
-  if(name == "Down"  ) mappings[0] = virtualPads[0].down;
-  if(name == "Left"  ) mappings[0] = virtualPads[0].left;
-  if(name == "Right" ) mappings[0] = virtualPads[0].right;
-  if(name == "B"     ) mappings[0] = virtualPads[0].a;
-  if(name == "A"     ) mappings[0] = virtualPads[0].b;
-  if(name == "Select") mappings[0] = virtualPads[0].select;
-  if(name == "Start" ) mappings[0] = virtualPads[0].start;
-  //MBC5
-  if(name == "Rumble") mappings[0] = virtualPads[0].rumble;
-  //MBC7
-  if(name == "X"     ) mappings[0] = virtualPads[0].lleft, mappings[1] = virtualPads[0].lright;
-  if(name == "Y"     ) mappings[0] = virtualPads[0].lup,   mappings[1] = virtualPads[0].ldown;
-
-  if(mappings[0]) {
-    if(auto axis = input->cast<ares::Node::Input::Axis>()) {
-      auto value = mappings[1]->value() - mappings[0]->value();
-      axis->setValue(value);
-    }
-    if(auto button = input->cast<ares::Node::Input::Button>()) {
-      auto value = mappings[0]->value();
-      button->setValue(value);
-    }
-    if(auto rumble = input->cast<ares::Node::Input::Rumble>()) {
-      if(auto target = dynamic_cast<InputRumble*>(mappings[0].data())) {
-        target->rumble(rumble->enable());
-      }
-    }
-  }
 }

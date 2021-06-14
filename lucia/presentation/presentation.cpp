@@ -372,8 +372,6 @@ auto Presentation::loadEmulator() -> void {
   emulator->load(systemMenu);
   if(systemMenu.actionCount() > 0) systemMenu.append(MenuSeparator());
 
-  //todo: enable this once controller selection is supported
-  #if 0
   u32 portsFound = 0;
   for(auto port : ares::Node::enumerate<ares::Node::Port>(emulator->root)) {
     if(!port->hotSwappable()) continue;
@@ -391,13 +389,28 @@ auto Presentation::loadEmulator() -> void {
       peripheralGroup.append(peripheralItem);
     }
     for(auto peripheral : port->supported()) {
+      //do not add unsupported peripherals to the peripheral port menu
+      if(emulator->inputBlacklist.find(peripheral)) continue;
+
       MenuRadioItem peripheralItem{&portMenu};
+      peripheralItem.setAttribute<ares::Node::Port>("port", port);
       peripheralItem.setText(peripheral);
+      peripheralItem.onActivate([=] {
+        auto port = peripheralItem.attribute<ares::Node::Port>("port");
+        port->allocate(peripheralItem.text());
+        port->connect();
+      });
       peripheralGroup.append(peripheralItem);
+    }
+
+    //check the peripheral item menu option that is currently connected to said port
+    if(auto connected = port->connected()) {
+      for(auto peripheralItem : peripheralGroup.objects<MenuRadioItem>()) {
+        if(peripheralItem.text() == connected->name()) peripheralItem.setChecked();
+      }
     }
   }
   if(portsFound > 0) systemMenu.append(MenuSeparator());
-  #endif
 
   MenuItem reset{&systemMenu};
   reset.setText("Reset").setIcon(Icon::Action::Refresh).onActivate([&] {

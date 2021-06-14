@@ -19,7 +19,7 @@ auto pTableView::construct() -> void {
 
   qtTableView->connect(qtTableView, SIGNAL(itemActivated(QTreeWidgetItem*, int)), SLOT(onActivate(QTreeWidgetItem*, int)));
   qtTableView->connect(qtTableView, SIGNAL(itemSelectionChanged()), SLOT(onChange()));
-  qtTableView->connect(qtTableView, SIGNAL(customContextMenuRequested(const QPoint&)), SLOT(onContext()));
+  qtTableView->connect(qtTableView, SIGNAL(customContextMenuRequested(const QPoint&)), SLOT(onContext(const QPoint&)));
   qtTableView->connect(qtTableView->header(), SIGNAL(sectionClicked(int)), SLOT(onSort(int)));
   qtTableView->connect(qtTableView, SIGNAL(itemChanged(QTreeWidgetItem*, int)), SLOT(onToggle(QTreeWidgetItem*, int)));
 
@@ -212,8 +212,13 @@ auto QtTableView::onChange() -> void {
   if(!p.locked()) p.self().doChange();
 }
 
-auto QtTableView::onContext() -> void {
-  if(!p.locked()) p.self().doContext();
+auto QtTableView::onContext(const QPoint&) -> void {
+  if(p.locked()) return;
+
+  //todo: determine actual cell clicked instead of returning the first cell
+  auto item = p.self().selected();
+  auto cell = item.cell(0);
+  p.self().doContext(cell);
 }
 
 auto QtTableView::onSort(int columnNumber) -> void {

@@ -2,6 +2,7 @@ struct System {
   Node::System node;
   Node::Setting::Boolean fastBoot;
   VFS::Pak pak;
+  Memory::Readable<n8> bios;
 
   struct Controls {
     Node::Object node;
@@ -27,8 +28,19 @@ struct System {
     bool rightLatch = 0;
   } controls;
 
+  struct Debugger {
+    System& self;
+
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
+
+    struct Memory {
+      Node::Debugger::Memory bios;
+    } memory;
+  } debugger{*this};
+
   enum class Model : u32 { NeoGeoPocket, NeoGeoPocketColor };
-  Memory::Readable<n8> bios;
 
   auto name() const -> string { return information.name; }
   auto model() const -> Model { return information.model; }

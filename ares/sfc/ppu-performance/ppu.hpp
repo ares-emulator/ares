@@ -5,10 +5,14 @@ struct PPU : Thread, PPUcounter {
   Node::Setting::Boolean overscanEnable;
   Node::Setting::Boolean colorEmulation;
   Node::Setting::Boolean colorBleed;
+  Node::Setting::Natural screenWidth;
 
   struct Debugger {
+    PPU& self;
+
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
 
     struct Memory {
       Node::Debugger::Memory vram;
@@ -22,8 +26,9 @@ struct PPU : Thread, PPUcounter {
       Node::Debugger::Graphics tiles8bpp;
       Node::Debugger::Graphics tilesMode7;
     } graphics;
-  } debugger;
+  } debugger{*this};
 
+  auto width() const -> u32 { return screenWidth->value(); }
   auto hires() const -> bool { return io.pseudoHires || io.bgMode == 5 || io.bgMode == 6; }
   auto interlace() const -> bool { return state.interlace; }
   auto overscan() const -> bool { return state.overscan; }
@@ -58,7 +63,7 @@ struct PPU : Thread, PPUcounter {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-private:
+//private:
   struct Source { enum : u32 { BG1, BG2, BG3, BG4, OBJ1, OBJ2, COL }; };
 
   n32 renderingCycle;
@@ -162,28 +167,240 @@ private:
     n16 vcenter;
   } mode7;
 
-  #include "window.hpp"
-  #include "mosaic.hpp"
-  #include "background.hpp"
-  #include "oam.hpp"
-  #include "object.hpp"
-  #include "dac.hpp"
+  struct Window {
+    PPU& self;
+    struct Layer;
+    struct Color;
 
-  Window window;
-  Mosaic mosaic;
-  Background bg1{Background::ID::BG1};
-  Background bg2{Background::ID::BG2};
-  Background bg3{Background::ID::BG3};
-  Background bg4{Background::ID::BG4};
-  Object obj;
-  DAC dac;
+    //window.cpp
+    auto render(Layer&, bool enable, bool output[448]) -> void;
+    auto render(Color&, u32 mask, bool output[448]) -> void;
+    auto power() -> void;
 
-  friend class PPU::Window;
-  friend class PPU::Mosaic;
-  friend class PPU::Background;
-  friend class PPU::Object;
-  friend class PPU::DAC;
-  friend class SuperFamicomInterface;
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct Layer {
+      n1 oneInvert;
+      n1 oneEnable;
+      n1 twoInvert;
+      n1 twoEnable;
+      n2 mask;
+      n1 aboveEnable;
+      n1 belowEnable;
+
+      //serialization.cpp
+      auto serialize(serializer&) -> void;
+    };
+
+    struct Color {
+      n1 oneInvert;
+      n1 oneEnable;
+      n1 twoInvert;
+      n1 twoEnable;
+      n2 mask;
+      n2 aboveMask;
+      n2 belowMask;
+
+      //serialization.cpp
+      auto serialize(serializer&) -> void;
+    };
+
+    struct IO {
+      //$2126  WH0
+      n8 oneLeft;
+
+      //$2127  WH1
+      n8 oneRight;
+
+      //$2128  WH2
+      n8 twoLeft;
+
+      //$2129  WH3
+      n8 twoRight;
+    } io;
+  } window{*this};
+
+  struct Mosaic {
+    PPU& self;
+
+    //mosaic.cpp
+    auto enable() const -> bool;
+    auto voffset() const -> u32;
+    auto scanline() -> void;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n5 size;
+    n5 vcounter;
+  } mosaic{*this};
+
+  struct Background {
+    struct ID { enum : u32 { BG1, BG2, BG3, BG4 }; };
+    struct Mode { enum : u32 { BPP2, BPP4, BPP8, Mode7, Inactive }; };
+
+    PPU& self;
+    const u32 id;
+    Background(PPU& self, u32 id) : self(self), id(id) {}
+
+    //background.cpp
+    auto render() -> void;
+    auto getTile(u32 hoffset, u32 voffset) -> n16;
+    auto power() -> void;
+
+    //mode7.cpp
+    auto renderMode7() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct IO {
+      n2  screenSize;
+      n16 screenAddress;
+
+      n16 tiledataAddress;
+      n1  tileSize;
+
+      n16 hoffset;
+      n16 voffset;
+
+      n1  aboveEnable;
+      n1  belowEnable;
+      n1  mosaicEnable;
+
+      n8  mode;
+      n8  priority[2];
+    } io;
+
+    PPU::Window::Layer window;
+  };
+  Background bg1{*this, Background::ID::BG1};
+  Background bg2{*this, Background::ID::BG2};
+  Background bg3{*this, Background::ID::BG3};
+  Background bg4{*this, Background::ID::BG4};
+
+  struct OAM {
+    //oam.cpp
+    auto read(n10 address) -> n8;
+    auto write(n10 address, n8 data) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    struct Object {
+      //oam.cpp
+      auto width() const -> u32;
+      auto height() const -> u32;
+
+      n9 x;
+      n8 y;
+      n8 character;
+      n1 nameselect;
+      n1 vflip;
+      n1 hflip;
+      n2 priority;
+      n3 palette;
+      n1 size;
+    } objects[128];
+  };
+
+  struct Object {
+    PPU& self;
+
+    //object.cpp
+    auto addressReset() -> void;
+    auto setFirstSprite() -> void;
+    auto render() -> void;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    OAM oam;
+
+    struct IO {
+      n1  interlace;
+
+      n16 tiledataAddress;
+      n2  nameselect;
+      n3  baseSize;
+      n7  firstSprite;
+
+      n1  aboveEnable;
+      n1  belowEnable;
+
+      n1  rangeOver;
+      n1  timeOver;
+
+      n8  priority[4];
+    } io;
+
+    PPU::Window::Layer window;
+
+  //unserialized:
+    struct Item {
+      n1 valid;
+      n7 index;
+      n8 width;
+      n8 height;
+      n8 y;
+    } items[32];
+
+    struct Tile {
+      n1  valid;
+      n9  x;
+      n2  priority;
+      n8  palette;
+      n1  hflip;
+      n32 data;
+    } tiles[34];
+  } obj{*this};
+
+  struct DAC {
+    PPU& self;
+    struct Pixel;
+
+    //dac.cpp
+    auto prepare() -> void;
+    auto render() -> void;
+    auto pixel(n9 x, Pixel above, Pixel below) const -> n15;
+    auto blend(n15 x, n15 y, bool halve) const -> n15;
+    auto plotAbove(n9 x, n8 source, n8 priority, n15 color) -> void;
+    auto plotBelow(n9 x, n8 source, n8 priority, n15 color) -> void;
+    auto directColor(n8 palette, n3 paletteGroup) const -> n15;
+    auto fixedColor() const -> n15;
+    auto power() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n15 cgram[256];
+
+    struct IO {
+      n1 directColor;
+      n1 blendMode;
+      n1 colorEnable[7];
+      n1 colorHalve;
+      n1 colorMode;
+      n5 colorRed;
+      n5 colorGreen;
+      n5 colorBlue;
+    } io;
+
+    PPU::Window::Color window;
+
+  //unserialized:
+    struct Pixel {
+      n8  source;
+      n8  priority;
+      n15 color;
+    } above[448], below[448];
+
+    bool windowAbove[448];
+    bool windowBelow[448];
+  } dac{*this};
 };
 
 extern PPU ppu;

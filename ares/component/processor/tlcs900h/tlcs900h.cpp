@@ -44,6 +44,8 @@ auto TLCS900H::interrupt(n8 vector) -> void {
 auto TLCS900H::power() -> void {
   r = {};
   r.xsp.l.l0 = 0x100;
+  MAR = 0;
+  MDR = 0;
   invalidate();
 }
 

@@ -1,6 +1,6 @@
 auto V9938::Sprite::setup(n8 voffset) -> void {
   n4 valid = 0;
-  n5 sizeLimit = (8 << io.size << io.zoom) - 1;
+  n5 vlimit = (8 << io.zoom << io.size) - 1;
 
   switch(self.videoMode()) {
 
@@ -20,7 +20,7 @@ auto V9938::Sprite::setup(n8 voffset) -> void {
 
       y += 1;
       if(voffset < y) continue;
-      if(voffset > y + sizeLimit) continue;
+      if(voffset > y + vlimit) continue;
 
       //16x16 sprites use four patterns; thus lower two pattern bits are ignored
       if(io.size) pattern.bit(0,1) = 0;
@@ -57,7 +57,7 @@ auto V9938::Sprite::setup(n8 voffset) -> void {
 
       y += 1;
       if(voffset < y) continue;
-      if(voffset > y + sizeLimit) continue;
+      if(voffset > y + vlimit) continue;
 
       //16x16 sprites use four patterns; thus lower two pattern bits are ignored
       if(io.size) pattern.bit(0,1) = 0;
@@ -101,18 +101,19 @@ auto V9938::Sprite::run(n8 x, n8 y) -> void {
 
 auto V9938::Sprite::sprite1(n8 hoffset, n8 voffset) -> void {
   n4 color;
-  n5 sizeLimit = (8 << io.size << io.zoom) - 1;
+  n4 hlimit = (8 << io.zoom) - 1;
+  n5 vlimit = (8 << io.zoom << io.size) - 1;
 
   for(auto& o : objects) {
     if(o.y == 0xd0) break;
     if(hoffset < o.x) continue;
-    if(hoffset > o.x + sizeLimit) continue;
+    if(hoffset > o.x + hlimit) continue;
 
     n4 x = hoffset - o.x >> io.zoom;
     n4 y = voffset - o.y >> io.zoom;
 
     n14 address = io.patternTableAddress;
-    address += (o.pattern << 3) + (x >> 3 << 4) + y;
+    address += (o.pattern << 3) + (x >> 3 << 4) + (y & vlimit);
 
     if(self.vram.read(address).bit(~x & 7)) {
       if(color) { io.collision = 1; break; }
@@ -125,18 +126,19 @@ auto V9938::Sprite::sprite1(n8 hoffset, n8 voffset) -> void {
 
 auto V9938::Sprite::sprite2(n8 hoffset, n8 voffset) -> void {
   n4 color;
-  n5 sizeLimit = (8 << io.size << io.zoom) - 1;
+  n4 hlimit = (8 << io.zoom) - 1;
+  n5 vlimit = (8 << io.zoom << io.size) - 1;
 
   for(auto& o : objects) {
     if(o.y == 0xd8) break;
     if(hoffset < o.x) continue;
-    if(hoffset > o.x + sizeLimit) continue;
+    if(hoffset > o.x + hlimit) continue;
 
     n4 x = hoffset - o.x >> io.zoom;
     n4 y = voffset - o.y >> io.zoom;
 
     n17 address = io.patternTableAddress;
-    address += (o.pattern << 3) + (x >> 3 << 4) + y;
+    address += (o.pattern << 3) + (x >> 3 << 4) + (y & vlimit);
 
     if(self.vram.read(address).bit(~x & 7)) {
       if(color) { io.collision = 1; break; }

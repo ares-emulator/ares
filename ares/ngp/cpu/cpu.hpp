@@ -8,10 +8,15 @@ struct CPU : TLCS900H, Thread {
   ares::Memory::Writable<n8> ram;  //12KB
 
   struct Debugger {
+    CPU& self;
+
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
     auto instruction() -> void;
-    auto interrupt(string_view) -> void;
+    auto interrupt(u8 vector) -> void;
+    auto readIO(u8 address, u8 data) -> void;
+    auto writeIO(u8 address, u8 data) -> void;
 
     struct Memory {
       Node::Debugger::Memory ram;
@@ -20,8 +25,12 @@ struct CPU : TLCS900H, Thread {
     struct Tracer {
       Node::Debugger::Tracer::Instruction instruction;
       Node::Debugger::Tracer::Notification interrupt;
+      Node::Debugger::Tracer::Notification systemCall;
+      Node::Debugger::Tracer::Notification io;
     } tracer;
-  } debugger;
+
+    vector<n24> vectors;
+  } debugger{*this};
 
   //Neo Geo Pocket Color: 0x87e2 (K2GE mode selection) is a privileged register.
   //the development manual states user-mode code cannot change this value, and

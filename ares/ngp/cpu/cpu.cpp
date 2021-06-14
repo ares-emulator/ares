@@ -59,21 +59,15 @@ auto CPU::save() -> void {
 }
 
 auto CPU::unload() -> void {
+  if(!node) return;
+  debugger.unload(node);
   ram.reset();
   node.reset();
-  debugger = {};
 }
 
 auto CPU::main() -> void {
-  if(interrupts.fire()) {
-    debugger.interrupt("IRQ");
-    r.halted = false;
-  }
-
-  if(r.halted) {
-    return step(16);
-  }
-
+  if(interrupts.fire()) return (void)(r.halted = false);
+  if(r.halted) return step(16);
   debugger.instruction();
   instruction();
 }
@@ -118,9 +112,6 @@ auto CPU::power() -> void {
   //this to a hardware reset point, bypassing the need to press controls.power first.
   address = 0xff1800;
   store(PC, address);
-
-  mar = 0;
-  mdr = 0;
 
   interrupts = {};
 

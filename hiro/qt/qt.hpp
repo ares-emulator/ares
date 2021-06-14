@@ -254,7 +254,7 @@ public:
 public slots:
   void onActivate(QTreeWidgetItem* item, int column);
   void onChange();
-  void onContext();
+  void onContext(const QPoint&);
   void onSort(int column);
   void onToggle(QTreeWidgetItem* item, int column);
 };

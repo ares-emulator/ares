@@ -4,7 +4,6 @@ struct FamicomDiskSystem : Emulator {
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
-  auto input(ares::Node::Input::Input) -> void override;
   auto notify(const string& message) -> void override;
 
   shared_pointer<mia::Pak> bios;
@@ -19,17 +18,17 @@ FamicomDiskSystem::FamicomDiskSystem() {
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
-    InputDevice device{"Gamepad"};
-    device.button("Up",         virtualPads[id].up);
-    device.button("Down",       virtualPads[id].down);
-    device.button("Left",       virtualPads[id].left);
-    device.button("Right",      virtualPads[id].right);
-    device.button("B",          virtualPads[id].a);
-    device.button("A",          virtualPads[id].b);
-    device.button("Select",     virtualPads[id].select);
-    device.button("Start",      virtualPads[id].start);
-    device.button("Microphone", virtualPads[id].x);
-    port.append(device);
+  { InputDevice device{"Gamepad"};
+    device.digital("Up",         virtualPorts[id].pad.up);
+    device.digital("Down",       virtualPorts[id].pad.down);
+    device.digital("Left",       virtualPorts[id].pad.left);
+    device.digital("Right",      virtualPorts[id].pad.right);
+    device.digital("B",          virtualPorts[id].pad.a);
+    device.digital("A",          virtualPorts[id].pad.b);
+    device.digital("Select",     virtualPorts[id].pad.select);
+    device.digital("Start",      virtualPorts[id].pad.start);
+    device.digital("Microphone", virtualPorts[id].pad.x);
+    port.append(device); }
 
     ports.append(port);
   }
@@ -118,40 +117,6 @@ auto FamicomDiskSystem::pak(ares::Node::Object node) -> shared_pointer<vfs::dire
   if(node->name() == "Famicom Cartridge") return bios->pak;
   if(node->name() == "Famicom Disk") return game->pak;
   return {};
-}
-
-auto FamicomDiskSystem::input(ares::Node::Input::Input input) -> void {
-  auto device = ares::Node::parent(input);
-  if(!device) return;
-
-  auto port = ares::Node::parent(device);
-  if(!port) return;
-
-  maybe<u32> id;
-  if(port->name() == "Controller Port 1") id = 0;
-  if(port->name() == "Controller Port 2") id = 1;
-  if(!id) return;
-
-  if(device->name() == "Gamepad") {
-    auto name = input->name();
-    maybe<InputMapping&> mapping;
-    if(name == "Up"        ) mapping = virtualPads[*id].up;
-    if(name == "Down"      ) mapping = virtualPads[*id].down;
-    if(name == "Left"      ) mapping = virtualPads[*id].left;
-    if(name == "Right"     ) mapping = virtualPads[*id].right;
-    if(name == "B"         ) mapping = virtualPads[*id].a;
-    if(name == "A"         ) mapping = virtualPads[*id].b;
-    if(name == "Select"    ) mapping = virtualPads[*id].select;
-    if(name == "Start"     ) mapping = virtualPads[*id].start;
-    if(name == "Microphone") mapping = virtualPads[*id].x;
-
-    if(mapping) {
-      auto value = mapping->value();
-      if(auto button = input->cast<ares::Node::Input::Button>()) {
-         button->setValue(value);
-      }
-    }
-  }
 }
 
 auto FamicomDiskSystem::notify(const string& message) -> void {

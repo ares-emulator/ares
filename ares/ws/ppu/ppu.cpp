@@ -4,8 +4,12 @@ namespace ares::WonderSwan {
 
 PPU ppu;
 #include "io.cpp"
-#include "latch.cpp"
-#include "render.cpp"
+#include "memory.cpp"
+#include "window.cpp"
+#include "screen.cpp"
+#include "sprite.cpp"
+#include "dac.cpp"
+#include "timer.cpp"
 #include "color.cpp"
 #include "serialization.cpp"
 
@@ -171,34 +175,19 @@ auto PPU::unload() -> void {
 }
 
 auto PPU::main() -> void {
-  if(s.vtime == 142) {
-    latchOAM();
+  if(io.vcounter == 142) {
+    sprite.frame();
   }
 
-  if(s.vtime < 144) {
-    u32 y = s.vtime % (r.vtotal + 1);
-    auto line = screen->pixels().data() + y * screen->width();
-    latchRegisters();
-    latchSprites(y);
-    for(u32 x : range(224)) {
-      s.pixel = {Pixel::Source::Back, 0x000};
-      if(r.lcdEnable) {
-        renderBack();
-        if(l.screenOneEnable) renderScreenOne(x, y);
-        if(l.screenTwoEnable) renderScreenTwo(x, y);
-        if(l.spriteEnable) renderSprite(x, y);
-      }
-      if(Model::WonderSwanColor() && r.lcdContrast == 1) {
-        auto b = s.pixel.color.bit(0, 3);
-        auto g = s.pixel.color.bit(4, 7);
-        auto r = s.pixel.color.bit(8,11);
-        //this is just a rough approximation, not accurate to the actual effect.
-        //note that b,g,r are BitRange references, and modify the underlying s.pixel.color variable.
-        b = min(15, b * 1.5);
-        g = min(15, g * 1.5);
-        r = min(15, r * 1.5);
-      }
-      *line++ = s.pixel.color;
+  if(io.vcounter < 144) {
+    n8 y = io.vcounter % (io.vtotal + 1);
+    sprite.scanline(y);
+    dac.scanline(y);
+    for(n8 x : range(224)) {
+      screen1.pixel(x, y);
+      screen2.pixel(x, y);
+      sprite.pixel(x, y);
+      dac.pixel(x, y);
       step(1);
     }
     step(32);
@@ -206,43 +195,25 @@ auto PPU::main() -> void {
     step(256);
   }
   scanline();
-  if(r.htimerEnable && r.htimerCounter < r.htimerFrequency) {
-    if(++r.htimerCounter == r.htimerFrequency) {
-      if(r.htimerRepeat) {
-        r.htimerCounter = 0;
-      } else {
-        r.htimerEnable = false;
-      }
-      cpu.raise(CPU::Interrupt::HblankTimer);
-    }
-  }
+  if(htimer.step()) cpu.raise(CPU::Interrupt::HblankTimer);
 }
 
 //vtotal+1 = scanlines per frame
-//vtotal<143 inhibits vblank and repeats the screen image until vtime=144
-//todo: unknown how votal<143 interferes with line compare interrupts
+//vtotal<143 inhibits vblank and repeats the screen image until vcounter=144
+//todo: unknown how votal<143 interferes with vcompare interrupts
 auto PPU::scanline() -> void {
-  s.vtime++;
-  if(s.vtime >= max(144, r.vtotal + 1)) return frame();
-  if(s.vtime == r.lineCompare) cpu.raise(CPU::Interrupt::LineCompare);
-  if(s.vtime == 144) {
+  io.vcounter++;
+  if(io.vcounter >= max(144, io.vtotal + 1)) return frame();
+  if(io.vcounter == io.vcompare) cpu.raise(CPU::Interrupt::LineCompare);
+  if(io.vcounter == 144) {
     cpu.raise(CPU::Interrupt::Vblank);
-    if(r.vtimerEnable && r.vtimerCounter < r.vtimerFrequency) {
-      if(++r.vtimerCounter == r.vtimerFrequency) {
-        if(r.vtimerRepeat) {
-          r.vtimerCounter = 0;
-        } else {
-          r.vtimerEnable = false;
-        }
-        cpu.raise(CPU::Interrupt::VblankTimer);
-      }
-    }
+    if(vtimer.step()) cpu.raise(CPU::Interrupt::VblankTimer);
   }
 }
 
 auto PPU::frame() -> void {
-  s.field = !s.field;
-  s.vtime = 0;
+  io.vcounter = 0;
+  io.field = !io.field;
   screen->setViewport(0, 0, screen->width(), screen->height());
   screen->frame();
   scheduler.exit(Event::Frame);
@@ -262,9 +233,15 @@ auto PPU::power() -> void {
   bus.map(this, 0x00a2);
   bus.map(this, 0x00a4, 0x00ab);
 
-  s = {};
-  l = {};
-  r = {};
+  screen1.power();
+  screen2.power();
+  sprite.power();
+  dac.power();
+  pram = {};
+  lcd = {};
+  htimer = {};
+  vtimer = {};
+  io = {};
   updateIcons();
 }
 
@@ -275,12 +252,12 @@ auto PPU::updateIcons() -> void {
 
   icon.poweredOn->setVisible(visible);
 
-  icon.sleeping->setVisible(r.icon.sleeping & visible);
-  icon.orientation1->setVisible(r.icon.orientation1 & visible);
-  icon.orientation0->setVisible(r.icon.orientation0 & visible);
-  icon.auxiliary0->setVisible(r.icon.auxiliary0 & visible);
-  icon.auxiliary1->setVisible(r.icon.auxiliary1 & visible);
-  icon.auxiliary2->setVisible(r.icon.auxiliary2 & visible);
+  icon.sleeping->setVisible(lcd.icon.sleeping & visible);
+  icon.orientation1->setVisible(lcd.icon.orientation1 & visible);
+  icon.orientation0->setVisible(lcd.icon.orientation0 & visible);
+  icon.auxiliary0->setVisible(lcd.icon.auxiliary0 & visible);
+  icon.auxiliary1->setVisible(lcd.icon.auxiliary1 & visible);
+  icon.auxiliary2->setVisible(lcd.icon.auxiliary2 & visible);
 
   auto volume = apu.r.masterVolume;
 
@@ -305,14 +282,14 @@ auto PPU::updateIcons() -> void {
 auto PPU::updateOrientation() -> void {
   if(Model::PocketChallengeV2() || !orientation) return;
 
-  if(r.icon.orientation1) l.orientation = 1;
-  if(r.icon.orientation0) l.orientation = 0;
+  if(lcd.icon.orientation1) io.orientation = 1;
+  if(lcd.icon.orientation0) io.orientation = 0;
 
   auto orientation = this->orientation->value();
-  if(orientation == "Horizontal" || (orientation == "Automatic" && l.orientation == 0)) {
+  if(orientation == "Horizontal" || (orientation == "Automatic" && io.orientation == 0)) {
     screen->setRotation(0);
   }
-  if(orientation == "Vertical" || (orientation == "Automatic" && l.orientation == 1)) {
+  if(orientation == "Vertical" || (orientation == "Automatic" && io.orientation == 1)) {
     screen->setRotation(90);
   }
 }

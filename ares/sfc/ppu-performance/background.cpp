@@ -3,37 +3,37 @@ auto PPU::Background::render() -> void {
   if(io.mode == Mode::Inactive) return;
   if(io.mode == Mode::Mode7) return renderMode7();
 
-  bool windowAbove[256];
-  bool windowBelow[256];
-  ppu.window.render(window, window.aboveEnable, windowAbove);
-  ppu.window.render(window, window.belowEnable, windowBelow);
+  bool windowAbove[448];
+  bool windowBelow[448];
+  self.window.render(window, window.aboveEnable, windowAbove);
+  self.window.render(window, window.belowEnable, windowBelow);
 
-  bool hires = ppu.io.bgMode == 5 || ppu.io.bgMode == 6;
-  bool offsetPerTileMode = ppu.io.bgMode == 2 || ppu.io.bgMode == 4 || ppu.io.bgMode == 6;
-  bool directColorMode = ppu.dac.io.directColor && id == ID::BG1 && (ppu.io.bgMode == 3 || ppu.io.bgMode == 4);
+  bool hires = self.io.bgMode == 5 || self.io.bgMode == 6;
+  bool offsetPerTileMode = self.io.bgMode == 2 || self.io.bgMode == 4 || self.io.bgMode == 6;
+  bool directColorMode = self.dac.io.directColor && id == ID::BG1 && (self.io.bgMode == 3 || self.io.bgMode == 4);
   u32 colorShift = 3 + io.mode;
-  s32 width = 256 << hires;
+  s32 width = self.width() << hires;
 
   u32 tileHeight = 3 + io.tileSize;
   u32 tileWidth = !hires ? tileHeight : 4;
   u32 tileMask = 0x0fff >> io.mode;
   u32 tiledataIndex = io.tiledataAddress >> 3 + io.mode;
 
-  u32 paletteBase = ppu.io.bgMode == 0 ? id << 5 : 0;
+  u32 paletteBase = self.io.bgMode == 0 ? id << 5 : 0;
   u32 paletteShift = 2 << io.mode;
 
   u32 hscroll = io.hoffset;
   u32 vscroll = io.voffset;
-  u32 hmask = (width << io.tileSize << !!(io.screenSize & 1)) - 1;
-  u32 vmask = (width << io.tileSize << !!(io.screenSize & 2)) - 1;
+  u32 hmask = (256 << hires << io.tileSize << !!(io.screenSize & 1)) - 1;
+  u32 vmask = (256 << hires << io.tileSize << !!(io.screenSize & 2)) - 1;
 
-  u32 y = ppu.vcounter();
+  u32 y = self.vcounter();
   if(hires) {
     hscroll <<= 1;
-    if(ppu.io.interlace) y = y << 1 | (ppu.field() && !io.mosaicEnable);
+    if(self.io.interlace) y = y << 1 | (self.field() && !io.mosaicEnable);
   }
   if(io.mosaicEnable) {
-    y -= ppu.mosaic.voffset() << (hires && ppu.io.interlace);
+    y -= self.mosaic.voffset() << (hires && self.io.interlace);
   }
 
   u32 mosaicCounter = 1;
@@ -41,16 +41,23 @@ auto PPU::Background::render() -> void {
   u32 mosaicPriority = 0;
   n15 mosaicColor = 0;
 
-  s32 x = 0 - (hscroll & 7);
-  while(x < width) {
+  s32 x1 =   0;
+  s32 x2 = 256;
+  if(self.width() == 352) x1 = -48, x2 = 304;
+  if(self.width() == 448) x1 = -96, x2 = 352;
+  x1 <<= hires;
+  x2 <<= hires;
+
+  s32 x = x1 - (hscroll & 7);
+  while(x < x2) {
     u32 hoffset = x + hscroll;
     u32 voffset = y + vscroll;
     if(offsetPerTileMode) {
       u32 validBit = 0x2000 << id;
       u32 offsetX = x + (hscroll & 7);
       if(offsetX >= 8) {  //first column is exempt
-        u32 hlookup = ppu.bg3.getTile((offsetX - 8) + (ppu.bg3.io.hoffset & ~7), ppu.bg3.io.voffset + 0);
-        if(ppu.io.bgMode == 4) {
+        u32 hlookup = self.bg3.getTile((offsetX - 8) + (self.bg3.io.hoffset & ~7), self.bg3.io.voffset + 0);
+        if(self.io.bgMode == 4) {
           if(hlookup & validBit) {
             if(!(hlookup & 0x8000)) {
               hoffset = offsetX + (hlookup & ~7);
@@ -59,7 +66,7 @@ auto PPU::Background::render() -> void {
             }
           }
         } else {
-          u32 vlookup = ppu.bg3.getTile((offsetX - 8) + (ppu.bg3.io.hoffset & ~7), ppu.bg3.io.voffset + 8);
+          u32 vlookup = self.bg3.getTile((offsetX - 8) + (self.bg3.io.hoffset & ~7), self.bg3.io.voffset + 8);
           if(hlookup & validBit) {
             hoffset = offsetX + (hlookup & ~7);
           }
@@ -87,13 +94,13 @@ auto PPU::Background::render() -> void {
     address = (tileNumber << colorShift) + (voffset & 7 ^ mirrorY);
 
     n64 data;
-    data |= (n64)ppu.vram[address +  0] <<  0;
-    data |= (n64)ppu.vram[address +  8] << 16;
-    data |= (n64)ppu.vram[address + 16] << 32;
-    data |= (n64)ppu.vram[address + 24] << 48;
+    data |= (n64)self.vram[address +  0] <<  0;
+    data |= (n64)self.vram[address +  8] << 16;
+    data |= (n64)self.vram[address + 16] << 32;
+    data |= (n64)self.vram[address + 24] << 48;
 
     for(u32 tileX = 0; tileX < 8; tileX++, x++) {
-      if(x & width) continue;  //x < 0 || x >= width
+      if(x < x1 || x >= x2) continue;
       if(--mosaicCounter == 0) {
         u32 color = 0, shift = mirrorX ? tileX : 7 - tileX;
       /*if(io.mode >= Mode::BPP2)*/ {
@@ -111,26 +118,27 @@ auto PPU::Background::render() -> void {
           color += data >> shift + 49 & 128;
         }
 
-        mosaicCounter = io.mosaicEnable ? ppu.mosaic.size << hires : 1;
+        mosaicCounter = io.mosaicEnable ? self.mosaic.size << hires : 1;
         mosaicPalette = color;
         mosaicPriority = tilePriority;
         if(directColorMode) {
-          mosaicColor = ppu.dac.directColor(mosaicPalette, paletteNumber);
+          mosaicColor = self.dac.directColor(mosaicPalette, paletteNumber);
         } else {
-          mosaicColor = ppu.dac.cgram[paletteIndex + mosaicPalette];
+          mosaicColor = self.dac.cgram[paletteIndex + mosaicPalette];
         }
       }
       if(!mosaicPalette) continue;
 
+      s32 xp = x + abs(x1);
       if(!hires) {
-        if(io.aboveEnable && !windowAbove[x]) ppu.dac.plotAbove(x, id, mosaicPriority, mosaicColor);
-        if(io.belowEnable && !windowBelow[x]) ppu.dac.plotBelow(x, id, mosaicPriority, mosaicColor);
+        if(io.aboveEnable && !windowAbove[xp]) self.dac.plotAbove(xp, id, mosaicPriority, mosaicColor);
+        if(io.belowEnable && !windowBelow[xp]) self.dac.plotBelow(xp, id, mosaicPriority, mosaicColor);
       } else {
-        u32 X = x >> 1;
-        if(x & 1) {
-          if(io.aboveEnable && !windowAbove[X]) ppu.dac.plotAbove(X, id, mosaicPriority, mosaicColor);
+        u32 Xp = xp >> 1;
+        if(xp & 1) {
+          if(io.aboveEnable && !windowAbove[Xp]) self.dac.plotAbove(Xp, id, mosaicPriority, mosaicColor);
         } else {
-          if(io.belowEnable && !windowBelow[X]) ppu.dac.plotBelow(X, id, mosaicPriority, mosaicColor);
+          if(io.belowEnable && !windowBelow[Xp]) self.dac.plotBelow(Xp, id, mosaicPriority, mosaicColor);
         }
       }
     }
@@ -138,7 +146,7 @@ auto PPU::Background::render() -> void {
 }
 
 auto PPU::Background::getTile(u32 hoffset, u32 voffset) -> n16 {
-  bool hires = ppu.io.bgMode == 5 || ppu.io.bgMode == 6;
+  bool hires = self.io.bgMode == 5 || self.io.bgMode == 6;
   u32  tileHeight = 3 + io.tileSize;
   u32  tileWidth = !hires ? tileHeight : 4;
   u32  screenX = io.screenSize & 1 ? 32 << 5 : 0;
@@ -148,7 +156,7 @@ auto PPU::Background::getTile(u32 hoffset, u32 voffset) -> n16 {
   u32  offset = (tileY & 0x1f) << 5 | (tileX & 0x1f);
   if(tileX & 0x20) offset += screenX;
   if(tileY & 0x20) offset += screenY;
-  return ppu.vram[io.screenAddress + offset];
+  return self.vram[io.screenAddress + offset];
 }
 
 auto PPU::Background::power() -> void {

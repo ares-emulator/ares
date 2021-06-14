@@ -1,77 +1,121 @@
 auto Cartridge::portRead(n16 address) -> n8 {
   n8 data;
 
-  //BANK_ROM2
-  if(address == 0x00c0) return r.romBank2;
+  switch(address) {
 
-  //BANK_SRAM
-  if(address == 0x00c1) return r.sramBank;
+  case 0x00c0:  //BANK_ROM2
+    data = r.romBank2;
+    break;
 
-  //BANK_ROM0
-  if(address == 0x00c2) return r.romBank0;
+  case 0x00c1:  //BANK_SRAM
+    data = r.sramBank;
+    break;
 
-  //BANK_ROM1
-  if(address == 0x00c3) return r.romBank1;
+  case 0x00c2:  //BANK_ROM0
+    data = r.romBank0;
+    break;
 
-  //EEP_DATA
-  if(address == 0x00c4) return eeprom.read(EEPROM::DataLo);
-  if(address == 0x00c5) return eeprom.read(EEPROM::DataHi);
+  case 0x00c3:  //BANK_ROM1
+    data = r.romBank1;
+    break;
 
-  //EEP_ADDR
-  if(address == 0x00c6) return eeprom.read(EEPROM::AddressLo);
-  if(address == 0x00c7) return eeprom.read(EEPROM::AddressHi);
+  case 0x00c4:  //EEP_DATALO
+    data = eeprom.read(EEPROM::DataLo);
+    break;
 
-  //EEP_STATUS
-  if(address == 0x00c8) return eeprom.read(EEPROM::Status);
+  case 0x00c5:  //EEP_DATAHI
+    data = eeprom.read(EEPROM::DataHi);
+    break;
 
-  //RTC_STATUS
-  if(address == 0x00ca) return rtcStatus();
+  case 0x00c6:  //EEP_ADDRLO
+    data = eeprom.read(EEPROM::AddressLo);
+    break;
 
-  //RTC_DATA
-  if(address == 0x00cb) return rtcRead();
+  case 0x00c7:  //EEP_ADDRHI
+    data = eeprom.read(EEPROM::AddressHi);
+    break;
 
-  //GPO_EN
-  if(address == 0x00cc) return r.gpoEnable;
+  case 0x00c8:  //EEP_STATUS
+    data = eeprom.read(EEPROM::Status);
+    break;
 
-  //GPO_DATA
-  if(address == 0x00cd) return r.gpoData;
+  case 0x00ca:  //RTC_STATUS
+    data = rtcStatus();
+    break;
+
+  case 0x00cb:  //RTC_DATA
+    data = rtcRead();
+    break;
+
+  case 0x00cc:  //GPO_EN
+    data = r.gpoEnable;
+    break;
+
+  case 0x00cd:  //GPO_DATA
+    data = r.gpoData;
+    break;
+
+  }
 
   return data;
 }
 
 auto Cartridge::portWrite(n16 address, n8 data) -> void {
-  //BANK_ROM2
-  if(address == 0x00c0) r.romBank2 = data;
+  switch(address) {
 
-  //BANK_SRAM
-  if(address == 0x00c1) r.sramBank = data;
+  case 0x00c0:  //BANK_ROM2
+    r.romBank2 = data;
+    break;
 
-  //BANK_ROM0
-  if(address == 0x00c2) r.romBank0 = data;
+  case 0x00c1:  //BANK_SRAM
+    r.sramBank = data;
+    break;
 
-  //BANK_ROM1
-  if(address == 0x00c3) r.romBank1 = data;
+  case 0x00c2:  //BANK_ROM0
+    r.romBank0 = data;
+    break;
 
-  //EEP_DATA
-  if(address == 0x00c4) eeprom.write(EEPROM::DataLo, data);
-  if(address == 0x00c5) eeprom.write(EEPROM::DataHi, data);
+  case 0x00c3:  //BANK_ROM1
+    r.romBank1 = data;
+    break;
 
-  //EEP_ADDR
-  if(address == 0x00c6) eeprom.write(EEPROM::AddressLo, data);
-  if(address == 0x00c7) eeprom.write(EEPROM::AddressHi, data);
+  case 0x00c4:  //EEP_DATALO
+    eeprom.write(EEPROM::DataLo, data);
+    break;
 
-  //EEP_CMD
-  if(address == 0x00c8) eeprom.write(EEPROM::Command, data);
+  case 0x00c5:  //EEP_DATAHI
+    eeprom.write(EEPROM::DataHi, data);
+    break;
 
-  //RTC_CMD
-  if(address == 0x00ca) rtcCommand(data);
+  case 0x00c6:  //EEP_ADDRLO
+    eeprom.write(EEPROM::AddressLo, data);
+    break;
 
-  //RTC_DATA
-  if(address == 0x00cb) rtcWrite(data);
+  case 0x00c7:  //EEP_ADDRHI
+    eeprom.write(EEPROM::AddressHi, data);
+    break;
 
-  //GPO_EN
-  if(address == 0x00cc) r.gpoEnable = data;
+  case 0x00c8:  //EEP_CMD
+    eeprom.write(EEPROM::Command, data);
+    break;
 
-  //GPO_DATA
-  if(address == 0x00cd) r.gpoData = data;
+  case 0x00ca:  //RTC_CMD
+    rtcCommand(data);
+    break;
+
+  case 0x00cb:  //RTC_DATA
+    rtcWrite(data);
+    break;
+
+  case 0x00cc:  //GPO_EN
+    r.gpoEnable = data;
+    break;
+
+  case 0x00cd:  //GPO_DATA
+    r.gpoData = data;
+    break;
+
+  }
+
+  return;
 }

@@ -15,7 +15,7 @@ struct mTableView : mWidget {
   auto columns() const -> vector<TableViewColumn>;
   auto doActivate(sTableViewCell cell) const -> void;
   auto doChange() const -> void;
-  auto doContext() const -> void;
+  auto doContext(sTableViewCell cell) const -> void;
   auto doEdit(sTableViewCell cell) const -> void;
   auto doSort(sTableViewColumn column) const -> void;
   auto doToggle(sTableViewCell cell) const -> void;
@@ -26,7 +26,7 @@ struct mTableView : mWidget {
   auto items() const -> vector<TableViewItem>;
   auto onActivate(const function<void (TableViewCell)>& callback = {}) -> type&;
   auto onChange(const function<void ()>& callback = {}) -> type&;
-  auto onContext(const function<void ()>& callback = {}) -> type&;
+  auto onContext(const function<void (TableViewCell)>& callback = {}) -> type&;
   auto onEdit(const function<void (TableViewCell)>& callback = {}) -> type&;
   auto onSort(const function<void (TableViewColumn)>& callback = {}) -> type&;
   auto onToggle(const function<void (TableViewCell)>& callback = {}) -> type&;
@@ -61,7 +61,7 @@ struct mTableView : mWidget {
     vector<sTableViewItem> items;
     function<void (TableViewCell)> onActivate;
     function<void ()> onChange;
-    function<void ()> onContext;
+    function<void (TableViewCell)> onContext;
     function<void (TableViewCell)> onEdit;
     function<void (TableViewColumn)> onSort;
     function<void (TableViewCell)> onToggle;

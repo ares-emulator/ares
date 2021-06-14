@@ -1,87 +1,73 @@
 auto System::portRead(n16 address) -> n8 {
   n8 data;
 
-  //DISP_MODE
-  if(address == 0x0060) {
+  switch(address) {
+
+  case 0x0060:  //DISP_MODE
     data.bit(0) = io.unknown0;
     data.bit(1) = io.unknown1;
     data.bit(3) = io.unknown3;
     data.bit(5) = io.mode.bit(0);
     data.bit(6) = io.mode.bit(1);
     data.bit(7) = io.mode.bit(2);
-    return data;
-  }
+    break;
 
-  //IEEP_DATALO
-  if(address == 0x00ba) {
+  case 0x00ba:  //IEEP_DATALO
     data = eeprom.read(EEPROM::DataLo);
-    return data;
-  }
+    break;
 
-  //IEEP_DATAHI
-  if(address == 0x00bb) {
+  case 0x00bb:  //IEEP_DATAHI
     data = eeprom.read(EEPROM::DataHi);
-    return data;
-  }
+    break;
 
-  //IEEP_ADDRLO
-  if(address == 0x00bc) {
+  case 0x00bc:  //IEEP_ADDRLO
     data = eeprom.read(EEPROM::AddressLo);
-    return data;
-  }
+    break;
 
-  //IEEP_ADDRHI
-  if(address == 0x00bd) {
+  case 0x00bd:  //IEEP_ADDRHI
     data = eeprom.read(EEPROM::AddressHi);
-    return data;
-  }
+    break;
 
-  //IEEP_STATUS
-  if(address == 0x00be) {
+  case 0x00be:  //IEEP_STATUS
     data = eeprom.read(EEPROM::Status);
-    return data;
+    break;
+
   }
 
   return data;
 }
 
 auto System::portWrite(n16 address, n8 data) -> void {
-  //DISP_MODE
-  if(address == 0x0060) {
+  switch(address) {
+
+  case 0x0060:  //DISP_MODE
     io.unknown0 = data.bit(0);
     io.unknown1 = data.bit(1);
     io.unknown3 = data.bit(3);
     io.mode     = data.bit(5,7);
-    return;
-  }
+    break;
 
-  //IEEP_DATALO
-  if(address == 0x00ba) {
+  case 0x00ba:  //IEEP_DATALO
     eeprom.write(EEPROM::DataLo, data);
-    return;
-  }
+    break;
 
-  //IEEP_DATAHI
-  if(address == 0x00bb) {
+  case 0x00bb:  //IEEP_DATAHI
     eeprom.write(EEPROM::DataHi, data);
-    return;
-  }
+    break;
 
-  //IEEP_ADDRLO
-  if(address == 0x00bc) {
+  case 0x00bc:  //IEEP_ADDRLO
     eeprom.write(EEPROM::AddressLo, data);
-    return;
-  }
+    break;
 
-  //IEEP_ADDRHI
-  if(address == 0x00bd) {
+  case 0x00bd:  //IEEP_ADDRHI
     eeprom.write(EEPROM::AddressHi, data);
-    return;
+    break;
+
+  case 0x00be:  //IEEP_CMD
+    eeprom.write(EEPROM::Command, data);
+    break;
+
   }
 
-  //IEEP_CMD
-  if(address == 0x00be) {
-    eeprom.write(EEPROM::Command, data);
-    return;
-  }
+  return;
 }

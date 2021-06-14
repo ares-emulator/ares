@@ -8,28 +8,28 @@ auto PPU::Window::run() -> void {
   x++;
 
   if(test(io.bg1.oneEnable, one ^ io.bg1.oneInvert, io.bg1.twoEnable, two ^ io.bg1.twoInvert, io.bg1.mask)) {
-    if(io.bg1.aboveEnable) ppu.bg1.output.above.priority = 0;
-    if(io.bg1.belowEnable) ppu.bg1.output.below.priority = 0;
+    if(io.bg1.aboveEnable) bg1.output.above.priority = 0;
+    if(io.bg1.belowEnable) bg1.output.below.priority = 0;
   }
 
   if(test(io.bg2.oneEnable, one ^ io.bg2.oneInvert, io.bg2.twoEnable, two ^ io.bg2.twoInvert, io.bg2.mask)) {
-    if(io.bg2.aboveEnable) ppu.bg2.output.above.priority = 0;
-    if(io.bg2.belowEnable) ppu.bg2.output.below.priority = 0;
+    if(io.bg2.aboveEnable) bg2.output.above.priority = 0;
+    if(io.bg2.belowEnable) bg2.output.below.priority = 0;
   }
 
   if(test(io.bg3.oneEnable, one ^ io.bg3.oneInvert, io.bg3.twoEnable, two ^ io.bg3.twoInvert, io.bg3.mask)) {
-    if(io.bg3.aboveEnable) ppu.bg3.output.above.priority = 0;
-    if(io.bg3.belowEnable) ppu.bg3.output.below.priority = 0;
+    if(io.bg3.aboveEnable) bg3.output.above.priority = 0;
+    if(io.bg3.belowEnable) bg3.output.below.priority = 0;
   }
 
   if(test(io.bg4.oneEnable, one ^ io.bg4.oneInvert, io.bg4.twoEnable, two ^ io.bg4.twoInvert, io.bg4.mask)) {
-    if(io.bg4.aboveEnable) ppu.bg4.output.above.priority = 0;
-    if(io.bg4.belowEnable) ppu.bg4.output.below.priority = 0;
+    if(io.bg4.aboveEnable) bg4.output.above.priority = 0;
+    if(io.bg4.belowEnable) bg4.output.below.priority = 0;
   }
 
   if(test(io.obj.oneEnable, one ^ io.obj.oneInvert, io.obj.twoEnable, two ^ io.obj.twoInvert, io.obj.mask)) {
-    if(io.obj.aboveEnable) ppu.obj.output.above.priority = 0;
-    if(io.obj.belowEnable) ppu.obj.output.below.priority = 0;
+    if(io.obj.aboveEnable) obj.output.above.priority = 0;
+    if(io.obj.belowEnable) obj.output.below.priority = 0;
   }
 
   bool value = test(io.col.oneEnable, one ^ io.col.oneInvert, io.col.twoEnable, two ^ io.col.twoInvert, io.col.mask);

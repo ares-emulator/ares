@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nall/traits.hpp>
+
 namespace nall {
 
 struct nothing_t {};

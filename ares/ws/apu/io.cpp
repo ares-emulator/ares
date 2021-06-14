@@ -1,113 +1,93 @@
 auto APU::portRead(n16 address) -> n8 {
   n8 data;
 
-  //SDMA_SRC
-  if(address == 0x004a) return dma.s.source.bit( 0, 7);
-  if(address == 0x004b) return dma.s.source.bit( 8,15);
-  if(address == 0x004c) return dma.s.source.bit(16,19);
+  switch(address) {
 
-  //SDMA_LEN
-  if(address == 0x004e) return dma.s.length.bit( 0, 7);
-  if(address == 0x004f) return dma.s.length.bit( 8,15);
-  if(address == 0x0050) return dma.s.length.bit(16,19);
+  case 0x004a ... 0x004c:  //SDMA_SRC
+    data = dma.s.source.byte(address - 0x004a);
+    break;
 
-  //SDMA_CTRL
-  if(address == 0x0052) {
+  case 0x004e ... 0x0050:  //SDMA_LEN
+    data = dma.s.length.byte(address - 0x004e);
+    break;
+
+  case 0x0052:  //SDMA_CTRL
     data.bit(0,1) = dma.r.rate;
     data.bit(2)   = dma.r.unknown;
     data.bit(3)   = dma.r.loop;
     data.bit(4)   = dma.r.target;
     data.bit(6)   = dma.r.direction;
     data.bit(7)   = dma.r.enable;
-    return data;
-  }
+    break;
 
-  //SND_HYPER_CTRL
-  if(address == 0x006a) {
+  case 0x006a:  //SND_HYPER_CTRL
     data.bit(0,1) = channel5.r.volume;
     data.bit(2,3) = channel5.r.scale;
     data.bit(4,6) = channel5.r.speed;
     data.bit(7)   = channel5.r.enable;
-    return data;
-  }
+    break;
 
-  //SND_HYPER_CHAN_CTRL
-  if(address == 0x006b) {
+  case 0x006b:  //SND_HYPER_CHAN_CTRL
     data.bit(0,3) = channel5.r.unknown;
     data.bit(5)   = channel5.r.leftEnable;
     data.bit(6)   = channel5.r.rightEnable;
-    return data;
-  }
+    break;
 
-  //SND_CH1_PITCH
-  if(address == 0x0080) return channel1.r.pitch.bit(0, 7);
-  if(address == 0x0081) return channel1.r.pitch.bit(8,10);
+  case 0x0080 ... 0x0081:  //SND_CH1_PITCH
+    data = channel1.r.pitch.byte(address - 0x0080);
+    break;
 
-  //SND_CH2_PITCH
-  if(address == 0x0082) return channel2.r.pitch.bit(0, 7);
-  if(address == 0x0083) return channel2.r.pitch.bit(8,10);
+  case 0x0082 ... 0x0083:  //SND_CH2_PITCH
+    data = channel2.r.pitch.byte(address - 0x0082);
+    break;
 
-  //SND_CH3_PITCH
-  if(address == 0x0084) return channel3.r.pitch.bit(0, 7);
-  if(address == 0x0085) return channel3.r.pitch.bit(8,10);
+  case 0x0084 ... 0x0085:  //SND_CH3_PITCH
+    data = channel3.r.pitch.byte(address - 0x0084);
+    break;
 
-  //SND_CH4_PITCH
-  if(address == 0x0086) return channel4.r.pitch.bit(0, 7);
-  if(address == 0x0087) return channel4.r.pitch.bit(8,10);
+  case 0x0086 ... 0x0087:  //SND_CH4_PITCH
+    data = channel4.r.pitch.byte(address - 0x0086);
+    break;
 
-  //SND_CH1_VOL
-  if(address == 0x0088) {
+  case 0x0088:  //SND_CH1_VOL
     data.bit(0,3) = channel1.r.volumeRight;
     data.bit(4,7) = channel1.r.volumeLeft;
-    return data;
-  }
+    break;
 
-  //SND_CH2_VOL
-  if(address == 0x0089) {
+  case 0x0089:  //SND_CH2_VOL
     data.bit(0,3) = channel2.r.volumeRight;
     data.bit(4,7) = channel2.r.volumeLeft;
-    return data;
-  }
+    break;
 
-  //SND_CH3_VOL
-  if(address == 0x008a) {
+  case 0x008a:  //SND_CH3_VOL
     data.bit(0,3) = channel3.r.volumeRight;
     data.bit(4,7) = channel3.r.volumeLeft;
-    return data;
-  }
+    break;
 
-  //SND_CH4_VOL
-  if(address == 0x008b) {
+  case 0x008b:  //SND_CH4_VOL
     data.bit(0,3) = channel4.r.volumeRight;
     data.bit(4,7) = channel4.r.volumeLeft;
-    return data;
-  }
+    break;
 
-  //SND_SWEEP_VALUE
-  if(address == 0x008c) {
-    return channel3.r.sweepValue;
-  }
+  case 0x008c:  //SND_SWEEP_VALUE
+    data = channel3.r.sweepValue;
+    break;
 
-  //SND_SWEEP_TIME
-  if(address == 0x008d) {
-    return channel3.r.sweepTime;
-  }
+  case 0x008d:  //SND_SWEEP_TIME
+    data = channel3.r.sweepTime;
+    break;
 
-  //SND_NOISE
-  if(address == 0x008e) {
+  case 0x008e:  //SND_NOISE
     data.bit(0,2) = channel4.r.noiseMode;
     data.bit(3)   = 0;  //noiseReset always reads as zero
     data.bit(4)   = channel4.r.noiseUpdate;
-    return data;
-  }
+    break;
 
-  //SND_WAVE_BASE
-  if(address == 0x008f) {
-    return r.waveBase;
-  }
+  case 0x008f:  //SND_WAVE_BASE
+    data = r.waveBase;
+    break;
 
-  //SND_CTRL
-  if(address == 0x0090) {
+  case 0x0090:  //SND_CTRL
     data.bit(0) = channel1.r.enable;
     data.bit(1) = channel2.r.enable;
     data.bit(2) = channel3.r.enable;
@@ -115,58 +95,51 @@ auto APU::portRead(n16 address) -> n8 {
     data.bit(5) = channel2.r.voice;
     data.bit(6) = channel3.r.sweep;
     data.bit(7) = channel4.r.noise;
-    return data;
-  }
+    break;
 
-  //SND_OUTPUT
-  if(address == 0x0091) {
+  case 0x0091:  //SND_OUTPUT
     data.bit(0)   = r.speakerEnable;
     data.bit(1,2) = r.speakerShift;
     data.bit(3)   = r.headphonesEnable;
     data.bit(7)   = r.headphonesConnected;
-    return data;
-  }
+    break;
 
-  //SND_RANDOM
-  if(address == 0x0092) return channel4.s.noiseLFSR.bit(0, 7);
-  if(address == 0x0093) return channel4.s.noiseLFSR.bit(8,14);
+  case 0x0092 ... 0x0093:  //SND_RANDOM
+    data = channel4.s.noiseLFSR.byte(address - 0x0092);
+    break;
 
-  //SND_VOICE_CTRL
-  if(address == 0x0094) {
+  case 0x0094:  //SND_VOICE_CTRL
     data.bit(0,1) = channel2.r.voiceEnableRight;
     data.bit(2,3) = channel2.r.voiceEnableLeft;
-    return data;
-  }
+    break;
 
-  //SND_HYPERVOICE
-  if(address == 0x0095) {
-    return channel5.s.data;
-  }
+  case 0x0095:  //SND_HYPERVOICE
+    data = channel5.s.data;
+    break;
 
-  //SND_VOLUME
-  if(address == 0x009e) {
+  case 0x009e:  //SND_VOLUME
     if(!SoC::ASWAN()) {
       data.bit(0,1) = r.masterVolume;
     }
-    return data;
+    break;
+
   }
 
   return data;
 }
 
 auto APU::portWrite(n16 address, n8 data) -> void {
-  //SDMA_SRC
-  if(address == 0x004a) { dma.r.source.bit( 0, 7) = data.bit(0,7); return; }
-  if(address == 0x004b) { dma.r.source.bit( 8,15) = data.bit(0,7); return; }
-  if(address == 0x004c) { dma.r.source.bit(16,19) = data.bit(0,3); return; }
+  switch(address) {
 
-  //SDMA_LEN
-  if(address == 0x004e) { dma.r.length.bit( 0, 7) = data.bit(0,7); return; }
-  if(address == 0x004f) { dma.r.length.bit( 8,15) = data.bit(0,7); return; }
-  if(address == 0x0050) { dma.r.length.bit(16,19) = data.bit(0,3); return; }
+  case 0x004a ... 0x004c:  //SDMA_SRC
+    dma.r.source.byte(address - 0x004a) = data;
+    break;
 
-  //SDMA_CTRL
-  if(address == 0x0052) {
+  case 0x004e ... 0x0050:  //SDMA_LEN
+    dma.r.length.byte(address - 0x004e) = data;
+    break;
+
+  case 0x0052: {  //SDMA_CTRL
     bool trigger = !dma.r.enable && data.bit(7);
     dma.r.rate      = data.bit(0,1);
     dma.r.unknown   = data.bit(2);
@@ -178,98 +151,76 @@ auto APU::portWrite(n16 address, n8 data) -> void {
       dma.s.source = dma.r.source;
       dma.s.length = dma.r.length;
     }
-    return;
-  }
+  } break;
 
-  //SND_HYPER_CTRL
-  if(address == 0x006a) {
+  case 0x006a:  //SND_HYPER_CTRL
     channel5.r.volume = data.bit(0,1);
     channel5.r.scale  = data.bit(2,3);
     channel5.r.speed  = data.bit(4,6);
     channel5.r.enable = data.bit(7);
-    return;
-  }
+    break;
 
-  //SND_HYPER_CHAN_CTRL
-  if(address == 0x006b) {
+  case 0x006b:  //SND_HYPER_CHAN_CTRL
     channel5.r.unknown     = data.bit(0,3);
     channel5.r.leftEnable  = data.bit(5);
     channel5.r.rightEnable = data.bit(6);
-    return;
-  }
+    break;
 
-  //SND_CH1_PITCH
-  if(address == 0x0080) { channel1.r.pitch.bit(0, 7) = data.bit(0,7); return; }
-  if(address == 0x0081) { channel1.r.pitch.bit(8,10) = data.bit(0,2); return; }
+  case 0x0080 ... 0x0081:  //SND_CH1_PITCH
+    channel1.r.pitch.byte(address - 0x0080) = data;
+    break;
 
-  //SND_CH2_PITCH
-  if(address == 0x0082) { channel2.r.pitch.bit(0, 7) = data.bit(0,7); return; }
-  if(address == 0x0083) { channel2.r.pitch.bit(8,10) = data.bit(0,2); return; }
+  case 0x0082 ... 0x0083:  //SND_CH2_PITCH
+    channel2.r.pitch.byte(address - 0x0082) = data;
+    break;
 
-  //SND_CH3_PITCH
-  if(address == 0x0084) { channel3.r.pitch.bit(0, 7) = data.bit(0,7); return; }
-  if(address == 0x0085) { channel3.r.pitch.bit(8,10) = data.bit(0,2); return; }
+  case 0x0084 ... 0x0085:  //SND_CH3_PITCH
+    channel3.r.pitch.byte(address - 0x0084) = data;
+    break;
 
-  //SND_CH4_PITCH
-  if(address == 0x0086) { channel4.r.pitch.bit(0, 7) = data.bit(0,7); return; }
-  if(address == 0x0087) { channel4.r.pitch.bit(8,10) = data.bit(0,2); return; }
+  case 0x0086 ... 0x0087:  //SND_CH4_PITCH
+    channel4.r.pitch.byte(address - 0x0086) = data;
+    break;
 
-  //SND_CH1_VOL
-  if(address == 0x0088) {
+  case 0x0088:  //SND_CH1_VOL
     channel1.r.volumeRight = data.bit(0,3);
     channel1.r.volumeLeft  = data.bit(4,7);
-    return;
-  }
+    break;
 
-  //SND_CH2_VOL
-  if(address == 0x0089) {
+  case 0x0089:  //SND_CH2_VOL
     channel2.r.volumeRight = data.bit(0,3);
     channel2.r.volumeLeft  = data.bit(4,7);
-    return;
-  }
+    break;
 
-  //SND_CH3_VOL
-  if(address == 0x008a) {
+  case 0x008a:  //SND_CH3_VOL
     channel3.r.volumeRight = data.bit(0,3);
     channel3.r.volumeLeft  = data.bit(4,7);
-    return;
-  }
+    break;
 
-  //SND_CH4_VOL
-  if(address == 0x008b) {
+  case 0x008b:  //SND_CH4_VOL
     channel4.r.volumeRight = data.bit(0,3);
     channel4.r.volumeLeft  = data.bit(4,7);
-    return;
-  }
+    break;
 
-  //SND_SWEEP_VALUE
-  if(address == 0x008c) {
+  case 0x008c:  //SND_SWEEP_VALUE
     channel3.r.sweepValue = data;
-    return;
-  }
+    break;
 
-  //SND_SWEEP_TIME
-  if(address == 0x008d) {
+  case 0x008d:  //SND_SWEEP_TIME
     channel3.r.sweepTime = data.bit(0,4);
-    return;
-  }
+    break;
 
-  //SND_NOISE
-  if(address == 0x008e) {
+  case 0x008e:  //SND_NOISE
     channel4.r.noiseMode   = data.bit(0,2);
     channel4.r.noiseReset  = data.bit(3);
     channel4.r.noiseUpdate = data.bit(4);
-    return;
-  }
+    break;
 
-  //SND_WAVE_BASE
-  if(address == 0x008f) {
+  case 0x008f:  //SND_WAVE_BASE
     r.waveBase = data;
-    return;
-  }
+    break;
 
-  //SND_CTRL
-  if(address == 0x0090) {
+  case 0x0090:  //SND_CTRL
     channel1.r.enable = data.bit(0);
     channel2.r.enable = data.bit(1);
     channel3.r.enable = data.bit(2);
@@ -277,31 +228,26 @@ auto APU::portWrite(n16 address, n8 data) -> void {
     channel2.r.voice  = data.bit(5);
     channel3.r.sweep  = data.bit(6);
     channel4.r.noise  = data.bit(7);
-    return;
-  }
+    break;
 
-  //SND_OUTPUT
-  if(address == 0x0091) {
+  case 0x0091:  //SND_OUTPUT
     r.speakerEnable    = data.bit(0);
     r.speakerShift     = data.bit(1,2);
     r.headphonesEnable = data.bit(3);
-    return;
-  }
+    break;
 
-  //SND_VOICE_CTRL
-  if(address == 0x0094) {
+  case 0x0094:  //SND_VOICE_CTRL
     channel2.r.voiceEnableRight = data.bit(0,1);
     channel2.r.voiceEnableLeft  = data.bit(2,3);
-    return;
-  }
+    break;
 
-  //SND_VOLUME
-  if(address == 0x009e) {
+  case 0x009e:  //SND_VOLUME
     if(!SoC::ASWAN()) {
       r.masterVolume = data.bit(0,1);
       ppu.updateIcons();
     }
-    return;
+    break;
+
   }
 
   return;

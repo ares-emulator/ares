@@ -12,7 +12,8 @@ auto Emulator::enumeratePorts(string name) -> vector<InputPort>& {
   if(!ports) {
     for(auto id : range(2)) {
       InputPort port{string{"Controller Port ", 1 + id}};
-      port.append(virtualPads[id]);
+      port.append(virtualPorts[id].pad);
+      port.append(virtualPorts[id].mouse);
       ports.append(port);
     }
   }
@@ -172,5 +173,43 @@ auto Emulator::errorFirmware(const Firmware& firmware, string system) -> void {
   }).question() == "Yes") {
     settingsWindow.show("Firmware");
     firmwareSettings.select(system, firmware.type, firmware.region);
+  }
+}
+
+auto Emulator::input(ares::Node::Input::Input input) -> void {
+  auto device = ares::Node::parent(input);
+  if(!device) return;
+
+  auto port = ares::Node::parent(device);
+  if(!port) return;
+
+  for(auto& inputPort : ports) {
+    if(inputPort.name != port->name()) continue;
+    for(auto& inputDevice : inputPort.devices) {
+      if(inputDevice.name != device->name()) continue;
+      for(auto& inputNode : inputDevice.inputs) {
+        if(inputNode.name != input->name()) continue;
+        if(auto button = input->cast<ares::Node::Input::Button>()) {
+          auto value = inputNode.mapping->value();
+          return button->setValue(value);
+        }
+        if(auto axis = input->cast<ares::Node::Input::Axis>()) {
+          auto value = inputNode.mapping->value();
+          return axis->setValue(value);
+        }
+        if(auto rumble = input->cast<ares::Node::Input::Rumble>()) {
+          if(auto target = dynamic_cast<InputRumble*>(inputNode.mapping)) {
+            return target->rumble(rumble->enable());
+          }
+        }
+      }
+      for(auto& inputPair : inputDevice.pairs) {
+        if(inputPair.name != input->name()) continue;
+        if(auto axis = input->cast<ares::Node::Input::Axis>()) {
+          auto value = inputPair.mappingHi->value() - inputPair.mappingLo->value();
+          return axis->setValue(value);
+        }
+      }
+    }
   }
 }

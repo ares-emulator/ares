@@ -21,11 +21,11 @@ struct Emulator {
   auto errorFirmware(const Firmware&, string system = "") -> void;
   auto load(mia::Pak& node, string name) -> bool;
   auto save(mia::Pak& node, string name) -> bool;
+  auto input(ares::Node::Input::Input) -> void;
   virtual auto load(Menu) -> void {}
   virtual auto load() -> bool = 0;
   virtual auto save() -> bool { return true; }
   virtual auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> = 0;
-  virtual auto input(ares::Node::Input::Input) -> void = 0;
   virtual auto notify(const string& message) -> void {}
 
   struct Firmware {
@@ -42,6 +42,7 @@ struct Emulator {
   shared_pointer<mia::Pak> system;
   shared_pointer<mia::Pak> game;
   vector<InputPort> ports;
+  vector<string> inputBlacklist;
 
   struct Configuration {
     bool visible = true;  //whether or not to show this emulator in the load menu

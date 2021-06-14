@@ -40,19 +40,28 @@ auto NeoGeoPocket::save(string location) -> bool {
 }
 
 auto NeoGeoPocket::analyze(vector<u8>& rom) -> string {
+  string hash = Hash::SHA256(rom).digest();
+
   //expand ROMs that are smaller than valid flash chip sizes (homebrew games)
-       if(rom.size() <= 0x080000) rom.resize(0x080000);  // 4mbit
-  else if(rom.size() <= 0x100000) rom.resize(0x100000);  // 8mbit
-  else if(rom.size() <= 0x200000) rom.resize(0x200000);  //16mbit
-  else if(rom.size() <= 0x280000) rom.resize(0x280000);  //16mbit +  4mbit
-  else if(rom.size() <= 0x300000) rom.resize(0x300000);  //16mbit +  8mbit
-  else if(rom.size() <= 0x400000) rom.resize(0x400000);  //16mbit + 16mbit
+       if(rom.size() <= 0x080000) rom.resize(0x080000, 0xff);  // 4mbit
+  else if(rom.size() <= 0x100000) rom.resize(0x100000, 0xff);  // 8mbit
+  else if(rom.size() <= 0x200000) rom.resize(0x200000, 0xff);  //16mbit
+  else if(rom.size() <= 0x280000) rom.resize(0x280000, 0xff);  //16mbit +  4mbit
+  else if(rom.size() <= 0x300000) rom.resize(0x300000, 0xff);  //16mbit +  8mbit
+  else if(rom.size() <= 0x400000) rom.resize(0x400000, 0xff);  //16mbit + 16mbit
+
+  //Prize Game: PP-AA01 Pusher Program (Japan)
+  if(hash == "c5faa5cd1d00566493dd098067aaf7cadf6a506e6d4e8f277bd06b205f82ff4a") {
+    //underdump: ROM is 4mbit, but should be 16mbit (this matters for flash ROM emulation)
+    rom.resize(0x200000, 0xff);
+  }
 
   string s;
   s += "game\n";
-  s +={"  name:  ", Medium::name(location), "\n"};
-  s +={"  title: ", Medium::name(location), "\n"};
-  s +={"  label: ", label(rom), "\n"};
+  s +={"  sha256: ", hash, "\n"};
+  s +={"  name:   ", Medium::name(location), "\n"};
+  s +={"  title:  ", Medium::name(location), "\n"};
+  s +={"  label:  ", label(rom), "\n"};
   s += "  board\n";
   s += "    memory\n";
   s += "      type: Flash\n";

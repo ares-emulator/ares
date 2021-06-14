@@ -149,8 +149,10 @@ struct InputSettings : VerticalLayout {
   auto portChange() -> void;
   auto deviceChange() -> void;
   auto refresh() -> void;
+  auto eventContext(TableViewCell) -> void;
   auto eventChange() -> void;
   auto eventClear() -> void;
+  auto eventAssign(TableViewCell, string binding) -> void;
   auto eventAssign(TableViewCell) -> void;
   auto eventInput(shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
   auto setVisible(bool visible = true) -> InputSettings&;
@@ -169,6 +171,7 @@ struct InputSettings : VerticalLayout {
   maybe<InputNode&> activeMapping;
   u32 activeBinding = 0;
   Timer timer;
+  PopupMenu menu;
 };
 
 struct HotkeySettings : VerticalLayout {

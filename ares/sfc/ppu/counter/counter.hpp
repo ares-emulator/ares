@@ -11,6 +11,7 @@
 //V=128.
 
 struct PPUcounter {
+  //inline.hpp
   auto tick() -> void;
   auto tick(u32 clocks) -> void; private:
   auto tickScanline() -> void; public:
@@ -27,22 +28,24 @@ struct PPUcounter {
   auto hcounter(u32 offset) const -> u32;
 
   auto reset() -> void;
+
+  //serialization.cpp
   auto serialize(serializer&) -> void;
 
   function<void ()> scanline;
 
 private:
   struct {
-    bool interlace = 0;
-    bool field = 0;
-    u32  vperiod = 0;
-    u32  hperiod = 0;
-    u32  vcounter = 0;
-    u32  hcounter = 0;
+    bool interlace;
+    bool field;
+    u32  vperiod;
+    u32  hperiod;
+    u32  vcounter;
+    u32  hcounter;
   } time;
 
   struct {
-    u32  vperiod = 0;
-    u32  hperiod = 0;
+    u32 vperiod;
+    u32 hperiod;
   } last;
 };

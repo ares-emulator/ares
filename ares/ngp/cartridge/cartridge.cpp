@@ -5,6 +5,7 @@ namespace ares::NeoGeoPocket {
 Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "slot.cpp"
 #include "flash.cpp"
+#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
@@ -28,11 +29,13 @@ auto Cartridge::connect() -> void {
     flash[1].load(fp);
   }
 
+  debugger.load(node);
   power();
 }
 
 auto Cartridge::disconnect() -> void {
   if(!node) return;
+  debugger.unload(node);
   flash[0].reset(0);
   flash[1].reset(1);
   pak.reset();

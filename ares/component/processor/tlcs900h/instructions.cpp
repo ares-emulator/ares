@@ -15,7 +15,9 @@ auto TLCS900H::instructionAnd(Target target, Source source) -> void {
 
 template<typename Source, typename Offset>
 auto TLCS900H::instructionAndCarry(Source source, Offset offset) -> void {
-  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) { if(load(offset).bit(3)) return (void)Undefined; }
+  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) {
+    if(load(offset).bit(3)) return (void)Undefined;
+  }
   CF &= load(source).bit(load(offset) & Source::bits - 1);
 }
 
@@ -228,7 +230,9 @@ auto TLCS900H::instructionLoad(Target target, Source source) -> void {
 
 template<typename Source, typename Offset>
 auto TLCS900H::instructionLoadCarry(Source source, Offset offset) -> void {
-  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) { if(load(offset).bit(3)) return (void)Undefined; }
+  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) {
+    if(load(offset).bit(3)) return (void)Undefined;
+  }
   CF = load(source).bit(load(offset) & Source::bits - 1);
 }
 
@@ -259,14 +263,10 @@ template<typename Size, s32 Adjust> auto TLCS900H::instructionLoadRepeat() -> vo
 }
 
 //reverse all bits in a 16-bit register
-//note: an 8-bit lookup table is faster (when in L1/L2 cache), but much more code
 auto TLCS900H::instructionMirror(Register<n16> register) -> void {
   idle(1);
   auto data = load(register);
-  data = data << 1 & 0xaaaa | data >> 1 & 0x5555;
-  data = data << 2 & 0xcccc | data >> 2 & 0x3333;
-  data = data << 4 & 0xf0f0 | data >> 4 & 0x0f0f;
-  store(register, data << 8 | data >> 8);
+  store(register, bit::reverse<u16>(data));
 }
 
 template<u32 Modulo, typename Target, typename Source>
@@ -333,7 +333,9 @@ auto TLCS900H::instructionOr(Target target, Source source) -> void {
 
 template<typename Source, typename Offset>
 auto TLCS900H::instructionOrCarry(Source source, Offset offset) -> void {
-  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) { if(load(offset).bit(3)) return (void)Undefined; }
+  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) {
+    if(load(offset).bit(3)) return (void)Undefined;
+  }
   CF |= load(source).bit(load(offset) & Source::bits - 1);
 }
 
@@ -566,7 +568,9 @@ auto TLCS900H::instructionShiftRightLogical(Target target, Amount amount) -> voi
 
 template<typename Target, typename Offset>
 auto TLCS900H::instructionStoreCarry(Target target, Offset offset) -> void {
-  if constexpr(Target::bits == 8) { if(load(offset).bit(3)) return; }  //unlike other *CF instructions, STCF behavior is defined
+  if constexpr(Target::bits == 8) {
+    if(load(offset).bit(3)) return;  //unlike other *CF instructions, STCF behavior is defined
+  }
   auto result = load(target);
   result.bit(load(offset)) = CF;
   store(target, result);
@@ -613,6 +617,8 @@ auto TLCS900H::instructionXor(Target target, Source source) -> void {
 
 template<typename Source, typename Offset>
 auto TLCS900H::instructionXorCarry(Source source, Offset offset) -> void {
-  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) { if(load(offset).bit(3)) return (void)Undefined; }
+  if constexpr(Source::bits == 8 && is_same_v<Offset, Register<n8>>) {
+    if(load(offset).bit(3)) return (void)Undefined;
+  }
   CF ^= load(source).bit(load(offset) & Source::bits - 1);
 }

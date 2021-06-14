@@ -148,7 +148,23 @@ auto pTableView::onChange(LPARAM lparam) -> void {
 
 auto pTableView::onContext(LPARAM lparam) -> void {
   auto nmitemactivate = (LPNMITEMACTIVATE)lparam;
-  return self().doContext();
+  if(ListView_GetSelectedCount(hwnd) > 0) {
+    LVHITTESTINFO hitTest{};
+    GetCursorPos(&hitTest.pt);
+    ScreenToClient(nmitemactivate->hdr.hwndFrom, &hitTest.pt);
+    ListView_SubItemHitTest(nmitemactivate->hdr.hwndFrom, &hitTest);
+    if(hitTest.flags & LVHT_ONITEM) {
+      s32 row = hitTest.iItem;
+      if(row >= 0 && row < state().items.size()) {
+        s32 column = hitTest.iSubItem;
+        if(column >= 0 && column < state().columns.size()) {
+          auto item = state().items[row];
+          return self().doContext(item->cell(column));
+        }
+      }
+    }
+  }
+  return self().doContext(TableViewCell());
 }
 
 auto pTableView::onCustomDraw(LPARAM lparam) -> LRESULT {

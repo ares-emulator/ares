@@ -11,13 +11,13 @@ auto TLCS900H::disassembleInstruction() -> string {
 
   enum : u32 {
     Null,
-    Text,       //text
-    Condition,  //condition
-    Register,   //register.size
-    Control,    //register.size
-    Immediate,  //immediate.size
-    Displacement,    //displacement.size
-    DisplacementPC,  //pc+displacement.size
+    Text,                            //text
+    Condition,                       //condition
+    Register,                        //register.size
+    Control,                         //register.size
+    Immediate,                       //immediate.size
+    Displacement,                    //displacement.size
+    DisplacementPC,                  //pc+displacement.size
     IndirectRegister,                //op.size (r32)
     IndirectRegisterDecrement,       //op.size (-r32)
     IndirectRegisterIncrement,       //op.size (r32+)
@@ -25,9 +25,9 @@ auto TLCS900H::disassembleInstruction() -> string {
     IndirectRegisterRegister16,      //op.size (r32+r16)
     IndirectRegisterDisplacement8,   //op.size (r32+d8)
     IndirectRegisterDisplacement16,  //op.size (r32+d16)
-    IndirectImmediate8,   //(i8)
-    IndirectImmediate16,  //(i16)
-    IndirectImmediate24,  //(i24)
+    IndirectImmediate8,              //(i8)
+    IndirectImmediate16,             //(i16)
+    IndirectImmediate24,             //(i24)
   };
 
   //name [lhs[,rhs]]
@@ -81,9 +81,9 @@ auto TLCS900H::disassembleInstruction() -> string {
     natural _displacement;
 
     static auto lookup(natural size, n3 register) -> n8 {
-      if(size ==  8) return from_array<0xe1, 0xe0, 0xe5, 0xe4, 0xe9, 0xe8, 0xed, 0xec>(register);
-      if(size == 16) return from_array<0xe0, 0xe4, 0xe8, 0xec, 0xf0, 0xf4, 0xf8, 0xfc>(register);
-      if(size == 32) return from_array<0xe0, 0xe4, 0xe8, 0xec, 0xf0, 0xf4, 0xf8, 0xfc>(register);
+      if(size ==  8) return from_array<0xe1,0xe0,0xe5,0xe4,0xe9,0xe8,0xed,0xec>(register);
+      if(size == 16) return from_array<0xe0,0xe4,0xe8,0xec,0xf0,0xf4,0xf8,0xfc>(register);
+      if(size == 32) return from_array<0xe0,0xe4,0xe8,0xec,0xf0,0xf4,0xf8,0xfc>(register);
       return 0;
     }
   } lhs, rhs;
@@ -127,43 +127,23 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x1d: name = "call"; lhs.immediate(24, read24()); break;
   case 0x1e: name = "calr"; lhs.displacementPC(16, read16()); break;
   case 0x1f: break;
-  case 0x20: case 0x21: case 0x22: case 0x23: case 0x24: case 0x25: case 0x26: case 0x27:
-    name = "ld"; lhs.register3(8, fetch); rhs.immediate(8, read8()); break;
-  case 0x28: case 0x29: case 0x2a: case 0x2b: case 0x2c: case 0x2d: case 0x2e: case 0x2f:
-    name = "push"; lhs.register3(16, fetch); break;
-  case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37:
-    name = "ld"; lhs.register3(16, fetch); rhs.immediate(16, read16()); break;
-  case 0x38: case 0x39: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e: case 0x3f:
-    name = "push"; lhs.register3(32, fetch); break;
-  case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
-    name = "ld"; lhs.register3(32, fetch); rhs.immediate(32, read32()); break;
-  case 0x48: case 0x49: case 0x4a: case 0x4b: case 0x4c: case 0x4d: case 0x4e: case 0x4f:
-    name = "pop"; lhs.register3(16, fetch); break;
-  case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57: break;
-  case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f:
-    name = "pop"; lhs.register3(32, fetch); break;
-  case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
-  case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
-    name = "jr"; lhs.condition(fetch); rhs.displacementPC(8, read8()); break;
-  case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
-  case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: case 0x7f:
-    name = "jrl"; lhs.condition(fetch); rhs.displacementPC(16, read16()); break;
-  case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
-    opSourceMemory = true; lhs.indirectRegister3(8, fetch); break;
-  case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
-    opSourceMemory = true; lhs.indirectRegister3Displacement8(8, fetch, read8()); break;
-  case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
-    opSourceMemory = true; lhs.indirectRegister3(16, fetch); break;
-  case 0x98: case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: case 0x9e: case 0x9f:
-    opSourceMemory = true; lhs.indirectRegister3Displacement8(16, fetch, read8()); break;
-  case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
-    opSourceMemory = true; lhs.indirectRegister3(32, fetch); break;
-  case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
-    opSourceMemory = true; lhs.indirectRegister3Displacement8(32, fetch, read8()); break;
-  case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
-    opTargetMemory = true; lhs.indirectRegister3(0, fetch); break;
-  case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
-    opTargetMemory = true; lhs.indirectRegister3Displacement8(0, fetch, read8()); break;
+  case 0x20 ... 0x27: name = "ld"; lhs.register3(8, fetch); rhs.immediate(8, read8()); break;
+  case 0x28 ... 0x2f: name = "push"; lhs.register3(16, fetch); break;
+  case 0x30 ... 0x37: name = "ld"; lhs.register3(16, fetch); rhs.immediate(16, read16()); break;
+  case 0x38 ... 0x3f: name = "push"; lhs.register3(32, fetch); break;
+  case 0x40 ... 0x47: name = "ld"; lhs.register3(32, fetch); rhs.immediate(32, read32()); break;
+  case 0x48 ... 0x4f: name = "pop"; lhs.register3(16, fetch); break;
+  case 0x50 ... 0x5f: name = "pop"; lhs.register3(32, fetch); break;
+  case 0x60 ... 0x6f: name = "jr"; lhs.condition(fetch); rhs.displacementPC(8, read8()); break;
+  case 0x70 ... 0x7f: name = "jrl"; lhs.condition(fetch); rhs.displacementPC(16, read16()); break;
+  case 0x80 ... 0x87: opSourceMemory = true; lhs.indirectRegister3(8, fetch); break;
+  case 0x88 ... 0x8f: opSourceMemory = true; lhs.indirectRegister3Displacement8(8, fetch, read8()); break;
+  case 0x90 ... 0x97: opSourceMemory = true; lhs.indirectRegister3(16, fetch); break;
+  case 0x98 ... 0x9f: opSourceMemory = true; lhs.indirectRegister3Displacement8(16, fetch, read8()); break;
+  case 0xa0 ... 0xa7: opSourceMemory = true; lhs.indirectRegister3(32, fetch); break;
+  case 0xa8 ... 0xaf: opSourceMemory = true; lhs.indirectRegister3Displacement8(32, fetch, read8()); break;
+  case 0xb0 ... 0xb7: opTargetMemory = true; lhs.indirectRegister3(0, fetch); break;
+  case 0xb8 ... 0xbf: opTargetMemory = true; lhs.indirectRegister3Displacement8(0, fetch, read8()); break;
   case 0xc0: case 0xd0: case 0xe0: case 0xf0:
     opSourceMemory = fetch < 0xf0; opTargetMemory = !opSourceMemory;
     lhs.indirectImmediate8(opSize, read8()); break;
@@ -178,21 +158,17 @@ auto TLCS900H::disassembleInstruction() -> string {
     auto data = read8();
     if((n2)data == 0) lhs.indirectRegister(opSize, data);
     if((n2)data == 1) lhs.indirectRegisterDisplacement16(opSize, data, read16());
-    if(data == 0x03) { auto r32 = read8(); lhs.indirectRegisterRegister8(opSize, r32, read8()); }
-    if(data == 0x07) { auto r32 = read8(); lhs.indirectRegisterRegister16(opSize, r32, read8()); }
-    if(data == 0x17 && opTargetMemory) {
-      opTargetMemory = false;
-      name = "ldar";
+    if(data == 0x03) {
+      auto r32 = read8();
+      lhs.indirectRegisterRegister8(opSize, r32, read8());
+    }
+    if(data == 0x07) {
+      auto r32 = read8();
+      lhs.indirectRegisterRegister16(opSize, r32, read8());
+    }
+    if(data == 0x13) {
       i16 d16 = read16();
-      data = read8();
-      if((data & 0xf8) == 0x20) {
-        lhs.register3(16, data);
-        rhs.displacementPC(16, d16);
-      }
-      if((data & 0xf8) == 0x30) {
-        lhs.register3(32, data);
-        rhs.displacementPC(16, d16);
-      }
+      lhs.indirectImmediate24(opSize, pc + d16);
     }
   } break;
   case 0xc4: case 0xd4: case 0xe4: case 0xf4:
@@ -210,14 +186,10 @@ auto TLCS900H::disassembleInstruction() -> string {
     read8(); lhs.indirectImmediate8(8, read8());
     read8(); rhs.immediate(8, read8());
     read8(); break;
-  case 0xc8: case 0xc9: case 0xca: case 0xcb: case 0xcc: case 0xcd: case 0xce: case 0xcf:
-    opRegister = true; lhs.register3(8, fetch); break;
-  case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
-    opRegister = true; lhs.register3(16, fetch); break;
-  case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: case 0xed: case 0xee: case 0xef:
-    opRegister = true; lhs.register3(32, fetch); break;
-  case 0xf8: case 0xf9: case 0xfa: case 0xfb: case 0xfc: case 0xfd: case 0xfe: case 0xff:
-    name = "swi"; lhs.immediate(3, (n3)fetch); break;
+  case 0xc8 ... 0xcf: opRegister = true; lhs.register3(8, fetch); break;
+  case 0xd8 ... 0xdf: opRegister = true; lhs.register3(16, fetch); break;
+  case 0xe8 ... 0xef: opRegister = true; lhs.register3(32, fetch); break;
+  case 0xf8 ... 0xff: name = "swi"; lhs.immediate(3, (n3)fetch); break;
   }
   #undef opSize
 
@@ -232,7 +204,7 @@ auto TLCS900H::disassembleInstruction() -> string {
   //size defined
   if(opRegister)
   switch(auto fetch = read8()) {
-  case 0x00: case 0x01: case 0x02: break;
+  case 0x00 ... 0x02: break;
   case 0x03: name = "ld"; rhs.immediate(lhs.size(), reads(lhs.size())); break;
   case 0x04: name = "push"; break;
   case 0x05: name = "pop"; break;
@@ -253,17 +225,17 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x14: name = "paa"; break;
   case 0x15: break;
   case 0x16: name = "mirr"; break;
-  case 0x17: case 0x18: break;
+  case 0x17 ... 0x18: break;
   case 0x19: name = "mula"; break;
-  case 0x1a: case 0x1b: break;
+  case 0x1a ... 0x1b: break;
   case 0x1c: name = "djnz"; rhs.displacementPC(8, read8()); break;
-  case 0x1d: case 0x1e: case 0x1f: break;
+  case 0x1d ... 0x1f: break;
   case 0x20: name = "andcf"; rhs.immediate(4, (n4)read8()); break;
   case 0x21: name = "orcf"; rhs.immediate(4, (n4)read8()); break;
   case 0x22: name = "xorcf"; rhs.immediate(4, (n4)read8()); break;
   case 0x23: name = "ldcf"; rhs.immediate(4, (n4)read8()); break;
   case 0x24: name = "stcf"; rhs.immediate(4, (n4)read8()); break;
-  case 0x25: case 0x26: case 0x27: break;
+  case 0x25 ... 0x27: break;
   case 0x28: name = "andcf"; rhs.register(8, A.id); break;
   case 0x29: name = "orcf"; rhs.register(8, A.id); break;
   case 0x2a: name = "xorcf"; rhs.register(8, A.id); break;
@@ -277,7 +249,7 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x32: name = "chg"; rhs.immediate(4, (n4)read8()); break;
   case 0x33: name = "bit"; rhs.immediate(4, (n4)read8()); break;
   case 0x34: name = "tset"; rhs.immediate(4, (n4)read8()); break;
-  case 0x35: case 0x36: case 0x37: break;
+  case 0x35 ... 0x37: break;
   case 0x38: name = "minc1"; rhs.immediate(16, read16()); break;
   case 0x39: name = "minc2"; rhs.immediate(16, read16()); break;
   case 0x3a: name = "minc4"; rhs.immediate(16, read16()); break;
@@ -286,39 +258,22 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x3d: name = "mdec2"; rhs.immediate(16, read16()); break;
   case 0x3e: name = "mdec4"; rhs.immediate(16, read16()); break;
   case 0x3f: break;
-  case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
-    name = "mul"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x48: case 0x49: case 0x4a: case 0x4b: case 0x4c: case 0x4d: case 0x4e: case 0x4f:
-    name = "muls"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
-    name = "div"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f:
-    name = "divs"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
-    name = "inc"; rhs.immediate(4, fetch ? natural((n3)fetch) : 8_n); break;
-  case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
-    name = "dec"; rhs.immediate(4, fetch ? natural((n3)fetch) : 8_n); break;
-  case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
-  case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: case 0x7f:
-    name = "scc"; rhs = lhs; lhs.condition(fetch); break;
-  case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
-    name = "add"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
-    name = "ld"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
-    name = "adc"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x98: case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: case 0x9e: case 0x9f:
-    name = "ld"; rhs.register3(lhs.size(), fetch); break;
-  case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
-    name = "sub"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
-    name = "ld"; rhs.immediate(3, (n3)fetch); break;
-  case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
-    name = "sbb"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
-    name = "ex"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0xc0: case 0xc1: case 0xc2: case 0xc3: case 0xc4: case 0xc5: case 0xc6: case 0xc7:
-    name = "and"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x40 ... 0x47: name = "mul"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x48 ... 0x4f: name = "muls"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x50 ... 0x57: name = "div"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x58 ... 0x5f: name = "divs"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x60 ... 0x67: name = "inc"; rhs.immediate(4, fetch ? natural((n3)fetch) : 8_n); break;
+  case 0x68 ... 0x6f: name = "dec"; rhs.immediate(4, fetch ? natural((n3)fetch) : 8_n); break;
+  case 0x70 ... 0x7f: name = "scc"; rhs = lhs; lhs.condition(fetch); break;
+  case 0x80 ... 0x87: name = "add"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x88 ... 0x8f: name = "ld"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x90 ... 0x97: name = "adc"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x98 ... 0x9f: name = "ld"; rhs.register3(lhs.size(), fetch); break;
+  case 0xa0 ... 0xa7: name = "sub"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xa8 ... 0xaf: name = "ld"; rhs.immediate(3, (n3)fetch); break;
+  case 0xb0 ... 0xb7: name = "sbb"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xb8 ... 0xbf: name = "ex"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xc0 ... 0xc7: name = "and"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
   case 0xc8: name = "add"; rhs.immediate(lhs.size(), reads(lhs.size())); break;
   case 0xc9: name = "adc"; rhs.immediate(lhs.size(), reads(lhs.size())); break;
   case 0xca: name = "sub"; rhs.immediate(lhs.size(), reads(lhs.size())); break;
@@ -327,12 +282,9 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0xcd: name = "xor"; rhs.immediate(lhs.size(), reads(lhs.size())); break;
   case 0xce: name = "or";  rhs.immediate(lhs.size(), reads(lhs.size())); break;
   case 0xcf: name = "cp";  rhs.immediate(lhs.size(), reads(lhs.size())); break;
-  case 0xd0: case 0xd1: case 0xd2: case 0xd3: case 0xd4: case 0xd5: case 0xd6: case 0xd7:
-    name = "xor"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
-    name = "cp"; rhs.immediate(3, (n3)fetch); break;
-  case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
-    name = "or"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xd0 ... 0xd7: name = "xor"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xd8 ... 0xdf: name = "cp"; rhs.immediate(3, (n3)fetch); break;
+  case 0xe0 ... 0xe7: name = "or"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
   case 0xe8: name = "rlc"; { auto data = read8(); rhs.immediate(5, data ? natural(data) : 16_n); } break;
   case 0xe9: name = "rrc"; { auto data = read8(); rhs.immediate(5, data ? natural(data) : 16_n); } break;
   case 0xea: name = "rl";  { auto data = read8(); rhs.immediate(5, data ? natural(data) : 16_n); } break;
@@ -341,8 +293,7 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0xed: name = "sra"; { auto data = read8(); rhs.immediate(5, data ? natural(data) : 16_n); } break;
   case 0xee: name = "sll"; { auto data = read8(); rhs.immediate(5, data ? natural(data) : 16_n); } break;
   case 0xef: name = "srl"; { auto data = read8(); rhs.immediate(5, data ? natural(data) : 16_n); } break;
-  case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5: case 0xf6: case 0xf7:
-    name = "cp"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xf0 ... 0xf7: name = "cp"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
   case 0xf8: name = "rlc"; rhs.register(8, A.id); break;
   case 0xf9: name = "rrc"; rhs.register(8, A.id); break;
   case 0xfa: name = "rl";  rhs.register(8, A.id); break;
@@ -356,12 +307,12 @@ auto TLCS900H::disassembleInstruction() -> string {
   //size defined
   if(opSourceMemory)
   switch(auto fetch = read8()) {
-  case 0x00: case 0x01: case 0x02: case 0x03: break;
+  case 0x00 ... 0x03: break;
   case 0x04: name = lhs.size() == 8 ? "push" : "pushw"; break;
   case 0x05: break;
   case 0x06: name = "rld"; rhs = lhs; lhs.register(8, A.id); break;
   case 0x07: name = "rrd"; rhs = lhs; lhs.register(8, A.id); break;
-  case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d: case 0x0e: case 0x0f: break;
+  case 0x08 ... 0x0f: break;
   case 0x10:
     name = lhs.size() == 8 ? "ldi" : "ldiw";
     lhs.indirectRegisterIncrement(32, (n3)op[0] != 5 ? XDE.id : XIX.id);
@@ -404,12 +355,10 @@ auto TLCS900H::disassembleInstruction() -> string {
     break;
   case 0x18: break;
   case 0x19: name = "ld"; rhs = lhs; lhs.indirectImmediate16(16, read16()); break;
-  case 0x1a: case 0x1b: case 0x1c: case 0x1d: case 0x1e: case 0x1f: break;
-  case 0x20: case 0x21: case 0x22: case 0x23: case 0x24: case 0x25: case 0x26: case 0x27:
-    name = "ld"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x28: case 0x29: case 0x2a: case 0x2b: case 0x2c: case 0x2d: case 0x2e: case 0x2f: break;
-  case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37:
-    name = "ex"; rhs.register3(lhs.size(), fetch); break;
+  case 0x1a ... 0x1f: break;
+  case 0x20 ... 0x27: name = "ld"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x28 ... 0x2f: break;
+  case 0x30 ... 0x37: name = "ex"; rhs.register3(lhs.size(), fetch); break;
   case 0x38: name = "add"; rhs.immediate(lhs.size(), reads(lhs.size())); break;
   case 0x39: name = "adc"; rhs.immediate(lhs.size(), reads(lhs.size())); break;
   case 0x3a: name = "sub"; rhs.immediate(lhs.size(), reads(lhs.size())); break;
@@ -418,19 +367,13 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x3d: name = "xor"; rhs.immediate(lhs.size(), reads(lhs.size())); break;
   case 0x3e: name = "or";  rhs.immediate(lhs.size(), reads(lhs.size())); break;
   case 0x3f: name = "cp";  rhs.immediate(lhs.size(), reads(lhs.size())); break;
-  case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
-    name = "mul"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x48: case 0x49: case 0x4a: case 0x4b: case 0x4c: case 0x4d: case 0x4e: case 0x4f:
-    name = "muls"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
-    name = "div"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f:
-    name = "divs"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
-    name = "inc"; rhs.immediate(4, (n3)fetch ? natural((n3)fetch) : 8_n); break;
-  case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
-    name = "dec"; rhs.immediate(4, (n3)fetch ? natural((n3)fetch) : 8_n); break;
-  case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77: break;
+  case 0x40 ... 0x47: name = "mul"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x48 ... 0x4f: name = "muls"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x50 ... 0x57: name = "div"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x58 ... 0x5f: name = "divs"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x60 ... 0x67: name = "inc"; rhs.immediate(4, (n3)fetch ? natural((n3)fetch) : 8_n); break;
+  case 0x68 ... 0x6f: name = "dec"; rhs.immediate(4, (n3)fetch ? natural((n3)fetch) : 8_n); break;
+  case 0x70 ... 0x77: break;
   case 0x78: name = "rlc"; break;
   case 0x79: name = "rrc"; break;
   case 0x7a: name = "rl";  break;
@@ -439,38 +382,22 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x7d: name = "sra"; break;
   case 0x7e: name = "sll"; break;
   case 0x7f: name = "srl"; break;
-  case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
-    name = "add"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
-    name = "add"; rhs.register3(lhs.size(), fetch); break;
-  case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
-    name = "adc"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x98: case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: case 0x9e: case 0x9f:
-    name = "adc"; rhs.register3(lhs.size(), fetch); break;
-  case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
-    name = "sub"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
-    name = "sub"; rhs.register3(lhs.size(), fetch); break;
-  case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
-    name = "sbb"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
-    name = "sbb"; rhs.register3(lhs.size(), fetch); break;
-  case 0xc0: case 0xc1: case 0xc2: case 0xc3: case 0xc4: case 0xc5: case 0xc6: case 0xc7:
-    name = "and"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0xc8: case 0xc9: case 0xca: case 0xcb: case 0xcc: case 0xcd: case 0xce: case 0xcf:
-    name = "and"; rhs.register3(lhs.size(), fetch); break;
-  case 0xd0: case 0xd1: case 0xd2: case 0xd3: case 0xd4: case 0xd5: case 0xd6: case 0xd7:
-    name = "xor"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
-    name = "xor"; rhs.register3(lhs.size(), fetch); break;
-  case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
-    name = "or"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: case 0xed: case 0xee: case 0xef:
-    name = "or"; rhs.register3(lhs.size(), fetch); break;
-  case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5: case 0xf6: case 0xf7:
-    name = "cp"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0xf8: case 0xf9: case 0xfa: case 0xfb: case 0xfc: case 0xfd: case 0xfe: case 0xff:
-    name = "cp"; rhs.register3(lhs.size(), fetch); break;
+  case 0x80 ... 0x87: name = "add"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x88 ... 0x8f: name = "add"; rhs.register3(lhs.size(), fetch); break;
+  case 0x90 ... 0x97: name = "adc"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x98 ... 0x9f: name = "adc"; rhs.register3(lhs.size(), fetch); break;
+  case 0xa0 ... 0xa7: name = "sub"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xa8 ... 0xaf: name = "sub"; rhs.register3(lhs.size(), fetch); break;
+  case 0xb0 ... 0xb7: name = "sbb"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xb8 ... 0xbf: name = "sbb"; rhs.register3(lhs.size(), fetch); break;
+  case 0xc0 ... 0xc7: name = "and"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xc8 ... 0xcf: name = "and"; rhs.register3(lhs.size(), fetch); break;
+  case 0xd0 ... 0xd7: name = "xor"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xd8 ... 0xdf: name = "xor"; rhs.register3(lhs.size(), fetch); break;
+  case 0xe0 ... 0xe7: name = "or"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xe8 ... 0xef: name = "or"; rhs.register3(lhs.size(), fetch); break;
+  case 0xf0 ... 0xf7: name = "cp"; rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0xf8 ... 0xff: name = "cp"; rhs.register3(lhs.size(), fetch); break;
   }
 
   //size undefined
@@ -483,63 +410,41 @@ auto TLCS900H::disassembleInstruction() -> string {
   case 0x04: name = "pop"; lhs.size(8); break;
   case 0x05: break;
   case 0x06: name = "pop"; lhs.size(16); break;
-  case 0x07: case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d: case 0x0e: case 0x0f: break;
-  case 0x10: case 0x11: case 0x12: case 0x13: break;
+  case 0x07 ... 0x13: break;
   case 0x14: name = "ld"; lhs.size(8); rhs.indirectImmediate16(16, read16()); break;
   case 0x15: break;
   case 0x16: name = "ld"; lhs.size(16); rhs.indirectImmediate16(16, read16()); break;
-  case 0x17: case 0x18: case 0x19: case 0x1a: case 0x1b: case 0x1c: case 0x1d: case 0x1e: case 0x1f: break;
-  case 0x20: case 0x21: case 0x22: case 0x23: case 0x24: case 0x25: case 0x26: case 0x27:
-    name = "lda"; lhs.size(16); rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x17 ... 0x1f: break;
+  case 0x20 ... 0x27: name = "lda"; lhs.size(16); rhs = lhs; lhs.register3(rhs.size(), fetch); break;
   case 0x28: name = "andcf"; lhs.size(8); rhs.register3(8, A.id); break;
   case 0x29: name = "orcf";  lhs.size(8); rhs.register3(8, A.id); break;
   case 0x2a: name = "xorcf"; lhs.size(8); rhs.register3(8, A.id); break;
   case 0x2b: name = "ldcf";  lhs.size(8); rhs.register3(8, A.id); break;
   case 0x2c: name = "stcf";  lhs.size(8); rhs.register3(8, A.id); break;
-  case 0x2d: case 0x2e: case 0x2f: break;
-  case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37:
-    name = "lda"; lhs.size(32); rhs = lhs; lhs.register3(rhs.size(), fetch); break;
-  case 0x38: case 0x39: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e: case 0x3f: break;
-  case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
-    name = "ld"; lhs.size(8); rhs.register3(lhs.size(), fetch); break;
-  case 0x48: case 0x49: case 0x4a: case 0x4b: case 0x4c: case 0x4d: case 0x4e: case 0x4f: break;
-  case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
-    name = "ld"; lhs.size(16); rhs.register3(lhs.size(), fetch); break;
-  case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f: break;
-  case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
-    name = "ld"; lhs.size(32); rhs.register3(lhs.size(), fetch); break;
-  case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f: break;
-  case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77: break;
-  case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: case 0x7f: break;
-  case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
-    name = "andcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
-  case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
-    name = "orcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
-  case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
-    name = "xorcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
-  case 0x98: case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: case 0x9e: case 0x9f:
-    name = "ldcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
-  case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
-    name = "stcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
-  case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
-    name = "tset"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
-  case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
-    name = "res"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
-  case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
-    name = "set"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
-  case 0xc0: case 0xc1: case 0xc2: case 0xc3: case 0xc4: case 0xc5: case 0xc6: case 0xc7:
-    name = "chg"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
-  case 0xc8: case 0xc9: case 0xca: case 0xcb: case 0xcc: case 0xcd: case 0xce: case 0xcf:
-    name = "bit"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
-  case 0xd0: case 0xd1: case 0xd2: case 0xd3: case 0xd4: case 0xd5: case 0xd6: case 0xd7:
-  case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
-    name = "jp"; lhs.size(32); rhs = lhs; lhs.condition(fetch); break;
-  case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
-  case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: case 0xed: case 0xee: case 0xef:
-    name = "call"; lhs.size(32); rhs = lhs; lhs.condition(fetch); break;
-  case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5: case 0xf6: case 0xf7:
-  case 0xf8: case 0xf9: case 0xfa: case 0xfb: case 0xfc: case 0xfd: case 0xfe: case 0xff:
-    name = "ret"; lhs.condition(fetch); break;
+  case 0x2d ... 0x2f: break;
+  case 0x30 ... 0x37: name = "lda"; lhs.size(32); rhs = lhs; lhs.register3(rhs.size(), fetch); break;
+  case 0x38 ... 0x3f: break;
+  case 0x40 ... 0x47: name = "ld"; lhs.size(8); rhs.register3(lhs.size(), fetch); break;
+  case 0x48 ... 0x4f: break;
+  case 0x50 ... 0x57: name = "ld"; lhs.size(16); rhs.register3(lhs.size(), fetch); break;
+  case 0x58 ... 0x5f: break;
+  case 0x60 ... 0x67: name = "ld"; lhs.size(32); rhs.register3(lhs.size(), fetch); break;
+  case 0x68 ... 0x6f: break;
+  case 0x70 ... 0x77: break;
+  case 0x78 ... 0x7f: break;
+  case 0x80 ... 0x87: name = "andcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
+  case 0x88 ... 0x8f: name = "orcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
+  case 0x90 ... 0x97: name = "xorcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
+  case 0x98 ... 0x9f: name = "ldcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
+  case 0xa0 ... 0xa7: name = "stcf"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
+  case 0xa8 ... 0xaf: name = "tset"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
+  case 0xb0 ... 0xb7: name = "res"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
+  case 0xb8 ... 0xbf: name = "set"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
+  case 0xc0 ... 0xc7: name = "chg"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
+  case 0xc8 ... 0xcf: name = "bit"; lhs.size(8); rhs.immediate(3, (n3)fetch); break;
+  case 0xd0 ... 0xdf: name = "jp"; lhs.size(32); rhs = lhs; lhs.condition(fetch); break;
+  case 0xe0 ... 0xef: name = "call"; lhs.size(32); rhs = lhs; lhs.condition(fetch); break;
+  case 0xf0 ... 0xff: name = "ret"; lhs.condition(fetch); break;
   }
 
   auto operand = [&](Operand& operand) -> string {
@@ -724,8 +629,8 @@ auto TLCS900H::disassembleContext() -> string {
   output.append("XIY:", hex(r.xiy.l.l0, 8L), " ");
   output.append("XIZ:", hex(r.xiz.l.l0, 8L), " ");
   output.append("XSP:", hex(r.xsp.l.l0, 8L), " ");
-  output.append("I", r.iff);
-  output.append("R", r.rfp);
+  output.append("IFF:", r.iff, " ");
+  output.append("RFP:", r.rfp, " ");
   output.append(r.s ? "S" : "s");
   output.append(r.z ? "Z" : "z");
   output.append(r.h ? "H" : "h");

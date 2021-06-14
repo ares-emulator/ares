@@ -85,6 +85,7 @@ auto HotkeySettings::eventAssign(TableViewCell cell) -> void {
 auto HotkeySettings::eventInput(shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
   if(!activeMapping) return;
   if(!settingsWindow.focused()) return;
+  if(device->isMouse()) return;
 
   if(activeMapping->bind(activeBinding, device, groupID, inputID, oldValue, newValue)) {
     activeMapping.reset();

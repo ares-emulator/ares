@@ -19,18 +19,17 @@ PPU ppu;
 auto PPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PPU");
 
-  screen = node->append<Node::Video::Screen>("Screen", 512, 480);
+  screen = node->append<Node::Video::Screen>("Screen", 896, 480);
   screen->colors(1 << 19, {&PPU::color, this});
   screen->setSize(512, 480);
   screen->setScale(0.5, 0.5);
   screen->setAspect(8.0, 7.0);
 
-  vramSize = node->append<Node::Setting::Natural>("VRAM", 64_KiB);
+  vramSize = node->append<Node::Setting::Natural>("VRAM", 128_KiB);
   vramSize->setAllowedValues({64_KiB, 128_KiB});
 
   overscanEnable = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
-    if(value == 0) screen->setSize(512, 448);
-    if(value == 1) screen->setSize(512, 480);
+    screen->setSize(screenWidth->value() * 2, overscanEnable->value() ? 480 : 448);
   });
   overscanEnable->setDynamic(true);
 
@@ -44,11 +43,16 @@ auto PPU::load(Node::Object parent) -> void {
   });
   colorBleed->setDynamic(true);
 
+  screenWidth = screen->append<Node::Setting::Natural>("Width", 352, [&](auto value) {
+    screen->setSize(screenWidth->value() * 2, overscanEnable->value() ? 480 : 448);
+  });
+  screenWidth->setAllowedValues({256, 352, 448});
+
   debugger.load(node);
 }
 
 auto PPU::unload() -> void {
-  debugger = {};
+  debugger.unload(node);
   vramSize.reset();
   overscanEnable.reset();
   colorEmulation.reset();
@@ -67,10 +71,10 @@ auto PPU::step(u32 clocks) -> void {
 
 auto PPU::main() -> void {
   if(vcounter() == 0) {
-    state.interlace = io.interlace;
-    state.overscan = io.overscan;
+    state.interlace  = io.interlace;
+    state.overscan   = io.overscan;
     obj.io.rangeOver = 0;
-    obj.io.timeOver = 0;
+    obj.io.timeOver  = 0;
   }
 
   if(vcounter() && vcounter() < vdisp() && !runAhead()) {
@@ -94,8 +98,8 @@ auto PPU::main() -> void {
   if(vcounter() == 240) {
     if(state.interlace == 0) screen->setProgressive(1);
     if(state.interlace == 1) screen->setInterlace(field());
-    if(overscanEnable->value() == 0) screen->setViewport(0, 18, 512, 448);
-    if(overscanEnable->value() == 1) screen->setViewport(0,  0, 512, 480);
+    if(overscanEnable->value() == 0) screen->setViewport(0, 18, width() * 2, 448);
+    if(overscanEnable->value() == 1) screen->setViewport(0,  0, width() * 2, 480);
     screen->frame();
     scheduler.exit(Event::Frame);
   }

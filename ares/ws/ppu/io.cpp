@@ -1,407 +1,319 @@
 auto PPU::portRead(n16 address) -> n8 {
   n8 data;
 
-  //DISP_CTRL
-  if(address == 0x0000) {
-    data.bit(0) = r.screenOneEnable;
-    data.bit(1) = r.screenTwoEnable;
-    data.bit(2) = r.spriteEnable;
-    data.bit(3) = r.spriteWindowEnable;
-    data.bit(4) = r.screenTwoWindowInvert;
-    data.bit(5) = r.screenTwoWindowEnable;
-    return data;
-  }
+  switch(address) {
 
-  //BACK_COLOR
-  if(address == 0x0001) {
+  case 0x0000:  //DISP_CTRL
+    data.bit(0) = screen1.enable;
+    data.bit(1) = screen2.enable;
+    data.bit(2) = sprite.enable;
+    data.bit(3) = sprite.window.enable;
+    data.bit(4) = screen2.window.invert;
+    data.bit(5) = screen2.window.enable;
+    break;
+
+  case 0x0001:  //BACK_COLOR
     if(grayscale()) {
-      data.bit(0,2) = r.backColor.bit(0,2);
+      data.bit(0,2) = dac.backdrop.bit(0,2);
     } else {
-      data.bit(0,7) = r.backColor.bit(0,7);
+      data.bit(0,7) = dac.backdrop.bit(0,7);
     }
-    return data;
-  }
+    break;
 
-  //LINE_CUR
-  if(address == 0x0002) {
-    //todo: unknown if this is vtime or vtime%(vtotal+1)
-    return s.vtime;
-  }
+  case 0x0002:  //LINE_CUR
+    //todo: unknown if this is vcounter or vcounter%(vtotal+1)
+    data = io.vcounter;
+    break;
 
-  //LINE_CMP
-  if(address == 0x0003) {
-    return r.lineCompare;
-  }
+  case 0x0003:  //LINE_CMP
+    data = io.vcompare;
+    break;
 
-  //SPR_BASE
-  if(address == 0x0004) {
+  case 0x0004:  //SPR_BASE
     if(depth() == 2) {
-      data.bit(0,4) = r.spriteBase.bit(0,4);
+      data.bit(0,4) = sprite.oamBase.bit(0,4);
     } else {
-      data.bit(0,5) = r.spriteBase.bit(0,5);
+      data.bit(0,5) = sprite.oamBase.bit(0,5);
     }
-    return data;
-  }
+    break;
 
-  //SPR_FIRST
-  if(address == 0x0005) {
-    return r.spriteFirst;
-  }
+  case 0x0005:  //SPR_FIRST
+    data = sprite.first;
+    break;
 
-  //SPR_COUNT
-  if(address == 0x0006) {
-    return r.spriteCount;
-  }
+  case 0x0006:  //SPR_COUNT
+    data = sprite.count;
+    break;
 
-  //MAP_BASE
-  if(address == 0x0007) {
+  case 0x0007:  //MAP_BASE
     if(depth() == 2) {
-      data.bit(0,2) = r.screenOneMapBase.bit(0,2);
-      data.bit(4,6) = r.screenTwoMapBase.bit(0,2);
+      data.bit(0,2) = screen1.mapBase.bit(0,2);
+      data.bit(4,6) = screen2.mapBase.bit(0,2);
     } else {
-      data.bit(0,3) = r.screenOneMapBase.bit(0,3);
-      data.bit(4,7) = r.screenTwoMapBase.bit(0,3);
+      data.bit(0,3) = screen1.mapBase.bit(0,3);
+      data.bit(4,7) = screen2.mapBase.bit(0,3);
     }
-    return data;
-  }
+    break;
 
-  //SCR2_WIN_X0
-  if(address == 0x0008) {
-    return r.screenTwoWindowX0;
-  }
+  case 0x0008:  //SCR2_WIN_X0
+    data = screen2.window.x0;
+    break;
 
-  //SCR2_WIN_Y0
-  if(address == 0x0009) {
-    return r.screenTwoWindowY0;
-  }
+  case 0x0009:  //SCR2_WIN_Y0
+    data = screen2.window.y0;
+    break;
 
-  //SCR2_WIN_X1
-  if(address == 0x000a) {
-    return r.screenTwoWindowX1;
-  }
+  case 0x000a:  //SCR2_WIN_X1
+    data = screen2.window.x1;
+    break;
 
-  //SCR2_WIN_Y1
-  if(address == 0x000b) {
-    return r.screenTwoWindowY1;
-  }
+  case 0x000b:  //SCR2_WIN_Y1
+    data = screen2.window.y1;
+    break;
 
-  //SPR_WIN_X0
-  if(address == 0x000c) {
-    return r.spriteWindowX0;
-  }
+  case 0x000c:  //SPR_WIN_X0
+    data = sprite.window.x0;
+    break;
 
-  //SPR_WIN_Y0
-  if(address == 0x000d) {
-    return r.spriteWindowY0;
-  }
+  case 0x000d:  //SPR_WIN_Y0
+    data = sprite.window.y0;
+    break;
 
-  //SPR_WIN_X1
-  if(address == 0x000e) {
-    return r.spriteWindowX1;
-  }
+  case 0x000e:  //SPR_WIN_X1
+    data = sprite.window.x1;
+    break;
 
-  //SPR_WIN_Y1
-  if(address == 0x000f) {
-    return r.spriteWindowY1;
-  }
+  case 0x000f:  //SPR_WIN_Y1
+    data = sprite.window.y1;
+    break;
 
-  //SCR1_X
-  if(address == 0x0010) {
-    return r.scrollOneX;
-  }
+  case 0x0010:  //SCR1_X
+    data = screen1.hscroll;
+    break;
 
-  //SCR1_Y
-  if(address == 0x0011) {
-    return r.scrollOneY;
-  }
+  case 0x0011:  //SCR1_Y
+    data = screen1.vscroll;
+    break;
 
-  //SCR2_X
-  if(address == 0x0012) {
-    return r.scrollTwoX;
-  }
+  case 0x0012:  //SCR2_X
+    data = screen2.hscroll;
+    break;
 
-  //SCR2_Y
-  if(address == 0x0013) {
-    return r.scrollTwoY;
-  }
+  case 0x0013:  //SCR2_Y
+    data = screen2.vscroll;
+    break;
 
-  //LCD_CTRL
-  if(address == 0x0014) {
-    data.bit(0) = r.lcdEnable;
+  case 0x0014:  //LCD_CTRL
+    data.bit(0) = lcd.enable;
     if(SoC::ASWAN()) {
-      data.bit(1,7) = r.lcdUnknown.bit(1,7);
+      data.bit(1,7) = lcd.unknown.bit(1,7);
     }
     if(SoC::SPHINX()) {
-      data.bit(1)   = r.lcdContrast;
-      data.bit(4,7) = r.lcdUnknown.bit(4,7);
+      data.bit(1)   = lcd.contrast;
+      data.bit(4,7) = lcd.unknown.bit(4,7);
     }
-    return data;
-  }
+    break;
 
-  //LCD_ICON
-  if(address == 0x0015) {
-    data.bit(0) = r.icon.sleeping;
-    data.bit(1) = r.icon.orientation1;
-    data.bit(2) = r.icon.orientation0;
-    data.bit(3) = r.icon.auxiliary0;
-    data.bit(4) = r.icon.auxiliary1;
-    data.bit(5) = r.icon.auxiliary2;
-    return data;
-  }
+  case 0x0015:  //LCD_ICON
+    data.bit(0) = lcd.icon.sleeping;
+    data.bit(1) = lcd.icon.orientation1;
+    data.bit(2) = lcd.icon.orientation0;
+    data.bit(3) = lcd.icon.auxiliary0;
+    data.bit(4) = lcd.icon.auxiliary1;
+    data.bit(5) = lcd.icon.auxiliary2;
+    break;
 
-  //LCD_VTOTAL
-  if(address == 0x0016) {
-    return r.vtotal;
-  }
+  case 0x0016:  //LCD_VTOTAL
+    data = io.vtotal;
+    break;
 
-  //LCD_VSYNC
-  if(address == 0x0017) {
-    return r.vsync;
-  }
+  case 0x0017:  //LCD_VSYNC
+    data = io.vsync;
+    break;
 
-  //PALMONO_POOL
-  if(address >= 0x001c && address <= 0x001f) {
-    data.bit(0,3) = r.pool[address.bit(0,1) << 1 | 0];
-    data.bit(4,7) = r.pool[address.bit(0,1) << 1 | 1];
-    return data;
-  }
+  case 0x001c ... 0x001f:  //PALMONO_POOL
+    data.bit(0,3) = pram.pool[address.bit(0,1) << 1 | 0];
+    data.bit(4,7) = pram.pool[address.bit(0,1) << 1 | 1];
+    break;
 
-  //PALMONO
-  if(address >= 0x0020 && address <= 0x003f) {
-    data.bit(0,3) = r.palette[address.bit(1,4)].color[address.bit(0) << 1 | 0];
-    data.bit(4,7) = r.palette[address.bit(1,4)].color[address.bit(0) << 1 | 1];
-    return data;
-  }
+  case 0x0020 ... 0x003f:  //PALMONO
+    data.bit(0,3) = pram.palette[address.bit(1,4)].color[address.bit(0) << 1 | 0];
+    data.bit(4,7) = pram.palette[address.bit(1,4)].color[address.bit(0) << 1 | 1];
+    break;
 
-  //TMR_CTRL
-  if(address == 0x00a2) {
-    data.bit(0) = r.htimerEnable;
-    data.bit(1) = r.htimerRepeat;
-    data.bit(2) = r.vtimerEnable;
-    data.bit(3) = r.vtimerRepeat;
-    return data;
-  }
+  case 0x00a2:  //TMR_CTRL
+    data.bit(0) = htimer.enable;
+    data.bit(1) = htimer.repeat;
+    data.bit(2) = vtimer.enable;
+    data.bit(3) = vtimer.repeat;
+    break;
 
-  //HTMR_FREQ
-  if(address == 0x00a4 || address == 0x00a5) {
-    return r.htimerFrequency.byte(address & 1);
-  }
+  case 0x00a4 ... 0x00a5:  //HTMR_FREQ
+    data = htimer.frequency.byte(address - 0x00a4);
+    break;
 
-  //VTMR_FREQ
-  if(address == 0x00a6 || address == 0x00a7) {
-    return r.vtimerFrequency.byte(address & 1);
-  }
+  case 0x00a6 ... 0x00a7:  //VTMR_FREQ
+    data = vtimer.frequency.byte(address - 0x00a6);
+    break;
 
-  //HTMR_CTR
-  if(address == 0x00a8 || address == 0x00a9) {
-    return r.htimerCounter.byte(address & 1);
-  }
+  case 0x00a8 ... 0x00a9:  //HTMR_CTR
+    data = htimer.counter.byte(address - 0x00a8);
+    break;
 
-  //VTMR_CTR
-  if(address == 0x00aa || address == 0x00ab) {
-    return r.vtimerCounter.byte(address & 1);
+  case 0x00aa ... 0x00ab:  //VTMR_CTR
+    data = vtimer.counter.byte(address - 0x00aa);
+    break;
+
   }
 
   return data;
 }
 
 auto PPU::portWrite(n16 address, n8 data) -> void {
-  //DISP_CTRL
-  if(address == 0x0000) {
-    r.screenOneEnable       = data.bit(0);
-    r.screenTwoEnable       = data.bit(1);
-    r.spriteEnable          = data.bit(2);
-    r.spriteWindowEnable    = data.bit(3);
-    r.screenTwoWindowInvert = data.bit(4);
-    r.screenTwoWindowEnable = data.bit(5);
-    return;
-  }
+  switch(address) {
 
-  //BACK_COLOR
-  if(address == 0x0001) {
-    r.backColor = data;
-    return;
-  }
+  case 0x0000:  //DISP_CTRL
+    screen1.enable        = data.bit(0);
+    screen2.enable        = data.bit(1);
+    sprite.enable         = data.bit(2);
+    sprite.window.enable  = data.bit(3);
+    screen2.window.invert = data.bit(4);
+    screen2.window.enable = data.bit(5);
+    break;
 
-  //LINE_CMP
-  if(address == 0x0003) {
-    r.lineCompare = data;
-    return;
-  }
+  case 0x0001:  //BACK_COLOR
+    dac.backdrop = data;
+    break;
 
-  //SPR_BASE
-  if(address == 0x0004) {
-    r.spriteBase = data.bit(0,5);
-    return;
-  }
+  case 0x0003:  //LINE_CMP
+    io.vcompare = data;
+    break;
 
-  //SPR_FIRST
-  if(address == 0x0005) {
-    r.spriteFirst = data.bit(6,0);
-    return;
-  }
+  case 0x0004:  //SPR_BASE
+    sprite.oamBase = data.bit(0,5);
+    break;
 
-  //SPR_COUNT
-  if(address == 0x0006) {
-    r.spriteCount = data;
-    return;
-  }
+  case 0x0005:  //SPR_FIRST
+    sprite.first = data.bit(0,6);
+    break;
 
-  //MAP_BASE
-  if(address == 0x0007) {
-    r.screenOneMapBase = data.bit(0,3);
-    r.screenTwoMapBase = data.bit(4,7);
-    return;
-  }
+  case 0x0006:  //SPR_COUNT
+    sprite.count = data;
+    break;
 
-  //SCR2_WIN_X0
-  if(address == 0x0008) {
-    r.screenTwoWindowX0 = data;
-    return;
-  }
+  case 0x0007:  //MAP_BASE
+    screen1.mapBase = data.bit(0,3);
+    screen2.mapBase = data.bit(4,7);
+    break;
 
-  //SCR2_WIN_Y0
-  if(address == 0x0009) {
-    r.screenTwoWindowY0 = data;
-    return;
-  }
+  case 0x0008:  //SCR2_WIN_X0
+    screen2.window.x0 = data;
+    break;
 
-  //SCR2_WIN_X1
-  if(address == 0x000a) {
-    r.screenTwoWindowX1 = data;
-    return;
-  }
+  case 0x0009:  //SCR2_WIN_Y0
+    screen2.window.y0 = data;
+    break;
 
-  //SCR2_WIN_Y1
-  if(address == 0x000b) {
-    r.screenTwoWindowY1 = data;
-    return;
-  }
+  case 0x000a:  //SCR2_WIN_X1
+    screen2.window.x1 = data;
+    break;
 
-  //SPR_WIN_X0
-  if(address == 0x000c) {
-    r.spriteWindowX0 = data;
-    return;
-  }
+  case 0x000b:  //SCR2_WIN_Y1
+    screen2.window.y1 = data;
+    break;
 
-  //SPR_WIN_Y0
-  if(address == 0x000d) {
-    r.spriteWindowY0 = data;
-    return;
-  }
+  case 0x000c:  //SPR_WIN_X0
+    sprite.window.x0 = data;
+    break;
 
-  //SPR_WIN_X1
-  if(address == 0x000e) {
-    r.spriteWindowX1 = data;
-    return;
-  }
+  case 0x000d:  //SPR_WIN_Y0
+    sprite.window.y0 = data;
+    break;
 
-  //SPR_WIN_Y1
-  if(address == 0x000f) {
-    r.spriteWindowY1 = data;
-    return;
-  }
+  case 0x000e:  //SPR_WIN_X1
+    sprite.window.x1 = data;
+    break;
 
-  //SCR1_X
-  if(address == 0x0010) {
-    r.scrollOneX = data;
-    return;
-  }
+  case 0x000f:  //SPR_WIN_Y1
+    sprite.window.y1 = data;
+    break;
 
-  //SCR1_Y
-  if(address == 0x0011) {
-    r.scrollOneY = data;
-    return;
-  }
+  case 0x0010:  //SCR1_X
+    screen1.hscroll = data;
+    break;
 
-  //SCR2_X
-  if(address == 0x0012) {
-    r.scrollTwoX = data;
-    return;
-  }
+  case 0x0011:  //SCR1_Y
+    screen1.vscroll = data;
+    break;
 
-  //SCR2_Y
-  if(address == 0x0013) {
-    r.scrollTwoY = data;
-    return;
-  }
+  case 0x0012:  //SCR2_X
+    screen2.hscroll = data;
+    break;
 
-  //LCD_CTRL
-  if(address == 0x0014) {
-    r.lcdEnable = data.bit(0);
+  case 0x0013:  //SCR2_Y
+    screen2.vscroll = data;
+    break;
+
+  case 0x0014:  //LCD_CTRL
+    lcd.enable = data.bit(0);
     if(SoC::ASWAN()) {
-      r.lcdUnknown.bit(1,7) = data.bit(1,7);
+      lcd.unknown.bit(1,7) = data.bit(1,7);
     }
     if(SoC::SPHINX()) {
-      r.lcdContrast = data.bit(1);
-      r.lcdUnknown.bit(4,7) = data.bit(4,7);
+      lcd.contrast         = data.bit(1);
+      lcd.unknown.bit(4,7) = data.bit(4,7);
     }
-    return;
-  }
+    break;
 
-  //LCD_ICON
-  if(address == 0x0015) {
-    r.icon.sleeping     = data.bit(0);
-    r.icon.orientation1 = data.bit(1);
-    r.icon.orientation0 = data.bit(2);
-    r.icon.auxiliary0   = data.bit(3);
-    r.icon.auxiliary1   = data.bit(4);
-    r.icon.auxiliary2   = data.bit(5);
+  case 0x0015:  //LCD_ICON
+    lcd.icon.sleeping     = data.bit(0);
+    lcd.icon.orientation1 = data.bit(1);
+    lcd.icon.orientation0 = data.bit(2);
+    lcd.icon.auxiliary0   = data.bit(3);
+    lcd.icon.auxiliary1   = data.bit(4);
+    lcd.icon.auxiliary2   = data.bit(5);
     updateIcons();
     updateOrientation();
-    return;
+    break;
+
+  case 0x0016:  //LCD_VTOTAL
+    io.vtotal = data;
+    break;
+
+  case 0x0017:  //LCD_VSYNC
+    io.vsync = data;
+    break;
+
+  case 0x001c ... 0x001f:  //PALMONO_POOL
+    pram.pool[address.bit(0,1) << 1 | 0] = data.bit(0,3);
+    pram.pool[address.bit(0,1) << 1 | 1] = data.bit(4,7);
+    break;
+
+  case 0x0020 ... 0x003f:  //PALMONO
+    pram.palette[address.bit(1,4)].color[address.bit(0) << 1 | 0] = data.bit(0,2);
+    pram.palette[address.bit(1,4)].color[address.bit(0) << 1 | 1] = data.bit(4,6);
+    break;
+
+  case 0x00a2:  //TMR_CTRL
+    if(!htimer.enable && data.bit(0)) htimer.counter = htimer.frequency;
+    if(!vtimer.enable && data.bit(1)) vtimer.counter = vtimer.frequency;
+    htimer.enable = data.bit(0);
+    htimer.repeat = data.bit(1);
+    vtimer.enable = data.bit(2);
+    vtimer.repeat = data.bit(3);
+    break;
+
+  case 0x00a4 ... 0x00a5:  //HTMR_FREQ
+    htimer.frequency.byte(address - 0x00a4) = data;
+    htimer.counter  .byte(address - 0x00a4) = data;
+    break;
+
+  case 0x00a6 ... 0x00a7:  //VTMR_FREQ
+    vtimer.frequency.byte(address - 0x00a6) = data;
+    vtimer.counter  .byte(address - 0x00a6) = data;
+    break;
+
   }
 
-  //LCD_VTOTAL
-  if(address == 0x0016) {
-    r.vtotal = data;
-    return;
-  }
-
-  //LCD_VSYNC
-  if(address == 0x0017) {
-    r.vsync = data;
-    return;
-  }
-
-  //PALMONO_POOL
-  if(address >= 0x001c && address <= 0x001f) {
-    r.pool[address.bit(0,1) << 1 | 0] = data.bit(0,3);
-    r.pool[address.bit(0,1) << 1 | 1] = data.bit(4,7);
-    return;
-  }
-
-  //PALMONO
-  if(address >= 0x0020 && address <= 0x003f) {
-    r.palette[address.bit(1,4)].color[address.bit(0) << 1 | 0] = data.bit(0,2);
-    r.palette[address.bit(1,4)].color[address.bit(0) << 1 | 1] = data.bit(4,6);
-    return;
-  }
-
-  //TMR_CTRL
-  if(address == 0x00a2) {
-    r.htimerEnable = data.bit(0);
-    r.htimerRepeat = data.bit(1);
-    r.vtimerEnable = data.bit(2);
-    r.vtimerRepeat = data.bit(3);
-    if(r.htimerEnable) r.htimerCounter = 0;
-    if(r.vtimerEnable) r.vtimerCounter = 0;
-    return;
-  }
-
-  //HTMR_FREQ
-  if(address == 0x00a4 || address == 0x00a5) {
-    r.htimerFrequency.byte(address & 1) = data;
-    r.htimerEnable = 1;
-    r.htimerRepeat = 1;
-    r.htimerCounter = 0;
-  }
-
-  //VTMR_FREQ
-  if(address == 0x00a6 || address == 0x00a7) {
-    r.vtimerFrequency.byte(address & 1) = data;
-    r.vtimerEnable = 1;
-    r.vtimerRepeat = 1;
-    r.vtimerCounter = 0;
-  }
+  return;
 }

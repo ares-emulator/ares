@@ -52,7 +52,7 @@ auto PPU::OAM::write(n10 address, n8 data) -> void {
   }
 }
 
-alwaysinline auto PPU::OAM::Object::width() const -> u32 {
+inline auto PPU::OAM::Object::width() const -> u32 {
   if(size == 0) {
     static constexpr u32 width[] = { 8,  8,  8, 16, 16, 32, 16, 16};
     return width[ppu.obj.io.baseSize];
@@ -62,7 +62,7 @@ alwaysinline auto PPU::OAM::Object::width() const -> u32 {
   }
 }
 
-alwaysinline auto PPU::OAM::Object::height() const -> u32 {
+inline auto PPU::OAM::Object::height() const -> u32 {
   if(size == 0) {
     if(ppu.obj.io.interlace && ppu.obj.io.baseSize >= 6) return 16;  //hardware quirk
     static constexpr u32 height[] = { 8,  8,  8, 16, 16, 32, 32, 32};

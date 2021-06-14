@@ -25,9 +25,13 @@ extern const unsigned char BIOS[32768];
 extern const unsigned char Sub[16384];
 }
 namespace Nintendo64 {
+extern const unsigned char CIC6101[1024];
+extern const unsigned char CIC6102[1024];
+extern const unsigned char CIC6105[1024];
+extern const unsigned char CIC7101[1024];
+extern const unsigned char PIFSM5[1024];
 extern const unsigned char PIFNTSC[1984];
 extern const unsigned char PIFPAL[1984];
-extern const unsigned char PIFSM5[1024];
 }
 namespace SuperFamicom {
 extern const unsigned char IPLROM[64];

@@ -7,15 +7,14 @@ auto InputManager::createHotkeys() -> void {
     program.videoFullScreenToggle();
   }));
 
-  //wait until controller selection is enabled before exposing this hotkey:
-/*hotkeys.append(InputHotkey("Toggle Mouse Capture").onPress([&] {
+  hotkeys.append(InputHotkey("Toggle Mouse Capture").onPress([&] {
     if(!emulator) return;
     if(!ruby::input.acquired()) {
       ruby::input.acquire();
     } else {
       ruby::input.release();
     }
-  }));*/
+  }));
 
   hotkeys.append(InputHotkey("Fast Forward").onPress([&] {
     if(!emulator || program.rewinding) return;

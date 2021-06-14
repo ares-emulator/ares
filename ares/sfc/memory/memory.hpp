@@ -22,14 +22,18 @@ struct AbstractMemory {
 #include "protectable.hpp"
 
 struct Bus {
+  //inline.hpp
   static auto mirror(u32 address, u32 size) -> u32;
   static auto reduce(u32 address, u32 mask) -> u32;
 
+  //memory.cpp
   ~Bus();
 
+  //inline.hpp
   auto read(n24 address, n8 data) -> n8;
   auto write(n24 address, n8 data) -> void;
 
+  //memory.cpp
   auto reset() -> void;
   auto map(
     const function<n8   (n24, n8)>& read,

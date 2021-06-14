@@ -1,5 +1,3 @@
-extern Random random;
-
 struct System {
   Node::System node;
   VFS::Pak pak;
@@ -46,6 +44,7 @@ private:
   friend class Cartridge;
 };
 
+extern Random random;
 extern System system;
 
 auto Region::NTSC() -> bool { return system.region() == System::Region::NTSC; }

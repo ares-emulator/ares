@@ -137,7 +137,7 @@ auto Emulator::construct() -> void {
 
   #ifdef CORE_N64
   emulators.append(new Nintendo64);
-  emulators.append(new Nintendo64DD);
+//emulators.append(new Nintendo64DD);
   #endif
 
   #ifdef CORE_SG

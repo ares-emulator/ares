@@ -39,6 +39,6 @@ namespace ares::SuperFamicom {
   #include <sfc/slot/slot.hpp>
   #include <sfc/cartridge/cartridge.hpp>
 
-  #include <sfc/memory/memory-inline.hpp>
-  #include <sfc/ppu/counter/counter-inline.hpp>
+  #include <sfc/memory/inline.hpp>
+  #include <sfc/ppu/counter/inline.hpp>
 }

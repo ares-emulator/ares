@@ -19,9 +19,13 @@ namespace name=Resource
     binary name=BIOS file="../Firmware/MSX2/bios.rom"
     binary name=Sub file="../Firmware/MSX2/sub.rom"
   namespace name=Nintendo64
+    binary name=CIC6101 file="../Firmware/Nintendo 64/cic.6101.rom"
+    binary name=CIC6102 file="../Firmware/Nintendo 64/cic.6102.rom"
+    binary name=CIC6105 file="../Firmware/Nintendo 64/cic.6105.rom"
+    binary name=CIC7101 file="../Firmware/Nintendo 64/cic.7101.rom"
+    binary name=PIFSM5 file="../Firmware/Nintendo 64/pif.sm5.rom"
     binary name=PIFNTSC file="../Firmware/Nintendo 64/pif.ntsc.rom"
     binary name=PIFPAL file="../Firmware/Nintendo 64/pif.pal.rom"
-    binary name=PIFSM5 file="../Firmware/Nintendo 64/pif.sm5.rom"
   namespace name=SuperFamicom
     binary name=IPLROM file="../Firmware/Super Famicom/ipl.rom"
     binary name=Cx4 file="../Firmware/Super Famicom/cx4.rom"

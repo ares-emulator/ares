@@ -702,7 +702,7 @@ struct TableView : sTableView {
   auto columns() const { return self().columns(); }
   auto doActivate(sTableViewCell cell) const { return self().doActivate(cell); }
   auto doChange() const { return self().doChange(); }
-  auto doContext() const { return self().doContext(); }
+  auto doContext(sTableViewCell cell) const { return self().doContext(cell); }
   auto doEdit(sTableViewCell cell) const { return self().doEdit(cell); }
   auto doSort(sTableViewColumn column) const { return self().doSort(column); }
   auto doToggle(sTableViewCell cell) const { return self().doToggle(cell); }
@@ -713,7 +713,7 @@ struct TableView : sTableView {
   auto items() const { return self().items(); }
   auto onActivate(const function<void (TableViewCell)>& callback = {}) { return self().onActivate(callback), *this; }
   auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
-  auto onContext(const function<void ()>& callback = {}) { return self().onContext(callback), *this; }
+  auto onContext(const function<void (TableViewCell)>& callback = {}) { return self().onContext(callback), *this; }
   auto onEdit(const function<void (TableViewCell)>& callback = {}) { return self().onEdit(callback), *this; }
   auto onSort(const function<void (TableViewColumn)>& callback = {}) { return self().onSort(callback), *this; }
   auto onToggle(const function<void (TableViewCell)>& callback = {}) { return self().onToggle(callback), *this; }

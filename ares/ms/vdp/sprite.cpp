@@ -1,7 +1,7 @@
 auto VDP::Sprite::setup(n9 voffset) -> void {
   if(!self.displayEnable()) return;
   n8 valid = 0;
-  n5 limit = (8 << io.size << io.zoom) - 1;
+  n5 vlimit = (8 << io.zoom << io.size) - 1;
   for(auto& object : objects) object.y = 0xd0;
 
   if(!self.videoMode().bit(3)) {
@@ -18,9 +18,9 @@ auto VDP::Sprite::setup(n9 voffset) -> void {
       if(extra.bit(7)) x -= 32;
       y += 1;
       if(voffset < y) continue;
-      if(voffset > y + limit) continue;
+      if(voffset > y + vlimit) continue;
 
-      if(limit == 15) pattern.bit(0,1) = 0;
+      if(vlimit == (io.zoom ? 31 : 15)) pattern.bit(0,1) = 0;
 
       if(valid == 4) {
         io.overflow = 1;
@@ -44,9 +44,9 @@ auto VDP::Sprite::setup(n9 voffset) -> void {
       if(io.shift) x -= 8;
       y += 1;
       if(voffset < y) continue;
-      if(voffset > y + limit) continue;
+      if(voffset > y + vlimit) continue;
 
-      if(limit == 15) pattern.bit(0) = 0;
+      if(vlimit == (io.zoom ? 31 : 15)) pattern.bit(0) = 0;
 
       if(valid == 8) {
         io.overflow = 1;
@@ -88,17 +88,18 @@ auto VDP::Sprite::graphics1(n8 hoffset, n9 voffset) -> void {
 }
 
 auto VDP::Sprite::graphics2(n8 hoffset, n9 voffset) -> void {
-  n5 limit = (8 << io.size << io.zoom) - 1;
+  n4 hlimit = (8 << io.zoom) - 1;
+  n5 vlimit = (8 << io.zoom << io.size) - 1;
   for(auto& o : objects) {
     if(o.y == 0xd0) continue;
     if(hoffset < o.x) continue;
-    if(hoffset > o.x + limit) continue;
+    if(hoffset > o.x + hlimit) continue;
 
     u32 x = hoffset - o.x >> io.zoom;
     u32 y = voffset - o.y >> io.zoom;
 
     n14 address;
-    address.bit( 0,10) = (o.pattern << 3) + (x >> 3 << 4) + (y & limit);
+    address.bit( 0,10) = (o.pattern << 3) + (x >> 3 << 4) + (y & vlimit);
     address.bit(11,13) = io.patternTableAddress;
 
     n3 index = x ^ 7;
@@ -110,17 +111,18 @@ auto VDP::Sprite::graphics2(n8 hoffset, n9 voffset) -> void {
 }
 
 auto VDP::Sprite::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
-  n5 limit = (8 << io.size << io.zoom) - 1;
+  n4 hlimit = (8 << io.zoom) - 1;
+  n5 vlimit = (8 << io.zoom << io.size) - 1;
   for(auto& o : objects) {
     if(o.y == 0xd0) continue;
     if(hoffset < o.x) continue;
-    if(hoffset > o.x + 7) continue;
+    if(hoffset > o.x + hlimit) continue;
 
     u32 x = hoffset - o.x >> io.zoom;
     u32 y = voffset - o.y >> io.zoom;
 
     n14 address;
-    address.bit(2,12) = (o.pattern << 3) + (y & limit);
+    address.bit(2,12) = (o.pattern << 3) + (y & vlimit);
     address.bit  (13) = io.patternTableAddress.bit(2);
 
     n3 index = x ^ 7;

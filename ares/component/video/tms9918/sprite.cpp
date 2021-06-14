@@ -1,6 +1,6 @@
 auto TMS9918::Sprite::setup(n8 voffset) -> void {
   n8 valid = 0;
-  n5 limit = (8 << io.size << io.zoom) - 1;
+  n5 vlimit = (8 << io.zoom << io.size) - 1;
   for(auto& object : objects) object.y = 0xd0;
 
   n14 attributeAddress;
@@ -16,9 +16,9 @@ auto TMS9918::Sprite::setup(n8 voffset) -> void {
     if(extra.bit(7)) x -= 32;
     y += 1;
     if(voffset < y) continue;
-    if(voffset > y + limit) continue;
+    if(voffset > y + vlimit) continue;
 
-    if(limit == 15) pattern.bit(0,1) = 0;
+    if(vlimit == (io.zoom ? 31 : 15)) pattern.bit(0,1) = 0;
 
     if(valid == 4) {
       io.overflow = 1;
@@ -34,18 +34,19 @@ auto TMS9918::Sprite::run(n8 hoffset, n8 voffset) -> void {
   output = {};
 
   n4 color;
-  n5 limit = (8 << io.size << io.zoom) - 1;
+  n4 hlimit = (8 << io.zoom) - 1;
+  n5 vlimit = (8 << io.zoom << io.size) - 1;
 
   for(auto& o : objects) {
     if(o.y == 0xd0) continue;
     if(hoffset < o.x) continue;
-    if(hoffset > o.x + limit) continue;
+    if(hoffset > o.x + hlimit) continue;
 
     u32 x = hoffset - o.x >> io.zoom;
     u32 y = voffset - o.y >> io.zoom;
 
     n14 address;
-    address.bit( 0,10) = (o.pattern << 3) + (x >> 3 << 4) + y;
+    address.bit( 0,10) = (o.pattern << 3) + (x >> 3 << 4) + (y & vlimit);
     address.bit(11,13) = io.patternTableAddress;
 
     n3 index = x ^ 7;

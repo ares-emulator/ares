@@ -73,8 +73,8 @@ auto mTableView::doChange() const -> void {
   if(state.onChange) return state.onChange();
 }
 
-auto mTableView::doContext() const -> void {
-  if(state.onContext) return state.onContext();
+auto mTableView::doContext(sTableViewCell cell) const -> void {
+  if(state.onContext) return state.onContext(cell);
 }
 
 auto mTableView::doEdit(sTableViewCell cell) const -> void {
@@ -122,7 +122,7 @@ auto mTableView::onChange(const function<void ()>& callback) -> type& {
   return *this;
 }
 
-auto mTableView::onContext(const function<void ()>& callback) -> type& {
+auto mTableView::onContext(const function<void (TableViewCell)>& callback) -> type& {
   state.onContext = callback;
   return *this;
 }

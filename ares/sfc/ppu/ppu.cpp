@@ -58,7 +58,7 @@ auto PPU::load(Node::Object parent) -> void {
 }
 
 auto PPU::unload() -> void {
-  debugger = {};
+  debugger.unload(node);
   versionPPU1.reset();
   versionPPU2.reset();
   vramSize.reset();
@@ -107,6 +107,21 @@ auto PPU::power(bool reset) -> void {
 
   vram.mask = vramSize->value() / sizeof(n16) - 1;
   if(vram.mask != 0xffff) vram.mask = 0x7fff;
+
+  for(auto& object : oam.object) {
+    object.x = 0;
+    object.y = 0;
+    object.character = 0;
+    object.nameselect = 0;
+    object.vflip = 0;
+    object.hflip = 0;
+    object.priority = 0;
+    object.palette = 0;
+    object.size = 0;
+  }
+
+  random.array({cgram, sizeof(cgram)});
+  for(auto& word : cgram) word &= 0x7fff;
 
   latch.vram = random();
   latch.oam = random();

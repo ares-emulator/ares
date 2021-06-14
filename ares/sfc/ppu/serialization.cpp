@@ -7,6 +7,8 @@ auto PPU::serialize(serializer& s) -> void {
   s(self.vdisp);
 
   s(array_span<u16>{vram.data, vram.mask + 1});
+  s(oam.object);
+  s(cgram);
 
   s(ppu1.version);
   s(ppu1.mdr);
@@ -78,6 +80,18 @@ auto PPU::serialize(serializer& s) -> void {
   s(dac);
 }
 
+auto PPU::OAM::Object::serialize(serializer& s) -> void {
+  s(x);
+  s(y);
+  s(character);
+  s(nameselect);
+  s(vflip);
+  s(hflip);
+  s(priority);
+  s(palette);
+  s(size);
+}
+
 auto PPU::Mosaic::serialize(serializer& s) -> void {
   s(size);
   s(vcounter);
@@ -130,18 +144,6 @@ auto PPU::Background::serialize(serializer& s) -> void {
 }
 
 auto PPU::Object::serialize(serializer& s) -> void {
-  for(auto& object : oam.object) {
-    s(object.x);
-    s(object.y);
-    s(object.character);
-    s(object.nameselect);
-    s(object.vflip);
-    s(object.hflip);
-    s(object.priority);
-    s(object.palette);
-    s(object.size);
-  }
-
   s(io.aboveEnable);
   s(io.belowEnable);
   s(io.interlace);
@@ -248,8 +250,6 @@ auto PPU::Window::serialize(serializer& s) -> void {
 }
 
 auto PPU::DAC::serialize(serializer& s) -> void {
-  s(cgram);
-
   s(io.directColor);
   s(io.blendMode);
 

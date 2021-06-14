@@ -4,7 +4,6 @@ struct GameBoyAdvance : Emulator {
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
-  auto input(ares::Node::Input::Input) -> void override;
 };
 
 GameBoyAdvance::GameBoyAdvance() {
@@ -13,21 +12,21 @@ GameBoyAdvance::GameBoyAdvance() {
 
   firmware.append({"BIOS", "World", "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"});
 
-  { InputPort port{string{"Hardware"}};
+  { InputPort port{string{"Game Boy Player"}};
 
-    InputDevice device{"Controls"};
-    device.button("Up",     virtualPads[0].up);
-    device.button("Down",   virtualPads[0].down);
-    device.button("Left",   virtualPads[0].left);
-    device.button("Right",  virtualPads[0].right);
-    device.button("B",      virtualPads[0].a);
-    device.button("A",      virtualPads[0].b);
-    device.button("L",      virtualPads[0].l1);
-    device.button("R",      virtualPads[0].r1);
-    device.button("Select", virtualPads[0].select);
-    device.button("Start",  virtualPads[0].start);
-    device.rumble("Rumble", virtualPads[0].rumble);
-    port.append(device);
+  { InputDevice device{"Controls"};
+    device.digital("Up",     virtualPorts[0].pad.up);
+    device.digital("Down",   virtualPorts[0].pad.down);
+    device.digital("Left",   virtualPorts[0].pad.left);
+    device.digital("Right",  virtualPorts[0].pad.right);
+    device.digital("B",      virtualPorts[0].pad.a);
+    device.digital("A",      virtualPorts[0].pad.b);
+    device.digital("L",      virtualPorts[0].pad.l1);
+    device.digital("R",      virtualPorts[0].pad.r1);
+    device.digital("Select", virtualPorts[0].pad.select);
+    device.digital("Start",  virtualPorts[0].pad.start);
+    device.rumble ("Rumble", virtualPorts[0].pad.rumble);
+    port.append(device); }
 
     ports.append(port);
   }
@@ -79,33 +78,4 @@ auto GameBoyAdvance::pak(ares::Node::Object node) -> shared_pointer<vfs::directo
   if(node->name() == "Game Boy Player") return system->pak;
   if(node->name() == "Game Boy Advance Cartridge") return game->pak;
   return {};
-}
-
-auto GameBoyAdvance::input(ares::Node::Input::Input input) -> void {
-  auto name = input->name();
-  maybe<InputMapping&> mapping;
-  if(name == "Up"    ) mapping = virtualPads[0].up;
-  if(name == "Down"  ) mapping = virtualPads[0].down;
-  if(name == "Left"  ) mapping = virtualPads[0].left;
-  if(name == "Right" ) mapping = virtualPads[0].right;
-  if(name == "B"     ) mapping = virtualPads[0].a;
-  if(name == "A"     ) mapping = virtualPads[0].b;
-  if(name == "L"     ) mapping = virtualPads[0].l1;
-  if(name == "R"     ) mapping = virtualPads[0].r1;
-  if(name == "Select") mapping = virtualPads[0].select;
-  if(name == "Start" ) mapping = virtualPads[0].start;
-  //Game Boy Player
-  if(name == "Rumble") mapping = virtualPads[0].rumble;
-
-  if(mapping) {
-    auto value = mapping->value();
-    if(auto button = input->cast<ares::Node::Input::Button>()) {
-      button->setValue(value);
-    }
-    if(auto rumble = input->cast<ares::Node::Input::Rumble>()) {
-      if(auto target = dynamic_cast<InputRumble*>(mapping.data())) {
-        target->rumble(rumble->enable());
-      }
-    }
-  }
 }

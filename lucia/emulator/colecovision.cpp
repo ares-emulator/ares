@@ -3,7 +3,6 @@ struct ColecoVision : Emulator {
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
-  auto input(ares::Node::Input::Input) -> void override;
 };
 
 ColecoVision::ColecoVision() {
@@ -15,26 +14,26 @@ ColecoVision::ColecoVision() {
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
-    InputDevice device{"Gamepad"};
-    device.button("Up",    virtualPads[id].up);
-    device.button("Down",  virtualPads[id].down);
-    device.button("Left",  virtualPads[id].left);
-    device.button("Right", virtualPads[id].right);
-    device.button("L",     virtualPads[id].select);
-    device.button("R",     virtualPads[id].start);
-    device.button("1",     virtualPads[id].a);
-    device.button("2",     virtualPads[id].b);
-    device.button("3",     virtualPads[id].c);
-    device.button("4",     virtualPads[id].x);
-    device.button("5",     virtualPads[id].y);
-    device.button("6",     virtualPads[id].z);
-    device.button("7",     virtualPads[id].l1);
-    device.button("8",     virtualPads[id].r1);
-    device.button("9",     virtualPads[id].l2);
-    device.button("*",     virtualPads[id].r2);
-    device.button("0",     virtualPads[id].lt);
-    device.button("#",     virtualPads[id].rt);
-    port.append(device);
+  { InputDevice device{"Gamepad"};
+    device.digital("Up",    virtualPorts[id].pad.up);
+    device.digital("Down",  virtualPorts[id].pad.down);
+    device.digital("Left",  virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("L",     virtualPorts[id].pad.select);
+    device.digital("R",     virtualPorts[id].pad.start);
+    device.digital("1",     virtualPorts[id].pad.a);
+    device.digital("2",     virtualPorts[id].pad.b);
+    device.digital("3",     virtualPorts[id].pad.c);
+    device.digital("4",     virtualPorts[id].pad.x);
+    device.digital("5",     virtualPorts[id].pad.y);
+    device.digital("6",     virtualPorts[id].pad.z);
+    device.digital("7",     virtualPorts[id].pad.l1);
+    device.digital("8",     virtualPorts[id].pad.r1);
+    device.digital("9",     virtualPorts[id].pad.l2);
+    device.digital("*",     virtualPorts[id].pad.r2);
+    device.digital("0",     virtualPorts[id].pad.lt);
+    device.digital("#",     virtualPorts[id].pad.rt);
+    port.append(device); }
 
     ports.append(port);
   }
@@ -79,47 +78,4 @@ auto ColecoVision::pak(ares::Node::Object node) -> shared_pointer<vfs::directory
   if(node->name() == "ColecoVision") return system->pak;
   if(node->name() == "ColecoVision Cartridge") return game->pak;
   return {};
-}
-
-auto ColecoVision::input(ares::Node::Input::Input input) -> void {
-  auto device = ares::Node::parent(input);
-  if(!device) return;
-
-  auto port = ares::Node::parent(device);
-  if(!port) return;
-
-  maybe<u32> id;
-  if(port->name() == "Controller Port 1") id = 0;
-  if(port->name() == "Controller Port 2") id = 1;
-  if(!id) return;
-
-  if(device->name() == "Gamepad") {
-    auto name = input->name();
-    maybe<InputMapping&> mapping;
-    if(name == "Up"   ) mapping = virtualPads[*id].up;
-    if(name == "Down" ) mapping = virtualPads[*id].down;
-    if(name == "Left" ) mapping = virtualPads[*id].left;
-    if(name == "Right") mapping = virtualPads[*id].right;
-    if(name == "L"    ) mapping = virtualPads[*id].select;
-    if(name == "R"    ) mapping = virtualPads[*id].start;
-    if(name == "1"    ) mapping = virtualPads[*id].a;
-    if(name == "2"    ) mapping = virtualPads[*id].b;
-    if(name == "3"    ) mapping = virtualPads[*id].c;
-    if(name == "4"    ) mapping = virtualPads[*id].x;
-    if(name == "5"    ) mapping = virtualPads[*id].y;
-    if(name == "6"    ) mapping = virtualPads[*id].z;
-    if(name == "7"    ) mapping = virtualPads[*id].l1;
-    if(name == "8"    ) mapping = virtualPads[*id].r1;
-    if(name == "9"    ) mapping = virtualPads[*id].l2;
-    if(name == "*"    ) mapping = virtualPads[*id].r2;
-    if(name == "0"    ) mapping = virtualPads[*id].lt;
-    if(name == "#"    ) mapping = virtualPads[*id].rt;
-
-    if(mapping) {
-      auto value = mapping->value();
-      if(auto button = input->cast<ares::Node::Input::Button>()) {
-        button->setValue(value);
-      }
-    }
-  }
 }

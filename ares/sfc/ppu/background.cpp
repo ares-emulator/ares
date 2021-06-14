@@ -1,5 +1,5 @@
-alwaysinline auto PPU::Background::hires() const -> bool {
-  return ppu.io.bgMode == 5 || ppu.io.bgMode == 6;
+inline auto PPU::Background::hires() const -> bool {
+  return self.io.bgMode == 5 || self.io.bgMode == 6;
 }
 
 //V = 0, H = 0
@@ -8,7 +8,7 @@ auto PPU::Background::frame() -> void {
 
 //H = 0
 auto PPU::Background::scanline() -> void {
-  mosaic.hcounter = ppu.mosaic.size;
+  mosaic.hcounter = self.mosaic.size;
   mosaic.hoffset = 0;
 
   renderingIndex = 0;
@@ -25,22 +25,22 @@ auto PPU::Background::begin() -> void {
 }
 
 auto PPU::Background::fetchNameTable() -> void {
-  if(ppu.vcounter() == 0) return;
+  if(self.vcounter() == 0) return;
 
-  u32 nameTableIndex = ppu.hcounter() >> 5 << hires();
-  s32 x = (ppu.hcounter() & ~31) >> 2;
+  u32 nameTableIndex = self.hcounter() >> 5 << hires();
+  s32 x = (self.hcounter() & ~31) >> 2;
 
   u32 hpixel = x << hires();
-  u32 vpixel = ppu.vcounter();
+  u32 vpixel = self.vcounter();
   u32 hscroll = io.hoffset;
   u32 vscroll = io.voffset;
 
   if(hires()) {
     hscroll <<= 1;
-    if(ppu.io.interlace) vpixel = vpixel << 1 | (ppu.field() && !mosaic.enable);
+    if(self.io.interlace) vpixel = vpixel << 1 | (self.field() && !mosaic.enable);
   }
   if(mosaic.enable) {
-    vpixel -= ppu.mosaic.voffset() << (hires() && ppu.io.interlace);
+    vpixel -= self.mosaic.voffset() << (hires() && self.io.interlace);
   }
 
   bool repeated = false;
@@ -49,12 +49,12 @@ auto PPU::Background::fetchNameTable() -> void {
   u32 hoffset = hpixel + hscroll;
   u32 voffset = vpixel + vscroll;
 
-  if(ppu.io.bgMode == 2 || ppu.io.bgMode == 4 || ppu.io.bgMode == 6) {
-    auto hlookup = ppu.bg3.opt.hoffset;
-    auto vlookup = ppu.bg3.opt.voffset;
+  if(self.io.bgMode == 2 || self.io.bgMode == 4 || self.io.bgMode == 6) {
+    auto hlookup = self.bg3.opt.hoffset;
+    auto vlookup = self.bg3.opt.voffset;
     u32  valid = 13 + id;
 
-    if(ppu.io.bgMode == 4) {
+    if(self.io.bgMode == 4) {
       if(hlookup.bit(valid)) {
         if(!hlookup.bit(15)) {
           hoffset = hpixel + (hlookup & ~7) + (hscroll & 7);
@@ -89,7 +89,7 @@ auto PPU::Background::fetchNameTable() -> void {
   if(vtile & 0x20) offset += vscreen;
 
   n16 address = io.screenAddress + offset;
-  n16 attributes = ppu.vram[address];
+  n16 attributes = vram[address];
 
   auto& tile = tiles[nameTableIndex];
   tile.character = attributes.bit(0,9);
@@ -101,14 +101,14 @@ auto PPU::Background::fetchNameTable() -> void {
   if(htiles == 4 && bool(hoffset & 8) != tile.hmirror) tile.character +=  1;
   if(vtiles == 4 && bool(voffset & 8) != tile.vmirror) tile.character += 16;
 
-  u32 characterMask = ppu.vram.mask >> 3 + io.mode;
+  u32 characterMask = vram.mask >> 3 + io.mode;
   u32 characterIndex = io.tiledataAddress >> 3 + io.mode;
   n16 origin = tile.character + characterIndex & characterMask;
 
   if(tile.vmirror) voffset ^= 7;
   tile.address = (origin << 3 + io.mode) + (voffset & 7);
 
-  u32 paletteOffset = ppu.io.bgMode == 0 ? id << 5 : 0;
+  u32 paletteOffset = self.io.bgMode == 0 ? id << 5 : 0;
   u32 paletteSize = 2 << io.mode;
   tile.palette = paletteOffset + (tile.paletteGroup << paletteSize);
 
@@ -121,9 +121,9 @@ auto PPU::Background::fetchNameTable() -> void {
 }
 
 auto PPU::Background::fetchOffset(u32 y) -> void {
-  if(ppu.vcounter() == 0) return;
+  if(self.vcounter() == 0) return;
 
-  u32 characterIndex = ppu.hcounter() >> 5 << hires();
+  u32 characterIndex = self.hcounter() >> 5 << hires();
   u32 x = characterIndex << 3;
 
   u32 hoffset = x + (io.hoffset & ~7);
@@ -143,17 +143,17 @@ auto PPU::Background::fetchOffset(u32 y) -> void {
   if(vtile & 0x20) offset += vscreen;
 
   n16 address = io.screenAddress + offset;
-  if(y == 0) opt.hoffset = ppu.vram[address];
-  if(y == 8) opt.voffset = ppu.vram[address];
+  if(y == 0) opt.hoffset = vram[address];
+  if(y == 8) opt.voffset = vram[address];
 }
 
 auto PPU::Background::fetchCharacter(u32 index, bool half) -> void {
-  if(ppu.vcounter() == 0) return;
+  if(self.vcounter() == 0) return;
 
-  u32 characterIndex = (ppu.hcounter() >> 5 << hires()) + half;
+  u32 characterIndex = (self.hcounter() >> 5 << hires()) + half;
 
   auto& tile = tiles[characterIndex];
-  n16 data = ppu.vram[tile.address + (index << 3)];
+  n16 data = vram[tile.address + (index << 3)];
 
   //reverse bits so that the lowest bit is the left-most pixel
   if(!tile.hmirror) {
@@ -170,7 +170,7 @@ auto PPU::Background::fetchCharacter(u32 index, bool half) -> void {
 }
 
 auto PPU::Background::run(bool screen) -> void {
-  if(ppu.vcounter() == 0) return;
+  if(self.vcounter() == 0) return;
 
   if(screen == Screen::Below) {
     output.above.priority = 0;
@@ -193,12 +193,12 @@ auto PPU::Background::run(bool screen) -> void {
   pixel.paletteGroup = tile.paletteGroup;
   if(++pixelCounter == 0) renderingIndex++;
 
-  u32 x = ppu.hcounter() - 56 >> 2;
+  u32 x = self.hcounter() - 56 >> 2;
   if(x == 0 && (!hires() || screen == Screen::Below)) {
-    mosaic.hcounter = ppu.mosaic.size;
+    mosaic.hcounter = self.mosaic.size;
     mosaic.pixel = pixel;
   } else if((!hires() || screen == Screen::Below) && --mosaic.hcounter == 0) {
-    mosaic.hcounter = ppu.mosaic.size;
+    mosaic.hcounter = self.mosaic.size;
     mosaic.pixel = pixel;
   } else if(mosaic.enable) {
     pixel = mosaic.pixel;

@@ -3,7 +3,7 @@
 mListView::mListView() {
   mTableView::onActivate([&](auto) { doActivate(); });
   mTableView::onChange([&] { doChange(); });
-  mTableView::onContext([&] { doContext(); });
+  mTableView::onContext([&](auto cell) { doContext(); });
   mTableView::onToggle([&](TableViewCell cell) {
     if(auto item = cell->parentTableViewItem()) {
       if(auto shared = item->instance.acquire()) {

@@ -44,6 +44,7 @@ template<typename T> auto TLCS900H::toImmediate3(natural constant) const -> Imme
 //the order of evaluations of function arguments. fetch() ordering is critical.
 
 auto TLCS900H::undefined() -> void {
+  debug(unusual, "[TLCS900H::undefined]");
   instructionSoftwareInterrupt(2);
 }
 
@@ -129,56 +130,54 @@ auto TLCS900H::instruction() -> void {
     return instructionCallRelative(fetchImmediate<i16>());
   case 0x1f:
     return undefined();
-  case 0x20: case 0x21: case 0x22: case 0x23: case 0x24: case 0x25: case 0x26: case 0x27:
+  case 0x20 ... 0x27:
     return instructionLoad(toRegister3<n8>(data), fetchImmediate<n8>());
-  case 0x28: case 0x29: case 0x2a: case 0x2b: case 0x2c: case 0x2d: case 0x2e: case 0x2f:
+  case 0x28 ... 0x2f:
     idle(1);
     return instructionPush(toRegister3<n16>(data));
-  case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37:
+  case 0x30 ... 0x37:
     idle(1);
     return instructionLoad(toRegister3<n16>(data), fetchImmediate<n16>());
-  case 0x38: case 0x39: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e: case 0x3f:
+  case 0x38 ... 0x3f:
     idle(1);
     return instructionPush(toRegister3<n32>(data));
-  case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
+  case 0x40 ... 0x47:
     idle(3);
     return instructionLoad(toRegister3<n32>(data), fetchImmediate<n32>());
-  case 0x48: case 0x49: case 0x4a: case 0x4b: case 0x4c: case 0x4d: case 0x4e: case 0x4f:
+  case 0x48 ... 0x4f:
     idle(2);
     return instructionPop(toRegister3<n16>(data));
-  case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
+  case 0x50 ... 0x57:
     return undefined();
-  case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f:
+  case 0x58 ... 0x5f:
     idle(4);
     return instructionPop(toRegister3<n32>(data));
-  case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
-  case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f: {
+  case 0x60 ... 0x6f: {
     auto immediate = fetchImmediate<i8>();
     if(!condition((n4)data)) return;
     return instructionJumpRelative(immediate); }
-  case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
-  case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: case 0x7f: {
+  case 0x70 ... 0x7f: {
     auto immediate = fetchImmediate<i16>();
     if(!condition((n4)data)) return;
     return instructionJumpRelative(immediate); }
-  case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+  case 0x80 ... 0x87:
     return instructionSourceMemory(toMemory<n8>(load(toRegister3<n32>(data))));
-  case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
+  case 0x88 ... 0x8f:
     idle(1);
     return instructionSourceMemory(toMemory<n8>(load(toRegister3<n32>(data)) + fetch<i8>()));
-  case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
+  case 0x90 ... 0x97:
     return instructionSourceMemory(toMemory<n16>(load(toRegister3<n32>(data))));
-  case 0x98: case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: case 0x9e: case 0x9f:
+  case 0x98 ... 0x9f:
     idle(1);
     return instructionSourceMemory(toMemory<n16>(load(toRegister3<n32>(data)) + fetch<i8>()));
-  case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
+  case 0xa0 ... 0xa7:
     return instructionSourceMemory(toMemory<n32>(load(toRegister3<n32>(data))));
-  case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
+  case 0xa8 ... 0xaf:
     idle(1);
     return instructionSourceMemory(toMemory<n32>(load(toRegister3<n32>(data)) + fetch<i8>()));
-  case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
+  case 0xb0 ... 0xb7:
     return instructionTargetMemory(load(toRegister3<n32>(data)));
-  case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
+  case 0xb8 ... 0xbf:
     idle(1);
     return instructionTargetMemory(load(toRegister3<n32>(data)) + fetch<i8>());
   case 0xc0:
@@ -204,14 +203,20 @@ auto TLCS900H::instruction() -> void {
       auto r32 = load(fetchRegister<n32>());
       auto r8  = load(fetchRegister<n8 >());
       idle(3);
-      return instructionSourceMemory(Memory<n8>{r32 + (i8)r8});
+      return instructionSourceMemory(toMemory<n8>(r32 + (i8)r8));
     }
     if(data == 0x07) {
       auto r32 = load(fetchRegister<n32>());
       auto r16 = load(fetchRegister<n16>());
       idle(3);
-      return instructionSourceMemory(Memory<n8>{r32 + (i16)r16});
+      return instructionSourceMemory(toMemory<n8>(r32 + (i16)r16));
     }
+    if(data == 0x13) {
+      auto d16 = fetch<i16>();
+      idle(5);
+      return instructionSourceMemory(toMemory<n8>(load(PC) + d16));
+    }
+    debug(unusual, "[TLCS900H::instruction] 0xc3 0x", hex(data, 2L));
     return undefined(); }
   case 0xc4: {
     data = fetch();
@@ -237,7 +242,7 @@ auto TLCS900H::instruction() -> void {
     return undefined();
   case 0xc7:
     return instructionRegister(fetchRegister<n8>());
-  case 0xc8: case 0xc9: case 0xca: case 0xcb: case 0xcc: case 0xcd: case 0xce: case 0xcf:
+  case 0xc8 ... 0xcf:
     return instructionRegister(toRegister3<n8>(data));
   case 0xd0:
     idle(1);
@@ -270,6 +275,12 @@ auto TLCS900H::instruction() -> void {
       idle(3);
       return instructionSourceMemory(toMemory<n16>(r32 + (i16)r16));
     }
+    if(data == 0x13) {
+      auto d16 = fetch<i16>();
+      idle(5);
+      return instructionSourceMemory(toMemory<n16>(load(PC) + d16));
+    }
+    debug(unusual, "[TLCS900H::instruction] 0xd3 0x", hex(data, 2L));
     return undefined(); }
   case 0xd4: {
     data = fetch();
@@ -295,7 +306,7 @@ auto TLCS900H::instruction() -> void {
     return undefined();
   case 0xd7:
     return instructionRegister(fetchRegister<n16>());
-  case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
+  case 0xd8 ... 0xdf:
     return instructionRegister(toRegister3<n16>(data));
   case 0xe0:
     idle(1);
@@ -328,6 +339,12 @@ auto TLCS900H::instruction() -> void {
       idle(3);
       return instructionSourceMemory(toMemory<n32>(r32 + (i16)r16));
     }
+    if(data == 0x13) {
+      auto d16 = fetch<i16>();
+      idle(5);
+      return instructionSourceMemory(toMemory<n32>(load(PC) + d16));
+    }
+    debug(unusual, "[TLCS900H::instruction] 0xe3 0x", hex(data, 2L));
     return undefined(); }
   case 0xe4: {
     data = fetch();
@@ -353,7 +370,7 @@ auto TLCS900H::instruction() -> void {
     return undefined();
   case 0xe7:
     return instructionRegister(fetchRegister<n32>());
-  case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: case 0xed: case 0xee: case 0xef:
+  case 0xe8 ... 0xef:
     return instructionRegister(toRegister3<n32>(data));
   case 0xf0:
     idle(1);
@@ -386,21 +403,12 @@ auto TLCS900H::instruction() -> void {
       idle(3);
       return instructionTargetMemory(r32 + (i16)r16);
     }
-    if(data == 0x17) {
+    if(data == 0x13) {
       auto d16 = fetch<i16>();
-      data = fetch();
       idle(5);
-      if((data & 0xf8) == 0x20) {
-        auto register = toRegister3<n16>(data);
-        store(register, load(PC) + d16);
-        return;
-      }
-      if((data & 0xf8) == 0x30) {
-        auto register = toRegister3<n32>(data);
-        store(register, load(PC) + d16);
-        return;
-      }
+      return instructionTargetMemory(load(PC) + d16);
     }
+    debug(unusual, "[TLCS900H::instruction] 0xf3 0x", hex(data, 2L));
     return undefined(); }
   case 0xf4: {
     data = fetch();
@@ -432,7 +440,7 @@ auto TLCS900H::instruction() -> void {
     if(fetch()) Undefined;
     idle(4);
     return instructionLoad(memory, immediate); }
-  case 0xf8: case 0xf9: case 0xfa: case 0xfb: case 0xfc: case 0xfd: case 0xfe: case 0xff:
+  case 0xf8 ... 0xff:
     return instructionSoftwareInterrupt((n3)data);
   }
 }
@@ -444,7 +452,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
   auto data = fetch();
 
   switch(data) {
-  case 0x00: case 0x01: case 0x02:
+  case 0x00 ... 0x02:
     return undefined();
   case 0x03:
     idleBWL<bits>(1, 2, 4);
@@ -515,18 +523,18 @@ auto TLCS900H::instructionRegister(R register) -> void {
   case 0x16:
     if constexpr(bits != 16) return undefined(); else {
     return instructionMirror(register); }
-  case 0x17: case 0x18:
+  case 0x17 ... 0x18:
     return undefined();
   case 0x19:
     if constexpr(bits != 16) return undefined(); else {
     idle(17);
     return instructionMultiplyAdd(register); }
-  case 0x1a: case 0x1b:
+  case 0x1a ... 0x1b:
     return undefined();
   case 0x1c:
     if constexpr(bits == 32) return undefined(); else {
     return instructionDecrementJumpNotZero(register, fetchImmediate<i8>()); }
-  case 0x1d: case 0x1e: case 0x1f:
+  case 0x1d ... 0x1f:
     return undefined();
   case 0x20:
     if constexpr(bits == 32) return undefined(); else {
@@ -548,7 +556,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
     if constexpr(bits == 32) return undefined(); else {
     idle(1);
     return instructionStoreCarry(register, fetchImmediate<n8>()); }
-  case 0x25: case 0x26: case 0x27:
+  case 0x25 ... 0x27:
     return undefined();
   case 0x28:
     if constexpr(bits == 32) return undefined(); else {
@@ -600,7 +608,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
     if constexpr(bits == 32) return undefined(); else {
     idle(2);
     return instructionTestSet(register, fetchImmediate<n8>()); }
-  case 0x35: case 0x36: case 0x37:
+  case 0x35 ... 0x37:
     return undefined();
   case 0x38:
     if constexpr(bits != 16) return undefined(); else {
@@ -630,51 +638,50 @@ auto TLCS900H::instructionRegister(R register) -> void {
     return instructionModuloDecrement<4>(register, fetchImmediate<n16>()); }
   case 0x3f:
     return undefined();
-  case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
+  case 0x40 ... 0x47:
     if constexpr(bits == 32) return undefined(); else {
     idleBW<bits>(9, 12);
     return instructionMultiply(toRegister3<T>(data), register); }
-  case 0x48: case 0x49: case 0x4a: case 0x4b: case 0x4c: case 0x4d: case 0x4e: case 0x4f:
+  case 0x48 ... 0x4f:
     if constexpr(bits == 32) return undefined(); else {
     idleBW<bits>(7, 10);
     return instructionMultiplySigned(toRegister3<T>(data), register); }
-  case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
+  case 0x50 ... 0x57:
     if constexpr(bits == 32) return undefined(); else {
     idleBW<bits>(13, 21);
     return instructionDivide(toRegister3<T>(data), register); }
-  case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f:
+  case 0x58 ... 0x5f:
     if constexpr(bits == 32) return undefined(); else {
     idleBW<bits>(16, 24);
     return instructionDivideSigned(toRegister3<T>(data), register); }
-  case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
+  case 0x60 ... 0x67:
     idle(1);
     return instructionIncrement(register, toImmediate<T>((n3)data));
-  case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
+  case 0x68 ... 0x6f:
     idle(1);
     return instructionDecrement(register, toImmediate<T>((n3)data));
-  case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
-  case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: case 0x7f:
+  case 0x70 ... 0x7f:
     if constexpr(bits == 32) return undefined(); else {
     return instructionSetConditionCode((n4)data, register); }
-  case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+  case 0x80 ... 0x87:
     return instructionAdd(toRegister3<T>(data), register);
-  case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
+  case 0x88 ... 0x8f:
     return instructionLoad(toRegister3<T>(data), register);
-  case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
+  case 0x90 ... 0x97:
     return instructionAddCarry(toRegister3<T>(data), register);
-  case 0x98: case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: case 0x9e: case 0x9f:
+  case 0x98 ... 0x9f:
     return instructionLoad(register, toRegister3<T>(data));
-  case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
+  case 0xa0 ... 0xa7:
     return instructionSubtract(toRegister3<T>(data), register);
-  case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
+  case 0xa8 ... 0xaf:
     return instructionLoad(register, toImmediate<T>((n3)data));
-  case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
+  case 0xb0 ... 0xb7:
     return instructionSubtractBorrow(toRegister3<T>(data), register);
-  case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
+  case 0xb8 ... 0xbf:
     if constexpr(bits == 32) return undefined(); else {
     idle(1);
     return instructionExchange(toRegister3<T>(data), register); }
-  case 0xc0: case 0xc1: case 0xc2: case 0xc3: case 0xc4: case 0xc5: case 0xc6: case 0xc7:
+  case 0xc0 ... 0xc7:
     return instructionAnd(toRegister3<T>(data), register);
   case 0xc8:
     idleBWL<bits>(1, 2, 4);
@@ -700,12 +707,12 @@ auto TLCS900H::instructionRegister(R register) -> void {
   case 0xcf:
     idleBWL<bits>(1, 2, 4);
     return instructionCompare(register, fetchImmediate<T>());
-  case 0xd0: case 0xd1: case 0xd2: case 0xd3: case 0xd4: case 0xd5: case 0xd6: case 0xd7:
+  case 0xd0 ... 0xd7:
     return instructionXor(toRegister3<T>(data), register);
-  case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
+  case 0xd8 ... 0xdf:
     if constexpr(bits == 32) return undefined(); else {
     return instructionCompare(register, toImmediate<T>((n3)data)); }
-  case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
+  case 0xe0 ... 0xe7:
     return instructionOr(toRegister3<T>(data), register);
   case 0xe8:
     idle(1);
@@ -731,7 +738,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
   case 0xef:
     idle(1);
     return instructionShiftRightLogical(register, fetchImmediate<n8>());
-  case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5: case 0xf6: case 0xf7:
+  case 0xf0 ... 0xf7:
     return instructionCompare(toRegister3<T>(data), register);
   case 0xf8:
     idle(1);
@@ -767,7 +774,7 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
   auto data = fetch();
 
   switch(data) {
-  case 0x00: case 0x01: case 0x02: case 0x03:
+  case 0x00 ... 0x03:
     return undefined();
   case 0x04:
     if constexpr(bits == 32) return undefined(); else {
@@ -782,7 +789,7 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     if constexpr(bits != 8) return undefined(); else {
     idle(12);
     return instructionRotateRightDigit(A, memory); }
-  case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d: case 0x0e: case 0x0f:
+  case 0x08 ... 0x0f:
     return undefined();
   case 0x10:
     if constexpr(bits ==  8) { idle(6); return instructionLoad<T, +1>(); }
@@ -822,13 +829,13 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     if constexpr(bits == 32) return undefined(); else {
     idle(6);
     return instructionLoad(fetchMemory<T, n16>(), memory); }
-  case 0x1a: case 0x1b: case 0x1c: case 0x1d: case 0x1e: case 0x1f:
+  case 0x1a ... 0x1f:
     return undefined();
-  case 0x20: case 0x21: case 0x22: case 0x23: case 0x24: case 0x25: case 0x26: case 0x27:
+  case 0x20 ... 0x27:
     return instructionLoad(toRegister3<T>(data), memory);
-  case 0x28: case 0x29: case 0x2a: case 0x2b: case 0x2c: case 0x2d: case 0x2e: case 0x2f:
+  case 0x28 ... 0x2f:
     return undefined();
-  case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37:
+  case 0x30 ... 0x37:
     if constexpr(bits == 32) return undefined(); else {
     idle(4);
     return instructionExchange(memory, toRegister3<T>(data)); }
@@ -864,31 +871,31 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     if constexpr(bits == 32) return undefined(); else {
     idleBW<bits>(3, 4);
     return instructionCompare(memory, fetchImmediate<T>()); }
-  case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
+  case 0x40 ... 0x47:
     if constexpr(bits == 32) return undefined(); else {
     idleBW<bits>(11, 14);
     return instructionMultiply(toRegister3<T>(data), memory); }
-  case 0x48: case 0x49: case 0x4a: case 0x4b: case 0x4c: case 0x4d: case 0x4e: case 0x4f:
+  case 0x48 ... 0x4f:
     if constexpr(bits == 32) return undefined(); else {
     idleBW<bits>(9, 12);
     return instructionMultiplySigned(toRegister3<T>(data), memory); }
-  case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
+  case 0x50 ... 0x57:
     if constexpr(bits == 32) return undefined(); else {
     idleBW<bits>(14, 22);
     return instructionDivide(toRegister3<T>(data), memory); }
-  case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f:
+  case 0x58 ... 0x5f:
     if constexpr(bits == 32) return undefined(); else {
     idleBW<bits>(17, 25);
     return instructionDivideSigned(toRegister3<T>(data), memory); }
-  case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
+  case 0x60 ... 0x67:
     if constexpr(bits == 32) return undefined(); else {
     idle(4);
     return instructionIncrement(memory, toImmediate<T>((n3)data)); }
-  case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
+  case 0x68 ... 0x6f:
     if constexpr(bits == 32) return undefined(); else {
     idle(4);
     return instructionDecrement(memory, toImmediate<T>((n3)data)); }
-  case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
+  case 0x70 ... 0x77:
     return undefined();
   case 0x78:
     if constexpr(bits == 32) return undefined(); else {
@@ -922,52 +929,52 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     if constexpr(bits == 32) return undefined(); else {
     idle(4);
     return instructionShiftRightLogical(memory, toImmediate<n4>(1)); }
-  case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+  case 0x80 ... 0x87:
     idleBWL<bits>(2, 2, 4);
     return instructionAdd(toRegister3<T>(data), memory);
-  case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
+  case 0x88 ... 0x8f:
     idleBWL<bits>(4, 4, 8);
     return instructionAdd(memory, toRegister3<T>(data));
-  case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
+  case 0x90 ... 0x97:
     idleBWL<bits>(2, 2, 4);
     return instructionAddCarry(toRegister3<T>(data), memory);
-  case 0x98: case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: case 0x9e: case 0x9f:
+  case 0x98 ... 0x9f:
     idleBWL<bits>(4, 4, 8);
     return instructionAddCarry(memory, toRegister3<T>(data));
-  case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
+  case 0xa0 ... 0xa7:
     idleBWL<bits>(2, 2, 4);
     return instructionSubtract(toRegister3<T>(data), memory);
-  case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
+  case 0xa8 ... 0xaf:
     idleBWL<bits>(4, 4, 8);
     return instructionSubtract(memory, toRegister3<T>(data));
-  case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
+  case 0xb0 ... 0xb7:
     idleBWL<bits>(2, 2, 4);
     return instructionSubtractBorrow(toRegister3<T>(data), memory);
-  case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
+  case 0xb8 ... 0xbf:
     idleBWL<bits>(4, 4, 8);
     return instructionSubtractBorrow(memory, toRegister3<T>(data));
-  case 0xc0: case 0xc1: case 0xc2: case 0xc3: case 0xc4: case 0xc5: case 0xc6: case 0xc7:
+  case 0xc0 ... 0xc7:
     idleBWL<bits>(2, 2, 4);
     return instructionAnd(toRegister3<T>(data), memory);
-  case 0xc8: case 0xc9: case 0xca: case 0xcb: case 0xcc: case 0xcd: case 0xce: case 0xcf:
+  case 0xc8 ... 0xcf:
     idleBWL<bits>(4, 4, 8);
     return instructionAnd(memory, toRegister3<T>(data));
-  case 0xd0: case 0xd1: case 0xd2: case 0xd3: case 0xd4: case 0xd5: case 0xd6: case 0xd7:
+  case 0xd0 ... 0xd7:
     idleBWL<bits>(2, 2, 4);
     return instructionXor(toRegister3<T>(data), memory);
-  case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
+  case 0xd8 ... 0xdf:
     idleBWL<bits>(4, 4, 8);
     return instructionXor(memory, toRegister3<T>(data));
-  case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
+  case 0xe0 ... 0xe7:
     idleBWL<bits>(2, 2, 4);
     return instructionOr(toRegister3<T>(data), memory);
-  case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: case 0xed: case 0xee: case 0xef:
+  case 0xe8 ... 0xef:
     idleBWL<bits>(4, 4, 8);
     return instructionOr(memory, toRegister3<T>(data));
-  case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5: case 0xf6: case 0xf7:
+  case 0xf0 ... 0xf7:
     idleBWL<bits>(2, 2, 4);
     return instructionCompare(toRegister3<T>(data), memory);
-  case 0xf8: case 0xf9: case 0xfa: case 0xfb: case 0xfc: case 0xfd: case 0xfe: case 0xff:
+  case 0xf8 ... 0xff:
     idleBWL<bits>(2, 2, 4);
     return instructionCompare(memory, toRegister3<T>(data));
   }
@@ -995,11 +1002,7 @@ auto TLCS900H::instructionTargetMemory(n32 address) -> void {
   case 0x06:
     idle(1);
     return instructionPop(toMemory<n16>(address));
-  case 0x07:
-    return undefined();
-  case 0x08: case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d: case 0x0e: case 0x0f:
-    return undefined();
-  case 0x10: case 0x11: case 0x12: case 0x13:
+  case 0x07 ... 0x13:
     return undefined();
   case 0x14:
     idle(4);
@@ -1009,11 +1012,9 @@ auto TLCS900H::instructionTargetMemory(n32 address) -> void {
   case 0x16:
     idle(4);
     return instructionLoad(toMemory<n16>(address), fetchMemory<n16, n16>());
-  case 0x17:
+  case 0x17 ... 0x1f:
     return undefined();
-  case 0x18: case 0x19: case 0x1a: case 0x1b: case 0x1c: case 0x1d: case 0x1e: case 0x1f:
-    return undefined();
-  case 0x20: case 0x21: case 0x22: case 0x23: case 0x24: case 0x25: case 0x26: case 0x27:
+  case 0x20 ... 0x27:
     idle(2);
     return instructionLoad(toRegister3<n16>(data), toImmediate<n16>(address));
   case 0x28:
@@ -1031,73 +1032,66 @@ auto TLCS900H::instructionTargetMemory(n32 address) -> void {
   case 0x2c:
     idle(2);
     return instructionStoreCarry(toMemory<n8>(address), A);
-  case 0x2d: case 0x2e: case 0x2f:
+  case 0x2d ... 0x2f:
     return undefined();
-  case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37:
+  case 0x30 ... 0x37:
     idle(2);
     return instructionLoad(toRegister3<n32>(data), toImmediate<n32>(address));
-  case 0x38: case 0x39: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e: case 0x3f:
+  case 0x38 ... 0x3f:
     return undefined();
-  case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
+  case 0x40 ... 0x47:
     idle(2);
     return instructionLoad(toMemory<n8>(address), toRegister3<n8>(data));
-  case 0x48: case 0x49: case 0x4a: case 0x4b: case 0x4c: case 0x4d: case 0x4e: case 0x4f:
+  case 0x48 ... 0x4f:
     return undefined();
-  case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
+  case 0x50 ... 0x57:
     idle(2);
     return instructionLoad(toMemory<n16>(address), toRegister3<n16>(data));
-  case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f:
+  case 0x58 ... 0x5f:
     return undefined();
-  case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
+  case 0x60 ... 0x67:
     idle(4);
     return instructionLoad(toMemory<n32>(address), toRegister3<n32>(data));
-  case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
+  case 0x68 ... 0x7f:
     return undefined();
-  case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
-    return undefined();
-  case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: case 0x7f:
-    return undefined();
-  case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+  case 0x80 ... 0x87:
     idle(4);
     return instructionAndCarry(toMemory<n8>(address), toImmediate<n3>(data));
-  case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
+  case 0x88 ... 0x8f:
     idle(4);
     return instructionOrCarry(toMemory<n8>(address), toImmediate<n3>(data));
-  case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
+  case 0x90 ... 0x97:
     idle(4);
     return instructionXorCarry(toMemory<n8>(address), toImmediate<n3>(data));
-  case 0x98: case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: case 0x9e: case 0x9f:
+  case 0x98 ... 0x9f:
     idle(4);
     return instructionLoadCarry(toMemory<n8>(address), toImmediate<n3>(data));
-  case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
+  case 0xa0 ... 0xa7:
     idle(5);
     return instructionStoreCarry(toMemory<n8>(address), toImmediate<n3>(data));
-  case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
+  case 0xa8 ... 0xaf:
     idle(5);
     return instructionTestSet(toMemory<n8>(address), toImmediate<n3>(data));
-  case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
+  case 0xb0 ... 0xb7:
     idle(5);
     return instructionReset(toMemory<n8>(address), toImmediate<n3>(data));
-  case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
+  case 0xb8 ... 0xbf:
     idle(5);
     return instructionSet(toMemory<n8>(address), toImmediate<n3>(data));
-  case 0xc0: case 0xc1: case 0xc2: case 0xc3: case 0xc4: case 0xc5: case 0xc6: case 0xc7:
+  case 0xc0 ... 0xc7:
     idle(5);
     return instructionChange(toMemory<n8>(address), toImmediate<n3>(data));
-  case 0xc8: case 0xc9: case 0xca: case 0xcb: case 0xcc: case 0xcd: case 0xce: case 0xcf:
+  case 0xc8 ... 0xcf:
     idle(4);
     return instructionBit(toMemory<n8>(address), toImmediate<n3>(data));
-  case 0xd0: case 0xd1: case 0xd2: case 0xd3: case 0xd4: case 0xd5: case 0xd6: case 0xd7:
-  case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
+  case 0xd0 ... 0xdf:
     if(!condition((n4)data)) return;
     return instructionJump(toImmediate<n32>(address));
-  case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
-  case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: case 0xed: case 0xee: case 0xef:
+  case 0xe0 ... 0xef:
     if(!condition((n4)data)) return;
     idle(3);
     return instructionCall(toImmediate<n32>(address));
-  case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5: case 0xf6: case 0xf7:
-  case 0xf8: case 0xf9: case 0xfa: case 0xfb: case 0xfc: case 0xfd: case 0xfe: case 0xff:
+  case 0xf0 ... 0xff:
     if(!condition((n4)data)) return;
     idle(2);
     return instructionReturn();

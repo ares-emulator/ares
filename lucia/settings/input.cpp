@@ -11,6 +11,7 @@ auto InputSettings::construct() -> void {
   deviceList.onChange([&] { deviceChange(); });
   inputList.setBatchable();
   inputList.setHeadered();
+  inputList.onContext([&](auto cell) { eventContext(cell); });
   inputList.onChange([&] { eventChange(); });
   inputList.onActivate([&](auto cell) { eventAssign(cell); });
 
@@ -53,6 +54,7 @@ auto InputSettings::deviceChange() -> void {
   auto& device = port.devices[deviceList.selected().offset()];
   for(auto& input : device.inputs) {
     TableViewItem item{&inputList};
+    item.setAttribute<u32>("type", (u32)input.type);
     item.append(TableViewCell().setText(input.name).setFont(Font().setBold()));
     for(u32 binding : range(BindingLimit)) item.append(TableViewCell());
   }
@@ -80,6 +82,37 @@ auto InputSettings::refresh() -> void {
   }
 }
 
+auto InputSettings::eventContext(TableViewCell cell) -> void {
+  if(!cell) return;
+  if(cell.offset() == 0) return;  //ignore label cell
+  if(cell.offset() >= BindingLimit) return;  //should never occur
+
+  auto item = cell->parentTableViewItem();
+  auto type = (InputNode::Type)item->attribute<u32>("type");
+  menu.setVisible(false);
+  menu.reset();
+  if(type == InputNode::Type::Relative) {
+    menu.append(MenuItem().setIcon(Icon::Device::Mouse).setText("Mouse X-axis").onActivate([=] {
+      settingsWindow.inputSettings.eventAssign(cell, "X");
+    }));
+    menu.append(MenuItem().setIcon(Icon::Device::Mouse).setText("Mouse Y-axis").onActivate([=] {
+      settingsWindow.inputSettings.eventAssign(cell, "Y");
+    }));
+  }
+  if(type == InputNode::Type::Digital) {
+    menu.append(MenuItem().setIcon(Icon::Device::Mouse).setText("Mouse Left Button").onActivate([=] {
+      settingsWindow.inputSettings.eventAssign(cell, "Left");
+    }));
+    menu.append(MenuItem().setIcon(Icon::Device::Mouse).setText("Mouse Middle Button").onActivate([=] {
+      settingsWindow.inputSettings.eventAssign(cell, "Middle");
+    }));
+    menu.append(MenuItem().setIcon(Icon::Device::Mouse).setText("Mouse Right Button").onActivate([=] {
+      settingsWindow.inputSettings.eventAssign(cell, "Right");
+    }));
+  }
+  if(menu.actionCount()) menu.setVisible(true);
+}
+
 auto InputSettings::eventChange() -> void {
   assignButton.setEnabled(inputList.batched().size() == 1);
   clearButton.setEnabled(inputList.batched().size() >= 1);
@@ -94,6 +127,36 @@ auto InputSettings::eventClear() -> void {
     mapping.unbind();
   }
   refresh();
+}
+
+auto InputSettings::eventAssign(TableViewCell cell, string binding) -> void {
+  if(ruby::input.driver() == "None") return (void)MessageDialog().setText(
+    "Bindings cannot be set when no input driver has been loaded.\n"
+    "Please go to driver settings and activate an input driver first."
+  ).setAlignment(settingsWindow).error();
+
+  auto& ports = Emulator::enumeratePorts(systemList.selected().text());
+  auto& port = ports[portList.selected().offset()];
+  auto& device = port.devices[deviceList.selected().offset()];
+  if(auto item = inputList.selected()) {
+    if(activeMapping) refresh();  //clear any previous assign arrow prompts
+    activeMapping = device.inputs[item.offset()];
+    activeBinding = max(0, (s32)cell.offset() - 1);
+
+    for(auto device : inputManager.devices) {
+      if(device->isMouse()) {
+        for(auto& group : *device) {
+          if(auto inputID = group.find(binding)) {
+            auto groupID = (binding == "X" || binding == "Y") ? HID::Mouse::GroupID::Axis : HID::Mouse::GroupID::Button;
+            activeMapping->mapping->bind(activeBinding, device, groupID, inputID(), 0, 1);
+          }
+        }
+      }
+    }
+
+    activeMapping.reset();
+    refresh();
+  }
 }
 
 auto InputSettings::eventAssign(TableViewCell cell) -> void {
@@ -124,6 +187,7 @@ auto InputSettings::eventAssign(TableViewCell cell) -> void {
 auto InputSettings::eventInput(shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void {
   if(!activeMapping) return;
   if(!settingsWindow.focused()) return;
+  if(device->isMouse()) return;
 
   if(activeMapping->mapping->bind(activeBinding, device, groupID, inputID, oldValue, newValue)) {
     activeMapping.reset();

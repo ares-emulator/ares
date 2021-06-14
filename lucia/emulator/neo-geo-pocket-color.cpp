@@ -3,7 +3,6 @@ struct NeoGeoPocketColor : Emulator {
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
-  auto input(ares::Node::Input::Input) -> void override;
 };
 
 NeoGeoPocketColor::NeoGeoPocketColor() {
@@ -12,17 +11,19 @@ NeoGeoPocketColor::NeoGeoPocketColor() {
 
   firmware.append({"BIOS", "World", "8fb845a2f71514cec20728e2f0fecfade69444f8d50898b92c2259f1ba63e10d"});
 
-  { InputPort port{"Hardware"};
+  { InputPort port{"Neo Geo Pocket Color"};
 
-    InputDevice device{"Controls"};
-    device.button("Up",     virtualPads[0].up);
-    device.button("Down",   virtualPads[0].down);
-    device.button("Left",   virtualPads[0].left);
-    device.button("Right",  virtualPads[0].right);
-    device.button("A",      virtualPads[0].a);
-    device.button("B",      virtualPads[0].b);
-    device.button("Option", virtualPads[0].start);
-    port.append(device);
+  { InputDevice device{"Controls"};
+    device.digital("Up",       virtualPorts[0].pad.up);
+    device.digital("Down",     virtualPorts[0].pad.down);
+    device.digital("Left",     virtualPorts[0].pad.left);
+    device.digital("Right",    virtualPorts[0].pad.right);
+    device.digital("A",        virtualPorts[0].pad.a);
+    device.digital("B",        virtualPorts[0].pad.b);
+    device.digital("Option",   virtualPorts[0].pad.start);
+    device.digital("Power",    virtualPorts[0].pad.lt);
+    device.digital("Debugger", virtualPorts[0].pad.rt);
+    port.append(device); }
 
     ports.append(port);
   }
@@ -60,23 +61,4 @@ auto NeoGeoPocketColor::pak(ares::Node::Object node) -> shared_pointer<vfs::dire
   if(node->name() == "Neo Geo Pocket Color") return system->pak;
   if(node->name() == "Neo Geo Pocket Color Cartridge") return game->pak;
   return {};
-}
-
-auto NeoGeoPocketColor::input(ares::Node::Input::Input input) -> void {
-  auto name = input->name();
-  maybe<InputMapping&> mapping;
-  if(name == "Up"    ) mapping = virtualPads[0].up;
-  if(name == "Down"  ) mapping = virtualPads[0].down;
-  if(name == "Left"  ) mapping = virtualPads[0].left;
-  if(name == "Right" ) mapping = virtualPads[0].right;
-  if(name == "A"     ) mapping = virtualPads[0].a;
-  if(name == "B"     ) mapping = virtualPads[0].b;
-  if(name == "Option") mapping = virtualPads[0].start;
-
-  if(mapping) {
-    auto value = mapping->value();
-    if(auto button = input->cast<ares::Node::Input::Button>()) {
-      button->setValue(value);
-    }
-  }
 }

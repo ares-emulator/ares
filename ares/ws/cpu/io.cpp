@@ -67,155 +67,131 @@ auto CPU::keypadRead() -> n4 {
 auto CPU::portRead(n16 address) -> n8 {
   n8 data;
 
-  //DMA_SRC
-  if(address == 0x0040) return r.dmaSource.byte(0);
-  if(address == 0x0041) return r.dmaSource.byte(1);
-  if(address == 0x0042) return r.dmaSource.byte(2);
+  switch(address) {
 
-  //DMA_DST
-  if(address == 0x0044) return r.dmaTarget.byte(0);
-  if(address == 0x0045) return r.dmaTarget.byte(1);
+  case 0x0040 ... 0x0042:  //DMA_SRC
+    data = r.dmaSource.byte(address - 0x0040);
+    break;
 
-  //DMA_LEN
-  if(address == 0x0046) return r.dmaLength.byte(0);
-  if(address == 0x0047) return r.dmaLength.byte(1);
+  case 0x0044 ... 0x0045:  //DMA_DST
+    data = r.dmaTarget.byte(address - 0x0044);
+    break;
 
-  //DMA_CTRL
-  if(address == 0x0048) {
+  case 0x0046 ... 0x0047:  //DMA_LEN
+    data = r.dmaLength.byte(address - 0x0046);
+    break;
+
+  case 0x0048:  //DMA_CTRL
     data.bit(0) = r.dmaMode;
     data.bit(7) = r.dmaEnable;
-    return data;
-  }
+    break;
 
-  //WSC_SYSTEM
-  if(address == 0x0062) {
+  case 0x0062:  //WSC_SYSTEM
     data.bit(7) = SoC::SPHINX2();
-    return data;
-  }
+    break;
 
-  //HW_FLAGS
-  if(address == 0x00a0) {
+  case 0x00a0:  //HW_FLAGS
     data.bit(0) = r.cartridgeEnable;
     data.bit(1) = !SoC::ASWAN();
     data.bit(2) = 1;  //0 = 8-bit bus width; 1 = 16-bit bus width
     data.bit(7) = 1;  //1 = built-in self-test passed
-    return data;
-  }
+    break;
 
-  //INT_BASE
-  if(address == 0x00b0) {
+  case 0x00b0:  //INT_BASE
     data  = r.interruptBase;
     data |= SoC::ASWAN() ? 3 : 0;
-    return data;
-  }
+    break;
 
-  //SER_DATA
-  if(address == 0x00b1) {
-    return r.serialData;
-  }
+  case 0x00b1:  //SER_DATA
+    data = r.serialData;
+    break;
 
-  //INT_ENABLE
-  if(address == 0x00b2) {
-    return r.interruptEnable;
-  }
+  case 0x00b2:  //INT_ENABLE
+    data = r.interruptEnable;
+    break;
 
-  //SER_STATUS
-  if(address == 0x00b3) {
+  case 0x00b3:  //SER_STATUS
     data.bit(2) = 1;  //hack: always report send buffer as empty
     data.bit(6) = r.serialBaudRate;
     data.bit(7) = r.serialEnable;
-    return data;
-  }
+    break;
 
-  //INT_STATUS
-  if(address == 0x00b4) {
-    return r.interruptStatus;
-  }
+  case 0x00b4:  //INT_STATUS
+    data = r.interruptStatus;
+    break;
 
-  //KEYPAD
-  if(address == 0x00b5) {
+  case 0x00b5:  //KEYPAD
     data.bit(0,3) = keypadRead();
     data.bit(4,6) = r.keypadMatrix;
-    return data;
+    break;
+
   }
 
   return data;
 }
 
 auto CPU::portWrite(n16 address, n8 data) -> void {
-  //DMA_SRC
-  if(address == 0x0040) { r.dmaSource.byte(0) = data & ~1; return; }
-  if(address == 0x0041) { r.dmaSource.byte(1) = data;      return; }
-  if(address == 0x0042) { r.dmaSource.byte(2) = data;      return; }
+  switch(address) {
 
-  //DMA_DST
-  if(address == 0x0044) { r.dmaTarget.byte(0) = data & ~1; return; }
-  if(address == 0x0045) { r.dmaTarget.byte(1) = data;      return; }
+  case 0x0040 ... 0x0042:  //DMA_SRC
+    r.dmaSource.byte(address - 0x0040) = data;
+    r.dmaSource &= ~1;
+    break;
 
-  //DMA_LEN
-  if(address == 0x0046) { r.dmaLength.byte(0) = data & ~1; return; }
-  if(address == 0x0047) { r.dmaLength.byte(1) = data;      return; }
+  case 0x0044 ... 0x0045:  //DMA_DST
+    r.dmaTarget.byte(address - 0x0044) = data;
+    r.dmaTarget &= ~1;
+    break;
 
-  //DMA_CTRL
-  if(address == 0x0048) {
+  case 0x0046 ... 0x0047:  //DMA_LEN
+    r.dmaLength.byte(address - 0x0046) = data;
+    r.dmaLength &= ~1;
+    break;
+
+  case 0x0048:  //DMA_CTRL
     r.dmaMode   = data.bit(6);
     r.dmaEnable = data.bit(7);
     if(r.dmaEnable) dmaTransfer();
-    return;
-  }
+    break;
 
-  //WSC_SYSTEM
-  if(address == 0x0062) {
+  case 0x0062:  //WSC_SYSTEM
     if(!SoC::ASWAN()) {
       if(data.bit(0)) scheduler.exit(Event::Power);
     }
-    return;
-  }
+    break;
 
-  //HW_FLAGS
-  if(address == 0x00a0) {
+  case 0x00a0:  //HW_FLAGS
     //todo: d2 (bus width) bit is writable; but ... it will do very bad things
     r.cartridgeEnable |= data.bit(0);  //bit can never be unset (boot ROM lockout)
-    return;
-  }
+    break;
 
-  //INT_BASE
-  if(address == 0x00b0) {
+  case 0x00b0:  //INT_BASE
     r.interruptBase = SoC::ASWAN() ? data & ~7 : data & ~1;
-    return;
-  }
+    break;
 
-  //SER_DATA
-  if(address == 0x00b1) {
+  case 0x00b1:  //SER_DATA
     r.serialData = data;
-    return;
-  }
+    break;
 
-  //INT_ENABLE
-  if(address == 0x00b2) {
+  case 0x00b2:  //INT_ENABLE
     r.interruptEnable = data;
     r.interruptStatus &= ~r.interruptEnable;
-    return;
-  }
+    break;
 
-  //SER_STATUS
-  if(address == 0x00b3) {
+  case 0x00b3:  //SER_STATUS
     r.serialBaudRate = data.bit(6);
     r.serialEnable   = data.bit(7);
-    return;
-  }
+    break;
 
-  //KEYPAD
-  if(address == 0x00b5) {
+  case 0x00b5:  //KEYPAD
     r.keypadMatrix = data.bit(4,6);
-    return;
-  }
+    break;
 
-  //INT_ACK
-  if(address == 0x00b6) {
+  case 0x00b6:  //INT_ACK
     //acknowledge only edge-sensitive interrupts
     r.interruptStatus &= ~(data & 0b11110010);
-    return;
+    break;
+
   }
 
   return;

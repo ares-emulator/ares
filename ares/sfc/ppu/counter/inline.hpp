@@ -77,9 +77,12 @@ alwaysinline auto PPUcounter::hdot() const -> u32 {
 }
 
 inline auto PPUcounter::reset() -> void {
-  time = {};
-  last = {};
-
+  time.interlace = 0;
+  time.field = 0;
   time.vperiod = last.vperiod = Region::NTSC() ? 262 : 312;
   time.hperiod = last.hperiod = 1364;
+  time.vcounter = 0;
+  time.hcounter = 0;
+  last.vperiod = 0;
+  last.hperiod = 0;
 }
