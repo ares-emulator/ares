@@ -46,19 +46,21 @@ auto V30MZ::DEC(Size size, n16 x) -> n16 {
   return result;
 }
 
-auto V30MZ::DIV(Size size, n32 x, n32 y) -> n32 {
-  if(y == 0) return interrupt(0), 0;
-  n32 quotient = x / y;
-  n32 remainder = x % y;
+auto V30MZ::DIVI(Size size, i32 x, i32 y) -> n32 {
+  if(y == 0) return interrupt(0), x;
+  x = size == Byte ? (s16)x : (s32)x;
+  y = size == Byte ? ( s8)y : (s16)y;
+  i32 quotient  = x / y;
+  i32 remainder = x % y;
+  if(quotient > mask >> 1 || quotient < -sign) return interrupt(0), x;
   return (remainder & mask) << bits | (quotient & mask);
 }
 
-auto V30MZ::DIVI(Size size, i32 x, i32 y) -> n32 {
-  if(y == 0) return interrupt(0), 0;
-  x = size == Byte ? (s8)x : (s16)x;
-  y = size == Byte ? (s8)y : (s16)y;
-  n32 quotient = x / y;
+auto V30MZ::DIVU(Size size, n32 x, n32 y) -> n32 {
+  if(y == 0) return interrupt(0), x;
+  n32 quotient  = x / y;
   n32 remainder = x % y;
+  if(quotient > mask) return interrupt(0), x;
   return (remainder & mask) << bits | (quotient & mask);
 }
 
@@ -72,16 +74,16 @@ auto V30MZ::INC(Size size, n16 x) -> n16 {
   return result;
 }
 
-auto V30MZ::MUL(Size size, n16 x, n16 y) -> n32 {
+auto V30MZ::MULI(Size size, i16 x, i16 y) -> n32 {
+  x = size == Byte ? (s8)x : (s16)x;
+  y = size == Byte ? (s8)y : (s16)y;
   n32 result = x * y;
   r.f.c = result >> bits;
   r.f.v = result >> bits;
   return result;
 }
 
-auto V30MZ::MULI(Size size, i16 x, i16 y) -> n32 {
-  x = size == Byte ? (s8)x : (s16)x;
-  y = size == Byte ? (s8)y : (s16)y;
+auto V30MZ::MULU(Size size, n16 x, n16 y) -> n32 {
   n32 result = x * y;
   r.f.c = result >> bits;
   r.f.v = result >> bits;

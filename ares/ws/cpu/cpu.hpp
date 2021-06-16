@@ -33,9 +33,8 @@ struct CPU : V30MZ, Thread, IO {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(u32 clocks) -> void;
+  auto step(u32 clocks) -> void override;
 
-  auto wait(u32 clocks = 1) -> void override;
   auto read(n20 addr) -> n8 override;
   auto write(n20 addr, n8 data) -> void override;
   auto in(n16 port) -> n8 override;

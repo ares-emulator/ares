@@ -220,6 +220,7 @@ auto PPU::frame() -> void {
 }
 
 auto PPU::step(u32 clocks) -> void {
+  io.hcounter += clocks;
   Thread::step(clocks);
   Thread::synchronize(cpu);
 }

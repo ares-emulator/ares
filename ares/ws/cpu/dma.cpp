@@ -5,9 +5,9 @@ auto CPU::dmaTransfer() -> void {
     return;
   }
 
-  wait(5);
+  step(5);
   while(r.dmaLength) {
-    wait(2);
+    step(2);
     n16 data = 0;
     //once DMA is started; SRAM reads still incur time penalty, but do not transfer
     if(r.dmaSource.byte(2) != 1) {

@@ -4,6 +4,7 @@ auto V30MZ::instructionLoop() -> void {
   if(--r.cx) {
     wait(3);
     r.ip += offset;
+    flush();
   }
 }
 
@@ -13,6 +14,7 @@ auto V30MZ::instructionLoopWhile(bool value) -> void {
   if(--r.cx && r.f.z == value) {
     wait(3);
     r.ip += offset;
+    flush();
   }
 }
 
@@ -20,16 +22,23 @@ auto V30MZ::instructionJumpShort() -> void {
   wait(3);
   auto offset = (i8)fetch();
   r.ip += offset;
+  flush();
 }
 
 auto V30MZ::instructionJumpIf(bool condition) -> void {
+  wait(1);
   auto offset = (i8)fetch();
-  if(condition) r.ip += offset;
+  if(condition) {
+    wait(3);
+    r.ip += offset;
+    flush();
+  }
 }
 
 auto V30MZ::instructionJumpNear() -> void {
   wait(3);
   r.ip += (i16)fetch(Word);
+  flush();
 }
 
 auto V30MZ::instructionJumpFar() -> void {
@@ -38,6 +47,7 @@ auto V30MZ::instructionJumpFar() -> void {
   auto cs = fetch(Word);
   r.cs = cs;
   r.ip = ip;
+  flush();
 }
 
 auto V30MZ::instructionCallNear() -> void {
@@ -45,6 +55,7 @@ auto V30MZ::instructionCallNear() -> void {
   auto offset = (i16)fetch(Word);
   push(r.ip);
   r.ip += offset;
+  flush();
 }
 
 auto V30MZ::instructionCallFar() -> void {
@@ -55,11 +66,13 @@ auto V30MZ::instructionCallFar() -> void {
   push(r.ip);
   r.cs = cs;
   r.ip = ip;
+  flush();
 }
 
 auto V30MZ::instructionReturn() -> void {
   wait(5);
   r.ip = pop();
+  flush();
 }
 
 auto V30MZ::instructionReturnImm() -> void {
@@ -67,12 +80,14 @@ auto V30MZ::instructionReturnImm() -> void {
   auto offset = fetch(Word);
   r.ip = pop();
   r.sp += offset;
+  flush();
 }
 
 auto V30MZ::instructionReturnFar() -> void {
   wait(7);
   r.ip = pop();
   r.cs = pop();
+  flush();
 }
 
 auto V30MZ::instructionReturnFarImm() -> void {
@@ -81,6 +96,7 @@ auto V30MZ::instructionReturnFarImm() -> void {
   r.ip = pop();
   r.cs = pop();
   r.sp += offset;
+  flush();
 }
 
 auto V30MZ::instructionReturnInt() -> void {
@@ -88,7 +104,8 @@ auto V30MZ::instructionReturnInt() -> void {
   r.ip = pop();
   r.cs = pop();
   r.f = pop();
-  state.poll = false;
+  flush();
+  state.poll = 0;
 }
 
 auto V30MZ::instructionInt3() -> void {
@@ -135,9 +152,19 @@ auto V30MZ::instructionPushReg(u16& reg) -> void {
   push(reg);
 }
 
+auto V30MZ::instructionPushSeg(u16& seg) -> void {
+  wait(1);
+  push(seg);
+}
+
 auto V30MZ::instructionPopReg(u16& reg) -> void {
   reg = pop();
-  if(&reg == &r.ss) state.poll = false;
+}
+
+auto V30MZ::instructionPopSeg(u16& seg) -> void {
+  wait(2);
+  seg = pop();
+  if(&seg == &r.ss) state.poll = 0;
 }
 
 auto V30MZ::instructionPushFlags() -> void {
@@ -148,11 +175,11 @@ auto V30MZ::instructionPushFlags() -> void {
 auto V30MZ::instructionPopFlags() -> void {
   wait(2);
   r.f = pop();
-  state.poll = false;
+  state.poll = 0;
 }
 
 auto V30MZ::instructionPushAll() -> void {
-  wait(8);
+  wait(1);
   auto sp = r.sp;
   push(r.ax);
   push(r.cx);
@@ -165,7 +192,7 @@ auto V30MZ::instructionPushAll() -> void {
 }
 
 auto V30MZ::instructionPopAll() -> void {
-  wait(7);
+  wait(1);
   r.di = pop();
   r.si = pop();
   r.bp = pop();
@@ -183,6 +210,7 @@ auto V30MZ::instructionPushImm(Size size) -> void {
 }
 
 auto V30MZ::instructionPopMem() -> void {
+  wait(1);
   modRM();
   auto data = pop();
   //NEC bug: pop into a register will adjust the stack, but fail to set the register properly

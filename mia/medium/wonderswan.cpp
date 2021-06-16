@@ -4,7 +4,6 @@ struct WonderSwan : Cartridge {
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
-  auto analyzeHacks(vector<u8>& rom, string hash) -> void;
 };
 
 auto WonderSwan::load(string location) -> bool {
@@ -60,7 +59,6 @@ auto WonderSwan::analyze(vector<u8>& rom) -> string {
   if(rom.size() < 0x10000) return {};
 
   auto hash = Hash::SHA256(rom).digest();
-  analyzeHacks(rom, hash);
 
   auto metadata = &rom[rom.size() - 16];
 
@@ -110,22 +108,4 @@ auto WonderSwan::analyze(vector<u8>& rom) -> string {
   }
 
   return s;
-}
-
-auto WonderSwan::analyzeHacks(vector<u8>& rom, string hash) -> void {
-  //Meitantei Conan: Nishi no Meitantei Saidai no Kiki! (Japan)
-  if(hash == "183ab5ec58beb95d460211fa09fa968c6f01f80f1ae2b78b5b11542f22ddd95a") {
-    //changes the active ROM bank within said bank.
-    //bank target should be 0x0f, but is 0x0e.
-    //bank 0x0e (0fxxxx) contains 0xff bytes.
-    //bank 0x0f (1fxxxx) contains vectors.
-    //0fffe0  mov al,0xe0
-    //0fffe2  out 0xc2,al
-    //0fffe4  mov al,0x0e
-    //0fffe6  out 0xc0,al        ;jumps to 0fffe8 (efffe8)
-    //1fffe8  jmp 0x2000:0x0000  ;but should jump to 1fffe8 (ffffe8)
-    for(auto address : range(32)) {
-      rom[0x0fffe0 + address] = rom[0x1fffe0 + address];
-    }
-  }
 }

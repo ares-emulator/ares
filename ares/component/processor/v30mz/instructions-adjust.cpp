@@ -1,5 +1,5 @@
 auto V30MZ::instructionDecimalAdjust(bool negate) -> void {
-  wait(9);
+  wait(10 + negate);
   n8 al = r.al;
   if(r.f.h || ((al & 0x0f) > 0x09)) {
     r.al += negate ? -0x06 : 0x06;
@@ -15,7 +15,7 @@ auto V30MZ::instructionDecimalAdjust(bool negate) -> void {
 }
 
 auto V30MZ::instructionAsciiAdjust(bool negate) -> void {
-  wait(8);
+  wait(9);
   if(r.f.h || ((r.al & 0x0f) > 0x09)) {
     r.al += negate ? -0x06 : 0x06;
     r.ah += negate ? -0x01 : 0x01;
@@ -41,7 +41,7 @@ auto V30MZ::instructionAdjustAfterMultiply() -> void {
 }
 
 auto V30MZ::instructionAdjustAfterDivide() -> void {
-  wait(5);
+  wait(6);
   auto imm = fetch();
   //NEC CPUs do not honor the immediate and always use (base) 10
   r.al += r.ah * 10;

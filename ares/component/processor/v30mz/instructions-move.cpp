@@ -1,21 +1,24 @@
 auto V30MZ::instructionMoveMemReg(Size size) -> void {
   modRM();
+  if(modrm.mod == 3) wait(1);
   setMem(size, getReg(size));
 }
 
 auto V30MZ::instructionMoveRegMem(Size size) -> void {
   modRM();
+  if(modrm.mod == 3) wait(1);
   setReg(size, getMem(size));
 }
 
 auto V30MZ::instructionMoveMemSeg() -> void {
+  wait(1);
   modRM();
   setMem(Word, getSeg());
   state.poll = false;
 }
 
 auto V30MZ::instructionMoveSegMem() -> void {
-  wait(1);
+  wait(2);
   modRM();
   setSeg(getMem(Word));
   if((modrm.reg & 3) == 3) state.poll = false;
@@ -30,10 +33,12 @@ auto V30MZ::instructionMoveMemAcc(Size size) -> void {
 }
 
 auto V30MZ::instructionMoveRegImm(u8& reg) -> void {
+  wait(1);
   reg = fetch(Byte);
 }
 
 auto V30MZ::instructionMoveRegImm(u16& reg) -> void {
+  wait(1);
   reg = fetch(Word);
 }
 
@@ -43,14 +48,14 @@ auto V30MZ::instructionMoveMemImm(Size size) -> void {
 }
 
 auto V30MZ::instructionExchange(u16& x, u16& y) -> void {
-  wait(2);
+  wait(3);
   n16 z = x;
   x = y;
   y = z;
 }
 
 auto V30MZ::instructionExchangeMemReg(Size size) -> void {
-  wait(2);
+  wait(3);
   modRM();
   auto mem = getMem(size);
   auto reg = getReg(size);
@@ -59,12 +64,13 @@ auto V30MZ::instructionExchangeMemReg(Size size) -> void {
 }
 
 auto V30MZ::instructionLoadEffectiveAddressRegMem() -> void {
+  wait(1);
   modRM();
   setReg(Word, modrm.address);
 }
 
 auto V30MZ::instructionLoadSegmentMem(u16& segment) -> void {
-  wait(5);
+  wait(4);
   modRM();
   setReg(Word, getMem(Word));
   segment = getMem(Word, 2);

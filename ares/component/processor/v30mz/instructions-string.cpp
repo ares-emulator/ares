@@ -7,8 +7,9 @@ auto V30MZ::instructionInString(Size size) -> void {
 
     if(!repeat() || !--r.cx) return;
 
-    state.prefix = true;
+    state.prefix = 1;
     r.ip--;
+    loop();
   }
 }
 
@@ -21,13 +22,14 @@ auto V30MZ::instructionOutString(Size size) -> void {
 
     if(!repeat() || !--r.cx) return;
 
-    state.prefix = true;
+    state.prefix = 1;
     r.ip--;
+    loop();
   }
 }
 
 auto V30MZ::instructionMoveString(Size size) -> void {
-  wait(4);
+  wait(3);
   if(!repeat() || r.cx) {
     auto data = read(size, segment(r.ds), r.si);
     write(size, r.es, r.di, data);
@@ -36,13 +38,14 @@ auto V30MZ::instructionMoveString(Size size) -> void {
 
     if(!repeat() || !--r.cx) return;
 
-    state.prefix = true;
+    state.prefix = 1;
     r.ip--;
+    loop();
   }
 }
 
 auto V30MZ::instructionCompareString(Size size) -> void {
-  wait(5);
+  wait(4);
   if(!repeat() || r.cx) {
     auto x = read(size, segment(r.ds), r.si);
     auto y = read(size, r.es, r.di);
@@ -54,8 +57,9 @@ auto V30MZ::instructionCompareString(Size size) -> void {
     if(repeat() == RepeatWhileZeroLo && r.f.z == 1) return;
     if(repeat() == RepeatWhileZeroHi && r.f.z == 0) return;
 
-    state.prefix = true;
+    state.prefix = 1;
     r.ip--;
+    loop();
   }
 }
 
@@ -67,8 +71,9 @@ auto V30MZ::instructionStoreString(Size size) -> void {
 
     if(!repeat() || !--r.cx) return;
 
-    state.prefix = true;
+    state.prefix = 1;
     r.ip--;
+    loop();
   }
 }
 
@@ -80,8 +85,9 @@ auto V30MZ::instructionLoadString(Size size) -> void {
 
     if(!repeat() || !--r.cx) return;
 
-    state.prefix = true;
+    state.prefix = 1;
     r.ip--;
+    loop();
   }
 }
 
@@ -97,7 +103,8 @@ auto V30MZ::instructionScanString(Size size) -> void {
     if(repeat() == RepeatWhileZeroLo && r.f.z == 1) return;
     if(repeat() == RepeatWhileZeroHi && r.f.z == 0) return;
 
-    state.prefix = true;
+    state.prefix = 1;
     r.ip--;
+    loop();
   }
 }

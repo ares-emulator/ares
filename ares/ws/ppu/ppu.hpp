@@ -25,6 +25,7 @@ struct PPU : Thread, IO {
     Node::Video::Sprite volumeB3;
   } icon;
 
+  auto hcounter() const -> u32 { return io.hcounter; }
   auto vcounter() const -> u32 { return io.vcounter; }
   auto field() const -> bool { return io.field; }
 
@@ -188,6 +189,7 @@ struct PPU : Thread, IO {
   } htimer, vtimer;
 
   struct IO {
+    n8 hcounter;
     n8 vcounter;
     n8 vsync  = 155;
     n8 vtotal = 158;

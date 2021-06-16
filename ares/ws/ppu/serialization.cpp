@@ -61,6 +61,7 @@ auto PPU::serialize(serializer& s) -> void {
   s(vtimer.frequency);
   s(vtimer.counter);
 
+  s(io.hcounter);
   s(io.vcounter);
   s(io.vsync);
   s(io.vtotal);

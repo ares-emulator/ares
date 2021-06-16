@@ -32,10 +32,6 @@ auto CPU::step(u32 clocks) -> void {
   Thread::synchronize();
 }
 
-auto CPU::wait(u32 clocks) -> void {
-  step(clocks);
-}
-
 auto CPU::read(n20 addr) -> n8 {
   return bus.read(addr);
 }

@@ -40,4 +40,6 @@ auto V30MZ::serialize(serializer& s) -> void {
   s(r.ds);
   s(r.ip);
   s(r.f.data);
+  s(r.pf);
+  s(r.pfp);
 }

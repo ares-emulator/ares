@@ -18,14 +18,10 @@ namespace ares {
 #include "instructions-string.cpp"
 #include "serialization.cpp"
 
-auto V30MZ::warning(string text) -> void {
-//print(text, "\n");
-}
-
 auto V30MZ::power() -> void {
-  state.halt = false;
-  state.poll = true;
-  state.prefix = false;
+  state.halt = 0;
+  state.poll = 1;
+  state.prefix = 0;
   prefixes.reset();
 
   r.ax = 0x0000;
@@ -42,11 +38,12 @@ auto V30MZ::power() -> void {
   r.ds = 0x0000;
   r.ip = 0x0000;
   r.f  = 0x8000;
+  flush();
 }
 
 auto V30MZ::exec() -> void {
-  state.poll = true;
-  state.prefix = false;
+  state.poll = 1;
+  state.prefix = 0;
   if(state.halt) return wait(1);
 
   instruction();

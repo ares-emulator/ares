@@ -1,9 +1,9 @@
 auto V30MZ::interrupt(n8 vector) -> void {
   wait(32);
 
-  state.halt = false;
-  state.poll = true;
-  state.prefix = false;
+  state.halt = 0;
+  state.poll = 1;
+  state.prefix = 0;
 
   //if an IRQ fires during a rep string instruction;
   //flush prefix queue and seek back to first prefix.
@@ -20,12 +20,13 @@ auto V30MZ::interrupt(n8 vector) -> void {
   push(r.cs);
   push(r.ip);
 
-  r.f.m = true;
-  r.f.i = false;
-  r.f.b = false;
+  r.f.m = 1;
+  r.f.i = 0;
+  r.f.b = 0;
 
   r.ip = ip;
   r.cs = cs;
+  flush();
 }
 
 #define op(id, name, ...) case id: return instruction##name(__VA_ARGS__);
@@ -38,32 +39,32 @@ auto V30MZ::instruction() -> void {
   op(0x03, AddRegMem, Word)
   op(0x04, AddAccImm, Byte)
   op(0x05, AddAccImm, Word)
-  op(0x06, PushReg, r.es)
-  op(0x07, PopReg, r.es)
+  op(0x06, PushSeg, r.es)
+  op(0x07, PopSeg, r.es)
   op(0x08, OrMemReg, Byte)
   op(0x09, OrMemReg, Word)
   op(0x0a, OrRegMem, Byte)
   op(0x0b, OrRegMem, Word)
   op(0x0c, OrAccImm, Byte)
   op(0x0d, OrAccImm, Word)
-  op(0x0e, PushReg, r.cs)
-  op(0x0f, PopReg, r.cs)
+  op(0x0e, PushSeg, r.cs)
+  op(0x0f, PopSeg, r.cs)
   op(0x10, AdcMemReg, Byte)
   op(0x11, AdcMemReg, Word)
   op(0x12, AdcRegMem, Byte)
   op(0x13, AdcRegMem, Word)
   op(0x14, AdcAccImm, Byte)
   op(0x15, AdcAccImm, Word)
-  op(0x16, PushReg, r.ss)
-  op(0x17, PopReg, r.ss)
+  op(0x16, PushSeg, r.ss)
+  op(0x17, PopSeg, r.ss)
   op(0x18, SbbMemReg, Byte)
   op(0x19, SbbMemReg, Word)
   op(0x1a, SbbRegMem, Byte)
   op(0x1b, SbbRegMem, Word)
   op(0x1c, SbbAccImm, Byte)
   op(0x1d, SbbAccImm, Word)
-  op(0x1e, PushReg, r.ds)
-  op(0x1f, PopReg, r.ds)
+  op(0x1e, PushSeg, r.ds)
+  op(0x1f, PopSeg, r.ds)
   op(0x20, AndMemReg, Byte)
   op(0x21, AndMemReg, Word)
   op(0x22, AndRegMem, Byte)
@@ -224,8 +225,8 @@ auto V30MZ::instruction() -> void {
   op(0xbd, MoveRegImm, r.bp)
   op(0xbe, MoveRegImm, r.si)
   op(0xbf, MoveRegImm, r.di)
-  op(0xc0, Group2MemImm, Byte)
-  op(0xc1, Group2MemImm, Word)
+  op(0xc0, Group2MemImm, Byte, 3)
+  op(0xc1, Group2MemImm, Word, 3)
   op(0xc2, ReturnImm)
   op(0xc3, Return)
   op(0xc4, LoadSegmentMem, r.es)
@@ -240,14 +241,14 @@ auto V30MZ::instruction() -> void {
   op(0xcd, IntImm)
   op(0xce, Into)
   op(0xcf, ReturnInt)
-  op(0xd0, Group2MemImm, Byte, (n8)1)
-  op(0xd1, Group2MemImm, Word, (n8)1)
-  op(0xd2, Group2MemImm, Byte, (n8)r.cl)
-  op(0xd3, Group2MemImm, Word, (n8)r.cl)
+  op(0xd0, Group2MemImm, Byte, 1, (n8)1)
+  op(0xd1, Group2MemImm, Word, 1, (n8)1)
+  op(0xd2, Group2MemImm, Byte, 3, (n8)r.cl)
+  op(0xd3, Group2MemImm, Word, 3, (n8)r.cl)
   op(0xd4, AdjustAfterMultiply)
   op(0xd5, AdjustAfterDivide)
-  op(0xd6, Translate)  //xlat (undocumented mirror)
-  op(0xd7, Translate)  //xlat
+  op(0xd6, Translate, 7)  //xlat (undocumented mirror)
+  op(0xd7, Translate, 4)  //xlat
 //op(0xd8, ...)  //fpo1
 //op(0xd9, ...)  //fpo1
 //op(0xda, ...)  //fpo1

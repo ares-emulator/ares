@@ -57,13 +57,12 @@ struct V30MZ {
     RepeatWhileZeroHi  = 0xf3,
   };
 
-  virtual auto wait(u32 clocks = 1) -> void = 0;
+  virtual auto step(u32 clocks = 1) -> void = 0;
   virtual auto read(n20 address) -> n8 = 0;
   virtual auto write(n20 address, n8 data) -> void = 0;
   virtual auto in(n16 port) -> n8 = 0;
   virtual auto out(n16 port, n8 data) -> void = 0;
 
-  auto warning(string text) -> void;
   auto power() -> void;
   auto exec() -> void;
 
@@ -97,6 +96,10 @@ struct V30MZ {
   auto in(Size, n16) -> n16;
   auto out(Size, n16, n16) -> void;
 
+  auto loop() -> void;
+  auto flush() -> void;
+  auto wait(u32 clocks) -> void;
+  auto prefetch() -> void;
   auto fetch(Size = Byte) -> n16;
   auto pop() -> n16;
   auto push(n16) -> void;
@@ -107,11 +110,11 @@ struct V30MZ {
   auto ADD (Size, n16, n16) -> n16;
   auto AND (Size, n16, n16) -> n16;
   auto DEC (Size, n16     ) -> n16;
-  auto DIV (Size, n32, n32) -> n32;
   auto DIVI(Size, i32, i32) -> n32;
+  auto DIVU(Size, n32, n32) -> n32;
   auto INC (Size, n16     ) -> n16;
-  auto MUL (Size, n16, n16) -> n32;
   auto MULI(Size, i16, i16) -> n32;
+  auto MULU(Size, n16, n16) -> n32;
   auto NEG (Size, n16     ) -> n16;
   auto NOT (Size, n16     ) -> n16;
   auto OR  (Size, n16, n16) -> n16;
@@ -186,7 +189,9 @@ struct V30MZ {
   auto instructionEnter() -> void;
   auto instructionLeave() -> void;
   auto instructionPushReg(u16&) -> void;
+  auto instructionPushSeg(u16&) -> void;
   auto instructionPopReg(u16&) -> void;
+  auto instructionPopSeg(u16&) -> void;
   auto instructionPushFlags() -> void;
   auto instructionPopFlags() -> void;
   auto instructionPushAll() -> void;
@@ -203,7 +208,7 @@ struct V30MZ {
 
   //instructions-group.cpp
   auto instructionGroup1MemImm(Size, bool) -> void;
-  auto instructionGroup2MemImm(Size, maybe<n8> = {}) -> void;
+  auto instructionGroup2MemImm(Size, u8, maybe<n8> = {}) -> void;
   auto instructionGroup3MemImm(Size) -> void;
   auto instructionGroup4MemImm(Size) -> void;
 
@@ -218,7 +223,7 @@ struct V30MZ {
   auto instructionOut(Size) -> void;
   auto instructionInDX(Size) -> void;
   auto instructionOutDX(Size) -> void;
-  auto instructionTranslate() -> void;
+  auto instructionTranslate(u8) -> void;
   auto instructionBound() -> void;
 
   //instructions-move.cpp
@@ -309,6 +314,9 @@ struct V30MZ {
       auto& operator^=(u32 value) { return data ^= value, *this; }
       auto& operator|=(u32 value) { return data |= value, *this; }
     } f;
+
+    queue<u8[16]> pf;
+    u16 pfp;
   } r;
 };
 

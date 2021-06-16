@@ -18,7 +18,7 @@ auto V30MZ::modRM() -> void {
     case 6: modrm.segment = segment(r.ss); modrm.address = r.bp; break;
     case 7: modrm.segment = segment(r.ds); modrm.address = r.bx; break;
     }
-    if(modrm.mod == 1) modrm.address += (i8 )fetch(Byte);
+    if(modrm.mod == 1) modrm.address += ( i8)fetch(Byte);
     if(modrm.mod == 2) modrm.address += (i16)fetch(Word);
   }
 }

@@ -8,6 +8,10 @@ auto PPU::Screen::pixel(n8 x, n8 y) -> void {
   n15 address = x.bit(3,7) << 1 | y.bit(3,7) << 6 | mapBase << 11;
   n16 attributes = iram.read16(address);
 
+//if(this == &self.screen2 && x==176 && y == 50) {
+//  print(x, ",", y, ",", hex(address), ",", hex(attributes), "\n");
+//}
+
   n10 tile    = attributes.bit( 0, 8) | attributes.bit(13) << 9;
   n4  palette = attributes.bit( 9,12);
   n3  hflip   = attributes.bit(14) * 7;
