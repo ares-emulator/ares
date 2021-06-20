@@ -1,15 +1,21 @@
 auto APU::Channel3::sweep() -> void {
-  if(r.sweep && --s.sweepCounter < 0) {
-    s.sweepCounter = r.sweepTime;
-    r.pitch += r.sweepValue;
+  if(io.sweep && --state.sweepCounter < 0) {
+    state.sweepCounter = io.sweepTime;
+    io.pitch += io.sweepValue;
   }
 }
 
 auto APU::Channel3::run() -> void {
-  if(--s.period == r.pitch) {
-    s.period = 0;
-    auto output = apu.sample(3, s.sampleOffset++);
-    o.left = output * r.volumeLeft;
-    o.right = output * r.volumeRight;
+  if(--state.period == io.pitch) {
+    state.period = 0;
+    auto sample = apu.sample(3, state.sampleOffset++);
+    output.left  = sample * io.volumeLeft;
+    output.right = sample * io.volumeRight;
   }
+}
+
+auto APU::Channel3::power() -> void {
+  io = {};
+  state = {};
+  output = {};
 }

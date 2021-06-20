@@ -66,7 +66,7 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  if(interrupts.fire()) return (void)(r.halted = false);
+  if(interrupts.fire()) return (void)(r.halted = 0);
   if(r.halted) return step(16);
   debugger.instruction();
   instruction();
@@ -82,15 +82,6 @@ auto CPU::step(u32 clocks) -> void {
   Thread::synchronize();
 }
 
-auto CPU::idle(u32 clocks) -> void {
-  clocks <<= clock.rate;
-  prescaler.step(clocks);
-  adc.step(clocks);
-  rtc.step(clocks);
-  watchdog.step(clocks);
-  Thread::step(clocks);
-}
-
 auto CPU::pollPowerButton() -> void {
 //platform->input(system.controls.power);
   nmi.set(!system.controls.power->value());
@@ -98,9 +89,6 @@ auto CPU::pollPowerButton() -> void {
 
 auto CPU::power() -> void {
   TLCS900H::power();
-
-  //the CPU runs at 6144000hz, but each TLCS900/H state takes two clock cycles.
-  //halve the thread frequency instead of doubling the cycles for every instruction.
   Thread::create(system.frequency() / 2.0, {&CPU::main, this});
 
   n24 address;

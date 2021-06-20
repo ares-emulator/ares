@@ -2,6 +2,57 @@
 
 namespace nall {
 
+template<u32 Precision> struct IntegerPrimitive {
+  static_assert(Precision >= 1 && Precision <= 64);
+  using stype =
+    conditional_t<Precision <=  8, s8,
+    conditional_t<Precision <= 16, s16,
+    conditional_t<Precision <= 32, s32,
+    conditional_t<Precision <= 64, s64,
+    void>>>>;
+  using utype = typename Natural<Precision>::utype;
+
+  IntegerPrimitive() = default;
+  template<u32 Bits> IntegerPrimitive(IntegerPrimitive<Bits> value) { data = cast(value); }
+  template<typename T> IntegerPrimitive(const T& value) { data = cast(value); }
+  explicit IntegerPrimitive(const char* value) { data = cast(toInteger(value)); }
+
+  operator stype() const { return data; }
+
+  auto operator++(s32) { auto value = *this; data = cast(data + 1); return value; }
+  auto operator--(s32) { auto value = *this; data = cast(data - 1); return value; }
+
+  auto& operator++() { data = cast(data + 1); return *this; }
+  auto& operator--() { data = cast(data - 1); return *this; }
+
+  template<typename T> auto& operator  =(const T& value) { data = cast(        value); return *this; }
+  template<typename T> auto& operator *=(const T& value) { data = cast(data  * value); return *this; }
+  template<typename T> auto& operator /=(const T& value) { data = cast(data  / value); return *this; }
+  template<typename T> auto& operator %=(const T& value) { data = cast(data  % value); return *this; }
+  template<typename T> auto& operator +=(const T& value) { data = cast(data  + value); return *this; }
+  template<typename T> auto& operator -=(const T& value) { data = cast(data  - value); return *this; }
+  template<typename T> auto& operator<<=(const T& value) { data = cast(data << value); return *this; }
+  template<typename T> auto& operator>>=(const T& value) { data = cast(data >> value); return *this; }
+  template<typename T> auto& operator &=(const T& value) { data = cast(data  & value); return *this; }
+  template<typename T> auto& operator ^=(const T& value) { data = cast(data  ^ value); return *this; }
+  template<typename T> auto& operator |=(const T& value) { data = cast(data  | value); return *this; }
+
+private:
+  static constexpr auto mask() -> utype {
+    return ~0ull >> 64 - Precision;
+  }
+
+  static constexpr auto sign() -> utype {
+    return 1ull << Precision - 1;
+  }
+
+  auto cast(stype value) const -> stype {
+    return (value & mask() ^ sign()) - sign();
+  }
+
+  stype data;
+};
+
 template<u32 Precision> struct Integer {
   static_assert(Precision >= 1 && Precision <= 64);
   static constexpr auto bits() -> u32 { return Precision; }

@@ -13,15 +13,12 @@ auto TLCS900H::dma(n2 channel) -> bool {
   case 3: size = Long; break;  //unknown behavior
   }
 
-  idle(1);
-  prefetch();
-
   if(mode <= 4) {
+    wait(size != Long ? 8 : 12);
     auto data = read(size, source);
-    idle(1);
     write(size, target, data);
   } else {
-    idle(2);
+    wait(5);
   }
 
   switch(mode) {

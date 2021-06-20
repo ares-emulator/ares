@@ -1,29 +1,34 @@
 auto APU::DMA::run() -> void {
-  if(!r.enable) return;
+  if(!io.enable) return;
 
-  if(r.rate == 0 && ++s.clock < 768) return;  // 4000hz
-  if(r.rate == 1 && ++s.clock < 512) return;  // 6000hz
-  if(r.rate == 2 && ++s.clock < 256) return;  //12000hz
-  if(r.rate == 3 && ++s.clock < 128) return;  //24000hz
-  s.clock = 0;
+  if(io.rate == 0 && ++state.clock < 768) return;  // 4000hz
+  if(io.rate == 1 && ++state.clock < 512) return;  // 6000hz
+  if(io.rate == 2 && ++state.clock < 256) return;  //12000hz
+  if(io.rate == 3 && ++state.clock < 128) return;  //24000hz
+  state.clock = 0;
 
-  n8 data = bus.read(s.source);
-  if(r.direction == 0) s.source++;
-  if(r.direction == 1) s.source--;
+  n8 data = bus.read(state.source);
+  if(io.direction == 0) state.source++;
+  if(io.direction == 1) state.source--;
 
-  if(r.target == 0) {
-    apu.channel2.r.volumeRight = data.bit(0,3);
-    apu.channel2.r.volumeLeft  = data.bit(4,7);
+  if(io.target == 0) {
+    apu.channel2.io.volumeRight = data.bit(0,3);
+    apu.channel2.io.volumeLeft  = data.bit(4,7);
   } else {
-    apu.channel5.s.data = data;
+    apu.channel5.state.data = data;
   }
 
-  if(--s.length) return;
+  if(--state.length) return;
 
-  if(r.loop) {
-    s.source = r.source;
-    s.length = r.length;
+  if(io.loop) {
+    state.source = io.source;
+    state.length = io.length;
   } else {
-    r.enable = false;
+    io.enable = 0;
   }
+}
+
+auto APU::DMA::power() -> void {
+  io = {};
+  state = {};
 }

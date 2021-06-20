@@ -2,7 +2,7 @@ auto TLCS900H::disassembleInstruction() -> string {
   string output;
 
   auto pc = r.pc.l.l0;
-  n8 op[8] = {}, ops = 0;
+  n8 op[8], ops;
 
   auto read8  = [&]() -> n8  { return op[ops++] = disassembleRead(pc++); };
   auto read16 = [&]() -> n16 { n16 data = read8(); return data | read8() << 8; };
@@ -166,7 +166,7 @@ auto TLCS900H::disassembleInstruction() -> string {
       auto r32 = read8();
       lhs.indirectRegisterRegister16(opSize, r32, read8());
     }
-    if(data == 0x13) {
+    if(data == 0x13 && fetch == 0xf3) {
       i16 d16 = read16();
       lhs.indirectImmediate24(opSize, pc + d16);
     }

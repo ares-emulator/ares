@@ -3,19 +3,18 @@ auto Cartridge::serialize(serializer& s) -> void {
 
   s(ram);
   s(eeprom);
-  s(rtc);
-  if(rtc) {
-    s(rtc.command);
-    s(rtc.index);
-    s(rtc.alarm);
-    s(rtc.alarmHour);
-    s(rtc.alarmMinute);
-  }
+  s(rtc.ram);
 
-  s(r.romBank0);
-  s(r.romBank1);
-  s(r.romBank2);
-  s(r.sramBank);
-  s(r.gpoEnable);
-  s(r.gpoData);
+  s(rtc.command);
+  s(rtc.index);
+  s(rtc.alarm);
+  s(rtc.alarmHour);
+  s(rtc.alarmMinute);
+
+  s(io.romBank0);
+  s(io.romBank1);
+  s(io.romBank2);
+  s(io.sramBank);
+  s(io.gpoEnable);
+  s(io.gpoData);
 }

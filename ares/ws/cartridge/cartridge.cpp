@@ -40,8 +40,8 @@ auto Cartridge::connect() -> void {
   }
 
   if(auto fp = pak->read("time.rtc")) {
-    rtc.allocate(fp->size());
-    rtc.load(fp);
+    rtc.ram.allocate(fp->size());
+    rtc.ram.load(fp);
   }
 
   debugger.load(node);
@@ -55,7 +55,7 @@ auto Cartridge::disconnect() -> void {
   Thread::destroy();
   rom.reset();
   ram.reset();
-  rtc.reset();
+  rtc.ram.reset();
 }
 
 auto Cartridge::save() -> void {
@@ -70,14 +70,14 @@ auto Cartridge::save() -> void {
   }
 
   if(auto fp = pak->write("time.rtc")) {
-    rtc.save(fp);
+    rtc.ram.save(fp);
   }
 }
 
 auto Cartridge::main() -> void {
-  if(rtc) {
-    rtcTickSecond();
-    rtcCheckAlarm();
+  if(rtc.ram) {
+    rtc.tickSecond();
+    rtc.checkAlarm();
   }
   step(3'072'000);
 }
@@ -90,12 +90,13 @@ auto Cartridge::step(u32 clocks) -> void {
 auto Cartridge::power() -> void {
   Thread::create(3'072'000, {&Cartridge::main, this});
   eeprom.power();
+  rtc.power();
 
   bus.map(this, 0x00c0, 0x00c8);
-  if(rtc) bus.map(this, 0x00ca, 0x00cb);
+  if(rtc.ram) bus.map(this, 0x00ca, 0x00cb);
   bus.map(this, 0x00cc, 0x00cd);
 
-  r = {};
+  io = {};
 }
 
 }

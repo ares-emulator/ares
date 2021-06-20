@@ -1,5 +1,5 @@
 //(0 = odd, 1 = even) number of bits set in value
-auto V30MZ::parity(n8 value) const -> bool {
+auto V30MZ::parity(u8 value) const -> bool {
   value ^= value >> 4;
   value ^= value >> 2;
   value ^= value >> 1;
@@ -10,217 +10,217 @@ auto V30MZ::parity(n8 value) const -> bool {
 #define mask (size == Byte ? 0xff : 0xffff)
 #define sign (size == Byte ? 0x80 : 0x8000)
 
-auto V30MZ::ADC(Size size, n16 x, n16 y) -> n16 {
-  return ADD(size, x, y + r.f.c);
+template<u32 size> auto V30MZ::ADC(u16 x, u16 y) -> u16 {
+  return ADD<size>(x, y + PSW.CY);
 }
 
-auto V30MZ::ADD(Size size, n16 x, n16 y) -> n16 {
-  n16 result = (x + y) & mask;
-  r.f.c = x + y > mask;
-  r.f.p = parity(result);
-  r.f.h = (n4)x + (n4)y >= 16;
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = (result ^ x) & (result ^ y) & sign;
+template<u32 size> auto V30MZ::ADD(u16 x, u16 y) -> u16 {
+  u16 result = (x + y) & mask;
+  PSW.CY = x + y > mask;
+  PSW.P  = parity(result);
+  PSW.AC = (u4)x + (u4)y >= 16;
+  PSW.Z  = result == 0;
+  PSW.S  = result & sign;
+  PSW.V  = (result ^ x) & (result ^ y) & sign;
   return result;
 }
 
-auto V30MZ::AND(Size size, n16 x, n16 y) -> n16 {
-  n16 result = (x & y) & mask;
-  r.f.c = 0;
-  r.f.p = parity(result);
-  r.f.h = 0;
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = 0;
+template<u32 size> auto V30MZ::AND(u16 x, u16 y) -> u16 {
+  u16 result = (x & y) & mask;
+  PSW.CY = 0;
+  PSW.P  = parity(result);
+  PSW.AC  = 0;
+  PSW.Z  = result == 0;
+  PSW.S  = result & sign;
+  PSW.V  = 0;
   return result;
 }
 
-auto V30MZ::DEC(Size size, n16 x) -> n16 {
-  n16 result = (x - 1) & mask;
-  r.f.p = parity(result);
-  r.f.h = (x & 0x0f) == 0;
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = result == sign - 1;
+template<u32 size> auto V30MZ::DEC(u16 x) -> u16 {
+  u16 result = (x - 1) & mask;
+  PSW.P  = parity(result);
+  PSW.AC = (x & 0x0f) == 0;
+  PSW.Z  = result == 0;
+  PSW.S  = result & sign;
+  PSW.V  = result == sign - 1;
   return result;
 }
 
-auto V30MZ::DIVI(Size size, i32 x, i32 y) -> n32 {
+template<u32 size> auto V30MZ::DIVI(s32 x, s32 y) -> u32 {
   if(y == 0) return interrupt(0), x;
   x = size == Byte ? (s16)x : (s32)x;
   y = size == Byte ? ( s8)y : (s16)y;
-  i32 quotient  = x / y;
-  i32 remainder = x % y;
+  s32 quotient  = x / y;
+  s32 remainder = x % y;
   if(quotient > mask >> 1 || quotient < -sign) return interrupt(0), x;
   return (remainder & mask) << bits | (quotient & mask);
 }
 
-auto V30MZ::DIVU(Size size, n32 x, n32 y) -> n32 {
+template<u32 size> auto V30MZ::DIVU(u32 x, u32 y) -> u32 {
   if(y == 0) return interrupt(0), x;
-  n32 quotient  = x / y;
-  n32 remainder = x % y;
+  u32 quotient  = x / y;
+  u32 remainder = x % y;
   if(quotient > mask) return interrupt(0), x;
   return (remainder & mask) << bits | (quotient & mask);
 }
 
-auto V30MZ::INC(Size size, n16 x) -> n16 {
-  n16 result = (x + 1) & mask;
-  r.f.p = parity(result);
-  r.f.h = (x & 0x0f) == 0x0f;
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = result == sign;
+template<u32 size> auto V30MZ::INC(u16 x) -> u16 {
+  u16 result = (x + 1) & mask;
+  PSW.P  = parity(result);
+  PSW.AC = (x & 0x0f) == 0x0f;
+  PSW.Z  = result == 0;
+  PSW.S  = result & sign;
+  PSW.V  = result == sign;
   return result;
 }
 
-auto V30MZ::MULI(Size size, i16 x, i16 y) -> n32 {
+template<u32 size> auto V30MZ::MULI(s16 x, s16 y) -> u32 {
   x = size == Byte ? (s8)x : (s16)x;
   y = size == Byte ? (s8)y : (s16)y;
-  n32 result = x * y;
-  r.f.c = result >> bits;
-  r.f.v = result >> bits;
+  u32 result = x * y;
+  PSW.CY = result >> bits;
+  PSW.V  = result >> bits;
   return result;
 }
 
-auto V30MZ::MULU(Size size, n16 x, n16 y) -> n32 {
-  n32 result = x * y;
-  r.f.c = result >> bits;
-  r.f.v = result >> bits;
+template<u32 size> auto V30MZ::MULU(u16 x, u16 y) -> u32 {
+  u32 result = x * y;
+  PSW.CY = result >> bits;
+  PSW.V  = result >> bits;
   return result;
 }
 
-auto V30MZ::NEG(Size size, n16 x) -> n16 {
-  n16 result = (-x) & mask;
-  r.f.c = x;
-  r.f.p = parity(result);
-  r.f.h = x & 0x0f;
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = x == sign;
+template<u32 size> auto V30MZ::NEG(u16 x) -> u16 {
+  u16 result = (-x) & mask;
+  PSW.CY = x;
+  PSW.P  = parity(result);
+  PSW.AC = x & 0x0f;
+  PSW.Z  = result == 0;
+  PSW.S  = result & sign;
+  PSW.V  = x == sign;
   return result;
 }
 
-auto V30MZ::NOT(Size size, n16 x) -> n16 {
-  n16 result = (~x) & mask;
+template<u32 size> auto V30MZ::NOT(u16 x) -> u16 {
+  u16 result = (~x) & mask;
   return result;
 }
 
-auto V30MZ::OR(Size size, n16 x, n16 y) -> n16 {
-  n16 result = (x | y) & mask;
-  r.f.c = 0;
-  r.f.p = parity(result);
-  r.f.h = 0;
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = 0;
+template<u32 size> auto V30MZ::OR(u16 x, u16 y) -> u16 {
+  u16 result = (x | y) & mask;
+  PSW.CY = 0;
+  PSW.P  = parity(result);
+  PSW.AC = 0;
+  PSW.Z  = result == 0;
+  PSW.S  = result & sign;
+  PSW.V  = 0;
   return result;
 }
 
-auto V30MZ::RCL(Size size, n16 x, n5 y) -> n16 {
-  n16 result = x;
+template<u32 size> auto V30MZ::RCL(u16 x, u5 y) -> u16 {
+  u16 result = x;
   for(u32 n = 0; n < y; n++) {
     bool carry = result & sign;
-    result = (result << 1) | r.f.c;
-    r.f.c = carry;
+    result = (result << 1) | PSW.CY;
+    PSW.CY = carry;
   }
-  r.f.v = (x ^ result) & sign;
+  PSW.V = (x ^ result) & sign;
   return result & mask;
 }
 
-auto V30MZ::RCR(Size size, n16 x, n5 y) -> n16 {
-  n16 result = x;
+template<u32 size> auto V30MZ::RCR(u16 x, u5 y) -> u16 {
+  u16 result = x;
   for(u32 n = 0; n < y; n++) {
     bool carry = result & 1;
-    result = (r.f.c ? sign : 0) | (result >> 1);
-    r.f.c = carry;
+    result = (PSW.CY ? sign : 0) | (result >> 1);
+    PSW.CY = carry;
   }
-  r.f.v = (x ^ result) & sign;
+  PSW.V = (x ^ result) & sign;
   return result & mask;
 }
 
-auto V30MZ::ROL(Size size, n16 x, n4 y) -> n16 {
-  r.f.c = (x << y) & (1 << bits);
-  n16 result = ((x << y) | (x >> (bits - y))) & mask;
-  r.f.v = (x ^ result) & sign;
+template<u32 size> auto V30MZ::ROL(u16 x, u4 y) -> u16 {
+  PSW.CY = (x << y) & (1 << bits);
+  u16 result = ((x << y) | (x >> (bits - y))) & mask;
+  PSW.V = (x ^ result) & sign;
   return result;
 }
 
-auto V30MZ::ROR(Size size, n16 x, n4 y) -> n16 {
-  r.f.c = (x >> (y - 1)) & 1;
-  n16 result = ((x >> y) | (x << (bits - y))) & mask;
-  r.f.v = (x ^ result) & sign;
+template<u32 size> auto V30MZ::ROR(u16 x, u4 y) -> u16 {
+  PSW.CY = (x >> (y - 1)) & 1;
+  u16 result = ((x >> y) | (x << (bits - y))) & mask;
+  PSW.V = (x ^ result) & sign;
   return result;
 }
 
-auto V30MZ::SAL(Size size, n16 x, n5 y) -> n16 {
-  r.f.c = (x << y) & (1 << bits);
-  n16 result = (x << y) & mask;
-  r.f.p = parity(result);
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = 0;
+template<u32 size> auto V30MZ::SAL(u16 x, u5 y) -> u16 {
+  PSW.CY = (x << y) & (1 << bits);
+  u16 result = (x << y) & mask;
+  PSW.P = parity(result);
+  PSW.Z = result == 0;
+  PSW.S = result & sign;
+  PSW.V = 0;
   return result;
 }
 
-auto V30MZ::SAR(Size size, n16 x, n5 y) -> n16 {
+template<u32 size> auto V30MZ::SAR(u16 x, u5 y) -> u16 {
   if(y & 16) {
-    r.f.c = x & sign;
-    return 0 - r.f.c;
+    PSW.CY = x & sign;
+    return 0 - PSW.CY;
   }
-  r.f.c = (x >> (y - 1)) & 1;
-  n16 result = (x >> y) & mask;
+  PSW.CY = (x >> (y - 1)) & 1;
+  u16 result = (x >> y) & mask;
   if(x & sign) result |= mask << (bits - y);
-  r.f.p = parity(result);
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = 0;
+  PSW.P = parity(result);
+  PSW.Z = result == 0;
+  PSW.S = result & sign;
+  PSW.V = 0;
   return result;
 }
 
-auto V30MZ::SBB(Size size, n16 x, n16 y) -> n16 {
-  return SUB(size, x, y + r.f.c);
+template<u32 size> auto V30MZ::SBB(u16 x, u16 y) -> u16 {
+  return SUB<size>(x, y + PSW.CY);
 }
 
-auto V30MZ::SHL(Size size, n16 x, n5 y) -> n16 {
-  r.f.c = (x << y) & (1 << bits);
-  n16 result = (x << y) & mask;
-  r.f.p = parity(result);
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = (x ^ result) & sign;
+template<u32 size> auto V30MZ::SHL(u16 x, u5 y) -> u16 {
+  PSW.CY = (x << y) & (1 << bits);
+  u16 result = (x << y) & mask;
+  PSW.P = parity(result);
+  PSW.Z = result == 0;
+  PSW.S = result & sign;
+  PSW.V = (x ^ result) & sign;
   return result;
 }
 
-auto V30MZ::SHR(Size size, n16 x, n5 y) -> n16 {
-  r.f.c = (x >> (y - 1)) & 1;
-  n16 result = (x >> y) & mask;
-  r.f.p = parity(result);
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = (x ^ result) & sign;
+template<u32 size> auto V30MZ::SHR(u16 x, u5 y) -> u16 {
+  PSW.CY = (x >> (y - 1)) & 1;
+  u16 result = (x >> y) & mask;
+  PSW.P = parity(result);
+  PSW.Z = result == 0;
+  PSW.S = result & sign;
+  PSW.V = (x ^ result) & sign;
   return result;
 }
 
-auto V30MZ::SUB(Size size, n16 x, n16 y) -> n16 {
-  n16 result = (x - y) & mask;
-  r.f.c = y > x;
-  r.f.p = parity(result);
-  r.f.h = (n4)y > (n4)x;
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = (x ^ y) & (x ^ result) & sign;
+template<u32 size> auto V30MZ::SUB(u16 x, u16 y) -> u16 {
+  u16 result = (x - y) & mask;
+  PSW.CY = y > x;
+  PSW.P  = parity(result);
+  PSW.AC = (u4)y > (u4)x;
+  PSW.Z  = result == 0;
+  PSW.S  = result & sign;
+  PSW.V  = (x ^ y) & (x ^ result) & sign;
   return result;
 }
 
-auto V30MZ::XOR(Size size, n16 x, n16 y) -> n16 {
-  n16 result = (x ^ y) & mask;
-  r.f.c = 0;
-  r.f.p = parity(result);
-  r.f.h = 0;
-  r.f.z = result == 0;
-  r.f.s = result & sign;
-  r.f.v = 0;
+template<u32 size> auto V30MZ::XOR(u16 x, u16 y) -> u16 {
+  u16 result = (x ^ y) & mask;
+  PSW.CY = 0;
+  PSW.P  = parity(result);
+  PSW.AC = 0;
+  PSW.Z  = result == 0;
+  PSW.S  = result & sign;
+  PSW.V  = 0;
   return result;
 }
 

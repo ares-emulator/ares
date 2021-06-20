@@ -1,8 +1,7 @@
 auto APU::read(n16 address) -> n8 {
   switch(address) {
   case 0x0000 ... 0x0fff:
-  //u32 timeout = 0;
-  //while(cpu.MAR >= 0x7000 && cpu.MAR <= 0x7fff && ++timeout < 64) step(1);
+    while(cpu.MAR >= 0x7000 && cpu.MAR <= 0x7fff && !scheduler.synchronizing()) step(1);
     return ram.read(0x3000 | address);
   case 0x8000:
     return port.data;
@@ -14,8 +13,7 @@ auto APU::read(n16 address) -> n8 {
 auto APU::write(n16 address, n8 data) -> void {
   switch(address) {
   case 0x0000 ... 0x0fff:
-  //u32 timeout = 0;
-  //while(cpu.MAR >= 0x7000 && cpu.MAR <= 0x7fff && ++timeout < 64) step(1);
+    while(cpu.MAR >= 0x7000 && cpu.MAR <= 0x7fff && !scheduler.synchronizing()) step(1);
     return ram.write(0x3000 | address, data);
   case 0x4000:
     return psg.writeRight(data);

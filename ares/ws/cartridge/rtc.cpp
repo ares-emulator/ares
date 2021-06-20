@@ -1,150 +1,161 @@
 //calculate time between last play of game and current time;
 //increment RTC by said amount of seconds
-auto Cartridge::rtcLoad() -> void {
+auto Cartridge::RTC::load() -> void {
   n64 timestamp = 0;
-  for(auto n : range(8)) timestamp.byte(n) = rtc.read(8 + n);
+  for(auto n : range(8)) timestamp.byte(n) = ram.read(8 + n);
   if(!timestamp) return;  //new save file
 
   timestamp = time(0) - timestamp;
-  while(timestamp--) rtcTickSecond();
+  while(timestamp--) tickSecond();
 }
 
 //save time when game is unloaded
-auto Cartridge::rtcSave() -> void {
+auto Cartridge::RTC::save() -> void {
   n64 timestamp = time(0);
-  for(auto n : range(8)) rtc.write(8 + n, timestamp.byte(n));
+  for(auto n : range(8)) ram.write(8 + n, timestamp.byte(n));
 }
 
-auto Cartridge::rtcTickSecond() -> void {
-  if(++rtc.second() < 60) return;
-  rtc.second() = 0;
+auto Cartridge::RTC::tickSecond() -> void {
+  if(++second() < 60) return;
+  second() = 0;
 
-  if(++rtc.minute() < 60) return;
-  rtc.minute() = 0;
+  if(++minute() < 60) return;
+  minute() = 0;
 
-  if(++rtc.hour() < 24) return;
-  rtc.hour() = 0;
+  if(++hour() < 24) return;
+  hour() = 0;
 
-  rtc.weekday() += 1;
-  rtc.weekday() %= 7;
+  weekday() += 1;
+  weekday() %= 7;
 
   u32 daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-  if(rtc.year() && (rtc.year() % 100) && !(rtc.year() % 4)) daysInMonth[1]++;
+  if(year() && (year() % 100) && !(year() % 4)) daysInMonth[1]++;
 
-  if(++rtc.day() < daysInMonth[rtc.month()]) return;
-  rtc.day() = 0;
+  if(++day() < daysInMonth[month()]) return;
+  day() = 0;
 
-  if(++rtc.month() < 12) return;
-  rtc.month() = 0;
+  if(++month() < 12) return;
+  month() = 0;
 
-  ++rtc.year();
+  ++year();
 }
 
-auto Cartridge::rtcCheckAlarm() -> void {
-  if(!rtc.alarm.bit(5)) return;
+auto Cartridge::RTC::checkAlarm() -> void {
+  if(!alarm.bit(5)) return;
 
-  if(rtc.hour() == rtc.alarmHour && rtc.minute() == rtc.alarmMinute) {
+  if(hour() == alarmHour && minute() == alarmMinute) {
     cpu.raise(CPU::Interrupt::Cartridge);
   } else {
     cpu.lower(CPU::Interrupt::Cartridge);
   }
 }
 
-auto Cartridge::rtcStatus() -> n8 {
-  return 0x80;
+auto Cartridge::RTC::status() -> n8 {
+  n8 data;
+  data.bit(0,6) = 0;  //unknown
+  data.bit(7)   = 1;  //0 = busy; 1 = ready for command
+  return data;
 }
 
-auto Cartridge::rtcCommand(n8 data) -> void {
-  rtc.command = data;
+auto Cartridge::RTC::execute(n8 data) -> void {
+  command = data;
 
   //RESET
-  if(rtc.command == 0x10) {
-    rtc.year() = 0;
-    rtc.month() = 0;
-    rtc.day() = 0;
-    rtc.weekday() = 0;
-    rtc.hour() = 0;
-    rtc.minute() = 0;
-    rtc.second() = 0;
+  if(command == 0x10) {
+    year() = 0;
+    month() = 0;
+    day() = 0;
+    weekday() = 0;
+    hour() = 0;
+    minute() = 0;
+    second() = 0;
   }
 
   //ALARM_FLAG
-  if(rtc.command == 0x12) {
-    rtc.index = 0;
+  if(command == 0x12) {
+    index = 0;
   }
 
   //SET_DATETIME
-  if(rtc.command == 0x14) {
-    rtc.index = 0;
+  if(command == 0x14) {
+    index = 0;
   }
 
   //GET_DATETIME
-  if(rtc.command == 0x15) {
-    rtc.index = 0;
+  if(command == 0x15) {
+    index = 0;
   }
 
   //SET_ALARM
-  if(rtc.command == 0x18) {
-    rtc.index = 0;
+  if(command == 0x18) {
+    index = 0;
   }
 }
 
-auto Cartridge::rtcRead() -> n8 {
+auto Cartridge::RTC::read() -> n8 {
   n8 data = 0;
 
   static auto encode = [](n8 data) -> n8 {
-    return ((data / 10) << 4) + (data % 10);
+    return (data / 10 << 4) + data % 10;
   };
 
   //GET_DATETIME
-  if(rtc.command == 0x15) {
-    switch(rtc.index) {
-    case 0: data = encode(rtc.year()); break;
-    case 1: data = encode(rtc.month() + 1); break;
-    case 2: data = encode(rtc.day() + 1); break;
-    case 3: data = encode(rtc.weekday()); break;
-    case 4: data = encode(rtc.hour()); break;
-    case 5: data = encode(rtc.minute()); break;
-    case 6: data = encode(rtc.second()); break;
+  if(command == 0x15) {
+    switch(index) {
+    case 0: data = encode(year()); break;
+    case 1: data = encode(month() + 1); break;
+    case 2: data = encode(day() + 1); break;
+    case 3: data = encode(weekday()); break;
+    case 4: data = encode(hour()); break;
+    case 5: data = encode(minute()); break;
+    case 6: data = encode(second()); break;
     }
-    if(++rtc.index >= 7) rtc.command = 0;
+    if(++index >= 7) command = 0;
   }
 
   return data;
 }
 
-auto Cartridge::rtcWrite(n8 data) -> void {
+auto Cartridge::RTC::write(n8 data) -> void {
   static auto decode = [](n8 data) -> n8 {
     return (data >> 4) * 10 + (data & 0x0f);
   };
 
   //ALARM_FLAG
-  if(rtc.command == 0x12) {
-    if(data.bit(6)) rtc.alarm = data;  //todo: is bit6 really required to be set?
-    rtc.command = 0;
-    rtcCheckAlarm();
+  if(command == 0x12) {
+    if(data.bit(6)) alarm = data;  //todo: is bit6 really required to be set?
+    command = 0;
+    checkAlarm();
   }
 
   //SET_DATETIME
-  if(rtc.command == 0x14) {
-    switch(rtc.index) {
-    case 0: rtc.year() = decode(data); break;
-    case 1: rtc.month() = decode(data) - 1; break;
-    case 2: rtc.day() = decode(data) - 1; break;
-    case 3: rtc.weekday() = decode(data); break;
-    case 4: rtc.hour() = decode(data); break;
-    case 5: rtc.minute() = decode(data); break;
-    case 6: rtc.second() = decode(data); break;
+  if(command == 0x14) {
+    switch(index) {
+    case 0: year()    = decode(data); break;
+    case 1: month()   = decode(data) - 1; break;
+    case 2: day()     = decode(data) - 1; break;
+    case 3: weekday() = decode(data); break;
+    case 4: hour()    = decode(data); break;
+    case 5: minute()  = decode(data); break;
+    case 6: second()  = decode(data); break;
     }
-    if(++rtc.index >= 7) rtc.command = 0;
+    if(++index >= 7) command = 0;
   }
 
-  //SET_ALRM
-  if(rtc.command == 0x18) {
-    switch(rtc.index) {
-    case 0: rtc.alarmHour = decode(data.bit(0,6)); break;
-    case 1: rtc.alarmMinute = decode(data); break;
+  //SET_ALARM
+  if(command == 0x18) {
+    switch(index) {
+    case 0: alarmHour   = decode(data.bit(0,6)); break;
+    case 1: alarmMinute = decode(data); break;
     }
-    if(++rtc.index >= 2) rtc.command = 0;
+    if(++index >= 2) command = 0;
   }
+}
+
+auto Cartridge::RTC::power() -> void {
+  command = 0;
+  index = 0;
+  alarm = 0;
+  alarmHour = 0;
+  alarmMinute = 0;
 }

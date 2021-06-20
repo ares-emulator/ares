@@ -1,110 +1,110 @@
-auto V30MZ::instructionInString(Size size) -> void {
+template<u32 size> auto V30MZ::instructionInString() -> void {
   wait(5);
-  if(!repeat() || r.cx) {
-    auto data = in(size, r.dx);
-    write(size, r.es, r.di, data);
-    r.di += r.f.d ? -size : size;
+  if(!repeat() || CW) {
+    auto data = in<size>(DW);
+    write<size>(DS1, IY, data);
+    IY += PSW.DIR ? -size : size;
 
-    if(!repeat() || !--r.cx) return;
+    if(!repeat() || !--CW) return;
 
     state.prefix = 1;
-    r.ip--;
+    PC--;
     loop();
   }
 }
 
-auto V30MZ::instructionOutString(Size size) -> void {
+template<u32 size> auto V30MZ::instructionOutString() -> void {
   wait(6);
-  if(!repeat() || r.cx) {
-    auto data = read(size, segment(r.ds), r.si);
-    out(size, r.dx, data);
-    r.si += r.f.d ? -size : size;
+  if(!repeat() || CW) {
+    auto data = read<size>(segment(DS0), IX);
+    out<size>(DW, data);
+    IX += PSW.DIR ? -size : size;
 
-    if(!repeat() || !--r.cx) return;
+    if(!repeat() || !--CW) return;
 
     state.prefix = 1;
-    r.ip--;
+    PC--;
     loop();
   }
 }
 
-auto V30MZ::instructionMoveString(Size size) -> void {
+template<u32 size> auto V30MZ::instructionMoveString() -> void {
   wait(3);
-  if(!repeat() || r.cx) {
-    auto data = read(size, segment(r.ds), r.si);
-    write(size, r.es, r.di, data);
-    r.si += r.f.d ? -size : size;
-    r.di += r.f.d ? -size : size;
+  if(!repeat() || CW) {
+    auto data = read<size>(segment(DS0), IX);
+    write<size>(DS1, IY, data);
+    IX += PSW.DIR ? -size : size;
+    IY += PSW.DIR ? -size : size;
 
-    if(!repeat() || !--r.cx) return;
+    if(!repeat() || !--CW) return;
 
     state.prefix = 1;
-    r.ip--;
+    PC--;
     loop();
   }
 }
 
-auto V30MZ::instructionCompareString(Size size) -> void {
+template<u32 size> auto V30MZ::instructionCompareString() -> void {
   wait(4);
-  if(!repeat() || r.cx) {
-    auto x = read(size, segment(r.ds), r.si);
-    auto y = read(size, r.es, r.di);
-    r.si += r.f.d ? -size : size;
-    r.di += r.f.d ? -size : size;
-    SUB(size, x, y);
+  if(!repeat() || CW) {
+    auto x = read<size>(segment(DS0), IX);
+    auto y = read<size>(DS1, IY);
+    IX += PSW.DIR ? -size : size;
+    IY += PSW.DIR ? -size : size;
+    SUB<size>(x, y);
 
-    if(!repeat() || !--r.cx) return;
-    if(repeat() == RepeatWhileZeroLo && r.f.z == 1) return;
-    if(repeat() == RepeatWhileZeroHi && r.f.z == 0) return;
+    if(!repeat() || !--CW) return;
+    if(repeat() == RepeatWhileZeroLo && PSW.Z == 1) return;
+    if(repeat() == RepeatWhileZeroHi && PSW.Z == 0) return;
 
     state.prefix = 1;
-    r.ip--;
+    PC--;
     loop();
   }
 }
 
-auto V30MZ::instructionStoreString(Size size) -> void {
+template<u32 size> auto V30MZ::instructionStoreString() -> void {
   wait(2);
-  if(!repeat() || r.cx) {
-    write(size, r.es, r.di, getAcc(size));
-    r.di += r.f.d ? -size : size;
+  if(!repeat() || CW) {
+    write<size>(DS1, IY, getAccumulator<size>());
+    IY += PSW.DIR ? -size : size;
 
-    if(!repeat() || !--r.cx) return;
+    if(!repeat() || !--CW) return;
 
     state.prefix = 1;
-    r.ip--;
+    PC--;
     loop();
   }
 }
 
-auto V30MZ::instructionLoadString(Size size) -> void {
+template<u32 size> auto V30MZ::instructionLoadString() -> void {
   wait(2);
-  if(!repeat() || r.cx) {
-    setAcc(size, read(size, segment(r.ds), r.si));
-    r.si += r.f.d ? -size : size;
+  if(!repeat() || CW) {
+    setAccumulator<size>(read<size>(segment(DS0), IX));
+    IX += PSW.DIR ? -size : size;
 
-    if(!repeat() || !--r.cx) return;
+    if(!repeat() || !--CW) return;
 
     state.prefix = 1;
-    r.ip--;
+    PC--;
     loop();
   }
 }
 
-auto V30MZ::instructionScanString(Size size) -> void {
+template<u32 size> auto V30MZ::instructionScanString() -> void {
   wait(3);
-  if(!repeat() || r.cx) {
-    auto x = getAcc(size);
-    auto y = read(size, r.es, r.di);
-    r.di += r.f.d ? -size : size;
-    SUB(size, x, y);
+  if(!repeat() || CW) {
+    auto x = getAccumulator<size>();
+    auto y = read<size>(DS1, IY);
+    IY += PSW.DIR ? -size : size;
+    SUB<size>(x, y);
 
-    if(!repeat() || !--r.cx) return;
-    if(repeat() == RepeatWhileZeroLo && r.f.z == 1) return;
-    if(repeat() == RepeatWhileZeroHi && r.f.z == 0) return;
+    if(!repeat() || !--CW) return;
+    if(repeat() == RepeatWhileZeroLo && PSW.Z == 1) return;
+    if(repeat() == RepeatWhileZeroHi && PSW.Z == 0) return;
 
     state.prefix = 1;
-    r.ip--;
+    PC--;
     loop();
   }
 }

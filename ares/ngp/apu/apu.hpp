@@ -3,8 +3,11 @@ struct APU : Z80, Z80::Bus, Thread {
   Memory::Writable<n8> ram;
 
   struct Debugger {
+    APU& self;
+
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
 
@@ -16,7 +19,7 @@ struct APU : Z80, Z80::Bus, Thread {
       Node::Debugger::Tracer::Instruction instruction;
       Node::Debugger::Tracer::Notification interrupt;
     } tracer;
-  } debugger;
+  } debugger{*this};
 
   auto synchronizing() const -> bool override { return scheduler.synchronizing(); }
 

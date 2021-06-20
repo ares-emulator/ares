@@ -1,30 +1,24 @@
 #define PC r.pc.l.l0
 
-template<> auto TLCS900H::fetch<n8 >() -> n8  {
-//while(p.valid < 3) prefetch();
-  if(p.valid == 0) prefetch();
-  n8 data = p.data;
-  p.data >>= 8;
-  p.valid--;
-  return PC++, data;
-}
-
 template<> auto TLCS900H::fetch<n16>() -> n16 {
-  n16    data = fetch<n8>() << 0;
-  return data | fetch<n8>() << 8;
+  u8 d0 = fetch<n8>();
+  u8 d1 = fetch<n8>();
+  return d0 << 0 | d1 << 8;
 }
 
 template<> auto TLCS900H::fetch<n24>() -> n24 {
-  n24    data  = fetch<n8>() <<  0;
-         data |= fetch<n8>() <<  8;
-  return data |= fetch<n8>() << 16;
+  u8 d0 = fetch<n8>();
+  u8 d1 = fetch<n8>();
+  u8 d2 = fetch<n8>();
+  return d0 << 0 | d1 << 8 | d2 << 16;
 }
 
 template<> auto TLCS900H::fetch<n32>() -> n32 {
-  n32    data  = fetch<n8>() <<  0;
-         data |= fetch<n8>() <<  8;
-         data |= fetch<n8>() << 16;
-  return data |= fetch<n8>() << 24;
+  u8 d0 = fetch<n8>();
+  u8 d1 = fetch<n8>();
+  u8 d2 = fetch<n8>();
+  u8 d3 = fetch<n8>();
+  return d0 << 0 | d1 << 8 | d2 << 16 | d3 << 24;
 }
 
 #undef PC

@@ -1,50 +1,50 @@
-auto V30MZ::instructionMoveMemReg(Size size) -> void {
+template<u32 size> auto V30MZ::instructionMoveMemReg() -> void {
   modRM();
   if(modrm.mod == 3) wait(1);
-  setMem(size, getReg(size));
+  setMemory<size>(getRegister<size>());
 }
 
-auto V30MZ::instructionMoveRegMem(Size size) -> void {
+template<u32 size> auto V30MZ::instructionMoveRegMem() -> void {
   modRM();
   if(modrm.mod == 3) wait(1);
-  setReg(size, getMem(size));
+  setRegister<size>(getMemory<size>());
 }
 
 auto V30MZ::instructionMoveMemSeg() -> void {
   wait(1);
   modRM();
-  setMem(Word, getSeg());
-  state.poll = false;
+  setMemory<Word>(getSegment());
+  state.poll = 0;
 }
 
 auto V30MZ::instructionMoveSegMem() -> void {
   wait(2);
   modRM();
-  setSeg(getMem(Word));
-  if((modrm.reg & 3) == 3) state.poll = false;
+  setSegment(getMemory<Word>());
+  if((modrm.reg & 3) == 3) state.poll = 0;
 }
 
-auto V30MZ::instructionMoveAccMem(Size size) -> void {
-  setAcc(size, read(size, segment(r.ds), fetch(Word)));
+template<u32 size> auto V30MZ::instructionMoveAccMem() -> void {
+  setAccumulator<size>(read<size>(segment(DS0), fetch<Word>()));
 }
 
-auto V30MZ::instructionMoveMemAcc(Size size) -> void {
-  write(size, segment(r.ds), fetch(Word), getAcc(size));
+template<u32 size> auto V30MZ::instructionMoveMemAcc() -> void {
+  write<size>(segment(DS0), fetch<Word>(), getAccumulator<size>());
 }
 
 auto V30MZ::instructionMoveRegImm(u8& reg) -> void {
   wait(1);
-  reg = fetch(Byte);
+  reg = fetch<Byte>();
 }
 
 auto V30MZ::instructionMoveRegImm(u16& reg) -> void {
   wait(1);
-  reg = fetch(Word);
+  reg = fetch<Word>();
 }
 
-auto V30MZ::instructionMoveMemImm(Size size) -> void {
+template<u32 size> auto V30MZ::instructionMoveMemImm() -> void {
   modRM();
-  setMem(size, fetch(size));
+  setMemory<size>(fetch<size>());
 }
 
 auto V30MZ::instructionExchange(u16& x, u16& y) -> void {
@@ -54,24 +54,24 @@ auto V30MZ::instructionExchange(u16& x, u16& y) -> void {
   y = z;
 }
 
-auto V30MZ::instructionExchangeMemReg(Size size) -> void {
+template<u32 size> auto V30MZ::instructionExchangeMemReg() -> void {
   wait(3);
   modRM();
-  auto mem = getMem(size);
-  auto reg = getReg(size);
-  setMem(size, reg);
-  setReg(size, mem);
+  auto mem = getMemory<size>();
+  auto reg = getRegister<size>();
+  setMemory<size>(reg);
+  setRegister<size>(mem);
 }
 
 auto V30MZ::instructionLoadEffectiveAddressRegMem() -> void {
   wait(1);
   modRM();
-  setReg(Word, modrm.address);
+  setRegister<Word>(modrm.address);
 }
 
 auto V30MZ::instructionLoadSegmentMem(u16& segment) -> void {
   wait(4);
   modRM();
-  setReg(Word, getMem(Word));
-  segment = getMem(Word, 2);
+  setRegister<Word>(getMemory<Word>());
+  segment = getMemory<Word>(2);
 }

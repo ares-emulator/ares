@@ -76,6 +76,13 @@ template<> struct stringify<s128> {
 };
 #endif
 
+template<u32 Bits> struct stringify<IntegerPrimitive<Bits>> {
+  stringify(IntegerPrimitive<Bits> source) { fromInteger(_data, source); }
+  auto data() const -> const char* { return _data; }
+  auto size() const -> u32 { return strlen(_data); }
+  char _data[2 + sizeof(s64) * 3];
+};
+
 template<u32 Bits> struct stringify<Integer<Bits>> {
   stringify(Integer<Bits> source) { fromInteger(_data, source); }
   auto data() const -> const char* { return _data; }
@@ -128,6 +135,13 @@ template<> struct stringify<u128> {
   char _data[1 + sizeof(u128) * 3];
 };
 #endif
+
+template<u32 Bits> struct stringify<NaturalPrimitive<Bits>> {
+  stringify(NaturalPrimitive<Bits> source) { fromNatural(_data, source); }
+  auto data() const -> const char* { return _data; }
+  auto size() const -> u32 { return strlen(_data); }
+  char _data[1 + sizeof(u64) * 3];
+};
 
 template<u32 Bits> struct stringify<Natural<Bits>> {
   stringify(Natural<Bits> source) { fromNatural(_data, source); }

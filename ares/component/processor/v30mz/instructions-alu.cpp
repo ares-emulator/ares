@@ -1,172 +1,172 @@
-auto V30MZ::instructionAddMemReg(Size size) -> void {
+template<u32 size> auto V30MZ::instructionAddMemReg() -> void {
   wait(1);
   modRM();
-  setMem(size, ADD(size, getMem(size), getReg(size)));
+  setMemory<size>(ADD<size>(getMemory<size>(), getRegister<size>()));
 }
 
-auto V30MZ::instructionAddRegMem(Size size) -> void {
+template<u32 size> auto V30MZ::instructionAddRegMem() -> void {
   wait(1);
   modRM();
-  setReg(size, ADD(size, getReg(size), getMem(size)));
+  setRegister<size>(ADD<size>(getRegister<size>(), getMemory<size>()));
 }
 
-auto V30MZ::instructionAddAccImm(Size size) -> void {
+template<u32 size> auto V30MZ::instructionAddAccImm() -> void {
   wait(1);
-  setAcc(size, ADD(size, getAcc(size), fetch(size)));
+  setAccumulator<size>(ADD<size>(getAccumulator<size>(), fetch<size>()));
 }
 
-auto V30MZ::instructionOrMemReg(Size size) -> void {
-  wait(1);
-  modRM();
-  setMem(size, OR(size, getMem(size), getReg(size)));
-}
-
-auto V30MZ::instructionOrRegMem(Size size) -> void {
+template<u32 size> auto V30MZ::instructionOrMemReg() -> void {
   wait(1);
   modRM();
-  setReg(size, OR(size, getReg(size), getMem(size)));
+  setMemory<size>(OR<size>(getMemory<size>(), getRegister<size>()));
 }
 
-auto V30MZ::instructionOrAccImm(Size size) -> void {
-  wait(1);
-  setAcc(size, OR(size, getAcc(size), fetch(size)));
-}
-
-auto V30MZ::instructionAdcMemReg(Size size) -> void {
+template<u32 size> auto V30MZ::instructionOrRegMem() -> void {
   wait(1);
   modRM();
-  setMem(size, ADC(size, getMem(size), getReg(size)));
+  setRegister<size>(OR<size>(getRegister<size>(), getMemory<size>()));
 }
 
-auto V30MZ::instructionAdcRegMem(Size size) -> void {
+template<u32 size> auto V30MZ::instructionOrAccImm() -> void {
+  wait(1);
+  setAccumulator<size>(OR<size>(getAccumulator<size>(), fetch<size>()));
+}
+
+template<u32 size> auto V30MZ::instructionAdcMemReg() -> void {
   wait(1);
   modRM();
-  setReg(size, ADC(size, getReg(size), getMem(size)));
+  setMemory<size>(ADC<size>(getMemory<size>(), getRegister<size>()));
 }
 
-auto V30MZ::instructionAdcAccImm(Size size) -> void {
-  wait(1);
-  setAcc(size, ADC(size, getAcc(size), fetch(size)));
-}
-
-auto V30MZ::instructionSbbMemReg(Size size) -> void {
+template<u32 size> auto V30MZ::instructionAdcRegMem() -> void {
   wait(1);
   modRM();
-  setMem(size, SBB(size, getMem(size), getReg(size)));
+  setRegister<size>(ADC<size>(getRegister<size>(), getMemory<size>()));
 }
 
-auto V30MZ::instructionSbbRegMem(Size size) -> void {
+template<u32 size> auto V30MZ::instructionAdcAccImm() -> void {
+  wait(1);
+  setAccumulator<size>(ADC<size>(getAccumulator<size>(), fetch<size>()));
+}
+
+template<u32 size> auto V30MZ::instructionSbbMemReg() -> void {
   wait(1);
   modRM();
-  setReg(size, SBB(size, getReg(size), getMem(size)));
+  setMemory<size>(SBB<size>(getMemory<size>(), getRegister<size>()));
 }
 
-auto V30MZ::instructionSbbAccImm(Size size) -> void {
-  wait(1);
-  setAcc(size, SBB(size, getAcc(size), fetch(size)));
-}
-
-auto V30MZ::instructionAndMemReg(Size size) -> void {
+template<u32 size> auto V30MZ::instructionSbbRegMem() -> void {
   wait(1);
   modRM();
-  setMem(size, AND(size, getMem(size), getReg(size)));
+  setRegister<size>(SBB<size>(getRegister<size>(), getMemory<size>()));
 }
 
-auto V30MZ::instructionAndRegMem(Size size) -> void {
+template<u32 size> auto V30MZ::instructionSbbAccImm() -> void {
+  wait(1);
+  setAccumulator<size>(SBB<size>(getAccumulator<size>(), fetch<size>()));
+}
+
+template<u32 size> auto V30MZ::instructionAndMemReg() -> void {
   wait(1);
   modRM();
-  setReg(size, AND(size, getReg(size), getMem(size)));
+  setMemory<size>(AND<size>(getMemory<size>(), getRegister<size>()));
 }
 
-auto V30MZ::instructionAndAccImm(Size size) -> void {
-  wait(1);
-  setAcc(size, AND(size, getAcc(size), fetch(size)));
-}
-
-auto V30MZ::instructionSubMemReg(Size size) -> void {
+template<u32 size> auto V30MZ::instructionAndRegMem() -> void {
   wait(1);
   modRM();
-  setMem(size, SUB(size, getMem(size), getReg(size)));
+  setRegister<size>(AND<size>(getRegister<size>(), getMemory<size>()));
 }
 
-auto V30MZ::instructionSubRegMem(Size size) -> void {
+template<u32 size> auto V30MZ::instructionAndAccImm() -> void {
+  wait(1);
+  setAccumulator<size>(AND<size>(getAccumulator<size>(), fetch<size>()));
+}
+
+template<u32 size> auto V30MZ::instructionSubMemReg() -> void {
   wait(1);
   modRM();
-  setReg(size, SUB(size, getReg(size), getMem(size)));
+  setMemory<size>(SUB<size>(getMemory<size>(), getRegister<size>()));
 }
 
-auto V30MZ::instructionSubAccImm(Size size) -> void {
-  wait(1);
-  setAcc(size, SUB(size, getAcc(size), fetch(size)));
-}
-
-auto V30MZ::instructionXorMemReg(Size size) -> void {
+template<u32 size> auto V30MZ::instructionSubRegMem() -> void {
   wait(1);
   modRM();
-  setMem(size, XOR(size, getMem(size), getReg(size)));
+  setRegister<size>(SUB<size>(getRegister<size>(), getMemory<size>()));
 }
 
-auto V30MZ::instructionXorRegMem(Size size) -> void {
+template<u32 size> auto V30MZ::instructionSubAccImm() -> void {
+  wait(1);
+  setAccumulator<size>(SUB<size>(getAccumulator<size>(), fetch<size>()));
+}
+
+template<u32 size> auto V30MZ::instructionXorMemReg() -> void {
   wait(1);
   modRM();
-  setReg(size, XOR(size, getReg(size), getMem(size)));
+  setMemory<size>(XOR<size>(getMemory<size>(), getRegister<size>()));
 }
 
-auto V30MZ::instructionXorAccImm(Size size) -> void {
-  wait(1);
-  setAcc(size, XOR(size, getAcc(size), fetch(size)));
-}
-
-auto V30MZ::instructionCmpMemReg(Size size) -> void {
+template<u32 size> auto V30MZ::instructionXorRegMem() -> void {
   wait(1);
   modRM();
-  SUB(size, getMem(size), getReg(size));
+  setRegister<size>(XOR<size>(getRegister<size>(), getMemory<size>()));
 }
 
-auto V30MZ::instructionCmpRegMem(Size size) -> void {
+template<u32 size> auto V30MZ::instructionXorAccImm() -> void {
+  wait(1);
+  setAccumulator<size>(XOR<size>(getAccumulator<size>(), fetch<size>()));
+}
+
+template<u32 size> auto V30MZ::instructionCmpMemReg() -> void {
   wait(1);
   modRM();
-  SUB(size, getReg(size), getMem(size));
+  SUB<size>(getMemory<size>(), getRegister<size>());
 }
 
-auto V30MZ::instructionCmpAccImm(Size size) -> void {
-  wait(1);
-  SUB(size, getAcc(size), fetch(size));
-}
-
-auto V30MZ::instructionTestAcc(Size size) -> void {
-  wait(1);
-  AND(size, getAcc(size), fetch(size));
-}
-
-auto V30MZ::instructionTestMemReg(Size size) -> void {
+template<u32 size> auto V30MZ::instructionCmpRegMem() -> void {
   wait(1);
   modRM();
-  AND(size, getMem(size), getReg(size));
+  SUB<size>(getRegister<size>(), getMemory<size>());
 }
 
-auto V30MZ::instructionMultiplySignedRegMemImm(Size size) -> void {
+template<u32 size> auto V30MZ::instructionCmpAccImm() -> void {
+  wait(1);
+  SUB<size>(getAccumulator<size>(), fetch<size>());
+}
+
+template<u32 size> auto V30MZ::instructionTestAcc() -> void {
+  wait(1);
+  AND<size>(getAccumulator<size>(), fetch<size>());
+}
+
+template<u32 size> auto V30MZ::instructionTestMemReg() -> void {
+  wait(1);
+  modRM();
+  AND<size>(getMemory<size>(), getRegister<size>());
+}
+
+template<u32 size> auto V30MZ::instructionMultiplySignedRegMemImm() -> void {
   wait(5);
   modRM();
-  setReg(Word, MULI(Word, getMem(Word), size == Word ? (s16)fetch(Word) : (s8)fetch(Byte)));
+  setRegister<Word>(MULI<Word>(getMemory<Word>(), size == Word ? (s16)fetch<Word>() : (s8)fetch<Byte>()));
 }
 
 auto V30MZ::instructionIncReg(u16& reg) -> void {
   wait(1);
-  reg = INC(Word, reg);
+  reg = INC<Word>(reg);
 }
 
 auto V30MZ::instructionDecReg(u16& reg) -> void {
   wait(1);
-  reg = DEC(Word, reg);
+  reg = DEC<Word>(reg);
 }
 
 auto V30MZ::instructionSignExtendByte() -> void {
   wait(1);
-  setAcc(Word, (i8)getAcc(Byte));
+  setAccumulator<Word>((i8)getAccumulator<Byte>());
 }
 
 auto V30MZ::instructionSignExtendWord() -> void {
   wait(1);
-  setAcc(Long, (i16)getAcc(Word));
+  setAccumulator<Long>((i16)getAccumulator<Word>());
 }

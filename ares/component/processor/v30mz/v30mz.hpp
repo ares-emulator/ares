@@ -45,16 +45,15 @@
 namespace ares {
 
 struct V30MZ {
-  using Size = u32;
   enum : u32 { Byte = 1, Word = 2, Long = 4 };
   enum : u32 {
-    SegmentOverrideES  = 0x26,
-    SegmentOverrideCS  = 0x2e,
-    SegmentOverrideSS  = 0x36,
-    SegmentOverrideDS  = 0x3e,
-    Lock               = 0xf0,
-    RepeatWhileZeroLo  = 0xf2,
-    RepeatWhileZeroHi  = 0xf3,
+    SegmentOverrideDS1 = 0x26,  //ES:
+    SegmentOverridePS  = 0x2e,  //CS:
+    SegmentOverrideSS  = 0x36,  //SS:
+    SegmentOverrideDS0 = 0x3e,  //DS:
+    Lock               = 0xf0,  //LOCK:
+    RepeatWhileZeroLo  = 0xf2,  //REPNZ:
+    RepeatWhileZeroHi  = 0xf3,  //REPZ:
   };
 
   virtual auto step(u32 clocks = 1) -> void = 0;
@@ -63,72 +62,74 @@ struct V30MZ {
   virtual auto in(n16 port) -> n8 = 0;
   virtual auto out(n16 port, n8 data) -> void = 0;
 
+  //v30mz.cpp
   auto power() -> void;
-  auto exec() -> void;
 
   //instruction.cpp
-  auto interrupt(n8 vector) -> void;
+  auto interrupt(u8 vector) -> void;
   auto instruction() -> void;
 
   //registers.cpp
-  auto repeat() -> n8;
-  auto segment(n16) -> n16;
+  auto repeat() -> u8;
+  auto segment(u16) -> u16;
 
-  auto getAcc(Size) -> n32;
-  auto setAcc(Size, n32) -> void;
+  template<u32> auto getAccumulator() -> u32;
+  template<u32> auto setAccumulator(u32) -> void;
 
   //modrm.cpp
   auto modRM() -> void;
 
-  auto getMem(Size, u32 offset = 0) -> n16;
-  auto setMem(Size, n16) -> void;
+  auto getSegment() -> u16;
+  auto setSegment(u16) -> void;
 
-  auto getReg(Size) -> n16;
-  auto setReg(Size, n16) -> void;
+  template<u32> auto getRegister() -> u16;
+  template<u32> auto setRegister(u16) -> void;
 
-  auto getSeg() -> n16;
-  auto setSeg(n16) -> void;
+  template<u32> auto getMemory(u32 offset = 0) -> u16;
+  template<u32> auto setMemory(u16) -> void;
 
   //memory.cpp
-  auto read(Size, n16, n16) -> n32;
-  auto write(Size, n16, n16, n16) -> void;
+  template<u32> auto read(u16 segment, u16 address) -> u32;
+  template<u32> auto write(u16 segment, u16 address, u16 data) -> void;
 
-  auto in(Size, n16) -> n16;
-  auto out(Size, n16, n16) -> void;
+  template<u32> auto in(u16 address) -> u16;
+  template<u32> auto out(u16 address, u16 data) -> void;
 
+  auto pop() -> u16;
+  auto push(u16) -> void;
+
+  //prefetch.cpp
+  auto wait(u32 clocks) -> void;
   auto loop() -> void;
   auto flush() -> void;
-  auto wait(u32 clocks) -> void;
   auto prefetch() -> void;
-  auto fetch(Size = Byte) -> n16;
-  auto pop() -> n16;
-  auto push(n16) -> void;
+  template<u32> auto fetch() -> u16;
 
   //algorithms.cpp
-  auto parity(n8) const -> bool;
-  auto ADC (Size, n16, n16) -> n16;
-  auto ADD (Size, n16, n16) -> n16;
-  auto AND (Size, n16, n16) -> n16;
-  auto DEC (Size, n16     ) -> n16;
-  auto DIVI(Size, i32, i32) -> n32;
-  auto DIVU(Size, n32, n32) -> n32;
-  auto INC (Size, n16     ) -> n16;
-  auto MULI(Size, i16, i16) -> n32;
-  auto MULU(Size, n16, n16) -> n32;
-  auto NEG (Size, n16     ) -> n16;
-  auto NOT (Size, n16     ) -> n16;
-  auto OR  (Size, n16, n16) -> n16;
-  auto RCL (Size, n16, n5 ) -> n16;
-  auto RCR (Size, n16, n5 ) -> n16;
-  auto ROL (Size, n16, n4 ) -> n16;
-  auto ROR (Size, n16, n4 ) -> n16;
-  auto SAL (Size, n16, n5 ) -> n16;
-  auto SAR (Size, n16, n5 ) -> n16;
-  auto SBB (Size, n16, n16) -> n16;
-  auto SUB (Size, n16, n16) -> n16;
-  auto SHL (Size, n16, n5 ) -> n16;
-  auto SHR (Size, n16, n5 ) -> n16;
-  auto XOR (Size, n16, n16) -> n16;
+  auto parity(u8) const -> bool;
+  template<u32> auto ADC (u16, u16) -> u16;
+  template<u32> auto ADD (u16, u16) -> u16;
+  template<u32> auto AND (u16, u16) -> u16;
+  template<u32> auto DEC (u16     ) -> u16;
+  template<u32> auto DIVI(s32, s32) -> u32;
+  template<u32> auto DIVU(u32, u32) -> u32;
+  template<u32> auto INC (u16     ) -> u16;
+  template<u32> auto MULI(s16, s16) -> u32;
+  template<u32> auto MULU(u16, u16) -> u32;
+  template<u32> auto NEG (u16     ) -> u16;
+  template<u32> auto NOT (u16     ) -> u16;
+  template<u32> auto OR  (u16, u16) -> u16;
+  template<u32> auto RCL (u16, u5 ) -> u16;
+  template<u32> auto RCR (u16, u5 ) -> u16;
+  template<u32> auto ROL (u16, u4 ) -> u16;
+  template<u32> auto ROR (u16, u4 ) -> u16;
+  template<u32> auto SAL (u16, u5 ) -> u16;
+  template<u32> auto SAR (u16, u5 ) -> u16;
+  template<u32> auto SBB (u16, u16) -> u16;
+  template<u32> auto SUB (u16, u16) -> u16;
+  template<u32> auto SHL (u16, u5 ) -> u16;
+  template<u32> auto SHR (u16, u5 ) -> u16;
+  template<u32> auto XOR (u16, u16) -> u16;
 
   //instructions-adjust.cpp
   auto instructionDecimalAdjust(bool) -> void;
@@ -137,33 +138,33 @@ struct V30MZ {
   auto instructionAdjustAfterDivide() -> void;
 
   //instructions-alu.cpp
-  auto instructionAddMemReg(Size) -> void;
-  auto instructionAddRegMem(Size) -> void;
-  auto instructionAddAccImm(Size) -> void;
-  auto instructionOrMemReg(Size) -> void;
-  auto instructionOrRegMem(Size) -> void;
-  auto instructionOrAccImm(Size) -> void;
-  auto instructionAdcMemReg(Size) -> void;
-  auto instructionAdcRegMem(Size) -> void;
-  auto instructionAdcAccImm(Size) -> void;
-  auto instructionSbbMemReg(Size) -> void;
-  auto instructionSbbRegMem(Size) -> void;
-  auto instructionSbbAccImm(Size) -> void;
-  auto instructionAndMemReg(Size) -> void;
-  auto instructionAndRegMem(Size) -> void;
-  auto instructionAndAccImm(Size) -> void;
-  auto instructionSubMemReg(Size) -> void;
-  auto instructionSubRegMem(Size) -> void;
-  auto instructionSubAccImm(Size) -> void;
-  auto instructionXorMemReg(Size) -> void;
-  auto instructionXorRegMem(Size) -> void;
-  auto instructionXorAccImm(Size) -> void;
-  auto instructionCmpMemReg(Size) -> void;
-  auto instructionCmpRegMem(Size) -> void;
-  auto instructionCmpAccImm(Size) -> void;
-  auto instructionTestMemReg(Size) -> void;
-  auto instructionTestAcc(Size) -> void;
-  auto instructionMultiplySignedRegMemImm(Size) -> void;
+  template<u32> auto instructionAddMemReg() -> void;
+  template<u32> auto instructionAddRegMem() -> void;
+  template<u32> auto instructionAddAccImm() -> void;
+  template<u32> auto instructionOrMemReg() -> void;
+  template<u32> auto instructionOrRegMem() -> void;
+  template<u32> auto instructionOrAccImm() -> void;
+  template<u32> auto instructionAdcMemReg() -> void;
+  template<u32> auto instructionAdcRegMem() -> void;
+  template<u32> auto instructionAdcAccImm() -> void;
+  template<u32> auto instructionSbbMemReg() -> void;
+  template<u32> auto instructionSbbRegMem() -> void;
+  template<u32> auto instructionSbbAccImm() -> void;
+  template<u32> auto instructionAndMemReg() -> void;
+  template<u32> auto instructionAndRegMem() -> void;
+  template<u32> auto instructionAndAccImm() -> void;
+  template<u32> auto instructionSubMemReg() -> void;
+  template<u32> auto instructionSubRegMem() -> void;
+  template<u32> auto instructionSubAccImm() -> void;
+  template<u32> auto instructionXorMemReg() -> void;
+  template<u32> auto instructionXorRegMem() -> void;
+  template<u32> auto instructionXorAccImm() -> void;
+  template<u32> auto instructionCmpMemReg() -> void;
+  template<u32> auto instructionCmpRegMem() -> void;
+  template<u32> auto instructionCmpAccImm() -> void;
+  template<u32> auto instructionTestMemReg() -> void;
+  template<u32> auto instructionTestAcc() -> void;
+  template<u32> auto instructionMultiplySignedRegMemImm() -> void;
   auto instructionIncReg(u16&) -> void;
   auto instructionDecReg(u16&) -> void;
   auto instructionSignExtendByte() -> void;
@@ -196,7 +197,7 @@ struct V30MZ {
   auto instructionPopFlags() -> void;
   auto instructionPushAll() -> void;
   auto instructionPopAll() -> void;
-  auto instructionPushImm(Size) -> void;
+  template<u32> auto instructionPushImm() -> void;
   auto instructionPopMem() -> void;
 
   //instructions-flag.cpp
@@ -207,10 +208,10 @@ struct V30MZ {
   auto instructionSetFlag(u32) -> void;
 
   //instructions-group.cpp
-  auto instructionGroup1MemImm(Size, bool) -> void;
-  auto instructionGroup2MemImm(Size, u8, maybe<n8> = {}) -> void;
-  auto instructionGroup3MemImm(Size) -> void;
-  auto instructionGroup4MemImm(Size) -> void;
+  template<u32> auto instructionGroup1MemImm(bool) -> void;
+  template<u32> auto instructionGroup2MemImm(u8, maybe<u8> = {}) -> void;
+  template<u32> auto instructionGroup3MemImm() -> void;
+  template<u32> auto instructionGroup4MemImm() -> void;
 
   //instructions-misc.cpp
   auto instructionSegment(n16) -> void;
@@ -219,42 +220,42 @@ struct V30MZ {
   auto instructionWait() -> void;
   auto instructionHalt() -> void;
   auto instructionNop() -> void;
-  auto instructionIn(Size) -> void;
-  auto instructionOut(Size) -> void;
-  auto instructionInDX(Size) -> void;
-  auto instructionOutDX(Size) -> void;
+  template<u32> auto instructionIn() -> void;
+  template<u32> auto instructionOut() -> void;
+  template<u32> auto instructionInDW() -> void;
+  template<u32> auto instructionOutDW() -> void;
   auto instructionTranslate(u8) -> void;
   auto instructionBound() -> void;
 
   //instructions-move.cpp
-  auto instructionMoveMemReg(Size) -> void;
-  auto instructionMoveRegMem(Size) -> void;
+  template<u32> auto instructionMoveMemReg() -> void;
+  template<u32> auto instructionMoveRegMem() -> void;
   auto instructionMoveMemSeg() -> void;
   auto instructionMoveSegMem() -> void;
-  auto instructionMoveAccMem(Size) -> void;
-  auto instructionMoveMemAcc(Size) -> void;
+  template<u32> auto instructionMoveAccMem() -> void;
+  template<u32> auto instructionMoveMemAcc() -> void;
   auto instructionMoveRegImm(u8&) -> void;
   auto instructionMoveRegImm(u16&) -> void;
-  auto instructionMoveMemImm(Size) -> void;
+  template<u32> auto instructionMoveMemImm() -> void;
   auto instructionExchange(u16&, u16&) -> void;
-  auto instructionExchangeMemReg(Size) -> void;
+  template<u32> auto instructionExchangeMemReg() -> void;
   auto instructionLoadEffectiveAddressRegMem() -> void;
   auto instructionLoadSegmentMem(u16&) -> void;
 
   //instructions-string.cpp
-  auto instructionInString(Size) -> void;
-  auto instructionOutString(Size) -> void;
-  auto instructionMoveString(Size) -> void;
-  auto instructionCompareString(Size) -> void;
-  auto instructionStoreString(Size) -> void;
-  auto instructionLoadString(Size) -> void;
-  auto instructionScanString(Size) -> void;
+  template<u32> auto instructionInString() -> void;
+  template<u32> auto instructionOutString() -> void;
+  template<u32> auto instructionMoveString() -> void;
+  template<u32> auto instructionCompareString() -> void;
+  template<u32> auto instructionStoreString() -> void;
+  template<u32> auto instructionLoadString() -> void;
+  template<u32> auto instructionScanString() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
   //disassembler.cpp
-  auto disassembleInstruction(n16 cs, n16 ip) -> string;
+  auto disassembleInstruction(u16 ps, u16 pc) -> string;
   auto disassembleInstruction() -> string;
   auto disassembleContext() -> string;
 
@@ -264,60 +265,57 @@ struct V30MZ {
     bool prefix;  //set to true for prefix instructions; prevents flushing of Prefix struct
   } state;
 
-  n8 opcode;
-  vector<n8> prefixes;
+  u8 opcode;
+  queue<u8[7]> prefixes;
 
   struct ModRM {
-    n2 mod;
-    n3 reg;
-    n3 mem;
+    u2 mod;
+    u3 reg;
+    u3 mem;
 
-    n16 segment;
-    n16 address;
+    u16 segment;
+    u16 address;
   } modrm;
 
-  struct Registers {
-    union { u16 ax; struct { u8 order_lsb2(al, ah); }; };
-    union { u16 cx; struct { u8 order_lsb2(cl, ch); }; };
-    union { u16 dx; struct { u8 order_lsb2(dl, dh); }; };
-    union { u16 bx; struct { u8 order_lsb2(bl, bh); }; };
-    u16 sp;
-    u16 bp;
-    u16 si;
-    u16 di;
-    u16 es;
-    u16 cs;
-    u16 ss;
-    u16 ds;
-    u16 ip;
+  union { u16 AW; struct { u8 order_lsb2(AL, AH); }; };  //AX
+  union { u16 CW; struct { u8 order_lsb2(CL, CH); }; };  //CX
+  union { u16 DW; struct { u8 order_lsb2(DL, DH); }; };  //DX
+  union { u16 BW; struct { u8 order_lsb2(BL, BH); }; };  //BX
+  u16 SP;   //SP
+  u16 BP;   //BP
+  u16 IX;   //SI
+  u16 IY;   //DI
+  u16 DS1;  //ES
+  u16 PS;   //CS
+  u16 SS;   //SS
+  u16 DS0;  //DS
+  u16 PC;   //IP
+  u16 PFP;  //prefetch pointer
+  queue<u8[16]> PF;  //prefetch queue
 
-    u8*  b[8]{&al, &cl, &dl, &bl, &ah, &ch, &dh, &bh};
-    u16* w[8]{&ax, &cx, &dx, &bx, &sp, &bp, &si, &di};
-    u16* s[8]{&es, &cs, &ss, &ds, &es, &cs, &ss, &ds};
+  struct ProgramStatusWord {
+    u16 data;
+    BitField<16, 0> CY {&data};  //carry
+    BitField<16, 2> P  {&data};  //parity
+    BitField<16, 4> AC {&data};  //auxiliary carry
+    BitField<16, 6> Z  {&data};  //zero
+    BitField<16, 7> S  {&data};  //sign
+    BitField<16, 8> BRK{&data};  //break
+    BitField<16, 9> IE {&data};  //interrupt enable
+    BitField<16,10> DIR{&data};  //direction
+    BitField<16,11> V  {&data};  //overflow
+    BitField<16,15> MD {&data};  //mode (unused, for V30HL compatibility only)
 
-    struct Flags {
-      n16 data;
-      BitField<16, 0> c{&data};  //carry
-      BitField<16, 2> p{&data};  //parity
-      BitField<16, 4> h{&data};  //half-carry
-      BitField<16, 6> z{&data};  //zero
-      BitField<16, 7> s{&data};  //sign
-      BitField<16, 8> b{&data};  //break
-      BitField<16, 9> i{&data};  //interrupt
-      BitField<16,10> d{&data};  //direction
-      BitField<16,11> v{&data};  //overflow
-      BitField<16,15> m{&data};  //mode
+    operator u16() const { return data & 0x8fd5 | 0x7002; }
+    auto& operator =(u16 value) { return data  = value, *this; }
+    auto& operator&=(u16 value) { return data &= value, *this; }
+    auto& operator^=(u16 value) { return data ^= value, *this; }
+    auto& operator|=(u16 value) { return data |= value, *this; }
+  } PSW;
 
-      operator u32() const { return data & 0x8fd5 | 0x7002; }
-      auto& operator =(u32 value) { return data  = value, *this; }
-      auto& operator&=(u32 value) { return data &= value, *this; }
-      auto& operator^=(u32 value) { return data ^= value, *this; }
-      auto& operator|=(u32 value) { return data |= value, *this; }
-    } f;
-
-    queue<u8[16]> pf;
-    u16 pfp;
-  } r;
+  u8*  const RB[8]{&AL,  &CL, &DL, &BL,  &AH,  &CH, &DH, &BH };
+  u16* const RW[8]{&AW,  &CW, &DW, &BW,  &SP,  &BP, &IX, &IY };
+  u16* const RS[8]{&DS1, &PS, &SS, &DS0, &DS1, &PS, &SS, &DS0};
 };
 
 }

@@ -1,22 +1,22 @@
-auto PPU::portRead(n16 address) -> n8 {
+auto PPU::readIO(n16 address) -> n8 {
   n8 data;
 
   switch(address) {
 
   case 0x0000:  //DISP_CTRL
-    data.bit(0) = screen1.enable;
-    data.bit(1) = screen2.enable;
-    data.bit(2) = sprite.enable;
-    data.bit(3) = sprite.window.enable;
-    data.bit(4) = screen2.window.invert;
-    data.bit(5) = screen2.window.enable;
+    data.bit(0) = screen1.enable[1];
+    data.bit(1) = screen2.enable[1];
+    data.bit(2) = sprite.enable[1];
+    data.bit(3) = sprite.window.enable[1];
+    data.bit(4) = screen2.window.invert[1];
+    data.bit(5) = screen2.window.enable[1];
     break;
 
   case 0x0001:  //BACK_COLOR
     if(grayscale()) {
-      data.bit(0,2) = dac.backdrop.bit(0,2);
+      data.bit(0,2) = dac.backdrop[1].bit(0,2);
     } else {
-      data.bit(0,7) = dac.backdrop.bit(0,7);
+      data.bit(0,7) = dac.backdrop[1].bit(0,7);
     }
     break;
 
@@ -47,70 +47,70 @@ auto PPU::portRead(n16 address) -> n8 {
 
   case 0x0007:  //MAP_BASE
     if(depth() == 2) {
-      data.bit(0,2) = screen1.mapBase.bit(0,2);
-      data.bit(4,6) = screen2.mapBase.bit(0,2);
+      data.bit(0,2) = screen1.mapBase[1].bit(0,2);
+      data.bit(4,6) = screen2.mapBase[1].bit(0,2);
     } else {
-      data.bit(0,3) = screen1.mapBase.bit(0,3);
-      data.bit(4,7) = screen2.mapBase.bit(0,3);
+      data.bit(0,3) = screen1.mapBase[1].bit(0,3);
+      data.bit(4,7) = screen2.mapBase[1].bit(0,3);
     }
     break;
 
   case 0x0008:  //SCR2_WIN_X0
-    data = screen2.window.x0;
+    data = screen2.window.x0[1];
     break;
 
   case 0x0009:  //SCR2_WIN_Y0
-    data = screen2.window.y0;
+    data = screen2.window.y0[1];
     break;
 
   case 0x000a:  //SCR2_WIN_X1
-    data = screen2.window.x1;
+    data = screen2.window.x1[1];
     break;
 
   case 0x000b:  //SCR2_WIN_Y1
-    data = screen2.window.y1;
+    data = screen2.window.y1[1];
     break;
 
   case 0x000c:  //SPR_WIN_X0
-    data = sprite.window.x0;
+    data = sprite.window.x0[1];
     break;
 
   case 0x000d:  //SPR_WIN_Y0
-    data = sprite.window.y0;
+    data = sprite.window.y0[1];
     break;
 
   case 0x000e:  //SPR_WIN_X1
-    data = sprite.window.x1;
+    data = sprite.window.x1[1];
     break;
 
   case 0x000f:  //SPR_WIN_Y1
-    data = sprite.window.y1;
+    data = sprite.window.y1[1];
     break;
 
   case 0x0010:  //SCR1_X
-    data = screen1.hscroll;
+    data = screen1.hscroll[1];
     break;
 
   case 0x0011:  //SCR1_Y
-    data = screen1.vscroll;
+    data = screen1.vscroll[1];
     break;
 
   case 0x0012:  //SCR2_X
-    data = screen2.hscroll;
+    data = screen2.hscroll[1];
     break;
 
   case 0x0013:  //SCR2_Y
-    data = screen2.vscroll;
+    data = screen2.vscroll[1];
     break;
 
   case 0x0014:  //LCD_CTRL
-    data.bit(0) = lcd.enable;
+    data.bit(0) = dac.enable[1];
     if(SoC::ASWAN()) {
-      data.bit(1,7) = lcd.unknown.bit(1,7);
+      data.bit(1,7) = dac.unknown.bit(1,7);
     }
     if(SoC::SPHINX()) {
-      data.bit(1)   = lcd.contrast;
-      data.bit(4,7) = lcd.unknown.bit(4,7);
+      data.bit(1)   = dac.contrast[1];
+      data.bit(4,7) = dac.unknown.bit(4,7);
     }
     break;
 
@@ -169,20 +169,20 @@ auto PPU::portRead(n16 address) -> n8 {
   return data;
 }
 
-auto PPU::portWrite(n16 address, n8 data) -> void {
+auto PPU::writeIO(n16 address, n8 data) -> void {
   switch(address) {
 
   case 0x0000:  //DISP_CTRL
-    screen1.enable        = data.bit(0);
-    screen2.enable        = data.bit(1);
-    sprite.enable         = data.bit(2);
-    sprite.window.enable  = data.bit(3);
-    screen2.window.invert = data.bit(4);
-    screen2.window.enable = data.bit(5);
+    screen1.enable[1]        = data.bit(0);
+    screen2.enable[1]        = data.bit(1);
+    sprite.enable[1]         = data.bit(2);
+    sprite.window.enable[1]  = data.bit(3);
+    screen2.window.invert[1] = data.bit(4);
+    screen2.window.enable[1] = data.bit(5);
     break;
 
   case 0x0001:  //BACK_COLOR
-    dac.backdrop = data;
+    dac.backdrop[1] = data;
     break;
 
   case 0x0003:  //LINE_CMP
@@ -202,66 +202,66 @@ auto PPU::portWrite(n16 address, n8 data) -> void {
     break;
 
   case 0x0007:  //MAP_BASE
-    screen1.mapBase = data.bit(0,3);
-    screen2.mapBase = data.bit(4,7);
+    screen1.mapBase[1] = data.bit(0,3);
+    screen2.mapBase[1] = data.bit(4,7);
     break;
 
   case 0x0008:  //SCR2_WIN_X0
-    screen2.window.x0 = data;
+    screen2.window.x0[1] = data;
     break;
 
   case 0x0009:  //SCR2_WIN_Y0
-    screen2.window.y0 = data;
+    screen2.window.y0[1] = data;
     break;
 
   case 0x000a:  //SCR2_WIN_X1
-    screen2.window.x1 = data;
+    screen2.window.x1[1] = data;
     break;
 
   case 0x000b:  //SCR2_WIN_Y1
-    screen2.window.y1 = data;
+    screen2.window.y1[1] = data;
     break;
 
   case 0x000c:  //SPR_WIN_X0
-    sprite.window.x0 = data;
+    sprite.window.x0[1] = data;
     break;
 
   case 0x000d:  //SPR_WIN_Y0
-    sprite.window.y0 = data;
+    sprite.window.y0[1] = data;
     break;
 
   case 0x000e:  //SPR_WIN_X1
-    sprite.window.x1 = data;
+    sprite.window.x1[1] = data;
     break;
 
   case 0x000f:  //SPR_WIN_Y1
-    sprite.window.y1 = data;
+    sprite.window.y1[1] = data;
     break;
 
   case 0x0010:  //SCR1_X
-    screen1.hscroll = data;
+    screen1.hscroll[1] = data;
     break;
 
   case 0x0011:  //SCR1_Y
-    screen1.vscroll = data;
+    screen1.vscroll[1] = data;
     break;
 
   case 0x0012:  //SCR2_X
-    screen2.hscroll = data;
+    screen2.hscroll[1] = data;
     break;
 
   case 0x0013:  //SCR2_Y
-    screen2.vscroll = data;
+    screen2.vscroll[1] = data;
     break;
 
   case 0x0014:  //LCD_CTRL
-    lcd.enable = data.bit(0);
+    dac.enable[1] = data.bit(0);
     if(SoC::ASWAN()) {
-      lcd.unknown.bit(1,7) = data.bit(1,7);
+      dac.unknown.bit(1,7) = data.bit(1,7);
     }
     if(SoC::SPHINX()) {
-      lcd.contrast         = data.bit(1);
-      lcd.unknown.bit(4,7) = data.bit(4,7);
+      dac.contrast[1]      = data.bit(1);
+      dac.unknown.bit(4,7) = data.bit(4,7);
     }
     break;
 

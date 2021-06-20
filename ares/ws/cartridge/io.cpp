@@ -1,22 +1,22 @@
-auto Cartridge::portRead(n16 address) -> n8 {
+auto Cartridge::readIO(n16 address) -> n8 {
   n8 data;
 
   switch(address) {
 
   case 0x00c0:  //BANK_ROM2
-    data = r.romBank2;
+    data = io.romBank2;
     break;
 
   case 0x00c1:  //BANK_SRAM
-    data = r.sramBank;
+    data = io.sramBank;
     break;
 
   case 0x00c2:  //BANK_ROM0
-    data = r.romBank0;
+    data = io.romBank0;
     break;
 
   case 0x00c3:  //BANK_ROM1
-    data = r.romBank1;
+    data = io.romBank1;
     break;
 
   case 0x00c4:  //EEP_DATALO
@@ -40,19 +40,19 @@ auto Cartridge::portRead(n16 address) -> n8 {
     break;
 
   case 0x00ca:  //RTC_STATUS
-    data = rtcStatus();
+    data = rtc.status();
     break;
 
   case 0x00cb:  //RTC_DATA
-    data = rtcRead();
+    data = rtc.read();
     break;
 
   case 0x00cc:  //GPO_EN
-    data = r.gpoEnable;
+    data = io.gpoEnable;
     break;
 
   case 0x00cd:  //GPO_DATA
-    data = r.gpoData;
+    data = io.gpoData;
     break;
 
   }
@@ -60,23 +60,23 @@ auto Cartridge::portRead(n16 address) -> n8 {
   return data;
 }
 
-auto Cartridge::portWrite(n16 address, n8 data) -> void {
+auto Cartridge::writeIO(n16 address, n8 data) -> void {
   switch(address) {
 
   case 0x00c0:  //BANK_ROM2
-    r.romBank2 = data;
+    io.romBank2 = data;
     break;
 
   case 0x00c1:  //BANK_SRAM
-    r.sramBank = data;
+    io.sramBank = data;
     break;
 
   case 0x00c2:  //BANK_ROM0
-    r.romBank0 = data;
+    io.romBank0 = data;
     break;
 
   case 0x00c3:  //BANK_ROM1
-    r.romBank1 = data;
+    io.romBank1 = data;
     break;
 
   case 0x00c4:  //EEP_DATALO
@@ -100,19 +100,19 @@ auto Cartridge::portWrite(n16 address, n8 data) -> void {
     break;
 
   case 0x00ca:  //RTC_CMD
-    rtcCommand(data);
+    rtc.execute(data);
     break;
 
   case 0x00cb:  //RTC_DATA
-    rtcWrite(data);
+    rtc.write(data);
     break;
 
   case 0x00cc:  //GPO_EN
-    r.gpoEnable = data;
+    io.gpoEnable = data;
     break;
 
   case 0x00cd:  //GPO_DATA
-    r.gpoData = data;
+    io.gpoData = data;
     break;
 
   }

@@ -1,30 +1,25 @@
-auto V30MZ::repeat() -> n8 {
+auto V30MZ::repeat() -> u8 {
   for(auto prefix : prefixes) {
     if(prefix == RepeatWhileZeroLo) return prefix;
     if(prefix == RepeatWhileZeroHi) return prefix;
   }
-  return {};
+  return 0;
 }
 
-auto V30MZ::segment(n16 segment) -> n16 {
+auto V30MZ::segment(u16 segment) -> u16 {
   for(auto prefix : prefixes) {
-    if(prefix == SegmentOverrideES) return r.es;
-    if(prefix == SegmentOverrideCS) return r.cs;
-    if(prefix == SegmentOverrideSS) return r.ss;
-    if(prefix == SegmentOverrideDS) return r.ds;
+    if(prefix == SegmentOverrideDS1) return DS1;
+    if(prefix == SegmentOverridePS ) return PS;
+    if(prefix == SegmentOverrideSS ) return SS;
+    if(prefix == SegmentOverrideDS0) return DS0;
   }
   return segment;
 }
 
-auto V30MZ::getAcc(Size size) -> n32 {
-  if(size == Byte) return r.al;
-  if(size == Word) return r.ax;
-  if(size == Long) return r.dx << 16 | r.ax;
-  unreachable;
-}
+template<> auto V30MZ::getAccumulator<Byte>() -> u32 { return AL; }
+template<> auto V30MZ::getAccumulator<Word>() -> u32 { return AW; }
+template<> auto V30MZ::getAccumulator<Long>() -> u32 { return AW | DW << 16; }
 
-auto V30MZ::setAcc(Size size, n32 data) -> void {
-  if(size == Byte) r.al = data;
-  if(size == Word) r.ax = data;
-  if(size == Long) r.ax = data, r.dx = data >> 16;
-}
+template<> auto V30MZ::setAccumulator<Byte>(u32 data) -> void { AL = data; }
+template<> auto V30MZ::setAccumulator<Word>(u32 data) -> void { AW = data; }
+template<> auto V30MZ::setAccumulator<Long>(u32 data) -> void { AW = data; DW = data >> 16; }

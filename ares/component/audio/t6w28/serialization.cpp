@@ -3,7 +3,7 @@ auto T6W28::serialize(serializer& s) -> void {
   s(tone1);
   s(tone2);
   s(noise);
-  s(io.register);
+  s(latch);
 }
 
 auto T6W28::Tone::serialize(serializer& s) -> void {
@@ -24,4 +24,9 @@ auto T6W28::Noise::serialize(serializer& s) -> void {
   s(output);
   s(volume.left);
   s(volume.right);
+}
+
+auto T6W28::Latch::serialize(serializer& s) -> void {
+  s(type);
+  s(channel);
 }

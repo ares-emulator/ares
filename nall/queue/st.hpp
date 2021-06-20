@@ -54,6 +54,19 @@ struct queue<T[Size]> {
     return true;
   }
 
+  struct iterator_const {
+    iterator_const(const queue& self, u64 offset) : self(self), offset(offset) {}
+    auto operator*() -> T { return self.peek(offset); }
+    auto operator!=(const iterator_const& source) const -> bool { return offset != source.offset; }
+    auto operator++() -> iterator_const& { return offset++, *this; }
+
+    const queue& self;
+    u64 offset;
+  };
+
+  auto begin() const -> iterator_const { return {*this, 0}; }
+  auto end() const -> iterator_const { return {*this, size()}; }
+
   auto serialize(serializer& s) -> void {
     s(_data);
     s(_read);

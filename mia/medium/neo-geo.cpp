@@ -1,15 +1,17 @@
 struct NeoGeo : Cartridge {
   auto name() -> string override { return "Neo Geo"; }
   auto extensions() -> vector<string> override { return {"ng"}; }
-  auto read(string location, string match, bool interleave = false) -> vector<u8>;
+  auto read(string location, string match) -> vector<u8>;
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& v) -> string;
-  auto halveSwap(vector<u8>&) -> void;
   auto endianSwap(vector<u8>&) -> void;
 };
 
-auto NeoGeo::read(string location, string match, bool interleave) -> vector<u8> {
+auto NeoGeo::read(string location, string match) -> vector<u8> {
+  bool characterROM = match == "*.c*";
+  bool programROM   = match == "*.p*";
+
   vector<u8> output;
   //parse Neo Geo ROM images in MAME ZIP file format:
   if(location.iendsWith(".zip")) {
@@ -21,7 +23,9 @@ auto NeoGeo::read(string location, string match, bool interleave) -> vector<u8> 
         if(file.name.imatch(match)) filenames.append(file.name);
       }
       filenames.sort();
-      if(interleave) {
+
+      //interleave charater ROM bitplanes
+      if(characterROM) {
         vector<string> interleaved;
         for(u32 index = 0; index < filenames.size(); index += 2) interleaved.append(filenames[index]);
         for(u32 index = 1; index < filenames.size(); index += 2) interleaved.append(filenames[index]);
@@ -29,15 +33,28 @@ auto NeoGeo::read(string location, string match, bool interleave) -> vector<u8> 
       }
 
       //build the concatenated ROM image
+      bool first = true;
       for(auto& filename : filenames) {
         for(auto& file : archive.file) {
-          if(file.name == filename) {
-            auto input = archive.extract(file);
-            output.resize(output.size() + input.size());
-            memory::copy(output.data() + output.size() - input.size(), input.data(), input.size());
+          if(file.name != filename) continue;
+          auto input = archive.extract(file);
+          output.resize(output.size() + input.size());
+          if(first && programROM) {
+            first = false;
+            if(input.size() > 1_MiB) {
+              memory::copy(output.data() + output.size() - input.size(), input.data() + 1_MiB, input.size() - 1_MiB);
+              memory::copy(output.data() + output.size() - (input.size() - 1_MiB), input.data(), 1_MiB);
+              continue;
+            }
+            while(output.size() < 1_MiB) {
+              memory::copy(output.data() + output.size() - input.size(), input.data(), input.size());
+              output.resize(output.size() + min(1_MiB - output.size(), input.size()));
+            }
           }
+          memory::copy(output.data() + output.size() - input.size(), input.data(), input.size());
         }
       }
+      if(programROM) endianSwap(output);
     }
   }
   return output;
@@ -58,11 +75,9 @@ auto NeoGeo::load(string location) -> bool {
   } else if(file::exists(location)) {
     programROM   = NeoGeo::read(location, "*.p*");
     musicROM     = NeoGeo::read(location, "*.m*");
-    characterROM = NeoGeo::read(location, "*.c*", true);
+    characterROM = NeoGeo::read(location, "*.c*");
     staticROM    = NeoGeo::read(location, "*.s*");
     voiceROM     = NeoGeo::read(location, "*.v*");
-    halveSwap(programROM);
-    endianSwap(programROM);
   }
   if(!programROM  ) return false;
   if(!musicROM    ) return false;
@@ -113,14 +128,6 @@ auto NeoGeo::analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s,
   manifest +={"    memory type=ROM size=0x", hex(s.size(), 8L), " content=Static\n"};
   manifest +={"    memory type=ROM size=0x", hex(v.size(), 8L), " content=Voice\n"};
   return manifest;
-}
-
-auto NeoGeo::halveSwap(vector<u8>& memory) -> void {
-  u32 lower = 0;
-  u32 upper = memory.size() >> 1;
-  for(u32 address : range(upper)) {
-    swap(memory[address + lower], memory[address + upper]);
-  }
 }
 
 auto NeoGeo::endianSwap(vector<u8>& memory) -> void {

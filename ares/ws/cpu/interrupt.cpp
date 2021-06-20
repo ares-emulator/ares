@@ -1,26 +1,23 @@
 auto CPU::poll() -> void {
   if(!state.poll) return;
 
-  for(s32 n = 7; n >= 0; n--) {
-    if(!r.interruptEnable.bit(n)) continue;
-    if(!r.interruptStatus.bit(n)) continue;
+  for(auto id : reverse(range(8))) {
+    if(!io.interruptEnable.bit(id)) continue;
+    if(!io.interruptStatus.bit(id)) continue;
     state.halt = false;
-    if(!V30MZ::r.f.i) continue;
-    static const string type[8] = {
-      "SerialSend", "Input", "Cartridge", "SerialReceive",
-      "LineCompare", "VblankTimer", "Vblank", "HblankTimer"
-    };
-    debugger.interrupt(type[n]);
-    interrupt(r.interruptBase + n);
+    if(!PSW.IE) continue;
+
+    debugger.interrupt(id);
+    interrupt(io.interruptBase + id);
     return;
   }
 }
 
-auto CPU::raise(Interrupt irq) -> void {
-  if(!r.interruptEnable.bit((u32)irq)) return;
-  r.interruptStatus.bit((u32)irq) = 1;
+auto CPU::raise(n3 irq) -> void {
+  if(!io.interruptEnable.bit(irq)) return;
+  io.interruptStatus.bit(irq) = 1;
 }
 
-auto CPU::lower(Interrupt irq) -> void {
-  r.interruptStatus.bit((u32)irq) = 0;
+auto CPU::lower(n3 irq) -> void {
+  io.interruptStatus.bit(irq) = 0;
 }

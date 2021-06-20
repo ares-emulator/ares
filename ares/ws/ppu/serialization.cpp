@@ -14,12 +14,12 @@ auto PPU::serialize(serializer& s) -> void {
   s(screen2.vscroll);
   s(screen2.output.valid);
   s(screen2.output.color);
+  s(screen2.window.enable);
+  s(screen2.window.invert);
   s(screen2.window.x0);
   s(screen2.window.x1);
   s(screen2.window.y0);
   s(screen2.window.y1);
-  s(screen2.window.enable);
-  s(screen2.window.invert);
 
   s(sprite.enable);
   s(sprite.oamBase);
@@ -28,22 +28,22 @@ auto PPU::serialize(serializer& s) -> void {
   s(sprite.valid);
   s(sprite.output.valid);
   s(sprite.output.color);
+  s(sprite.window.enable);
   s(sprite.window.x0);
   s(sprite.window.x1);
   s(sprite.window.y0);
   s(sprite.window.y1);
-  s(sprite.window.enable);
   for(auto& line : sprite.oam) s(line);
   s(sprite.objects);
 
+  s(dac.enable);
+  s(dac.contrast);
+  s(dac.unknown);
   s(dac.backdrop);
 
   s(pram.pool);
   for(auto& palette : pram.palette) s(palette.color);
 
-  s(lcd.enable);
-  s(lcd.contrast);
-  s(lcd.unknown);
   s(lcd.icon.sleeping);
   s(lcd.icon.orientation1);
   s(lcd.icon.orientation0);

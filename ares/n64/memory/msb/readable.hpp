@@ -59,7 +59,7 @@ struct Readable {
 
   template<u32 Size>
   auto readUnaligned(u32 address) -> u64 {
-    static_assert(Size != Byte);
+    static_assert(Size == Half || Size == Word || Size == Dual);
     if constexpr(Size == Half) return bswap16(*(u16*)&data[address & maskByte]);
     if constexpr(Size == Word) return bswap32(*(u32*)&data[address & maskByte]);
     if constexpr(Size == Dual) return bswap64(*(u64*)&data[address & maskByte]);
@@ -68,7 +68,7 @@ struct Readable {
 
   template<u32 Size>
   auto writeUnaligned(u32 address, u64 value) -> void {
-    static_assert(Size != Byte);
+    static_assert(Size == Half || Size == Word || Size == Dual);
   }
 
   auto serialize(serializer& s) -> void {

@@ -5,6 +5,8 @@ namespace ares {
 //T6W28 (SN76489 variant)
 
 struct T6W28 {
+  virtual auto writePitch(u32) -> void = 0;
+
   //t6w28.cpp
   auto clock() -> array<n4[8]>;
   auto writeLeft(n8 data) -> void;
@@ -51,15 +53,19 @@ protected:
     } volume;
   };
 
-  struct IO {
-    n3 register;
+  struct Latch {
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n1 type;
+    n2 channel;
   };
 
-  Tone tone0;
-  Tone tone1;
-  Tone tone2;
+  Tone  tone0;
+  Tone  tone1;
+  Tone  tone2;
   Noise noise;
-  IO io;
+  Latch latch;
 };
 
 }

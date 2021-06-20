@@ -1,4 +1,4 @@
-auto System::portRead(n16 address) -> n8 {
+auto System::readIO(n16 address) -> n8 {
   n8 data;
 
   switch(address) {
@@ -37,7 +37,7 @@ auto System::portRead(n16 address) -> n8 {
   return data;
 }
 
-auto System::portWrite(n16 address, n8 data) -> void {
+auto System::writeIO(n16 address, n8 data) -> void {
   switch(address) {
 
   case 0x0060:  //DISP_MODE

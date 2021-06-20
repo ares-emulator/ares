@@ -49,16 +49,17 @@ struct CPU : TLCS900H, Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(u32 clocks) -> void;
-  auto idle(u32 clocks) -> void override;
+  auto step(u32 clocks) -> void override;
   auto pollPowerButton() -> void;
   auto power() -> void;
   auto fastBoot() -> void;
 
   //memory.cpp
   auto width(n24 address) -> u32 override;
+  auto speed(u32 width, n24 address) -> n32 override;
   auto read(u32 width, n24 address) -> n32 override;
   auto write(u32 width, n24 address, n32 data) -> void override;
+  auto disassembleRead(n24 address) -> n8 override;
 
   //io.cpp
   auto readIO(n8 address) -> n8;
@@ -647,6 +648,7 @@ struct CPU : TLCS900H, Thread {
   //memory.cpp
   struct Bus {
     auto wait() -> void;
+    auto speed(u32 width, n24 address) -> n32;
     auto read(u32 width, n24 address) -> n32;
     auto write(u32 width, n24 address, n32 data) -> void;
 
@@ -654,6 +656,9 @@ struct CPU : TLCS900H, Thread {
     n2 timing;
     function<n8   (n24)> reader;
     function<void (n24, n8)> writer;
+
+  //unserialized:
+    n1 debugging;
   };
 
   struct IO : Bus {

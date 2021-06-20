@@ -1,8 +1,14 @@
 auto APU::Channel1::run() -> void {
-  if(--s.period == r.pitch) {
-    s.period = 0;
-    auto output = apu.sample(1, s.sampleOffset++);
-    o.left = output * r.volumeLeft;
-    o.right = output * r.volumeRight;
+  if(--state.period == io.pitch) {
+    state.period = 0;
+    auto sample = apu.sample(1, state.sampleOffset++);
+    output.left  = sample * io.volumeLeft;
+    output.right = sample * io.volumeRight;
   }
+}
+
+auto APU::Channel1::power() -> void {
+  io = {};
+  state = {};
+  output = {};
 }

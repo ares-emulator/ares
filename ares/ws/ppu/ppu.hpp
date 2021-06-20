@@ -33,7 +33,6 @@ struct PPU : Thread, IO {
   auto packed() const -> bool { return system.mode().bit(0) == 1; }
   auto depth() const -> u32 { return system.mode().bit(1,2) != 3 ? 2 : 4; }
   auto grayscale() const -> bool { return system.mode().bit(1,2) == 0; }
-  auto tilemask() const -> u32 { return 1023 >> !system.mode().bit(2); }
 
   //ppu.cpp
   auto load(Node::Object) -> void;
@@ -48,12 +47,12 @@ struct PPU : Thread, IO {
   auto updateOrientation() -> void;
 
   //io.cpp
-  auto portRead(n16 address) -> n8 override;
-  auto portWrite(n16 address, n8 data) -> void override;
+  auto readIO(n16 address) -> n8 override;
+  auto writeIO(n16 address, n8 data) -> void override;
 
   //memory.cpp
   auto fetch(n10 tile, n3 x, n3 y) -> n4;
-  auto backdrop(n4 color) -> n12;
+  auto backdrop(n8 color) -> n12;
   auto palette(n4 palette, n4 color) -> n12;
   auto opaque(n4 palette, n4 color) -> n1;
 
@@ -71,46 +70,49 @@ struct PPU : Thread, IO {
 
   struct Window {
     //window.cpp
+    auto scanline(n8 y) -> void;
     auto inside(n8 x, n8 y) const -> bool;
     auto outside(n8 x, n8 y) const -> bool;
-    auto within(n8 x, n8 y) const -> bool;
+    auto power() -> void;
 
-    n8 x0;
-    n8 x1;
-    n8 y0;
-    n8 y1;
+    n1 enable[2];
+    n1 invert[2];  //Screen2 only
+    n8 x0[2];
+    n8 x1[2];
+    n8 y0[2];
+    n8 y1[2];
   };
 
   struct Screen {
     PPU& self;
 
     //screen.cpp
+    auto scanline(n8 y) -> void;
     auto pixel(n8 x, n8 y) -> void;
     auto power() -> void;
 
-    n1 enable;
-    n4 mapBase;
-    n8 hscroll;
-    n8 vscroll;
+    n1 enable[2];
+    n4 mapBase[2];
+    n8 hscroll[2];
+    n8 vscroll[2];
 
     Output output;
   };
 
   struct Screen1 : Screen {
     //screen.cpp
+    auto scanline(n8 y) -> void;
     auto pixel(n8 x, n8 y) -> void;
     auto power() -> void;
   } screen1{*this};
 
   struct Screen2 : Screen {
     //screen.cpp
+    auto scanline(n8 y) -> void;
     auto pixel(n8 x, n8 y) -> void;
     auto power() -> void;
 
-    struct Window : PPU::Window {
-      n1 enable;
-      n1 invert;
-    } window;
+    Window window;
   } screen2{*this};
 
   struct Sprite {
@@ -123,20 +125,17 @@ struct PPU : Thread, IO {
     auto pixel(n8 x, n8 y) -> void;
     auto power() -> void;
 
-    n1 enable;
+    n1 enable[2];
     n6 oamBase;
     n7 first;
     n8 count;  //0 - 128
     n8 valid;  //0 - 32
 
     Output output;
+    Window window;
 
-    struct Window : PPU::Window {
-      n1 enable;
-    } window;
-
-    n32 oam[2][128];
-    n32 objects[32];
+    queue<n32[128]> oam[2];
+    queue<n32[32]> objects;
   } sprite{*this, screen2};
 
   struct DAC {
@@ -150,7 +149,10 @@ struct PPU : Thread, IO {
     auto pixel(n8 x, n8 y) -> void;
     auto power() -> void;
 
-    n8 backdrop;
+    n1 enable[2];
+    n1 contrast[2];
+    n8 unknown;
+    n8 backdrop[2];
 
   //unserialized:
     u32* output = nullptr;
@@ -164,10 +166,6 @@ struct PPU : Thread, IO {
   } pram;
 
   struct LCD {
-    n1 enable;
-    n1 contrast;  //0 = low, 1 = high (WonderSwan Color only)
-    n8 unknown;
-
     struct Icon {
       n1 sleeping;
       n1 orientation1;

@@ -1,21 +1,21 @@
 auto V30MZ::instructionSegment(n16 segment) -> void {
-  if(prefixes.size() >= 7) prefixes.removeRight();
-  prefixes.prepend(opcode);
+  if(prefixes.full()) prefixes.read(0);
+  prefixes.write(opcode);
   state.prefix = 1;
   state.poll = 0;
 }
 
 auto V30MZ::instructionRepeat() -> void {
-  if(prefixes.size() >= 7) prefixes.removeRight();
-  prefixes.prepend(opcode);
+  if(prefixes.full()) prefixes.read(0);
+  prefixes.write(opcode);
   wait(4);
   state.prefix = 1;
   state.poll = 0;
 }
 
 auto V30MZ::instructionLock() -> void {
-  if(prefixes.size() >= 7) prefixes.removeRight();
-  prefixes.prepend(opcode);
+  if(prefixes.full()) prefixes.read(0);
+  prefixes.write(opcode);
   state.prefix = 1;
   state.poll = 0;
 }
@@ -33,36 +33,36 @@ auto V30MZ::instructionNop() -> void {
   wait(1);
 }
 
-auto V30MZ::instructionIn(Size size) -> void {
+template<u32 size> auto V30MZ::instructionIn() -> void {
   wait(6);
-  setAcc(size, in(size, fetch()));
+  setAccumulator<size>(in<size>(fetch<Byte>()));
 }
 
-auto V30MZ::instructionOut(Size size) -> void {
+template<u32 size> auto V30MZ::instructionOut() -> void {
   wait(6);
-  out(size, fetch(), getAcc(size));
+  out<size>(fetch<Byte>(), getAccumulator<size>());
 }
 
-auto V30MZ::instructionInDX(Size size) -> void {
+template<u32 size> auto V30MZ::instructionInDW() -> void {
   wait(4);
-  setAcc(size, in(size, r.dx));
+  setAccumulator<size>(in<size>(DW));
 }
 
-auto V30MZ::instructionOutDX(Size size) -> void {
+template<u32 size> auto V30MZ::instructionOutDW() -> void {
   wait(4);
-  out(size, r.dx, getAcc(size));
+  out<size>(DW, getAccumulator<size>());
 }
 
 auto V30MZ::instructionTranslate(u8 clocks) -> void {
   wait(clocks);
-  r.al = read(Byte, segment(r.ds), r.bx + r.al);
+  AL = read<Byte>(segment(DS0), BW + AL);
 }
 
 auto V30MZ::instructionBound() -> void {
   wait(12);
   modRM();
-  auto lo = getMem(Word, 0);
-  auto hi = getMem(Word, 2);
-  auto reg = getReg(Word);
+  auto lo = getMemory<Word>(0);
+  auto hi = getMemory<Word>(2);
+  auto reg = getRegister<Word>();
   if(reg < lo || reg > hi) interrupt(5);
 }

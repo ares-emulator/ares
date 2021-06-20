@@ -25,9 +25,9 @@ auto APU::save() -> void {
 }
 
 auto APU::unload() -> void {
+  debugger.unload(node);
   ram.reset();
   node.reset();
-  debugger = {};
 }
 
 auto APU::main() -> void {
@@ -62,7 +62,7 @@ auto APU::power() -> void {
   nmi = {};
   irq = {};
   io = {};
-  io.enable = false;
+  io.enable = 0;
 }
 
 auto APU::enable() -> void {
@@ -73,11 +73,11 @@ auto APU::enable() -> void {
   nmi = {};
   irq = {};
   io = {};
-  io.enable = true;
+  io.enable = 1;
 }
 
 auto APU::disable() -> void {
-  io.enable = false;
+  io.enable = 0;
 }
 
 }

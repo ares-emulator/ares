@@ -2,6 +2,54 @@
 
 namespace nall {
 
+template<u32 Precision> struct NaturalPrimitive {
+  static_assert(Precision >= 1 && Precision <= 64);
+  using utype =
+    conditional_t<Precision <=  8, u8,
+    conditional_t<Precision <= 16, u16,
+    conditional_t<Precision <= 32, u32,
+    conditional_t<Precision <= 64, u64,
+    void>>>>;
+
+  NaturalPrimitive() = default;
+  template<u32 Bits> NaturalPrimitive(NaturalPrimitive<Bits> value) { data = cast(value); }
+  template<typename T> NaturalPrimitive(const T& value) { data = cast(value); }
+  explicit NaturalPrimitive(const char* value) { data = cast(toNatural(value)); }
+
+  operator utype() const { return data; }
+
+  auto operator++(s32) { auto value = *this; data = cast(data + 1); return value; }
+  auto operator--(s32) { auto value = *this; data = cast(data - 1); return value; }
+
+  auto& operator++() { data = cast(data + 1); return *this; }
+  auto& operator--() { data = cast(data - 1); return *this; }
+
+  template<typename T> auto& operator  =(const T& value) { data = cast(        value); return *this; }
+  template<typename T> auto& operator *=(const T& value) { data = cast(data  * value); return *this; }
+  template<typename T> auto& operator /=(const T& value) { data = cast(data  / value); return *this; }
+  template<typename T> auto& operator %=(const T& value) { data = cast(data  % value); return *this; }
+  template<typename T> auto& operator +=(const T& value) { data = cast(data  + value); return *this; }
+  template<typename T> auto& operator -=(const T& value) { data = cast(data  - value); return *this; }
+  template<typename T> auto& operator<<=(const T& value) { data = cast(data << value); return *this; }
+  template<typename T> auto& operator>>=(const T& value) { data = cast(data >> value); return *this; }
+  template<typename T> auto& operator &=(const T& value) { data = cast(data  & value); return *this; }
+  template<typename T> auto& operator ^=(const T& value) { data = cast(data  ^ value); return *this; }
+  template<typename T> auto& operator |=(const T& value) { data = cast(data  | value); return *this; }
+
+  auto serialize(serializer& s) { s(data); }
+
+private:
+  static constexpr auto mask() -> utype {
+    return ~0ull >> 64 - Precision;
+  }
+
+  auto cast(utype value) const -> utype {
+    return value & mask();
+  }
+
+  utype data;
+};
+
 template<u32 Precision> struct Natural {
   static_assert(Precision >= 1 && Precision <= 64);
   static constexpr auto bits() -> u32 { return Precision; }

@@ -181,6 +181,8 @@ auto PPU::main() -> void {
 
   if(io.vcounter < 144) {
     n8 y = io.vcounter % (io.vtotal + 1);
+    screen1.scanline(y);
+    screen2.scanline(y);
     sprite.scanline(y);
     dac.scanline(y);
     for(n8 x : range(224)) {
@@ -260,7 +262,7 @@ auto PPU::updateIcons() -> void {
   icon.auxiliary1->setVisible(lcd.icon.auxiliary1 & visible);
   icon.auxiliary2->setVisible(lcd.icon.auxiliary2 & visible);
 
-  auto volume = apu.r.masterVolume;
+  auto volume = apu.io.masterVolume;
 
   if(Model::WonderSwan()) {
     icon.volumeA0->setVisible(volume == 0 & visible);
@@ -275,7 +277,7 @@ auto PPU::updateIcons() -> void {
     icon.volumeB3->setVisible(volume == 3 & visible);
   }
 
-  auto headphones = apu.r.headphonesConnected;
+  auto headphones = apu.io.headphonesConnected;
 
   icon.headphones->setVisible(headphones & visible);
 }

@@ -4,6 +4,7 @@ namespace ares::WonderSwan {
 
 CPU cpu;
 #include "io.cpp"
+#include "keypad.cpp"
 #include "interrupt.cpp"
 #include "dma.cpp"
 #include "debugger.cpp"
@@ -11,20 +12,18 @@ CPU cpu;
 
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("CPU");
-
   debugger.load(node);
 }
 
 auto CPU::unload() -> void {
-  debugger = {};
-  node = {};
+  debugger.unload(node);
+  node.reset();
 }
 
 auto CPU::main() -> void {
   poll();
-
   debugger.instruction();
-  exec();
+  instruction();
 }
 
 auto CPU::step(u32 clocks) -> void {
@@ -32,20 +31,20 @@ auto CPU::step(u32 clocks) -> void {
   Thread::synchronize();
 }
 
-auto CPU::read(n20 addr) -> n8 {
-  return bus.read(addr);
+auto CPU::read(n20 address) -> n8 {
+  return bus.read(address);
 }
 
-auto CPU::write(n20 addr, n8 data) -> void {
-  return bus.write(addr, data);
+auto CPU::write(n20 address, n8 data) -> void {
+  return bus.write(address, data);
 }
 
 auto CPU::in(n16 port) -> n8 {
-  return bus.portRead(port);
+  return bus.readIO(port);
 }
 
 auto CPU::out(n16 port, n8 data) -> void {
-  return bus.portWrite(port, data);
+  return bus.writeIO(port, data);
 }
 
 auto CPU::power() -> void {
@@ -60,10 +59,7 @@ auto CPU::power() -> void {
     bus.map(this, 0x0062);
   }
 
-  r = {};
-
-  //necessary hack until all boot ROMs have been dumped.
-  if(!system.bootROM) r.cartridgeEnable = 1;
+  io = {};
 }
 
 }

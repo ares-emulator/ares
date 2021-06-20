@@ -70,7 +70,7 @@ struct Writable {
 
   template<u32 Size>
   auto readUnaligned(u32 address) -> u64 {
-    static_assert(Size != Byte);
+    static_assert(Size == Half || Size == Word || Size == Dual);
     if constexpr(Size == Half) {
       u16 upper = read<Byte>(address + 0);
       u16 lower = read<Byte>(address + 1);
@@ -91,7 +91,7 @@ struct Writable {
 
   template<u32 Size>
   auto writeUnaligned(u32 address, u64 value) -> void {
-    static_assert(Size != Byte);
+    static_assert(Size == Half || Size == Word || Size == Dual);
     if constexpr(Size == Half) {
       write<Byte>(address + 0, value >> 8);
       write<Byte>(address + 1, value >> 0);

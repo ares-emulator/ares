@@ -14,16 +14,35 @@ auto CPU::Debugger::load(Node::Object parent) -> void {
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "CPU");
 }
 
+auto CPU::Debugger::unload(Node::Object parent) -> void {
+  parent->remove(memory.ram);
+  parent->remove(tracer.instruction);
+  parent->remove(tracer.interrupt);
+  memory.ram.reset();
+  tracer.instruction.reset();
+  tracer.interrupt.reset();
+}
+
 auto CPU::Debugger::instruction() -> void {
-  if(tracer.instruction->enabled() && tracer.instruction->address(n20(cpu.V30MZ::r.cs * 16 + cpu.V30MZ::r.ip))) {
-    if(auto instruction = cpu.disassembleInstruction()) {
-      tracer.instruction->notify(instruction, cpu.disassembleContext());
+  if(likely(!tracer.instruction->enabled())) return;
+  if(tracer.instruction->address(n20(self.PS * 16 + self.PC))) {
+    if(auto instruction = self.disassembleInstruction()) {
+      tracer.instruction->notify(instruction, {self.disassembleContext(), " V:", pad(ppu.vcounter(), 3L), " H:", pad(ppu.hcounter(), 3L)});
     }
   }
 }
 
-auto CPU::Debugger::interrupt(string_view type) -> void {
-  if(tracer.interrupt->enabled()) {
-    tracer.interrupt->notify(type);
-  }
+auto CPU::Debugger::interrupt(n3 type) -> void {
+  if(likely(!tracer.interrupt->enabled())) return;
+  static const string name[8] = {
+    "SerialSend",
+    "Input",
+    "Cartridge",
+    "SerialReceive",
+    "LineCompare",
+    "VblankTimer",
+    "Vblank",
+    "HblankTimer"
+  };
+  tracer.interrupt->notify(name[type]);
 }

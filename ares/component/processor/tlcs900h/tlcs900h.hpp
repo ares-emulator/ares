@@ -19,8 +19,9 @@ namespace ares {
 struct TLCS900H {
   enum : u32 { Byte = 1, Word = 2, Long = 4 };
 
-  virtual auto idle(u32 clocks) -> void = 0;
+  virtual auto step(u32 clocks) -> void = 0;
   virtual auto width(n24 address) -> u32 = 0;
+  virtual auto speed(u32 size, n24 address) -> n32 = 0;
   virtual auto read(u32 size, n24 address) -> n32 = 0;
   virtual auto write(u32 size, n24 address, n32 data) -> void = 0;
 
@@ -87,16 +88,13 @@ struct TLCS900H {
   auto dma(n2 channel) -> bool;
 
   //instruction.cpp
-  template<u32 Bits> auto idleBW(u32 b, u32 w) -> void;
-  template<u32 Bits> auto idleWL(u32 w, u32 l) -> void;
-  template<u32 Bits> auto idleBWL(u32 b, u32 w, u32 l) -> void;
+  template<u32 Bits> auto wait(u32 b, u32 w, u32 l) -> void;
 
   template<typename T> auto toRegister3(n3) const -> Register<T>;
   template<typename T> auto toRegister8(n8) const -> Register<T>;
   template<typename T> auto toControlRegister(n8) const -> ControlRegister<T>;
   template<typename T> auto toMemory(n32 address) const -> Memory<T>;
   template<typename T> auto toImmediate(n32 constant) const -> Immediate<T>;
-  template<typename T> auto toImmediate3(natural constant) const -> Immediate<T>;
   auto undefined() -> void;
   auto instruction() -> void;
   template<typename Register> auto instructionRegister(Register) -> void;
@@ -177,6 +175,10 @@ struct TLCS900H {
   template<typename Target, typename Source> auto instructionXor(Target, Source) -> void;
   template<typename Source, typename Offset> auto instructionXorCarry(Source, Offset) -> void;
 
+  //prefetch.cpp
+  auto invalidate() -> void;
+  auto wait(u32 clocks) -> void;
+
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
@@ -216,15 +218,7 @@ struct TLCS900H {
     n8 prefix;   //first opcode byte; needed for [CP|LD][ID](R) instructions
   } r;
 
-  struct Prefetch {
-    n3  valid;  //0-4 bytes
-    n32 data;
-  } p;
-
-  //prefetch.cpp
-  auto invalidate() -> void;
-  auto prefetch() -> void;
-
+  queue<u8[4]> PIQ;  //prefetch instruction queue
   n24 MAR;  //A0-A23: memory address register
   n16 MDR;  //D0-D15: memory data register
 

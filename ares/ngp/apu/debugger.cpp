@@ -1,11 +1,11 @@
 auto APU::Debugger::load(Node::Object parent) -> void {
   memory.ram = parent->append<Node::Debugger::Memory>("APU RAM");
-  memory.ram->setSize(apu.ram.size());
+  memory.ram->setSize(self.ram.size());
   memory.ram->setRead([&](u32 address) -> u8 {
-    return apu.ram[address];
+    return self.ram[address];
   });
   memory.ram->setWrite([&](u32 address, u8 data) -> void {
-    apu.ram[address] = data;
+    self.ram[address] = data;
   });
 
   tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "APU");
@@ -14,14 +14,22 @@ auto APU::Debugger::load(Node::Object parent) -> void {
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "APU");
 }
 
+auto APU::Debugger::unload(Node::Object parent) -> void {
+  parent->remove(memory.ram);
+  parent->remove(tracer.instruction);
+  parent->remove(tracer.interrupt);
+  memory.ram.reset();
+  tracer.instruction.reset();
+  tracer.interrupt.reset();
+}
+
 auto APU::Debugger::instruction() -> void {
-  if(tracer.instruction->enabled() && tracer.instruction->address(apu.PC)) {
-    tracer.instruction->notify(apu.disassembleInstruction(), apu.disassembleContext());
-  }
+  if(likely(!tracer.instruction->enabled())) return;
+  if(!tracer.instruction->address(self.PC)) return;
+  tracer.instruction->notify(self.disassembleInstruction(), self.disassembleContext());
 }
 
 auto APU::Debugger::interrupt(string_view type) -> void {
-  if(tracer.interrupt->enabled()) {
-    tracer.interrupt->notify(type);
-  }
+  if(likely(!tracer.interrupt->enabled())) return;
+  tracer.interrupt->notify(type);
 }

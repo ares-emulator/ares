@@ -1,12 +1,18 @@
 auto APU::Channel2::run() -> void {
-  if(r.voice) {
-    n8 volume = r.volumeLeft << 4 | r.volumeRight << 0;
-    o.left = r.voiceEnableLeft ? volume : (n8)0;
-    o.right = r.voiceEnableRight ? volume : (n8)0;
-  } else if(--s.period == r.pitch) {
-    s.period = 0;
-    auto output = apu.sample(2, s.sampleOffset++);
-    o.left = output * r.volumeLeft;
-    o.right = output * r.volumeRight;
+  if(io.voice) {
+    n8 volume = io.volumeLeft << 4 | io.volumeRight << 0;
+    output.left  = io.voiceEnableLeft  ? volume : (n8)0;
+    output.right = io.voiceEnableRight ? volume : (n8)0;
+  } else if(--state.period == io.pitch) {
+    state.period = 0;
+    auto sample = apu.sample(2, state.sampleOffset++);
+    output.left  = sample * io.volumeLeft;
+    output.right = sample * io.volumeRight;
   }
+}
+
+auto APU::Channel2::power() -> void {
+  io = {};
+  state = {};
+  output = {};
 }

@@ -2,10 +2,13 @@ struct CPU : V30MZ, Thread, IO {
   Node::Object node;
 
   struct Debugger {
+    CPU& self;
+
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
     auto instruction() -> void;
-    auto interrupt(string_view) -> void;
+    auto interrupt(n3) -> void;
 
     struct Memory {
       Node::Debugger::Memory ram;
@@ -15,9 +18,9 @@ struct CPU : V30MZ, Thread, IO {
       Node::Debugger::Tracer::Instruction instruction;
       Node::Debugger::Tracer::Notification interrupt;
     } tracer;
-  } debugger;
+  } debugger{*this};
 
-  enum class Interrupt : u32 {
+  struct Interrupt { enum : u32 {
     SerialSend,
     Input,
     Cartridge,
@@ -26,7 +29,7 @@ struct CPU : V30MZ, Thread, IO {
     VblankTimer,
     Vblank,
     HblankTimer,
-  };
+  };};
 
   //cpu.cpp
   auto load(Node::Object) -> void;
@@ -35,65 +38,56 @@ struct CPU : V30MZ, Thread, IO {
   auto main() -> void;
   auto step(u32 clocks) -> void override;
 
-  auto read(n20 addr) -> n8 override;
-  auto write(n20 addr, n8 data) -> void override;
+  auto read(n20 address) -> n8 override;
+  auto write(n20 address, n8 data) -> void override;
   auto in(n16 port) -> n8 override;
   auto out(n16 port, n8 data) -> void override;
 
   auto power() -> void;
 
   //io.cpp
-  auto keypadRead() -> n4;
-  auto portRead(n16 address) -> n8 override;
-  auto portWrite(n16 address, n8 data) -> void override;
+  auto readIO(n16 address) -> n8 override;
+  auto writeIO(n16 address, n8 data) -> void override;
 
   //interrupt.cpp
   auto poll() -> void;
-  auto raise(Interrupt) -> void;
-  auto lower(Interrupt) -> void;
-
-  //dma.cpp
-  auto dmaTransfer() -> void;
+  auto raise(n3) -> void;
+  auto lower(n3) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-  struct Registers {
-    //$0040-0042  DMA_SRC
-    n20 dmaSource;
+  struct DMA {
+    CPU& self;
 
-    //$0044-0045  DMA_DST
-    n16 dmaTarget;
+    //dma.cpp
+    auto transfer() -> void;
 
-    //$0046-0047  DMA_LEN
-    n16 dmaLength;
+    n20 source;
+    n16 target;
+    n16 length;
+    n1  enable;
+    n1  direction;  //0 = increment, 1 = increment
+  } dma{*this};
 
-    //$0048  DMA_CTRL
-    n1 dmaEnable;
-    n1 dmaMode;  //0 = increment; 1 = decrement
+  struct Keypad {
+    CPU& self;
 
-    //$00a0  HW_FLAGS
+    //keypad.cpp
+    auto read() -> n4;
+
+    n3 matrix;
+  } keypad{*this};
+
+  struct IO {
     n1 cartridgeEnable;
-
-    //$00b0  INT_BASE
     n8 interruptBase;
-
-    //$00b1  SER_DATA
-    n8 serialData;
-
-    //$00b2  INT_ENABLE
     n8 interruptEnable;
-
-    //$00b3  SER_STATUS
+    n8 interruptStatus;
+    n8 serialData;
     n1 serialBaudRate;  //0 = 9600; 1 = 38400
     n1 serialEnable;
-
-    //$00b4  INT_STATUS
-    n8 interruptStatus;
-
-    //$00b5  KEYPAD
-    n3 keypadMatrix;
-  } r;
+  } io;
 };
 
 extern CPU cpu;

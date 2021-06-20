@@ -1,27 +1,33 @@
 auto APU::Channel4::noiseSample() -> n4 {
-  return s.noiseOutput ? 0xf : 0x0;
+  return state.noiseOutput ? 0xf : 0x0;
 }
 
 auto APU::Channel4::run() -> void {
-  if(--s.period == r.pitch) {
-    s.period = 0;
+  if(--state.period == io.pitch) {
+    state.period = 0;
 
-    auto output = r.noise ? noiseSample() : apu.sample(4, s.sampleOffset++);
-    o.left = output * r.volumeLeft;
-    o.right = output * r.volumeRight;
+    auto sample = io.noise ? noiseSample() : apu.sample(4, state.sampleOffset++);
+    output.left  = sample * io.volumeLeft;
+    output.right = sample * io.volumeRight;
 
-    if(r.noiseReset) {
-      r.noiseReset = 0;
-      s.noiseLFSR = 0;
-      s.noiseOutput = 0;
+    if(io.noiseReset) {
+      io.noiseReset = 0;
+      state.noiseLFSR = 0;
+      state.noiseOutput = 0;
     }
 
-    if(r.noiseUpdate) {
-      static const s32 taps[8] = {14, 10, 13, 4, 8, 6, 9, 11};
-      auto tap = taps[r.noiseMode];
+    if(io.noiseUpdate) {
+      static constexpr s32 taps[8] = {14, 10, 13, 4, 8, 6, 9, 11};
+      auto tap = taps[io.noiseMode];
 
-      s.noiseOutput = (1 ^ (s.noiseLFSR >> 7) ^ (s.noiseLFSR >> tap)) & 1;
-      s.noiseLFSR = s.noiseLFSR << 1 | s.noiseOutput;
+      state.noiseOutput = (1 ^ (state.noiseLFSR >> 7) ^ (state.noiseLFSR >> tap)) & 1;
+      state.noiseLFSR = state.noiseLFSR << 1 | state.noiseOutput;
     }
   }
+}
+
+auto APU::Channel4::power() -> void {
+  io = {};
+  state = {};
+  output = {};
 }

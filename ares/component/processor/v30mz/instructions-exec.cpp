@@ -1,109 +1,109 @@
 auto V30MZ::instructionLoop() -> void {
   wait(1);
-  auto offset = (i8)fetch();
-  if(--r.cx) {
+  auto offset = (i8)fetch<Byte>();
+  if(--CW) {
     wait(3);
-    r.ip += offset;
+    PC += offset;
     flush();
   }
 }
 
 auto V30MZ::instructionLoopWhile(bool value) -> void {
   wait(2);
-  auto offset = (i8)fetch();
-  if(--r.cx && r.f.z == value) {
+  auto offset = (i8)fetch<Byte>();
+  if(--CW && PSW.Z == value) {
     wait(3);
-    r.ip += offset;
+    PC += offset;
     flush();
   }
 }
 
 auto V30MZ::instructionJumpShort() -> void {
   wait(3);
-  auto offset = (i8)fetch();
-  r.ip += offset;
+  auto offset = (i8)fetch<Byte>();
+  PC += offset;
   flush();
 }
 
 auto V30MZ::instructionJumpIf(bool condition) -> void {
   wait(1);
-  auto offset = (i8)fetch();
+  auto offset = (i8)fetch<Byte>();
   if(condition) {
     wait(3);
-    r.ip += offset;
+    PC += offset;
     flush();
   }
 }
 
 auto V30MZ::instructionJumpNear() -> void {
   wait(3);
-  r.ip += (i16)fetch(Word);
+  PC += (i16)fetch<Word>();
   flush();
 }
 
 auto V30MZ::instructionJumpFar() -> void {
   wait(6);
-  auto ip = fetch(Word);
-  auto cs = fetch(Word);
-  r.cs = cs;
-  r.ip = ip;
+  auto pc = fetch<Word>();
+  auto ps = fetch<Word>();
+  PS = ps;
+  PC = pc;
   flush();
 }
 
 auto V30MZ::instructionCallNear() -> void {
   wait(4);
-  auto offset = (i16)fetch(Word);
-  push(r.ip);
-  r.ip += offset;
+  auto offset = (i16)fetch<Word>();
+  push(PC);
+  PC += offset;
   flush();
 }
 
 auto V30MZ::instructionCallFar() -> void {
   wait(9);
-  auto ip = fetch(Word);
-  auto cs = fetch(Word);
-  push(r.cs);
-  push(r.ip);
-  r.cs = cs;
-  r.ip = ip;
+  auto pc = fetch<Word>();
+  auto ps = fetch<Word>();
+  push(PS);
+  push(PC);
+  PS = ps;
+  PC = pc;
   flush();
 }
 
 auto V30MZ::instructionReturn() -> void {
   wait(5);
-  r.ip = pop();
+  PC = pop();
   flush();
 }
 
 auto V30MZ::instructionReturnImm() -> void {
   wait(5);
-  auto offset = fetch(Word);
-  r.ip = pop();
-  r.sp += offset;
+  auto offset = fetch<Word>();
+  PC = pop();
+  SP += offset;
   flush();
 }
 
 auto V30MZ::instructionReturnFar() -> void {
   wait(7);
-  r.ip = pop();
-  r.cs = pop();
+  PC = pop();
+  PS = pop();
   flush();
 }
 
 auto V30MZ::instructionReturnFarImm() -> void {
   wait(8);
-  auto offset = fetch(Word);
-  r.ip = pop();
-  r.cs = pop();
-  r.sp += offset;
+  auto offset = fetch<Word>();
+  PC = pop();
+  PS = pop();
+  SP += offset;
   flush();
 }
 
 auto V30MZ::instructionReturnInt() -> void {
   wait(9);
-  r.ip = pop();
-  r.cs = pop();
-  r.f = pop();
+  PC = pop();
+  PS = pop();
+  PSW = pop();
   flush();
   state.poll = 0;
 }
@@ -115,7 +115,7 @@ auto V30MZ::instructionInt3() -> void {
 
 auto V30MZ::instructionIntImm() -> void {
   wait(9);
-  interrupt(fetch());
+  interrupt(fetch<Byte>());
 }
 
 auto V30MZ::instructionInto() -> void {
@@ -125,27 +125,27 @@ auto V30MZ::instructionInto() -> void {
 
 auto V30MZ::instructionEnter() -> void {
   wait(7);
-  auto offset = fetch(Word);
-  auto length = fetch(Byte) & 0x1f;
-  push(r.bp);
-  r.bp = r.sp;
-  r.sp -= offset;
+  auto offset = fetch<Word>();
+  auto length = fetch<Byte>() & 0x1f;
+  push(BP);
+  BP = SP;
+  SP -= offset;
 
   if(length) {
     wait(length > 1 ? 7 : 6);
-    for(u32 n = 1; n < length; n++) {
+    for(auto index = 1; index < length; index++) {
       wait(4);
-      auto data = read(Word, segment(r.ss), r.bp - n * 2);
+      auto data = read<Word>(segment(SS), BP - index * 2);
       push(data);
     }
-    push(r.bp);
+    push(BP);
   }
 }
 
 auto V30MZ::instructionLeave() -> void {
   wait(1);
-  r.sp = r.bp;
-  r.bp = pop();
+  SP = BP;
+  BP = pop();
 }
 
 auto V30MZ::instructionPushReg(u16& reg) -> void {
@@ -164,49 +164,49 @@ auto V30MZ::instructionPopReg(u16& reg) -> void {
 auto V30MZ::instructionPopSeg(u16& seg) -> void {
   wait(2);
   seg = pop();
-  if(&seg == &r.ss) state.poll = 0;
+  if(&seg == &SS) state.poll = 0;
 }
 
 auto V30MZ::instructionPushFlags() -> void {
   wait(1);
-  push(r.f);
+  push(PSW);
 }
 
 auto V30MZ::instructionPopFlags() -> void {
   wait(2);
-  r.f = pop();
+  PSW = pop();
   state.poll = 0;
 }
 
 auto V30MZ::instructionPushAll() -> void {
   wait(1);
-  auto sp = r.sp;
-  push(r.ax);
-  push(r.cx);
-  push(r.dx);
-  push(r.bx);
+  auto sp = SP;
+  push(AW);
+  push(CW);
+  push(DW);
+  push(BW);
   push(sp);
-  push(r.bp);
-  push(r.si);
-  push(r.di);
+  push(BP);
+  push(IX);
+  push(IY);
 }
 
 auto V30MZ::instructionPopAll() -> void {
   wait(1);
-  r.di = pop();
-  r.si = pop();
-  r.bp = pop();
+  IY = pop();
+  IX = pop();
+  BP = pop();
   auto sp = pop();
-  r.bx = pop();
-  r.dx = pop();
-  r.cx = pop();
-  r.ax = pop();
-  //r.sp is not restored
+  BW = pop();
+  DW = pop();
+  CW = pop();
+  AW = pop();
+  //SP is not restored
 }
 
-auto V30MZ::instructionPushImm(Size size) -> void {
-  if(size == Byte) push((i8)fetch(Byte));
-  if(size == Word) push(fetch(Word));
+template<u32 size> auto V30MZ::instructionPushImm() -> void {
+  if constexpr(size == Byte) push((i8)fetch<Byte>());
+  if constexpr(size == Word) push(fetch<Word>());
 }
 
 auto V30MZ::instructionPopMem() -> void {
@@ -216,5 +216,5 @@ auto V30MZ::instructionPopMem() -> void {
   //NEC bug: pop into a register will adjust the stack, but fail to set the register properly
   //in practice, this isn't an issue as assemblers will favor one-byte pop instructions,
   //but this difference can be used to distinguish Intel x86 chips from NEC V20/V30 chips.
-  if(modrm.mod != 3) setMem(Word, data);
+  if(modrm.mod != 3) setMemory<Word>(data);
 }

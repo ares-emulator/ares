@@ -1,25 +1,25 @@
 auto V30MZ::instructionStoreFlagsAcc() -> void {
   wait(4);
-  r.f = (r.f & 0xff00) | r.ah;
+  PSW = (PSW & 0xff00) | AH;
 }
 
 auto V30MZ::instructionLoadAccFlags() -> void {
   wait(2);
-  r.ah = (r.f & 0x00ff);
+  AH = (PSW & 0x00ff);
 }
 
 auto V30MZ::instructionComplementCarry() -> void {
   wait(4);
-  r.f.c = !r.f.c;
+  PSW.CY = !PSW.CY;
 }
 
 auto V30MZ::instructionClearFlag(u32 bit) -> void {
   wait(4);
-  r.f &= ~(1 << bit);
+  PSW &= ~(1 << bit);
 }
 
 auto V30MZ::instructionSetFlag(u32 bit) -> void {
   wait(4);
-  r.f |= 1 << bit;
-  if(bit == r.f.i.bit()) state.poll = false;
+  PSW |= 1 << bit;
+  if(bit == PSW.IE.bit()) state.poll = 0;
 }

@@ -77,7 +77,7 @@ struct System : IO {
   //mode:
   //xx0 => planar tiledata
   //xx1 => packed tiledata
-  //x0x =>  512 tiles
+  //x0x => 512 tiles
   //x1x => 1024 tiles
   //0xx => 16 KiB memory mode
   //1xx => 64 KiB memory mode
@@ -96,8 +96,8 @@ struct System : IO {
   auto power(bool reset = false) -> void;
 
   //io.cpp
-  auto portRead(n16 address) -> n8 override;
-  auto portWrite(n16 address, n8 data) -> void override;
+  auto readIO(n16 address) -> n8 override;
+  auto writeIO(n16 address, n8 data) -> void override;
 
   //serialization.cpp
   auto serialize(bool synchronize) -> serializer;
@@ -113,7 +113,7 @@ struct System : IO {
   EEPROM eeprom;
 
 private:
-  struct Registers {
+  struct IO {
     //$0060  DISP_MODE
     n1 unknown0;
     n1 unknown1;

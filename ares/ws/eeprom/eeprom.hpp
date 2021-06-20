@@ -17,7 +17,7 @@ struct EEPROM : M93LCx6 {
   auto serialize(serializer&) -> void;
 
 private:
-  struct Registers {
+  struct IO {
     n16 data;
     n16 address;
 
@@ -30,5 +30,5 @@ private:
     n1 writePending;
     n1 erasePending;
     n1 resetPending;
-  } r;
+  } io;
 };

@@ -1,6 +1,6 @@
 struct IO {
-  virtual auto portRead(n16 address) -> n8 = 0;
-  virtual auto portWrite(n16 address, n8 data) -> void = 0;
+  virtual auto readIO(n16 address) -> n8 = 0;
+  virtual auto writeIO(n16 address, n8 data) -> void = 0;
 };
 
 struct InternalRAM {
@@ -50,8 +50,8 @@ struct Bus {
   auto write(n20 address, n8 data) -> void;
 
   auto map(IO* io, u16 lo, maybe<u16> hi = nothing) -> void;
-  auto portRead(n16 address) -> n8;
-  auto portWrite(n16 address, n8 data) -> void;
+  auto readIO(n16 address) -> n8;
+  auto writeIO(n16 address, n8 data) -> void;
 
 private:
   IO* port[64 * 1024] = {nullptr};

@@ -2,6 +2,8 @@ struct PSG : T6W28, Thread {
   Node::Object node;
   Node::Audio::Stream stream;
 
+auto writePitch(u32) -> void override;
+
   //psg.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;

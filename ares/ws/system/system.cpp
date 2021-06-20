@@ -77,7 +77,7 @@ auto System::load(Node::System& root, string name) -> bool {
   if(!node->setPak(pak = platform->pak(node))) return false;
 
   headphones = node->append<Node::Setting::Boolean>("Headphones", true, [&](auto value) {
-    apu.r.headphonesConnected = value;
+    apu.io.headphonesConnected = value;
     ppu.updateIcons();
   });
   headphones->setDynamic(true);

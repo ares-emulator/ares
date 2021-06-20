@@ -16,8 +16,8 @@ namespace ares {
 
 #include "registers.cpp"
 #include "control-registers.cpp"
-#include "memory.cpp"
 #include "prefetch.cpp"
+#include "memory.cpp"
 #include "conditions.cpp"
 #include "algorithms.cpp"
 #include "dma.cpp"
@@ -27,18 +27,11 @@ namespace ares {
 #include "disassembler.cpp"
 
 auto TLCS900H::interrupt(n8 vector) -> void {
+  wait(19);
   push(PC);
   push(SR);
   store(PC, load(Memory<n32>{0xffff00 | vector}));
   store(INTNEST, load(INTNEST) + 1);
-  idle(1);
-  prefetch();
-  idle(1);
-  prefetch();
-  idle(1);
-  prefetch();
-  idle(1);
-  prefetch();
 }
 
 auto TLCS900H::power() -> void {

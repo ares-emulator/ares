@@ -5,6 +5,10 @@ namespace ares::NeoGeoPocket {
 PSG psg;
 #include "serialization.cpp"
 
+auto PSG::writePitch(u32 pitch) -> void {
+  apu.debugger.interrupt(string{"writePitch ", pitch & 15, " ", pitch >> 4 & 63});
+}
+
 auto PSG::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PSG");
 

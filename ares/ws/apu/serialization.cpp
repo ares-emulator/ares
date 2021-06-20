@@ -1,84 +1,103 @@
 auto APU::serialize(serializer& s) -> void {
   Thread::serialize(s);
 
-  s(this->s.sweepClock);
-  s(r.waveBase);
-  s(r.speakerEnable);
-  s(r.speakerShift);
-  s(r.headphonesEnable);
-  s(r.headphonesConnected);
-  s(r.masterVolume);
+  s(dma);
+  s(channel1);
+  s(channel2);
+  s(channel3);
+  s(channel4);
+  s(channel5);
 
-  s(dma.s.clock);
-  s(dma.s.source);
-  s(dma.s.length);
-  s(dma.r.source);
-  s(dma.r.length);
-  s(dma.r.rate);
-  s(dma.r.unknown);
-  s(dma.r.loop);
-  s(dma.r.target);
-  s(dma.r.direction);
-  s(dma.r.enable);
+  s(io.waveBase);
+  s(io.speakerEnable);
+  s(io.speakerShift);
+  s(io.headphonesEnable);
+  s(io.headphonesConnected);
+  s(io.masterVolume);
+  s(state.sweepClock);
+}
 
-  s(channel1.o.left);
-  s(channel1.o.right);
-  s(channel1.s.period);
-  s(channel1.s.sampleOffset);
-  s(channel1.r.pitch);
-  s(channel1.r.volumeLeft);
-  s(channel1.r.volumeRight);
-  s(channel1.r.enable);
+auto APU::DMA::serialize(serializer& s) -> void {
+  s(io.source);
+  s(io.length);
+  s(io.rate);
+  s(io.unknown);
+  s(io.loop);
+  s(io.target);
+  s(io.direction);
+  s(io.enable);
+  s(state.clock);
+  s(state.source);
+  s(state.length);
+}
 
-  s(channel2.o.left);
-  s(channel2.o.right);
-  s(channel2.s.period);
-  s(channel2.s.sampleOffset);
-  s(channel2.r.pitch);
-  s(channel2.r.volumeLeft);
-  s(channel2.r.volumeRight);
-  s(channel2.r.enable);
-  s(channel2.r.voice);
-  s(channel2.r.voiceEnableLeft);
-  s(channel2.r.voiceEnableRight);
+auto APU::Channel1::serialize(serializer& s) -> void {
+  s(io.pitch);
+  s(io.volumeLeft);
+  s(io.volumeRight);
+  s(io.enable);
+  s(state.period);
+  s(state.sampleOffset);
+  s(output.left);
+  s(output.right);
+}
 
-  s(channel3.o.left);
-  s(channel3.o.right);
-  s(channel3.s.period);
-  s(channel3.s.sampleOffset);
-  s(channel3.s.sweepCounter);
-  s(channel3.r.pitch);
-  s(channel3.r.volumeLeft);
-  s(channel3.r.volumeRight);
-  s(channel3.r.sweepValue);
-  s(channel3.r.sweepTime);
-  s(channel3.r.enable);
-  s(channel3.r.sweep);
+auto APU::Channel2::serialize(serializer& s) -> void {
+  s(io.pitch);
+  s(io.volumeLeft);
+  s(io.volumeRight);
+  s(io.enable);
+  s(io.voice);
+  s(io.voiceEnableLeft);
+  s(io.voiceEnableRight);
+  s(state.period);
+  s(state.sampleOffset);
+  s(output.left);
+  s(output.right);
+}
 
-  s(channel4.o.left);
-  s(channel4.o.right);
-  s(channel4.s.period);
-  s(channel4.s.sampleOffset);
-  s(channel4.s.noiseOutput);
-  s(channel4.s.noiseLFSR);
-  s(channel4.r.pitch);
-  s(channel4.r.volumeLeft);
-  s(channel4.r.volumeRight);
-  s(channel4.r.noiseMode);
-  s(channel4.r.noiseReset);
-  s(channel4.r.noiseUpdate);
-  s(channel4.r.enable);
-  s(channel4.r.noise);
+auto APU::Channel3::serialize(serializer& s) -> void {
+  s(io.pitch);
+  s(io.volumeLeft);
+  s(io.volumeRight);
+  s(io.sweepValue);
+  s(io.sweepTime);
+  s(io.enable);
+  s(io.sweep);
+  s(state.period);
+  s(state.sampleOffset);
+  s(state.sweepCounter);
+  s(output.left);
+  s(output.right);
+}
 
-  s(channel5.o.left);
-  s(channel5.o.right);
-  s(channel5.s.clock);
-  s(channel5.s.data);
-  s(channel5.r.volume);
-  s(channel5.r.scale);
-  s(channel5.r.speed);
-  s(channel5.r.enable);
-  s(channel5.r.unknown);
-  s(channel5.r.leftEnable);
-  s(channel5.r.rightEnable);
+auto APU::Channel4::serialize(serializer& s) -> void {
+  s(io.pitch);
+  s(io.volumeLeft);
+  s(io.volumeRight);
+  s(io.noiseMode);
+  s(io.noiseReset);
+  s(io.noiseUpdate);
+  s(io.enable);
+  s(io.noise);
+  s(state.period);
+  s(state.sampleOffset);
+  s(state.noiseOutput);
+  s(state.noiseLFSR);
+  s(output.left);
+  s(output.right);
+}
+
+auto APU::Channel5::serialize(serializer& s) -> void {
+  s(io.volume);
+  s(io.scale);
+  s(io.speed);
+  s(io.enable);
+  s(io.unknown);
+  s(io.leftEnable);
+  s(io.rightEnable);
+  s(state.clock);
+  s(state.data);
+  s(output.left);
+  s(output.right);
 }

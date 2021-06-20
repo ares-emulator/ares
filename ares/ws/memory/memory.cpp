@@ -22,38 +22,39 @@ auto Bus::power() -> void {
 }
 
 auto Bus::read(n20 address) -> n8 {
-  if(!cpu.r.cartridgeEnable && address >= 0x100000 - system.bootROM.size()) {
+  if(!cpu.io.cartridgeEnable && address >= 0x100000 - system.bootROM.size()) {
     return system.bootROM.read(address);
   }
-  n4 bank = address.bit(16,19);
-  if(bank == 0x0) return iram.read(address);
-  if(bank == 0x1) return cartridge.ramRead(address);
-  if(bank >= 0x2) return cartridge.romRead(address);
-  return 0x00;
+  switch(address.bit(16,19)) { default:
+  case 0x0: return iram.read(address);
+  case 0x1: return cartridge.readRAM(address);
+  case 0x2 ... 0xf: return cartridge.readROM(address);
+  }
 }
 
 auto Bus::write(n20 address, n8 data) -> void {
-  if(!cpu.r.cartridgeEnable && address >= 0x100000 - system.bootROM.size()) {
+  if(!cpu.io.cartridgeEnable && address >= 0x100000 - system.bootROM.size()) {
     return system.bootROM.write(address, data);
   }
-  n4 bank = address.bit(16,19);
-  if(bank == 0x0) return iram.write(address, data);
-  if(bank == 0x1) return cartridge.ramWrite(address, data);
-  if(bank >= 0x2) return cartridge.romWrite(address, data);
+  switch(address.bit(16,19)) { default:
+  case 0x0: return iram.write(address, data);
+  case 0x1: return cartridge.writeRAM(address, data);
+  case 0x2 ... 0xf: return cartridge.writeROM(address, data);
+  }
 }
 
 auto Bus::map(IO* io, u16 lo, maybe<u16> hi) -> void {
   for(u32 address = lo; address <= (hi ? hi() : lo); address++) port[address] = io;
 }
 
-auto Bus::portRead(n16 address) -> n8 {
-  if(auto io = port[address]) return io->portRead(address);
+auto Bus::readIO(n16 address) -> n8 {
+  if(auto io = port[address]) return io->readIO(address);
   if(address == 0x00ca) return 0x80;  //Mama Mitte (unknown status bit)
   return 0x00;
 }
 
-auto Bus::portWrite(n16 address, n8 data) -> void {
-  if(auto io = port[address]) return io->portWrite(address, data);
+auto Bus::writeIO(n16 address, n8 data) -> void {
+  if(auto io = port[address]) return io->writeIO(address, data);
 }
 
 }
