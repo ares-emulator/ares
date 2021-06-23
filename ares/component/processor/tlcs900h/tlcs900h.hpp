@@ -59,8 +59,12 @@ struct TLCS900H {
   template<typename T> auto load(ControlRegister<T>) const -> T;
   template<typename T> auto store(ControlRegister<T>, n32) -> void;
 
-  //memory.cpp
+  //prefetch.cpp
+  auto invalidate() -> void;
+  auto prefetch(u32 clocks) -> void;
   template<typename T = n8> auto fetch() -> T;
+
+  //memory.cpp
   template<typename T> auto fetchRegister() -> Register<T>;
   template<typename T, typename U> auto fetchMemory() -> Memory<T>;
   template<typename T> auto fetchImmediate() -> Immediate<T>;
@@ -88,8 +92,6 @@ struct TLCS900H {
   auto dma(n2 channel) -> bool;
 
   //instruction.cpp
-  template<u32 Bits> auto wait(u32 b, u32 w, u32 l) -> void;
-
   template<typename T> auto toRegister3(n3) const -> Register<T>;
   template<typename T> auto toRegister8(n8) const -> Register<T>;
   template<typename T> auto toControlRegister(n8) const -> ControlRegister<T>;
@@ -175,10 +177,6 @@ struct TLCS900H {
   template<typename Target, typename Source> auto instructionXor(Target, Source) -> void;
   template<typename Source, typename Offset> auto instructionXorCarry(Source, Offset) -> void;
 
-  //prefetch.cpp
-  auto invalidate() -> void;
-  auto wait(u32 clocks) -> void;
-
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
@@ -218,6 +216,7 @@ struct TLCS900H {
     n8 prefix;   //first opcode byte; needed for [CP|LD][ID](R) instructions
   } r;
 
+  n16 PIC;           //prefetch instruction counter
   queue<u8[4]> PIQ;  //prefetch instruction queue
   n24 MAR;  //A0-A23: memory address register
   n16 MDR;  //D0-D15: memory data register

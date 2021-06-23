@@ -27,7 +27,7 @@ namespace ares {
 #include "disassembler.cpp"
 
 auto TLCS900H::interrupt(n8 vector) -> void {
-  wait(19);
+  prefetch(34);
   push(PC);
   push(SR);
   store(PC, load(Memory<n32>{0xffff00 | vector}));
@@ -37,9 +37,10 @@ auto TLCS900H::interrupt(n8 vector) -> void {
 auto TLCS900H::power() -> void {
   r = {};
   r.xsp.l.l0 = 0x100;
+  PIC = 0;
+  PIQ.flush();
   MAR = 0;
   MDR = 0;
-  invalidate();
 }
 
 }

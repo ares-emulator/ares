@@ -80,7 +80,7 @@ auto TLCS900H::instructionCompare(Target target) -> void {
 template<typename Size, s32 Adjust, typename Target>
 auto TLCS900H::instructionCompareRepeat(Target target) -> void {
   do {
-    wait(7);
+    prefetch(14);
     instructionCompare<Size, Adjust>(target);
   } while(load(BC) && !ZF);
 }
@@ -128,7 +128,9 @@ auto TLCS900H::instructionDecrementJumpNotZero(Target target, Offset offset) -> 
   auto result = load(target);
   store(target, --result);
   if(!result) return;
+  prefetch(2);
   store(PC, load(PC) + load(offset));
+  prefetch(2);
 }
 
 template<typename Target, typename Source>
@@ -240,7 +242,7 @@ template<typename Size, s32 Adjust> auto TLCS900H::instructionLoad() -> void {
 //since I'm not sure how to emulate this, I don't try and guess here.
 template<typename Size, s32 Adjust> auto TLCS900H::instructionLoadRepeat() -> void {
   do {
-    wait(7);
+    prefetch(14);
     instructionLoad<Size, Adjust>();
   } while(load(BC));
 }
@@ -383,7 +385,7 @@ auto TLCS900H::instructionRotateLeft(Target target, Amount amount) -> void {
   auto result = load(target);
   auto length = load(amount).clip(4);
   if(!length) length = 16;
-  wait(length >> 2);
+  prefetch(length >> 2 << 1);
   for(u32 n : range(length)) {
     u32 cf = result.bit(-1);
     result = result << 1 | CF;
@@ -397,7 +399,7 @@ auto TLCS900H::instructionRotateLeftWithoutCarry(Target target, Amount amount) -
   auto result = load(target);
   auto length = load(amount).clip(4);
   if(!length) length = 16;
-  wait(length >> 2);
+  prefetch(length >> 2 << 1);
   for(u32 n : range(length)) {
     CF = result.bit(-1);
     result = result << 1 | CF;
@@ -427,7 +429,7 @@ auto TLCS900H::instructionRotateRight(Target target, Amount amount) -> void {
   auto result = load(target);
   auto length = load(amount).clip(4);
   if(!length) length = 16;
-  wait(length >> 2);
+  prefetch(length >> 2 << 1);
   for(u32 n : range(length)) {
     u32 cf = result.bit(0);
     result = CF << Target::bits - 1 | result >> 1;
@@ -441,7 +443,7 @@ auto TLCS900H::instructionRotateRightWithoutCarry(Target target, Amount amount) 
   auto result = load(target);
   auto length = load(amount).clip(4);
   if(!length) length = 16;
-  wait(length >> 2);
+  prefetch(length >> 2 << 1);
   for(u32 n : range(length)) {
     CF = result.bit(0);
     result = CF << Target::bits - 1 | result >> 1;
@@ -490,7 +492,7 @@ auto TLCS900H::instructionShiftLeftArithmetic(Target target, Amount amount) -> v
   auto result = load(target);
   auto length = load(amount).clip(4);
   if(!length) length = 16;
-  wait(length >> 2);
+  prefetch(length >> 2 << 1);
   for(u32 n : range(length)) {
     CF = result.bit(-1);
     result = result << 1;
@@ -503,7 +505,7 @@ auto TLCS900H::instructionShiftLeftLogical(Target target, Amount amount) -> void
   auto result = load(target);
   auto length = load(amount).clip(4);
   if(!length) length = 16;
-  wait(length >> 2);
+  prefetch(length >> 2 << 1);
   for(u32 n : range(length)) {
     CF = result.bit(-1);
     result = result << 1;
@@ -516,7 +518,7 @@ auto TLCS900H::instructionShiftRightArithmetic(Target target, Amount amount) -> 
   auto result = load(target);
   auto length = load(amount).clip(4);
   if(!length) length = 16;
-  wait(length >> 2);
+  prefetch(length >> 2 << 1);
   for(u32 n : range(length)) {
     CF = result.bit(0);
     result = result >> 1;
@@ -530,7 +532,7 @@ auto TLCS900H::instructionShiftRightLogical(Target target, Amount amount) -> voi
   auto result = load(target);
   auto length = load(amount).clip(4);
   if(!length) length = 16;
-  wait(length >> 2);
+  prefetch(length >> 2 << 1);
   for(u32 n : range(length)) {
     CF = result.bit(0);
     result = result >> 1;

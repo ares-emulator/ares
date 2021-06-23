@@ -21,8 +21,8 @@ auto NeoGeoPocketColor::load(string location) -> bool {
 }
 
 auto NeoGeoPocketColor::save(string location) -> bool {
-  Pak::save("cpu.ram", ".cram");
-  Pak::save("apu.ram", ".aram");
+//Pak::save("cpu.ram", ".cram");
+//Pak::save("apu.ram", ".aram");
 
   return true;
 }

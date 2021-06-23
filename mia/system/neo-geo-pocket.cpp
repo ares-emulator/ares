@@ -21,8 +21,8 @@ auto NeoGeoPocket::load(string location) -> bool {
 }
 
 auto NeoGeoPocket::save(string location) -> bool {
-  Pak::save("cpu.ram", ".cram");
-  Pak::save("apu.ram", ".aram");
+//Pak::save("cpu.ram", ".cram");
+//Pak::save("apu.ram", ".aram");
 
   return true;
 }

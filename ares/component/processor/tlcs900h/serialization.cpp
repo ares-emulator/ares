@@ -36,6 +36,7 @@ auto TLCS900H::serialize(serializer& s) -> void {
   s(r.halted);
   s(r.prefix);
 
+  s(PIC);
   s(PIQ);
   s(MAR);
   s(MDR);

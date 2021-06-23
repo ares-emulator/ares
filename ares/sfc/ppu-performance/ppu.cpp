@@ -43,7 +43,7 @@ auto PPU::load(Node::Object parent) -> void {
   });
   colorBleed->setDynamic(true);
 
-  screenWidth = screen->append<Node::Setting::Natural>("Width", 352, [&](auto value) {
+  screenWidth = screen->append<Node::Setting::Natural>("Width", 256, [&](auto value) {
     screen->setSize(screenWidth->value() * 2, overscanEnable->value() ? 480 : 448);
   });
   screenWidth->setAllowedValues({256, 352, 448});

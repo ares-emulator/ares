@@ -89,7 +89,7 @@ auto CPU::pollPowerButton() -> void {
 
 auto CPU::power() -> void {
   TLCS900H::power();
-  Thread::create(system.frequency() / 2.0, {&CPU::main, this});
+  Thread::create(system.frequency(), {&CPU::main, this});
 
   n24 address;
   address.byte(0) = system.bios.read(0xff00);

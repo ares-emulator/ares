@@ -27,24 +27,36 @@
 
 auto CPU::Bus::wait() -> void {
   if(unlikely(debugging)) return;
-  switch(timing) {
-  case 0: return cpu.step(1 + 1);  //1 state
-  case 1: return cpu.step(1 + 2);  //2 states
-  case 2: return cpu.step(1 + 1);  //1 state + (not emulated) /WAIT
-  case 3: return cpu.step(1 + 0);  //0 states
+
+  if(width == Byte) {
+    switch(timing) {
+    case 0: return cpu.step(2 + 2);  //1 state
+    case 1: return cpu.step(2 + 4);  //2 states
+    case 2: return cpu.step(2 + 2);  //1 state + (not emulated) /WAIT
+    case 3: return cpu.step(2 + 0);  //0 states
+    }
+  }
+
+  if(width == Word) {
+    switch(timing) {
+    case 0: return cpu.step(2 + 2);  //1 state
+    case 1: return cpu.step(2 + 4);  //2 states
+    case 2: return cpu.step(2 + 2);  //1 state + (not emulated) /WAIT
+    case 3: return cpu.step(2 + 0);  //0 states
+    }
   }
 }
 
 auto CPU::Bus::speed(u32 size, n24 address) -> n32 {
-  static constexpr u32 waits[4] = {1 + 1, 1 + 2, 1 + 1, 1 + 0};
-
   if(width == Byte) {
+    static constexpr u32 waits[4] = {2 + 2, 2 + 4, 2 + 2, 2 + 0};
     if(size == Byte) return waits[timing] * 1;
     if(size == Word) return waits[timing] * 2;
     if(size == Long) return waits[timing] * 4;
   }
 
   if(width == Word) {
+    static constexpr u32 waits[4] = {2 + 2, 2 + 4, 2 + 2, 2 + 0};
     if(size == Byte) return waits[timing] * 1;
     if(size == Word && address.bit(0) == 0) return waits[timing] * 1;
     if(size == Word && address.bit(0) == 1) return waits[timing] * 2;
