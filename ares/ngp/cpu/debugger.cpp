@@ -40,7 +40,7 @@ auto CPU::Debugger::unload(Node::Object parent) -> void {
 
 auto CPU::Debugger::instruction() -> void {
   if(unlikely(tracer.systemCall->enabled())) {
-    auto PC = self.r.pc.l.l0;
+    auto PC = self.TLCS900H::load(TLCS900H::PC);
     if(!PC) return;
     if(auto vectorID = vectors.find(PC)) {
       auto RA3  = self.TLCS900H::load(TLCS900H::RA3);
@@ -166,7 +166,8 @@ auto CPU::Debugger::instruction() -> void {
   }
 
   if(unlikely(tracer.instruction->enabled())) {
-    if(tracer.instruction->address(self.r.pc.l.l0)) {
+    auto PC = self.TLCS900H::load(self.TLCS900H::PC);
+    if(tracer.instruction->address(PC)) {
       tracer.instruction->notify(self.disassembleInstruction(), self.disassembleContext());
     }
   }

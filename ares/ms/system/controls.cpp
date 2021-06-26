@@ -2,8 +2,9 @@ auto System::Controls::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("Controls");
 
   if(Device::MasterSystem()) {
+    if(MasterSystem::Region::NTSCJ() == 1) rapid = node->append<Node::Input::Button>("Rapid");
+    if(MasterSystem::Region::NTSCJ() == 0) reset = node->append<Node::Input::Button>("Reset");
     pause = node->append<Node::Input::Button>("Pause");
-    reset = node->append<Node::Input::Button>("Reset");
   }
 
   if(Device::GameGear()) {
@@ -19,13 +20,11 @@ auto System::Controls::load(Node::Object parent) -> void {
 
 auto System::Controls::poll() -> void {
   if(Device::MasterSystem()) {
+    if(MasterSystem::Region::NTSCJ() == 1) platform->input(rapid);
+    if(MasterSystem::Region::NTSCJ() == 0) platform->input(reset);
     auto paused = pause->value();
     platform->input(pause);
-    platform->input(reset);
-
-    if(!paused && pause->value()) {
-      cpu.setNMI(1);
-    }
+    if(!paused && pause->value()) cpu.setNMI(1);
   }
 
   if(Device::GameGear()) {

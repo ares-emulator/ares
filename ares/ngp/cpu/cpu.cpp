@@ -66,8 +66,8 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  if(interrupts.fire()) return (void)(r.halted = 0);
-  if(r.halted) return step(16);
+  if(interrupts.fire()) return (void)(HALT = 0);
+  if(HALT) return step(16);
   debugger.instruction();
   instruction();
 }

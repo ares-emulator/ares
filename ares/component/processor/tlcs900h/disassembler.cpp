@@ -1,13 +1,30 @@
-auto TLCS900H::disassembleInstruction() -> string {
+noinline auto TLCS900H::disassembleInstruction() -> string {
   string output;
 
-  auto pc = r.pc.l.l0;
-  n8 op[8], ops;
+  auto pc = load(PC);
 
-  auto read8  = [&]() -> n8  { return op[ops++] = disassembleRead(pc++); };
-  auto read16 = [&]() -> n16 { n16 data = read8(); return data | read8() << 8; };
-  auto read24 = [&]() -> n24 { n24 data = read8(); data |= read8() << 8; return data | read8() << 16; };
-  auto read32 = [&]() -> n32 { n32 data = read8(); data |= read8() << 8; data |= read8() << 16; return data | read8() << 24; };
+  n8 op[8], ops;
+  auto read8 = [&]() -> n8 {
+    return op[ops++] = disassembleRead(pc++);
+  };
+  auto read16 = [&]() -> n16 {
+    n8 d0 = read8();
+    n8 d1 = read8();
+    return d0 << 0 | d1 << 8;
+  };
+  auto read24 = [&]() -> n24 {
+    n8 d0 = read8();
+    n8 d1 = read8();
+    n8 d2 = read8();
+    return d0 << 0 | d1 << 8 | d2 << 16;
+  };
+  auto read32 = [&]() -> n32 {
+    n8 d0 = read8();
+    n8 d1 = read8();
+    n8 d2 = read8();
+    n8 d3 = read8();
+    return d0 << 0 | d1 << 8 | d2 << 16 | d3 << 24;
+  };
 
   enum : u32 {
     Null,
@@ -619,23 +636,23 @@ auto TLCS900H::disassembleInstruction() -> string {
   return pad(output, -48);
 }
 
-auto TLCS900H::disassembleContext() -> string {
+noinline auto TLCS900H::disassembleContext() -> string {
   string output;
-  output.append("XWA:", hex(r.xwa[r.rfp].l.l0, 8L), " ");
-  output.append("XBC:", hex(r.xbc[r.rfp].l.l0, 8L), " ");
-  output.append("XDE:", hex(r.xde[r.rfp].l.l0, 8L), " ");
-  output.append("XHL:", hex(r.xhl[r.rfp].l.l0, 8L), " ");
-  output.append("XIX:", hex(r.xix.l.l0, 8L), " ");
-  output.append("XIY:", hex(r.xiy.l.l0, 8L), " ");
-  output.append("XIZ:", hex(r.xiz.l.l0, 8L), " ");
-  output.append("XSP:", hex(r.xsp.l.l0, 8L), " ");
-  output.append("IFF:", r.iff, " ");
-  output.append("RFP:", r.rfp, " ");
-  output.append(r.s ? "S" : "s");
-  output.append(r.z ? "Z" : "z");
-  output.append(r.h ? "H" : "h");
-  output.append(r.v ? "V" : "v");
-  output.append(r.n ? "N" : "n");
-  output.append(r.c ? "C" : "c");
+  output.append("XWA:", hex(r.xwa[RFP].l0, 8L), " ");
+  output.append("XBC:", hex(r.xbc[RFP].l0, 8L), " ");
+  output.append("XDE:", hex(r.xde[RFP].l0, 8L), " ");
+  output.append("XHL:", hex(r.xhl[RFP].l0, 8L), " ");
+  output.append("XIX:", hex(r.xix.l0, 8L), " ");
+  output.append("XIY:", hex(r.xiy.l0, 8L), " ");
+  output.append("XIZ:", hex(r.xiz.l0, 8L), " ");
+  output.append("XSP:", hex(r.xsp.l0, 8L), " ");
+  output.append("IFF:", IFF, " ");
+  output.append("RFP:", RFP, " ");
+  output.append(SF ? "S" : "s");
+  output.append(ZF ? "Z" : "z");
+  output.append(HF ? "H" : "h");
+  output.append(VF ? "V" : "v");
+  output.append(NF ? "N" : "n");
+  output.append(CF ? "C" : "c");
   return output;
 }

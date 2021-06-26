@@ -17,6 +17,9 @@ auto CPU::write(n16 address, n8 data) -> void {
   if(bus.cartridgeEnable) cartridge.write(address, data);
 }
 
+//note: the Japanese Mark III / Master System supposedly decodes a0-a7 fully for I/O.
+//since I don't have explicit confirmation of this, I haven't implemented this yet.
+
 auto CPU::in(n16 address) -> n8 {
   n8 data = mdr();
   if(0);
@@ -126,11 +129,10 @@ auto CPU::in(n16 address) -> n8 {
   }
 
   else if((address & 0xc1) == 0xc1 && Display::CRT()) {
-    platform->input(system.controls.reset);
     auto port1 = controllerPort1.read();
     auto port2 = controllerPort2.read();
     data.bit(0,3) = port2.bit(2,5);
-    data.bit(4)   = !system.controls.reset->value();
+    data.bit(4)   = Region::NTSCJ() ? 1 : !system.controls.reset->value();
     data.bit(5)   = 1;
     data.bit(6)   = port1.bit(6);
     data.bit(7)   = port2.bit(6);

@@ -36,11 +36,11 @@ struct CPU : TLCS900H, Thread {
   //the development manual states user-mode code cannot change this value, and
   //yet Dokodemo Mahjong does so anyway, and sets it to grayscale mode despite
   //operating in color mode, and further fails to set the K1GE compatibility
-  //palette, resulting in incorrect colors. . I am not certain how, but the NGPC
+  //palette, resulting in incorrect colors. I am not certain how, but the NGPC
   //blocks this write command, so I attempt to simulate that here.
-  //VPU::write(n24, n8) calls this function.
+  //KGE::write(n24, n8) calls this function.
   auto privilegedMode() const -> bool {
-    return r.pc.l.l0 >= 0xff0000;  //may also be r.rfp == 3
+    return TLCS900H::load(PC) >= 0xff0000;  //may also be RFP == 3
   }
 
   //cpu.cpp

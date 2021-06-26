@@ -30,16 +30,18 @@ auto TLCS900H::instructionBit(Source source, Offset offset) -> void {
   SF = Undefined;
 }
 
-auto TLCS900H::instructionBitSearch1Backward(Register<n16> register) -> void {
-  auto value = load(register);
+template<typename Source>
+auto TLCS900H::instructionBitSearch1Backward(Source source) -> void {
+  auto value = load(source);
   for(u32 index : reverse(range(16))) {
     if(value.bit(index)) return VF = 0, store(A, index);
   }
   VF = 1;
 }
 
-auto TLCS900H::instructionBitSearch1Forward(Register<n16> register) -> void {
-  auto value = load(register);
+template<typename Source>
+auto TLCS900H::instructionBitSearch1Forward(Source source) -> void {
+  auto value = load(source);
   for(u32 index : range(16)) {
     if(value.bit(index)) return VF = 0, store(A, index);
   }
@@ -66,9 +68,8 @@ auto TLCS900H::instructionChange(Target target, Offset offset) -> void {
   store(target, result);
 }
 
-template<typename Size, s32 Adjust, typename Target>
-auto TLCS900H::instructionCompare(Target target) -> void {
-  auto source = toRegister3<n32>(r.prefix);
+template<typename Size, s32 Adjust, typename Target, typename Source>
+auto TLCS900H::instructionCompare(Target target, Source source) -> void {
   auto cf = CF;  //CF is not modified; but algorithmSubtract will modify it
   algorithmSubtract(load(target), load(toMemory<Size>(load(source))));
   store(source, load(source) + Adjust);
@@ -77,11 +78,11 @@ auto TLCS900H::instructionCompare(Target target) -> void {
   VF = load(BC) != 0;
 }
 
-template<typename Size, s32 Adjust, typename Target>
-auto TLCS900H::instructionCompareRepeat(Target target) -> void {
+template<typename Size, s32 Adjust, typename Target, typename Source>
+auto TLCS900H::instructionCompareRepeat(Target target, Source source) -> void {
   do {
     prefetch(14);
-    instructionCompare<Size, Adjust>(target);
+    instructionCompare<Size, Adjust>(target, source);
   } while(load(BC) && !ZF);
 }
 
@@ -97,17 +98,18 @@ auto TLCS900H::instructionComplement(Target target) -> void {
   HF = 1;
 }
 
-auto TLCS900H::instructionDecimalAdjustAccumulator(Register<n8> register) -> void {
-  auto input = load(register), value = input;
+template<typename Modify>
+auto TLCS900H::instructionDecimalAdjustAccumulator(Modify modify) -> void {
+  auto input = load(modify), value = input;
   if(CF || (n8)value > 0x99) value += NF ? -0x60 : 0x60;
   if(HF || (n4)value > 0x09) value += NF ? -0x06 : 0x06;
   if(NF == 0) CF |= value < input;
   if(NF == 1) CF |= value > input;
-  PF = parity(value);
+  VF = parity(value);
   HF = n8(value ^ input).bit(4);
   ZF = value == 0;
   SF = value.bit(-1);
-  store(register, value);
+  store(modify, value);
 }
 
 template<typename Target, typename Source>
@@ -175,7 +177,7 @@ auto TLCS900H::instructionExtendZero(Target target) -> void {
 }
 
 auto TLCS900H::instructionHalt() -> void {
-  r.halted = true;
+  HALT = 1;
 }
 
 template<typename Target, typename Source>
@@ -222,9 +224,8 @@ auto TLCS900H::instructionLoadCarry(Source source, Offset offset) -> void {
   CF = load(source).bit(load(offset) & Source::bits - 1);
 }
 
-template<typename Size, s32 Adjust> auto TLCS900H::instructionLoad() -> void {
-  auto source = (n3)r.prefix == 5 ? XIY : XHL;
-  auto target = (n3)r.prefix == 5 ? XIX : XDE;
+template<typename Size, s32 Adjust, typename Target, typename Source>
+auto TLCS900H::instructionLoad(Target target, Source source) -> void {
   store(toMemory<Size>(load(target)), load(toMemory<Size>(load(source))));
   store(source, load(source) + Adjust);
   store(target, load(target) + Adjust);
@@ -240,17 +241,19 @@ template<typename Size, s32 Adjust> auto TLCS900H::instructionLoad() -> void {
 //it further also isn't clear whether this only occurs when *starting* LDIR and LDDR with BC=0,
 //or if it always occurs at the end of ever LDIR and LDDR instruction.
 //since I'm not sure how to emulate this, I don't try and guess here.
-template<typename Size, s32 Adjust> auto TLCS900H::instructionLoadRepeat() -> void {
+template<typename Size, s32 Adjust, typename Target, typename Source>
+auto TLCS900H::instructionLoadRepeat(Target target, Source source) -> void {
   do {
     prefetch(14);
-    instructionLoad<Size, Adjust>();
+    instructionLoad<Size, Adjust>(target, source);
   } while(load(BC));
 }
 
 //reverse all bits in a 16-bit register
-auto TLCS900H::instructionMirror(Register<n16> register) -> void {
-  auto data = load(register);
-  store(register, bit::reverse<u16>(data));
+template<typename Modify>
+auto TLCS900H::instructionMirror(Modify modify) -> void {
+  auto data = load(modify);
+  store(modify, bit::reverse<u16>(data));
 }
 
 template<u32 Modulo, typename Target, typename Source>
@@ -282,16 +285,17 @@ auto TLCS900H::instructionMultiply(Target target, Source source) -> void {
   store(expand(target), load(target) * load(source));
 }
 
-auto TLCS900H::instructionMultiplyAdd(Register<n16> register) -> void {
+template<typename Modify>
+auto TLCS900H::instructionMultiplyAdd(Modify modify) -> void {
   auto xde = toMemory<i16>(load(XDE));
   auto xhl = toMemory<i16>(load(XHL));
 
-  auto source = load(expand(register));
+  auto source = load(expand(modify));
   auto target = load(xde) * load(xhl);
-  store(expand(register), source + target);
+  store(expand(modify), source + target);
   store(XHL, load(XHL) - 2);
 
-  auto result = load(expand(register));
+  auto result = load(expand(modify));
   VF = n32((target ^ result) & (source ^ result)).bit(-1);
   ZF = result == 0;
   SF = result.bit(-1);
@@ -374,7 +378,7 @@ auto TLCS900H::instructionRotateLeftDigit(LHS lhs, RHS rhs) -> void {
   store(lhs, lvalue);
   store(rhs, rvalue);
   NF = 0;
-  PF = parity(lvalue);
+  VF = parity(lvalue);
   HF = 0;
   ZF = lvalue == 0;
   SF = lvalue.bit(-1);
@@ -418,7 +422,7 @@ auto TLCS900H::instructionRotateRightDigit(LHS lhs, RHS rhs) -> void {
   store(lhs, lvalue);
   store(rhs, rvalue);
   NF = 0;
-  PF = parity(lvalue);
+  VF = parity(lvalue);
   HF = 0;
   ZF = lvalue == 0;
   SF = lvalue.bit(-1);

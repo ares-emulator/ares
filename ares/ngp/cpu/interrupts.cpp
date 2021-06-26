@@ -27,7 +27,7 @@ auto CPU::Interrupts::poll() -> void {
 }
 
 auto CPU::Interrupts::fire() -> bool {
-  if(!priority || priority < cpu.r.iff) return false;
+  if(!priority || priority < cpu.IFF) return false;
 
   cpu.inttc3.fire(vector);
   cpu.inttc2.fire(vector);
@@ -65,8 +65,8 @@ auto CPU::Interrupts::fire() -> bool {
   } else {
     cpu.debugger.interrupt(vector);
     cpu.interrupt(vector);
-    cpu.r.iff = priority;
-    if(cpu.r.iff != 7) cpu.r.iff++;
+    cpu.IFF = priority;
+    if(cpu.IFF != 7) cpu.IFF++;
   }
 
   poll();
@@ -84,7 +84,7 @@ auto CPU::Interrupt::poll(n8& vector, n3& priority) -> void {
     vector   = this->vector;
     return;
   }
-  if(dmaAllowed && cpu.r.iff <= 6) {
+  if(dmaAllowed && cpu.IFF <= 6) {
     if(this->vector == cpu.dma0.vector
     || this->vector == cpu.dma1.vector
     || this->vector == cpu.dma2.vector

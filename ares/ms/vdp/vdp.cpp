@@ -94,7 +94,6 @@ auto VDP::main() -> void {
   step(172);
 
   if(io.vcounter == 240) {
-    io.ccounter++;  //C-sync counter
     if(Mode::MasterSystem()) {
       if(vlines() == 192) screen->setViewport(0,  0, 256, 240);
       if(vlines() == 224) screen->setViewport(0, 16, 256, 240);
@@ -105,6 +104,10 @@ auto VDP::main() -> void {
     }
     screen->frame();
     scheduler.exit(Event::Frame);
+  }
+
+  if(io.vcounter < (Region::PAL() ? 311 : 260)) {
+    io.ccounter++;  //C-sync counter
   }
 }
 

@@ -22,8 +22,9 @@ struct System {
     Node::Object node;
 
     //Master System
+    Node::Input::Button rapid;  //NTSC-J only (unemulated)
+    Node::Input::Button reset;  //NTSC-U and PAL only
     Node::Input::Button pause;
-    Node::Input::Button reset;
 
     //Game Gear
     Node::Input::Button up;

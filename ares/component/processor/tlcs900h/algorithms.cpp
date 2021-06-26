@@ -37,7 +37,7 @@ template<typename T> auto TLCS900H::algorithmAnd(T target, T source) -> T {
   T result = target & source;
   CF = 0;
   NF = 0;
-  PF = parity(result);
+  VF = parity(result);
   HF = 1;
   ZF = result == 0;
   SF = result.bit(-1);
@@ -68,7 +68,7 @@ template<typename T> auto TLCS900H::algorithmOr(T target, T source) -> T {
   T result = target | source;
   CF = 0;
   NF = 0;
-  PF = parity(result);
+  VF = parity(result);
   HF = 0;
   ZF = result == 0;
   SF = result.bit(-1);
@@ -77,7 +77,7 @@ template<typename T> auto TLCS900H::algorithmOr(T target, T source) -> T {
 
 template<typename T> auto TLCS900H::algorithmRotated(T result) -> T {
   NF = 0;
-  PF = parity(result);
+  VF = parity(result);
   HF = 0;
   ZF = result == 0;
   SF = result.bit(-1);
@@ -86,7 +86,7 @@ template<typename T> auto TLCS900H::algorithmRotated(T result) -> T {
 
 template<typename T> auto TLCS900H::algorithmShifted(T result) -> T {
   NF = 0;
-  PF = parity(result);
+  VF = parity(result);
   HF = 0;
   ZF = result == 0;
   SF = result.bit(-1);
@@ -111,7 +111,7 @@ template<typename T> auto TLCS900H::algorithmXor(T target, T source) -> T {
   T result = target ^ source;
   CF = 0;
   NF = 0;
-  PF = parity(result);
+  VF = parity(result);
   HF = 0;
   ZF = result == 0;
   SF = result.bit(-1);

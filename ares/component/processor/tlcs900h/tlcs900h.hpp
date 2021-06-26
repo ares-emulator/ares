@@ -45,8 +45,10 @@ struct TLCS900H {
   template<typename T> auto store(Register<T>, n32) -> void;
   auto expand(Register<n8 >) const -> Register<n16>;
   auto expand(Register<n16>) const -> Register<n32>;
+  auto expand(Register<n32>) const -> Register<n32>;  //unused
   auto shrink(Register<n32>) const -> Register<n16>;
   auto shrink(Register<n16>) const -> Register<n8 >;
+  auto shrink(Register<n8 >) const -> Register<n8 >;  //unused
   auto load(FlagRegister) const -> n8;
   auto store(FlagRegister, n8) -> void;
   auto load(StatusRegister) const -> n16;
@@ -109,16 +111,16 @@ struct TLCS900H {
   template<typename Target, typename Source> auto instructionAnd(Target, Source) -> void;
   template<typename Source, typename Offset> auto instructionAndCarry(Source, Offset) -> void;
   template<typename Source, typename Offset> auto instructionBit(Source, Offset) -> void;
-  auto instructionBitSearch1Backward(Register<n16>) -> void;
-  auto instructionBitSearch1Forward(Register<n16>) -> void;
+  template<typename Source> auto instructionBitSearch1Backward(Source) -> void;
+  template<typename Source> auto instructionBitSearch1Forward(Source) -> void;
   template<typename Source> auto instructionCall(Source) -> void;
   template<typename Source> auto instructionCallRelative(Source) -> void;
   template<typename Target, typename Offset> auto instructionChange(Target, Offset) -> void;
-  template<typename Size, s32 Adjust, typename Target> auto instructionCompare(Target) -> void;
-  template<typename Size, s32 Adjust, typename Target> auto instructionCompareRepeat(Target) -> void;
+  template<typename Size, s32 Adjust, typename Target, typename Source> auto instructionCompare(Target, Source) -> void;
+  template<typename Size, s32 Adjust, typename Target, typename Source> auto instructionCompareRepeat(Target, Source) -> void;
   template<typename Target, typename Source> auto instructionCompare(Target, Source) -> void;
   template<typename Target> auto instructionComplement(Target) -> void;
-  auto instructionDecimalAdjustAccumulator(Register<n8>) -> void;
+  template<typename Modify> auto instructionDecimalAdjustAccumulator(Modify) -> void;
   template<typename Target, typename Source> auto instructionDecrement(Target, Source) -> void;
   template<typename Target, typename Offset> auto instructionDecrementJumpNotZero(Target, Offset) -> void;
   template<typename Target, typename Source> auto instructionDivide(Target, Source) -> void;
@@ -133,13 +135,13 @@ struct TLCS900H {
   template<typename Target, typename Offset> auto instructionLink(Target, Offset) -> void;
   template<typename Target, typename Source> auto instructionLoad(Target, Source) -> void;
   template<typename Source, typename Offset> auto instructionLoadCarry(Source, Offset) -> void;
-  template<typename Size, s32 Adjust> auto instructionLoad() -> void;
-  template<typename Size, s32 Adjust> auto instructionLoadRepeat() -> void;
+  template<typename Size, s32 Adjust, typename Target, typename Source> auto instructionLoad(Target, Source) -> void;
+  template<typename Size, s32 Adjust, typename Target, typename Source> auto instructionLoadRepeat(Target, Source) -> void;
   template<u32 Modulo, typename Target, typename Source> auto instructionModuloDecrement(Target, Source) -> void;
   template<u32 Modulo, typename Target, typename Source> auto instructionModuloIncrement(Target, Source) -> void;
-  auto instructionMirror(Register<n16>) -> void;
+  template<typename Modify> auto instructionMirror(Modify) -> void;
   template<typename Target, typename Source> auto instructionMultiply(Target, Source) -> void;
-  auto instructionMultiplyAdd(Register<n16>) -> void;
+  template<typename Modify> auto instructionMultiplyAdd(Modify) -> void;
   template<typename Target, typename Source> auto instructionMultiplySigned(Target, Source) -> void;
   template<typename Target> auto instructionNegate(Target) -> void;
   auto instructionNoOperation() -> void;
@@ -181,10 +183,10 @@ struct TLCS900H {
   auto serialize(serializer&) -> void;
 
   union DataRegister {
-    DataRegister() { l.l0 = 0; }
-    struct { n32 order_lsb1(l0); } l;
-    struct { n16 order_lsb2(w0, w1); } w;
-    struct { n8  order_lsb4(b0, b1, b2, b3); } b;
+    DataRegister() { l0 = 0; }
+    struct { n32 order_lsb1(l0); };
+    struct { n16 order_lsb2(w0, w1); };
+    struct { n8  order_lsb4(b0, b1, b2, b3); };
   };
 
   struct Registers {
@@ -202,24 +204,23 @@ struct TLCS900H {
     DataRegister dmad[4];
     DataRegister dmam[4];
     DataRegister intnest;  //16-bit
-
-    n1 c, cp;     //carry
-    n1 n, np;     //negative
-    n1 v, vp;     //overflow or parity
-    n1 h, hp;     //half carry
-    n1 z, zp;     //zero
-    n1 s, sp;     //sign
-    n2 rfp;       //register file pointer
-    n3 iff = 7;   //interrupt mask flip-flop
-
-    n1 halted;   //set if halt instruction executed; waits for an interrupt to resume
-    n8 prefix;   //first opcode byte; needed for [CP|LD][ID](R) instructions
   } r;
 
-  n16 PIC;           //prefetch instruction counter
+  n1 CF, CA;  //carry
+  n1 NF, NA;  //negative
+  n1 VF, VA;  //overflow or parity
+  n1 HF, HA;  //half carry
+  n1 ZF, ZA;  //zero
+  n1 SF, SA;  //sign
+  n2 RFP;     //register file pointer
+  n3 IFF;     //interrupt mask flip-flop
+
+  n8 OP;             //first opcode byte
+  n1 HALT;           //set if HALT instruction executed
+  n8 PIC;            //prefetch instruction counter
   queue<u8[4]> PIQ;  //prefetch instruction queue
-  n24 MAR;  //A0-A23: memory address register
-  n16 MDR;  //D0-D15: memory data register
+  n24 MAR;           //A0-A23: memory address register
+  n16 MDR;           //D0-D15: memory data register
 
   static inline const Register<n8 > RA0 {0x00}; static inline const Register<n8 > RW0 {0x01};
   static inline const Register<n8 > QA0 {0x02}; static inline const Register<n8 > QW0 {0x03};
@@ -376,8 +377,8 @@ struct TLCS900H {
 
   //disassembler.cpp
   virtual auto disassembleRead(n24 address) -> n8 { return read(Byte, address); }
-  noinline auto disassembleInstruction() -> string;
-  noinline auto disassembleContext() -> string;
+  auto disassembleInstruction() -> string;
+  auto disassembleContext() -> string;
 };
 
 }

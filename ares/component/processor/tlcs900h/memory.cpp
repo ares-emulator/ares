@@ -9,7 +9,7 @@ template<typename T> auto TLCS900H::fetchImmediate() -> Immediate<T> { return Im
 
 //
 
-#define XSP r.xsp.l.l0
+#define XSP r.xsp.l0
 
 template<typename T> auto TLCS900H::pop(T data) -> void {
   auto value = typename T::type();
