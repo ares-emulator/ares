@@ -1,5 +1,6 @@
 name := mia
 build := optimized
+threaded := true
 local := true
 flags += -I. -I.. -I../ares
 
