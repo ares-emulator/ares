@@ -12,8 +12,7 @@ Official releases are available from
 Nightly Builds
 --------------
 
-Automated, untested builds of higan are available
-for each supported operating system as a [pre-release](https://github.com/higan-emu/ares/releases/tag/nightly). 
+Automated, untested builds of ares are available for Windows and macOS as a [pre-release](https://github.com/higan-emu/ares/releases/tag/nightly). 
 Only the latest nightly build is kept.
 
 Features
