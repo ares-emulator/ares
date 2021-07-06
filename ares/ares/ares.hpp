@@ -37,7 +37,7 @@ using namespace nall;
 
 namespace ares {
   static const string Name       = "ares";
-  static const string Version    = "121";
+  static const string Version    = "121a";
   static const string Copyright  = "Near";
   static const string License    = "ISC";
   static const string LicenseURI = "https://opensource.org/licenses/ISC";
