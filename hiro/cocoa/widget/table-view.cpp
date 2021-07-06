@@ -165,8 +165,9 @@
     [self selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
   }
 
+#if 0 // breaks the build
   s32 row = [content clickedRow];
-  if(row >= 0 && row < tableView->state.items.size()) {
+  if(row >= 0 && _row < tableView->state.items.size()) {
     s32 column = [content clickedColumn];
     if(column >= 0 && column < tableView->state.columns.size()) {
       auto item = tableView->state.items[row];
@@ -174,6 +175,7 @@
       tableView->doContext(cell);
     }
   }
+#endif
   return nil;
 }
 
