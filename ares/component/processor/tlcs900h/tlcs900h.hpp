@@ -183,10 +183,10 @@ struct TLCS900H {
   auto serialize(serializer&) -> void;
 
   union DataRegister {
-    DataRegister() { l0 = 0; }
-    struct { n32 order_lsb1(l0); };
-    struct { n16 order_lsb2(w0, w1); };
-    struct { n8  order_lsb4(b0, b1, b2, b3); };
+    DataRegister() { l.l0 = 0; }
+    struct { n32 order_lsb1(l0); } l;
+    struct { n16 order_lsb2(w0, w1); } w;
+    struct { n8 order_lsb4(b0, b1, b2, b3); } b;
   };
 
   struct Registers {

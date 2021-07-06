@@ -1,8 +1,8 @@
 auto TLCS900H::dma(n2 channel) -> bool {
-  auto& source = r.dmas[channel].l0;
-  auto& target = r.dmad[channel].l0;
-  auto& length = r.dmam[channel].w0;  //0 = 65536
-  auto& config = r.dmam[channel].w1;
+  auto& source = r.dmas[channel].l.l0;
+  auto& target = r.dmad[channel].l.l0;
+  auto& length = r.dmam[channel].w.w0;  //0 = 65536
+  auto& config = r.dmam[channel].w.w1;
 
   n32 mode = config.bit(2,4);
   n32 size;

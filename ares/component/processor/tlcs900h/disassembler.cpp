@@ -638,14 +638,14 @@ noinline auto TLCS900H::disassembleInstruction() -> string {
 
 noinline auto TLCS900H::disassembleContext() -> string {
   string output;
-  output.append("XWA:", hex(r.xwa[RFP].l0, 8L), " ");
-  output.append("XBC:", hex(r.xbc[RFP].l0, 8L), " ");
-  output.append("XDE:", hex(r.xde[RFP].l0, 8L), " ");
-  output.append("XHL:", hex(r.xhl[RFP].l0, 8L), " ");
-  output.append("XIX:", hex(r.xix.l0, 8L), " ");
-  output.append("XIY:", hex(r.xiy.l0, 8L), " ");
-  output.append("XIZ:", hex(r.xiz.l0, 8L), " ");
-  output.append("XSP:", hex(r.xsp.l0, 8L), " ");
+  output.append("XWA:", hex(r.xwa[RFP].l.l0, 8L), " ");
+  output.append("XBC:", hex(r.xbc[RFP].l.l0, 8L), " ");
+  output.append("XDE:", hex(r.xde[RFP].l.l0, 8L), " ");
+  output.append("XHL:", hex(r.xhl[RFP].l.l0, 8L), " ");
+  output.append("XIX:", hex(r.xix.l.l0, 8L), " ");
+  output.append("XIY:", hex(r.xiy.l.l0, 8L), " ");
+  output.append("XIZ:", hex(r.xiz.l.l0, 8L), " ");
+  output.append("XSP:", hex(r.xsp.l.l0, 8L), " ");
   output.append("IFF:", IFF, " ");
   output.append("RFP:", RFP, " ");
   output.append(SF ? "S" : "s");

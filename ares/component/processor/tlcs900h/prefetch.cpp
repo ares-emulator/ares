@@ -1,4 +1,4 @@
-#define PC r.pc.l0
+#define PC r.pc.l.l0
 
 //called on branches, returns, and interrupts
 auto TLCS900H::invalidate() -> void {

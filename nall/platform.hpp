@@ -188,5 +188,9 @@ inline auto spinloop() -> void {
   #define unreachable throw
 #endif
 
+#if defined(COMPILER_GCC)
+  #undef _serialize
+#endif
+
 #define export $export
 #define register $register
