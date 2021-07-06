@@ -25,7 +25,7 @@ auto PPU::load(Node::Object parent) -> void {
   screen->setScale(0.5, 0.5);
   screen->setAspect(8.0, 7.0);
 
-  vramSize = node->append<Node::Setting::Natural>("VRAM", 128_KiB);
+  vramSize = node->append<Node::Setting::Natural>("VRAM", 64_KiB);
   vramSize->setAllowedValues({64_KiB, 128_KiB});
 
   overscanEnable = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
