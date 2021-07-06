@@ -26,7 +26,7 @@ auto TLCS900H::instructionBit(Source source, Offset offset) -> void {
   NF = 0;
   VF = Undefined;
   HF = 1;
-  ZF = !load(source).bit(load(offset) & Source::bits - 1);
+  ZF = !load(source).bit(load(offset));
   SF = Undefined;
 }
 

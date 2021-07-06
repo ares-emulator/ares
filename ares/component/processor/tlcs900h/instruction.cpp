@@ -829,9 +829,9 @@ auto TLCS900H::instructionRegister(R register) -> void {
   }
   case 0x33: {  //BIT #,r
     if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<n8>();
+    data = fetch();
     prefetch(6);
-    return instructionBit(register, immediate);
+    return instructionBit(register, toImmediate<n4>(data));
   }
   case 0x34: {  //TSET #,r
     if constexpr(Long) return undefined();
