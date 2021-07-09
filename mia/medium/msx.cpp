@@ -15,8 +15,10 @@ auto MSX::load(string location) -> bool {
   }
   if(!rom) return false;
 
+  this->sha256   = Hash::SHA256(rom).digest();
   this->location = location;
-  this->manifest = analyze(rom);
+  this->manifest = Medium::manifestDatabase(sha256);
+  if(!manifest) manifest = analyze(rom);
   auto document = BML::unserialize(manifest);
   if(!document) return false;
 
