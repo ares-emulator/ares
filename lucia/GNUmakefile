@@ -74,6 +74,9 @@ ifeq ($(platform),macos)
 	mv $(output.path)/$(name) $(output.path)/$(name).app/Contents/MacOS/$(name)
 	cp resource/$(name).plist $(output.path)/$(name).app/Contents/Info.plist
 	sips -s format icns resource/$(name).png --out $(output.path)/$(name).app/Contents/Resources/$(name).icns
+else ifeq ($(platform),windows)
+	cp -R $(ares.path)/Shaders $(output.path)/
+	cp -R $(mia.path)/Database $(output.path)/
 endif
 
 verbose: nall.verbose ruby.verbose hiro.verbose all;
