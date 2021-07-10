@@ -31,8 +31,14 @@ auto SH2::instruction() -> void {
 
   if constexpr(Accuracy::Recompiler) {
     exceptionHandler();
-    auto block = recompiler.block(PC - 4);
-    block->execute();
+
+    // Recompiled blocks may be very small, negating the impact
+    // minimum cycle counts ensure that the recompiler is a net positive
+    do {
+      auto block = recompiler.block(PC - 4);
+      block->execute();
+    } while (CCR <= recompiler.min_cycles);
+
     step(CCR);
     CCR = 0;
     ID = 0;

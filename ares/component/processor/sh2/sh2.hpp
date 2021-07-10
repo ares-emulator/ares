@@ -278,6 +278,7 @@ struct SH2 {
 
     bump_allocator allocator;
     Pool* pools[1 << 24];
+    int min_cycles = 0;
   } recompiler{*this};
 
   #include "sh7604/sh7604.hpp"
