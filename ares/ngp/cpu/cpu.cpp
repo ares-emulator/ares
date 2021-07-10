@@ -338,6 +338,9 @@ auto CPU::fastBoot() -> void {
   address.byte(2) = cartridge.read(0, 0x1e);
   store(PC, address);
   store(XSP, 0x6c00);
+  //Puyo Pop World writes 0x800 zeroes starting at XIX, likely by mistake. It's important
+  //that these writes are ignored and that they don't go to the I/O range from 0x00-0xff.
+  store(XIX, 0x200000);
 
   //configure initial system I/O state to values after the BIOS set has completed.
   writeIO(0x20, 0x80);
@@ -401,6 +404,16 @@ auto CPU::fastBoot() -> void {
     kge.write(address, data[address & 15]);
   }
 
+  //interrupt request levels used by syscall VECT_INTLVSET
+  ram[0x2c24] = 0x0a;
+  ram[0x2c25] = 0xdc;
+  ram[0x2c26] = 0x00;
+  ram[0x2c27] = 0x00;
+  ram[0x2c28] = 0x00;
+  ram[0x2c29] = 0x00;
+  ram[0x2c2a] = 0x00;
+  ram[0x2c2b] = 0x00;
+
   ram[0x2c55] = 0x01;  //game type (0x01 = game)
   ram[0x2c58] = cartridge.flash[0] ? 0x03 : 0x00;  //flash type
   ram[0x2c59] = cartridge.flash[1] ? 0x03 : 0x00;  //flash type
@@ -415,6 +428,15 @@ auto CPU::fastBoot() -> void {
   ram[0x2f92] = ram[0x2c58];
   ram[0x2f93] = ram[0x2c59];
   ram[0x2f95] = ram[0x2f91];
+
+  //interrupt vector table
+  for(u32 address = 0x2fb8; address < 0x3000; address++) {
+    static n8 data[2][4] = {
+      { 0xf9, 0x20, 0xff, 0x00 }, // address of stub handler (single iret instruction)
+      { 0xdf, 0x23, 0xff, 0x00 }, // same, but for color BIOS
+    };
+    ram[address] = data[Model::NeoGeoPocketColor() ? 1 : 0][address & 3];
+  }
 }
 
 }
