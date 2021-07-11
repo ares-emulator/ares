@@ -155,14 +155,14 @@ auto CPU::power() -> void {
   dma2 = {};
   dma3 = {};
 
-  p10.latch = 1; p10.flow = 1;
-  p11.latch = 1; p11.flow = 1;
-  p12.latch = 1; p12.flow = 1;
-  p13.latch = 1; p13.flow = 1;
-  p14.latch = 1; p14.flow = 1;
-  p15.latch = 1; p15.flow = 1;
-  p16.latch = 1; p16.flow = 1;
-  p17.latch = 1; p17.flow = 1;
+  p10.latch = 0; p10.flow = 1;
+  p11.latch = 0; p11.flow = 1;
+  p12.latch = 0; p12.flow = 1;
+  p13.latch = 0; p13.flow = 1;
+  p14.latch = 0; p14.flow = 1;
+  p15.latch = 0; p15.flow = 1;
+  p16.latch = 0; p16.flow = 1;
+  p17.latch = 0; p17.flow = 1;
 
   p20.latch = 1; p20.mode = 1;
   p21.latch = 1; p21.mode = 1;
