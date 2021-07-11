@@ -25,7 +25,7 @@ auto M32X::PWM::main() -> void {
     if(rmode == 3) rsample = 0;  //undefined
   }
 
-  if(dreqIRQ && timer) {
+  if(timer) {
     if(++periods == timer) {
       periods = 0;
       m32x.shm.irq.pwm.active = 1;
