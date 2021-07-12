@@ -92,9 +92,10 @@ endif
 
 # link-time optimization
 ifeq ($(lto),true)
-  flags   += -fwhole-program -flto -fno-fat-lto-objects
+  flags   += -flto
   options += -fwhole-program
-  ifneq ($(platform),macos)
+  ifneq ($(findstring clang++,$(compiler)),clang++)
+    flags   += -fwhole-program -fno-fat-lto-objects
     options += -flto=jobserver
   else
     options += -flto=thin
