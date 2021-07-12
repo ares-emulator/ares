@@ -10,6 +10,11 @@ auto locate(string name) -> string {
   string location = {Path::program(), name};
   if(inode::exists(location)) return location;
 
+  #if defined(PLATFORM_MACOS)
+    location = {Path::program(), "../Resources/", name};
+    if(inode::exists(location)) return location;
+  #endif
+  
   directory::create({Path::userData(), "mia/"});
   return {Path::userData(), "mia/", name};
 }

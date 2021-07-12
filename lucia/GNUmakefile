@@ -73,6 +73,8 @@ ifeq ($(platform),macos)
 	mkdir -p $(output.path)/$(name).app/Contents/Resources/
 	mv $(output.path)/$(name) $(output.path)/$(name).app/Contents/MacOS/$(name)
 	cp resource/$(name).plist $(output.path)/$(name).app/Contents/Info.plist
+	cp -R $(ares.path)/Shaders $(output.path)/$(name).app/Contents/Resources/
+	cp -R $(mia.path)/Database $(output.path)/$(name).app/Contents/Resources/	
 	sips -s format icns resource/$(name).png --out $(output.path)/$(name).app/Contents/Resources/$(name).icns
 else ifeq ($(platform),windows)
 	cp -R $(ares.path)/Shaders $(output.path)/
