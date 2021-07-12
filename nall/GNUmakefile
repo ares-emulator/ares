@@ -79,12 +79,16 @@ endif
 ifeq ($(build),debug)
   flags += -Og -g -DBUILD_DEBUG
 else ifeq ($(build),stable)
+  lto = true
   flags += -O1 -DBUILD_STABLE
 else ifeq ($(build),minified)
+  lto = true
   flags += -Os -DBUILD_MINIFIED
 else ifeq ($(build),release)
+  lto = true
   flags += -O2 -DBUILD_RELEASE
 else ifeq ($(build),optimized)
+  lto = true
   flags += -O3 -fomit-frame-pointer -DBUILD_OPTIMIZED
 else
   $(error unrecognized build type.)
