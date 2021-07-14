@@ -404,6 +404,22 @@ auto CPU::fastBoot() -> void {
     kge.write(address, data[address & 15]);
   }
 
+  //SNK logo: Metal Slug - 2nd Mission compares this memory to a copy in the rom
+  //and disables shooting controls if it doesn't match.
+  u32 logo = Model::NeoGeoPocketColor() ? 0x8eaf : 0x8123;
+  for(u32 address = 0xa1c0; address < 0xa200; address++) {
+      n8 packed = system.bios.read(logo + ((address >> 1) & 0x1f));
+      if (address & 1) packed >>= 4;
+
+      n8 unpacked;
+      unpacked.bit(7) = unpacked.bit(6) = packed.bit(3);
+      unpacked.bit(5) = unpacked.bit(4) = packed.bit(2);
+      unpacked.bit(3) = unpacked.bit(2) = packed.bit(1);
+      unpacked.bit(1) = unpacked.bit(0) = packed.bit(0);
+
+      kge.write(address, unpacked);
+  }
+
   //interrupt request levels used by syscall VECT_INTLVSET
   ram[0x2c24] = 0x0a;
   ram[0x2c25] = 0xdc;
@@ -432,8 +448,8 @@ auto CPU::fastBoot() -> void {
   //interrupt vector table
   for(u32 address = 0x2fb8; address < 0x3000; address++) {
     static n8 data[2][4] = {
-      { 0xf9, 0x20, 0xff, 0x00 }, // address of stub handler (single iret instruction)
-      { 0xdf, 0x23, 0xff, 0x00 }, // same, but for color BIOS
+      { 0xf9, 0x20, 0xff, 0x00 }, //address of stub handler (single iret instruction)
+      { 0xdf, 0x23, 0xff, 0x00 }, //same, but for color BIOS
     };
     ram[address] = data[Model::NeoGeoPocketColor() ? 1 : 0][address & 3];
   }
