@@ -29,6 +29,7 @@ auto M32X::writeInternal(n1 upper, n1 lower, n32 address, n16 data) -> void {
   }
 
   if(address >= 0x0400'0000 && address <= 0x0401'ffff) {
+    if (!vdp.framebufferAccess) return;
     if(!data && (!upper || !lower)) return;  //8-bit 0x00 writes do not go through
     if(upper) vdp.bbram[address >> 1 & 0xffff].byte(1) = data.byte(1);
     if(lower) vdp.bbram[address >> 1 & 0xffff].byte(0) = data.byte(0);
@@ -36,6 +37,7 @@ auto M32X::writeInternal(n1 upper, n1 lower, n32 address, n16 data) -> void {
   }
 
   if(address >= 0x0402'0000 && address <= 0x0403'ffff) {
+    if (!vdp.framebufferAccess) return;
     if(upper && data.byte(1)) vdp.bbram[address >> 1 & 0xffff].byte(1) = data.byte(1);
     if(lower && data.byte(0)) vdp.bbram[address >> 1 & 0xffff].byte(0) = data.byte(0);
     return;

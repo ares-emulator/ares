@@ -111,7 +111,7 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
   }
 
   //packed pixel control
-  if(address == 0x4102) {
+  if(address == 0x4102) {  
     data.bit(0) = vdp.dotshift;
   }
 
@@ -257,6 +257,7 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
 
   //bitmap mode
   if(address == 0x4100) {
+    if (!vdp.framebufferAccess) return;
     if(lower) {
       vdp.mode     = data.bit(0,1);
       vdp.lines    = data.bit(6);
@@ -266,6 +267,7 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
 
   //packed pixel control
   if(address == 0x4102) {
+    if (!vdp.framebufferAccess) return;
     if(lower) {
       vdp.dotshift = data.bit(0);
     }
@@ -273,6 +275,7 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
 
   //autofill length
   if(address == 0x4104) {
+    if (!vdp.framebufferAccess) return;
     if(lower) {
       vdp.autofillLength = data.byte(0);
     }
@@ -280,12 +283,14 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
 
   //autofill address
   if(address == 0x4106) {
+    if (!vdp.framebufferAccess) return;
     if(upper) vdp.autofillAddress.byte(1) = data.byte(1);
     if(lower) vdp.autofillAddress.byte(0) = data.byte(0);
   }
 
   //autofill data
   if(address == 0x4108) {
+    if (!vdp.framebufferAccess) return;
     if(upper) vdp.autofillData.byte(1) = data.byte(1);
     if(lower) vdp.autofillData.byte(0) = data.byte(0);
     vdp.fill();
@@ -293,6 +298,7 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
 
   //frame buffer control
   if(address == 0x410a) {
+    if (!vdp.framebufferAccess) return;
     if(lower) {
       vdp.selectFramebuffer(data.bit(0));
     }
@@ -300,6 +306,7 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
 
   //palette
   if(address >= 0x4200 && address <= 0x43ff) {
+    if (!vdp.framebufferAccess) return;
     if(upper) vdp.cram[address >> 1 & 0xff].byte(1) = data.byte(1);
     if(lower) vdp.cram[address >> 1 & 0xff].byte(0) = data.byte(0);
   }
