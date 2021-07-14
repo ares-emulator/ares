@@ -51,7 +51,7 @@ struct Settings : Markup::Node {
   } input;
 
   struct Boot {
-    bool fast = true;
+    bool fast = false;
     bool debugger = false;
     string prefer = "NTSC-U";
   } boot;
