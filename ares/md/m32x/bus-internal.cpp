@@ -9,6 +9,12 @@ auto M32X::readInternal(n1 upper, n1 lower, n32 address, n16 data) -> n16 {
   }
 
   if(address >= 0x0200'0000 && address <= 0x023f'ffff) {
+    while(dreq.vram) {
+      // SH2 ROM accesses stall while RV is set
+      if(shm.active()) shm.step(1);
+      if(shs.active()) shs.step(1);
+    }
+
     return rom[address >> 1];
   }
 

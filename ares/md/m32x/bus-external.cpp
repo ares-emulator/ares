@@ -20,12 +20,12 @@ auto M32X::readExternal(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address >= 0x880000 && address <= 0x8fffff) {
-    return rom[address >> 1 & 0x3ffff];
+    if(!dreq.vram) return rom[address >> 1 & 0x3ffff];
   }
 
   if(address >= 0x900000 && address <= 0x9fffff) {
     address = io.romBank * 0x100000 | address & 0x0fffff;
-    return rom[address >> 1];
+    if(!dreq.vram) return rom[address >> 1];
   }
 
   return data;
