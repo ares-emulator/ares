@@ -10,6 +10,21 @@ auto SH2::Recompiler::block(u32 address) -> Block* {
   return pool(address)->blocks[address >> 1 & 0x7f] = block;
 }
 
+alwaysinline auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
+  #define op(id, name, ...) \
+    case id: \
+      call(&SH2::name, &self, ##__VA_ARGS__); \
+      return 0;
+  #define br(id, name, ...) \
+    case id: \
+      call(&SH2::name, &self, ##__VA_ARGS__); \
+      return 1;
+  #include "decoder.hpp"
+  #undef op
+  #undef br
+  return 0;
+}
+
 auto SH2::Recompiler::emit(u32 address) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("SH2 allocator flush\n");
@@ -40,19 +55,4 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
 
   allocator.reserve(size());
   return block;
-}
-
-auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
-  #define op(id, name, ...) \
-    case id: \
-      call(&SH2::name, &self, ##__VA_ARGS__); \
-      return 0;
-  #define br(id, name, ...) \
-    case id: \
-      call(&SH2::name, &self, ##__VA_ARGS__); \
-      return 1;
-  #include "decoder.hpp"
-  #undef op
-  #undef br
-  return 0;
 }
