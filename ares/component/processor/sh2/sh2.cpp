@@ -9,8 +9,8 @@ namespace ares {
 #include "exceptions.cpp"
 #include "instruction.cpp"
 #include "instructions.cpp"
-//#include "cached.cpp"
-#include "recompiler.cpp"
+#include "cached.cpp"
+//#include "recompiler.cpp"
 #include "serialization.cpp"
 #include "disassembler.cpp"
 
