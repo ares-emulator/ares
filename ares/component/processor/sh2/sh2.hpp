@@ -266,7 +266,7 @@ struct SH2 {
     }
 
     auto invalidate(u32 address) -> void {
-      pools[address >> 8 & 0xffffff] = nullptr;
+      pool(address)->blocks[address >> 1 & 0x7f] = nullptr;
     }
 
     auto pool(u32 address) -> Pool*;
