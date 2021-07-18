@@ -97,14 +97,16 @@ auto System::unload() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
+  //enable or disable boot animation.
+  n16 bootAnim = NeoGeoPocket::Model::NeoGeoPocketColor() ? 0x530c : 0x4618;
+  bios.program(bootAnim, fastBoot->latch() ? 0x0e : 0xf1); //0x0e = ret, 0xf1 = ld
+
   cartridge.power();
   cpu.power();
   apu.power();
   kge.power();
   psg.power();
   scheduler.power(cpu);
-
-  if(fastBoot->latch() && cartridge.flash[0]) cpu.fastBoot();
 }
 
 }
