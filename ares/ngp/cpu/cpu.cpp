@@ -20,31 +20,6 @@ auto CPU::load(Node::Object parent) -> void {
 
   if(auto fp = system.pak->read("cpu.ram")) {
     ram.load(fp);
-
-    //hack: the BIOS checks (0x6c14) to determine if the setup menu needs to be executed.
-    //for unknown reasons, the BIOS from (0xffff00) only writes 0x00dc.
-    //it is not updated when language/color choices are made.
-    //to prevent the setup from being run every boot, manually calculate and set this value.
-    n16 data;
-    data += ram[0x2f87];  //language: Japanese, English
-    for(u32 address = 0x2c25; address <= 0x2c2b; address++) data += ram[address];  //always 0x00dc
-    if(Model::NeoGeoPocketColor()) {
-      data += ram[0x2f94];  //K1GE color mode: Black & White, Blue, Green, Red, Classic
-    }
-    ram[0x2c14] = data.byte(0);
-    ram[0x2c15] = data.byte(1);
-
-    //signature check
-    ram[0x2e96] = 'N';  //'N'eo Geo
-    ram[0x2e95] = 'P';  //'P'ocket
-
-    //this byte seems to indicate system state (0x00 = BIOS UI, 0x10 = setup, 0x40 = game playing)
-    //for unknown reasons, sometimes d4 gets set, which re-enters the BIOS setup again.
-    ram[0x2f83].bit(4) = 0;
-
-    //this setting gets erased sometimes for unknown reasons, preventing games from booting.
-    ram[0x2f91] = Model::NeoGeoPocketColor() ? 0x10 : 0x00;
-    ram[0x2f95] = ram[0x2f91];
   }
 
   node = parent->append<Node::Object>("CPU");
@@ -67,7 +42,17 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   if(interrupts.fire()) return (void)(HALT = 0);
-  if(HALT) return step(16);
+  if(HALT) {
+    //real hardware boots once batteries are connected and goes into a halt state.
+    //here we bypass the need for the user to press controls.power.
+    if(privilegedMode()) { //did this halt occur in the BIOS?
+      if(!system.controls.power->value()) {
+        system.controls.power->setValue(true); //press power on the user's behalf.
+        pollPowerButtonSkipCounter = 6000; //half a second, or ~30 frames at 198 lines/frame
+      }
+    }
+    return step(16);
+  }
   debugger.instruction();
   instruction();
 }
@@ -83,7 +68,9 @@ auto CPU::step(u32 clocks) -> void {
 }
 
 auto CPU::pollPowerButton() -> void {
-//platform->input(system.controls.power);
+  //suppress user input when we are simulating a power button press.
+  if(pollPowerButtonSkipCounter > 0) --pollPowerButtonSkipCounter;
+  else platform->input(system.controls.power);
   nmi.set(!system.controls.power->value());
 }
 
@@ -92,13 +79,22 @@ auto CPU::power() -> void {
   Thread::create(system.frequency(), {&CPU::main, this});
 
   n24 address;
+  //read hardware reset vector.
   address.byte(0) = system.bios.read(0xff00);
   address.byte(1) = system.bios.read(0xff01);
   address.byte(2) = system.bios.read(0xff02);
-  //hack: real hardware boots once batteries are connected, and goes into a halt state.
-  //power is implemented as a switch rather than a button, so the PC is jumped past
-  //this to a hardware reset point, bypassing the need to press controls.power first.
-  address = 0xff1800;
+  //detect whether the loaded ram data has already been through the boot process.
+  //this byte is written when entering or leaving a halt state and is never zero,
+  //making it convenient to test.
+  if(ram[0x6c7a] != 0) {
+    //read VECT_SHUTDOWN; it may seem counterintuitive to jump here on power-on,
+    //but it allows the BIOS to perform cleanup that would normally only occur
+    //when the user shuts off the device before switching cartridges.
+    address.byte(0) = system.bios.read(0xfe00);
+    address.byte(1) = system.bios.read(0xfe01);
+    address.byte(2) = system.bios.read(0xfe02);
+    store(XSP, 0x6c00); //system calls require a stack
+  }
   store(PC, address);
 
   interrupts = {};
@@ -327,132 +323,8 @@ auto CPU::power() -> void {
   clock = {};
 
   misc = {};
-}
 
-//code to skip the BIOS boot sequence and load the game immediately.
-//note that this will not configure the language, color mode, or real-time clock.
-auto CPU::fastBoot() -> void {
-  n32 address;
-  address.byte(0) = cartridge.read(0, 0x1c);
-  address.byte(1) = cartridge.read(0, 0x1d);
-  address.byte(2) = cartridge.read(0, 0x1e);
-  store(PC, address);
-  store(XSP, 0x6c00);
-  //Puyo Pop World writes 0x800 zeroes starting at XIX, likely by mistake. It's important
-  //that these writes are ignored and that they don't go to the I/O range from 0x00-0xff.
-  store(XIX, 0x200000);
-
-  //configure initial system I/O state to values after the BIOS set has completed.
-  writeIO(0x20, 0x80);
-  writeIO(0x22, 0x01);
-  writeIO(0x23, 0x90);
-  writeIO(0x24, 0x03);
-  writeIO(0x25, 0xfc);
-  writeIO(0x26, 0x90);
-  writeIO(0x27, 0x62);
-  writeIO(0x28, 0x05);
-  writeIO(0x38, 0x30);
-  writeIO(0x3c, 0x20);
-  writeIO(0x3d, 0xff);
-  writeIO(0x3e, 0x80);
-  writeIO(0x3f, 0x7f);
-  writeIO(0x48, 0x30);
-  writeIO(0x51, 0x20);
-  writeIO(0x52, 0x20);
-  writeIO(0x53, 0x15);
-  writeIO(0x5c, 0xff);
-  writeIO(0x5d, 0xff);
-  writeIO(0x5e, 0xff);
-  writeIO(0x5f, 0xff);
-  writeIO(0x68, 0x17);
-  writeIO(0x69, 0x17);
-  writeIO(0x6a, 0x03);
-  writeIO(0x6b, 0x03);
-  writeIO(0x6c, 0x02);
-  writeIO(0x6d, 0x04);
-  writeIO(0x6e, 0xf0);
-  writeIO(0x6f, 0x4e);
-  writeIO(0x70, 0x0a);
-  writeIO(0x71, 0xdc);
-  writeIO(0x72, 0x00);
-  writeIO(0x73, 0x00);
-  writeIO(0x74, 0x00);
-  writeIO(0x77, 0x00);
-  writeIO(0x79, 0x00);
-  writeIO(0x7a, 0x00);
-  writeIO(0x7b, 0x04);
-  writeIO(0x80, 0x00);
-  writeIO(0xb2, 0x01);
-  writeIO(0xb3, 0x04);
-  writeIO(0xb4, 0x0a);
-  writeIO(0xb5, 0x00);
-  writeIO(0xb6, 0x05);
-  writeIO(0xb7, 0x00);
-  writeIO(0xb8, 0xaa);
-  writeIO(0xb9, 0xaa);
-  writeIO(0xba, 0xfc);
-  writeIO(0xbc, 0x03);
-
-  kge.write(0x8000, 0xc0);  //enable Vblank and Hblank interrupts
-
-  //default color palette: Magical Drop relies on the BIOS to initialize this.
-  for(u32 address = 0x8380; address < 0x8400; address++) {
-    static n8 data[16] = {
-      0xff, 0x0f, 0xdd, 0x0d, 0xbb, 0x0b, 0x99, 0x09,
-      0x77, 0x07, 0x44, 0x04, 0x33, 0x03, 0x00, 0x00,
-    };
-    kge.write(address, data[address & 15]);
-  }
-
-  //SNK logo: Metal Slug - 2nd Mission compares this memory to a copy in the rom
-  //and disables shooting controls if it doesn't match.
-  u32 logo = Model::NeoGeoPocketColor() ? 0x8eaf : 0x8123;
-  for(u32 address = 0xa1c0; address < 0xa200; address++) {
-      n8 packed = system.bios.read(logo + ((address >> 1) & 0x1f));
-      if (address & 1) packed >>= 4;
-
-      n8 unpacked;
-      unpacked.bit(7) = unpacked.bit(6) = packed.bit(3);
-      unpacked.bit(5) = unpacked.bit(4) = packed.bit(2);
-      unpacked.bit(3) = unpacked.bit(2) = packed.bit(1);
-      unpacked.bit(1) = unpacked.bit(0) = packed.bit(0);
-
-      kge.write(address, unpacked);
-  }
-
-  //interrupt request levels used by syscall VECT_INTLVSET
-  ram[0x2c24] = 0x0a;
-  ram[0x2c25] = 0xdc;
-  ram[0x2c26] = 0x00;
-  ram[0x2c27] = 0x00;
-  ram[0x2c28] = 0x00;
-  ram[0x2c29] = 0x00;
-  ram[0x2c2a] = 0x00;
-  ram[0x2c2b] = 0x00;
-
-  ram[0x2c55] = 0x01;  //game type (0x01 = game)
-  ram[0x2c58] = cartridge.flash[0] ? 0x03 : 0x00;  //flash type
-  ram[0x2c59] = cartridge.flash[1] ? 0x03 : 0x00;  //flash type
-
-  ram[0x2f80] = 0xff;  //battery level (lo)
-  ram[0x2f81] = 0x03;  //battery level (hi)
-  ram[0x2f84] = 0x40;  //user boot: power on
-  ram[0x2f85] = 0x00;  //user shutdown: no
-  ram[0x2f86] = 0x00;  //user response: none
-  ram[0x2f87] = 0x01;  //language: English
-  ram[0x2f91] = Model::NeoGeoPocketColor() ? 0x10 : 0x00;  //hardware model
-  ram[0x2f92] = ram[0x2c58];
-  ram[0x2f93] = ram[0x2c59];
-  ram[0x2f95] = ram[0x2f91];
-
-  //interrupt vector table
-  for(u32 address = 0x2fb8; address < 0x3000; address++) {
-    static n8 data[2][4] = {
-      { 0xf9, 0x20, 0xff, 0x00 }, //address of stub handler (single iret instruction)
-      { 0xdf, 0x23, 0xff, 0x00 }, //same, but for color BIOS
-    };
-    ram[address] = data[Model::NeoGeoPocketColor() ? 1 : 0][address & 3];
-  }
+  pollPowerButtonSkipCounter = 0;
 }
 
 }

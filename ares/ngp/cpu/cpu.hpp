@@ -52,7 +52,6 @@ struct CPU : TLCS900H, Thread {
   auto step(u32 clocks) -> void override;
   auto pollPowerButton() -> void;
   auto power() -> void;
-  auto fastBoot() -> void;
 
   //memory.cpp
   auto width(n24 address) -> u32 override;
@@ -741,6 +740,9 @@ struct CPU : TLCS900H, Thread {
     n8 b6;
     n8 b7;
   } unknown;
+
+//unserialized:
+  n32 pollPowerButtonSkipCounter;
 };
 
 extern CPU cpu;
