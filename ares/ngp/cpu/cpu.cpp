@@ -86,7 +86,7 @@ auto CPU::power() -> void {
   //detect whether the loaded ram data has already been through the boot process.
   //this byte is written when entering or leaving a halt state and is never zero,
   //making it convenient to test.
-  if(ram[0x6c7a] != 0) {
+  if(ram[0x2c7a] != 0) {
     //read VECT_SHUTDOWN; it may seem counterintuitive to jump here on power-on,
     //but it allows the BIOS to perform cleanup that would normally only occur
     //when the user shuts off the device before switching cartridges.
