@@ -89,30 +89,28 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
 
   string region = "NTSC";
   switch(data[0x3e]) {
-  case 'A': region = "NTSC"; break;  //Asia
-  case 'B': region = "NTSC"; break;  //Brazil
-  case 'C': region = "NTSC"; break;  //China
+  case 'A': region = "NTSC"; break;  //North America + Japan
   case 'D': region = "PAL";  break;  //Germany
   case 'E': region = "NTSC"; break;  //North America
   case 'F': region = "PAL";  break;  //France
   case 'G': region = "NTSC"; break;  //Gateway 64 (NTSC)
-  case 'H': region = "PAL";  break;  //Netherlands
   case 'I': region = "PAL";  break;  //Italy
   case 'J': region = "NTSC"; break;  //Japan
-  case 'K': region = "NTSC"; break;  //Korea
   case 'L': region = "PAL";  break;  //Gateway 64 (PAL)
-  case 'N': region = "NTSC"; break;  //Canada
   case 'P': region = "PAL";  break;  //Europe
   case 'S': region = "PAL";  break;  //Spain
   case 'U': region = "PAL";  break;  //Australia
-  case 'W': region = "PAL";  break;  //Scandanavia
   case 'X': region = "PAL";  break;  //Europe
   case 'Y': region = "PAL";  break;  //Europe
   }
 
   string id;
+  id.append((char)data[0x3b]);
   id.append((char)data[0x3c]);
   id.append((char)data[0x3d]);
+
+  char region_code = data[0x3e];
+  u8 revision = data[0x3f];
 
   //detect the CIC used for a given gamepak based on checksumming its bootcode
   //note: NTSC 6101 = PAL 7102 and NTSC 6102 = PAL 7101 (IDs are swapped)
@@ -132,126 +130,214 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   u32 flash  = 0;  //128_KiB
 
   //512B EEPROM
-  if(id == "ER") eeprom = 512;     //AeroFighters Assault
-  if(id == "AB") eeprom = 512;     //Air Boarder 64
-  if(id == "TN") eeprom = 512;     //All Star Tennis '99
-  if(id == "BK") eeprom = 512;     //Banjo-Kazooie
-  if(id == "FH") eeprom = 512;     //Bass Hunter 64
-  if(id == "MU") eeprom = 512;     //Big Mountain 2000
-  if(id == "BC") eeprom = 512;     //Blast Corps
-  if(id == "BH") eeprom = 512;     //Body Harvest
-  if(id == "BM") eeprom = 512;     //Bomberman 64
-  if(id == "BV") eeprom = 512;     //Bomberman 64: The Second Attack!
-  if(id == "BD") eeprom = 512;     //Bomberman Hero
-  if(id == "CT") eeprom = 512;     //Chameleon Twist
-  if(id == "CH") eeprom = 512;     //Chopper Attack
-  if(id == "XO") eeprom = 512;     //Cruis'n Exotica
-  if(id == "CU") eeprom = 512;     //Cruis'n USA
-  if(id == "DY") eeprom = 512;     //Diddy Kong Racing
-  if(id == "DQ") eeprom = 512;     //Donald Duck: Goin' Quackers
-  if(id == "N6") eeprom = 512;     //Dr. Mario 64
-  if(id == "JM") eeprom = 512;     //Earthworm Jim 3D
-  if(id == "FW") eeprom = 512;     //F-1 World Grand Prix
-  if(id == "F2") eeprom = 512;     //F-1 World Grand Prix II
-  if(id == "KA") eeprom = 512;     //Fighters Destiny
-  if(id == "FG") eeprom = 512;     //Fighter Destiny 2
-  if(id == "GV") eeprom = 512;     //Glover
-  if(id == "GE") eeprom = 512;     //GoldenEye 007
-  if(id == "GC") eeprom = 512;     //GT 64: Championship Edition
-  if(id == "PG") eeprom = 512;     //Hey You, Pikachu!
-  if(id == "IJ") eeprom = 512;     //Indiana Jones and the Infernal Machine
-  if(id == "IC") eeprom = 512;     //Indy Racing 2000
-  if(id == "KI") eeprom = 512;     //Killer Instinct Gold
-  if(id == "K4") eeprom = 512;     //Kirby 64: The Crystal Shards
-  if(id == "LR") eeprom = 512;     //Lode Runner 3-D
-  if(id == "DU") eeprom = 512;     //Duck Dodgers starring Daffy Duck
-  if(id == "KT") eeprom = 512;     //Mario Kart 64
-  if(id == "LB") eeprom = 512;     //Mario Party
-  if(id == "MW") eeprom = 512;     //Mario Party 2
-  if(id == "ML") eeprom = 512;     //Mickey's Speedway USA
-  if(id == "TM") eeprom = 512;     //Mischief Makers
-  if(id == "MI") eeprom = 512;     //Mission: Impossible
-  if(id == "MO") eeprom = 512;     //Monopoly
-  if(id == "MR") eeprom = 512;     //Multi-Racing Championship
-  if(id == "CR") eeprom = 512;     //Penny Racers
-  if(id == "EA") eeprom = 512;     //PGA European Tour
-  if(id == "PW") eeprom = 512;     //Pilotwings 64
-  if(id == "PM") eeprom = 512;     //Premier Manager 64
-  if(id == "SU") eeprom = 512;     //Rocket: Robot on Wheels
-  if(id == "K2") eeprom = 512;     //Snowboard Kids 2
-  if(id == "SV") eeprom = 512;     //SpaceStation Silicon Valley
-  if(id == "FX") eeprom = 512;     //Star Fox 64
-  if(id == "S6") eeprom = 512;     //Star Soldier: Vanishing Earth
-  if(id == "NA") eeprom = 512;     //Star Wars Episode I: Battle for Naboo
-  if(id == "RS") eeprom = 512;     //Star Wars: Rogue Squadron
-  if(id == "SW") eeprom = 512;     //Star Wars: Shadows of the Empire
-  if(id == "SC") eeprom = 512;     //Starshot: Space Circus Fever
-  if(id == "SM") eeprom = 512;     //Super Mario 64
-  if(id == "TX") eeprom = 512;     //Tax Express
-  if(id == "TP") eeprom = 512;     //Tetrisphere
-  if(id == "TJ") eeprom = 512;     //Tom & Jerry in Fists of Fury
-  if(id == "RC") eeprom = 512;     //Top Gear Overdrive
-  if(id == "VL") eeprom = 512;     //V-Rally Edition '99
-  if(id == "WL") eeprom = 512;     //Waialae Country Club: True Golf Classics
-  if(id == "WR") eeprom = 512;     //Wave Race 64: Kawasaki Jet Ski
-  if(id == "AD") eeprom = 512;     //Worms Armageddon
+  if(id == "NTW") eeprom = 512;     //64 de Hakken!! Tamagotchi
+  if(id == "NHF") eeprom = 512;     //64 Hanafuda: Tenshi no Yakusoku
+  if(id == "NOS") eeprom = 512;     //64 Oozumou
+  if(id == "NTC") eeprom = 512;     //64 Trump Collection
+  if(id == "NER") eeprom = 512;     //AeroFighters Assault (North America)
+  if(id == "NSA") eeprom = 512;     //AeroFighters Assault (PAL, Japan)
+  if(id == "NAG") eeprom = 512;     //AeroGauge
+  if(id == "NAB") eeprom = 512;     //Air Boarder 64
+  if(id == "NTN") eeprom = 512;     //All Star Tennis '99
+  if(id == "NBN") eeprom = 512;     //Bakuretsu Muteki Bangaioh
+  if(id == "NBK") eeprom = 512;     //Banjo-Kazooie
+  if(id == "NFH") eeprom = 512;     //Bass Hunter 64
+  if(id == "NMU") eeprom = 512;     //Big Mountain 2000
+  if(id == "NBC") eeprom = 512;     //Blast Corps
+  if(id == "NBH") eeprom = 512;     //Body Harvest
+  if(id == "NHA") eeprom = 512;     //Bomber Man 64 (Japan)
+  if(id == "NBM") eeprom = 512;     //Bomberman 64
+  if(id == "NBV") eeprom = 512;     //Bomberman 64: The Second Attack!
+  if(id == "NBD") eeprom = 512;     //Bomberman Hero
+  if(id == "NCT") eeprom = 512;     //Chameleon Twist
+  if(id == "NCH") eeprom = 512;     //Chopper Attack
+  if(id == "NCG") eeprom = 512;     //Choro Q 64 2: Hacha-Mecha Grand Prix Race
+  if(id == "NP2") eeprom = 512;     //Chou Kuukan Nighter Pro Yakyuu King 2
+  if(id == "NXO") eeprom = 512;     //Cruis'n Exotica
+  if(id == "NCU") eeprom = 512;     //Cruis'n USA
+  if(id == "NCX") eeprom = 512;     //Custom Robo
+  if(id == "NDY") eeprom = 512;     //Diddy Kong Racing
+  if(id == "NDQ") eeprom = 512;     //Donald Duck: Goin' Quackers
+  if(id == "NDR") eeprom = 512;     //Doraemon: Nobita to 3tsu no Seireiseki
+  if(id == "NN6") eeprom = 512;     //Dr. Mario 64
+  if(id == "NDU") eeprom = 512;     //Duck Dodgers starring Daffy Duck
+  if(id == "NJM") eeprom = 512;     //Earthworm Jim 3D
+  if(id == "NFW") eeprom = 512;     //F-1 World Grand Prix
+  if(id == "NF2") eeprom = 512;     //F-1 World Grand Prix II
+  if(id == "NKA") eeprom = 512;     //Fighters Destiny
+  if(id == "NFG") eeprom = 512;     //Fighter Destiny 2
+  if(id == "NGL") eeprom = 512;     //Getter Love!!
+  if(id == "NGV") eeprom = 512;     //Glover
+  if(id == "NGE") eeprom = 512;     //GoldenEye 007
+  if(id == "NHP") eeprom = 512;     //Heiwa Pachinko World 64
+  if(id == "NPG") eeprom = 512;     //Hey You, Pikachu!
+  if(id == "NIJ") eeprom = 512;     //Indiana Jones and the Infernal Machine
+  if(id == "NIC") eeprom = 512;     //Indy Racing 2000
+  if(id == "NFY") eeprom = 512;     //Kakutou Denshou: F-Cup Maniax
+  if(id == "NKI") eeprom = 512;     //Killer Instinct Gold
+  if(id == "NLL") eeprom = 512;     //Last Legion UX
+  if(id == "NLR") eeprom = 512;     //Lode Runner 3-D
+  if(id == "NKT") eeprom = 512;     //Mario Kart 64
+  if(id == "CLB") eeprom = 512;     //Mario Party (NTSC)
+  if(id == "NLB") eeprom = 512;     //Mario Party (PAL)
+  if(id == "NMW") eeprom = 512;     //Mario Party 2
+  if(id == "NML") eeprom = 512;     //Mickey's Speedway USA
+  if(id == "NTM") eeprom = 512;     //Mischief Makers
+  if(id == "NMI") eeprom = 512;     //Mission: Impossible
+  if(id == "NMG") eeprom = 512;     //Monaco Grand Prix
+  if(id == "NMO") eeprom = 512;     //Monopoly
+  if(id == "NMS") eeprom = 512;     //Morita Shougi 64
+  if(id == "NMR") eeprom = 512;     //Multi-Racing Championship
+  if(id == "NCR") eeprom = 512;     //Penny Racers
+  if(id == "NEA") eeprom = 512;     //PGA European Tour
+  if(id == "NPW") eeprom = 512;     //Pilotwings 64
+  if(id == "NPM") eeprom = 512;     //Premier Manager 64
+  if(id == "NPY") eeprom = 512;     //Puyo Puyo Sun 64
+  if(id == "NPT") eeprom = 512;     //Puyo Puyon Party
+  if(id == "NRA") eeprom = 512;     //Rally '99
+  if(id == "NWQ") eeprom = 512;     //Rally Challenge 2000
+  if(id == "NSU") eeprom = 512;     //Rocket: Robot on Wheels
+  if(id == "NSN") eeprom = 512;     //Snow Speeder
+  if(id == "NK2") eeprom = 512;     //Snowboard Kids 2
+  if(id == "NSV") eeprom = 512;     //Space Station Silicon Valley
+  if(id == "NFX") eeprom = 512;     //Star Fox 64
+  if(id == "NS6") eeprom = 512;     //Star Soldier: Vanishing Earth
+  if(id == "NNA") eeprom = 512;     //Star Wars Episode I: Battle for Naboo
+  if(id == "NRS") eeprom = 512;     //Star Wars: Rogue Squadron
+  if(id == "NSW") eeprom = 512;     //Star Wars: Shadows of the Empire
+  if(id == "NSC") eeprom = 512;     //Starshot: Space Circus Fever
+  if(id == "NB6") eeprom = 512;     //Super B-Daman: Battle Phoenix 64
+  if(id == "NSM") eeprom = 512;     //Super Mario 64
+  if(id == "NSS") eeprom = 512;     //Super Robot Spirits
+  if(id == "NTX") eeprom = 512;     //Taz Express
+  if(id == "NT6") eeprom = 512;     //Tetris 64
+  if(id == "NTP") eeprom = 512;     //Tetrisphere
+  if(id == "NTJ") eeprom = 512;     //Tom & Jerry in Fists of Fury
+  if(id == "NRC") eeprom = 512;     //Top Gear Overdrive
+  if(id == "NTR") eeprom = 512;     //Top Gear Rally (Japan, PAL)
+  if(id == "NTB") eeprom = 512;     //Transformers: Beast Wars Metals 64
+  if(id == "NGU") eeprom = 512;     //Tsumi to Batsu: Hoshi no Keishousha
+  if(id == "NIR") eeprom = 512;     //Utchan Nanchan no Hono no Challenger: Denryuu Ira Ira Bou
+  if(id == "NVL") eeprom = 512;     //V-Rally Edition '99 (North America, PAL)
+  if(id == "NVY") eeprom = 512;     //V-Rally Edition '99 (Japan)
+  if(id == "NWR") eeprom = 512;     //Wave Race 64: Kawasaki Jet Ski
+  if(id == "NWC") eeprom = 512;     //Wild Choppers
+  if(id == "NAD") eeprom = 512;     //Worms Armageddon (NTSC)
+  if(id == "NWU") eeprom = 512;     //Worms Armageddon (PAL)
+  if(id == "NYK") eeprom = 512;     //Yakouchuu II: Satsujin Kouro
+
+  //Special case for Japanese version of Wetrix and Dark Rift
+  if(id == "NDK" && region_code == 'J') eeprom = 512; //Dark Rift aka Space Dynamites
+  if(id == "NWT" && region_code == 'J') eeprom = 512; //Wetrix
 
   //2KB EEPROM
-  if(id == "B7") eeprom = 2_KiB;   //Banjo-Tooie
-  if(id == "FU") eeprom = 2_KiB;   //Conker's Bad Fur Day
-  if(id == "CW") eeprom = 2_KiB;   //Cruis'n World
-  if(id == "DO") eeprom = 2_KiB;   //Donkey Kong 64
-  if(id == "MX") eeprom = 2_KiB;   //Excitebike 64
-  if(id == "NB") eeprom = 2_KiB;   //Kobe Bryant in NBA Courtside
-  if(id == "MV") eeprom = 2_KiB;   //Mario Party 3
-  if(id == "M8") eeprom = 2_KiB;   //Mario Tennis
-  if(id == "PD") eeprom = 2_KiB;   //Perfect Dark
-  if(id == "RZ") eeprom = 2_KiB;   //Ridge Racer 64
-  if(id == "EP") eeprom = 2_KiB;   //Star Wars Episode I: Racer
-  if(id == "YS") eeprom = 2_KiB;   //Yoshi's Story
+  if(id == "NB7") eeprom = 2_KiB;   //Banjo-Tooie
+  if(id == "NGT") eeprom = 2_KiB;   //City-Tour GP: Zen-Nihon GT Senshuken
+  if(id == "NFU") eeprom = 2_KiB;   //Conker's Bad Fur Day
+  if(id == "NCW") eeprom = 2_KiB;   //Cruis'n World
+  if(id == "NCZ") eeprom = 2_KiB;   //Custom Robo V2
+  if(id == "ND6") eeprom = 2_KiB;   //Densha de Go! 64
+  if(id == "NDO") eeprom = 2_KiB;   //Donkey Kong 64
+  if(id == "ND2") eeprom = 2_KiB;   //Doraemon 2: Nobita to Hikari no Shinden
+  if(id == "N3D") eeprom = 2_KiB;   //Doraemon 3: Nobita no Machi SOS!
+  if(id == "NMX") eeprom = 2_KiB;   //Excitebike 64
+  if(id == "NGC") eeprom = 2_KiB;   //GT 64: Championship Edition
+  if(id == "NIM") eeprom = 2_KiB;   //Ide Yosuke no Mahjong Juku
+  if(id == "NK4") eeprom = 2_KiB;   //Kirby 64: The Crystal Shards
+  if(id == "NNB") eeprom = 2_KiB;   //Kobe Bryant in NBA Courtside
+  if(id == "NMV") eeprom = 2_KiB;   //Mario Party 3
+  if(id == "NM8") eeprom = 2_KiB;   //Mario Tennis
+  if(id == "NEV") eeprom = 2_KiB;   //Neon Genesis Evangelion
+  if(id == "NPP") eeprom = 2_KiB;   //Parlor! Pro 64: Pachinko Jikki Simulation Game
+  if(id == "NUB") eeprom = 2_KiB;   //PD Ultraman Battle Collection 64
+  if(id == "NPD") eeprom = 2_KiB;   //Perfect Dark
+  if(id == "NRZ") eeprom = 2_KiB;   //Ridge Racer 64
+  if(id == "NR7") eeprom = 2_KiB;   //Robot Poncots 64: 7tsu no Umi no Caramel
+  if(id == "NEP") eeprom = 2_KiB;   //Star Wars Episode I: Racer
+  if(id == "NYS") eeprom = 2_KiB;   //Yoshi's Story
+
+  //Special cases for Japanese versions of Castlevania
+  if(id == "ND3" && region_code == 'J') eeprom = 2_KiB; //Akumajou Dracula Mokushiroku
+  if(id == "ND4" && region_code == 'J') eeprom = 2_KiB; //Akumajou Dracula Mokushiroku Gaiden: Legend of Cornell
 
   //32KB SRAM
-  if(id == "TE") sram = 32_KiB;    //1080 Snowboarding
-  if(id == "FZ") sram = 32_KiB;    //F-Zero X
-  if(id == "YW") sram = 32_KiB;    //Harvest Moon 64
-  if(id == "ZL") sram = 32_KiB;    //Legend of Zelda: The Ocarina of Time
-  if(id == "KG") sram = 32_KiB;    //Major League Baseball featuring Ken Griffey Jr.
-  if(id == "MF") sram = 32_KiB;    //Mario Golf 64
-  if(id == "RI") sram = 32_KiB;    //New Tetris
-  if(id == "OB") sram = 32_KiB;    //Ogre Battle 64: Person of Lordly Caliber
-  if(id == "PS") sram = 32_KiB;    //Pokemon Stadium (JPN)
-  if(id == "RE") sram = 32_KiB;    //Resident Evil 2
-  if(id == "AL") sram = 32_KiB;    //Super Smash Bros.
-  if(id == "W2") sram = 32_KiB;    //WCW/NWO Revenge
-  if(id == "WX") sram = 32_KiB;    //WWF WrestleMania 2000
+  if(id == "NTE") sram = 32_KiB;    //1080 Snowboarding
+  if(id == "NVB") sram = 32_KiB;    //Bass Rush: ECOGEAR PowerWorm Championship
+  if(id == "CFZ") sram = 32_KiB;    //F-Zero X (NTSC)
+  if(id == "NFZ") sram = 32_KiB;    //F-Zero X (PAL)
+  if(id == "NSI") sram = 32_KiB;    //Fushigi no Dungeon: Fuurai no Shiren 2
+  if(id == "NG6") sram = 32_KiB;    //Ganmare Goemon: Dero Dero Douchuu Obake Tenkomori
+  if(id == "N3H") sram = 32_KiB;    //Ganbare! Nippon! Olympics 2000
+  if(id == "NGP") sram = 32_KiB;    //Goemon: Mononoke Sugoroku
+  if(id == "NYW") sram = 32_KiB;    //Harvest Moon 64
+  if(id == "NHY") sram = 32_KiB;    //Hybrid Heaven (Japan)
+  if(id == "NIB") sram = 32_KiB;    //Itoi Shigesato no Bass Tsuri No. 1 Kettei Ban!
+  if(id == "NPS") sram = 32_KiB;    //Jikkyou J.League 1999: Perfect Striker 2
+  if(id == "NPA") sram = 32_KiB;    //Jikkyou Powerful Pro Yakyuu 2000
+  if(id == "NJ5") sram = 32_KiB;    //Jikkyou Powerful Pro Yakyuu 5
+  if(id == "NP6") sram = 32_KiB;    //Jikkyou Powerful Pro Yakyuu 6
+  if(id == "NPE") sram = 32_KiB;    //Jikkyou Powerful Pro Yakyuu Basic Ban 2001
+  if(id == "NJG") sram = 32_KiB;    //Jinsei Game 64
+  if(id == "CZL") sram = 32_KiB;    //Legend of Zelda: Ocarina of Time (NTSC)
+  if(id == "NZL") sram = 32_KiB;    //Legend of Zelda: Ocarina of Time (PAL)
+  if(id == "NKG") sram = 32_KiB;    //Major League Baseball featuring Ken Griffey Jr.
+  if(id == "NMF") sram = 32_KiB;    //Mario Golf 64
+  if(id == "NRI") sram = 32_KiB;    //New Tetris
+  if(id == "NUT") sram = 32_KiB;    //Nushi Zuri 64
+  if(id == "NUM") sram = 32_KiB;    //Nushi Zuri 64: Shiokaze ni Notte
+  if(id == "NOB") sram = 32_KiB;    //Ogre Battle 64: Person of Lordly Caliber
+  if(id == "CPS") sram = 32_KiB;    //Pokemon Stadium (Japan)
+  if(id == "NB5") sram = 32_KiB;    //Resident Evil 2 (Japan) aka Biohazard 2
+  if(id == "NRE") sram = 32_KiB;    //Resident Evil 2
+  if(id == "NS4") sram = 32_KiB;    //Super Robot Taisen 64
+  if(id == "NAL") sram = 32_KiB;    //Super Smash Bros.
+  if(id == "NT3") sram = 32_KiB;    //Toukon Road 2
+  if(id == "NA2") sram = 32_KiB;    //Virtual Pro Wrestling 2
+  if(id == "NVP") sram = 32_KiB;    //Virtual Pro Wrestling 64
+  if(id == "NWL") sram = 32_KiB;    //Waialae Country Club: True Golf Classics
+  if(id == "NW2") sram = 32_KiB;    //WCW/NWO Revenge
+  if(id == "NWX") sram = 32_KiB;    //WWF WrestleMania 2000
 
   //96KB SRAM
-  if(id == "DZ") sram = 96_KiB;    //Dezaemon 3D
+  if(id == "CDZ") sram = 96_KiB;    //Dezaemon 3D
 
   //128KB Flash
-  if(id == "CC") flash = 128_KiB;  //Command & Conquer
-  if(id == "JF") flash = 128_KiB;  //Jet Force Gemini
-  if(id == "KJ") flash = 128_KiB;  //Ken Griffey Jr.'s Slugfest
-  if(id == "ZS") flash = 128_KiB;  //Legend of Zelda: Majora's Mask
-  if(id == "M6") flash = 128_KiB;  //Mega Man 64
-  if(id == "CK") flash = 128_KiB;  //NBA Courtside 2 featuring Kobe Bryant
-  if(id == "MQ") flash = 128_KiB;  //Paper Mario
-  if(id == "PN") flash = 128_KiB;  //Pokemon Puzzle League
-  if(id == "PF") flash = 128_KiB;  //Pokemon Snap
-  if(id == "PO") flash = 128_KiB;  //Pokemon Stadium
-  if(id == "P3") flash = 128_KiB;  //Pokemon Stadium 2
-  if(id == "SQ") flash = 128_KiB;  //StarCraft 64
-  if(id == "T9") flash = 128_KiB;  //Tigger's Honey Hunt
-  if(id == "W4") flash = 128_KiB;  //WWF No Mercy
+  if(id == "NCC") flash = 128_KiB;  //Command & Conquer
+  if(id == "NDA") flash = 128_KiB;  //Derby Stallion 64
+  if(id == "NAF") flash = 128_KiB;  //Doubutsu no Mori
+  if(id == "NJF") flash = 128_KiB;  //Jet Force Gemini
+  if(id == "NKJ") flash = 128_KiB;  //Ken Griffey Jr.'s Slugfest
+  if(id == "NZS") flash = 128_KiB;  //Legend of Zelda: Majora's Mask
+  if(id == "NM6") flash = 128_KiB;  //Mega Man 64
+  if(id == "NCK") flash = 128_KiB;  //NBA Courtside 2 featuring Kobe Bryant
+  if(id == "NMQ") flash = 128_KiB;  //Paper Mario
+  if(id == "NPN") flash = 128_KiB;  //Pokemon Puzzle League
+  if(id == "NPF") flash = 128_KiB;  //Pokemon Snap
+  if(id == "NPO") flash = 128_KiB;  //Pokemon Stadium
+  if(id == "CP2") flash = 128_KiB;  //Pokemon Stadium 2 (Japan)
+  if(id == "NP3") flash = 128_KiB;  //Pokemon Stadium 2
+  if(id == "NRH") flash = 128_KiB;  //Rockman Dash
+  if(id == "NSQ") flash = 128_KiB;  //StarCraft 64
+  if(id == "NT9") flash = 128_KiB;  //Tigger's Honey Hunt
+  if(id == "NW4") flash = 128_KiB;  //WWF No Mercy
   //unlicensed
-  if(id == "DP") flash = 128_KiB;  //Dinosaur Planet
+  if(id == "NDP") flash = 128_KiB;  //Dinosaur Planet
+
+  //Special case for first Japanese revisions of Kirby 64, overrides earlier entry
+  if(id == "NK4" && region_code == 'J' && revision < 2) {
+    eeprom = 0;
+    flash = 128_KiB;
+  }
 
   string s;
   s += "game\n";
-  s +={"  name:   ", Medium::name(location), "\n"};
-  s +={"  title:  ", Medium::name(location), "\n"};
-  s +={"  region: ", region, "\n"};
-  s +={"  id:     ", id, "\n"};
+  s +={"  name:     ", Medium::name(location), "\n"};
+  s +={"  title:    ", Medium::name(location), "\n"};
+  s +={"  region:   ", region, "\n"};
+  s +={"  id:       ", id, region_code, "\n"};
+  if(revision < 4) {
+  s +={"  revision: 1.", revision, "\n"};
+  }
   s += "  board\n";
   s +={"    cic: ", cic, "\n"};
   s += "    memory\n";
