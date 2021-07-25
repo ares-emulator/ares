@@ -190,8 +190,8 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
       for(auto& inputNode : inputDevice.inputs) {
         if(inputNode.name != input->name()) continue;
         if(auto button = input->cast<ares::Node::Input::Button>()) {
-          auto value = inputNode.mapping->value();
-          return button->setValue(value);
+          auto pressed = inputNode.mapping->pressed();
+          return button->setValue(pressed);
         }
         if(auto axis = input->cast<ares::Node::Input::Axis>()) {
           auto value = inputNode.mapping->value();
