@@ -163,6 +163,10 @@ auto InputDigital::value() -> s16 {
   return result;
 }
 
+auto InputDigital::pressed() -> bool {
+  return value() != 0;
+}
+
 //
 
 auto InputAnalog::bind(u32 binding, shared_pointer<HID::Device> device, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool {
@@ -226,6 +230,10 @@ auto InputAnalog::value() -> s16 {
   }
 
   return sclamp<16>(result);
+}
+
+auto InputAnalog::pressed() -> bool {
+  return value() > 16384;
 }
 
 //

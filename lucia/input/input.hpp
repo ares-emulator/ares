@@ -10,6 +10,7 @@ struct InputMapping {
 
   virtual auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool = 0;
   virtual auto value() -> s16 = 0;
+  virtual auto pressed() -> bool { return false; }
 
   string assignments[BindingLimit];
 
@@ -31,6 +32,7 @@ struct InputDigital : InputMapping {
   using InputMapping::bind;
   auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
+  auto pressed() -> bool override;
 };
 
 //0 ... +32767
@@ -38,6 +40,7 @@ struct InputAnalog : InputMapping {
   using InputMapping::bind;
   auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
+  auto pressed() -> bool override;
 };
 
 //-32768 ... +32767
