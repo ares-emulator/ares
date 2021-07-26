@@ -35,8 +35,8 @@ auto Z80::power(MOSFET mosfet) -> void {
 }
 
 auto Z80::irq(bool maskable, n16 pc, n8 extbus) -> bool {
-  if(EI) return false;  //do not execute interrupts immediately after EI instruction
-  if(maskable && !IFF1) return false;
+  //do not execute maskable interrupts if disabled or immediately after EI instruction
+  if(maskable && (!IFF1 || EI)) return false;
   R.bit(0,6)++;
 
   push(PC);
