@@ -217,7 +217,9 @@ auto Z80::instructionDJNZ_e() -> void { Q = 0;
 }
 
 auto Z80::instructionEI() -> void { Q = 0;
-  EI = 1;  //raise IFF1, IFF2 after the next instruction
+  IFF1 = 1;
+  IFF2 = 1;
+  EI = 1;  //ignore maskable interrupts until after the next instruction
 }
 
 auto Z80::instructionEX_irr_rr(n16& x, n16& y) -> void { Q = 0;
