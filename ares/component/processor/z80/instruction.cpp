@@ -1,11 +1,6 @@
 auto Z80::instruction() -> void {
+  EI = 0;
   P = 0;
-
-  if(EI) {
-    EI = 0;
-    IFF1 = 1;
-    IFF2 = 1;
-  }
 
   if(HALT) {
     return wait(1);
