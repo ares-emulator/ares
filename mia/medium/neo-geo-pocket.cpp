@@ -55,7 +55,13 @@ auto NeoGeoPocket::analyze(vector<u8>& rom) -> string {
     //underdump: ROM is 4mbit, but should be 16mbit (this matters for flash ROM emulation)
     rom.resize(0x200000, 0xff);
   }
-
+  
+  //Delta Warp (Japan)
+  if(hash == "4a6412482dc5eb2669913ce002edfa08d4672e4afe109496bed5f432a8ceff82	") {
+    //underdump: ROM is 4mbit, but should be 8mbit (this matters for flash ROM emulation)
+    rom.resize(0x100000, 0xff);
+  }
+  
   string s;
   s += "game\n";
   s +={"  sha256: ", hash, "\n"};
