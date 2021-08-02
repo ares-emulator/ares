@@ -34,8 +34,7 @@ auto TMS9918::Sprite::run(n8 hoffset, n8 voffset) -> void {
   output = {};
 
   n4 color;
-  n4 hlimit = (8 << io.zoom) - 1;
-  n5 vlimit = (8 << io.zoom << io.size) - 1;
+  n5 hlimit = (8 << io.zoom << io.size) - 1, vlimit = hlimit;
 
   for(auto& o : objects) {
     if(o.y == 0xd0) continue;

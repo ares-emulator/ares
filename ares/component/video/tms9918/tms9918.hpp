@@ -21,6 +21,7 @@ struct TMS9918 {
   auto unload() -> void;
 
   auto main() -> void;
+  auto poll() -> void;
   auto power() -> void;
 
   //io.cpp

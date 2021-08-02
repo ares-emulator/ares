@@ -93,7 +93,7 @@ ares currently emulates the following 27 hardware devices:
   <td><a href="docs/images/gallery/colecovision_frogger.png">ColecoVision</a></td>
 </tr>
 <tr>
-  <td><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/starless-small.png" alt=""></td>
+  <td><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""></td>
   <td><a href="docs/images/gallery/neo-geo-pocket_samurai-shodown.png">Neo Geo Pocket</a> + <a href="docs/images/gallery/neo-geo-pocket-color_last-blade.png">Neo Geo Pocket Color</a></td>
 </tr>
 <tr>

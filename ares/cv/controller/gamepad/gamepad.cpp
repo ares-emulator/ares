@@ -53,7 +53,7 @@ auto Gamepad::read() -> n8 {
     xHold = 1, swap(leftLatch, rightLatch);
   }
 
-  n8 data = 0xff;
+  n8 data = 0x7f;
   if(select == 0) {
          if(one->value  ()) data.bit(0,3) = 0b1101;
     else if(two->value  ()) data.bit(0,3) = 0b0111;

@@ -11,7 +11,7 @@ auto TMS9918::status() -> n8 {
   sprite.io.collision = 0;
   sprite.io.overflow = 0;
   irqFrame.pending = 0;
-  irq(0);
+  poll();
 
   return data;
 }
@@ -56,7 +56,7 @@ auto TMS9918::register(n3 register, n8 data) -> void {
     irqFrame.enable      = data.bit(5);
     dac.io.displayEnable = data.bit(6);
     io.vramMode          = data.bit(7);
-    if(!irqFrame.enable) irqFrame.pending = 0;
+    poll();
     break;
 
   case 2:
