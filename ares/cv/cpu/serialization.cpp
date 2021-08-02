@@ -3,6 +3,7 @@ auto CPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
   s(ram);
   s(expansion);
+  s(state.nmiPending);
   s(state.nmiLine);
   s(state.irqLine);
   s(io.replaceBIOS);
