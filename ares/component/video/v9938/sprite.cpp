@@ -101,8 +101,7 @@ auto V9938::Sprite::run(n8 x, n8 y) -> void {
 
 auto V9938::Sprite::sprite1(n8 hoffset, n8 voffset) -> void {
   n4 color;
-  n4 hlimit = (8 << io.zoom) - 1;
-  n5 vlimit = (8 << io.zoom << io.size) - 1;
+  n5 hlimit = (8 << io.zoom << io.size) - 1, vlimit = hlimit;
 
   for(auto& o : objects) {
     if(o.y == 0xd0) break;
@@ -126,8 +125,7 @@ auto V9938::Sprite::sprite1(n8 hoffset, n8 voffset) -> void {
 
 auto V9938::Sprite::sprite2(n8 hoffset, n8 voffset) -> void {
   n4 color;
-  n4 hlimit = (8 << io.zoom) - 1;
-  n5 vlimit = (8 << io.zoom << io.size) - 1;
+  n5 hlimit = (8 << io.zoom << io.size) - 1, vlimit = hlimit;
 
   for(auto& o : objects) {
     if(o.y == 0xd8) break;
