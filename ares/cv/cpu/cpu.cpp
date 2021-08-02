@@ -24,8 +24,8 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  if(state.nmiLine) {
-    state.nmiLine = 0;  //edge-sensitive
+  if(state.nmiPending) {
+    state.nmiPending = 0;  //edge-sensitive
     debugger.interrupt("NMI");
     irq(0, 0x0066, 0xff);
   }
@@ -46,6 +46,7 @@ auto CPU::step(uint clocks) -> void {
 }
 
 auto CPU::setNMI(bool value) -> void {
+  if(!state.nmiLine && value) state.nmiPending = 1;
   state.nmiLine = value;
 }
 

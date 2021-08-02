@@ -36,14 +36,18 @@ auto TMS9918::main() -> void {
 
   io.vcounter++;
   if(io.vcounter == 262) io.vcounter = 0;
-  if(io.vcounter ==   0) irqFrame.pending = 0;
-  if(io.vcounter == 192) irqFrame.pending = 1, irq(irqFrame.enable), frame();
+  if(io.vcounter == 192) irqFrame.pending = 1, poll(), frame();
+}
+
+auto TMS9918::poll() -> void {
+  irq(irqFrame.pending && irqFrame.enable);
 }
 
 auto TMS9918::power() -> void {
   background.power();
   sprite.power();
   dac.power();
+  irqFrame = {};
   io = {};
 }
 

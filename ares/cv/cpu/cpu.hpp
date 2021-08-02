@@ -46,6 +46,7 @@ struct CPU : Z80, Z80::Bus, Thread {
 
 private:
   struct State {
+    bool nmiPending = 0;
     bool nmiLine = 0;
     bool irqLine = 0;
   } state;
