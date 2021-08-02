@@ -88,8 +88,7 @@ auto VDP::Sprite::graphics1(n8 hoffset, n9 voffset) -> void {
 }
 
 auto VDP::Sprite::graphics2(n8 hoffset, n9 voffset) -> void {
-  n4 hlimit = (8 << io.zoom) - 1;
-  n5 vlimit = (8 << io.zoom << io.size) - 1;
+  n5 hlimit = (8 << io.zoom << io.size) - 1, vlimit = hlimit;
   for(auto& o : objects) {
     if(o.y == 0xd0) continue;
     if(hoffset < o.x) continue;
