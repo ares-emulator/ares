@@ -37,12 +37,12 @@ using namespace nall;
 
 namespace ares {
   static const string Name       = "ares";
-  static const string Version    = "121a";
-  static const string Copyright  = "Near";
+  static const string Version    = "122";
+  static const string Copyright  = "ares team, Near";
   static const string License    = "ISC";
   static const string LicenseURI = "https://opensource.org/licenses/ISC";
-  static const string Website    = "ares.dev";
-  static const string WebsiteURI = "https://ares.dev";
+  static const string Website    = "GitHub";
+  static const string WebsiteURI = "https://github.com/higan-emu/ares";
 
   //incremented only when serialization format changes
   static const u32    SerializerSignature = 0x31545342;  //"BST1" (little-endian)
