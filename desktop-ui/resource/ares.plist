@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
   <key>CFBundleIdentifier</key>
-  <string>dev.ares.lucia</string>
+  <string>dev.ares.ares</string>
   <key>CFBundleDisplayName</key>
-  <string>lucia</string>
+  <string>ares</string>
   <key>CFBundleExecutable</key>
-  <string>lucia</string>
+  <string>ares</string>
   <key>CFBundleIconFile</key>
-  <string>lucia.icns</string>
+  <string>ares.icns</string>
   <key>NSHighResolutionCapable</key>
   <true/>
   <key>NSSupportsAutomaticGraphicsSwitching</key>

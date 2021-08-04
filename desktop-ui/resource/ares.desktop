@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=lucia
+Name=ares
 Comment=Emulator
-Exec=lucia
-Icon=lucia
+Exec=ares
+Icon=ares
 Terminal=false
 Type=Application
 Categories=Game;Emulator;

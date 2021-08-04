@@ -29,12 +29,12 @@ jobs:
     - name: Parallel-RDP
       run: make -j4 -C ares/n64/vulkan sync-upstream
     - name: Make
-      run: make -j4 -C lucia build=optimized local=false lto=true
+      run: make -j4 -C desktop-ui build=optimized local=false lto=true
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.program }}-${{ matrix.os.name }}
-        path: lucia/out/*
+        path: desktop-ui/out/*
 
      
   release:
@@ -63,7 +63,7 @@ jobs:
         bindir="${GITHUB_WORKSPACE}/bin"
 
         # Hack: Workaround for GitHub artifacts losing attributes.
-        chmod +x ${bindir}/ares-macos/lucia.app/Contents/MacOS/lucia
+        chmod +x ${bindir}/ares-macos/ares.app/Contents/MacOS/ares
 
         for os in windows macos
         do

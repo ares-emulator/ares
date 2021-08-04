@@ -1,4 +1,4 @@
-#include "lucia.hpp"
+#include "desktop-ui.hpp"
 
 namespace ruby {
   Video video;
@@ -15,13 +15,13 @@ auto locate(const string& name) -> string {
     if(inode::exists(location)) return location;
   #endif
 
-  directory::create({Path::userData(), "lucia/"});
-  return {Path::userData(), "lucia/", name};
+  directory::create({Path::userData(), "ares/"});
+  return {Path::userData(), "ares/", name};
 }
 
 #include <nall/main.hpp>
 auto nall::main(Arguments arguments) -> void {
-  Application::setName("lucia");
+  Application::setName("ares");
   Application::setScreenSaver(false);
 
   mia::setHomeLocation([]() -> string {
