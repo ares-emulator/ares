@@ -1,5 +1,6 @@
 ares
 ====
+[![License: ISP](https://img.shields.io/badge/License-ISC-blue.svg)](https://github.com/higan-emu/ares/blob/master/LICENSE)
 
 ![ares logo](https://user-images.githubusercontent.com/12163923/128292077-6194fb1e-95c1-424f-903f-d8640de85f83.png)
 
