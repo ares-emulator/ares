@@ -1,4 +1,4 @@
-#include "../lucia.hpp"
+#include "../desktop-ui.hpp"
 namespace Instances { Instance<Presentation> presentation; }
 Presentation& presentation = Instances::presentation();
 
@@ -158,9 +158,9 @@ Presentation::Presentation() {
     image logo{Resource::Ares::Logo};
     logo.shrink();
     AboutDialog()
-    .setName({ares::Name, "/lucia"})
+    .setName(ares::Name)
     .setLogo(logo)
-    .setDescription({ares::Name, "/lucia — a simplified multi-system emulator"})
+    .setDescription({ares::Name, " — a simplified multi-system emulator"})
     .setVersion(ares::Version)
     .setCopyright(ares::Copyright)
     .setLicense(ares::License, ares::LicenseURI)

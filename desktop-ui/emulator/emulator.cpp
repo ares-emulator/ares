@@ -1,4 +1,4 @@
-#include "../lucia.hpp"
+#include "../desktop-ui.hpp"
 #include "emulators.cpp"
 
 vector<shared_pointer<Emulator>> emulators;
@@ -21,7 +21,7 @@ auto Emulator::enumeratePorts(string name) -> vector<InputPort>& {
 }
 
 auto Emulator::location() -> string {
-  return {Path::userData(), "lucia/Saves/", name, "/"};
+  return {Path::userData(), "ares/Saves/", name, "/"};
 }
 
 auto Emulator::locate(const string& location, const string& suffix, const string& path, maybe<string> system) -> string {

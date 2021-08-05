@@ -1,4 +1,4 @@
-name := lucia
+name := ares
 build := optimized
 threaded := true
 openmp := false
@@ -28,7 +28,7 @@ ruby.path := ../ruby
 include $(ruby.path)/GNUmakefile
 
 hiro.path := ../hiro
-hiro.resource := resource/lucia.rc
+hiro.resource := resource/ares.rc
 include $(hiro.path)/GNUmakefile
 
 profile := performance
@@ -46,23 +46,23 @@ mia.objects := $(mia.objects:%=$(object.path)/%.o)
 $(object.path)/mia.o: $(mia.path)/mia.cpp
 $(object.path)/mia-resource.o: $(mia.path)/resource/resource.cpp
 
-lucia.path = ../lucia
+desktop-ui.path = ../desktop-ui
 
-lucia.objects += lucia lucia-resource lucia-input lucia-emulator lucia-program
-lucia.objects += lucia-presentation lucia-settings lucia-tools
-lucia.objects := $(lucia.objects:%=$(object.path)/%.o)
+desktop-ui.objects += desktop-ui desktop-ui-resource desktop-ui-input desktop-ui-emulator desktop-ui-program
+desktop-ui.objects += desktop-ui-presentation desktop-ui-settings desktop-ui-tools
+desktop-ui.objects := $(desktop-ui.objects:%=$(object.path)/%.o)
 
-$(object.path)/lucia.o: $(lucia.path)/lucia.cpp
-$(object.path)/lucia-resource.o: $(lucia.path)/resource/resource.cpp
-$(object.path)/lucia-input.o: $(lucia.path)/input/input.cpp
-$(object.path)/lucia-emulator.o: $(lucia.path)/emulator/emulator.cpp
-$(object.path)/lucia-program.o: $(lucia.path)/program/program.cpp
-$(object.path)/lucia-presentation.o: $(lucia.path)/presentation/presentation.cpp
-$(object.path)/lucia-settings.o: $(lucia.path)/settings/settings.cpp
-$(object.path)/lucia-tools.o: $(lucia.path)/tools/tools.cpp
+$(object.path)/desktop-ui.o: $(desktop-ui.path)/desktop-ui.cpp
+$(object.path)/desktop-ui-resource.o: $(desktop-ui.path)/resource/resource.cpp
+$(object.path)/desktop-ui-input.o: $(desktop-ui.path)/input/input.cpp
+$(object.path)/desktop-ui-emulator.o: $(desktop-ui.path)/emulator/emulator.cpp
+$(object.path)/desktop-ui-program.o: $(desktop-ui.path)/program/program.cpp
+$(object.path)/desktop-ui-presentation.o: $(desktop-ui.path)/presentation/presentation.cpp
+$(object.path)/desktop-ui-settings.o: $(desktop-ui.path)/settings/settings.cpp
+$(object.path)/desktop-ui-tools.o: $(desktop-ui.path)/tools/tools.cpp
 
-all.objects := $(libco.objects) $(ruby.objects) $(hiro.objects) $(ares.objects) $(mia.objects) $(lucia.objects)
-all.options := $(libco.options) $(ruby.options) $(hiro.options) $(ares.options) $(mia.options) $(lucia.options) $(options)
+all.objects := $(libco.objects) $(ruby.objects) $(hiro.objects) $(ares.objects) $(mia.objects) $(desktop-ui.objects)
+all.options := $(libco.options) $(ruby.options) $(hiro.options) $(ares.options) $(mia.options) $(desktop-ui.options) $(options)
 
 all: $(all.objects)
 	$(info Linking $(output.path)/$(name) ...)

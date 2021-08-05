@@ -1,4 +1,4 @@
-#include "../lucia.hpp"
+#include "../desktop-ui.hpp"
 #include "hotkeys.cpp"
 
 VirtualPort virtualPorts[2];

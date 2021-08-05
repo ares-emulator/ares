@@ -62,6 +62,7 @@ auto CPU::power() -> void {
   PC = 0x0000;  //reset vector address
   state = {};
   io = {};
+  ram.fill(0);
 }
 
 }
