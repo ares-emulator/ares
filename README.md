@@ -1,8 +1,10 @@
-# ares
-![image](https://user-images.githubusercontent.com/12163923/128292077-6194fb1e-95c1-424f-903f-d8640de85f83.png)
+ares
+====
+
+![ares logo](https://user-images.githubusercontent.com/12163923/128292077-6194fb1e-95c1-424f-903f-d8640de85f83.png)
 
 **ares** is a multi-system emulator that began development on October 14th, 2004.
-It is a descendent of [higan](https://github.com/higan-emu/higan) and [bsnes](https://github.com/bsnes-emu/bsnes/), and focuses on accuracy and preservation.
+It is a descendent of [higan](https://github.com/higan-emu/higan) and [bsnes](https://github.com/bsnes-emu/bsnes/), and focuses on accuracy, preservation and ease of use.
 
 Community
 -----------------
@@ -41,6 +43,7 @@ Only the latest nightly build is kept.
 
 Compiling instructions (for Windows x64)
 ----------------------------------------
+
 If you want to compile by yourself, it's also very easy to. Just follow these steps:
 
 1. You'll need both MinGW and .git installed in your system. If you already have, you can skip these steps:
