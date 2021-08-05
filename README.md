@@ -4,6 +4,13 @@
 **ares** is a multi-system emulator that began development on October 14th, 2004.
 It is a descendent of [higan](https://github.com/higan-emu/higan) and [bsnes](https://github.com/bsnes-emu/bsnes/), and focuses on accuracy and preservation.
 
+Community
+-----------------
+
+  - [Official git repository](https://github.com/higan-emu/ares)
+  - [Discussion Forum](https://helmet.kafuka.org/bboard/forum.php?id=6)
+  - [Discord Chat](https://discord.gg/xdsQRXfuCh)
+
 Official Releases
 -----------------
 
@@ -32,8 +39,8 @@ Nightly Builds
 Automated, untested builds of ares are available for Windows and macOS as a [pre-release](https://github.com/higan-emu/ares/releases/tag/nightly). 
 Only the latest nightly build is kept.
 
-Compiling instructions (for Windows x64):
---------------
+Compiling instructions (for Windows x64)
+----------------------------------------
 If you want to compile by yourself, it's also very easy to. Just follow these steps:
 
 1. You'll need both MinGW and .git installed in your system. If you already have, you can skip these steps:
