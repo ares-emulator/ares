@@ -6,13 +6,6 @@ ares
 **ares** is a multi-system emulator that began development on October 14th, 2004.
 It is a descendent of [higan](https://github.com/higan-emu/higan) and [bsnes](https://github.com/bsnes-emu/bsnes/), and focuses on accuracy, preservation and ease of use.
 
-Community
------------------
-
-  - [Official git repository](https://github.com/higan-emu/ares)
-  - [Discussion Forum](https://helmet.kafuka.org/bboard/forum.php?id=6)
-  - [Discord Chat](https://discord.gg/xdsQRXfuCh)
-
 Official Releases
 -----------------
 
@@ -40,28 +33,6 @@ Nightly Builds
 
 Automated, untested builds of ares are available for Windows and macOS as a [pre-release](https://github.com/higan-emu/ares/releases/tag/nightly). 
 Only the latest nightly build is kept.
-
-Compiling instructions (for Windows x64)
-----------------------------------------
-
-If you want to compile by yourself, it's also very easy to. Just follow these steps:
-
-1. You'll need both MinGW and .git installed in your system. If you already have, you can skip these steps:
-
-  I. Download MingGW x64 (http://mingw-w64.org/doku.php). Install and make sure that the following paths are in your enviroment table (you can check searching for "enviroment path" in your windows search and opening "Edit enviroment path").
-  ![image](https://user-images.githubusercontent.com/12163923/128291920-11b92486-c765-4064-abc1-630164b9f1d8.png)
-  ![image](https://user-images.githubusercontent.com/12163923/128292012-590136b4-5e90-4518-ac58-1b07b6839533.png)
-  
-  II. Download and install git (https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
-  
-2. Open a command prompt in your directory of choice and clone bsnes/higan/ares with the command:
-`git clone https://github.com/higan-emu/ares.git`
-
-3. Go to `desktop-ui` folder with: `cd desktop-ui`.
-
-4. Now you just need to put the command: `mingw32-make`. The compilation will start.
-
-5. The brand new compiled file will be at directory `./out`. Enjoy!
 
 Systems:
 --------
