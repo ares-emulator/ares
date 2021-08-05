@@ -99,7 +99,7 @@ Systems:
 </tr>
 <tr>
   <td><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/starless-small.png" alt=""><img src="docs/images/starless-small.png" alt=""></td>
-  <td><a href="docs/images/gallery/mega-drive_sonic-3.png">Mega Drive</a> + <a href="docs/images/gallery/mega-32x_chaotix.png">Mega 32X</a> + <a href="docs/images/gallery/mega-cd_lunar-silver-star-small.png">Mega CD</a></td>
+  <td><a href="docs/images/gallery/mega-drive_sonic-3.png">Mega Drive</a> + <a href="docs/images/gallery/mega-32x_chaotix.png">Mega 32X</a> + <a href="docs/images/gallery/mega-cd_lunar-silver-star.png">Mega CD</a></td>
 </tr>
 <tr>
   <td><img src="docs/images/star-small.png" alt=""><img src="docs/images/starless-small.png" alt=""><img src="docs/images/starless-small.png" alt=""><img src="docs/images/starless-small.png" alt=""></td>
