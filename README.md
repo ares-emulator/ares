@@ -2,7 +2,7 @@
 ![image](https://user-images.githubusercontent.com/12163923/128292077-6194fb1e-95c1-424f-903f-d8640de85f83.png)
 
 **ares** is a multi-system emulator that began development on October 14th, 2004.
-It is a descendent of higan and bsnes, and focuses on accuracy and preservation.
+It is a descendent of [higan](https://github.com/higan-emu/higan) and [bsnes](https://github.com/bsnes-emu/bsnes/), and focuses on accuracy and preservation.
 
 Official Releases
 -----------------
