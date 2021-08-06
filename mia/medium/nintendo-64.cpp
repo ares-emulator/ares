@@ -298,6 +298,12 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NW2") sram = 32_KiB;    //WCW/NWO Revenge
   if(id == "NWX") sram = 32_KiB;    //WWF WrestleMania 2000
 
+  //Special case for first Japanese revisions of Kirby 64, overrides earlier entry
+  if(id == "NK4" && region_code == 'J' && revision < 2) {
+    eeprom = 0;
+    sram = 32_KiB;
+  }
+
   //96KB SRAM
   if(id == "CDZ") sram = 96_KiB;    //Dezaemon 3D
 
@@ -322,12 +328,6 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NW4") flash = 128_KiB;  //WWF No Mercy
   //unlicensed
   if(id == "NDP") flash = 128_KiB;  //Dinosaur Planet
-
-  //Special case for first Japanese revisions of Kirby 64, overrides earlier entry
-  if(id == "NK4" && region_code == 'J' && revision < 2) {
-    eeprom = 0;
-    flash = 128_KiB;
-  }
 
   string s;
   s += "game\n";
