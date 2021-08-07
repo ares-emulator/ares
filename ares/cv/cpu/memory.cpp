@@ -4,7 +4,7 @@ auto CPU::read(n16 address) -> n8 {
   if(address >= 0x2000 && address <= 0x7fff && io.replaceRAM ) return expansion.read(address);
   if(address >= 0x0000 && address <= 0x1fff) return system.bios[address & 0x1fff];
   if(address >= 0x6000 && address <= 0x7fff) return ram.read(address - 0x6000);
-  if(address >= 0x8000 && address <= 0xffff) return cartridge.rom.read(address - 0x8000);
+  if(address >= 0x8000 && address <= 0xffff) return cartridge.read(address - 0x8000);
   return data;
 }
 
