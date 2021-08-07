@@ -382,34 +382,67 @@ auto InputRumble::rumble(bool enable) -> void {
 //
 
 VirtualPad::VirtualPad() {
-  InputDevice::name = "Xbox 360 Gamepad";
-  InputDevice::digital("Up",      up);
-  InputDevice::digital("Down",    down);
-  InputDevice::digital("Left",    left);
-  InputDevice::digital("Right",   right);
-  InputDevice::digital("Select",  select);
-  InputDevice::digital("Start",   start);
-  InputDevice::digital("A",       a);
-  InputDevice::digital("B",       b);
-  InputDevice::digital("C",       c);
-  InputDevice::digital("X",       x);
-  InputDevice::digital("Y",       y);
-  InputDevice::digital("Z",       z);
-  InputDevice::digital("L1",      l1);
-  InputDevice::digital("R1",      r1);
-  InputDevice::digital("L2",      l2);
-  InputDevice::digital("R2",      r2);
-  InputDevice::digital("LT",      lt);
-  InputDevice::digital("RT",      rt);
-  InputDevice::analog ("L-Up",    lup);
-  InputDevice::analog ("L-Down",  ldown);
-  InputDevice::analog ("L-Left",  lleft);
-  InputDevice::analog ("L-Right", lright);
-  InputDevice::analog ("R-Up",    rup);
-  InputDevice::analog ("R-Down",  rdown);
-  InputDevice::analog ("R-Left",  rleft);
-  InputDevice::analog ("R-Right", rright);
-  InputDevice::rumble ("Rumble",  rumble);
+  InputDevice::name = "Default Gamepad";
+
+  // Digital Pad
+  InputDevice::digital("D-Up",    up);
+  InputDevice::digital("D-Down",  down);
+  InputDevice::digital("D-Left",  left);
+  InputDevice::digital("D-Right", right);
+
+  // Option buttons
+  InputDevice::digital("Select", select);
+  InputDevice::digital("Start",  start);
+  InputDevice::digital("Mode",   mode);
+
+  // Bottom Row buttons
+  InputDevice::digital("B1", b1);
+  InputDevice::digital("B2", b2);
+  InputDevice::digital("B3", b3);
+
+  // Top Row buttons
+  InputDevice::digital("T1", t1);
+  InputDevice::digital("T2", t2);
+  InputDevice::digital("T3", t3);
+
+  // Shoulder buttons
+  InputDevice::digital("Shoulder-L1", l1);
+  InputDevice::digital("Shoulder-R1", r1);
+  InputDevice::digital("Shoulder-L2", l2);
+  InputDevice::digital("Shoulder-R2", r2);
+
+  // Trigger buttons
+  InputDevice::digital("TriggerLeft",  lt);
+  InputDevice::digital("TriggerRight", rt);
+
+  // Analog joystick
+  InputDevice::analog("LAnalog-Up",     lup);
+  InputDevice::analog("LAnalog-Down",   ldown);
+  InputDevice::analog("LAnalog-Left",   lleft);
+  InputDevice::analog("LAnalog-Right",  lright);
+  InputDevice::digital("LAnalog-Thumb", thumbl); //Necessary for Dual Shock control
+  InputDevice::analog("RAnalog-Up",     rup);
+  InputDevice::analog("RAnalog-Down",   rdown);
+  InputDevice::analog("RAnalog-Left",   rleft);
+  InputDevice::analog("RAnalog-Right",  rright);
+  InputDevice::digital("RAnalog-Thumb", thumbr); //Necessary for Dual Shock control
+
+  // NumPad
+  InputDevice::digital("Numpad-0",        zero);
+  InputDevice::digital("Numpad-1",        one);
+  InputDevice::digital("Numpad-2",        two);
+  InputDevice::digital("Numpad-3",        three);
+  InputDevice::digital("Numpad-4",        four);
+  InputDevice::digital("Numpad-5",        five);
+  InputDevice::digital("Numpad-6",        six);
+  InputDevice::digital("Numpad-7",        seven);
+  InputDevice::digital("Numpad-8",        eight);
+  InputDevice::digital("Numpad-9",        nine);
+  InputDevice::digital("Numpad-Asterisk", asterisk);
+  InputDevice::digital("Numpad-Pound",    pound);
+
+  // Rumble
+  InputDevice::rumble("Rumble", rumble);                        
 }
 
 //

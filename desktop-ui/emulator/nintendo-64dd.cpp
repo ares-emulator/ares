@@ -15,33 +15,33 @@ Nintendo64DD::Nintendo64DD() {
 
   firmware.append({"BIOS", "Japan"});
 
-  for(auto id : range(2)) {
+  for(auto id : range(4)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
   { InputDevice device{"Gamepad"};
-    device.analog ("L-Up",    virtualPorts[id].pad.lup);
-    device.analog ("L-Down",  virtualPorts[id].pad.ldown);
-    device.analog ("L-Left",  virtualPorts[id].pad.lleft);
-    device.analog ("L-Right", virtualPorts[id].pad.lright);
-    device.digital("Up",      virtualPorts[id].pad.up);
-    device.digital("Down",    virtualPorts[id].pad.down);
-    device.digital("Left",    virtualPorts[id].pad.left);
-    device.digital("Right",   virtualPorts[id].pad.right);
-    device.digital("B",       virtualPorts[id].pad.a);
-    device.digital("A",       virtualPorts[id].pad.b);
-    device.digital("C-Up",    virtualPorts[id].pad.rup);
-    device.digital("C-Down",  virtualPorts[id].pad.rdown);
-    device.digital("C-Left",  virtualPorts[id].pad.rleft);
-    device.digital("C-Right", virtualPorts[id].pad.rright);
-    device.digital("L",       virtualPorts[id].pad.l1);
-    device.digital("R",       virtualPorts[id].pad.r1);
-    device.digital("Z",       virtualPorts[id].pad.z);
-    device.digital("Start",   virtualPorts[id].pad.start);
-    device.rumble ("Rumble",  virtualPorts[id].pad.rumble);
-    device.analog ("X-Axis",  virtualPorts[id].pad.lleft, virtualPorts[id].pad.lright);
-    device.analog ("Y-Axis",  virtualPorts[id].pad.lup,   virtualPorts[id].pad.ldown);
-    port.append(device); }
-
+    device.analog ("Analog-Up",    virtualPorts[id].pad.lup);
+    device.analog ("Analog-Down",  virtualPorts[id].pad.ldown);
+    device.analog ("Analog-Left",  virtualPorts[id].pad.lleft);
+    device.analog ("Analog-Right", virtualPorts[id].pad.lright);
+    device.digital("Up",           virtualPorts[id].pad.up);
+    device.digital("Down",         virtualPorts[id].pad.down);
+    device.digital("Left",         virtualPorts[id].pad.left);
+    device.digital("Right",        virtualPorts[id].pad.right);
+    device.digital("B",            virtualPorts[id].pad.b2);
+    device.digital("A",            virtualPorts[id].pad.b1);
+    device.digital("C-Up",         virtualPorts[id].pad.rup);
+    device.digital("C-Down",       virtualPorts[id].pad.rdown);
+    device.digital("C-Left",       virtualPorts[id].pad.rleft);
+    device.digital("C-Right",      virtualPorts[id].pad.rright);
+    device.digital("L",            virtualPorts[id].pad.l1);
+    device.digital("R",            virtualPorts[id].pad.r1);
+    device.digital("Z",            virtualPorts[id].pad.l2);
+    device.digital("Start",        virtualPorts[id].pad.start);
+    device.rumble ("Rumble",       virtualPorts[id].pad.rumble);
+    device.analog ("X-Axis",       virtualPorts[id].pad.lleft, virtualPorts[id].pad.lright);
+    device.analog ("Y-Axis",       virtualPorts[id].pad.lup,   virtualPorts[id].pad.ldown);
+    port.append(device); }     
+     
     ports.append(port);
   }
 }

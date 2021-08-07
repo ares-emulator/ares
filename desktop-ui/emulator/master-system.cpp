@@ -17,24 +17,25 @@ MasterSystem::MasterSystem() {
 
   { InputPort port{"Master System"};
 
-  { InputDevice device{"Controls"};
-    device.digital("Pause", virtualPorts[0].pad.start);
-    device.digital("Reset", virtualPorts[0].pad.rt);
-    port.append(device); }
-
-    ports.append(port);
-  }
-
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
+//Sega Master System/Mark III 
   { InputDevice device{"Gamepad"};
     device.digital("Up",    virtualPorts[id].pad.up);
     device.digital("Down",  virtualPorts[id].pad.down);
     device.digital("Left",  virtualPorts[id].pad.left);
     device.digital("Right", virtualPorts[id].pad.right);
-    device.digital("1",     virtualPorts[id].pad.a);
-    device.digital("2",     virtualPorts[id].pad.b);
+    device.digital("1",     virtualPorts[id].pad.b1);
+    device.digital("2",     virtualPorts[id].pad.b2);
+    port.append(device); }
+
+    ports.append(port);
+  }
+
+  { InputDevice device{"Controls"};
+    device.digital("Pause", virtualPorts[0].pad.start);
+    device.digital("Reset", virtualPorts[0].pad.mode);
     port.append(device); }
 
     ports.append(port);

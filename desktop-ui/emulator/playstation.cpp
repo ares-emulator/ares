@@ -24,10 +24,10 @@ PlayStation::PlayStation() {
     device.digital("Down",     virtualPorts[id].pad.down);
     device.digital("Left",     virtualPorts[id].pad.left);
     device.digital("Right",    virtualPorts[id].pad.right);
-    device.digital("Cross",    virtualPorts[id].pad.a);
-    device.digital("Circle",   virtualPorts[id].pad.b);
-    device.digital("Square",   virtualPorts[id].pad.x);
-    device.digital("Triangle", virtualPorts[id].pad.y);
+    device.digital("Cross",    virtualPorts[id].pad.b1);
+    device.digital("Circle",   virtualPorts[id].pad.b2);
+    device.digital("Square",   virtualPorts[id].pad.t1);
+    device.digital("Triangle", virtualPorts[id].pad.t2);
     device.digital("L1",       virtualPorts[id].pad.l1);
     device.digital("L2",       virtualPorts[id].pad.l2);
     device.digital("R1",       virtualPorts[id].pad.r1);
@@ -35,6 +35,32 @@ PlayStation::PlayStation() {
     device.digital("Select",   virtualPorts[id].pad.select);
     device.digital("Start",    virtualPorts[id].pad.start);
     port.append(device); }
+  
+    // Skeleton dual-shock controller support
+    // { InputDevice device{"Dual Shock Controller"};
+    // device.analog ("Analog Up",       virtualPorts[id].pad.lup);
+    // device.analog ("Analog Down",     virtualPorts[id].pad.ldown);
+    // device.analog ("Analog Left",     virtualPorts[id].pad.lleft);
+    // device.analog ("Analog Right",    virtualPorts[id].pad.lright);
+    // device.digital("Thumb Left",      virtualPorts[id].pad.thumbl);
+    // device.digital("Thumb Right",     virtualPorts[id].pad.thumbr);
+    // device.digital("Up",              virtualPorts[id].pad.up);
+    // device.digital("Down",            virtualPorts[id].pad.down);
+    // device.digital("Left",            virtualPorts[id].pad.left);
+    // device.digital("Right",           virtualPorts[id].pad.right);
+    // device.digital("Cross",           virtualPorts[id].pad.b1);
+    // device.digital("Circle",          virtualPorts[id].pad.b2);
+    // device.digital("Square",          virtualPorts[id].pad.t1);
+    // device.digital("Triangle",        virtualPorts[id].pad.t2);
+    // device.digital("L1",              virtualPorts[id].pad.l1);
+    // device.digital("L2",              virtualPorts[id].pad.l2);
+    // device.digital("R1",              virtualPorts[id].pad.r1);
+    // device.digital("R2",              virtualPorts[id].pad.r2);
+    // device.digital("Select",          virtualPorts[id].pad.select);
+    // device.digital("Start",           virtualPorts[id].pad.start);
+    // device.digital("Analog (button)", virtualPorts[id].pad.mode);
+    // device.rumble ("Rumble",          virtualPorts[id].pad.rumble);
+    // port.append(device); }
 
     ports.append(port);
   }

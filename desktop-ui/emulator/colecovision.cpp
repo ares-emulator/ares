@@ -14,27 +14,27 @@ ColecoVision::ColecoVision() {
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
-  { InputDevice device{"Gamepad"};
+//{ InputDevice device{"ColecoVision Joystick Controller with Numeric KeyPad"};
+{ InputDevice device{"Gamepad"};
     device.digital("Up",    virtualPorts[id].pad.up);
     device.digital("Down",  virtualPorts[id].pad.down);
     device.digital("Left",  virtualPorts[id].pad.left);
     device.digital("Right", virtualPorts[id].pad.right);
-    device.digital("L",     virtualPorts[id].pad.select);
-    device.digital("R",     virtualPorts[id].pad.start);
-    device.digital("1",     virtualPorts[id].pad.a);
-    device.digital("2",     virtualPorts[id].pad.b);
-    device.digital("3",     virtualPorts[id].pad.c);
-    device.digital("4",     virtualPorts[id].pad.x);
-    device.digital("5",     virtualPorts[id].pad.y);
-    device.digital("6",     virtualPorts[id].pad.z);
-    device.digital("7",     virtualPorts[id].pad.l1);
-    device.digital("8",     virtualPorts[id].pad.r1);
-    device.digital("9",     virtualPorts[id].pad.l2);
-    device.digital("*",     virtualPorts[id].pad.r2);
-    device.digital("0",     virtualPorts[id].pad.lt);
-    device.digital("#",     virtualPorts[id].pad.rt);
+    device.digital("L",     virtualPorts[id].pad.b1);
+    device.digital("R",     virtualPorts[id].pad.b2);
+    device.digital("1",     virtualPorts[id].pad.one);
+    device.digital("2",     virtualPorts[id].pad.two);
+    device.digital("3",     virtualPorts[id].pad.three);
+    device.digital("4",     virtualPorts[id].pad.four);
+    device.digital("5",     virtualPorts[id].pad.five);
+    device.digital("6",     virtualPorts[id].pad.six);
+    device.digital("7",     virtualPorts[id].pad.seven);
+    device.digital("8",     virtualPorts[id].pad.eight);
+    device.digital("9",     virtualPorts[id].pad.nine);
+    device.digital("*",     virtualPorts[id].pad.asterisk);
+    device.digital("0",     virtualPorts[id].pad.zero);
+    device.digital("#",     virtualPorts[id].pad.pound);
     port.append(device); }
-
     ports.append(port);
   }
 }

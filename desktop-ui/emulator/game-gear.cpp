@@ -19,8 +19,8 @@ GameGear::GameGear() {
     device.digital("Down",  virtualPorts[0].pad.down);
     device.digital("Left",  virtualPorts[0].pad.left);
     device.digital("Right", virtualPorts[0].pad.right);
-    device.digital("1",     virtualPorts[0].pad.a);
-    device.digital("2",     virtualPorts[0].pad.b);
+    device.digital("1",     virtualPorts[0].pad.b1);
+    device.digital("2",     virtualPorts[0].pad.b2);
     device.digital("Start", virtualPorts[0].pad.start);
     port.append(device); }
 

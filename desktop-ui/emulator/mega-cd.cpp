@@ -23,13 +23,13 @@ MegaCD::MegaCD() {
     device.digital("Down",  virtualPorts[id].pad.down);
     device.digital("Left",  virtualPorts[id].pad.left);
     device.digital("Right", virtualPorts[id].pad.right);
-    device.digital("A",     virtualPorts[id].pad.a);
-    device.digital("B",     virtualPorts[id].pad.b);
-    device.digital("C",     virtualPorts[id].pad.c);
-    device.digital("X",     virtualPorts[id].pad.x);
-    device.digital("Y",     virtualPorts[id].pad.y);
-    device.digital("Z",     virtualPorts[id].pad.z);
-    device.digital("Mode",  virtualPorts[id].pad.select);
+    device.digital("A",     virtualPorts[id].pad.b1);
+    device.digital("B",     virtualPorts[id].pad.b2);
+    device.digital("C",     virtualPorts[id].pad.b3);
+    device.digital("X",     virtualPorts[id].pad.t1);
+    device.digital("Y",     virtualPorts[id].pad.t2);
+    device.digital("Z",     virtualPorts[id].pad.t3);
+    device.digital("Mode",  virtualPorts[id].pad.mode);
     device.digital("Start", virtualPorts[id].pad.start);
     port.append(device); }
 

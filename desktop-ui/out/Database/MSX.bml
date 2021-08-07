@@ -1,0 +1,14 @@
+database
+  revision: 2021-07-10
+
+game
+  sha256:   a93058238d63b05c8bd30498d695b3769b8d94b76ea7b24d55e2e9f32e270dac
+  title:    R-Type 
+  name:     R-Type
+  region:   NTSC
+  board:    ASC16
+    memory
+      type: ROM
+      size: 0x60000
+      content: Program
+

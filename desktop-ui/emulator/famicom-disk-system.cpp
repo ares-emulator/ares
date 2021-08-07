@@ -23,11 +23,11 @@ FamicomDiskSystem::FamicomDiskSystem() {
     device.digital("Down",       virtualPorts[id].pad.down);
     device.digital("Left",       virtualPorts[id].pad.left);
     device.digital("Right",      virtualPorts[id].pad.right);
-    device.digital("B",          virtualPorts[id].pad.a);
-    device.digital("A",          virtualPorts[id].pad.b);
+    device.digital("B",          virtualPorts[id].pad.b1);
+    device.digital("A",          virtualPorts[id].pad.b2);
     device.digital("Select",     virtualPorts[id].pad.select);
     device.digital("Start",      virtualPorts[id].pad.start);
-    device.digital("Microphone", virtualPorts[id].pad.x);
+    device.digital("Microphone", virtualPorts[id].pad.r1);
     port.append(device); }
 
     ports.append(port);

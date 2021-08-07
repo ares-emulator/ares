@@ -12,19 +12,19 @@ GameBoyColor::GameBoyColor() {
   { InputPort port{"Game Boy Color"};
 
   { InputDevice device{"Controls"};
-    device.digital("Up",      virtualPorts[0].pad.up);
-    device.digital("Down",    virtualPorts[0].pad.down);
-    device.digital("Left",    virtualPorts[0].pad.left);
-    device.digital("Right",   virtualPorts[0].pad.right);
-    device.digital("B",       virtualPorts[0].pad.a);
-    device.digital("A",       virtualPorts[0].pad.b);
-    device.digital("Select",  virtualPorts[0].pad.select);
-    device.digital("Start",   virtualPorts[0].pad.start);
-    device.analog ("A-Up",    virtualPorts[0].pad.lup);
-    device.analog ("A-Down",  virtualPorts[0].pad.ldown);
-    device.analog ("A-Left",  virtualPorts[0].pad.lleft);
-    device.analog ("A-Right", virtualPorts[0].pad.lright);
-    device.rumble ("Rumble",  virtualPorts[0].pad.rumble);
+    device.digital("Up",         virtualPorts[0].pad.up);
+    device.digital("Down",       virtualPorts[0].pad.down);
+    device.digital("Left",       virtualPorts[0].pad.left);
+    device.digital("Right",      virtualPorts[0].pad.right);
+    device.digital("B",          virtualPorts[0].pad.b1);
+    device.digital("A",          virtualPorts[0].pad.b2);
+    device.digital("Select",     virtualPorts[0].pad.select);
+    device.digital("Start",      virtualPorts[0].pad.start);
+    device.analog ("Tilt-Up",    virtualPorts[0].pad.lup);
+    device.analog ("Tilt-Down",  virtualPorts[0].pad.ldown);
+    device.analog ("Tilt-Left",  virtualPorts[0].pad.lleft);
+    device.analog ("Tilt-Right", virtualPorts[0].pad.lright);
+    device.rumble ("Rumble",     virtualPorts[0].pad.rumble);
     port.append(device); }
 
     ports.append(port);

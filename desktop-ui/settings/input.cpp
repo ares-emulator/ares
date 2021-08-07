@@ -2,7 +2,8 @@ auto InputSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
 
-  systemList.append(ComboButtonItem().setText("Virtual Gamepads"));
+  systemList.append(ComboButtonItem().setText("Virtual Gamepads"))
+  .setToolTip("The \"Virtual Gamepads\" combines most of the buttons from different button layouts across supported systems.\nD-Pad: Digital pads with each position.\nSelect, Start and Mode: 3 different option buttons that generally are located in the center of the pads.\nB1-3: The bottom row of the front buttons. Designs based in Super Famicom as Dual Shock controller, only have 2 buttons in each row. Arcade-based controllers as the Saturn controller, have 3.\nT1-3: The top row of the front buttons. The design idea is the buttons just over B1-3.\nShoulder-L1/R1/L2/R2: 1 means top and 2 means bottom. Names based on the original Playstation gamepad, are the shoulder buttons of the controllers.\nTriggerLeft, TriggerRight: Analog triggers such as RT and LT in XBox 360 controllers.\nLAnalog/RAnalog: This means respectively the left and right analog stick in the controllers.\nNumPad: Are the buttons in NumPads present in controllers such as ColecoVision, Atari 5200, Intellivision, and Atari Jaguar.\nRumble: The rumble function.");
   for(auto& emulator : emulators) {
     systemList.append(ComboButtonItem().setText(emulator->name));
   }

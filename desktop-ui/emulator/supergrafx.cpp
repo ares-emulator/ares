@@ -16,8 +16,8 @@ SuperGrafx::SuperGrafx() {
     device.digital("Down",   virtualPorts[0].pad.down);
     device.digital("Left",   virtualPorts[0].pad.left);
     device.digital("Right",  virtualPorts[0].pad.right);
-    device.digital("II",     virtualPorts[0].pad.a);
-    device.digital("I",      virtualPorts[0].pad.b);
+    device.digital("II",     virtualPorts[0].pad.b1);
+    device.digital("I",      virtualPorts[0].pad.b2);
     device.digital("Select", virtualPorts[0].pad.select);
     device.digital("Run",    virtualPorts[0].pad.start);
     port.append(device); }

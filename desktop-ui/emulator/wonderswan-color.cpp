@@ -21,8 +21,8 @@ WonderSwanColor::WonderSwanColor() {
     device.digital("X2",    virtualPorts[0].pad.right);
     device.digital("X3",    virtualPorts[0].pad.down);
     device.digital("X4",    virtualPorts[0].pad.left);
-    device.digital("B",     virtualPorts[0].pad.a);
-    device.digital("A",     virtualPorts[0].pad.b);
+    device.digital("B",     virtualPorts[0].pad.b1);
+    device.digital("A",     virtualPorts[0].pad.b2);
     device.digital("Start", virtualPorts[0].pad.start);
     port.append(device); }
 

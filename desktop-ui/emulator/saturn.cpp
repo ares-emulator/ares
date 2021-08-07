@@ -14,6 +14,27 @@ Saturn::Saturn() {
   firmware.append({"BIOS", "US"});      //NTSC-U
   firmware.append({"BIOS", "Japan"});   //NTSC-J
   firmware.append({"BIOS", "Europe"});  //PAL
+
+  for(auto id : range(2)) {
+  InputPort port{string{"Controller Port ", 1 + id}};
+
+  // Saturn controller skeleton
+  // { InputDevice device{"Gamepad"};
+  //   device.digital("Up",    virtualPorts[id].pad.up);
+  //   device.digital("Down",  virtualPorts[id].pad.down);
+  //   device.digital("Left",  virtualPorts[id].pad.left);
+  //   device.digital("Right", virtualPorts[id].pad.right);
+  //   device.digital("A",     virtualPorts[id].pad.b1);
+  //   device.digital("B",     virtualPorts[id].pad.b2);
+  //   device.digital("C",     virtualPorts[id].pad.b3);
+  //   device.digital("X",     virtualPorts[id].pad.t1);
+  //   device.digital("Y",     virtualPorts[id].pad.t2);
+  //   device.digital("Z",     virtualPorts[id].pad.t3);
+  //   device.digital("Start", virtualPorts[id].pad.start);
+  //   port.append(device); }
+
+  //   ports.append(port);
+  }
 }
 
 auto Saturn::load() -> bool {

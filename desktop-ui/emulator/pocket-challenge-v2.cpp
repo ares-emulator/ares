@@ -17,9 +17,9 @@ PocketChallengeV2::PocketChallengeV2() {
     device.digital("Down",   virtualPorts[0].pad.down);
     device.digital("Left",   virtualPorts[0].pad.left);
     device.digital("Right",  virtualPorts[0].pad.right);
-    device.digital("Pass",   virtualPorts[0].pad.a);
-    device.digital("Circle", virtualPorts[0].pad.b);
-    device.digital("Clear",  virtualPorts[0].pad.y);
+    device.digital("Pass",   virtualPorts[0].pad.b1);
+    device.digital("Circle", virtualPorts[0].pad.b2);
+    device.digital("Clear",  virtualPorts[0].pad.t1);
     device.digital("View",   virtualPorts[0].pad.start);
     device.digital("Escape", virtualPorts[0].pad.select);
     port.append(device); }

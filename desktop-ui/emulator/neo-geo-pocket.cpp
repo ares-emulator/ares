@@ -18,11 +18,11 @@ NeoGeoPocket::NeoGeoPocket() {
     device.digital("Down",     virtualPorts[0].pad.down);
     device.digital("Left",     virtualPorts[0].pad.left);
     device.digital("Right",    virtualPorts[0].pad.right);
-    device.digital("A",        virtualPorts[0].pad.a);
-    device.digital("B",        virtualPorts[0].pad.b);
+    device.digital("A",        virtualPorts[0].pad.b1);
+    device.digital("B",        virtualPorts[0].pad.b2);
     device.digital("Option",   virtualPorts[0].pad.start);
-    device.digital("Power",    virtualPorts[0].pad.lt);
-    device.digital("Debugger", virtualPorts[0].pad.rt);
+    device.digital("Power",    virtualPorts[0].pad.select);
+    device.digital("Debugger", virtualPorts[0].pad.mode);
     port.append(device); }
 
     ports.append(port);
