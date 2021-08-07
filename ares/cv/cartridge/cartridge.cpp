@@ -38,4 +38,9 @@ auto Cartridge::save() -> void {
 auto Cartridge::power() -> void {
 }
 
+auto Cartridge::read(n16 address) -> n8 {
+  if(address >= rom.size()) return 0xff;
+  return rom.read(address);
+}
+
 }

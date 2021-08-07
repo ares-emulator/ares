@@ -13,10 +13,12 @@ struct Cartridge {
   auto save() -> void;
   auto power() -> void;
 
+  auto read(n16 address) -> n8;
+
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
-//private:
+private:
   struct Information {
     string title;
     string region;
