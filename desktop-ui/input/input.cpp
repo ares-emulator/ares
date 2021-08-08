@@ -411,21 +411,21 @@ VirtualPad::VirtualPad() {
   InputDevice::digital("Shoulder-L2", l2);
   InputDevice::digital("Shoulder-R2", r2);
 
-  // Trigger
-  InputDevice::digital("Trigger-Left",  lt);
-  InputDevice::digital("Trigger-Right", rt);
+  // Triggers
+  InputDevice::digital("Left-Trigger",  lt);
+  InputDevice::digital("Right-Trigger", rt);
 
   // Analog joystick
   InputDevice::analog("LAnalog-Up",     lup);
   InputDevice::analog("LAnalog-Down",   ldown);
   InputDevice::analog("LAnalog-Left",   lleft);
   InputDevice::analog("LAnalog-Right",  lright);
-  InputDevice::digital("LAnalog-Thumb", thumbl); // Required for Dual Shock support
+  InputDevice::digital("LAnalog-Thumb", lthumb); // Required for Dual Shock support
   InputDevice::analog("RAnalog-Up",     rup);
   InputDevice::analog("RAnalog-Down",   rdown);
   InputDevice::analog("RAnalog-Left",   rleft);
   InputDevice::analog("RAnalog-Right",  rright);
-  InputDevice::digital("RAnalog-Thumb", thumbr); // Required for Dual Shock support
+  InputDevice::digital("RAnalog-Thumb", rthumb); // Required for Dual Shock support
 
   // NumPad
   InputDevice::digital("Numpad-0",        zero);
