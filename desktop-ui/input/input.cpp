@@ -411,9 +411,9 @@ VirtualPad::VirtualPad() {
   InputDevice::digital("Shoulder-L2", l2);
   InputDevice::digital("Shoulder-R2", r2);
 
-  // Trigger buttons
-  InputDevice::digital("TriggerLeft",  lt);
-  InputDevice::digital("TriggerRight", rt);
+  // Trigger
+  InputDevice::digital("Trigger-Left",  lt);
+  InputDevice::digital("Trigger-Right", rt);
 
   // Analog joystick
   InputDevice::analog("LAnalog-Up",     lup);
