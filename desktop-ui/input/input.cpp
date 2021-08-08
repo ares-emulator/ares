@@ -420,12 +420,12 @@ VirtualPad::VirtualPad() {
   InputDevice::analog("LAnalog-Down",   ldown);
   InputDevice::analog("LAnalog-Left",   lleft);
   InputDevice::analog("LAnalog-Right",  lright);
-  InputDevice::digital("LAnalog-Thumb", thumbl); //Necessary for Dual Shock control
+  InputDevice::digital("LAnalog-Thumb", thumbl); // Required for Dual Shock control
   InputDevice::analog("RAnalog-Up",     rup);
   InputDevice::analog("RAnalog-Down",   rdown);
   InputDevice::analog("RAnalog-Left",   rleft);
   InputDevice::analog("RAnalog-Right",  rright);
-  InputDevice::digital("RAnalog-Thumb", thumbr); //Necessary for Dual Shock control
+  InputDevice::digital("RAnalog-Thumb", thumbr); // Required for Dual Shock control
 
   // NumPad
   InputDevice::digital("Numpad-0",        zero);
