@@ -396,14 +396,14 @@ VirtualPad::VirtualPad() {
   InputDevice::digital("Mode",   mode);
 
   // Bottom Row buttons
-  InputDevice::digital("B1", b1);
-  InputDevice::digital("B2", b2);
-  InputDevice::digital("B3", b3);
+  InputDevice::digital("Button-1", b1);
+  InputDevice::digital("Button-2", b2);
+  InputDevice::digital("Button-3", b3);
 
   // Top Row buttons
-  InputDevice::digital("T1", t1);
-  InputDevice::digital("T2", t2);
-  InputDevice::digital("T3", t3);
+  InputDevice::digital("Button-4", t1);
+  InputDevice::digital("Button-5", t2);
+  InputDevice::digital("Button-6", t3);
 
   // Shoulder buttons
   InputDevice::digital("Shoulder-L1", l1);
