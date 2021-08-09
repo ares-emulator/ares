@@ -26,8 +26,6 @@ jobs:
       run: |
         sudo apt-get update -y -qq
         sudo apt-get install libsdl2-dev libgtksourceview2.0-dev libgtk2.0-dev libao-dev libopenal-dev   
-    - name: Parallel-RDP
-      run: make -j4 -C ares/n64/vulkan sync-upstream
     - name: Make
       run: make -j4 -C desktop-ui build=optimized local=false lto=true
     - name: Upload
