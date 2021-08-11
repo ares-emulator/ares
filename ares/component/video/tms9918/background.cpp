@@ -71,7 +71,24 @@ auto TMS9918::Background::graphics2(n8 hoffset, n8 voffset) -> void {
 }
 
 auto TMS9918::Background::multicolor(n8 hoffset, n8 voffset) -> void {
-  debug(unimplemented, "[TMS9918::Background::multicolor]");
+  n14 nameAddress;
+  nameAddress.bit( 0, 4) = hoffset.bit(3,7);
+  nameAddress.bit( 5, 9) = voffset.bit(3,7);
+  nameAddress.bit(10,13) = io.nameTableAddress;
+
+  n8 pattern = self.vram.read(nameAddress);
+
+  n14 patternAddress;
+  patternAddress.bit( 0, 2) = voffset.bit(2,4);
+  patternAddress.bit( 3,10) = pattern;
+  patternAddress.bit(11,13) = io.patternTableAddress;
+
+  n8 color = self.vram.read(patternAddress);
+  if(hoffset.bit(2)) {
+    output.color = color.bit(0,3);
+  } else {
+    output.color = color.bit(4,7);
+  }
 }
 
 auto TMS9918::Background::power() -> void {
