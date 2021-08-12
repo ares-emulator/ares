@@ -38,16 +38,20 @@ PlayStation::PlayStation() {
   
     // Skeleton dual-shock controller support
     // { InputDevice device{"Dual Shock Controller"};
-    // device.analog ("Analog Up",       virtualPorts[id].pad.lup);
-    // device.analog ("Analog Down",     virtualPorts[id].pad.ldown);
-    // device.analog ("Analog Left",     virtualPorts[id].pad.lleft);
-    // device.analog ("Analog Right",    virtualPorts[id].pad.lright);
-    // device.digital("Thumb Left",      virtualPorts[id].pad.thumbl);
-    // device.digital("Thumb Right",     virtualPorts[id].pad.thumbr);
-    // device.digital("Up",              virtualPorts[id].pad.up);
-    // device.digital("Down",            virtualPorts[id].pad.down);
-    // device.digital("Left",            virtualPorts[id].pad.left);
-    // device.digital("Right",           virtualPorts[id].pad.right);
+    // device.digital("D-Pad Up",        virtualPorts[id].pad.up);
+    // device.digital("D-Pad Down",      virtualPorts[id].pad.down);
+    // device.digital("D-Pad Left",      virtualPorts[id].pad.left);
+    // device.digital("D-Pad Right",     virtualPorts[id].pad.right);
+    // device.analog ("LAnalog-Up",      virtualPorts[id].pad.lup);
+    // device.analog ("LAnalog-Down",    virtualPorts[id].pad.ldown);
+    // device.analog ("LAnalog-Left",    virtualPorts[id].pad.lleft);
+    // device.analog ("LAnalog-Right",   virtualPorts[id].pad.lright);
+    // device.digital("LAnalog-Thumb",   virtualPorts[id].pad.lthumbl);
+    // device.analog ("RAnalog-Up",      virtualPorts[id].pad.lup);
+    // device.analog ("RAnalog-Down",    virtualPorts[id].pad.ldown);
+    // device.analog ("RAnalog-Left",    virtualPorts[id].pad.lleft);
+    // device.analog ("RAnalog-Right",   virtualPorts[id].pad.lright);
+    // device.digital("RAnalog-Thumb",   virtualPorts[id].pad.rthumbl);
     // device.digital("Cross",           virtualPorts[id].pad.b1);
     // device.digital("Circle",          virtualPorts[id].pad.b2);
     // device.digital("Square",          virtualPorts[id].pad.t1);
