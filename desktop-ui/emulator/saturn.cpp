@@ -30,6 +30,8 @@ Saturn::Saturn() {
   //   device.digital("X",     virtualPorts[id].pad.t1);
   //   device.digital("Y",     virtualPorts[id].pad.t2);
   //   device.digital("Z",     virtualPorts[id].pad.t3);
+  //   device.digital("L",     virtualPorts[id].pad.l1);
+  //   device.digital("R",     virtualPorts[id].pad.r1);
   //   device.digital("Start", virtualPorts[id].pad.start);
   //   port.append(device); }
 
