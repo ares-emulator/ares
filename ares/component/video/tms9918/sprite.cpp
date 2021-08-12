@@ -6,10 +6,11 @@ auto TMS9918::Sprite::setup(n8 voffset) -> void {
   n14 attributeAddress;
   attributeAddress.bit(7,13) = io.attributeTableAddress;
   for(u32 index : range(32)) {
-    n8 y = self.vram.read(attributeAddress++);
+    i9 y = self.vram.read(attributeAddress++);
     if(y == 0xd0) break;
+    if(y >= 0xe0) y -= 0x100;
 
-    n8 x = self.vram.read(attributeAddress++);
+    i9 x = self.vram.read(attributeAddress++);
     n8 pattern = self.vram.read(attributeAddress++);
     n8 extra = self.vram.read(attributeAddress++);
 
