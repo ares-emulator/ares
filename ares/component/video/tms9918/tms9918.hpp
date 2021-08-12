@@ -74,8 +74,8 @@ protected:
     auto serialize(serializer&) -> void;
 
     struct Object {
-      n8 x;
-      n8 y = 0xd0;
+      i9 x;
+      i9 y = 0xd0;
       n8 pattern;
       n4 color;
     } objects[4];
