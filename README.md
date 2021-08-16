@@ -89,7 +89,7 @@ ares currently emulates the following 27 hardware devices:
   <td><a href="docs/images/gallery/msx_parodius.png">MSX</a> + <a href="docs/images/gallery/msx2_akumajou-dracula.png">MSX2</a></td>
 </tr>
 <tr>
-  <td><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/starless-small.png" alt=""></td>
+  <td><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""></td>
   <td><a href="docs/images/gallery/colecovision_frogger.png">ColecoVision</a></td>
 </tr>
 <tr>

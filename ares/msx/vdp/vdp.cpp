@@ -15,6 +15,7 @@ auto VDP::load(Node::Object parent) -> void {
     screen->setSize(256, 192);
     screen->setScale(1.0, 1.0);
     screen->setAspect(1.0, 1.0);
+    TMS9918::vram.allocate(16_KiB, 0x00);
     TMS9918::load(screen);
   }
 
@@ -24,6 +25,9 @@ auto VDP::load(Node::Object parent) -> void {
     screen->setSize(512, 424);
     screen->setScale(0.5, 0.5);
     screen->setAspect(1.0, 1.0);
+    V9938::vram.allocate(128_KiB, 0x00);
+    V9938::xram.allocate(64_KiB, 0x00);
+    V9938::pram.allocate(16);
     V9938::load(screen);
   }
 }
@@ -58,15 +62,11 @@ auto VDP::frame() -> void {
 
 auto VDP::power() -> void {
   if(Model::MSX()) {
-    TMS9918::vram.allocate(16_KiB);
     TMS9918::power();
     Thread::create(system.colorburst() * 2, [&] { TMS9918::main(); });
   }
 
   if(Model::MSX2()) {
-    V9938::vram.allocate(128_KiB);
-    V9938::xram.allocate(64_KiB);
-    V9938::pram.allocate(16);
     V9938::power();
     Thread::create(system.colorburst() * 2, [&] { V9938::main(); });
   }

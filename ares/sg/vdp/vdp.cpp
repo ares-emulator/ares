@@ -7,6 +7,8 @@ VDP vdp;
 #include "serialization.cpp"
 
 auto VDP::load(Node::Object parent) -> void {
+  vram.allocate(16_KiB, 0x00);
+
   node = parent->append<Node::Object>("VDP");
 
   screen = node->append<Node::Video::Screen>("Screen", 256, 192);
@@ -45,7 +47,6 @@ auto VDP::power() -> void {
   TMS9918::power();
   Thread::create(system.colorburst() * 2, [&] { main(); });
   screen->power();
-  vram.allocate(0x4000);
 }
 
 }
