@@ -1,11 +1,19 @@
 ares
 ====
-[![License: ISP](https://img.shields.io/badge/License-ISC-blue.svg)](https://github.com/higan-emu/ares/blob/master/LICENSE)
 
 ![ares logo](https://user-images.githubusercontent.com/12163923/128292077-6194fb1e-95c1-424f-903f-d8640de85f83.png)
 
+[![License: ISP](https://img.shields.io/badge/License-ISC-blue.svg)](https://github.com/higan-emu/ares/blob/master/LICENSE)
+
 **ares** is a multi-system emulator that began development on October 14th, 2004.
 It is a descendent of [higan](https://github.com/higan-emu/higan) and [bsnes](https://github.com/bsnes-emu/bsnes/), and focuses on accuracy, preservation and ease of use.
+
+Links
+-----
+
+Official website: https://ares-emulator.github.io/
+
+Official GitHub repository: https://github.com/higan-emu/ares
 
 Official Releases
 -----------------
@@ -93,7 +101,7 @@ Systems:
   <td><a href="docs/images/gallery/msx_parodius.png">MSX</a> + <a href="docs/images/gallery/msx2_akumajou-dracula.png">MSX2</a></td>
 </tr>
 <tr>
-  <td><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/starless-small.png" alt=""></td>
+  <td><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""></td>
   <td><a href="docs/images/gallery/colecovision_frogger.png">ColecoVision</a></td>
 </tr>
 <tr>
