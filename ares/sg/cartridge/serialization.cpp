@@ -1,3 +1,3 @@
 auto Cartridge::serialize(serializer& s) -> void {
-  s(ram);
+  if(board) s(*board);
 }

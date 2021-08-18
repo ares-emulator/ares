@@ -21,6 +21,7 @@ auto SG1000::load(string location) -> bool {
   if(!document) return false;
 
   pak = new vfs::directory;
+  pak->setAttribute("board",  document["game/board" ].string());  
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->append("manifest.bml", manifest);
@@ -44,12 +45,32 @@ auto SG1000::save(string location) -> bool {
 }
 
 auto SG1000::analyze(vector<u8>& rom) -> string {
+  string hash   = Hash::SHA256(rom).digest();
+  string board  = "Linear";
+
+  // Bomberman Special (Taiwan) (DahJee)
+  if (hash == "30417fcd412ad281cd6f72c77ecc107b2c13c719bff2d045dde05ea760c757ff") {
+    board = "Taiwan-A";
+  }
+
+  // Bomberman Special (Taiwan)
+  if (hash == "3eff3d6f1f74041f7b732455799d0978ab49724552ff2985f34b76478cd91721") {
+    board = "Taiwan-B";
+  }
+
+  // Knightmare (Taiwan)
+  if (hash == "3106c32c31eb16d9a9534b3975e204a0876c583f48d7a735c325710f03e31f89") {
+    board = "Taiwan-A";
+  }
+
+  print(string{Medium::name(location), ": ", hash, "\n"});
+
   string s;
   s += "game\n";
   s +={"  name:  ", Medium::name(location), "\n"};
   s +={"  title: ", Medium::name(location), "\n"};
   s += "  region: NTSC, PAL\n";  //database required to detect region
-  s += "  board\n";
+  s +={"  board:  ", board, "\n"};
   s += "    memory\n";
   s += "      type: ROM\n";
   s +={"      size: 0x", hex(rom.size()), "\n"};
