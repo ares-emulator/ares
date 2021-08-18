@@ -73,6 +73,7 @@ struct CPU : SM83, Thread {
   auto timer1024hz() -> void;
   auto hblank() -> void;
   auto hblankTrigger() -> void;
+  auto haltBugTrigger() -> void;
 
   struct Status {
     n22 clock;

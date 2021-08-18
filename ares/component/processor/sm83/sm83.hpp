@@ -15,6 +15,7 @@ struct SM83 {
   virtual auto idle() -> void = 0;
   virtual auto read(n16 address) -> n8 = 0;
   virtual auto write(n16 address, n8 data) -> void = 0;
+  virtual auto haltBugTrigger() -> void = 0;
 
   //sm83.cpp
   auto power() -> void;
@@ -175,6 +176,9 @@ struct SM83 {
     n1 halt;
     n1 stop;
     n1 ime;
+    
+    // set if halt bug occurs
+    n1 haltBug;
   } r;
 
   //disassembler.cpp

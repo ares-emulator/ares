@@ -12,6 +12,14 @@ auto CPU::halt() -> void {
   }
 }
 
+auto CPU::haltBugTrigger() -> void {
+  // halt bug is triggered when IME is off, and IE & IF != 0
+  // does not properly emulate two halts in a rom
+  if(!r.ime && status.interruptLatch != 0) { 
+    r.haltBug = 1;
+  }
+}
+
 auto CPU::idle() -> void {
   if(r.ei) r.ei = 0, r.ime = 1;
   step();

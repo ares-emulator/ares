@@ -98,9 +98,9 @@ auto SM83::instructionDAA() -> void {
   if(!NF) {
     if(HF || (n4)A > 0x09) a += 0x06;
     if(CF || (n8)A > 0x99) {
-	  a += 0x60;
-	  CF = 1;
-	}
+      a += 0x60;
+      CF = 1;
+    }
   } else {
     if(HF) a -= 0x06;
     if(CF) a -= 0x60;
@@ -134,6 +134,7 @@ auto SM83::instructionEI() -> void {
 
 auto SM83::instructionHALT() -> void {
   r.halt = 1;
+  haltBugTrigger();
   while(r.halt) halt();
 }
 
