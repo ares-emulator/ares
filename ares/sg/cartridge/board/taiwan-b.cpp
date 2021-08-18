@@ -16,11 +16,11 @@ struct TaiwanB : Interface {
   }
 
   auto read(n16 address) -> maybe<n8> override {
-    if(address >= 0x0000 && address < rom.size()) {
+    if(address >= 0x0000 && address < 0xbfff) {
       return rom.read(address - 0x0000);
     }
 
-    if(address >= 0xc000 && address <= 0xdfff) {
+    if(address >= 0xc000) {
       return ram.read(address - 0xc000);
     }
 
@@ -28,11 +28,11 @@ struct TaiwanB : Interface {
   }
    
   auto write(n16 address, n8 data) -> bool override {
-    if(address >= 0x0000 && address < rom.size()) {
+    if(address >= 0x0000 && address < 0xbfff) {
       return rom.write(address - 0x0000, data), true;
     }
 
-    if(address >= 0xc000 && address <= 0xdfff) {
+    if(address >= 0xc000) {
       return ram.write(address - 0xc000, data), true;
     }
 
