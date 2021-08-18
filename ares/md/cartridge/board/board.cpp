@@ -3,7 +3,6 @@ namespace Board {
 #include "linear.cpp"
 #include "banked.cpp"
 #include "svp.cpp"
-#include "lock-on.cpp"
 #include "j-cart.cpp"
 #include "game-genie.cpp"
 #include "mega-32x.cpp"

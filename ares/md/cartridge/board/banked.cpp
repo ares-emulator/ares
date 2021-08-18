@@ -11,6 +11,11 @@ struct Banked : Interface {
 
   auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {
     n25 offset = romBank[address >> 19] << 19 | (n19)address;
+
+    if ((offset >> 1) > rom.size() - 1) {
+      return 0xffff;
+    }
+
     return data = rom[offset >> 1];
   }
 

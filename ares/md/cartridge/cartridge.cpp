@@ -23,8 +23,6 @@ auto Cartridge::connect() -> void {
     board = new Board::Mega32X{*this};
   } else if(pak->read("svp.rom")) {
     board = new Board::SVP(*this);
-  } else if(pak->read("patch.rom")) {
-    board = new Board::LockOn(*this);
   } else if(pak->attribute("label") == "Game Genie") {
     board = new Board::GameGenie(*this);
   } else if(pak->read("program.rom") && pak->read("program.rom")->size() > 0x400000) {
