@@ -11,10 +11,11 @@ auto V9938::Sprite::setup(n8 voffset) -> void {
 
     n14 address = io.nameTableAddress & 0x03f80;
     for(u32 index : range(32)) {
-      n8 y = self.vram.read(address++);
+      i9 y = self.vram.read(address++);
       if(y == 0xd0) break;
+      if(y >= 0xe0) y -= 0x100;
 
-      n8 x = self.vram.read(address++);
+      i9 x = self.vram.read(address++);
       n8 pattern = self.vram.read(address++);
       n8 attributes = self.vram.read(address++);
 
@@ -48,10 +49,11 @@ auto V9938::Sprite::setup(n8 voffset) -> void {
 
     n17 address = io.nameTableAddress & 0x1fe00;
     for(u32 index : range(32)) {
-      n8 y = self.vram.read(address++);
+      i9 y = self.vram.read(address++);
       if(y == 0xd8) break;
+      if(y >= 0xe0) y -= 0x100;
 
-      n8 x = self.vram.read(address++);
+      i9 x = self.vram.read(address++);
       n8 pattern = self.vram.read(address++);
       n8 reserved = self.vram.read(address++);
 
