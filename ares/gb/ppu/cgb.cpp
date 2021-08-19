@@ -109,6 +109,7 @@ auto PPU::runBackgroundCGB() -> void {
 
 auto PPU::runWindowCGB() -> void {
   if(status.ly < status.wy) return;
+  if(px + 7 < status.wx) return;
   if(px + 7 == status.wx) latch.wy++;
 
   n8 scrollY = latch.wy - 1;
