@@ -12,7 +12,7 @@ GameBoyAdvance::GameBoyAdvance() {
 
   firmware.append({"BIOS", "World", "fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570"});
 
-  { InputPort port{string{"Game Boy Player"}};
+  { InputPort port{string{"Game Boy Advance"}};
 
   { InputDevice device{"Controls"};
     device.digital("Up",     virtualPorts[0].pad.up);
@@ -57,7 +57,7 @@ auto GameBoyAdvance::load() -> bool {
   system = mia::System::create("Game Boy Advance");
   if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
 
-  if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Player")) return false;
+  if(!ares::GameBoyAdvance::load(root, "[Nintendo] Game Boy Advance")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
@@ -75,7 +75,7 @@ auto GameBoyAdvance::save() -> bool {
 }
 
 auto GameBoyAdvance::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
-  if(node->name() == "Game Boy Player") return system->pak;
+  if(node->name() == "Game Boy Advance") return system->pak;
   if(node->name() == "Game Boy Advance Cartridge") return game->pak;
   return {};
 }

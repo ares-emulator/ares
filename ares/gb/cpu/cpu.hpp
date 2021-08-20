@@ -56,6 +56,7 @@ struct CPU : SM83, Thread {
   auto stop() -> void override;
   auto halt() -> void override;
   auto idle() -> void override;
+  auto haltBugTrigger() -> void;
   auto read(n16 address) -> n8 override;
   auto write(n16 address, n8 data) -> void override;
   auto readDMA(n16 address, n8 data) -> n8;
@@ -73,7 +74,7 @@ struct CPU : SM83, Thread {
   auto timer1024hz() -> void;
   auto hblank() -> void;
   auto hblankTrigger() -> void;
-
+  
   struct Status {
     n22 clock;
     n8  interruptLatch;

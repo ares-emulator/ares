@@ -49,6 +49,10 @@ struct Linear : Interface {
       }
     }
 
+    if ((address >> 1) > rom.size() - 1) {
+      return 0xffff;
+    }
+
     return rom[address >> 1];
   }
 

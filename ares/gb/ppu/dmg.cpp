@@ -103,6 +103,7 @@ auto PPU::runBackgroundDMG() -> void {
 
 auto PPU::runWindowDMG() -> void {
   if(status.ly < status.wy) return;
+  if(px + 7 < status.wx) return;
   if(px + 7 == status.wx) latch.wy++;
 
   n8 scrollY = latch.wy - 1;

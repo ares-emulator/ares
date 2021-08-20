@@ -1,5 +1,5 @@
 //Yamaha YM7101
-#if defined(PROFILE_PERFORMANCE)
+#if 0 //defined(PROFILE_PERFORMANCE)
 #include "../vdp-performance/vdp.hpp"
 #else
 struct VDP : Thread {

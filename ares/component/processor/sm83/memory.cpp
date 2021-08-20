@@ -1,10 +1,14 @@
 auto SM83::operand() -> n8 {
+  if(r.haltBug) {
+    r.haltBug = 0;
+    return read(PC);
+  }
   return read(PC++);
 }
 
 auto SM83::operands() -> n16 {
-  n16    data = read(PC++) << 0;
-  return data | read(PC++) << 8;
+  n16    data = operand() << 0;
+  return data | operand() << 8;
 }
 
 auto SM83::load(n16 address) -> n16 {

@@ -156,6 +156,8 @@ auto PPU::mode(n2 mode) -> void {
 }
 
 auto PPU::stat() -> void {
+  if(!status.displayEnable) return;
+
   bool irq = status.irq;
 
   status.irq  = status.interruptHblank && status.mode == 0;

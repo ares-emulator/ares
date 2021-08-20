@@ -3,6 +3,7 @@
 namespace ares::SG1000 {
 
 Cartridge& cartridge = cartridgeSlot.cartridge;
+#include "board/board.cpp"
 #include "slot.cpp"
 #include "serialization.cpp"
 
@@ -16,62 +17,46 @@ auto Cartridge::connect() -> void {
   information = {};
   information.title  = pak->attribute("title");
   information.region = pak->attribute("region");
+  information.board  = pak->attribute("board");
 
-  if(auto fp = pak->read("program.rom")) {
-    rom.allocate(fp->size());
-    rom.load(fp);
-  }
 
-  if(auto fp = pak->read("save.ram")) {
-    ram.allocate(fp->size());
-    ram.load(fp);
-  }
+  if(information.board == "Linear") board = new Board::Linear{*this};
+  if(information.board == "Taiwan-A") board = new Board::TaiwanA{*this};
+  if(information.board == "Taiwan-B") board = new Board::TaiwanB{*this};
 
+  if(!board) board = new Board::Interface{*this};
+  board->pak = pak;
+  board->load();
   power();
 }
 
 auto Cartridge::disconnect() -> void {
-  if(!node) return;
-  rom.reset();
-  ram.reset();
-  pak.reset();
+  if(!node || !board) return;
+  board->unload();
+  board->pak.reset();
+  board.reset();
   node.reset();
 }
 
 auto Cartridge::save() -> void {
-  if(auto fp = pak->write("save.ram")) {
-    ram.save(fp);
-  }
+  if(!node) return;
+  if(board) board->save();
 }
 
 auto Cartridge::power() -> void {
+  if(board) board->power();
 }
 
 auto Cartridge::read(n16 address) -> maybe<n8> {
   if(!node) return nothing;
-
-  if(address >= 0x0000 && (address <= 0x7fff || address < rom.size())) {
-    return rom.read(address - 0x0000);
-  }
-
-  if(address >= 0x8000 && address <= 0xbfff) {
-    return ram.read(address - 0x8000);
-  }
+  if (board) return board->read(address);
 
   return nothing;
 }
 
 auto Cartridge::write(n16 address, n8 data) -> bool {
   if(!node) return false;
-
-  if(address >= 0x0000 && (address <= 0x7fff || address < rom.size())) {
-    return rom.write(address - 0x0000, data), true;
-  }
-
-  if(address >= 0x8000 && address <= 0xbfff) {
-    return ram.write(address - 0x8000, data), true;
-  }
-
+  if (board) return board->write(address, data);
   return false;
 }
 
