@@ -1,6 +1,6 @@
 struct Famicom : Cartridge {
   auto name() -> string override { return "Famicom"; }
-  auto extensions() -> vector<string> override { return {"fc", "nes", "unif"}; }
+  auto extensions() -> vector<string> override { return {"fc", "nes", "unf", "unif"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& data) -> string;
