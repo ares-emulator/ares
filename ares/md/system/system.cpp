@@ -61,21 +61,25 @@ auto System::load(Node::System& root, string name) -> bool {
     information.name = "Mega Drive";
     information.mega32X = 0;
     information.megaCD = 0;
+    cpu.minCyclesBetweenSyncs = 10; // sync approx every 1 pixel
   }
   if(name.match("[Sega] Mega 32X (*)")) {
     information.name = "Mega Drive";
     information.mega32X = 1;
     information.megaCD = 0;
+    cpu.minCyclesBetweenSyncs = 40; // sync approx every 4 pixels
   }
   if(name.match("[Sega] Mega CD (*)")) {
     information.name = "Mega Drive";
     information.mega32X = 0;
     information.megaCD = 1;
+    cpu.minCyclesBetweenSyncs = 10; // sync approx every 1 pixel
   }
   if(name.match("[Sega] Mega CD 32X (*)")) {
     information.name = "Mega Drive";
     information.mega32X = 1;
     information.megaCD = 1;
+    cpu.minCyclesBetweenSyncs = 40; // sync approx every 4 pixels
   }
   if(name.find("NTSC-J")) {
     information.region = Region::NTSCJ;
