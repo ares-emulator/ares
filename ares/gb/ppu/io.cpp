@@ -48,7 +48,7 @@ auto PPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
   }
 
   if(address == 0xff44 && cycle == 2) {  //LY
-    return status.ly;
+    return getLY();
   }
 
   if(address == 0xff45 && cycle == 2) {  //LYC
@@ -187,11 +187,6 @@ auto PPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
 
   if(address == 0xff43 && cycle == 2) {  //SCX
     status.scx = data;
-    return;
-  }
-
-  if(address == 0xff44 && cycle == 2) {  //LY
-    status.ly = 0;
     return;
   }
 
