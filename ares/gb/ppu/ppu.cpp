@@ -163,15 +163,9 @@ auto PPU::stat() -> void {
   status.irq  = status.interruptHblank && status.mode == 0;
   status.irq |= status.interruptVblank && status.mode == 1;
   status.irq |= status.interruptOAM    && status.mode == 2;
-  status.irq |= status.interruptLYC    && coincidence();
+  status.irq |= status.interruptLYC    && compareLYC();
 
   if(!irq && status.irq) cpu.raise(CPU::Interrupt::Stat);
-}
-
-auto PPU::coincidence() -> bool {
-  u32 ly = status.ly;
-  if(ly == 153 && status.lx >= 92) ly = 0;  //LYC=0 triggers early during LY=153
-  return ly == status.lyc;
 }
 
 auto PPU::step(u32 clocks) -> void {
