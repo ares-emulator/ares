@@ -61,7 +61,7 @@ ares currently emulates the following 27 hardware devices:
   <td><a href="docs/images/gallery/game-boy-advance_golden-sun.png">Game Boy Advance</a></td>
 </tr>
 <tr>
-  <td><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/starless-small.png" alt=""></td>
+  <td><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""><img src="docs/images/star-small.png" alt=""></td>
   <td><a href="docs/images/gallery/sg-1000_ninja-princess.png">SG-1000</a></td>
 </tr>
 <tr>

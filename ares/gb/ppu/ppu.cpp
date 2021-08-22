@@ -162,7 +162,7 @@ auto PPU::stat() -> void {
 
   status.irq  = status.interruptHblank && status.mode == 0;
   status.irq |= status.interruptVblank && status.mode == 1;
-  status.irq |= status.interruptOAM    && status.mode == 2;
+  status.irq |= status.interruptOAM    && triggerOAM();
   status.irq |= status.interruptLYC    && compareLYC();
 
   if(!irq && status.irq) cpu.raise(CPU::Interrupt::Stat);

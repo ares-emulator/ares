@@ -43,6 +43,7 @@ struct PPU : Thread {
   auto canAccessOAM() const -> bool;
   auto compareLYC() const -> bool;
   auto getLY() const -> n8;
+  auto triggerOAM() const -> bool;
 
   //io.cpp
   auto vramAddress(n13 address) const -> n16;

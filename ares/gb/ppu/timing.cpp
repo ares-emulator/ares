@@ -69,3 +69,9 @@ auto PPU::getLY() const -> n8 {
 
   return ly;
 }
+
+auto PPU::triggerOAM() const -> bool {
+  if(status.mode != 2) return 0;
+  auto lx = status.lx >> (cpu.status.speedDouble ? 1 : 2);
+  return lx == (status.ly == 0 ? 1 : 0);
+}
