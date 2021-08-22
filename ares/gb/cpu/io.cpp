@@ -97,8 +97,8 @@ auto CPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
 
   if(Model::GameBoyColor())
   if(address == 0xff55 && cycle == 2) {  //HDMA5
-    data.bit(0,6) = status.dmaLength;
-    data.bit(7)   = status.hdmaActive;
+    data.bit(0,6) =  status.dmaLength;
+    data.bit(7)   = !status.hdmaActive;
     return data;
   }
 
