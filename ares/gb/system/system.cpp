@@ -135,8 +135,12 @@ auto System::power(bool reset) -> void {
 
     if(fastBoot->latch()) {
       if(name == "boot.dmg-1.rom") {
-        bootROM.program(0x64, 0x18);
-        bootROM.program(0x65, 0x7a);
+        //skip the first 0x60 loop iterations (~4 seconds) and disable scrolling
+        bootROM.program(0x55, 0x26); //ld   h,$60 ; loop upcount   = 0x60
+        bootROM.program(0x56, 0x60);
+        bootROM.program(0x57, 0x16); //ld   d,$04 ; loop downcount = 0x04
+        bootROM.program(0x58, 0x04);
+        bootROM.program(0x88, 0x00); //nop        ; disable scroll
       }
       //todo: add fast boot patches for other boot ROMs
     }
