@@ -1,6 +1,6 @@
 struct ColecoVision : Cartridge {
   auto name() -> string override { return "ColecoVision"; }
-  auto extensions() -> vector<string> override { return {"cv", "col", "bin, "rom"}; }
+  auto extensions() -> vector<string> override { return {"cv", "col", "bin", "rom"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
