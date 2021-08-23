@@ -51,11 +51,7 @@ auto PPU::scanlineDMG() -> void {
   }
 
   //sort by X-coordinate
-  for(u32 lo = 0; lo < sprites; lo++) {
-    for(u32 hi = lo + 1; hi < sprites; hi++) {
-      if(sprite[hi].x < sprite[lo].x) swap(sprite[lo], sprite[hi]);
-    }
-  }
+  sort(sprite, sprites, [](auto l, auto r) { return l.x < r.x; });
 }
 
 auto PPU::runDMG() -> void {
