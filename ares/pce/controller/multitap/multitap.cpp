@@ -12,8 +12,6 @@ port5{"Controller Port 5"}
   port3.load(node);
   port4.load(node);
   port5.load(node);
-
-  print("new multitap");
 }
 
 auto Multitap::read() -> n4 {
