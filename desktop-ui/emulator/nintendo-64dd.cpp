@@ -15,7 +15,7 @@ Nintendo64DD::Nintendo64DD() {
 
   firmware.append({"BIOS", "Japan"});
 
-  for(auto id : range(2)) {
+  for(auto id : range(4)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
   { InputDevice device{"Gamepad"};

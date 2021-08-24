@@ -11,7 +11,7 @@ Nintendo64::Nintendo64() {
   manufacturer = "Nintendo";
   name = "Nintendo 64";
 
-  for(auto id : range(2)) {
+  for(auto id : range(4)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
   { InputDevice device{"Gamepad"};
