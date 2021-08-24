@@ -106,7 +106,6 @@ auto PPU::runWindowDMG() -> void {
   n8 scrollX = px + 7 - latch.wx;
   n3 tileX = scrollX & 7;
 
-  if(scrollX >= 160u) return;  //also matches underflow (scrollX < 0)
   if(tileX == 0 || px == 0) readTileDMG(status.windowTilemapSelect, scrollX, scrollY, window.tiledata);
 
   n2 index;

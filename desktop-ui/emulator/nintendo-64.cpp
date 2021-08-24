@@ -11,7 +11,7 @@ Nintendo64::Nintendo64() {
   manufacturer = "Nintendo";
   name = "Nintendo 64";
 
-  for(auto id : range(2)) {
+  for(auto id : range(4)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
   { InputDevice device{"Gamepad"};
@@ -82,6 +82,24 @@ auto Nintendo64::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
+    auto peripheral = port->allocate("Gamepad");
+    port->connect();
+    if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+      port->allocate("Rumble Pak");
+      port->connect();
+    }
+  }
+
+  if(auto port = root->find<ares::Node::Port>("Controller Port 3")) {
+    auto peripheral = port->allocate("Gamepad");
+    port->connect();
+    if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+      port->allocate("Rumble Pak");
+      port->connect();
+    }
+  }
+
+  if(auto port = root->find<ares::Node::Port>("Controller Port 4")) {
     auto peripheral = port->allocate("Gamepad");
     port->connect();
     if(auto port = peripheral->find<ares::Node::Port>("Pak")) {

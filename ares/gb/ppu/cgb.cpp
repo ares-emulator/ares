@@ -116,7 +116,6 @@ auto PPU::runWindowCGB() -> void {
   n8 scrollX = px + 7 - latch.wx;
   n3 tileX = scrollX & 7;
 
-  if(scrollX >= 160u) return;  //also matches underflow (scrollX < 0)
   if(tileX == 0 || px == 0) readTileCGB(status.windowTilemapSelect, scrollX, scrollY, window.tiledata, window.attributes);
 
   n2 index;

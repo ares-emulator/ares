@@ -10,7 +10,7 @@ auto Emulator::enumeratePorts(string name) -> vector<InputPort>& {
   }
   static vector<InputPort> ports;
   if(!ports) {
-    for(auto id : range(2)) {
+    for(auto id : range(5)) {
       InputPort port{string{"Controller Port ", 1 + id}};
       port.append(virtualPorts[id].pad);
       port.append(virtualPorts[id].mouse);

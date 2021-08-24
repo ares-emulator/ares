@@ -9,7 +9,7 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setType("Controller");
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
-  port->setSupported({"Gamepad", "Avenue Pad 6"});
+  port->setSupported({"Gamepad", "Avenue Pad 6", "Multitap"});
 }
 
 auto ControllerPort::unload() -> void {
@@ -20,6 +20,7 @@ auto ControllerPort::unload() -> void {
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
   if(name == "Gamepad") device = new Gamepad(port);
   if(name == "Avenue Pad 6") device = new AvenuePad(port);
+  if(name == "Multitap") device = new Multitap(port);
   if(device) return device->node;
   return {};
 }
