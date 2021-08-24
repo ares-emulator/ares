@@ -11,7 +11,7 @@ auto VDP::IRQ::poll() -> void {
     vdp.debugger.interrupt(CPU::Interrupt::HorizontalBlank);
     cpu.raise(CPU::Interrupt::HorizontalBlank);
   } else {
-    hblank.pending = 0;
+    // note: pending H-INT is not cleared when disabled
     cpu.lower(CPU::Interrupt::HorizontalBlank);
   }
 
