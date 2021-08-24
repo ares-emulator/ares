@@ -76,7 +76,24 @@ auto Nintendo64DD::load() -> bool {
     port->allocate("Gamepad");
     port->connect();
   }
+  
+  if(auto port = root->find<ares::Node::Port>("Controller Port 3")) {
+    auto peripheral = port->allocate("Gamepad");
+    port->connect();
+    if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+      port->allocate("Rumble Pak");
+      port->connect();
+    }
+  }
 
+  if(auto port = root->find<ares::Node::Port>("Controller Port 4")) {
+    auto peripheral = port->allocate("Gamepad");
+    port->connect();
+    if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+      port->allocate("Rumble Pak");
+      port->connect();
+    }
+  }
   return true;
 }
 
