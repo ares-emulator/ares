@@ -49,8 +49,7 @@ auto CPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
   }
 
   if(address == 0xff01 && cycle == 2) {  //SB
-    //unemulated
-    return 0x00;
+    return status.serialData;
   }
 
   if(address == 0xff02 && cycle == 2) {  //SC
