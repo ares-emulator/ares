@@ -75,7 +75,8 @@ auto PPU::runDMG() -> void {
 
   if(Model::GameBoy()) {
     auto output = screen->pixels().data() + status.ly * 160 + px++;
-    *output = color;
+    //LCD is still blank during the first frame
+    if(!latch.displayEnable) *output = color;
   }
   if(Model::SuperGameBoy()) {
     superGameBoy->ppuWrite(color);
@@ -101,6 +102,7 @@ auto PPU::runWindowDMG() -> void {
   if(status.ly < status.wy) return;
   if(px + 7 < status.wx) return;
   if(px + 7 == status.wx) latch.wy++;
+  if(!status.bgEnable) return;
 
   n8 scrollY = latch.wy - 1;
   n8 scrollX = px + 7 - latch.wx;
