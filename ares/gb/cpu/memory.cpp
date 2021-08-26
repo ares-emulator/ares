@@ -7,6 +7,7 @@ auto CPU::stop() -> void {
 
 auto CPU::halt() -> void {
   idle();
+  if(status.interruptLatch) r.halt = 0;
   if(Model::SuperGameBoy()) {
     scheduler.exit(Event::Step);
   }
