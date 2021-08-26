@@ -97,8 +97,7 @@ auto PPU::main() -> void {
     latch.wy = 0;
   }
 
-  if(latch.displayEnable) {
-    latch.displayEnable = 0;
+  if(latch.displayEnable && status.ly == 0) {
     mode(0);
     step(72);
 
@@ -136,6 +135,8 @@ auto PPU::main() -> void {
     cpu.raise(CPU::Interrupt::VerticalBlank);
     if(screen) screen->frame();
     scheduler.exit(Event::Frame);
+
+    latch.displayEnable = 0;
   }
 
   if(status.ly == 154) {
