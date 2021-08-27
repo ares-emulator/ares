@@ -7,18 +7,12 @@ struct Jaleco_JF11_JF14 : Interface {
   Memory::Readable<n8> programROM;
   Memory::Writable<n8> programRAM;
   Memory::Readable<n8> characterROM;
-  Memory::Writable<n8> characterRAM;
 
   auto load() -> void override {
     Interface::load(programROM, "program.rom");
-    Interface::load(characterROM, "character.rom");
-    Interface::load(characterRAM, "character.ram");
     Interface::load(programRAM, "save.ram");
+    Interface::load(characterROM, "character.rom");
     mirror = pak->attribute("mirror") == "vertical";
-  }
-
-  auto save() -> void override {
-    Interface::save(characterRAM, "character.ram");
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {
@@ -39,7 +33,6 @@ struct Jaleco_JF11_JF14 : Interface {
     }
     address = characterBank << 13 | (n13)address;
     if(characterROM) return characterROM.read(address);
-    if(characterRAM) return characterRAM.read(address);
     return data;
   }
 
@@ -49,14 +42,12 @@ struct Jaleco_JF11_JF14 : Interface {
       return ppu.writeCIRAM(address, data);
     }
     address = characterBank << 13 | (n13)address;
-    if(characterRAM) return characterRAM.write(address, data);
   }
 
   auto power() -> void override {
   }
 
   auto serialize(serializer& s) -> void override {
-    s(characterRAM);
     s(mirror);
     s(programBank);
     s(characterBank);
