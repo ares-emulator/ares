@@ -30,13 +30,15 @@
     [item setSubmenu:rootMenu];
     [menuBar addItem:item];
 
-    item = [[[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"About %@ ...", applicationName] action:@selector(menuAbout) keyEquivalent:@""] autorelease];
+    item = [[[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"About %@…", applicationName] action:@selector(menuAbout) keyEquivalent:@""] autorelease];
     [item setTarget:self];
     [rootMenu addItem:item];
     [rootMenu addItem:[NSMenuItem separatorItem]];
 
-    item = [[[NSMenuItem alloc] initWithTitle:@"Preferences ..." action:@selector(menuPreferences) keyEquivalent:@""] autorelease];
+    item = [[[NSMenuItem alloc] initWithTitle:@"Preferences…" action:@selector(menuPreferences) keyEquivalent:@""] autorelease];
     [item setTarget:self];
+    item.keyEquivalentModifierMask = NSCommandKeyMask;
+    item.keyEquivalent = @",";
     [rootMenu addItem:item];
 
     string result = nall::execute("spctl", "--status").output.strip();
@@ -72,6 +74,8 @@
 
     item = [[[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Quit %@", applicationName] action:@selector(menuQuit) keyEquivalent:@""] autorelease];
     [item setTarget:self];
+    item.keyEquivalentModifierMask = NSCommandKeyMask;
+    item.keyEquivalent = @"q";
     [rootMenu addItem:item];
 
     statusBar = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)];
