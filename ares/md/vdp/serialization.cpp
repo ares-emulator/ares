@@ -161,11 +161,11 @@ auto VDP::Sprite::serialize(serializer& s) -> void {
   s(cache);
   s(mappings);
   s(mappingCount);
-  s(patternX);
+  s(maskCheck);
+  s(maskActive);
   s(patternIndex);
   s(patternSlice);
   s(patternCount);
-  s(patternStop);
   s(visible);
   s(visibleLink);
   s(visibleCount);
