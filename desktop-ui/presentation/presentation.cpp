@@ -2,6 +2,12 @@
 namespace Instances { Instance<Presentation> presentation; }
 Presentation& presentation = Instances::presentation();
 
+#ifdef __APPLE__
+#define ELLIPSIS "…"
+#else
+#define ELLIPSIS " ..."
+#endif
+
 Presentation::Presentation() {
   loadMenu.setText("Load");
 
@@ -85,31 +91,31 @@ Presentation::Presentation() {
     }
     if(visible()) resizeWindow();
   }).doToggle();
-  videoSettingsAction.setText("Video ...").setIcon(Icon::Device::Display).onActivate([&] {
+  videoSettingsAction.setText("Video" ELLIPSIS).setIcon(Icon::Device::Display).onActivate([&] {
     settingsWindow.show("Video");
   });
-  audioSettingsAction.setText("Audio ...").setIcon(Icon::Device::Speaker).onActivate([&] {
+  audioSettingsAction.setText("Audio" ELLIPSIS).setIcon(Icon::Device::Speaker).onActivate([&] {
     settingsWindow.show("Audio");
   });
-  inputSettingsAction.setText("Input ...").setIcon(Icon::Device::Joypad).onActivate([&] {
+  inputSettingsAction.setText("Input" ELLIPSIS).setIcon(Icon::Device::Joypad).onActivate([&] {
     settingsWindow.show("Input");
   });
-  hotkeySettingsAction.setText("Hotkeys ...").setIcon(Icon::Device::Keyboard).onActivate([&] {
+  hotkeySettingsAction.setText("Hotkeys" ELLIPSIS).setIcon(Icon::Device::Keyboard).onActivate([&] {
     settingsWindow.show("Hotkeys");
   });
-  emulatorSettingsAction.setText("Emulators ...").setIcon(Icon::Place::Server).onActivate([&] {
+  emulatorSettingsAction.setText("Emulators" ELLIPSIS).setIcon(Icon::Place::Server).onActivate([&] {
     settingsWindow.show("Emulators");
   });
-  optionSettingsAction.setText("Options ...").setIcon(Icon::Action::Settings).onActivate([&] {
+  optionSettingsAction.setText("Options" ELLIPSIS).setIcon(Icon::Action::Settings).onActivate([&] {
     settingsWindow.show("Options");
   });
-  firmwareSettingsAction.setText("Firmware ...").setIcon(Icon::Emblem::Binary).onActivate([&] {
+  firmwareSettingsAction.setText("Firmware" ELLIPSIS).setIcon(Icon::Emblem::Binary).onActivate([&] {
     settingsWindow.show("Firmware");
   });
-  pathSettingsAction.setText("Paths ...").setIcon(Icon::Emblem::Folder).onActivate([&] {
+  pathSettingsAction.setText("Paths" ELLIPSIS).setIcon(Icon::Emblem::Folder).onActivate([&] {
     settingsWindow.show("Paths");
   });
-  driverSettingsAction.setText("Drivers ...").setIcon(Icon::Place::Settings).onActivate([&] {
+  driverSettingsAction.setText("Drivers" ELLIPSIS).setIcon(Icon::Place::Settings).onActivate([&] {
     settingsWindow.show("Drivers");
   });
 
@@ -154,7 +160,7 @@ Presentation::Presentation() {
   });
 
   helpMenu.setText("Help");
-  aboutAction.setText("About ...").setIcon(Icon::Prompt::Question).onActivate([&] {
+  aboutAction.setText("About" ELLIPSIS).setIcon(Icon::Prompt::Question).onActivate([&] {
     image logo{Resource::Ares::Logo};
     logo.shrink();
     AboutDialog()
@@ -319,7 +325,7 @@ auto Presentation::loadEmulators() -> void {
 
     MenuItem item;
     item.setIcon(Icon::Place::Server);
-    item.setText({emulator->name, " ..."});
+    item.setText({emulator->name, ELLIPSIS});
     item.setVisible(emulator->configuration.visible);
     item.onActivate([=] {
       program.load(emulator);
@@ -348,13 +354,15 @@ auto Presentation::loadEmulators() -> void {
     //if the user disables every system, give an indication for how to re-add systems to the load menu
     MenuItem item{&loadMenu};
     item.setIcon(Icon::Action::Add);
-    item.setText("Add Systems ...");
+    item.setText("Add Systems" ELLIPSIS);
     item.onActivate([&] {
       settingsWindow.show("Emulators");
     });
   }
+    
+#ifndef __APPLE__
   loadMenu.append(MenuSeparator());
-
+    
   { MenuItem quit{&loadMenu};
     quit.setIcon(Icon::Action::Quit);
     quit.setText("Quit");
@@ -362,6 +370,7 @@ auto Presentation::loadEmulators() -> void {
       program.quit();
     });
   }
+#endif
 }
 
 auto Presentation::loadEmulator() -> void {
