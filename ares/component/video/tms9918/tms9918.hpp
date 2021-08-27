@@ -125,7 +125,7 @@ protected:
   } irqFrame;
 
   struct IO {
-    n8  vcounter;
+    n9  vcounter;
     n8  hcounter;
 
     n1  controlLatch;
