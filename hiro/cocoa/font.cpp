@@ -21,10 +21,9 @@ auto pFont::size(NSFont* font, const string& text) -> Size {
 }
 
 auto pFont::family(const string& family) -> string {
-  if(family == Font::Sans ) return "Lucida Grande";
   if(family == Font::Serif) return "Georgia";
   if(family == Font::Mono ) return "Menlo";
-  return "Lucida Grande";
+  return [[[NSFont systemFontOfSize:0] familyName] UTF8String];
 }
 
 auto pFont::create(const Font& font) -> NSFont* {
