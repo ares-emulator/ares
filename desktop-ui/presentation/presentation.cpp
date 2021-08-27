@@ -188,6 +188,10 @@ Presentation::Presentation() {
     viewport.doDrop(filenames);
   });
 
+  iconPadding.setCollapsible().setColor({0, 0, 0}).setDroppable().onDrop([&](auto filenames) {
+    viewport.doDrop(filenames);
+  });
+
   iconBottom.setCollapsible().setColor({0, 0, 0}).setDroppable().onDrop([&](auto filenames) {
     viewport.doDrop(filenames);
   });
@@ -206,7 +210,6 @@ Presentation::Presentation() {
 
   resizeWindow();
   setTitle({ares::Name, " v", ares::Version});
-  setBackgroundColor({0, 0, 0});
   setAlignment(Alignment::Center);
   setVisible();
 
