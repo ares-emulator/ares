@@ -60,10 +60,15 @@
 
     item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Hide %@", applicationName] action:@selector(hide:) keyEquivalent:@""];
     [item setTarget:NSApp];
+    item.keyEquivalentModifierMask = NSCommandKeyMask;
+    item.keyEquivalent = @"h";
     [rootMenu addItem:item];
 
     item = [[NSMenuItem alloc] initWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@""];
     [item setTarget:NSApp];
+    [item setTarget:NSApp];
+    item.keyEquivalentModifierMask = NSCommandKeyMask | NSAlternateKeyMask;
+    item.keyEquivalent = @"h";
     [rootMenu addItem:item];
 
     item = [[NSMenuItem alloc] initWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
