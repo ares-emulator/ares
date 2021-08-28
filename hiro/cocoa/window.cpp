@@ -263,13 +263,15 @@ auto pWindow::remove(sStatusBar statusBar) -> void {
 }
 
 auto pWindow::setBackgroundColor(Color color) -> void {
-  [cocoaWindow
-    setBackgroundColor:[NSColor
+  NSView* view = cocoaWindow.contentView;
+  view.wantsLayer = YES;
+  [view.layer
+    setBackgroundColor:[[NSColor
       colorWithCalibratedRed:color.red() / 255.0
       green:color.green() / 255.0
       blue:color.blue() / 255.0
       alpha:color.alpha() / 255.0
-    ]
+    ] CGColor]
   ];
 }
 
