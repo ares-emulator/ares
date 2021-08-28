@@ -27,7 +27,7 @@
   if(auto foregroundColor = label->foregroundColor()) {
     color = NSMakeColor(foregroundColor);
   }
-  NSMutableParagraphStyle* paragraphStyle = [[[NSParagraphStyle defaultParagraphStyle] mutableCopy] autorelease];
+  NSMutableParagraphStyle* paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
   paragraphStyle.alignment = NSTextAlignmentLeft;
   paragraphStyle.lineBreakMode = NSLineBreakByClipping;
   NSDictionary* attributes = @{
@@ -136,7 +136,6 @@ auto pLabel::construct() -> void {
 auto pLabel::destruct() -> void {
   @autoreleasepool {
     [cocoaView removeFromSuperview];
-    [cocoaView release];
   }
 }
 

@@ -6,10 +6,10 @@
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
     canvas = &canvasReference;
     [self setEditable:NO];  //disable image drag-and-drop functionality
-    NSTrackingArea* area = [[[NSTrackingArea alloc] initWithRect:[self frame]
+    NSTrackingArea* area = [[NSTrackingArea alloc] initWithRect:[self frame]
       options:NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow | NSTrackingInVisibleRect
       owner:self userInfo:nil
-    ] autorelease];
+    ];
     [self addTrackingArea:area];
   }
   return self;
@@ -112,7 +112,6 @@ auto pCanvas::construct() -> void {
 auto pCanvas::destruct() -> void {
   @autoreleasepool {
     [cocoaView removeFromSuperview];
-    [cocoaView release];
   }
 }
 
@@ -188,15 +187,15 @@ auto pCanvas::_rasterize() -> void {
     surfaceHeight = height;
 
     if(!surface) {
-      surface = [[[NSImage alloc] initWithSize:NSMakeSize(width, height)] autorelease];
-      bitmap = [[[NSBitmapImageRep alloc]
+      surface = [[NSImage alloc] initWithSize:NSMakeSize(width, height)];
+      bitmap = [[NSBitmapImageRep alloc]
         initWithBitmapDataPlanes:nil
         pixelsWide:width pixelsHigh:height
         bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES
         isPlanar:NO colorSpaceName:NSDeviceRGBColorSpace
         bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
         bytesPerRow:(width * 4) bitsPerPixel:32
-      ] autorelease];
+      ];
       [surface addRepresentation:bitmap];
       [(CocoaCanvas*)cocoaView setImage:surface];
     }

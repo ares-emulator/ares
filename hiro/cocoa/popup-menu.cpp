@@ -29,7 +29,7 @@ auto pPopupMenu::construct() -> void {
 
 auto pPopupMenu::destruct() -> void {
   @autoreleasepool {
-    [[cocoaPopupMenu cocoaPopupMenu] release];
+    [cocoaPopupMenu cocoaPopupMenu];
   }
 }
 

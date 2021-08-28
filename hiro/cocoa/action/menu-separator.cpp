@@ -4,15 +4,12 @@ namespace hiro {
 
 auto pMenuSeparator::construct() -> void {
   @autoreleasepool {
-    cocoaAction = cocoaSeparator = [[NSMenuItem separatorItem] retain];
+    cocoaAction = cocoaSeparator = [NSMenuItem separatorItem];
     pAction::construct();
   }
 }
 
 auto pMenuSeparator::destruct() -> void {
-  @autoreleasepool {
-    [cocoaAction release];
-  }
 }
 
 }

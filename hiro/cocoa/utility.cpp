@@ -16,15 +16,15 @@ auto NSMakeImage(image icon, u32 scaleWidth = 0, u32 scaleHeight = 0) -> NSImage
   icon.transform(0, 32, 255u << 24, 255u << 0, 255u << 8, 255u << 16);  //Cocoa stores images in ABGR format
 
   //create NSImage from memory
-  NSImage* cocoaImage = [[[NSImage alloc] initWithSize:NSMakeSize(icon.width(), icon.height())] autorelease];
-  NSBitmapImageRep* bitmap = [[[NSBitmapImageRep alloc]
+  NSImage* cocoaImage = [[NSImage alloc] initWithSize:NSMakeSize(icon.width(), icon.height())];
+  NSBitmapImageRep* bitmap = [[NSBitmapImageRep alloc]
     initWithBitmapDataPlanes:nil
     pixelsWide:icon.width() pixelsHigh:icon.height()
     bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES
     isPlanar:NO colorSpaceName:NSDeviceRGBColorSpace
     bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
     bytesPerRow:(4 * icon.width()) bitsPerPixel:32
-  ] autorelease];
+  ];
   memory::copy<u32>([bitmap bitmapData], icon.data(), icon.width() * icon.height());
   [cocoaImage addRepresentation:bitmap];
   return cocoaImage;

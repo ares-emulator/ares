@@ -26,16 +26,16 @@
     string text;
 
     rootMenu = [[NSMenu alloc] init];
-    item = [[[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""] autorelease];
+    item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
     [item setSubmenu:rootMenu];
     [menuBar addItem:item];
 
-    item = [[[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"About %@…", applicationName] action:@selector(menuAbout) keyEquivalent:@""] autorelease];
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"About %@…", applicationName] action:@selector(menuAbout) keyEquivalent:@""];
     [item setTarget:self];
     [rootMenu addItem:item];
     [rootMenu addItem:[NSMenuItem separatorItem]];
 
-    item = [[[NSMenuItem alloc] initWithTitle:@"Preferences…" action:@selector(menuPreferences) keyEquivalent:@""] autorelease];
+    item = [[NSMenuItem alloc] initWithTitle:@"Preferences…" action:@selector(menuPreferences) keyEquivalent:@""];
     [item setTarget:self];
     item.keyEquivalentModifierMask = NSCommandKeyMask;
     item.keyEquivalent = @",";
@@ -43,36 +43,36 @@
 
     string result = nall::execute("spctl", "--status").output.strip();
     if(result != "assessments disabled") {
-      disableGatekeeper = [[[NSMenuItem alloc] initWithTitle:@"Disable Gatekeeper" action:@selector(menuDisableGatekeeper) keyEquivalent:@""] autorelease];
+      disableGatekeeper = [[NSMenuItem alloc] initWithTitle:@"Disable Gatekeeper" action:@selector(menuDisableGatekeeper) keyEquivalent:@""];
       [disableGatekeeper setTarget:self];
       [rootMenu addItem:disableGatekeeper];
     }
 
     [rootMenu addItem:[NSMenuItem separatorItem]];
 
-    NSMenu* servicesMenu = [[[NSMenu alloc] initWithTitle:@"Services"] autorelease];
-    item = [[[NSMenuItem alloc] initWithTitle:@"Services" action:nil keyEquivalent:@""] autorelease];
+    NSMenu* servicesMenu = [[NSMenu alloc] initWithTitle:@"Services"];
+    item = [[NSMenuItem alloc] initWithTitle:@"Services" action:nil keyEquivalent:@""];
     [item setTarget:self];
     [item setSubmenu:servicesMenu];
     [rootMenu addItem:item];
     [rootMenu addItem:[NSMenuItem separatorItem]];
     [NSApp setServicesMenu:servicesMenu];
 
-    item = [[[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Hide %@", applicationName] action:@selector(hide:) keyEquivalent:@""] autorelease];
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Hide %@", applicationName] action:@selector(hide:) keyEquivalent:@""];
     [item setTarget:NSApp];
     [rootMenu addItem:item];
 
-    item = [[[NSMenuItem alloc] initWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@""] autorelease];
+    item = [[NSMenuItem alloc] initWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@""];
     [item setTarget:NSApp];
     [rootMenu addItem:item];
 
-    item = [[[NSMenuItem alloc] initWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""] autorelease];
+    item = [[NSMenuItem alloc] initWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
     [item setTarget:NSApp];
     [rootMenu addItem:item];
 
     [rootMenu addItem:[NSMenuItem separatorItem]];
 
-    item = [[[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Quit %@", applicationName] action:@selector(menuQuit) keyEquivalent:@""] autorelease];
+    item = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"Quit %@", applicationName] action:@selector(menuQuit) keyEquivalent:@""];
     [item setTarget:self];
     item.keyEquivalentModifierMask = NSCommandKeyMask;
     item.keyEquivalent = @"q";
@@ -146,7 +146,7 @@
 
 //to hell with gatekeepers
 -(void) menuDisableGatekeeper {
-  NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+  NSAlert* alert = [[NSAlert alloc] init];
   [alert setMessageText:@"Disable Gatekeeper"];
 
   AuthorizationRef authorization;
@@ -213,9 +213,6 @@ auto pWindow::construct() -> void {
 }
 
 auto pWindow::destruct() -> void {
-  @autoreleasepool {
-    [cocoaWindow release];
-  }
 }
 
 auto pWindow::append(sMenuBar menuBar) -> void {

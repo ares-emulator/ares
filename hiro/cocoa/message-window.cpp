@@ -6,7 +6,7 @@ enum class MessageWindowType : u32 { Error, Information, Question, Warning };
 
 auto MessageWindow_dialog(MessageWindow::State& state, MessageWindowType type) -> MessageWindow::Response {
   @autoreleasepool {
-    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    NSAlert* alert = [[NSAlert alloc] init];
     if(state.title) [alert setMessageText:[NSString stringWithUTF8String:state.title]];
     [alert setInformativeText:[NSString stringWithUTF8String:state.text]];
 

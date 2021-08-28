@@ -45,7 +45,6 @@ auto pTableViewItem::setSelected(bool selected) -> void {
         if(item->selected()) [indexSet addIndex:item->offset()];
       }
       [[(CocoaTableView*)(tableView->cocoaView) content] selectRowIndexes:indexSet byExtendingSelection:NO];
-      [indexSet release];
     }
   }
 }

@@ -28,11 +28,6 @@
   return self;
 }
 
--(void) dealloc {
-  [content release];
-  [font release];
-  [super dealloc];
-}
 
 -(CocoaTableViewContent*) content {
   return content;
@@ -44,8 +39,6 @@
 
 -(void) setFont:(NSFont*)fontPointer {
   if(!fontPointer) fontPointer = [NSFont systemFontOfSize:12];
-  [fontPointer retain];
-  if(font) [font release];
   font = fontPointer;
 
   u32 fontHeight = hiro::pFont::size(font, " ").height();
@@ -318,7 +311,6 @@ auto pTableView::construct() -> void {
 auto pTableView::destruct() -> void {
   @autoreleasepool {
     [cocoaView removeFromSuperview];
-    [cocoaView release];
   }
 }
 
@@ -411,7 +403,7 @@ auto pTableView::setForegroundColor(Color color) -> void {
 auto pTableView::setHeadered(bool headered) -> void {
   @autoreleasepool {
     if(headered) {
-      [[(CocoaTableView*)cocoaView content] setHeaderView:[[[NSTableHeaderView alloc] init] autorelease]];
+      [[(CocoaTableView*)cocoaView content] setHeaderView:[[NSTableHeaderView alloc] init]];
     } else {
       [[(CocoaTableView*)cocoaView content] setHeaderView:nil];
     }
