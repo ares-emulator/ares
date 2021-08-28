@@ -46,7 +46,7 @@ auto pVerticalSlider::setGeometry(Geometry geometry) -> void {
 }
 
 auto pVerticalSlider::setLength(u32 length) -> void {
-  [(CocoaVerticalSlider*)cocoaView setMaxValue:length];
+  [(CocoaVerticalSlider*)cocoaView setMaxValue:length - 1];
 }
 
 auto pVerticalSlider::setPosition(u32 position) -> void {
