@@ -32,4 +32,13 @@ auto BrowserWindow::setTitle(const string& title) -> type& {
   return *this;
 }
 
+auto BrowserWindow::setAllowsFolders(bool allows) -> type& {
+  state.allowsFolders = allows;
+  return *this;
+}
+
+auto BrowserWindow::allowsFolders() const -> bool {
+  return state.allowsFolders;
+}
+
 #endif
