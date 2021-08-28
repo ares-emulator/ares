@@ -544,14 +544,15 @@ auto TLCS900H::instruction() -> void {
     }
     if(data == 0x13) {  //LDAR R,PC+dd
       auto immediate = fetch<i16>();
+      auto address = load(PC) + immediate;  //load PC before final byte fetch
       data = fetch();
       switch(data) {
       case 0x20 ... 0x27:
         prefetch(14);
-        return instructionLoad(toRegister3<n16>(data), toImmediate<n16>(load(PC) + immediate));
+        return instructionLoad(toRegister3<n16>(data), toImmediate<n16>(address));
       case 0x30 ... 0x37:
         prefetch(14);
-        return instructionLoad(toRegister3<n32>(data), toImmediate<n32>(load(PC) + immediate));
+        return instructionLoad(toRegister3<n32>(data), toImmediate<n32>(address));
       }
     }
     debug(unusual, "[TLCS900H::instruction] 0xf3 0x", hex(data, 2L));
