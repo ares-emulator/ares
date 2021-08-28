@@ -21,8 +21,8 @@ struct InputKeyboardRawInput {
     u32 flag = input->data.keyboard.Flags;
 
     for(auto& key : keys) {
-      if(key.code != code) continue;
-      key.value = (key.flag == flag);
+      if(key.code != code || key.flag != (flag & ~1)) continue;
+      key.value = ~flag & 1;
     }
   }
 
