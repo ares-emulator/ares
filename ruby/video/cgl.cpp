@@ -98,6 +98,7 @@ struct VideoCGL : VideoDriver, OpenGL {
   }
 
   auto output(u32 width, u32 height) -> void override {
+    lock_guard<recursive_mutex> lock(mutex);
     acquireContext();
     u32 windowWidth, windowHeight;
     size(windowWidth, windowHeight);
