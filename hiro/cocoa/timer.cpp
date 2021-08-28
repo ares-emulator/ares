@@ -40,27 +40,19 @@
 namespace hiro {
 
 auto pTimer::construct() -> void {
-  @autoreleasepool {
-    cocoaTimer = [[CocoaTimer alloc] initWith:self()];
-  }
+  cocoaTimer = [[CocoaTimer alloc] initWith:self()];
 }
 
 auto pTimer::destruct() -> void {
-  @autoreleasepool {
-    if([cocoaTimer instance]) [[cocoaTimer instance] invalidate];
-  }
+  if([cocoaTimer instance]) [[cocoaTimer instance] invalidate];
 }
 
 auto pTimer::setEnabled(bool enabled) -> void {
-  @autoreleasepool {
-    [cocoaTimer update];
-  }
+  [cocoaTimer update];
 }
 
 auto pTimer::setInterval(u32 interval) -> void {
-  @autoreleasepool {
-    [cocoaTimer update];
-  }
+  [cocoaTimer update];
 }
 
 }

@@ -3,21 +3,17 @@
 namespace hiro {
 
 auto pFont::size(const Font& font, const string& text) -> Size {
-  @autoreleasepool {
-    if(NSFont* nsFont = create(font)) {
-      return size(nsFont, text);
-    }
+  if(NSFont* nsFont = create(font)) {
+    return size(nsFont, text);
   }
   return {0, 0};
 }
 
 auto pFont::size(NSFont* font, const string& text) -> Size {
-  @autoreleasepool {
-    NSString* cocoaText = [NSString stringWithUTF8String:text];
-    NSDictionary* fontAttributes = [NSDictionary dictionaryWithObjectsAndKeys:font, NSFontAttributeName, nil];
-    NSSize size = [cocoaText sizeWithAttributes:fontAttributes];
-    return {(s32)size.width, (s32)size.height};
-  }
+  NSString* cocoaText = [NSString stringWithUTF8String:text];
+  NSDictionary* fontAttributes = [NSDictionary dictionaryWithObjectsAndKeys:font, NSFontAttributeName, nil];
+  NSSize size = [cocoaText sizeWithAttributes:fontAttributes];
+  return {(s32)size.width, (s32)size.height};
 }
 
 auto pFont::family(const string& family) -> string {

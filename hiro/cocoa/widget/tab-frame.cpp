@@ -68,35 +68,27 @@
 namespace hiro {
 
 auto pTabFrame::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaTabFrame = [[CocoaTabFrame alloc] initWith:self()];
-    pWidget::construct();
+  cocoaView = cocoaTabFrame = [[CocoaTabFrame alloc] initWith:self()];
+  pWidget::construct();
 
-    setNavigation(state().navigation);
-  }
+  setNavigation(state().navigation);
 }
 
 auto pTabFrame::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pTabFrame::append(sTabFrameItem item) -> void {
-  @autoreleasepool {
-    if(auto p = item->self()) {
-      p->cocoaTabFrameItem = [[CocoaTabFrameItem alloc] initWith:self()];
-      [p->cocoaTabFrameItem setLabel:[NSString stringWithUTF8String:item->state.text]];
-      [(CocoaTabFrame*)cocoaView addTabViewItem:p->cocoaTabFrameItem];
-    }
+  if(auto p = item->self()) {
+    p->cocoaTabFrameItem = [[CocoaTabFrameItem alloc] initWith:self()];
+    [p->cocoaTabFrameItem setLabel:[NSString stringWithUTF8String:item->state.text]];
+    [(CocoaTabFrame*)cocoaView addTabViewItem:p->cocoaTabFrameItem];
   }
 }
 
 auto pTabFrame::remove(sTabFrameItem item) -> void {
-  @autoreleasepool {
-    if(auto p = item->self()) {
-      [(CocoaTabFrame*)cocoaView removeTabViewItem:p->cocoaTabFrameItem];
-    }
+  if(auto p = item->self()) {
+    [(CocoaTabFrame*)cocoaView removeTabViewItem:p->cocoaTabFrameItem];
   }
 }
 
@@ -148,13 +140,11 @@ auto pTabFrame::setVisible(bool visible) -> void {
 }
 
 auto pTabFrame::_synchronizeSizable() -> void {
-  @autoreleasepool {
-    NSTabViewItem* tabViewItem = [(CocoaTabFrame*)cocoaView selectedTabViewItem];
-    s32 selected = tabViewItem ? [(CocoaTabFrame*)cocoaView indexOfTabViewItem:tabViewItem] : -1;
-    for(auto& item : state().items) {
-      item->state.selected = item->offset() == selected;
-      if(auto& sizable = item->state.sizable) sizable->setVisible(item->selected());
-    }
+  NSTabViewItem* tabViewItem = [(CocoaTabFrame*)cocoaView selectedTabViewItem];
+  s32 selected = tabViewItem ? [(CocoaTabFrame*)cocoaView indexOfTabViewItem:tabViewItem] : -1;
+  for(auto& item : state().items) {
+    item->state.selected = item->offset() == selected;
+    if(auto& sizable = item->state.sizable) sizable->setVisible(item->selected());
   }
 }
 

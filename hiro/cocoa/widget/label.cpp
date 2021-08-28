@@ -122,21 +122,17 @@
 namespace hiro {
 
 auto pLabel::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaLabel = [[CocoaLabel alloc] initWith:self()];
-    pWidget::construct();
+  cocoaView = cocoaLabel = [[CocoaLabel alloc] initWith:self()];
+  pWidget::construct();
 
-    setAlignment(state().alignment);
-    setBackgroundColor(state().backgroundColor);
-    setForegroundColor(state().foregroundColor);
-    setText(state().text);
-  }
+  setAlignment(state().alignment);
+  setBackgroundColor(state().backgroundColor);
+  setForegroundColor(state().foregroundColor);
+  setText(state().text);
 }
 
 auto pLabel::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pLabel::minimumSize() const -> Size {
@@ -144,27 +140,19 @@ auto pLabel::minimumSize() const -> Size {
 }
 
 auto pLabel::setAlignment(Alignment alignment) -> void {
-  @autoreleasepool {
-    [cocoaView setNeedsDisplay:YES];
-  }
+  [cocoaView setNeedsDisplay:YES];
 }
 
 auto pLabel::setBackgroundColor(Color color) -> void {
-  @autoreleasepool {
-    [cocoaView setNeedsDisplay:YES];
-  }
+  [cocoaView setNeedsDisplay:YES];
 }
 
 auto pLabel::setForegroundColor(Color color) -> void {
-  @autoreleasepool {
-    [cocoaView setNeedsDisplay:YES];
-  }
+  [cocoaView setNeedsDisplay:YES];
 }
 
 auto pLabel::setText(const string& text) -> void {
-  @autoreleasepool {
-    [cocoaView setNeedsDisplay:YES];
-  }
+  [cocoaView setNeedsDisplay:YES];
 }
 
 }

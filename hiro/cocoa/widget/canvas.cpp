@@ -103,16 +103,12 @@
 namespace hiro {
 
 auto pCanvas::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaCanvas = [[CocoaCanvas alloc] initWith:self()];
-    pWidget::construct();
-  }
+  cocoaView = cocoaCanvas = [[CocoaCanvas alloc] initWith:self()];
+  pWidget::construct();
 }
 
 auto pCanvas::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pCanvas::minimumSize() const -> Size {
@@ -129,12 +125,10 @@ auto pCanvas::setColor(Color color) -> void {
 }
 
 auto pCanvas::setDroppable(bool droppable) -> void {
-  @autoreleasepool {
-    if(droppable) {
-      [cocoaCanvas registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
-    } else {
-      [cocoaCanvas unregisterDraggedTypes];
-    }
+  if(droppable) {
+    [cocoaCanvas registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
+  } else {
+    [cocoaCanvas unregisterDraggedTypes];
   }
 }
 
@@ -157,64 +151,60 @@ auto pCanvas::setIcon(const image& icon) -> void {
 
 auto pCanvas::update() -> void {
   _rasterize();
-  @autoreleasepool {
-    [cocoaView setNeedsDisplay:YES];
-  }
+  [cocoaView setNeedsDisplay:YES];
 }
 
 //todo: support cases where the icon size does not match the canvas size (alignment)
 auto pCanvas::_rasterize() -> void {
-  @autoreleasepool {
-    s32 width = 0;
-    s32 height = 0;
+  s32 width = 0;
+  s32 height = 0;
 
-    if(auto& icon = state().icon) {
-      width = icon.width();
-      height = icon.height();
-    } else {
-      width = pSizable::state().geometry.width();
-      height = pSizable::state().geometry.height();
-    }
-    if(width <= 0 || height <= 0) return;
+  if(auto& icon = state().icon) {
+    width = icon.width();
+    height = icon.height();
+  } else {
+    width = pSizable::state().geometry.width();
+    height = pSizable::state().geometry.height();
+  }
+  if(width <= 0 || height <= 0) return;
 
-    if(width != surfaceWidth || height != surfaceHeight) {
-      [(CocoaCanvas*)cocoaView setImage:nil];
-      surface = nullptr;
-      bitmap = nullptr;
-    }
+  if(width != surfaceWidth || height != surfaceHeight) {
+    [(CocoaCanvas*)cocoaView setImage:nil];
+    surface = nullptr;
+    bitmap = nullptr;
+  }
 
-    surfaceWidth = width;
-    surfaceHeight = height;
+  surfaceWidth = width;
+  surfaceHeight = height;
 
-    if(!surface) {
-      surface = [[NSImage alloc] initWithSize:NSMakeSize(width, height)];
-      bitmap = [[NSBitmapImageRep alloc]
-        initWithBitmapDataPlanes:nil
-        pixelsWide:width pixelsHigh:height
-        bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES
-        isPlanar:NO colorSpaceName:NSDeviceRGBColorSpace
-        bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
-        bytesPerRow:(width * 4) bitsPerPixel:32
-      ];
-      [surface addRepresentation:bitmap];
-      [(CocoaCanvas*)cocoaView setImage:surface];
-    }
+  if(!surface) {
+    surface = [[NSImage alloc] initWithSize:NSMakeSize(width, height)];
+    bitmap = [[NSBitmapImageRep alloc]
+      initWithBitmapDataPlanes:nil
+      pixelsWide:width pixelsHigh:height
+      bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES
+      isPlanar:NO colorSpaceName:NSDeviceRGBColorSpace
+      bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
+      bytesPerRow:(width * 4) bitsPerPixel:32
+    ];
+    [surface addRepresentation:bitmap];
+    [(CocoaCanvas*)cocoaView setImage:surface];
+  }
 
-    auto target = (u32*)[bitmap bitmapData];
+  auto target = (u32*)[bitmap bitmapData];
 
-    if(auto icon = state().icon) {
-      icon.transform(0, 32, 255u << 24, 255u << 0, 255u << 8, 255u << 16);  //Cocoa uses ABGR format
-      memory::copy(target, icon.data(), icon.size());
-    } else if(auto& gradient = state().gradient) {
-      auto& colors = gradient.state.colors;
-      image fill;
-      fill.allocate(width, height);
-      fill.gradient(colors[0].value(), colors[1].value(), colors[2].value(), colors[3].value());
-      memory::copy(target, fill.data(), fill.size());
-    } else {
-      u32 color = state().color.value();
-      for(auto n : range(width * height)) target[n] = color;
-    }
+  if(auto icon = state().icon) {
+    icon.transform(0, 32, 255u << 24, 255u << 0, 255u << 8, 255u << 16);  //Cocoa uses ABGR format
+    memory::copy(target, icon.data(), icon.size());
+  } else if(auto& gradient = state().gradient) {
+    auto& colors = gradient.state.colors;
+    image fill;
+    fill.allocate(width, height);
+    fill.gradient(colors[0].value(), colors[1].value(), colors[2].value(), colors[3].value());
+    memory::copy(target, fill.data(), fill.size());
+  } else {
+    u32 color = state().color.value();
+    for(auto n : range(width * height)) target[n] = color;
   }
 }
 

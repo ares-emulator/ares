@@ -23,19 +23,15 @@
 namespace hiro {
 
 auto pRadioLabel::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaRadioLabel = [[CocoaRadioLabel alloc] initWith:self()];
-    pWidget::construct();
+  cocoaView = cocoaRadioLabel = [[CocoaRadioLabel alloc] initWith:self()];
+  pWidget::construct();
 
-    setGroup(state().group);
-    setText(state().text);
-  }
+  setGroup(state().group);
+  setText(state().text);
 }
 
 auto pRadioLabel::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pRadioLabel::minimumSize() const -> Size {
@@ -59,15 +55,13 @@ auto pRadioLabel::setGeometry(Geometry geometry) -> void {
 }
 
 auto pRadioLabel::setGroup(sGroup group) -> void {
-  @autoreleasepool {
-    if(!group) return;
-    for(auto& weak : group->state.objects) {
-      if(auto object = weak.acquire()) {
-        if(auto self = object->self()) {
-          if(auto p = dynamic_cast<pRadioLabel*>(self)) {
-            auto state = p->state().checked ? NSOnState : NSOffState;
-            [(CocoaRadioLabel*)p->cocoaView setState:state];
-          }
+  if(!group) return;
+  for(auto& weak : group->state.objects) {
+    if(auto object = weak.acquire()) {
+      if(auto self = object->self()) {
+        if(auto p = dynamic_cast<pRadioLabel*>(self)) {
+          auto state = p->state().checked ? NSOnState : NSOffState;
+          [(CocoaRadioLabel*)p->cocoaView setState:state];
         }
       }
     }
@@ -75,9 +69,7 @@ auto pRadioLabel::setGroup(sGroup group) -> void {
 }
 
 auto pRadioLabel::setText(const string& text) -> void {
-  @autoreleasepool {
-    [(CocoaRadioLabel*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
-  }
+  [(CocoaRadioLabel*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
 }
 
 }

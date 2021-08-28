@@ -24,17 +24,13 @@ auto pTabFrameItem::setMovable(bool movable) -> void {
 }
 
 auto pTabFrameItem::setSelected() -> void {
-  @autoreleasepool {
-    if(auto parent = _parent()) {
-      [(CocoaTabFrame*)(parent->cocoaView) selectTabViewItem:cocoaTabFrameItem];
-    }
+  if(auto parent = _parent()) {
+    [(CocoaTabFrame*)(parent->cocoaView) selectTabViewItem:cocoaTabFrameItem];
   }
 }
 
 auto pTabFrameItem::setText(const string& text) -> void {
-  @autoreleasepool {
-    [cocoaTabFrameItem setLabel:[NSString stringWithUTF8String:state().text]];
-  }
+  [cocoaTabFrameItem setLabel:[NSString stringWithUTF8String:state().text]];
 }
 
 auto pTabFrameItem::_parent() -> maybe<pTabFrame&> {

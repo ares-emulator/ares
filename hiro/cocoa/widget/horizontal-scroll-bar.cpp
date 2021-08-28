@@ -55,37 +55,27 @@
 namespace hiro {
 
 auto pHorizontalScrollBar::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaHorizontalScrollBar = [[CocoaHorizontalScrollBar alloc] initWith:self()];
-    pWidget::construct();
+  cocoaView = cocoaHorizontalScrollBar = [[CocoaHorizontalScrollBar alloc] initWith:self()];
+  pWidget::construct();
 
-    setLength(state().length);
-    setPosition(state().position);
-  }
+  setLength(state().length);
+  setPosition(state().position);
 }
 
 auto pHorizontalScrollBar::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pHorizontalScrollBar::minimumSize() const -> Size {
-  @autoreleasepool {
-    return {32, (s32)[NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy]};
-  }
+  return {32, (s32)[NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy]};
 }
 
 auto pHorizontalScrollBar::setLength(u32 length) -> void {
-  @autoreleasepool {
-    [(CocoaHorizontalScrollBar*)cocoaView update];
-  }
+  [(CocoaHorizontalScrollBar*)cocoaView update];
 }
 
 auto pHorizontalScrollBar::setPosition(u32 position) -> void {
-  @autoreleasepool {
-    [(CocoaHorizontalScrollBar*)cocoaView update];
-  }
+  [(CocoaHorizontalScrollBar*)cocoaView update];
 }
 
 }

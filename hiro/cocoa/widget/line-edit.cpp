@@ -30,21 +30,17 @@
 namespace hiro {
 
 auto pLineEdit::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaLineEdit = [[CocoaLineEdit alloc] initWith:self()];
-    pWidget::construct();
+  cocoaView = cocoaLineEdit = [[CocoaLineEdit alloc] initWith:self()];
+  pWidget::construct();
 
-    setBackgroundColor(state().backgroundColor);
-    setEditable(state().editable);
-    setForegroundColor(state().foregroundColor);
-    setText(state().text);
-  }
+  setBackgroundColor(state().backgroundColor);
+  setEditable(state().editable);
+  setForegroundColor(state().foregroundColor);
+  setText(state().text);
 }
 
 auto pLineEdit::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pLineEdit::minimumSize() const -> Size {
@@ -56,25 +52,19 @@ auto pLineEdit::setBackgroundColor(Color color) -> void {
 }
 
 auto pLineEdit::setEditable(bool editable) -> void {
-  @autoreleasepool {
-    [(CocoaLineEdit*)cocoaView setEditable:editable];
-  }
+  [(CocoaLineEdit*)cocoaView setEditable:editable];
 }
 
 auto pLineEdit::setForegroundColor(Color color) -> void {
 }
 
 auto pLineEdit::setText(const string& text) -> void {
-  @autoreleasepool {
-    [(CocoaLineEdit*)cocoaView setStringValue:[NSString stringWithUTF8String:text]];
-  }
+  [(CocoaLineEdit*)cocoaView setStringValue:[NSString stringWithUTF8String:text]];
 }
 
 /*
 auto pLineEdit::text() const -> string {
-  @autoreleasepool {
-    return [[cocoaView stringValue] UTF8String];
-  }
+  return [[cocoaView stringValue] UTF8String];
 }
 */
 
