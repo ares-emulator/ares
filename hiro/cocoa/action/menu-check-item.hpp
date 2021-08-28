@@ -1,6 +1,6 @@
 #if defined(Hiro_MenuCheckItem)
 
-@interface CocoaMenuCheckItem : NSMenuItem {
+@interface CocoaMenuCheckItem : NSMenuItem<CocoaMenu> {
 @public
   hiro::mMenuCheckItem* menuCheckItem;
 }

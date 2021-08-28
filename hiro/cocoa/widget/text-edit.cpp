@@ -69,7 +69,7 @@ auto pTextEdit::setBackgroundColor(Color color) -> void {
 
 auto pTextEdit::setEditable(bool editable) -> void {
   @autoreleasepool {
-    [[cocoaView content] setEditable:(editable && self().enabled(true))];
+    [[(CocoaTextEdit*)cocoaView content] setEditable:(editable && self().enabled(true))];
   }
 }
 
@@ -80,7 +80,7 @@ auto pTextEdit::setEnabled(bool enabled) -> void {
 
 auto pTextEdit::setFont(const Font& font) -> void {
   @autoreleasepool {
-    [[cocoaView content] setFont:pFont::create(font)];
+    [[(CocoaTextEdit*)cocoaView content] setFont:pFont::create(font)];
   }
 }
 
@@ -89,33 +89,33 @@ auto pTextEdit::setForegroundColor(Color color) -> void {
 
 auto pTextEdit::setGeometry(Geometry geometry) -> void {
   pWidget::setGeometry(geometry);
-  [cocoaView configure];
+  [(CocoaTextEdit*)cocoaView configure];
 }
 
 auto pTextEdit::setText(const string& text) -> void {
   @autoreleasepool {
-    [[cocoaView content] setString:[NSString stringWithUTF8String:text]];
+    [[(CocoaTextEdit*)cocoaView content] setString:[NSString stringWithUTF8String:text]];
   }
 }
 
 auto pTextEdit::setTextCursor(TextCursor cursor) -> void {
   @autoreleasepool {
     //todo: handle text selection (cursor.length())
-    string text = [[[cocoaView content] string] UTF8String];
+    string text = [[[(CocoaTextEdit*)cocoaView content] string] UTF8String];
     auto offset = min(cursor.offset(), text.length());
-    [[cocoaView content] setSelectedRange:NSMakeRange(offset, 0)];
+    [[(CocoaTextEdit*)cocoaView content] setSelectedRange:NSMakeRange(offset, 0)];
   }
 }
 
 auto pTextEdit::setWordWrap(bool wordWrap) -> void {
   @autoreleasepool {
-    [cocoaView configure];
+    [(CocoaTextEdit*)cocoaView configure];
   }
 }
 
 auto pTextEdit::text() const -> string {
   @autoreleasepool {
-    return [[[cocoaView content] string] UTF8String];
+    return [[[(CocoaTextEdit*)cocoaView content] string] UTF8String];
   }
 }
 

@@ -26,7 +26,7 @@ auto pTabFrameItem::setMovable(bool movable) -> void {
 auto pTabFrameItem::setSelected() -> void {
   @autoreleasepool {
     if(auto parent = _parent()) {
-      [parent->cocoaView selectTabViewItem:cocoaTabFrameItem];
+      [(CocoaTabFrame*)(parent->cocoaView) selectTabViewItem:cocoaTabFrameItem];
     }
   }
 }

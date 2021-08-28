@@ -64,7 +64,7 @@ auto pCheckButton::setBordered(bool bordered) -> void {
 
 auto pCheckButton::setChecked(bool checked) -> void {
   @autoreleasepool {
-    [cocoaView setState:checked ? NSOnState : NSOffState];
+    [(CocoaCheckButton*)cocoaView setState:checked ? NSOnState : NSOffState];
   }
 }
 
@@ -77,20 +77,20 @@ auto pCheckButton::setGeometry(Geometry geometry) -> void {
 
 auto pCheckButton::setIcon(const image& icon) -> void {
   @autoreleasepool {
-    [cocoaView setImage:NSMakeImage(icon)];
+    [(CocoaCheckButton*)cocoaView setImage:NSMakeImage(icon)];
   }
 }
 
 auto pCheckButton::setOrientation(Orientation orientation) -> void {
   @autoreleasepool {
-    if(orientation == Orientation::Horizontal) [cocoaView setImagePosition:NSImageLeft];
-    if(orientation == Orientation::Vertical  ) [cocoaView setImagePosition:NSImageAbove];
+    if(orientation == Orientation::Horizontal) [(CocoaCheckButton*)cocoaView setImagePosition:NSImageLeft];
+    if(orientation == Orientation::Vertical  ) [(CocoaCheckButton*)cocoaView setImagePosition:NSImageAbove];
   }
 }
 
 auto pCheckButton::setText(const string& text) -> void {
   @autoreleasepool {
-    [cocoaView setTitle:[NSString stringWithUTF8String:text]];
+    [(CocoaCheckButton*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
   }
 }
 

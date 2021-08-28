@@ -79,13 +79,13 @@ auto pVerticalScrollBar::minimumSize() const -> Size {
 
 auto pVerticalScrollBar::setLength(u32 length) -> void {
   @autoreleasepool {
-    [cocoaView update];
+    [(CocoaVerticalScrollBar*)cocoaView update];
   }
 }
 
 auto pVerticalScrollBar::setPosition(u32 position) -> void {
   @autoreleasepool {
-    [cocoaView update];
+    [(CocoaVerticalScrollBar*)cocoaView update];
   }
 }
 

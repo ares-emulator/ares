@@ -5,7 +5,7 @@ namespace hiro {
 auto pTableViewColumn::construct() -> void {
   @autoreleasepool {
     if(auto tableView = _parent()) {
-      [tableView->cocoaView reloadColumns];
+      [(CocoaTableView*)(tableView->cocoaView) reloadColumns];
     }
   }
 }
@@ -13,7 +13,7 @@ auto pTableViewColumn::construct() -> void {
 auto pTableViewColumn::destruct() -> void {
   @autoreleasepool {
     if(auto tableView = _parent()) {
-      [tableView->cocoaView reloadColumns];
+      [(CocoaTableView*)(tableView->cocoaView) reloadColumns];
     }
   }
 }
@@ -54,14 +54,17 @@ auto pTableViewColumn::setSorting(Sort sorting) -> void {
 }
 
 auto pTableViewColumn::setText(const string& text) -> void {
+  /* (LIJI) TODO: I believe this function has some type confusion that should make it crash when called,
+                  (hence the (id) casts), but I have never seen it called to test and fix it.
+  */
   @autoreleasepool {
     if(auto parent = _parent()) {
       string label = text;
       if(state().sorting == Sort::Ascending ) label.append(" \u25b4");
       if(state().sorting == Sort::Descending) label.append(" \u25be");
-      NSTableColumn* tableColumn = [[parent->cocoaView content] tableColumnWithIdentifier:[[NSNumber numberWithInteger:self().offset()] stringValue]];
+      NSTableColumn* tableColumn = [[(id)(parent->cocoaView) content] tableColumnWithIdentifier:[[NSNumber numberWithInteger:self().offset()] stringValue]];
       [[tableColumn headerCell] setStringValue:[NSString stringWithUTF8String:label]];
-      [[parent->cocoaView headerView] setNeedsDisplay:YES];
+      [[(id)(parent->cocoaView) headerView] setNeedsDisplay:YES];
     }
   }
 }

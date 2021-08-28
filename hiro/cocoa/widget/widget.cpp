@@ -45,7 +45,7 @@ auto pWidget::setEnabled(bool enabled) -> void {
 
   @autoreleasepool {
     if([cocoaView respondsToSelector:@selector(setEnabled:)]) {
-      [cocoaView setEnabled:enabled];
+      [(id)cocoaView setEnabled:enabled];
     }
   }
 }
@@ -63,7 +63,7 @@ auto pWidget::setFocused() -> void {
 auto pWidget::setFont(const Font& font) -> void {
   @autoreleasepool {
     if([cocoaView respondsToSelector:@selector(setFont:)]) {
-      [cocoaView setFont:pFont::create(font)];
+      [(id)cocoaView setFont:pFont::create(font)];
     }
   }
 }

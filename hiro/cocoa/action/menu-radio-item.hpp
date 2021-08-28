@@ -1,6 +1,6 @@
 #if defined(Hiro_MenuRadioItem)
 
-@interface CocoaMenuRadioItem : NSMenuItem {
+@interface CocoaMenuRadioItem : NSMenuItem<CocoaMenu> {
 @public
   hiro::mMenuRadioItem* menuRadioItem;
 }

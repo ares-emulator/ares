@@ -8,7 +8,7 @@ struct pAction :  pObject {
   auto setEnabled(bool enabled) -> void override;
   auto setVisible(bool visible) -> void override;
 
-  NSMenuItem* cocoaAction = nullptr;
+  NSMenuItem<CocoaMenu>* cocoaAction = nullptr;
 };
 
 }

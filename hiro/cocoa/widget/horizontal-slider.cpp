@@ -52,13 +52,13 @@ auto pHorizontalSlider::setGeometry(Geometry geometry) -> void {
 
 auto pHorizontalSlider::setLength(u32 length) -> void {
   @autoreleasepool {
-    [cocoaView setMaxValue:length];
+    [(CocoaHorizontalSlider*)cocoaView setMaxValue:length];
   }
 }
 
 auto pHorizontalSlider::setPosition(u32 position) -> void {
   @autoreleasepool {
-    [cocoaView setDoubleValue:position];
+    [(CocoaHorizontalSlider*)cocoaView setDoubleValue:position];
   }
 }
 

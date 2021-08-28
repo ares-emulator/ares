@@ -20,16 +20,6 @@
   if(Application::state().onMain) Application::doMain();
 }
 
--(void) updateInDock:(NSTimer*)timer {
-  NSArray* windows = [NSApp windows];
-  for(u32 n = 0; n < [windows count]; n++) {
-    NSWindow* window = [windows objectAtIndex:n];
-    if([window isMiniaturized]) {
-      [window updateInDock];
-    }
-  }
-}
-
 @end
 
 CocoaDelegate* cocoaDelegate = nullptr;
@@ -47,8 +37,6 @@ auto pApplication::modal() -> bool {
 }
 
 auto pApplication::run() -> void {
-//applicationTimer = [NSTimer scheduledTimerWithTimeInterval:0.1667 target:cocoaDelegate selector:@selector(updateInDock:) userInfo:nil repeats:YES];
-
   if(Application::state().onMain) {
     applicationTimer = [NSTimer scheduledTimerWithTimeInterval:0.0 target:cocoaDelegate selector:@selector(run:) userInfo:nil repeats:YES];
 

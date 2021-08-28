@@ -52,13 +52,13 @@ auto pVerticalSlider::setGeometry(Geometry geometry) -> void {
 
 auto pVerticalSlider::setLength(u32 length) -> void {
   @autoreleasepool {
-    [cocoaView setMaxValue:length];
+    [(CocoaVerticalSlider*)cocoaView setMaxValue:length];
   }
 }
 
 auto pVerticalSlider::setPosition(u32 position) -> void {
   @autoreleasepool {
-    [cocoaView setDoubleValue:position];
+    [(CocoaVerticalSlider*)cocoaView setDoubleValue:position];
   }
 }
 

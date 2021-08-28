@@ -179,7 +179,7 @@ auto pCanvas::_rasterize() -> void {
     if(width <= 0 || height <= 0) return;
 
     if(width != surfaceWidth || height != surfaceHeight) {
-      [cocoaView setImage:nil];
+      [(CocoaCanvas*)cocoaView setImage:nil];
       surface = nullptr;
       bitmap = nullptr;
     }
@@ -198,7 +198,7 @@ auto pCanvas::_rasterize() -> void {
         bytesPerRow:(width * 4) bitsPerPixel:32
       ] autorelease];
       [surface addRepresentation:bitmap];
-      [cocoaView setImage:surface];
+      [(CocoaCanvas*)cocoaView setImage:surface];
     }
 
     auto target = (u32*)[bitmap bitmapData];

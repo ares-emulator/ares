@@ -22,6 +22,7 @@
 #include "menu-bar.hpp"
 #include "popup-menu.hpp"
 
+#include "action/menu-protocol.hpp"
 #include "action/action.hpp"
 #include "action/menu.hpp"
 #include "action/menu-separator.hpp"

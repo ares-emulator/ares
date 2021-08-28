@@ -71,7 +71,7 @@ auto pRadioButton::setChecked() -> void {
           if(auto self = object->self()) {
             if(auto p = dynamic_cast<pRadioButton*>(self)) {
               auto state = this == p ? NSOnState : NSOffState;
-              [p->cocoaView setState:state];
+              [(CocoaRadioButton*)p->cocoaView setState:state];
             }
           }
         }
@@ -92,20 +92,20 @@ auto pRadioButton::setGroup(sGroup group) -> void {
 
 auto pRadioButton::setIcon(const image& icon) -> void {
   @autoreleasepool {
-    [cocoaView setImage:NSMakeImage(icon)];
+    [(CocoaRadioButton*)cocoaView setImage:NSMakeImage(icon)];
   }
 }
 
 auto pRadioButton::setOrientation(Orientation orientation) -> void {
   @autoreleasepool {
-    if(orientation == Orientation::Horizontal) [cocoaView setImagePosition:NSImageLeft];
-    if(orientation == Orientation::Vertical  ) [cocoaView setImagePosition:NSImageAbove];
+    if(orientation == Orientation::Horizontal) [(CocoaRadioButton*)cocoaView setImagePosition:NSImageLeft];
+    if(orientation == Orientation::Vertical  ) [(CocoaRadioButton*)cocoaView setImagePosition:NSImageAbove];
   }
 }
 
 auto pRadioButton::setText(const string& text) -> void {
   @autoreleasepool {
-    [cocoaView setTitle:[NSString stringWithUTF8String:text]];
+    [(CocoaRadioButton*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
   }
 }
 
