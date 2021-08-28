@@ -14,5 +14,18 @@
   <true/>
   <key>NSSupportsAutomaticGraphicsSwitching</key>
   <true/>
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>*</string>
+      </array>
+      <key>CFBundleTypeName</key>
+      <string>DocumentType</string>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+     </dict>
+  </array>
 </dict>
 </plist>
