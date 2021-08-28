@@ -33,7 +33,7 @@ auto VDP::DMA::load() -> void {
 }
 
 auto VDP::DMA::fill() -> void {
-  auto data = vdp.fifo.slots[3].data;
+  auto data = vdp.fifo.slots[0].data;
   switch(vdp.command.target) {
   case 1: vdp.vram.writeByte(vdp.command.address, data >> 8); break;
   case 3: vdp.cram.write(vdp.command.address, data); break;

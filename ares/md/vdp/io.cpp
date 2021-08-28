@@ -140,7 +140,6 @@ auto VDP::writeDataPort(n16 data) -> void {
   command.latch = 0;
   command.ready = 1;
 
-  if(dma.mode == 2) dma.wait = 0;
   fifo.write(command.target, command.address, data);
   command.address += command.increment;
 }
