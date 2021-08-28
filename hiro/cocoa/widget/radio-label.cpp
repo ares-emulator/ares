@@ -67,7 +67,7 @@ auto pRadioLabel::setGroup(sGroup group) -> void {
         if(auto self = object->self()) {
           if(auto p = dynamic_cast<pRadioLabel*>(self)) {
             auto state = p->state().checked ? NSOnState : NSOffState;
-            [p->cocoaView setState:state];
+            [(CocoaRadioLabel*)p->cocoaView setState:state];
           }
         }
       }
@@ -77,7 +77,7 @@ auto pRadioLabel::setGroup(sGroup group) -> void {
 
 auto pRadioLabel::setText(const string& text) -> void {
   @autoreleasepool {
-    [cocoaView setTitle:[NSString stringWithUTF8String:text]];
+    [(CocoaRadioLabel*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
   }
 }
 

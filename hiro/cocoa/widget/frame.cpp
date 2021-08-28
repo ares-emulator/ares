@@ -44,7 +44,7 @@ auto pFrame::setEnabled(bool enabled) -> void {
 
 auto pFrame::setFont(const Font& font) -> void {
   @autoreleasepool {
-    [cocoaView setTitleFont:pFont::create(font)];
+    [(CocoaFrame*)cocoaView setTitleFont:pFont::create(font)];
   }
   if(auto& sizable = state().sizable) sizable->setFont(font);
 }
@@ -66,7 +66,7 @@ auto pFrame::setGeometry(Geometry geometry) -> void {
 
 auto pFrame::setText(const string& text) -> void {
   @autoreleasepool {
-    [cocoaView setTitle:[NSString stringWithUTF8String:text]];
+    [(CocoaFrame*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
   }
 }
 

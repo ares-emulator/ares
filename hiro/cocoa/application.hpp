@@ -5,7 +5,6 @@
 -(NSApplicationTerminateReply) applicationShouldTerminate:(NSApplication*)sender;
 -(BOOL) applicationShouldHandleReopen:(NSApplication*)application hasVisibleWindows:(BOOL)flag;
 -(void) run:(NSTimer*)timer;
--(void) updateInDock:(NSTimer*)timer;
 @end
 
 namespace hiro {

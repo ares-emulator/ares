@@ -200,7 +200,8 @@
   return [[self objectValue] objectForKey:@"text"];
 }
 
--(void) drawWithFrame:(NSRect)frame inView:(NSView*)view {
+-(void) drawWithFrame:(NSRect)frame inView:(NSView*)_view {
+  NSTableView* view = (NSTableView*)_view;
   if(auto tableViewItem = tableView->item([view rowAtPoint:frame.origin])) {
     if(auto tableViewCell = tableViewItem->cell([view columnAtPoint:frame.origin])) {
       NSColor* backgroundColor = nil;
@@ -266,7 +267,8 @@
 
 //I am unable to get startTrackingAt:, continueTracking:, stopTracking: to work
 //so instead, I have to run a modal loop on events until the mouse button is released
--(BOOL) trackMouse:(NSEvent*)event inRect:(NSRect)frame ofView:(NSView*)view untilMouseUp:(BOOL)flag {
+-(BOOL) trackMouse:(NSEvent*)event inRect:(NSRect)frame ofView:(NSView*)_view untilMouseUp:(BOOL)flag {
+  NSTableView* view = (NSTableView*)_view;
   if([event type] == NSLeftMouseDown) {
     NSWindow* window = [view window];
     NSEvent* nextEvent;
@@ -322,27 +324,27 @@ auto pTableView::destruct() -> void {
 
 auto pTableView::append(sTableViewColumn column) -> void {
   @autoreleasepool {
-    [cocoaView reloadColumns];
+    [(CocoaTableView*)cocoaView reloadColumns];
     resizeColumns();
   }
 }
 
 auto pTableView::append(sTableViewItem item) -> void {
   @autoreleasepool {
-    [[cocoaView content] reloadData];
+    [[(CocoaTableView*)cocoaView content] reloadData];
   }
 }
 
 auto pTableView::remove(sTableViewColumn column) -> void {
   @autoreleasepool {
-    [cocoaView reloadColumns];
+    [(CocoaTableView*)cocoaView reloadColumns];
     resizeColumns();
   }
 }
 
 auto pTableView::remove(sTableViewItem item) -> void {
   @autoreleasepool {
-    [[cocoaView content] reloadData];
+    [[(CocoaTableView*)cocoaView content] reloadData];
   }
 }
 
@@ -368,7 +370,7 @@ auto pTableView::resizeColumns() -> void {
       if(auto self = state().columns[column]->self()) {
         s32 width = widths[column];
         if(self->state().expandable) width += expandWidth;
-        NSTableColumn* tableColumn = [[cocoaView content] tableColumnWithIdentifier:[[NSNumber numberWithInteger:column] stringValue]];
+        NSTableColumn* tableColumn = [[(CocoaTableView*)cocoaView content] tableColumnWithIdentifier:[[NSNumber numberWithInteger:column] stringValue]];
         [tableColumn setWidth:width];
       }
     }
@@ -383,7 +385,7 @@ auto pTableView::setBackgroundColor(Color color) -> void {
 
 auto pTableView::setBatchable(bool batchable) -> void {
   @autoreleasepool {
-    [[cocoaView content] setAllowsMultipleSelection:(batchable ? YES : NO)];
+    [[(CocoaTableView*)cocoaView content] setAllowsMultipleSelection:(batchable ? YES : NO)];
   }
 }
 
@@ -393,13 +395,13 @@ auto pTableView::setBordered(bool bordered) -> void {
 auto pTableView::setEnabled(bool enabled) -> void {
   pWidget::setEnabled(enabled);
   @autoreleasepool {
-    [[cocoaView content] setEnabled:enabled];
+    [[(CocoaTableView*)cocoaView content] setEnabled:enabled];
   }
 }
 
 auto pTableView::setFont(const Font& font) -> void {
   @autoreleasepool {
-    [cocoaView setFont:pFont::create(font)];
+    [(CocoaTableView*)cocoaView setFont:pFont::create(font)];
   }
 }
 
@@ -409,9 +411,9 @@ auto pTableView::setForegroundColor(Color color) -> void {
 auto pTableView::setHeadered(bool headered) -> void {
   @autoreleasepool {
     if(headered) {
-      [[cocoaView content] setHeaderView:[[[NSTableHeaderView alloc] init] autorelease]];
+      [[(CocoaTableView*)cocoaView content] setHeaderView:[[[NSTableHeaderView alloc] init] autorelease]];
     } else {
-      [[cocoaView content] setHeaderView:nil];
+      [[(CocoaTableView*)cocoaView content] setHeaderView:nil];
     }
   }
 }

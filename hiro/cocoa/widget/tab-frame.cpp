@@ -88,7 +88,7 @@ auto pTabFrame::append(sTabFrameItem item) -> void {
     if(auto p = item->self()) {
       p->cocoaTabFrameItem = [[CocoaTabFrameItem alloc] initWith:self()];
       [p->cocoaTabFrameItem setLabel:[NSString stringWithUTF8String:item->state.text]];
-      [cocoaView addTabViewItem:p->cocoaTabFrameItem];
+      [(CocoaTabFrame*)cocoaView addTabViewItem:p->cocoaTabFrameItem];
     }
   }
 }
@@ -96,7 +96,7 @@ auto pTabFrame::append(sTabFrameItem item) -> void {
 auto pTabFrame::remove(sTabFrameItem item) -> void {
   @autoreleasepool {
     if(auto p = item->self()) {
-      [cocoaView removeTabViewItem:p->cocoaTabFrameItem];
+      [(CocoaTabFrame*)cocoaView removeTabViewItem:p->cocoaTabFrameItem];
     }
   }
 }
@@ -150,8 +150,8 @@ auto pTabFrame::setVisible(bool visible) -> void {
 
 auto pTabFrame::_synchronizeSizable() -> void {
   @autoreleasepool {
-    NSTabViewItem* tabViewItem = [cocoaView selectedTabViewItem];
-    s32 selected = tabViewItem ? [cocoaView indexOfTabViewItem:tabViewItem] : -1;
+    NSTabViewItem* tabViewItem = [(CocoaTabFrame*)cocoaView selectedTabViewItem];
+    s32 selected = tabViewItem ? [(CocoaTabFrame*)cocoaView indexOfTabViewItem:tabViewItem] : -1;
     for(auto& item : state().items) {
       item->state.selected = item->offset() == selected;
       if(auto& sizable = item->state.sizable) sizable->setVisible(item->selected());

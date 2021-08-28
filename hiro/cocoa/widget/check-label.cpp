@@ -46,7 +46,7 @@ auto pCheckLabel::minimumSize() const -> Size {
 
 auto pCheckLabel::setChecked(bool checked) -> void {
   @autoreleasepool {
-    [cocoaView setState:checked ? NSOnState : NSOffState];
+    [(CocoaCheckLabel*)cocoaView setState:checked ? NSOnState : NSOffState];
   }
 }
 
@@ -59,7 +59,7 @@ auto pCheckLabel::setGeometry(Geometry geometry) -> void {
 
 auto pCheckLabel::setText(const string& text) -> void {
   @autoreleasepool {
-    [cocoaView setTitle:[NSString stringWithUTF8String:text]];
+    [(CocoaCheckLabel*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
   }
 }
 

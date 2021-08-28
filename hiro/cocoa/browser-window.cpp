@@ -66,8 +66,7 @@ auto pBrowserWindow::save(BrowserWindow::State& state) -> string {
     if(state.title) [panel setTitle:[NSString stringWithUTF8String:state.title]];
     [panel setAllowedFileTypes:filters];
     if([panel runModalForDirectory:[NSString stringWithUTF8String:state.path] file:nil] == NSOKButton) {
-      NSArray* names = [panel filenames];
-      const char* name = [[names objectAtIndex:0] UTF8String];
+      const char* name = panel.URL.path.UTF8String;
       if(name) result = name;
     }
     [filters release];

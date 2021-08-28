@@ -79,13 +79,13 @@ auto pHorizontalScrollBar::minimumSize() const -> Size {
 
 auto pHorizontalScrollBar::setLength(u32 length) -> void {
   @autoreleasepool {
-    [cocoaView update];
+    [(CocoaHorizontalScrollBar*)cocoaView update];
   }
 }
 
 auto pHorizontalScrollBar::setPosition(u32 position) -> void {
   @autoreleasepool {
-    [cocoaView update];
+    [(CocoaHorizontalScrollBar*)cocoaView update];
   }
 }
 

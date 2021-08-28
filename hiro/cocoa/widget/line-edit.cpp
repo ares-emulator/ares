@@ -58,7 +58,7 @@ auto pLineEdit::setBackgroundColor(Color color) -> void {
 
 auto pLineEdit::setEditable(bool editable) -> void {
   @autoreleasepool {
-    [cocoaView setEditable:editable];
+    [(CocoaLineEdit*)cocoaView setEditable:editable];
   }
 }
 
@@ -67,7 +67,7 @@ auto pLineEdit::setForegroundColor(Color color) -> void {
 
 auto pLineEdit::setText(const string& text) -> void {
   @autoreleasepool {
-    [cocoaView setStringValue:[NSString stringWithUTF8String:text]];
+    [(CocoaLineEdit*)cocoaView setStringValue:[NSString stringWithUTF8String:text]];
   }
 }
 
