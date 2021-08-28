@@ -34,9 +34,6 @@ auto pMenuRadioItem::construct() -> void {
 }
 
 auto pMenuRadioItem::destruct() -> void {
-  @autoreleasepool {
-    [cocoaAction release];
-  }
 }
 
 auto pMenuRadioItem::setChecked() -> void {

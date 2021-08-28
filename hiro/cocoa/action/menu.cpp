@@ -31,10 +31,6 @@ auto pMenu::construct() -> void {
 }
 
 auto pMenu::destruct() -> void {
-  @autoreleasepool {
-    [[cocoaAction cocoaMenu] release];
-    [cocoaAction release];
-  }
 }
 
 auto pMenu::append(sAction action) -> void {

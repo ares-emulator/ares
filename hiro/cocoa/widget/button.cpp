@@ -36,7 +36,6 @@ auto pButton::construct() -> void {
 auto pButton::destruct() -> void {
   @autoreleasepool {
     [cocoaView removeFromSuperview];
-    [cocoaView release];
   }
 }
 

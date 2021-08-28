@@ -161,10 +161,10 @@ private:
         0
       };
 
-      auto context = self.fullScreen ? [window contentView] : (NSView*)self.context;
+      auto context = self.fullScreen ? [window contentView] : (__bridge NSView*)(void *)self.context;
       auto size = [context frame].size;
-      auto format = [[[NSOpenGLPixelFormat alloc] initWithAttributes:attributeList] autorelease];
-      auto openGLContext = [[[NSOpenGLContext alloc] initWithFormat:format shareContext:nil] autorelease];
+      auto format = [[NSOpenGLPixelFormat alloc] initWithAttributes:attributeList];
+      auto openGLContext = [[NSOpenGLContext alloc] initWithFormat:format shareContext:nil];
 
       view = [[RubyVideoCGL alloc] initWith:this pixelFormat:format];
       [view setOpenGLContext:openGLContext];
@@ -198,7 +198,6 @@ private:
     @autoreleasepool {
       if(view) {
         [view removeFromSuperview];
-        [view release];
         view = nil;
       }
 
@@ -207,7 +206,6 @@ private:
         [window toggleFullScreen:nil];
         [window setCollectionBehavior:NSWindowCollectionBehaviorDefault];
         [window close];
-        [window release];
         window = nil;
       }
     }

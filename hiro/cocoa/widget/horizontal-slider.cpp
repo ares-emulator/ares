@@ -35,7 +35,6 @@ auto pHorizontalSlider::construct() -> void {
 auto pHorizontalSlider::destruct() -> void {
   @autoreleasepool {
     [cocoaView removeFromSuperview];
-    [cocoaView release];
   }
 }
 

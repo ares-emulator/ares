@@ -33,9 +33,6 @@ auto pMenuCheckItem::construct() -> void {
 }
 
 auto pMenuCheckItem::destruct() -> void {
-  @autoreleasepool {
-    [cocoaAction release];
-  }
 }
 
 auto pMenuCheckItem::setChecked(bool checked) -> void {

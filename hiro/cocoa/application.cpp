@@ -63,9 +63,7 @@ auto pApplication::processEvents() -> void {
     while(!Application::state().quit) {
       NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES];
       if(event == nil) break;
-      [event retain];
       [NSApp sendEvent:event];
-      [event release];
     }
   }
 }
@@ -93,7 +91,7 @@ auto pApplication::setScreenSaver(bool screenSaver) -> void {
       string reason = {Application::state().name, " screensaver suppression"};
       NSString* assertionName = [NSString stringWithUTF8String:reason.data()];
       if(IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleDisplaySleep,
-        kIOPMAssertionLevelOn, (CFStringRef)assertionName, &powerAssertion
+                                     kIOPMAssertionLevelOn, (__bridge CFStringRef)assertionName, &powerAssertion
       ) != kIOReturnSuccess) {
         powerAssertion = kIOPMNullAssertionID;
       }

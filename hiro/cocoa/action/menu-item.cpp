@@ -30,9 +30,6 @@ auto pMenuItem::construct() -> void {
 }
 
 auto pMenuItem::destruct() -> void {
-  @autoreleasepool {
-    [cocoaAction release];
-  }
 }
 
 auto pMenuItem::setIcon(const image& icon) -> void {

@@ -146,7 +146,7 @@ endif
 
 # macos settings
 ifeq ($(platform),macos)
-  flags   += -stdlib=libc++ -mmacosx-version-min=10.9 -Wno-auto-var-id
+  flags   += -stdlib=libc++ -mmacosx-version-min=10.9 -Wno-auto-var-id -fobjc-arc
   options += -lc++ -lobjc -mmacosx-version-min=10.9
   ifneq ($(local),true)
     flags   += -arch x86_64

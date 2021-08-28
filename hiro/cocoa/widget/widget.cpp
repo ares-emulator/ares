@@ -26,7 +26,6 @@ auto pWidget::construct() -> void {
 auto pWidget::destruct() -> void {
   @autoreleasepool {
     [cocoaView removeFromSuperview];
-    [cocoaView release];
   }
 }
 

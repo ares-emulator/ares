@@ -6,7 +6,7 @@
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
     textEdit = &textEditReference;
 
-    content = [[[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)] autorelease];
+    content = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)];
     [content setDelegate:self];
     [content setRichText:NO];
 
@@ -60,7 +60,6 @@ auto pTextEdit::construct() -> void {
 auto pTextEdit::destruct() -> void {
   @autoreleasepool {
     [cocoaView removeFromSuperview];
-    [cocoaView release];
   }
 }
 

@@ -79,7 +79,6 @@ auto pTabFrame::construct() -> void {
 auto pTabFrame::destruct() -> void {
   @autoreleasepool {
     [cocoaView removeFromSuperview];
-    [cocoaView release];
   }
 }
 

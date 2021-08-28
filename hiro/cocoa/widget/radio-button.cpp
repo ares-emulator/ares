@@ -40,7 +40,6 @@ auto pRadioButton::construct() -> void {
 auto pRadioButton::destruct() -> void {
   @autoreleasepool {
     [cocoaView removeFromSuperview];
-    [cocoaView release];
   }
 }
 
