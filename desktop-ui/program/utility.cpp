@@ -42,6 +42,8 @@ auto Program::openFile(BrowserDialog& dialog) -> string {
     window.setPath(dialog.path());
     window.setFilters(dialog.filters());
     window.setParent(dialog.alignmentWindow());
+    // Only affects macOS. TODO: are there scenarios where we want to forbid selecting folders?
+    window.setAllowsFolders(true);
     return window.open();
   }
   if(dialog.filters().size() > 1) return dialog.openObject();

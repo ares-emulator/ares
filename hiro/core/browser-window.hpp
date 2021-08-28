@@ -9,6 +9,8 @@ struct BrowserWindow {
   auto setParent(sWindow parent) -> type&;
   auto setPath(const string& path = "") -> type&;
   auto setTitle(const string& title = "") -> type&;
+  auto setAllowsFolders(bool allows = false) -> type&;
+  auto allowsFolders() const -> bool;
 
 //private:
   struct State {
@@ -16,6 +18,7 @@ struct BrowserWindow {
     sWindow parent;
     string path;
     string title;
+    bool allowsFolders;
   } state;
 };
 #endif

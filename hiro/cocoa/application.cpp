@@ -21,6 +21,9 @@
 }
 
 -(BOOL)application:(NSApplication*)sender openFile:(NSString*)filename {
+  BOOL isDirectory = NO;
+  [[NSFileManager defaultManager] fileExistsAtPath:filename isDirectory:&isDirectory];
+  if(isDirectory) filename = [filename stringByAppendingString:@"/"];
   hiro::Application::doOpenFile(filename.UTF8String);
   return YES;
 }
