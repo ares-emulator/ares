@@ -9,15 +9,11 @@ auto pAction::destruct() -> void {
 }
 
 auto pAction::setEnabled(bool enabled) -> void {
-  @autoreleasepool {
-    [cocoaAction setEnabled:enabled];
-  }
+  [cocoaAction setEnabled:enabled];
 }
 
 auto pAction::setVisible(bool visible) -> void {
-  @autoreleasepool {
-    [cocoaAction setHidden:!visible];
-  }
+  [cocoaAction setHidden:!visible];
 }
 
 }

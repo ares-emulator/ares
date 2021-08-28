@@ -23,19 +23,15 @@
 namespace hiro {
 
 auto pCheckLabel::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaCheckLabel = [[CocoaCheckLabel alloc] initWith:self()];
-    pWidget::construct();
+  cocoaView = cocoaCheckLabel = [[CocoaCheckLabel alloc] initWith:self()];
+  pWidget::construct();
 
-    setChecked(state().checked);
-    setText(state().text);
-  }
+  setChecked(state().checked);
+  setText(state().text);
 }
 
 auto pCheckLabel::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pCheckLabel::minimumSize() const -> Size {
@@ -44,9 +40,7 @@ auto pCheckLabel::minimumSize() const -> Size {
 }
 
 auto pCheckLabel::setChecked(bool checked) -> void {
-  @autoreleasepool {
-    [(CocoaCheckLabel*)cocoaView setState:checked ? NSOnState : NSOffState];
-  }
+  [(CocoaCheckLabel*)cocoaView setState:checked ? NSOnState : NSOffState];
 }
 
 auto pCheckLabel::setGeometry(Geometry geometry) -> void {
@@ -57,9 +51,7 @@ auto pCheckLabel::setGeometry(Geometry geometry) -> void {
 }
 
 auto pCheckLabel::setText(const string& text) -> void {
-  @autoreleasepool {
-    [(CocoaCheckLabel*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
-  }
+  [(CocoaCheckLabel*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
 }
 
 }

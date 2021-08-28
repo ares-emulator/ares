@@ -24,22 +24,18 @@
 namespace hiro {
 
 auto pCheckButton::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaCheckButton = [[CocoaCheckButton alloc] initWith:self()];
-    pWidget::construct();
+  cocoaView = cocoaCheckButton = [[CocoaCheckButton alloc] initWith:self()];
+  pWidget::construct();
 
-    setBordered(state().bordered);
-    setChecked(state().checked);
-    setIcon(state().icon);
-    setOrientation(state().orientation);
-    setText(state().text);
-  }
+  setBordered(state().bordered);
+  setChecked(state().checked);
+  setIcon(state().icon);
+  setOrientation(state().orientation);
+  setText(state().text);
 }
 
 auto pCheckButton::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pCheckButton::minimumSize() const -> Size {
@@ -62,9 +58,7 @@ auto pCheckButton::setBordered(bool bordered) -> void {
 }
 
 auto pCheckButton::setChecked(bool checked) -> void {
-  @autoreleasepool {
-    [(CocoaCheckButton*)cocoaView setState:checked ? NSOnState : NSOffState];
-  }
+  [(CocoaCheckButton*)cocoaView setState:checked ? NSOnState : NSOffState];
 }
 
 auto pCheckButton::setGeometry(Geometry geometry) -> void {
@@ -75,22 +69,16 @@ auto pCheckButton::setGeometry(Geometry geometry) -> void {
 }
 
 auto pCheckButton::setIcon(const image& icon) -> void {
-  @autoreleasepool {
-    [(CocoaCheckButton*)cocoaView setImage:NSMakeImage(icon)];
-  }
+  [(CocoaCheckButton*)cocoaView setImage:NSMakeImage(icon)];
 }
 
 auto pCheckButton::setOrientation(Orientation orientation) -> void {
-  @autoreleasepool {
-    if(orientation == Orientation::Horizontal) [(CocoaCheckButton*)cocoaView setImagePosition:NSImageLeft];
-    if(orientation == Orientation::Vertical  ) [(CocoaCheckButton*)cocoaView setImagePosition:NSImageAbove];
-  }
+  if(orientation == Orientation::Horizontal) [(CocoaCheckButton*)cocoaView setImagePosition:NSImageLeft];
+  if(orientation == Orientation::Vertical  ) [(CocoaCheckButton*)cocoaView setImagePosition:NSImageAbove];
 }
 
 auto pCheckButton::setText(const string& text) -> void {
-  @autoreleasepool {
-    [(CocoaCheckButton*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
-  }
+  [(CocoaCheckButton*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
 }
 
 }

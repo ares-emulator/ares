@@ -14,15 +14,11 @@
 namespace hiro {
 
 auto pHexEdit::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaHexEdit = [[CocoaHexEdit alloc] initWith:self()];
-  }
+  cocoaView = cocoaHexEdit = [[CocoaHexEdit alloc] initWith:self()];
 }
 
 auto pHexEdit::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pHexEdit::setAddress(u32 offset) -> void {

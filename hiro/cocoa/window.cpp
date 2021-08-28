@@ -201,14 +201,12 @@
 namespace hiro {
 
 auto pWindow::construct() -> void {
-  @autoreleasepool {
-    cocoaWindow = [[CocoaWindow alloc] initWith:self()];
+  cocoaWindow = [[CocoaWindow alloc] initWith:self()];
 
-    static bool once = true;
-    if(once) {
-      once = false;
-      [NSApp setMainMenu:[cocoaWindow menuBar]];
-    }
+  static bool once = true;
+  if(once) {
+    once = false;
+    [NSApp setMainMenu:[cocoaWindow menuBar]];
   }
 }
 
@@ -231,16 +229,12 @@ auto pWindow::append(sStatusBar statusBar) -> void {
 }
 
 auto pWindow::focused() const -> bool {
-  @autoreleasepool {
-    return [cocoaWindow isMainWindow] == YES;
-  }
+  return [cocoaWindow isMainWindow] == YES;
 }
 
 auto pWindow::frameMargin() const -> Geometry {
-  @autoreleasepool {
-    NSRect frame = [cocoaWindow frameRectForContentRect:NSMakeRect(0, 0, 640, 480)];
-    return {abs(frame.origin.x), (s32)(frame.size.height - 480), (s32)(frame.size.width - 640), abs(frame.origin.y)};
-  }
+  NSRect frame = [cocoaWindow frameRectForContentRect:NSMakeRect(0, 0, 640, 480)];
+  return {abs(frame.origin.x), (s32)(frame.size.height - 480), (s32)(frame.size.width - 640), abs(frame.origin.y)};
 }
 
 auto pWindow::handle() const -> uintptr_t {
@@ -256,28 +250,22 @@ auto pWindow::remove(sMenuBar menuBar) -> void {
 }
 
 auto pWindow::remove(sSizable sizable) -> void {
-  @autoreleasepool {
-    [[cocoaWindow contentView] setNeedsDisplay:YES];
-  }
+  [[cocoaWindow contentView] setNeedsDisplay:YES];
 }
 
 auto pWindow::remove(sStatusBar statusBar) -> void {
-  @autoreleasepool {
-    [[cocoaWindow statusBar] setHidden:YES];
-  }
+  [[cocoaWindow statusBar] setHidden:YES];
 }
 
 auto pWindow::setBackgroundColor(Color color) -> void {
-  @autoreleasepool {
-    [cocoaWindow
-      setBackgroundColor:[NSColor
-        colorWithCalibratedRed:color.red() / 255.0
-        green:color.green() / 255.0
-        blue:color.blue() / 255.0
-        alpha:color.alpha() / 255.0
-      ]
-    ];
-  }
+  [cocoaWindow
+    setBackgroundColor:[NSColor
+      colorWithCalibratedRed:color.red() / 255.0
+      green:color.green() / 255.0
+      blue:color.blue() / 255.0
+      alpha:color.alpha() / 255.0
+    ]
+  ];
 }
 
 auto pWindow::setDismissable(bool dismissable) -> void {
@@ -285,58 +273,50 @@ auto pWindow::setDismissable(bool dismissable) -> void {
 }
 
 auto pWindow::setDroppable(bool droppable) -> void {
-  @autoreleasepool {
-    if(droppable) {
-      [cocoaWindow registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
-    } else {
-      [cocoaWindow unregisterDraggedTypes];
-    }
+  if(droppable) {
+    [cocoaWindow registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
+  } else {
+    [cocoaWindow unregisterDraggedTypes];
   }
 }
 
 auto pWindow::setFocused() -> void {
-  @autoreleasepool {
-    [cocoaWindow makeKeyAndOrderFront:nil];
-  }
+  [cocoaWindow makeKeyAndOrderFront:nil];
 }
 
 auto pWindow::setFullScreen(bool fullScreen) -> void {
-  @autoreleasepool {
-    if(fullScreen) {
-      windowedGeometry = state().geometry;
-      [NSApp setPresentationOptions:NSApplicationPresentationFullScreen];
-      [cocoaWindow setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-      [cocoaWindow toggleFullScreen:nil];
-      state().geometry = _geometry();
-    } else {
-      [cocoaWindow toggleFullScreen:nil];
-      [cocoaWindow setCollectionBehavior:NSWindowCollectionBehaviorDefault];
-      [NSApp setPresentationOptions:NSApplicationPresentationDefault];
-      state().geometry = windowedGeometry;
-    }
+  if(fullScreen) {
+    windowedGeometry = state().geometry;
+    [NSApp setPresentationOptions:NSApplicationPresentationFullScreen];
+    [cocoaWindow setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
+    [cocoaWindow toggleFullScreen:nil];
+    state().geometry = _geometry();
+  } else {
+    [cocoaWindow toggleFullScreen:nil];
+    [cocoaWindow setCollectionBehavior:NSWindowCollectionBehaviorDefault];
+    [NSApp setPresentationOptions:NSApplicationPresentationDefault];
+    state().geometry = windowedGeometry;
   }
 }
 
 auto pWindow::setGeometry(Geometry geometry) -> void {
   lock();
 
-  @autoreleasepool {
-    [cocoaWindow
-      setFrame:[cocoaWindow
-        frameRectForContentRect:NSMakeRect(
-          geometry.x(), Desktop::size().height() - geometry.y() - geometry.height(),
-          geometry.width(), geometry.height() + statusBarHeight()
-        )
-      ]
-      display:YES
-    ];
+  [cocoaWindow
+    setFrame:[cocoaWindow
+      frameRectForContentRect:NSMakeRect(
+        geometry.x(), Desktop::size().height() - geometry.y() - geometry.height(),
+        geometry.width(), geometry.height() + statusBarHeight()
+      )
+    ]
+    display:YES
+  ];
 
-    if(auto& sizable = state().sizable) {
-      sizable->setGeometry(self().geometry().setPosition());
-    }
-
-    statusBarReposition();
+  if(auto& sizable = state().sizable) {
+    sizable->setGeometry(self().geometry().setPosition());
   }
+
+  statusBarReposition();
 
   unlock();
 }
@@ -358,46 +338,36 @@ auto pWindow::setMinimumSize(Size size) -> void {
 }
 
 auto pWindow::setModal(bool modal) -> void {
-  @autoreleasepool {
-    if(modal == true) {
-      [NSApp runModalForWindow:cocoaWindow];
-    } else {
-      [NSApp stopModal];
-      NSEvent* event = [NSEvent otherEventWithType:NSApplicationDefined location:NSMakePoint(0, 0) modifierFlags:0 timestamp:0.0 windowNumber:0 context:nil subtype:0 data1:0 data2:0];
-      [NSApp postEvent:event atStart:true];
-    }
+  if(modal == true) {
+    [NSApp runModalForWindow:cocoaWindow];
+  } else {
+    [NSApp stopModal];
+    NSEvent* event = [NSEvent otherEventWithType:NSApplicationDefined location:NSMakePoint(0, 0) modifierFlags:0 timestamp:0.0 windowNumber:0 context:nil subtype:0 data1:0 data2:0];
+    [NSApp postEvent:event atStart:true];
   }
 }
 
 auto pWindow::setResizable(bool resizable) -> void {
-  @autoreleasepool {
-    NSUInteger style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask;
-    if(resizable) style |= NSResizableWindowMask;
-    [cocoaWindow setStyleMask:style];
-  }
+  NSUInteger style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask;
+  if(resizable) style |= NSResizableWindowMask;
+  [cocoaWindow setStyleMask:style];
 }
 
 auto pWindow::setTitle(const string& text) -> void {
-  @autoreleasepool {
-    [cocoaWindow setTitle:[NSString stringWithUTF8String:text]];
-  }
+  [cocoaWindow setTitle:[NSString stringWithUTF8String:text]];
 }
 
 auto pWindow::setVisible(bool visible) -> void {
-  @autoreleasepool {
-    if(visible) [cocoaWindow makeKeyAndOrderFront:nil];
-    else [cocoaWindow orderOut:nil];
-  }
+  if(visible) [cocoaWindow makeKeyAndOrderFront:nil];
+  else [cocoaWindow orderOut:nil];
 }
 
 auto pWindow::moveEvent() -> void {
   if(!locked() && !self().fullScreen() && self().visible()) {
-    @autoreleasepool {
-      NSRect area = [cocoaWindow contentRectForFrameRect:[cocoaWindow frame]];
-      area.size.height -= statusBarHeight();
-      state().geometry.setX(area.origin.x);
-      state().geometry.setY(Desktop::size().height() - area.origin.y - area.size.height);
-    }
+    NSRect area = [cocoaWindow contentRectForFrameRect:[cocoaWindow frame]];
+    area.size.height -= statusBarHeight();
+    state().geometry.setX(area.origin.x);
+    state().geometry.setY(Desktop::size().height() - area.origin.y - area.size.height);
   }
 
   if(!locked()) self().doMove();
@@ -405,12 +375,10 @@ auto pWindow::moveEvent() -> void {
 
 auto pWindow::sizeEvent() -> void {
   if(!locked() && !self().fullScreen() && self().visible()) {
-    @autoreleasepool {
-      NSRect area = [cocoaWindow contentRectForFrameRect:[cocoaWindow frame]];
-      area.size.height -= statusBarHeight();
-      state().geometry.setWidth(area.size.width);
-      state().geometry.setHeight(area.size.height);
-    }
+    NSRect area = [cocoaWindow contentRectForFrameRect:[cocoaWindow frame]];
+    area.size.height -= statusBarHeight();
+    state().geometry.setWidth(area.size.width);
+    state().geometry.setHeight(area.size.height);
   }
 
   if(auto& sizable = state().sizable) {
@@ -432,33 +400,27 @@ auto pWindow::statusBarHeight() -> u32 {
 }
 
 auto pWindow::statusBarReposition() -> void {
-  @autoreleasepool {
-    NSRect area = [cocoaWindow contentRectForFrameRect:[cocoaWindow frame]];
-    [[cocoaWindow statusBar] setFrame:NSMakeRect(0, 0, area.size.width, statusBarHeight())];
+  NSRect area = [cocoaWindow contentRectForFrameRect:[cocoaWindow frame]];
+  [[cocoaWindow statusBar] setFrame:NSMakeRect(0, 0, area.size.width, statusBarHeight())];
+  [[cocoaWindow contentView] setNeedsDisplay:YES];
+}
+
+auto pWindow::_append(mWidget& widget) -> void {
+  if(auto pWidget = widget.self()) {
+    [pWidget->cocoaView removeFromSuperview];
+    [[cocoaWindow contentView] addSubview:pWidget->cocoaView positioned:NSWindowAbove relativeTo:nil];
+    pWidget->setGeometry(widget.geometry());
     [[cocoaWindow contentView] setNeedsDisplay:YES];
   }
 }
 
-auto pWindow::_append(mWidget& widget) -> void {
-  @autoreleasepool {
-    if(auto pWidget = widget.self()) {
-      [pWidget->cocoaView removeFromSuperview];
-      [[cocoaWindow contentView] addSubview:pWidget->cocoaView positioned:NSWindowAbove relativeTo:nil];
-      pWidget->setGeometry(widget.geometry());
-      [[cocoaWindow contentView] setNeedsDisplay:YES];
-    }
-  }
-}
-
 auto pWindow::_geometry() -> Geometry {
-  @autoreleasepool {
-    NSRect area = [cocoaWindow contentRectForFrameRect:[cocoaWindow frame]];
-    area.size.height -= statusBarHeight();
-    return {
-      (s32)area.origin.x, (s32)(Monitor::geometry(Monitor::primary()).height() - area.origin.y - area.size.height),
-      (s32)area.size.width, (s32)area.size.height
-    };
-  }
+  NSRect area = [cocoaWindow contentRectForFrameRect:[cocoaWindow frame]];
+  area.size.height -= statusBarHeight();
+  return {
+    (s32)area.origin.x, (s32)(Monitor::geometry(Monitor::primary()).height() - area.origin.y - area.size.height),
+    (s32)area.size.width, (s32)area.size.height
+  };
 }
 
 }

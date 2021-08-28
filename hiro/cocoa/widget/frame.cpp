@@ -16,18 +16,14 @@
 namespace hiro {
 
 auto pFrame::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaFrame = [[CocoaFrame alloc] initWith:self()];
-    pWidget::construct();
+  cocoaView = cocoaFrame = [[CocoaFrame alloc] initWith:self()];
+  pWidget::construct();
 
-    setText(state().text);
-  }
+  setText(state().text);
 }
 
 auto pFrame::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pFrame::append(sSizable sizable) -> void {
@@ -42,9 +38,7 @@ auto pFrame::setEnabled(bool enabled) -> void {
 }
 
 auto pFrame::setFont(const Font& font) -> void {
-  @autoreleasepool {
-    [(CocoaFrame*)cocoaView setTitleFont:pFont::create(font)];
-  }
+  [(CocoaFrame*)cocoaView setTitleFont:pFont::create(font)];
   if(auto& sizable = state().sizable) sizable->setFont(font);
 }
 
@@ -64,9 +58,7 @@ auto pFrame::setGeometry(Geometry geometry) -> void {
 }
 
 auto pFrame::setText(const string& text) -> void {
-  @autoreleasepool {
-    [(CocoaFrame*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
-  }
+  [(CocoaFrame*)cocoaView setTitle:[NSString stringWithUTF8String:text]];
 }
 
 auto pFrame::setVisible(bool visible) -> void {

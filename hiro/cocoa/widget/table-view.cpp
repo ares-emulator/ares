@@ -293,78 +293,64 @@
 namespace hiro {
 
 auto pTableView::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaTableView = [[CocoaTableView alloc] initWith:self()];
-    pWidget::construct();
+  cocoaView = cocoaTableView = [[CocoaTableView alloc] initWith:self()];
+  pWidget::construct();
 
-    setAlignment(state().alignment);
-    setBackgroundColor(state().backgroundColor);
-    setBatchable(state().batchable);
-    setBordered(state().bordered);
-    setFont(self().font(true));
-    setForegroundColor(state().foregroundColor);
-    setHeadered(state().headered);
-    setSortable(state().sortable);
-  }
+  setAlignment(state().alignment);
+  setBackgroundColor(state().backgroundColor);
+  setBatchable(state().batchable);
+  setBordered(state().bordered);
+  setFont(self().font(true));
+  setForegroundColor(state().foregroundColor);
+  setHeadered(state().headered);
+  setSortable(state().sortable);
 }
 
 auto pTableView::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pTableView::append(sTableViewColumn column) -> void {
-  @autoreleasepool {
-    [(CocoaTableView*)cocoaView reloadColumns];
-    resizeColumns();
-  }
+  [(CocoaTableView*)cocoaView reloadColumns];
+  resizeColumns();
 }
 
 auto pTableView::append(sTableViewItem item) -> void {
-  @autoreleasepool {
-    [[(CocoaTableView*)cocoaView content] reloadData];
-  }
+  [[(CocoaTableView*)cocoaView content] reloadData];
 }
 
 auto pTableView::remove(sTableViewColumn column) -> void {
-  @autoreleasepool {
-    [(CocoaTableView*)cocoaView reloadColumns];
-    resizeColumns();
-  }
+  [(CocoaTableView*)cocoaView reloadColumns];
+  resizeColumns();
 }
 
 auto pTableView::remove(sTableViewItem item) -> void {
-  @autoreleasepool {
-    [[(CocoaTableView*)cocoaView content] reloadData];
-  }
+  [[(CocoaTableView*)cocoaView content] reloadData];
 }
 
 auto pTableView::resizeColumns() -> void {
-  @autoreleasepool {
-    vector<s32> widths;
-    s32 minimumWidth = 0;
-    s32 expandable = 0;
-    for(u32 column : range(self().columnCount())) {
-      s32 width = _width(column);
-      widths.append(width);
-      minimumWidth += width;
-      if(state().columns[column]->expandable()) expandable++;
-    }
+  vector<s32> widths;
+  s32 minimumWidth = 0;
+  s32 expandable = 0;
+  for(u32 column : range(self().columnCount())) {
+    s32 width = _width(column);
+    widths.append(width);
+    minimumWidth += width;
+    if(state().columns[column]->expandable()) expandable++;
+  }
 
-    s32 maximumWidth = self().geometry().width() - 18;  //include margin for vertical scroll bar
-    s32 expandWidth = 0;
-    if(expandable && maximumWidth > minimumWidth) {
-      expandWidth = (maximumWidth - minimumWidth) / expandable;
-    }
+  s32 maximumWidth = self().geometry().width() - 18;  //include margin for vertical scroll bar
+  s32 expandWidth = 0;
+  if(expandable && maximumWidth > minimumWidth) {
+    expandWidth = (maximumWidth - minimumWidth) / expandable;
+  }
 
-    for(u32 column : range(self().columnCount())) {
-      if(auto self = state().columns[column]->self()) {
-        s32 width = widths[column];
-        if(self->state().expandable) width += expandWidth;
-        NSTableColumn* tableColumn = [[(CocoaTableView*)cocoaView content] tableColumnWithIdentifier:[[NSNumber numberWithInteger:column] stringValue]];
-        [tableColumn setWidth:width];
-      }
+  for(u32 column : range(self().columnCount())) {
+    if(auto self = state().columns[column]->self()) {
+      s32 width = widths[column];
+      if(self->state().expandable) width += expandWidth;
+      NSTableColumn* tableColumn = [[(CocoaTableView*)cocoaView content] tableColumnWithIdentifier:[[NSNumber numberWithInteger:column] stringValue]];
+      [tableColumn setWidth:width];
     }
   }
 }
@@ -376,9 +362,7 @@ auto pTableView::setBackgroundColor(Color color) -> void {
 }
 
 auto pTableView::setBatchable(bool batchable) -> void {
-  @autoreleasepool {
-    [[(CocoaTableView*)cocoaView content] setAllowsMultipleSelection:(batchable ? YES : NO)];
-  }
+  [[(CocoaTableView*)cocoaView content] setAllowsMultipleSelection:(batchable ? YES : NO)];
 }
 
 auto pTableView::setBordered(bool bordered) -> void {
@@ -386,27 +370,21 @@ auto pTableView::setBordered(bool bordered) -> void {
 
 auto pTableView::setEnabled(bool enabled) -> void {
   pWidget::setEnabled(enabled);
-  @autoreleasepool {
-    [[(CocoaTableView*)cocoaView content] setEnabled:enabled];
-  }
+  [[(CocoaTableView*)cocoaView content] setEnabled:enabled];
 }
 
 auto pTableView::setFont(const Font& font) -> void {
-  @autoreleasepool {
-    [(CocoaTableView*)cocoaView setFont:pFont::create(font)];
-  }
+  [(CocoaTableView*)cocoaView setFont:pFont::create(font)];
 }
 
 auto pTableView::setForegroundColor(Color color) -> void {
 }
 
 auto pTableView::setHeadered(bool headered) -> void {
-  @autoreleasepool {
-    if(headered) {
-      [[(CocoaTableView*)cocoaView content] setHeaderView:[[NSTableHeaderView alloc] init]];
-    } else {
-      [[(CocoaTableView*)cocoaView content] setHeaderView:nil];
-    }
+  if(headered) {
+    [[(CocoaTableView*)cocoaView content] setHeaderView:[[NSTableHeaderView alloc] init]];
+  } else {
+    [[(CocoaTableView*)cocoaView content] setHeaderView:nil];
   }
 }
 
@@ -461,17 +439,13 @@ auto pTableView::_width(u32 column) -> u32 {
 
 /*
 auto pTableView::setSelected(bool selected) -> void {
-  @autoreleasepool {
-    if(selected == false) {
-      [[cocoaView content] deselectAll:nil];
-    }
+  if(selected == false) {
+    [[cocoaView content] deselectAll:nil];
   }
 }
 
 auto pTableView::setSelection(u32 selection) -> void {
-  @autoreleasepool {
-    [[cocoaView content] selectRowIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(selection, 1)] byExtendingSelection:NO];
-  }
+  [[cocoaView content] selectRowIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(selection, 1)] byExtendingSelection:NO];
 }
 */
 

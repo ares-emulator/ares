@@ -22,22 +22,16 @@
 namespace hiro {
 
 auto pComboButton::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaComboButton = [[CocoaComboButton alloc] initWith:self()];
-    pWidget::construct();
-  }
+  cocoaView = cocoaComboButton = [[CocoaComboButton alloc] initWith:self()];
+  pWidget::construct();
 }
 
 auto pComboButton::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pComboButton::append(sComboButtonItem item) -> void {
-  @autoreleasepool {
-    [(CocoaComboButton*)cocoaView addItemWithTitle:[NSString stringWithUTF8String:item->text()]];
-  }
+  [(CocoaComboButton*)cocoaView addItemWithTitle:[NSString stringWithUTF8String:item->text()]];
 }
 
 auto pComboButton::minimumSize() const -> Size {
@@ -51,15 +45,11 @@ auto pComboButton::minimumSize() const -> Size {
 }
 
 auto pComboButton::remove(sComboButtonItem item) -> void {
-  @autoreleasepool {
-    [(CocoaComboButton*)cocoaView removeItemAtIndex:item->offset()];
-  }
+  [(CocoaComboButton*)cocoaView removeItemAtIndex:item->offset()];
 }
 
 auto pComboButton::reset() -> void {
-  @autoreleasepool {
-    [(CocoaComboButton*)cocoaView removeAllItems];
-  }
+  [(CocoaComboButton*)cocoaView removeAllItems];
 }
 
 auto pComboButton::setGeometry(Geometry geometry) -> void {

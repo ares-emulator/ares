@@ -49,14 +49,12 @@ auto pTableViewCell::_parent() -> maybe<pTableViewItem&> {
 }
 
 auto pTableViewCell::_redraw() -> void {
-  @autoreleasepool {
-    if(auto pTableViewItem = _parent()) {
-      if(auto pTableView = _grandparent()) {
-        auto column = self().offset();
-        auto row = pTableViewItem->self().offset();
-        NSRect rect = [[pTableView->cocoaTableView content] frameOfCellAtColumn:column row:row];
-        [[pTableView->cocoaTableView content] setNeedsDisplayInRect:rect];
-      }
+  if(auto pTableViewItem = _parent()) {
+    if(auto pTableView = _grandparent()) {
+      auto column = self().offset();
+      auto row = pTableViewItem->self().offset();
+      NSRect rect = [[pTableView->cocoaTableView content] frameOfCellAtColumn:column row:row];
+      [[pTableView->cocoaTableView content] setNeedsDisplayInRect:rect];
     }
   }
 }

@@ -22,30 +22,22 @@
 namespace hiro {
 
 auto pPopupMenu::construct() -> void {
-  @autoreleasepool {
-    cocoaPopupMenu = [[CocoaPopupMenu alloc] initWith:self()];
-  }
+  cocoaPopupMenu = [[CocoaPopupMenu alloc] initWith:self()];
 }
 
 auto pPopupMenu::destruct() -> void {
-  @autoreleasepool {
-    [cocoaPopupMenu cocoaPopupMenu];
-  }
+  [cocoaPopupMenu cocoaPopupMenu];
 }
 
 auto pPopupMenu::append(sAction action) -> void {
-  @autoreleasepool {
-    if(auto pAction = action->self()) {
-      [[cocoaPopupMenu cocoaPopupMenu] addItem:pAction->cocoaAction];
-    }
+  if(auto pAction = action->self()) {
+    [[cocoaPopupMenu cocoaPopupMenu] addItem:pAction->cocoaAction];
   }
 }
 
 auto pPopupMenu::remove(sAction action) -> void {
-  @autoreleasepool {
-    if(auto pAction = action->self()) {
-      [[cocoaPopupMenu cocoaPopupMenu] removeItem:pAction->cocoaAction];
-    }
+  if(auto pAction = action->self()) {
+    [[cocoaPopupMenu cocoaPopupMenu] removeItem:pAction->cocoaAction];
   }
 }
 

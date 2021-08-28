@@ -50,10 +50,8 @@ struct VideoCGL : VideoDriver, OpenGL {
   auto setBlocking(bool blocking) -> bool override {
     if(!view) return true;
     acquireContext();
-    @autoreleasepool {
-      s32 blocking = self.blocking;
-      [[view openGLContext] setValues:&blocking forParameter:NSOpenGLCPSwapInterval];
-    }
+    s32 blocking32 = self.blocking;
+    [[view openGLContext] setValues:&blocking32 forParameter:NSOpenGLCPSwapInterval];
     releaseContext();
     return true;
   }
@@ -75,21 +73,17 @@ struct VideoCGL : VideoDriver, OpenGL {
 
   auto clear() -> void override {
     acquireContext();
-    @autoreleasepool {
-      [view lockFocus];
-      OpenGL::clear();
-      [[view openGLContext] flushBuffer];
-      [view unlockFocus];
-    }
+    [view lockFocus];
+    OpenGL::clear();
+    [[view openGLContext] flushBuffer];
+    [view unlockFocus];
     releaseContext();
   }
 
   auto size(u32& width, u32& height) -> void override {
-    @autoreleasepool {
-      auto area = [view convertRectToBacking:[view bounds]];
-      width = area.size.width;
-      height = area.size.height;
-    }
+    auto area = [view convertRectToBacking:[view bounds]];
+    width = area.size.width;
+    height = area.size.height;
   }
 
   auto acquire(u32*& data, u32& pitch, u32 width, u32 height) -> bool override {
@@ -108,20 +102,18 @@ struct VideoCGL : VideoDriver, OpenGL {
     u32 windowWidth, windowHeight;
     size(windowWidth, windowHeight);
 
-    @autoreleasepool {
-      if([view lockFocusIfCanDraw]) {
-        OpenGL::absoluteWidth = width;
-        OpenGL::absoluteHeight = height;
-        OpenGL::outputX = 0;
-        OpenGL::outputY = 0;
-        OpenGL::outputWidth = windowWidth;
-        OpenGL::outputHeight = windowHeight;
-        OpenGL::output();
+    if([view lockFocusIfCanDraw]) {
+      OpenGL::absoluteWidth = width;
+      OpenGL::absoluteHeight = height;
+      OpenGL::outputX = 0;
+      OpenGL::outputY = 0;
+      OpenGL::outputWidth = windowWidth;
+      OpenGL::outputHeight = windowHeight;
+      OpenGL::output();
 
-        [[view openGLContext] flushBuffer];
-        if(self.flush) glFinish();
-        [view unlockFocus];
-      }
+      [[view openGLContext] flushBuffer];
+      if(self.flush) glFinish();
+      [view unlockFocus];
     }
     releaseContext();
   }
@@ -129,61 +121,56 @@ struct VideoCGL : VideoDriver, OpenGL {
 private:
   auto acquireContext() -> void {
     lock_guard<recursive_mutex> lock(mutex);
-    @autoreleasepool {
-      [[view openGLContext] makeCurrentContext];
-    }
+    [[view openGLContext] makeCurrentContext];
   }
 
   auto releaseContext() -> void {
     lock_guard<recursive_mutex> lock(mutex);
-    @autoreleasepool {
-      [NSOpenGLContext clearCurrentContext];
-    }
+    [NSOpenGLContext clearCurrentContext];
   }
 
   auto initialize() -> bool {
     terminate();
     if(!self.fullScreen && !self.context) return false;
 
-    @autoreleasepool {
-      if(self.fullScreen) {
-        window = [[RubyWindowCGL alloc] initWith:this];
-        [window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-        [window toggleFullScreen:nil];
-      //[NSApp setPresentationOptions:NSApplicationPresentationFullScreen];
-      }
-
-      NSOpenGLPixelFormatAttribute attributeList[] = {
-        NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
-        NSOpenGLPFAColorSize, 24,
-        NSOpenGLPFAAlphaSize, 8,
-        NSOpenGLPFADoubleBuffer,
-        0
-      };
-
-      auto context = self.fullScreen ? [window contentView] : (__bridge NSView*)(void *)self.context;
-      auto size = [context frame].size;
-      auto format = [[NSOpenGLPixelFormat alloc] initWithAttributes:attributeList];
-      auto openGLContext = [[NSOpenGLContext alloc] initWithFormat:format shareContext:nil];
-
-      view = [[RubyVideoCGL alloc] initWith:this pixelFormat:format];
-      [view setOpenGLContext:openGLContext];
-      [view setFrame:NSMakeRect(0, 0, size.width, size.height)];
-      [view setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
-      [view setWantsBestResolutionOpenGLSurface:YES];
-      [context addSubview:view];
-      [openGLContext setView:view];
-      [openGLContext makeCurrentContext];
-      [[view window] makeFirstResponder:view];
-      [view lockFocus];
-
-      OpenGL::initialize(self.shader);
-
-      s32 blocking = self.blocking;
-      [[view openGLContext] setValues:&blocking forParameter:NSOpenGLCPSwapInterval];
-
-      [view unlockFocus];
+    if(self.fullScreen) {
+      window = [[RubyWindowCGL alloc] initWith:this];
+      [window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
+      [window toggleFullScreen:nil];
+    //[NSApp setPresentationOptions:NSApplicationPresentationFullScreen];
     }
+
+    NSOpenGLPixelFormatAttribute attributeList[] = {
+      NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
+      NSOpenGLPFAColorSize, 24,
+      NSOpenGLPFAAlphaSize, 8,
+      NSOpenGLPFADoubleBuffer,
+      0
+    };
+
+    auto context = self.fullScreen ? [window contentView] : (__bridge NSView*)(void *)self.context;
+    auto size = [context frame].size;
+    auto format = [[NSOpenGLPixelFormat alloc] initWithAttributes:attributeList];
+    auto openGLContext = [[NSOpenGLContext alloc] initWithFormat:format shareContext:nil];
+
+    view = [[RubyVideoCGL alloc] initWith:this pixelFormat:format];
+    [view setOpenGLContext:openGLContext];
+    [view setFrame:NSMakeRect(0, 0, size.width, size.height)];
+    [view setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+    [view setWantsBestResolutionOpenGLSurface:YES];
+    [context addSubview:view];
+    [openGLContext setView:view];
+    [openGLContext makeCurrentContext];
+    [[view window] makeFirstResponder:view];
+    [view lockFocus];
+
+    OpenGL::initialize(self.shader);
+
+    s32 blocking = self.blocking;
+    [[view openGLContext] setValues:&blocking forParameter:NSOpenGLCPSwapInterval];
+
+    [view unlockFocus];
+
 
     releaseContext();
     clear();
@@ -195,19 +182,17 @@ private:
     _ready = false;
     OpenGL::terminate();
 
-    @autoreleasepool {
-      if(view) {
-        [view removeFromSuperview];
-        view = nil;
-      }
+    if(view) {
+      [view removeFromSuperview];
+      view = nil;
+    }
 
-      if(window) {
-      //[NSApp setPresentationOptions:NSApplicationPresentationDefault];
-        [window toggleFullScreen:nil];
-        [window setCollectionBehavior:NSWindowCollectionBehaviorDefault];
-        [window close];
-        window = nil;
-      }
+    if(window) {
+    //[NSApp setPresentationOptions:NSApplicationPresentationDefault];
+      [window toggleFullScreen:nil];
+      [window setCollectionBehavior:NSWindowCollectionBehaviorDefault];
+      [window close];
+      window = nil;
     }
   }
 

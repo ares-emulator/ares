@@ -29,16 +29,12 @@ auto pConsole::setPrompt(string prompt) -> void {
 }
 
 auto pConsole::constructor() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaConsole = [[CocoaConsole alloc] initWith:console];
-  }
+  cocoaView = cocoaConsole = [[CocoaConsole alloc] initWith:console];
 }
 
 auto pConsole::destructor() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-    [cocoaView release];
-  }
+  [cocoaView removeFromSuperview];
+  [cocoaView release];
 }
 
 }

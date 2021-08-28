@@ -83,18 +83,16 @@ auto pApplication::setScreenSaver(bool screenSaver) -> void {
   //do nothing if state has not been changed
   if(screenSaver == (powerAssertion == kIOPMNullAssertionID)) return;
 
-  @autoreleasepool {
-    if(screenSaver) {
-      IOPMAssertionRelease(powerAssertion);
+  if(screenSaver) {
+    IOPMAssertionRelease(powerAssertion);
+    powerAssertion = kIOPMNullAssertionID;
+  } else {
+    string reason = {Application::state().name, " screensaver suppression"};
+    NSString* assertionName = [NSString stringWithUTF8String:reason.data()];
+    if(IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleDisplaySleep,
+                                   kIOPMAssertionLevelOn, (__bridge CFStringRef)assertionName, &powerAssertion
+    ) != kIOReturnSuccess) {
       powerAssertion = kIOPMNullAssertionID;
-    } else {
-      string reason = {Application::state().name, " screensaver suppression"};
-      NSString* assertionName = [NSString stringWithUTF8String:reason.data()];
-      if(IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleDisplaySleep,
-                                     kIOPMAssertionLevelOn, (__bridge CFStringRef)assertionName, &powerAssertion
-      ) != kIOReturnSuccess) {
-        powerAssertion = kIOPMNullAssertionID;
-      }
     }
   }
 }

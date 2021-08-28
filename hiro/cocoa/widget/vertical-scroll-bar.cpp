@@ -55,37 +55,27 @@
 namespace hiro {
 
 auto pVerticalScrollBar::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaVerticalScrollBar = [[CocoaVerticalScrollBar alloc] initWith:self()];
-    pWidget::construct();
+  cocoaView = cocoaVerticalScrollBar = [[CocoaVerticalScrollBar alloc] initWith:self()];
+  pWidget::construct();
 
-    setLength(state().length);
-    setPosition(state().position);
-  }
+  setLength(state().length);
+  setPosition(state().position);
 }
 
 auto pVerticalScrollBar::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pVerticalScrollBar::minimumSize() const -> Size {
-  @autoreleasepool {
-    return {(s32)[NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy], 32};
-  }
+  return {(s32)[NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:NSScrollerStyleLegacy], 32};
 }
 
 auto pVerticalScrollBar::setLength(u32 length) -> void {
-  @autoreleasepool {
-    [(CocoaVerticalScrollBar*)cocoaView update];
-  }
+  [(CocoaVerticalScrollBar*)cocoaView update];
 }
 
 auto pVerticalScrollBar::setPosition(u32 position) -> void {
-  @autoreleasepool {
-    [(CocoaVerticalScrollBar*)cocoaView update];
-  }
+  [(CocoaVerticalScrollBar*)cocoaView update];
 }
 
 }

@@ -23,29 +23,23 @@
 namespace hiro {
 
 auto pMenuCheckItem::construct() -> void {
-  @autoreleasepool {
-    cocoaAction = cocoaMenuCheckItem = [[CocoaMenuCheckItem alloc] initWith:self()];
-    pAction::construct();
+  cocoaAction = cocoaMenuCheckItem = [[CocoaMenuCheckItem alloc] initWith:self()];
+  pAction::construct();
 
-    setChecked(state().checked);
-    setText(state().text);
-  }
+  setChecked(state().checked);
+  setText(state().text);
 }
 
 auto pMenuCheckItem::destruct() -> void {
 }
 
 auto pMenuCheckItem::setChecked(bool checked) -> void {
-  @autoreleasepool {
-    auto state = checked ? NSOnState : NSOffState;
-    [cocoaAction setState:state];
-  }
+  auto state = checked ? NSOnState : NSOffState;
+  [cocoaAction setState:state];
 }
 
 auto pMenuCheckItem::setText(const string& text) -> void {
-  @autoreleasepool {
-    [cocoaAction setTitle:[NSString stringWithUTF8String:text]];
-  }
+  [cocoaAction setTitle:[NSString stringWithUTF8String:text]];
 }
 
 }

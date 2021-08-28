@@ -46,16 +46,12 @@
 namespace hiro {
 
 auto pViewport::construct() -> void {
-  @autoreleasepool {
-    cocoaView = cocoaViewport = [[CocoaViewport alloc] initWith:self()];
-    pWidget::construct();
-  }
+  cocoaView = cocoaViewport = [[CocoaViewport alloc] initWith:self()];
+  pWidget::construct();
 }
 
 auto pViewport::destruct() -> void {
-  @autoreleasepool {
-    [cocoaView removeFromSuperview];
-  }
+  [cocoaView removeFromSuperview];
 }
 
 auto pViewport::handle() const -> uintptr_t {
@@ -63,12 +59,10 @@ auto pViewport::handle() const -> uintptr_t {
 }
 
 auto pViewport::setDroppable(bool droppable) -> void {
-  @autoreleasepool {
-    if(droppable) {
-      [cocoaViewport registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
-    } else {
-      [cocoaViewport unregisterDraggedTypes];
-    }
+  if(droppable) {
+    [cocoaViewport registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
+  } else {
+    [cocoaViewport unregisterDraggedTypes];
   }
 }
 
