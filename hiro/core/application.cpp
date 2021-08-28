@@ -9,6 +9,10 @@ auto Application::doMain() -> void {
   if(state().onMain) return state().onMain();
 }
 
+auto Application::doOpenFile(const string& path) -> void {
+  if(state().onOpenFile) return state().onOpenFile(path);
+}
+
 auto Application::exit() -> void {
   state().quit = true;
   return pApplication::exit();
@@ -32,6 +36,10 @@ auto Application::name() -> string {
 
 auto Application::onMain(const function<void ()>& callback) -> void {
   state().onMain = callback;
+}
+
+auto Application::onOpenFile(const function<void (const string& path)>& callback) -> void {
+  state().onOpenFile = callback;
 }
 
 auto Application::run() -> void {

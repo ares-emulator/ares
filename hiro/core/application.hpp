@@ -4,12 +4,14 @@ struct Application {
 
   static auto abort() -> void;
   static auto doMain() -> void;
+  static auto doOpenFile(const string& path) -> void;
   static auto exit() -> void;
   static auto font() -> Font;
   static auto locale() -> Locale&;
   static auto modal() -> bool;
   static auto name() -> string;
   static auto onMain(const function<void ()>& callback = {}) -> void;
+  static auto onOpenFile(const function<void (const string& path)>& callback = {}) -> void;
   static auto run() -> void;
   static auto scale() -> f32;
   static auto scale(f32 value) -> f32;
@@ -48,6 +50,7 @@ struct Application {
     s32 modal = 0;
     string name;
     function<void ()> onMain;
+    function<void (const string& path)> onOpenFile;
     bool quit = false;
     f32 scale = 1.0;
     bool screenSaver = true;

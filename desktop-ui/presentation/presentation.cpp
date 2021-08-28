@@ -181,6 +181,12 @@ Presentation::Presentation() {
       program.load(emulator, filenames.first());
     }
   });
+    
+  Application::onOpenFile([&](auto filename) {
+    if(auto emulator = program.identify(filename)) {
+      program.load(emulator, filename);
+    }
+  });
 
   iconLayout.setCollapsible();
 

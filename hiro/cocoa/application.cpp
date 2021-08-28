@@ -20,6 +20,11 @@
   if(Application::state().onMain) Application::doMain();
 }
 
+-(BOOL)application:(NSApplication*)sender openFile:(NSString*)filename {
+  hiro::Application::doOpenFile(filename.UTF8String);
+  return YES;
+}
+
 @end
 
 CocoaDelegate* cocoaDelegate = nullptr;
