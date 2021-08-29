@@ -11,6 +11,7 @@ struct mMenu : mAction {
   auto remove(sAction action) -> type&;
   auto reset() -> type& override;
   auto setIcon(const image& icon = {}, bool force = false) -> type&;
+  auto setIconForFile(const string& filename) -> type&;
   auto setParent(mObject* parent = nullptr, s32 offset = -1) -> type& override;
   auto setText(const string& text = "") -> type&;
   auto text() const -> string;

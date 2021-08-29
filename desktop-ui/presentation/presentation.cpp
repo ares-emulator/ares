@@ -299,8 +299,7 @@ auto Presentation::loadEmulators() -> void {
       auto entry = settings.recent.game[index];
       auto system = entry.split(";", 1L)(0);
       auto location = entry.split(";", 1L)(1);
-      if(directory::exists(location)) item.setIcon(Icon::Action::Open, true);
-      if(file::exists(location)) item.setIcon(Icon::Emblem::File, true);
+      item.setIconForFile(location);
       item.setText(Location::prefix(location));
       item.onActivate([=] {
         for(auto& emulator : emulators) {
@@ -368,7 +367,7 @@ auto Presentation::loadEmulators() -> void {
     });
   }
     
-#if !defined(PLATFORM_MACOS)
+  #if !defined(PLATFORM_MACOS)
   loadMenu.append(MenuSeparator());
     
   { MenuItem quit{&loadMenu};
@@ -378,7 +377,7 @@ auto Presentation::loadEmulators() -> void {
       program.quit();
     });
   }
-#endif
+  #endif
 }
 
 auto Presentation::loadEmulator() -> void {
