@@ -313,7 +313,11 @@ auto Presentation::loadEmulators() -> void {
       recentGames.append(MenuSeparator());
       MenuItem clearHistory{&recentGames};
       clearHistory.setIcon(Icon::Edit::Clear);
+      #if defined(PLATFORM_MACOS)
       clearHistory.setText("Clear History");
+      #else
+      clearHistory.setText("Clear Menu");
+      #endif
       clearHistory.onActivate([&] {
         for(u32 index : range(9)) settings.recent.game[index] = {};
         loadEmulators();
