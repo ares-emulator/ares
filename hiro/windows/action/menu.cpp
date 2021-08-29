@@ -19,7 +19,7 @@ auto pMenu::remove(sAction action) -> void {
   _synchronize();
 }
 
-auto pMenu::setIcon(const image& icon) -> void {
+auto pMenu::setIcon(const image& icon, bool force) -> void {
   _createBitmap();
   _synchronize();
 }

@@ -299,8 +299,8 @@ auto Presentation::loadEmulators() -> void {
       auto entry = settings.recent.game[index];
       auto system = entry.split(";", 1L)(0);
       auto location = entry.split(";", 1L)(1);
-      if(directory::exists(location)) item.setIcon(Icon::Action::Open);
-      if(file::exists(location)) item.setIcon(Icon::Emblem::File);
+      if(directory::exists(location)) item.setIcon(Icon::Action::Open, true);
+      if(file::exists(location)) item.setIcon(Icon::Emblem::File, true);
       item.setText(Location::prefix(location));
       item.onActivate([=] {
         for(auto& emulator : emulators) {

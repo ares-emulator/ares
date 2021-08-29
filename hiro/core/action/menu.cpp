@@ -52,9 +52,9 @@ auto mMenu::reset() -> type& {
   return *this;
 }
 
-auto mMenu::setIcon(const image& icon) -> type& {
+auto mMenu::setIcon(const image& icon, bool force) -> type& {
   state.icon = icon;
-  signal(setIcon, icon);
+  signal(setIcon, icon, force);
   return *this;
 }
 

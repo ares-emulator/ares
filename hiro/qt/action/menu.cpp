@@ -34,7 +34,7 @@ auto pMenu::append(sAction action) -> void {
 auto pMenu::remove(sAction action) -> void {
 }
 
-auto pMenu::setIcon(const image& icon) -> void {
+auto pMenu::setIcon(const image& icon, bool force) -> void {
   _setState();
 }
 

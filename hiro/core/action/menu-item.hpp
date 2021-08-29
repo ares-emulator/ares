@@ -5,7 +5,7 @@ struct mMenuItem : mAction {
   auto doActivate() const -> void;
   auto icon() const -> image;
   auto onActivate(const function<void ()>& callback = {}) -> type&;
-  auto setIcon(const image& icon = {}) -> type&;
+  auto setIcon(const image& icon = {}, bool force = false) -> type&;
   auto setText(const string& text = "") -> type&;
   auto text() const -> string;
 

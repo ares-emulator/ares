@@ -17,7 +17,7 @@ auto pMenuItem::destruct() -> void {
   if(widget) gtk_widget_destroy(widget), widget = nullptr;
 }
 
-auto pMenuItem::setIcon(const image& icon) -> void {
+auto pMenuItem::setIcon(const image& icon, bool force) -> void {
   if(icon) {
     GtkImage* gtkImage = CreateImage(icon, true);
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(widget), (GtkWidget*)gtkImage);

@@ -19,9 +19,9 @@ auto mMenuItem::onActivate(const function<void ()>& callback) -> type& {
   return *this;
 }
 
-auto mMenuItem::setIcon(const image& icon) -> type& {
+auto mMenuItem::setIcon(const image& icon, bool force) -> type& {
   state.icon = icon;
-  signal(setIcon, icon);
+  signal(setIcon, icon, force);
   return *this;
 }
 

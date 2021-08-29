@@ -143,7 +143,7 @@ struct Menu : sMenu {
   auto icon() const { return self().icon(); }
   auto remove(sAction action) { return self().remove(action), *this; }
   auto reset() { return self().reset(), *this; }
-  auto setIcon(const image& icon = {}) { return self().setIcon(icon), *this; }
+  auto setIcon(const image& icon = {}, bool forced = false) { return self().setIcon(icon, forced), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
   auto text() const { return self().text(); }
 };
@@ -162,7 +162,7 @@ struct MenuItem : sMenuItem {
   auto doActivate() const { return self().doActivate(); }
   auto icon() const { return self().icon(); }
   auto onActivate(const function<void ()>& callback = {}) { return self().onActivate(callback), *this; }
-  auto setIcon(const image& icon = {}) { return self().setIcon(icon), *this; }
+  auto setIcon(const image& icon = {}, bool forced = false) { return self().setIcon(icon, forced), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
   auto text() const { return self().text(); }
 };
