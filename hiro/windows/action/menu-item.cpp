@@ -10,7 +10,7 @@ auto pMenuItem::destruct() -> void {
   if(hbitmap) { DeleteObject(hbitmap); hbitmap = nullptr; }
 }
 
-auto pMenuItem::setIcon(const image& icon) -> void {
+auto pMenuItem::setIcon(const image& icon, bool force) -> void {
   _createBitmap();
   _synchronize();
 }

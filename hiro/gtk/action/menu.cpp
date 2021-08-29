@@ -36,7 +36,7 @@ auto pMenu::setFont(const Font& font) -> void {
   }
 }
 
-auto pMenu::setIcon(const image& icon) -> void {
+auto pMenu::setIcon(const image& icon, bool force) -> void {
   if(icon) {
     GtkImage* gtkImage = CreateImage(icon, true);
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(widget), (GtkWidget*)gtkImage);
