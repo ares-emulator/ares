@@ -949,6 +949,7 @@ struct Window : sWindow {
   auto setResizable(bool resizable = true) { return self().setResizable(resizable), *this; }
   auto setSize(Size size) { return self().setSize(size), *this; }
   auto setTitle(const string& title = "") { return self().setTitle(title), *this; }
+  auto setAssociatedFile(const string& filename = "") { return self().setAssociatedFile(filename), *this; }
   auto sizable() const { return self().sizable(); }
   auto statusBar() const { return self().statusBar(); }
   auto title() const { return self().title(); }

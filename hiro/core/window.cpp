@@ -362,6 +362,13 @@ auto mWindow::setTitle(const string& title) -> type& {
   return *this;
 }
 
+auto mWindow::setAssociatedFile(const string& filename) -> type& {
+#if defined(PLATFORM_MACOS)
+    signal(setAssociatedFile, filename);
+#endif
+    return *this;
+}
+
 auto mWindow::setVisible(bool visible) -> type& {
   mObject::setVisible(visible);
   if(auto& menuBar = state.menuBar) menuBar->setVisible(menuBar->visible());
