@@ -53,6 +53,7 @@ struct pWindow : pObject {
   auto setModal(bool modal) -> void;
   auto setResizable(bool resizable) -> void;
   auto setTitle(const string& text) -> void;
+  auto setAssociatedFile(const string& filename) -> void;
   auto setVisible(bool visible) -> void;
 
   auto moveEvent() -> void;

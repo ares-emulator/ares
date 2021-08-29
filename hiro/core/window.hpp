@@ -60,6 +60,7 @@ struct mWindow : mObject {
   auto setResizable(bool resizable = true) -> type&;
   auto setSize(Size size) -> type&;
   auto setTitle(const string& title = "") -> type&;
+  auto setAssociatedFile(const string& filename = "") -> type&;
   auto setVisible(bool visible = true) -> type& override;
   auto sizable() const -> Sizable;
   auto statusBar() const -> StatusBar;

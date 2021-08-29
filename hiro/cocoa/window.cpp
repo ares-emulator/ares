@@ -364,6 +364,10 @@ auto pWindow::setTitle(const string& text) -> void {
   [cocoaWindow setTitle:[NSString stringWithUTF8String:text]];
 }
 
+auto pWindow::setAssociatedFile(const string& filename) -> void {
+  [cocoaWindow setRepresentedFilename:[NSString stringWithUTF8String:filename]];
+}
+
 auto pWindow::setVisible(bool visible) -> void {
   if(visible) [cocoaWindow makeKeyAndOrderFront:nil];
   else [cocoaWindow orderOut:nil];

@@ -222,6 +222,8 @@ Presentation::Presentation() {
 
   resizeWindow();
   setTitle({ares::Name, " v", ares::Version});
+  setAssociatedFile();
+  setBackgroundColor({0, 0, 0});
   setAlignment(Alignment::Center);
   setVisible();
 
@@ -381,7 +383,7 @@ auto Presentation::loadEmulators() -> void {
 
 auto Presentation::loadEmulator() -> void {
   setTitle(emulator->root->game());
-
+  setAssociatedFile(emulator->game->location);
   systemMenu.setText(emulator->name);
   systemMenu.setVisible();
 
@@ -456,7 +458,7 @@ auto Presentation::loadEmulator() -> void {
 
 auto Presentation::unloadEmulator(bool reloading) -> void {
   setTitle({ares::Name, " v", ares::Version});
-
+  setAssociatedFile();
   systemMenu.setVisible(false);
   systemMenu.reset();
 
