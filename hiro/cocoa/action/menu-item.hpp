@@ -14,6 +14,7 @@ struct pMenuItem : pAction {
   Declare(MenuItem, Action)
 
   auto setIcon(const image& icon, bool force = false) -> void;
+  auto setIconForFile(const string& filename) -> void;
   auto setText(const string& text) -> void;
 
   CocoaMenuItem* cocoaMenuItem = nullptr;

@@ -49,6 +49,12 @@ auto pMenu::setIcon(const image& icon, bool force) -> void {
   [cocoaAction setImage:NSMakeImage(icon, size, size)];
 }
 
+auto pMenu::setIconForFile(const string& filename) -> void {
+  NSImage* icon = [[NSWorkspace sharedWorkspace] iconForFile:@((const char*)filename)];
+  icon.size = NSMakeSize(16, 16);
+  [cocoaAction setImage:icon];
+}
+
 auto pMenu::setText(const string& text) -> void {
   [[cocoaAction cocoaMenu] setTitle:[NSString stringWithUTF8String:text]];
   [cocoaAction setTitle:[NSString stringWithUTF8String:text]];

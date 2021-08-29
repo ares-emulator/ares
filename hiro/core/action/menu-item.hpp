@@ -6,6 +6,7 @@ struct mMenuItem : mAction {
   auto icon() const -> image;
   auto onActivate(const function<void ()>& callback = {}) -> type&;
   auto setIcon(const image& icon = {}, bool force = false) -> type&;
+  auto setIconForFile(const string& filename) -> type&;
   auto setText(const string& text = "") -> type&;
   auto text() const -> string;
 
