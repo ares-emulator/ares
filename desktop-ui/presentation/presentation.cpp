@@ -2,7 +2,7 @@
 namespace Instances { Instance<Presentation> presentation; }
 Presentation& presentation = Instances::presentation();
 
-#ifdef __APPLE__
+#if defined(PLATFORM_MACOS)
 #define ELLIPSIS "…"
 #else
 #define ELLIPSIS " ..."
@@ -366,7 +366,7 @@ auto Presentation::loadEmulators() -> void {
     });
   }
     
-#ifndef __APPLE__
+#if !defined(PLATFORM_MACOS)
   loadMenu.append(MenuSeparator());
     
   { MenuItem quit{&loadMenu};
