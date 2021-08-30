@@ -202,6 +202,7 @@ SettingsWindow::SettingsWindow() {
   setTitle("Configuration");
   setSize({700_sx, 405_sy});
   setAlignment({0.0, 1.0});
+  setResizable(false);
 }
 
 auto SettingsWindow::show(const string& panel) -> void {
