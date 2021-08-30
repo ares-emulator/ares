@@ -236,7 +236,7 @@ Presentation::Presentation() {
 }
 
 auto Presentation::resizeWindow() -> void {
-  if(fullScreen()) return;
+  if(fullScreen()) setFullScreen(false);
   if(maximized()) setMaximized(false);
 
   u32 multiplier = max(2, settings.video.multiplier);

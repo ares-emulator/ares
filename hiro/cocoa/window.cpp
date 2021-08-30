@@ -201,6 +201,14 @@
   return statusBar;
 }
 
+-(void)windowDidEnterFullScreen:(NSNotification *)notification {
+  window->state.fullScreen = true;
+}
+
+-(void)windowDidExitFullScreen:(NSNotification *)notification {
+  window->state.fullScreen = false;
+}
+
 @end
 
 namespace hiro {
