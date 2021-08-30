@@ -64,6 +64,7 @@ struct pTableView : pWidget {
   auto setForegroundColor(Color color) -> void;
   auto setHeadered(bool headered) -> void;
   auto setSortable(bool sortable) -> void;
+  auto setUsesSidebarStyle(bool usesSidebarStyle) -> void;
 
   auto _cellWidth(u32 row, u32 column) -> u32;
   auto _columnWidth(u32 column) -> u32;

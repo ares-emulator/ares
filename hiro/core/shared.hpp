@@ -733,6 +733,7 @@ struct TableView : sTableView {
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
   auto setHeadered(bool headered = true) { return self().setHeadered(headered), *this; }
   auto setSortable(bool sortable = true) { return self().setSortable(sortable), *this; }
+  auto setUsesSidebarStyle(bool usesSidebarStyle = true) { return self().setUsesSidebarStyle(usesSidebarStyle), *this; }
   auto sort() { return self().sort(), *this; }
   auto sortable() const { return self().sortable(); }
 };

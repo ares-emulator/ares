@@ -45,6 +45,7 @@ struct mTableView : mWidget {
   auto setHeadered(bool headered = true) -> type&;
   auto setParent(mObject* parent = nullptr, s32 offset = -1) -> type& override;
   auto setSortable(bool sortable = true) -> type&;
+  auto setUsesSidebarStyle(bool usesSidebarStyle = true) -> type&;
   auto sort() -> type&;
   auto sortable() const -> bool;
 

@@ -240,10 +240,17 @@ auto mTableView::setParent(mObject* parent, s32 offset) -> type& {
   return *this;
 }
 
-auto mTableView::setSortable(bool sortable) -> type& {
-  state.sortable = sortable;
-  signal(setSortable, sortable);
+auto mTableView::setUsesSidebarStyle(bool usesSidebarStyle) -> type& {
+  #if defined(PLATFORM_MACOS)
+  signal(setUsesSidebarStyle, usesSidebarStyle);
+  #endif
   return *this;
+}
+
+auto mTableView::setSortable(bool sortable) -> type& {
+    state.sortable = sortable;
+    signal(setSortable, sortable);
+    return *this;
 }
 
 auto mTableView::sort() -> type& {

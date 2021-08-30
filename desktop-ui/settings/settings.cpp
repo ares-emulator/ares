@@ -163,7 +163,7 @@ SettingsWindow::SettingsWindow() {
     hotkeySettings.setVisible(false);
   });
 
-  layout.setPadding(5_sx, 5_sy);
+  panelContainer.setPadding(5_sx, 5_sy);
 
   panelList.append(ListViewItem().setText("Video").setIcon(Icon::Device::Display));
   panelList.append(ListViewItem().setText("Audio").setIcon(Icon::Device::Speaker));
@@ -174,6 +174,7 @@ SettingsWindow::SettingsWindow() {
   panelList.append(ListViewItem().setText("Firmware").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
   panelList.append(ListViewItem().setText("Drivers").setIcon(Icon::Place::Settings));
+  panelList->setUsesSidebarStyle();
   panelList.onChange([&] { eventChange(); });
 
   panelContainer.append(videoSettings, Size{~0, ~0});
