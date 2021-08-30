@@ -28,6 +28,14 @@
   return self;
 }
 
+-(void) setUsesSidebarStyle:(bool)usesSidebarStyle {
+  content.selectionHighlightStyle = usesSidebarStyle? NSTableViewSelectionHighlightStyleSourceList : NSTableViewSelectionHighlightStyleRegular;
+  self.borderType = usesSidebarStyle? NSNoBorder : NSBezelBorder;
+}
+
+-(bool) usesSidebarStyle {
+  return content.selectionHighlightStyle == NSTableViewSelectionHighlightStyleSourceList;
+}
 
 -(CocoaTableViewContent*) content {
   return content;
@@ -170,6 +178,20 @@
   }
 #endif
   return nil;
+}
+
+- (void)drawRect:(NSRect)dirtyRect
+{
+  [super drawRect:dirtyRect];
+  if(((CocoaTableView*)self.enclosingScrollView).usesSidebarStyle) {
+    NSRect frame = self.bounds;
+    frame.origin.x += frame.size.width - 1;
+    frame.size.width = 1;
+    if(@available(macOS 10.14, *)) [[NSColor separatorColor] set];
+    else if (@available(macOS 10.10, *)) [[NSColor secondaryLabelColor] set];
+    else [[NSColor shadowColor] set];
+    [NSBezierPath fillRect:frame];
+  }
 }
 
 @end
@@ -380,6 +402,10 @@ auto pTableView::setHeadered(bool headered) -> void {
 
 auto pTableView::setSortable(bool sortable) -> void {
   //TODO
+}
+
+auto pTableView::setUsesSidebarStyle(bool usesSidebarStyle) -> void {
+  ((CocoaTableView*)cocoaView).usesSidebarStyle = usesSidebarStyle;
 }
 
 auto pTableView::_cellWidth(u32 row, u32 column) -> u32 {
