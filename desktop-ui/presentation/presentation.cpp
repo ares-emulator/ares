@@ -300,7 +300,7 @@ auto Presentation::loadEmulators() -> void {
       auto system = entry.split(";", 1L)(0);
       auto location = entry.split(";", 1L)(1);
       item.setIconForFile(location);
-      item.setText(Location::prefix(location));
+      item.setText(Location::base(location).trimRight("/"));
       item.onActivate([=] {
         for(auto& emulator : emulators) {
           if(emulator->name == system) {
