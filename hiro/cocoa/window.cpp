@@ -333,15 +333,15 @@ auto pWindow::setMaximized(bool maximized) -> void {
 }
 
 auto pWindow::setMaximumSize(Size size) -> void {
-  //todo
+  [cocoaWindow setContentMaxSize:NSMakeSize(size.width(), size.height())];
 }
 
 auto pWindow::setMinimized(bool minimized) -> void {
-  //todo
+  [cocoaWindow setIsMiniaturized:minimized];
 }
 
 auto pWindow::setMinimumSize(Size size) -> void {
-  //todo
+  [cocoaWindow setContentMinSize:NSMakeSize(size.width(), size.height())];
 }
 
 auto pWindow::setModal(bool modal) -> void {
