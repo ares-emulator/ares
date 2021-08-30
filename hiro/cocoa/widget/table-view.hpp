@@ -35,6 +35,7 @@
 @interface CocoaTableViewCell : NSCell {
   hiro::mTableView* tableView;
   NSButtonCell* buttonCell;
+  NSTextFieldCell* textCell;
 }
 -(id) initWith:(hiro::mTableView&)tableViewReference;
 -(NSString*) stringValue;

@@ -43,7 +43,7 @@
 
   u32 fontHeight = hiro::pFont::size(font, " ").height();
   [content setFont:font];
-  [content setRowHeight:fontHeight];
+  [content setRowHeight:fontHeight + 4];
   [self reloadColumns];
   tableView->resizeColumns();
 }
@@ -184,6 +184,7 @@
     [buttonCell setControlSize:NSSmallControlSize];
     [buttonCell setRefusesFirstResponder:YES];
     [buttonCell setTarget:self];
+    textCell = [[NSTextFieldCell alloc] init];
   }
   return self;
 }
@@ -197,15 +198,6 @@
   NSTableView* view = (NSTableView*)_view;
   if(auto tableViewItem = tableView->item([view rowAtPoint:frame.origin])) {
     if(auto tableViewCell = tableViewItem->cell([view columnAtPoint:frame.origin])) {
-      NSColor* backgroundColor = nil;
-      if([self isHighlighted]) backgroundColor = [NSColor alternateSelectedControlColor];
-      else if(!tableView->enabled(true)) backgroundColor = [NSColor controlBackgroundColor];
-      else if(auto color = tableViewCell->state.backgroundColor) backgroundColor = NSMakeColor(color);
-      else backgroundColor = [NSColor controlBackgroundColor];
-
-      [backgroundColor set];
-      [NSBezierPath fillRect:frame];
-
       if(tableViewCell->state.checkable) {
         [buttonCell setHighlighted:YES];
         [buttonCell setState:(tableViewCell->state.checked ? NSOnState : NSOffState)];
@@ -215,33 +207,31 @@
       }
 
       if(tableViewCell->state.icon) {
-        NSImage* image = NSMakeImage(tableViewCell->state.icon, frame.size.height, frame.size.height);
+        NSImage* image = NSMakeImage(tableViewCell->state.icon,
+                                     tableViewCell->state.icon.width(),
+                                     tableViewCell->state.icon.height());
         [[NSGraphicsContext currentContext] saveGraphicsState];
-        NSRect targetRect = NSMakeRect(frame.origin.x, frame.origin.y, frame.size.height, frame.size.height);
-        NSRect sourceRect = NSMakeRect(0, 0, [image size].width, [image size].height);
+        NSRect targetRect = NSMakeRect(frame.origin.x + 2, frame.origin.y + (frame.size.height - image.size.height) / 2,
+                                       image.size.width, image.size.height);
+        NSRect sourceRect = NSMakeRect(0, 0, image.size.width, image.size.height);
         [image drawInRect:targetRect fromRect:sourceRect operation:NSCompositeSourceOver fraction:1.0 respectFlipped:YES hints:nil];
         [[NSGraphicsContext currentContext] restoreGraphicsState];
-        frame.origin.x += frame.size.height + 2;
-        frame.size.width -= frame.size.height + 2;
+        frame.origin.x += image.size.width + 4;
+        frame.size.width -= image.size.width + 4;
       }
 
       if(tableViewCell->state.text) {
-        NSMutableParagraphStyle* paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
-        paragraphStyle.alignment = NSTextAlignmentCenter;
-        if(tableViewCell->state.alignment.horizontal() < 0.333) paragraphStyle.alignment = NSTextAlignmentLeft;
-        if(tableViewCell->state.alignment.horizontal() > 0.666) paragraphStyle.alignment = NSTextAlignmentRight;
+        textCell.stringValue = @((const char*)tableViewCell->state.text);
+        textCell.alignment = NSTextAlignmentCenter;
+        textCell.backgroundStyle = self.backgroundStyle;
+        if(tableViewCell->state.alignment.horizontal() < 0.333) textCell.alignment = NSTextAlignmentLeft;
+        if(tableViewCell->state.alignment.horizontal() > 0.666) textCell.alignment = NSTextAlignmentRight;
+        textCell.textColor = nil;
         NSColor* foregroundColor = nil;
-        if([self isHighlighted]) foregroundColor = [NSColor alternateSelectedControlTextColor];
-        else if(!tableView->enabled(true)) foregroundColor = [NSColor disabledControlTextColor];
-        else if(auto color = tableViewCell->state.foregroundColor) foregroundColor = NSMakeColor(color);
-        else foregroundColor = [NSColor textColor];
-        NSString* text = [NSString stringWithUTF8String:tableViewCell->state.text];
-        [text drawInRect:frame withAttributes:@{
-          NSBackgroundColorAttributeName:backgroundColor,
-          NSForegroundColorAttributeName:foregroundColor,
-          NSFontAttributeName:hiro::pFont::create(tableViewCell->font(true)),
-          NSParagraphStyleAttributeName:paragraphStyle
-        }];
+        if(![self isHighlighted] && tableView->enabled(true)) {
+          if(auto color = tableViewCell->state.foregroundColor) textCell.textColor = NSMakeColor(color);
+        }
+        [textCell drawWithFrame:frame inView:view];
       }
     }
   }
