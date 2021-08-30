@@ -246,6 +246,7 @@
         textCell.stringValue = @((const char*)tableViewCell->state.text);
         textCell.alignment = NSTextAlignmentCenter;
         textCell.backgroundStyle = self.backgroundStyle;
+        textCell.font = hiro::pFont::create(tableViewCell->font(true));
         if(tableViewCell->state.alignment.horizontal() < 0.333) textCell.alignment = NSTextAlignmentLeft;
         if(tableViewCell->state.alignment.horizontal() > 0.666) textCell.alignment = NSTextAlignmentRight;
         textCell.textColor = nil;
