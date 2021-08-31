@@ -50,16 +50,13 @@ auto pTableViewColumn::setSorting(Sort sorting) -> void {
 }
 
 auto pTableViewColumn::setText(const string& text) -> void {
-  /* (LIJI) TODO: I believe this function has some type confusion that should make it crash when called,
-                  (hence the (id) casts), but I have never seen it called to test and fix it.
-  */
   if(auto parent = _parent()) {
     string label = text;
     if(state().sorting == Sort::Ascending ) label.append(" \u25b4");
     if(state().sorting == Sort::Descending) label.append(" \u25be");
-    NSTableColumn* tableColumn = [[(id)(parent->cocoaView) content] tableColumnWithIdentifier:[[NSNumber numberWithInteger:self().offset()] stringValue]];
+    NSTableColumn* tableColumn = [[(CocoaTableView*)(parent->cocoaView) content] tableColumnWithIdentifier:[[NSNumber numberWithInteger:self().offset()] stringValue]];
     [[tableColumn headerCell] setStringValue:[NSString stringWithUTF8String:label]];
-    [[(id)(parent->cocoaView) headerView] setNeedsDisplay:YES];
+    [[[(CocoaTableView*)(parent->cocoaView) content] headerView] setNeedsDisplay:YES];
   }
 }
 
@@ -70,6 +67,10 @@ auto pTableViewColumn::setVisible(bool visible) -> void {
 }
 
 auto pTableViewColumn::setWidth(signed width) -> void {
+  if(auto parent = _parent()) {
+    NSTableColumn* tableColumn = [[(CocoaTableView*)(parent->cocoaView) content] tableColumnWithIdentifier:[[NSNumber numberWithInteger:self().offset()] stringValue]];
+    tableColumn.width = width;
+  }
 }
 
 auto pTableViewColumn::_parent() -> maybe<pTableView&> {
