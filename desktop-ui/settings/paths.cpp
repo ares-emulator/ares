@@ -1,3 +1,9 @@
+#if defined(PLATFORM_MACOS)
+#define ELLIPSIS "…"
+#else
+#define ELLIPSIS " ..."
+#endif
+
 auto PathSettings::construct() -> void {
   setCollapsible();
   setVisible(false);
@@ -5,7 +11,7 @@ auto PathSettings::construct() -> void {
   homeLabel.setText("Home").setFont(Font().setBold());
   homeLayout.setPadding(12_sx, 0);
   homePath.setEditable(false);
-  homeAssign.setText("Assign ...").onActivate([&] {
+  homeAssign.setText("Assign" ELLIPSIS).onActivate([&] {
     BrowserDialog dialog;
     dialog.setTitle("Select Home Path");
     dialog.setPath(Path::desktop());
@@ -22,7 +28,7 @@ auto PathSettings::construct() -> void {
   savesLabel.setText("Saves").setFont(Font().setBold());
   savesLayout.setPadding(12_sx, 0);
   savesPath.setEditable(false);
-  savesAssign.setText("Assign ...").onActivate([&] {
+  savesAssign.setText("Assign" ELLIPSIS).onActivate([&] {
     BrowserDialog dialog;
     dialog.setTitle("Select Saves Path");
     dialog.setPath(Path::desktop());
@@ -39,7 +45,7 @@ auto PathSettings::construct() -> void {
   screenshotsLabel.setText("Screenshots").setFont(Font().setBold());
   screenshotsLayout.setPadding(12_sx, 0);
   screenshotsPath.setEditable(false);
-  screenshotsAssign.setText("Assign ...").onActivate([&] {
+  screenshotsAssign.setText("Assign" ELLIPSIS).onActivate([&] {
     BrowserDialog dialog;
     dialog.setTitle("Select Screenshots Path");
     dialog.setPath(Path::desktop());
@@ -56,7 +62,7 @@ auto PathSettings::construct() -> void {
   debuggingLabel.setText("Debugging Files").setFont(Font().setBold());
   debuggingLayout.setPadding(12_sx, 0);
   debuggingPath.setEditable(false);
-  debuggingAssign.setText("Assign ...").onActivate([&] {
+  debuggingAssign.setText("Assign" ELLIPSIS).onActivate([&] {
     BrowserDialog dialog;
     dialog.setTitle("Select Debugging Path");
     dialog.setPath(Path::desktop());
