@@ -5,12 +5,10 @@ struct Jaleco_JF11_JF14 : Interface {
   }
 
   Memory::Readable<n8> programROM;
-  Memory::Writable<n8> programRAM;
   Memory::Readable<n8> characterROM;
 
   auto load() -> void override {
     Interface::load(programROM, "program.rom");
-    Interface::load(programRAM, "save.ram");
     Interface::load(characterROM, "character.rom");
     mirror = pak->attribute("mirror") == "vertical";
   }
