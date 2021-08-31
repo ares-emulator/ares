@@ -13,7 +13,7 @@ auto pFont::size(NSFont* font, const string& text) -> Size {
   NSString* cocoaText = [NSString stringWithUTF8String:text];
   NSDictionary* fontAttributes = [NSDictionary dictionaryWithObjectsAndKeys:font, NSFontAttributeName, nil];
   NSSize size = [cocoaText sizeWithAttributes:fontAttributes];
-  return {(s32)size.width, (s32)size.height};
+  return {(s32)ceil(size.width), (s32)ceil(size.height)};
 }
 
 auto pFont::family(const string& family) -> string {
