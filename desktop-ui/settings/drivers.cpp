@@ -89,6 +89,15 @@ auto DriverSettings::construct() -> void {
   if(settings.input.defocus == "Pause") inputDefocusPause.setChecked();
   if(settings.input.defocus == "Block") inputDefocusBlock.setChecked();
   if(settings.input.defocus == "Allow") inputDefocusAllow.setChecked();
+    
+  videoDriverLayout.setPadding(12_sx, 0);
+  videoPropertyLayout.setPadding(12_sx, 0);
+  videoToggleLayout.setPadding(12_sx, 0);
+  audioDriverLayout.setPadding(12_sx, 0);
+  audioPropertyLayout.setPadding(12_sx, 0);
+  audioToggleLayout.setPadding(12_sx, 0);
+  inputDriverLayout.setPadding(12_sx, 0);
+  inputDefocusLayout.setPadding(12_sx, 0);
 }
 
 auto DriverSettings::videoRefresh() -> void {

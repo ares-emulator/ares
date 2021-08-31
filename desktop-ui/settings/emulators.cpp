@@ -19,7 +19,10 @@ auto EmulatorSettings::construct() -> void {
     TableViewCell manufacturer{&item};
     manufacturer.setText(emulator->manufacturer);
   }
-
+  emulatorList.resizeColumns();
+  emulatorList.column(0).setWidth(16);
+    
+  groupEmulatorsLayout.setAlignment(1);
   groupEmulators.setText("Group Emulators").setChecked(settings.general.groupEmulators).onToggle([&] {
     settings.general.groupEmulators = groupEmulators.checked();
     presentation.loadEmulators();

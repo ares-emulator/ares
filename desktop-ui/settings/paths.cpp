@@ -3,6 +3,7 @@ auto PathSettings::construct() -> void {
   setVisible(false);
 
   homeLabel.setText("Home").setFont(Font().setBold());
+  homeLayout.setPadding(12_sx, 0);
   homePath.setEditable(false);
   homeAssign.setText("Assign ...").onActivate([&] {
     BrowserDialog dialog;
@@ -19,6 +20,7 @@ auto PathSettings::construct() -> void {
   });
 
   savesLabel.setText("Saves").setFont(Font().setBold());
+  savesLayout.setPadding(12_sx, 0);
   savesPath.setEditable(false);
   savesAssign.setText("Assign ...").onActivate([&] {
     BrowserDialog dialog;
@@ -35,6 +37,7 @@ auto PathSettings::construct() -> void {
   });
 
   screenshotsLabel.setText("Screenshots").setFont(Font().setBold());
+  screenshotsLayout.setPadding(12_sx, 0);
   screenshotsPath.setEditable(false);
   screenshotsAssign.setText("Assign ...").onActivate([&] {
     BrowserDialog dialog;
@@ -51,6 +54,7 @@ auto PathSettings::construct() -> void {
   });
 
   debuggingLabel.setText("Debugging Files").setFont(Font().setBold());
+  debuggingLayout.setPadding(12_sx, 0);
   debuggingPath.setEditable(false);
   debuggingAssign.setText("Assign ...").onActivate([&] {
     BrowserDialog dialog;
