@@ -2,7 +2,6 @@ auto HotkeySettings::construct() -> void {
   setCollapsible();
   setVisible(false);
 
-  inputLabel.setText("Hotkey Bindings").setFont(Font().setBold());
   inputList.setBatchable();
   inputList.setHeadered();
   inputList.onChange([&] { eventChange(); });
@@ -31,6 +30,7 @@ auto HotkeySettings::reload() -> void {
 
   refresh();
   eventChange();
+  inputList.resizeColumns();
 }
 
 auto HotkeySettings::refresh() -> void {

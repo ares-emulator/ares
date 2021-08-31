@@ -3,7 +3,7 @@ auto VideoSettings::construct() -> void {
   setVisible(false);
 
   colorAdjustmentLabel.setText("Color Adjustment").setFont(Font().setBold());
-  colorAdjustmentLayout.setSize({3, 3});
+  colorAdjustmentLayout.setSize({3, 3}).setPadding(12_sx, 0);
   colorAdjustmentLayout.column(0).setAlignment(1.0);
 
   luminanceLabel.setText("Luminance:");
@@ -35,24 +35,29 @@ auto VideoSettings::construct() -> void {
     settings.video.colorBleed = colorBleedOption.checked();
     if(emulator) emulator->setBoolean("Color Bleed", settings.video.colorBleed);
   });
+  colorBleedLayout.setAlignment(1).setPadding(12_sx, 0);
   colorBleedHint.setText("Blurs adjacent pixels for translucency effects").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
   colorEmulationOption.setText("Color Emulation").setChecked(settings.video.colorEmulation).onToggle([&] {
     settings.video.colorEmulation = colorEmulationOption.checked();
     if(emulator) emulator->setBoolean("Color Emulation", settings.video.colorEmulation);
   });
+  colorEmulationLayout.setAlignment(1).setPadding(12_sx, 0);
   colorEmulationHint.setText("Matches colors to how they look on real hardware").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
   interframeBlendingOption.setText("Interframe Blending").setChecked(settings.video.interframeBlending).onToggle([&] {
     settings.video.interframeBlending = interframeBlendingOption.checked();
     if(emulator) emulator->setBoolean("Interframe Blending", settings.video.interframeBlending);
   });
+  interframeBlendingLayout.setAlignment(1).setPadding(12_sx, 0);
   interframeBlendingHint.setText("Emulates LCD translucency effects, but increases motion blur").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
   overscanOption.setText("Overscan").setChecked(settings.video.overscan).onToggle([&] {
     settings.video.overscan = overscanOption.checked();
     if(emulator) emulator->setOverscan(settings.video.overscan);
   });
-  overscanLabel.setText("Shows extended PAL CRT lines, but these are usually blank in most games").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
+  overscanLayout.setAlignment(1).setPadding(12_sx, 0);
+  overscanHint.setText("Shows extended PAL CRT lines, but these are usually blank in most games").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
 
   renderSettingsLabel.setText("N64 Render Settings").setFont(Font().setBold());
+  renderQualityLayout.setPadding(12_sx, 0);
   renderQualitySD.setText("SD Quality").onActivate([&] {
     settings.video.quality = "SD";
     renderSupersamplingOption.setChecked(false).setEnabled(false);
@@ -71,7 +76,9 @@ auto VideoSettings::construct() -> void {
   renderSupersamplingOption.setText("Supersampling").setChecked(settings.video.supersampling && settings.video.quality != "SD").setEnabled(settings.video.quality != "SD").onToggle([&] {
     settings.video.supersampling = renderSupersamplingOption.checked();
   });
+  renderSupersamplingLayout.setAlignment(1).setPadding(12_sx, 0);
   renderSupersamplingHint.setText("Scales HD and UHD resolutions back down to SD").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
+  renderSettingsLayout.setPadding(12_sx, 0);
   renderSettingsHint.setText("Note: render settings changes require a game reload to take effect").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
 
   #if !defined(VULKAN)

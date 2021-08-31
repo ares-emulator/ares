@@ -90,7 +90,7 @@ struct Settings : Markup::Node {
 struct VideoSettings : VerticalLayout {
   auto construct() -> void;
 
-  Label colorAdjustmentLabel{this, Size{~0, 0}, 2};
+  Label colorAdjustmentLabel{this, Size{~0, 0}, 5};
   TableLayout colorAdjustmentLayout{this, Size{~0, 0}};
     Label luminanceLabel{&colorAdjustmentLayout, Size{0, 0}};
     Label luminanceValue{&colorAdjustmentLayout, Size{50_sx, 0}};
@@ -103,36 +103,37 @@ struct VideoSettings : VerticalLayout {
     Label gammaLabel{&colorAdjustmentLayout, Size{0, 0}};
     Label gammaValue{&colorAdjustmentLayout, Size{50_sx, 0}};
     HorizontalSlider gammaSlider{&colorAdjustmentLayout, Size{~0, 0}};
-  Label emulatorSettingsLabel{this, Size{~0, 0}, 2};
-    HorizontalLayout colorBleedLayout{this, Size{~0, 0}, 2};
-      CheckLabel colorBleedOption{&colorBleedLayout, Size{0, 0}, 2};
+  Label emulatorSettingsLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout colorBleedLayout{this, Size{~0, 0}, 5};
+      CheckLabel colorBleedOption{&colorBleedLayout, Size{0, 0}, 5};
       Label colorBleedHint{&colorBleedLayout, Size{~0, 0}};
-    HorizontalLayout colorEmulationLayout{this, Size{~0, 0}, 2};
-      CheckLabel colorEmulationOption{&colorEmulationLayout, Size{0, 0}, 2};
+    HorizontalLayout colorEmulationLayout{this, Size{~0, 0}, 5};
+      CheckLabel colorEmulationOption{&colorEmulationLayout, Size{0, 0}, 5};
       Label colorEmulationHint{&colorEmulationLayout, Size{~0, 0}};
-    HorizontalLayout interframeBlendingLayout{this, Size{~0, 0}, 2};
-      CheckLabel interframeBlendingOption{&interframeBlendingLayout, Size{0, 0}, 2};
+    HorizontalLayout interframeBlendingLayout{this, Size{~0, 0}, 5};
+      CheckLabel interframeBlendingOption{&interframeBlendingLayout, Size{0, 0}, 5};
       Label interframeBlendingHint{&interframeBlendingLayout, Size{~0, 0}};
     HorizontalLayout overscanLayout{this, Size{~0, 0}};
-      CheckLabel overscanOption{&overscanLayout, Size{0, 0}, 2};
-      Label overscanLabel{&overscanLayout, Size{~0, 0}};
+      CheckLabel overscanOption{&overscanLayout, Size{0, 0}, 5};
+      Label overscanHint{&overscanLayout, Size{~0, 0}};
   //
-  Label renderSettingsLabel{this, Size{~0, 0}, 2};
-  HorizontalLayout renderQualityLayout{this, Size{~0, 0}, 2};
+  Label renderSettingsLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout renderQualityLayout{this, Size{~0, 0}, 5};
     RadioLabel renderQualitySD{&renderQualityLayout, Size{0, 0}};
     RadioLabel renderQualityHD{&renderQualityLayout, Size{0, 0}};
     RadioLabel renderQualityUHD{&renderQualityLayout, Size{0, 0}};
     Group renderQualityGroup{&renderQualitySD, &renderQualityHD, &renderQualityUHD};
-  HorizontalLayout renderSupersamplingLayout{this, Size{~0, 0}, 2};
-    CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 2};
+  HorizontalLayout renderSupersamplingLayout{this, Size{~0, 0}, 5};
+    CheckLabel renderSupersamplingOption{&renderSupersamplingLayout, Size{0, 0}, 5};
     Label renderSupersamplingHint{&renderSupersamplingLayout, Size{0, 0}};
-  Label renderSettingsHint{this, Size{0, 0}};
+  HorizontalLayout renderSettingsLayout{this, Size{~0, 0}};
+      Label renderSettingsHint{&renderSettingsLayout, Size{0, 0}};
 };
 
 struct AudioSettings : VerticalLayout {
   auto construct() -> void;
 
-  Label effectsLabel{this, Size{~0, 0}, 2};
+  Label effectsLabel{this, Size{~0, 0}, 5};
   TableLayout effectsLayout{this, Size{~0, 0}};
     Label volumeLabel{&effectsLayout, Size{0, 0}};
     Label volumeValue{&effectsLayout, Size{50_sx, 0}};
@@ -184,7 +185,6 @@ struct HotkeySettings : VerticalLayout {
   auto eventInput(shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> void;
   auto setVisible(bool visible = true) -> HotkeySettings&;
 
-  Label inputLabel{this, Size{~0, 0}, 2};
   TableView inputList{this, Size{~0, ~0}};
   HorizontalLayout controlLayout{this, Size{~0, 0}};
     Label assignLabel{&controlLayout, Size{~0, 0}};
@@ -201,28 +201,26 @@ struct EmulatorSettings : VerticalLayout {
   auto construct() -> void;
   auto eventToggle(TableViewCell cell) -> void;
 
-  Label emulatorLabel{this, Size{~0, 0}, 2};
+  Label emulatorLabel{this, Size{~0, 0}, 5};
   TableView emulatorList{this, Size{~0, ~0}};
   HorizontalLayout groupEmulatorsLayout{this, Size{~0, 0}};
-    CheckLabel groupEmulators{&groupEmulatorsLayout, Size{0, 0}, 2};
+    CheckLabel groupEmulators{&groupEmulatorsLayout, Size{0, 0}, 5};
     Label groupEmulatorsHint{&groupEmulatorsLayout, Size{~0, 0}};
 };
 
 struct OptionSettings : VerticalLayout {
   auto construct() -> void;
-
-  Label optionsLabel{this, Size{~0, 0}, 2};
-  HorizontalLayout rewindLayout{this, Size{~0, 0}, 2};
-    CheckLabel rewind{&rewindLayout, Size{0, 0}, 2};
+  HorizontalLayout rewindLayout{this, Size{~0, 0}, 5};
+    CheckLabel rewind{&rewindLayout, Size{0, 0}, 5};
     Label rewindHint{&rewindLayout, Size{~0, 0}};
-  HorizontalLayout runAheadLayout{this, Size{~0, 0}, 2};
-    CheckLabel runAhead{&runAheadLayout, Size{0, 0}, 2};
+  HorizontalLayout runAheadLayout{this, Size{~0, 0}, 5};
+    CheckLabel runAhead{&runAheadLayout, Size{0, 0}, 5};
     Label runAheadHint{&runAheadLayout, Size{~0, 0}};
-  HorizontalLayout autoSaveMemoryLayout{this, Size{~0, 0}, 2};
-    CheckLabel autoSaveMemory{&autoSaveMemoryLayout, Size{0, 0}, 2};
+  HorizontalLayout autoSaveMemoryLayout{this, Size{~0, 0}, 5};
+    CheckLabel autoSaveMemory{&autoSaveMemoryLayout, Size{0, 0}, 5};
     Label autoSaveMemoryHint{&autoSaveMemoryLayout, Size{~0, 0}};
-  HorizontalLayout nativeFileDialogsLayout{this, Size{~0, 0}, 2};
-    CheckLabel nativeFileDialogs{&nativeFileDialogsLayout, Size{0, 0}, 2};
+  HorizontalLayout nativeFileDialogsLayout{this, Size{~0, 0}, 5};
+    CheckLabel nativeFileDialogs{&nativeFileDialogsLayout, Size{0, 0}, 5};
     Label nativeFileDialogsHint{&nativeFileDialogsLayout, Size{~0, 0}};
 };
 
@@ -234,7 +232,7 @@ struct FirmwareSettings : VerticalLayout {
   auto eventAssign() -> void;
   auto eventClear() -> void;
 
-  Label firmwareLabel{this, Size{~0, 0}, 2};
+  Label firmwareLabel{this, Size{~0, 0}, 5};
   TableView firmwareList{this, Size{~0, ~0}};
   HorizontalLayout controlLayout{this, Size{~0, 0}};
     Canvas spacer{&controlLayout, Size{~0, 0}};
@@ -246,22 +244,22 @@ struct PathSettings : VerticalLayout {
   auto construct() -> void;
   auto refresh() -> void;
 
-  Label homeLabel{this, Size{~0, 0}, 2};
+  Label homeLabel{this, Size{~0, 0}, 5};
   HorizontalLayout homeLayout{this, Size{~0, 0}};
     LineEdit homePath{&homeLayout, Size{~0, 0}};
     Button homeAssign{&homeLayout, Size{80, 0}};
     Button homeReset{&homeLayout, Size{80, 0}};
-  Label savesLabel{this, Size{~0, 0}, 2};
+  Label savesLabel{this, Size{~0, 0}, 5};
   HorizontalLayout savesLayout{this, Size{~0, 0}};
     LineEdit savesPath{&savesLayout, Size{~0, 0}};
     Button savesAssign{&savesLayout, Size{80, 0}};
     Button savesReset{&savesLayout, Size{80, 0}};
-  Label screenshotsLabel{this, Size{~0, 0}, 2};
+  Label screenshotsLabel{this, Size{~0, 0}, 5};
   HorizontalLayout screenshotsLayout{this, Size{~0, 0}};
     LineEdit screenshotsPath{&screenshotsLayout, Size{~0, 0}};
     Button screenshotsAssign{&screenshotsLayout, Size{80, 0}};
     Button screenshotsReset{&screenshotsLayout, Size{80, 0}};
-  Label debuggingLabel{this, Size{~0, 0}, 2};
+  Label debuggingLabel{this, Size{~0, 0}, 5};
   HorizontalLayout debuggingLayout{this, Size{~0, 0}};
     LineEdit debuggingPath{&debuggingLayout, Size{~0, 0}};
     Button debuggingAssign{&debuggingLayout, Size{80, 0}};
@@ -277,7 +275,7 @@ struct DriverSettings : VerticalLayout {
   auto inputRefresh() -> void;
   auto inputDriverUpdate() -> void;
 
-  Label videoLabel{this, Size{~0, 0}, 2};
+  Label videoLabel{this, Size{~0, 0}, 5};
   HorizontalLayout videoDriverLayout{this, Size{~0, 0}};
     Label videoDriverLabel{&videoDriverLayout, Size{0, 0}};
     ComboButton videoDriverList{&videoDriverLayout, Size{0, 0}};
@@ -293,7 +291,7 @@ struct DriverSettings : VerticalLayout {
     CheckLabel videoBlockingToggle{&videoToggleLayout, Size{0, 0}};
     CheckLabel videoFlushToggle{&videoToggleLayout, Size{0, 0}};
   //
-  Label audioLabel{this, Size{~0, 0}, 2};
+  Label audioLabel{this, Size{~0, 0}, 5};
   HorizontalLayout audioDriverLayout{this, Size{~0, 0}};
     Label audioDriverLabel{&audioDriverLayout, Size{0, 0}};
     ComboButton audioDriverList{&audioDriverLayout, Size{0, 0}};
@@ -311,7 +309,7 @@ struct DriverSettings : VerticalLayout {
     CheckLabel audioBlockingToggle{&audioToggleLayout, Size{0, 0}};
     CheckLabel audioDynamicToggle{&audioToggleLayout, Size{0, 0}};
   //
-  Label inputLabel{this, Size{~0, 0}, 2};
+  Label inputLabel{this, Size{~0, 0}, 5};
   HorizontalLayout inputDriverLayout{this, Size{~0, 0}};
     Label inputDriverLabel{&inputDriverLayout, Size{0, 0}};
     ComboButton inputDriverList{&inputDriverLayout, Size{0, 0}};
