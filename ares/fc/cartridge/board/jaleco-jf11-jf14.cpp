@@ -39,7 +39,6 @@ struct Jaleco_JF11_JF14 : Interface {
       address = address >> !mirror & 0x0400 | (n10)address;
       return ppu.writeCIRAM(address, data);
     }
-    address = characterBank << 13 | (n13)address;
   }
 
   auto power() -> void override {
