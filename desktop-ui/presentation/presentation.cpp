@@ -313,7 +313,7 @@ auto Presentation::loadEmulators() -> void {
       recentGames.append(MenuSeparator());
       MenuItem clearHistory{&recentGames};
       clearHistory.setIcon(Icon::Edit::Clear);
-      #if defined(PLATFORM_MACOS)
+      #if !defined(PLATFORM_MACOS)
       clearHistory.setText("Clear History");
       #else
       clearHistory.setText("Clear Menu");
