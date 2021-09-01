@@ -399,7 +399,7 @@ struct CPU : Thread {
   struct SCC {
     //0
     struct Index {
-      n6 tlbEntry;
+      n6 tlbEntry = 63;
       n1 probeFailure;
     } index;
 
@@ -417,7 +417,7 @@ struct CPU : Thread {
 
     //4
     struct Context {
-      n19 badVirtualAddress;
+      n19 badVirtualAddress = 0x7ffff;
       n41 pageTableEntryBase;
     } context;
 
@@ -428,7 +428,7 @@ struct CPU : Thread {
     } wired;
 
     //8
-    n64 badVirtualAddress;
+    n64 badVirtualAddress = 0xffffffff;
 
     //9
     n33 count;  //32-bit; +1 to count half-cycles
@@ -466,14 +466,14 @@ struct CPU : Thread {
 
     //13
     struct Cause {
-      n5 exceptionCode;
-      n8 interruptPending;
-      n2 coprocessorError;
-      n1 branchDelay;
+      n5 exceptionCode = 31;
+      n8 interruptPending = 1;
+      n2 coprocessorError = 3;
+      n1 branchDelay = 1;
     } cause;
 
     //14: Exception Program Counter
-    n64 epc;
+    n64 epc = 0xffffffff;
 
     //15: Coprocessor Revision Identifier
     struct Coprocessor {
@@ -486,30 +486,30 @@ struct CPU : Thread {
       n2 coherencyAlgorithmKSEG0;
       n2 cu;  //reserved
       n1 bigEndian = 1;
-      n2 sysadWritebackPattern;
-      n2 systemClockRatio = 6;
+      n4 sysadWritebackPattern;
+      n3 systemClockRatio = 7;
     } configuration;
 
     //17: Load Linked Address
-    n64 ll;
+    n64 ll = 0xffffffff;
     n1  llbit;
 
     //18
     struct WatchLo {
-      n1  trapOnWrite;
-      n1  trapOnRead;
-      n32 physicalAddress;
+      n1  trapOnWrite = 1;
+      n1  trapOnRead = 1;
+      n32 physicalAddress = 0xffffffff;
     } watchLo;
 
     //19
     struct WatchHi {
-      n4 physicalAddressExtended;  //unused; for R4000 compatibility only
+      n4 physicalAddressExtended = 0xf;  //unused; for R4000 compatibility only
     } watchHi;
 
     //20
     struct XContext {
-      n27 badVirtualAddress;
-      n2  region;
+      n27 badVirtualAddress = 0xfffffff;
+      n2  region = 3;
       n31 pageTableEntryBase;
     } xcontext;
 
@@ -525,7 +525,7 @@ struct CPU : Thread {
     } tagLo;
 
     //30: Error Exception Program Counter
-    n64 epcError;
+    n64 epcError = 0xffffffff;
   } scc;
 
   //interpreter-scc.cpp

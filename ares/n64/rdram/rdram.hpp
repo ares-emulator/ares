@@ -31,13 +31,13 @@ struct RDRAM : Memory::IO<RDRAM> {
   auto serialize(serializer&) -> void;
 
   struct Chip {
-    n32 deviceType;
+    n32 deviceType = 0xb4190010;
     n32 deviceID;
-    n32 delay;
+    n32 delay = 0x2b3b1a0b;
     n32 mode;
     n32 refreshInterval;
     n32 refreshRow;
-    n32 rasInterval;
+    n32 rasInterval = 0x101c0a04;
     n32 minInterval;
     n32 addressSelect;
     n32 deviceManufacturer;
