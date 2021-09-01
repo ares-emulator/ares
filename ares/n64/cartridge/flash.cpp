@@ -65,12 +65,12 @@ auto Cartridge::Flash::writeWord(u32 address, u64 data) -> void {
 
   case 0x78:  //erase
     mode = Mode::Erase;
-    status = 0x1111'8008'00c2'0000ull;
+    status = 0x1111'8008'00c2'001dull;
     return;
 
   case 0xa5:  //set write offset
     offset = u16(data) * 128;
-    status = 0x1111'8004'00c2'0000ull;
+    status = 0x1111'8004'00c2'001dull;
     return;
 
   case 0xb4:  //write
@@ -93,12 +93,12 @@ auto Cartridge::Flash::writeWord(u32 address, u64 data) -> void {
 
   case 0xe1:  //status
     mode = Mode::Status;
-    status = 0x1111'8001'00c2'0000ull;
+    status = 0x1111'8001'00c2'001dull;
     return;
 
   case 0xf0:  //read
     mode = Mode::Read;
-    status = 0x1111'8004'f000'0000ull;
+    status = 0x1111'8004'f000'001dull;
     return;
 
   default:
