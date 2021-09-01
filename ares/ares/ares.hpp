@@ -37,16 +37,16 @@ using namespace nall;
 
 namespace ares {
   static const string Name       = "ares";
-  static const string Version    = "123-dev";
+  static const string Version    = "123";
   static const string Copyright  = "ares team, Near";
   static const string License    = "ISC";
   static const string LicenseURI = "https://opensource.org/licenses/ISC";
-  static const string Website    = "GitHub";
-  static const string WebsiteURI = "https://github.com/higan-emu/ares";
+  static const string Website    = "ares-emulator.github.io";
+  static const string WebsiteURI = "https://ares-emulator.github.io";
 
   //incremented only when serialization format changes
   static const u32    SerializerSignature = 0x31545342;  //"BST1" (little-endian)
-  static const string SerializerVersion   = "121";
+  static const string SerializerVersion   = "123";
 
   namespace VFS {
     using Pak = shared_pointer<vfs::directory>;

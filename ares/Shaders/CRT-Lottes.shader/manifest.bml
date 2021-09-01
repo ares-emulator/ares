@@ -1,0 +1,10 @@
+input
+  filter: nearest
+
+program
+  filter: nearest
+  wrap: border
+  fragment: shadertoy.fs
+
+output
+  filter: nearest

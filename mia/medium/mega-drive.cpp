@@ -206,17 +206,6 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
     s += "      content: Program\n";
     s += "    slot\n";
     s += "      type: Mega Drive\n";
-  } else if(domesticName == "SONIC & KNUCKLES") {
-    s += "    memory\n";
-    s += "      type: ROM\n";
-    s += "      size: 0x200000\n";
-    s += "      content: Program\n";
-    s += "    memory\n";
-    s += "      type: ROM\n";
-    s += "      size: 0x40000\n";
-    s += "      content: Patch\n";
-    s += "    slot\n";
-    s += "      type: Mega Drive\n";
   } else if(internationalName == "Virtua Racing") {
     s += "    memory\n";
     s += "      type: ROM\n";

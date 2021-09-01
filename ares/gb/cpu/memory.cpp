@@ -7,8 +7,17 @@ auto CPU::stop() -> void {
 
 auto CPU::halt() -> void {
   idle();
+  if(status.interruptLatch) r.halt = 0;
   if(Model::SuperGameBoy()) {
     scheduler.exit(Event::Step);
+  }
+}
+
+auto CPU::haltBugTrigger() -> void {
+  // halt bug is triggered when IME is off, and IE & IF != 0
+  // does not properly emulate two halts in a rom
+  if(!r.ime && status.interruptLatch != 0) { 
+    r.haltBug = 1;
   }
 }
 

@@ -51,11 +51,7 @@ auto PPU::scanlineDMG() -> void {
   }
 
   //sort by X-coordinate
-  for(u32 lo = 0; lo < sprites; lo++) {
-    for(u32 hi = lo + 1; hi < sprites; hi++) {
-      if(sprite[hi].x < sprite[lo].x) swap(sprite[lo], sprite[hi]);
-    }
-  }
+  sort(sprite, sprites, [](auto l, auto r) { return l.x < r.x; });
 }
 
 auto PPU::runDMG() -> void {
@@ -79,7 +75,8 @@ auto PPU::runDMG() -> void {
 
   if(Model::GameBoy()) {
     auto output = screen->pixels().data() + status.ly * 160 + px++;
-    *output = color;
+    //LCD is still blank during the first frame
+    if(!latch.displayEnable) *output = color;
   }
   if(Model::SuperGameBoy()) {
     superGameBoy->ppuWrite(color);
@@ -103,13 +100,14 @@ auto PPU::runBackgroundDMG() -> void {
 
 auto PPU::runWindowDMG() -> void {
   if(status.ly < status.wy) return;
+  if(px + 7 < status.wx) return;
   if(px + 7 == status.wx) latch.wy++;
+  if(!status.bgEnable) return;
 
   n8 scrollY = latch.wy - 1;
   n8 scrollX = px + 7 - latch.wx;
   n3 tileX = scrollX & 7;
 
-  if(scrollX >= 160u) return;  //also matches underflow (scrollX < 0)
   if(tileX == 0 || px == 0) readTileDMG(status.windowTilemapSelect, scrollX, scrollY, window.tiledata);
 
   n2 index;

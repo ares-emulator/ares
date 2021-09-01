@@ -109,13 +109,13 @@ auto PPU::runBackgroundCGB() -> void {
 
 auto PPU::runWindowCGB() -> void {
   if(status.ly < status.wy) return;
+  if(px + 7 < status.wx) return;
   if(px + 7 == status.wx) latch.wy++;
 
   n8 scrollY = latch.wy - 1;
   n8 scrollX = px + 7 - latch.wx;
   n3 tileX = scrollX & 7;
 
-  if(scrollX >= 160u) return;  //also matches underflow (scrollX < 0)
   if(tileX == 0 || px == 0) readTileCGB(status.windowTilemapSelect, scrollX, scrollY, window.tiledata, window.attributes);
 
   n2 index;

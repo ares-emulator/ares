@@ -49,8 +49,7 @@ auto CPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
   }
 
   if(address == 0xff01 && cycle == 2) {  //SB
-    //unemulated
-    return 0x00;
+    return status.serialData;
   }
 
   if(address == 0xff02 && cycle == 2) {  //SC
@@ -97,8 +96,8 @@ auto CPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
 
   if(Model::GameBoyColor())
   if(address == 0xff55 && cycle == 2) {  //HDMA5
-    data.bit(0,6) = status.dmaLength;
-    data.bit(7)   = status.hdmaActive;
+    data.bit(0,6) =  status.dmaLength;
+    data.bit(7)   = !status.hdmaActive;
     return data;
   }
 

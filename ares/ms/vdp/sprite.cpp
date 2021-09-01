@@ -8,10 +8,11 @@ auto VDP::Sprite::setup(n9 voffset) -> void {
     n14 attributeAddress;
     attributeAddress.bit(7,13) = io.attributeTableAddress;
     for(u32 index : range(32)) {
-      n8 y = self.vram[attributeAddress++];
+      i9 y = self.vram[attributeAddress++];
       if(y == 0xd0) break;
+      if(y >= 0xe0) y -= 0x100;
 
-      n8 x = self.vram[attributeAddress++];
+      i9 x = self.vram[attributeAddress++];
       n8 pattern = self.vram[attributeAddress++];
       n8 extra = self.vram[attributeAddress++];
 
@@ -35,10 +36,11 @@ auto VDP::Sprite::setup(n9 voffset) -> void {
     attributeAddress.bit(8,13) = io.attributeTableAddress.bit(1,6);
 
     for(u32 index : range(64)) {
-      n8 y = self.vram[attributeAddress + index];
+      i9 y = self.vram[attributeAddress + index];
       if(self.vlines() == 192 && y == 0xd0) break;
+      if(y >= 0xf0) y -= 0x100;
 
-      n8 x = self.vram[attributeAddress + 0x80 + (index << 1)];
+      i9 x = self.vram[attributeAddress + 0x80 + (index << 1)];
       n8 pattern = self.vram[attributeAddress + 0x81 + (index << 1)];
 
       if(io.shift) x -= 8;

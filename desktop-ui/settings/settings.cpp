@@ -112,7 +112,7 @@ auto Settings::process(bool load) -> void {
     bind(string, name, recent.game[index]);
   }
 
-  for(u32 index : range(2)) {
+  for(u32 index : range(5)) {
     auto& port = virtualPorts[index];
     for(auto& input : port.pad.inputs) {
       string name = {"VirtualPad", 1 + index, "/", input.name}, value;

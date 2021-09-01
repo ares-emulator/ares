@@ -32,7 +32,6 @@ struct PPU : Thread {
   auto main() -> void;
   auto mode(n2 mode) -> void;
   auto stat() -> void;
-  auto coincidence() -> bool;
   auto step(u32 clocks) -> void;
 
   auto hflip(n16 tiledata) const -> n16;
@@ -43,6 +42,8 @@ struct PPU : Thread {
   auto canAccessVRAM() const -> bool;
   auto canAccessOAM() const -> bool;
   auto compareLYC() const -> bool;
+  auto getLY() const -> n8;
+  auto triggerOAM() const -> bool;
 
   //io.cpp
   auto vramAddress(n13 address) const -> n16;

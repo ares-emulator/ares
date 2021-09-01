@@ -1,4 +1,4 @@
-#if defined(PROFILE_PERFORMANCE)
+#if 0 //defined(PROFILE_PERFORMANCE)
 #include "../vdp-performance/vdp.cpp"
 #else
 #include <md/md.hpp>

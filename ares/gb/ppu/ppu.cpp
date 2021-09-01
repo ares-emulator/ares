@@ -97,8 +97,7 @@ auto PPU::main() -> void {
     latch.wy = 0;
   }
 
-  if(latch.displayEnable) {
-    latch.displayEnable = 0;
+  if(latch.displayEnable && status.ly == 0) {
     mode(0);
     step(72);
 
@@ -136,6 +135,8 @@ auto PPU::main() -> void {
     cpu.raise(CPU::Interrupt::VerticalBlank);
     if(screen) screen->frame();
     scheduler.exit(Event::Frame);
+
+    latch.displayEnable = 0;
   }
 
   if(status.ly == 154) {
@@ -156,20 +157,16 @@ auto PPU::mode(n2 mode) -> void {
 }
 
 auto PPU::stat() -> void {
+  if(!status.displayEnable) return;
+
   bool irq = status.irq;
 
   status.irq  = status.interruptHblank && status.mode == 0;
   status.irq |= status.interruptVblank && status.mode == 1;
-  status.irq |= status.interruptOAM    && status.mode == 2;
-  status.irq |= status.interruptLYC    && coincidence();
+  status.irq |= status.interruptOAM    && triggerOAM();
+  status.irq |= status.interruptLYC    && compareLYC();
 
   if(!irq && status.irq) cpu.raise(CPU::Interrupt::Stat);
-}
-
-auto PPU::coincidence() -> bool {
-  u32 ly = status.ly;
-  if(ly == 153 && status.lx >= 92) ly = 0;  //LYC=0 triggers early during LY=153
-  return ly == status.lyc;
 }
 
 auto PPU::step(u32 clocks) -> void {

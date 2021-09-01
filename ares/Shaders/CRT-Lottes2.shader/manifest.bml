@@ -1,0 +1,12 @@
+input
+  filter: nearest
+
+program
+  filter: nearest
+  vertex: lottes.vs
+  fragment: lottes.fs
+  
+output
+  height: 0
+  width: 0
+  filter: linear

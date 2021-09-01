@@ -9,17 +9,18 @@ SuperGrafx::SuperGrafx() {
   manufacturer = "NEC";
   name = "SuperGrafx";
 
-  { InputPort port{"Controller Port"};
+  for(auto id : range(5)) {
+   InputPort port{string{"Controller Port ", 1 + id}};
 
   { InputDevice device{"Gamepad"};
-    device.digital("Up",     virtualPorts[0].pad.up);
-    device.digital("Down",   virtualPorts[0].pad.down);
-    device.digital("Left",   virtualPorts[0].pad.left);
-    device.digital("Right",  virtualPorts[0].pad.right);
-    device.digital("II",     virtualPorts[0].pad.b1);
-    device.digital("I",      virtualPorts[0].pad.b2);
-    device.digital("Select", virtualPorts[0].pad.select);
-    device.digital("Run",    virtualPorts[0].pad.start);
+    device.digital("Up",     virtualPorts[id].pad.up);
+    device.digital("Down",   virtualPorts[id].pad.down);
+    device.digital("Left",   virtualPorts[id].pad.left);
+    device.digital("Right",  virtualPorts[id].pad.right);
+    device.digital("II",     virtualPorts[id].pad.b1);
+    device.digital("I",      virtualPorts[id].pad.b2);
+    device.digital("Select", virtualPorts[id].pad.select);
+    device.digital("Run",    virtualPorts[id].pad.start);
     port.append(device); }
 
     ports.append(port);
@@ -41,8 +42,15 @@ auto SuperGrafx::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port")) {
-    port->allocate("Gamepad");
+    port->allocate("Multitap");
     port->connect();
+  }
+
+  for(auto id : range(5)) {
+    if(auto port = root->scan<ares::Node::Port>(string{"Controller Port ", 1 + id})) {
+      port->allocate("Gamepad");
+      port->connect();
+    }
   }
 
   return true;

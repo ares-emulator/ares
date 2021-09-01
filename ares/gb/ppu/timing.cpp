@@ -38,3 +38,40 @@ auto PPU::compareLYC() const -> bool {
 
   return lyc == ly;
 }
+
+auto PPU::getLY() const -> n8 {
+  auto ly  = status.ly;
+
+  if(Model::GameBoy() || Model::SuperGameBoy()) {
+    auto lx = status.lx >> 2;
+    if(ly == 153 && lx >= 1) return 0;
+  }
+
+  if(Model::GameBoyColor() && cpu.lowSpeed()) {
+    auto lx = status.lx >> 2;
+    if(ly != 153 && lx >= 113) {
+      static const n3 pattern[8] = {0, 0, 2, 0, 4, 4, 6, 0};
+      if(ly.bit(0,3) != 0xf) {
+        ly.bit(0,2) = pattern[ly.bit(0,2)];
+      } else {
+        ly.bit(0,3) = 0;
+        ly.bit(4,6) = pattern[ly.bit(4,6)];
+      }
+      return ly;
+    }
+    if(ly == 153 && lx >= 1) return 0;
+  }
+
+  if(Model::GameBoyColor() && cpu.highSpeed()) {
+    auto lx = status.lx >> 1;
+    if(ly == 153 && lx >= 6) return 0;
+  }
+
+  return ly;
+}
+
+auto PPU::triggerOAM() const -> bool {
+  if(status.mode != 2) return 0;
+  auto lx = status.lx >> (cpu.status.speedDouble ? 1 : 2);
+  return lx == (status.ly == 0 ? 1 : 0);
+}

@@ -96,17 +96,16 @@ auto SM83::instructionCPL() -> void {
 auto SM83::instructionDAA() -> void {
   n16 a = A;
   if(!NF) {
-    if(HF || (n4)a > 0x09) a += 0x06;
-    if(CF || (n8)a > 0x9f) a += 0x60;
-  } else {
-    if(HF) {
-      a -= 0x06;
-      if(!CF) a &= 0xff;
+    if(HF || (n4)A > 0x09) a += 0x06;
+    if(CF || (n8)A > 0x99) {
+      a += 0x60;
+      CF = 1;
     }
+  } else {
+    if(HF) a -= 0x06;
     if(CF) a -= 0x60;
   }
   A = a;
-  CF |= a.bit(8);
   HF = 0;
   ZF = A == 0;
 }
@@ -135,6 +134,7 @@ auto SM83::instructionEI() -> void {
 
 auto SM83::instructionHALT() -> void {
   r.halt = 1;
+  haltBugTrigger();
   while(r.halt) halt();
 }
 

@@ -54,6 +54,8 @@ auto CPU::timer16384hz() -> void {
 
 auto CPU::timer8192hz() -> void {
   if(status.serialTransfer && status.serialClock) {
+    status.serialData <<= 1;
+    status.serialData |= 1;
     if(--status.serialBits == 0) {
       status.serialTransfer = 0;
       raise(Interrupt::Serial);

@@ -1,7 +1,7 @@
 #include "../desktop-ui.hpp"
 #include "hotkeys.cpp"
 
-VirtualPort virtualPorts[2];
+VirtualPort virtualPorts[5];
 InputManager inputManager;
 
 auto InputMapping::bind() -> void {

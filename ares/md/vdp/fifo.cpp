@@ -16,7 +16,12 @@ auto VDP::FIFO::run() -> bool {
     if(slots[0].upper) {
       slots[0].upper = 0;
       vdp.vram.writeByte(slots[0].address & ~1 | 0, slots[0].data.byte(1));
-      return advance(), true;
+      if(vdp.command.pending && vdp.dma.mode == 2 && vdp.dma.wait) {
+        vdp.dma.wait = 0;   // start pending DMA fill (do not advance fifo)
+      } else {
+        advance();
+      }
+      return true;
     }
   }
 
@@ -24,13 +29,25 @@ auto VDP::FIFO::run() -> bool {
     slots[0].lower = 0;
     slots[0].upper = 0;
     vdp.vram.writeByte(slots[0].address | 1, slots[0].data.byte(0));
-    return advance(), true;
+    if(vdp.command.pending && vdp.dma.mode == 2 && vdp.dma.wait) {
+        // Note: DMA fill to VRAM in an undocumented VRAM mode
+        // Not exactly sure what to do, but we'll treat it like normal VRAM mode for now
+        vdp.dma.wait = 0;   // start pending DMA fill (do not advance fifo)
+    } else {
+      advance();
+    }
+    return true;
   }
 
   if(slots[0].target == 3) {
     slots[0].lower = 0;
     slots[0].upper = 0;
     vdp.cram.write(slots[0].address >> 1, slots[0].data);
+    if(vdp.command.pending && vdp.dma.mode == 2 && vdp.dma.wait) {
+      // Note: DMA fill to CRAM is undocumented -- this is best-guess implementation based on research by Nemesis
+      // Advance the fifo and use invalidated data for the fill
+      vdp.dma.wait = 0;   // start pending DMA fill
+    }
     return advance(), true;
   }
 
@@ -38,6 +55,11 @@ auto VDP::FIFO::run() -> bool {
     slots[0].lower = 0;
     slots[0].upper = 0;
     vdp.vsram.write(slots[0].address >> 1, slots[0].data);
+    if(vdp.command.pending && vdp.dma.mode == 2 && vdp.dma.wait) {
+      // Note: DMA fill to VSRAM is undocumented -- this is best-guess implementation based on research by Nemesis
+      // Advance the fifo and use invalidated data for the fill
+      vdp.dma.wait = 0;   // start pending DMA fill
+    }
     return advance(), true;
   }
 

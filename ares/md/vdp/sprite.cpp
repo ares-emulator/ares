@@ -3,7 +3,7 @@ auto VDP::Sprite::write(n16 address, n16 data) -> void {
   if(vdp.h40()) baseAddress &= ~0x1ff;
 
   address -= baseAddress;
-  if(address >= 320) return;
+  if(address >= frameObjectLimit()*8/2) return;
 
   auto& object = cache[address >> 2];
   switch(address & 3) {
@@ -29,7 +29,7 @@ auto VDP::Sprite::end() -> void {
   patternIndex = 0;
   patternSlice = 0;
   patternCount = 0;
-  patternStop  = 0;
+  maskActive   = 0;
 }
 
 //called 16 (H32) or 20 (H40) times
@@ -41,7 +41,7 @@ auto VDP::Sprite::mappingFetch(u32) -> void {
   if(test.disablePhase2) return;
 
   //mapping fetches are delayed when less than 16/20 objects are visible
-  if(visibleCount++ < objectLimit()) return;
+  if(visibleCount++ < lineObjectLimit()) return;
 
   auto interlace = vdp.io.interlaceMode == 3;
   auto y = 129 + (i9)vdp.vcounter();
@@ -82,62 +82,57 @@ auto VDP::Sprite::patternFetch(u32) -> void {
     return vdp.slot();
   }
 
-  if(test.disablePhase3) patternStop = 1;
+  if(test.disablePhase3) mappings[patternIndex].valid = 0;
 
   auto interlace = vdp.io.interlaceMode == 3;
   auto y = 129 + (i9)vdp.vcounter();
   if(interlace) y = y << 1 | vdp.field();
 
-  if(!patternStop && mappings[patternIndex].valid) {
-    auto& object = mappings[patternIndex];
-    if(patternX && !object.x) patternStop = 1;
-    patternX = object.x;
-  } else {
-    patternX = 0;
-  }
-
-  if(!patternStop && mappings[patternIndex].valid) {
+  if(mappings[patternIndex].valid) {
     auto& object = mappings[patternIndex];
     auto width  = 1 + object.width  << 3;
     auto height = 1 + object.height << 3 + interlace;
 
-    u32 x = patternSlice * 8;
-    if(object.hflip) x = (width - 1) - x;
-
-    u32 tileX = x >> 3;
-    u32 tileNumber = tileX * (height >> 3 + interlace);
-    n15 tileAddress = object.address + (tileNumber << 4 + interlace);
-
-    u16 hi = vdp.vram.read(generatorAddress | tileAddress++);
-    u16 lo = vdp.vram.read(generatorAddress | tileAddress++);
-    u32 data = hi << 16 | lo << 0;
-    if(object.hflip) data = hflip(data);
-    for(auto index : range(8)) {
-      n9 x = object.x + patternSlice * 8 + index - 128;
-      n6 color = data >> 28;
-      data <<= 4;
-      if(!color) continue;
-      if(pixels[x].color) {
-        collision = 1;
+    if(!maskActive) {
+      if(maskCheck && !object.x) {
+        maskActive = 1;
       } else {
-        color |= object.palette << 4;
-        pixels[x] = {color, object.priority};
+        u32 x = patternSlice * 8;
+        if(object.hflip) x = (width - 1) - x;
+
+        u32 tileX = x >> 3;
+        u32 tileNumber = tileX * (height >> 3 + interlace);
+        n15 tileAddress = object.address + (tileNumber << 4 + interlace);
+
+        u16 hi = vdp.vram.read(generatorAddress | tileAddress++);
+        u16 lo = vdp.vram.read(generatorAddress | tileAddress++);
+        u32 data = hi << 16 | lo << 0;
+        if(object.hflip) data = hflip(data);
+        for(auto index : range(8)) {
+          n9 x = object.x + patternSlice * 8 + index - 128;
+          n6 color = data >> 28;
+          data <<= 4;
+          if(!color) continue;
+          if(pixels[x].color) {
+            collision = 1;
+          } else {
+            color |= object.palette << 4;
+            pixels[x] = {color, object.priority};
+          }
+        }
+
+        if(object.x) maskCheck = 1;
       }
     }
 
     if(++patternSlice >= 1 + object.width) {
       patternSlice = 0;
-      if(++patternIndex >= objectLimit()) patternStop = 1;
+      patternIndex++;
     }
-    if(++patternCount >= tileLimit()) patternStop = 1;
-    if(patternX && !object.x) patternStop = 1;
-    patternX = object.x;
-  } else {
-    patternX = 0;
-  }
 
-  y = 129 + (i9)vdp.vcounter();
-  if(interlace) y = y << 1 | vdp.field();
+  } else {
+    maskCheck = 0;
+  }
 
   if(test.disablePhase1) visibleStop = 1;
 
@@ -154,7 +149,7 @@ auto VDP::Sprite::patternFetch(u32) -> void {
     if(y >= objectY + height) continue;
 
     visible[visibleCount++] = id;
-    if(visibleCount >= objectLimit()) visibleStop = 1;
+    if(visibleCount >= lineObjectLimit()) visibleStop = 1;
   }
 }
 
@@ -171,11 +166,11 @@ auto VDP::Sprite::power(bool reset) -> void {
   for(auto& cache : this->cache) cache = {};
   for(auto& mapping : mappings) mapping = {};
   mappingCount = 0;
-  patternX = 0;
+  maskCheck = 0;
+  maskActive = 0;
   patternIndex = 0;
   patternSlice = 0;
   patternCount = 0;
-  patternStop = 0;
   for(auto& visible : this->visible) visible = {};
   visibleLink = 0;
   visibleCount = 0;

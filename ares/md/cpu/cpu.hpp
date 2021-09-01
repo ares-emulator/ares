@@ -69,6 +69,9 @@ struct CPU : M68000, Thread {
   struct State {
     n32 interruptPending;
   } state;
+
+  int cyclesUntilSync = 0;
+  int minCyclesBetweenSyncs = 0;
 };
 
 extern CPU cpu;

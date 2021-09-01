@@ -1,6 +1,6 @@
 struct Famicom : Cartridge {
   auto name() -> string override { return "Famicom"; }
-  auto extensions() -> vector<string> override { return {"fc", "nes", "unif"}; }
+  auto extensions() -> vector<string> override { return {"fc", "nes", "unf", "unif"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& data) -> string;
@@ -297,7 +297,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     prgram = 8192;
     break;
-
+    
   case  75:
     s += "  board:  KONAMI-VRC-1\n";
     s += "    chip type=VRC1\n";
@@ -320,6 +320,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case  97:
     s += "  board:  IREM-TAM-S1\n";
+    break;
+
+  case  140:
+    s += "  board:  JALECO-JF11-JF14\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
   case 159:
