@@ -101,12 +101,12 @@ else ifeq ($(platform),macos)
 else ifneq ($(filter $(platform),linux bsd),)
 	mkdir -p $(prefix)/bin/
 	mkdir -p $(prefix)/share/applications/
-	mkdir -p $(prefix)/share/icons/
+	mkdir -p $(prefix)/share/icons/hicolor/256x256/apps/
 	mkdir -p $(prefix)/share/$(name)/Shaders/
 	cp $(output.path)/$(name) $(prefix)/bin/$(name)
 	cp -R $(ares.path)/Shaders/* $(prefix)/share/$(name)/Shaders/
 	cp resource/$(name).desktop $(prefix)/share/applications/$(name).desktop
-	cp resource/$(name).png $(prefix)/share/icons/$(name).png
+	cp resource/$(name).png $(prefix)/share/icons/hicolor/256x256/apps/$(name).png
 endif
 
 uninstall:
@@ -118,7 +118,7 @@ else ifeq ($(platform),macos)
 else ifneq ($(filter $(platform),linux bsd),)
 	rm -f $(prefix)/bin/$(name)
 	rm -f $(prefix)/share/applications/$(name).desktop
-	rm -f $(prefix)/share/icons/$(name).png
+	rm -f $(prefix)/share/icons/hicolor/256x256/apps/$(name).png
 endif
 
 -include $(object.path)/*.d

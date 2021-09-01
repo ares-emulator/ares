@@ -2,6 +2,7 @@ namespace Board {
 
 #include "bandai-fcg.cpp"
 #include "jaleco-jf.cpp"
+#include "jaleco-jf11-jf14.cpp"
 #include "konami-vrc1.cpp"
 #include "konami-vrc2.cpp"
 #include "konami-vrc3.cpp"
@@ -49,6 +50,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = HVC_UxROM::create(board);
   if(!p) p = IremTAMS1::create(board);
   if(!p) p = JalecoJF::create(board);
+  if(!p) p = Jaleco_JF11_JF14::create(board);
   if(!p) p = KonamiVRC1::create(board);
   if(!p) p = KonamiVRC2::create(board);
   if(!p) p = KonamiVRC3::create(board);
