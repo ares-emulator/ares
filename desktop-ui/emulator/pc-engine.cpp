@@ -25,6 +25,9 @@ PCEngine::PCEngine() {
 
     ports.append(port);
   }
+
+  portBlacklist = {"Controller Port"};
+  inputBlacklist = {"Multitap"};
 }
 
 auto PCEngine::load() -> bool {

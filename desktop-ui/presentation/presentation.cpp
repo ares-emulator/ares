@@ -377,6 +377,9 @@ auto Presentation::loadEmulator() -> void {
 
   u32 portsFound = 0;
   for(auto port : ares::Node::enumerate<ares::Node::Port>(emulator->root)) {
+    //do not add unsupported ports to the port menu
+    if(emulator->portBlacklist.find(port->name())) continue;
+
     if(!port->hotSwappable()) continue;
     if(port->type() != "Controller" && port->type() != "Expansion") continue;
 

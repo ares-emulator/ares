@@ -43,6 +43,7 @@ struct Emulator {
   shared_pointer<mia::Pak> game;
   vector<InputPort> ports;
   vector<string> inputBlacklist;
+  vector<string> portBlacklist;
 
   struct Configuration {
     bool visible = true;  //whether or not to show this emulator in the load menu
