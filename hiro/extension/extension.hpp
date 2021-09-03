@@ -1,5 +1,6 @@
 namespace hiro {
   #include "../resource/resource.hpp"
+  #include "../resource/icon.hpp"
   #include "fixed-layout.hpp"
   #include "horizontal-layout.hpp"
   #include "vertical-layout.hpp"

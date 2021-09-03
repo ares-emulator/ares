@@ -3,6 +3,7 @@ using namespace nall;
 
 namespace hiro {
   #include "../resource/resource.cpp"
+  #include "../resource/icon.cpp"
   #include "fixed-layout.cpp"
   #include "horizontal-layout.cpp"
   #include "vertical-layout.cpp"
