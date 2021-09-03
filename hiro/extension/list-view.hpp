@@ -48,11 +48,11 @@ struct mListViewItem : mTableViewItem {
   mListViewItem();
   auto checkable() const -> bool;
   auto checked() const -> bool;
-  auto icon() const -> image;
+  auto icon() const -> multiFactorImage;
   auto reset() -> type&;
   auto setCheckable(bool checkable) -> type&;
   auto setChecked(bool checked) -> type&;
-  auto setIcon(const image& icon = {}) -> type&;
+  auto setIcon(const multiFactorImage& icon = {}) -> type&;
   auto setText(const string& text) -> type&;
   auto text() const -> string;
 };

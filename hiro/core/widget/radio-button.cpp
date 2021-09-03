@@ -22,7 +22,7 @@ auto mRadioButton::group() const -> Group {
   return state.group;
 }
 
-auto mRadioButton::icon() const -> image {
+auto mRadioButton::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -62,7 +62,7 @@ auto mRadioButton::setGroup(sGroup group) -> type& {
   return *this;
 }
 
-auto mRadioButton::setIcon(const image& icon) -> type& {
+auto mRadioButton::setIcon(const multiFactorImage& icon) -> type& {
   state.icon = icon;
   signal(setIcon, icon);
   return *this;

@@ -102,7 +102,7 @@ auto mListViewItem::checked() const -> bool {
   return cell(0).checked();
 }
 
-auto mListViewItem::icon() const -> image {
+auto mListViewItem::icon() const -> multiFactorImage {
   return cell(0).icon();
 }
 
@@ -122,7 +122,7 @@ auto mListViewItem::setChecked(bool checked) -> type& {
   return *this;
 }
 
-auto mListViewItem::setIcon(const image& icon) -> type& {
+auto mListViewItem::setIcon(const multiFactorImage& icon) -> type& {
   cell(0).setIcon(icon);
   return *this;
 }

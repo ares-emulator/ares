@@ -157,6 +157,30 @@ private:
   channel _blue {255u <<  0, 8,  0};
 };
 
+struct multiFactorImage : public image {
+    using image::image;
+
+    multiFactorImage(const multiFactorImage& source);
+    multiFactorImage(multiFactorImage&& source);
+    multiFactorImage(const image& lowDPI, const image& highDPI);
+    multiFactorImage(const image& source);
+    multiFactorImage(image&& source);
+    multiFactorImage();
+    ~multiFactorImage();
+    
+    auto operator=(const multiFactorImage& source) -> multiFactorImage&;
+    auto operator=(multiFactorImage&& source) -> multiFactorImage&;
+    
+    auto operator==(const multiFactorImage& source) const -> bool;
+    auto operator!=(const multiFactorImage& source) const -> bool;
+
+    const image& lowDPI() const { return *this; }
+    const image& highDPI() const { return _highDPI; }
+    
+private:
+    image _highDPI;
+};
+
 }
 
 #include <nall/image/static.hpp>
@@ -167,3 +191,4 @@ private:
 #include <nall/image/scale.hpp>
 #include <nall/image/blend.hpp>
 #include <nall/image/utility.hpp>
+#include <nall/image/multifactor.hpp>

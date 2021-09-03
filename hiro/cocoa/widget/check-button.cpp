@@ -68,7 +68,7 @@ auto pCheckButton::setGeometry(Geometry geometry) -> void {
   });
 }
 
-auto pCheckButton::setIcon(const image& icon) -> void {
+auto pCheckButton::setIcon(const multiFactorImage& icon) -> void {
   [(CocoaCheckButton*)cocoaView setImage:NSMakeImage(icon)];
 }
 

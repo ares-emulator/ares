@@ -6,7 +6,7 @@ auto mIconViewItem::allocate() -> pObject* {
 
 //
 
-auto mIconViewItem::icon() const -> image {
+auto mIconViewItem::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -19,7 +19,7 @@ auto mIconViewItem::selected() const -> bool {
   return state.selected;
 }
 
-auto mIconViewItem::setIcon(const image& icon) -> type& {
+auto mIconViewItem::setIcon(const multiFactorImage& icon) -> type& {
   state.icon = icon;
   signal(setIcon, icon);
   return *this;

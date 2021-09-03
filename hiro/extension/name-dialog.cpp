@@ -38,7 +38,7 @@ auto NameDialog::setAlignment(sWindow relativeTo, Alignment alignment) -> type& 
   return *this;
 }
 
-auto NameDialog::setIcon(const image& icon) -> type& {
+auto NameDialog::setIcon(const multiFactorImage& icon) -> type& {
   state.icon = icon;
   return *this;
 }

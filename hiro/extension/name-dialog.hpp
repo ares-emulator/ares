@@ -6,7 +6,7 @@ struct NameDialog {
   NameDialog();
   auto create(string name = "") -> string;
   auto rename(string name) -> string;
-  auto setIcon(const image& icon = {}) -> type&;
+  auto setIcon(const multiFactorImage& icon = {}) -> type&;
   auto setAlignment(Alignment = Alignment::Center) -> type&;
   auto setAlignment(sWindow relativeTo, Alignment = Alignment::Center) -> type&;
   auto setText(const string& text = {}) -> type&;

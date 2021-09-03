@@ -61,7 +61,7 @@ auto pButton::setGeometry(Geometry geometry) -> void {
   });
 }
 
-auto pButton::setIcon(const image& icon) -> void {
+auto pButton::setIcon(const multiFactorImage& icon) -> void {
   [(CocoaButton*)cocoaView setImage:NSMakeImage(icon)];
 }
 

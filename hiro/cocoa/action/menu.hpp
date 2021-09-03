@@ -16,7 +16,7 @@ struct pMenu : pAction {
 
   auto append(sAction action) -> void;
   auto remove(sAction action) -> void;
-  auto setIcon(const image& icon, bool force = false) -> void;
+  auto setIcon(const multiFactorImage& icon, bool force = false) -> void;
   auto setIconForFile(const string& filename) -> void;
   auto setText(const string& text) -> void;
 

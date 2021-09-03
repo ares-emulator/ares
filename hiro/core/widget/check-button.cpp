@@ -18,7 +18,7 @@ auto mCheckButton::doToggle() const -> void {
   if(state.onToggle) return state.onToggle();
 }
 
-auto mCheckButton::icon() const -> image {
+auto mCheckButton::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -43,7 +43,7 @@ auto mCheckButton::setChecked(bool checked) -> type& {
   return *this;
 }
 
-auto mCheckButton::setIcon(const image& icon) -> type& {
+auto mCheckButton::setIcon(const multiFactorImage& icon) -> type& {
   state.icon = icon;
   signal(setIcon, icon);
   return *this;

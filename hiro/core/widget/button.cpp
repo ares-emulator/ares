@@ -14,7 +14,7 @@ auto mButton::doActivate() const -> void {
   if(state.onActivate) return state.onActivate();
 }
 
-auto mButton::icon() const -> image {
+auto mButton::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -33,7 +33,7 @@ auto mButton::setBordered(bool bordered) -> type& {
   return *this;
 }
 
-auto mButton::setIcon(const image& icon) -> type& {
+auto mButton::setIcon(const multiFactorImage& icon) -> type& {
   state.icon = icon;
   signal(setIcon, icon);
   return *this;

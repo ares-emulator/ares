@@ -30,7 +30,7 @@ auto pMenuItem::construct() -> void {
 auto pMenuItem::destruct() -> void {
 }
 
-auto pMenuItem::setIcon(const image& icon, bool force) -> void {
+auto pMenuItem::setIcon(const multiFactorImage& icon, bool force) -> void {
   if(!force) return;
   u32 size = 16;  //there is no API to retrieve the optimal size
   [cocoaAction setImage:NSMakeImage(icon, size, size)];

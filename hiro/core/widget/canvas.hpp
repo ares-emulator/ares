@@ -6,11 +6,11 @@ struct mCanvas : mWidget {
   auto color() const -> Color;
   auto data() -> u32*;
   auto gradient() const -> Gradient;
-  auto icon() const -> image;
+  auto icon() const -> multiFactorImage;
   auto setAlignment(Alignment alignment = {}) -> type&;
   auto setColor(Color color = {}) -> type&;
   auto setGradient(Gradient gradient = {}) -> type&;
-  auto setIcon(const image& icon = {}) -> type&;
+  auto setIcon(const multiFactorImage& icon = {}) -> type&;
   auto setSize(Size size = {}) -> type&;
   auto size() const -> Size;
   auto update() -> type&;
@@ -20,7 +20,7 @@ struct mCanvas : mWidget {
     Alignment alignment;
     Color color;
     Gradient gradient;
-    image icon;
+    multiFactorImage icon;
   } state;
 };
 #endif

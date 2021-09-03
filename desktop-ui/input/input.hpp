@@ -15,7 +15,7 @@ struct InputMapping {
   string assignments[BindingLimit];
 
   struct Binding {
-    auto icon() -> image;
+    auto icon() -> multiFactorImage;
     auto text() -> string;
 
     shared_pointer<HID::Device> device;

@@ -6,7 +6,7 @@ auto mComboButtonItem::allocate() -> pObject* {
 
 //
 
-auto mComboButtonItem::icon() const -> image {
+auto mComboButtonItem::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -19,7 +19,7 @@ auto mComboButtonItem::selected() const -> bool {
   return state.selected;
 }
 
-auto mComboButtonItem::setIcon(const image& icon) -> type& {
+auto mComboButtonItem::setIcon(const multiFactorImage& icon) -> type& {
   state.icon = icon;
   signal(setIcon, icon);
   return *this;

@@ -6,7 +6,7 @@ auto mComboEditItem::allocate() -> pObject* {
 
 //
 
-auto mComboEditItem::icon() const -> image {
+auto mComboEditItem::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -15,7 +15,7 @@ auto mComboEditItem::remove() -> type& {
   return *this;
 }
 
-auto mComboEditItem::setIcon(const image& icon) -> type& {
+auto mComboEditItem::setIcon(const multiFactorImage& icon) -> type& {
   state.icon = icon;
   signal(setIcon, icon);
   return *this;
