@@ -1,7 +1,9 @@
 namespace name=Resource
   namespace name=Ares
-    binary name=Icon file=icon.png
-    binary name=Logo file=logo.png
+    binary name=Icon1x file=icon.png
+    binary name=Icon2x file=icon@2x.png
+    binary name=Logo1x file=logo.png
+    binary name=Logo2x file=logo@2x.png
   namespace name=Sprite
     namespace name=SuperFamicom
       binary name=CrosshairBlue file=sprite/sfc/crosshair-blue.png

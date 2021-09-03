@@ -8,7 +8,7 @@ struct AboutDialog {
   auto setCopyright(const string& copyright = "", const string& uri = "") -> type&;
   auto setDescription(const string& description = "") -> type&;
   auto setLicense(const string& license = "", const string& uri = "") -> type&;
-  auto setLogo(const image& logo = {}) -> type&;
+  auto setLogo(const multiFactorImage& logo = {}) -> type&;
   auto setName(const string& name = "") -> type&;
   auto setVersion(const string& version = "") -> type&;
   auto setWebsite(const string& website = "", const string& uri = "") -> type&;
@@ -22,7 +22,7 @@ private:
     string description;
     string license;
     string licenseURI;
-    image logo;
+    multiFactorImage logo;
     string name;
     sWindow relativeTo;
     string version;

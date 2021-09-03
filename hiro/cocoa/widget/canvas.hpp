@@ -1,6 +1,6 @@
 #if defined(Hiro_Canvas)
 
-@interface CocoaCanvas : NSImageView {
+@interface CocoaCanvas : NSView {
 @public
   hiro::mCanvas* canvas;
 }
@@ -37,8 +37,6 @@ struct pCanvas : pWidget {
   auto setGradient(Gradient gradient) -> void;
   auto setIcon(const image& icon) -> void;
   auto update() -> void;
-
-  auto _rasterize() -> void;
 
   CocoaCanvas* cocoaCanvas = nullptr;
   NSImage* surface = nullptr;
