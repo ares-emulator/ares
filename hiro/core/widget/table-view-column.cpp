@@ -37,7 +37,7 @@ auto mTableViewColumn::horizontalAlignment() const -> f32 {
   return state.horizontalAlignment;
 }
 
-auto mTableViewColumn::icon() const -> image {
+auto mTableViewColumn::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -93,7 +93,7 @@ auto mTableViewColumn::setHorizontalAlignment(f32 alignment) -> type& {
   return *this;
 }
 
-auto mTableViewColumn::setIcon(const image& icon) -> type& {
+auto mTableViewColumn::setIcon(const multiFactorImage& icon) -> type& {
   state.icon = icon;
   signal(setIcon, icon);
   return *this;

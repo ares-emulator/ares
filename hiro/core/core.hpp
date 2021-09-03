@@ -21,6 +21,7 @@
 using nall::any;
 using nall::function;
 using nall::image;
+using nall::multiFactorImage;
 using nall::Locale;
 using nall::maybe;
 using nall::nothing;

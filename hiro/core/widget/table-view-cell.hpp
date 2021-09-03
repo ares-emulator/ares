@@ -8,13 +8,13 @@ struct mTableViewCell : mObject {
   auto checked() const -> bool;
   auto font(bool recursive = false) const -> Font;
   auto foregroundColor(bool recursive = false) const -> Color;
-  auto icon() const -> image;
+  auto icon() const -> multiFactorImage;
   auto setAlignment(Alignment alignment = {}) -> type&;
   auto setBackgroundColor(Color color = {}) -> type&;
   auto setCheckable(bool checkable = true) -> type&;
   auto setChecked(bool checked = true) -> type&;
   auto setForegroundColor(Color color = {}) -> type&;
-  auto setIcon(const image& icon = {}) -> type&;
+  auto setIcon(const multiFactorImage& icon = {}) -> type&;
   auto setText(const string& text = "") -> type&;
   auto text() const -> string;
 
@@ -25,7 +25,7 @@ struct mTableViewCell : mObject {
     bool checkable = false;
     bool checked = false;
     Color foregroundColor;
-    image icon;
+    multiFactorImage icon;
     string text;
   } state;
 };

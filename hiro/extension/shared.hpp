@@ -194,7 +194,7 @@ struct ListViewItem : sListViewItem {
   auto setCheckable(bool checkable = true) { return self().setCheckable(checkable), *this; }
   auto setChecked(bool checked = true) { return self().setChecked(checked), *this; }
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
-  auto setIcon(const image& icon = {}) { return self().setIcon(icon), *this; }
+  auto setIcon(const multiFactorImage& icon = {}) { return self().setIcon(icon), *this; }
   auto setSelected(bool selected = true) { return self().setSelected(selected), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
   auto text() const { return self().text(); }

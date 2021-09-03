@@ -23,7 +23,7 @@ auto mTabFrameItem::closable() const -> bool {
   return state.closable;
 }
 
-auto mTabFrameItem::icon() const -> image {
+auto mTabFrameItem::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -70,7 +70,7 @@ auto mTabFrameItem::setFont(const Font& font) -> type& {
   return *this;
 }
 
-auto mTabFrameItem::setIcon(const image& icon) -> type& {
+auto mTabFrameItem::setIcon(const multiFactorImage& icon) -> type& {
   state.icon = icon;
   signal(setIcon, icon);
   return *this;

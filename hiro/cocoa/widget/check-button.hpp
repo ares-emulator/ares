@@ -17,7 +17,7 @@ struct pCheckButton : pWidget {
   auto setBordered(bool bordered) -> void;
   auto setChecked(bool checked) -> void;
   auto setGeometry(Geometry geometry) -> void override;
-  auto setIcon(const image& icon) -> void;
+  auto setIcon(const multiFactorImage& icon) -> void;
   auto setOrientation(Orientation orientation) -> void;
   auto setText(const string& text) -> void;
 

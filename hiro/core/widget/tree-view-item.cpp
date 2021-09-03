@@ -68,7 +68,7 @@ auto mTreeViewItem::foregroundColor(bool recursive) const -> Color {
   return {};
 }
 
-auto mTreeViewItem::icon() const -> image {
+auto mTreeViewItem::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -154,7 +154,7 @@ auto mTreeViewItem::setForegroundColor(Color color) -> type& {
   return *this;
 }
 
-auto mTreeViewItem::setIcon(const image& icon) -> type& {
+auto mTreeViewItem::setIcon(const multiFactorImage& icon) -> type& {
   state.icon = icon;
   signal(setIcon, icon);
   return *this;

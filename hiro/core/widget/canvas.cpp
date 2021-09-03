@@ -22,7 +22,7 @@ auto mCanvas::gradient() const -> Gradient {
   return state.gradient;
 }
 
-auto mCanvas::icon() const -> image {
+auto mCanvas::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -48,7 +48,7 @@ auto mCanvas::setGradient(Gradient gradient) -> type& {
   return *this;
 }
 
-auto mCanvas::setIcon(const image& icon) -> type& {
+auto mCanvas::setIcon(const multiFactorImage& icon) -> type& {
   state.color = {};
   state.gradient = {};
   state.icon = icon;
@@ -57,7 +57,7 @@ auto mCanvas::setIcon(const image& icon) -> type& {
 }
 
 auto mCanvas::setSize(Size size) -> type& {
-  image icon;
+  multiFactorImage icon;
   icon.allocate(size.width(), size.height());
   return setIcon(icon);
 }

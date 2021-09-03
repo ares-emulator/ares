@@ -86,7 +86,7 @@ auto mTableViewCell::foregroundColor(bool recursive) const -> Color {
   return state.foregroundColor;
 }
 
-auto mTableViewCell::icon() const -> image {
+auto mTableViewCell::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -121,7 +121,7 @@ auto mTableViewCell::setForegroundColor(Color color) -> type& {
   return *this;
 }
 
-auto mTableViewCell::setIcon(const image& icon) -> type& {
+auto mTableViewCell::setIcon(const multiFactorImage& icon) -> type& {
   state.icon = icon;
   signal(setIcon, icon);
   return *this;

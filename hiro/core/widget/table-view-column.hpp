@@ -9,7 +9,7 @@ struct mTableViewColumn : mObject {
   auto expandable() const -> bool;
   auto foregroundColor() const -> Color;
   auto horizontalAlignment() const -> f32;
-  auto icon() const -> image;
+  auto icon() const -> multiFactorImage;
   auto remove() -> type& override;
   auto resizable() const -> bool;
   auto setActive() -> type&;
@@ -19,7 +19,7 @@ struct mTableViewColumn : mObject {
   auto setExpandable(bool expandable = true) -> type&;
   auto setForegroundColor(Color color = {}) -> type&;
   auto setHorizontalAlignment(f32 alignment = 0.0) -> type&;
-  auto setIcon(const image& icon = {}) -> type&;
+  auto setIcon(const multiFactorImage& icon = {}) -> type&;
   auto setResizable(bool resizable = true) -> type&;
   auto setSorting(Sort sorting = Sort::None) -> type&;
   auto setText(const string& text = "") -> type&;
@@ -41,7 +41,7 @@ struct mTableViewColumn : mObject {
     bool expandable = false;
     Color foregroundColor;
     f32 horizontalAlignment = 0.0;
-    image icon;
+    multiFactorImage icon;
     bool resizable = true;
     Sort sorting = Sort::None;
     string text;

@@ -1,6 +1,6 @@
 #if defined(Hiro_MenuItem)
 // LIJI: TODO: is there a more reasonable place to have this include?
-#include "../../resource/resource.hpp"
+#include "../../resource/icon.hpp"
 
 auto mMenuItem::allocate() -> pObject* {
   return new pMenuItem(*this);
@@ -12,7 +12,7 @@ auto mMenuItem::doActivate() const -> void {
   if(state.onActivate) return state.onActivate();
 }
 
-auto mMenuItem::icon() const -> image {
+auto mMenuItem::icon() const -> multiFactorImage {
   return state.icon;
 }
 
@@ -21,7 +21,7 @@ auto mMenuItem::onActivate(const function<void ()>& callback) -> type& {
   return *this;
 }
 
-auto mMenuItem::setIcon(const image& icon, bool force) -> type& {
+auto mMenuItem::setIcon(const multiFactorImage& icon, bool force) -> type& {
   state.icon = icon;
   signal(setIcon, icon, force);
   return *this;

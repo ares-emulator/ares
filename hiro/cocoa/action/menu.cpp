@@ -43,7 +43,7 @@ auto pMenu::remove(sAction action) -> void {
   }
 }
 
-auto pMenu::setIcon(const image& icon, bool force) -> void {
+auto pMenu::setIcon(const multiFactorImage& icon, bool force) -> void {
   if (!force) return;
   u32 size = 16;  //there is no API to retrieve the optimal size
   [cocoaAction setImage:NSMakeImage(icon, size, size)];

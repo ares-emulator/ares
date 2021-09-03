@@ -10,7 +10,7 @@ struct mTreeViewItem : mObject {
   auto expand(bool recursive = true) -> type&;
   auto expanded() const -> bool;
   auto foregroundColor(bool recursive = false) const -> Color;
-  auto icon() const -> image;
+  auto icon() const -> multiFactorImage;
   auto item(const string& path) const -> TreeViewItem;
   auto itemCount() const -> u32;
   auto items() const -> vector<TreeViewItem>;
@@ -24,7 +24,7 @@ struct mTreeViewItem : mObject {
   auto setExpanded(bool expanded = true) -> type&;
   auto setFocused() -> type& override;
   auto setForegroundColor(Color color = {}) -> type&;
-  auto setIcon(const image& icon = {}) -> type&;
+  auto setIcon(const multiFactorImage& icon = {}) -> type&;
   auto setParent(mObject* parent = nullptr, s32 offset = -1) -> type& override;
   auto setSelected() -> type&;
   auto setText(const string& text = "") -> type&;
@@ -37,7 +37,7 @@ struct mTreeViewItem : mObject {
     bool checked = false;
     bool expanded = false;
     Color foregroundColor;
-    image icon;
+    multiFactorImage icon;
     vector<sTreeViewItem> items;
     string text;
   } state;

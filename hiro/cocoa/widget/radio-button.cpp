@@ -83,7 +83,7 @@ auto pRadioButton::setGeometry(Geometry geometry) -> void {
 auto pRadioButton::setGroup(sGroup group) -> void {
 }
 
-auto pRadioButton::setIcon(const image& icon) -> void {
+auto pRadioButton::setIcon(const multiFactorImage& icon) -> void {
   [(CocoaRadioButton*)cocoaView setImage:NSMakeImage(icon)];
 }
 

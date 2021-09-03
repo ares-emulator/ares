@@ -30,6 +30,16 @@ auto NSMakeImage(image icon, u32 scaleWidth = 0, u32 scaleHeight = 0) -> NSImage
   return cocoaImage;
 }
 
+auto NSMakeImage(multiFactorImage icon, u32 scaleWidth = 0, u32 scaleHeight = 0) -> NSImage* {
+  if(!icon) return nil;
+  NSImage* cocoaImage = NSMakeImage(icon.lowDPI(), scaleWidth, scaleHeight);
+  if(!icon.highDPI()) return cocoaImage;
+  NSImage* retinaCocoaImage = NSMakeImage(icon.highDPI(), scaleWidth * 2, scaleHeight * 2);
+  [cocoaImage addRepresentation:retinaCocoaImage.representations[0]];
+  
+  return cocoaImage;
+}
+
 auto DropPathsOperation(id<NSDraggingInfo> sender) -> NSDragOperation {
   NSPasteboard* pboard = [sender draggingPasteboard];
   if([[pboard types] containsObject:NSFilenamesPboardType]) {
