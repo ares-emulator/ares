@@ -6,7 +6,7 @@ struct ManifestViewer : VerticalLayout {
   auto eventChange() -> void;
   auto setVisible(bool visible = true) -> ManifestViewer&;
 
-  Label manifestLabel{this, Size{~0, 0}, 2};
+  Label manifestLabel{this, Size{~0, 0}, 5};
   ComboButton manifestList{this, Size{~0, 0}};
   TextEdit manifestView{this, Size{~0, ~0}};
 };
@@ -21,7 +21,7 @@ struct MemoryEditor : VerticalLayout {
   auto eventExport() -> void;
   auto setVisible(bool visible = true) -> MemoryEditor&;
 
-  Label memoryLabel{this, Size{~0, 0}, 2};
+  Label memoryLabel{this, Size{~0, 0}, 5};
   ComboButton memoryList{this, Size{~0, 0}};
   HexEdit memoryEditor{this, Size{~0, ~0}};
   HorizontalLayout controlLayout{this, Size{~0, 0}};
@@ -43,7 +43,7 @@ struct GraphicsViewer : VerticalLayout {
   auto eventExport() -> void;
   auto setVisible(bool visible = true) -> GraphicsViewer&;
 
-  Label graphicsLabel{this, Size{~0, 0}, 2};
+  Label graphicsLabel{this, Size{~0, 0}, 5};
   ComboButton graphicsList{this, Size{~0, 0}};
   Canvas graphicsView{this, Size{~0, ~0}};
   HorizontalLayout controlLayout{this, Size{~0, 0}};
@@ -58,7 +58,7 @@ struct StreamManager : VerticalLayout {
   auto reload() -> void;
   auto unload() -> void;
 
-  Label streamLabel{this, Size{~0, 0}, 2};
+  Label streamLabel{this, Size{~0, 0}, 5};
   TableView streamList{this, Size{~0, ~0}};
 };
 
@@ -71,7 +71,7 @@ struct PropertiesViewer : VerticalLayout {
   auto eventChange() -> void;
   auto setVisible(bool visible = true) -> PropertiesViewer&;
 
-  Label propertiesLabel{this, Size{~0, 0}, 2};
+  Label propertiesLabel{this, Size{~0, 0}, 5};
   ComboButton propertiesList{this, Size{~0, 0}};
   TextEdit propertiesView{this, Size{~0, ~0}};
   HorizontalLayout controlLayout{this, Size{~0, 0}};
@@ -88,11 +88,11 @@ struct TraceLogger : VerticalLayout {
 
   file_buffer fp;
 
-  Label tracerLabel{this, Size{~0, 0}, 2};
+  Label tracerLabel{this, Size{~0, 0}, 5};
   ListView tracerList{this, Size{~0, ~0}};
   HorizontalLayout controlLayout{this, Size{~0, 0}};
-    Button selectAllButton{&controlLayout, Size{80, 0}};
-    Button unselectAllButton{&controlLayout, Size{80, 0}};
+    Button selectAllButton{&controlLayout, Size{96, 0}};
+    Button unselectAllButton{&controlLayout, Size{96, 0}};
     CheckLabel traceToTerminal{&controlLayout, Size{0, 0}};
     CheckLabel traceToFile{&controlLayout, Size{0, 0}};
     CheckLabel traceMask{&controlLayout, Size{0, 0}};

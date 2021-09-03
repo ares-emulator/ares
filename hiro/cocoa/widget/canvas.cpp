@@ -97,13 +97,16 @@
   [self mouseMove:event];
 }
 
-//todo: support cases where the icon size does not match the canvas size (alignment)
 -(void) drawRect:(NSRect)dirtyRect {
   NSRect frame = self.bounds;
   s32 width = frame.size.width;
   s32 height = frame.size.height;
   if(auto icon = canvas->state.icon) {
-    [NSMakeImage(icon) drawInRect:frame];
+    NSRect alignedFrame = NSMakeRect(canvas->state.alignment.horizontal() * (width - (s32)icon.width()),
+                                     (1 - canvas->state.alignment.vertical()) * (height - (s32)icon.height()),
+                                     icon.width(), icon.height());
+    [NSGraphicsContext currentContext].imageInterpolation = NSImageInterpolationNone;
+    [NSMakeImage(icon) drawInRect:alignedFrame];
   } else if(auto& gradient = canvas->state.gradient) {
     auto& colors = gradient.state.colors;
     image fill;
