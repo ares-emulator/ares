@@ -27,6 +27,8 @@ auto StreamManager::reload() -> void {
     item.append(TableViewCell().setText(stream->channels()));
     item.append(TableViewCell().setText({u32(stream->frequency() + 0.5), "hz"}));
   }
+  streamList.resizeColumns();
+  streamList.column(0).setWidth(16);
 }
 
 auto StreamManager::unload() -> void {

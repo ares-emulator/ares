@@ -16,7 +16,6 @@ PropertiesViewer& propertiesViewer = toolsWindow.propertiesViewer;
 TraceLogger& traceLogger = toolsWindow.traceLogger;
 
 ToolsWindow::ToolsWindow() {
-  layout.setPadding(5_sx, 5_sy);
 
   panelList.append(ListViewItem().setText("Manifest").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Memory").setIcon(Icon::Device::Storage));
@@ -24,8 +23,10 @@ ToolsWindow::ToolsWindow() {
   panelList.append(ListViewItem().setText("Streams").setIcon(Icon::Emblem::Audio));
   panelList.append(ListViewItem().setText("Properties").setIcon(Icon::Emblem::Text));
   panelList.append(ListViewItem().setText("Tracer").setIcon(Icon::Emblem::Script));
+  panelList->setUsesSidebarStyle();
   panelList.onChange([&] { eventChange(); });
 
+  panelContainer.setPadding(5_sx, 5_sy);
   panelContainer.append(manifestViewer, Size{~0, ~0});
   panelContainer.append(memoryEditor, Size{~0, ~0});
   panelContainer.append(graphicsViewer, Size{~0, ~0});
@@ -46,6 +47,7 @@ ToolsWindow::ToolsWindow() {
   setTitle("Tools");
   setSize({700_sx, 405_sy});
   setAlignment({1.0, 1.0});
+  setMinimumSize({480_sx, 320_sy});
 }
 
 auto ToolsWindow::show(const string& panel) -> void {
