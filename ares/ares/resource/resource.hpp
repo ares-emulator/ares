@@ -1,7 +1,9 @@
 namespace Resource {
 namespace Ares {
-extern const unsigned char Icon[6562];
-extern const unsigned char Logo[11533];
+extern const unsigned char Icon1x[6562];
+extern const unsigned char Icon2x[9662];
+extern const unsigned char Logo1x[11533];
+extern const unsigned char Logo2x[18991];
 }
 namespace Sprite {
 namespace SuperFamicom {

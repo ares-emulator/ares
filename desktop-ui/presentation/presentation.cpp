@@ -161,8 +161,7 @@ Presentation::Presentation() {
 
   helpMenu.setText("Help");
   aboutAction.setText("About" ELLIPSIS).setIcon(Icon::Prompt::Question).onActivate([&] {
-    image logo{Resource::Ares::Logo};
-    logo.shrink();
+    multiFactorImage logo(Resource::Ares::Logo1x, Resource::Ares::Logo2x);
     AboutDialog()
     .setName(ares::Name)
     .setLogo(logo)
@@ -194,7 +193,7 @@ Presentation::Presentation() {
     viewport.doDrop(filenames);
   });
 
-  image icon{Resource::Ares::Icon};
+  multiFactorImage icon(Resource::Ares::Icon1x, Resource::Ares::Icon2x);
   icon.alphaBlend(0x000000);
   iconCanvas.setCollapsible().setIcon(icon).setDroppable().onDrop([&](auto filenames) {
     viewport.doDrop(filenames);

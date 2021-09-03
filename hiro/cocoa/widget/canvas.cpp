@@ -1,11 +1,10 @@
 #if defined(Hiro_Canvas)
 
-@implementation CocoaCanvas : NSImageView
+@implementation CocoaCanvas : NSView
 
 -(id) initWith:(hiro::mCanvas&)canvasReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
     canvas = &canvasReference;
-    [self setEditable:NO];  //disable image drag-and-drop functionality
     NSTrackingArea* area = [[NSTrackingArea alloc] initWithRect:[self frame]
       options:NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow | NSTrackingInVisibleRect
       owner:self userInfo:nil
@@ -98,6 +97,25 @@
   [self mouseMove:event];
 }
 
+//todo: support cases where the icon size does not match the canvas size (alignment)
+-(void) drawRect:(NSRect)dirtyRect {
+  NSRect frame = self.bounds;
+  s32 width = frame.size.width;
+  s32 height = frame.size.height;
+  if(auto icon = canvas->state.icon) {
+    [NSMakeImage(icon) drawInRect:frame];
+  } else if(auto& gradient = canvas->state.gradient) {
+    auto& colors = gradient.state.colors;
+    image fill;
+    fill.allocate(width, height);
+    fill.gradient(colors[0].value(), colors[1].value(), colors[2].value(), colors[3].value());
+    [NSMakeImage(fill) drawInRect:frame];
+  } else {
+    [NSMakeColor(canvas->state.color) set];
+    NSRectFill(dirtyRect);
+  }
+}
+
 @end
 
 namespace hiro {
@@ -150,62 +168,7 @@ auto pCanvas::setIcon(const image& icon) -> void {
 }
 
 auto pCanvas::update() -> void {
-  _rasterize();
   [cocoaView setNeedsDisplay:YES];
-}
-
-//todo: support cases where the icon size does not match the canvas size (alignment)
-auto pCanvas::_rasterize() -> void {
-  s32 width = 0;
-  s32 height = 0;
-
-  if(auto& icon = state().icon) {
-    width = icon.width();
-    height = icon.height();
-  } else {
-    width = pSizable::state().geometry.width();
-    height = pSizable::state().geometry.height();
-  }
-  if(width <= 0 || height <= 0) return;
-
-  if(width != surfaceWidth || height != surfaceHeight) {
-    [(CocoaCanvas*)cocoaView setImage:nil];
-    surface = nullptr;
-    bitmap = nullptr;
-  }
-
-  surfaceWidth = width;
-  surfaceHeight = height;
-
-  if(!surface) {
-    surface = [[NSImage alloc] initWithSize:NSMakeSize(width, height)];
-    bitmap = [[NSBitmapImageRep alloc]
-      initWithBitmapDataPlanes:nil
-      pixelsWide:width pixelsHigh:height
-      bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES
-      isPlanar:NO colorSpaceName:NSDeviceRGBColorSpace
-      bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
-      bytesPerRow:(width * 4) bitsPerPixel:32
-    ];
-    [surface addRepresentation:bitmap];
-    [(CocoaCanvas*)cocoaView setImage:surface];
-  }
-
-  auto target = (u32*)[bitmap bitmapData];
-
-  if(auto icon = state().icon) {
-    icon.transform(0, 32, 255u << 24, 255u << 0, 255u << 8, 255u << 16);  //Cocoa uses ABGR format
-    memory::copy(target, icon.data(), icon.size());
-  } else if(auto& gradient = state().gradient) {
-    auto& colors = gradient.state.colors;
-    image fill;
-    fill.allocate(width, height);
-    fill.gradient(colors[0].value(), colors[1].value(), colors[2].value(), colors[3].value());
-    memory::copy(target, fill.data(), fill.size());
-  } else {
-    u32 color = state().color.value();
-    for(auto n : range(width * height)) target[n] = color;
-  }
 }
 
 }

@@ -17,7 +17,7 @@ auto pFont::size(NSFont* font, const string& text) -> Size {
 }
 
 auto pFont::family(const string& family) -> string {
-  if(family == Font::Serif) return "Georgia";
+  if(family == Font::Serif) return "Baskerville";
   if(family == Font::Mono ) return "Menlo";
   return [[[NSFont systemFontOfSize:0] familyName] UTF8String];
 }
