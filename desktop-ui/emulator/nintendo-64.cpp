@@ -60,20 +60,19 @@ auto Nintendo64::load() -> bool {
     port->connect();
   }
 
+  string rumble = game->pak->attribute("rumble"); 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
     auto peripheral = port->allocate("Gamepad");
     port->connect();
-    if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-      if(!game->pak->read("save.ram")
-      && !game->pak->read("save.eeprom")
-      && !game->pak->read("save.flash")
-      ) {
+    if(auto port = peripheral->find<ares::Node::Port>("Pak")) { 
+      if(game->pak->attribute("mempak") == "yes")
+      {
         gamepad = mia::Pak::create("Nintendo 64");
         gamepad->pak->append("save.pak", 32_KiB);
         gamepad->load("save.pak", ".pak", game->location);
         port->allocate("Controller Pak");
         port->connect();
-      } else {
+      } else if(rumble == "yes") {
         gamepad.reset();
         port->allocate("Rumble Pak");
         port->connect();
@@ -85,8 +84,10 @@ auto Nintendo64::load() -> bool {
     auto peripheral = port->allocate("Gamepad");
     port->connect();
     if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-      port->allocate("Rumble Pak");
-      port->connect();
+      if(rumble == "yes") {
+        port->allocate("Rumble Pak");
+        port->connect();
+      }
     }
   }
 
@@ -94,8 +95,10 @@ auto Nintendo64::load() -> bool {
     auto peripheral = port->allocate("Gamepad");
     port->connect();
     if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-      port->allocate("Rumble Pak");
-      port->connect();
+      if(rumble == "yes") {
+        port->allocate("Rumble Pak");
+        port->connect();
+      }
     }
   }
 
@@ -103,8 +106,10 @@ auto Nintendo64::load() -> bool {
     auto peripheral = port->allocate("Gamepad");
     port->connect();
     if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-      port->allocate("Rumble Pak");
-      port->connect();
+      if(rumble == "yes") {
+        port->allocate("Rumble Pak");
+        port->connect();
+      }
     }
   }
 
