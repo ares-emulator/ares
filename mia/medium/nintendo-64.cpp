@@ -350,7 +350,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NDP") {flash = 128_KiB;}                                     //Dinosaur Planet
 
   //Mempak
-  if(id == "N07") {mempak = true; rumble = true;}                        //The World Is Not Enough
+  if(id == "NO7") {mempak = true; rumble = true;}                        //The World Is Not Enough
   if(id == "NAY") {mempak = true;}                                       //Aidyn Chronicles - The First Mage
   if(id == "NBS") {mempak = true; rumble = true;}                        //All-Star Baseball '99
   if(id == "NBE") {mempak = true; rumble = true;}                        //All-Star Baseball 2000
@@ -402,7 +402,6 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "N8I") {mempak = true;}                                       //FIFA - Road to World Cup 98
   if(id == "N9F") {mempak = true;}                                       //FIFA 99
   if(id == "N7I") {mempak = true;}                                       //FIFA Soccer 64
-  if(id == "F7I") {mempak = true;}                                       //FIFA Soccer 64 (E)
   if(id == "NFS") {mempak = true;}                                       //Famista 64
   if(id == "NFF") {mempak = true; rumble = true;}                        //Fighting Force 64
   if(id == "NFD") {mempak = true; rumble = true;}                        //Flying Dragon
