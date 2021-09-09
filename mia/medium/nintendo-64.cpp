@@ -561,6 +561,10 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NWO") {mempak = true; rumble = true;}                        //World Driver Championship
   if(id == "NXF") {mempak = true; rumble = true;}                        //Xena Warrior Princess - The Talisman of Fate
 
+  //Special case for Shindou editions of Super Mario 64 & Wave Race 64
+  if(id == "NSM" && region_code == 'J' && revision == 3) {rumble = true;} //Super Mario 64: Shindou Edition (Rev 3)
+  if(id == "NWR" && region_code == 'J' && revision == 2) {rumble = true;} //Wave Race 64: Kawasaki Jet Ski Shindou Edition (Rev 2)
+
   //Rumble
   if(id == "NJQ") {rumble = true;}                                       //Batman - Return of the Joker
   if(id == "NCB") {rumble = true;}                                       //Charlie Blast's Territory
