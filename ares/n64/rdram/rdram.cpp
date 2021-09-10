@@ -24,8 +24,10 @@ auto RDRAM::unload() -> void {
 }
 
 auto RDRAM::power(bool reset) -> void {
-  ram.fill();
-  for(auto& chip : chips) chip = {};
+  if(!reset) {
+    ram.fill();
+    for(auto& chip : chips) chip = {};
+  }
 }
 
 }
