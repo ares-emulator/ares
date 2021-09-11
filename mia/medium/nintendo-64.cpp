@@ -21,10 +21,11 @@ auto Nintendo64::load(string location) -> bool {
   if(!document) return false;
 
   pak = new vfs::directory;
+  pak->setAttribute("id",     document["game/id"].string());
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
-  pak->setAttribute("mempak", document["game/mempak"].string());
-  pak->setAttribute("rumble", document["game/rumble"].string());
+  pak->setAttribute("mempak", (bool)document["game/mempak"]);
+  pak->setAttribute("rumble", (bool)document["game/rumble"]);
   pak->setAttribute("cic",    document["game/board/cic"].string());
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
@@ -583,8 +584,10 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   s +={"  title:    ", Medium::name(location), "\n"};
   s +={"  region:   ", region, "\n"};
   s +={"  id:       ", id, region_code, "\n"};
-  s +={"  mempak:   ", mempak ? "yes" : "no", "\n"};
-  s +={"  rumble:   ", rumble ? "yes" : "no", "\n"};
+  if(mempak)
+  s += "  mempak\n";
+  if(rumble)
+  s += "  rumble\n";
   if(revision < 4) {
   s +={"  revision: 1.", revision, "\n"};
   }
