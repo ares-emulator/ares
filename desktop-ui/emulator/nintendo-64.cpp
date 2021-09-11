@@ -60,55 +60,25 @@ auto Nintendo64::load() -> bool {
     port->connect();
   }
 
-  string rumble = game->pak->attribute("rumble"); 
-  if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    auto peripheral = port->allocate("Gamepad");
-    port->connect();
-    if(auto port = peripheral->find<ares::Node::Port>("Pak")) { 
-      if(game->pak->attribute("mempak") == "yes")
-      {
-        gamepad = mia::Pak::create("Nintendo 64");
-        gamepad->pak->append("save.pak", 32_KiB);
-        gamepad->load("save.pak", ".pak", game->location);
-        port->allocate("Controller Pak");
-        port->connect();
-      } else if(rumble == "yes") {
-        gamepad.reset();
-        port->allocate("Rumble Pak");
-        port->connect();
-      }
-    }
-  }
+  auto controllers = 4;
+  //Jeopardy! does not accept any input if > 3 controllers are plugged in at boot.
+  if(game->pak->attribute("id") == "NJOE") controllers = min(controllers, 3);
 
-  if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
-    auto peripheral = port->allocate("Gamepad");
-    port->connect();
-    if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-      if(rumble == "yes") {
-        port->allocate("Rumble Pak");
-        port->connect();
-      }
-    }
-  }
-
-  if(auto port = root->find<ares::Node::Port>("Controller Port 3")) {
-    auto peripheral = port->allocate("Gamepad");
-    port->connect();
-    if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-      if(rumble == "yes") {
-        port->allocate("Rumble Pak");
-        port->connect();
-      }
-    }
-  }
-
-  if(auto port = root->find<ares::Node::Port>("Controller Port 4")) {
-    auto peripheral = port->allocate("Gamepad");
-    port->connect();
-    if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-      if(rumble == "yes") {
-        port->allocate("Rumble Pak");
-        port->connect();
+  for(auto id : range(controllers)) {
+    if(auto port = root->find<ares::Node::Port>({"Controller Port ", 1 + id})) {
+      auto peripheral = port->allocate("Gamepad");
+      port->connect();
+      if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+        if(id == 0 && game->pak->attribute("mempak").boolean()) {
+          gamepad = mia::Pak::create("Nintendo 64");
+          gamepad->pak->append("save.pak", 32_KiB);
+          gamepad->load("save.pak", ".pak", game->location);
+          port->allocate("Controller Pak");
+          port->connect();
+        } else if(game->pak->attribute("rumble").boolean()) {
+          port->allocate("Rumble Pak");
+          port->connect();
+        }
       }
     }
   }
