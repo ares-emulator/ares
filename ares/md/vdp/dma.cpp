@@ -35,7 +35,7 @@ auto VDP::DMA::load() -> void {
 auto VDP::DMA::fill() -> void {
   auto data = vdp.fifo.slots[0].data;
   switch(vdp.command.target) {
-  case 1: vdp.vram.writeByte(vdp.command.address, data >> 8); break;
+  case 1: vdp.vram.writeByte(vdp.command.address ^ 1, data >> 8); break;
   case 3: vdp.cram.write(vdp.command.address, data); break;
   case 5: vdp.vsram.write(vdp.command.address, data); break;
   }
@@ -53,13 +53,13 @@ auto VDP::DMA::fill() -> void {
 auto VDP::DMA::copy() -> void {
   if(!read) {
     read = 1;
-    data = vdp.vram.readByte(source);
+    data = vdp.vram.readByte(source ^ 1);
     return;
   }
 
   read = 0;
-  vdp.vram.writeByte(vdp.command.address, data);
-  vdp.debugger.dmaCopy(source, vdp.command.target, vdp.command.address, data);
+  vdp.vram.writeByte(vdp.command.address ^ 1, data);
+  vdp.debugger.dmaCopy(source, vdp.command.target, vdp.command.address ^ 1, data);
 
   source.bit(0,15)++;
   vdp.command.address += vdp.command.increment;
