@@ -16,62 +16,34 @@ auto VDP::FIFO::run() -> bool {
     if(slots[0].upper) {
       slots[0].upper = 0;
       vdp.vram.writeByte(slots[0].address, slots[0].data.byte(1));
-      if(vdp.command.pending && vdp.dma.mode == 2 && vdp.dma.wait) {
-        vdp.dma.wait = 0;   // start pending DMA fill (do not advance fifo)
-      } else {
-        advance();
+      if(vdp.command.pending && vdp.dma.mode == 2) {
+        vdp.dma.data = slots[0].data;
+        vdp.dma.wait = 0; // start pending DMA
       }
-      return true;
+      return advance(), true;
     }
   }
 
-  if(slots[0].target == 1 && vdp.vram.mode == 1) {
-    slots[0].lower = 0;
-    slots[0].upper = 0;
+  if(slots[0].target == 1 && vdp.vram.mode == 1)
     vdp.vram.writeByte(slots[0].address | 1, slots[0].data.byte(0));
-    if(vdp.command.pending && vdp.dma.mode == 2 && vdp.dma.wait) {
-        // Note: DMA fill to VRAM in an undocumented VRAM mode
-        // Not exactly sure what to do, but we'll treat it like normal VRAM mode for now
-        vdp.dma.wait = 0;   // start pending DMA fill (do not advance fifo)
-    } else {
-      advance();
-    }
-    return true;
-  }
-
-  if(slots[0].target == 3) {
-    slots[0].lower = 0;
-    slots[0].upper = 0;
+  else if(slots[0].target == 3)
     vdp.cram.write(slots[0].address >> 1, slots[0].data);
-    if(vdp.command.pending && vdp.dma.mode == 2 && vdp.dma.wait) {
-      // Note: DMA fill to CRAM is undocumented -- this is best-guess implementation based on research by Nemesis
-      // Advance the fifo and use invalidated data for the fill
-      vdp.dma.wait = 0;   // start pending DMA fill
-    }
-    return advance(), true;
-  }
-
-  if(slots[0].target == 5) {
-    slots[0].lower = 0;
-    slots[0].upper = 0;
+  else if(slots[0].target == 5)
     vdp.vsram.write(slots[0].address >> 1, slots[0].data);
-    if(vdp.command.pending && vdp.dma.mode == 2 && vdp.dma.wait) {
-      // Note: DMA fill to VSRAM is undocumented -- this is best-guess implementation based on research by Nemesis
-      // Advance the fifo and use invalidated data for the fill
-      vdp.dma.wait = 0;   // start pending DMA fill
-    }
-    return advance(), true;
+  else
+    debug(unusual, "[VDP::FIFO] write target = 0x", hex(slots[0].target));
+
+  if(vdp.command.pending && vdp.dma.mode == 2) {
+    vdp.dma.data = slots[1].data; // fill data taken from next fifo slot (late fetch)
+    vdp.dma.wait = 0; // start pending DMA
   }
 
   slots[0].lower = 0;
   slots[0].upper = 0;
-  //debug(unusual, "[VDP::FIFO] write target = 0x", hex(slots[0].target));
-  //cpu.debugger.interrupt({"VDP FIFO ", hex(slots[0].target)});
   return advance(), true;
 }
 
 auto VDP::FIFO::write(n4 target, n17 address, n16 data) -> void {
-  if(target.bit(0) != 1) return;
   if(full()) {
     bus.acquire(Bus::VDPFIFO);
     while(full()) {

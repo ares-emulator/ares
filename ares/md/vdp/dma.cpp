@@ -11,10 +11,13 @@ auto VDP::DMA::synchronize() -> void {
 
 auto VDP::DMA::run() -> bool {
   if(vdp.command.pending && !wait) {
-    if(vdp.fifo.full()) return false;
-    if(mode <= 1) return load(), true;
-    if(mode == 2) return fill(), true;
-    if(mode == 3) return copy(), true;
+    if(mode <= 1 && !vdp.fifo.full()) {
+      return load(), true;
+    } else if(mode == 2 && vdp.fifo.empty()) {
+      return fill(), true;
+    } else if(mode == 3) {
+      return copy(), true;
+    }
   }
   return false;
 }
@@ -33,11 +36,10 @@ auto VDP::DMA::load() -> void {
 }
 
 auto VDP::DMA::fill() -> void {
-  auto data = vdp.fifo.slots[0].data;
   switch(vdp.command.target) {
   case 1: vdp.vram.writeByte(vdp.command.address ^ 1, data >> 8); break;
-  case 3: vdp.cram.write(vdp.command.address, data); break;
-  case 5: vdp.vsram.write(vdp.command.address, data); break;
+  case 3: vdp.cram.write(vdp.command.address >> 1, data); break;
+  case 5: vdp.vsram.write(vdp.command.address >> 1, data); break;
   }
   vdp.debugger.dmaFill(vdp.command.target, vdp.command.address, data);
 

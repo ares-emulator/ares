@@ -200,7 +200,7 @@ struct VDP : Thread {
     n2  mode;
     n22 source;
     n16 length;
-    n8  data;
+    n16 data;
     n1  wait;
     n1  read;
     n1  enable;
