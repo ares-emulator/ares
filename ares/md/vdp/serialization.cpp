@@ -47,6 +47,7 @@ auto VDP::serialize(serializer& s) -> void {
   s(latch.displayWidth);
   s(latch.clockSelect);
 
+  s(state.counterLatchValue);
   s(state.hcounter);
   s(state.vcounter);
   s(state.field);
