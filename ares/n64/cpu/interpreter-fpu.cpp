@@ -196,8 +196,18 @@ auto CPU::FCEIL_W_D(u8 fd, u8 fs) -> void {
   FD(s32) = ceil(FS(f64));
 }
 
-#define   ORDERED(type, value) if(isnan(FS(type)) || isnan(FT(type))) { CF = value; return exception.floatingPoint(); }
-#define UNORDERED(type, value) if(isnan(FS(type)) || isnan(FT(type))) { CF = value; return; }
+#define  XORDERED(type, value, quiet) \
+  if(isnan(FS(type)) || isnan(FT(type))) { \
+    if constexpr(!quiet) { \
+      fpu.csr.cause.invalidOperation = 1; \
+      if(fpu.csr.enable.invalidOperation) return exception.floatingPoint(); \
+      fpu.csr.flag.invalidOperation = 1; \
+    } \
+    CF = value; \
+    return; \
+  }
+#define   ORDERED(type, value) XORDERED(type, value, 0)
+#define UNORDERED(type, value) XORDERED(type, value, 1)
 
 auto CPU::FC_EQ_S(u8 fs, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
@@ -414,24 +424,22 @@ auto CPU::FCVT_W_D(u8 fd, u8 fs) -> void {
 
 auto CPU::FDIV_S(u8 fd, u8 fs, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  if(FT(f32)) {
-    FD(f32) = FS(f32) / FT(f32);
-  } else if(fpu.csr.enable.divisionByZero) {
-    fpu.csr.flag.divisionByZero = 1;
+  if(!FT(f32)) {
     fpu.csr.cause.divisionByZero = 1;
-    exception.floatingPoint();
+    if(fpu.csr.enable.divisionByZero) return exception.floatingPoint();
+    fpu.csr.flag.divisionByZero = 1;
   }
+  FD(f32) = FS(f32) / FT(f32);
 }
 
 auto CPU::FDIV_D(u8 fd, u8 fs, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  if(FT(f64)) {
-    FD(f64) = FS(f64) / FT(f64);
-  } else if(fpu.csr.enable.divisionByZero) {
-    fpu.csr.flag.divisionByZero = 1;
+  if(!FT(f64)) {
     fpu.csr.cause.divisionByZero = 1;
-    exception.floatingPoint();
+    if(fpu.csr.enable.divisionByZero) return exception.floatingPoint();
+    fpu.csr.flag.divisionByZero = 1;
   }
+  FD(f64) = FS(f64) / FT(f64);
 }
 
 auto CPU::FFLOOR_L_S(u8 fd, u8 fs) -> void {
