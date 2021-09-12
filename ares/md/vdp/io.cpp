@@ -180,23 +180,21 @@ auto VDP::writeControlPort(n16 data) -> void {
     command.address.bit(14,16) = data.bit(0,2);
     command.target.bit(2,3)    = data.bit(4,5);
     command.ready              = data.bit(6) | command.target.bit(0);
-    command.pending            = data.bit(7) & dma.enable;
+    command.pending           |= data.bit(7) & dma.enable;
 
-    if(prefetch.full()) {
-      prefetch.read(command.target, command.address);
-    }
+    prefetch.read(command.target, command.address);
 
     dma.wait = dma.mode == 2;
     dma.synchronize();
     return;
   }
 
-  command.address.bit(0,13) = data.bit(0,13);
   command.target.bit(0,1)   = data.bit(14,15);
   command.ready             = 1;
 
   //command write (hi)
   if(data.bit(14,15) != 2) {
+    command.address.bit(0,13) = data.bit(0,13);
     command.latch = 1;
     return;
   }
