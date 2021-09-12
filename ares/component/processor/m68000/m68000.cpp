@@ -49,6 +49,7 @@ auto M68000::supervisor() -> bool {
 }
 
 auto M68000::exception(u32 exception, u32 vector, u32 priority) -> void {
+  r.stop  = false;
   idle(10);  //todo: not accurate
 
   auto pc = r.pc;
