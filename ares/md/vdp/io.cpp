@@ -13,6 +13,7 @@ auto VDP::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //counters
   case 0xc00008 ... 0xc0000f: {
+    if(io.counterLatch) return state.counterLatchValue;
     auto vcounter = state.vcounter;
     if(io.interlaceMode.bit(0)) {
       if(io.interlaceMode.bit(1)) vcounter <<= 1;
@@ -207,6 +208,7 @@ auto VDP::writeControlPort(n16 data) -> void {
   //mode register 1
   case 0x00: {
     io.displayOverlayEnable  = data.bit(0);
+    if(!io.counterLatch && data.bit(1)) state.counterLatchValue = read(1,1,0xC00008,0);
     io.counterLatch          = data.bit(1);
     io.videoMode4            = data.bit(2);
     irq.hblank.enable        = data.bit(4);

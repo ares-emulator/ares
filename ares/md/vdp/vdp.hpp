@@ -487,6 +487,7 @@ private:
   } latch;
 
   struct State {
+    n16 counterLatchValue;
     n8 hcounter;
     n9 vcounter;
     n1 field;
