@@ -10,12 +10,12 @@ auto VDP::FIFO::run() -> bool {
   if(slots[0].target == 1 && vdp.vram.mode == 0) {
     if(slots[0].lower) {
       slots[0].lower = 0;
-      vdp.vram.writeByte(slots[0].address & ~1 | 1, slots[0].data.byte(0));
+      vdp.vram.writeByte(slots[0].address ^ 1, slots[0].data.byte(0));
       return true;
     }
     if(slots[0].upper) {
       slots[0].upper = 0;
-      vdp.vram.writeByte(slots[0].address & ~1 | 0, slots[0].data.byte(1));
+      vdp.vram.writeByte(slots[0].address, slots[0].data.byte(1));
       if(vdp.command.pending && vdp.dma.mode == 2 && vdp.dma.wait) {
         vdp.dma.wait = 0;   // start pending DMA fill (do not advance fifo)
       } else {
@@ -65,8 +65,8 @@ auto VDP::FIFO::run() -> bool {
 
   slots[0].lower = 0;
   slots[0].upper = 0;
-  debug(unusual, "[VDP::FIFO] write target = 0x", hex(slots[0].target));
-  cpu.debugger.interrupt({"VDP FIFO ", hex(slots[0].target)});
+  //debug(unusual, "[VDP::FIFO] write target = 0x", hex(slots[0].target));
+  //cpu.debugger.interrupt({"VDP FIFO ", hex(slots[0].target)});
   return advance(), true;
 }
 
@@ -79,10 +79,6 @@ auto VDP::FIFO::write(n4 target, n17 address, n16 data) -> void {
       if(apu.active()) apu.step(1);
     }
     bus.release(Bus::VDPFIFO);
-  }
-
-  if(address.bit(0) && target == 1) {
-    data = data << 8 | data >> 8;
   }
 
   for(auto& slot : slots) {
