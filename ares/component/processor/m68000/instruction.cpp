@@ -1,6 +1,10 @@
 auto M68000::instruction() -> void {
-  r.ird = r.ir;
-  return instructionTable[r.ird]();
+  if(!r.stop) {
+    r.ird = r.ir;
+    return instructionTable[r.ird]();
+  } else {
+     wait(1);
+  }
 }
 
 M68000::M68000() {
