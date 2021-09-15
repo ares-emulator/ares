@@ -227,6 +227,13 @@ private:
 };
 using DeviceAllocationOwnerHandle = Util::IntrusivePtr<DeviceAllocationOwner>;
 
+struct MemoryAllocateInfo
+{
+	VkMemoryRequirements requirements = {};
+	VkMemoryPropertyFlags required_properties = 0;
+	AllocationMode mode = {};
+};
+
 struct MiniHeap : Util::IntrusiveListEnabled<MiniHeap>
 {
 	DeviceAllocation allocation;
@@ -389,6 +396,7 @@ private:
 	};
 
 	std::vector<Heap> heaps;
+	bool memory_heap_is_budget_critical[VK_MAX_MEMORY_HEAPS] = {};
 	void get_memory_budget_nolock(HeapBudget *heaps);
 };
 }
