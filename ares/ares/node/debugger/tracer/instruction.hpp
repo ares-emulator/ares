@@ -28,7 +28,7 @@ struct Instruction : Tracer {
   }
 
   auto address(u32 address) -> bool {
-    address &= (1u << _addressBits) - 1;  //mask upper bits of address
+    address &= (1ull << _addressBits) - 1;  //mask upper bits of address
     _address = address;
     address >>= _addressMask;  //clip unneeded alignment bits (to reduce _masks size)
 
@@ -57,7 +57,7 @@ struct Instruction : Tracer {
   //call when writing to executable RAM to support self-modifying code.
   auto invalidate(u32 address) -> void {
     if(unlikely(_mask && updateMasks())) {
-      address &= (1u << _addressBits) - 1;
+      address &= (1ull << _addressBits) - 1;
       address >>= _addressMask;
       _masks[address >> 3] &= ~(1 << (address & 7));
     }
