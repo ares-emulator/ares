@@ -51,6 +51,13 @@ CommandBuffer::CommandBuffer(Device *device_, VkCommandBuffer cmd_, VkPipelineCa
 	set_opaque_state();
 	memset(&pipeline_state.static_state, 0, sizeof(pipeline_state.static_state));
 	memset(&bindings, 0, sizeof(bindings));
+
+	// Set up extra state which PSO creation depends on implicitly.
+	// This needs to affect hashing to make Fossilize path behave as expected.
+	auto &features = device->get_device_features();
+	pipeline_state.subgroup_size_tag =
+			(features.subgroup_size_control_properties.minSubgroupSize << 0) |
+			(features.subgroup_size_control_properties.maxSubgroupSize << 8);
 }
 
 CommandBuffer::~CommandBuffer()
@@ -494,15 +501,19 @@ void CommandBuffer::init_viewport_scissor(const RenderPassInfo &info, const Fram
 	uint32_t fb_width = fb->get_width();
 	uint32_t fb_height = fb->get_height();
 
-	if (surface_transform_swaps_xy(current_framebuffer_surface_transform))
-		std::swap(fb_width, fb_height);
-
 	rect.offset.x = min(fb_width, uint32_t(rect.offset.x));
 	rect.offset.y = min(fb_height, uint32_t(rect.offset.y));
 	rect.extent.width = min(fb_width - rect.offset.x, rect.extent.width);
 	rect.extent.height = min(fb_height - rect.offset.y, rect.extent.height);
 
-	viewport = { 0.0f, 0.0f, float(fb_width), float(fb_height), 0.0f, 1.0f };
+	if (surface_transform_swaps_xy(current_framebuffer_surface_transform))
+		rect2d_swap_xy(rect);
+
+	viewport = {
+		float(rect.offset.x), float(rect.offset.y),
+		float(rect.extent.width), float(rect.extent.height),
+		0.0f, 1.0f
+	};
 	scissor = rect;
 }
 
@@ -657,7 +668,7 @@ void CommandBuffer::begin_render_pass(const RenderPassInfo &info, VkSubpassConte
 		}
 
 		if (info.color_attachments[i]->get_image().is_swapchain_image())
-			uses_swapchain = true;
+			swapchain_touch_in_stages(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 	}
 
 	if (info.depth_stencil && (info.op_flags & RENDER_PASS_OP_CLEAR_DEPTH_STENCIL_BIT) != 0)
@@ -739,24 +750,17 @@ VkPipeline CommandBuffer::build_compute_pipeline(Device *device, const DeferredP
 
 	if (compile.static_state.state.subgroup_control_size)
 	{
-		auto &features = device->get_device_features();
-
-		if (!features.subgroup_size_control_features.subgroupSizeControl)
+		if (!device->supports_subgroup_size_log2(compile.static_state.state.subgroup_full_group,
+		                                         compile.static_state.state.subgroup_minimum_size_log2,
+		                                         compile.static_state.state.subgroup_maximum_size_log2))
 		{
-			LOGE("Device does not support subgroup size control.\n");
+			LOGE("Subgroup size configuration not supported.\n");
 			return VK_NULL_HANDLE;
 		}
+		auto &features = device->get_device_features();
 
 		if (compile.static_state.state.subgroup_full_group)
-		{
-			if (!features.subgroup_size_control_features.computeFullSubgroups)
-			{
-				LOGE("Device does not support full subgroups.\n");
-				return VK_NULL_HANDLE;
-			}
-
 			info.stage.flags |= VK_PIPELINE_SHADER_STAGE_CREATE_REQUIRE_FULL_SUBGROUPS_BIT_EXT;
-		}
 
 		uint32_t min_subgroups = 1u << compile.static_state.state.subgroup_minimum_size_log2;
 		uint32_t max_subgroups = 1u << compile.static_state.state.subgroup_maximum_size_log2;
@@ -774,19 +778,6 @@ VkPipeline CommandBuffer::build_compute_pipeline(Device *device, const DeferredP
 				subgroup_size_info.requiredSubgroupSize = min_subgroups;
 
 			info.stage.pNext = &subgroup_size_info;
-
-			if (subgroup_size_info.requiredSubgroupSize < features.subgroup_size_control_properties.minSubgroupSize ||
-			    subgroup_size_info.requiredSubgroupSize > features.subgroup_size_control_properties.maxSubgroupSize)
-			{
-				LOGE("Requested subgroup size is out of range.\n");
-				return VK_NULL_HANDLE;
-			}
-
-			if ((features.subgroup_size_control_properties.requiredSubgroupSizeStages & VK_SHADER_STAGE_COMPUTE_BIT) == 0)
-			{
-				LOGE("Cannot request specific subgroup size in compute.\n");
-				return VK_NULL_HANDLE;
-			}
 		}
 	}
 
@@ -1077,7 +1068,10 @@ void CommandBuffer::update_hash_compute_pipeline(DeferredPipelineCompile &compil
 		h.s32(1);
 		h.u32(compile.static_state.state.subgroup_minimum_size_log2);
 		h.u32(compile.static_state.state.subgroup_maximum_size_log2);
-		h.s32(compile.static_state.state.subgroup_full_group);
+		h.u32(compile.static_state.state.subgroup_full_group);
+		// Required for Fossilize since we don't know exactly how to lower these requirements to a PSO
+		// without knowing some device state.
+		h.u32(compile.subgroup_size_tag);
 	}
 	else
 		h.s32(0);
@@ -1784,6 +1778,15 @@ void CommandBuffer::set_storage_texture(unsigned set, unsigned binding, const Im
 	            view.get_image().get_layout(VK_IMAGE_LAYOUT_GENERAL), view.get_cookie());
 }
 
+void CommandBuffer::set_unorm_storage_texture(unsigned set, unsigned binding, const ImageView &view)
+{
+	VK_ASSERT(view.get_image().get_create_info().usage & VK_IMAGE_USAGE_STORAGE_BIT);
+	auto unorm_view = view.get_unorm_view();
+	VK_ASSERT(unorm_view != VK_NULL_HANDLE);
+	set_texture(set, binding, unorm_view, unorm_view,
+	            view.get_image().get_layout(VK_IMAGE_LAYOUT_GENERAL), view.get_cookie() | COOKIE_BIT_UNORM);
+}
+
 static void update_descriptor_set_legacy(Device &device, VkDescriptorSet desc_set,
                                          const DescriptorSetLayout &set_layout, const ResourceBinding *bindings)
 {
@@ -2034,7 +2037,7 @@ void CommandBuffer::flush_descriptor_set(uint32_t set)
 		for (unsigned i = 0; i < array_size; i++)
 		{
 			h.u64(bindings.cookies[set][binding + i]);
-			if (!has_immutable_sampler(set_layout, binding + i))
+			if ((set_layout.immutable_sampler_mask & (1u << (binding + i))) == 0)
 			{
 				h.u64(bindings.secondary_cookies[set][binding + i]);
 				VK_ASSERT(bindings.bindings[set][binding + i].image.fp.sampler != VK_NULL_HANDLE);
@@ -2453,7 +2456,7 @@ void CommandBuffer::end_threaded_recording()
 
 	if (has_profiling())
 	{
-		auto &query_pool = device->get_performance_query_pool(type);
+		auto &query_pool = device->get_performance_query_pool(device->get_physical_queue_type(type));
 		query_pool.end_command_buffer(cmd);
 	}
 

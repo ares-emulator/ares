@@ -31,6 +31,7 @@
 #include "rdp_common.hpp"
 #include "command_ring.hpp"
 #include "worker_thread.hpp"
+#include "rdp_dump_write.hpp"
 
 #ifndef GRANITE_VULKAN_MT
 #error "Granite Vulkan backend must be built with multithreading support."
@@ -175,6 +176,7 @@ private:
 	void clear_tmem();
 	void clear_buffer(Vulkan::Buffer &buffer, uint32_t value);
 	void init_renderer();
+	void enqueue_command_inner(unsigned num_words, const uint32_t *words);
 
 	Vulkan::ImageHandle scanout(const ScanoutOptions &opts, VkImageLayout target_layout);
 
@@ -234,5 +236,8 @@ private:
 	void decode_triangle_setup(TriangleSetup &setup, const uint32_t *words) const;
 
 	Quirks quirks;
+
+	std::unique_ptr<RDPDumpWriter> dump_writer;
+	bool dump_in_command_list = false;
 };
 }

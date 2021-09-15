@@ -3085,9 +3085,6 @@ void Renderer::load_tile(uint32_t tile, const LoadTileInfo &info)
 		auto &meta = tiles[tile].meta;
 		unsigned pixels_coverered_per_line = (((info.shi >> 2) - (info.slo >> 2)) + 1) & 0xfff;
 
-		if (meta.fmt == TextureFormat::YUV)
-			pixels_coverered_per_line *= 2;
-
 		// Technically, 32-bpp TMEM upload and YUV upload will work like 16bpp, just split into two halves, but that also means
 		// we get 2kB wraparound instead of 4kB wraparound, so this works out just fine for our purposes.
 		unsigned quad_words_covered_per_line = ((pixels_coverered_per_line << unsigned(meta.size)) + 15) >> 4;
@@ -3101,16 +3098,22 @@ void Renderer::load_tile(uint32_t tile, const LoadTileInfo &info)
 		// Compute a conservative estimate for how many bytes we're going to splat down into TMEM.
 		unsigned bytes_covered_per_line = std::max<unsigned>(quad_words_covered_per_line * 8, meta.stride);
 
+		unsigned max_bytes_per_line = 0x1000;
+		// We need to write lower and upper halves at once,
+		// so we need to wrap around at 2k boundary.
+		if (meta.fmt == TextureFormat::YUV)
+			max_bytes_per_line /= 2;
+
 		unsigned num_lines = ((info.thi >> 2) - (info.tlo >> 2)) + 1;
 		unsigned total_bytes_covered = bytes_covered_per_line * num_lines;
 
-		if (total_bytes_covered > 0x1000)
+		if (total_bytes_covered > max_bytes_per_line)
 		{
 			// Welp, for whatever reason, the game wants to write more than 4k of texture data to TMEM in one go.
 			// We can only handle 4kB in one go due to wrap-around effects,
 			// so split up the upload in multiple chunks.
 
-			unsigned max_lines_per_iteration = 0x1000u / bytes_covered_per_line;
+			unsigned max_lines_per_iteration = max_bytes_per_line / bytes_covered_per_line;
 			// Align T-state.
 			max_lines_per_iteration &= ~1u;
 
