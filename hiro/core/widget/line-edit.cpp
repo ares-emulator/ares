@@ -48,6 +48,12 @@ auto mLineEdit::setEditable(bool editable) -> type& {
   return *this;
 }
 
+auto mLineEdit::setForegroundColor(SystemColor color) -> type& {
+    state.foregroundColor = color;
+    signal(setForegroundColor, color);
+    return *this;
+}
+
 auto mLineEdit::setForegroundColor(Color color) -> type& {
   state.foregroundColor = color;
   signal(setForegroundColor, color);

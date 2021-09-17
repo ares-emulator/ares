@@ -101,7 +101,7 @@ auto AboutDialog::show() -> void {
   copyrightValue.setAlignment(0.0);
   copyrightValue.setText(state.copyright);
   if(state.copyrightURI) {
-    copyrightValue.setForegroundColor({0, 85, 255}).setFont(Font().setBold());;
+    copyrightValue.setForegroundColor(SystemColor::Link).setFont(Font().setBold());;
     copyrightValue.setMouseCursor(MouseCursor::Hand);
     copyrightValue.onMouseRelease([&](auto button) {
       if(button == Mouse::Button::Left) invoke(state.copyrightURI);
@@ -120,7 +120,7 @@ auto AboutDialog::show() -> void {
   licenseValue.setAlignment(0.0);
   licenseValue.setText(state.license);
   if(state.licenseURI) {
-    licenseValue.setForegroundColor({0, 85, 255}).setFont(Font().setBold());;
+    licenseValue.setForegroundColor(SystemColor::Link).setFont(Font().setBold());;
     licenseValue.setMouseCursor(MouseCursor::Hand);
     licenseValue.onMouseRelease([&](auto button) {
       if(button == Mouse::Button::Left) invoke(state.licenseURI);
@@ -139,7 +139,7 @@ auto AboutDialog::show() -> void {
   websiteValue.setAlignment(0.0);
   websiteValue.setText(state.website);
   if(state.websiteURI) {
-    websiteValue.setForegroundColor({0, 85, 255}).setFont(Font().setBold());;
+    websiteValue.setForegroundColor(SystemColor::Link).setFont(Font().setBold());;
     websiteValue.setMouseCursor(MouseCursor::Hand);
     websiteValue.onMouseRelease([&](auto button) {
       if(button == Mouse::Button::Left) invoke(state.websiteURI);

@@ -55,7 +55,12 @@ auto pLineEdit::setEditable(bool editable) -> void {
   [(CocoaLineEdit*)cocoaView setEditable:editable];
 }
 
+auto pLineEdit::setForegroundColor(SystemColor color) -> void {
+  [[(CocoaLineEdit*)cocoaView cell] setTextColor: NSMakeColor(color)?: NSMakeColor(hiro::SystemColor::Text)];
+}
+
 auto pLineEdit::setForegroundColor(Color color) -> void {
+  [[(CocoaLineEdit*)cocoaView cell] setTextColor: NSMakeColor(color)?: NSMakeColor(hiro::SystemColor::Text)];
 }
 
 auto pLineEdit::setText(const string& text) -> void {

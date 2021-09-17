@@ -476,6 +476,7 @@ struct Label : sLabel {
   auto foregroundColor() const { return self().foregroundColor(); }
   auto setAlignment(Alignment alignment = {}) { return self().setAlignment(alignment), *this; }
   auto setBackgroundColor(Color color = {}) { return self().setBackgroundColor(color), *this; }
+  auto setForegroundColor(SystemColor color) { return self().setForegroundColor(color), *this; }
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
   auto text() const { return self().text(); }
@@ -495,6 +496,7 @@ struct LineEdit : sLineEdit {
   auto onChange(const function<void ()>& callback = {}) { return self().onChange(callback), *this; }
   auto setBackgroundColor(Color color = {}) { return self().setBackgroundColor(color), *this; }
   auto setEditable(bool editable = true) { return self().setEditable(editable), *this; }
+  auto setForegroundColor(SystemColor color) { return self().setForegroundColor(color), *this; }
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
   auto text() const { return self().text(); }
@@ -661,6 +663,7 @@ struct TableViewCell : sTableViewCell {
   auto setCheckable(bool checkable = true) const { return self().setCheckable(checkable), *this; }
   auto setChecked(bool checked = true) const { return self().setChecked(checked), *this; }
   auto setForegroundColor(Color color = {}) { return self().setForegroundColor(color), *this; }
+  auto setForegroundColor(SystemColor color) { return self().setForegroundColor(color), *this; }
   auto setIcon(const multiFactorImage& icon = {}) { return self().setIcon(icon), *this; }
   auto setText(const string& text = "") { return self().setText(text), *this; }
   auto text() const { return self().text(); }

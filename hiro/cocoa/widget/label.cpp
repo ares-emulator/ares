@@ -1,6 +1,9 @@
 #if defined(Hiro_Label)
 
 @implementation CocoaLabel : NSView
+{
+  NSColor *_foregroundColor;
+}
 
 -(id) initWith:(hiro::mLabel&)labelReference {
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
@@ -23,10 +26,11 @@
   }
 
   NSFont* font = hiro::pFont::create(label->font(true));
-  NSColor* color = [NSColor textColor];
-  if(auto foregroundColor = label->foregroundColor()) {
-    color = NSMakeColor(foregroundColor);
+  NSColor* color = _foregroundColor;
+  if(!color) {
+    color = NSMakeColor(hiro::SystemColor::Label);
   }
+  
   NSMutableParagraphStyle* paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
   paragraphStyle.alignment = NSTextAlignmentLeft;
   paragraphStyle.lineBreakMode = NSLineBreakByClipping;
@@ -117,8 +121,6 @@
   [self mouseMove:event];
 }
 
-@end
-
 namespace hiro {
 
 auto pLabel::construct() -> void {
@@ -148,6 +150,12 @@ auto pLabel::setBackgroundColor(Color color) -> void {
 }
 
 auto pLabel::setForegroundColor(Color color) -> void {
+  ((CocoaLabel *)cocoaView)->_foregroundColor = color? NSMakeColor(color): nil;
+  [cocoaView setNeedsDisplay:YES];
+}
+
+auto pLabel::setForegroundColor(SystemColor color) -> void {
+  ((CocoaLabel *)cocoaView)->_foregroundColor = NSMakeColor(color);
   [cocoaView setNeedsDisplay:YES];
 }
 
@@ -157,4 +165,5 @@ auto pLabel::setText(const string& text) -> void {
 
 }
 
+@end
 #endif

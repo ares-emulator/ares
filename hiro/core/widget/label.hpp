@@ -7,6 +7,7 @@ struct mLabel : mWidget {
   auto foregroundColor() const -> Color;
   auto setAlignment(Alignment alignment = {}) -> type&;
   auto setBackgroundColor(Color color = {}) -> type&;
+  auto setForegroundColor(SystemColor color) -> type&;
   auto setForegroundColor(Color color = {}) -> type&;
   auto setText(const string& text = "") -> type&;
   auto text() const -> string;

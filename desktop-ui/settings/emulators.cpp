@@ -27,7 +27,7 @@ auto EmulatorSettings::construct() -> void {
     settings.general.groupEmulators = groupEmulators.checked();
     presentation.loadEmulators();
   });
-  groupEmulatorsHint.setText("Groups emulators by manufacturer in the load menu").setFont(Font().setSize(7.0)).setForegroundColor({80, 80, 80});
+  groupEmulatorsHint.setText("Groups emulators by manufacturer in the load menu").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 }
 
 auto EmulatorSettings::eventToggle(TableViewCell cell) -> void {
