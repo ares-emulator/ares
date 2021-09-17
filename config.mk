@@ -48,5 +48,6 @@ ifeq (,$(findstring win,$(platform)))
     PARALLEL_RDP_LDFLAGS += -ldl
 else
     PARALLEL_RDP_CFLAGS += -DVK_USE_PLATFORM_WIN32_KHR
+    PARALLEL_RDP_LDFLAGS += -lwinmm
 endif
 

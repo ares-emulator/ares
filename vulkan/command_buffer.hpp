@@ -191,6 +191,7 @@ struct DeferredPipelineCompile
 	unsigned subpass_index;
 	Util::Hash hash;
 	VkPipelineCache cache;
+	uint32_t subgroup_size_tag;
 };
 
 class CommandBuffer;
@@ -206,10 +207,11 @@ public:
 	friend struct CommandBufferDeleter;
 	enum class Type
 	{
-		Generic,
-		AsyncGraphics,
-		AsyncCompute,
-		AsyncTransfer,
+		Generic = QUEUE_INDEX_GRAPHICS,
+		AsyncCompute = QUEUE_INDEX_COMPUTE,
+		AsyncTransfer = QUEUE_INDEX_TRANSFER,
+		VideoDecode = QUEUE_INDEX_VIDEO_DECODE,
+		AsyncGraphics = QUEUE_INDEX_COUNT, // Aliases with either Generic or AsyncCompute queue
 		Count
 	};
 
@@ -227,9 +229,15 @@ public:
 		return *device;
 	}
 
-	bool swapchain_touched() const
+	VkPipelineStageFlags swapchain_touched_in_stages() const
 	{
-		return uses_swapchain;
+		return uses_swapchain_in_stages;
+	}
+
+	// Only used when using swapchain in non-obvious ways, like compute or transfer.
+	void swapchain_touch_in_stages(VkPipelineStageFlags stages)
+	{
+		uses_swapchain_in_stages |= stages;
 	}
 
 	void set_thread_index(unsigned index_)
@@ -352,6 +360,7 @@ public:
 	void set_texture(unsigned set, unsigned binding, const ImageView &view, const Sampler &sampler);
 	void set_texture(unsigned set, unsigned binding, const ImageView &view, StockSampler sampler);
 	void set_storage_texture(unsigned set, unsigned binding, const ImageView &view);
+	void set_unorm_storage_texture(unsigned set, unsigned binding, const ImageView &view);
 	void set_sampler(unsigned set, unsigned binding, const Sampler &sampler);
 	void set_sampler(unsigned set, unsigned binding, StockSampler sampler);
 	void set_uniform_buffer(unsigned set, unsigned binding, const Buffer &buffer);
@@ -693,7 +702,7 @@ private:
 	uint32_t dirty_sets_dynamic = 0;
 	uint32_t dirty_vbos = 0;
 	uint32_t active_vbos = 0;
-	bool uses_swapchain = false;
+	VkPipelineStageFlags uses_swapchain_in_stages = 0;
 	bool is_compute = true;
 	bool is_secondary = false;
 	bool is_ended = false;

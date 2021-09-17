@@ -57,6 +57,21 @@ CommandProcessor::CommandProcessor(Vulkan::Device &device_, void *rdram_ptr,
 	info.domain = BufferDomain::CachedCoherentHostPreferCached;
 	info.misc = BUFFER_MISC_ZERO_INITIALIZE_BIT;
 
+	if (const char *env = getenv("PARALLEL_RDP_DUMP_PATH"))
+	{
+		dump_writer.reset(new RDPDumpWriter);
+		if (!dump_writer->init(env, rdram_size, hidden_rdram_size))
+		{
+			LOGE("Failed to init RDP dump: %s.\n", env);
+			dump_writer.reset();
+		}
+		else
+		{
+			LOGI("Dumping RDP commands to: %s.\n", env);
+			flags |= COMMAND_PROCESSOR_FLAG_HOST_VISIBLE_HIDDEN_RDRAM_BIT;
+		}
+	}
+
 	if (rdram_ptr)
 	{
 		bool allow_memory_host = true;
@@ -843,12 +858,37 @@ OP(sync_load) OP(sync_pipe)
 OP(sync_tile)
 #undef OP
 
-void CommandProcessor::enqueue_command(unsigned num_words, const uint32_t *words)
+void CommandProcessor::enqueue_command_inner(unsigned num_words, const uint32_t *words)
 {
 	if (single_threaded_processing)
 		enqueue_command_direct(num_words, words);
 	else
 		ring.enqueue_command(num_words, words);
+}
+
+void CommandProcessor::enqueue_command(unsigned num_words, const uint32_t *words)
+{
+	if (dump_writer && !dump_in_command_list)
+	{
+		wait_for_timeline(signal_timeline());
+		dump_writer->flush_dram(begin_read_rdram(), rdram_size);
+		dump_writer->flush_hidden_dram(begin_read_hidden_rdram(), hidden_rdram->get_create_info().size);
+		dump_in_command_list = true;
+	}
+
+	enqueue_command_inner(num_words, words);
+
+	if (dump_writer)
+	{
+		uint32_t cmd_id = (words[0] >> 24) & 63;
+		if (Op(cmd_id) == Op::SyncFull)
+		{
+			dump_writer->signal_complete();
+			dump_in_command_list = false;
+		}
+		else
+			dump_writer->emit_command(cmd_id, words, num_words);
+	}
 }
 
 void CommandProcessor::enqueue_command_direct(unsigned, const uint32_t *words)
@@ -919,12 +959,14 @@ void CommandProcessor::set_quirks(const Quirks &quirks_)
 		uint32_t(Op::MetaSetQuirks) << 24u,
 		quirks_.u.words[0],
 	};
-	enqueue_command(2, words);
+	enqueue_command_inner(2, words);
 }
 
 void CommandProcessor::set_vi_register(VIRegister reg, uint32_t value)
 {
 	vi.set_vi_register(reg, value);
+	if (dump_writer)
+		dump_writer->set_vi_register(uint32_t(reg), value);
 }
 
 void *CommandProcessor::begin_read_rdram()
@@ -980,7 +1022,7 @@ void CommandProcessor::flush()
 	const uint32_t words[1] = {
 		uint32_t(Op::MetaFlush) << 24,
 	};
-	enqueue_command(1, words);
+	enqueue_command_inner(1, words);
 }
 
 uint64_t CommandProcessor::signal_timeline()
@@ -992,7 +1034,7 @@ uint64_t CommandProcessor::signal_timeline()
 		uint32_t(timeline_value),
 		uint32_t(timeline_value >> 32),
 	};
-	enqueue_command(3, words);
+	enqueue_command_inner(3, words);
 
 	return timeline_value;
 }
@@ -1016,6 +1058,14 @@ Vulkan::ImageHandle CommandProcessor::scanout(const ScanoutOptions &opts, VkImag
 {
 	Vulkan::QueryPoolHandle start_ts, end_ts;
 	drain_command_ring();
+
+	if (dump_writer)
+	{
+		wait_for_timeline(signal_timeline());
+		dump_writer->flush_dram(begin_read_rdram(), rdram_size);
+		dump_writer->flush_hidden_dram(begin_read_hidden_rdram(), hidden_rdram->get_create_info().size);
+		dump_writer->end_frame();
+	}
 
 	// Block idle callbacks triggering while we're doing this.
 	renderer.lock_command_processing();

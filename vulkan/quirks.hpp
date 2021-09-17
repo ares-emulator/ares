@@ -37,20 +37,18 @@ struct ImplementationQuirks
 	bool use_async_compute_post = true;
 	bool render_graph_force_single_queue = false;
 	bool force_no_subgroups = false;
+	bool force_no_subgroup_shuffle = false;
+	bool force_no_subgroup_size_control = false;
 
-	static ImplementationQuirks &get()
-	{
-		static ImplementationQuirks quirks;
-		return quirks;
-	}
+	static ImplementationQuirks &get();
 };
 
 struct ImplementationWorkarounds
 {
 	bool emulate_event_as_pipeline_barrier = false;
-	bool wsi_acquire_barrier_is_expensive = false;
 	bool optimize_all_graphics_barrier = false;
 	bool force_store_in_render_pass = false;
 	bool broken_color_write_mask = false;
+	bool split_binary_timeline_semaphores = false;
 };
 }
