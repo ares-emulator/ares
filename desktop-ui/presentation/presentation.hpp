@@ -53,7 +53,10 @@ struct Presentation : Window {
       MenuCheckItem pauseEmulation{&toolsMenu};
       MenuSeparator toolsMenuSeparatorB{&toolsMenu};
       MenuItem manifestViewerAction{&toolsMenu};
+      #if !defined(PLATFORM_MACOS)
+      // Cocoa hiro is missing the hex editor widget
       MenuItem memoryEditorAction{&toolsMenu};
+      #endif
       MenuItem graphicsViewerAction{&toolsMenu};
       MenuItem streamManagerAction{&toolsMenu};
       MenuItem propertiesViewerAction{&toolsMenu};
