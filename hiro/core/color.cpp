@@ -8,6 +8,17 @@ Color::Color(s32 red, s32 green, s32 blue, s32 alpha) {
   setColor(red, green, blue, alpha);
 }
 
+Color::Color(SystemColor color) {
+  switch (color) {
+    case SystemColor::Text: setColor(0, 0, 0, 255); return;
+    case SystemColor::Label: setColor(0, 0, 0, 255); return;
+    case SystemColor::Sublabel: setColor(80, 80, 80, 255); return;
+    case SystemColor::Link: setColor(0, 85, 255, 255); return;
+    case SystemColor::PlaceholderText: setColor(128, 128, 128, 255); return;
+    default: setColor(0, 0, 0, 0); return;
+  }
+}
+
 Color::operator bool() const {
   return state.red || state.green || state.blue || state.alpha;
 }

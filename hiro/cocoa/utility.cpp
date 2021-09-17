@@ -2,6 +2,25 @@ auto NSMakeColor(const hiro::Color& color) -> NSColor* {
   return [NSColor colorWithRed:(color.red() / 255.0) green:(color.green() / 255.0) blue:(color.blue() / 255.0) alpha:(color.alpha() / 255.0)];
 }
 
+auto NSMakeColor(const hiro::SystemColor color) -> NSColor* {
+  switch(color) {
+    case hiro::SystemColor::Text: return [NSColor textColor];
+    case hiro::SystemColor::Label:
+      if([NSColor respondsToSelector:@selector(labelColor)]) return [NSColor labelColor];
+      return [NSColor textColor];
+    case hiro::SystemColor::Sublabel:
+      if([NSColor respondsToSelector:@selector(secondaryLabelColor)]) return [NSColor secondaryLabelColor];
+      return [NSColor colorWithWhite:2/3.0 alpha:1.0];
+    case hiro::SystemColor::Link:
+      if([NSColor respondsToSelector:@selector(linkColor)]) return [NSColor linkColor];
+      return [NSColor colorWithRed:0.21 green:0.48 blue:1.0 alpha:1.0];
+    case hiro::SystemColor::PlaceholderText:
+      if([NSColor respondsToSelector:@selector(placeholderTextColor)]) return [NSColor placeholderTextColor];
+      return [NSColor colorWithWhite:0.5 alpha:1.0];
+  }
+  return nil;
+}
+
 auto NSMakeCursor(const hiro::MouseCursor& mouseCursor) -> NSCursor* {
   if(mouseCursor == hiro::MouseCursor::Hand) return [NSCursor pointingHandCursor];
   if(mouseCursor == hiro::MouseCursor::HorizontalResize) return [NSCursor resizeLeftRightCursor];

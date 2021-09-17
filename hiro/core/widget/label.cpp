@@ -30,6 +30,12 @@ auto mLabel::setBackgroundColor(Color color) -> type& {
   return *this;
 }
 
+auto mLabel::setForegroundColor(SystemColor color) -> type& {
+    state.foregroundColor = color;
+    signal(setForegroundColor, color);
+    return *this;
+}
+
 auto mLabel::setForegroundColor(Color color) -> type& {
   state.foregroundColor = color;
   signal(setForegroundColor, color);

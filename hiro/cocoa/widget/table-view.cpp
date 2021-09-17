@@ -250,9 +250,10 @@
         if(tableViewCell->state.alignment.horizontal() < 0.333) textCell.alignment = NSTextAlignmentLeft;
         if(tableViewCell->state.alignment.horizontal() > 0.666) textCell.alignment = NSTextAlignmentRight;
         textCell.textColor = nil;
-        NSColor* foregroundColor = nil;
         if(![self isHighlighted] && tableView->enabled(true)) {
-          if(auto color = tableViewCell->state.foregroundColor) textCell.textColor = NSMakeColor(color);
+          auto systemColor = tableViewCell->state.foregroundSystemColor;
+          if(systemColor != hiro::SystemColor::None) textCell.textColor = NSMakeColor(systemColor);
+          else if(auto color = tableViewCell->state.foregroundColor) textCell.textColor = NSMakeColor(color);
         }
         [textCell drawWithFrame:frame inView:view];
       }

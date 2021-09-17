@@ -11,6 +11,7 @@ struct mLineEdit : mWidget {
   auto onChange(const function<void ()>& callback = {}) -> type&;
   auto setBackgroundColor(Color color = {}) -> type&;
   auto setEditable(bool editable = true) -> type&;
+  auto setForegroundColor(SystemColor color) -> type&;
   auto setForegroundColor(Color color = {}) -> type&;
   auto setText(const string& text = "") -> type&;
   auto text() const -> string;

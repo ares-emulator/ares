@@ -93,24 +93,24 @@ auto PathSettings::refresh() -> void {
   if(settings.paths.home) {
     homePath.setText(pathname(settings.paths.home)).setForegroundColor();
   } else {
-    homePath.setText(pathname(mia::homeLocation())).setForegroundColor({96, 96, 96});
+    homePath.setText(pathname(mia::homeLocation())).setForegroundColor(SystemColor::PlaceholderText);
   }
 
   if(settings.paths.saves) {
     savesPath.setText(pathname(settings.paths.saves)).setForegroundColor();
   } else {
-    savesPath.setText("(same as game path)").setForegroundColor({96, 96, 96});
+    savesPath.setText("(same as game path)").setForegroundColor(SystemColor::PlaceholderText);
   }
 
   if(settings.paths.screenshots) {
     screenshotsPath.setText(pathname(settings.paths.screenshots)).setForegroundColor();
   } else {
-    screenshotsPath.setText("(same as game path)").setForegroundColor({96, 96, 96});
+    screenshotsPath.setText("(same as game path)").setForegroundColor(SystemColor::PlaceholderText);
   }
 
   if(settings.paths.debugging) {
     debuggingPath.setText(pathname(settings.paths.debugging)).setForegroundColor();
   } else {
-    debuggingPath.setText("(same as game path)").setForegroundColor({96, 96, 96});
+    debuggingPath.setText("(same as game path)").setForegroundColor(SystemColor::PlaceholderText);
   }
 }

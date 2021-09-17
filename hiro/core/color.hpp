@@ -4,6 +4,7 @@ struct Color {
 
   Color();
   Color(s32 red, s32 green, s32 blue, s32 alpha = 255);
+  Color(SystemColor color);
 
   explicit operator bool() const;
   auto operator==(const Color& source) const -> bool;

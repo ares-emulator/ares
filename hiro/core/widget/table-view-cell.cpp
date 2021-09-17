@@ -117,8 +117,16 @@ auto mTableViewCell::setChecked(bool checked) -> type& {
 
 auto mTableViewCell::setForegroundColor(Color color) -> type& {
   state.foregroundColor = color;
+  state.foregroundSystemColor = SystemColor::None;
   signal(setForegroundColor, color);
   return *this;
+}
+
+auto mTableViewCell::setForegroundColor(SystemColor color) -> type& {
+    state.foregroundColor = color;
+    state.foregroundSystemColor = color;
+    signal(setForegroundColor, color);
+    return *this;
 }
 
 auto mTableViewCell::setIcon(const multiFactorImage& icon) -> type& {

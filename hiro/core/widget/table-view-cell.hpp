@@ -14,6 +14,7 @@ struct mTableViewCell : mObject {
   auto setCheckable(bool checkable = true) -> type&;
   auto setChecked(bool checked = true) -> type&;
   auto setForegroundColor(Color color = {}) -> type&;
+  auto setForegroundColor(SystemColor color) -> type&;
   auto setIcon(const multiFactorImage& icon = {}) -> type&;
   auto setText(const string& text = "") -> type&;
   auto text() const -> string;
@@ -25,6 +26,7 @@ struct mTableViewCell : mObject {
     bool checkable = false;
     bool checked = false;
     Color foregroundColor;
+    SystemColor foregroundSystemColor;
     multiFactorImage icon;
     string text;
   } state;
