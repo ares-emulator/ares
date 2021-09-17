@@ -160,7 +160,8 @@ enum ImageMiscFlagBits
 	IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT = 1 << 6,
 	IMAGE_MISC_VERIFY_FORMAT_FEATURE_SAMPLED_LINEAR_FILTER_BIT = 1 << 7,
 	IMAGE_MISC_LINEAR_IMAGE_IGNORE_DEVICE_LOCAL_BIT = 1 << 8,
-	IMAGE_MISC_FORCE_NO_DEDICATED_BIT = 1 << 9
+	IMAGE_MISC_FORCE_NO_DEDICATED_BIT = 1 << 9,
+	IMAGE_MISC_NO_DEFAULT_VIEWS_BIT = 1 << 10
 };
 using ImageMiscFlags = uint32_t;
 
@@ -306,6 +307,8 @@ enum class ImageDomain
 	LinearHost
 };
 
+class ImmutableYcbcrConversion;
+
 struct ImageCreateInfo
 {
 	ImageDomain domain = ImageDomain::Physical;
@@ -326,6 +329,8 @@ struct ImageCreateInfo
 	};
 	const DeviceAllocation **memory_aliases = nullptr;
 	unsigned num_memory_aliases = 0;
+	const ImmutableYcbcrConversion *ycbcr_conversion = nullptr;
+	void *pnext = nullptr;
 
 	static ImageCreateInfo immutable_image(const TextureFormatLayout &layout)
 	{
@@ -446,20 +451,11 @@ struct ImageCreateInfo
 	}
 };
 
-struct YCbCrImageCreateInfo
-{
-	YCbCrFormat format = YCbCrFormat::YUV420P_3PLANE;
-	unsigned width = 0;
-	unsigned height = 0;
-};
-
 class Image;
-class YCbCrImage;
 
 struct ImageDeleter
 {
 	void operator()(Image *image);
-	void operator()(YCbCrImage *image);
 };
 
 enum class Layout
@@ -627,29 +623,6 @@ private:
 };
 
 using ImageHandle = Util::IntrusivePtr<Image>;
-
-class YCbCrImage : public Util::IntrusivePtrEnabled<YCbCrImage, ImageDeleter, HandleCounter>
-{
-public:
-	friend struct ImageDeleter;
-	~YCbCrImage();
-	Image &get_ycbcr_image();
-	Image &get_plane_image(unsigned plane);
-	unsigned get_num_planes() const;
-	YCbCrFormat get_ycbcr_format() const;
-
-private:
-	friend class Util::ObjectPool<YCbCrImage>;
-	YCbCrImage(Device *device, YCbCrFormat format, ImageHandle image, const ImageHandle *planes, unsigned num_planes);
-
-	Device *device;
-	YCbCrFormat format;
-	ImageHandle image;
-	ImageHandle planes[3];
-	unsigned num_planes;
-};
-
-using YCbCrImageHandle = Util::IntrusivePtr<YCbCrImage>;
 
 class LinearHostImage;
 struct LinearHostImageDeleter
