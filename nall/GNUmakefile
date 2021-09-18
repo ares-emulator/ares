@@ -77,7 +77,8 @@ endif
 
 # build optimization levels
 ifeq ($(build),debug)
-  flags += -Og -g -DBUILD_DEBUG
+  symbols = true
+  flags += -Og -DBUILD_DEBUG
 else ifeq ($(build),stable)
   lto = true
   flags += -O1 -DBUILD_STABLE
@@ -92,6 +93,17 @@ else ifeq ($(build),optimized)
   flags += -O3 -fomit-frame-pointer -DBUILD_OPTIMIZED
 else
   $(error unrecognized build type.)
+endif
+
+# debugging information
+ifeq ($(symbols),true)
+  flags += -g
+  ifeq ($(platform),windows)
+    ifeq ($(findstring clang++,$(compiler)),clang++)
+      flags   += -gcodeview
+      options += -Wl,-pdb=
+    endif
+  endif
 endif
 
 # link-time optimization
