@@ -200,14 +200,14 @@ private:
   IXAudio2SourceVoice* sourceVoice = nullptr;
 
   //inherited from IXAudio2VoiceCallback
-  STDMETHODIMP_(void) OnBufferStart(void* pBufferContext){}
-  STDMETHODIMP_(void) OnLoopEnd(void* pBufferContext){}
-  STDMETHODIMP_(void) OnStreamEnd() {}
-  STDMETHODIMP_(void) OnVoiceError(void* pBufferContext, HRESULT Error) {}
-  STDMETHODIMP_(void) OnVoiceProcessingPassEnd() {}
-  STDMETHODIMP_(void) OnVoiceProcessingPassStart(UINT32 BytesRequired) {}
+  STDMETHODIMP_(void) OnBufferStart(void* pBufferContext) noexcept override {}
+  STDMETHODIMP_(void) OnLoopEnd(void* pBufferContext) noexcept override {}
+  STDMETHODIMP_(void) OnStreamEnd() noexcept override {}
+  STDMETHODIMP_(void) OnVoiceError(void* pBufferContext, HRESULT Error) noexcept override {}
+  STDMETHODIMP_(void) OnVoiceProcessingPassEnd() noexcept override {}
+  STDMETHODIMP_(void) OnVoiceProcessingPassStart(UINT32 BytesRequired) noexcept override {}
 
-  STDMETHODIMP_(void) OnBufferEnd(void* pBufferContext) {
+  STDMETHODIMP_(void) OnBufferEnd(void* pBufferContext) noexcept override {
     InterlockedDecrement(&self.queue);
   }
 };

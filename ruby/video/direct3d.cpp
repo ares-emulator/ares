@@ -63,7 +63,7 @@ struct VideoDirect3D : VideoDriver {
     }
   }
 
-  auto size(u32& width, u32& height) -> void {
+  auto size(u32& width, u32& height) -> void override {
     if(_lost && !recover()) return;
 
     RECT rectangle;

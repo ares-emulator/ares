@@ -22,8 +22,8 @@ struct pWindow : pObject {
   auto setBackgroundColor(Color color) -> void;
   auto setDismissable(bool dismissable) -> void;
   auto setDroppable(bool droppable) -> void;
-  auto setEnabled(bool enabled) -> void;
-  auto setFocused() -> void;
+  auto setEnabled(bool enabled) -> void override;
+  auto setFocused() -> void override;
   auto setFont(const Font& font) -> void override;
   auto setFullScreen(bool fullScreen) -> void;
   auto setGeometry(Geometry geometry) -> void;
@@ -34,7 +34,7 @@ struct pWindow : pObject {
   auto setModal(bool modal) -> void;
   auto setResizable(bool resizable) -> void;
   auto setTitle(string text) -> void;
-  auto setVisible(bool visible) -> void;
+  auto setVisible(bool visible) -> void override;
 
   auto modalIncrement() -> void;
   auto modalDecrement() -> void;

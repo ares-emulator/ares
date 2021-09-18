@@ -210,7 +210,7 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
       wchar_t* p = drives;
       while(*p || *(p + 1)) {
         if(!*p) *p = ';';
-        *p++;
+        p++;
       }
       return string{(const char*)utf8_t(drives)}.replace("\\", "/").split(";");
     }
