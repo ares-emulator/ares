@@ -21,7 +21,7 @@ auto CPU::write(n16 address, n8 data) -> void {
 }
 
 auto CPU::lastCycle() -> void {
-  io.interruptPending = ((io.irqLine | io.apuLine) & ~P.i) | io.nmiPending;
+  io.interruptPending = ((io.irqLine | io.apuLine) & !P.i) | io.nmiPending;
 }
 
 auto CPU::nmi(n16& vector) -> void {

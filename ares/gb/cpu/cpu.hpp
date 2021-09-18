@@ -56,7 +56,7 @@ struct CPU : SM83, Thread {
   auto stop() -> void override;
   auto halt() -> void override;
   auto idle() -> void override;
-  auto haltBugTrigger() -> void;
+  auto haltBugTrigger() -> void override;
   auto read(n16 address) -> n8 override;
   auto write(n16 address, n8 data) -> void override;
   auto readDMA(n16 address, n8 data) -> n8;

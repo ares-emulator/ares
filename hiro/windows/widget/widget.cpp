@@ -38,7 +38,7 @@ auto pWidget::focused() const -> bool {
   return hwnd == focused || IsChild(hwnd, focused);
 }
 
-auto pWidget::minimumSize() -> Size {
+auto pWidget::minimumSize() const -> Size {
   return {0, 0};
 }
 

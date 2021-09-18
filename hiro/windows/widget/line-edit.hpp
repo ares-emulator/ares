@@ -5,7 +5,7 @@ namespace hiro {
 struct pLineEdit : pWidget {
   Declare(LineEdit, Widget)
 
-  auto minimumSize() const -> Size;
+  auto minimumSize() const -> Size override;
   auto setBackgroundColor(Color color) -> void;
   auto setEditable(bool editable) -> void;
   auto setForegroundColor(Color color) -> void;
