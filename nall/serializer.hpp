@@ -148,8 +148,7 @@ private:
     enum : u32 { size = std::is_same<bool, T>::value ? 1 : sizeof(T) };
     reserve(_size + size);
     if(writing()) {
-      T copy = value;
-      for(u32 n : range(size)) _data[_size++] = copy, copy >>= 8;
+      for(u32 n : range(size)) _data[_size++] = value >> (n << 3);
     } else if(reading()) {
       value = 0;
       for(u32 n : range(size)) value |= (T)_data[_size++] << (n << 3);
