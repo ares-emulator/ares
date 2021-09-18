@@ -13,8 +13,8 @@ struct Class {
   }
 
   template<typename T> static auto register() -> void {
-    if(!classes().find([&](auto instance) { return instance.identifier == T::identifier; })) {
-      classes().append({T::identifier, &T::create});
+    if(!classes().find([&](auto instance) { return instance.identifier == T::identifier(); })) {
+      classes().append({T::identifier(), &T::create});
     } else {
       throw;
     }
