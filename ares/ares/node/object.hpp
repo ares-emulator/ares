@@ -1,14 +1,14 @@
-//identifier is static, allowing template<typename T> to access via T::identifier
+//identifier() is static, allowing template<typename T> to access via T::identifier()
 //identity() is virtual, allowing T* to access via T->identity()
 
 #define DeclareClass(Type, Name) \
-  static inline const string identifier = Name; \
+  static auto identifier() -> string { return Name; } \
   static auto create() -> Node::Object { return new Type; } \
   auto identity() const -> string override { return Name; } \
   private: static inline Class::Register<Type> register; public: \
 
 struct Object : shared_pointer_this<Object> {
-  static inline const string identifier = "Object";
+  static auto identifier() -> string { return "Object"; }
   static auto create() -> Node::Object { return new Object; }
   virtual auto identity() const -> string { return "Object"; }
   private: static inline Class::Register<Object> register; public:
@@ -112,7 +112,7 @@ struct Object : shared_pointer_this<Object> {
     for(auto& node : _nodes) {
       if(node->_name != name) continue;
       if(path) return node->find<T>(path.merge("/"));
-      if(node->identity() == Type::identifier) return node;
+      if(node->identity() == Type::identifier()) return node;
     }
     return {};
   }
@@ -121,7 +121,7 @@ struct Object : shared_pointer_this<Object> {
   auto scan(string name) -> T {
     using Type = typename T::type;
     for(auto& node : _nodes) {
-      if(node->identity() == Type::identifier && node->_name == name) return node;
+      if(node->identity() == Type::identifier() && node->_name == name) return node;
       if(auto result = node->scan<T>(name)) return result;
     }
     return {};
