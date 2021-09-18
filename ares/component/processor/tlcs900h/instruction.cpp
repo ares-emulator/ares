@@ -1,8 +1,3 @@
-#if defined(COMPILER_CLANG)
-  //this core uses "Undefined;" many times, which Clang does not like to ignore.
-  #pragma clang diagnostic ignored "-Wunused-value"
-#endif
-
 template<> auto TLCS900H::toRegister3<n8>(n3 code) const -> Register<n8 > {
   static const Register<n8 > lookup[] = {W, A, B, C, D, E, H, L};
   return lookup[code];
@@ -325,7 +320,7 @@ auto TLCS900H::instruction() -> void {
     if((data & 3) == 0) store(register, location -= 1);
     if((data & 3) == 1) store(register, location -= 2);
     if((data & 3) == 2) store(register, location -= 4);
-    if((data & 3) == 3) Undefined;
+    if((data & 3) == 3) (void)Undefined;
     return instructionSourceMemory(toMemory<n8>(location));
   }
   case 0xc5: {  //src.B
@@ -336,7 +331,7 @@ auto TLCS900H::instruction() -> void {
     if((data & 3) == 0) store(register, location + 1);
     if((data & 3) == 1) store(register, location + 2);
     if((data & 3) == 2) store(register, location + 4);
-    if((data & 3) == 3) Undefined;
+    if((data & 3) == 3) (void)Undefined;
     return instructionSourceMemory(toMemory<n8>(location));
   }
   case 0xc6: {
@@ -401,7 +396,7 @@ auto TLCS900H::instruction() -> void {
     if((data & 3) == 0) store(register, location -= 1);
     if((data & 3) == 1) store(register, location -= 2);
     if((data & 3) == 2) store(register, location -= 4);
-    if((data & 3) == 3) Undefined;
+    if((data & 3) == 3) (void)Undefined;
     return instructionSourceMemory(toMemory<n16>(location));
   }
   case 0xd5: {  //src.W
@@ -412,7 +407,7 @@ auto TLCS900H::instruction() -> void {
     if((data & 3) == 0) store(register, location + 1);
     if((data & 3) == 1) store(register, location + 2);
     if((data & 3) == 2) store(register, location + 4);
-    if((data & 3) == 3) Undefined;
+    if((data & 3) == 3) (void)Undefined;
     return instructionSourceMemory(toMemory<n16>(location));
   }
   case 0xd6: {
@@ -477,7 +472,7 @@ auto TLCS900H::instruction() -> void {
     if((data & 3) == 0) store(register, location -= 1);
     if((data & 3) == 1) store(register, location -= 2);
     if((data & 3) == 2) store(register, location -= 4);
-    if((data & 3) == 3) Undefined;
+    if((data & 3) == 3) (void)Undefined;
     return instructionSourceMemory(toMemory<n32>(location));
   }
   case 0xe5: {  //src.L
@@ -488,7 +483,7 @@ auto TLCS900H::instruction() -> void {
     if((data & 3) == 0) store(register, location + 1);
     if((data & 3) == 1) store(register, location + 2);
     if((data & 3) == 2) store(register, location + 4);
-    if((data & 3) == 3) Undefined;
+    if((data & 3) == 3) (void)Undefined;
     return instructionSourceMemory(toMemory<n32>(location));
   }
   case 0xe6: {
@@ -566,7 +561,7 @@ auto TLCS900H::instruction() -> void {
     if((data & 3) == 0) store(register, location -= 1);
     if((data & 3) == 1) store(register, location -= 2);
     if((data & 3) == 2) store(register, location -= 4);
-    if((data & 3) == 3) Undefined;
+    if((data & 3) == 3) (void)Undefined;
     return instructionTargetMemory(location);
   }
   case 0xf5: {  //dst
@@ -577,7 +572,7 @@ auto TLCS900H::instruction() -> void {
     if((data & 3) == 0) store(register, location + 1);
     if((data & 3) == 1) store(register, location + 2);
     if((data & 3) == 2) store(register, location + 4);
-    if((data & 3) == 3) Undefined;
+    if((data & 3) == 3) (void)Undefined;
     return instructionTargetMemory(location);
   }
   case 0xf6: {
@@ -630,172 +625,226 @@ auto TLCS900H::instructionRegister(R register) -> void {
     return instructionPop(register);
   }
   case 0x06: {  //CPL r
-    if constexpr(Long) return undefined();
-    prefetch(4);
-    return instructionComplement(register);
+    if constexpr(!Long) {
+      prefetch(4);
+      return instructionComplement(register);
+    }
+    return undefined();
   }
   case 0x07: {  //NEG r
-    if constexpr(Long) return undefined();
-    prefetch(4);
-    return instructionNegate(register);
+    if constexpr(!Long) {
+      prefetch(4);
+      return instructionNegate(register);
+    }
+    return undefined();
   }
   case 0x08: {  //MUL rr,#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(24);
-    if constexpr(Word) prefetch(30);
-    return instructionMultiply(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(24);
+      if constexpr(Word) prefetch(30);
+      return instructionMultiply(register, immediate);
+    }
+    return undefined();
   }
   case 0x09: {  //MULS rr,#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(20);
-    if constexpr(Word) prefetch(26);
-    return instructionMultiplySigned(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(20);
+      if constexpr(Word) prefetch(26);
+      return instructionMultiplySigned(register, immediate);
+    }
+    return undefined();
   }
   case 0x0a: {  //DIV rr,#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(30);
-    if constexpr(Word) prefetch(46);
-    return instructionDivide(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(30);
+      if constexpr(Word) prefetch(46);
+      return instructionDivide(register, immediate);
+    }
+    return undefined();
   }
   case 0x0b: {  //DIVS rr,#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(36);
-    if constexpr(Word) prefetch(52);
-    return instructionDivideSigned(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(36);
+      if constexpr(Word) prefetch(52);
+      return instructionDivideSigned(register, immediate);
+    }
+    return undefined();
   }
   case 0x0c: {  //LINK r,dd
-    if constexpr(!Long) return undefined();
-    auto immediate = fetchImmediate<i16>();
-    prefetch(12);
-    return instructionLink(register, immediate);
+    if constexpr(Long) {
+      auto immediate = fetchImmediate<i16>();
+      prefetch(12);
+      return instructionLink(register, immediate);
+    }
+    return undefined();
   }
   case 0x0d: {  //UNLK r
-    if constexpr(!Long) return undefined();
-    prefetch(10);
-    return instructionUnlink(register);
+    if constexpr(Long) {
+      prefetch(10);
+      return instructionUnlink(register);
+    }
+    return undefined();
   }
   case 0x0e: {  //BS1F A,r
-    if constexpr(!Word) return undefined();
-    prefetch(6);
-    return instructionBitSearch1Forward(register);
+    if constexpr(Word) {
+      prefetch(6);
+      return instructionBitSearch1Forward(register);
+    }
+    return undefined();
   }
   case 0x0f: {  //BS1B A,r
-    if constexpr(!Word) return undefined();
-    prefetch(6);
-    return instructionBitSearch1Backward(register);
+    if constexpr(Word) {
+      prefetch(6);
+      return instructionBitSearch1Backward(register);
+    }
+    return undefined();
   }
   case 0x10: {  //DAA r
-    if constexpr(!Byte) return undefined();
-    prefetch(8);
-    return instructionDecimalAdjustAccumulator(register);
+    if constexpr(Byte) {
+      prefetch(8);
+      return instructionDecimalAdjustAccumulator(register);
+    }
+    return undefined();
   }
   case 0x11: {
     return undefined();
   }
   case 0x12: {  //EXTZ r
-    if constexpr(Byte) return undefined();
-    prefetch(6);
-    return instructionExtendZero(register);
+    if constexpr(!Byte) {
+      prefetch(6);
+      return instructionExtendZero(register);
+    }
+    return undefined();
   }
   case 0x13: {  //EXTS r
-    if constexpr(Byte) return undefined();
-    prefetch(6);
-    return instructionExtendSign(register);
+    if constexpr(!Byte) {
+      prefetch(6);
+      return instructionExtendSign(register);
+    }
+    return undefined();
   }
   case 0x14: {  //PAA r
-    if constexpr(Byte) return undefined();
-    prefetch(8);
-    return instructionPointerAdjustAccumulator(register);
+    if constexpr(!Byte) {
+      prefetch(8);
+      return instructionPointerAdjustAccumulator(register);
+    }
+    return undefined();
   }
   case 0x15: {
     return undefined();
   }
   case 0x16: {  //MIRR r
-    if constexpr(!Word) return undefined();
-    prefetch(6);
-    return instructionMirror(register);
+    if constexpr(Word) {
+      prefetch(6);
+      return instructionMirror(register);
+    }
+    return undefined();
   }
   case 0x17 ... 0x18: {
     return undefined();
   }
   case 0x19: {  //MULA r
-    if constexpr(!Word) return undefined();
-    prefetch(38);
-    return instructionMultiplyAdd(register);
+    if constexpr(Word) {
+      prefetch(38);
+      return instructionMultiplyAdd(register);
+    }
+    return undefined();
   }
   case 0x1a ... 0x1b: {
     return undefined();
   }
   case 0x1c: {  //DJNZ r,d
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<i8>();
-    prefetch(8);
-    return instructionDecrementJumpNotZero(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<i8>();
+      prefetch(8);
+      return instructionDecrementJumpNotZero(register, immediate);
+    }
+    return undefined();
   }
   case 0x1d ... 0x1f: {
     return undefined();
   }
   case 0x20: {  //ANDCF #,r
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<n8>();
-    prefetch(6);
-    return instructionAndCarry(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<n8>();
+      prefetch(6);
+      return instructionAndCarry(register, immediate);
+    }
+    return undefined();
   }
   case 0x21: {  //ORCF #,r
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<n8>();
-    prefetch(6);
-    return instructionOrCarry(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<n8>();
+      prefetch(6);
+      return instructionOrCarry(register, immediate);
+    }
+    return undefined();
   }
   case 0x22: {  //XORCF #,r
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<n8>();
-    prefetch(6);
-    return instructionXorCarry(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<n8>();
+      prefetch(6);
+      return instructionXorCarry(register, immediate);
+    }
+    return undefined();
   }
   case 0x23: {  //LDCF #,r
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<n8>();
-    prefetch(6);
-    return instructionLoadCarry(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<n8>();
+      prefetch(6);
+      return instructionLoadCarry(register, immediate);
+    }
+    return undefined();
   }
   case 0x24: {  //STCF #,r
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<n8>();
-    prefetch(6);
-    return instructionStoreCarry(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<n8>();
+      prefetch(6);
+      return instructionStoreCarry(register, immediate);
+    }
+    return undefined();
   }
   case 0x25 ... 0x27: {
     return undefined();
   }
   case 0x28: {  //ANDCF A,r
-    if constexpr(Long) return undefined();
-    prefetch(6);
-    return instructionAndCarry(register, A);
+    if constexpr(!Long) {
+      prefetch(6);
+      return instructionAndCarry(register, A);
+    }
+    return undefined();
   }
   case 0x29: {  //ORCF A,r
-    if constexpr(Long) return undefined();
-    prefetch(6);
-    return instructionOrCarry(register, A);
+    if constexpr(!Long) {
+      prefetch(6);
+      return instructionOrCarry(register, A);
+    }
+    return undefined();
   }
   case 0x2a: {  //XORCF A,r
-    if constexpr(Long) return undefined();
-    prefetch(6);
-    return instructionXorCarry(register, A);
+    if constexpr(!Long) {
+      prefetch(6);
+      return instructionXorCarry(register, A);
+    }
+    return undefined();
   }
   case 0x2b: {  //LDCF A,r
-    if constexpr(Long) return undefined();
-    prefetch(6);
-    return instructionLoadCarry(register, A);
+    if constexpr(!Long) {
+      prefetch(6);
+      return instructionLoadCarry(register, A);
+    }
+    return undefined();
   }
   case 0x2c: {  //STCF A,r
-    if constexpr(Long) return undefined();
-    prefetch(6);
-    return instructionStoreCarry(register, A);
+    if constexpr(!Long) {
+      prefetch(6);
+      return instructionStoreCarry(register, A);
+    }
+    return undefined();
   }
   case 0x2d: {
     return undefined();
@@ -811,103 +860,133 @@ auto TLCS900H::instructionRegister(R register) -> void {
     return instructionLoad(register, toControlRegister<T>(data));
   }
   case 0x30: {  //RES #,r
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<n8>();
-    prefetch(6);
-    return instructionReset(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<n8>();
+      prefetch(6);
+      return instructionReset(register, immediate);
+    }
+    return undefined();
   }
   case 0x31: {  //SET #,r
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<n8>();
-    prefetch(6);
-    return instructionSet(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<n8>();
+      prefetch(6);
+      return instructionSet(register, immediate);
+    }
+    return undefined();
   }
   case 0x32: {  //CHG #,r
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<n8>();
-    prefetch(6);
-    return instructionChange(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<n8>();
+      prefetch(6);
+      return instructionChange(register, immediate);
+    }
+    return undefined();
   }
   case 0x33: {  //BIT #,r
-    if constexpr(Long) return undefined();
-    data = fetch();
-    prefetch(6);
-    return instructionBit(register, toImmediate<n4>(data));
+    if constexpr(!Long) {
+      data = fetch();
+      prefetch(6);
+      return instructionBit(register, toImmediate<n4>(data));
+    }
+    return undefined();
   }
   case 0x34: {  //TSET #,r
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<n8>();
-    prefetch(8);
-    return instructionTestSet(register, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<n8>();
+      prefetch(8);
+      return instructionTestSet(register, immediate);
+    }
+    return undefined();
   }
   case 0x35 ... 0x37: {
     return undefined();
   }
   case 0x38: {  //MINC1 #,r
-    if constexpr(!Word) return undefined();
-    auto immediate = fetchImmediate<n16>();
-    prefetch(10);
-    return instructionModuloIncrement<1>(register, immediate);
+    if constexpr(Word) {
+      auto immediate = fetchImmediate<n16>();
+      prefetch(10);
+      return instructionModuloIncrement<1>(register, immediate);
+    }
+    return undefined();
   }
   case 0x39: {  //MINC2 #,r
-    if constexpr(!Word) return undefined();
-    auto immediate = fetchImmediate<n16>();
-    prefetch(10);
-    return instructionModuloIncrement<2>(register, immediate);
+    if constexpr(Word) {
+      auto immediate = fetchImmediate<n16>();
+      prefetch(10);
+      return instructionModuloIncrement<2>(register, immediate);
+    }
+    return undefined();
   }
   case 0x3a: {  //MINC4 #,r
-    if constexpr(!Word) return undefined();
-    auto immediate = fetchImmediate<n16>();
-    prefetch(10);
-    return instructionModuloIncrement<4>(register, immediate);
+    if constexpr(Word) {
+      auto immediate = fetchImmediate<n16>();
+      prefetch(10);
+      return instructionModuloIncrement<4>(register, immediate);
+    }
+    return undefined();
   }
   case 0x3b: {
     return undefined();
   }
   case 0x3c: {  //MDEC1 #,r
-    if constexpr(!Word) return undefined();
-    auto immediate = fetchImmediate<n16>();
-    prefetch(8);
-    return instructionModuloDecrement<1>(register, immediate);
+    if constexpr(Word) {
+      auto immediate = fetchImmediate<n16>();
+      prefetch(8);
+      return instructionModuloDecrement<1>(register, immediate);
+    }
+    return undefined();
   }
   case 0x3d: {  //MDEC2 #,r
-    if constexpr(!Word) return undefined();
-    auto immediate = fetchImmediate<n16>();
-    prefetch(8);
-    return instructionModuloDecrement<2>(register, immediate);
+    if constexpr(Word) {
+      auto immediate = fetchImmediate<n16>();
+      prefetch(8);
+      return instructionModuloDecrement<2>(register, immediate);
+    }
+    return undefined();
   }
   case 0x3e: {  //MDEC4 #,r
-    if constexpr(!Word) return undefined();
-    auto immediate = fetchImmediate<n16>();
-    prefetch(8);
-    return instructionModuloDecrement<4>(register, immediate);
+    if constexpr(Word) {
+      auto immediate = fetchImmediate<n16>();
+      prefetch(8);
+      return instructionModuloDecrement<4>(register, immediate);
+    }
+    return undefined();
   }
   case 0x3f: {
     return undefined();
   }
   case 0x40 ... 0x47: {  //MUL R,r
-    if constexpr(Long) return undefined();
-    if constexpr(Byte) prefetch(22);
-    if constexpr(Word) prefetch(28);
-    return instructionMultiply(toRegister3<T>(data), register);
+    if constexpr(!Long) {
+      if constexpr(Byte) prefetch(22);
+      if constexpr(Word) prefetch(28);
+      return instructionMultiply(toRegister3<T>(data), register);
+    }
+    return undefined();
   }
   case 0x48 ... 0x4f: {  //MULS R,r
-    if constexpr(Long) return undefined();
-    if constexpr(Byte) prefetch(18);
-    if constexpr(Word) prefetch(24);
-    return instructionMultiplySigned(toRegister3<T>(data), register);
+    if constexpr(!Long) {
+      if constexpr(Byte) prefetch(18);
+      if constexpr(Word) prefetch(24);
+      return instructionMultiplySigned(toRegister3<T>(data), register);
+    }
+    return undefined();
   }
   case 0x50 ... 0x57: {  //DIV R,r
-    if constexpr(Long) return undefined();
-    if constexpr(Byte) prefetch(30);
-    if constexpr(Word) prefetch(46);
-    return instructionDivide(toRegister3<T>(data), register);
+    if constexpr(!Long) {
+      if constexpr(Byte) prefetch(30);
+      if constexpr(Word) prefetch(46);
+      return instructionDivide(toRegister3<T>(data), register);
+    }
+    return undefined();
   }
   case 0x58 ... 0x5f: {  //DIVS R,r
-    if constexpr(Long) return undefined();
-    if constexpr(Byte) prefetch(36);
-    if constexpr(Word) prefetch(52);
-    return instructionDivideSigned(toRegister3<T>(data), register);
+    if constexpr(!Long) {
+      if constexpr(Byte) prefetch(36);
+      if constexpr(Word) prefetch(52);
+      return instructionDivideSigned(toRegister3<T>(data), register);
+    }
+    return undefined();
   }
   case 0x60 ... 0x67: {  //INC #3,r
     prefetch(4);
@@ -918,9 +997,11 @@ auto TLCS900H::instructionRegister(R register) -> void {
     return instructionDecrement(register, toImmediate<T>((n3)data));
   }
   case 0x70 ... 0x7f: {  //SCC cc,r
-    if constexpr(Long) return undefined();
-    prefetch(4);
-    return instructionSetConditionCode((n4)data, register);
+    if constexpr(!Long) {
+      prefetch(4);
+      return instructionSetConditionCode((n4)data, register);
+    }
+    return undefined();
   }
   case 0x80 ... 0x87: {  //ADD R,r
     prefetch(4);
@@ -951,9 +1032,11 @@ auto TLCS900H::instructionRegister(R register) -> void {
     return instructionSubtractBorrow(toRegister3<T>(data), register);
   }
   case 0xb8 ... 0xbf: {  //EX R,r
-    if constexpr(Long) return undefined();
-    prefetch(6);
-    return instructionExchange(toRegister3<T>(data), register);
+    if constexpr(!Long) {
+      prefetch(6);
+      return instructionExchange(toRegister3<T>(data), register);
+    }
+    return undefined();
   }
   case 0xc0 ... 0xc7: {  //AND R,r
     prefetch(4);
@@ -1020,9 +1103,11 @@ auto TLCS900H::instructionRegister(R register) -> void {
     return instructionXor(toRegister3<T>(data), register);
   }
   case 0xd8 ... 0xdf: {  //CP r,#3
-    if constexpr(Long) return undefined();
-    prefetch(4);
-    return instructionCompare(register, toImmediate<T>((n3)data));
+    if constexpr(!Long) {
+      prefetch(4);
+      return instructionCompare(register, toImmediate<T>((n3)data));
+    }
+    return undefined();
   }
   case 0xe0 ... 0xe7: {  //OR R,r
     prefetch(4);
@@ -1120,22 +1205,28 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     return undefined();
   }
   case 0x04: {  //PUSH (mem)
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionPush(memory);
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionPush(memory);
+    }
+    return undefined();
   }
   case 0x05: {
     return undefined();
   }
   case 0x06: {  //RLD A,(mem)
-    if constexpr(!Byte) return undefined();
-    prefetch(24);
-    return instructionRotateLeftDigit(A, memory);
+    if constexpr(Byte) {
+      prefetch(24);
+      return instructionRotateLeftDigit(A, memory);
+    }
+    return undefined();
   }
   case 0x07: {  //RRD A,(mem)
-    if constexpr(!Byte) return undefined();
-    prefetch(24);
-    return instructionRotateRightDigit(A, memory);
+    if constexpr(Byte) {
+      prefetch(24);
+      return instructionRotateRightDigit(A, memory);
+    }
+    return undefined();
   }
   case 0x08 ... 0x0f: {
     return undefined();
@@ -1181,28 +1272,34 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     return undefined();
   }
   case 0x16: {  //CPD
-    if constexpr(Long) return undefined();
-    auto register = toRegister3<n32>(OP);
-    if constexpr(Byte) { prefetch(10); return instructionCompare<T, -1>( A, register); }
-    if constexpr(Word) { prefetch(10); return instructionCompare<T, -2>(WA, register); }
+    if constexpr(!Long) {
+      auto register = toRegister3<n32>(OP);
+      if constexpr(Byte) { prefetch(10); return instructionCompare<T, -1>( A, register); }
+      if constexpr(Word) { prefetch(10); return instructionCompare<T, -2>(WA, register); }
+      return undefined();
+    }
     return undefined();
   }
   case 0x17: {  //CPDR
-    if constexpr(Long) return undefined();
-    prefetch(2);
-    auto register = toRegister3<n32>(OP);
-    if constexpr(Byte) { prefetch(2); return instructionCompareRepeat<T, -1>( A, register); }
-    if constexpr(Word) { prefetch(2); return instructionCompareRepeat<T, -2>(WA, register); }
+    if constexpr(!Long) {
+      prefetch(2);
+      auto register = toRegister3<n32>(OP);
+      if constexpr(Byte) { prefetch(2); return instructionCompareRepeat<T, -1>( A, register); }
+      if constexpr(Word) { prefetch(2); return instructionCompareRepeat<T, -2>(WA, register); }
+      return undefined();
+    }
     return undefined();
   }
   case 0x18: {
     return undefined();
   }
   case 0x19: {  //LD (nn),(m)
-    if constexpr(Long) return undefined();
-    auto target = fetchMemory<T, n16>();
-    prefetch(12);
-    return instructionLoad(target, memory);
+    if constexpr(!Long) {
+      auto target = fetchMemory<T, n16>();
+      prefetch(12);
+      return instructionLoad(target, memory);
+    }
+    return undefined();
   }
   case 0x1a ... 0x1f: {
     return undefined();
@@ -1217,141 +1314,187 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     return undefined();
   }
   case 0x30 ... 0x37: {  //EX (mem),R
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionExchange(memory, toRegister3<T>(data));
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionExchange(memory, toRegister3<T>(data));
+    }
+    return undefined();
   }
   case 0x38: {  //ADD (mem),#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(10);
-    if constexpr(Word) prefetch(12);
-    return instructionAdd(memory, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(10);
+      if constexpr(Word) prefetch(12);
+      return instructionAdd(memory, immediate);
+    }
+    return undefined();
   }
   case 0x39: {  //ADC (mem),#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(10);
-    if constexpr(Word) prefetch(12);
-    return instructionAddCarry(memory, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(10);
+      if constexpr(Word) prefetch(12);
+      return instructionAddCarry(memory, immediate);
+    }
+    return undefined();
   }
   case 0x3a: {  //SUB (mem),#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(10);
-    if constexpr(Word) prefetch(12);
-    return instructionSubtract(memory, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(10);
+      if constexpr(Word) prefetch(12);
+      return instructionSubtract(memory, immediate);
+    }
+    return undefined();
   }
   case 0x3b: {  //SBC (mem),#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(10);
-    if constexpr(Word) prefetch(12);
-    return instructionSubtractBorrow(memory, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(10);
+      if constexpr(Word) prefetch(12);
+      return instructionSubtractBorrow(memory, immediate);
+    }
+    return undefined();
   }
   case 0x3c: {  //AND (mem),#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(10);
-    if constexpr(Word) prefetch(12);
-    return instructionAnd(memory, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(10);
+      if constexpr(Word) prefetch(12);
+      return instructionAnd(memory, immediate);
+    }
+    return undefined();
   }
   case 0x3d: {//XOR (mem),#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(10);
-    if constexpr(Word) prefetch(12);
-    return instructionXor(memory, immediate); }
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(10);
+      if constexpr(Word) prefetch(12);
+      return instructionXor(memory, immediate); }
+    }
+    return undefined();
   case 0x3e: {  //OR (mem),#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(10);
-    if constexpr(Word) prefetch(12);
-    return instructionOr(memory, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(10);
+      if constexpr(Word) prefetch(12);
+      return instructionOr(memory, immediate);
+    }
+    return undefined();
   }
   case 0x3f: {  //CP (mem),#
-    if constexpr(Long) return undefined();
-    auto immediate = fetchImmediate<T>();
-    if constexpr(Byte) prefetch(8);
-    if constexpr(Word) prefetch(10);
-    return instructionCompare(memory, immediate);
+    if constexpr(!Long) {
+      auto immediate = fetchImmediate<T>();
+      if constexpr(Byte) prefetch(8);
+      if constexpr(Word) prefetch(10);
+      return instructionCompare(memory, immediate);
+    }
+    return undefined();
   }
   case 0x40 ... 0x47: {  //MUL R,(mem)
-    if constexpr(Long) return undefined();
-    if constexpr(Byte) prefetch(24);
-    if constexpr(Word) prefetch(30);
-    return instructionMultiply(toRegister3<T>(data), memory);
+    if constexpr(!Long) {
+      if constexpr(Byte) prefetch(24);
+      if constexpr(Word) prefetch(30);
+      return instructionMultiply(toRegister3<T>(data), memory);
+    }
+    return undefined();
   }
   case 0x48 ... 0x4f: {  //MULS R,(mem)
-    if constexpr(Long) return undefined();
-    if constexpr(Byte) prefetch(20);
-    if constexpr(Word) prefetch(26);
-    return instructionMultiplySigned(toRegister3<T>(data), memory);
+    if constexpr(!Long) {
+      if constexpr(Byte) prefetch(20);
+      if constexpr(Word) prefetch(26);
+      return instructionMultiplySigned(toRegister3<T>(data), memory);
+    }
+    return undefined();
   }
   case 0x50 ... 0x57: {  //DIV R,(mem)
-    if constexpr(Long) return undefined();
-    if constexpr(Byte) prefetch(30);
-    if constexpr(Word) prefetch(46);
-    return instructionDivide(toRegister3<T>(data), memory);
+    if constexpr(!Long) {
+      if constexpr(Byte) prefetch(30);
+      if constexpr(Word) prefetch(46);
+      return instructionDivide(toRegister3<T>(data), memory);
+    }
+    return undefined();
   }
   case 0x58 ... 0x5f: {  //DIVS R,(mem)
-    if constexpr(Long) return undefined();
-    if constexpr(Byte) prefetch(36);
-    if constexpr(Word) prefetch(52);
-    return instructionDivideSigned(toRegister3<T>(data), memory);
+    if constexpr(!Long) {
+      if constexpr(Byte) prefetch(36);
+      if constexpr(Word) prefetch(52);
+      return instructionDivideSigned(toRegister3<T>(data), memory);
+    }
+    return undefined();
   }
   case 0x60 ... 0x67: {  //INC #3,(mem)
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionIncrement(memory, toImmediate<T>((n3)data));
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionIncrement(memory, toImmediate<T>((n3)data));
+    }
+    return undefined();
   }
   case 0x68 ... 0x6f: {  //DEC #3,(mem)
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionDecrement(memory, toImmediate<T>((n3)data));
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionDecrement(memory, toImmediate<T>((n3)data));
+    }
+    return undefined();
   }
   case 0x70 ... 0x77: {
     return undefined();
   }
   case 0x78: {  //RLC (mem)
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionRotateLeftWithoutCarry(memory, toImmediate<n4>(1));
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionRotateLeftWithoutCarry(memory, toImmediate<n4>(1));
+    }
+    return undefined();
   }
   case 0x79: {  //RRC (mem)
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionRotateRightWithoutCarry(memory, toImmediate<n4>(1));
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionRotateRightWithoutCarry(memory, toImmediate<n4>(1));
+    }
+    return undefined();
   }
   case 0x7a: {  //RL (mem)
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionRotateLeft(memory, toImmediate<n4>(1));
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionRotateLeft(memory, toImmediate<n4>(1));
+    }
+    return undefined();
   }
   case 0x7b: {  //RR (mem)
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionRotateRight(memory, toImmediate<n4>(1));
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionRotateRight(memory, toImmediate<n4>(1));
+    }
+    return undefined();
   }
   case 0x7c: {  //SLA (mem)
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionShiftLeftArithmetic(memory, toImmediate<n4>(1));
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionShiftLeftArithmetic(memory, toImmediate<n4>(1));
+    }
+    return undefined();
   }
   case 0x7d: {  //SRA (mem)
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionShiftRightArithmetic(memory, toImmediate<n4>(1));
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionShiftRightArithmetic(memory, toImmediate<n4>(1));
+    }
+    return undefined();
   }
   case 0x7e: {  //SLL (mem)
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionShiftLeftLogical(memory, toImmediate<n4>(1));
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionShiftLeftLogical(memory, toImmediate<n4>(1));
+    }
+    return undefined();
   }
   case 0x7f: {  //SRL (mem)
-    if constexpr(Long) return undefined();
-    prefetch(8);
-    return instructionShiftRightLogical(memory, toImmediate<n4>(1));
+    if constexpr(!Long) {
+      prefetch(8);
+      return instructionShiftRightLogical(memory, toImmediate<n4>(1));
+    }
+    return undefined();
   }
   case 0x80 ... 0x87: {  //ADD R,(mem)
     if constexpr(Byte) prefetch(6);

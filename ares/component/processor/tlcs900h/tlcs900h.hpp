@@ -45,10 +45,10 @@ struct TLCS900H {
   template<typename T> auto store(Register<T>, n32) -> void;
   auto expand(Register<n8 >) const -> Register<n16>;
   auto expand(Register<n16>) const -> Register<n32>;
-  auto expand(Register<n32>) const -> Register<n32>;  //unused
+  auto expand(Register<n32>) const -> Register<n32> = delete;  //unused
   auto shrink(Register<n32>) const -> Register<n16>;
   auto shrink(Register<n16>) const -> Register<n8 >;
-  auto shrink(Register<n8 >) const -> Register<n8 >;  //unused
+  auto shrink(Register<n8 >) const -> Register<n8 > = delete;  //unused
   auto load(FlagRegister) const -> n8;
   auto store(FlagRegister, n8) -> void;
   auto load(StatusRegister) const -> n16;

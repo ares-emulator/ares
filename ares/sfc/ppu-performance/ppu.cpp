@@ -142,7 +142,7 @@ auto PPU::power(bool reset) -> void {
 
   string title;
   for(u32 index : range(21)) {
-    char byte = bus.read(0xffc0 + index, 0x00);
+    auto byte = bus.read(0xffc0 + index, 0x00);
     if(byte == 0x00) break;
     if(byte == 0xff) break;
     title.append(byte);

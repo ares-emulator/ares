@@ -87,11 +87,9 @@ template<> auto TLCS900H::store<n32>(Register<n32> register, n32 data) -> void {
 
 auto TLCS900H::expand(Register<n8 > register) const -> Register<n16> { return {register.id & ~1}; }
 auto TLCS900H::expand(Register<n16> register) const -> Register<n32> { return {register.id & ~3}; }
-auto TLCS900H::expand(Register<n32> register) const -> Register<n32> { return {register.id & ~3}; }  //unused
 
 auto TLCS900H::shrink(Register<n32> register) const -> Register<n16> { return {register.id}; }
 auto TLCS900H::shrink(Register<n16> register) const -> Register<n8 > { return {register.id}; }
-auto TLCS900H::shrink(Register<n8 > register) const -> Register<n8 > { return {register.id}; }  //unused
 
 auto TLCS900H::load(FlagRegister f) const -> n8 {
   //TLCS-90: d3 = X   (expansion carry flag); TLCS-900/H: always 0
