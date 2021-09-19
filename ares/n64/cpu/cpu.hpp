@@ -723,6 +723,7 @@ struct CPU : Thread {
 
     bump_allocator allocator;
     Pool* pools[1 << 21];  //2_MiB * sizeof(void*) == 16_MiB
+    bool earlyExit = false;
   } recompiler{*this};
 
   struct Disassembler {
