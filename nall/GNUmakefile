@@ -138,6 +138,7 @@ endif
 # windows settings
 ifeq ($(platform),windows)
   options += -mthreads -lpthread -lws2_32 -lole32
+  options += $(if $(findstring clang++,$(compiler)),-fuse-ld=lld)
   options += $(if $(findstring g++,$(compiler)),-static -static-libgcc -static-libstdc++)
   options += $(if $(findstring true,$(console)),-mconsole,-mwindows)
   windres := windres
