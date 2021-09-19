@@ -96,14 +96,14 @@ auto PI::writeWord(u32 address, u32 data_) -> void {
 
   if(address == 2) {
     //PI_READ_LENGTH
-    io.readLength = (n24(data) | 1) + 1;
+    io.readLength = n24(data);
     io.dmaBusy = 1;
     queue.insert(Queue::PI_DMA_Read, io.readLength * 9);
   }
 
   if(address == 3) {
     //PI_WRITE_LENGTH
-    io.writeLength = (n24(data) | 1) + 1;
+    io.writeLength = n24(data);
     io.dmaBusy = 1;
     queue.insert(Queue::PI_DMA_Write, io.writeLength * 9);
   }
