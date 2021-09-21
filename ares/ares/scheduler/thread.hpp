@@ -1,8 +1,8 @@
 struct Scheduler;
 
 struct Thread {
-  enum : uintmax { Second = (uintmax)-1 >> 1 };
-  enum : uintmax { Size = 16_KiB * sizeof(void*) };
+  enum : u64 { Second = (u64)-1 >> 1 };
+  enum : u64 { Size = 16_KiB * sizeof(void*) };
 
   struct EntryPoint {
     cothread_t handle = nullptr;
@@ -20,14 +20,14 @@ struct Thread {
   explicit operator bool() const { return _handle; }
   auto active() const -> bool;
   auto handle() const -> cothread_t;
-  auto frequency() const -> uintmax;
-  auto scalar() const -> uintmax;
-  auto clock() const -> uintmax;
+  auto frequency() const -> u64;
+  auto scalar() const -> u64;
+  auto clock() const -> u64;
 
   auto setHandle(cothread_t handle) -> void;
   auto setFrequency(double frequency) -> void;
-  auto setScalar(uintmax scalar) -> void;
-  auto setClock(uintmax clock) -> void;
+  auto setScalar(u64 scalar) -> void;
+  auto setClock(u64 clock) -> void;
 
   auto create(double frequency, function<void ()> entryPoint) -> void;
   auto restart(function<void ()> entryPoint) -> void;
@@ -42,9 +42,9 @@ struct Thread {
 protected:
   cothread_t _handle = nullptr;
   u32 _uniqueID = 0;
-  uintmax _frequency = 0;
-  uintmax _scalar = 0;
-  uintmax _clock = 0;
+  u64 _frequency = 0;
+  u64 _scalar = 0;
+  u64 _clock = 0;
 
   friend class Scheduler;
 };

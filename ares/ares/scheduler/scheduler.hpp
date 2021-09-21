@@ -16,8 +16,8 @@ struct Scheduler {
   auto threads() const -> u32;
   auto thread(u32 threadID) const -> maybe<Thread&>;
   auto uniqueID() const -> u32;
-  auto minimum() const -> uintmax;
-  auto maximum() const -> uintmax;
+  auto minimum() const -> u64;
+  auto maximum() const -> u64;
 
   auto append(Thread& thread) -> bool;
   auto remove(Thread& thread) -> void;

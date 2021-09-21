@@ -23,8 +23,8 @@ inline auto Scheduler::uniqueID() const -> u32 {
 }
 
 //find the clock time of the furthest behind thread.
-inline auto Scheduler::minimum() const -> uintmax {
-  uintmax minimum = (uintmax)-1;
+inline auto Scheduler::minimum() const -> u64 {
+  u64 minimum = (u64)-1;
   for(auto& thread : _threads) {
     minimum = min(minimum, thread->_clock - thread->_uniqueID);
   }
@@ -32,8 +32,8 @@ inline auto Scheduler::minimum() const -> uintmax {
 }
 
 //find the clock time of the furthest ahead thread.
-inline auto Scheduler::maximum() const -> uintmax {
-  uintmax maximum = 0;
+inline auto Scheduler::maximum() const -> u64 {
+  u64 maximum = 0;
   for(auto& thread : _threads) {
     maximum = max(maximum, thread->_clock - thread->_uniqueID);
   }

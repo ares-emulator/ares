@@ -16,12 +16,12 @@ namespace nall {
   template<> struct ArithmeticNatural< 16> { using type = u16;  };
   template<> struct ArithmeticNatural< 32> { using type = u32;  };
   template<> struct ArithmeticNatural< 64> { using type = u64;  };
-  #if INTMAX_BITS >= 128
+  #if defined(__SIZEOF_INT128__)
   template<> struct ArithmeticNatural<128> { using type = u128; };
   #endif
 }
 
-#if INTMAX_BITS < 128
+#if !defined(__SIZEOF_INT128__)
 #define PairBits 128
 #define TypeBits  64
 #define HalfBits  32
