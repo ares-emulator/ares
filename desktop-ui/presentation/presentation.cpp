@@ -3,7 +3,7 @@ namespace Instances { Instance<Presentation> presentation; }
 Presentation& presentation = Instances::presentation();
 
 #if defined(PLATFORM_MACOS)
-#define ELLIPSIS "…"
+#define ELLIPSIS "\u2026"
 #else
 #define ELLIPSIS " ..."
 #endif

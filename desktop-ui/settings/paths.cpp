@@ -1,5 +1,5 @@
 #if defined(PLATFORM_MACOS)
-#define ELLIPSIS "…"
+#define ELLIPSIS "\u2026"
 #else
 #define ELLIPSIS " ..."
 #endif
