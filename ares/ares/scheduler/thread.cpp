@@ -24,9 +24,9 @@ inline Thread::~Thread() {
 
 inline auto Thread::active() const -> bool { return co_active() == _handle; }
 inline auto Thread::handle() const -> cothread_t { return _handle; }
-inline auto Thread::frequency() const -> uintmax { return _frequency; }
-inline auto Thread::scalar() const -> uintmax { return _scalar; }
-inline auto Thread::clock() const -> uintmax { return _clock; }
+inline auto Thread::frequency() const -> u64 { return _frequency; }
+inline auto Thread::scalar() const -> u64 { return _scalar; }
+inline auto Thread::clock() const -> u64 { return _clock; }
 
 inline auto Thread::setHandle(cothread_t handle) -> void {
   _handle = handle;
@@ -37,11 +37,11 @@ inline auto Thread::setFrequency(double frequency) -> void {
   _scalar = Second / _frequency;
 }
 
-inline auto Thread::setScalar(uintmax scalar) -> void {
+inline auto Thread::setScalar(u64 scalar) -> void {
   _scalar = scalar;
 }
 
-inline auto Thread::setClock(uintmax clock) -> void {
+inline auto Thread::setClock(u64 clock) -> void {
   _clock = clock;
 }
 

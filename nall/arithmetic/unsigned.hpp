@@ -33,7 +33,7 @@ inline auto ror(T lhs, U rhs, enable_if_t<is_unsigned<T>::value>* = 0) -> T {
   return lhs >> rhs | lhs << sizeof(T) * 8 - rhs;
 }
 
-#if INTMAX_BITS >= 128
+#if defined(__SIZEOF_INT128__)
 inline auto operator"" _u128(const char* s) -> u128 {
   u128 p = 0;
   if(s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
