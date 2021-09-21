@@ -15,7 +15,18 @@ MegaDrive::MegaDrive() {
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
-  { InputDevice device{"Fighting Pad"};
+    { InputDevice device{"Control Pad"};
+    device.digital("Up",    virtualPorts[id].pad.up);
+    device.digital("Down",  virtualPorts[id].pad.down);
+    device.digital("Left",  virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("A",     virtualPorts[id].pad.a);
+    device.digital("B",     virtualPorts[id].pad.b);
+    device.digital("C",     virtualPorts[id].pad.c);
+    device.digital("Start", virtualPorts[id].pad.start);
+    port.append(device); }
+
+    { InputDevice device{"Fighting Pad"};
     device.digital("Up",    virtualPorts[id].pad.up);
     device.digital("Down",  virtualPorts[id].pad.down);
     device.digital("Left",  virtualPorts[id].pad.left);
@@ -77,12 +88,12 @@ auto MegaDrive::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    port->allocate("Fighting Pad");
+    port->allocate("Control Pad");
     port->connect();
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
-    port->allocate("Fighting Pad");
+    port->allocate("Control Pad");
     port->connect();
   }
 
