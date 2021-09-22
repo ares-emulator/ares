@@ -119,7 +119,7 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
   analyzeCopyProtection(rom, hash);
 
   vector<string> devices;
-  string device = slice((const char*)&rom[0x1a0], 0, 16).trimRight(" ");
+  string device = slice((const char*)&rom[0x190], 0, 16).trimRight(" ");
   for(auto& id : device) {
     if(id == '0');  //Master System controller
     if(id == '4');  //multitap
