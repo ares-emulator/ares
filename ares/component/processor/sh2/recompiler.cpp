@@ -78,7 +78,7 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
     address += 2;
     if(hasBranched || (address & 0xfe) == 0) break;  //block boundary
     hasBranched = branched;
-    test(rax, rax);
+    test(al, al);
     jnz(epilogue);
   }
   jmp(epilogue);
