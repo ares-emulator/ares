@@ -77,7 +77,7 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
     address += 4;
     if(hasBranched || (address & 0xffc) == 0) break;  //IMEM boundary
     hasBranched = branched;
-    test(rax, rax);
+    test(al, al);
     jnz(epilogue);
   }
   jmp(epilogue);

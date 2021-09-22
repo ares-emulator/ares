@@ -58,7 +58,7 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
     address += 4;
     if(hasBranched || (address & 0xfc) == 0) break;  //block boundary
     hasBranched = branched;
-    test(rax, rax);
+    test(al, al);
     jnz(epilogue);
   }
   jmp(epilogue);
