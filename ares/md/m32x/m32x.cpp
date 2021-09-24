@@ -44,6 +44,9 @@ auto M32X::save() -> void {
 }
 
 auto M32X::power(bool reset) -> void {
+  if constexpr(SH2::Accuracy::Recompiler) {
+    ares::Memory::FixedAllocator::get().release();
+  }
   sdram.fill(0);
   shm.power(reset);
   shs.power(reset);

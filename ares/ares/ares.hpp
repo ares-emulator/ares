@@ -74,6 +74,7 @@ namespace ares {
 #include <ares/debug/debug.hpp>
 #include <ares/node/node.hpp>
 #include <ares/platform.hpp>
+#include <ares/memory/fixed-allocator.hpp>
 #include <ares/memory/readable.hpp>
 #include <ares/memory/writable.hpp>
 #include <ares/resource/resource.hpp>

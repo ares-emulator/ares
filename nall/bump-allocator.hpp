@@ -17,16 +17,23 @@ struct bump_allocator {
   }
 
   auto reset() -> void {
-    memory::free<u8, 4096>(_memory);
+    if(_owner) memory::free<u8, 4096>(_memory);
     _memory = nullptr;
   }
 
-  auto resize(u32 capacity, u32 flags = 0) -> bool {
+  auto resize(u32 capacity, u32 flags = 0, u8* buffer = nullptr) -> bool {
     reset();
     _offset = 0;
-    _capacity = capacity + 4095 & ~4095;              //capacity alignment
-    _memory = memory::allocate<u8, 4096>(_capacity);  //_SC_PAGESIZE alignment
-    if(!_memory) return false;
+    if(buffer) {
+      _owner = false;
+      _capacity = capacity;
+      _memory = buffer;
+    } else {
+      _owner = true;
+      _capacity = capacity + 4095 & ~4095;              //capacity alignment
+      _memory = memory::allocate<u8, 4096>(_capacity);  //_SC_PAGESIZE alignment
+      if(!_memory) return false;
+    }
 
     if(flags & executable) {
       #if defined(PLATFORM_WINDOWS)
@@ -91,6 +98,7 @@ private:
   u8* _memory = nullptr;
   u32 _capacity = 0;
   u32 _offset = 0;
+  bool _owner = false;
 };
 
 }
