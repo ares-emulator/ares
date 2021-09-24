@@ -113,6 +113,9 @@ auto System::save() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
+  if constexpr(Accuracy::CPU::Recompiler) {
+    ares::Memory::FixedAllocator::get().release();
+  }
   bios.setWaitStates(6, 12, 24);
   memory.power(reset);
   cpu.power(reset);

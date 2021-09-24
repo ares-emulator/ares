@@ -10,9 +10,10 @@ else
   $(error "ares is a library and cannot be built directly.")
 endif
 
-ares.objects := ares
+ares.objects := ares ares-fixed-allocator
 
 $(object.path)/ares.o: $(ares.path)/ares/ares.cpp
+$(object.path)/ares-fixed-allocator.o: $(ares.path)/ares/memory/fixed-allocator.cpp
 
 ifeq ($(vulkan),true)
   flags += -DVULKAN

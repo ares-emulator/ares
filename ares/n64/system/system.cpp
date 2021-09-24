@@ -129,6 +129,9 @@ auto System::save() -> void {
 auto System::power(bool reset) -> void {
   for(auto& setting : node->find<Node::Setting::Setting>()) setting->setLatch();
 
+  if constexpr(Accuracy::CPU::Recompiler || Accuracy::RSP::Recompiler) {
+    ares::Memory::FixedAllocator::get().release();
+  }
   queue.reset();
   cartridge.power(reset);
   rdram.power(reset);

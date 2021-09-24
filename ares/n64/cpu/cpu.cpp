@@ -138,7 +138,8 @@ auto CPU::power(bool reset) -> void {
   context.setMode();
 
   if constexpr(Accuracy::CPU::Recompiler) {
-    recompiler.allocator.resize(512_MiB, bump_allocator::executable | bump_allocator::zero_fill);
+    auto buffer = ares::Memory::FixedAllocator::get().acquire(512_MiB);
+    recompiler.allocator.resize(512_MiB, bump_allocator::executable | bump_allocator::zero_fill, buffer);
     recompiler.reset();
   }
 }
