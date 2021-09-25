@@ -49,6 +49,20 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
   mov(rbp, imm64(&self));
   mov(r13, imm64(&self.vpu.r[0]));
 
+  jmp(imm8(ABI::Windows ? 11 : 5));
+
+  u32 epilogue = size();
+
+  if constexpr(ABI::Windows) {
+    add(rsp, imm8(0x40));
+    pop(rdi);
+    pop(rsi);
+  }
+  pop(r13);
+  pop(rbp);
+  pop(rbx);
+  ret();
+
   bool hasBranched = 0;
   while(true) {
     u32 instruction = self.imem.read<Word>(address);
@@ -61,26 +75,9 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
     if(hasBranched || (address & 0xffc) == 0) break;  //IMEM boundary
     hasBranched = branched;
     test(rax, rax);
-    jz(imm8(ABI::Windows ? 11 : 5));
-    if constexpr(ABI::Windows) {
-      add(rsp, imm8(0x40));
-      pop(rdi);
-      pop(rsi);
-    }
-    pop(r13);
-    pop(rbp);
-    pop(rbx);
-    ret();
+    jnz(imm32(epilogue - size() - 6));
   }
-  if constexpr(ABI::Windows) {
-    add(rsp, imm8(0x40));
-    pop(rdi);
-    pop(rsi);
-  }
-  pop(r13);
-  pop(rbp);
-  pop(rbx);
-  ret();
+  jmp(imm32(epilogue - size() - 5));
 
   allocator.reserve(size());
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
