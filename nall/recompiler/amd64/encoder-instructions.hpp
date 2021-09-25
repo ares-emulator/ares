@@ -14,6 +14,12 @@
     emit.dword(it.data);
   }
 
+  //jmp imm32
+  alwaysinline auto jmp(imm32 it) {
+    emit.byte(0xe9);
+    emit.dword(it.data);
+  }
+
   //call reg64
   alwaysinline auto call(reg64 rt) {
     emit.rex(0, 0, 0, rt & 8);
@@ -734,6 +740,14 @@
   alwaysinline auto jmp(imm8 it) { op(0xeb); }
   alwaysinline auto jnz(imm8 it) { op(0x75); }
   alwaysinline auto jz (imm8 it) { op(0x74); }
+  #undef op
+
+  #define op(code) \
+    emit.byte(0x0f); \
+    emit.byte(code); \
+    emit.dword(it.data);
+  alwaysinline auto jnz(imm32 it) { op(0x85); }
+  alwaysinline auto jz (imm32 it) { op(0x84); }
   #undef op
 
   //op reg8
