@@ -1444,7 +1444,6 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 template<typename V, typename... P>
 auto RSP::Recompiler::call(V (RSP::*function)(P...)) -> void {
   static_assert(sizeof...(P) <= 5);
-  mov(rax, imm64(function));
   if constexpr(ABI::SystemV) {
     mov(rdi, rbp);
   }
@@ -1456,5 +1455,5 @@ auto RSP::Recompiler::call(V (RSP::*function)(P...)) -> void {
     if constexpr(sizeof...(P) >= 1) mov(rdx, rsi);
     mov(rcx, rbp);
   }
-  call(rax);
+  call(imm64{function}, rax);
 }

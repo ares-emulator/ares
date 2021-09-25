@@ -6,8 +6,7 @@
   alwaysinline auto call(auto (C::*function)(P...) -> R, C* object) {
     sub(rsp, imm8{0x28});
     mov(rcx, imm64{object});
-    mov(rax, imm64{function});
-    call(rax);
+    call(imm64{function}, rax);
     add(rsp, imm8{0x28});
   }
 
@@ -16,8 +15,7 @@
     sub(rsp, imm8{0x28});
     mov(rcx, imm64{object});
     mov(rdx, imm64{p0});
-    mov(rax, imm64{function});
-    call(rax);
+    call(imm64{function}, rax);
     add(rsp, imm8{0x28});
   }
 
@@ -27,8 +25,7 @@
     mov(rcx, imm64{object});
     mov(rdx, imm64{p0});
     mov(r8, imm64{p1});
-    mov(rax, imm64{function});
-    call(rax);
+    call(imm64{function}, rax);
     add(rsp, imm8{0x28});
   }
 
@@ -39,8 +36,7 @@
     mov(rdx, imm64{p0});
     mov(r8, imm64{p1});
     mov(r9, imm64{p2});
-    mov(rax, imm64{function});
-    call(rax);
+    call(imm64{function}, rax);
     add(rsp, imm8{0x28});
   }
 
@@ -53,8 +49,7 @@
     mov(r9, imm64{p2});
     mov(rax, imm64{p3});
     mov(dis8{rsp, 0x20}, rax);
-    mov(rax, imm64{function});
-    call(rax);
+    call(imm64{function}, rax);
     add(rsp, imm8{0x38});
   }
 
@@ -69,8 +64,7 @@
     mov(dis8{rsp, 0x20}, rax);
     mov(rax, imm64{p4});
     mov(dis8{rsp, 0x28}, rax);
-    mov(rax, imm64{function});
-    call(rax);
+    call(imm64{function}, rax);
     add(rsp, imm8{0x38});
   }
 //};

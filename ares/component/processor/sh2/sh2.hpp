@@ -277,7 +277,6 @@ struct SH2 {
     template<typename V, typename... P>
     alwaysinline auto call(V (SH2::*function)(P...)) -> void {
       static_assert(sizeof...(P) <= 5);
-      mov(rax, imm64(function));
       if constexpr(ABI::SystemV) {
         mov(rdi, rbp);
       }
@@ -289,7 +288,7 @@ struct SH2 {
         if constexpr(sizeof...(P) >= 1) mov(rdx, rsi);
         mov(rcx, rbp);
       }
-      call(rax);
+      call(imm64{function}, rax);
     }
 
     bump_allocator allocator;

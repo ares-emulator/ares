@@ -2058,7 +2058,6 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 template<typename V, typename... P>
 auto CPU::Recompiler::call(V (CPU::*function)(P...)) -> void {
   static_assert(sizeof...(P) <= 5);
-  mov(rax, imm64(function));
   if constexpr(ABI::SystemV) {
     mov(rdi, rbp);
   }
@@ -2070,5 +2069,5 @@ auto CPU::Recompiler::call(V (CPU::*function)(P...)) -> void {
     if constexpr(sizeof...(P) >= 1) mov(rdx, rsi);
     mov(rcx, rbp);
   }
-  call(rax);
+  call(imm64{function}, rax);
 }

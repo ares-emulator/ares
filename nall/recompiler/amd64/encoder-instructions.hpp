@@ -8,6 +8,12 @@
   alwaysinline auto stc()  { emit.byte(0xf9); }
   alwaysinline auto ret()  { emit.byte(0xc3); }
 
+  //call imm32
+  alwaysinline auto call(imm32 it) {
+    emit.byte(0xe8);
+    emit.dword(it.data);
+  }
+
   //call reg64
   alwaysinline auto call(reg64 rt) {
     emit.rex(0, 0, 0, rt & 8);
@@ -816,4 +822,15 @@
   alwaysinline auto sets (dis8 dt) { op(0x98); }
   alwaysinline auto setz (dis8 dt) { op(0x94); }
   #undef op
+
+  //call imm64 (pseudo-op)
+  alwaysinline auto call(imm64 target, reg64 scratch) {
+    s64 dist = distance(target.data) - 5;
+    if(dist < INT32_MIN || dist > INT32_MAX) {
+      mov(scratch, target);
+      call(scratch);
+    } else {
+      call(imm32{dist});
+    }
+  }
 //};
