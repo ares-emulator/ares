@@ -35,20 +35,12 @@ auto CPU::main() -> void {
 
 auto CPU::step(u32 clocks) -> void {
   Thread::clock += clocks;
-
-  i33 dist = scc.compare - scc.count;
-  if(0 <= dist && dist < clocks){
-    scc.cause.interruptPending.bit(Interrupt::Timer) = 1;
-    if constexpr(Accuracy::CPU::Recompiler) {
-      recompiler.earlyExit = true;
-    }
-  }
-  scc.count += clocks;
 }
 
 auto CPU::synchronize() -> void {
   auto clocks = Thread::clock * 2;
   Thread::clock = 0;
+  prevClock = 0;
 
    vi.clock -= clocks;
    ai.clock -= clocks;
@@ -95,6 +87,20 @@ auto CPU::instruction() -> void {
   }
 }
 
+auto CPU::checkTimerInterrupt() -> void {
+  u32 clocks = Thread::clock - prevClock;
+  prevClock = Thread::clock;
+
+  i33 dist = scc.compare - scc.count;
+  if(0 <= dist && dist < clocks){
+    scc.cause.interruptPending.bit(Interrupt::Timer) = 1;
+    if constexpr(Accuracy::CPU::Recompiler) {
+      recompiler.earlyExit = true;
+    }
+  }
+  scc.count += clocks;
+}
+
 auto CPU::instructionEpilogue() -> bool {
   if constexpr(Accuracy::CPU::Recompiler) {
     icache.step(ipu.pc);  //simulates timings without performing actual icache loads
@@ -105,6 +111,8 @@ auto CPU::instructionEpilogue() -> bool {
   if(--scc.random.index < scc.wired.index) {
     scc.random.index = 31;
   }
+
+  checkTimerInterrupt();
 
   switch(branch.state) {
   case Branch::Step: ipu.pc += 4; return recompiler.earlyExit;

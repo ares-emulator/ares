@@ -35,6 +35,9 @@ struct CPU : Thread {
   auto step(u32 clocks) -> void;
   auto synchronize() -> void;
 
+  auto checkTimerInterrupt() -> void;
+  u32 prevClock = 0;
+
   auto instruction() -> void;
   auto instructionEpilogue() -> bool;
 
