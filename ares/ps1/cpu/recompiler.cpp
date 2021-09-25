@@ -31,9 +31,10 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
   mov(rbx, imm64(&self.ipu.r[0]));
   mov(rbp, imm64(&self));
 
-  jmp(imm8(ABI::Windows ? 11 : 5));
+  auto entry = declareLabel();
+  jmp8(entry);
 
-  u32 epilogue = size();
+  auto epilogue = defineLabel();
 
   if constexpr(ABI::Windows) {
     add(rsp, imm8(0x40));
@@ -44,6 +45,8 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
   pop(rbp);
   pop(rbx);
   ret();
+
+  defineLabel(entry);
 
   address &= 0x1fff'ffff;
   bool hasBranched = 0;
@@ -56,9 +59,9 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
     if(hasBranched || (address & 0xfc) == 0) break;  //block boundary
     hasBranched = branched;
     test(rax, rax);
-    jnz(imm32(epilogue - size() - 6));
+    jnz(epilogue);
   }
-  jmp(imm32(epilogue - size() - 5));
+  jmp(epilogue);
 
   allocator.reserve(size());
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");

@@ -54,9 +54,60 @@ struct emitter {
   array_span<u8> span, origin;
 } emit;
 
+struct label {
+  explicit label(u32 index) : index(index) {}
+  u32 index;
+};
+
+struct fixup {
+  u32 index;
+  u32 offset;
+  u32 size;
+};
+
+vector<u32> labelOffsets;
+vector<fixup> fixups;
+
 alwaysinline auto bind(array_span<u8> span) {
   emit.span = span;
   emit.origin = span;
+  labelOffsets.reset();
+  assert(fixups.size() == 0);
+  fixups.reset();
+}
+
+alwaysinline auto declareLabel() -> label {
+  labelOffsets.append(~0);
+  return label{labelOffsets.size() - 1};
+}
+
+alwaysinline auto defineLabel(label label) -> amd64::label {
+  u32 labelOffset = size();
+  labelOffsets[label.index] = labelOffset;
+  for(u32 n = 0; n < fixups.size(); ) {
+    auto fixup = fixups[n];
+    if(fixup.index == label.index) {
+      u32 value = labelOffset - (fixup.offset + fixup.size);
+      emit.origin.span(fixup.offset, fixup.size).writel(value, fixup.size);
+      fixups.removeByIndex(n);
+      continue;
+    }
+    n++;
+  }
+  return label;
+}
+
+alwaysinline auto defineLabel() -> label {
+  return defineLabel(declareLabel());
+}
+
+alwaysinline auto resolve(label label, u32 offset, u32 size) -> u32 {
+  u32 labelOffset = labelOffsets[label.index];
+  if(labelOffset == ~0) {
+    fixups.append(fixup{label.index, this->size() + offset, size});
+    return ~0;
+  }
+  return labelOffset - (this->size() + offset + size);
 }
 
 alwaysinline auto distance(u64 target) const -> s64 {

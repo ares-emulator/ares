@@ -63,12 +63,12 @@ template<typename T> struct array_span : array_view<T> {
     super::_size--;
   }
 
-  auto span(u32 offset, u32 length) const -> type {
+  auto span(u32 offset, u32 length) -> type {
     #ifdef DEBUG
     struct out_of_bounds {};
     if(offset + length >= super::_size) throw out_of_bounds{};
     #endif
-    return {super::_data + offset, length};
+    return {(T*)super::_data + offset, length};
   }
 
   //array_span<u8> specializations

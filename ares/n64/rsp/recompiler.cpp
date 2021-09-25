@@ -49,9 +49,10 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
   mov(rbp, imm64(&self));
   mov(r13, imm64(&self.vpu.r[0]));
 
-  jmp(imm8(ABI::Windows ? 11 : 5));
+  auto entry = declareLabel();
+  jmp8(entry);
 
-  u32 epilogue = size();
+  auto epilogue = defineLabel();
 
   if constexpr(ABI::Windows) {
     add(rsp, imm8(0x40));
@@ -62,6 +63,8 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
   pop(rbp);
   pop(rbx);
   ret();
+
+  defineLabel(entry);
 
   bool hasBranched = 0;
   while(true) {
@@ -75,9 +78,9 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
     if(hasBranched || (address & 0xffc) == 0) break;  //IMEM boundary
     hasBranched = branched;
     test(rax, rax);
-    jnz(imm32(epilogue - size() - 6));
+    jnz(epilogue);
   }
-  jmp(imm32(epilogue - size() - 5));
+  jmp(epilogue);
 
   allocator.reserve(size());
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
