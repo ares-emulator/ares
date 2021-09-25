@@ -59,6 +59,10 @@ alwaysinline auto bind(array_span<u8> span) {
   emit.origin = span;
 }
 
+alwaysinline auto distance(u64 target) const -> s64 {
+  return target - (u64)emit.span.data();
+}
+
 alwaysinline auto size() const -> u32 {
   return emit.span.data() - emit.origin.data();
 }
