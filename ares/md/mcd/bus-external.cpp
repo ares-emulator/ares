@@ -37,14 +37,6 @@ auto MCD::writeExternal(n1 upper, n1 lower, n22 address, n16 data) -> void {
   if(!MegaCD()) return;
   address.bit(18,20) = 0;  //mirrors
 
-  if(address >= 0x000000 && address <= 0x01ffff) {
-    if(address == 0x70 && upper) io.vectorLevel4.byte(3) = data.byte(1);
-    if(address == 0x70 && lower) io.vectorLevel4.byte(2) = data.byte(0);
-    if(address == 0x72 && upper) io.vectorLevel4.byte(1) = data.byte(1);
-    if(address == 0x72 && lower) io.vectorLevel4.byte(0) = data.byte(0);
-    return;
-  }
-
   if(address >= 0x020000 && address <= 0x03ffff) {
     address = io.pramBank << 17 | (n17)address;
     if(upper) pram[address >> 1].byte(1) = data.byte(1);
