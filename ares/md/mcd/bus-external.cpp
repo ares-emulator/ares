@@ -16,17 +16,17 @@ auto MCD::readExternal(n1 upper, n1 lower, n22 address, n16 data) -> n16 {
   if(address >= 0x200000 && address <= 0x23ffff) {
     if(io.wramMode == 0) {
     //if(io.wramSwitch == 1) return data;
-      address = (n18)address;
+      address = (n18)address >> 1;
     } else {
-      address = !io.wramSelect << 17 | (n17)address;
+      address = (n17)address & ~1 | io.wramSelect;
     }
-    if(!vdp.dma.active) return wram[address >> 1];
+    if(!vdp.dma.active) return wram[address];
 
     //VDP DMA from Mega CD word RAM to VDP VRAM responds with a one-access delay
     //note: it is believed that the first transfer is the CPU prefetch, which isn't emulated here
     //games manually correct the first word transferred after VDP DMAs from word RAM
     data = io.wramLatch;
-    io.wramLatch = wram[address >> 1];
+    io.wramLatch = wram[address];
     return data;
   }
 
@@ -55,12 +55,12 @@ auto MCD::writeExternal(n1 upper, n1 lower, n22 address, n16 data) -> void {
   if(address >= 0x200000 && address <= 0x23ffff) {
     if(io.wramMode == 0) {
     //if(io.wramSwitch == 1) return;
-      address = (n18)address;
+      address = (n18)address >> 1;
     } else {
-      address = !io.wramSelect << 17 | (n17)address;
+      address = (n17)address & ~1 | io.wramSelect;
     }
-    if(upper) wram[address >> 1].byte(1) = data.byte(1);
-    if(lower) wram[address >> 1].byte(0) = data.byte(0);
+    if(upper) wram[address].byte(1) = data.byte(1);
+    if(lower) wram[address].byte(0) = data.byte(0);
     return;
   }
 }

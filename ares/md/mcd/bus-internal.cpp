@@ -8,16 +8,16 @@ auto MCD::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   if(address >= 0x080000 && address <= 0x0bffff) {
     if(io.wramMode == 0) {
     //if(io.wramSwitch == 0) return data;
-      address = (n18)address;
-      return wram[address >> 1];
+      address = (n18)address >> 1;
+      return wram[address];
     }
     return data;
   }
 
   if(address >= 0x0c0000 && address <= 0x0dffff) {
     if(io.wramMode == 1) {
-      address = io.wramSelect << 17 | (n17)address;
-      return wram[address >> 1];
+      address = (n17)address & ~1 | !io.wramSelect;
+      return wram[address];
     }
     return data;
   }
@@ -51,17 +51,17 @@ auto MCD::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   if(address >= 0x080000 && address <= 0x0bffff) {
     if(io.wramMode == 0) {
     //if(io.wramSwitch == 0) return;
-      address = (n18)address;
-      if(upper) wram[address >> 1].byte(1) = data.byte(1);
-      if(lower) wram[address >> 1].byte(0) = data.byte(0);
+      address = (n18)address >> 1;
+      if(upper) wram[address].byte(1) = data.byte(1);
+      if(lower) wram[address].byte(0) = data.byte(0);
     }
   }
 
   if(address >= 0x0c0000 && address <= 0x0dffff) {
     if(io.wramMode == 1) {
-      address = io.wramSelect << 17 | (n17)address;
-      if(upper) wram[address >> 1].byte(1) = data.byte(1);
-      if(lower) wram[address >> 1].byte(0) = data.byte(0);
+      address = (n17)address & ~1 | !io.wramSelect;
+      if(upper) wram[address].byte(1) = data.byte(1);
+      if(lower) wram[address].byte(0) = data.byte(0);
     }
   }
 
