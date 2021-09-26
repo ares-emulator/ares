@@ -196,8 +196,8 @@ auto MCD::power(bool reset) -> void {
 
   io.vectorLevel4.byte(3) = bios[0x70 >> 1].byte(1);
   io.vectorLevel4.byte(2) = bios[0x70 >> 1].byte(0);
-  io.vectorLevel4.byte(1) = bios[0x72 >> 1].byte(1);
-  io.vectorLevel4.byte(0) = bios[0x72 >> 1].byte(0);
+  io.vectorLevel4.byte(1) = ~0;
+  io.vectorLevel4.byte(0) = ~0;
 }
 
 }

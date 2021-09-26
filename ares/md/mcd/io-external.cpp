@@ -26,7 +26,8 @@ auto MCD::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address == 0xa12006) {
-    data = bios.read(0x72 >> 1);
+    data.byte(1) = io.vectorLevel4.byte(1);
+    data.byte(0) = io.vectorLevel4.byte(0);
   }
 
   if(address == 0xa12008) {
@@ -92,7 +93,8 @@ auto MCD::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address == 0xa12006) {
-    bios.program(0x72 >> 1, data);
+    if(upper) io.vectorLevel4.byte(1) = data.byte(1);
+    if(lower) io.vectorLevel4.byte(0) = data.byte(0);
   }
 
   if(address == 0xa12008) {
