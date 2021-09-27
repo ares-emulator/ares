@@ -24,6 +24,13 @@ namespace nall {
 namespace nall {
 
 struct thread {
+  thread(const thread&) = delete;
+  auto operator=(const thread&) -> thread& = delete;
+
+  thread() = default;
+  thread(thread&&) = default;
+  auto operator=(thread&&) -> thread& = default;
+
   auto join() -> void;
 
   static auto create(const function<void (uintptr)>& callback, uintptr parameter = 0, u32 stacksize = 0) -> thread;
@@ -80,7 +87,22 @@ inline auto thread::exit() -> void {
 namespace nall {
 
 struct thread {
-  ~thread();
+  thread(const thread&) = delete;
+  auto operator=(const thread&) -> thread& = delete;
+
+  thread() = default;
+  thread(thread&& source) { operator=(move(source)); }
+
+  ~thread() { close(); }
+
+  auto operator=(thread&& source) -> thread& {
+    close();
+    handle = source.handle;
+    source.handle = 0;
+    return *this;
+  }
+
+  auto close() -> void;
   auto join() -> void;
 
   static auto create(const function<void (uintptr)>& callback, uintptr parameter = 0, u32 stacksize = 0) -> thread;
@@ -103,7 +125,7 @@ inline auto WINAPI _threadCallback(void* parameter) -> DWORD {
   return 0;
 }
 
-inline thread::~thread() {
+inline auto thread::close() -> void {
   if(handle) {
     CloseHandle(handle);
     handle = 0;
@@ -112,14 +134,8 @@ inline thread::~thread() {
 
 inline auto thread::join() -> void {
   if(handle) {
-  //wait until the thread has finished executing ...
-  //WaitForSingleObject(handle, INFINITE);  //this hangs sometimes even after _threadCallback returns
-    while(true) {
-      DWORD exitCode;
-      GetExitCodeThread(handle, &exitCode);
-      if(exitCode != STILL_ACTIVE) break;
-      usleep(1);
-    }
+    //wait until the thread has finished executing ...
+    WaitForSingleObject(handle, INFINITE);
     CloseHandle(handle);
     handle = 0;
   }
