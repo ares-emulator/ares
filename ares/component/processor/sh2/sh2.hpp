@@ -277,17 +277,11 @@ struct SH2 {
     template<typename V, typename... P>
     alwaysinline auto call(V (SH2::*function)(P...)) -> void {
       static_assert(sizeof...(P) <= 5);
-      if constexpr(ABI::SystemV) {
-        mov(rdi, rbp);
-      }
       if constexpr(ABI::Windows) {
-        if constexpr(sizeof...(P) >= 5) mov(dis8(rsp, 0x28), r9);
-        if constexpr(sizeof...(P) >= 4) mov(dis8(rsp, 0x20), r8);
-        if constexpr(sizeof...(P) >= 3) mov(r9, rcx);
-        if constexpr(sizeof...(P) >= 2) mov(r8, rdx);
-        if constexpr(sizeof...(P) >= 1) mov(rdx, rsi);
-        mov(rcx, rbp);
+        if constexpr(sizeof...(P) >= 5) mov(dis8(rsp, 0x28), ra5);
+        if constexpr(sizeof...(P) >= 4) mov(dis8(rsp, 0x20), ra4);
       }
+      mov(ra0, rbp);
       call(imm64{function}, rax);
     }
 
