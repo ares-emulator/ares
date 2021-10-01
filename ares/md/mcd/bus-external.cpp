@@ -18,6 +18,20 @@ auto MCD::readExternal(n1 upper, n1 lower, n22 address, n16 data) -> n16 {
     //if(io.wramSwitch == 1) return data;
       address = (n18)address >> 1;
     } else {
+      if(address >= 0x220000) {
+        if(address < 0x230000)
+          // V32 cell-mapped window
+          address = (address & 0x0FC00) >> 8 | (address & 0x003FC) << 6 | address & 0x10002;
+        else if (address < 0x238000)
+          // V16 cell-mapped window
+          address = (address & 0x07E00) >> 7 | (address & 0x001FC) << 6 | address & 0x18002;
+        else if (address < 0x23C000)
+          // V8 cell-mapped window
+          address = (address & 0x03F00) >> 6 | (address & 0x000FC) << 6 | address & 0x1C002;
+        else
+          // V4 cell-mapped window
+          address = (address & 0x01F80) >> 5 | (address & 0x0007C) << 6 | address & 0x1E002;
+      }
       address = (n17)address & ~1 | io.wramSelect;
     }
     if(!vdp.dma.active) return wram[address];
@@ -49,6 +63,20 @@ auto MCD::writeExternal(n1 upper, n1 lower, n22 address, n16 data) -> void {
     //if(io.wramSwitch == 1) return;
       address = (n18)address >> 1;
     } else {
+      if(address >= 0x220000) {
+        if(address < 0x230000)
+          // V32 cell-mapped window
+          address = (address & 0x0FC00) >> 8 | (address & 0x003FC) << 6 | address & 0x10002;
+        else if (address < 0x238000)
+          // V16 cell-mapped window
+          address = (address & 0x07E00) >> 7 | (address & 0x001FC) << 6 | address & 0x18002;
+        else if (address < 0x23C000)
+          // V8 cell-mapped window
+          address = (address & 0x03F00) >> 6 | (address & 0x000FC) << 6 | address & 0x1C002;
+        else
+          // V4 cell-mapped window
+          address = (address & 0x01F80) >> 5 | (address & 0x0007C) << 6 | address & 0x1E002;
+      }
       address = (n17)address & ~1 | io.wramSelect;
     }
     if(upper) wram[address].byte(1) = data.byte(1);
