@@ -10,6 +10,11 @@ auto MCD::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     //if(io.wramSwitch == 0) return data;
       address = (n18)address >> 1;
       return wram[address];
+    } else {
+      // dot-mapped window
+      n4 ofs = address.bit(1) ? 0 : 8; // low/high byte selector
+      address = (n17)(address >> 1) & ~1 | !io.wramSelect;
+      return wram[address].bit(4+ofs,7+ofs) << 8 | wram[address].bit(0+ofs,3+ofs);
     }
     return data;
   }
@@ -54,6 +59,29 @@ auto MCD::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
       address = (n18)address >> 1;
       if(upper) wram[address].byte(1) = data.byte(1);
       if(lower) wram[address].byte(0) = data.byte(0);
+    } else {
+      // dot-mapped window
+      n4 ofs = address.bit(1) ? 0 : 8; // low/high byte selector
+      address = (n17)(address >> 1) & ~1 | !io.wramSelect;
+      switch(mcd.io.wramPriority) {
+      case 0: // normal write
+        if(upper) wram[address].bit(4+ofs,7+ofs) = data.bit(8,11);
+        if(lower) wram[address].bit(0+ofs,3+ofs) = data.bit(0,3);
+        return;
+      case 1: // under write
+        if(upper && !wram[address].bit(4+ofs,7+ofs))
+          wram[address].bit(4+ofs,7+ofs) = data.bit(8,11);
+        if(lower && !wram[address].bit(0+ofs,3+ofs))
+          wram[address].bit(0+ofs,3+ofs) = data.bit(0,3);
+        return;
+      case 2: // over write
+        if(upper && data.bit(8,11))
+          wram[address].bit(4+ofs,7+ofs) = data.bit(8,11);
+        if(lower && data.bit(0,3))
+          wram[address].bit(0+ofs,3+ofs) = data.bit(0,3);
+        return;
+      }
+      return; // invalid priority mode
     }
   }
 
