@@ -17,15 +17,7 @@ MasterSystem::MasterSystem() {
 
   { InputPort port{"Master System"};
 
-  { InputDevice device{"Controls"};
-    device.digital("Pause", virtualPorts[0].pad.start);
-    device.digital("Reset", virtualPorts[0].pad.rt);
-    port.append(device); }
-
-    ports.append(port);
-  }
-
-  for(auto id : range(2)) {
+   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
   { InputDevice device{"Gamepad"};
@@ -35,6 +27,14 @@ MasterSystem::MasterSystem() {
     device.digital("Right", virtualPorts[id].pad.right);
     device.digital("1",     virtualPorts[id].pad.a);
     device.digital("2",     virtualPorts[id].pad.b);
+    port.append(device); }
+
+    ports.append(port);
+  }
+
+  { InputDevice device{"Controls"};
+    device.digital("Pause", virtualPorts[0].pad.start);
+    device.digital("Reset", virtualPorts[0].pad.select);
     port.append(device); }
 
     ports.append(port);
