@@ -34,6 +34,7 @@ protected:
 
 auto SuperFamicom::load(string location) -> bool {
   vector<u8> rom;
+  string directory = location;
   if(directory::exists(location)) {
     auto files = directory::files(location, "*.rom");
     append(rom, {location, "program.rom"  });
@@ -43,6 +44,7 @@ auto SuperFamicom::load(string location) -> bool {
     for(auto& file : files.match("*.data.rom"   )) append(rom, {location, file});
     for(auto& file : files.match("*.boot.rom"   )) append(rom, {location, file});
   } else if(rom = Medium::read(location)) {
+    directory = Location::dir(location);
     //append firmware to the ROM if it is missing
     auto manifest = analyze(rom);
     auto document = BML::unserialize(manifest);
@@ -98,6 +100,11 @@ auto SuperFamicom::load(string location) -> bool {
   }
   pak->setAttribute("region", region);
   pak->append("manifest.bml", manifest);
+
+  auto files = directory::files(directory, "msu1.*");
+  for(auto& _file : files) {
+    pak->append(_file, file::read({directory, "/", _file}));
+  }
 
   array_view<u8> view{rom};
   for(auto node : document.find("game/board/memory(type=ROM)")) {
