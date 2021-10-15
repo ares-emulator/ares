@@ -1,5 +1,3 @@
-# ares
-
 ![ares logo](https://ares-emulator.github.io/images/logo.png)
 
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://github.com/higan-emu/ares/blob/master/LICENSE)
