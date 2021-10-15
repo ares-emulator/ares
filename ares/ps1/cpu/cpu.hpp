@@ -510,8 +510,8 @@ struct CPU : Thread {
     Recompiler(CPU& self) : self(self) {}
 
     struct Block {
-      auto execute() -> void {
-        ((void (*)())code)();
+      auto execute(CPU& self) -> void {
+        ((void (*)(u32*, CPU*))code)(&self.ipu.r[0], &self);
       }
 
       u8* code;

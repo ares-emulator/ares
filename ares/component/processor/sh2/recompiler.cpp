@@ -46,8 +46,8 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   if constexpr(ABI::Windows) {
     sub(rsp, imm8(0x40));
   }
-  mov(rbx, imm64(&self.R[0]));
-  mov(rbp, imm64(&self));
+  mov(rbx, ra0);
+  mov(rbp, ra1);
 
   auto entry = declareLabel();
   jmp8(entry);

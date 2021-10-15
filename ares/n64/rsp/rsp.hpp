@@ -320,8 +320,8 @@ struct RSP : Thread, Memory::IO<RSP> {
     Recompiler(RSP& self) : self(self) {}
 
     struct Block {
-      auto execute() -> void {
-        ((void (*)())code)();
+      auto execute(RSP& self) -> void {
+        ((void (*)(r32*, RSP*, r128*))code)(&self.ipu.r[0], &self, &self.vpu.r[0]);
       }
 
       u8* code;

@@ -250,8 +250,8 @@ struct SH2 {
     Recompiler(SH2& self) : self(self) {}
 
     struct Block {
-      auto execute() -> void {
-        ((void (*)())code)();
+      auto execute(SH2& self) -> void {
+        ((void (*)(u32*, SH2*))code)(&self.R[0], &self);
       }
 
       u8* code;

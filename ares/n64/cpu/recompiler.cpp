@@ -26,9 +26,9 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
   if constexpr(ABI::Windows) {
     sub(rsp, imm8(0x40));
   }
-  mov(rbx, imm64(&self.ipu.r[0] + 16));
-  mov(rbp, imm64(&self));
-  mov(r13, imm64(&self.fpu.r[0] + 16));
+  mov(rbx, ra0);
+  mov(rbp, ra1);
+  mov(r13, ra2);
 
   auto entry = declareLabel();
   jmp8(entry);
@@ -51,9 +51,8 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
     bool branched = emitEXECUTE(instruction);
     if(unlikely(instruction == 0x1000'ffff)) {
       //accelerate idle loops
-      mov(rax, mem64(&self.clock));
-      add(rax, imm8(64));
-      mov(mem64(&self.clock), rax);
+      mov(ra1d, imm32(64));
+      call(&CPU::step);
     }
     call(&CPU::instructionEpilogue);
     address += 4;
@@ -79,6 +78,8 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
 #define Rd  dis8(rbx, (Rdn - 16) * 8)
 #define Rt  dis8(rbx, (Rtn - 16) * 8)
 #define Rs  dis8(rbx, (Rsn - 16) * 8)
+#define Lo  dis32(rbx, offsetof(IPU, lo) - offsetof(IPU, r[16]))
+#define Hi  dis32(rbx, offsetof(IPU, hi) - offsetof(IPU, r[16]))
 #define Fd  dis8(r13, (Fdn - 16) * 8)
 #define Fs  dis8(r13, (Fsn - 16) * 8)
 #define Ft  dis8(r13, (Ftn - 16) * 8)
@@ -716,7 +717,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //MFHI Rd
   case 0x10: {
-    mov(rax, mem64(&cpu.ipu.hi));
+    mov(rax, Hi);
     mov(Rd, rax);
     return 0;
   }
@@ -724,13 +725,13 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //MTHI Rs
   case 0x11: {
     mov(rax, Rs);
-    mov(mem64(&cpu.ipu.hi), rax);
+    mov(Hi, rax);
     return 0;
   }
 
   //MFLO Rd
   case 0x12: {
-    mov(rax, mem64(&cpu.ipu.lo));
+    mov(rax, Lo);
     mov(Rd, rax);
     return 0;
   }
@@ -738,7 +739,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //MTLO Rs
   case 0x13: {
     mov(rax, Rs);
-    mov(mem64(&cpu.ipu.lo), rax);
+    mov(Lo, rax);
     return 0;
   }
 
@@ -2044,6 +2045,8 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 #undef Rd
 #undef Rt
 #undef Rs
+#undef Lo
+#undef Hi
 #undef Fd
 #undef Fs
 #undef Ft
