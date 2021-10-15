@@ -11,27 +11,51 @@ jobs:
       matrix:
         program:
         - ares
-        os:
+        platform:
         - name: windows
-          version: latest
+          os: windows-latest
+          compiler: g++
+          shell: 'msys2 {0}'
+          msystem: mingw64
+          msys-env: x86_64
+        - name: windows-clang
+          os: windows-latest
+          compiler: clang++
+          shell: 'msys2 {0}'
+          msystem: clang64
+          msys-env: clang-x86_64
         - name: macos
-          version: latest
+          os: macos-latest
+          compiler: clang++
+          shell: sh
         - name: ubuntu
-          version: latest
-    runs-on: ${{ matrix.os.name }}-${{ matrix.os.version }}
+          os: ubuntu-latest
+          compiler: g++
+          shell: sh
+    name: ${{ matrix.program }}-${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.platform.shell }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Install Dependencies
-      if: matrix.os.name == 'ubuntu'
+    - name: Install MSYS2 Dependencies
+      if: matrix.platform.shell == 'msys2 {0}'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.platform.msystem }}
+        install: make mingw-w64-${{ matrix.platform.msys-env }}-toolchain
+    - name: Install Linux Dependencies
+      if: runner.os == 'Linux'
       run: |
         sudo apt-get update -y -qq
         sudo apt-get install libsdl2-dev libgtksourceview2.0-dev libgtk2.0-dev libao-dev libopenal-dev   
+    - uses: actions/checkout@v2
     - name: Make
-      run: make -j4 -C desktop-ui build=optimized local=false lto=true
+      run: make -j4 -C desktop-ui build=optimized local=false lto=true compiler=${{ matrix.platform.compiler }}
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ matrix.program }}-${{ matrix.os.name }}
+        name: ${{ matrix.program }}-${{ matrix.platform.name }}
         path: desktop-ui/out/*
 
      
