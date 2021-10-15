@@ -35,6 +35,9 @@ struct CPU : Thread {
   auto step(u32 clocks) -> void;
   auto synchronize() -> void;
 
+  auto checkTimerInterrupt() -> void;
+  u32 prevClock = 0;
+
   auto instruction() -> void;
   auto instructionEpilogue() -> bool;
 
@@ -723,6 +726,7 @@ struct CPU : Thread {
 
     bump_allocator allocator;
     Pool* pools[1 << 21];  //2_MiB * sizeof(void*) == 16_MiB
+    bool earlyExit = false;
   } recompiler{*this};
 
   struct Disassembler {

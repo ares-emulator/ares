@@ -40,6 +40,7 @@ auto CPU::step(u32 clocks) -> void {
 auto CPU::synchronize() -> void {
   auto clocks = Thread::clock * 2;
   Thread::clock = 0;
+  prevClock = 0;
 
    vi.clock -= clocks;
    ai.clock -= clocks;
@@ -59,12 +60,6 @@ auto CPU::synchronize() -> void {
     case Queue::SI_DMA_Write:  return si.dmaWrite();
     }
   });
-
-  clocks >>= 1;
-  if(scc.count < scc.compare && scc.count + clocks >= scc.compare) {
-    scc.cause.interruptPending.bit(Interrupt::Timer) = 1;
-  }
-  scc.count += clocks;
 }
 
 auto CPU::instruction() -> void {
@@ -79,6 +74,7 @@ auto CPU::instruction() -> void {
   if constexpr(Accuracy::CPU::Recompiler) {
     auto address = devirtualize(ipu.pc)(0);
     auto block = recompiler.block(address);
+    recompiler.earlyExit = false;
     block->execute();
   }
 
@@ -89,6 +85,20 @@ auto CPU::instruction() -> void {
     decoderEXECUTE();
     instructionEpilogue();
   }
+}
+
+auto CPU::checkTimerInterrupt() -> void {
+  u32 clocks = Thread::clock - prevClock;
+  prevClock = Thread::clock;
+
+  i33 dist = scc.compare - scc.count;
+  if(0 <= dist && dist < clocks){
+    scc.cause.interruptPending.bit(Interrupt::Timer) = 1;
+    if constexpr(Accuracy::CPU::Recompiler) {
+      recompiler.earlyExit = true;
+    }
+  }
+  scc.count += clocks;
 }
 
 auto CPU::instructionEpilogue() -> bool {
@@ -102,9 +112,11 @@ auto CPU::instructionEpilogue() -> bool {
     scc.random.index = 31;
   }
 
+  checkTimerInterrupt();
+
   switch(branch.state) {
-  case Branch::Step: ipu.pc += 4; return 0;
-  case Branch::Take: ipu.pc += 4; branch.delaySlot(); return 0;
+  case Branch::Step: ipu.pc += 4; return recompiler.earlyExit;
+  case Branch::Take: ipu.pc += 4; branch.delaySlot(); return recompiler.earlyExit;
   case Branch::DelaySlot: ipu.pc = branch.pc; branch.reset(); return 1;
   case Branch::Exception: branch.reset(); return 1;
   case Branch::Discard: ipu.pc += 8; branch.reset(); return 1;
