@@ -43,9 +43,9 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
   if constexpr(ABI::Windows) {
     sub(rsp, imm8(0x40));
   }
-  mov(rbx, imm64(&self.ipu.r[0]));
-  mov(rbp, imm64(&self));
-  mov(r13, imm64(&self.vpu.r[0]));
+  mov(rbx, ra0);
+  mov(rbp, ra1);
+  mov(r13, ra2);
 
   auto entry = declareLabel();
   jmp8(entry);
@@ -66,9 +66,6 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
   while(true) {
     u32 instruction = self.imem.read<Word>(address);
     bool branched = emitEXECUTE(instruction);
-    mov(rax, mem64(&self.clock));
-    add(rax, imm8(3));
-    mov(mem64(&self.clock), rax);
     call(&RSP::instructionEpilogue);
     address += 4;
     if(hasBranched || (address & 0xffc) == 0) break;  //IMEM boundary

@@ -85,7 +85,7 @@ auto CPU::instruction() -> void {
 
   if constexpr(Accuracy::CPU::Recompiler) {
     auto block = recompiler.block(ipu.pc);
-    block->execute();
+    block->execute(*this);
   }
 }
 

@@ -36,7 +36,7 @@ auto SH2::instruction() -> void {
     // minimum cycle counts ensure that the recompiler is a net positive
     do {
       auto block = recompiler.block(PC - 4);
-      block->execute();
+      block->execute(*this);
     } while (CCR <= recompiler.min_cycles);
 
     step(CCR);

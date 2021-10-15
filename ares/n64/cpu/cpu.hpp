@@ -690,8 +690,8 @@ struct CPU : Thread {
     Recompiler(CPU& self) : self(self) {}
 
     struct Block {
-      auto execute() -> void {
-        ((void (*)())code)();
+      auto execute(CPU& self) -> void {
+        ((void (*)(r64*, CPU*, r64*))code)(&self.ipu.r[16], &self, &self.fpu.r[16]);
       }
 
       u8* code;

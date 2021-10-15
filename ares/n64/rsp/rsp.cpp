@@ -40,7 +40,7 @@ auto RSP::step(u32 clocks) -> void {
 auto RSP::instruction() -> void {
   if constexpr(Accuracy::RSP::Recompiler) {
     auto block = recompiler.block(ipu.pc);
-    block->execute();
+    block->execute(*this);
   }
 
   if constexpr(Accuracy::RSP::Interpreter) {
@@ -54,6 +54,10 @@ auto RSP::instruction() -> void {
 }
 
 auto RSP::instructionEpilogue() -> bool {
+  if constexpr(Accuracy::RSP::Recompiler) {
+    step(3);
+  }
+
   ipu.r[0].u32 = 0;
 
   switch(branch.state) {

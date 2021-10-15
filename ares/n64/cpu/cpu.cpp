@@ -79,7 +79,7 @@ auto CPU::instruction() -> void {
   if constexpr(Accuracy::CPU::Recompiler) {
     auto address = devirtualize(ipu.pc)(0);
     auto block = recompiler.block(address);
-    block->execute();
+    block->execute(*this);
   }
 
   if constexpr(Accuracy::CPU::Interpreter) {
