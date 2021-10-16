@@ -95,26 +95,22 @@ private:
     session.leadOut.lba = lbaFileBase;
     session.leadOut.end = lbaFileBase + LeadOutSectors - 1;
 
+    // determine track and index ranges
+    session.firstTrack = 0xff;
     for(u32 track : range(100)) {
       if(!session.tracks[track]) continue;
-      session.firstTrack = track;
-      for(u32 index : range(100)) {
-        if(!session.tracks[track].indices[index]) continue;
-        session.tracks[track].firstIndex = index;
-        break;
+      if(session.firstTrack > 99) session.firstTrack = track;
+      // find first index
+      for(u32 indexID : range(100)) {
+        auto& index = session.tracks[track].indices[indexID];
+        if(index) { session.tracks[track].firstIndex = indexID; break; }
       }
-      break;
-    }
-
-    for(u32 track : reverse(range(100))) {
-      if(!session.tracks[track]) continue;
+      // find last index
+      for(u32 indexID : reverse(range(100))) {
+        auto& index = session.tracks[track].indices[indexID];
+        if(index) { session.tracks[track].lastIndex = indexID; break; }
+      }
       session.lastTrack = track;
-      for(u32 index : reverse(range(100))) {
-        if(!session.tracks[track].indices[index]) continue;
-        session.tracks[track].lastIndex = index;
-        break;
-      }
-      break;
     }
 
     _image.resize(2448 * (LeadInSectors + lbaFileBase + LeadOutSectors));

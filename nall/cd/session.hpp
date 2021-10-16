@@ -13,9 +13,9 @@ struct BCD {
 };
 
 struct MSF {
-  u8 minute;      //00-99
-  u8 second;      //00-59
-  u8 frame = -1;  //00-74
+  u8 minute;        //00-99
+  u8 second;        //00-59
+  u8 frame = 0xff;  //00-74
 
   MSF() = default;
   MSF(u8 m, u8 s, u8 f) : minute(m), second(s), frame(f) {}
@@ -67,10 +67,9 @@ struct Index {
 
 struct Track {
   u8 control = 0b1111;  //4-bit
-  u8 address = 0b1111;  //4-bit
   Index indices[100];
-  u8 firstIndex = -1;
-  u8 lastIndex  = -1;
+  u8 firstIndex = 0xff;
+  u8 lastIndex  = 0xff;
 
   explicit operator bool() const {
     return (bool)indices[1];
@@ -125,27 +124,27 @@ struct Session {
   Index leadIn;       //00
   Track tracks[100];  //01-99
   Index leadOut;      //aa
-  u8 firstTrack = -1;
-  u8 lastTrack  = -1;
+  u8 firstTrack = 0xff;
+  u8 lastTrack  = 0xff;
 
   auto inLeadIn(s32 lba) const -> bool {
-    return lba < 0;
+    return leadIn && lba <= leadIn.end;
   }
 
   auto inTrack(s32 lba) const -> maybe<u8> {
-    for(u8 trackID : range(100)) {
-      auto& track = tracks[trackID];
-      if(track && track.inRange(lba)) return trackID;
+    for(u8 trackID : range(99)) {
+      auto& track = tracks[trackID+1];
+      if(track && track.inRange(lba)) return trackID+1;
     }
     return {};
   }
 
   auto inLeadOut(s32 lba) const -> bool {
-    return lba >= leadOut.lba;
+    return leadOut && lba >= leadOut.lba;
   }
 
   auto track(u8 trackID) -> maybe<Track&> {
-    if(trackID < 100 && tracks[trackID]) return tracks[trackID];
+    if(trackID >= 1 && trackID < 100 && tracks[trackID]) return tracks[trackID];
     return {};
   }
 
@@ -390,7 +389,6 @@ struct Session {
       if(trackID <=  99) {  //00-99
         auto& track = tracks[trackID];
         track.control = control;
-        track.address = address;
         track.indices[1].lba = MSF::fromBCD(q[7], q[8], q[9]).toLBA();
       }
 
@@ -480,7 +478,6 @@ struct Session {
       if(trackID ==  lastTrack) s.append( " last");
       s.append("\n");
       s.append("    control: ", binary(track.control, 4, '0'), "\n");
-      s.append("    address: ", binary(track.address, 4, '0'), "\n");
       for(u32 indexID : range(100)) {
         auto& index = track.indices[indexID];
         if(!index) continue;
