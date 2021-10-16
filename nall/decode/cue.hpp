@@ -11,7 +11,7 @@ struct CUE {
   struct Index {
     auto sectorCount() const -> u32;
 
-    s32 number;  //01-99
+    u8 number = 0xff; //00-99
     s32 lba = -1;
     s32 end = -1;
   };
@@ -20,7 +20,7 @@ struct CUE {
     auto sectorCount() const -> u32;
     auto sectorSize() const -> u32;
 
-    s32 number;  //01-99
+    u8 number = 0xff; //01-99
     string type;
     vector<Index> indices;
     maybe<s32> pregap;
@@ -145,7 +145,7 @@ inline auto CUE::loadTrack(vector<string>& lines, u32& offset) -> Track {
     offset++;
   }
 
-  if(track.number > 99) return {};
+  if(track.number == 0 || track.number > 99) return {};
   return track;
 }
 
