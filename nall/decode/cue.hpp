@@ -67,10 +67,12 @@ inline auto CUE::load(const string& location) -> bool {
   if(!files.first().tracks) return false;
   if(!files.first().tracks.first().indices) return false;
 
+  // calculate index ends for all but the last index
   for(auto& file : files) {
     maybe<Index&> previous;
     for(auto& track : file.tracks) {
       for(auto& index : track.indices) {
+        if(index.lba < 0) continue; // ignore gaps (not in file)
         if(previous) previous->end = index.lba - 1;
         previous = index;
       }
@@ -123,15 +125,21 @@ inline auto CUE::loadTrack(vector<string>& lines, u32& offset) -> Track {
     if(lines[offset].ibeginsWith("TRACK ")) break;
     if(lines[offset].ibeginsWith("INDEX ")) {
       auto index = loadIndex(lines, offset);
+      if(index.number == 0 && track.number == 1)
+        index.lba = 0; // ignore track 1 index 0 (assume 1st pregap always starts at origin)
       track.indices.append(index);
       continue;
     }
     if(lines[offset].ibeginsWith("PREGAP ")) {
       track.pregap = toLBA(lines[offset++].itrimLeft("PREGAP ", 1L));
+      Index index; index.number = 0; index.lba = -1;
+      track.indices.append(index); // placeholder
       continue;
     }
     if(lines[offset].ibeginsWith("POSTGAP ")) {
       track.postgap = toLBA(lines[offset++].itrimLeft("POSTGAP ", 1L));
+      Index index; index.number = track.indices.last().number + 1; index.lba = -1;
+      track.indices.append(index); // placeholder
       continue;
     }
     offset++;
@@ -187,8 +195,10 @@ inline auto CUE::File::scan(const string& pathname) -> bool {
     return false;
   }
 
+  // calculate last index end for the file
   for(auto& track : tracks) {
     for(auto& index : track.indices) {
+      if(index.lba < 0) continue; // ignore gaps (not in file)
       if(index.end >= 0) {
         size -= track.sectorSize() * index.sectorCount();
       } else {
