@@ -73,6 +73,7 @@ auto FirmwareSettings::eventAssign() -> void {
       BrowserDialog dialog;
       dialog.setTitle({"Select ", name, " ", type, " (", region, ")"});
       dialog.setPath(Path::desktop());
+      dialog.setAlignment(settingsWindow);
       dialog.setFilters({"All|*"});
       if(auto location = program.openFile(dialog)) {
         firmware.location = location;
