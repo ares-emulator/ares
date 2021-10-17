@@ -68,6 +68,9 @@ all: $(all.objects)
 	$(info Linking $(output.path)/$(name) ...)
 	+@$(compiler) -o $(output.path)/$(name) $(all.objects) $(all.options)
 ifeq ($(platform),macos)
+# Apply workaround for buggy linker in Xcode < 11.4.1
+	@$(compiler) -o $(output.path)/macos-fix-jit macos-fix-jit.cpp
+	$(output.path)/macos-fix-jit $(output.path)/$(name)
 	rm -rf $(output.path)/$(name).app
 	mkdir -p $(output.path)/$(name).app/Contents/MacOS/
 	mkdir -p $(output.path)/$(name).app/Contents/Resources/

@@ -40,7 +40,8 @@ struct bump_allocator {
       DWORD privileges;
       VirtualProtect((void*)_memory, _capacity, PAGE_EXECUTE_READWRITE, &privileges);
       #else
-      mprotect(_memory, _capacity, PROT_READ | PROT_WRITE | PROT_EXEC);
+      int ret = mprotect(_memory, _capacity, PROT_READ | PROT_WRITE | PROT_EXEC);
+      assert(ret == 0);
       #endif
     }
 
