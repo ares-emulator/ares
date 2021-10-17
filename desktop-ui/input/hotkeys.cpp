@@ -46,6 +46,11 @@ auto InputManager::createHotkeys() -> void {
     program.rewindSetMode(Program::Rewind::Mode::Playing);
   }));
 
+  hotkeys.append(InputHotkey("Capture Screenshot").onPress([&] {
+    if(!emulator) return;
+    program.requestScreenshot = true;
+  }));
+
   hotkeys.append(InputHotkey("Save State").onPress([&] {
     if(!emulator) return;
     program.stateSave(program.state.slot);
