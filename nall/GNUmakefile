@@ -148,6 +148,8 @@ endif
 ifeq ($(platform),macos)
   flags   += -stdlib=libc++ -mmacosx-version-min=10.9 -Wno-auto-var-id -fobjc-arc
   options += -lc++ -lobjc -mmacosx-version-min=10.9
+  # allow mprotect() on dynamic recompiler code blocks
+  options += -Wl,-segprot,__DATA,rwx,rw
   ifneq ($(local),true)
     flags   += -arch x86_64
     options += -arch x86_64
