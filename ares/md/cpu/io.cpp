@@ -2,9 +2,9 @@
 
 auto CPU::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   if(address >= 0xa10000 && address <= 0xa100ff) {
-    if(!lower) return data;  //even byte writes ignored
-    address.bit(5,7) = 0;    //a10020-a100ff mirrors a10000-a1001f
+    if(!lower) return data.byte(0) << 8;
 
+    address.bit(5,7) = 0;    //a10020-a100ff mirrors a10000-a1001f
     switch(address) {
     case 0xa10000:
       data.bit(0) =  io.version;       //0 = Model 1; 1 = Model 2+
@@ -38,7 +38,7 @@ auto CPU::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
       break;
     }
 
-    return data;
+    return data.byte(1)=data.byte(0), data;
   }
 
   if(address >= 0xa11100 && address <= 0xa111ff) {

@@ -47,7 +47,7 @@ struct CPU : M68000, Thread {
   auto power(bool reset) -> void;
 
   //bus.cpp
-  auto read(n1 upper, n1 lower, n24 address, n16 data = 0) -> n16 override;
+  auto read(n1 upper, n1 lower, n24 address, n16 _ = 0) -> n16 override;
   auto write(n1 upper, n1 lower, n24 address, n16 data) -> void override;
 
   //io.cpp
