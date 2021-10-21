@@ -26,7 +26,7 @@ struct HVC_BNROM : Interface {
 
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x8000) return;
-    programBank = data.bit(0,1);
+    programBank = data;
   }
 
   auto readCHR(n32 address, n8 data) -> n8 override {
@@ -57,5 +57,5 @@ struct HVC_BNROM : Interface {
   }
 
   n1 mirror;  //0 = horizontal, 1 = vertical
-  n2 programBank;
+  n8 programBank;
 };

@@ -29,13 +29,14 @@ struct HVC_UxROM : Interface {
 
   auto readPRG(n32 address, n8 data) -> n8 override {
     if(address < 0x8000) return data;
-    n4 bank = (address < 0xc000 ? programBank : (n4)0xf);
+    n8 fixedBank = programROM.size() == 512_KiB ? 0x1f : 0xf;
+    n8 bank = (address < 0xc000 ? programBank : fixedBank);
     return programROM.read(bank << 14 | (n14)address);
   }
 
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x8000) return;
-    programBank = data.bit(0,3);
+    programBank = data;
   }
 
   auto readCHR(n32 address, n8 data) -> n8 override {
@@ -66,5 +67,5 @@ struct HVC_UxROM : Interface {
   }
 
   n1 mirror;  //0 = horizontal, 1 = vertical
-  n4 programBank;
+  n8 programBank;
 };
