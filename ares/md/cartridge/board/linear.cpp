@@ -29,7 +29,7 @@ struct Linear : Interface {
   }
 
   auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {
-    if(address >= 0x200000) {
+    if(address >= 0x200000 && address < 0x300000) {
       if(wram && ramEnable) {
         return wram[address >> 1];
       }
