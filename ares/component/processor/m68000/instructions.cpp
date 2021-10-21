@@ -1262,7 +1262,7 @@ auto M68000::instructionSWAP(DataRegister with) -> void {
 auto M68000::instructionTAS(EffectiveAddress with) -> void {
   n32 data;
 
-  if(with.mode == DataRegisterDirect) {
+  if(lockable() || with.mode == DataRegisterDirect) {
     data = read<Byte, Hold>(with);
     prefetch();
     write<Byte>(with, data | 0x80);
