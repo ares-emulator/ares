@@ -42,7 +42,7 @@ auto CPU::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address >= 0xa11100 && address <= 0xa111ff) {
-    data.bit(8) = apu.busownerAPU();
+    data.bit(8) = !apu.busownerCPU();
     return data;
   }
 
