@@ -21,8 +21,12 @@ struct APU : Z80, Z80::Bus, Thread {
   } debugger;
 
   auto synchronizing() const -> bool override { return scheduler.synchronizing(); }
-  auto busownerAPU() const -> bool { return (state.resLine & state.busreqLatch) == 0; }  //Z80 has bus access
-  auto busownerCPU() const -> bool { return (state.resLine & state.busreqLatch) == 1; }  //68K has bus access
+  auto busgrantedCPU() const -> bool { return state.resLine & state.busreqLatch;  }
+  auto busownerCPU()   const -> bool { return state.resLine & state.busreqLine;   }
+  // Note: bus ownership is flagged according to line state, since it could be too slow
+  // to wait for latching with only instruction-level granularity on the Z80 emulation.
+  // At worst, a positive signal would indicate bus grant is imminent, which should be safe.
+  // (fixes Arkagis Revolution - Trial Version [Rev 00])
 
   //z80.cpp
   auto load(Node::Object) -> void;

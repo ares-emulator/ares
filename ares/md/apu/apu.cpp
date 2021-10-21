@@ -22,13 +22,11 @@ auto APU::unload() -> void {
 auto APU::main() -> void {
   //handle a bus switching request from the CPU
   if(state.resLine) {
-    //switching requires a minimum of 9 cycles to allow the 68K to read back unavailable bus state
-    if(state.busreqLine && !state.busreqLatch) step(9);
     state.busreqLatch = state.busreqLine;
   }
 
   //stall the APU until the CPU relinquishes control of the bus
-  if(!state.resLine || !busownerAPU()) {
+  if(!state.resLine || state.busreqLatch) {
     return step(1);
   }
 

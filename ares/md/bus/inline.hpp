@@ -27,7 +27,7 @@ inline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address >= 0xa00000 && address <= 0xa0ffff) {
-    if(!apu.busownerCPU()) return data;
+    if(!apu.busgrantedCPU()) return data;
     if(cpu.active()) cpu.wait(3);  //todo: inaccurate approximation of Z80 RAM access delay
     address.bit(15) = 0;  //a080000-a0ffff mirrors a00000-a07fff
     //word reads load the even input byte into both output bytes
@@ -85,7 +85,7 @@ inline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address >= 0xa00000 && address <= 0xa0ffff) {
-    if(!apu.busownerCPU()) return;
+    if(!apu.busgrantedCPU()) return;
     if(cpu.active()) cpu.wait(3);  //todo: inaccurate approximation of Z80 RAM access delay
     address.bit(15) = 0;  //a08000-a0ffff mirrors a00000-a07fff
     //word writes store the upper input byte into the lower output byte
