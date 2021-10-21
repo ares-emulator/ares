@@ -50,7 +50,7 @@ template<u32 Size> auto M68000::_address(EffectiveAddress& ea) -> string {
   if(ea.mode ==  2) return {_addressRegister(AddressRegister{ea.reg})};
   if(ea.mode ==  5) return {"$", hex(_readDisplacement(read(AddressRegister{ea.reg})), 6L)};
   if(ea.mode ==  6) return {"$", hex(_readIndex(read(AddressRegister{ea.reg})), 6L)};
-  if(ea.mode ==  7) return {"$", hex((i16)_readPC<Word>(), 6L)};
+  if(ea.mode ==  7) { auto imm = _readPC<Word>(); return {"$", imm >= 0x8000 ? hex((i16)imm, 6L, 'f') : hex((i16)imm, 6L, '0') }; }
   if(ea.mode ==  8) return {"$", hex(_readPC<Long>(), 6L)};
   if(ea.mode ==  9) return {"$", hex(_pc + (i16)_readPC(), 6L)};
   if(ea.mode == 10) return {"$", hex(_readIndex(_pc), 6L)};
@@ -65,7 +65,7 @@ template<u32 Size> auto M68000::_effectiveAddress(EffectiveAddress& ea) -> strin
   if(ea.mode ==  4) return {"-(", _addressRegister(AddressRegister{ea.reg}), ")"};
   if(ea.mode ==  5) return {"($", hex(_readDisplacement(read(AddressRegister{ea.reg})), 6L), ")"};
   if(ea.mode ==  6) return {"($", hex(_readIndex(read(AddressRegister{ea.reg})), 6L), ")"};
-  if(ea.mode ==  7) return {"($", hex((i16)_readPC<Word>(), 6L), ")"};
+  if(ea.mode ==  7) { auto imm = _readPC<Word>(); return {"($", imm >= 0x8000 ? hex((i16)imm, 6L, 'f') : hex((i16)imm, 6L, '0'), ")"}; }
   if(ea.mode ==  8) return {"($", hex(_readPC<Long>(), 6L), ")"};
   if(ea.mode ==  9) return {"($", hex(_readDisplacement(_pc), 6L), ")"};
   if(ea.mode == 10) return {"($", hex(_readIndex(_pc), 6L), ")"};
