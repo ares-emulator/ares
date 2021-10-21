@@ -70,8 +70,8 @@ struct M68000 {
   M68000();
   auto power() -> void;
   auto supervisor() -> bool;
-  auto exception(u32 exception, u32 vector, u32 priority = 7) -> void;
-  auto interrupt(u32 vector, u32 priority = 7) -> void;
+  auto exception(u32 exception, u32 vector, u32 priority = 0) -> void;
+  auto interrupt(u32 vector, u32 priority = 0) -> void;
 
   //registers.cpp
   struct DataRegister {
