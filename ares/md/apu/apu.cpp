@@ -20,11 +20,6 @@ auto APU::unload() -> void {
 }
 
 auto APU::main() -> void {
-  //handle a bus switching request from the CPU
-  if(state.resLine) {
-    state.busreqLatch = state.busreqLine;
-  }
-
   //stall the APU until the CPU relinquishes control of the bus
   if(!state.resLine || state.busreqLatch) {
     return step(1);
@@ -48,6 +43,7 @@ auto APU::main() -> void {
 
 auto APU::step(u32 clocks) -> void {
   Thread::step(clocks);
+  state.busreqLatch = busownerCPU() ? 1 : 0;
   Thread::synchronize(cpu, vdp, vdp.psg, opn2);
 }
 
