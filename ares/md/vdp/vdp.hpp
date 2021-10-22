@@ -137,6 +137,9 @@ struct VDP : Thread {
       n1 pending;
       n1 transitioned;
     } vblank;
+
+    n8 delay;
+
   } irq;
 
   struct Slot {

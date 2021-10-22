@@ -19,6 +19,7 @@ auto VDP::tick() -> void {
     if(hcounter() == 0xb3) hblank(1);
     if(hcounter() == 0xb6) state.hcounter = 0xe4;
   }
+  irq.poll();
   vram.refreshing = 0;
 }
 
@@ -28,7 +29,7 @@ auto VDP::vtick() -> void {
   } else if(irq.hblank.counter-- == 0) {
     irq.hblank.counter = irq.hblank.frequency;
     irq.hblank.pending = 1;
-    irq.poll();
+    debugger.interrupt(CPU::Interrupt::HorizontalBlank);
   }
 
   state.vcounter++;
@@ -72,7 +73,7 @@ auto VDP::vedge() -> void {
     cartridge.vblank(1);
     apu.setINT(1);
     irq.vblank.pending = 1;
-    irq.poll();
+    debugger.interrupt(CPU::Interrupt::VerticalBlank);
   }
 }
 

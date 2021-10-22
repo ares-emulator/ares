@@ -175,6 +175,13 @@ auto VDP::readControlPort() -> n16 {
 
 auto VDP::writeControlPort(n16 data) -> void {
   //command write (lo)
+
+  // Note: A pending interrupt will be delayed when a register write
+  // is used to enable that interrupt. Further testing is required,
+  // but the current method should be sufficient to handle most cases.
+  // Required for Sesame Street Counting Cafe et al.
+  irq.delay = 2; // 4 pixel delay (4-6 M68k clocks) from this write
+
   if(command.latch) {
     command.latch = 0;
 
@@ -214,7 +221,6 @@ auto VDP::writeControlPort(n16 data) -> void {
     irq.hblank.enable        = data.bit(4);
     io.leftColumnBlank       = data.bit(5);
 
-    irq.poll();
     if(!io.videoMode4) debug(unimplemented, "[VDP] M4=0");
     return;
   }
@@ -228,7 +234,6 @@ auto VDP::writeControlPort(n16 data) -> void {
     io.displayEnable   = data.bit(6);
     vram.mode          = data.bit(7);
 
-    irq.poll();
     if(!io.videoMode5) debug(unimplemented, "[VDP] M5=0");
     return;
   }
@@ -281,7 +286,6 @@ auto VDP::writeControlPort(n16 data) -> void {
     layers.vscrollMode  = data.bit(2);
     irq.external.enable = data.bit(3);
 
-    irq.poll();
     return;
   }
 

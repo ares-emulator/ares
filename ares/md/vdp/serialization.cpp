@@ -74,6 +74,7 @@ auto VDP::IRQ::serialize(serializer& s) -> void {
   s(vblank.enable);
   s(vblank.pending);
   s(vblank.transitioned);
+  s(delay);
 }
 
 auto VDP::Slot::serialize(serializer& s) -> void {
