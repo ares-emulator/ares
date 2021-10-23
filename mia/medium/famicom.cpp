@@ -262,6 +262,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     prgram = 8192;
     break;
 
+  case  33:
+    s += "  board:  TAITO-TC0190\n";
+    break;
+
   case  34:
     s += "  board:  HVC-BNROM\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
@@ -297,7 +301,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     prgram = 8192;
     break;
-    
+
   case  75:
     s += "  board:  KONAMI-VRC-1\n";
     s += "    chip type=VRC1\n";
