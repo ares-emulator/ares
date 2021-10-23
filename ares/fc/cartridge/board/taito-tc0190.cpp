@@ -69,6 +69,9 @@ struct TaitoTC0190 : Interface {
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
   }
 
+  auto power() -> void override {
+  }
+
   auto serialize(serializer& s) -> void override {
     s(mirror);
     s(programBank);
