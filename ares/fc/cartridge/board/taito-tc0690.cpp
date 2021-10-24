@@ -1,6 +1,6 @@
-struct TaitoTC0190 : Interface {
+struct TaitoTC0690 : Interface {
   static auto create(string id) -> Interface* {
-    if(id == "TAITO-TC0190") return new TaitoTC0190;
+    if(id == "TAITO-TC0690") return new TaitoTC0690;
     return nullptr;
   }
 
@@ -10,6 +10,28 @@ struct TaitoTC0190 : Interface {
   auto load() -> void override {
     Interface::load(programROM, "program.rom");
     Interface::load(characterROM, "character.rom");
+  }
+
+  auto main() -> void override {
+    if(irqDelay) irqDelay--;
+    if(irqLineDelay && --irqLineDelay == 0) irqLine = 1;
+    cpu.irqLine(irqLine);
+    tick();
+  }
+
+  auto irqTest(n16 address) -> void {
+    if(!(characterAddress & 0x1000) && (address & 0x1000)) {
+      if(irqDelay == 0) {
+        if(irqCounter == 0) {
+          irqCounter = irqLatch + 1;
+        }
+        if(--irqCounter == 0) {
+          if(irqEnable) irqLineDelay = 6;
+        }
+      }
+      irqDelay = 6;
+    }
+    characterAddress = address;
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {
@@ -28,13 +50,9 @@ struct TaitoTC0190 : Interface {
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x8000) return;
 
-    switch(address & 0xa003) {
-    case 0x8000:
-      programBank[0] = data.bit(0,5);
-      mirror = data.bit(6);
-      break;
-    case 0x8001:
-      programBank[1] = data.bit(0,5);
+    switch(address & 0xe003) {
+    case 0x8000: case 0x8001:
+      programBank[address & 1] = data.bit(0,5);
       break;
     case 0x8002: characterBank[0] = data; break;
     case 0x8003: characterBank[1] = data; break;
@@ -42,6 +60,22 @@ struct TaitoTC0190 : Interface {
     case 0xa001: characterBank[3] = data; break;
     case 0xa002: characterBank[4] = data; break;
     case 0xa003: characterBank[5] = data; break;
+    case 0xc000:
+      irqLatch = ~data;
+      break;
+    case 0xc001:
+      irqCounter = 0;
+      break;
+    case 0xc002:
+      irqEnable = 1;
+      break;
+    case 0xc003:
+      irqEnable = 0;
+      irqLine = 0;
+      break;
+    case 0xe000:
+      mirror = data.bit(6);
+      break;
     }
   }
 
@@ -60,12 +94,14 @@ struct TaitoTC0190 : Interface {
   }
 
   auto readCHR(n32 address, n8 data) -> n8 override {
+    irqTest(address);
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
     if(characterROM) return characterROM.read(addressCHR(address));
     return data;
   }
 
   auto writeCHR(n32 address, n8 data) -> void override {
+    irqTest(address);
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
   }
 
@@ -73,9 +109,23 @@ struct TaitoTC0190 : Interface {
     s(mirror);
     s(programBank);
     s(characterBank);
+    s(irqLatch);
+    s(irqCounter);
+    s(irqEnable);
+    s(irqDelay);
+    s(irqLineDelay);
+    s(irqLine);
+    s(characterAddress);
   }
 
-  n1 mirror;
-  n6 programBank[2];
-  n8 characterBank[6];
+  n1  mirror;
+  n6  programBank[2];
+  n8  characterBank[6];
+  n8  irqLatch;
+  n8  irqCounter;
+  n1  irqEnable;
+  n8  irqDelay;
+  n8  irqLineDelay;
+  n1  irqLine;
+  n16 characterAddress;
 };
