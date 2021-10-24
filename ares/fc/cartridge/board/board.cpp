@@ -31,6 +31,7 @@ namespace Board {
 #include "sunsoft-4.cpp"
 #include "sunsoft-5b.cpp"
 #include "taito-tc0190.cpp"
+#include "taito-tc0690.cpp"
 
 auto Interface::create(string board) -> Interface* {
   Interface* p = nullptr;
@@ -65,6 +66,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = Sunsoft4::create(board);
   if(!p) p = Sunsoft5B::create(board);
   if(!p) p = TaitoTC0190::create(board);
+  if(!p) p = TaitoTC0690::create(board);
   if(!p) p = new Interface;
   return p;
 }
