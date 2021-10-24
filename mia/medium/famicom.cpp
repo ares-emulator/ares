@@ -271,6 +271,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
+  case  48:
+    s += "  board:  TAITO-TC0690\n";
+    break;
+
   case  66:
     s += "  board:  HVC-GNROM\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
