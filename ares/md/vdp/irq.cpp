@@ -25,8 +25,10 @@ auto VDP::IRQ::acknowledge(u8 level) -> void {
   if(level == 4) {
     // H-INT ack can errantly cancel V-INT if they coincide.
     // Required for Fatal Rewind et al.
-    if(!vblank.pending) hblank.pending = 0;
-    else                vblank.pending = 0;
+    if(vblank.pending && vblank.enable)
+      vblank.pending = 0;
+    else
+      hblank.pending = 0;
   }
   if(level == 6) vblank.pending = 0;
 }
