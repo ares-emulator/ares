@@ -252,7 +252,7 @@ auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address == 0xff8030) {
     if(lower) {
-      timer.frequency = data.byte(0);
+      timer.counter = timer.frequency = data.byte(0);
     }
   }
 
