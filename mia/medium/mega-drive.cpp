@@ -302,6 +302,12 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     ram.size = 32768;
   }
 
+  //Super Hydlide (Japan)
+  if(hash == "30749097096807abf67cd1f7b2392f5789f5149ee33661e6d13113396f06a121") {
+    ram.mode = "lower";
+    ram.size = 8192;
+  }
+
   //M28C16
   //======
 
