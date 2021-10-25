@@ -54,17 +54,15 @@ auto MCD::CDD::clock() -> void {
 }
 
 auto MCD::CDD::advance() -> void {
-  //is the next sector still within the current track?
   if(auto track = session.inTrack(io.sector + 1)) {
-    if(track() == io.track) {
-      io.sector++;
-      io.sample = 0;
-      return;
-    }
+    io.track = track();
+    io.sector++;
+    io.sample = 0;
+    return;
   }
 
-  //if not, then the track has been completed
-  io.status = Status::Paused;
+  io.status = Status::LeadOut;
+  io.track = 0xaa;
 }
 
 auto MCD::CDD::sample() -> void {
