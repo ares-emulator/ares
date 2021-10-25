@@ -36,11 +36,20 @@ auto MegaCD::save(string location) -> bool {
 
 auto MegaCD::analyze(string location) -> string {
   auto sector = readDataSectorCUE(location, 0);
-  if(!sector) return CompactDisc::manifestAudio(location);
-
-  if(memory::compare(sector.data(), "SEGADISCSYSTEM  ", 16)) {
+  if(!sector || memory::compare(sector.data(), "SEGA", 4))
     return CompactDisc::manifestAudio(location);
+
+  vector<string> regions;
+  if(!memory::compare(sector.data()+4, "DISCSYSTEM  ", 12)
+  || !memory::compare(sector.data()+4, "BOOTDISC    ", 12)) {
+    if(     Hash::CRC32({sector.data()+0x200,  340}).value() == 0x4571f623) // JP boot
+      regions.append("NTSC-J");
+    else if(Hash::CRC32({sector.data()+0x200, 1390}).value() == 0x6ffb4732) // EU boot
+      regions.append("PAL");
+    else if(Hash::CRC32({sector.data()+0x200, 1412}).value() == 0xf361ab57) // US boot
+      regions.append("NTSC-U");
   }
+  if(!regions) regions.append("NTSC-J","NTSC-U","PAL"); // unknown boot
 
   vector<string> devices;
   string device = slice((const char*)(sector.data() + 0x190), 0, 16).trimRight(" ");
@@ -62,31 +71,6 @@ auto MegaCD::analyze(string location) -> string {
     if(id == 'R');  //RS-232 modem
     if(id == 'T');  //tablet
     if(id == 'V');  //paddle
-  }
-
-  vector<string> regions;
-  string region = slice((const char*)(sector.data() + 0x1f0), 0, 16).trimRight(" ");
-  if(!regions) {
-    if(region == "JAPAN" ) regions.append("NTSC-J");
-    if(region == "EUROPE") regions.append("PAL");
-  }
-  if(!regions) {
-    if(region.find("J")) regions.append("NTSC-J");
-    if(region.find("U")) regions.append("NTSC-U");
-    if(region.find("E")) regions.append("PAL");
-  }
-  if(!regions && region.size() == 1) {
-    maybe<u8> bits;
-    u8 field = region[0];
-    if(field >= '0' && field <= '9') bits = field - '0';
-    if(field >= 'A' && field <= 'F') bits = field - 'A' + 10;
-    if(bits && *bits & 1) regions.append("NTSC-J");  //domestic 60hz
-    if(bits && *bits & 2);                           //domestic 50hz
-    if(bits && *bits & 4) regions.append("NTSC-U");  //overseas 60hz
-    if(bits && *bits & 8) regions.append("PAL");     //overseas 50hz
-  }
-  if(!regions) {
-    regions.append("NTSC-J", "NTSC-U", "PAL");
   }
 
   string s;
