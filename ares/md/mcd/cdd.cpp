@@ -242,6 +242,8 @@ auto MCD::CDD::process() -> void {
     io.status = Status::Playing;
   } break;
 
+  default:
+    io.status = Status::CommandError;
   }
 
   status[0] = io.status;
