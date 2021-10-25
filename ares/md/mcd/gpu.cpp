@@ -11,6 +11,7 @@ auto MCD::GPU::step(u32 clocks) -> void {
     if(!--image.vdots) {
       active = 0;
       irq.raise();
+      break;
     }
   }
 }
@@ -26,11 +27,20 @@ auto MCD::GPU::write(n19 address, n4 data) -> void {
 }
 
 auto MCD::GPU::render(n19 address, n9 width) -> void {
-  n8  stampShift = 11 + 4 + stamp.tile.size;
-  n8  mapShift   = (4 << stamp.map.size) - stamp.tile.size;
+  n4  stampShift =  4;
+  n4  mapShift   =  4 << stamp.map.size;
+  n11 indexMask  = ~0;
+  n5  pixelOffsetMask = 0x0f;
 
-  n2  stampMask  = !stamp.tile.size ? 1 : 3;
-  n23 mapMask    = !stamp.map.size ? 0x07ffff : 0x7fffff;
+  if(stamp.tile.size) {
+    stampShift++;
+    mapShift--;
+    indexMask &= ~3;
+    pixelOffsetMask |= 0x10;
+  }
+
+  n19 imageWidth = image.vcells+1 << 6;
+  n24 mapMask = !stamp.map.size ? 0x07ffff : 0x7fffff;
 
   n24 x = mcd.wram[vector.address++] << 8;  //13.3 -> 13.11
   n24 y = mcd.wram[vector.address++] << 8;  //13.3 -> 13.11
@@ -44,30 +54,32 @@ auto MCD::GPU::render(n19 address, n9 width) -> void {
       y &= mapMask;
     }
 
-    n4 output;
+    n4 output = 0;
     if(bool outside = (x | y) & ~mapMask; !outside) {
-      auto xstamp = x >> stampShift;
-      auto ystamp = y >> stampShift << mapShift;
+      auto xtrunc = x >> 11;
+      auto ytrunc = y >> 11;
+      auto xstamp = xtrunc >> stampShift;
+      auto ystamp = ytrunc >> stampShift;
 
-      auto data  = mcd.wram[stamp.map.address + xstamp + ystamp];
-      auto index = n10(data >>  0);
-      auto lroll = n1 (data >> 13);  //0 = 0 degrees; 1 =  90 degrees
-      auto hroll = n1 (data >> 14);  //0 = 0 degrees; 1 = 180 degrees
-      auto hflip = n1 (data >> 15);
+      auto mapEntry = mcd.wram[stamp.map.address + (ystamp << mapShift) + xstamp];
+      n11 index = mapEntry & indexMask;
+      n1  lroll = mapEntry >> 13;  //0 = 0 degrees; 1 =  90 degrees
+      n1  hroll = mapEntry >> 14;  //0 = 0 degrees; 1 = 180 degrees
+      n1  hflip = mapEntry >> 15;
 
-      if(index) {  //stamp index 0 is not rendered
-        auto xpixel = n6(x >> 11);
-        auto ypixel = n6(y >> 11);
+      if(index) {
+        if(hflip) { xtrunc = ~xtrunc; }
+        if(hroll) { xtrunc = ~xtrunc; ytrunc = ~ytrunc; }
+        if(lroll) { auto t = xtrunc; xtrunc = ~ytrunc; ytrunc = t; }
 
-        if(hflip) { xpixel = ~xpixel; }
-        if(hroll) { xpixel = ~xpixel; ypixel = ~ypixel; }
-        if(lroll) { auto tpixel = xpixel; xpixel = ~ypixel; ypixel = tpixel; }
+        n5 xpixel = xtrunc & pixelOffsetMask;
+        n5 ypixel = ytrunc & pixelOffsetMask;
 
-        n6 pixel = n3(xpixel) + n3(ypixel) * 8;
-        xpixel = xpixel >> 3 & stampMask;
-        ypixel = ypixel >> 3 & stampMask;
-        n4 cell = ypixel + xpixel * (1 + stampMask);
-        output = read(index << 8 | cell << 6 | pixel);
+        output = read(
+          index  << 8 |
+         (xpixel & ~7) << stampShift |
+          ypixel << 3 |
+          xpixel &  7);
       }
     }
 
@@ -79,7 +91,7 @@ auto MCD::GPU::render(n19 address, n9 width) -> void {
     case 3: output = input; break;
     }
     write(address, output);
-    if(!(++address & 7)) address += (image.vcells + 1 << 6) - 8;
+    if(!(++address & 7)) address += imageWidth - 8;
 
     x += xstep;
     y += ystep;
