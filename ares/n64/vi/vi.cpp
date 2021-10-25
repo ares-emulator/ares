@@ -11,9 +11,9 @@ auto VI::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VI");
 
   #if defined(VULKAN)
-  screen = node->append<Node::Video::Screen>("Screen", vulkan.outputUpscale * 640, vulkan.outputUpscale * 480);
+  screen = node->append<Node::Video::Screen>("Screen", vulkan.outputUpscale * 640, vulkan.outputUpscale * 576);
   #else
-  screen = node->append<Node::Video::Screen>("Screen", 640, 480);
+  screen = node->append<Node::Video::Screen>("Screen", 640, 576);
   #endif
   screen->setRefresh({&VI::refresh, this});
   screen->colors((1 << 24) + (1 << 15), [&](n32 color) -> n64 {
