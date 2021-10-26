@@ -33,6 +33,7 @@ namespace Board {
 #include "taito-tc0190.cpp"
 #include "taito-tc0690.cpp"
 #include "taito-x1-005.cpp"
+#include "taito-x1-017.cpp"
 
 auto Interface::create(string board) -> Interface* {
   Interface* p = nullptr;
@@ -69,6 +70,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = TaitoTC0190::create(board);
   if(!p) p = TaitoTC0690::create(board);
   if(!p) p = TaitoX1005::create(board);
+  if(!p) p = TaitoX1017::create(board);
   if(!p) p = new Interface;
   return p;
 }
