@@ -311,6 +311,12 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "    chip type=VRC1\n";
     break;
 
+  case  80:
+    s += "  board:  TAITO-X1-005\n";
+    s += "    chip type=X1-005\n";
+    prgram = 128;
+    break;
+
   case  85:
     s += "  board:  KONAMI-VRC-7\n";
     s += "    chip type=VRC7\n";
@@ -349,6 +355,12 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case 206:
     s += "  board: HVC-DRROM\n";
     chrram = 2048;
+    break;
+
+  case 207:
+    s += "  board:  TAITO-X1-005A\n";
+    s += "    chip type=X1-005\n";
+    prgram = 128;
     break;
 
   }
