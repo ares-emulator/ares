@@ -264,6 +264,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case  33:
     s += "  board:  TAITO-TC0190\n";
+    s += "    chip type=TC0190\n";
     break;
 
   case  34:
@@ -273,6 +274,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case  48:
     s += "  board:  TAITO-TC0690\n";
+    s += "    chip type=TC0690\n";
     break;
 
   case  66:
