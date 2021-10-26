@@ -23,7 +23,7 @@ struct TaitoX1017 : Interface {
       if(!ramEnable[address >> 11 & 3]) return data;
       return programRAM.read((n13)address);
     }
-    if(address < 0x800) return data;
+    if(address < 0x8000) return data;
 
     n6 bank;
     switch(address >> 13 & 3) {
