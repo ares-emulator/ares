@@ -14,15 +14,15 @@ auto SPC7110::setDataAdjust(n16 address) -> void { r4814 = address; r4815 = addr
 
 auto SPC7110::dataPortRead() -> void {
   n24 offset = dataOffset();
-  n16 adjust = r4818 & 2 ? dataAdjust() : (n16)0;
+  n32 adjust = r4818 & 2 ? dataAdjust() : (n16)0;
   if(r4818 & 8) adjust = (i16)adjust;
   r4810 = dataromRead(offset + adjust);
 }
 
 auto SPC7110::dataPortIncrement4810() -> void {
   n24 offset = dataOffset();
-  n16 stride = r4818 & 1 ? dataStride() : (n16)1;
-  n16 adjust = dataAdjust();
+  n32 stride = r4818 & 1 ? dataStride() : (n16)1;
+  n32 adjust = dataAdjust();
   if(r4818 & 4) stride = (i16)stride;
   if(r4818 & 8) adjust = (i16)adjust;
   if((r4818 & 16) == 0) setDataOffset(offset + stride);
@@ -33,7 +33,7 @@ auto SPC7110::dataPortIncrement4810() -> void {
 auto SPC7110::dataPortIncrement4814() -> void {
   if(r4818 >> 5 != 1) return;
   n24 offset = dataOffset();
-  n16 adjust = dataAdjust();
+  n32 adjust = dataAdjust();
   if(r4818 & 8) adjust = (i16)adjust;
   setDataOffset(offset + adjust);
   dataPortRead();
@@ -42,7 +42,7 @@ auto SPC7110::dataPortIncrement4814() -> void {
 auto SPC7110::dataPortIncrement4815() -> void {
   if(r4818 >> 5 != 2) return;
   n24 offset = dataOffset();
-  n16 adjust = dataAdjust();
+  n32 adjust = dataAdjust();
   if(r4818 & 8) adjust = (i16)adjust;
   setDataOffset(offset + adjust);
   dataPortRead();
@@ -51,7 +51,7 @@ auto SPC7110::dataPortIncrement4815() -> void {
 auto SPC7110::dataPortIncrement481a() -> void {
   if(r4818 >> 5 != 3) return;
   n24 offset = dataOffset();
-  n16 adjust = dataAdjust();
+  n32 adjust = dataAdjust();
   if(r4818 & 8) adjust = (i16)adjust;
   setDataOffset(offset + adjust);
   dataPortRead();
