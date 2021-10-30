@@ -283,6 +283,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "    chip type=TC0690\n";
     break;
 
+  case  65:
+    s += "  board:  IREM-H3001\n";
+    s += "    chip type=H3001\n";
+    break;
+
   case  66:
     s += "  board:  HVC-GNROM\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
