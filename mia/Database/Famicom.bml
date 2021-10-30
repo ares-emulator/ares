@@ -1,0 +1,24 @@
+database
+  revision: 2021-10-30
+
+game
+  sha256: 4ef61de405406bfa9eeaf19ed1d882444c41bb606ac78673b7ec8ee323d0e073
+  name:   Major League
+  title:  Major League
+  region: NTSC-J
+  board:  IREM-G101A
+    chip
+      type: G101
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+

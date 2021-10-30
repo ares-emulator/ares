@@ -124,6 +124,10 @@ auto Famicom::analyzeFDS(vector<u8>& data) -> string {
 
 //iNES
 auto Famicom::analyzeINES(vector<u8>& data) -> string {
+  string hash = Hash::SHA256({data.data() + 16, data.size() - 16}).digest();
+  string manifest = Medium::manifestDatabase(hash);
+  if(manifest) return manifest;
+
   u32 mapper = ((data[7] >> 4) << 4) | (data[6] >> 4);
   u32 mirror = ((data[6] & 0x08) >> 2) | (data[6] & 0x01);
   u32 prgrom = data[4] * 0x4000;
@@ -131,7 +135,6 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   u32 prgram = 0u;
   u32 chrram = chrrom == 0u ? 8192u : 0u;
   u32 eeprom = 0u;
-  string hash = Hash::SHA256({data.data() + 16, data.size() - 16}).digest();
 
   string s;
   s += "game\n";
