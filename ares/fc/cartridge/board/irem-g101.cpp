@@ -28,29 +28,22 @@ struct IremG101 : Interface {
 
   auto readPRG(n32 address, n8 data) -> n8 override {
     if(address < 0x6000) return data;
+    if(address < 0x8000 && !programRAM) return data;
     if(address < 0x8000) return programRAM.read((n13)address);
 
     n5 bank;
-    if(programMode) {
-      switch(address >> 13 & 3) {
-      case 0: bank = 0x1e; break;
-      case 1: bank = programBank[1]; break;
-      case 2: bank = programBank[0]; break;
-      case 3: bank = 0x1f; break;
-      }
-    } else {
-      switch(address >> 13 & 3) {
-      case 0: bank = programBank[0]; break;
-      case 1: bank = programBank[1]; break;
-      case 2: bank = 0x1e; break;
-      case 3: bank = 0x1f; break;
-      }
+    switch(address >> 13 & 3) {
+    case 0: bank = (programMode == 0 ? programBank[0] : (n5)0x1e); break;
+    case 1: bank = programBank[1]; break;
+    case 2: bank = (programMode == 1 ? programBank[0] : (n5)0x1e); break;
+    case 3: bank = 0x1f; break;
     }
     return programROM.read(bank << 13 | (n13)address);
   }
 
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000) return;
+    if(address < 0x8000 && !programRAM) return;
     if(address < 0x8000) return programRAM.write((n13)address, data);
 
     switch(address & 0xf000) {
