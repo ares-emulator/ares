@@ -327,6 +327,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "    chip type=VRC1\n";
     break;
 
+  case  77:
+    s += "  board:  IREM-LROG017\n";
+    chrram = 8192;
+    break;
+
   case  80:
     s += "  board:  TAITO-X1-005\n";
     s += "    chip type=X1-005\n";

@@ -26,6 +26,7 @@ namespace Board {
 #include "hvc-uxrom.cpp"
 #include "irem-g101.cpp"
 #include "irem-h3001.cpp"
+#include "irem-lrog017.cpp"
 #include "irem-tam-s1.cpp"
 #include "sunsoft-1.cpp"
 #include "sunsoft-2.cpp"
@@ -56,6 +57,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = HVC_UxROM::create(board);
   if(!p) p = IremG101::create(board);
   if(!p) p = IremH3001::create(board);
+  if(!p) p = IremLROG017::create(board);
   if(!p) p = IremTAMS1::create(board);
   if(!p) p = JalecoJF::create(board);
   if(!p) p = Jaleco_JF11_JF14::create(board);
