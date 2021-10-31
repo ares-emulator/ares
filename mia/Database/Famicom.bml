@@ -1,5 +1,5 @@
 database
-  revision: 2021-10-30
+  revision: 2021-10-31
 
 game
   sha256: 4ef61de405406bfa9eeaf19ed1d882444c41bb606ac78673b7ec8ee323d0e073
@@ -9,6 +9,25 @@ game
   board:  IREM-G101A
     chip
       type: G101
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 407e54848ad9991399f0383118f138d3a0532bb03bb488ed856deb7f2eb4efbf
+  name:   Uchuusen Cosmo Carrier
+  title:  Uchuusen Cosmo Carrier
+  region: NTSC-J
+  board:  JALECO-JF-16
     memory
       type: ROM
       size: 0x10
