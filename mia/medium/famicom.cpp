@@ -315,6 +315,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     prgram = 8192;
     break;
 
+  case  72:
+    s += "  board:  JALECO-JF-17\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
   case  73:
     s += "  board:  KONAMI-VRC-3\n";
     s += "    chip type=VRC3\n";
@@ -358,6 +363,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "  board:  SUNSOFT-2\n";
     break;
 
+  case  92:
+    s += "  board:  JALECO-JF-19\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
   case  93:
     s += "  board:  SUNSOFT-2\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
@@ -365,6 +375,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case  97:
     s += "  board:  IREM-TAM-S1\n";
+    s += "    chip type=TAM-S1\n";
     break;
 
   case  140:
