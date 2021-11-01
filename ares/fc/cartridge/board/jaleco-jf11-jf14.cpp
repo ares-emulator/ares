@@ -20,7 +20,7 @@ struct Jaleco_JF11_JF14 : Interface {
 
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000 || address > 0x7fff) return;
-    characterBank = data.bit(0,1);
+    characterBank = data.bit(0,3);
     programBank = data.bit(4,5);
   }
 
@@ -52,5 +52,5 @@ struct Jaleco_JF11_JF14 : Interface {
 
   n1 mirror;  //0 = horizontal, 1 = vertical
   n2 programBank;
-  n2 characterBank;
+  n4 characterBank;
 };
