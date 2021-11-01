@@ -56,7 +56,7 @@ struct IremG101 : Interface {
         programMode = data.bit(1);
       }
       break;
-	  }
+    }
   }
 
   auto addressCIRAM(n32 address) const -> n32 {

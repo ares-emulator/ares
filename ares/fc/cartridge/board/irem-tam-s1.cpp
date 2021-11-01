@@ -5,7 +5,7 @@ struct IremTAMS1 : Interface {
   }
 
   Memory::Readable<n8> programROM;
-  Memory::Writable<n8> characterROM;
+  Memory::Readable<n8> characterROM;
   Memory::Writable<n8> characterRAM;
 
   auto load() -> void override {
