@@ -66,11 +66,8 @@ struct IremG101 : Interface {
 
   auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
-    if(characterROM) {
-      n8 bank = characterBank[address >> 10 & 7];
-      return characterROM.read(bank << 10 | (n10)address);
-    }
-    return data;
+    n8 bank = characterBank[address >> 10 & 7];
+    return characterROM.read(bank << 10 | (n10)address);
   }
 
   auto writeCHR(n32 address, n8 data) -> void override {

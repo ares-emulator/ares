@@ -30,8 +30,7 @@ struct Jaleco_JF11_JF14 : Interface {
       return ppu.readCIRAM(address);
     }
     address = characterBank << 13 | (n13)address;
-    if(characterROM) return characterROM.read(address);
-    return data;
+    return characterROM.read(address);
   }
 
   auto writeCHR(n32 address, n8 data) -> void override {

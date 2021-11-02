@@ -96,8 +96,7 @@ struct TaitoTC0690 : Interface {
   auto readCHR(n32 address, n8 data) -> n8 override {
     irqTest(address);
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
-    if(characterROM) return characterROM.read(addressCHR(address));
-    return data;
+    return characterROM.read(addressCHR(address));
   }
 
   auto writeCHR(n32 address, n8 data) -> void override {
