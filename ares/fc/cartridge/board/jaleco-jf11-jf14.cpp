@@ -1,11 +1,23 @@
-struct Jaleco_JF11_JF14 : Interface {
+//todo: uPD7756 ADPCM unsupported
+
+struct JalecoJF11 : Interface {
   static auto create(string id) -> Interface* {
-    if(id == "JALECO-JF11-JF14") return new Jaleco_JF11_JF14;
+    if(id == "JALECO-JF-11") return new JalecoJF11(Revision::JF11);
+    if(id == "JALECO-JF-13") return new JalecoJF11(Revision::JF13);
+    if(id == "JALECO-JF-14") return new JalecoJF11(Revision::JF14);
     return nullptr;
   }
 
   Memory::Readable<n8> programROM;
   Memory::Readable<n8> characterROM;
+
+  enum class Revision : u32 {
+    JF11,
+    JF13,
+    JF14,
+  } revision;
+
+  JalecoJF11(Revision revision) : revision(revision) {}
 
   auto load() -> void override {
     Interface::load(programROM, "program.rom");
@@ -20,8 +32,14 @@ struct Jaleco_JF11_JF14 : Interface {
 
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000 || address > 0x7fff) return;
-    characterBank = data.bit(0,3);
+    if(revision == Revision::JF13 && address > 0x6fff) return;
+
     programBank = data.bit(4,5);
+    if(revision == Revision::JF13) {
+      characterBank = data.bit(6) << 2 | data.bit(0,1);
+    } else {
+      characterBank = data.bit(0,3);
+    }
   }
 
   auto readCHR(n32 address, n8 data) -> n8 override {
@@ -38,9 +56,6 @@ struct Jaleco_JF11_JF14 : Interface {
       address = address >> !mirror & 0x0400 | (n10)address;
       return ppu.writeCIRAM(address, data);
     }
-  }
-
-  auto power() -> void override {
   }
 
   auto serialize(serializer& s) -> void override {
