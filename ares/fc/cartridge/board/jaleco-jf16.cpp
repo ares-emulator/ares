@@ -1,7 +1,7 @@
-struct IremIF12 : Interface {
+struct JalecoJF16 : Interface {
   static auto create(string id) -> Interface* {
-    if(id == "IREM-IF-12"  ) return new IremIF12(Revision::IF12);
-    if(id == "JALECO-JF-16") return new IremIF12(Revision::JF16);
+    if(id == "JALECO-JF-16") return new JalecoJF16(Revision::JF16);
+    if(id == "IREM-IF-12"  ) return new JalecoJF16(Revision::IF12);
     return nullptr;
   }
 
@@ -9,11 +9,11 @@ struct IremIF12 : Interface {
   Memory::Readable<n8> characterROM;
 
   enum class Revision : u32 {
-    IF12,
     JF16,
+    IF12,
   } revision;
 
-  IremIF12(Revision revision) : revision(revision) {}
+  JalecoJF16(Revision revision) : revision(revision) {}
 
   auto load() -> void override {
     Interface::load(programROM, "program.rom");
@@ -39,10 +39,10 @@ struct IremIF12 : Interface {
   }
 
   auto addressCIRAM(n32 address) const -> n32 {
-    if(revision == Revision::JF16) {
-      return mirror << 10 | (n10)address;
+    if(revision == Revision::IF12) {
+      return address >> !mirror & 0x0400 | (n10)address;
     }
-    return address >> !mirror & 0x0400 | (n10)address;
+    return mirror << 10 | (n10)address;
   }
 
   auto readCHR(n32 address, n8 data) -> n8 override {

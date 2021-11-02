@@ -1,25 +1,15 @@
 struct JalecoJF05 : Interface {
   static auto create(string id) -> Interface* {
-    if(id == "JALECO-JF-05") return new JalecoJF05(Revision::JF05);
-    if(id == "JALECO-JF-06") return new JalecoJF05(Revision::JF06);
-    if(id == "JALECO-JF-07") return new JalecoJF05(Revision::JF07);
-    if(id == "JALECO-JF-08") return new JalecoJF05(Revision::JF08);
-    if(id == "JALECO-JF-10") return new JalecoJF05(Revision::JF10);
+    if(id == "JALECO-JF-05") return new JalecoJF05;
+    if(id == "JALECO-JF-06") return new JalecoJF05;
+    if(id == "JALECO-JF-07") return new JalecoJF05;
+    if(id == "JALECO-JF-08") return new JalecoJF05;
+    if(id == "JALECO-JF-10") return new JalecoJF05;
     return nullptr;
   }
 
   Memory::Readable<n8> programROM;
   Memory::Readable<n8> characterROM;
-
-  enum class Revision : u32 {
-    JF05,
-    JF06,
-    JF07,
-    JF08,
-    JF10,
-  } revision;
-
-  JalecoJF05(Revision revision) : revision(revision) {}
 
   auto load() -> void override {
     Interface::load(programROM, "program.rom");

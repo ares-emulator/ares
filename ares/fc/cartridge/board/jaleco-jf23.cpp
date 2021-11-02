@@ -1,9 +1,14 @@
-//JALECO-JF-(23A,24A,25,27B,29A,37,40)
 //todo: uPD7756 ADPCM unsupported
 
-struct JalecoJF : Interface {
+struct JalecoJF23 : Interface {
   static auto create(string id) -> Interface* {
-    if(id == "JALECO-JF") return new JalecoJF;
+    if(id == "JALECO-JF-23A") return new JalecoJF23;
+    if(id == "JALECO-JF-24A") return new JalecoJF23;
+    if(id == "JALECO-JF-25" ) return new JalecoJF23;
+    if(id == "JALECO-JF-27B") return new JalecoJF23;
+    if(id == "JALECO-JF-29A") return new JalecoJF23;
+    if(id == "JALECO-JF-37" ) return new JalecoJF23;
+    if(id == "JALECO-JF-40" ) return new JalecoJF23;
     return nullptr;
   }
 
