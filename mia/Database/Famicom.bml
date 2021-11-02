@@ -1,5 +1,74 @@
 database
-  revision: 2021-10-31
+  revision: 2021-11-02
+
+game
+  sha256: c8c0b6c21bdda7503bab7592aea0f945a0259c18504bb241aafb1eabe65846f3
+  name:   Family BASIC V3
+  title:  Family BASIC V3
+  region: NTSC-J
+  board:  HVC-NROM
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: RAM
+      size: 0x1000
+      content: Save
+    memory
+      type: ROM
+      size: 0x2000
+      content: Character
+
+game
+  sha256: 1c1ad2992f728c7fb6a8f3980b1a0f8e01e5b24a0c43c713300846d87be5987a
+  name:   Holy Diver
+  title:  Holy Diver
+  region: NTSC-J
+  board:  IREM-IF-12
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: ea770788f68e4bb089e4205807931d64b83175a0106e7563d0a6d3ebac369991
+  name:   Jajamaru Gekimaden - Maboroshi no Kinmajou
+  title:  Jajamaru Gekimaden - Maboroshi no Kinmajou
+  region: NTSC-J
+  board:  JALECO-JF-27B
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
 
 game
   sha256: 4ef61de405406bfa9eeaf19ed1d882444c41bb606ac78673b7ec8ee323d0e073
@@ -17,6 +86,31 @@ game
       type: ROM
       size: 0x20000
       content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 32c6893e0f8a14714dd2082803cfde62f8981010d23fc9cf00a5a18066d063cb
+  name:   Mezase! Top Pro - Green ni Kakeru Yume
+  title:  Mezase! Top Pro - Green ni Kakeru Yume
+  region: NTSC-J
+  board:  JALECO-JF-40
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
     memory
       type: ROM
       size: 0x20000

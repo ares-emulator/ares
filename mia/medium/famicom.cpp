@@ -143,11 +143,6 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   s +={"  title:  ", Medium::name(location), "\n"};
   s += "  region: NTSC-J, NTSC-U, PAL\n";  //database required to detect region
 
-  //Family BASIC (Japan)
-  if(hash == "c8c0b6c21bdda7503bab7592aea0f945a0259c18504bb241aafb1eabe65846f3") {
-    prgram = 8_KiB;
-  }
-
   //Gauntlet (USA)
   if(hash == "fd2a8520314fb183e15fd62f48df97f92eb9c81140da4e6ab9ff0386e4797071") {
     mapper = 206;
@@ -156,16 +151,6 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   //Gauntlet (USA) [Unlicensed]
   if(hash == "67b8a39744807dd740bdebcfe3d33bdac11a4d47b4807c0ffd35e322f8d670c2") {
     mapper = 206;
-  }
-
-  //Jajamaru Gekimaden: Maboroshi no Kinmajou (Japan)
-  if(hash == "ea770788f68e4bb089e4205807931d64b83175a0106e7563d0a6d3ebac369991") {
-    prgram = 8_KiB;
-  }
-
-  //Mezase Top Pro: Green ni Kakeru Yume (Japan)
-  if(hash == "32c6893e0f8a14714dd2082803cfde62f8981010d23fc9cf00a5a18066d063cb") {
-    prgram = 8_KiB;
   }
 
   switch(mapper) {
@@ -231,7 +216,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
 
   case  18:
-    s += "  board:  JALECO-JF\n";
+    s += "  board:  JALECO-JF-23A\n";
     s += "    chip type=SS88006\n";
     break;
 
@@ -338,7 +323,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
 
   case  78:
-    s += "  board:  IREM-IF-12\n";
+    s += "  board:  JALECO-JF-16\n";
     break;
 
   case  80:
