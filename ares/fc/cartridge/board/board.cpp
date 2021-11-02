@@ -65,8 +65,8 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = IremTAMS1::create(board);
   if(!p) p = JalecoJF::create(board);
   if(!p) p = JalecoJF05::create(board);
+  if(!p) p = JalecoJF11::create(board);
   if(!p) p = JalecoJF17::create(board);
-  if(!p) p = Jaleco_JF11_JF14::create(board);
   if(!p) p = KonamiVRC1::create(board);
   if(!p) p = KonamiVRC2::create(board);
   if(!p) p = KonamiVRC3::create(board);
