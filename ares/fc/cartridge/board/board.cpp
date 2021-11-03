@@ -1,6 +1,7 @@
 namespace Board {
 
 #include "bandai-fcg.cpp"
+#include "gtrom.cpp"
 #include "jaleco-jf05.cpp"
 #include "jaleco-jf11.cpp"
 #include "jaleco-jf16.cpp"
@@ -44,6 +45,7 @@ namespace Board {
 auto Interface::create(string board) -> Interface* {
   Interface* p = nullptr;
   if(!p) p = BandaiFCG::create(board);
+  if(!p) p = GTROM::create(board);
   if(!p) p = HVC_AxROM::create(board);
   if(!p) p = HVC_BNROM::create(board);
   if(!p) p = HVC_CNROM::create(board);
