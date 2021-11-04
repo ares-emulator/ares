@@ -66,7 +66,7 @@ struct Sunsoft5B : Interface {
     bank &= 0x3f;
 
     if(ramSelect) {
-      if(!ramEnable) return data;
+      if(!ramEnable || !programRAM) return data;
       return programRAM.read((n13)address);
     }
 
@@ -76,7 +76,7 @@ struct Sunsoft5B : Interface {
 
   auto writePRG(n32 address, n8 data) -> void override {
     if((address & 0xe000) == 0x6000) {
-      programRAM.write((n13)address, data);
+      if(programRAM) programRAM.write((n13)address, data);
     }
 
     if(address == 0x8000) {
