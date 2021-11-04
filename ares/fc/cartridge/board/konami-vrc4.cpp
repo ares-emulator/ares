@@ -52,6 +52,7 @@ struct KonamiVRC4 : Interface {
 
   auto readPRG(n32 address, n8 data) -> n8 override {
     if(address < 0x6000) return data;
+    if(address < 0x8000 && !programRAM) return data;
     if(address < 0x8000) return programRAM.read((n13)address);
 
     n5 bank, banks = programROM.size() >> 13;
@@ -67,6 +68,7 @@ struct KonamiVRC4 : Interface {
 
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000) return;
+    if(address < 0x8000 && !programRAM) return;
     if(address < 0x8000) return programRAM.write((n13)address, data);
 
     bool a0 = address & pinA0;
