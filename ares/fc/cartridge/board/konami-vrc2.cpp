@@ -1,6 +1,7 @@
 struct KonamiVRC2 : Interface {
   static auto create(string id) -> Interface* {
-    if(id == "KONAMI-VRC-2") return new KonamiVRC2;
+    if(id == "KONAMI-VRC-2" ) return new KonamiVRC2(Revision::VRC2);
+    if(id == "KONAMI-VRC-2A") return new KonamiVRC2(Revision::VRC2A);
     return nullptr;
   }
 
@@ -8,6 +9,13 @@ struct KonamiVRC2 : Interface {
   Memory::Writable<n8> programRAM;
   Memory::Readable<n8> characterROM;
   Memory::Writable<n8> characterRAM;
+
+  enum class Revision : u32 {
+    VRC2,
+    VRC2A,
+  } revision;
+
+  KonamiVRC2(Revision revision) : revision(revision) {}
 
   auto load() -> void override {
     Interface::load(programROM, "program.rom");
@@ -98,6 +106,7 @@ struct KonamiVRC2 : Interface {
 
   auto addressCHR(n32 address) const -> n32 {
     n8 bank = characterBank[address >> 10];
+    if(revision == Revision::VRC2A) bank >>= 1;
     return bank << 10 | (n10)address;
   }
 
