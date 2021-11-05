@@ -479,6 +479,34 @@ game
       content: Character
 
 game
+  sha256: a45d30c949f9d0942700826e4433ebad39e08da8252ecb541cae9d495928d63f
+  name:   Lagrange Point
+  title:  Lagrange Point
+  region: NTSC-J
+  board:  KONAMI-VRC-7
+    chip
+      type: VRC7
+      pinout
+        a0: 4
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x80000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+
+game
   sha256: 4ef61de405406bfa9eeaf19ed1d882444c41bb606ac78673b7ec8ee323d0e073
   name:   Major League
   title:  Major League
@@ -663,6 +691,29 @@ game
       pinout
         a0: 2
         a1: 3
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: dabde0dbf12d01237350cf6ad6463ce79651ac1e80d57b7b3b55c1819e72fd8a
+  name:   Tiny Toon Adventures 2 - Montana Land e Youkoso
+  title:  Tiny Toon Adventures 2 - Montana Land e Youkoso
+  region: NTSC-J
+  board:  KONAMI-VRC-7
+    chip
+      type: VRC7
+      pinout
+        a0: 3
     memory
       type: ROM
       size: 0x10
