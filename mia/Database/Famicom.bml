@@ -2,6 +2,182 @@ database
   revision: 2021-11-02
 
 game
+  sha256: c70f0f5d4054ce7c4850259879c9823add73ccc234ddcf96d95681bb78bd2c58
+  name:   Akumajou Densetsu
+  title:  Akumajou Densetsu
+  region: NTSC-J
+  board:  KONAMI-VRC-6
+    chip
+      type: VRC6
+      pinout
+        a0: 0
+        a1: 1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: ff5b96853cf67171918aad5157661dc223e0002e0373e2580cee2e207bb0a682
+  name:   Akumajou Special - Boku Dracula-kun
+  title:  Akumajou Special - Boku Dracula-kun
+  region: NTSC-J
+  board:  KONAMI-VRC-4
+    chip
+      type: VRC4
+      pinout
+        a0: 2
+        a1: 3
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 92c481350b63c57385834dfa0ab02aeb527df7e80cec14a3e1a1a77118cd38d1
+  name:   Bio Miracle Bokutte Upa
+  title:  Bio Miracle Bokutte Upa
+  region: NTSC-J
+  board:  KONAMI-VRC-4
+    chip
+      type: VRC4
+      pinout
+        a0: 1
+        a1: 0
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 62c9d4e0578cb1e615ce9bb2c8ebc15b1e8de4c928c5c07ba9a85c11aa36ae4d
+  name:   Contra
+  title:  Contra
+  region: NTSC-J
+  board:  KONAMI-VRC-2
+    chip
+      type: VRC2
+      pinout
+        a0: 0
+        a1: 1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: b504d0ebff8aa6439f1f9606526d8739f5007c1fdac31f9550caa7ca26edce16
+  name:   Crisis Force
+  title:  Crisis Force
+  region: NTSC-J
+  board:  KONAMI-VRC-4
+    chip
+      type: VRC4
+      pinout
+        a0: 2
+        a1: 3
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x800
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 8f7a7ce842ce3135e1cfaea50da3029e7fe8de28384c8db45ef8371ba42b45a9
+  name:   Dragon Scroll - Yomigaerishi Maryuu
+  title:  Dragon Scroll - Yomigaerishi Maryuu
+  region: NTSC-J
+  board:  KONAMI-VRC-2
+    chip
+      type: VRC2
+      pinout
+        a0: 0
+        a1: 1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 761df2c2e04f9ffec5eec59afd821bd74af3b155546519d649876aad37160c06
+  name:   Esper Dream 2 - Aratanaru Tatakai
+  title:  Esper Dream 2 - Aratanaru Tatakai
+  region: NTSC-J
+  board:  KONAMI-VRC-6
+    chip
+      type: VRC6
+      pinout
+        a0: 1
+        a1: 0
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: c8c0b6c21bdda7503bab7592aea0f945a0259c18504bb241aafb1eabe65846f3
   name:   Family BASIC V3
   title:  Family BASIC V3
@@ -24,6 +200,190 @@ game
     memory
       type: ROM
       size: 0x2000
+      content: Character
+
+game
+  sha256: 270b84c1f6fcac20f2ce66bdf702882d44fc5345cdf76ff62d7823ccda9f2cba
+  name:   Ganbare Goemon 2
+  title:  Ganbare Goemon 2
+  region: NTSC-J
+  board:  KONAMI-VRC-2
+    chip
+      type: VRC2
+      pinout
+        a0: 0
+        a1: 1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 2613db1559a07137af1f3cfda4175ac09be465604c651956dd98d971aedae6bc
+  name:   Ganbare Goemon Gaiden - Kieta Ougon Kiseru
+  title:  Ganbare Goemon Gaiden - Kieta Ougon Kiseru
+  region: NTSC-J
+  board:  KONAMI-VRC-2
+    chip
+      type: VRC2
+      pinout
+        a0: 1
+        a1: 0
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 7c27ab834d0dcc03498d46d9944c9ea5498b1a7af9606a835217e141e2b3c662
+  name:   Ganbare Goemon Gaiden - Kieta Ougon Kiseru (Rev 1)
+  title:  Ganbare Goemon Gaiden - Kieta Ougon Kiseru (Rev 1)
+  region: NTSC-J
+  board:  KONAMI-VRC-2
+    chip
+      type: VRC2
+      pinout
+        a0: 1
+        a1: 0
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 50770ffec21bd47eadc9b502b73323f976e48e6f8f589a6717300119bde99de3
+  name:   Ganbare Goemon Gaiden 2 - Tenka no Zaihou
+  title:  Ganbare Goemon Gaiden 2 - Tenka no Zaihou
+  region: NTSC-J
+  board:  KONAMI-VRC-4
+    chip
+      type: VRC4
+      pinout
+        a0: 6
+        a1: 7
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: a5697c59cdbd3859662199825c50cb338762c379c700701f75cdf157b3c13829
+  name:   Ganbare Pennant Race!
+  title:  Ganbare Pennant Race!
+  region: NTSC-J
+  board:  KONAMI-VRC-2A
+    chip
+      type: VRC2
+      pinout
+        a0: 1
+        a1: 0
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 963ef31970fb4f7aa84dbfa2eacf96c084effeaeb8ba276387fb9875e4daf7c5
+  name:   Getsu Fuuma Den
+  title:  Getsu Fuuma Den
+  region: NTSC-J
+  board:  KONAMI-VRC-2
+    chip
+      type: VRC2
+      pinout
+        a0: 0
+        a1: 1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 2974ad16b994cfdc9418310ced6c7f4ed64433063d12439a7b37a816f797dd0e
+  name:   Gradius II
+  title:  Gradius II
+  region: NTSC-J
+  board:  KONAMI-VRC-4
+    chip
+      type: VRC4
+      pinout
+        a0: 1
+        a1: 0
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x800
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
@@ -65,6 +425,54 @@ game
       type: RAM
       size: 0x2000
       content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: e9c28ba4b940583e4a486ac5b401ac42e9aafa909d27c798f4fb3fc0045a3971
+  name:   Jarinko Chie - Bakudan Musume no Shiawase Sagashi
+  title:  Jarinko Chie - Bakudan Musume no Shiawase Sagashi
+  region: NTSC-J
+  board:  KONAMI-VRC-2
+    chip
+      type: VRC2
+      pinout
+        a0: 0
+        a1: 1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: d13fa0e0694a8318d7a7c51c759c254415bf1b41869a4cc04d3233062f7256ae
+  name:   Konami Wai Wai World
+  title:  Konami Wai Wai World
+  region: NTSC-J
+  board:  KONAMI-VRC-2
+    chip
+      type: VRC2
+      pinout
+        a0: 0
+        a1: 1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
     memory
       type: ROM
       size: 0x20000
@@ -117,6 +525,182 @@ game
       content: Character
 
 game
+  sha256: 97ff1ac9e6061ba5fb02b4626abf3521f84ee1542fa8093d617ede08dbb17cdc
+  name:   Mouryou Senki Madara
+  title:  Mouryou Senki Madara
+  region: NTSC-J
+  board:  KONAMI-VRC-6
+    chip
+      type: VRC6
+      pinout
+        a0: 1
+        a1: 0
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 7c9ac15848defca1f6977a167e50e80e6a59c7cad040c5190629f29c2998ea16
+  name:   Parodius Da!
+  title:  Parodius Da!
+  region: NTSC-J
+  board:  KONAMI-VRC-4
+    chip
+      type: VRC4
+      pinout
+        a0: 2
+        a1: 3
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 6b5f7dbd2c4e7512b27e8492a8af8ad08701ba125e0fe7d4ac679f5782f7eb9b
+  name:   Racer Mini Yonku - Japan Cup
+  title:  Racer Mini Yonku - Japan Cup
+  region: NTSC-J
+  board:  KONAMI-VRC-4
+    chip
+      type: VRC4
+      pinout
+        a0: 1
+        a1: 0
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 6fff1bfc89bb2f3c160b88736990c764920b0c44107b265f642a50324ca3adfb
+  name:   Teenage Mutant Ninja Turtles
+  title:  Teenage Mutant Ninja Turtles
+  region: NTSC-J
+  board:  KONAMI-VRC-4
+    chip
+      type: VRC4
+      pinout
+        a0: 3
+        a1: 2
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 76b488345b40aa2868e6d4b4f2f06fdaf626601ec76daf9da15c41800ecc5be8
+  name:   Teenage Mutant Ninja Turtles 2 - The Manhattan Project
+  title:  Teenage Mutant Ninja Turtles 2 - The Manhattan Project
+  region: NTSC-J
+  board:  KONAMI-VRC-4
+    chip
+      type: VRC4
+      pinout
+        a0: 3
+        a1: 2
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 4b80a1db42ecde039f01c52a74146887f9dfc2ad54fe3706bcdf625ec3e2de97
+  name:   Tiny Toon Adventures
+  title:  Tiny Toon Adventures
+  region: NTSC-J
+  board:  KONAMI-VRC-4
+    chip
+      type: VRC4
+      pinout
+        a0: 2
+        a1: 3
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 092db8cfadf0a96c67dd0734c966c47dfb80ffb830485d8ee702284ae8eac4aa
+  name:   TwinBee 3 - Poko Poko Daimaou
+  title:  TwinBee 3 - Poko Poko Daimaou
+  region: NTSC-J
+  board:  KONAMI-VRC-2A
+    chip
+      type: VRC2
+      pinout
+        a0: 1
+        a1: 0
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 407e54848ad9991399f0383118f138d3a0532bb03bb488ed856deb7f2eb4efbf
   name:   Uchuusen Cosmo Carrier
   title:  Uchuusen Cosmo Carrier
@@ -129,6 +713,30 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 375a2fef345cabaab35ad7cc238b2cf0298cbf93f047ea57a79c3dae598b4287
+  name:   Wai Wai World 2 - SOS!! Paseri Jou
+  title:  Wai Wai World 2 - SOS!! Paseri Jou
+  region: NTSC-J
+  board:  KONAMI-VRC-4
+    chip
+      type: VRC4
+      pinout
+        a0: 1
+        a1: 2
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
       content: Program
     memory
       type: ROM
