@@ -351,6 +351,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  85:
     s += "  board:  KONAMI-VRC-7\n";
     s += "    chip type=VRC7\n";
+    s += "      pinout a0=4\n";
     prgram = 8192;
     break;
 
