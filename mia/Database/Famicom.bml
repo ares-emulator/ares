@@ -74,6 +74,29 @@ game
       content: Character
 
 game
+  sha256: 59f228976854136f7988c309ad5baa68687b363df27810e28bb6959b771d5af6
+  name:   Chibi Maruko-chan - Uki Uki Shopping
+  title:  Chibi Maruko-chan - Uki Uki Shopping
+  region: NTSC-J
+  board:  NAMCO-175
+    chip
+      type: 175
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 62c9d4e0578cb1e615ce9bb2c8ebc15b1e8de4c928c5c07ba9a85c11aa36ae4d
   name:   Contra
   title:  Contra
@@ -200,6 +223,119 @@ game
     memory
       type: ROM
       size: 0x2000
+      content: Character
+
+game
+  sha256: 0396d4e3ec774acab0713dcea7d7cf4e62e13f1991765864d97b567621213fd0
+  name:   Family Circuit '91
+  title:  Family Circuit '91
+  region: NTSC-J
+  board:  NAMCO-175
+    chip
+      type: 175
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x80000
+      content: Program
+    memory
+      type: RAM
+      size: 0x800
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: dcc5c7e37da015cae9b2a296e406628453de71df21ed934993901cb999966b4b
+  name:   Famista '91
+  title:  Famista '91
+  region: NTSC-J
+  board:  NAMCO-175
+    chip
+      type: 175
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: adb959cca18b207aea36d79ba41ee3c57edcf6a0d8e92e8e79f856021c4ec1e9
+  name:   Famista '92
+  title:  Famista '92
+  region: NTSC-J
+  board:  NAMCO-340
+    chip
+      type: 340
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: f6959e92c4d8e596fed4c585be1416df29b0ab5ac3c7a50d9321da9bc19eb764
+  name:   Famista '93
+  title:  Famista '93
+  region: NTSC-J
+  board:  NAMCO-340
+    chip
+      type: 340
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 0d9319a3cc0e12ad9670a14b625f33eb8c5f4cc6ff93a2fe5bbf64f7bfe57b61
+  name:   Famista '94
+  title:  Famista '94
+  region: NTSC-J
+  board:  NAMCO-340
+    chip
+      type: 340
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
@@ -381,6 +517,29 @@ game
       type: RAM
       size: 0x800
       content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 429c833eb61c0728b0d9335c61f4bd8d3fb19c3bf8a18564917bf75526f104af
+  name:   Heisei Tensai Bakabon
+  title:  Heisei Tensai Bakabon
+  region: NTSC-J
+  board:  NAMCO-175
+    chip
+      type: 175
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
     memory
       type: ROM
       size: 0x20000
@@ -581,6 +740,29 @@ game
       content: Character
 
 game
+  sha256: de6cb9b8644fe4c3477ba29a7ef1c6102f4ca0c18a7c909616442b9068f28ca3
+  name:   Namco Prism Zone - Dream Master
+  title:  Namco Prism Zone - Dream Master
+  region: NTSC-J
+  board:  NAMCO-175
+    chip
+      type: 175
+    mirror
+      mode: horizontal
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
   sha256: 7c9ac15848defca1f6977a167e50e80e6a59c7cad040c5190629f29c2998ea16
   name:   Parodius Da!
   title:  Parodius Da!
@@ -619,6 +801,48 @@ game
       pinout
         a0: 1
         a1: 0
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 387d82471ca5f54e70b3c4d445ae5c692640d99c47b30a6bf67f5a17b6236c85
+  name:   Splatterhouse - Wanpaku Graffiti
+  title:  Splatterhouse - Wanpaku Graffiti
+  region: NTSC-J
+  board:  NAMCO-340
+    chip
+      type: 340
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 4a6cdbfe99fd5bffabda34a67d9918d0bda59701763176a44b58a362a6ad971d
+  name:   Splatterhouse - Wanpaku Graffiti (Namcot Collection)
+  title:  Splatterhouse - Wanpaku Graffiti (Namcot Collection)
+  region: NTSC-J
+  board:  NAMCO-340
+    chip
+      type: 340
     memory
       type: ROM
       size: 0x10
@@ -728,6 +952,27 @@ game
       content: Character
 
 game
+  sha256: 5094752e3f001c1eeff60116cf64fd35a090e14bf95ef5f563afc41d59fc3445
+  name:   Top Striker
+  title:  Top Striker
+  region: NTSC-J
+  board:  NAMCO-340
+    chip
+      type: 340
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 092db8cfadf0a96c67dd0734c966c47dfb80ffb830485d8ee702284ae8eac4aa
   name:   TwinBee 3 - Poko Poko Daimaou
   title:  TwinBee 3 - Poko Poko Daimaou
@@ -768,6 +1013,69 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: 2f72973f63b861a4e7db9b9c92600616dfe6fac73d95a8cb15322a3711d7744c
+  name:   Wagyan Land 2 (Virtual Console)
+  title:  Wagyan Land 2 (Virtual Console)
+  region: NTSC-J
+  board:  NAMCO-340
+    chip
+      type: 340
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 8b415e22a0479560517eb62dc11a4e9869d86a4a32191253d73d5b71ee249462
+  name:   Wagyan Land 2
+  title:  Wagyan Land 2
+  region: NTSC-J
+  board:  NAMCO-340
+    chip
+      type: 340
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: eb7010c9e745d8a61d325e6bac7b8cbb16f34ad8fd01b5996131ba35cf528d26
+  name:   Wagyan Land 3
+  title:  Wagyan Land 3
+  region: NTSC-J
+  board:  NAMCO-340
+    chip
+      type: 340
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
       content: Character
 
 game
