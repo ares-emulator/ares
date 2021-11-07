@@ -240,17 +240,17 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     prgram = 8192;
     break;
 
+  case  24:
+    s += "  board:  KONAMI-VRC-6\n";
+    s += "    chip type=VRC6\n";
+    s += "      pinout a0=0 a1=1\n";
+    break;
+
   case  25:
     s += "  board:  KONAMI-VRC-4\n";
     s += "    chip type=VRC4\n";
     s += "      pinout a0=1 a1=0\n";
     prgram = 8192;
-    break;
-
-  case  24:
-    s += "  board:  KONAMI-VRC-6\n";
-    s += "    chip type=VRC6\n";
-    s += "      pinout a0=0 a1=1\n";
     break;
 
   case  26:
@@ -413,6 +413,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "  board:  TAITO-X1-005A\n";
     s += "    chip type=X1-005\n";
     prgram = 128;
+    break;
+
+  case 210:
+    s += "  board:  NAMCO-340\n";
+    s += "    chip type=340\n";
     break;
 
   }
