@@ -60,6 +60,9 @@ auto VDP::status() -> n8 {
 auto VDP::data(n8 data) -> void {
   latch.control = 0;
 
+  // Writes to data port set VDP read buffer
+  latch.vram = data;
+
   if(io.code <= 2) {
     vram[io.address] = data;
   } else {
