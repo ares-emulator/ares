@@ -62,6 +62,12 @@ auto GameGear::analyze(vector<u8>& rom) -> string {
     ms     = 1;
   }
 
+  //Mickey Mouse no Castle Illusion (Japan)
+  if(hash == "906e8da0e24899d30dffc4745b533e2a7c9d7ec2addbe853715165b552474d68") {
+    region = "NTSC-J";
+    ms     = 1;
+  }
+
   //Jang Pung II (Korea)
   if(hash == "a685ad4118edd2fe6fb8ccc4bfc0c9ceac2f6affc3b5d93cc29afb2c9604d5ee") {
     region = "NTSC-J";
