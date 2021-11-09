@@ -143,16 +143,6 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   s +={"  title:  ", Medium::name(location), "\n"};
   s += "  region: NTSC-J, NTSC-U, PAL\n";  //database required to detect region
 
-  //Gauntlet (USA)
-  if(hash == "fd2a8520314fb183e15fd62f48df97f92eb9c81140da4e6ab9ff0386e4797071") {
-    mapper = 206;
-  }
-
-  //Gauntlet (USA) [Unlicensed]
-  if(hash == "67b8a39744807dd740bdebcfe3d33bdac11a4d47b4807c0ffd35e322f8d670c2") {
-    mapper = 206;
-  }
-
   switch(mapper) {
 
   default:
@@ -327,6 +317,12 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "    chip type=VRC1\n";
     break;
 
+  case  76:
+    s += "  board:  NAMCO-3446\n";
+    s += "    chip type=118\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
   case  77:
     s += "  board:  IREM-LROG017\n";
     chrram = 8192;
@@ -365,6 +361,12 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
+  case  88:
+    s += "  board:  NAMCO-3433\n";
+    s += "    chip type=118\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
   case  89:
     s += "  board:  SUNSOFT-2\n";
     break;
@@ -377,6 +379,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  93:
     s += "  board:  SUNSOFT-2\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
+  case  95:
+    s += "  board:  NAMCO-3425\n";
+    s += "    chip type=118\n";
     break;
 
   case  97:
@@ -393,6 +400,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
+  case 154:
+    s += "  board:  NAMCO-3453\n";
+    s += "    chip type=118\n";
+    break;
+
   case 159:
     s += "  board:  BANDAI-FCG\n";
     s += "    chip type=LZ93D50\n";
@@ -405,8 +417,9 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
 
   case 206:
-    s += "  board: HVC-DRROM\n";
-    chrram = 2048;
+    s += "  board:  NAMCO-118\n";
+    s += "    chip type=118\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
   case 207:
