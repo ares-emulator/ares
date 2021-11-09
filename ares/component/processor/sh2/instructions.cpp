@@ -5,9 +5,10 @@ auto SH2::ADD(u32 m, u32 n) -> void {
 
 //ADDC Rm,Rn
 auto SH2::ADDC(u32 m, u32 n) -> void {
-  bool c = (u64)R[n] + R[m] >> 32;
-  R[n] = R[n] + R[m] + SR.T;
-  SR.T = c;
+  u32 a = R[n];
+  u32 b = a + R[m];
+  R[n] = b + SR.T;
+  SR.T = a > b || b > R[n];
 }
 
 //ADD #imm,Rn
@@ -17,9 +18,11 @@ auto SH2::ADDI(u32 i, u32 n) -> void {
 
 //ADDV Rm,Rn
 auto SH2::ADDV(u32 m, u32 n) -> void {
-  bool v = ~(R[n] ^ R[m]) & (R[n] ^ R[n] + R[m]) >> 31;
+  u32 d = ((s32)R[n] < 0);
+  u32 s = ((s32)R[m] < 0) + d;
   R[n] += R[m];
-  SR.T = v;
+  u32 r = ((s32)R[n] < 0) + d;
+  SR.T = s != 1 ? r == 1 : 0;
 }
 
 //AND Rm,Rn
@@ -140,7 +143,11 @@ auto SH2::CMPPZ(u32 n) -> void {
 
 //CMP/STR Rm,Rn
 auto SH2::CMPSTR(u32 m, u32 n) -> void {
-  SR.T = bool(R[n] ^ R[m]);
+  u32 t = R[n] ^ R[m];
+  SR.T = !(t & 0xff << 24)
+      || !(t & 0xff << 16)
+      || !(t & 0xff << 8)
+      || !(t & 0xff);
 }
 
 //DIV0S Rm,Rn
@@ -353,8 +360,9 @@ auto SH2::MOVBLG(u32 d) -> void {
 
 //MOV.B Rm,@-Rn
 auto SH2::MOVBM(u32 m, u32 n) -> void {
+  u32 t = R[m];
   R[n] -= 1;
-  writeByte(R[n], R[m]);
+  writeByte(R[n], t);
 }
 
 //MOV.B @Rm+,Rn
@@ -405,8 +413,9 @@ auto SH2::MOVWLG(u32 d) -> void {
 
 //MOV.W Rm,@-Rn
 auto SH2::MOVWM(u32 m, u32 n) -> void {
+  u32 t = R[m];
   R[n] -= 2;
-  writeWord(R[n], R[m]);
+  writeWord(R[n], t);
 }
 
 //MOV.W @Rm+,Rn
@@ -457,8 +466,9 @@ auto SH2::MOVLLG(u32 d) -> void {
 
 //MOV.L Rm,@-Rn
 auto SH2::MOVLM(u32 m, u32 n) -> void {
+  u32 t = R[m];
   R[n] -= 4;
-  writeLong(R[n], R[m]);
+  writeLong(R[n], t);
 }
 
 //MOV.L @Rm+,Rn
@@ -536,7 +546,7 @@ auto SH2::NEG(u32 m, u32 n) -> void {
 auto SH2::NEGC(u32 m, u32 n) -> void {
   u32 t = 0 - R[m];
   R[n] = t - SR.T;
-  SR.T = (s32)t >= 0 || t < R[n];
+  SR.T = 0 < t || t < R[n];
 }
 
 //NOP

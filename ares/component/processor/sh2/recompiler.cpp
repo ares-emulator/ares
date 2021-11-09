@@ -174,14 +174,12 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     addd(Rn, imm8(4));
     call(readLong);
     movsxd(rax, eax);
-    push(rax);
-    push(rax);
+    mov(r13, rax);
     mov(ra1d, Rm);
     addd(Rm, imm8(4));
     call(readLong);
     movsxd(rax, eax);
-    pop(rdx);
-    pop(rdx);
+    mov(rdx, r13);
     imul(rdx);
     mov(rdx, rax);
     add(rdx, MAC);
@@ -232,9 +230,10 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x24: {
     mov(ra1d, Rn);
     dec(ra1d);
-    mov(Rn, ra1d);
+    mov(r13d, ra1d);
     mov(ra2d, Rm);
     call(writeByte);
+    mov(Rn, r13d);
     return 0;
   }
 
@@ -242,9 +241,10 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x25: {
     mov(ra1d, Rn);
     sub(ra1d, imm8(2));
-    mov(Rn, ra1d);
+    mov(r13d, ra1d);
     mov(ra2d, Rm);
     call(writeWord);
+    mov(Rn, r13d);
     return 0;
   }
 
@@ -252,9 +252,10 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x26: {
     mov(ra1d, Rn);
     sub(ra1d, imm8(4));
-    mov(Rn, ra1d);
+    mov(r13d, ra1d);
     mov(ra2d, Rm);
     call(writeLong);
+    mov(Rn, r13d);
     return 0;
   }
 
@@ -309,6 +310,14 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     mov(eax, Rn);
     mov(edx, Rm);
     xor(eax, edx);
+    test(al, al);
+    setz(dl);
+    for(auto _ : range(3)) {
+      shr(eax, imm8(8));
+      test(al, al);
+      setz(al);
+      or(dl, al);
+    }
     setnz(T);
     return 0;
   }
@@ -484,7 +493,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //ADDC Rm,Rn
   case 0x3e: {
-    mov(rax, T);
+    mov(al, T);
     rcr(al);
     mov(eax, Rn);
     adc(eax, Rm);
@@ -510,17 +519,15 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     addd(Rn, imm8(2));
     call(readWord);
     movsx(eax, ax);
-    push(rax);
-    push(rax);
+    mov(r13d, eax);
     mov(ra1d, Rm);
     addd(Rm, imm8(2));
     call(readWord);
     movsx(eax, ax);
-    pop(rdx);
-    pop(rdx);
+    mov(edx, r13d);
     imul(edx);
     shl(rdx, imm8(32));
-    or(edx, eax);
+    or(rdx, rax);
     add(rdx, MAC);
     mov(al, S);
     test(al, al);
@@ -633,14 +640,14 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //NEGC Rm,Rn
   case 0x6a: {
-    xor(edx, edx);
-    sub(edx, Rm);
     mov(al, T);
     and(eax, imm8(1));
-    sub(edx, eax);
-    mov(Rn, edx);
-    setc(al);
-    mov(T, al);
+    mov(edx, Rm);
+    add(eax, edx);
+    neg(eax);
+    mov(Rn, eax);
+    or(eax, edx);
+    setnz(T);
     return 0;
   }
 
@@ -949,7 +956,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     mov(ra1d, GBR);
     add(ra1d, imm32(d8*4));
     call(readLong);
-    mov(R0, rax);
+    mov(R0, eax);
     return 0;
   }
 
@@ -1249,7 +1256,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     mov(ra1d, Rn);
     addd(Rn, imm8(4));
     call(readLong);
-    mov(MACH, rax);
+    mov(MACH, eax);
     return 0;
   }
 
