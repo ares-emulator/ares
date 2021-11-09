@@ -17,7 +17,6 @@ namespace Board {
 #include "hvc-axrom.cpp"
 #include "hvc-bnrom.cpp"
 #include "hvc-cnrom.cpp"
-#include "hvc-dxrom.cpp"
 #include "hvc-exrom.cpp"
 #include "hvc-fmr.cpp"
 #include "hvc-fxrom.cpp"
@@ -32,6 +31,7 @@ namespace Board {
 #include "irem-h3001.cpp"
 #include "irem-lrog017.cpp"
 #include "irem-tam-s1.cpp"
+#include "namco-118.cpp"
 #include "namco-340.cpp"
 #include "sunsoft-1.cpp"
 #include "sunsoft-2.cpp"
@@ -50,7 +50,6 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = HVC_AxROM::create(board);
   if(!p) p = HVC_BNROM::create(board);
   if(!p) p = HVC_CNROM::create(board);
-  if(!p) p = HVC_DxROM::create(board);
   if(!p) p = HVC_ExROM::create(board);
   if(!p) p = HVC_FMR::create(board);
   if(!p) p = HVC_FxROM::create(board);
@@ -77,6 +76,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = KonamiVRC5::create(board);
   if(!p) p = KonamiVRC6::create(board);
   if(!p) p = KonamiVRC7::create(board);
+  if(!p) p = Namco118::create(board);
   if(!p) p = Namco340::create(board);
   if(!p) p = Sunsoft1::create(board);
   if(!p) p = Sunsoft2::create(board);
