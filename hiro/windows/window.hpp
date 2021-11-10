@@ -51,6 +51,7 @@ struct pWindow : pObject {
   HBRUSH hbrush = nullptr;
   COLORREF hbrushColor = 0;
   Geometry windowedGeometry{128, 128, 256, 256};
+  bool focus = false;
 };
 
 }

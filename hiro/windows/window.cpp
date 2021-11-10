@@ -62,7 +62,7 @@ auto pWindow::append(sStatusBar statusBar) -> void {
 }
 
 auto pWindow::focused() const -> bool {
-  return (GetForegroundWindow() == hwnd);
+  return focus;
 }
 
 auto pWindow::frameMargin() const -> Geometry {
@@ -327,6 +327,16 @@ auto pWindow::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> m
     if(wparam == SC_SCREENSAVE || wparam == SC_MONITORPOWER) {
       if(!Application::screenSaver()) return 0;
     }
+  }
+
+  if(msg == WM_SETFOCUS) {
+    focus = true;
+    return false;
+  }
+
+  if(msg == WM_KILLFOCUS) {
+    focus = false;
+    return false;
   }
 
   return {};
