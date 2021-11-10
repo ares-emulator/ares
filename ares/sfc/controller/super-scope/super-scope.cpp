@@ -30,7 +30,7 @@ SuperScope::SuperScope(Node::Port parent) {
 
 SuperScope::~SuperScope() {
   cpu.peripherals.removeByValue(this);
-  ppu.screen->detach(sprite);
+  if(ppu.screen) ppu.screen->detach(sprite);
 }
 
 auto SuperScope::main() -> void {

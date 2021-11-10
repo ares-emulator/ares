@@ -36,6 +36,7 @@ auto Screen::main(uintptr_t) -> void {
 auto Screen::quit() -> void {
   _kill = true;
   _thread.join();
+  _sprites.reset();
 }
 
 auto Screen::power() -> void {
