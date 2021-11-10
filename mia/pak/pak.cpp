@@ -10,6 +10,18 @@ auto Pak::name(string location) const -> string {
   return Location::prefix(location);
 }
 
+auto Pak::read(string location) -> vector<u8> {
+  //attempt to match known extensions
+  auto extensions = this->extensions();
+  for(auto& extension : extensions) extension.prepend("*.");
+  auto memory = read(location, extensions);
+
+  //failing that, read whatever exists
+  if(!memory) memory = read(location, {"*"});
+
+  return memory;
+}
+
 auto Pak::read(string location, vector<string> match) -> vector<u8> {
   vector<u8> memory;
   vector<u8> patch;
@@ -30,11 +42,13 @@ auto Pak::read(string location, vector<string> match) -> vector<u8> {
           }
           if(memory) break;
         }
-        //support BPS patches inside the ZIP archive
-        for(auto& file : archive.file) {
-          if(file.name.imatch("*.bps")) {
-            patch = archive.extract(file);
-            break;
+        if(memory) {
+          //support BPS patches inside the ZIP archive
+          for(auto& file : archive.file) {
+            if(file.name.imatch("*.bps")) {
+              patch = archive.extract(file);
+              break;
+            }
           }
         }
       }
