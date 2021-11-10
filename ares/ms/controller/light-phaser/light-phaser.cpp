@@ -11,7 +11,7 @@ LightPhaser::LightPhaser(Node::Port parent) {
 }
 
 LightPhaser::~LightPhaser() {
-  vdp.screen->detach(sprite);
+  if(vdp.screen) vdp.screen->detach(sprite);
 }
 
 auto LightPhaser::read() -> n7 {

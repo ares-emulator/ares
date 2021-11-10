@@ -25,8 +25,10 @@ Justifiers::Justifiers(Node::Port parent) {
 
 Justifiers::~Justifiers() {
   cpu.peripherals.removeByValue(this);
-  ppu.screen->detach(sprite1);
-  ppu.screen->detach(sprite2);
+  if(ppu.screen) {
+    ppu.screen->detach(sprite1);
+    ppu.screen->detach(sprite2);
+  }
 }
 
 auto Justifiers::main() -> void {

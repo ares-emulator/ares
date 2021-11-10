@@ -16,7 +16,7 @@ Justifier::Justifier(Node::Port parent) {
 
 Justifier::~Justifier() {
   cpu.peripherals.removeByValue(this);
-  ppu.screen->detach(sprite);
+  if(ppu.screen) ppu.screen->detach(sprite);
 }
 
 auto Justifier::main() -> void {
