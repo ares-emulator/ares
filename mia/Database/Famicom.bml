@@ -1,10 +1,52 @@
 database
-  revision: 2021-11-09
+  revision: 2021-11-10
+
+game
+  sha256: 21b10e8d4cf775aa1f4027c4afb4f64e72e221a506a485cf4ffdf98bed01a524
+  name:   Ai Sensei no Oshiete - Watashi no Hoshi (Japan)
+  title:  Ai Sensei no Oshiete - Watashi no Hoshi (Japan)
+  region: NTSC-J
+  board:  IREM-G101
+    chip
+      type: G101
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: caa7f0a9aa265625cc375ea6fe21d410b661476b5a665344eda1c5a9dff404f4
+  name:   Akira (Japan)
+  title:  Akira (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0190
+    chip
+      type: TC0190
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
 
 game
   sha256: c70f0f5d4054ce7c4850259879c9823add73ccc234ddcf96d95681bb78bd2c58
-  name:   Akumajou Densetsu
-  title:  Akumajou Densetsu
+  name:   Akumajou Densetsu (Japan)
+  title:  Akumajou Densetsu (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-6
     chip
@@ -27,8 +69,8 @@ game
 
 game
   sha256: ff5b96853cf67171918aad5157661dc223e0002e0373e2580cee2e207bb0a682
-  name:   Akumajou Special - Boku Dracula-kun
-  title:  Akumajou Special - Boku Dracula-kun
+  name:   Akumajou Special - Boku Dracula-kun (Japan)
+  title:  Akumajou Special - Boku Dracula-kun (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-4
     chip
@@ -47,6 +89,27 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: 7768ef85519c94dc40d09bc598121825d103fcf1d4927be59f597b0a3509d15f
+  name:   Argus (Japan)
+  title:  Argus (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-07
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x4000
       content: Character
 
 game
@@ -73,9 +136,72 @@ game
       content: Character
 
 game
+  sha256: a04479f081dedd31fb5b3f1cfb2741c1a18946cc8f71c0c0ce9488835ce37563
+  name:   Bakushou!! Jinsei Gekijou (Japan)
+  title:  Bakushou!! Jinsei Gekijou (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0190
+    chip
+      type: TC0190
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 74b3668bfd13400d296866403a4cfce126c54f6278ab5a8edfc3179f899d0894
+  name:   Bakushou!! Jinsei Gekijou 2 (Japan)
+  title:  Bakushou!! Jinsei Gekijou 2 (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0190
+    chip
+      type: TC0190
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 698144cfbd23188ad39a02209a40dc9ad7cbd38c8c04d8957df4482f57a6c6fb
+  name:   Bakushou!! Jinsei Gekijou 3 (Japan)
+  title:  Bakushou!! Jinsei Gekijou 3 (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0690
+    chip
+      type: TC0690
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
   sha256: 92c481350b63c57385834dfa0ab02aeb527df7e80cec14a3e1a1a77118cd38d1
-  name:   Bio Miracle Bokutte Upa
-  title:  Bio Miracle Bokutte Upa
+  name:   Bio Miracle Bokutte Upa (Japan)
+  title:  Bio Miracle Bokutte Upa (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-4
     chip
@@ -83,6 +209,69 @@ game
       pinout
         a0: 1
         a1: 0
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: bad75642a65cde63265f5f0bf0ad8d002da0ae5834a27aae4eb62651de7980cf
+  name:   Bio Senshi Dan - Increaser Tono Tatakai (Japan)
+  title:  Bio Senshi Dan - Increaser Tono Tatakai (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-14
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: caab4e955514d17ff9b08251d09a52cf2fc1126788724e28c3ac3300599694c1
+  name:   Bubble Bobble 2 (Japan)
+  title:  Bubble Bobble 2 (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0690
+    chip
+      type: TC0690
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 2ac39a3e3892cc4e4ec616348a9646be8c8cb8b229c9f5d8868e3a5a5c7e8397
+  name:   Captain Saver (Japan)
+  title:  Captain Saver (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0690
+    chip
+      type: TC0690
     memory
       type: ROM
       size: 0x10
@@ -120,9 +309,72 @@ game
       content: Character
 
 game
+  sha256: d5aa44754e9b2bdd3c747ca49e2e52b653889fc235d7ed0ca49177942fa8e9fe
+  name:   Choplifter (Japan)
+  title:  Choplifter (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-08
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x4000
+      content: Character
+
+game
+  sha256: 3ad002d6db25da0e1383ca22acba42fdfdf6fd37eba4264dee4c6dcb48568138
+  name:   Choplifter (Japan) (Rev 1)
+  title:  Choplifter (Japan) (Rev 1)
+  region: NTSC-J
+  board:  JALECO-JF-08
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x4000
+      content: Character
+
+game
+  sha256: 72c69f068099e42844bfe17e7d37f439243fad10b283650cac041e78443e0300
+  name:   City Connection (Japan)
+  title:  City Connection (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-05
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+    memory
+      type: ROM
+      size: 0x4000
+      content: Character
+
+game
   sha256: 62c9d4e0578cb1e615ce9bb2c8ebc15b1e8de4c928c5c07ba9a85c11aa36ae4d
-  name:   Contra
-  title:  Contra
+  name:   Contra (Japan)
+  title:  Contra (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-2
     chip
@@ -145,8 +397,8 @@ game
 
 game
   sha256: b504d0ebff8aa6439f1f9606526d8739f5007c1fdac31f9550caa7ca26edce16
-  name:   Crisis Force
-  title:  Crisis Force
+  name:   Crisis Force (Japan)
+  title:  Crisis Force (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-4
     chip
@@ -169,6 +421,27 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: a1d9bcf389d6837581cd33a26b4e13917d084e3e69dbe89453e443fc9976fa22
+  name:   Daiku no Gen-san 2 - Akage no Dan no Gyakushuu (Japan)
+  title:  Daiku no Gen-san 2 - Akage no Dan no Gyakushuu (Japan)
+  region: NTSC-J
+  board:  IREM-H3001
+    chip
+      type: H3001
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
       content: Character
 
 game
@@ -213,6 +486,48 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: 1eaa6da0a158dd99c5dc46e0c75b8dcec07ee26300847b3e775c8b8ef1e7484a
+  name:   Don Doko Don (Japan)
+  title:  Don Doko Don (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0190
+    chip
+      type: TC0190
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: fb0b3aab3fb22ab78b1d94fcbc730ed440591fdc359caec9e9f1d45682a38d01
+  name:   Don Doko Don 2 (Japan)
+  title:  Don Doko Don 2 (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0690
+    chip
+      type: TC0690
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
       content: Character
 
 game
@@ -261,8 +576,8 @@ game
 
 game
   sha256: 8f7a7ce842ce3135e1cfaea50da3029e7fe8de28384c8db45ef8371ba42b45a9
-  name:   Dragon Scroll - Yomigaerishi Maryuu
-  title:  Dragon Scroll - Yomigaerishi Maryuu
+  name:   Dragon Scroll - Yomigaerishi Maryuu (Japan)
+  title:  Dragon Scroll - Yomigaerishi Maryuu (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-2
     chip
@@ -331,8 +646,8 @@ game
 
 game
   sha256: 761df2c2e04f9ffec5eec59afd821bd74af3b155546519d649876aad37160c06
-  name:   Esper Dream 2 - Aratanaru Tatakai
-  title:  Esper Dream 2 - Aratanaru Tatakai
+  name:   Esper Dream 2 - Aratanaru Tatakai (Japan)
+  title:  Esper Dream 2 - Aratanaru Tatakai (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-6
     chip
@@ -358,9 +673,30 @@ game
       content: Character
 
 game
+  sha256: 19e1f9b0f4dfbfb126c936db4ffc266ad224a4dd611a4bfacab00547e521267f
+  name:   Exciting Boxing (Japan)
+  title:  Exciting Boxing (Japan)
+  region: NTSC-J
+  board:  KONAMI-VRC-1
+    chip
+      type: VRC1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: c8c0b6c21bdda7503bab7592aea0f945a0259c18504bb241aafb1eabe65846f3
-  name:   Family BASIC V3
-  title:  Family BASIC V3
+  name:   Family BASIC V3 (Japan)
+  title:  Family BASIC V3 (Japan)
   region: NTSC-J
   board:  HVC-NROM
     mirror
@@ -703,9 +1039,55 @@ game
       content: Character
 
 game
+  sha256: 41fea670ccfb999d2693ff2233466c632dd379a6ac07d9789d8a1259da714383
+  name:   Flintstones, The - The Rescue of Dino & Hoppy (Japan)
+  title:  Flintstones, The - The Rescue of Dino & Hoppy (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0690
+    chip
+      type: TC0690
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 3de53c75e43927ad7a09e717b8827ae15e2ce210ea788df0852819b57ce26de8
+  name:   Fudou Myouou Den (Japan)
+  title:  Fudou Myouou Den (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-005A
+    chip
+      type: X1-005
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x80
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 270b84c1f6fcac20f2ce66bdf702882d44fc5345cdf76ff62d7823ccda9f2cba
-  name:   Ganbare Goemon 2
-  title:  Ganbare Goemon 2
+  name:   Ganbare Goemon 2 (Japan)
+  title:  Ganbare Goemon 2 (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-2
     chip
@@ -728,8 +1110,8 @@ game
 
 game
   sha256: 2613db1559a07137af1f3cfda4175ac09be465604c651956dd98d971aedae6bc
-  name:   Ganbare Goemon Gaiden - Kieta Ougon Kiseru
-  title:  Ganbare Goemon Gaiden - Kieta Ougon Kiseru
+  name:   Ganbare Goemon Gaiden - Kieta Ougon Kiseru (Japan)
+  title:  Ganbare Goemon Gaiden - Kieta Ougon Kiseru (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-2
     chip
@@ -756,8 +1138,8 @@ game
 
 game
   sha256: 7c27ab834d0dcc03498d46d9944c9ea5498b1a7af9606a835217e141e2b3c662
-  name:   Ganbare Goemon Gaiden - Kieta Ougon Kiseru (Rev 1)
-  title:  Ganbare Goemon Gaiden - Kieta Ougon Kiseru (Rev 1)
+  name:   Ganbare Goemon Gaiden - Kieta Ougon Kiseru (Japan) (Rev 1)
+  title:  Ganbare Goemon Gaiden - Kieta Ougon Kiseru (Japan) (Rev 1)
   region: NTSC-J
   board:  KONAMI-VRC-2
     chip
@@ -784,8 +1166,8 @@ game
 
 game
   sha256: 50770ffec21bd47eadc9b502b73323f976e48e6f8f589a6717300119bde99de3
-  name:   Ganbare Goemon Gaiden 2 - Tenka no Zaihou
-  title:  Ganbare Goemon Gaiden 2 - Tenka no Zaihou
+  name:   Ganbare Goemon Gaiden 2 - Tenka no Zaihou (Japan)
+  title:  Ganbare Goemon Gaiden 2 - Tenka no Zaihou (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-4
     chip
@@ -811,9 +1193,30 @@ game
       content: Character
 
 game
+  sha256: 8d0090fb9ed391c28c241cbdd111cf9de2abc34bf492b849985bc337bf4dd17c
+  name:   Ganbare Goemon! - Karakuri Douchuu (Japan)
+  title:  Ganbare Goemon! - Karakuri Douchuu (Japan)
+  region: NTSC-J
+  board:  KONAMI-VRC-1
+    chip
+      type: VRC1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: a5697c59cdbd3859662199825c50cb338762c379c700701f75cdf157b3c13829
-  name:   Ganbare Pennant Race!
-  title:  Ganbare Pennant Race!
+  name:   Ganbare Pennant Race! (Japan)
+  title:  Ganbare Pennant Race! (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-2A
     chip
@@ -885,8 +1288,8 @@ game
 
 game
   sha256: 963ef31970fb4f7aa84dbfa2eacf96c084effeaeb8ba276387fb9875e4daf7c5
-  name:   Getsu Fuuma Den
-  title:  Getsu Fuuma Den
+  name:   Getsu Fuuma Den (Japan)
+  title:  Getsu Fuuma Den (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-2
     chip
@@ -908,9 +1311,72 @@ game
       content: Character
 
 game
+  sha256: 4ca57e0bff08c5308073382af56138f31fe60c30cea7ab5fb1e4863b86e0b5d7
+  name:   Goal!! (Japan)
+  title:  Goal!! (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-24A
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: d530bfd8bae1fd38d29d776e663bcf5e774590866a5ee8a09e2c1d992e28a008
+  name:   Golfkko Open (Japan)
+  title:  Golfkko Open (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0190
+    chip
+      type: TC0190
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: f837e0807ade4bb8036d40746e2433ed66986f043fc2be722e765e45a676cd5d
+  name:   Goonies (Japan)
+  title:  Goonies (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-05
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x4000
+      content: Character
+
+game
   sha256: 2974ad16b994cfdc9418310ced6c7f4ed64433063d12439a7b37a816f797dd0e
-  name:   Gradius II
-  title:  Gradius II
+  name:   Gradius II (Japan)
+  title:  Gradius II (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-4
     chip
@@ -960,8 +1426,8 @@ game
 
 game
   sha256: 1c1ad2992f728c7fb6a8f3980b1a0f8e01e5b24a0c43c713300846d87be5987a
-  name:   Holy Diver
-  title:  Holy Diver
+  name:   Holy Diver (Japan)
+  title:  Holy Diver (Japan)
   region: NTSC-J
   board:  IREM-IF-12
     memory
@@ -978,9 +1444,76 @@ game
       content: Character
 
 game
+  sha256: c4bf5a80d8c2a941e9809338f97a86b7764e3c3101ad102bcfd76832cd72d27f
+  name:   Hyper Olympic (Japan) (Genteiban!)
+  title:  Hyper Olympic (Japan) (Genteiban!)
+  region: NTSC-J
+  board:  JALECO-JF-05
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x4000
+      content: Character
+
+game
+  sha256: c9707547555d8c38014540204649125f7b36d3990433bfebb63c49742e2dc3a2
+  name:   Image Fight (Japan)
+  title:  Image Fight (Japan)
+  region: NTSC-J
+  board:  IREM-G101
+    chip
+      type: G101
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 0f406a7c853b919ed880868420808b945855146db9817ebc3102f08da13fa703
+  name:   Insector X (Japan)
+  title:  Insector X (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0190
+    chip
+      type: TC0190
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: ea770788f68e4bb089e4205807931d64b83175a0106e7563d0a6d3ebac369991
-  name:   Jajamaru Gekimaden - Maboroshi no Kinmajou
-  title:  Jajamaru Gekimaden - Maboroshi no Kinmajou
+  name:   Jajamaru Gekimaden - Maboroshi no Kinmajou (Japan)
+  title:  Jajamaru Gekimaden - Maboroshi no Kinmajou (Japan)
   region: NTSC-J
   board:  JALECO-JF-27B
     chip
@@ -1003,9 +1536,51 @@ game
       content: Character
 
 game
+  sha256: f0e2cd32fa12097bc7d6387b3cebce66f3790cf2f858244060663b605b37607e
+  name:   Jajamaru Ninpou Chou (Japan)
+  title:  Jajamaru Ninpou Chou (Japan)
+  region: NTSC-J
+  board:  KONAMI-VRC-1
+    chip
+      type: VRC1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 2e5520ba75f0d1b0e2d56588ea28838cb4555413919019372541b86cb5c36b15
+  name:   Jajamaru no Daibouken (Japan)
+  title:  Jajamaru no Daibouken (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-08
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x8000
+      content: Character
+
+game
   sha256: e9c28ba4b940583e4a486ac5b401ac42e9aafa909d27c798f4fb3fc0045a3971
-  name:   Jarinko Chie - Bakudan Musume no Shiawase Sagashi
-  title:  Jarinko Chie - Bakudan Musume no Shiawase Sagashi
+  name:   Jarinko Chie - Bakudan Musume no Shiawase Sagashi (Japan)
+  title:  Jarinko Chie - Bakudan Musume no Shiawase Sagashi (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-2
     chip
@@ -1013,6 +1588,27 @@ game
       pinout
         a0: 0
         a1: 1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 740de2e292b8ba92ee87c2cac51ccdfa6a2e5bfe230078f3e02fd3f4f83af34d
+  name:   Jetsons, The - Cogswell's Caper (Japan)
+  title:  Jetsons, The - Cogswell's Caper (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0690
+    chip
+      type: TC0690
     memory
       type: ROM
       size: 0x10
@@ -1047,6 +1643,91 @@ game
     memory
       type: ROM
       size: 0x10000
+      content: Character
+
+game
+  sha256: 722035257431bbc43bbc612ccf36f5c8346c4f7073b298dcf6d46d95866f860a
+  name:   Kage no Densetsu (Japan)
+  title:  Kage no Densetsu (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-05
+    mirror
+      mode: horizontal
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x4000
+      content: Character
+
+game
+  sha256: ced7f840a0cae6fe82aca994858e3c407d2ff9b2396f0b43cdbaddc7e9f2bc1d
+  name:   Kaiketsu Yancha Maru (Japan)
+  title:  Kaiketsu Yancha Maru (Japan)
+  region: NTSC-J
+  board:  IREM-TAM-S1
+    chip
+      type: TAM-S1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+
+game
+  sha256: afbe54670d674ff80ce65382f33f8d227540a1502190467b790fd1fed3c72ba4
+  name:   Kaiketsu Yancha Maru 2 - Karakuri Land (Japan)
+  title:  Kaiketsu Yancha Maru 2 - Karakuri Land (Japan)
+  region: NTSC-J
+  board:  IREM-G101
+    chip
+      type: G101
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: ce0bbce545ad5d94f5c8cb6f58b0dd9ecaa72df24cede815aebb2a82b103d534
+  name:   Kaiketsu Yancha Maru 3 - Taiketsu! Zouringen (Japan)
+  title:  Kaiketsu Yancha Maru 3 - Taiketsu! Zouringen (Japan)
+  region: NTSC-J
+  board:  IREM-H3001
+    chip
+      type: H3001
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
@@ -1142,9 +1823,30 @@ game
       content: Character
 
 game
+  sha256: a8f2987d83253adb573aa760c1bb926e951f2c2d72daff4e2d2e125ec1a181c4
+  name:   King Kong 2 - Ikari no Megaton Punch (Japan)
+  title:  King Kong 2 - Ikari no Megaton Punch (Japan)
+  region: NTSC-J
+  board:  KONAMI-VRC-1
+    chip
+      type: VRC1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: d13fa0e0694a8318d7a7c51c759c254415bf1b41869a4cc04d3233062f7256ae
-  name:   Konami Wai Wai World
-  title:  Konami Wai Wai World
+  name:   Konami Wai Wai World (Japan)
+  title:  Konami Wai Wai World (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-2
     chip
@@ -1166,9 +1868,184 @@ game
       content: Character
 
 game
+  sha256: 3b3419873ea0d53d6fd18ed9b58c4c77fc111e2971ed7f3715bd114dc6d24d84
+  name:   Kyonshiizu 2 (Japan)
+  title:  Kyonshiizu 2 (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-005
+    chip
+      type: X1-005
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x80
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: b0e11b917f5c604e8a6ad5a196a40219e5b19b484c8972e3255c81c4df4bda31
+  name:   Kyoto Ryuu no Tera Satsujin Jiken (Japan)
+  title:  Kyoto Ryuu no Tera Satsujin Jiken (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-005
+    chip
+      type: X1-005
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x80
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: f5bee7faa68e7ecff675a749d3c3ac481b565ad9d74a893f8d3fce2b17f36180
+  name:   Kyuukyoku Harikiri Koushien (Japan)
+  title:  Kyuukyoku Harikiri Koushien (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-017
+    chip
+      type: X1-017
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 509210e6700523b088312827cca7db7c1878d80015724994fed04a74f3762e96
+  name:   Kyuukyoku Harikiri Stadium (Japan)
+  title:  Kyuukyoku Harikiri Stadium (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-005
+    chip
+      type: X1-005
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x80
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: ce47e39f55e083dee4f91752c5ca945722b3ec949d3cc629e4648d6110cb37d2
+  name:   Kyuukyoku Harikiri Stadium - '88 Senshu Shin Data Version (Japan)
+  title:  Kyuukyoku Harikiri Stadium - '88 Senshu Shin Data Version (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-005
+    chip
+      type: X1-005
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x80
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: ae174747b3c89b00c4a8b86225aaab28c01b8e051ac960ae667d9a921d85d7ef
+  name:   Kyuukyoku Harikiri Stadium - Heisei Gannen Ban (Japan)
+  title:  Kyuukyoku Harikiri Stadium - Heisei Gannen Ban (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-017
+    chip
+      type: X1-017
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 8df64c366873557f81216e9338498df628999469b765499cafe77a49f56b6dc5
+  name:   Kyuukyoku Harikiri Stadium III (Japan)
+  title:  Kyuukyoku Harikiri Stadium III (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-017
+    chip
+      type: X1-017
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
   sha256: a45d30c949f9d0942700826e4433ebad39e08da8252ecb541cae9d495928d63f
-  name:   Lagrange Point
-  title:  Lagrange Point
+  name:   Lagrange Point (Japan)
+  title:  Lagrange Point (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-7
     chip
@@ -1217,6 +2094,27 @@ game
       content: Character
 
 game
+  sha256: 98331d734fb2ad1e619301e4558492517b6e47ab213e4dcec5b8d7c536c526b9
+  name:   Lord of King, The (Japan)
+  title:  Lord of King, The (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-25
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 8c801e6fb86ff4174d7c02cd576a1ada260130b403d09ddc76f6aeae9792bf12
   name:   Lupin Sansei - Pandora no Isan (Japan)
   title:  Lupin Sansei - Pandora no Isan (Japan)
@@ -1240,9 +2138,30 @@ game
       content: Character
 
 game
+  sha256: 497c3015516cb6ae2f20d70b8fb1b70b8c4cfcd64e118992c438cfe7b0579f2b
+  name:   Magic John (Japan)
+  title:  Magic John (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-24A
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 4ef61de405406bfa9eeaf19ed1d882444c41bb606ac78673b7ec8ee323d0e073
-  name:   Major League
-  title:  Major League
+  name:   Major League (Japan)
+  title:  Major League (Japan)
   region: NTSC-J
   board:  IREM-G101A
     chip
@@ -1307,9 +2226,30 @@ game
       content: Character
 
 game
+  sha256: c9a294e5ac3490c346e24db8125761fac7e8ba57df0456a6dd29d62a34dbfda7
+  name:   Meikyuu-jima (Japan)
+  title:  Meikyuu-jima (Japan)
+  region: NTSC-J
+  board:  IREM-G101
+    chip
+      type: G101
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 32c6893e0f8a14714dd2082803cfde62f8981010d23fc9cf00a5a18066d063cb
-  name:   Mezase! Top Pro - Green ni Kakeru Yume
-  title:  Mezase! Top Pro - Green ni Kakeru Yume
+  name:   Mezase! Top Pro - Green ni Kakeru Yume (Japan)
+  title:  Mezase! Top Pro - Green ni Kakeru Yume (Japan)
   region: NTSC-J
   board:  JALECO-JF-40
     chip
@@ -1332,9 +2272,332 @@ game
       content: Character
 
 game
+  sha256: c673fd919abe12938881e274c92064fe5d6f8998700e9f2a5944598ca20ac700
+  name:   Minelvaton Saga - Ragon no Fukkatsu (Japan)
+  title:  Minelvaton Saga - Ragon no Fukkatsu (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-005
+    chip
+      type: X1-005
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x80
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 96772d6ffccf3e0ca66c1dd59c7f03b7749ef94169e949ae0bcf8bdc9aa49aa8
+  name:   Mirai Shinwa Jarvas (Japan)
+  title:  Mirai Shinwa Jarvas (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-005
+    chip
+      type: X1-005
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x80
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 3d510de6ca2e4445da5f5d33ae6ed6e5e552953d5852d365ab7a7a2d6bd1c589
+  name:   Mississippi Satsujin Jiken (Japan)
+  title:  Mississippi Satsujin Jiken (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-11
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x8000
+      content: Character
+
+game
+  sha256: ad55139cc2fb72835e30683df6fc918c14503ca48795d6078077d1ad37298d79
+  name:   Mississippi Satsujin Jiken (Japan) (Rev A)
+  title:  Mississippi Satsujin Jiken (Japan) (Rev A)
+  region: NTSC-J
+  board:  JALECO-JF-11
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x8000
+      content: Character
+
+game
+  sha256: 14868615d1ca04bf91cfa4ab5a9c55aef090cc957f786f9b337247047b7b179e
+  name:   Moe Pro! '90 - Kandou Hen (Japan)
+  title:  Moe Pro! '90 - Kandou Hen (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-29A
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: d5f44543ac0d9775b3e2ca331ff1797fa6269371a420c1bff5d00335c5f63510
+  name:   Moe Pro! - Saikyou Hen (Japan)
+  title:  Moe Pro! - Saikyou Hen (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-29A
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 4ba739e8e46e9c2c9086fe001e2733f9cffba9002422b85185a87a2041c32b73
+  name:   Moero!! Junior Basket - Two on Two (Japan)
+  title:  Moero!! Junior Basket - Two on Two (Japan)
+  region: NTSC-J
+  board:  KONAMI-VRC-1
+    chip
+      type: VRC1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 47780815892d5d28d72656dd37e4643146c3dc297703b3b2aad2d5cc4aaff712
+  name:   Moero!! Juudou Warriors (Japan)
+  title:  Moero!! Juudou Warriors (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-17
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 2c54c5e66cb960ee8647acbe086b2b3386fabf24f7f0d9d2d0e17bd19d681eda
+  name:   Moero!! Pro Tennis (Japan)
+  title:  Moero!! Pro Tennis (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-17
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 21c904f1577720871d98e0b374b7bfd63e192d1707879cda986aa4cff4fb2e09
+  name:   Moero!! Pro Soccer (Japan)
+  title:  Moero!! Pro Soccer (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-19
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 0ef0db4c35c27d2cd90716f868ba88326901f70e3ac3333f84b42b88e8477d9c
+  name:   Moero!! Pro Yakyuu (Japan)
+  title:  Moero!! Pro Yakyuu (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-13
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x10000
+      content: Character
+
+game
+  sha256: 76f6b0d5a50cb829bdac14a0dfcfa87a9f999cffba66963c81825e8d614cd13d
+  name:   Moero!! Pro Yakyuu (Japan) (Rev 1)
+  title:  Moero!! Pro Yakyuu (Japan) (Rev 1)
+  region: NTSC-J
+  board:  JALECO-JF-13
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x10000
+      content: Character
+
+game
+  sha256: b9637180e1f0261cf68aa978a4d89562ae65ae9eb664f8aad5703e887c39cbb6
+  name:   Moero!! Pro Yakyuu (Japan) (Rev 2)
+  title:  Moero!! Pro Yakyuu (Japan) (Rev 2)
+  region: NTSC-J
+  board:  JALECO-JF-13
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x10000
+      content: Character
+
+game
+  sha256: a7c4164414920239aca2f282713b08b2c69608089f43edcaffd513b65eb44247
+  name:   Moero!! Pro Yakyuu (Japan) (Rev 3)
+  title:  Moero!! Pro Yakyuu (Japan) (Rev 3)
+  region: NTSC-J
+  board:  JALECO-JF-13
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x10000
+      content: Character
+
+game
+  sha256: db5639fb3843b8f1aa86ff398b2e8a442efd3389323029899f2b2cf88e4e6230
+  name:   Moero!! Pro Yakyuu '88 - Ketteiban (Japan)
+  title:  Moero!! Pro Yakyuu '88 - Ketteiban (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-19
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 97ff1ac9e6061ba5fb02b4626abf3521f84ee1542fa8093d617ede08dbb17cdc
-  name:   Mouryou Senki Madara
-  title:  Mouryou Senki Madara
+  name:   Mouryou Senki Madara (Japan)
+  title:  Mouryou Senki Madara (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-6
     chip
@@ -1406,9 +2669,96 @@ game
       content: Character
 
 game
+  sha256: 83d326a461cca8dc539283dc8017985e9a6cd1893db4674de1a086c7cb8b0269
+  name:   Napoleon Senki (Japan)
+  title:  Napoleon Senki (Japan)
+  region: NTSC-J
+  board:  IREM-LROG017
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x8000
+      content: Character
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+
+game
+  sha256: 648cf7ac553517573cc9b3955ab50566a91974b2348154910bfa53ef15d55b56
+  name:   Ninja Jajamaru - Ginga Daisakusen (Japan)
+  title:  Ninja Jajamaru - Ginga Daisakusen (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-25
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: bf546b0ce7fc60d89020ff7c0fadc7369925ba68a84d25b03de4190a91c46a95
+  name:   Ninja Jajamaru-kun (Japan)
+  title:  Ninja Jajamaru-kun (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-06
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+    memory
+      type: ROM
+      size: 0x4000
+      content: Character
+
+game
+  sha256: adf95de2cdff7b606ceedf5908679ef9bb8ffeec37d3d1dad3446ef85ca17026
+  name:   Operation Wolf (Japan)
+  title:  Operation Wolf (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0190
+    chip
+      type: TC0190
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 7c9ac15848defca1f6977a167e50e80e6a59c7cad040c5190629f29c2998ea16
-  name:   Parodius Da!
-  title:  Parodius Da!
+  name:   Parodius Da! (Japan)
+  title:  Parodius Da! (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-4
     chip
@@ -1428,6 +2778,132 @@ game
       type: RAM
       size: 0x2000
       content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 6d2887d978262401f315836411537a208272cba7721f598308d92983f1f5731a
+  name:   Perman (Japan)
+  title:  Perman (Japan)
+  region: NTSC-J
+  board:  IREM-G101
+    chip
+      type: G101
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: ece3f1fefbcc9c4a6da801d931a5bda85241975d96b5b4931bcd635bc3e0f1a5
+  name:   Perman Part 2 - Himitsu Kessha Madoodan o Taose! (Japan)
+  title:  Perman Part 2 - Himitsu Kessha Madoodan o Taose! (Japan)
+  region: NTSC-J
+  board:  IREM-G101
+    chip
+      type: G101
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: b7daa24069d54f56fb71e7659b4ad40a6e9f4695f73e7a0d0e56d5c80e2e6474
+  name:   Pinball Quest (Japan)
+  title:  Pinball Quest (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-17
+    mirror
+      mode: horizontal
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 18c82e04c90a19e7148018245fffaaadc4dd92f294332a84605098ddc375b653
+  name:   Pizza Pop! (Japan)
+  title:  Pizza Pop! (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-24A
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 2063bcc2134fb472338e953b8d0e52d39701ef7d91f44f19c6c6daae0aaf1bda
+  name:   Plasma Ball (Japan)
+  title:  Plasma Ball (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-24A
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 1f5a86488d8bbc8fbc09fdb91a33fa2530ed124949a7001576e7c631f87bd9df
+  name:   Power Blazer (Japan)
+  title:  Power Blazer (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0190
+    chip
+      type: TC0190
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
     memory
       type: ROM
       size: 0x20000
@@ -1550,8 +3026,8 @@ game
 
 game
   sha256: 6b5f7dbd2c4e7512b27e8492a8af8ad08701ba125e0fe7d4ac679f5782f7eb9b
-  name:   Racer Mini Yonku - Japan Cup
-  title:  Racer Mini Yonku - Japan Cup
+  name:   Racer Mini Yonku - Japan Cup (Japan)
+  title:  Racer Mini Yonku - Japan Cup (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-4
     chip
@@ -1596,6 +3072,55 @@ game
       content: Character
 
 game
+  sha256: 840723003ce183494e9aa5081462f085db2b3846b4680976b32bff0fae0d3968
+  name:   Saiyuuki World 2 - Tenjoukai no Majin (Japan)
+  title:  Saiyuuki World 2 - Tenjoukai no Majin (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-24A
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 9e8eb95ec2917597650131db254067ff59bc3669417563165518927357812c73
+  name:   Salamander (Japan)
+  title:  Salamander (Japan)
+  region: NTSC-J
+  board:  KONAMI-VRC-3
+    chip
+      type: VRC3
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+
+game
   sha256: 83bffec6356bc787041747d36f088134ceebb14bd476a508a931ee291b95d74b
   name:   Sanma no Meitantei (Japan)
   title:  Sanma no Meitantei (Japan)
@@ -1616,6 +3141,52 @@ game
     memory
       type: ROM
       size: 0x10000
+      content: Character
+
+game
+  sha256: 2d3d6f009b1f81640867a5b5102c10e4d26c8ad6280c30e43d65dcd1acce9fb3
+  name:   SD Keiji - Blader (Japan)
+  title:  SD Keiji - Blader (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-017
+    chip
+      type: X1-017
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 52b9b0d7137c458b2dc3a96e693af96ce044feedcdc1edf736c728a25e2fe4d8
+  name:   Shin Moero!! Pro Yakyuu (Japan)
+  title:  Shin Moero!! Pro Yakyuu (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-23A
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
@@ -1662,6 +3233,27 @@ game
     memory
       type: ROM
       size: 0x8000
+      content: Character
+
+game
+  sha256: dbd587ef5a12e03a336cda61cd120b4e8c585f45d82821e144ee8afdea9ee84e
+  name:   Spartan X 2 (Japan)
+  title:  Spartan X 2 (Japan)
+  region: NTSC-J
+  board:  IREM-H3001
+    chip
+      type: H3001
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
@@ -1732,9 +3324,55 @@ game
       content: Character
 
 game
+  sha256: 054097cbfccd8ec2d343c0adc134d69f2b6b9067f880ec51464696e0581326c0
+  name:   Taito Grand Prix - Eikou e no License (Japan)
+  title:  Taito Grand Prix - Eikou e no License (Japan)
+  region: NTSC-J
+  board:  TAITO-X1-005
+    chip
+      type: X1-005
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x80
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 819a989fd3a7190136b07a4a3c7ee484c23c4d34dd8b91435c40c3c1009a214c
+  name:   Takeshi no Sengoku Fuuunji (Japan)
+  title:  Takeshi no Sengoku Fuuunji (Japan)
+  region: NTSC-J
+  board:  TAITO-TC0190
+    chip
+      type: TC0190
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 6fff1bfc89bb2f3c160b88736990c764920b0c44107b265f642a50324ca3adfb
-  name:   Teenage Mutant Ninja Turtles
-  title:  Teenage Mutant Ninja Turtles
+  name:   Teenage Mutant Ninja Turtles (Japan)
+  title:  Teenage Mutant Ninja Turtles (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-4
     chip
@@ -1757,8 +3395,8 @@ game
 
 game
   sha256: 76b488345b40aa2868e6d4b4f2f06fdaf626601ec76daf9da15c41800ecc5be8
-  name:   Teenage Mutant Ninja Turtles 2 - The Manhattan Project
-  title:  Teenage Mutant Ninja Turtles 2 - The Manhattan Project
+  name:   Teenage Mutant Ninja Turtles 2 - The Manhattan Project (Japan)
+  title:  Teenage Mutant Ninja Turtles 2 - The Manhattan Project (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-4
     chip
@@ -1803,9 +3441,51 @@ game
       content: Character
 
 game
+  sha256: 7735cce529485771897277685d4e5b7a6d11de52076cac80f600b7776ff5cc66
+  name:   Terao no Dosukoi Oozumou (Japan)
+  title:  Terao no Dosukoi Oozumou (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-24A
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 95706907214a6df6230d5ff33400437b651440d3f2e974fb9482b70c472e6898
+  name:   Tetsuwan Atom (Japan)
+  title:  Tetsuwan Atom (Japan)
+  region: NTSC-J
+  board:  KONAMI-VRC-1
+    chip
+      type: VRC1
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 4b80a1db42ecde039f01c52a74146887f9dfc2ad54fe3706bcdf625ec3e2de97
-  name:   Tiny Toon Adventures
-  title:  Tiny Toon Adventures
+  name:   Tiny Toon Adventures (Japan)
+  title:  Tiny Toon Adventures (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-4
     chip
@@ -1828,8 +3508,8 @@ game
 
 game
   sha256: dabde0dbf12d01237350cf6ad6463ce79651ac1e80d57b7b3b55c1819e72fd8a
-  name:   Tiny Toon Adventures 2 - Montana Land e Youkoso
-  title:  Tiny Toon Adventures 2 - Montana Land e Youkoso
+  name:   Tiny Toon Adventures 2 - Montana Land e Youkoso (Japan)
+  title:  Tiny Toon Adventures 2 - Montana Land e Youkoso (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-7
     chip
@@ -1871,9 +3551,72 @@ game
       content: Character
 
 game
+  sha256: 4fcadd486cdd108ffd1ebc6585658c86e89626dc86815b41bc28424a67e7d133
+  name:   Toukon Club (Japan)
+  title:  Toukon Club (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-37
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: e532491e590505b49f65c771e938c0f1a0d7ccbe6b3fb2cbf42693db39d878d9
+  name:   Tsuru Pika Hagemaru - Mezase! Tsuru Seko no Akashi (Japan)
+  title:  Tsuru Pika Hagemaru - Mezase! Tsuru Seko no Akashi (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-24A
+    chip
+      type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 4b9c46714fa085d61ad1177b72bdaa9428d104a171eb6335a03bf06ad9782389
+  name:   TwinBee (Japan)
+  title:  TwinBee (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-05
+    mirror
+      mode: horizontal
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x4000
+      content: Character
+
+game
   sha256: 092db8cfadf0a96c67dd0734c966c47dfb80ffb830485d8ee702284ae8eac4aa
-  name:   TwinBee 3 - Poko Poko Daimaou
-  title:  TwinBee 3 - Poko Poko Daimaou
+  name:   TwinBee 3 - Poko Poko Daimaou (Japan)
+  title:  TwinBee 3 - Poko Poko Daimaou (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-2A
     chip
@@ -1896,10 +3639,52 @@ game
 
 game
   sha256: 407e54848ad9991399f0383118f138d3a0532bb03bb488ed856deb7f2eb4efbf
-  name:   Uchuusen Cosmo Carrier
-  title:  Uchuusen Cosmo Carrier
+  name:   Uchuusen Cosmo Carrier (Japan)
+  title:  Uchuusen Cosmo Carrier (Japan)
   region: NTSC-J
   board:  JALECO-JF-16
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 81aa477b7f5b873d19b845fa15d6830267889d912475d8393d2ecc8d6c037e75
+  name:   Urusei Yatsura - Lum no Wedding Bell (Japan)
+  title:  Urusei Yatsura - Lum no Wedding Bell (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-10
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x8000
+      content: Character
+
+game
+  sha256: 37085157b388353d7f4ce8e904ad6545dc66b798878a959793b151e78b903537
+  name:   USA Ice Hockey in FC (Japan)
+  title:  USA Ice Hockey in FC (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-37
+    chip
+      type: SS88006
     memory
       type: ROM
       size: 0x10
@@ -2003,8 +3788,8 @@ game
 
 game
   sha256: 375a2fef345cabaab35ad7cc238b2cf0298cbf93f047ea57a79c3dae598b4287
-  name:   Wai Wai World 2 - SOS!! Paseri Jou
-  title:  Wai Wai World 2 - SOS!! Paseri Jou
+  name:   Wai Wai World 2 - SOS!! Paseri Jou (Japan)
+  title:  Wai Wai World 2 - SOS!! Paseri Jou (Japan)
   region: NTSC-J
   board:  KONAMI-VRC-4
     chip
@@ -2023,5 +3808,26 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: 703411cb92283840c096d7e1e422582ecda18bd9b27604a253cb0b0702383043
+  name:   Youkai Club (Japan)
+  title:  Youkai Club (Japan)
+  region: NTSC-J
+  board:  JALECO-JF-11
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x8000
       content: Character
 
