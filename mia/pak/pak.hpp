@@ -9,7 +9,8 @@ struct Pak {
   virtual auto save(string location = {}) -> bool { return true; }
 
   auto name(string location) const -> string;
-  auto read(string location, vector<string> match = {"*"}) -> vector<u8>;
+  auto read(string location) -> vector<u8>;
+  auto read(string location, vector<string> match) -> vector<u8>;
   auto append(vector<u8>& data, string location) -> bool;
   auto load(string name, string extension, string location = {}) -> bool;
   auto save(string name, string extension, string location = {}) -> bool;
