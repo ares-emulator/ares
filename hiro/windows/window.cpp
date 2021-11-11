@@ -329,13 +329,8 @@ auto pWindow::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) -> m
     }
   }
 
-  if(msg == WM_SETFOCUS) {
-    focus = true;
-    return false;
-  }
-
-  if(msg == WM_KILLFOCUS) {
-    focus = false;
+  if(msg == WM_ACTIVATE) {
+    focus = LOWORD(wparam) != WA_INACTIVE;
     return false;
   }
 
