@@ -89,6 +89,5 @@ auto MSX::analyze(vector<u8>& rom) -> string {
   s +={"      size: 0x", hex(rom.size()), "\n"};
   s += "      content: Program\n";
 
-  print(s);
   return s;
 }
