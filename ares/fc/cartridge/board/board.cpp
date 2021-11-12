@@ -34,6 +34,7 @@ namespace Board {
 #include "irem-h3001.cpp"
 #include "irem-lrog017.cpp"
 #include "irem-tam-s1.cpp"
+#include "mlt-action52.cpp"
 #include "namco-118.cpp"
 #include "namco-340.cpp"
 #include "sunsoft-1.cpp"
@@ -82,6 +83,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = KonamiVRC5::create(board);
   if(!p) p = KonamiVRC6::create(board);
   if(!p) p = KonamiVRC7::create(board);
+  if(!p) p = MltAction52::create(board);
   if(!p) p = Namco118::create(board);
   if(!p) p = Namco340::create(board);
   if(!p) p = Sunsoft1::create(board);

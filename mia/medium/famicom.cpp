@@ -447,6 +447,9 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "    chip type=340\n";
     break;
 
+  case 228:
+    s += "  board:  MLT-ACTION52\n";
+    break;
   }
 
   s += "    memory\n";
