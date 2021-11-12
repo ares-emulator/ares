@@ -9,7 +9,7 @@ CPU cpu;
 
 auto CPU::load(Node::Object parent) -> void {
   if(Model::MSX()) ram.allocate(64_KiB);
-  if(Model::MSX2()) ram.allocate(256_KiB);
+  if(Model::MSX2()) ram.allocate(512_KiB);
 
   node = parent->append<Node::Object>("CPU");
 

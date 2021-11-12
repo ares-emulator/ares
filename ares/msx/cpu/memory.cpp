@@ -5,6 +5,9 @@ auto CPU::read(n16 address) -> n8 {
   n2 primary = slot[page].primary;
   n2 secondary = slot[primary].secondary[page];
 
+  // If MSX1, assume there are no secondary slots
+  if (Model::MSX()) secondary = 0;  
+
   if(primary == 0) {
     return rom.bios.read(address);
   }
@@ -18,13 +21,17 @@ auto CPU::read(n16 address) -> n8 {
   }
 
   if(primary == 3) {
-    if(secondary == 0) {
-      if(Model::MSX()) return ram.read(address);
+    if (secondary == 0 && Model::MSX()) {
+      return ram.read(address);
+    }
+
+    if(secondary == 0 && rom.sub) {
+      return rom.sub.read(address);
+    }
+
+    if(secondary == 2) {
       n22 logical = slot[page].memory << 14 | (n14)address;
       return ram.read(logical);
-    }
-    if(secondary == 1 && rom.sub) {
-      return rom.sub.read(address);
     }
   }
 
@@ -37,6 +44,9 @@ auto CPU::write(n16 address, n8 data) -> void {
   n2 page = address.bit(14,15);
   n2 primary = slot[page].primary;
   n2 secondary = slot[primary].secondary[page];
+
+  // If MSX1, assume there are no secondary slots
+  if (Model::MSX()) secondary = 0;
 
   if(primary == 0) {
     return;
@@ -51,9 +61,14 @@ auto CPU::write(n16 address, n8 data) -> void {
   }
 
   if(primary == 3) {
-    if(Model::MSX()) return ram.write(address, data);
-    n22 logical = slot[page].memory << 14 | (n14)address;
-    return ram.write(logical, data);
+    if (secondary == 0 && Model::MSX()) {
+      return ram.write(address, data);
+    }
+
+    if(secondary == 2) {
+      n22 logical = slot[page].memory << 14 | (n14)address;
+      return ram.write(logical, data);
+    }
   }
 }
 
