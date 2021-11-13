@@ -173,6 +173,25 @@ game
       content: Character
 
 game
+  sha256: 8593b6ae7b19b2e767ad2c207c5a83dea90030414f45eef4c0dec3c3a5530364
+  name:   Arkanoid II (Japan)
+  title:  Arkanoid II (Japan)
+  region: NTSC-J
+  board:  BANDAI-74161A
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x10000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: f3601248633f47a0ef10723e42a1072c76dd487d7ddf943e618611bb7cfec737
   name:   Atlantis no Nazo (Japan)
   title:  Atlantis no Nazo (Japan)
@@ -1686,6 +1705,69 @@ game
       content: Character
 
 game
+  sha256: 0b13a37ba5cc35f743669b803d119dda47dd136d211be060614817830609eed9
+  name:   Family Trainer 4 - Jogging Race (Japan)
+  title:  Family Trainer 4 - Jogging Race (Japan)
+  region: NTSC-J
+  board:  BANDAI-74161
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: d25bd1e575ca131e524236fb97ebea89ccfea42c09e0a16b404abdd747768a9f
+  name:   Family Trainer 5 - Meiro Daisakusen (Japan)
+  title:  Family Trainer 5 - Meiro Daisakusen (Japan)
+  region: NTSC-J
+  board:  BANDAI-74161
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 6257cc5bdee40b901305a1fa9d1537196378c5a96b02ec59260696e9390f8050
+  name:   Family Trainer 6 - Manhattan Police (Japan)
+  title:  Family Trainer 6 - Manhattan Police (Japan)
+  region: NTSC-J
+  board:  BANDAI-74161
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 95d3ae878eb2e0d0fd8a8dc55b7cf03524e5f1975cdcef4a90e8651da642c1a2
   name:   Family Trainer 9 - Fuuun Takeshi-jou 2 (Japan)
   title:  Family Trainer 9 - Fuuun Takeshi-jou 2 (Japan)
@@ -2130,6 +2212,25 @@ game
       size: 0x800
       content: Character
       volatile
+
+game
+  sha256: 992e63eef393060170d03c2558c7bc090428c8ed553ba496ddda6432fcbff0ac
+  name:   Gegege no Kitarou 2 - Youkai Gundan no Chousen (Japan)
+  title:  Gegege no Kitarou 2 - Youkai Gundan no Chousen (Japan)
+  region: NTSC-J
+  board:  BANDAI-74161A
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
 
 game
   sha256: c0f0fad3abcb7c284eca6bf17b263d22ea1749316d6321a8b83969bd4a7c22ee
@@ -2875,6 +2976,27 @@ game
   board:  IREM-H3001
     chip
       type: H3001
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 2241728a8072ccdf13c3bb913d2d16abd62bb43c71757d80a376c4f65cd060cf
+  name:   Kamen Rider Club (Japan)
+  title:  Kamen Rider Club (Japan)
+  region: NTSC-J
+  board:  BANDAI-74161
+    mirror
+      mode: vertical
     memory
       type: ROM
       size: 0x10
@@ -4377,6 +4499,25 @@ game
       content: Character
 
 game
+  sha256: 6eabf52d9e7250d74a8b2186dc0da2ae89771c207dcb5d905e0328b24c8984c4
+  name:   Pocket Zaurus - Juu Ouken no Nazo (Japan)
+  title:  Pocket Zaurus - Juu Ouken no Nazo (Japan)
+  region: NTSC-J
+  board:  BANDAI-74161A
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 1f5a86488d8bbc8fbc09fdb91a33fa2530ed124949a7001576e7c631f87bd9df
   name:   Power Blazer (Japan)
   title:  Power Blazer (Japan)
@@ -4724,6 +4865,25 @@ game
       content: Character
 
 game
+  sha256: 4d6e58f232dc1a592583889f858eac230b8e8921e715276e580073ab2dd18546
+  name:   Saint Seiya - Ougon Densetsu (Japan)
+  title:  Saint Seiya - Ougon Densetsu (Japan)
+  region: NTSC-J
+  board:  BANDAI-74161A
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 840723003ce183494e9aa5081462f085db2b3846b4680976b32bff0fae0d3968
   name:   Saiyuuki World 2 - Tenjoukai no Majin (Japan)
   title:  Saiyuuki World 2 - Tenjoukai no Majin (Japan)
@@ -5008,6 +5168,27 @@ game
       size: 0x2000
       content: Character
       volatile
+
+game
+  sha256: 82d59a71189043d8a3e690b41a339c27cbc5e1343466fcc02f8cb66d9f6757f5
+  name:   Space Shadow (Japan)
+  title:  Space Shadow (Japan)
+  region: NTSC-J
+  board:  BANDAI-74161
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x10000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
 
 game
   sha256: dbd587ef5a12e03a336cda61cd120b4e8c585f45d82821e144ee8afdea9ee84e
