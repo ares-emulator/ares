@@ -305,6 +305,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     prgram = 8192;
     break;
 
+  case  70:
+    s += "  board:  BANDAI-74161\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
   case  72:
     s += "  board:  JALECO-JF-17\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
@@ -403,6 +408,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  140:
     s += "  board:  JALECO-JF-11\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
+  case 152:
+    s += "  board:  BANDAI-74161A\n";
     break;
 
   case 154:
