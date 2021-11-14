@@ -199,6 +199,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     prgram = 8192;
     break;
 
+  case  11:
+    s += "  board:  COLORDREAMS-74*377\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
   case  16:
     s += "  board:  BANDAI-FCG\n";
     s += "    chip type=LZ93D50\n";
