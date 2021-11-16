@@ -44,6 +44,27 @@ game
       content: Character
 
 game
+  sha256: fec392d252eda8203bfaee45c95ccfc8c1689b90ab6de5cce3f45320d9c69c74
+  name:   Akuma-kun - Makai no Wana (Japan)
+  title:  Akuma-kun - Makai no Wana (Japan)
+  region: NTSC-J
+  board:  BANDAI-FCG
+    chip
+      type: FCG
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: c70f0f5d4054ce7c4850259879c9823add73ccc234ddcf96d95681bb78bd2c58
   name:   Akumajou Densetsu (Japan)
   title:  Akumajou Densetsu (Japan)
@@ -832,6 +853,27 @@ game
       content: Character
 
 game
+  sha256: 3f243f6cf4b33d25d76c7cf9459e82bcd5367aa001f4c36fdf1c5728429bed0a
+  name:   Crayon Shin-chan - Ora to Poi Poi (Japan)
+  title:  Crayon Shin-chan - Ora to Poi Poi (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: b504d0ebff8aa6439f1f9606526d8739f5007c1fdac31f9550caa7ca26edce16
   name:   Crisis Force (Japan)
   title:  Crisis Force (Japan)
@@ -1151,6 +1193,27 @@ game
       volatile
 
 game
+  sha256: d36b8989cbaf9ceafd91d15edd7b990dce6f9aede1bf9ac696ea8d288ec53d44
+  name:   Dragon Ball - Daimaou Fukkatsu (Japan)
+  title:  Dragon Ball - Daimaou Fukkatsu (Japan)
+  region: NTSC-J
+  board:  BANDAI-FCG
+    chip
+      type: FCG
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 656a10fd06a7d75df48bfc452a6610db1c4e115b552c2811b037336db506cdf5
   name:   Dragon Ball - Le Secret du Dragon (France)
   title:  Dragon Ball - Le Secret du Dragon (France)
@@ -1212,6 +1275,173 @@ game
       type: ROM
       size: 0x8000
       content: Character
+
+game
+  sha256: 4d48c60b8bb151d76a08f9af9aab2fff7e5b2b763192aa6fa0512ffd0db97fc6
+  name:   Dragon Ball 3 - Gokuu Den (Japan)
+  title:  Dragon Ball 3 - Gokuu Den (Japan)
+  region: NTSC-J
+  board:  BANDAI-FCG
+    chip
+      type: FCG
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 47acdebfe2beb53eb7cba0ca2920d5d19ff297ebe4c6373635d352111ad94ddb
+  name:   Dragon Ball 3 - Gokuu Den (Japan) (Rev 1)
+  title:  Dragon Ball 3 - Gokuu Den (Japan) (Rev 1)
+  region: NTSC-J
+  board:  BANDAI-FCG
+    chip
+      type: FCG
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 4654f20e7b6dc8bea64b7d0be9aa4f75a4276b4d7f4bc9a06c39172b9e5ae9bf
+  name:   Dragon Ball Z - Kyoushuu! Saiya Jin (Japan)
+  title:  Dragon Ball Z - Kyoushuu! Saiya Jin (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x80
+      content: Save
+
+game
+  sha256: a0a735282c3ba19f743b7ff2a7178a83cb9dfaf60c6e6c233d5b85c76003b974
+  name:   Dragon Ball Z Gaiden - Saiya Jin Zetsumetsu Keikaku (Japan)
+  title:  Dragon Ball Z Gaiden - Saiya Jin Zetsumetsu Keikaku (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
+
+game
+  sha256: 54d19b5d717bcc6367989e77eb30c7a820b2772aa311d4cca7b235f448cbce0a
+  name:   Dragon Ball Z II - Gekishin Freeza!! (Japan)
+  title:  Dragon Ball Z II - Gekishin Freeza!! (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
+
+game
+  sha256: 5287ce3be3b449abead802a5512029b11acb7a1ed10af6303f7fbd575d31af0f
+  name:   Dragon Ball Z II - Gekishin Freeza!! (Japan) (Rev 1)
+  title:  Dragon Ball Z II - Gekishin Freeza!! (Japan) (Rev 1)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
+
+game
+  sha256: bb88e85c73125466ebf4943715c66bbe77175d234842a0c9ea542f3cfcf2c528
+  name:   Dragon Ball Z III - Ressen Jinzou Ningen (Japan)
+  title:  Dragon Ball Z III - Ressen Jinzou Ningen (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
 
 game
   sha256: b1a7377282123b3b18107e0d929666af8831bebde78ceaf7fe410c2132cd61ce
@@ -1416,6 +1646,27 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 342f0e5ad45d040e538e6b1c576d02c264e7982d2b440afcb4f12cedccbb11de
+  name:   Famicom Jump - Eiyuu Retsuden (Japan)
+  title:  Famicom Jump - Eiyuu Retsuden (Japan)
+  region: NTSC-J
+  board:  BANDAI-FCG
+    chip
+      type: FCG
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
       content: Program
     memory
       type: ROM
@@ -3457,27 +3708,6 @@ game
       content: Character
 
 game
-  sha256: dc541137d79000fe3e0bdf5ce35b687a5b137c3a09160c5742599b4ff257cfae
-  name:   Madoola no Tsubasa (Japan)
-  title:  Madoola no Tsubasa (Japan)
-  region: NTSC-J
-  board:  SUNSOFT-1
-    mirror
-      mode: vertical
-    memory
-      type: ROM
-      size: 0x10
-      content: iNES
-    memory
-      type: ROM
-      size: 0x8000
-      content: Program
-    memory
-      type: ROM
-      size: 0x8000
-      content: Character
-
-game
   sha256: 8c801e6fb86ff4174d7c02cd576a1ada260130b403d09ddc76f6aeae9792bf12
   name:   Lupin Sansei - Pandora no Isan (Japan)
   title:  Lupin Sansei - Pandora no Isan (Japan)
@@ -3501,6 +3731,27 @@ game
       content: Character
 
 game
+  sha256: dc541137d79000fe3e0bdf5ce35b687a5b137c3a09160c5742599b4ff257cfae
+  name:   Madoola no Tsubasa (Japan)
+  title:  Madoola no Tsubasa (Japan)
+  region: NTSC-J
+  board:  SUNSOFT-1
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x8000
+      content: Character
+
+game
   sha256: 497c3015516cb6ae2f20d70b8fb1b70b8c4cfcd64e118992c438cfe7b0579f2b
   name:   Magic John (Japan)
   title:  Magic John (Japan)
@@ -3520,6 +3771,81 @@ game
       type: ROM
       size: 0x20000
       content: Character
+
+game
+  sha256: 06dd2c356d2e09929525827f10dda83030a24e743b2648833dc0c56b39edce2f
+  name:   Magical Taruruuto-kun - Fantastic World!! (Japan)
+  title:  Magical Taruruuto-kun - Fantastic World!! (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x80
+      content: Save
+
+game
+  sha256: a1a4e50c09c3983e79a9a1098202a82d82426eaf2e3d898b4a4a8dd55d38e2e7
+  name:   Magical Taruruuto-kun - Fantastic World!! (Japan) (Rev 1)
+  title:  Magical Taruruuto-kun - Fantastic World!! (Japan) (Rev 1)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x80
+      content: Save
+
+game
+  sha256: f4295cfe1d7d75fd5eebe972e4a63cb626ffb90008ace74377518ef4762d29c0
+  name:   Magical Taruruuto-kun 2 - Mahou Daibouken (Japan)
+  title:  Magical Taruruuto-kun 2 - Mahou Daibouken (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x80
+      content: Save
 
 game
   sha256: 4ef61de405406bfa9eeaf19ed1d882444c41bb606ac78673b7ec8ee323d0e073
@@ -3635,6 +3961,27 @@ game
   board:  IREM-G101
     chip
       type: G101
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: f7d8a3732396d928d80dafd32a3873c71a10434fa31b05e4882b28a774c4bcb9
+  name:   Meimon! Daisan Yakyuubu (Japan)
+  title:  Meimon! Daisan Yakyuubu (Japan)
+  region: NTSC-J
+  board:  BANDAI-FCG
+    chip
+      type: FCG
     memory
       type: ROM
       size: 0x10
@@ -4324,6 +4671,27 @@ game
       content: Character
 
 game
+  sha256: 98433ab0b15d19d23c544c2237988abf4a489914e63e18efc28fe2d92ae8c84a
+  name:   Nishimura Kyoutarou Mystery - Blue Train Satsujin Jiken (Japan)
+  title:  Nishimura Kyoutarou Mystery - Blue Train Satsujin Jiken (Japan)
+  region: NTSC-J
+  board:  BANDAI-FCG
+    chip
+      type: FCG
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
   sha256: adf95de2cdff7b606ceedf5908679ef9bb8ffeec37d3d1dad3446ef85ca17026
   name:   Operation Wolf (Japan)
   title:  Operation Wolf (Japan)
@@ -4865,6 +5233,31 @@ game
       content: Character
 
 game
+  sha256: 03bb4abbbab7bc91844dd65b808d1281ae22f9e4460479b27dd9d9b186b40647
+  name:   Rokudenashi Blues (Japan)
+  title:  Rokudenashi Blues (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
+
+game
   sha256: 4d6e58f232dc1a592583889f858eac230b8e8921e715276e580073ab2dd18546
   name:   Saint Seiya - Ougon Densetsu (Japan)
   title:  Saint Seiya - Ougon Densetsu (Japan)
@@ -4891,6 +5284,27 @@ game
   board:  JALECO-JF-24A
     chip
       type: SS88006
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: fda768dba543b9dcdff48ffb1e241c944f34fbd1c12dfddc2cebea6835a62d1c
+  name:   Sakigake!! Otoko Juku - Shippuu Ichi Gou Sei (Japan)
+  title:  Sakigake!! Otoko Juku - Shippuu Ichi Gou Sei (Japan)
+  region: NTSC-J
+  board:  BANDAI-FCG
+    chip
+      type: FCG
     memory
       type: ROM
       size: 0x10
@@ -4954,6 +5368,106 @@ game
       type: ROM
       size: 0x10000
       content: Character
+
+game
+  sha256: cd6e7fb18348488f256d08d8c02802dea3980cdb5b46bd0ea200324b913c1a07
+  name:   SD Gundam Gaiden - Knight Gundam Monogatari (Japan)
+  title:  SD Gundam Gaiden - Knight Gundam Monogatari (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x80
+      content: Save
+
+game
+  sha256: 976fa847a4e2ea4ec678539ddef9794a457c85c5c8f89f6cd12622c8476ab44f
+  name:   SD Gundam Gaiden - Knight Gundam Monogatari (Japan) (Rev 1)
+  title:  SD Gundam Gaiden - Knight Gundam Monogatari (Japan) (Rev 1)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x80
+      content: Save
+
+game
+  sha256: c960e211e1859825d6de21fcde325816444cd63dd7212456eedb85884f2649ca
+  name:   SD Gundam Gaiden - Knight Gundam Monogatari 2 - Hikari no Knight (Japan)
+  title:  SD Gundam Gaiden - Knight Gundam Monogatari 2 - Hikari no Knight (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
+
+game
+  sha256: 4ea5d6ad94d5cf257819167aa87e45f38079d0194db4218a75a989ba6d5e3736
+  name:   SD Gundam Gaiden - Knight Gundam Monogatari 3 - Densetsu no Kishi Dan (Japan)
+  title:  SD Gundam Gaiden - Knight Gundam Monogatari 3 - Densetsu no Kishi Dan (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
 
 game
   sha256: 2d3d6f009b1f81640867a5b5102c10e4d26c8ad6280c30e43d65dcd1acce9fb3
