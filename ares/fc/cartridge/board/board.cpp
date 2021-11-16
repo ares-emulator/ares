@@ -2,6 +2,7 @@ namespace Board {
 
 #include "bandai-74161.cpp"
 #include "bandai-fcg.cpp"
+#include "bandai-lz93d50.cpp"
 #include "colordreams-74x377.cpp"
 #include "gtrom.cpp"
 #include "jaleco-jf05.cpp"
@@ -49,6 +50,7 @@ auto Interface::create(string board) -> Interface* {
   Interface* p = nullptr;
   if(!p) p = Bandai74161::create(board);
   if(!p) p = BandaiFCG::create(board);
+  if(!p) p = BandaiLZ93D50::create(board);
   if(!p) p = ColorDreams_74x377::create(board);
   if(!p) p = GTROM::create(board);
   if(!p) p = HVC_AxROM::create(board);
