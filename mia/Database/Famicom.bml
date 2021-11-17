@@ -1,5 +1,5 @@
 database
-  revision: 2021-11-13
+  revision: 2021-11-18
 
 game
   sha256: 21b10e8d4cf775aa1f4027c4afb4f64e72e221a506a485cf4ffdf98bed01a524
@@ -872,6 +872,28 @@ game
       type: ROM
       size: 0x20000
       content: Character
+
+game
+  sha256: e24d3c754dce20e27046afeacb2dfc217950d4be766ded80c20283392cb3891e
+  name:   Crazy Climber (Japan)
+  title:  Crazy Climber (Japan)
+  region: NTSC-J
+  board:  HVC-UNROMA
+    mirror
+      mode: horizontal
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
 
 game
   sha256: b504d0ebff8aa6439f1f9606526d8739f5007c1fdac31f9550caa7ca26edce16
@@ -5519,6 +5541,28 @@ game
       type: ROM
       size: 0x20000
       content: Character
+
+game
+  sha256: dbc22a40e8a79c5ccf1d6e5126c9b10bb3d9b3e708fe5316c298c3d03dbc7977
+  name:   Senjou no Ookami (Japan)
+  title:  Senjou no Ookami (Japan)
+  region: NTSC-J
+  board:  HVC-UN1ROM
+    mirror
+      mode: horizontal
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
 
 game
   sha256: f7271a7030e2f5298f3931f08c84fdbe1dad3108aaf1259a766f05b80b12910a

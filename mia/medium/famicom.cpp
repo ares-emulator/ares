@@ -391,6 +391,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
+  case  94:
+    s += "  board:  HVC-UN1ROM\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
   case  95:
     s += "  board:  NAMCO-3425\n";
     s += "    chip type=118\n";
@@ -429,6 +434,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "  board:  BANDAI-LZ93D50\n";
     s += "    chip type=LZ93D50\n";
     eeprom = 128;
+    break;
+
+  case 180:
+    s += "  board:  HVC-UNROMA\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
   case 184:
