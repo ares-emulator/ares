@@ -42,26 +42,27 @@ struct BandaiLZ93D50 : Interface {
   auto readPRG(n32 address, n8 data) -> n8 override {
     if(address < 0x6000) return data;
     if(address < 0x8000) {
-      if(programRAM) return programRAM.read((n13)address);
+      if(programRAM && ramEnable) return programRAM.read((n13)address);
       if(eeprom) data.bit(4) = eeprom.read();
       return data;
     }
 
-    n4 bank = (address < 0xc000 ? programBank : (n4)0xf);
+    n5 bank = (address < 0xc000 ? (n5)programBank : (n5)0xf);
+    if(characterRAM) bank.bit(4) = bool(programOuterBank);
     return programROM.read(bank << 14 | (n14)address);
   }
 
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x6000) return;
     if(address < 0x8000) {
-      if(programRAM) return programRAM.write((n13)address, data);
+      if(programRAM && ramEnable) return programRAM.write((n13)address, data);
     }
 
     switch(address & 0x800f) {
-    case 0x8000: characterBank[0] = data; break;
-    case 0x8001: characterBank[1] = data; break;
-    case 0x8002: characterBank[2] = data; break;
-    case 0x8003: characterBank[3] = data; break;
+    case 0x8000: characterBank[0] = data; programOuterBank.bit(0) = data.bit(0); break;
+    case 0x8001: characterBank[1] = data; programOuterBank.bit(1) = data.bit(0); break;
+    case 0x8002: characterBank[2] = data; programOuterBank.bit(2) = data.bit(0); break;
+    case 0x8003: characterBank[3] = data; programOuterBank.bit(3) = data.bit(0); break;
     case 0x8004: characterBank[4] = data; break;
     case 0x8005: characterBank[5] = data; break;
     case 0x8006: characterBank[6] = data; break;
@@ -81,6 +82,7 @@ struct BandaiLZ93D50 : Interface {
         eeprom.data  = data.bit(6);
         eeprom.write();
       }
+      ramEnable = data.bit(5);
       break;
     }
   }
@@ -117,7 +119,9 @@ struct BandaiLZ93D50 : Interface {
     s(eeprom);
     s(characterBank);
     s(programBank);
+    s(programOuterBank);
     s(mirror);
+    s(ramEnable);
     s(irqEnable);
     s(irqCounter);
     s(irqLatch);
@@ -125,7 +129,9 @@ struct BandaiLZ93D50 : Interface {
 
   n8  characterBank[8];
   n4  programBank;
+  n4  programOuterBank;
   n2  mirror;
+  n1  ramEnable;
   n1  irqEnable;
   n16 irqCounter;
   n16 irqLatch;
