@@ -1674,6 +1674,32 @@ game
       content: Character
 
 game
+  sha256: dd031b72924e1d080f8758412c73224a274ae5e5a50d90310d578975df74101f
+  name:   Famicom Jump II - Saikyou no 7 Nin (Japan)
+  title:  Famicom Jump II - Saikyou no 7 Nin (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x80000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+
+game
   sha256: 7586cdd8b742ba3c4f0ea3eefaa2f6f2215af197a5269e3de9026bcdf236e981
   name:   Famicom Wars (Japan)
   title:  Famicom Wars (Japan)
