@@ -69,7 +69,13 @@ struct HVC_SxROM : Interface {  //MMC1
   HVC_SxROM(Revision revision) : revision(revision) {}
 
   auto load() -> void override {
+    auto chip = pak->attribute("chip");
     chipRevision = ChipRevision::MMC1B2;
+    if(chip == "MMC1"  ) chipRevision = ChipRevision::MMC1;
+    if(chip == "MMC1A" ) chipRevision = ChipRevision::MMC1A;
+    if(chip == "MMC1B1") chipRevision = ChipRevision::MMC1B1;
+    if(chip == "MMC1B3") chipRevision = ChipRevision::MMC1B3;
+    if(chip == "MMC1C" ) chipRevision = ChipRevision::MMC1C;
 
     Interface::load(programROM, "program.rom");
     Interface::load(programRAM, "save.ram");
@@ -180,7 +186,9 @@ struct HVC_SxROM : Interface {  //MMC1
           break;
         case 3:
           programBank = shiftValue.bit(0,3);
-          ramDisable = shiftValue.bit(4);
+          if(chipRevision > ChipRevision::MMC1A) {
+            ramDisable = shiftValue.bit(4);
+          }
           break;
         }
       }

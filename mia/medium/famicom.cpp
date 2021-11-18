@@ -30,6 +30,7 @@ auto Famicom::load(string location) -> bool {
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("board", document["game/board"].string());
   pak->setAttribute("mirror", document["game/board/mirror/mode"].string());
+  pak->setAttribute("chip", document["game/board/chip/type"].string());
   pak->setAttribute("pinout/a0", document["game/board/chip/pinout/a0"].natural());
   pak->setAttribute("pinout/a1", document["game/board/chip/pinout/a1"].natural());
   pak->append("manifest.bml", manifest);
@@ -428,6 +429,12 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case 154:
     s += "  board:  NAMCO-3453\n";
     s += "    chip type=118\n";
+    break;
+
+  case 155:
+    s += "  board:  HVC-SXROM\n";
+    s += "    chip type=MMC1A\n";
+    prgram = 8192;
     break;
 
   case 159:
