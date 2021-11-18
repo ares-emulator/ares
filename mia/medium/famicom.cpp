@@ -31,6 +31,7 @@ auto Famicom::load(string location) -> bool {
   pak->setAttribute("board", document["game/board"].string());
   pak->setAttribute("mirror", document["game/board/mirror/mode"].string());
   pak->setAttribute("chip", document["game/board/chip/type"].string());
+  pak->setAttribute("chip/key", document["game/board/chip/key"].string());
   pak->setAttribute("pinout/a0", document["game/board/chip/pinout/a0"].natural());
   pak->setAttribute("pinout/a1", document["game/board/chip/pinout/a1"].natural());
   pak->append("manifest.bml", manifest);
@@ -450,6 +451,12 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case 184:
     s += "  board:  SUNSOFT-1\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
+  case 185:
+    s += "  board:  HVC-CNROM-SEC\n";
+    s += "    chip type=SECURITY key=0x11\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
