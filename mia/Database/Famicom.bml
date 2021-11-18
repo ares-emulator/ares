@@ -234,6 +234,30 @@ game
       content: Character
 
 game
+  sha256: 2b4ac20082e2f45a8f8fd4922a0e995829719a523e118a9eec891c3206adf25b
+  name:   B-Wings (Japan)
+  title:  B-Wings (Japan)
+  region: NTSC-J
+  board:  HVC-CNROM-SEC
+    chip
+      type: SECURITY
+      key:  0x33
+    mirror
+      mode: horizontal
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x2000
+      content: Character
+
+game
   sha256: a9d7e89bd4ea28cfd169e32c4516ef5d059e19afb9dfa4ede8412f2373dfb0a7
   name:   Babel no Tou (Japan)
   title:  Babel no Tou (Japan)
@@ -578,6 +602,30 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: acf054b0886a2ca74a0280fc36bc1d55e9845acc29759f1893c1da4c1389f9c2
+  name:   Bird Week (Japan)
+  title:  Bird Week (Japan)
+  region: NTSC-J
+  board:  HVC-CNROM-SEC
+    chip
+      type: SECURITY
+      key:  0x0f
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x4000
+      content: Program
+    memory
+      type: ROM
+      size: 0x2000
       content: Character
 
 game
@@ -4092,6 +4140,54 @@ game
       content: Character
 
 game
+  sha256: 02d86ba60b7f43f9d04131522263e7560d9ad1d4cc474b909d487cc0d470ccc3
+  name:   Mighty Bomb Jack (Japan)
+  title:  Mighty Bomb Jack (Japan)
+  region: NTSC-J
+  board:  HVC-CNROM-SEC
+    chip
+      type: SECURITY
+      key:  0x11
+    mirror
+      mode: horizontal
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x2000
+      content: Character
+
+game
+  sha256: c011721745c92916542dd1c82f8b38def52e7aeb7dfdb02609cfd049f436b82a
+  name:   Mighty Bomb Jack (Japan) (Rev 1)
+  title:  Mighty Bomb Jack (Japan) (Rev 1)
+  region: NTSC-J
+  board:  HVC-CNROM-SEC
+    chip
+      type: SECURITY
+      key:  0x11
+    mirror
+      mode: horizontal
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x2000
+      content: Character
+
+game
   sha256: eb2a2a5e15bb2b35b8284e15e85eede46de1765be9fa7d62c4d3fc6015e20bcc
   name:   Mike Tyson's Punch-Out!! (Europe)
   title:  Mike Tyson's Punch-Out!! (Europe)
@@ -4786,6 +4882,54 @@ game
       content: Character
 
 game
+  sha256: 8b7bfbd2e0d636ff1683d08119c39f468f20074233b8c82c18b22956a4a9dd03
+  name:   Othello (Japan)
+  title:  Othello (Japan)
+  region: NTSC-J
+  board:  HVC-CNROM-SEC
+    chip
+      type: SECURITY
+      key:  0x22
+    mirror
+      mode: horizontal
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x2000
+      content: Character
+
+game
+  sha256: 1eee67e8734bdfcdd380fd033b3b0e9e7a1781bb94fc57138afdce5fc327c5a4
+  name:   Othello (Japan) (Rev 1)
+  title:  Othello (Japan) (Rev 1)
+  region: NTSC-J
+  board:  HVC-CNROM-SEC
+    chip
+      type: SECURITY
+      key:  0x22
+    mirror
+      mode: horizontal
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x2000
+      content: Character
+
+game
   sha256: 035383efbc5131942ba7df721ba406fd57c08a9ff87e3aa6e6f3d272bda86c44
   name:   Paris-Dakar Rally Special (Japan)
   title:  Paris-Dakar Rally Special (Japan)
@@ -5443,6 +5587,78 @@ game
       content: Character
 
 game
+  sha256: a5e173f9b25b9024807108afb59ca89fa3704cddb97ac2543f41bc4a6c02f4bd
+  name:   Sansuu 1 Nen - Keisan Game (Japan)
+  title:  Sansuu 1 Nen - Keisan Game (Japan)
+  region: NTSC-J
+  board:  HVC-CNROM-SEC
+    chip
+      type: SECURITY
+      key:  0x22
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x2000
+      content: Character
+
+game
+  sha256: 77ddaff6948aa4d88cdacde3692c94e5cab92e3ec9ce86c6228ed973956f41ca
+  name:   Sansuu 2 Nen - Keisan Game (Japan)
+  title:  Sansuu 2 Nen - Keisan Game (Japan)
+  region: NTSC-J
+  board:  HVC-CNROM-SEC
+    chip
+      type: SECURITY
+      key:  0x22
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x2000
+      content: Character
+
+game
+  sha256: d2fa2e6d93bed19b33e4ab2163705ea8d69d4119baf1663dc155e3777e9b0e94
+  name:   Sansuu 3 Nen - Keisan Game (Japan)
+  title:  Sansuu 3 Nen - Keisan Game (Japan)
+  region: NTSC-J
+  board:  HVC-CNROM-SEC
+    chip
+      type: SECURITY
+      key:  0x2a
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x2000
+      content: Character
+
+game
   sha256: cd6e7fb18348488f256d08d8c02802dea3980cdb5b46bd0ea200324b913c1a07
   name:   SD Gundam Gaiden - Knight Gundam Monogatari (Japan)
   title:  SD Gundam Gaiden - Knight Gundam Monogatari (Japan)
@@ -5565,6 +5781,30 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: 269c410730fde0184a39f3063fbccb06c2488ffb7b2638738b106fae8a2f0acb
+  name:   Seicross (Japan) (Rev 1)
+  title:  Seicross (Japan) (Rev 1)
+  region: NTSC-J
+  board:  HVC-CNROM-SEC
+    chip
+      type: SECURITY
+      key:  0x20
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x2000
       content: Character
 
 game
@@ -5839,6 +6079,30 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: a9cf92ec1a080faa195d0b3dcb48fbb5ee3362f0f2f14e14e4257def48ac4346
+  name:   Spy vs Spy (Japan)
+  title:  Spy vs Spy (Japan)
+  region: NTSC-J
+  board:  HVC-CNROM-SEC
+    chip
+      type: SECURITY
+      key:  0x21
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: ROM
+      size: 0x2000
       content: Character
 
 game
