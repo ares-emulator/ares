@@ -4518,6 +4518,31 @@ game
       content: Character
 
 game
+  sha256: f2aef1a9ade54330ff821083fda7e03c7a5f93d77f4da359069d84f98ab1f852
+  name:   Money Game, The (Japan)
+  title:  Money Game, The (Japan)
+  region: NTSC-J
+  board:  HVC-SJROM
+    chip
+      type: MMC1A
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x8000
+      content: Character
+
+game
   sha256: 97ff1ac9e6061ba5fb02b4626abf3521f84ee1542fa8093d617ede08dbb17cdc
   name:   Mouryou Senki Madara (Japan)
   title:  Mouryou Senki Madara (Japan)
@@ -5966,6 +5991,31 @@ game
       type: ROM
       size: 0x20000
       content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: a086ff08e7eae822285975d04f5d227f2434d5f1819969e233ff8670f7d57439
+  name:   Tatakae!! Rahmen Man - Sakuretsu Choujin 102 Gei (Japan)
+  title:  Tatakae!! Rahmen Man - Sakuretsu Choujin 102 Gei (Japan)
+  region: NTSC-J
+  board:  HVC-SKROM
+    chip
+      type: MMC1A
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
     memory
       type: ROM
       size: 0x20000
