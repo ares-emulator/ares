@@ -412,6 +412,18 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "  board:  GTROM\n";
     break;
 
+  case 118:
+    s += "  board:  HVC-TKSROM\n";
+    s += "    chip type=MMC3B\n";
+    prgram = 8192;
+    break;
+
+  case 119:
+    s += "  board:  HVC-TQROM\n";
+    s += "    chip type=MMC3B\n";
+    chrram = 8192;
+    break;
+
   case  140:
     s += "  board:  JALECO-JF-11\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
