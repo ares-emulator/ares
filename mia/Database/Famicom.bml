@@ -1,5 +1,5 @@
 database
-  revision: 2021-11-18
+  revision: 2021-11-20
 
 game
   sha256: 21b10e8d4cf775aa1f4027c4afb4f64e72e221a506a485cf4ffdf98bed01a524
@@ -206,6 +206,27 @@ game
     memory
       type: ROM
       size: 0x10000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 54526dc9444c0eb4b0e5814f98b5e522bcb9881a6f2c0644fc7a21ca8c03502b
+  name:   Armadillo (Japan)
+  title:  Armadillo (Japan)
+  region: NTSC-J
+  board:  HVC-TLSROM
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
       content: Program
     memory
       type: ROM
@@ -1674,6 +1695,27 @@ game
       content: Character
 
 game
+  sha256: badedff174fd32fcaad914ea72d04763b828ed4d1d883e8c902cb668ea52b92a
+  name:   Eric Cantona Football Challenge - Goal! 2 (Europe)
+  title:  Eric Cantona Football Challenge - Goal! 2 (Europe)
+  region: PAL
+  board:  HVC-TLSROM
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 761df2c2e04f9ffec5eec59afd821bd74af3b155546519d649876aad37160c06
   name:   Esper Dream 2 - Aratanaru Tatakai (Japan)
   title:  Esper Dream 2 - Aratanaru Tatakai (Japan)
@@ -2648,6 +2690,27 @@ game
       content: Character
 
 game
+  sha256: 7911375ab98da4ac5c628ba4dfffcba8ba4fc13a341901aed120ab967be5e26c
+  name:   Goal! Two (USA)
+  title:  Goal! Two (USA)
+  region: NTSC-U
+  board:  HVC-TLSROM
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 4ca57e0bff08c5308073382af56138f31fe60c30cea7ab5fb1e4863b86e0b5d7
   name:   Goal!! (Japan)
   title:  Goal!! (Japan)
@@ -2823,6 +2886,58 @@ game
       type: ROM
       size: 0x20000
       content: Character
+
+game
+  sha256: 0ba8c48be4033b02a28be9e7da664a03e3956ba381a3d45bf66e9c080df47167
+  name:   High Speed (Europe)
+  title:  High Speed (Europe)
+  region: PAL
+  board:  HVC-TQROM
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x10000
+      content: Character
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+
+game
+  sha256: 710e907230bbd82143286b40a56a298b25cf326697a9f07bfd8e043c1936a4b1
+  name:   High Speed (USA)
+  title:  High Speed (USA)
+  region: NTSC-U
+  board:  HVC-TQROM
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x10000
+      content: Character
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
 
 game
   sha256: 1c1ad2992f728c7fb6a8f3980b1a0f8e01e5b24a0c43c713300846d87be5987a
@@ -4778,6 +4893,27 @@ game
       volatile
 
 game
+  sha256: 4b382baa70cbc52977fd766f49a3c7c9a3239f0d9581cd961b8b26700c53247d
+  name:   NES Play Action Football (USA)
+  title:  NES Play Action Football (USA)
+  region: NTSC-U
+  board:  HVC-TLSROM
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 58be6a811ee3370882160115253b610581e8b4af7228669eb3fbd56e7a13117c
   name:   Nightmare on Elm Street, A (USA)
   title:  Nightmare on Elm Street, A (USA)
@@ -5021,6 +5157,58 @@ game
       content: Character
 
 game
+  sha256: 1067b39e520810e55300a4ec1c94f4dddee17e899090af30cf5d626058dbe531
+  name:   Pin Bot (Europe)
+  title:  Pin Bot (Europe)
+  region: PAL
+  board:  HVC-TQROM
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x10000
+      content: Character
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+
+game
+  sha256: f4ddb0f1a02f823ebed30b55547344de3c8fb9d87254ff993584373ecadd9141
+  name:   Pin Bot (USA)
+  title:  Pin Bot (USA)
+  region: NTSC-U
+  board:  HVC-TQROM
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x10000
+      content: Character
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+
+game
   sha256: b7daa24069d54f56fb71e7659b4ad40a6e9f4695f73e7a0d0e56d5c80e2e6474
   name:   Pinball Quest (Japan)
   title:  Pinball Quest (Japan)
@@ -5110,6 +5298,27 @@ game
   board:  TAITO-TC0190
     chip
       type: TC0190
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 3910ae7495a71e6a55f70ed31eb345d28d6e9d524fe88679719d831f8f2553ce
+  name:   Pro Sport Hockey (USA)
+  title:  Pro Sport Hockey (USA)
+  region: NTSC-U
+  board:  HVC-TLSROM
+    chip
+      type: MMC3B
     memory
       type: ROM
       size: 0x10
@@ -5427,6 +5636,32 @@ game
       content: Character
 
 game
+  sha256: bcc8a24ab99f85933ff2cd0787daab6093710ef04f95b4c7bec842961ee0e3ad
+  name:   Rad Racer II (USA)
+  title:  Rad Racer II (USA)
+  region: NTSC-U
+  board:  HVC-TVROM
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x10000
+      content: Program
+    memory
+      type: ROM
+      size: 0x10000
+      content: Character
+    memory
+      type: RAM
+      size: 0x800
+      content: Character
+      volatile
+
+game
   sha256: f17df83a3e714c9f839dcd428d31a0b8b3cdb5fe1a78f24f43f158cb379720c1
   name:   Ring King (USA)
   title:  Ring King (USA)
@@ -5473,6 +5708,31 @@ game
       type: EEPROM
       size: 0x100
       content: Save
+
+game
+  sha256: ff5d21cadd406e368a622f940a272efcfc441c08aa736cf3a82fddd6e7d8a097
+  name:   RPG Jinsei Game (Japan)
+  title:  RPG Jinsei Game (Japan)
+  region: NTSC-J
+  board:  HVC-TKSROM
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
 
 game
   sha256: 4d6e58f232dc1a592583889f858eac230b8e8921e715276e580073ab2dd18546
@@ -7105,5 +7365,30 @@ game
     memory
       type: ROM
       size: 0x8000
+      content: Character
+
+game
+  sha256: ec1d85479d72847d3adbd76e2e79221143e6c9324d5647be2c4a11aa87123f75
+  name:   Ys III - Wanderers from Ys (Japan)
+  title:  Ys III - Wanderers from Ys (Japan)
+  region: NTSC-J
+  board:  HVC-TKSROM
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 

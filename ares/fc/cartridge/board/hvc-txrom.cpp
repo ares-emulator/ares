@@ -163,20 +163,54 @@ struct HVC_TxROM : Interface {  //MMC3
   }
 
   auto addressCIRAM(n32 address) const -> n32 {
+    if(revision == Revision::TKSROM || revision == Revision::TLSROM) {
+      address.bit(12) = 0;
+      if(characterMode == 0) {
+        if(address <= 0x27ff) return characterBank[0].bit(7) << 10 | (n10)address;
+        if(address <= 0x2fff) return characterBank[1].bit(7) << 10 | (n10)address;
+      } else {
+        if(address <= 0x23ff) return characterBank[2].bit(7) << 10 | (n10)address;
+        if(address <= 0x27ff) return characterBank[3].bit(7) << 10 | (n10)address;
+        if(address <= 0x2bff) return characterBank[4].bit(7) << 10 | (n10)address;
+        if(address <= 0x2fff) return characterBank[5].bit(7) << 10 | (n10)address;
+      }
+      unreachable;
+    }
     return address >> mirror & 0x0400 | (n10)address;
   }
 
   auto readCHR(n32 address, n8 data) -> n8 override {
     irqTest(address);
+    if(revision == Revision::TVROM) {
+      if(address < 0x2000) return characterROM.read(addressCHR(address));
+      address.bit(12) = 0;
+      if(address < 0x2800) return ppu.readCIRAM((n11)address);
+      return characterRAM.read((n11)address);
+    }
     if(address & 0x2000) return ppu.readCIRAM(addressCIRAM(address));
-    if(characterROM) return characterROM.read(addressCHR(address));
+    if(revision == Revision::TQROM) {
+      address = addressCHR(address);
+      if(address < 0x10000) return characterROM.read(address);
+      return characterRAM.read(address);
+    }
     if(characterRAM) return characterRAM.read(addressCHR(address));
-    return data;
+    return characterROM.read(addressCHR(address));
   }
 
   auto writeCHR(n32 address, n8 data) -> void override {
     irqTest(address);
+    if(revision == Revision::TVROM) {
+      if(address < 0x2000) return;
+      address.bit(12) = 0;
+      if(address < 0x2800) return ppu.writeCIRAM((n11)address, data);
+      return characterRAM.write((n11)address, data);
+    }
     if(address & 0x2000) return ppu.writeCIRAM(addressCIRAM(address), data);
+    if(revision == Revision::TQROM) {
+      address = addressCHR(address);
+      if(address < 0x10000) return;
+      return characterRAM.write(address, data);
+    }
     if(characterRAM) return characterRAM.write(addressCHR(address), data);
   }
 
