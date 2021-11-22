@@ -8,7 +8,7 @@
 /*[amd64]:
    Win64 only: provides a substantial speed-up, but will thrash XMM regs
    do not use this unless you are certain your application won't use SSE */
-#define LIBCO_NO_SSE
+/* #define LIBCO_NO_SSE */
 
 #if defined(LIBCO_C)
   #if defined(LIBCO_MP)
