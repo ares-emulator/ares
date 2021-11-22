@@ -1,5 +1,5 @@
 database
-  revision: 2021-11-20
+  revision: 2021-11-22
 
 game
   sha256: 21b10e8d4cf775aa1f4027c4afb4f64e72e221a506a485cf4ffdf98bed01a524
@@ -458,6 +458,27 @@ game
     memory
       type: ROM
       size: 0x40000
+      content: Character
+
+game
+  sha256: 263b133697e368b60a6a11a82d9f0ab0fca94da1bef8c5f823d593b4f2f64e7e
+  name:   Battle Fleet (Japan)
+  title:  Battle Fleet (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
@@ -1180,6 +1201,77 @@ game
       content: Character
 
 game
+  sha256: 49ab761441ead1619021d6762bc5db727684de80790ac4f48ff3e3034ae9d278
+  name:   Digital Devil Story - Megami Tensei II (Japan)
+  title:  Digital Devil Story - Megami Tensei II (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 168d15dc4727edc7ac7f20c36ce497f58b8066e66a28b1fcba94324ed5410e54
+  name:   Digital Devil Story - Megami Tensei II (Japan) (Rev A)
+  title:  Digital Devil Story - Megami Tensei II (Japan) (Rev A)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 86e140846743a3e37888ff3c6ffd5f0102b5c750d7dadc1df5ec68c6f28756e2
+  name:   Dokuganryuu Masamune (Japan)
+  title:  Dokuganryuu Masamune (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 1eaa6da0a158dd99c5dc46e0c75b8dcec07ee26300847b3e775c8b8ef1e7484a
   name:   Don Doko Don (Japan)
   title:  Don Doko Don (Japan)
@@ -1579,6 +1671,48 @@ game
       content: Character
 
 game
+  sha256: 456caa33251d5b666913b193036c99d9ba78a0170d9d8606b70ab1e1b02d49f3
+  name:   Dragon Ninja (Japan)
+  title:  Dragon Ninja (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 283f13f4d070e8ad076d8f308000070735852dddda831461883d3d61c06ec5cc
+  name:   Dragon Ninja (Japan) (Rev A)
+  title:  Dragon Ninja (Japan) (Rev A)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 038f2241fd6e58600ce234623be752cca47875ef7295fe92c30c328c81ffe7ec
   name:   Dragon Power (USA)
   title:  Dragon Power (USA)
@@ -1702,6 +1836,27 @@ game
   board:  HVC-TLSROM
     chip
       type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: ccc7685722b9a512846a1c385e9db91d4365712af00afb823f6989c5bf40f96d
+  name:   Erika to Satoru no Yume Bouken (Japan)
+  title:  Erika to Satoru no Yume Bouken (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
     memory
       type: ROM
       size: 0x10
@@ -2201,6 +2356,27 @@ game
       content: Character
 
 game
+  sha256: 89ffb8634f667f237bd623326a638bc94fb0629358dc31f7b01cf0a5c30369aa
+  name:   Famista '90 (Japan)
+  title:  Famista '90 (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: dcc5c7e37da015cae9b2a296e406628453de71df21ed934993901cb999966b4b
   name:   Famista '91 (Japan)
   title:  Famista '91 (Japan)
@@ -2314,6 +2490,27 @@ game
   title:  Fantasy Zone II - Opa-Opa no Namida (Japan)
   region: NTSC-J
   board:  SUNSOFT-3
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 9f9e96423a8a322cd79676dadb7d24a27733f834a88049bda3acc98c2d2df026
+  name:   Final Lap (Japan)
+  title:  Final Lap (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
     memory
       type: ROM
       size: 0x10
@@ -3005,6 +3202,27 @@ game
       content: Character
 
 game
+  sha256: 8a18ba7a4d8708ea21ae973fa1871824c55bec30570d0808e2852760f07ce59b
+  name:   Hydlide 3 - Yami kara no Houmonsha (Japan)
+  title:  Hydlide 3 - Yami kara no Houmonsha (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: c4bf5a80d8c2a941e9809338f97a86b7764e3c3101ad102bcfd76832cd72d27f
   name:   Hyper Olympic (Japan) (Genteiban!)
   title:  Hyper Olympic (Japan) (Genteiban!)
@@ -3367,6 +3585,56 @@ game
       content: Character
 
 game
+  sha256: 670d4bb81befa1957b47a712d0234dd5169ee03a41b0700b28615a73ef211ce3
+  name:   Juvei Quest (Japan)
+  title:  Juvei Quest (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 69e3aaaa116c394cfae92d13706cd08d9094c62df0ab35945d27bf5340078753
+  name:   Juvei Quest (Japan)
+  title:  Juvei Quest (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
   sha256: 722035257431bbc43bbc612ccf36f5c8346c4f7073b298dcf6d46d95866f860a
   name:   Kage no Densetsu (Japan)
   title:  Kage no Densetsu (Japan)
@@ -3385,6 +3653,27 @@ game
     memory
       type: ROM
       size: 0x4000
+      content: Character
+
+game
+  sha256: 4d302aae428b6189c3e12261eeb42fcf1d104ab799cce71522824e1524298f46
+  name:   Kaijuu Monogatari (Japan)
+  title:  Kaijuu Monogatari (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
@@ -3622,6 +3911,31 @@ game
       type: ROM
       size: 0x20000
       content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 6e1c333bd8434ef0da15995dc01afb21d145d20b9504ee8b7e6700b7470969ca
+  name:   King of Kings (Japan)
+  title:  King of Kings (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
     memory
       type: ROM
       size: 0x20000
@@ -4080,6 +4394,27 @@ game
       content: Character
 
 game
+  sha256: 383e8a225f32b06704e4e5563d8970fd7c7d9ec99446f7001214d1c6e0b3cd62
+  name:   Mappy Kids (Japan)
+  title:  Mappy Kids (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 481ddd49134a5e2ae6beb35227dbd2384d9968dc22391eb89cafb40f2a48db6a
   name:   Mappy-Land (Japan)
   title:  Mappy-Land (Japan)
@@ -4373,6 +4708,27 @@ game
   board:  HVC-PNROM
     chip
       type: MMC2
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: abe5fabba427d3247b31236aba26a2669c8b79733b97b1a14ac9370eee09018b
+  name:   Mindseeker (Japan)
+  title:  Mindseeker (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
     memory
       type: ROM
       size: 0x10
@@ -4800,6 +5156,48 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: 1f1bd720199dfd46035845ef24ea4234c2440d748ebed75da9720701228045cd
+  name:   Namco Classic (Japan)
+  title:  Namco Classic (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 09fe0f41c99a27f4d38bbcf1c1a71524f568f8ae550a35afb9d6c280862ae34b
+  name:   Namco Classic II (Japan)
+  title:  Namco Classic II (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
       content: Character
 
 game
@@ -5710,6 +6108,27 @@ game
       content: Save
 
 game
+  sha256: ed8c07ac72403ef5d131e9e5eb9b90578b40a1fec0b2925bab9ce06aa308477a
+  name:   Rolling Thunder (Japan)
+  title:  Rolling Thunder (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: ff5d21cadd406e368a622f940a272efcfc441c08aa736cf3a82fddd6e7d8a097
   name:   RPG Jinsei Game (Japan)
   title:  RPG Jinsei Game (Japan)
@@ -5822,6 +6241,56 @@ game
       size: 0x2000
       content: Character
       volatile
+
+game
+  sha256: 6a258031a63ea324b02d865ef7860bde15bd0b29be1071311c45d87a2f1d56f2
+  name:   Sangokushi - Chuugen no Hasha (Japan)
+  title:  Sangokushi - Chuugen no Hasha (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: fcd7bb633e020aeeeba74dd330eca2c5af59a7fbacdbcb271b9bab129e3f2dd2
+  name:   Sangokushi II - Haou no Tairiku (Japan)
+  title:  Sangokushi II - Haou no Tairiku (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
 
 game
   sha256: 83bffec6356bc787041747d36f088134ceebb14bd476a508a931ee291b95d74b
@@ -6363,6 +6832,27 @@ game
     memory
       type: ROM
       size: 0x2000
+      content: Character
+
+game
+  sha256: 6b42e1b3fba910280016616a24050d3aec19d32480c4b5863c3f3734d44681bc
+  name:   Star Wars (Japan)
+  title:  Star Wars (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
@@ -7365,6 +7855,27 @@ game
     memory
       type: ROM
       size: 0x8000
+      content: Character
+
+game
+  sha256: a6f31393dc6b343560125aaaf9241dbbed4553870778ef882d149cf4706fc41b
+  name:   Youkai Douchuuki (Japan)
+  title:  Youkai Douchuuki (Japan)
+  region: NTSC-J
+  board:  NAMCO-163
+    chip
+      type: 163
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
