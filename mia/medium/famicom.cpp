@@ -45,6 +45,10 @@ auto Famicom::load(string location) -> bool {
     pak->append("program.rom", {view.data(), node["size"].natural()});
     view += node["size"].natural();
   }
+  if(auto node = document["game/board/memory(type=ROM,content=Option)"]) {
+    pak->append("option.rom", {view.data(), node["size"].natural()});
+    view += node["size"].natural();
+  }
   if(auto node = document["game/board/memory(type=ROM,content=Character)"]) {
     pak->append("character.rom", {view.data(), node["size"].natural()});
     view += node["size"].natural();
@@ -300,10 +304,6 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case  68:
     s += "  board:  SUNSOFT-4\n";
-    s += "    memory\n";
-    s += "      type: ROM\n";
-    s += "      size: 0x4000\n";
-    s += "      content: Option\n";
     prgram = 8192;
     break;
 
