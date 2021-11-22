@@ -1,5 +1,24 @@
 database
-  revision: 2021-11-22
+  revision: 2021-11-23
+
+game
+  sha256: 4fb12ad1c791c7ee8d5ec824eff871d71b43b92c4e93b45ed0b60f022459b917
+  name:   After Burner (Japan)
+  title:  After Burner (Japan)
+  region: NTSC-J
+  board:  SUNSOFT-4
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
 
 game
   sha256: 21b10e8d4cf775aa1f4027c4afb4f64e72e221a506a485cf4ffdf98bed01a524
@@ -4373,6 +4392,29 @@ game
       content: Save
 
 game
+  sha256: 9935c7ef77152a4d91e757a02f2c58b05d3635d10d1f249129ea036fb945e69e
+  name:   Maharaja (Japan)
+  title:  Maharaja (Japan)
+  region: NTSC-J
+  board:  SUNSOFT-4
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 4ef61de405406bfa9eeaf19ed1d882444c41bb606ac78673b7ec8ee323d0e073
   name:   Major League (Japan)
   title:  Major League (Japan)
@@ -5241,6 +5283,83 @@ game
       type: ROM
       size: 0x20000
       content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: cb6cc5ceddb82e92fc36b8948588d19556706b3f89810395613ab21c0954aad9
+  name:   Nantettatte!! Baseball (Japan)
+  title:  Nantettatte!! Baseball (Japan)
+  region: NTSC-J
+  board:  SUNSOFT-4
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 4e693127c64f0194c04db3d5aace6c26499f7c42adb2645c7af3f872e5b34323
+  name:   Nantettatte!! Baseball + Ko-Game Cassette - '91 Kaimaku Hen (Japan)
+  title:  Nantettatte!! Baseball + Ko-Game Cassette - '91 Kaimaku Hen (Japan)
+  region: NTSC-J
+  board:  SUNSOFT-4
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x4000
+      content: Option
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 32a4f87305a1d44a90aba8ee3bc0a314bfc6f7a71c7eca12d871845dcf409003
+  name:   Nantettatte!! Baseball + Ko-Game Cassette - OB All Star Hen (Japan)
+  title:  Nantettatte!! Baseball + Ko-Game Cassette - OB All Star Hen (Japan)
+  region: NTSC-J
+  board:  SUNSOFT-4
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x4000
+      content: Option
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
     memory
       type: ROM
       size: 0x20000
