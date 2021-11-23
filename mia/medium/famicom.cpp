@@ -210,6 +210,12 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
+  case  13:
+    s += "  board:  HVC-CPROM\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    chrram = 16384;
+    break;
+
   case  16:
     s += "  board:  BANDAI-LZ93D50\n";
     s += "    chip type=LZ93D50\n";
