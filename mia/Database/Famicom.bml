@@ -7587,6 +7587,28 @@ game
       content: Character
 
 game
+  sha256: 26ff208f2b133e66c602765778107c5938386c24fc03a197bbf9b2b659cb8792
+  name:   Videomation (USA)
+  title:  Videomation (USA)
+  region: NTSC-U
+  board:  HVC-CPROM
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x8000
+      content: Program
+    memory
+      type: RAM
+      size: 0x4000
+      content: Character
+      volatile
+
+game
   sha256: 2737968efa4bdb5576a6ad36e08712ba76a752a0f88b741bf72a463b451a9dfe
   name:   Wagyan Land (Japan)
   title:  Wagyan Land (Japan)
