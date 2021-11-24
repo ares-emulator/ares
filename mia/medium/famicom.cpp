@@ -484,6 +484,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
 
+  case 188:
+    s += "  board:  BANDAI-KARAOKE\n";
+    break;
+
   case 206:
     s += "  board:  NAMCO-118\n";
     s += "    chip type=118\n";
