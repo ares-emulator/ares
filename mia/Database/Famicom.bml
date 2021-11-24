@@ -3802,6 +3802,74 @@ game
       content: Character
 
 game
+  sha256: 048f6f1df73a1cef21de4de8b58ba0d12bfabdf64d106497faedaa7be1b85786
+  name:   Karaoke Studio (Japan)
+  title:  Karaoke Studio (Japan)
+  region: NTSC-J
+  board:  BANDAI-KARAOKE
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+
+game
+  sha256: c04e4c43095e7b0caf169ccf8b262b2bb71dcb07335b2ee9f5e30cfc5798f68f
+  name:   Karaoke Studio Senyou Cassette Vol. 1 (Japan)
+  title:  Karaoke Studio Senyou Cassette Vol. 1 (Japan)
+  region: NTSC-J
+  board:  BANDAI-KARAOKE
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Option
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+
+game
+  sha256: 3cfadf91ec98e5bd108bf44422b517c444bf8974432010bc4fd780949126a68f
+  name:   Karaoke Studio Senyou Cassette Vol. 2 (Japan)
+  title:  Karaoke Studio Senyou Cassette Vol. 2 (Japan)
+  region: NTSC-J
+  board:  BANDAI-KARAOKE
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Option
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+
+game
   sha256: 9905d9999767b7428ba770f855e9b8904123c84fa46b9e6cc0a178fef3ad4e2c
   name:   Karnov (Japan)
   title:  Karnov (Japan)
