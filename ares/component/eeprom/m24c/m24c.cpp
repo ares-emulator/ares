@@ -74,7 +74,7 @@ auto M24C::write() -> void {
   case Mode::Device:
     if(counter <= 8) {
       device = device << 1 | data();
-    } else if(!select()) {
+    } else if(select() != Acknowledge) {
       mode = Mode::Standby;
     } else if(device & 1) {
       mode = Mode::Read;
