@@ -16,8 +16,9 @@ struct BandaiLZ93D50 : Interface {
     Interface::load(characterROM, "character.rom");
     Interface::load(characterRAM, "character.ram");
     if(auto fp = pak->read("save.eeprom")) {
-      eeprom.load(M24C::Type::X24C01);
-      fp->read({eeprom.memory, eeprom.size()});
+      if(fp->size() == 128) eeprom.load(M24C::Type::X24C01);
+      if(fp->size() == 256) eeprom.load(M24C::Type::M24C02);
+      if(eeprom) fp->read({eeprom.memory, eeprom.size()});
     }
   }
 
@@ -25,7 +26,7 @@ struct BandaiLZ93D50 : Interface {
     Interface::save(programRAM, "save.ram");
     Interface::save(characterRAM, "character.ram");
     if(auto fp = pak->write("save.eeprom")) {
-      fp->write({eeprom.memory, eeprom.size()});
+      if(eeprom) fp->write({eeprom.memory, eeprom.size()});
     }
   }
 
