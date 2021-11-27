@@ -5582,6 +5582,50 @@ game
       content: Character
 
 game
+  sha256: 6f1d8f1b3c18ce3030188a3a8e6ba0231d84699e71ce8a6e02aaeabeb34f7b89
+  name:   Oeka Kids - Anpanman no Hiragana Daisuki (Japan)
+  title:  Oeka Kids - Anpanman no Hiragana Daisuki (Japan)
+  region: NTSC-J
+  board:  BANDAI-OEKA
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x8000
+      content: Character
+      volatile
+
+game
+  sha256: 9d93ed7137f0376edc07f64d482719b701765129b9e125b40fabc42f3a7ebaaf
+  name:   Oeka Kids - Anpanman to Oekaki Shiyou!! (Japan)
+  title:  Oeka Kids - Anpanman to Oekaki Shiyou!! (Japan)
+  region: NTSC-J
+  board:  BANDAI-OEKA
+    mirror
+      mode: vertical
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: RAM
+      size: 0x8000
+      content: Character
+      volatile
+
+game
   sha256: adf95de2cdff7b606ceedf5908679ef9bb8ffeec37d3d1dad3446ef85ca17026
   name:   Operation Wolf (Japan)
   title:  Operation Wolf (Japan)

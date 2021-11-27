@@ -415,6 +415,12 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "    chip type=118\n";
     break;
 
+  case  96:
+    s += "  board:  BANDAI-OEKA\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    chrram = 32768;
+    break;
+
   case  97:
     s += "  board:  IREM-TAM-S1\n";
     s += "    chip type=TAM-S1\n";
