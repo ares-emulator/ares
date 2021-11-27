@@ -1,5 +1,5 @@
 database
-  revision: 2021-11-23
+  revision: 2021-11-27
 
 game
   sha256: 4fb12ad1c791c7ee8d5ec824eff871d71b43b92c4e93b45ed0b60f022459b917
@@ -1092,6 +1092,188 @@ game
       size: 0x2000
       content: Character
       volatile
+
+game
+  sha256: cbc404d57879beca0b65b855b19fda9e017e7d8cc716941b52bbea8f8a6ee859
+  name:   Datach - Battle Rush - Build Up Robot Tournament (Japan)
+  title:  Datach - Battle Rush - Build Up Robot Tournament (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
+
+game
+  sha256: 0acc10d731fbd33ca07cc6c81ce44850b9668f743012260b526e1053d332e37b
+  name:   Datach - Crayon Shin-chan - Ora to Poi Poi (Japan)
+  title:  Datach - Crayon Shin-chan - Ora to Poi Poi (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
+
+game
+  sha256: a1370e7410a98a4a2de19f4872281a065b1d7d7cd7b5f2ba0da70504b4a1d52d
+  name:   Datach - Dragon Ball Z - Gekitou Tenkaichi Budoukai (Japan)
+  title:  Datach - Dragon Ball Z - Gekitou Tenkaichi Budoukai (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
+
+game
+  sha256: a7b1e4693093c8a155747f9023399ebb2537064e788970ecdcccee467108b62e
+  name:   Datach - J.League Super Top Players (Japan)
+  title:  Datach - J.League Super Top Players (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
+
+game
+  sha256: a6a909d829e3d9ef1a14d002f8ac3c59173420530d467c09fe338b28143f4308
+  name:   Datach - SD Gundam - Gundam Wars (Japan)
+  title:  Datach - SD Gundam - Gundam Wars (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
+
+game
+  sha256: 85f0ab77ae56df26e18bf55caafb795ec24712c168912f0963756fe4daa2ef65
+  name:   Datach - Ultraman Club - Supokon Fight! (Japan)
+  title:  Datach - Ultraman Club - Supokon Fight! (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
+
+game
+  sha256: acc54496853ce6306589790857b0d56145d8382bd00f5d0f40ecdfa2906ad349
+  name:   Datach - Yu Yu Hakusho - Bakutou Ankoku Bujutsukai (Japan)
+  title:  Datach - Yu Yu Hakusho - Bakutou Ankoku Bujutsukai (Japan)
+  region: NTSC-J
+  board:  BANDAI-LZ93D50
+    chip
+      type: LZ93D50
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Character
+      volatile
+    memory
+      type: EEPROM
+      size: 0x100
+      content: Save
 
 game
   sha256: 0115356b0791cc8ddcb7d3163d6ef7aa664f3ff4e68dba561ffffb79eefcbca9

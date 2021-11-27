@@ -468,6 +468,12 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     prgram = 8192;
     break;
 
+  case 157:
+    s += "  board:  BANDAI-LZ93D50\n";
+    s += "    chip type=LZ93D50\n";
+    eeprom = 256;
+    break;
+
   case 159:
     s += "  board:  BANDAI-LZ93D50\n";
     s += "    chip type=LZ93D50\n";
