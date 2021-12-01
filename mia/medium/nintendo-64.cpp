@@ -198,7 +198,6 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NCR") {eeprom = 512; mempak = true;}                         //Penny Racers [Choro Q 64 (J)]
   if(id == "NEA") {eeprom = 512;}                                        //PGA European Tour
   if(id == "NPW") {eeprom = 512;}                                        //Pilotwings 64
-  if(id == "NPM") {eeprom = 512; mempak = true;}                         //Premier Manager 64 (E)
   if(id == "NPY") {eeprom = 512; rumble = true;}                         //Puyo Puyo Sun 64
   if(id == "NPT") {eeprom = 512; rumble = true;}                         //Puyo Puyon Party
   if(id == "NRA") {eeprom = 512; mempak = true; rumble = true;}          //Rally '99 (J)
@@ -307,6 +306,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NUM") {sram = 32_KiB; rumble = true;}                        //Nushi Zuri 64: Shiokaze ni Notte
   if(id == "NOB") {sram = 32_KiB;}                                       //Ogre Battle 64: Person of Lordly Caliber
   if(id == "CPS") {sram = 32_KiB;}                                       //Pocket Monsters Stadium (J)
+  if(id == "NPM") {sram = 32_KiB; mempak = true;}                        //Premier Manager 64
   if(id == "NB5") {sram = 32_KiB; rumble = true;}                        //Resident Evil 2 (Japan) aka Biohazard 2
   if(id == "NRE") {sram = 32_KiB; rumble = true;}                        //Resident Evil 2
   if(id == "NAL") {sram = 32_KiB; rumble = true;}                        //Super Smash Bros. [Nintendo All-Star! Dairantou Smash Brothers (J)]
