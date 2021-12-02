@@ -70,6 +70,11 @@ struct MOS6502 {
   auto instructionJumpAbsolute() -> void;
   auto instructionJumpIndirect() -> void;
   auto instructionNoOperation() -> void;
+  auto instructionNoOperationAbsolute() -> void;
+  auto instructionNoOperationAbsolute(n8 index) -> void;
+  auto instructionNoOperationImmediate() -> void;
+  auto instructionNoOperationZeroPage() -> void;
+  auto instructionNoOperationZeroPage(n8 index) -> void;
   auto instructionPull(n8& data) -> void;
   auto instructionPullP() -> void;
   auto instructionPush(n8& data) -> void;

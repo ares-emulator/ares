@@ -139,6 +139,34 @@ auto MOS6502::instructionNoOperation() -> void {
 L idle();
 }
 
+auto MOS6502::instructionNoOperationAbsolute() -> void {
+  n16 absolute = operand();
+  absolute |= operand() << 8;
+L read(absolute);
+}
+
+auto MOS6502::instructionNoOperationAbsolute(n8 index) -> void {
+  n16 absolute = operand();
+  absolute |= operand() << 8;
+  idlePageCrossed(absolute, absolute + index);
+L read(absolute + index);
+}
+
+auto MOS6502::instructionNoOperationImmediate() -> void {
+L operand();
+}
+
+auto MOS6502::instructionNoOperationZeroPage() -> void {
+  auto zeroPage = operand();
+L load(zeroPage);
+}
+
+auto MOS6502::instructionNoOperationZeroPage(n8 index) -> void {
+  auto zeroPage = operand();
+  load(zeroPage);
+L load(zeroPage + index);
+}
+
 auto MOS6502::instructionPull(n8& data) -> void {
   idle();
   idle();
