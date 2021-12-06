@@ -198,9 +198,8 @@ auto PPU::renderScanline() -> void {
 
   //337-338
   loadCHR(0x2000 | (n12)io.v.address);
-  step(1);
-  bool skip = enable() && io.field == 1 && io.ly == vlines() - 1;
-  step(1);
+  bool skip = !Region::PAL() && enable() && io.field == 1 && io.ly == vlines() - 1;
+  step(2);
 
   //339
   loadCHR(0x2000 | (n12)io.v.address);
