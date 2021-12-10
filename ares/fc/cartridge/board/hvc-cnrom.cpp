@@ -37,7 +37,7 @@ struct HVC_CNROM : Interface {
 
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x8000) return;
-    characterBank = data.bit(0,1);
+    characterBank = data & programROM.read((n15)address);
     characterEnable = (data == key);
   }
 
