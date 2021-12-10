@@ -31,7 +31,7 @@ auto Famicom::load(string location) -> bool {
   pak->setAttribute("board", document["game/board"].string());
   pak->setAttribute("mirror", document["game/board/mirror/mode"].string());
   pak->setAttribute("chip", document["game/board/chip/type"].string());
-  pak->setAttribute("chip/key", document["game/board/chip/key"].string());
+  pak->setAttribute("chip/key", document["game/board/chip/key"].natural());
   pak->setAttribute("pinout/a0", document["game/board/chip/pinout/a0"].natural());
   pak->setAttribute("pinout/a1", document["game/board/chip/pinout/a1"].natural());
   pak->append("manifest.bml", manifest);
