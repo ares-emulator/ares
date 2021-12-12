@@ -96,6 +96,25 @@ auto RSP::Recompiler::emit(u32 address) -> Block* {
 #define i16 s16(instruction)
 #define n16 u16(instruction)
 #define n26 u32(instruction & 0x03ff'ffff)
+#define callvu(name) \
+  switch(E) { \
+  case 0x0: call(name<0x0>); break; \
+  case 0x1: call(name<0x1>); break; \
+  case 0x2: call(name<0x2>); break; \
+  case 0x3: call(name<0x3>); break; \
+  case 0x4: call(name<0x4>); break; \
+  case 0x5: call(name<0x5>); break; \
+  case 0x6: call(name<0x6>); break; \
+  case 0x7: call(name<0x7>); break; \
+  case 0x8: call(name<0x8>); break; \
+  case 0x9: call(name<0x9>); break; \
+  case 0xa: call(name<0xa>); break; \
+  case 0xb: call(name<0xb>); break; \
+  case 0xc: call(name<0xc>); break; \
+  case 0xd: call(name<0xd>); break; \
+  case 0xe: call(name<0xe>); break; \
+  case 0xf: call(name<0xf>); break; \
+  }
 
 auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   switch(instruction >> 26) {
@@ -628,8 +647,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   case 0x00: {
     lea(ra1, Rt);
     lea(ra2, Vs);
-    mov(ra3d, imm32(E));
-    call(&RSP::MFC2);
+    callvu(&RSP::MFC2);
     return 0;
   }
 
@@ -655,8 +673,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   case 0x04: {
     lea(ra1, Rt);
     lea(ra2, Vs);
-    mov(ra3d, imm32(E));
-    call(&RSP::MTC2);
+    callvu(&RSP::MTC2);
     return 0;
   }
 
@@ -690,8 +707,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMULF<0>);
+    callvu(&RSP::VMULF);
     return 0;
   }
 
@@ -700,8 +716,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMULF<1>);
+    callvu(&RSP::VMULU);
     return 0;
   }
 
@@ -710,8 +725,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     mov(ra2d, imm32(Vsn));
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VRND<1>);
+    callvu(&RSP::VRNDP);
     return 0;
   }
 
@@ -720,8 +734,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMULQ);
+    callvu(&RSP::VMULQ);
     return 0;
   }
 
@@ -730,8 +743,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMUDL);
+    callvu(&RSP::VMUDL);
     return 0;
   }
 
@@ -740,8 +752,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMUDM);
+    callvu(&RSP::VMUDM);
     return 0;
   }
 
@@ -750,8 +761,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMUDN);
+    callvu(&RSP::VMUDN);
     return 0;
   }
 
@@ -760,8 +770,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMUDH);
+    callvu(&RSP::VMUDH);
     return 0;
   }
 
@@ -770,8 +779,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMACF<0>);
+    callvu(&RSP::VMACF);
     return 0;
   }
 
@@ -780,8 +788,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMACF<1>);
+    callvu(&RSP::VMACU);
     return 0;
   }
 
@@ -790,8 +797,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     mov(ra2d, imm32(Vsn));
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VRND<0>);
+    callvu(&RSP::VRNDN);
     return 0;
   }
 
@@ -807,8 +813,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMADL);
+    callvu(&RSP::VMADL);
     return 0;
   }
 
@@ -817,8 +822,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMADM);
+    callvu(&RSP::VMADM);
     return 0;
   }
 
@@ -827,8 +831,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMADN);
+    callvu(&RSP::VMADN);
     return 0;
   }
 
@@ -837,8 +840,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMADH);
+    callvu(&RSP::VMADH);
     return 0;
   }
 
@@ -847,8 +849,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VADD);
+    callvu(&RSP::VADD);
     return 0;
   }
 
@@ -857,8 +858,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VSUB);
+    callvu(&RSP::VSUB);
     return 0;
   }
 
@@ -872,8 +872,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VABS);
+    callvu(&RSP::VABS);
     return 0;
   }
 
@@ -882,8 +881,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VADDC);
+    callvu(&RSP::VADDC);
     return 0;
   }
 
@@ -892,8 +890,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VSUBC);
+    callvu(&RSP::VSUBC);
     return 0;
   }
 
@@ -906,8 +903,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   case 0x1d: {
     lea(ra1, Vd);
     lea(ra2, Vs);
-    mov(ra3d, imm32(E));
-    call(&RSP::VSAR);
+    callvu(&RSP::VSAR);
     return 0;
   }
 
@@ -921,8 +917,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VLT);
+    callvu(&RSP::VLT);
     return 0;
   }
 
@@ -931,8 +926,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VEQ);
+    callvu(&RSP::VEQ);
     return 0;
   }
 
@@ -941,8 +935,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VNE);
+    callvu(&RSP::VNE);
     return 0;
   }
 
@@ -951,8 +944,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VGE);
+    callvu(&RSP::VGE);
     return 0;
   }
 
@@ -961,8 +953,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VCL);
+    callvu(&RSP::VCL);
     return 0;
   }
 
@@ -971,8 +962,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VCH);
+    callvu(&RSP::VCH);
     return 0;
   }
 
@@ -981,8 +971,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VCR);
+    callvu(&RSP::VCR);
     return 0;
   }
 
@@ -991,8 +980,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMRG);
+    callvu(&RSP::VMRG);
     return 0;
   }
 
@@ -1001,8 +989,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VAND);
+    callvu(&RSP::VAND);
     return 0;
   }
 
@@ -1011,8 +998,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VNAND);
+    callvu(&RSP::VNAND);
     return 0;
   }
 
@@ -1021,8 +1007,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VOR);
+    callvu(&RSP::VOR);
     return 0;
   }
 
@@ -1031,8 +1016,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VNOR);
+    callvu(&RSP::VNOR);
     return 0;
   }
 
@@ -1041,8 +1025,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VXOR);
+    callvu(&RSP::VXOR);
     return 0;
   }
 
@@ -1051,8 +1034,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     lea(ra2, Vs);
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VNXOR);
+    callvu(&RSP::VNXOR);
     return 0;
   }
 
@@ -1066,8 +1048,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     mov(ra2d, imm32(DE));
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VRCP<0>);
+    callvu(&RSP::VRCP);
     return 0;
   }
 
@@ -1076,8 +1057,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     mov(ra2d, imm32(DE));
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VRCP<1>);
+    callvu(&RSP::VRCPL);
     return 0;
   }
 
@@ -1086,8 +1066,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     mov(ra2d, imm32(DE));
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VRCPH);
+    callvu(&RSP::VRCPH);
     return 0;
   }
 
@@ -1096,8 +1075,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     mov(ra2d, imm32(DE));
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VMOV);
+    callvu(&RSP::VMOV);
     return 0;
   }
 
@@ -1106,8 +1084,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     mov(ra2d, imm32(DE));
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VRSQ<0>);
+    callvu(&RSP::VRSQ);
     return 0;
   }
 
@@ -1116,8 +1093,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     mov(ra2d, imm32(DE));
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VRSQ<1>);
+    callvu(&RSP::VRSQL);
     return 0;
   }
 
@@ -1126,8 +1102,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     lea(ra1, Vd);
     mov(ra2d, imm32(DE));
     lea(ra3, Vt);
-    mov(ra4d, imm32(E));
-    call(&RSP::VRSQH);
+    callvu(&RSP::VRSQH);
     return 0;
   }
 
@@ -1156,100 +1131,90 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
   //LBV Vt(e),Rs,i7
   case 0x00: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::LBV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::LBV);
     return 0;
   }
 
   //LSV Vt(e),Rs,i7
   case 0x01: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::LSV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::LSV);
     return 0;
   }
 
   //LLV Vt(e),Rs,i7
   case 0x02: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::LLV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::LLV);
     return 0;
   }
 
   //LDV Vt(e),Rs,i7
   case 0x03: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::LDV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::LDV);
     return 0;
   }
 
   //LQV Vt(e),Rs,i7
   case 0x04: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::LQV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::LQV);
     return 0;
   }
 
   //LRV Vt(e),Rs,i7
   case 0x05: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::LRV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::LRV);
     return 0;
   }
 
   //LPV Vt(e),Rs,i7
   case 0x06: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::LPV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::LPV);
     return 0;
   }
 
   //LUV Vt(e),Rs,i7
   case 0x07: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::LUV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::LUV);
     return 0;
   }
 
   //LHV Vt(e),Rs,i7
   case 0x08: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::LHV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::LHV);
     return 0;
   }
 
   //LFV Vt(e),Rs,i7
   case 0x09: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::LFV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::LFV);
     return 0;
   }
 
@@ -1261,10 +1226,9 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
   //LTV Vt(e),Rs,i7
   case 0x0b: {
     mov(ra1d, imm32(Vtn));
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::LTV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::LTV);
     return 0;
   }
 
@@ -1288,120 +1252,108 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
   //SBV Vt(e),Rs,i7
   case 0x00: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::SBV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::SBV);
     return 0;
   }
 
   //SSV Vt(e),Rs,i7
   case 0x01: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::SSV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::SSV);
     return 0;
   }
 
   //SLV Vt(e),Rs,i7
   case 0x02: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::SLV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::SLV);
     return 0;
   }
 
   //SDV Vt(e),Rs,i7
   case 0x03: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::SDV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::SDV);
     return 0;
   }
 
   //SQV Vt(e),Rs,i7
   case 0x04: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::SQV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::SQV);
     return 0;
   }
 
   //SRV Vt(e),Rs,i7
   case 0x05: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::SRV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::SRV);
     return 0;
   }
 
   //SPV Vt(e),Rs,i7
   case 0x06: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::SPV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::SPV);
     return 0;
   }
 
   //SUV Vt(e),Rs,i7
   case 0x07: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::SUV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::SUV);
     return 0;
   }
 
   //SHV Vt(e),Rs,i7
   case 0x08: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::SHV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::SHV);
     return 0;
   }
 
   //SFV Vt(e),Rs,i7
   case 0x09: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::SFV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::SFV);
     return 0;
   }
 
   //SWV Vt(e),Rs,i7
   case 0x0a: {
     lea(ra1, Vt);
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::SWV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::SWV);
     return 0;
   }
 
   //STV Vt(e),Rs,i7
   case 0x0b: {
     mov(ra1d, imm32(Vtn));
-    mov(ra2d, imm32(E));
-    lea(ra3, Rs);
-    mov(ra4d, imm32(i7));
-    call(&RSP::STV);
+    lea(ra2, Rs);
+    mov(ra3d, imm32(i7));
+    callvu(&RSP::STV);
     return 0;
   }
 
@@ -1433,6 +1385,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 #undef i16
 #undef n16
 #undef n26
+#undef callvu
 
 template<typename V, typename... P>
 auto RSP::Recompiler::call(V (RSP::*function)(P...)) -> void {

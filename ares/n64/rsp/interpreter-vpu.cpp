@@ -138,12 +138,14 @@ auto RSP::CTC2(cr32& rt, u8 rd) -> void {
   }
 }
 
-auto RSP::LBV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LBV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm;
   vt.byte(e) = dmem.read<Byte>(address);
 }
 
-auto RSP::LDV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LDV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   auto start = e;
   auto end = start + 8;
@@ -152,7 +154,8 @@ auto RSP::LDV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::LFV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LFV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = e >> 1;
   auto end = start + 4;
@@ -162,14 +165,16 @@ auto RSP::LFV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::LHV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LHV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   for(u32 offset = 0; offset < 8; offset++) {
     vt.element(offset) = dmem.read<Byte>(address + (16 - e + offset * 2 & 15)) << 7;
   }
 }
 
-auto RSP::LLV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LLV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 4;
   auto start = e;
   auto end = start + 4;
@@ -178,14 +183,16 @@ auto RSP::LLV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::LPV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LPV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   for(u32 offset = 0; offset < 8; offset++) {
     vt.element(offset) = dmem.read<Byte>(address + (16 - e + offset & 15)) << 8;
   }
 }
 
-auto RSP::LQV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LQV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = e;
   auto end = 16 - (address & 15);
@@ -194,7 +201,8 @@ auto RSP::LQV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::LRV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LRV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto index = e;
   auto start = 16 - ((address & 15) - index);
@@ -204,7 +212,8 @@ auto RSP::LRV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::LSV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LSV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 2;
   auto start = e;
   auto end = start + 2;
@@ -213,7 +222,8 @@ auto RSP::LSV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::LTV(u8 vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LTV(u8 vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = vt;
   auto end = min(32, start + 8);
@@ -225,14 +235,16 @@ auto RSP::LTV(u8 vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::LUV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LUV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   for(u32 offset = 0; offset < 8; offset++) {
     vt.element(offset) = dmem.read<Byte>(address + (16 - e + offset & 15)) << 7;
   }
 }
 
-auto RSP::LWV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::LWV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = 16 - e;
   auto end = e + 16;
@@ -242,23 +254,27 @@ auto RSP::LWV(r128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::MFC2(r32& rt, cr128& vs, u8 e) -> void {
+template<u8 e>
+auto RSP::MFC2(r32& rt, cr128& vs) -> void {
   auto hi = vs.byte(e + 0 & 15);
   auto lo = vs.byte(e + 1 & 15);
   rt.u32 = s16(hi << 8 | lo << 0);
 }
 
-auto RSP::MTC2(cr32& rt, r128& vs, u8 e) -> void {
+template<u8 e>
+auto RSP::MTC2(cr32& rt, r128& vs) -> void {
   vs.byte(e + 0 & 15) = rt.u32 >> 8;
   vs.byte(e + 1 & 15) = rt.u32 >> 0;
 }
 
-auto RSP::SBV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::SBV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm;
   dmem.write<Byte>(address, vt.byte(e));
 }
 
-auto RSP::SDV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::SDV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   auto start = e;
   auto end = start + 8;
@@ -267,7 +283,8 @@ auto RSP::SDV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::SFV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::SFV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = e >> 1;
   auto end = start + 4;
@@ -279,7 +296,8 @@ auto RSP::SFV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::SHV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::SHV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   for(u32 offset = 0; offset < 8; offset++) {
     auto byte = e + offset * 2;
@@ -289,7 +307,8 @@ auto RSP::SHV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::SLV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::SLV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 4;
   auto start = e;
   auto end = start + 4;
@@ -298,7 +317,8 @@ auto RSP::SLV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::SPV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::SPV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   auto start = e;
   auto end = start + 8;
@@ -311,7 +331,8 @@ auto RSP::SPV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::SQV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::SQV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = e;
   auto end = start + (16 - (address & 15));
@@ -320,7 +341,8 @@ auto RSP::SQV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::SRV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::SRV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = e;
   auto end = start + (address & 15);
@@ -331,7 +353,8 @@ auto RSP::SRV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::SSV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::SSV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 2;
   auto start = e;
   auto end = start + 2;
@@ -340,7 +363,8 @@ auto RSP::SSV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::STV(u8 vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::STV(u8 vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = vt;
   auto end = min(32, start + 8);
@@ -353,7 +377,8 @@ auto RSP::STV(u8 vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::SUV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::SUV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   auto start = e;
   auto end = start + 8;
@@ -366,7 +391,8 @@ auto RSP::SUV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::SWV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
+template<u8 e>
+auto RSP::SWV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = e;
   auto end = start + 16;
@@ -377,7 +403,8 @@ auto RSP::SWV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void {
   }
 }
 
-auto RSP::VABS(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VABS(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     r128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -406,7 +433,8 @@ auto RSP::VABS(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VADD(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VADD(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -433,7 +461,8 @@ auto RSP::VADD(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VADDC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VADDC(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -458,7 +487,8 @@ auto RSP::VADDC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VAND(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     r128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -475,7 +505,8 @@ auto RSP::VAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VCH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VCH(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -526,7 +557,8 @@ auto RSP::VCH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VCL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VCL(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -585,7 +617,8 @@ auto RSP::VCL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VCR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VCR(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -625,7 +658,8 @@ auto RSP::VCR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VEQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VEQ(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -652,7 +686,8 @@ auto RSP::VEQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VGE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VGE(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -682,7 +717,8 @@ auto RSP::VGE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VLT(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VLT(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -712,8 +748,8 @@ auto RSP::VLT(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-template<bool U>
-auto RSP::VMACF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<bool U, u8 e>
+auto RSP::VMACF(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -780,7 +816,8 @@ auto RSP::VMACQ(r128& vd) -> void {
   }
 }
 
-auto RSP::VMADH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VMADH(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -809,7 +846,8 @@ auto RSP::VMADH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VMADL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VMADL(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -843,7 +881,8 @@ auto RSP::VMADL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VMADM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VMADM(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -879,7 +918,8 @@ auto RSP::VMADM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VMADN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VMADN(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -919,7 +959,9 @@ auto RSP::VMADN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VMOV(r128& vd, u8 de, cr128& vt, u8 e) -> void {
+template<u8 E>
+auto RSP::VMOV(r128& vd, u8 de, cr128& vt) -> void {
+  u8 e = E;
   switch(e) {
   case 0x0 ... 0x1: e = e & 0b000 | de & 0b111; break;  //hardware glitch
   case 0x2 ... 0x3: e = e & 0b001 | de & 0b110; break;  //hardware glitch
@@ -930,7 +972,8 @@ auto RSP::VMOV(r128& vd, u8 de, cr128& vt, u8 e) -> void {
   ACCL = vt(e);
 }
 
-auto RSP::VMRG(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VMRG(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -951,7 +994,8 @@ auto RSP::VMRG(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VMUDH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VMUDH(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -973,7 +1017,8 @@ auto RSP::VMUDH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VMUDL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VMUDL(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -992,7 +1037,8 @@ auto RSP::VMUDL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VMUDM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VMUDM(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -1015,7 +1061,8 @@ auto RSP::VMUDM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VMUDN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VMUDN(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -1038,8 +1085,8 @@ auto RSP::VMUDN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-template<bool U>
-auto RSP::VMULF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<bool U, u8 e>
+auto RSP::VMULF(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -1082,7 +1129,8 @@ auto RSP::VMULF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VMULQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VMULQ(r128& vd, cr128& vs, cr128& vt) -> void {
   cr128 vte = vt(e);
   for(u32 n : range(8)) {
     s32 product = (s16)vs.element(n) * (s16)vte.element(n);
@@ -1094,7 +1142,8 @@ auto RSP::VMULQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VNAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VNAND(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -1112,7 +1161,8 @@ auto RSP::VNAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VNE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VNE(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -1144,7 +1194,8 @@ auto RSP::VNE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
 auto RSP::VNOP() -> void {
 }
 
-auto RSP::VNOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VNOR(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -1162,7 +1213,8 @@ auto RSP::VNOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VNXOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VNXOR(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -1180,7 +1232,8 @@ auto RSP::VNXOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VOR(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -1197,8 +1250,8 @@ auto RSP::VOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-template<bool L>
-auto RSP::VRCP(r128& vd, u8 de, cr128& vt, u8 e) -> void {
+template<bool L, u8 e>
+auto RSP::VRCP(r128& vd, u8 de, cr128& vt) -> void {
   s32 result = 0;
   s32 input = L && DIVDP ? DIVIN << 16 | vt.element(e & 7) : s16(vt.element(e & 7));
   s32 mask = input >> 31;
@@ -1221,15 +1274,16 @@ auto RSP::VRCP(r128& vd, u8 de, cr128& vt, u8 e) -> void {
   vd.element(de) = result;
 }
 
-auto RSP::VRCPH(r128& vd, u8 de, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VRCPH(r128& vd, u8 de, cr128& vt) -> void {
   ACCL  = vt(e);
   DIVDP = 1;
   DIVIN = vt.element(e & 7);
   vd.element(de) = DIVOUT;
 }
 
-template<bool D>
-auto RSP::VRND(r128& vd, u8 vs, cr128& vt, u8 e) -> void {
+template<bool D, u8 e>
+auto RSP::VRND(r128& vd, u8 vs, cr128& vt) -> void {
   cr128 vte = vt(e);
   for(u32 n : range(8)) {
     s32 product = (s16)vte.element(n);
@@ -1248,8 +1302,8 @@ auto RSP::VRND(r128& vd, u8 vs, cr128& vt, u8 e) -> void {
   }
 }
 
-template<bool L>
-auto RSP::VRSQ(r128& vd, u8 de, cr128& vt, u8 e) -> void {
+template<bool L, u8 e>
+auto RSP::VRSQ(r128& vd, u8 de, cr128& vt) -> void {
   s32 result = 0;
   s32 input = L && DIVDP ? DIVIN << 16 | vt.element(e & 7) : s16(vt.element(e & 7));
   s32 mask = input >> 31;
@@ -1272,14 +1326,16 @@ auto RSP::VRSQ(r128& vd, u8 de, cr128& vt, u8 e) -> void {
   vd.element(de) = result;
 }
 
-auto RSP::VRSQH(r128& vd, u8 de, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VRSQH(r128& vd, u8 de, cr128& vt) -> void {
   ACCL  = vt(e);
   DIVDP = 1;
   DIVIN = vt.element(e & 7);
   vd.element(de) = DIVOUT;
 }
 
-auto RSP::VSAR(r128& vd, cr128& vs, u8 e) -> void {
+template<u8 e>
+auto RSP::VSAR(r128& vd, cr128& vs) -> void {
   switch(e) {
   case 0x8: vd = ACCH; break;
   case 0x9: vd = ACCM; break;
@@ -1288,7 +1344,8 @@ auto RSP::VSAR(r128& vd, cr128& vs, u8 e) -> void {
   }
 }
 
-auto RSP::VSUB(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VSUB(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -1315,7 +1372,8 @@ auto RSP::VSUB(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VSUBC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VSUBC(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
@@ -1341,7 +1399,8 @@ auto RSP::VSUBC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
   }
 }
 
-auto RSP::VXOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void {
+template<u8 e>
+auto RSP::VXOR(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
