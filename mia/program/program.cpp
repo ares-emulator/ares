@@ -27,7 +27,7 @@ ProgramWindow::ProgramWindow() {
 
   helpMenu.setText("Help");
   aboutAction.setIcon(Icon::Prompt::Question).setText("About ...").onActivate([&] {
-    image logo{Resource::Ares::Logo};
+    image logo{Resource::Ares::Logo1x};
     logo.shrink();
     AboutDialog()
     .setName({ares::Name, "/mia"})

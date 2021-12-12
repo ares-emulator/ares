@@ -1,6 +1,6 @@
 Home::Home(View* parent) : Panel(parent, Size{~0, ~0}) {
   setCollapsible().setVisible(false);
-  image icon{Resource::Ares::Icon};
+  image icon{Resource::Ares::Icon1x};
   icon.shrink();
   for(u32 y : range(icon.height())) {
     auto data = icon.data() + y * icon.pitch();
