@@ -1,6 +1,7 @@
 #pragma once
 
 #include <libco/libco.h>
+#include <sljit.h>
 
 #include <nall/platform.hpp>
 #include <nall/adaptive-array.hpp>
