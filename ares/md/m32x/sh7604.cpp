@@ -14,27 +14,27 @@ auto M32X::SH7604::unload() -> void {
 }
 
 auto M32X::SH7604::main() -> void {
-  if(!SH2::inDelaySlot() && !SH2::ID) {
+  if(!SH2::inDelaySlot() && !regs.ID) {
     if(irq.vres.active && irq.vres.enable) {
       debugger.interrupt("VRES");
       irq.vres.active = 0;
-      return ET = 1, interrupt(14, 71);
+      return regs.ET = 1, interrupt(14, 71);
     }
-    if(irq.vint.active && irq.vint.enable && SR.I < 12) {
+    if(irq.vint.active && irq.vint.enable && regs.SR.I < 12) {
       debugger.interrupt("VINT");
-      return ET = 1, interrupt(12, 70);
+      return regs.ET = 1, interrupt(12, 70);
     }
-    if(irq.hint.active && irq.hint.enable && SR.I < 10) {
+    if(irq.hint.active && irq.hint.enable && regs.SR.I < 10) {
       debugger.interrupt("HINT");
-      return ET = 1, interrupt(10, 69);
+      return regs.ET = 1, interrupt(10, 69);
     }
-    if(irq.cmd.active && irq.cmd.enable && SR.I < 8) {
+    if(irq.cmd.active && irq.cmd.enable && regs.SR.I < 8) {
       debugger.interrupt("CMD");
-      return ET = 1, interrupt(8, 68);
+      return regs.ET = 1, interrupt(8, 68);
     }
-    if(irq.pwm.active && irq.pwm.enable && SR.I < 6) {
+    if(irq.pwm.active && irq.pwm.enable && regs.SR.I < 6) {
       debugger.interrupt("PWM");
-      return ET = 1, interrupt(6, 67);
+      return regs.ET = 1, interrupt(6, 67);
     }
   }
 

@@ -40,9 +40,9 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   while(true) {
     u16 instruction = self.readWord(address);
     bool branched = emitInstruction(instruction);
-    mov(rax, mem64(&self.CCR));
+    mov(rax, mem64(&self.regs.CCR));
     inc(rax);
-    mov(mem64(&self.CCR), rax);
+    mov(mem64(&self.regs.CCR), rax);
     call(&SH2::instructionEpilogue, &self);
     address += 2;
     if(hasBranched || (address & 0xfe) == 0) break;  //block boundary

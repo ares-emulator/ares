@@ -17,7 +17,7 @@ auto M32X::SH7604::Debugger::load(Node::Object parent) -> void {
 }
 
 auto M32X::SH7604::Debugger::instruction() -> void {
-  if(tracer.instruction->enabled() && tracer.instruction->address(self->PC - 4)) {
+  if(tracer.instruction->enabled() && tracer.instruction->address(self->regs.PC - 4)) {
     tracer.instruction->notify(self->disassembleInstruction(), self->disassembleContext());
   }
 }
