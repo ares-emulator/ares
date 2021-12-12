@@ -1,22 +1,24 @@
-#define R0   dis (rbx)
-#define R15  dis8(rbx,15*4)
-#define PC   dis8(rbx,16*4)
-#define PR   dis8(rbx,17*4)
-#define GBR  dis8(rbx,18*4)
-#define VBR  dis8(rbx,19*4)
-#define MAC  dis8(rbx,20*4)
-#define MACL dis8(rbx,20*4)
-#define MACH dis8(rbx,21*4)
-#define CCR  dis8(rbx,22*4)
-#define T    dis8(rbx,23*4)
-#define S    dis8(rbx,24*4)
-#define I    dis8(rbx,25*4)
-#define Q    dis8(rbx,26*4)
-#define M    dis8(rbx,27*4)
-#define PPC  dis8(rbx,28*4)
-#define PPM  dis8(rbx,29*4)
-#define ET   dis8(rbx,30*4)
-#define ID   dis8(rbx,31*4)
+#define Reg(r)  mem(sreg(1), offsetof(Registers, r))
+#define RegR(i) mem(sreg(1), offsetof(Registers, R) + (i) * sizeof(u32))
+#define R0      Reg(R[0])
+#define R15     Reg(R[15])
+#define PC      Reg(PC)
+#define PR      Reg(PR)
+#define GBR     Reg(GBR)
+#define VBR     Reg(VBR)
+#define MAC     Reg(MAC)
+#define MACL    Reg(MACL)
+#define MACH    Reg(MACH)
+#define CCR     Reg(CCR)
+#define T       Reg(SR.T)
+#define S       Reg(SR.S)
+#define I       Reg(SR.I)
+#define Q       Reg(SR.Q)
+#define M       Reg(SR.M)
+#define PPC     Reg(PPC)
+#define PPM     Reg(PPM)
+#define ET      Reg(ET)
+#define ID      Reg(ID)
 
 auto SH2::Recompiler::pool(u32 address) -> Pool* {
   auto& pool = pools[address >> 8 & 0xffffff];
@@ -38,48 +40,24 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   }
 
   auto block = (Block*)allocator.acquire(sizeof(Block));
-  block->code = allocator.acquire();
-  bind({block->code, allocator.available()});
-  push(rbx);
-  push(rbp);
-  push(r13);
-  if constexpr(ABI::Windows) {
-    sub(rsp, imm8(0x40));
-  }
-  mov(rbx, ra0);
-  mov(rbp, ra1);
-
-  auto entry = declareLabel();
-  jmp8(entry);
-
-  auto epilogue = defineLabel();
-
-  if constexpr(ABI::Windows) {
-    add(rsp, imm8(0x40));
-  }
-  pop(r13);
-  pop(rbp);
-  pop(rbx);
-  ret();
-
-  defineLabel(entry);
+  beginFunction(2);
 
   bool hasBranched = 0;
   while(true) {
     u16 instruction = self.readWord(address);
     bool branched = emitInstruction(instruction);
-    incd(CCR);
-  //addd(CCR, imm8(2));  //underclocking hack
+    add64(CCR, CCR, imm(1));
+  //add64(CCR, CCR, imm(2));  //underclocking hack
     call(&SH2::instructionEpilogue);
     address += 2;
     if(hasBranched || (address & 0xfe) == 0) break;  //block boundary
     hasBranched = branched;
-    test(al, al);
-    jnz(epilogue);
+    testJumpEpilog();
   }
-  jmp(epilogue);
+  jumpEpilog();
 
-  allocator.reserve(size());
+  block->code = endFunction();
+
   return block;
 }
 
@@ -98,651 +76,564 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   #define d4  (opcode >> 0 & 0x00f)
   #define d8  (opcode >> 0 & 0x0ff)
   #define d12 (opcode >> 0 & 0xfff)
-  #define Rn  dis8(rbx, n * 4)
-  #define Rm  dis8(rbx, m * 4)
+  #define Rn  RegR(n)
+  #define Rm  RegR(m)
   switch(opcode >> 8 & 0x00f0 | opcode & 0x000f) {
 
   //MOV.B Rm,@(R0,Rn)
   case 0x04: {
-    mov(ra1d, Rn);
-    add(ra1d, R0);
-    mov(ra2d, Rm);
+    add32(reg(1), Rn, R0);
+    mov32(reg(2), Rm);
     call(writeByte);
     return 0;
   }
 
   //MOV.W Rm,@(R0,Rn)
   case 0x05: {
-    mov(ra1d, Rn);
-    add(ra1d, R0);
-    mov(ra2d, Rm);
+    add32(reg(1), Rn, R0);
+    mov32(reg(2), Rm);
     call(writeWord);
     return 0;
   }
 
   //MOV.L Rm,@(R0,Rn)
   case 0x06: {
-    mov(ra1d, Rn);
-    add(ra1d, R0);
-    mov(ra2d, Rm);
+    add32(reg(1), Rn, R0);
+    mov32(reg(2), Rm);
     call(writeLong);
     return 0;
   }
 
   //MUL.L Rm,Rn
   case 0x07: {
-    mov(eax, Rn);
-    mov(edx, Rm);
-    mul(edx);
-    mov(MACL, eax);
+    mul32(MACL, Rn, Rm);
     return 0;
   }
 
   //MOV.B @(R0,Rm),Rn
   case 0x0c: {
-    mov(ra1d, Rm);
-    add(ra1d, R0);
+    add32(reg(1), Rm, R0);
     call(readByte);
-    movsx(eax, al);
-    mov(Rn, eax);
+    mov32_s8(reg(0), reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //MOV.W @(R0,Rm),Rn
   case 0x0d: {
-    mov(ra1d, Rm);
-    add(ra1d, R0);
+    add32(reg(1), Rm, R0);
     call(readWord);
-    movsx(eax, ax);
-    mov(Rn, eax);
+    mov32_s16(reg(0), reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //MOV.L @(R0,Rm),Rn
   case 0x0e: {
-    mov(ra1d, Rm);
-    add(ra1d, R0);
+    add32(reg(1), Rm, R0);
     call(readLong);
-    mov(Rn, eax);
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //MAC.L @Rm+,@Rn+
   case 0x0f: {
-    auto skip = declareLabel();
-    mov(ra1d, Rn);
-    addd(Rn, imm8(4));
+    mov32(reg(1), Rn);
+    add32(Rn, reg(1), imm(4));
     call(readLong);
-    movsxd(rax, eax);
-    mov(r13, rax);
-    mov(ra1d, Rm);
-    addd(Rm, imm8(4));
+    mov32(sreg(2), reg(0));
+    mov32(reg(1), Rm);
+    add32(Rm, reg(1), imm(4));
     call(readLong);
-    movsxd(rax, eax);
-    mov(rdx, r13);
-    imul(rdx);
-    mov(rdx, rax);
-    add(rdx, MAC);
-    mov(al, S);
-    test(al, al);
-    jz8(skip);
-    sal(rdx, imm8(16));
-    sar(rdx, imm8(16));
-    defineLabel(skip);
-    mov(MAC, rdx);
+    mov64_s32(reg(0), reg(0));
+    mov64_s32(reg(1), sreg(2));
+    mul64(reg(0), reg(0), reg(1));
+    add64(reg(0), reg(0), MAC);
+    auto skip = cmp32_jump(S, imm(0), flag_eq);
+    shl64(reg(0), reg(0), imm(16));
+    ashr64(reg(0), reg(0), imm(16));
+    setLabel(skip);
+    mov64(MAC, reg(0));
     return 0;
   }
 
   //MOV.L Rm,@(disp,Rn)
   case 0x10 ... 0x1f: {
-    mov(ra1d, Rn);
-    add(ra1d, imm8(d4*4));
-    mov(ra2d, Rm);
+    add32(reg(1), Rn, imm(d4*4));
+    mov32(reg(2), Rm);
     call(writeLong);
     return 0;
   }
 
   //MOV.B Rm,@Rn
   case 0x20: {
-    mov(ra1d, Rn);
-    mov(ra2d, Rm);
+    mov32(reg(1), Rn);
+    mov32(reg(2), Rm);
     call(writeByte);
     return 0;
   }
 
   //MOV.W Rm,@Rn
   case 0x21: {
-    mov(ra1d, Rn);
-    mov(ra2d, Rm);
+    mov32(reg(1), Rn);
+    mov32(reg(2), Rm);
     call(writeWord);
     return 0;
   }
 
   //MOV.L Rm,@Rn
   case 0x22: {
-    mov(ra1d, Rn);
-    mov(ra2d, Rm);
+    mov32(reg(1), Rn);
+    mov32(reg(2), Rm);
     call(writeLong);
     return 0;
   }
 
   //MOV.B Rm,@-Rn
   case 0x24: {
-    mov(ra1d, Rn);
-    dec(ra1d);
-    mov(r13d, ra1d);
-    mov(ra2d, Rm);
+    mov32(reg(2), Rm);
+    sub32(reg(1), Rn, imm(1));
+    mov32(Rn, reg(1));
     call(writeByte);
-    mov(Rn, r13d);
     return 0;
   }
 
   //MOV.W Rm,@-Rn
   case 0x25: {
-    mov(ra1d, Rn);
-    sub(ra1d, imm8(2));
-    mov(r13d, ra1d);
-    mov(ra2d, Rm);
+    mov32(reg(2), Rm);
+    sub32(reg(1), Rn, imm(2));
+    mov32(Rn, reg(1));
     call(writeWord);
-    mov(Rn, r13d);
     return 0;
   }
 
   //MOV.L Rm,@-Rn
   case 0x26: {
-    mov(ra1d, Rn);
-    sub(ra1d, imm8(4));
-    mov(r13d, ra1d);
-    mov(ra2d, Rm);
+    mov32(reg(2), Rm);
+    sub32(reg(1), Rn, imm(4));
+    mov32(Rn, reg(1));
     call(writeLong);
-    mov(Rn, r13d);
     return 0;
   }
 
   //DIV0S Rm,Rn
   case 0x27: {
-    mov(eax, Rn);
-    shr(eax, imm8(31));
-    mov(Q, al);
-    mov(dl, al);
-    mov(eax, Rm);
-    shr(eax, imm8(31));
-    mov(M, al);
-    xor(al, dl);
-    mov(T, al);
+    lshr32(reg(0), Rn, imm(31));
+    mov32(Q, reg(0));
+    lshr32(reg(1), Rm, imm(31));
+    mov32(M, reg(1));
+    xor32(reg(0), reg(0), reg(1));
+    mov32(T, reg(0));
     return 0;
   }
 
   //TST Rm,Rn
   case 0x28: {
-    mov(eax, Rn);
-    and(eax, Rm);
-    setz(T);
+    test32(Rn, Rm, set_z);
+    mov32_f(T, flag_z);
     return 0;
   }
 
   //AND Rm,Rn
   case 0x29: {
-    mov(eax, Rn);
-    and(eax, Rm);
-    mov(Rn, eax);
+    and32(Rn, Rn, Rm);
     return 0;
   }
 
   //XOR Rm,Rn
   case 0x2a: {
-    mov(eax, Rn);
-    xor(eax, Rm);
-    mov(Rn, eax);
+    xor32(Rn, Rn, Rm);
     return 0;
   }
 
   //OR Rm,Rn
   case 0x2b: {
-    mov(eax, Rn);
-    or(eax, Rm);
-    mov(Rn, eax);
+    or32(Rn, Rn, Rm);
     return 0;
   }
 
   //CMP/STR Rm,Rn
   case 0x2c: {
-    mov(eax, Rn);
-    mov(edx, Rm);
-    xor(eax, edx);
-    test(al, al);
-    setz(dl);
-    for(auto _ : range(3)) {
-      shr(eax, imm8(8));
-      test(al, al);
-      setz(al);
-      or(dl, al);
+    xor32(reg(0), Rn, Rm);
+    xor32(reg(1), reg(1), reg(1));
+    for(auto b : range(4)) {
+      test32(reg(0), imm(0xff << b * 8), set_z);
+      or32_f(reg(1), flag_z);
     }
-    setnz(T);
+    mov32(T, reg(1));
     return 0;
   }
 
   //XTRCT Rm,Rn
   case 0x2d: {
-    mov(eax, Rn);
-    mov(edx, Rm);
-    shr(eax, imm8(16));
-    shl(edx, imm8(16));
-    or(eax, edx);
-    mov(Rn, eax);
+    lshr32(reg(0), Rn, imm(16));
+    shl32(reg(1), Rm, imm(16));
+    or32(reg(0), reg(0), reg(1));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //MULU Rm,Rn
   case 0x2e: {
-    mov(eax, Rn);
-    mov(edx, Rm);
-    movzx(eax, ax);
-    movzx(edx, dx);
-    mul(edx);
-    mov(MACL, eax);
+    mov32(reg(0), Rn);
+    mov32(reg(1), Rm);
+    mov32_u16(reg(0), reg(0));
+    mov32_u16(reg(1), reg(1));
+    mul32(reg(0), reg(0), reg(1));
+    mov32(MACL, reg(0));
     return 0;
   }
 
   //MULS Rm,Rn
   case 0x2f: {
-    mov(eax, Rn);
-    mov(edx, Rm);
-    movsx(eax, ax);
-    movsx(edx, dx);
-    imul(edx);
-    mov(MACL, eax);
+    mov32(reg(0), Rn);
+    mov32(reg(1), Rm);
+    mov32_s16(reg(0), reg(0));
+    mov32_s16(reg(1), reg(1));
+    mul32(reg(0), reg(0), reg(1));
+    mov32(MACL, reg(0));
     return 0;
   }
 
   //CMP/EQ Rm,Rn
   case 0x30: {
-    mov(eax, Rn);
-    cmp(eax, Rm);
-    setz(T);
+    cmp32(Rn, Rm, set_z);
+    mov32_f(T, flag_z);
     return 0;
   }
 
   //CMP/HS Rm,Rn
   case 0x32: {
-    mov(eax, Rn);
-    cmp(eax, Rm);
-    setnc(T);
+    cmp32(Rn, Rm, set_uge);
+    mov32_f(T, flag_uge);
     return 0;
   }
 
   //CMP/GE Rm,Rn
   case 0x33: {
-    mov(eax, Rn);
-    cmp(eax, Rm);
-    setge(T);
+    cmp32(Rn, Rm, set_sge);
+    mov32_f(T, flag_sge);
     return 0;
   }
 
   //DIV1 Rm,Rn
   case 0x34: {
-    auto skip = declareLabel();
-    auto skip2 = declareLabel();
-    mov(al, Q);
-    mov(cl, al);
-    mov(eax, Rn);
-    shr(eax, imm8(31));
-    mov(Q, al);
-    mov(edx, Rn);
-    shl(edx, imm8(1));
-    mov(al, T);
-    or(dl, al);
-    mov(al, M);
-    cmp(al, cl);
-    jnz8(skip);
-    sub(edx, Rm);
-    jmp8(skip2);
-    defineLabel(skip);
-    add(edx, Rm);
-    defineLabel(skip2);
-    mov(Rn, edx);
-    setc(dl);
-    mov(al, Q);
-    mov(cl, al);
-    mov(al, M);
-    xor(al, cl);
-    xor(al, dl);
-    mov(Q, al);
-    mov(al, Q);
-    mov(cl, al);
-    mov(al, M);
-    xor(cl, al);
-    mov(al, imm8(1));
-    sub(al, cl);
-    mov(T, al);
+    mov32(reg(0), Q);
+    lshr32(Q, Rn, imm(31));
+    shl32(reg(1), Rn, imm(1));
+    or32(reg(1), reg(1), T);
+    auto skip = cmp32_jump(M, reg(0), flag_ne);
+    sub32(reg(1), reg(1), Rm, set_c);
+    mov32(Rn, reg(1));
+    mov32_from_c(reg(1), -1);
+    auto skip2 = jump();
+    setLabel(skip);
+    add32(reg(1), reg(1), Rm, set_c);
+    mov32(Rn, reg(1));
+    mov32_from_c(reg(1), +1);
+    setLabel(skip2);
+    xor32(reg(0), M, Q);
+    xor32(reg(0), reg(0), reg(1));
+    mov32(Q, reg(0));
+    xor32(reg(1), Q, M);
+    mov32(reg(0), imm(1));
+    sub32(reg(0), reg(0), reg(1));
+    mov32(T, reg(0));
     return 0;
   }
 
   //DMULU.L Rm,Rn
   case 0x35: {
-    mov(eax, Rn);
-    mov(edx, Rm);
-    mul(edx);
-    mov(MACL, eax);
-    mov(MACH, edx);
+    mov64_u32(reg(0), Rn);
+    mov64_u32(reg(1), Rm);
+    mul64(reg(0), reg(0), reg(1));
+    mov64(MAC, reg(0));
     return 0;
   }
 
   //CMP/HI Rm,Rn
   case 0x36: {
-    mov(eax, Rn);
-    cmp(eax, Rm);
-    seta(T);
+    cmp32(Rn, Rm, set_ugt);
+    mov32_f(T, flag_ugt);
     return 0;
   }
 
   //CMP/GT Rm,Rn
   case 0x37: {
-    mov(eax, Rn);
-    cmp(eax, Rm);
-    setg(T);
+    cmp32(Rn, Rm, set_sgt);
+    mov32_f(T, flag_sgt);
     return 0;
   }
 
   //SUB Rm,Rn
   case 0x38: {
-    mov(eax, Rn);
-    sub(eax, Rm);
-    mov(Rn, eax);
+    sub32(Rn, Rn, Rm);
     return 0;
   }
 
   //SUBC Rm,Rn
   case 0x3a: {
-    mov(al, T);
-    rcr(al);
-    mov(eax, Rn);
-    sbb(eax, Rm);
-    mov(Rn, eax);
-    setc(T);
+    mov32_to_c(T, -1);
+    subc32(Rn, Rn, Rm, set_c);
+    mov32_from_c(reg(0), -1);
+    mov32(T, reg(0));
     return 0;
   }
 
   //SUBV Rm,Rn
   case 0x3b: {
-    mov(eax, Rn);
-    sub(eax, Rm);
-    mov(Rn, eax);
-    seto(al);
-    mov(T, al);
+    sub32(Rn, Rn, Rm, set_o);
+    mov32_f(T, flag_o);
     return 0;
   }
 
   //ADD Rm,Rn
   case 0x3c: {
-    mov(eax, Rn);
-    add(eax, Rm);
-    mov(Rn, eax);
+    add32(Rn, Rn, Rm);
     return 0;
   }
 
   //DMULS.L Rm,Rn
   case 0x3d: {
-    mov(eax, Rn);
-    mov(edx, Rm);
-    imul(edx);
-    mov(MACL, eax);
-    mov(MACH, edx);
+    mov64_s32(reg(0), Rn);
+    mov64_s32(reg(1), Rm);
+    mul64(reg(0), reg(0), reg(1));
+    mov64(MAC, reg(0));
     return 0;
   }
 
   //ADDC Rm,Rn
   case 0x3e: {
-    mov(al, T);
-    rcr(al);
-    mov(eax, Rn);
-    adc(eax, Rm);
-    mov(Rn, eax);
-    setc(T);
+    mov32_to_c(T, +1);
+    addc32(Rn, Rn, Rm, set_c);
+    mov32_from_c(reg(0), +1);
+    mov32(T, reg(0));
     return 0;
   }
 
   //ADDV Rm,Rn
   case 0x3f: {
-    mov(eax, Rn);
-    add(eax, Rm);
-    mov(Rn, eax);
-    seto(al);
-    mov(T, al);
+    add32(Rn, Rn, Rm, set_o);
+    mov32_f(T, flag_o);
     return 0;
   }
 
   //MAC.W @Rm+,@Rn+
   case 0x4f: {
-    auto skip = declareLabel();
-    mov(ra1d, Rn);
-    addd(Rn, imm8(2));
+    mov32(reg(1), Rn);
+    add32(Rn, reg(1), imm(2));
     call(readWord);
-    movsx(eax, ax);
-    mov(r13d, eax);
-    mov(ra1d, Rm);
-    addd(Rm, imm8(2));
+    mov32(sreg(2), reg(0));
+    mov32(reg(1), Rm);
+    add32(Rm, reg(1), imm(2));
     call(readWord);
-    movsx(eax, ax);
-    mov(edx, r13d);
-    imul(edx);
-    shl(rdx, imm8(32));
-    or(rdx, rax);
-    add(rdx, MAC);
-    mov(al, S);
-    test(al, al);
-    jz8(skip);
-    movsxd(rdx, edx);
-    defineLabel(skip);
-    mov(MAC, rdx);
+    mov64_s16(reg(0), reg(0));
+    mov64_s16(reg(1), sreg(2));
+    mul64(reg(0), reg(0), reg(1));
+    add64(reg(0), reg(0), MAC);
+    auto skip = cmp32_jump(S, imm(0), flag_eq);
+    mov64_s32(reg(0), reg(0));
+    setLabel(skip);
+    mov64(MAC, reg(0));
     return 0;
   }
 
   //MOV.L @(disp,Rm),Rn
   case 0x50 ... 0x5f: {
-    mov(ra1d, Rm);
-    add(ra1d, imm8(d4*4));
+    add32(reg(1), Rm, imm(d4*4));
     call(readLong);
-    mov(Rn, eax);
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //MOV.B @Rm,Rn
   case 0x60: {
-    mov(ra1d, Rm);
+    mov32(reg(1), Rm);
     call(readByte);
-    movsx(eax, al);
-    mov(Rn, eax);
+    mov32_s8(reg(0), reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //MOV.W @Rm,Rn
   case 0x61: {
-    mov(ra1d, Rm);
+    mov32(reg(1), Rm);
     call(readWord);
-    movsx(eax, ax);
-    mov(Rn, eax);
+    mov32_s16(reg(0), reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //MOV.L @Rm,Rn
   case 0x62: {
-    mov(ra1d, Rm);
+    mov32(reg(1), Rm);
     call(readLong);
-    mov(Rn, eax);
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //MOV Rm,Rn
   case 0x63: {
-    mov(eax, Rm);
-    mov(Rn, eax);
+    mov32(Rn, Rm);
     return 0;
   }
 
   //MOV.B @Rm+,Rn
   case 0x64: {
-    mov(ra1d, Rm);
-    if(n != m) addd(Rm, imm8(1));
+    mov32(reg(1), Rm);
+    if(n != m) {
+      add32(Rm, reg(1), imm(1));
+    }
     call(readByte);
-    movsx(eax, al);
-    mov(Rn, eax);
+    mov32_s8(reg(0), reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //MOV.W @Rm+,Rn
   case 0x65: {
-    mov(ra1d, Rm);
-    if(n != m) addd(Rm, imm8(2));
+    mov32(reg(1), Rm);
+    if(n != m) {
+      add32(Rm, reg(1), imm(2));
+    }
     call(readWord);
-    movsx(eax, ax);
-    mov(Rn, eax);
+    mov32_s16(reg(0), reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //MOV.L @Rm+,Rn
   case 0x66: {
-    mov(ra1d, Rm);
-    if(n != m) addd(Rm, imm8(4));
+    mov32(reg(1), Rm);
+    if (n != m) {
+      add32(Rm, reg(1), imm(4));
+    }
     call(readLong);
-    mov(Rn, eax);
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //NOT Rm,Rn
   case 0x67: {
-    mov(eax, Rm);
-    not(eax);
-    mov(Rn, eax);
+    not32(Rn, Rm);
     return 0;
   }
 
   //SWAP.B Rm,Rn
   case 0x68: {
-    mov(eax, Rm);
-    mov(edx, eax);
-    mov(al, ah);
-    mov(ah, dl);
-    mov(Rn, eax);
+    mov32(reg(0), Rm);
+    lshr32(reg(1), reg(0), imm(8));
+    mov32_u8(reg(1), reg(1));
+    mov32_u8(reg(2), reg(0));
+    shl32(reg(2), reg(2), imm(8));
+    and32(reg(0), reg(0), imm(~0xffff));
+    or32(reg(0), reg(0), reg(1));
+    or32(reg(0), reg(0), reg(2));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //SWAP.W Rm,Rn
   case 0x69: {
-    mov(eax, Rm);
-    mov(edx, eax);
-    shr(eax, imm8(16));
-    shl(edx, imm8(16));
-    or(eax, edx);
-    mov(Rn, eax);
+    mov32(reg(0), Rm);
+    lshr32(reg(1), reg(0), imm(16));
+    shl32(reg(0), reg(0), imm(16));
+    or32(reg(0), reg(0), reg(1));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //NEGC Rm,Rn
   case 0x6a: {
-    mov(al, T);
-    and(eax, imm8(1));
-    mov(edx, Rm);
-    add(eax, edx);
-    neg(eax);
-    mov(Rn, eax);
-    or(eax, edx);
-    setnz(T);
+    mov32_to_c(T, -1);
+    subc32(Rn, imm(0), Rm, set_c);
+    mov32_from_c(reg(0), -1);
+    mov32(T, reg(0));
     return 0;
   }
 
   //NEG Rm,Rn
   case 0x6b: {
-    xor(eax, eax);
-    sub(eax, Rm);
-    mov(Rn, eax);
+    neg32(Rn, Rm);
     return 0;
   }
 
   //EXTU.B Rm,Rn
   case 0x6c: {
-    mov(eax, Rm);
-    movzx(eax, al);
-    mov(Rn, eax);
+    mov32(reg(0), Rm);
+    mov32_u8(reg(0), reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //EXTU.W Rm,Rn
   case 0x6d: {
-    mov(eax, Rm);
-    movzx(eax, ax);
-    mov(Rn, eax);
+    mov32(reg(0), Rm);
+    mov32_u16(reg(0), reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //EXTS.B Rm,Rn
   case 0x6e: {
-    mov(eax, Rm);
-    movsx(eax, al);
-    mov(Rn, eax);
+    mov32(reg(0), Rm);
+    mov32_s8(reg(0), reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //EXTS.W Rm,Rn
   case 0x6f: {
-    mov(eax, Rm);
-    movsx(eax, ax);
-    mov(Rn, eax);
+    mov32(reg(0), Rm);
+    mov32_s16(reg(0), reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //ADD #imm,Rn
   case 0x70 ... 0x7f: {
-    mov(al, imm8(d8));
-    movsx(eax, al);
-    add(eax, Rn);
-    mov(Rn, eax);
+    add32(Rn, Rn, imm((s8)i));
     return 0;
   }
 
   //MOV.W @(disp,PC),Rn
   case 0x90 ... 0x9f: {
-    mov(ra1d, PC);
-    add(ra1d, imm32(d8*2));
+    add32(reg(1), PC, imm(d8*2));
     call(readWord);
-    movsx(eax, ax);
-    mov(Rn, eax);
+    mov32_s16(reg(0), reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //BRA disp
   case 0xa0 ... 0xaf: {
-    mov(eax, PC);
-    add(eax, imm32(4 + (i12)d12 * 2));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Slot));
+    add32(PPC, PC, imm(4 + (i12)d12 * 2));
+    mov32(PPM, imm(Branch::Slot));
     return 1;
   }
 
   //BSR disp
   case 0xb0 ... 0xbf: {
-    mov(eax, PC);
-    mov(PR, eax);
-    add(eax, imm32(4 + (i12)d12 * 2));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Slot));
+    mov32(reg(0), PC);
+    mov32(PR, reg(0));
+    add32(reg(0), reg(0), imm(4 + (i12)d12 * 2));
+    mov32(PPC, reg(0));
+    mov32(PPM, imm(Branch::Slot));
     return 1;
   }
 
   //MOV.L @(disp,PC),Rn
   case 0xd0 ... 0xdf: {
-    mov(ra1d, PC);
-    and(ra1d, imm8(~3));
-    add(ra1d, imm32(d8*4));
+    and32(reg(1), PC, imm(~3));
+    add32(reg(1), reg(1), imm(d8*4));
     call(readLong);
-    mov(Rn, eax);
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //MOV #imm,Rn
   case 0xe0 ... 0xef: {
-    mov(eax, imm32((s8)i));
-    mov(Rn, eax);
+    mov32(Rn, imm((s8)i));
     return 0;
   }
 
@@ -761,299 +652,227 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   #define i  (opcode >> 0 & 0xff)
   #define d4 (opcode >> 0 & 0x0f)
   #define d8 (opcode >> 0 & 0xff)
-  #define Rn dis8(rbx, n * 4)
-  #define Rm dis8(rbx, m * 4)
+  #define Rn RegR(n)
+  #define Rm RegR(m)
   switch(opcode >> 8) {
 
   //MOV.B R0,@(disp,Rn)
   case 0x80: {
-    mov(ra1d, Rm);
-    add(ra1d, imm8(d4));
-    mov(ra2d, R0);
+    add32(reg(1), Rm, imm(d4));
+    mov32(reg(2), R0);
     call(writeByte);
     return 0;
   }
 
   //MOV.W R0,@(disp,Rn)
   case 0x81: {
-    mov(ra1d, Rm);
-    add(ra1d, imm8(d4*2));
-    mov(ra2d, R0);
+    add32(reg(1), Rm, imm(d4*2));
+    mov32(reg(2), R0);
     call(writeWord);
     return 0;
   }
 
   //MOV.B @(disp,Rn),R0
   case 0x84: {
-    mov(ra1d, Rm);
-    add(ra1d, imm8(d4));
+    add32(reg(1), Rm, imm(d4));
     call(readByte);
-    movsx(eax, al);
-    mov(R0, eax);
+    mov32_s8(reg(0), reg(0));
+    mov32(R0, reg(0));
     return 0;
   }
 
   //MOV.W @(disp,Rn),R0
   case 0x85: {
-    mov(ra1d, Rm);
-    add(ra1d, imm8(d4*2));
+    add32(reg(1), Rm, imm(d4*2));
     call(readWord);
-    movsx(eax, ax);
-    mov(R0, eax);
+    mov32_s16(reg(0), reg(0));
+    mov32(R0, reg(0));
     return 0;
   }
 
   //CMP/EQ #imm,R0
   case 0x88: {
-    mov(eax, R0);
-    cmp(eax, imm8(i));
-    setz(T);
+    cmp32(R0, imm((s8)i), set_z);
+    mov32_f(T, flag_z);
     return 0;
   }
 
   //BT disp
   case 0x89: {
-    auto skip = declareLabel();
-    mov(al, T);
-    test(al, al);
-    jz8(skip);
-    mov(eax, PC);
-    add(eax, imm32(4 + (s8)d8 * 2));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Take));
-    defineLabel(skip);
+    auto skip = cmp32_jump(T, imm(0), flag_eq);
+    add32(PPC, PC, imm(4 + (s8)d8 * 2));
+    mov32(PPM, imm(Branch::Take));
+    setLabel(skip);
     return 1;
   }
 
   //BF disp
   case 0x8b: {
-    auto skip = declareLabel();
-    mov(al, T);
-    test(al, al);
-    jnz8(skip);
-    mov(eax, PC);
-    add(eax, imm32(4 + (s8)d8 * 2));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Take));
-    defineLabel(skip);
+    auto skip = cmp32_jump(T, imm(0), flag_ne);
+    add32(PPC, PC, imm(4 + (s8)d8 * 2));
+    mov32(PPM, imm(Branch::Take));
+    setLabel(skip);
     return 1;
   }
 
   //BT/S disp
   case 0x8d: {
-    auto skip = declareLabel();
-    mov(al, T);
-    test(al, al);
-    jz8(skip);
-    mov(eax, PC);
-    add(eax, imm32(4 + (s8)d8 * 2));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Slot));
-    defineLabel(skip);
+    auto skip = cmp32_jump(T, imm(0), flag_eq);
+    add32(PPC, PC, imm(4 + (s8)d8 * 2));
+    mov32(PPM, imm(Branch::Slot));
+    setLabel(skip);
     return 1;
   }
 
   //BF/S disp
   case 0x8f: {
-    auto skip = declareLabel();
-    mov(al, T);
-    test(al, al);
-    jnz8(skip);
-    mov(eax, PC);
-    add(eax, imm32(4 + (s8)d8 * 2));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Slot));
-    defineLabel(skip);
+    auto skip = cmp32_jump(T, imm(0), flag_ne);
+    add32(PPC, PC, imm(4 + (s8)d8 * 2));
+    mov32(PPM, imm(Branch::Slot));
+    setLabel(skip);
     return 1;
   }
 
   //MOV.B R0,@(disp,GBR)
   case 0xc0: {
-    mov(ra1d, GBR);
-    add(ra1d, imm32(d8));
-    mov(ra2d, R0);
+    add32(reg(1), GBR, imm(d8));
+    mov32(reg(2), R0);
     call(writeByte);
     return 0;
   }
 
   //MOV.W R0,@(disp,GBR)
   case 0xc1: {
-    mov(ra1d, GBR);
-    add(ra1d, imm32(d8*2));
-    mov(ra2d, R0);
+    add32(reg(1), GBR, imm(d8*2));
+    mov32(reg(2), R0);
     call(writeWord);
     return 0;
   }
 
   //MOV.L R0,@(disp,GBR)
   case 0xc2: {
-    mov(ra1d, GBR);
-    add(ra1d, imm32(d8*4));
-    mov(ra2d, R0);
+    add32(reg(1), GBR, imm(d8*4));
+    mov32(reg(2), R0);
     call(writeLong);
     return 0;
   }
 
   //TRAPA #imm
   case 0xc3: {
-    xor(edx, edx);
-    xor(eax, eax);
-    mov(al, T);
-    or(dl, al);
-    mov(al, S);
-    shl(eax, imm8(1));
-    or(dl, al);
-    mov(al, I);
-    shl(eax, imm8(4));
-    or(dl, al);
-    mov(al, Q);
-    shl(eax, imm8(8));
-    or(edx, eax);
-    mov(al, M);
-    shl(eax, imm8(9));
-    or(edx, eax);
-    mov(ra2d, edx);
-    mov(ra1d, R15);
-    addd(R15, imm8(4));
+    getSR(reg(2));
+    sub32(reg(1), R15, imm(4));
+    mov32(R15, reg(1));
     call(writeLong);
-    mov(edx, PC);
-    add(edx, imm8(2));
-    mov(ra2d, edx);
-    mov(ra1d, R15);
-    addd(R15, imm8(4));
+    add32(reg(2), PC, imm(2));
+    sub32(reg(1), R15, imm(4));
+    mov32(R15, reg(1));
     call(writeLong);
-    mov(ra1d, VBR);
-    add(ra1d, imm32(i * 4));
+    add32(reg(1), VBR, imm(i * 4));
     call(readLong);
-    add(eax, imm8(4));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Take));
+    add32(reg(0), reg(0), imm(4));
+    mov32(PPC, reg(0));
+    mov32(PPM, imm(Branch::Take));
     return 1;
   }
 
   //MOV.B @(disp,GBR),R0
   case 0xc4: {
-    mov(ra1d, GBR);
-    add(ra1d, imm32(d8));
+    add32(reg(1), GBR, imm(d8));
     call(readByte);
-    movsx(eax, al);
-    mov(R0, eax);
+    mov32_s8(reg(0), reg(0));
+    mov32(R0, reg(0));
     return 0;
   }
 
   //MOV.W @(disp,GBR),R0
   case 0xc5: {
-    mov(ra1d, GBR);
-    add(ra1d, imm32(d8*2));
+    add32(reg(1), GBR, imm(d8*2));
     call(readWord);
-    movsx(eax, ax);
-    mov(R0, eax);
+    mov32_s16(reg(0), reg(0));
+    mov32(R0, reg(0));
     return 0;
   }
 
   //MOV.L @(disp,GBR),R0
   case 0xc6: {
-    mov(ra1d, GBR);
-    add(ra1d, imm32(d8*4));
+    add32(reg(1), GBR, imm(d8*4));
     call(readLong);
-    mov(R0, eax);
+    mov32(R0, reg(0));
     return 0;
   }
 
   //MOVA @(disp,PC),R0
   case 0xc7: {
-    auto skip = declareLabel();
-    mov(eax, PC);
-    and(al, imm8(~3));
-    add(eax, imm32(d8*4));
-    mov(R0, eax);
-    mov(eax, PPM);
-    test(eax, eax);
-    jz8(skip);
-    mov(eax, R0);
-    sub(eax, imm8(2));
-    mov(R0, eax);
-    defineLabel(skip);
+    and32(reg(0), PC, imm(~3));
+    add32(reg(0), reg(0), imm(d8*4));
+    mov32(R0, reg(0));
+    auto skip = cmp32_jump(PPM, imm(0), flag_eq);
+    sub32(R0, R0, imm(2));
+    setLabel(skip);
     return 0;
   }
 
   //TST #imm,R0
   case 0xc8: {
-    mov(eax, R0);
-    and(eax, imm32(i));
-    setz(T);
+    test32(R0, imm(i), set_z);
+    mov32_f(T, flag_z);
     return 0;
   }
 
   //AND #imm,R0
   case 0xc9: {
-    mov(eax, R0);
-    and(eax, imm32(i));
-    mov(R0, eax);
+    and32(R0, R0, imm(i));
     return 0;
   }
 
   //XOR #imm,R0
   case 0xca: {
-    mov(eax, R0);
-    xor(eax, imm32(i));
-    mov(R0, eax);
+    xor32(R0, R0, imm(i));
     return 0;
   }
 
   //OR #imm,R0
   case 0xcb: {
-    mov(eax, R0);
-    or(eax, imm32(i));
-    mov(R0, eax);
+    or32(R0, R0, imm(i));
     return 0;
   }
 
   //TST.B #imm,@(R0,GBR)
   case 0xcc: {
-    mov(ra1d, GBR);
-    add(ra1d, R0);
+    mov32(reg(1), GBR);
+    add32(reg(1), reg(1), R0);
     call(readByte);
-    and(al, imm8(i));
-    setz(T);
+    test32(reg(0), imm(i), set_z);
+    mov32_f(T, flag_z);
     return 0;
   }
 
   //AND.B #imm,@(R0,GBR)
   case 0xcd: {
-    mov(ra1d, GBR);
-    add(ra1d, R0);
+    add32(reg(1), GBR, R0);
     call(readByte);
-    and(al, imm8(i));
-    mov(ra2d, eax);
-    mov(ra1d, GBR);
-    add(ra1d, R0);
+    and32(reg(2), reg(0), imm(i));
+    add32(reg(1), GBR, R0);
     call(writeByte);
     return 0;
   }
 
   //XOR.B #imm,@(R0,GBR)
   case 0xce: {
-    mov(ra1d, GBR);
-    add(ra1d, R0);
+    add32(reg(1), GBR, R0);
     call(readByte);
-    xor(al, imm8(i));
-    mov(ra2d, eax);
-    mov(ra1d, GBR);
-    add(ra1d, R0);
+    xor32(reg(2), reg(0), imm(i));
+    add32(reg(1), GBR, R0);
     call(writeByte);
     return 0;
   }
 
   //OR.B #imm,@(R0,GBR)
   case 0xcf: {
-    mov(ra1d, GBR);
-    add(ra1d, R0);
+    add32(reg(1), GBR, R0);
     call(readByte);
-    or(al, imm8(i));
-    mov(ra2d, eax);
-    mov(ra1d, GBR);
-    add(ra1d, R0);
+    or32(reg(2), reg(0), imm(i));
+    add32(reg(1), GBR, R0);
     call(writeByte);
     return 0;
   }
@@ -1069,525 +888,375 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   #define n  (opcode >> 8 & 0xf)
   #define m  (opcode >> 8 & 0xf)
-  #define Rn dis8(rbx, n * 4)
-  #define Rm dis8(rbx, m * 4)
+  #define Rn RegR(n)
+  #define Rm RegR(m)
   switch(opcode >> 4 & 0x0f00 | opcode & 0x00ff) {
 
   //STC SR,Rn
   case 0x002: {
-    auto skip = declareLabel();
-    auto skip2 = declareLabel();
-    xor(edx, edx);
-    xor(eax, eax);
-    mov(al, T);
-    or(dl, al);
-    mov(al, S);
-    shl(eax, imm8(1));
-    or(dl, al);
-    mov(al, I);
-    shl(eax, imm8(4));
-    or(dl, al);
-    mov(al, Q);
-    test(al, al);
-    jz8(skip);
-    or(edx, imm32(0x100));
-    defineLabel(skip);
-    mov(al, M);
-    test(al, al);
-    jz8(skip2);
-    or(edx, imm32(0x200));
-    defineLabel(skip2);
-    mov(Rn, edx);
+    getSR(reg(0));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //BSRF Rm
   case 0x003: {
-    mov(eax, PC);
-    mov(PR, eax);
-    add(eax, Rm);
-    add(eax, imm8(4));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Slot));
+    mov32(reg(0), PC);
+    mov32(PR, reg(0));
+    add32(reg(0), reg(0), Rm);
+    add32(reg(0), reg(0), imm(4));
+    mov32(PPC, reg(0));
+    mov32(PPM, imm(Branch::Slot));
     return 1;
   }
 
   //STS MACH,Rn
   case 0x00a: {
-    mov(eax, MACH);
-    mov(Rn, eax);
+    mov32(Rn, MACH);
     return 0;
   }
 
   //STC GBR,Rn
   case 0x012: {
-    mov(eax, GBR);
-    mov(Rn, eax);
+    mov32(Rn, GBR);
     return 0;
   }
 
   //STS MACL,Rn
   case 0x01a: {
-    mov(eax, MACL);
-    mov(Rn, eax);
+    mov32(Rn, MACL);
     return 0;
   }
 
   //STC VBR,Rn
   case 0x022: {
-    mov(eax, VBR);
-    mov(Rn, eax);
+    mov32(Rn, VBR);
     return 0;
   }
 
   //BRAF Rm
   case 0x023: {
-    mov(eax, PC);
-    add(eax, Rm);
-    add(eax, imm8(4));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Slot));
+    add32(reg(0), PC, Rm);
+    add32(reg(0), reg(0), imm(4));
+    mov32(PPC, reg(0));
+    mov32(PPM, imm(Branch::Slot));
     return 1;
   }
 
   //MOVT Rn
   case 0x029: {
-    mov(al, T);
-    movzx(eax, al);
-    mov(Rn, eax);
+    mov32(Rn, T);
     return 0;
   }
 
   //STS PR,Rn
   case 0x02a: {
-    mov(eax, PR);
-    mov(Rn, eax);
+    mov32(Rn, PR);
     return 0;
   }
 
   //SHLL Rn
   case 0x400: {
-    mov(eax, Rn);
-    shr(eax, imm8(31));
-    mov(T, al);
-    mov(eax, Rn);
-    shl(eax, imm8(1));
-    mov(Rn, eax);
+    lshr32(T, Rn, imm(31));
+    shl32(Rn, Rn, imm(1));
     return 0;
   }
 
   //SHLR Rn
   case 0x401: {
-    mov(eax, Rn);
-    and(al, imm8(1));
-    mov(T, al);
-    mov(eax, Rn);
-    shr(eax, imm8(1));
-    mov(Rn, eax);
+    and32(T, Rn, imm(1));
+    lshr32(Rn, Rn, imm(1));
     return 0;
   }
 
   //STS.L MACH,@-Rn
   case 0x402: {
-    mov(ra1d, Rn);
-    sub(ra1d, imm8(4));
-    mov(Rn, ra1d);
-    mov(ra2d, MACH);
+    sub32(reg(1), Rn, imm(4));
+    mov32(Rn, reg(1));
+    mov32(reg(2), MACH);
     call(writeLong);
     return 0;
   }
 
   //STC.L SR,@-Rn
   case 0x403: {
-    auto skip = declareLabel();
-    auto skip2 = declareLabel();
-    xor(edx, edx);
-    xor(eax, eax);
-    mov(al, T);
-    or(dl, al);
-    mov(al, S);
-    shl(eax, imm8(1));
-    or(dl, al);
-    mov(al, I);
-    shl(eax, imm8(4));
-    or(dl, al);
-    mov(al, Q);
-    test(al, al);
-    jz8(skip);
-    or(edx, imm32(0x100));
-    defineLabel(skip);
-    mov(al, M);
-    test(al, al);
-    jz8(skip2);
-    or(edx, imm32(0x200));
-    defineLabel(skip2);
-    mov(ra2d, edx);
-    mov(ra1d, Rn);
-    sub(ra1d, imm8(4));
-    mov(Rn, ra1d);
+    getSR(reg(2));
+    sub32(reg(1), Rn, imm(4));
+    mov32(Rn, reg(1));
     call(writeLong);
     return 0;
   }
 
   //ROTL Rn
   case 0x404: {
-    mov(eax, Rn);
-    shr(eax, imm8(31));
-    mov(T, al);
-    mov(eax, Rn);
-    rol(eax);
-    mov(Rn, eax);
+    lshr32(T, Rn, imm(31));
+    mov32(reg(0), Rn);
+    lshr32(reg(1), reg(0), imm(31));
+    shl32(reg(0), reg(0), imm(1));
+    or32(reg(0), reg(0), reg(1));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //ROTR Rn
   case 0x405: {
-    mov(eax, Rn);
-    and(al, imm8(1));
-    mov(T, al);
-    mov(eax, Rn);
-    ror(eax);
-    mov(Rn, eax);
+    and32(T, Rn, imm(1));
+    mov32(reg(0), Rn);
+    lshr32(reg(1), reg(0), imm(1));
+    shl32(reg(0), reg(0), imm(31));
+    or32(reg(0), reg(0), reg(1));
+    mov32(Rn, reg(0));
     return 0;
   }
 
   //LDS.L @Rm+,MACH
   case 0x406: {
-    mov(ra1d, Rn);
-    addd(Rn, imm8(4));
+    mov32(reg(1), Rn);
+    add32(Rn, reg(1), imm(4));
     call(readLong);
-    mov(MACH, eax);
+    mov32(MACH, reg(0));
     return 0;
   }
 
   //LDC.L @Rm+,SR
   case 0x407: {
-    mov(ra1d, Rn);
-    addd(Rn, imm8(4));
+    mov32(reg(1), Rn);
+    add32(Rn, reg(1), imm(4));
     call(readLong);
-    mov(edx, eax);
-    and(al, imm8(1));
-    mov(T, al);
-    mov(eax, edx);
-    shr(eax, imm8(1));
-    and(al, imm8(1));
-    mov(S, al);
-    mov(eax, edx);
-    shr(eax, imm8(4));
-    and(al, imm8(15));
-    mov(I, al);
-    mov(eax, edx);
-    shr(eax, imm8(8));
-    and(al, imm8(1));
-    mov(Q, al);
-    mov(eax, edx);
-    shr(eax, imm8(9));
-    and(al, imm8(1));
-    mov(M, al);
+    setSR(reg(0));
     return 0;
   }
 
   //SHLL2 Rn
   case 0x408: {
-    mov(eax, Rn);
-    shl(eax, imm8(2));
-    mov(Rn, eax);
+    shl32(Rn, Rn, imm(2));
     return 0;
   }
 
   //SHLR2 Rn
   case 0x409: {
-    mov(eax, Rn);
-    shr(eax, imm8(2));
-    mov(Rn, eax);
+    lshr32(Rn, Rn, imm(2));
     return 0;
   }
 
   //LDS Rm,MACH
   case 0x40a: {
-    mov(eax, Rm);
-    mov(MACH, eax);
+    mov32(MACH, Rm);
     return 0;
   }
 
   //JSR @Rm
   case 0x40b: {
-    mov(eax, PC);
-    mov(PR, eax);
-    mov(eax, Rm);
-    add(eax, imm8(4));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Slot));
+    mov32(PR, PC);
+    add32(PPC, Rm, imm(4));
+    mov32(PPM, imm(Branch::Slot));
     return 1;
   }
 
   //LDC Rm,SR
   case 0x40e: {
-    mov(edx, Rm);
-    mov(eax, edx);
-    and(al, imm8(1));
-    mov(T, al);
-    mov(eax, edx);
-    shr(eax, imm8(1));
-    and(al, imm8(1));
-    mov(S, al);
-    mov(eax, edx);
-    shr(eax, imm8(4));
-    and(al, imm8(15));
-    mov(I, al);
-    mov(eax, edx);
-    shr(eax, imm8(8));
-    and(al, imm8(1));
-    mov(Q, al);
-    mov(eax, edx);
-    shr(eax, imm8(9));
-    and(al, imm8(1));
-    mov(M, al);
+    mov32(reg(0), Rm);
+    setSR(reg(0));
     return 0;
   }
 
   //DT Rn
   case 0x410: {
-    mov(eax, Rn);
-    dec(eax);
-    mov(Rn, eax);
-    setz(al);
-    mov(T, al);
+    sub32(Rn, Rn, imm(1), set_z);
+    mov32_f(T, flag_z);
     return 0;
   }
 
   //CMP/PZ Rn
   case 0x411: {
-    mov(eax, Rn);
-    test(eax, eax);
-    setge(T);
+    cmp32(Rn, imm(0), set_sge);
+    mov32_f(T, flag_sge);
     return 0;
   }
 
   //STS.L MACL,@-Rn
   case 0x412: {
-    mov(ra1d, Rn);
-    sub(ra1d, imm8(4));
-    mov(Rn, ra1d);
-    mov(ra2d, MACL);
+    sub32(reg(1), Rn, imm(4));
+    mov32(Rn, reg(1));
+    mov32(reg(2), MACL);
     call(writeLong);
     return 0;
   }
 
   //STC.L GBR,@-Rn
   case 0x413: {
-    mov(ra1d, Rn);
-    sub(ra1d, imm8(4));
-    mov(Rn, ra1d);
-    mov(ra2d, GBR);
+    sub32(reg(1), Rn, imm(4));
+    mov32(Rn, reg(1));
+    mov32(reg(2), GBR);
     call(writeLong);
     return 0;
   }
 
   //CMP/PL Rn
   case 0x415: {
-    mov(eax, Rn);
-    test(eax, eax);
-    setg(T);
+    cmp32(Rn, imm(0), set_sgt);
+    mov32_f(T, flag_sgt);
     return 0;
   }
 
   //LDS.L @Rm+,MACL
   case 0x416: {
-    mov(ra1d, Rm);
-    addd(Rm, imm8(4));
+    mov32(reg(1), Rm);
+    add32(Rm, reg(1), imm(4));
     call(readLong);
-    mov(MACL, eax);
+    mov32(MACL, reg(0));
     return 0;
   }
 
   //LDS.L @Rm+,GBR
   case 0x417: {
-    mov(ra1d, Rm);
-    addd(Rm, imm8(4));
+    mov32(reg(1), Rm);
+    add32(Rm, reg(1), imm(4));
     call(readLong);
-    mov(GBR, eax);
+    mov32(GBR, reg(0));
     return 0;
   }
 
   //SHLL8 Rn
   case 0x418: {
-    mov(eax, Rn);
-    shl(eax, imm8(8));
-    mov(Rn, eax);
+    shl32(Rn, Rn, imm(8));
     return 0;
   }
 
   //SHLR8 Rn
   case 0x419: {
-    mov(eax, Rn);
-    shr(eax, imm8(8));
-    mov(Rn, eax);
+    lshr32(Rn, Rn, imm(8));
     return 0;
   }
 
   //LDS Rm,MACL
   case 0x41a: {
-    mov(eax, Rm);
-    mov(MACL, eax);
+    mov32(MACL, Rm);
     return 0;
   }
 
   //TAS @Rn
   case 0x41b: {
-    mov(ra1d, Rn);
-    and(ra1d, imm32(0x1fff'ffff));
-    or(ra1d, imm32(0x2000'0000));
+    and32(reg(1), Rn, imm(0x1fff'ffff));
+    or32(reg(1), reg(1), imm(0x2000'0000));
     call(readByte);
-    mov(cl, al);
-    test(al, al);
-    setz(al);
-    mov(T, al);
-    mov(al, cl);
-    or(al, imm8(0x80));
-    mov(ra2d, eax);
-    mov(ra1d, Rn);
-    and(ra1d, imm32(0x1fff'ffff));
-    or(ra1d, imm32(0x2000'0000));
+    test32(reg(0), reg(0), set_z);
+    mov32_f(T, flag_z);
+    or32(reg(0), reg(0), imm(0x80));
+    mov32(reg(2), reg(0));
+    and32(reg(1), Rn, imm(0x1fff'ffff));
+    or32(reg(1), reg(1), imm(0x2000'0000));
     call(writeByte);
     return 0;
   }
 
   //LDC Rm,GBR
   case 0x41e: {
-    mov(eax, Rn);
-    mov(GBR, eax);
+    mov32(GBR, Rn);
     return 0;
   }
 
   //SHAL Rn
   case 0x420: {
-    mov(eax, Rn);
-    shr(eax, imm8(31));
-    mov(T, al);
-    mov(eax, Rn);
-    sal(eax, imm8(1));
-    mov(Rn, eax);
+    lshr32(T, Rn, imm(31));
+    shl32(Rn, Rn, imm(1));
     return 0;
   }
 
   //SHAR Rn
   case 0x421: {
-    mov(eax, Rn);
-    and(eax, imm8(1));
-    mov(T, al);
-    mov(eax, Rn);
-    sar(eax, imm8(1));
-    mov(Rn, eax);
+    and32(T, Rn, imm(1));
+    ashr32(Rn, Rn, imm(1));
     return 0;
   }
 
   //STS.L PR,@-Rn
   case 0x422: {
-    mov(ra1d, Rn);
-    sub(ra1d, imm8(4));
-    mov(Rn, ra1d);
-    mov(ra2d, PR);
+    sub32(reg(1), Rn, imm(4));
+    mov32(Rn, reg(1));
+    mov32(reg(2), PR);
     call(writeLong);
     return 0;
   }
 
   //STC.L VBR,@-Rn
   case 0x423: {
-    mov(ra1d, Rn);
-    sub(ra1d, imm8(4));
-    mov(Rn, ra1d);
-    mov(ra2d, VBR);
+    sub32(reg(1), Rn, imm(4));
+    mov32(Rn, reg(1));
+    mov32(reg(2), VBR);
     call(writeLong);
     return 0;
   }
 
   //ROTCL Rn
   case 0x424: {
-    mov(eax, Rn);
-    shr(eax, imm8(31));
-    mov(cl, al);
-    mov(edx, Rn);
-    shl(edx, imm8(1));
-    mov(al, T);
-    or(dl, al);
-    mov(Rn, edx);
-    mov(al, cl);
-    mov(T, al);
+    mov32(reg(0), Rn);
+    lshr32(reg(1), reg(0), imm(31));
+    shl32(reg(0), reg(0), imm(1));
+    or32(reg(0), reg(0), T);
+    mov32(Rn, reg(0));
+    mov32(T, reg(1));
     return 0;
   }
 
   //ROTCR Rn
   case 0x425: {
-    mov(eax, Rn);
-    and(al, imm8(1));
-    mov(cl, al);
-    mov(edx, Rn);
-    shr(edx, imm8(1));
-    xor(eax, eax);
-    mov(al, T);
-    shl(eax, imm8(31));
-    or(edx, eax);
-    mov(Rn, edx);
-    mov(al, cl);
-    mov(T, al);
+    mov32(reg(0), Rn);
+    and32(reg(1), reg(0), imm(1));
+    lshr32(reg(0), reg(0), imm(1));
+    shl32(reg(2), T, imm(31));
+    or32(reg(0), reg(0), reg(2));
+    mov32(Rn, reg(0));
+    mov32(T, reg(1));
     return 0;
   }
 
   //LDS.L @Rm+,PR
   case 0x426: {
-    mov(ra1d, Rm);
-    addd(Rm, imm8(4));
+    mov32(reg(1), Rm);
+    add32(Rm, reg(1), imm(4));
     call(readLong);
-    mov(PR, eax);
+    mov32(PR, reg(0));
     return 0;
   }
 
   //LDC.L @Rm+,VBR
   case 0x427: {
-    mov(ra1d, Rm);
-    addd(Rm, imm8(4));
+    mov32(reg(1), Rm);
+    add32(Rm, reg(1), imm(4));
     call(readLong);
-    mov(VBR, eax);
+    mov32(VBR, reg(0));
     return 0;
   }
 
   //SHLL16 Rn
   case 0x428: {
-    mov(eax, Rn);
-    shl(eax, imm8(16));
-    mov(Rn, eax);
+    shl32(Rn, Rn, imm(16));
     return 0;
   }
 
   //SHLR16 Rn
   case 0x429: {
-    mov(eax, Rn);
-    shr(eax, imm8(16));
-    mov(Rn, eax);
+    lshr32(Rn, Rn, imm(16));
     return 0;
   }
 
   //LDS Rm,PR
   case 0x42a: {
-    mov(eax, Rm);
-    mov(PR, eax);
+    mov32(PR, Rm);
     return 0;
   }
 
   //JMP @Rm
   case 0x42b: {
-    mov(eax, Rm);
-    add(eax, imm8(4));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Slot));
+    add32(PPC, Rm, imm(4));
+    mov32(PPM, imm(Branch::Slot));
     return 1;
   }
 
   //LDC Rm,VBR
   case 0x42e: {
-    mov(eax, Rm);
-    mov(VBR, eax);
+    mov32(VBR, Rm);
     return 0;
   }
 
@@ -1601,8 +1270,8 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //CLRT
   case 0x0008: {
-    xor(al, al);
-    mov(T, al);
+    xor32(reg(0), reg(0), reg(0));
+    mov32(T, reg(0));
     return 0;
   }
 
@@ -1613,80 +1282,55 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //RTS
   case 0x000b: {
-    mov(eax, PR);
-    add(eax, imm8(4));
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Slot));
+    add32(PPC, PR, imm(4));
+    mov32(PPM, imm(Branch::Slot));
     return 1;
   }
 
   //SETT
   case 0x0018: {
-    mov(al, imm8(1));
-    mov(T, al);
+    mov32(T, imm(1));
     return 0;
   }
 
   //DIV0U
   case 0x0019: {
-    xor(al, al);
-    mov(Q, al);
-    mov(M, al);
-    mov(T, al);
+    xor32(reg(0), reg(0), reg(0));
+    mov32(Q, reg(0));
+    mov32(M, reg(0));
+    mov32(T, reg(0));
     return 0;
   }
 
   //SLEEP
   case 0x001b: {
-    auto skip = declareLabel();
-    auto skip2 = declareLabel();
-    mov(eax, ET);
-    test(al, al);
-    jnz8(skip);
-    subd(PC, imm8(2));
-    jmp8(skip2);
-    defineLabel(skip);
-    movb(ET, imm8(0));
-    defineLabel(skip2);
+    auto skip = cmp32_jump(ET, imm(0), flag_ne);
+    sub32(PC, PC, imm(2));
+    auto skip2 = jump();
+    setLabel(skip);
+    mov32(ET, imm(0));
+    setLabel(skip2);
     return 1;
   }
 
   //CLRMAC
   case 0x0028: {
-    xor(rax, rax);
-    mov(MAC, rax);
+    xor64(reg(0), reg(0), reg(0));
+    mov64(MAC, reg(0));
     return 0;
   }
 
   //RTE
   case 0x002b: {
-    mov(ra1d, R15);
-    addd(R15, imm8(4));
+    mov32(reg(1), R15);
+    add32(R15, reg(1), imm(4));
     call(readLong);
-    mov(PPC, eax);
-    movb(PPM, imm8(Branch::Slot));
-    mov(ra1d, R15);
-    addd(R15, imm8(4));
+    mov32(PPC, reg(0));
+    mov32(PPM, imm(Branch::Slot));
+    mov32(reg(1), R15);
+    add32(R15, reg(1), imm(4));
     call(readLong);
-    mov(edx, eax);
-    and(al, imm8(1));
-    mov(T, al);
-    mov(eax, edx);
-    shr(eax, imm8(1));
-    and(al, imm8(1));
-    mov(S, al);
-    mov(eax, edx);
-    shr(eax, imm8(4));
-    and(al, imm8(15));
-    mov(I, al);
-    mov(eax, edx);
-    shr(eax, imm8(8));
-    and(al, imm8(1));
-    mov(Q, al);
-    mov(eax, edx);
-    shr(eax, imm8(9));
-    and(al, imm8(1));
-    mov(M, al);
+    setSR(reg(0));
     return 1;
   }
 
@@ -1719,6 +1363,32 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   return 0;
 }
 
+auto SH2::Recompiler::getSR(reg dst) -> void {
+  mov32(dst, M);
+  shl32(dst, dst, imm(1));
+  or32(dst, dst, Q);
+  shl32(dst, dst, imm(4));
+  or32(dst, dst, I);
+  shl32(dst, dst, imm(3));
+  or32(dst, dst, S);
+  shl32(dst, dst, imm(1));
+  or32(dst, dst, T);
+}
+
+auto SH2::Recompiler::setSR(reg src) -> void {
+  and32(T, src, imm(1));
+  lshr32(src, src, imm(1));
+  and32(S, src, imm(1));
+  lshr32(src, src, imm(3));
+  and32(I, src, imm(15));
+  lshr32(src, src, imm(4));
+  and32(Q, src, imm(1));
+  lshr32(src, src, imm(1));
+  and32(M, src, imm(1));
+}
+
+#undef Reg
+#undef RegR
 #undef R0
 #undef R15
 #undef PC

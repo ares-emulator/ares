@@ -45,7 +45,7 @@ auto SH2::instruction() -> void {
   }
 }
 
-auto SH2::instructionEpilogue() -> bool {
+auto SH2::instructionEpilogue() -> s32 {
   switch(PPM) {
   case Branch::Step: PC = PC + 2; return 0;
   case Branch::Slot: PC = PC + 2; PPM = Branch::Take; return 0;

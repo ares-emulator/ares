@@ -53,7 +53,7 @@ auto RSP::instruction() -> void {
   }
 }
 
-auto RSP::instructionEpilogue() -> bool {
+auto RSP::instructionEpilogue() -> s32 {
   if constexpr(Accuracy::RSP::Recompiler) {
     step(3);
   }

@@ -3,7 +3,7 @@
 
 #include <ares/ares.hpp>
 #include <nall/hashset.hpp>
-#include <nall/recompiler/amd64/amd64.hpp>
+#include <nall/recompiler/generic/generic.hpp>
 #include <component/processor/sm5k/sm5k.hpp>
 
 #if defined(ARCHITECTURE_AMD64)

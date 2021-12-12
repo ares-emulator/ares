@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nall/recompiler/amd64/amd64.hpp>
+#include <nall/recompiler/generic/generic.hpp>
 
 //Hitachi SH-2
 
@@ -39,7 +39,7 @@ struct SH2 {
   auto jump(u32 pc) -> void;
   auto branch(u32 pc) -> void;
   auto delaySlot(u32 pc) -> void;
-  auto instructionEpilogue() -> bool;
+  auto instructionEpilogue() -> s32;
   auto instruction() -> void;
   auto execute(u16 opcode) -> void;
 
@@ -246,14 +246,13 @@ struct SH2 {
   };
   u32 exceptions = 0;  //delayed exception flags
 
-  struct Recompiler : recompiler::amd64 {
-    using recompiler::amd64::call;
+  struct Recompiler : recompiler::generic {
     SH2& self;
-    Recompiler(SH2& self) : self(self) {}
+    Recompiler(SH2& self) : self(self), generic(allocator) {}
 
     struct Block {
       auto execute(SH2& self) -> void {
-        ((void (*)(u32*, SH2*))code)(&self.regs.R[0], &self);
+        ((void (*)(SH2*, Registers*))code)(&self, &self.regs);
       }
 
       u8* code;
@@ -275,17 +274,8 @@ struct SH2 {
     auto block(u32 address) -> Block*;
     auto emit(u32 address) -> Block*;
     auto emitInstruction(u16 opcode) -> bool;
-
-    template<typename V, typename... P>
-    alwaysinline auto call(V (SH2::*function)(P...)) -> void {
-      static_assert(sizeof...(P) <= 5);
-      if constexpr(ABI::Windows) {
-        if constexpr(sizeof...(P) >= 5) mov(dis8(rsp, 0x28), ra5);
-        if constexpr(sizeof...(P) >= 4) mov(dis8(rsp, 0x20), ra4);
-      }
-      mov(ra0, rbp);
-      call(imm64{function}, rax);
-    }
+    auto getSR(reg dst) -> void;
+    auto setSR(reg src) -> void;
 
     bump_allocator allocator;
     Pool* pools[1 << 24];
