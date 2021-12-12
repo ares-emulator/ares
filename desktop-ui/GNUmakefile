@@ -12,13 +12,14 @@ include $(nall.path)/GNUmakefile
 ifeq ($(platform),windows)
  #vulkan := $(if $(shell if exist ..\ares\n64\vulkan\parallel-rdp) echo 1),true,false)
   vulkan := $(if $(shell test -e ../ares/n64/vulkan/parallel-rdp && echo 1),true,false)
-  local := false
 else ifeq ($(platform),linux)
   vulkan := $(if $(shell test -e ../ares/n64/vulkan/parallel-rdp && echo 1),true,false)
 endif
 
 ifeq ($(local),true)
-  flags += -march=native
+  ifeq ($(arch),amd64)
+    flags += -march=native
+  endif
 endif
 
 libco.path := ../libco

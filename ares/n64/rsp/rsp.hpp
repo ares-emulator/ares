@@ -178,10 +178,12 @@ struct RSP : Thread, Memory::IO<RSP> {
   //vpu.cpp: Vector Processing Unit
   union r128 {
     struct { uint128_t u128; };
+#if defined(ARCHITECTURE_AMD64)
     struct {   __m128i v128; };
 
     operator __m128i() const { return v128; }
     auto operator=(__m128i value) { v128 = value; }
+#endif
 
     auto byte(u32 index) -> uint8_t& { return ((uint8_t*)&u128)[15 - index]; }
     auto byte(u32 index) const -> uint8_t { return ((uint8_t*)&u128)[15 - index]; }

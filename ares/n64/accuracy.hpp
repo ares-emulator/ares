@@ -15,7 +15,7 @@ struct Accuracy {
     static constexpr bool Recompiler = !Interpreter;
 
     //VU instructions
-    static constexpr bool SISD = 0 | Reference;
+    static constexpr bool SISD = 0 | Reference | !Architecture::amd64;
     static constexpr bool SIMD = !SISD;
   };
 
