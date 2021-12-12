@@ -4,7 +4,7 @@ threaded := true
 openmp := false
 vulkan := false
 local := true
-flags += -I. -I.. -I../ares -DMIA_LIBRARY
+flags += -I. -I.. -I../ares -I../thirdparty -DMIA_LIBRARY
 
 nall.path := ../nall
 include $(nall.path)/GNUmakefile
@@ -24,6 +24,10 @@ endif
 
 libco.path := ../libco
 include $(libco.path)/GNUmakefile
+
+thirdparty.path := ../thirdparty
+sljit.path := $(thirdparty.path)/sljit/sljit_src
+include $(thirdparty.path)/GNUmakefile
 
 ruby.path := ../ruby
 include $(ruby.path)/GNUmakefile
@@ -62,12 +66,13 @@ $(object.path)/desktop-ui-presentation.o: $(desktop-ui.path)/presentation/presen
 $(object.path)/desktop-ui-settings.o: $(desktop-ui.path)/settings/settings.cpp
 $(object.path)/desktop-ui-tools.o: $(desktop-ui.path)/tools/tools.cpp
 
-all.objects := $(libco.objects) $(ruby.objects) $(hiro.objects) $(ares.objects) $(mia.objects) $(desktop-ui.objects)
-all.options := $(libco.options) $(ruby.options) $(hiro.options) $(ares.options) $(mia.options) $(desktop-ui.options) $(options)
+all.objects := $(libco.objects) $(sljit.objects) $(ruby.objects) $(hiro.objects) $(ares.objects) $(mia.objects) $(desktop-ui.objects)
+all.options := $(libco.options) $(sljit.options) $(ruby.options) $(hiro.options) $(ares.options) $(mia.options) $(desktop-ui.options) $(options)
 
 all: $(all.objects)
 	$(info Linking $(output.path)/$(name) ...)
 	+@$(compiler) -o $(output.path)/$(name) $(all.objects) $(all.options)
+	cp ../LICENSE $(output.path)/LICENSE.txt
 ifeq ($(platform),macos)
 # Apply workaround for buggy linker in Xcode < 11.4.1
 	@$(compiler) -o $(output.path)/macos-fix-jit macos-fix-jit.cpp

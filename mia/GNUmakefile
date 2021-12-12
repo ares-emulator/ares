@@ -2,7 +2,7 @@ name := mia
 build := optimized
 threaded := true
 local := true
-flags += -I. -I.. -I../ares
+flags += -I. -I.. -I../ares -I../thirdparty
 
 nall.path := ../nall
 include $(nall.path)/GNUmakefile
