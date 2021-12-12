@@ -33,7 +33,7 @@ struct RSP : Thread, Memory::IO<RSP> {
   auto step(u32 clocks) -> void;
 
   auto instruction() -> void;
-  auto instructionEpilogue() -> bool;
+  auto instructionEpilogue() -> s32;
 
   auto power(bool reset) -> void;
 
@@ -326,14 +326,13 @@ struct RSP : Thread, Memory::IO<RSP> {
   auto INVALID() -> void;
 
   //recompiler.cpp
-  struct Recompiler : recompiler::amd64 {
-    using recompiler::amd64::call;
+  struct Recompiler : recompiler::generic {
     RSP& self;
-    Recompiler(RSP& self) : self(self) {}
+    Recompiler(RSP& self) : self(self), generic(allocator) {}
 
     struct Block {
       auto execute(RSP& self) -> void {
-        ((void (*)(r32*, RSP*, r128*))code)(&self.ipu.r[0], &self, &self.vpu.r[0]);
+        ((void (*)(RSP*, IPU*, VU*))code)(&self, &self.ipu, &self.vpu);
       }
 
       u8* code;
@@ -368,8 +367,6 @@ struct RSP : Thread, Memory::IO<RSP> {
     auto emitVU(u32 instruction) -> bool;
     auto emitLWC2(u32 instruction) -> bool;
     auto emitSWC2(u32 instruction) -> bool;
-
-    template<typename R, typename... P> auto call(R (RSP::*function)(P...)) -> void;
 
     bump_allocator allocator;
     Pool* context = nullptr;

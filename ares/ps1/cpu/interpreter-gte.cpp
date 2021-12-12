@@ -614,6 +614,13 @@ auto CPU::MVMVA(bool lm, u8 tv, u8 mv, u8 mm, u8 sf) -> void {
   epilogue();
 }
 
+auto CPU::MVMVA_(bool lm, u8 MmMvTv, u8 sf) -> void {
+  u8 tv = MmMvTv >> 0 & 3;
+  u8 mv = MmMvTv >> 2 & 3;
+  u8 mm = MmMvTv >> 4 & 3;
+  MVMVA(lm, tv, mv, mm, sf);
+}
+
 //meta-instruction
 template<u32 m>
 auto CPU::NC(const v16& vector) -> void {

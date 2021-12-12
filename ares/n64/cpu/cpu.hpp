@@ -36,7 +36,7 @@ struct CPU : Thread {
   auto synchronize() -> void;
 
   auto instruction() -> void;
-  auto instructionEpilogue() -> bool;
+  auto instructionEpilogue() -> s32;
 
   auto power(bool reset) -> void;
 
@@ -684,14 +684,13 @@ struct CPU : Thread {
   auto INVALID() -> void;
 
   //recompiler.cpp
-  struct Recompiler : recompiler::amd64 {
-    using recompiler::amd64::call;
+  struct Recompiler : recompiler::generic {
     CPU& self;
-    Recompiler(CPU& self) : self(self) {}
+    Recompiler(CPU& self) : self(self), generic(allocator) {}
 
     struct Block {
       auto execute(CPU& self) -> void {
-        ((void (*)(r64*, CPU*, r64*))code)(&self.ipu.r[16], &self, &self.fpu.r[16]);
+        ((void (*)(CPU*, r64*, r64*))code)(&self, &self.ipu.r[16], &self.fpu.r[16]);
       }
 
       u8* code;
@@ -718,8 +717,6 @@ struct CPU : Thread {
     auto emitREGIMM(u32 instruction) -> bool;
     auto emitSCC(u32 instruction) -> bool;
     auto emitFPU(u32 instruction) -> bool;
-
-    template<typename R, typename... P> auto call(R (CPU::*function)(P...)) -> void;
 
     bump_allocator allocator;
     Pool* pools[1 << 21];  //2_MiB * sizeof(void*) == 16_MiB

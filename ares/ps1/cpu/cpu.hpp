@@ -44,7 +44,7 @@ struct CPU : Thread {
   auto synchronize() -> void;
 
   auto instruction() -> void;
-  auto instructionEpilogue() -> bool;
+  auto instructionEpilogue() -> s32;
   auto instructionHook() -> void;
 
   auto power(bool reset) -> void;
@@ -140,16 +140,13 @@ struct CPU : Thread {
   auto serialize(serializer&) -> void;
 
   struct IPU {
-    CPU& self;
-    IPU(CPU& self) : self(self) {}
-
     u32 r[32];
     u32 lo;
     u32 hi;
     u32 pb;  //previous PC
     u32 pc;  //current PC
     u32 pd;  //next PC
-  } ipu{*this};
+  } ipu;
 
   //interpreter-ipu.cpp
   auto ADD(u32& rd, cu32& rs, cu32& rt) -> void;
@@ -471,6 +468,7 @@ struct CPU : Thread {
   auto MFC2(u32& rt, u8 rd) -> void;
   auto MTC2(cu32& rt, u8 rd) -> void;
   auto MVMVA(bool lm, u8 tv, u8 mv, u8 mm, u8 sf) -> void;
+  auto MVMVA_(bool lm, u8 MmMvTv, u8 sf) -> void;
   template<u32> auto NC(const GTE::v16&) -> void;
   auto NCCS(bool lm, u8 sf) -> void;
   auto NCCT(bool lm, u8 sf) -> void;
@@ -504,14 +502,13 @@ struct CPU : Thread {
   auto INVALID() -> void;
 
   //recompiler.cpp
-  struct Recompiler : recompiler::amd64 {
-    using recompiler::amd64::call;
+  struct Recompiler : recompiler::generic {
     CPU& self;
-    Recompiler(CPU& self) : self(self) {}
+    Recompiler(CPU& self) : self(self), generic(allocator) {}
 
     struct Block {
       auto execute(CPU& self) -> void {
-        ((void (*)(u32*, CPU*))code)(&self.ipu.r[0], &self);
+        ((void (*)(CPU*, IPU*))code)(&self, &self.ipu);
       }
 
       u8* code;
@@ -538,8 +535,6 @@ struct CPU : Thread {
     auto emitREGIMM(u32 instruction) -> bool;
     auto emitSCC(u32 instruction) -> bool;
     auto emitGTE(u32 instruction) -> bool;
-
-    template<typename R, typename... P> auto call(R (CPU::*function)(P...)) -> void;
 
     bump_allocator allocator;
     Pool* pools[1 << 21];  //2_MiB * sizeof(void*) = 16_MiB

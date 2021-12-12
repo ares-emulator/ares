@@ -89,7 +89,7 @@ auto CPU::instruction() -> void {
   }
 }
 
-auto CPU::instructionEpilogue() -> bool {
+auto CPU::instructionEpilogue() -> s32 {
   if constexpr(Accuracy::CPU::Recompiler) {
     icache.step(ipu.pc);  //simulates timings without performing actual icache loads
   }
