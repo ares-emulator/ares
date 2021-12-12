@@ -16,7 +16,7 @@ struct SH2 {
   virtual auto busWriteLong(u32 address, u32 data) -> void = 0;
 
   auto inDelaySlot() const -> bool {
-    return PPM != Branch::Step;
+    return regs.PPM != Branch::Step;
   }
 
   //sh2.cpp
@@ -220,21 +220,23 @@ struct SH2 {
     u32 M;
   };
 
-  u32 R[16];  //general purpose registers
-  u32 PC;     //program counter
-  u32 PR;     //procedure register
-  u32 GBR;    //global base register
-  u32 VBR;    //vector base register
-  union {
-    u64 MAC;  //multiply-and-accumulate register
-    struct { u32 order_msb2(MACH, MACL); };
-  };
-  u32 CCR;    //clock counter register
-  S32 SR;     //status register
-  u32 PPC;    //program counter for delay slots
-  u32 PPM;    //delay slot mode
-  u32 ET;     //exception triggered flag
-  u32 ID;     //interrupts disabled flag
+  struct Registers {
+    u32 R[16];  //general purpose registers
+    u32 PC;     //program counter
+    u32 PR;     //procedure register
+    u32 GBR;    //global base register
+    u32 VBR;    //vector base register
+    union {
+      u64 MAC;  //multiply-and-accumulate register
+      struct { u32 order_msb2(MACH, MACL); };
+    };
+    u32 CCR;    //clock counter register
+    S32 SR;     //status register
+    u32 PPC;    //program counter for delay slots
+    u32 PPM;    //delay slot mode
+    u32 ET;     //exception triggered flag
+    u32 ID;     //interrupts disabled flag
+  } regs;
 
   enum : u32 {
     ResetCold       = 1 << 0,
@@ -251,7 +253,7 @@ struct SH2 {
 
     struct Block {
       auto execute(SH2& self) -> void {
-        ((void (*)(u32*, SH2*))code)(&self.R[0], &self);
+        ((void (*)(u32*, SH2*))code)(&self.regs.R[0], &self);
       }
 
       u8* code;
