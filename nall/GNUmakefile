@@ -75,6 +75,18 @@ ifeq ($(compiler),)
   endif
 endif
 
+# architecture detection
+ifeq ($(arch),)
+  machine := $(shell $(compiler) -dumpmachine)
+  ifneq ($(filter amd64-% x86_64-%,$(machine)),)
+    arch := amd64
+  else ifneq ($(filter arm64-% aarch64-%,$(machine)),)
+    arch := arm64
+  else
+    $(error unknown arch, please specify manually.)
+  endif
+endif
+
 # build optimization levels
 ifeq ($(build),debug)
   symbols = true
@@ -130,6 +142,10 @@ endif
 # clang settings
 ifeq ($(findstring clang++,$(compiler)),clang++)
   flags += -fno-strict-aliasing -fwrapv
+  ifeq ($(arch),arm64)
+    # work around bad interaction with alignas(n) when n >= 4096
+    flags += -mno-global-merge
+  endif
 # gcc settings
 else ifeq ($(findstring g++,$(compiler)),g++)
   flags += -fno-strict-aliasing -fwrapv -Wno-trigraphs
@@ -153,6 +169,7 @@ ifeq ($(platform),macos)
   ifneq ($(local),true)
     flags   += -arch x86_64
     options += -arch x86_64
+    arch    := amd64
   endif
 endif
 

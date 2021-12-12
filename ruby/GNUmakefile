@@ -1,6 +1,9 @@
 ifeq ($(ruby),)
   ifeq ($(platform),windows)
-    ruby += video.wgl video.direct3d video.directdraw video.gdi
+    ruby += video.direct3d video.directdraw video.gdi
+    ifeq ($(arch),amd64)
+      ruby += video.wgl
+    endif
     ruby += audio.wasapi audio.xaudio2 audio.directsound audio.waveout #audio.asio
     ruby += input.windows
   else ifeq ($(platform),macos)

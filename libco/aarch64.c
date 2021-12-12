@@ -5,16 +5,12 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>
-#ifdef LIBCO_MPROTECT
-  #include <unistd.h>
-  #include <sys/mman.h>
-#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-static thread_local unsigned long co_active_buffer[64];
+static thread_local uintptr_t co_active_buffer[64];
 static thread_local cothread_t co_active_handle = 0;
 static void (*co_swap)(cothread_t, cothread_t) = 0;
 
@@ -51,14 +47,30 @@ static const uint32_t co_swap_function[1024] = {
   0xd61f03c0,  /* br x30               */
 };
 
+#ifdef _WIN32
+  #include <windows.h>
+
+  static void co_init() {
+    #ifdef LIBCO_MPROTECT
+    DWORD old_privileges;
+    VirtualProtect((void*)co_swap_function, sizeof co_swap_function, PAGE_EXECUTE_READ, &old_privileges);
+    #endif
+  }
+#else
+#ifdef LIBCO_MPROTECT
+  #include <unistd.h>
+  #include <sys/mman.h>
+#endif
+
 static void co_init() {
   #ifdef LIBCO_MPROTECT
-  unsigned long addr = (unsigned long)co_swap_function;
-  unsigned long base = addr - (addr % sysconf(_SC_PAGESIZE));
-  unsigned long size = (addr - base) + sizeof co_swap_function;
+  uintptr_t addr = (uintptr_t)co_swap_function;
+  uintptr_t base = addr - (addr % sysconf(_SC_PAGESIZE));
+  uintptr_t size = (addr - base) + sizeof co_swap_function;
   mprotect((void*)base, size, PROT_READ | PROT_EXEC);
   #endif
 }
+#endif
 
 cothread_t co_active() {
   if(!co_active_handle) co_active_handle = &co_active_buffer;
@@ -66,19 +78,19 @@ cothread_t co_active() {
 }
 
 cothread_t co_derive(void* memory, unsigned int size, void (*entrypoint)(void)) {
-  unsigned long* handle;
+  uintptr_t* handle;
   if(!co_swap) {
     co_init();
     co_swap = (void (*)(cothread_t, cothread_t))co_swap_function;
   }
   if(!co_active_handle) co_active_handle = &co_active_buffer;
 
-  if(handle = (unsigned long*)memory) {
+  if(handle = (uintptr_t*)memory) {
     unsigned int offset = (size & ~15);
-    unsigned long* p = (unsigned long*)((unsigned char*)handle + offset);
-    handle[0]  = (unsigned long)p;           /* x16 (stack pointer) */
-    handle[1]  = (unsigned long)entrypoint;  /* x30 (link register) */
-    handle[12] = (unsigned long)p;           /* x29 (frame pointer) */
+    uintptr_t* p = (uintptr_t*)((unsigned char*)handle + offset);
+    handle[0]  = (uintptr_t)p;           /* x16 (stack pointer) */
+    handle[1]  = (uintptr_t)entrypoint;  /* x30 (link register) */
+    handle[12] = (uintptr_t)p;           /* x29 (frame pointer) */
   }
 
   return handle;
