@@ -229,76 +229,86 @@ struct RSP : Thread, Memory::IO<RSP> {
 
   auto CFC2(r32& rt, u8 rd) -> void;
   auto CTC2(cr32& rt, u8 rd) -> void;
-  auto LBV(r128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto LDV(r128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto LFV(r128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto LHV(r128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto LLV(r128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto LPV(r128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto LQV(r128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto LRV(r128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto LSV(r128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto LTV(u8 vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto LUV(r128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto LWV(r128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto MFC2(r32& rt, cr128& vs, u8 e) -> void;
-  auto MTC2(cr32& rt, r128& vs, u8 e) -> void;
-  auto SBV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto SDV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto SFV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto SHV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto SLV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto SPV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto SQV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto SRV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto SSV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto STV(u8 vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto SUV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto SWV(cr128& vt, u8 e, cr32& rs, s8 imm) -> void;
-  auto VABS(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VADD(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VADDC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VAND(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VCH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VCL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VCR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VEQ(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VGE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VLT(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  template<bool U>
-  auto VMACF(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  template<u8 e> auto LBV(r128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto LDV(r128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto LFV(r128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto LHV(r128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto LLV(r128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto LPV(r128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto LQV(r128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto LRV(r128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto LSV(r128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto LTV(u8 vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto LUV(r128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto LWV(r128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto MFC2(r32& rt, cr128& vs) -> void;
+  template<u8 e> auto MTC2(cr32& rt, r128& vs) -> void;
+  template<u8 e> auto SBV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto SDV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto SFV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto SHV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto SLV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto SPV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto SQV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto SRV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto SSV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto STV(u8 vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto SUV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto SWV(cr128& vt, cr32& rs, s8 imm) -> void;
+  template<u8 e> auto VABS(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VADD(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VADDC(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VAND(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VCH(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VCL(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VCR(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VEQ(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VGE(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VLT(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<bool U, u8 e>
+  auto VMACF(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VMACF(r128& vd, cr128& vs, cr128& vt) -> void { VMACF<0, e>(vd, vs, vt); }
+  template<u8 e> auto VMACU(r128& vd, cr128& vs, cr128& vt) -> void { VMACF<1, e>(vd, vs, vt); }
   auto VMACQ(r128& vd) -> void;
-  auto VMADH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VMADL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VMADM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VMADN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VMOV(r128& vd, u8 de, cr128& vt, u8 e) -> void;
-  auto VMRG(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VMUDH(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VMUDL(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VMUDM(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VMUDN(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  template<bool U>
-  auto VMULF(r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VMULQ(r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VNAND(r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VNE(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
+  template<u8 e> auto VMADH(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VMADL(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VMADM(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VMADN(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VMOV(r128& vd, u8 de, cr128& vt) -> void;
+  template<u8 e> auto VMRG(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VMUDH(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VMUDL(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VMUDM(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VMUDN(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<bool U, u8 e>
+  auto VMULF(r128& rd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VMULF(r128& rd, cr128& vs, cr128& vt) -> void { VMULF<0, e>(rd, vs, vt); }
+  template<u8 e> auto VMULU(r128& rd, cr128& vs, cr128& vt) -> void { VMULF<1, e>(rd, vs, vt); }
+  template<u8 e> auto VMULQ(r128& rd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VNAND(r128& rd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VNE(r128& vd, cr128& vs, cr128& vt) -> void;
   auto VNOP() -> void;
-  auto VNOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VNXOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VOR(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  template<bool L>
-  auto VRCP(r128& vd, u8 de, cr128& vt, u8 e) -> void;
-  auto VRCPH(r128& vd, u8 de, cr128& vt, u8 e) -> void;
-  template<bool D>
-  auto VRND(r128& vd, u8 vs, cr128& vt, u8 e) -> void;
-  template<bool L>
-  auto VRSQ(r128& vd, u8 de, cr128& vt, u8 e) -> void;
-  auto VRSQH(r128& vd, u8 de, cr128& vt, u8 e) -> void;
-  auto VSAR(r128& vd, cr128& vs, u8 e) -> void;
-  auto VSUB(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VSUBC(r128& vd, cr128& vs, cr128& vt, u8 e) -> void;
-  auto VXOR(r128& rd, cr128& vs, cr128& vt, u8 e) -> void;
+  template<u8 e> auto VNOR(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VNXOR(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VOR(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<bool L, u8 e>
+  auto VRCP(r128& vd, u8 de, cr128& vt) -> void;
+  template<u8 e> auto VRCP(r128& vd, u8 de, cr128& vt) -> void { VRCP<0, e>(vd, de, vt); }
+  template<u8 e> auto VRCPL(r128& vd, u8 de, cr128& vt) -> void { VRCP<1, e>(vd, de, vt); }
+  template<u8 e> auto VRCPH(r128& vd, u8 de, cr128& vt) -> void;
+  template<bool D, u8 e>
+  auto VRND(r128& vd, u8 vs, cr128& vt) -> void;
+  template<u8 e> auto VRNDN(r128& vd, u8 vs, cr128& vt) -> void { VRND<0, e>(vd, vs, vt); }
+  template<u8 e> auto VRNDP(r128& vd, u8 vs, cr128& vt) -> void { VRND<1, e>(vd, vs, vt); }
+  template<bool L, u8 e>
+  auto VRSQ(r128& vd, u8 de, cr128& vt) -> void;
+  template<u8 e> auto VRSQ(r128& vd, u8 de, cr128& vt) -> void { VRSQ<0, e>(vd, de, vt); }
+  template<u8 e> auto VRSQL(r128& vd, u8 de, cr128& vt) -> void { VRSQ<1, e>(vd, de, vt); }
+  template<u8 e> auto VRSQH(r128& vd, u8 de, cr128& vt) -> void;
+  template<u8 e> auto VSAR(r128& vd, cr128& vs) -> void;
+  template<u8 e> auto VSUB(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VSUBC(r128& vd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VXOR(r128& rd, cr128& vs, cr128& vt) -> void;
 
 //unserialized:
   u16 reciprocals[512];
