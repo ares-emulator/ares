@@ -266,10 +266,7 @@ struct SH2 {
       for(u32 index : range(1 << 24)) pools[index] = nullptr;
     }
 
-    auto invalidate(u32 address) -> void {
-      pool(address)->blocks[address >> 1 & 0x7f] = nullptr;
-    }
-
+    auto invalidate(u32 address) -> void;
     auto pool(u32 address) -> Pool*;
     auto block(u32 address) -> Block*;
     auto emit(u32 address) -> Block*;

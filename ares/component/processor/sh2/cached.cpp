@@ -1,3 +1,11 @@
+auto SH2::Recompiler::invalidate(u32 address) -> void {
+  auto pool = pools[address >> 8 & 0xffffff];
+  if(!pool) return;
+  memory::jitprotect(false);
+  pool->blocks[address >> 1 & 0x7f] = nullptr;
+  memory::jitprotect(true);
+}
+
 auto SH2::Recompiler::pool(u32 address) -> Pool* {
   auto& pool = pools[address >> 8 & 0xffffff];
   if(!pool) pool = (Pool*)allocator.acquire(sizeof(Pool));
@@ -7,7 +15,9 @@ auto SH2::Recompiler::pool(u32 address) -> Pool* {
 auto SH2::Recompiler::block(u32 address) -> Block* {
   if(auto block = pool(address)->blocks[address >> 1 & 0x7f]) return block;
   auto block = emit(address);
-  return pool(address)->blocks[address >> 1 & 0x7f] = block;
+  pool(address)->blocks[address >> 1 & 0x7f] = block;
+  memory::jitprotect(true);
+  return block;
 }
 
 alwaysinline auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
@@ -30,7 +40,9 @@ alwaysinline auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 auto SH2::Recompiler::emit(u32 address) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("SH2 allocator flush\n");
+    memory::jitprotect(false);
     allocator.release(bump_allocator::zero_fill);
+    memory::jitprotect(true);
     reset();
   }
 
@@ -50,6 +62,7 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   }
   jumpEpilog();
 
+  memory::jitprotect(false);
   block->code = endFunction();
 
   return block;

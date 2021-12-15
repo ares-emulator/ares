@@ -166,11 +166,6 @@ ifeq ($(platform),macos)
   options += -lc++ -lobjc -mmacosx-version-min=10.9
   # allow mprotect() on dynamic recompiler code blocks
   options += -Wl,-segprot,__DATA,rwx,rw
-  ifneq ($(local),true)
-    flags   += -arch x86_64
-    options += -arch x86_64
-    arch    := amd64
-  endif
 endif
 
 # linux settings
