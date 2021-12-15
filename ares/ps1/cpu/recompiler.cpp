@@ -7,13 +7,17 @@ auto CPU::Recompiler::pool(u32 address) -> Pool* {
 auto CPU::Recompiler::block(u32 address) -> Block* {
   if(auto block = pool(address)->blocks[address >> 2 & 0x3f]) return block;
   auto block = emit(address);
-  return pool(address)->blocks[address >> 2 & 0x3f] = block;
+  pool(address)->blocks[address >> 2 & 0x3f] = block;
+  memory::jitprotect(true);
+  return block;
 }
 
 auto CPU::Recompiler::emit(u32 address) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
+    memory::jitprotect(false);
     allocator.release(bump_allocator::zero_fill);
+    memory::jitprotect(true);
     reset();
   }
 
@@ -34,6 +38,7 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
   }
   jumpEpilog();
 
+  memory::jitprotect(false);
   block->code = endFunction();
 
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");

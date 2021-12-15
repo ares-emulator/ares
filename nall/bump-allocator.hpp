@@ -17,37 +17,30 @@ struct bump_allocator {
   }
 
   auto reset() -> void {
-    if(_owner) memory::free<u8, 4096>(_memory);
+    if(_owner) memory::unmap(_memory, _capacity);
     _memory = nullptr;
+    _capacity = 0;
+    _offset = 0;
+    _owner = false;
   }
 
   auto resize(u32 capacity, u32 flags = 0, u8* buffer = nullptr) -> bool {
     reset();
-    _offset = 0;
+
     if(buffer) {
-      _owner = false;
-      _capacity = capacity;
-      _memory = buffer;
+      if(flags & executable) {
+        memory::protect(buffer, capacity, true);
+      }
+      if(flags & zero_fill) {
+        memset(buffer, 0x00, capacity);
+      }
     } else {
+      buffer = (u8*)memory::map(capacity, flags & executable);
+      if(!buffer) return false;
       _owner = true;
-      _capacity = capacity + 4095 & ~4095;              //capacity alignment
-      _memory = memory::allocate<u8, 4096>(_capacity);  //_SC_PAGESIZE alignment
-      if(!_memory) return false;
     }
-
-    if(flags & executable) {
-      #if defined(PLATFORM_WINDOWS)
-      DWORD privileges;
-      VirtualProtect((void*)_memory, _capacity, PAGE_EXECUTE_READWRITE, &privileges);
-      #else
-      int ret = mprotect(_memory, _capacity, PROT_READ | PROT_WRITE | PROT_EXEC);
-      assert(ret == 0);
-      #endif
-    }
-
-    if(flags & zero_fill) {
-      memset(_memory, 0x00, _capacity);
-    }
+    _memory = buffer;
+    _capacity = capacity;
 
     return true;
   }
@@ -70,10 +63,10 @@ struct bump_allocator {
   auto acquire(u32 size) -> u8* {
     #ifdef DEBUG
     struct out_of_memory {};
-    if((_offset + size + 15 & ~15) > _capacity) throw out_of_memory{};
+    if((nextOffset(size)) > _capacity) throw out_of_memory{};
     #endif
     auto memory = _memory + _offset;
-    _offset = _offset + size + 15 & ~15;  //alignment
+    _offset = nextOffset(size);  //alignment
     return memory;
   }
 
@@ -90,12 +83,21 @@ struct bump_allocator {
   auto reserve(u32 size) -> void {
     #ifdef DEBUG
     struct out_of_memory {};
-    if((_offset + size + 15 & ~15) > _capacity) throw out_of_memory{};
+    if((nextOffset(size)) > _capacity) throw out_of_memory{};
     #endif
-    _offset = _offset + size + 15 & ~15;  //alignment
+    _offset = nextOffset(size);  //alignment
+  }
+
+  auto tryAcquire(u32 size) -> u8* {
+    if((nextOffset(size)) > _capacity) return nullptr;
+    return acquire(size);
   }
 
 private:
+  auto nextOffset(u32 size) const -> u32 {
+    return _offset + size + 15 & ~15;
+  }
+
   u8* _memory = nullptr;
   u32 _capacity = 0;
   u32 _offset = 0;
