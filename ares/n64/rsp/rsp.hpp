@@ -339,12 +339,16 @@ struct RSP : Thread, Memory::IO<RSP> {
     };
 
     struct Pool {
-      auto operator==(const Pool& source) const -> bool { return hashcode == source.hashcode; }
-      auto operator< (const Pool& source) const -> bool { return hashcode <  source.hashcode; }
+      Block* blocks[1024];
+    };
+
+    struct PoolHashPair {
+      auto operator==(const PoolHashPair& source) const -> bool { return hashcode == source.hashcode; }
+      auto operator< (const PoolHashPair& source) const -> bool { return hashcode <  source.hashcode; }
       auto hash() const -> u32 { return hashcode; }
 
+      Pool* pool;
       u32 hashcode;
-      Block* blocks[1024];
     };
 
     auto reset() -> void {
@@ -370,8 +374,8 @@ struct RSP : Thread, Memory::IO<RSP> {
 
     bump_allocator allocator;
     Pool* context = nullptr;
-    set<Pool> pools;
-  //hashset<Pool> pools;
+    set<PoolHashPair> pools;
+  //hashset<PoolHashPair> pools;
   } recompiler{*this};
 
   struct Disassembler {
