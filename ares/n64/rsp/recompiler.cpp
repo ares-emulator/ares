@@ -1,21 +1,21 @@
 auto RSP::Recompiler::pool() -> Pool* {
   if(context) return context;
 
-  context = (Pool*)allocator.acquire();
   u32 hashcode = 0;
   for(u32 offset : range(4096)) {
     hashcode = (hashcode << 5) + hashcode + self.imem.read<Byte>(offset);
   }
-  context->hashcode = hashcode;
 
-  if(auto result = pools.find(*context)) {
-    context->hashcode = 0;  //leave the memory zeroed out
-    return context = &result();
+  PoolHashPair pair;
+  pair.pool = (Pool*)allocator.acquire();
+  pair.hashcode = hashcode;
+  if(auto result = pools.find(pair)) {
+    return context = result->pool;
   }
 
   allocator.reserve(sizeof(Pool));
-  if(auto result = pools.insert(*context)) {
-    return context = &result();
+  if(auto result = pools.insert(pair)) {
+    return context = result->pool;
   }
 
   throw;  //should never occur
