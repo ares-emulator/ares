@@ -56,3 +56,39 @@ ifeq ($(vulkan),true)
 	@mkdir -p $(dir $@)
 	@$(call compile)
 endif
+
+ifeq ($(mame.rdp),true)
+  mame.path := $(thirdparty.path)/mame
+
+  ares.objects += mame-emu-emucore
+  ares.objects += mame-lib-util-delegate
+  ares.objects += mame-lib-util-strformat
+  ares.objects += mame-mame-video-n64
+  ares.objects += mame-mame-video-pin64
+  ares.objects += mame-mame-video-rdpblend
+  ares.objects += mame-mame-video-rdptpipe
+  ares.objects += mame-osd-osdcore
+  ares.objects += mame-osd-osdsync
+
+  $(object.path)/mame-emu-emucore.o:          $(mame.path)/emu/emucore.cpp
+  $(object.path)/mame-lib-util-delegate.o:    $(mame.path)/lib/util/delegate.cpp
+  $(object.path)/mame-lib-util-strformat.o:   $(mame.path)/lib/util/strformat.cpp
+  $(object.path)/mame-mame-video-n64.o:       $(mame.path)/mame/video/n64.cpp
+  $(object.path)/mame-mame-video-pin64.o:     $(mame.path)/mame/video/pin64.cpp
+  $(object.path)/mame-mame-video-rdpblend.o:  $(mame.path)/mame/video/rdpblend.cpp
+  $(object.path)/mame-mame-video-rdptpipe.o:  $(mame.path)/mame/video/rdptpipe.cpp
+  $(object.path)/mame-osd-osdcore.o:          $(mame.path)/osd/osdcore.cpp
+  $(object.path)/mame-osd-osdsync.o:          $(mame.path)/osd/osdsync.cpp
+
+  flags += -I$(mame.path)/devices -I$(mame.path)/emu -I$(mame.path)/lib/util -I$(mame.path)/mame -I$(mame.path)/osd
+  flags += -DMAME_RDP -DLSB_FIRST -DPTR64
+  ifeq ($(platform),windows)
+    flags += -DOSD_WINDOWS=1
+  else ifeq ($(platform),macos)
+    flags += -DSDLMAME_MACOSX
+  else ifeq ($(platform),linux)
+    flags += -DSDLMAME_LINUX
+  else ifeq ($(platform),bsd)
+    flags += -DSDLMAME_BSD
+  endif
+endif
