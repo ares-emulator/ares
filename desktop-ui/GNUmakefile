@@ -3,6 +3,7 @@ build := optimized
 threaded := true
 openmp := false
 vulkan := false
+mame.rdp := true
 local := true
 flags += -I. -I.. -I../ares -I../thirdparty -DMIA_LIBRARY
 

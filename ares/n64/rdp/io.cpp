@@ -72,7 +72,6 @@ auto RDP::writeWord(u32 address, u32 data_) -> void {
     if(command.end > command.current) {
       command.freeze = 0;
       render();
-      command.current = command.end;
       command.ready = 1;
     }
   }
