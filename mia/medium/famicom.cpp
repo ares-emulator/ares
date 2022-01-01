@@ -173,14 +173,9 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
 
   case   4:
-    //MMC3
     s += "  board:  HVC-TLROM\n";
     s += "    chip type=MMC3B\n";
     prgram = 8192;
-    //MMC6
-  //s += "  board:  HVC-HKROM\n";
-  //s += "    chip type=MMC6\n";
-  //prgram = 1024;
     break;
 
   case   5:
