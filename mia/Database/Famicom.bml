@@ -17995,6 +17995,56 @@ game
       volatile
 
 game
+  sha256: 7ff16ac31650db5d353a7c77349e916c71cd104b3fb8e97df3d9da35af248644
+  name:   StarTropics (Europe)
+  title:  StarTropics (Europe)
+  region: PAL
+  board:  HVC-HKROM
+    chip
+      type: MMC6
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x400
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 69de2c7552fa81ca5921da0e457abf1be35f18ffbad159788a76141be59c9f6b
+  name:   StarTropics (USA)
+  title:  StarTropics (USA)
+  region: NTSC-U
+  board:  HVC-HKROM
+    chip
+      type: MMC6
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x400
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
   sha256: 2ce85b82b427de187b59b62d33081497acfa2010ef38660b157f8eb008336e6e
   name:   Stick Hunter - Exciting Ice Hockey (Japan)
   title:  Stick Hunter - Exciting Ice Hockey (Japan)
@@ -21043,6 +21093,31 @@ game
     memory
       type: ROM
       size: 0x2000
+      content: Character
+
+game
+  sha256: d0850075065ecbd125a33accc952de5d012527be45aa14a1b8223a9adf1643ae
+  name:   Zoda's Revenge - StarTropics II (USA)
+  title:  Zoda's Revenge - StarTropics II (USA)
+  region: NTSC-U
+  board:  HVC-HKROM
+    chip
+      type: MMC6
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x400
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
       content: Character
 
 game

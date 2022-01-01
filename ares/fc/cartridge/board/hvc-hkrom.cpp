@@ -31,8 +31,9 @@ struct HVC_HKROM : Interface {  //MMC6
     if(!(characterAddress & 0x1000) && (address & 0x1000)) {
       if(irqDelay == 0) {
         if(irqCounter == 0) {
-          irqCounter = irqLatch;
-        } else if(--irqCounter == 0) {
+          irqCounter = irqLatch + 1;
+        }
+        if(--irqCounter == 0) {
           if(irqEnable) irqLine = 1;
         }
       }
@@ -64,6 +65,7 @@ struct HVC_HKROM : Interface {  //MMC6
   }
 
   auto writePRG(n32 address, n8 data) -> void override {
+    if(address == 0x2006 && ++characterLatch) irqTest(data << 8);
     if(address < 0x7000) return;
 
     if(address < 0x8000) {
@@ -179,6 +181,7 @@ struct HVC_HKROM : Interface {  //MMC6
     s(irqEnable);
     s(irqDelay);
     s(irqLine);
+    s(characterLatch);
     s(characterAddress);
   }
 
@@ -194,7 +197,8 @@ struct HVC_HKROM : Interface {  //MMC6
   n8  irqLatch;
   n8  irqCounter;
   n1  irqEnable;
-  n1  irqDelay;
+  n8  irqDelay;
   n1  irqLine;
+  n1  characterLatch;
   n16 characterAddress;
 };
