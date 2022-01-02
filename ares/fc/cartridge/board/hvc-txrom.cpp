@@ -80,7 +80,7 @@ struct HVC_TxROM : Interface {  //MMC3
     if(address < 0x6000) return data;
 
     if(address < 0x8000) {
-      if(!ramEnable) return data;
+      if(!ramEnable || !programRAM) return data;
       return programRAM.read((n13)address);
     }
 
@@ -100,7 +100,7 @@ struct HVC_TxROM : Interface {  //MMC3
     if(address < 0x6000) return;
 
     if(address < 0x8000) {
-      if(!ramEnable || !ramWritable) return;
+      if(!ramEnable || !ramWritable || !programRAM) return;
       return programRAM.write((n13)address, data);
     }
 
