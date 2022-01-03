@@ -55,7 +55,6 @@ auto RSP::BREAK() -> void {
   status.halted = 1;
   status.broken = 1;
   if(status.interruptOnBreak) mi.raise(MI::IRQ::SP);
-  branch.halt();
 }
 
 auto RSP::J(u32 imm) -> void {

@@ -170,7 +170,11 @@ auto RSP::Status::readWord(u32 address) -> u32 {
 
   if(address == 0) {
     //SP_PC_REG
-    data.bit(0,11) = self.ipu.pc;
+    if(halted) {
+      data.bit(0,11) = self.ipu.pc;
+    } else {
+      data.bit(0,11) = random();
+    }
   }
 
   if(address == 1) {
@@ -187,11 +191,8 @@ auto RSP::Status::writeWord(u32 address, u32 data_) -> void {
 
   if(address == 0) {
     //SP_PC_REG
-    if(self.branch.state == Branch::Take) {
-      self.branch.pc = data.bit(0,11) & ~3;
-    } else {
-      self.ipu.pc = data.bit(0,11) & ~3;
-    }
+    self.ipu.pc = data.bit(0,11) & ~3;
+    self.branch.reset();
   }
 
   if(address == 1) {

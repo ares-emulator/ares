@@ -61,10 +61,9 @@ auto RSP::instructionEpilogue() -> s32 {
   ipu.r[0].u32 = 0;
 
   switch(branch.state) {
-  case Branch::Step: ipu.pc += 4; return 0;
-  case Branch::Take: ipu.pc += 4; branch.delaySlot(); return 0;
+  case Branch::Step: ipu.pc += 4; return status.halted;
+  case Branch::Take: ipu.pc += 4; branch.delaySlot(); return status.halted;
   case Branch::DelaySlot: ipu.pc = branch.pc; branch.reset(); return 1;
-  case Branch::Halt: ipu.pc += 4; return 1;
   }
 
   unreachable;
