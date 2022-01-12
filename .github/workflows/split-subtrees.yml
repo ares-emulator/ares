@@ -1,0 +1,30 @@
+name: 'Split Subtrees'
+on:
+    push:
+        branches:
+            - master
+        tags:
+            - '*'
+env:
+    GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+jobs:
+    packages_split:
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                package: 
+                  - nall
+                  - hiro
+                  - ruby
+                  - libco
+        steps:
+            -   uses: actions/checkout@v2
+            -   if: "!startsWith(github.ref, 'refs/tags/')"
+                uses: "symplify/monorepo-split-github-action@2.1"
+                with:
+                    package_directory: '${{ matrix.package }}'
+                    repository_organization: 'ares-emulator'
+                    repository_name: '${{ matrix.package }}'
+                    user_name: "Luke Usher"
+                    user_email: "luke.usher@outlook.com"
