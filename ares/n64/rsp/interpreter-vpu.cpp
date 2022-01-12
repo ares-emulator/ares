@@ -808,10 +808,10 @@ auto RSP::VMACQ(r128& vd) -> void {
   for(u32 n : range(8)) {
     s32 product = ACCH.element(n) << 16 | ACCM.element(n) << 0;
     if(product < 0 && !(product & 1 << 5)) product += 32;
-    else if(product >= 0 && !(product & 1 << 5)) product -= 32;
+    else if(product > 0 && !(product & 1 << 5)) product -= 32;
     ACCH.element(n) = product >> 16;
     ACCM.element(n) = product >>  0;
-    ACCL.element(n) = 0;  //unconfirmed
+    ACCL.element(n) = 0;
     vd.element(n) = sclamp<16>(product >> 1) & ~15;
   }
 }
@@ -1137,7 +1137,7 @@ auto RSP::VMULQ(r128& vd, cr128& vs, cr128& vt) -> void {
     if(product < 0) product += 31;  //round
     ACCH.element(n) = product >> 16;
     ACCM.element(n) = product >>  0;
-    ACCL.element(n) = 0;  //unconfirmed
+    ACCL.element(n) = 0;
     vd.element(n) = sclamp<16>(product >> 1) & ~15;
   }
 }
