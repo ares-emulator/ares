@@ -248,6 +248,7 @@ auto CPU::DDIV(cr64& rs, cr64& rt) -> void {
     LO.u64 = rs.s64 < 0 ? +1 : -1;
     HI.u64 = rs.s64;
   }
+  step(69);
 }
 
 auto CPU::DDIVU(cr64& rs, cr64& rt) -> void {
@@ -259,6 +260,7 @@ auto CPU::DDIVU(cr64& rs, cr64& rt) -> void {
     LO.u64 = -1;
     HI.u64 = rs.u64;
   }
+  step(69);
 }
 
 auto CPU::DIV(cr64& rs, cr64& rt) -> void {
@@ -271,6 +273,7 @@ auto CPU::DIV(cr64& rs, cr64& rt) -> void {
     LO.u64 = rs.s32 < 0 ? +1 : -1;
     HI.u64 = rs.s32;
   }
+  step(37);
 }
 
 auto CPU::DIVU(cr64& rs, cr64& rt) -> void {
@@ -282,6 +285,7 @@ auto CPU::DIVU(cr64& rs, cr64& rt) -> void {
     LO.u64 = -1;
     HI.u64 = rs.s32;
   }
+  step(37);
 }
 
 auto CPU::DMULT(cr64& rs, cr64& rt) -> void {
@@ -289,6 +293,7 @@ auto CPU::DMULT(cr64& rs, cr64& rt) -> void {
   u128 result = rs.s128() * rt.s128();
   LO.u64 = result >>  0;
   HI.u64 = result >> 64;
+  step(8);
 }
 
 auto CPU::DMULTU(cr64& rs, cr64& rt) -> void {
@@ -296,6 +301,7 @@ auto CPU::DMULTU(cr64& rs, cr64& rt) -> void {
   u128 result = rs.u128() * rt.u128();
   LO.u64 = result >>  0;
   HI.u64 = result >> 64;
+  step(8);
 }
 
 auto CPU::DSLL(r64& rd, cr64& rt, u8 sa) -> void {
@@ -717,12 +723,14 @@ auto CPU::MULT(cr64& rs, cr64& rt) -> void {
   u64 result = s64(rs.s32) * s64(rt.s32);
   LO.u64 = s32(result >>  0);
   HI.u64 = s32(result >> 32);
+  step(5);
 }
 
 auto CPU::MULTU(cr64& rs, cr64& rt) -> void {
   u64 result = u64(rs.u32) * u64(rt.u32);
   LO.u64 = s32(result >>  0);
   HI.u64 = s32(result >> 32);
+  step(5);
 }
 
 auto CPU::NOR(r64& rd, cr64& rs, cr64& rt) -> void {
