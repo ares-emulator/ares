@@ -938,11 +938,11 @@ auto CPU::SLTU(r64& rd, cr64& rs, cr64& rt) -> void {
 }
 
 auto CPU::SRA(r64& rd, cr64& rt, u8 sa) -> void {
-  rd.u64 = rt.s32 >> sa;
+  rd.u64 = s32(rt.s64 >> sa);
 }
 
 auto CPU::SRAV(r64& rd, cr64& rt, cr64& rs) -> void {
-  rd.u64 = rt.s32 >> (rs.u32 & 31);
+  rd.u64 = s32(rt.s64 >> (rs.u32 & 31));
 }
 
 auto CPU::SRL(r64& rd, cr64& rt, u8 sa) -> void {

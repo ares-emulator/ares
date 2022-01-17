@@ -592,7 +592,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SRA Rd,Rt,Sa
   case 0x03: {
-    ashr32(reg(0), mem(Rt32), imm(Sa));
+    ashr64(reg(0), mem(Rt), imm(Sa));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
     return 0;
@@ -626,9 +626,8 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SRAV Rd,Rt,Rs
   case 0x07: {
-    mov32(reg(0), mem(Rt32));
     and32(reg(1), mem(Rs32), imm(31));
-    ashr32(reg(0), reg(0), reg(1));
+    ashr64(reg(0), mem(Rt), reg(1));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
     return 0;
