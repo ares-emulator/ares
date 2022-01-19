@@ -46,7 +46,7 @@ auto Vulkan::load(Node::Object) -> bool {
 }
 
 auto Vulkan::unload() -> void {
-  delete implementation;
+  if (implementation) delete implementation;
   implementation = nullptr;
 }
 

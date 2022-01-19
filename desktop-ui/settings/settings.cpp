@@ -70,6 +70,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Video/Overscan", video.overscan);
   bind(string,  "Video/Quality", video.quality);
   bind(boolean, "Video/Supersampling", video.supersampling);
+  bind(boolean, "Video/EnableVulkan", video.enableVulkan);
 
   bind(string,  "Audio/Driver", audio.driver);
   bind(string,  "Audio/Device", audio.device);

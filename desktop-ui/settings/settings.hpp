@@ -29,6 +29,7 @@ struct Settings : Markup::Node {
 
     string quality = "SD";
     bool supersampling = false;
+    bool enableVulkan = true;
   } video;
 
   struct Audio {
@@ -118,6 +119,9 @@ struct VideoSettings : VerticalLayout {
       Label overscanHint{&overscanLayout, Size{~0, 0}};
   //
   Label renderSettingsLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout enableVulkanLayout{this, Size{~0, 0}};
+    CheckLabel enableVulkanOption{&enableVulkanLayout, Size{0, 0}, 5};
+    Label enableVulkanHint{&enableVulkanLayout, Size{~0, 0}};  
   HorizontalLayout renderQualityLayout{this, Size{~0, 0}, 5};
     RadioLabel renderQualitySD{&renderQualityLayout, Size{0, 0}};
     RadioLabel renderQualityHD{&renderQualityLayout, Size{0, 0}};

@@ -58,6 +58,7 @@ auto Nintendo64DD::load() -> bool {
 
   ares::Nintendo64::option("Quality", settings.video.quality);
   ares::Nintendo64::option("Supersampling", settings.video.supersampling);
+  ares::Nintendo64::option("Enable Vulkan", settings.video.enableVulkan);
 
   auto region = Emulator::region();
   if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64 (", region, ")"})) return false;

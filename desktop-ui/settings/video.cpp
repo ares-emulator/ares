@@ -57,7 +57,20 @@ auto VideoSettings::construct() -> void {
   overscanHint.setText("Shows extended PAL CRT lines, but these are usually blank in most games").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   renderSettingsLabel.setText("N64 Render Settings").setFont(Font().setBold());
+
   renderQualityLayout.setPadding(12_sx, 0);
+    enableVulkanOption.setText("Enable Vulkan").setChecked(settings.video.enableVulkan).onToggle([&] {
+    settings.video.enableVulkan = enableVulkanOption.checked();
+    if(emulator) emulator->setBoolean("Enable Vulkan", settings.video.enableVulkan);
+
+    renderSupersamplingOption.setEnabled(settings.video.enableVulkan && settings.video.quality != "SD");
+    renderQualitySD.setEnabled(settings.video.enableVulkan);
+    renderQualityHD.setEnabled(settings.video.enableVulkan);
+    renderQualityUHD.setEnabled(settings.video.enableVulkan);
+  });
+  enableVulkanLayout.setAlignment(1).setPadding(12_sx, 0);
+  enableVulkanHint.setText("Enables Vulkan Hardware rendering").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  
   renderQualitySD.setText("SD Quality").onActivate([&] {
     settings.video.quality = "SD";
     renderSupersamplingOption.setChecked(false).setEnabled(false);
@@ -84,6 +97,7 @@ auto VideoSettings::construct() -> void {
   #if !defined(VULKAN)
   //hide Vulkan-specific options if Vulkan is not available
   renderSettingsLabel.setCollapsible(true).setVisible(false);
+  enableVulkanLayout.setCollapsible(true).setVisible(false);
   renderQualityLayout.setCollapsible(true).setVisible(false);
   renderSupersamplingLayout.setCollapsible(true).setVisible(false);
   renderSettingsHint.setCollapsible(true).setVisible(false);

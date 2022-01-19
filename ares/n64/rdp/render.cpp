@@ -46,7 +46,7 @@ static const vector<string> commandNames = {
 
 auto RDP::render() -> void {
   #if defined(VULKAN)
-  if(vulkan.render()) return;
+  if(vulkan.enable && vulkan.render()) return;
   #endif
 
   #if defined(MAME_RDP)
