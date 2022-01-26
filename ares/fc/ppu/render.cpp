@@ -138,6 +138,7 @@ auto PPU::renderScanline() -> void {
 
   //257-320
   for(u32 sprite : range(8)) {
+    if(enable()) io.oamAddress = 0;
     u32 nametable = loadCHR(0x2000 | (n12)io.v.address);
     step(1);
 
