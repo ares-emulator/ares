@@ -136,7 +136,7 @@ struct HVC_SxROM : Interface {  //MMC1
       if(revision == Revision::SNROM) {
         if(characterBank[0].bit(4)) return data;
       }
-      if(ramDisable) return 0x00;
+      if(!programRAM || ramDisable) return 0x00;
       return programRAM.read(addressProgramRAM(address));
     }
 
@@ -152,7 +152,7 @@ struct HVC_SxROM : Interface {  //MMC1
       if(revision == Revision::SNROM) {
         if(characterBank[0].bit(4)) return;
       }
-      if(ramDisable) return;
+      if(!programRAM || ramDisable) return;
       return programRAM.write(addressProgramRAM(address), data);
     }
 
