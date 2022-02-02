@@ -159,7 +159,7 @@ auto System::power(bool reset) -> void {
   bus.power(reset);
   cpu.power(reset);
   apu.power(reset);  //apu.power() calls opn2.power()
-  vdp.power(reset);  //vdp.power() calls vdp.psg.power()
+  if(!reset) vdp.power(reset);  //vdp.power() calls vdp.psg.power()
   controllerPort1.power(reset);
   controllerPort2.power(reset);
   extensionPort.power(reset);
