@@ -147,7 +147,8 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
     if(region == "EUROPE") regions.append("PAL");
   }
   if(!regions) {
-    if(region.find("J")) regions.append("NTSC-J");
+    if(region.find("J")
+    || region.find("K")) regions.append("NTSC-J");
     if(region.find("U")) regions.append("NTSC-U");
     if(region.find("E")) regions.append("PAL");
   }
