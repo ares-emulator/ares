@@ -120,6 +120,10 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
 
   vector<string> devices;
   string device = slice((const char*)&rom[0x190], 0, 16).trimRight(" ");
+  if(device == "OJKRPTBVFCA") {
+    //ignore erroneous device string used by Codemasters
+    device = "";
+  }
   for(auto& id : device) {
     if(id == '0');  //Master System controller
     if(id == '4');  //multitap
