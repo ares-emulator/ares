@@ -10,6 +10,11 @@
    do not use this unless you are certain your application won't use SSE */
 /* #define LIBCO_NO_SSE */
 
+/*[amd64, aarch64]:
+   Win64 only: provides a small speed-up, but will break stack unwinding
+   do not use this if your application uses exceptions or setjmp/longjmp */
+/* #define LIBCO_NO_TIB */
+
 #if defined(LIBCO_C)
   #if defined(LIBCO_MP)
     #define thread_local __thread
