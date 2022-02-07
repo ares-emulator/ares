@@ -44,6 +44,12 @@ static const uint32_t co_swap_function[1024] = {
   0x6d49340c,  /* ldp d12,d13,[x0,144] */
   0x6d0a3c2e,  /* stp d14,d15,[x1,160] */
   0x6d4a3c0e,  /* ldp d14,d15,[x0,160] */
+#if defined(_WIN32) && !defined(LIBCO_NO_TIB)
+  0xa940c650,  /* ldp x16,x17,[x18, 8] */
+  0xa90b4430,  /* stp x16,x17,[x1,176] */
+  0xa94b4410,  /* ldp x16,x17,[x0,176] */
+  0xa900c650,  /* stp x16,x17,[x18, 8] */
+#endif
   0xd61f03c0,  /* br x30               */
 };
 
@@ -72,6 +78,13 @@ static void co_init() {
 }
 #endif
 
+static void co_entrypoint(cothread_t handle) {
+  uintptr_t* buffer = (uintptr_t*)handle;
+  void (*entrypoint)(void) = (void (*)(void))buffer[2];
+  entrypoint();
+  abort();  /* called only if cothread_t entrypoint returns */
+}
+
 cothread_t co_active() {
   if(!co_active_handle) co_active_handle = &co_active_buffer;
   return co_active_handle;
@@ -88,9 +101,14 @@ cothread_t co_derive(void* memory, unsigned int size, void (*entrypoint)(void)) 
   if(handle = (uintptr_t*)memory) {
     unsigned int offset = (size & ~15);
     uintptr_t* p = (uintptr_t*)((unsigned char*)handle + offset);
-    handle[0]  = (uintptr_t)p;           /* x16 (stack pointer) */
-    handle[1]  = (uintptr_t)entrypoint;  /* x30 (link register) */
-    handle[12] = (uintptr_t)p;           /* x29 (frame pointer) */
+    handle[0]  = (uintptr_t)p;              /* x16 (stack pointer) */
+    handle[1]  = (uintptr_t)co_entrypoint;  /* x30 (link register) */
+    handle[2]  = (uintptr_t)entrypoint;     /* x19 (entry point) */
+    handle[12] = (uintptr_t)p;              /* x29 (frame pointer) */
+#if defined(_WIN32) && !defined(LIBCO_NO_TIB)
+    handle[22] = (uintptr_t)handle + size;  /* stack base */
+    handle[23] = (uintptr_t)handle;         /* stack limit */
+#endif
   }
 
   return handle;
