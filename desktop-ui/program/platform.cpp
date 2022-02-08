@@ -48,6 +48,10 @@ auto Program::log(string_view message) -> void {
   }
 }
 
+auto Program::status(string_view message) -> void {
+  showMessage(message);
+}
+
 auto Program::video(ares::Node::Video::Screen node, const u32* data, u32 pitch, u32 width, u32 height) -> void {
   if(!screens) return;
 

@@ -35,13 +35,25 @@ struct Vulkan::Implementation {
 };
 
 auto Vulkan::load(Node::Object) -> bool {
-  Util::set_thread_logging_interface(&loggingInterface);
-  delete implementation;
-  implementation = new Vulkan::Implementation(rdram.ram.data, rdram.ram.size);
-  if(!implementation->processor) {
+  if (vulkan.enable) {
+    Util::set_thread_logging_interface(&loggingInterface);
     delete implementation;
-    implementation = nullptr;
+    implementation = new Vulkan::Implementation(rdram.ram.data, rdram.ram.size);
+    if(!implementation->processor) {
+      delete implementation;
+      implementation = nullptr;
+    }
+
+    if (implementation) {
+      platform->status("Vulkan init failed, falling back to MAME RDP");
+      vulkan.enable = false;
+    } else {
+      platform->status("Vulkan Enabled: using paraLLEl-RDP");
+    }
+  } else {
+    platform->status("Vulkan Disabled: using MAME RDP");
   }
+
   return true;
 }
 
