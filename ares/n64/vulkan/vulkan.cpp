@@ -44,7 +44,7 @@ auto Vulkan::load(Node::Object) -> bool {
       implementation = nullptr;
     }
 
-    if (implementation) {
+    if (!implementation) {
       platform->status("Vulkan init failed, falling back to MAME RDP");
       vulkan.enable = false;
     } else {
