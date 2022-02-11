@@ -69,7 +69,7 @@ namespace ares::Nintendo64 {
   #include <n64/si/si.hpp>
   #include <n64/rdram/rdram.hpp>
   #include <n64/cpu/cpu.hpp>
-  #include <n64/rdp/rdp.hpp>
   #include <n64/rsp/rsp.hpp>
+  #include <n64/rdp/rdp.hpp>
   #include <n64/memory/bus.hpp>
 }
