@@ -34,7 +34,7 @@ auto PPU::Object::render() -> void {
 
     if(object.x == width || within<-128,+383>(object.x, item.width, x1, x2)) {
       u32 height = item.height >> io.interlace;
-      if(auto y = within<0,511>(object.y, height, self.vcounter())) {
+      if(auto y = within<0,255>(object.y, height, self.vcounter())) {
         item.y = y();
         if(itemCount++ >= 32) break;
         items[itemCount - 1] = item;

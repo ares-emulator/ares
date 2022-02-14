@@ -51,7 +51,7 @@ auto PPU::Object::evaluate(n7 index) -> void {
 auto PPU::Object::onScanline(PPU::OAM::Object& sprite) -> bool {
   if(sprite.x > 256 && sprite.x + sprite.width() - 1 < 512) return false;
   u32 height = sprite.height() >> io.interlace;
-  return (bool)within<0,511>(sprite.y, height, t.y);
+  return (bool)within<0,255>(sprite.y, height, t.y);
 }
 
 auto PPU::Object::run() -> void {
