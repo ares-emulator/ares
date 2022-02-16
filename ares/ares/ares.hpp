@@ -42,8 +42,8 @@ namespace ares {
   static const string Copyright  = "ares team, Near";
   static const string License    = "ISC";
   static const string LicenseURI = "https://opensource.org/licenses/ISC";
-  static const string Website    = "ares-emulator.github.io";
-  static const string WebsiteURI = "https://ares-emulator.github.io";
+  static const string Website    = "ares-emu.net";
+  static const string WebsiteURI = "https://ares-emu.net/";
 
   //incremented only when serialization format changes
   static const u32    SerializerSignature = 0x31545342;  //"BST1" (little-endian)
