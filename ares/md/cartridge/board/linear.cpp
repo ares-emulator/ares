@@ -4,12 +4,13 @@ struct Linear : Interface {
   Memory::Writable<n16> wram;
   Memory::Writable<n8 > uram;
   Memory::Writable<n8 > lram;
+  u32 sramAddr, sramSize;
   M24C m24c;
 
   auto load() -> void override {
     Interface::load(rom, "program.rom");
     if(auto fp = pak->read("save.ram")) {
-      Interface::load(wram, uram, lram, "save.ram");
+      Interface::load(sramAddr, sramSize, wram, uram, lram, "save.ram");
     }
     if(auto fp = pak->read("save.eeprom")) {
       Interface::load(m24c, "save.eeprom");
@@ -29,7 +30,7 @@ struct Linear : Interface {
   }
 
   auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {
-    if(address >= 0x200000 && address < 0x300000) {
+    if(address >= sramAddr && address < sramAddr+sramSize) {
       if(wram && ramEnable) {
         return wram[address >> 1];
       }
@@ -60,7 +61,7 @@ struct Linear : Interface {
     //emulating ramWritable will break commercial software:
     //it does not appear that many (any?) games actually connect $a130f1.d1 to /WE;
     //hence RAM ends up always being writable, and many games fail to set d1=1
-    if(address >= 0x200000) {
+    if(address >= sramAddr && address < sramAddr+sramSize) {
       if(wram && ramEnable) {
         if(upper) wram[address >> 1].byte(1) = data.byte(1);
         if(lower) wram[address >> 1].byte(0) = data.byte(0);
@@ -78,7 +79,7 @@ struct Linear : Interface {
       }
 
       if(m24c) {
-        if(rom.size() * 2 > 0x200000 && upper && lower) {
+        if(rom.size() * 2 > sramAddr && upper && lower) {
           eepromEnable = !data.bit(0);
           return;
         }
@@ -98,17 +99,16 @@ struct Linear : Interface {
   }
 
   auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void override {
-    if(!lower) return;  //todo: unconfirmed
-    if(address == 0xa130f0) {
+    if(rom.size() * 2 > sramAddr && address == 0xa130f0) {
       ramEnable   = data.bit(0);
       ramWritable = data.bit(1);
     }
   }
 
   auto power(bool reset) -> void override {
-    ramEnable = 1;
+    ramEnable = rom.size() * 2 <= sramAddr;
     ramWritable = 1;
-    eepromEnable = rom.size() * 2 <= 0x200000;
+    eepromEnable = rom.size() * 2 <= sramAddr;
     m24c.power();
   }
 
