@@ -3,6 +3,7 @@ struct Mega32X : Interface {
   Memory::Writable<n16> wram;
   Memory::Writable<n8 > uram;
   Memory::Writable<n8 > lram;
+  u32 sramAddr, sramSize;
   M24C m24c;
 
   auto load() -> void override {
@@ -14,7 +15,7 @@ struct Mega32X : Interface {
     }
 
     if(auto fp = pak->read("save.ram")) {
-      Interface::load(wram, uram, lram, "save.ram");
+      Interface::load(sramAddr, sramSize, wram, uram, lram, "save.ram");
     }
 
     if(auto fp = pak->read("save.eeprom")) {
@@ -36,7 +37,7 @@ struct Mega32X : Interface {
   }
 
   auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {
-    if(address >= 0x200000) {
+    if(address >= sramAddr && address < sramAddr+sramSize) {
       if(wram) {
         return wram[address >> 1];
       }
@@ -60,7 +61,7 @@ struct Mega32X : Interface {
   }
 
   auto write(n1 upper, n1 lower, n22 address, n16 data) -> void override {
-    if(address >= 0x200000) {
+    if(address >= sramAddr && address < sramAddr+sramSize) {
       if(wram) {
         if(upper) wram[address >> 1].byte(1) = data.byte(1);
         if(lower) wram[address >> 1].byte(0) = data.byte(0);

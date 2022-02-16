@@ -12,6 +12,7 @@ struct MegaDrive : Cartridge {
     explicit operator bool() const { return mode && size != 0; }
 
     string mode;
+    u32 address = 0x200000;
     u32 size = 0;
   } ram;
 
@@ -72,6 +73,7 @@ auto MegaDrive::load(string location) -> bool {
     Medium::load(node, ".ram");
     if(auto fp = pak->read("save.ram")) {
       fp->setAttribute("mode", node["mode"].string());
+      fp->setAttribute("address", node["address"].natural());
     }
   }
 
@@ -239,6 +241,7 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
   } else if(ram) {
     s += "    memory\n";
     s += "      type: RAM\n";
+    s +={"      address: 0x", hex(ram.address), "\n"};
     s +={"      size: 0x", hex(ram.size), "\n"};
     s += "      content: Save\n";
     s +={"      mode: ", ram.mode, "\n"};
@@ -275,6 +278,8 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     if(ram.mode == "upper") ram.size = (ramTo - ramFrom + 2) >> 1;
     if(ram.mode == "lower") ram.size = (ramTo - ramFrom + 2) >> 1;
     if(ram.mode == "word" ) ram.size = (ramTo - ramFrom + 1);
+
+    ram.address = ramFrom & ~1;
   }
 
   //Buck Rogers: Countdown to Doomsday (USA, Europe)
@@ -311,6 +316,24 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
   if(hash == "30749097096807abf67cd1f7b2392f5789f5149ee33661e6d13113396f06a121") {
     ram.mode = "lower";
     ram.size = 8192;
+  }
+
+  //NBA Live '98 (USA)
+  if(hash == "9de38bd95d7ae8910fe5440651feafaef540ed743ea61925503dce6605192b0e") {
+    ram.mode = "lower";
+    ram.size = 8192;
+  }
+
+  //NHL '96 (USA, Europe)
+  if(hash == "dce28c858bb368d8095267e04a8bdff17d913787efd783352334b0dba1e480da") {
+    ram.mode = "lower";
+    ram.size = 8192;
+  }
+
+  //NHL '98 (USA)
+  if(hash == "ed68ec25c676f7b935414d07657b9721a6ec3b43cecf1bc9dc1d069d0a14e974") {
+    ram.mode = "lower";
+    ram.size = 32768;
   }
 
   //M28C16
