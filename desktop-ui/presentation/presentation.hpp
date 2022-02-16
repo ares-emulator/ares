@@ -51,6 +51,7 @@ struct Presentation : Window {
       MenuItem captureScreenshot{&toolsMenu};
       MenuSeparator toolsMenuSeparatorA{&toolsMenu};
       MenuCheckItem pauseEmulation{&toolsMenu};
+      MenuItem frameAdvance{&toolsMenu};
       MenuSeparator toolsMenuSeparatorB{&toolsMenu};
       MenuItem manifestViewerAction{&toolsMenu};
       #if !defined(PLATFORM_MACOS)

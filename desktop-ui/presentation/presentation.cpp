@@ -140,6 +140,10 @@ Presentation::Presentation() {
   pauseEmulation.setText("Pause Emulation").onToggle([&] {
     program.pause(!program.paused);
   });
+  frameAdvance.setText("Frame Advance").setIcon(Icon::Media::Play).onActivate([&] {
+    if (!program.paused) program.pause(true);
+    program.requestFrameAdvance = true;
+  });
   manifestViewerAction.setText("Manifest").setIcon(Icon::Emblem::Binary).onActivate([&] {
     toolsWindow.show("Manifest");
   });

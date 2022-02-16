@@ -58,6 +58,7 @@ struct Program : ares::Platform {
   bool fastForwarding = false;
   bool rewinding = false;
   bool runAhead = false;
+  bool requestFrameAdvance = false;
   bool requestScreenshot = false;
 
   struct State {
