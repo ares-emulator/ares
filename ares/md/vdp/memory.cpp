@@ -28,12 +28,12 @@ auto VDP::VRAM::writeByte(n17 address, n8 data) -> void {
   write(address >> 1, word);
 }
 
-auto VDP::VSRAM::read(n6 address) const -> n10 {
-  if(address >= 40) return 0x0000;
+auto VDP::VSRAM::read(n6 address) const -> n11 {
+  if(address >= 40) address = 0;
   return memory[address];
 }
 
-auto VDP::VSRAM::write(n6 address, n10 data) -> void {
+auto VDP::VSRAM::write(n6 address, n11 data) -> void {
   if(address >= 40) return;
   memory[address] = data;
 }
