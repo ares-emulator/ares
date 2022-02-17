@@ -12,6 +12,7 @@ struct M68000 {
   virtual auto lockable() -> bool { return true; }
 
   auto ird() const -> n16 { return r.ird; }
+  auto irc() const -> n16 { return r.irc; }
 
   enum : bool { User, Supervisor };
   enum : u32  { Byte, Word, Long };
