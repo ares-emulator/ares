@@ -151,22 +151,17 @@ auto VDP::readControlPort() -> n16 {
   command.latch = 0;
 
   n16 result;
-  result.bit( 0) = Region::PAL();
-  result.bit( 1) = command.pending;
-  result.bit( 2) = hblank();
-  result.bit( 3) = vblank() || !io.displayEnable;
-  result.bit( 4) = io.interlaceMode.bit(0) && field();
-  result.bit( 5) = sprite.collision;
-  result.bit( 6) = sprite.overflow;
-  result.bit( 7) = irq.vblank.pending;
-  result.bit( 8) = fifo.full();
-  result.bit( 9) = fifo.empty();
-  result.bit(10) = 1;  //constants (bits 10-15)
-  result.bit(11) = 0;  //todo: should these bits be open bus instead?
-  result.bit(12) = 1;
-  result.bit(13) = 1;
-  result.bit(14) = 0;
-  result.bit(15) = 0;
+  result.bit( 0)    = Region::PAL();
+  result.bit( 1)    = command.pending;
+  result.bit( 2)    = hblank();
+  result.bit( 3)    = vblank() || !io.displayEnable;
+  result.bit( 4)    = io.interlaceMode.bit(0) && field();
+  result.bit( 5)    = sprite.collision;
+  result.bit( 6)    = sprite.overflow;
+  result.bit( 7)    = irq.vblank.pending;
+  result.bit( 8)    = fifo.full();
+  result.bit( 9)    = fifo.empty();
+  result.bit(10,15) = cpu.irc().bit(10,15); // open bus
 
   sprite.collision = 0;
   sprite.overflow  = 0;
