@@ -10,7 +10,7 @@ struct Linear : Interface {
   auto load() -> void override {
     Interface::load(rom, "program.rom");
     if(auto fp = pak->read("save.ram")) {
-      Interface::load(sramAddr, sramSize, wram, uram, lram, "save.ram");
+      Interface::load(sramAddr, sramSize, ramAlwaysEnabled, wram, uram, lram, "save.ram");
     }
     if(auto fp = pak->read("save.eeprom")) {
       Interface::load(m24c, "save.eeprom");
@@ -99,14 +99,14 @@ struct Linear : Interface {
   }
 
   auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void override {
-    if(rom.size() * 2 > sramAddr && address == 0xa130f0) {
+    if(!ramAlwaysEnabled && rom.size() * 2 > sramAddr && address == 0xa130f0) {
       ramEnable   = data.bit(0);
       ramWritable = data.bit(1);
     }
   }
 
   auto power(bool reset) -> void override {
-    ramEnable = rom.size() * 2 <= sramAddr;
+    ramEnable = ramAlwaysEnabled || rom.size() * 2 <= sramAddr;
     ramWritable = 1;
     eepromEnable = rom.size() * 2 <= sramAddr;
     m24c.power();
@@ -117,6 +117,7 @@ struct Linear : Interface {
     s(uram);
     s(lram);
     s(m24c);
+    s(ramAlwaysEnabled);
     s(ramEnable);
     s(ramWritable);
     s(eepromEnable);
@@ -125,6 +126,7 @@ struct Linear : Interface {
     s(wscl);
   }
 
+  n1 ramAlwaysEnabled;
   n1 ramEnable;
   n1 ramWritable;
   n1 eepromEnable;

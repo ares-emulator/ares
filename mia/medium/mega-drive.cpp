@@ -14,6 +14,7 @@ struct MegaDrive : Cartridge {
     string mode;
     u32 address = 0x200000;
     u32 size = 0;
+    u1 hardwired = 0;
   } ram;
 
   struct EEPROM {
@@ -74,6 +75,7 @@ auto MegaDrive::load(string location) -> bool {
     if(auto fp = pak->read("save.ram")) {
       fp->setAttribute("mode", node["mode"].string());
       fp->setAttribute("address", node["address"].natural());
+      fp->setAttribute("hardwired", node["hardwired"].natural());
     }
   }
 
@@ -245,6 +247,7 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
     s +={"      size: 0x", hex(ram.size), "\n"};
     s += "      content: Save\n";
     s +={"      mode: ", ram.mode, "\n"};
+    s +={"      hardwired: ", ram.hardwired, "\n"};
   }
 
   if(peripherals.jcart) {
@@ -312,12 +315,6 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     ram.size = 32768;
   }
 
-  //Super Hydlide (Japan)
-  if(hash == "30749097096807abf67cd1f7b2392f5789f5149ee33661e6d13113396f06a121") {
-    ram.mode = "lower";
-    ram.size = 8192;
-  }
-
   //NBA Live '98 (USA)
   if(hash == "9de38bd95d7ae8910fe5440651feafaef540ed743ea61925503dce6605192b0e") {
     ram.mode = "lower";
@@ -334,6 +331,17 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
   if(hash == "ed68ec25c676f7b935414d07657b9721a6ec3b43cecf1bc9dc1d069d0a14e974") {
     ram.mode = "lower";
     ram.size = 32768;
+  }
+
+  //Super Hydlide (Japan)
+  if(hash == "30749097096807abf67cd1f7b2392f5789f5149ee33661e6d13113396f06a121") {
+    ram.mode = "lower";
+    ram.size = 8192;
+  }
+
+  //Triple Play Gold (USA)
+  if(hash == "8f98a245db4a5c710469c168a5f2afe1c2f9309ef89b40942258494c61d23c68") {
+    ram.hardwired = 1;
   }
 
   //M28C16

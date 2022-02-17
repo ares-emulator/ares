@@ -21,7 +21,7 @@ struct Interface {
   virtual auto serialize(serializer&) -> void {}
 
   auto load(Memory::Readable<n16>& rom, string name) -> bool;
-  auto load(u32& addr, u32 &size, Memory::Writable<n16>& wram, Memory::Writable<n8>& uram, Memory::Writable<n8>& lram, string name) -> bool;
+  auto load(u32& addr, u32 &size, n1& alwaysEnabled, Memory::Writable<n16>& wram, Memory::Writable<n8>& uram, Memory::Writable<n8>& lram, string name) -> bool;
   auto load(M24C& m24c, string name) -> bool;
 
   auto save(Memory::Writable<n16>& wram, Memory::Writable<n8>& uram, Memory::Writable<n8>& lram, string name) -> bool;

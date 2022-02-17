@@ -10,7 +10,7 @@ struct Banked : Interface {
   auto load() -> void override {
     Interface::load(rom, "program.rom");
     if(auto fp = pak->read("save.ram")) {
-      Interface::load(sramAddr, sramSize, wram, uram, lram, "save.ram");
+      Interface::load(sramAddr, sramSize, ramAlwaysEnabled, wram, uram, lram, "save.ram");
     }
     if(auto fp = pak->read("save.eeprom")) {
       Interface::load(m24c, "save.eeprom");
@@ -107,7 +107,7 @@ struct Banked : Interface {
       return;
     }
 
-    if(address == 0xa130f0) {
+    if(address == 0xa130f0 && !ramAlwaysEnabled) {
       ramEnable   = data.bit(0);
       ramWritable = data.bit(1);
     }
@@ -123,6 +123,7 @@ struct Banked : Interface {
 
   auto power(bool reset) -> void override {
     for(auto index : range(8)) romBank[index] = index;
+    ramEnable = ramAlwaysEnabled;
   }
 
   auto serialize(serializer& s) -> void override {
@@ -131,6 +132,7 @@ struct Banked : Interface {
     s(uram);
     s(lram);
     s(m24c);
+    s(ramAlwaysEnabled);
     s(ramEnable);
     s(ramWritable);
     s(eepromEnable);
@@ -140,6 +142,7 @@ struct Banked : Interface {
   }
 
   n6 romBank[8];
+  n1 ramAlwaysEnabled;
   n1 ramEnable;
   n1 ramWritable;
   n1 eepromEnable;

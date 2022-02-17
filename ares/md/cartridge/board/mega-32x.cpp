@@ -15,7 +15,7 @@ struct Mega32X : Interface {
     }
 
     if(auto fp = pak->read("save.ram")) {
-      Interface::load(sramAddr, sramSize, wram, uram, lram, "save.ram");
+      Interface::load(sramAddr, sramSize, ramAlwaysEnabled, wram, uram, lram, "save.ram");
     }
 
     if(auto fp = pak->read("save.eeprom")) {
@@ -127,6 +127,7 @@ struct Mega32X : Interface {
   }
 
   n1 eepromEnable;
+  n1 ramAlwaysEnabled;
   n4 rsda;
   n4 wsda;
   n4 wscl;
