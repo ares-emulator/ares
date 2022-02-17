@@ -205,7 +205,9 @@ auto VDP::writeControlPort(n16 data) -> void {
   debugger.io(n5(data >> 8), n8(data));
 
   //register write (d13 is ignored)
-  switch(data.bit(8,12)) {
+  u5 reg = data.bit(8,12);
+  if(!io.videoMode5 && reg > 0xA) return;
+  switch(reg) {
 
   //mode register 1
   case 0x00: {
