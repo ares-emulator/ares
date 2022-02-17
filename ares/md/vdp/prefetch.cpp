@@ -43,6 +43,15 @@ auto VDP::Prefetch::run() -> bool {
     return true;
   }
 
+  if(vdp.command.target == 12) {
+    slot.lower = 1;
+    slot.upper = 1;
+    slot.data.byte(0) = vdp.vram.readByte(vdp.command.address ^ 1);
+    slot.data.byte(1) = vdp.fifo.slots[0].data.byte(1);
+    vdp.command.ready = 1;
+    return true;
+  }
+
   slot.lower = 1;
   slot.upper = 1;
   vdp.command.ready = 1;
