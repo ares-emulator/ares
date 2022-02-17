@@ -29,6 +29,7 @@ auto VDP::Prefetch::run() -> bool {
     slot.lower = 1;
     slot.upper = 1;
     slot.data = vdp.vsram.read(vdp.command.address >> 1);
+    slot.data = (slot.data & 0x07FF) | (vdp.fifo.slots[0].data & 0xF800);
     vdp.command.ready = 1;
     return true;
   }
@@ -37,6 +38,7 @@ auto VDP::Prefetch::run() -> bool {
     slot.lower = 1;
     slot.upper = 1;
     slot.data = vdp.cram.read(vdp.command.address >> 1);
+    slot.data = slot.data & 0x0EEE | vdp.fifo.slots[0].data & ~0x0EEE;
     vdp.command.ready = 1;
     return true;
   }
