@@ -418,13 +418,13 @@ private:
   //vertical scroll RAM
   struct VSRAM {
     //memory.cpp
-    auto read(n6 address) const -> n10;
-    auto write(n6 address, n10 data) -> void;
+    auto read(n6 address) const -> n11;
+    auto write(n6 address, n11 data) -> void;
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    n10 memory[40];
+    n11 memory[40];
   } vsram;
 
   //color RAM
