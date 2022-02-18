@@ -17,10 +17,25 @@ PCEngine::PCEngine() {
     device.digital("Down",   virtualPorts[id].pad.down);
     device.digital("Left",   virtualPorts[id].pad.left);
     device.digital("Right",  virtualPorts[id].pad.right);
-    device.digital("II",     virtualPorts[id].pad.a);
-    device.digital("I",      virtualPorts[id].pad.b);
+    device.digital("II",     virtualPorts[id].pad.b);
+    device.digital("I",      virtualPorts[id].pad.c);
     device.digital("Select", virtualPorts[id].pad.select);
     device.digital("Run",    virtualPorts[id].pad.start);
+    port.append(device); }
+
+    { InputDevice device{"Avenue Pad 6"};
+    device.digital("Up",    virtualPorts[id].pad.up);
+    device.digital("Down",  virtualPorts[id].pad.down);
+    device.digital("Left",  virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("III",   virtualPorts[id].pad.a);
+    device.digital("II",    virtualPorts[id].pad.b);
+    device.digital("I",     virtualPorts[id].pad.c);
+    device.digital("IV",    virtualPorts[id].pad.x);
+    device.digital("V",     virtualPorts[id].pad.y);
+    device.digital("VI",    virtualPorts[id].pad.z);
+    device.digital("Select",virtualPorts[id].pad.select);
+    device.digital("Run",   virtualPorts[id].pad.start);
     port.append(device); }
 
     ports.append(port);
