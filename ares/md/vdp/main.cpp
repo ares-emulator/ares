@@ -78,17 +78,12 @@ auto VDP::vedge() -> void {
 }
 
 auto VDP::slot() -> void {
-  if(state.refreshing) {
-    state.refreshing = 0;
-    return;
-  }
   if(!fifo.run()) prefetch.run();
   dma.run();
 }
 
 auto VDP::refresh() -> void {
-  vram.refreshing  = 1;
-  state.refreshing = !displayEnable();
+  vram.refreshing = 1;
 }
 
 auto VDP::main() -> void {
@@ -136,7 +131,7 @@ auto VDP::mainH32() -> void {
   for(auto cycle : range(13)) {
     tick(); sprite.patternFetch(cycle + 0);
   }
-  tick(); displayEnable() ? slot() : refresh();
+  tick(); slot();
   for(auto cycle : range(13)) {
     tick(); sprite.patternFetch(cycle + 13);
   }
@@ -197,7 +192,7 @@ auto VDP::mainH40() -> void {
   for(auto cycle : range(23)) {
     tick(); sprite.patternFetch(cycle + 0);
   }
-  tick(); displayEnable() ? slot() : refresh();
+  tick(); slot();
   for(auto cycle : range(11)) {
     tick(); sprite.patternFetch(cycle + 23);
   }
