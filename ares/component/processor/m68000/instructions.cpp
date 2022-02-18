@@ -413,6 +413,7 @@ auto M68000::instructionDIVS(EffectiveAddress from, DataRegister with) -> void {
   n32 divisor  = read<Word>(from) << 16, odivisor = divisor;
 
   if(divisor == 0) {
+    prefetch();
     return exception(Exception::DivisionByZero, Vector::DivisionByZero);
   }
 
@@ -489,6 +490,7 @@ auto M68000::instructionDIVU(EffectiveAddress from, DataRegister with) -> void {
   n32 divisor  = read<Word>(from) << 16;
 
   if(divisor == 0) {
+    prefetch();
     return exception(Exception::DivisionByZero, Vector::DivisionByZero);
   }
 
