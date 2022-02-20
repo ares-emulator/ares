@@ -19,7 +19,7 @@ struct Mega32X : Interface {
     }
 
     if(auto fp = pak->read("save.eeprom")) {
-      Interface::load(m24c, "save.eeprom");
+      Interface::load(sramAddr, sramSize, m24c, "save.eeprom");
       rsda = fp->attribute("rsda").natural();
       wsda = fp->attribute("wsda").natural();
       wscl = fp->attribute("wscl").natural();

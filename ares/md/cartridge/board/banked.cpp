@@ -13,7 +13,7 @@ struct Banked : Interface {
       Interface::load(sramAddr, sramSize, wram, uram, lram, "save.ram");
     }
     if(auto fp = pak->read("save.eeprom")) {
-      Interface::load(m24c, "save.eeprom");
+      Interface::load(sramAddr, sramSize, m24c, "save.eeprom");
       rsda = fp->attribute("rsda").natural();
       wsda = fp->attribute("wsda").natural();
       wscl = fp->attribute("wscl").natural();

@@ -51,10 +51,12 @@ auto Interface::load(u32& addr, u32& size, Memory::Writable<n16>& wram, Memory::
   return false;
 }
 
-auto Interface::load(M24C& m24c, string name) -> bool {
+auto Interface::load(u32& addr, u32& size, M24C& m24c, string name) -> bool {
   m24c.reset();
   if(auto fp = pak->read(name)) {
     auto mode = fp->attribute("mode");
+    addr = fp->attribute("address").natural();
+    size = 1;
     m24c.reset();
     if(mode == "X24C01" ) m24c.load(M24C::Type::X24C01 );
     if(mode == "M24C01" ) m24c.load(M24C::Type::M24C01 );
