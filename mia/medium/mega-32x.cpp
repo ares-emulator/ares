@@ -10,6 +10,7 @@ struct Mega32X : Cartridge {
     explicit operator bool() const { return mode && size != 0; }
 
     string mode;
+    u32 address = 0;
     u32 size = 0;
   } ram;
 
@@ -51,6 +52,7 @@ auto Mega32X::load(string location) -> bool {
     Pak::load(node, ".ram");
     if(auto fp = pak->read("save.ram")) {
       fp->setAttribute("mode", node["mode"].string());
+      fp->setAttribute("address", node["address"].natural());
     }
   }
 
@@ -179,10 +181,12 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
   } else if(ram) {
     s += "    memory\n";
     s += "      type: RAM\n";
+    s +={"      address: 0x", hex(ram.address), "\n"};
     s +={"      size: 0x", hex(ram.size), "\n"};
     s += "      content: Save\n";
     s +={"      mode: ", ram.mode, "\n"};
   }
+
   return s;
 }
 
@@ -210,6 +214,8 @@ auto Mega32X::analyzeStorage(vector<u8>& rom, string hash) -> void {
     if(ram.mode == "upper") ram.size = (ramTo - ramFrom + 2) >> 1;
     if(ram.mode == "lower") ram.size = (ramTo - ramFrom + 2) >> 1;
     if(ram.mode == "word" ) ram.size = (ramTo - ramFrom + 1);
+
+    ram.address = ramFrom & ~1;
   }
 
   //M24C02
