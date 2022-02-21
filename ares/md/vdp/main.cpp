@@ -8,19 +8,30 @@ auto VDP::tick() -> void {
   cycles += 2;
   state.hcounter++;
   if(h32()) {
-    if(hcounter() == 0x00) hblank(0), vedge();
+    if(hcounter() == 0x00) hblank(0), vblankcheck(), vedge();
     if(hcounter() == 0x81) vtick();
     if(hcounter() == 0x93) hblank(1);
     if(hcounter() == 0x94) state.hcounter = 0xe9;
   }
   if(h40()) {
-    if(hcounter() == 0x00) hblank(0), vedge();
+    if(hcounter() == 0x00) hblank(0), vblankcheck(), vedge();
     if(hcounter() == 0xa1) vtick();
     if(hcounter() == 0xb3) hblank(1);
     if(hcounter() == 0xb6) state.hcounter = 0xe4;
   }
   irq.poll();
   vram.refreshing = 0;
+}
+
+auto VDP::vblankcheck() -> void {
+  if(v28()) {
+    if(vcounter() == 0x0e0) vblank(1);
+    if(vcounter() == 0x1ff) vblank(0);
+  }
+  if(v30()) {
+    if(vcounter() == 0x0f0) vblank(1);
+    if(vcounter() == 0x1ff) vblank(0);
+  }
 }
 
 auto VDP::vtick() -> void {
@@ -34,16 +45,12 @@ auto VDP::vtick() -> void {
 
   state.vcounter++;
   if(v28()) {
-    if(vcounter() == 0x0e0) vblank(1);
     if(vcounter() == 0x0eb && Region::NTSC()) state.vcounter = 0x1e5;
     if(vcounter() == 0x103 && Region::PAL ()) state.vcounter = 0x1ca;
-    if(vcounter() == 0x1ff) vblank(0);
   }
   if(v30()) {
-    if(vcounter() == 0x0f0) vblank(1);
     if(vcounter() == 0x200 && Region::NTSC()) state.vcounter = 0x000;
     if(vcounter() == 0x10b && Region::PAL ()) state.vcounter = 0x1d2;
-    if(vcounter() == 0x1ff) vblank(0);
   }
 }
 

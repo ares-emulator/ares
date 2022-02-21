@@ -67,6 +67,7 @@ struct VDP : Thread {
   auto vtick() -> void;
   auto hblank(bool line) -> void;
   auto vblank(bool line) -> void;
+  auto vblankcheck() -> void;
   auto vedge() -> void;
   auto slot() -> void;
   auto refresh() -> void;
