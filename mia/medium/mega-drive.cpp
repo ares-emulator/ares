@@ -20,6 +20,7 @@ struct MegaDrive : Cartridge {
     explicit operator bool() const { return mode && size != 0; }
 
     string mode;
+    u32 address = 0x200000;
     u32 size = 0;
     u8 rsda = 0;
     u8 wsda = 0;
@@ -80,6 +81,7 @@ auto MegaDrive::load(string location) -> bool {
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
     Medium::load(node, ".eeprom");
     if(auto fp = pak->read("save.eeprom")) {
+      fp->setAttribute("address", node["address"].natural());
       fp->setAttribute("mode", node["mode"].string());
       fp->setAttribute("rsda", node["rsda"].natural());
       fp->setAttribute("wsda", node["wsda"].natural());
@@ -231,6 +233,7 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
 
   if(eeprom) {
     s += "    memory\n";
+    s +={"      address: 0x", hex(ram.address), "\n"};
     s += "      type: EEPROM\n";
     s +={"      size: 0x", hex(eeprom.size), "\n"};
     s += "      content: Save\n";
