@@ -1,5 +1,6 @@
 auto VDP::DAC::setup(n8 y) -> void {
-  output = self.screen->pixels().data() + (24 + y) * 256;
+  self.screen->setFillColor(palette(16 | io.backdropColor));
+  output = self.screen->pixels().data() + ((240-self.vlines())/2 + y) * 256;
 }
 
 auto VDP::DAC::run(n8 x, n8 y) -> void {
@@ -11,7 +12,6 @@ auto VDP::DAC::run(n8 x, n8 y) -> void {
       color = palette(16 | self.sprite.output.color);
     }
   }
-  if(!self.displayEnable()) color = 0;
   output[x] = color;
 }
 
