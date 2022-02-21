@@ -74,10 +74,16 @@ auto VDP::pixels() -> u32* {
     output = screen->pixels().data() + (vcounter() - 8) * 2 * 1280;
   }
   if(overscan->value() == 1 && latch.overscan == 0) {
-    if(vcounter() >= 232) return nullptr;
-    output = screen->pixels().data() + (vcounter() + 8) * 2 * 1280;
+    if(vcounter() >= 0x1f8) { // top border
+      output = screen->pixels().data() + (vcounter() - 0x1f8) * 2 * 1280;
+    } else if(vcounter() >= 232) {
+      return nullptr;
+    } else {
+      output = screen->pixels().data() + (vcounter() + 8) * 2 * 1280;
+    }
   }
   if(overscan->value() == 1 && latch.overscan == 1) {
+    if(vcounter() >= 240) return nullptr;
     output = screen->pixels().data() + (vcounter() + 0) * 2 * 1280;
   }
   if(latch.interlace) output += field() * 1280;

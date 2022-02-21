@@ -1,6 +1,11 @@
 auto VDP::DAC::pixel(u32 x) -> void {
   if(!pixels) return;
 
+  if(!vdp.displayEnable() || vdp.vcounter() == 0x1ff) {
+    output(0b101 << 9 | vdp.cram.color(vdp.io.backgroundColor));
+    return;
+  }
+
   Pixel g = {vdp.io.backgroundColor, 0, 1};
   Pixel a = vdp.layerA.pixel(x);
   Pixel b = vdp.layerB.pixel(x);
