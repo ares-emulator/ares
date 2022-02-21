@@ -18,7 +18,7 @@ auto VDP::load(Node::Object parent) -> void {
 
   node = parent->append<Node::Object>("VDP");
 
-  screen = node->append<Node::Video::Screen>("Screen", 256, 264);
+  screen = node->append<Node::Video::Screen>("Screen", 256, 240);
 
   u32 defaultRevision = 2;
   if((Model::MarkIII() || Model::MasterSystemI()) && Region::NTSCJ()) defaultRevision = 1;
@@ -30,6 +30,12 @@ auto VDP::load(Node::Object parent) -> void {
     screen->setSize(256, 240);
     screen->setScale(1.0, 1.0);
     screen->setAspect(8.0, 7.0);
+
+    overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
+      if(value == 0) screen->setSize(256, vlines());
+      if(value == 1) screen->setSize(256, 240);
+    });
+    overscan->setDynamic(true);
   }
 
   if(Display::LCD()) {
@@ -53,6 +59,7 @@ auto VDP::unload() -> void {
   revision.reset();
   screen->quit();
   node->remove(screen);
+  overscan.reset();
   screen.reset();
   node.reset();
   vram.reset();
@@ -95,9 +102,8 @@ auto VDP::main() -> void {
 
   if(io.vcounter == 240) {
     if(Mode::MasterSystem()) {
-      if(vlines() == 192) screen->setViewport(0,  0, 256, 240);
-      if(vlines() == 224) screen->setViewport(0, 16, 256, 240);
-      if(vlines() == 240) screen->setViewport(0, 24, 256, 240);
+      if(overscan->value() == 0) screen->setViewport(0, (240-vlines())/2, 256, vlines());
+      if(overscan->value() == 1) screen->setViewport(0, 0, 256, 240);
     }
     if(Mode::GameGear()) {
       screen->setViewport(48, 48, 160, 144);
@@ -124,6 +130,16 @@ auto VDP::step(u32 clocks) -> void {
     Thread::step(1);
     Thread::synchronize(cpu);
   }
+}
+
+auto VDP::updateScreenSize() -> void {
+  if(Display::CRT()) {
+    if(overscan->value() == 0) screen->setSize(256, vlines());
+    if(overscan->value() == 1) screen->setSize(256, 240);
+  }
+  //if(Display::LCD()) {
+  //  screen->setSize(160, 144);
+  //}
 }
 
 auto VDP::vlines() -> u32 {

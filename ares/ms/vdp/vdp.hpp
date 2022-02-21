@@ -5,6 +5,7 @@
 struct VDP : Thread {
   Node::Object node;
   Node::Video::Screen screen;
+  Node::Setting::Boolean overscan;
   Node::Setting::Natural revision;
   Node::Setting::Boolean interframeBlending;  //Game Gear only
   Memory::Writable<n8 > vram;  //16KB
@@ -36,6 +37,8 @@ struct VDP : Thread {
 
   auto main() -> void;
   auto step(u32 clocks) -> void;
+
+  auto updateScreenSize() -> void;
 
   auto vlines() -> u32;
   auto vblank() -> bool;
