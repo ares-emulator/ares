@@ -211,8 +211,9 @@ struct VDP : Thread {
   } dma;
 
   struct Pixel {
-    auto above() const -> bool { return priority == 1 && color; }
-    auto below() const -> bool { return priority == 0 && color; }
+    auto solid() const -> bool { return color & 0xF; }
+    auto above() const -> bool { return priority == 1 && solid(); }
+    auto below() const -> bool { return priority == 0 && solid(); }
 
     //serialization.cpp
     auto serialize(serializer&) -> void;
