@@ -8,13 +8,17 @@ auto VDP::tick() -> void {
   cycles += 2;
   state.hcounter++;
   if(h32()) {
-    if(hcounter() == 0x00) hblank(0), vblankcheck(), vedge();
+    if(hcounter() >  0x90 ||
+       hcounter() <  0x80) vblankcheck();  // exact bounds are unconfirmed
+    if(hcounter() == 0x00) hblank(0), vedge();
     if(hcounter() == 0x81) vtick();
     if(hcounter() == 0x93) hblank(1);
     if(hcounter() == 0x94) state.hcounter = 0xe9;
   }
   if(h40()) {
-    if(hcounter() == 0x00) hblank(0), vblankcheck(), vedge();
+    if(hcounter() >  0xb0 ||
+       hcounter() <  0xa0) vblankcheck();  // exact bounds are unconfirmed
+    if(hcounter() == 0x00) hblank(0), vedge();
     if(hcounter() == 0xa1) vtick();
     if(hcounter() == 0xb3) hblank(1);
     if(hcounter() == 0xb6) state.hcounter = 0xe4;
@@ -65,8 +69,8 @@ auto VDP::hblank(bool line) -> void {
 }
 
 auto VDP::vblank(bool line) -> void {
+  irq.vblank.transitioned |= state.vblank ^ line;
   state.vblank = line;
-  irq.vblank.transitioned = 1;
 }
 
 auto VDP::vedge() -> void {
