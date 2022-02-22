@@ -89,7 +89,7 @@ auto APU::writeExternal(n24 address, n8 data) -> void {
 
 auto APU::in(n16 address) -> n8 {
   //unused on Mega Drive
-  return 0x00;
+  return 0xff;
 }
 
 auto APU::out(n16 address, n8 data) -> void {
