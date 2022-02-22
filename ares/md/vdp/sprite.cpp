@@ -112,10 +112,11 @@ auto VDP::Sprite::patternFetch(u32) -> void {
           n9 x = object.x + patternSlice * 8 + index - 128;
           n6 color = data >> 28;
           data <<= 4;
-          if(!color) continue;
-          if(pixels[x].color) {
-            collision = 1;
+          if(pixels[x].solid()) {
+            if (color) collision = 1;
           } else {
+            // Transparent pixels must still be written to the sprite buffer. 
+            // Test case: Titan - OverDrive 2 (logo scene)
             color |= object.palette << 4;
             pixels[x] = {color, object.priority};
           }

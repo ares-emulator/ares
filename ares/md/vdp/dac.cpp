@@ -20,8 +20,8 @@ auto VDP::DAC::pixel(u32 x) -> void {
     s = {};
   }
 
-  auto& bg = a.above() || a.color && !b.above() ? a : b.color ? b : g;
-  auto& fg = s.above() || s.color && !b.above() && !a.above() ? s : bg;
+  auto& bg = a.above() || a.solid() && !b.above() ? a : b.solid() ? b : g;
+  auto& fg = s.above() || s.solid() && !b.above() && !a.above() ? s : bg;
 
   auto pixel = fg;
   auto mode  = 1;  //0 = shadow, 1 = normal, 2 = highlight
