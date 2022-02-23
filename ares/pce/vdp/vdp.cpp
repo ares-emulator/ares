@@ -1,6 +1,3 @@
-#if defined(PROFILE_PERFORMANCE)
-#include "../vdp-performance/vdp.cpp"
-#else
 #include <pce/pce.hpp>
 
 namespace ares::PCEngine {
@@ -112,4 +109,3 @@ auto VDP::power() -> void {
 }
 
 }
-#endif

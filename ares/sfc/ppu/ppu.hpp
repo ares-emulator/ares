@@ -1,6 +1,3 @@
-#if defined(PROFILE_PERFORMANCE)
-#include "../ppu-performance/ppu.hpp"
-#else
 struct PPU : Thread, PPUcounter {
   Node::Object node;
   Node::Video::Screen screen;
@@ -504,4 +501,3 @@ struct PPU : Thread, PPUcounter {
 };
 
 extern PPU ppu;
-#endif
