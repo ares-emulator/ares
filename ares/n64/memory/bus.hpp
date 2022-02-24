@@ -49,8 +49,6 @@ inline auto Bus::read(u32 address) -> u64 {
 template<u32 Size>
 inline auto Bus::write(u32 address, u64 data) -> void {
   address &= 0x1fff'ffff - (Size - 1);
-  cpu.recompiler.invalidate(address + 0); if constexpr(Size == Dual)
-  cpu.recompiler.invalidate(address + 4);
 
   if(address <= 0x007f'ffff) return rdram.ram.write<Size>(address, data);
   if(address <= 0x03ef'ffff) return;
