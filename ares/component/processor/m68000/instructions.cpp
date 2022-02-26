@@ -390,21 +390,29 @@ template<u32 Size> auto M68000::instructionCMPM(EffectiveAddress from, Effective
 }
 
 auto M68000::instructionDBCC(n4 test, DataRegister with) -> void {
-  auto displacement = extension<Word>();
-  if(condition(test)) {
-    idle(4);
-  } else {
+  idle(2);
+  r.pc -= 2;
+  if(!condition(test)) { // cc false
+    auto disp = sign<Word>(r.irc);
+    // predict branch
+    r.pc += disp;
+    prefetch();
+    // decrement register
     n16 result = read<Word>(with);
     write<Word>(with, result - 1);
     if(result) {
-      idle(2);
-      r.pc -= 4;
-      r.pc += sign<Word>(displacement);
-      prefetch();
+      // branch taken
+      prefetch(); 
+      return;
     } else {
-      idle(2);
+      // branch not taken
+      r.pc -= disp;
     }
+  } else { // cc true
+    idle(2);
+    r.pc += 2;
   }
+  prefetch();
   prefetch();
 }
 
