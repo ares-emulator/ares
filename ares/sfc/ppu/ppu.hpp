@@ -279,9 +279,9 @@ struct PPU : PPUBase::Implementation, PPUcounter {
     auto scanline() -> void;
     auto begin() -> void;
     auto fetchNameTable() -> void;
-    auto fetchOffset(u32 y) -> void;
-    auto fetchCharacter(u32 index, bool half = 0) -> void;
-    auto run(bool screen) -> void;
+    template<u32 y> auto fetchOffset() -> void;
+    template<u32 index, bool half> auto fetchCharacter() -> void;
+    template<bool screen> auto run() -> void;
     auto power() -> void;
 
     //mode7.cpp

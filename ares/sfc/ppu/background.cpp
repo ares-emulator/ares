@@ -120,7 +120,7 @@ auto PPU::Background::fetchNameTable() -> void {
   }
 }
 
-auto PPU::Background::fetchOffset(u32 y) -> void {
+template<u32 y> auto PPU::Background::fetchOffset() -> void {
   if(self.vcounter() == 0) return;
 
   u32 characterIndex = self.hcounter() >> 5 << hires();
@@ -147,7 +147,7 @@ auto PPU::Background::fetchOffset(u32 y) -> void {
   if(y == 8) opt.voffset = vram[address];
 }
 
-auto PPU::Background::fetchCharacter(u32 index, bool half) -> void {
+template<u32 index, bool half> auto PPU::Background::fetchCharacter() -> void {
   if(self.vcounter() == 0) return;
 
   u32 characterIndex = (self.hcounter() >> 5 << hires()) + half;
@@ -169,7 +169,7 @@ auto PPU::Background::fetchCharacter(u32 index, bool half) -> void {
   );
 }
 
-auto PPU::Background::run(bool screen) -> void {
+template<bool screen> auto PPU::Background::run() -> void {
   if(self.vcounter() == 0) return;
 
   if(screen == Screen::Below) {
