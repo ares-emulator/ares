@@ -1,3 +1,6 @@
+#if defined(PROFILE_PERFORMANCE)
+#include "../ppu-performance/ppu.cpp"
+#else
 #include <sfc/sfc.hpp>
 
 namespace ares::SuperFamicom {
@@ -214,3 +217,4 @@ auto PPU::power(bool reset) -> void {
 }
 
 }
+#endif

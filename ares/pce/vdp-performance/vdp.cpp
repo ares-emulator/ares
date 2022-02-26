@@ -1,6 +1,3 @@
-#if defined(PROFILE_PERFORMANCE)
-#include "../vdp-performance/vdp.cpp"
-#else
 #include <pce/pce.hpp>
 
 namespace ares::PCEngine {
@@ -22,26 +19,19 @@ auto VDP::load(Node::Object parent) -> void {
 
   screen = node->append<Node::Video::Screen>("Screen", 1365, 263);
   screen->colors(1 << 10, {&VDP::color, this});
-  screen->setSize(1088, 239);
+  screen->setSize(1024, 239);
   screen->setScale(0.25, 1.0);
   screen->setAspect(8.0, 7.0);
 
-  overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
-    if(value == 0) screen->setSize(1024, 239);
-    if(value == 1) screen->setSize(1088, 239);
-  });
-  overscan->setDynamic(true);
-
-  vce.debugger.load(vce, node);
-  vdc0.debugger.load(vdc0, node); if(Model::SuperGrafx())
-  vdc1.debugger.load(vdc1, node);
+  vce.debugger.load(vce, parent);
+  vdc0.debugger.load(vdc0, parent); if(Model::SuperGrafx())
+  vdc1.debugger.load(vdc1, parent);
 }
 
 auto VDP::unload() -> void {
   vce.debugger = {};
   vdc0.debugger = {}; if(Model::SuperGrafx())
   vdc1.debugger = {};
-  overscan.reset();
   screen->quit();
   node->remove(screen);
   screen.reset();
@@ -57,36 +47,50 @@ auto VDP::main() -> void {
     vdc1.vsync();
   }
 
-  auto output = screen->pixels().data() + 1365 * io.vcounter;
+  step(512);
 
-  while(io.hcounter <= 1360) {
-    vdc0.hclock(); if(Model::SuperGrafx())
-    vdc1.hclock();
+  vdc0.hclock(); if(Model::SuperGrafx())
+  vdc1.hclock();
 
-    n10 color;
-    if(Model::SuperGrafx() == 0) color = vdc0.bus();
-    if(Model::SuperGrafx() == 1) color = vpc.bus(io.hcounter);
-    color = vce.io.grayscale << 9 | vce.cram.read(color);
+  if(io.vcounter >= 21 && io.vcounter < 239 + 21) {
+    auto line = screen->pixels().data() + 1365 * io.vcounter;
+    auto clock = vce.clock();
 
-    switch(vce.clock()) {
-    case 4: *output++ = color;
-    case 3: *output++ = color;
-    case 2: *output++ = color;
-    case 1: *output++ = color;
+    if(Model::SuperGrafx() == 0) {
+      for(u32 x : range(vce.width())) {
+        u32 color = vce.io.grayscale << 9 | vce.cram.read(vdc0.output[x]);
+        switch(clock) {
+        case 4: *line++ = color;
+        case 3: *line++ = color;
+        case 2: *line++ = color;
+        case 1: *line++ = color;
+        }
+      }
     }
 
-    step(vce.clock());
+    if(Model::SuperGrafx() == 1) {
+      vpc.render();
+      for(u32 x : range(vce.width())) {
+        u32 color = vce.io.grayscale << 9 | vce.cram.read(vpc.output[x]);
+        switch(clock) {
+        case 4: *line++ = color;
+        case 3: *line++ = color;
+        case 2: *line++ = color;
+        case 1: *line++ = color;
+        }
+      }
+    }
   }
 
   step(1365 - io.hcounter);
+
   vdc0.vclock(); if(Model::SuperGrafx())
   vdc1.vclock();
 
   io.hcounter = 0;
   if(++io.vcounter >= 262 + vce.io.extraLine) {
     io.vcounter = 0;
-    if(overscan->value() == 0) screen->setViewport(96, 21, 1024, 239);
-    if(overscan->value() == 1) screen->setViewport(96, 21, 1088, 239);
+    screen->setViewport(0, 21, 1024, 239);
     screen->frame();
     scheduler.exit(Event::Frame);
   }
@@ -112,4 +116,3 @@ auto VDP::power() -> void {
 }
 
 }
-#endif

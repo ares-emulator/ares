@@ -1,4 +1,7 @@
 //Yamaha YM7101
+#if 0 //defined(PROFILE_PERFORMANCE)
+#include "../vdp-performance/vdp.hpp"
+#else
 struct VDP : Thread {
   Node::Object node;
   Node::Video::Screen screen;
@@ -505,3 +508,4 @@ private:
 };
 
 extern VDP vdp;
+#endif
