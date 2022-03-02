@@ -1,8 +1,11 @@
 #include <sfc/sfc.hpp>
 
+#define PPU PPUPerformance
+#define ppu ppuPerformanceImpl
+
 namespace ares::SuperFamicom {
 
-PPU ppu;
+PPU ppuPerformanceImpl;
 #include "io.cpp"
 #include "window.cpp"
 #include "mosaic.cpp"
@@ -14,7 +17,6 @@ PPU ppu;
 #include "color.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
-#include "../ppu/counter/serialization.cpp"
 
 auto PPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PPU");

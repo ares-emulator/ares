@@ -2,9 +2,9 @@ auto PPU::serialize(serializer& s) -> void {
   Thread::serialize(s);
   PPUcounter::serialize(s);
 
-  s(self.interlace);
-  s(self.overscan);
-  s(self.vdisp);
+  s(state.interlace);
+  s(state.overscan);
+  s(state.vdisp);
 
   s(array_span<u16>{vram.data, vram.mask + 1});
   s(oam.object);

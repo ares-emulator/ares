@@ -14,6 +14,11 @@ auto load(Node::System& node, string name) -> bool {
   return system.load(node, name);
 }
 
+auto option(string name, string value) -> bool {
+  if(name == "Pixel Accuracy") ppu.setAccurate(value.boolean());
+  return true;
+}
+
 Random random;
 Scheduler scheduler;
 System system;

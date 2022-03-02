@@ -1,11 +1,12 @@
-#if defined(PROFILE_PERFORMANCE)
-#include "../ppu-performance/ppu.cpp"
-#else
 #include <sfc/sfc.hpp>
 
 namespace ares::SuperFamicom {
 
-PPU ppu;
+PPUBase ppu;
+PPU ppuImpl;
+
+#define ppu ppuImpl
+
 #include "main.cpp"
 #include "io.cpp"
 #include "mosaic.cpp"
@@ -19,6 +20,14 @@ PPU ppu;
 #include "debugger.cpp"
 #include "serialization.cpp"
 #include "counter/serialization.cpp"
+
+auto PPUBase::setAccurate(bool value) -> void {
+  accurate = value;
+  if(value)
+    implementation = &ppuImpl;
+  else
+    implementation = &ppuPerformanceImpl;
+}
 
 auto PPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PPU");
@@ -217,4 +226,3 @@ auto PPU::power(bool reset) -> void {
 }
 
 }
-#endif

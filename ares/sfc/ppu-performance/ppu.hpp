@@ -1,6 +1,7 @@
-struct PPU : Thread, PPUcounter {
+#define PPU PPUPerformance
+
+struct PPU : PPUBase::Implementation, PPUcounter {
   Node::Object node;
-  Node::Video::Screen screen;
   Node::Setting::Natural vramSize;
   Node::Setting::Boolean overscanEnable;
   Node::Setting::Boolean colorEmulation;
@@ -35,17 +36,17 @@ struct PPU : Thread, PPUcounter {
   auto vdisp() const -> u32 { return state.vdisp; }
 
   //ppu.cpp
-  auto load(Node::Object parent) -> void;
-  auto unload() -> void;
+  auto load(Node::Object parent) -> void override;
+  auto unload() -> void override;
 
   auto step(u32 clocks) -> void;
   auto main() -> void;
-  auto map() -> void;
-  auto power(bool reset) -> void;
+  auto map() -> void override;
+  auto power(bool reset) -> void override;
   auto draw(u32* output) -> void;
 
   //io.cpp
-  auto latchCounters() -> void;
+  auto latchCounters() -> void override;
   auto addressVRAM() const -> n16;
   auto readVRAM() -> n16;
   auto writeVRAM(n1 byte, n8 data) -> void;
@@ -61,7 +62,7 @@ struct PPU : Thread, PPUcounter {
   auto color(n32 color) -> n64;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void;
+  auto serialize(serializer&) -> void override;
 
 //private:
   struct Source { enum : u32 { BG1, BG2, BG3, BG4, OBJ1, OBJ2, COL }; };
@@ -82,12 +83,6 @@ struct PPU : Thread, PPUcounter {
     n2  mapping;
     n1  mode;
   } vram;
-
-  struct State {
-    n1 interlace;
-    n1 overscan;
-    n9 vdisp;
-  } state;
 
   struct Latches {
     n16 vram;
@@ -281,6 +276,8 @@ struct PPU : Thread, PPUcounter {
   Background bg3{*this, Background::ID::BG3};
   Background bg4{*this, Background::ID::BG4};
 
+  struct Object;
+
   struct OAM {
     //oam.cpp
     auto read(n10 address) -> n8;
@@ -403,4 +400,6 @@ struct PPU : Thread, PPUcounter {
   } dac{*this};
 };
 
-extern PPU ppu;
+extern PPU ppuPerformanceImpl;
+
+#undef PPU

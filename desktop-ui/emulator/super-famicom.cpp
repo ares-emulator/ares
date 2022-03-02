@@ -70,6 +70,8 @@ auto SuperFamicom::load() -> bool {
   system = mia::System::create("Super Famicom");
   if(!system->load()) return false;
 
+  ares::SuperFamicom::option("Pixel Accuracy", settings.video.pixelAccuracy);
+
   auto region = Emulator::region();
   if(!ares::SuperFamicom::load(root, {"[Nintendo] Super Famicom (", region, ")"})) return false;
 

@@ -22,7 +22,7 @@ SuperScope::SuperScope(Node::Port parent) {
 
   sprite = node->append<Node::Video::Sprite>("Crosshair");
   sprite->setImage(Resource::Sprite::SuperFamicom::CrosshairGreen);
-  ppu.screen->attach(sprite);
+  ppu.screen()->attach(sprite);
 
   Thread::create(system.cpuFrequency(), {&SuperScope::main, this});
   cpu.peripherals.append(this);
@@ -30,7 +30,7 @@ SuperScope::SuperScope(Node::Port parent) {
 
 SuperScope::~SuperScope() {
   cpu.peripherals.removeByValue(this);
-  if(ppu.screen) ppu.screen->detach(sprite);
+  if(ppu.screen()) ppu.screen()->detach(sprite);
 }
 
 auto SuperScope::main() -> void {
