@@ -8,7 +8,7 @@ Justifier::Justifier(Node::Port parent) {
 
   sprite = node->append<Node::Video::Sprite>("Crosshair");
   sprite->setImage(Resource::Sprite::SuperFamicom::CrosshairGreen);
-  ppu.screen->attach(sprite);
+  ppu.screen()->attach(sprite);
 
   Thread::create(system.cpuFrequency(), {&Justifier::main, this});
   cpu.peripherals.append(this);
@@ -16,7 +16,7 @@ Justifier::Justifier(Node::Port parent) {
 
 Justifier::~Justifier() {
   cpu.peripherals.removeByValue(this);
-  if(ppu.screen) ppu.screen->detach(sprite);
+  if(ppu.screen()) ppu.screen()->detach(sprite);
 }
 
 auto Justifier::main() -> void {

@@ -26,6 +26,7 @@ struct Settings : Markup::Node {
     bool colorEmulation = true;
     bool interframeBlending = true;
     bool overscan = false;
+    bool pixelAccuracy = false;
 
     string quality = "SD";
     bool supersampling = false;
@@ -117,6 +118,9 @@ struct VideoSettings : VerticalLayout {
     HorizontalLayout overscanLayout{this, Size{~0, 0}};
       CheckLabel overscanOption{&overscanLayout, Size{0, 0}, 5};
       Label overscanHint{&overscanLayout, Size{~0, 0}};
+    HorizontalLayout pixelAccuracyLayout{this, Size{~0, 0}};
+      CheckLabel pixelAccuracyOption{&pixelAccuracyLayout, Size{0, 0}, 5};
+      Label pixelAccuracyHint{&pixelAccuracyLayout, Size{~0, 0}};
   //
   Label renderSettingsLabel{this, Size{~0, 0}, 5};
   HorizontalLayout enableVulkanLayout{this, Size{~0, 0}};

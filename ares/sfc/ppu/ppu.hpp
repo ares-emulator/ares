@@ -1,9 +1,50 @@
-#if defined(PROFILE_PERFORMANCE)
-#include "../ppu-performance/ppu.hpp"
-#else
-struct PPU : Thread, PPUcounter {
+struct PPUBase {
+  struct Implementation : Thread {
+    Node::Video::Screen screen;
+
+    struct State {
+      n1 interlace;
+      n1 overscan;
+      n9 vdisp;
+    } state;
+
+    virtual auto load(Node::Object) -> void = 0;
+    virtual auto unload() -> void = 0;
+
+    virtual auto map() -> void = 0;
+    virtual auto power(bool reset) -> void = 0;
+
+    virtual auto latchCounters() -> void = 0;
+
+    virtual auto serialize(serializer&) -> void = 0;
+  };
+
+  Implementation* implementation = nullptr;
+  bool accurate = false;
+
+  auto setAccurate(bool value) -> void;
+
+  auto thread() const -> Thread& { return *implementation; }
+  auto screen() const -> Node::Video::Screen& { return implementation->screen; }
+  auto interlace() const -> bool { return implementation->state.interlace; }
+  auto overscan() const -> bool { return implementation->state.overscan; }
+  auto vdisp() const -> u32 { return implementation->state.vdisp; }
+
+  auto load(Node::Object parent) -> void { implementation->load(parent); }
+  auto unload() -> void { implementation->unload(); }
+
+  auto map() -> void { implementation->map(); }
+  auto power(bool reset) -> void { implementation->power(reset); }
+
+  auto latchCounters() -> void { implementation->latchCounters(); }
+
+  auto serialize(serializer& s) -> void { implementation->serialize(s); }
+};
+
+extern PPUBase ppu;
+
+struct PPU : PPUBase::Implementation, PPUcounter {
   Node::Object node;
-  Node::Video::Screen screen;
   Node::Setting::Natural versionPPU1;
   Node::Setting::Natural versionPPU2;
   Node::Setting::Natural vramSize;
@@ -37,16 +78,16 @@ struct PPU : Thread, PPUcounter {
     } properties;
   } debugger{*this};
 
-  auto interlace() const -> bool { return self.interlace; }
-  auto overscan() const -> bool { return self.overscan; }
-  auto vdisp() const -> u32 { return self.vdisp; }
+  auto interlace() const -> bool { return state.interlace; }
+  auto overscan() const -> bool { return state.overscan; }
+  auto vdisp() const -> u32 { return state.vdisp; }
 
   //ppu.cpp
-  auto load(Node::Object) -> void;
-  auto unload() -> void;
+  auto load(Node::Object) -> void override;
+  auto unload() -> void override;
 
-  auto map() -> void;
-  auto power(bool reset) -> void;
+  auto map() -> void override;
+  auto power(bool reset) -> void override;
 
   //main.cpp
   auto main() -> void;
@@ -59,13 +100,13 @@ struct PPU : Thread, PPUcounter {
   template<u32> auto cycle() -> void;
 
   //io.cpp
-  auto latchCounters() -> void;
+  auto latchCounters() -> void override;
 
   //color.cpp
   auto color(n32) -> n64;
 
   //serialization.cpp
-  auto serialize(serializer&) -> void;
+  auto serialize(serializer&) -> void override;
 
 //private:
   //ppu.cpp
@@ -89,6 +130,8 @@ struct PPU : Thread, PPUcounter {
     n16 data[64_KiB];
     n16 mask = 0x7fff;
   } vram;
+
+  struct Object;
 
   struct OAM {
     //oam.cpp
@@ -116,12 +159,6 @@ struct PPU : Thread, PPUcounter {
   } oam;
 
   n15 cgram[256];
-
-  struct {
-    n1 interlace;
-    n1 overscan;
-    n9 vdisp;
-  } self;
 
   struct {
     n4 version;
@@ -503,5 +540,4 @@ struct PPU : Thread, PPUcounter {
   } dac{*this, bg1, bg2, bg3, bg3, obj, window, cgram};
 };
 
-extern PPU ppu;
-#endif
+extern PPU ppuImpl;

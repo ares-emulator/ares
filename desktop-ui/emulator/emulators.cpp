@@ -105,6 +105,7 @@
 #ifdef CORE_SFC
   namespace ares::SuperFamicom {
     auto load(Node::System& node, string name) -> bool;
+    auto option(string name, string value) -> bool;
   }
   #include "super-famicom.cpp"
 #endif

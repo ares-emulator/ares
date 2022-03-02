@@ -68,6 +68,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Video/ColorEmulation", video.colorEmulation);
   bind(boolean, "Video/InterframeBlending", video.interframeBlending);
   bind(boolean, "Video/Overscan", video.overscan);
+  bind(boolean, "Video/PixelAccuracy", video.pixelAccuracy);
   bind(string,  "Video/Quality", video.quality);
   bind(boolean, "Video/Supersampling", video.supersampling);
   bind(boolean, "Video/EnableVulkan", video.enableVulkan);

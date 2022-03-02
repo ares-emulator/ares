@@ -1,27 +1,27 @@
 auto PPU::Background::runMode7() -> void {
-  s32 a = (i16)ppu.io.m7a;
-  s32 b = (i16)ppu.io.m7b;
-  s32 c = (i16)ppu.io.m7c;
-  s32 d = (i16)ppu.io.m7d;
+  s32 a = (i16)self.io.m7a;
+  s32 b = (i16)self.io.m7b;
+  s32 c = (i16)self.io.m7c;
+  s32 d = (i16)self.io.m7d;
 
-  s32 hcenter = (i13)ppu.io.m7x;
-  s32 vcenter = (i13)ppu.io.m7y;
-  s32 hoffset = (i13)ppu.io.hoffsetMode7;
-  s32 voffset = (i13)ppu.io.voffsetMode7;
+  s32 hcenter = (i13)self.io.m7x;
+  s32 vcenter = (i13)self.io.m7y;
+  s32 hoffset = (i13)self.io.hoffsetMode7;
+  s32 voffset = (i13)self.io.voffsetMode7;
 
   u32 x = mosaic.hoffset;
-  u32 y = ppu.vcounter();
-  if(ppu.bg1.mosaic.enable) y -= ppu.mosaic.voffset();  //BG2 vertical mosaic uses BG1 mosaic enable
+  u32 y = self.vcounter();
+  if(self.bg1.mosaic.enable) y -= self.mosaic.voffset();  //BG2 vertical mosaic uses BG1 mosaic enable
 
   if(!mosaic.enable) {
     mosaic.hoffset += 1;
   } else if(--mosaic.hcounter == 0) {
-    mosaic.hcounter = ppu.mosaic.size;
-    mosaic.hoffset += ppu.mosaic.size;
+    mosaic.hcounter = self.mosaic.size;
+    mosaic.hoffset += self.mosaic.size;
   }
 
-  if(ppu.io.hflipMode7) x = 255 - x;
-  if(ppu.io.vflipMode7) y = 255 - y;
+  if(self.io.hflipMode7) x = 255 - x;
+  if(self.io.vflipMode7) y = 255 - y;
 
   //13-bit sign extend: --s---nnnnnnnnnn -> ssssssnnnnnnnnnn
   auto clip = [](s32 n) -> s32 { return n & 0x2000 ? (n | ~1023) : (n & 1023); };
@@ -38,8 +38,8 @@ auto PPU::Background::runMode7() -> void {
 
   bool outOfBounds = (pixelX | pixelY) & ~1023;
 
-  n8 tile = ppu.io.repeatMode7 == 3 && outOfBounds ? 0 : ppu.vram[tileAddress] >> 0;
-  n8 palette = ppu.io.repeatMode7 == 2 && outOfBounds ? 0 : ppu.vram[tile << 6 | paletteAddress] >> 8;
+  n8 tile = self.io.repeatMode7 == 3 && outOfBounds ? 0 : vram[tileAddress] >> 0;
+  n8 palette = self.io.repeatMode7 == 2 && outOfBounds ? 0 : vram[tile << 6 | paletteAddress] >> 8;
 
   u32 priority;
   if(id == ID::BG1) {

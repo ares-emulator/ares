@@ -55,6 +55,12 @@ auto VideoSettings::construct() -> void {
   });
   overscanLayout.setAlignment(1).setPadding(12_sx, 0);
   overscanHint.setText("Shows extended PAL CRT lines, but these are usually blank in most games").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  pixelAccuracyOption.setText("Pixel Accuracy Mode").setChecked(settings.video.pixelAccuracy).onToggle([&] {
+    settings.video.pixelAccuracy = pixelAccuracyOption.checked();
+    if(emulator) emulator->setBoolean("Pixel Accuracy", settings.video.pixelAccuracy);
+  });
+  pixelAccuracyLayout.setAlignment(1).setPadding(12_sx, 0);
+  pixelAccuracyHint.setText("Use pixel-accurate emulation where available").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   renderSettingsLabel.setText("N64 Render Settings").setFont(Font().setBold());
 

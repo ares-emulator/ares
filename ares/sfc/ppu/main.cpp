@@ -1,7 +1,7 @@
 auto PPU::main() -> void {
   if(vcounter() == 0) {
-    self.interlace = io.interlace;
-    self.overscan = io.overscan;
+    state.interlace = io.interlace;
+    state.overscan = io.overscan;
     bg1.frame();
     bg2.frame();
     bg3.frame();
@@ -19,8 +19,8 @@ auto PPU::main() -> void {
   dac.scanline();
 
   if(vcounter() == 240) {
-    if(self.interlace == 0) screen->setProgressive(1);
-    if(self.interlace == 1) screen->setInterlace(field());
+    if(state.interlace == 0) screen->setProgressive(1);
+    if(state.interlace == 1) screen->setInterlace(field());
     if(overscanEnable->value() == 0) screen->setViewport(0, 18, 512, 448);
     if(overscanEnable->value() == 1) screen->setViewport(0,  0, 512, 480);
     screen->frame();

@@ -53,7 +53,7 @@ auto CPU::step(u32 clocks) -> void {
 //called by ppu.tick() when Hcounter=0
 auto CPU::scanline() -> void {
   //forcefully sync S-CPU to other processors, in case chips are not communicating
-  Thread::synchronize(smp, ppu);
+  Thread::synchronize(smp, ppu.thread());
   for(auto coprocessor : coprocessors) Thread::synchronize(*coprocessor);
 
   if(vcounter() == 0) {

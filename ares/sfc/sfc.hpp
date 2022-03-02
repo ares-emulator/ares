@@ -18,6 +18,7 @@ namespace ares::SuperFamicom {
   #include <ares/inline.hpp>
   auto enumerate() -> vector<string>;
   auto load(Node::System& node, string name) -> bool;
+  auto option(string name, string value) -> bool;
 
   struct Region {
     static inline auto NTSC() -> bool;
@@ -32,6 +33,7 @@ namespace ares::SuperFamicom {
   #include <sfc/smp/smp.hpp>
   #include <sfc/dsp/dsp.hpp>
   #include <sfc/ppu/ppu.hpp>
+  #include <sfc/ppu-performance/ppu.hpp>
 
   #include <sfc/controller/controller.hpp>
   #include <sfc/expansion/expansion.hpp>
