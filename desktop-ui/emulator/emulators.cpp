@@ -82,6 +82,7 @@
 #ifdef CORE_PCE
   namespace ares::PCEngine {
     auto load(Node::System& node, string name) -> bool;
+    auto option(string name, string value) -> bool;
   }
   #include "pc-engine.cpp"
   #include "pc-engine-cd.cpp"

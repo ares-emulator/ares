@@ -1,6 +1,11 @@
 //Hudson Soft HuC6270: Video Display Controller
 
-struct VDC {
+struct VDCBase {
+  virtual auto read(n2 address) -> n8 = 0;
+  virtual auto write(n2 address, n8 data) -> void = 0;
+};
+
+struct VDC : VDCBase {
   struct Debugger {
     //debugger.cpp
     auto load(VDC&, Node::Object) -> void;
@@ -20,8 +25,8 @@ struct VDC {
   auto vsync() -> void;
   auto hclock() -> void;
   auto vclock() -> void;
-  auto read(n2 address) -> n8;
-  auto write(n2 address, n8 data) -> void;
+  auto read(n2 address) -> n8 override;
+  auto write(n2 address, n8 data) -> void override;
   auto power() -> void;
 
   //serialization.cpp

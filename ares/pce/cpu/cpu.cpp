@@ -55,7 +55,7 @@ auto CPU::step(u32 clocks) -> void {
   }
 
   Thread::step(clocks);
-  synchronize(vdp);
+  synchronize(vdp.thread());
   if(PCD::Present()) synchronize(pcd);
 }
 

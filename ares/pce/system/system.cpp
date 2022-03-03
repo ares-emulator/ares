@@ -17,6 +17,11 @@ auto load(Node::System& node, string name) -> bool {
   return system.load(node, name);
 }
 
+auto option(string name, string value) -> bool {
+  if(name == "Pixel Accuracy") vdp.setAccurate(value.boolean());
+  return true;
+}
+
 Scheduler scheduler;
 System system;
 #include "serialization.cpp"

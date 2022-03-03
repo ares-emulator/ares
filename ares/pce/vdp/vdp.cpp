@@ -1,11 +1,12 @@
-#if defined(PROFILE_PERFORMANCE)
-#include "../vdp-performance/vdp.cpp"
-#else
 #include <pce/pce.hpp>
 
 namespace ares::PCEngine {
 
-VDP vdp;
+VDPBase vdp;
+VDP vdpImpl;
+
+#define vdp vdpImpl
+
 #include "vce.cpp"
 #include "vdc.cpp"
 #include "vpc.cpp"
@@ -16,6 +17,23 @@ VDP vdp;
 #include "color.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
+
+auto VDPBase::setAccurate(bool value) -> void {
+  accurate = value;
+  if(value) {
+    implementation = &vdpImpl;
+    vce = &vdpImpl.vce;
+    vdc0 = &vdpImpl.vdc0;
+    vdc1 = &vdpImpl.vdc1;
+    vpc = &vdpImpl.vpc;
+  } else {
+    implementation = &vdpPerformanceImpl;
+    vce = &vdpPerformanceImpl.vce;
+    vdc0 = &vdpPerformanceImpl.vdc0;
+    vdc1 = &vdpPerformanceImpl.vdc1;
+    vpc = &vdpPerformanceImpl.vpc;
+  }
+}
 
 auto VDP::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VDP");
@@ -112,4 +130,3 @@ auto VDP::power() -> void {
 }
 
 }
-#endif

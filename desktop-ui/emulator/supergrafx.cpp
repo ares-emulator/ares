@@ -34,6 +34,8 @@ auto SuperGrafx::load() -> bool {
   system = mia::System::create("SuperGrafx");
   if(!system->load()) return false;
 
+  ares::PCEngine::option("Pixel Accuracy", settings.video.pixelAccuracy);
+
   if(!ares::PCEngine::load(root, "[NEC] SuperGrafx (NTSC-J)")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {

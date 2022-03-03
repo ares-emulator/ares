@@ -6,7 +6,7 @@ auto CPU::IRQ::poll() -> void {
     pending = Vector::IRQ2;
   }
 
-  if(!disable.irq1 && (vdp.vdc0.irqLine() | vdp.vdc1.irqLine())) {
+  if(!disable.irq1 && vdp.irqLine()) {
     pending = Vector::IRQ1;
   }
 

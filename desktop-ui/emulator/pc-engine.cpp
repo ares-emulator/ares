@@ -52,6 +52,8 @@ auto PCEngine::load() -> bool {
   system = mia::System::create("PC Engine");
   if(!system->load()) return false;
 
+  ares::PCEngine::option("Pixel Accuracy", settings.video.pixelAccuracy);
+
   auto region = Emulator::region();
   string name = region == "NTSC-J" ? "PC Engine" : "TurboGrafx 16";
   if(!ares::PCEngine::load(root, {"[NEC] ", name, " (", region, ")"})) return false;

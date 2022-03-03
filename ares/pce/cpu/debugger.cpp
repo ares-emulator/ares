@@ -20,7 +20,7 @@ auto CPU::Debugger::instruction() -> void {
     auto address = (n13)cpu.r.pc;
     if(tracer.instruction->address(bank << 16 | address)) {
       tracer.instruction->notify(cpu.disassembleInstruction(), cpu.disassembleContext(), {
-        "V:", pad(vdp.io.vcounter, 3L), " ", "H:", pad(vdp.io.hcounter, 4L)
+        "V:", pad(vdp.vcounter(), 3L), " ", "H:", pad(vdp.hcounter(), 4L)
       });
     }
   }

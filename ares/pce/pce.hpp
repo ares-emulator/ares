@@ -10,6 +10,7 @@ namespace ares::PCEngine {
   #include <ares/inline.hpp>
   auto enumerate() -> vector<string>;
   auto load(Node::System& node, string name) -> bool;
+  auto option(string name, string value) -> bool;
 
   struct Model {
     inline static auto PCEngine() -> bool;
@@ -26,6 +27,7 @@ namespace ares::PCEngine {
 
   #include <pce/cpu/cpu.hpp>
   #include <pce/vdp/vdp.hpp>
+  #include <pce/vdp-performance/vdp.hpp>
   #include <pce/psg/psg.hpp>
   #include <pce/pcd/pcd.hpp>
 
