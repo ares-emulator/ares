@@ -1,11 +1,11 @@
 //Hudson Soft HuC6202: Video Priority Controller
 
-struct VPC {
+struct VPC : VPCBase {
   //vpc.cpp
   auto render() -> void;
-  auto read(n5 address) -> n8;
-  auto write(n5 address, n8 data) -> void;
-  auto store(n2 address, n8 data) -> void;
+  auto read(n5 address) -> n8 override;
+  auto write(n5 address, n8 data) -> void override;
+  auto store(n2 address, n8 data) -> void override;
   auto power() -> void;
 
   //serialization.cpp

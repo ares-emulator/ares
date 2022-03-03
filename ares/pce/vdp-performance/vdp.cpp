@@ -1,5 +1,11 @@
 #include <pce/pce.hpp>
 
+#define VCE VCEPerformance
+#define VDC VDCPerformance
+#define VDP VDPPerformance
+#define VPC VPCPerformance
+#define vdp vdpPerformanceImpl
+
 namespace ares::PCEngine {
 
 VDP vdp;

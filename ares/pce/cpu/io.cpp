@@ -16,13 +16,13 @@ auto CPU::read(n8 bank, n13 address) -> n8 {
   if(bank == 0xff) {
     //$0000-03ff  VDC or VPC
     if((address & 0x1c00) == 0x0000) {
-      if(Model::SuperGrafx() == 0) return vdp.vdc0.read(address);
-      if(Model::SuperGrafx() == 1) return vdp.vpc.read(address);
+      if(Model::SuperGrafx() == 0) return vdp.vdc0->read(address);
+      if(Model::SuperGrafx() == 1) return vdp.vpc->read(address);
     }
 
     //$0400-07ff  VCE
     if((address & 0x1c00) == 0x0400) {
-      return vdp.vce.read(address);
+      return vdp.vce->read(address);
     }
 
     //$0800-0bff  PSG
@@ -116,13 +116,13 @@ auto CPU::write(n8 bank, n13 address, n8 data) -> void {
   if(bank == 0xff) {
     //$0000-03ff  VDC or VPC
     if((address & 0x1c00) == 0x0000) {
-      if(Model::SuperGrafx() == 0) return vdp.vdc0.write(address, data);
-      if(Model::SuperGrafx() == 1) return vdp.vpc.write(address, data);
+      if(Model::SuperGrafx() == 0) return vdp.vdc0->write(address, data);
+      if(Model::SuperGrafx() == 1) return vdp.vpc->write(address, data);
     }
 
     //$0400-07ff  VCE
     if((address & 0x1c00) == 0x0400) {
-      return vdp.vce.write(address, data);
+      return vdp.vce->write(address, data);
     }
 
     //$0800-0bff  PSG
@@ -188,6 +188,6 @@ auto CPU::write(n8 bank, n13 address, n8 data) -> void {
 //ST0, ST1, ST2
 auto CPU::store(n2 address, n8 data) -> void {
   if(address) address++;  //0,1,2 => 0,2,3
-  if(Model::SuperGrafx() == 0) vdp.vdc0.write(address, data);
-  if(Model::SuperGrafx() == 1) vdp.vpc.store(address, data);
+  if(Model::SuperGrafx() == 0) vdp.vdc0->write(address, data);
+  if(Model::SuperGrafx() == 1) vdp.vpc->store(address, data);
 }

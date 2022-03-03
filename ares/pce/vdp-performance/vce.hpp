@@ -1,6 +1,6 @@
 //Hudson Soft HuC6260: Video Color Encoder
 
-struct VCE {
+struct VCE : VCEBase {
   struct Debugger {
     //debugger.cpp
     auto load(VCE&, Node::Object) -> void;
@@ -14,8 +14,8 @@ struct VCE {
   auto width() const -> u32 { return io.clock == 4 ? 256 : io.clock == 3 ? 344 : 512; }
 
   //vce.cpp
-  auto read(n3 address) -> n8;
-  auto write(n3 address, n8 data) -> void;
+  auto read(n3 address) -> n8 override;
+  auto write(n3 address, n8 data) -> void override;
   auto power() -> void;
 
   //serialization.cpp

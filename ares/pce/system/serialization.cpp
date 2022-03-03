@@ -11,6 +11,7 @@ auto System::serialize(bool synchronize) -> serializer {
   s(synchronize);
   s(version);
   s(description);
+  s(vdp.accurate);
 
   serialize(s, synchronize);
   return s;
@@ -21,14 +22,17 @@ auto System::unserialize(serializer& s) -> bool {
   bool synchronize = true;
   char version[16] = {};
   char description[512] = {};
+  bool vdpAccurate = false;
 
   s(signature);
   s(synchronize);
   s(version);
   s(description);
+  s(vdpAccurate);
 
   if(signature != SerializerSignature) return false;
   if(string{version} != SerializerVersion) return false;
+  if(vdpAccurate != vdp.accurate) return false;
 
   if(synchronize) power();
   serialize(s, synchronize);
