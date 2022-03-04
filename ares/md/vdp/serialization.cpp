@@ -102,6 +102,7 @@ auto VDP::DMA::serialize(serializer& s) -> void {
   s(wait);
   s(read);
   s(enable);
+  s(delay);
 }
 
 auto VDP::Pixel::serialize(serializer& s) -> void {
