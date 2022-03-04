@@ -67,7 +67,7 @@ auto System::load(Node::System& root, string name) -> bool {
     information.name = "Mega Drive";
     information.mega32X = 1;
     information.megaCD = 0;
-    cpu.minCyclesBetweenSyncs = 15; // sync approx every 25-26 pixels
+    cpu.minCyclesBetweenSyncs = 14; // sync approx every 24-25 pixels
   }
   if(name.match("[Sega] Mega CD (*)")) {
     information.name = "Mega Drive";
