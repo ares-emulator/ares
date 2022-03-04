@@ -16,3 +16,9 @@ Nightly Builds
 
 Automated, untested builds of ares are available for Windows and macOS as a [pre-release](https://github.com/higan-emu/ares/releases/tag/nightly). 
 Only the latest nightly build is kept.
+
+Manual Build (Linux)
+--------------------
+
+To build Ares from source, first ensure the following dependencies are installed (Debian/Ubuntu package names): build-essential libsdl2-dev libgtksourceview2.0-dev libgtk2.0-dev libao-dev libopenal-dev.
+Then, run ./build-linux.sh.
