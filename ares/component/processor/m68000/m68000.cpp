@@ -50,21 +50,36 @@ auto M68000::supervisor() -> bool {
 
 auto M68000::exception(u32 exception, u32 vector, u32 priority) -> void {
   r.stop  = false;
-  idle(10);  //todo: not accurate
 
-  auto pc = r.pc;
-  auto sr = readSR();
-
+  // register setup (+6 cyc)
+  idle(6);
+  n32 pc = r.pc - 4;
+  n32 sr = readSR();
   if(!r.s) swap(r.a[7], r.sp);
-  if(priority) r.i = priority;
   r.s = 1;
   r.t = 0;
 
-  push<Long>(pc - 4);
-  push<Word>(sr);
+  // push pc low (+4 cyc)
+  push<Word>(pc & 0x0000ffff);
 
+  // external interrupt handling
+  if(exception == Exception::Interrupt) {
+    // IACK vector number acquisition (+4 cyc normal or +10 to +18 cyc autovectored)
+    // & justify vector number (+4 cyc)
+    idle(16+4); // assuming autovector cycles (approximated for Megadrive)
+    r.i = priority;
+  }
+
+  // push pc high & sr (+8 cyc)
+  push<Long>(sr << 16 | pc >> 16);
+
+  // read vector address (+8 cyc)
   r.pc = read<Long>(vector << 2);
+  // todo: if the vector address read causes an address error, this exception should be escalated
+
+  // prefetch (+8 cyc)
   prefetch();
+  if(exception == Exception::Interrupt) idle(2); // dead cycles (+2 cyc)
   prefetch();
 }
 
