@@ -6,6 +6,8 @@ auto CPU::serialize(serializer& s) -> void {
   s(io.romEnable);
   s(io.vdpEnable);
   s(refresh.ram);
+  s(refresh.ramEnd);
   s(refresh.external);
+  s(refresh.externalEnd);
   s(state.interruptPending);
 }

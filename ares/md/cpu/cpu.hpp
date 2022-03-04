@@ -66,8 +66,18 @@ struct CPU : M68000, Thread {
   } io;
 
   struct Refresh {
-    n8 ram;
-    n7 external;
+    int ram;
+    int ramEnd;
+    int external;
+    int externalEnd;
+
+    static constexpr int ramLowBound       = 113;
+    static constexpr int ramHighBound      = 132;
+    static constexpr int ramLength         = 3;
+    static constexpr int externalLowBound  = 126;
+    static constexpr int externalHighBound = 132;
+    static constexpr int externalLength    = 2;
+
   } refresh;
 
   struct State {
