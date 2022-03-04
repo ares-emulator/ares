@@ -21,4 +21,5 @@ Manual Build (Linux)
 --------------------
 
 To build Ares from source, first ensure the following dependencies are installed (Debian/Ubuntu package names): build-essential libsdl2-dev libgtksourceview2.0-dev libgtk2.0-dev libao-dev libopenal-dev. \
-Then, run ./build-linux.sh.
+Then, run ./build-linux.sh. \
+The resulting build artifact will be found in desktop-ui/out/.
