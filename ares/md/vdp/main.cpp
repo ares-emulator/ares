@@ -8,18 +8,14 @@ auto VDP::tick() -> void {
   cycles += 2;
   state.hcounter++;
   if(h32()) {
-    if(hcounter() >  0x90 ||
-       hcounter() <  0x80) vblankcheck();  // exact bounds are unconfirmed
     if(hcounter() == 0x00) hblank(0), vedge();
-    if(hcounter() == 0x81) vtick();
+    if(hcounter() == 0x83) vtick();
     if(hcounter() == 0x93) hblank(1);
     if(hcounter() == 0x94) state.hcounter = 0xe9;
   }
   if(h40()) {
-    if(hcounter() >  0xb0 ||
-       hcounter() <  0xa0) vblankcheck();  // exact bounds are unconfirmed
     if(hcounter() == 0x00) hblank(0), vedge();
-    if(hcounter() == 0xa1) vtick();
+    if(hcounter() == 0xa3) vtick();
     if(hcounter() == 0xb3) hblank(1);
     if(hcounter() == 0xb6) state.hcounter = 0xe4;
   }
@@ -56,6 +52,8 @@ auto VDP::vtick() -> void {
     if(vcounter() == 0x200 && Region::NTSC()) state.vcounter = 0x000;
     if(vcounter() == 0x10b && Region::PAL ()) state.vcounter = 0x1d2;
   }
+
+  vblankcheck();
 }
 
 auto VDP::hblank(bool line) -> void {
@@ -64,7 +62,6 @@ auto VDP::hblank(bool line) -> void {
     cartridge.hblank(0);
   } else {
     cartridge.hblank(1);
-    apu.setINT(0);  //timing hack
   }
 }
 
@@ -74,12 +71,12 @@ auto VDP::vblank(bool line) -> void {
 }
 
 auto VDP::vedge() -> void {
+  apu.setINT(0);
   if(!irq.vblank.transitioned) return;
   irq.vblank.transitioned = 0;
 
   if(vblank() == 0) {
     cartridge.vblank(0);
-  //apu.setINT(0);
   } else {
     cartridge.vblank(1);
     apu.setINT(1);
@@ -163,7 +160,7 @@ auto VDP::mainH32() -> void {
   window.attributesFetch(-1);
 
   tick(); layerA.mappingFetch(-1);
-  tick(); sprite.patternFetch(30);
+  tick(); !displayEnable() ? refresh() : sprite.patternFetch(30);
   tick(); layerA.patternFetch( 0);
   tick(); layerA.patternFetch( 1);
   tick(); layerB.mappingFetch(-1);
@@ -223,7 +220,7 @@ auto VDP::mainH40() -> void {
   window.attributesFetch(-1);
 
   tick(); layerA.mappingFetch(-1);
-  tick(); sprite.patternFetch(38);
+  tick(); !displayEnable() ? refresh() : sprite.patternFetch(38);
   tick(); layerA.patternFetch( 0);
   tick(); layerA.patternFetch( 1);
   tick(); layerB.mappingFetch(-1);
