@@ -114,22 +114,48 @@ inline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 }
 
-//0-127
 inline auto Bus::waitRefreshExternal() -> void {
-  while(cpu.refresh.external >= 126) {
-    if(cpu.active()) cpu.wait(1);
-    if(scheduler.synchronizing()) break;
-    if(apu.active()) apu.step(1);
-    if(vdp.active()) break;
+  if(state.acquired & VDPDMA) return; // refresh is synched with VDP during DMA
+  if(cpu.refresh.external < cpu.refresh.externalLowBound) return;
+
+  if(cpu.refresh.externalEnd == 0)
+    cpu.refresh.externalEnd = min(cpu.refresh.external + cpu.refresh.externalLength, cpu.refresh.externalHighBound);
+  if(cpu.refresh.external < cpu.refresh.externalEnd) {
+    while(cpu.refresh.external < cpu.refresh.externalEnd) {
+      if(cpu.active()) cpu.wait(1);
+      if(apu.active()) apu.step(1);
+      if(scheduler.synchronizing()) return;
+      if(vdp.active()) return;
+    }
+    cpu.refresh.external -= cpu.refresh.externalEnd;
+    cpu.refresh.externalEnd = 0;
+  }
+
+  while(cpu.refresh.external >= cpu.refresh.externalHighBound) {
+    cpu.refresh.external -= cpu.refresh.externalHighBound;
+    cpu.refresh.externalEnd = 0;
   }
 }
 
-//0-132
 inline auto Bus::waitRefreshRAM() -> void {
-  while(cpu.refresh.ram >= 130) {
-    if(cpu.active()) cpu.wait(1);
-    if(scheduler.synchronizing()) break;
-    if(apu.active()) apu.step(1);
-    if(vdp.active()) break;
+  if(state.acquired & VDPDMA) return; // refresh is synched with VDP during DMA
+  if(cpu.refresh.ram < cpu.refresh.ramLowBound) return;
+
+  if(cpu.refresh.ramEnd == 0)
+    cpu.refresh.ramEnd = min(cpu.refresh.ram + cpu.refresh.ramLength, cpu.refresh.ramHighBound);
+  if(cpu.refresh.ram < cpu.refresh.ramEnd) {
+    while(cpu.refresh.ram < cpu.refresh.ramEnd) {
+      if(cpu.active()) cpu.wait(1);
+      if(apu.active()) apu.step(1);
+      if(scheduler.synchronizing()) return;
+      if(vdp.active()) return;
+    }
+    cpu.refresh.ram -= cpu.refresh.ramEnd;
+    cpu.refresh.ramEnd = 0;
+  }
+
+  while(cpu.refresh.ram >= cpu.refresh.ramHighBound) {
+    cpu.refresh.ram -= cpu.refresh.ramHighBound;
+    cpu.refresh.ramEnd = 0;
   }
 }
