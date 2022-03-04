@@ -18,9 +18,16 @@ auto VDP::Layers::vscrollFetch() -> void {
 
 auto VDP::Layers::vscrollFetch(s32 index) -> void {
   if(vscrollMode == 0) return;
-  n16 address = index << 1;
-  vdp.layerA.vscroll = vdp.vsram.read(address++);
-  vdp.layerB.vscroll = vdp.vsram.read(address++);
+  if(index == -1) {
+    // Confirmed hardware bug that affects vertical scrolling of the left-most partial column.
+    // This bug can be observed in Wing of Wor / Gynoug during screen tilts.
+    n10 val = vdp.h40() ? vdp.vsram.read(38) & vdp.vsram.read(39) : 0;
+    vdp.layerA.vscroll = vdp.layerB.vscroll = val;
+  } else {
+    n16 address = index << 1;
+    vdp.layerA.vscroll = vdp.vsram.read(address++);
+    vdp.layerB.vscroll = vdp.vsram.read(address++);
+  }
 }
 
 auto VDP::Layers::power(bool reset) -> void {
