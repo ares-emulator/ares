@@ -225,7 +225,10 @@ auto VDP::writeControlPort(n16 data) -> void {
   //mode register 2
   case 0x01: {
     io.videoMode5      = data.bit(2);
-    io.overscan        = data.bit(3);
+    if(io.overscan ^ data.bit(3)) {
+      io.overscan      = data.bit(3);
+      vblankcheck();
+    }
     dma.enable         = data.bit(4);
     irq.vblank.enable  = data.bit(5);
     io.displayEnable   = data.bit(6);
