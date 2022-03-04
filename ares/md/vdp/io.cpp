@@ -187,6 +187,7 @@ auto VDP::writeControlPort(n16 data) -> void {
 
     prefetch.read(command.target, command.address);
 
+    if(command.pending && dma.mode == 1) dma.delay = 4; // based on measurement noted by Mask of Destiny
     dma.wait = dma.mode == 2;
     dma.synchronize();
     return;

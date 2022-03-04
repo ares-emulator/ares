@@ -208,6 +208,7 @@ struct VDP : Thread {
     n1  wait;
     n1  read;
     n1  enable;
+    n4  delay;
   } dma;
 
   struct Pixel {
