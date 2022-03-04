@@ -15,8 +15,15 @@ auto locate(const string& name) -> string {
     if(inode::exists(location)) return location;
   #endif
 
-  directory::create({Path::userData(), "ares/"});
-  return {Path::userData(), "ares/", name};
+  // On non-windows platforms, after exhausting other options,
+  // default to userData, on Windows, default to program dir
+  // most windows users desire portability.
+  #if !defined(PLATFORM_WINDOWS)
+    directory::create({Path::userData(), "ares/"});
+    return {Path::userData(), "ares/", name};
+  #else 
+    return {Path::program(), name};
+  #endif
 }
 
 #include <nall/main.hpp>
@@ -26,7 +33,7 @@ auto nall::main(Arguments arguments) -> void {
 
   mia::setHomeLocation([]() -> string {
     if(auto location = settings.paths.home) return location;
-    return {Path::user(), "Emulation/Systems/"};
+    return locate("Systems");
   });
 
   mia::setSaveLocation([]() -> string {
