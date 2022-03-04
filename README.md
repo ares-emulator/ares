@@ -9,7 +9,7 @@ Official Releases
 -----------------
 
 Official releases are available from
-[the ares website](https://ares-emulator.github.io).
+[the ares website](https://ares-emu.net).
 
 Nightly Builds
 --------------
