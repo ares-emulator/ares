@@ -13,6 +13,17 @@ auto M32X::VDP::unload() -> void {
 auto M32X::VDP::power(bool reset) -> void {
   dram.fill(0);
   cram.fill(0);
+  mode = 0;
+  lines = 0;
+  priority = 0;
+  dotshift = 0;
+  autofillLength = 0;
+  autofillAddress = 0;
+  autofillData = 0;
+  framebufferAccess = 0;
+  framebufferActive = 0;
+  framebufferSelect = 0;
+  hblank = 0;
   vblank = 1;
   selectFramebuffer(framebufferSelect);
 }

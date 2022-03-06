@@ -42,6 +42,7 @@ auto SH2::power(bool reset) -> void {
   SR.M = undefined;
   PPC = 0;
   PPM = Branch::Step;
+  ET = 0;
   ID = 0;
   exceptions = !reset ? ResetCold : ResetWarm;
 
