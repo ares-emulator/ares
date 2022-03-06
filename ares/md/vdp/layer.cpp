@@ -103,5 +103,8 @@ auto VDP::Layer::power(bool reset) -> void {
   nametableAddress = 0;
   attributes = {};
   for(auto& pixel : pixels) pixel = {};
+  colors = 0;
+  extras = 0;
+  for(auto& window : windowed) window = 0;
   for(auto& mapping : mappings) mapping = {};
 }

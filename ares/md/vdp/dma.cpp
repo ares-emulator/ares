@@ -77,6 +77,7 @@ auto VDP::DMA::power(bool reset) -> void {
   mode = 0;
   source = 0;
   length = 0;
+  data = 0;
   wait = 1;
   read = 0;
   enable = 0;
