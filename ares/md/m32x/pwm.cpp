@@ -50,6 +50,16 @@ auto M32X::PWM::step(u32 clocks) -> void {
 
 auto M32X::PWM::power(bool reset) -> void {
   Thread::create(23'020'200, {&M32X::PWM::main, this});
+  lmode = 0;
+  rmode = 0;
+  mono = 0;
+  dreqIRQ = 0;
+  timer = 0;
+  cycle = 0;
+  periods = 0;
+  counter = 0;
+  lsample = 0;
+  rsample = 0;
   lfifo.flush();
   rfifo.flush();
 }
