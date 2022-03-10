@@ -16,6 +16,12 @@ auto InputManager::createHotkeys() -> void {
     }
   }));
 
+  hotkeys.append(InputHotkey("Toggle Keyboard Capture").onPress([&] {
+    if(!emulator) return;
+    program.keyboardCaptured = !program.keyboardCaptured;
+    print("Keyboard capture: ", program.keyboardCaptured, "\n");
+  }));
+
   hotkeys.append(InputHotkey("Fast Forward").onPress([&] {
     if(!emulator || program.rewinding) return;
     program.fastForwarding = true;

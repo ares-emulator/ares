@@ -60,6 +60,7 @@ struct Program : ares::Platform {
   bool runAhead = false;
   bool requestFrameAdvance = false;
   bool requestScreenshot = false;
+  bool keyboardCaptured = false;
 
   struct State {
     u32 slot = 1;

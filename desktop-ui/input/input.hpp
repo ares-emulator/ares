@@ -69,6 +69,7 @@ struct InputHotkey : InputDigital {
   InputHotkey(string name) : name(name) {}
   auto& onPress(function<void ()> press) { return this->press = press, *this; }
   auto& onRelease(function<void ()> release) { return this->release = release, *this; }
+  auto value() -> s16 override;
 
   const string name;
 

@@ -182,7 +182,7 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
 
   auto port = ares::Node::parent(device);
   if(!port) return;
-
+  
   for(auto& inputPort : ports) {
     if(inputPort.name != port->name()) continue;
     for(auto& inputDevice : inputPort.devices) {
@@ -213,3 +213,19 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
     }
   }
 }
+
+auto Emulator::inputKeyboard(string name) -> bool {
+  for (auto& device : inputManager.devices) {
+    if (!device->isKeyboard()) continue;
+
+    auto keyboard = (shared_pointer<HID::Keyboard>)device;
+
+    auto key = keyboard->buttons().find(name);
+    if (!key) return false;
+
+    return keyboard->buttons().input(*key).value();
+  }
+
+  return false;
+}
+

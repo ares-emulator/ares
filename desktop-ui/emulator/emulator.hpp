@@ -21,7 +21,8 @@ struct Emulator {
   auto errorFirmware(const Firmware&, string system = "") -> void;
   auto load(mia::Pak& node, string name) -> bool;
   auto save(mia::Pak& node, string name) -> bool;
-  auto input(ares::Node::Input::Input) -> void;
+  virtual auto input(ares::Node::Input::Input) -> void;
+  auto inputKeyboard(string name) -> bool;
   virtual auto load(Menu) -> void {}
   virtual auto load() -> bool = 0;
   virtual auto save() -> bool { return true; }

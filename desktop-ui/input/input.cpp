@@ -137,6 +137,7 @@ auto InputDigital::value() -> s16 {
     auto& groupID = binding.groupID;
     auto& inputID = binding.inputID;
     auto& qualifier = binding.qualifier;
+    if (device->isKeyboard() && program.keyboardCaptured) continue;
     s16 value = device->group(groupID).input(inputID).value();
     s16 output = 0;
 
@@ -166,6 +167,45 @@ auto InputDigital::value() -> s16 {
 auto InputDigital::pressed() -> bool {
   return value() != 0;
 }
+
+
+auto InputHotkey::value() -> s16 {
+  s16 result = 0;
+
+  for(auto& binding : bindings) {
+    if(!binding.device) continue;  //unbound
+
+    auto& device = binding.device;
+    auto& groupID = binding.groupID;
+    auto& inputID = binding.inputID;
+    auto& qualifier = binding.qualifier;
+
+    s16 value = device->group(groupID).input(inputID).value();
+    s16 output = 0;
+
+    if(device->isKeyboard() && groupID == HID::Keyboard::GroupID::Button) {
+      output = value != 0;
+    }
+
+    if(device->isMouse() && groupID == HID::Mouse::GroupID::Button && ruby::input.acquired()) {
+      output = value != 0;
+    }
+
+    if(device->isJoypad() && groupID == HID::Joypad::GroupID::Button) {
+      output = value != 0;
+    }
+
+    if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button) {
+      if(qualifier == Qualifier::Lo) output = value < -16384;
+      if(qualifier == Qualifier::Hi) output = value > +16384;
+    }
+
+    result |= output;
+  }
+
+  return result;
+}
+
 
 //
 
@@ -213,6 +253,7 @@ auto InputAnalog::value() -> s16 {
     auto& groupID = binding.groupID;
     auto& inputID = binding.inputID;
     auto& qualifier = binding.qualifier;
+    if (device->isKeyboard() && program.keyboardCaptured) continue;    
     s16 value = device->group(groupID).input(inputID).value();
 
     if(device->isKeyboard() && groupID == HID::Keyboard::GroupID::Button) {
@@ -278,6 +319,7 @@ auto InputAbsolute::value() -> s16 {
     auto& groupID = binding.groupID;
     auto& inputID = binding.inputID;
     auto& qualifier = binding.qualifier;
+    if (device->isKeyboard() && program.keyboardCaptured) continue;
     s16 value = device->group(groupID).input(inputID).value();
 
     if(device->isMouse() && groupID == HID::Joypad::GroupID::Axis && ruby::input.acquired()) {
@@ -334,6 +376,7 @@ auto InputRelative::value() -> s16 {
     auto& groupID = binding.groupID;
     auto& inputID = binding.inputID;
     auto& qualifier = binding.qualifier;
+    if (device->isKeyboard() && program.keyboardCaptured) continue;
     s16 value = device->group(groupID).input(inputID).value();
 
     if(device->isMouse() && groupID == HID::Joypad::GroupID::Axis && ruby::input.acquired()) {
