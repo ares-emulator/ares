@@ -12,7 +12,7 @@ struct Settings : Markup::Node {
     bool exclusive = false;
     bool blocking = false;
     bool flush = false;
-    string shader = "Blur";
+    string shader = "None";
     u32 multiplier = 2;
     string output = "Scale";
     bool aspectCorrection = true;
