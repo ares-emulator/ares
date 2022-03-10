@@ -44,7 +44,7 @@ auto nall::main(Arguments arguments) -> void {
 
   mia::setHomeLocation([]() -> string {
     if(auto location = settings.paths.home) return location;
-    return locate("Systems");
+    return locate("Systems/");
   });
 
   mia::setSaveLocation([]() -> string {
