@@ -145,7 +145,6 @@ auto pWindow::construct() -> void {
   if(!visual) visual = gdk_screen_get_system_visual(gdk_screen_get_default());
   if(visual) gtk_widget_set_visual(widget, visual);
 
-  gtk_widget_set_app_paintable(widget, true);
   gtk_widget_add_events(widget, GDK_CONFIGURE);
 
   #if HIRO_GTK==2
@@ -162,7 +161,8 @@ auto pWindow::construct() -> void {
   formContainer = gtk_fixed_new();
   gtk_box_pack_start(GTK_BOX(menuContainer), formContainer, true, true, 0);
   gtk_widget_show(formContainer);
-
+  gtk_widget_set_app_paintable(formContainer, true);
+  
   statusContainer = gtk_event_box_new();
   gtkStatus = gtk_statusbar_new();
   #if HIRO_GTK==2
@@ -186,7 +186,7 @@ auto pWindow::construct() -> void {
   #if HIRO_GTK==2
   g_signal_connect(G_OBJECT(widget), "expose-event", G_CALLBACK(Window_expose), (gpointer)this);
   #elif HIRO_GTK==3
-  g_signal_connect(G_OBJECT(widget), "draw", G_CALLBACK(Window_draw), (gpointer)this);
+  g_signal_connect(G_OBJECT(formContainer), "draw", G_CALLBACK(Window_draw), (gpointer)this);
   #endif
   g_signal_connect(G_OBJECT(widget), "configure-event", G_CALLBACK(Window_configure), (gpointer)this);
   g_signal_connect(G_OBJECT(widget), "drag-data-received", G_CALLBACK(Window_drop), (gpointer)this);
@@ -286,7 +286,7 @@ auto pWindow::remove(sStatusBar statusBar) -> void {
 
 auto pWindow::setBackgroundColor(Color color) -> void {
   GdkColor gdkColor = CreateColor(color);
-  gtk_widget_modify_bg(widget, GTK_STATE_NORMAL, color ? &gdkColor : nullptr);
+  gtk_widget_modify_bg(formContainer, GTK_STATE_NORMAL, color ? &gdkColor : nullptr);
 }
 
 auto pWindow::setDismissable(bool dismissable) -> void {
