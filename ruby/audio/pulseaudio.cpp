@@ -93,7 +93,7 @@ private:
     do {
       if (pa_mainloop_prepare(_mainLoop, 1000000) < 0) return false;
       pa_mainloop_poll(_mainLoop);
-      pa_mainloop_dispatch(_mainLoop)
+      pa_mainloop_dispatch(_mainLoop);
       streamState = pa_stream_get_state(_stream);
       if(!PA_STREAM_IS_GOOD(streamState)) return false;
     } while(streamState != PA_STREAM_READY);
