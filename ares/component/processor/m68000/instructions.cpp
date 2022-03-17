@@ -332,14 +332,20 @@ auto M68000::instructionCHK(DataRegister compare, EffectiveAddress maximum) -> v
 
   r.z = clip<Word>(target) == 0;
   r.n = sign<Word>(target) < 0;
-  if(r.n) return exception(Exception::BoundsCheck, Vector::BoundsCheck);
+  if(r.n) {
+    prefetched();
+    return exception(Exception::BoundsCheck, Vector::BoundsCheck);
+  }
 
   auto result = (n64)target - source;
   r.c = sign<Word>(result >> 1) < 0;
   r.v = sign<Word>((target ^ source) & (target ^ result)) < 0;
   r.z = clip<Word>(result) == 0;
   r.n = sign<Word>(result) < 0;
-  if(r.n == r.v && !r.z) return exception(Exception::BoundsCheck, Vector::BoundsCheck);
+  if(r.n == r.v && !r.z) {
+    prefetched();
+    return exception(Exception::BoundsCheck, Vector::BoundsCheck);
+  }
   prefetch();
 }
 
@@ -421,7 +427,7 @@ auto M68000::instructionDIVS(EffectiveAddress from, DataRegister with) -> void {
   n32 divisor  = read<Word>(from) << 16, odivisor = divisor;
 
   if(divisor == 0) {
-    prefetch();
+    prefetched();
     return exception(Exception::DivisionByZero, Vector::DivisionByZero);
   }
 
@@ -498,7 +504,7 @@ auto M68000::instructionDIVU(EffectiveAddress from, DataRegister with) -> void {
   n32 divisor  = read<Word>(from) << 16;
 
   if(divisor == 0) {
-    prefetch();
+    prefetched();
     return exception(Exception::DivisionByZero, Vector::DivisionByZero);
   }
 
