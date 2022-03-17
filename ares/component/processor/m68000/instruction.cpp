@@ -414,6 +414,7 @@ M68000::M68000() {
   for(n3 mode : range(8))
   for(n3 reg  : range(8)) {
     auto opcode = pattern("1011 ---+ 11-- ----") | areg << 9 | mode << 3 | reg << 0;
+    if(mode == 7 && reg >= 5) continue;
 
     AddressRegister with{areg};
     EffectiveAddress from{mode, reg};
@@ -1256,7 +1257,7 @@ M68000::M68000() {
   for(n3 mode : range(8))
   for(n3 reg  : range(8)) {
     auto opcode = pattern("0100 1010 ++-- ----") | mode << 3 | reg << 0;
-    if(mode == 7 && reg >= 2) continue;
+    if(mode == 1 || mode == 7 && reg >= 2) continue;
 
     EffectiveAddress from{mode, reg};
     bind(opcode | 0 << 6, TST<Byte>, from);
