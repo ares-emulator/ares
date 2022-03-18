@@ -577,6 +577,18 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NOH") {rumble = true;}                                       //Transformers Beast Wars: Transmetals
   if(id == "NWF") {rumble = true;}                                       //Wheel of Fortune
 
+  //Homebrew (libdragon / Everdrive special header flag)
+  if(id[1] == 'E' && id[2] == 'D') {
+    n8 config = data[0x3f];
+    if(config.bit(4,7) == 1) {eeprom = 512;}
+    if(config.bit(4,7) == 2) {eeprom = 2_KiB;}
+    if(config.bit(4,7) == 3) {sram = 32_KiB;}
+    //if(config.bit(4,7) == 4) {sram = 96_KiB;}   //banked SRAM, not supported yet
+    if(config.bit(4,7) == 5) {flash = 128_KiB;}
+    if(config.bit(4,7) == 6) {sram = 128_KiB;}
+    rumble = true;
+    mempak = true;
+  }
 
   string s;
   s += "game\n";
