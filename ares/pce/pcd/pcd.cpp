@@ -92,6 +92,20 @@ auto PCD::connect() -> void {
   if(auto fp = system.pak->read("backup.ram")) {
     bram.load(fp);
   }
+
+  // Initialise bram to prevent 'rma error' screens in many games
+  // Only do this if the HUBM string is not present, to prevent overwriting
+  // existing bram
+  if (bram[0] != 'H' && bram[1] != 'U' && bram[2] != 'B' && bram[3] != 'M') {
+    bram[0] = 'H';
+    bram[1] = 'U';
+    bram[2] = 'B';
+    bram[3] = 'M';
+    bram[4] = 0x00;
+    bram[5] = 0x88;
+    bram[6] = 0x10;
+    bram[7] = 0x80;
+  }
 }
 
 auto PCD::disconnect() -> void {
