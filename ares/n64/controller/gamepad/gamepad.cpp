@@ -105,7 +105,7 @@ auto Gamepad::read() -> n32 {
   auto ax = x->value() * 85.0 / 32767.0;
   auto ay = y->value() * 85.0 / 32767.0;
 
-  //create sqaure dead-zone in range {-7 ... +7}
+  //create square dead-zone in range {-7 ... +7}
   auto lengthAbsoluteX = abs (ax);
   auto lengthAbsoluteY = abs (ay);
   if (lengthAbsoluteX < 7.0) {
@@ -117,7 +117,7 @@ auto Gamepad::read() -> n32 {
     ay *= lengthAbsoluteY;
   }
   
-  //create outer circular dead-zone in ranges {-inf ... -85} and {+85 ... +inf} and scale radially between the two dead-zones
+  //create outer circular dead-zone in ranges {-inf ... -85} and {+85 ... +inf} and scale between the two dead-zones according to the two-dimensional length
   auto length = sqrt(ax * ax + ay * ay);
   if(length > 85.0) {
     length = 85.0 / length;
