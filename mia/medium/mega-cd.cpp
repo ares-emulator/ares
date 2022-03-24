@@ -16,6 +16,7 @@ auto MegaCD::load(string location) -> bool {
 
   pak = new vfs::directory;
   pak->setAttribute("title",  document["game/title"].string());
+  pak->setAttribute("serial", document["game/serial"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->append("manifest.bml", manifest);
   if(directory::exists(location)) {
@@ -58,6 +59,8 @@ auto MegaCD::analyze(string location) -> string {
   }
   if(!regions) regions.append("NTSC-J","NTSC-U","PAL"); // unknown boot
 
+  string serialNumber = slice((const char*)(sector.data() + 0x180), 0, 14).trimRight(" ");
+
   vector<string> devices;
   string device = slice((const char*)(sector.data() + 0x190), 0, 16).trimRight(" ");
   for(auto& id : device) {
@@ -84,6 +87,7 @@ auto MegaCD::analyze(string location) -> string {
   s += "game\n";
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
+  s +={"  serial: ", serialNumber, "\n"};
   s +={"  region: ", regions.merge(", "), "\n"};
   if(devices)
   s +={"  device: ", devices.merge(", "), "\n"};
