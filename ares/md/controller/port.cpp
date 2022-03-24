@@ -20,6 +20,7 @@ auto ControllerPort::unload() -> void {
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
+  device = nullptr;
   if(name == "Control Pad" ) device = new ControlPad(port);
   if(name == "Fighting Pad") device = new FightingPad(port);
   if(device) return device->node;
