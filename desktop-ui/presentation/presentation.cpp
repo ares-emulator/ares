@@ -417,7 +417,13 @@ auto Presentation::loadEmulator() -> void {
 
     Group peripheralGroup;
     { MenuRadioItem peripheralItem{&portMenu};
+      peripheralItem.setAttribute<ares::Node::Port>("port", port);
       peripheralItem.setText("Nothing");
+      peripheralItem.onActivate([=] {
+        auto port = peripheralItem.attribute<ares::Node::Port>("port");
+        port->disconnect();
+        port->allocate(); // deallocation for ports not implementing disconnect()
+      });
       peripheralGroup.append(peripheralItem);
     }
     for(auto peripheral : port->supported()) {
@@ -429,6 +435,7 @@ auto Presentation::loadEmulator() -> void {
       peripheralItem.setText(peripheral);
       peripheralItem.onActivate([=] {
         auto port = peripheralItem.attribute<ares::Node::Port>("port");
+        port->disconnect();
         port->allocate(peripheralItem.text());
         port->connect();
       });
