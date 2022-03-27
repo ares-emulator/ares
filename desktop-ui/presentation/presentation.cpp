@@ -422,7 +422,6 @@ auto Presentation::loadEmulator() -> void {
       peripheralItem.onActivate([=] {
         auto port = peripheralItem.attribute<ares::Node::Port>("port");
         port->disconnect();
-        port->allocate(); // deallocation for ports not implementing disconnect()
       });
       peripheralGroup.append(peripheralItem);
     }
