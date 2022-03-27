@@ -9,7 +9,7 @@ struct ControllerPort {
 
   ControllerPort(string name);
   auto connect(Node::Peripheral) -> void;
-  auto disconnect() -> void;
+  auto disconnect() -> void { device.reset(); }
 
   auto readControl() -> n8 { return control; }
   auto writeControl(n8 data) -> void { control = data; }
