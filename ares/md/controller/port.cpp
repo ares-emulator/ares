@@ -11,6 +11,8 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setType("Controller");
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
+  port->setDisconnect([&] { return disconnect(); });
+
   port->setSupported({"Control Pad", "Fighting Pad"});
 }
 
@@ -20,7 +22,6 @@ auto ControllerPort::unload() -> void {
 }
 
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
-  device = nullptr;
   if(name == "Control Pad" ) device = new ControlPad(port);
   if(name == "Fighting Pad") device = new FightingPad(port);
   if(device) return device->node;
