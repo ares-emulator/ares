@@ -52,6 +52,7 @@ struct PPU : Thread {
 
   //dmg.cpp
   auto readTileDMG(bool select, u32 x, u32 y, n16& tiledata) -> void;
+  auto readObjectDMG(i16 y, n8 tile, n8 attributes, n16& tiledata) -> void;
   auto scanlineDMG() -> void;
   auto runDMG() -> void;
   auto runBackgroundDMG() -> void;
@@ -60,6 +61,7 @@ struct PPU : Thread {
 
   //cgb.cpp
   auto readTileCGB(bool select, u32 x, u32 y, n16& tiledata, n8& attributes) -> void;
+  auto readObjectCGB(i16 y, n8 tile, n8 attributes, n16& tiledata) -> void;
   auto scanlineCGB() -> void;
   auto runCGB() -> void;
   auto runBackgroundCGB() -> void;

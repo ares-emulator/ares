@@ -23,6 +23,19 @@ auto PPU::readTileDMG(bool select, u32 x, u32 y, n16& tiledata) -> void {
   tiledata.byte(1) = vram[tiledataAddress + 1];
 }
 
+auto PPU::readObjectDMG(i16 y, n8 tile, n8 attributes, n16& tiledata) -> void {
+  const s32 Height = (status.obSize == 0 ? 8 : 16);
+
+  tile &= ~status.obSize;
+  y = s32(status.ly) - y;
+
+  if(attributes.bit(6)) y ^= Height - 1;
+  n13 tiledataAddress = (tile << 4) + (y << 1);
+  tiledata.byte(0) = vram[tiledataAddress + 0];
+  tiledata.byte(1) = vram[tiledataAddress + 1];
+  if(attributes.bit(5)) tiledata = hflip(tiledata);
+}
+
 auto PPU::scanlineDMG() -> void {
   px = 0;
 
@@ -34,18 +47,11 @@ auto PPU::scanlineDMG() -> void {
     Sprite& s = sprite[sprites];
     s.y = oam[n + 0] - 16;
     s.x = oam[n + 1] -  8;
-    s.tile = oam[n + 2] & ~status.obSize;
+    s.tile = oam[n + 2];
     s.attributes = oam[n + 3];
 
     if(s32(status.ly) <  s.y) continue;
     if(s32(status.ly) >= s.y + Height) continue;
-    s.y = s32(status.ly) - s.y;
-
-    if(s.attributes.bit(6)) s.y ^= Height - 1;
-    n13 tiledataAddress = (s.tile << 4) + (s.y << 1);
-    s.tiledata.byte(0) = vram[tiledataAddress + 0];
-    s.tiledata.byte(1) = vram[tiledataAddress + 1];
-    if(s.attributes.bit(5)) s.tiledata = hflip(s.tiledata);
 
     if(++sprites == 10) break;
   }
@@ -125,6 +131,7 @@ auto PPU::runObjectsDMG() -> void {
 
     s32 tileX = px - s.x;
     if(tileX < 0 || tileX > 7) continue;
+    if(tileX == 0 || px == 0) readObjectDMG(s.y, s.tile, s.attributes, s.tiledata);
 
     n2 index;
     index.bit(0) = s.tiledata.bit( 7 - tileX);
