@@ -14,7 +14,25 @@ auto TMS9918::Background::run(n8 hoffset, n8 voffset) -> void {
 }
 
 auto TMS9918::Background::text1(n8 hoffset, n8 voffset) -> void {
-  debug(unimplemented, "[TMS9918::Background::text1]");
+  // Offset by 6px and blank the last 10px to centre the display
+  i32 x = hoffset - 6;
+  if (x < 0) return;
+  if (hoffset > 246) return;
+  
+  n14 nameAddress = (voffset.bit(3,7) * 40) + (x / 6);
+  nameAddress.bit(10,13) = io.nameTableAddress;
+  
+  n8 pattern = self.vram.read(nameAddress);
+
+  n14 patternAddress;
+  patternAddress.bit( 0, 2) = voffset.bit(0,2);
+  patternAddress.bit( 3,10) = pattern;
+  patternAddress.bit(11,13) = io.patternTableAddress;
+
+  n3 index = 7 - (x % 6);
+  if(self.vram.read(patternAddress).bit(index)) {
+    output.color = self.dac.io.colorForeground;
+  } 
 }
 
 auto TMS9918::Background::graphics1(n8 hoffset, n8 voffset) -> void {

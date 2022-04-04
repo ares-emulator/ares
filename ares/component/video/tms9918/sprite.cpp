@@ -32,6 +32,9 @@ auto TMS9918::Sprite::setup(n8 voffset) -> void {
 }
 
 auto TMS9918::Sprite::run(n8 hoffset, n8 voffset) -> void {
+  // Text mode does not support sprites
+  if (self.videoMode() == 1) return;
+
   output = {};
 
   n4 color;
