@@ -13,7 +13,8 @@ struct Linear : Interface {
   }
 
   auto read(n16 address, n8 data) -> n8 override {
-    data = rom.read(address);
+    // cartridges are mapped from 0x4000
+    data = rom.read(address - 0x4000);
     return data;
   }
 
