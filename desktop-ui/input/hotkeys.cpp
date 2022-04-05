@@ -39,6 +39,25 @@ auto InputManager::createHotkeys() -> void {
     ruby::audio.setDynamic(fastForwardAudioDynamic);
   }));
 
+  hotkeys.append(InputHotkey("Toggle Fast Forward").onPress([&] {
+    if(!emulator || program.rewinding) return;
+    program.fastForwarding = !program.fastForwarding;
+
+    if (program.fastForwarding) {
+      fastForwardVideoBlocking = ruby::video.blocking();
+      fastForwardAudioBlocking = ruby::audio.blocking();
+      fastForwardAudioDynamic  = ruby::audio.dynamic();
+      ruby::video.setBlocking(false);
+      ruby::audio.setBlocking(false);
+      ruby::audio.setDynamic(false);
+      return;
+    } 
+
+    ruby::video.setBlocking(fastForwardVideoBlocking);
+    ruby::audio.setBlocking(fastForwardAudioBlocking);
+    ruby::audio.setDynamic(fastForwardAudioDynamic);
+  }));
+
   hotkeys.append(InputHotkey("Rewind").onPress([&] {
     if(!emulator || program.fastForwarding) return;
     if(program.rewind.frequency == 0) {
