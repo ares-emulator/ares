@@ -19,12 +19,12 @@ SuperFamicom::SuperFamicom() {
     device.digital("Down",   virtualPorts[id].pad.down);
     device.digital("Left",   virtualPorts[id].pad.left);
     device.digital("Right",  virtualPorts[id].pad.right);
-    device.digital("B",      virtualPorts[id].pad.a);
-    device.digital("A",      virtualPorts[id].pad.b);
-    device.digital("Y",      virtualPorts[id].pad.x);
-    device.digital("X",      virtualPorts[id].pad.y);
-    device.digital("L",      virtualPorts[id].pad.l1);
-    device.digital("R",      virtualPorts[id].pad.r1);
+    device.digital("B",      virtualPorts[id].pad.south);
+    device.digital("A",      virtualPorts[id].pad.east);
+    device.digital("Y",      virtualPorts[id].pad.west);
+    device.digital("X",      virtualPorts[id].pad.north);
+    device.digital("L",      virtualPorts[id].pad.l_bumper);
+    device.digital("R",      virtualPorts[id].pad.r_bumper);
     device.digital("Select", virtualPorts[id].pad.select);
     device.digital("Start",  virtualPorts[id].pad.start);
     port.append(device); }
@@ -53,8 +53,8 @@ SuperFamicom::SuperFamicom() {
     port.append(device); }
 
   { InputDevice device{"Twin Tap"};
-    device.digital("1", virtualPorts[id].pad.a);
-    device.digital("2", virtualPorts[id].pad.b);
+    device.digital("1", virtualPorts[id].pad.south);
+    device.digital("2", virtualPorts[id].pad.east);
     port.append(device); }
 
     ports.append(port);

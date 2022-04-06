@@ -19,27 +19,27 @@ Nintendo64DD::Nintendo64DD() {
     InputPort port{string{"Controller Port ", 1 + id}};
 
   { InputDevice device{"Gamepad"};
-    device.analog ("L-Up",    virtualPorts[id].pad.lup);
-    device.analog ("L-Down",  virtualPorts[id].pad.ldown);
-    device.analog ("L-Left",  virtualPorts[id].pad.lleft);
-    device.analog ("L-Right", virtualPorts[id].pad.lright);
+    device.analog ("L-Up",    virtualPorts[id].pad.lstick_up);
+    device.analog ("L-Down",  virtualPorts[id].pad.lstick_down);
+    device.analog ("L-Left",  virtualPorts[id].pad.lstick_left);
+    device.analog ("L-Right", virtualPorts[id].pad.lstick_right);
     device.digital("Up",      virtualPorts[id].pad.up);
     device.digital("Down",    virtualPorts[id].pad.down);
     device.digital("Left",    virtualPorts[id].pad.left);
     device.digital("Right",   virtualPorts[id].pad.right);
-    device.digital("B",       virtualPorts[id].pad.a);
-    device.digital("A",       virtualPorts[id].pad.b);
-    device.digital("C-Up",    virtualPorts[id].pad.rup);
-    device.digital("C-Down",  virtualPorts[id].pad.rdown);
-    device.digital("C-Left",  virtualPorts[id].pad.rleft);
-    device.digital("C-Right", virtualPorts[id].pad.rright);
-    device.digital("L",       virtualPorts[id].pad.l1);
-    device.digital("R",       virtualPorts[id].pad.r1);
-    device.digital("Z",       virtualPorts[id].pad.z);
+    device.digital("B",       virtualPorts[id].pad.west);
+    device.digital("A",       virtualPorts[id].pad.south);
+    device.digital("C-Up",    virtualPorts[id].pad.rstick_up);
+    device.digital("C-Down",  virtualPorts[id].pad.rstick_down);
+    device.digital("C-Left",  virtualPorts[id].pad.rstick_left);
+    device.digital("C-Right", virtualPorts[id].pad.rstick_right);
+    device.digital("L",       virtualPorts[id].pad.l_bumper);
+    device.digital("R",       virtualPorts[id].pad.r_bumper);
+    device.digital("Z",       virtualPorts[id].pad.r_trigger);
     device.digital("Start",   virtualPorts[id].pad.start);
     device.rumble ("Rumble",  virtualPorts[id].pad.rumble);
-    device.analog ("X-Axis",  virtualPorts[id].pad.lleft, virtualPorts[id].pad.lright);
-    device.analog ("Y-Axis",  virtualPorts[id].pad.lup,   virtualPorts[id].pad.ldown);
+    device.analog ("X-Axis",  virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+    device.analog ("Y-Axis",  virtualPorts[id].pad.lstick_up,   virtualPorts[id].pad.lstick_down);
     port.append(device); }
 
     ports.append(port);

@@ -17,8 +17,8 @@ SG1000::SG1000() {
     device.digital("Down",  virtualPorts[id].pad.down);
     device.digital("Left",  virtualPorts[id].pad.left);
     device.digital("Right", virtualPorts[id].pad.right);
-    device.digital("1",     virtualPorts[id].pad.a);
-    device.digital("2",     virtualPorts[id].pad.b);
+    device.digital("1",     virtualPorts[id].pad.south);
+    device.digital("2",     virtualPorts[id].pad.east);
     port.append(device); }
 
     ports.append(port);

@@ -18,8 +18,8 @@ MSX2::MSX2() {
     device.digital("Down",  virtualPorts[id].pad.down);
     device.digital("Left",  virtualPorts[id].pad.left);
     device.digital("Right", virtualPorts[id].pad.right);
-    device.digital("A",     virtualPorts[id].pad.a);
-    device.digital("B",     virtualPorts[id].pad.b);
+    device.digital("A",     virtualPorts[id].pad.east);
+    device.digital("B",     virtualPorts[id].pad.south);
     port.append(device); }
 
     ports.append(port);

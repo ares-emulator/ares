@@ -19,10 +19,10 @@ GameBoyAdvance::GameBoyAdvance() {
     device.digital("Down",   virtualPorts[0].pad.down);
     device.digital("Left",   virtualPorts[0].pad.left);
     device.digital("Right",  virtualPorts[0].pad.right);
-    device.digital("B",      virtualPorts[0].pad.a);
-    device.digital("A",      virtualPorts[0].pad.b);
-    device.digital("L",      virtualPorts[0].pad.l1);
-    device.digital("R",      virtualPorts[0].pad.r1);
+    device.digital("B",      virtualPorts[0].pad.south);
+    device.digital("A",      virtualPorts[0].pad.east);
+    device.digital("L",      virtualPorts[0].pad.l_bumper);
+    device.digital("R",      virtualPorts[0].pad.r_bumper);
     device.digital("Select", virtualPorts[0].pad.select);
     device.digital("Start",  virtualPorts[0].pad.start);
     device.rumble ("Rumble", virtualPorts[0].pad.rumble);

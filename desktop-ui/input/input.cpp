@@ -425,34 +425,32 @@ auto InputRumble::rumble(bool enable) -> void {
 //
 
 VirtualPad::VirtualPad() {
-  InputDevice::name = "Xbox 360 Gamepad";
-  InputDevice::digital("Up",      up);
-  InputDevice::digital("Down",    down);
-  InputDevice::digital("Left",    left);
-  InputDevice::digital("Right",   right);
-  InputDevice::digital("Select",  select);
-  InputDevice::digital("Start",   start);
-  InputDevice::digital("A",       a);
-  InputDevice::digital("B",       b);
-  InputDevice::digital("C",       c);
-  InputDevice::digital("X",       x);
-  InputDevice::digital("Y",       y);
-  InputDevice::digital("Z",       z);
-  InputDevice::digital("L1",      l1);
-  InputDevice::digital("R1",      r1);
-  InputDevice::digital("L2",      l2);
-  InputDevice::digital("R2",      r2);
-  InputDevice::digital("LT",      lt);
-  InputDevice::digital("RT",      rt);
-  InputDevice::analog ("L-Up",    lup);
-  InputDevice::analog ("L-Down",  ldown);
-  InputDevice::analog ("L-Left",  lleft);
-  InputDevice::analog ("L-Right", lright);
-  InputDevice::analog ("R-Up",    rup);
-  InputDevice::analog ("R-Down",  rdown);
-  InputDevice::analog ("R-Left",  rleft);
-  InputDevice::analog ("R-Right", rright);
-  InputDevice::rumble ("Rumble",  rumble);
+  InputDevice::name = "Virtual Gamepad";
+  InputDevice::digital("Pad Up",          up);
+  InputDevice::digital("Pad Down",        down);
+  InputDevice::digital("Pad Left",        left);
+  InputDevice::digital("Pad Right",       right);
+  InputDevice::digital("Select",          select);
+  InputDevice::digital("Start",           start);
+  InputDevice::digital("A (South)",       south);
+  InputDevice::digital("B (East)",        east);
+  InputDevice::digital("X (West)",        west);
+  InputDevice::digital("Y (North)",       north);
+  InputDevice::digital("L-Bumper",        l_bumper);
+  InputDevice::digital("R-Bumper",        r_bumper);
+  InputDevice::digital("L-Trigger",       l_trigger);
+  InputDevice::digital("R-Trigger",       r_trigger);
+  InputDevice::digital("L-Stick (Click)", lstick_click);
+  InputDevice::digital("R-Stick (Click)", rstick_click);
+  InputDevice::analog ("L-Up",            lstick_up);
+  InputDevice::analog ("L-Down",          lstick_down);
+  InputDevice::analog ("L-Left",          lstick_left);
+  InputDevice::analog ("L-Right",         lstick_right);
+  InputDevice::analog ("R-Up",            rstick_up);
+  InputDevice::analog ("R-Down",          rstick_down);
+  InputDevice::analog ("R-Left",          rstick_left);
+  InputDevice::analog ("R-Right",         rstick_right);
+  InputDevice::rumble ("Rumble",          rumble);
 }
 
 //

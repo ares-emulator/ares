@@ -24,14 +24,14 @@ PlayStation::PlayStation() {
     device.digital("Down",     virtualPorts[id].pad.down);
     device.digital("Left",     virtualPorts[id].pad.left);
     device.digital("Right",    virtualPorts[id].pad.right);
-    device.digital("Cross",    virtualPorts[id].pad.a);
-    device.digital("Circle",   virtualPorts[id].pad.b);
-    device.digital("Square",   virtualPorts[id].pad.x);
-    device.digital("Triangle", virtualPorts[id].pad.y);
-    device.digital("L1",       virtualPorts[id].pad.l1);
-    device.digital("L2",       virtualPorts[id].pad.l2);
-    device.digital("R1",       virtualPorts[id].pad.r1);
-    device.digital("R2",       virtualPorts[id].pad.r2);
+    device.digital("Cross",    virtualPorts[id].pad.south);
+    device.digital("Circle",   virtualPorts[id].pad.east);
+    device.digital("Square",   virtualPorts[id].pad.west);
+    device.digital("Triangle", virtualPorts[id].pad.north);
+    device.digital("L1",       virtualPorts[id].pad.l_bumper);
+    device.digital("L2",       virtualPorts[id].pad.l_trigger);
+    device.digital("R1",       virtualPorts[id].pad.r_bumper);
+    device.digital("R2",       virtualPorts[id].pad.r_trigger);
     device.digital("Select",   virtualPorts[id].pad.select);
     device.digital("Start",    virtualPorts[id].pad.start);
     port.append(device); }

@@ -16,14 +16,10 @@ GameBoy::GameBoy() {
     device.digital("Down",    virtualPorts[0].pad.down);
     device.digital("Left",    virtualPorts[0].pad.left);
     device.digital("Right",   virtualPorts[0].pad.right);
-    device.digital("B",       virtualPorts[0].pad.a);
-    device.digital("A",       virtualPorts[0].pad.b);
+    device.digital("B",       virtualPorts[0].pad.south);
+    device.digital("A",       virtualPorts[0].pad.east);
     device.digital("Select",  virtualPorts[0].pad.select);
     device.digital("Start",   virtualPorts[0].pad.start);
-    device.analog ("A-Up",    virtualPorts[0].pad.lup);
-    device.analog ("A-Down",  virtualPorts[0].pad.ldown);
-    device.analog ("A-Left",  virtualPorts[0].pad.lleft);
-    device.analog ("A-Right", virtualPorts[0].pad.lright);
     device.rumble ("Rumble",  virtualPorts[0].pad.rumble);
     port.append(device); }
 

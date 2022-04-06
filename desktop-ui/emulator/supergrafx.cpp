@@ -17,14 +17,32 @@ SuperGrafx::SuperGrafx() {
     device.digital("Down",   virtualPorts[id].pad.down);
     device.digital("Left",   virtualPorts[id].pad.left);
     device.digital("Right",  virtualPorts[id].pad.right);
-    device.digital("II",     virtualPorts[id].pad.a);
-    device.digital("I",      virtualPorts[id].pad.b);
+    device.digital("II",     virtualPorts[id].pad.south);
+    device.digital("I",      virtualPorts[id].pad.east);
     device.digital("Select", virtualPorts[id].pad.select);
     device.digital("Run",    virtualPorts[id].pad.start);
     port.append(device); }
 
+    { InputDevice device{"Avenue Pad 6"};
+    device.digital("Up",    virtualPorts[id].pad.up);
+    device.digital("Down",  virtualPorts[id].pad.down);
+    device.digital("Left",  virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("III",   virtualPorts[id].pad.west);
+    device.digital("II",    virtualPorts[id].pad.south);
+    device.digital("I",     virtualPorts[id].pad.east);
+    device.digital("IV",    virtualPorts[id].pad.l_bumper);
+    device.digital("V",     virtualPorts[id].pad.north);
+    device.digital("VI",    virtualPorts[id].pad.r_bumper);
+    device.digital("Select",virtualPorts[id].pad.select);
+    device.digital("Run",   virtualPorts[id].pad.start);
+    port.append(device); }
+
     ports.append(port);
   }
+
+  portBlacklist = {"Controller Port"};
+  inputBlacklist = {"Multitap"};
 }
 
 auto SuperGrafx::load() -> bool {
