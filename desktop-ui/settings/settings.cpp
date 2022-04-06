@@ -117,7 +117,7 @@ auto Settings::process(bool load) -> void {
   for(u32 index : range(5)) {
     auto& port = virtualPorts[index];
     for(auto& input : port.pad.inputs) {
-      string name = {"VirtualPad", 1 + index, "/", input.name}, value;
+      string name = {"VirtualPad", 1 + index, "/", string{input.name}.replace(" ", ".").replace("(", ".").replace(")", "")}, value;
       if(load == 0) for(auto& assignment : input.mapping->assignments) value.append(assignment, ";");
       if(load == 0) value.trimRight(";", 1L);
       bind(string, name, value);
