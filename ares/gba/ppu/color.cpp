@@ -12,7 +12,7 @@ auto PPU::color(n32 color) -> n64 {
     f64 lb = pow(B / 31.0, lcdGamma);
     f64 lg = pow(G / 31.0, lcdGamma);
     f64 lr = pow(R / 31.0, lcdGamma);
-    r = pow((  0 * lb +  50 * lg + 255 * lr) / 255, 1 / outGamma) * (0xffff * 255 / 280);
+    r = pow((  0 * lb +  50 * lg + 240 * lr) / 255, 1 / outGamma) * (0xffff * 255 / 280);
     g = pow(( 30 * lb + 230 * lg +  10 * lr) / 255, 1 / outGamma) * (0xffff * 255 / 280);
     b = pow((220 * lb +  10 * lg +  50 * lr) / 255, 1 / outGamma) * (0xffff * 255 / 280);
   }
