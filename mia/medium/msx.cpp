@@ -51,18 +51,18 @@ auto MSX::analyze(vector<u8>& rom) -> string {
   // We can check for this by checking which range the init
   // and text fields of the cartridge header fall into
   if ((rom.size() == 0x4000) && (rom[0] == 'A') && (rom[1] == 'B')) {
-	  n16 init = rom[2] | (rom[3] << 8);
-	  n16 text = rom[8] | (rom[9] << 8);
+    n16 init = rom[2] | (rom[3] << 8);
+    n16 text = rom[8] | (rom[9] << 8);
 
     bool textHas8000base = text.bit(14, 15) == 2;
     bool hasNoInitVector = init == 0;
     bool initHas8000base = init.bit(14, 15) == 2;
     bool init8000BaseHasRet = initHas8000base && rom[init & (rom.size() - 1)] == 0xC9;
 
-		if (textHas8000base && (hasNoInitVector || init8000BaseHasRet)) {
-			board = "LinearPage2";
-		}
-	}  
+    if (textHas8000base && (hasNoInitVector || init8000BaseHasRet)) {
+  	  board = "LinearPage2";
+    }
+  }  
   
   // If the rom is too big to be linear, attempt to guess the mapper
   // based on the number of times specific banking instructions occur 
