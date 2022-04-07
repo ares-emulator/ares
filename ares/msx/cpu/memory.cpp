@@ -1,15 +1,9 @@
 auto CPU::read(n16 address) -> n8 {
-  if(address == 0xffff) return readSecondarySlot();
-
   n2 page = address.bit(14,15);
   n2 primary = slot[page].primary;
-  n2 secondary = slot[primary].secondary[page];
-
-  // If MSX1, assume there are no secondary slots
-  if (Model::MSX()) secondary = 0;  
-
+  
   if(primary == 0) {
-    return rom.bios.read(address);
+    if (address < rom.bios.size()) return rom.bios.read(address);
   }
 
   if(primary == 1) {
@@ -21,17 +15,16 @@ auto CPU::read(n16 address) -> n8 {
   }
 
   if(primary == 3) {
-    if (secondary == 0 && Model::MSX()) {
-      return ram.read(address);
+    if (Model::MSX2() && address == 0xffff) return readSecondarySlot();
+    n2 secondary = slot[primary].secondary[page];
+
+    if(secondary == 0) {
+      n22 logical = Model::MSX2() ? (n22)(slot[page].memory << 16 | (n16)address) : (n22)address;
+      if (logical < ram.size()) return ram.read(logical);
     }
 
-    if(secondary == 0 && rom.sub) {
+    if(secondary == 1 && rom.sub && address < rom.sub.size()) {
       return rom.sub.read(address);
-    }
-
-    if(secondary == 2) {
-      n22 logical = slot[page].memory << 14 | (n14)address;
-      return ram.read(logical);
     }
   }
 
@@ -39,14 +32,9 @@ auto CPU::read(n16 address) -> n8 {
 }
 
 auto CPU::write(n16 address, n8 data) -> void {
-  if(address == 0xffff) return writeSecondarySlot(data);
-
   n2 page = address.bit(14,15);
   n2 primary = slot[page].primary;
   n2 secondary = slot[primary].secondary[page];
-
-  // If MSX1, assume there are no secondary slots
-  if (Model::MSX()) secondary = 0;
 
   if(primary == 0) {
     return;
@@ -61,13 +49,15 @@ auto CPU::write(n16 address, n8 data) -> void {
   }
 
   if(primary == 3) {
+    if (Model::MSX2() && address == 0xffff) return writeSecondarySlot(data);
+
     if (secondary == 0 && Model::MSX()) {
       return ram.write(address, data);
     }
 
-    if(secondary == 2) {
-      n22 logical = slot[page].memory << 14 | (n14)address;
-      return ram.write(logical, data);
+    if(secondary == 0 && Model::MSX2()) {
+      n22 logical = Model::MSX2() ? (n22)(slot[page].memory << 16 | (n16)address) : (n22)address;
+      if (logical < ram.size()) return ram.write(logical, data);
     }
   }
 }
@@ -89,6 +79,7 @@ auto CPU::in(n16 address) -> n8 {
     //but since it's not specified how so, that is not emulated here
     return slot[(n2)address].memory;
   }
+
   return 0xff;
 }
 
@@ -103,6 +94,7 @@ auto CPU::out(n16 address, n8 data) -> void {
   case 0xa8: return writePrimarySlot(data);
   case 0xaa: return keyboard.write(data.bit(0,3));
   case 0xfc: case 0xfd: case 0xfe: case 0xff:
+    if(Model::MSX()) return;
     slot[(n2)address].memory = data;
     return;
   }
