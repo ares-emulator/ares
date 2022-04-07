@@ -10,6 +10,9 @@ MSX::MSX() {
   manufacturer = "Microsoft";
   name = "MSX";
 
+  // TODO: Support other region bios versions
+  firmware.append({"BIOS", "Japan"});
+
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
@@ -31,7 +34,7 @@ auto MSX::load() -> bool {
   if(!game->load(Emulator::load(game, configuration.game))) return false;
 
   system = mia::System::create("MSX");
-  if(!system->load()) return false;
+  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
 
   auto region = Emulator::region();
   if(!ares::MSX::load(root, {"[Microsoft] MSX (", region, ")"})) return false;

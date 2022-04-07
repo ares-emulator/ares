@@ -5,9 +5,12 @@ struct MSX : System {
 };
 
 auto MSX::load(string location) -> bool {
+  auto bios = Pak::read(location);
+  if(!bios) return false;
+
   this->location = locate();
   pak = new vfs::directory;
-  pak->append("bios.rom", Resource::MSX::BIOS);
+  pak->append("bios.rom", bios);
   return true;
 }
 
