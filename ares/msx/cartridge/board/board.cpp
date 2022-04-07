@@ -6,6 +6,7 @@ namespace Board {
 #include "konami.cpp"
 #include "konami-scc.cpp"
 #include "linear.cpp"
+#include "mirrored.cpp"
 #include "super-lode-runner.cpp"
 #include "super-pierrot.cpp"
 

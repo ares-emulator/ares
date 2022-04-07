@@ -25,7 +25,9 @@ auto Cartridge::connect() -> void {
   if(information.board == "CrossBlaim") board = new Board::CrossBlaim{*this};
   if(information.board == "Konami") board = new Board::Konami{*this};
   if(information.board == "KonamiSCC") board = new Board::KonamiSCC{*this};
-  if(information.board == "Linear") board = new Board::Linear{*this};
+  if(information.board == "Linear") board = new Board::Linear{*this, 0x4000};
+  if(information.board == "LinearPage2") board = new Board::Linear{*this, 0x8000};
+  if(information.board == "Mirrored") board = new Board::Mirrored{*this};
   if(information.board == "SuperLodeRunner") board = new Board::SuperLodeRunner{*this};
   if(information.board == "SuperPierrot") board = new Board::SuperPierrot{*this};
   if(!board) board = new Board::Konami{*this};
