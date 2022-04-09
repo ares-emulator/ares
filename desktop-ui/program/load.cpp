@@ -58,7 +58,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
   } else {
     pause(false);
   }
-  //showMessage({"Loaded ", Location::prefix(location)});
+  showMessage({"Loaded ", Location::prefix(location)});
 
   //update recent games list
   for(s32 index = 7; index >= 0; index--) {

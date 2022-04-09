@@ -1,19 +1,29 @@
 auto Program::updateMessage() -> void {
+  presentation.statusLeft.setText(message.text);
+
   if(chrono::millisecond() - message.timestamp >= 2000) {
-    presentation.statusLeft.setText();
+    message = {};
+    if (messages.size()) {
+        message = messages.takeFirst();
+    }
   }
 
-  if(message.framesPerSecond) {
-    presentation.statusRight.setText({message.framesPerSecond(), " FPS"});
-    message.framesPerSecond.reset();
+  if(framesPerSecond) {
+     presentation.statusRight.setText({framesPerSecond(), " FPS"});
+     framesPerSecond.reset();
   }
 
   if(!emulator) {
     presentation.statusRight.setText("Unloaded");
   }
+
+  if (message.text == "") {
+    if (emulator && keyboardCaptured) {
+      presentation.statusLeft.setText("Keyboard capture is active");
+    }
+  }
 }
 
 auto Program::showMessage(const string& text) -> void {
-  message.timestamp = chrono::millisecond();
-  presentation.statusLeft.setText(text);
+  messages.append({chrono::millisecond(), text});
 }

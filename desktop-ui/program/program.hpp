@@ -81,8 +81,10 @@ struct Program : ares::Platform {
   struct Message {
     u64 timestamp = 0;
     string text;
-    maybe<u64> framesPerSecond;
   } message;
+
+  vector<Message> messages;
+  maybe<u64> framesPerSecond;
 };
 
 extern Program program;
