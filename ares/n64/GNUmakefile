@@ -34,11 +34,6 @@ $(object.path)/ares-n64-cpu.o:        $(ares.path)/n64/cpu/cpu.cpp
 $(object.path)/ares-n64-rsp.o:        $(ares.path)/n64/rsp/rsp.cpp
 $(object.path)/ares-n64-rdp.o:        $(ares.path)/n64/rdp/rdp.cpp
 
-ifeq ($(arch),amd64)
-  flags   += -msse4.2
-  options += -msse4.2
-endif
-
 ifeq ($(vulkan),true)
   ares.objects += ares-n64-vulkan
   $(object.path)/ares-n64-vulkan.o: $(ares.path)/n64/vulkan/vulkan.cpp

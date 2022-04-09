@@ -17,10 +17,13 @@ else ifeq ($(platform),linux)
   vulkan := $(if $(shell test -e ../ares/n64/vulkan/parallel-rdp && echo 1),true,false)
 endif
 
-ifeq ($(local),true)
-  ifeq ($(arch),amd64)
-    flags += -march=native
-  endif
+ifeq ($(arch),amd64)
+	ifeq ($(local),true)
+		flags += -march=native
+	else
+		# For official builds, default to nehalem which supports up to SSE 4.2.
+		flags += -march=nehalem
+	endif
 endif
 
 libco.path := ../libco
