@@ -87,6 +87,7 @@
   #include "pc-engine.cpp"
   #include "pc-engine-cd.cpp"
   #include "supergrafx.cpp"
+  #include "supergrafx-cd.cpp"
 #endif
 
 #ifdef CORE_PS1
@@ -169,6 +170,7 @@ auto Emulator::construct() -> void {
   emulators.append(new PCEngine);
   emulators.append(new PCEngineCD);
   emulators.append(new SuperGrafx);
+  emulators.append(new SuperGrafxCD);
   #endif
 
   #ifdef CORE_NG
