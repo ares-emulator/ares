@@ -19,7 +19,7 @@ auto BSMemoryCartridge::connect() -> void {
 
   if(auto fp = pak->read("program.flash")) {
     ROM = 0;
-    memory.allocate(fp->size());
+    memory.allocate(max(fp->size(), 0x100000));
     fp->read({memory.data(), memory.size()});
   }
 
