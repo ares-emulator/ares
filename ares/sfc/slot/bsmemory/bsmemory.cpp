@@ -116,7 +116,7 @@ auto BSMemoryCartridge::main() -> void {
 
   compatible.status.ready = 1;
   global.status.ready = 1;
-  Thread::step(10'000);  //10 milliseconds
+  step(10'000);  //10 milliseconds
 }
 
 auto BSMemoryCartridge::step(u32 clocks) -> void {
