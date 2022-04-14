@@ -99,11 +99,11 @@ auto MSX::input(ares::Node::Input::Input input) -> void {
   if (input->name() == "9 ) よ ょ") return button->setValue(inputKeyboard("Num9"));
   if (input->name() == "- = ほ")    return button->setValue(inputKeyboard("Dash"));
   if (input->name() == "^ ~ へ")    return button->setValue(inputKeyboard("Tilde"));
-//  if (input->name() == "¥ | ー")    return button->setValue(inputKeyboard(""));
+  if (input->name() == "¥ | ー")    return button->setValue(inputKeyboard("Equal"));
   if (input->name() == "@ ‘ \"")    return button->setValue(inputKeyboard("Apostrophe"));
   if (input->name() == "[ { 。")    return button->setValue(inputKeyboard("LeftBracket"));
   if (input->name() == "; + れ")    return button->setValue(inputKeyboard("Semicolon"));
-//  if (input->name() == ": * け")    return button->setValue(inputKeyboard(""));
+  if (input->name() == ": * け")    return button->setValue(inputKeyboard("Backslash"));
   if (input->name() == "] } む")    return button->setValue(inputKeyboard("RightBracket"));
   if (input->name() == ", < ね `")  return button->setValue(inputKeyboard("Comma"));
   if (input->name() == ". > る 。") return button->setValue(inputKeyboard("Period"));
@@ -174,7 +174,7 @@ auto MSX::input(ares::Node::Input::Input input) -> void {
   if (input->name() == "9")         return button->setValue(inputKeyboard("Keypad*"));
   if (input->name() == "-")         return button->setValue(inputKeyboard("Subtract"));
   if (input->name() == ",")         return button->setValue(inputKeyboard("Pagedown"));
-//  if (input->name() == ".")         return button->setValue(inputKeyboard(""));
+  if (input->name() == ".")         return button->setValue(inputKeyboard("Point"));
   if (input->name() == "実行")      return button->setValue(inputKeyboard("LeftSuper"));
   if (input->name() == "取消")      return button->setValue(inputKeyboard("RightSuper"));
 }
