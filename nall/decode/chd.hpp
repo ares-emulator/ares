@@ -8,6 +8,7 @@
 namespace nall::Decode {
 
 struct CHD {
+  ~CHD();
   struct Index {
     auto sectorCount() const -> u32;
 
@@ -33,12 +34,18 @@ struct CHD {
 
   vector<Track> tracks;
 private:
-  chd_file* chd;
+  chd_file* chd = nullptr;
   const int chd_sector_size = 2352 + 96;
   size_t chd_hunk_size;
   vector<u8> chd_hunk_buffer;
   int chd_current_hunk = -1;
 };
+
+inline CHD::~CHD() {
+  if (chd != nullptr) {
+     chd_close(chd);
+  }
+}
 
 inline auto CHD::load(const string& location) -> bool {
   chd_error err = chd_open(location.data(), CHD_OPEN_READ, nullptr, &chd);
@@ -92,6 +99,13 @@ inline auto CHD::load(const string& location) -> bool {
         print("CHD: Invalid track metadata: ", metadata, "\n");
         return false;
       }
+    }
+
+    // We currently only support RAW and audio tracks; log an error and exit if we see anything different
+    auto typeStr = string{type};
+    if (!(typeStr.find("_RAW") || typeStr.find("AUDIO"))) {
+      print("CHD: Unsupported track type: ", type, "\n");
+      return false;
     }
 
     // Ensure two second pregap is present
