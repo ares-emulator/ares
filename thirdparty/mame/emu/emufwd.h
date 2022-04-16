@@ -47,7 +47,7 @@ class osd_interface;
 class avi_file;
 
 // declared in chd.h
-class chd_file;
+//class chd_file;
 
 // declared in unzip.h
 namespace util { class archive_file; }

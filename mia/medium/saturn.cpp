@@ -1,6 +1,6 @@
 struct Saturn : CompactDisc {
   auto name() -> string override { return "Saturn"; }
-  auto extensions() -> vector<string> override { return {"sat", "cue"}; }
+  auto extensions() -> vector<string> override { return {"cue", "chd"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;

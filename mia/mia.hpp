@@ -3,6 +3,7 @@
 #include <nall/vfs.hpp>
 #include <nall/beat/single/apply.hpp>
 #include <nall/decode/cue.hpp>
+#include <nall/decode/chd.hpp>
 #include <nall/decode/wav.hpp>
 using namespace nall;
 

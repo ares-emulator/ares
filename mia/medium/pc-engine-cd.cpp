@@ -1,6 +1,6 @@
 struct PCEngineCD : CompactDisc {
   auto name() -> string override { return "PC Engine CD"; }
-  auto extensions() -> vector<string> override { return {"pcecd", "cue"}; }
+  auto extensions() -> vector<string> override { return {"cue", "chd"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
@@ -35,7 +35,14 @@ auto PCEngineCD::save(string location) -> bool {
 }
 
 auto PCEngineCD::analyze(string location) -> string {
-  auto sector = readDataSectorCUE(location, 0);
+  vector<u8> sector;
+
+  if(location.iendsWith(".cue")) {
+    sector = readDataSectorCUE(location, 0);
+  } else if (location.iendsWith(".chd")) {
+    sector = readDataSectorCHD(location, 0);
+  }
+
   if(!sector) return CompactDisc::manifestAudio(location);
 
   //yes, "Electronics" is spelled incorrectly in actual PC Engine CD games ...

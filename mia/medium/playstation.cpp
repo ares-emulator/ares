@@ -1,6 +1,6 @@
 struct PlayStation : CompactDisc {
   auto name() -> string override { return "PlayStation"; }
-  auto extensions() -> vector<string> override { return {"ps1", "cue", "exe"}; }
+  auto extensions() -> vector<string> override { return {"cue", "chd", "exe"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
@@ -28,6 +28,9 @@ auto PlayStation::load(string location) -> bool {
     if(location.iendsWith(".cue")) {
       pak->append("cd.rom", vfs::cdrom::open(location));
     }
+    if(location.iendsWith(".chd")) {
+      pak->append("cd.rom", vfs::cdrom::open(location));
+    }
     if(location.iendsWith(".exe")) {
       pak->append("program.exe", vfs::disk::open(location, vfs::read));
     }
@@ -41,8 +44,15 @@ auto PlayStation::save(string location) -> bool {
 }
 
 auto PlayStation::analyze(string location) -> string {
-  if(location.iendsWith(".cue")) {
-    auto sector = readDataSectorCUE(location, 4);
+  if(location.iendsWith(".cue") || location.iendsWith(".chd")) {
+    vector<u8> sector;
+
+    if(location.iendsWith(".cue")) {
+      sector = readDataSectorCUE(location, 4);
+    } else if (location.iendsWith(".chd")) {
+      sector = readDataSectorCHD(location, 4);
+    }
+
     if(!sector) return CompactDisc::manifestAudio(location);
 
     string text;

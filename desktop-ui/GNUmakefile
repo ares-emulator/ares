@@ -31,6 +31,7 @@ include $(libco.path)/GNUmakefile
 
 thirdparty.path := ../thirdparty
 sljit.path := $(thirdparty.path)/sljit/sljit_src
+libchdr.path := $(thirdparty.path)/libchdr
 include $(thirdparty.path)/GNUmakefile
 
 ruby.path := ../ruby
@@ -70,8 +71,8 @@ $(object.path)/desktop-ui-presentation.o: $(desktop-ui.path)/presentation/presen
 $(object.path)/desktop-ui-settings.o: $(desktop-ui.path)/settings/settings.cpp
 $(object.path)/desktop-ui-tools.o: $(desktop-ui.path)/tools/tools.cpp
 
-all.objects := $(libco.objects) $(sljit.objects) $(ruby.objects) $(hiro.objects) $(ares.objects) $(mia.objects) $(desktop-ui.objects)
-all.options := $(libco.options) $(sljit.options) $(ruby.options) $(hiro.options) $(ares.options) $(mia.options) $(desktop-ui.options) $(options)
+all.objects := $(libco.objects) $(sljit.objects) $(libchdr.objects) $(ruby.objects) $(hiro.objects) $(ares.objects) $(mia.objects) $(desktop-ui.objects)
+all.options := $(libco.options) $(sljit.options) $(libchdr.options)  $(ruby.options) $(hiro.options) $(ares.options) $(mia.options) $(desktop-ui.options) $(options)
 
 all: $(all.objects)
 	$(info Linking $(output.path)/$(name) ...)

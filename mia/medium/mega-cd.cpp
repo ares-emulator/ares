@@ -1,6 +1,6 @@
 struct MegaCD : CompactDisc {
   auto name() -> string override { return "Mega CD"; }
-  auto extensions() -> vector<string> override { return {"mcd", "cue"}; }
+  auto extensions() -> vector<string> override { return {"cue", "chd"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
@@ -35,7 +35,14 @@ auto MegaCD::save(string location) -> bool {
 }
 
 auto MegaCD::analyze(string location) -> string {
-  auto sector = readDataSectorCUE(location, 0);
+  vector<u8> sector;
+
+  if(location.iendsWith(".cue")) {
+      sector = readDataSectorCUE(location, 0);
+  } else if (location.iendsWith(".chd")) {
+      sector = readDataSectorCHD(location, 0);
+  }
+
   if(!sector || memory::compare(sector.data(), "SEGA", 4))
     return CompactDisc::manifestAudio(location);
 
