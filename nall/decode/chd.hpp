@@ -110,7 +110,7 @@ inline auto CHD::load(const string& location) -> bool {
 
     // Ensure two second pregap is present
     const bool pregap_in_file = (pregap_frames > 0 && pgtype[0] == 'V');
-    if (pregap_frames <= 0 && type != "AUDIO") {
+    if (pregap_frames <= 0 && strcmp(type, "AUDIO") != 0) {
       pregap_frames = 2 * 75;
     }
 
