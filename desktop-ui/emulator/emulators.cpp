@@ -1,3 +1,11 @@
+#ifdef CORE_A26
+namespace ares::Atari2600 {
+    auto load(Node::System& node, string name) -> bool;
+    auto option(string name, string value) -> bool;
+}
+#include "atari-2600.cpp"
+#endif
+
 #ifdef CORE_CV
   namespace ares::ColecoVision {
     auto load(Node::System& node, string name) -> bool;
@@ -129,6 +137,10 @@
 #endif
 
 auto Emulator::construct() -> void {
+  #ifdef CORE_A26
+  emulators.append(new Atari2600);
+  #endif
+
   #ifdef CORE_FC
   emulators.append(new Famicom);
   emulators.append(new FamicomDiskSystem);

@@ -45,6 +45,7 @@ auto construct() -> void {
   if(initialized) return;
   initialized = true;
 
+  media.append("Atari 2600");
   media.append("BS Memory");
   media.append("ColecoVision");
   media.append("Famicom");

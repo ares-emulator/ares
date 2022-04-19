@@ -27,6 +27,10 @@ ifeq ($(profile),performance)
   flags += -DPROFILE_PERFORMANCE
 endif
 
+ifneq ($(filter $(cores),a26),)
+  include $(ares.path)/a26/GNUmakefile
+endif
+
 ifneq ($(filter $(cores),fc),)
   include $(ares.path)/fc/GNUmakefile
 endif

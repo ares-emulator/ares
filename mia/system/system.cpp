@@ -1,4 +1,5 @@
 namespace Systems {
+  #include "atari-2600.cpp"
   #include "colecovision.cpp"
   #include "famicom.cpp"
   #include "game-boy.cpp"
@@ -30,6 +31,7 @@ namespace Systems {
 }
 
 auto System::create(string name) -> shared_pointer<Pak> {
+  if(name == "Atari 2600") return new Systems::Atari2600;
   if(name == "ColecoVision") return new Systems::ColecoVision;
   if(name == "Famicom") return new Systems::Famicom;
   if(name == "Game Boy") return new Systems::GameBoy;
