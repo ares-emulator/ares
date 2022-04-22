@@ -149,7 +149,6 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     scc.tlb.dirty[0]                      = data.bit(2);
     scc.tlb.cacheAlgorithm[0]             = data.bit(3, 5);
     scc.tlb.physicalAddress[0].bit(12,35) = data.bit(6,29);
-    scc.tlb.synchronize();
     break;
   case  3:  //entrylo1
     scc.tlb.global[1]                     = data.bit(0);
@@ -157,7 +156,6 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     scc.tlb.dirty[1]                      = data.bit(2);
     scc.tlb.cacheAlgorithm[1]             = data.bit(3, 5);
     scc.tlb.physicalAddress[1].bit(12,35) = data.bit(6,29);
-    scc.tlb.synchronize();
     break;
   case  4:  //context
     scc.context.badVirtualAddress  = data.bit( 4,22);
@@ -165,7 +163,6 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     break;
   case  5:  //pagemask
     scc.tlb.pageMask.bit(13,24) = data.bit(13,24);
-    scc.tlb.synchronize();
     break;
   case  6:  //wired
     scc.wired.index  = data.bit(0,4);
@@ -182,7 +179,6 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     scc.tlb.addressSpaceID            = data.bit( 0, 7);
     scc.tlb.virtualAddress.bit(13,39) = data.bit(13,39);
     scc.tlb.region                    = data.bit(62,63);
-    scc.tlb.synchronize();
     break;
   case 11:  //compare
     scc.compare = data.bit(0,31) << 1;
@@ -351,6 +347,7 @@ auto CPU::TLBWI() -> void {
   }
   if(scc.index.tlbEntry >= TLB::Entries) return;
   tlb.entry[scc.index.tlbEntry] = scc.tlb;
+  tlb.entry[scc.index.tlbEntry].synchronize();
   debugger.tlbWrite(scc.index.tlbEntry);
 }
 
@@ -360,5 +357,6 @@ auto CPU::TLBWR() -> void {
   }
   if(scc.random.index >= TLB::Entries) return;
   tlb.entry[scc.random.index] = scc.tlb;
+  tlb.entry[scc.random.index].synchronize();
   debugger.tlbWrite(scc.random.index);
 }

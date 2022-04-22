@@ -57,6 +57,8 @@ auto CPU::TLB::exception(u32 address) -> void {
 }
 
 auto CPU::TLB::Entry::synchronize() -> void {
+  pageMask = pageMask & (0b1010101010 << 13);
+  pageMask |= pageMask >> 1;
   globals = global[0] && global[1];
   addressMaskHi = ~(pageMask | 0x1fff);
   addressMaskLo = (pageMask | 0x1fff) >> 1;
