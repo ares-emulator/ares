@@ -41,7 +41,7 @@ struct CPU : Thread {
   auto power(bool reset) -> void;
 
   struct Pipeline {
-    u32 address;
+    u64 address;
     u32 instruction;
 
     struct InstructionCache {
@@ -65,7 +65,7 @@ struct CPU : Thread {
 
     auto inDelaySlot() const -> bool { return state == DelaySlot; }
     auto reset() -> void { state = Step; }
-    auto take(u32 address) -> void { state = Take; pc = address; }
+    auto take(u64 address) -> void { state = Take; pc = address; }
     auto delaySlot() -> void { state = DelaySlot; }
     auto exception() -> void { state = Exception; }
     auto discard() -> void { state = Discard; }

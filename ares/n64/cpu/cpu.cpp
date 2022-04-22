@@ -129,8 +129,8 @@ auto CPU::power(bool reset) -> void {
   for(auto& r : ipu.r) r.u64 = 0;
   ipu.lo.u64 = 0;
   ipu.hi.u64 = 0;
-  ipu.r[29].u64 = u32(0xa400'1ff0);  //stack pointer
-  ipu.pc = u32(0xbfc0'0000);
+  ipu.r[29].u64 = 0xffff'ffff'a400'1ff0ull;  //stack pointer
+  ipu.pc = 0xffff'ffff'bfc0'0000ull;
   scc = {};
   for(auto& r : fpu.r) r.u64 = 0;
   fpu.csr = {};
