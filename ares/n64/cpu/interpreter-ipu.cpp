@@ -350,17 +350,17 @@ auto CPU::J(u32 imm) -> void {
 }
 
 auto CPU::JAL(u32 imm) -> void {
-  RA.u64 = s32(PC + 8);
-  branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
+  RA.u64 = PC + 8;
+  branch.take((PC + 4 & 0xffff'ffff'f000'0000) | (imm << 2));
 }
 
 auto CPU::JALR(r64& rd, cr64& rs) -> void {
-  rd.u64 = s32(PC + 8);
-  branch.take(rs.u32);
+  rd.u64 = PC + 8;
+  branch.take(rs.u64);
 }
 
 auto CPU::JR(cr64& rs) -> void {
-  branch.take(rs.u32);
+  branch.take(rs.u64);
 }
 
 auto CPU::LB(r64& rt, cr64& rs, s16 imm) -> void {
