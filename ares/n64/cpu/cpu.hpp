@@ -487,7 +487,7 @@ struct CPU : Thread {
       n2 cu;  //reserved
       n1 bigEndian = 1;
       n2 sysadWritebackPattern;
-      n2 systemClockRatio = 6;
+      n3 systemClockRatio = 7;
     } configuration;
 
     //17: Load Linked Address

@@ -90,7 +90,9 @@ auto CPU::getControlRegister(n5 index) -> u64 {
   case 16:  //configuration
     data.bit( 0, 1) = scc.configuration.coherencyAlgorithmKSEG0;
     data.bit( 2, 3) = scc.configuration.cu;
+    data.bit( 4,14) = 0b11001000110;
     data.bit(15)    = scc.configuration.bigEndian;
+    data.bit(16,23) = 0b00000110;
     data.bit(24,27) = scc.configuration.sysadWritebackPattern;
     data.bit(28,30) = scc.configuration.systemClockRatio;
     break;
