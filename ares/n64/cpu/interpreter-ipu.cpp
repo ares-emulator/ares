@@ -355,8 +355,8 @@ auto CPU::JAL(u32 imm) -> void {
 }
 
 auto CPU::JALR(r64& rd, cr64& rs) -> void {
-  rd.u64 = PC + 8;
   branch.take(rs.u64);
+  rd.u64 = PC + 8;
 }
 
 auto CPU::JR(cr64& rs) -> void {
