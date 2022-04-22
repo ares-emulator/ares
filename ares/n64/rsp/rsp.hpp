@@ -111,7 +111,7 @@ struct RSP : Thread, Memory::IO<RSP> {
     };
 
     r32 r[32];
-    u32 pc;
+    u12 pc;
   } ipu;
 
   struct Branch {
@@ -119,10 +119,10 @@ struct RSP : Thread, Memory::IO<RSP> {
 
     auto inDelaySlot() const -> bool { return state == DelaySlot; }
     auto reset() -> void { state = Step; }
-    auto take(u32 address) -> void { state = Take; pc = address; }
+    auto take(u12 address) -> void { state = Take; pc = address; }
     auto delaySlot() -> void { state = DelaySlot; }
 
-    u64 pc = 0;
+    u12 pc = 0;
     u32 state = Step;
   } branch;
 
