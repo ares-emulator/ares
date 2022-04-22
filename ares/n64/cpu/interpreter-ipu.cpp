@@ -43,14 +43,14 @@ auto CPU::BGEZ(cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::BGEZAL(cr64& rs, s16 imm) -> void {
-  RA.u64 = s32(PC + 8);
   if(rs.s64 >= 0) branch.take(PC + 4 + (imm << 2));
+  RA.u64 = s32(PC + 8);
 }
 
 auto CPU::BGEZALL(cr64& rs, s16 imm) -> void {
-  RA.u64 = s32(PC + 8);
   if(rs.s64 >= 0) branch.take(PC + 4 + (imm << 2));
   else branch.discard();
+  RA.u64 = s32(PC + 8);
 }
 
 auto CPU::BGEZL(cr64& rs, s16 imm) -> void {
