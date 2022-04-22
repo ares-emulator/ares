@@ -121,31 +121,31 @@ auto RSP::writeWord(u32 address, u32 data_) -> void {
 
   if(address == 4) {
     //SP_STATUS
-    if(data.bit( 0)) status.halted = 0;
-    if(data.bit( 1)) status.halted = 1;
+    if(data.bit( 0) && !data.bit( 1)) status.halted = 0;
+    if(data.bit( 1) && !data.bit( 0)) status.halted = 1;
     if(data.bit( 2)) status.broken = 0;
-    if(data.bit( 3)) mi.lower(MI::IRQ::SP);
-    if(data.bit( 4)) mi.raise(MI::IRQ::SP);
-    if(data.bit( 5)) status.singleStep = 0;
-    if(data.bit( 6)) status.singleStep = 1;
-    if(data.bit( 7)) status.interruptOnBreak = 0;
-    if(data.bit( 8)) status.interruptOnBreak = 1;
-    if(data.bit( 9)) status.signal[0] = 0;
-    if(data.bit(10)) status.signal[0] = 1;
-    if(data.bit(11)) status.signal[1] = 0;
-    if(data.bit(12)) status.signal[1] = 1;
-    if(data.bit(13)) status.signal[2] = 0;
-    if(data.bit(14)) status.signal[2] = 1;
-    if(data.bit(15)) status.signal[3] = 0;
-    if(data.bit(16)) status.signal[3] = 1;
-    if(data.bit(17)) status.signal[4] = 0;
-    if(data.bit(18)) status.signal[4] = 1;
-    if(data.bit(19)) status.signal[5] = 0;
-    if(data.bit(20)) status.signal[5] = 1;
-    if(data.bit(21)) status.signal[6] = 0;
-    if(data.bit(22)) status.signal[6] = 1;
-    if(data.bit(23)) status.signal[7] = 0;
-    if(data.bit(24)) status.signal[7] = 1;
+    if(data.bit( 3) && !data.bit( 4)) mi.lower(MI::IRQ::SP);
+    if(data.bit( 4) && !data.bit( 3)) mi.raise(MI::IRQ::SP);
+    if(data.bit( 5) && !data.bit( 6)) status.singleStep = 0;
+    if(data.bit( 6) && !data.bit( 5)) status.singleStep = 1;
+    if(data.bit( 7) && !data.bit( 8)) status.interruptOnBreak = 0;
+    if(data.bit( 8) && !data.bit( 7)) status.interruptOnBreak = 1;
+    if(data.bit( 9) && !data.bit(10)) status.signal[0] = 0;
+    if(data.bit(10) && !data.bit( 9)) status.signal[0] = 1;
+    if(data.bit(11) && !data.bit(12)) status.signal[1] = 0;
+    if(data.bit(12) && !data.bit(11)) status.signal[1] = 1;
+    if(data.bit(13) && !data.bit(14)) status.signal[2] = 0;
+    if(data.bit(14) && !data.bit(13)) status.signal[2] = 1;
+    if(data.bit(15) && !data.bit(16)) status.signal[3] = 0;
+    if(data.bit(16) && !data.bit(15)) status.signal[3] = 1;
+    if(data.bit(17) && !data.bit(18)) status.signal[4] = 0;
+    if(data.bit(18) && !data.bit(17)) status.signal[4] = 1;
+    if(data.bit(19) && !data.bit(20)) status.signal[5] = 0;
+    if(data.bit(20) && !data.bit(19)) status.signal[5] = 1;
+    if(data.bit(21) && !data.bit(22)) status.signal[6] = 0;
+    if(data.bit(22) && !data.bit(21)) status.signal[6] = 1;
+    if(data.bit(23) && !data.bit(24)) status.signal[7] = 0;
+    if(data.bit(24) && !data.bit(23)) status.signal[7] = 1;
   }
 
   if(address == 5) {
