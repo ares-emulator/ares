@@ -26,7 +26,7 @@ auto RSP::BGEZ(cr32& rs, s16 imm) -> void {
 }
 
 auto RSP::BGEZAL(cr32& rs, s16 imm) -> void {
-  RA.u32 = s32(PC + 8);
+  RA.u32 = u12(PC + 8);
   if(rs.s32 >= 0) branch.take(PC + 4 + (imm << 2));
 }
 
@@ -43,7 +43,7 @@ auto RSP::BLTZ(cr32& rs, s16 imm) -> void {
 }
 
 auto RSP::BLTZAL(cr32& rs, s16 imm) -> void {
-  RA.u32 = s32(PC + 8);
+  RA.u32 = u12(PC + 8);
   if(rs.s32 < 0) branch.take(PC + 4 + (imm << 2));
 }
 
@@ -58,17 +58,17 @@ auto RSP::BREAK() -> void {
 }
 
 auto RSP::J(u32 imm) -> void {
-  branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
+  branch.take(imm << 2);
 }
 
 auto RSP::JAL(u32 imm) -> void {
-  RA.u32 = s32(PC + 8);
-  branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
+  RA.u32 = u12(PC + 8);
+  branch.take(imm << 2);
 }
 
 auto RSP::JALR(r32& rd, cr32& rs) -> void {
-  rd.u32 = s32(PC + 8);
   branch.take(rs.u32);
+  rd.u32 = u12(PC + 8);
 }
 
 auto RSP::JR(cr32& rs) -> void {
