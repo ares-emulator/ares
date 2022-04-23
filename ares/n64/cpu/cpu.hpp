@@ -207,6 +207,7 @@ struct CPU : Thread {
   auto fetch(u64 address) -> u32;
   template<u32 Size> auto read(u64 address) -> maybe<u64>;
   template<u32 Size> auto write(u64 address, u64 data) -> bool;
+  auto addressException(u64 address) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
