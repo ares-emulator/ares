@@ -10,20 +10,17 @@ flags += -I. -I.. -I../ares -I../thirdparty -DMIA_LIBRARY
 nall.path := ../nall
 include $(nall.path)/GNUmakefile
 
-ifeq ($(platform),windows)
- #vulkan := $(if $(shell if exist ..\ares\n64\vulkan\parallel-rdp) echo 1),true,false)
-  vulkan := $(if $(shell test -e ../ares/n64/vulkan/parallel-rdp && echo 1),true,false)
-else ifeq ($(platform),linux)
-  vulkan := $(if $(shell test -e ../ares/n64/vulkan/parallel-rdp && echo 1),true,false)
+ifneq ($(filter $(platform),windows linux),)
+  vulkan := true
 endif
 
 ifeq ($(arch),amd64)
-	ifeq ($(local),true)
-		flags += -march=native
-	else
-		# For official builds, default to nehalem which supports up to SSE 4.2.
-		flags += -march=nehalem
-	endif
+  ifeq ($(local),true)
+    flags += -march=native
+  else
+    # For official builds, default to nehalem which supports up to SSE 4.2.
+    flags += -march=nehalem
+  endif
 endif
 
 libco.path := ../libco
@@ -77,7 +74,7 @@ all.options := $(libco.options) $(sljit.options) $(libchdr.options)  $(ruby.opti
 all: $(all.objects)
 	$(info Linking $(output.path)/$(name) ...)
 	+@$(compiler) -o $(output.path)/$(name) $(all.objects) $(all.options)
-	cp ../LICENSE $(output.path)/LICENSE.txt
+	$(call copy,../LICENSE,$(output.path)/LICENSE.txt)
 ifeq ($(platform),macos)
 # Apply workaround for buggy linker in Xcode < 11.4.1
 	@$(compiler) -o $(output.path)/macos-fix-jit macos-fix-jit.cpp
@@ -92,8 +89,10 @@ ifeq ($(platform),macos)
 	sips -s format icns resource/$(name).png --out $(output.path)/$(name).app/Contents/Resources/$(name).icns
 	codesign --force --deep --sign - $(output.path)/$(name).app
 else ifeq ($(platform),windows)
-	cp -R $(ares.path)/Shaders $(output.path)/
-	cp -R $(mia.path)/Database $(output.path)/
+	$(call mkdir,$(output.path)/Shaders/)
+	$(call mkdir,$(output.path)/Database/)
+	$(call rcopy,$(ares.path)/Shaders/*,$(output.path)/Shaders/)
+	$(call rcopy,$(mia.path)/Database/*,$(output.path)/Database/)
 endif
 
 verbose: nall.verbose ruby.verbose hiro.verbose all;
@@ -107,7 +106,7 @@ endif
 
 install: all
 ifeq ($(platform),windows)
-	mkdir -p $(prefix)/$(name)/
+	$(call mkdir,$(prefix)/$(name)/)
 else ifeq ($(shell id -un),root)
 	$(error "make install should not be run as root")
 else ifeq ($(platform),macos)

@@ -39,10 +39,17 @@ endif
 # common commands
 ifeq ($(shell echo ^^),^)
   # cmd
-  delete  = $(info Deleting $1 ...) @del /q $(subst /,\,$1)
-  rdelete = $(info Deleting $1 ...) @del /s /q $(subst /,\,$1) && if exist $(subst /,\,$1) (rmdir /s /q $(subst /,\,$1))
+  fixpath = $(subst /,\\,$1)
+  mkdir   = @if not exist $(call fixpath,$1) (mkdir $(call fixpath,$1))
+  copy    = @copy $(call fixpath,$1) $(call fixpath,$2)
+  rcopy   = @xcopy /e /q /y $(call fixpath,$1) $(call fixpath,$2)
+  delete  = $(info Deleting $1 ...) @del /q $(call fixpath,$1)
+  rdelete = $(info Deleting $1 ...) @del /s /q $(call fixpath,$1) && if exist $(call fixpath,$1) (rmdir /s /q $(call fixpath,$1))
 else
   # sh
+  mkdir   = @mkdir -p $1
+  copy    = @cp $1 $2
+  rcopy   = @cp -R $1 $2
   delete  = $(info Deleting $1 ...) @rm -f $1
   rdelete = $(info Deleting $1 ...) @rm -rf $1
 endif

@@ -44,11 +44,11 @@ endif
 
 install: all
 ifeq ($(platform),windows)
-	mkdir -p $(prefix)/$(name)/
-	mkdir -p $(prefix)/$(name)/Database/
-	mkdir -p $(prefix)/$(name)/Firmware/
-	cp -R Database/* $(prefix)/$(name)/Database/
-	cp -R Firmware/* $(prefix)/$(name)/Firmware/
+	$(call mkdir,$(prefix)/$(name)/)
+	$(call mkdir,$(prefix)/$(name)/Database/)
+	$(call mkdir,$(prefix)/$(name)/Firmware/)
+	$(call rcopy,Database/*,$(prefix)/$(name)/Database/)
+	$(call rcopy,Firmware/*,$(prefix)/$(name)/Firmware/)
 else ifeq ($(shell id -un),root)
 	$(error "make install should not be run as root")
 else ifeq ($(platform),macos)
