@@ -148,7 +148,7 @@ template<u8 e>
 auto RSP::LDV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
   auto start = e;
-  auto end = start + 8;
+  auto end = min(start + 8, 16);
   for(u32 offset = start; offset < end; offset++) {
     vt.byte(offset & 15) = dmem.read<Byte>(address++);
   }
@@ -168,8 +168,10 @@ auto RSP::LFV(r128& vt, cr32& rs, s8 imm) -> void {
 template<u8 e>
 auto RSP::LHV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
+  auto index = (address & 7) - e;
+  address &= ~7;
   for(u32 offset = 0; offset < 8; offset++) {
-    vt.element(offset) = dmem.read<Byte>(address + (16 - e + offset * 2 & 15)) << 7;
+    vt.element(offset) = dmem.read<Byte>(address + (index + offset * 2 & 15)) << 7;
   }
 }
 
@@ -177,7 +179,7 @@ template<u8 e>
 auto RSP::LLV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 4;
   auto start = e;
-  auto end = start + 4;
+  auto end = min(start + 4, 16);
   for(u32 offset = start; offset < end; offset++) {
     vt.byte(offset & 15) = dmem.read<Byte>(address++);
   }
@@ -186,8 +188,10 @@ auto RSP::LLV(r128& vt, cr32& rs, s8 imm) -> void {
 template<u8 e>
 auto RSP::LPV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
+  auto index = (address & 7) - e;
+  address &= ~7;
   for(u32 offset = 0; offset < 8; offset++) {
-    vt.element(offset) = dmem.read<Byte>(address + (16 - e + offset & 15)) << 8;
+    vt.element(offset) = dmem.read<Byte>(address + (index + offset & 15)) << 8;
   }
 }
 
@@ -195,7 +199,7 @@ template<u8 e>
 auto RSP::LQV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
   auto start = e;
-  auto end = 16 - (address & 15);
+  auto end = min(16 + e - (address & 15), 16);
   for(u32 offset = start; offset < end; offset++) {
     vt.byte(offset & 15) = dmem.read<Byte>(address++);
   }
@@ -216,7 +220,7 @@ template<u8 e>
 auto RSP::LSV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 2;
   auto start = e;
-  auto end = start + 2;
+  auto end = min(start + 2, 16);
   for(u32 offset = start; offset < end; offset++) {
     vt.byte(offset & 15) = dmem.read<Byte>(address++);
   }
@@ -238,8 +242,10 @@ auto RSP::LTV(u8 vt, cr32& rs, s8 imm) -> void {
 template<u8 e>
 auto RSP::LUV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 8;
+  auto index = (address & 7) - e;
+  address &= ~7;
   for(u32 offset = 0; offset < 8; offset++) {
-    vt.element(offset) = dmem.read<Byte>(address + (16 - e + offset & 15)) << 7;
+    vt.element(offset) = dmem.read<Byte>(address + (index + offset & 15)) << 7;
   }
 }
 
