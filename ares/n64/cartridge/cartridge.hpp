@@ -1,16 +1,9 @@
 struct Cartridge {
   Node::Peripheral node;
   VFS::Pak pak;
-  Memory::Writable ram;
-  Memory::Writable eeprom;
-  struct Rom : Memory::Readable {
-    template<u32 Size>
-    auto read(u32 address) -> u64 {
-      if constexpr(Size == Byte) return Memory::Readable::read<Byte>(address + (address & 2));
-      if constexpr(Size == Half) return Memory::Readable::read<Half>(address + (address & 2));
-      return Memory::Readable::read<Size>(address);
-    }
-  } rom;
+  Memory::Readable16 rom;
+  Memory::Writable16 ram;
+  Memory::Writable16 eeprom;
   struct Flash : Memory::Writable {
     template<u32 Size>
     auto read(u32 address) -> u64 {

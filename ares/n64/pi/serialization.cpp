@@ -10,6 +10,7 @@ auto PI::serialize(serializer& s) -> void {
   s(io.readLength);
   s(io.writeLength);
   s(io.romLockout);
+  s(io.busLatch);
 
   s(bsd1.latency);
   s(bsd1.pulseWidth);

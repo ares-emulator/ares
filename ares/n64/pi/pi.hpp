@@ -29,9 +29,19 @@ struct PI : Memory::IO<PI> {
   auto dmaWrite() -> void;
 
   //io.cpp
+  auto ioRead(u32 address) -> u32;
+  auto ioWrite(u32 address, u32 data) -> void;
+
+  //bus.hpp
   auto readWord(u32 address) -> u32;
   auto writeWord(u32 address, u32 data) -> void;
-
+  auto writeFinished() -> void;
+  auto writeForceFinish() -> void;
+  template <u32 Size>
+  auto busRead(u32 address) -> u32;
+  template <u32 Size>
+  auto busWrite(u32 address, u32 data) -> void;
+  
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
@@ -45,6 +55,7 @@ struct PI : Memory::IO<PI> {
     n32 readLength;
     n32 writeLength;
     n1  romLockout;
+    n32 busLatch;
   } io;
 
   struct BSD {

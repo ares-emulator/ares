@@ -17,24 +17,7 @@ inline auto Bus::read(u32 address) -> u64 {
   if(address <= 0x047f'ffff) return ri.read<Size>(address);
   if(address <= 0x048f'ffff) return si.read<Size>(address);
   if(address <= 0x04ff'ffff) return unmapped;
-  if(address <= 0x0500'03ff) return dd.c2s.read<Size>(address);
-  if(address <= 0x0500'04ff) return dd.ds.read<Size>(address);
-  if(address <= 0x0500'057f) return dd.read<Size>(address);
-  if(address <= 0x0500'05bf) return dd.ms.read<Size>(address);
-  if(address <= 0x05ff'ffff) return unmapped;
-  if(address <= 0x063f'ffff) return dd.iplrom.read<Size>(address);
-  if(address <= 0x07ff'ffff) return unmapped;
-  if(address <= 0x0fff'ffff) {
-    if(cartridge.ram  ) return cartridge.ram.read<Size>(address);
-    if(cartridge.flash) return cartridge.flash.read<Size>(address);
-    return unmapped;
-  }
-  if(address <= 0x1fbf'ffff) {
-    if(address >= 0x13ff'0000 && address <= 0x13ff'ffff) {
-      return cartridge.isviewer.read<Size>(address);
-    }
-    return cartridge.rom.read<Size>(address);
-  }
+  if(address <= 0x1fbf'ffff) return pi.read<Size>(address);
   if(address <= 0x1fc0'07bf) {
     if(pi.io.romLockout) return unmapped;
     return pi.rom.read<Size>(address);
@@ -46,8 +29,10 @@ inline auto Bus::read(u32 address) -> u64 {
 template<u32 Size>
 inline auto Bus::write(u32 address, u64 data) -> void {
   address &= 0x1fff'ffff - (Size - 1);
-  cpu.recompiler.invalidate(address + 0); if constexpr(Size == Dual)
-  cpu.recompiler.invalidate(address + 4);
+  if constexpr(Accuracy::CPU::Recompiler) {
+    cpu.recompiler.invalidate(address + 0); if constexpr(Size == Dual)
+    cpu.recompiler.invalidate(address + 4);
+  }
 
   if(address <= 0x007f'ffff) return rdram.ram.write<Size>(address, data);
   if(address <= 0x03ef'ffff) return;
@@ -63,24 +48,7 @@ inline auto Bus::write(u32 address, u64 data) -> void {
   if(address <= 0x047f'ffff) return ri.write<Size>(address, data);
   if(address <= 0x048f'ffff) return si.write<Size>(address, data);
   if(address <= 0x04ff'ffff) return;
-  if(address <= 0x0500'03ff) return dd.c2s.write<Size>(address, data);
-  if(address <= 0x0500'04ff) return dd.ds.write<Size>(address, data);
-  if(address <= 0x0500'057f) return dd.write<Size>(address, data);
-  if(address <= 0x0500'05bf) return dd.ms.write<Size>(address, data);
-  if(address <= 0x05ff'ffff) return;
-  if(address <= 0x063f'ffff) return dd.iplrom.write<Size>(address, data);
-  if(address <= 0x07ff'ffff) return;
-  if(address <= 0x0fff'ffff) {
-    if(cartridge.ram  ) return cartridge.ram.write<Size>(address, data);
-    if(cartridge.flash) return cartridge.flash.write<Size>(address, data);
-    return;
-  }
-  if(address <= 0x1fbf'ffff) {
-    if(address >= 0x13ff'0000 && address <= 0x13ff'ffff) {
-      cartridge.isviewer.write<Size>(address, data);
-    }
-    return cartridge.rom.write<Size>(address, data);
-  }
+  if(address <= 0x1fbf'ffff) return pi.write<Size>(address, data);
   if(address <= 0x1fc0'07bf) {
     if(pi.io.romLockout) return;
     return pi.rom.write<Size>(address, data);
