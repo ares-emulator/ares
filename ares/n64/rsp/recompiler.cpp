@@ -272,7 +272,16 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x26 ... 0x27: {
+  case 0x26: {
+    return 0;
+  }
+
+  //LWU Rt,Rs,i16
+  case 0x27: {
+    lea(reg(1), Rt);
+    lea(reg(2), Rs);
+    mov32(reg(3), imm(i16));
+    call(&RSP::LWU);
     return 0;
   }
 

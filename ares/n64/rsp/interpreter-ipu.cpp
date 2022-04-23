@@ -96,7 +96,11 @@ auto RSP::LUI(r32& rt, u16 imm) -> void {
 }
 
 auto RSP::LW(r32& rt, cr32& rs, s16 imm) -> void {
-  rt.u32 = s32(dmem.readUnaligned<Word>(rs.u32 + imm));
+  rt.u32 = dmem.readUnaligned<Word>(rs.u32 + imm);
+}
+
+auto RSP::LWU(r32& rt, cr32& rs, s16 imm) -> void {
+  rt.u32 = dmem.readUnaligned<Word>(rs.u32 + imm);
 }
 
 auto RSP::NOR(r32& rd, cr32& rs, cr32& rt) -> void {
