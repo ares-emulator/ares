@@ -44,7 +44,7 @@ ifeq ($(shell echo ^^),^)
   copy    = @copy $(call fixpath,$1) $(call fixpath,$2)
   rcopy   = @xcopy /e /q /y $(call fixpath,$1) $(call fixpath,$2)
   delete  = $(info Deleting $1 ...) @del /q $(call fixpath,$1)
-  rdelete = $(info Deleting $1 ...) @del /s /q $(call fixpath,$1) && if exist $(call fixpath,$1) (rmdir /s /q $(call fixpath,$1))
+  rdelete = $(info Deleting $1 ...) @if exist $(call fixpath,$1) (rmdir /s /q $(call fixpath,$1))
 else
   # sh
   mkdir   = @mkdir -p $1
@@ -213,6 +213,12 @@ nall.verbose:
 %.o: $<
 	$(info Compiling $(subst ../,,$<) ...)
 	@$(call compile)
+
+$(object.path):
+	$(call mkdir,$(object.path))
+
+$(output.path):
+	$(call mkdir,$(output.path))
 
 # function compile([arguments])
 compile = \
