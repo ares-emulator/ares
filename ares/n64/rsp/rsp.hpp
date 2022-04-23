@@ -150,6 +150,7 @@ struct RSP : Thread, Memory::IO<RSP> {
   auto LHU(r32& rt, cr32& rs, s16 imm) -> void;
   auto LUI(r32& rt, u16 imm) -> void;
   auto LW(r32& rt, cr32& rs, s16 imm) -> void;
+  auto LWU(r32& rt, cr32& rs, s16 imm) -> void;
   auto NOR(r32& rd, cr32& rs, cr32& rt) -> void;
   auto OR(r32& rd, cr32& rs, cr32& rt) -> void;
   auto ORI(r32& rt, cr32& rs, u16 imm) -> void;

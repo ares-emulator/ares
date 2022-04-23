@@ -81,7 +81,7 @@ auto RSP::decoderEXECUTE() -> void {
   op(0x24, LBU, RT, RS, IMMi16);
   op(0x25, LHU, RT, RS, IMMi16);
   op(0x26, INVALID);  //LWR
-  op(0x27, INVALID);  //LWU
+  op(0x27, LWU, RT, RS, IMMi16);
   op(0x28, SB, RT, RS, IMMi16);
   op(0x29, SH, RT, RS, IMMi16);
   op(0x2a, INVALID);  //SWL
