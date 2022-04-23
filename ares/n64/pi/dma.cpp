@@ -28,7 +28,8 @@ auto PI::dmaWrite() -> void {
 
     i32 rom_len = (cur_len + 1) & ~1;
     for (u32 i = 0; i < rom_len; i += 2) {
-      u16 data = bus.read<Half>(io.pbusAddress);
+      //Do Word accesses to the cartridge because Half accesses are broken
+      u16 data = bus.read<Word>(io.pbusAddress) >> (io.pbusAddress & 2 ? 0 : 16);
       mem[i + 0] = data >> 8;
       mem[i + 1] = data & 0xFF;
       io.pbusAddress += 2;
