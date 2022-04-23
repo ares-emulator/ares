@@ -5,23 +5,25 @@ flags += -I..
 nall.path := ../nall
 include $(nall.path)/GNUmakefile
 
-objects := obj/sourcery.o
+objects := $(object.path)/sourcery.o
 
-obj/sourcery.o: sourcery.cpp
+$(object.path)/sourcery.o: sourcery.cpp
 
-all: $(objects)
-	$(info Linking out/$(name) ...)
-	+@$(compiler) -o out/$(name) $(objects) $(options)
+$(objects): | $(object.path)
+
+all: $(objects) | $(output.path)
+	$(info Linking $(output.path)/$(name) ...)
+	+@$(compiler) -o $(output.path)/$(name) $(objects) $(options)
 
 verbose: nall.verbose all;
 
 clean:
-	$(call delete,obj/*)
-	$(call delete,out/*)
+	$(call delete,$(object.path)/*)
+	$(call delete,$(output.path)/*)
 
 install: all
 ifneq ($(filter $(platform),linux bsd),)
-	cp out/$(name) $(prefix)/bin/$(name)
+	cp $(output.path)/$(name) $(prefix)/bin/$(name)
 endif
 
 uninstall:

@@ -71,7 +71,9 @@ $(object.path)/desktop-ui-tools.o: $(desktop-ui.path)/tools/tools.cpp
 all.objects := $(libco.objects) $(sljit.objects) $(libchdr.objects) $(ruby.objects) $(hiro.objects) $(ares.objects) $(mia.objects) $(desktop-ui.objects)
 all.options := $(libco.options) $(sljit.options) $(libchdr.options)  $(ruby.options) $(hiro.options) $(ares.options) $(mia.options) $(desktop-ui.options) $(options)
 
-all: $(all.objects)
+$(all.objects): | $(object.path)
+
+all: $(all.objects) | $(output.path)
 	$(info Linking $(output.path)/$(name) ...)
 	+@$(compiler) -o $(output.path)/$(name) $(all.objects) $(all.options)
 	$(call copy,../LICENSE,$(output.path)/LICENSE.txt)
@@ -101,8 +103,8 @@ clean:
 ifeq ($(platform),macos)
 	rm -rf $(output.path)/$(name).app
 endif
-	$(call rdelete,$(object.path)/*)
-	$(call rdelete,$(output.path)/*)
+	$(call rdelete,$(object.path))
+	$(call rdelete,$(output.path))
 
 install: all
 ifeq ($(platform),windows)

@@ -9,40 +9,42 @@ hiro.path := ../hiro
 hiro.resource := data/$(name).rc
 include $(hiro.path)/GNUmakefile
 
-objects := obj/genius.o
+objects := $(object.path)/genius.o
 
-obj/genius.o: genius.cpp
+$(object.path)/genius.o: genius.cpp
 
-all: $(hiro.objects) $(objects)
-	$(info Linking out/$(name) ...)
-	+@$(compiler) -o out/$(name) $(hiro.objects) $(objects) $(hiro.options) $(options)
+$(objects): | $(object.path)
+
+all: $(hiro.objects) $(objects) | $(output.path)
+	$(info Linking $(output.path)/$(name) ...)
+	+@$(compiler) -o $(output.path)/$(name) $(hiro.objects) $(objects) $(hiro.options) $(options)
 ifeq ($(platform),macos)
-	rm -rf out/$(name).app
-	mkdir -p out/$(name).app/Contents/MacOS/
-	mkdir -p out/$(name).app/Contents/Resources/
-	mv out/$(name) out/$(name).app/Contents/MacOS/$(name)
-	cp data/$(name).plist out/$(name).app/Contents/Info.plist
-	sips -s format icns data/$(name).png --out out/$(name).app/Contents/Resources/$(name).icns
+	rm -rf $(output.path)/$(name).app
+	mkdir -p $(output.path)/$(name).app/Contents/MacOS/
+	mkdir -p $(output.path)/$(name).app/Contents/Resources/
+	mv $(output.path)/$(name) $(output.path)/$(name).app/Contents/MacOS/$(name)
+	cp data/$(name).plist $(output.path)/$(name).app/Contents/Info.plist
+	sips -s format icns data/$(name).png --$(output.path) $(output.path)/$(name).app/Contents/Resources/$(name).icns
 endif
 
 verbose: hiro.verbose nall.verbose all;
 
 clean:
 ifeq ($(platform),macos)
-	rm -rf out/$(name).app
+	rm -rf $(output.path)/$(name).app
 endif
-	$(call delete,obj/*)
-	$(call delete,out/*)
+	$(call delete,$(object.path)/*)
+	$(call delete,$(output.path)/*)
 
 install: all
 ifeq ($(platform),macos)
-	cp -R out/$(name).app /Applications/$(name).app
+	cp -R $(output.path)/$(name).app /Applications/$(name).app
 else ifneq ($(filter $(platform),linux bsd),)
 	mkdir -p $(prefix)/bin/
 	mkdir -p $(prefix)/share/applications/
 	mkdir -p $(prefix)/share/icons/
 	mkdir -p $(prefix)/share/$(name)/
-	cp out/$(name) $(prefix)/bin/$(name)
+	cp $(output.path)/$(name) $(prefix)/bin/$(name)
 	cp data/$(name).desktop $(prefix)/share/applications/$(name).desktop
 	cp data/$(name).png $(prefix)/share/icons/$(name).png
 endif
@@ -56,4 +58,4 @@ else ifneq ($(filter $(platform),linux bsd),)
 	rm -f $(prefix)/share/icons/$(name).png
 endif
 
--include obj/*.d
+-include $(object.path)/*.d

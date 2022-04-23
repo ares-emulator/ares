@@ -21,7 +21,9 @@ $(object.path)/ares.o: $(ares.path)/ares/ares.cpp
 $(object.path)/mia.o: $(mia.path)/mia.cpp
 $(object.path)/resource.o: $(mia.path)/resource/resource.cpp
 
-all: $(hiro.objects) $(objects)
+$(objects): | $(object.path)
+
+all: $(hiro.objects) $(objects) | $(output.path)
 	$(info Linking $(output.path)/$(name) ...)
 	+@$(compiler) -o $(output.path)/$(name) $(hiro.objects) $(objects) $(hiro.options) $(options)
 ifeq ($(platform),macos)
