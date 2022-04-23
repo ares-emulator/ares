@@ -20,7 +20,11 @@ clean:
 	$(call delete,out/*)
 
 install: all
+ifneq ($(filter $(platform),linux bsd),)
 	cp out/$(name) $(prefix)/bin/$(name)
+endif
 
 uninstall:
+ifneq ($(filter $(platform),linux bsd),)
 	rm -f $(prefix)/bin/$(name)
+endif

@@ -44,11 +44,11 @@ ifeq ($(vulkan),true)
   flags += $(PARALLEL_RDP_INCLUDE_DIRS) $(PARALLEL_RDP_CXXFLAGS) $(PARALLEL_RDP_CFLAGS)
   $(object.path)/ares-n64-parallel-rdp/%.o: $(PARALLEL_RDP_IMPLEMENTATION)/%.cpp
 	$(info Compiling $(subst ../,,$<) ...)
-	@mkdir -p $(dir $@)
+	$(call mkdir,$(dir $@))
 	@$(call compile)
   $(object.path)/ares-n64-parallel-rdp/%.o: $(PARALLEL_RDP_IMPLEMENTATION)/%.c
 	$(info Compiling $(subst ../,,$<) ...)
-	@mkdir -p $(dir $@)
+	$(call mkdir,$(dir $@))
 	@$(call compile)
 endif
 
