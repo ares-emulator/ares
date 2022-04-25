@@ -23,5 +23,14 @@ auto RSP::dmaTransfer() -> void {
       request.pbusAddress += request.length;
       request.dramAddress += request.length + request.skip;
     }
+    dma.pbusRegion = request.pbusRegion;
+    dma.pbusAddress = request.pbusAddress;
+    dma.dramAddress = request.dramAddress;
   }
+
+  dma.pbusRegion  = request.pbusRegion;
+  dma.pbusAddress = request.pbusAddress;
+  dma.dramAddress = request.dramAddress;
+  dma.read.length = dma.write.length = 0xFF8;
+  dma.read.count  = dma.write.count  = 0;
 }
