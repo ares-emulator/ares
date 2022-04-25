@@ -48,6 +48,8 @@ struct RSP : Thread, Memory::IO<RSP> {
   //io.cpp
   auto readWord(u32 address) -> u32;
   auto writeWord(u32 address, u32 data) -> void;
+  auto ioRead(u32 address) -> u32;
+  auto ioWrite(u32 address, u32 data) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
