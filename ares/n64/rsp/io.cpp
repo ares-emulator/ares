@@ -158,7 +158,7 @@ auto RSP::writeWord(u32 address, u32 data_) -> void {
 
   if(address == 7) {
     //SP_SEMAPHORE
-    if(!data.bit(0)) status.semaphore = 0;
+    status.semaphore = 0;
   }
 
   debugger.ioSCC(Write, address, data);
