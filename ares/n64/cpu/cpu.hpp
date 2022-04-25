@@ -404,12 +404,7 @@ struct CPU : Thread {
       n1 probeFailure;
     } index;
 
-    //1
-    struct Random {
-      n5 index = 31;
-      n1 unused;
-    } random;
-
+    //1: Random
     //2: EntryLo0
     //3: EntryLo1
     //5: PageMask
@@ -424,8 +419,7 @@ struct CPU : Thread {
 
     //6
     struct Wired {
-      n5 index;
-      n1 unused;
+      n6 index;
     } wired;
 
     //8
@@ -532,6 +526,7 @@ struct CPU : Thread {
   //interpreter-scc.cpp
   auto getControlRegister(n5) -> u64;
   auto setControlRegister(n5, n64) -> void;
+  auto getControlRandom() -> u8;
 
   auto DMFC0(r64& rt, u8 rd) -> void;
   auto DMTC0(cr64& rt, u8 rd) -> void;

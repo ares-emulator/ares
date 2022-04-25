@@ -6,8 +6,7 @@ auto CPU::getControlRegister(n5 index) -> u64 {
     data.bit(31)    = scc.index.probeFailure;
     break;
   case  1:  //random
-    data.bit(0,4) = scc.random.index;
-    data.bit(5)   = scc.random.unused;
+    data.bit(0,5) = getControlRandom();
     break;
   case  2:  //entrylo0
     data.bit(0)    = scc.tlb.global[0];
@@ -31,8 +30,7 @@ auto CPU::getControlRegister(n5 index) -> u64 {
     data.bit(13,24) = scc.tlb.pageMask.bit(13,24);
     break;
   case  6:  //wired
-    data.bit(0,4) = scc.wired.index;
-    data.bit(5)   = scc.wired.unused;
+    data.bit(0,5) = scc.wired.index;
     break;
   case  8:  //badvaddr
     data = scc.badVirtualAddress;
@@ -140,8 +138,6 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     scc.index.probeFailure = data.bit(31);
     break;
   case  1:  //random
-  //scc.random.index  = data.bit(0,4);
-    scc.random.unused = data.bit(5);
     break;
   case  2:  //entrylo0
     scc.tlb.global[0]                     = data.bit(0);
@@ -165,9 +161,7 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     scc.tlb.pageMask.bit(13,24) = data.bit(13,24);
     break;
   case  6:  //wired
-    scc.wired.index  = data.bit(0,4);
-    scc.wired.unused = data.bit(5);
-    scc.random.index = 31;
+    scc.wired.index  = data.bit(0,5);
     break;
   case  8:  //badvaddr
   //scc.badVirtualAddress = data;  //read-only
@@ -268,6 +262,11 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
   }
 }
 
+auto CPU::getControlRandom() -> u8 {
+  if (scc.wired.index > 31) return (n6)random();
+  return random() % (32 - scc.wired.index) + scc.wired.index;
+}
+
 auto CPU::DMFC0(r64& rt, u8 rd) -> void {
   if(!context.kernelMode()) {
     if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
@@ -355,8 +354,9 @@ auto CPU::TLBWR() -> void {
   if(!context.kernelMode()) {
     if(!scc.status.enable.coprocessor0) return exception.coprocessor0();
   }
-  if(scc.random.index >= TLB::Entries) return;
-  tlb.entry[scc.random.index] = scc.tlb;
-  tlb.entry[scc.random.index].synchronize();
-  debugger.tlbWrite(scc.random.index);
+  u8 index = getControlRandom();
+  if(index >= TLB::Entries) return;
+  tlb.entry[index] = scc.tlb;
+  tlb.entry[index].synchronize();
+  debugger.tlbWrite(index);
 }
