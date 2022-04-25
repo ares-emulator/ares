@@ -7,7 +7,7 @@ auto RSP::dmaTransfer() -> void {
     for(u32 block : range(request.count)) {
       for(u32 offset = 0; offset < request.length; offset += 4) {
         u32 data = bus.read<Word>(request.dramAddress + offset);
-        bus.write<Word>(region + request.pbusAddress + offset, data);
+        bus.write<Word>(region + (request.pbusAddress + offset & 0xFFF), data);
       }
       request.pbusAddress += request.length;
       request.dramAddress += request.length + request.skip;
@@ -17,7 +17,7 @@ auto RSP::dmaTransfer() -> void {
   if(request.type == DMA::Request::Type::Write) {
     for(u32 block : range(request.count)) {
       for(u32 offset = 0; offset < request.length; offset += 4) {
-        u32 data = bus.read<Word>(region + request.pbusAddress + offset);
+        u32 data = bus.read<Word>(region + (request.pbusAddress + offset & 0xFFF));
         bus.write<Word>(request.dramAddress + offset, data);
       }
       request.pbusAddress += request.length;
