@@ -154,7 +154,6 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     scc.tlb.physicalAddress[1].bit(12,35) = data.bit(6,29);
     break;
   case  4:  //context
-    scc.context.badVirtualAddress  = data.bit( 4,22);
     scc.context.pageTableEntryBase = data.bit(23,63);
     break;
   case  5:  //pagemask
@@ -241,8 +240,6 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     scc.watchHi.physicalAddressExtended = data.bit(0,3);
     break;
   case 20:  //xcontext
-    scc.xcontext.badVirtualAddress  = data.bit( 4,30);
-    scc.xcontext.region             = data.bit(31,32);
     scc.xcontext.pageTableEntryBase = data.bit(33,63);
     break;
   case 26:  //parity error
