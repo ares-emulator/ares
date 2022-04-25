@@ -52,8 +52,6 @@ auto CPU::serialize(serializer& s) -> void {
 
   s(scc.index.tlbEntry);
   s(scc.index.probeFailure);
-  s(scc.random.index);
-  s(scc.random.unused);
   s(scc.tlb.global);
   s(scc.tlb.valid);
   s(scc.tlb.dirty);
@@ -71,7 +69,6 @@ auto CPU::serialize(serializer& s) -> void {
   s(scc.context.badVirtualAddress);
   s(scc.context.pageTableEntryBase);
   s(scc.wired.index);
-  s(scc.wired.unused);
   s(scc.badVirtualAddress);
   s(scc.count);
   s(scc.compare);

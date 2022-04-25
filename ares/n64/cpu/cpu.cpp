@@ -98,10 +98,6 @@ auto CPU::instructionEpilogue() -> s32 {
 
   ipu.r[0].u64 = 0;
 
-  if(--scc.random.index < scc.wired.index) {
-    scc.random.index = 31;
-  }
-
   switch(branch.state) {
   case Branch::Step: ipu.pc += 4; return 0;
   case Branch::Take: ipu.pc += 4; branch.delaySlot(); return 0;
