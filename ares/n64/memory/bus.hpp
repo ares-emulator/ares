@@ -6,9 +6,6 @@ inline auto Bus::read(u32 address) -> u64 {
   if(address <= 0x007f'ffff) return rdram.ram.read<Size>(address);
   if(address <= 0x03ef'ffff) return unmapped;
   if(address <= 0x03ff'ffff) return rdram.read<Size>(address);
-  if(address <= 0x0400'0fff) return rsp.dmem.read<Size>(address);
-  if(address <= 0x0400'1fff) return rsp.imem.read<Size>(address);
-  if(address <= 0x0403'ffff) return unmapped;
   if(address <= 0x0407'ffff) return rsp.read<Size>(address);
   if(address <= 0x040f'ffff) return rsp.status.read<Size>(address);
   if(address <= 0x041f'ffff) return rdp.read<Size>(address);
@@ -55,9 +52,6 @@ inline auto Bus::write(u32 address, u64 data) -> void {
   if(address <= 0x007f'ffff) return rdram.ram.write<Size>(address, data);
   if(address <= 0x03ef'ffff) return;
   if(address <= 0x03ff'ffff) return rdram.write<Size>(address, data);
-  if(address <= 0x0400'0fff) return rsp.dmem.write<Size>(address, data);
-  if(address <= 0x0400'1fff) return rsp.recompiler.invalidate(), rsp.imem.write<Size>(address, data);
-  if(address <= 0x0403'ffff) return;
   if(address <= 0x0407'ffff) return rsp.write<Size>(address, data);
   if(address <= 0x040f'ffff) return rsp.status.write<Size>(address, data);
   if(address <= 0x041f'ffff) return rdp.write<Size>(address, data);
