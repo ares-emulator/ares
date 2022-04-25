@@ -10,7 +10,7 @@ auto CPU::TLB::load(u32 address) -> Match {
       self.exception.tlbLoadInvalid();
       return {false};
     }
-    if(!entry.globals || entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
+    if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
     physicalAddress = entry.physicalAddress[lo] + (address & entry.addressMaskLo);
     self.debugger.tlbLoad(address, physicalAddress);
     return {true, entry.cacheAlgorithm[lo] != 2, physicalAddress};
@@ -37,7 +37,7 @@ auto CPU::TLB::store(u32 address) -> Match {
       self.exception.tlbModification();
       return {false};
     }
-    if(!entry.globals || entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
+    if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
     physicalAddress = entry.physicalAddress[lo] + (address & entry.addressMaskLo);
     self.debugger.tlbStore(address, physicalAddress);
     return {true, entry.cacheAlgorithm[lo] != 2, physicalAddress};
