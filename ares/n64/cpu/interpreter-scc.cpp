@@ -229,7 +229,7 @@ auto CPU::setControlRegister(n5 index, n64 data) -> void {
     context.setMode();
     break;
   case 17:  //load linked address
-    scc.ll = data;
+    scc.ll.bit(0,31) = data.bit(0,31);
     break;
   case 18:  //watchlo
     scc.watchLo.trapOnWrite               = data.bit(0);
