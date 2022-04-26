@@ -157,11 +157,17 @@ auto RSP::LDV(r128& vt, cr32& rs, s8 imm) -> void {
 template<u8 e>
 auto RSP::LFV(r128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
-  auto start = e >> 1;
-  auto end = start + 4;
+  auto index = (address & 7) - e;
+  address &= ~7;
+  auto start = e;
+  auto end = min(start + 8, 16);
+  r128 tmp;
+  for(u32 offset = 0; offset < 4; offset++) {
+    tmp.element(offset + 0) = dmem.read<Byte>(address + (index + offset * 4 + 0 & 15)) << 7;
+    tmp.element(offset + 4) = dmem.read<Byte>(address + (index + offset * 4 + 8 & 15)) << 7;
+  }
   for(u32 offset = start; offset < end; offset++) {
-    vt.element(offset & 7) = dmem.read<Byte>(address) << 7;
-    address += 4;
+    vt.byte(offset) = tmp.byte(offset);
   }
 }
 
@@ -269,8 +275,8 @@ auto RSP::MFC2(r32& rt, cr128& vs) -> void {
 
 template<u8 e>
 auto RSP::MTC2(cr32& rt, r128& vs) -> void {
-  vs.byte(e + 0 & 15) = rt.u32 >> 8;
-  vs.byte(e + 1 & 15) = rt.u32 >> 0;
+               vs.byte(e + 0) = rt.u32 >> 8;
+  if (e != 15) vs.byte(e + 1) = rt.u32 >> 0;
 }
 
 template<u8 e>
