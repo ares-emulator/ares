@@ -116,12 +116,15 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   u8 revision = data[0x3f];
 
   //detect the CIC used for a given gamepak based on checksumming its bootcode
-  //note: NTSC 6101 = PAL 7102 and NTSC 6102 = PAL 7101 (IDs are swapped)
+  //note: NTSC 6101 != PAL 7102; they use different bootcodes
+  //note: NTSC 6102 == PAL 7101
   //note: NTSC 6104 / PAL 7104 was never officially used
+  //note: Except for above cases, NTSC 610x == PAL 710x
   bool ntsc = region == "NTSC";
   string cic = ntsc ? "CIC-NUS-6102" : "CIC-NUS-7101";  //fallback; most common
   u32 crc32 = Hash::CRC32({&data[0x40], 0x9c0}).value();
-  if(crc32 == 0x1deb51a9) cic = ntsc ? "CIC-NUS-6101" : "CIC-NUS-7102";
+  if(crc32 == 0x1deb51a9) cic = "CIC-NUS-6101"; // Always NTSC (Star Fox 64)
+  if(crc32 == 0xec8b1325) cic = "CIC-NUS-7102"; // Always PAL (Lylat Wars)
   if(crc32 == 0xc08e5bd6) cic = ntsc ? "CIC-NUS-6102" : "CIC-NUS-7101";
   if(crc32 == 0x03b8376a) cic = ntsc ? "CIC-NUS-6103" : "CIC-NUS-7103";
   if(crc32 == 0xcf7f41dc) cic = ntsc ? "CIC-NUS-6105" : "CIC-NUS-7105";
