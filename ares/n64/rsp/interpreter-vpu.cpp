@@ -1429,6 +1429,26 @@ auto RSP::VXOR(r128& vd, cr128& vs, cr128& vt) -> void {
   }
 }
 
+template<u8 e>
+auto RSP::VZERO(r128& vd, cr128& vs, cr128& vt) -> void {
+  if constexpr(Accuracy::RSP::SISD) {
+    cr128 vte = vt(e);
+    for(u32 n : range(8)) {
+      s32 result = vs.s16(n) + vte.s16(n);
+      ACCL.s16(n) = result;
+      vd.s16(n) = 0;
+    }
+  }
+
+  if constexpr(Accuracy::RSP::SIMD) {
+#if defined(ARCHITECTURE_AMD64)
+    r128 vte = vt(e), sum, min, max;
+    ACCL = _mm_add_epi16(vs, vte);
+    vd   = _mm_xor_si128(vd, vd);
+#endif
+  }
+}
+
 #undef ACCH
 #undef ACCM
 #undef ACCL
