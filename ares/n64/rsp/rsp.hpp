@@ -311,6 +311,7 @@ struct RSP : Thread, Memory::IO<RSP> {
   template<u8 e> auto VSUB(r128& vd, cr128& vs, cr128& vt) -> void;
   template<u8 e> auto VSUBC(r128& vd, cr128& vs, cr128& vt) -> void;
   template<u8 e> auto VXOR(r128& rd, cr128& vs, cr128& vt) -> void;
+  template<u8 e> auto VZERO(r128& rd, cr128& vs, cr128& vt) -> void;
 
 //unserialized:
   u16 reciprocals[512];

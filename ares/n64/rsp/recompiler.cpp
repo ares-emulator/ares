@@ -804,9 +804,13 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     return 0;
   }
 
-  //INVALID
+  //VSUT (broken)
   case 0x12: {
-    return 0;
+    lea(reg(1), Vd);
+    lea(reg(2), Vs);
+    lea(reg(3), Vt);
+    callvu(&RSP::VZERO);
+    return 0;    
   }
 
   //VABS Vd,Vs,Vt(e)
@@ -836,9 +840,13 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     return 0;
   }
 
-  //INVALID
+  //Broken opcodes: VADDB, VSUBB, VACCB, VSUCB, VSAD, VSAC, VSUM
   case 0x16 ... 0x1c: {
-    return 0;
+    lea(reg(1), Vd);
+    lea(reg(2), Vs);
+    lea(reg(3), Vt);
+    callvu(&RSP::VZERO);
+    return 0;    
   }
 
   //VSAR Vd,Vs,E
@@ -1051,10 +1059,35 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   //VNOP
   case 0x37: {
     call(&RSP::VNOP);
+    return 0;
+  }
+
+  //Broken opcodes: VEXTT, VEXTQ, VEXTN
+  case 0x38 ... 0x3a: {
+    lea(reg(1), Vd);
+    lea(reg(2), Vs);
+    lea(reg(3), Vt);
+    callvu(&RSP::VZERO);
+    return 0;        
   }
 
   //INVALID
-  case 0x38 ... 0x3f: {
+  case 0x3b: {
+    return 0;
+  }
+
+  //Broken opcodes: VINST, VINSQ, VINSN
+  case 0x3c ... 0x3e: {
+    lea(reg(1), Vd);
+    lea(reg(2), Vs);
+    lea(reg(3), Vt);
+    callvu(&RSP::VZERO);
+    return 0;        
+  }
+
+  //VNULL
+  case 0x3f: {
+    call(&RSP::VNOP);    
     return 0;
   }
 
