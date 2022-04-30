@@ -235,13 +235,16 @@ auto RSP::LSV(r128& vt, cr32& rs, s8 imm) -> void {
 template<u8 e>
 auto RSP::LTV(u8 vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
-  auto start = vt;
-  auto end = min(32, start + 8);
-  address = (address + 8 & ~15) + (e & 1);
-  for(u32 offset = start; offset < end; offset++) {
-    auto byte = (8 - (e >> 1) + (offset - start)) << 1;
-    vpu.r[offset].byte(byte + 0 & 15) = dmem.read<Byte>(address++);
-    vpu.r[offset].byte(byte + 1 & 15) = dmem.read<Byte>(address++);
+  auto begin = address & ~7;
+  address = begin + ((e + (address & 8)) & 15);
+  auto vtbase = vt & ~7;
+  auto vtoff = e >> 1;
+  for (u32 i = 0; i < 8; i++) {
+    vpu.r[vtbase + vtoff].byte(i * 2 + 0) = dmem.read<Byte>(address++);
+    if (address == begin + 16) address = begin;
+    vpu.r[vtbase + vtoff].byte(i * 2 + 1) = dmem.read<Byte>(address++);
+    if (address == begin + 16) address = begin;
+    vtoff = vtoff + 1 & 7;
   }
 }
 
