@@ -116,6 +116,7 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x00: {  //icache index invalidate
     auto& line = icache.line(address);
+    cpu.recompiler.invalidate(address);
     line.valid = 0;
     break;
   }
@@ -138,7 +139,13 @@ auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
 
   case 0x10: {  //icache hit invalidate
     auto& line = icache.line(address);
-    if(line.hit(address)) line.valid = 0;
+    // Invalidate recompiler also on non-hits. icache invalidate is a signal
+    // that something was changed in memory, even though the memory is not in
+    // the icache anymore.
+    cpu.recompiler.invalidate(address);
+    if(line.hit(address)) {
+      line.valid = 0;
+    }
     break;
   }
 
