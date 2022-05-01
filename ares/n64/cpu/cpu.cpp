@@ -121,7 +121,7 @@ auto CPU::power(bool reset) -> void {
   for(auto& segment : context.segment) segment = Context::Segment::Unused;
   icache.power(reset);
   dcache.power(reset);
-  for(auto& entry : tlb.entry) entry = {};
+  for(auto& entry : tlb.entry) entry = {}, entry.synchronize();
   tlb.physicalAddress = 0;
   for(auto& r : ipu.r) r.u64 = 0;
   ipu.lo.u64 = 0;
