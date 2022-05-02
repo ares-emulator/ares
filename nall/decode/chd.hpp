@@ -34,6 +34,7 @@ struct CHD {
 
   vector<Track> tracks;
 private:
+  file_buffer fp;
   chd_file* chd = nullptr;
   const int chd_sector_size = 2352 + 96;
   size_t chd_hunk_size;
@@ -48,7 +49,13 @@ inline CHD::~CHD() {
 }
 
 inline auto CHD::load(const string& location) -> bool {
-  chd_error err = chd_open(location.data(), CHD_OPEN_READ, nullptr, &chd);
+  fp = file::open(location, file::mode::read);
+  if(!fp) {
+    print("CHD: Failed to open ", location, "\n");
+    return false;
+  }
+
+  chd_error err = chd_open_file(fp.handle(), CHD_OPEN_READ, nullptr, &chd);
   if (err != CHDERR_NONE) {
     print("CHD: Failed to open ", location, ": ", chd_error_string(err), "\n");
     return false;
