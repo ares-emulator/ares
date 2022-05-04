@@ -567,7 +567,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //NEG Rm,Rn
   case 0x6b: {
-    neg32(Rn, Rm);
+    sub32(Rn, imm(0), Rm);
     return 0;
   }
 
