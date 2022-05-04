@@ -111,6 +111,8 @@ auto CPU::BREAK() -> void {
 
 auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
   u32 address = rs.u64 + imm;
+  if (auto phys = devirtualize(address)) address = *phys;
+  else return;
 
   switch(operation) {
 
