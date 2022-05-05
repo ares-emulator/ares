@@ -486,7 +486,7 @@ struct CPU : Thread {
     } configuration;
 
     //17: Load Linked Address
-    n64 ll;
+    n32 ll;
     n1  llbit;
 
     //18
