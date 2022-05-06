@@ -7,7 +7,7 @@ struct Accuracy {
     static constexpr bool Recompiler = !Interpreter;
 
     //exceptions when the CPU accesses unaligned memory addresses
-    static constexpr bool AddressErrors = 0 | Reference;
+    static constexpr bool AddressErrors = 1 | Reference;
   };
 
   struct RSP {
