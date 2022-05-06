@@ -755,7 +755,7 @@ auto CPU::ORI(r64& rt, cr64& rs, u16 imm) -> void {
 }
 
 auto CPU::SB(cr64& rt, cr64& rs, s16 imm) -> void {
-  write<Byte>(rs.u32 + imm, rt.u32);
+  write<Byte>(rs.u64 + imm, rt.u32);
 }
 
 auto CPU::SC(r64& rt, cr64& rs, s16 imm) -> void {
