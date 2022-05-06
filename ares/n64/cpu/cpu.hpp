@@ -177,17 +177,16 @@ struct CPU : Thread {
       n1  valid[2];
       n1  dirty[2];
       n3  cacheAlgorithm[2];
-      n32 physicalAddress[2];
+      n36 physicalAddress[2];
       n32 pageMask;
       n40 virtualAddress;
       n8  addressSpaceID;
       n2  region;
     //internal:
       n1  globals;
-      n32 addressMaskHi;
-      n32 addressMaskLo;
-      n32 addressSelect;
-      n40 addressCompare;
+      n40 addressMaskHi;
+      n40 addressMaskLo;
+      n40 addressSelect;
     } entry[TLB::Entries];
 
     u32 physicalAddress;

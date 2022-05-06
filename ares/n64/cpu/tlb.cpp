@@ -3,7 +3,7 @@
 auto CPU::TLB::load(u32 address) -> Match {
   for(auto& entry : this->entry) {
     if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
-    if((address & entry.addressMaskHi) != (u32)entry.addressCompare) continue;
+    if((u32)(address & entry.addressMaskHi) != (u32)entry.virtualAddress) continue;
     bool lo = address & entry.addressSelect;
     if(!entry.valid[lo]) {
       exception(address);
@@ -24,7 +24,7 @@ auto CPU::TLB::load(u32 address) -> Match {
 auto CPU::TLB::store(u32 address) -> Match {
   for(auto& entry : this->entry) {
     if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
-    if((address & entry.addressMaskHi) != (u32)entry.addressCompare) continue;
+    if((u32)(address & entry.addressMaskHi) != (u32)entry.virtualAddress) continue;
     bool lo = address & entry.addressSelect;
     if(!entry.valid[lo]) {
       exception(address);
@@ -57,11 +57,12 @@ auto CPU::TLB::exception(u32 address) -> void {
 }
 
 auto CPU::TLB::Entry::synchronize() -> void {
-  pageMask = pageMask & (0b1010101010 << 13);
+  pageMask = pageMask & (0b101010101010 << 13);
   pageMask |= pageMask >> 1;
   globals = global[0] && global[1];
-  addressMaskHi = ~(pageMask | 0x1fff);
+  addressMaskHi = ~(n40)(pageMask | 0x1fff);
   addressMaskLo = (pageMask | 0x1fff) >> 1;
   addressSelect = addressMaskLo + 1;
-  addressCompare = virtualAddress & addressMaskHi;
+  virtualAddress &= addressMaskHi;
+  global[0] = global[1] = globals;
 }
