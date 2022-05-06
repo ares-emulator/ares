@@ -140,6 +140,12 @@ auto CPU::read(u64 address) -> maybe<u64> {
       exception.addressLoad();
       return nothing;
     }
+    if (context.bits == 32 && unlikely((s32)address != address)) {
+      step(1);
+      addressException(address);
+      exception.addressLoad();
+      return nothing;      
+    }
   }
 
   switch(segment(address)) {
@@ -171,6 +177,12 @@ template<u32 Size>
 auto CPU::write(u64 address, u64 data) -> bool {
   if constexpr(Accuracy::CPU::AddressErrors) {
     if(unlikely(address & Size - 1)) {
+      step(1);
+      addressException(address);
+      exception.addressStore();
+      return false;
+    }
+    if (context.bits == 32 && unlikely((s32)address != address)) {
       step(1);
       addressException(address);
       exception.addressStore();
