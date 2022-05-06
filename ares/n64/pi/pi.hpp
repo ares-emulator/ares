@@ -2,17 +2,11 @@
 
 struct PI : Memory::IO<PI> {
   Node::Object node;
-  Memory::Readable rom;
-  Memory::Writable ram;
 
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto io(bool mode, u32 address, u32 data) -> void;
-
-    struct Memory {
-      Node::Debugger::Memory ram;
-    } memory;
 
     struct Tracer {
       Node::Debugger::Tracer::Notification io;
@@ -54,7 +48,6 @@ struct PI : Memory::IO<PI> {
     n32 pbusAddress;
     n32 readLength;
     n32 writeLength;
-    n1  romLockout;
     n32 busLatch;
   } io;
 

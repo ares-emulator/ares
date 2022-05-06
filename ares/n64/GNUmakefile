@@ -9,6 +9,7 @@ ares.objects += ares-n64-mi
 ares.objects += ares-n64-vi
 ares.objects += ares-n64-ai
 ares.objects += ares-n64-pi
+ares.objects += ares-n64-pif
 ares.objects += ares-n64-ri
 ares.objects += ares-n64-si
 ares.objects += ares-n64-rdram
@@ -27,6 +28,7 @@ $(object.path)/ares-n64-mi.o:         $(ares.path)/n64/mi/mi.cpp
 $(object.path)/ares-n64-vi.o:         $(ares.path)/n64/vi/vi.cpp
 $(object.path)/ares-n64-ai.o:         $(ares.path)/n64/ai/ai.cpp
 $(object.path)/ares-n64-pi.o:         $(ares.path)/n64/pi/pi.cpp
+$(object.path)/ares-n64-pif.o:        $(ares.path)/n64/pif/pif.cpp
 $(object.path)/ares-n64-ri.o:         $(ares.path)/n64/ri/ri.cpp
 $(object.path)/ares-n64-si.o:         $(ares.path)/n64/si/si.cpp
 $(object.path)/ares-n64-rdram.o:      $(ares.path)/n64/rdram/rdram.cpp
