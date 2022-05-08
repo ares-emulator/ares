@@ -38,7 +38,7 @@ inline auto PI::writeWord(u32 address, u32 data) -> void {
   if(io.ioBusy) return;
   io.ioBusy = 1;
   io.busLatch = data;
-  queue.insert(Queue::PI_BUS_Write, 300);
+  queue.insert(Queue::PI_BUS_Write, 400);
   return busWrite<Word>(address, data);
 }
 
