@@ -63,6 +63,8 @@ auto CPU::TLB::Entry::synchronize() -> void {
   addressMaskHi = ~(n40)(pageMask | 0x1fff);
   addressMaskLo = (pageMask | 0x1fff) >> 1;
   addressSelect = addressMaskLo + 1;
+  physicalAddress[0] &= 0xffff'ffff;
+  physicalAddress[1] &= 0xffff'ffff;
   virtualAddress &= addressMaskHi;
   global[0] = global[1] = globals;
 }
