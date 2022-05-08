@@ -358,7 +358,7 @@ auto CPU::DSUBU(r64& rd, cr64& rs, cr64& rt) -> void {
 
 auto CPU::J(u32 imm) -> void {
   if (branch.inDelaySlotTaken()) return;
-  branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
+  branch.take((PC + 4 & 0xffff'ffff'f000'0000) | (imm << 2));
 }
 
 auto CPU::JAL(u32 imm) -> void {
