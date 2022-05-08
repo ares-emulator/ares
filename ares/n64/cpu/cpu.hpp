@@ -61,12 +61,14 @@ struct CPU : Thread {
   } pipeline;
 
   struct Branch {
-    enum : u32 { Step, Take, DelaySlot, Exception, Discard };
+    enum : u32 { Step, Take, NotTaken, DelaySlotTaken, DelaySlotNotTaken, Exception, Discard };
 
-    auto inDelaySlot() const -> bool { return state == DelaySlot; }
+    auto inDelaySlot() const -> bool { return state == DelaySlotTaken || state == DelaySlotNotTaken; }
+    auto inDelaySlotTaken() const -> bool { return state == DelaySlotTaken; }
     auto reset() -> void { state = Step; }
     auto take(u64 address) -> void { state = Take; pc = address; }
-    auto delaySlot() -> void { state = DelaySlot; }
+    auto notTaken() -> void { state = NotTaken; }
+    auto delaySlot(bool taken) -> void { state = taken ? DelaySlotTaken : DelaySlotNotTaken; }
     auto exception() -> void { state = Exception; }
     auto discard() -> void { state = Discard; }
 

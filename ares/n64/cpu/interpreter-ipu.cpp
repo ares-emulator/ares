@@ -31,6 +31,7 @@ auto CPU::ANDI(r64& rt, cr64& rs, u16 imm) -> void {
 
 auto CPU::BEQ(cr64& rs, cr64& rt, s16 imm) -> void {
   if(rs.u64 == rt.u64) branch.take(PC + 4 + (imm << 2));
+  else branch.notTaken();
 }
 
 auto CPU::BEQL(cr64& rs, cr64& rt, s16 imm) -> void {
@@ -40,11 +41,14 @@ auto CPU::BEQL(cr64& rs, cr64& rt, s16 imm) -> void {
 
 auto CPU::BGEZ(cr64& rs, s16 imm) -> void {
   if(rs.s64 >= 0) branch.take(PC + 4 + (imm << 2));
+  else branch.notTaken();
 }
 
 auto CPU::BGEZAL(cr64& rs, s16 imm) -> void {
+  bool inDelaySlot = branch.inDelaySlot();
   if(rs.s64 >= 0) branch.take(PC + 4 + (imm << 2));
-  RA.u64 = s32(branch.inDelaySlot() ? branch.pc+4 : PC+8);
+  else branch.notTaken();
+  RA.u64 = s32(inDelaySlot ? branch.pc+4 : PC+8);
 }
 
 auto CPU::BGEZALL(cr64& rs, s16 imm) -> void {
@@ -60,6 +64,7 @@ auto CPU::BGEZL(cr64& rs, s16 imm) -> void {
 
 auto CPU::BGTZ(cr64& rs, s16 imm) -> void {
   if(rs.s64 > 0) branch.take(PC + 4 + (imm << 2));
+  else branch.notTaken();
 }
 
 auto CPU::BGTZL(cr64& rs, s16 imm) -> void {
@@ -69,6 +74,7 @@ auto CPU::BGTZL(cr64& rs, s16 imm) -> void {
 
 auto CPU::BLEZ(cr64& rs, s16 imm) -> void {
   if(rs.s64 <= 0) branch.take(PC + 4 + (imm << 2));
+  else branch.notTaken();
 }
 
 auto CPU::BLEZL(cr64& rs, s16 imm) -> void {
@@ -78,11 +84,13 @@ auto CPU::BLEZL(cr64& rs, s16 imm) -> void {
 
 auto CPU::BLTZ(cr64& rs, s16 imm) -> void {
   if(rs.s64 < 0) branch.take(PC + 4 + (imm << 2));
+  else branch.notTaken();
 }
 
 auto CPU::BLTZAL(cr64& rs, s16 imm) -> void {
   RA.u64 = s32(PC + 8);
   if(rs.s64 < 0) branch.take(PC + 4 + (imm << 2));
+  else branch.notTaken();
 }
 
 auto CPU::BLTZALL(cr64& rs, s16 imm) -> void {
@@ -98,6 +106,7 @@ auto CPU::BLTZL(cr64& rs, s16 imm) -> void {
 
 auto CPU::BNE(cr64& rs, cr64& rt, s16 imm) -> void {
   if(rs.u64 != rt.u64) branch.take(PC + 4 + (imm << 2));
+  else branch.notTaken();
 }
 
 auto CPU::BNEL(cr64& rs, cr64& rt, s16 imm) -> void {
@@ -348,24 +357,26 @@ auto CPU::DSUBU(r64& rd, cr64& rs, cr64& rt) -> void {
 }
 
 auto CPU::J(u32 imm) -> void {
-  if (branch.inDelaySlot()) return;
+  if (branch.inDelaySlotTaken()) return;
   branch.take((PC + 4 & 0xf000'0000) | (imm << 2));
 }
 
 auto CPU::JAL(u32 imm) -> void {
-  RA.u64 = branch.inDelaySlot() ? branch.pc+4 : PC+8;
-  if (!branch.inDelaySlot()) branch.take((PC + 4 & 0xffff'ffff'f000'0000) | (imm << 2));
+  RA.u64 = branch.inDelaySlotTaken() ? branch.pc+4 : PC+8;
+  if (!branch.inDelaySlotTaken()) branch.take((PC + 4 & 0xffff'ffff'f000'0000) | (imm << 2));
+  else if (!branch.inDelaySlot()) branch.notTaken();
 }
 
 auto CPU::JALR(r64& rd, cr64& rs) -> void {
   u64 tgt = rs.u64;
-  rd.u64 = branch.inDelaySlot() ? branch.pc+4 : PC+8;
-  if (!branch.inDelaySlot()) branch.take(tgt);
+  rd.u64 = branch.inDelaySlotTaken() ? branch.pc+4 : PC+8;
+  if (!branch.inDelaySlotTaken()) branch.take(tgt);
+  else if (!branch.inDelaySlot()) branch.notTaken();
 }
 
 auto CPU::JR(cr64& rs) -> void {
-  if (branch.inDelaySlot()) return;
-  branch.take(rs.u64);
+  if (!branch.inDelaySlotTaken()) branch.take(rs.u64);
+  else if (!branch.inDelaySlot()) branch.notTaken();
 }
 
 auto CPU::LB(r64& rt, cr64& rs, s16 imm) -> void {
