@@ -134,6 +134,7 @@ auto CPU::BC1(bool value, bool likely, s16 imm) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   if(CF == value) branch.take(ipu.pc + 4 + (imm << 2));
   else if(likely) branch.discard();
+  else branch.notTaken();
 }
 
 auto CPU::CFC1(r64& rt, u8 rd) -> void {
