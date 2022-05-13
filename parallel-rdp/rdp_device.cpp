@@ -969,6 +969,26 @@ void CommandProcessor::set_vi_register(VIRegister reg, uint32_t value)
 		dump_writer->set_vi_register(uint32_t(reg), value);
 }
 
+void CommandProcessor::begin_vi_register_per_scanline(VideoInterface::PerScanlineRegisterFlags vi_flags)
+{
+	vi.begin_vi_register_per_scanline(vi_flags);
+}
+
+void CommandProcessor::set_vi_register_for_scanline(VideoInterface::PerScanlineRegisterBits reg, uint32_t value)
+{
+	vi.set_vi_register_for_scanline(reg, value);
+}
+
+void CommandProcessor::latch_vi_register_for_scanline(unsigned vi_line)
+{
+	vi.latch_vi_register_for_scanline(vi_line);
+}
+
+void CommandProcessor::end_vi_register_per_scanline()
+{
+	vi.end_vi_register_per_scanline();
+}
+
 void *CommandProcessor::begin_read_rdram()
 {
 	if (rdram)
@@ -1132,14 +1152,9 @@ void CommandProcessor::scanout_async_buffer(VIScanoutBuffer &buffer, const Scano
 	device.submit(cmd, &buffer.fence);
 }
 
-void CommandProcessor::scanout_sync(std::vector<RGBA> &colors, unsigned &width, unsigned &height)
+void CommandProcessor::scanout_sync(std::vector<RGBA> &colors, unsigned &width, unsigned &height,
+                                    const ScanoutOptions &opts)
 {
-	ScanoutOptions opts = {};
-	// Downscale down to 1x, always.
-	opts.downscale_steps = 32;
-	opts.blend_previous_frame = true;
-	opts.upscale_deinterlacing = false;
-
 	VIScanoutBuffer scanout;
 	scanout_async_buffer(scanout, opts);
 
