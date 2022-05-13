@@ -28,22 +28,22 @@
 #include "noise.h"
 
 layout(set = 0, binding = 0) uniform mediump utexture2DArray uDivotOutput;
+layout(set = 0, binding = 1) uniform itextureBuffer uHorizontalInfo;
 layout(set = 1, binding = 0) uniform mediump utextureBuffer uGammaTable;
 layout(location = 0) out vec4 FragColor;
 
 layout(push_constant, std430) uniform Registers
 {
-    int x_base;
-    int y_base;
-    int h_offset;
-    int v_offset;
-    int x_add;
+    ivec2 frag_coord_offset;
+    int v_start;
     int y_add;
     int frame_count;
 
     int serrate_shift;
     int serrate_mask;
     int serrate_select;
+
+    int info_y_shift;
 } registers;
 
 uvec3 vi_lerp(uvec3 a, uvec3 b, uint l)
@@ -76,17 +76,41 @@ layout(constant_id = 2) const bool FETCH_BUG = false;
 
 void main()
 {
-    ivec2 coord = ivec2(gl_FragCoord.xy) + ivec2(registers.h_offset, registers.v_offset);
+    // Handles crop where we start scanning out at an offset.
+    ivec2 coord = ivec2(gl_FragCoord.xy) + registers.frag_coord_offset;
 
-    if ((coord.y & registers.serrate_mask) != registers.serrate_select)
+    int info_index = coord.y >> registers.info_y_shift;
+    ivec4 horiz_info0 = texelFetch(uHorizontalInfo, 2 * info_index + 0);
+    ivec4 horiz_info1 = texelFetch(uHorizontalInfo, 2 * info_index + 1);
+
+    int h_start = horiz_info0.x;
+    int h_start_clamp = horiz_info0.y;
+    int h_end_clamp = horiz_info0.z;
+    int x_start = horiz_info0.w;
+    int x_add = horiz_info1.x;
+    int y_start = horiz_info1.y;
+    int y_add = horiz_info1.z;
+    int y_base = horiz_info1.w;
+
+    // Rebase Y relative to YStart.
+    coord.y -= registers.v_start;
+
+    // Scissor against HStart/End, also handles serrate where we skip every other line.
+    if (coord.x < h_start_clamp || coord.x >= h_end_clamp ||
+            ((coord.y & registers.serrate_mask) != registers.serrate_select))
         discard;
+
+    // Shift the X coord to be relative to sampling, this can change per scanline.
+    coord.x -= h_start;
+
+    // Rebase Y in terms of progressive scan.
     coord.y >>= registers.serrate_shift;
 
     if (GAMMA_DITHER)
         reseed_noise(coord.x, coord.y, registers.frame_count);
 
-    int x = coord.x * registers.x_add + registers.x_base;
-    int y = coord.y * registers.y_add + registers.y_base;
+    int x = coord.x * x_add + x_start;
+    int y = (coord.y - y_base) * y_add + y_start;
     ivec2 base_coord = ivec2(x, y) >> 10;
     uvec3 c00 = texelFetch(uDivotOutput, ivec3(base_coord, 0), 0).rgb;
 
@@ -98,6 +122,9 @@ void main()
         // we're going to get buggy output.
         // If we hit this case, the next line we filter against will come from the "buggy" array slice.
         // Why this makes sense, I have no idea.
+        //
+        // XXX: This assumes constant YAdd.
+        // No idea how this is supposed to work if YAdd can vary per scanline.
         int prev_y = (y - registers.y_add) >> 10;
         int next_y = (y + registers.y_add) >> 10;
         if (coord.y != 0 && base_coord.y == prev_y && base_coord.y != next_y)
