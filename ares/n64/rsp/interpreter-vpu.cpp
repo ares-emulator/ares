@@ -1308,12 +1308,12 @@ auto RSP::VRND(r128& vd, u8 vs, cr128& vt) -> void {
     acc |= ACCM.element(n); acc <<= 16;
     acc |= ACCL.element(n); acc <<= 16;
     acc >>= 16;
-    if(D == 0 && acc <  0) acc += product;
-    if(D == 1 && acc >= 0) acc += product;
+    if(D == 0 && acc <  0) acc = sclip<48>(acc + product);
+    if(D == 1 && acc >= 0) acc = sclip<48>(acc + product);
     ACCH.element(n) = acc >> 32;
     ACCM.element(n) = acc >> 16;
     ACCL.element(n) = acc >>  0;
-    vd.element(n) = acc >> 16;
+    vd.element(n) = sclamp<16>(acc >> 16);
   }
 }
 
