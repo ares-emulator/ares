@@ -145,8 +145,9 @@ auto PIF::scan() -> void {
     if(input[0] == 0x00 || input[0] == 0xff) {
       //controller
       if(channel < 4 && controllers[channel]->device) {
-        output[0] = 0x05;  //0x05 = gamepad; 0x02 = mouse
-        output[1] = 0x00;
+        u32 dataId = controllers[channel]->device->readId();
+        output[0] = dataId >> 0;  //0x05 = gamepad; 0x02 = mouse
+        output[1] = dataId >> 8;
         output[2] = 0x02;  //0x02 = nothing present in controller slot
         if(auto& device = controllers[channel]->device) {
           if(auto gamepad = dynamic_cast<Gamepad*>(device.data())) {
