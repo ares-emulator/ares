@@ -38,6 +38,13 @@ Nintendo64::Nintendo64() {
     device.analog ("Y-Axis",  virtualPorts[id].pad.lstick_up,   virtualPorts[id].pad.lstick_down);
     port.append(device); }
 
+  { InputDevice device{"Mouse"};
+    device.relative("X",     virtualPorts[id].mouse.x);
+    device.relative("Y",     virtualPorts[id].mouse.y);
+    device.digital ("Left",  virtualPorts[id].mouse.left);
+    device.digital ("Right", virtualPorts[id].mouse.right);
+    port.append(device); }
+  
     ports.append(port);
   }
 }

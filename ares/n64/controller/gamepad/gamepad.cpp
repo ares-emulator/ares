@@ -170,6 +170,10 @@ auto Gamepad::read() -> n32 {
   return data;
 }
 
+auto Gamepad::readId() -> u16 {
+  return 0x0005;
+}
+
 //controller paks contain 32KB of SRAM split into 128 pages of 256 bytes each.
 //the first 5 pages are for storing system data, and the remaining 123 for game data.
 auto Gamepad::formatControllerPak() -> void {
