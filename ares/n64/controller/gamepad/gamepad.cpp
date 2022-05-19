@@ -83,6 +83,95 @@ auto Gamepad::rumble(bool enable) -> void {
   platform->input(motor);
 }
 
+auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
+  b1 valid = 0;
+  b1 over = 0;
+
+  //status
+  if(input[0] == 0x00 || input[0] == 0xff) {
+    u32 dataId = readId();
+    output[0] = dataId >> 0;  //0x05 = gamepad; 0x02 = mouse
+    output[1] = dataId >> 8;
+    output[2] = 0x02;  //0x02 = nothing present in controller slot
+    if(ram || motor) {
+      output[2] = 0x01;  //0x01 = pak present
+    }
+    valid = 1;
+  }
+
+  //read controller state
+  if(input[0] == 0x01) {
+    u32 data = read();
+    output[0] = data >> 24;
+    output[1] = data >> 16;
+    output[2] = data >>  8;
+    output[3] = data >>  0;
+    if(recv <= 4) {
+      over = 0;
+    } else {
+      over = 1;
+    }
+    valid = 1;
+  }
+
+  //read pak
+  if(input[0] == 0x02 && send >= 3 && recv >= 1) {
+    //controller pak
+    if(ram) {
+      u32 address = (input[1] << 8 | input[2] << 0) & ~31;
+      if(pif.addressCRC(address) == (n5)input[2]) {
+        for(u32 index : range(recv - 1)) {
+          output[index] = ram.read<Byte>(address++);
+        }
+        output[recv - 1] = pif.dataCRC({&output[0], recv - 1});
+        valid = 1;
+      }
+    }
+
+    //rumble pak
+    if(motor) {
+      u32 address = (input[1] << 8 | input[2] << 0) & ~31;
+      if(pif.addressCRC(address) == (n5)input[2]) {
+        for(u32 index : range(recv - 1)) {
+          output[index] = 0x80;
+        }
+        output[recv - 1] = pif.dataCRC({&output[0], recv - 1});
+        valid = 1;
+      }
+    }
+  }
+
+  //write pak
+  if(input[0] == 0x03 && send >= 3 && recv >= 1) {
+    //controller pak
+    if(ram) {
+      u32 address = (input[1] << 8 | input[2] << 0) & ~31;
+      if(pif.addressCRC(address) == (n5)input[2]) {
+        for(u32 index : range(send - 3)) {
+          ram.write<Byte>(address++, input[3 + index]);
+        }
+        output[0] = pif.dataCRC({&input[3], send - 3});
+        valid = 1;
+      }
+    }
+
+    //rumble pak
+    if(motor) {
+      u32 address = (input[1] << 8 | input[2] << 0) & ~31;
+      if(pif.addressCRC(address) == (n5)input[2]) {
+        output[0] = pif.dataCRC({&input[3], send - 3});
+        valid = 1;
+        rumble(input[3] & 1);
+      }
+    }
+  }
+
+  n2 status = 0;
+  status.bit(0) = valid;
+  status.bit(1) = over;
+  return status;
+}
+
 auto Gamepad::read() -> n32 {
   platform->input(x);
   platform->input(y);

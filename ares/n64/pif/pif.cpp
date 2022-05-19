@@ -140,155 +140,75 @@ auto PIF::scan() -> void {
     }
     n8 output[64];
     b1 valid = 0;
+    b1 over = 0;
 
-    //status
-    if(input[0] == 0x00 || input[0] == 0xff) {
-      //controller
-      if(channel < 4 && controllers[channel]->device) {
-        u32 dataId = controllers[channel]->device->readId();
-        output[0] = dataId >> 0;  //0x05 = gamepad; 0x02 = mouse
-        output[1] = dataId >> 8;
-        output[2] = 0x02;  //0x02 = nothing present in controller slot
-        if(auto& device = controllers[channel]->device) {
-          if(auto gamepad = dynamic_cast<Gamepad*>(device.data())) {
-            if(gamepad->ram || gamepad->motor) {
-              output[2] = 0x01;  //0x01 = pak present
-            }
-          }
+    //controller port communication
+    if (channel < 4 && controllers[channel]->device) {
+      n2 status = controllers[channel]->device->comm(send, recv, input, output);
+      valid = status.bit(0);
+      over = status.bit(1);
+    }
+    
+    if (channel >= 4) {
+      //status
+      if(input[0] == 0x00 || input[0] == 0xff) {
+        //cartridge EEPROM (4kbit)
+        if(cartridge.eeprom.size == 512) {
+          output[0] = 0x00;
+          output[1] = 0x80;
+          output[2] = 0x00;
+          valid = 1;
+        }
+
+        //cartridge EEPROM (16kbit)
+        if(cartridge.eeprom.size == 2048) {
+          output[0] = 0x00;
+          output[1] = 0xc0;
+          output[2] = 0x00;
+          valid = 1;
+        }
+      }
+
+      //read EEPROM
+      if(input[0] == 0x04 && send >= 2) {
+        u32 address = input[1] * 8;
+        for(u32 index : range(recv)) {
+          output[index] = cartridge.eeprom.read<Byte>(address++);
         }
         valid = 1;
       }
 
-      //cartridge EEPROM (4kbit)
-      if(channel >= 4 && cartridge.eeprom.size == 512) {
+      //write EEPROM
+      if(input[0] == 0x05 && send >= 2 && recv >= 1) {
+        u32 address = input[1] * 8;
+        for(u32 index : range(send - 2)) {
+          cartridge.eeprom.write<Byte>(address++, input[2 + index]);
+        }
         output[0] = 0x00;
-        output[1] = 0x80;
-        output[2] = 0x00;
         valid = 1;
       }
 
-      //cartridge EEPROM (16kbit)
-      if(channel >= 4 && cartridge.eeprom.size == 2048) {
-        output[0] = 0x00;
-        output[1] = 0xc0;
-        output[2] = 0x00;
-        valid = 1;
+      //RTC status
+      if(input[0] == 0x06) {
+        debug(unimplemented, "[SI::main] RTC status");
       }
-    }
 
-    //read controller state
-    if(input[0] == 0x01) {
-      if(channel < 4 && controllers[channel]->device) {
-        u32 data = controllers[channel]->device->read();
-        output[0] = data >> 24;
-        output[1] = data >> 16;
-        output[2] = data >>  8;
-        output[3] = data >>  0;
-        if(recv <= 4) {
-          ram.write<Byte>(recvOffset, 0x00 | recv & 0x3f);
-        } else {
-          ram.write<Byte>(recvOffset, 0x40 | recv & 0x3f);
-        }
-        valid = 1;
+      //RTC read
+      if(input[0] == 0x07) {
+        debug(unimplemented, "[SI::main] RTC read");
       }
-    }
 
-    //read pak
-    if(input[0] == 0x02 && send >= 3 && recv >= 1) {
-      if(auto& device = controllers[channel]->device) {
-        if(auto gamepad = dynamic_cast<Gamepad*>(device.data())) {
-          //controller pak
-          if(auto& ram = gamepad->ram) {
-            u32 address = (input[1] << 8 | input[2] << 0) & ~31;
-            if(addressCRC(address) == (n5)input[2]) {
-              for(u32 index : range(recv - 1)) {
-                output[index] = ram.read<Byte>(address++);
-              }
-              output[recv - 1] = dataCRC({&output[0], recv - 1});
-              valid = 1;
-            }
-          }
-
-          //rumble pak
-          if(gamepad->motor) {
-            u32 address = (input[1] << 8 | input[2] << 0) & ~31;
-            if(addressCRC(address) == (n5)input[2]) {
-              for(u32 index : range(recv - 1)) {
-                output[index] = 0x80;
-              }
-              output[recv - 1] = dataCRC({&output[0], recv - 1});
-              valid = 1;
-            }
-          }
-        }
+      //RTC write
+      if(input[0] == 0x08) {
+        debug(unimplemented, "[SI::main] RTC write");
       }
-    }
-
-    //write pak
-    if(input[0] == 0x03 && send >= 3 && recv >= 1) {
-      if(auto& device = controllers[channel]->device) {
-        if(auto gamepad = dynamic_cast<Gamepad*>(device.data())) {
-          //controller pak
-          if(auto& ram = gamepad->ram) {
-            u32 address = (input[1] << 8 | input[2] << 0) & ~31;
-            if(addressCRC(address) == (n5)input[2]) {
-              for(u32 index : range(send - 3)) {
-                ram.write<Byte>(address++, input[3 + index]);
-              }
-              output[0] = dataCRC({&input[3], send - 3});
-              valid = 1;
-            }
-          }
-
-          //rumble pak
-          if(gamepad->motor) {
-            u32 address = (input[1] << 8 | input[2] << 0) & ~31;
-            if(addressCRC(address) == (n5)input[2]) {
-              output[0] = dataCRC({&input[3], send - 3});
-              valid = 1;
-              gamepad->rumble(input[3] & 1);
-            }
-          }
-        }
-      }
-    }
-
-    //read EEPROM
-    if(input[0] == 0x04 && send >= 2) {
-      u32 address = input[1] * 8;
-      for(u32 index : range(recv)) {
-        output[index] = cartridge.eeprom.read<Byte>(address++);
-      }
-      valid = 1;
-    }
-
-    //write EEPROM
-    if(input[0] == 0x05 && send >= 2 && recv >= 1) {
-      u32 address = input[1] * 8;
-      for(u32 index : range(send - 2)) {
-        cartridge.eeprom.write<Byte>(address++, input[2 + index]);
-      }
-      output[0] = 0x00;
-      valid = 1;
-    }
-
-    //RTC status
-    if(input[0] == 0x06) {
-      debug(unimplemented, "[SI::main] RTC status");
-    }
-
-    //RTC read
-    if(input[0] == 0x07) {
-      debug(unimplemented, "[SI::main] RTC read");
-    }
-
-    //RTC write
-    if(input[0] == 0x08) {
-      debug(unimplemented, "[SI::main] RTC write");
     }
 
     if(!valid) {
       ram.write<Byte>(recvOffset, 0x80 | recv & 0x3f);
+    }
+    if(over) {
+      ram.write<Byte>(recvOffset, 0x40 | recv & 0x3f);
     }
     for(u32 index : range(recv)) {
       ram.write<Byte>(offset++, output[index]);
