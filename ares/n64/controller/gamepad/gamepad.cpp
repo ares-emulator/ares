@@ -89,9 +89,8 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
 
   //status
   if(input[0] == 0x00 || input[0] == 0xff) {
-    u32 dataId = readId();
-    output[0] = dataId >> 0;  //0x05 = gamepad; 0x02 = mouse
-    output[1] = dataId >> 8;
+    output[0] = 0x05;  //0x05 = gamepad; 0x02 = mouse
+    output[1] = 0x00;
     output[2] = 0x02;  //0x02 = nothing present in controller slot
     if(ram || motor) {
       output[2] = 0x01;  //0x01 = pak present
@@ -257,10 +256,6 @@ auto Gamepad::read() -> n32 {
   }
 
   return data;
-}
-
-auto Gamepad::readId() -> u16 {
-  return 0x0005;
 }
 
 //controller paks contain 32KB of SRAM split into 128 pages of 256 bytes each.

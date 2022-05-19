@@ -16,9 +16,8 @@ auto Mouse::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
 
   //status
   if(input[0] == 0x00 || input[0] == 0xff) {
-    u32 dataId = readId();
-    output[0] = dataId >> 0;  //0x05 = gamepad; 0x02 = mouse
-    output[1] = dataId >> 8;
+    output[0] = 0x02;  //0x05 = gamepad; 0x02 = mouse
+    output[1] = 0x00;
     output[2] = 0x02;  //0x02 = nothing present in controller slot
     valid = 1;
   }
@@ -61,8 +60,4 @@ auto Mouse::read() -> n32 {
   data.bit(31) = left->value();
 
   return data;
-}
-
-auto Mouse::readId() -> u16 {
-  return 0x0002;
 }
