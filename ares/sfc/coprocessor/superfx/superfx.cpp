@@ -44,13 +44,27 @@ auto SuperFX::main() -> void {
   }
 }
 
+// TODO: find a better place for this routine
+auto romSizeRound(u32 romSize) -> u32 {
+  u32 count = 0;
+  if (romSize && !(romSize & (romSize - 1))) return romSize;
+  while(romSize != 0) {
+    romSize >>= 1;
+    count += 1;
+  }
+  return 1 << count;
+}
+
 auto SuperFX::power() -> void {
   GSU::power();
 
   Thread::create(Frequency, {&SuperFX::main, this});
   cpu.coprocessors.append(this);
 
-  romMask = rom.size() - 1;
+  // SuperFX voxel demo has a non power-of-two rom
+  // resulting in an incorrect/broken rom mask
+  // fix this by ensuring romSize is a power of two
+  romMask = romSizeRound(rom.size()) - 1;
   ramMask = ram.size() - 1;
   bramMask = bram.size() - 1;
 
