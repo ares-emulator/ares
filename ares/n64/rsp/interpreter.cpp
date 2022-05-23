@@ -291,8 +291,8 @@ auto RSP::decoderVU() -> void {
   vu(0x1b, VZERO, VD, VS, VT); //VSAC
   vu(0x1c, VZERO, VD, VS, VT); //VSUM
   vu(0x1d, VSAR, VD, VS);
-  op(0x1e, INVALID);
-  op(0x1f, INVALID);
+  vu(0x1e, VZERO, VD, VS, VT);
+  vu(0x1f, VZERO, VD, VS, VT);
   vu(0x20, VLT, VD, VS, VT);
   vu(0x21, VEQ, VD, VS, VT);
   vu(0x22, VNE, VD, VS, VT);
@@ -307,8 +307,8 @@ auto RSP::decoderVU() -> void {
   vu(0x2b, VNOR, VD, VS, VT);
   vu(0x2c, VXOR, VD, VS, VT);
   vu(0x2d, VNXOR, VD, VS, VT);
-  op(0x2e, INVALID);
-  op(0x2f, INVALID);
+  vu(0x2e, VZERO, VD, VS, VT);
+  vu(0x2f, VZERO, VD, VS, VT);
   vu(0x30, VRCP, VD, DE, VT);
   vu(0x31, VRCPL, VD, DE, VT);
   vu(0x32, VRCPH, VD, DE, VT);
@@ -320,7 +320,7 @@ auto RSP::decoderVU() -> void {
   vu(0x38, VZERO, VD, VS, VT); //VEXTT
   vu(0x39, VZERO, VD, VS, VT); //VEXTQ
   vu(0x3a, VZERO, VD, VS, VT); //VEXTN
-  op(0x3b, INVALID);
+  vu(0x3b, VZERO, VD, VS, VT);
   vu(0x3c, VZERO, VD, VS, VT); //VINST
   vu(0x3d, VZERO, VD, VS, VT); //VINSQ
   vu(0x3e, VZERO, VD, VS, VT); //VINSN
