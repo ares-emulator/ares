@@ -823,10 +823,9 @@ auto RSP::VMACQ(r128& vd) -> void {
   for(u32 n : range(8)) {
     s32 product = ACCH.element(n) << 16 | ACCM.element(n) << 0;
     if(product < 0 && !(product & 1 << 5)) product += 32;
-    else if(product > 0 && !(product & 1 << 5)) product -= 32;
+    else if(product >= 32 && !(product & 1 << 5)) product -= 32;
     ACCH.element(n) = product >> 16;
     ACCM.element(n) = product >>  0;
-    ACCL.element(n) = 0;
     vd.element(n) = sclamp<16>(product >> 1) & ~15;
   }
 }
@@ -974,17 +973,11 @@ auto RSP::VMADN(r128& vd, cr128& vs, cr128& vt) -> void {
   }
 }
 
-template<u8 E>
+template<u8 e>
 auto RSP::VMOV(r128& vd, u8 de, cr128& vt) -> void {
-  u8 e = E;
-  switch(e) {
-  case 0x0 ... 0x1: e = e & 0b000 | de & 0b111; break;  //hardware glitch
-  case 0x2 ... 0x3: e = e & 0b001 | de & 0b110; break;  //hardware glitch
-  case 0x4 ... 0x7: e = e & 0b011 | de & 0b100; break;  //hardware glitch
-  case 0x8 ... 0xf: e = e & 0b111 | de & 0b000; break;  //normal behavior
-  }
-  vd.u16(de) = vt.u16(e);
-  ACCL = vt(e);
+  cr128 vte = vt(e);
+  vd.u16(de) = vte.u16(de);
+  ACCL = vte;
 }
 
 template<u8 e>
