@@ -4,9 +4,6 @@ auto PI::dmaRead() -> void {
     u16 data = rdram.ram.read<Half>(io.dramAddress + address);
     busWrite<Half>(io.pbusAddress + address, data);
   }
-  io.dmaBusy = 0;
-  io.interrupt = 1;
-  mi.raise(MI::IRQ::PI);
 }
 
 auto PI::dmaWrite() -> void {
@@ -48,7 +45,9 @@ auto PI::dmaWrite() -> void {
 
     first_block = false;
   }
+}
 
+auto PI::dmaFinished() -> void {
   io.dmaBusy = 0;
   io.interrupt = 1;
   mi.raise(MI::IRQ::PI);

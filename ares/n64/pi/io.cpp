@@ -99,6 +99,7 @@ auto PI::ioWrite(u32 address, u32 data_) -> void {
     io.readLength = n24(data);
     io.dmaBusy = 1;
     queue.insert(Queue::PI_DMA_Read, io.readLength * 9);
+    dmaRead();
   }
 
   if(address == 3) {
@@ -106,6 +107,7 @@ auto PI::ioWrite(u32 address, u32 data_) -> void {
     io.writeLength = n24(data);
     io.dmaBusy = 1;
     queue.insert(Queue::PI_DMA_Write, io.writeLength * 9);
+    dmaWrite();
   }
 
   if(address == 4) {
