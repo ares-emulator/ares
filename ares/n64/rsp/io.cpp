@@ -113,7 +113,7 @@ auto RSP::ioWrite(u32 address, u32 data_) -> void {
       request.count       = 1 + (dma.read.count);
       request.skip        = dma.read.skip & ~7;
       dma.requests.write(request);
-      queue.insert(Queue::RSP_DMA, request.length * request.count / 4);
+      queue.insert(Queue::RSP_DMA, request.length * request.count / 8 * 3);
     }
   }
 
@@ -132,7 +132,7 @@ auto RSP::ioWrite(u32 address, u32 data_) -> void {
       request.count       = 1 + (dma.write.count);
       request.skip        = dma.write.skip & ~7;
       dma.requests.write(request);
-      queue.insert(Queue::RSP_DMA, request.length * request.count / 4);
+      queue.insert(Queue::RSP_DMA, request.length * request.count / 8 * 3);
     }
   }
 
