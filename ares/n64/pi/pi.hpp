@@ -21,6 +21,7 @@ struct PI : Memory::IO<PI> {
   //dma.cpp
   auto dmaRead() -> void;
   auto dmaWrite() -> void;
+  auto dmaFinished() -> void;
 
   //io.cpp
   auto ioRead(u32 address) -> u32;
