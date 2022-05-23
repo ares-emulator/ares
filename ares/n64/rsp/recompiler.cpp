@@ -857,9 +857,13 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
     return 0;
   }
 
-  //INVALID
+  //Invalid opcodes
   case 0x1e ... 0x1f: {
-    return 0;
+    lea(reg(1), Vd);
+    lea(reg(2), Vs);
+    lea(reg(3), Vt);
+    callvu(&RSP::VZERO);
+    return 0;    
   }
 
   //VLT Vd,Vs,Vt(e)
@@ -990,6 +994,10 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
 
   //INVALID
   case 0x2e ... 0x2f: {
+    lea(reg(1), Vd);
+    lea(reg(2), Vs);
+    lea(reg(3), Vt);
+    callvu(&RSP::VZERO);
     return 0;
   }
 
@@ -1073,6 +1081,10 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
 
   //INVALID
   case 0x3b: {
+    lea(reg(1), Vd);
+    lea(reg(2), Vs);
+    lea(reg(3), Vt);
+    callvu(&RSP::VZERO);
     return 0;
   }
 
