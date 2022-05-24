@@ -43,7 +43,8 @@ struct RSP : Thread, Memory::IO<RSP> {
   } pipeline;
 
   //dma.cpp
-  auto dmaTransfer() -> void;
+  auto dmaTransferStart() -> void;
+  auto dmaTransferStep() -> void;
 
   //io.cpp
   auto readWord(u32 address) -> u32;
@@ -55,29 +56,23 @@ struct RSP : Thread, Memory::IO<RSP> {
   auto serialize(serializer&) -> void;
 
   struct DMA {
-    n1  pbusRegion;
-    n12 pbusAddress;
-    n24 dramAddress;
-
-    struct Transfer {
-      n12 length;
-      n12 skip;
-      n8  count;
-    } read, write;
-
-    struct Request {
-      //serialization.cpp
-      auto serialize(serializer&) -> void;
-
-      enum class Type : u32 { Read, Write } type;
+    struct Regs {    
       n1  pbusRegion;
       n12 pbusAddress;
       n24 dramAddress;
-      n16 length;
-      n16 skip;
-      n16 count;
-    };
-    nall::queue<Request[2]> requests;
+      n12 length;
+      n12 skip;
+      n8  count;
+      
+      auto serialize(serializer&) -> void;
+    } pending, current;
+
+    struct Status {
+      n1 read;
+      n1 write;
+
+      auto any() -> n1 { return read | write; }
+    } busy, full;
   } dma;
 
   struct Status : Memory::IO<Status> {
