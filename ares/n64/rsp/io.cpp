@@ -12,35 +12,28 @@ auto RSP::ioRead(u32 address) -> u32 {
 
   if(address == 0) {
     //SP_PBUS_ADDRESS
-    data.bit( 0,11) = dma.pbusAddress;
-    data.bit(12)    = dma.pbusRegion;
+    data.bit( 0,11) = dma.current.pbusAddress;
+    data.bit(12)    = dma.current.pbusRegion;
   }
 
   if(address == 1) {
     //SP_DRAM_ADDRESS
-    data.bit(0,23) = dma.dramAddress;
+    data.bit(0,23) = dma.current.dramAddress;
   }
 
-  if(address == 2) {
-    //SP_READ_LENGTH
-    data.bit( 0,11) = dma.read.length;
-    data.bit(12,19) = dma.read.count;
-    data.bit(20,31) = dma.read.skip;
-  }
-
-  if(address == 3) {
-    //SP_WRITE_LENGTH
-    data.bit( 0,11) = dma.write.length;
-    data.bit(12,19) = dma.write.count;
-    data.bit(20,31) = dma.write.skip;
+  if(address == 2 || address == 3) {
+    //SP_READ_LENGTH or SP_WRITE_LENGTH
+    data.bit( 0,11) = dma.current.length;
+    data.bit(12,19) = dma.current.count;
+    data.bit(20,31) = dma.current.skip;
   }
 
   if(address == 4) {
     //SP_STATUS
     data.bit( 0) = status.halted;
     data.bit( 1) = status.broken;
-    data.bit( 2) = !dma.requests.empty();
-    data.bit( 3) = dma.requests.full();
+    data.bit( 2) = dma.busy.any();
+    data.bit( 3) = dma.full.any();
     data.bit( 4) = status.full;
     data.bit( 5) = status.singleStep;
     data.bit( 6) = status.interruptOnBreak;
@@ -56,12 +49,12 @@ auto RSP::ioRead(u32 address) -> u32 {
 
   if(address == 5) {
     //SP_DMA_FULL
-    data.bit(0) = dma.requests.full();
+    data.bit(0) = dma.full.any();
   }
 
   if(address == 6) {
     //SP_DMA_BUSY
-    data.bit(0) = !dma.requests.empty();
+    data.bit(0) = dma.busy.any();
   }
 
   if(address == 7) {
@@ -89,51 +82,33 @@ auto RSP::ioWrite(u32 address, u32 data_) -> void {
 
   if(address == 0) {
     //SP_PBUS_ADDRESS
-    dma.pbusAddress = data.bit( 0,11);
-    dma.pbusRegion  = data.bit(12);
+    dma.pending.pbusAddress.bit(3,11) = data.bit( 3,11);
+    dma.pending.pbusRegion            = data.bit(12);
   }
 
   if(address == 1) {
     //SP_DRAM_ADDRESS
-    dma.dramAddress = data.bit(0,23);
+    dma.pending.dramAddress.bit(3,23) = data.bit(3,23);
   }
 
   if(address == 2) {
     //SP_READ_LENGTH
-    dma.read.length = data.bit( 0,11);
-    dma.read.count  = data.bit(12,19);
-    dma.read.skip   = data.bit(20,31);
-    if(!dma.requests.full()) {
-      DMA::Request request;
-      request.type        = DMA::Request::Type::Read;
-      request.pbusRegion  = dma.pbusRegion;
-      request.pbusAddress = dma.pbusAddress & ~7;
-      request.dramAddress = dma.dramAddress & ~7;
-      request.length      = 1 + (dma.read.length | 7);
-      request.count       = 1 + (dma.read.count);
-      request.skip        = dma.read.skip & ~7;
-      dma.requests.write(request);
-      queue.insert(Queue::RSP_DMA, request.length * request.count / 8 * 3);
-    }
+    dma.pending.length.bit(3,11) = data.bit( 3,11);
+    dma.pending.count            = data.bit(12,19);
+    dma.pending.skip.bit(3,11)   = data.bit(23,31);
+    dma.full.read  = 1;
+    dma.full.write = 0;
+    dmaTransferStart();
   }
 
   if(address == 3) {
     //SP_WRITE_LENGTH
-    dma.write.length = data.bit( 0,11);
-    dma.write.count  = data.bit(12,19);
-    dma.write.skip   = data.bit(20,31);
-    if(!dma.requests.full()) {
-      DMA::Request request;
-      request.type        = DMA::Request::Type::Write;
-      request.pbusRegion  = dma.pbusRegion;
-      request.pbusAddress = dma.pbusAddress & ~7;
-      request.dramAddress = dma.dramAddress & ~7;
-      request.length      = 1 + (dma.write.length | 7);
-      request.count       = 1 + (dma.write.count);
-      request.skip        = dma.write.skip & ~7;
-      dma.requests.write(request);
-      queue.insert(Queue::RSP_DMA, request.length * request.count / 8 * 3);
-    }
+    dma.pending.length.bit(3,11) = data.bit( 3,11);
+    dma.pending.count            = data.bit(12,19);
+    dma.pending.skip.bit(3,11)   = data.bit(23,31);
+    dma.full.write = 1;
+    dma.full.read  = 0;
+    dmaTransferStart();
   }
 
   if(address == 4) {
