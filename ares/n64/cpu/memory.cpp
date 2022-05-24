@@ -75,8 +75,8 @@ auto CPU::userSegment64(u64 address) const -> Context::Segment {
 
 auto CPU::segment(u64 address) -> Context::Segment {
   auto segment = context.segment[address >> 29 & 7];
-//if(likely(context.bits == 32))
-  return (Context::Segment)segment;
+  if(likely(context.bits == 32))
+    return (Context::Segment)segment;
   switch(segment) {
   case Context::Segment::Kernel64:
     return kernelSegment64(address);
