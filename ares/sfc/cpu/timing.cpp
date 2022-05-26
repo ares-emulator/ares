@@ -47,7 +47,10 @@ auto CPU::step(u32 clocks) -> void {
 
   Thread::step(clocks);
   for(auto peripheral : peripherals) Thread::synchronize(*peripheral);
+
+#if !defined(PROFILE_PERFORMANCE)
   for(auto coprocessor : coprocessors) Thread::synchronize(*coprocessor);
+#endif
 }
 
 //called by ppu.tick() when Hcounter=0
