@@ -153,7 +153,7 @@ auto Disc::commandReadWithRetry() -> void {
   drive.seeking = 2 << drive.mode.speed;
   drive.lba.current = drive.lba.request;
   ssr.reading = 1;
-
+  ssr.playingCDDA = 0;
   fifo.response.write(status());
 
   irq.acknowledge.flag = 1;
