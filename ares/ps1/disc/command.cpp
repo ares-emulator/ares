@@ -398,23 +398,34 @@ auto Disc::commandGetTrackStart() -> void {
 
 //0x15
 auto Disc::commandSeekData() -> void {
-  drive.lba.current = drive.lba.request;
+  if(event.invocation == 0) {
+    event.invocation = 1;
+    event.counter = 50'000;     // TODO: Calculate seek time
 
-  fifo.response.write(status());
+    fifo.response.write(status());
 
-  irq.complete.flag = 1;
-  irq.poll();
+    irq.acknowledge.flag = 1;
+    irq.poll();
+    return;
+  }
+
+  if(event.invocation == 1) {
+    drive.lba.current = drive.lba.request;
+    ssr.playingCDDA = 0;
+
+    fifo.response.write(status());
+
+    irq.complete.flag = 1;
+    irq.poll();
+
+    return;
+  }
 }
 
 //0x16
 auto Disc::commandSeekCDDA() -> void {
-  drive.lba.current = drive.lba.request;
-  ssr.playingCDDA = 0;
-
-  fifo.response.write(status());
-
-  irq.complete.flag = 1;
-  irq.poll();
+  // TODO: use subchannel data to seek rather than LBA
+  commandSeekData();
 }
 
 //0x19 0x20
