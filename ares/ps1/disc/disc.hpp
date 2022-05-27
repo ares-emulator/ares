@@ -74,6 +74,8 @@ struct Disc : Thread, Memory::Interface {
   auto commandGetTrackStart() -> void;
   auto commandSeekData() -> void;
   auto commandSeekCDDA() -> void;
+  auto commandTestStartReadSCEX() -> void;
+  auto commandTestStopReadSCEX() -> void;
   auto commandTestControllerDate() -> void;
   auto commandGetID() -> void;
   auto commandReadWithoutRetry() -> void;

@@ -59,6 +59,8 @@ auto Disc::commandTest() -> void {
   debugger.commandPrologue(operation, suboperation);
 
   switch(suboperation) {
+  case 0x04: commandTestStartReadSCEX(); break;
+  case 0x05: commandTestStopReadSCEX(); break;
   case 0x20: commandTestControllerDate(); break;
   default: commandUnimplemented(operation, suboperation); break;
   }
@@ -427,6 +429,22 @@ auto Disc::commandSeekData() -> void {
 auto Disc::commandSeekCDDA() -> void {
   // TODO: use subchannel data to seek rather than LBA
   commandSeekData();
+}
+
+//0x19 0x04
+auto Disc::commandTestStartReadSCEX() -> void {
+  fifo.response.write(status());
+  irq.acknowledge.flag = 1;
+  irq.poll();
+}
+
+//0x19 0x05
+auto Disc::commandTestStopReadSCEX() -> void {
+  // Report no SCEX string found to appease mod-chip detection
+  fifo.response.write(0);
+  fifo.response.write(0);
+  irq.acknowledge.flag = 1;
+  irq.poll();
 }
 
 //0x19 0x20
