@@ -42,6 +42,7 @@ auto Disc::command(u8 operation) -> void {
   case 0x19: commandTest(); break;
   case 0x1a: commandGetID(); break;
   case 0x1b: commandReadWithoutRetry(); break;
+  case 0x1e: commandReadToc(); break;
   case 0x20 ... 0x4f: commandInvalid(); break;
   case 0x50 ... 0x57: commandInvalid(); break;  //secret unlock commands
   case 0x58 ... 0xff: commandInvalid(); break;
@@ -548,6 +549,28 @@ auto Disc::commandGetID() -> void {
 auto Disc::commandReadWithoutRetry() -> void {
   //retries will never occur under emulation
   return commandReadWithRetry();
+}
+
+//0x1e
+auto Disc::commandReadToc() -> void {
+  if(event.invocation == 0) {
+    event.invocation = 1;
+    event.counter = 475'000;
+
+    fifo.response.write(status());
+
+    irq.acknowledge.flag = 1;
+    irq.poll();
+    return;
+  }
+
+  if(event.invocation == 1) {
+    fifo.response.write(status());
+
+    irq.complete.flag = 1;
+    irq.poll();
+    return;
+  }
 }
 
 auto Disc::commandUnimplemented(u8 operation, maybe<u8> suboperation) -> void {

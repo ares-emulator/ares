@@ -77,6 +77,7 @@ struct Disc : Thread, Memory::Interface {
   auto commandTestControllerDate() -> void;
   auto commandGetID() -> void;
   auto commandReadWithoutRetry() -> void;
+  auto commandReadToc() -> void;
   auto commandUnimplemented(u8, maybe<u8> = nothing) -> void;
 
   //serialization.cpp

@@ -109,6 +109,10 @@ auto Disc::Debugger::commandPrologue(u8 operation, maybe<u8> suboperation) -> vo
     name = "ReadWithoutRetry";
   }
 
+  if(operation == 0x1e) {
+    name = "ReadToc";
+  }
+
   if(!name) {
     if(!suboperation) name = {"$", hex(operation, 2L)};
     if( suboperation) name = {"Test$", hex(*suboperation, 2L)};
