@@ -23,6 +23,7 @@ auto Disc::command(u8 operation) -> void {
   case 0x04: commandFastForward(); break;
   case 0x05: commandRewind(); break;
   case 0x06: commandReadWithRetry(); break;
+  case 0x07: commandMotorOn(); break;
   case 0x08: commandStop(); break;
   case 0x09: commandPause(); break;
   case 0x0a: commandInitialize(); break;
@@ -161,6 +162,27 @@ auto Disc::commandReadWithRetry() -> void {
 
   irq.acknowledge.flag = 1;
   irq.poll();
+}
+
+//0x07
+auto Disc::commandMotorOn() -> void {
+  if(event.invocation == 0) {
+    event.invocation = 1;
+    event.counter = 50'000;
+
+    fifo.response.write(status());
+
+    irq.acknowledge.flag = 1;
+    irq.poll();
+    return;
+  }
+
+  if(event.invocation == 1) {
+    fifo.response.write(status());
+    irq.complete.flag = 1;
+    irq.poll();
+    return;
+  }
 }
 
 //0x08

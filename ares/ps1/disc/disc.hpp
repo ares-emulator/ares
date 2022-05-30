@@ -60,6 +60,7 @@ struct Disc : Thread, Memory::Interface {
   auto commandFastForward() -> void;
   auto commandRewind() -> void;
   auto commandReadWithRetry() -> void;
+  auto commandMotorOn() -> void;
   auto commandStop() -> void;
   auto commandPause() -> void;
   auto commandInitialize() -> void;
