@@ -50,6 +50,7 @@ auto Disc::command(u8 operation) -> void {
   default: commandUnimplemented(operation); break;
   }
 
+  fifo.parameter.flush();
   debugger.commandEpilogue(operation);
 }
 
