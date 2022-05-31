@@ -675,17 +675,26 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
     dmac.drcr[1] = data.bit(0,1);
     return;
 
-  //WTCSR: watchdog timer control/status register
+  //WTCSR/WTCNT select
   case 0xffff'fe80:
-    wdt.wtcsr.cks  = data.bit(0,2);
-    wdt.wtcsr.tme  = data.bit(5);
-    wdt.wtcsr.wtit = data.bit(6);
-    wdt.wtcsr.ovf &= data.bit(7);
+    wdt.select = data.bit(0,7);
     return;
 
-  //WTCNT: watchdog timer counter
+  //WTCSR/WTCNT data
   case 0xffff'fe81:
-    wdt.wtcnt = data.bit(0,7);
+    //WTCSR: watchdog timer control/status register
+    if(wdt.select == 0xa5) {
+       wdt.wtcsr.cks  = data.bit(0,2);
+       wdt.wtcsr.tme  = data.bit(5);
+       wdt.wtcsr.wtit = data.bit(6);
+       wdt.wtcsr.ovf &= data.bit(7);
+       if(!wdt.wtcsr.tme) wdt.wtcnt = 0;
+    }
+
+    //WTCNT: watchdog timer counter
+    if(wdt.select == 0x5a) {
+      wdt.wtcnt = data.bit(0,7);
+    }
     return;
 
   //RSTCSR: reset control/status register

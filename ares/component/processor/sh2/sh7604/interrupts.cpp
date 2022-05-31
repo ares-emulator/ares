@@ -22,6 +22,13 @@ print("dreq1\n");
     }
   }
 
+  if(self->wdt.pendingIRQ) {
+    if(self->SR.I < ipra.wdtip) {
+      self->interrupt(ipra.wdtip, vcrwdt.witv);
+      self->wdt.pendingIRQ = 0;
+    }
+  }
+
   if(self->sci.pendingTransmitEmptyIRQ) {
     if(self->SR.I < iprb.sciip) {
       self->interrupt(iprb.sciip, vcrb.stxv);

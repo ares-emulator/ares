@@ -67,7 +67,7 @@ auto SH2::illegalInstruction() -> void {
   push(SR);
   push(PC);
   jump(readLong(VBR + vector * 4) + 4);
-  debug(unusual, "[SH2] illegal instruction: 0x", hex(busReadWord(PC - 4), 4L));
+  debug(unusual, "[SH2] illegal instruction: 0x", hex(busReadWord(PC - 4), 4L), " @ 0x", hex(PC - 4));
 }
 
 auto SH2::illegalSlotInstruction() -> void {

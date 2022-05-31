@@ -133,6 +133,7 @@ auto SH2::WDT::serialize(serializer& s) -> void {
   s(rstcsr.rste);
   s(rstcsr.wovf);
   s(wtcnt);
+  s(pendingIRQ);
 }
 
 auto SH2::UBC::serialize(serializer& s) -> void {

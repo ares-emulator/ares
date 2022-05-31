@@ -43,6 +43,7 @@ auto M32X::SH7604::main() -> void {
   SH2::intc.run();
   SH2::dmac.run();
   SH2::frt.run();
+  SH2::wdt.run();
 }
 
 auto M32X::SH7604::step(u32 clocks) -> void {

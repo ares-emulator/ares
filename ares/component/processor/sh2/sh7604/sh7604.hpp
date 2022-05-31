@@ -112,8 +112,8 @@
       n7 fovv;      //FRT overflow interrupt vector number
     } vcrd;
     struct VCRWDT { //vector number setting register WDT
-      n4 bcmv;      //BSC compare match interrupt vector number
-      n4 witv;      //WDT interval interrupt vector number
+      n7 bcmv;      //BSC compare match interrupt vector number
+      n7 witv;      //WDT interval interrupt vector number
     } vcrwdt;
   } intc;
 
@@ -210,6 +210,9 @@
 
   //watchdog timer
   struct WDT {
+    //timer.cpp
+    auto run() -> void;
+
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
@@ -225,6 +228,11 @@
       n1 wovf;      //watchdog timer overflow flag
     } rstcsr;
     n8 wtcnt;       //watchdog timer counter
+
+    //internal
+    n32 counter;
+    n1 pendingIRQ;
+    n8 select;
   } wdt;
 
   //user break controller
