@@ -38,7 +38,7 @@ auto PPU::DAC::run(u32 x, u32 y) -> n15 {
   n15 color = above.color;
 
   //color blending
-  if(active[SFX]) {
+  if(active[SFX] || (above.translucent && io.blendBelow[belowLayer])) {
     if(above.translucent && io.blendBelow[belowLayer]) {
       color = blend(above.color, eva, below.color, evb);
     } else if(io.blendMode == 1 && io.blendAbove[aboveLayer] && io.blendBelow[belowLayer]) {
