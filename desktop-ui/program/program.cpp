@@ -21,6 +21,17 @@ auto Program::create() -> void {
   driverSettings.inputRefresh();
 
   if(startGameLoad) {
+    if(startSystem) {
+      for(auto &emulator: emulators) {
+        if(emulator->name == startSystem) {
+          if(load(emulator, startGameLoad)) {
+            if(startFullScreen) videoFullScreenToggle();
+          }
+          return;
+        }
+      }
+    }
+
     if(auto emulator = identify(startGameLoad)) {
       if(load(emulator, startGameLoad)) {
         if(startFullScreen) videoFullScreenToggle();

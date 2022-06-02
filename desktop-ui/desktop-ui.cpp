@@ -51,12 +51,16 @@ auto nall::main(Arguments arguments) -> void {
     return settings.paths.saves;
   });
 
+  if(arguments.take("--fullscreen")) {
+    program.startFullScreen = true;
+  }
+
+  if(string system; arguments.take("--system", system)) {
+    program.startSystem = system;
+  }
+
   for(auto argument : arguments) {
-    if(argument == "--fullscreen") {
-      program.startFullScreen = true;
-    } else if(file::exists(argument)) {
-      program.startGameLoad = argument;
-    }
+    if(file::exists(argument)) program.startGameLoad = argument;
   }
 
   inputManager.create();
