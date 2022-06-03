@@ -551,7 +551,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NVC") {mempak = true;}                                       //Virtual Chess 64
   if(id == "NVR") {mempak = true;}                                       //Virtual Pool 64
   if(id == "NWV") {mempak = true; rumble = true;}                        //WCW: Backstage Assault
-  if(id == "NWV") {mempak = true; rumble = true;}                        //WCW: Mayhem
+  if(id == "NWM") {mempak = true; rumble = true;}                        //WCW: Mayhem
   if(id == "NW3") {mempak = true; rumble = true;}                        //WCW: Nitro
   if(id == "NWN") {mempak = true; rumble = true;}                        //WCW vs. nWo - World Tour
   if(id == "NWW") {mempak = true; rumble = true;}                        //WWF: War Zone
