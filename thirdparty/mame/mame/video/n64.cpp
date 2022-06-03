@@ -4364,7 +4364,7 @@ void n64_rdp::span_draw_copy(int32_t scanline, const extent_t &extent, const rdp
 	{
 		const bool valid_x = (flip) ? (x >= xend_scissored) : (x <= xend_scissored);
 
-		if (x >= clipx1 && x < clipx2 && valid_x)
+		if (x >= clipx1 && x <= clipx2 && valid_x)
 		{
 			int32_t sss = s.h.h;
 			int32_t sst = t.h.h;
@@ -4405,7 +4405,7 @@ void n64_rdp::span_draw_fill(int32_t scanline, const extent_t &extent, const rdp
 
 	for (int32_t j = 0; j <= length; j++)
 	{
-		if (x >= clipx1 && x < clipx2)
+		if (x >= clipx1 && x <= clipx2)
 		{
 			((this)->*(m_fill_pixel[object.m_misc_state.m_fb_size]))(fb_index + x, object);
 		}
