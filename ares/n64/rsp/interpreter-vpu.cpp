@@ -426,14 +426,14 @@ auto RSP::SSV(cr128& vt, cr32& rs, s8 imm) -> void {
 template<u8 e>
 auto RSP::STV(u8 vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
-  auto start = vt;
-  auto end = min(32, start + 8);
-  auto element = 8 - (e >> 1);
-  auto base = (address & 15) + (element << 1);
-  address &= ~15;
+  auto start = vt & ~7;
+  auto end = start + 8;
+  auto element = 16 - (e & ~1);
+  auto base = (address & 7) - (e & ~1);
+  address &= ~7;
   for(u32 offset = start; offset < end; offset++) {
-    dmem.writeUnaligned<Half>(address + (base & 15), vpu.r[offset].element(element++ & 7));
-    base += 2;
+    dmem.write<Byte>(address + (base++ & 15), vpu.r[offset].byte(element++ & 15));
+    dmem.write<Byte>(address + (base++ & 15), vpu.r[offset].byte(element++ & 15));
   }
 }
 
