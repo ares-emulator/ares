@@ -301,13 +301,57 @@ auto RSP::SDV(cr128& vt, cr32& rs, s8 imm) -> void {
 template<u8 e>
 auto RSP::SFV(cr128& vt, cr32& rs, s8 imm) -> void {
   auto address = rs.u32 + imm * 16;
-  auto start = e >> 1;
-  auto end = start + 4;
-  auto base = address & 15;
-  address &= ~15;
-  for(u32 offset = start; offset < end; offset++) {
-    dmem.write<Byte>(address + (base & 15), vt.element(offset & 7) >> 7);
-    base += 4;
+  auto base = address & 7;
+  address &= ~7;
+  switch (e) {
+  case 0: case 15:
+    dmem.write<Byte>(address + (base +  0 & 15), vt.element(0) >> 7);
+    dmem.write<Byte>(address + (base +  4 & 15), vt.element(1) >> 7);
+    dmem.write<Byte>(address + (base +  8 & 15), vt.element(2) >> 7);
+    dmem.write<Byte>(address + (base + 12 & 15), vt.element(3) >> 7);
+    break;
+  case 1:
+    dmem.write<Byte>(address + (base +  0 & 15), vt.element(6) >> 7);
+    dmem.write<Byte>(address + (base +  4 & 15), vt.element(7) >> 7);
+    dmem.write<Byte>(address + (base +  8 & 15), vt.element(4) >> 7);
+    dmem.write<Byte>(address + (base + 12 & 15), vt.element(5) >> 7);
+    break;
+  case 4:
+    dmem.write<Byte>(address + (base +  0 & 15), vt.element(1) >> 7);
+    dmem.write<Byte>(address + (base +  4 & 15), vt.element(2) >> 7);
+    dmem.write<Byte>(address + (base +  8 & 15), vt.element(3) >> 7);
+    dmem.write<Byte>(address + (base + 12 & 15), vt.element(0) >> 7);
+    break;
+  case 5:
+    dmem.write<Byte>(address + (base +  0 & 15), vt.element(7) >> 7);
+    dmem.write<Byte>(address + (base +  4 & 15), vt.element(4) >> 7);
+    dmem.write<Byte>(address + (base +  8 & 15), vt.element(5) >> 7);
+    dmem.write<Byte>(address + (base + 12 & 15), vt.element(6) >> 7);
+    break;
+  case 8:
+    dmem.write<Byte>(address + (base +  0 & 15), vt.element(4) >> 7);
+    dmem.write<Byte>(address + (base +  4 & 15), vt.element(5) >> 7);
+    dmem.write<Byte>(address + (base +  8 & 15), vt.element(6) >> 7);
+    dmem.write<Byte>(address + (base + 12 & 15), vt.element(7) >> 7);
+    break;
+  case 11:
+    dmem.write<Byte>(address + (base +  0 & 15), vt.element(3) >> 7);
+    dmem.write<Byte>(address + (base +  4 & 15), vt.element(0) >> 7);
+    dmem.write<Byte>(address + (base +  8 & 15), vt.element(1) >> 7);
+    dmem.write<Byte>(address + (base + 12 & 15), vt.element(2) >> 7);
+    break;
+  case 12:
+    dmem.write<Byte>(address + (base +  0 & 15), vt.element(5) >> 7);
+    dmem.write<Byte>(address + (base +  4 & 15), vt.element(6) >> 7);
+    dmem.write<Byte>(address + (base +  8 & 15), vt.element(7) >> 7);
+    dmem.write<Byte>(address + (base + 12 & 15), vt.element(4) >> 7);
+    break;
+  default:
+    dmem.write<Byte>(address + (base +  0 & 15), 0);
+    dmem.write<Byte>(address + (base +  4 & 15), 0);
+    dmem.write<Byte>(address + (base +  8 & 15), 0);
+    dmem.write<Byte>(address + (base + 12 & 15), 0);
+    break;
   }
 }
 
