@@ -612,25 +612,26 @@ auto CPU::LW(r64& rt, cr64& rs, s16 imm) -> void {
 auto CPU::LWL(r64& rt, cr64& rs, s16 imm) -> void {
   u64 address = rs.u64 + imm;
   u32 data = rt.u32;
+  auto mem = read<Word>(address & ~3);
+  if (!mem) return;
 
   if(context.littleEndian())
   switch(address & 3) {
   case 0:
     data &= 0x00ffffff;
-    if(auto byte = read<Byte>(address & ~3 | 3)) data |= byte() << 24; else return;
+    *mem <<= 24;
     break;
   case 1:
     data &= 0x0000ffff;
-    if(auto half = read<Half>(address & ~3 | 2)) data |= half() << 16; else return;
+    *mem <<= 16;
     break;
   case 2:
     data &= 0x000000ff;
-    if(auto byte = read<Byte>(address & ~3 | 1)) data |= byte() << 24; else return;
-    if(auto half = read<Half>(address & ~3 | 2)) data |= half() <<  8; else return;
+    *mem <<= 8;
     break;
   case 3:
     data &= 0x00000000;
-    if(auto word = read<Word>(address & ~3 | 0)) data |= word() <<  0; else return;
+    *mem <<= 0;
     break;
   }
 
@@ -638,53 +639,58 @@ auto CPU::LWL(r64& rt, cr64& rs, s16 imm) -> void {
   switch(address & 3) {
   case 0:
     data &= 0x00000000;
-    if(auto word = read<Word>(address & ~3 | 0)) data |= word() <<  0; else return;
+    *mem <<= 0;
     break;
   case 1:
     data &= 0x000000ff;
-    if(auto byte = read<Byte>(address & ~3 | 1)) data |= byte() << 24; else return;
-    if(auto half = read<Half>(address & ~3 | 2)) data |= half() <<  8; else return;
+    *mem <<= 8;
     break;
   case 2:
     data &= 0x0000ffff;
-    if(auto half = read<Half>(address & ~3 | 2)) data |= half() << 16; else return;
+    *mem <<= 16;
     break;
   case 3:
     data &= 0x00ffffff;
-    if(auto byte = read<Byte>(address & ~3 | 3)) data |= byte() << 24; else return;
+    *mem <<= 24;
     break;
   }
 
+  data |= *mem;
   rt.s64 = (s32)data;
 }
 
 auto CPU::LWR(r64& rt, cr64& rs, s16 imm) -> void {
   u64 address = rs.u64 + imm;
   u32 data = rt.u32;
+  auto mem = read<Word>(address & ~3);
+  if (!mem) return;
 
   if(context.littleEndian())
   switch(address & 3) {
   case 0:
     data &= 0x00000000;
-    if(auto word = read<Word>(address & ~3 | 0)) data |= word() <<  0; else return;
+    *mem >>= 0;
+    data |= *mem;
     rt.s64 = (s32)data;
     break;
   case 1:
     data &= 0xff000000;
-    if(auto half = read<Half>(address & ~3 | 0)) data |= half() <<  8; else return;
-    if(auto byte = read<Byte>(address & ~3 | 2)) data |= byte() <<  0; else return;
+    *mem >>= 8;
+    data |= *mem;
     if(context.bits == 32) rt.u32 = data;
     if(context.bits == 64) rt.s64 = (s32)data;
     break;
   case 2:
     data &= 0xffff0000;
-    if(auto half = read<Half>(address & ~3 | 0)) data |= half() <<  0; else return;
+    *mem >>= 16;
+    data |= *mem;
     if(context.bits == 32) rt.u32 = data;
     if(context.bits == 64) rt.s64 = (s32)data;
     break;
   case 3:
     data &= 0xffffff00;
-    if(auto byte = read<Byte>(address & ~3 | 0)) data |= byte() <<  0; else return;
+    *mem >>= 24;
+    data |= *mem;
     if(context.bits == 32) rt.u32 = data;
     if(context.bits == 64) rt.s64 = (s32)data;
     break;
@@ -694,26 +700,29 @@ auto CPU::LWR(r64& rt, cr64& rs, s16 imm) -> void {
   switch(address & 3) {
   case 0:
     data &= 0xffffff00;
-    if(auto byte = read<Byte>(address & ~3 | 0)) data |= byte() <<  0; else return;
+    *mem >>= 24;
+    data |= *mem;
     if(context.bits == 32) rt.u32 = data;
     if(context.bits == 64) rt.s64 = (s32)data;
     break;
   case 1:
     data &= 0xffff0000;
-    if(auto half = read<Half>(address & ~3 | 0)) data |= half() <<  0; else return;
+    *mem >>= 16;
+    data |= *mem;
     if(context.bits == 32) rt.u32 = data;
     if(context.bits == 64) rt.s64 = (s32)data;
     break;
   case 2:
     data &= 0xff000000;
-    if(auto half = read<Half>(address & ~3 | 0)) data |= half() <<  8; else return;
-    if(auto byte = read<Byte>(address & ~3 | 2)) data |= byte() <<  0; else return;
+    *mem >>= 8;
+    data |= *mem;
     if(context.bits == 32) rt.u32 = data;
     if(context.bits == 64) rt.s64 = (s32)data;
     break;
   case 3:
     data &= 0x00000000;
-    if(auto word = read<Word>(address & ~3 | 0)) data |= word() <<  0; else return;
+    *mem >>= 0;
+    data |= *mem;
     rt.s64 = (s32)data;
     break;
   }
