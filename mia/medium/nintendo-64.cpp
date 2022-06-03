@@ -523,7 +523,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NS2") {mempak = true;}                                       //Simcity 2000
   if(id == "NSK") {mempak = true; rumble = true;}                        //Snowboard Kids [Snobow Kids (J)]
   if(id == "NDT") {mempak = true; rumble = true;}                        //South Park
-  if(id == "NDR") {mempak = true; rumble = true;}                        //South Park Rally
+  if(id == "NPR") {mempak = true; rumble = true;}                        //South Park Rally
   if(id == "NIV") {mempak = true; rumble = true;}                        //Space Invaders
   if(id == "NSL") {mempak = true; rumble = true;}                        //Spider-Man
   if(id == "NR3") {mempak = true; rumble = true;}                        //Stunt Racer 64
