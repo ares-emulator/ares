@@ -22,6 +22,8 @@ auto NeoGeoAES::load(string location) -> bool {
     }
   }
 
+  if(pak->count() != 1) return false;
+
   return true;
 }
 
