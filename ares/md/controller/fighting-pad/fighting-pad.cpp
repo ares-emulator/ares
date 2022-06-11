@@ -17,6 +17,10 @@ FightingPad::FightingPad(Node::Port parent) {
   Thread::create(1'000'000, {&FightingPad::main, this});
 }
 
+FightingPad::~FightingPad() {
+  Thread::destroy();
+}
+
 auto FightingPad::main() -> void {
   if(timeout) {
     timeout--;
