@@ -126,11 +126,15 @@ auto CPU::getControlRegister(n5 index) -> u64 {
   case 30:  //error exception program counter
     data = scc.epcError;
     break;
+  default:
+    data = scc.latch;
+    break;
   }
   return data;
 }
 
 auto CPU::setControlRegister(n5 index, n64 data) -> void {
+  scc.latch = data;
   //read-only variables are defined but commented out for documentation purposes
   switch(index) {
   case  0:  //index

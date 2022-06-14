@@ -522,6 +522,9 @@ struct CPU : Thread {
 
     //30: Error Exception Program Counter
     n64 epcError;
+
+    //other
+    n64 latch;
   } scc;
 
   //interpreter-scc.cpp
