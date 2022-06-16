@@ -119,8 +119,8 @@ auto CPU::BREAK() -> void {
 }
 
 auto CPU::CACHE(u8 operation, cr64& rs, s16 imm) -> void {
-  u32 address = rs.u64 + imm;
-  if (auto phys = devirtualize(address)) address = *phys;
+  u32 address;
+  if (auto phys = devirtualize(rs.u64 + imm)) address = *phys;
   else return;
 
   switch(operation) {
@@ -582,9 +582,9 @@ auto CPU::LHU(r64& rt, cr64& rs, s16 imm) -> void {
 
 auto CPU::LL(r64& rt, cr64& rs, s16 imm) -> void {
   if(auto address = devirtualize(rs.u64 + imm)) {
-    if (auto data = read<Word>(*address)) {
+    if (auto data = read<Word>(rs.u64 + imm)) {
       rt.u64 = s32(*data);
-      scc.ll = (*address & 0x1fff'ffff) >> 4;
+      scc.ll = *address >> 4;
       scc.llbit = 1;
     }
   }
@@ -593,9 +593,9 @@ auto CPU::LL(r64& rt, cr64& rs, s16 imm) -> void {
 auto CPU::LLD(r64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
   if(auto address = devirtualize(rs.u64 + imm)) {
-    if (auto data = read<Dual>(*address)) {
+    if (auto data = read<Dual>(rs.u64 + imm)) {
       rt.u64 = *data;
-      scc.ll = (*address & 0x1fff'ffff) >> 4;
+      scc.ll = *address >> 4;
       scc.llbit = 1;
     }
   }
@@ -779,25 +779,21 @@ auto CPU::SB(cr64& rt, cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::SC(r64& rt, cr64& rs, s16 imm) -> void {
-  if(auto address = devirtualize(rs.u64 + imm)) {  
-    if(scc.llbit) {
-      scc.llbit = 0;
-      rt.u64 = write<Word>(*address, rt.u32);
-    } else {
-      rt.u64 = 0;
-    }
+  if(scc.llbit) {
+    scc.llbit = 0;
+    rt.u64 = write<Word>(rs.u64 + imm, rt.u32);
+  } else {
+    rt.u64 = 0;
   }
 }
 
 auto CPU::SCD(r64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-  if(auto address = devirtualize(rs.u64 + imm)) {  
-    if(scc.llbit) {
-      scc.llbit = 0;
-      rt.u64 = write<Dual>(*address, rt.u64);
-    } else {
-      rt.u64 = 0;
-    }
+  if(scc.llbit) {
+    scc.llbit = 0;
+    rt.u64 = write<Dual>(rs.u64 + imm, rt.u64);
+  } else {
+    rt.u64 = 0;
   }
 }
 
