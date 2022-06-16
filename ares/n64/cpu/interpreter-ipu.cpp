@@ -394,88 +394,88 @@ auto CPU::LD(r64& rt, cr64& rs, s16 imm) -> void {
 
 auto CPU::LDL(r64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-  u64 address = rs.u64 + imm;
+  u64 vaddr = rs.u64 + imm;
   u64 data = rt.u64;
 
   if(context.littleEndian())
-  switch(address & 7) {
+  switch(vaddr & 7) {
   case 0:
     data &= 0x00ffffffffffffffull;
-    if(auto byte = read<Byte>(address & ~7 | 7)) data |= byte() << 56; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 7)) data |= byte() << 56; else return;
     break;
   case 1:
     data &= 0x0000ffffffffffffull;
-    if(auto half = read<Half>(address & ~7 | 6)) data |= half() << 48; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 6)) data |= half() << 48; else return;
     break;
   case 2:
     data &= 0x000000ffffffffffull;
-    if(auto byte = read<Byte>(address & ~7 | 5)) data |= byte() << 56; else return;
-    if(auto half = read<Half>(address & ~7 | 6)) data |= half() << 40; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 5)) data |= byte() << 56; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 6)) data |= half() << 40; else return;
     break;
   case 3:
     data &= 0x00000000ffffffffull;
-    if(auto word = read<Word>(address & ~7 | 4)) data |= word() << 32; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 4)) data |= word() << 32; else return;
     break;
   case 4:
     data &= 0x0000000000ffffffull;
-    if(auto byte = read<Byte>(address & ~7 | 3)) data |= byte() << 56; else return;
-    if(auto word = read<Word>(address & ~7 | 4)) data |= word() << 24; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 3)) data |= byte() << 56; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 4)) data |= word() << 24; else return;
     break;
   case 5:
     data &= 0x000000000000ffffull;
-    if(auto half = read<Half>(address & ~7 | 2)) data |= half() << 48; else return;
-    if(auto word = read<Word>(address & ~7 | 4)) data |= word() << 16; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 2)) data |= half() << 48; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 4)) data |= word() << 16; else return;
     break;
   case 6:
     data &= 0x00000000000000ffull;
-    if(auto byte = read<Byte>(address & ~7 | 1)) data |= byte() << 56; else return;
-    if(auto half = read<Half>(address & ~7 | 2)) data |= half() << 40; else return;
-    if(auto word = read<Word>(address & ~7 | 4)) data |= word() <<  8; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 1)) data |= byte() << 56; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 2)) data |= half() << 40; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 4)) data |= word() <<  8; else return;
     break;
   case 7:
     data &= 0x0000000000000000ull;
-    if(auto dual = read<Dual>(address & ~7 | 0)) data |= dual() <<  0; else return;
+    if(auto dual = read<Dual>(vaddr & ~7 | 0)) data |= dual() <<  0; else return;
     break;
   }
 
   if(context.bigEndian())
-  switch(address & 7) {
+  switch(vaddr & 7) {
   case 0:
     data &= 0x0000000000000000ull;
-    if(auto dual = read<Dual>(address & ~7 | 0)) data |= dual() <<  0; else return;
+    if(auto dual = read<Dual>(vaddr & ~7 | 0)) data |= dual() <<  0; else return;
     break;
   case 1:
     data &= 0x00000000000000ffull;
-    if(auto byte = read<Byte>(address & ~7 | 1)) data |= byte() << 56; else return;
-    if(auto half = read<Half>(address & ~7 | 2)) data |= half() << 40; else return;
-    if(auto word = read<Word>(address & ~7 | 4)) data |= word() <<  8; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 1)) data |= byte() << 56; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 2)) data |= half() << 40; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 4)) data |= word() <<  8; else return;
     break;
   case 2:
     data &= 0x000000000000ffffull;
-    if(auto half = read<Half>(address & ~7 | 2)) data |= half() << 48; else return;
-    if(auto word = read<Word>(address & ~7 | 4)) data |= word() << 16; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 2)) data |= half() << 48; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 4)) data |= word() << 16; else return;
     break;
   case 3:
     data &= 0x0000000000ffffffull;
-    if(auto byte = read<Byte>(address & ~7 | 3)) data |= byte() << 56; else return;
-    if(auto word = read<Word>(address & ~7 | 4)) data |= word() << 24; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 3)) data |= byte() << 56; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 4)) data |= word() << 24; else return;
     break;
   case 4:
     data &= 0x00000000ffffffffull;
-    if(auto word = read<Word>(address & ~7 | 4)) data |= word() << 32; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 4)) data |= word() << 32; else return;
     break;
   case 5:
     data &= 0x000000ffffffffffull;
-    if(auto byte = read<Byte>(address & ~7 | 5)) data |= byte() << 56; else return;
-    if(auto half = read<Half>(address & ~7 | 6)) data |= half() << 40; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 5)) data |= byte() << 56; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 6)) data |= half() << 40; else return;
     break;
   case 6:
     data &= 0x0000ffffffffffffull;
-    if(auto half = read<Half>(address & ~7 | 6)) data |= half() << 48; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 6)) data |= half() << 48; else return;
     break;
   case 7:
     data &= 0x00ffffffffffffffull;
-    if(auto byte = read<Byte>(address & ~7 | 7)) data |= byte() << 56; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 7)) data |= byte() << 56; else return;
     break;
   }
 
@@ -484,88 +484,88 @@ auto CPU::LDL(r64& rt, cr64& rs, s16 imm) -> void {
 
 auto CPU::LDR(r64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-  u64 address = rs.u64 + imm;
+  u64 vaddr = rs.u64 + imm;
   u64 data = rt.u64;
 
   if(context.littleEndian())
-  switch(address & 7) {
+  switch(vaddr & 7) {
   case 0:
     data &= 0x0000000000000000ull;
-    if(auto dual = read<Dual>(address & ~7 | 0)) data |= dual() <<  0; else return;
+    if(auto dual = read<Dual>(vaddr & ~7 | 0)) data |= dual() <<  0; else return;
     break;
   case 1:
     data &= 0xff00000000000000ull;
-    if(auto word = read<Word>(address & ~7 | 0)) data |= word() << 24; else return;
-    if(auto half = read<Half>(address & ~7 | 4)) data |= half() <<  8; else return;
-    if(auto byte = read<Byte>(address & ~7 | 6)) data |= byte() <<  0; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 0)) data |= word() << 24; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 4)) data |= half() <<  8; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 6)) data |= byte() <<  0; else return;
     break;
   case 2:
     data &= 0xffff000000000000ull;
-    if(auto word = read<Word>(address & ~7 | 0)) data |= word() << 16; else return;
-    if(auto half = read<Half>(address & ~7 | 4)) data |= half() <<  0; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 0)) data |= word() << 16; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 4)) data |= half() <<  0; else return;
     break;
   case 3:
     data &= 0xffffff0000000000ull;
-    if(auto word = read<Word>(address & ~7 | 0)) data |= word() <<  8; else return;
-    if(auto byte = read<Byte>(address & ~7 | 4)) data |= byte() <<  0; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 0)) data |= word() <<  8; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 4)) data |= byte() <<  0; else return;
     break;
   case 4:
     data &= 0xffffffff00000000ull;
-    if(auto word = read<Word>(address & ~7 | 0)) data |= word() <<  0; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 0)) data |= word() <<  0; else return;
     break;
   case 5:
     data &= 0xffffffffff000000ull;
-    if(auto half = read<Half>(address & ~7 | 0)) data |= half() <<  8; else return;
-    if(auto byte = read<Byte>(address & ~7 | 2)) data |= byte() <<  0; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 0)) data |= half() <<  8; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 2)) data |= byte() <<  0; else return;
     break;
   case 6:
     data &= 0xffffffffffff0000ull;
-    if(auto half = read<Half>(address & ~7 | 0)) data |= half() <<  0; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 0)) data |= half() <<  0; else return;
     break;
   case 7:
     data &= 0xffffffffffffff00ull;
-    if(auto byte = read<Byte>(address & ~7 | 0)) data |= byte() <<  0; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 0)) data |= byte() <<  0; else return;
     break;
   }
 
   if(context.bigEndian())
-  switch(address & 7) {
+  switch(vaddr & 7) {
   case 0:
     data &= 0xffffffffffffff00ull;
-    if(auto byte = read<Byte>(address & ~7 | 0)) data |= byte() <<  0; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 0)) data |= byte() <<  0; else return;
     break;
   case 1:
     data &= 0xffffffffffff0000ull;
-    if(auto half = read<Half>(address & ~7 | 0)) data |= half() <<  0; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 0)) data |= half() <<  0; else return;
     break;
   case 2:
     data &= 0xffffffffff000000ull;
-    if(auto half = read<Half>(address & ~7 | 0)) data |= half() <<  8; else return;
-    if(auto byte = read<Byte>(address & ~7 | 2)) data |= byte() <<  0; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 0)) data |= half() <<  8; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 2)) data |= byte() <<  0; else return;
     break;
   case 3:
     data &= 0xffffffff00000000ull;
-    if(auto word = read<Word>(address & ~7 | 0)) data |= word() <<  0; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 0)) data |= word() <<  0; else return;
     break;
   case 4:
     data &= 0xffffff0000000000ull;
-    if(auto word = read<Word>(address & ~7 | 0)) data |= word() <<  8; else return;
-    if(auto byte = read<Byte>(address & ~7 | 4)) data |= byte() <<  0; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 0)) data |= word() <<  8; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 4)) data |= byte() <<  0; else return;
     break;
   case 5:
     data &= 0xffff000000000000ull;
-    if(auto word = read<Word>(address & ~7 | 0)) data |= word() << 16; else return;
-    if(auto half = read<Half>(address & ~7 | 4)) data |= half() <<  0; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 0)) data |= word() << 16; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 4)) data |= half() <<  0; else return;
     break;
   case 6:
     data &= 0xff00000000000000ull;
-    if(auto word = read<Word>(address & ~7 | 0)) data |= word() << 24; else return;
-    if(auto half = read<Half>(address & ~7 | 4)) data |= half() <<  8; else return;
-    if(auto byte = read<Byte>(address & ~7 | 6)) data |= byte() <<  0; else return;
+    if(auto word = read<Word>(vaddr & ~7 | 0)) data |= word() << 24; else return;
+    if(auto half = read<Half>(vaddr & ~7 | 4)) data |= half() <<  8; else return;
+    if(auto byte = read<Byte>(vaddr & ~7 | 6)) data |= byte() <<  0; else return;
     break;
   case 7:
     data &= 0x0000000000000000ull;
-    if(auto dual = read<Dual>(address & ~7 | 0)) data |= dual() <<  0; else return;
+    if(auto dual = read<Dual>(vaddr & ~7 | 0)) data |= dual() <<  0; else return;
     break;
   }
 
@@ -610,13 +610,13 @@ auto CPU::LW(r64& rt, cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::LWL(r64& rt, cr64& rs, s16 imm) -> void {
-  u64 address = rs.u64 + imm;
+  u64 vaddr = rs.u64 + imm;
   u32 data = rt.u32;
-  auto mem = read<Word>(address & ~3);
+  auto mem = read<Word>(vaddr & ~3);
   if (!mem) return;
 
   if(context.littleEndian())
-  switch(address & 3) {
+  switch(vaddr & 3) {
   case 0:
     data &= 0x00ffffff;
     *mem <<= 24;
@@ -636,7 +636,7 @@ auto CPU::LWL(r64& rt, cr64& rs, s16 imm) -> void {
   }
 
   if(context.bigEndian())
-  switch(address & 3) {
+  switch(vaddr & 3) {
   case 0:
     data &= 0x00000000;
     *mem <<= 0;
@@ -660,13 +660,13 @@ auto CPU::LWL(r64& rt, cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::LWR(r64& rt, cr64& rs, s16 imm) -> void {
-  u64 address = rs.u64 + imm;
+  u64 vaddr = rs.u64 + imm;
   u32 data = rt.u32;
-  auto mem = read<Word>(address & ~3);
+  auto mem = read<Word>(vaddr & ~3);
   if (!mem) return;
 
   if(context.littleEndian())
-  switch(address & 3) {
+  switch(vaddr & 3) {
   case 0:
     data &= 0x00000000;
     *mem >>= 0;
@@ -697,7 +697,7 @@ auto CPU::LWR(r64& rt, cr64& rs, s16 imm) -> void {
   }
 
   if(context.bigEndian())
-  switch(address & 3) {
+  switch(vaddr & 3) {
   case 0:
     data &= 0xffffff00;
     *mem >>= 24;
@@ -804,144 +804,144 @@ auto CPU::SD(cr64& rt, cr64& rs, s16 imm) -> void {
 
 auto CPU::SDL(cr64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-  u64 address = rs.u64 + imm;
+  u64 vaddr = rs.u64 + imm;
   u64 data = rt.u64;
 
   if(context.littleEndian())
-  switch(address & 7) {
+  switch(vaddr & 7) {
   case 0:
-    if(!write<Byte>(address & ~7 | 7, data >> 56)) return;
+    if(!write<Byte>(vaddr & ~7 | 7, data >> 56)) return;
     break;
   case 1:
-    if(!write<Half>(address & ~7 | 6, data >> 48)) return;
+    if(!write<Half>(vaddr & ~7 | 6, data >> 48)) return;
     break;
   case 2:
-    if(!write<Byte>(address & ~7 | 5, data >> 56)) return;
-    if(!write<Half>(address & ~7 | 6, data >> 40)) return;
+    if(!write<Byte>(vaddr & ~7 | 5, data >> 56)) return;
+    if(!write<Half>(vaddr & ~7 | 6, data >> 40)) return;
     break;
   case 3:
-    if(!write<Word>(address & ~7 | 4, data >> 32)) return;
+    if(!write<Word>(vaddr & ~7 | 4, data >> 32)) return;
     break;
   case 4:
-    if(!write<Byte>(address & ~7 | 3, data >> 56)) return;
-    if(!write<Word>(address & ~7 | 4, data >> 24)) return;
+    if(!write<Byte>(vaddr & ~7 | 3, data >> 56)) return;
+    if(!write<Word>(vaddr & ~7 | 4, data >> 24)) return;
     break;
   case 5:
-    if(!write<Half>(address & ~7 | 2, data >> 48)) return;
-    if(!write<Word>(address & ~7 | 4, data >> 16)) return;
+    if(!write<Half>(vaddr & ~7 | 2, data >> 48)) return;
+    if(!write<Word>(vaddr & ~7 | 4, data >> 16)) return;
     break;
   case 6:
-    if(!write<Byte>(address & ~7 | 1, data >> 56)) return;
-    if(!write<Half>(address & ~7 | 2, data >> 40)) return;
-    if(!write<Word>(address & ~7 | 4, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~7 | 1, data >> 56)) return;
+    if(!write<Half>(vaddr & ~7 | 2, data >> 40)) return;
+    if(!write<Word>(vaddr & ~7 | 4, data >>  8)) return;
     break;
   case 7:
-    if(!write<Dual>(address & ~7 | 0, data >>  0)) return;
+    if(!write<Dual>(vaddr & ~7 | 0, data >>  0)) return;
     break;
   }
 
   if(context.bigEndian())
-  switch(address & 7) {
+  switch(vaddr & 7) {
   case 0:
-    if(!write<Dual>(address & ~7 | 0, data >>  0)) return;
+    if(!write<Dual>(vaddr & ~7 | 0, data >>  0)) return;
     break;
   case 1:
-    if(!write<Byte>(address & ~7 | 1, data >> 56)) return;
-    if(!write<Half>(address & ~7 | 2, data >> 40)) return;
-    if(!write<Word>(address & ~7 | 4, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~7 | 1, data >> 56)) return;
+    if(!write<Half>(vaddr & ~7 | 2, data >> 40)) return;
+    if(!write<Word>(vaddr & ~7 | 4, data >>  8)) return;
     break;
   case 2:
-    if(!write<Half>(address & ~7 | 2, data >> 48)) return;
-    if(!write<Word>(address & ~7 | 4, data >> 16)) return;
+    if(!write<Half>(vaddr & ~7 | 2, data >> 48)) return;
+    if(!write<Word>(vaddr & ~7 | 4, data >> 16)) return;
     break;
   case 3:
-    if(!write<Byte>(address & ~7 | 3, data >> 56)) return;
-    if(!write<Word>(address & ~7 | 4, data >> 24)) return;
+    if(!write<Byte>(vaddr & ~7 | 3, data >> 56)) return;
+    if(!write<Word>(vaddr & ~7 | 4, data >> 24)) return;
     break;
   case 4:
-    if(!write<Word>(address & ~7 | 4, data >> 32)) return;
+    if(!write<Word>(vaddr & ~7 | 4, data >> 32)) return;
     break;
   case 5:
-    if(!write<Byte>(address & ~7 | 5, data >> 56)) return;
-    if(!write<Half>(address & ~7 | 6, data >> 40)) return;
+    if(!write<Byte>(vaddr & ~7 | 5, data >> 56)) return;
+    if(!write<Half>(vaddr & ~7 | 6, data >> 40)) return;
     break;
   case 6:
-    if(!write<Half>(address & ~7 | 6, data >> 48)) return;
+    if(!write<Half>(vaddr & ~7 | 6, data >> 48)) return;
     break;
   case 7:
-    if(!write<Byte>(address & ~7 | 7, data >> 56)) return;
+    if(!write<Byte>(vaddr & ~7 | 7, data >> 56)) return;
     break;
   }
 }
 
 auto CPU::SDR(cr64& rt, cr64& rs, s16 imm) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-  u64 address = rs.u64 + imm;
+  u64 vaddr = rs.u64 + imm;
   u64 data = rt.u64;
 
   if(context.littleEndian())
-  switch(address & 7) {
+  switch(vaddr & 7) {
   case 0:
-    if(!write<Dual>(address & ~7 | 0, data >>  0)) return;
+    if(!write<Dual>(vaddr & ~7 | 0, data >>  0)) return;
     break;
   case 1:
-    if(!write<Word>(address & ~7 | 0, data >> 24)) return;
-    if(!write<Half>(address & ~7 | 4, data >>  8)) return;
-    if(!write<Byte>(address & ~7 | 6, data >>  0)) return;
+    if(!write<Word>(vaddr & ~7 | 0, data >> 24)) return;
+    if(!write<Half>(vaddr & ~7 | 4, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~7 | 6, data >>  0)) return;
     break;
   case 2:
-    if(!write<Word>(address & ~7 | 0, data >> 16)) return;
-    if(!write<Half>(address & ~7 | 4, data >>  0)) return;
+    if(!write<Word>(vaddr & ~7 | 0, data >> 16)) return;
+    if(!write<Half>(vaddr & ~7 | 4, data >>  0)) return;
     break;
   case 3:
-    if(!write<Word>(address & ~7 | 0, data >>  8)) return;
-    if(!write<Byte>(address & ~7 | 4, data >>  0)) return;
+    if(!write<Word>(vaddr & ~7 | 0, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~7 | 4, data >>  0)) return;
     break;
   case 4:
-    if(!write<Word>(address & ~7 | 0, data >>  0)) return;
+    if(!write<Word>(vaddr & ~7 | 0, data >>  0)) return;
     break;
   case 5:
-    if(!write<Half>(address & ~7 | 0, data >>  8)) return;
-    if(!write<Byte>(address & ~7 | 2, data >>  0)) return;
+    if(!write<Half>(vaddr & ~7 | 0, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~7 | 2, data >>  0)) return;
     break;
   case 6:
-    if(!write<Half>(address & ~7 | 0, data >>  0)) return;
+    if(!write<Half>(vaddr & ~7 | 0, data >>  0)) return;
     break;
   case 7:
-    if(!write<Byte>(address & ~7 | 0, data >>  0)) return;
+    if(!write<Byte>(vaddr & ~7 | 0, data >>  0)) return;
     break;
   }
 
   if(context.bigEndian())
-  switch(address & 7) {
+  switch(vaddr & 7) {
   case 0:
-    if(!write<Byte>(address & ~7 | 0, data >>  0)) return;
+    if(!write<Byte>(vaddr & ~7 | 0, data >>  0)) return;
     break;
   case 1:
-    if(!write<Half>(address & ~7 | 0, data >>  0)) return;
+    if(!write<Half>(vaddr & ~7 | 0, data >>  0)) return;
     break;
   case 2:
-    if(!write<Half>(address & ~7 | 0, data >>  8)) return;
-    if(!write<Byte>(address & ~7 | 2, data >>  0)) return;
+    if(!write<Half>(vaddr & ~7 | 0, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~7 | 2, data >>  0)) return;
     break;
   case 3:
-    if(!write<Word>(address & ~7 | 0, data >>  0)) return;
+    if(!write<Word>(vaddr & ~7 | 0, data >>  0)) return;
     break;
   case 4:
-    if(!write<Word>(address & ~7 | 0, data >>  8)) return;
-    if(!write<Byte>(address & ~7 | 4, data >>  0)) return;
+    if(!write<Word>(vaddr & ~7 | 0, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~7 | 4, data >>  0)) return;
     break;
   case 5:
-    if(!write<Word>(address & ~7 | 0, data >> 16)) return;
-    if(!write<Half>(address & ~7 | 4, data >>  0)) return;
+    if(!write<Word>(vaddr & ~7 | 0, data >> 16)) return;
+    if(!write<Half>(vaddr & ~7 | 4, data >>  0)) return;
     break;
   case 6:
-    if(!write<Word>(address & ~7 | 0, data >> 24)) return;
-    if(!write<Half>(address & ~7 | 4, data >>  8)) return;
-    if(!write<Byte>(address & ~7 | 6, data >>  0)) return;
+    if(!write<Word>(vaddr & ~7 | 0, data >> 24)) return;
+    if(!write<Half>(vaddr & ~7 | 4, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~7 | 6, data >>  0)) return;
     break;
   case 7:
-    if(!write<Dual>(address & ~7 | 0, data >>  0)) return;
+    if(!write<Dual>(vaddr & ~7 | 0, data >>  0)) return;
     break;
   }
 }
@@ -1004,79 +1004,79 @@ auto CPU::SW(cr64& rt, cr64& rs, s16 imm) -> void {
 }
 
 auto CPU::SWL(cr64& rt, cr64& rs, s16 imm) -> void {
-  u64 address = rs.u64 + imm;
+  u64 vaddr = rs.u64 + imm;
   u32 data = rt.u32;
 
   if(context.littleEndian())
-  switch(address & 3) {
+  switch(vaddr & 3) {
   case 0:
-    if(!write<Byte>(address & ~3 | 3, data >> 24)) return;
+    if(!write<Byte>(vaddr & ~3 | 3, data >> 24)) return;
     break;
   case 1:
-    if(!write<Half>(address & ~3 | 2, data >> 16)) return;
+    if(!write<Half>(vaddr & ~3 | 2, data >> 16)) return;
     break;
   case 2:
-    if(!write<Byte>(address & ~3 | 1, data >> 24)) return;
-    if(!write<Half>(address & ~3 | 2, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~3 | 1, data >> 24)) return;
+    if(!write<Half>(vaddr & ~3 | 2, data >>  8)) return;
     break;
   case 3:
-    if(!write<Word>(address & ~3 | 0, data >>  0)) return;
+    if(!write<Word>(vaddr & ~3 | 0, data >>  0)) return;
     break;
   }
 
   if(context.bigEndian())
-  switch(address & 3) {
+  switch(vaddr & 3) {
   case 0:
-    if(!write<Word>(address & ~3 | 0, data >>  0)) return;
+    if(!write<Word>(vaddr & ~3 | 0, data >>  0)) return;
     break;
   case 1:
-    if(!write<Byte>(address & ~3 | 1, data >> 24)) return;
-    if(!write<Half>(address & ~3 | 2, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~3 | 1, data >> 24)) return;
+    if(!write<Half>(vaddr & ~3 | 2, data >>  8)) return;
     break;
   case 2:
-    if(!write<Half>(address & ~3 | 2, data >> 16)) return;
+    if(!write<Half>(vaddr & ~3 | 2, data >> 16)) return;
     break;
   case 3:
-    if(!write<Byte>(address & ~3 | 3, data >> 24)) return;
+    if(!write<Byte>(vaddr & ~3 | 3, data >> 24)) return;
     break;
   }
 }
 
 auto CPU::SWR(cr64& rt, cr64& rs, s16 imm) -> void {
-  u64 address = rs.u64 + imm;
+  u64 vaddr = rs.u64 + imm;
   u32 data = rt.u32;
 
   if(context.littleEndian())
-  switch(address & 3) {
+  switch(vaddr & 3) {
   case 0:
-    if(!write<Word>(address & ~3 | 0, data >>  0)) return;
+    if(!write<Word>(vaddr & ~3 | 0, data >>  0)) return;
     break;
   case 1:
-    if(!write<Half>(address & ~3 | 0, data >>  8)) return;
-    if(!write<Byte>(address & ~3 | 2, data >>  0)) return;
+    if(!write<Half>(vaddr & ~3 | 0, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~3 | 2, data >>  0)) return;
     break;
   case 2:
-    if(!write<Half>(address & ~3 | 0, data >>  0)) return;
+    if(!write<Half>(vaddr & ~3 | 0, data >>  0)) return;
     break;
   case 3:
-    if(!write<Byte>(address & ~3 | 0, data >>  0)) return;
+    if(!write<Byte>(vaddr & ~3 | 0, data >>  0)) return;
     break;
   }
 
   if(context.bigEndian())
-  switch(address & 3) {
+  switch(vaddr & 3) {
   case 0:
-    if(!write<Byte>(address & ~3 | 0, data >>  0)) return;
+    if(!write<Byte>(vaddr & ~3 | 0, data >>  0)) return;
     break;
   case 1:
-    if(!write<Half>(address & ~3 | 0, data >>  0)) return;
+    if(!write<Half>(vaddr & ~3 | 0, data >>  0)) return;
     break;
   case 2:
-    if(!write<Half>(address & ~3 | 0, data >>  8)) return;
-    if(!write<Byte>(address & ~3 | 2, data >>  0)) return;
+    if(!write<Half>(vaddr & ~3 | 0, data >>  8)) return;
+    if(!write<Byte>(vaddr & ~3 | 2, data >>  0)) return;
     break;
   case 3:
-    if(!write<Word>(address & ~3 | 0, data >>  0)) return;
+    if(!write<Word>(vaddr & ~3 | 0, data >>  0)) return;
     break;
   }
 }
