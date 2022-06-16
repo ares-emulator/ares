@@ -96,7 +96,7 @@ auto CPU::devirtualize(u64 vaddr) -> maybe<u64> {
     return nothing;
   case Context::Segment::Mapped:
     if(auto match = tlb.load(vaddr)) return match.address & context.physMask;
-    tlb.exception(vaddr);
+    addressException(vaddr);
     return nothing;
   case Context::Segment::Cached:
   case Context::Segment::Direct:
@@ -119,7 +119,7 @@ auto CPU::fetch(u64 vaddr) -> u32 {
       return bus.read<Word>(match.address & context.physMask);
     }
     step(1);
-    tlb.exception(vaddr);
+    addressException(vaddr);
     return 0;  //nop
   case Context::Segment::Cached:
     return icache.fetch(vaddr & context.physMask);
@@ -161,7 +161,7 @@ auto CPU::read(u64 vaddr) -> maybe<u64> {
       return bus.read<Size>(match.address & context.physMask);
     }
     step(1);
-    tlb.exception(vaddr);
+    addressException(vaddr);
     return nothing;
   case Context::Segment::Cached:
     return dcache.read<Size>(vaddr & context.physMask);
@@ -203,7 +203,7 @@ auto CPU::write(u64 vaddr, u64 data) -> bool {
       return bus.write<Size>(match.address & context.physMask, data), true;
     }
     step(1);
-    tlb.exception(vaddr);
+    addressException(vaddr);
     return false;
   case Context::Segment::Cached:
     return dcache.write<Size>(vaddr & context.physMask, data), true;
@@ -217,6 +217,8 @@ auto CPU::write(u64 vaddr, u64 data) -> bool {
 
 auto CPU::addressException(u64 vaddr) -> void {
   scc.badVirtualAddress = vaddr;
+  scc.tlb.virtualAddress.bit(13,39) = vaddr >> 13;
+  scc.tlb.region = vaddr >> 62;
   scc.context.badVirtualAddress = vaddr >> 13;
   scc.xcontext.badVirtualAddress = vaddr >> 13;
   scc.xcontext.region = vaddr >> 62;

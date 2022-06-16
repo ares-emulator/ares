@@ -168,9 +168,8 @@ struct CPU : Thread {
     };
 
     //tlb.cpp
-    auto load(u32 vaddr) -> Match;
-    auto store(u32 vaddr) -> Match;
-    auto exception(u32 vaddr) -> void;
+    auto load(u64 vaddr) -> Match;
+    auto store(u64 vaddr) -> Match;
 
     struct Entry {
       //scc-tlb.cpp
