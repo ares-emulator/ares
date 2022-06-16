@@ -95,6 +95,7 @@ struct CPU : Thread {
     auto setMode() -> void;
 
     bool endian;
+    u64  physMask;
     u32  mode;
     u32  bits;
     u32  segment[8];  //512_MiB chunks

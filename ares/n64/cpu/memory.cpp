@@ -89,18 +89,18 @@ auto CPU::segment(u64 address) -> Context::Segment {
 }
 
 auto CPU::devirtualize(u64 address) -> maybe<u64> {
-  switch(context.segment[address >> 29 & 7]) {
+  switch(segment(address)) {
   case Context::Segment::Unused:
     addressException(address);
     exception.addressLoad();
     return nothing;
   case Context::Segment::Mapped:
-    if(auto match = tlb.load(address)) return match.address;
+    if(auto match = tlb.load(address)) return match.address & context.physMask;
     tlb.exception(address);
     return nothing;
   case Context::Segment::Cached:
   case Context::Segment::Direct:
-    return address;
+    return address & context.physMask;
   }
   unreachable;
 }
@@ -114,18 +114,18 @@ auto CPU::fetch(u64 address) -> u32 {
     return 0;  //nop
   case Context::Segment::Mapped:
     if(auto match = tlb.load(address)) {
-      if(match.cache) return icache.fetch(match.address);
+      if(match.cache) return icache.fetch(match.address & context.physMask);
       step(1);
-      return bus.read<Word>(match.address);
+      return bus.read<Word>(match.address & context.physMask);
     }
     step(1);
     tlb.exception(address);
     return 0;  //nop
   case Context::Segment::Cached:
-    return icache.fetch(address);
+    return icache.fetch(address & context.physMask);
   case Context::Segment::Direct:
     step(1);
-    return bus.read<Word>(address);
+    return bus.read<Word>(address & context.physMask);
   }
 
   unreachable;
@@ -156,18 +156,18 @@ auto CPU::read(u64 address) -> maybe<u64> {
     return nothing;
   case Context::Segment::Mapped:
     if(auto match = tlb.load(address)) {
-      if(match.cache) return dcache.read<Size>(match.address);
+      if(match.cache) return dcache.read<Size>(match.address & context.physMask);
       step(1);
-      return bus.read<Size>(match.address);
+      return bus.read<Size>(match.address & context.physMask);
     }
     step(1);
     tlb.exception(address);
     return nothing;
   case Context::Segment::Cached:
-    return dcache.read<Size>(address);
+    return dcache.read<Size>(address & context.physMask);
   case Context::Segment::Direct:
     step(1);
-    return bus.read<Size>(address);
+    return bus.read<Size>(address & context.physMask);
   }
 
   unreachable;
@@ -198,18 +198,18 @@ auto CPU::write(u64 address, u64 data) -> bool {
     return false;
   case Context::Segment::Mapped:
     if(auto match = tlb.store(address)) {
-      if(match.cache) return dcache.write<Size>(match.address, data), true;
+      if(match.cache) return dcache.write<Size>(match.address & context.physMask, data), true;
       step(1);
-      return bus.write<Size>(match.address, data), true;
+      return bus.write<Size>(match.address & context.physMask, data), true;
     }
     step(1);
     tlb.exception(address);
     return false;
   case Context::Segment::Cached:
-    return dcache.write<Size>(address, data), true;
+    return dcache.write<Size>(address & context.physMask, data), true;
   case Context::Segment::Direct:
     step(1);
-    return bus.write<Size>(address, data), true;
+    return bus.write<Size>(address & context.physMask, data), true;
   }
 
   unreachable;
