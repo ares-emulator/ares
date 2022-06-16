@@ -2,7 +2,8 @@
 auto CPU::TLB::load(u64 vaddr) -> Match {
   for(auto& entry : this->entry) {
     if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
-    if((u32)(vaddr & entry.addressMaskHi) != (u32)entry.virtualAddress) continue;
+    if((vaddr & entry.addressMaskHi) != entry.virtualAddress) continue;
+    if(vaddr >> 62 != entry.region) continue;
     bool lo = vaddr & entry.addressSelect;
     if(!entry.valid[lo]) {
       self.addressException(vaddr);
@@ -23,7 +24,8 @@ auto CPU::TLB::load(u64 vaddr) -> Match {
 auto CPU::TLB::store(u64 vaddr) -> Match {
   for(auto& entry : this->entry) {
     if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
-    if((u32)(vaddr & entry.addressMaskHi) != (u32)entry.virtualAddress) continue;
+    if((vaddr & entry.addressMaskHi) != entry.virtualAddress) continue;
+    if(vaddr >> 62 != entry.region) continue;
     bool lo = vaddr & entry.addressSelect;
     if(!entry.valid[lo]) {
       self.addressException(vaddr);
