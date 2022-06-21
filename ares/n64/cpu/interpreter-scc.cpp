@@ -324,6 +324,7 @@ auto CPU::TLBP() -> void {
     auto& entry = tlb.entry[index];
     auto mask = ~entry.pageMask & ~0x1fff;
     if((entry.virtualAddress & mask) != (scc.tlb.virtualAddress & mask)) continue;
+    if(entry.region != scc.tlb.region) continue;
     if(!entry.global[0] || !entry.global[1]) {
       if(entry.addressSpaceID != scc.tlb.addressSpaceID) continue;
     }
