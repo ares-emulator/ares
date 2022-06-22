@@ -69,15 +69,8 @@ auto RDP::writeWord(u32 address, u32 data_) -> void {
   if(address == 1) {
     //DPC_END
     command.end = data.bit(0,23) & ~7;
-
-    if(command.startValid) {
-      command.current = command.start;
-      command.startValid = 0;
-    }
-    command.pipeBusy = 1;
-    command.startGclk = 1;
-    if(command.end > command.current) render();
-    command.ready = 1;
+    command.endValid = 1;
+    flushCommands();
   }
 
   if(address == 2) {
@@ -88,7 +81,7 @@ auto RDP::writeWord(u32 address, u32 data_) -> void {
     //DPC_STATUS
     if(data.bit(0)) command.source = 0;
     if(data.bit(1)) command.source = 1;
-    if(data.bit(2)) command.freeze = 0;
+    if(data.bit(2)) command.freeze = 0, flushCommands();
     if(data.bit(3)) command.freeze = 1;
     if(data.bit(4)) command.flush = 0;
     if(data.bit(5)) command.flush = 1;
@@ -175,4 +168,17 @@ auto RDP::IO::writeWord(u32 address, u32 data_) -> void {
   }
 
   self.debugger.ioDPS(Write, address, data);
+}
+
+auto RDP::flushCommands() -> void {
+  if(command.freeze || !command.endValid) return;
+  if(command.startValid) {
+    command.current = command.start;
+    command.startValid = 0;
+  }
+  command.endValid = 0;      
+  command.pipeBusy = 1;
+  command.startGclk = 1;
+  if(command.end > command.current) render();
+  command.ready = 1;
 }
