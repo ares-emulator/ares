@@ -6,6 +6,7 @@ namespace Board {
 #include "j-cart.cpp"
 #include "game-genie.cpp"
 #include "mega-32x.cpp"
+#include "mega-32x-banked.cpp"
 #include "debugger.cpp"
 
 auto Interface::main() -> void {
