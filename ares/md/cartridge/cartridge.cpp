@@ -20,7 +20,11 @@ auto Cartridge::connect() -> void {
   information.bootable = pak->attribute("bootable").boolean();
 
   if(pak->attribute("mega32x").boolean()) {
-    board = new Board::Mega32X{*this};
+    if (pak->read("program.rom") && pak->read("program.rom")->size() > 0x400000) {
+      board = new Board::Mega32XBanked{*this};
+    } else {
+      board = new Board::Mega32X{*this};
+    }
   } else if(pak->read("svp.rom")) {
     board = new Board::SVP(*this);
   } else if(pak->attribute("label") == "Game Genie") {
