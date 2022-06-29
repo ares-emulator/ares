@@ -62,14 +62,17 @@ auto RDP::writeWord(u32 address, u32 data_) -> void {
 
   if(address == 0) {
     //DPC_START
-    command.start = data.bit(0,23) & ~7;
+    if(!command.startValid) command.start = data.bit(0,23) & ~7;
     command.startValid = 1;
   }
 
   if(address == 1) {
     //DPC_END
     command.end = data.bit(0,23) & ~7;
-    command.endValid = 1;
+    if(command.startValid) {
+      command.current = command.start;
+      command.startValid = 0;
+    }
     flushCommands();
   }
 
@@ -171,12 +174,7 @@ auto RDP::IO::writeWord(u32 address, u32 data_) -> void {
 }
 
 auto RDP::flushCommands() -> void {
-  if(command.freeze || !command.endValid) return;
-  if(command.startValid) {
-    command.current = command.start;
-    command.startValid = 0;
-  }
-  command.endValid = 0;      
+  if(command.freeze) return;
   command.pipeBusy = 1;
   command.startGclk = 1;
   if(command.end > command.current) render();
