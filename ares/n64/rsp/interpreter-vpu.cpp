@@ -469,15 +469,21 @@ auto RSP::VABS(r128& vd, cr128& vs, cr128& vt) -> void {
     r128 vte = vt(e);
     for(u32 n : range(8)) {
       if(vs.s16(n) < 0) {
-        if(vte.s16(n) == -32768) vte.s16(n) = -32767;
-        ACCL.s16(n) = -vte.s16(n);
+        if(vte.s16(n) == -32768) {
+          ACCL.s16(n)  = -32768;
+          vd.s16(n)    = 32767;
+        } else {
+          ACCL.s16(n) = -vte.s16(n);
+          vd.s16(n)   = -vte.s16(n);
+        }
       } else if(vs.s16(n) > 0) {
         ACCL.s16(n) = +vte.s16(n);
+        vd.s16(n)   = +vte.s16(n);
       } else {
         ACCL.s16(n) = 0;
+        vd.s16(n)   = 0;
       }
     }
-    vd = ACCL;
   }
 
   if constexpr(Accuracy::RSP::SIMD) {
@@ -625,10 +631,14 @@ auto RSP::VCL(r128& vd, cr128& vs, cr128& vt) -> void {
       if(VCOL.get(n)) {
         if(VCOH.get(n)) {
           ACCL.u16(n) = VCCL.get(n) ? -vte.u16(n) : vs.u16(n);
-        } else if(VCE.get(n)) {
-          ACCL.u16(n) = VCCL.set(n, vs.u16(n) + vte.u16(n) <= 0xffff) ? -vte.u16(n) : vs.u16(n);
         } else {
-          ACCL.u16(n) = VCCL.set(n, vs.u16(n) + vte.u16(n) == 0) ? -vte.u16(n) : vs.u16(n);
+          u16 sum = vs.u16(n) + vte.u16(n);
+          bool carry = (vs.u16(n) + vte.u16(n)) != sum;
+          if(VCE.get(n)) {
+            ACCL.u16(n) = VCCL.set(n, (!sum || !carry)) ? -vte.u16(n) : vs.u16(n);
+          } else {
+            ACCL.u16(n) = VCCL.set(n, (!sum && !carry)) ? -vte.u16(n) : vs.u16(n);
+          }
         }
       } else {
         if(VCOH.get(n)) {
@@ -723,12 +733,11 @@ auto RSP::VEQ(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
-      ACCL.u16(n) = VCCL.set(n, !VCE.get(n) && vs.u16(n) == vte.u16(n)) ? vs.u16(n) : vte.u16(n);
+      ACCL.u16(n) = VCCL.set(n, !VCOH.get(n) && vs.u16(n) == vte.u16(n)) ? vs.u16(n) : vte.u16(n);
     }
     VCCH = zero;  //unverified
     VCOL = zero;
     VCOH = zero;
-    VCE = zero;
     vd = ACCL;
   }
 
@@ -751,12 +760,11 @@ auto RSP::VGE(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
-      ACCL.u16(n) = VCCL.set(n, vs.s16(n) > vte.s16(n) || (vs.s16(n) == vte.s16(n) && (!VCOL.get(n) || VCE.get(n)))) ? vs.u16(n) : vte.u16(n);
+      ACCL.u16(n) = VCCL.set(n, vs.s16(n) > vte.s16(n) || (vs.s16(n) == vte.s16(n) && (!VCOL.get(n) || !VCOH.get(n)))) ? vs.u16(n) : vte.u16(n);
     }
     VCCH = zero;  //unverified
     VCOL = zero;
     VCOH = zero;
-    VCE = zero;
     vd = ACCL;
   }
 
@@ -782,12 +790,11 @@ auto RSP::VLT(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
-      ACCL.u16(n) = VCCL.set(n, vs.s16(n) < vte.s16(n) || (vs.s16(n) == vte.s16(n) && VCOL.get(n) && !VCE.get(n))) ? vs.u16(n) : vte.u16(n);
+      ACCL.u16(n) = VCCL.set(n, vs.s16(n) < vte.s16(n) || (vs.s16(n) == vte.s16(n) && VCOL.get(n) && VCOH.get(n))) ? vs.u16(n) : vte.u16(n);
     }
-    VCCH = zero;  //unverified
+    VCCH = zero;
     VCOL = zero;
     VCOH = zero;
-    VCE = zero;
     vd = ACCL;
   }
 
@@ -813,7 +820,7 @@ auto RSP::VMACF(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
-      accumulatorSet(n, accumulatorGet(n) + vs.s16(n) * vte.s16(n) * 2);
+      accumulatorSet(n, accumulatorGet(n) + (s64)vs.s16(n) * (s64)vte.s16(n) * 2);
       if constexpr(U == 0) {
         vd.u16(n) = accumulatorSaturate(n, 1, 0x8000, 0x7fff);
       }
@@ -1143,9 +1150,9 @@ auto RSP::VMULF(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
-      accumulatorSet(n, vs.s16(n) * vte.s16(n) * 2 + 0x8000);
+      accumulatorSet(n, (s64)vs.s16(n) * (s64)vte.s16(n) * 2 + 0x8000);
       if constexpr(U == 0) {
-        vd.u16(n) = ACCM.u16(n);
+        vd.u16(n) = accumulatorSaturate(n, 1, 0x8000, 0x7fff);
       }
       if constexpr(U == 1) {
         vd.u16(n) = ACCH.s16(n) < 0 ? 0x0000 : (ACCH.s16(n) ^ ACCM.s16(n)) < 0 ? 0xffff : ACCM.u16(n);
@@ -1219,12 +1226,11 @@ auto RSP::VNE(r128& vd, cr128& vs, cr128& vt) -> void {
   if constexpr(Accuracy::RSP::SISD) {
     cr128 vte = vt(e);
     for(u32 n : range(8)) {
-      ACCL.u16(n) = VCCL.set(n, vs.u16(n) != vte.u16(n) || VCE.get(n)) ? vs.u16(n) : vte.u16(n);
+      ACCL.u16(n) = VCCL.set(n, vs.u16(n) != vte.u16(n) || VCOH.get(n)) ? vs.u16(n) : vte.u16(n);
     }
     VCCH = zero;  //unverified
     VCOL = zero;
     VCOH = zero;
-    VCE = zero;
     vd = ACCL;
   }
 
