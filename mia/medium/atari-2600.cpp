@@ -101,7 +101,7 @@ auto Atari2600::analyze(vector<u8>& rom, string location) -> string {
 auto Atari2600::match(vector<u8>& rom, vector<u8> pattern, u8 target_matches) -> bool {
   u8 matches = 0;
 
-  for (int romIndex = 0; romIndex < rom.size(); ++romIndex) {
+  for (int romIndex = 0; romIndex + pattern.size() <= rom.size(); ++romIndex) {
     int patternIndex = 0;
 
     // Loop until either the end of the pattern, or don't find a match
