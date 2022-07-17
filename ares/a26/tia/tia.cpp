@@ -44,7 +44,7 @@ auto TIA::scanline() -> void {
   cpu.rdyLine(1);
   for(io.hcounter = 0; io.hcounter < 228; io.hcounter++) {
     auto x = io.hcounter - 68;
-    if(x >= 0) pixel(x);
+    if(x >= 0 && io.vcounter < vlines()) pixel(x);
     writeQueue.step();
     runAudio();
     step();
