@@ -11,7 +11,7 @@ struct FamicomDiskSystem : Emulator {
 
 FamicomDiskSystem::FamicomDiskSystem() {
   manufacturer = "Nintendo";
-  name = "Famicom Disk System";
+  name = "Famicom Disk";
 
   firmware.append({"BIOS", "Japan"});
 
