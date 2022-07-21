@@ -32,11 +32,13 @@ auto GameGear::load() -> bool {
   game = mia::Medium::create("Game Gear");
   if(!game->load(Emulator::load(game, configuration.game))) return false;
 
+  auto region = Emulator::region();
+
   system = mia::System::create("Game Gear");
   if(!system->load()) return false;
 //if(!system->load(firmware[0].location)) return false;
 
-  if(!ares::MasterSystem::load(root, "[Sega] Game Gear")) return false;
+  if(!ares::MasterSystem::load(root, {"[Sega] Game Gear (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();

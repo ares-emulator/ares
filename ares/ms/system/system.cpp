@@ -10,7 +10,8 @@ auto enumerate() -> vector<string> {
     "[Sega] Master System (PAL)",
     "[Sega] Master System II (NTSC-U)",
     "[Sega] Master System II (PAL)",
-    "[Sega] Game Gear",
+    "[Sega] Game Gear (NTSC-J)",
+    "[Sega] Game Gear (NTSC-U)",
   };
 }
 
@@ -74,9 +75,6 @@ auto System::load(Node::System& root, string name) -> bool {
   if(name.find("PAL")) {
     information.region = Region::PAL;
     information.colorburst = Constants::Colorburst::PAL * 4.0 / 5.0;
-  }
-  if(MasterSystem::Model::GameGear()) {
-    information.region = Region::NTSCJ;
   }
 
   node = Node::System::create(information.name);
