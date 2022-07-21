@@ -12,7 +12,7 @@ auto GPU::readGP0() -> u32 {
     for(u32 loop : range(2)) {
       n10 x = io.copy.x + io.copy.px;
       n9  y = io.copy.y + io.copy.py;
-      data = vram2D[y][x] << 16 | data >> 16;
+      data = vram2D[y & 511][x & 1023] << 16 | data >> 16;
       if(++io.copy.px >= io.copy.width) {
         io.copy.px = 0;
         if(++io.copy.py >= io.copy.height) {
@@ -36,9 +36,9 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
     for(u32 loop : range(2)) {
       n10 x = io.copy.x + io.copy.px;
       n9  y = io.copy.y + io.copy.py;
-      u16 pixel = vram2D[y][x];
+      u16 pixel = vram2D[y & 511][x & 1023];
       if((pixel >> 15 & io.checkMaskBit) == 0) {
-        vram2D[y][x] = value | io.forceMaskBit << 15;
+        vram2D[y & 511][x & 1023] = value | io.forceMaskBit << 15;
       }
       value >>= 16;
       if(++io.copy.px >= io.copy.width) {
@@ -390,9 +390,9 @@ auto GPU::writeGP0(u32 value, bool isThread) -> void {
     u16 height  = queue.data[3].bit(16,31);
     for(u32 y : range(height)) {
       for(u32 x : range(width)) {
-        u16 pixel = vram2D[n9(y + sourceY)][n10(x + sourceX)];
+        u16 pixel = vram2D[n9(y + sourceY) & 511][n10(x + sourceX) & 1023];
         if((pixel >> 15 & io.checkMaskBit) == 0) {
-          vram2D[n9(y + targetY)][n10(x + targetX)] = pixel | io.forceMaskBit << 15;
+          vram2D[n9(y + targetY) & 511][n10(x + targetX) & 1023] = pixel | io.forceMaskBit << 15;
         }
       }
     }
