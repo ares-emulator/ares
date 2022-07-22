@@ -49,7 +49,7 @@ auto construct() -> void {
   media.append("BS Memory");
   media.append("ColecoVision");
   media.append("Famicom");
-  media.append("Famicom Disk");
+  media.append("Famicom Disk System");
   media.append("Game Boy");
   media.append("Game Boy Color");
   media.append("Game Boy Advance");

@@ -11,7 +11,7 @@ struct FamicomDiskSystem : Emulator {
 
 FamicomDiskSystem::FamicomDiskSystem() {
   manufacturer = "Nintendo";
-  name = "Famicom Disk";
+  name = "Famicom Disk System";
 
   firmware.append({"BIOS", "Japan"});
 
@@ -66,7 +66,7 @@ auto FamicomDiskSystem::load(Menu menu) -> void {
 }
 
 auto FamicomDiskSystem::load() -> bool {
-  game = mia::Medium::create("Famicom Disk");
+  game = mia::Medium::create("Famicom Disk System");
   if(!game->load(Emulator::load(game, configuration.game))) return false;
 
   bios = mia::Medium::create("Famicom");
@@ -115,7 +115,7 @@ auto FamicomDiskSystem::save() -> bool {
 auto FamicomDiskSystem::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == "Famicom") return system->pak;
   if(node->name() == "Famicom Cartridge") return bios->pak;
-  if(node->name() == "Famicom Disk") return game->pak;
+  if(node->name() == "Famicom Disk System") return game->pak;
   return {};
 }
 
