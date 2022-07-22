@@ -11,6 +11,9 @@ struct NeoGeo : Cartridge {
 auto NeoGeo::read(string location, string match) -> vector<u8> {
   bool characterROM = match == "*.c*";
   bool programROM   = match == "*.p*";
+  if(!programROM) {
+    programROM   = match == "*.ep*";
+  }
 
   vector<u8> output;
   //parse Neo Geo ROM images in MAME ZIP file format:
@@ -74,6 +77,7 @@ auto NeoGeo::load(string location) -> bool {
     voiceROM     = file::read({location, "voice.rom"});
   } else if(file::exists(location)) {
     programROM   = NeoGeo::read(location, "*.p*");
+    if(programROM.size() <= 0) programROM = NeoGeo::read(location, "*.ep*");
     musicROM     = NeoGeo::read(location, "*.m*");
     characterROM = NeoGeo::read(location, "*.c*");
     staticROM    = NeoGeo::read(location, "*.s*");
