@@ -200,7 +200,6 @@ auto CPU::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   //REG_SOUND
   if((address & 0xfe0000) == 0x320000 && upper) {
-    print("REG_SND = ", hex((n8)data), "\n");
     apu.communication.input = data.byte(1);
     apu.nmi.pending = 1;
   }
