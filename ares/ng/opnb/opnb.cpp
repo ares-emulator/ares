@@ -40,7 +40,7 @@ auto OPNB::main() -> void {
   output += volume[channels[2]];
   streamSSG->frame(output / 3.0);
 
-  apu.irq.pending = fm.readStatus();
+  apu.irq.pending = fm.readStatus() != 0;
 }
 
 auto OPNB::step(u32 clocks) -> void {
@@ -52,8 +52,8 @@ auto OPNB::power(bool reset) -> void {
   YM2610::power();
   Thread::create(8'000'000, {&OPNB::main, this});
 
-  for(u32 level : range(16)) {
-    volume[level] = 1.0 / pow(2, 1.0 / 2 * (15 - level));
+  for(u32 level : range(32)) {
+    volume[level] = 1.0 / pow(2, 1.0 / 2 * (31 - level));
   }
 }
 

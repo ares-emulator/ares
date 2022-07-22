@@ -21,17 +21,15 @@ auto APU::unload() -> void {
 
 auto APU::main() -> void {
   if(nmi.pending && nmi.enable) {
-    if(Z80::irq(0, 0x0066, 0xff)) {
-      nmi.pending = 0;  //edge-sensitive
-      debugger.interrupt("NMI");
-    }
+    Z80::irq(0, 0x0066, 0xff);
+    nmi.pending = 0;
+    debugger.interrupt("NMI");
   }
 
   if(irq.pending) {
-    if(Z80::irq(1, 0x0038, 0xff)) {
-      //level-sensitive
-      debugger.interrupt("IRQ");
-    }
+    Z80::irq(1, 0x0038, 0xff);
+    irq.pending = 0;
+    debugger.interrupt("IRQ");
   }
 
   debugger.instruction();

@@ -2,7 +2,7 @@
 
 struct APU : Z80, Z80::Bus, Thread {
   Node::Object node;
-  Memory::Readable<n8> ram;
+  Memory::Writable<n8> ram;
 
   struct Debugger {
     //debugger.cpp

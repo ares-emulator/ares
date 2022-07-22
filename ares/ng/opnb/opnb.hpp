@@ -17,7 +17,7 @@ struct OPNB : YM2610, Thread {
   auto serialize(serializer&) -> void;
 
 private:
-  f64 volume[16];
+  f64 volume[32];
 };
 
 extern OPNB opnb;

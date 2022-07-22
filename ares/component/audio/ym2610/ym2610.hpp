@@ -21,7 +21,7 @@ struct YM2610 {
   auto serialize(serializer&) -> void;
 
 protected:
-  n9 register;
+  n9 registerAddress;
   YM2612 fm;
   YM2149 ssg;
 };
