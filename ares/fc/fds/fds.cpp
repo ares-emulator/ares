@@ -10,7 +10,7 @@ FDS fds;
 
 auto FDS::load(Node::Object parent) -> void {
   port = parent->append<Node::Port>("Disk Slot");
-  port->setFamily("Famicom Disk");
+  port->setFamily("Famicom Disk System");
   port->setType("Floppy Disk");
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(port); });
@@ -35,7 +35,7 @@ auto FDS::unload() -> void {
 }
 
 auto FDS::allocate(Node::Port parent) -> Node::Peripheral {
-  return node = parent->append<Node::Peripheral>("Famicom Disk");
+  return node = parent->append<Node::Peripheral>("Famicom Disk System");
 }
 
 auto FDS::connect() -> void {
