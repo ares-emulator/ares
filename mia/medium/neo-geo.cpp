@@ -9,57 +9,122 @@ struct NeoGeo : Cartridge {
 };
 
 auto NeoGeo::read(string location, string match) -> vector<u8> {
-  bool characterROM = match == "*.c*";
-  bool programROM   = match == "*.p*";
-  if(!programROM) {
-    programROM   = match == "*.ep*";
-  }
+  bool programROM = match == "program.rom";
+  bool characterROM = match == "character.rom";
 
   vector<u8> output;
-  //parse Neo Geo ROM images in MAME ZIP file format:
-  if(location.iendsWith(".zip")) {
-    Decode::ZIP archive;
-    if(archive.open(location)) {
-      //find all files that match the requested pattern and then sort the results
-      vector<string> filenames;
-      for(auto& file : archive.file) {
-        if(file.name.imatch(match)) filenames.append(file.name);
-      }
-      filenames.sort();
 
-      //interleave charater ROM bitplanes
-      if(characterROM) {
-        vector<string> interleaved;
-        for(u32 index = 0; index < filenames.size(); index += 2) interleaved.append(filenames[index]);
-        for(u32 index = 1; index < filenames.size(); index += 2) interleaved.append(filenames[index]);
-        filenames = interleaved;
-      }
+  // we expect mame style .zip rom images
+  if(!location.iendsWith(".zip")) {
+    return output;
+  }
 
-      //build the concatenated ROM image
-      bool first = true;
-      for(auto& filename : filenames) {
-        for(auto& file : archive.file) {
-          if(file.name != filename) continue;
-          auto input = archive.extract(file);
-          output.resize(output.size() + input.size());
-          if(first && programROM) {
-            first = false;
-            if(input.size() > 1_MiB) {
-              memory::copy(output.data() + output.size() - input.size(), input.data() + 1_MiB, input.size() - 1_MiB);
-              memory::copy(output.data() + output.size() - (input.size() - 1_MiB), input.data(), 1_MiB);
-              continue;
-            }
-            while(output.size() < 1_MiB) {
-              memory::copy(output.data() + output.size() - input.size(), input.data(), input.size());
-              output.resize(output.size() + min(1_MiB - output.size(), input.size()));
-            }
-          }
-          memory::copy(output.data() + output.size() - input.size(), input.data(), input.size());
-        }
-      }
-      if(programROM) endianSwap(output);
+  Decode::ZIP archive;
+  if(!archive.open(location)) {
+    return output;
+  }
+
+  //find all files that match the correct pattern and then sort the results
+  vector<string> filenames;
+
+  // Program roms are either *.p* or *.ep*
+  // secondary (banked) program roms are usually *.sp2
+  if(match == "program.rom") {
+    for (auto &file: archive.file) {
+      if (file.name.imatch("*.p*")) filenames.append(file.name);
+      if (file.name.imatch("*.ep*")) filenames.append(file.name);
+      if (file.name.imatch("*.sp2")) filenames.append(file.name);
     }
   }
+
+  if(match == "music.rom") {
+    for (auto &file: archive.file) {
+      if (file.name.imatch("*.m*")) filenames.append(file.name);
+    }
+  }
+
+  if(match == "character.rom") {
+    for (auto &file: archive.file) {
+      if (file.name.imatch("*.c*")) filenames.append(file.name);
+    }
+  }
+
+  // Thankfully, games only have one static rom.
+  if(match == "static.rom") {
+    for (auto &file: archive.file) {
+      if (file.name.imatch("*.s1")) filenames.append(file.name);
+    }
+  }
+
+  if(match == "voice.rom") {
+    for (auto &file: archive.file) {
+      if (file.name.imatch("*.v*")) filenames.append(file.name);
+    }
+  }
+
+  filenames.sort();
+
+  //interleave character ROM bitplanes
+  if(characterROM) {
+    vector<string> interleaved;
+    for(u32 index = 0; index < filenames.size(); index += 2) interleaved.append(filenames[index]);
+    for(u32 index = 1; index < filenames.size(); index += 2) interleaved.append(filenames[index]);
+    filenames = interleaved;
+  }
+
+  // Special case for character roms: pad all character roms to the maximum sized crom
+  // Test case: Twinkle Star Sprites
+  if(characterROM) {
+    vector<vector<u8>> roms;
+    u32 maxRomSize = 0;
+
+    // Step 1: load all croms and store the maximum size
+    for(auto& filename : filenames) {
+      for (auto &file: archive.file) {
+        if (file.name != filename) continue;
+        auto input = archive.extract(file);
+        if (input.size() > maxRomSize) maxRomSize = input.size();
+        roms.append(input);
+      }
+    }
+
+    // Step 2: Load character roms into output, padding to maxRomSize
+    for(auto& rom : roms) {
+      u32 bytesCopied = 0;
+      while(bytesCopied < maxRomSize) {
+        output.resize(output.size() + rom.size());
+        memory::copy(output.data() + output.size() - rom.size(), rom.data(), rom.size());
+        bytesCopied += rom.size();
+      }
+    }
+
+    return output;
+  }
+
+  //build the concatenated ROM image
+  bool first = true;
+  for(auto& filename : filenames) {
+    for(auto& file : archive.file) {
+      if(file.name != filename) continue;
+      auto input = archive.extract(file);
+      output.resize(output.size() + input.size());
+      if(first && programROM) {
+        first = false;
+        if(input.size() > 1_MiB) {
+          memory::copy(output.data() + output.size() - input.size(), input.data() + 1_MiB, input.size() - 1_MiB);
+          memory::copy(output.data() + output.size() - (input.size() - 1_MiB), input.data(), 1_MiB);
+          continue;
+        }
+         while(output.size() < 1_MiB) {
+          memory::copy(output.data() + output.size() - input.size(), input.data(), input.size());
+          output.resize(output.size() + min(1_MiB - output.size(), input.size()));
+        }
+      }
+      memory::copy(output.data() + output.size() - input.size(), input.data(), input.size());
+    }
+  }
+  if(programROM) endianSwap(output);
+
   return output;
 }
 
@@ -76,12 +141,11 @@ auto NeoGeo::load(string location) -> bool {
     staticROM    = file::read({location, "static.rom"});
     voiceROM     = file::read({location, "voice.rom"});
   } else if(file::exists(location)) {
-    programROM   = NeoGeo::read(location, "*.p*");
-    if(programROM.size() <= 0) programROM = NeoGeo::read(location, "*.ep*");
-    musicROM     = NeoGeo::read(location, "*.m*");
-    characterROM = NeoGeo::read(location, "*.c*");
-    staticROM    = NeoGeo::read(location, "*.s*");
-    voiceROM     = NeoGeo::read(location, "*.v*");
+    programROM   = NeoGeo::read(location, "program.rom");
+    musicROM     = NeoGeo::read(location, "music.rom");
+    characterROM = NeoGeo::read(location, "character.rom");
+    staticROM    = NeoGeo::read(location, "static.rom");
+    voiceROM     = NeoGeo::read(location, "voice.rom");
   }
   if(!programROM  ) return false;
   if(!musicROM    ) return false;
