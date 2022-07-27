@@ -39,7 +39,7 @@ auto OPNB::main() -> void {
   // TODO: Tweak for best mixing level between FM/ADPCM
   const float volumeScale = 8.0f;
 
-  if(--cyclesUntilFmSsg == 0) {
+  if(cyclesUntilFmSsg == 0) {
     auto samples = fm.clock();
     streamFM->frame(samples[0] / (32768.0 * volumeScale), samples[1] / (32768.0 * volumeScale));
 
@@ -55,14 +55,17 @@ auto OPNB::main() -> void {
     apu.irq.pending = fm.readStatus() != 0;
   }
 
-  if (--cyclesUntilPcmA == 0) {
+  if (cyclesUntilPcmA == 0) {
     auto samples = pcmA.clock();
     streamPCMA->frame(samples[0] / (32768.0), samples[1] / (32768.0));
 
     cyclesUntilPcmA = 432;
   }
 
-  step(1);
+  auto stepDuration = min(cyclesUntilFmSsg, cyclesUntilFmSsg);
+  cyclesUntilPcmA -= stepDuration;
+  cyclesUntilFmSsg -= stepDuration;
+  step(stepDuration);
 }
 
 auto OPNB::step(u32 clocks) -> void {
