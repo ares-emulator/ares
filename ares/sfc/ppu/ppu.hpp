@@ -537,7 +537,7 @@ struct PPU : PPUBase::Implementation, PPUcounter {
 
   //unserialized:
     u32* line = nullptr;
-  } dac{*this, bg1, bg2, bg3, bg3, obj, window, cgram};
+  } dac{*this, bg1, bg2, bg3, bg4, obj, window, cgram};
 };
 
 extern PPU ppuImpl;
