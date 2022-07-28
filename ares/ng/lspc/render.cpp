@@ -58,10 +58,11 @@ auto LSPC::render(n9 y) -> void {
 
     n13 pramAddress = io.pramBank << 12 | palette << 4;
     n25 tileAddress = (tileNumber << 5 | ry & 15) << 1;
-    n16 d0 = c1[tileAddress + 0 & cs - 1] << 8 | c1[tileAddress + 32 & cs - 1] << 0;
-    n16 d1 = c1[tileAddress + 1 & cs - 1] << 8 | c1[tileAddress + 33 & cs - 1] << 0;
-    n16 d2 = c2[tileAddress + 0 & cs - 1] << 8 | c2[tileAddress + 32 & cs - 1] << 0;
-    n16 d3 = c2[tileAddress + 1 & cs - 1] << 8 | c2[tileAddress + 33 & cs - 1] << 0;
+
+    n16 d0 = c1[(tileAddress + 0) % cs] << 8 | c1[(tileAddress + 32) % cs] << 0;
+    n16 d1 = c1[(tileAddress + 1) % cs] << 8 | c1[(tileAddress + 33) % cs] << 0;
+    n16 d2 = c2[(tileAddress + 0) % cs] << 8 | c2[(tileAddress + 32) % cs] << 0;
+    n16 d3 = c2[(tileAddress + 1) % cs] << 8 | c2[(tileAddress + 33) % cs] << 0;
     n9  px = 0;
     for(u32 x : range(16)) {
       if(!hscale[hshrink][x]) continue;
