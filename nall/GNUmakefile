@@ -123,10 +123,10 @@ endif
 
 # link-time optimization
 ifeq ($(lto),true)
-  flags   += -flto=auto
   ifneq ($(findstring clang++,$(compiler)),clang++)
-    flags   += -fno-fat-lto-objects
+    flags   += -flto=auto -fno-fat-lto-objects
   else
+    flags   += -flto
     options += -flto=thin
   endif
 endif
