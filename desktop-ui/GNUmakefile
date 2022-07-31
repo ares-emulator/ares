@@ -5,7 +5,7 @@ openmp := false
 vulkan := false
 mame.rdp := true
 local := true
-lto := true
+lto := false
 flags += -I. -I.. -I../ares -I../thirdparty -DMIA_LIBRARY
 
 nall.path := ../nall
