@@ -32,9 +32,9 @@ auto AI::main() -> void {
 }
 
 auto AI::sample(f64& left, f64& right) -> void {
-  if(!io.dmaEnable || io.dmaCount == 0) return;
+  if(io.dmaCount == 0) return;
 
-  if(io.dmaLength[0]) {
+  if(io.dmaLength[0] && io.dmaEnable) {
     io.dmaAddress[0].bit(13,23) += io.dmaAddressCarry;
     auto data  = rdram.ram.read<Word>(io.dmaAddress[0]);
     auto l     = s16(data >> 16);
