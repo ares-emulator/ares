@@ -20,7 +20,7 @@ ifeq ($(arch),amd64)
     flags += -march=native
   else
     # For official builds, default to nehalem which supports up to SSE 4.2.
-    flags += -march=x86-64-v2
+    flags += -march=nehalem
   endif
 endif
 
