@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -58,7 +58,7 @@ struct ResourceLayout
 	uint32_t push_constant_size = 0;
 	uint32_t spec_constant_mask = 0;
 	uint32_t bindless_set_mask = 0;
-	enum { Version = 2 };
+	enum { Version = 3 };
 
 	bool unserialize(const uint8_t *data, size_t size);
 	bool serialize(uint8_t *data, size_t size) const;
@@ -131,7 +131,7 @@ public:
 		return set_allocators[set];
 	}
 
-	VkDescriptorUpdateTemplateKHR get_update_template(unsigned set) const
+	VkDescriptorUpdateTemplate get_update_template(unsigned set) const
 	{
 		return update_template[set];
 	}
@@ -141,7 +141,7 @@ private:
 	VkPipelineLayout pipe_layout = VK_NULL_HANDLE;
 	CombinedResourceLayout layout;
 	DescriptorSetAllocator *set_allocators[VULKAN_NUM_DESCRIPTOR_SETS] = {};
-	VkDescriptorUpdateTemplateKHR update_template[VULKAN_NUM_DESCRIPTOR_SETS] = {};
+	VkDescriptorUpdateTemplate update_template[VULKAN_NUM_DESCRIPTOR_SETS] = {};
 	void create_update_templates();
 };
 
@@ -169,14 +169,20 @@ public:
 	}
 
 	static bool reflect_resource_layout(ResourceLayout &layout, const uint32_t *spirv_data, size_t spirv_size);
-
 	static const char *stage_to_name(ShaderStage stage);
+	static Util::Hash hash(const uint32_t *data, size_t size, const ImmutableSamplerBank *sampler_bank);
 
 private:
 	Device *device;
 	VkShaderModule module = VK_NULL_HANDLE;
 	ResourceLayout layout;
 	ImmutableSamplerBank immutable_sampler_bank;
+};
+
+struct Pipeline
+{
+	VkPipeline pipeline;
+	uint32_t dynamic_mask;
 };
 
 class Program : public HashedObject<Program>, public InternalSyncEnabled
@@ -201,8 +207,8 @@ public:
 		return layout;
 	}
 
-	VkPipeline get_pipeline(Util::Hash hash) const;
-	VkPipeline add_pipeline(Util::Hash hash, VkPipeline pipeline);
+	Pipeline get_pipeline(Util::Hash hash) const;
+	Pipeline add_pipeline(Util::Hash hash, const Pipeline &pipeline);
 
 	void promote_read_write_to_read_only();
 
@@ -211,7 +217,7 @@ private:
 	Device *device;
 	Shader *shaders[Util::ecast(ShaderStage::Count)] = {};
 	PipelineLayout *layout = nullptr;
-	VulkanCache<Util::IntrusivePODWrapper<VkPipeline>> pipelines;
-	void destroy_pipeline(VkPipeline pipeline);
+	VulkanCache<Util::IntrusivePODWrapper<Pipeline>> pipelines;
+	void destroy_pipeline(const Pipeline &pipeline);
 };
 }

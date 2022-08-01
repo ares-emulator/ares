@@ -1397,6 +1397,11 @@ void Renderer::fixup_triangle_setup(TriangleSetup &setup) const
 		setup.flags |= (stream.static_raster_state.flags & RASTERIZATION_INTERLACE_KEEP_ODD_BIT) ?
 		               TRIANGLE_SETUP_INTERLACE_KEEP_ODD_BIT : 0;
 	}
+
+	// Span size is inclusive, not exclusive.
+	// Rasterization is based on X range directly.
+	if ((stream.static_raster_state.flags & (RASTERIZATION_COPY_BIT | RASTERIZATION_FILL_BIT)) != 0)
+		setup.flags |= TRIANGLE_SETUP_FILL_COPY_RASTER_BIT;
 }
 
 void Renderer::draw_shaded_primitive(TriangleSetup &setup, const AttributeSetup &attr)

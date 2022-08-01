@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -168,7 +168,7 @@ using CommandBufferSaveStateFlags = uint32_t;
 
 struct CommandBufferSavedState
 {
-	CommandBufferSaveStateFlags flags = 0;
+	CommandBufferSaveStateFlags flags;
 	ResourceBindings bindings;
 	VkViewport viewport;
 	VkRect2D scissor;
@@ -315,6 +315,11 @@ public:
 	                   VkPipelineStageFlags src_stage, VkAccessFlags src_access, VkPipelineStageFlags dst_stage,
 	                   VkAccessFlags dst_access);
 
+	void buffer_barriers(VkPipelineStageFlags src_stages, VkPipelineStageFlags dst_stages,
+	                     unsigned buffer_barriers, const VkBufferMemoryBarrier *buffers);
+	void image_barriers(VkPipelineStageFlags src_stages, VkPipelineStageFlags dst_stages,
+	                    unsigned image_barriers, const VkImageMemoryBarrier *images);
+
 	void blit_image(const Image &dst,
 	                const Image &src,
 	                const VkOffset3D &dst_offset0, const VkOffset3D &dst_extent,
@@ -353,6 +358,7 @@ public:
 #endif
 
 	void set_buffer_view(unsigned set, unsigned binding, const BufferView &view);
+	void set_storage_buffer_view(unsigned set, unsigned binding, const BufferView &view);
 	void set_input_attachments(unsigned set, unsigned start_binding);
 	void set_texture(unsigned set, unsigned binding, const ImageView &view);
 	void set_unorm_texture(unsigned set, unsigned binding, const ImageView &view);
@@ -583,6 +589,11 @@ public:
 		}
 	}
 
+	inline void set_specialization_constant(unsigned index, bool value)
+	{
+		set_specialization_constant(index, uint32_t(value));
+	}
+
 	void set_surface_transform_specialization_constants(unsigned base_index);
 
 	inline void enable_subgroup_size_control(bool subgroup_control_size)
@@ -664,8 +675,10 @@ public:
 	void end_debug_channel();
 
 	void extract_pipeline_state(DeferredPipelineCompile &compile) const;
-	static VkPipeline build_graphics_pipeline(Device *device, const DeferredPipelineCompile &compile);
-	static VkPipeline build_compute_pipeline(Device *device, const DeferredPipelineCompile &compile);
+	static Pipeline build_graphics_pipeline(Device *device, const DeferredPipelineCompile &compile,
+	                                        bool synchronous = true);
+	static Pipeline build_compute_pipeline(Device *device, const DeferredPipelineCompile &compile,
+	                                       bool synchronous = true);
 
 	bool flush_pipeline_state_without_blocking();
 
@@ -688,7 +701,7 @@ private:
 	VkDescriptorSet bindless_sets[VULKAN_NUM_DESCRIPTOR_SETS] = {};
 	VkDescriptorSet allocated_sets[VULKAN_NUM_DESCRIPTOR_SETS] = {};
 
-	VkPipeline current_pipeline = VK_NULL_HANDLE;
+	Pipeline current_pipeline = {};
 	VkPipelineLayout current_pipeline_layout = VK_NULL_HANDLE;
 	PipelineLayout *current_layout = nullptr;
 	VkSubpassContents current_contents = VK_SUBPASS_CONTENTS_INLINE;
@@ -747,6 +760,7 @@ private:
 	void set_texture(unsigned set, unsigned binding, VkImageView float_view, VkImageView integer_view,
 	                 VkImageLayout layout,
 	                 uint64_t cookie);
+	void set_buffer_view_common(unsigned set, unsigned binding, const BufferView &view);
 
 	void init_viewport_scissor(const RenderPassInfo &info, const Framebuffer *framebuffer);
 	void init_surface_transform(const RenderPassInfo &info);
@@ -756,6 +770,8 @@ private:
 	std::string debug_channel_tag;
 	Vulkan::BufferHandle debug_channel_buffer;
 	DebugChannelInterface *debug_channel_interface = nullptr;
+
+	void bind_pipeline(VkPipelineBindPoint bind_point, VkPipeline pipeline, uint32_t active_dynamic_state);
 
 	static void update_hash_graphics_pipeline(DeferredPipelineCompile &compile, uint32_t &active_vbos);
 	static void update_hash_compute_pipeline(DeferredPipelineCompile &compile);

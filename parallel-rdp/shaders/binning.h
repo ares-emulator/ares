@@ -103,8 +103,12 @@ ivec2 interpolate_xs(TriangleSetup setup, ivec4 ys, bool flip, int scaling)
 	return range;
 }
 
-bool bin_primitive(TriangleSetup setup, ivec2 lo, ivec2 hi, int scaling)
+bool bin_primitive(TriangleSetup setup, ivec2 lo, ivec2 hi, int scaling, ScissorState scissor)
 {
+	// First clip Y range based on scissor.
+	lo.y = max(lo.y, scaling * (scissor.ylo >> 2));
+	hi.y = min(hi.y, scaling * ((scissor.yhi + 3) >> 2) - 1);
+
 	int start_y = lo.y * SUBPIXELS_Y;
 	int end_y = (hi.y * SUBPIXELS_Y) + (SUBPIXELS_Y - 1);
 
@@ -121,6 +125,18 @@ bool bin_primitive(TriangleSetup setup, ivec2 lo, ivec2 hi, int scaling)
 	// Sample the X ranges for min and max Y, and potentially the mid-point as well.
 	ivec4 ys = ivec4(start_y, end_y, clamp(setup.ym * scaling + ivec2(-1, 0), ivec2(start_y), ivec2(end_y)));
 	ivec2 x_range = interpolate_xs(setup, ys, flip, scaling);
+
+	// For FILL_COPY_RASTER_BIT we're inclusive, if not, exclusive.
+	int x_bias = (setup.flags & TRIANGLE_SETUP_FILL_COPY_RASTER_BIT) != 0 ? 4 : 3;
+	ivec2 scissor_x = ivec2(scaling * (scissor.xlo >> 2), scaling * ((scissor.xhi + x_bias) >> 2) - 1);
+
+	// Scissor is applied through a clamp with a mask being generated for overshoot which affects if the line is valid.
+	// Since this is a conservative test we don't compute valid line here, so we have to assume it is valid.
+	// We can end up creating fake coverage in FILL/COPY modes in some cases
+	// if we clamp scissor to outside the primitive's range as long as at least one sub-line passes the scissor test.
+	// The x_range ends up being degenerate, but these fill modes are conservative and generate one pixel of coverage
+	// anyways.
+	x_range = clamp(x_range, scissor_x.xx, scissor_x.yy);
 
 	x_range.x = max(x_range.x, lo.x);
 	x_range.y = min(x_range.y, hi.x);

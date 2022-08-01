@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -175,7 +175,6 @@ void CommandPool::trim()
 		table->vkFreeCommandBuffers(device->get_device(), pool, secondary_buffers.size(), secondary_buffers.data());
 	buffers.clear();
 	secondary_buffers.clear();
-	if (device->get_device_features().supports_maintenance_1)
-		table->vkTrimCommandPoolKHR(device->get_device(), pool, 0);
+	table->vkTrimCommandPool(device->get_device(), pool, 0);
 }
 }

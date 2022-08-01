@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -338,6 +338,18 @@ void CommandBuffer::image_barrier(const Image &image, VkImageLayout old_layout, 
 	table.vkCmdPipelineBarrier(cmd, src_stages, dst_stages, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
+void CommandBuffer::buffer_barriers(VkPipelineStageFlags src_stages, VkPipelineStageFlags dst_stages,
+                                    unsigned buffer_barriers, const VkBufferMemoryBarrier *buffers)
+{
+	barrier(src_stages, dst_stages, 0, nullptr, buffer_barriers, buffers, 0, nullptr);
+}
+
+void CommandBuffer::image_barriers(VkPipelineStageFlags src_stages, VkPipelineStageFlags dst_stages,
+                                   unsigned image_barriers, const VkImageMemoryBarrier *images)
+{
+	barrier(src_stages, dst_stages, 0, nullptr, 0, nullptr, image_barriers, images);
+}
+
 void CommandBuffer::barrier_prepare_generate_mipmap(const Image &image, VkImageLayout base_level_layout,
                                                     VkPipelineStageFlags src_stage, VkAccessFlags src_access,
                                                     bool need_top_level_barrier)
@@ -463,7 +475,7 @@ void CommandBuffer::begin_context()
 	dirty = ~0u;
 	dirty_sets = ~0u;
 	dirty_vbos = ~0u;
-	current_pipeline = VK_NULL_HANDLE;
+	current_pipeline = {};
 	current_pipeline_layout = VK_NULL_HANDLE;
 	current_layout = nullptr;
 	pipeline_state.program = nullptr;
@@ -709,8 +721,16 @@ void CommandBuffer::end_render_pass()
 	begin_compute();
 }
 
-VkPipeline CommandBuffer::build_compute_pipeline(Device *device, const DeferredPipelineCompile &compile)
+Pipeline CommandBuffer::build_compute_pipeline(Device *device, const DeferredPipelineCompile &compile, bool synchronous)
 {
+	// If we don't have pipeline creation cache control feature,
+	// we must assume compilation can be synchronous.
+	if (!synchronous &&
+	    !device->get_device_features().pipeline_creation_cache_control_features.pipelineCreationCacheControl)
+	{
+		return {};
+	}
+
 	auto &shader = *compile.program->get_shader(ShaderStage::Compute);
 	VkComputePipelineCreateInfo info = { VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO };
 	info.layout = compile.program->get_pipeline_layout()->get_layout();
@@ -755,7 +775,7 @@ VkPipeline CommandBuffer::build_compute_pipeline(Device *device, const DeferredP
 		                                         compile.static_state.state.subgroup_maximum_size_log2))
 		{
 			LOGE("Subgroup size configuration not supported.\n");
-			return VK_NULL_HANDLE;
+			return {};
 		}
 		auto &features = device->get_device_features();
 
@@ -781,23 +801,31 @@ VkPipeline CommandBuffer::build_compute_pipeline(Device *device, const DeferredP
 		}
 	}
 
-	VkPipeline compute_pipeline;
+	VkPipeline compute_pipeline = VK_NULL_HANDLE;
 #ifdef GRANITE_VULKAN_FOSSILIZE
 	device->register_compute_pipeline(compile.hash, info);
 #endif
 
 #ifdef VULKAN_DEBUG
-	LOGI("Creating compute pipeline.\n");
+	if (synchronous)
+		LOGI("Creating compute pipeline.\n");
 #endif
 	auto &table = device->get_device_table();
-	if (table.vkCreateComputePipelines(device->get_device(), compile.cache, 1, &info, nullptr, &compute_pipeline) != VK_SUCCESS)
+
+	if (!synchronous)
+		info.flags |= VK_PIPELINE_CREATE_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT_EXT;
+
+	VkResult vr = table.vkCreateComputePipelines(device->get_device(), compile.cache, 1, &info, nullptr, &compute_pipeline);
+
+	if (vr != VK_SUCCESS || compute_pipeline == VK_NULL_HANDLE)
 	{
-		LOGE("Failed to create compute pipeline!\n");
-		return VK_NULL_HANDLE;
+		if (vr < 0)
+			LOGE("Failed to create compute pipeline!\n");
+		return {};
 	}
 
-	auto returned_pipeline = compile.program->add_pipeline(compile.hash, compute_pipeline);
-	if (returned_pipeline != compute_pipeline)
+	auto returned_pipeline = compile.program->add_pipeline(compile.hash, { compute_pipeline, 0 });
+	if (returned_pipeline.pipeline != compute_pipeline)
 		table.vkDestroyPipeline(device->get_device(), compute_pipeline, nullptr);
 	return returned_pipeline;
 }
@@ -821,8 +849,16 @@ void CommandBuffer::extract_pipeline_state(DeferredPipelineCompile &compile) con
 	}
 }
 
-VkPipeline CommandBuffer::build_graphics_pipeline(Device *device, const DeferredPipelineCompile &compile)
+Pipeline CommandBuffer::build_graphics_pipeline(Device *device, const DeferredPipelineCompile &compile, bool synchronous)
 {
+	// If we don't have pipeline creation cache control feature,
+	// we must assume compilation can be synchronous.
+	if (!synchronous &&
+	    !device->get_device_features().pipeline_creation_cache_control_features.pipelineCreationCacheControl)
+	{
+		return {};
+	}
+
 	// Viewport state
 	VkPipelineViewportStateCreateInfo vp = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
 	vp.viewportCount = 1;
@@ -836,13 +872,20 @@ VkPipeline CommandBuffer::build_graphics_pipeline(Device *device, const Deferred
 	};
 	dyn.pDynamicStates = states;
 
+	uint32_t dynamic_mask = COMMAND_BUFFER_DIRTY_VIEWPORT_BIT | COMMAND_BUFFER_DIRTY_SCISSOR_BIT;
+
 	if (compile.static_state.state.depth_bias_enable)
+	{
 		states[dyn.dynamicStateCount++] = VK_DYNAMIC_STATE_DEPTH_BIAS;
+		dynamic_mask |= COMMAND_BUFFER_DIRTY_DEPTH_BIAS_BIT;
+	}
+
 	if (compile.static_state.state.stencil_test)
 	{
 		states[dyn.dynamicStateCount++] = VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK;
 		states[dyn.dynamicStateCount++] = VK_DYNAMIC_STATE_STENCIL_REFERENCE;
 		states[dyn.dynamicStateCount++] = VK_DYNAMIC_STATE_STENCIL_WRITE_MASK;
+		dynamic_mask |= COMMAND_BUFFER_DIRTY_STENCIL_REFERENCE_BIT;
 	}
 
 	// Blend state
@@ -956,7 +999,7 @@ VkPipeline CommandBuffer::build_graphics_pipeline(Device *device, const Deferred
 		else
 		{
 			LOGE("Conservative rasterization is not supported on this device.\n");
-			return VK_NULL_HANDLE;
+			return {};
 		}
 	}
 
@@ -1017,24 +1060,30 @@ VkPipeline CommandBuffer::build_graphics_pipeline(Device *device, const Deferred
 	pipe.pStages = stages;
 	pipe.stageCount = num_stages;
 
-	VkPipeline pipeline;
+	VkPipeline pipeline = VK_NULL_HANDLE;
 #ifdef GRANITE_VULKAN_FOSSILIZE
 	device->register_graphics_pipeline(compile.hash, pipe);
 #endif
 
 #ifdef VULKAN_DEBUG
-	LOGI("Creating graphics pipeline.\n");
+	if (synchronous)
+		LOGI("Creating graphics pipeline.\n");
 #endif
 	auto &table = device->get_device_table();
+
+	if (!synchronous)
+		pipe.flags |= VK_PIPELINE_CREATE_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT_EXT;
+
 	VkResult res = table.vkCreateGraphicsPipelines(device->get_device(), compile.cache, 1, &pipe, nullptr, &pipeline);
-	if (res != VK_SUCCESS)
+	if (res != VK_SUCCESS || pipeline == VK_NULL_HANDLE)
 	{
-		LOGE("Failed to create graphics pipeline!\n");
-		return VK_NULL_HANDLE;
+		if (res < 0)
+			LOGE("Failed to create graphics pipeline!\n");
+		return {};
 	}
 
-	auto returned_pipeline = compile.program->add_pipeline(compile.hash, pipeline);
-	if (returned_pipeline != pipeline)
+	auto returned_pipeline = compile.program->add_pipeline(compile.hash, { pipeline, dynamic_mask });
+	if (returned_pipeline.pipeline != pipeline)
 		table.vkDestroyPipeline(device->get_device(), pipeline, nullptr);
 	return returned_pipeline;
 }
@@ -1043,10 +1092,9 @@ bool CommandBuffer::flush_compute_pipeline(bool synchronous)
 {
 	update_hash_compute_pipeline(pipeline_state);
 	current_pipeline = pipeline_state.program->get_pipeline(pipeline_state.hash);
-	if (current_pipeline == VK_NULL_HANDLE && synchronous)
-		current_pipeline = build_compute_pipeline(device, pipeline_state);
-
-	return current_pipeline != VK_NULL_HANDLE;
+	if (current_pipeline.pipeline == VK_NULL_HANDLE)
+		current_pipeline = build_compute_pipeline(device, pipeline_state, synchronous);
+	return current_pipeline.pipeline != VK_NULL_HANDLE;
 }
 
 void CommandBuffer::update_hash_compute_pipeline(DeferredPipelineCompile &compile)
@@ -1131,11 +1179,19 @@ bool CommandBuffer::flush_graphics_pipeline(bool synchronous)
 {
 	update_hash_graphics_pipeline(pipeline_state, active_vbos);
 	current_pipeline = pipeline_state.program->get_pipeline(pipeline_state.hash);
+	if (current_pipeline.pipeline == VK_NULL_HANDLE)
+		current_pipeline = build_graphics_pipeline(device, pipeline_state, synchronous);
+	return current_pipeline.pipeline != VK_NULL_HANDLE;
+}
 
-	if (current_pipeline == VK_NULL_HANDLE && synchronous)
-		current_pipeline = build_graphics_pipeline(device, pipeline_state);
+void CommandBuffer::bind_pipeline(VkPipelineBindPoint bind_point, VkPipeline pipeline, uint32_t active_dynamic_state)
+{
+	table.vkCmdBindPipeline(cmd, bind_point, pipeline);
 
-	return current_pipeline != VK_NULL_HANDLE;
+	// If some dynamic state is static in the pipeline it clobbers the dynamic state.
+	// As a performance optimization don't clobber everything.
+	uint32_t static_state_clobber = ~active_dynamic_state & COMMAND_BUFFER_DYNAMIC_BITS;
+	set_dirty(static_state_clobber);
 }
 
 bool CommandBuffer::flush_compute_state(bool synchronous)
@@ -1144,20 +1200,20 @@ bool CommandBuffer::flush_compute_state(bool synchronous)
 		return false;
 	VK_ASSERT(current_layout);
 
-	if (current_pipeline == VK_NULL_HANDLE)
+	if (current_pipeline.pipeline == VK_NULL_HANDLE)
 		set_dirty(COMMAND_BUFFER_DIRTY_PIPELINE_BIT);
 
 	if (get_and_clear(COMMAND_BUFFER_DIRTY_STATIC_STATE_BIT | COMMAND_BUFFER_DIRTY_PIPELINE_BIT))
 	{
-		VkPipeline old_pipe = current_pipeline;
+		VkPipeline old_pipe = current_pipeline.pipeline;
 		if (!flush_compute_pipeline(synchronous))
 			return false;
 
-		if (old_pipe != current_pipeline)
-			table.vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, current_pipeline);
+		if (old_pipe != current_pipeline.pipeline)
+			bind_pipeline(VK_PIPELINE_BIND_POINT_COMPUTE, current_pipeline.pipeline, current_pipeline.dynamic_mask);
 	}
 
-	if (current_pipeline == VK_NULL_HANDLE)
+	if (current_pipeline.pipeline == VK_NULL_HANDLE)
 		return false;
 
 	flush_descriptor_sets();
@@ -1183,25 +1239,22 @@ bool CommandBuffer::flush_render_state(bool synchronous)
 		return false;
 	VK_ASSERT(current_layout);
 
-	if (current_pipeline == VK_NULL_HANDLE)
+	if (current_pipeline.pipeline == VK_NULL_HANDLE)
 		set_dirty(COMMAND_BUFFER_DIRTY_PIPELINE_BIT);
 
 	// We've invalidated pipeline state, update the VkPipeline.
 	if (get_and_clear(COMMAND_BUFFER_DIRTY_STATIC_STATE_BIT | COMMAND_BUFFER_DIRTY_PIPELINE_BIT |
 	                  COMMAND_BUFFER_DIRTY_STATIC_VERTEX_BIT))
 	{
-		VkPipeline old_pipe = current_pipeline;
+		VkPipeline old_pipe = current_pipeline.pipeline;
 		if (!flush_graphics_pipeline(synchronous))
 			return false;
 
-		if (old_pipe != current_pipeline)
-		{
-			table.vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, current_pipeline);
-			set_dirty(COMMAND_BUFFER_DYNAMIC_BITS);
-		}
+		if (old_pipe != current_pipeline.pipeline)
+			bind_pipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, current_pipeline.pipeline, current_pipeline.dynamic_mask);
 	}
 
-	if (current_pipeline == VK_NULL_HANDLE)
+	if (current_pipeline.pipeline == VK_NULL_HANDLE)
 		return false;
 
 	flush_descriptor_sets();
@@ -1429,9 +1482,9 @@ void CommandBuffer::set_program(Program *program)
 		return;
 
 	pipeline_state.program = program;
-	current_pipeline = VK_NULL_HANDLE;
+	current_pipeline = {};
 
-	set_dirty(COMMAND_BUFFER_DIRTY_PIPELINE_BIT | COMMAND_BUFFER_DYNAMIC_BITS);
+	set_dirty(COMMAND_BUFFER_DIRTY_PIPELINE_BIT);
 	if (!program)
 		return;
 
@@ -1521,9 +1574,9 @@ void *CommandBuffer::update_image(const Image &image, const VkOffset3D &offset, 
                                   const VkImageSubresourceLayers &subresource)
 {
 	auto &create_info = image.get_create_info();
-	uint32_t width = max(image.get_width() >> subresource.mipLevel, 1u);
-	uint32_t height = max(image.get_height() >> subresource.mipLevel, 1u);
-	uint32_t depth = max(image.get_depth() >> subresource.mipLevel, 1u);
+	uint32_t width = image.get_width(subresource.mipLevel);
+	uint32_t height = image.get_height(subresource.mipLevel);
+	uint32_t depth = image.get_depth(subresource.mipLevel);
 
 	if (!row_length)
 		row_length = width;
@@ -1647,11 +1700,10 @@ void CommandBuffer::set_sampler(unsigned set, unsigned binding, const Sampler &s
 	bindings.secondary_cookies[set][binding] = sampler.get_cookie();
 }
 
-void CommandBuffer::set_buffer_view(unsigned set, unsigned binding, const BufferView &view)
+void CommandBuffer::set_buffer_view_common(unsigned set, unsigned binding, const BufferView &view)
 {
 	VK_ASSERT(set < VULKAN_NUM_DESCRIPTOR_SETS);
 	VK_ASSERT(binding < VULKAN_NUM_BINDINGS);
-	VK_ASSERT(view.get_buffer().get_create_info().usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT);
 	if (view.get_cookie() == bindings.cookies[set][binding])
 		return;
 	auto &b = bindings.bindings[set][binding];
@@ -1659,6 +1711,18 @@ void CommandBuffer::set_buffer_view(unsigned set, unsigned binding, const Buffer
 	bindings.cookies[set][binding] = view.get_cookie();
 	bindings.secondary_cookies[set][binding] = 0;
 	dirty_sets |= 1u << set;
+}
+
+void CommandBuffer::set_buffer_view(unsigned set, unsigned binding, const BufferView &view)
+{
+	VK_ASSERT(view.get_buffer().get_create_info().usage & VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT);
+	set_buffer_view_common(set, binding, view);
+}
+
+void CommandBuffer::set_storage_buffer_view(unsigned set, unsigned binding, const BufferView &view)
+{
+	VK_ASSERT(view.get_buffer().get_create_info().usage & VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT);
+	set_buffer_view_common(set, binding, view);
 }
 
 void CommandBuffer::set_input_attachments(unsigned set, unsigned start_binding)
@@ -1787,167 +1851,6 @@ void CommandBuffer::set_unorm_storage_texture(unsigned set, unsigned binding, co
 	            view.get_image().get_layout(VK_IMAGE_LAYOUT_GENERAL), view.get_cookie() | COOKIE_BIT_UNORM);
 }
 
-static void update_descriptor_set_legacy(Device &device, VkDescriptorSet desc_set,
-                                         const DescriptorSetLayout &set_layout, const ResourceBinding *bindings)
-{
-	auto &table = device.get_device_table();
-	uint32_t write_count = 0;
-	VkWriteDescriptorSet writes[VULKAN_NUM_BINDINGS];
-
-	for_each_bit(set_layout.uniform_buffer_mask, [&](uint32_t binding) {
-		unsigned array_size = set_layout.array_size[binding];
-		for (unsigned i = 0; i < array_size; i++)
-		{
-			VK_ASSERT(write_count < VULKAN_NUM_BINDINGS);
-			auto &write = writes[write_count++];
-			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			write.pNext = nullptr;
-			write.descriptorCount = 1;
-			write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-			write.dstArrayElement = i;
-			write.dstBinding = binding;
-			write.dstSet = desc_set;
-			write.pBufferInfo = &bindings[binding + i].buffer;
-		}
-	});
-
-	for_each_bit(set_layout.storage_buffer_mask, [&](uint32_t binding) {
-		unsigned array_size = set_layout.array_size[binding];
-		for (unsigned i = 0; i < array_size; i++)
-		{
-			VK_ASSERT(write_count < VULKAN_NUM_BINDINGS);
-			auto &write = writes[write_count++];
-			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			write.pNext = nullptr;
-			write.descriptorCount = 1;
-			write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			write.dstArrayElement = i;
-			write.dstBinding = binding;
-			write.dstSet = desc_set;
-			write.pBufferInfo = &bindings[binding + i].buffer;
-		}
-	});
-
-	for_each_bit(set_layout.sampled_buffer_mask, [&](uint32_t binding) {
-		unsigned array_size = set_layout.array_size[binding];
-		for (unsigned i = 0; i < array_size; i++)
-		{
-			VK_ASSERT(write_count < VULKAN_NUM_BINDINGS);
-			auto &write = writes[write_count++];
-			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			write.pNext = nullptr;
-			write.descriptorCount = 1;
-			write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
-			write.dstArrayElement = i;
-			write.dstBinding = binding;
-			write.dstSet = desc_set;
-			write.pTexelBufferView = &bindings[binding + i].buffer_view;
-		}
-	});
-
-	for_each_bit(set_layout.sampled_image_mask, [&](uint32_t binding) {
-		unsigned array_size = set_layout.array_size[binding];
-		for (unsigned i = 0; i < array_size; i++)
-		{
-			VK_ASSERT(write_count < VULKAN_NUM_BINDINGS);
-			auto &write = writes[write_count++];
-			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			write.pNext = nullptr;
-			write.descriptorCount = 1;
-			write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			write.dstArrayElement = i;
-			write.dstBinding = binding;
-			write.dstSet = desc_set;
-
-			if (set_layout.fp_mask & (1u << binding))
-				write.pImageInfo = &bindings[binding + i].image.fp;
-			else
-				write.pImageInfo = &bindings[binding + i].image.integer;
-		}
-	});
-
-	for_each_bit(set_layout.separate_image_mask, [&](uint32_t binding) {
-		unsigned array_size = set_layout.array_size[binding];
-		for (unsigned i = 0; i < array_size; i++)
-		{
-			VK_ASSERT(write_count < VULKAN_NUM_BINDINGS);
-			auto &write = writes[write_count++];
-			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			write.pNext = nullptr;
-			write.descriptorCount = 1;
-			write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-			write.dstArrayElement = i;
-			write.dstBinding = binding;
-			write.dstSet = desc_set;
-
-			if (set_layout.fp_mask & (1u << binding))
-				write.pImageInfo = &bindings[binding + i].image.fp;
-			else
-				write.pImageInfo = &bindings[binding + i].image.integer;
-		}
-	});
-
-	for_each_bit(set_layout.sampler_mask & ~set_layout.immutable_sampler_mask, [&](uint32_t binding) {
-		unsigned array_size = set_layout.array_size[binding];
-		for (unsigned i = 0; i < array_size; i++)
-		{
-			VK_ASSERT(write_count < VULKAN_NUM_BINDINGS);
-			auto &write = writes[write_count++];
-			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			write.pNext = nullptr;
-			write.descriptorCount = 1;
-			write.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-			write.dstArrayElement = i;
-			write.dstBinding = binding;
-			write.dstSet = desc_set;
-			write.pImageInfo = &bindings[binding + i].image.fp;
-		}
-	});
-
-	for_each_bit(set_layout.storage_image_mask, [&](uint32_t binding) {
-		unsigned array_size = set_layout.array_size[binding];
-		for (unsigned i = 0; i < array_size; i++)
-		{
-			VK_ASSERT(write_count < VULKAN_NUM_BINDINGS);
-			auto &write = writes[write_count++];
-			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			write.pNext = nullptr;
-			write.descriptorCount = 1;
-			write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			write.dstArrayElement = i;
-			write.dstBinding = binding;
-			write.dstSet = desc_set;
-
-			if (set_layout.fp_mask & (1u << binding))
-				write.pImageInfo = &bindings[binding + i].image.fp;
-			else
-				write.pImageInfo = &bindings[binding + i].image.integer;
-		}
-	});
-
-	for_each_bit(set_layout.input_attachment_mask, [&](uint32_t binding) {
-		unsigned array_size = set_layout.array_size[binding];
-		for (unsigned i = 0; i < array_size; i++)
-		{
-			VK_ASSERT(write_count < VULKAN_NUM_BINDINGS);
-			auto &write = writes[write_count++];
-			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			write.pNext = nullptr;
-			write.descriptorCount = 1;
-			write.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-			write.dstArrayElement = i;
-			write.dstBinding = binding;
-			write.dstSet = desc_set;
-			if (set_layout.fp_mask & (1u << binding))
-				write.pImageInfo = &bindings[binding + i].image.fp;
-			else
-				write.pImageInfo = &bindings[binding + i].image.integer;
-		}
-	});
-
-	table.vkUpdateDescriptorSets(device.get_device(), write_count, writes, 0, nullptr);
-}
-
 void CommandBuffer::rebind_descriptor_set(uint32_t set)
 {
 	auto &layout = current_layout->get_resource_layout();
@@ -2021,8 +1924,8 @@ void CommandBuffer::flush_descriptor_set(uint32_t set)
 		}
 	});
 
-	// Sampled buffers
-	for_each_bit(set_layout.sampled_buffer_mask, [&](uint32_t binding) {
+	// Texel buffers
+	for_each_bit(set_layout.sampled_texel_buffer_mask | set_layout.storage_texel_buffer_mask, [&](uint32_t binding) {
 		unsigned array_size = set_layout.array_size[binding];
 		for (unsigned i = 0; i < array_size; i++)
 		{
@@ -2097,14 +2000,9 @@ void CommandBuffer::flush_descriptor_set(uint32_t set)
 	if (!allocated.second)
 	{
 		auto update_template = current_layout->get_update_template(set);
-
-		if (update_template != VK_NULL_HANDLE)
-		{
-			table.vkUpdateDescriptorSetWithTemplateKHR(device->get_device(), allocated.first,
-			                                           update_template, bindings.bindings[set]);
-		}
-		else
-			update_descriptor_set_legacy(*device, allocated.first, layout.sets[set], bindings.bindings[set]);
+		VK_ASSERT(update_template);
+		table.vkUpdateDescriptorSetWithTemplate(device->get_device(), allocated.first,
+		                                        update_template, bindings.bindings[set]);
 	}
 
 	table.vkCmdBindDescriptorSets(cmd, actual_render_pass ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,

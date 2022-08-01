@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -118,13 +118,7 @@ static inline VkAccessFlags image_usage_to_possible_access(VkImageUsageFlags usa
 static inline uint32_t image_num_miplevels(const VkExtent3D &extent)
 {
 	uint32_t size = std::max(std::max(extent.width, extent.height), extent.depth);
-	uint32_t levels = 0;
-	while (size)
-	{
-		levels++;
-		size >>= 1;
-	}
-	return levels;
+	return Util::floor_log2(size) + 1;
 }
 
 static inline VkFormatFeatureFlags image_usage_to_features(VkImageUsageFlags usage)
@@ -175,7 +169,7 @@ class Image;
 
 struct ImageViewCreateInfo
 {
-	Image *image = nullptr;
+	const Image *image = nullptr;
 	VkFormat format = VK_FORMAT_UNDEFINED;
 	unsigned base_level = 0;
 	unsigned levels = VK_REMAINING_MIP_LEVELS;
@@ -276,15 +270,14 @@ public:
 		return *info.image;
 	}
 
-	Image &get_image()
-	{
-		return *info.image;
-	}
-
 	const ImageViewCreateInfo &get_create_info() const
 	{
 		return info;
 	}
+
+	unsigned get_view_width() const;
+	unsigned get_view_height() const;
+	unsigned get_view_depth() const;
 
 private:
 	Device *device;

@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -46,9 +46,19 @@ void WSIPlatform::set_window_title(const std::string &)
 {
 }
 
+void WSIPlatform::destroy_surface(VkInstance instance, VkSurfaceKHR surface)
+{
+	vkDestroySurfaceKHR(instance, surface, nullptr);
+}
+
 uintptr_t WSIPlatform::get_fullscreen_monitor()
 {
 	return 0;
+}
+
+const VkApplicationInfo *WSIPlatform::get_application_info()
+{
+	return nullptr;
 }
 
 void WSI::set_window_title(const std::string &title)
@@ -99,21 +109,18 @@ float WSI::get_estimated_video_latency()
 	}
 }
 
-bool WSI::init_external_context(std::unique_ptr<Context> fresh_context)
+bool WSI::init_from_existing_context(ContextHandle existing_context)
 {
-	context = move(fresh_context);
-
-	// Need to have a dummy swapchain in place before we issue create device events.
-	device.reset(new Device);
-	device->set_context(*context);
-	device->init_external_swapchain({ ImageHandle(nullptr) });
-	platform->event_device_created(device.get());
+	VK_ASSERT(platform);
+	context = std::move(existing_context);
 	table = &context->get_device_table();
 	return true;
 }
 
 bool WSI::init_external_swapchain(std::vector<ImageHandle> swapchain_images_)
 {
+	VK_ASSERT(context);
+	VK_ASSERT(device);
 	swapchain_width = platform->get_surface_width();
 	swapchain_height = platform->get_surface_height();
 	swapchain_aspect_ratio = platform->get_aspect_ratio();
@@ -145,25 +152,35 @@ void WSI::set_platform(WSIPlatform *platform_)
 	platform = platform_;
 }
 
-bool WSI::init(unsigned num_thread_indices, const Context::SystemHandles &system_handles)
+bool WSI::init_device()
 {
-	auto instance_ext = platform->get_instance_extensions();
-	auto device_ext = platform->get_device_extensions();
-	context.reset(new Context);
-	context->set_num_thread_indices(num_thread_indices);
-	context->set_system_handles(system_handles);
-	if (!context->init_instance_and_device(instance_ext.data(), instance_ext.size(), device_ext.data(), device_ext.size()))
-		return false;
-
-	device.reset(new Device);
+	VK_ASSERT(context);
+	device = Util::make_handle<Device>();
 	device->set_context(*context);
-	table = &context->get_device_table();
-
 	platform->event_device_created(device.get());
+	return true;
+}
+
+bool WSI::init_device(DeviceHandle device_handle)
+{
+	VK_ASSERT(context);
+	device = std::move(device_handle);
+	platform->event_device_created(device.get());
+	return true;
+}
+
+bool WSI::init_surface_swapchain()
+{
+	VK_ASSERT(surface == VK_NULL_HANDLE);
+	VK_ASSERT(context);
+	VK_ASSERT(device);
 
 	surface = platform->create_surface(context->get_instance(), context->get_gpu());
 	if (surface == VK_NULL_HANDLE)
+	{
+		LOGE("Failed to create VkSurfaceKHR.\n");
 		return false;
+	}
 
 	unsigned width = platform->get_surface_width();
 	unsigned height = platform->get_surface_height();
@@ -176,8 +193,8 @@ bool WSI::init(unsigned num_thread_indices, const Context::SystemHandles &system
 	{
 		if (index != VK_QUEUE_FAMILY_IGNORED)
 		{
-			if (vkGetPhysicalDeviceSurfaceSupportKHR(context->get_gpu(), index, surface, &supported) == VK_SUCCESS &&
-			    supported)
+			if (vkGetPhysicalDeviceSurfaceSupportKHR(context->get_gpu(), index, surface, &supported) ==
+			    VK_SUCCESS && supported)
 			{
 				queue_present_support |= 1u << index;
 			}
@@ -185,12 +202,18 @@ bool WSI::init(unsigned num_thread_indices, const Context::SystemHandles &system
 	}
 
 	if ((queue_present_support & (1u << context->get_queue_info().family_indices[QUEUE_INDEX_GRAPHICS])) == 0)
+	{
+		LOGE("No presentation queue found for GPU. Is it connected to a display?\n");
 		return false;
+	}
 
 	device->set_swapchain_queue_family_support(queue_present_support);
 
 	if (!blocking_init_swapchain(width, height))
+	{
+		LOGE("Failed to create swapchain.\n");
 		return false;
+	}
 
 	device->init_swapchain(swapchain_images, swapchain_width, swapchain_height, swapchain_format,
 	                       swapchain_current_prerotate,
@@ -199,7 +222,39 @@ bool WSI::init(unsigned num_thread_indices, const Context::SystemHandles &system
 	return true;
 }
 
-void WSI::init_surface_and_swapchain(VkSurfaceKHR new_surface)
+bool WSI::init_simple(unsigned num_thread_indices, const Context::SystemHandles &system_handles)
+{
+	if (!init_context_from_platform(num_thread_indices, system_handles))
+		return false;
+	if (!init_device())
+		return false;
+	if (!init_surface_swapchain())
+		return false;
+	return true;
+}
+
+bool WSI::init_context_from_platform(unsigned num_thread_indices, const Context::SystemHandles &system_handles)
+{
+	VK_ASSERT(platform);
+	auto instance_ext = platform->get_instance_extensions();
+	auto device_ext = platform->get_device_extensions();
+	auto new_context = Util::make_handle<Context>();
+
+	new_context->set_application_info(platform->get_application_info());
+	new_context->set_num_thread_indices(num_thread_indices);
+	new_context->set_system_handles(system_handles);
+	if (!new_context->init_instance_and_device(
+		instance_ext.data(), instance_ext.size(),
+		device_ext.data(), device_ext.size()))
+	{
+		LOGE("Failed to create Vulkan device.\n");
+		return false;
+	}
+
+	return init_from_existing_context(std::move(new_context));
+}
+
+void WSI::reinit_surface_and_swapchain(VkSurfaceKHR new_surface)
 {
 	LOGI("init_surface_and_swapchain()\n");
 	if (new_surface != VK_NULL_HANDLE)
@@ -227,7 +282,7 @@ void WSI::tear_down_swapchain()
 
 	if (swapchain != VK_NULL_HANDLE)
 	{
-		if (device->get_device_features().present_wait_features.presentWait)
+		if (device->get_device_features().present_wait_features.presentWait && present_last_id)
 			table->vkWaitForPresentKHR(context->get_device(), swapchain, present_last_id, UINT64_MAX);
 		table->vkDestroySwapchainKHR(context->get_device(), swapchain, nullptr);
 	}
@@ -244,8 +299,10 @@ void WSI::deinit_surface_and_swapchain()
 	tear_down_swapchain();
 
 	if (surface != VK_NULL_HANDLE)
-		vkDestroySurfaceKHR(context->get_instance(), surface, nullptr);
-	surface = VK_NULL_HANDLE;
+	{
+		platform->destroy_surface(context->get_instance(), surface);
+		surface = VK_NULL_HANDLE;
+	}
 
 	platform->event_swapchain_destroyed();
 }
@@ -426,8 +483,7 @@ bool WSI::end_frame()
 	{
 		// If we didn't render into the swapchain this frame, we will return a blank semaphore.
 		external_release = device->consume_release_semaphore();
-		if (external_release && !external_release->is_signalled())
-			abort();
+		VK_ASSERT(!external_release || external_release->is_signalled());
 		frame_is_external = false;
 	}
 	else
@@ -614,7 +670,7 @@ void WSI::set_backbuffer_srgb(bool enable)
 	}
 }
 
-void WSI::deinit_external()
+void WSI::teardown()
 {
 	if (platform)
 		platform->release_resources();
@@ -626,7 +682,10 @@ void WSI::deinit_external()
 	}
 
 	if (surface != VK_NULL_HANDLE)
-		vkDestroySurfaceKHR(context->get_instance(), surface, nullptr);
+	{
+		platform->destroy_surface(context->get_instance(), surface);
+		surface = VK_NULL_HANDLE;
+	}
 
 	if (platform)
 		platform->event_device_destroyed();
@@ -1057,8 +1116,11 @@ WSI::SwapchainError WSI::init_swapchain(unsigned width, unsigned height)
 	info.clipped = VK_TRUE;
 	info.oldSwapchain = old_swapchain;
 
-	if (device->get_device_features().present_wait_features.presentWait && old_swapchain != VK_NULL_HANDLE)
+	if (device->get_device_features().present_wait_features.presentWait &&
+	    old_swapchain != VK_NULL_HANDLE && present_last_id)
+	{
 		table->vkWaitForPresentKHR(context->get_device(), old_swapchain, present_last_id, UINT64_MAX);
+	}
 
 #ifdef _WIN32
 	if (device->get_device_features().supports_full_screen_exclusive)
@@ -1152,7 +1214,7 @@ VkSurfaceTransformFlagBitsKHR WSI::get_current_prerotate() const
 
 WSI::~WSI()
 {
-	deinit_external();
+	teardown();
 }
 
 void WSIPlatform::event_device_created(Device *) {}
