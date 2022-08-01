@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -93,6 +93,12 @@ inline void for_each_bit_range(uint32_t value, const T &func)
 	}
 }
 
+template <typename T>
+inline bool is_pow2(T value)
+{
+	return (value & (value - T(1))) == T(0);
+}
+
 inline uint32_t next_pow2(uint32_t v)
 {
 	v--;
@@ -103,4 +109,15 @@ inline uint32_t next_pow2(uint32_t v)
 	v |= v >> 1;
 	return v + 1;
 }
+
+inline uint32_t prev_pow2(uint32_t v)
+{
+	return next_pow2(v + 1) >> 1;
+}
+
+inline uint32_t floor_log2(uint32_t v)
+{
+	return 31 - leading_zeroes(v);
+}
+
 }

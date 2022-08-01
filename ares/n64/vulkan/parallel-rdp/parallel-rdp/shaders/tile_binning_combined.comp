@@ -183,10 +183,8 @@ void main()
         if (primitive_index < primitive_count)
         {
             ScissorState scissor = load_scissor_state(primitive_index);
-            ivec2 clipped_base_coord = max(base_coord_meta, SCALE_FACTOR * (ivec2(scissor.xlo, scissor.ylo) >> 2) - 1);
-            ivec2 clipped_end_coord = min(end_coord_meta, SCALE_FACTOR * (ivec2(scissor.xhi + 3, scissor.yhi + 3) >> 2) - 1);
             TriangleSetup setup = load_triangle_setup(primitive_index);
-            binned = bin_primitive(setup, clipped_base_coord, clipped_end_coord, SCALE_FACTOR);
+            binned = bin_primitive(setup, base_coord_meta, end_coord_meta, SCALE_FACTOR, scissor);
         }
     }
 
@@ -206,10 +204,8 @@ void main()
         merged_mask &= ~(1u << bit);
         uint primitive_index = group_index * 32 + bit;
         ScissorState scissor = load_scissor_state(primitive_index);
-        ivec2 clipped_base_coord = max(base_coord, SCALE_FACTOR * (ivec2(scissor.xlo, scissor.ylo) >> 2));
-        ivec2 clipped_end_coord = min(end_coord, SCALE_FACTOR * (ivec2(scissor.xhi + 3, scissor.yhi + 3) >> 2) - 1);
         TriangleSetup setup = load_triangle_setup(primitive_index);
-        if (bin_primitive(setup, clipped_base_coord, clipped_end_coord, SCALE_FACTOR))
+        if (bin_primitive(setup, base_coord, end_coord, SCALE_FACTOR, scissor))
             binned_mask |= 1u << bit;
     }
 

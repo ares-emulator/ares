@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -106,15 +106,10 @@ RenderPass::RenderPass(Hash hash, Device *device_, const VkRenderPassCreateInfo 
 	// Store the important subpass information for later.
 	setup_subpasses(create_info);
 
-	// Fixup after, we want the Fossilize render pass to be generic.
-	auto info = create_info;
-	VkAttachmentDescription fixup_attachments[VULKAN_NUM_ATTACHMENTS + 1];
-	fixup_render_pass_workaround(info, fixup_attachments);
-
 #ifdef VULKAN_DEBUG
 	LOGI("Creating render pass.\n");
 #endif
-	if (table.vkCreateRenderPass(device->get_device(), &info, nullptr, &render_pass) != VK_SUCCESS)
+	if (table.vkCreateRenderPass(device->get_device(), &create_info, nullptr, &render_pass) != VK_SUCCESS)
 		LOGE("Failed to create render pass.");
 
 #ifdef GRANITE_VULKAN_FOSSILIZE
@@ -718,7 +713,7 @@ RenderPass::RenderPass(Hash hash, Device *device_, const RenderPassInfo &info)
 		dep.dstSubpass = subpass;
 		dep.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 		if (multiview)
-			dep.dependencyFlags |= VK_DEPENDENCY_VIEW_LOCAL_BIT_KHR;
+			dep.dependencyFlags |= VK_DEPENDENCY_VIEW_LOCAL_BIT;
 
 		if (color_self_dependencies & (1u << subpass))
 		{
@@ -745,7 +740,7 @@ RenderPass::RenderPass(Hash hash, Device *device_, const RenderPassInfo &info)
 		dep.dstSubpass = subpass;
 		dep.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 		if (multiview)
-			dep.dependencyFlags |= VK_DEPENDENCY_VIEW_LOCAL_BIT_KHR;
+			dep.dependencyFlags |= VK_DEPENDENCY_VIEW_LOCAL_BIT;
 
 		if (color_attachment_read_write & (1u << (subpass - 1)))
 		{
@@ -793,7 +788,7 @@ RenderPass::RenderPass(Hash hash, Device *device_, const RenderPassInfo &info)
 	// Store the important subpass information for later.
 	setup_subpasses(rp_info);
 
-	VkRenderPassMultiviewCreateInfoKHR multiview_info = { VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO_KHR };
+	VkRenderPassMultiviewCreateInfo multiview_info = { VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO };
 	vector<uint32_t> multiview_view_mask;
 	if (multiview && device->get_device_features().multiview_features.multiview)
 	{
@@ -805,11 +800,7 @@ RenderPass::RenderPass(Hash hash, Device *device_, const RenderPassInfo &info)
 		rp_info.pNext = &multiview_info;
 	}
 	else if (multiview)
-		LOGE("Multiview not supported. Predending render pass is not multiview.");
-
-	// Fixup after, we want the Fossilize render pass to be generic.
-	VkAttachmentDescription fixup_attachments[VULKAN_NUM_ATTACHMENTS + 1];
-	fixup_render_pass_workaround(rp_info, fixup_attachments);
+		LOGE("Multiview not supported. Pretending render pass is not multiview.");
 
 #ifdef VULKAN_DEBUG
 	LOGI("Creating render pass.\n");
@@ -821,30 +812,6 @@ RenderPass::RenderPass(Hash hash, Device *device_, const RenderPassInfo &info)
 #ifdef GRANITE_VULKAN_FOSSILIZE
 	device->register_render_pass(render_pass, get_hash(), rp_info);
 #endif
-}
-
-void RenderPass::fixup_render_pass_workaround(VkRenderPassCreateInfo &create_info, VkAttachmentDescription *attachments)
-{
-	if (device->get_workarounds().force_store_in_render_pass)
-	{
-		// Workaround a bug on NV where depth-stencil input attachments break if we have STORE_OP_DONT_CARE.
-		// Force STORE_OP_STORE for all attachments.
-		if (attachments != create_info.pAttachments)
-		{
-			memcpy(attachments, create_info.pAttachments, create_info.attachmentCount * sizeof(attachments[0]));
-			create_info.pAttachments = attachments;
-		}
-
-		for (uint32_t i = 0; i < create_info.attachmentCount; i++)
-		{
-			VkFormat format = attachments[i].format;
-			auto aspect = format_to_aspect_mask(format);
-			if ((aspect & (VK_IMAGE_ASPECT_COLOR_BIT | VK_IMAGE_ASPECT_DEPTH_BIT)) != 0)
-				attachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-			if ((aspect & VK_IMAGE_ASPECT_STENCIL_BIT) != 0)
-				attachments[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-		}
-	}
 }
 
 RenderPass::~RenderPass()
@@ -907,16 +874,14 @@ void Framebuffer::compute_dimensions(const RenderPassInfo &info, uint32_t &width
 	for (unsigned i = 0; i < info.num_color_attachments; i++)
 	{
 		VK_ASSERT(info.color_attachments[i]);
-		unsigned lod = info.color_attachments[i]->get_create_info().base_level;
-		width = min(width, info.color_attachments[i]->get_image().get_width(lod));
-		height = min(height, info.color_attachments[i]->get_image().get_height(lod));
+		width = min(width, info.color_attachments[i]->get_view_width());
+		height = min(height, info.color_attachments[i]->get_view_height());
 	}
 
 	if (info.depth_stencil)
 	{
-		unsigned lod = info.depth_stencil->get_create_info().base_level;
-		width = min(width, info.depth_stencil->get_image().get_width(lod));
-		height = min(height, info.depth_stencil->get_image().get_height(lod));
+		width = min(width, info.depth_stencil->get_view_width());
+		height = min(height, info.depth_stencil->get_view_height());
 	}
 }
 

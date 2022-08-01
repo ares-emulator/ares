@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -41,13 +41,15 @@ struct DescriptorSetLayout
 	uint32_t storage_image_mask = 0;
 	uint32_t uniform_buffer_mask = 0;
 	uint32_t storage_buffer_mask = 0;
-	uint32_t sampled_buffer_mask = 0;
+	uint32_t sampled_texel_buffer_mask = 0;
+	uint32_t storage_texel_buffer_mask = 0;
 	uint32_t input_attachment_mask = 0;
 	uint32_t sampler_mask = 0;
 	uint32_t separate_image_mask = 0;
 	uint32_t fp_mask = 0;
 	uint32_t immutable_sampler_mask = 0;
 	uint8_t array_size[VULKAN_NUM_BINDINGS] = {};
+	uint32_t padding = 0;
 	enum { UNSIZED_ARRAY = 0xff };
 };
 
@@ -171,6 +173,8 @@ public:
 	VkDescriptorSet commit(Device &device);
 
 	unsigned get_next_offset() const;
+
+	void reset();
 
 private:
 	BindlessDescriptorPoolHandle descriptor_pool;

@@ -224,9 +224,8 @@ bool shade_pixel(int x, int y, uint primitive_index, out ShadedData shaded)
 			tile_info0.size = u8(TEX_SIZE);
 		}
 #endif
-		texel0 = sample_texture(tile_info0, tmem_instance_index, st, tlut, tlut_type, sample_quad, mid_texel, false, i16x4(0));
-		if (!sample_quad && !bilerp0)
-			texel0 = texture_convert_factors(texel0, derived.factors);
+		texel0 = sample_texture(tile_info0, tmem_instance_index, st, tlut, tlut_type,
+		                        sample_quad, mid_texel, false, bilerp0, derived.factors, i16x4(0));
 	}
 
 	// A very awkward mechanism where we peek into the next pixel, or in some cases, the next scanline's first pixel.
@@ -272,10 +271,7 @@ bool shade_pixel(int x, int y, uint primitive_index, out ShadedData shaded)
 			}
 #endif
 			texel1 = sample_texture(tile_info1, tmem_instance_index, st, tlut, tlut_type, sample_quad, mid_texel,
-			                        convert_one, texel0);
-
-			if (!sample_quad && !tlut && !bilerp1)
-				texel1 = texture_convert_factors(texel1, derived.factors);
+			                        convert_one, bilerp1, derived.factors, texel0);
 		}
 	}
 

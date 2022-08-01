@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -57,7 +57,6 @@
 
 #ifdef GRANITE_VULKAN_FOSSILIZE
 #include "fossilize.hpp"
-#include "thread_group.hpp"
 #endif
 
 #include "quirks.hpp"
@@ -66,6 +65,11 @@
 namespace Util
 {
 class TimelineTraceFile;
+}
+
+namespace Granite
+{
+struct TaskGroup;
 }
 
 namespace Vulkan
@@ -160,8 +164,9 @@ private:
 }
 
 class Device
+	: public Util::IntrusivePtrEnabled<Device, std::default_delete<Device>, HandleCounter>
 #ifdef GRANITE_VULKAN_FOSSILIZE
-	: public Fossilize::StateCreatorInterface
+	, public Fossilize::StateCreatorInterface
 #endif
 {
 public:
@@ -336,10 +341,11 @@ public:
 	                                                             unsigned num_sets, unsigned num_descriptors);
 
 	// Render pass helpers.
-	bool image_format_is_supported(VkFormat format, VkFormatFeatureFlags required, VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL) const;
-	void get_format_properties(VkFormat format, VkFormatProperties *properties);
-	bool get_image_format_properties(VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags,
-	                                 VkImageFormatProperties *properties);
+	bool image_format_is_supported(VkFormat format, VkFormatFeatureFlags2KHR required, VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL) const;
+	void get_format_properties(VkFormat format, VkFormatProperties3KHR *properties) const;
+	bool get_image_format_properties(VkFormat format, VkImageType type, VkImageTiling tiling,
+	                                 VkImageUsageFlags usage, VkImageCreateFlags flags,
+	                                 VkImageFormatProperties2 *properties2) const;
 
 	VkFormat get_default_depth_stencil_format() const;
 	VkFormat get_default_depth_format() const;
@@ -435,6 +441,11 @@ public:
 	bool supports_subgroup_size_log2(bool subgroup_full_group,
 	                                 uint8_t subgroup_minimum_size_log2,
 	                                 uint8_t subgroup_maximum_size_log2) const;
+
+	const QueueInfo &get_queue_info() const;
+
+	void timestamp_log_reset();
+	void timestamp_log(const TimestampIntervalReportCallback &cb) const;
 
 private:
 	VkInstance instance = VK_NULL_HANDLE;
@@ -764,8 +775,6 @@ private:
 	TextureManager texture_manager;
 #endif
 
-	std::string get_pipeline_cache_string() const;
-
 #ifdef GRANITE_VULKAN_FOSSILIZE
 	Fossilize::StateRecorder state_recorder;
 	bool enqueue_create_sampler(Fossilize::Hash hash, const VkSamplerCreateInfo *create_info, VkSampler *sampler) override;
@@ -773,8 +782,10 @@ private:
 	bool enqueue_create_pipeline_layout(Fossilize::Hash hash, const VkPipelineLayoutCreateInfo *create_info, VkPipelineLayout *layout) override;
 	bool enqueue_create_shader_module(Fossilize::Hash hash, const VkShaderModuleCreateInfo *create_info, VkShaderModule *module) override;
 	bool enqueue_create_render_pass(Fossilize::Hash hash, const VkRenderPassCreateInfo *create_info, VkRenderPass *render_pass) override;
+	bool enqueue_create_render_pass2(Fossilize::Hash hash, const VkRenderPassCreateInfo2 *create_info, VkRenderPass *render_pass) override;
 	bool enqueue_create_compute_pipeline(Fossilize::Hash hash, const VkComputePipelineCreateInfo *create_info, VkPipeline *pipeline) override;
 	bool enqueue_create_graphics_pipeline(Fossilize::Hash hash, const VkGraphicsPipelineCreateInfo *create_info, VkPipeline *pipeline) override;
+	bool enqueue_create_raytracing_pipeline(Fossilize::Hash hash, const VkRayTracingPipelineCreateInfoKHR *create_info, VkPipeline *pipeline) override;
 	void notify_replayed_resources_for_type() override;
 	VkPipeline fossilize_create_graphics_pipeline(Fossilize::Hash hash, VkGraphicsPipelineCreateInfo &info);
 	VkPipeline fossilize_create_compute_pipeline(Fossilize::Hash hash, VkComputePipelineCreateInfo &info);
@@ -785,18 +796,20 @@ private:
 	void register_descriptor_set_layout(VkDescriptorSetLayout layout, Fossilize::Hash hash, const VkDescriptorSetLayoutCreateInfo &info);
 	void register_pipeline_layout(VkPipelineLayout layout, Fossilize::Hash hash, const VkPipelineLayoutCreateInfo &info);
 	void register_shader_module(VkShaderModule module, Fossilize::Hash hash, const VkShaderModuleCreateInfo &info);
-	void register_sampler(VkSampler sampler, Fossilize::Hash hash, const VkSamplerCreateInfo &info);
+	//void register_sampler(VkSampler sampler, Fossilize::Hash hash, const VkSamplerCreateInfo &info);
 
 	struct
 	{
 		std::unordered_map<VkShaderModule, Shader *> shader_map;
 		std::unordered_map<VkRenderPass, RenderPass *> render_pass_map;
+		const Fossilize::FeatureFilter *feature_filter = nullptr;
 #ifdef GRANITE_VULKAN_MT
-		Granite::TaskGroupHandle pipeline_group;
+		// Need to forward-declare the type, avoid the ref-counted wrapper.
+		Granite::TaskGroup *pipeline_group = nullptr;
 #endif
 	} replayer_state;
 
-	void init_pipeline_state();
+	void init_pipeline_state(const Fossilize::FeatureFilter &filter);
 	void flush_pipeline_state();
 #endif
 
@@ -809,4 +822,32 @@ private:
 	bool allocate_image_memory(DeviceAllocation *allocation, const ImageCreateInfo &info,
 	                           VkImage image, VkImageTiling tiling);
 };
+
+// A fairly complex helper used for async queue readbacks.
+// Typically used for things like headless backend which emulates WSI through readbacks + encode.
+struct OwnershipTransferInfo
+{
+	CommandBuffer::Type old_queue;
+	CommandBuffer::Type new_queue;
+	VkImageLayout old_image_layout;
+	VkImageLayout new_image_layout;
+	VkPipelineStageFlags dst_pipeline_stage;
+	VkAccessFlags dst_access;
+};
+
+// For an image which was last accessed in old_queue, requests a command buffer
+// for new_queue. Commands will be enqueued as necessary in new_queue to ensure that a complete ownership
+// transfer has taken place.
+// If queue family for old_queue differs from new_queue, a release barrier is enqueued in old_queue.
+// In new_queue we perform either an acquire barrier or a simple pipeline barrier to change layout if required.
+// If semaphore is a valid handle, it will be waited on in either old_queue to perform release barrier
+// or new_queue depending on what is required.
+// If the image uses CONCURRENT sharing mode, acquire/release barriers are skipped.
+CommandBufferHandle request_command_buffer_with_ownership_transfer(
+		Device &device,
+		const Vulkan::Image &image,
+		const OwnershipTransferInfo &info,
+		const Vulkan::Semaphore &semaphore);
+
+using DeviceHandle = Util::IntrusivePtr<Device>;
 }

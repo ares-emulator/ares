@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -78,7 +78,7 @@ ImmutableSampler::ImmutableSampler(Util::Hash hash, Device *device_, const Sampl
                                    const ImmutableYcbcrConversion *ycbcr_)
 	: HashedObject<ImmutableSampler>(hash), device(device_), ycbcr(ycbcr_)
 {
-	VkSamplerYcbcrConversionInfoKHR conv_info = { VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_INFO };
+	VkSamplerYcbcrConversionInfo conv_info = { VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_INFO };
 	auto info = Sampler::fill_vk_sampler_info(sampler_info);
 
 	if (ycbcr)
@@ -96,7 +96,7 @@ ImmutableSampler::ImmutableSampler(Util::Hash hash, Device *device_, const Sampl
 		LOGE("Failed to create sampler.\n");
 
 #ifdef GRANITE_VULKAN_FOSSILIZE
-	register_sampler(vk_sampler, hash, info);
+	//device->register_sampler(vk_sampler, hash, info);
 #endif
 
 	sampler = SamplerHandle(device->handle_pool.samplers.allocate(device, vk_sampler, sampler_info, true));
@@ -108,8 +108,8 @@ ImmutableYcbcrConversion::ImmutableYcbcrConversion(Util::Hash hash, Device *devi
 {
 	if (device->get_device_features().sampler_ycbcr_conversion_features.samplerYcbcrConversion)
 	{
-		if (device->get_device_table().vkCreateSamplerYcbcrConversionKHR(device->get_device(), &info, nullptr,
-		                                                                 &conversion) != VK_SUCCESS)
+		if (device->get_device_table().vkCreateSamplerYcbcrConversion(device->get_device(), &info, nullptr,
+		                                                              &conversion) != VK_SUCCESS)
 		{
 			LOGE("Failed to create YCbCr conversion.\n");
 		}
@@ -121,6 +121,6 @@ ImmutableYcbcrConversion::ImmutableYcbcrConversion(Util::Hash hash, Device *devi
 ImmutableYcbcrConversion::~ImmutableYcbcrConversion()
 {
 	if (conversion)
-		device->get_device_table().vkDestroySamplerYcbcrConversionKHR(device->get_device(), conversion, nullptr);
+		device->get_device_table().vkDestroySamplerYcbcrConversion(device->get_device(), conversion, nullptr);
 }
 }

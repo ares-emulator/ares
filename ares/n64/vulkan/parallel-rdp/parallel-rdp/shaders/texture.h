@@ -484,8 +484,20 @@ i16x2 bilinear_3tap(i16x2 t00, i16x2 t10, i16x2 t01, i16x2 t11, ivec2 frac)
 	return accum;
 }
 
-i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, bool tlut_type, bool sample_quad, bool mid_texel, bool convert_one,
-                     i16x4 prev_cycle)
+i16x4 texture_convert_factors(i16x4 texel_in, i16x4 factors)
+{
+	ivec4 texel = bitfieldExtract(ivec4(texel_in), 0, 9);
+
+	int r = texel.b + ((factors.x * texel.g + 0x80) >> 8);
+	int g = texel.b + ((factors.y * texel.r + factors.z * texel.g + 0x80) >> 8);
+	int b = texel.b + ((factors.w * texel.r + 0x80) >> 8);
+	int a = texel.b;
+	return i16x4(r, g, b, a);
+}
+
+i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, bool tlut_type,
+                     bool sample_quad, bool mid_texel_state, bool convert_one, bool bilerp,
+                     i16x4 conversion_factors, i16x4 prev_cycle)
 {
 	st.x = clamp_and_shift_coord((tile.flags & TILE_INFO_CLAMP_S_BIT) != 0, st.x, int(tile.slo), int(tile.shi), int(tile.shift_s));
 	st.y = clamp_and_shift_coord((tile.flags & TILE_INFO_CLAMP_T_BIT) != 0, st.y, int(tile.tlo), int(tile.thi), int(tile.shift_t));
@@ -510,13 +522,17 @@ i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, boo
 	t0 &= 0xff;
 
 	i16x4 t_base, t10, t01, t11;
+	bool mid_texel = all(bvec4(mid_texel_state, bilerp, equal(frac, ivec2(0x10))));
 
-	mid_texel = all(bvec3(mid_texel, equal(frac, ivec2(0x10))));
 	if (mid_texel)
+	{
+		// Ensure we sample all 4 texels.
 		sum_frac = 0;
+	}
 
 	bool yuv = tile.fmt == TEXTURE_FORMAT_YUV;
 	ivec2 base_st = sum_frac >= 0x20 ? ivec2(s1, t1) : ivec2(s0, t0);
+	int chroma_frac = ((s0 & 1) << 4) | (frac.x >> 1);
 
 	if (tlut)
 	{
@@ -774,22 +790,97 @@ i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, boo
 
 	i16x4 accum;
 
+	// This is esoteric gibberish for the most part ...
+
+	// Basic ideas seem to be:
+	// - If mid_texel is enabled and we end up sampling center pixel, replace any 3-tap bilinear with 4-tap average.
+	// - If YUV is used, filtering is separate for RG (chroma) and BA (luma) channels. Upper / Mid signals are separate.
+	// - For YUV, sampling without bilerp with sample_quad means picking either t00 or t11, the base texel of any 3-tap bilerp plane.
+	//   Chroma and Luma planes are selected separately.
+	//   Then, the texel is converted.
+	// - If convert_one + sample_quad + bilerp is used, a whack mode is entered where the conversion factors are dynamic.
+	//   This also needs to handle variants of MID / YUV.
+
 	if (convert_one)
 	{
+		// bilerp + convert_one path. !bilerp + convert_one path is trivial and does not require sampling at all.
+		// It is handled outside.
+
 		ivec4 prev_sext = bitfieldExtract(ivec4(prev_cycle), 0, 9);
-		ivec2 factors = sum_frac >= 32 ? prev_sext.gr : prev_sext.rg;
-		ivec4 converted = factors.r * (t10 - t_base) + factors.g * (t01 - t_base) + 0x80;
-		converted >>= 8;
-		converted += prev_sext.b;
-		accum = i16x4(converted);
+		if (sample_quad)
+		{
+			bool mid_rg = yuv ? all(bvec3(mid_texel_state, equal(ivec2(chroma_frac, frac.y), ivec2(0x10)))) : mid_texel;
+			bool mid_ba = mid_texel;
+
+			bool upper_ba = sum_frac >= 32;
+			bool upper_rg = yuv ? ((chroma_frac + frac.y) >= 32 && !mid_rg) : upper_ba;
+
+			ivec2 factors_rg = upper_rg ? prev_sext.gr : prev_sext.rg;
+			ivec2 factors_ba = upper_ba ? prev_sext.gr : prev_sext.rg;
+
+			// t11 vs t00 selection is already done for non-YUV. YUV needs to defer here.
+
+			ivec2 converted_rg, converted_ba;
+			if (mid_rg)
+			{
+				converted_rg = factors_rg.r * (t01.rg - t11.rg) +
+				               factors_rg.g * (t10.rg - t11.rg) +
+				               ((t_base.rg - t11.rg) << 6) + 0x80;
+			}
+			else
+			{
+				ivec2 base_rg = upper_rg && yuv ? t11.xy : t_base.xy;
+				converted_rg = factors_rg.r * (t10.xy - base_rg) + factors_rg.g * (t01.xy - base_rg) + 0x80;
+			}
+
+			if (mid_ba)
+			{
+				converted_ba = factors_ba.r * (t01.ba - t11.ba) +
+				               factors_ba.g * (t10.ba - t11.ba) +
+				               ((t_base.ba - t11.ba) << 6) + 0x80;
+			}
+			else
+			{
+				ivec2 base_ba = upper_ba && yuv ? t11.zw : t_base.zw;
+				converted_ba = factors_ba.r * (t10.zw - base_ba) + factors_ba.g * (t01.zw - base_ba) + 0x80;
+			}
+
+			ivec4 converted = ivec4(converted_rg, converted_ba);
+			converted >>= 8;
+			converted += prev_sext.b;
+			accum = i16x4(converted);
+		}
+		else
+			accum = i16x4(prev_sext.bbbb);
 	}
 	else if (yuv)
 	{
 		if (sample_quad)
 		{
-			int chroma_frac = ((s0 & 1) << 4) | (frac.x >> 1);
-			i16x2 accum_chroma = bilinear_3tap(t_base.xy, t10.xy, t01.xy, t11.xy, ivec2(chroma_frac, frac.y));
-			i16x2 accum_luma = bilinear_3tap(t_base.zw, t10.zw, t01.zw, t11.zw, frac);
+			i16x2 accum_chroma;
+			i16x2 accum_luma;
+
+			if (bilerp)
+			{
+				bool mid_chroma = all(bvec3(mid_texel_state, equal(ivec2(chroma_frac, frac.y), ivec2(0x10))));
+				if (mid_chroma)
+					accum_chroma = (t_base.xy + t10.xy + t11.xy + t01.xy + I16_C(2)) >> I16_C(2);
+				else
+					accum_chroma = bilinear_3tap(t_base.xy, t10.xy, t01.xy, t11.xy, ivec2(chroma_frac, frac.y));
+
+				if (mid_texel)
+					accum_luma = (t_base.zw + t10.zw + t11.zw + t01.zw + I16_C(2)) >> I16_C(2);
+				else
+					accum_luma = bilinear_3tap(t_base.zw, t10.zw, t01.zw, t11.zw, frac);
+			}
+			else
+			{
+				// Weird path. Seems to pick either t00 or t11 for purposes of nearest.
+				// Bilinear footprint path, except it's not doing bilinear path.
+				accum_luma = frac.x + frac.y >= 32 ? t11.zw : t_base.zw;
+				accum_chroma = chroma_frac + frac.y >= 32 ? t11.xy : t_base.xy;
+			}
+
 			accum = i16x4(accum_chroma, accum_luma);
 		}
 		else
@@ -799,7 +890,7 @@ i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, boo
 	{
 		accum = (t_base + t01 + t10 + t11 + I16_C(2)) >> I16_C(2);
 	}
-	else
+	else if (bilerp && sample_quad)
 	{
 		i16x2 flip_frac = i16x2(sum_frac >= 32 ? (32 - frac.yx) : frac);
 		accum = (t10 - t_base) * flip_frac.x;
@@ -808,6 +899,16 @@ i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, boo
 		accum >>= I16_C(5);
 		accum += t_base;
 	}
+	else
+		accum = t_base;
+
+	// If we don't spend math on bilerp for this cycle, we get conversion instead.
+	// This happens regardless of convert_one. Convert_one in cycle 1 only means we take the
+	// previous texel cycle and perform some math on it.
+
+	if (!bilerp && !convert_one)
+		accum = texture_convert_factors(accum, conversion_factors);
+
 	return accum;
 }
 
@@ -889,17 +990,6 @@ void compute_lod_2cycle(inout uint tile0, inout uint tile1, out i16 lod_frac, ui
 			tile0 = (tile0 + tile_offset + (magnify ? 0 : 1)) & 7u;
 		}
 	}
-}
-
-i16x4 texture_convert_factors(i16x4 texel_in, i16x4 factors)
-{
-	ivec4 texel = bitfieldExtract(ivec4(texel_in), 0, 9);
-
-	int r = texel.b + ((factors.x * texel.g + 0x80) >> 8);
-	int g = texel.b + ((factors.y * texel.r + factors.z * texel.g + 0x80) >> 8);
-	int b = texel.b + ((factors.w * texel.r + 0x80) >> 8);
-	int a = texel.b;
-	return i16x4(r, g, b, a);
 }
 
 #endif

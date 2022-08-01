@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -263,6 +263,20 @@ public:
 	IntrusivePtr(IntrusivePtr &&other) noexcept
 	{
 		*this = std::move(other);
+	}
+
+	T *release() &
+	{
+		T *ret = data;
+		data = nullptr;
+		return ret;
+	}
+
+	T *release() &&
+	{
+		T *ret = data;
+		data = nullptr;
+		return ret;
 	}
 
 private:
