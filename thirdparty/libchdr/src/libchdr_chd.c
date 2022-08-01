@@ -249,6 +249,14 @@ struct _cdlz_codec_data {
 	uint8_t*			buffer;
 };
 
+/* codec-private data for the FLAC codec */
+typedef struct _flac_codec_data flac_codec_data;
+struct _flac_codec_data {
+	/* internal state */
+	int		native_endian;
+	flac_decoder	decoder;
+};
+
 /* codec-private data for the CDFL codec */
 typedef struct _cdfl_codec_data cdfl_codec_data;
 struct _cdfl_codec_data {
@@ -286,6 +294,8 @@ struct _chd_file
 	const codec_interface *	codecintf[4];	/* interface to the codec */
 
 	zlib_codec_data			zlib_codec_data;		/* zlib codec data */
+	lzma_codec_data			lzma_codec_data;		/* zlib codec data */
+	flac_codec_data			flac_codec_data;		/* zlib codec data */
 	cdzl_codec_data			cdzl_codec_data;		/* cdzl codec data */
 	cdlz_codec_data			cdlz_codec_data;		/* cdlz codec data */
 	cdfl_codec_data			cdfl_codec_data;		/* cdfl codec data */
@@ -337,6 +347,11 @@ static void zlib_allocator_free(voidpf opaque);
 static chd_error lzma_codec_init(void *codec, uint32_t hunkbytes);
 static void lzma_codec_free(void *codec);
 static chd_error lzma_codec_decompress(void *codec, const uint8_t *src, uint32_t complen, uint8_t *dest, uint32_t destlen);
+
+/* flac compression codec */
+static chd_error flac_codec_init(void *codec, uint32_t hunkbytes);
+static void flac_codec_free(void *codec);
+static chd_error flac_codec_decompress(void *codec, const uint8_t *src, uint32_t complen, uint8_t *dest, uint32_t destlen);
 
 /* cdzl compression codec */
 static chd_error cdzl_codec_init(void* codec, uint32_t hunkbytes);
@@ -755,18 +770,74 @@ static chd_error cdzl_codec_decompress(void *codec, const uint8_t *src, uint32_t
  */
 
 /*------------------------------------------------------
- *  cdfl_codec_blocksize - return the optimal block size
+ *  flac_codec_blocksize - return the optimal block size
  *------------------------------------------------------
  */
 
-static uint32_t cdfl_codec_blocksize(uint32_t bytes)
+static uint32_t flac_codec_blocksize(uint32_t bytes)
 {
 	/* determine FLAC block size, which must be 16-65535
 	 * clamp to 2k since that's supposed to be the sweet spot */
-	uint32_t hunkbytes = bytes / 4;
-	while (hunkbytes > 2048)
-		hunkbytes /= 2;
-	return hunkbytes;
+	uint32_t blocksize = bytes / 4;
+	while (blocksize > 2048)
+		blocksize /= 2;
+	return blocksize;
+}
+
+static chd_error flac_codec_init(void *codec, uint32_t hunkbytes)
+{
+	uint16_t native_endian = 0;
+	flac_codec_data *flac = (flac_codec_data*)codec;
+
+	/* make sure the CHD's hunk size is an even multiple of the sample size */
+	if (hunkbytes % 4 != 0)
+		return CHDERR_CODEC_ERROR;
+
+	/* determine whether we want native or swapped samples */
+	*(uint8_t *)(&native_endian) = 1;
+	flac->native_endian = (native_endian & 1);
+
+	/* flac decoder init */
+	if (flac_decoder_init(&flac->decoder))
+		return CHDERR_OUT_OF_MEMORY;
+
+	return CHDERR_NONE;
+}
+
+static void flac_codec_free(void *codec)
+{
+	flac_codec_data *flac = (flac_codec_data*)codec;
+	flac_decoder_free(&flac->decoder);
+}
+
+static chd_error flac_codec_decompress(void *codec, const uint8_t *src, uint32_t complen, uint8_t *dest, uint32_t destlen)
+{
+	flac_codec_data *flac = (flac_codec_data*)codec;
+	int swap_endian;
+
+	if (src[0] == 'L')
+		swap_endian = !flac->native_endian;
+	else if (src[0] == 'B')
+		swap_endian = flac->native_endian;
+	else
+		return CHDERR_DECOMPRESSION_ERROR;
+
+	if (!flac_decoder_reset(&flac->decoder, 44100, 2, flac_codec_blocksize(destlen), src + 1, complen - 1))
+		return CHDERR_DECOMPRESSION_ERROR;
+	if (!flac_decoder_decode_interleaved(&flac->decoder, (int16_t *)(dest), destlen/4, swap_endian))
+		return CHDERR_DECOMPRESSION_ERROR;
+	flac_decoder_finish(&flac->decoder);
+
+	return CHDERR_NONE;
+}
+
+static uint32_t cdfl_codec_blocksize(uint32_t bytes)
+{
+	// for CDs it seems that CD_MAX_SECTOR_DATA is the right target
+	uint32_t blocksize = bytes / 4;
+	while (blocksize > CD_MAX_SECTOR_DATA)
+		blocksize /= 2;
+	return blocksize;
 }
 
 static chd_error cdfl_codec_init(void *codec, uint32_t hunkbytes)
@@ -901,6 +972,28 @@ static const codec_interface codec_interfaces[] =
 		zlib_codec_init,
 		zlib_codec_free,
 		zlib_codec_decompress,
+		NULL
+	},
+
+	/* V5 lzma compression */
+	{
+		CHD_CODEC_LZMA,
+		"lzma (LZMA)",
+		FALSE,
+		lzma_codec_init,
+		lzma_codec_free,
+		lzma_codec_decompress,
+		NULL
+	},
+
+	/* V5 flac compression */
+	{
+		CHD_CODEC_FLAC,
+		"flac (FLAC)",
+		FALSE,
+		flac_codec_init,
+		flac_codec_free,
+		flac_codec_decompress,
 		NULL
 	},
 
@@ -1492,6 +1585,14 @@ CHD_EXPORT chd_error chd_open_file(core_file *file, int mode, chd_file *parent, 
 						codec = &newchd->zlib_codec_data;
 						break;
 
+					case CHD_CODEC_LZMA:
+						codec = &newchd->lzma_codec_data;
+						break;
+
+					case CHD_CODEC_FLAC:
+						codec = &newchd->flac_codec_data;
+						break;
+
 					case CHD_CODEC_CD_ZLIB:
 						codec = &newchd->cdzl_codec_data;
 						break;
@@ -1638,16 +1739,24 @@ CHD_EXPORT void chd_close(chd_file *chd)
 
 			switch (chd->codecintf[i]->compression)
 			{
-				case CHD_CODEC_CD_LZMA:
-					codec = &chd->cdlz_codec_data;
-					break;
-
 				case CHD_CODEC_ZLIB:
 					codec = &chd->zlib_codec_data;
 					break;
 
+				case CHD_CODEC_LZMA:
+					codec = &chd->lzma_codec_data;
+					break;
+
+				case CHD_CODEC_FLAC:
+					codec = &chd->flac_codec_data;
+					break;
+
 				case CHD_CODEC_CD_ZLIB:
 					codec = &chd->cdzl_codec_data;
+					break;
+
+				case CHD_CODEC_CD_LZMA:
+					codec = &chd->cdlz_codec_data;
 					break;
 
 				case CHD_CODEC_CD_FLAC:
@@ -2356,16 +2465,24 @@ static chd_error hunk_read_into_memory(chd_file *chd, UINT32 hunknum, UINT8 *des
 					return CHDERR_READ_ERROR;
 				switch (chd->codecintf[rawmap[0]]->compression)
 				{
-					case CHD_CODEC_CD_LZMA:
-						codec = &chd->cdlz_codec_data;
-						break;
-
 					case CHD_CODEC_ZLIB:
 						codec = &chd->zlib_codec_data;
 						break;
 
+					case CHD_CODEC_LZMA:
+						codec = &chd->lzma_codec_data;
+						break;
+
+					case CHD_CODEC_FLAC:
+						codec = &chd->flac_codec_data;
+						break;
+
 					case CHD_CODEC_CD_ZLIB:
 						codec = &chd->cdzl_codec_data;
+						break;
+
+					case CHD_CODEC_CD_LZMA:
+						codec = &chd->cdlz_codec_data;
 						break;
 
 					case CHD_CODEC_CD_FLAC:
