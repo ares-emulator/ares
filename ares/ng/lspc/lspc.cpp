@@ -46,6 +46,7 @@ auto LSPC::unload() -> void {
   debugger.unload(node);
   vram.reset();
   pram.reset();
+  screen->quit();
   node->remove(screen);
   screen.reset();
   node.reset();
