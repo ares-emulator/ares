@@ -309,16 +309,10 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     ram.size = 32768;
   }
 
-  //Might and Magic III: Isles of Terra (USA)
+  //Might and Magic III: Isles of Terra (USA) (Proto)
   if(hash == "ac08551ecd4c037211fca98359efcfe7c0b048880e82a474d5c5fcd157e33592") {
     ram.mode = "lower";
     ram.size = 32768;
-  }
-
-  //Super Hydlide (Japan)
-  if(hash == "30749097096807abf67cd1f7b2392f5789f5149ee33661e6d13113396f06a121") {
-    ram.mode = "lower";
-    ram.size = 8192;
   }
 
   //NBA Live '98 (USA)
@@ -337,6 +331,18 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
   if(hash == "ed68ec25c676f7b935414d07657b9721a6ec3b43cecf1bc9dc1d069d0a14e974") {
     ram.mode = "lower";
     ram.size = 32768;
+  }
+
+  //Psy-O-Blade (Japan)
+  if(hash == "26706ead54c450a98aac785e2d6dd66e36e0fe52c4980618b6fe7602b3a2623c") {
+    ram.mode = "lower";
+    ram.size = 32768;
+  }
+
+  //Super Hydlide (Japan)
+  if(hash == "30749097096807abf67cd1f7b2392f5789f5149ee33661e6d13113396f06a121") {
+    ram.mode = "lower";
+    ram.size = 8192;
   }
 
   //M28C16
