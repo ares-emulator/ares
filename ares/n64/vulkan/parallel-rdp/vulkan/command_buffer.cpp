@@ -25,6 +25,7 @@
 #include "format.hpp"
 #include "thread_id.hpp"
 #include "vulkan_prerotate.hpp"
+#include "timer.hpp"
 #include <string.h>
 
 //#define FULL_BACKTRACE_CHECKPOINTS
@@ -312,6 +313,123 @@ void CommandBuffer::buffer_barrier(const Buffer &buffer, VkPipelineStageFlags sr
 
 	fixup_src_stage(src_stages, device->get_workarounds().optimize_all_graphics_barrier);
 	table.vkCmdPipelineBarrier(cmd, src_stages, dst_stages, 0, 0, nullptr, 1, &barrier, 0, nullptr);
+}
+
+// Buffers are always CONCURRENT.
+static uint32_t deduce_acquire_release_family_index(Device &device)
+{
+	uint32_t family = VK_QUEUE_FAMILY_IGNORED;
+	auto &queue_info = device.get_queue_info();
+	for (auto &i : queue_info.family_indices)
+	{
+		if (i != VK_QUEUE_FAMILY_IGNORED)
+		{
+			if (family == VK_QUEUE_FAMILY_IGNORED)
+				family = i;
+			else if (i != family)
+				return VK_QUEUE_FAMILY_IGNORED;
+		}
+	}
+
+	return family;
+}
+
+static uint32_t deduce_acquire_release_family_index(Device &device, const Image &image, uint32_t family_index)
+{
+	uint32_t family = family_index;
+	auto &queue_info = device.get_queue_info();
+
+	if (image.get_create_info().misc & IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT)
+		if (queue_info.family_indices[QUEUE_INDEX_GRAPHICS] != family)
+			return VK_QUEUE_FAMILY_IGNORED;
+
+	if (image.get_create_info().misc &
+	    (IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT | IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT))
+	{
+		if (queue_info.family_indices[QUEUE_INDEX_COMPUTE] != family)
+			return VK_QUEUE_FAMILY_IGNORED;
+	}
+
+	if (image.get_create_info().misc & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT)
+		if (queue_info.family_indices[QUEUE_INDEX_COMPUTE] != family)
+			return VK_QUEUE_FAMILY_IGNORED;
+
+	return family;
+}
+
+void CommandBuffer::release_external_image_barrier(
+		const Image &image,
+		VkImageLayout old_layout, VkImageLayout new_layout,
+		VkPipelineStageFlags src_stage, VkAccessFlags src_access)
+{
+	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+	uint32_t family_index = device->get_queue_info().family_indices[device->get_physical_queue_type(type)];
+
+	barrier.image = image.get_image();
+	barrier.subresourceRange = {
+		format_to_aspect_mask(image.get_format()),
+		0, VK_REMAINING_MIP_LEVELS,
+		0, VK_REMAINING_ARRAY_LAYERS
+	};
+	barrier.oldLayout = old_layout;
+	barrier.newLayout = new_layout;
+	barrier.srcAccessMask = src_access;
+
+	barrier.srcQueueFamilyIndex = deduce_acquire_release_family_index(*device, image, family_index);
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_EXTERNAL;
+	table.vkCmdPipelineBarrier(cmd, src_stage, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+	                           0, 0, nullptr, 0, nullptr, 1, &barrier);
+}
+
+void CommandBuffer::acquire_external_image_barrier(
+		const Image &image,
+		VkImageLayout old_layout, VkImageLayout new_layout,
+		VkPipelineStageFlags dst_stage, VkAccessFlags dst_access)
+{
+	VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+	uint32_t family_index = device->get_queue_info().family_indices[device->get_physical_queue_type(type)];
+
+	barrier.image = image.get_image();
+	barrier.subresourceRange = {
+		format_to_aspect_mask(image.get_format()),
+		0, VK_REMAINING_MIP_LEVELS,
+		0, VK_REMAINING_ARRAY_LAYERS
+	};
+	barrier.oldLayout = old_layout;
+	barrier.newLayout = new_layout;
+	barrier.dstAccessMask = dst_access;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_EXTERNAL;
+	barrier.dstQueueFamilyIndex = deduce_acquire_release_family_index(*device, image, family_index);
+	table.vkCmdPipelineBarrier(cmd, dst_stage, dst_stage,
+	                           0, 0, nullptr, 0, nullptr, 1, &barrier);
+}
+
+void CommandBuffer::release_external_buffer_barrier(
+		const Buffer &buffer,
+		VkPipelineStageFlags src_stage, VkAccessFlags src_access)
+{
+	VkBufferMemoryBarrier barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
+	barrier.buffer = buffer.get_buffer();
+	barrier.size = buffer.get_create_info().size;
+	barrier.srcAccessMask = src_access;
+	barrier.srcQueueFamilyIndex = deduce_acquire_release_family_index(*device);
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_EXTERNAL;
+	table.vkCmdPipelineBarrier(cmd, src_stage, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+	                           0, 0, nullptr, 1, &barrier, 0, nullptr);
+}
+
+void CommandBuffer::acquire_external_buffer_barrier(
+		const Buffer &buffer,
+		VkPipelineStageFlags dst_stage, VkAccessFlags dst_access)
+{
+	VkBufferMemoryBarrier barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
+	barrier.buffer = buffer.get_buffer();
+	barrier.size = buffer.get_create_info().size;
+	barrier.dstAccessMask = dst_access;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_EXTERNAL;
+	barrier.dstQueueFamilyIndex = deduce_acquire_release_family_index(*device);
+	table.vkCmdPipelineBarrier(cmd, dst_stage, dst_stage,
+	                           0, 0, nullptr, 1, &barrier, 0, nullptr);
 }
 
 void CommandBuffer::image_barrier(const Image &image, VkImageLayout old_layout, VkImageLayout new_layout,
@@ -721,12 +839,62 @@ void CommandBuffer::end_render_pass()
 	begin_compute();
 }
 
-Pipeline CommandBuffer::build_compute_pipeline(Device *device, const DeferredPipelineCompile &compile, bool synchronous)
+static void log_compile_time(const char *tag, Hash hash,
+                             int64_t time_ns, VkResult result,
+                             CommandBuffer::CompileMode mode)
+{
+	bool stall = time_ns >= 5 * 1000 * 1000 && mode != CommandBuffer::CompileMode::AsyncThread;
+#ifndef VULKAN_DEBUG
+	// If a compile takes more than 5 ms and it's not happening on an async thread,
+	// we consider it a stall.
+	if (stall)
+#endif
+	{
+		double time_us = 1e-3 * double(time_ns);
+		const char *mode_str;
+
+		switch (mode)
+		{
+		case CommandBuffer::CompileMode::Sync:
+			mode_str = "sync";
+			break;
+
+		case CommandBuffer::CompileMode::FailOnCompileRequired:
+			mode_str = "fail-on-compile-required";
+			break;
+
+		default:
+			mode_str = "async-thread";
+			break;
+		}
+
+#ifdef VULKAN_DEBUG
+		if (!stall)
+		{
+			LOGI("Compile (%s, %016llx): thread %u - %.3f us (mode: %s, success: %s).\n",
+			     tag, static_cast<unsigned long long>(hash),
+			     get_current_thread_index(),
+			     time_us, mode_str, result == VK_SUCCESS ? "yes" : "no");
+		}
+		else
+#endif
+		{
+			LOGW("Stalled compile (%s, %016llx): thread %u - %.3f us (mode: %s, success: %s).\n",
+			     tag, static_cast<unsigned long long>(hash),
+			     get_current_thread_index(),
+			     time_us, mode_str, result == VK_SUCCESS ? "yes" : "no");
+		}
+	}
+}
+
+Pipeline CommandBuffer::build_compute_pipeline(Device *device, const DeferredPipelineCompile &compile,
+                                               CompileMode mode)
 {
 	// If we don't have pipeline creation cache control feature,
 	// we must assume compilation can be synchronous.
-	if (!synchronous &&
-	    !device->get_device_features().pipeline_creation_cache_control_features.pipelineCreationCacheControl)
+	if (mode == CompileMode::FailOnCompileRequired &&
+	    (device->get_workarounds().broken_pipeline_cache_control ||
+	     !device->get_device_features().pipeline_creation_cache_control_features.pipelineCreationCacheControl))
 	{
 		return {};
 	}
@@ -806,16 +974,15 @@ Pipeline CommandBuffer::build_compute_pipeline(Device *device, const DeferredPip
 	device->register_compute_pipeline(compile.hash, info);
 #endif
 
-#ifdef VULKAN_DEBUG
-	if (synchronous)
-		LOGI("Creating compute pipeline.\n");
-#endif
 	auto &table = device->get_device_table();
 
-	if (!synchronous)
+	if (mode == CompileMode::FailOnCompileRequired)
 		info.flags |= VK_PIPELINE_CREATE_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT_EXT;
 
+	auto start_ts = Util::get_current_time_nsecs();
 	VkResult vr = table.vkCreateComputePipelines(device->get_device(), compile.cache, 1, &info, nullptr, &compute_pipeline);
+	auto end_ts = Util::get_current_time_nsecs();
+	log_compile_time("compute", compile.hash, end_ts - start_ts, vr, mode);
 
 	if (vr != VK_SUCCESS || compute_pipeline == VK_NULL_HANDLE)
 	{
@@ -849,12 +1016,14 @@ void CommandBuffer::extract_pipeline_state(DeferredPipelineCompile &compile) con
 	}
 }
 
-Pipeline CommandBuffer::build_graphics_pipeline(Device *device, const DeferredPipelineCompile &compile, bool synchronous)
+Pipeline CommandBuffer::build_graphics_pipeline(Device *device, const DeferredPipelineCompile &compile,
+                                                CompileMode mode)
 {
 	// If we don't have pipeline creation cache control feature,
 	// we must assume compilation can be synchronous.
-	if (!synchronous &&
-	    !device->get_device_features().pipeline_creation_cache_control_features.pipelineCreationCacheControl)
+	if (mode == CompileMode::FailOnCompileRequired &&
+	    (device->get_workarounds().broken_pipeline_cache_control ||
+	     !device->get_device_features().pipeline_creation_cache_control_features.pipelineCreationCacheControl))
 	{
 		return {};
 	}
@@ -1065,16 +1234,16 @@ Pipeline CommandBuffer::build_graphics_pipeline(Device *device, const DeferredPi
 	device->register_graphics_pipeline(compile.hash, pipe);
 #endif
 
-#ifdef VULKAN_DEBUG
-	if (synchronous)
-		LOGI("Creating graphics pipeline.\n");
-#endif
 	auto &table = device->get_device_table();
 
-	if (!synchronous)
+	if (mode == CompileMode::FailOnCompileRequired)
 		pipe.flags |= VK_PIPELINE_CREATE_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT_EXT;
 
+	auto start_ts = Util::get_current_time_nsecs();
 	VkResult res = table.vkCreateGraphicsPipelines(device->get_device(), compile.cache, 1, &pipe, nullptr, &pipeline);
+	auto end_ts = Util::get_current_time_nsecs();
+	log_compile_time("graphics", compile.hash, end_ts - start_ts, res, mode);
+
 	if (res != VK_SUCCESS || pipeline == VK_NULL_HANDLE)
 	{
 		if (res < 0)
@@ -1093,7 +1262,11 @@ bool CommandBuffer::flush_compute_pipeline(bool synchronous)
 	update_hash_compute_pipeline(pipeline_state);
 	current_pipeline = pipeline_state.program->get_pipeline(pipeline_state.hash);
 	if (current_pipeline.pipeline == VK_NULL_HANDLE)
-		current_pipeline = build_compute_pipeline(device, pipeline_state, synchronous);
+	{
+		current_pipeline = build_compute_pipeline(
+			device, pipeline_state,
+			synchronous ? CompileMode::Sync : CompileMode::FailOnCompileRequired);
+	}
 	return current_pipeline.pipeline != VK_NULL_HANDLE;
 }
 
@@ -1180,7 +1353,11 @@ bool CommandBuffer::flush_graphics_pipeline(bool synchronous)
 	update_hash_graphics_pipeline(pipeline_state, active_vbos);
 	current_pipeline = pipeline_state.program->get_pipeline(pipeline_state.hash);
 	if (current_pipeline.pipeline == VK_NULL_HANDLE)
-		current_pipeline = build_graphics_pipeline(device, pipeline_state, synchronous);
+	{
+		current_pipeline = build_graphics_pipeline(
+			device, pipeline_state,
+			synchronous ? CompileMode::Sync : CompileMode::FailOnCompileRequired);
+	}
 	return current_pipeline.pipeline != VK_NULL_HANDLE;
 }
 

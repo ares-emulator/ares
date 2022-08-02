@@ -139,6 +139,7 @@ public:
 	void add_signal_semaphore(VkSemaphore sem, uint64_t count);
 	void add_command_buffer(VkCommandBuffer cmd);
 
+	void begin_batch();
 	Util::SmallVector<VkSubmitInfo, MaxSubmissions> &bake(int profiling_iteration = -1);
 
 private:
@@ -155,8 +156,6 @@ private:
 
 	unsigned submit_index = 0;
 	bool split_binary_timeline_semaphores = false;
-
-	void begin_batch();
 
 	bool has_timeline_semaphore_in_batch(unsigned index) const;
 	bool has_binary_semaphore_in_batch(unsigned index) const;
@@ -228,7 +227,7 @@ public:
 	const VolkDeviceTable &get_device_table() const;
 
 	// Profiling
-	bool init_performance_counters(const std::vector<std::string> &names);
+	bool init_performance_counters(CommandBuffer::Type type, const std::vector<std::string> &names);
 	bool acquire_profiling();
 	void release_profiling();
 	void query_available_performance_counters(CommandBuffer::Type type,
@@ -276,8 +275,7 @@ public:
 	            unsigned semaphore_count = 0, Semaphore *semaphore = nullptr);
 	void submit_empty(CommandBuffer::Type type,
 	                  Fence *fence = nullptr,
-	                  unsigned semaphore_count = 0,
-	                  Semaphore *semaphore = nullptr);
+	                  SemaphoreHolder *semaphore = nullptr);
 	void submit_discard(CommandBufferHandle &cmd);
 	void add_wait_semaphore(CommandBuffer::Type type, Semaphore semaphore, VkPipelineStageFlags stages, bool flush);
 	QueueIndices get_physical_queue_type(CommandBuffer::Type queue_type) const;
@@ -324,14 +322,6 @@ public:
 	InitialImageBuffer create_image_staging_buffer(const ImageCreateInfo &info, const ImageInitialData *initial);
 	InitialImageBuffer create_image_staging_buffer(const TextureFormatLayout &layout);
 
-#ifndef _WIN32
-	ImageHandle create_imported_image(int fd,
-	                                  VkDeviceSize size,
-	                                  uint32_t memory_type,
-	                                  VkExternalMemoryHandleTypeFlagBitsKHR handle_type,
-	                                  const ImageCreateInfo &create_info);
-#endif
-
 	// Create image view, buffer views and samplers.
 	ImageViewHandle create_image_view(const ImageViewCreateInfo &view_info);
 	BufferViewHandle create_buffer_view(const BufferViewCreateInfo &view_info);
@@ -345,6 +335,7 @@ public:
 	void get_format_properties(VkFormat format, VkFormatProperties3KHR *properties) const;
 	bool get_image_format_properties(VkFormat format, VkImageType type, VkImageTiling tiling,
 	                                 VkImageUsageFlags usage, VkImageCreateFlags flags,
+	                                 const void *pNext,
 	                                 VkImageFormatProperties2 *properties2) const;
 
 	VkFormat get_default_depth_stencil_format() const;
@@ -353,18 +344,42 @@ public:
 	                                     unsigned index = 0, unsigned samples = 1, unsigned layers = 1);
 	RenderPassInfo get_swapchain_render_pass(SwapchainRenderPass style);
 
-	// Request legacy (non-timeline) semaphores.
-	// Timeline semaphores are only used internally to reduce handle bloat.
-	Semaphore request_legacy_semaphore();
-	Semaphore request_external_semaphore(VkSemaphore semaphore, bool signalled);
-#ifndef _WIN32
-	Semaphore request_imported_semaphore(int fd, VkExternalSemaphoreHandleTypeFlagBitsKHR handle_type);
-#endif
+	// Semaphore API:
+	// Semaphores in Granite are abstracted to support both binary and timeline semaphores
+	// internally.
+	// In practice this means that semaphores behave like single-use binary semaphores,
+	// with one signal and one wait.
+	// A single semaphore handle is not reused for multiple submissions, and they must be recycled through
+	// the device. The intended use is device.submit(&sem), device.add_wait_semaphore(sem); dispose(sem);
+	// For timeline semaphores, the semaphore is just a proxy object which
+	// holds the internally owned VkSemaphore + timeline value and is otherwise lightweight.
+	//
+	// However, there are various use cases where we explicitly need semaphore objects:
+	// - Interoperate with other code that only accepts VkSemaphore.
+	// - Interoperate with external objects. We need to know whether to use binary or timeline.
+	//   For timelines, we need to know which handle type to use (OPAQUE or ID3D12Fence).
+	//   Binary external semaphore is always opaque with TEMPORARY semantics.
+
+	// If transfer_ownership is set, Semaphore owns the VkSemaphore. Otherwise, application must
+	// free the semaphore when GPU usage of it is complete.
+	Semaphore request_semaphore(VkSemaphoreTypeKHR type, VkSemaphore handle = VK_NULL_HANDLE, bool transfer_ownership = false);
+
+	// Requests a binary or timeline semaphore that can be used to import/export.
+	// These semaphores cannot be used directly by add_wait_semaphore() and submit_empty().
+	// See request_timeline_semaphore_as_binary() for how to use timelines.
+	Semaphore request_semaphore_external(VkSemaphoreTypeKHR type,
+	                                     VkExternalSemaphoreHandleTypeFlagBits handle_type);
+	// The created semaphore does not hold ownership of the VkSemaphore object.
+	Semaphore request_timeline_semaphore_as_binary(const SemaphoreHolder &holder, uint64_t value);
+
 	// A proxy semaphore which lets us grab a semaphore handle before we signal it.
+	// Move assignment can be used to move a payload.
 	// Mostly useful to deal better with render graph implementation.
-	// TODO: When we require timeline semaphores, this could be a bit more elegant, and we could expose timeline directly.
 	// For time being however, we'll support moving the payload over to the proxy object.
 	Semaphore request_proxy_semaphore();
+
+	// For compat with existing code that uses this entry point.
+	inline Semaphore request_legacy_semaphore() { return request_semaphore(VK_SEMAPHORE_TYPE_BINARY_KHR); }
 
 	VkDevice get_device() const
 	{
@@ -644,6 +659,7 @@ private:
 	} dma;
 
 	void submit_queue(QueueIndices physical_type, InternalFence *fence,
+	                  SemaphoreHolder *external_semaphore = nullptr,
 	                  unsigned semaphore_count = 0,
 	                  Semaphore *semaphore = nullptr,
 	                  int profiled_iteration = -1);
@@ -700,11 +716,13 @@ private:
 	void flush_frame(QueueIndices physical_type);
 	void sync_buffer_blocks();
 	void submit_empty_inner(QueueIndices type, InternalFence *fence,
+	                        SemaphoreHolder *external_semaphore,
 	                        unsigned semaphore_count,
 	                        Semaphore *semaphore);
 
 	void collect_wait_semaphores(QueueData &data, Helper::WaitSemaphores &semaphores);
 	void emit_queue_signals(Helper::BatchComposer &composer,
+	                        SemaphoreHolder *external_semaphore,
 	                        VkSemaphore sem, uint64_t timeline, InternalFence *fence,
 	                        unsigned semaphore_count, Semaphore *semaphores);
 	VkResult submit_batches(Helper::BatchComposer &composer, VkQueue queue, VkFence fence,
@@ -745,8 +763,7 @@ private:
 	void submit_nolock(CommandBufferHandle cmd, Fence *fence,
 	                   unsigned semaphore_count, Semaphore *semaphore);
 	void submit_empty_nolock(QueueIndices physical_type, Fence *fence,
-	                         unsigned semaphore_count,
-	                         Semaphore *semaphore, int profiling_iteration);
+	                         SemaphoreHolder *semaphore, int profiling_iteration);
 	void add_wait_semaphore_nolock(QueueIndices type, Semaphore semaphore, VkPipelineStageFlags stages,
 	                               bool flush);
 

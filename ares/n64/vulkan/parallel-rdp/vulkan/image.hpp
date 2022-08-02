@@ -155,7 +155,8 @@ enum ImageMiscFlagBits
 	IMAGE_MISC_VERIFY_FORMAT_FEATURE_SAMPLED_LINEAR_FILTER_BIT = 1 << 7,
 	IMAGE_MISC_LINEAR_IMAGE_IGNORE_DEVICE_LOCAL_BIT = 1 << 8,
 	IMAGE_MISC_FORCE_NO_DEDICATED_BIT = 1 << 9,
-	IMAGE_MISC_NO_DEFAULT_VIEWS_BIT = 1 << 10
+	IMAGE_MISC_NO_DEFAULT_VIEWS_BIT = 1 << 10,
+	IMAGE_MISC_EXTERNAL_MEMORY_BIT = 1 << 11
 };
 using ImageMiscFlags = uint32_t;
 
@@ -178,7 +179,7 @@ struct ImageViewCreateInfo
 	VkImageViewType view_type = VK_IMAGE_VIEW_TYPE_MAX_ENUM;
 	ImageViewMiscFlags misc = 0;
 	VkComponentMapping swizzle = {
-			VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A,
+		VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY,
 	};
 };
 
@@ -318,12 +319,13 @@ struct ImageCreateInfo
 	ImageMiscFlags misc = 0;
 	VkImageLayout initial_layout = VK_IMAGE_LAYOUT_GENERAL;
 	VkComponentMapping swizzle = {
-			VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A,
+		VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY,
 	};
 	const DeviceAllocation **memory_aliases = nullptr;
 	unsigned num_memory_aliases = 0;
 	const ImmutableYcbcrConversion *ycbcr_conversion = nullptr;
 	void *pnext = nullptr;
+	ExternalHandle external;
 
 	static ImageCreateInfo immutable_image(const TextureFormatLayout &layout)
 	{
@@ -593,6 +595,8 @@ public:
 	{
 		return surface_transform;
 	}
+
+	ExternalHandle export_handle();
 
 private:
 	friend class Util::ObjectPool<Image>;

@@ -72,6 +72,12 @@ struct ScanoutOptions
 		bool divot_filter = true;
 		bool gamma_dither = true;
 	} vi;
+
+	// External memory support.
+	// If true, the scanout image will be created with external memory support.
+	// presist_frame_on_invalid_input must be false when using exports.
+	VkExternalMemoryHandleTypeFlagBits export_handle_type = {};
+	bool export_scanout = false;
 };
 
 struct VIScanoutBuffer
@@ -154,6 +160,7 @@ private:
 	uint32_t last_valid_frame_count = 0;
 	Vulkan::ImageHandle prev_scanout_image;
 	VkImageLayout prev_image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	bool prev_image_is_external = false;
 
 	size_t rdram_offset = 0;
 	size_t rdram_size = 0;
@@ -216,14 +223,18 @@ private:
 	                                const HorizontalInfoLines &lines,
 	                                unsigned scaling_factor,
 	                                bool degenerate,
-	                                const ScanoutOptions &options) const;
+	                                const ScanoutOptions &options,
+	                                bool final_pass) const;
 	Vulkan::ImageHandle downscale_stage(Vulkan::CommandBuffer &cmd,
 	                                    Vulkan::Image &scale_image,
 	                                    unsigned scaling_factor,
-	                                    unsigned downscale_factor) const;
+	                                    unsigned downscale_factor,
+										const ScanoutOptions &options,
+										bool final_pass) const;
 	Vulkan::ImageHandle upscale_deinterlace(Vulkan::CommandBuffer &cmd,
 	                                        Vulkan::Image &scale_image,
-	                                        unsigned scaling_factor, bool field_select) const;
+	                                        unsigned scaling_factor, bool field_select,
+	                                        const ScanoutOptions &options) const;
 	static bool need_fetch_bug_emulation(const Registers &reg, unsigned scaling_factor);
 };
 }
