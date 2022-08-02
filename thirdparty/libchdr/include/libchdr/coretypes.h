@@ -41,7 +41,7 @@ typedef int8_t INT8;
 #elif defined(_LARGEFILE_SOURCE) && defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
 	#define core_fseek fseeko64
 	#define core_ftell ftello64
-#elif defined(__PS3__) && !defined(__PSL1GHT__) || defined(__SWITCH__)
+#elif defined(__PS3__) && !defined(__PSL1GHT__) || defined(__SWITCH__) || defined(__vita__)
     #define core_fseek(x,y,z) fseek(x,(off_t)y,z)
     #define core_ftell(x) (off_t)ftell(x)
 #else
