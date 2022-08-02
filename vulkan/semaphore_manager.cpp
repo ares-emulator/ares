@@ -47,9 +47,15 @@ VkSemaphore SemaphoreManager::request_cleared_semaphore()
 {
 	if (semaphores.empty())
 	{
-		VkSemaphore semaphore;
 		VkSemaphoreCreateInfo info = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-		table->vkCreateSemaphore(device->get_device(), &info, nullptr, &semaphore);
+		VkSemaphore semaphore;
+
+		if (table->vkCreateSemaphore(device->get_device(), &info, nullptr, &semaphore) != VK_SUCCESS)
+		{
+			LOGE("Failed to create semaphore.\n");
+			semaphore = VK_NULL_HANDLE;
+		}
+
 		return semaphore;
 	}
 	else
