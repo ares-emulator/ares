@@ -705,8 +705,13 @@ struct CPU : Thread {
     }
 
     auto invalidate(u32 address) -> void {
-      pools[address >> 8 & 0x1fffff] = nullptr;
+      auto pool = pools[address >> 8 & 0x1fffff];
+      if(!pool) return;
+      memory::jitprotect(false);
+      pool->blocks[address >> 2 & 0x3f] = nullptr;
+      memory::jitprotect(true);
     }
+
     auto invalidateRange(u32 address, u32 length) -> void {
       for (u32 s = 0; s < length; s += 256)
         invalidate(address + s);
