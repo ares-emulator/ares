@@ -350,15 +350,15 @@ struct RSP : Thread, Memory::IO<RSP> {
     };
 
     auto reset() -> void {
-      context = nullptr;
-      pools.reset();
+      for(auto n : range(16)) context[n] = nullptr;
+      for(auto n : range(16)) pools[n].reset();
     }
 
-    auto invalidate() -> void {
-      context = nullptr;
+    auto invalidate(u32 address) -> void {
+      context[address >> 8] = nullptr;
     }
 
-    auto pool() -> Pool*;
+    auto pool(u32 address) -> Pool*;
     auto block(u32 address) -> Block*;
 
     auto emit(u32 address) -> Block*;
@@ -371,9 +371,8 @@ struct RSP : Thread, Memory::IO<RSP> {
     auto emitSWC2(u32 instruction) -> bool;
 
     bump_allocator allocator;
-    Pool* context = nullptr;
-    set<PoolHashPair> pools;
-  //hashset<PoolHashPair> pools;
+    Pool* context[16];
+    set<PoolHashPair> pools[16];
   } recompiler{*this};
 
   struct Disassembler {
