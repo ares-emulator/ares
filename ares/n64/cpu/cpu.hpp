@@ -705,11 +705,21 @@ struct CPU : Thread {
     }
 
     auto invalidate(u32 address) -> void {
+      /* FIXME: Recompiler shouldn't be so aggressive with pool eviction
+       * Sometimes there are overlapping blocks, so clearing just one block
+       * isn't sufficient and causes some games to crash (Jet Force Gemini)
+       * the recompiler needs to be smarter with block tracking
+       * Until then, clear the entire pool and live with the performance hit.
+      */
+      #if 1
+      invalidatePool(address);
+      #else
       auto pool = pools[address >> 8 & 0x1fffff];
       if(!pool) return;
       memory::jitprotect(false);
       pool->blocks[address >> 2 & 0x3f] = nullptr;
       memory::jitprotect(true);
+      #endif
     }
 
     auto invalidatePool(u32 address) -> void {
