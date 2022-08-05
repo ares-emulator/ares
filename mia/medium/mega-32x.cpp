@@ -60,6 +60,7 @@ auto Mega32X::load(string location) -> bool {
     Pak::load(node, ".eeprom");
     if(auto fp = pak->read("save.eeprom")) {
       fp->setAttribute("mode", node["mode"].string());
+      fp->setAttribute("address", node["address"].natural());
       fp->setAttribute("rsda", node["rsda"].natural());
       fp->setAttribute("wsda", node["wsda"].natural());
       fp->setAttribute("wscl", node["wscl"].natural());
@@ -172,6 +173,7 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
   if(eeprom) {
     s += "    memory\n";
     s += "      type: EEPROM\n";
+    s +={"      address: 0x200000\n"};
     s +={"      size: 0x", hex(eeprom.size), "\n"};
     s += "      content: Save\n";
     s +={"      mode: ", eeprom.mode, "\n"};
