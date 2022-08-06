@@ -15,9 +15,14 @@
 
 #pragma once
 
-#include <emmintrin.h>
-#ifdef __SSE4_1__
-#include <smmintrin.h>
+#ifdef __aarch64__
+	#include "sse2neon.h"
+	#define __SSE4_1__ 1
+#else
+	#include <emmintrin.h>
+	#ifdef __SSE4_1__
+		#include <smmintrin.h>
+	#endif
 #endif
 
 
