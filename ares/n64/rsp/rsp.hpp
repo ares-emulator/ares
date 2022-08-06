@@ -175,7 +175,7 @@ struct RSP : Thread, Memory::IO<RSP> {
   //vpu.cpp: Vector Processing Unit
   union r128 {
     struct { uint128_t u128; };
-#if defined(ARCHITECTURE_AMD64)
+#if defined(ARCHITECTURE_AMD64) || defined(ARCHITECTURE_ARM64)
     struct {   __m128i v128; };
 
     operator __m128i() const { return v128; }
