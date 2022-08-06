@@ -1,6 +1,8 @@
 #pragma once
 //started: 2020-04-28
 
+#define XXH_INLINE_ALL
+#include <xxhash.h>
 #include <ares/ares.hpp>
 #include <nall/hashset.hpp>
 #include <nall/recompiler/generic/generic.hpp>

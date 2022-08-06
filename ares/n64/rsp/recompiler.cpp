@@ -1,14 +1,11 @@
 auto RSP::Recompiler::pool(u32 address) -> Pool* {
   if(context[address >> 8]) return context[address >> 8];
 
-  nall::Hash::CRC32 hashcode;
-  for(u32 offset : range(256)) {
-    hashcode.input(self.imem.read<Byte>(address + offset));
-  }
+  auto hashcode = XXH3_64bits(self.imem.data + address, 256);
 
   PoolHashPair pair;
   pair.pool = (Pool*)allocator.acquire();
-  pair.hashcode = hashcode.value();
+  pair.hashcode = hashcode;
 
   auto result = pools[address >> 8].find(pair);
   if(result) {
