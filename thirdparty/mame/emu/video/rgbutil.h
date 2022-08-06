@@ -18,6 +18,11 @@
 #define MAME_RGB_HIGH_PRECISION
 #include "rgbsse.h"
 
+#elif defined(__aarch64__)
+
+#define MAME_RGB_HIGH_PRECISION
+#include "rgbsse.h"
+
 #elif defined(__ALTIVEC__)
 
 #define MAME_RGB_HIGH_PRECISION
