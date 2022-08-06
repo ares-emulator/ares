@@ -1,4 +1,4 @@
-auto RSP::Recompiler::pool(u32 address) -> Pool* {
+auto RSP::Recompiler::pool(u12 address) -> Pool* {
   if(context[address >> 8]) return context[address >> 8];
 
   auto hashcode = XXH3_64bits(self.imem.data + address, 256);
@@ -20,7 +20,7 @@ auto RSP::Recompiler::pool(u32 address) -> Pool* {
   throw;  //should never occur
 }
 
-auto RSP::Recompiler::block(u32 address) -> Block* {
+auto RSP::Recompiler::block(u12 address) -> Block* {
   if(auto block = pool(address)->blocks[address >> 2 & 0x3ff]) return block;
   auto block = emit(address);
   pool(address)->blocks[address >> 2 & 0x3ff] = block;
@@ -28,7 +28,7 @@ auto RSP::Recompiler::block(u32 address) -> Block* {
   return block;
 }
 
-auto RSP::Recompiler::emit(u32 address) -> Block* {
+auto RSP::Recompiler::emit(u12 address) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("RSP allocator flush\n");
     memory::jitprotect(false);

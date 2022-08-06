@@ -108,7 +108,7 @@ struct RSP : Thread, Memory::IO<RSP> {
     };
 
     r32 r[32];
-    u12 pc;
+    u16 pc; // previously u12; now u16 for performance.
   } ipu;
 
   struct Branch {
@@ -358,10 +358,10 @@ struct RSP : Thread, Memory::IO<RSP> {
       context[address >> 8] = nullptr;
     }
 
-    auto pool(u32 address) -> Pool*;
-    auto block(u32 address) -> Block*;
+    auto pool(u12 address) -> Pool*;
+    auto block(u12 address) -> Block*;
 
-    auto emit(u32 address) -> Block*;
+    auto emit(u12 address) -> Block*;
     auto emitEXECUTE(u32 instruction) -> bool;
     auto emitSPECIAL(u32 instruction) -> bool;
     auto emitREGIMM(u32 instruction) -> bool;
