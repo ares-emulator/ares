@@ -1,7 +1,3 @@
-auto CPU::InstructionCache::Line::hit(u32 address) const -> bool {
-  return valid && tag == (address & ~0x0000'0fff);
-}
-
 auto CPU::InstructionCache::Line::fill(u32 address) -> void {
   cpu.step(48);
   valid = 1;
@@ -26,14 +22,6 @@ auto CPU::InstructionCache::Line::writeBack() -> void {
   bus.write<Word>(tag | index | 0x14, words[5]);
   bus.write<Word>(tag | index | 0x18, words[6]);
   bus.write<Word>(tag | index | 0x1c, words[7]);
-}
-
-auto CPU::InstructionCache::Line::read(u32 address) const -> u32 {
-  return words[address >> 2 & 7];
-}
-
-auto CPU::InstructionCache::line(u32 address) -> Line& {
-  return lines[address >> 5 & 0x1ff];
 }
 
 //used by the recompiler to simulate instruction cache fetch timing

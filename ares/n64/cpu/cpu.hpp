@@ -104,18 +104,17 @@ struct CPU : Thread {
   //icache.cpp
   struct InstructionCache {
     struct Line;
-    auto line(u32 address) -> Line&;
+    auto line(u32 address) -> Line& { return lines[address >> 5 & 0x1ff]; }
     auto step(u32 address) -> void;
     auto fetch(u32 address) -> u32;
-    auto read(u32 address) -> u32;
     auto power(bool reset) -> void;
 
     //16KB
     struct Line {
-      auto hit(u32 address) const -> bool;
+      auto hit(u32 address) const -> bool { return valid && tag == (address & ~0x0000'0fff); }
       auto fill(u32 address) -> void;
       auto writeBack() -> void;
-      auto read(u32 address) const -> u32;
+      auto read(u32 address) const -> u32 { return words[address >> 2 & 7]; }
 
       bool valid;
       u32  tag;
