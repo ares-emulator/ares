@@ -9,6 +9,9 @@
 #if defined(ARCHITECTURE_AMD64)
 #include <nmmintrin.h>
 using v128 = __m128i;
+#elif defined(ARCHITECTURE_ARM64)
+#include <sse2neon.h>
+using v128 = __m128i;
 #endif
 
 #if defined(VULKAN)
