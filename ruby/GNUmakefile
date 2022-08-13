@@ -11,9 +11,7 @@ ifeq ($(ruby),)
     ruby += audio.openal
     ruby += input.quartz #input.carbon
   else ifeq ($(platform),linux)
-    pkg_check1 = $(if $(shell test -e /usr/lib/lib$1.so && echo 1),$2)
-    pkg_check2 = $(if $(shell test -e /usr/lib/$(shell uname -m)-linux-gnu/lib$1.so && echo 1),$2)
-    pkg_check = $(call pkg_check1,$1,$2) $(call pkg_check2,$1,$2)
+    pkg_check = $(if $(shell pkg-config lib$1 && echo 1),$2)
     ruby += video.glx video.glx2 video.xshm
     ruby += $(call pkg_check,Xv,video.xvideo)
     ruby += audio.oss audio.alsa
