@@ -491,8 +491,8 @@ auto M68000::instructionDIVS(EffectiveAddress from, DataRegister with) -> void {
     return;
   }
 
-  r.z = quotient == 0;
-  r.n = quotient < 0;
+  r.z = clip<Word>(quotient) == 0;
+  r.n = sign<Word>(quotient) < 0;
 
   idle(ticks);
   write<Long>(with, dividend | quotient);
@@ -531,8 +531,8 @@ auto M68000::instructionDIVU(EffectiveAddress from, DataRegister with) -> void {
   ticks += force ? 6 : carry ? 4 : 2;
   quotient = quotient << 1 | carry;
 
-  r.z = quotient == 0;
-  r.n = quotient < 0;
+  r.z = clip<Word>(quotient) == 0;
+  r.n = sign<Word>(quotient) < 0;
 
   idle(ticks);
   write<Long>(with, dividend | quotient);
