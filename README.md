@@ -65,5 +65,5 @@ High-level Components
 * __hiro__:       cross-platform GUI toolkit that utilizes native APIs on supported platforms
 * __nall__:       Near's alternative to the C++ standard library
 * __ruby__:       interface between a hiro application and platform-specific APIs for emulator video, audio, and input
-
-
+* __mia__:        internal ROM database and ROM/image loader
+* __libco__:      cooperative multithreading library
