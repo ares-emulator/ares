@@ -1,7 +1,7 @@
 auto M68000::instructionABCD(EffectiveAddress from, EffectiveAddress with) -> void {
   if(from.mode == DataRegisterDirect) idle(2);
-  auto target = read<Byte, Hold, Fast>(with);
   auto source = read<Byte>(from);
+  auto target = read<Byte, Hold, Fast>(with);
   auto result = source + target + r.x;
   bool c = false;
   bool v = false;
@@ -98,8 +98,8 @@ template<u32 Size> auto M68000::instructionADDX(EffectiveAddress from, Effective
   if constexpr(Size == Long) {
     if(from.mode == DataRegisterDirect) idle(4);
   }
-  auto target = read<Size, Hold, Fast>(with);
   auto source = read<Size>(from);
+  auto target = read<Size, Hold, Fast>(with);
   auto result = ADD<Size, Extend>(source, target);
   prefetch();
   write<Size>(with, result);
@@ -1134,8 +1134,8 @@ auto M68000::instructionRTS() -> void {
 
 auto M68000::instructionSBCD(EffectiveAddress from, EffectiveAddress with) -> void {
   if(from.mode == DataRegisterDirect) idle(2);
-  auto target = read<Byte, Hold, Fast>(with);
   auto source = read<Byte>(from);
+  auto target = read<Byte, Hold, Fast>(with);
   auto result = target - source - r.x;
   bool c = false;
   bool v = false;
@@ -1256,8 +1256,8 @@ template<u32 Size> auto M68000::instructionSUBX(EffectiveAddress from, Effective
   if constexpr(Size == Long) {
     if(from.mode == DataRegisterDirect) idle(4);
   }
-  auto target = read<Size, Hold, Fast>(with);
   auto source = read<Size>(from);
+  auto target = read<Size, Hold, Fast>(with);
   auto result = SUB<Size, Extend>(source, target);
   prefetch();
   write<Size>(with, result);
