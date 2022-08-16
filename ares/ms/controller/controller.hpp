@@ -26,3 +26,4 @@ struct Controller {
 #include "port.hpp"
 #include "gamepad/gamepad.hpp"
 #include "light-phaser/light-phaser.hpp"
+#include "paddle/paddle.hpp"

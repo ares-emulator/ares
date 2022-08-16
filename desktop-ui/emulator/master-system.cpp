@@ -37,6 +37,13 @@ MasterSystem::MasterSystem() {
     device.digital("2",     virtualPorts[id].pad.east);
     port.append(device); }
 
+  { InputDevice device{"Paddle"};
+    device.analog ("L-Left",  virtualPorts[id].pad.lstick_left);
+    device.analog ("L-Right", virtualPorts[id].pad.lstick_right);
+    device.analog ("X-Axis",  virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+    device.digital("Button",  virtualPorts[id].pad.south);
+    port.append(device); }
+
     ports.append(port);
   }
 }
