@@ -81,7 +81,7 @@ auto PPU::unload() -> void {
 }
 
 auto PPU::main() -> void {
-  if(!status.displayEnable) {
+  if(!status.displayEnable || cpu.r.stop) {
     step(456 * 154);
     if(screen) screen->frame();
     scheduler.exit(Event::Frame);
