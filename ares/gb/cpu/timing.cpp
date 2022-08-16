@@ -8,7 +8,7 @@ auto CPU::step() -> void {
 
 auto CPU::step(u32 clocks) -> void {
   for(auto n : range(clocks)) {
-    status.div++;
+    if(!r.stop) status.div++;
     if((n4 )status.div == 0) timer262144hz();
     if((n6 )status.div == 0)  timer65536hz();
     if((n8 )status.div == 0)  timer16384hz();
