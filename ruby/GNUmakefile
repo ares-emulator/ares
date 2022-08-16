@@ -1,6 +1,6 @@
 ifeq ($(ruby),)
   ifeq ($(platform),windows)
-    ruby += video.direct3d video.directdraw video.gdi
+    ruby += video.direct3d video.gdi
     ifeq ($(arch),amd64)
       ruby += video.wgl
     endif
@@ -49,7 +49,6 @@ ruby.options :=
 
 ruby.options += $(if $(findstring video.cgl,$(ruby)),-framework OpenGL)
 ruby.options += $(if $(findstring video.direct3d,$(ruby)),-ld3d9)
-ruby.options += $(if $(findstring video.directdraw,$(ruby)),-lddraw)
 ruby.options += $(if $(findstring video.glx,$(ruby)),-lGL)
 ruby.options += $(if $(findstring video.wgl,$(ruby)),-lopengl32)
 ruby.options += $(if $(findstring video.xvideo,$(ruby)),-lXv)

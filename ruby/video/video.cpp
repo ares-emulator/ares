@@ -6,10 +6,6 @@
   #include <ruby/video/direct3d.cpp>
 #endif
 
-#if defined(VIDEO_DIRECTDRAW)
-  #include <ruby/video/directdraw.cpp>
-#endif
-
 #if defined(VIDEO_GDI)
   #include <ruby/video/gdi.cpp>
 #endif
@@ -168,10 +164,6 @@ auto Video::create(string driver) -> bool {
   if(driver == "Direct3D 9.0") self.instance = new VideoDirect3D(*this);
   #endif
 
-  #if defined(VIDEO_DIRECTDRAW)
-  if(driver == "DirectDraw 7.0") self.instance = new VideoDirectDraw(*this);
-  #endif
-
   #if defined(VIDEO_GDI)
   if(driver == "GDI") self.instance = new VideoGDI(*this);
   #endif
@@ -212,10 +204,6 @@ auto Video::hasDrivers() -> vector<string> {
   "Direct3D 9.0",
   #endif
 
-  #if defined(VIDEO_DIRECTDRAW)
-  "DirectDraw 7.0",
-  #endif
-
   #if defined(VIDEO_GDI)
   "GDI",
   #endif
@@ -248,8 +236,6 @@ auto Video::optimalDriver() -> string {
   return "OpenGL 3.2";
   #elif defined(VIDEO_DIRECT3D)
   return "Direct3D 9.0";
-  #elif defined(VIDEO_DIRECTDRAW)
-  return "DirectDraw 7.0";
   #elif defined(VIDEO_GDI)
   return "GDI";
   #elif defined(VIDEO_CGL)
@@ -272,8 +258,6 @@ auto Video::safestDriver() -> string {
   return "Direct3D 9.0";
   #elif defined(VIDEO_WGL)
   return "OpenGL 3.2";
-  #elif defined(VIDEO_DIRECTDRAW)
-  return "DirectDraw 7.0";
   #elif defined(VIDEO_GDI)
   return "GDI";
   #elif defined(VIDEO_CGL)
