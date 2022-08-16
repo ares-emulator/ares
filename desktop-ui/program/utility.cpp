@@ -36,27 +36,20 @@ auto Program::captureScreenshot(const u32* data, u32 pitch, u32 width, u32 heigh
 }
 
 auto Program::openFile(BrowserDialog& dialog) -> string {
-  if(settings.general.nativeFileDialogs) {
-    BrowserWindow window;
-    window.setTitle(dialog.title());
-    window.setPath(dialog.path());
-    window.setFilters(dialog.filters());
-    window.setParent(dialog.alignmentWindow());
-    // Only affects macOS. TODO: are there scenarios where we want to forbid selecting folders?
-    window.setAllowsFolders(true);
-    return window.open();
-  }
-  if(dialog.filters().size() > 1) return dialog.openObject();
-  return dialog.openFile();
+  BrowserWindow window;
+  window.setTitle(dialog.title());
+  window.setPath(dialog.path());
+  window.setFilters(dialog.filters());
+  window.setParent(dialog.alignmentWindow());
+  // Only affects macOS. TODO: are there scenarios where we want to forbid selecting folders?
+  window.setAllowsFolders(true);
+  return window.open();
 }
 
 auto Program::selectFolder(BrowserDialog& dialog) -> string {
-  if(settings.general.nativeFileDialogs) {
-    BrowserWindow window;
-    window.setTitle(dialog.title());
-    window.setPath(dialog.path());
-    window.setParent(dialog.alignmentWindow());
-    return window.directory();
-  }
-  return dialog.selectFolder();
+  BrowserWindow window;
+  window.setTitle(dialog.title());
+  window.setPath(dialog.path());
+  window.setParent(dialog.alignmentWindow());
+  return window.directory();
 }

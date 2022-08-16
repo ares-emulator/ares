@@ -47,7 +47,6 @@ struct Emulator {
   vector<string> portBlacklist;
 
   struct Configuration {
-    bool visible = true;  //whether or not to show this emulator in the load menu
     string game;          //the most recently used folder for games for each emulator core
   } configuration;
 

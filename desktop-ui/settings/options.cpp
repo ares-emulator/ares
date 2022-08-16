@@ -21,10 +21,4 @@ auto OptionSettings::construct() -> void {
   });
   autoSaveMemoryLayout.setAlignment(1);
       autoSaveMemoryHint.setText("Helps safeguard game saves from being lost").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
-
-  nativeFileDialogs.setText("Use Native File Dialogs").setChecked(settings.general.nativeFileDialogs).onToggle([&] {
-    settings.general.nativeFileDialogs = nativeFileDialogs.checked();
-  });
-  nativeFileDialogsLayout.setAlignment(1);
-      nativeFileDialogsHint.setText("More familiar, but lacks advanced loading options").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 }
