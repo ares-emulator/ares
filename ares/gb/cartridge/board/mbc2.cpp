@@ -24,7 +24,7 @@ struct MBC2 : Interface {
       return rom.read(io.rom.bank << 14 | (n14)address);
     }
 
-    if(address >= 0xa000 && address <= 0xa1ff) {
+    if(address >= 0xa000 && address <= 0xbfff) {
       if(!ram || !io.ram.enable) return 0xff;
       auto pair = ram.read(address.bit(1,8));
       if((address & 1) == 0) data = 0xf0 | pair.bit(0,3);
@@ -36,18 +36,16 @@ struct MBC2 : Interface {
   }
 
   auto write(n16 address, n8 data) -> void override {
-    if(address >= 0x0000 && address <= 0x1fff) {
+    if(address >= 0x0000 && address <= 0x3fff) {
       if(!address.bit(8)) io.ram.enable = data.bit(0,3) == 0x0a;
+      if(address.bit(8)) {
+        io.rom.bank = data.bit(0,3);
+        if(!io.rom.bank) io.rom.bank = 0x01;
+      }
       return;
     }
 
-    if(address >= 0x2000 && address <= 0x3fff) {
-      if(address.bit(8)) io.rom.bank = data.bit(0,3);
-      if(!io.rom.bank) io.rom.bank = 0x01;
-      return;
-    }
-
-    if(address >= 0xa000 && address <= 0xa1ff) {
+    if(address >= 0xa000 && address <= 0xbfff) {
       if(!ram || !io.ram.enable) return;
       auto pair = ram.read(address.bit(1,8));
       if((address & 1) == 0) pair.bit(0,3) = data.bit(0,3);
