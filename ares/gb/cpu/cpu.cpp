@@ -134,30 +134,8 @@ auto CPU::power() -> void {
 
   status = {};
 
-  //note: this may not be accurate, DIV values at startup may be due to LCD delays?
-  //but probably not, since "CPU CGB" differs from "CPU CGB [A-E]"
-
-  //0146~0149
-  if(version->latch() == "DMG-CPU"   ) status.div = 0x0146;
-
-  //ffe6~ffe9
-  if(version->latch() == "DMG-CPU A" ) status.div = 0xffe6;
-  if(version->latch() == "DMG-CPU B" ) status.div = 0xffe6;
-  if(version->latch() == "DMG-CPU C" ) status.div = 0xffe6;
-  if(version->latch() == "CPU MGB"   ) status.div = 0xffe6;
-
-  if(version->latch() == "SGB-CPU 01") status.div = 0xffe6;  //unconfirmed
-  if(version->latch() == "CPU SGB2"  ) status.div = 0xffe6;  //unconfirmed
-
-  //0206~0209
-  if(version->latch() == "CPU CGB"   ) status.div = 0x0206;
-
-  //fffa~fffd
-  if(version->latch() == "CPU CGB A" ) status.div = 0xfffa;
-  if(version->latch() == "CPU CGB B" ) status.div = 0xfffa;
-  if(version->latch() == "CPU CGB C" ) status.div = 0xfffa;
-  if(version->latch() == "CPU CGB D" ) status.div = 0xfffa;
-  if(version->latch() == "CPU CGB E" ) status.div = 0xfffa;
+  // TODO: Validate this for models other than dmg ABC/mgb
+  status.div = 8;
 }
 
 }
