@@ -210,7 +210,7 @@ auto CPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
   if(Model::GameBoyColor() && cartridge.bootromEnable)
   if(address == 0xff4c && cycle == 2) {  //KEY0
     status.cgbMode    = !(data & 0x0c);
-    status.opriEnable = data.bit(7);
+    status.opriEnable = data.bit(3);
     return;
   }
 
