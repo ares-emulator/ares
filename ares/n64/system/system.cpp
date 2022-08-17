@@ -21,6 +21,7 @@ auto option(string name, string value) -> bool {
   if(name == "Quality" && value == "HD" ) vulkan.internalUpscale = 2;
   if(name == "Quality" && value == "UHD") vulkan.internalUpscale = 4;
   if(name == "Supersampling") vulkan.supersampleScanout = value.boolean();
+  if(name == "Disable Video Interface Processing") vulkan.disableVideoInterfaceProcessing = value.boolean();
   if(vulkan.internalUpscale == 1) vulkan.supersampleScanout = false;
   vulkan.outputUpscale = vulkan.supersampleScanout ? 1 : vulkan.internalUpscale;
   #endif

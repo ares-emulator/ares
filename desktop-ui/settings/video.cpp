@@ -73,10 +73,16 @@ auto VideoSettings::construct() -> void {
     renderQualitySD.setEnabled(settings.video.enableVulkan);
     renderQualityHD.setEnabled(settings.video.enableVulkan);
     renderQualityUHD.setEnabled(settings.video.enableVulkan);
+    disableVideoInterfaceProcessingOption.setEnabled(settings.video.enableVulkan);
   });
   enableVulkanLayout.setAlignment(1).setPadding(12_sx, 0);
   enableVulkanHint.setText("Enables Vulkan Hardware rendering").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
-  
+  disableVideoInterfaceProcessingOption.setText("Disable Video Interface Processing").setChecked(settings.video.disableVideoInterfaceProcessing).onToggle([&] {
+    settings.video.disableVideoInterfaceProcessing = disableVideoInterfaceProcessingOption.checked();
+    if(emulator) emulator->setBoolean("Disable Video Interface Processing", settings.video.disableVideoInterfaceProcessing);
+  });
+  disableVideoInterfaceProcessingLayout.setAlignment(1).setPadding(12_sx, 0);
+  disableVideoInterfaceProcessingHint.setText("Disables Video Interface post processing to render image from VRAM directly").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   renderQualitySD.setText("SD Quality").onActivate([&] {
     settings.video.quality = "SD";
     renderSupersamplingOption.setChecked(false).setEnabled(false);
@@ -107,5 +113,6 @@ auto VideoSettings::construct() -> void {
   renderQualityLayout.setCollapsible(true).setVisible(false);
   renderSupersamplingLayout.setCollapsible(true).setVisible(false);
   renderSettingsHint.setCollapsible(true).setVisible(false);
+  disableVideoInterfaceProcessingLayout.setCollapsible(true).setVisible(false);
   #endif
 }
