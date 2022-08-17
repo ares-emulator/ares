@@ -18,6 +18,7 @@ struct Vulkan {
   Implementation* implementation = nullptr;
 
   bool enable = true;
+  bool disableVideoInterfaceProcessing = false;
   u32  internalUpscale = 1;  //1, 2, 4, 8
   bool supersampleScanout = false;
   u32  outputUpscale = supersampleScanout ? 1 : internalUpscale;
