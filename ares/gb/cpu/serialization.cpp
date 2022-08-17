@@ -28,6 +28,8 @@ auto CPU::serialize(serializer& s) -> void {
 
   s(status.interruptFlag);
 
+  s(status.cgbMode);
+  s(status.opriEnable);
   s(status.speedSwitch);
   s(status.speedDouble);
 
@@ -36,7 +38,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(status.dmaLength);
   s(status.hdmaActive);
 
-  s(status.ff6c);
+  s(status.opri);
 
   s(status.wramBank);
 

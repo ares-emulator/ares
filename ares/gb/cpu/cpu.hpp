@@ -110,6 +110,10 @@ struct CPU : SM83, Thread {
     //$ff0f  IF
     n5 interruptFlag;
 
+    //$ff4c  KEY0
+    n1 cgbMode;
+    n1 opriEnable;
+
     //$ff4d  KEY1
     n1 speedSwitch;
     n1 speedDouble;
@@ -124,8 +128,8 @@ struct CPU : SM83, Thread {
     n7 dmaLength;
     n1 hdmaActive;
 
-    //$ff6c  ???
-    n1 ff6c;
+    //$ff6c  OPRI
+    n1 opri;
 
     //$ff70  SVBK
     n3 wramBank = 1;

@@ -65,6 +65,9 @@ auto PPU::scanlineCGB() -> void {
 
     if(++sprites == 10) break;
   }
+
+  //sort by X-coordinate if opri (DMG priority) is enabled
+  if(cpu.status.opri) sort(sprite, sprites, [](auto l, auto r) { return l.x < r.x; });
 }
 
 auto PPU::runCGB() -> void {
@@ -107,6 +110,7 @@ auto PPU::runBackgroundCGB() -> void {
   index.bit(1) = background.tiledata.bit(15 - tileX);
   n5 palette = background.attributes.bit(0,2) << 2 | index;
 
+  if(!cpu.status.cgbMode) palette = bgp[index];
   bg.color = bgpd[palette];
   bg.palette = index;
   bg.priority = background.attributes.bit(7);
@@ -128,6 +132,8 @@ auto PPU::runWindowCGB() -> void {
   index.bit(1) = window.tiledata.bit(15 - tileX);
   n5 palette = window.attributes.bit(0,2) << 2 | index;
 
+  if(!cpu.status.cgbMode) palette = bgp[index];
+
   bg.color = bgpd[palette];
   bg.palette = index;
   bg.priority = window.attributes.bit(7);
@@ -147,6 +153,8 @@ auto PPU::runObjectsCGB() -> void {
     index.bit(1) = s.tiledata.bit(15 - tileX);
     if(index == 0) continue;
     n5 palette = s.attributes.bit(0,2) << 2 | index;
+
+    if(!cpu.status.cgbMode) palette = obp[index];
 
     ob.color = obpd[palette];
     ob.palette = index;

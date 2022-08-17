@@ -136,6 +136,8 @@ auto CPU::power() -> void {
 
   // TODO: Validate this for models other than dmg ABC/mgb
   status.div = 8;
+
+  if(Model::GameBoyColor()) status.cgbMode = 1;
 }
 
 }
