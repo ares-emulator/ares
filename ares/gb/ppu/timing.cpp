@@ -18,11 +18,12 @@ auto PPU::compareLYC() const -> bool {
   auto ly  = status.ly;
   auto lyc = status.lyc;
 
-  if(Model::GameBoy() || Model::SuperGameBoy()) {
+  if(Model::GameBoy() || Model::SuperGameBoy() || !cpu.status.cgbMode) {
     auto lx = status.lx >> 2;
     if(ly !=   0 && lx == 0) return 0;
     if(ly == 153 && lx == 2) return 0;
     if(ly == 153 && lx >= 3) return lyc == 0;
+    return lyc == ly;
   }
 
   if(Model::GameBoyColor() && cpu.lowSpeed()) {
@@ -42,9 +43,10 @@ auto PPU::compareLYC() const -> bool {
 auto PPU::getLY() const -> n8 {
   auto ly  = status.ly;
 
-  if(Model::GameBoy() || Model::SuperGameBoy()) {
+  if(Model::GameBoy() || Model::SuperGameBoy() || !cpu.status.cgbMode) {
     auto lx = status.lx >> 2;
     if(ly == 153 && lx >= 1) return 0;
+    return ly;
   }
 
   if(Model::GameBoyColor() && cpu.lowSpeed()) {

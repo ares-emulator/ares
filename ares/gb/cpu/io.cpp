@@ -87,21 +87,21 @@ auto CPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
     return data;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && status.cgbMode)
   if(address == 0xff4d && cycle == 2) {  //KEY1
     data.bit(0) = status.speedSwitch;
     data.bit(7) = status.speedDouble;
     return data;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && status.cgbMode)
   if(address == 0xff55 && cycle == 2) {  //HDMA5
     data.bit(0,6) =  status.dmaLength;
     data.bit(7)   = !status.hdmaActive;
     return data;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && status.cgbMode)
   if(address == 0xff56 && cycle == 2) {  //RP
     //unemulated
     return 0x02;
@@ -113,7 +113,7 @@ auto CPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
     return data;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && status.cgbMode)
   if(address == 0xff70 && cycle == 2) {  //SVBK
     return status.wramBank;
   }
@@ -214,31 +214,31 @@ auto CPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
     return;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && status.cgbMode)
   if(address == 0xff4d && cycle == 2) {  //KEY1
     status.speedSwitch = data.bit(0);
     return;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && status.cgbMode)
   if(address == 0xff51 && cycle == 2) {  //HDMA1
     status.dmaSource.bit(8,15) = data.bit(0,7);
     return;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && status.cgbMode)
   if(address == 0xff52 && cycle == 2) {  //HDMA2
     status.dmaSource.bit(4,7) = data.bit(4,7);
     return;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && status.cgbMode)
   if(address == 0xff53 && cycle == 2) {  //HDMA3
     status.dmaTarget.bit(8,15) = data.bit(0,7);
     return;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && status.cgbMode)
   if(address == 0xff54 && cycle == 2) {  //HDMA4
     status.dmaTarget.bit(4,7) = data.bit(4,7);
     return;
@@ -268,7 +268,7 @@ auto CPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
     return;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && status.cgbMode)
   if(address == 0xff56 && cycle == 2) {  //RP
     return;
   }

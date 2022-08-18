@@ -91,7 +91,7 @@ auto PPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
     return status.wx;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && cpu.status.cgbMode)
   if(address == 0xff4f && cycle == 2) {  //VBK
     return status.vramBank;
   }
@@ -103,7 +103,7 @@ auto PPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
     return data;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && ((!cpu.status.cgbMode && cartridge.bootromEnable) || cpu.status.cgbMode))
   if(address == 0xff69 && cycle == 2) {  //BGPD
     return bgpd[status.bgpi >> 1].byte(status.bgpi & 1);
   }
@@ -115,7 +115,7 @@ auto PPU::readIO(u32 cycle, n16 address, n8 data) -> n8 {
     return data;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && ((!cpu.status.cgbMode && cartridge.bootromEnable) || cpu.status.cgbMode))
   if(address == 0xff6b && cycle == 2) {  //OBPD
     return obpd[status.obpi >> 1].byte(status.obpi & 1);
   }
@@ -236,7 +236,7 @@ auto PPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
     return;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && cpu.status.cgbMode)
   if(address == 0xff4f && cycle == 2) {  //VBK
     status.vramBank = data.bit(0);
     return;
@@ -249,7 +249,7 @@ auto PPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
     return;
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && ((!cpu.status.cgbMode && cartridge.bootromEnable) || cpu.status.cgbMode))
   if(address == 0xff69 && cycle == 2) {  //BGPD
     bgpd[status.bgpi >> 1].byte(status.bgpi & 1) = data;
     if(status.bgpiIncrement) status.bgpi++;
@@ -262,7 +262,7 @@ auto PPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
     status.obpiIncrement = data.bit(7);
   }
 
-  if(Model::GameBoyColor())
+  if(Model::GameBoyColor() && ((!cpu.status.cgbMode && cartridge.bootromEnable) || cpu.status.cgbMode))
   if(address == 0xff6b && cycle == 2) {  //OBPD
     obpd[status.obpi >> 1].byte(status.obpi & 1) = data;
     if(status.obpiIncrement) status.obpi++;

@@ -13,6 +13,8 @@
 //0x07: palette#
 
 auto PPU::readTileCGB(bool select, u32 x, u32 y, n16& tiledata, n8& attributes) -> void {
+  if(!cpu.status.cgbMode) return readTileDMG(select, x, y, tiledata);
+
   n14 tilemapAddress = 0x1800 + (select << 10);
   tilemapAddress += (((y >> 3) << 5) + (x >> 3)) & 0x03ff;
 
@@ -35,6 +37,8 @@ auto PPU::readTileCGB(bool select, u32 x, u32 y, n16& tiledata, n8& attributes) 
 }
 
 auto PPU::readObjectCGB(i16 y, n8 tile, n8 attributes, n16& tiledata) -> void {
+    if(!cpu.status.cgbMode) return readObjectDMG(y, tile, attributes, tiledata);
+
     const s32 Height = (status.obSize == 0 ? 8 : 16);
     tile &= ~status.obSize;
     y = status.ly - y;
@@ -125,13 +129,14 @@ auto PPU::runBackgroundCGB() -> void {
   if(!cpu.status.cgbMode) palette = bgp[index];
   bg.color = bgpd[palette];
   bg.palette = index;
-  bg.priority = background.attributes.bit(7);
+  if(cpu.status.cgbMode) bg.priority = background.attributes.bit(7);
 }
 
 auto PPU::runWindowCGB() -> void {
   if(status.ly < status.wy) return;
   if(px + 7 < status.wx) return;
   if(px + 7 == status.wx) latch.wy++;
+  if(!cpu.status.cgbMode && !status.bgEnable) return;
 
   n8 scrollY = latch.wy - 1;
   n8 scrollX = px + 7 - latch.wx;
@@ -148,7 +153,7 @@ auto PPU::runWindowCGB() -> void {
 
   bg.color = bgpd[palette];
   bg.palette = index;
-  bg.priority = window.attributes.bit(7);
+  if(cpu.status.cgbMode) bg.priority = window.attributes.bit(7);
 }
 
 auto PPU::runObjectsCGB() -> void {
