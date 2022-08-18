@@ -75,22 +75,34 @@ auto PPU::runCGB() -> void {
   ob = {};
 
   n15 color = 0x7fff;
-  runBackgroundCGB();
+  if(cpu.status.cgbMode || status.bgEnable) runBackgroundCGB();
   if(latch.windowDisplayEnable) runWindowCGB();
   if(status.obEnable) runObjectsCGB();
 
-  if(ob.palette == 0) {
-    color = bg.color;
-  } else if(bg.palette == 0) {
-    color = ob.color;
-  } else if(status.bgEnable == 0) {
-    color = ob.color;
-  } else if(bg.priority) {
-    color = bg.color;
-  } else if(ob.priority) {
-    color = ob.color;
+  if(cpu.status.cgbMode ) {
+    if(ob.palette == 0) {
+      color = bg.color;
+    } else if(bg.palette == 0) {
+      color = ob.color;
+    } else if(status.bgEnable == 0) {
+      color = ob.color;
+    } else if(bg.priority) {
+      color = bg.color;
+    } else if(ob.priority) {
+      color = ob.color;
+    } else {
+      color = bg.color;
+    }
   } else {
-    color = bg.color;
+    if(ob.palette == 0) {
+      color = bg.color;
+    } else if(bg.palette == 0) {
+      color = ob.color;
+    } else if(ob.priority) {
+      color = ob.color;
+    } else {
+      color = bg.color;
+    }
   }
 
   if(Model::GameBoyColor()) {
