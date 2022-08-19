@@ -45,6 +45,7 @@ struct MOS6502 {
   auto algorithmROL(n8) -> n8;
   auto algorithmROR(n8) -> n8;
   auto algorithmSBC(n8) -> n8;
+  auto algorithmSLO(n8) -> n8;
 
   //instruction.cpp
   auto interrupt() -> void;
@@ -66,6 +67,7 @@ struct MOS6502 {
   auto instructionIndirectXRead(fp alu, n8& data) -> void;
   auto instructionIndirectXWrite(n8& data) -> void;
   auto instructionIndirectYRead(fp alu, n8& data) -> void;
+  auto instructionIndirectYRead(fp, n8& data, n8& data2) -> void;
   auto instructionIndirectYWrite(n8& data) -> void;
   auto instructionJumpAbsolute() -> void;
   auto instructionJumpIndirect() -> void;

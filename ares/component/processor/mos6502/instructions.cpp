@@ -112,6 +112,11 @@ auto MOS6502::instructionIndirectYRead(fp alu, n8& data) -> void {
 L data = ALU(read(absolute + Y));
 }
 
+auto MOS6502::instructionIndirectYRead(fp alu, n8& data, n8& data2) -> void {
+  instructionIndirectYRead(alu, data);
+  data2 = data;
+}
+
 auto MOS6502::instructionIndirectYWrite(n8& data) -> void {
   auto zeroPage = operand();
   n16 absolute = load(zeroPage + 0);

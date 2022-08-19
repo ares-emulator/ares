@@ -23,6 +23,7 @@ auto MOS6502::instruction() -> void {
   op(0x04, NoOperationZeroPage)
   op(0x05, ZeroPageRead, fp(ORA), A)
   op(0x06, ZeroPageModify, fp(ASL))
+  op(0x07, ZeroPageModify, fp(SLO))
   op(0x08, PushP)
   op(0x09, Immediate, fp(ORA), A)
   op(0x0a, Implied, fp(ASL), A)
@@ -141,6 +142,7 @@ auto MOS6502::instruction() -> void {
   op(0xae, AbsoluteRead, fp(LD), X)
   op(0xb0, Branch, C == 1)
   op(0xb1, IndirectYRead, fp(LD), A)
+  op(0xb3, IndirectYRead, fp(LD), A, X)
   op(0xb4, ZeroPageRead, fp(LD), Y, X)
   op(0xb5, ZeroPageRead, fp(LD), A, X)
   op(0xb6, ZeroPageRead, fp(LD), X, Y)
@@ -182,6 +184,7 @@ auto MOS6502::instruction() -> void {
   op(0xe8, Implied, fp(INC), X)
   op(0xe9, Immediate, fp(SBC), A)
   op(0xea, NoOperation)
+  op(0xeb, Immediate, fp(SBC), A)
   op(0xec, AbsoluteRead, fp(CPX), X)
   op(0xed, AbsoluteRead, fp(SBC), A)
   op(0xee, AbsoluteModify, fp(INC))
@@ -199,6 +202,7 @@ auto MOS6502::instruction() -> void {
   }
 
   //unimplemented instruction
+  debug(unusual, "[6502] unimplemented opcode ", hex(code));
   return instructionNoOperation();
 }
 
