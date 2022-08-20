@@ -118,7 +118,10 @@ auto InputManager::createHotkeys() -> void {
 
 auto InputManager::pollHotkeys() -> void {
   if(Application::modal()) return;
-  if(!presentation.focused() && !ruby::video.fullScreen()) return;
+
+  if(!driverSettings.inputDefocusAllow.checked()) {
+    if (!presentation.focused() && !ruby::video.fullScreen()) return;
+  }
 
   for(auto& hotkey : hotkeys) {
     auto state = hotkey.value();
