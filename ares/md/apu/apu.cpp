@@ -85,6 +85,7 @@ auto APU::restart() -> void {
   Thread::restart({&APU::main, this});
   state.nmiLine = 0;
   state.intLine = 0;
+  state.busreqLatch = state.busreqLine;
   opn2.power(true);
 }
 
