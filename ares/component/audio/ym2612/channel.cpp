@@ -32,7 +32,6 @@ auto YM2612::Channel::Operator::runEnvelope() -> void {
 
   u32 value = ym2612.envelope.clock >> envelope.divider;
   u32 step = envelope.steps >> ((~value & 7) << 2) & 0xf;
-  if(ssg.enable) step <<= 2;  //SSG results in a 4x faster envelope
 
   if(envelope.state == Attack) {
     u32 next = envelope.value + (~u16(envelope.value) * step >> 4) & 0x3ff;
@@ -44,6 +43,7 @@ auto YM2612::Channel::Operator::runEnvelope() -> void {
       updateEnvelope();
     }
   } else if(!ssg.enable || envelope.value < 0x200) {
+    if(ssg.enable) step <<= 2;  //SSG results in a 4x faster envelope
     envelope.value = min(envelope.value + step, 0x3ff);
     if(envelope.state == Decay && envelope.value >= sustain) {
       envelope.state = Sustain;
