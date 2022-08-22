@@ -2,7 +2,7 @@
 
 namespace ares::PlayStation {
 
-auto amplify(s32 sample, s16 volume) -> s32 {
+auto amplify(s32 sample, s32 volume) -> s32 {
   return (s64)sample * volume >> 15;
 }
 
