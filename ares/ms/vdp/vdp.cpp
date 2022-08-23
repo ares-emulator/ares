@@ -43,6 +43,7 @@ auto VDP::load(Node::Object parent) -> void {
     screen->setSize(160, 144);
     screen->setScale(1.0, 1.0);
     screen->setAspect(1.0, 1.0);
+    screen->setViewport(0, 0, 256, 240);
 
     interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
       screen->setInterframeBlending(value);
@@ -101,9 +102,11 @@ auto VDP::main() -> void {
   step(172);
 
   if(io.vcounter == 240) {
-    if(Mode::MasterSystem()) {
+    if(Display::CRT()) {
       if(overscan->value() == 0) screen->setViewport(0, (240-vlines())/2, 256, vlines());
       if(overscan->value() == 1) screen->setViewport(0, 0, 256, 240);
+    } else if (Mode::MasterSystem()) {
+      screen->setViewport(0, (240-vlines())/2, 256, vlines());
     }
     if(Mode::GameGear()) {
       screen->setViewport(48, 48, 160, 144);
