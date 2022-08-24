@@ -62,6 +62,12 @@ auto GameGear::analyze(vector<u8>& rom) -> string {
     ms     = 1;
   }
 
+  //Chase H.Q (USA)
+  if(hash == "a77e272804f4c77272cbc912bf19c10dd033af61b742a258b9d7cb39b15bbd68") {
+    region = "NTSC-U";
+    ms     = 1;
+  }
+
   //Mickey Mouse no Castle Illusion (Japan)
   if(hash == "906e8da0e24899d30dffc4745b533e2a7c9d7ec2addbe853715165b552474d68") {
     region = "NTSC-J";
