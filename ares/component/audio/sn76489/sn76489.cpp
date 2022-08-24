@@ -63,6 +63,10 @@ auto SN76489::write(n8 data) -> void {
     case 0: tone0.pitch.bit(4,9) = data.bit(0,5); break;
     case 1: tone1.pitch.bit(4,9) = data.bit(0,5); break;
     case 2: tone2.pitch.bit(4,9) = data.bit(0,5); noise.pitch = tone2.pitch; break;
+    case 3: noise.rate   = data.bit(0,1);
+            noise.enable = data.bit(2);
+            noise.lfsr   = 0x8000;
+            break;
     }
   }
 }
