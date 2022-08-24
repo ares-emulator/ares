@@ -200,10 +200,10 @@ private:
   } io;
 
   struct Latch {
-    n1 control;
-    n8 hcounter;
-    n8 vram;
-    n8 cram;  //Game Gear only
+    n1  control;
+    u32 hcounter;
+    n8  vram;
+    n8  cram;  //Game Gear only
   } latch;
 };
 
