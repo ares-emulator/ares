@@ -59,6 +59,10 @@ auto CPU::power() -> void {
   Thread::create(system.colorburst(), {&CPU::main, this});
   PC = 0x0000;  //reset vector address
   SP = 0xfffd;  //initial stack pointer location
+
+  ram.fill(0);  //fixes hang in Shanghai II (Japan) (GG)
+                //bios usually clears ram, so it should be safe
+
   ram.write(0xc000, 0xab);  //CPU $3e initial value
   ram.write(0xc700, 0x9b);  //VDP $01 initial value
   state = {};
