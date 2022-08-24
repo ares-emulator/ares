@@ -146,6 +146,12 @@ auto GameGear::analyze(vector<u8>& rom) -> string {
     ms     = 1;
   }
 
+  //Taito Chase H.Q (Japan)
+  if(hash == "ab8e2b1fdfb3c0cbee781ccb0c808afd154d36b9ed0968e28410e45ca8c378f0") {
+    region = "NTSC-J";
+    ms     = 1;
+  }
+
   //WWF Wrestlemania Steel Cage Challenge (Europe)
   if(hash == "71d8d0769bf9c7d9339ead0319062d85a0e19411a17a938f58678b0b8efa7132") {
     region = "NTSC-U";
