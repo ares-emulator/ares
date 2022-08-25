@@ -39,7 +39,7 @@ auto DigitalGamepad::bus(u8 data) -> u8 {
   }
 
   case State::IDLower: {
-    if(input != 0x42) break;
+    if(input != 0x42) return invalid(input);
     output = 0x41;
     state = State::IDUpper;
     break;
@@ -89,12 +89,6 @@ auto DigitalGamepad::bus(u8 data) -> u8 {
     output.bit(5) = !circle->value();
     output.bit(6) = !cross->value();
     output.bit(7) = !square->value();
-    state = State::Release;
-    break;
-  }
-
-  case State::Release: {
-    output = 0xff;
     state = State::Idle;
     break;
   }
@@ -102,4 +96,10 @@ auto DigitalGamepad::bus(u8 data) -> u8 {
   }
 
   return output;
+}
+
+auto DigitalGamepad::invalid(u8 data) -> u8 {
+  debug(unusual, "[DigitalGamepad] Invalid command byte ", hex(data));
+  state = State::Idle;
+  return 0xff;
 }
