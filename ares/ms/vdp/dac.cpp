@@ -5,6 +5,8 @@ auto VDP::DAC::setup(n8 y) -> void {
 
 auto VDP::DAC::run(n8 x, n8 y) -> void {
   n12 color = palette(16 | io.backdropColor);
+
+  if(self.displayEnable())
   if(!io.leftClip || x >= 8) {
     if(self.background.output.priority || !self.sprite.output.color) {
       color = palette(self.background.output.palette << 4 | self.background.output.color);
@@ -12,6 +14,7 @@ auto VDP::DAC::run(n8 x, n8 y) -> void {
       color = palette(16 | self.sprite.output.color);
     }
   }
+
   output[x] = color;
 }
 

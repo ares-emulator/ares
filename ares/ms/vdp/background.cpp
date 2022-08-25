@@ -1,13 +1,10 @@
 auto VDP::Background::setup(n9 voffset) -> void {
-  if(!self.displayEnable()) return;
-  latch.nameTableAddress = io.nameTableAddress;
   latch.hscroll = io.hscroll;
   latch.vscroll = io.vscroll;
 }
 
 auto VDP::Background::run(n8 hoffset, n9 voffset) -> void {
   output = {};
-  if(!self.displayEnable()) return;
   switch(self.videoMode()) {
   case 0b0000: return graphics1(hoffset, voffset);
   case 0b0001: return;
@@ -32,7 +29,7 @@ auto VDP::Background::graphics1(n8 hoffset, n9 voffset) -> void {
   n14 nameTableAddress;
   nameTableAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameTableAddress.bit( 5, 9) = voffset.bit(3,7);
-  nameTableAddress.bit(10,13) = latch.nameTableAddress;
+  nameTableAddress.bit(10,13) = io.nameTableAddress;
   n8 pattern = self.vram[nameTableAddress];
 
   n14 patternAddress;
@@ -57,7 +54,7 @@ auto VDP::Background::graphics2(n8 hoffset, n9 voffset) -> void {
   n14 nameTableAddress;
   nameTableAddress.bit( 0, 4) = hoffset.bit(3,7);
   nameTableAddress.bit( 5, 9) = voffset.bit(3,7);
-  nameTableAddress.bit(10,13) = latch.nameTableAddress;
+  nameTableAddress.bit(10,13) = io.nameTableAddress;
   n8 pattern = self.vram[nameTableAddress];
 
   n14 patternAddress;
@@ -88,16 +85,16 @@ auto VDP::Background::graphics3(n8 hoffset, n9 voffset, u32 vlines) -> void {
   n14 nameTableAddress;
   if(vlines == 192) {
     voffset %= 224;
-    nameTableAddress  = latch.nameTableAddress >> 1 << 11;
+    nameTableAddress  = io.nameTableAddress >> 1 << 11;
     nameTableAddress += voffset >> 3 << 6;
     nameTableAddress += hoffset >> 3 << 1;
     if(self.revision->value() == 1) {
       //SMS1 quirk: bit 0 of name table base address acts as a mask
-      nameTableAddress.bit(10) &= latch.nameTableAddress.bit(0);
+      nameTableAddress.bit(10) &= io.nameTableAddress.bit(0);
     }
   } else {
     voffset %= 256;
-    nameTableAddress  = latch.nameTableAddress >> 2 << 12 | 0x0700;
+    nameTableAddress  = io.nameTableAddress >> 2 << 12 | 0x0700;
     nameTableAddress += voffset >> 3 << 6;
     nameTableAddress += hoffset >> 3 << 1;
   }

@@ -82,7 +82,6 @@ struct VDP : Thread {
     } io;
 
     struct Latch {
-      n4 nameTableAddress;
       n8 hscroll;
       n8 vscroll;
     } latch;

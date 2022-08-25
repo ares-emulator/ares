@@ -1,5 +1,4 @@
 auto VDP::Sprite::setup(n9 voffset) -> void {
-  if(!self.displayEnable()) return;
   n8 valid = 0;
   n5 vlimit = (8 << io.zoom << io.size) - 1;
   for(auto& object : objects) object.y = 0xd0;
@@ -63,7 +62,6 @@ auto VDP::Sprite::setup(n9 voffset) -> void {
 
 auto VDP::Sprite::run(n8 hoffset, n9 voffset) -> void {
   output = {};
-  if(!self.displayEnable()) return;
   switch(self.videoMode()) {
   case 0b0000: return graphics1(hoffset, voffset);
   case 0b0001: return;

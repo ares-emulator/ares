@@ -27,7 +27,7 @@ auto VDP::Background::serialize(serializer& s) -> void {
   s(io.patternTableAddress);
   s(io.hscroll);
   s(io.vscroll);
-  s(latch.nameTableAddress);
+  s(io.nameTableAddress);
   s(latch.hscroll);
   s(latch.vscroll);
   s(output.color);

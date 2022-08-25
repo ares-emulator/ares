@@ -19,7 +19,7 @@ auto VDP::vcounterQuery() -> n8 {
 }
 
 auto VDP::hcounterQuery() -> n8 {
-  return latch.hcounter - 94 >> 2;
+  return latch.hcounter >> 2;
 }
 
 auto VDP::hcounterLatch() -> void {
