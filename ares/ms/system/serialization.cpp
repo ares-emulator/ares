@@ -42,9 +42,9 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(cpu);
   s(vdp);
   s(psg);
+  s(controllerPort1);
+  s(controllerPort2);
   if(Device::MasterSystem()) {
-    s(controllerPort1);
-    s(controllerPort2);
     if(MasterSystem::Region::NTSCJ()) {
       if(MasterSystem::Model::MarkIII()) {
         s(expansionPort);

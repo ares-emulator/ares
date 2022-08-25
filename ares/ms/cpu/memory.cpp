@@ -204,7 +204,8 @@ auto CPU::out(n16 address, n8 data) -> void {
     psg.balance(data);
   }
 
-  else if((address & 0xc1) == 0x00) {
+  // Fully decoded on Game Gear
+  if(address == 0x3e || (Device::MasterSystem() && (address & 0xc1) == 0x00)) {
     bus.ioEnable        = !data.bit(2);
     bus.biosEnable      = !data.bit(3);
     bus.ramEnable       = !data.bit(4);
@@ -213,7 +214,7 @@ auto CPU::out(n16 address, n8 data) -> void {
     bus.expansionEnable = !data.bit(7);
   }
 
-  else if((address & 0xc1) == 0x01 && Display::CRT()) {
+  else if((address & 0xc1) == 0x01) {
     auto thLevel1 = controllerPort1.thLevel;
     auto thLevel2 = controllerPort2.thLevel;
 

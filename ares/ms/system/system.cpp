@@ -95,9 +95,9 @@ auto System::load(Node::System& root, string name) -> bool {
   cpu.load(node);
   vdp.load(node);
   psg.load(node);
+  controllerPort1.load(node);
+  controllerPort2.load(node);
   if(Device::MasterSystem()) {
-    controllerPort1.load(node);
-    controllerPort2.load(node);
     if(MasterSystem::Region::NTSCJ()) {
       if(MasterSystem::Model::MarkIII()) {
         expansionPort.load(node);
@@ -125,9 +125,9 @@ auto System::unload() -> void {
   cpu.unload();
   vdp.unload();
   psg.unload();
+  controllerPort1.unload();
+  controllerPort2.unload();
   if(Device::MasterSystem()) {
-    controllerPort1.unload();
-    controllerPort2.unload();
     if(MasterSystem::Region::NTSCJ()) {
       if(MasterSystem::Model::MarkIII()) {
         expansionPort.unload();
@@ -156,9 +156,9 @@ auto System::power(bool reset) -> void {
   cpu.power();
   vdp.power();
   psg.power();
+  controllerPort1.power();
+  controllerPort2.power();
   if(Device::MasterSystem()) {
-    controllerPort1.power();
-    controllerPort2.power();
     if(MasterSystem::Region::NTSCJ()) {
       if(MasterSystem::Model::MarkIII()) {
         expansionPort.power();
