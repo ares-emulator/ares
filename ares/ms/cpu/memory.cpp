@@ -5,16 +5,20 @@ auto CPU::mdr() const -> n8 {
 auto CPU::read(n16 address) -> n8 {
   n8 data = mdr();
   if(address >= 0xc000 && bus.ramEnable) data = ram.read(address);
-  if(bus.biosEnable) data = bios.read(address, data);
-  if(bus.cartridgeEnable) data = cartridge.read(address, data);
+  if(Device::MasterSystem() && bus.biosEnable) data = bios.read(address, data);
+  if(Device::GameGear() && bus.biosEnable && address < 0x400) data = bios.read(address, data);
+  if(Device::MasterSystem() && bus.cartridgeEnable) data = cartridge.read(address, data);
+  if(Device::GameGear() && (address >= 0x400 || !bus.biosEnable)) data = cartridge.read(address, data);
   return bus.mdr = data;
 }
 
 auto CPU::write(n16 address, n8 data) -> void {
   bus.mdr = data;
   if(address >= 0xc000 && bus.ramEnable) ram.write(address, data);
-  if(bus.biosEnable) bios.write(address, data);
-  if(bus.cartridgeEnable) cartridge.write(address, data);
+  if(Device::MasterSystem() && bus.biosEnable) bios.write(address, data);
+  if(Device::GameGear() && bus.biosEnable && address < 0x400) bios.write(address, data);
+  if(Device::MasterSystem() && bus.cartridgeEnable) cartridge.write(address, data);
+  if(Device::GameGear() && (address >= 0x400 || !bus.biosEnable)) cartridge.write(address, data);
 }
 
 //note: the Japanese Mark III / Master System supposedly decodes a0-a7 fully for I/O.
@@ -205,7 +209,7 @@ auto CPU::out(n16 address, n8 data) -> void {
   }
 
   // Fully decoded on Game Gear
-  if(address == 0x3e || (Device::MasterSystem() && (address & 0xc1) == 0x00)) {
+  if((address & 0xff) == 0x3e || (Device::MasterSystem() && (address & 0xc1) == 0x00)) {
     bus.ioEnable        = !data.bit(2);
     bus.biosEnable      = !data.bit(3);
     bus.ramEnable       = !data.bit(4);

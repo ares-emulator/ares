@@ -9,8 +9,7 @@ GameGear::GameGear() {
   manufacturer = "Sega";
   name = "Game Gear";
 
-//note: disabled because the BIOS is not yet working for Game Gear
-//firmware.append({"BIOS", "World"});
+  firmware.append({"BIOS", "World"});
 
   { InputPort port{"Game Gear"};
 
@@ -35,8 +34,7 @@ auto GameGear::load() -> bool {
   auto region = Emulator::region();
 
   system = mia::System::create("Game Gear");
-  if(!system->load()) return false;
-//if(!system->load(firmware[0].location)) return false;
+  if(!system->load(firmware[0].location)) return false;
 
   if(!ares::MasterSystem::load(root, {"[Sega] Game Gear (", region, ")"})) return false;
 
