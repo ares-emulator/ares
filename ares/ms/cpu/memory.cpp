@@ -28,7 +28,7 @@ auto CPU::in(n16 address) -> n8 {
   n8 data = mdr();
   if(0);
 
- else if((address & 0xff) == 0x00 && Display::LCD()) {
+ else if((address & 0xff) == 0x00 && Mode::GameGear()) {
     platform->input(system.controls.start);
     data.bit(0) = 0;
     data.bit(1) = 0;
@@ -40,7 +40,7 @@ auto CPU::in(n16 address) -> n8 {
     data.bit(7) = !system.controls.start->value();
   }
 
-  else if((address & 0xff) == 0x01 && Display::LCD()) {
+  else if((address & 0xff) == 0x01 && Mode::GameGear()) {
     data.bit(0) = sio.dataDirection.bit(0) ? 1 : sio.parallelData.bit(0);
     data.bit(1) = sio.dataDirection.bit(1) ? 1 : sio.parallelData.bit(1);
     data.bit(2) = sio.dataDirection.bit(2) ? 1 : sio.parallelData.bit(2);
@@ -51,20 +51,20 @@ auto CPU::in(n16 address) -> n8 {
     data.bit(7) =                                sio.parallelData.bit(7);
   }
 
-  else if((address & 0xff) == 0x02 && Display::LCD()) {
+  else if((address & 0xff) == 0x02 && Mode::GameGear()) {
     data.bit(0,6) = sio.dataDirection;
     data.bit(7)   = sio.nmiEnable;
   }
 
-  else if((address & 0xff) == 0x03 && Display::LCD()) {
+  else if((address & 0xff) == 0x03 && Mode::GameGear()) {
     data = sio.transmitData;
   }
 
-  else if((address & 0xff) == 0x04 && Display::LCD()) {
+  else if((address & 0xff) == 0x04 && Mode::GameGear()) {
     data = sio.receiveData;
   }
 
-  else if((address & 0xff) == 0x05 && Display::LCD()) {
+  else if((address & 0xff) == 0x05 && Mode::GameGear()) {
     data.bit(0)   = sio.transmitFull;
     data.bit(1)   = sio.receiveFull;
     data.bit(2)   = sio.framingError;
