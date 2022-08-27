@@ -42,15 +42,15 @@ Check out the source code by running this command:
 	
 From the root of the project directory run:
 
-	make -C desktop-ui -j4 build=release
+	make -j4 build=release
 	
-Where `desktop-ui` is the location of the main make file (called 'GNUmakefile' in these projects) and build type is of type 'release'. 
-`-j4` indicates number of parallel build processes, and shouldn't be set higher than N-1 cores on your processor. Specifying this option can signficantly decrease the time to build this project. There are multiple build types availabe (debug, etc.). Most additional options can be 
+that builds with build type of type 'release'. 
+`-j4` indicates number of parallel build processes, and shouldn't be set higher than N-1 cores on your processor. Specifying this option can significantly decrease the time to build this project. There are multiple build types available (debug, etc.). Most additional options can be 
 found in nall's make file (nall/GNUmakefile).
 
 To start compilation from the beginning, run the following prior to compiling:
 
-	make -C desktop-ui clean
+	make clean
 
 Build Output
 ------------
