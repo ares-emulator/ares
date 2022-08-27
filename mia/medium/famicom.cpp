@@ -141,17 +141,31 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   u32 prgram = 0u;
   u32 chrram = chrrom == 0u ? 8192u : 0u;
   u32 eeprom = 0u;
+  u32 submapper = 0u;
+
+  string region = "NTSC-J, NTSC-U, PAL"; //iNES 1.0 requires database to detect region
+
+  bool iNes2 = (data[7] & 0xc) == 0x8;
+  if (iNes2) {
+    mapper |= ((data[8] & 0xf) << 8);
+    submapper = data[8] >> 4;
+    u32 timing = data[12] & 3;
+
+    // TODO: add DENDY (pirate famiclone) timing
+    if (timing == 1) region = "PAL";
+  }
 
   string s;
   s += "game\n";
   s +={"  sha256: ", hash, "\n"};
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
-  s += "  region: NTSC-J, NTSC-U, PAL\n";  //database required to detect region
+  s +={"  region: ", region, "\n"};
 
   switch(mapper) {
 
   default:
+    debug(unimplemented, "[famicom] unknown iNES mapper number ", mapper);
     s += "  board:  HVC-NROM-256\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
@@ -515,6 +529,13 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case 228:
     s += "  board:  MLT-ACTION52\n";
     break;
+  }
+
+
+  // iNES 2.0 overrides auto-detected ram amounts
+  if(iNes2) {
+    u32 chrshift = data[11] & 0xf;
+    chrram = chrshift > 0 ? 64 << chrshift : 0;
   }
 
   s += "    memory\n";
