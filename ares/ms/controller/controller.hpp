@@ -20,7 +20,12 @@ struct Controller {
   virtual ~Controller() = default;
 
   virtual auto read() -> n7 { return 0x7f; }
-  virtual auto write(n8 data) -> void {}
+
+  // 0: trDirection
+  // 1: thDirection
+  // 2: trLevel
+  // 3: thLevel
+  virtual auto write(n4 data) -> void {}
 };
 
 #include "port.hpp"

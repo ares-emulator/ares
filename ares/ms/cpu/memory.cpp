@@ -240,6 +240,17 @@ auto CPU::out(n16 address, n8 data) -> void {
 
     if(!thLevel1 && controllerPort1.thLevel) vdp.hcounterLatch();
     if(!thLevel2 && controllerPort2.thLevel) vdp.hcounterLatch();
+
+    n4 writeData;
+    writeData.bit(0,1) = data.bit(0,1); // Port 1 TR and TH direction
+    writeData.bit(2) = data.bit(4);
+    writeData.bit(3) = data.bit(5);
+    controllerPort1.write(writeData);
+
+    writeData.bit(0,1) = data.bit(2,3); // Port 2 TR and TH direction
+    writeData.bit(2) = data.bit(6);
+    writeData.bit(3) = data.bit(7);
+    controllerPort2.write(data);
   }
 
   else if((address & 0xc0) == 0x40) {
