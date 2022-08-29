@@ -26,6 +26,7 @@ auto MasterSystem::load(string location) -> bool {
   pak->setAttribute("title",  document["game/title" ].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("paddle", (bool)document["game/paddle"]);
+  pak->setAttribute("sportspad", (bool)document["game/sportspad"]);
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
 
@@ -52,6 +53,7 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   string region = "NTSC-J, NTSC-U, PAL";  //database required to detect region
   u32 ram       = 32_KiB;                 //database required to detect RAM size
   bool paddle = false;
+  bool sportspad = false;
 
   //Region
   //======
@@ -68,6 +70,11 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     region = "NTSC-J";
   }
 
+  //Great Ice Hockey (Japan, USA) (En)
+  if(hash == "4b8fe9cb1688c730807fbb68d2f2c135a3a64a6b668af4bca8fed2c3ed050fe1") {
+    sportspad = true;
+  }
+
   //Megumi Rescue (Japan)
   if(hash == "d06ec2a0bb145f48695a07d4a6fe374e50ec3dff1a9287c5972b206b74e37c07") {
     paddle = true;
@@ -77,6 +84,16 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   //PGA Tour Golf (Europe)
   if(hash == "a3856f0d15511f7a6d48fa6c47da2c81adf372e6a04f83298a10cd45b6711530") {
     region = "PAL";
+  }
+
+  //Sports Pad Football (USA)
+  if(hash == "70719f8e88cdc58180d5042b0b0cbc2298144acdf062e7e3f14aaecaeb8b50e4") {
+    sportspad = true;
+  }
+
+  //Sports Pad Soccer (Japan)
+  if(hash == "4b856123cd090d584af0a6a94ac0a341aa439562a7d8d9e0669999a292e32309") {
+    sportspad = true;
   }
 
   //Woody Pop - Shinjinrui no Block Kuzushi (Japan)
@@ -223,6 +240,7 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   s +={"  region: ", region, "\n"};
   s +={"  board:  ", board, "\n"};
   if(paddle) s += "  paddle\n";
+  if(sportspad) s += "  sportspad\n";
   s += "    memory\n";
   s += "      type: ROM\n";
   s +={"      size: 0x", hex(rom.size()), "\n"};

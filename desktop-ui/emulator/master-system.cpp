@@ -78,6 +78,7 @@ auto MasterSystem::load() -> bool {
 
   auto device = "Gamepad";
   if(game->pak->attribute("paddle").boolean()) device = "Paddle";
+  if(game->pak->attribute("sportspad").boolean()) device = "Sports Pad";
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
     port->allocate(device);
