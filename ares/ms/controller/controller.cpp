@@ -6,5 +6,6 @@ namespace ares::MasterSystem {
 #include "gamepad/gamepad.cpp"
 #include "light-phaser/light-phaser.cpp"
 #include "paddle/paddle.cpp"
+#include "sports-pad/sports-pad.cpp"
 
 }

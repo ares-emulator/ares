@@ -10,7 +10,7 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setType("Controller");
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
-  port->setSupported({"Gamepad", "Light Phaser", "Paddle"});
+  port->setSupported({"Gamepad", "Light Phaser", "Paddle", "Sports Pad"});
 }
 
 auto ControllerPort::unload() -> void {
@@ -22,6 +22,7 @@ auto ControllerPort::allocate(string name) -> Node::Peripheral {
   if(name == "Gamepad") device = new Gamepad(port);
   if(name == "Light Phaser") device = new LightPhaser(port);
   if(name == "Paddle") device = new Paddle(port);
+  if(name == "Sports Pad") device = new SportsPad(port);
   if(device) return device->node;
   return {};
 }

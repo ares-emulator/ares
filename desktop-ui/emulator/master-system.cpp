@@ -44,6 +44,13 @@ MasterSystem::MasterSystem() {
     device.digital("Button",  virtualPorts[id].pad.south);
     port.append(device); }
 
+  { InputDevice device{"Sports Pad"};
+    device.relative("X", virtualPorts[id].mouse.x);
+    device.relative("Y", virtualPorts[id].mouse.y);
+    device.digital ("1", virtualPorts[id].mouse.left);
+    device.digital ("2", virtualPorts[id].mouse.right);
+    port.append(device); }
+
     ports.append(port);
   }
 }
