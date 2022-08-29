@@ -21,6 +21,7 @@ struct InputMouseXlib {
     s32 threshold = 0;
     u32 relativeX = 0;
     u32 relativeY = 0;
+    bool ignoreNextCenter = false;
   } ms;
 
   auto acquired() -> bool {
@@ -77,13 +78,27 @@ struct InputMouseXlib {
       XWindowAttributes attributes;
       XGetWindowAttributes(display, handle, &attributes);
 
-      //absolute -> relative conversion
-      assign(HID::Mouse::GroupID::Axis, 0, (s16)(rootXReturn - screenWidth  / 2));
-      assign(HID::Mouse::GroupID::Axis, 1, (s16)(rootYReturn - screenHeight / 2));
+      if (!ms.ignoreNextCenter || (rootXReturn != screenWidth / 2) || (rootYReturn != screenHeight / 2)) {
+        //absolute -> relative conversion
+        assign(HID::Mouse::GroupID::Axis, 0, (s16)(rootXReturn - screenWidth  / 2));
+        assign(HID::Mouse::GroupID::Axis, 1, (s16)(rootYReturn - screenHeight / 2));
 
-      if(hid->axes().input(0).value() != 0 || hid->axes().input(1).value() != 0) {
-        //if mouse moved, re-center mouse for next poll
-        XWarpPointer(display, None, rootWindow, 0, 0, 0, 0, screenWidth / 2, screenHeight / 2);
+        if(hid->axes().input(0).value() != 0 || hid->axes().input(1).value() != 0) {
+          //if mouse moved, re-center mouse for next poll
+          XWarpPointer(display, None, rootWindow, 0, 0, 0, 0, screenWidth / 2, screenHeight / 2);
+
+          // XWarpPointer generates an event and results in this method getting called
+          // again pretty soon, but the second time there is no movement (since the mouse is centered)
+          // and the initial relative motion values are replaced by zeros.
+          //
+          // If the above occurs before the controller code has copied the value, the motion never
+          // reach the game.
+          //
+          // This flag is used to workaround the above issue.
+          ms.ignoreNextCenter = true;
+        }
+      } else {
+        ms.ignoreNextCenter = false;
       }
     } else {
       assign(HID::Mouse::GroupID::Axis, 0, (s16)(rootXReturn - ms.relativeX));
