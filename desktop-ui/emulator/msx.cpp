@@ -25,6 +25,13 @@ MSX::MSX() {
     device.digital("B",     virtualPorts[id].pad.south);
     port.append(device); }
 
+  { InputDevice device{"Arkanoid Vaus Paddle"};
+    device.analog ("L-Left",  virtualPorts[id].pad.lstick_left);
+    device.analog ("L-Right", virtualPorts[id].pad.lstick_right);
+    device.analog ("X-Axis",  virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+    device.digital("Button",  virtualPorts[id].pad.south);
+    port.append(device); }
+
     ports.append(port);
   }
 }

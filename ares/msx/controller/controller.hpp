@@ -10,3 +10,4 @@ struct Controller {
 #include "port.hpp"
 #include "mux.hpp"
 #include "gamepad/gamepad.hpp"
+#include "vaus-paddle/vaus-paddle.hpp"
