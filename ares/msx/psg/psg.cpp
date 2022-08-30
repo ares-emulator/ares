@@ -45,14 +45,39 @@ auto PSG::power() -> void {
 }
 
 auto PSG::readIO(n1 port) -> n8 {
-  if(port == 0) return controllerPort1.read() | 0x40;
-  if(port == 1) return controllerPort2.read() | 0xc0;
+  // port 0 refers to PSG register 14, which receives inputs from
+  // either joystick depending on the state of Bit 6 in PSG register
+  // 15.
+  if (port == 0) return controllerMux.read();
+
+  // port 1 refers to PSG register 15, normally used for output.
+  // If read from, return the last value written.
+  // TODO: What does this do on a real MSX?
+  if (port == 1) return portB.data;
+
   unreachable;
 }
 
 auto PSG::writeIO(n1 port, n8 data) -> void {
-  if(port == 0) return controllerPort1.write(data);
-  if(port == 1) return controllerPort2.write(data);
+  n8 out_port1, out_port2;
+
+  // port 0 refers to PSG register 14, typically only used as an input
+  if(port == 0) return;
+
+  // port 1 refers to PSG register 15, with bits controlling level of
+  // outputs going to both ports.
+
+  out_port1.bit(0,1) = data.bit(0,1); // Pin 6,7 of general port 1
+  out_port1.bit(2)   = data.bit(4);   // Pin 8 of general port 1
+
+  out_port2.bit(0,1) = data.bit(2,3); // Pin 6,7 of general port 2
+  out_port2.bit(2)   = data.bit(5);   // Pin 8 of general port 2
+
+  controllerPort1.write(out_port1);
+  controllerPort2.write(out_port2);
+
+  // This bit controls which port is read through PSG register 14
+  controllerMux.select(data.bit(6));
 }
 
 }
