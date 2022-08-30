@@ -51,13 +51,16 @@ auto MSX::load() -> bool {
     port->connect();
   }
 
+  auto device = "Gamepad";
+  if(game->pak->attribute("vauspaddle").boolean()) device = "Arkanoid Vaus Paddle";
+
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    port->allocate("Gamepad");
+    port->allocate(device);
     port->connect();
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
-    port->allocate("Gamepad");
+    port->allocate(device);
     port->connect();
   }
 
