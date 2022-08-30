@@ -196,9 +196,11 @@ auto AY38910::write(n8 data) -> void {
     envelope.output    = !envelope.attacking ? 15 : 0;
     break;
   case 14:
+    portA.data = data;
     writeIO(0, data);
     break;
   case 15:
+    portB.data = data;
     writeIO(1, data);
     break;
   }
