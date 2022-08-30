@@ -26,6 +26,7 @@ auto MSX::load(string location) -> bool {
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("board",  document["game/board"].string());
+  pak->setAttribute("vauspaddle", (bool)document["game/vauspaddle"]);
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
 
@@ -39,7 +40,9 @@ auto MSX::save(string location) -> bool {
 }
 
 auto MSX::analyze(vector<u8>& rom) -> string {
+  string hash   = Hash::SHA256(rom).digest();
   string board = "Linear";
+  bool vauspaddle = false;
 
   // Roms <= 16KB are most likely (but not always) mirrored
   // This is because MSX looks at 0x4000 for the rom header
@@ -101,12 +104,21 @@ auto MSX::analyze(vector<u8>& rom) -> string {
     }
   }
 
+  //Special Controllers
+  //===================
+
+  // Arkanoid (Japan)
+  if (hash == "7100a087369bf03aa117f8103551047d888fc3eb86b339b1af1d51e028aee279") {
+    vauspaddle = true;
+  }
+
   string s;
   s += "game\n";
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
   s += "  region: NTSC\n";  //database required to detect region
   s +={"  board: ", board, "\n"};
+  if (vauspaddle) s += "  vauspaddle\n";
   s += "    memory\n";
   s += "      type: ROM\n";
   s +={"      size: 0x", hex(rom.size()), "\n"};
