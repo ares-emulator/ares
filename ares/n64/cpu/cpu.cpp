@@ -12,6 +12,7 @@ CPU cpu;
 #include "interpreter-ipu.cpp"
 #include "interpreter-scc.cpp"
 #include "interpreter-fpu.cpp"
+#include "interpreter-cop2.cpp"
 #include "recompiler.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
@@ -132,6 +133,7 @@ auto CPU::power(bool reset) -> void {
   scc = {};
   for(auto& r : fpu.r) r.u64 = 0;
   fpu.csr = {};
+  cop2 = {};
   fesetround(FE_TONEAREST);
   context.setMode();
 

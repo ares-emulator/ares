@@ -204,8 +204,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //COP2
   case 0x12: {
-    call(&CPU::COP2);
-    return 1;
+    return emitCOP2(instruction);
   }
 
   //COP3
@@ -454,7 +453,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //LWC2
   case 0x32: {
-    call(&CPU::COP2);
+    call(&CPU::COP2INVALID);
     return 1;
   }
 
@@ -484,7 +483,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //LDC2
   case 0x36: {
-    call(&CPU::COP2);
+    call(&CPU::COP2INVALID);
     return 1;
   }
 
@@ -517,7 +516,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //SWC2
   case 0x3a: {
-    call(&CPU::COP2);
+    call(&CPU::COP2INVALID);
     return 1;
   }
 
@@ -547,7 +546,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //SDC2
   case 0x3e: {
-    call(&CPU::COP2);
+    call(&CPU::COP2INVALID);
     return 1;
   }
 
@@ -1305,7 +1304,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //INVALID
   case 0x03: {
-    call(&CPU::INVALID);
+    call(&CPU::COP1INVALID);
     return 1;
   }
 
@@ -1335,7 +1334,7 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   //INVALID
   case 0x07: {
-    call(&CPU::INVALID);
+    call(&CPU::COP1INVALID);
     return 1;
   }
 
@@ -1976,6 +1975,73 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   }
 
+  return 0;
+}
+
+auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
+  switch(instruction >> 21 & 0x1f) {
+
+  //MFC2 Rt,Rd
+  case 0x00: {
+    lea(reg(1), Rt);
+    mov32(reg(2), imm(Rdn));
+    call(&CPU::MFC2);
+    return 0;
+  }
+
+  //DMFC2 Rt,Rd
+  case 0x01: {
+    lea(reg(1), Rt);
+    mov32(reg(2), imm(Rdn));
+    call(&CPU::DMFC2);
+    return 0;
+  }
+
+  //CFC2 Rt,Rd
+  case 0x02: {
+    lea(reg(1), Rt);
+    mov32(reg(2), imm(Rdn));
+    call(&CPU::CFC2);
+    return 0;
+  }
+
+  //INVALID
+  case 0x03: {
+    call(&CPU::COP2INVALID);
+    return 1;
+  }
+
+  //MTC0 Rt,Rd
+  case 0x04: {
+    lea(reg(1), Rt);
+    mov32(reg(2), imm(Rdn));
+    call(&CPU::MTC2);
+    return 0;
+  }
+
+  //DMTC2 Rt,Rd
+  case 0x05: {
+    lea(reg(1), Rt);
+    mov32(reg(2), imm(Rdn));
+    call(&CPU::DMTC2);
+    return 0;
+  }
+
+  //CTC2 Rt,Rd
+  case 0x06: {
+    lea(reg(1), Rt);
+    mov32(reg(2), imm(Rdn));
+    call(&CPU::CTC2);
+    return 0;
+  }
+
+  //INVALID
+  case 0x07 ... 0x0f: {
+    call(&CPU::COP2INVALID);
+    return 1;
+  }
+
+  }
   return 0;
 }
 

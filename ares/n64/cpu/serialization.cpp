@@ -138,6 +138,8 @@ auto CPU::serialize(serializer& s) -> void {
   s(fpu.csr.compare);
   s(fpu.csr.flushed);
 
+  s(cop2.latch);
+
   if constexpr(Accuracy::CPU::Recompiler) {
     recompiler.reset();
   }
