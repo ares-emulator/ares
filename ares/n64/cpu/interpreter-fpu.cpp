@@ -583,6 +583,11 @@ auto CPU::SWC1(u8 ft, cr64& rs, s16 imm) -> void {
   write<Word>(rs.u64 + imm, FT(u32));
 }
 
+auto CPU::COP1INVALID() -> void {
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  exception.floatingPoint();
+}
+
 #undef CF
 #undef FD
 #undef FS

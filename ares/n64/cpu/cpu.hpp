@@ -287,6 +287,7 @@ struct CPU : Thread {
     auto systemCall() -> void;
     auto breakpoint() -> void;
     auto reservedInstruction() -> void;
+    auto reservedInstructionCop2() -> void;
     auto coprocessor0() -> void;
     auto coprocessor1() -> void;
     auto coprocessor2() -> void;
@@ -725,6 +726,20 @@ struct CPU : Thread {
   auto MTC1(cr64& rt, u8 fs) -> void;
   auto SDC1(u8 ft, cr64& rs, s16 imm) -> void;
   auto SWC1(u8 ft, cr64& rs, s16 imm) -> void;
+  auto COP1INVALID() -> void;
+
+  //interpreter-cop2.cpp
+  struct COP2 {
+    u64 latch;
+  } cop2;
+
+  auto MFC2(r64& rt, u8 rd) -> void;
+  auto DMFC2(r64& rt, u8 rd) -> void;
+  auto CFC2(r64& rt, u8 rd) -> void;
+  auto MTC2(cr64& rt, u8 rd) -> void;
+  auto DMTC2(cr64& rt, u8 rd) -> void;
+  auto CTC2(cr64& rt, u8 rd) -> void;
+  auto COP2INVALID() -> void;
 
   //decoder.cpp
   auto decoderEXECUTE() -> void;
@@ -732,8 +747,8 @@ struct CPU : Thread {
   auto decoderREGIMM() -> void;
   auto decoderSCC() -> void;
   auto decoderFPU() -> void;
+  auto decoderCOP2() -> void;
 
-  auto COP2() -> void;
   auto COP3() -> void;
   auto INVALID() -> void;
 
@@ -795,6 +810,7 @@ struct CPU : Thread {
     auto emitREGIMM(u32 instruction) -> bool;
     auto emitSCC(u32 instruction) -> bool;
     auto emitFPU(u32 instruction) -> bool;
+    auto emitCOP2(u32 instruction) -> bool;
 
     bump_allocator allocator;
     Pool* pools[1 << 21];  //2_MiB * sizeof(void*) == 16_MiB
