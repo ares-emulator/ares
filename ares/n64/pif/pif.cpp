@@ -287,18 +287,21 @@ auto PIF::power(bool reset) -> void {
   string cic = cartridge.cic();
   n8 seed = 0x3f;
   n1 version = 0;
+  n1 type = 0;
   if(cic == "CIC-NUS-6101" || cic == "CIC-NUS-7102") seed = 0x3f, version = 1;
   if(cic == "CIC-NUS-6102" || cic == "CIC-NUS-7101") seed = 0x3f;
   if(cic == "CIC-NUS-6103" || cic == "CIC-NUS-7103") seed = 0x78;
   if(cic == "CIC-NUS-6105" || cic == "CIC-NUS-7105") seed = 0x91;
   if(cic == "CIC-NUS-6106" || cic == "CIC-NUS-7106") seed = 0x85;
+  if(cic == "CIC-NUS-8303" || cic == "CIC-NUS-8401") seed = 0xdd, type = 1;
+  if(cic == "CIC-NUS-DDUS") seed = 0xde, type = 1;
 
   n32 data;
   data.bit(0, 7) = 0x3f;     //CIC IPL2 seed
   data.bit(8,15) = seed;     //CIC IPL3 seed
   data.bit(17)   = reset;    //osResetType (0 = power; 1 = reset (NMI))
   data.bit(18)   = version;  //osVersion
-  data.bit(19)   = 0;        //osRomType (0 = Gamepak; 1 = 64DD)
+  data.bit(19)   = type;     //osRomType (0 = Gamepak; 1 = 64DD)
   ram.write<Word>(0x24, data);
 }
 
