@@ -63,9 +63,11 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(data.size() < 0x1000) {
     //too small
     return {};
-  } else if(data[0] == 0x80 && data[1] == 0x37 && data[2] == 0x12 && data[3] == 0x40) {
+  } else if((data[0] == 0x80 && data[1] == 0x37 && data[2] == 0x12 && data[3] == 0x40)
+         || (data[0] == 0x80 && data[1] == 0x27 && data[2] == 0x07 && data[3] == 0x40)) {   //64DD IPL
     //big endian
-  } else if(data[0] == 0x37 && data[1] == 0x80 && data[2] == 0x40 && data[3] == 0x12) {
+  } else if((data[0] == 0x37 && data[1] == 0x80 && data[2] == 0x40 && data[3] == 0x12)
+         || (data[0] == 0x27 && data[1] == 0x80 && data[2] == 0x40 && data[3] == 0x07)) {   //64DD IPL
     //byte-swapped
     for(u32 index = 0; index < data.size(); index += 2) {
       u8 d0 = data[index + 0];
@@ -73,7 +75,8 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
       data[index + 0] = d1;
       data[index + 1] = d0;
     }
-  } else if(data[0] == 0x40 && data[1] == 0x12 && data[2] == 0x37 && data[3] == 0x80) {
+  } else if((data[0] == 0x40 && data[1] == 0x12 && data[2] == 0x37 && data[3] == 0x80)
+         || (data[0] == 0x40 && data[1] == 0x07 && data[2] == 0x27 && data[3] == 0x80)) {   //64DD IPL
     //little endian
     for(u32 index = 0; index < data.size(); index += 4) {
       u8 d0 = data[index + 0];
@@ -129,6 +132,9 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(crc32 == 0x03b8376a) cic = ntsc ? "CIC-NUS-6103" : "CIC-NUS-7103";
   if(crc32 == 0xcf7f41dc) cic = ntsc ? "CIC-NUS-6105" : "CIC-NUS-7105";
   if(crc32 == 0xd1059c6a) cic = ntsc ? "CIC-NUS-6106" : "CIC-NUS-7106";
+  if(crc32 == 0x0c965795) cic = "CIC-NUS-8303"; // 64DD Retail IPL (Japanese)
+  if(crc32 == 0x10c68b18) cic = "CIC-NUS-8401"; // 64DD Development IPL (Japanese)
+  if(crc32 == 0x8feba21e) cic = "CIC-NUS-DDUS"; // 64DD Retail IPL (North American, unreleased)
 
   //detect the save type based on the game ID
   u32 eeprom  = 0;      //512_B or 2_KiB
