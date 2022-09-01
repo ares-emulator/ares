@@ -3,6 +3,7 @@
 namespace ares::Nintendo64 {
 
 DD dd;
+#include "controller.cpp"
 #include "io.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
@@ -73,6 +74,15 @@ auto DD::power(bool reset) -> void {
   c2s.fill();
   ds.fill();
   ms.fill();
+
+  irq = {};
+  ctl = {};
+  ctl.error = {};
+  io = {};
+  io.status = {};
+  io.bm = {};
+  io.error = {};
+  io.micro = {};
 }
 
 auto DD::raise(IRQ source) -> void {
