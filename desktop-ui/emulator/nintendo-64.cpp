@@ -5,6 +5,7 @@ struct Nintendo64 : Emulator {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
   shared_pointer<mia::Pak> gamepad;
+  shared_pointer<mia::Pak> disk;
 };
 
 Nintendo64::Nintendo64() {
@@ -53,8 +54,25 @@ auto Nintendo64::load() -> bool {
   game = mia::Medium::create("Nintendo 64");
   if(!game->load(Emulator::load(game, configuration.game))) return false;
 
-  system = mia::System::create("Nintendo 64");
-  if(!system->load()) return false;
+  string name;
+  if(game->pak->attribute("64dd").boolean()) {
+    //use 64DD firmware settings
+    vector<Firmware> firmware;
+    for(auto& emulator : emulators) {
+      if(emulator->name == "Nintendo 64DD") firmware = emulator->firmware;
+    }
+    if(!firmware) return false;  //should never occur
+    name = "Nintendo 64DD";
+    system = mia::System::create("Nintendo 64DD");
+    if(!system->load(firmware[0].location)) return errorFirmware(firmware[0], "Nintendo 64DD"), false;
+
+    disk = mia::Medium::create("Nintendo 64DD");
+    if(!disk->load(Emulator::load(disk, configuration.game))) disk.reset();
+  } else {
+    name = "Nintendo 64";
+    system = mia::System::create("Nintendo 64");
+    if(!system->load()) return false;
+  }
 
   ares::Nintendo64::option("Quality", settings.video.quality);
   ares::Nintendo64::option("Supersampling", settings.video.supersampling);
@@ -62,9 +80,14 @@ auto Nintendo64::load() -> bool {
   ares::Nintendo64::option("Disable Video Interface Processing", settings.video.disableVideoInterfaceProcessing);
 
   auto region = Emulator::region();
-  if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64 (", region, ")"})) return false;
+  if(!ares::Nintendo64::load(root, {"[Nintendo] ", name, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
+    port->allocate();
+    port->connect();
+  }
+
+  if(auto port = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive")) {
     port->allocate();
     port->connect();
   }
@@ -106,6 +129,7 @@ auto Nintendo64::save() -> bool {
 auto Nintendo64::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == "Nintendo 64") return system->pak;
   if(node->name() == "Nintendo 64 Cartridge") return game->pak;
+  if(node->name() == "Nintendo 64DD Disk") return disk->pak;
   if(node->name() == "Gamepad") return gamepad->pak;
   return {};
 }

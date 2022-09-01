@@ -8,30 +8,65 @@ DD dd;
 #include "serialization.cpp"
 
 auto DD::load(Node::Object parent) -> void {
-  node = parent->append<Node::Object>("Disk Drive");
+  node = parent->append<Node::Object>("Nintendo 64DD");
+
+  drive = node->append<Node::Port>("Disk Drive");
+  drive->setFamily("Nintendo 64DD");
+  drive->setType("Floppy Disk");
+  drive->setHotSwappable(true);
+  drive->setAllocate([&](auto name) { return allocate(drive); });
+  drive->setConnect([&] { return connect(); });
+  drive->setDisconnect([&] { return disconnect(); });
 
   iplrom.allocate(4_MiB);
   c2s.allocate(0x400);
   ds.allocate(0x100);
   ms.allocate(0x40);
 
-  if(node->setPak(pak = platform->pak(node))) {
-    if(auto fp = pak->read("64dd.ipl.rom")) {
-      iplrom.load(fp);
-    }
+  // TODO: Detect correct CIC from ipl rom
+  if(auto fp = system.pak->read("64dd.ipl.rom")) {
+    iplrom.load(fp);
   }
 
   debugger.load(node);
 }
 
 auto DD::unload() -> void {
+  if(!node) return;
+  disconnect();
+
   debugger = {};
   iplrom.reset();
   c2s.reset();
   ds.reset();
   ms.reset();
-  pak.reset();
+  drive.reset();
   node.reset();
+}
+
+auto DD::allocate(Node::Port parent) -> Node::Peripheral {
+  return disk = parent->append<Node::Peripheral>("Nintendo 64DD Disk");
+}
+
+auto DD::connect() -> void {
+  if(!disk->setPak(pak = platform->pak(disk))) return;
+
+  information = {};
+  information.title = pak->attribute("title");
+
+  fd = pak->read("program.disk");
+  if(!fd) return disconnect();
+}
+
+auto DD::disconnect() -> void {
+  if(!drive) return;
+  save();
+  pak.reset();
+  information = {};
+}
+
+auto DD::save() -> void {
+
 }
 
 auto DD::power(bool reset) -> void {

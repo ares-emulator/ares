@@ -18,6 +18,7 @@ namespace Systems {
   #include "neo-geo-pocket.cpp"
   #include "neo-geo-pocket-color.cpp"
   #include "nintendo-64.cpp"
+  #include "nintendo-64dd.cpp"
   #include "pc-engine.cpp"
   #include "saturn.cpp"
   #include "supergrafx.cpp"
@@ -50,6 +51,7 @@ auto System::create(string name) -> shared_pointer<Pak> {
   if(name == "Neo Geo Pocket") return new Systems::NeoGeoPocket;
   if(name == "Neo Geo Pocket Color") return new Systems::NeoGeoPocketColor;
   if(name == "Nintendo 64") return new Systems::Nintendo64;
+  if(name == "Nintendo 64DD") return new Systems::Nintendo64DD;
   if(name == "PC Engine") return new Systems::PCEngine;
   if(name == "Saturn") return new Systems::Saturn;
   if(name == "SuperGrafx") return new Systems::SuperGrafx;

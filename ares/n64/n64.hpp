@@ -38,6 +38,8 @@ namespace ares::Nintendo64 {
     static inline auto PAL() -> bool;
   };
 
+  inline static auto _DD() -> bool;
+
   struct Thread {
     auto reset() -> void {
       clock = 0;

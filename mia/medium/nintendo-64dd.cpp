@@ -22,6 +22,7 @@ auto Nintendo64DD::load(string location) -> bool {
 
   pak = shared_pointer{new vfs::directory};
   pak->setAttribute("title", document["game/title"].string());
+  pak->setAttribute("region", document["game/region"].string());
   pak->append("manifest.bml", manifest);
   pak->append("program.disk", input);
 
@@ -39,5 +40,6 @@ auto Nintendo64DD::analyze(vector<u8>& rom) -> string {
   s += "game\n";
   s +={"  name: ",  Medium::name(location), "\n"};
   s +={"  title: ", Medium::name(location), "\n"};
+  s += "  region:   NTSC\n";
   return s;
 }
