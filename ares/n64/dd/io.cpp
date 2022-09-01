@@ -177,7 +177,7 @@ auto DD::writeWord(u32 address, u32 data_) -> void {
   //ASIC_HARD_RESET
   if(address == 8) {
     if((data >> 16) == 0xAAAA) {
-      //reset();
+      power(true);
     }
   }
 

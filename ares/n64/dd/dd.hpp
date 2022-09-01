@@ -10,6 +10,7 @@ struct DD : Memory::IO<DD> {
   Memory::Writable c2s;
   Memory::Writable ds;
   Memory::Writable ms;
+  Memory::Writable rtc;
 
   struct Debugger {
     //debugger.cpp
@@ -56,6 +57,11 @@ struct DD : Memory::IO<DD> {
     string title;
     string cic = "CIC-NUS-8303";
   } information;
+
+  struct BCD {
+    static auto encode(u8 value) -> u8 { return value / 10 << 4 | value % 10; }
+    static auto decode(u8 value) -> u8 { return (value >> 4) * 10 + (value & 15); }
+  };
 
 private:
   struct Interrupt {
@@ -159,9 +165,9 @@ private:
       SetRTCYearMonth    = 0xf,  //set year and month
       SetRTCDayHour      = 0x10, //set day and hour
       SetRTCMinuteSecond = 0x11, //set minute and second
-      GetRTCYearMonth    = 0x12, //get year and month (must be done first)
+      GetRTCYearMonth    = 0x12, //get year and month
       GetRTCDayHour      = 0x13, //get day and hour
-      GetRTCMinuteSecond = 0x14, //get minute and second
+      GetRTCMinuteSecond = 0x14, //get minute and second (must be done first)
       SetLEDBlinkRate    = 0x15, //set led blink rate
       ReadProgramVersion = 0x1b, //read program version
     };};

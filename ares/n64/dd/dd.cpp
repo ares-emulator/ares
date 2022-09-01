@@ -23,10 +23,15 @@ auto DD::load(Node::Object parent) -> void {
   c2s.allocate(0x400);
   ds.allocate(0x100);
   ms.allocate(0x40);
+  rtc.allocate(0x6);
 
   // TODO: Detect correct CIC from ipl rom
   if(auto fp = system.pak->read("64dd.ipl.rom")) {
     iplrom.load(fp);
+  }
+
+  if(auto fp = system.pak->read("time.rtc")) {
+    rtc.load(fp);
   }
 
   debugger.load(node);
@@ -41,6 +46,7 @@ auto DD::unload() -> void {
   c2s.reset();
   ds.reset();
   ms.reset();
+  rtc.reset();
   drive.reset();
   node.reset();
 }
@@ -83,6 +89,8 @@ auto DD::power(bool reset) -> void {
   io.bm = {};
   io.error = {};
   io.micro = {};
+
+  io.status.resetState = 1;
 }
 
 auto DD::raise(IRQ source) -> void {
