@@ -284,7 +284,7 @@ auto PIF::power(bool reset) -> void {
   io = {};
 
   //write CIC seeds into PIF RAM so that cartridge checksum function passes
-  string cic = cartridge.cic();
+  string cic = cartridge.node ? cartridge.cic() : dd.cic();
   n8 seed = 0x3f;
   n1 version = 0;
   n1 type = 0;

@@ -6,6 +6,7 @@ auto enumerate() -> vector<string> {
   return {
     "[Nintendo] Nintendo 64 (NTSC)",
     "[Nintendo] Nintendo 64 (PAL)",
+    "[Nintendo] Nintendo 64DD (NTSC)",
   };
 }
 
@@ -33,6 +34,10 @@ Queue queue;
 #include "serialization.cpp"
 
 auto System::game() -> string {
+  if(dd.node && !cartridge.node) {
+    return dd.title();
+  }
+
   if(cartridge.node) {
     return cartridge.title();
   }
@@ -50,9 +55,15 @@ auto System::load(Node::System& root, string name) -> bool {
   if(node) unload();
 
   information = {};
-  if(name.find("Nintendo 64")) {
+  if(name.match("[Nintendo] Nintendo 64 (*)")) {
     information.name = "Nintendo 64";
+    information.dd = 0;
   }
+  if(name.match("[Nintendo] Nintendo 64DD (*)")) {
+    information.name = "Nintendo 64";
+    information.dd = 1;
+  }
+
   if(name.find("NTSC")) {
     information.region = Region::NTSC;
   }
@@ -87,7 +98,7 @@ auto System::load(Node::System& root, string name) -> bool {
   cpu.load(node);
   rsp.load(node);
   rdp.load(node);
-  dd.load(node);
+  if(_DD()) dd.load(node);
   #if defined(VULKAN)
   vulkan.load(node);
   #endif
@@ -116,7 +127,7 @@ auto System::unload() -> void {
   cpu.unload();
   rsp.unload();
   rdp.unload();
-  dd.unload();
+  if(_DD()) dd.unload();
   pak.reset();
   node.reset();
 }
@@ -128,6 +139,7 @@ auto System::save() -> void {
   controllerPort2.save();
   controllerPort3.save();
   controllerPort4.save();
+  if(_DD()) dd.save();
 }
 
 auto System::power(bool reset) -> void {
@@ -139,7 +151,7 @@ auto System::power(bool reset) -> void {
   queue.reset();
   cartridge.power(reset);
   rdram.power(reset);
-  dd.power(reset);
+  if(_DD()) dd.power(reset);
   mi.power(reset);
   vi.power(reset);
   ai.power(reset);

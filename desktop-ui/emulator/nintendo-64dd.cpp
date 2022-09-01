@@ -1,12 +1,10 @@
-//not functional yet
-
 struct Nintendo64DD : Emulator {
   Nintendo64DD();
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
-  shared_pointer<mia::Pak> bios;
+  shared_pointer<mia::Pak> gamepad;
 };
 
 Nintendo64DD::Nintendo64DD() {
@@ -50,11 +48,8 @@ auto Nintendo64DD::load() -> bool {
   game = mia::Medium::create("Nintendo 64DD");
   if(!game->load(Emulator::load(game, configuration.game))) return false;
 
-  bios = mia::Medium::create("Nintendo 64");
-  if(!bios->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
-
-  system = mia::System::create("Nintendo 64");
-  if(!system->load()) return false;
+  system = mia::System::create("Nintendo 64DD");
+  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
 
   ares::Nintendo64::option("Quality", settings.video.quality);
   ares::Nintendo64::option("Supersampling", settings.video.supersampling);
@@ -62,46 +57,48 @@ auto Nintendo64DD::load() -> bool {
   ares::Nintendo64::option("Disable Video Interface Processing", settings.video.disableVideoInterfaceProcessing);
 
   auto region = Emulator::region();
-  if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64 (", region, ")"})) return false;
+  if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64DD (", region, ")"})) return false;
 
-  if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
+  if(auto port = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive")) {
     port->allocate();
     port->connect();
   }
 
-  if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
-    port->allocate("Gamepad");
-    port->connect();
+  auto controllers = 4;
+  for(auto id : range(controllers)) {
+    if(auto port = root->find<ares::Node::Port>({"Controller Port ", 1 + id})) {
+      auto peripheral = port->allocate("Gamepad");
+      port->connect();
+      if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
+        if(id == 0 && game->pak->attribute("mempak").boolean()) {
+          gamepad = mia::Pak::create("Nintendo 64");
+          gamepad->pak->append("save.pak", 32_KiB);
+          gamepad->load("save.pak", ".pak", game->location);
+          port->allocate("Controller Pak");
+          port->connect();
+        } else if(game->pak->attribute("rumble").boolean()) {
+          port->allocate("Rumble Pak");
+          port->connect();
+        }
+      }
+    }
   }
 
-  if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
-    port->allocate("Gamepad");
-    port->connect();
-  }
-  
-  if(auto port = root->find<ares::Node::Port>("Controller Port 3")) {
-    port->allocate("Gamepad");
-    port->connect();
-  }
 
-  if(auto port = root->find<ares::Node::Port>("Controller Port 4")) {
-    port->allocate("Gamepad");
-    port->connect();
-  }
   return true;
 }
 
 auto Nintendo64DD::save() -> bool {
   root->save();
   system->save(system->location);
-  bios->save(bios->location);
   game->save(game->location);
+  if(gamepad) gamepad->save("save.pak", ".pak", game->location);
   return true;
 }
 
 auto Nintendo64DD::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == "Nintendo 64") return system->pak;
-  if(node->name() == "Nintendo 64 Cartridge") return bios->pak;
   if(node->name() == "Nintendo 64DD Disk") return game->pak;
+  if(node->name() == "Gamepad") return gamepad->pak;
   return {};
 }
