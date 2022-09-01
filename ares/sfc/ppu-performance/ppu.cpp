@@ -147,7 +147,7 @@ auto PPU::power(bool reset) -> void {
     auto byte = bus.read(0xffc0 + index, 0x00);
     if(byte == 0x00) break;
     if(byte == 0xff) break;
-    title.append(byte);
+    title.append((char)byte);
   }
   title.strip();
 
@@ -156,7 +156,7 @@ auto PPU::power(bool reset) -> void {
   if(title == "AIR STRIKE PATROL" || title == "DESERT FIGHTER") renderingCycle = 32;
   if(title == "FIREPOWER 2000" || title == "SUPER SWIV") renderingCycle = 32;
   if(title == "NHL '94" || title == "NHL PROHOCKEY'94") renderingCycle = 32;
-  if(title == "Suguro Quest++") renderingCycle = 128;
+  if(title == "Sugoro Quest++") renderingCycle = 128;
 }
 
 }
