@@ -75,4 +75,28 @@ auto DD::power(bool reset) -> void {
   ms.fill();
 }
 
+auto DD::raise(IRQ source) -> void {
+  debugger.interrupt((u32)source);
+  switch(source) {
+  case IRQ::MECHA: irq.mecha.line = 1; break;
+  case IRQ::BM: irq.bm.line = 1; break;
+  }
+  poll();
+}
+
+auto DD::lower(IRQ source) -> void {
+  switch(source) {
+  case IRQ::MECHA: irq.mecha.line = 0; break;
+  case IRQ::BM: irq.bm.line = 0; break;
+  }
+  poll();
+}
+
+auto DD::poll() -> void {
+  bool line = 0;
+  line |= irq.mecha.line & irq.mecha.mask;
+  line |= irq.bm.line & irq.bm.mask;
+  cpu.scc.cause.interruptPending.bit(3) = line;
+}
+
 }

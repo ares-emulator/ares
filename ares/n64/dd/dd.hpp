@@ -14,9 +14,11 @@ struct DD : Memory::IO<DD> {
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
+    auto interrupt(u8 source) -> void;
     auto io(bool mode, u32 address, u32 data) -> void;
 
     struct Tracer {
+      Node::Debugger::Tracer::Notification interrupt;
       Node::Debugger::Tracer::Notification io;
     } tracer;
   } debugger;
@@ -35,6 +37,11 @@ struct DD : Memory::IO<DD> {
   auto save() -> void;
   auto power(bool reset) -> void;
 
+  enum class IRQ : u32 { MECHA, BM };
+  auto raise(IRQ) -> void;
+  auto lower(IRQ) -> void;
+  auto poll() -> void;
+
   //io.cpp
   auto readWord(u32 address) -> u32;
   auto writeWord(u32 address, u32 data) -> void;
@@ -46,6 +53,17 @@ struct DD : Memory::IO<DD> {
     string title;
     string cic = "CIC-NUS-8303";
   } information;
+
+private:
+  struct Interrupt {
+    b1 line = 1;
+    b1 mask;
+  };
+
+  struct IRQs {
+    Interrupt mecha;
+    Interrupt bm;
+  } irq;
 };
 
 extern DD dd;
