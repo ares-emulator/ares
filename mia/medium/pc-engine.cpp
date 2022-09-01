@@ -58,11 +58,18 @@ auto PCEngine::analyze(vector<u8>& data) -> string {
   }
 
   string digest = Hash::SHA256(data).digest();
+  string title = Medium::name(location);
 
   string region = "NTSC-U";
   string board = "Linear";
   if(data.size() ==  0x60000) board = "Split";
   if(data.size() == 0x280000) board = "Banked";
+
+  //Kore ga Pro Yakyuu '89 (Japan)
+  if(digest == "d23f4d610424a66fcdbf444a6e1a7ac3e0637471b215b1ba2691356102ede84a") title = "Kore ga Pro Yakyuu '89";
+
+  //Kore ga Pro Yakyuu '90 (Japan)
+  if(digest == "b3765d35ff78b8d97d057a55c7c9f8daaf36a527e9d144b681e39ae724d4338d") title = "Kore ga Pro Yakyuu '90";
 
   //Populous
   if(digest == "16a796634a2b3da417a775cb64ffa3322ad7baf901c288934d28df967f7977f6") board = "RAM", region = "NTSC-J";
@@ -70,6 +77,27 @@ auto PCEngine::analyze(vector<u8>& data) -> string {
 
   //Ten no Koe Bank
   if(digest == "16d43e32b34ed40b0a59f4122370f4d973af33a6122c9ccbfab6bb21cf36f1b3") board = "RAM";
+
+  //TV Sports Baseball (USA) (Proto)
+  if(digest == "8e8294f197aa260271d59a5971369523bb6ff8d52bab0ae6b40044f3875e8c86") title = "TV Sports Baseball";
+
+  //TV Sports Football (Japan)
+  if(digest == "16f4b39a916e8db28f6ec4094d0612de82bb5ad40a30aceb8488752376b08d8f"
+  //TV Sports Football (USA)
+  || digest == "c8a438359f1a65c0f0a079b2c89274760b34a78e32244f11b677eca43c5f22e4") title = "TV Sports Football";
+
+  //TV Sports Hockey (Japan)
+  if(digest == "0c4605a3c5fe9c035dda9478cbe06bf92884198dac112e2060435c9469d0b5b1"
+  //TV Sports Hockey (USA)
+  || digest == "866b93e455a2ebe5afff9386b517e02d1feb03e72c276ad8e7e3423e48c9a061") title = "TV Sports Hockey";
+
+  //Valkyrie no Densetsu
+  if(digest == "633e6cea16faa32a135099f6002ef08f253781ea26a03add646f18fcfecc71ce") title = "Valkyrie no Densetsu";
+
+  //Victory Run - Eikou no 13,000km (Japan)
+  if(digest == "5e2bce8efbba82bd89efd571c3534360344797262a5762cdf253aa61e01523a1"
+  //Victory Run (USA)
+  || digest == "769aafaee88972586a77c2b4359ad837844a429a7e7b86ae36d25fcaf0266b20") title = "Victory Run";
 
   //PC Engine System Card 1.00
   if(digest == "afe9f27f91ac918348555b86298b4f984643eafa2773196f2c5441ea84f0c3bb") board = "System Card", region = "NTSC-J";
@@ -97,7 +125,7 @@ auto PCEngine::analyze(vector<u8>& data) -> string {
   s += "game\n";
   s +={"  sha256: ", digest, "\n"};
   s +={"  name:   ", Medium::name(location), "\n"};
-  s +={"  title:  ", Medium::name(location), "\n"};
+  s +={"  title:  ", title, "\n"};
   s +={"  region: ", region, "\n"};
   s +={"  board:  ", board, "\n"};
   s += "    memory\n";
