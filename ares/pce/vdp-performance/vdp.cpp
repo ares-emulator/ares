@@ -53,7 +53,7 @@ auto VDP::main() -> void {
     vdc1.vsync();
   }
 
-  step(512);
+  step(renderingCycle);
 
   vdc0.hclock(); if(Model::SuperGrafx())
   vdc1.hclock();
@@ -119,6 +119,16 @@ auto VDP::power() -> void {
   vdc0.power(); if(Model::SuperGrafx())
   vdc1.power(); if(Model::SuperGrafx())
   vpc.power();
+
+  renderingCycle = 512;
+  string game = system.game();
+  if(game == "Kore ga Pro Yakyuu '89") renderingCycle = 128;
+  if(game == "Kore ga Pro Yakyuu '90") renderingCycle = 128;
+  if(game == "TV Sports Baseball") renderingCycle = 128;
+  if(game == "TV Sports Football") renderingCycle = 128;
+  if(game == "TV Sports Hockey") renderingCycle = 128;
+  if(game == "Valkyrie no Densetsu") renderingCycle = 128;
+  if(game == "Victory Run") renderingCycle = 32;
 }
 
 }

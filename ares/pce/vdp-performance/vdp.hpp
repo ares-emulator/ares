@@ -31,6 +31,8 @@ struct VDP : VDPBase::Implementation {
   VDC vdc0;
   VDC vdc1;
   VPC vpc;
+
+  n32 renderingCycle;
 };
 
 extern VDP vdpPerformanceImpl;
