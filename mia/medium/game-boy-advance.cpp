@@ -107,7 +107,7 @@ auto GameBoyAdvance::analyze(vector<u8>& rom) -> string {
     if(list.first().beginsWith("EEPROM_V")) {
       s += "    memory\n";
       s += "      type: EEPROM\n";
-      s += "      size: 0x0\n";  //auto-detected
+      s += "      size: 0x4001\n";  // auto-detected
       s += "      content: Save\n";
     }
 

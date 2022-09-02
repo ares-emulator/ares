@@ -13,10 +13,15 @@ auto Cartridge::EEPROM::read() -> bool {
   //EEPROM size auto-detection
   if(bits == 0 && mode == Mode::ReadAddress) {
     print("EEPROM address bits: ", --addressbits, "\n");
-    bits = addressbits == 6 ? 6 : 14;
-    size = 8192;
+    bits = addressbits;
+    size = 1 << addressbits;
     mode = Mode::ReadData;
     offset = 0;
+
+    print("EEPROM size: ", size, "\n");
+    delete[] data;
+    data = new n8[size];
+    for(auto n : range(size)) data[n] = 0xff;
     //fallthrough
   }
 
