@@ -54,10 +54,18 @@ else
   rdelete = $(info Deleting $1 ...) @rm -rf $1
 endif
 
-compiler.c      = $(compiler) -x c -std=c11
-compiler.cpp    = $(compiler) -x c++ -std=c++17 -fno-operator-names
-compiler.objc   = $(compiler) -x objective-c -std=c11
-compiler.objcpp = $(compiler) -x objective-c++ -std=c++17 -fno-operator-names
+ifeq ($(ccache), true)
+  compiler.c      = ccache $(compiler) -x c -std=c11
+  compiler.cpp    = ccache $(compiler) -x c++ -std=c++17 -fno-operator-names
+  compiler.objc   = ccache $(compiler) -x objective-c -std=c11
+  compiler.objcpp = ccache $(compiler) -x objective-c++ -std=c++17 -fno-operator-names
+else
+  compiler.c      = $(compiler) -x c -std=c11
+  compiler.cpp    = $(compiler) -x c++ -std=c++17 -fno-operator-names
+  compiler.objc   = $(compiler) -x objective-c -std=c11
+  compiler.objcpp = $(compiler) -x objective-c++ -std=c++17 -fno-operator-names
+endif
+
 
 flags.c      = -x c -std=c11
 flags.cpp    = -x c++ -std=c++17 -fno-operator-names
