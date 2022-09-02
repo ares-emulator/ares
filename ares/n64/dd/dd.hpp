@@ -91,6 +91,12 @@ private:
       n1 invalidParam;
       n1 unknown;
     } error;
+    n1 standbyDelayDisable = 0;
+    n16 standbyDelay = 3 * 0x17;
+    n1 sleepDelayDisable = 0;
+    n16 sleepDelay = 1 * 0x17;
+    n8 ledOnTime = 0x4;
+    n8 ledOffTime = 0x4;
   } ctl;
 
   struct IO {
