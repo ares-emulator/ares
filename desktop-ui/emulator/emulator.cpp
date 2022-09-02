@@ -177,6 +177,11 @@ auto Emulator::errorFirmware(const Firmware& firmware, string system) -> void {
 }
 
 auto Emulator::input(ares::Node::Input::Input input) -> void {
+  //looking up inputs is very time-consuming; skip call if input was called too recently
+  auto thisPoll = chrono::millisecond();
+  if(thisPoll - input->lastPoll < 5) return;
+  input->lastPoll = thisPoll;
+
   auto device = ares::Node::parent(input);
   if(!device) return;
 
