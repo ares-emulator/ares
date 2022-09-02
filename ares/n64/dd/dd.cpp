@@ -23,15 +23,11 @@ auto DD::load(Node::Object parent) -> void {
   c2s.allocate(0x400);
   ds.allocate(0x100);
   ms.allocate(0x40);
-  rtc.allocate(0x6);
+  rtc.allocate(0x8);
 
   // TODO: Detect correct CIC from ipl rom
   if(auto fp = system.pak->read("64dd.ipl.rom")) {
     iplrom.load(fp);
-  }
-
-  if(auto fp = system.pak->read("time.rtc")) {
-    rtc.load(fp);
   }
 
   debugger.load(node);
@@ -63,6 +59,10 @@ auto DD::connect() -> void {
 
   fd = pak->read("program.disk");
   if(!fd) return disconnect();
+
+  if(auto fp = system.pak->read("time.rtc")) {
+    rtc.load(fp);
+  }
 }
 
 auto DD::disconnect() -> void {
@@ -73,7 +73,9 @@ auto DD::disconnect() -> void {
 }
 
 auto DD::save() -> void {
-
+  if(auto fp = system.pak->write("time.rtc")) {
+    rtc.save(fp);
+  }
 }
 
 auto DD::power(bool reset) -> void {
@@ -83,12 +85,7 @@ auto DD::power(bool reset) -> void {
 
   irq = {};
   ctl = {};
-  ctl.error = {};
   io = {};
-  io.status = {};
-  io.bm = {};
-  io.error = {};
-  io.micro = {};
 
   io.status.resetState = 1;
 }
