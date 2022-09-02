@@ -46,6 +46,12 @@ struct DD : Memory::IO<DD> {
   //controller.cpp
   auto command(n16 command) -> void;
 
+  //rtc.cpp
+  auto rtcLoad() -> void;
+  auto rtcSave() -> void;
+  auto rtcTick(u32 offset) -> void;
+  auto rtcTickSecond() -> void;
+
   //io.cpp
   auto readWord(u32 address) -> u32;
   auto writeWord(u32 address, u32 data) -> void;
