@@ -112,12 +112,14 @@ template<typename... P> struct variant final {  //final as destructor is not vir
   }
 
   auto& operator=(const variant& source) {
+    if(this == &source) return *this;
     reset();
     if(assigned = source.assigned) variant_copy<P...>(1, source.assigned, (void*)data, (void*)source.data);
     return *this;
   }
 
   auto& operator=(variant&& source) {
+    if(this == &source) return *this;
     reset();
     if(assigned = source.assigned) variant_move<P...>(1, source.assigned, (void*)data, (void*)source.data);
     source.assigned = 0;

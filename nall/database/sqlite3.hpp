@@ -19,6 +19,7 @@ struct SQLite3 {
     Statement(Statement&& source) { operator=(move(source)); }
 
     auto operator=(Statement&& source) -> Statement& {
+      if(this == &source) return *this;
       _statement = source._statement;
       _response = source._response;
       _output = source._output;
@@ -98,6 +99,8 @@ struct SQLite3 {
     }
 
     auto operator=(Query&& source) -> Query& {
+      if(this == &source) return *this;
+      sqlite3_finalize(statement());
       _statement = source._statement;
       _input = source._input;
       source._statement = nullptr;

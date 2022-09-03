@@ -55,6 +55,7 @@ inline string_view::~string_view() {
 
 inline auto string_view::operator=(const string_view& source) -> type& {
   if(this == &source) return *this;
+  if(_string) delete _string;
   _string = nullptr;
   _data = source._data;
   _size = source._size;
@@ -63,6 +64,7 @@ inline auto string_view::operator=(const string_view& source) -> type& {
 
 inline auto string_view::operator=(string_view&& source) -> type& {
   if(this == &source) return *this;
+  if(_string) delete _string;
   _string = source._string;
   _data = source._data;
   _size = source._size;
