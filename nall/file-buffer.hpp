@@ -34,6 +34,9 @@ struct file_buffer {
   ~file_buffer() { close(); }
 
   auto operator=(file_buffer&& source) -> file_buffer& {
+    if(this == &source) return *this;
+    close();
+
     buffer = source.buffer;
     bufferOffset = source.bufferOffset;
     bufferDirty = source.bufferDirty;

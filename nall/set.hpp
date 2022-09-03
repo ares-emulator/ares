@@ -44,6 +44,7 @@ template<typename T> struct set {
 
   auto operator=(set&& source) -> set& {
     if(this == &source) return *this;
+    reset();
     root = source.root;
     nodes = source.nodes;
     source.root = nullptr;

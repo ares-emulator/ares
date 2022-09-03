@@ -19,6 +19,7 @@ struct ODBC {
     Statement(Statement&& source) { operator=(move(source)); }
 
     auto operator=(Statement&& source) -> Statement& {
+      if(this == &source) return *this;
       _statement = source._statement;
       _output = source._output;
       _values = move(source._values);
@@ -108,6 +109,8 @@ struct ODBC {
     }
 
     auto operator=(Query&& source) -> Query& {
+      if(this == &source) return *this;
+      if(statement()) SQLFreeHandle(SQL_HANDLE_STMT, _statement);
       Statement::operator=(move(source));
       _bindings = move(source._bindings);
       _result = source._result;

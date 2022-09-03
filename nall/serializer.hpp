@@ -98,6 +98,7 @@ struct serializer {
   }
 
   auto operator=(const serializer& s) -> serializer& {
+    if(this == &s) return *this;
     if(_data) delete[] _data;
 
     _mode = s._mode;
@@ -110,6 +111,7 @@ struct serializer {
   }
 
   auto operator=(serializer&& s) -> serializer& {
+    if(this == &s) return *this;
     if(_data) delete[] _data;
 
     _mode = s._mode;

@@ -96,6 +96,7 @@ struct thread {
   ~thread() { close(); }
 
   auto operator=(thread&& source) -> thread& {
+    if(this == &source) return *this;
     close();
     handle = source.handle;
     source.handle = 0;

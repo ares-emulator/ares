@@ -21,6 +21,7 @@ struct hashset {
   ~hashset() { reset(); }
 
   auto operator=(const hashset& source) -> hashset& {
+    if(this == &source) return *this;
     reset();
     if(source.pool) {
       for(u32 n : range(source.count)) {
@@ -31,6 +32,7 @@ struct hashset {
   }
 
   auto operator=(hashset&& source) -> hashset& {
+    if(this == &source) return *this;
     reset();
     pool = source.pool;
     length = source.length;

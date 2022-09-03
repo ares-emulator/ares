@@ -52,12 +52,14 @@ struct any {
   }
 
   auto operator=(const any& source) -> any& {
+    if(this == &source) return *this;
     if(container) { delete container; container = nullptr; }
     if(source.container) container = source.container->copy();
     return *this;
   }
 
   auto operator=(any&& source) -> any& {
+    if(this == &source) return *this;
     if(container) delete container;
     container = source.container;
     source.container = nullptr;

@@ -100,6 +100,7 @@ struct queue {
 
   auto operator=(queue&& source) -> queue& {
     if(this == &source) return *this;
+    delete[] _data;
     _data = source._data;
     _capacity = source._capacity;
     _size = source._size;
