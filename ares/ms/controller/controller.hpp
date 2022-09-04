@@ -33,3 +33,5 @@ struct Controller {
 #include "light-phaser/light-phaser.hpp"
 #include "paddle/paddle.hpp"
 #include "sports-pad/sports-pad.hpp"
+#include "md-control-pad/md-control-pad.hpp"
+#include "md-fighting-pad/md-fighting-pad.hpp"
