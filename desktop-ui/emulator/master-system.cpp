@@ -51,6 +51,32 @@ MasterSystem::MasterSystem() {
     device.digital ("2", virtualPorts[id].mouse.right);
     port.append(device); }
 
+  { InputDevice device{"MD Control Pad"};
+    device.digital("Up",    virtualPorts[id].pad.up);
+    device.digital("Down",  virtualPorts[id].pad.down);
+    device.digital("Left",  virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("A",     virtualPorts[id].pad.west);
+    device.digital("B",     virtualPorts[id].pad.south);
+    device.digital("C",     virtualPorts[id].pad.east);
+    device.digital("Start", virtualPorts[id].pad.start);
+    port.append(device); }
+
+  { InputDevice device{"MD Fighting Pad"};
+    device.digital("Up",    virtualPorts[id].pad.up);
+    device.digital("Down",  virtualPorts[id].pad.down);
+    device.digital("Left",  virtualPorts[id].pad.left);
+    device.digital("Right", virtualPorts[id].pad.right);
+    device.digital("A",     virtualPorts[id].pad.west);
+    device.digital("B",     virtualPorts[id].pad.south);
+    device.digital("C",     virtualPorts[id].pad.east);
+    device.digital("X",     virtualPorts[id].pad.l_bumper);
+    device.digital("Y",     virtualPorts[id].pad.north);
+    device.digital("Z",     virtualPorts[id].pad.r_bumper);
+    device.digital("Mode",  virtualPorts[id].pad.select);
+    device.digital("Start", virtualPorts[id].pad.start);
+    port.append(device); }
+
     ports.append(port);
   }
 }
