@@ -55,7 +55,6 @@ auto VI::load(Node::Object parent) -> void {
 
 auto VI::unload() -> void {
   debugger = {};
-  screen->quit();
   node->remove(screen);
   screen.reset();
   node.reset();
