@@ -87,6 +87,7 @@ auto System::load(Node::System& root, string name) -> bool {
 auto System::unload() -> void {
   if(!node) return;
   save();
+  if(gpu.screen) gpu.screen->quit(); //stop video thread
   memory.unload();
   cpu.unload();
   gpu.unload();

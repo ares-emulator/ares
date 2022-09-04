@@ -97,6 +97,7 @@ auto System::load(Node::System& root, string name) -> bool {
 auto System::unload() -> void {
   if(!node) return;
   save();
+  if(vi.screen) vi.screen->quit(); //stop video thread
   #if defined(VULKAN)
   vulkan.unload();
   #endif

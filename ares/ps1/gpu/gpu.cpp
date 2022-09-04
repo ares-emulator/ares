@@ -62,7 +62,6 @@ auto GPU::unload() -> void {
   debugger = {};
   vram.reset();
   overscan.reset();
-  screen->quit();
   node->remove(screen);
   screen.reset();
   node.reset();
