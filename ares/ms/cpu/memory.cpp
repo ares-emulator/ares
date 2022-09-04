@@ -250,7 +250,7 @@ auto CPU::out(n16 address, n8 data) -> void {
     writeData.bit(0,1) = data.bit(2,3); // Port 2 TR and TH direction
     writeData.bit(2) = data.bit(6);
     writeData.bit(3) = data.bit(7);
-    controllerPort2.write(data);
+    controllerPort2.write(writeData);
   }
 
   else if((address & 0xc0) == 0x40) {
