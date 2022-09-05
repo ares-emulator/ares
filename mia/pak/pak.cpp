@@ -86,6 +86,7 @@ auto Pak::load(string name, string extension, string location) -> bool {
   if(!location) location = this->location;
   if(auto load = pak->write(name)) {
     if(auto memory = file::read(saveLocation(location, name, extension))) {
+      if(!load->size()) load->resize(memory.size());
       load->write(memory);
       load->setAttribute("loaded", true);
       return true;
