@@ -13,7 +13,7 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 Cartridge::Cartridge() {
   mrom.data = new n8[mrom.size = 32 * 1024 * 1024];
   sram.data = new n8[sram.size = 32 * 1024];
-  eeprom.data = new n8[eeprom.size = 8 * 1024];
+  eeprom.data = new n8[eeprom.size = 16 * 1024];
   flash.data = new n8[flash.size = 128 * 1024];
 }
 
@@ -50,9 +50,9 @@ auto Cartridge::connect() -> void {
 
   if(auto fp = pak->read("save.eeprom")) {
     has.eeprom = true;
-    eeprom.size = min(8_KiB, fp->size());
+    eeprom.size = min(16_KiB, fp->size());
     eeprom.bits = eeprom.size <= 512 ? 6 : 14;
-    if(eeprom.size == 0) eeprom.size = 8192, eeprom.bits = 0;  //auto-detect size
+    if(eeprom.size == 0) eeprom.size = 16384, eeprom.bits = 0;  //auto-detect size
     eeprom.mask = mrom.size > 16 * 1024 * 1024 ? 0x0fffff00 : 0x0f000000;
     eeprom.test = mrom.size > 16 * 1024 * 1024 ? 0x0dffff00 : 0x0d000000;
     for(auto n : range(eeprom.size)) eeprom.data[n] = 0xff;
@@ -96,6 +96,7 @@ auto Cartridge::save() -> void {
   }
 
   if(auto fp = pak->write("save.eeprom")) {
+    if(fp->size() < eeprom.size) fp->resize(eeprom.size);
     fp->write({eeprom.data, eeprom.size});
   }
 
