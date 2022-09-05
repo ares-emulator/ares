@@ -26,5 +26,6 @@ jobs:
                     package_directory: '${{ matrix.package }}'
                     repository_organization: 'ares-emulator'
                     repository_name: '${{ matrix.package }}'
+                    branch: 'master'
                     user_name: "Luke Usher"
                     user_email: "luke.usher@outlook.com"
