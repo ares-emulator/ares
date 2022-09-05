@@ -3,4 +3,7 @@ all: desktop
 desktop:
 	$(MAKE) -C desktop-ui
 
-.PHONY: all desktop
+clean:
+	$(MAKE) -C desktop-ui clean
+
+.PHONY: all desktop clean
