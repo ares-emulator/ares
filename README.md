@@ -57,6 +57,27 @@ Build Output
 
 There is a single binary produced at the end of compilation which can be found in `desktop-ui/out`. On OS's besides Linux, the `Database` & `Shader` directories are copied over here as well. On Linux, running `make install` after compilation will copy these directories and binary into suitable locations (see desktop-ui/GNUmakefile for details). Alternatively, these directories can be copied from `ares/Shaders/*` and `mia/Database/*`.
 
+
+Command-line options
+--------------------
+
+When started from the command-line, ares accepts a few options.
+
+```
+Usage: ./ares [options] game
+
+  --help                 Displays available options and exit
+  --fullscreen           Start in full screen mode
+  --system system        Specify the system name
+```
+
+The --system option is useful when the system type cannot be auto-detected.
+--fullscreen will only have an effect if a game is also passed in argument.
+
+Example:
+`ares --system MSX examples.rom --fullscreen`
+
+
 High-level Components
 ---------------------
 
