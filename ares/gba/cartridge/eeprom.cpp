@@ -19,6 +19,8 @@ auto Cartridge::EEPROM::read() -> bool {
     offset = 0;
 
     print("EEPROM size: ", size, "\n");
+    delete[] data;
+    data = new n8[size];
     for(auto n : range(size)) data[n] = 0xff;
     //fallthrough
   }
