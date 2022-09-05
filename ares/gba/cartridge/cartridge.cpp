@@ -50,9 +50,7 @@ auto Cartridge::connect() -> void {
 
   if(auto fp = pak->read("save.eeprom")) {
     has.eeprom = true;
-    eeprom.size = min(16_KiB, fp->size());
-    eeprom.bits = eeprom.size <= 512 ? 6 : 14;
-    if(eeprom.size > 0x4000) eeprom.size = 16, eeprom.bits = 0;  //auto-detect size
+    if(eeprom.size > 0x4000) eeprom.size = 16384, eeprom.bits = 0;  //auto-detect size
     eeprom.mask = mrom.size > 16 * 1024 * 1024 ? 0x0fffff00 : 0x0f000000;
     eeprom.test = mrom.size > 16 * 1024 * 1024 ? 0x0dffff00 : 0x0d000000;
     for(auto n : range(eeprom.size)) eeprom.data[n] = 0xff;
