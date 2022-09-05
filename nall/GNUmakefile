@@ -88,6 +88,11 @@ ifeq ($(compiler),)
   else
     compiler := g++
   endif
+  # detect clang-as-gcc
+  compiler.version := $(shell $(compiler) --version)
+  ifeq ($(findstring clang,$(compiler.version)),clang)
+    compiler := clang++
+  endif
 endif
 
 # architecture detection
