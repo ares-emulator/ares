@@ -1,6 +1,6 @@
-all: desktop
+targets = all clean install uninstall verbose
 
-desktop:
-	$(MAKE) -C desktop-ui
+$(targets):
+	@$(MAKE) -C desktop-ui $@
 
-.PHONY: all desktop
+.PHONY: $(targets)
