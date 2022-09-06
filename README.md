@@ -1,4 +1,4 @@
-![ares logo](https://ares-emulator.github.io/images/logo.png)
+![ares logo](https://github.com/ares-emulator/ares/blob/master/ares/ares/resource/logo.png)
 
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://github.com/higan-emu/ares/blob/master/LICENSE)
 
