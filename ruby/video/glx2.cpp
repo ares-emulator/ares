@@ -62,7 +62,7 @@ struct VideoGLX2 : VideoDriver {
 
   auto setBlocking(bool blocking) -> bool override {
     acquireContext();
-    if(glXSwapInterval) glXSwapInterval(blocking);
+    glXSwapInterval(blocking);
     releaseContext();
     return true;
   }
@@ -300,10 +300,11 @@ private:
     _glXContext = glXCreateContext(_display, visual, 0, GL_TRUE);
     glXMakeCurrent(_display, _glXWindow = _window, _glXContext);
 
-    if(!glXSwapInterval) glXSwapInterval = (int (*)(int))glGetProcAddress("glXSwapIntervalMESA");
-    if(!glXSwapInterval) glXSwapInterval = (int (*)(int))glGetProcAddress("glXSwapIntervalSGI");
+    glXSwapIntervalEXT  = (int (*)(Display*, GLXDrawable drawable, int))glGetProcAddress("glXSwapIntervalEXT");
+    glXSwapIntervalMESA = (int (*)(int))glGetProcAddress("glXSwapIntervalMESA");
+    glXSwapIntervalSGI  = (int (*)(int))glGetProcAddress("glXSwapIntervalSGI");
 
-    if(glXSwapInterval) glXSwapInterval(self.blocking);
+    glXSwapInterval(self.blocking);
 
     s32 value = 0;
     glXGetConfig(_display, visual, GLX_DOUBLEBUFFER, &value);
@@ -402,5 +403,15 @@ private:
   u32 _glHeight = 0;
   u32 _glFormat = GL_UNSIGNED_INT_8_8_8_8_REV;
 
-  auto (*glXSwapInterval)(int) -> int = nullptr;
+  auto glXSwapInterval(int blocking) -> int {
+    //note that the ordering is very important! MESA declares SGI, but the SGI function does nothing
+    if(glXSwapIntervalEXT  && glXSwapIntervalEXT(_display, glXGetCurrentDrawable(), blocking)) return 1;
+    if(glXSwapIntervalMESA && glXSwapIntervalMESA(blocking)) return 1;
+    if(glXSwapIntervalSGI  && glXSwapIntervalSGI(blocking)) return 1;
+    return 0;
+  }
+
+  auto (*glXSwapIntervalMESA)(int) -> int = nullptr;
+  auto (*glXSwapIntervalSGI)(int) -> int = nullptr;
+  auto (*glXSwapIntervalEXT)(Display *dpy, GLXDrawable drawable, int interval) -> int = nullptr;
 };

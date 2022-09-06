@@ -48,7 +48,7 @@ struct VideoGLX : VideoDriver, OpenGL {
 
   auto setBlocking(bool blocking) -> bool override {
     acquireContext();
-    if(glXSwapInterval) glXSwapInterval(blocking);
+    glXSwapInterval(blocking);
     releaseContext();
     return true;
   }
@@ -246,9 +246,9 @@ private:
     glXMakeCurrent(_display, _glXWindow = _window, _glXContext);
 
     //glXSwapInterval is used to toggle Vsync
-    //note that the ordering is very important! MESA declares SGI, but the SGI function does nothing
-    if(!glXSwapInterval) glXSwapInterval = (int (*)(int))glGetProcAddress("glXSwapIntervalMESA");
-    if(!glXSwapInterval) glXSwapInterval = (int (*)(int))glGetProcAddress("glXSwapIntervalSGI");
+    glXSwapIntervalEXT  = (int (*)(Display*, GLXDrawable drawable, int))glGetProcAddress("glXSwapIntervalEXT");
+    glXSwapIntervalMESA = (int (*)(int))glGetProcAddress("glXSwapIntervalMESA");
+    glXSwapIntervalSGI  = (int (*)(int))glGetProcAddress("glXSwapIntervalSGI");
 
     if(auto glXCreateContextAttribs = (auto (*)(Display*, GLXFBConfig, GLXContext, int, const int*) -> GLXContext)glGetProcAddress("glXCreateContextAttribsARB")) {
       int attributes[] = {
@@ -276,7 +276,7 @@ private:
       return false;
     }
 
-    if(glXSwapInterval) glXSwapInterval(self.blocking);
+    glXSwapInterval(self.blocking);
 
     //read attributes of frame buffer for later use, as requested attributes from above are not always granted
     int value = 0;
@@ -312,7 +312,17 @@ private:
 
   bool _ready = false;
 
-  auto (*glXSwapInterval)(int) -> int = nullptr;
+  auto glXSwapInterval(int blocking) -> int {
+    //note that the ordering is very important! MESA declares SGI, but the SGI function does nothing
+    if(glXSwapIntervalEXT  && glXSwapIntervalEXT(_display, glXGetCurrentDrawable(), blocking)) return 1;
+    if(glXSwapIntervalMESA && glXSwapIntervalMESA(blocking)) return 1;
+    if(glXSwapIntervalSGI  && glXSwapIntervalSGI(blocking)) return 1;
+    return 0;
+  }
+
+  auto (*glXSwapIntervalMESA)(int) -> int = nullptr;
+  auto (*glXSwapIntervalSGI)(int) -> int = nullptr;
+  auto (*glXSwapIntervalEXT)(Display *dpy, GLXDrawable drawable, int interval) -> int = nullptr;
 
   Display* _display = nullptr;
   u32 _monitorX = 0;
