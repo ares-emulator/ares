@@ -125,6 +125,62 @@ auto CPU::setControlRegisterFPU(n5 index, n32 data) -> void {
   }
 }
 
+auto CPU::fpeDivisionByZero() -> bool {
+  fpu.csr.cause.divisionByZero = 1;
+  if(fpu.csr.enable.divisionByZero) return true;
+  fpu.csr.flag.divisionByZero = 1;
+  return false;
+}
+
+auto CPU::fpeInexact() -> bool {
+  fpu.csr.cause.inexact = 1;
+  if(fpu.csr.enable.inexact) return true;
+  fpu.csr.flag.inexact = 1;
+  return false;
+}
+
+auto CPU::fpeUnderflow() -> bool {
+  fpu.csr.cause.underflow = 1;
+  if(fpu.csr.enable.underflow) return true;
+  fpu.csr.flag.underflow = 1;
+  return false;
+}
+
+auto CPU::fpeOverflow() -> bool {
+  fpu.csr.cause.overflow = 1;
+  if(fpu.csr.enable.overflow) return true;
+  fpu.csr.flag.overflow = 1;
+  return false;
+}
+
+auto CPU::fpeInvalidOperation() -> bool {
+  fpu.csr.cause.invalidOperation = 1;
+  if(fpu.csr.enable.invalidOperation) return true;
+  fpu.csr.flag.invalidOperation = 1;
+  return false;
+}
+
+auto CPU::checkFPUExceptions() -> bool {
+  int exc = fetestexcept(FE_ALL_EXCEPT);
+  if (!exc) return false;
+
+  bool raise = false;
+  if(exc & FE_DIVBYZERO) raise |= fpeDivisionByZero();
+  if(exc & FE_INEXACT)   raise |= fpeInexact();
+  if(exc & FE_UNDERFLOW) raise |= fpeUnderflow();
+  if(exc & FE_OVERFLOW)  raise |= fpeOverflow();
+  if(exc & FE_INVALID)   raise |= fpeInvalidOperation();
+  if(raise) exception.floatingPoint();
+  return raise;
+}
+
+#define CHECK_FPE(type, operation) ({ \
+  feclearexcept(FE_ALL_EXCEPT); \
+  volatile type res = operation; \
+  if (checkFPUExceptions()) return; \
+  (res); \
+})
+
 #define CF fpu.csr.compare
 #define FD(type) fgr<type>(fd)
 #define FS(type) fgr<type>(fs)
@@ -169,12 +225,12 @@ auto CPU::FABS_D(u8 fd, u8 fs) -> void {
 
 auto CPU::FADD_S(u8 fd, u8 fs, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f32) = FS(f32) + FT(f32);
+  FD(f32) = CHECK_FPE(f32, FS(f32) + FT(f32));
 }
 
 auto CPU::FADD_D(u8 fd, u8 fs, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f64) = FS(f64) + FT(f64);
+  FD(f64) = CHECK_FPE(f64, FS(f64) + FT(f64));
 }
 
 auto CPU::FCEIL_L_S(u8 fd, u8 fs) -> void {
@@ -200,9 +256,7 @@ auto CPU::FCEIL_W_D(u8 fd, u8 fs) -> void {
 #define  XORDERED(type, value, quiet) \
   if(isnan(FS(type)) || isnan(FT(type))) { \
     if constexpr(!quiet) { \
-      fpu.csr.cause.invalidOperation = 1; \
-      if(fpu.csr.enable.invalidOperation) return exception.floatingPoint(); \
-      fpu.csr.flag.invalidOperation = 1; \
+      if(fpeInvalidOperation()) return exception.floatingPoint(); \
     } \
     CF = value; \
     return; \
@@ -425,22 +479,12 @@ auto CPU::FCVT_W_D(u8 fd, u8 fs) -> void {
 
 auto CPU::FDIV_S(u8 fd, u8 fs, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  if(!FT(f32)) {
-    fpu.csr.cause.divisionByZero = 1;
-    if(fpu.csr.enable.divisionByZero) return exception.floatingPoint();
-    fpu.csr.flag.divisionByZero = 1;
-  }
-  FD(f32) = FS(f32) / FT(f32);
+  FD(f32) = CHECK_FPE(f32, FS(f32) / FT(f32));
 }
 
 auto CPU::FDIV_D(u8 fd, u8 fs, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  if(!FT(f64)) {
-    fpu.csr.cause.divisionByZero = 1;
-    if(fpu.csr.enable.divisionByZero) return exception.floatingPoint();
-    fpu.csr.flag.divisionByZero = 1;
-  }
-  FD(f64) = FS(f64) / FT(f64);
+  FD(f64) = CHECK_FPE(f64, FS(f64) / FT(f64));
 }
 
 auto CPU::FFLOOR_L_S(u8 fd, u8 fs) -> void {
@@ -475,22 +519,22 @@ auto CPU::FMOV_D(u8 fd, u8 fs) -> void {
 
 auto CPU::FMUL_S(u8 fd, u8 fs, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f32) = FS(f32) * FT(f32);
+  FD(f32) = CHECK_FPE(f32, FS(f32) * FT(f32));
 }
 
 auto CPU::FMUL_D(u8 fd, u8 fs, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f64) = FS(f64) * FT(f64);
+  FD(f64) = CHECK_FPE(f64, FS(f64) * FT(f64));
 }
 
 auto CPU::FNEG_S(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f32) = -FS(f32);
+  FD(f32) = CHECK_FPE(f32, -FS(f32));
 }
 
 auto CPU::FNEG_D(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f64) = -FS(f64);
+  FD(f64) = CHECK_FPE(f64, -FS(f64));
 }
 
 auto CPU::FROUND_L_S(u8 fd, u8 fs) -> void {
@@ -525,12 +569,12 @@ auto CPU::FSQRT_D(u8 fd, u8 fs) -> void {
 
 auto CPU::FSUB_S(u8 fd, u8 fs, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f32) = FS(f32) - FT(f32);
+  FD(f32) = CHECK_FPE(f32, FS(f32) - FT(f32));
 }
 
 auto CPU::FSUB_D(u8 fd, u8 fs, u8 ft) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f64) = FS(f64) - FT(f64);
+  FD(f64) = CHECK_FPE(f64, FS(f64) - FT(f64));
 }
 
 auto CPU::FTRUNC_L_S(u8 fd, u8 fs) -> void {
@@ -592,3 +636,4 @@ auto CPU::COP1INVALID() -> void {
 #undef FD
 #undef FS
 #undef FT
+#undef CHECK_FPE
