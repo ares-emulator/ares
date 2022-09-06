@@ -278,7 +278,7 @@ auto PIF::challenge() -> void {
 }
 
 auto PIF::power(bool reset) -> void {
-  string pifrom = cartridge.region() == "NTSC" ? "pif.ntsc.rom" : "pif.pal.rom";
+  string pifrom = Region::PAL() ? "pif.pal.rom" : "pif.ntsc.rom";
   if(auto fp = system.pak->read(pifrom)) {
     rom.load(fp);
   }
