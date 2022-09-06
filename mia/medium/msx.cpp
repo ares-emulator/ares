@@ -114,6 +114,7 @@ auto MSX::analyze(vector<u8>& rom) -> string {
 
   string s;
   s += "game\n";
+  s +={"  sha256: ", hash, "\n"};
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
   s += "  region: NTSC\n";  //database required to detect region

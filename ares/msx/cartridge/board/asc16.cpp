@@ -4,6 +4,8 @@ struct ASC16 : Interface {
   using Interface::Interface;
   Memory::Readable<n8> rom;
 
+  ASC16(Cartridge& cartridge, bool rtype) : Interface(cartridge), rtype(rtype) {}
+
   auto load() -> void override {
     Interface::load(rom, "program.rom");
   }
@@ -30,7 +32,7 @@ struct ASC16 : Interface {
   }
 
   auto power() -> void override {
-    bank[0] = 0x0f;  //R-Type = 0x0f; others = 0x00
+    bank[0] = rtype ? 0x0f : 0x00;  //R-Type = 0x0f; others = 0x00
     bank[1] = 0x00;
   }
 
@@ -39,4 +41,5 @@ struct ASC16 : Interface {
   }
 
   n8 bank[2];
+  const bool rtype;
 };

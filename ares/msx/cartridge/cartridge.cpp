@@ -20,7 +20,8 @@ auto Cartridge::connect() -> void {
   information.region = pak->attribute("region");
   information.board  = pak->attribute("board");
 
-  if(information.board == "ASC16") board = new Board::ASC16{*this};
+  if(information.board == "ASC16") board = new Board::ASC16{*this, false};
+  if(information.board == "ASC16R") board = new Board::ASC16{*this, true};
   if(information.board == "ASC8") board = new Board::ASC8{*this};
   if(information.board == "CrossBlaim") board = new Board::CrossBlaim{*this};
   if(information.board == "Konami") board = new Board::Konami{*this};
