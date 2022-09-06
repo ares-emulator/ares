@@ -26,3 +26,4 @@ struct Controller {
 #include "port.hpp"
 #include "control-pad/control-pad.hpp"
 #include "fighting-pad/fighting-pad.hpp"
+#include "mega-mouse/mega-mouse.hpp"
