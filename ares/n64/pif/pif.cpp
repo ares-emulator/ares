@@ -210,8 +210,11 @@ auto PIF::scan() -> void {
     if(over) {
       ram.write<Byte>(recvOffset, 0x40 | recv & 0x3f);
     }
-    for(u32 index : range(recv)) {
-      ram.write<Byte>(offset++, output[index]);
+
+    if (valid) {
+      for(u32 index : range(recv)) {
+        ram.write<Byte>(offset++, output[index]);
+      }
     }
     channel++;
   }
