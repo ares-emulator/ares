@@ -172,6 +172,7 @@ struct VirtualMouse : InputDevice {
   InputDigital  left;
   InputDigital  middle;
   InputDigital  right;
+  InputDigital  extra;
 };
 
 struct VirtualPort {

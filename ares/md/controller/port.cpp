@@ -13,7 +13,7 @@ auto ControllerPort::load(Node::Object parent) -> void {
   port->setAllocate([&](auto name) { return allocate(name); });
   port->setDisconnect([&] { return disconnect(); });
 
-  port->setSupported({"Control Pad", "Fighting Pad"});
+  port->setSupported({"Control Pad", "Fighting Pad", "Mega Mouse"});
 }
 
 auto ControllerPort::unload() -> void {
@@ -24,6 +24,7 @@ auto ControllerPort::unload() -> void {
 auto ControllerPort::allocate(string name) -> Node::Peripheral {
   if(name == "Control Pad" ) device = new ControlPad(port);
   if(name == "Fighting Pad") device = new FightingPad(port);
+  if(name == "Mega Mouse") device = new MegaMouse(port);
   if(device) return device->node;
   return {};
 }

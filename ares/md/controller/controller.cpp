@@ -5,5 +5,6 @@ namespace ares::MegaDrive {
 #include "port.cpp"
 #include "control-pad/control-pad.cpp"
 #include "fighting-pad/fighting-pad.cpp"
+#include "mega-mouse/mega-mouse.cpp"
 
 }

@@ -462,6 +462,7 @@ VirtualMouse::VirtualMouse() {
   InputDevice::digital ("Left",   left);
   InputDevice::digital ("Middle", middle);
   InputDevice::digital ("Right",  right);
+  InputDevice::digital ("Extra",  extra);
 }
 
 //
