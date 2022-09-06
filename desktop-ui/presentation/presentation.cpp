@@ -402,6 +402,8 @@ auto Presentation::loadEmulator() -> void {
       peripheralItem.onActivate([=] {
         auto port = peripheralItem.attribute<ares::Node::Port>("port");
         port->disconnect();
+        port->allocate(peripheralItem.text());
+        port->connect();
       });
       peripheralGroup.append(peripheralItem);
     }
