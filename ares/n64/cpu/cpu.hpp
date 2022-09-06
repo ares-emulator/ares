@@ -640,6 +640,12 @@ struct CPU : Thread {
   template<typename T> auto fgr(u32) -> T&;
   auto getControlRegisterFPU(n5) -> u32;
   auto setControlRegisterFPU(n5, n32) -> void;
+  auto checkFPUExceptions() -> bool;
+  auto fpeDivisionByZero() -> bool;
+  auto fpeInexact() -> bool;
+  auto fpeUnderflow() -> bool;
+  auto fpeOverflow() -> bool;
+  auto fpeInvalidOperation() -> bool;
 
   auto BC1(bool value, bool likely, s16 imm) -> void;
   auto CFC1(r64& rt, u8 rd) -> void;
