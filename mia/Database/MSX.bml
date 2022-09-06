@@ -2,6 +2,17 @@ database
   revision: 2022-09-06
 
 game
+  sha256:   79f2ebd8ea2da71ad42e315efd4e619dd14b2052253ee7b488c66669e448e4cf
+  title:    Batman (Japan)
+  name:     Batman (Japan)
+  region:   NTSC
+  board:    ASC8
+    memory
+      type: ROM
+      size: 0x10000
+      content: Program
+
+game
   sha256:   a93058238d63b05c8bd30498d695b3769b8d94b76ea7b24d55e2e9f32e270dac
   title:    R-Type (Japan)
   name:     R-Type (Japan)
