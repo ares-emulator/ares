@@ -67,18 +67,18 @@ auto nall::main(Arguments arguments) -> void {
   Emulator::construct();
 
   if(arguments.take("--help")) {
-	print("Usage: ares [OPTIONS]... game\n\n");
-	print("Options:\n");
-	print("  --help               Displays available options and exit\n");
-	print("  --fullscreen         Start in full screen mode\n");
-	print("  --system name        Specifiy the system name\n");
-	print("\n");
-	print("Available Systems:\n");
-	print("  ");
-	for(auto& emulator : emulators) {
-		print(emulator->name, ", ");
-	}
-	print("\n");
+    print("Usage: ares [OPTIONS]... game\n\n");
+    print("Options:\n");
+    print("  --help               Displays available options and exit\n");
+    print("  --fullscreen         Start in full screen mode\n");
+    print("  --system name        Specifiy the system name\n");
+    print("\n");
+    print("Available Systems:\n");
+    print("  ");
+    for(auto& emulator : emulators) {
+      print(emulator->name, ", ");
+    }
+    print("\n");
     return;
   }
 
