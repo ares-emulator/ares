@@ -3,6 +3,10 @@ auto DD::rtcLoad() -> void {
     rtc.load(fp);
   }
 
+  n64 check = 0;
+  for(auto n : range(8)) check.byte(n) = rtc.read<Byte>(n);
+  if(!~check) return;  //new save file
+
   n64 timestamp = 0;
   for(auto n : range(8)) timestamp.byte(n) = rtc.read<Byte>(8 + n);
   if(!~timestamp) return;  //new save file
@@ -25,6 +29,12 @@ auto DD::rtcTick(u32 offset) -> void {
   if((++n & 0xf) > 9) n = (n & 0xf0) + 0x10;
   if((n & 0xf0) > 0x90) n = 0;
   rtc.write<Byte>(offset, n);
+}
+
+auto DD::rtcTickClock() -> void {
+  rtcTickSecond();
+  queue.remove(Queue::DD_Clock_Tick);
+  queue.insert(Queue::DD_Clock_Tick, 187'500'000);
 }
 
 auto DD::rtcTickSecond() -> void {

@@ -2,8 +2,15 @@ auto DD::command(n16 command) -> void {
   ctl.error.undefinedCommand = 0;
   switch(command) {
     case Command::Nop: {} break;
-    case Command::ReadSeek: {} break;
-    case Command::WriteSeek: {} break;
+    case Command::ReadSeek: {
+      io.status.writeProtect = 0;
+      io.currentTrack = io.data | 0x6000;
+      seekTrack();
+    } break;
+    case Command::WriteSeek: {
+      io.currentTrack = io.data | 0x6000;
+      io.status.writeProtect = seekTrack();
+    } break;
     case Command::Recalibration: {} break;
     case Command::Sleep: {} break;
     case Command::Start: {} break;

@@ -20,12 +20,16 @@ auto DD::readWord(u32 address) -> u32 {
     data.bit(20) = io.status.spindleMotorStopped;
     data.bit(22) = io.status.resetState;
     data.bit(23) = io.status.busyState;
-    data.bit(24) = 0; //disk present
+    data.bit(24) = (bool)disk; //disk present
     data.bit(25) = irq.mecha.line;
     data.bit(26) = irq.bm.line;
     data.bit(27) = io.bm.error;
     data.bit(28) = io.status.requestC2Sector;
     data.bit(30) = io.status.requestUserSector;
+
+    if(irq.bm.line) {
+      lower(IRQ::BM);
+    }
 
     //required to indicate the 64DD is missing
     //data = 0xffff'ffff;
@@ -33,7 +37,7 @@ auto DD::readWord(u32 address) -> u32 {
 
   //ASIC_CUR_TK
   if(address == 3) {
-    data.bit(16,31) = io.currentTrack | 0x6000;
+    data.bit(16,31) = io.currentTrack;
   }
 
   //ASIC_BM_STATUS
@@ -62,7 +66,6 @@ auto DD::readWord(u32 address) -> u32 {
 
   //ASIC_SEQ_STATUS
   if(address == 6) {
-    data.bit(30) = io.micro.enable;
   }
 
   //ASIC_CUR_SECTOR
@@ -147,18 +150,30 @@ auto DD::writeWord(u32 address, u32 data_) -> void {
   //ASIC_BM_CTL
   if(address == 4) {
     io.bm.start |= data.bit(31);
+    io.bm.reset |= data.bit(28);
     io.bm.readMode = data.bit(30);
-    irq.bm.mask = ~data.bit(29);
-    if (data.bit(28)) {
-      //BM reset
-      lower(IRQ::BM);
-    }
+    //irq.bm.mask = ~data.bit(29);
     io.bm.disableORcheck = data.bit(27);
     io.bm.disableC1Correction = data.bit(26);
     io.bm.blockTransfer = data.bit(25);
     if (data.bit(24)) {
-      //Mecha Int Reset
+      //mecha int reset
       lower(IRQ::MECHA);
+    }
+    io.currentSector = data.bit(16,23);
+    if (!data.bit(28) && io.bm.reset) {
+      //BM reset
+      io.bm.start = 0;
+      io.bm.error = 0;
+      io.status.requestUserSector = 0;
+      io.status.requestC2Sector = 0;
+      io.bm.reset = 0;
+      lower(IRQ::BM);
+    }
+
+    if(data.bit(31)) {
+      //start BM
+      queue.insert(Queue::DD_BM_Request, 500'000);
     }
   }
 
@@ -168,6 +183,7 @@ auto DD::writeWord(u32 address, u32 data_) -> void {
 
   //ASIC_SEQ_CTL
   if(address == 6) {
+    io.micro.enable = data.bit(30);
   }
 
   //ASIC_CUR_SECTOR

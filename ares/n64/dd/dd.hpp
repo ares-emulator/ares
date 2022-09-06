@@ -1,16 +1,16 @@
 //Disk Drive
 
 struct DD : Memory::IO<DD> {
-  Node::Object node;
-  Node::Port drive;
-  Node::Peripheral disk;
+  Node::Object obj;
+  Node::Port port;
+  Node::Peripheral node;
   VFS::Pak pak;
-  VFS::File fd;
   Memory::Readable iplrom;
   Memory::Writable c2s;
   Memory::Writable ds;
   Memory::Writable ms;
   Memory::Writable rtc;
+  Memory::Writable disk;
 
   struct Debugger {
     //debugger.cpp
@@ -46,10 +46,16 @@ struct DD : Memory::IO<DD> {
   //controller.cpp
   auto command(n16 command) -> void;
 
+  //drive.cpp
+  auto seekTrack() -> n1;
+  auto seekSector(n8 sector) -> u32;
+  auto bmRequest() -> void;
+
   //rtc.cpp
   auto rtcLoad() -> void;
   auto rtcSave() -> void;
   auto rtcTick(u32 offset) -> void;
+  auto rtcTickClock() -> void;
   auto rtcTickSecond() -> void;
 
   //io.cpp
@@ -127,6 +133,7 @@ private:
     struct {
       //stat
       n1 start;
+      n1 reset;
       n1 error;
       n1 blockTransfer;
 

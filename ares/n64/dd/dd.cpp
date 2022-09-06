@@ -4,21 +4,21 @@ namespace ares::Nintendo64 {
 
 DD dd;
 #include "controller.cpp"
+#include "drive.cpp"
 #include "rtc.cpp"
 #include "io.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
 
 auto DD::load(Node::Object parent) -> void {
-  node = parent->append<Node::Object>("Nintendo 64DD");
-
-  drive = node->append<Node::Port>("Disk Drive");
-  drive->setFamily("Nintendo 64DD");
-  drive->setType("Floppy Disk");
-  drive->setHotSwappable(true);
-  drive->setAllocate([&](auto name) { return allocate(drive); });
-  drive->setConnect([&] { return connect(); });
-  drive->setDisconnect([&] { return disconnect(); });
+  obj = parent->append<Node::Object>("Nintendo 64DD");
+  port = obj->append<Node::Port>("Disk Drive");
+  port->setFamily("Nintendo 64DD");
+  port->setType("Floppy Disk");
+  port->setHotSwappable(true);
+  port->setAllocate([&](auto name) { return allocate(port); });
+  port->setConnect([&] { return connect(); });
+  port->setDisconnect([&] { return disconnect(); });
 
   iplrom.allocate(4_MiB);
   c2s.allocate(0x400);
@@ -31,7 +31,7 @@ auto DD::load(Node::Object parent) -> void {
     iplrom.load(fp);
   }
 
-  debugger.load(node);
+  debugger.load(parent->append<Node::Object>("Nintendo 64DD"));
 }
 
 auto DD::unload() -> void {
@@ -44,28 +44,38 @@ auto DD::unload() -> void {
   ds.reset();
   ms.reset();
   rtc.reset();
-  drive.reset();
+  disk.reset();
+  port.reset();
   node.reset();
+  obj.reset();
 }
 
 auto DD::allocate(Node::Port parent) -> Node::Peripheral {
-  return disk = parent->append<Node::Peripheral>("Nintendo 64DD Disk");
+  return node = parent->append<Node::Peripheral>("Nintendo 64DD Disk");
 }
 
 auto DD::connect() -> void {
-  if(!disk->setPak(pak = platform->pak(disk))) return;
+  if(!node->setPak(pak = platform->pak(node))) return;
 
   information = {};
   information.title = pak->attribute("title");
 
-  fd = pak->read("program.disk");
-  if(!fd) return disconnect();
+  if(auto fp = pak->read("program.disk")) {
+    disk.allocate(fp->size());
+    disk.load(fp);
+  }
 
   rtcLoad();
 }
 
 auto DD::disconnect() -> void {
-  if(!drive) return;
+  if(!port) return;
+
+  if(disk)
+  if(auto fp = pak->write("program.disk")) {
+    disk.save(fp);
+  }
+
   save();
   pak.reset();
   information = {};
@@ -85,6 +95,9 @@ auto DD::power(bool reset) -> void {
   io = {};
 
   io.status.resetState = 1;
+  io.id = 3;
+
+  queue.insert(Queue::DD_Clock_Tick, 187'500'000);
 }
 
 auto DD::raise(IRQ source) -> void {

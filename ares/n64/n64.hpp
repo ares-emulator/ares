@@ -60,6 +60,8 @@ namespace ares::Nintendo64 {
       PI_BUS_Write,
       SI_DMA_Read,
       SI_DMA_Write,
+      DD_Clock_Tick,
+      DD_BM_Request,
     };
   };
   extern Queue queue;
