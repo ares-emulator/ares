@@ -27,6 +27,7 @@ auto Nintendo64::load(string location) -> bool {
   pak->setAttribute("mempak", (bool)document["game/mempak"]);
   pak->setAttribute("rumble", (bool)document["game/rumble"]);
   pak->setAttribute("cic",    document["game/board/cic"].string());
+  pak->setAttribute("dd",     (bool)document["game/dd"]);
   pak->append("manifest.bml", manifest);
   pak->append("program.rom",  rom);
 
@@ -141,9 +142,10 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   u32 sram    = 0;      //32_KiB
   u32 flash   = 0;      //128_KiB
 
-  //supported controller peripheral support
-  bool mempak = false;  //Controller Memory Pak
-  bool rumble = false;  //Rumble Pak
+  //supported peripherals
+  bool mempak = false;               //Controller Memory Pak
+  bool rumble = false;               //Rumble Pak
+  bool dd     = id.beginsWith("C");  //64DD
 
   //512B EEPROM
   if(id == "NTW") {eeprom = 512; mempak = true;}                         //64 de Hakken!! Tamagotchi
@@ -609,6 +611,8 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   s += "  mempak\n";
   if(rumble)
   s += "  rumble\n";
+  if(dd)
+  s += "  dd\n";
   if(revision < 4) {
   s +={"  revision: 1.", revision, "\n"};
   }

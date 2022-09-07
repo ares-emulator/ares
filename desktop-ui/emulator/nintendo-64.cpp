@@ -55,7 +55,7 @@ auto Nintendo64::load() -> bool {
   if(!game->load(Emulator::load(game, configuration.game))) return false;
 
   string name;
-  if(game->pak->attribute("64dd").boolean()) {
+  if(game->pak->attribute("dd").boolean()) {
     //use 64DD firmware settings
     vector<Firmware> firmware;
     for(auto& emulator : emulators) {
@@ -122,6 +122,7 @@ auto Nintendo64::save() -> bool {
   root->save();
   system->save(system->location);
   game->save(game->location);
+  if(disk) disk->save(disk->location);
   if(gamepad) gamepad->save("save.pak", ".pak", game->location);
   return true;
 }
@@ -129,7 +130,7 @@ auto Nintendo64::save() -> bool {
 auto Nintendo64::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == "Nintendo 64") return system->pak;
   if(node->name() == "Nintendo 64 Cartridge") return game->pak;
-  if(node->name() == "Nintendo 64DD Disk") return disk->pak;
+  if(node->name() == "Nintendo 64DD Disk" && disk) return disk->pak;
   if(node->name() == "Gamepad") return gamepad->pak;
   return {};
 }
