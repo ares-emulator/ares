@@ -19,7 +19,9 @@ auto VDP::vcounterQuery() -> n8 {
 }
 
 auto VDP::hcounterQuery() -> n8 {
-  return latch.hcounter >> 2;
+  int hcounter = latch.hcounter;
+  if(hcounter >= 592) hcounter += 340;
+  return hcounter >> 2;
 }
 
 auto VDP::hcounterLatch() -> void {
