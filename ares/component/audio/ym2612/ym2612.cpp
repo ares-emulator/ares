@@ -124,7 +124,7 @@ auto YM2612::clock() -> array<i16[2]> {
 
   if(++envelope.divider == 3) {
     envelope.divider = 0;
-    envelope.clock++;
+    if(!++envelope.clock) ++envelope.clock; // 12-bit counter: 1..4095 - zero-value is skipped (confirmed behavior)
   }
 
   for(auto& channel : channels) {
