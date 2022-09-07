@@ -33,7 +33,7 @@ struct Z80 {
   auto operands() -> n16;
   auto push(n16) -> void;
   auto pop() -> n16;
-  auto displace(n16&) -> n16;
+  auto displace(n16&, u32 wclocks = 5) -> n16;
   auto read(n16 address) -> n8;
   auto write(n16 address, n8 data) -> void;
   auto in(n16 address) -> n8;
