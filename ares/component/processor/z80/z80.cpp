@@ -31,7 +31,18 @@ auto Z80::power(MOSFET mosfet) -> void {
   HALT = 0;
   IFF1 = 0;
   IFF2 = 0;
-  IM = 1;
+  IM = 0;
+}
+
+auto Z80::reset() -> void {
+  prefix = Prefix::hl;
+  ir.word = 0x0000;
+  WZ = PC = 0x0000;
+  EI = 0;
+  HALT = 0;
+  IFF1 = 0;
+  IFF2 = 0;
+  IM = 0;
 }
 
 auto Z80::irq(bool maskable, n16 pc, n8 extbus) -> bool {

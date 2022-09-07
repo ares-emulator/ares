@@ -69,10 +69,13 @@ auto APU::power(bool reset) -> void {
   Z80::power();
   Thread::create(system.frequency() / 15.0, {&APU::main, this});
   if(!reset) {
+    Z80::power();
     ram.fill();
     state.resLine = 0;
     state.busreqLine = 0;
     state.busreqLatch = 0;
+  } else {
+    Z80::reset();
   }
   state.nmiLine = 0;
   state.intLine = 0;
@@ -81,7 +84,7 @@ auto APU::power(bool reset) -> void {
 }
 
 auto APU::restart() -> void {
-  Z80::power();
+  Z80::reset();
   Thread::restart({&APU::main, this});
   state.nmiLine = 0;
   state.intLine = 0;

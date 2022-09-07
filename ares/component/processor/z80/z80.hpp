@@ -22,6 +22,7 @@ struct Z80 {
 
   //z80.cpp
   auto power(MOSFET = MOSFET::NMOS) -> void;
+  auto reset() -> void;
 
   auto irq(bool maskable, n16 vector = 0x0000, n8 extbus = 0xff) -> bool;
   auto parity(n8) const -> bool;
