@@ -45,6 +45,7 @@ struct DD : Memory::IO<DD> {
 
   //controller.cpp
   auto command(n16 command) -> void;
+  auto mechaResponse() -> void;
 
   //drive.cpp
   auto seekTrack() -> n1;

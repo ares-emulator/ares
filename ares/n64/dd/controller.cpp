@@ -92,5 +92,9 @@ auto DD::command(n16 command) -> void {
     } break;
   }
 
+  queue.insert(Queue::DD_MECHA_Response, 500);
+}
+
+auto DD::mechaResponse() -> void {
   raise(IRQ::MECHA);
 }
