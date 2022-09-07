@@ -59,6 +59,7 @@ auto Nintendo64DD::transform(array_view<u8> input) -> vector<u8> {
   //only recognize base retail ndd for now
   if(input.size() == 0x435B0C0) {
     //mame physical format (canon ares format)
+    //just copy
     input.begin();
     vector<u8> output;
     output.resize(0x435B0C0, 0);
@@ -72,7 +73,45 @@ auto Nintendo64DD::transform(array_view<u8> input) -> vector<u8> {
   if(input.size() != 0x3DEC800) return {};
   //ndd dump format (convert to mame format)
 
-  array_view<u8> dataFormat{input.data(), 0xE8};
+  //perform basic system area check, check if the data repeats and validity
+  b1 systemCheck = 0;
+  u32 systemLBAs[4] = {0, 1, 8, 9};
+  u32 systemOffset = 0;
+  for(u32 n : range(4)) {
+    systemOffset = systemLBAs[n]*0x4D08;
+
+    //validity check
+    if(input[systemOffset + 0x04] != 0x10) continue;  //format type
+    if(input[systemOffset + 0x05] <  0x10) continue;  //disk type
+    if(input[systemOffset + 0x05] >= 0x17) continue;
+    if(input[systemOffset + 0x18] != 0xFF) continue;  //always 0xFF
+    if(input[systemOffset + 0x19] != 0xFF) continue;
+    if(input[systemOffset + 0x1A] != 0xFF) continue;
+    if(input[systemOffset + 0x1B] != 0xFF) continue;
+    if(input[systemOffset + 0x1C] != 0x80) continue;  //load address
+
+    //repeat check
+    b1 repeatCheck = 1;
+    for(u32 i : range(0xE8)) {
+      for(u32 j : range(0x55)) {
+        if (input[systemOffset + i] != input[systemOffset + (j * 0xE8) + i]) {
+          repeatCheck = 0;
+          break;
+        }
+      }
+      if(!repeatCheck) break;
+    }
+    if(!repeatCheck) continue;
+
+    systemCheck = 1;
+    break;
+  }
+
+  //check failed
+  if(!systemCheck) return {};
+
+  //make sure to use valid disk info when converting
+  array_view<u8> dataFormat{input.data() + systemOffset, 0xE8};
 
   //ndd conv
   input.begin();
