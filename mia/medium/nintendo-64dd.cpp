@@ -57,7 +57,20 @@ auto Nintendo64DD::analyze(vector<u8>& rom) -> string {
 
 auto Nintendo64DD::transform(array_view<u8> input) -> vector<u8> {
   //only recognize base retail ndd for now
+  if(input.size() == 0x435B0C0) {
+    //mame physical format (canon ares format)
+    input.begin();
+    vector<u8> output;
+    output.resize(0x435B0C0, 0);
+
+    for(u32 n : range(input.size()))
+      output[n] = input.read();
+    
+    return output;
+  }
+
   if(input.size() != 0x3DEC800) return {};
+  //ndd dump format (convert to mame format)
 
   array_view<u8> dataFormat{input.data(), 0xE8};
 
