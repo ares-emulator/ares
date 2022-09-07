@@ -94,9 +94,14 @@ auto DD::bmRequest() -> void {
     }
   } else {
     //write mode
+    //first interrupt: bm interrupt, request data, don't write anything to disk, wait
+    //next interrupt:  assume sector data to be written is on buffer, write to disk
+    //                 and request next sector data
+    //therefore take into account writing previous sector
+    //no need to write C1/C2 data, drive handles it automatically
     if(sectorCalc <= 0x55) {
       if (sectorCalc > 0) {
-        auto offsetCalc = seekSector(io.currentSector-1);
+        auto offsetCalc = seekSector(io.currentSector - 1);
         for(u32 n : range(io.sectorSizeBuf + 1)) {
           disk.write<Byte>(offsetCalc + n, ds.read<Byte>(n));
         }
@@ -104,16 +109,18 @@ auto DD::bmRequest() -> void {
       io.status.requestUserSector = 1;
     }
 
+    //manage next sector
     if (sectorCalc >= 0x55) {
+      //if next sector is on the other block, wrap around the track
       if (io.bm.blockTransfer) {
         io.bm.blockTransfer = 0;
         sectorCalc = 0;
         blockCalc = 1 - blockCalc;
         io.currentSector = sectorCalc + (blockCalc * 0x5A);
       } else {
-        if(sectorCalc >= 0x56) {
-          io.bm.start = 0;
-        }
+        //last interrupt is basically acknowledge sector write, don't request data, stop afterwards
+        io.status.requestUserSector = 0;
+        io.bm.start = 0;
       }
     }
 

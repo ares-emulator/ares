@@ -27,6 +27,7 @@ auto DD::readWord(u32 address) -> u32 {
     data.bit(28) = io.status.requestC2Sector;
     data.bit(30) = io.status.requestUserSector;
 
+    //acknowledge bm interrupt (tested on real hardware)
     if(irq.bm.line) {
       lower(IRQ::BM);
     }
