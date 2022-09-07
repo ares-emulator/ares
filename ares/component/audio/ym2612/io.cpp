@@ -14,6 +14,8 @@ auto YM2612::writeData(n8 data) -> void {
   case 0x022: {
     lfo.rate = data.bit(0,2);
     lfo.enable = data.bit(3);
+    lfo.clock = 0;
+    lfo.divider = 0;
     break;
   }
 
@@ -37,11 +39,12 @@ auto YM2612::writeData(n8 data) -> void {
 
   //timer control
   case 0x027: {
-    //d6,d7 = mode (unimplemented; treated as mode 0 always)
-
     //reload period on 0->1 transition
     if(!timerA.enable && data.bit(0)) timerA.counter = timerA.period;
-    if(!timerB.enable && data.bit(1)) timerB.counter = timerB.period;
+    if(!timerB.enable && data.bit(1)) {
+      timerB.counter = timerB.period;
+      timerB.divider = 0;
+    }
 
     timerA.enable = data.bit(0);
     timerB.enable = data.bit(1);
@@ -51,6 +54,7 @@ auto YM2612::writeData(n8 data) -> void {
     if(data.bit(4)) timerA.line = 0;
     if(data.bit(5)) timerB.line = 0;
 
+    //d7 is enable bit for CSM mode (not yet implemented)
     channels[2].mode = data.bit(6,7);
     for(auto& op : channels[2].operators) op.updatePitch();
 
@@ -145,10 +149,11 @@ auto YM2612::writeData(n8 data) -> void {
 
   //SSG-EG
   case 0x090: {
-    op.ssg.hold = data.bit(0);
-    op.ssg.alternate = data.bit(1);
-    op.ssg.attack = data.bit(2);
     op.ssg.enable = data.bit(3);
+    op.ssg.hold      = op.ssg.enable ? data.bit(0) : 0;
+    op.ssg.alternate = op.ssg.enable ? data.bit(1) : 0;
+    op.ssg.attack    = op.ssg.enable ? data.bit(2) : 0;
+    channel[index].updateLevel();
     break;
   }
 

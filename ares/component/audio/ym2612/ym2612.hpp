@@ -36,7 +36,7 @@ protected:
   } dac;
 
   struct Envelope {
-    n32 clock = 0;
+    n12 clock = 0;
     n32 divider = 0;
   } envelope;
 
