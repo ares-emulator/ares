@@ -57,7 +57,7 @@ auto DD::readWord(u32 address) -> u32 {
   if(address == 5) {
     data.bit(24) = io.error.selfStop;
     data.bit(25) = io.error.clockUnlock;
-    data.bit(26) = 0; //no disk
+    data.bit(26) = ~(bool)disk; //no disk
     data.bit(27) = io.error.offTrack;
     data.bit(28) = io.error.overrun;
     data.bit(29) = io.error.spindle;
@@ -150,7 +150,6 @@ auto DD::writeWord(u32 address, u32 data_) -> void {
 
   //ASIC_BM_CTL
   if(address == 4) {
-    io.bm.start |= data.bit(31);
     io.bm.reset |= data.bit(28);
     io.bm.readMode = data.bit(30);
     //irq.bm.mask = ~data.bit(29);
@@ -172,8 +171,9 @@ auto DD::writeWord(u32 address, u32 data_) -> void {
       lower(IRQ::BM);
     }
 
-    if(data.bit(31)) {
+    if(data.bit(31) && disk) {
       //start BM
+      io.bm.start |= data.bit(31);
       queue.insert(Queue::DD_BM_Request, 500'000);
     }
   }

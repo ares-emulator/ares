@@ -1,19 +1,37 @@
 auto DD::command(n16 command) -> void {
   ctl.error.undefinedCommand = 0;
+  io.status.mechaError = 0;
+  io.status.writeProtect = 0;
   switch(command) {
     case Command::Nop: {} break;
     case Command::ReadSeek: {
-      io.status.writeProtect = 0;
-      io.currentTrack = io.data | 0x6000;
-      seekTrack();
+      if(disk) {
+        io.currentTrack = io.data | 0x6000;
+        seekTrack();
+      } else {
+        io.status.mechaError = 1;
+      }
     } break;
     case Command::WriteSeek: {
-      io.currentTrack = io.data | 0x6000;
-      io.status.writeProtect = seekTrack();
+      if(disk) {
+        io.currentTrack = io.data | 0x6000;
+        io.status.writeProtect = seekTrack();
+        io.status.mechaError = io.status.writeProtect;
+      } else {
+        io.status.mechaError = 1;
+      }
     } break;
-    case Command::Recalibration: {} break;
+    case Command::Recalibration: {
+      if(!disk) {
+        io.status.mechaError = 1;
+      }
+    } break;
     case Command::Sleep: {} break;
-    case Command::Start: {} break;
+    case Command::Start: {
+      if(!disk) {
+        io.status.mechaError = 1;
+      }
+    } break;
     case Command::SetStandby: {
       if (!io.data.bit(24)) {
         ctl.standbyDelayDisable = 1;
@@ -41,7 +59,7 @@ auto DD::command(n16 command) -> void {
       io.status.diskChanged = 0;
     } break;
     case Command::ClearResetFlag: {
-      io.status.diskChanged = 0;
+      io.status.diskChanged = 0;  //that's how it works
       io.status.resetState = 0;
     } break;
     case Command::ReadVersion: {
@@ -60,8 +78,16 @@ auto DD::command(n16 command) -> void {
       io.data.bit(5) = ctl.error.invalidParam;
       io.data.bit(6) = ctl.error.unknown;
     } break;
-    case Command::Standby: {} break;
-    case Command::IndexLockRetry: {} break;
+    case Command::Standby: {
+      if(!disk) {
+        io.status.mechaError = 1;
+      }
+    } break;
+    case Command::IndexLockRetry: {
+      if(!disk) {
+        io.status.mechaError = 1;
+      }
+    } break;
     case Command::SetRTCYearMonth: {
       rtc.write<Half>(0, io.data);
     } break;
@@ -89,6 +115,7 @@ auto DD::command(n16 command) -> void {
     } break;
     default: {
       ctl.error.undefinedCommand = 1;
+      io.status.mechaError = 1;
     } break;
   }
 
