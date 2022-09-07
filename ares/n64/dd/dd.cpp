@@ -71,17 +71,17 @@ auto DD::connect() -> void {
 auto DD::disconnect() -> void {
   if(!port) return;
 
-  if(disk)
-  if(auto fp = pak->write("program.disk")) {
-    disk.save(fp);
-  }
-
   save();
   pak.reset();
   information = {};
 }
 
 auto DD::save() -> void {
+  if(disk)
+  if(auto fp = pak->write("program.disk")) {
+    disk.save(fp);
+  }
+  
   rtcSave();
 }
 
