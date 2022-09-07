@@ -27,10 +27,10 @@ auto Z80::pop() -> n16 {
   return data | read(SP++) << 8;
 }
 
-auto Z80::displace(n16& x) -> n16 {
+auto Z80::displace(n16& x, u32 wclocks) -> n16 {
   if(&x != &ix.word && &x != &iy.word) return x;
   auto d = operand();
-  wait(5);
+  wait(wclocks);
   WZ = x + (i8)d;
   return WZ;
 }

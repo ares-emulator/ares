@@ -351,7 +351,7 @@ auto Z80::instructionLD_a_inn() -> void { Q = 0;
 
 auto Z80::instructionLD_a_irr(n16& x) -> void { Q = 0;
   WZ = x;
-  A = read(displace(WZ));
+  A = read(x);
   WZ++;
 }
 
@@ -370,13 +370,13 @@ auto Z80::instructionLD_inn_rr(n16& x) -> void { Q = 0;
 
 auto Z80::instructionLD_irr_a(n16& x) -> void { Q = 0;
   WZ = x;
-  write(displace(WZ), A);
+  write(x, A);
   WZL++;
   WZH = A;
 }
 
 auto Z80::instructionLD_irr_n(n16& x) -> void { Q = 0;
-  auto addr = displace(x);
+  auto addr = displace(x,5-3); // special case: reduced wait cycles due to timing overlap
   write(addr, operand());
 }
 
@@ -574,7 +574,6 @@ auto Z80::instructionRES_o_r(n3 bit, n8& x) -> void { Q = 1;
 }
 
 auto Z80::instructionRET() -> void { Q = 0;
-  wait(1);
   WZ = pop();
   PC = WZ;
 }
