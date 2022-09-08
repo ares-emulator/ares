@@ -115,32 +115,52 @@ auto VI::refresh() -> void {
   }
   #endif
 
-  u32 pitch  = vi.io.width;
-  u32 width  = vi.io.width;  //vi.io.xscale <= 0x300 ? 320 : 640;
-  u32 height = vi.io.yscale <= 0x400 ? 239 : 478;
-  screen->setViewport(0, 0, width, height);
+  if(io.serrate == 0) screen->setProgressive(0);
+  if(io.serrate == 1) screen->setInterlace(io.field);
 
+  u32 hscan_start = Region::NTSC() ? 108 : 128;
+  u32 vscan_start = Region::NTSC() ?  34 :  44;
+  u32 hscan_len   = Region::NTSC() ? 640 : 640;
+  u32 vscan_len   = Region::NTSC() ? 480 : 576;
+  u32 hscan_stop  = hscan_start + hscan_len;
+  u32 vscan_stop  = vscan_start + vscan_len;
+  screen->setViewport(0, 0, hscan_len, vscan_len);
+
+  u32 dy0 = max(vscan_start, vi.io.vstart + io.field*2);
+  u32 dy1 = min(vscan_stop,  vi.io.vend   + io.field*2);
+  u32 dx0 = max(hscan_start, vi.io.hstart);
+  u32 dx1 = min(hscan_stop,  vi.io.hend);
+
+  u32 pitch = vi.io.width;
   if(vi.io.colorDepth == 2) {
     //15bpp
-    for(u32 y : range(height)) {
-      u32 address = vi.io.dramAddress + y * pitch * 2;
-      auto line = screen->pixels(1).data() + y * 640;
-      for(u32 x : range(min(width, pitch))) {
-        u16 data = bus.read<Half>(address + x * 2);
-        *line++ = 1 << 24 | data >> 1;
+    u32 y0 = vi.io.ysubpixel + vi.io.yscale * (dy0 - (vi.io.vstart + io.field*2));
+    for(u32 dy = dy0; dy < dy1; dy++) {
+      u32 address = vi.io.dramAddress + (y0 >> 11) * pitch * 2;
+      auto line = screen->pixels(1).data() + (dy - vscan_start) * hscan_len;
+      u32 x0 = vi.io.xsubpixel + vi.io.xscale * (dx0 - vi.io.hstart);
+      for(u32 dx = dx0; dx < dx1; dx++) {
+        u16 data = bus.read<Half>(address + (x0 >> 10) * 2);
+        line[dx - hscan_start] = 1 << 24 | data >> 1;
+        x0 += vi.io.xscale;
       }
+      y0 += vi.io.yscale;
     }
   }
 
   if(vi.io.colorDepth == 3) {
     //24bpp
-    for(u32 y : range(height)) {
-      u32 address = vi.io.dramAddress + y * pitch * 4;
-      auto line = screen->pixels(1).data() + y * 640;
-      for(u32 x : range(min(width, pitch))) {
-        u32 data = bus.read<Word>(address + x * 4);
-        *line++ = data >> 8;
+    u32 y0 = vi.io.ysubpixel + vi.io.yscale * (dy0 - (vi.io.vstart + io.field*2));
+    for(u32 dy = dy0; dy < dy1; dy++) {
+      u32 address = vi.io.dramAddress + (y0 >> 11) * pitch * 4;
+      auto line = screen->pixels(1).data() + (dy - vscan_start) * hscan_len;
+      u32 x0 = vi.io.xsubpixel + vi.io.xscale * (dx0 - vi.io.hstart);
+      for(u32 dx = dx0; dx < dx1; dx++) {
+        u32 data = bus.read<Word>(address + (x0 >> 10) * 4);
+        line[dx - hscan_start] = data >> 8;
+        x0 += vi.io.xscale;
       }
+      y0 += vi.io.yscale;
     }
   }
 }
