@@ -29,7 +29,7 @@ auto M32X::VDP::power(bool reset) -> void {
 }
 
 auto M32X::VDP::scanline(u32 pixels[1280], u32 y) -> void {
-  if(!Mega32X() || !pixels) return;
+  if(!Mega32X() || !pixels || y >= 240) return;
   if(mode == 1) return scanlineMode1(pixels, y);
   if(mode == 2) return scanlineMode2(pixels, y);
   if(mode == 3) return scanlineMode3(pixels, y);
