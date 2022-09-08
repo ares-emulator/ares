@@ -5,6 +5,7 @@ struct Nintendo64DD : Emulator {
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
   shared_pointer<mia::Pak> gamepad;
+  u32 regionID = 0;
 };
 
 Nintendo64DD::Nintendo64DD() {
@@ -12,6 +13,8 @@ Nintendo64DD::Nintendo64DD() {
   name = "Nintendo 64DD";
 
   firmware.append({"BIOS", "Japan"});
+  firmware.append({"BIOS", "US"});
+  firmware.append({"BIOS", "DEV"});
 
   for(auto id : range(4)) {
     InputPort port{string{"Controller Port ", 1 + id}};
@@ -55,15 +58,20 @@ auto Nintendo64DD::load() -> bool {
   game = mia::Medium::create("Nintendo 64DD");
   if(!game->load(Emulator::load(game, configuration.game))) return false;
 
+  auto region = game->pak->attribute("region");
+  //if statements below are ordered by lowest to highest priority
+  if (region == "NTSC-DEV") regionID = 2;
+  if (region == "NTSC-U"  ) regionID = 1;
+  if (region == "NTSC-J"  ) regionID = 0;
+
   system = mia::System::create("Nintendo 64DD");
-  if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
+  if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID]), false;
 
   ares::Nintendo64::option("Quality", settings.video.quality);
   ares::Nintendo64::option("Supersampling", settings.video.supersampling);
   ares::Nintendo64::option("Enable Vulkan", settings.video.enableVulkan);
   ares::Nintendo64::option("Disable Video Interface Processing", settings.video.disableVideoInterfaceProcessing);
 
-  auto region = Emulator::region();
   if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64DD (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive")) {

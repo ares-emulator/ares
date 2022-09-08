@@ -6,7 +6,9 @@ auto enumerate() -> vector<string> {
   return {
     "[Nintendo] Nintendo 64 (NTSC)",
     "[Nintendo] Nintendo 64 (PAL)",
-    "[Nintendo] Nintendo 64DD (NTSC)",
+    "[Nintendo] Nintendo 64DD (NTSC-U)",
+    "[Nintendo] Nintendo 64DD (NTSC-J)",
+    "[Nintendo] Nintendo 64DD (NTSC-DEV)",
   };
 }
 

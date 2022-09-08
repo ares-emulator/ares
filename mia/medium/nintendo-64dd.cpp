@@ -54,7 +54,7 @@ auto Nintendo64DD::save(string location) -> bool {
 
 auto Nintendo64DD::analyze(vector<u8>& rom, vector<u8> errorTable) -> string {
   bool dev = errorTable[12] == 0;
-  string region = "NTSC";
+  string region = "NTSC-J";
   u32 systemBlocks[4] = {0, 1, 8, 9};
   for(u32 n : range(4)) {
     if(dev) {

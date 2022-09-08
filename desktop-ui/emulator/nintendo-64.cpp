@@ -6,6 +6,7 @@ struct Nintendo64 : Emulator {
 
   shared_pointer<mia::Pak> gamepad;
   shared_pointer<mia::Pak> disk;
+  u32 regionID = 0;
 };
 
 Nintendo64::Nintendo64() {
@@ -54,6 +55,8 @@ auto Nintendo64::load() -> bool {
   game = mia::Medium::create("Nintendo 64");
   if(!game->load(Emulator::load(game, configuration.game))) return false;
 
+  auto region = Emulator::region();
+
   string name;
   if(game->pak->attribute("dd").boolean()) {
     //use 64DD firmware settings
@@ -63,11 +66,23 @@ auto Nintendo64::load() -> bool {
     }
     if(!firmware) return false;  //should never occur
     name = "Nintendo 64DD";
-    system = mia::System::create("Nintendo 64DD");
-    if(!system->load(firmware[0].location)) return errorFirmware(firmware[0], "Nintendo 64DD"), false;
 
     disk = mia::Medium::create("Nintendo 64DD");
-    if(!disk->load(Emulator::load(disk, configuration.game))) disk.reset();
+    if(!disk->load(Emulator::load(disk, configuration.game))) {
+      disk.reset();
+      name = "Nintendo 64";
+      system = mia::System::create("Nintendo 64");
+      if(!system->load()) return false;
+    } else {
+      region = disk->pak->attribute("region");
+      //if statements below are ordered by lowest to highest priority
+      if (region == "NTSC-DEV") regionID = 2;
+      if (region == "NTSC-U") regionID = 1;
+      if (region == "NTSC-J") regionID = 0;
+
+      system = mia::System::create(name);
+      if(!system->load(firmware[regionID].location)) return errorFirmware(firmware[regionID], "Nintendo 64DD"), false;
+    }
   } else {
     name = "Nintendo 64";
     system = mia::System::create("Nintendo 64");
@@ -79,7 +94,6 @@ auto Nintendo64::load() -> bool {
   ares::Nintendo64::option("Enable Vulkan", settings.video.enableVulkan);
   ares::Nintendo64::option("Disable Video Interface Processing", settings.video.disableVideoInterfaceProcessing);
 
-  auto region = Emulator::region();
   if(!ares::Nintendo64::load(root, {"[Nintendo] ", name, " (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
