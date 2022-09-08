@@ -17,8 +17,9 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //interrupt control
   if(address == 0xa15102) {
-    data.bit(0) = shm.irq.cmd.active;
-    data.bit(1) = shs.irq.cmd.active;
+    data.bit(0)     = shm.irq.cmd.active;
+    data.bit(1)     = shs.irq.cmd.active;
+    data.bit(2, 15) = 0;
   }
 
   //bank set
