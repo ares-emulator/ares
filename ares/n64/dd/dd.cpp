@@ -60,6 +60,11 @@ auto DD::connect() -> void {
   information = {};
   information.title = pak->attribute("title");
 
+  if(auto fp = pak->read("program.disk.error")) {
+    error.allocate(fp->size());
+    error.load(fp);
+  }
+
   if(auto fp = pak->read("program.disk")) {
     disk.allocate(fp->size());
     disk.load(fp);

@@ -55,13 +55,16 @@ auto DD::bmRequest() -> void {
   io.bm.c1Single = 0;
   io.bm.c1Double = 0;
 
-  n1 blockCalc = (io.currentSector >= 0x5A) ? 1 : 0;
-  n8 sectorCalc = io.currentSector - (blockCalc * 0x5A);
-  n16 trackCalc = io.currentTrack.bit(0,12);
+  n1  blockCalc  = (io.currentSector >= 0x5A) ? 1 : 0;
+  n8  sectorCalc = io.currentSector - (blockCalc * 0x5A);
+  n16 trackCalc  = io.currentTrack.bit(0,11);
+  n1  headCalc   = io.currentTrack.bit(12);
+
+  n32 errorCalc  = (headCalc * (1175*2)) + (trackCalc * 2) + blockCalc;
 
   if(io.bm.readMode) {
     //read mode
-    if(trackCalc == 6) {
+    if(error.read<Byte>(errorCalc) != 0) {
       //copy protection (C1 fail all over, retail disk only)
       io.bm.c1Single = 1;
       io.bm.c1Double = 1;

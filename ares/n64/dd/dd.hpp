@@ -11,6 +11,7 @@ struct DD : Memory::IO<DD> {
   Memory::Writable ms;
   Memory::Writable rtc;
   Memory::Writable disk;
+  Memory::Writable error;
 
   struct Debugger {
     //debugger.cpp

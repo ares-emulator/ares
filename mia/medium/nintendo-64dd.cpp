@@ -4,7 +4,9 @@ struct Nintendo64DD : FloppyDisk {
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
-  auto transform(array_view<u8> input) -> vector<u8>;
+  auto transform(array_view<u8> input, vector<u8> errorTable) -> vector<u8>;
+  auto repeatCheck(array_view<u8> input, u32 repeat, u32 size) -> bool;
+  auto createErrorTable(array_view<u8> input) -> vector<u8>;
 };
 
 auto Nintendo64DD::load(string location) -> bool {
@@ -27,7 +29,14 @@ auto Nintendo64DD::load(string location) -> bool {
   pak->append("manifest.bml", manifest);
 
   array_view<u8> view{input};
-  if(auto output = transform(view)) {
+  auto errorTable = createErrorTable(view);
+  if(errorTable) {
+    pak->append("program.disk.error", errorTable);
+  } else {
+    return false;
+  }
+
+  if(auto output = transform(view, errorTable)) {
     pak->append("program.disk", output);
   }
 
@@ -55,7 +64,53 @@ auto Nintendo64DD::analyze(vector<u8>& rom) -> string {
   return s;
 }
 
-auto Nintendo64DD::transform(array_view<u8> input) -> vector<u8> {
+auto Nintendo64DD::repeatCheck(array_view<u8> input, u32 repeat, u32 size) -> bool {
+  for(u32 i : range(size)) {
+    for(u32 j : range(repeat)) {
+      if (input[i] != input[(j * size) + i]) return false;
+    }
+  }
+  return true;
+}
+
+auto Nintendo64DD::createErrorTable(array_view<u8> input) -> vector<u8> {
+  //if neither mame or ndd format, don't do anything
+  if ((input.size() != 0x435B0C0) && (input.size() != 0x3DEC800)) return {};
+
+  input.begin();
+  vector<u8> output;
+  output.resize(1175*2*2, 0);   //1175 tracks * 2 blocks per track * 2 sides
+
+  //perform basic system area check, check if the data repeats and validity
+  u32 systemBlocks[4] = {0, 1, 8, 9};
+  for(u32 n : range(4)) {
+    u32 systemOffset = systemBlocks[n]*0x4D08;
+    output[systemBlocks[n]] = 1;
+
+    //validity check
+    if(input[systemOffset + 0x04] != 0x10) continue;  //format type
+    if(input[systemOffset + 0x05] <  0x10) continue;  //disk type
+    if(input[systemOffset + 0x05] >= 0x17) continue;
+    if(input[systemOffset + 0x18] != 0xFF) continue;  //always 0xFF
+    if(input[systemOffset + 0x19] != 0xFF) continue;
+    if(input[systemOffset + 0x1A] != 0xFF) continue;
+    if(input[systemOffset + 0x1B] != 0xFF) continue;
+    if(input[systemOffset + 0x1C] != 0x80) continue;  //load address
+
+    //repeat check
+    array_view<u8> block{input.data() + systemOffset, 0xE8 * 0x55};
+    if (!repeatCheck(block, 0x55, 0xE8))   continue;
+
+    output[systemBlocks[n]] = 0;
+
+    //confirmed retail, inject error in block 12
+    output[12] = 1;
+  }
+
+  return output;
+}
+
+auto Nintendo64DD::transform(array_view<u8> input, vector<u8> errorTable) -> vector<u8> {
   //only recognize base retail ndd for now
   if(input.size() == 0x435B0C0) {
     //mame physical format (canon ares format)
@@ -73,38 +128,15 @@ auto Nintendo64DD::transform(array_view<u8> input) -> vector<u8> {
   if(input.size() != 0x3DEC800) return {};
   //ndd dump format (convert to mame format)
 
-  //perform basic system area check, check if the data repeats and validity
-  b1 systemCheck = 0;
-  u32 systemLBAs[4] = {0, 1, 8, 9};
+  //perform basic system area check
+  b1 systemCheck = false;
+  u32 systemBlocks[4] = {9, 8, 1, 0};
   u32 systemOffset = 0;
   for(u32 n : range(4)) {
-    systemOffset = systemLBAs[n]*0x4D08;
-
-    //validity check
-    if(input[systemOffset + 0x04] != 0x10) continue;  //format type
-    if(input[systemOffset + 0x05] <  0x10) continue;  //disk type
-    if(input[systemOffset + 0x05] >= 0x17) continue;
-    if(input[systemOffset + 0x18] != 0xFF) continue;  //always 0xFF
-    if(input[systemOffset + 0x19] != 0xFF) continue;
-    if(input[systemOffset + 0x1A] != 0xFF) continue;
-    if(input[systemOffset + 0x1B] != 0xFF) continue;
-    if(input[systemOffset + 0x1C] != 0x80) continue;  //load address
-
-    //repeat check
-    b1 repeatCheck = 1;
-    for(u32 i : range(0xE8)) {
-      for(u32 j : range(0x55)) {
-        if (input[systemOffset + i] != input[systemOffset + (j * 0xE8) + i]) {
-          repeatCheck = 0;
-          break;
-        }
-      }
-      if(!repeatCheck) break;
+    if(errorTable[systemBlocks[n]] == 0) {
+      systemCheck = true;
+      systemOffset = systemBlocks[n]*0x4D08;
     }
-    if(!repeatCheck) continue;
-
-    systemCheck = 1;
-    break;
   }
 
   //check failed
