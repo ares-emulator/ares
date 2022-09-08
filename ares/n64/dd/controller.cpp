@@ -1,35 +1,50 @@
 auto DD::command(n16 command) -> void {
+  ctl.error.selfDiagnostic = 0;
+  ctl.error.servoNG = 0;
+  ctl.error.indexGapNG = 0;
+  ctl.error.timeout = 0;
   ctl.error.undefinedCommand = 0;
+  ctl.error.invalidParam = 0;
   io.status.mechaError = 0;
   io.status.writeProtect = 0;
+
   switch(command) {
     case Command::Nop: {} break;
     case Command::ReadSeek: {
       if(disk) {
-        io.currentTrack = io.data | 0x6000;
-        seekTrack();
+        if((io.data.bit(12,15) > 1) || (io.data.bit(0,11) > 0x5D7)) {
+          ctl.error.invalidParam = 1;
+          io.currentTrack = 0;
+        } else {
+          io.currentTrack = io.data | 0x6000;
+          seekTrack();
+        }
       } else {
-        io.status.mechaError = 1;
+        ctl.error.selfDiagnostic = 1;
       }
     } break;
     case Command::WriteSeek: {
       if(disk) {
-        io.currentTrack = io.data | 0x6000;
-        io.status.writeProtect = seekTrack();
-        io.status.mechaError = io.status.writeProtect;
+        if((io.data.bit(12,15) > 1) || (io.data.bit(0,11) > 0x5D7)) {
+          ctl.error.invalidParam = 1;
+          io.currentTrack = 0;
+        } else {
+          io.currentTrack = io.data | 0x6000;
+          io.status.writeProtect = seekTrack();
+        }
       } else {
-        io.status.mechaError = 1;
+        ctl.error.selfDiagnostic = 1;
       }
     } break;
     case Command::Recalibration: {
       if(!disk) {
-        io.status.mechaError = 1;
+        ctl.error.selfDiagnostic = 1;
       }
     } break;
     case Command::Sleep: {} break;
     case Command::Start: {
       if(!disk) {
-        io.status.mechaError = 1;
+        ctl.error.selfDiagnostic = 1;
       }
     } break;
     case Command::SetStandby: {
@@ -80,12 +95,12 @@ auto DD::command(n16 command) -> void {
     } break;
     case Command::Standby: {
       if(!disk) {
-        io.status.mechaError = 1;
+        ctl.error.selfDiagnostic = 1;
       }
     } break;
     case Command::IndexLockRetry: {
       if(!disk) {
-        io.status.mechaError = 1;
+        ctl.error.selfDiagnostic = 1;
       }
     } break;
     case Command::SetRTCYearMonth: {
@@ -115,9 +130,16 @@ auto DD::command(n16 command) -> void {
     } break;
     default: {
       ctl.error.undefinedCommand = 1;
-      io.status.mechaError = 1;
     } break;
   }
+
+  if(ctl.error.selfDiagnostic)        io.status.mechaError = 1;
+  else if(ctl.error.servoNG)          io.status.mechaError = 1;
+  else if(ctl.error.indexGapNG)       io.status.mechaError = 1;
+  else if(ctl.error.timeout)          io.status.mechaError = 1;
+  else if(ctl.error.undefinedCommand) io.status.mechaError = 1;
+  else if(ctl.error.invalidParam)     io.status.mechaError = 1;
+  else if(io.status.writeProtect)     io.status.mechaError = 1;
 
   queue.insert(Queue::DD_MECHA_Response, 500);
 }
