@@ -3,7 +3,7 @@ struct Nintendo64DD : FloppyDisk {
   auto extensions() -> vector<string> override { return {"n64dd", "ndd"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& rom) -> string;
+  auto analyze(vector<u8>& rom, vector<u8> errorTable) -> string;
   auto transform(array_view<u8> input, vector<u8> errorTable) -> vector<u8>;
   auto repeatCheck(array_view<u8> input, u32 repeat, u32 size) -> bool;
   auto createErrorTable(array_view<u8> input) -> vector<u8>;
@@ -18,8 +18,12 @@ auto Nintendo64DD::load(string location) -> bool {
   }
   if(!input) return false;
 
+  array_view<u8> view{input};
+  auto errorTable = createErrorTable(view);
+  if(!errorTable) return false;
+
   this->location = location;
-  this->manifest = analyze(input);
+  this->manifest = analyze(input, errorTable);
   auto document = BML::unserialize(manifest);
   if(!document) return false;
 
@@ -27,14 +31,7 @@ auto Nintendo64DD::load(string location) -> bool {
   pak->setAttribute("title", document["game/title"].string());
   pak->setAttribute("region", document["game/region"].string());
   pak->append("manifest.bml", manifest);
-
-  array_view<u8> view{input};
-  auto errorTable = createErrorTable(view);
-  if(errorTable) {
-    pak->append("program.disk.error", errorTable);
-  } else {
-    return false;
-  }
+  pak->append("program.disk.error", errorTable);
 
   if(auto output = transform(view, errorTable)) {
     pak->append("program.disk", output);
@@ -55,12 +52,41 @@ auto Nintendo64DD::save(string location) -> bool {
   return true;
 }
 
-auto Nintendo64DD::analyze(vector<u8>& rom) -> string {
+auto Nintendo64DD::analyze(vector<u8>& rom, vector<u8> errorTable) -> string {
+  bool dev = errorTable[12] == 0;
+  string region = "NTSC";
+  u32 systemBlocks[4] = {0, 1, 8, 9};
+  for(u32 n : range(4)) {
+    if(dev) {
+      if(errorTable[systemBlocks[n]+2]) continue;
+      region = "NTSC-DEV";
+    } else {
+      if(errorTable[systemBlocks[n]]) continue;
+      u32 systemOffset = systemBlocks[n] * 0x4D08;
+      if(rom[systemOffset] == 0xE8) region = "NTSC-J";
+      else region = "NTSC-U";
+    }
+    break;
+  }
+
+  string id;
+  u32 diskIdBlocks[2] = {14, 15};
+  for(u32 n : range(2)) {
+    if(errorTable[diskIdBlocks[n]]) continue;
+    u32 diskIdOffset = diskIdBlocks[n] * 0x4D08;
+    id.append((char)rom[diskIdOffset + 0x00]);
+    id.append((char)rom[diskIdOffset + 0x01]);
+    id.append((char)rom[diskIdOffset + 0x02]);
+    id.append((char)rom[diskIdOffset + 0x03]);
+    break;
+  }
+
   string s;
   s += "game\n";
-  s +={"  name: ",  Medium::name(location), "\n"};
-  s +={"  title: ", Medium::name(location), "\n"};
-  s += "  region:   NTSC\n";
+  s +={"  name:   ", Medium::name(location), "\n"};
+  s +={"  title:  ", Medium::name(location), "\n"};
+  s +={"  region: ", region, "\n"};
+  s +={"  id:     ", id, "\n"};
   return s;
 }
 
@@ -88,6 +114,15 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> vector<u8> {
     output[systemBlocks[n]] = 1;
 
     //validity check
+    if((input[systemOffset + 0x00] != 0xE8)             //region magic (jpn & usa)
+    && (input[systemOffset + 0x00] != 0x22)) continue;
+    if((input[systemOffset + 0x01] != 0x48)
+    && (input[systemOffset + 0x01] != 0x63)) continue;
+    if((input[systemOffset + 0x02] != 0xD3)
+    && (input[systemOffset + 0x02] != 0xEE)) continue;
+    if((input[systemOffset + 0x03] != 0x16)
+    && (input[systemOffset + 0x03] != 0x56)) continue;
+
     if(input[systemOffset + 0x04] != 0x10) continue;  //format type
     if(input[systemOffset + 0x05] <  0x10) continue;  //disk type
     if(input[systemOffset + 0x05] >= 0x17) continue;
@@ -105,6 +140,47 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> vector<u8> {
 
     //confirmed retail, inject error in block 12
     output[12] = 1;
+  }
+
+  //if retail info check is bad, check if it's a dev one
+  if(output[12] == 0) {
+    for(u32 n : range(4)) {
+      u32 systemOffset = ((systemBlocks[n]+2) ^ (input.size() == 0x435B0C0) ? 1 : 0) * 0x4D08;
+      output[systemBlocks[n]+2] = 1;
+
+      //validity check
+      if(input[systemOffset + 0x00] != 0x00) continue;  //region magic (dev)
+      if(input[systemOffset + 0x01] != 0x00) continue;
+      if(input[systemOffset + 0x02] != 0x00) continue;
+      if(input[systemOffset + 0x03] != 0x00) continue;
+      if(input[systemOffset + 0x04] != 0x10) continue;  //format type
+      if(input[systemOffset + 0x05] <  0x10) continue;  //disk type
+      if(input[systemOffset + 0x05] >= 0x17) continue;
+      if(input[systemOffset + 0x18] != 0xFF) continue;  //always 0xFF
+      if(input[systemOffset + 0x19] != 0xFF) continue;
+      if(input[systemOffset + 0x1A] != 0xFF) continue;
+      if(input[systemOffset + 0x1B] != 0xFF) continue;
+      if(input[systemOffset + 0x1C] != 0x80) continue;  //load address
+
+      //repeat check
+      array_view<u8> block{input.data() + systemOffset, 0xC0 * 0x55};
+      if (!repeatCheck(block, 0x55, 0xC0))   continue;
+
+      output[systemBlocks[n]+2] = 0;
+    }
+  }
+
+  //check disk id info
+  u32 diskIdBlocks[2] = {14, 15};
+  for(u32 n : range(2)) {
+    u32 diskIdOffset = diskIdBlocks[n]*0x4D08;
+    output[diskIdBlocks[n]] = 1;
+
+    //repeat check
+    array_view<u8> block{input.data() + diskIdOffset, 0xE8 * 0x55};
+    if (!repeatCheck(block, 0x55, 0xE8))   continue;
+
+    output[diskIdBlocks[n]] = 0;
   }
 
   return output;
