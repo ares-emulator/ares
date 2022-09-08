@@ -9,5 +9,6 @@ namespace ares::MasterSystem {
 #include "sports-pad/sports-pad.cpp"
 #include "md-control-pad/md-control-pad.cpp"
 #include "md-fighting-pad/md-fighting-pad.cpp"
+#include "mega-mouse/mega-mouse.cpp"
 
 }
