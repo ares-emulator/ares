@@ -16,7 +16,7 @@ MegaMouse::MegaMouse(Node::Port parent) {
 
   // Is is said that some games do not do the hanshake correctly
   // and rely heavily on timing, so we try to mimick the real
-  // timis closely.
+  // timing closely.
 
   // One game has a programming error where it polls for TL low
   // instead of TL high for one of the nibbles so it falls rights
