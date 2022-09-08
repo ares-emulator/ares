@@ -35,3 +35,4 @@ struct Controller {
 #include "sports-pad/sports-pad.hpp"
 #include "md-control-pad/md-control-pad.hpp"
 #include "md-fighting-pad/md-fighting-pad.hpp"
+#include "mega-mouse/mega-mouse.hpp"
