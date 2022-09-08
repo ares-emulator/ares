@@ -14,12 +14,27 @@ inline auto PI::busRead(u32 address) -> u32 {
   static constexpr u32 unmapped = 0;
 
   if(address <= 0x04ff'ffff) return unmapped; //Address range not memory mapped, only accessible via DMA
-  if(address <= 0x0500'03ff) return dd.c2s.read<Size>(address);
-  if(address <= 0x0500'04ff) return dd.ds.read<Size>(address);
-  if(address <= 0x0500'057f) return dd.read<Size>(address);
-  if(address <= 0x0500'05bf) return dd.ms.read<Size>(address);
+  if(address <= 0x0500'03ff) {
+    if(_DD()) return dd.c2s.read<Size>(address);
+    return 0xffff'ffff;  //TODO: Proper open-bus behavior
+  }
+  if(address <= 0x0500'04ff) {
+    if(_DD()) return dd.ds.read<Size>(address);
+    return 0xffff'ffff;  //TODO: Proper open-bus behavior
+  }
+  if(address <= 0x0500'057f) {
+    if(_DD()) return dd.read<Size>(address);
+    return 0xffff'ffff;  //TODO: Proper open-bus behavior
+  }
+  if(address <= 0x0500'05bf) {
+    if(_DD()) return dd.ms.read<Size>(address);
+    return 0xffff'ffff;  //TODO: Proper open-bus behavior
+  }
   if(address <= 0x05ff'ffff) return unmapped;
-  if(address <= 0x063f'ffff) return dd.iplrom.read<Size>(address);
+  if(address <= 0x063f'ffff) {
+    if(_DD()) return dd.iplrom.read<Size>(address);
+    return 0xffff'ffff;  //TODO: Proper open-bus behavior
+  }
   if(address <= 0x07ff'ffff) return unmapped;
   if(address <= 0x0fff'ffff) {
     if(cartridge.ram  ) return cartridge.ram.read<Size>(address);
@@ -49,12 +64,27 @@ template <u32 Size>
 inline auto PI::busWrite(u32 address, u32 data) -> void {
   static_assert(Size == Half || Size == Word);  //PI bus will do 32-bit (CPU) or 16-bit (DMA) only
   if(address <= 0x04ff'ffff) return; //Address range not memory mapped, only accessible via DMA
-  if(address <= 0x0500'03ff) return dd.c2s.write<Size>(address, data);
-  if(address <= 0x0500'04ff) return dd.ds.write<Size>(address, data);
-  if(address <= 0x0500'057f) return dd.write<Size>(address, data);
-  if(address <= 0x0500'05bf) return dd.ms.write<Size>(address, data);
+  if(address <= 0x0500'03ff) {
+    if(_DD()) return dd.c2s.write<Size>(address, data);
+    return;
+  }
+  if(address <= 0x0500'04ff) {
+    if(_DD()) return dd.ds.write<Size>(address, data);
+    return;
+  }
+  if(address <= 0x0500'057f) {
+    if(_DD()) return dd.write<Size>(address, data);
+    return;
+  }
+  if(address <= 0x0500'05bf) {
+    if(_DD()) return dd.ms.write<Size>(address, data);
+    return;
+  }
   if(address <= 0x05ff'ffff) return;
-  if(address <= 0x063f'ffff) return dd.iplrom.write<Size>(address, data);
+  if(address <= 0x063f'ffff) {
+    if(_DD()) return dd.iplrom.write<Size>(address, data);
+    return;
+  }
   if(address <= 0x07ff'ffff) return;
   if(address <= 0x0fff'ffff) {
     if(cartridge.ram  ) return cartridge.ram.write<Size>(address, data);

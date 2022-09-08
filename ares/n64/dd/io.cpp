@@ -31,9 +31,6 @@ auto DD::readWord(u32 address) -> u32 {
     if(irq.bm.line) {
       lower(IRQ::BM);
     }
-
-    //required to indicate the 64DD is missing
-    //data = 0xffff'ffff;
   }
 
   //ASIC_CUR_TK
