@@ -52,6 +52,10 @@ struct DD : Memory::IO<DD> {
   auto seekTrack() -> n1;
   auto seekSector(n8 sector) -> u32;
   auto bmRequest() -> void;
+  auto motorActive() -> void;
+  auto motorStandby() -> void;
+  auto motorStop() -> void;
+  auto motorChange() -> void;
 
   //rtc.cpp
   auto rtcLoad() -> void;

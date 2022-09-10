@@ -135,3 +135,37 @@ auto DD::bmRequest() -> void {
   queue.insert(Queue::DD_BM_Request, 50'000);
   raise(IRQ::BM);
 }
+
+auto DD::motorActive() -> void {
+  queue.remove(Queue::DD_Motor_Mode);
+  io.status.headRetracted = 0;
+  io.status.spindleMotorStopped = 0;
+  if(!ctl.standbyDelayDisable)
+    queue.insert(Queue::DD_Motor_Mode, (187'500'000 / 0x17) * ctl.standbyDelay);
+}
+
+auto DD::motorStandby() -> void {
+  queue.remove(Queue::DD_Motor_Mode);
+  io.status.headRetracted = 1;
+  io.status.spindleMotorStopped = 0;
+  if(!ctl.sleepDelayDisable)
+      queue.insert(Queue::DD_Motor_Mode, (187'500'000 / 0x17) * ctl.sleepDelay);
+}
+
+auto DD::motorStop() -> void {
+  queue.remove(Queue::DD_Motor_Mode);
+  io.status.headRetracted = 1;
+  io.status.spindleMotorStopped = 1;
+}
+
+auto DD::motorChange() -> void {
+  //to sleep mode
+  if(io.status.headRetracted && !io.status.spindleMotorStopped) {
+    motorStop();
+  }
+
+  //to standby mode
+  if(!io.status.headRetracted && !io.status.spindleMotorStopped) {
+    motorStandby();
+  }
+}

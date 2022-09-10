@@ -61,6 +61,7 @@ auto CPU::synchronize() -> void {
     case Queue::DD_Clock_Tick:  return dd.rtcTickClock();
     case Queue::DD_MECHA_Response:  return dd.mechaResponse();
     case Queue::DD_BM_Request:  return dd.bmRequest();
+    case Queue::DD_Motor_Mode:  return dd.motorChange();
     }
   });
 

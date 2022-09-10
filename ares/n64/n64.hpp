@@ -63,6 +63,7 @@ namespace ares::Nintendo64 {
       DD_Clock_Tick,
       DD_MECHA_Response,
       DD_BM_Request,
+      DD_Motor_Mode,
     };
   };
   extern Queue queue;

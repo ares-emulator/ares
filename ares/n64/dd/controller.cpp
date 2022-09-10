@@ -8,7 +8,8 @@ auto DD::command(n16 command) -> void {
   io.status.mechaError = 0;
   io.status.writeProtect = 0;
 
-  u32 count = 500;
+  //most simple command timing response, based on Command::ReadProgramVersion
+  u32 count = 8000;
 
   switch(command) {
     case Command::Nop: {} break;
@@ -16,12 +17,14 @@ auto DD::command(n16 command) -> void {
       if(disk) {
         if((io.data.bit(12,15) > 1) || (io.data.bit(0,11) > 0x5D7)) {
           ctl.error.invalidParam = 1;
-          io.currentTrack = 0;
         } else {
           count = 637500;
+          if(io.status.headRetracted || io.status.spindleMotorStopped)
+            count += 200'700'000;
           count += 37500 * abs(io.data.bit(0,11) - io.currentTrack.bit(0,11));
           io.currentTrack = io.data | 0x6000;
           seekTrack();
+          motorActive();
         }
       } else {
         ctl.error.selfDiagnostic = 1;
@@ -31,27 +34,39 @@ auto DD::command(n16 command) -> void {
       if(disk) {
         if((io.data.bit(12,15) > 1) || (io.data.bit(0,11) > 0x5D7)) {
           ctl.error.invalidParam = 1;
-          io.currentTrack = 0;
         } else {
           count = 637500;
+          if(io.status.headRetracted || io.status.spindleMotorStopped)
+            count += 200'700'000;
           count += 37500 * abs(io.data.bit(0,11) - io.currentTrack.bit(0,11));
           io.currentTrack = io.data | 0x6000;
           io.status.writeProtect = seekTrack();
+          motorActive();
         }
       } else {
         ctl.error.selfDiagnostic = 1;
       }
     } break;
-    case Command::Recalibration: {
-      if(!disk) {
+    case Command::Recalibration:
+    case Command::Start: {
+      //identical commands
+      if(disk) {
+        //seek to head 0 track 0
+        count = 637500;
+        if(io.status.headRetracted || io.status.spindleMotorStopped)
+            count += 200'700'000;
+        count += 37500 * abs(0 - io.currentTrack.bit(0,11));
+        io.currentTrack = 0x6000;
+        seekTrack();
+        motorActive();
+      } else {
         ctl.error.selfDiagnostic = 1;
       }
     } break;
-    case Command::Sleep: {} break;
-    case Command::Start: {
-      if(!disk) {
-        ctl.error.selfDiagnostic = 1;
-      }
+    case Command::Sleep: {
+      if(!io.status.headRetracted || !io.status.spindleMotorStopped)
+        count = 83'000'000;
+      motorStop();
     } break;
     case Command::SetStandby: {
       if (!io.data.bit(24)) {
@@ -102,6 +117,10 @@ auto DD::command(n16 command) -> void {
     case Command::Standby: {
       if(!disk) {
         ctl.error.selfDiagnostic = 1;
+      } else {
+        if(!io.status.headRetracted || !io.status.spindleMotorStopped)
+          count = 64'000'000;
+        motorStandby();
       }
     } break;
     case Command::IndexLockRetry: {
