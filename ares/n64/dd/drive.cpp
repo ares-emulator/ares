@@ -23,6 +23,8 @@ auto DD::seekSector(n8 sector) -> u32 {
 	                            0x23196E0,0x28A1E00,0x2DF5DC0,0x3299340,0x36D99A0,0x3AB70E0,0x3E31900,0x4149200};
   
   u16 trackPhysicalTable[] = {0x000, 0x09E, 0x13C, 0x1D1, 0x266, 0x2FB, 0x390, 0x425};
+  u16 blockSizeTable[] = {0x4D08, 0x47B8, 0x4510, 0x3FC0, 0x3A70, 0x3520, 0x2FD0, 0x2A80, 
+                          0x47B8, 0x4510, 0x3FC0, 0x3A70, 0x3520, 0x2FD0, 0x2A80, 0x2530};
   n8 pzone = 0;
   for(u32 n : range(7)) {
     if(trackCalc >= trackPhysicalTable[n + 1]) pzone++;
@@ -31,8 +33,8 @@ auto DD::seekSector(n8 sector) -> u32 {
   pzone += (headCalc) ? 8 : 0;
 
   u32 offsetCalc = startOffsetTable[pzone];
-  offsetCalc += (0x55 * (io.sectorSizeBuf + 1)) * 2 * trackCalc;
-  offsetCalc += blockCalc * (0x55 * (io.sectorSizeBuf + 1));
+  offsetCalc += blockSizeTable[pzone] * 2 * trackCalc;
+  offsetCalc += blockCalc * blockSizeTable[pzone];
   offsetCalc += sectorCalc * (io.sectorSizeBuf + 1);
 
   //return disk data offset
