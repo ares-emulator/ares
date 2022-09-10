@@ -8,6 +8,9 @@ auto DD::command(n16 command) -> void {
   io.status.mechaError = 0;
   io.status.writeProtect = 0;
 
+  if(io.status.busyState) return;
+  io.status.busyState = 1;
+
   //most simple command timing response, based on Command::ReadProgramVersion
   u32 count = 8000;
 
@@ -170,5 +173,6 @@ auto DD::command(n16 command) -> void {
 }
 
 auto DD::mechaResponse() -> void {
+  io.status.busyState = 0;
   raise(IRQ::MECHA);
 }
