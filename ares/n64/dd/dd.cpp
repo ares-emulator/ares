@@ -60,6 +60,17 @@ auto DD::connect() -> void {
   information = {};
   information.title = pak->attribute("title");
 
+  if(iplrom) {
+    string id;
+    id.append((char)iplrom.read<Byte>(0x3b));
+    id.append((char)iplrom.read<Byte>(0x3c));
+    id.append((char)iplrom.read<Byte>(0x3d));
+    id.append((char)iplrom.read<Byte>(0x3e));
+    if(id.match("NDDJ")) dd.information.cic = "CIC-NUS-8303";
+    if(id.match("NDDE")) dd.information.cic = "CIC-NUS-DDUS";
+    if(id.match("NDXJ")) dd.information.cic = "CIC-NUS-8401";
+  }
+
   if(auto fp = pak->read("program.disk.error")) {
     error.allocate(fp->size());
     error.load(fp);
@@ -101,6 +112,7 @@ auto DD::power(bool reset) -> void {
 
   io.status.resetState = 1;
   io.id = 3;
+  if(dd.information.cic.match("CIC-NUS-8401")) io.id = 4;
 
   queue.insert(Queue::DD_Clock_Tick, 187'500'000);
   queue.remove(Queue::DD_MECHA_Response);

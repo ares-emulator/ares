@@ -69,7 +69,7 @@ struct DD : Memory::IO<DD> {
 
   struct Information {
     string title;
-    string cic = "CIC-NUS-8303";
+    string cic;
   } information;
 
   struct BCD {
