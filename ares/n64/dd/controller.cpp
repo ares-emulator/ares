@@ -8,6 +8,8 @@ auto DD::command(n16 command) -> void {
   io.status.mechaError = 0;
   io.status.writeProtect = 0;
 
+  u32 count = 500;
+
   switch(command) {
     case Command::Nop: {} break;
     case Command::ReadSeek: {
@@ -16,6 +18,8 @@ auto DD::command(n16 command) -> void {
           ctl.error.invalidParam = 1;
           io.currentTrack = 0;
         } else {
+          count = 637500;
+          count += 37500 * abs(io.data.bit(0,11) - io.currentTrack.bit(0,11));
           io.currentTrack = io.data | 0x6000;
           seekTrack();
         }
@@ -29,6 +33,8 @@ auto DD::command(n16 command) -> void {
           ctl.error.invalidParam = 1;
           io.currentTrack = 0;
         } else {
+          count = 637500;
+          count += 37500 * abs(io.data.bit(0,11) - io.currentTrack.bit(0,11));
           io.currentTrack = io.data | 0x6000;
           io.status.writeProtect = seekTrack();
         }
@@ -141,7 +147,7 @@ auto DD::command(n16 command) -> void {
   else if(ctl.error.invalidParam)     io.status.mechaError = 1;
   else if(io.status.writeProtect)     io.status.mechaError = 1;
 
-  queue.insert(Queue::DD_MECHA_Response, 500);
+  queue.insert(Queue::DD_MECHA_Response, count);
 }
 
 auto DD::mechaResponse() -> void {

@@ -171,7 +171,7 @@ auto DD::writeWord(u32 address, u32 data_) -> void {
     if(data.bit(31) && disk) {
       //start BM
       io.bm.start |= data.bit(31);
-      queue.insert(Queue::DD_BM_Request, 500'000);
+      queue.insert(Queue::DD_BM_Request, 50'000);
     }
   }
 
