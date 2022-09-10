@@ -117,7 +117,7 @@ auto YM2612::Channel::Operator::updatePhase() -> void {
   u32 tuning = detune & 3 ? detunes[(detune & 3) - 1][ksr & 7] >> (3 - (ksr >> 3)) : 0;
 
   u32 lfo = ym2612.lfo.clock >> 2 & 0x1f;
-  s32 pm = (pitch.value * vibratos[channel.vibrato][lfo & 15] >> 9) * (-lfo >> 4);
+  s32 pm = (pitch.value * vibratos[channel.vibrato][lfo & 15] >> 9) * (lfo > 15 ? -1 : 1);
 
   phase.delta = pitch.value + pm << 6 >> 7 - octave.value;
   phase.delta = (!detune.bit(2) ? phase.delta + tuning : phase.delta - tuning) & 0x1ffff;
