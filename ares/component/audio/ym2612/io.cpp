@@ -68,10 +68,10 @@ auto YM2612::writeData(n8 data) -> void {
     if(index == 3 || index == 7) break;
     if(index >= 4) index--;
 
-    channels[index][0].trigger(data.bit(4));
-    channels[index][1].trigger(data.bit(5));
-    channels[index][2].trigger(data.bit(6));
-    channels[index][3].trigger(data.bit(7));
+    channels[index][0].keyLine = data.bit(4);
+    channels[index][1].keyLine = data.bit(5);
+    channels[index][2].keyLine = data.bit(6);
+    channels[index][3].keyLine = data.bit(7);
 
     break;
   }
