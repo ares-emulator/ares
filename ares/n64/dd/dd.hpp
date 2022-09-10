@@ -171,6 +171,10 @@ private:
     } micro;
   } io;
 
+  struct State {
+    n1 seek;
+  } state;
+
   struct Command { enum : u16 {
       Nop                = 0x0,  //no operation
       ReadSeek           = 0x1,  //seek (read)

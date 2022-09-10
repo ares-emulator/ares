@@ -109,6 +109,7 @@ auto DD::power(bool reset) -> void {
   irq = {};
   ctl = {};
   io = {};
+  state = {};
 
   io.status.resetState = 1;
   io.id = 3;

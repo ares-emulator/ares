@@ -27,7 +27,10 @@ auto DD::command(n16 command) -> void {
           count += 37500 * abs(io.data.bit(0,11) - io.currentTrack.bit(0,11));
           io.currentTrack = io.data | 0x6000;
           seekTrack();
-          motorActive();
+          queue.remove(Queue::DD_Motor_Mode);
+          io.status.headRetracted = 0;
+          io.status.spindleMotorStopped = 0;
+          state.seek = 1;
         }
       } else {
         ctl.error.selfDiagnostic = 1;
@@ -44,7 +47,10 @@ auto DD::command(n16 command) -> void {
           count += 37500 * abs(io.data.bit(0,11) - io.currentTrack.bit(0,11));
           io.currentTrack = io.data | 0x6000;
           io.status.writeProtect = seekTrack();
-          motorActive();
+          queue.remove(Queue::DD_Motor_Mode);
+          io.status.headRetracted = 0;
+          io.status.spindleMotorStopped = 0;
+          state.seek = 1;
         }
       } else {
         ctl.error.selfDiagnostic = 1;
@@ -61,7 +67,10 @@ auto DD::command(n16 command) -> void {
         count += 37500 * abs(0 - io.currentTrack.bit(0,11));
         io.currentTrack = 0x6000;
         seekTrack();
-        motorActive();
+        queue.remove(Queue::DD_Motor_Mode);
+        io.status.headRetracted = 0;
+        io.status.spindleMotorStopped = 0;
+        state.seek = 1;
       } else {
         ctl.error.selfDiagnostic = 1;
       }
@@ -173,6 +182,10 @@ auto DD::command(n16 command) -> void {
 }
 
 auto DD::mechaResponse() -> void {
+  if(state.seek) {
+    state.seek = 0;
+    motorActive();
+  }
   io.status.busyState = 0;
   raise(IRQ::MECHA);
 }
