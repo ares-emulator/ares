@@ -108,6 +108,7 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> vector<u8> {
   output.resize(1175*2*2, 0);   //1175 tracks * 2 blocks per track * 2 sides
 
   //perform basic system area check, check if the data repeats and validity
+  output[12] = 0;
   u32 systemBlocks[4] = {0, 1, 8, 9};
   for(u32 n : range(4)) {
     u32 systemOffset = systemBlocks[n]*0x4D08;
@@ -145,7 +146,8 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> vector<u8> {
   //if retail info check is bad, check if it's a dev one
   if(output[12] == 0) {
     for(u32 n : range(4)) {
-      u32 systemOffset = ((systemBlocks[n]+2) ^ (input.size() == 0x435B0C0) ? 1 : 0) * 0x4D08;
+      u32 systemBlock = (input.size() == 0x3DEC800) ? (systemBlocks[n]+2)^1 : (systemBlocks[n]+2);
+      u32 systemOffset = systemBlock * 0x4D08;
       output[systemBlocks[n]+2] = 1;
 
       //validity check
@@ -206,12 +208,22 @@ auto Nintendo64DD::transform(array_view<u8> input, vector<u8> errorTable) -> vec
 
   //perform basic system area check
   b1 systemCheck = false;
+  b1 dev = errorTable[12] == 0;
   u32 systemBlocks[4] = {9, 8, 1, 0};
   u32 systemOffset = 0;
   for(u32 n : range(4)) {
-    if(errorTable[systemBlocks[n]] == 0) {
-      systemCheck = true;
-      systemOffset = systemBlocks[n]*0x4D08;
+    if(dev) {
+      u32 systemBlock = systemBlocks[n]+2;
+      if(errorTable[systemBlock] == 0) {
+        systemCheck = true;
+        systemOffset = (systemBlock^1)*0x4D08;
+      }
+    } else {
+      u32 systemBlock = systemBlocks[n];
+      if(errorTable[systemBlock] == 0) {
+        systemCheck = true;
+        systemOffset = systemBlock*0x4D08;
+      }
     }
   }
 
