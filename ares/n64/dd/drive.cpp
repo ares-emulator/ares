@@ -131,8 +131,7 @@ auto DD::bmRequest() -> void {
 
     io.currentSector++;
   }
-
-  queue.insert(Queue::DD_BM_Request, 50'000);
+  
   raise(IRQ::BM);
 }
 

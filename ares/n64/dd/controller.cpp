@@ -21,6 +21,7 @@ auto DD::command(n16 command) -> void {
         if((io.data.bit(12,15) > 1) || (io.data.bit(0,11) > 0x5D7)) {
           ctl.error.invalidParam = 1;
         } else {
+          //TODO: proper research into seek and access times
           count = 637500;
           if(io.status.headRetracted || io.status.spindleMotorStopped)
             count += 200'700'000;
@@ -41,6 +42,7 @@ auto DD::command(n16 command) -> void {
         if((io.data.bit(12,15) > 1) || (io.data.bit(0,11) > 0x5D7)) {
           ctl.error.invalidParam = 1;
         } else {
+          //TODO: proper research into seek and access times
           count = 637500;
           if(io.status.headRetracted || io.status.spindleMotorStopped)
             count += 200'700'000;
@@ -60,6 +62,7 @@ auto DD::command(n16 command) -> void {
     case Command::Start: {
       //identical commands
       if(disk) {
+        //TODO: proper research into seek and access times
         //seek to head 0 track 0
         count = 637500;
         if(io.status.headRetracted || io.status.spindleMotorStopped)
