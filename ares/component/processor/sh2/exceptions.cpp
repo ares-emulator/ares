@@ -63,17 +63,17 @@ auto SH2::addressErrorDMA() -> void {
 
 auto SH2::illegalInstruction() -> void {
   if(inDelaySlot()) return illegalSlotInstruction();
+  debug(unusual, "[SH2] illegal instruction: 0x", hex(busReadWord(PC - 4), 4L), " @ 0x", hex(PC - 4));
   static constexpr u8 vector = 0x04;
   push(SR);
   push(PC);
   jump(readLong(VBR + vector * 4) + 4);
-  debug(unusual, "[SH2] illegal instruction: 0x", hex(busReadWord(PC - 4), 4L), " @ 0x", hex(PC - 4));
 }
 
 auto SH2::illegalSlotInstruction() -> void {
+  debug(unusual, "[SH2] illegal slot instruction: 0x", hex(busReadWord(PC - 4), 4L));
   static constexpr u8 vector = 0x06;
   push(SR);
   push(PC - 2);
   jump(readLong(VBR + vector * 4) + 4);
-  debug(unusual, "[SH2] illegal slot instruction: 0x", hex(busReadWord(PC - 4), 4L));
 }
