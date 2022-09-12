@@ -160,6 +160,11 @@ auto CPU::fpeInvalidOperation() -> bool {
   return false;
 }
 
+auto CPU::fpeUnimplemented() -> bool {
+  fpu.csr.cause.unimplementedOperation = 1;
+  return true;
+}
+
 auto CPU::checkFPUExceptions() -> bool {
   u32 exc = fenv.testExcept(float_env::divByZero
                           | float_env::inexact
@@ -583,22 +588,46 @@ auto CPU::FSUB_D(u8 fd, u8 fs, u8 ft) -> void {
 
 auto CPU::FTRUNC_L_S(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(s64) = FS(f32) < 0 ? ceil(FS(f32)) : floor(FS(f32));
+  auto f = FS(f32);
+  if (isinf(f) || isnan(f) || f >= 0x1p+63 || f < -0x1p+63) {
+    if (fpeUnimplemented()) return exception.floatingPoint();
+    FD(s64) = 0xffff'ffff'ffff'ffffull;
+  } else {
+    FD(s64) = f < 0 ? ceil(f) : floor(f);
+  }
 }
 
 auto CPU::FTRUNC_L_D(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(s64) = FS(f64) < 0 ? ceil(FS(f64)) : floor(FS(f64));
+  auto f = FS(f64);
+  if (isinf(f) || isnan(f) || f >= 0x1p+63 || f < -0x1p+63) {
+    if (fpeUnimplemented()) return exception.floatingPoint();
+    FD(s64) = 0xffff'ffff'ffff'ffffull;
+  } else {
+    FD(s64) = f < 0 ? ceil(f) : floor(f);
+  }
 }
 
 auto CPU::FTRUNC_W_S(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(s32) = FS(f32) < 0 ? ceil(FS(f32)) : floor(FS(f32));
+  auto f = FS(f32);
+  if (isinf(f) || isnan(f) || f >= 0x1p+31f || f < -0x1p+31f) {
+    if (fpeUnimplemented()) return exception.floatingPoint();
+    FD(s32) = 0xffff'ffff;
+  } else {
+    FD(s32) = f < 0 ? ceil(f) : floor(f);
+  }
 }
 
 auto CPU::FTRUNC_W_D(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(s32) = FS(f64) < 0 ? ceil(FS(f64)) : floor(FS(f64));
+  auto f = FS(f64);
+  if (isinf(f) || isnan(f) || f >= 0x1p+31f || f < -0x1p+31f) {
+    if (fpeUnimplemented()) return exception.floatingPoint();
+    FD(s32) = 0xffff'ffff;
+  } else {
+    FD(s32) = f < 0 ? ceil(f) : floor(f);
+  }
 }
 
 auto CPU::LDC1(u8 ft, cr64& rs, s16 imm) -> void {
