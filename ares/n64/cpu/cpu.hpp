@@ -648,6 +648,7 @@ struct CPU : Thread {
   auto fpeUnderflow() -> bool;
   auto fpeOverflow() -> bool;
   auto fpeInvalidOperation() -> bool;
+  auto fpeUnimplemented() -> bool;
 
   auto BC1(bool value, bool likely, s16 imm) -> void;
   auto CFC1(r64& rt, u8 rd) -> void;
