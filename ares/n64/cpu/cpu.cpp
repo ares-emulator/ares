@@ -134,7 +134,7 @@ auto CPU::power(bool reset) -> void {
   for(auto& r : fpu.r) r.u64 = 0;
   fpu.csr = {};
   cop2 = {};
-  fesetround(FE_TONEAREST);
+  fenv.setRound(float_env::toNearest);
   context.setMode();
 
   if constexpr(Accuracy::CPU::Recompiler) {

@@ -637,6 +637,8 @@ struct CPU : Thread {
   } fpu;
 
   //interpreter-fpu.cpp
+  float_env fenv;
+
   template<typename T> auto fgr(u32) -> T&;
   auto getControlRegisterFPU(n5) -> u32;
   auto setControlRegisterFPU(n5, n32) -> void;

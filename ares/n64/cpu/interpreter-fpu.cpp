@@ -115,10 +115,10 @@ auto CPU::setControlRegisterFPU(n5 index, n32 data) -> void {
 
     if(fpu.csr.roundMode != roundModePrevious) {
       switch(fpu.csr.roundMode) {
-      case 0: fesetround(FE_TONEAREST);  break;
-      case 1: fesetround(FE_TOWARDZERO); break;
-      case 2: fesetround(FE_UPWARD);     break;
-      case 3: fesetround(FE_DOWNWARD);   break;
+      case 0: fenv.setRound(float_env::toNearest);  break;
+      case 1: fenv.setRound(float_env::towardZero); break;
+      case 2: fenv.setRound(float_env::upward);     break;
+      case 3: fenv.setRound(float_env::downward);   break;
       }
     }
   } break;
@@ -161,21 +161,25 @@ auto CPU::fpeInvalidOperation() -> bool {
 }
 
 auto CPU::checkFPUExceptions() -> bool {
-  int exc = fetestexcept(FE_ALL_EXCEPT);
+  u32 exc = fenv.testExcept(float_env::divByZero
+                          | float_env::inexact
+                          | float_env::underflow
+                          | float_env::overflow
+                          | float_env::invalid);
   if (!exc) return false;
 
   bool raise = false;
-  if(exc & FE_DIVBYZERO) raise |= fpeDivisionByZero();
-  if(exc & FE_INEXACT)   raise |= fpeInexact();
-  if(exc & FE_UNDERFLOW) raise |= fpeUnderflow();
-  if(exc & FE_OVERFLOW)  raise |= fpeOverflow();
-  if(exc & FE_INVALID)   raise |= fpeInvalidOperation();
+  if(exc & float_env::divByZero) raise |= fpeDivisionByZero();
+  if(exc & float_env::inexact)   raise |= fpeInexact();
+  if(exc & float_env::underflow) raise |= fpeUnderflow();
+  if(exc & float_env::overflow)  raise |= fpeOverflow();
+  if(exc & float_env::invalid)   raise |= fpeInvalidOperation();
   if(raise) exception.floatingPoint();
   return raise;
 }
 
 #define CHECK_FPE(type, operation) ({ \
-  feclearexcept(FE_ALL_EXCEPT); \
+  fenv.clearExcept(); \
   volatile type res = operation; \
   if (checkFPUExceptions()) return; \
   (res); \
