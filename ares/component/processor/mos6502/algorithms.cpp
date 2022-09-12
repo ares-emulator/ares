@@ -196,9 +196,11 @@ auto MOS6502::algorithmSBC(n8 i) -> n8 {
 auto MOS6502::algorithmSLO(n8 i) -> n8 {
   C = i.bit(7);
   i <<= 1;
+  Z = i == 0;
+  N = i.bit(7);
 
-  n8 o = A | i;
-  Z = o == 0;
-  N = o.bit(7);
-  return o;
+  A |= i;
+  Z = A == 0;
+  N = A.bit(7);
+  return i;
 }
