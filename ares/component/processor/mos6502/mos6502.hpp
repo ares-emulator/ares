@@ -31,7 +31,12 @@ struct MOS6502 {
   using fp = auto (MOS6502::*)(n8) -> n8;
   auto algorithmADC(n8) -> n8;
   auto algorithmAND(n8) -> n8;
+  auto algorithmANC(n8) -> n8;
+  auto algorithmARR(n8) -> n8;
   auto algorithmASL(n8) -> n8;
+  auto algorithmATX(n8) -> n8;
+  auto algorithmALR(n8) -> n8;
+  auto algorithmAXS(n8) -> n8;
   auto algorithmBIT(n8) -> n8;
   auto algorithmCMP(n8) -> n8;
   auto algorithmCPX(n8) -> n8;

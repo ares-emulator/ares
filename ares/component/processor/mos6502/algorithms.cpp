@@ -17,10 +17,43 @@ auto MOS6502::algorithmADC(n8 i) -> n8 {
   return o;
 }
 
+auto MOS6502::algorithmALR(n8 i) -> n8 {
+  n8 o = A & i;
+  C = o.bit(0);
+  o >>= 1;
+  Z = o == 0;
+  N = o.bit(7);
+
+  return o;
+}
+
 auto MOS6502::algorithmAND(n8 i) -> n8 {
   n8 o = A & i;
   Z = o == 0;
   N = o.bit(7);
+  return o;
+}
+
+auto MOS6502::algorithmANC(n8 i) -> n8 {
+  n8 o = A & i;
+  Z = o == 0;
+  N = o.bit(7);
+  C = N;
+  return o;
+}
+
+auto MOS6502::algorithmARR(n8 i) -> n8 {
+  n8 o = A & i;
+  Z = o == 0;
+  N = o.bit(7);
+
+  bool c = C;
+  o = c << 7 | o >> 1;
+  Z = o == 0;
+  N = o.bit(7);
+  C = o.bit(6);
+  V = o.bit(6) ^ o.bit(5);
+
   return o;
 }
 
@@ -30,6 +63,23 @@ auto MOS6502::algorithmASL(n8 i) -> n8 {
   Z = i == 0;
   N = i.bit(7);
   return i;
+}
+
+auto MOS6502::algorithmATX(n8 i) -> n8 {
+  A |= 0xff; //TODO: OR value may differ on non-NES platforms
+  n8 o = A & i;
+  X = o;
+  Z = o == 0;
+  N = o.bit(7);
+  return o;
+}
+
+auto MOS6502::algorithmAXS(n8 i) -> n8 {
+  n9 o = (A & X) - i;
+  C = !o.bit(8);
+  Z = n8(o) == 0;
+  N = o.bit(7);
+  return o;
 }
 
 auto MOS6502::algorithmBIT(n8 i) -> n8 {
