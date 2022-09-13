@@ -92,7 +92,7 @@ MasterSystem::MasterSystem() {
 
 auto MasterSystem::load() -> bool {
   game = mia::Medium::create("Master System");
-  game->load(Emulator::load(game, configuration.game));
+  if(!game->load(Emulator::load(game, configuration.game))) return false;
 
   auto region = Emulator::region();
   //if statements below are ordered by lowest to highest priority
