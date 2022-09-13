@@ -611,7 +611,13 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //MOV.W @(disp,PC),Rn
   case 0x90 ... 0x9f: {
-    add32(reg(1), PC, imm(d8*2));
+    auto delay = cmp32_jump(PPM, imm(0), flag_ne);
+    mov32(reg(0), PC);
+    auto tail = jump();
+    setLabel(delay);
+    sub32(reg(0), PPC, imm(2));
+    setLabel(tail);
+    add32(reg(1), reg(0), imm(d8*2));
     call(readWord);
     mov32_s16(reg(0), reg(0));
     mov32(Rn, reg(0));
@@ -637,8 +643,14 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //MOV.L @(disp,PC),Rn
   case 0xd0 ... 0xdf: {
-    and32(reg(1), PC, imm(~3));
-    add32(reg(1), reg(1), imm(d8*4));
+    auto delay = cmp32_jump(PPM, imm(0), flag_ne);
+    mov32(reg(0), PC);
+    auto tail = jump();
+    setLabel(delay);
+    sub32(reg(0), PPC, imm(2));
+    setLabel(tail);
+    and32(reg(0), reg(0), imm(~3));
+    add32(reg(1), reg(0), imm(d8*4));
     call(readLong);
     mov32(Rn, reg(0));
     return 0;
@@ -816,12 +828,15 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //MOVA @(disp,PC),R0
   case 0xc7: {
-    and32(reg(0), PC, imm(~3));
+    auto delay = cmp32_jump(PPM, imm(0), flag_ne);
+    mov32(reg(0), PC);
+    auto tail = jump();
+    setLabel(delay);
+    sub32(reg(0), PPC, imm(2));
+    setLabel(tail);
+    and32(reg(0), reg(0), imm(~3));
     add32(reg(0), reg(0), imm(d8*4));
     mov32(R0, reg(0));
-    auto skip = cmp32_jump(PPM, imm(0), flag_eq);
-    sub32(R0, R0, imm(2));
-    setLabel(skip);
     return 0;
   }
 
