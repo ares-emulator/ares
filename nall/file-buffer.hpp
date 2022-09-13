@@ -29,7 +29,7 @@ struct file_buffer {
   file_buffer() = default;
   file_buffer(const string& filename, u32 mode) { open(filename, mode); }
 
-  file_buffer(file_buffer&& source) { operator=(move(source)); }
+  file_buffer(file_buffer&& source) { operator=(std::move(source)); }
 
   ~file_buffer() { close(); }
 
@@ -125,7 +125,7 @@ struct file_buffer {
   }
 
   template<typename... P> auto print(P&&... p) -> void {
-    string s{forward<P>(p)...};
+    string s{std::forward<P>(p)...};
     for(auto& byte : s) write(byte);
   }
 

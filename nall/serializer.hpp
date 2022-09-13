@@ -124,7 +124,7 @@ struct serializer {
   }
 
   serializer(const serializer& s) { operator=(s); }
-  serializer(serializer&& s) { operator=(move(s)); }
+  serializer(serializer&& s) { operator=(std::move(s)); }
 
   serializer() {
     setWriting();

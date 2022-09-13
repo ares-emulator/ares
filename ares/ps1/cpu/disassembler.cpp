@@ -395,6 +395,6 @@ auto CPU::Disassembler::gteControlRegisterValue(u8 index) const -> string {
 
 template<typename... P>
 auto CPU::Disassembler::hint(P&&... p) const -> string {
-  if(showColors) return {"\e[0m\e[37m", forward<P>(p)..., "\e[0m"};
-  return {forward<P>(p)...};
+  if(showColors) return {"\e[0m\e[37m", std::forward<P>(p)..., "\e[0m"};
+  return {std::forward<P>(p)...};
 }

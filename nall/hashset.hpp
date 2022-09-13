@@ -17,7 +17,7 @@ struct hashset {
   hashset() = default;
   hashset(u32 length) : length(bit::round(length)) {}
   hashset(const hashset& source) { operator=(source); }
-  hashset(hashset&& source) { operator=(move(source)); }
+  hashset(hashset&& source) { operator=(std::move(source)); }
   ~hashset() { reset(); }
 
   auto operator=(const hashset& source) -> hashset& {

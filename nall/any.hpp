@@ -8,7 +8,7 @@ namespace nall {
 struct any {
   any() = default;
   any(const any& source) { operator=(source); }
-  any(any&& source) { operator=(move(source)); }
+  any(any&& source) { operator=(std::move(source)); }
   template<typename T> any(const T& value) { operator=(value); }
   ~any() { reset(); }
 

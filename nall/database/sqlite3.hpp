@@ -16,7 +16,7 @@ struct SQLite3 {
     auto operator=(const Statement& source) -> Statement& = delete;
 
     Statement(sqlite3_stmt* statement) : _statement(statement) {}
-    Statement(Statement&& source) { operator=(move(source)); }
+    Statement(Statement&& source) { operator=(std::move(source)); }
 
     auto operator=(Statement&& source) -> Statement& {
       if(this == &source) return *this;
@@ -91,7 +91,7 @@ struct SQLite3 {
     auto operator=(const Query& source) -> Query& = delete;
 
     Query(sqlite3_stmt* statement) : Statement(statement) {}
-    Query(Query&& source) : Statement(source._statement) { operator=(move(source)); }
+    Query(Query&& source) : Statement(source._statement) { operator=(std::move(source)); }
 
     ~Query() {
       sqlite3_finalize(statement());
@@ -195,7 +195,7 @@ struct SQLite3 {
     }
 
     Query query{_statement};
-    bind(query, forward<P>(p)...);
+    bind(query, std::forward<P>(p)...);
     return query;
   }
 
@@ -211,7 +211,7 @@ protected:
   auto bind(Query&) -> void {}
   template<typename T, typename... P> auto bind(Query& query, const T& value, P&&... p) -> void {
     query.bind(value);
-    bind(query, forward<P>(p)...);
+    bind(query, std::forward<P>(p)...);
   }
 
   bool _debug = false;
