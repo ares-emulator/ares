@@ -178,7 +178,7 @@ auto PPU::step(u32 clocks) -> void {
       u32 lo = hi & (cpu.status.speedDouble ? 1 : 3);
       hi >>= cpu.status.speedDouble ? 1 : 2;
       if(lo == 0) {
-        if(hi == 0) {
+        if(hi < 2) {
           //warm-up
         } else if(hi == 161) {
           //cool-down; disable
