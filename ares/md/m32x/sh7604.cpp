@@ -53,7 +53,7 @@ auto M32X::SH7604::step(u32 clocks) -> void {
 
 auto M32X::SH7604::power(bool reset) -> void {
   Thread::create(23'000'000, {&M32X::SH7604::main, this});
-  recompiler.min_cycles = 22;
+  recompiler.min_cycles = 19;
   SH2::power(reset);
   irq = {};
   irq.vres.enable = 1;
