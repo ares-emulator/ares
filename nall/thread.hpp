@@ -28,7 +28,7 @@ struct thread {
   auto operator=(const thread&) -> thread& = delete;
 
   thread() = default;
-  thread(thread&& source) { operator=(move(source)); }
+  thread(thread&& source) { operator=(std::move(source)); }
 
   auto operator=(thread&& source) -> thread& {
     if(this == &source) return *this;
@@ -100,7 +100,7 @@ struct thread {
   auto operator=(const thread&) -> thread& = delete;
 
   thread() = default;
-  thread(thread&& source) { operator=(move(source)); }
+  thread(thread&& source) { operator=(std::move(source)); }
 
   ~thread() { close(); }
 

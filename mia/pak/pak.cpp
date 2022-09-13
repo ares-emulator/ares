@@ -65,7 +65,7 @@ auto Pak::read(string location, vector<string> match) -> vector<u8> {
   //attempt to apply BPS patch if one was found
   if(patch) {
     if(auto output = Beat::Single::apply(memory, patch)) {
-      memory = move(*output);
+      memory = std::move(*output);
     }
   }
 

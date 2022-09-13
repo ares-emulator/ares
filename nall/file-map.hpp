@@ -29,7 +29,7 @@ struct file_map {
   auto operator=(const file_map&) = delete;
 
   file_map() = default;
-  file_map(file_map&& source) { operator=(move(source)); }
+  file_map(file_map&& source) { operator=(std::move(source)); }
   file_map(const string& filename, u32 mode) { open(filename, mode); }
 
   ~file_map() { close(); }

@@ -86,7 +86,7 @@ auto Medium::manifestDatabase(string sha256) -> string {
     Database database;
     database.name = name();
     database.list = BML::unserialize(file::read(locate({"Database/", name(), ".bml"})));
-    Media::databases.append(move(database));
+    Media::databases.append(std::move(database));
   }
 
   //search the database for a given sha256 game entry

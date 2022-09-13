@@ -83,7 +83,7 @@ template<typename T>
 struct queue {
   queue() = default;
   queue(const queue& source) { operator=(source); }
-  queue(queue&& source) { operator=(move(source)); }
+  queue(queue&& source) { operator=(std::move(source)); }
   ~queue() { reset(); }
 
   auto operator=(const queue& source) -> queue& {

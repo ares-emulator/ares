@@ -1,8 +1,8 @@
 template<typename... P>
 auto SH2::hint(P&&... p) const -> string {
   if(1) return {};
-  if(1) return {"\e[0m\e[37m", forward<P>(p)..., "\e[0m"};
-  return {forward<P>(p)...};
+  if(1) return {"\e[0m\e[37m", std::forward<P>(p)..., "\e[0m"};
+  return {std::forward<P>(p)...};
 }
 
 auto SH2::disassembleInstruction() -> string {
