@@ -34,10 +34,12 @@ auto SH2::instruction() -> void {
 
     // Recompiled blocks may be very small, negating the impact
     // minimum cycle counts ensure that the recompiler is a net positive
+    auto min_cycles = recompiler.min_cycles;
     do {
       auto block = recompiler.block(PC - 4);
       block->execute(*this);
     } while (CCR <= recompiler.min_cycles);
+    recompiler.min_cycles = min_cycles;
 
     step(CCR);
     CCR = 0;
