@@ -137,9 +137,7 @@ template<u32 Origin> auto SH2::writeByte(u32 address, u32 data) -> void {
   }
 
   case Area::Uncached: {
-    if constexpr(Accuracy::Recompiler) {
-      recompiler.min_cycles = 0;
-    }
+    cyclesUntilSync = 0;
     return busWriteByte(address & 0x1fff'ffff, data);
   }
 
@@ -188,9 +186,7 @@ template<u32 Origin> auto SH2::writeWord(u32 address, u32 data) -> void {
   }
 
   case Area::Uncached: {
-    if constexpr(Accuracy::Recompiler) {
-      recompiler.min_cycles = 0;
-    }
+    cyclesUntilSync = 0;
     return busWriteWord(address & 0x1fff'fffe, data);
   }
 
@@ -237,9 +233,7 @@ template<u32 Origin> auto SH2::writeLong(u32 address, u32 data) -> void {
   }
 
   case Area::Uncached: {
-    if constexpr(Accuracy::Recompiler) {
-      recompiler.min_cycles = 0;
-    }
+    cyclesUntilSync = 0;
     return busWriteLong(address & 0x1fff'fffc, data);
   }
 

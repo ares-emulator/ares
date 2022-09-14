@@ -246,6 +246,9 @@ struct SH2 {
   };
   u32 exceptions = 0;  //delayed exception flags
 
+  s32 cyclesUntilSync = 0;
+  s32 minCyclesBetweenSyncs = 0;
+
   struct Recompiler : recompiler::generic {
     SH2& self;
     Recompiler(SH2& self) : self(self), generic(allocator) {}
@@ -276,7 +279,6 @@ struct SH2 {
 
     bump_allocator allocator;
     Pool* pools[1 << 24];
-    int min_cycles = 0;
   } recompiler{*this};
 
   #include "sh7604/sh7604.hpp"
