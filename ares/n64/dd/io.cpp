@@ -30,7 +30,7 @@ auto DD::readWord(u32 address) -> u32 {
     //acknowledge bm interrupt (tested on real hardware)
     if(irq.bm.line) {
       //TODO: proper research into seek and access times
-      queue.insert(Queue::DD_BM_Request, 34'280 + (io.currentTrack.bit(0,11) / 15));
+      queue.insert(Queue::DD_BM_Request, 38'000 + (io.currentTrack.bit(0,11) / 15));
       lower(IRQ::BM);
     }
   }
@@ -176,7 +176,7 @@ auto DD::writeWord(u32 address, u32 data_) -> void {
       //start BM
       io.bm.start |= data.bit(31);
       //TODO: proper research into seek and access times
-      queue.insert(Queue::DD_BM_Request, 34'280 + (io.currentTrack.bit(0,11) / 15));
+      queue.insert(Queue::DD_BM_Request, 50'000 + (io.currentTrack.bit(0,11) / 15));
     }
   }
 
