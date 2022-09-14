@@ -56,6 +56,13 @@ auto DD::bmRequest() -> void {
   io.bm.error = 0;
   io.bm.c1Single = 0;
   io.bm.c1Double = 0;
+  io.error.am = 0;
+  io.error.clockUnlock = 0;
+  io.error.offTrack = 0;
+  io.error.overrun = 0;
+  io.error.selfStop = 0;
+  io.error.spindle = 0;
+  io.error.sector = 0;
 
   n1  blockCalc  = (io.currentSector >= 0x5A) ? 1 : 0;
   n8  sectorCalc = io.currentSector - (blockCalc * 0x5A);

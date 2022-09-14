@@ -54,6 +54,7 @@ auto DD::readWord(u32 address) -> u32 {
 
   //ASIC_ERR_SECTOR
   if(address == 5) {
+    data.bit(16,23) = io.error.sector;
     data.bit(24) = io.error.selfStop;
     data.bit(25) = io.error.clockUnlock;
     data.bit(26) = ~(bool)disk; //no disk
@@ -70,7 +71,8 @@ auto DD::readWord(u32 address) -> u32 {
 
   //ASIC_CUR_SECTOR
   if(address == 7) {
-    data.bit(16,23) = io.currentSector;
+    data.bit(24,31) = io.currentSector;
+    data.bit(16,23) = 0xc3;
   }
 
   //ASIC_HARD_RESET

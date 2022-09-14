@@ -163,6 +163,8 @@ private:
       n1 offTrack;
       n1 clockUnlock;
       n1 selfStop;
+
+      n8 sector;
     } error;
 
     struct {
