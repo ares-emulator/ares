@@ -48,13 +48,20 @@ auto M32X::SH7604::main() -> void {
 
 auto M32X::SH7604::step(u32 clocks) -> void {
   Thread::step(clocks);
-  if(m32x.shm.active()) Thread::synchronize(m32x.shs, cpu);
-  if(m32x.shs.active()) Thread::synchronize(m32x.shm, cpu);
+  cyclesUntilSync -= clocks;
+
+  if(cyclesUntilSync <= 0) {
+    if(m32x.shm.active()) Thread::synchronize(m32x.shs, cpu);
+    if(m32x.shs.active()) Thread::synchronize(m32x.shm, cpu);
+    while(cyclesUntilSync <= 0) {
+      cyclesUntilSync += minCyclesBetweenSyncs;
+    }
+  }
 }
 
 auto M32X::SH7604::power(bool reset) -> void {
   Thread::create(23'000'000, {&M32X::SH7604::main, this});
-  recompiler.min_cycles = 19;
+  minCyclesBetweenSyncs = 20;
   SH2::power(reset);
   irq = {};
   irq.vres.enable = 1;
