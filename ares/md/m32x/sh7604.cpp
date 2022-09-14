@@ -48,7 +48,8 @@ auto M32X::SH7604::main() -> void {
 
 auto M32X::SH7604::step(u32 clocks) -> void {
   Thread::step(clocks);
-  Thread::synchronize(cpu);
+  if(m32x.shm.active()) Thread::synchronize(m32x.shs, cpu);
+  if(m32x.shs.active()) Thread::synchronize(m32x.shm, cpu);
 }
 
 auto M32X::SH7604::power(bool reset) -> void {
