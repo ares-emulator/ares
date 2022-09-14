@@ -22,10 +22,10 @@ auto DD::command(n16 command) -> void {
           ctl.error.invalidParam = 1;
         } else {
           //TODO: proper research into seek and access times
-          count = 637500;
+          count = 993'000;
           if(io.status.headRetracted || io.status.spindleMotorStopped)
             count += 200'700'000;
-          count += 37500 * abs(io.data.bit(0,11) - io.currentTrack.bit(0,11));
+          count += 19300 * abs(io.data.bit(0,11) - io.currentTrack.bit(0,11));
           io.currentTrack = io.data | 0x6000;
           seekTrack();
           queue.remove(Queue::DD_Motor_Mode);
@@ -43,10 +43,10 @@ auto DD::command(n16 command) -> void {
           ctl.error.invalidParam = 1;
         } else {
           //TODO: proper research into seek and access times
-          count = 637500;
+          count = 993'000;
           if(io.status.headRetracted || io.status.spindleMotorStopped)
             count += 200'700'000;
-          count += 37500 * abs(io.data.bit(0,11) - io.currentTrack.bit(0,11));
+          count += 19300 * abs(io.data.bit(0,11) - io.currentTrack.bit(0,11));
           io.currentTrack = io.data | 0x6000;
           io.status.writeProtect = seekTrack();
           queue.remove(Queue::DD_Motor_Mode);
@@ -64,10 +64,10 @@ auto DD::command(n16 command) -> void {
       if(disk) {
         //TODO: proper research into seek and access times
         //seek to head 0 track 0
-        count = 637500;
+        count = 993'000;
         if(io.status.headRetracted || io.status.spindleMotorStopped)
             count += 200'700'000;
-        count += 37500 * abs(0 - io.currentTrack.bit(0,11));
+        count += 19300 * abs(0 - io.currentTrack.bit(0,11));
         io.currentTrack = 0x6000;
         seekTrack();
         queue.remove(Queue::DD_Motor_Mode);
