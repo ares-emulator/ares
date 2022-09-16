@@ -74,13 +74,15 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   return block;
 }
 
-#define readByte  &SH2::readByte
-#define readWord  &SH2::readWord
-#define readLong  &SH2::readLong
-#define writeByte &SH2::writeByte
-#define writeWord &SH2::writeWord
-#define writeLong &SH2::writeLong
-#define illegal   &SH2::illegalInstruction
+#define readB   &SH2::readByte<>
+#define readW   &SH2::readWord<>
+#define readL   &SH2::readLong<>
+#define writeB  &SH2::writeByte<>
+#define writeW  &SH2::writeWord<>
+#define writeL  &SH2::writeLong<>
+#define readB   &SH2::readByte<>
+#define writeB  &SH2::writeByte<>
+#define illegal &SH2::illegalInstruction
 
 auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   #define n   (opcode >> 8 & 0x00f)
@@ -97,7 +99,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x04: {
     add32(reg(1), Rn, R0);
     mov32(reg(2), Rm);
-    call(writeByte);
+    call(writeB);
     return 0;
   }
 
@@ -105,7 +107,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x05: {
     add32(reg(1), Rn, R0);
     mov32(reg(2), Rm);
-    call(writeWord);
+    call(writeW);
     return 0;
   }
 
@@ -113,7 +115,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x06: {
     add32(reg(1), Rn, R0);
     mov32(reg(2), Rm);
-    call(writeLong);
+    call(writeL);
     return 0;
   }
 
@@ -126,7 +128,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.B @(R0,Rm),Rn
   case 0x0c: {
     add32(reg(1), Rm, R0);
-    call(readByte);
+    call(readB);
     mov32_s8(reg(0), reg(0));
     mov32(Rn, reg(0));
     return 0;
@@ -135,7 +137,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.W @(R0,Rm),Rn
   case 0x0d: {
     add32(reg(1), Rm, R0);
-    call(readWord);
+    call(readW);
     mov32_s16(reg(0), reg(0));
     mov32(Rn, reg(0));
     return 0;
@@ -144,7 +146,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.L @(R0,Rm),Rn
   case 0x0e: {
     add32(reg(1), Rm, R0);
-    call(readLong);
+    call(readL);
     mov32(Rn, reg(0));
     return 0;
   }
@@ -153,11 +155,11 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x0f: {
     mov32(reg(1), Rn);
     add32(Rn, reg(1), imm(4));
-    call(readLong);
+    call(readL);
     mov32(sreg(2), reg(0));
     mov32(reg(1), Rm);
     add32(Rm, reg(1), imm(4));
-    call(readLong);
+    call(readL);
     mov64_s32(reg(0), reg(0));
     mov64_s32(reg(1), sreg(2));
     mul64(reg(0), reg(0), reg(1));
@@ -174,7 +176,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x10 ... 0x1f: {
     add32(reg(1), Rn, imm(d4*4));
     mov32(reg(2), Rm);
-    call(writeLong);
+    call(writeL);
     return 0;
   }
 
@@ -182,7 +184,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x20: {
     mov32(reg(1), Rn);
     mov32(reg(2), Rm);
-    call(writeByte);
+    call(writeB);
     return 0;
   }
 
@@ -190,7 +192,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x21: {
     mov32(reg(1), Rn);
     mov32(reg(2), Rm);
-    call(writeWord);
+    call(writeW);
     return 0;
   }
 
@@ -198,7 +200,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x22: {
     mov32(reg(1), Rn);
     mov32(reg(2), Rm);
-    call(writeLong);
+    call(writeL);
     return 0;
   }
 
@@ -207,7 +209,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     mov32(reg(2), Rm);
     sub32(reg(1), Rn, imm(1));
     mov32(Rn, reg(1));
-    call(writeByte);
+    call(writeB);
     return 0;
   }
 
@@ -216,7 +218,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     mov32(reg(2), Rm);
     sub32(reg(1), Rn, imm(2));
     mov32(Rn, reg(1));
-    call(writeWord);
+    call(writeW);
     return 0;
   }
 
@@ -225,7 +227,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     mov32(reg(2), Rm);
     sub32(reg(1), Rn, imm(4));
     mov32(Rn, reg(1));
-    call(writeLong);
+    call(writeL);
     return 0;
   }
 
@@ -435,11 +437,11 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x4f: {
     mov32(reg(1), Rn);
     add32(Rn, reg(1), imm(2));
-    call(readWord);
+    call(readW);
     mov32(sreg(2), reg(0));
     mov32(reg(1), Rm);
     add32(Rm, reg(1), imm(2));
-    call(readWord);
+    call(readW);
     mov64_s16(reg(0), reg(0));
     mov64_s16(reg(1), sreg(2));
     mul64(reg(0), reg(0), reg(1));
@@ -454,7 +456,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.L @(disp,Rm),Rn
   case 0x50 ... 0x5f: {
     add32(reg(1), Rm, imm(d4*4));
-    call(readLong);
+    call(readL);
     mov32(Rn, reg(0));
     return 0;
   }
@@ -462,7 +464,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.B @Rm,Rn
   case 0x60: {
     mov32(reg(1), Rm);
-    call(readByte);
+    call(readB);
     mov32_s8(reg(0), reg(0));
     mov32(Rn, reg(0));
     return 0;
@@ -471,7 +473,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.W @Rm,Rn
   case 0x61: {
     mov32(reg(1), Rm);
-    call(readWord);
+    call(readW);
     mov32_s16(reg(0), reg(0));
     mov32(Rn, reg(0));
     return 0;
@@ -480,7 +482,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.L @Rm,Rn
   case 0x62: {
     mov32(reg(1), Rm);
-    call(readLong);
+    call(readL);
     mov32(Rn, reg(0));
     return 0;
   }
@@ -497,7 +499,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     if(n != m) {
       add32(Rm, reg(1), imm(1));
     }
-    call(readByte);
+    call(readB);
     mov32_s8(reg(0), reg(0));
     mov32(Rn, reg(0));
     return 0;
@@ -509,7 +511,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     if(n != m) {
       add32(Rm, reg(1), imm(2));
     }
-    call(readWord);
+    call(readW);
     mov32_s16(reg(0), reg(0));
     mov32(Rn, reg(0));
     return 0;
@@ -521,7 +523,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     if (n != m) {
       add32(Rm, reg(1), imm(4));
     }
-    call(readLong);
+    call(readL);
     mov32(Rn, reg(0));
     return 0;
   }
@@ -618,7 +620,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     sub32(reg(0), PPC, imm(2));
     setLabel(tail);
     add32(reg(1), reg(0), imm(d8*2));
-    call(readWord);
+    call(readW);
     mov32_s16(reg(0), reg(0));
     mov32(Rn, reg(0));
     return 0;
@@ -651,7 +653,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     setLabel(tail);
     and32(reg(0), reg(0), imm(~3));
     add32(reg(1), reg(0), imm(d8*4));
-    call(readLong);
+    call(readL);
     mov32(Rn, reg(0));
     return 0;
   }
@@ -685,7 +687,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x80: {
     add32(reg(1), Rm, imm(d4));
     mov32(reg(2), R0);
-    call(writeByte);
+    call(writeB);
     return 0;
   }
 
@@ -693,14 +695,14 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x81: {
     add32(reg(1), Rm, imm(d4*2));
     mov32(reg(2), R0);
-    call(writeWord);
+    call(writeW);
     return 0;
   }
 
   //MOV.B @(disp,Rn),R0
   case 0x84: {
     add32(reg(1), Rm, imm(d4));
-    call(readByte);
+    call(readB);
     mov32_s8(reg(0), reg(0));
     mov32(R0, reg(0));
     return 0;
@@ -709,7 +711,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.W @(disp,Rn),R0
   case 0x85: {
     add32(reg(1), Rm, imm(d4*2));
-    call(readWord);
+    call(readW);
     mov32_s16(reg(0), reg(0));
     mov32(R0, reg(0));
     return 0;
@@ -762,7 +764,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0xc0: {
     add32(reg(1), GBR, imm(d8));
     mov32(reg(2), R0);
-    call(writeByte);
+    call(writeB);
     return 0;
   }
 
@@ -770,7 +772,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0xc1: {
     add32(reg(1), GBR, imm(d8*2));
     mov32(reg(2), R0);
-    call(writeWord);
+    call(writeW);
     return 0;
   }
 
@@ -778,7 +780,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0xc2: {
     add32(reg(1), GBR, imm(d8*4));
     mov32(reg(2), R0);
-    call(writeLong);
+    call(writeL);
     return 0;
   }
 
@@ -787,13 +789,13 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     getSR(reg(2));
     sub32(reg(1), R15, imm(4));
     mov32(R15, reg(1));
-    call(writeLong);
+    call(writeL);
     add32(reg(2), PC, imm(2));
     sub32(reg(1), R15, imm(4));
     mov32(R15, reg(1));
-    call(writeLong);
+    call(writeL);
     add32(reg(1), VBR, imm(i * 4));
-    call(readLong);
+    call(readL);
     add32(reg(0), reg(0), imm(4));
     mov32(PPC, reg(0));
     mov32(PPM, imm(Branch::Take));
@@ -803,7 +805,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.B @(disp,GBR),R0
   case 0xc4: {
     add32(reg(1), GBR, imm(d8));
-    call(readByte);
+    call(readB);
     mov32_s8(reg(0), reg(0));
     mov32(R0, reg(0));
     return 0;
@@ -812,7 +814,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.W @(disp,GBR),R0
   case 0xc5: {
     add32(reg(1), GBR, imm(d8*2));
-    call(readWord);
+    call(readW);
     mov32_s16(reg(0), reg(0));
     mov32(R0, reg(0));
     return 0;
@@ -821,7 +823,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //MOV.L @(disp,GBR),R0
   case 0xc6: {
     add32(reg(1), GBR, imm(d8*4));
-    call(readLong);
+    call(readL);
     mov32(R0, reg(0));
     return 0;
   }
@@ -869,7 +871,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0xcc: {
     mov32(reg(1), GBR);
     add32(reg(1), reg(1), R0);
-    call(readByte);
+    call(readB);
     test32(reg(0), imm(i), set_z);
     mov32_f(T, flag_z);
     return 0;
@@ -878,30 +880,30 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //AND.B #imm,@(R0,GBR)
   case 0xcd: {
     add32(reg(1), GBR, R0);
-    call(readByte);
+    call(readB);
     and32(reg(2), reg(0), imm(i));
     add32(reg(1), GBR, R0);
-    call(writeByte);
+    call(writeB);
     return 0;
   }
 
   //XOR.B #imm,@(R0,GBR)
   case 0xce: {
     add32(reg(1), GBR, R0);
-    call(readByte);
+    call(readB);
     xor32(reg(2), reg(0), imm(i));
     add32(reg(1), GBR, R0);
-    call(writeByte);
+    call(writeB);
     return 0;
   }
 
   //OR.B #imm,@(R0,GBR)
   case 0xcf: {
     add32(reg(1), GBR, R0);
-    call(readByte);
+    call(readB);
     or32(reg(2), reg(0), imm(i));
     add32(reg(1), GBR, R0);
-    call(writeByte);
+    call(writeB);
     return 0;
   }
 
@@ -1002,7 +1004,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     sub32(reg(1), Rn, imm(4));
     mov32(Rn, reg(1));
     mov32(reg(2), MACH);
-    call(writeLong);
+    call(writeL);
     return 0;
   }
 
@@ -1011,7 +1013,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     getSR(reg(2));
     sub32(reg(1), Rn, imm(4));
     mov32(Rn, reg(1));
-    call(writeLong);
+    call(writeL);
     return 0;
   }
 
@@ -1041,7 +1043,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x406: {
     mov32(reg(1), Rn);
     add32(Rn, reg(1), imm(4));
-    call(readLong);
+    call(readL);
     mov32(MACH, reg(0));
     return 0;
   }
@@ -1050,7 +1052,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x407: {
     mov32(reg(1), Rn);
     add32(Rn, reg(1), imm(4));
-    call(readLong);
+    call(readL);
     setSR(reg(0));
     return 0;
   }
@@ -1107,7 +1109,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     sub32(reg(1), Rn, imm(4));
     mov32(Rn, reg(1));
     mov32(reg(2), MACL);
-    call(writeLong);
+    call(writeL);
     return 0;
   }
 
@@ -1116,7 +1118,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     sub32(reg(1), Rn, imm(4));
     mov32(Rn, reg(1));
     mov32(reg(2), GBR);
-    call(writeLong);
+    call(writeL);
     return 0;
   }
 
@@ -1131,7 +1133,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x416: {
     mov32(reg(1), Rm);
     add32(Rm, reg(1), imm(4));
-    call(readLong);
+    call(readL);
     mov32(MACL, reg(0));
     return 0;
   }
@@ -1140,7 +1142,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x417: {
     mov32(reg(1), Rm);
     add32(Rm, reg(1), imm(4));
-    call(readLong);
+    call(readL);
     mov32(GBR, reg(0));
     return 0;
   }
@@ -1165,16 +1167,14 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //TAS @Rn
   case 0x41b: {
-    and32(reg(1), Rn, imm(0x1fff'ffff));
-    or32(reg(1), reg(1), imm(0x2000'0000));
-    call(readByte);
+    mov32(reg(1), Rn);
+    call(&SH2::readByte<Bus::Internal>);
     test32(reg(0), reg(0), set_z);
     mov32_f(T, flag_z);
     or32(reg(0), reg(0), imm(0x80));
     mov32(reg(2), reg(0));
-    and32(reg(1), Rn, imm(0x1fff'ffff));
-    or32(reg(1), reg(1), imm(0x2000'0000));
-    call(writeByte);
+    mov32(reg(1), Rn);
+    call(writeB);
     return 0;
   }
 
@@ -1203,7 +1203,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     sub32(reg(1), Rn, imm(4));
     mov32(Rn, reg(1));
     mov32(reg(2), PR);
-    call(writeLong);
+    call(writeL);
     return 0;
   }
 
@@ -1212,7 +1212,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     sub32(reg(1), Rn, imm(4));
     mov32(Rn, reg(1));
     mov32(reg(2), VBR);
-    call(writeLong);
+    call(writeL);
     return 0;
   }
 
@@ -1243,7 +1243,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x426: {
     mov32(reg(1), Rm);
     add32(Rm, reg(1), imm(4));
-    call(readLong);
+    call(readL);
     mov32(PR, reg(0));
     return 0;
   }
@@ -1252,7 +1252,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x427: {
     mov32(reg(1), Rm);
     add32(Rm, reg(1), imm(4));
-    call(readLong);
+    call(readL);
     mov32(VBR, reg(0));
     return 0;
   }
@@ -1352,12 +1352,12 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   case 0x002b: {
     mov32(reg(1), R15);
     add32(R15, reg(1), imm(4));
-    call(readLong);
+    call(readL);
     mov32(PPC, reg(0));
     mov32(PPM, imm(Branch::Slot));
     mov32(reg(1), R15);
     add32(R15, reg(1), imm(4));
-    call(readLong);
+    call(readL);
     setSR(reg(0));
     return 1;
   }
@@ -1437,10 +1437,10 @@ auto SH2::Recompiler::setSR(reg src) -> void {
 #undef ET
 #undef ID
 
-#undef readByte
-#undef readWord
-#undef readLong
-#undef writeByte
-#undef writeWord
-#undef writeLong
+#undef readB
+#undef readW
+#undef readL
+#undef writeB
+#undef writeW
+#undef writeL
 #undef illegal
