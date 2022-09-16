@@ -69,17 +69,14 @@ auto VI::main() -> void {
   if(++io.vcounter >= (Region::NTSC() ? 262 : 312) + io.field) {
     io.vcounter = 0;
     io.field = io.field + 1 & io.serrate;
-    if(!io.field) {
-      #if defined(VULKAN)
-      if (vulkan.enable) {
-        gpuOutputValid = vulkan.scanoutAsync(io.field);
-        vulkan.frame();
-      }
-      #endif
-
-      refreshed = true;
-      screen->frame();
+    #if defined(VULKAN)
+    if (vulkan.enable) {
+      gpuOutputValid = vulkan.scanoutAsync(io.field);
+      vulkan.frame();
     }
+    #endif
+    refreshed = true;
+    screen->frame();
   }
 
   if(Region::NTSC()) step(system.frequency() / 60 / 262);
@@ -116,7 +113,7 @@ auto VI::refresh() -> void {
   #endif
 
   if(io.serrate == 0) screen->setProgressive(0);
-  if(io.serrate == 1) screen->setInterlace(io.field);
+  if(io.serrate == 1) screen->setInterlace(!io.field);
 
   u32 hscan_start = Region::NTSC() ? 108 : 128;
   u32 vscan_start = Region::NTSC() ?  34 :  44;
@@ -126,23 +123,25 @@ auto VI::refresh() -> void {
   u32 vscan_stop  = vscan_start + vscan_len;
   screen->setViewport(0, 0, hscan_len, vscan_len);
 
-  u32 dy0 = max(vscan_start, vi.io.vstart + io.field*2);
-  u32 dy1 = min(vscan_stop,  vi.io.vend   + io.field*2);
+  u32 dy0 = max(vscan_start, vi.io.vstart);
+  u32 dy1 = min(vscan_stop,  vi.io.vend);
   u32 dx0 = max(hscan_start, vi.io.hstart);
   u32 dx1 = min(hscan_stop,  vi.io.hend);
 
   u32 pitch = vi.io.width;
   if(vi.io.colorDepth == 2) {
     //15bpp
-    u32 y0 = vi.io.ysubpixel + vi.io.yscale * (dy0 - (vi.io.vstart + io.field*2));
+    u32 y0 = vi.io.ysubpixel + vi.io.yscale * (dy0 - vi.io.vstart);
     for(u32 dy = dy0; dy < dy1; dy++) {
-      u32 address = vi.io.dramAddress + (y0 >> 11) * pitch * 2;
-      auto line = screen->pixels(1).data() + (dy - vscan_start) * hscan_len;
-      u32 x0 = vi.io.xsubpixel + vi.io.xscale * (dx0 - vi.io.hstart);
-      for(u32 dx = dx0; dx < dx1; dx++) {
-        u16 data = bus.read<Half>(address + (x0 >> 10) * 2);
-        line[dx - hscan_start] = 1 << 24 | data >> 1;
-        x0 += vi.io.xscale;
+      if(!io.serrate || (dy & 1) == !io.field) {
+        u32 address = vi.io.dramAddress + (y0 >> 11) * pitch * 2;
+        auto line = screen->pixels(1).data() + (dy - vscan_start) * hscan_len;
+        u32 x0 = vi.io.xsubpixel + vi.io.xscale * (dx0 - vi.io.hstart);
+        for(u32 dx = dx0; dx < dx1; dx++) {
+          u16 data = bus.read<Half>(address + (x0 >> 10) * 2);
+          line[dx - hscan_start] = 1 << 24 | data >> 1;
+          x0 += vi.io.xscale;
+        }
       }
       y0 += vi.io.yscale;
     }
@@ -150,15 +149,17 @@ auto VI::refresh() -> void {
 
   if(vi.io.colorDepth == 3) {
     //24bpp
-    u32 y0 = vi.io.ysubpixel + vi.io.yscale * (dy0 - (vi.io.vstart + io.field*2));
+    u32 y0 = vi.io.ysubpixel + vi.io.yscale * (dy0 - vi.io.vstart);
     for(u32 dy = dy0; dy < dy1; dy++) {
-      u32 address = vi.io.dramAddress + (y0 >> 11) * pitch * 4;
-      auto line = screen->pixels(1).data() + (dy - vscan_start) * hscan_len;
-      u32 x0 = vi.io.xsubpixel + vi.io.xscale * (dx0 - vi.io.hstart);
-      for(u32 dx = dx0; dx < dx1; dx++) {
-        u32 data = bus.read<Word>(address + (x0 >> 10) * 4);
-        line[dx - hscan_start] = data >> 8;
-        x0 += vi.io.xscale;
+      if(!io.serrate || (dy & 1) == !io.field) {
+        u32 address = vi.io.dramAddress + (y0 >> 11) * pitch * 4;
+        auto line = screen->pixels(1).data() + (dy - vscan_start) * hscan_len;
+        u32 x0 = vi.io.xsubpixel + vi.io.xscale * (dx0 - vi.io.hstart);
+        for(u32 dx = dx0; dx < dx1; dx++) {
+          u32 data = bus.read<Word>(address + (x0 >> 10) * 4);
+          line[dx - hscan_start] = data >> 8;
+          x0 += vi.io.xscale;
+        }
       }
       y0 += vi.io.yscale;
     }
