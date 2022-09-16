@@ -5,6 +5,10 @@
 //struct SH2 {
   enum : u32 { Byte, Word, Long };
 
+  struct Bus {
+    enum : u32 { Cache, Internal, Peripheral };
+  };
+
   struct Area { enum : u32 {
     Cached   = 0,
     Uncached = 1,
@@ -15,12 +19,12 @@
   };};
 
   //bus.cpp
-  auto readByte(u32 address) -> u32;
-  auto readWord(u32 address) -> u32;
-  auto readLong(u32 address) -> u32;
-  auto writeByte(u32 address, u32 data) -> void;
-  auto writeWord(u32 address, u32 data) -> void;
-  auto writeLong(u32 address, u32 data) -> void;
+  template<u32 Origin = Bus::Cache> auto readByte(u32 address) -> u32;
+  template<u32 Origin = Bus::Cache> auto readWord(u32 address) -> u32;
+  template<u32 Origin = Bus::Cache> auto readLong(u32 address) -> u32;
+  template<u32 Origin = Bus::Cache> auto writeByte(u32 address, u32 data) -> void;
+  template<u32 Origin = Bus::Cache> auto writeWord(u32 address, u32 data) -> void;
+  template<u32 Origin = Bus::Cache> auto writeLong(u32 address, u32 data) -> void;
 
   //io.cpp
   auto internalReadByte(u32 address, n8 data = 0) -> n8;

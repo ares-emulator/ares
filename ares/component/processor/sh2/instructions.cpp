@@ -803,10 +803,7 @@ auto SH2::TAS(u32 n) -> void {
     ) return (void)(exceptions |= AddressErrorCPU);
   }
 
-  auto cacheEnable = cache.enable;
-  cache.enable = 0;
-  u8 b = readByte(R[n]);
-  cache.enable = cacheEnable;
+  u8 b = readByte<Bus::Internal>(R[n]);
   SR.T = b == 0;
   writeByte(R[n], b | 0x80);
 }

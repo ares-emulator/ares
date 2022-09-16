@@ -18,7 +18,7 @@ auto SH2::DMAC::transfer(bool c) -> void {
   switch(chcr[c].ts) {
 
   case 0:  //8-bit
-    self->writeByte(dar[c], self->readByte(sar[c]));
+    self->writeByte<Bus::Internal>(dar[c], self->readByte<Bus::Internal>(sar[c]));
     break;
   case 1:  //16-bit
     if constexpr(Accuracy::AddressErrors) {
@@ -27,7 +27,7 @@ auto SH2::DMAC::transfer(bool c) -> void {
         break;
       }
     }
-    self->writeWord(dar[c], self->readWord(sar[c]));
+    self->writeWord<Bus::Internal>(dar[c], self->readWord<Bus::Internal>(sar[c]));
     break;
   case 2:  //32-bit
     if constexpr(Accuracy::AddressErrors) {
@@ -36,7 +36,7 @@ auto SH2::DMAC::transfer(bool c) -> void {
         break;
       }
     }
-    self->writeLong(dar[c], self->readLong(sar[c]));
+    self->writeLong<Bus::Internal>(dar[c], self->readLong<Bus::Internal>(sar[c]));
     break;
   case 3:  //32-bit x4
     if constexpr(Accuracy::AddressErrors) {
@@ -45,10 +45,10 @@ auto SH2::DMAC::transfer(bool c) -> void {
         break;
       }
     }
-    self->writeLong(dar[c] +  0, self->readLong(sar[c] +  0));
-    self->writeLong(dar[c] +  4, self->readLong(sar[c] +  4));
-    self->writeLong(dar[c] +  8, self->readLong(sar[c] +  8));
-    self->writeLong(dar[c] + 12, self->readLong(sar[c] + 12));
+    self->writeLong<Bus::Internal>(dar[c] +  0, self->readLong<Bus::Internal>(sar[c] +  0));
+    self->writeLong<Bus::Internal>(dar[c] +  4, self->readLong<Bus::Internal>(sar[c] +  4));
+    self->writeLong<Bus::Internal>(dar[c] +  8, self->readLong<Bus::Internal>(sar[c] +  8));
+    self->writeLong<Bus::Internal>(dar[c] + 12, self->readLong<Bus::Internal>(sar[c] + 12));
     sar[c] += 16;  //always increments regardless of chcr[c].sm
     tcr[c] -= 3;   //always decrements by four instead of by one
     break;
