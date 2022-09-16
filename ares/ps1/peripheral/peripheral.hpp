@@ -4,6 +4,7 @@ struct PeripheralDevice {
   virtual ~PeripheralDevice() = default;
   virtual auto reset() -> void {}
   virtual auto acknowledge() -> bool { return 0; }
+  virtual auto active() -> bool { return 0; }
   virtual auto bus(u8 data) -> u8 { return 0xff; }
 };
 
@@ -42,6 +43,7 @@ struct Peripheral : Thread, Memory::Interface {
     //JOY_STAT
     n1 transmitStarted = 1;
     n1 transmitFinished = 1;
+    n1 acknowledgeInputLevel = 0;
     n1 parityError;
     n1 interruptRequest;
 

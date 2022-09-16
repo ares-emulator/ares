@@ -10,6 +10,7 @@ struct PeripheralPort {
 
   auto reset() -> void;
   auto acknowledge() -> bool;
+  auto active() -> bool;
   auto bus(u8 data) -> u8;
 
   auto serialize(serializer&) -> void;

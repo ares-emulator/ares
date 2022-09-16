@@ -41,6 +41,11 @@ auto PeripheralPort::acknowledge() -> bool {
   return 0;
 }
 
+auto PeripheralPort::active() -> bool {
+  if(device) return device->active();
+  return 0;
+}
+
 auto PeripheralPort::bus(u8 data) -> u8 {
   if(device) return device->bus(data);
   return 0xff;

@@ -19,10 +19,15 @@ DigitalGamepad::DigitalGamepad(Node::Port parent) {
 
 auto DigitalGamepad::reset() -> void {
   state = State::Idle;
+  _active = false;
 }
 
 auto DigitalGamepad::acknowledge() -> bool {
   return state != State::Idle;
+}
+
+auto DigitalGamepad::active() -> bool {
+  return _active || acknowledge();
 }
 
 auto DigitalGamepad::bus(u8 data) -> u8 {
@@ -32,9 +37,14 @@ auto DigitalGamepad::bus(u8 data) -> u8 {
   switch(state) {
 
   case State::Idle: {
-    if(input != 0x01) break;
+    if(input != 0x01) {
+      _active = false;
+      break;
+    }
+
     output = 0xff;
     state = State::IDLower;
+    _active = true;
     break;
   }
 

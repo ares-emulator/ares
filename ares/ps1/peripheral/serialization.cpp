@@ -8,6 +8,7 @@ auto Peripheral::serialize(serializer& s) -> void {
   s(io.transmitFinished);
   s(io.parityError);
   s(io.interruptRequest);
+  s(io.acknowledgeInputLevel);
   s(io.baudrateReloadFactor);
   s(io.characterLength);
   s(io.parityEnable);
