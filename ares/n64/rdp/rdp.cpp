@@ -43,6 +43,11 @@ auto RDP::unload() -> void {
   #endif
 }
 
+auto RDP::crash(const char *reason) -> void {
+  command.crashed = 1;
+  debug(unusual, "[RDP] software triggered a hardware bug; RDP crashed and will stop responding. Reason: ", reason);
+}
+
 auto RDP::main() -> void {
   step(system.frequency());
 }

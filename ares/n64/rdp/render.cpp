@@ -54,7 +54,11 @@ auto RDP::render() -> void {
   rdp->set_current(command.current);
   rdp->set_end(command.end);
   rdp->set_status(command.source ? DP_STATUS_XBUS_DMA : 0);
-  rdp->process_command_list();
+  try {
+    rdp->process_command_list();
+  } catch(emu_fatalerror &e) {
+    crash(e.what());
+  }
   command.current = rdp->get_current();
   return;
   #else
