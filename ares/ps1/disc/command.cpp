@@ -11,6 +11,19 @@ auto Disc::status() -> u8 {
   return data;
 }
 
+auto Disc::mode() -> u8 {
+  n8 mode;
+  mode.bit(0) = drive.mode.cdda;
+  mode.bit(1) = drive.mode.autoPause;
+  mode.bit(2) = drive.mode.report;
+  mode.bit(3) = drive.mode.xaFilter;
+  mode.bit(4) = drive.mode.ignore;
+  mode.bit(5) = drive.mode.sectorSize;
+  mode.bit(6) = drive.mode.xaADPCM;
+  mode.bit(7) = drive.mode.speed;
+  return mode;
+}
+
 auto Disc::command(u8 operation) -> void {
   fifo.response.flush();
   debugger.commandPrologue(operation);
@@ -31,6 +44,7 @@ auto Disc::command(u8 operation) -> void {
   case 0x0c: commandUnmute(); break;
   case 0x0d: commandSetFilter(); break;
   case 0x0e: commandSetMode(); break;
+  case 0x0f: commandGetParam(); break;
   case 0x10: commandGetLocationReading(); break;
   case 0x11: commandGetLocationPlaying(); break;
   case 0x12: commandSetSession(); break;
@@ -313,6 +327,18 @@ auto Disc::commandSetMode() -> void {
   drive.mode.speed      = data.bit(7);
 
   fifo.response.write(status());
+
+  irq.acknowledge.flag = 1;
+  irq.poll();
+}
+
+//0x0f
+auto Disc::commandGetParam() -> void {
+  fifo.response.write(status());
+  fifo.response.write(mode());
+  fifo.response.write(0);
+  fifo.response.write(cdxa.filter.file);
+  fifo.response.write(cdxa.filter.channel);
 
   irq.acknowledge.flag = 1;
   irq.poll();
