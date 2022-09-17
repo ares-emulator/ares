@@ -51,6 +51,7 @@ struct Disc : Thread, Memory::Interface {
 
   //command.cpp
   auto status() -> u8;
+  auto mode() -> u8;
   auto command(u8 operation) -> void;
   auto commandTest() -> void;
   auto commandInvalid() -> void;
@@ -68,6 +69,7 @@ struct Disc : Thread, Memory::Interface {
   auto commandUnmute() -> void;
   auto commandSetFilter() -> void;
   auto commandSetMode() -> void;
+  auto commandGetParam() -> void;
   auto commandGetLocationReading() -> void;
   auto commandGetLocationPlaying() -> void;
   auto commandSetSession() -> void;
