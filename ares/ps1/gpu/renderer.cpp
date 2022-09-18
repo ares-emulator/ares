@@ -271,7 +271,7 @@ auto GPU::Render::triangle() -> void {
 
     for(vp.x = vmin.x; vp.x <= vmax.x; vp.x++) {
       if((p0.x + bias[0] | p1.x + bias[1] | p2.x + bias[2]) >= 0) {
-        pixel<Flags | Dithering>(vp, {pr.x, pg.x, pb.x}, {pu.x, pv.x});
+        pixel<Flags | Dithering>(vp, Color::fromRGB(pr.x, pg.x, pb.x), {pu.x, pv.x});
         pixels++;
       }
 
