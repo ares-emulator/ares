@@ -139,22 +139,28 @@ template<u32 size> auto V30MZ::RCR(u16 x, u5 y) -> u16 {
   return result & mask;
 }
 
-template<u32 size> auto V30MZ::ROL(u16 x, u4 y) -> u16 {
-  PSW.CY = (x << y) & (1 << bits);
-  u16 result = ((x << y) | (x >> (bits - y))) & mask;
+template<u32 size> auto V30MZ::ROL(u16 x, u5 y) -> u16 {
+  u16 result = x;
+  for(u32 n = 0; n < y; n++) {
+    PSW.CY = result & sign;
+    result = (result << 1) | PSW.CY;
+  }
   PSW.V = (x ^ result) & sign;
-  return result;
+  return result & mask;
 }
 
-template<u32 size> auto V30MZ::ROR(u16 x, u4 y) -> u16 {
-  PSW.CY = (x >> (y - 1)) & 1;
-  u16 result = ((x >> y) | (x << (bits - y))) & mask;
+template<u32 size> auto V30MZ::ROR(u16 x, u5 y) -> u16 {
+  u16 result = x;
+  for(u32 n = 0; n < y; n++) {
+    PSW.CY = result & 1;
+    result = (PSW.CY ? sign : 0) | (result >> 1);
+  }
   PSW.V = (x ^ result) & sign;
-  return result;
+  return result & mask;
 }
 
 template<u32 size> auto V30MZ::SAL(u16 x, u5 y) -> u16 {
-  PSW.CY = (x << y) & (1 << bits);
+  if(y != 0) PSW.CY = (x << y) & (1 << bits);
   u16 result = (x << y) & mask;
   PSW.P = parity(result);
   PSW.Z = result == 0;
@@ -164,13 +170,12 @@ template<u32 size> auto V30MZ::SAL(u16 x, u5 y) -> u16 {
 }
 
 template<u32 size> auto V30MZ::SAR(u16 x, u5 y) -> u16 {
-  if(y & 16) {
-    PSW.CY = x & sign;
-    return 0 - PSW.CY;
+  u16 result = x;
+  for(u32 n = 0; n < y; n++) {
+    PSW.CY = result & 1;
+    result = (result & sign) | (result >> 1);
   }
-  PSW.CY = (x >> (y - 1)) & 1;
-  u16 result = (x >> y) & mask;
-  if(x & sign) result |= mask << (bits - y);
+  result &= mask;
   PSW.P = parity(result);
   PSW.Z = result == 0;
   PSW.S = result & sign;
@@ -183,7 +188,7 @@ template<u32 size> auto V30MZ::SBB(u16 x, u16 y) -> u16 {
 }
 
 template<u32 size> auto V30MZ::SHL(u16 x, u5 y) -> u16 {
-  PSW.CY = (x << y) & (1 << bits);
+  if(y != 0) PSW.CY = (x << y) & (1 << bits);
   u16 result = (x << y) & mask;
   PSW.P = parity(result);
   PSW.Z = result == 0;
@@ -193,7 +198,7 @@ template<u32 size> auto V30MZ::SHL(u16 x, u5 y) -> u16 {
 }
 
 template<u32 size> auto V30MZ::SHR(u16 x, u5 y) -> u16 {
-  PSW.CY = (x >> (y - 1)) & 1;
+  if(y != 0) PSW.CY = (x >> (y - 1)) & 1;
   u16 result = (x >> y) & mask;
   PSW.P = parity(result);
   PSW.Z = result == 0;
