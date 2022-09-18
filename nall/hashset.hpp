@@ -55,7 +55,7 @@ struct hashset {
           pool[n] = nullptr;
         }
       }
-      delete pool;
+      delete[] pool;
       pool = nullptr;
     }
     length = 8;
@@ -78,7 +78,7 @@ struct hashset {
       }
     }
 
-    delete pool;
+    delete[] pool;
     pool = copy;
     length = size;
   }
