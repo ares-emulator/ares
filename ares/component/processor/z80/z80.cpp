@@ -45,26 +45,17 @@ auto Z80::reset() -> void {
   IM = 0;
 }
 
-auto Z80::irq(bool maskable, n16 pc, n8 extbus) -> bool {
+auto Z80::irq(n8 extbus) -> bool {
   //do not execute maskable interrupts if disabled or immediately after EI instruction
-  if(maskable && (!IFF1 || EI)) return false;
+  if(!IFF1 || EI) return false;
   R.bit(0,6)++;
 
-  push(PC);
-
-  switch(maskable ? IM : (n2)1) {
-
+  switch(IM) {
+  case 1: extbus = 0xff;
   case 0: {
-    //external data bus ($ff = RST $38)
     WZ = extbus;
-    wait(extbus | 0x38 == 0xff ? 6 : 7);
-    break;
-  }
-
-  case 1: {
-    //constant address
-    WZ = pc;
-    wait(maskable ? 7 : 5);
+    wait(6);
+    instruction(WZ);
     break;
   }
 
@@ -74,18 +65,37 @@ auto Z80::irq(bool maskable, n16 pc, n8 extbus) -> bool {
     WZL = read(address + 0);
     WZH = read(address + 1);
     wait(7);
+    push(PC);
+    PC = WZ;
     break;
   }
 
   }
 
-  PC = WZ;
   IFF1 = 0;
-  if(maskable) IFF2 = 0;
+  IFF2 = 0;
   HALT = 0;
   if(P) PF = 0;
   P = 0;
   Q = 0;
+
+  return true;
+}
+
+auto Z80::nmi() -> bool {
+  R.bit(0,6)++;
+
+  push(PC);
+  WZ = 0x66;
+  wait(5);
+  PC = WZ;
+
+  IFF1 = 0;
+  HALT = 0;
+  if(P) PF = 0;
+  P = 0;
+  Q = 0;
+
   return true;
 }
 

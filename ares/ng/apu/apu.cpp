@@ -21,13 +21,13 @@ auto APU::unload() -> void {
 
 auto APU::main() -> void {
   if(nmi.pending && nmi.enable) {
-    Z80::irq(0, 0x0066, 0xff);
+    Z80::nmi();
     nmi.pending = 0;
     debugger.interrupt("NMI");
   }
 
   if(irq.pending) {
-    Z80::irq(1, 0x0038, 0xff);
+    Z80::irq();
     irq.pending = 0;
     debugger.interrupt("IRQ");
   }

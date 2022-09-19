@@ -25,7 +25,7 @@ auto CPU::unload() -> void {
 auto CPU::main() -> void {
   if(io.irqLine) {
     debugger.interrupt("IRQ");
-    irq(1, 0x0038, 0xff);
+    irq();
   }
 
   debugger.instruction();

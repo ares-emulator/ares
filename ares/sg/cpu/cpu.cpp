@@ -26,13 +26,13 @@ auto CPU::main() -> void {
   if(state.nmiLine) {
     state.nmiLine = 0;  //edge-sensitive
     debugger.interrupt("NMI");
-    irq(0, 0x0066, 0xff);
+    nmi();
   }
 
   if(state.irqLine) {
     //level-sensitive
     debugger.interrupt("IRQ");
-    irq(1, 0x0038, 0xff);
+    irq();
   }
 
   debugger.instruction();

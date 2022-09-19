@@ -36,13 +36,13 @@ auto APU::main() -> void {
   if(nmi.line) {
     nmi.line = 0;  //edge-sensitive
     debugger.interrupt("NMI");
-    Z80::irq(0, 0x0066, 0xff);
+    Z80::nmi();
   }
 
   if(irq.line) {
     //level-sensitive
     debugger.interrupt("IRQ");
-    Z80::irq(1, 0x0038, 0xff);
+    Z80::irq();
   }
 
   debugger.instruction();

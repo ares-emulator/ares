@@ -24,14 +24,14 @@ auto CPU::unload() -> void {
 auto CPU::main() -> void {
   if(state.nmiLine) {
     state.nmiLine = 0;  //edge-sensitive
-    if(irq(0, 0x0066, 0xff)) {
+    if(nmi()) {
       debugger.interrupt("NMI");
     }
   }
 
   if(state.irqLine) {
     //level-sensitive
-    if(irq(1, 0x0038, 0xff)) {
+    if(irq()) {
       debugger.interrupt("IRQ");
     }
   }
