@@ -37,6 +37,9 @@ $(object.path)/ares-n64-rsp.o:        $(ares.path)/n64/rsp/rsp.cpp
 $(object.path)/ares-n64-rdp.o:        $(ares.path)/n64/rdp/rdp.cpp
 
 ifeq ($(vulkan),true)
+  ifeq ($(filter shortest-stem,${.FEATURES}),)
+    $(error Compiling Ares N64 Vulkan backend requires GNU Make 3.82 or later)
+  endif
   ares.objects += ares-n64-vulkan
   $(object.path)/ares-n64-vulkan.o: $(ares.path)/n64/vulkan/vulkan.cpp
   PARALLEL_RDP_IMPLEMENTATION := $(ares.path)/n64/vulkan/parallel-rdp
