@@ -30,6 +30,11 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
     //shortcut: presume CPU is executing out of either CPU RAM or the BIOS area
     u32 instruction = address <= 0x007f'ffff ? cpu.ram.readWord(address) : bios.readWord(address);
     bool branched = emitEXECUTE(instruction);
+    if(unlikely(instruction == 0x1000'ffff)) {
+      //accelerate idle loops
+      mov32(reg(1), imm(64));
+      call(&CPU::step);
+    }
     call(&CPU::instructionEpilogue);
     address += 4;
     if(hasBranched || (address & 0xfc) == 0) break;  //block boundary
