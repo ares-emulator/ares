@@ -242,7 +242,7 @@ auto Z80::instruction(n8 code) -> void {
   op(0xca, JP_c_nn, ZF == 1)
 //op(0xcb, cb:)
   op(0xcc, CALL_c_nn, ZF == 1)
-  op(0xcd, CALL_nn)
+  op(0xcd, CALL_c_nn, true)
   op(0xce, ADC_a_n)
   op(0xcf, RST_o, 1)
   op(0xd0, RET_c, CF == 0)
@@ -821,6 +821,8 @@ auto Z80::instructionCBd(n16 addr, n8 code) -> void {
 }
 
 auto Z80::instructionED(n8 code) -> void {
+  n8 _;
+
   switch(code) {
   op(0x40, IN_r_ic, B)
   op(0x41, OUT_ic_r, B)
@@ -870,7 +872,7 @@ auto Z80::instructionED(n8 code) -> void {
   op(0x6d, RETI)
   op(0x6e, IM_o, 0)
   op(0x6f, RLD)
-  op(0x70, IN_ic)
+  op(0x70, IN_r_ic, _)
   op(0x71, OUT_ic)
   op(0x72, SBC_hl_rr, SP)
   op(0x73, LD_inn_rr, SP)
