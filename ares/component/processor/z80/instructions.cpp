@@ -24,9 +24,9 @@ auto Z80::instructionADC_a_r(n8& x) -> void { Q = 1;
 
 auto Z80::instructionADC_hl_rr(n16& x) -> void { Q = 1;
   WZ = HL + 1;
-  wait(4);
-  auto lo = ADD(HL >> 0, x >> 0, CF);
   wait(3);
+  auto lo = ADD(HL >> 0, x >> 0, CF);
+  wait(4);
   auto hi = ADD(HL >> 8, x >> 8, CF);
   HL = hi << 8 | lo << 0;
   ZF = HL == 0;
@@ -47,9 +47,9 @@ auto Z80::instructionADD_a_r(n8& x) -> void { Q = 1;
 auto Z80::instructionADD_hl_rr(n16& x) -> void { Q = 1;
   WZ = HL + 1;
   bool vf = VF, zf = ZF, sf = SF;
-  wait(4);
-  auto lo = ADD(HL >> 0, x >> 0);
   wait(3);
+  auto lo = ADD(HL >> 0, x >> 0);
+  wait(4);
   auto hi = ADD(HL >> 8, x >> 8, CF);
   HL = hi << 8 | lo << 0;
   VF = vf, ZF = zf, SF = sf;  //restore unaffected flags
@@ -86,13 +86,6 @@ auto Z80::instructionBIT_o_r(n3 bit, n8& x) -> void { Q = 1;
 auto Z80::instructionCALL_c_nn(bool c) -> void { Q = 0;
   WZ = operands();
   if(!c) return;
-  wait(1);
-  push(PC);
-  PC = WZ;
-}
-
-auto Z80::instructionCALL_nn() -> void { Q = 0;
-  WZ = operands();
   wait(1);
   push(PC);
   PC = WZ;
@@ -225,8 +218,10 @@ auto Z80::instructionEI() -> void { Q = 0;
 auto Z80::instructionEX_irr_rr(n16& x, n16& y) -> void { Q = 0;
   WZL = read(x + 0);
   WZH = read(x + 1);
+  wait(1);
   write(x + 0, y >> 0);
   write(x + 1, y >> 8);
+  wait(2);
   y = WZ;
 }
 
@@ -245,7 +240,6 @@ auto Z80::instructionHALT() -> void { Q = 0;
 }
 
 auto Z80::instructionIM_o(n2 code) -> void { Q = 0;
-  wait(4);
   IM = code;
 }
 
@@ -257,11 +251,6 @@ auto Z80::instructionIN_a_in() -> void { Q = 0;
 
 auto Z80::instructionIN_r_ic(n8& x) -> void { Q = 1;
   x = IN(in(BC));
-  WZ = BC + 1;
-}
-
-auto Z80::instructionIN_ic() -> void { Q = 1;
-  IN(in(BC));
   WZ = BC + 1;
 }
 
@@ -376,8 +365,10 @@ auto Z80::instructionLD_irr_a(n16& x) -> void { Q = 0;
 }
 
 auto Z80::instructionLD_irr_n(n16& x) -> void { Q = 0;
-  auto addr = displace(x,5-3); // special case: reduced wait cycles due to timing overlap
-  write(addr, operand());
+  auto addr = displace(x,0); // special case: defer wait cycles (overlap with n fetch)
+  auto data = operand();
+  if(&x == &ix.word || &x == &iy.word) wait(2);
+  write(addr, data);
 }
 
 auto Z80::instructionLD_irr_r(n16& x, n8& y) -> void { Q = 0;
@@ -646,9 +637,8 @@ auto Z80::instructionRLCA() -> void { Q = 1;
 auto Z80::instructionRLD() -> void { Q = 1;
   WZ = HL + 1;
   auto data = read(HL);
-  wait(1);
+  wait(4);
   write(HL, (data << 4) | (A & 0x0f));
-  wait(3);
   A = (A & 0xf0) | (data >> 4);
 
   NF = 0;
@@ -709,9 +699,8 @@ auto Z80::instructionRRCA() -> void { Q = 1;
 auto Z80::instructionRRD() -> void { Q = 1;
   WZ = HL + 1;
   auto data = read(HL);
-  wait(1);
+  wait(4);
   write(HL, (data >> 4) | (A << 4));
-  wait(3);
   A = (A & 0xf0) | (data & 0x0f);
 
   NF = 0;
@@ -744,9 +733,9 @@ auto Z80::instructionSBC_a_r(n8& x) -> void { Q = 1;
 
 auto Z80::instructionSBC_hl_rr(n16& x) -> void { Q = 1;
   WZ = HL + 1;
-  wait(4);
-  auto lo = SUB(HL >> 0, x >> 0, CF);
   wait(3);
+  auto lo = SUB(HL >> 0, x >> 0, CF);
+  wait(4);
   auto hi = SUB(HL >> 8, x >> 8, CF);
   HL = hi << 8 | lo << 0;
   ZF = HL == 0;
