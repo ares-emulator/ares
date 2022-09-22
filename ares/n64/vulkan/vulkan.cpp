@@ -20,6 +20,15 @@ struct Vulkan::Implementation {
   ::Vulkan::Context context;
   ::Vulkan::Device device;
   ::RDP::CommandProcessor* processor = nullptr;
+  atomic<const char*> crash_error = nullptr;
+
+  struct Validation : public ::RDP::ValidationInterface {
+    Implementation& self;
+    Validation(Implementation& i) : self(i) {}
+    void report_rdp_crash(::RDP::ValidationError err, const char *msg) override {
+      self.crash_error = msg;
+    }
+  } validator{*this};
 
   //commands are u64 words, but the backend uses u32 swapped words.
   //size and offset are in u64 words.
@@ -187,6 +196,11 @@ auto Vulkan::endScanout() -> void {
   }
 }
 
+auto Vulkan::crashed() -> const char* {
+  if(implementation) return implementation->crash_error;
+  return nullptr;
+}
+
 Vulkan::Implementation::Implementation(u8* data, u32 size) {
   if(!::Vulkan::Context::init_loader(nullptr)) return;
   if(!context.init_instance_and_device(nullptr, 0, nullptr, 0, ::Vulkan::CONTEXT_CREATION_DISABLE_BINDLESS_BIT)) return;
@@ -210,6 +224,7 @@ Vulkan::Implementation::Implementation(u8* data, u32 size) {
     delete processor;
     processor = nullptr;
   }
+  processor->set_validation_interface(&validator);
 }
 
 Vulkan::Implementation::~Implementation() {
