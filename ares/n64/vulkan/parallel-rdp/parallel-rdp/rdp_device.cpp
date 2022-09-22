@@ -227,6 +227,11 @@ bool CommandProcessor::device_is_supported() const
 	return is_supported;
 }
 
+void CommandProcessor::set_validation_interface(ValidationInterface *iface)
+{
+	renderer.set_validation_interface(iface);
+}
+
 void CommandProcessor::clear_hidden_rdram()
 {
 	clear_buffer(*hidden_rdram, 0x03030303);
