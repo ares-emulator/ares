@@ -2,7 +2,7 @@ name := ares
 build := optimized
 threaded := true
 openmp := false
-vulkan := false
+vulkan := true
 mame.rdp := true
 local := true
 lto := false
@@ -10,10 +10,6 @@ flags += -I. -I.. -I../ares -I../thirdparty -DMIA_LIBRARY
 
 nall.path := ../nall
 include $(nall.path)/GNUmakefile
-
-ifneq ($(filter $(platform),windows linux),)
-  vulkan := true
-endif
 
 ifeq ($(arch),amd64)
   ifeq ($(local),true)
