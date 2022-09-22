@@ -72,12 +72,36 @@ struct RendererOptions
 	bool super_sampled_readback_dither = false;
 };
 
+enum class ValidationError
+{
+	Fill4bpp,
+	LoadTile4bpp,
+	InvalidMultilineLoadTlut,
+	FillDepthTest,
+	FillDepthWrite,
+	FillImageReadEnable,
+	Copy32bpp
+};
+
+class ValidationInterface
+{
+public:
+	virtual ~ValidationInterface() = default;
+	// Validation errors may be called from a thread as errors are encountered.
+	// Reports situations that would cause fatal error on a real RDP.
+	// We only opt to report these situations rather than deliberately crashing the renderer.
+	// Handling crashes is only relevant during development of N64 homebrew.
+	virtual void report_rdp_crash(ValidationError err, const char *msg) = 0;
+};
+
 class Renderer : public Vulkan::DebugChannelInterface
 {
 public:
 	explicit Renderer(CommandProcessor &processor);
 	~Renderer();
 	void set_device(Vulkan::Device *device);
+
+	void set_validation_interface(ValidationInterface *iface);
 
 	// If coherent is false, RDRAM is a buffer split into data in lower half and writemask state in upper half, each part being size large.
 	// offset must be 0 in this case.
@@ -136,10 +160,13 @@ private:
 	CommandProcessor &processor;
 	Vulkan::Device *device = nullptr;
 	Vulkan::Buffer *rdram = nullptr;
+	ValidationInterface *validation_iface = nullptr;
 
 	Vulkan::BufferHandle upscaling_reference_rdram;
 	Vulkan::BufferHandle upscaling_multisampled_rdram;
 	Vulkan::BufferHandle upscaling_multisampled_hidden_rdram;
+
+	void validate_draw_state() const;
 
 	struct
 	{
