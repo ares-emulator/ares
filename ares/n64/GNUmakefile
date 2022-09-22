@@ -40,6 +40,16 @@ ifeq ($(vulkan),true)
   ifeq ($(filter shortest-stem,${.FEATURES}),)
     $(error Compiling Ares N64 Vulkan backend requires GNU Make 3.82 or later)
   endif
+  ifeq ($(platform),macos)
+    molten = $(ares.path)/../thirdparty/MoltenVK/libMoltenVK.dylib
+    ifeq ($(wildcard $(molten)),)  
+      molten = $(shell brew --prefix molten-vk)/lib/libMoltenVK.dylib
+      ifeq ($(wildcard $(molten)),)
+        $(error Compiling Ares N64 Vulkan backend requires MoltenVK. Install it via Homebrew, compile it using thirdparty/MoltenVK/build-moltenvk.sh, or disable with vulkan=false")
+      endif
+    endif
+    ares.dylibs += $(molten)
+  endif
   ares.objects += ares-n64-vulkan
   $(object.path)/ares-n64-vulkan.o: $(ares.path)/n64/vulkan/vulkan.cpp
   PARALLEL_RDP_IMPLEMENTATION := $(ares.path)/n64/vulkan/parallel-rdp

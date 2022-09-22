@@ -82,9 +82,15 @@ ifeq ($(platform),macos)
 # Apply workaround for buggy linker in Xcode < 11.4.1
 	@$(compiler) -o $(output.path)/macos-fix-jit macos-fix-jit.cpp
 	$(output.path)/macos-fix-jit $(output.path)/$(name)
+	rm -f $(output.path)/macos-fix-jit
 	rm -rf $(output.path)/$(name).app
+	install_name_tool -add_rpath @executable_path/../Frameworks $(output.path)/$(name)
 	mkdir -p $(output.path)/$(name).app/Contents/MacOS/
 	mkdir -p $(output.path)/$(name).app/Contents/Resources/
+	mkdir -p $(output.path)/$(name).app/Contents/Frameworks/
+ifneq ($(ares.dylibs),)
+	cp $(ares.dylibs) $(output.path)/$(name).app/Contents/Frameworks/
+endif
 	mv $(output.path)/$(name) $(output.path)/$(name).app/Contents/MacOS/$(name)
 	cp resource/$(name).plist $(output.path)/$(name).app/Contents/Info.plist
 	cp -R $(ares.path)/Shaders $(output.path)/$(name).app/Contents/Resources/
