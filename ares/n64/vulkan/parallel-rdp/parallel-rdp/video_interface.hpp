@@ -218,7 +218,7 @@ private:
 	                                const Registers &registers,
 	                                unsigned scaling_factor) const;
 	Vulkan::ImageHandle scale_stage(Vulkan::CommandBuffer &cmd,
-	                                Vulkan::Image &divot_image,
+	                                const Vulkan::Image *divot_image,
 	                                Registers registers,
 	                                const HorizontalInfoLines &lines,
 	                                unsigned scaling_factor,
