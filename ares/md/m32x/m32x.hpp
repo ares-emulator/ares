@@ -2,7 +2,6 @@
 
 struct M32X {
   Node::Object node;
-  Memory::Readable<n16> rom;
   Memory::Readable<n16> vectors;
   Memory::Writable<n16> sdram;
 
