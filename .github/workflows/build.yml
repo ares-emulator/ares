@@ -50,8 +50,16 @@ jobs:
         sudo apt-get update -y -qq
         sudo apt-get install libsdl2-dev libgtksourceview2.0-dev libgtk2.0-dev libao-dev libopenal-dev   
     - uses: actions/checkout@v2
+    - name: Install macOS Dependencies
+      if: runner.os == 'macOS'
+      run: |
+        brew install make
+        echo "MAKE=gmake" >> $GITHUB_ENV
+        pushd thirdparty/MoltenVK
+        ./build-moltenvk.sh
+        popd
     - name: Make
-      run: make -j4 -C desktop-ui build=optimized local=false compiler=${{ matrix.platform.compiler }}
+      run: ${MAKE:-make} -j4 -C desktop-ui build=optimized local=false compiler=${{ matrix.platform.compiler }}
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
