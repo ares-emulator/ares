@@ -67,9 +67,8 @@ auto Z80::instructionAND_a_r(n8& x) -> void { Q = 1;
   A = AND(A, x);
 }
 
-auto Z80::instructionBIT_o_irr_r(n3 bit, n16& addr, n8& x) -> void { Q = 1;
-  x = BIT(bit, read(addr));
-  wait(1);
+auto Z80::instructionBIT_o_irr(n3 bit, n16& addr) -> void { Q = 1;
+  BIT(bit, read(addr));
   XF = WZH.bit(3);
   YF = WZH.bit(5);
 }
