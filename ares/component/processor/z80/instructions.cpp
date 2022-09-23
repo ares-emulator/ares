@@ -553,6 +553,7 @@ auto Z80::instructionRES_o_irr(n3 bit, n16& addr) -> void { Q = 1;
 }
 
 auto Z80::instructionRES_o_irr_r(n3 bit, n16& addr, n8& x) -> void { Q = 1;
+  wait(2);  // Spurious-seeming wait cycles on real Z80, BEFORE the read
   auto data = read(addr);
   wait(1);
   write(addr, x = RES(bit, data));
@@ -593,6 +594,7 @@ auto Z80::instructionRL_irr(n16& addr) -> void { Q = 1;
 }
 
 auto Z80::instructionRL_irr_r(n16& addr, n8& x) -> void { Q = 1;
+  wait(2);  // Spurious-seeming wait cycles on real Z80, BEFORE the read
   auto data = read(addr);
   wait(1);
   write(addr, x = RL(data));
@@ -620,6 +622,7 @@ auto Z80::instructionRLC_irr(n16& addr) -> void { Q = 1;
 }
 
 auto Z80::instructionRLC_irr_r(n16& addr, n8& x) -> void { Q = 1;
+  wait(2);  // Spurious-seeming wait cycles on real Z80, BEFORE the read
   auto data = read(addr);
   wait(1);
   write(addr, x = RLC(data));
@@ -663,6 +666,7 @@ auto Z80::instructionRR_irr(n16& addr) -> void { Q = 1;
 }
 
 auto Z80::instructionRR_irr_r(n16& addr, n8& x) -> void { Q = 1;
+  wait(2);  // Spurious-seeming wait cycles on real Z80, BEFORE the read
   auto data = read(addr);
   wait(1);
   write(addr, x = RR(data));
@@ -690,6 +694,7 @@ auto Z80::instructionRRC_irr(n16& addr) -> void { Q = 1;
 }
 
 auto Z80::instructionRRC_irr_r(n16& addr, n8& x) -> void { Q = 1;
+  wait(2);  // Spurious-seeming wait cycles on real Z80, BEFORE the read
   auto data = read(addr);
   wait(1);
   write(addr, x = RRC(data));
@@ -766,6 +771,7 @@ auto Z80::instructionSCF() -> void {
 }
 
 auto Z80::instructionSET_o_irr_r(n3 bit, n16& addr) -> void { Q = 1;
+  wait(2);  // Spurious-seeming wait cycles on real Z80, BEFORE the read
   auto data = read(addr);
   wait(1);
   write(addr, SET(bit, data));
@@ -788,6 +794,7 @@ auto Z80::instructionSLA_irr(n16& addr) -> void { Q = 1;
 }
 
 auto Z80::instructionSLA_irr_r(n16& addr, n8& x) -> void { Q = 1;
+  wait(2);  // Spurious-seeming wait cycles on real Z80, BEFORE the read
   auto data = read(addr);
   wait(1);
   write(addr, x = SLA(data));
@@ -804,6 +811,7 @@ auto Z80::instructionSLL_irr(n16& addr) -> void { Q = 1;
 }
 
 auto Z80::instructionSLL_irr_r(n16& addr, n8& x) -> void { Q = 1;
+  wait(2);  // Spurious-seeming wait cycles on real Z80, BEFORE the read
   auto data = read(addr);
   wait(1);
   write(addr, x = SLL(data));
@@ -820,6 +828,7 @@ auto Z80::instructionSRA_irr(n16& addr) -> void { Q = 1;
 }
 
 auto Z80::instructionSRA_irr_r(n16& addr, n8& x) -> void { Q = 1;
+  wait(2);  // Spurious-seeming wait cycles on real Z80, BEFORE the read
   auto data = read(addr);
   wait(1);
   write(addr, x = SRA(data));
@@ -836,6 +845,7 @@ auto Z80::instructionSRL_irr(n16& addr) -> void { Q = 1;
 }
 
 auto Z80::instructionSRL_irr_r(n16& addr, n8& x) -> void { Q = 1;
+  wait(2);  // Spurious-seeming wait cycles on real Z80, BEFORE the read
   auto data = read(addr);
   wait(1);
   write(addr, x = SRL(data));
