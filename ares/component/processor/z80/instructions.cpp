@@ -546,6 +546,12 @@ auto Z80::instructionPUSH_rr(n16& x) -> void { Q = 0;
   push(x);
 }
 
+auto Z80::instructionRES_o_irr(n3 bit, n16& addr) -> void { Q = 1;
+  auto data = read(addr);
+  wait(1);
+  write(addr, RES(bit, data));
+}
+
 auto Z80::instructionRES_o_irr_r(n3 bit, n16& addr, n8& x) -> void { Q = 1;
   auto data = read(addr);
   wait(1);
@@ -757,6 +763,12 @@ auto Z80::instructionSCF() -> void {
   HF = 0;
   YF = YF | A.bit(5);
   Q = 1;
+}
+
+auto Z80::instructionSET_o_irr_r(n3 bit, n16& addr) -> void { Q = 1;
+  auto data = read(addr);
+  wait(1);
+  write(addr, SET(bit, data));
 }
 
 auto Z80::instructionSET_o_irr_r(n3 bit, n16& addr, n8& x) -> void { Q = 1;
