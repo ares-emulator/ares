@@ -1,2 +1,6 @@
 obj/
 out/
+obj-amd64/
+obj-arm64/
+out-amd64/
+out-arm64/
