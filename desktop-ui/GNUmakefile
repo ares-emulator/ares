@@ -92,7 +92,7 @@ endif
 	cp -R $(ares.path)/Shaders $(output.path)/$(name).app/Contents/Resources/
 	cp -R $(mia.path)/Database $(output.path)/$(name).app/Contents/Resources/	
 	sips -s format icns resource/$(name).png --out $(output.path)/$(name).app/Contents/Resources/$(name).icns
-	codesign --force --deep --sign - $(output.path)/$(name).app
+	codesign --force --deep --options runtime --entitlements resource/$(name).selfsigned.entitlements --sign - $(output.path)/$(name).app
 else ifeq ($(platform),windows)
 	$(call mkdir,$(output.path)/Shaders/)
 	$(call mkdir,$(output.path)/Database/)

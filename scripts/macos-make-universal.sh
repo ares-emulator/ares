@@ -26,4 +26,12 @@ cp -a desktop-ui/out-amd64 desktop-ui/out
 lipo -create -output desktop-ui/out/ares.app/Contents/MacOS/ares \
     desktop-ui/out-amd64/ares.app/Contents/MacOS/ares \
     desktop-ui/out-arm64/ares.app/Contents/MacOS/ares
-codesign --force --deep --sign - desktop-ui/out/ares.app
+
+if [ "${CERTIFICATE_NAME:-}" == "" ]; then
+    echo "Signing using self-signed"
+    ENTITLEMENTS=desktop-ui/resource/ares.selfsigned.entitlements
+else
+    echo "Signing using certificate: ${CERTIFICATE_NAME}"
+    ENTITLEMENTS=desktop-ui/resource/ares.entitlements
+fi
+codesign --force --deep --options runtime --entitlements "${ENTITLEMENTS}" --sign "${CERTIFICATE_NAME:--}" desktop-ui/out/ares.app
