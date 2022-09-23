@@ -95,13 +95,31 @@ ifeq ($(compiler),)
   endif
 endif
 
+machine_str := $(shell $(compiler) -dumpmachine)
+ifneq ($(filter amd64-% x86_64-%,$(machine_str)),)
+  machine := amd64
+else ifneq ($(filter arm64-% aarch64-%,$(machine_str)),)
+  machine := arm64
+endif
+
+# explicit architecture flags to allow for cross-compilation on macos
+ifeq ($(platform),macos)
+  ifeq ($(arch),amd64)
+    flags += -arch x86_64
+    options += -arch x86_64
+  else ifeq ($(arch),arm64)
+    flags += -arch arm64
+    options += -arch arm64
+  endif
+  ifneq ($(machine),$(arch))
+    local = false
+  endif
+endif
+
 # architecture detection
 ifeq ($(arch),)
-  machine := $(shell $(compiler) -dumpmachine)
-  ifneq ($(filter amd64-% x86_64-%,$(machine)),)
-    arch := amd64
-  else ifneq ($(filter arm64-% aarch64-%,$(machine)),)
-    arch := arm64
+  ifneq ($(machine),)
+    arch := $(machine)
   else
     $(error unknown arch, please specify manually.)
   endif
