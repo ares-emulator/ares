@@ -34,7 +34,6 @@ auto M32X::unload() -> void {
   shs.unload();
   vdp.unload();
   pwm.unload(node);
-  rom.reset();
   vectors.reset();
   sdram.reset();
   node.reset();

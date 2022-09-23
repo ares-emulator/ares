@@ -38,6 +38,7 @@ struct Cartridge : Thread {
   } information;
 
   unique_pointer<Board::Interface> board;
+  maybe<Board::Interface&> child;
 };
 
 #include "slot.hpp"

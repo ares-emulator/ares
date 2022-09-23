@@ -13,6 +13,7 @@ struct Vulkan {
   auto mapScanoutRead(const u8*& rgba, u32& width, u32& height) -> void;
   auto unmapScanoutRead() -> void;
   auto endScanout() -> void;
+  auto crashed() -> const char*;
 
   struct Implementation;
   Implementation* implementation = nullptr;

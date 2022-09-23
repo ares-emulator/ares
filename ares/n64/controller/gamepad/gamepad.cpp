@@ -189,35 +189,34 @@ auto Gamepad::read() -> n32 {
   platform->input(z);
   platform->input(start);
 
-  //scale {-32768 ... +32767} to {-84 ... +84}
+  //scale {-32768 ... +32767} to {-85 ... +85}
   auto ax = x->value() * 85.0 / 32767.0;
   auto ay = y->value() * 85.0 / 32767.0;
 
-  //create square dead-zone in range {-7 ... +7}
-  auto lengthAbsoluteX = abs (ax);
-  auto lengthAbsoluteY = abs (ay);
-  if (lengthAbsoluteX < 7.0) {
-    lengthAbsoluteX = 0.0;
-    ax *= lengthAbsoluteX;
-  }
-  if (lengthAbsoluteY < 7.0) {
-    lengthAbsoluteY = 0.0;
-    ay *= lengthAbsoluteY;
-  }
-  
-  //create outer circular dead-zone in ranges {-inf ... -85} and {+85 ... +inf} and scale between the two dead-zones according to the two-dimensional length
+  //create inner axial dead-zone in range {-7 ... +7} and scale from it up to outer circular dead-zone of radius 85
   auto length = sqrt(ax * ax + ay * ay);
-  if(length < 7.0) { 
-    length = 0.0;
-  } else if(length > 85.0) {
-    length = 85.0 / length;
+  if(length <= 85.0) {
+    auto lengthAbsoluteX = abs(ax);
+    auto lengthAbsoluteY = abs(ay);
+    if(lengthAbsoluteX < 7.0) {
+      lengthAbsoluteX = 0.0;
+    } else {
+      lengthAbsoluteX = (lengthAbsoluteX - 7.0) * 85.0 / (85.0 - 7.0) / lengthAbsoluteX;
+    }
+    ax *= lengthAbsoluteX;
+    if(lengthAbsoluteY < 7.0) {
+      lengthAbsoluteY = 0.0;
+    } else {
+      lengthAbsoluteY = (lengthAbsoluteY - 7.0) * 85.0 / (85.0 - 7.0) / lengthAbsoluteY;
+    }
+    ay *= lengthAbsoluteY;
   } else {
-    length = (length - 7.0) * 85.0 / (85.0 - 7.0) / length;
+    length = 85.0 / length;
+    ax *= length;
+    ay *= length;
   }
-  ax *= length;
-  ay *= length;
 
-  //bound diagonals to an octagonal range {-68 ... +68}
+  //bound diagonals to an octagonal range {-69 ... +69}
   if(ax != 0.0 && ay != 0.0) {
     auto slope = ay / ax;
     auto edgex = copysign(85.0 / (abs(slope) + 16.0 / 69.0), ax);

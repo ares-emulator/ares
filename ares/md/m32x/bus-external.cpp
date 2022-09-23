@@ -1,9 +1,5 @@
 auto M32X::readExternal(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
-  if(!Mega32X()) return data;
-
-  if(!io.adapterEnable) {
-    return rom[address >> 1];
-  }
+  if(!Mega32X() || !io.adapterEnable) return data;
 
   if(address >= 0x000000 && address <= 0x0000ff) {
     if(address == 0x70) return io.vectorLevel4 >> 16;
@@ -11,32 +7,29 @@ auto M32X::readExternal(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     return vectors[address >> 1];
   }
 
-  if(address >= 0x000100 && address <= 0x3fffff) {
-    if(dreq.vram) return rom[address >> 1];
-  }
-
   if(address >= 0x840000 && address <= 0x87ffff) {
     return vdp.bbram[address >> 1 & 0xffff];
   }
 
   if(address >= 0x880000 && address <= 0x8fffff) {
-    if(!dreq.vram) return rom[address >> 1 & 0x3ffff];
+    if(!dreq.vram) {
+      address &= 0x7ffff;
+      return cartridge.child->read(upper, lower, address, data);
+    }
   }
 
   if(address >= 0x900000 && address <= 0x9fffff) {
-    address = io.romBank * 0x100000 | address & 0x0fffff;
-    if(!dreq.vram) return rom[address >> 1];
+    if(!dreq.vram) {
+      address = io.romBank * 0x100000 | address & 0x0fffff;
+      return cartridge.child->read(upper, lower, address, data);
+    }
   }
 
   return data;
 }
 
 auto M32X::writeExternal(n1 upper, n1 lower, n24 address, n16 data) -> void {
-  if(!Mega32X()) return;
-
-  if(!io.adapterEnable) {
-    return;
-  }
+  if(!Mega32X() || !io.adapterEnable) return;
 
   if(address >= 0x000000 && address <= 0x0000ff) {
     if(address == 0x70 && upper) io.vectorLevel4.byte(3) = data.byte(1);
@@ -63,5 +56,12 @@ auto M32X::writeExternal(n1 upper, n1 lower, n24 address, n16 data) -> void {
     if(upper && data.byte(1)) vdp.bbram[address >> 1 & 0xffff].byte(1) = data.byte(1);
     if(lower && data.byte(0)) vdp.bbram[address >> 1 & 0xffff].byte(0) = data.byte(0);
     return;
+  }
+
+  if(address >= 0x900000 && address <= 0x9fffff) {
+    if(!dreq.vram) {
+      address = io.romBank * 0x100000 | address & 0x0fffff;
+      return cartridge.child->write(upper, lower, address, data);
+    }
   }
 }

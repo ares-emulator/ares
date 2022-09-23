@@ -716,7 +716,7 @@ void VideoInterface::bind_horizontal_info_view(Vulkan::CommandBuffer &cmd, const
 	cmd.set_buffer_view(0, 1, *scanout_parameters_view);
 }
 
-Vulkan::ImageHandle VideoInterface::scale_stage(Vulkan::CommandBuffer &cmd, Vulkan::Image &divot_image,
+Vulkan::ImageHandle VideoInterface::scale_stage(Vulkan::CommandBuffer &cmd, const Vulkan::Image *divot_image,
                                                 Registers regs, const HorizontalInfoLines &lines,
                                                 unsigned scaling_factor, bool degenerate,
                                                 const ScanoutOptions &options, bool final_pass) const
@@ -902,14 +902,14 @@ Vulkan::ImageHandle VideoInterface::scale_stage(Vulkan::CommandBuffer &cmd, Vulk
 			rect.extent.height = 0;
 	};
 
-	if (!degenerate && regs.h_res > 0 && regs.v_res > 0)
+	if (!degenerate && divot_image && regs.h_res > 0 && regs.v_res > 0)
 	{
 		VkRect2D rect = {{ regs.h_start, regs.v_start }, { uint32_t(regs.h_res), uint32_t(regs.v_res) }};
 		shift_rect(rect, -int(crop_left), -int(crop_top));
 
 		if (rect.extent.width > 0 && rect.extent.height > 0)
 		{
-			cmd.set_texture(0, 0, divot_image.get_view());
+			cmd.set_texture(0, 0, divot_image->get_view());
 			cmd.set_scissor(rect);
 			cmd.draw(3);
 		}
@@ -1357,7 +1357,7 @@ Vulkan::ImageHandle VideoInterface::scanout(VkImageLayout target_layout, const S
 	bool is_final_pass = !downscale_steps || scaling_factor <= 1;
 	bool serrate = (regs.status & VI_CONTROL_SERRATE_BIT) != 0;
 
-	auto scale_image = scale_stage(*cmd, *divot_image,
+	auto scale_image = scale_stage(*cmd, divot_image.get(),
 	                               regs, lines,
 	                               scaling_factor, degenerate, options,
 	                               is_final_pass);

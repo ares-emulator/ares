@@ -15,7 +15,7 @@ auto M32X::readInternal(n1 upper, n1 lower, n32 address, n16 data) -> n16 {
       if(shs.active()) shs.step(1);
     }
 
-    return rom[address >> 1];
+    return cartridge.child->read(upper, lower, address, data);
   }
 
   if(address >= 0x0400'0000 && address <= 0x0403'ffff) {

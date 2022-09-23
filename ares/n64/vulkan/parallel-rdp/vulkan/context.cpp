@@ -36,8 +36,6 @@
 
 //#undef VULKAN_DEBUG
 
-using namespace std;
-
 namespace Vulkan
 {
 void Context::set_application_info(const VkApplicationInfo *app_info)
@@ -61,7 +59,7 @@ bool Context::init_instance_and_device(const char **instance_ext, uint32_t insta
 	}
 
 	VkPhysicalDeviceFeatures features = {};
-	if (!create_device(VK_NULL_HANDLE, VK_NULL_HANDLE, device_ext, device_ext_count, nullptr, 0, &features, flags))
+	if (!create_device(VK_NULL_HANDLE, VK_NULL_HANDLE, device_ext, device_ext_count, &features, flags))
 	{
 		destroy();
 		LOGE("Failed to create Vulkan device.\n");
@@ -71,7 +69,7 @@ bool Context::init_instance_and_device(const char **instance_ext, uint32_t insta
 	return true;
 }
 
-static mutex loader_init_lock;
+static std::mutex loader_init_lock;
 static bool loader_init_once;
 static PFN_vkGetInstanceProcAddr instance_proc_addr;
 
@@ -82,7 +80,7 @@ PFN_vkGetInstanceProcAddr Context::get_instance_proc_addr()
 
 bool Context::init_loader(PFN_vkGetInstanceProcAddr addr)
 {
-	lock_guard<mutex> holder(loader_init_lock);
+	std::lock_guard<std::mutex> holder(loader_init_lock);
 	if (loader_init_once && !addr)
 		return true;
 
@@ -98,6 +96,8 @@ bool Context::init_loader(PFN_vkGetInstanceProcAddr addr)
 #ifdef __APPLE__
 			if (!module)
 				module = dlopen("libvulkan.1.dylib", RTLD_LOCAL | RTLD_LAZY);
+			if (!module)
+				module = dlopen("libMoltenVK.dylib", RTLD_LOCAL | RTLD_LAZY);
 #else
 			if (!module)
 				module = dlopen("libvulkan.so.1", RTLD_LOCAL | RTLD_LAZY);
@@ -163,7 +163,6 @@ bool Context::init_from_instance_and_device(VkInstance instance_, VkPhysicalDevi
 
 bool Context::init_device_from_instance(VkInstance instance_, VkPhysicalDevice gpu_, VkSurfaceKHR surface,
                                         const char **required_device_extensions, unsigned num_required_device_extensions,
-                                        const char **required_device_layers, unsigned num_required_device_layers,
                                         const VkPhysicalDeviceFeatures *required_features,
                                         ContextCreationFlags flags)
 {
@@ -176,8 +175,7 @@ bool Context::init_device_from_instance(VkInstance instance_, VkPhysicalDevice g
 	if (!create_instance(nullptr, 0))
 		return false;
 
-	if (!create_device(gpu_, surface, required_device_extensions, num_required_device_extensions, required_device_layers,
-	                   num_required_device_layers, required_features, flags))
+	if (!create_device(gpu_, surface, required_device_extensions, num_required_device_extensions, required_features, flags))
 	{
 		destroy();
 		LOGE("Failed to create Vulkan device.\n");
@@ -223,9 +221,9 @@ void Context::notify_validation_error(const char *msg)
 		message_callback(msg);
 }
 
-void Context::set_notification_callback(function<void(const char *)> func)
+void Context::set_notification_callback(std::function<void(const char *)> func)
 {
-	message_callback = move(func);
+	message_callback = std::move(func);
 }
 
 #ifdef VULKAN_DEBUG
@@ -306,20 +304,20 @@ bool Context::create_instance(const char **instance_ext, uint32_t instance_ext_c
 	VkInstanceCreateInfo info = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
 	info.pApplicationInfo = &get_application_info();
 
-	vector<const char *> instance_exts;
-	vector<const char *> instance_layers;
+	std::vector<const char *> instance_exts;
+	std::vector<const char *> instance_layers;
 	for (uint32_t i = 0; i < instance_ext_count; i++)
 		instance_exts.push_back(instance_ext[i]);
 
 	uint32_t ext_count = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &ext_count, nullptr);
-	vector<VkExtensionProperties> queried_extensions(ext_count);
+	std::vector<VkExtensionProperties> queried_extensions(ext_count);
 	if (ext_count)
 		vkEnumerateInstanceExtensionProperties(nullptr, &ext_count, queried_extensions.data());
 
 	uint32_t layer_count = 0;
 	vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
-	vector<VkLayerProperties> queried_layers(layer_count);
+	std::vector<VkLayerProperties> queried_layers(layer_count);
 	if (layer_count)
 		vkEnumerateInstanceLayerProperties(&layer_count, queried_layers.data());
 
@@ -344,7 +342,7 @@ bool Context::create_instance(const char **instance_ext, uint32_t instance_ext_c
 		ext.supports_debug_utils = true;
 	}
 
-	auto itr = find_if(instance_ext, instance_ext + instance_ext_count, [](const char *name) {
+	auto itr = std::find_if(instance_ext, instance_ext + instance_ext_count, [](const char *name) {
 		return strcmp(name, VK_KHR_SURFACE_EXTENSION_NAME) == 0;
 	});
 	bool has_surface_extension = itr != (instance_ext + instance_ext_count);
@@ -468,8 +466,7 @@ QueueInfo::QueueInfo()
 }
 
 bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const char **required_device_extensions,
-                            unsigned num_required_device_extensions, const char **required_device_layers,
-                            unsigned num_required_device_layers, const VkPhysicalDeviceFeatures *required_features,
+                            unsigned num_required_device_extensions, const VkPhysicalDeviceFeatures *required_features,
                             ContextCreationFlags flags)
 {
 	gpu = gpu_;
@@ -482,7 +479,7 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 		if (gpu_count == 0)
 			return false;
 
-		vector<VkPhysicalDevice> gpus(gpu_count);
+		std::vector<VkPhysicalDevice> gpus(gpu_count);
 		if (vkEnumeratePhysicalDevices(instance, &gpu_count, gpus.data()) != VK_SUCCESS)
 			return false;
 
@@ -533,15 +530,9 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 
 	uint32_t ext_count = 0;
 	vkEnumerateDeviceExtensionProperties(gpu, nullptr, &ext_count, nullptr);
-	vector<VkExtensionProperties> queried_extensions(ext_count);
+	std::vector<VkExtensionProperties> queried_extensions(ext_count);
 	if (ext_count)
 		vkEnumerateDeviceExtensionProperties(gpu, nullptr, &ext_count, queried_extensions.data());
-
-	uint32_t layer_count = 0;
-	vkEnumerateDeviceLayerProperties(gpu, &layer_count, nullptr);
-	vector<VkLayerProperties> queried_layers(layer_count);
-	if (layer_count)
-		vkEnumerateDeviceLayerProperties(gpu, &layer_count, queried_layers.data());
 
 	const auto has_extension = [&](const char *name) -> bool {
 		auto itr = find_if(begin(queried_extensions), end(queried_extensions), [name](const VkExtensionProperties &e) -> bool {
@@ -550,19 +541,8 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 		return itr != end(queried_extensions);
 	};
 
-	const auto has_layer = [&](const char *name) -> bool {
-		auto itr = find_if(begin(queried_layers), end(queried_layers), [name](const VkLayerProperties &e) -> bool {
-			return strcmp(e.layerName, name) == 0;
-		});
-		return itr != end(queried_layers);
-	};
-
 	for (uint32_t i = 0; i < num_required_device_extensions; i++)
 		if (!has_extension(required_device_extensions[i]))
-			return false;
-
-	for (uint32_t i = 0; i < num_required_device_layers; i++)
-		if (!has_layer(required_device_layers[i]))
 			return false;
 
 	vkGetPhysicalDeviceProperties(gpu, &gpu_props);
@@ -700,13 +680,10 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 	device_info.pQueueCreateInfos = queue_infos.data();
 	device_info.queueCreateInfoCount = uint32_t(queue_infos.size());
 
-	vector<const char *> enabled_extensions;
-	vector<const char *> enabled_layers;
+	std::vector<const char *> enabled_extensions;
 
 	for (uint32_t i = 0; i < num_required_device_extensions; i++)
 		enabled_extensions.push_back(required_device_extensions[i]);
-	for (uint32_t i = 0; i < num_required_device_layers; i++)
-		enabled_layers.push_back(required_device_layers[i]);
 
 	if (has_extension(VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME))
 	{
@@ -787,6 +764,9 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 		enabled_extensions.push_back(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME);
 		ext.supports_shader_float_control = true;
 	}
+
+	if (has_extension(VK_EXT_TOOLING_INFO_EXTENSION_NAME))
+		ext.supports_tooling_info = true;
 
 #ifdef GRANITE_VULKAN_BETA
 	if (has_extension(VK_KHR_VIDEO_QUEUE_EXTENSION_NAME))
@@ -1069,13 +1049,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 
 	device_info.pNext = &features;
 
-#ifdef VULKAN_DEBUG
-	if (!force_no_validation && has_layer("VK_LAYER_KHRONOS_validation"))
-		enabled_layers.push_back("VK_LAYER_KHRONOS_validation");
-	else if (!force_no_validation && has_layer("VK_LAYER_LUNARG_standard_validation"))
-		enabled_layers.push_back("VK_LAYER_LUNARG_standard_validation");
-#endif
-
 	if (ext.supports_external && has_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME))
 	{
 		ext.supports_external_memory_host = true;
@@ -1151,8 +1124,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 
 	device_info.enabledExtensionCount = enabled_extensions.size();
 	device_info.ppEnabledExtensionNames = enabled_extensions.empty() ? nullptr : enabled_extensions.data();
-	device_info.enabledLayerCount = enabled_layers.size();
-	device_info.ppEnabledLayerNames = enabled_layers.empty() ? nullptr : enabled_layers.data();
 
 	for (auto *enabled_extension : enabled_extensions)
 		LOGI("Enabling device extension: %s.\n", enabled_extension);
