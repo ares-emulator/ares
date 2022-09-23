@@ -59,7 +59,13 @@ jobs:
         ./build-moltenvk.sh
         popd
     - name: Make
+      if: runner.os != 'macOS'
       run: ${MAKE:-make} -j4 -C desktop-ui build=optimized local=false compiler=${{ matrix.platform.compiler }}
+    - name: Make universal app
+      if: runner.os == 'macOS'
+      run: scripts/macos-make-universal.sh
+      env:
+        MAKEFLAGS: -j3
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
