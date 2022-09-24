@@ -531,4 +531,10 @@ typedef uLong FAR uLongf;
   #pragma map(inflate_copyright,"INCOPY")
 #endif
 
+#if defined(__clang__)
+#  if __has_warning("-Wdeprecated-non-prototype")
+#    pragma clang diagnostic ignored "-Wdeprecated-non-prototype"
+#  endif
+#endif
+
 #endif /* ZCONF_H */
