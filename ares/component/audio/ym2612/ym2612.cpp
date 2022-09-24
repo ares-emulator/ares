@@ -27,7 +27,7 @@ auto YM2612::clock() -> array<i16[2]> {
     auto wave = [&](u32 n, u32 modulation) -> s32 {
       s32 x = (modulation >> 1) + (op[n].phase.value >> 10);
       s32 y = sine[x & 0x3ff] + op[n].outputLevel;
-      return y < 0x2000 ? pow2[y & 0x1ff] << 2 >> (y >> 9) : 0;
+      return y < 0x1a00 ? pow2[y & 0x1ff] << 2 >> (y >> 9) : 0; // -78 dB floor
     };
 
     s32 feedback = modMask & op[0].output + op[0].prior >> 9 - channel.feedback;
