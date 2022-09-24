@@ -29,7 +29,7 @@ auto LSPC::render(n9 y) -> void {
       sh = yattributes.bit(0, 5);
       sy = yattributes.bit(7,15);
     }
-    n9 ry = y - (496 - sy);
+    n9 ry = y - (496 + 16 - sy);
     if(sh == 0) continue;
     if(sh >= 33) sh = 32;  //todo: loop borders when shrinking
     if(sx >= 320 && sx + 15 <= 511) continue;
