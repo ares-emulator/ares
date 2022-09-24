@@ -24,7 +24,7 @@ auto VDP::load(Node::Object parent) -> void {
   screen->colors(1 << 16, {&VDP::color, this});
   screen->setSize(1280, 480);
   screen->setScale(0.25, 0.5);
-  screen->setAspect(1.0, 1.0);
+  screen->setAspect(32, 35);
 
   overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
     if(value == 0) screen->setSize(1280, 448);
