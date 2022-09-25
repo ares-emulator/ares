@@ -3,7 +3,12 @@ struct Mega32X : Interface {
   unique_pointer<Board::Interface> board;
 
   auto load() -> void override {
-    board = new Board::Standard(*cartridge);
+    if(pak) {
+      board = new Board::Standard(*cartridge);
+    } else {
+      board = new Board::Interface(*cartridge);
+    }
+
     board->pak = pak;
     board->load();
 
