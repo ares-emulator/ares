@@ -16,7 +16,7 @@ auto LSPC::load(Node::Object parent) -> void {
   screen->setSize(320, 256);
   screen->setScale(2.0, 2.0);
   screen->setAspect(1.0, 1.0);
-  screen->setViewport(0, 0, 320, 256);
+  screen->setViewport(8, 16, 320 - 16, 256 - 32);
 
   vram.allocate(68_KiB >> 1);
   pram.allocate(16_KiB >> 1);
