@@ -53,7 +53,7 @@ struct SVP : Interface, SSP1601 {
     SSP1601::instruction();
   }
 
-  auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {
+  auto read(n1 upper, n1 lower, n24 address, n16 data) -> n16 override {
     if(address >= 0x000000 && address <= 0x1fffff) {
       data = rom[address >> 1];
     }
@@ -77,7 +77,7 @@ struct SVP : Interface, SSP1601 {
     return data;
   }
 
-  auto write(n1 upper, n1 lower, n22 address, n16 data) -> void override {
+  auto write(n1 upper, n1 lower, n24 address, n16 data) -> void override {
     if(address >= 0x300000 && address <= 0x37ffff) {
       if(upper) dram[address >> 1].byte(1) = data.byte(1);
       if(lower) dram[address >> 1].byte(0) = data.byte(0);

@@ -11,7 +11,7 @@ struct GameGenie : Interface {
   auto save() -> void override {
   }
 
-  auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {
+  auto read(n1 upper, n1 lower, n24 address, n16 data) -> n16 override {
     if(enable) {
       for(auto& code : codes) {
         if(code.enable && code.address == address) return data = code.data;
@@ -21,7 +21,7 @@ struct GameGenie : Interface {
     return data = rom[address >> 1];
   }
 
-  auto write(n1 upper, n1 lower, n22 address, n16 data) -> void override {
+  auto write(n1 upper, n1 lower, n24 address, n16 data) -> void override {
     if(enable) {
       if(slot.connected()) return slot.cartridge.write(upper, lower, address, data);
     }

@@ -3,12 +3,7 @@ struct Mega32X : Interface {
   unique_pointer<Board::Interface> board;
 
   auto load() -> void override {
-    if(pak->read("program.rom") && pak->read("program.rom")->size() > 0x400000) {
-      board = new Board::Banked(*cartridge);
-    } else {
-      board = new Board::Linear(*cartridge);
-    }
-
+    board = new Board::Standard(*cartridge);
     board->pak = pak;
     board->load();
 
@@ -19,7 +14,7 @@ struct Mega32X : Interface {
     board->save();
   }
 
-  auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {
+  auto read(n1 upper, n1 lower, n24 address, n16 data) -> n16 override {
     if(!m32x.io.adapterEnable) {
       return board->read(upper, lower, address, data);
     }
@@ -35,7 +30,7 @@ struct Mega32X : Interface {
     return data;
   }
 
-  auto write(n1 upper, n1 lower, n22 address, n16 data) -> void override {
+  auto write(n1 upper, n1 lower, n24 address, n16 data) -> void override {
     if(!m32x.io.adapterEnable) {
       return board->write(upper, lower, address, data);
     }
