@@ -1,5 +1,6 @@
 namespace Board {
 
+#include "standard.cpp"
 #include "linear.cpp"
 #include "banked.cpp"
 #include "svp.cpp"

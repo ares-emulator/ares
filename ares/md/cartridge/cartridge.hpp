@@ -19,8 +19,8 @@ struct Cartridge : Thread {
   auto step(u32 clocks) -> void;
   auto power(bool reset) -> void;
 
-  auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16;
-  auto write(n1 upper, n1 lower, n22 address, n16 data) -> void;
+  auto read(n1 upper, n1 lower, n24 address, n16 data) -> n16;
+  auto write(n1 upper, n1 lower, n24 address, n16 data) -> void;
 
   auto readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16;
   auto writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void;

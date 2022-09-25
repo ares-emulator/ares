@@ -29,7 +29,7 @@ struct Linear : Interface {
     }
   }
 
-  auto read(n1 upper, n1 lower, n22 address, n16 data) -> n16 override {
+  auto read(n1 upper, n1 lower, n24 address, n16 data) -> n16 override {
     if(address >= sramAddr && address < sramAddr+sramSize) {
       if(wram && ramEnable) {
         return wram[address >> 1];
@@ -57,7 +57,7 @@ struct Linear : Interface {
     return rom[address >> 1];
   }
 
-  auto write(n1 upper, n1 lower, n22 address, n16 data) -> void override {
+  auto write(n1 upper, n1 lower, n24 address, n16 data) -> void override {
     //emulating ramWritable will break commercial software:
     //it does not appear that many (any?) games actually connect $a130f1.d1 to /WE;
     //hence RAM ends up always being writable, and many games fail to set d1=1

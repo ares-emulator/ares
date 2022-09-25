@@ -13,7 +13,7 @@ inline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   if(address >= 0x400000 && address <= 0x7fffff) {
     waitRefreshExternal();
-    if(!cartridge.bootable()) {
+    if(!cartridge.bootable() || !MegaCD()) {
       data = cartridge.read(upper, lower, address, data);
     } else {
       data = mcd.readExternal(upper, lower, address, data);
@@ -22,7 +22,11 @@ inline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address >= 0x800000 && address <= 0x9fffff) {
-    data = m32x.readExternal(upper, lower, address, data);
+    if(!Mega32X()) {
+      data = cartridge.read(upper, lower, address, data);
+    } else {
+      data = m32x.readExternal(upper, lower, address, data);
+    }
     return data;
   }
 
@@ -71,7 +75,7 @@ inline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address >= 0x400000 && address <= 0x7fffff) {
     waitRefreshExternal();
-    if(!cartridge.bootable()) {
+    if(!cartridge.bootable() || !MegaCD()) {
       cartridge.write(upper, lower, address, data);
     } else {
       mcd.writeExternal(upper, lower, address, data);
@@ -80,7 +84,11 @@ inline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address >= 0x800000 && address <= 0x9fffff) {
-    m32x.writeExternal(upper, lower, address, data);
+    if(!Mega32X()) {
+      cartridge.write(upper, lower, address, data);
+    } else {
+      m32x.writeExternal(upper, lower, address, data);
+    }
     return;
   }
 

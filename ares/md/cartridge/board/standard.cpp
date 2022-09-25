@@ -1,4 +1,4 @@
-struct Banked : Interface {
+struct Standard : Interface {
   using Interface::Interface;
   Memory::Readable<n16> rom;
   Memory::Writable<n16> wram;
@@ -30,68 +30,67 @@ struct Banked : Interface {
   }
 
   auto read(n1 upper, n1 lower, n24 address, n16 data) -> n16 override {
+    if(address >= 0x400000) {
+      if(address >= rom.size()*2) return data;
+      return rom[address >> 1];
+    }
+
+    auto bank = romBank[address >> 19];
     if(address >= sramAddr && address < sramAddr+sramSize) {
-      if(wram && ramEnable) {
+      if(wram && (ramEnable || bank > 0x3f)) {
         return wram[address >> 1];
       }
 
-      if(uram && ramEnable) {
+      if(uram && (ramEnable || bank > 0x3f)) {
         return uram[address >> 1] * 0x0101;
       }
 
-      if(lram && ramEnable) {
+      if(lram && (ramEnable || bank > 0x3f)) {
         return lram[address >> 1] * 0x0101;
       }
 
-      if(m24c && eepromEnable) {
+      if(m24c && (eepromEnable || bank > 0x3f)) {
         if(upper && rsda >> 3 == 1) data.bit(rsda) = m24c.read();
         if(lower && rsda >> 3 == 0) data.bit(rsda) = m24c.read();
         return data;
       }
     }
 
-    n25 offset = romBank[address >> 19] << 19 | (n19)address;
+    if(bank > 0x3f) return data;
 
-    if ((offset >> 1) > rom.size() - 1) {
-      return 0xffff;
-    }
-
-    return data = rom[offset >> 1];
+    n24 offset = bank << 19 | (n19)address;
+    if(offset >= rom.size()*2) return data;
+    return rom[offset >> 1];
   }
 
   auto write(n1 upper, n1 lower, n24 address, n16 data) -> void override {
-   //emulating ramWritable will break commercial software:
-    //it does not appear that many (any?) games actually connect $a130f1.d1 to /WE;
-    //hence RAM ends up always being writable, and many games fail to set d1=1
     if(address >= sramAddr && address < sramAddr+sramSize) {
-      if(wram && ramEnable) {
+      if(wram && ramWritable) {
         if(upper) wram[address >> 1].byte(1) = data.byte(1);
         if(lower) wram[address >> 1].byte(0) = data.byte(0);
         return;
       }
 
-      if(uram && ramEnable) {
+      if(uram && ramWritable) {
         if(upper) uram[address >> 1] = data;
         return;
       }
 
-      if(lram && ramEnable) {
+      if(lram && ramWritable) {
         if(lower) lram[address >> 1] = data;
         return;
       }
 
       if(m24c) {
-        if(rom.size() * 2 > sramAddr && upper && lower) {
+        if(wscl == 8 && upper && lower) { // control via word write (32Mbit Acclaim mappers only)
           eepromEnable = !data.bit(0);
           return;
         }
-        if(eepromEnable) {
-          if(upper && wscl >> 3 == 1) m24c.clock = data.bit(wscl);
-          if(upper && wsda >> 3 == 1) m24c.data  = data.bit(wsda);
-          if(lower && wscl >> 3 == 0) m24c.clock = data.bit(wscl);
-          if(lower && wsda >> 3 == 0) m24c.data  = data.bit(wsda);
-          return m24c.write();
-        }
+        if(upper && wscl >> 3 == 1) m24c.clock = data.bit(wscl);
+        if(upper && wsda >> 3 == 1) m24c.data  = data.bit(wsda);
+        if(lower && wscl >> 3 == 0) m24c.clock = data.bit(wscl);
+        if(lower && wsda >> 3 == 0) m24c.data  = data.bit(wsda);
+        return m24c.write();
       }
     }
   }
@@ -109,7 +108,7 @@ struct Banked : Interface {
 
     if(address == 0xa130f0) {
       ramEnable   = data.bit(0);
-      ramWritable = data.bit(1);
+      ramWritable = !data.bit(1);
     }
 
     if(address == 0xa130f2) romBank[1] = data.bit(0,5);
@@ -122,7 +121,16 @@ struct Banked : Interface {
   }
 
   auto power(bool reset) -> void override {
-    for(auto index : range(8)) romBank[index] = index;
+    for(auto index : range(8)) {
+      if(rom.size()*2 > index << 19)
+        romBank[index] = index;
+      else
+        romBank[index] = ~0;
+    }
+    ramEnable = 0;
+    ramWritable = 1;
+    eepromEnable = m24c && wscl != 8 ? 1 : 0; // for 32Mbit Acclaim mappers (670125 & 670127) [id based on wscl]
+    m24c.power();
   }
 
   auto serialize(serializer& s) -> void override {
@@ -139,7 +147,7 @@ struct Banked : Interface {
     s(wscl);
   }
 
-  n6 romBank[8];
+  n7 romBank[8];
   n1 ramEnable;
   n1 ramWritable;
   n1 eepromEnable;
