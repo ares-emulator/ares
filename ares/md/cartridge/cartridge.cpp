@@ -62,7 +62,15 @@ auto Cartridge::step(u32 clocks) -> void {
 }
 
 auto Cartridge::power(bool reset) -> void {
-  if(!board) board = new Board::Interface(*this);
+  if(!board) {
+    if(Mega32X()) {
+      board = new Board::Mega32X{*this};
+    } else {
+      board = new Board::Interface(*this);
+    }
+
+    board->load();
+  }
   Thread::create(board->frequency(), {&Cartridge::main, this});
   board->power(reset);
 }
