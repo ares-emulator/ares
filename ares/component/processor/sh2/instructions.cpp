@@ -605,7 +605,7 @@ auto SH2::ROTR(u32 n) -> void {
 
 //RTE
 auto SH2::RTE() -> void {
-  delaySlot(readLong(SP + 0));
+  delaySlot(readLong(SP + 0) + 4);
   SR  = readLong(SP + 4);
   SP += 8;
 }
@@ -811,7 +811,7 @@ auto SH2::TAS(u32 n) -> void {
 //TRAPA #imm
 auto SH2::TRAPA(u32 i) -> void {
   push(SR);
-  push(PC + 2);
+  push(PC - 2);
   branch(readLong(VBR + i * 4) + 4);
 }
 

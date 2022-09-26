@@ -29,7 +29,6 @@ struct SH2 {
   auto exceptionHandler() -> void;
   auto push(u32 data) -> void;
   auto interrupt(u8 level, u8 vector) -> void;
-  auto exception(u8 vector) -> void;
   auto addressErrorCPU() -> void;
   auto addressErrorDMA() -> void;
   auto illegalInstruction() -> void;
