@@ -790,7 +790,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     sub32(reg(1), R15, imm(4));
     mov32(R15, reg(1));
     call(writeL);
-    add32(reg(2), PC, imm(2));
+    sub32(reg(2), PC, imm(2));
     sub32(reg(1), R15, imm(4));
     mov32(R15, reg(1));
     call(writeL);
@@ -1353,6 +1353,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     mov32(reg(1), R15);
     add32(R15, reg(1), imm(4));
     call(readL);
+    add32(reg(0), reg(0), imm(4));
     mov32(PPC, reg(0));
     mov32(PPM, imm(Branch::Slot));
     mov32(reg(1), R15);
