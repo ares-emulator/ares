@@ -154,7 +154,13 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   if(address == 0xa15100) {
     if(lower) {
       io.adapterEnable = data.bit(0);
-      io.adapterReset  = data.bit(1);
+
+      if(data.bit(1) == 0) {
+        shm.power(true);
+        shs.power(true);
+      }
+
+      io.adapterReset = data.bit(1);
     }
     if(upper) {
       vdp.framebufferAccess = data.bit(15);

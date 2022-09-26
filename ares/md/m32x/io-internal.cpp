@@ -15,7 +15,7 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
     }
     data.bit( 7) = io.hintVblank;
     data.bit( 8) = !(bool)cartridge.node;  //0 = cartridge connected
-    data.bit( 9) = io.adapterEnable | 1;
+    data.bit( 9) = io.adapterEnable;
     data.bit(15) = vdp.framebufferAccess;
   }
 

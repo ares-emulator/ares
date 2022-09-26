@@ -14,6 +14,8 @@ auto M32X::SH7604::unload() -> void {
 }
 
 auto M32X::SH7604::main() -> void {
+  if(!m32x.io.adapterReset) return step(cyclesUntilSync);
+
   if(!SH2::inDelaySlot() && !regs.ID) {
     if(irq.vres.active && irq.vres.enable) {
       debugger.interrupt("VRES");
