@@ -372,7 +372,8 @@ struct _chd_verify_result
 /* chd_error chd_create_file(core_file *file, UINT64 logicalbytes, UINT32 hunkbytes, UINT32 compression, chd_file *parent); */
 
 /* open an existing CHD file */
-CHD_EXPORT chd_error chd_open_file(core_file *file, int mode, chd_file *parent, chd_file **chd);
+CHD_EXPORT chd_error chd_open_core_file(core_file *file, int mode, chd_file *parent, chd_file **chd);
+CHD_EXPORT chd_error chd_open_file(FILE *file, int mode, chd_file *parent, chd_file **chd);
 CHD_EXPORT chd_error chd_open(const char *filename, int mode, chd_file *parent, chd_file **chd);
 
 /* precache underlying file */

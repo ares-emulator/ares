@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-project(chdr VERSION 0.1 LANGUAGES C)
+project(chdr VERSION 0.2 LANGUAGES C)
 
 if(CMAKE_PROJECT_NAME STREQUAL "chdr")
   option(BUILD_SHARED_LIBS "Build libchdr also as a shared library" ON)
@@ -25,7 +25,7 @@ include(GNUInstallDirs)
 
 
 # lzma
-add_subdirectory(deps/lzma-19.00 EXCLUDE_FROM_ALL)
+add_subdirectory(deps/lzma-22.01 EXCLUDE_FROM_ALL)
   list(APPEND CHDR_LIBS lzma)
   list(APPEND CHDR_INCLUDES lzma)
 
@@ -34,7 +34,7 @@ if (WITH_SYSTEM_ZLIB)
   find_package(ZLIB REQUIRED)
   list(APPEND PLATFORM_LIBS ZLIB::ZLIB)
 else()
-  add_subdirectory(deps/zlib-1.2.11 EXCLUDE_FROM_ALL)
+  add_subdirectory(deps/zlib-1.2.12 EXCLUDE_FROM_ALL)
   list(APPEND CHDR_LIBS zlib)
   list(APPEND CHDR_INCLUDES zlib)
 endif()
