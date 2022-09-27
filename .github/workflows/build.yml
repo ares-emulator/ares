@@ -14,12 +14,6 @@ jobs:
         platform:
         - name: windows
           os: windows-latest
-          compiler: g++
-          shell: 'msys2 {0}'
-          msystem: mingw64
-          msys-env: x86_64
-        - name: windows-clang
-          os: windows-latest
           compiler: clang++
           shell: 'msys2 {0}'
           msystem: clang64
