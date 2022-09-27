@@ -101,9 +101,26 @@ auto SuperFamicom::load(string location) -> bool {
   pak->setAttribute("region", region);
   pak->append("manifest.bml", manifest);
 
-  auto files = directory::files(directory, "msu1.*");
+  //find all msu1 files
+  auto files = directory::files(directory, "*.msu");
+  for(auto _file : directory::files(directory, "*-*.pcm")) {
+    files.append(_file);
+  }
+  for(auto _file : directory::files(directory, "msu1.data.rom")) {
+    files.append(_file);
+  }
+
   for(auto& _file : files) {
-    pak->append(_file, file::read({directory, "/", _file}));
+    //add msu-1 rom
+    if(_file.imatch("*.msu") || _file == "msu1.data.rom") {
+      pak->append("msu1.data.rom", file::read({directory, "/", _file}));
+    }
+
+    //add msu-1 audio tracks
+    if(_file.imatch("*-*.pcm")) {
+      auto track = _file.split("-").last().replace(".pcm", "").integer();
+      pak->append({"msu1.track-", track,".pcm"}, file::read({directory, "/", _file}));
+    }
   }
 
   array_view<u8> view{rom};
