@@ -16,7 +16,7 @@ auto TIA::load(Node::Object parent) -> void {
   screen = node->append<Node::Video::Screen>("Screen", 160, vlines());
   screen->colors(1 << 7, {&TIA::color, this});
   screen->setSize(160, vlines());
-  screen->setScale(2.0, 1.0);
+  screen->setScale(4.0, 2.0);
   screen->setAspect(1.0, 1.0);
   screen->setViewport(0, 0, 160, vlines());
 
