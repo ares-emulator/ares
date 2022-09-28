@@ -32,6 +32,7 @@ auto YM2610::writeLower(n8 data) -> void {
               pcmB.repeat  = data.bit(4);
               if(data.bit(0)) pcmB.power();
               if(data.bit(7)) pcmB.beginPlay();
+              else            pcmB.playing = 0;
               return;
   case 0x011: pcmB.left    = data.bit(7);
               pcmB.right   = data.bit(6);           return;
