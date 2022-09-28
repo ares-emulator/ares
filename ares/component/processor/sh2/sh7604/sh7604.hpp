@@ -201,7 +201,7 @@
       n1 fer;       //framing error
       n1 orer;      //overrun error
       n1 rdrf;      //receive data register full
-      n1 tdre;      //transmit data register empty
+      n1 tdre = 1;  //transmit data register empty
     } ssr;
     n8 brr = 0xff;  //bit rate register
     n8 tdr = 0xff;  //transmit data register

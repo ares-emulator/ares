@@ -553,7 +553,7 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
     sci.scr.te   = data.bit(5);
     sci.scr.rie  = data.bit(6);
     sci.scr.tie  = data.bit(7);
-    if(!te && sci.scr.te) sci.run();
+    if(te && !sci.scr.te) sci.ssr.tdre = 1;
     return;
   }
 
@@ -563,7 +563,8 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
     return;
 
   //SSR: serial status register
-  case 0xffff'fe04:
+  case 0xffff'fe04: {
+    bool tdre = sci.ssr.tdre;
     sci.ssr.mpbt  = data.bit(0);
   //sci.ssr.mpb   = data.bit(1) = readonly;
   //sci.ssr.tend  = data.bit(2) = readonly;
@@ -572,8 +573,9 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
     sci.ssr.orer &= data.bit(5);
     sci.ssr.rdrf &= data.bit(6);
     sci.ssr.tdre &= data.bit(7);
-    if(sci.scr.te) sci.run();
+    if(tdre && !sci.ssr.tdre) sci.run();
     return;
+  }
 
   //RDR: receive data register
   case 0xffff'fe05:
