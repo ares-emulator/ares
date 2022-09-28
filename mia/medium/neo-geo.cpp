@@ -58,7 +58,7 @@ auto NeoGeo::read(string location, string match) -> vector<u8> {
 
   if(match == "voice-a.rom") {
     for (auto &file: archive.file) {
-      if (file.name.imatch("*.v1*")) filenames.append(file.name);
+      if (file.name.imatch("*.v*")) filenames.append(file.name);
     }
   }
 
