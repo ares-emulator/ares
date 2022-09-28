@@ -23,5 +23,19 @@ auto YM2610::PCMA::serialize(serializer& s) -> void {
 }
 
 auto YM2610::PCMB::serialize(serializer& s) -> void {
+  s(playing);
+  s(repeat);
+  s(left);
+  s(right);
+  s(startAddress);
+  s(endAddress);
+  s(delta);
+  s(volume);
 
+  s(currentAddress);
+  s(currentNibble);
+  s(decodeAccumulator);
+  s(decodePosition);
+  s(previousAccumulator);
+  s(decodeStep);
 }
