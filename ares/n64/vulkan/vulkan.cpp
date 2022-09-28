@@ -125,7 +125,7 @@ auto Vulkan::render() -> bool {
 
   queueOffset = 0;
   queueSize = 0;
-  command.start = command.current = command.end;
+  command.current = command.end;
   return true;
 }
 
