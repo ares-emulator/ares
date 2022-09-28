@@ -50,7 +50,7 @@ auto SH2::power(bool reset) -> void {
   cache = {*this};
   intc = {*this};
   dmac = {*this};
-  sci = {*this};
+  sci = {*this, reset ? sci.link : maybe<SH2&>()};
   wdt = {};
   ubc = {};
   frt = {*this};
