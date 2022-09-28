@@ -11,7 +11,9 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   if(address == 0xa15100) {
     data.bit( 0) = io.adapterEnable;
     data.bit( 1) = io.adapterReset;
+    data.bit(2, 6) = 0;
     data.bit( 7) = io.resetEnable;
+    data.bit(8, 14) = 0;
     data.bit(15) = vdp.framebufferAccess;
   }
 
