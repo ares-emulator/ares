@@ -20,7 +20,11 @@ auto OPNB::load(Node::Object parent) -> void {
 
   streamPCMA = node->append<Node::Audio::Stream>("ADPCM-A");
   streamPCMA->setChannels(2);
-  streamPCMA->setFrequency(8'000'000 / 12.0 / 6.0 / 6.0);
+  streamPCMA->setFrequency(8'000'000 / 432.0);
+
+  streamPCMB = node->append<Node::Audio::Stream>("ADPCM-B");
+  streamPCMB->setChannels(2);
+  streamPCMB->setFrequency(8'000'000 / 144.0);
 
   cyclesUntilFmSsg = 144;
   cyclesUntilPcmA = 432;
@@ -32,23 +36,24 @@ auto OPNB::unload() -> void {
   streamFM.reset();
   streamSSG.reset();
   streamPCMA.reset();
+  streamPCMB.reset();
   node.reset();
 }
 
 auto OPNB::main() -> void {
-  // TODO: Tweak for best mixing level between FM/ADPCM
-  const float volumeScale = 8.0f;
-
   if(cyclesUntilFmSsg == 0) {
     auto samples = fm.clock();
-    streamFM->frame(samples[0] / (32768.0 * volumeScale), samples[1] / (32768.0 * volumeScale));
+    streamFM->frame(samples[0] / (32768.0), samples[1] / (32768.0));
 
     auto channels = ssg.clock();
     f64 output = 0.0;
     output += volume[channels[0]];
     output += volume[channels[1]];
     output += volume[channels[2]];
-    streamSSG->frame(output / (3.0  * volumeScale));
+    streamSSG->frame(output / (3.0));
+
+    samples = pcmB.clock();
+    streamPCMB->frame(samples[0] / (32768.0), samples[1] / (32768.0));
 
     cyclesUntilFmSsg = 144;
 
@@ -83,7 +88,11 @@ auto OPNB::power(bool reset) -> void {
 }
 
 auto OPNB::readPCMA(u32 address) -> u8 {
-  return cartridge.vrom[address];
+  return cartridge.vromA[address];
+}
+
+auto OPNB::readPCMB(u32 address) -> u8 {
+  return cartridge.vromB ? cartridge.vromB[address] : cartridge.vromA[address];
 }
 
 }

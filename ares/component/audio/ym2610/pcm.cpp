@@ -1,7 +1,7 @@
 auto YM2610::PCMA::power() -> void {
   for(auto c : range(6)) {
     channels[c].startAddress.bit(0, 7) = 0x00;
-    channels[c].endAddress.bit(0, 7) = 0xff;
+    channels[c].endAddress.bit(0, 7) = 0x00;
     channels[c].decodeAccumulator = 0;
     channels[c].decodeStep = 0;
   }
@@ -29,12 +29,16 @@ auto YM2610::PCMA::clock() -> array<i16[2]> {
 
    for(auto c : range(6)) {
     if(!channels[c].playing) continue;
-    if(((channels[c].currentAddress ^ channels[c].endAddress) & 0xfffff) == 0) channels[c].playing = 0;
+    if(((channels[c].currentAddress ^ (channels[c].endAddress + (1 << 8))) & 0xfffff) == 0) {
+      channels[c].playing = 0;
+      continue;
+    }
+
     auto sample = channels[c].decode(self.readPCMA(channels[c].currentAddress));
 
-    int totalVolume = volume + channels[c].volume;
-    int volumeMultiplier = 15 - (volume & 7);
-    int volumeShift = 1 + (volume >> 3);
+    int totalVolume = (volume ^ 0x3f) + (channels[c].volume ^ 0x1f);
+    int volumeMultiplier = 15 - (totalVolume & 7);
+    int volumeShift = 5 + (totalVolume >> 3);
 
     sample = ((sample * volumeMultiplier) >> volumeShift) & ~3;
 
@@ -70,4 +74,76 @@ auto YM2610::PCMA::Channel::decode(n8 value) -> i12 {
   decodeStep = std::clamp((int)decodeStep, 0, 48 * 16);
 
   return decodeAccumulator;
+}
+
+auto YM2610::PCMB::power() -> void {
+  currentNibble       = 0;
+  currentAddress      = 0;
+  decodeAccumulator   = 0;
+  previousAccumulator = 0;
+  decodePosition      = 0;
+  decodeStep          = 127;
+  volume              = 255;
+}
+
+auto YM2610::PCMB::clock() -> array<i16[2]> {
+  f32 leftSample = 0;
+  f32 rightSample = 0;
+
+  decode();
+
+  i32 sample = (previousAccumulator * (i32)((decodePosition ^ 0xffff) + 1) + decodeAccumulator * (i32)(decodePosition)) >> 16;
+  sample = (sample * (i32)volume) >> 9;
+
+  if(left)  leftSample  += (sample / 65535.0);
+  if(right) rightSample += (sample / 65535.0);
+
+  return {sclamp<16>(leftSample * 32768.0), sclamp<16>(rightSample * 32768.0)};
+}
+
+auto YM2610::PCMB::decode() -> void {
+  if(!playing) {
+    return;
+  }
+
+  u8 stepSize[8] = { 57, 57, 57, 57, 77, 102, 128, 153 };
+
+  u32 position = decodePosition + delta;
+  decodePosition = (u16)position;
+  if(position < 0x10000) return;
+
+  n8 value = self.readPCMB(currentAddress);
+  value = currentNibble ? value.bit(0, 3) : value.bit(4, 7);
+  currentNibble = !currentNibble;
+
+  if(currentNibble == 0) {
+    currentAddress++;
+    if(currentAddress == endAddress) {
+      if(repeat) beginPlay();
+      else {
+        decodeAccumulator = 0;
+        previousAccumulator = 0;
+        playing = 0;
+      }
+    }
+  }
+
+  previousAccumulator = decodeAccumulator;
+
+  i32 _delta = (value.bit(0, 2) * 2 + 1) * decodeStep / 8;
+  if(value.bit(3)) _delta = -_delta;
+
+  decodeAccumulator = sclamp<16>(decodeAccumulator + _delta);
+
+  decodeStep = std::clamp(((int)decodeStep * stepSize[value.bit(0, 2)]) / 64, 127, 24576);
+}
+
+auto YM2610::PCMB::beginPlay() -> void {
+  currentAddress      = startAddress;
+  currentNibble       = 0;
+  decodeAccumulator   = 0;
+  previousAccumulator = 0;
+  decodePosition      = 0;
+  decodeStep          = 127;
+  playing             = 1;
 }

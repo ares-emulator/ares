@@ -11,6 +11,7 @@ auto YM2610::power() -> void {
   fm.power();
   ssg.power();
   pcmA.power();
+  pcmB.power();
 }
 
 }

@@ -21,6 +21,7 @@ struct YM2610 {
   auto serialize(serializer&) -> void;
 
   virtual auto readPCMA(u32 address) -> u8 { return 0; }
+  virtual auto readPCMB(u32 address) -> u8 { return 0; }
 
 protected:
   n9 registerAddress;
@@ -58,6 +59,35 @@ protected:
     n6 volume;
     int decodeTable[16 * 49];
   } pcmA{*this};
+
+  struct PCMB {
+    YM2610& self;
+
+    // pcm.cpp
+    auto power() -> void;
+    auto clock() -> array<i16[2]>;
+    auto decode() -> void;
+    auto beginPlay() -> void;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
+
+    n1  playing;
+    n1  repeat;
+    n1  left;
+    n2  right;
+    n32 startAddress;
+    n32 endAddress;
+    n16 delta;
+    n8  volume;
+
+    n32 currentAddress;
+    bool currentNibble;
+    i32 decodeAccumulator;
+    u32 decodePosition;
+    i32 previousAccumulator;
+    i32 decodeStep;
+  } pcmB{*this};
 };
 
 }

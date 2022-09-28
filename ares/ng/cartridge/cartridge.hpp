@@ -5,7 +5,8 @@ struct Cartridge {
   Memory::Readable<n8 > mrom;
   Memory::Readable<n8 > crom;
   Memory::Readable<n8 > srom;
-  Memory::Readable<n8 > vrom;
+  Memory::Readable<n8 > vromA;
+  Memory::Readable<n8 > vromB;
 
   struct Debugger {
     //debugger.cpp
@@ -17,7 +18,8 @@ struct Cartridge {
       Node::Debugger::Memory mrom;
       Node::Debugger::Memory crom;
       Node::Debugger::Memory srom;
-      Node::Debugger::Memory vrom;
+      Node::Debugger::Memory vromA;
+      Node::Debugger::Memory vromB;
     } memory;
   } debugger;
 

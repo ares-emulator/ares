@@ -35,13 +35,22 @@ auto Cartridge::Debugger::load(Node::Object parent) -> void {
     cartridge.srom[address] = data;
   });
 
-  memory.vrom = parent->append<Node::Debugger::Memory>("Cartridge Voice ROM");
-  memory.vrom->setSize(cartridge.vrom.size());
-  memory.vrom->setRead([&](u32 address) -> u8 {
-    return cartridge.vrom[address];
+  memory.vromA = parent->append<Node::Debugger::Memory>("Cartridge Voice ROM (A)");
+  memory.vromA->setSize(cartridge.vromA.size());
+  memory.vromA->setRead([&](u32 address) -> u8 {
+    return cartridge.vromA[address];
   });
-  memory.vrom->setWrite([&](u32 address, u8 data) -> void {
-    cartridge.vrom[address] = data;
+  memory.vromA->setWrite([&](u32 address, u8 data) -> void {
+    cartridge.vromA[address] = data;
+  });
+
+  memory.vromB = parent->append<Node::Debugger::Memory>("Cartridge Voice ROM (B)");
+  memory.vromB->setSize(cartridge.vromB.size());
+  memory.vromB->setRead([&](u32 address) -> u8 {
+    return cartridge.vromB[address];
+  });
+  memory.vromB->setWrite([&](u32 address, u8 data) -> void {
+    cartridge.vromB[address] = data;
   });
 }
 
@@ -50,10 +59,12 @@ auto Cartridge::Debugger::unload(Node::Object parent) -> void {
   parent->remove(memory.mrom);
   parent->remove(memory.crom);
   parent->remove(memory.srom);
-  parent->remove(memory.vrom);
+  parent->remove(memory.vromA);
+  parent->remove(memory.vromB);
   memory.prom.reset();
   memory.mrom.reset();
   memory.crom.reset();
   memory.srom.reset();
-  memory.vrom.reset();
+  memory.vromA.reset();
+  memory.vromB.reset();
 }

@@ -4,7 +4,7 @@ struct NeoGeo : Cartridge {
   auto read(string location, string match) -> vector<u8>;
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
-  auto analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& v) -> string;
+  auto analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> string;
   auto endianSwap(vector<u8>&) -> void;
 };
 
@@ -56,9 +56,15 @@ auto NeoGeo::read(string location, string match) -> vector<u8> {
     }
   }
 
-  if(match == "voice.rom") {
+  if(match == "voice-a.rom") {
     for (auto &file: archive.file) {
-      if (file.name.imatch("*.v*")) filenames.append(file.name);
+      if (file.name.imatch("*.v1*")) filenames.append(file.name);
+    }
+  }
+
+  if(match == "voice-b.rom") {
+    for (auto &file: archive.file) {
+      if (file.name.imatch("*.v2*")) filenames.append(file.name);
     }
   }
 
@@ -133,36 +139,41 @@ auto NeoGeo::load(string location) -> bool {
   vector<u8> musicROM;      //M ROM (Z80 APU program)
   vector<u8> characterROM;  //C ROM (sprite and background character graphics)
   vector<u8> staticROM;     //S ROM (fix layer static graphics)
-  vector<u8> voiceROM;      //V ROM (ADPCM voice samples)
+  vector<u8> voiceAROM;     //V ROM (ADPCM-A voice samples)
+  vector<u8> voiceBROM;     //V ROM (ADPCM-B voice samples)
   if(directory::exists(location)) {
     programROM   = file::read({location, "program.rom"});
     musicROM     = file::read({location, "music.rom"});
     characterROM = file::read({location, "character.rom"});
     staticROM    = file::read({location, "static.rom"});
-    voiceROM     = file::read({location, "voice.rom"});
+    voiceAROM    = file::read({location, "voice-a.rom"});
+    voiceBROM    = file::read({location, "voice-b.rom"});
   } else if(file::exists(location)) {
     programROM   = NeoGeo::read(location, "program.rom");
     musicROM     = NeoGeo::read(location, "music.rom");
     characterROM = NeoGeo::read(location, "character.rom");
     staticROM    = NeoGeo::read(location, "static.rom");
-    voiceROM     = NeoGeo::read(location, "voice.rom");
+    voiceAROM    = NeoGeo::read(location, "voice-a.rom");
+    voiceBROM    = NeoGeo::read(location, "voice-b.rom");
   }
   if(!programROM  ) return false;
   if(!musicROM    ) return false;
   if(!characterROM) return false;
   if(!staticROM   ) return false;
-  if(!voiceROM    ) return false;
+  if(!voiceAROM   ) return false;
+  //voiceB is optional
 
   Hash::SHA256 hash;
   hash.input(programROM);
   hash.input(musicROM);
   hash.input(characterROM);
   hash.input(staticROM);
-  hash.input(voiceROM);
+  hash.input(voiceAROM);
+  hash.input(voiceBROM);
   auto sha256 = hash.digest();
 
   this->location = location;
-  this->manifest = analyze(programROM, musicROM, characterROM, staticROM, voiceROM);
+  this->manifest = analyze(programROM, musicROM, characterROM, staticROM, voiceAROM, voiceBROM);
   auto document = BML::unserialize(manifest);
   if(!document) return false;
 
@@ -174,7 +185,8 @@ auto NeoGeo::load(string location) -> bool {
   pak->append("music.rom",     musicROM);
   pak->append("character.rom", characterROM);
   pak->append("static.rom",    staticROM);
-  pak->append("voice.rom",     voiceROM);
+  pak->append("voice-a.rom",   voiceAROM);
+  pak->append("voice-b.rom",   voiceBROM);
   return true;
 }
 
@@ -184,17 +196,18 @@ auto NeoGeo::save(string location) -> bool {
   return true;
 }
 
-auto NeoGeo::analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& v) -> string {
+auto NeoGeo::analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> string {
   string manifest;
   manifest += "game\n";
   manifest +={"  name:   ", Medium::name(location), "\n"};
   manifest +={"  title:  ", Medium::name(location), "\n"};
   manifest += "  board\n";
-  manifest +={"    memory type=ROM size=0x", hex(p.size(), 8L), " content=Program\n"};
-  manifest +={"    memory type=ROM size=0x", hex(m.size(), 8L), " content=Music\n"};
-  manifest +={"    memory type=ROM size=0x", hex(c.size(), 8L), " content=Character\n"};
-  manifest +={"    memory type=ROM size=0x", hex(s.size(), 8L), " content=Static\n"};
-  manifest +={"    memory type=ROM size=0x", hex(v.size(), 8L), " content=Voice\n"};
+  manifest +={"    memory type=ROM size=0x", hex( p.size(), 8L), " content=Program\n"};
+  manifest +={"    memory type=ROM size=0x", hex( m.size(), 8L), " content=Music\n"};
+  manifest +={"    memory type=ROM size=0x", hex( c.size(), 8L), " content=Character\n"};
+  manifest +={"    memory type=ROM size=0x", hex( s.size(), 8L), " content=Static\n"};
+  manifest +={"    memory type=ROM size=0x", hex(vA.size(), 8L), " content=VoiceA\n"};
+  manifest +={"    memory type=ROM size=0x", hex(vB.size(), 8L), " content=VoiceB\n"};
   return manifest;
 }
 

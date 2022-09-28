@@ -5,6 +5,7 @@ struct OPNB : YM2610, Thread {
   Node::Audio::Stream streamFM;
   Node::Audio::Stream streamSSG;
   Node::Audio::Stream streamPCMA;
+  Node::Audio::Stream streamPCMB;
 
   //opnb.cpp
   auto load(Node::Object) -> void;
@@ -18,6 +19,7 @@ struct OPNB : YM2610, Thread {
   auto serialize(serializer&) -> void;
 
   auto readPCMA(u32 address) -> u8 override;
+  auto readPCMB(u32 address) -> u8 override;
 
   i32 cyclesUntilFmSsg;
   i32 cyclesUntilPcmA;

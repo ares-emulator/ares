@@ -45,10 +45,17 @@ auto Cartridge::connect() -> void {
     }
   }
 
-  if(auto fp = pak->read("voice.rom")) {
-    vrom.allocate(fp->size());
-    for(auto address : range(vrom.size())) {
-      vrom.program(address, fp->read());
+  if(auto fp = pak->read("voice-a.rom")) {
+    vromA.allocate(fp->size());
+    for(auto address : range(vromA.size())) {
+      vromA.program(address, fp->read());
+    }
+  }
+
+  if(auto fp = pak->read("voice-b.rom")) {
+    vromB.allocate(fp->size());
+    for(auto address : range(vromB.size())) {
+      vromB.program(address, fp->read());
     }
   }
 
@@ -63,7 +70,8 @@ auto Cartridge::disconnect() -> void {
   mrom.reset();
   crom.reset();
   srom.reset();
-  vrom.reset();
+  vromA.reset();
+  vromB.reset();
   pak.reset();
   node.reset();
 }
