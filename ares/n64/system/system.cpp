@@ -19,7 +19,7 @@ auto load(Node::System& node, string name) -> bool {
 
 auto option(string name, string value) -> bool {
   #if defined(VULKAN)
-  if(name == "Enable Vulkan") vulkan.enable = value.boolean();
+  if(name == "Enable GPU acceleration") vulkan.enable = value.boolean();
   if(name == "Quality" && value == "SD" ) vulkan.internalUpscale = 1;
   if(name == "Quality" && value == "HD" ) vulkan.internalUpscale = 2;
   if(name == "Quality" && value == "UHD") vulkan.internalUpscale = 4;
