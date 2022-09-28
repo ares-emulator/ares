@@ -522,6 +522,15 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     eeprom.wscl = 1;
   }
 
+  //Wonder Boy V - Monster World III (Japan)
+  if(hash == "d758864efa18da7a8a87dce32a5b61a8067fb60846696a9588956bc316e480f9") {
+    eeprom.mode = "X24C01";
+    eeprom.size = 128;
+    eeprom.rsda = 0;
+    eeprom.wsda = 0;
+    eeprom.wscl = 1;
+  }
+
   //X24C02
   //======
 
