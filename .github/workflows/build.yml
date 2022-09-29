@@ -71,6 +71,16 @@ jobs:
         MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
         MACOS_KEYCHAIN_NAME: ares-macos-keychain
         MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+    - name: "Windows: sign"
+      if: runner.os == 'Windows'
+      uses: DanaBear/code-sign-action@98c79121b376beab8d6a9484f445089db4461bca
+      with:
+        certificate: '${{ secrets.WIN_CERTIFICATE }}'
+        password: '${{ secrets.WIN_PASSWORD }}'
+        certificatesha1: '${{ secrets.WIN_CERTHASH }}'
+        certificatename: '${{ secrets.WIN_CERTNAME }}'
+        folder: 'desktop-ui/out'
+        timestampUrl: 'http://timestamp.digicert.com' 
     - name: "macOS: notarize"
       if: runner.os == 'macOS'
       run: |
