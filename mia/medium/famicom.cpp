@@ -437,6 +437,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case 111:
     s += "  board:  GTROM\n";
+    chrram = 16384;
     break;
 
   case 118:
