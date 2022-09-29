@@ -11,6 +11,7 @@ struct Standard : Interface {
     Interface::load(rom, "program.rom");
     if(auto fp = pak->read("save.ram")) {
       Interface::load(sramAddr, sramSize, wram, uram, lram, "save.ram");
+      ramEnable = fp->attribute("enable").boolean() ? 1 : 0;
     }
     if(auto fp = pak->read("save.eeprom")) {
       Interface::load(sramAddr, sramSize, m24c, "save.eeprom");
@@ -127,7 +128,6 @@ struct Standard : Interface {
       else
         romBank[index] = ~0;
     }
-    ramEnable = 0;
     ramWritable = 1;
     eepromEnable = m24c && wscl != 8 ? 1 : 0; // for 32Mbit Acclaim mappers (670125 & 670127) [id based on wscl]
     m24c.power();
@@ -148,7 +148,7 @@ struct Standard : Interface {
   }
 
   n7 romBank[8];
-  n1 ramEnable;
+  n1 ramEnable = 0;
   n1 ramWritable;
   n1 eepromEnable;
   n4 rsda;

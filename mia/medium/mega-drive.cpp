@@ -14,6 +14,7 @@ struct MegaDrive : Cartridge {
     string mode;
     u32 address = 0x200000;
     u32 size = 0;
+    bool enable = 0;
   } ram;
 
   struct EEPROM {
@@ -75,6 +76,7 @@ auto MegaDrive::load(string location) -> bool {
     if(auto fp = pak->read("save.ram")) {
       fp->setAttribute("mode", node["mode"].string());
       fp->setAttribute("address", node["address"].natural());
+      fp->setAttribute("enable", node["enable"].boolean());
     }
   }
 
@@ -248,6 +250,7 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
     s +={"      size: 0x", hex(ram.size), "\n"};
     s += "      content: Save\n";
     s +={"      mode: ", ram.mode, "\n"};
+    s +={"      enable: ", ram.enable, "\n"};
   }
 
   if(peripherals.jcart) {
@@ -258,6 +261,8 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
 }
 
 auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
+  string serial = slice((const char*)&rom[0x0180], 0, 14);
+
   //SRAM
   //====
 
@@ -343,6 +348,46 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
   if(hash == "30749097096807abf67cd1f7b2392f5789f5149ee33661e6d13113396f06a121") {
     ram.mode = "lower";
     ram.size = 8192;
+  }
+
+  // Triple Play 96 (USA)
+  //   $000000-$1fffff : 2MiB ROM
+  //   $200001-$20ffff : 32 KiB lower SRAM
+  //   $300000-$3fffff : 1MiB ROM
+  if(serial == "GM T-172026-04" && rom.size() >= 3_MiB) {
+    if(Hash::SHA256({&rom[0],2_MiB}).digest() == "2712d5233e7e8f50a5a0ed954c404c16dd4bc20321ac19035bc8d3b07be10b72") {
+      // Matched low ROM at $000000
+      if( Hash::SHA256({&rom[2_MiB],1_MiB}).digest() == "a912d184412f764cef828e36aa44868b1515bfa1730327acbe480c8b95179225") {
+        // Matched high rom at offset $200000 (copy to $300000)
+        rom.resize(4_MiB);
+        memory::copy(&rom[3_MiB], &rom[2_MiB], 1_MiB);
+        ram.enable = true;
+      } else if(rom.size() == 4_MiB &&
+          Hash::SHA256({&rom[3_MiB],1_MiB}).digest() == "a912d184412f764cef828e36aa44868b1515bfa1730327acbe480c8b95179225") {
+        // Matched high ROM at offset $300000
+        ram.enable = true;
+      }
+    }
+  }
+
+  // Triple Play - Gold Edition (USA)
+  //   $000000-$1fffff : 2MiB ROM
+  //   $200001-$20ffff : 32 KiB lower SRAM
+  //   $300000-$3fffff : 1MiB ROM
+  if(serial == "GM T-172116-00" && rom.size() >= 3_MiB) {
+    if(Hash::SHA256({&rom[0],2_MiB}).digest() == "979531ead09319a57ec6e3a892128782aa9713369ba4e400414ba0d26e6053cf") {
+      // Matched low ROM at $000000
+      if( Hash::SHA256({&rom[2_MiB],1_MiB}).digest() == "306cfa0e742cf6ee5adc1d544fccb2ef3ed3c19716055a4daceb25a2ad5aadcf") {
+        // Matched high rom at offset $200000 (copy to $300000)
+        rom.resize(4_MiB);
+        memory::copy(&rom[3_MiB], &rom[2_MiB], 1_MiB);
+        ram.enable = true;
+      } else if(rom.size() == 4_MiB &&
+          Hash::SHA256({&rom[3_MiB],1_MiB}).digest() == "306cfa0e742cf6ee5adc1d544fccb2ef3ed3c19716055a4daceb25a2ad5aadcf") {
+        // Matched high ROM at $300000
+        ram.enable = true;
+      }
+    }
   }
 
   //M28C16
