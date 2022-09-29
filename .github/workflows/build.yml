@@ -43,6 +43,14 @@ jobs:
       run: |
         sudo apt-get update -y -qq
         sudo apt-get install libsdl2-dev libgtksourceview2.0-dev libgtk2.0-dev libao-dev libopenal-dev   
+    - name: "macOS: Import Certificate"
+      if: runner.os == 'macOS'
+      uses: devbotsxyz/import-signing-certificate@2ac4f44d28045073d23153256efbb4c4b2d8aa22    # Don't use rolling branch for security reasons
+      with:
+        certificate-data: ${{ secrets.MACOS_CERTIFICATE_DATA }}
+        certificate-passphrase: ${{ secrets.MACOS_CERTIFICATE_PASSPHRASE }}
+        keychain-name: ares-macos-keychain
+        keychain-password: abcd
     - uses: actions/checkout@v2
     - name: Install macOS Dependencies
       if: runner.os == 'macOS'
@@ -50,16 +58,26 @@ jobs:
         brew install make
         echo "MAKE=gmake" >> $GITHUB_ENV
         pushd thirdparty/MoltenVK
-        ./build-moltenvk.sh
+        #./build-moltenvk.sh
         popd
     - name: Make
       if: runner.os != 'macOS'
       run: ${MAKE:-make} -j4 -C desktop-ui build=optimized local=false compiler=${{ matrix.platform.compiler }}
-    - name: Make universal app
+    - name: "macOS: Make universal app"
       if: runner.os == 'macOS'
       run: scripts/macos-make-universal.sh
       env:
         MAKEFLAGS: -j3
+        MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
+        MACOS_KEYCHAIN_NAME: ares-macos-keychain
+        MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+    - name: "macOS: notarize"
+      if: runner.os == 'macOS'
+      uses: devbotsxyz/xcode-notarize@v1
+      with:
+        product-path: "desktop-ui/out/ares.app"
+        appstore-connect-username: ${{ secrets.MACOS_NOTARIZATION_USERNAME }}
+        appstore-connect-password: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
