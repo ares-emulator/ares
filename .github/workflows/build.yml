@@ -58,7 +58,7 @@ jobs:
         brew install make
         echo "MAKE=gmake" >> $GITHUB_ENV
         pushd thirdparty/MoltenVK
-        #./build-moltenvk.sh
+        ./build-moltenvk.sh
         popd
     - name: Make
       if: runner.os != 'macOS'
