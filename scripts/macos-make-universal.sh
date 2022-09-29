@@ -27,11 +27,15 @@ lipo -create -output desktop-ui/out/ares.app/Contents/MacOS/ares \
     desktop-ui/out-amd64/ares.app/Contents/MacOS/ares \
     desktop-ui/out-arm64/ares.app/Contents/MacOS/ares
 
-if [ "${CERTIFICATE_NAME:-}" == "" ]; then
+if [ "${MACOS_KEYCHAIN_PASSWORD:-}" != "" ]; then
+    security unlock-keychain -p "$MACOS_KEYCHAIN_PASSWORD" "$MACOS_KEYCHAIN_NAME"
+fi
+
+if [ "${MACOS_CERTIFICATE_NAME:-}" == "" ]; then
     echo "Signing using self-signed"
     ENTITLEMENTS=desktop-ui/resource/ares.selfsigned.entitlements
 else
-    echo "Signing using certificate: ${CERTIFICATE_NAME}"
+    echo "Signing using certificate: ${MACOS_CERTIFICATE_NAME}"
     ENTITLEMENTS=desktop-ui/resource/ares.entitlements
 fi
-codesign --force --deep --options runtime --entitlements "${ENTITLEMENTS}" --sign "${CERTIFICATE_NAME:--}" desktop-ui/out/ares.app
+codesign --force --deep --options runtime --entitlements "${ENTITLEMENTS}" --sign "${MACOS_CERTIFICATE_NAME:--}" desktop-ui/out/ares.app
