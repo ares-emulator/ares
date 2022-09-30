@@ -20,7 +20,6 @@ auto LSPC::render(n9 y) -> void {
     n16 yattributes = vram[0x8200 | sprite];
     n16 xattributes = vram[0x8400 | sprite];
 
-    hshrink = sattributes.bit(8,11);
     if(auto sticky = yattributes.bit(6)) {
       sx += hshrink + 1;
     } else {
@@ -29,6 +28,8 @@ auto LSPC::render(n9 y) -> void {
       sh = yattributes.bit(0, 5);
       sy = yattributes.bit(7,15);
     }
+    hshrink = sattributes.bit(8,11);
+
     n9 ry = y - (496 + 16 - sy);
     if(sh == 0) continue;
     if(sh >= 33) sh = 32;  //todo: loop borders when shrinking
