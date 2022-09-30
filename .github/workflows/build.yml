@@ -51,11 +51,20 @@ jobs:
         certificate-passphrase: ${{ secrets.MACOS_CERTIFICATE_PASSPHRASE }}
         keychain-name: ares-macos-keychain
         keychain-password: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
-    - uses: actions/checkout@v2
+    - name: Checkout source code
+      uses: actions/checkout@v2
+    - name: "macOS: recover cache"
+      if: runner.os == 'macOS'
+      uses: actions/cache@v3
+      env:
+          cache-name: moltenvk
+      with:
+          path: thirdparty/MoltenVK/MoltenVK
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('thirdparty/MoltenVK/HEAD') }}
     - name: Install macOS Dependencies
       if: runner.os == 'macOS'
       run: |
-        brew install make
+        brew install make ninja
         echo "MAKE=gmake" >> $GITHUB_ENV
         pushd thirdparty/MoltenVK
         ./build-moltenvk.sh
