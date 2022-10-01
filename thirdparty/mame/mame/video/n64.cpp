@@ -3185,7 +3185,7 @@ n64_rdp::n64_rdp(n64_state &state, uint32_t* rdram, uint32_t* dmem) : poly_manag
 	m_current = 0;
 	m_status = 0x88;
 
-	m_one.set(0xff, 0xff, 0xff, 0xff);
+	m_one.set(0x100, 0x100, 0x100, 0x100);
 	m_zero.set(0, 0, 0, 0);
 
 	m_tmem = nullptr;
