@@ -202,13 +202,21 @@ auto f64repr(f64 f) -> n64 {
   return n64(v);
 }
 
+auto qnan(f32 f) -> bool {
+  return f32repr(f).bit(22); 
+}
+
+auto qnan(f64 f) -> bool {
+  return f64repr(f).bit(51); 
+}
+
 auto CPU::fpuCheckInput(f32& f) -> bool {
   switch (fpclassify(f)) {
   case FP_SUBNORMAL:
     if(fpeUnimplemented()) return exception.floatingPoint(), false;
     return true;
   case FP_NAN:
-    if(!f32repr(f).bit(22) ? fpeUnimplemented() : fpeInvalidOperation())
+    if(qnan(f) ? fpeInvalidOperation() : fpeUnimplemented())
       return exception.floatingPoint(), false;
     return true;
   }
@@ -221,7 +229,7 @@ auto CPU::fpuCheckInput(f64& f) -> bool {
     if(fpeUnimplemented()) return exception.floatingPoint(), false;
     return true;
   case FP_NAN:
-    if(!f64repr(f).bit(51) ? fpeUnimplemented() : fpeInvalidOperation())
+    if(qnan(f) ? fpeInvalidOperation() : fpeUnimplemented())
       return exception.floatingPoint(), false;
     return true;
   }
@@ -358,9 +366,10 @@ auto CPU::FCEIL_W_D(u8 fd, u8 fs) -> void {
 
 #define  XORDERED(type, value, quiet) \
   if(isnan(FS(type)) || isnan(FT(type))) { \
-    if constexpr(!quiet) { \
-      if(fpeInvalidOperation()) return exception.floatingPoint(); \
-    } \
+    if(isnan(FS(type)) && (!quiet || qnan(FS(type))) && fpeInvalidOperation()) \
+      return exception.floatingPoint(); \
+    if(isnan(FT(type)) && (!quiet || qnan(FT(type))) && fpeInvalidOperation()) \
+      return exception.floatingPoint(); \
     CF = value; \
     return; \
   }
