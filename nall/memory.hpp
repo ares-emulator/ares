@@ -204,7 +204,7 @@ inline auto map(u32 size, bool executable) -> void* {
   int flags = MAP_ANON | MAP_PRIVATE;
   if(executable) {
     prot |= PROT_EXEC;
-    #if defined(PLATFORM_MACOS) && defined(ARCHITECTURE_ARM64)
+    #if defined(PLATFORM_MACOS)
     flags |= MAP_JIT;
     #endif
   }
