@@ -11,28 +11,28 @@ ifeq ($(ruby),)
     ruby += audio.openal
     ruby += input.quartz #input.carbon
   else ifeq ($(platform),linux)
-    pkg_check = $(if $(shell pkg-config lib$1 && echo 1),$2)
+    pkg_check = $(if $(shell pkg-config $1 && echo 1),$2)
     ruby += video.glx video.glx2 video.xshm
-    ruby += $(call pkg_check,Xv,video.xvideo)
+    ruby += $(call pkg_check,xv,video.xvideo)
     ruby += audio.oss audio.alsa
     ruby += $(call pkg_check,openal,audio.openal)
-    ruby += $(call pkg_check,pulse,audio.pulseaudio)
-    ruby += $(call pkg_check,pulse-simple,audio.pulseaudiosimple)
+    ruby += $(call pkg_check,libpulse,audio.pulseaudio)
+    ruby += $(call pkg_check,libpulse-simple,audio.pulseaudiosimple)
     ruby += $(call pkg_check,ao,audio.ao)
     ruby += input.xlib
-    ruby += $(call pkg_check,udev,input.udev)
-    ruby += $(call pkg_check,SDL2,input.sdl)
+    ruby += $(call pkg_check,libudev,input.udev)
+    ruby += $(call pkg_check,sdl2,input.sdl)
   else ifeq ($(platform),bsd)
-    pkg_check = $(if $(shell test -e /usr/local/lib/lib$1.so && echo 1),$2)
+    pkg_check = $(if $(shell pkg-config $1 && echo 1),$2)
     ruby += video.glx video.glx2 video.xshm
-    ruby += $(call pkg_check,Xv,video.xvideo)
+    ruby += $(call pkg_check,xv,video.xvideo)
     ruby += audio.oss
     ruby += $(call pkg_check,openal,audio.openal)
-    ruby += $(call pkg_check,pulse,audio.pulseaudio)
-    ruby += $(call pkg_check,pulse-simple,audio.pulseaudiosimple)
+    ruby += $(call pkg_check,libpulse,audio.pulseaudio)
+    ruby += $(call pkg_check,libpulse-simple,audio.pulseaudiosimple)
     ruby += $(call pkg_check,ao,audio.ao)
     ruby += input.uhid input.xlib
-    ruby += $(call pkg_check,SDL2,input.sdl)
+    ruby += $(call pkg_check,sdl2,input.sdl)
   endif
 endif
 
