@@ -76,6 +76,7 @@ struct VideoGDI : VideoDriver {
 
     SetDIBits(_dc, _bitmap, 0, _height, (void*)_buffer, &_info, DIB_RGB_COLORS);
     HDC hdc = GetDC(_context);
+    SetStretchBltMode(hdc, COLORONCOLOR);
     StretchBlt(hdc,
       ((s32)windowWidth - (s32)width) / 2, ((s32)windowHeight - (s32)height) / 2, width, height, _dc,
       0, 0, _width, _height, SRCCOPY
