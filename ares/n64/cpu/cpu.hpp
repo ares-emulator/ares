@@ -632,7 +632,7 @@ struct CPU : Thread {
         n1 unimplementedOperation = 0;
       } cause;
       n1 compare = 0;
-      n1 flushed = 0;
+      n1 flushSubnormals = 0;
     } csr;
   } fpu;
 
@@ -649,6 +649,11 @@ struct CPU : Thread {
   auto fpeOverflow() -> bool;
   auto fpeInvalidOperation() -> bool;
   auto fpeUnimplemented() -> bool;
+  auto fpuCheckInput(f32& f) -> bool;
+  auto fpuCheckInput(f64& f) -> bool;
+  auto fpuCheckOutput(f32& f) -> bool;
+  auto fpuCheckOutput(f64& f) -> bool;
+  auto fpuClearCause() -> void;
 
   auto BC1(bool value, bool likely, s16 imm) -> void;
   auto CFC1(r64& rt, u8 rd) -> void;
