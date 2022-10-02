@@ -123,6 +123,14 @@ auto CPU::setControlRegisterFPU(n5 index, n32 data) -> void {
       case 3: fenv.setRound(float_env::downward);   break;
       }
     }
+
+    if(fpu.csr.cause.inexact          && fpu.csr.enable.inexact)          return exception.floatingPoint();
+    if(fpu.csr.cause.underflow        && fpu.csr.enable.underflow)        return exception.floatingPoint();
+    if(fpu.csr.cause.overflow         && fpu.csr.enable.overflow)         return exception.floatingPoint();
+    if(fpu.csr.cause.divisionByZero   && fpu.csr.enable.divisionByZero)   return exception.floatingPoint();
+    if(fpu.csr.cause.invalidOperation && fpu.csr.enable.invalidOperation) return exception.floatingPoint();
+    if(fpu.csr.cause.unimplementedOperation)                              return exception.floatingPoint();
+
   } break;
   }
 }
