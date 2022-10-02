@@ -262,6 +262,7 @@ auto CPU::decoderFPU() -> void {
   op(0x0d, FTRUNC_W_S, FD, FS);
   op(0x0e, FCEIL_W_S, FD, FS);
   op(0x0f, FFLOOR_W_S, FD, FS);
+  op(0x20, FCVT_S_S, FD, FS);
   op(0x21, FCVT_D_S, FD, FS);
   op(0x24, FCVT_W_S, FD, FS);
   op(0x25, FCVT_L_S, FD, FS);
@@ -302,6 +303,7 @@ auto CPU::decoderFPU() -> void {
   op(0x0e, FCEIL_W_D, FD, FS);
   op(0x0f, FFLOOR_W_D, FD, FS);
   op(0x20, FCVT_S_D, FD, FS);
+  op(0x21, FCVT_D_D, FD, FS);
   op(0x24, FCVT_W_D, FD, FS);
   op(0x25, FCVT_L_D, FD, FS);
   op(0x30, FC_F_D, FS, FT);

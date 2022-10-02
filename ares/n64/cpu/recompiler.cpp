@@ -1490,6 +1490,14 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     return 0;
   }
 
+  //FCVT.S.S Fd,Fs
+  case 0x20: {
+    mov32(reg(1), imm(Fdn));
+    mov32(reg(2), imm(Fsn));
+    call(&CPU::FCVT_S_S);
+    return 0;
+  }
+
   //FCVT.D.S Fd,Fs
   case 0x21: {
     mov32(reg(1), imm(Fdn));
@@ -1784,6 +1792,14 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     mov32(reg(1), imm(Fdn));
     mov32(reg(2), imm(Fsn));
     call(&CPU::FCVT_S_D);
+    return 0;
+  }
+
+  //FCVT.D.D Fd,Fs
+  case 0x21: {
+    mov32(reg(1), imm(Fdn));
+    mov32(reg(2), imm(Fsn));
+    call(&CPU::FCVT_D_D);
     return 0;
   }
 

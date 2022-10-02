@@ -700,10 +700,12 @@ struct CPU : Thread {
   auto FC_ULT_D(u8 fs, u8 ft) -> void;
   auto FC_UN_S(u8 fs, u8 ft) -> void;
   auto FC_UN_D(u8 fs, u8 ft) -> void;
+  auto FCVT_S_S(u8 fd, u8 fs) -> void;
   auto FCVT_S_D(u8 fd, u8 fs) -> void;
   auto FCVT_S_W(u8 fd, u8 fs) -> void;
   auto FCVT_S_L(u8 fd, u8 fs) -> void;
   auto FCVT_D_S(u8 fd, u8 fs) -> void;
+  auto FCVT_D_D(u8 fd, u8 fs) -> void;
   auto FCVT_D_W(u8 fd, u8 fs) -> void;
   auto FCVT_D_L(u8 fd, u8 fs) -> void;
   auto FCVT_L_S(u8 fd, u8 fs) -> void;
