@@ -547,9 +547,15 @@ auto CPU::FC_UN_D(u8 fs, u8 ft) -> void {
 #undef   ORDERED
 #undef UNORDERED
 
+auto CPU::FCVT_S_S(u8 fd, u8 fs) -> void {
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(fpeUnimplemented()) return exception.floatingPoint();
+}
+
 auto CPU::FCVT_S_D(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   auto ffs = FS(f64);
+  if(!fpu.csr.flushSubnormals && ffs > 0 && ffs < FLT_MIN && fpeUnimplemented()) return exception.floatingPoint();
   if(!fpuCheckInput(ffs)) return;
   auto ffd = CHECK_FPE(f32, (f32)ffs);
   if(!fpuCheckOutput(ffd)) return;
@@ -567,6 +573,10 @@ auto CPU::FCVT_S_W(u8 fd, u8 fs) -> void {
 auto CPU::FCVT_S_L(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   auto ffs = FS(s64);
+  if (ffs >= (s64)0x0080'0000'0000'0000ull || ffs <= (s64)0xff80'0000'0000'0000ull) {
+    if (fpeUnimplemented()) return exception.floatingPoint();
+    return;
+  }
   auto ffd = CHECK_FPE(f32, (f32)ffs);
   if(!fpuCheckOutput(ffd)) return;
   FD(f32) = ffd;
@@ -574,17 +584,36 @@ auto CPU::FCVT_S_L(u8 fd, u8 fs) -> void {
 
 auto CPU::FCVT_D_S(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f64) = FS(f32);
+  auto ffs = FS(f32);
+  if(!fpuCheckInput(ffs)) return;
+  auto ffd = CHECK_FPE(f64, (f64)ffs);
+  if(!fpuCheckOutput(ffd)) return;
+  FD(f64) = ffd;
+}
+
+auto CPU::FCVT_D_D(u8 fd, u8 fs) -> void {
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(fpeUnimplemented()) return exception.floatingPoint();
 }
 
 auto CPU::FCVT_D_W(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f64) = FS(s32);
+  auto ffs = FS(s32);
+  auto ffd = CHECK_FPE(f64, (f64)ffs);
+  if(!fpuCheckOutput(ffd)) return;
+  FD(f64) = ffd;
 }
 
 auto CPU::FCVT_D_L(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
-  FD(f64) = FS(s64);
+  auto ffs = FS(s64);
+  if (ffs >= (s64)0x0080'0000'0000'0000ull || ffs <= (s64)0xff80'0000'0000'0000ull) {
+    if (fpeUnimplemented()) return exception.floatingPoint();
+    return;
+  }
+  auto ffd = CHECK_FPE(f64, (f64)ffs);
+  if(!fpuCheckOutput(ffd)) return;
+  FD(f64) = ffs;
 }
 
 auto CPU::FCVT_L_S(u8 fd, u8 fs) -> void {

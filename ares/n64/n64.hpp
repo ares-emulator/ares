@@ -3,6 +3,7 @@
 
 #define XXH_INLINE_ALL
 #include <xxhash.h>
+#include <float.h>
 #include <ares/ares.hpp>
 #include <nall/float-env.hpp>
 #include <nall/hashset.hpp>
