@@ -326,14 +326,34 @@ auto CPU::decoderFPU() -> void {
 
   if((OP >> 21 & 31) == 20)
   switch(OP & 0x3f) {
+  op(0x08, FROUND_L_W, FD, FS);
+  op(0x09, FTRUNC_L_W, FD, FS);
+  op(0x0a, FCEIL_L_W, FD, FS);
+  op(0x0b, FFLOOR_L_W, FD, FS);
+  op(0x0c, FROUND_W_W, FD, FS);
+  op(0x0d, FTRUNC_W_W, FD, FS);
+  op(0x0e, FCEIL_W_W, FD, FS);
+  op(0x0f, FFLOOR_W_W, FD, FS);
   op(0x20, FCVT_S_W, FD, FS);
   op(0x21, FCVT_D_W, FD, FS);
+  op(0x24, FCVT_W_W, FD, FS);
+  op(0x25, FCVT_L_W, FD, FS);
   }
 
   if((OP >> 21 & 31) == 21)
   switch(OP & 0x3f) {
+  op(0x08, FROUND_L_L, FD, FS);
+  op(0x09, FTRUNC_L_L, FD, FS);
+  op(0x0a, FCEIL_L_L, FD, FS);
+  op(0x0b, FFLOOR_L_L, FD, FS);
+  op(0x0c, FROUND_W_L, FD, FS);
+  op(0x0d, FTRUNC_W_L, FD, FS);
+  op(0x0e, FCEIL_W_L, FD, FS);
+  op(0x0f, FFLOOR_W_L, FD, FS);
   op(0x20, FCVT_S_L, FD, FS);
   op(0x21, FCVT_D_L, FD, FS);
+  op(0x24, FCVT_W_L, FD, FS);
+  op(0x25, FCVT_L_L, FD, FS);
   }
 
   //undefined instructions do not throw a reserved instruction exception

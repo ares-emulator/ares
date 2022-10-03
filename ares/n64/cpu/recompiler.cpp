@@ -1950,7 +1950,16 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   }
 
   if((instruction >> 21 & 31) == 20)
-  switch(instruction & 0x3f) {
+  switch(instruction & 0x3f) {    
+  case 0x08 ... 0x0f: {
+    call(&CPU::COP1UNIMPLEMENTED);
+    return 0;
+  }
+
+  case 0x24 ... 0x25: {
+    call(&CPU::COP1UNIMPLEMENTED);
+    return 0;
+  }
 
   //FCVT.S.W Fd,Fs
   case 0x20: {
@@ -1972,6 +1981,14 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
 
   if((instruction >> 21 & 31) == 21)
   switch(instruction & 0x3f) {
+  case 0x08 ... 0x0f: {
+    call(&CPU::COP1UNIMPLEMENTED);
+    return 0;
+  }
+  case 0x24 ... 0x25: {
+    call(&CPU::COP1UNIMPLEMENTED);
+    return 0;
+  }
 
   //FCVT.S.L
   case 0x20: {
