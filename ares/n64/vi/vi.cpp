@@ -123,10 +123,15 @@ auto VI::refresh() -> void {
   u32 vscan_stop  = vscan_start + vscan_len;
   screen->setViewport(0, 0, hscan_len, vscan_len);
 
-  u32 dy0 = max(vscan_start, vi.io.vstart);
-  u32 dy1 = min(vscan_stop,  vi.io.vend);
-  u32 dx0 = max(hscan_start, vi.io.hstart);
-  u32 dx1 = min(hscan_stop,  vi.io.hend);
+  u32 dy0 = vi.io.vstart;
+  u32 dy1 = vi.io.vend;   if (dy1 < dy0) dy1 = vscan_stop;
+  u32 dx0 = vi.io.hstart;
+  u32 dx1 = vi.io.hend;
+
+  dy0 = max(vscan_start, dy0);
+  dy1 = min(vscan_stop,  dy1);
+  dx0 = max(hscan_start, dx0);
+  dx1 = min(hscan_stop,  dx1);
 
   u32 pitch = vi.io.width;
   if(vi.io.colorDepth == 2) {
