@@ -15,7 +15,7 @@ auto VDP::load(Node::Object parent) -> void {
   screen->colors(1 << 4, {&VDP::color, this});
   screen->setSize(256, 192);
   screen->setScale(1.0, 1.0);
-  screen->setAspect(1.0, 1.0);
+  screen->setAspect(8.0, 7.0);
   screen->setViewport(0, 0, 256, 192);
 
   TMS9918::load(screen);
