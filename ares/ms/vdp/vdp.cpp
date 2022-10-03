@@ -42,7 +42,7 @@ auto VDP::load(Node::Object parent) -> void {
     screen->colors(1 << 12, {&VDP::colorGameGear, this});
     screen->setSize(160, 144);
     screen->setScale(1.0, 1.0);
-    screen->setAspect(8.0, 7.0);
+    screen->setAspect(6.0, 5.0);
     screen->setViewport(0, 0, 256, 240);
 
     interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
