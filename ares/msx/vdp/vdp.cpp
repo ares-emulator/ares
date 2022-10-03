@@ -14,7 +14,7 @@ auto VDP::load(Node::Object parent) -> void {
     screen->colors(1 << 4, {&VDP::colorMSX, this});
     screen->setSize(256, 192);
     screen->setScale(1.0, 1.0);
-    screen->setAspect(1.0, 1.0);
+    screen->setAspect(8.0, 7.0);
     TMS9918::vram.allocate(16_KiB, 0x00);
     TMS9918::load(screen);
   }
@@ -24,7 +24,7 @@ auto VDP::load(Node::Object parent) -> void {
     screen->colors(1 << 9, {&VDP::colorMSX2, this});
     screen->setSize(512, 424);
     screen->setScale(0.5, 0.5);
-    screen->setAspect(1.0, 1.0);
+    screen->setAspect(8.0, 7.0);
     V9938::vram.allocate(128_KiB, 0x00);
     V9938::xram.allocate(64_KiB, 0x00);
     V9938::pram.allocate(16);
