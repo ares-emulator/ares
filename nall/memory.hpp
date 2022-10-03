@@ -238,7 +238,7 @@ inline auto protect(void* target, u32 size, bool executable) -> void {
 }
 
 inline auto jitprotect(bool executable) -> void {
-  #if defined(PLATFORM_MACOS) && defined(ARCHITECTURE_ARM64)
+  #if defined(PLATFORM_MACOS)
   if(__builtin_available(macOS 11.0, *)) {
     pthread_jit_write_protect_np(executable);
   }
