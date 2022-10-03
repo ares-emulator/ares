@@ -654,6 +654,8 @@ struct CPU : Thread {
   auto fpuCheckOutput(f32& f) -> bool;
   auto fpuCheckOutput(f64& f) -> bool;
   auto fpuClearCause() -> void;
+  template<typename DST, typename SF>
+  auto fpuCheckInputConv(SF& f) -> bool;
 
   auto BC1(bool value, bool likely, s16 imm) -> void;
   auto CFC1(r64& rt, u8 rd) -> void;
@@ -666,8 +668,12 @@ struct CPU : Thread {
   auto FADD_D(u8 fd, u8 fs, u8 ft) -> void;
   auto FCEIL_L_S(u8 fd, u8 fs) -> void;
   auto FCEIL_L_D(u8 fd, u8 fs) -> void;
+  auto FCEIL_L_W(u8 fd, u8 fs) -> void;
+  auto FCEIL_L_L(u8 fd, u8 fs) -> void;
   auto FCEIL_W_S(u8 fd, u8 fs) -> void;
   auto FCEIL_W_D(u8 fd, u8 fs) -> void;
+  auto FCEIL_W_W(u8 fd, u8 fs) -> void;
+  auto FCEIL_W_L(u8 fd, u8 fs) -> void;
   auto FC_EQ_S(u8 fs, u8 ft) -> void;
   auto FC_EQ_D(u8 fs, u8 ft) -> void;
   auto FC_F_S(u8 fs, u8 ft) -> void;
@@ -710,14 +716,22 @@ struct CPU : Thread {
   auto FCVT_D_L(u8 fd, u8 fs) -> void;
   auto FCVT_L_S(u8 fd, u8 fs) -> void;
   auto FCVT_L_D(u8 fd, u8 fs) -> void;
+  auto FCVT_L_W(u8 fd, u8 fs) -> void;
+  auto FCVT_L_L(u8 fd, u8 fs) -> void;
   auto FCVT_W_S(u8 fd, u8 fs) -> void;
   auto FCVT_W_D(u8 fd, u8 fs) -> void;
+  auto FCVT_W_W(u8 fd, u8 fs) -> void;
+  auto FCVT_W_L(u8 fd, u8 fs) -> void;
   auto FDIV_S(u8 fd, u8 fs, u8 ft) -> void;
   auto FDIV_D(u8 fd, u8 fs, u8 ft) -> void;
   auto FFLOOR_L_S(u8 fd, u8 fs) -> void;
   auto FFLOOR_L_D(u8 fd, u8 fs) -> void;
+  auto FFLOOR_L_W(u8 fd, u8 fs) -> void;
+  auto FFLOOR_L_L(u8 fd, u8 fs) -> void;
   auto FFLOOR_W_S(u8 fd, u8 fs) -> void;
   auto FFLOOR_W_D(u8 fd, u8 fs) -> void;
+  auto FFLOOR_W_W(u8 fd, u8 fs) -> void;
+  auto FFLOOR_W_L(u8 fd, u8 fs) -> void;
   auto FMOV_S(u8 fd, u8 fs) -> void;
   auto FMOV_D(u8 fd, u8 fs) -> void;
   auto FMUL_S(u8 fd, u8 fs, u8 ft) -> void;
@@ -726,16 +740,24 @@ struct CPU : Thread {
   auto FNEG_D(u8 fd, u8 fs) -> void;
   auto FROUND_L_S(u8 fd, u8 fs) -> void;
   auto FROUND_L_D(u8 fd, u8 fs) -> void;
+  auto FROUND_L_W(u8 fd, u8 fs) -> void;
+  auto FROUND_L_L(u8 fd, u8 fs) -> void;
   auto FROUND_W_S(u8 fd, u8 fs) -> void;
   auto FROUND_W_D(u8 fd, u8 fs) -> void;
+  auto FROUND_W_W(u8 fd, u8 fs) -> void;
+  auto FROUND_W_L(u8 fd, u8 fs) -> void;
   auto FSQRT_S(u8 fd, u8 fs) -> void;
   auto FSQRT_D(u8 fd, u8 fs) -> void;
   auto FSUB_S(u8 fd, u8 fs, u8 ft) -> void;
   auto FSUB_D(u8 fd, u8 fs, u8 ft) -> void;
   auto FTRUNC_L_S(u8 fd, u8 fs) -> void;
   auto FTRUNC_L_D(u8 fd, u8 fs) -> void;
+  auto FTRUNC_L_W(u8 fd, u8 fs) -> void;
+  auto FTRUNC_L_L(u8 fd, u8 fs) -> void;
   auto FTRUNC_W_S(u8 fd, u8 fs) -> void;
   auto FTRUNC_W_D(u8 fd, u8 fs) -> void;
+  auto FTRUNC_W_W(u8 fd, u8 fs) -> void;
+  auto FTRUNC_W_L(u8 fd, u8 fs) -> void;
   auto LDC1(u8 ft, cr64& rs, s16 imm) -> void;
   auto LWC1(u8 ft, cr64& rs, s16 imm) -> void;
   auto MFC1(r64& rt, u8 fs) -> void;
@@ -743,6 +765,7 @@ struct CPU : Thread {
   auto SDC1(u8 ft, cr64& rs, s16 imm) -> void;
   auto SWC1(u8 ft, cr64& rs, s16 imm) -> void;
   auto COP1INVALID() -> void;
+  auto COP1UNIMPLEMENTED() -> void;
 
   //interpreter-cop2.cpp
   struct COP2 {
