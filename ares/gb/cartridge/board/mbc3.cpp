@@ -37,9 +37,6 @@ struct MBC3 : Interface {
   }
 
   auto save() -> void override {
-    Interface::save(ram, "save.ram");
-    Interface::save(rtc, "time.rtc");
-
     if(rtc.size() == 13) {
       rtc[0] = io.rtc.second;
       rtc[1] = io.rtc.minute;
@@ -52,6 +49,9 @@ struct MBC3 : Interface {
         rtc[5 + index] = timestamp.byte(index);
       }
     }
+
+    Interface::save(ram, "save.ram");
+    Interface::save(rtc, "time.rtc");
   }
 
   auto unload() -> void override {
@@ -174,7 +174,9 @@ struct MBC3 : Interface {
   }
 
   auto power() -> void override {
-    io = {};
+    io.rom = {};
+    io.ram = {};
+    //io.rtc registers are initialized by load()
   }
 
   auto serialize(serializer& s) -> void override {

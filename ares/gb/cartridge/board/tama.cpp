@@ -47,9 +47,6 @@ struct TAMA : Interface {
   }
 
   auto save() -> void override {
-    Interface::save(ram, "save.ram");
-    Interface::save(rtc, "time.rtc");
-
     if(rtc.size() == 15) {
       rtc[0] = toBCD(io.rtc.year);
       rtc[1] = toBCD(io.rtc.month);
@@ -64,6 +61,9 @@ struct TAMA : Interface {
         rtc[7 + index] = timestamp.byte(index);
       }
     }
+
+    Interface::save(ram, "save.ram");
+    Interface::save(rtc, "time.rtc");
   }
 
   auto unload() -> void override {
