@@ -343,7 +343,7 @@ auto GameBoy::analyze(vector<u8>& rom) -> string {
     if(label == "KORO2 KIRBY" && serial == "KKKJ") eepromSize = 256;
   }
 
-  if(mapper == "MBC3" && rtc) rtcSize = 13;
+  if(mapper.beginsWith("MBC3") && rtc) rtcSize = 13;
   if(mapper == "TAMA" && rtc) rtcSize = 15;
 
   string s;
