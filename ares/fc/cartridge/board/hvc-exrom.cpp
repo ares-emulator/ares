@@ -192,7 +192,7 @@ struct HVC_ExROM : Interface {  //MMC5
     n8 bank;
 
     if((address & 0xe000) == 0x6000) {
-      bank = ramSelect << 2 | ramBank;
+      bank = (revision == Revision::ETROM) ? ramSelect : ramSelect << 2 | ramBank;
       address &= 0x1fff;
     } else if(programMode == 0) {
       bank = programBank[3] & ~3;
@@ -222,6 +222,7 @@ struct HVC_ExROM : Interface {  //MMC5
       if(rom) {
         return programROM.read(bank << 13 | address);
       } else {
+        if(!programRAM) return data;
         return programRAM.read(bank << 13 | address);
       }
     } else {
@@ -229,7 +230,7 @@ struct HVC_ExROM : Interface {  //MMC5
         programROM.write(bank << 13 | address, data);
       } else {
         if(ramWriteProtect[0] == 2 && ramWriteProtect[1] == 1) {
-          programRAM.write(bank << 13 | address, data);
+          if(programRAM) programRAM.write(bank << 13 | address, data);
         }
       }
       return 0x00;
