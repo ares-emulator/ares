@@ -1,5 +1,5 @@
 database
-  revision: 2022-01-26
+  revision: 2022-10-09
 
 game
   sha256: 4f6fa63277b7a114a24e8d67175ff3f7b993fa5db569d8b689ec20ccf1b0c0d3
@@ -2079,6 +2079,31 @@ game
       content: Character
 
 game
+  sha256: 39a86e28afe46af9c7fd2158afc368c873f4a266f03d8d8ced9a752f5caa9434
+  name:   Aoki Ookami to Shiroki Mejika - Genchou Hishi (Japan)
+  title:  Aoki Ookami to Shiroki Mejika - Genchou Hishi (Japan)
+  region: NTSC-J
+  board:  HVC-EWROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x80000
+      content: Program
+    memory
+      type: RAM
+      size: 0x8000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
   sha256: 1d1fdadb35660db0048f20e056d61dc80726ef9b6d08f49f1799af6b364549db
   name:   Aoki Ookami to Shiroki Mejika - Genghis Khan (Japan)
   title:  Aoki Ookami to Shiroki Mejika - Genghis Khan (Japan)
@@ -3210,6 +3235,31 @@ game
     memory
       type: ROM
       size: 0x8000
+      content: Character
+
+game
+  sha256: 1ca05fb702996a110d14a9a4da19ca1bef92afe8003f3db85146045b95a782ff
+  name:   Bandit Kings of Ancient China (USA)
+  title:  Bandit Kings of Ancient China (USA)
+  region: NTSC-U
+  board:  HVC-ETROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x4000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
@@ -6613,6 +6663,48 @@ game
       content: Character
 
 game
+  sha256: 9a09e0da4fefc8fd57ee2ed196acdced97cb66033254a8c56b5c999ff0f915f8
+  name:   Castlevania III - Dracula's Curse (Europe)
+  title:  Castlevania III - Dracula's Curse (Europe)
+  region: PAL
+  board:  HVC-ELROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 6e8d289635ac39479ff1d36733aa3f8b9650593ab972cedb8e2cdbfc03aaa739
+  name:   Castlevania III - Dracula's Curse (USA)
+  title:  Castlevania III - Dracula's Curse (USA)
+  region: NTSC-U
+  board:  HVC-ELROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 52451a89296cfcb006beb6363ddc8486fcc88154338cbec778a846056c522f50
   name:   Cat Ninden Teyandee (Japan)
   title:  Cat Ninden Teyandee (Japan)
@@ -8477,6 +8569,31 @@ game
     memory
       type: ROM
       size: 0x40000
+      content: Character
+
+game
+  sha256: 1680afb5d0408c8ad0d960e577cd367b08a1967db83d04083c0bb4d638cb30eb
+  name:   Daikoukai Jidai (Japan)
+  title:  Daikoukai Jidai (Japan)
+  region: NTSC-J
+  board:  HVC-ETROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x80000
+      content: Program
+    memory
+      type: RAM
+      size: 0x4000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
@@ -12405,6 +12522,56 @@ game
       content: Character
 
 game
+  sha256: 9d408f17134b0f33fd63c931b106726a93cfd60c16d85e2002a07146d4469f20
+  name:   Empereur, L' (Japan)
+  title:  Empereur, L' (Japan)
+  region: NTSC-J
+  board:  HVC-ETROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x4000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: a899f4f8b7ded48a3ac6688d143e0a136170cb74b30386998a77188a329ac17b
+  name:   Empereur, L' (USA)
+  title:  Empereur, L' (USA)
+  region: NTSC-U
+  board:  HVC-ETROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x4000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: badedff174fd32fcaad914ea72d04763b828ed4d1d883e8c902cb668ea52b92a
   name:   Eric Cantona Football Challenge - Goal! 2 (Europe)
   title:  Eric Cantona Football Challenge - Goal! 2 (Europe)
@@ -16017,6 +16184,31 @@ game
       content: Character
 
 game
+  sha256: c7dae9170fcd7cbc885f67ad36cfca5f525f7311dd3255610b175564472e5264
+  name:   Gemfire (USA)
+  title:  Gemfire (USA)
+  region: NTSC-U
+  board:  HVC-EKROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
   sha256: 2a2f75c2be5f6952428612f019a4a4efa86bc64aace21a08d8d2b9d8859c3034
   name:   Genghis Khan (USA)
   title:  Genghis Khan (USA)
@@ -17524,6 +17716,27 @@ game
   board:  HVC-TLROM
     chip
       type: MMC3B
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: 4693fe0d42aba9054f3192e5fcefc06acf900bf8a20cef611156510e5fc304d1
+  name:   Gun Sight (Japan)
+  title:  Gun Sight (Japan)
+  region: NTSC-J
+  board:  HVC-ELROM
+    chip
+      type: MMC5
     memory
       type: ROM
       size: 0x10
@@ -20393,6 +20606,31 @@ game
       volatile
 
 game
+  sha256: 609b00132096c9d917994dca775c504819b0212a05999b0f28ae4604e44a762a
+  name:   Ishin no Arashi (Japan)
+  title:  Ishin no Arashi (Japan)
+  region: NTSC-J
+  board:  HVC-ETROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x4000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 401e5d3afb4d623308458e2c6c594fd38faa8cd9e5276d39b4052e996f937216
   name:   Isolated Warrior (Europe)
   title:  Isolated Warrior (Europe)
@@ -21528,6 +21766,31 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: f40341cf7e76480465ba8ab2d09e44644c3e3af7d647dc04c8b38357b26e014a
+  name:   Just Breed (Japan)
+  title:  Just Breed (Japan)
+  region: NTSC-J
+  board:  HVC-EKROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x80000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
       content: Character
 
 game
@@ -23874,6 +24137,27 @@ game
     memory
       type: ROM
       size: 0x10000
+      content: Character
+
+game
+  sha256: 764b80a6291f138fe507db735a16b44083cdb45d0337a5c5eb1827986268dbe1
+  name:   Laser Invasion (USA)
+  title:  Laser Invasion (USA)
+  region: NTSC-U
+  board:  HVC-ELROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
       content: Character
 
 game
@@ -27172,6 +27456,27 @@ game
     memory
       type: ROM
       size: 0x40000
+      content: Character
+
+game
+  sha256: ab53cffdadce293f68c1d22ffc74db56efbe14d18948c9e1db7b1cf5b0f1de4c
+  name:   Metal Slader Glory (Japan)
+  title:  Metal Slader Glory (Japan)
+  region: NTSC-J
+  board:  HVC-ELROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x80000
+      content: Program
+    memory
+      type: ROM
+      size: 0x80000
       content: Character
 
 game
@@ -30557,6 +30862,106 @@ game
       content: Character
 
 game
+  sha256: e582e18124cdaabec66bf6851f39061ad9ef073da54fd593fa82815dd351c949
+  name:   Nobunaga no Yabou - Bushou Fuuun Roku (Japan)
+  title:  Nobunaga no Yabou - Bushou Fuuun Roku (Japan)
+  region: NTSC-J
+  board:  HVC-EWROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x80000
+      content: Program
+    memory
+      type: RAM
+      size: 0x8000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: b7e6b32c776fc36bd3450582b554e8876984c75d6db38520f13b5fb4cfce0e1d
+  name:   Nobunaga no Yabou - Bushou Fuuun Roku (Japan) (Rev 1)
+  title:  Nobunaga no Yabou - Bushou Fuuun Roku (Japan) (Rev 1)
+  region: NTSC-J
+  board:  HVC-EWROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x80000
+      content: Program
+    memory
+      type: RAM
+      size: 0x8000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: fc948e7ac70e80bc9b84650ad964062f86746d5f2d9344f4eef1c326426dfad9
+  name:   Nobunaga no Yabou - Sengoku Gunyuuden (Japan)
+  title:  Nobunaga no Yabou - Sengoku Gunyuuden (Japan)
+  region: NTSC-J
+  board:  HVC-ETROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x4000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: d95a2d9ed78e89184d1040f7d5991843babba29a03cabf54685a8ac16ecb5360
+  name:   Nobunaga no Yabou - Sengoku Gunyuuden (Japan) (Rev 1)
+  title:  Nobunaga no Yabou - Sengoku Gunyuuden (Japan) (Rev 1)
+  region: NTSC-J
+  board:  HVC-ETROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x4000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: cdcdb39322241b3a8b4a32c4558403888b131f28b137f178622a9c85c9f3a619
   name:   Nobunaga no Yabou - Zenkoku Ban (Japan)
   title:  Nobunaga no Yabou - Zenkoku Ban (Japan)
@@ -30633,6 +31038,31 @@ game
       size: 0x2000
       content: Character
       volatile
+
+game
+  sha256: ac192342f14b41fefdaa1a425c1d2907a1b8dc0f71a87892e9130f2c2b476a84
+  name:   Nobunaga's Ambition II (USA)
+  title:  Nobunaga's Ambition II (USA)
+  region: NTSC-U
+  board:  HVC-ETROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x4000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
 
 game
   sha256: 4288e508734836e6ddd123dfae39a7a388abdd0afdc9d885ed597ee58a62fc61
@@ -35538,6 +35968,31 @@ game
       volatile
 
 game
+  sha256: 99c6775ac55cb243110608836193be2ecff5ac3ef6bc75ab45b466cd275f9de0
+  name:   Romance of the Three Kingdoms II (USA)
+  title:  Romance of the Three Kingdoms II (USA)
+  region: NTSC-U
+  board:  HVC-EWROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x8000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
   sha256: ec422cd0e074422171288eb340f89de3e1fb29d9d3fa007ae8a3e9739138ce45
   name:   Romancia (Japan)
   title:  Romancia (Japan)
@@ -35650,6 +36105,31 @@ game
     memory
       type: ROM
       size: 0x2000
+      content: Character
+
+game
+  sha256: dbbfa8a0bad50ff13733e9d58e9b62b167081f49525d7b6fbde0e522a6380e3b
+  name:   Royal Blood (Japan)
+  title:  Royal Blood (Japan)
+  region: NTSC-J
+  board:  HVC-EKROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
       content: Character
 
 game
@@ -36087,6 +36567,56 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: f67f930b57a327233e5a00a181b974be1fa723c8a79152e3647cffbdabd5b224
+  name:   Sangokushi II (Japan)
+  title:  Sangokushi II (Japan)
+  region: NTSC-J
+  board:  HVC-EWROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x8000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: e156b97113f266c31b058dd102ec6fca0ca7d8e59aa070a43d256fca6a67d5cc
+  name:   Sangokushi II (Japan) (Rev 1)
+  title:  Sangokushi II (Japan) (Rev 1)
+  region: NTSC-J
+  board:  HVC-EWROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x8000
+      content: Save
+    memory
+      type: ROM
+      size: 0x40000
       content: Character
 
 game
@@ -37396,6 +37926,31 @@ game
       size: 0x2000
       content: Character
       volatile
+
+game
+  sha256: 306e65d47fa89dcccb7c77ee42e3fdad202b2d77439faa94f49d8e1ff961d40e
+  name:   Shin 4 Nin Uchi Mahjong - Yakuman Tengoku (Japan)
+  title:  Shin 4 Nin Uchi Mahjong - Yakuman Tengoku (Japan)
+  region: NTSC-J
+  board:  HVC-EKROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
 
 game
   sha256: d345e0891826cbf448f82976264a58f0d68e36fb815c502adf31aa5b513e6591
@@ -40239,6 +40794,31 @@ game
     memory
       type: RAM
       size: 0x2000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
+  sha256: ef96976c411b1fe1383c4a33c577551001f69d7bfe516c5df5af825626147551
+  name:   Suikoden - Tenmei no Chikai (Japan)
+  title:  Suikoden - Tenmei no Chikai (Japan)
+  region: NTSC-J
+  board:  HVC-ETROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: RAM
+      size: 0x4000
       content: Save
     memory
       type: ROM
@@ -45234,6 +45814,27 @@ game
       content: Character
 
 game
+  sha256: 025ac49f984a97c7b96a8d9ddb8fccb9648c397c41f635f45b8854c3e9fd19b6
+  name:   Uchuu Keibitai SDF (Japan)
+  title:  Uchuu Keibitai SDF (Japan)
+  region: NTSC-J
+  board:  HVC-ELROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
+
+game
   sha256: 407e54848ad9991399f0383118f138d3a0532bb03bb488ed856deb7f2eb4efbf
   name:   Uchuusen Cosmo Carrier (Japan)
   title:  Uchuusen Cosmo Carrier (Japan)
@@ -45554,6 +46155,31 @@ game
       size: 0x2000
       content: Character
       volatile
+
+game
+  sha256: 1f368ff0f1d03bfd4cc3a810b20f4a49e0f9a4325fd3f6ae08cb61d6fbaec142
+  name:   Uncharted Waters (USA)
+  title:  Uncharted Waters (USA)
+  region: NTSC-U
+  board:  HVC-ETROM
+    chip
+      type: MMC5
+    memory
+      type: ROM
+      size: 0x10
+      content: iNES
+    memory
+      type: ROM
+      size: 0x80000
+      content: Program
+    memory
+      type: RAM
+      size: 0x4000
+      content: Save
+    memory
+      type: ROM
+      size: 0x20000
+      content: Character
 
 game
   sha256: 955abe39d0a45dab909510d24af99b4e71fe7cc24e3784bbfb9d02ed16ed2ef2
