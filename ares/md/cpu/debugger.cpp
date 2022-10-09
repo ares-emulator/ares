@@ -10,6 +10,7 @@ auto CPU::Debugger::load(Node::Object parent) -> void {
 
   tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "CPU");
   tracer.instruction->setAddressBits(24);
+  tracer.instruction->setDepth(8);
 
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "CPU");
 }
