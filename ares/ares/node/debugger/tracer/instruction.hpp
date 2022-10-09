@@ -24,7 +24,7 @@ struct Instruction : Tracer {
     _depth = depth;
     _history.reset();
     _history.resize(depth);
-    for(auto& history : _history) history = ~0;
+    for(auto& history : _history) history = ~0ull;
   }
 
   auto address(u64 address) -> bool {
@@ -120,6 +120,6 @@ protected:
 //unserialized:
   n64 _address = 0;
   n64 _omitted = 0;
-  vector<u32> _history;
+  vector<u64> _history;
   vector<u08> _masks;
 };
