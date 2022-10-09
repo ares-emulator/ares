@@ -1,6 +1,7 @@
 auto SVP::Debugger::load(Node::Object parent) -> void {
   tracer.instruction = parent->append<Node::Debugger::Tracer::Instruction>("Instruction", "SVP");
   tracer.instruction->setAddressBits(16);
+  tracer.instruction->setDepth(16);
 
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "SVP");
 }
