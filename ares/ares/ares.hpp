@@ -12,6 +12,7 @@
 #include <nall/directory.hpp>
 #include <nall/dl.hpp>
 #include <nall/endian.hpp>
+#include <nall/hashset.hpp>
 #include <nall/image.hpp>
 #include <nall/literals.hpp>
 #include <nall/priority-queue.hpp>
