@@ -192,7 +192,8 @@ struct HVC_ExROM : Interface {  //MMC5
     n8 bank;
 
     if((address & 0xe000) == 0x6000) {
-      bank = (revision == Revision::ETROM) ? ramSelect : ramSelect << 2 | ramBank;
+      bank = ramSelect << 2 | ramBank;
+      if(revision == Revision::ETROM) bank = ramSelect;
       address &= 0x1fff;
     } else if(programMode == 0) {
       bank = programBank[3] & ~3;
