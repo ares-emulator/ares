@@ -155,9 +155,7 @@ struct HVC_ExROM : Interface {  //MMC5
   }
 
   auto main() -> void override {
-    //scanline() resets this; if no scanlines detected, enter video blanking period
-    if(cycleCounter >= 200) blank();  //113-114 normal; ~2500 across Vblank period
-    else cycleCounter++;
+    if(cycleCounter && --cycleCounter == 0) blank();
 
     if(timerCounter && --timerCounter == 0) {
       timerLine = 1;
@@ -178,7 +176,6 @@ struct HVC_ExROM : Interface {  //MMC5
   }
 
   auto scanline() -> void {
-    cycleCounter = 0;
     hcounter = 0;
 
     if(!inFrame) {
@@ -303,6 +300,12 @@ struct HVC_ExROM : Interface {  //MMC5
       timerLine = 0;
       return data;
     }
+
+    case 0xfffa: case 0xfffb:
+      inFrame = 0;
+      vcounter = 0;
+      irqLine = 0;
+      break;
     }
 
     return 0x00;
@@ -639,6 +642,7 @@ struct HVC_ExROM : Interface {  //MMC5
   }
 
   auto readCHR(n32 address, n8 data) -> n8 override {
+    cycleCounter = 3;
     characterAccess[0] = characterAccess[1];
     characterAccess[1] = characterAccess[2];
     characterAccess[2] = characterAccess[3];
@@ -793,7 +797,7 @@ struct HVC_ExROM : Interface {  //MMC5
 
   //status registers
 
-  n8  cycleCounter;
+  n2  cycleCounter;
   n1  irqLine;
   n1  inFrame;
 
