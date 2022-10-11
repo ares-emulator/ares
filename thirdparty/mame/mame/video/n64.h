@@ -281,6 +281,7 @@ public:
 	color_t         m_prim_lod_fraction;    /* fixed LOD fraction for this poly */
 
 	color_t         m_one;
+	color_t         m_onecc;
 	color_t         m_zero;
 
 	uint32_t          m_fill_color;
