@@ -605,7 +605,7 @@ void n64_rdp::set_suba_input_rgb(color_t** input, int32_t code, rdp_span_aux* us
 		case 3:     *input = &userdata->m_prim_color; break;
 		case 4:     *input = &userdata->m_shade_color; break;
 		case 5:     *input = &userdata->m_env_color; break;
-		case 6:     *input = &m_one; break;
+		case 6:     *input = &m_onecc; break;
 		case 7:     *input = &userdata->m_noise_color; break;
 		case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
 		{
@@ -671,7 +671,7 @@ void n64_rdp::set_add_input_rgb(color_t** input, int32_t code, rdp_span_aux* use
 		case 3:     *input = &userdata->m_prim_color; break;
 		case 4:     *input = &userdata->m_shade_color; break;
 		case 5:     *input = &userdata->m_env_color; break;
-		case 6:     *input = &m_one; break;
+		case 6:     *input = &m_onecc; break;
 		case 7:     *input = &m_zero; break;
 	}
 }
@@ -686,7 +686,7 @@ void n64_rdp::set_sub_input_alpha(color_t** input, int32_t code, rdp_span_aux* u
 		case 3:     *input = &userdata->m_prim_alpha; break;
 		case 4:     *input = &userdata->m_shade_alpha; break;
 		case 5:     *input = &userdata->m_env_alpha; break;
-		case 6:     *input = &m_one; break;
+		case 6:     *input = &m_onecc; break;
 		case 7:     *input = &m_zero; break;
 	}
 }
@@ -3186,6 +3186,7 @@ n64_rdp::n64_rdp(n64_state &state, uint32_t* rdram, uint32_t* dmem) : poly_manag
 	m_status = 0x88;
 
 	m_one.set(0xff, 0xff, 0xff, 0xff);
+	m_onecc.set(0x100, 0x100, 0x100, 0x100);
 	m_zero.set(0, 0, 0, 0);
 
 	m_tmem = nullptr;
