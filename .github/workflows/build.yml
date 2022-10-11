@@ -44,7 +44,7 @@ jobs:
         sudo apt-get update -y -qq
         sudo apt-get install libsdl2-dev libgtksourceview2.0-dev libgtk2.0-dev libao-dev libopenal-dev   
     - name: "macOS: Import Certificate"
-      if: runner.os == 'macOS'
+      if: runner.os == 'macOS' && github.event_name != 'pull_request'
       uses: devbotsxyz/import-signing-certificate@2ac4f44d28045073d23153256efbb4c4b2d8aa22    # Don't use rolling branch for security reasons
       with:
         certificate-data: ${{ secrets.MACOS_CERTIFICATE_DATA }}
@@ -81,7 +81,7 @@ jobs:
         MACOS_KEYCHAIN_NAME: ares-macos-keychain
         MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
     - name: "Windows: sign"
-      if: runner.os == 'Windows'
+      if: runner.os == 'Windows' && github.event_name != 'pull_request'
       uses: DanaBear/code-sign-action@98c79121b376beab8d6a9484f445089db4461bca
       with:
         certificate: '${{ secrets.WIN_CERTIFICATE }}'
@@ -91,7 +91,7 @@ jobs:
         folder: 'desktop-ui/out'
         timestampUrl: 'http://timestamp.digicert.com' 
     - name: "macOS: notarize"
-      if: runner.os == 'macOS'
+      if: runner.os == 'macOS' && github.event_name != 'pull_request'
       run: |
         ditto -c -k --keepParent desktop-ui/out/ares.app /tmp/ares.zip
         xcrun notarytool submit /tmp/ares.zip --apple-id "$MACOS_NOTARIZATION_USERNAME" --password "$MACOS_NOTARIZATION_PASSWORD" --team-id "$MACOS_NOTARIZATION_TEAMID" --wait
