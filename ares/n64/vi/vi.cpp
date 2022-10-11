@@ -123,26 +123,30 @@ auto VI::refresh() -> void {
   u32 vscan_stop  = vscan_start + vscan_len;
   screen->setViewport(0, 0, hscan_len, vscan_len);
 
-  u32 dy0 = vi.io.vstart;
-  u32 dy1 = vi.io.vend;   if (dy1 < dy0) dy1 = vscan_stop;
-  u32 dx0 = vi.io.hstart;
-  u32 dx1 = vi.io.hend;
+  i32 dy0 = vi.io.vstart;
+  i32 dy1 = vi.io.vend;   if (dy1 < dy0) dy1 = vscan_stop;
+  i32 dx0 = vi.io.hstart;
+  i32 dx1 = vi.io.hend;
 
   dy0 = max(vscan_start, dy0);
   dy1 = min(vscan_stop,  dy1);
   dx0 = max(hscan_start, dx0);
   dx1 = min(hscan_stop,  dx1);
 
+  // Undocumented VI guard-band "hardware bug" (match parallel-RDP)
+  if(dx0 >= hscan_start) dx0 += 8;
+  if(dx1 <  hscan_stop)  dx1 -= 7;
+
   u32 pitch = vi.io.width;
   if(vi.io.colorDepth == 2) {
     //15bpp
     u32 y0 = vi.io.ysubpixel + vi.io.yscale * (dy0 - vi.io.vstart);
-    for(u32 dy = dy0; dy < dy1; dy++) {
+    for(i32 dy = dy0; dy < dy1; dy++) {
       if(!io.serrate || (dy & 1) == !io.field) {
         u32 address = vi.io.dramAddress + (y0 >> 11) * pitch * 2;
         auto line = screen->pixels(1).data() + (dy - vscan_start) * hscan_len;
         u32 x0 = vi.io.xsubpixel + vi.io.xscale * (dx0 - vi.io.hstart);
-        for(u32 dx = dx0; dx < dx1; dx++) {
+        for(i32 dx = dx0; dx < dx1; dx++) {
           u16 data = bus.read<Half>(address + (x0 >> 10) * 2);
           line[dx - hscan_start] = 1 << 24 | data >> 1;
           x0 += vi.io.xscale;
@@ -155,12 +159,12 @@ auto VI::refresh() -> void {
   if(vi.io.colorDepth == 3) {
     //24bpp
     u32 y0 = vi.io.ysubpixel + vi.io.yscale * (dy0 - vi.io.vstart);
-    for(u32 dy = dy0; dy < dy1; dy++) {
+    for(i32 dy = dy0; dy < dy1; dy++) {
       if(!io.serrate || (dy & 1) == !io.field) {
         u32 address = vi.io.dramAddress + (y0 >> 11) * pitch * 4;
         auto line = screen->pixels(1).data() + (dy - vscan_start) * hscan_len;
         u32 x0 = vi.io.xsubpixel + vi.io.xscale * (dx0 - vi.io.hstart);
-        for(u32 dx = dx0; dx < dx1; dx++) {
+        for(i32 dx = dx0; dx < dx1; dx++) {
           u32 data = bus.read<Word>(address + (x0 >> 10) * 4);
           line[dx - hscan_start] = data >> 8;
           x0 += vi.io.xscale;
