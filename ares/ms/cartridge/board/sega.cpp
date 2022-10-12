@@ -109,6 +109,7 @@ struct Sega : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
+    s(ram);
     s(romBankUpper);
     s(romBankShift);
     s(ramBank2);

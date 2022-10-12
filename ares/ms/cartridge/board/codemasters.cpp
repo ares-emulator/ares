@@ -57,6 +57,7 @@ struct Codemasters : Interface {
   }
 
   auto serialize(serializer& s) -> void override {
+    s(ram);
     s(romBank);
     s(ramEnable);
   }
