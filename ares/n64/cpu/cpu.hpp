@@ -662,6 +662,8 @@ struct CPU : Thread {
   auto BC1(bool value, bool likely, s16 imm) -> void;
   auto CFC1(r64& rt, u8 rd) -> void;
   auto CTC1(cr64& rt, u8 rd) -> void;
+  auto DCFC1(r64& rt, u8 rd) -> void;
+  auto DCTC1(cr64& rt, u8 rd) -> void;
   auto DMFC1(r64& rt, u8 fs) -> void;
   auto DMTC1(cr64& rt, u8 fs) -> void;
   auto FABS_S(u8 fd, u8 fs) -> void;

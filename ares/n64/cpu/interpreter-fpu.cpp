@@ -1019,6 +1019,9 @@ auto CPU::FTRUNC_W_L(u8 fd, u8 fs) -> void { COP1UNIMPLEMENTED(); }
 auto CPU::FCEIL_W_L(u8 fd, u8 fs) -> void { COP1UNIMPLEMENTED(); }
 auto CPU::FFLOOR_W_L(u8 fd, u8 fs) -> void { COP1UNIMPLEMENTED(); }
 
+auto CPU::DCFC1(r64& rt, u8 rd) -> void { COP1UNIMPLEMENTED(); }
+auto CPU::DCTC1(cr64& rt, u8 rd) -> void { COP1UNIMPLEMENTED(); }
+
 #undef CF
 #undef FD
 #undef FS
