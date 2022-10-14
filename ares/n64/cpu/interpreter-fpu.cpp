@@ -617,7 +617,10 @@ auto CPU::FCVT_S_S(u8 fd, u8 fs) -> void {
 auto CPU::FCVT_S_D(u8 fd, u8 fs) -> void {
   if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
-  if(!fpu.csr.flushSubnormals && ffs > 0 && ffs < FLT_MIN && fpeUnimplemented()) return exception.floatingPoint();
+  if(ffs > 0 && ffs < FLT_MIN) {
+    if(!fpu.csr.flushSubnormals || fpu.csr.enable.inexact || fpu.csr.enable.underflow)
+      if(fpeUnimplemented()) return exception.floatingPoint();
+  }
   if(!fpuCheckInput(ffs)) return;
   auto ffd = CHECK_FPE(f32, (f32)ffs);
   if(!fpuCheckOutput(ffd)) return;
