@@ -1302,9 +1302,9 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     return 0;
   }
 
-  //INVALID
+  //DCFC1 Rt,Rd
   case 0x03: {
-    call(&CPU::COP1INVALID);
+    call(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
 
@@ -1332,9 +1332,9 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
     return 0;
   }
 
-  //INVALID
+  //DCTC1 Rt,Rd
   case 0x07: {
-    call(&CPU::COP1INVALID);
+    call(&CPU::COP1UNIMPLEMENTED);
     return 1;
   }
 
@@ -1953,12 +1953,12 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   switch(instruction & 0x3f) {    
   case 0x08 ... 0x0f: {
     call(&CPU::COP1UNIMPLEMENTED);
-    return 0;
+    return 1;
   }
 
   case 0x24 ... 0x25: {
     call(&CPU::COP1UNIMPLEMENTED);
-    return 0;
+    return 1;
   }
 
   //FCVT.S.W Fd,Fs
@@ -1983,11 +1983,11 @@ auto CPU::Recompiler::emitFPU(u32 instruction) -> bool {
   switch(instruction & 0x3f) {
   case 0x08 ... 0x0f: {
     call(&CPU::COP1UNIMPLEMENTED);
-    return 0;
+    return 1;
   }
   case 0x24 ... 0x25: {
     call(&CPU::COP1UNIMPLEMENTED);
-    return 0;
+    return 1;
   }
 
   //FCVT.S.L

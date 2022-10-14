@@ -229,11 +229,11 @@ auto CPU::decoderFPU() -> void {
   op(0x00, MFC1, RT, FS);
   op(0x01, DMFC1, RT, FS);
   op(0x02, CFC1, RT, RDn);
-  br(0x03, COP1INVALID);
+  br(0x03, DCFC1, RT, RDn);
   op(0x04, MTC1, RT, FS);
   op(0x05, DMTC1, RT, FS);
   op(0x06, CTC1, RT, RDn);
-  br(0x07, COP1INVALID);
+  br(0x07, DCTC1, RT, RDn);
   br(0x08, BC1, OP >> 16 & 1, OP >> 17 & 1, IMMi16);
   br(0x09, INVALID);
   br(0x0a, INVALID);
