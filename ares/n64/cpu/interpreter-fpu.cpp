@@ -621,7 +621,7 @@ auto CPU::FCVT_S_D(u8 fd, u8 fs) -> void {
 auto CPU::FCVT_S_W(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   auto ffs = FS(s32);
-  auto ffd = CHECK_FPE(f32, (f32)ffs);
+  auto ffd = CHECK_FPE(f32, ffs);
   if(!fpuCheckOutput(ffd)) return;
   FD(f32) = ffd;
 }
@@ -804,11 +804,55 @@ auto CPU::FNEG_D(u8 fd, u8 fs) -> void {
   FD(f64) = ffd;
 }
 
+template <typename T>
+auto CPU::roundeven(f32 f) -> T {
+#if defined(ARCHITECTURE_ARM64)
+  u32 rnd = fenv.getRound();
+  fenv.setRound(float_env::toNearest);
+  T d = vrndns_f32(f);
+  fenv.setRound(rnd);
+  return d;
+#endif
+#if defined(ARCHITECTURE_AMD64)
+  T d;
+  __m128 t = _mm_set_ss(f);
+  t = _mm_round_ss(t, t, _MM_FROUND_TO_NEAREST_INT);
+  if(sizeof(T) == 4)
+    d = _mm_cvtss_si32(t);
+  else
+    d = _mm_cvtss_si64(t);
+  return d;
+#endif
+}
+
+template <typename T>
+auto CPU::roundeven(f64 f) -> T {
+#if defined(ARCHITECTURE_ARM64)
+  u32 rnd = fenv.getRound();
+  fenv.setRound(float_env::toNearest);
+  float64x1_t vf = {f};
+  T d = vrndn_f64(vf)[0];
+  fenv.setRound(rnd);
+  return d;
+#endif
+#if defined(ARCHITECTURE_AMD64)
+  T d;
+  __m128d t = _mm_set_sd(f);
+  t = _mm_round_sd(t, t, _MM_FROUND_TO_NEAREST_INT);
+  if(sizeof(T) == 4)
+    d = _mm_cvtsd_si32(t);
+  else
+    d = _mm_cvtsd_si64(t);
+  return d;
+#endif
+}
+
 auto CPU::FROUND_L_S(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s64>(ffs)) return;
-  auto ffd = CHECK_FPE(s64, llround(ffs));
+  auto ffd = CHECK_FPE(s64, roundeven<s64>(ffs));
+  if(ffd != ffs && fpeInexact()) return exception.floatingPoint();
   FD(s64) = ffd;
 }
 
@@ -816,7 +860,8 @@ auto CPU::FROUND_L_D(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s64>(ffs)) return;
-  auto ffd = CHECK_FPE(s64, llround(ffs));
+  auto ffd = CHECK_FPE(s64, roundeven<s64>(ffs));
+  if(ffd != ffs && fpeInexact()) return exception.floatingPoint();
   FD(s64) = ffd;
 }
 
@@ -824,7 +869,8 @@ auto CPU::FROUND_W_S(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s32>(ffs)) return;
-  auto ffd = CHECK_FPE(s32, lround(ffs));
+  auto ffd = CHECK_FPE(s32, roundeven<s32>(ffs));
+  if(ffd != ffs && fpeInexact()) return exception.floatingPoint();
   FD(s32) = ffd;
 }
 
@@ -832,7 +878,8 @@ auto CPU::FROUND_W_D(u8 fd, u8 fs) -> void {
   if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s32>(ffs)) return;
-  auto ffd = CHECK_FPE(s32, lround(ffs));
+  auto ffd = CHECK_FPE(s32, roundeven<s32>(ffs));
+  if(ffd != ffs && fpeInexact()) return exception.floatingPoint();
   FD(s32) = ffd;
 }
 

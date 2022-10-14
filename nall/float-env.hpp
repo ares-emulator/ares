@@ -70,6 +70,10 @@ struct float_env {
     setControl();
   }
 
+  auto getRound() -> u32 {
+    return control & roundMask;
+  }
+
   auto testExcept(u32 mask) -> u32 {
     return getStatus() & mask & allExcept;
   }
