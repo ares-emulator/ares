@@ -218,6 +218,12 @@ auto qnan(f64 f) -> bool {
   return f64repr(f).bit(51); 
 }
 
+auto CPU::fpuCheckStart() -> bool {
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1(), false;
+  fpu.csr.cause = {0};
+  return true;
+}
+
 auto CPU::fpuCheckInput(f32& f) -> bool {
   switch (fpclassify(f)) {
   case FP_SUBNORMAL:
@@ -332,7 +338,7 @@ auto CPU::fpuCheckInputConv<s64>(f64& f) -> bool {
 #define FT(type) fgr<type>(ft)
 
 auto CPU::BC1(bool value, bool likely, s16 imm) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   if(CF == value) branch.take(ipu.pc + 4 + (imm << 2));
   else if(likely) branch.discard();
   else branch.notTaken();
@@ -359,7 +365,7 @@ auto CPU::DMTC1(cr64& rt, u8 fs) -> void {
 }
 
 auto CPU::FABS_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInput(ffs)) return;
   auto ffd = fabs(ffs);
@@ -368,7 +374,7 @@ auto CPU::FABS_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FABS_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInput(ffs)) return;
   auto ffd = fabs(ffs);
@@ -377,7 +383,7 @@ auto CPU::FABS_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FADD_S(u8 fd, u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   f32 ffs = FS(f32), fft = FT(f32);
   if(!fpuCheckInput(ffs)) return;
   if(!fpuCheckInput(fft)) return;
@@ -387,7 +393,7 @@ auto CPU::FADD_S(u8 fd, u8 fs, u8 ft) -> void {
 }
 
 auto CPU::FADD_D(u8 fd, u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64), fft = FT(f64);
   if(!fpuCheckInput(ffs)) return;
   if(!fpuCheckInput(fft)) return;
@@ -397,7 +403,7 @@ auto CPU::FADD_D(u8 fd, u8 fs, u8 ft) -> void {
 }
 
 auto CPU::FCEIL_L_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s64>(ffs)) return;
   auto ffd = CHECK_FPE(s64, ceil(ffs));
@@ -405,7 +411,7 @@ auto CPU::FCEIL_L_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCEIL_L_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s64>(ffs)) return;
   auto ffd = CHECK_FPE(s64, ceil(ffs));
@@ -413,7 +419,7 @@ auto CPU::FCEIL_L_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCEIL_W_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s32>(ffs)) return;
   auto ffd = CHECK_FPE(s32, ceil(ffs));
@@ -421,7 +427,7 @@ auto CPU::FCEIL_W_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCEIL_W_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s32>(ffs)) return;
   auto ffd = CHECK_FPE(s32, ceil(ffs));
@@ -441,162 +447,162 @@ auto CPU::FCEIL_W_D(u8 fd, u8 fs) -> void {
 #define UNORDERED(type, value) XORDERED(type, value, 1)
 
 auto CPU::FC_EQ_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f32, 0); CF = FS(f32) == FT(f32);
 }
 
 auto CPU::FC_EQ_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f64, 0); CF = FS(f64) == FT(f64);
 }
 
 auto CPU::FC_F_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f32, 0); CF = 0;
 }
 
 auto CPU::FC_F_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f64, 0); CF = 0;
 }
 
 auto CPU::FC_LE_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f32, 0); CF = FS(f32) <= FT(f32);
 }
 
 auto CPU::FC_LE_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f64, 0); CF = FS(f64) <= FT(f64);
 }
 
 auto CPU::FC_LT_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f32, 0); CF = FS(f32) < FT(f32);
 }
 
 auto CPU::FC_LT_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f64, 0); CF = FS(f64) < FT(f64);
 }
 
 auto CPU::FC_NGE_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f32, 1); CF = FS(f32) < FT(f32);
 }
 
 auto CPU::FC_NGE_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f64, 1); CF = FS(f64) < FT(f64);
 }
 
 auto CPU::FC_NGL_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f32, 1); CF = FS(f32) == FT(f32);
 }
 
 auto CPU::FC_NGL_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f64, 1); CF = FS(f64) == FT(f64);
 }
 
 auto CPU::FC_NGLE_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f32, 1); CF = 0;
 }
 
 auto CPU::FC_NGLE_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f64, 1); CF = 0;
 }
 
 auto CPU::FC_NGT_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f32, 1); CF = FS(f32) <= FT(f32);
 }
 
 auto CPU::FC_NGT_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f64, 1); CF = FS(f64) <= FT(f64);
 }
 
 auto CPU::FC_OLE_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f32, 0); CF = FS(f32) <= FT(f32);
 }
 
 auto CPU::FC_OLE_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f64, 0); CF = FS(f64) <= FT(f64);
 }
 
 auto CPU::FC_OLT_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f32, 0); CF = FS(f32) < FT(f32);
 }
 
 auto CPU::FC_OLT_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f64, 0); CF = FS(f64) < FT(f64);
 }
 
 auto CPU::FC_SEQ_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f32, 0); CF = FS(f32) == FT(f32);
 }
 
 auto CPU::FC_SEQ_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f64, 0); CF = FS(f64) == FT(f64);
 }
 
 auto CPU::FC_SF_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f32, 0); CF = 0;
 }
 
 auto CPU::FC_SF_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   ORDERED(f64, 0); CF = 0;
 }
 
 auto CPU::FC_UEQ_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f32, 1); CF = FS(f32) == FT(f32);
 }
 
 auto CPU::FC_UEQ_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f64, 1); CF = FS(f64) == FT(f64);
 }
 
 auto CPU::FC_ULE_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f32, 1); CF = FS(f32) <= FT(f32);
 }
 
 auto CPU::FC_ULE_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f64, 1); CF = FS(f64) <= FT(f64);
 }
 
 auto CPU::FC_ULT_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f32, 1); CF = FS(f32) < FT(f32);
 }
 
 auto CPU::FC_ULT_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f64, 1); CF = FS(f64) < FT(f64);
 }
 
 auto CPU::FC_UN_S(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f32, 1); CF = 0;
 }
 
 auto CPU::FC_UN_D(u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   UNORDERED(f64, 1); CF = 0;
 }
 
@@ -604,12 +610,12 @@ auto CPU::FC_UN_D(u8 fs, u8 ft) -> void {
 #undef UNORDERED
 
 auto CPU::FCVT_S_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   if(fpeUnimplemented()) return exception.floatingPoint();
 }
 
 auto CPU::FCVT_S_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpu.csr.flushSubnormals && ffs > 0 && ffs < FLT_MIN && fpeUnimplemented()) return exception.floatingPoint();
   if(!fpuCheckInput(ffs)) return;
@@ -619,7 +625,7 @@ auto CPU::FCVT_S_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCVT_S_W(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(s32);
   auto ffd = CHECK_FPE(f32, ffs);
   if(!fpuCheckOutput(ffd)) return;
@@ -627,7 +633,7 @@ auto CPU::FCVT_S_W(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCVT_S_L(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(s64);
   if (ffs >= (s64)0x0080'0000'0000'0000ull || ffs <= (s64)0xff80'0000'0000'0000ull) {
     if (fpeUnimplemented()) return exception.floatingPoint();
@@ -639,7 +645,7 @@ auto CPU::FCVT_S_L(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCVT_D_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInput(ffs)) return;
   auto ffd = CHECK_FPE(f64, ffs);
@@ -648,12 +654,12 @@ auto CPU::FCVT_D_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCVT_D_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   if(fpeUnimplemented()) return exception.floatingPoint();
 }
 
 auto CPU::FCVT_D_W(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(s32);
   auto ffd = CHECK_FPE(f64, (f64)ffs);
   if(!fpuCheckOutput(ffd)) return;
@@ -661,7 +667,7 @@ auto CPU::FCVT_D_W(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCVT_D_L(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(s64);
   if (ffs >= (s64)0x0080'0000'0000'0000ull || ffs <= (s64)0xff80'0000'0000'0000ull) {
     if (fpeUnimplemented()) return exception.floatingPoint();
@@ -673,7 +679,7 @@ auto CPU::FCVT_D_L(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCVT_L_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s64>(ffs)) return;
   auto ffd = CHECK_FPE(s64, llrint(ffs));
@@ -681,7 +687,7 @@ auto CPU::FCVT_L_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCVT_L_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s64>(ffs)) return;
   auto ffd = CHECK_FPE(s64, llrint(ffs));
@@ -689,7 +695,7 @@ auto CPU::FCVT_L_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCVT_W_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s32>(ffs)) return;
   auto ffd = CHECK_FPE(s32, lrint(ffs));
@@ -697,7 +703,7 @@ auto CPU::FCVT_W_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FCVT_W_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s32>(ffs)) return;
   auto ffd = CHECK_FPE(s32, lrint(ffs));
@@ -705,7 +711,7 @@ auto CPU::FCVT_W_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FDIV_S(u8 fd, u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32), fft = FT(f32);
   if(!fpuCheckInput(ffs)) return;
   if(!fpuCheckInput(fft)) return;
@@ -715,7 +721,7 @@ auto CPU::FDIV_S(u8 fd, u8 fs, u8 ft) -> void {
 }
 
 auto CPU::FDIV_D(u8 fd, u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64), fft = FT(f64);
   if(!fpuCheckInput(ffs)) return;
   if(!fpuCheckInput(fft)) return;
@@ -725,7 +731,7 @@ auto CPU::FDIV_D(u8 fd, u8 fs, u8 ft) -> void {
 }
 
 auto CPU::FFLOOR_L_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s64>(ffs)) return;
   auto ffd = CHECK_FPE(s64, floor(ffs));
@@ -733,7 +739,7 @@ auto CPU::FFLOOR_L_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FFLOOR_L_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s64>(ffs)) return;
   auto ffd = CHECK_FPE(s64, floor(ffs));
@@ -741,7 +747,7 @@ auto CPU::FFLOOR_L_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FFLOOR_W_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s32>(ffs)) return;
   auto ffd = CHECK_FPE(s32, floor(ffs));
@@ -749,7 +755,7 @@ auto CPU::FFLOOR_W_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FFLOOR_W_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s32>(ffs)) return;
   auto ffd = CHECK_FPE(s32, floor(ffs));
@@ -757,17 +763,17 @@ auto CPU::FFLOOR_W_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FMOV_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   FD(f32) = FS(f32);
 }
 
 auto CPU::FMOV_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   FD(f64) = FS(f64);
 }
 
 auto CPU::FMUL_S(u8 fd, u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32), fft = FT(f32);
   if(!fpuCheckInput(ffs)) return;
   if(!fpuCheckInput(fft)) return;
@@ -777,7 +783,7 @@ auto CPU::FMUL_S(u8 fd, u8 fs, u8 ft) -> void {
 }
 
 auto CPU::FMUL_D(u8 fd, u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64), fft = FT(f64);
   if(!fpuCheckInput(ffs)) return;
   if(!fpuCheckInput(fft)) return;
@@ -787,7 +793,7 @@ auto CPU::FMUL_D(u8 fd, u8 fs, u8 ft) -> void {
 }
 
 auto CPU::FNEG_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInput(ffs)) return;
   auto ffd = CHECK_FPE(f32, -ffs);
@@ -796,7 +802,7 @@ auto CPU::FNEG_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FNEG_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInput(ffs)) return;
   auto ffd = CHECK_FPE(f64, -ffs);
@@ -848,7 +854,7 @@ auto CPU::roundeven(f64 f) -> T {
 }
 
 auto CPU::FROUND_L_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s64>(ffs)) return;
   auto ffd = CHECK_FPE(s64, roundeven<s64>(ffs));
@@ -857,7 +863,7 @@ auto CPU::FROUND_L_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FROUND_L_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s64>(ffs)) return;
   auto ffd = CHECK_FPE(s64, roundeven<s64>(ffs));
@@ -866,7 +872,7 @@ auto CPU::FROUND_L_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FROUND_W_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s32>(ffs)) return;
   auto ffd = CHECK_FPE(s32, roundeven<s32>(ffs));
@@ -875,7 +881,7 @@ auto CPU::FROUND_W_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FROUND_W_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s32>(ffs)) return;
   auto ffd = CHECK_FPE(s32, roundeven<s32>(ffs));
@@ -884,7 +890,7 @@ auto CPU::FROUND_W_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FSQRT_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInput(ffs)) return;
   auto ffd = CHECK_FPE(f32, sqrt(ffs));
@@ -893,7 +899,7 @@ auto CPU::FSQRT_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FSQRT_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInput(ffs)) return;
   auto ffd = CHECK_FPE(f64, sqrt(ffs));
@@ -902,7 +908,7 @@ auto CPU::FSQRT_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FSUB_S(u8 fd, u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32), fft = FT(f32);
   if(!fpuCheckInput(ffs)) return;
   if(!fpuCheckInput(fft)) return;
@@ -912,7 +918,7 @@ auto CPU::FSUB_S(u8 fd, u8 fs, u8 ft) -> void {
 }
 
 auto CPU::FSUB_D(u8 fd, u8 fs, u8 ft) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64), fft = FT(f64);
   if(!fpuCheckInput(ffs)) return;
   if(!fpuCheckInput(fft)) return;
@@ -922,7 +928,7 @@ auto CPU::FSUB_D(u8 fd, u8 fs, u8 ft) -> void {
 }
 
 auto CPU::FTRUNC_L_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s64>(ffs)) return;
   s64 ffd = ffs < 0 ? ceil(ffs) : floor(ffs);
@@ -931,7 +937,7 @@ auto CPU::FTRUNC_L_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FTRUNC_L_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s64>(ffs)) return;
   s64 ffd = ffs < 0 ? ceil(ffs) : floor(ffs);
@@ -940,7 +946,7 @@ auto CPU::FTRUNC_L_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FTRUNC_W_S(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f32);
   if(!fpuCheckInputConv<s32>(ffs)) return;
   s32 ffd = ffs < 0 ? ceil(ffs) : floor(ffs);
@@ -949,7 +955,7 @@ auto CPU::FTRUNC_W_S(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FTRUNC_W_D(u8 fd, u8 fs) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
   if(!fpuCheckInputConv<s32>(ffs)) return;
   s32 ffd = ffs < 0 ? ceil(ffs) : floor(ffs);
@@ -958,12 +964,12 @@ auto CPU::FTRUNC_W_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::LDC1(u8 ft, cr64& rs, s16 imm) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   if(auto data = read<Dual>(rs.u64 + imm)) FT(u64) = *data;
 }
 
 auto CPU::LWC1(u8 ft, cr64& rs, s16 imm) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   if(auto data = read<Word>(rs.u64 + imm)) FT(u32) = *data;
 }
 
@@ -978,22 +984,22 @@ auto CPU::MTC1(cr64& rt, u8 fs) -> void {
 }
 
 auto CPU::SDC1(u8 ft, cr64& rs, s16 imm) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   write<Dual>(rs.u64 + imm, FT(u64));
 }
 
 auto CPU::SWC1(u8 ft, cr64& rs, s16 imm) -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   write<Word>(rs.u64 + imm, FT(u32));
 }
 
 auto CPU::COP1INVALID() -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   exception.floatingPoint();
 }
 
 auto CPU::COP1UNIMPLEMENTED() -> void {
-  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
+  if(!fpuCheckStart()) return;
   if(fpeUnimplemented()) return exception.floatingPoint();
 }
 
