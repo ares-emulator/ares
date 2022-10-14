@@ -649,6 +649,7 @@ struct CPU : Thread {
   auto fpeOverflow() -> bool;
   auto fpeInvalidOperation() -> bool;
   auto fpeUnimplemented() -> bool;
+  auto fpuCheckStart() -> bool;
   auto fpuCheckInput(f32& f) -> bool;
   auto fpuCheckInput(f64& f) -> bool;
   auto fpuCheckOutput(f32& f) -> bool;
