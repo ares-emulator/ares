@@ -8,6 +8,7 @@ CPU cpu;
 #include "tlb.cpp"
 #include "memory.cpp"
 #include "exceptions.cpp"
+#include "algorithms.cpp"
 #include "interpreter.cpp"
 #include "interpreter-ipu.cpp"
 #include "interpreter-scc.cpp"
