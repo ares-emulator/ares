@@ -344,6 +344,20 @@ struct CPU : Thread {
     u64 pc;  //program counter
   } ipu;
 
+  //algorithms.cpp
+  template<typename T> auto roundNearest(f32 f) -> T;
+  template<typename T> auto roundNearest(f64 f) -> T;
+  template<typename T> auto roundCeil(f32 f) -> T;
+  template<typename T> auto roundCeil(f64 f) -> T;
+  template<typename T> auto roundCurrent(f32 f) -> T;
+  template<typename T> auto roundCurrent(f64 f) -> T;
+  template<typename T> auto roundFloor(f32 f) -> T;
+  template<typename T> auto roundFloor(f64 f) -> T;
+  template<typename T> auto roundTrunc(f32 f) -> T;
+  template<typename T> auto roundTrunc(f64 f) -> T;
+  auto squareRoot(f32 f) -> f32;
+  auto squareRoot(f64 f) -> f64;
+
   //interpreter-ipu.cpp
   auto ADD(r64& rd, cr64& rs, cr64& rt) -> void;
   auto ADDI(r64& rt, cr64& rs, s16 imm) -> void;
@@ -657,8 +671,6 @@ struct CPU : Thread {
   auto fpuClearCause() -> void;
   template<typename DST, typename SF>
   auto fpuCheckInputConv(SF& f) -> bool;
-  template <typename T> auto roundeven(f32 f) -> T;
-  template <typename T> auto roundeven(f64 f) -> T;
 
   auto BC1(bool value, bool likely, s16 imm) -> void;
   auto CFC1(r64& rt, u8 rd) -> void;
