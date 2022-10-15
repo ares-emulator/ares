@@ -195,7 +195,7 @@ auto CPU::checkFPUExceptions() -> bool {
 
 #define CHECK_FPE(type, operation) ({ \
   fenv.clearExcept(); \
-  volatile type res = operation; \
+  type res = [&]() noinline -> type { return operation; }(); \
   if (checkFPUExceptions()) return; \
   (res); \
 })
