@@ -250,6 +250,21 @@ auto CPU::fpuCheckInput(f64& f) -> bool {
   return true;
 }
 
+template<typename T>
+auto fpuFlushResult(T f, u32 roundMode) -> T
+{
+  switch(roundMode)
+  {
+  case float_env::toNearest: //RN
+  case float_env::towardZero: //RZ
+    return copysign(T(), f);
+  case float_env::upward: //RP
+    return signbit(f) ? -T() : std::numeric_limits<T>::min();
+  case float_env::downward: //RM
+    return signbit(f) ? -std::numeric_limits<T>::min() : T();
+  }
+  unreachable;
+}
 auto CPU::fpuCheckOutput(f32& f) -> bool {
   switch (fpclassify(f)) {
   case FP_SUBNORMAL:
@@ -258,7 +273,7 @@ auto CPU::fpuCheckOutput(f32& f) -> bool {
       return false;
     }
     fpeUnderflow(); fpeInexact();
-    f = copysign(0.0, f);
+    f = fpuFlushResult(f, fenv.getRound());
     return true;
   case FP_NAN: {
     // TODO: why __builtin_nanf doesn't work?
@@ -277,7 +292,7 @@ auto CPU::fpuCheckOutput(f64& f) -> bool {
       return false;
     }
     fpeUnderflow(); fpeInexact();
-    f = copysign(0.0, f);
+    f = fpuFlushResult(f, fenv.getRound());
     return true;
   case FP_NAN: {
     // TODO: why __builtin_nanf doesn't work?
