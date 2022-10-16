@@ -85,20 +85,20 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
 
   //PWM left channel pulse width
   if(address == 0x4034) {
-    data.bit(14) = pwm.lfifo.empty();
+    data = pwm.lfifoLatch;
     data.bit(15) = pwm.lfifo.full();
   }
 
   //PWM right channel pulse width
   if(address == 0x4036) {
-    data.bit(14) = pwm.rfifo.empty();
+    data = pwm.rfifoLatch;
     data.bit(15) = pwm.rfifo.full();
   }
 
   //PWM mono pulse width
   if(address == 0x4038) {
-    data.bit(14) = pwm.lfifo.empty() && pwm.rfifo.empty();
-    data.bit(15) = pwm.lfifo.full()  || pwm.rfifo.full();
+    data = pwm.mfifoLatch;
+    data.bit(15) = pwm.lfifo.full() || pwm.rfifo.full();
   }
 
   //bitmap mode
@@ -225,6 +225,8 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
     if(lower) {
       pwm.lmode   = data.bit(0,1);
       pwm.rmode   = data.bit(2,3);
+      if(!pwm.lmode) pwm.lsample = 0;
+      if(!pwm.rmode) pwm.rsample = 0;
       pwm.mono    = data.bit(4);
       pwm.dreqIRQ = data.bit(7);
     }
@@ -241,18 +243,21 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
 
   //PWM left channel pulse width
   if(address == 0x4034) {
-    pwm.lfifo.write(data);
+    pwm.lfifoLatch = data;
+    pwm.lfifo.write(pwm.lfifoLatch);
   }
 
   //PWM right channel pulse width
   if(address == 0x4036) {
-    pwm.rfifo.write(data);
+    pwm.rfifoLatch = data;
+    pwm.rfifo.write(pwm.rfifoLatch);
   }
 
   //PWM mono pulse width
   if(address == 0x4038) {
-    pwm.lfifo.write(data);
-    pwm.rfifo.write(data);
+    pwm.mfifoLatch = data;
+    pwm.lfifo.write(pwm.mfifoLatch);
+    pwm.rfifo.write(pwm.mfifoLatch);
   }
 
   //bitmap mode

@@ -69,6 +69,11 @@ auto M32X::PWM::serialize(serializer& s) -> void {
   s(counter);
   s(lsample);
   s(rsample);
-  s(lfifo);
-  s(rfifo);
+  s(lfifo.fifo);
+  s(lfifo.last);
+  s(rfifo.fifo);
+  s(rfifo.last);
+  s(lfifoLatch);
+  s(rfifoLatch);
+  s(mfifoLatch);
 }
