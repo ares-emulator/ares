@@ -159,8 +159,9 @@
       n1 pr;        //priority mode bit
     } dmaor;
 
+    n1 dreq[2];
+
     //internal:
-    n1 dreq;
     n2 pendingIRQ;
   } dmac;
 

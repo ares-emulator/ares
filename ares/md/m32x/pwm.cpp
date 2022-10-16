@@ -22,12 +22,12 @@ auto M32X::PWM::main() -> void {
     rfifoLatch.bit(14) = rfifo.empty();
     mfifoLatch.bit(14) = lfifoLatch.bit(14) & rfifoLatch.bit(14);
 
-    if(timer) {
-      if(++periods == timer) {
-        periods = 0;
-        m32x.shm.irq.pwm.active = 1;
-        m32x.shs.irq.pwm.active = 1;
-      }
+    if(periods++ == n4(timer-1)) {
+      periods = 0;
+      m32x.shm.irq.pwm.active = 1;
+      m32x.shs.irq.pwm.active = 1;
+      m32x.shm.dmac.dreq[1] = dreqIRQ;
+      m32x.shs.dmac.dreq[1] = dreqIRQ;
     }
   }
 

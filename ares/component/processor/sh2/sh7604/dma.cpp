@@ -4,12 +4,16 @@ auto SH2::DMAC::run() -> void {
       if(chcr[c].ar) {
         transfer(c);
       } else if(drcr[c] == 0) {
-        if(dreq) transfer(c);
+        if(dreq[c]) transfer(c);
+        // Note: DACK is not implemented (not used by 32X)
       } else if(drcr[c] == 1) {
         debug(unimplemented, "[SH2] DMA RXI");
       } else if(drcr[c] == 2) {
         debug(unimplemented, "[SH2] DMA TXI");
+      } else {
+        continue;
       }
+      break; // ignoring cycle-steal mode for now
     }
   }
 }
