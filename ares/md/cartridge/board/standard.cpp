@@ -59,7 +59,7 @@ struct Standard : Interface {
 
     if(bank > 0x3f) return data;
 
-    n24 offset = bank << 19 | (n19)address;
+    n25 offset = bank << 19 | (n19)address;
     if(offset >= rom.size()*2) return data;
     return rom[offset >> 1];
   }
