@@ -55,10 +55,10 @@ auto M32X::VDP::scanlineMode3(u32 pixels[1280], u32 y) -> void {
   u16 address = fbram[y];
   for(u32 x = 0; x < 320;) {
     u16 word  = fbram[address++ & 0xffff];
-    u8 length = (word >> 8) + 1;
-    u8 color  = (word >> 0);
+    u8 length = word >> 8;
+    u8 color  = word >> 0;
     u16 pixel = cram[color];
-    for(u32 repeat : range(length)) {
+    for(u32 repeat : range(min(length+1, 320-x))) {
       plot(&pixels[x * 4], pixel);
       x++;
     }
