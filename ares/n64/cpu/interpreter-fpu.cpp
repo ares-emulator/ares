@@ -183,6 +183,13 @@ auto CPU::checkFPUExceptions() -> bool {
                           | float_env::invalid);
   if (!exc) return false;
 
+  if(exc & float_env::underflow) {
+    if(!fpu.csr.flushSubnormals || fpu.csr.enable.underflow || fpu.csr.enable.inexact) {
+      if(fpeUnimplemented()) exception.floatingPoint();
+      return true;
+    }
+  }
+
   bool raise = false;
   if(exc & float_env::divByZero) raise |= fpeDivisionByZero();
   if(exc & float_env::inexact)   raise |= fpeInexact();
@@ -632,10 +639,6 @@ auto CPU::FCVT_S_S(u8 fd, u8 fs) -> void {
 auto CPU::FCVT_S_D(u8 fd, u8 fs) -> void {
   if(!fpuCheckStart()) return;
   auto ffs = FS(f64);
-  if(ffs > 0 && ffs < FLT_MIN) {
-    if(!fpu.csr.flushSubnormals || fpu.csr.enable.inexact || fpu.csr.enable.underflow)
-      if(fpeUnimplemented()) return exception.floatingPoint();
-  }
   if(!fpuCheckInput(ffs)) return;
   auto ffd = CHECK_FPE(f32, (f32)ffs);
   if(!fpuCheckOutput(ffd)) return;
