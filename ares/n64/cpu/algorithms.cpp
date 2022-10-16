@@ -1,11 +1,7 @@
 template <typename T>
 auto CPU::roundNearest(f32 f) -> T {
 #if defined(ARCHITECTURE_ARM64)
-  u32 rnd = fenv.getRound();
-  fenv.setRound(float_env::toNearest);
-  T d = vrndns_f32(f);
-  fenv.setRound(rnd);
-  return d;
+  return vrndns_f32(f);
 #elif defined(ARCHITECTURE_AMD64)
   __m128 t = _mm_set_ss(f);
   t = _mm_round_ss(t, t, _MM_FROUND_TO_NEAREST_INT);
@@ -18,12 +14,8 @@ auto CPU::roundNearest(f32 f) -> T {
 template <typename T>
 auto CPU::roundNearest(f64 f) -> T {
 #if defined(ARCHITECTURE_ARM64)
-  u32 rnd = fenv.getRound();
-  fenv.setRound(float_env::toNearest);
   float64x1_t vf = {f};
-  T d = vrndn_f64(vf)[0];
-  fenv.setRound(rnd);
-  return d;
+  return vrndn_f64(vf)[0];
 #elif defined(ARCHITECTURE_AMD64)
   __m128d t = _mm_set_sd(f);
   t = _mm_round_sd(t, t, _MM_FROUND_TO_NEAREST_INT);
