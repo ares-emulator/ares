@@ -192,8 +192,8 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
       dreq.active = data.bit(2);
       if(!dreq.active) {
         dreq.fifo.flush();
-        shm.dmac.dreq = 0;
-        shs.dmac.dreq = 0;
+        shm.dmac.dreq[0] = 0;
+        shs.dmac.dreq[0] = 0;
       }
     }
   }
@@ -227,8 +227,8 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
     if(dreq.active && !dreq.fifo.full()) {
       dreq.fifo.write(data);
       if(!--dreq.length) dreq.active = 0;
-      shm.dmac.dreq = !dreq.fifo.empty();
-      shs.dmac.dreq = !dreq.fifo.empty();
+      shm.dmac.dreq[0] = !dreq.fifo.empty();
+      shs.dmac.dreq[0] = !dreq.fifo.empty();
     }
   }
 
@@ -257,6 +257,7 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
     }
     if(upper) {
       pwm.timer = data.bit(8,11);
+      pwm.periods = 0;
     }
   }
 

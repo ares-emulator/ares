@@ -44,6 +44,8 @@ auto M32X::SH7604::main() -> void {
   SH2::instruction();
   SH2::intc.run();
   SH2::dmac.run();
+  if(m32x.shm.active()) m32x.shm.dmac.dreq[1] = 0;
+  if(m32x.shs.active()) m32x.shs.dmac.dreq[1] = 0;
   SH2::frt.run();
   SH2::wdt.run();
 }

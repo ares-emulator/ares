@@ -60,8 +60,8 @@ auto M32X::readInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> n16 {
   //FIFO
   if(address == 0x4012) {
     data = dreq.fifo.read(data);
-    shm.dmac.dreq = !dreq.fifo.empty();
-    shs.dmac.dreq = !dreq.fifo.empty();
+    shm.dmac.dreq[0] = !dreq.fifo.empty();
+    shs.dmac.dreq[0] = !dreq.fifo.empty();
   }
 
   //communication
@@ -229,9 +229,14 @@ auto M32X::writeInternalIO(n1 upper, n1 lower, n29 address, n16 data) -> void {
       if(!pwm.rmode) pwm.rsample = 0;
       pwm.mono    = data.bit(4);
       pwm.dreqIRQ = data.bit(7);
+      if(!pwm.dreqIRQ) {
+        shm.dmac.dreq[1] = 0;
+        shs.dmac.dreq[1] = 0;
+      }
     }
     if(upper) {
       pwm.timer = data.bit(8,11);
+      pwm.periods = 0;
     }
   }
 
