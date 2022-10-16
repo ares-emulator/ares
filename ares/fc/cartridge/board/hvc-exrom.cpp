@@ -188,14 +188,15 @@ struct HVC_ExROM : Interface {  //MMC5
     }
   }
 
-  auto accessPRG(bool write, n32 address, n8 data = 0x00) -> n8 {
+  auto programRamAddress(n32 address) -> n32 {
+    if(revision == Revision::ETROM) return ramSelect << 13 | (n13)address;
+    return ramBank << 13 | (n13)address;
+  }
+
+  auto programRomAddress(n32 address) -> n32 {
     n8 bank;
 
-    if((address & 0xe000) == 0x6000) {
-      bank = ramSelect << 2 | ramBank;
-      if(revision == Revision::ETROM) bank = ramSelect;
-      address &= 0x1fff;
-    } else if(programMode == 0) {
+    if(programMode == 0) {
       bank = programBank[3] & ~3;
       address &= 0x7fff;
     } else if(programMode == 1) {
@@ -216,26 +217,7 @@ struct HVC_ExROM : Interface {  //MMC5
       address &= 0x1fff;
     }
 
-    n1 rom = bank.bit(7);
-    bank.bit(7) = 0;
-
-    if(!write) {
-      if(rom) {
-        return programROM.read(bank << 13 | address);
-      } else {
-        if(!programRAM) return data;
-        return programRAM.read(bank << 13 | address);
-      }
-    } else {
-      if(rom) {
-        programROM.write(bank << 13 | address, data);
-      } else {
-        if(ramWriteProtect[0] == 2 && ramWriteProtect[1] == 1) {
-          if(programRAM) programRAM.write(bank << 13 | address, data);
-        }
-      }
-      return 0x00;
-    }
+    return bank << 13 | address;
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {
@@ -251,8 +233,19 @@ struct HVC_ExROM : Interface {  //MMC5
       return data;
     }
 
-    if(address >= 0x6000) {
-      data = accessPRG(0, address);
+    if((address & 0xe000) == 0x6000) {
+      if(programRAM) return programRAM.read(programRamAddress(address));
+      return data;
+    }
+
+    if(address >= 0x8000) {
+      n32 programAddress = programRomAddress(address);
+      if(programAddress.bit(20)) {
+        data = programROM.read(programAddress);
+      } else {
+        if(revision == Revision::ETROM) programAddress &= 0x1fff;
+        if(programRAM) data = programRAM.read(programAddress);
+      }
       if(pcm.mode == 1 && (address & 0xc000) == 0x8000) pcm.dac = data;
       return data;
     }
@@ -328,8 +321,20 @@ struct HVC_ExROM : Interface {  //MMC5
       return;
     }
 
-    if(address >= 0x6000) {
-      accessPRG(1, address, data);
+    if((address & 0xe000) == 0x6000) {
+      if(programRAM && ramWriteProtect[0] == 2 && ramWriteProtect[1] == 1) {
+        programRAM.write(programRamAddress(address), data);
+      }
+      return;
+    }
+
+    if(address >= 0x8000) {
+      n32 programAddress = programRomAddress(address);
+      if(programAddress.bit(20)) return;
+      if(revision == Revision::ETROM) programAddress &= 0x1fff;
+      if(programRAM && ramWriteProtect[0] == 2 && ramWriteProtect[1] == 1) {
+        programRAM.write(programAddress, data);
+      }
       return;
     }
 
