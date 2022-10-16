@@ -123,6 +123,21 @@ struct M32X {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
+    struct FIFO {
+      auto empty() const -> bool { return fifo.empty(); }
+      auto full()  const -> bool { return fifo.full();  }
+      auto flush()       -> void { return fifo.flush(); }
+
+      auto read() -> i12 { return last = fifo.read(last); }
+      auto write(i12 data) -> void {
+        if(fifo.full()) read(); // purge oldest sample
+        fifo.write(data);
+      }
+
+      queue<i12[3]> fifo;
+      i12 last;
+    } lfifo, rfifo;
+
     n2  lmode;
     n2  rmode;
     n1  mono;
@@ -134,8 +149,9 @@ struct M32X {
     n32 counter;
     i12 lsample;
     i12 rsample;
-    queue<i12[4096]> lfifo;
-    queue<i12[4096]> rfifo;
+    n16 lfifoLatch;
+    n16 rfifoLatch;
+    n16 mfifoLatch;
   };
 
   //m32x.cpp

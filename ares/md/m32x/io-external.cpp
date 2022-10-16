@@ -87,20 +87,20 @@ auto M32X::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //PWM left channel pulse width
   if(address == 0xa15134) {
-    data.bit(14) = pwm.lfifo.empty();
+    data = pwm.lfifoLatch;
     data.bit(15) = pwm.lfifo.full();
   }
 
   //PWM right channel pulse width
   if(address == 0xa15136) {
-    data.bit(14) = pwm.rfifo.empty();
+    data = pwm.rfifoLatch;
     data.bit(15) = pwm.rfifo.full();
   }
 
   //PWM mono pulse width
   if(address == 0xa15138) {
-    data.bit(14) = pwm.lfifo.empty() && pwm.rfifo.empty();
-    data.bit(15) = pwm.lfifo.full()  || pwm.rfifo.full();
+    data = pwm.mfifoLatch;
+    data.bit(15) = pwm.lfifo.full() || pwm.rfifo.full();
   }
 
   //bitmap mode
@@ -250,6 +250,8 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
     if(lower) {
       pwm.lmode   = data.bit(0,1);
       pwm.rmode   = data.bit(2,3);
+      if(!pwm.lmode) pwm.lsample = 0;
+      if(!pwm.rmode) pwm.rsample = 0;
       pwm.mono    = data.bit(4);
     //pwm.dreqIRQ = data.bit(7) = readonly;
     }
@@ -266,18 +268,30 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   //PWM left channel pulse width
   if(address == 0xa15134) {
-    pwm.lfifo.write(data);
+    if(upper) pwm.lfifoLatch.byte(1) = data.byte(1);
+    if(lower) {
+      pwm.lfifoLatch.byte(0) = data.byte(0);
+      pwm.lfifo.write(pwm.lfifoLatch);
+    }
   }
 
   //PWM right channel pulse width
   if(address == 0xa15136) {
-    pwm.rfifo.write(data);
+    if(upper) pwm.rfifoLatch.byte(1) = data.byte(1);
+    if(lower) {
+      pwm.rfifoLatch.byte(0) = data.byte(0);
+      pwm.rfifo.write(pwm.rfifoLatch);
+    }
   }
 
   //PWM mono pulse width
   if(address == 0xa15138) {
-    pwm.lfifo.write(data);
-    pwm.rfifo.write(data);
+    if(upper) pwm.mfifoLatch.byte(1) = data.byte(1);
+    if(lower) {
+      pwm.mfifoLatch.byte(0) = data.byte(0);
+      pwm.lfifo.write(pwm.mfifoLatch);
+      pwm.rfifo.write(pwm.mfifoLatch);
+    }
   }
 
   //bitmap mode
