@@ -155,11 +155,8 @@ struct HVC_ExROM : Interface {  //MMC5
   }
 
   auto main() -> void override {
-    if(cycleCounter && --cycleCounter == 0) blank();
-
-    if(timerCounter && --timerCounter == 0) {
-      timerLine = 1;
-    }
+    if(cycleCounter && --cycleCounter == 0) inFrame = 0;
+    if(timerCounter && --timerCounter == 0) timerLine = 1;
 
     i32 output = 0;
     output += apu.pulseDAC[pulse1.clock() + pulse2.clock()];
@@ -169,10 +166,6 @@ struct HVC_ExROM : Interface {  //MMC5
     cpu.irqLine((irqLine & irqEnable) || (pcm.irqLine & pcm.irqEnable) || timerLine);
 
     tick();
-  }
-
-  auto blank() -> void {
-    inFrame = 0;
   }
 
   auto scanline() -> void {
@@ -221,6 +214,12 @@ struct HVC_ExROM : Interface {  //MMC5
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {
+    if((address & 0xfffa) == 0xfffa) {
+      inFrame = 0;
+      vcounter = 0;
+      irqLine = 0;
+    }
+
     if((address & 0xfc00) == 0x5800) {
       if(chipRevision != ChipRevision::MMC5A) return data;
       if(cl3.direction == 1) cl3.line = 0;  //!M2
@@ -251,28 +250,25 @@ struct HVC_ExROM : Interface {  //MMC5
     }
 
     switch(address) {
-    case 0x5010: {
-      n8 data;
+    case 0x5010:
+      data = 0;
       data.bit(0) = pcm.mode;
       data.bit(7) = pcm.irqLine & pcm.irqEnable;
       pcm.irqLine = 0;
-      return data;
-    }
+      break;
 
-    case 0x5015: {
-      n8 data;
+    case 0x5015:
+      data = 0;
       data.bit(0) = (bool)pulse1.lengthCounter;
       data.bit(1) = (bool)pulse2.lengthCounter;
-      return data;
-    }
+      break;
 
-    case 0x5204: {
-      n8 data;
+    case 0x5204:
+      data = 0;
       data.bit(6) = inFrame;
       data.bit(7) = irqLine;
       irqLine = 0;
-      return data;
-    }
+      break;
 
     case 0x5205:
       return multiplier * multiplicand >> 0;
@@ -280,30 +276,22 @@ struct HVC_ExROM : Interface {  //MMC5
     case 0x5206:
       return multiplier * multiplicand >> 8;
 
-    case 0x5208: {
+    case 0x5208:
       if(chipRevision != ChipRevision::MMC5A) break;
-      n8 data;
+      data = 0;
       data.bit(6) = cl3.line;
       data.bit(7) = sl3.line;
-      return data;
-    }
+      break;
 
-    case 0x5209: {
+    case 0x5209:
       if(chipRevision != ChipRevision::MMC5A) break;
-      n8 data;
+      data = 0;
       data.bit(7) = timerLine;
       timerLine = 0;
-      return data;
-    }
-
-    case 0xfffa: case 0xfffb:
-      inFrame = 0;
-      vcounter = 0;
-      irqLine = 0;
       break;
     }
 
-    return 0x00;
+    return data;
   }
 
   auto writePRG(n32 address, n8 data) -> void override {
@@ -345,7 +333,7 @@ struct HVC_ExROM : Interface {  //MMC5
 
     case 0x2001:
       //if background + sprites are disabled; enter video blanking period
-      if(!data.bit(3,4)) blank();
+      if(!data.bit(3,4)) inFrame = 0;
       break;
 
     case 0x5000:
