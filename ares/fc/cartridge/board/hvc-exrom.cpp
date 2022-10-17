@@ -222,12 +222,6 @@ struct HVC_ExROM : Interface {  //MMC5
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {
-    if((address & 0xfffa) == 0xfffa) {
-      inFrame = 0;
-      vcounter = 0;
-      irqLine = 0;
-    }
-
     if((address & 0xfc00) == 0x5800) {
       if(chipRevision != ChipRevision::MMC5A) return data;
       if(cl3.direction == 1) cl3.line = 0;  //!M2
