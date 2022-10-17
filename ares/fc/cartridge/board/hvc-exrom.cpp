@@ -67,8 +67,6 @@ struct HVC_ExROM : Interface {  //MMC5
 
     auto clockLength() -> void {
       if(envelope.loopMode == 0) {
-        //clocked at twice the rate of the APU pulse channels
-        if(lengthCounter) lengthCounter--;
         if(lengthCounter) lengthCounter--;
       }
     }
@@ -157,6 +155,16 @@ struct HVC_ExROM : Interface {  //MMC5
   auto main() -> void override {
     if(cycleCounter && --cycleCounter == 0) inFrame = 0;
     if(timerCounter && --timerCounter == 0) timerLine = 1;
+
+    frameDivider -= 2;
+    if(frameDivider <= 0) {
+      //length counter clocked at twice the rate of the APU pulse channels
+      pulse1.clockLength();
+      pulse1.envelope.clock();
+      pulse2.clockLength();
+      pulse2.envelope.clock();
+      frameDivider += APU::FrameCounter::NtscPeriod;
+    }
 
     i32 output = 0;
     output += apu.pulseDAC[pulse1.clock() + pulse2.clock()];
@@ -700,6 +708,7 @@ struct HVC_ExROM : Interface {  //MMC5
     for(auto& byte : exram) byte = 0xff;
     programMode = 3;
     programBank[3] = 0xff;
+    frameDivider = 1;
   }
 
   auto serialize(serializer& s) -> void override {
@@ -734,6 +743,7 @@ struct HVC_ExROM : Interface {  //MMC5
     s(multiplier);
     s(timerCounter);
     s(timerLine);
+    s(frameDivider);
     s(cycleCounter);
     s(irqLine);
     s(inFrame);
@@ -792,6 +802,7 @@ struct HVC_ExROM : Interface {  //MMC5
 
   //status registers
 
+  i32 frameDivider;
   n2  cycleCounter;
   n1  irqLine;
   n1  inFrame;
