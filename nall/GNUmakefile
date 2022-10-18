@@ -189,7 +189,9 @@ ifeq ($(platform),windows)
   options += $(if $(findstring clang++,$(compiler)),-fuse-ld=lld)
   options += $(if $(findstring g++,$(compiler)),-static -static-libgcc -static-libstdc++)
   options += $(if $(findstring true,$(console)),-mconsole,-mwindows)
-  windres := windres
+  ifeq ($(windres),)
+    windres := windres
+  endif
 endif
 
 # macos settings
