@@ -15,6 +15,14 @@ jobs:
         - name: windows
           os: windows-latest
           compiler: clang++
+          windres: windres
+          shell: 'msys2 {0}'
+          msystem: clang64
+          msys-env: clang-x86_64
+        - name: windows-arm64
+          os: windows-latest
+          compiler: clang++ --target=aarch64-w64-windows-gnu --sysroot=/clangarm64 -resource-dir=/clangarm64/lib/clang/$resourcever
+          windres: windres --target=aarch64-w64-windows-gnu
           shell: 'msys2 {0}'
           msystem: clang64
           msys-env: clang-x86_64
@@ -37,7 +45,14 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         msystem: ${{ matrix.platform.msystem }}
+        update: true
         install: make mingw-w64-${{ matrix.platform.msys-env }}-toolchain
+    - name: Install MSYS2 ARM64 Dependencies
+      if: matrix.platform.name == 'windows-arm64'
+      run: | # enable clang arm64 package source, refresh package database, and install clang package
+        echo "resourcever=$(basename "$(clang++ -print-resource-dir)")" >> $GITHUB_ENV
+        grep -qFx '[clangarm64]' /etc/pacman.conf || sed -i '/^# \[clangarm64\]/,/^$/ s|^# ||g' /etc/pacman.conf
+        pacman --noconfirm -Sy mingw-w64-clang-aarch64-clang
     - name: Install Linux Dependencies
       if: runner.os == 'Linux'
       run: |
@@ -71,7 +86,7 @@ jobs:
         popd
     - name: Make
       if: runner.os != 'macOS'
-      run: ${MAKE:-make} -j4 -C desktop-ui build=optimized local=false compiler=${{ matrix.platform.compiler }}
+      run: ${MAKE:-make} -j4 -C desktop-ui build=optimized local=false compiler="${{ matrix.platform.compiler }}" windres="${{ matrix.platform.windres }}"
     - name: "macOS: Make universal app"
       if: runner.os == 'macOS'
       run: scripts/macos-make-universal.sh
