@@ -640,16 +640,17 @@ struct HVC_ExROM : Interface {  //MMC5
 
   auto readCHR(n32 address, n8 data) -> n8 override {
     cycleCounter = 3;
-    characterAccess[0] = characterAccess[1];
-    characterAccess[1] = characterAccess[2];
-    characterAccess[2] = characterAccess[3];
-    characterAccess[3] = address;
 
     //detect two unused nametable fetches at end of each scanline
-    if(characterAccess[0].bit(13) == 0
-    && characterAccess[1].bit(13) == 1
-    && characterAccess[2].bit(13) == 1
-    && characterAccess[3].bit(13) == 1) scanline();
+    if(address & 0x2000) {
+      if(characterAccess != address) {
+        characterMatch = 0;
+      } else {
+        characterMatch++;
+        if(characterMatch >= 2) scanline();
+      }
+      characterAccess = address;
+    }
 
     if(inFrame == false) {
       vsplitFetch = 0;
@@ -744,6 +745,7 @@ struct HVC_ExROM : Interface {  //MMC5
     s(vcounter);
     s(hcounter);
     s(characterAccess);
+    s(characterMatch);
     s(characterActive);
     s(sprite8x16);
     s(exbank);
@@ -803,7 +805,8 @@ struct HVC_ExROM : Interface {  //MMC5
 
   n16 vcounter;
   n16 hcounter;
-  n16 characterAccess[4];
+  n16 characterAccess;
+  n8  characterMatch;
   n1  characterActive;
   n1  sprite8x16;
 
