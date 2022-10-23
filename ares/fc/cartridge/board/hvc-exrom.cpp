@@ -184,8 +184,8 @@ struct HVC_ExROM : Interface {  //MMC5
       irqLine = 0;
       vcounter = 0;
     } else {
-      if(vcounter == irqCoincidence) irqLine = 1;
       vcounter++;
+      if(vcounter == irqCoincidence) irqLine = 1;
     }
   }
 
