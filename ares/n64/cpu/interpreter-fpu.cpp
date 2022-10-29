@@ -316,7 +316,7 @@ auto CPU::fpuCheckInputConv<s32>(f32& f) -> bool {
   case FP_SUBNORMAL: case FP_INFINITE: case FP_NAN:
     if (fpeUnimplemented()) return exception.floatingPoint(), false;
   }
-  if((f >= 0x1p+31f || f <= -0x1p+31f) && fpeUnimplemented())
+  if((f >= 0x1p+31f || f < -0x1p+31f) && fpeUnimplemented())
     return exception.floatingPoint(), false;
   return true;
 }
@@ -327,7 +327,7 @@ auto CPU::fpuCheckInputConv<s32>(f64& f) -> bool {
   case FP_SUBNORMAL: case FP_INFINITE: case FP_NAN:
     if (fpeUnimplemented()) return exception.floatingPoint(), false;
   }
-  if((f >= 0x1p+31 || f <= -0x1p+31) && fpeUnimplemented())
+  if((f >= 0x1p+31 || f < -0x1p+31) && fpeUnimplemented())
     return exception.floatingPoint(), false;
   return true;
 }
@@ -656,7 +656,7 @@ auto CPU::FCVT_S_W(u8 fd, u8 fs) -> void {
 auto CPU::FCVT_S_L(u8 fd, u8 fs) -> void {
   if(!fpuCheckStart()) return;
   auto ffs = FS(s64);
-  if (ffs >= (s64)0x0080'0000'0000'0000ull || ffs <= (s64)0xff80'0000'0000'0000ull) {
+  if (ffs >= (s64)0x0080'0000'0000'0000ull || ffs < (s64)0xff80'0000'0000'0000ull) {
     if (fpeUnimplemented()) return exception.floatingPoint();
     return;
   }
@@ -690,7 +690,7 @@ auto CPU::FCVT_D_W(u8 fd, u8 fs) -> void {
 auto CPU::FCVT_D_L(u8 fd, u8 fs) -> void {
   if(!fpuCheckStart()) return;
   auto ffs = FS(s64);
-  if (ffs >= (s64)0x0080'0000'0000'0000ull || ffs <= (s64)0xff80'0000'0000'0000ull) {
+  if (ffs >= (s64)0x0080'0000'0000'0000ull || ffs < (s64)0xff80'0000'0000'0000ull) {
     if (fpeUnimplemented()) return exception.floatingPoint();
     return;
   }
