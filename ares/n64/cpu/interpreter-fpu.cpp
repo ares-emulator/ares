@@ -784,12 +784,12 @@ auto CPU::FFLOOR_W_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::FMOV_S(u8 fd, u8 fs) -> void {
-  if(!fpuCheckStart()) return;
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   FD(f32) = FS(f32);
 }
 
 auto CPU::FMOV_D(u8 fd, u8 fs) -> void {
-  if(!fpuCheckStart()) return;
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   FD(f64) = FS(f64);
 }
 
