@@ -953,12 +953,12 @@ auto CPU::FTRUNC_W_D(u8 fd, u8 fs) -> void {
 }
 
 auto CPU::LDC1(u8 ft, cr64& rs, s16 imm) -> void {
-  if(!fpuCheckStart()) return;
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   if(auto data = read<Dual>(rs.u64 + imm)) FT(u64) = *data;
 }
 
 auto CPU::LWC1(u8 ft, cr64& rs, s16 imm) -> void {
-  if(!fpuCheckStart()) return;
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   if(auto data = read<Word>(rs.u64 + imm)) FT(u32) = *data;
 }
 
@@ -973,18 +973,13 @@ auto CPU::MTC1(cr64& rt, u8 fs) -> void {
 }
 
 auto CPU::SDC1(u8 ft, cr64& rs, s16 imm) -> void {
-  if(!fpuCheckStart()) return;
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   write<Dual>(rs.u64 + imm, FT(u64));
 }
 
 auto CPU::SWC1(u8 ft, cr64& rs, s16 imm) -> void {
-  if(!fpuCheckStart()) return;
+  if(!scc.status.enable.coprocessor1) return exception.coprocessor1();
   write<Word>(rs.u64 + imm, FT(u32));
-}
-
-auto CPU::COP1INVALID() -> void {
-  if(!fpuCheckStart()) return;
-  exception.floatingPoint();
 }
 
 auto CPU::COP1UNIMPLEMENTED() -> void {
