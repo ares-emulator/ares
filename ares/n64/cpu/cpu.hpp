@@ -781,7 +781,6 @@ struct CPU : Thread {
   auto MTC1(cr64& rt, u8 fs) -> void;
   auto SDC1(u8 ft, cr64& rs, s16 imm) -> void;
   auto SWC1(u8 ft, cr64& rs, s16 imm) -> void;
-  auto COP1INVALID() -> void;
   auto COP1UNIMPLEMENTED() -> void;
 
   //interpreter-cop2.cpp
