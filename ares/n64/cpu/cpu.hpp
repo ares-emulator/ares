@@ -656,7 +656,7 @@ struct CPU : Thread {
   template<typename T> auto fgr(u32) -> T&;
   auto getControlRegisterFPU(n5) -> u32;
   auto setControlRegisterFPU(n5, n32) -> void;
-  auto checkFPUExceptions() -> bool;
+  template<bool CVT> auto checkFPUExceptions() -> bool;
   auto fpeDivisionByZero() -> bool;
   auto fpeInexact() -> bool;
   auto fpeUnderflow() -> bool;
