@@ -7,7 +7,7 @@ auto CPU::roundNearest(f32 f) -> T {
   t = _mm_round_ss(t, t, _MM_FROUND_TO_NEAREST_INT);
   return _mm_cvtss_f32(t);
 #else
-  return lround(f);
+  return round(f);
 #endif
 }
 
@@ -21,7 +21,7 @@ auto CPU::roundNearest(f64 f) -> T {
   t = _mm_round_sd(t, t, _MM_FROUND_TO_NEAREST_INT);
   return _mm_cvtsd_f64(t);
 #else
-  return llround(f);
+  return round(f);
 #endif
 }
 
@@ -54,7 +54,7 @@ auto CPU::roundCurrent(f32 f) -> T {
   t = _mm_round_ss(t, t, _MM_FROUND_CUR_DIRECTION);
   return _mm_cvtss_f32(t);
 #else
-  return lrint(f);
+  return rint(f);
 #endif
 }
 
@@ -65,7 +65,7 @@ auto CPU::roundCurrent(f64 f) -> T {
   t = _mm_round_sd(t, t, _MM_FROUND_CUR_DIRECTION);
   return _mm_cvtsd_f64(t);
 #else
-  return llrint(f);
+  return rint(f);
 #endif
 }
 
