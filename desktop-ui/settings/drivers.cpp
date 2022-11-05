@@ -94,6 +94,7 @@ auto DriverSettings::construct() -> void {
   videoPropertyLayout.setPadding(12_sx, 0);
   videoToggleLayout.setPadding(12_sx, 0);
   audioDriverLayout.setPadding(12_sx, 0);
+  audioDeviceLayout.setPadding(12_sx, 0);
   audioPropertyLayout.setPadding(12_sx, 0);
   audioToggleLayout.setPadding(12_sx, 0);
   inputDriverLayout.setPadding(12_sx, 0);

@@ -293,9 +293,10 @@ struct DriverSettings : VerticalLayout {
     ComboButton audioDriverList{&audioDriverLayout, Size{0, 0}};
     Button audioDriverAssign{&audioDriverLayout, Size{0, 0}};
     Label audioDriverActive{&audioDriverLayout, Size{0, 0}};
+  HorizontalLayout audioDeviceLayout{this, Size{~0, 0}};
+    Label audioDeviceLabel{&audioDeviceLayout, Size{0, 0}};
+    ComboButton audioDeviceList{&audioDeviceLayout, Size{0, 0}};
   HorizontalLayout audioPropertyLayout{this, Size{~0, 0}};
-    Label audioDeviceLabel{&audioPropertyLayout, Size{0, 0}};
-    ComboButton audioDeviceList{&audioPropertyLayout, Size{0, 0}};
     Label audioFrequencyLabel{&audioPropertyLayout, Size{0, 0}};
     ComboButton audioFrequencyList{&audioPropertyLayout, Size{0, 0}};
     Label audioLatencyLabel{&audioPropertyLayout, Size{0, 0}};
