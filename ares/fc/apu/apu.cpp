@@ -59,6 +59,9 @@ auto APU::main() -> void {
   s32 output = 0;
   output += pulseDAC[pulseOutput];
   output += dmcTriangleNoiseDAC[dmcOutput][triangleOutput][noiseOutput];
+
+  output = (output * 2) - 32768;
+
   stream->frame(sclamp<16>(output) / 32768.0);
 
   tick();
