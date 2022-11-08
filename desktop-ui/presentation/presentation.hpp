@@ -51,6 +51,7 @@ struct Presentation : Window {
       MenuSeparator toolsMenuSeparatorA{&toolsMenu};
       MenuCheckItem pauseEmulation{&toolsMenu};
       MenuItem frameAdvance{&toolsMenu};
+      MenuItem reloadGame{&toolsMenu};
       MenuSeparator toolsMenuSeparatorB{&toolsMenu};
       MenuItem manifestViewerAction{&toolsMenu};
       #if !defined(PLATFORM_MACOS)

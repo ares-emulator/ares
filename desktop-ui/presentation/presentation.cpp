@@ -137,6 +137,9 @@ Presentation::Presentation() {
   pauseEmulation.setText("Pause Emulation").onToggle([&] {
     program.pause(!program.paused);
   });
+  reloadGame.setText("Reload Game").setIcon(Icon::Action::Refresh).onActivate([&] {
+    program.load(emulator, emulator->game->location);
+  });
   frameAdvance.setText("Frame Advance").setIcon(Icon::Media::Play).onActivate([&] {
     if (!program.paused) program.pause(true);
     program.requestFrameAdvance = true;
