@@ -13370,24 +13370,6 @@ game
       volatile
 
 game
-  sha256:   4e628007ef644fde983a61e685ff88a005e3f319e8cd108921a79288655c64ce
-  name:     Star Fox EX
-  title:    Star Fox EX    
-  region:   USA
-  revision: 1.0
-  board:    GSU-RAM
-    memory
-      type: ROM
-      size: 0x200000
-      content: Program
-    memory
-      type: RAM
-      size: 0x10000
-      content: Save
-    oscillator
-      frequency: 21440000
-
-game
   sha256:   2c0bac12a7866fad1cb306da768a201c12f2520332df1ef51cba1576db21ff06
   title:    Star Fox: Super Weekend
   name:     Star Fox - Super Weekend
@@ -16141,3 +16123,22 @@ game
       size: 0x80000
       content: Program
 
+//Unlicensed
+
+game
+  sha256:   4e628007ef644fde983a61e685ff88a005e3f319e8cd108921a79288655c64ce
+  name:     Star Fox EX
+  title:    Star Fox EX    
+  region:   USA
+  revision: 1.0
+  board:    GSU-RAM
+    memory
+      type: ROM
+      size: 0x200000
+      content: Program
+    memory
+      type: RAM
+      size: 0x10000
+      content: Save
+    oscillator
+      frequency: 21440000
