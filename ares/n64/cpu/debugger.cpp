@@ -49,6 +49,7 @@ auto CPU::Debugger::exception(u8 code) -> void {
     case 15: type = "floating point"; break;
     case 23: type = "watch address"; break;
     }
+    type.append(string{" (PC=", hex(cpu.ipu.pc, 16L), ")"});
     tracer.exception->notify(type);
   }
 }
