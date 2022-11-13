@@ -44,8 +44,11 @@ auto RDP::unload() -> void {
 }
 
 auto RDP::crash(const char *reason) -> void {
-  command.crashed = 1;
   debug(unusual, "[RDP] software triggered a hardware bug; RDP crashed and will stop responding. Reason: ", reason);
+  command.crashed = 1;
+  //guard against asynchronous reporting of crash state. We want the RDP to report that it's busy forever
+  command.pipeBusy = 1;
+  command.bufferBusy = 1;
 }
 
 auto RDP::main() -> void {
