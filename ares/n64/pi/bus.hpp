@@ -11,29 +11,29 @@ inline auto PI::readWord(u32 address) -> u32 {
 template <u32 Size>
 inline auto PI::busRead(u32 address) -> u32 {
   static_assert(Size == Half || Size == Word);  //PI bus will do 32-bit (CPU) or 16-bit (DMA) only
-  static constexpr u32 unmapped = 0;
+  const u32 unmapped = (address & 0xFFFF) | (address << 16);
 
   if(address <= 0x04ff'ffff) return unmapped; //Address range not memory mapped, only accessible via DMA
   if(address <= 0x0500'03ff) {
     if(_DD()) return dd.c2s.read<Size>(address);
-    return 0xffff'ffff;  //TODO: Proper open-bus behavior
+    return unmapped;
   }
   if(address <= 0x0500'04ff) {
     if(_DD()) return dd.ds.read<Size>(address);
-    return 0xffff'ffff;  //TODO: Proper open-bus behavior
+    return unmapped;
   }
   if(address <= 0x0500'057f) {
     if(_DD()) return dd.read<Size>(address);
-    return 0xffff'ffff;  //TODO: Proper open-bus behavior
+    return unmapped;
   }
   if(address <= 0x0500'05bf) {
     if(_DD()) return dd.ms.read<Size>(address);
-    return 0xffff'ffff;  //TODO: Proper open-bus behavior
+    return unmapped;
   }
   if(address <= 0x05ff'ffff) return unmapped;
   if(address <= 0x063f'ffff) {
     if(_DD()) return dd.iplrom.read<Size>(address);
-    return 0xffff'ffff;  //TODO: Proper open-bus behavior
+    return unmapped;
   }
   if(address <= 0x07ff'ffff) return unmapped;
   if(address <= 0x0fff'ffff) {
