@@ -71,7 +71,7 @@ ifeq ($(mame.rdp),true)
   mame.path := $(thirdparty.path)/mame
 
   ares.objects += mame-emu-emucore
-  ares.objects += mame-emu-video-rgbsse
+  ares.objects += mame-emu-video-rgbutil
   ares.objects += mame-lib-util-delegate
   ares.objects += mame-lib-util-strformat
   ares.objects += mame-mame-video-n64
@@ -82,7 +82,7 @@ ifeq ($(mame.rdp),true)
   ares.objects += mame-osd-osdsync
 
   $(object.path)/mame-emu-emucore.o:          $(mame.path)/emu/emucore.cpp
-  $(object.path)/mame-emu-video-rgbsse.o:     $(mame.path)/emu/video/rgbsse.cpp
+  $(object.path)/mame-emu-video-rgbutil.o:    $(mame.path)/emu/video/rgbutil.cpp
   $(object.path)/mame-lib-util-delegate.o:    $(mame.path)/lib/util/delegate.cpp
   $(object.path)/mame-lib-util-strformat.o:   $(mame.path)/lib/util/strformat.cpp
   $(object.path)/mame-mame-video-n64.o:       $(mame.path)/mame/video/n64.cpp
