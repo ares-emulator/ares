@@ -17,20 +17,32 @@
 
 #define MAME_RGB_HIGH_PRECISION
 #include "rgbsse.h"
+#ifdef MAME_RGBUTIL_IMPL
+#include "rgbsse.cpp"
+#endif
 
 #elif defined(__aarch64__)
 
 #define MAME_RGB_HIGH_PRECISION
 #include "rgbsse.h"
+#ifdef MAME_RGBUTIL_IMPL
+#include "rgbsse.cpp"
+#endif
 
 #elif defined(__ALTIVEC__)
 
 #define MAME_RGB_HIGH_PRECISION
 #include "rgbvmx.h"
+#ifdef MAME_RGBUTIL_IMPL
+#include "rgbvmx.cpp"
+#endif
 
 #else
 
 #include "rgbgen.h"
+#ifdef MAME_RGBUTIL_IMPL
+#include "rgbgen.cpp"
+#endif
 
 #endif
 
