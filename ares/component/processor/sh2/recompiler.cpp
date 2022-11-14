@@ -340,12 +340,12 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     auto skip = cmp32_jump(M, reg(0), flag_ne);
     sub32(reg(1), reg(1), Rm, set_c);
     mov32(Rn, reg(1));
-    mov32_from_c(reg(1), -1);
+    mov32_f(reg(1), flag_c);
     auto skip2 = jump();
     setLabel(skip);
     add32(reg(1), reg(1), Rm, set_c);
     mov32(Rn, reg(1));
-    mov32_from_c(reg(1), +1);
+    mov32_f(reg(1), flag_c);
     setLabel(skip2);
     xor32(reg(0), M, Q);
     xor32(reg(0), reg(0), reg(1));
@@ -388,10 +388,9 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //SUBC Rm,Rn
   case 0x3a: {
-    mov32_to_c(T, -1);
+    sub32(unused(), imm(0), T, set_c);
     subc32(Rn, Rn, Rm, set_c);
-    mov32_from_c(reg(0), -1);
-    mov32(T, reg(0));
+    mov32_f(T, flag_c);
     return 0;
   }
 
@@ -419,10 +418,9 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //ADDC Rm,Rn
   case 0x3e: {
-    mov32_to_c(T, +1);
+    add32(unused(), T, imm(-1), set_c);
     addc32(Rn, Rn, Rm, set_c);
-    mov32_from_c(reg(0), +1);
-    mov32(T, reg(0));
+    mov32_f(T, flag_c);
     return 0;
   }
 
@@ -560,10 +558,9 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //NEGC Rm,Rn
   case 0x6a: {
-    mov32_to_c(T, -1);
+    sub32(unused(), imm(0), T, set_c);
     subc32(Rn, imm(0), Rm, set_c);
-    mov32_from_c(reg(0), -1);
-    mov32(T, reg(0));
+    mov32_f(T, flag_c);
     return 0;
   }
 
