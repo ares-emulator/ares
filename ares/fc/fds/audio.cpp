@@ -106,8 +106,8 @@ auto FDSAudio::updateOutput() -> void {
   static constexpr u32 lookup[4] = {36, 24, 17, 14};
   i32 level = min(carrier.gain, 32) * lookup[masterVolume];
 
-  n8 output = waveform.data[waveform.index] * level / 1152;
-  stream->frame(output / 255.0 * 0.5);
+  n8 output = waveform.data[waveform.index] * level / 561;
+  stream->frame(output / 255.0 * 0.25);
 }
 
 auto FDSAudio::read(n16 address, n8 data) -> n8 {

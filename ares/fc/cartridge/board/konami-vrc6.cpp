@@ -132,7 +132,7 @@ struct KonamiVRC6 : Interface {
     pulse1.clock();
     pulse2.clock();
     sawtooth.clock();
-    f64 output = (pulse1.output + pulse2.output + sawtooth.output) / 61.0 * 0.25;
+    f64 output = (pulse1.output + pulse2.output + sawtooth.output) / 61.0 * 0.5;
     stream->frame(-output);
 
     tick();
