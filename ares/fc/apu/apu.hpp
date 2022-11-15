@@ -154,8 +154,8 @@ struct APU : Thread {
   n5 enabledChannels;
 
 //unserialized:
-  i16 pulseDAC[32];
-  i16 dmcTriangleNoiseDAC[128][16][16];
+  u16 pulseDAC[32];
+  u16 dmcTriangleNoiseDAC[128][16][16];
 
   static const n8  lengthCounterTable[32];
   static const n16 dmcPeriodTableNTSC[16];

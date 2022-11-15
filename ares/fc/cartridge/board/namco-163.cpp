@@ -39,7 +39,7 @@ struct Namco163 : Interface {
     if(++soundDivider == 15) {
       soundDivider = 0;
       double output = clockSound();
-      stream->frame(output / 255.0 * 0.25);
+      stream->frame(output / 255.0 * 0.5);
     }
 
     tick();
