@@ -86,7 +86,7 @@ struct APU : Thread {
     n8  linearLength;
     n1  haltLengthCounter;
     n11 period;
-    n5  stepCounter;
+    n5  stepCounter = 16;
     n8  linearLengthCounter;
     n1  reloadLinear;
   } triangle;
