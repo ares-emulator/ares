@@ -112,15 +112,15 @@ auto InputDigital::bind(u32 binding, shared_pointer<HID::Device> device, u32 gro
     return bind(binding, assignment), true;
   }
 
-  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button && (
-    (oldValue >= -16384 && newValue < -16384) || (oldValue <= -16384 && newValue > -16384)
-  )) {
+  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button
+  && oldValue >= -16384 && newValue < -16384
+  ) {
     return bind(binding, {assignment, "/Lo"}), true;
   }
 
-  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button && (
-    (oldValue <= +16384 && newValue > +16384) || (oldValue >= +16384 && newValue < +16384)
-  )) {
+  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button
+  && oldValue <= +16384 && newValue > +16384
+  ) {
     return bind(binding, {assignment, "/Hi"}), true;
   }
 
@@ -228,15 +228,15 @@ auto InputAnalog::bind(u32 binding, shared_pointer<HID::Device> device, u32 grou
     return bind(binding, assignment), true;
   }
 
-  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button && (
-    (oldValue >= -16384 && newValue < -16384) || (oldValue <= -16384 && newValue > -16384)
-  )) {
+  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button
+  && oldValue >= -16384 && newValue < -16384
+  ) {
     return bind(binding, {assignment, "/Lo"}), true;
   }
 
-  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button && (
-    (oldValue <= +16384 && newValue > +16384) || (oldValue >= +16384 && newValue < +16384)
-  )) {
+  if(device->isJoypad() && groupID != HID::Joypad::GroupID::Button
+  && oldValue <= +16384 && newValue > +16384
+  ) {
     return bind(binding, {assignment, "/Hi"}), true;
   }
 
@@ -294,15 +294,15 @@ auto InputAbsolute::bind(u32 binding, shared_pointer<HID::Device> device, u32 gr
     return bind(binding, assignment), true;
   }
 
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && (
-    (oldValue >= -16384 && newValue < -16384) || (oldValue <= -16384 && newValue > -16384)
-  )) {
+  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis
+  && oldValue >= -16384 && newValue < -16384
+  ) {
     return bind(binding, assignment), true;
   }
 
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && (
-    (oldValue <= +16384 && newValue > +16384) || (oldValue >= +16384 && newValue < +16384)
-  )) {
+  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis
+  && oldValue <= +16384 && newValue > +16384
+  ) {
     return bind(binding, assignment), true;
   }
 
@@ -351,15 +351,15 @@ auto InputRelative::bind(u32 binding, shared_pointer<HID::Device> device, u32 gr
     return bind(binding, assignment), true;
   }
 
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && (
-    (oldValue >= -16384 && newValue < -16384) || (oldValue <= -16384 && newValue > -16384)
-  )) {
+  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis
+  && oldValue >= -16384 && newValue < -16384
+  ) {
     return bind(binding, assignment), true;
   }
 
-  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis && (
-    (oldValue <= +16384 && newValue > +16384) || (oldValue >= +16384 && newValue < +16384)
-  )) {
+  if(device->isJoypad() && groupID == HID::Joypad::GroupID::Axis
+  && oldValue <= +16384 && newValue > +16384
+  ) {
     return bind(binding, assignment), true;
   }
 
