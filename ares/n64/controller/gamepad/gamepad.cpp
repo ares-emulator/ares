@@ -229,8 +229,8 @@ auto Gamepad::read() -> n32 {
   }
 
   n32 data;
-  data.byte(0) = -ay;
-  data.byte(1) = +ax;
+  data.byte(0) = s8(-ay);
+  data.byte(1) = s8(+ax);
   data.bit(16) = cameraRight->value();
   data.bit(17) = cameraLeft->value();
   data.bit(18) = cameraDown->value();
