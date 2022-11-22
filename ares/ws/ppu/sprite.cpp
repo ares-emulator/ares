@@ -1,6 +1,6 @@
 auto PPU::Sprite::frame() -> void {
   n7 index = first;
-  n16 base = oamBase.bit(0, self.depth() == 2 ? 4 : 5) << 9;
+  n16 base = oamBase.bit(0, self.grayscale() ? 4 : 5) << 9;
   oam[self.field()].flush();
   for(auto object : range(min(128, count))) {
     oam[self.field()].write(iram.read32(base + index++ * 4));
