@@ -1,8 +1,7 @@
 auto PPU::fetch(n10 tile, n3 x, n3 y) -> n4 {
   n4 color;
 
-  if(depth() == 2) tile &= 0x1ff;
-  if(depth() == 4) tile &= 0x3ff;
+  tile &= grayscale() ? 0x1ff : 0x3ff;
 
   if(planar() && depth() == 2) {
     n16 data = iram.read16(0x2000 + (tile << 4) + (y << 1));

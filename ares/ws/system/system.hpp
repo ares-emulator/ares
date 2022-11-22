@@ -75,16 +75,10 @@ struct System : IO {
   auto memory() const -> u32 { return io.mode.bit(2) == 0 ? 16_KiB : 64_KiB; }
 
   //mode:
-  //xx0 => planar tiledata
-  //xx1 => packed tiledata
-  //x0x => 512 tiles
-  //x1x => 1024 tiles
-  //0xx => 16 KiB memory mode
-  //1xx => 64 KiB memory mode
-  //00x => 2bpp, grayscale
-  //01x => 2bpp, color
-  //10x => 2bpp, color
-  //11x => 4bpp, color
+  //0xx => 2bpp, mono, planar tiledata (WSC enhancements locked)
+  //10x => 2bpp, color, planar tiledata (WSC enhancements unlocked)
+  //110 => 4bpp, color, planar tiledata
+  //111 => 4bpp, color, packed tiledata
 
   //system.cpp
   auto game() -> string;

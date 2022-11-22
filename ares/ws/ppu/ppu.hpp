@@ -29,10 +29,10 @@ struct PPU : Thread, IO {
   auto vcounter() const -> u32 { return io.vcounter; }
   auto field() const -> bool { return io.field; }
 
-  auto planar() const -> bool { return system.mode().bit(0) == 0; }
-  auto packed() const -> bool { return system.mode().bit(0) == 1; }
+  auto planar() const -> bool { return system.mode().bit(0,2) != 7; }
+  auto packed() const -> bool { return system.mode().bit(0,2) == 7; }
   auto depth() const -> u32 { return system.mode().bit(1,2) != 3 ? 2 : 4; }
-  auto grayscale() const -> bool { return system.mode().bit(1,2) == 0; }
+  auto grayscale() const -> bool { return system.mode().bit(2) == 0; }
 
   //ppu.cpp
   auto load(Node::Object) -> void;

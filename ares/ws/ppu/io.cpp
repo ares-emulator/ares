@@ -30,7 +30,7 @@ auto PPU::readIO(n16 address) -> n8 {
     break;
 
   case 0x0004:  //SPR_BASE
-    if(depth() == 2) {
+    if(grayscale()) {
       data.bit(0,4) = sprite.oamBase.bit(0,4);
     } else {
       data.bit(0,5) = sprite.oamBase.bit(0,5);
@@ -46,7 +46,7 @@ auto PPU::readIO(n16 address) -> n8 {
     break;
 
   case 0x0007:  //MAP_BASE
-    if(depth() == 2) {
+    if(grayscale()) {
       data.bit(0,2) = screen1.mapBase[1].bit(0,2);
       data.bit(4,6) = screen2.mapBase[1].bit(0,2);
     } else {
