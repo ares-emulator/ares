@@ -51,6 +51,9 @@ auto pApplication::run() -> void {
     //below line is needed to run application during window resize; however it has a large performance penalty on the resize smoothness
     //[[NSRunLoop currentRunLoop] addTimer:applicationTimer forMode:NSEventTrackingRunLoopMode];
   }
+  [[NSUserDefaults standardUserDefaults] registerDefaults:@{
+    @"NSTreatUnknownArgumentsAsOpen": @NO
+  }];
 
   @autoreleasepool {
     [NSApp run];
