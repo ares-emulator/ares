@@ -282,7 +282,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_icall(struct sljit_compiler *compi
 
 	if ((type & 0xff) == SLJIT_CALL_REG_ARG) {
 		if (type & SLJIT_CALL_RETURN) {
-			if (src >= SLJIT_FIRST_SAVED_REG && src <= SLJIT_S0) {
+			if (src >= SLJIT_FIRST_SAVED_REG && src <= (SLJIT_S0 - SLJIT_KEPT_SAVEDS_COUNT(compiler->options))) {
 				FAIL_IF(push_inst(compiler, DADDU | S(src) | TA(0) | D(PIC_ADDR_REG), DR(PIC_ADDR_REG)));
 				src = PIC_ADDR_REG;
 				srcw = 0;

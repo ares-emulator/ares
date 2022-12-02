@@ -603,7 +603,7 @@ typedef double sljit_f64;
 #endif
 #endif /* SLJIT_INDIRECT_CALL */
 
-/* The offset which needs to be substracted from the return address to
+/* The offset which needs to be subtracted from the return address to
 determine the next executed instruction after return. */
 #ifndef SLJIT_RETURN_ADDRESS_OFFSET
 #define SLJIT_RETURN_ADDRESS_OFFSET 0
@@ -631,11 +631,13 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_unused_memory_exec(void);
 #if (defined SLJIT_PROT_EXECUTABLE_ALLOCATOR && SLJIT_PROT_EXECUTABLE_ALLOCATOR)
 SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 #define SLJIT_EXEC_OFFSET(ptr) sljit_exec_offset(ptr)
-#else
-#define SLJIT_EXEC_OFFSET(ptr) 0
 #endif
 
 #endif /* SLJIT_EXECUTABLE_ALLOCATOR */
+
+#ifndef SLJIT_EXEC_OFFSET
+#define SLJIT_EXEC_OFFSET(ptr) 0
+#endif
 
 /**********************************************/
 /* Registers and locals offset determination. */
