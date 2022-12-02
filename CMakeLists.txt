@@ -36,7 +36,7 @@ if (WITH_SYSTEM_ZLIB)
 else()
   add_subdirectory(deps/zlib-1.2.12 EXCLUDE_FROM_ALL)
   list(APPEND CHDR_LIBS zlib)
-  list(APPEND CHDR_INCLUDES zlib)
+  list(APPEND CHDR_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/deps/zlib-1.2.12" "${CMAKE_CURRENT_BINARY_DIR}/deps/zlib-1.2.12")
 endif()
 
 #--------------------------------------------------

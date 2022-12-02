@@ -324,7 +324,7 @@ static UINT64 core_stdio_fsize(core_file *file);
 static size_t core_stdio_fread(void *ptr, size_t size, size_t nmemb, core_file *file);
 static int core_stdio_fclose(core_file *file);
 static int core_stdio_fclose_nonowner(core_file *file); // alternate fclose used by chd_open_file
-static int core_stdio_fseek(core_file* file, long offset, int whence);
+static int core_stdio_fseek(core_file* file, INT64 offset, int whence);
 
 /* internal header operations */
 static chd_error header_validate(const chd_header *header);
@@ -1717,9 +1717,7 @@ CHD_EXPORT chd_error chd_open(const char *filename, int mode, chd_file *parent, 
 	}
 
 	/* now open the CHD */
-	err = chd_open_core_file(file, mode, parent, chd);
-	if (err != CHDERR_NONE)
-		goto cleanup;
+	return chd_open_core_file(file, mode, parent, chd);
 
 cleanup:
 	if ((err != CHDERR_NONE) && (file != NULL))
@@ -2953,6 +2951,6 @@ static int core_stdio_fclose_nonowner(core_file *file) {
 /*-------------------------------------------------
 	core_stdio_fseek - core_file wrapper over fclose
 -------------------------------------------------*/
-static int core_stdio_fseek(core_file* file, long offset, int whence) {
+static int core_stdio_fseek(core_file* file, INT64 offset, int whence) {
 	return core_stdio_fseek_impl((FILE*)file->argp, offset, whence);
 }
