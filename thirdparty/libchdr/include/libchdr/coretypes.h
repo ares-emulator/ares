@@ -55,7 +55,7 @@ typedef struct chd_core_file {
 	int (*fclose)(struct chd_core_file*);
 
 	// fseek clone
-	int (*fseek)(struct chd_core_file*, long, int);
+	int (*fseek)(struct chd_core_file*, INT64, int);
 } core_file;
 
 static inline int core_fclose(core_file *fp) {
@@ -66,7 +66,7 @@ static inline size_t core_fread(core_file *fp, void *ptr, size_t len) {
 	return fp->fread(ptr, 1, len, fp);
 }
 
-static inline int core_fseek(core_file* fp, long offset, int whence) {
+static inline int core_fseek(core_file* fp, INT64 offset, int whence) {
 	return fp->fseek(fp, offset, whence);
 }
 
