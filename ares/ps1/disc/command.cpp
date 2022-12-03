@@ -228,7 +228,7 @@ auto Disc::commandStop() -> void {
 auto Disc::commandPause() -> void {
   if(event.invocation == 0) {
     event.invocation = 1;
-    event.counter = 1'000'000;
+    event.counter = 50'000;
 
     ssr.reading = 0;
 
