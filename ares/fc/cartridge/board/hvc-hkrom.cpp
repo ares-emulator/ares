@@ -24,7 +24,6 @@ struct HVC_HKROM : Interface {  //MMC6
   auto main() -> void override {
     if(irqDelay) irqDelay--;
     cpu.irqLine(irqLine);
-    tick();
   }
 
   auto irqTest(n32 address) -> void {

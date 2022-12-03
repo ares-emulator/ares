@@ -105,16 +105,6 @@ auto Interface::create(string board) -> Interface* {
   return p;
 }
 
-auto Interface::main() -> void {
-  cartridge.step(cartridge.rate() * 4095);
-  tick();
-}
-
-auto Interface::tick() -> void {
-  cartridge.step(cartridge.rate());
-  cartridge.synchronize(cpu);
-}
-
 auto Interface::load(Memory::Readable<n8>& memory, string name) -> bool {
   if(auto fp = pak->read(name)) {
     memory.allocate(fp->size(), 0xff);

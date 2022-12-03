@@ -66,8 +66,6 @@ struct KonamiVRC7 : Interface {
       if(!disableFM) sample = ym2413.clock();
       stream->frame(sample);
     }
-
-    tick();
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {

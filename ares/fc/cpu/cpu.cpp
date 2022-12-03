@@ -33,6 +33,9 @@ auto CPU::main() -> void {
 }
 
 auto CPU::step(u32 clocks) -> void {
+  assert(clocks == rate());
+  apu.main();
+  cartridge.main();
   Thread::step(clocks);
   Thread::synchronize();
 }

@@ -172,8 +172,6 @@ struct HVC_ExROM : Interface {  //MMC5
     stream->frame(sclamp<16>(-output) / 32768.0);
 
     cpu.irqLine((irqLine & irqEnable) || (pcm.irqLine & pcm.irqEnable) || timerLine);
-
-    tick();
   }
 
   auto scanline() -> void {

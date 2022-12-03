@@ -134,8 +134,6 @@ struct KonamiVRC6 : Interface {
     sawtooth.clock();
     f64 output = (pulse1.output + pulse2.output + sawtooth.output) / 61.0 * 0.5;
     stream->frame(-output);
-
-    tick();
   }
 
   auto addressPRG(n32 address) const -> n32 {

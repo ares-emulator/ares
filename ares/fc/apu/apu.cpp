@@ -61,13 +61,6 @@ auto APU::main() -> void {
   output += dmcTriangleNoiseDAC[dmcOutput][triangleOutput][noiseOutput];
 
   stream->frame(sclamp<16>(output) / 32768.0);
-
-  tick();
-}
-
-auto APU::tick() -> void {
-  Thread::step(rate());
-  Thread::synchronize(cpu);
 }
 
 auto APU::setIRQ() -> void {
@@ -75,8 +68,6 @@ auto APU::setIRQ() -> void {
 }
 
 auto APU::power(bool reset) -> void {
-  Thread::create(system.frequency(), {&APU::main, this});
-
   pulse1 = {};
   pulse2 = {};
   triangle = {};

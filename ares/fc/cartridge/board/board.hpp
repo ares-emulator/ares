@@ -11,8 +11,7 @@ struct Interface {
   virtual auto save() -> void {}
   virtual auto unload() -> void {}
 
-  virtual auto main() -> void;
-  virtual auto tick() -> void;
+  virtual auto main() -> void {}
 
   virtual auto readPRG(n32 address, n8 data) -> n8 { return data; }
   virtual auto writePRG(n32 address, n8 data) -> void {}

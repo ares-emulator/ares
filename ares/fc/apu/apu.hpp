@@ -1,4 +1,4 @@
-struct APU : Thread {
+struct APU {
   Node::Object node;
   Node::Audio::Stream stream;
 
@@ -9,7 +9,6 @@ struct APU : Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto tick() -> void;
   auto setIRQ() -> void;
 
   auto power(bool reset) -> void;

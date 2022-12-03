@@ -37,7 +37,6 @@ struct BandaiLZ93D50 : Interface {
         irqEnable = false;
       }
     }
-    tick();
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {

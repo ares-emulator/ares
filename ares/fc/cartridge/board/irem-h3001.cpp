@@ -17,7 +17,6 @@ struct IremH3001 : Interface {
       if(irqCounter && --irqCounter == 0) irqLine = 1;
     }
     cpu.irqLine(irqLine);
-    tick();
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {

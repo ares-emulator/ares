@@ -47,7 +47,6 @@ auto Cartridge::save() -> void {
 }
 
 auto Cartridge::power() -> void {
-  Thread::create(system.frequency(), {&Cartridge::main, this});
   board->power();
 }
 
