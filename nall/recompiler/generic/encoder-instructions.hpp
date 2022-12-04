@@ -75,6 +75,10 @@
   OP2(lshr64, LSHR)
   OP2(ashr32, ASHR32)
   OP2(ashr64, ASHR)
+  OP2(rotl32, ROTL32)
+  OP2(rotl64, ROTL)
+  OP2(rotr32, ROTR32)
+  OP2(rotr64, ROTR)
 #undef OP2
 
   //compare instructions

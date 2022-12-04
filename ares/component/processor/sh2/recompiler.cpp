@@ -1016,22 +1016,18 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //ROTL Rn
   case 0x404: {
-    lshr32(T, Rn, imm(31));
     mov32(reg(0), Rn);
-    lshr32(reg(1), reg(0), imm(31));
-    shl32(reg(0), reg(0), imm(1));
-    or32(reg(0), reg(0), reg(1));
+    lshr32(T, reg(0), imm(31));
+    rotl32(reg(0), reg(0), imm(1));
     mov32(Rn, reg(0));
     return 0;
   }
 
   //ROTR Rn
   case 0x405: {
-    and32(T, Rn, imm(1));
     mov32(reg(0), Rn);
-    lshr32(reg(1), reg(0), imm(1));
-    shl32(reg(0), reg(0), imm(31));
-    or32(reg(0), reg(0), reg(1));
+    and32(T, reg(0), imm(1));
+    rotr32(reg(0), reg(0), imm(1));
     mov32(Rn, reg(0));
     return 0;
   }
