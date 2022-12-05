@@ -599,9 +599,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SLLV Rd,Rt,Rs
   case 0x04: {
-    mov32(reg(0), mem(Rt32));
-    and32(reg(1), mem(Rs32), imm(31));
-    shl32(reg(0), reg(0), reg(1));
+    mshl32(reg(0), mem(Rt32), mem(Rs32));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
     return 0;
@@ -615,9 +613,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SRLV Rd,Rt,RS
   case 0x06: {
-    mov32(reg(0), mem(Rt32));
-    and32(reg(1), mem(Rs32), imm(31));
-    lshr32(reg(0), reg(0), reg(1));
+    mlshr32(reg(0), mem(Rt32), mem(Rs32));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));
     return 0;
@@ -625,7 +621,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SRAV Rd,Rt,Rs
   case 0x07: {
-    and32(reg(1), mem(Rs32), imm(31));
+    and64(reg(1), mem(Rs), imm(31));
     ashr64(reg(0), mem(Rt), reg(1));
     mov64_s32(reg(0), reg(0));
     mov64(mem(Rd), reg(0));

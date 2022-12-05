@@ -405,8 +405,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SLLV Rd,Rt,Rs
   case 0x04: {
-    and32(reg(0), mem(Rs), imm(31));
-    shl32(mem(Rd), mem(Rt), reg(0));
+    mshl32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
 
@@ -417,15 +416,13 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SRLV Rd,Rt,Rs
   case 0x06: {
-    and32(reg(0), mem(Rs), imm(31));
-    lshr32(mem(Rd), mem(Rt), reg(0));
+    mlshr32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
 
   //SRAV Rd,Rt,Rs
   case 0x07: {
-    and32(reg(0), mem(Rs), imm(31));
-    ashr32(mem(Rd), mem(Rt), reg(0));
+    mashr32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
 
