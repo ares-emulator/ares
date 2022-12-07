@@ -3112,7 +3112,7 @@ void Renderer::load_tile(uint32_t tile, const LoadTileInfo &info)
 	else
 	{
 		unsigned pixel_count = ((info.shi - info.slo) + 1) & 0xfff;
-		if (!pixel_count)
+		if (!pixel_count || pixel_count > 2048)
 			return;
 	}
 

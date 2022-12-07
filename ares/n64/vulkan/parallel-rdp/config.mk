@@ -26,6 +26,7 @@ PARALLEL_RDP_SOURCES_CXX := \
         $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/semaphore_manager.cpp \
         $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/shader.cpp \
         $(PARALLEL_RDP_IMPLEMENTATION)/vulkan/texture_format.cpp \
+        $(PARALLEL_RDP_IMPLEMENTATION)/util/arena_allocator.cpp \
         $(PARALLEL_RDP_IMPLEMENTATION)/util/logging.cpp \
         $(PARALLEL_RDP_IMPLEMENTATION)/util/thread_id.cpp \
         $(PARALLEL_RDP_IMPLEMENTATION)/util/aligned_alloc.cpp \

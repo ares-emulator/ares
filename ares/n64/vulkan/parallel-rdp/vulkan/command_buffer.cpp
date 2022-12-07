@@ -40,6 +40,12 @@ using namespace Util;
 
 namespace Vulkan
 {
+static inline uint32_t get_combined_spec_constant_mask(const DeferredPipelineCompile &compile)
+{
+	return compile.potential_static_state.spec_constant_mask |
+	       (compile.potential_static_state.internal_spec_constant_mask << VULKAN_NUM_USER_SPEC_CONSTANTS);
+}
+
 CommandBuffer::CommandBuffer(Device *device_, VkCommandBuffer cmd_, VkPipelineCache cache, Type type_)
     : device(device_)
     , table(device_->get_device_table())
@@ -226,14 +232,21 @@ void CommandBuffer::clear_quad(unsigned attachment, const VkClearRect &rect, con
 	att.clearValue = value;
 	att.colorAttachment = attachment;
 	att.aspectMask = aspect;
-	table.vkCmdClearAttachments(cmd, 1, &att, 1, &rect);
+
+	auto tmp_rect = rect;
+	rect2d_transform_xy(tmp_rect.rect, current_framebuffer_surface_transform,
+						framebuffer->get_width(), framebuffer->get_height());
+	table.vkCmdClearAttachments(cmd, 1, &att, 1, &tmp_rect);
 }
 
 void CommandBuffer::clear_quad(const VkClearRect &rect, const VkClearAttachment *attachments, unsigned num_attachments)
 {
 	VK_ASSERT(framebuffer);
 	VK_ASSERT(actual_render_pass);
-	table.vkCmdClearAttachments(cmd, num_attachments, attachments, 1, &rect);
+	auto tmp_rect = rect;
+	rect2d_transform_xy(tmp_rect.rect, current_framebuffer_surface_transform,
+	                    framebuffer->get_width(), framebuffer->get_height());
+	table.vkCmdClearAttachments(cmd, num_attachments, attachments, 1, &tmp_rect);
 }
 
 void CommandBuffer::full_barrier()
@@ -597,6 +610,7 @@ void CommandBuffer::begin_context()
 	current_layout = nullptr;
 	pipeline_state.program = nullptr;
 	pipeline_state.potential_static_state.spec_constant_mask = 0;
+	pipeline_state.potential_static_state.internal_spec_constant_mask = 0;
 	memset(bindings.cookies, 0, sizeof(bindings.cookies));
 	memset(bindings.secondary_cookies, 0, sizeof(bindings.secondary_cookies));
 	memset(&index_state, 0, sizeof(index_state));
@@ -620,7 +634,7 @@ void CommandBuffer::begin_graphics()
 	// Vertex shaders which support prerotate are expected to include inc/prerotate.h and
 	// call prerotate_fixup_clip_xy().
 	if (current_framebuffer_surface_transform != VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
-		set_surface_transform_specialization_constants(0);
+		set_surface_transform_specialization_constants();
 }
 
 void CommandBuffer::init_viewport_scissor(const RenderPassInfo &info, const Framebuffer *fb)
@@ -630,13 +644,14 @@ void CommandBuffer::init_viewport_scissor(const RenderPassInfo &info, const Fram
 	uint32_t fb_width = fb->get_width();
 	uint32_t fb_height = fb->get_height();
 
-	rect.offset.x = std::min(fb_width, uint32_t(rect.offset.x));
-	rect.offset.y = std::min(fb_height, uint32_t(rect.offset.y));
+	// Convert fb_width / fb_height to logical width / height if need be.
+	if (surface_transform_swaps_xy(current_framebuffer_surface_transform))
+		std::swap(fb_width, fb_height);
+
+	rect.offset.x = std::min(int32_t(fb_width), rect.offset.x);
+	rect.offset.y = std::min(int32_t(fb_height), rect.offset.y);
 	rect.extent.width = std::min(fb_width - rect.offset.x, rect.extent.width);
 	rect.extent.height = std::min(fb_height - rect.offset.y, rect.extent.height);
-
-	if (surface_transform_swaps_xy(current_framebuffer_surface_transform))
-		rect2d_swap_xy(rect);
 
 	viewport = {
 		float(rect.offset.x), float(rect.offset.y),
@@ -714,14 +729,16 @@ void CommandBuffer::next_subpass(VkSubpassContents contents)
 	begin_graphics();
 }
 
-void CommandBuffer::set_surface_transform_specialization_constants(unsigned base_index)
+void CommandBuffer::set_surface_transform_specialization_constants()
 {
 	float transform[4];
-
-	set_specialization_constant_mask(0xf << base_index);
+	pipeline_state.potential_static_state.internal_spec_constant_mask = 0xf;
 	build_prerotate_matrix_2x2(current_framebuffer_surface_transform, transform);
 	for (unsigned i = 0; i < 4; i++)
-		set_specialization_constant(base_index + i, transform[i]);
+	{
+		memcpy(pipeline_state.potential_static_state.spec_constants + VULKAN_NUM_USER_SPEC_CONSTANTS,
+		       transform, sizeof(transform));
+	}
 }
 
 void CommandBuffer::init_surface_transform(const RenderPassInfo &info)
@@ -815,8 +832,8 @@ void CommandBuffer::begin_render_pass(const RenderPassInfo &info, VkSubpassConte
 
 	// In the render pass interface, we pretend we are rendering with normal
 	// un-rotated coordinates.
-	if (surface_transform_swaps_xy(current_framebuffer_surface_transform))
-		rect2d_swap_xy(begin_info.renderArea);
+	rect2d_transform_xy(begin_info.renderArea, current_framebuffer_surface_transform,
+	                    framebuffer->get_width(), framebuffer->get_height());
 
 	table.vkCmdBeginRenderPass(cmd, &begin_info, contents);
 
@@ -907,11 +924,11 @@ Pipeline CommandBuffer::build_compute_pipeline(Device *device, const DeferredPip
 	info.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
 
 	VkSpecializationInfo spec_info = {};
-	VkSpecializationMapEntry spec_entries[VULKAN_NUM_SPEC_CONSTANTS];
+	VkSpecializationMapEntry spec_entries[VULKAN_NUM_TOTAL_SPEC_CONSTANTS];
 	auto mask = compile.program->get_pipeline_layout()->get_resource_layout().combined_spec_constant_mask &
-	            compile.potential_static_state.spec_constant_mask;
+	            get_combined_spec_constant_mask(compile);
 
-	uint32_t spec_constants[VULKAN_NUM_SPEC_CONSTANTS];
+	uint32_t spec_constants[VULKAN_NUM_TOTAL_SPEC_CONSTANTS];
 
 	if (mask)
 	{
@@ -1176,8 +1193,8 @@ Pipeline CommandBuffer::build_graphics_pipeline(Device *device, const DeferredPi
 	unsigned num_stages = 0;
 
 	VkSpecializationInfo spec_info[ecast(ShaderStage::Count)] = {};
-	VkSpecializationMapEntry spec_entries[ecast(ShaderStage::Count)][VULKAN_NUM_SPEC_CONSTANTS];
-	uint32_t spec_constants[static_cast<unsigned>(ShaderStage::Count)][VULKAN_NUM_SPEC_CONSTANTS];
+	VkSpecializationMapEntry spec_entries[ecast(ShaderStage::Count)][VULKAN_NUM_TOTAL_SPEC_CONSTANTS];
+	uint32_t spec_constants[static_cast<unsigned>(ShaderStage::Count)][VULKAN_NUM_TOTAL_SPEC_CONSTANTS];
 
 	for (unsigned i = 0; i < static_cast<unsigned>(ShaderStage::Count); i++)
 	{
@@ -1191,7 +1208,7 @@ Pipeline CommandBuffer::build_graphics_pipeline(Device *device, const DeferredPi
 			s.stage = static_cast<VkShaderStageFlagBits>(1u << i);
 
 			auto mask = compile.program->get_pipeline_layout()->get_resource_layout().spec_constant_mask[i] &
-			            compile.potential_static_state.spec_constant_mask;
+			            get_combined_spec_constant_mask(compile);
 
 			if (mask)
 			{
@@ -1277,7 +1294,7 @@ void CommandBuffer::update_hash_compute_pipeline(DeferredPipelineCompile &compil
 	// Spec constants.
 	auto &layout = compile.program->get_pipeline_layout()->get_resource_layout();
 	uint32_t combined_spec_constant = layout.combined_spec_constant_mask;
-	combined_spec_constant &= compile.potential_static_state.spec_constant_mask;
+	combined_spec_constant &= get_combined_spec_constant_mask(compile);
 	h.u32(combined_spec_constant);
 	for_each_bit(combined_spec_constant, [&](uint32_t bit) {
 		h.u32(compile.potential_static_state.spec_constants[bit]);
@@ -1338,7 +1355,7 @@ void CommandBuffer::update_hash_graphics_pipeline(DeferredPipelineCompile &compi
 
 	// Spec constants.
 	uint32_t combined_spec_constant = layout.combined_spec_constant_mask;
-	combined_spec_constant &= compile.potential_static_state.spec_constant_mask;
+	combined_spec_constant &= get_combined_spec_constant_mask(compile);
 	h.u32(combined_spec_constant);
 	for_each_bit(combined_spec_constant, [&](uint32_t bit) {
 		h.u32(compile.potential_static_state.spec_constants[bit]);
@@ -1428,6 +1445,16 @@ bool CommandBuffer::flush_render_state(bool synchronous)
 
 		if (old_pipe != current_pipeline.pipeline)
 			bind_pipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, current_pipeline.pipeline, current_pipeline.dynamic_mask);
+
+#ifdef VULKAN_DEBUG
+		if (current_framebuffer_surface_transform != VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
+		{
+			// Make sure that if we're using prerotate, our vertex shaders have prerotate.
+			auto spec_constant_mask = current_layout->get_resource_layout().combined_spec_constant_mask;
+			constexpr uint32_t expected_mask = 0xfu << VULKAN_NUM_USER_SPEC_CONSTANTS;
+			VK_ASSERT((spec_constant_mask & expected_mask) == expected_mask);
+		}
+#endif
 	}
 
 	if (current_pipeline.pipeline == VK_NULL_HANDLE)
@@ -1449,10 +1476,11 @@ bool CommandBuffer::flush_render_state(bool synchronous)
 
 	if (get_and_clear(COMMAND_BUFFER_DIRTY_VIEWPORT_BIT))
 	{
-		if (surface_transform_swaps_xy(current_framebuffer_surface_transform))
+		if (current_framebuffer_surface_transform != VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
 		{
 			auto tmp_viewport = viewport;
-			viewport_swap_xy(tmp_viewport);
+			viewport_transform_xy(tmp_viewport, current_framebuffer_surface_transform,
+			                      framebuffer->get_width(), framebuffer->get_height());
 			table.vkCmdSetViewport(cmd, 0, 1, &tmp_viewport);
 		}
 		else
@@ -1461,14 +1489,11 @@ bool CommandBuffer::flush_render_state(bool synchronous)
 
 	if (get_and_clear(COMMAND_BUFFER_DIRTY_SCISSOR_BIT))
 	{
-		if (surface_transform_swaps_xy(current_framebuffer_surface_transform))
-		{
-			auto tmp_scissor = scissor;
-			rect2d_swap_xy(tmp_scissor);
-			table.vkCmdSetScissor(cmd, 0, 1, &tmp_scissor);
-		}
-		else
-			table.vkCmdSetScissor(cmd, 0, 1, &scissor);
+		auto tmp_scissor = scissor;
+		rect2d_transform_xy(tmp_scissor, current_framebuffer_surface_transform,
+							framebuffer->get_width(), framebuffer->get_height());
+		rect2d_clip(tmp_scissor);
+		table.vkCmdSetScissor(cmd, 0, 1, &tmp_scissor);
 	}
 
 	if (pipeline_state.static_state.state.depth_bias_enable && get_and_clear(COMMAND_BUFFER_DIRTY_DEPTH_BIAS_BIT))

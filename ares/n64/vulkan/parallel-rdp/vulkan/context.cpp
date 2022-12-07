@@ -34,6 +34,10 @@
 #include <windows.h>
 #endif
 
+#if defined(ANDROID) && defined(HAVE_SWAPPY)
+#include "swappy/swappyVk.h"
+#endif
+
 //#undef VULKAN_DEBUG
 
 namespace Vulkan
@@ -41,7 +45,7 @@ namespace Vulkan
 void Context::set_application_info(const VkApplicationInfo *app_info)
 {
 	user_application_info = app_info;
-	VK_ASSERT(app_info->apiVersion >= VK_API_VERSION_1_1);
+	VK_ASSERT(!app_info || app_info->apiVersion >= VK_API_VERSION_1_1);
 }
 
 bool Context::init_instance_and_device(const char **instance_ext, uint32_t instance_ext_count, const char **device_ext,
@@ -196,8 +200,14 @@ void Context::destroy()
 	debug_messenger = VK_NULL_HANDLE;
 #endif
 
+#if defined(ANDROID) && defined(HAVE_SWAPPY)
+	if (device != VK_NULL_HANDLE)
+		SwappyVk_destroyDevice(device);
+#endif
+
 	if (owned_device && device != VK_NULL_HANDLE)
 		device_table.vkDestroyDevice(device, nullptr);
+
 	if (owned_instance && instance != VK_NULL_HANDLE)
 		vkDestroyInstance(instance, nullptr);
 }
@@ -353,6 +363,12 @@ bool Context::create_instance(const char **instance_ext, uint32_t instance_ext_c
 		ext.supports_surface_capabilities2 = true;
 	}
 
+	if (has_surface_extension && has_extension(VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME))
+	{
+		instance_exts.push_back(VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME);
+		ext.supports_swapchain_colorspace = true;
+	}
+
 #ifdef VULKAN_DEBUG
 	const auto has_layer = [&](const char *name) -> bool {
 		auto layer_itr = find_if(begin(queried_layers), end(queried_layers), [name](const VkLayerProperties &e) -> bool {
@@ -415,7 +431,7 @@ bool Context::create_instance(const char **instance_ext, uint32_t instance_ext_c
 
 	volkLoadInstance(instance);
 
-#if defined(VULKAN_DEBUG) && !defined(ANDROID)
+#if defined(VULKAN_DEBUG)
 	if (ext.supports_debug_utils)
 	{
 		VkDebugUtilsMessengerCreateInfoEXT debug_info = { VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
@@ -522,12 +538,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 		}
 	}
 
-	{
-		VkPhysicalDeviceProperties props;
-		vkGetPhysicalDeviceProperties(gpu, &props);
-		LOGI("Using Vulkan GPU: %s\n", props.deviceName);
-	}
-
 	uint32_t ext_count = 0;
 	vkEnumerateDeviceExtensionProperties(gpu, nullptr, &ext_count, nullptr);
 	std::vector<VkExtensionProperties> queried_extensions(ext_count);
@@ -545,7 +555,17 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 		if (!has_extension(required_device_extensions[i]))
 			return false;
 
-	vkGetPhysicalDeviceProperties(gpu, &gpu_props);
+	VkPhysicalDeviceProperties2 gpu_props2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+	if (has_extension(VK_KHR_DRIVER_PROPERTIES_EXTENSION_NAME))
+	{
+		ext.supports_driver_properties = true;
+		ext.driver_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES_KHR };
+		gpu_props2.pNext = &ext.driver_properties;
+	}
+
+	vkGetPhysicalDeviceProperties2(gpu, &gpu_props2);
+	gpu_props = gpu_props2.properties;
+	LOGI("Using Vulkan GPU: %s\n", gpu_props.deviceName);
 
 	if (gpu_props.apiVersion < VK_API_VERSION_1_1)
 	{
@@ -627,12 +647,22 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 	queue_info.timestamp_valid_bits =
 			queue_props[queue_info.family_indices[QUEUE_INDEX_GRAPHICS]].queueFamilyProperties.timestampValidBits;
 
+	// Driver ends up interleaving GPU work in very bizarre ways, causing horrible GPU
+	// bubbles and completely broken pacing. Single queue works around it.
+	bool broken_async_queues =
+			ext.supports_driver_properties &&
+			ext.driver_properties.driverID == VK_DRIVER_ID_SAMSUNG_PROPRIETARY;
+
+	if (broken_async_queues)
+		LOGW("Working around broken scheduler for separate compute queues, forcing single GRAPHICS + COMPUTE queue.\n");
+
 	// Prefer another graphics queue since we can do async graphics that way.
 	// The compute queue is to be treated as high priority since we also do async graphics on it.
-	if (!find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_COMPUTE], queue_indices[QUEUE_INDEX_COMPUTE],
-	                       VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, 1.0f) &&
-	    !find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_COMPUTE], queue_indices[QUEUE_INDEX_COMPUTE],
-	                       VK_QUEUE_COMPUTE_BIT, 0, 1.0f))
+	if (broken_async_queues ||
+	    (!find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_COMPUTE], queue_indices[QUEUE_INDEX_COMPUTE],
+	                        VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0, 1.0f) &&
+	     !find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_COMPUTE], queue_indices[QUEUE_INDEX_COMPUTE],
+	                        VK_QUEUE_COMPUTE_BIT, 0, 1.0f)))
 	{
 		// Fallback to the graphics queue if we must.
 		queue_info.family_indices[QUEUE_INDEX_COMPUTE] = queue_info.family_indices[QUEUE_INDEX_GRAPHICS];
@@ -682,19 +712,47 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 
 	std::vector<const char *> enabled_extensions;
 
+	bool requires_swapchain = false;
 	for (uint32_t i = 0; i < num_required_device_extensions; i++)
+	{
 		enabled_extensions.push_back(required_device_extensions[i]);
+		if (strcmp(required_device_extensions[i], VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
+			requires_swapchain = true;
+	}
+
+#if defined(ANDROID) && defined(HAVE_SWAPPY)
+	// Enable additional extensions required by SwappyVk.
+	std::unique_ptr<char[]> swappy_str_buffer;
+	if (requires_swapchain)
+	{
+		uint32_t required_swappy_extension_count = 0;
+
+		// I'm really not sure why the API just didn't return static const char * strings here,
+		// but oh well.
+		SwappyVk_determineDeviceExtensions(gpu, uint32_t(queried_extensions.size()),
+		                                   queried_extensions.data(),
+		                                   &required_swappy_extension_count,
+		                                   nullptr);
+		swappy_str_buffer.reset(new char[required_swappy_extension_count * (VK_MAX_EXTENSION_NAME_SIZE + 1)]);
+
+		std::vector<char *> extension_buffer;
+		extension_buffer.reserve(required_swappy_extension_count);
+		for (uint32_t i = 0; i < required_swappy_extension_count; i++)
+			extension_buffer.push_back(swappy_str_buffer.get() + i * (VK_MAX_EXTENSION_NAME_SIZE + 1));
+		SwappyVk_determineDeviceExtensions(gpu, uint32_t(queried_extensions.size()),
+		                                   queried_extensions.data(),
+		                                   &required_swappy_extension_count,
+		                                   extension_buffer.data());
+
+		for (auto *required_ext : extension_buffer)
+			enabled_extensions.push_back(required_ext);
+	}
+#endif
 
 	if (has_extension(VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME))
 	{
 		ext.supports_mirror_clamp_to_edge = true;
 		enabled_extensions.push_back(VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME);
-	}
-
-	if (has_extension(VK_GOOGLE_DISPLAY_TIMING_EXTENSION_NAME))
-	{
-		ext.supports_google_display_timing = true;
-		enabled_extensions.push_back(VK_GOOGLE_DISPLAY_TIMING_EXTENSION_NAME);
 	}
 
 #ifdef _WIN32
@@ -965,31 +1023,28 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 		enabled_extensions.push_back(VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME);
 	}
 
-	// Validation layers don't fully support present_id/wait yet.
-	// Ignore this extension for now.
-#ifndef VULKAN_DEBUG
-	for (unsigned i = 0; i < num_required_device_extensions; i++)
+	if (requires_swapchain)
 	{
-		if (strcmp(required_device_extensions[i], VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
+		if (has_extension(VK_KHR_PRESENT_ID_EXTENSION_NAME))
 		{
-			if (has_extension(VK_KHR_PRESENT_ID_EXTENSION_NAME))
-			{
-				enabled_extensions.push_back(VK_KHR_PRESENT_ID_EXTENSION_NAME);
-				*ppNext = &ext.present_id_features;
-				ppNext = &ext.present_id_features.pNext;
-			}
+			enabled_extensions.push_back(VK_KHR_PRESENT_ID_EXTENSION_NAME);
+			*ppNext = &ext.present_id_features;
+			ppNext = &ext.present_id_features.pNext;
+		}
 
-			if (has_extension(VK_KHR_PRESENT_WAIT_EXTENSION_NAME))
-			{
-				enabled_extensions.push_back(VK_KHR_PRESENT_WAIT_EXTENSION_NAME);
-				*ppNext = &ext.present_wait_features;
-				ppNext = &ext.present_wait_features.pNext;
-			}
+		if (has_extension(VK_KHR_PRESENT_WAIT_EXTENSION_NAME))
+		{
+			enabled_extensions.push_back(VK_KHR_PRESENT_WAIT_EXTENSION_NAME);
+			*ppNext = &ext.present_wait_features;
+			ppNext = &ext.present_wait_features.pNext;
+		}
 
-			break;
+		if (ext.supports_swapchain_colorspace && has_extension(VK_EXT_HDR_METADATA_EXTENSION_NAME))
+		{
+			ext.supports_hdr_metadata = true;
+			enabled_extensions.push_back(VK_EXT_HDR_METADATA_EXTENSION_NAME);
 		}
 	}
-#endif
 
 	vkGetPhysicalDeviceFeatures2(gpu, &features);
 
@@ -1060,8 +1115,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 	ext.subgroup_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES };
 	ext.multiview_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES };
 
-	ext.driver_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES_KHR };
-
 	ext.host_memory_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_HOST_PROPERTIES_EXT };
 	ext.subgroup_size_control_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_PROPERTIES_EXT };
 	ext.descriptor_indexing_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES_EXT };
@@ -1098,14 +1151,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 	{
 		*ppNext = &ext.conservative_rasterization_properties;
 		ppNext = &ext.conservative_rasterization_properties.pNext;
-	}
-
-	if (has_extension(VK_KHR_DRIVER_PROPERTIES_EXTENSION_NAME))
-	{
-		enabled_extensions.push_back(VK_KHR_DRIVER_PROPERTIES_EXTENSION_NAME);
-		ext.supports_driver_properties = true;
-		*ppNext = &ext.driver_properties;
-		ppNext = &ext.driver_properties.pNext;
 	}
 
 	if (ext.supports_shader_float_control)
@@ -1146,6 +1191,10 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 		{
 			device_table.vkGetDeviceQueue(device, queue_info.family_indices[i], queue_indices[i],
 			                              &queue_info.queues[i]);
+
+#if defined(ANDROID) && defined(HAVE_SWAPPY)
+			SwappyVk_setQueueFamilyIndex(device, queue_info.queues[i], queue_info.family_indices[i]);
+#endif
 		}
 		else
 		{

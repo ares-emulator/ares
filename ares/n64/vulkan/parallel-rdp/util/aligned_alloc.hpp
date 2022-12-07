@@ -32,6 +32,8 @@ void *memalign_alloc(size_t boundary, size_t size);
 void *memalign_calloc(size_t boundary, size_t size);
 void memalign_free(void *ptr);
 
+struct AlignedDeleter { void operator()(void *ptr) { memalign_free(ptr); }};
+
 template <typename T>
 struct AlignedAllocation
 {

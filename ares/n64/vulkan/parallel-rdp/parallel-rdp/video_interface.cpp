@@ -23,6 +23,7 @@
 #include "video_interface.hpp"
 #include "rdp_renderer.hpp"
 #include "luts.hpp"
+#include "bitops.hpp"
 #include <cmath>
 
 #ifndef PARALLEL_RDP_SHADER_DIR
@@ -847,7 +848,7 @@ Vulkan::ImageHandle VideoInterface::scale_stage(Vulkan::CommandBuffer &cmd, cons
 		uint32_t info_y_shift;
 	} push = {};
 
-	push.info_y_shift = Vulkan::log2_integer(scaling_factor);
+	push.info_y_shift = Util::floor_log2(scaling_factor);
 
 	if (serrate)
 	{

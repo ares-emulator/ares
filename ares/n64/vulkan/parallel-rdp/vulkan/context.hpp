@@ -49,7 +49,6 @@ struct DeviceFeatures
 {
 	bool supports_debug_utils = false;
 	bool supports_mirror_clamp_to_edge = false;
-	bool supports_google_display_timing = false;
 	bool supports_nv_device_diagnostic_checkpoints = false;
 	bool supports_external_memory_host = false;
 	bool supports_surface_capabilities2 = false;
@@ -71,6 +70,8 @@ struct DeviceFeatures
 	bool supports_image_format_list = false;
 	bool supports_shader_float_control = false;
 	bool supports_tooling_info = false;
+	bool supports_hdr_metadata = false;
+	bool supports_swapchain_colorspace = false;
 
 	// Vulkan 1.1 core
 	VkPhysicalDeviceFeatures enabled_features = {};
@@ -277,12 +278,12 @@ private:
 
 #ifdef VULKAN_DEBUG
 	VkDebugUtilsMessengerEXT debug_messenger = VK_NULL_HANDLE;
+	bool force_no_validation = false;
 #endif
 	std::function<void (const char *)> message_callback;
 
 	void destroy();
 	void check_descriptor_indexing_features();
-	bool force_no_validation = false;
 
 #ifdef GRANITE_VULKAN_FOSSILIZE
 	Fossilize::FeatureFilter feature_filter;
