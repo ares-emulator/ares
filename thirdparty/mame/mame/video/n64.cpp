@@ -2568,6 +2568,8 @@ void n64_rdp::cmd_load_block(uint64_t *cmd_buf)
 	do_load_edge_walker(load_edge_walker_data);*/
 
 	int32_t width = (sh - sl) + 1;
+	if (width > 2048)
+		return;
 
 	width = (width << m_misc_state.m_ti_size) >> 1;
 	if (width & 7)
