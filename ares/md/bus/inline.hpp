@@ -1,4 +1,4 @@
-inline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
+alwaysinline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   if(address >= 0x000000 && address <= 0x3fffff) {
     waitRefreshExternal();
     if(!cpu.io.romEnable) {
@@ -62,7 +62,7 @@ inline auto Bus::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   return data;
 }
 
-inline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
+alwaysinline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   if(address >= 0x000000 && address <= 0x3fffff) {
     waitRefreshExternal();
     if(cartridge.bootable()) {
@@ -122,7 +122,7 @@ inline auto Bus::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 }
 
-inline auto Bus::waitRefreshExternal() -> void {
+alwaysinline auto Bus::waitRefreshExternal() -> void {
   if(state.acquired & VDPDMA) return; // refresh is synched with VDP during DMA
   if(cpu.refresh.external < cpu.refresh.externalLowBound) return;
 
@@ -145,7 +145,7 @@ inline auto Bus::waitRefreshExternal() -> void {
   }
 }
 
-inline auto Bus::waitRefreshRAM() -> void {
+alwaysinline auto Bus::waitRefreshRAM() -> void {
   if(state.acquired & VDPDMA) return; // refresh is synched with VDP during DMA
   if(cpu.refresh.ram < cpu.refresh.ramLowBound) return;
 
