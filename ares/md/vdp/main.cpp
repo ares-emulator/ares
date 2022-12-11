@@ -1,6 +1,6 @@
 auto VDP::step(u32 clocks) -> void {
   Thread::step(clocks);
-  Thread::synchronize(cpu, apu);
+  Thread::synchronize(cpu);
 }
 
 auto VDP::tick() -> void {
