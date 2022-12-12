@@ -3,12 +3,12 @@ auto VDP::step(u32 clocks) -> void {
   Thread::synchronize(cpu);
 }
 
-template<bool h40> auto VDP::tick() -> void {
+template<bool _h40> auto VDP::tick() -> void {
   step(cycles[0] + cycles[1]);
   cycles += 2;
   state.hcounter++;
 
-  if(h40) {
+  if(_h40) {
     if(hcounter() == 0x00) hblank(0), vedge();
     else if(hcounter() == 0xa3) vtick();
     else if(hcounter() == 0xb3) hblank(1);
@@ -206,28 +206,28 @@ auto VDP::mainH40() -> void {
   tick<true>(); layerB.patternFetch( 1);
 }
 
-template<bool h40, bool pixels> auto VDP::blocks() -> void {
+template<bool _h40, bool _pixels> auto VDP::blocks() -> void {
   bool den = displayEnable();
   bool vc = vcounter() == 0x1ff;
-  for(auto block : range(h40 ? 20 : 16)) {
+  for(auto block : range(_h40 ? 20 : 16)) {
     layers.vscrollFetch(block);
     layerA.attributesFetch();
     layerB.attributesFetch();
     window.attributesFetch(block);
-    tick<h40>(); layerA.mappingFetch(block);
-    tick<h40>(); (block & 3) != 3 ? slot() : refresh();
-    tick<h40>(); layerA.patternFetch(block * 2 + 2);
-    tick<h40>(); layerA.patternFetch(block * 2 + 3);
-    tick<h40>(); layerB.mappingFetch(block);
-    tick<h40>(); sprite.mappingFetch(block);
-    tick<h40>(); layerB.patternFetch(block * 2 + 2);
-    tick<h40>(); layerB.patternFetch(block * 2 + 3);
+    tick<_h40>(); layerA.mappingFetch(block);
+    tick<_h40>(); (block & 3) != 3 ? slot() : refresh();
+    tick<_h40>(); layerA.patternFetch(block * 2 + 2);
+    tick<_h40>(); layerA.patternFetch(block * 2 + 3);
+    tick<_h40>(); layerB.mappingFetch(block);
+    tick<_h40>(); sprite.mappingFetch(block);
+    tick<_h40>(); layerB.patternFetch(block * 2 + 2);
+    tick<_h40>(); layerB.patternFetch(block * 2 + 3);
 
-    if(pixels) {
+    if(_pixels) {
       if(!den || vc) {
-        for(auto pixel: range(16)) dac.pixel<h40, false>(block * 16 + pixel);
+        for(auto pixel: range(16)) dac.pixel<_h40, false>(block * 16 + pixel);
       } else {
-        for(auto pixel: range(16)) dac.pixel<h40, true>(block * 16 + pixel);
+        for(auto pixel: range(16)) dac.pixel<_h40, true>(block * 16 + pixel);
       }
     }
   }
