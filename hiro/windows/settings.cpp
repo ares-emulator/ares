@@ -1,7 +1,7 @@
 namespace hiro {
 
 Settings::Settings() {
-  string path = {Path::userData(), "hiro/"};
+  string path = {Path::program(), "hiro/"};
   auto document = BML::unserialize(file::read({path, "windows.bml"}));
 
   document["extendedFrameBounds/popup/x"].value(efbPopup.x);
@@ -21,7 +21,7 @@ Settings::Settings() {
 }
 
 Settings::~Settings() {
-  string path = {Path::userData(), "hiro/"};
+  string path = {Path::program(), "hiro/"};
   directory::create(path, 0755);
   Markup::Node document;
 
