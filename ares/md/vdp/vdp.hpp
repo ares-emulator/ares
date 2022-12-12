@@ -63,7 +63,7 @@ struct VDP : Thread {
 
   //main.cpp
   auto step(u32 clocks) -> void;
-  auto tick() -> void;
+  template<bool h40> auto tick() -> void;
   auto vtick() -> void;
   auto hblank(bool line) -> void;
   auto vblank(bool line) -> void;
@@ -75,6 +75,7 @@ struct VDP : Thread {
   auto render() -> void;
   auto mainH32() -> void;
   auto mainH40() -> void;
+  template<bool h40, bool pixels> auto blocks() -> void;
   auto generateCycleTimings() -> void;
 
   //io.cpp
@@ -376,8 +377,8 @@ struct VDP : Thread {
 
   struct DAC {
     //dac.cpp
-    auto pixel(u32 x) -> void;
-    auto output(n32 color) -> void;
+    template<bool h40, bool draw> auto pixel(u32 x) -> void;
+    template<bool h40> auto output(n32 color) -> void;
     auto power(bool reset) -> void;
 
     //serialization.cpp

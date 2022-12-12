@@ -3,22 +3,23 @@ auto VDP::step(u32 clocks) -> void {
   Thread::synchronize(cpu);
 }
 
-auto VDP::tick() -> void {
+template<bool h40> auto VDP::tick() -> void {
   step(cycles[0] + cycles[1]);
   cycles += 2;
   state.hcounter++;
-  if(h32()) {
+
+  if(h40) {
     if(hcounter() == 0x00) hblank(0), vedge();
-    if(hcounter() == 0x83) vtick();
-    if(hcounter() == 0x93) hblank(1);
-    if(hcounter() == 0x94) state.hcounter = 0xe9;
-  }
-  if(h40()) {
+    else if(hcounter() == 0xa3) vtick();
+    else if(hcounter() == 0xb3) hblank(1);
+    else if(hcounter() == 0xb6) state.hcounter = 0xe4;
+  } else {
     if(hcounter() == 0x00) hblank(0), vedge();
-    if(hcounter() == 0xa3) vtick();
-    if(hcounter() == 0xb3) hblank(1);
-    if(hcounter() == 0xb6) state.hcounter = 0xe4;
+    else if(hcounter() == 0x83) vtick();
+    else if(hcounter() == 0x93) hblank(1);
+    else if(hcounter() == 0x94) state.hcounter = 0xe9;
   }
+
   irq.poll();
   vram.refreshing = 0;
 }
@@ -113,60 +114,48 @@ auto VDP::mainH32() -> void {
   cycles = &cyclesH32[edclk()][0];
 
   sprite.begin();
-  for(auto block : range(16)) {
-    layers.vscrollFetch(block);
-    layerA.attributesFetch();
-    layerB.attributesFetch();
-    window.attributesFetch(block);
-    tick(); layerA.mappingFetch(block);
-    tick(); (block & 3) != 3 ? slot() : refresh();
-    tick(); layerA.patternFetch(block * 2 + 2);
-    tick(); layerA.patternFetch(block * 2 + 3);
-    tick(); layerB.mappingFetch(block);
-    tick(); sprite.mappingFetch(block);
-    tick(); layerB.patternFetch(block * 2 + 2);
-    tick(); layerB.patternFetch(block * 2 + 3);
-    for(auto pixel : range(16)) dac.pixel(block * 16 + pixel);
-  }
+  if(dac.pixels) blocks<false, true>();
+  else blocks<false, false>();
+
   m32x.vdp.scanline(pixels, scanline);
 
-  tick(); slot();
-  tick(); slot();
+  tick<false>(); slot();
+  tick<false>(); slot();
 
   layers.vscrollFetch();
   sprite.end();
 
   for(auto cycle : range(13)) {
-    tick(); sprite.patternFetch(cycle + 0);
+    tick<false>(); sprite.patternFetch(cycle + 0);
   }
-  tick(); slot();
+  tick<false>(); slot();
   for(auto cycle : range(13)) {
-    tick(); sprite.patternFetch(cycle + 13);
+    tick<false>(); sprite.patternFetch(cycle + 13);
   }
-  tick(); slot();
+  tick<false>(); slot();
 
   layerA.begin();
   layerB.begin();
 
-  tick(); layers.hscrollFetch();
-  tick(); sprite.patternFetch(26);
-  tick(); sprite.patternFetch(27);
-  tick(); sprite.patternFetch(28);
-  tick(); sprite.patternFetch(29);
+  tick<false>(); layers.hscrollFetch();
+  tick<false>(); sprite.patternFetch(26);
+  tick<false>(); sprite.patternFetch(27);
+  tick<false>(); sprite.patternFetch(28);
+  tick<false>(); sprite.patternFetch(29);
 
   layers.vscrollFetch(-1);
   layerA.attributesFetch();
   layerB.attributesFetch();
   window.attributesFetch(-1);
 
-  tick(); layerA.mappingFetch(-1);
-  tick(); !displayEnable() ? refresh() : sprite.patternFetch(30);
-  tick(); layerA.patternFetch( 0);
-  tick(); layerA.patternFetch( 1);
-  tick(); layerB.mappingFetch(-1);
-  tick(); sprite.patternFetch(31);
-  tick(); layerB.patternFetch( 0);
-  tick(); layerB.patternFetch( 1);
+  tick<false>(); layerA.mappingFetch(-1);
+  tick<false>(); !displayEnable() ? refresh() : sprite.patternFetch(30);
+  tick<false>(); layerA.patternFetch( 0);
+  tick<false>(); layerA.patternFetch( 1);
+  tick<false>(); layerB.mappingFetch(-1);
+  tick<false>(); sprite.patternFetch(31);
+  tick<false>(); layerB.patternFetch( 0);
+  tick<false>(); layerB.patternFetch( 1);
 }
 
 auto VDP::mainH40() -> void {
@@ -174,59 +163,74 @@ auto VDP::mainH40() -> void {
   cycles = &cyclesH40[edclk()][0];
 
   sprite.begin();
-  for(auto block : range(20)) {
-    layers.vscrollFetch(block);
-    layerA.attributesFetch();
-    layerB.attributesFetch();
-    window.attributesFetch(block);
-    tick(); layerA.mappingFetch(block);
-    tick(); (block & 3) != 3 ? slot() : refresh();
-    tick(); layerA.patternFetch(block * 2 + 2);
-    tick(); layerA.patternFetch(block * 2 + 3);
-    tick(); layerB.mappingFetch(block);
-    tick(); sprite.mappingFetch(block);
-    tick(); layerB.patternFetch(block * 2 + 2);
-    tick(); layerB.patternFetch(block * 2 + 3);
-    for(auto pixel : range(16)) dac.pixel(block * 16 + pixel);
-  }
+  if(dac.pixels) blocks<true, true>();
+  else blocks<true, false>();
+
   m32x.vdp.scanline(pixels, vcounter());
 
-  tick(); slot();
-  tick(); slot();
+  tick<true>(); slot();
+  tick<true>(); slot();
 
   layers.vscrollFetch();
   sprite.end();
 
   for(auto cycle : range(23)) {
-    tick(); sprite.patternFetch(cycle + 0);
+    tick<true>(); sprite.patternFetch(cycle + 0);
   }
-  tick(); slot();
+  tick<true>(); slot();
   for(auto cycle : range(11)) {
-    tick(); sprite.patternFetch(cycle + 23);
+    tick<true>(); sprite.patternFetch(cycle + 23);
   }
 
   layerA.begin();
   layerB.begin();
 
-  tick(); layers.hscrollFetch();
-  tick(); sprite.patternFetch(34);
-  tick(); sprite.patternFetch(35);
-  tick(); sprite.patternFetch(36);
-  tick(); sprite.patternFetch(37);
+  tick<true>(); layers.hscrollFetch();
+  tick<true>(); sprite.patternFetch(34);
+  tick<true>(); sprite.patternFetch(35);
+  tick<true>(); sprite.patternFetch(36);
+  tick<true>(); sprite.patternFetch(37);
 
   layers.vscrollFetch(-1);
   layerA.attributesFetch();
   layerB.attributesFetch();
   window.attributesFetch(-1);
 
-  tick(); layerA.mappingFetch(-1);
-  tick(); !displayEnable() ? refresh() : sprite.patternFetch(38);
-  tick(); layerA.patternFetch( 0);
-  tick(); layerA.patternFetch( 1);
-  tick(); layerB.mappingFetch(-1);
-  tick(); sprite.patternFetch(39);
-  tick(); layerB.patternFetch( 0);
-  tick(); layerB.patternFetch( 1);
+  tick<true>(); layerA.mappingFetch(-1);
+  tick<true>(); !displayEnable() ? refresh() : sprite.patternFetch(38);
+  tick<true>(); layerA.patternFetch( 0);
+  tick<true>(); layerA.patternFetch( 1);
+  tick<true>(); layerB.mappingFetch(-1);
+  tick<true>(); sprite.patternFetch(39);
+  tick<true>(); layerB.patternFetch( 0);
+  tick<true>(); layerB.patternFetch( 1);
+}
+
+template<bool h40, bool pixels> auto VDP::blocks() -> void {
+  bool den = displayEnable();
+  bool vc = vcounter() == 0x1ff;
+  for(auto block : range(h40 ? 20 : 16)) {
+    layers.vscrollFetch(block);
+    layerA.attributesFetch();
+    layerB.attributesFetch();
+    window.attributesFetch(block);
+    tick<h40>(); layerA.mappingFetch(block);
+    tick<h40>(); (block & 3) != 3 ? slot() : refresh();
+    tick<h40>(); layerA.patternFetch(block * 2 + 2);
+    tick<h40>(); layerA.patternFetch(block * 2 + 3);
+    tick<h40>(); layerB.mappingFetch(block);
+    tick<h40>(); sprite.mappingFetch(block);
+    tick<h40>(); layerB.patternFetch(block * 2 + 2);
+    tick<h40>(); layerB.patternFetch(block * 2 + 3);
+
+    if(pixels) {
+      if(!den || vc) {
+        for(auto pixel: range(16)) dac.pixel<h40, false>(block * 16 + pixel);
+      } else {
+        for(auto pixel: range(16)) dac.pixel<h40, true>(block * 16 + pixel);
+      }
+    }
+  }
 }
 
 //timings are approximations; exact positions of slow/normal/fast cycles are not known

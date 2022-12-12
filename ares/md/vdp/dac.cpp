@@ -1,8 +1,6 @@
-auto VDP::DAC::pixel(u32 x) -> void {
-  if(!pixels) return;
-
-  if(!vdp.displayEnable() || vdp.vcounter() == 0x1ff) {
-    output(0b101 << 9 | vdp.cram.color(vdp.io.backgroundColor));
+template<bool h40, bool draw> auto VDP::DAC::pixel(u32 x) -> void {
+  if(!draw) {
+    output<h40>(0b101 << 9 | vdp.cram.color(vdp.io.backgroundColor));
     return;
   }
 
@@ -54,15 +52,15 @@ auto VDP::DAC::pixel(u32 x) -> void {
   }
 
   auto color = vdp.cram.color(pixel.color);
-  output(pixel.backdrop << 11 | mode << 9 | color);
+  output<h40>(pixel.backdrop << 11 | mode << 9 | color);
 }
 
-auto VDP::DAC::output(n32 color) -> void {
+template<bool h40> auto VDP::DAC::output(n32 color) -> void {
   *pixels++ = color;
   *pixels++ = color;
   *pixels++ = color;
   *pixels++ = color;
-  if(vdp.h40()) return;
+  if(h40) return;
   *pixels++ = color;
 }
 
