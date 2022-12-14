@@ -171,7 +171,7 @@ auto PPU::runObjectsCGB() -> void {
     if(index == 0) continue;
     n5 palette = s.attributes.bit(0,2) << 2 | index;
 
-    if(!cpu.status.cgbMode) palette = obp[index];
+    if(!cpu.status.cgbMode) palette = obp[s.attributes.bit(4) << 2 | index] + (s.attributes.bit(4) << 2);
 
     ob.color = obpd[palette];
     ob.palette = index;
