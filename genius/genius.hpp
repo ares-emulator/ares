@@ -5,7 +5,7 @@ struct Memory {
   string manufacturer;
   string architecture;
   string identifier;
-  boolean Volatile;
+  Boolean Volatile;
 };
 
 struct Oscillator {

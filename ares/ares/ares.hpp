@@ -36,6 +36,7 @@
 #include <nall/hash/crc32.hpp>
 #include <nall/hash/sha256.hpp>
 using namespace nall;
+using namespace nall::primitives;
 
 namespace ares {
   static const string Name       = "ares";
