@@ -2,9 +2,9 @@ struct Settings {
   auto serialize() -> string;
   auto unserialize(const string&) -> void;
 
-  boolean createManifests = false;
-  boolean useDatabase     = true;
-  boolean useHeuristics   = true;
+  Boolean createManifests = false;
+  Boolean useDatabase     = true;
+  Boolean useHeuristics   = true;
   string recent           = Path::user();
 };
 
