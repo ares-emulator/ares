@@ -1,5 +1,11 @@
 #pragma once
 
+#if defined(NALL_HEADER_ONLY)
+  #define NALL_HEADER_INLINE inline
+#else
+  #define NALL_HEADER_INLINE
+#endif
+
 #if defined(__APPLE__)
   #include <machine/endian.h>
 #elif defined(linux) || defined(__linux__)

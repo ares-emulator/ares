@@ -329,3 +329,8 @@ ifeq ($(platform),windows)
 else
   prefix := $(HOME)/.local
 endif
+
+# objects
+nall.objects := $(object.path)/nall.o
+
+$(object.path)/nall.o: $(nall.path)/nall.cpp

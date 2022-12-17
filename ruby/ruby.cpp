@@ -1,6 +1,4 @@
 #include <ruby/ruby.hpp>
-using namespace nall;
-using namespace ruby;
 
 #undef deprecated
 #undef mkdir
@@ -21,9 +19,14 @@ using namespace ruby;
   #include <IOKit/graphics/IOGraphicsLib.h>
   #include <nall/macos/guard.hpp>
 #elif defined(DISPLAY_WINDOWS)
-  #define far
+  #include <nall/windows/windows.hpp>
+  #include <initguid.h>
+  #include <cguid.h>
   #include <mmsystem.h>
 #endif
+
+using namespace nall;
+using namespace ruby;
 
 #include <ruby/video/video.cpp>
 #include <ruby/audio/audio.cpp>
