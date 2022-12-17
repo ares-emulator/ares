@@ -7,6 +7,10 @@ flags += -I. -I.. -I../ares -I../thirdparty
 nall.path := ../nall
 include $(nall.path)/GNUmakefile
 
+thirdparty.path := ../thirdparty
+libchdr.path := $(thirdparty.path)/libchdr
+include $(thirdparty.path)/GNUmakefile
+
 hiro.path := ../hiro
 hiro.resource := resource/$(name).rc
 include $(hiro.path)/GNUmakefile
@@ -21,11 +25,14 @@ $(object.path)/ares.o: $(ares.path)/ares/ares.cpp
 $(object.path)/mia.o: $(mia.path)/mia.cpp
 $(object.path)/resource.o: $(mia.path)/resource/resource.cpp
 
-$(objects): | $(object.path)
+all.objects := $(libchdr.objects) $(nall.objects) $(hiro.objects) $(objects)
+all.options := $(libchdr.options) $(nall.options) $(hiro.options) $(options)
 
-all: $(hiro.objects) $(objects) | $(output.path)
+$(all.objects): | $(object.path)
+
+all: $(all.objects) | $(output.path)
 	$(info Linking $(output.path)/$(name) ...)
-	+@$(compiler) -o $(output.path)/$(name) $(hiro.objects) $(objects) $(hiro.options) $(options)
+	+@$(compiler) -o $(output.path)/$(name) $(all.objects) $(all.options)
 ifeq ($(platform),macos)
 	rm -rf $(output.path)/$(name).app
 	mkdir -p $(output.path)/$(name).app/Contents/MacOS/

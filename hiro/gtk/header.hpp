@@ -1,9 +1,8 @@
 #if defined(DISPLAY_WINDOWS)
   #define TBS_TRANSPARENTBKGND 0x1000
 
-  #include <nall/windows/guard.hpp>
+  #include <nall/windows/windows.hpp>
   #include <winsock2.h>
-  #include <windows.h>
   #include <windowsx.h>
   #include <commctrl.h>
   #include <uxtheme.h>
@@ -23,7 +22,6 @@
       #include <gtksourceview/gtksource.h>
     #endif
   #endif
-  #include <nall/windows/guard.hpp>
   #include <nall/windows/registry.hpp>
   #include <nall/windows/utf8.hpp>
 #endif

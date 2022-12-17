@@ -1,14 +1,13 @@
-#include <nall/windows/guard.hpp>
+#include <nall/windows/windows.hpp>
 #include <winsock2.h>
-#include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
 #include <commdlg.h>
 #include <uxtheme.h>
 #include <io.h>
 #include <shlobj.h>
+#include <shellapi.h>
 #include <dwmapi.h>
-#include <nall/windows/guard.hpp>
 #include <nall/windows/registry.hpp>
 #include <nall/windows/utf8.hpp>
 

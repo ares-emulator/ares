@@ -13,11 +13,14 @@ objects := $(object.path)/genius.o
 
 $(object.path)/genius.o: genius.cpp
 
-$(objects): | $(object.path)
+all.objects := $(nall.objects) $(hiro.objects) $(objects)
+all.options := $(nall.options) $(hiro.options) $(options)
 
-all: $(hiro.objects) $(objects) | $(output.path)
+$(all.objects): | $(object.path)
+
+all: $(all.objects) | $(output.path)
 	$(info Linking $(output.path)/$(name) ...)
-	+@$(compiler) -o $(output.path)/$(name) $(hiro.objects) $(objects) $(hiro.options) $(options)
+	+@$(compiler) -o $(output.path)/$(name) $(all.objects) $(all.options)
 ifeq ($(platform),macos)
 	rm -rf $(output.path)/$(name).app
 	mkdir -p $(output.path)/$(name).app/Contents/MacOS/

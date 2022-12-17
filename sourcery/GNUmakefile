@@ -1,6 +1,6 @@
 name := sourcery
 build := stable
-flags += -I..
+flags += -I.. -DNALL_HEADER_ONLY
 
 nall.path := ../nall
 include $(nall.path)/GNUmakefile

@@ -1,5 +1,4 @@
 #include "xaudio2.hpp"
-#undef interface
 
 struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
   enum : u32 { Buffers = 32 };
@@ -95,13 +94,13 @@ private:
   vector<Device> devices;
 
   auto construct() -> void {
-    XAudio2Create(&self.interface, 0 , XAUDIO2_DEFAULT_PROCESSOR);
+    XAudio2Create(&self.xa2Interface, 0 , XAUDIO2_DEFAULT_PROCESSOR);
 
     u32 deviceCount = 0;
-    self.interface->GetDeviceCount(&deviceCount);
+    self.xa2Interface->GetDeviceCount(&deviceCount);
     for(u32 deviceIndex : range(deviceCount)) {
       XAUDIO2_DEVICE_DETAILS deviceDetails{};
-      self.interface->GetDeviceDetails(deviceIndex, &deviceDetails);
+      self.xa2Interface->GetDeviceDetails(deviceIndex, &deviceDetails);
       auto format = deviceDetails.OutputFormat.Format.wFormatTag;
       auto bits = deviceDetails.OutputFormat.Format.wBitsPerSample;
 
@@ -129,15 +128,15 @@ private:
   auto destruct() -> void {
     terminate();
 
-    if(self.interface) {
-      self.interface->Release();
-      self.interface = nullptr;
+    if(self.xa2Interface) {
+      self.xa2Interface->Release();
+      self.xa2Interface = nullptr;
     }
   }
 
   auto initialize() -> bool {
     terminate();
-    if(!self.interface) return false;
+    if(!self.xa2Interface) return false;
 
     self.period = self.frequency * self.latency / Buffers / 1000.0 + 0.5;
     for(u32 n : range(Buffers)) buffers[n].resize(self.period);
@@ -147,7 +146,7 @@ private:
     if(!hasDevices().find(self.device)) self.device = hasDevices().first();
     u32 deviceID = devices[hasDevices().find(self.device)()].id;
 
-    if(FAILED(self.interface->CreateMasteringVoice(&self.masterVoice, self.channels, self.frequency, 0, deviceID, nullptr))) return terminate(), false;
+    if(FAILED(self.xa2Interface->CreateMasteringVoice(&self.masterVoice, self.channels, self.frequency, 0, deviceID, nullptr))) return terminate(), false;
 
     WAVEFORMATEX waveFormat{};
     waveFormat.wFormatTag = WAVE_FORMAT_PCM;
@@ -158,7 +157,7 @@ private:
     waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
     waveFormat.cbSize = 0;
 
-    if(FAILED(self.interface->CreateSourceVoice(&self.sourceVoice, (WAVEFORMATEX*)&waveFormat, XAUDIO2_VOICE_NOSRC, XAUDIO2_DEFAULT_FREQ_RATIO, this, nullptr, nullptr))) return terminate(), false;
+    if(FAILED(self.xa2Interface->CreateSourceVoice(&self.sourceVoice, (WAVEFORMATEX*)&waveFormat, XAUDIO2_VOICE_NOSRC, XAUDIO2_DEFAULT_FREQ_RATIO, this, nullptr, nullptr))) return terminate(), false;
 
     clear();
     return self.isReady = true;
@@ -195,7 +194,7 @@ private:
   u32 index = 0;           //current buffer for writing samples to
   volatile long queue = 0;  //how many buffers are queued and ready for playback
 
-  IXAudio2* interface = nullptr;
+  IXAudio2* xa2Interface = nullptr;
   IXAudio2MasteringVoice* masterVoice = nullptr;
   IXAudio2SourceVoice* sourceVoice = nullptr;
 
