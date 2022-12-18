@@ -74,9 +74,19 @@ ifeq ($(hiro.resource),)
   hiro.resource := $(hiro.path)/windows/hiro.rc
 endif
 
+ifneq ($(findstring windres,$(windres)),)
+  # windres
+  hiro.resource.extension := .o
+  hiro.resource.command = $1 $2
+else
+  # rc
+  hiro.resource.extension := .res
+  hiro.resource.command = /FO $2 $1
+endif
+
 hiro.objects := \
   $(object.path)/hiro-$(hiro).o \
-  $(if $(filter windows,$(hiro)),$(object.path)/hiro-resource.o)
+  $(if $(filter windows,$(hiro)),$(object.path)/hiro-resource$(hiro.resource.extension))
 
 $(object.path)/hiro-$(hiro).o: $(hiro.path)/hiro.cpp
 	$(if $(filter qt%,$(hiro)),$(info Compiling $(hiro.path)/qt/qt.moc ...))
@@ -84,9 +94,9 @@ $(object.path)/hiro-$(hiro).o: $(hiro.path)/hiro.cpp
 	$(info Compiling $(subst ../,,$<) ...)
 	@$(compiler) $(hiro.flags) $(flags) $(flags.deps) -c $< -o $@
 
-$(object.path)/hiro-resource.o: $(hiro.resource)
+$(object.path)/hiro-resource$(hiro.resource.extension): $(hiro.resource)
 	$(info Compiling $(subst ../,,$<) ...)
-	@$(windres) $< $@
+	@$(windres) $(call hiro.resource.command,$<,$@)
 
 hiro.verbose:
 	$(info hiro Target:)

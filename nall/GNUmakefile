@@ -104,6 +104,13 @@ else ifneq ($(filter powerpc64-% powerpc64le-%,$(machine_str)),)
   machine := ppc64
 endif
 
+# detect clang with msvc target
+ifeq ($(msvc),)
+  ifneq ($(filter %-msvc,$(machine_str)),)
+    msvc := true
+  endif
+endif
+
 # explicit architecture flags to allow for cross-compilation on macos
 ifeq ($(platform),macos)
   ifeq ($(arch),amd64)
@@ -149,7 +156,11 @@ ifeq ($(symbols),true)
   ifeq ($(platform),windows)
     ifeq ($(findstring clang++,$(compiler)),clang++)
       flags   += -gcodeview
-      options += -Wl,-pdb=
+      ifeq ($(msvc),true)
+        options += -Wl,-debug
+      else
+        options += -Wl,-pdb=
+      endif
     endif
   endif
 endif
@@ -187,12 +198,20 @@ endif
 
 # windows settings
 ifeq ($(platform),windows)
-  options += -mthreads -lpthread -lws2_32 -lole32
+  extension := .exe
+  ifeq ($(msvc),true)
+    flags += -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DNOMINMAX
+  endif
+  options += -mthreads -lws2_32 -lole32 -lshell32
   options += $(if $(findstring clang++,$(compiler)),-fuse-ld=lld)
-  options += $(if $(findstring g++,$(compiler)),-static -static-libgcc -static-libstdc++)
+  options += -static
   options += $(if $(findstring true,$(console)),-mconsole,-mwindows)
   ifeq ($(windres),)
-    windres := windres
+    ifeq ($(msvc),true)
+      windres := llvm-rc
+    else
+      windres := windres
+    endif
   endif
 endif
 

@@ -71,8 +71,8 @@ all.options := $(libco.options) $(sljit.options) $(libchdr.options) $(nall.optio
 $(all.objects): | $(object.path)
 
 all: $(all.objects) | $(output.path)
-	$(info Linking $(output.path)/$(name) ...)
-	+@$(compiler) -o $(output.path)/$(name) $(all.objects) $(all.options)
+	$(info Linking $(output.path)/$(name)$(extension) ...)
+	+@$(compiler) -o $(output.path)/$(name)$(extension) $(all.objects) $(all.options)
 	$(call copy,../LICENSE,$(output.path)/LICENSE.txt)
 ifeq ($(platform),macos)
 # Apply workaround for buggy linker in Xcode < 11.4.1

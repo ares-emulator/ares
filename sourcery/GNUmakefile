@@ -12,8 +12,8 @@ $(object.path)/sourcery.o: sourcery.cpp
 $(objects): | $(object.path)
 
 all: $(objects) | $(output.path)
-	$(info Linking $(output.path)/$(name) ...)
-	+@$(compiler) -o $(output.path)/$(name) $(objects) $(options)
+	$(info Linking $(output.path)/$(name)$(extension) ...)
+	+@$(compiler) -o $(output.path)/$(name)$(extension) $(objects) $(options)
 
 verbose: nall.verbose all;
 
