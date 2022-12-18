@@ -15,10 +15,15 @@
 
 #include <intrin.h>
 
+#if defined(__clang__)
+unsigned int _CountLeadingOnes(unsigned long);
+unsigned int _CountLeadingOnes64(unsigned __int64);
+#else
 #pragma intrinsic(_CountLeadingZeros)
 #pragma intrinsic(_CountLeadingZeros64)
 #pragma intrinsic(_CountLeadingOnes)
 #pragma intrinsic(_CountLeadingOnes64)
+#endif
 
 
 /***************************************************************************

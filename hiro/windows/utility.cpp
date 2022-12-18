@@ -7,12 +7,6 @@ static constexpr u32 Windows7     = 0x0601;
 
 static auto Button_CustomDraw(HWND, PAINTSTRUCT&, bool, bool, bool, u32, const Font&, const image&, Orientation, const string&) -> void;
 
-static auto OsVersion() -> u32 {
-  OSVERSIONINFO versionInfo{0};
-  versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-  GetVersionEx(&versionInfo);
-  return (versionInfo.dwMajorVersion << 8) + (versionInfo.dwMajorVersion << 0);
-}
 
 static auto CreateBitmap(HDC hdc, u32 width, u32 height, u32*& data) -> HBITMAP {
   BITMAPINFO info{};

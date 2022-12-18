@@ -15,6 +15,7 @@ namespace Math {
   #include <direct.h>
   #include <io.h>
   #include <wchar.h>
+  #include <sys/utime.h>
   #include <nall/windows/utf8.hpp>
 #endif
 
@@ -33,9 +34,7 @@ namespace Math {
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <utime.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -43,6 +42,7 @@ namespace Math {
 #if !defined(PLATFORM_WINDOWS)
   #include <dlfcn.h>
   #include <unistd.h>
+  #include <utime.h>
   #include <pwd.h>
   #include <grp.h>
   #include <sys/mman.h>
@@ -91,6 +91,8 @@ namespace Math {
     auto recv(int socket, void* buffer, size_t length, int flags) -> ssize_t;
     auto send(int socket, const void* buffer, size_t length, int flags) -> ssize_t;
     auto setsockopt(int socket, int level, int option_name, const void* option_value, int option_len) -> int;
+
+    auto usleep(unsigned int us) -> int;
   }
 #else
   #define dllexport
@@ -137,16 +139,18 @@ namespace Math {
   #define unlikely(expression) expression
 #endif
 
-//notify the processor/operating system that this thread is currently awaiting an event (eg a spinloop)
-//calling this function aims to avoid consuming 100% CPU resources on the active thread during spinloops
-inline auto spinloop() -> void {
-  #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
-    #if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_AMD64)
-      __builtin_ia32_pause();
-      return;
+namespace nall {
+  //notify the processor/operating system that this thread is currently awaiting an event (eg a spinloop)
+  //calling this function aims to avoid consuming 100% CPU resources on the active thread during spinloops
+  inline auto spinloop() -> void {
+    #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
+      #if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_AMD64)
+        __builtin_ia32_pause();
+        return;
+      #endif
     #endif
-  #endif
-  usleep(1);
+    usleep(1);
+  }
 }
 
 #if defined(PLATFORM_MACOS) && !defined(MSG_NOSIGNAL)

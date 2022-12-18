@@ -1,7 +1,5 @@
 ifeq ($(platform),windows)
   options += -luuid -lkernel32 -luser32 -lgdi32 -lcomctl32 -lcomdlg32 -lshell32
-  options += -Wl,-enable-auto-import
-  options += -Wl,-enable-runtime-pseudo-reloc
 else ifeq ($(platform),macos)
 else ifneq ($(filter $(platform),linux bsd),)
   options += -Wl,-export-dynamic

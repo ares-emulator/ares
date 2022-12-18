@@ -8,8 +8,10 @@
   typedef int64_t intmax_t;
   #if defined(_WIN64)
   typedef int64_t intptr_t;
+  typedef int64_t ssize_t;
   #else
   typedef int32_t intptr_t;
+  typedef int32_t ssize_t;
   #endif
 
   typedef unsigned char uint8_t;

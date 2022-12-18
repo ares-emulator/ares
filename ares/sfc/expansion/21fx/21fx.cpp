@@ -30,8 +30,8 @@ S21FX::S21FX(Node::Port parent) {
 
   string filename{Path::temporary(), "21fx.so"};
   if(link.openAbsolute(filename)) {
-    linkInit = link.sym("fx_init");
-    linkMain = link.sym("fx_main");
+    linkInit = (decltype(linkInit)::cast)link.sym("fx_init");
+    linkMain = (decltype(linkMain)::cast)link.sym("fx_main");
   }
 }
 

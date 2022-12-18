@@ -31,8 +31,8 @@ all.options := $(libchdr.options) $(nall.options) $(hiro.options) $(options)
 $(all.objects): | $(object.path)
 
 all: $(all.objects) | $(output.path)
-	$(info Linking $(output.path)/$(name) ...)
-	+@$(compiler) -o $(output.path)/$(name) $(all.objects) $(all.options)
+	$(info Linking $(output.path)/$(name)$(extension) ...)
+	+@$(compiler) -o $(output.path)/$(name)$(extension) $(all.objects) $(all.options)
 ifeq ($(platform),macos)
 	rm -rf $(output.path)/$(name).app
 	mkdir -p $(output.path)/$(name).app/Contents/MacOS/

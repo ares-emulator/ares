@@ -5,6 +5,9 @@
 //  osdsync.c - OSD core work item functions
 //
 //============================================================
+
+#include "osdcomm.h"
+
 #if defined(OSD_WINDOWS) || defined(SDLMAME_WIN32)
 // standard windows headers
 #include <windows.h>
