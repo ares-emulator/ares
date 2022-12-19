@@ -259,10 +259,14 @@ jobs:
             echo "UPLOAD_URL=$(make_nightly_release | jq -r .upload_url)" >> $GITHUB_ENV
             ;;
         esac
-    - name: Upload ares-windows
+    - name: Upload ares-windows-msvc-x64
       uses: actions/upload-release-asset@v1
       env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
-      with: { upload_url: '${{ env.UPLOAD_URL }}', asset_path: 'ares-windows.zip', asset_name: 'ares-windows.zip', asset_content_type: 'application/zip' }
+      with: { upload_url: '${{ env.UPLOAD_URL }}', asset_path: 'ares-windows-msvc-x64.zip', asset_name: 'ares-windows-msvc-x64.zip', asset_content_type: 'application/zip' }
+    - name: Upload ares-windows-msvc-arm64
+      uses: actions/upload-release-asset@v1
+      env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+      with: { upload_url: '${{ env.UPLOAD_URL }}', asset_path: 'ares-windows-msvc-arm64.zip', asset_name: 'ares-windows-msvc-arm64.zip', asset_content_type: 'application/zip' }      
     - name: Upload ares-macos
       uses: actions/upload-release-asset@v1
       env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
