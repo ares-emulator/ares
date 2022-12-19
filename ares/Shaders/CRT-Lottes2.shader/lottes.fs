@@ -125,9 +125,9 @@ out vec4 FragColor;
 // Since shadertoy doesn't have sRGB textures
 // And we need linear input into shader
 // Don't do this in your code
-	float FromSrgb1(float c){
-		return (c<=0.04045)?c*(1.0/12.92):
-			pow(c*(1.0/1.055)+(0.055/1.055),CRT_GAMMA);}
+float FromSrgb1(float c){
+ return (c<=0.04045)?c*(1.0/12.92):
+   pow(c*(1.0/1.055)+(0.055/1.055),CRT_GAMMA);}
 //--------------------------------------------------------------
 vec3 FromSrgb(vec3 c){return vec3(
  FromSrgb1(c.r),FromSrgb1(c.g),FromSrgb1(c.b));}
@@ -603,7 +603,7 @@ void main() {
    INPUT_BLUR,
    INPUT_MASK,
    CrtsTone(1.0,0.0,INPUT_THIN,INPUT_MASK));
-	
+   
    // Shadertoy outputs non-linear color
    FragColor.rgb = ToSrgb(FragColor.rgb);
 }

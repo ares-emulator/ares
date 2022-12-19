@@ -289,7 +289,7 @@ auto Nintendo64DD::transform(array_view<u8> input, vector<u8> errorTable) -> vec
     u32 blockCalc = ((lba & 3) == 0 || (lba & 3) == 3) ? 0 : 1;
 
     u32 startOffsetTable[16] = {0x0,0x5F15E0,0xB79D00,0x10801A0,0x1523720,0x1963D80,0x1D414C0,0x20BBCE0,
-		                            0x23196E0,0x28A1E00,0x2DF5DC0,0x3299340,0x36D99A0,0x3AB70E0,0x3E31900,0x4149200};
+                                0x23196E0,0x28A1E00,0x2DF5DC0,0x3299340,0x36D99A0,0x3AB70E0,0x3E31900,0x4149200};
     u32 offsetCalc = startOffsetTable[pzoneCalc];
     offsetCalc += (trackCalc - trackStart) * (blockSizeTable[headCalc ? pzoneCalc - 7 : pzoneCalc] * 2);
     offsetCalc += blockSizeTable[headCalc ? pzoneCalc - 7 : pzoneCalc] * blockCalc;

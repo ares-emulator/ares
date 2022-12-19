@@ -63,7 +63,7 @@ auto MSX::analyze(vector<u8>& rom) -> string {
     bool init8000BaseHasRet = initHas8000base && rom[init & (rom.size() - 1)] == 0xC9;
 
     if (textHas8000base && (hasNoInitVector || init8000BaseHasRet)) {
-  	  board = "LinearPage2";
+      board = "LinearPage2";
     }
   }  
   
