@@ -199,6 +199,8 @@ endif
 # windows settings
 ifeq ($(platform),windows)
   extension := .exe
+  # target Windows 7
+  flags += -D_WIN32_WINNT=0x0601
   ifeq ($(msvc),true)
     flags += -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DNOMINMAX
   endif
