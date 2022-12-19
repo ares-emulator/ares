@@ -83,7 +83,7 @@ struct CPU : Thread {
 
     enum Endian : bool { Little, Big };
     enum Mode : u32 { Kernel, Supervisor, User };
-    enum Segment : u32 { Unused, Mapped, Cached, Direct, Kernel64, Supervisor64, User64 };
+    enum Segment : u32 { Unused, Mapped, Cached, Direct, Cached32, Direct32, Kernel64, Supervisor64, User64 };
 
     auto littleEndian() const -> bool { return endian == Endian::Little; }
     auto bigEndian() const -> bool { return endian == Endian::Big; }
