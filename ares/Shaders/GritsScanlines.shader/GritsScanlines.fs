@@ -32,18 +32,18 @@ out vec4 fragColor;
 #ifdef LuminanceLUT
 #define LUT_SizeLum 16.0
 
-	// Code taken from RetroArch's LUT shader
+  // Code taken from RetroArch's LUT shader
 float luminancelut(vec4 org)
 {
-	vec4 imgColorLum = org;
-	float redLum = ( imgColorLum.r * (LUT_SizeLum - 1.0) + 0.4999 ) / (LUT_SizeLum * LUT_SizeLum);
-	float greenLum = ( imgColorLum.g * (LUT_SizeLum - 1.0) + 0.4999 ) / LUT_SizeLum;
-	float blue1Lum = (floor( imgColorLum.b  * (LUT_SizeLum - 1.0) ) / LUT_SizeLum) + redLum;
-	float blue2Lum = (ceil( imgColorLum.b  * (LUT_SizeLum - 1.0) ) / LUT_SizeLum) + redLum;
-	float mixerLum = clamp(max((imgColorLum.b - blue1Lum) / (blue2Lum - blue1Lum), 0.0), 0.0, 32.0);
-	float color1Lum = texture(pixmap[1], vec2( blue1Lum, greenLum )).x;
-	float color2Lum = texture(pixmap[1], vec2( blue2Lum, greenLum )).x;
-	return mix(color1Lum, color2Lum, mixerLum);
+  vec4 imgColorLum = org;
+  float redLum = ( imgColorLum.r * (LUT_SizeLum - 1.0) + 0.4999 ) / (LUT_SizeLum * LUT_SizeLum);
+  float greenLum = ( imgColorLum.g * (LUT_SizeLum - 1.0) + 0.4999 ) / LUT_SizeLum;
+  float blue1Lum = (floor( imgColorLum.b  * (LUT_SizeLum - 1.0) ) / LUT_SizeLum) + redLum;
+  float blue2Lum = (ceil( imgColorLum.b  * (LUT_SizeLum - 1.0) ) / LUT_SizeLum) + redLum;
+  float mixerLum = clamp(max((imgColorLum.b - blue1Lum) / (blue2Lum - blue1Lum), 0.0), 0.0, 32.0);
+  float color1Lum = texture(pixmap[1], vec2( blue1Lum, greenLum )).x;
+  float color2Lum = texture(pixmap[1], vec2( blue2Lum, greenLum )).x;
+  return mix(color1Lum, color2Lum, mixerLum);
 }
 #endif
 
@@ -52,48 +52,48 @@ float luminancelut(vec4 org)
 
 vec4 TrinitronD50(vec4 org)
 {
-	vec4 imgColorTrinitron = org;
-	float redTrinitron = ( imgColorTrinitron.r * (LUT_SizeTrinitron - 1.0) + 0.4999 ) / (LUT_SizeTrinitron * LUT_SizeTrinitron);
-	float greenTrinitron = ( imgColorTrinitron.g * (LUT_SizeTrinitron - 1.0) + 0.4999 ) / LUT_SizeTrinitron;
-	float blue1Trinitron = (floor( imgColorTrinitron.b  * (LUT_SizeTrinitron - 1.0) ) / LUT_SizeTrinitron) + redTrinitron;
-	float blue2Trinitron = (ceil( imgColorTrinitron.b  * (LUT_SizeTrinitron - 1.0) ) / LUT_SizeTrinitron) + redTrinitron;
-	float mixerTrinitron = clamp(max((imgColorTrinitron.b - blue1Trinitron) / (blue2Trinitron - blue1Trinitron), 0.0), 0.0, 32.0);
-	vec4 color1Trinitron = texture(pixmap[2], vec2( blue1Trinitron, greenTrinitron ));
-	vec4 color2Trinitron = texture(pixmap[2], vec2( blue2Trinitron, greenTrinitron ));
-	vec4 fragColorTrinitron = mix(color1Trinitron, color2Trinitron, mixerTrinitron);
-	return vec4(pow(fragColorTrinitron.rgb,vec3(GammaCorrection,GammaCorrection,GammaCorrection)),1.0);
+  vec4 imgColorTrinitron = org;
+  float redTrinitron = ( imgColorTrinitron.r * (LUT_SizeTrinitron - 1.0) + 0.4999 ) / (LUT_SizeTrinitron * LUT_SizeTrinitron);
+  float greenTrinitron = ( imgColorTrinitron.g * (LUT_SizeTrinitron - 1.0) + 0.4999 ) / LUT_SizeTrinitron;
+  float blue1Trinitron = (floor( imgColorTrinitron.b  * (LUT_SizeTrinitron - 1.0) ) / LUT_SizeTrinitron) + redTrinitron;
+  float blue2Trinitron = (ceil( imgColorTrinitron.b  * (LUT_SizeTrinitron - 1.0) ) / LUT_SizeTrinitron) + redTrinitron;
+  float mixerTrinitron = clamp(max((imgColorTrinitron.b - blue1Trinitron) / (blue2Trinitron - blue1Trinitron), 0.0), 0.0, 32.0);
+  vec4 color1Trinitron = texture(pixmap[2], vec2( blue1Trinitron, greenTrinitron ));
+  vec4 color2Trinitron = texture(pixmap[2], vec2( blue2Trinitron, greenTrinitron ));
+  vec4 fragColorTrinitron = mix(color1Trinitron, color2Trinitron, mixerTrinitron);
+  return vec4(pow(fragColorTrinitron.rgb,vec3(GammaCorrection,GammaCorrection,GammaCorrection)),1.0);
 } 
 #endif
 
 void main() {
 
 //Source Image
-	vec4 org = texture(source[0], texCoord);
+  vec4 org = texture(source[0], texCoord);
    
 #ifdef LuminanceLUT
 // Use a 3DLUT instead of an equation so that it can use any arbitrary mess you can come up with.
-	float luminance = luminancelut(org);
+  float luminance = luminancelut(org);
 #elif defined LuminanceDawnbringer
 // Dawnbringer's brightness equation from Dawnbringer's Toolbox scripts for Grafx2
-	float luminance = sqrt(org.r*org.r*0.0676 + org.g*org.g*0.3025 + org.b*org.b*0.0361) * 1.5690256395005606;
+  float luminance = sqrt(org.r*org.r*0.0676 + org.g*org.g*0.3025 + org.b*org.b*0.0361) * 1.5690256395005606;
 #else
 // Plain, standard, fine; slightly faster
-	float luminance = ((0.299*org.r) + (0.587*org.g) + (0.114*org.b));
+  float luminance = ((0.299*org.r) + (0.587*org.g) + (0.114*org.b));
 #endif
 
 // Don't let it exceed 1.0
-	luminance = clamp(luminance, 0.0, 1.0);
+  luminance = clamp(luminance, 0.0, 1.0);
 
 // Scanline Mapping, based on the Phosphor LUT shader's method of tiling a texture over the screen
-	vec2 LUTeffectiveCoord = vec2(luminance,fract((texCoord.y*targetSize.y)/4.0));
+  vec2 LUTeffectiveCoord = vec2(luminance,fract((texCoord.y*targetSize.y)/4.0));
 
 // Scanline Layer
-	vec4 screen = texture(pixmap[0], LUTeffectiveCoord);
+  vec4 screen = texture(pixmap[0], LUTeffectiveCoord);
 
 // Output multiplying the scanlines into the original image, with control over opacity
 #ifdef TrinitronColors
-	org = TrinitronD50(org);
+  org = TrinitronD50(org);
 #endif
-	fragColor = ((screen*ScanlinesOpacity)+(1.0 - ScanlinesOpacity)) * (org);
+  fragColor = ((screen*ScanlinesOpacity)+(1.0 - ScanlinesOpacity)) * (org);
 }
 
