@@ -167,16 +167,16 @@ jobs:
         # Hack: Workaround for GitHub artifacts losing attributes.
         chmod +x ${bindir}/ares-macos/ares.app/Contents/MacOS/ares
 
-        for os in windows macos
+        for package in windows-msvc-x64 windows-msvc-arm64 macos
         do
-          mkdir "${os}"
-          cd "${os}"
+          mkdir "${package}"
+          cd "${package}"
 
           # Package ares.
           outdir=ares${suffix}
           mkdir ${outdir}
-          cp -ar ${bindir}/ares-${os}/* ${outdir}
-          zip -r ../ares-${os}.zip ${outdir}
+          cp -ar ${bindir}/ares-${package}/* ${outdir}
+          zip -r ../ares-${package}.zip ${outdir}
 
           cd -
         done
