@@ -45,6 +45,7 @@ ifeq ($(shell echo ^^),^)
   rcopy   = @xcopy /e /q /y $(call fixpath,$1) $(call fixpath,$2)
   delete  = $(info Deleting $1 ...) @del /q $(call fixpath,$1)
   rdelete = $(info Deleting $1 ...) @if exist $(call fixpath,$1) (rmdir /s /q $(call fixpath,$1))
+  which   = $(shell where $1 2> NUL)
 else
   # sh
   mkdir   = @mkdir -p $1
@@ -52,6 +53,7 @@ else
   rcopy   = @cp -R $1 $2
   delete  = $(info Deleting $1 ...) @rm -f $1
   rdelete = $(info Deleting $1 ...) @rm -rf $1
+  which   = $(shell which $1 2> /dev/null)
 endif
 
 ifeq ($(ccache), true)
@@ -75,23 +77,11 @@ flags.deps   = -MMD -MP -MF $(@:.o=.d)
 
 # compiler detection
 ifeq ($(compiler),)
-  ifeq ($(platform),windows)
-    compiler := g++
-    compiler.cpp = $(compiler) -x c++ -std=gnu++17 -fno-operator-names
-    flags.cpp = -x c++ -std=gnu++17 -fno-operator-names
-  else ifeq ($(platform),macos)
-    compiler := clang++
-  else ifeq ($(platform),linux)
-    compiler := g++
-  else ifeq ($(platform),bsd)
+  # prefer clang
+  ifneq ($(call which,clang++),)
     compiler := clang++
   else
     compiler := g++
-  endif
-  # detect clang-as-gcc
-  compiler.version := $(shell $(compiler) --version)
-  ifeq ($(findstring clang,$(compiler.version)),clang)
-    compiler := clang++
   endif
 endif
 
