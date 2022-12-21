@@ -197,7 +197,13 @@ ifeq ($(platform),windows)
   options += -mthreads -lws2_32 -lole32 -lshell32
   options += $(if $(findstring clang++,$(compiler)),-fuse-ld=lld)
   options += -static
-  options += $(if $(findstring true,$(console)),-mconsole,-mwindows)
+  ifeq ($(console),true)
+    flags += -DSUBSYTEM_CONSOLE
+    options += -mconsole
+  else
+    flags += -DSUBSYTEM_WINDOWS
+    options += -mwindows
+  endif
   ifeq ($(windres),)
     ifeq ($(msvc),true)
       windres := llvm-rc
