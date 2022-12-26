@@ -8,6 +8,7 @@ ares.objects += ares-ws-cartridge
 ares.objects += ares-ws-cpu
 ares.objects += ares-ws-ppu
 ares.objects += ares-ws-apu
+ares.objects += ares-ws-serial
 
 $(object.path)/ares-ws-system.o:    $(ares.path)/ws/system/system.cpp
 $(object.path)/ares-ws-memory.o:    $(ares.path)/ws/memory/memory.cpp
@@ -16,3 +17,4 @@ $(object.path)/ares-ws-cartridge.o: $(ares.path)/ws/cartridge/cartridge.cpp
 $(object.path)/ares-ws-cpu.o:       $(ares.path)/ws/cpu/cpu.cpp
 $(object.path)/ares-ws-ppu.o:       $(ares.path)/ws/ppu/ppu.cpp
 $(object.path)/ares-ws-apu.o:       $(ares.path)/ws/apu/apu.cpp
+$(object.path)/ares-ws-serial.o:    $(ares.path)/ws/serial/serial.cpp

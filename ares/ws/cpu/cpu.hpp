@@ -86,9 +86,6 @@ struct CPU : V30MZ, Thread, IO {
     n8 interruptBase;
     n8 interruptEnable;
     n8 interruptStatus;
-    n8 serialData;
-    n1 serialBaudRate;  //0 = 9600; 1 = 38400
-    n1 serialEnable;
     n1 nmiOnLowBattery;
   } io;
 };

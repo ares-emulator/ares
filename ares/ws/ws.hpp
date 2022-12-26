@@ -33,4 +33,5 @@ namespace ares::WonderSwan {
   #include <ws/cpu/cpu.hpp>
   #include <ws/ppu/ppu.hpp>
   #include <ws/apu/apu.hpp>
+  #include <ws/serial/serial.hpp>
 }

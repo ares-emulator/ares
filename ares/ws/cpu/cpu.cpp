@@ -52,7 +52,9 @@ auto CPU::power() -> void {
   Thread::create(3'072'000, {&CPU::main, this});
 
   bus.map(this, 0x00a0);
-  bus.map(this, 0x00b0, 0x00b7);
+  bus.map(this, 0x00b0);
+  bus.map(this, 0x00b2);
+  bus.map(this, 0x00b4, 0x00b7);
 
   if(Model::WonderSwanColor() || Model::SwanCrystal()) {
     bus.map(this, 0x0040, 0x0049);
