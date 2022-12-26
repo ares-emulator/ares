@@ -207,6 +207,7 @@ auto System::power(bool reset) -> void {
   ppu.power();
   apu.power();
   cartridge.power();
+  serial.power();
   scheduler.power(cpu);
 
   bus.map(this, 0x0060);

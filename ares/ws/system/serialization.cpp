@@ -47,4 +47,5 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(apu);
   s(cartridge);
   s(iram);
+  s(serial);
 }

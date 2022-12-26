@@ -37,18 +37,8 @@ auto CPU::readIO(n16 address) -> n8 {
     data |= SoC::ASWAN() ? 3 : 0;
     break;
 
-  case 0x00b1:  //SER_DATA
-    data = io.serialData;
-    break;
-
   case 0x00b2:  //INT_ENABLE
     data = io.interruptEnable;
-    break;
-
-  case 0x00b3:  //SER_STATUS
-    data.bit(2) = 1;  //hack: always report send buffer as empty
-    data.bit(6) = io.serialBaudRate;
-    data.bit(7) = io.serialEnable;
     break;
 
   case 0x00b4:  //INT_STATUS
@@ -109,18 +99,9 @@ auto CPU::writeIO(n16 address, n8 data) -> void {
     io.interruptBase = SoC::ASWAN() ? data & ~7 : data & ~1;
     break;
 
-  case 0x00b1:  //SER_DATA
-    io.serialData = data;
-    break;
-
   case 0x00b2:  //INT_ENABLE
     //disabling an interrupt that is pending will *not* clear its pending flag
     io.interruptEnable = data;
-    break;
-
-  case 0x00b3:  //SER_STATUS
-    io.serialBaudRate = data.bit(6);
-    io.serialEnable   = data.bit(7);
     break;
 
   case 0x00b5:  //KEYPAD
