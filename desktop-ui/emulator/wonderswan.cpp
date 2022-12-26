@@ -46,6 +46,15 @@ auto WonderSwan::load(Menu menu) -> void {
       group.append(item);
     }
   }
+
+  if(auto headphones = root->find<ares::Node::Setting::Boolean>("Headphones")) {
+    MenuCheckItem headphoneItem{&menu};
+    headphoneItem.setText("Headphones").setChecked(headphones->value()).onToggle([=] {
+      if(auto headphones = root->find<ares::Node::Setting::Boolean>("Headphones")) {
+        headphones->setValue(headphoneItem.checked());
+      }
+    });
+  }
 }
 
 auto WonderSwan::load() -> bool {
