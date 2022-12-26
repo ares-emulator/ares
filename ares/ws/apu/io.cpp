@@ -4,14 +4,17 @@ auto APU::readIO(n16 address) -> n8 {
   switch(address) {
 
   case 0x004a ... 0x004c:  //SDMA_SRC
+    if(!system.color()) break;
     data = dma.state.source.byte(address - 0x004a);
     break;
 
   case 0x004e ... 0x0050:  //SDMA_LEN
+    if(!system.color()) break;
     data = dma.state.length.byte(address - 0x004e);
     break;
 
   case 0x0052:  //SDMA_CTRL
+    if(!system.color()) break;
     data.bit(0,1) = dma.io.rate;
     data.bit(2)   = dma.io.unknown;
     data.bit(3)   = dma.io.loop;
@@ -21,6 +24,7 @@ auto APU::readIO(n16 address) -> n8 {
     break;
 
   case 0x006a:  //SND_HYPER_CTRL
+    if(!system.color()) break;
     data.bit(0,1) = channel5.io.volume;
     data.bit(2,3) = channel5.io.scale;
     data.bit(4,6) = channel5.io.speed;
@@ -28,6 +32,7 @@ auto APU::readIO(n16 address) -> n8 {
     break;
 
   case 0x006b:  //SND_HYPER_CHAN_CTRL
+    if(!system.color()) break;
     data.bit(0,3) = channel5.io.unknown;
     data.bit(5)   = channel5.io.leftEnable;
     data.bit(6)   = channel5.io.rightEnable;
@@ -116,6 +121,7 @@ auto APU::readIO(n16 address) -> n8 {
     break;
 
   case 0x0095:  //SND_HYPERVOICE
+    if(!system.color()) break;
     data = channel5.state.data;
     break;
 

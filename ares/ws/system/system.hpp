@@ -73,6 +73,7 @@ struct System : IO {
   auto soc() const -> SoC { return information.soc; }
   auto mode() const -> n3 { return io.mode; }
   auto memory() const -> u32 { return io.mode.bit(2) == 0 ? 16_KiB : 64_KiB; }
+  auto color() const -> bool { return io.mode.bit(2) != 0; }
 
   //mode:
   //0xx => 2bpp, mono, planar tiledata (WSC enhancements locked)
