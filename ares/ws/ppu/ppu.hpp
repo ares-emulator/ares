@@ -42,6 +42,8 @@ struct PPU : Thread, IO {
     auto unload(Node::Object) -> void;
 
     struct Graphics {
+      Node::Debugger::Graphics screen1;
+      Node::Debugger::Graphics screen2;
       Node::Debugger::Graphics tiles;
     } graphics;
   } debugger{*this};
@@ -100,6 +102,7 @@ struct PPU : Thread, IO {
 
     //screen.cpp
     auto scanline(n8 y) -> void;
+    auto screenPixel(n8 x, n8 y, Output& output) -> void;
     auto pixel(n8 x, n8 y) -> void;
     auto power() -> void;
 

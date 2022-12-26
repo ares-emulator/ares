@@ -14,12 +14,8 @@ auto PPU::Screen2::scanline(n8 y) -> void {
   window.scanline(y);
 }
 
-auto PPU::Screen::pixel(n8 x, n8 y) -> void {
+auto PPU::Screen::screenPixel(n8 x, n8 y, Output& output) -> void {
   output = {};
-  if(!enable[0]) return;
-
-  x += hscroll[0];
-  y += vscroll[0];
 
   n15 address = x.bit(3,7) << 1 | y.bit(3,7) << 6 | mapBase[0] << 11;
   n16 attributes = iram.read16(address);
@@ -34,6 +30,15 @@ auto PPU::Screen::pixel(n8 x, n8 y) -> void {
     output.valid = 1;
     output.color = self.palette(palette, color);
   }
+}
+
+auto PPU::Screen::pixel(n8 x, n8 y) -> void {
+  if(!enable[0]) return;
+
+  x += hscroll[0];
+  y += vscroll[0];
+
+  screenPixel(x, y, output);
 }
 
 auto PPU::Screen1::pixel(n8 x, n8 y) -> void {
