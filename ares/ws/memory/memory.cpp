@@ -28,7 +28,9 @@ auto Bus::read(n20 address) -> n8 {
   switch(address.bit(16,19)) { default:
   case 0x0: return iram.read(address);
   case 0x1: return cartridge.readRAM(address);
-  case 0x2 ... 0xf: return cartridge.readROM(address);
+  case 0x2 ... 0xf:
+    if(!cpu.io.cartridgeRomWidth) address &= ~(0x1);
+    return cartridge.readROM(address);
   }
 }
 
@@ -39,7 +41,9 @@ auto Bus::write(n20 address, n8 data) -> void {
   switch(address.bit(16,19)) { default:
   case 0x0: return iram.write(address, data);
   case 0x1: return cartridge.writeRAM(address, data);
-  case 0x2 ... 0xf: return cartridge.writeROM(address, data);
+  case 0x2 ... 0xf:
+    if(!cpu.io.cartridgeRomWidth) address &= ~(0x1);
+    return cartridge.writeROM(address, data);
   }
 }
 

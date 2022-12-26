@@ -40,11 +40,11 @@ auto CPU::write(n20 address, n8 data) -> void {
 }
 
 auto CPU::in(n16 port) -> n8 {
-  return bus.readIO(port);
+  return bus.readIO(port & 0x01ff);
 }
 
 auto CPU::out(n16 port, n8 data) -> void {
-  return bus.writeIO(port, data);
+  return bus.writeIO(port & 0x01ff, data);
 }
 
 auto CPU::power() -> void {
@@ -52,7 +52,7 @@ auto CPU::power() -> void {
   Thread::create(3'072'000, {&CPU::main, this});
 
   bus.map(this, 0x00a0);
-  bus.map(this, 0x00b0, 0x00b6);
+  bus.map(this, 0x00b0, 0x00b7);
 
   if(Model::WonderSwanColor() || Model::SwanCrystal()) {
     bus.map(this, 0x0040, 0x0049);
