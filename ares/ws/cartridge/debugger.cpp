@@ -31,6 +31,9 @@ auto Cartridge::Debugger::load(Node::Object parent) -> void {
       self.eeprom.data[address] = data;
     });
   }
+
+  properties.ports = parent->append<Node::Debugger::Properties>("Cartridge I/O");
+  properties.ports->setQuery([&] { return ports(); });
 }
 
 auto Cartridge::Debugger::unload(Node::Object parent) -> void {
@@ -40,4 +43,17 @@ auto Cartridge::Debugger::unload(Node::Object parent) -> void {
   memory.rom.reset();
   memory.ram.reset();
   memory.eeprom.reset();
+}
+
+auto Cartridge::Debugger::ports() -> string {
+  string output;
+
+  output.append("ROM Bank 0: ", hex(self.io.romBank0, 4L), "\n");
+  output.append("ROM Bank 1: ", hex(self.io.romBank1, 4L), "\n");
+  output.append("ROM Bank Linear: ", hex(self.io.romBank2, 4L), "\n");
+  output.append("SRAM Bank: ", hex(self.io.sramBank, 4L), "\n");
+
+  // TODO: RTC
+
+  return output;
 }

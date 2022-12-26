@@ -3,6 +3,7 @@
 namespace ares::WonderSwan {
 
 APU apu;
+#include "debugger.cpp"
 #include "io.cpp"
 #include "dma.cpp"
 #include "channel1.cpp"
@@ -19,9 +20,13 @@ auto APU::load(Node::Object parent) -> void {
   stream->setChannels(2);
   stream->setFrequency(24'000);
   stream->addHighPassFilter(15.915, 1);
+
+  debugger.load(node);
 }
 
 auto APU::unload() -> void {
+  debugger.unload(node);
+
   node->remove(stream);
   stream.reset();
   node.reset();
