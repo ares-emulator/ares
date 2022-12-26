@@ -131,6 +131,9 @@ auto PPU::Debugger::ports() -> string {
   }
 
   output.append("\n");
+  output.append("HBlank Timer: ", self.htimer.counter, "/", self.htimer.frequency, "; ", self.htimer.enable ? "enabled" : "disabled", ", ", self.htimer.repeat ? "repeat" : "one-shot", "\n");
+  output.append("VBlank Timer: ", self.vtimer.counter, "/", self.vtimer.frequency, "; ", self.vtimer.enable ? "enabled" : "disabled", ", ", self.vtimer.repeat ? "repeat" : "one-shot", "\n");
+
   output.append("LCD Timing: ", (self.io.vtotal + 1), " lines/frame (", (12000.0 / (self.io.vtotal + 1)), " Hz), VBP @ line ", self.io.vsync);
   if(self.io.vtotal != self.io.vsync + 3) {
     output.append(" (unexpected)");
