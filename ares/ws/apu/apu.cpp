@@ -17,8 +17,8 @@ auto APU::load(Node::Object parent) -> void {
 
   stream = node->append<Node::Audio::Stream>("PSG");
   stream->setChannels(2);
-  stream->setFrequency(3'072'000);
-  stream->addHighPassFilter(20.0, 1);
+  stream->setFrequency(24'000);
+  stream->addHighPassFilter(15.915, 1);
 }
 
 auto APU::unload() -> void {
@@ -28,13 +28,12 @@ auto APU::unload() -> void {
 }
 
 auto APU::main() -> void {
-  dma.run();
+  if(++state.dmaClock == 0) dma.run();
   channel1.run();
   channel2.run();
   channel3.run();
   channel4.run();
-  channel5.run();
-  dacRun();
+  if(++state.dacClock == 0) dacRun();
   if(++state.sweepClock == 0) channel3.sweep();
   step(1);
 }
@@ -47,13 +46,25 @@ auto APU::sample(u32 channel, n5 index) -> n4 {
 }
 
 auto APU::dacRun() -> void {
+  bool outputEnable = io.headphonesConnected ? io.headphonesEnable : io.speakerEnable;
+
+  if(channel1.io.enable) channel1.runOutput();
+  if(channel2.io.enable) channel2.runOutput();
+  if(channel3.io.enable) channel3.runOutput();
+  if(channel4.io.enable) channel4.runOutput();
+  if(channel5.io.enable) channel5.runOutput();
+
+  if (!outputEnable) {
+    stream->frame(0, 0);
+    return;
+  }
+
   s32 left = 0;
   if(channel1.io.enable) left += channel1.output.left;
   if(channel2.io.enable) left += channel2.output.left;
   if(channel3.io.enable) left += channel3.output.left;
   if(channel4.io.enable) left += channel4.output.left;
   if(channel5.io.enable) left += channel5.output.left * io.headphonesConnected;
-  left = sclamp<16>(left << 5);
 
   s32 right = 0;
   if(channel1.io.enable) right += channel1.output.right;
@@ -61,19 +72,12 @@ auto APU::dacRun() -> void {
   if(channel3.io.enable) right += channel3.output.right;
   if(channel4.io.enable) right += channel4.output.right;
   if(channel5.io.enable) right += channel5.output.right * io.headphonesConnected;
-  right = sclamp<16>(right << 5);
 
   if(!io.headphonesConnected) {
-    left = right = (left + right) / 2 >> 3 - io.speakerShift;  //monaural output
-    if(!io.speakerEnable) {
-      left  = 0;
-      right = 0;
-    }
+    left = right = sclamp<16>((((left + right) >> io.speakerShift) & 0xFF) << 8);
   } else {
-    if(!io.headphonesEnable) {
-      left  = 0;
-      right = 0;
-    }
+    left = sclamp<16>(left << 5);
+    right = sclamp<16>(right << 5);
   }
 
   //ASWAN has three volume steps (0%, 50%, 100%); SPHINX and SPHINX2 have four (0%, 33%, 66%, 100%)
@@ -107,6 +111,9 @@ auto APU::power() -> void {
   io.headphonesConnected = system.headphones->value();
   io.masterVolume = SoC::ASWAN() ? 2 : 3;
   state = {};
+
+  state.dacClock = 0;
+  state.sweepClock = 0;
 }
 
 }

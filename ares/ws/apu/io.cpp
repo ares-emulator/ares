@@ -109,8 +109,10 @@ auto APU::readIO(n16 address) -> n8 {
     break;
 
   case 0x0094:  //SND_VOICE_CTRL
-    data.bit(0,1) = channel2.io.voiceEnableRight;
-    data.bit(2,3) = channel2.io.voiceEnableLeft;
+    data.bit(0) = channel2.io.voiceEnableRightHalf;
+    data.bit(1) = channel2.io.voiceEnableRightFull;
+    data.bit(2) = channel2.io.voiceEnableLeftHalf;
+    data.bit(3) = channel2.io.voiceEnableLeftFull;
     break;
 
   case 0x0095:  //SND_HYPERVOICE
@@ -237,8 +239,10 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     break;
 
   case 0x0094:  //SND_VOICE_CTRL
-    channel2.io.voiceEnableRight = data.bit(0,1);
-    channel2.io.voiceEnableLeft  = data.bit(2,3);
+    channel2.io.voiceEnableRightHalf = data.bit(0);
+    channel2.io.voiceEnableRightFull = data.bit(1);
+    channel2.io.voiceEnableLeftHalf  = data.bit(2);
+    channel2.io.voiceEnableLeftFull  = data.bit(3);
     break;
 
   case 0x009e:  //SND_VOLUME
