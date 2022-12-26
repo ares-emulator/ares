@@ -3,7 +3,18 @@
 namespace ares::WonderSwan {
 
 Serial serial;
+#include "debugger.cpp"
 #include "serialization.cpp"
+
+auto Serial::load(Node::Object parent) -> void {
+  node = parent->append<Node::Object>("Serial");
+  debugger.load(node);
+}
+
+auto Serial::unload() -> void {
+  debugger.unload(node);
+  node.reset();
+}
 
 auto Serial::main() -> void {
   step(80);

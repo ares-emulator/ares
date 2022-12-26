@@ -113,6 +113,8 @@ auto PPU::Debugger::ports() -> string {
     self.sprite.window.x1[1], ", ", self.sprite.window.y1[1], "; ",
     self.sprite.window.enable[1] ? (self.sprite.window.invert[1] ? "inverted" : "enabled") : "disabled",
     "\n");
+  
+  output.append("Line Compare: ", self.io.vcounter, " == ", self.io.vcompare, "\n");
 
   output.append("Shade LUT: ");
   for(u32 i : range(8)) {

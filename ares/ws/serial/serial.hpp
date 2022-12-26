@@ -1,5 +1,10 @@
 struct Serial : Thread, IO {
+  Node::Object node;
+  
   //serial.cpp
+  auto load(Node::Object) -> void;
+  auto unload() -> void;
+
   auto main() -> void;
   auto step(u32 clocks) -> void;
 
@@ -10,6 +15,19 @@ struct Serial : Thread, IO {
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
+
+  struct Debugger {
+    Serial& self;
+
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
+    auto ports() -> string;
+
+    struct Properties {
+      Node::Debugger::Properties ports;
+    } properties;
+  } debugger{*this};
 
   struct State {
     n8 dataTx;
