@@ -74,10 +74,10 @@ auto APU::dacRun() -> void {
   if(channel5.io.enable) right += channel5.output.right * io.headphonesConnected;
 
   if(!io.headphonesConnected) {
-    left = right = sclamp<16>((((left + right) >> io.speakerShift) & 0xFF) << 8);
+    left = right = sclamp<16>((((left + right) >> io.speakerShift) & 0xFF) << 7);
   } else {
-    left = sclamp<16>(left << 5);
-    right = sclamp<16>(right << 5);
+    left = sclip<16>(left << 5);
+    right = sclip<16>(right << 5);
   }
 
   //ASWAN has three volume steps (0%, 50%, 100%); SPHINX and SPHINX2 have four (0%, 33%, 66%, 100%)
