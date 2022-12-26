@@ -1,7 +1,10 @@
-auto PPU::Timer::step() -> bool {
-  if(enable && counter && !--counter) {
-    if(repeat) counter = frequency;
-    return true;
+auto PPU::Timer::step() -> bool { 
+  n16 counterNext = counter - 1;
+  if(enable) {
+    counter = counterNext;
+    if(repeat && !counter) {
+      counter = frequency;
+    }
   }
-  return false;
+  return counterNext == 0;
 }
