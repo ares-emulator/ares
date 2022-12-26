@@ -394,9 +394,9 @@ auto V30MZ::disassembleInstruction(u16 ps, u16 pc) -> string {
   op(0xe2, "loop");
   op(0xe3, "jcwz", relativeByte());
   op(0xe4, "in", "al", immediateByte());
-  op(0xe5, "in", "aw", immediateWord());
+  op(0xe5, "in", "aw", immediateByte());
   op(0xe6, "out", immediateByte(), "al");
-  op(0xe7, "out", immediateWord(), "aw");
+  op(0xe7, "out", immediateByte(), "aw");
   op(0xe8, "call", relativeWord());
   op(0xe9, "jmp", relativeWord());
   op(0xea, "jmp", immediateLong());
