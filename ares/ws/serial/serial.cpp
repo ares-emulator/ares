@@ -9,11 +9,16 @@ auto Serial::main() -> void {
   step(80);
   
   if (!state.enable) return;
-  if (!state.baudRate && ++state.clock < 4) return;
-  state.clock = 0;
+  if (!state.baudRate && ++state.baudClock < 4) return;
+  state.baudClock = 0;
 
   // stub implementation
-  state.txFull = 0;
+  if(state.txFull) {
+    if(++state.txBitClock == 9) {
+      state.txBitClock = 0;
+      state.txFull = 0;
+    }
+  }
   if(!state.txFull) {
     cpu.raise(CPU::Interrupt::SerialSend);
   } else {
