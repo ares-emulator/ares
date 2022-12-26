@@ -40,12 +40,17 @@ struct PPU : Thread, IO {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto unload(Node::Object) -> void;
+    auto ports() -> string;
 
     struct Graphics {
       Node::Debugger::Graphics screen1;
       Node::Debugger::Graphics screen2;
       Node::Debugger::Graphics tiles;
     } graphics;
+
+    struct Properties {
+      Node::Debugger::Properties ports;
+    } properties;
   } debugger{*this};
 
   //ppu.cpp

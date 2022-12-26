@@ -19,6 +19,19 @@ struct APU : Thread, IO {
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  struct Debugger {
+    APU& self;
+
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
+    auto ports() -> string;
+
+    struct Properties {
+      Node::Debugger::Properties ports;
+    } properties;
+  } debugger{*this};
+
   struct DMA {
     //dma.cpp
     auto run() -> void;

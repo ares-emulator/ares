@@ -12,6 +12,11 @@ struct Cartridge : Thread, IO {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto unload(Node::Object) -> void;
+    auto ports() -> string;
+
+    struct Properties {
+      Node::Debugger::Properties ports;
+    } properties;
 
     struct Memory {
       Node::Debugger::Memory rom;

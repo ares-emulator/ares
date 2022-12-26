@@ -78,13 +78,61 @@ auto PPU::Debugger::load(Node::Object parent) -> void {
     }
     return output;
   });
+
+  properties.ports = parent->append<Node::Debugger::Properties>("Display I/O");
+  properties.ports->setQuery([&] { return ports(); });
 }
 
 auto PPU::Debugger::unload(Node::Object parent) -> void {
+  parent->remove(properties.ports);
   parent->remove(graphics.tiles);
   parent->remove(graphics.screen2);
   parent->remove(graphics.screen1);
+  properties.ports.reset();
   graphics.tiles.reset();
   graphics.screen2.reset();
   graphics.screen1.reset();
+}
+
+auto PPU::Debugger::ports() -> string {
+  string output;
+  output.append("Screen 1: ", hex(self.screen1.mapBase[1] << 11, 4L) , "; ", self.screen1.enable[1] ? "enabled" : "disabled", "\n");
+  output.append("Screen 1 Scroll: ", self.screen1.hscroll[1], ", ", self.screen1.vscroll[1], "\n");
+  output.append("Screen 1: ", hex(self.screen2.mapBase[1] << 11, 4L) , "; ", self.screen2.enable[1] ? "enabled" : "disabled", "\n");
+  output.append("Screen 2 Scroll: ", self.screen2.hscroll[1], ", ", self.screen2.vscroll[1], "\n");
+  output.append("Screen 2 Window: ",
+    self.screen2.window.x0[1], ", ", self.screen2.window.y0[1], " -> ",
+    self.screen2.window.x1[1], ", ", self.screen2.window.y1[1], "; ",
+    self.screen2.window.enable[1] ? (self.screen2.window.invert[1] ? "inverted" : "enabled") : "disabled",
+    "\n");
+  output.append("Sprites: ", hex(self.sprite.oamBase << 9, 4L) , "; ", self.sprite.enable[1] ? "enabled" : "disabled", "\n");
+  output.append("Sprite First: ", self.sprite.first, "\n");
+  output.append("Sprite Count: ", self.sprite.count, "\n");
+  output.append("Sprite Window: ",
+    self.sprite.window.x0[1], ", ", self.sprite.window.y0[1], " -> ",
+    self.sprite.window.x1[1], ", ", self.sprite.window.y1[1], "; ",
+    self.sprite.window.enable[1] ? (self.sprite.window.invert[1] ? "inverted" : "enabled") : "disabled",
+    "\n");
+
+  output.append("Shade LUT: ");
+  for(u32 i : range(8)) {
+    if(i > 0) output.append(", ");
+    output.append(self.pram.pool[i]);
+  }
+  for(u32 i : range(16)) {
+    output.append("\n");
+    output.append(i >= 8 ? "SPR" : "SCR", " Palette ", (i & 7), " (", i, "): ");
+    for(u32 j : range(4)) {
+      if(j > 0) output.append(", ");
+      output.append(self.pram.palette[i].color[j], " (", self.pram.pool[self.pram.palette[i].color[j]], ")");
+    }
+  }
+
+  output.append("\n");
+  output.append("LCD Timing: ", (self.io.vtotal + 1), " lines/frame (", (12000.0 / (self.io.vtotal + 1)), " Hz), VBP @ line ", self.io.vsync);
+  if(self.io.vtotal != self.io.vsync + 3) {
+    output.append(" (unexpected)");
+  }
+
+  return output;
 }
