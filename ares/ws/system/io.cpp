@@ -4,12 +4,10 @@ auto System::readIO(n16 address) -> n8 {
   switch(address) {
 
   case 0x0060:  //DISP_MODE
-    data.bit(0) = io.unknown0;
-    data.bit(1) = io.unknown1;
-    data.bit(3) = io.unknown3;
-    data.bit(5) = io.mode.bit(0);
-    data.bit(6) = io.mode.bit(1);
-    data.bit(7) = io.mode.bit(2);
+    data.bit(0)    = io.unknown0;
+    data.bit(1)    = io.unknown1;
+    data.bit(3)    = io.unknown3;
+    data.bit(5, 7) = io.mode.bit(0, 2);
     break;
 
   case 0x00ba:  //IEEP_DATALO
