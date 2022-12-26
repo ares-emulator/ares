@@ -33,6 +33,7 @@ auto PPU::Screen::screenPixel(n8 x, n8 y, Output& output) -> void {
 }
 
 auto PPU::Screen::pixel(n8 x, n8 y) -> void {
+  output = {};
   if(!enable[0]) return;
 
   x += hscroll[0];
