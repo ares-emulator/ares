@@ -19,7 +19,9 @@ struct Serial : Thread, IO {
     n1 rxOverrun;
     n1 txFull;
     n1 rxFull;
-    n32 clock;
+    n8 baudClock;
+    n8 txBitClock;
+    n8 rxBitClock;
   } state;
 };
 

@@ -6,5 +6,7 @@ auto Serial::serialize(serializer& s) -> void {
   s(state.rxOverrun);
   s(state.txFull);
   s(state.rxFull);
-  s(state.clock);
+  s(state.baudClock);
+  s(state.txBitClock);
+  s(state.rxBitClock);
 }
