@@ -34,6 +34,18 @@ struct PPU : Thread, IO {
   auto depth() const -> u32 { return system.mode().bit(1,2) != 3 ? 2 : 4; }
   auto grayscale() const -> bool { return system.mode().bit(2) == 0; }
 
+  struct Debugger {
+    PPU& self;
+
+    //debugger.cpp
+    auto load(Node::Object) -> void;
+    auto unload(Node::Object) -> void;
+
+    struct Graphics {
+      Node::Debugger::Graphics tiles;
+    } graphics;
+  } debugger{*this};
+
   //ppu.cpp
   auto load(Node::Object) -> void;
   auto unload() -> void;
