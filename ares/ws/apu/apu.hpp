@@ -48,6 +48,7 @@ struct APU : Thread, IO {
   struct Channel1 {
     //channel1.cpp
     auto run() -> void;
+    auto runOutput() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -74,6 +75,7 @@ struct APU : Thread, IO {
   struct Channel2 {
     //channel2.cpp
     auto run() -> void;
+    auto runOutput() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -85,8 +87,10 @@ struct APU : Thread, IO {
       n4  volumeRight;
       n1  enable;
       n1  voice;
-      n2  voiceEnableLeft;
-      n2  voiceEnableRight;
+      n1  voiceEnableLeftHalf;
+      n1  voiceEnableLeftFull;
+      n1  voiceEnableRightHalf;
+      n1  voiceEnableRightFull;
     } io;
 
     struct State {
@@ -104,6 +108,7 @@ struct APU : Thread, IO {
     //channel3.cpp
     auto sweep() -> void;
     auto run() -> void;
+    auto runOutput() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -135,6 +140,7 @@ struct APU : Thread, IO {
     //channel4.cpp
     auto noiseSample() -> n4;
     auto run() -> void;
+    auto runOutput() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -166,7 +172,7 @@ struct APU : Thread, IO {
 
   struct Channel5 {
     //channel5.cpp
-    auto run() -> void;
+    auto runOutput() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -204,6 +210,8 @@ struct APU : Thread, IO {
 
   struct State {
     n13 sweepClock;
+    n7 dacClock;
+    n7 dmaClock;
   } state;
 };
 

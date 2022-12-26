@@ -1,10 +1,10 @@
 auto APU::DMA::run() -> void {
   if(!io.enable) return;
 
-  if(io.rate == 0 && ++state.clock < 768) return;  // 4000hz
-  if(io.rate == 1 && ++state.clock < 512) return;  // 6000hz
-  if(io.rate == 2 && ++state.clock < 256) return;  //12000hz
-  if(io.rate == 3 && ++state.clock < 128) return;  //24000hz
+  if(io.rate == 0 && ++state.clock < 6) return;  // 4000hz
+  if(io.rate == 1 && ++state.clock < 4) return;  // 6000hz
+  if(io.rate == 2 && ++state.clock < 2) return;  //12000hz
+  //24000hz runs always
   state.clock = 0;
 
   n8 data = bus.read(state.source);

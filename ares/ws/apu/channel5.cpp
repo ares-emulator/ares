@@ -1,4 +1,4 @@
-auto APU::Channel5::run() -> void {
+auto APU::Channel5::runOutput() -> void {
   i11 sample;
   switch(io.scale) {
   case 0: sample = (n8)state.data << 3 - io.volume; break;

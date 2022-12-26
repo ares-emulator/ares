@@ -8,10 +8,14 @@ auto APU::Channel3::sweep() -> void {
 auto APU::Channel3::run() -> void {
   if(--state.period == io.pitch) {
     state.period = 0;
-    auto sample = apu.sample(3, state.sampleOffset++);
-    output.left  = sample * io.volumeLeft;
-    output.right = sample * io.volumeRight;
+    state.sampleOffset++;
   }
+}
+
+auto APU::Channel3::runOutput() -> void {
+  auto sample = apu.sample(3, state.sampleOffset);
+  output.left  = sample * io.volumeLeft;
+  output.right = sample * io.volumeRight;
 }
 
 auto APU::Channel3::power() -> void {

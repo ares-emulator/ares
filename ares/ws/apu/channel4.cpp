@@ -5,10 +5,7 @@ auto APU::Channel4::noiseSample() -> n4 {
 auto APU::Channel4::run() -> void {
   if(--state.period == io.pitch) {
     state.period = 0;
-
-    auto sample = io.noise ? noiseSample() : apu.sample(4, state.sampleOffset++);
-    output.left  = sample * io.volumeLeft;
-    output.right = sample * io.volumeRight;
+    state.sampleOffset++;
 
     if(io.noiseReset) {
       io.noiseReset = 0;
@@ -24,6 +21,12 @@ auto APU::Channel4::run() -> void {
       state.noiseLFSR = state.noiseLFSR << 1 | state.noiseOutput;
     }
   }
+}
+
+auto APU::Channel4::runOutput() -> void {
+  auto sample = io.noise ? noiseSample() : apu.sample(4, state.sampleOffset);
+  output.left  = sample * io.volumeLeft;
+  output.right = sample * io.volumeRight;
 }
 
 auto APU::Channel4::power() -> void {
