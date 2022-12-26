@@ -166,6 +166,7 @@ auto System::load(Node::System& root, string name) -> bool {
   cpu.load(node);
   ppu.load(node);
   apu.load(node);
+  serial.load(node);
   cartridgeSlot.load(node);
   debugger.load(node);
   return true;
@@ -191,6 +192,7 @@ auto System::unload() -> void {
   cpu.unload();
   ppu.unload();
   apu.unload();
+  serial.unload();
   cartridgeSlot.unload();
   headphones.reset();
   pak.reset();

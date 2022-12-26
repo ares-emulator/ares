@@ -23,6 +23,45 @@ auto CPU::Debugger::unload(Node::Object parent) -> void {
   tracer.interrupt.reset();
 }
 
+auto CPU::Debugger::ports() -> string {
+  string output;
+
+  static const string irqName[8] = {
+    "SerialSend",
+    "Input",
+    "Cartridge",
+    "SerialReceive",
+    "LineCompare",
+    "VblankTimer",
+    "Vblank",
+    "HblankTimer"
+  };
+
+  output.append("SoC Interrupts Enabled: ");
+  u32 iAdded = 0;
+  for(u32 i : range(8)) {
+    if(self.io.interruptEnable & (1 << i)) {
+      if(iAdded++ > 0) output.append(", ");
+      output.append(irqName[i]);
+    }
+  }
+  output.append("\n");
+
+  output.append("SoC Interrupts Raised: ");
+  iAdded = 0;
+  for(u32 i : range(8)) {
+    if(self.io.interruptStatus & (1 << i)) {
+      if(iAdded++ > 0) output.append(", ");
+      output.append(irqName[i]);
+    }
+  }
+  output.append("\n");
+
+  output.append("NMI on Low Battery: ", self.io.nmiOnLowBattery ? "enabled" : "disabled", "\n");
+
+  return output;
+}
+
 auto CPU::Debugger::instruction() -> void {
   if(likely(!tracer.instruction->enabled())) return;
   if(tracer.instruction->address(n20(self.PS * 16 + self.PC))) {

@@ -62,10 +62,15 @@ struct System : IO {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto unload(Node::Object) -> void;
+    auto ports() -> string;
 
     struct Memory {
       Node::Debugger::Memory eeprom;
     } memory;
+
+    struct Properties {
+      Node::Debugger::Properties ports;
+    } properties;
   } debugger{*this};
 
   auto name() const -> string { return information.name; }

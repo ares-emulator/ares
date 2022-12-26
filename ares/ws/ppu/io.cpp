@@ -21,7 +21,6 @@ auto PPU::readIO(n16 address) -> n8 {
     break;
 
   case 0x0002:  //LINE_CUR
-    //todo: unknown if this is vcounter or vcounter%(vtotal+1)
     data = io.vcounter;
     break;
 

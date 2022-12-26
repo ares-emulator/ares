@@ -7,6 +7,7 @@ struct CPU : V30MZ, Thread, IO {
     //debugger.cpp
     auto load(Node::Object) -> void;
     auto unload(Node::Object) -> void;
+    auto ports() -> string;
     auto instruction() -> void;
     auto interrupt(n3) -> void;
 

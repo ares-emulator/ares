@@ -37,9 +37,11 @@ auto Cartridge::Debugger::load(Node::Object parent) -> void {
 }
 
 auto Cartridge::Debugger::unload(Node::Object parent) -> void {
+  parent->remove(properties.ports);
   parent->remove(memory.rom);
   parent->remove(memory.ram);
   parent->remove(memory.eeprom);
+  properties.ports.reset();
   memory.rom.reset();
   memory.ram.reset();
   memory.eeprom.reset();
