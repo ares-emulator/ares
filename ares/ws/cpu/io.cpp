@@ -27,7 +27,8 @@ auto CPU::readIO(n16 address) -> n8 {
   case 0x00a0:  //HW_FLAGS
     data.bit(0) = io.cartridgeEnable;
     data.bit(1) = !SoC::ASWAN();
-    data.bit(2) = 1;  //0 = 8-bit bus width; 1 = 16-bit bus width
+    data.bit(2) = io.cartridgeRomWidth;
+    data.bit(3) = io.cartridgeRomWait;
     data.bit(7) = 1;  //1 = built-in self-test passed
     break;
 
@@ -57,6 +58,10 @@ auto CPU::readIO(n16 address) -> n8 {
   case 0x00b5:  //KEYPAD
     data.bit(0,3) = keypad.read();
     data.bit(4,6) = keypad.matrix;
+    break;
+
+  case 0x00b7:  //NMI
+    data.bit(4) = io.nmiOnLowBattery;
     break;
 
   }
@@ -95,8 +100,9 @@ auto CPU::writeIO(n16 address, n8 data) -> void {
     break;
 
   case 0x00a0:  //HW_FLAGS
-    //todo: d2 (bus width) bit is writable; but ... it will do very bad things
     io.cartridgeEnable |= data.bit(0);  //bit can never be unset (boot ROM lockout)
+    io.cartridgeRomWidth = data.bit(2);
+    io.cartridgeRomWait = data.bit(3);
     break;
 
   case 0x00b0:  //INT_BASE
@@ -124,6 +130,10 @@ auto CPU::writeIO(n16 address, n8 data) -> void {
   case 0x00b6:  //INT_ACK
     //acknowledge only edge-sensitive interrupts
     io.interruptStatus &= ~(data & 0b11110010);
+    break;
+
+  case 0x00b7:  //NMI
+    io.nmiOnLowBattery = data.bit(4);
     break;
 
   }

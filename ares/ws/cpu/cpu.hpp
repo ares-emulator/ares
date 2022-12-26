@@ -81,12 +81,15 @@ struct CPU : V30MZ, Thread, IO {
 
   struct IO {
     n1 cartridgeEnable;
+    n1 cartridgeRomWidth; // 0 = 8-bit; 1 = 16-bit
+    n1 cartridgeRomWait; // 0 = 3 cycles; 1 = 1 cycle
     n8 interruptBase;
     n8 interruptEnable;
     n8 interruptStatus;
     n8 serialData;
     n1 serialBaudRate;  //0 = 9600; 1 = 38400
     n1 serialEnable;
+    n1 nmiOnLowBattery;
   } io;
 };
 

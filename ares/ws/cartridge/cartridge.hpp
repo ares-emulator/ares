@@ -85,10 +85,10 @@ struct Cartridge : Thread, IO {
   } rtc{*this};
 
   struct IO {
-    n8 romBank2 = 0xff;
-    n8 sramBank = 0xff;
-    n8 romBank0 = 0xff;
-    n8 romBank1 = 0xff;
+    n16 romBank2 = 0xffff;
+    n16 sramBank = 0xffff;
+    n16 romBank0 = 0xffff;
+    n16 romBank1 = 0xffff;
     n8 gpoEnable;
     n8 gpoData;
   } io;

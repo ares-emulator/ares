@@ -92,9 +92,7 @@ auto Cartridge::power() -> void {
   eeprom.power();
   rtc.power();
 
-  bus.map(this, 0x00c0, 0x00c8);
-  if(rtc.ram) bus.map(this, 0x00ca, 0x00cb);
-  bus.map(this, 0x00cc, 0x00cd);
+  bus.map(this, 0x00c0, 0x00ff);
 
   io = {};
 }

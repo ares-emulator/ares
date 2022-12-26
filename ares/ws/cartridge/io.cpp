@@ -4,19 +4,35 @@ auto Cartridge::readIO(n16 address) -> n8 {
   switch(address) {
 
   case 0x00c0:  //BANK_ROM2
-    data = io.romBank2;
+  case 0x00cf:
+    data.bit(0,7) = io.romBank2.bit(0,7);
     break;
 
   case 0x00c1:  //BANK_SRAM
-    data = io.sramBank;
+  case 0x00d0:
+    data.bit(0,7) = io.sramBank.bit(0,7);
+    break;
+
+  case 0x00d1:  //BANK_SRAM_HI
+    data.bit(0,7) = io.sramBank.bit(8,15);
     break;
 
   case 0x00c2:  //BANK_ROM0
-    data = io.romBank0;
+  case 0x00d2:
+    data.bit(0,7) = io.romBank0.bit(0,7);
+    break;
+
+  case 0x00d3:  //BANK_ROM0_HI
+    data.bit(0,7) = io.romBank0.bit(8,15);
     break;
 
   case 0x00c3:  //BANK_ROM1
-    data = io.romBank1;
+  case 0x00d4:
+    data.bit(0,7) = io.romBank1.bit(0,7);
+    break;
+
+  case 0x00d5:  //BANK_ROM1_HI
+    data.bit(0,7) = io.romBank1.bit(8,15);
     break;
 
   case 0x00c4:  //EEP_DATALO
@@ -64,19 +80,35 @@ auto Cartridge::writeIO(n16 address, n8 data) -> void {
   switch(address) {
 
   case 0x00c0:  //BANK_ROM2
-    io.romBank2 = data;
+  case 0x00cf:
+    io.romBank2.bit(0,7) = data.bit(0,7);
     break;
 
   case 0x00c1:  //BANK_SRAM
-    io.sramBank = data;
+  case 0x00d0:
+    io.sramBank.bit(0,7) = data.bit(0,7);
+    break;
+
+  case 0x00d1:  //BANK_RO01_HI
+    io.sramBank.bit(8,15) = data.bit(0,7);
     break;
 
   case 0x00c2:  //BANK_ROM0
-    io.romBank0 = data;
+  case 0x00d2:
+    io.romBank0.bit(0,7) = data.bit(0,7);
+    break;
+
+  case 0x00d3:  //BANK_RO01_HI
+    io.romBank0.bit(8,15) = data.bit(0,7);
     break;
 
   case 0x00c3:  //BANK_ROM1
-    io.romBank1 = data;
+  case 0x00d4:
+    io.romBank1.bit(0,7) = data.bit(0,7);
+    break;
+
+  case 0x00d5:  //BANK_ROM1_HI
+    io.romBank1.bit(8,15) = data.bit(0,7);
     break;
 
   case 0x00c4:  //EEP_DATALO
@@ -100,11 +132,11 @@ auto Cartridge::writeIO(n16 address, n8 data) -> void {
     break;
 
   case 0x00ca:  //RTC_CMD
-    rtc.execute(data);
+    if (rtc.ram) rtc.execute(data);
     break;
 
   case 0x00cb:  //RTC_DATA
-    rtc.write(data);
+    if (rtc.ram) rtc.write(data);
     break;
 
   case 0x00cc:  //GPO_EN
