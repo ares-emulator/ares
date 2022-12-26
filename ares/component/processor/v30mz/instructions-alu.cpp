@@ -146,7 +146,7 @@ template<u32 size> auto V30MZ::instructionTestMemReg() -> void {
 }
 
 template<u32 size> auto V30MZ::instructionMultiplySignedRegMemImm() -> void {
-  wait(5);
+  wait(3);
   modRM();
   setRegister<Word>(MULI<Word>(getMemory<Word>(), size == Word ? (s16)fetch<Word>() : (s8)fetch<Byte>()));
 }

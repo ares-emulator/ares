@@ -1,5 +1,5 @@
 template<u32 size> auto V30MZ::instructionInString() -> void {
-  wait(5);
+  wait(3);
   if(!repeat() || CW) {
     auto data = in<size>(DW);
     write<size>(DS1, IY, data);
@@ -14,7 +14,7 @@ template<u32 size> auto V30MZ::instructionInString() -> void {
 }
 
 template<u32 size> auto V30MZ::instructionOutString() -> void {
-  wait(6);
+  wait(3);
   if(!repeat() || CW) {
     auto data = read<size>(segment(DS0), IX);
     out<size>(DW, data);

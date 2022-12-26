@@ -136,11 +136,11 @@ auto V30MZ::instruction() -> void {
   op(0x60, PushAll)
   op(0x61, PopAll)
   op(0x62, Bound)
-//op(0x63, ...)
-//op(0x64, ...)  repnc
-//op(0x65, ...)  repc
-//op(0x66, ...)  fpo2
-//op(0x67, ...)  fpo2
+  op(0x63, Undefined)
+  op(0x64, Undefined)
+  op(0x65, Undefined)
+  op(0x66, Undefined)
+  op(0x67, Undefined)
   op(0x68, PushImm<Word>)
   op(0x69, MultiplySignedRegMemImm<Word>)
   op(0x6a, PushImm<Byte>)
@@ -253,14 +253,14 @@ auto V30MZ::instruction() -> void {
   op(0xd5, AdjustAfterDivide)
   op(0xd6, Translate, 7)  //xlat (undocumented mirror)
   op(0xd7, Translate, 4)  //xlat
-//op(0xd8, ...)  //fpo1
-//op(0xd9, ...)  //fpo1
-//op(0xda, ...)  //fpo1
-//op(0xdb, ...)  //fpo1
-//op(0xdc, ...)  //fpo1
-//op(0xdd, ...)  //fpo1
-//op(0xde, ...)  //fpo1
-//op(0xdf, ...)  //fpo1
+  op(0xd8, Undefined)
+  op(0xd9, Undefined)
+  op(0xda, Undefined)
+  op(0xdb, Undefined)
+  op(0xdc, Undefined)
+  op(0xdd, Undefined)
+  op(0xde, Undefined)
+  op(0xdf, Undefined)
   op(0xe0, LoopWhile, 0)  //loopnz
   op(0xe1, LoopWhile, 1)  //loopz
   op(0xe2, Loop)

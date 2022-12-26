@@ -220,6 +220,7 @@ struct V30MZ {
   auto instructionWait() -> void;
   auto instructionHalt() -> void;
   auto instructionNop() -> void;
+  auto instructionUndefined() -> void;
   template<u32> auto instructionIn() -> void;
   template<u32> auto instructionOut() -> void;
   template<u32> auto instructionInDW() -> void;
