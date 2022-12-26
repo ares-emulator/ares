@@ -54,7 +54,7 @@ auto APU::dacRun() -> void {
   if(channel4.io.enable) channel4.runOutput();
   if(channel5.io.enable) channel5.runOutput();
 
-  if (!outputEnable) {
+  if(!outputEnable) {
     stream->frame(0, 0);
     return;
   }

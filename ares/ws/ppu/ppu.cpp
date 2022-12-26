@@ -3,6 +3,7 @@
 namespace ares::WonderSwan {
 
 PPU ppu;
+#include "debugger.cpp"
 #include "io.cpp"
 #include "memory.cpp"
 #include "window.cpp"
@@ -160,9 +161,13 @@ auto PPU::load(Node::Object parent) -> void {
 
   updateOrientation();
   updateIcons();
+
+  debugger.load(node);
 }
 
 auto PPU::unload() -> void {
+  debugger.unload(node);
+
   icon = {};
   showIcons.reset();
   orientation.reset();
