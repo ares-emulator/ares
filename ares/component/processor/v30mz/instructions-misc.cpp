@@ -57,8 +57,13 @@ template<u32 size> auto V30MZ::instructionOutDW() -> void {
   out<size>(DW, getAccumulator<size>());
 }
 
-auto V30MZ::instructionTranslate(u8 clocks) -> void {
-  wait(clocks);
+auto V30MZ::instructionSetALCarry() -> void {
+  wait(8);
+  AL = PSW.CY ? 0xFF : 0x00;
+}
+
+auto V30MZ::instructionTranslate() -> void {
+  wait(4);
   AL = read<Byte>(segment(DS0), BW + AL);
 }
 

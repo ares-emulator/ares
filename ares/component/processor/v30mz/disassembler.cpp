@@ -379,7 +379,7 @@ auto V30MZ::disassembleInstruction(u16 ps, u16 pc) -> string {
   op(0xd3, group2(), memoryWord(), "cl");
   op(0xd4, "aam", immediateByte());
   op(0xd5, "aad", immediateByte());
-  op(0xd6, "xlat");  //undocumented mirror
+  op(0xd6, "salc");
   op(0xd7, "xlat");
 //op(0xd8);
 //op(0xd9);
