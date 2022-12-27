@@ -37,6 +37,8 @@ auto CPU::Debugger::ports() -> string {
     "HblankTimer"
   };
 
+  output.append("SoC Interrupt Base: ", hex(self.io.interruptBase, 2), "\n");
+
   output.append("SoC Interrupts Enabled: ");
   u32 iAdded = 0;
   for(u32 i : range(8)) {
@@ -58,6 +60,12 @@ auto CPU::Debugger::ports() -> string {
   output.append("\n");
 
   output.append("NMI on Low Battery: ", self.io.nmiOnLowBattery ? "enabled" : "disabled", "\n");
+
+  output.append("Cartridge Bus: ",
+    self.io.cartridgeEnable ? "enabled" : "disabled", ", ",
+    self.io.cartridgeRomWidth ? "16-bit" : "8-bit", ", ",
+    self.io.cartridgeRomWait ? "1 wait cycle" : "3 wait cycles",
+    "\n");
 
   return output;
 }

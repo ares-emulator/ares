@@ -55,7 +55,7 @@ auto Cartridge::Debugger::ports() -> string {
   output.append("ROM Bank Linear: ", hex(self.io.romBank2, 4L), "\n");
   output.append("SRAM Bank: ", hex(self.io.sramBank, 4L), "\n");
 
-  // TODO: RTC
+  // TODO: RTC, GPO
 
   return output;
 }
