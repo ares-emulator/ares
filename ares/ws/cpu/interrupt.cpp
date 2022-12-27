@@ -21,3 +21,8 @@ auto CPU::raise(n3 irq) -> void {
 auto CPU::lower(n3 irq) -> void {
   io.interruptStatus.bit(irq) = 0;
 }
+
+auto CPU::irqLevel(n3 irq, bool value) -> void {
+  if(value) raise(irq);
+  else lower(irq);
+}

@@ -30,16 +30,8 @@ auto Serial::main() -> void {
       state.txFull = 0;
     }
   }
-  if(!state.txFull) {
-    cpu.raise(CPU::Interrupt::SerialSend);
-  } else {
-    cpu.lower(CPU::Interrupt::SerialSend);
-  }
-  if(state.rxFull) {
-    cpu.raise(CPU::Interrupt::SerialReceive);
-  } else {
-    cpu.lower(CPU::Interrupt::SerialReceive);
-  }
+  cpu.irqLevel(CPU::Interrupt::SerialSend, !state.txFull);
+  cpu.irqLevel(CPU::Interrupt::SerialReceive, state.rxFull);
 }
 
 auto Serial::step(u32 clocks) -> void {

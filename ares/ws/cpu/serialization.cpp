@@ -7,6 +7,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(dma.enable);
   s(dma.direction);
   s(keypad.matrix);
+  s(keypad.lastPolledMatrix);
   s(io.cartridgeEnable);
   s(io.interruptBase);
   s(io.interruptEnable);

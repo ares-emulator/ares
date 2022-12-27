@@ -52,6 +52,7 @@ struct CPU : V30MZ, Thread, IO {
 
   //interrupt.cpp
   auto poll() -> void;
+  auto irqLevel(n3, bool) -> void;
   auto raise(n3) -> void;
   auto lower(n3) -> void;
 
@@ -76,8 +77,11 @@ struct CPU : V30MZ, Thread, IO {
 
     //keypad.cpp
     auto read() -> n4;
+    auto poll() -> void;
+    auto power() -> void;
 
     n3 matrix;
+    n3 lastPolledMatrix;
   } keypad{*this};
 
   struct IO {

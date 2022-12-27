@@ -62,6 +62,7 @@ auto CPU::power() -> void {
   }
 
   io = {};
+  keypad.power();
 }
 
 }

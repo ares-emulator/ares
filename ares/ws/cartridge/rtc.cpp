@@ -43,11 +43,7 @@ auto Cartridge::RTC::tickSecond() -> void {
 auto Cartridge::RTC::checkAlarm() -> void {
   if(!alarm.bit(5)) return;
 
-  if(hour() == alarmHour && minute() == alarmMinute) {
-    cpu.raise(CPU::Interrupt::Cartridge);
-  } else {
-    cpu.lower(CPU::Interrupt::Cartridge);
-  }
+  cpu.irqLevel(CPU::Interrupt::Cartridge, hour() == alarmHour && minute() == alarmMinute);
 }
 
 auto Cartridge::RTC::status() -> n8 {

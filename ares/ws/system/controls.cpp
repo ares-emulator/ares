@@ -45,13 +45,6 @@ auto System::Controls::poll() -> void {
     platform->input(a);
     platform->input(start);
 
-    if(y1->value() || y2->value() || y3->value() || y4->value()
-    || x1->value() || x2->value() || x3->value() || x4->value()
-    || b->value() || a->value() || start->value()
-    ) {
-      cpu.raise(CPU::Interrupt::Input);
-    }
-
     bool volumeValue = volume->value();
     platform->input(volume);
     if(!volumeValue && volume->value()) {
@@ -81,14 +74,9 @@ auto System::Controls::poll() -> void {
     } else if(!xHold) {
       xHold = 1, swap(leftLatch, rightLatch);
     }
-
-    if(up->value() || down->value() || leftLatch || rightLatch
-    || pass->value() || circle->value() || clear->value()
-    || view->value() || escape->value()
-    ) {
-      cpu.raise(CPU::Interrupt::Input);
-    }
   }
+
+  cpu.keypad.poll();
 
   bool powerValue = power->value();
   platform->input(power);

@@ -21,7 +21,7 @@ auto V30MZ::instructionLock() -> void {
 }
 
 auto V30MZ::instructionWait() -> void {
-  wait(1 + 9);
+  wait(10);
 }
 
 auto V30MZ::instructionHalt() -> void {
