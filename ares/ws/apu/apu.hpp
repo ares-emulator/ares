@@ -2,7 +2,11 @@ struct APU : Thread, IO {
   Node::Object node;
   Node::Audio::Stream stream;
 
+  bool accurate;
+
   //apu.cpp
+  auto setAccurate(bool value) -> void;
+
   auto load(Node::Object) -> void;
   auto unload() -> void;
 

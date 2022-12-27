@@ -64,6 +64,8 @@ auto WonderSwanColor::load() -> bool {
   system = mia::System::create("WonderSwan Color");
   if(!system->load()) return false;
 
+  ares::WonderSwan::option("Pixel Accuracy", settings.video.pixelAccuracy);
+
   if(!ares::WonderSwan::load(root, "[Bandai] WonderSwan Color")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
