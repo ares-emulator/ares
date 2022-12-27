@@ -17,23 +17,23 @@ struct MBC1 : Interface {
 
   auto read(n16 address, n8 data) -> n8 override {
     if(address >= 0x0000 && address <= 0x3fff) {
-      return rom.read((n14)address);
+      if(io.mode) {
+        return rom.read(io.ram.bank << 19 | (n14)address);
+      } else {
+        return rom.read((n14)address);
+      }
     }
 
     if(address >= 0x4000 && address <= 0x7fff) {
-      if(io.mode == 0) {
-        return rom.read(io.ram.bank << 19 | io.rom.bank << 14 | (n14)address);
-      } else {
-        return rom.read(io.rom.bank << 14 | (n14)address);
-      }
+      return rom.read(io.ram.bank << 19 | io.rom.bank << 14 | (n14)address);
     }
 
     if(address >= 0xa000 && address <= 0xbfff) {
       if(!ram || !io.ram.enable) return 0xff;
-      if(io.mode == 0) {
-        return ram.read((n13)address);
-      } else {
+      if(io.mode) {
         return ram.read(io.ram.bank << 13 | (n13)address);
+      } else {
+        return ram.read((n13)address);
       }
     }
 
