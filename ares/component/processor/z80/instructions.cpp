@@ -405,7 +405,7 @@ auto Z80::instructionLD_r_r2(n8& x, n8& y) -> void { Q = 1;
 auto Z80::instructionLD_rr_inn(n16& x) -> void { Q = 0;
   WZ = operands();
   x.byte(0) = read(WZ);
-  WZ++
+  WZ++;
   x.byte(1) = read(WZ);
 }
 
