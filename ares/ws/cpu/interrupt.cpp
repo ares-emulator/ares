@@ -8,7 +8,7 @@ auto CPU::poll() -> void {
     if(!PSW.IE) continue;
 
     debugger.interrupt(id);
-    interrupt(io.interruptBase + id);
+    interrupt((io.interruptBase & ~7) | id);
     return;
   }
 }
