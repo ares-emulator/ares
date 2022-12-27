@@ -403,9 +403,10 @@ auto Z80::instructionLD_r_r2(n8& x, n8& y) -> void { Q = 1;
 }
 
 auto Z80::instructionLD_rr_inn(n16& x) -> void { Q = 0;
-  auto addr = operands();
-  x.byte(0) = read(addr + 0);
-  x.byte(1) = read(addr + 1);
+  WZ = operands();
+  x.byte(0) = read(WZ);
+  WZ++
+  x.byte(1) = read(WZ);
 }
 
 auto Z80::instructionLD_rr_nn(n16& x) -> void { Q = 0;
