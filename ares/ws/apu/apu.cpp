@@ -33,13 +33,25 @@ auto APU::unload() -> void {
 }
 
 auto APU::main() -> void {
-  if(++state.dmaClock == 0) dma.run();
+  // further verification could always be useful
+
+  // TODO: is the period value (run()) updated before or after the outputs (runOutput())?
   channel1.run();
   channel2.run();
   channel3.run();
+  if(++state.sweepClock == 0) channel3.sweep(); // TODO: which cycle is this, or is it separate?
   channel4.run();
-  if(++state.dacClock == 0) dacRun();
-  if(++state.sweepClock == 0) channel3.sweep();
+
+  // TODO: are voice/noise modes handled on different cycles than tone modes?
+  switch(state.apuClock++) {
+  case 0: if(channel1.io.enable) channel1.runOutput(); break;
+  case 1: if(channel2.io.enable) channel2.runOutput(); break;
+  case 2: if(channel3.io.enable) channel3.runOutput(); break;
+  case 3: if(channel4.io.enable) channel4.runOutput(); break;
+  case 4: if(channel5.io.enable) channel5.runOutput(); break; // TODO: which cycle is this?
+  case 5: dma.run(); break; // TODO: which cycle is this?
+  case 6: dacRun(); break; // TODO: which cycle is this?
+  }
   step(1);
 }
 
@@ -52,12 +64,6 @@ auto APU::sample(u32 channel, n5 index) -> n4 {
 
 auto APU::dacRun() -> void {
   bool outputEnable = io.headphonesConnected ? io.headphonesEnable : io.speakerEnable;
-
-  if(channel1.io.enable) channel1.runOutput();
-  if(channel2.io.enable) channel2.runOutput();
-  if(channel3.io.enable) channel3.runOutput();
-  if(channel4.io.enable) channel4.runOutput();
-  if(channel5.io.enable) channel5.runOutput();
 
   if(!outputEnable) {
     stream->frame(0, 0);
@@ -117,7 +123,7 @@ auto APU::power() -> void {
   io.masterVolume = SoC::ASWAN() ? 2 : 3;
   state = {};
 
-  state.dacClock = 0;
+  state.apuClock = 0;
   state.sweepClock = 0;
 }
 

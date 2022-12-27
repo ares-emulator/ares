@@ -223,8 +223,7 @@ struct APU : Thread, IO {
 
   struct State {
     n13 sweepClock;
-    n7 dacClock;
-    n7 dmaClock;
+    n7 apuClock;
   } state;
 };
 
