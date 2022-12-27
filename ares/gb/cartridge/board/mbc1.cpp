@@ -17,11 +17,8 @@ struct MBC1 : Interface {
 
   auto read(n16 address, n8 data) -> n8 override {
     if(address >= 0x0000 && address <= 0x3fff) {
-      if(io.mode) {
-        return rom.read(io.ram.bank << 19 | (n14)address);
-      } else {
-        return rom.read((n14)address);
-      }
+      if(io.mode) return rom.read(io.ram.bank << 19 | (n14)address);
+      return rom.read((n14)address);
     }
 
     if(address >= 0x4000 && address <= 0x7fff) {
@@ -30,11 +27,8 @@ struct MBC1 : Interface {
 
     if(address >= 0xa000 && address <= 0xbfff) {
       if(!ram || !io.ram.enable) return 0xff;
-      if(io.mode) {
-        return ram.read(io.ram.bank << 13 | (n13)address);
-      } else {
-        return ram.read((n13)address);
-      }
+      if(io.mode) return ram.read(io.ram.bank << 13 | (n13)address);
+      return ram.read((n13)address);
     }
 
     return data;
@@ -64,11 +58,8 @@ struct MBC1 : Interface {
 
     if(address >= 0xa000 && address <= 0xbfff) {
       if(!ram || !io.ram.enable) return;
-      if(io.mode == 0) {
-        return ram.write((n13)address, data);
-      } else {
-        return ram.write(io.ram.bank << 13 | (n13)address, data);
-      }
+      if(io.mode) return ram.write(io.ram.bank << 13 | (n13)address, data);
+      return ram.write((n13)address, data);
     }
   }
 
