@@ -16,6 +16,14 @@ auto load(Node::System& node, string name) -> bool {
   return system.load(node, name);
 }
 
+auto option(string name, string value) -> bool {
+  if(name == "Pixel Accuracy") {
+    apu.setAccurate(value.boolean());
+    ppu.setAccurate(value.boolean());
+  }
+  return true;
+}
+
 Scheduler scheduler;
 System system;
 #define Model ares::WonderSwan::Model

@@ -10,6 +10,7 @@ namespace ares::WonderSwan {
   #include <ares/inline.hpp>
   auto enumerate() -> vector<string>;
   auto load(Node::System& node, string name) -> bool;
+  auto option(string name, string value) -> bool;
 
   enum : u32 { Byte = 1, Word = 2, Long = 4 };
 

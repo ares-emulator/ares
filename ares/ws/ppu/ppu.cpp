@@ -14,6 +14,10 @@ PPU ppu;
 #include "color.cpp"
 #include "serialization.cpp"
 
+auto PPU::setAccurate(bool value) -> void {
+  accurate = value;
+}
+
 auto PPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("PPU");
 
@@ -195,9 +199,9 @@ auto PPU::main() -> void {
       screen2.pixel(x, y);
       sprite.pixel(x, y);
       dac.pixel(x, y);
-      step(1);
+      if(accurate) step(1);
     }
-    step(32);
+    step((accurate ? 0 : 224) + 32);
   } else {
     step(256);
   }

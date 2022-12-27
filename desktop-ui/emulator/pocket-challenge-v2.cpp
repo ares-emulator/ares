@@ -41,6 +41,8 @@ auto PocketChallengeV2::load() -> bool {
   system = mia::System::create("Pocket Challenge V2");
   if(!system->load()) return false;
 
+  ares::WonderSwan::option("Pixel Accuracy", settings.video.pixelAccuracy);
+
   if(!ares::WonderSwan::load(root, "[Benesse] Pocket Challenge V2")) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {

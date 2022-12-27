@@ -25,6 +25,8 @@ struct PPU : Thread, IO {
     Node::Video::Sprite volumeB3;
   } icon;
 
+  bool accurate;
+
   auto hcounter() const -> u32 { return io.hcounter; }
   auto vcounter() const -> u32 { return io.vcounter; }
   auto field() const -> bool { return io.field; }
@@ -54,6 +56,8 @@ struct PPU : Thread, IO {
   } debugger{*this};
 
   //ppu.cpp
+  auto setAccurate(bool value) -> void;
+
   auto load(Node::Object) -> void;
   auto unload() -> void;
 
@@ -123,7 +127,8 @@ struct PPU : Thread, IO {
     //screen.cpp
     auto scanline(n8 y) -> void;
     auto pixel(n8 x, n8 y) -> void;
-    auto power() -> void;
+    auto power() -> void;  auto setAccurate(bool value) -> void;
+
   } screen1{*this};
 
   struct Screen2 : Screen {

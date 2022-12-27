@@ -130,6 +130,7 @@ namespace ares::Atari2600 {
 #ifdef CORE_WS
   namespace ares::WonderSwan {
     auto load(Node::System& node, string name) -> bool;
+    auto option(string name, string value) -> bool;
   }
   #include "wonderswan.cpp"
   #include "wonderswan-color.cpp"
