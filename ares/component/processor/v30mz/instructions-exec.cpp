@@ -149,7 +149,9 @@ auto V30MZ::instructionLeave() -> void {
 }
 
 auto V30MZ::instructionPushReg(u16& reg) -> void {
-  push(reg);
+  // Emulate the 8086/80186 "PUSH SP" bug.
+  if(&reg == &SP) push(reg - 2);
+  else push(reg);
 }
 
 auto V30MZ::instructionPushSeg(u16& seg) -> void {
