@@ -251,8 +251,8 @@ auto V30MZ::instruction() -> void {
   op(0xd3, Group2MemImm<Word>, 3, (u8)CL)
   op(0xd4, AdjustAfterMultiply)
   op(0xd5, AdjustAfterDivide)
-  op(0xd6, Translate, 7)  //xlat (undocumented mirror)
-  op(0xd7, Translate, 4)  //xlat
+  op(0xd6, SetALCarry) //salc
+  op(0xd7, Translate)  //xlat
   op(0xd8, Undefined)
   op(0xd9, Undefined)
   op(0xda, Undefined)

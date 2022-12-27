@@ -225,7 +225,8 @@ struct V30MZ {
   template<u32> auto instructionOut() -> void;
   template<u32> auto instructionInDW() -> void;
   template<u32> auto instructionOutDW() -> void;
-  auto instructionTranslate(u8) -> void;
+  auto instructionTranslate() -> void;
+  auto instructionSetALCarry() -> void;
   auto instructionBound() -> void;
 
   //instructions-move.cpp
