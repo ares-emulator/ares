@@ -40,7 +40,7 @@ template<u32 size> auto V30MZ::instructionGroup3MemImm() -> void {
   auto mem = getMemory<size>();
   switch(modrm.reg) {
   case 0: wait(1); AND<size>(mem, fetch<size>()); break;  //TEST
-  case 1: wait(1); AND<size>(mem, fetch<size>()); break;  //TEST (undocumented mirror)
+  case 1: wait(1); break; // undefined (acts as NOP)
   case 2: wait(1); setMemory<size>(NOT<size>(mem)); break;
   case 3: wait(1); setMemory<size>(NEG<size>(mem)); break;
   case 4: wait(3); setAccumulator<size * 2>(MULU<size>(getAccumulator<size>(), mem)); break;
