@@ -184,10 +184,6 @@ auto PPU::unload() -> void {
 }
 
 auto PPU::main() -> void {
-  if(io.vcounter == 142) {
-    sprite.frame();
-  }
-
   if(io.vcounter < 144) {
     n8 y = io.vcounter % (io.vtotal + 1);
     screen1.scanline(y);
@@ -202,6 +198,8 @@ auto PPU::main() -> void {
       if(accurate) step(1);
     }
     step((accurate ? 0 : 224) + 32);
+  } else if (io.vcounter == 144) {
+    sprite.oamSyncScanline();
   } else {
     step(256);
   }

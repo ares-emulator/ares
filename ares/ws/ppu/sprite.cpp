@@ -1,9 +1,25 @@
-auto PPU::Sprite::frame() -> void {
+auto PPU::Sprite::oamSyncScanline() -> void {
   n7 index = first;
   n16 base = oamBase.bit(0, self.grayscale() ? 4 : 5) << 9;
   oam[self.field()].flush();
-  for(auto object : range(min(128, count))) {
-    oam[self.field()].write(iram.read32(base + index++ * 4));
+  if(self.accurate) {
+    for(auto object : range(min(128, count))) {
+      auto addr = base + index++ * 4;
+      n32 data;
+
+      data.bit(0, 15) = iram.read16(addr);
+      self.step(1);
+      data.bit(16, 31) = iram.read16(addr + 2);
+      self.step(1);
+
+      oam[self.field()].write(data);
+    }
+    self.step((128 - count) * 2);
+  } else {
+    for(auto object : range(min(128, count))) {
+      oam[self.field()].write(iram.read32(base + index++ * 4));
+    }
+    self.step(256);
   }
 }
 
