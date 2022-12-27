@@ -15,8 +15,7 @@ auto APU::serialize(serializer& s) -> void {
   s(io.headphonesConnected);
   s(io.masterVolume);
   s(state.sweepClock);
-  s(state.dacClock);
-  s(state.dmaClock);
+  s(state.apuClock);
 }
 
 auto APU::DMA::serialize(serializer& s) -> void {
