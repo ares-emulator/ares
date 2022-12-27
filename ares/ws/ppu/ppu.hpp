@@ -145,7 +145,7 @@ struct PPU : Thread, IO {
     Screen2& screen2;
 
     //sprite.cpp
-    auto frame() -> void;
+    auto oamSyncScanline() -> void;
     auto scanline(n8 y) -> void;
     auto pixel(n8 x, n8 y) -> void;
     auto power() -> void;
