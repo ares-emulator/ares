@@ -63,3 +63,15 @@ auto CPU::Keypad::read() -> n4 {
 
   return data;
 }
+
+auto CPU::Keypad::poll() -> void {
+  n3 polledMatrix = read();
+  if (polledMatrix & ~(lastPolledMatrix)) {
+    cpu.raise(CPU::Interrupt::Input);
+  }
+  lastPolledMatrix = polledMatrix;
+}
+
+auto CPU::Keypad::power() -> void {
+  lastPolledMatrix = read();
+}
