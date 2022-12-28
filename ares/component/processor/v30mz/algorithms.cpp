@@ -47,20 +47,20 @@ template<u32 size> auto V30MZ::DEC(u16 x) -> u16 {
 }
 
 template<u32 size> auto V30MZ::DIVI(s32 x, s32 y) -> u32 {
-  if(y == 0) return interrupt(0), x;
+  if(y == 0) return interrupt(0, InterruptSource::CPU), x;
   x = size == Byte ? (s16)x : (s32)x;
   y = size == Byte ? ( s8)y : (s16)y;
   s32 quotient  = x / y;
   s32 remainder = x % y;
-  if(quotient > mask >> 1 || quotient < -sign) return interrupt(0), x;
+  if(quotient > mask >> 1 || quotient < -sign) return interrupt(0, InterruptSource::CPU), x;
   return (remainder & mask) << bits | (quotient & mask);
 }
 
 template<u32 size> auto V30MZ::DIVU(u32 x, u32 y) -> u32 {
-  if(y == 0) return interrupt(0), x;
+  if(y == 0) return interrupt(0, InterruptSource::CPU), x;
   u32 quotient  = x / y;
   u32 remainder = x % y;
-  if(quotient > mask) return interrupt(0), x;
+  if(quotient > mask) return interrupt(0, InterruptSource::CPU), x;
   return (remainder & mask) << bits | (quotient & mask);
 }
 

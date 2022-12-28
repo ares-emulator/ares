@@ -73,5 +73,5 @@ auto V30MZ::instructionBound() -> void {
   auto lo = getMemory<Word>(0);
   auto hi = getMemory<Word>(2);
   auto reg = getRegister<Word>();
-  if(reg < lo || reg > hi) interrupt(5);
+  if(reg < lo || reg > hi) interrupt(5, InterruptSource::CPU);
 }

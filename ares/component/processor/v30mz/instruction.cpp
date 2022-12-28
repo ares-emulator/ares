@@ -1,5 +1,7 @@
-auto V30MZ::interrupt(u8 vector) -> void {
-  wait(32);
+auto V30MZ::interrupt(u8 vector, InterruptSource source) -> bool {
+  if(source == InterruptSource::INT) wait(32);
+  else if (source == InterruptSource::NMI) wait(26);
+  else wait(25);
 
   state.halt = 0;
   state.poll = 1;
@@ -27,6 +29,17 @@ auto V30MZ::interrupt(u8 vector) -> void {
   PC = pc;
   PS = ps;
   flush();
+  return true;
+}
+
+auto V30MZ::interrupt(u8 vector) -> bool {
+  state.halt = false;
+  if(!PSW.IE) return false;
+  return interrupt(vector, InterruptSource::INT);
+}
+
+auto V30MZ::nonMaskableInterrupt() -> bool {
+  return interrupt(2, InterruptSource::NMI);
 }
 
 #define op(id, name, ...) case id: instruction##name(__VA_ARGS__); break;
