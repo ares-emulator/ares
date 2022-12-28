@@ -19,15 +19,16 @@ auto V30MZ::interrupt(u8 vector, InterruptSource source) -> bool {
   auto ps = read<Word>(0x0000, vector * 4 + 2);
 
   push(PSW);
-  push(PS);
-  push(PC);
 
   PSW.MD  = 1;
   PSW.IE  = 0;
   PSW.BRK = 0;
 
-  PC = pc;
+  push(PS);
   PS = ps;
+  push(PC);
+  PC = pc;
+
   flush();
   return true;
 }
@@ -309,6 +310,7 @@ auto V30MZ::instruction() -> void {
   }
 
   if(!state.prefix) prefixes.flush();
+  if(PSW.BRK) interrupt(1, InterruptSource::SingleStep);
 }
 
 #undef op
