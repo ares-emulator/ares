@@ -66,7 +66,7 @@ auto V30MZ::instruction() -> void {
   op(0x0c, OrAccImm<Byte>)
   op(0x0d, OrAccImm<Word>)
   op(0x0e, PushSeg, PS)
-  op(0x0f, PopSeg, PS)
+  op(0x0f, Undefined)
   op(0x10, AdcMemReg<Byte>)
   op(0x11, AdcMemReg<Word>)
   op(0x12, AdcRegMem<Byte>)
