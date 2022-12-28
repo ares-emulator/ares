@@ -267,14 +267,14 @@ auto V30MZ::instruction() -> void {
   op(0xd5, AdjustAfterDivide)
   op(0xd6, SetALCarry) //salc
   op(0xd7, Translate)  //xlat
-  op(0xd8, Undefined)
-  op(0xd9, Undefined)
-  op(0xda, Undefined)
-  op(0xdb, Undefined)
-  op(0xdc, Undefined)
-  op(0xdd, Undefined)
-  op(0xde, Undefined)
-  op(0xdf, Undefined)
+  op(0xd8, Undefined1)
+  op(0xd9, Undefined1)
+  op(0xda, Undefined1)
+  op(0xdb, Undefined1)
+  op(0xdc, Undefined1)
+  op(0xdd, Undefined1)
+  op(0xde, Undefined1)
+  op(0xdf, Undefined1)
   op(0xe0, LoopWhile, 0)  //loopnz
   op(0xe1, LoopWhile, 1)  //loopz
   op(0xe2, Loop)

@@ -37,6 +37,11 @@ auto V30MZ::instructionUndefined() -> void {
   wait(1);
 }
 
+auto V30MZ::instructionUndefined1() -> void {
+  wait(1);
+  fetch<Byte>();
+}
+
 template<u32 size> auto V30MZ::instructionIn() -> void {
   wait(6);
   setAccumulator<size>(in<size>(fetch<Byte>()));
