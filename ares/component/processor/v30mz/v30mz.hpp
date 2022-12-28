@@ -2,25 +2,12 @@
 
 //does not contain V20/V30 extended instructions
 
-//x86 variant instructions:
-//  8f c0-c7  pop reg [CPU bug: pops from stack; fails to set register]
-//  d6        
-//  f1        ??? [this is int 0x1 on x86 CPUs; said to be a two-byte NOP on V20; unknown on V30/V30MZ]
-//  ff f8-ff  push (mirror of ff f0-f7)
-
 //x86 unemulated variation:
 //  after interrupts, NEC V20/V30 CPUs resume string instructions with prefixes intact. unlike x86 CPUs
 //  I need more information on this behavior in order to emulate it ...
-//  also, the opcode f1 behavior is not currently known
 
 //V30MZ opcode prefix functionality:
 //  there is a seven-level stack for opcode prefixes. once full, older prefixes are pushed off the stack
-
-//other notes:
-//  0f     pop cs (not nop) [on the V20; the V30 uses this for instruction extensions; unsure on the V30MZ]
-//  8e xx  mov cs,modRM (works as expected; able to set CS)
-
-//I currently emulate opcode 0f as pop cs, although it's unknown if that is correct.
 
 #pragma once
 
