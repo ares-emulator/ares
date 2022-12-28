@@ -31,7 +31,7 @@ auto V30MZ::instructionAsciiAdjust(bool negate) -> void {
 auto V30MZ::instructionAdjustAfterMultiply() -> void {
   wait(16);
   auto imm = fetch<Byte>();
-  if(imm == 0) return interrupt(0);
+  if(imm == 0) { interrupt(0, InterruptSource::CPU); return; }
   AH = AL / imm;
   AL %= imm;
   PSW.P = parity(AL);

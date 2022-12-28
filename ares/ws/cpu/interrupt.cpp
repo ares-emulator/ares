@@ -4,11 +4,10 @@ auto CPU::poll() -> void {
   for(auto id : reverse(range(8))) {
     if(!io.interruptEnable.bit(id)) continue;
     if(!io.interruptStatus.bit(id)) continue;
-    state.halt = false;
-    if(!PSW.IE) continue;
 
-    debugger.interrupt(id);
-    interrupt((io.interruptBase & ~7) | id);
+    if(interrupt((io.interruptBase & ~7) | id)) {
+      debugger.interrupt(id);
+    }
     return;
   }
 }
