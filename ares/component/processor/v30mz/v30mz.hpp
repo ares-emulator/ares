@@ -26,6 +26,8 @@ struct V30MZ {
   };
 
   virtual auto step(u32 clocks = 1) -> void = 0;
+  virtual auto width(n20 address) -> u32 = 0;
+  virtual auto speed(n20 address) -> n32 = 0;
   virtual auto read(n20 address) -> n8 = 0;
   virtual auto write(n20 address, n8 data) -> void = 0;
   virtual auto in(n16 port) -> n8 = 0;
@@ -264,6 +266,7 @@ struct V30MZ {
   u16 PC;   //IP
   u16 PFP;  //prefetch pointer
   queue<u8[16]> PF;  //prefetch queue
+  n8 PFW; //prefetch wait time
 
   struct ProgramStatusWord {
     u16 data;

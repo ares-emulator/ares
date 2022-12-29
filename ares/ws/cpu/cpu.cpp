@@ -31,6 +31,22 @@ auto CPU::step(u32 clocks) -> void {
   Thread::synchronize();
 }
 
+auto CPU::width(n20 address) -> u32 {
+  switch(address >> 16) {
+    case 0: return Word; // internal RAM
+    case 1: return Byte; // SRAM
+    default: return io.cartridgeRomWidth ? Word : Byte; // cartridge ROM
+  }
+}
+
+auto CPU::speed(n20 address) -> n32 {
+  switch(address >> 16) {
+    case 0: return 1; // internal RAM
+    case 1: return system.color() ? 1 : 3; // SRAM
+    default: return io.cartridgeRomWait ? 3 : 1; // cartridge ROM
+  }
+}
+
 auto CPU::read(n20 address) -> n8 {
   return bus.read(address);
 }

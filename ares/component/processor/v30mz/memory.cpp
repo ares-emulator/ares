@@ -1,5 +1,5 @@
 template<> auto V30MZ::read<Byte>(u16 segment, u16 address) -> u32 {
-  step(1);
+  step(speed(segment * 16 + address));
   u32 data = 0;
   data |= read(segment * 16 + address++) << 0;
   return data;
@@ -7,35 +7,35 @@ template<> auto V30MZ::read<Byte>(u16 segment, u16 address) -> u32 {
 
 template<> auto V30MZ::read<Word>(u16 segment, u16 address) -> u32 {
   u32 data = 0;
-  step(1);
+  step(speed(segment * 16 + address));
   data |= read(segment * 16 + address++) << 0;
-  if(!(address & 1)) step(1);
+  if(width(address) == Byte || !(address & 1)) step(speed(segment * 16 + address));
   data |= read(segment * 16 + address++) << 8;
   return data;
 }
 
 template<> auto V30MZ::read<Long>(u16 segment, u16 address) -> u32 {
   u32 data = 0;
-  step(1);
+  step(speed(segment * 16 + address));
   data |= read(segment * 16 + address++) <<  0;
-  if(!(address & 1)) step(1);
+  if(width(address) == Byte || !(address & 1)) step(speed(segment * 16 + address));
   data |= read(segment * 16 + address++) <<  8;
-  if(!(address & 1)) step(1);
+  if(width(address) == Byte || !(address & 1)) step(speed(segment * 16 + address));
   data |= read(segment * 16 + address++) << 16;
-  if(!(address & 1)) step(1);
+  if(width(address) == Byte || !(address & 1)) step(speed(segment * 16 + address));
   data |= read(segment * 16 + address++) << 24;
   return data;
 }
 
 template<> auto V30MZ::write<Byte>(u16 segment, u16 address, u16 data) -> void {
-  step(1);
+  step(speed(segment * 16 + address));
   write(segment * 16 + address++, data >> 0);
 }
 
 template<> auto V30MZ::write<Word>(u16 segment, u16 address, u16 data) -> void {
-  step(1);
+  step(speed(segment * 16 + address));
   write(segment * 16 + address++, data >> 0);
-  if(!(address & 1)) step(1);
+  if(width(address) == Byte || !(address & 1)) step(speed(segment * 16 + address));
   write(segment * 16 + address++, data >> 8);
 }
 
