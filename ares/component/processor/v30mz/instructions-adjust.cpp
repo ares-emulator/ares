@@ -1,13 +1,23 @@
 auto V30MZ::instructionDecimalAdjust(bool negate) -> void {
   wait(10 + negate);
   n8 al = AL;
+  PSW.V = 0; // undefined
   if(PSW.AC || ((al & 0x0f) > 0x09)) {
     AL += negate ? -0x06 : 0x06;
     PSW.AC = 1;
+    if(negate) PSW.V |= (al ^ 0x06) & (al ^ AL) & 0x80; // undefined
+    else PSW.V |= (AL ^ al) & (AL ^ 0x06) & 0x80; // undefined
+  } else {
+    PSW.AC = 0;
   }
   if(PSW.CY || (al > 0x99)) {
+    al = AL;
     AL += negate ? -0x60 : 0x60;
     PSW.CY = 1;
+    if(negate) PSW.V |= (al ^ 0x06) & (al ^ AL) & 0x80; // undefined
+    else PSW.V |= (AL ^ al) & (AL ^ 0x60) & 0x80; // undefined
+  } else {
+    PSW.CY = 0;
   }
   PSW.S = AL & 0x80;
   PSW.Z = AL == 0;
