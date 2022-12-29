@@ -138,7 +138,7 @@ template<u32 size> auto V30MZ::RCL(u16 x, u5 y) -> u16 {
     result = (result << 1) | PSW.CY;
     PSW.CY = carry;
   }
-  PSW.V = (x ^ result) & sign;
+  PSW.V = (result ^ (PSW.CY << (bits - 1))) & sign;
   return result & mask;
 }
 
@@ -149,7 +149,7 @@ template<u32 size> auto V30MZ::RCR(u16 x, u5 y) -> u16 {
     result = (PSW.CY ? sign : 0) | (result >> 1);
     PSW.CY = carry;
   }
-  PSW.V = (x ^ result) & sign;
+  PSW.V = (result ^ (result << 1)) & sign;
   return result & mask;
 }
 
@@ -159,7 +159,7 @@ template<u32 size> auto V30MZ::ROL(u16 x, u5 y) -> u16 {
     PSW.CY = result & sign;
     result = (result << 1) | PSW.CY;
   }
-  PSW.V = (x ^ result) & sign;
+  PSW.V = (result ^ (PSW.CY << (bits - 1))) & sign;
   return result & mask;
 }
 
@@ -169,7 +169,7 @@ template<u32 size> auto V30MZ::ROR(u16 x, u5 y) -> u16 {
     PSW.CY = result & 1;
     result = (PSW.CY ? sign : 0) | (result >> 1);
   }
-  PSW.V = (x ^ result) & sign;
+  PSW.V = (result ^ (result << 1)) & sign;
   return result & mask;
 }
 
