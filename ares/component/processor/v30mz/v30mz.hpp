@@ -299,6 +299,11 @@ protected:
     SingleStep = 4 // internal request - single step
   };
 
+  // algorithms.cpp
+  template<u32> auto ADD (u16, u16, u16) -> u16;
+  template<u32> auto SUB (u16, u16, u16) -> u16;
+
+  // instruction.cpp
   auto interrupt(u8 vector, InterruptSource source) -> bool;
 };
 
