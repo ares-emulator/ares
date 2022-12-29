@@ -173,17 +173,6 @@ template<u32 size> auto V30MZ::ROR(u16 x, u5 y) -> u16 {
   return result & mask;
 }
 
-template<u32 size> auto V30MZ::SAL(u16 x, u5 y) -> u16 {
-  if(y != 0) PSW.CY = (x << y) & (1 << bits);
-  u16 result = (x << y) & mask;
-  PSW.AC = 0;
-  PSW.P = parity(result);
-  PSW.Z = result == 0;
-  PSW.S = result & sign;
-  PSW.V = (result ^ (PSW.CY << (bits - 1))) & sign;
-  return result;
-}
-
 template<u32 size> auto V30MZ::SAR(u16 x, u5 y) -> u16 {
   u16 result = x;
   for(u32 n = 0; n < y; n++) {
