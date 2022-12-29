@@ -140,14 +140,17 @@ auto APU::writeIO(n16 address, n8 data) -> void {
   switch(address) {
 
   case 0x004a ... 0x004c:  //SDMA_SRC
+    if(!system.color()) break;
     dma.io.source.byte(address - 0x004a) = data;
     break;
 
   case 0x004e ... 0x0050:  //SDMA_LEN
+    if(!system.color()) break;
     dma.io.length.byte(address - 0x004e) = data;
     break;
 
   case 0x0052: {  //SDMA_CTRL
+    if(!system.color()) break;
     bool trigger = !dma.io.enable && data.bit(7);
     dma.io.rate      = data.bit(0,1);
     dma.io.unknown   = data.bit(2);
@@ -162,6 +165,7 @@ auto APU::writeIO(n16 address, n8 data) -> void {
   } break;
 
   case 0x006a:  //SND_HYPER_CTRL
+    if(!system.color()) break;
     channel5.io.volume = data.bit(0,1);
     channel5.io.scale  = data.bit(2,3);
     channel5.io.speed  = data.bit(4,6);
@@ -169,6 +173,7 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     break;
 
   case 0x006b:  //SND_HYPER_CHAN_CTRL
+    if(!system.color()) break;
     channel5.io.unknown     = data.bit(0,3);
     channel5.io.leftEnable  = data.bit(5);
     channel5.io.rightEnable = data.bit(6);
