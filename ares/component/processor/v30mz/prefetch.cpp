@@ -15,20 +15,24 @@ auto V30MZ::loop() -> void {
 auto V30MZ::flush() -> void {
   PF.flush();
   PFP = PC;
+  PFW = 0;
   if(PFP & 1) step(1);
 }
 
 auto V30MZ::prefetch() -> void {
   step(1);
-  switch(PFP & 1) {
-  case 0: if(PF.full()) break; PF.write(read(PS * 16 + PFP++));  //fallthrough
-  case 1: if(PF.full()) break; PF.write(read(PS * 16 + PFP++));
-  }
+  auto address = PS * 16 + PFP;
+  auto size = width(address);
+  auto wait = speed(address);
+  if(++PFW < wait) return;
+  PFW -= wait;
+  if(size == Word && !(PFP & 1)) if(!PF.full()) PF.write(read(PS * 16 + PFP++));
+  if(!PF.full()) PF.write(read(PS * 16 + PFP++));
 }
 
 template<> auto V30MZ::fetch<Byte>() -> u16 {
   PC++;
-  if(PF.empty()) prefetch();
+  while(PF.empty()) prefetch();
   return PF.read(0);
 }
 
