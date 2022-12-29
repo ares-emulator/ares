@@ -4,15 +4,16 @@ auto V30MZ::modRM() -> void {
   modrm.reg = data >> 3 & 7;
   modrm.mod = data >> 6 & 3;
 
+  if(modrm.mod == 3) return;
   if(modrm.mod == 0 && modrm.mem == 6) {
     modrm.segment = segment(DS0);
     modrm.address = fetch<Word>();
   } else {
     switch(modrm.mem) {
-    case 0: modrm.segment = segment(DS0); modrm.address = BW + IX; break;
-    case 1: modrm.segment = segment(DS0); modrm.address = BW + IY; break;
-    case 2: modrm.segment = segment(SS ); modrm.address = BP + IX; break;
-    case 3: modrm.segment = segment(SS ); modrm.address = BP + IY; break;
+    case 0: modrm.segment = segment(DS0); modrm.address = BW + IX; wait(1); break;
+    case 1: modrm.segment = segment(DS0); modrm.address = BW + IY; wait(1); break;
+    case 2: modrm.segment = segment(SS ); modrm.address = BP + IX; wait(1); break;
+    case 3: modrm.segment = segment(SS ); modrm.address = BP + IY; wait(1); break;
     case 4: modrm.segment = segment(DS0); modrm.address = IX; break;
     case 5: modrm.segment = segment(DS0); modrm.address = IY; break;
     case 6: modrm.segment = segment(SS ); modrm.address = BP; break;
