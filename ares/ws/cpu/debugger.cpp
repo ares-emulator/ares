@@ -64,7 +64,7 @@ auto CPU::Debugger::ports() -> string {
   output.append("Cartridge Bus: ",
     self.io.cartridgeEnable ? "enabled" : "disabled", ", ",
     self.io.cartridgeRomWidth ? "16-bit" : "8-bit", ", ",
-    self.io.cartridgeRomWait ? "1 wait cycle" : "3 wait cycles",
+    self.io.cartridgeRomWait ? "3 wait cycles" : "1 wait cycle",
     "\n");
 
   return output;
