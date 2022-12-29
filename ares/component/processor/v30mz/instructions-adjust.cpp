@@ -42,9 +42,6 @@ auto V30MZ::instructionAdjustAfterMultiply() -> void {
 auto V30MZ::instructionAdjustAfterDivide() -> void {
   wait(6);
   auto imm = fetch<Byte>();
-  AL += AH * imm;
+  AL = ADD<Byte>(AL, MULU<Byte>(AH, imm) & 0xFF, 0);
   AH = 0;
-  PSW.P = parity(AL);
-  PSW.S = AW & 0x8000;
-  PSW.Z = AW == 0;
 }
