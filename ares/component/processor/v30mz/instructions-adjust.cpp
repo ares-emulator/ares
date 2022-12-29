@@ -31,11 +31,18 @@ auto V30MZ::instructionAsciiAdjust(bool negate) -> void {
     AH += negate ? -0x01 : 0x01;
     PSW.AC = 1;
     PSW.CY = 1;
+    PSW.S = 0; // undefined
+    PSW.Z = 1; // undefined
   } else {
+    AL &= 0x0f;
     PSW.AC = 0;
     PSW.CY = 0;
+    PSW.S = 1; // undefined
+    PSW.Z = 0; // undefined
   }
   AL &= 0x0f;
+  PSW.V = 0; // undefined
+  PSW.P = 1; // undefined
 }
 
 auto V30MZ::instructionAdjustAfterMultiply() -> void {
