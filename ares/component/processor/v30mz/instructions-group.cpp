@@ -30,7 +30,7 @@ template<u32 size> auto V30MZ::instructionGroup2MemImm(u8 clocks, maybe<u8> imm)
   case 3: setMemory<size>(RCR<size>(mem, *imm)); break;
   case 4: setMemory<size>(SHL<size>(mem, *imm)); break;
   case 5: setMemory<size>(SHR<size>(mem, *imm)); break;
-  case 6: setMemory<size>(SAL<size>(mem, *imm)); break;
+  case 6: setMemory<size>(0); break; // undefined opcode
   case 7: setMemory<size>(SAR<size>(mem, *imm)); break;
   }
 }
@@ -89,8 +89,8 @@ template<u32 size> auto V30MZ::instructionGroup4MemImm() -> void {
   case 6:  //PUSH
     push(getMemory<Word>());
     break;
-  case 7:  //PUSH (undocumented mirror)
-    push(getMemory<Word>());
+  case 7:  //undefined opcode
+    wait(1);
     break;
   }
 }

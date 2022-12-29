@@ -93,7 +93,6 @@ struct V30MZ {
   template<u32> auto RCR (u16, u5 ) -> u16;
   template<u32> auto ROL (u16, u5 ) -> u16;
   template<u32> auto ROR (u16, u5 ) -> u16;
-  template<u32> auto SAL (u16, u5 ) -> u16;
   template<u32> auto SAR (u16, u5 ) -> u16;
   template<u32> auto SBB (u16, u16) -> u16;
   template<u32> auto SUB (u16, u16) -> u16;
