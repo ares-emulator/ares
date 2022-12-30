@@ -41,7 +41,7 @@ auto PPU::readIO(n16 address) -> n8 {
 
   //PPUDATA
   case 7:
-    if(enable() && (io.ly <= 240 || io.ly == 261)) return 0x00;
+    if(enable() && (io.ly < 240 || io.ly == vlines() - 1)) return 0x00;
 
     address = (n14)io.v.address;
     if(address <= 0x1fff) {
@@ -127,7 +127,7 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
 
   //PPUDATA
   case 7:
-    if(enable() && (io.ly <= 240 || io.ly == 261)) return;
+    if(enable() && (io.ly < 240 || io.ly == vlines() - 1)) return;
 
     address = (n14)io.v.address;
     if(address <= 0x1fff) {
