@@ -294,8 +294,13 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
 
   case  34:
-    s += "  board:  HVC-BNROM\n";
-    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    if(submapper == 0 && chrrom != 0 || submapper == 1) {
+      s += "  board:  AVE-NINA-001\n";
+      prgram = 8192;
+    } else {
+      s += "  board:  HVC-BNROM\n";
+      s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    }
     break;
 
   case  48:
