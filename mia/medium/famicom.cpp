@@ -84,6 +84,8 @@ auto Famicom::analyze(vector<u8>& data) -> string {
   if(data.size() < 256) return {};
 
   string digest = Hash::SHA256(data).digest();
+  string manifest = Medium::manifestDatabase(digest);
+  if(manifest) return manifest;
 
   if(digest == "99c18490ed9002d9c6d999b9d8d15be5c051bdfa7cc7e73318053c9a994b0178"  //Nintendo Famicom Disk System (Japan)
   || digest == "a0a9d57cbace21bf9c85c2b85e86656317f0768d7772acc90c7411ab1dbff2bf"  //Sharp Twin Famicom (Japan)
@@ -132,7 +134,13 @@ auto Famicom::analyzeFDS(vector<u8>& data) -> string {
 auto Famicom::analyzeINES(vector<u8>& data) -> string {
   string hash = Hash::SHA256({data.data() + 16, data.size() - 16}).digest();
   string manifest = Medium::manifestDatabase(hash);
-  if(manifest) return manifest;
+  if(manifest) {
+    manifest += "    memory\n";
+    manifest += "      type: ROM\n";
+    manifest += "      size: 0x10\n";
+    manifest += "      content: iNES\n";
+    return manifest;
+  }
 
   u32 mapper = ((data[7] >> 4) << 4) | (data[6] >> 4);
   u32 mirror = ((data[6] & 0x08) >> 2) | (data[6] & 0x01);
