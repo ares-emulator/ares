@@ -51,6 +51,7 @@ struct Program : ares::Platform {
   bool startFullScreen = false;
   string startGameLoad;
   string startSystem;
+  string startShader;
 
   vector<ares::Node::Video::Screen> screens;
   vector<ares::Node::Audio::Stream> streams;

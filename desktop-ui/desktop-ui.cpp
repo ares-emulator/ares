@@ -59,6 +59,10 @@ auto nall::main(Arguments arguments) -> void {
     program.startSystem = system;
   }
 
+  if(string shader; arguments.take("--shader", shader)) {
+    program.startShader = shader;
+  }
+
   for(auto argument : arguments) {
     if(file::exists(argument)) program.startGameLoad = argument;
   }
