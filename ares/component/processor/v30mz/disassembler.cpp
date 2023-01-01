@@ -6,7 +6,7 @@ auto V30MZ::disassembleInstruction(u16 ps, u16 pc) -> string {
   string output, repeat, prefix;
 
   auto read = [&](u32 offset) -> n8 {
-    return V30MZ::read<Byte>(ps, pc + offset);
+    return this->read(ps * 16 + ((pc + offset) & 0xFFFF));
   };
 
   auto modRM = [&](u32 offset = 1) -> u32 {
