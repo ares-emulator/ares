@@ -77,6 +77,7 @@ Usage: ./ares [options] game
   --help                 Displays available options and exit
   --fullscreen           Start in full screen mode
   --system system        Specify the system name
+  --shader shader        Specify GLSL shader name to load (requires OpenGL driver)
 ```
 
 The --system option is useful when the system type cannot be auto-detected.

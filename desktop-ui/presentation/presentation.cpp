@@ -508,11 +508,37 @@ auto Presentation::loadShaders() -> void {
     }
   }
 
-  if(settings.video.shader == "None") none.setChecked();
-  if(settings.video.shader == "Blur") blur.setChecked();
+  if(program.startShader) {
+    string existingShader = settings.video.shader;
+
+    if(!program.startShader.imatch("None") &&
+       !program.startShader.imatch("Blur")) {
+        settings.video.shader = {location, program.startShader, ".shader/"};
+    } else {
+        settings.video.shader = program.startShader;
+    }
+
+    if(inode::exists(settings.video.shader) ||
+       settings.video.shader.imatch("None") ||
+       settings.video.shader.imatch("Blur")) {
+        ruby::video.setShader(settings.video.shader);
+    } else {
+        hiro::MessageDialog()
+            .setTitle("Warning")
+            .setAlignment(hiro::Alignment::Center)
+            .setText({ "Requested shader not found: ", settings.video.shader , "\nUsing existing defined shader: ", existingShader })
+            .warning();
+        settings.video.shader = existingShader;
+    }
+  }
+
+  if(settings.video.shader.imatch("None")) {none.setChecked(); settings.video.shader = "None";}
+  if(settings.video.shader.imatch("Blur")) {blur.setChecked(); settings.video.shader = "Blur";}
   for(auto item : shaders.objects<MenuRadioItem>()) {
-    if(settings.video.shader == string{location, item.text(), ".shader/"}) {
+    string fullPath = {location, item.text(), ".shader/"};
+    if(settings.video.shader.imatch(fullPath)) {
       item.setChecked();
+      settings.video.shader = fullPath;
     }
   }
 }
