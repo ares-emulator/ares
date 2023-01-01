@@ -293,13 +293,16 @@ struct V30MZ {
   u16* const RS[8]{&DS1, &PS, &SS, &DS0, &DS1, &PS, &SS, &DS0};
 
 protected:
-  // TODO: implement interrupt priorities
   enum class InterruptSource : u32 {
+    None = 0,
     CPU = 1, // internal request
     NMI = 2, // external NMI
     INT = 3, // external interrupt request
     SingleStep = 4 // internal request - single step
   };
+
+  n8 queuedInterruptVector;
+  u32 queuedInterruptSource;
 
   // algorithms.cpp
   template<u32> auto ADD (u16, u16, u16) -> u16;
@@ -307,6 +310,7 @@ protected:
 
   // instruction.cpp
   auto interrupt(u8 vector, InterruptSource source) -> bool;
+  auto processInterrupt(void) -> void;
 };
 
 }

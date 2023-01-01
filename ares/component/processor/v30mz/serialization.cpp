@@ -28,4 +28,7 @@ auto V30MZ::serialize(serializer& s) -> void {
   s(PFP);
   s(PF);
   s(PSW.data);
+
+  s(queuedInterruptSource);
+  s(queuedInterruptVector);
 }

@@ -1,4 +1,16 @@
 auto V30MZ::interrupt(u8 vector, InterruptSource source) -> bool {
+  if(queuedInterruptSource && queuedInterruptSource < (u32)source) return false;
+  queuedInterruptVector = vector;
+  queuedInterruptSource = (u32)source;
+  return true;
+}
+
+auto V30MZ::processInterrupt(void) -> void {
+  auto vector = queuedInterruptVector;
+  auto source = (InterruptSource)queuedInterruptSource;
+  if(source == InterruptSource::None) return;
+  queuedInterruptSource = 0;
+
   if(source == InterruptSource::INT) wait(32);
   else if (source == InterruptSource::NMI) wait(26);
   else wait(25);
@@ -30,7 +42,6 @@ auto V30MZ::interrupt(u8 vector, InterruptSource source) -> bool {
   PC = pc;
 
   flush();
-  return true;
 }
 
 auto V30MZ::interrupt(u8 vector) -> bool {
@@ -311,6 +322,8 @@ auto V30MZ::instruction() -> void {
 
   if(!state.prefix) prefixes.flush();
   if(PSW.BRK) interrupt(1, InterruptSource::SingleStep);
+
+  processInterrupt();
 }
 
 #undef op
