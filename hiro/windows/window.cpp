@@ -65,16 +65,33 @@ auto pWindow::focused() const -> bool {
   return focus;
 }
 
-auto pWindow::frameMargin() const -> Geometry {
-  RECT rc{0, 0, 640, 480};
+auto pWindow::frameMargin(s32 width) const -> Geometry {
+  if(width <= 0) {
+    RECT rcClient;
+    GetClientRect(hwnd, &rcClient);
+    width = rcClient.right - rcClient.left;
+    if(width <= 0) width = 640;
+  }
+  RECT rc{0, 0, width, 480};
   u32 style = state().fullScreen ? 0 : state().resizable ? ResizableStyle : FixedStyle;
   bool menuVisible = state().menuBar && state().menuBar->visible();
   AdjustWindowRect(&rc, style, menuVisible);
+  //from https://devblogs.microsoft.com/oldnewthing/20030911-00/?p=42553
+  //if there is a menu, then check how much wrapping occurs when we set a window
+  //to the width specified by AdjustWindowRect and an infinite amount of height
+  //an infinite height allows us to see every single menu wrap
+  if(menuVisible) {
+    RECT rcTemp = rc;
+    rcTemp.bottom = 0x7fff;  //"infinite" height
+    SendMessage(hwnd, WM_NCCALCSIZE, (WPARAM)false, (LPARAM)&rcTemp);
+    //adjust our previous calculation to compensate for menu wrapping
+    rc.bottom += rcTemp.top;
+  }
   auto& efb = state().fullScreen ? settings.efbPopup : !state().resizable ? settings.efbFixed : settings.efbResizable;
   return {
     abs(rc.left) - efb.x,
     abs(rc.top) - efb.y,
-    (rc.right - rc.left) - 640 - efb.width,
+    (rc.right - rc.left) - width - efb.width,
     (rc.bottom - rc.top) + _statusHeight() - 480 - efb.height
   };
 }
@@ -140,7 +157,7 @@ auto pWindow::setFullScreen(bool fullScreen) -> void {
     RECT rc = info.rcMonitor;
     Geometry geometry = {rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top};
     SetWindowLongPtr(hwnd, GWL_STYLE, style | WS_POPUP);
-    Geometry margin = frameMargin();
+    Geometry margin = frameMargin(geometry.width());
     self().setGeometry({
       geometry.x() + margin.x(), geometry.y() + margin.y(),
       geometry.width() - margin.width(), geometry.height() - margin.height()
@@ -153,7 +170,7 @@ auto pWindow::setFullScreen(bool fullScreen) -> void {
 
 auto pWindow::setGeometry(Geometry geometry) -> void {
   auto lock = acquire();
-  Geometry margin = frameMargin();
+  Geometry margin = frameMargin(geometry.width());
   auto& efb = state().fullScreen ? settings.efbPopup : !state().resizable ? settings.efbFixed : settings.efbResizable;
   SetWindowPos(
     hwnd, nullptr,
