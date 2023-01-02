@@ -242,7 +242,12 @@ auto QtTableView::onToggle(QTreeWidgetItem* qtItem, int column) -> void {
 
 auto QtTableView::mousePressEvent(QMouseEvent* event) -> void {
   QTreeWidget::mousePressEvent(event);
-  if(event->button() == Qt::RightButton) onContext();
+  if(event->button() == Qt::RightButton) {
+    //todo: determine actual cell clicked instead of returning the first cell
+    auto item = p.self().selected();
+    auto cell = item.cell(0);
+    p.self().doContext(cell);
+  }
 }
 
 auto QtTableView::resizeEvent(QResizeEvent* event) -> void {
