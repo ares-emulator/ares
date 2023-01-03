@@ -118,7 +118,7 @@ auto PPU::map() -> void {
 auto PPU::power(bool reset) -> void {
   Thread::create(system.cpuFrequency(), {&PPU::main, this});
   PPUcounter::reset();
-  screen->power();
+  if(!reset) screen->power();
 
   ppu1.version = 1, ppu1.mdr = 0x00;
   ppu2.version = 3, ppu2.mdr = 0x00;
@@ -131,15 +131,18 @@ auto PPU::power(bool reset) -> void {
   latch = {};
   io = {};
   mode7 = {};
-  window.power();
-  mosaic.power();
-  bg1.power();
-  bg2.power();
-  bg3.power();
-  bg4.power();
-  obj.power();
-  dac.power();
-
+  
+  if(!reset) {
+    window.power();
+    mosaic.power();
+    bg1.power();
+    bg2.power();
+    bg3.power();
+    bg4.power();
+    obj.power();
+    dac.power();
+  }
+  
   updateVideoMode();
 
   string title;

@@ -104,7 +104,7 @@ inline auto PPU::step(u32 clocks) -> void {
 auto PPU::power(bool reset) -> void {
   Thread::create(system.cpuFrequency(), {&PPU::main, this});
   PPUcounter::reset();
-  screen->power();
+  if(!reset)screen->power();
 
   if(!reset) random.array({vram.data, sizeof(vram.data)});
 
@@ -129,8 +129,10 @@ auto PPU::power(bool reset) -> void {
     object.size = 0;
   }
 
-  random.array({cgram, sizeof(cgram)});
-  for(auto& word : cgram) word &= 0x7fff;
+  if(!reset) {
+    random.array({cgram, sizeof(cgram)});
+    for(auto& word : cgram) word &= 0x7fff;
+  }
 
   latch.vram = random();
   latch.oam = random();
@@ -203,7 +205,7 @@ auto PPU::power(bool reset) -> void {
 
   //$2133  SETINI
   io.extbg = random();
-  io.pseudoHires = random();
+  if(!reset) io.pseudoHires = random();
   io.overscan = false;
   io.interlace = false;
 
@@ -213,6 +215,7 @@ auto PPU::power(bool reset) -> void {
   //$213d  OPVCT
   io.vcounter = 0;
 
+if(!reset) {
   mosaic.power();
   bg1.power();
   bg2.power();
@@ -221,6 +224,7 @@ auto PPU::power(bool reset) -> void {
   obj.power();
   window.power();
   dac.power();
+}
 
   updateVideoMode();
 }
