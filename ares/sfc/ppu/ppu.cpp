@@ -104,7 +104,7 @@ inline auto PPU::step(u32 clocks) -> void {
 auto PPU::power(bool reset) -> void {
   Thread::create(system.cpuFrequency(), {&PPU::main, this});
   PPUcounter::reset();
-  if(!reset)screen->power();
+  screen->power();
 
   if(!reset) random.array({vram.data, sizeof(vram.data)});
 

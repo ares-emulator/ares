@@ -118,7 +118,7 @@ auto PPU::map() -> void {
 auto PPU::power(bool reset) -> void {
   Thread::create(system.cpuFrequency(), {&PPU::main, this});
   PPUcounter::reset();
-  if(!reset) screen->power();
+  screen->power();
 
   ppu1.version = 1, ppu1.mdr = 0x00;
   ppu2.version = 3, ppu2.mdr = 0x00;
