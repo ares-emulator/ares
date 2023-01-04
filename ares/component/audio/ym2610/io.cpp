@@ -40,7 +40,9 @@ auto YM2610::writeLower(n8 data) -> void {
   case 0x013: pcmB.startAddress.bit(16, 23) = data; return;
   case 0x014: pcmB.endAddress.bit  ( 8, 15) = data; return;
   case 0x015: pcmB.endAddress.bit  (16, 23) = data; return;
-  case 0x016 ... 0x018: debug(unimplemented, "[YM2610::ADPCMB] Write ", hex(registerAddress), " = ", data);
+  case 0x016 ... 0x018:
+    debug(unimplemented, "[YM2610::ADPCMB] Write ", hex(registerAddress), " = ", data);
+    return;
   case 0x019: pcmB.delta.bit       ( 0,  7) = data; return;
   case 0x01a: pcmB.delta.bit       ( 8, 15) = data; return;
   case 0x01b: pcmB.volume                   = data; return;

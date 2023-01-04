@@ -37,6 +37,7 @@ auto V9938::Sprite::setup(n8 voffset) -> void {
 
       objects[valid++] = {x, y, pattern, color};
     }
+    break;
   }
 
   case 0b01000:
@@ -82,6 +83,7 @@ auto V9938::Sprite::setup(n8 voffset) -> void {
 
       objects[valid++] = {x, y, pattern, color, collision, priority};
     }
+    break;
   }
 
   }
