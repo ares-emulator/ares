@@ -51,7 +51,7 @@ auto Z80::irq(n8 extbus) -> bool {
   R.bit(0,6)++;
 
   switch(IM) {
-  case 1: extbus = 0xff;
+  case 1: extbus = 0xff; [[fallthrough]];
   case 0: {
     WZ = extbus;
     wait(6);

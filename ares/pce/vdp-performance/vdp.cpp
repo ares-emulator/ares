@@ -66,9 +66,9 @@ auto VDP::main() -> void {
       for(u32 x : range(vce.width())) {
         u32 color = vce.io.grayscale << 9 | vce.cram.read(vdc0.output[x]);
         switch(clock) {
-        case 4: *line++ = color;
-        case 3: *line++ = color;
-        case 2: *line++ = color;
+        case 4: *line++ = color; [[fallthrough]];
+        case 3: *line++ = color; [[fallthrough]];
+        case 2: *line++ = color; [[fallthrough]];
         case 1: *line++ = color;
         }
       }
@@ -79,9 +79,9 @@ auto VDP::main() -> void {
       for(u32 x : range(vce.width())) {
         u32 color = vce.io.grayscale << 9 | vce.cram.read(vpc.output[x]);
         switch(clock) {
-        case 4: *line++ = color;
-        case 3: *line++ = color;
-        case 2: *line++ = color;
+        case 4: *line++ = color; [[fallthrough]];
+        case 3: *line++ = color; [[fallthrough]];
+        case 2: *line++ = color; [[fallthrough]];
         case 1: *line++ = color;
         }
       }

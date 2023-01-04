@@ -87,9 +87,9 @@ auto VDP::main() -> void {
     color = vce.io.grayscale << 9 | vce.cram.read(color);
 
     switch(vce.clock()) {
-    case 4: *output++ = color;
-    case 3: *output++ = color;
-    case 2: *output++ = color;
+    case 4: *output++ = color; [[fallthrough]];
+    case 3: *output++ = color; [[fallthrough]];
+    case 2: *output++ = color; [[fallthrough]];
     case 1: *output++ = color;
     }
 

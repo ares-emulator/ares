@@ -25,6 +25,7 @@ namespace nall {
     static constexpr bool GCC       = 0;
     static constexpr bool Microsoft = 0;
   };
+  #pragma clang diagnostic warning "-Wimplicit-fallthrough"
   #pragma clang diagnostic warning "-Wreturn-type"
   #pragma clang diagnostic ignored "-Wunused-result"
   #pragma clang diagnostic ignored "-Wunknown-pragmas"
@@ -43,6 +44,7 @@ namespace nall {
     static constexpr bool GCC       = 1;
     static constexpr bool Microsoft = 0;
   };
+  #pragma GCC diagnostic warning "-Wimplicit-fallthrough"
   #pragma GCC diagnostic warning "-Wreturn-type"
   #pragma GCC diagnostic ignored "-Wunused-result"
   #pragma GCC diagnostic ignored "-Wunknown-pragmas"
