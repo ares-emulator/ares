@@ -174,6 +174,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   default:
     debug(unimplemented, "[famicom] unknown iNES mapper number ", mapper);
+  case   0:
     s += "  board:  HVC-NROM-256\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
     break;
