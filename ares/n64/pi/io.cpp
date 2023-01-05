@@ -94,11 +94,16 @@ auto PI::ioWrite(u32 address, u32 data_) -> void {
     io.pbusAddress = n32(data) & ~1;
   }
 
+  // DMA Timing notes:
+  // io.readLength and io.writeLength are 1 byte less than the actual value of bytes read or written
+  // According to MAME's implementation (linked below), each byte transfered during a DMA takes ~5.08 CPU cycles
+  // https://github.com/mamedev/mame/blob/ab6237da824a95898209ecbb568095981c4dbe69/src/mame/nintendo/n64_m.cpp#L1609
+  // Since ares cycles are 2x that (see CPU::synchronize() in cpu.cpp), multiply by 10 (~10.16)
   if(address == 2) {
     //PI_READ_LENGTH
     io.readLength = n24(data);
     io.dmaBusy = 1;
-    queue.insert(Queue::PI_DMA_Read, io.readLength * 36);
+    queue.insert(Queue::PI_DMA_Read, (io.readLength + 1) * 10);
     dmaRead();
   }
 
@@ -106,7 +111,7 @@ auto PI::ioWrite(u32 address, u32 data_) -> void {
     //PI_WRITE_LENGTH
     io.writeLength = n24(data);
     io.dmaBusy = 1;
-    queue.insert(Queue::PI_DMA_Write, io.writeLength * 36);
+    queue.insert(Queue::PI_DMA_Write, (io.writeLength + 1) * 10);
     dmaWrite();
   }
 
