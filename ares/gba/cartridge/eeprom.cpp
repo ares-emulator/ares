@@ -14,7 +14,7 @@ auto Cartridge::EEPROM::read() -> bool {
   if(bits == 0 && mode == Mode::ReadAddress) {
     print("EEPROM address bits: ", --addressbits, "\n");
     bits = addressbits == 6 ? 6 : 14;
-    size = 8192;
+    size = addressbits == 6 ? 512 : 8_KiB;
     mode = Mode::ReadData;
     offset = 0;
     //fallthrough

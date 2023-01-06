@@ -96,6 +96,7 @@ auto Cartridge::save() -> void {
   }
 
   if(auto fp = pak->write("save.eeprom")) {
+    if(eeprom.bits != 0 && fp->size() != eeprom.size) fp->resize(eeprom.size);
     fp->write({eeprom.data, eeprom.size});
   }
 
