@@ -29,6 +29,8 @@ namespace Systems {
   #include "wonderswan.cpp"
   #include "wonderswan-color.cpp"
   #include "pocket-challenge-v2.cpp"
+  #include "zx-spectrum.cpp"
+  #include "zx-spectrum-128.cpp"
 }
 
 auto System::create(string name) -> shared_pointer<Pak> {
@@ -62,6 +64,8 @@ auto System::create(string name) -> shared_pointer<Pak> {
   if(name == "WonderSwan") return new Systems::WonderSwan;
   if(name == "WonderSwan Color") return new Systems::WonderSwanColor;
   if(name == "Pocket Challenge V2") return new Systems::PocketChallengeV2;
+  if(name == "ZX Spectrum") return new Systems::ZXSpectrum;
+  if(name == "ZX Spectrum 128") return new Systems::ZXSpectrum128;
   return {};
 }
 

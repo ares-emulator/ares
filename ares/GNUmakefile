@@ -97,6 +97,10 @@ ifneq ($(filter $(cores),ngp),)
   include $(ares.path)/ngp/GNUmakefile
 endif
 
+ifneq ($(filter $(cores),spec),)
+  include $(ares.path)/spec/GNUmakefile
+endif
+
 include $(ares.path)/component/GNUmakefile
 
 flags += $(foreach c,$(call strupper,$(cores)),-DCORE_$c)

@@ -45,3 +45,8 @@ namespace name=Resource
     binary name=Boot file="../Firmware/WonderSwan Color/boot.rom"
   namespace name=PocketChallengeV2
     binary name=Boot file="../Firmware/Pocket Challenge V2/boot.rom"
+  namespace name=ZXSpectrum
+    binary name=BIOS file="../Firmware/ZX Spectrum/bios.rom"
+  namespace name=ZXSpectrum128
+    binary name=BIOS file="../Firmware/ZX Spectrum 128/bios.rom"
+    binary name=Sub file="../Firmware/ZX Spectrum 128/sub.rom"

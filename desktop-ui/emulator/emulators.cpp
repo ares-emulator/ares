@@ -137,6 +137,15 @@ namespace ares::Atari2600 {
   #include "pocket-challenge-v2.cpp"
 #endif
 
+#ifdef CORE_SPEC
+namespace ares::ZXSpectrum {
+    auto load(Node::System& node, string name) -> bool;
+    auto option(string name, string value) -> bool;
+  }
+  #include "zx-spectrum.cpp"
+  #include "zx-spectrum-128.cpp"
+#endif
+
 auto Emulator::construct() -> void {
   #ifdef CORE_A26
   emulators.append(new Atari2600);
@@ -220,4 +229,10 @@ auto Emulator::construct() -> void {
   #ifdef CORE_PS1
   emulators.append(new PlayStation);
   #endif
+
+  #ifdef CORE_SPEC
+  emulators.append(new ZXSpectrum);
+  emulators.append(new ZXSpectrum128);
+  #endif
+
 }
