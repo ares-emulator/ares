@@ -27,6 +27,7 @@ auto APU::write(n16 address, n8 data) -> void {
     case 0x4002: return opn2.writeAddress(1 << 8 | data);
     case 0x4003: return opn2.writeData(data);
     }
+    unreachable;
   case 0x6000 ... 0x60ff: return (void)(state.bank = data.bit(0) << 8 | state.bank >> 1);
   case 0x7f00 ... 0x7fff: return writeExternal(0xc00000 | (n8)address, data);
   case 0x8000 ... 0xffff: return writeExternal(state.bank << 15 | (n15)address, data);
