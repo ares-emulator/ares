@@ -40,7 +40,7 @@ auto Mame2BML::main(Arguments arguments) -> void {
 
         for(auto sub : software["part"]){
           if(sub.name() != "dataarea") continue;
-          output.print("  ", sub["name"].string().replace(":", "_"), "\n");
+          output.print("  ", sub["name"].string().replace(":", ""), "\n");
           output.print("    size: ", sub["size"].natural(), "\n");
 
           for(auto rom : sub) {
