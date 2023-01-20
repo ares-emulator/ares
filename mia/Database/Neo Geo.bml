@@ -28,7 +28,7 @@ game
       size:   262144
       crc:    ba874463
       sha1:   a83514f4b20301f84a98699900e2593f1c1b8846
-  ymsnd_adpcma
+  ymsndadpcma
     size: 524288
     rom
       name:   001-v11.v11
@@ -36,7 +36,7 @@ game
       size:   524288
       crc:    a7c3d5e5
       sha1:   e3efc86940f91c53b7724c4566cfc21ea1a7a465
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 1572864
     rom
       name:   001-v21.v21
@@ -122,7 +122,7 @@ game
       size:   262144
       crc:    4ecaa4ee
       sha1:   50abfb8eed6cb4887393089f9ccc76f306ef69b5
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   002-v11.v11
@@ -148,7 +148,7 @@ game
       size:   524288
       crc:    c7e11c38
       sha1:   5abf2a7877e0162c758a4dcf09f183930fa7ef24
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   002-v21.v21
@@ -222,7 +222,7 @@ game
       size:   262144
       crc:    4ecaa4ee
       sha1:   50abfb8eed6cb4887393089f9ccc76f306ef69b5
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   002-v11.v11
@@ -248,7 +248,7 @@ game
       size:   524288
       crc:    c7e11c38
       sha1:   5abf2a7877e0162c758a4dcf09f183930fa7ef24
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   002-v21.v21
@@ -328,7 +328,7 @@ game
       size:   131072
       crc:    4cc545e6
       sha1:   8e014b8cab3e5b3995756a4ea52ce49c36866377
-  ymsnd_adpcma
+  ymsndadpcma
     size: 524288
     rom
       name:   003-v11.v11
@@ -336,7 +336,7 @@ game
       size:   524288
       crc:    ff97f1cb
       sha1:   defa249d46ae220f7bfa70746f5202bbbcc3e5fe
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 2097152
     rom
       name:   003-v21.v21
@@ -440,7 +440,7 @@ game
       size:   131072
       crc:    c71fbb3b
       sha1:   59c58665b53da61352359d191a0569de5dd1f4b3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1048576
     rom
       name:   004-v11.v11
@@ -454,7 +454,7 @@ game
       size:   524288
       crc:    8503317b
       sha1:   ab22f1aba1e977ab234a4f1d73dc6ed789dbeb85
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 1572864
     rom
       name:   004-v21.v21
@@ -528,7 +528,7 @@ game
       size:   262144
       crc:    26259f0f
       sha1:   4f3e500093d61585048767dbd9fa09b3911a05d6
-  ymsnd_adpcma
+  ymsndadpcma
     size: 524288
     rom
       name:   005-v11.v11
@@ -536,7 +536,7 @@ game
       size:   524288
       crc:    cc0455fd
       sha1:   a8ff4270e7705e263d25ff0b301f503bccea7e59
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 1048576
     rom
       name:   005-v21.v21
@@ -616,7 +616,7 @@ game
       size:   262144
       crc:    26259f0f
       sha1:   4f3e500093d61585048767dbd9fa09b3911a05d6
-  ymsnd_adpcma
+  ymsndadpcma
     size: 524288
     rom
       name:   005-v11.v11
@@ -624,7 +624,7 @@ game
       size:   524288
       crc:    cc0455fd
       sha1:   a8ff4270e7705e263d25ff0b301f503bccea7e59
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 1048576
     rom
       name:   005-v21.v21
@@ -712,7 +712,7 @@ game
       size:   262144
       crc:    92e7b4fe
       sha1:   d240056cd632f92bdfaa5e0492c09aa9bd7b0471
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1048576
     rom
       name:   006-v11.v11
@@ -726,7 +726,7 @@ game
       size:   524288
       crc:    e2fd2371
       sha1:   cc95297bee7ffbdcb24ac4daeb5307cb39a52067
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 2097152
     rom
       name:   006-v21.v21
@@ -814,7 +814,7 @@ game
       size:   262144
       crc:    92e7b4fe
       sha1:   d240056cd632f92bdfaa5e0492c09aa9bd7b0471
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1048576
     rom
       name:   006-v11.v11
@@ -828,7 +828,7 @@ game
       size:   524288
       crc:    e2fd2371
       sha1:   cc95297bee7ffbdcb24ac4daeb5307cb39a52067
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 2097152
     rom
       name:   006-v21.v21
@@ -914,7 +914,7 @@ game
       size:   131072
       crc:    28dfe2cd
       sha1:   1a1a99fb917c6c8db591e3be695ce03f843ee1df
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   007-v1.v1
@@ -988,7 +988,7 @@ game
       size:   131072
       crc:    5976b464
       sha1:   ec824567ecc3579f6d86c9d9385710cbaeef16a3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   007_v11_1bb4.v11
@@ -1008,7 +1008,7 @@ game
       size:   524288
       crc:    25e60f25
       sha1:   d06b0df872372de38fcf90187195070ac5f8c651
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   007_v21_28c2.v21
@@ -1094,7 +1094,7 @@ game
       size:   131072
       crc:    b5819863
       sha1:   6f2309d51531052dbf7d712993c9e35649db0d84
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1572864
     rom
       name:   009-v11.v11
@@ -1114,7 +1114,7 @@ game
       size:   524288
       crc:    505a01b5
       sha1:   9426a4f5b31e16f74e72e61951c189a878f211c5
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   009-v21.v21
@@ -1188,7 +1188,7 @@ game
       size:   131072
       crc:    b5819863
       sha1:   6f2309d51531052dbf7d712993c9e35649db0d84
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1572864
     rom
       name:   009-v11.v11
@@ -1208,7 +1208,7 @@ game
       size:   524288
       crc:    505a01b5
       sha1:   9426a4f5b31e16f74e72e61951c189a878f211c5
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   009-v21.v21
@@ -1282,7 +1282,7 @@ game
       size:   131072
       crc:    8be3a078
       sha1:   054ec6a061fcc88df1ecbb0a01611a31f37a7709
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   010-v11.v11
@@ -1308,7 +1308,7 @@ game
       size:   524288
       crc:    70899bd2
       sha1:   8cf01144f0bcf59f09777175ae6b71846b09f3a1
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   010-v21.v21
@@ -1388,7 +1388,7 @@ game
       size:   262144
       crc:    ca661f1b
       sha1:   4e3cb57db716ec48487c1b070c3a55a5faf40856
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1572864
     rom
       name:   011-v11.v11
@@ -1402,7 +1402,7 @@ game
       size:   524288
       crc:    9f513d5a
       sha1:   37b04962f0b8e2a74abd35c407337a6151dc4e95
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   011-v21.v21
@@ -1464,7 +1464,7 @@ game
       size:   131072
       crc:    b6683092
       sha1:   623ec7ec2915fb077bf65b4a16c815e071c25259
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   014-v1.v1
@@ -1538,7 +1538,7 @@ game
       size:   131072
       crc:    9da9ca10
       sha1:   88b915827d529f39c365d3e41197d5461e07a085
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   016-v1.v1
@@ -1612,7 +1612,7 @@ game
       size:   131072
       crc:    9da9ca10
       sha1:   88b915827d529f39c365d3e41197d5461e07a085
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   016-v1.v1
@@ -1686,7 +1686,7 @@ game
       size:   131072
       crc:    9b4f34c6
       sha1:   7f3a51f47fcbaa598f5c76bc66e2c53c8dfd852d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   017-v1.v1
@@ -1760,7 +1760,7 @@ game
       size:   131072
       crc:    9b4f34c6
       sha1:   7f3a51f47fcbaa598f5c76bc66e2c53c8dfd852d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   017-v1.v1
@@ -1828,7 +1828,7 @@ game
       size:   131072
       crc:    0c939ee2
       sha1:   57d580d3279e66b9fe66bbcc68529d3384a926ff
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   018-v1.v1
@@ -1896,7 +1896,7 @@ game
       size:   131072
       crc:    0c939ee2
       sha1:   57d580d3279e66b9fe66bbcc68529d3384a926ff
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   018-v1.v1
@@ -1970,7 +1970,7 @@ game
       size:   131072
       crc:    2b0c0415
       sha1:   a5a0d5e3ea2ef77b6f5cd14f2907ab2f1aed76b7
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   018_v11_6c00.v11
@@ -2080,7 +2080,7 @@ game
       size:   131072
       crc:    3031af09
       sha1:   72d3776f8c818f5db984e7a1b2fa7cb4a9c8d1ee
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   v11.bin
@@ -2196,7 +2196,7 @@ game
       size:   131072
       crc:    470dd5d4
       sha1:   4291811b4aefe45261a1ae3631b6999fcd74fb3f
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   018_v11_56ac.v11
@@ -2210,7 +2210,7 @@ game
       size:   524288
       crc:    f1ae637c
       sha1:   02a4c7d4a544350a314ab7b26d8c9d3baa8f5778
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   018_v21_98dd.v21
@@ -2298,7 +2298,7 @@ game
       size:   131072
       crc:    d568c17d
       sha1:   a2e318ed6ad1809c79f3f0853d75e0dd1a2f275c
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1048576
     rom
       name:   019-v11.v11
@@ -2312,7 +2312,7 @@ game
       size:   524288
       crc:    029faa57
       sha1:   7bbaa87e38929ab1e32df5f6a2ec0fd5001e7cdb
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   019-v21.v21
@@ -2368,7 +2368,7 @@ game
       size:   131072
       crc:    48409377
       sha1:   0e212d2c76856a90b2c2fdff675239525972ac43
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1572864
     rom
       name:   020-v11.v11
@@ -2382,7 +2382,7 @@ game
       size:   524288
       crc:    4a9e6f03
       sha1:   d3ac11f333b03d8a318921bdaefb14598e289a14
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   020-v21.v21
@@ -2450,7 +2450,7 @@ game
       size:   131072
       crc:    48409377
       sha1:   0e212d2c76856a90b2c2fdff675239525972ac43
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1572864
     rom
       name:   020-v11.v11
@@ -2464,7 +2464,7 @@ game
       size:   524288
       crc:    4a9e6f03
       sha1:   d3ac11f333b03d8a318921bdaefb14598e289a14
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   020-v21.v21
@@ -2532,7 +2532,7 @@ game
       size:   131072
       crc:    32a108cf
       sha1:   4d38a283376725e1c1aca0d5aeedd4862146ba1f
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1572864
     rom
       name:   v11
@@ -2552,7 +2552,7 @@ game
       size:   524288
       crc:    4a9e6f03
       sha1:   d3ac11f333b03d8a318921bdaefb14598e289a14
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   v21
@@ -2638,7 +2638,7 @@ game
       size:   262144
       crc:    5a4be5e8
       sha1:   552f025ce0d51c25f42e1a81cf0d08376ca5475d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 524288
     rom
       name:   021-v11.v11
@@ -2646,7 +2646,7 @@ game
       size:   524288
       crc:    66c1e5c4
       sha1:   7e85420021d4c39c36ed75a1cec567c5610ffce0
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 524288
     rom
       name:   021-v21.v21
@@ -2696,7 +2696,7 @@ game
       size:   131072
       crc:    8e1d4ab6
       sha1:   deabc11ab81e7e68a3e041c03a127ae28d0d7264
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   022-v11.v11
@@ -2764,7 +2764,7 @@ game
       size:   131072
       crc:    8e1d4ab6
       sha1:   deabc11ab81e7e68a3e041c03a127ae28d0d7264
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   022-v11.v11
@@ -2832,7 +2832,7 @@ game
       size:   131072
       crc:    2a2105e0
       sha1:   26fc13556fda2dbeb7b5b035abd994e302dc7662
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1048576
     rom
       name:   023-v1.v1
@@ -2882,7 +2882,7 @@ game
       size:   131072
       crc:    d67f53f9
       sha1:   73a1bd175ae29dd957a907a046884f8715bd0a34
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   123-v1.v1
@@ -2932,7 +2932,7 @@ game
       size:   131072
       crc:    cec19742
       sha1:   ab6c6ba7737e68d2420a0617719c6d4c89039c45
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   024-v1.v1
@@ -3006,7 +3006,7 @@ game
       size:   131072
       crc:    22122875
       sha1:   540c21559163381467679f836cb068adaf526659
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   024_v11_b085.v11
@@ -3110,7 +3110,7 @@ game
       size:   131072
       crc:    9927034c
       sha1:   205665361c5b2ab4f01ec480dd3c9b69db858d09
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   025-v1.v1
@@ -3178,7 +3178,7 @@ game
       size:   131072
       crc:    add5a226
       sha1:   99995bef2584abbba16777bac52f55523f7aa97d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1048576
     rom
       name:   027-v11.v11
@@ -3186,7 +3186,7 @@ game
       size:   1048576
       crc:    59ad4459
       sha1:   bbb8ba8a8e337dd2946eefda4757e80d0547d54a
-  ymsnd_adpcmb
+  ymsndadpcmb
     size: 1048576
     rom
       name:   027-v21.v21
@@ -3248,7 +3248,7 @@ game
       size:   131072
       crc:    6f2843f0
       sha1:   975fb1598b87a2798fff05e951fca2e2e0329e79
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1048576
     rom
       name:   029-v1.v1
@@ -3310,7 +3310,7 @@ game
       size:   131072
       crc:    4cf466ec
       sha1:   6a003b53c7a4af9d7529e2c10f27ffc4e58dcda5
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   030-v1.v1
@@ -3378,7 +3378,7 @@ game
       size:   131072
       crc:    4cf466ec
       sha1:   6a003b53c7a4af9d7529e2c10f27ffc4e58dcda5
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   030-v1.v1
@@ -3446,7 +3446,7 @@ game
       size:   131072
       crc:    4cf466ec
       sha1:   6a003b53c7a4af9d7529e2c10f27ffc4e58dcda5
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   030-v1.v1
@@ -3514,7 +3514,7 @@ game
       size:   131072
       crc:    cb37427c
       sha1:   99efe9600ebeda48331f396e3203c7588bdb7d24
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   031-v1.v1
@@ -3582,7 +3582,7 @@ game
       size:   131072
       crc:    cb37427c
       sha1:   99efe9600ebeda48331f396e3203c7588bdb7d24
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   031-v1.v1
@@ -3650,7 +3650,7 @@ game
       size:   131072
       crc:    35ec952d
       sha1:   8aed30e26d7e2c70dbce5de752df416091066f7b
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   032-v1.v1
@@ -3718,7 +3718,7 @@ game
       size:   131072
       crc:    35ec952d
       sha1:   8aed30e26d7e2c70dbce5de752df416091066f7b
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   032-v1.v1
@@ -3792,7 +3792,7 @@ game
       size:   131072
       crc:    5be10ffd
       sha1:   90a5e6cbbc58a7883cd2a3a597180d631a466882
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   033-v1.v1
@@ -3860,7 +3860,7 @@ game
       size:   131072
       crc:    f41b16b8
       sha1:   f3e1cfc4cd2c5baece176f169906aa796367d303
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   034-v1.v1
@@ -3928,7 +3928,7 @@ game
       size:   131072
       crc:    f1385b96
       sha1:   e7e3d1484188a115e262511116aaf466b8b1f428
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   036-v1.v1
@@ -3996,7 +3996,7 @@ game
       size:   131072
       crc:    9504b2c6
       sha1:   9ce8e681b9df6eacd0d23a36bad836bd5074233d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1048576
     rom
       name:   037-v1.v1
@@ -4066,7 +4066,7 @@ game
       size:   131072
       crc:    0908707e
       sha1:   df7489ea6abf84d7f137ba7a8f52a4fd1b088fd7
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1572864
     rom
       name:   038-v1.v1
@@ -4140,7 +4140,7 @@ game
       size:   131072
       crc:    0c5b2ad5
       sha1:   15eb5ea10fecdbdbcfd06225ae6d88bb239592e7
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   039-v2.v2
@@ -4163,11 +4163,11 @@ game
       crc:    6d1c4aa9
       sha1:   4fbc9d7cb37522ec298eefbe38c75a2d050fbb4a
     rom
-      name:
+      name:   
       offset: 4194304
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   039-c2.c2
       offset: 1
@@ -4175,11 +4175,11 @@ game
       crc:    f7b75337
       sha1:   4d85f85948c3e6ed38b0b0ccda79de3ce026e2d9
     rom
-      name:
+      name:   
       offset: 4194305
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   039-c3.c3
       offset: 2097152
@@ -4226,7 +4226,7 @@ game
       size:   131072
       crc:    0c5b2ad5
       sha1:   15eb5ea10fecdbdbcfd06225ae6d88bb239592e7
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   039-v2.v2
@@ -4249,11 +4249,11 @@ game
       crc:    6d1c4aa9
       sha1:   4fbc9d7cb37522ec298eefbe38c75a2d050fbb4a
     rom
-      name:
+      name:   
       offset: 4194304
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   039-c2.c2
       offset: 1
@@ -4261,11 +4261,11 @@ game
       crc:    f7b75337
       sha1:   4d85f85948c3e6ed38b0b0ccda79de3ce026e2d9
     rom
-      name:
+      name:   
       offset: 4194305
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   039-c3.c3
       offset: 2097152
@@ -4312,7 +4312,7 @@ game
       size:   131072
       crc:    0c5b2ad5
       sha1:   15eb5ea10fecdbdbcfd06225ae6d88bb239592e7
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   proto_039-v1.v1
@@ -4428,7 +4428,7 @@ game
       size:   131072
       crc:    d4de4bca
       sha1:   ecf604d06f01d40b04e285facef66a6ae2d35661
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   040-v1.v1
@@ -4451,11 +4451,11 @@ game
       crc:    faa8ea99
       sha1:   714575e57ea1990612f960ec42b38d2e157ad400
     rom
-      name:
+      name:   
       offset: 4194304
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   040-c2.c2
       offset: 1
@@ -4463,11 +4463,11 @@ game
       crc:    87d0ec65
       sha1:   23645e0cf859fb4cec3745b3846ca0ef64c689fb
     rom
-      name:
+      name:   
       offset: 4194305
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   040-c3.c3
       offset: 2097152
@@ -4508,7 +4508,7 @@ game
       size:   131072
       crc:    15c177a6
       sha1:   3f4abed635102f9bc8b44809750828c82e79b44f
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2621440
     rom
       name:   041-v1.v1
@@ -4582,7 +4582,7 @@ game
       size:   131072
       crc:    bb19995d
       sha1:   ed458fad5a23c6bd0d099927d98c31e1e6562d1b
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   042-v1.v1
@@ -4650,7 +4650,7 @@ game
       size:   131072
       crc:    7eab59cb
       sha1:   5ae4107457e091f73960bfba39b589ae36d51ca3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   043-v1.v1
@@ -4673,11 +4673,11 @@ game
       crc:    bad2d67f
       sha1:   04928e50ca75b7fbc52b64e816ec5701901f5893
     rom
-      name:
+      name:   
       offset: 4194304
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   043-c2.c2
       offset: 1
@@ -4685,11 +4685,11 @@ game
       crc:    a7fbda95
       sha1:   9da3c5faf22592a7eaf8df9fa6454f48c2a927ae
     rom
-      name:
+      name:   
       offset: 4194305
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   043-c3.c3
       offset: 2097152
@@ -4697,11 +4697,11 @@ game
       crc:    f00be011
       sha1:   2721cdba37a511a966a2a53b9bd6240f181d920c
     rom
-      name:
+      name:   
       offset: 6291456
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   043-c4.c4
       offset: 2097153
@@ -4709,11 +4709,11 @@ game
       crc:    1887e5c0
       sha1:   9b915359add7c10c78d8b281b4084eceea8f0499
     rom
-      name:
+      name:   
       offset: 6291457
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
 
 game
   name:  aof
@@ -4742,7 +4742,7 @@ game
       size:   131072
       crc:    0987e4bb
       sha1:   8fae4b7fac09d46d4727928e609ed9d3711dbded
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   044-v2.v2
@@ -4765,11 +4765,11 @@ game
       crc:    ddab98a7
       sha1:   f20eb81ec431268798c142c482146c1545af1c24
     rom
-      name:
+      name:   
       offset: 4194304
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   044-c2.c2
       offset: 1
@@ -4777,11 +4777,11 @@ game
       crc:    d8ccd575
       sha1:   f697263fe92164e274bf34c55327b3d4a158b332
     rom
-      name:
+      name:   
       offset: 4194305
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   044-c3.c3
       offset: 2097152
@@ -4789,11 +4789,11 @@ game
       crc:    403e898a
       sha1:   dd5888f8b24a33b2c1f483316fe80c17849ccfc4
     rom
-      name:
+      name:   
       offset: 6291456
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   044-c4.c4
       offset: 2097153
@@ -4801,11 +4801,11 @@ game
       crc:    6235fbaa
       sha1:   9090e337d7beed25ba81ae0708d0aeb57e6cf405
     rom
-      name:
+      name:   
       offset: 6291457
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
 
 game
   name:  samsho
@@ -4840,7 +4840,7 @@ game
       size:   131072
       crc:    95170640
       sha1:   125c502db0693e8d11cef619b090081c14a9a300
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   045-v1.v1
@@ -4926,7 +4926,7 @@ game
       size:   131072
       crc:    95170640
       sha1:   125c502db0693e8d11cef619b090081c14a9a300
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   045-v1.v1
@@ -5012,7 +5012,7 @@ game
       size:   131072
       crc:    3f84bb9f
       sha1:   07446040871d11da3c2217ee9d1faf8c3cae7420
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   046-v1.v1
@@ -5122,7 +5122,7 @@ game
       size:   131072
       crc:    3f84bb9f
       sha1:   07446040871d11da3c2217ee9d1faf8c3cae7420
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   046-v1.v1
@@ -5226,7 +5226,7 @@ game
       size:   131072
       crc:    820b0ba7
       sha1:   5708248d89446e49184eaadb52f7c61b2b6c13c5
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   047-v1.v1
@@ -5249,11 +5249,11 @@ game
       crc:    f72a939e
       sha1:   67fc398ec28061adca0d3be82bbe7297015800da
     rom
-      name:
+      name:   
       offset: 4194304
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   047-c2.c2
       offset: 1
@@ -5261,11 +5261,11 @@ game
       crc:    05119a0d
       sha1:   c2f100b73eb04f65b6ba6089d49aceb51b470ec6
     rom
-      name:
+      name:   
       offset: 4194305
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   047-c3.c3
       offset: 2097152
@@ -5273,11 +5273,11 @@ game
       crc:    01e00738
       sha1:   79654f24d777dd5eb68bafc3b8cb9db71d5822e2
     rom
-      name:
+      name:   
       offset: 6291456
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   047-c4.c4
       offset: 2097153
@@ -5285,11 +5285,11 @@ game
       crc:    9fe27432
       sha1:   89d22d77ba8bc6d1f6c974195c34ad61b9010de7
     rom
-      name:
+      name:   
       offset: 6291457
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
 
 game
   name:  janshin
@@ -5318,7 +5318,7 @@ game
       size:   131072
       crc:    310467c7
       sha1:   c529961195c9bdf5d1ce70a38ad129002d1f3b5f
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   048-v1.v1
@@ -5374,7 +5374,7 @@ game
       size:   131072
       crc:    edd2acf4
       sha1:   c4ee6ba834d54b9fc5a854dbc41a05877e090371
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1048576
     rom
       name:   049-v1.v1
@@ -5424,7 +5424,7 @@ game
       size:   131072
       crc:    6fcf07d3
       sha1:   e9ecff4bfec1f5964bf06645f75d80d611b6231c
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1572864
     rom
       name:   050-v1.v1
@@ -5492,7 +5492,7 @@ game
       size:   131072
       crc:    8e69f29a
       sha1:   7a25f4997996434ea1b7d0d1ca9e7aaf966cbd03
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   051-v2.v1
@@ -5515,11 +5515,11 @@ game
       crc:    d624c132
       sha1:   49c7e9f020cba45d7083b45252bcc03397f8c286
     rom
-      name:
+      name:   
       offset: 4194304
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   051-c2.c2
       offset: 1
@@ -5527,11 +5527,11 @@ game
       crc:    40d69f1e
       sha1:   ec4a13582772594957f927622d50f54b0dfcd8d8
     rom
-      name:
+      name:   
       offset: 4194305
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
 
 game
   name:  viewpoinp
@@ -5566,7 +5566,7 @@ game
       size:   131072
       crc:    8e69f29a
       sha1:   7a25f4997996434ea1b7d0d1ca9e7aaf966cbd03
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   v1
@@ -5670,7 +5670,7 @@ game
       size:   131072
       crc:    49f17d2d
       sha1:   70971fcf71ae3a6b2e26e7ade8063941fb178ae5
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   052-v1.v1
@@ -5687,11 +5687,11 @@ game
       crc:    53e1c002
       sha1:   2125b1be379ea7933893ffb1cd65d6c4bf8b03bd
     rom
-      name:
+      name:   
       offset: 4194304
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   052-c2.c2
       offset: 1
@@ -5699,11 +5699,11 @@ game
       crc:    776a2d1f
       sha1:   bca0bac87443e9e78c623d284f6cc96cc9c9098f
     rom
-      name:
+      name:   
       offset: 4194305
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
 
 game
   name:  wh1
@@ -5738,7 +5738,7 @@ game
       size:   131072
       crc:    1bd9d04b
       sha1:   65cd7b002123ed1a3111e3d942608d0082799ff3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   053-v2.v2
@@ -5761,11 +5761,11 @@ game
       crc:    85eb5bce
       sha1:   3d03d29296ca6e6b5106aac4aaeec9d4b4ed1313
     rom
-      name:
+      name:   
       offset: 4194304
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   053-c2.c2
       offset: 1
@@ -5773,11 +5773,11 @@ game
       crc:    ec93b048
       sha1:   d4159210df94e259f874a4671d271ec27be13451
     rom
-      name:
+      name:   
       offset: 4194305
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   053-c3.c3
       offset: 2097152
@@ -5824,7 +5824,7 @@ game
       size:   131072
       crc:    1bd9d04b
       sha1:   65cd7b002123ed1a3111e3d942608d0082799ff3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   053-v2.v2
@@ -5847,11 +5847,11 @@ game
       crc:    85eb5bce
       sha1:   3d03d29296ca6e6b5106aac4aaeec9d4b4ed1313
     rom
-      name:
+      name:   
       offset: 4194304
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   053-c2.c2
       offset: 1
@@ -5859,11 +5859,11 @@ game
       crc:    ec93b048
       sha1:   d4159210df94e259f874a4671d271ec27be13451
     rom
-      name:
+      name:   
       offset: 4194305
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   053-c3.c3
       offset: 2097152
@@ -5910,7 +5910,7 @@ game
       size:   131072
       crc:    1bd9d04b
       sha1:   65cd7b002123ed1a3111e3d942608d0082799ff3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   053-v2.v2
@@ -5933,11 +5933,11 @@ game
       crc:    85eb5bce
       sha1:   3d03d29296ca6e6b5106aac4aaeec9d4b4ed1313
     rom
-      name:
+      name:   
       offset: 4194304
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   053-c2.c2
       offset: 1
@@ -5945,11 +5945,11 @@ game
       crc:    ec93b048
       sha1:   d4159210df94e259f874a4671d271ec27be13451
     rom
-      name:
+      name:   
       offset: 4194305
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   053-c3.c3
       offset: 2097152
@@ -5975,11 +5975,11 @@ game
       crc:    f10a2042
       sha1:   d08a3f3c28be4b1793de7d362456281329fe1828
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -5996,7 +5996,7 @@ game
       size:   131072
       crc:    f6e77cf5
       sha1:   292a3e3a4918ffe72bd1c41acb927b91844e035e
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   055-v1.v1
@@ -6094,7 +6094,7 @@ game
       size:   131072
       crc:    f27e9d52
       sha1:   dddae733d87ce7c88ad2580a8f64cb6ff9572e67
-  ymsnd_adpcma
+  ymsndadpcma
     size: 5242880
     rom
       name:   056-v1.v1
@@ -6198,7 +6198,7 @@ game
       size:   131072
       crc:    f27e9d52
       sha1:   dddae733d87ce7c88ad2580a8f64cb6ff9572e67
-  ymsnd_adpcma
+  ymsndadpcma
     size: 5242880
     rom
       name:   056-v1.v1
@@ -6281,11 +6281,11 @@ game
       crc:    65a891d9
       sha1:   ff8d5ccb0dd22c523902bb3db3c645583a335056
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -6302,7 +6302,7 @@ game
       size:   131072
       crc:    8fa3bc77
       sha1:   982f92978671e4ee66630948e6bb7565b37b5dc0
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   057-v1.v1
@@ -6367,11 +6367,11 @@ game
       crc:    cde9aff5
       sha1:   003f79cbff1383b59588ccee4b372027e506235c
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -6388,7 +6388,7 @@ game
       size:   131072
       crc:    8fa3bc77
       sha1:   982f92978671e4ee66630948e6bb7565b37b5dc0
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   057-v1.v1
@@ -6474,7 +6474,7 @@ game
       size:   131072
       crc:    ccc5186e
       sha1:   cf9091c523c182aebfb928c91640b2d72fd70123
-  ymsnd_adpcma
+  ymsndadpcma
     size: 5242880
     rom
       name:   058-v1.v1
@@ -6572,7 +6572,7 @@ game
       size:   131072
       crc:    ccc5186e
       sha1:   cf9091c523c182aebfb928c91640b2d72fd70123
-  ymsnd_adpcma
+  ymsndadpcma
     size: 5242880
     rom
       name:   058-v1.v1
@@ -6643,11 +6643,11 @@ game
       crc:    01d4e9c0
       sha1:   3179d2be59bf2de6918d506117cff50acf7e09f3
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -6664,7 +6664,7 @@ game
       size:   131072
       crc:    29992eba
       sha1:   187be624abe8670503edb235ff21ae8fdc3866e0
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   059-v1.v1
@@ -6762,7 +6762,7 @@ game
       size:   131072
       crc:    0b7c4e65
       sha1:   999a1e784de18db3f1332b30bc425836ea6970be
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   060-v1.v1
@@ -6836,7 +6836,7 @@ game
       size:   131072
       crc:    0b7c4e65
       sha1:   999a1e784de18db3f1332b30bc425836ea6970be
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   060-v1.v1
@@ -6904,7 +6904,7 @@ game
       size:   131072
       crc:    156f6951
       sha1:   49686f615f109a02b4f23931f1c84fee13872ffd
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   061-v1.v1
@@ -6978,7 +6978,7 @@ game
       size:   131072
       crc:    76108b2f
       sha1:   08c89a8b746dbb10ff885b41cde344173c2e3699
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1048576
     rom
       name:   062-v1.v1
@@ -7049,11 +7049,11 @@ game
       crc:    22368892
       sha1:   0997f8284aa0f57a333be8a0fdea777d0d01afd6
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -7070,7 +7070,7 @@ game
       size:   131072
       crc:    56675098
       sha1:   90429fc40d056d480d0e2bbefbc691d9fa260fc4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 7340032
     rom
       name:   063-v1.v1
@@ -7159,11 +7159,11 @@ game
       crc:    147cc6d7
       sha1:   8e22305f41a0688786ff55437c25948e6c8fda58
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   063-ep1-kan.ep1
       offset: 0
@@ -7192,7 +7192,7 @@ game
       size:   131072
       crc:    56675098
       sha1:   90429fc40d056d480d0e2bbefbc691d9fa260fc4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 7340032
     rom
       name:   063-v1.v1
@@ -7281,11 +7281,11 @@ game
       crc:    147cc6d7
       sha1:   8e22305f41a0688786ff55437c25948e6c8fda58
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -7302,7 +7302,7 @@ game
       size:   131072
       crc:    56675098
       sha1:   90429fc40d056d480d0e2bbefbc691d9fa260fc4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 7340032
     rom
       name:   063-v1.v1
@@ -7391,11 +7391,11 @@ game
       crc:    385a2e86
       sha1:   cfde4a1aeae038a3d6ca9946065624f097682d3d
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -7412,7 +7412,7 @@ game
       size:   131072
       crc:    d2eec9d3
       sha1:   09478787045f1448d19d064dd3d540d1741fd619
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   064-v1.v1
@@ -7504,7 +7504,7 @@ game
       size:   131072
       crc:    52c23cfc
       sha1:   809a7e072ad9acbffc25e9bd27cdb97638d09d07
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   065-v1.v1
@@ -7584,7 +7584,7 @@ game
       size:   131072
       crc:    030beae4
       sha1:   ceb6ee6c09514504efacdbca7b280901e4c97084
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   066-v1.v1
@@ -7658,7 +7658,7 @@ game
       size:   131072
       crc:    9e3c6328
       sha1:   17e8479c258f28a01d2283be9e692ff7685898cc
-  ymsnd_adpcma
+  ymsndadpcma
     size: 524288
     rom
       name:   067-v1.v1
@@ -7708,7 +7708,7 @@ game
       size:   131072
       crc:    b1c7911e
       sha1:   27b298e7d50981331e17aa642e2e363ffac4333a
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   068-v1.v1
@@ -7800,7 +7800,7 @@ game
       size:   131072
       crc:    fce72926
       sha1:   a40c74f793900b8542f0b8383ce4bf46fca112d4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 10485760
     rom
       name:   069-v1.v1
@@ -7873,11 +7873,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -7886,7 +7886,7 @@ game
       size:   131072
       crc:    5a3b3191
       sha1:   fa9a9930e18c64e598841fb344c4471d3d2c1964
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   070-v1.v1
@@ -7936,7 +7936,7 @@ game
       size:   131072
       crc:    3cdf5d88
       sha1:   6d8365a946fbd0b7c7b896536322638d80f6a764
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   073-v1.v1
@@ -7977,11 +7977,11 @@ game
       crc:    62369553
       sha1:   ca4d561ee08d16fe6804249d1ba49188eb3bd606
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -7998,7 +7998,7 @@ game
       size:   131072
       crc:    5a52a9d1
       sha1:   ef913a9a55d29d5dd3beab1ce6039d64ce9b1a5b
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   074-v1.v1
@@ -8075,11 +8075,11 @@ game
       crc:    92871738
       sha1:   fed040a7c1ff9e495109813a702d09fb1d2ecf3a
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -8096,7 +8096,7 @@ game
       size:   131072
       crc:    bb828df1
       sha1:   eab8e2868173bdaac7c7ed97305a9aa1033fd303
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   075-v1.v1
@@ -8164,7 +8164,7 @@ game
       size:   131072
       crc:    7b5f3d0a
       sha1:   4a301781a57ff236f49492b576ff4858b0ffbdf8
-  ymsnd_adpcma
+  ymsndadpcma
     size: 5242880
     rom
       name:   076-v1.v1
@@ -8223,11 +8223,11 @@ game
       crc:    45906309
       sha1:   cdcd96a564acf42e959193e139e149b29c103e25
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -8244,7 +8244,7 @@ game
       size:   131072
       crc:    8e9e3b10
       sha1:   7c44d1dbd4f8d337c99e90361d1dab837df85e31
-  ymsnd_adpcma
+  ymsndadpcma
     size: 5242880
     rom
       name:   078-v1.v1
@@ -8342,7 +8342,7 @@ game
       size:   131072
       crc:    bee3455a
       sha1:   fd5345d9847982085a9b364fff542580889bf02f
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   079-v1.v1
@@ -8410,7 +8410,7 @@ game
       size:   131072
       crc:    f5f44172
       sha1:   eaaba1781622901b91bce9257be4e05f84df053b
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   080-v1.v1
@@ -8484,7 +8484,7 @@ game
       size:   131072
       crc:    4f157e9a
       sha1:   8397bfdd5738914670ada7cd8c611c20ed1f74da
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   080-v1.v1
@@ -8543,11 +8543,11 @@ game
       crc:    6bc27a3d
       sha1:   94692abe7343f9204a557acae4ab74d0af511ca3
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -8564,7 +8564,7 @@ game
       size:   131072
       crc:    82fcd863
       sha1:   b219a5685450f9c24cc195f1c914bc3b292d72c0
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   081-v1.v1
@@ -8635,11 +8635,11 @@ game
       crc:    34ab832a
       sha1:   fbb1bd195f5653f7b9c89648649f838eaf83cbe4
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -8656,7 +8656,7 @@ game
       size:   131072
       crc:    10b144de
       sha1:   cf1ed0a447da68240c62bcfd76b1569803f6bf76
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   082-v1.v1
@@ -8748,7 +8748,7 @@ game
       size:   131072
       crc:    f424368a
       sha1:   5e5bbcaeb82bed2ee17df08f005ca20ad1030723
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3670016
     rom
       name:   068-v1.v1
@@ -8825,11 +8825,11 @@ game
       crc:    2cba2716
       sha1:   f6c2d0537c9c3e0938065c65b1797c47198fcff8
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -8846,7 +8846,7 @@ game
       size:   131072
       crc:    6f2d7429
       sha1:   6f8462e4f07af82a5ca3197895d5dcbb67bdaa61
-  ymsnd_adpcma
+  ymsndadpcma
     size: 9437184
     rom
       name:   084-v1.v1
@@ -8962,7 +8962,7 @@ game
       size:   131072
       crc:    6f2d7429
       sha1:   6f8462e4f07af82a5ca3197895d5dcbb67bdaa61
-  ymsnd_adpcma
+  ymsndadpcma
     size: 9437184
     rom
       name:   084-v1.v1
@@ -9045,11 +9045,11 @@ game
       crc:    5e54cf95
       sha1:   41abe2042fdbb1526e92a0789976a9b1ac5e60f0
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -9066,7 +9066,7 @@ game
       size:   131072
       crc:    6f2d7429
       sha1:   6f8462e4f07af82a5ca3197895d5dcbb67bdaa61
-  ymsnd_adpcma
+  ymsndadpcma
     size: 9437184
     rom
       name:   084-v1.v1
@@ -9164,7 +9164,7 @@ game
       size:   131072
       crc:    cb82bc5d
       sha1:   8e3ecabec25d89adb6e0eed0ef5f94d34a4d5fc0
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   086-v1.v1
@@ -9256,7 +9256,7 @@ game
       size:   131072
       crc:    8e6440eb
       sha1:   e3f72150af4e326543b29df71cda27d73ec087c1
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   087-v1.v1
@@ -9354,7 +9354,7 @@ game
       size:   131072
       crc:    8e6440eb
       sha1:   e3f72150af4e326543b29df71cda27d73ec087c1
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   087-v1.v1
@@ -9452,7 +9452,7 @@ game
       size:   131072
       crc:    8e6440eb
       sha1:   e3f72150af4e326543b29df71cda27d73ec087c1
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   087-v1.v1
@@ -9529,11 +9529,11 @@ game
       crc:    bd5814f6
       sha1:   95179a4dee61ae88bb5d9fd74af0c56c8c29f5ea
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -9550,7 +9550,7 @@ game
       size:   131072
       crc:    2fe1f499
       sha1:   5b747eeef65be04423d2db05e086df9132758a47
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   088-v1.v1
@@ -9618,7 +9618,7 @@ game
       size:   524288
       crc:    daedbcd7
       sha1:   d6d0e67ff7865ff5a0262aba381468e198d50536
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   v1.v1
@@ -9746,7 +9746,7 @@ game
       size:   131072
       crc:    ff3df7c7
       sha1:   59d2ef64f734f6026073b365300221909057a512
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   089-v1.v1
@@ -9823,11 +9823,11 @@ game
       crc:    afaa4702
       sha1:   83d122fddf17d4774353abf4a0655f3939f7b752
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -9844,7 +9844,7 @@ game
       size:   131072
       crc:    28065668
       sha1:   0c60d4afa1dccad0135e733104f056be73b54e4e
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   090-v1.v1
@@ -9927,11 +9927,11 @@ game
       crc:    28ec9b77
       sha1:   7cdc789a99f8127f437d68cbc41278c926be9efd
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -9948,7 +9948,7 @@ game
       size:   131072
       crc:    91957ef6
       sha1:   7b6907532a0e02ceb643623cbd689cf228776ed1
-  ymsnd_adpcma
+  ymsndadpcma
     size: 7340032
     rom
       name:   092-v1.v1
@@ -10028,7 +10028,7 @@ game
       size:   131072
       crc:    e81e780b
       sha1:   c56c53984e0f92e180e850c60a75f550ee84917c
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   093-v1.v1
@@ -10081,11 +10081,11 @@ game
       crc:    33019545
       sha1:   213db6c0b7d24b74b809854f9c606dbea1d9ba00
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -10102,7 +10102,7 @@ game
       size:   131072
       crc:    78c851cb
       sha1:   a9923c002e4e2171a564af45cff0958c5d57b275
-  ymsnd_adpcma
+  ymsndadpcma
     size: 5242880
     rom
       name:   094-v1.v1
@@ -10206,7 +10206,7 @@ game
       size:   131072
       crc:    653492a7
       sha1:   39e511fb9ed5d2135dc8428a31d0baafb2ab36e0
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   069-v1.v1
@@ -10316,7 +10316,7 @@ game
       size:   131072
       crc:    653492a7
       sha1:   39e511fb9ed5d2135dc8428a31d0baafb2ab36e0
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   069-v1.v1
@@ -10426,7 +10426,7 @@ game
       size:   131072
       crc:    653492a7
       sha1:   39e511fb9ed5d2135dc8428a31d0baafb2ab36e0
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   069-v1.v1
@@ -10530,7 +10530,7 @@ game
       size:   131072
       crc:    653492a7
       sha1:   39e511fb9ed5d2135dc8428a31d0baafb2ab36e0
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   069-v1.v1
@@ -10634,7 +10634,7 @@ game
       size:   131072
       crc:    cb07b659
       sha1:   940b379957c2987d7ab0443cb80c3ff58f6ba559
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   096-v1.v1
@@ -10738,7 +10738,7 @@ game
       size:   131072
       crc:    cb07b659
       sha1:   940b379957c2987d7ab0443cb80c3ff58f6ba559
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   096-v1.v1
@@ -10821,11 +10821,11 @@ game
       crc:    0547121d
       sha1:   e0bb6c614f572b74ba9a9f0d3d5b69fbc91ebc52
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -10842,7 +10842,7 @@ game
       size:   131072
       crc:    b20e4291
       sha1:   0e891ab53f9fded510295dfc7818bc59b4a9dd97
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   097-v1.v1
@@ -10895,11 +10895,11 @@ game
       crc:    28c83048
       sha1:   e7ef87e1de21d2bb17ef17bb08657e92363f0e9a
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -10916,7 +10916,7 @@ game
       size:   131072
       crc:    9994ac00
       sha1:   7bded797f3b80fd00bcbe451ac0abe6646b19a14
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   200-v1.v1
@@ -10969,11 +10969,11 @@ game
       crc:    08d8daa5
       sha1:   b888993dbb7e9f0a28a01d7d2e1da00ef9cf6f38
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -10990,7 +10990,7 @@ game
       size:   131072
       crc:    c28b3253
       sha1:   fd75bd15aed30266a8b3775f276f997af57d1c06
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   201-v1.v1
@@ -11058,7 +11058,7 @@ game
       size:   131072
       crc:    9c0291ea
       sha1:   3fa67c62acba79be6b3a98cc1601e45569fa11ae
-  ymsnd_adpcma
+  ymsndadpcma
     size: 524288
     rom
       name:   202-v1.v1
@@ -11108,7 +11108,7 @@ game
       size:   131072
       crc:    a602c2c2
       sha1:   19fd5d0379244c528b58343f6cbf78b4766fb23d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   203-v1.v1
@@ -11158,7 +11158,7 @@ game
       size:   131072
       crc:    0e22902e
       sha1:   fb8466c342d4abd8bb4cad01c6ceab03f96cdad8
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   206-v1.v1
@@ -11226,7 +11226,7 @@ game
       size:   131072
       crc:    b5b74a95
       sha1:   7b01f3b87c247cc7472591f8cdcf0ae8065e31c6
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   207-v1.v1
@@ -11261,11 +11261,11 @@ game
       crc:    127f3d32
       sha1:   18e77b79b1197a89371533ef9b1e4d682c44d875
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -11282,7 +11282,7 @@ game
       size:   131072
       crc:    0a5f3325
       sha1:   04e0236df478a5452654c823dcb42fea65b6a718
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   208-v1.v1
@@ -11329,11 +11329,11 @@ game
       crc:    2a019a79
       sha1:   422a639e74284fef2e53e1b49cf8803b0a7e80c6
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -11350,7 +11350,7 @@ game
       size:   131072
       crc:    cd758325
       sha1:   b51eac634fc646c07210dff993018ad9ebabd3f9
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   209-v1.v1
@@ -11397,11 +11397,11 @@ game
       crc:    16c063a9
       sha1:   5432869f830eed816ee5ed71c7fd39f749d15619
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -11418,7 +11418,7 @@ game
       size:   131072
       crc:    fcab6191
       sha1:   488b8310b0957f0012fe50f73641b606f6ac4a57
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   212-v1.v1
@@ -11477,11 +11477,11 @@ game
       crc:    e397d798
       sha1:   10f459111db4bab7aaa63ca47e83304a84300812
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -11498,7 +11498,7 @@ game
       size:   131072
       crc:    200045f1
       sha1:   7a6cd1c8d4447ea260d7ff4520c676b8d685f2e4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   213-v1.v1
@@ -11560,7 +11560,7 @@ game
       size:   131072
       crc:    dabc427c
       sha1:   b76722ed142ee7addceb4757424870dbd003e8b3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 10485760
     rom
       name:   214-v1.v1
@@ -11664,7 +11664,7 @@ game
       size:   131072
       crc:    dabc427c
       sha1:   b76722ed142ee7addceb4757424870dbd003e8b3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 10485760
     rom
       name:   214-v1.v1
@@ -11747,11 +11747,11 @@ game
       crc:    519b4ba3
       sha1:   5aa59514b23aa663f2c4014ee94a31e9f59151de
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -11768,7 +11768,7 @@ game
       size:   131072
       crc:    a932081d
       sha1:   376a45e19edb780ac8798c41ae2260c8a8a4bba8
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   215-v1.v1
@@ -11833,11 +11833,11 @@ game
       crc:    75d2b3de
       sha1:   ee778656c26828935ee2a2bfd0ce5a22aa681c10
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -11854,7 +11854,7 @@ game
       size:   131072
       crc:    1b096820
       sha1:   72852e78c620038f8dafde5e54e02e418c31be9c
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   059-v1.v1
@@ -11964,7 +11964,7 @@ game
       size:   131072
       crc:    d00fb2af
       sha1:   6bcaa52e1641cc24288e1f22f4dc98e8d8921b90
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   217-v1.v1
@@ -12041,11 +12041,11 @@ game
       crc:    ca372303
       sha1:   67991e4fef9b36bc7d909810eebb857ac2f906f1
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -12062,7 +12062,7 @@ game
       size:   131072
       crc:    17028bcf
       sha1:   7a4e8f33ce9b41beac2152b8f6003f247699e2e1
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   218-v1.v1
@@ -12139,11 +12139,11 @@ game
       crc:    6af0e574
       sha1:   c3f0fed0d942e48c99c80b1713f271c033ce0f4f
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -12160,7 +12160,7 @@ game
       size:   131072
       crc:    958efdc8
       sha1:   aacc6056b1ff48cde8f241a11a27473cfb4b4aa3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   219-v1.v1
@@ -12207,11 +12207,11 @@ game
       crc:    62a942c6
       sha1:   12aaa7d9bd84328d1bf4610e056b5c57d0252537
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -12228,7 +12228,7 @@ game
       size:   131072
       crc:    3a08bb63
       sha1:   d8fbbf42a006ccafc3cd99808d28c82dbaac4590
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   proto_220-v1.v1
@@ -12275,11 +12275,11 @@ game
       crc:    ce37e3a0
       sha1:   488f95fa15f56eea6666dda13d96ec29dba18e19
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -12296,7 +12296,7 @@ game
       size:   131072
       crc:    3a08bb63
       sha1:   d8fbbf42a006ccafc3cd99808d28c82dbaac4590
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   proto_220-v1.v1
@@ -12358,7 +12358,7 @@ game
       size:   131072
       crc:    bddae628
       sha1:   02c77e6aaaed43e39778bf83a3184e7c21db63d4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   221-v1.v1
@@ -12414,7 +12414,7 @@ game
       size:   131072
       crc:    7615bc1b
       sha1:   b936f7b341f6fe0921b4c41049734684583e3596
-  ymsnd_adpcma
+  ymsndadpcma
     size: 10485760
     rom
       name:   222-v1.v1
@@ -12518,7 +12518,7 @@ game
       size:   131072
       crc:    7615bc1b
       sha1:   b936f7b341f6fe0921b4c41049734684583e3596
-  ymsnd_adpcma
+  ymsndadpcma
     size: 10485760
     rom
       name:   222-v1.v1
@@ -12622,7 +12622,7 @@ game
       size:   131072
       crc:    3fee46bf
       sha1:   e750f85233953853618fcdff980a4721af1710a3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   223-v1.v1
@@ -12726,7 +12726,7 @@ game
       size:   131072
       crc:    3fee46bf
       sha1:   e750f85233953853618fcdff980a4721af1710a3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   223-v1.v1
@@ -12809,11 +12809,11 @@ game
       crc:    7697e445
       sha1:   5b55ca120f77a931d40719b14e0bfc8cac1d628c
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -12830,7 +12830,7 @@ game
       size:   131072
       crc:    364d6f96
       sha1:   779b95a6476089b71f48c8368d9043ee1dba9032
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   224-v1.v1
@@ -12904,7 +12904,7 @@ game
       size:   131072
       crc:    0634bba6
       sha1:   153aaf016440500df7a4454f3f2f2911219cb7d8
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   225-v1.v1
@@ -12969,11 +12969,11 @@ game
       crc:    daf101d2
       sha1:   96b90f884bae2969ebd8c04aba509928464e2433
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -12990,7 +12990,7 @@ game
       size:   131072
       crc:    c8e5e0f9
       sha1:   09bb05ae6f09b59b9e4871fae1fc7c3bafd07394
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   227-v1.v1
@@ -13058,7 +13058,7 @@ game
       size:   131072
       crc:    fd833b33
       sha1:   ab6c218c42cba821654cbdae154efecb69f844f6
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   proto_228-v1.v1
@@ -13093,11 +13093,11 @@ game
       crc:    ed24a6e6
       sha1:   3fb77ae696d92d2f9a5d589e08b708545c7cda0a
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -13114,7 +13114,7 @@ game
       size:   131072
       crc:    3951a1c1
       sha1:   1e6442a7ea82ada9503d71045dd93e12bd05254f
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   230-v1.v1
@@ -13182,7 +13182,7 @@ game
       size:   131072
       crc:    de41301b
       sha1:   59ce3836ac8f064d56a446c9374f05bcb40fcfd8
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   231-v1.v1
@@ -13250,7 +13250,7 @@ game
       size:   131072
       crc:    45348747
       sha1:   ed77cbae2b208d1177a9f5f6e8cd57070e90b65b
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   232-v1.v1
@@ -13342,7 +13342,7 @@ game
       size:   131072
       crc:    45348747
       sha1:   ed77cbae2b208d1177a9f5f6e8cd57070e90b65b
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   232-v1.v1
@@ -13434,7 +13434,7 @@ game
       size:   131072
       crc:    bbea9070
       sha1:   c26c2e29fe90966dd574838be63f0037ea799aca
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   232-v1.v1
@@ -13520,7 +13520,7 @@ game
       size:   131072
       crc:    5beaf34e
       sha1:   2905d26945932cddc2dd3a1dc5abba8aa3baee14
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4718592
     rom
       name:   233-v1.v1
@@ -13594,7 +13594,7 @@ game
       size:   131072
       crc:    087628ea
       sha1:   48dcf739bb16699af4ab8ed632b7dcb25e470e06
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   234-v1.v1
@@ -13692,7 +13692,7 @@ game
       size:   131072
       crc:    087628ea
       sha1:   48dcf739bb16699af4ab8ed632b7dcb25e470e06
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   234-v1.v1
@@ -13790,7 +13790,7 @@ game
       size:   131072
       crc:    087628ea
       sha1:   48dcf739bb16699af4ab8ed632b7dcb25e470e06
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   234-v1.v1
@@ -13882,7 +13882,7 @@ game
       size:   131072
       crc:    9c0291ea
       sha1:   3fa67c62acba79be6b3a98cc1601e45569fa11ae
-  ymsnd_adpcma
+  ymsndadpcma
     size: 524288
     rom
       name:   202-v1.v1
@@ -13917,11 +13917,11 @@ game
       crc:    4c2ff660
       sha1:   4a0cbd09044648ff9ec67723729f16d422c34bda
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -13938,7 +13938,7 @@ game
       size:   131072
       crc:    880a1abd
       sha1:   905afa157aba700e798243b842792e50729b19a0
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3145728
     rom
       name:   236-v1.v1
@@ -13994,7 +13994,7 @@ game
       size:   131072
       crc:    d4c946dd
       sha1:   6ca09040b5db8d89511d627954c783154d58ab01
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   237-v1.v1
@@ -14050,7 +14050,7 @@ game
       size:   131072
       crc:    075b9518
       sha1:   ac21b88a860b9572bf24432b4cadcc96d108055d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   238-v1.v1
@@ -14148,7 +14148,7 @@ game
       size:   131072
       crc:    075b9518
       sha1:   ac21b88a860b9572bf24432b4cadcc96d108055d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   238-v1.v1
@@ -14246,7 +14246,7 @@ game
       size:   131072
       crc:    d31a3aea
       sha1:   e23abfeb23052f0358edcf2c83401025fe632511
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   239-v1.v1
@@ -14344,7 +14344,7 @@ game
       size:   262144
       crc:    ed482791
       sha1:   1f54a45967cb7842c33aa24be322c9f33ff75ac3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 14680064
     rom
       name:   240-v1.v1
@@ -14442,7 +14442,7 @@ game
       size:   262144
       crc:    ed482791
       sha1:   1f54a45967cb7842c33aa24be322c9f33ff75ac3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 14680064
     rom
       name:   240-v1.v1
@@ -14540,7 +14540,7 @@ game
       size:   262144
       crc:    ed482791
       sha1:   1f54a45967cb7842c33aa24be322c9f33ff75ac3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 14680064
     rom
       name:   240-v1.v1
@@ -14638,7 +14638,7 @@ game
       size:   131072
       crc:    94520ebd
       sha1:   f8a1551cebcb91e416f30f50581feed7f72899e9
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   241-v1.v1
@@ -14712,7 +14712,7 @@ game
       size:   262144
       crc:    4ef7016b
       sha1:   4182235e963bd70d398a79abeb54ab4d62887c48
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   242-v1.v1
@@ -14828,7 +14828,7 @@ game
       size:   262144
       crc:    4ef7016b
       sha1:   4182235e963bd70d398a79abeb54ab4d62887c48
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   242-v1.v1
@@ -14938,7 +14938,7 @@ game
       size:   262144
       crc:    ce12da0c
       sha1:   e7c01dae2852d543d1a58d55735239f6a5aa05a5
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   242-v1.v1
@@ -15048,7 +15048,7 @@ game
       size:   262144
       crc:    ce9fb07c
       sha1:   631d995f1291dd803fb069f3b25e7b9ed30d8649
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   242-v1.v1
@@ -15158,7 +15158,7 @@ game
       size:   262144
       crc:    4e7a6b1b
       sha1:   b54d08f88713ed0271aa06f9f7c9c572ef555b1a
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   242-v1.v1
@@ -15268,7 +15268,7 @@ game
       size:   131072
       crc:    acf12d10
       sha1:   6e6b98cc1fa44f24a5168877559b0055e6957b60
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   243-v1.v1
@@ -15345,11 +15345,11 @@ game
       crc:    f8fdb7a5
       sha1:   f34ee5d1c24e70427d05ef488f46906dbd9f9950
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -15366,7 +15366,7 @@ game
       size:   131072
       crc:    a701b276
       sha1:   055550ebc650835bcf8ea4457b2c91bd73e21281
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   244-v1.v1
@@ -15407,11 +15407,11 @@ game
       crc:    c828876d
       sha1:   1dcba850e5cf8219d0945612cfded6d20ca8682a
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -15428,7 +15428,7 @@ game
       size:   131072
       crc:    00f31c66
       sha1:   8488598415c9b74bce00e05b31d96e3d1625c20d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   245-v1.v1
@@ -15514,7 +15514,7 @@ game
       size:   131072
       crc:    d0604ad1
       sha1:   fae3cd52a177eadd5f5775ace957cc0f8301e65d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   246-v1.v1
@@ -15600,7 +15600,7 @@ game
       size:   131072
       crc:    a9fe0144
       sha1:   4cc076ecce9216a373f3dcd7ba28a03d6050e522
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   247-v1.v1
@@ -15650,7 +15650,7 @@ game
       size:   131072
       crc:    883097a9
       sha1:   677bf9684c0c7977a9a3f0c1288e430040a53b49
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   248-v1.v1
@@ -15718,7 +15718,7 @@ game
       size:   131072
       crc:    6da739ad
       sha1:   cbf5f55c54b4ee00943e2a411eeee4e465ce9c34
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   071.v1
@@ -15753,11 +15753,11 @@ game
       crc:    c9386118
       sha1:   5554662c7bc8605889cac4a67fee05bbb4eb786f
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -15774,7 +15774,7 @@ game
       size:   131072
       crc:    80328a47
       sha1:   34b6b1a81eab1cf38834b2eea55454ce1b6100e2
-  ymsnd_adpcma
+  ymsndadpcma
     size: 5242880
     rom
       name:   249-v1.v1
@@ -15836,7 +15836,7 @@ game
       size:   131072
       crc:    fd42a842
       sha1:   55769bad4860f64ef53a333e0da9e073db483d6a
-  ymsnd_adpcma
+  ymsndadpcma
     size: 10485760
     rom
       name:   250-v1.v1
@@ -15921,11 +15921,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -15934,7 +15934,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsnd_adpcma
+  ymsndadpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -16037,11 +16037,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -16050,7 +16050,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsnd_adpcma
+  ymsndadpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -16165,11 +16165,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -16178,7 +16178,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsnd_adpcma
+  ymsndadpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -16281,11 +16281,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -16294,7 +16294,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsnd_adpcma
+  ymsndadpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -16391,11 +16391,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -16404,7 +16404,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsnd_adpcma
+  ymsndadpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -16514,7 +16514,7 @@ game
       size:   131072
       crc:    5e74539c
       sha1:   6f49a9343cbd026b2c6720ff3fa2e5b1f85e80da
-  ymsnd_adpcma
+  ymsndadpcma
     size: 14680064
     rom
       name:   251-v1.v1
@@ -16603,19 +16603,19 @@ game
       crc:    4b8ac4fb
       sha1:   93d90271bff281862b03beba3809cf95a47a1e44
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -16624,7 +16624,7 @@ game
       size:   131072
       crc:    30cc4099
       sha1:   46453b7aac41855a92724a785372f8daf931d8d4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   252-v1.v1
@@ -16685,11 +16685,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 262144
     rom
@@ -16698,7 +16698,7 @@ game
       size:   262144
       crc:    36a806be
       sha1:   90fb44dc0c3fb57946a0f35716056abb84a0f191
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   253-v1.v1
@@ -16801,11 +16801,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 262144
     rom
@@ -16814,7 +16814,7 @@ game
       size:   262144
       crc:    36a806be
       sha1:   90fb44dc0c3fb57946a0f35716056abb84a0f191
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   253-v1.v1
@@ -16929,11 +16929,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 262144
     rom
@@ -16942,7 +16942,7 @@ game
       size:   262144
       crc:    36a806be
       sha1:   90fb44dc0c3fb57946a0f35716056abb84a0f191
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   253-v1.v1
@@ -17052,7 +17052,7 @@ game
       size:   262144
       crc:    bbe464f7
       sha1:   f5f8f3e48f5d453f45107085d6f4023bcd24c053
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   proto_253-v1.v1
@@ -17149,11 +17149,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -17162,7 +17162,7 @@ game
       size:   131072
       crc:    994b4487
       sha1:   a4e645a3ababa48a8325980ff022e04a8b51b017
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   254-v1.v1
@@ -17259,11 +17259,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -17272,7 +17272,7 @@ game
       size:   131072
       crc:    8efd4014
       sha1:   5b73809b6e4e49264d281ef3e5004ac8a9de296d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   255-v1.v1
@@ -17351,11 +17351,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 524288
     rom
@@ -17364,7 +17364,7 @@ game
       size:   524288
       crc:    eaeec116
       sha1:   54419dbb21edc8c4b37eaac2e7ad9496d2de037a
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   256-v1.v1
@@ -17467,11 +17467,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 524288
     rom
@@ -17480,7 +17480,7 @@ game
       size:   524288
       crc:    eaeec116
       sha1:   54419dbb21edc8c4b37eaac2e7ad9496d2de037a
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   256-v1.v1
@@ -17577,11 +17577,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 524288
     rom
@@ -17590,7 +17590,7 @@ game
       size:   524288
       crc:    eaeec116
       sha1:   54419dbb21edc8c4b37eaac2e7ad9496d2de037a
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   256-v1.v1
@@ -17693,11 +17693,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -17706,7 +17706,7 @@ game
       size:   262144
       crc:    4b749113
       sha1:   2af2361146edd0ce3966614d90165a5c1afb8de4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   257-v1.v1
@@ -17803,11 +17803,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -17816,7 +17816,7 @@ game
       size:   262144
       crc:    4b749113
       sha1:   2af2361146edd0ce3966614d90165a5c1afb8de4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   257-v1.v1
@@ -17905,19 +17905,19 @@ game
       crc:    88a37f8b
       sha1:   566db84850fad5e8fe822e8bba910a33e083b550
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -17926,7 +17926,7 @@ game
       size:   131072
       crc:    85668ee9
       sha1:   7d3f51710cf90c097cd3faaeeef10ceb85cbb3e8
-  ymsnd_adpcma
+  ymsndadpcma
     size: 5242880
     rom
       name:   259-v1.v1
@@ -17969,11 +17969,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 524288
     rom
@@ -17982,7 +17982,7 @@ game
       size:   524288
       crc:    6407c5e5
       sha1:   d273e154cc905b63205a17a1a6d419cac3485a92
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   260-v1.v1
@@ -18017,19 +18017,19 @@ game
       crc:    e0d4bc0a
       sha1:   8df366097f224771ca6d1aa5c1691cd46776cd12
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 524288
     rom
@@ -18038,7 +18038,7 @@ game
       size:   524288
       crc:    7d501c39
       sha1:   8e6bcc428f5ac7532d9c9be7e07ad0821461a080
-  ymsnd_adpcma
+  ymsndadpcma
     size: 14680064
     rom
       name:   261-v1.v1
@@ -18103,19 +18103,19 @@ game
       crc:    5b557201
       sha1:   d01421d1dc80fe7d2a46b9f79c0f344b3c81c1e7
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 524288
     rom
@@ -18124,7 +18124,7 @@ game
       size:   524288
       crc:    7d501c39
       sha1:   8e6bcc428f5ac7532d9c9be7e07ad0821461a080
-  ymsnd_adpcma
+  ymsndadpcma
     size: 14680064
     rom
       name:   261-v1.v1
@@ -18197,11 +18197,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -18210,7 +18210,7 @@ game
       size:   262144
       crc:    a7f8119f
       sha1:   71805b39b8b09c32425cf39f9de59b2f755976c2
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   262-v1-08-e0.v1
@@ -18307,11 +18307,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -18320,7 +18320,7 @@ game
       size:   262144
       crc:    a7f8119f
       sha1:   71805b39b8b09c32425cf39f9de59b2f755976c2
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   262-v1-08-e0.v1
@@ -18417,11 +18417,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -18430,7 +18430,7 @@ game
       size:   131072
       crc:    46ac8228
       sha1:   5aeea221050c98e4bb0f16489ce772bf1c80f787
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   263-v1.v1
@@ -18503,11 +18503,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -18516,7 +18516,7 @@ game
       size:   131072
       crc:    46ac8228
       sha1:   5aeea221050c98e4bb0f16489ce772bf1c80f787
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   263-v1.v1
@@ -18583,11 +18583,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -18596,7 +18596,7 @@ game
       size:   131072
       crc:    4dbd7b43
       sha1:   6b63756b0d2d30bbf13fbd219833c81fd060ef96
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   264-v1.v1
@@ -18681,11 +18681,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -18694,7 +18694,7 @@ game
       size:   131072
       crc:    4dbd7b43
       sha1:   6b63756b0d2d30bbf13fbd219833c81fd060ef96
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   264-v1.v1
@@ -18779,11 +18779,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -18792,7 +18792,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -18877,11 +18877,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -18890,7 +18890,7 @@ game
       size:   131072
       crc:    456c3e6c
       sha1:   5a07d0186198a18d2dda1331093cf29b0b9b2984
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   266-v1.v1
@@ -18969,11 +18969,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -18982,7 +18982,7 @@ game
       size:   524288
       crc:    c7853ccd
       sha1:   1b7a4c5093cf0fe3861ce44fd1d3b30c71ad0abe
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   267-v1.v1
@@ -19019,11 +19019,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -19032,7 +19032,7 @@ game
       size:   524288
       crc:    c7853ccd
       sha1:   1b7a4c5093cf0fe3861ce44fd1d3b30c71ad0abe
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   267-v1.v1
@@ -19075,11 +19075,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -19088,7 +19088,7 @@ game
       size:   524288
       crc:    4a5a6e0e
       sha1:   df0f660f2465e1db7be5adfcaf5e88ad61a74a42
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   268-v1c.v1
@@ -19173,11 +19173,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -19186,7 +19186,7 @@ game
       size:   524288
       crc:    4a5a6e0e
       sha1:   df0f660f2465e1db7be5adfcaf5e88ad61a74a42
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   268-v1c.v1
@@ -19271,11 +19271,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -19284,7 +19284,7 @@ game
       size:   524288
       crc:    f6819d00
       sha1:   d3bbe09df502464f104e53501708ac6e2c1832c6
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   269-v1.v1
@@ -19369,11 +19369,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -19382,7 +19382,7 @@ game
       size:   524288
       crc:    49c9901a
       sha1:   2623e9765a0eba58fee2de72851e9dc502344a3d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   270-v1.v1
@@ -19467,11 +19467,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -19480,7 +19480,7 @@ game
       size:   524288
       crc:    49c9901a
       sha1:   2623e9765a0eba58fee2de72851e9dc502344a3d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   270-v1.v1
@@ -19565,11 +19565,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -19578,7 +19578,7 @@ game
       size:   524288
       crc:    49c9901a
       sha1:   2623e9765a0eba58fee2de72851e9dc502344a3d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   270-v1.v1
@@ -19669,11 +19669,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -19682,7 +19682,7 @@ game
       size:   524288
       crc:    f5515629
       sha1:   7516bf1b0207a3c8d41dc30c478f8d8b1f71304b
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -19773,11 +19773,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -19786,7 +19786,7 @@ game
       size:   524288
       crc:    48d9affe
       sha1:   68f01560b91bbada39001ce01bdeeed5c9bb29f2
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -19871,11 +19871,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -19884,7 +19884,7 @@ game
       size:   524288
       crc:    adeebf40
       sha1:   8cbd63dda3fff4de38060405bf70cd9308c9e66e
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   272-v1.v1
@@ -19969,11 +19969,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -19982,7 +19982,7 @@ game
       size:   524288
       crc:    adeebf40
       sha1:   8cbd63dda3fff4de38060405bf70cd9308c9e66e
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   272-v1.v1
@@ -20067,11 +20067,11 @@ game
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -20080,7 +20080,7 @@ game
       size:   524288
       crc:    adeebf40
       sha1:   8cbd63dda3fff4de38060405bf70cd9308c9e66e
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   272-v1.v1
@@ -20157,19 +20157,19 @@ game
       crc:    2fb7f388
       sha1:   e3c9b03944b4c10cf5081caaf9c8be1f08c06493
     rom
-      name:
+      name:   
       offset: 1048576
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -20178,7 +20178,7 @@ game
       size:   524288
       crc:    d163c690
       sha1:   1dfd04d20c5985037f07cd01000d0b04f3a8f4f4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   008-v1.v1
@@ -20213,19 +20213,19 @@ game
       crc:    b8f35532
       sha1:   b46c96677f1bfe324b678112e9c614a20c550d51
     rom
-      name:
+      name:   
       offset: 1048576
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 131072
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocrypt
     size: 524288
     rom
@@ -20234,7 +20234,7 @@ game
       size:   524288
       crc:    d163c690
       sha1:   1dfd04d20c5985037f07cd01000d0b04f3a8f4f4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   008-v1.v1
@@ -20285,19 +20285,19 @@ game
   audiocpu
     size: 196608
     rom
-      name:
+      name:   
       offset: 0
       size:   196608
-      crc:
-      sha1:
-  ymsnd_adpcma
+      crc:    
+      sha1:   
+  ymsndadpcma
     size: 2097152
     rom
       name:   sram.v1
       offset: 0
       size:   2097152
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   sprites
     size: 33554432
     rom
@@ -20340,7 +20340,7 @@ game
       size:   131072
       crc:    fd9627ca
       sha1:   b640c1f1ff466f734bb1cb5d7b589cb7e8a55346
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   zin-v1.bin
@@ -20390,7 +20390,7 @@ game
       size:   131072
       crc:    da4878cf
       sha1:   ce13d18a4c5d01974df8542c67c4df00dbc6e7c1
-  ymsnd_adpcma
+  ymsndadpcma
     size: 1048576
     rom
       name:   098.v1
@@ -20425,11 +20425,11 @@ game
       crc:    64836147
       sha1:   083cb1626885893e736fc9998036c952cd4d503b
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -20446,7 +20446,7 @@ game
       size:   131072
       crc:    63e28343
       sha1:   f46dbc2f1d6033b11047cca31a9a7d715dc69cb2
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   054-v1.v1
@@ -20487,11 +20487,11 @@ game
       crc:    6e1c4d8c
       sha1:   f514638a599a8a582c5f4df72f6a957bab776b7e
     rom
-      name:
+      name:   
       offset: 1048576
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
       name:   orochi-p29.bin
       offset: 4194304
@@ -20499,11 +20499,11 @@ game
       crc:    4c7c0221
       sha1:   fdd05927743cb12210b74768155bb3f59bff01b5
     rom
-      name:
+      name:   
       offset: 3145728
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -20520,7 +20520,7 @@ game
       size:   131072
       crc:    45348747
       sha1:   ed77cbae2b208d1177a9f5f6e8cd57070e90b65b
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   orochi-v1.bin
@@ -20612,7 +20612,7 @@ game
       size:   131072
       crc:    45348747
       sha1:   ed77cbae2b208d1177a9f5f6e8cd57070e90b65b
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   232-v1.v1
@@ -20704,7 +20704,7 @@ game
       size:   131072
       crc:    45348747
       sha1:   ed77cbae2b208d1177a9f5f6e8cd57070e90b65b
-  ymsnd_adpcma
+  ymsndadpcma
     size: 12582912
     rom
       name:   232-v1.v1
@@ -20802,7 +20802,7 @@ game
       size:   131072
       crc:    d0604ad1
       sha1:   fae3cd52a177eadd5f5775ace957cc0f8301e65d
-  ymsnd_adpcma
+  ymsndadpcma
     size: 10485760
     rom
       name:   lnsq-v1.bin
@@ -20894,7 +20894,7 @@ game
       size:   524288
       crc:    7c51d002
       sha1:   01ffba6cbc8da07804f7b21d8c71c39d64a1a4e2
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   garou-v1.bin
@@ -20980,7 +20980,7 @@ game
       size:   524288
       crc:    eaeec116
       sha1:   54419dbb21edc8c4b37eaac2e7ad9496d2de037a
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   256-v1.v1
@@ -21084,7 +21084,7 @@ game
       size:   524288
       crc:    6407c5e5
       sha1:   d273e154cc905b63205a17a1a6d419cac3485a92
-  ymsnd_adpcma
+  ymsndadpcma
     size: 4194304
     rom
       name:   nitd-v1.bin
@@ -21158,7 +21158,7 @@ game
       size:   131072
       crc:    1a8c274b
       sha1:   5f6f9c533f4a296a18c741ce59a69cf6f5c836b9
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   262-v1-08-e0.v1
@@ -21268,7 +21268,7 @@ game
       size:   131072
       crc:    1a8c274b
       sha1:   5f6f9c533f4a296a18c741ce59a69cf6f5c836b9
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   262-v1-08-e0.v1
@@ -21378,7 +21378,7 @@ game
       size:   131072
       crc:    1a8c274b
       sha1:   5f6f9c533f4a296a18c741ce59a69cf6f5c836b9
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   262-v1-08-e0.v1
@@ -21488,7 +21488,7 @@ game
       size:   131072
       crc:    46ac8228
       sha1:   5aeea221050c98e4bb0f16489ce772bf1c80f787
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   263-v1.v1
@@ -21574,7 +21574,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -21672,7 +21672,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -21770,7 +21770,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -21868,7 +21868,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -21966,7 +21966,7 @@ game
       size:   131072
       crc:    85aaa632
       sha1:   744fba4ca3bc3a5873838af886efb97a8a316104
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   265-v1.v1
@@ -22045,11 +22045,11 @@ game
   fixed
     size: 262144
     rom
-      name:
+      name:   
       offset: 0
       size:   262144
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -22058,7 +22058,7 @@ game
       size:   131072
       crc:    f6fab859
       sha1:   0184aa1394b9f9946d610278b53b846020dd88dc
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   kf10-v1.bin
@@ -22210,7 +22210,7 @@ game
       size:   131072
       crc:    5a47d9ad
       sha1:   0197737934653acc6c97221660d789e9914f3578
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   kf10-v1.bin
@@ -22356,7 +22356,7 @@ game
       size:   131072
       crc:    9050bfe7
       sha1:   765bf3d954f775231b7ef2504bb844cd0b29e3f7
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   kf10-v1.bin
@@ -22508,7 +22508,7 @@ game
       size:   131072
       crc:    5a47d9ad
       sha1:   0197737934653acc6c97221660d789e9914f3578
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   k2k4s-v2.bin
@@ -22593,11 +22593,11 @@ game
   fixed
     size: 524288
     rom
-      name:
+      name:   
       offset: 0
       size:   524288
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 131072
     rom
@@ -22606,7 +22606,7 @@ game
       size:   131072
       crc:    3ea96ab1
       sha1:   e5053c4312f658faed2a34e38325a22ef792d384
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   mart-v1.bin
@@ -22722,7 +22722,7 @@ game
       size:   524288
       crc:    4a5a6e0e
       sha1:   df0f660f2465e1db7be5adfcaf5e88ad61a74a42
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   268-v1c.v1
@@ -22820,7 +22820,7 @@ game
       size:   131072
       crc:    bf1601bc
       sha1:   5e285c98c65acefd77e893247482af0d09f3e1e4
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   ms5b-v1.bin
@@ -22924,7 +22924,7 @@ game
       size:   131072
       crc:    f424368a
       sha1:   5e5bbcaeb82bed2ee17df08f005ca20ad1030723
-  ymsnd_adpcma
+  ymsndadpcma
     size: 3670016
     rom
       name:   u8
@@ -22973,11 +22973,11 @@ game
       crc:    70b44df1
       sha1:   52ae3f264d7b33e94e770e6b2d0cf35a64e7dda4
     rom
-      name:
+      name:   
       offset: 0
       size:   65536
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 262144
     rom
@@ -22987,12 +22987,12 @@ game
       crc:    804328c3
       sha1:   f931636c563b0789d4812033a77b47bf663db43f
     rom
-      name:
+      name:   
       offset: 0
       size:   65536
-      crc:
-      sha1:
-  ymsnd_adpcma
+      crc:    
+      sha1:   
+  ymsndadpcma
     size: 16777216
     rom
       name:   svc-v2.bin
@@ -23109,12 +23109,12 @@ game
       crc:    804328c3
       sha1:   f931636c563b0789d4812033a77b47bf663db43f
     rom
-      name:
+      name:   
       offset: 0
       size:   65536
-      crc:
-      sha1:
-  ymsnd_adpcma
+      crc:    
+      sha1:   
+  ymsndadpcma
     size: 16777216
     rom
       name:   svc-v2.bin
@@ -23217,11 +23217,11 @@ game
       crc:    ca3c735e
       sha1:   aebd15253c90432a2e0a4c40f37110c1e2176ee4
     rom
-      name:
+      name:   
       offset: 0
       size:   65536
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 262144
     rom
@@ -23231,12 +23231,12 @@ game
       crc:    804328c3
       sha1:   f931636c563b0789d4812033a77b47bf663db43f
     rom
-      name:
+      name:   
       offset: 0
       size:   65536
-      crc:
-      sha1:
-  ymsnd_adpcma
+      crc:    
+      sha1:   
+  ymsndadpcma
     size: 16777216
     rom
       name:   svc-v2.bin
@@ -23347,12 +23347,12 @@ game
       crc:    804328c3
       sha1:   f931636c563b0789d4812033a77b47bf663db43f
     rom
-      name:
+      name:   
       offset: 0
       size:   65536
-      crc:
-      sha1:
-  ymsnd_adpcma
+      crc:    
+      sha1:   
+  ymsndadpcma
     size: 16777216
     rom
       name:   svc-v2.bin
@@ -23462,7 +23462,7 @@ game
       size:   131072
       crc:    18114fb1
       sha1:   016dc2f328340f3637a9bff373a20973df29f6b8
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   ssv-v1.bin
@@ -23533,17 +23533,17 @@ game
       crc:    5d3d8bb3
       sha1:   7f2341f14ca12ff5721eb038b3496228a1f34b60
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
-      name:
+      name:   
       offset: 0
       size:   1048576
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   fixed
     size: 262144
     rom
@@ -23560,7 +23560,7 @@ game
       size:   131072
       crc:    3a4969ff
       sha1:   2fc107a023a82053a8df63025829bcf12cee9610
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -23664,7 +23664,7 @@ game
       size:   131072
       crc:    3a4969ff
       sha1:   2fc107a023a82053a8df63025829bcf12cee9610
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -23768,7 +23768,7 @@ game
       size:   131072
       crc:    3a4969ff
       sha1:   2fc107a023a82053a8df63025829bcf12cee9610
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -23860,7 +23860,7 @@ game
       size:   131072
       crc:    3a4969ff
       sha1:   2fc107a023a82053a8df63025829bcf12cee9610
-  ymsnd_adpcma
+  ymsndadpcma
     size: 16777216
     rom
       name:   271-v1c.v1
@@ -23945,23 +23945,23 @@ game
       crc:    2fd04b2a
       sha1:   1acb446704ab56d0a33df7c48855aa8d00fd5a3c
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
     rom
-      name:
+      name:   
       offset: 0
       size:   131072
-      crc:
-      sha1:
+      crc:    
+      sha1:   
   audiocpu
     size: 524288
     rom
@@ -23970,7 +23970,7 @@ game
       size:   524288
       crc:    7b1f86f7
       sha1:   15b6af7f9fbd0f1f6a1ecd912200ca8d0af2da2a
-  ymsnd_adpcma
+  ymsndadpcma
     size: 8388608
     rom
       name:   001-003-12a.u12
@@ -24026,7 +24026,7 @@ game
       size:   131072
       crc:    e777a234
       sha1:   9f3974ac07859337bc0203f903c40ae3f60dc1fb
-  ymsnd_adpcma
+  ymsndadpcma
     size: 2097152
     rom
       name:   dig-v1.bin
@@ -24076,7 +24076,7 @@ game
       size:   131072
       crc:    113c870f
       sha1:   854425eb4be0d7fa088a6c3bf6078fdd011707f5
-  ymsnd_adpcma
+  ymsndadpcma
     size: 6291456
     rom
       name:   NGDT-300-V1.bin
@@ -24150,7 +24150,7 @@ game
       size:   131072
       crc:    18b23ace
       sha1:   d55495f3d8bb5568c8f2322763278a86ba5297b3
-  ymsnd_adpcma
+  ymsndadpcma
     size: 5242880
     rom
       name:   316.v1
