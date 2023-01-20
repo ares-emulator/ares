@@ -1,16 +1,15 @@
 name := genius
 build := stable
-flags += -I..
+flags += -I../../ -DNALL_HEADER_ONLY
 
-nall.path := ../nall
+nall.path := ../../nall
 include $(nall.path)/GNUmakefile
 
-hiro.path := ../hiro
+hiro.path := ../../hiro
 hiro.resource := data/$(name).rc
 include $(hiro.path)/GNUmakefile
 
 objects := $(object.path)/genius.o
-
 $(object.path)/genius.o: genius.cpp
 
 all.objects := $(nall.objects) $(hiro.objects) $(objects)

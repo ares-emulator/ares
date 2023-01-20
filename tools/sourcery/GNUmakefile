@@ -1,8 +1,8 @@
 name := sourcery
 build := stable
-flags += -I.. -DNALL_HEADER_ONLY
+flags += -I../../ -DNALL_HEADER_ONLY
 
-nall.path := ../nall
+nall.path := ../../nall
 include $(nall.path)/GNUmakefile
 
 objects := $(object.path)/sourcery.o
