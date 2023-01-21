@@ -46,6 +46,7 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(lspc);
   s(opnb);
   s(wram);
+  s(sram);
   s(io.sramLock);
   s(io.slotSelect);
   s(io.ledMarquee);
