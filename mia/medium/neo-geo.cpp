@@ -136,6 +136,7 @@ auto NeoGeo::load(string location) -> bool {
   pak = new vfs::directory;
   pak->setAttribute("sha256",  sha256);
   pak->setAttribute("title",   document["game/title"].string());
+  pak->setAttribute("board",   document["game/board"].string());
   pak->append("manifest.bml",  manifest);
   pak->append("program.rom",   programROM);
   pak->append("music.rom",     musicROM);
@@ -154,10 +155,18 @@ auto NeoGeo::save(string location) -> bool {
 
 auto NeoGeo::analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> string {
   string manifest;
+
+  string board = "rom";
+  if(info) {
+    for (auto element: info["game"]) {
+      if(element.name() == "feature" && element["name"].string() == "slot") board = element["value"].string();
+    }
+  }
+
   manifest += "game\n";
   manifest +={"  name:   ", Medium::name(location), "\n"};
   manifest +={"  title:  ", (info ? info["game/title"].string() : Medium::name(location)), "\n"};
-  manifest += "  board\n";
+  manifest +={"  board:  ", board, "\n"};
   manifest +={"    memory type=ROM size=0x", hex( p.size(), 8L), " content=Program\n"};
   manifest +={"    memory type=ROM size=0x", hex( m.size(), 8L), " content=Music\n"};
   manifest +={"    memory type=ROM size=0x", hex( c.size(), 8L), " content=Character\n"};

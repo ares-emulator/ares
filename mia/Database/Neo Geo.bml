@@ -5593,6 +5593,9 @@ game
 game
   name:  fatfury2
   title: Fatal Fury 2 / Garou Densetsu 2 - Arata-naru Tatakai (NGM-047 ~ NGH-047)
+  feature
+    name:  slot
+    value: rom_fatfur2
   maincpu
     size: 1048576
     rom
@@ -6067,6 +6070,9 @@ game
 game
   name:  ssideki
   title: Super Sidekicks / Tokuten Ou
+  feature
+    name:  slot
+    value: rom_fatfur2
   maincpu
     size: 1048576
     rom
@@ -8466,6 +8472,9 @@ game
 game
   name:  zupapa
   title: Zupapa!
+  feature
+    name:  slot
+    value: cmc42_zupapa
   maincpu
     size: 1048576
     rom
@@ -15859,6 +15868,9 @@ game
 game
   name:  kof98
   title: The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (NGM-2420)
+  feature
+    name:  slot
+    value: rom_kof98
   maincpu
     size: 6291456
     rom
@@ -15979,6 +15991,9 @@ game
 game
   name:  kof98a
   title: The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (NGM-2420, alt board)
+  feature
+    name:  slot
+    value: rom_kof98
   maincpu
     size: 6291456
     rom
@@ -16106,6 +16121,9 @@ game
 game
   name:  kof98k
   title: The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (Korean board, set 1)
+  feature
+    name:  slot
+    value: rom_kof98
   maincpu
     size: 6291456
     rom
@@ -16226,6 +16244,9 @@ game
 game
   name:  kof98ka
   title: The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (Korean board, set 2)
+  feature
+    name:  slot
+    value: rom_kof98
   maincpu
     size: 6291456
     rom
@@ -17074,6 +17095,9 @@ game
 game
   name:  mslugx
   title: Metal Slug X - Super Vehicle-001 (NGM-2500 ~ NGH-2500)
+  feature
+    name:  slot
+    value: rom_mslugx
   maincpu
     size: 5242880
     rom
@@ -17174,6 +17198,9 @@ game
 game
   name:  kof99
   title: The King of Fighters '99 - Millennium Battle (NGM-2510)
+  feature
+    name:  slot
+    value: sma_kof99
   maincpu
     size: 9437184
     rom
@@ -17302,6 +17329,9 @@ game
 game
   name:  kof99h
   title: The King of Fighters '99 - Millennium Battle (NGH-2510)
+  feature
+    name:  slot
+    value: sma_kof99
   maincpu
     size: 9437184
     rom
@@ -17430,6 +17460,9 @@ game
 game
   name:  kof99e
   title: The King of Fighters '99 - Millennium Battle (earlier)
+  feature
+    name:  slot
+    value: sma_kof99
   maincpu
     size: 9437184
     rom
@@ -17572,6 +17605,9 @@ game
 game
   name:  kof99k
   title: The King of Fighters '99 - Millennium Battle (Korean release)
+  feature
+    name:  slot
+    value: sma_kof99
   maincpu
     size: 9437184
     rom
@@ -17700,6 +17736,9 @@ game
 game
   name:  kof99ka
   title: The King of Fighters '99 - Millennium Battle (Korean release, non-encrypted program)
+  feature
+    name:  slot
+    value: cmc42_kof99k
   maincpu
     size: 5242880
     rom
@@ -17941,6 +17980,9 @@ game
 game
   name:  ganryu
   title: Ganryu / Musashi Ganryuki
+  feature
+    name:  slot
+    value: cmc42_ganryu
   maincpu
     size: 2097152
     rom
@@ -18001,6 +18043,9 @@ game
 game
   name:  garou
   title: Garou - Mark of the Wolves (NGM-2530)
+  feature
+    name:  slot
+    value: sma_garou
   maincpu
     size: 9437184
     rom
@@ -18143,6 +18188,9 @@ game
 game
   name:  garouh
   title: Garou - Mark of the Wolves (NGM-2530 ~ NGH-2530)
+  feature
+    name:  slot
+    value: sma_garouh
   maincpu
     size: 9437184
     rom
@@ -18271,6 +18319,9 @@ game
 game
   name:  garouha
   title: Garou - Mark of the Wolves (NGH-2530)
+  feature
+    name:  slot
+    value: sma_garou
   maincpu
     size: 9437184
     rom
@@ -18533,6 +18584,9 @@ game
 game
   name:  s1945p
   title: Strikers 1945 Plus
+  feature
+    name:  slot
+    value: cmc42_s1945p
   maincpu
     size: 5242880
     rom
@@ -18654,6 +18708,9 @@ game
 game
   name:  preisle2
   title: Prehistoric Isle 2
+  feature
+    name:  slot
+    value: cmc42_preisle2
   maincpu
     size: 5242880
     rom
@@ -18749,6 +18806,9 @@ game
 game
   name:  mslug3
   title: Metal Slug 3 (NGM-2560)
+  feature
+    name:  slot
+    value: sma_mslug3
   maincpu
     size: 9437184
     rom
@@ -18877,6 +18937,9 @@ game
 game
   name:  mslug3a
   title: Metal Slug 3 (NGM-2560, earlier)
+  feature
+    name:  slot
+    value: sma_mslug3a
   maincpu
     size: 9437184
     rom
@@ -19005,6 +19068,9 @@ game
 game
   name:  mslug3h
   title: Metal Slug 3 (NGH-2560)
+  feature
+    name:  slot
+    value: cmc42_mslug3h
   maincpu
     size: 5242880
     rom
@@ -19126,6 +19192,9 @@ game
 game
   name:  kof2000
   title: The King of Fighters 2000 (NGM-2570 ~ NGH-2570)
+  feature
+    name:  slot
+    value: sma_kof2k
   maincpu
     size: 9437184
     rom
@@ -19254,6 +19323,9 @@ game
 game
   name:  kof2000n
   title: The King of Fighters 2000 (not encrypted)
+  feature
+    name:  slot
+    value: cmc50_kof2000n
   maincpu
     size: 5242880
     rom
@@ -19375,6 +19447,9 @@ game
 game
   name:  bangbead
   title: Bang Bead
+  feature
+    name:  slot
+    value: cmc42_bangbead
   maincpu
     size: 2097152
     rom
@@ -19441,6 +19516,9 @@ game
 game
   name:  nitd
   title: Nightmare in the Dark
+  feature
+    name:  slot
+    value: cmc42_nitd
   maincpu
     size: 1048576
     rom
@@ -19495,6 +19573,9 @@ game
 game
   name:  sengoku3
   title: Sengoku 3 / Sengoku Densho 2001 (set 1)
+  feature
+    name:  slot
+    value: cmc42_sengoku3
   maincpu
     size: 2097152
     rom
@@ -19587,6 +19668,9 @@ game
 game
   name:  sengoku3a
   title: Sengoku 3 / Sengoku Densho 2001 (set 2)
+  feature
+    name:  slot
+    value: cmc42_sengoku3
   maincpu
     size: 2097152
     rom
@@ -19679,6 +19763,9 @@ game
 game
   name:  kof2001
   title: The King of Fighters 2001 (NGM-262?)
+  feature
+    name:  slot
+    value: cmc50_kof2001
   maincpu
     size: 5242880
     rom
@@ -19800,6 +19887,9 @@ game
 game
   name:  kof2001h
   title: The King of Fighters 2001 (NGH-2621)
+  feature
+    name:  slot
+    value: cmc50_kof2001
   maincpu
     size: 5242880
     rom
@@ -19921,6 +20011,9 @@ game
 game
   name:  mslug4
   title: Metal Slug 4 (NGM-2630)
+  feature
+    name:  slot
+    value: pcm2_mslug4
   maincpu
     size: 5242880
     rom
@@ -20016,6 +20109,9 @@ game
 game
   name:  mslug4h
   title: Metal Slug 4 (NGH-2630)
+  feature
+    name:  slot
+    value: pcm2_mslug4
   maincpu
     size: 5242880
     rom
@@ -20111,6 +20207,9 @@ game
 game
   name:  rotd
   title: Rage of the Dragons (NGM-2640?)
+  feature
+    name:  slot
+    value: pcm2_rotd
   maincpu
     size: 8388608
     rom
@@ -20213,6 +20312,9 @@ game
 game
   name:  rotdh
   title: Rage of the Dragons (NGH-2640?)
+  feature
+    name:  slot
+    value: pcm2_rotd
   maincpu
     size: 3145728
     rom
@@ -20322,6 +20424,9 @@ game
 game
   name:  kof2002
   title: The King of Fighters 2002 (NGM-2650 ~ NGH-2650)
+  feature
+    name:  slot
+    value: k2k2_kof2k2
   maincpu
     size: 5242880
     rom
@@ -20431,6 +20536,9 @@ game
 game
   name:  matrim
   title: Matrimelee / Shin Gouketsuji Ichizoku Toukon (NGM-2660 ~ NGH-2660)
+  feature
+    name:  slot
+    value: k2k2_matrim
   maincpu
     size: 5242880
     rom
@@ -20540,6 +20648,9 @@ game
 game
   name:  pnyaa
   title: Pochi and Nyaa (Ver 2.02)
+  feature
+    name:  slot
+    value: pcm2_pnyaa
   maincpu
     size: 1048576
     rom
@@ -20594,6 +20705,9 @@ game
 game
   name:  pnyaaa
   title: Pochi and Nyaa (Ver 2.00)
+  feature
+    name:  slot
+    value: pcm2_pnyaa
   maincpu
     size: 1048576
     rom
@@ -20648,6 +20762,9 @@ game
 game
   name:  mslug5
   title: Metal Slug 5 (NGM-2680)
+  feature
+    name:  slot
+    value: pvc_mslug5
   maincpu
     size: 8388608
     rom
@@ -20757,6 +20874,9 @@ game
 game
   name:  mslug5h
   title: Metal Slug 5 (NGH-2680)
+  feature
+    name:  slot
+    value: pvc_mslug5
   maincpu
     size: 8388608
     rom
@@ -20866,6 +20986,9 @@ game
 game
   name:  svc
   title: SNK vs. Capcom - SVC Chaos (NGM-2690 ~ NGH-2690)
+  feature
+    name:  slot
+    value: pvc_svc
   maincpu
     size: 8388608
     rom
@@ -20975,6 +21098,9 @@ game
 game
   name:  samsho5
   title: Samurai Shodown V / Samurai Spirits Zero (NGM-2700, set 1)
+  feature
+    name:  slot
+    value: k2k2_samsh5
   maincpu
     size: 8388608
     rom
@@ -21084,6 +21210,9 @@ game
 game
   name:  samsho5a
   title: Samurai Shodown V / Samurai Spirits Zero (NGM-2700, set 2)
+  feature
+    name:  slot
+    value: k2k2_samsh5
   maincpu
     size: 8388608
     rom
@@ -21193,6 +21322,9 @@ game
 game
   name:  samsho5h
   title: Samurai Shodown V / Samurai Spirits Zero (NGH-2700)
+  feature
+    name:  slot
+    value: k2k2_samsh5
   maincpu
     size: 8388608
     rom
@@ -21302,6 +21434,9 @@ game
 game
   name:  kof2003
   title: The King of Fighters 2003 (NGM-2710, Export)
+  feature
+    name:  slot
+    value: pvc_kf2k3
   maincpu
     size: 9437184
     rom
@@ -21418,6 +21553,9 @@ game
 game
   name:  kof2003h
   title: The King of Fighters 2003 (NGH-2710)
+  feature
+    name:  slot
+    value: pvc_kf2k3h
   maincpu
     size: 9437184
     rom
@@ -21534,6 +21672,9 @@ game
 game
   name:  samsh5sp
   title: Samurai Shodown V Special / Samurai Spirits Zero Special (NGM-2720)
+  feature
+    name:  slot
+    value: k2k2_sams5s
   maincpu
     size: 8388608
     rom
@@ -21643,6 +21784,9 @@ game
 game
   name:  samsh5sph
   title: Samurai Shodown V Special / Samurai Spirits Zero Special (NGH-2720, 2nd release, less censored)
+  feature
+    name:  slot
+    value: k2k2_sams5s
   maincpu
     size: 8388608
     rom
@@ -21752,6 +21896,9 @@ game
 game
   name:  samsh5spho
   title: Samurai Shodown V Special / Samurai Spirits Zero Special (NGH-2720, 1st release, censored)
+  feature
+    name:  slot
+    value: k2k2_sams5s
   maincpu
     size: 8388608
     rom
@@ -21861,6 +22008,9 @@ game
 game
   name:  jockeygp
   title: Jockey Grand Prix (set 1)
+  feature
+    name:  slot
+    value: cmc50_jockeygp
   maincpu
     size: 2097152
     rom
@@ -21922,6 +22072,9 @@ game
 game
   name:  jockeygpa
   title: Jockey Grand Prix (set 2)
+  feature
+    name:  slot
+    value: cmc50_jockeygp
   maincpu
     size: 2097152
     rom
@@ -22209,6 +22362,9 @@ game
 game
   name:  kof97oro
   title: The King of Fighters '97 Chongchu Jianghu Plus 2003 (bootleg)
+  feature
+    name:  slot
+    value: boot_kof97oro
   maincpu
     size: 5242880
     rom
@@ -22428,6 +22584,9 @@ game
 game
   name:  kog
   title: King of Gladiator (The King of Fighters '97 bootleg)
+  feature
+    name:  slot
+    value: boot_kog
   maincpu
     size: 6291456
     rom
@@ -22528,6 +22687,9 @@ game
 game
   name:  lans2004
   title: Lansquenet 2004 (Shock Troopers - 2nd Squad bootleg)
+  feature
+    name:  slot
+    value: boot_lans2004
   maincpu
     size: 6291456
     rom
@@ -22635,6 +22797,9 @@ game
 game
   name:  garoubl
   title: Garou - Mark of the Wolves (bootleg)
+  feature
+    name:  slot
+    value: boot_garoubl
   maincpu
     size: 5242880
     rom
@@ -22727,6 +22892,9 @@ game
 game
   name:  mslug3b6
   title: Metal Slug 6 (Metal Slug 3 bootleg)
+  feature
+    name:  slot
+    value: boot_mslug3b6
   maincpu
     size: 5242880
     rom
@@ -22920,6 +23088,9 @@ game
 game
   name:  cthd2003
   title: Crouching Tiger Hidden Dragon 2003 (The King of Fighters 2001 bootleg)
+  feature
+    name:  slot
+    value: boot_cthd2k3
   maincpu
     size: 5242880
     rom
@@ -23040,6 +23211,9 @@ game
 game
   name:  ct2k3sp
   title: Crouching Tiger Hidden Dragon 2003 Super Plus (The King of Fighters 2001 bootleg)
+  feature
+    name:  slot
+    value: boot_ct2k3sp
   maincpu
     size: 5242880
     rom
@@ -23160,6 +23334,9 @@ game
 game
   name:  ct2k3sa
   title: Crouching Tiger Hidden Dragon 2003 Super Plus alternate (The King of Fighters 2001 bootleg)
+  feature
+    name:  slot
+    value: boot_ct2k3sa
   maincpu
     size: 5242880
     rom
@@ -23280,6 +23457,9 @@ game
 game
   name:  ms4plus
   title: Metal Slug 4 Plus (bootleg)
+  feature
+    name:  slot
+    value: pcm2_ms4p
   maincpu
     size: 5242880
     rom
@@ -23374,6 +23554,9 @@ game
 game
   name:  kof2002b
   title: The King of Fighters 2002 (bootleg)
+  feature
+    name:  slot
+    value: boot_kf2k2b
   maincpu
     size: 5242880
     rom
@@ -23482,6 +23665,9 @@ game
 game
   name:  kf2k2pls
   title: The King of Fighters 2002 Plus (bootleg set 1)
+  feature
+    name:  slot
+    value: k2k2_kf2k2p
   maincpu
     size: 5242880
     rom
@@ -23590,6 +23776,9 @@ game
 game
   name:  kf2k2pla
   title: The King of Fighters 2002 Plus (bootleg set 2)
+  feature
+    name:  slot
+    value: k2k2_kf2k2p
   maincpu
     size: 5242880
     rom
@@ -23698,6 +23887,9 @@ game
 game
   name:  kf2k2mp
   title: The King of Fighters 2002 Magic Plus (bootleg)
+  feature
+    name:  slot
+    value: boot_kf2k2mp
   maincpu
     size: 8388608
     rom
@@ -23806,6 +23998,9 @@ game
 game
   name:  kf2k2mp2
   title: The King of Fighters 2002 Magic Plus II (bootleg)
+  feature
+    name:  slot
+    value: boot_kf2k2mp2
   maincpu
     size: 6291456
     rom
@@ -23914,6 +24109,9 @@ game
 game
   name:  kof10th
   title: The King of Fighters 10th Anniversary (The King of Fighters 2002 bootleg)
+  feature
+    name:  slot
+    value: boot_kf10th
   maincpu
     size: 9437184
     rom
@@ -24072,6 +24270,9 @@ game
 game
   name:  kf10thep
   title: The King of Fighters 10th Anniversary Extra Plus (The King of Fighters 2002 bootleg)
+  feature
+    name:  slot
+    value: boot_kf10thep
   maincpu
     size: 8388608
     rom
@@ -24243,6 +24444,9 @@ game
 game
   name:  kf2k5uni
   title: The King of Fighters 10th Anniversary 2005 Unique (The King of Fighters 2002 bootleg)
+  feature
+    name:  slot
+    value: boot_kf2k5uni
   maincpu
     size: 8388608
     rom
@@ -24407,6 +24611,9 @@ game
 game
   name:  kof2k4se
   title: The King of Fighters Special Edition 2004 (The King of Fighters 2002 bootleg)
+  feature
+    name:  slot
+    value: boot_kf2k4se
   maincpu
     size: 5242880
     rom
@@ -24522,6 +24729,9 @@ game
 game
   name:  matrimbl
   title: Matrimelee / Shin Gouketsuji Ichizoku Toukon (bootleg)
+  feature
+    name:  slot
+    value: boot_matrimbl
   maincpu
     size: 5242880
     rom
@@ -24645,6 +24855,9 @@ game
 game
   name:  ms5plus
   title: Metal Slug 5 Plus (bootleg)
+  feature
+    name:  slot
+    value: boot_ms5plus
   maincpu
     size: 5242880
     rom
@@ -24760,6 +24973,9 @@ game
 game
   name:  mslug5b
   title: Metal Slug 5 (bootleg)
+  feature
+    name:  slot
+    value: boot_mslug5b
   maincpu
     size: 5242880
     rom
@@ -24939,6 +25155,9 @@ game
 game
   name:  svcboot
   title: SNK vs. Capcom - SVC Chaos (bootleg)
+  feature
+    name:  slot
+    value: boot_svcboot
   maincpu
     size: 8388608
     rom
@@ -25068,6 +25287,9 @@ game
 game
   name:  svcplus
   title: SNK vs. Capcom - SVC Chaos Plus (bootleg, set 1)
+  feature
+    name:  slot
+    value: boot_svcplus
   maincpu
     size: 6291456
     rom
@@ -25205,6 +25427,9 @@ game
 game
   name:  svcplusa
   title: SNK vs. Capcom - SVC Chaos Plus (bootleg, set 2)
+  feature
+    name:  slot
+    value: boot_svcplusa
   maincpu
     size: 6291456
     rom
@@ -25341,6 +25566,9 @@ game
 game
   name:  svcsplus
   title: SNK vs. Capcom - SVC Chaos Super Plus (bootleg)
+  feature
+    name:  slot
+    value: boot_svcsplus
   maincpu
     size: 8388608
     rom
@@ -25471,6 +25699,9 @@ game
 game
   name:  samsho5b
   title: Samurai Shodown V / Samurai Spirits Zero (bootleg)
+  feature
+    name:  slot
+    value: boot_samsho5b
   maincpu
     size: 8388608
     rom
@@ -25563,6 +25794,9 @@ game
 game
   name:  kf2k3bl
   title: The King of Fighters 2003 (bootleg, set 1)
+  feature
+    name:  slot
+    value: boot_kf2k3bl
   maincpu
     size: 8388608
     rom
@@ -25683,6 +25917,9 @@ game
 game
   name:  kf2k3bla
   title: The King of Fighters 2003 (bootleg, set 2)
+  feature
+    name:  slot
+    value: boot_kf2k3pl
   maincpu
     size: 7340032
     rom
@@ -25798,6 +26035,9 @@ game
 game
   name:  kf2k3pl
   title: The King of Fighters 2004 Plus / Hero (The King of Fighters 2003 bootleg)
+  feature
+    name:  slot
+    value: boot_kf2k3pl
   maincpu
     size: 7340032
     rom
@@ -25913,6 +26153,9 @@ game
 game
   name:  kf2k3upl
   title: The King of Fighters 2004 Ultra Plus (The King of Fighters 2003 bootleg)
+  feature
+    name:  slot
+    value: boot_kf2k3upl
   maincpu
     size: 8388608
     rom
@@ -26014,6 +26257,9 @@ game
 game
   name:  sbp
   title: Super Bubble Pop (MVS)
+  feature
+    name:  slot
+    value: boot_sbp
   maincpu
     size: 1048576
     rom
