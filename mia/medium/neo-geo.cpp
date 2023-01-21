@@ -81,7 +81,7 @@ auto NeoGeo::read(string location, string match) -> vector<u8> {
     if(match == "character.rom") return loadRoms(location, "sprites");
     if(match == "static.rom")    return loadRoms(location, "fixed");
     if(match == "voice-a.rom")   return loadRoms(location, "ymsndadpcma");
-    if(match == "voice-b.rom")   return loadRoms(location, "ymsndadpcma");
+    if(match == "voice-b.rom")   return loadRoms(location, "ymsndadpcmb");
   }
 
   return {};
