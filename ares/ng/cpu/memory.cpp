@@ -119,13 +119,13 @@ auto CPU::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //REG_DIPSW
   if((address & 0xfe0080) == 0x300000 && lower) {
-    data.bit(0)   = 0;  //settings mode
-    data.bit(1)   = 0;  //0 = 1 chute; 1 = 2 chutes
-    data.bit(2)   = 0;  //0 = normal controller; 1 = mahjong keyboard
-    data.bit(3,4) = 0;  //communication ID code
-    data.bit(5)   = 0;  //enable multiplayer
-    data.bit(6)   = 0;  //freeplay
-    data.bit(7)   = 0;  //freeze
+    data.bit(0)   = 1;  //settings mode
+    data.bit(1)   = 1;  //0 = 1 chute; 1 = 2 chutes (TODO: Verify)
+    data.bit(2)   = 1;  //1 = normal controller; 0 = mahjong keyboard
+    data.bit(3,4) = 1;  //communication ID code
+    data.bit(5)   = 1;  //enable multiplayer
+    data.bit(6)   = 1;  //freeplay
+    data.bit(7)   = 1;  //freeze
   }
 
   //REG_SYSTYPE
