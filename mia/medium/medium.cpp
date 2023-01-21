@@ -121,7 +121,7 @@ auto Medium::manifestDatabaseArcade(string rom) -> string {
     Media::databases.append(std::move(database));
   }
 
-  //search the database for a given sha256 game entry
+  //search the database for a given named game entry
   for(auto& database : Media::databases) {
     if(database.name == name()) {
       for(auto node : database.list) {
