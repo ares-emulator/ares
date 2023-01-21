@@ -6,6 +6,7 @@ struct Database {
 struct Medium : Pak {
   static auto create(string name) -> shared_pointer<Pak>;
   auto manifestDatabase(string sha256) -> string;
+  auto manifestDatabaseArcade(string name) -> string;
 
   string sha256;
 };

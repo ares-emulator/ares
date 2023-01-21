@@ -3,135 +3,88 @@ struct NeoGeo : Cartridge {
   auto extensions() -> vector<string> override { return {"ng"}; }
   auto read(string location, string match) -> vector<u8>;
   auto load(string location) -> bool override;
+  auto loadRoms(string location, string sectionName) -> vector<u8>;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> string;
-  auto endianSwap(vector<u8>&) -> void;
+  auto endianSwap(vector<u8>& memory, u32 address = 0, int size = -1) -> void;
+
+  Markup::Node info;
 };
 
-auto NeoGeo::read(string location, string match) -> vector<u8> {
-  bool programROM = match == "program.rom";
-  bool characterROM = match == "character.rom";
-
+// TODO: Once we support more arcade systems, split this into a generic MAME medium
+// Since we only have one arcade system at present, it's fine to keep it here.
+auto NeoGeo::loadRoms(string location, string sectionName) -> vector<u8> {
   vector<u8> output;
-
-  // we expect mame style .zip rom images
-  if(!location.iendsWith(".zip")) {
-    return output;
-  }
 
   Decode::ZIP archive;
   if(!archive.open(location)) {
     return output;
   }
 
-  //find all files that match the correct pattern and then sort the results
-  vector<string> filenames;
+  string filename = {};
+  vector<u8> input = {};
+  u32 readOffset = 0;
+  string loadType = {};
 
-  // Program roms are either *.p* or *.ep*
-  // secondary (banked) program roms are usually *.sp2
-  if(match == "program.rom") {
-    for (auto &file: archive.file) {
-      if (file.name.imatch("*.p*")) filenames.append(file.name);
-      if (file.name.imatch("*.ep*")) filenames.append(file.name);
-      if (file.name.imatch("*.sp2")) filenames.append(file.name);
-    }
-  }
+  for(auto section : info[{"game/", sectionName}]) {
+    if(section.name() == "rom") {
+      if(section["name"]) {
+        filename = section["name"].string().strip();
+        if(filename) {
+          input = {};
+          for (auto &file: archive.file) {
+            if (file.name != filename) continue;
+            input = archive.extract(file);
+            readOffset = 0;
 
-  if(match == "music.rom") {
-    for (auto &file: archive.file) {
-      if (file.name.imatch("*.m*")) filenames.append(file.name);
-    }
-  }
-
-  if(match == "character.rom") {
-    for (auto &file: archive.file) {
-      if (file.name.imatch("*.c*")) filenames.append(file.name);
-    }
-  }
-
-  // Thankfully, games only have one static rom.
-  if(match == "static.rom") {
-    for (auto &file: archive.file) {
-      if (file.name.imatch("*.s1")) filenames.append(file.name);
-    }
-  }
-
-  if(match == "voice-a.rom") {
-    for (auto &file: archive.file) {
-      if (file.name.imatch("*.v*")) filenames.append(file.name);
-    }
-  }
-
-  if(match == "voice-b.rom") {
-    for (auto &file: archive.file) {
-      if (file.name.imatch("*.v2*")) filenames.append(file.name);
-    }
-  }
-
-  filenames.sort();
-
-  //interleave character ROM bitplanes
-  if(characterROM) {
-    vector<string> interleaved;
-    for(u32 index = 0; index < filenames.size(); index += 2) interleaved.append(filenames[index]);
-    for(u32 index = 1; index < filenames.size(); index += 2) interleaved.append(filenames[index]);
-    filenames = interleaved;
-  }
-
-  // Special case for character roms: pad all character roms to the maximum sized crom
-  // Test case: Twinkle Star Sprites
-  if(characterROM) {
-    vector<vector<u8>> roms;
-    u32 maxRomSize = 0;
-
-    // Step 1: load all croms and store the maximum size
-    for(auto& filename : filenames) {
-      for (auto &file: archive.file) {
-        if (file.name != filename) continue;
-        auto input = archive.extract(file);
-        if (input.size() > maxRomSize) maxRomSize = input.size();
-        roms.append(input);
-      }
-    }
-
-    // Step 2: Load character roms into output, padding to maxRomSize
-    for(auto& rom : roms) {
-      u32 bytesCopied = 0;
-      while(bytesCopied < maxRomSize) {
-        output.resize(output.size() + rom.size());
-        memory::copy(output.data() + output.size() - rom.size(), rom.data(), rom.size());
-        bytesCopied += rom.size();
-      }
-    }
-
-    return output;
-  }
-
-  //build the concatenated ROM image
-  bool first = true;
-  for(auto& filename : filenames) {
-    for(auto& file : archive.file) {
-      if(file.name != filename) continue;
-      auto input = archive.extract(file);
-      output.resize(output.size() + input.size());
-      if(first && programROM) {
-        first = false;
-        if(input.size() > 1_MiB) {
-          memory::copy(output.data() + output.size() - input.size(), input.data() + 1_MiB, input.size() - 1_MiB);
-          memory::copy(output.data() + output.size() - (input.size() - 1_MiB), input.data(), 1_MiB);
-          continue;
-        }
-         while(output.size() < 1_MiB) {
-          memory::copy(output.data() + output.size() - input.size(), input.data(), input.size());
-          output.resize(output.size() + min(1_MiB - output.size(), input.size()));
+            if(section["type"] && section["type"].string() != "continue") loadType = section["type"].string();
+            if (!input) return output;
+          }
         }
       }
-      memory::copy(output.data() + output.size() - input.size(), input.data(), input.size());
+
+      auto writeOffset = section["offset"].natural();
+      auto size = section["size"].natural();
+
+      auto startIndex = 0;
+      auto increment = 1;
+      if(loadType == "load16_byte") {
+        increment = 2;
+        size *= 2;
+        if(writeOffset & 1) {
+          startIndex = 1;
+          writeOffset--;
+        }
+      }
+
+      if(output.size() < writeOffset + size) output.resize(writeOffset + size);
+      for(auto index = startIndex; index < size; index += increment) {
+        output[index + writeOffset] = input[readOffset++];
+      }
+
+      if(loadType == "load16_word_swap") {
+        endianSwap(output, section["offset"].natural(), size);
+      }
     }
   }
-  if(programROM) endianSwap(output);
 
   return output;
+}
+
+auto NeoGeo::read(string location, string match) -> vector<u8> {
+  // we expect mame style .zip rom images
+  if(!location.iendsWith(".zip")) {}
+
+  if(info) {
+    if(match == "program.rom")   return loadRoms(location, "maincpu");
+    if(match == "music.rom")     return loadRoms(location, "audiocpu");
+    if(match == "character.rom") return loadRoms(location, "sprites");
+    if(match == "static.rom")    return loadRoms(location, "fixed");
+    if(match == "voice-a.rom")   return loadRoms(location, "ymsndadpcma");
+    if(match == "voice-b.rom")   return loadRoms(location, "ymsndadpcma");
+  }
+
+  return {};
 }
 
 auto NeoGeo::load(string location) -> bool {
@@ -141,14 +94,10 @@ auto NeoGeo::load(string location) -> bool {
   vector<u8> staticROM;     //S ROM (fix layer static graphics)
   vector<u8> voiceAROM;     //V ROM (ADPCM-A voice samples)
   vector<u8> voiceBROM;     //V ROM (ADPCM-B voice samples)
-  if(directory::exists(location)) {
-    programROM   = file::read({location, "program.rom"});
-    musicROM     = file::read({location, "music.rom"});
-    characterROM = file::read({location, "character.rom"});
-    staticROM    = file::read({location, "static.rom"});
-    voiceAROM    = file::read({location, "voice-a.rom"});
-    voiceBROM    = file::read({location, "voice-b.rom"});
-  } else if(file::exists(location)) {
+
+  this->info = BML::unserialize(manifestDatabaseArcade(Medium::name(location)));
+
+  if(file::exists(location)) {
     programROM   = NeoGeo::read(location, "program.rom");
     musicROM     = NeoGeo::read(location, "music.rom");
     characterROM = NeoGeo::read(location, "character.rom");
@@ -156,6 +105,7 @@ auto NeoGeo::load(string location) -> bool {
     voiceAROM    = NeoGeo::read(location, "voice-a.rom");
     voiceBROM    = NeoGeo::read(location, "voice-b.rom");
   }
+
   if(!programROM  ) return false;
   if(!musicROM    ) return false;
   if(!characterROM) return false;
@@ -200,7 +150,7 @@ auto NeoGeo::analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s,
   string manifest;
   manifest += "game\n";
   manifest +={"  name:   ", Medium::name(location), "\n"};
-  manifest +={"  title:  ", Medium::name(location), "\n"};
+  manifest +={"  title:  ", (info ? info["game/title"].string() : Medium::name(location)), "\n"};
   manifest += "  board\n";
   manifest +={"    memory type=ROM size=0x", hex( p.size(), 8L), " content=Program\n"};
   manifest +={"    memory type=ROM size=0x", hex( m.size(), 8L), " content=Music\n"};
@@ -211,8 +161,9 @@ auto NeoGeo::analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s,
   return manifest;
 }
 
-auto NeoGeo::endianSwap(vector<u8>& memory) -> void {
-  for(u32 address = 0; address < memory.size(); address += 2) {
-    swap(memory[address + 0], memory[address + 1]);
+auto NeoGeo::endianSwap(vector<u8>& memory, u32 address, int size) -> void {
+  if(size < 0) size = memory.size();
+  for(u32 index = 0; index < size; index += 2) {
+    swap(memory[address + index + 0], memory[address + index + 1]);
   }
 }

@@ -5,10 +5,6 @@ auto LSPC::render(n9 y) -> void {
     output[x] = backdrop;
   }
 
-  auto cs = cartridge.crom.size() / 2;
-  auto c1 = &cartridge.crom.self.data[cs * 0];
-  auto c2 = &cartridge.crom.self.data[cs * 1];
-
   n9 sx = 0;
   n9 sy = 0;
   n6 sh = 0;
@@ -58,12 +54,16 @@ auto LSPC::render(n9 y) -> void {
     }
 
     n13 pramAddress = io.pramBank << 12 | palette << 4;
-    n25 tileAddress = (tileNumber << 5 | ry & 15) << 1;
+    n27 tileAddress = (tileNumber << 5 | ry & 15) << 2;
 
-    n16 d0 = c1[(tileAddress + 0) % cs] << 8 | c1[(tileAddress + 32) % cs] << 0;
-    n16 d1 = c1[(tileAddress + 1) % cs] << 8 | c1[(tileAddress + 33) % cs] << 0;
-    n16 d2 = c2[(tileAddress + 0) % cs] << 8 | c2[(tileAddress + 32) % cs] << 0;
-    n16 d3 = c2[(tileAddress + 1) % cs] << 8 | c2[(tileAddress + 33) % cs] << 0;
+    auto cs = cartridge.crom.size();
+    auto c = cartridge.crom.data();
+
+    n16 d0 = c[(tileAddress + 0) % cs] << 8 | c[(tileAddress + 64 + 0) % cs] << 0;
+    n16 d1 = c[(tileAddress + 2) % cs] << 8 | c[(tileAddress + 64 + 2) % cs] << 0;
+    n16 d2 = c[(tileAddress + 1) % cs] << 8 | c[(tileAddress + 64 + 1) % cs] << 0;
+    n16 d3 = c[(tileAddress + 3) % cs] << 8 | c[(tileAddress + 64 + 3) % cs] << 0;
+
     n9  px = 0;
     for(u32 x : range(16)) {
       if(!hscale[hshrink][x]) continue;

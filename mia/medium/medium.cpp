@@ -106,6 +106,36 @@ auto Medium::manifestDatabase(string sha256) -> string {
   return {};
 }
 
+
+//search game database for manifest, if one exists
+auto Medium::manifestDatabaseArcade(string rom) -> string {
+  //load the database on the first time it's needed for a given media type
+  bool found = false;
+  for(auto& database : Media::databases) {
+    if(database.name == name()) found = true;
+  }
+  if(!found) {
+    Database database;
+    database.name = name();
+    database.list = BML::unserialize(file::read(locate({"Database/", name(), ".bml"})));
+    Media::databases.append(std::move(database));
+  }
+
+  //search the database for a given sha256 game entry
+  for(auto& database : Media::databases) {
+    if(database.name == name()) {
+      for(auto node : database.list) {
+        if(node["name"].string() == rom) {
+          return BML::serialize(node);
+        }
+      }
+    }
+  }
+
+  //database or game entry not found
+  return {};
+}
+
 //
 
 //audio CD fallback
