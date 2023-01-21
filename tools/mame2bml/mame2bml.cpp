@@ -50,6 +50,8 @@ auto Mame2BML::main(Arguments arguments) -> void {
             output.print("      name:   ", rom["name"].string(), "\n");
           if(rom["loadflag"])
             output.print("      type:   ", rom["loadflag"].string(), "\n");
+          if(rom["value"])
+            output.print("      value:  ", rom["value"].natural(), "\n");
             output.print("      offset: ", rom["offset"].natural(), "\n");
             output.print("      size:   ", rom["size"].natural(), "\n");
             output.print("      crc:    ", rom["crc"].string(), "\n");
