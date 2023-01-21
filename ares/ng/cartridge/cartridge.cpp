@@ -76,11 +76,29 @@ auto Cartridge::disconnect() -> void {
   node.reset();
 }
 
+auto Cartridge::readProgram(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
+  if(address <= 0x0fffff) return prom[address >> 1];
+  if(address >= 0x200000 && address <= 0x2fffff) {
+    address = ((bank + 1) * 0x100000) | n20(address);
+    return prom[address >> 1];
+  }
+
+  return data;
+}
+
+auto Cartridge::writeProgram(n1 upper, n1 lower, n24 address, n16 data) -> void {
+  if(lower && address >= 0x200000 && address <= 0x2fffff) {
+    bank = data.bit(0, 2);
+  }
+}
+
+
 auto Cartridge::save() -> void {
   if(!node) return;
 }
 
 auto Cartridge::power() -> void {
+  bank = 0;
 }
 
 }

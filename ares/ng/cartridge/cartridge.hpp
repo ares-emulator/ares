@@ -32,6 +32,9 @@ struct Cartridge {
   auto save() -> void;
   auto power() -> void;
 
+  auto readProgram(n1 upper, n1 lower, n24 address, n16 data) -> n16;
+  auto writeProgram(n1 upper, n1 lower, n24 address, n16 data) -> void;
+
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
@@ -39,6 +42,8 @@ private:
   struct Information {
     string title;
   } information;
+
+  n8 bank;
 };
 
 #include "slot.hpp"

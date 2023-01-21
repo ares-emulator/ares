@@ -8,7 +8,7 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //cartridge program ROM
   if(address <= 0x0fffff) {
-    return cartridge.prom[address >> 1];
+    return cartridge.readProgram(upper, lower, address, data);
   }
 
   //work RAM
@@ -18,8 +18,7 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   //cartridge program ROM (banked)
   if(address <= 0x2fffff) {
-    address = 0x100000 | n20(address);
-    return cartridge.prom[address >> 1];
+    return cartridge.readProgram(upper, lower, address, data);
   }
 
   //I/O registers
@@ -60,9 +59,9 @@ auto CPU::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 }
 
 auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
-  //cartridge program ROM (read-only)
+  //cartridge program ROM
   if(address <= 0x0fffff) {
-    return;
+    return cartridge.writeProgram(upper, lower, address, data);
   }
 
   //work RAM
@@ -72,9 +71,9 @@ auto CPU::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
     return;
   }
 
-  //cartridge program ROM (banked) (read-only)
+  //cartridge program ROM (banked)
   if(address <= 0x2fffff) {
-    return;
+    return cartridge.writeProgram(upper, lower, address, data);
   }
 
   //I/O registers
