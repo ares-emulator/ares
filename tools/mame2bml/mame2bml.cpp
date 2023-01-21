@@ -39,6 +39,13 @@ auto Mame2BML::main(Arguments arguments) -> void {
         output.print("  title: ", software["description"].string(), "\n");
 
         for(auto sub : software["part"]){
+          if(sub.name() == "feature") {
+            output.print("  feature\n");
+            output.print("    name:  ", sub["name"].string(), "\n");
+            output.print("    value: ", sub["value"].string(), "\n");
+            continue;
+          }
+
           if(sub.name() != "dataarea") continue;
           output.print("  ", sub["name"].string().replace(":", ""), "\n");
           output.print("    size: ", sub["size"].natural(), "\n");
