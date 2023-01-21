@@ -49,7 +49,6 @@ namespace ares {
 
   //incremented only when serialization format changes
   static const u32    SerializerSignature = 0x31545342;  //"BST1" (little-endian)
-  static const string SerializerVersion   = "131";
 
   namespace VFS {
     using Pak = shared_pointer<vfs::directory>;
