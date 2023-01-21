@@ -28,6 +28,8 @@ auto NeoGeo::loadRoms(string location, string sectionName) -> vector<u8> {
 
   for(auto section : info[{"game/", sectionName}]) {
     if(section.name() == "rom") {
+      if(section["type"] && section["type"].string() != "continue") loadType = section["type"].string();
+
       if(section["name"]) {
         filename = section["name"].string().strip();
         if(filename) {
@@ -36,8 +38,6 @@ auto NeoGeo::loadRoms(string location, string sectionName) -> vector<u8> {
             if (file.name != filename) continue;
             input = archive.extract(file);
             readOffset = 0;
-
-            if(section["type"] && section["type"].string() != "continue") loadType = section["type"].string();
             if (!input) return output;
           }
         }
@@ -58,7 +58,13 @@ auto NeoGeo::loadRoms(string location, string sectionName) -> vector<u8> {
       }
 
       if(output.size() < writeOffset + size) output.resize(writeOffset + size);
+
       for(auto index = startIndex; index < size; index += increment) {
+        if(loadType == "fill") {
+          output[index + writeOffset] = section["value"].natural();
+          continue;
+        }
+
         output[index + writeOffset] = input[readOffset++];
       }
 

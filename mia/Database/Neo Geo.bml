@@ -1,5 +1,5 @@
 database
-  revision: 2023-01-20
+  revision: 2023-01-21
 
 game
   name:  nam1975
@@ -8479,6 +8479,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -17200,6 +17201,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -17327,6 +17329,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -17468,6 +17471,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -17595,6 +17599,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -17715,6 +17720,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -17954,6 +17960,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -18035,6 +18042,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -18162,6 +18170,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -18303,6 +18312,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -18543,6 +18553,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -18663,6 +18674,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -18764,6 +18776,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -18891,6 +18904,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -19011,6 +19025,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -19138,6 +19153,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -19258,6 +19274,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -19377,6 +19394,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -19436,6 +19454,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -19495,6 +19514,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -19586,6 +19606,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -19678,6 +19699,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -19798,6 +19820,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -19918,6 +19941,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -20012,6 +20036,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -20099,6 +20124,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -20207,6 +20233,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -20315,6 +20342,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -20423,6 +20451,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -20524,6 +20553,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -20577,6 +20607,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -20637,6 +20668,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -20745,6 +20777,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -20853,6 +20886,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -20961,6 +20995,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -21069,6 +21104,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -21177,6 +21213,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -21292,6 +21329,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -21407,6 +21445,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
@@ -21515,6 +21554,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -21623,6 +21663,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -21731,6 +21772,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -21830,6 +21872,7 @@ game
       sha1:   e3c9b03944b4c10cf5081caaf9c8be1f08c06493
     rom
       type:   fill
+      value:  255
       offset: 1048576
       size:   1048576
       crc:    
@@ -21838,6 +21881,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -21889,6 +21933,7 @@ game
       sha1:   b46c96677f1bfe324b678112e9c614a20c550d51
     rom
       type:   fill
+      value:  255
       offset: 1048576
       size:   1048576
       crc:    
@@ -21897,6 +21942,7 @@ game
     size: 131072
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   131072
       crc:    
@@ -21965,6 +22011,7 @@ game
     size: 196608
     rom
       type:   fill
+      value:  255
       offset: 0
       size:   196608
       crc:    
@@ -23880,6 +23927,7 @@ game
     size: 262144
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   262144
       crc:    
@@ -24494,6 +24542,7 @@ game
     size: 524288
     rom
       type:   fill
+      value:  0
       offset: 0
       size:   524288
       crc:    
