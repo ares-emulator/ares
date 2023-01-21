@@ -17,19 +17,19 @@ auto Cartridge::Debugger::load(Node::Object parent) -> void {
     cartridge.mrom[address] = data;
   });
 
-  memory.crom = parent->append<Node::Debugger::Memory>("Cartridge Character ROM");
-  memory.crom->setSize(cartridge.crom.size());
+  memory.crom = parent->append<Node::Debugger::Memory>("Cartridge Static ROM");
+  memory.crom->setSize(cartridge.srom.size());
   memory.crom->setRead([&](u32 address) -> u8 {
-    return cartridge.crom[address];
+    return cartridge.srom[address];
   });
   memory.crom->setWrite([&](u32 address, u8 data) -> void {
-    cartridge.crom[address] = data;
+    cartridge.srom[address] = data;
   });
 
   memory.srom = parent->append<Node::Debugger::Memory>("Cartridge Sprite ROM");
-  memory.srom->setSize(cartridge.srom.size());
+  memory.srom->setSize(cartridge.crom.size());
   memory.srom->setRead([&](u32 address) -> u8 {
-    return cartridge.srom[address];
+    return cartridge.crom[address];
   });
   memory.srom->setWrite([&](u32 address, u8 data) -> void {
     cartridge.srom[address] = data;
