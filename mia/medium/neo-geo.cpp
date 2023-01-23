@@ -61,12 +61,12 @@ auto NeoGeo::loadRoms(string location, string sectionName) -> vector<u8> {
         filename = section["name"].string().strip();
         if(filename) {
           input = {};
-          for (auto &file: archive.file) {
-            if (file.name != filename) continue;
+          for(auto &file: archive.file) {
+            if(!file.name.iequals(filename)) continue;
             input = archive.extract(file);
             readOffset = 0;
-            if (!input) return output;
           }
+          if (!input || input.size() == 0) return output;
         }
       }
 

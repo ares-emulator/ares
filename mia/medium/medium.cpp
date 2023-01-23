@@ -125,7 +125,7 @@ auto Medium::manifestDatabaseArcade(string rom) -> string {
   for(auto& database : Media::databases) {
     if(database.name == name()) {
       for(auto node : database.list) {
-        if(node["name"].string() == rom) {
+        if(node["name"].string().iequals(rom)) {
           return BML::serialize(node);
         }
       }
