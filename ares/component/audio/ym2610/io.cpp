@@ -2,11 +2,18 @@ auto YM2610::read(n2 address) -> n8 {
   switch(address) {
   case 0: return fm.readStatus();
   case 1: return ssg.read();
-
+  case 2: return pcmStatus();
   }
 
   debug(unimplemented, "[YM2610] read ", hex(address));
   return 0;
+}
+
+auto YM2610::pcmStatus() -> n8 {
+  n8 output;
+  for(auto c : range(6)) output.bit(c) = pcmA.channels[c].ended;
+  output.bit(7) = pcmB.ended;
+  return output;
 }
 
 auto YM2610::write(n2 address, n8 data) -> void {
@@ -26,8 +33,8 @@ auto YM2610::write(n2 address, n8 data) -> void {
 auto YM2610::writeLower(n8 data) -> void {
   switch(registerAddress) {
   case 0x000 ... 0x00f:
-    ssg.write(data);
-    return;
+              ssg.write(data);
+              return;
   case 0x010:
               pcmB.repeat  = data.bit(4);
               if(data.bit(0)) pcmB.power();
@@ -47,8 +54,12 @@ auto YM2610::writeLower(n8 data) -> void {
   case 0x01a: pcmB.delta.bit       ( 8, 15) = data; return;
   case 0x01b: pcmB.volume                   = data; return;
   case 0x01c:
-    //EOS
-    debug(unimplemented, "[YM2610::EOS] Write ", hex(registerAddress), " = ", data);
+    for(auto c : range(6)) {
+      pcmA.channels[c].endedMask = data.bit(c);
+      if(data.bit(c)) pcmA.channels[c].ended = 0;
+    }
+    pcmB.endedMask = data.bit(7);
+    if(data.bit(7)) pcmB.ended = 0;
     return;
   case 0x01d ... 0x1ff:
     fm.writeData(data);

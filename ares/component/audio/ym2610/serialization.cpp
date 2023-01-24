@@ -10,6 +10,7 @@ auto YM2610::PCMA::serialize(serializer& s) -> void {
   for(auto n : range(6)) {
    s(channels[n].playing);
    s(channels[n].ended);
+   s(channels[n].endedMask);
    s(channels[n].left);
    s(channels[n].right);
    s(channels[n].volume);
@@ -24,6 +25,8 @@ auto YM2610::PCMA::serialize(serializer& s) -> void {
 
 auto YM2610::PCMB::serialize(serializer& s) -> void {
   s(playing);
+  s(ended);
+  s(endedMask);
   s(repeat);
   s(left);
   s(right);

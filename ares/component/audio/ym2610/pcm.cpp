@@ -31,6 +31,7 @@ auto YM2610::PCMA::clock() -> array<i16[2]> {
     if(!channels[c].playing) continue;
     if(((channels[c].currentAddress ^ (channels[c].endAddress + (1 << 8))) & 0xfffff) == 0) {
       channels[c].playing = 0;
+      if(!channels[c].endedMask) channels[c].ended = 1;
       continue;
     }
 
@@ -50,6 +51,7 @@ auto YM2610::PCMA::clock() -> array<i16[2]> {
 }
 
 auto YM2610::PCMA::Channel::keyOn() -> void {
+  if(ended) return;
   playing = 1;
   currentAddress = startAddress;
   decodeAccumulator = 0;
@@ -124,6 +126,7 @@ auto YM2610::PCMB::decode() -> void {
         decodeAccumulator = 0;
         previousAccumulator = 0;
         playing = 0;
+        if(!endedMask) ended = 1;
       }
     }
   }
@@ -139,6 +142,7 @@ auto YM2610::PCMB::decode() -> void {
 }
 
 auto YM2610::PCMB::beginPlay() -> void {
+  if(ended) return;
   currentAddress      = startAddress;
   currentNibble       = 0;
   decodeAccumulator   = 0;

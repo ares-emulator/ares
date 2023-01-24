@@ -16,6 +16,7 @@ struct YM2610 {
   auto write(n2 address, n8 data) -> void;
   auto writeLower(n8 data) -> void;
   auto writeUpper(n8 data) -> void;
+  auto pcmStatus() -> n8;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
@@ -45,6 +46,7 @@ protected:
       auto decode(n8) -> i12;
       n1 playing;
       n1 ended;
+      n1 endedMask;
       n1 left;
       n1 right;
       n5 volume;
@@ -73,6 +75,8 @@ protected:
     auto serialize(serializer&) -> void;
 
     n1  playing;
+    n1  ended;
+    n1  endedMask;
     n1  repeat;
     n1  left;
     n2  right;
