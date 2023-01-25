@@ -13,13 +13,17 @@ auto NeoGeoMVS::load(string location) -> bool {
     Decode::ZIP archive;
     if(archive.open(location)) {
       for(auto& file : archive.file) {
-        if(file.name == "vs-bios.rom") {
+        if(file.name == "sp-45.sp1") {
           auto memory = archive.extract(file);
           endianSwap(memory);
           pak->append("bios.rom", memory);
         }
       }
     }
+  } else {
+    auto bios = Pak::read(location);
+    endianSwap(bios);
+    if(bios) pak->append("bios.rom", bios);
   }
 
   if(pak->count() != 1) return false;

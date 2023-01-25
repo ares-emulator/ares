@@ -13,13 +13,17 @@ auto NeoGeoAES::load(string location) -> bool {
     Decode::ZIP archive;
     if(archive.open(location)) {
       for(auto& file : archive.file) {
-        if(file.name == "neo-po.bin") {
+        if(file.name == "neo-epo.bin") {
           auto memory = archive.extract(file);
           endianSwap(memory);
           pak->append("bios.rom", memory);
         }
       }
     }
+  } else {
+    auto bios = Pak::read(location);
+    endianSwap(bios);
+    if (bios) pak->append("bios.rom", bios);
   }
 
   if(pak->count() != 1) return false;
