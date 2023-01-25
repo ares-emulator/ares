@@ -25,6 +25,7 @@ struct PIF : Memory::IO<PIF> {
   auto scan() -> void;
   auto challenge() -> void;
   auto power(bool reset) -> void;
+  auto estimateTiming() -> u32;
 
   //io.cpp
   auto readWord(u32 address) -> u32;

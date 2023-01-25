@@ -232,6 +232,55 @@ auto PIF::scan() -> void {
   }
 }
 
+auto PIF::estimateTiming() -> u32 {
+  ControllerPort* controllers[4] = {
+    &controllerPort1,
+    &controllerPort2,
+    &controllerPort3,
+    &controllerPort4,
+  };
+
+  u32 cycles = 13600;
+  u32 short_cmds = 0;
+
+  u32 offset = 0;
+  u32 channel = 0;
+  while(offset < 64 && channel < 5) {
+    n8 send = ram.read<Byte>(offset++);
+    if(send == 0xfe) { short_cmds++; break; }     //end of packets
+    if(send == 0x00) { short_cmds++; channel++; continue; }
+    if(send == 0xfd) { short_cmds++; channel++; continue;  } //channel reset
+    if(send == 0xff) { short_cmds++; continue;  } //alignment padding
+
+    n8 recv = ram.read<Byte>(offset++);
+
+    //clear flags from lengths
+    send &= 0x3f;
+    recv &= 0x3f;
+    n8 input[64];
+    for(u32 index : range(send)) {
+      input[index] = ram.read<Byte>(offset++);
+    }
+    offset += recv;
+
+    if (channel < 4) {
+      if (controllers[channel]->device) {
+        cycles += 22000;
+      } else {
+        cycles += 18000;
+      }
+    } else {
+      //accessories(TBD)
+      cycles += 20000;
+    }
+
+    channel++;
+  }
+
+  cycles += 1420 * short_cmds;
+  return cycles;
+}
+
 //CIC-NUS-6105 anti-piracy challenge/response
 auto PIF::challenge() -> void {
   static n4 lut[32] = {
