@@ -54,7 +54,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Video/Blocking", video.blocking);
   bind(boolean, "Video/Flush", video.flush);
   bind(string,  "Video/Shader", video.shader);
-  bind(natural, "Video/Multiplier", video.multiplier);
+  bind(natural, "Video/Scale", video.scale);
   bind(string,  "Video/Output", video.output);
   bind(boolean, "Video/AspectCorrection", video.aspectCorrection);
   bind(boolean, "Video/AdaptiveSizing", video.adaptiveSizing);
