@@ -65,19 +65,22 @@ auto LSPC::render(n9 y) -> void {
     n16 d3 = c[(tileAddress + 3) % cs] << 8 | c[(tileAddress + 64 + 3) % cs] << 0;
 
     n9  px = 0;
+    n4  bx = hflip;
     for(u32 x : range(16)) {
-      if(!hscale[hshrink][x]) continue;
-      n9 rx = sx + (px++ ^ hflip);
-      if(rx >= 320) continue;
+      if(hscale[hshrink][x]) {
+        n9 rx = sx + px++;
+        if (rx >= 320) continue;
 
-      n4 color;
-      color.bit(0) = d0.bit(x);
-      color.bit(1) = d1.bit(x);
-      color.bit(2) = d2.bit(x);
-      color.bit(3) = d3.bit(x);
-      if(color) {
-        output[rx] = io.shadow << 16 | pram[pramAddress | color];
+        n4 color;
+        color.bit(0) = d0.bit(bx);
+        color.bit(1) = d1.bit(bx);
+        color.bit(2) = d2.bit(bx);
+        color.bit(3) = d3.bit(bx);
+        if (color) {
+          output[rx] = io.shadow << 16 | pram[pramAddress | color];
+        }
       }
+      bx += hflip ? -1 : 1;
     }
   }
 
