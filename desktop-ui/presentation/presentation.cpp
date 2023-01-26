@@ -14,27 +14,33 @@ Presentation::Presentation() {
   systemMenu.setVisible(false);
 
   settingsMenu.setText("Settings");
-  videoSizeMenu.setText("Size").setIcon(Icon::Emblem::Image);
-  //determine the largest multiplier that can be used by the largest monitor found
-  u32 monitorHeight = 1;
-  for(u32 monitor : range(Monitor::count())) {
-    monitorHeight = max(monitorHeight, Monitor::workspace(monitor).height());
-  }
-  //generate size menu
-  u32 multipliers = max(1, monitorHeight / 240);
-  for(u32 multiplier : range(2, multipliers + 1)) {
-    MenuItem item{&videoSizeMenu};
-    item.setText({multiplier, "x (", 240 * multiplier, "p)"});
-    item.onActivate([=] {
-      settings.video.multiplier = multiplier;
-      resizeWindow();
-    });
-  }
-  videoSizeMenu.append(MenuSeparator());
-  MenuItem centerWindow{&videoSizeMenu};
-  centerWindow.setText("Center Window").setIcon(Icon::Place::Settings).onActivate([&] {
-    setAlignment(Alignment::Center);
+  videoScaleMenu.setText("Scale").setIcon(Icon::Emblem::Image);
+  videoScaleOne.setText("1x").onActivate([&] {
+    settings.video.scale = 1;
+    resizeWindow();
   });
+  videoScaleTwo.setText("2x").onActivate([&] {
+    settings.video.scale = 2;
+    resizeWindow();
+  });
+  videoScaleThree.setText("3x").onActivate([&] {
+    settings.video.scale = 3;
+    resizeWindow();
+  });
+  videoScaleFour.setText("4x").onActivate([&] {
+    settings.video.scale = 4;
+    resizeWindow();
+  });
+  videoScaleFive.setText("5x").onActivate([&] {
+    settings.video.scale = 5;
+    resizeWindow();
+  });
+  if(settings.video.scale == 1) videoScaleOne.setChecked();
+  if(settings.video.scale == 2) videoScaleTwo.setChecked();
+  if(settings.video.scale == 3) videoScaleThree.setChecked();
+  if(settings.video.scale == 4) videoScaleFour.setChecked();
+  if(settings.video.scale == 5) videoScaleFive.setChecked();
+
   videoOutputMenu.setText("Output").setIcon(Icon::Emblem::Image);
   videoOutputCenter.setText("Center").onActivate([&] {
     settings.video.output = "Center";
@@ -55,11 +61,10 @@ Presentation::Presentation() {
   videoAdaptiveSizing.setText("Adaptive Sizing").setChecked(settings.video.adaptiveSizing).onToggle([&] {
     if(settings.video.adaptiveSizing = videoAdaptiveSizing.checked()) resizeWindow();
   });
-  videoAutoCentering.setText("Auto Centering").setChecked(settings.video.autoCentering).onToggle([&] {
-    if(settings.video.autoCentering = videoAutoCentering.checked()) resizeWindow();
-  });
+
   videoShaderMenu.setText("Shader").setIcon(Icon::Emblem::Image);
   loadShaders();
+
   bootOptionsMenu.setText("Boot Options").setIcon(Icon::Place::Settings);
   fastBoot.setText("Fast Boot").setChecked(settings.boot.fast).onToggle([&] {
     settings.boot.fast = fastBoot.checked();
@@ -79,6 +84,7 @@ Presentation::Presentation() {
   if(settings.boot.prefer == "NTSC-U") preferNTSCU.setChecked();
   if(settings.boot.prefer == "NTSC-J") preferNTSCJ.setChecked();
   if(settings.boot.prefer == "PAL") preferPAL.setChecked();
+
   muteAudioSetting.setText("Mute Audio").setChecked(settings.audio.mute).onToggle([&] {
     settings.audio.mute = muteAudioSetting.checked();
   });
@@ -91,6 +97,7 @@ Presentation::Presentation() {
     }
     if(visible()) resizeWindow();
   }).doToggle();
+
   videoSettingsAction.setText("Video" ELLIPSIS).setIcon(Icon::Device::Display).onActivate([&] {
     settingsWindow.show("Video");
   });
@@ -245,9 +252,9 @@ auto Presentation::resizeWindow() -> void {
   if(fullScreen()) setFullScreen(false);
   if(maximized()) setMaximized(false);
 
-  u32 multiplier = max(2, settings.video.multiplier);
-  u32 viewportWidth = 320 * multiplier;
-  u32 viewportHeight = 240 * multiplier;
+  u32 scale = settings.video.scale;
+  u32 viewportWidth = 320 * scale;
+  u32 viewportHeight = 240 * scale;
 
   if(emulator && program.screens) {
     auto& node = program.screens.first();
@@ -255,24 +262,13 @@ auto Presentation::resizeWindow() -> void {
     u32 videoHeight = node->height() * node->scaleY();
     if(settings.video.aspectCorrection) videoWidth = videoWidth * node->aspectX() / node->aspectY();
     if(node->rotation() == 90 || node->rotation() == 270) swap(videoWidth, videoHeight);
-
-    u32 multiplierX = viewportWidth / videoWidth;
-    u32 multiplierY = viewportHeight / videoHeight;
-    u32 multiplier = max(1, min(multiplierX, multiplierY));
-
-    viewportWidth = videoWidth * multiplier;
-    viewportHeight = videoHeight * multiplier;
+    viewportWidth = videoWidth * scale;
+    viewportHeight = videoHeight * scale;
   }
 
   u32 statusHeight = showStatusBarSetting.checked() ? StatusHeight : 0;
-
-  if(settings.video.autoCentering) {
-    setGeometry(Alignment::Center, {viewportWidth, viewportHeight + statusHeight});
-  } else {
-    setSize({viewportWidth, viewportHeight + statusHeight});
-  }
-
-  setMinimumSize({256, 240 + statusHeight});
+  setSize({viewportWidth, viewportHeight + statusHeight});
+  setMinimumSize({16, 16 + statusHeight});
 }
 
 auto Presentation::loadEmulators() -> void {
