@@ -144,8 +144,8 @@ auto CPU::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     data.bit(0) = 0;  //coin 1
     data.bit(1) = 0;  //coin 2
     data.bit(2) = 1;  //service button
-    data.bit(3) = 0;  //coin 3
-    data.bit(4) = 0;  //coin 4
+    data.bit(3) = Model::NeoGeoMVS();  //coin 3 (MVS: active low, AES: always 0)
+    data.bit(4) = Model::NeoGeoMVS();  //coin 3 (MVS: active low, AES: always 0)
     data.bit(5) = 0;  //0 = 4-slot; 1 = 6-slot
     data.bit(6) = 0;  //RTC time pulse
     data.bit(7) = 0;  //RTC data bit
