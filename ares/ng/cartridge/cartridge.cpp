@@ -18,6 +18,7 @@ auto Cartridge::connect() -> void {
   information.title = pak->attribute("title");
   information.board = pak->attribute("board");
 
+  if(information.board == "rom_mslugx") board = new Board::MSlugX{*this};
   if(information.board == "cmc50_jockeygp") board = new Board::JockeyGP{*this};
   if(!board) board = new Board::Rom{*this};
   board->pak = pak;
