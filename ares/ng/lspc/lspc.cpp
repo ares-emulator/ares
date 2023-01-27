@@ -13,10 +13,10 @@ auto LSPC::load(Node::Object parent) -> void {
 
   screen = node->append<Node::Video::Screen>("Screen", 320, 256);
   screen->colors(1 << 17, {&LSPC::color, this});
-  screen->setSize(320, 256);
-  screen->setScale(2.0, 2.0);
+  screen->setSize(304, 240);
+  screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
-  screen->setViewport(8, 8, 320 - 16, 256 - 16);
+  screen->setViewport(8, 8, 304, 240);
 
   vram.allocate(68_KiB >> 1);
   pram.allocate(16_KiB >> 1);
