@@ -1,27 +1,9 @@
+struct Cartridge;
+#include "board/board.hpp"
+
 struct Cartridge {
   Node::Peripheral node;
   VFS::Pak pak;
-  Memory::Readable<n16> prom;
-  Memory::Readable<n8 > mrom;
-  Memory::Readable<n8 > crom;
-  Memory::Readable<n8 > srom;
-  Memory::Readable<n8 > vromA;
-  Memory::Readable<n8 > vromB;
-
-  struct Debugger {
-    //debugger.cpp
-    auto load(Node::Object) -> void;
-    auto unload(Node::Object) -> void;
-
-    struct Memory {
-      Node::Debugger::Memory prom;
-      Node::Debugger::Memory mrom;
-      Node::Debugger::Memory crom;
-      Node::Debugger::Memory srom;
-      Node::Debugger::Memory vromA;
-      Node::Debugger::Memory vromB;
-    } memory;
-  } debugger;
 
   auto title() const -> string { return information.title; }
 
@@ -29,18 +11,28 @@ struct Cartridge {
   auto allocate(Node::Port) -> Node::Peripheral;
   auto connect() -> void;
   auto disconnect() -> void;
+
   auto save() -> void;
   auto power() -> void;
 
-  auto readProgram(n1 upper, n1 lower, n24 address, n16 data) -> n16;
-  auto writeProgram(n1 upper, n1 lower, n24 address, n16 data) -> void;
+  auto readP(n1 upper, n1 lower, n24 address, n16 data) -> n16;
+  auto writeP(n1 upper, n1 lower, n24 address, n16 data) -> void;
+
+  auto readM(n32 address) -> n8;
+  auto readC(n32 address) -> n8;
+  auto readS(n32 address) -> n8;
+  auto readVA(n32 address) -> n8;
+  auto readVB(n32 address) -> n8;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
 
+  unique_pointer<Board::Interface> board;
+
 private:
   struct Information {
     string title;
+    string board;
   } information;
 
   n8 bank;

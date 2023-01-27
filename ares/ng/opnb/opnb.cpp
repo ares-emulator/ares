@@ -88,11 +88,11 @@ auto OPNB::power(bool reset) -> void {
 }
 
 auto OPNB::readPCMA(u32 address) -> u8 {
-  return cartridge.vromA[address];
+  return cartridge.readVA(address);
 }
 
 auto OPNB::readPCMB(u32 address) -> u8 {
-  return cartridge.vromB ? cartridge.vromB[address] : cartridge.vromA[address];
+  return cartridge.readVB(address);
 }
 
 }

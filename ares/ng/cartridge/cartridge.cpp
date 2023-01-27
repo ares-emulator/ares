@@ -3,8 +3,8 @@
 namespace ares::NeoGeo {
 
 Cartridge& cartridge = cartridgeSlot.cartridge;
+#include "board/board.cpp"
 #include "slot.cpp"
-#include "debugger.cpp"
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
@@ -16,89 +16,65 @@ auto Cartridge::connect() -> void {
 
   information = {};
   information.title = pak->attribute("title");
+  information.board = pak->attribute("board");
 
-  if(auto fp = pak->read("program.rom")) {
-    prom.allocate(fp->size() >> 1);
-    for(auto address : range(prom.size())) {
-      prom.program(address, fp->readm(2L));
-    }
-  }
+  if(information.board == "cmc50_jockeygp") board = new Board::JockeyGP{*this};
+  if(!board) board = new Board::Rom{*this};
+  board->pak = pak;
+  board->load();
 
-  if(auto fp = pak->read("music.rom")) {
-    mrom.allocate(fp->size());
-    for(auto address : range(mrom.size())) {
-      mrom.program(address, fp->read());
-    }
-  }
-
-  if(auto fp = pak->read("character.rom")) {
-    crom.allocate(fp->size());
-    for(auto address : range(crom.size())) {
-      crom.program(address, fp->read());
-    }
-  }
-
-  if(auto fp = pak->read("static.rom")) {
-    srom.allocate(fp->size());
-    for(auto address : range(srom.size())) {
-      srom.program(address, fp->read());
-    }
-  }
-
-  if(auto fp = pak->read("voice-a.rom")) {
-    vromA.allocate(fp->size());
-    for(auto address : range(vromA.size())) {
-      vromA.program(address, fp->read());
-    }
-  }
-
-  if(auto fp = pak->read("voice-b.rom")) {
-    vromB.allocate(fp->size());
-    for(auto address : range(vromB.size())) {
-      vromB.program(address, fp->read());
-    }
-  }
-
-  debugger.load(node);
   power();
 }
 
 auto Cartridge::disconnect() -> void {
-  if(!node) return;
-  debugger.unload(node);
-  prom.reset();
-  mrom.reset();
-  crom.reset();
-  srom.reset();
-  vromA.reset();
-  vromB.reset();
-  pak.reset();
+  if(!node || !board) return;
+  board->unload();
+  board->pak.reset();
+  board.reset();
   node.reset();
 }
 
-auto Cartridge::readProgram(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
-  if(address <= 0x0fffff) return prom[address >> 1];
-  if(address >= 0x200000 && address <= 0x2fffff) {
-    address = ((bank + 1) * 0x100000) | n20(address);
-    return prom[address >> 1];
-  }
-
-  return data;
-}
-
-auto Cartridge::writeProgram(n1 upper, n1 lower, n24 address, n16 data) -> void {
-  if(lower && address >= 0x200000 && address <= 0x2fffff) {
-    bank = data.bit(0, 2);
-  }
-}
-
-
 auto Cartridge::save() -> void {
   if(!node) return;
+  if(board) board->save();
 }
 
 auto Cartridge::power() -> void {
-  bank = 0;
+  if(board) board->power();
+}
+
+auto Cartridge::readP(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
+  if(board) return board->readP(upper, lower, address, data);
+  return data;
+}
+
+auto Cartridge::writeP(n1 upper, n1 lower, n24 address, n16 data) -> void {
+  if(board) return board->writeP(upper, lower, address, data);
+}
+
+auto Cartridge::readM(n32 address) -> n8 {
+ if(board) return board->readM(address);
+ return 0xff;
+}
+
+auto Cartridge::readC(n32 address) -> n8 {
+  if(board) return board->readC(address);
+  return 0xff;
+}
+
+auto Cartridge::readS(n32 address) -> n8 {
+  if(board) return board->readS(address);
+  return 0xff;
+}
+
+auto Cartridge::readVA(n32 address) -> n8 {
+  if(board) return board->readVA(address);
+  return 0xff;
+}
+
+auto Cartridge::readVB(n32 address) -> n8 {
+  if(board) return board->readVB(address);
+  return 0xff;
 }
 
 }

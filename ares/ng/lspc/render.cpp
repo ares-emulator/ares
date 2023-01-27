@@ -56,13 +56,10 @@ auto LSPC::render(n9 y) -> void {
     n13 pramAddress = io.pramBank << 12 | palette << 4;
     n27 tileAddress = (tileNumber << 5 | ry & 15) << 2;
 
-    auto cs = cartridge.crom.size();
-    auto c = cartridge.crom.data();
-
-    n16 d0 = c[(tileAddress + 0) % cs] << 8 | c[(tileAddress + 64 + 0) % cs] << 0;
-    n16 d1 = c[(tileAddress + 2) % cs] << 8 | c[(tileAddress + 64 + 2) % cs] << 0;
-    n16 d2 = c[(tileAddress + 1) % cs] << 8 | c[(tileAddress + 64 + 1) % cs] << 0;
-    n16 d3 = c[(tileAddress + 3) % cs] << 8 | c[(tileAddress + 64 + 3) % cs] << 0;
+    n16 d0 = cartridge.readC(tileAddress + 0) << 8 | cartridge.readC(tileAddress + 64 + 0) << 0;
+    n16 d1 = cartridge.readC(tileAddress + 2) << 8 | cartridge.readC(tileAddress + 64 + 2) << 0;
+    n16 d2 = cartridge.readC(tileAddress + 1) << 8 | cartridge.readC(tileAddress + 64 + 1) << 0;
+    n16 d3 = cartridge.readC(tileAddress + 3) << 8 | cartridge.readC(tileAddress + 64 + 3) << 0;
 
     n9  px = 0;
     n4  bx = hflip;
@@ -90,7 +87,7 @@ auto LSPC::render(n9 y) -> void {
     n4  palette     = attributes.bit(12,15);
     n13 pramAddress = io.pramBank << 12 | palette << 4;
     n17 tileAddress = tileNumber << 5 | x << 2 & 24 ^ 16 | y & 7;
-    n8  tileData    = cartridge.srom[tileAddress];
+    n8  tileData    = cartridge.readS(tileAddress);
     n4  color       = tileData >> (x & 1) * 4;
     if(color) {
       output[x] = io.shadow << 16 | pram[pramAddress | color];
