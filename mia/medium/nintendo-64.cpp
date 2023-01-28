@@ -296,7 +296,6 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NFZ") {sram = 32_KiB; rumble = true;}                        //F-Zero X (U + E)
   if(id == "NSI") {sram = 32_KiB; mempak = true;}                        //Fushigi no Dungeon: Fuurai no Shiren 2
   if(id == "NG6") {sram = 32_KiB; rumble = true;}                        //Ganmare Goemon: Dero Dero Douchuu Obake Tenkomori
-  if(id == "N3H") {sram = 32_KiB; rumble = true;}                        //Ganbare! Nippon! Olympics 2000
   if(id == "NGP") {sram = 32_KiB; mempak = true;}                        //Goemon: Mononoke Sugoroku
   if(id == "NYW") {sram = 32_KiB;}                                       //Harvest Moon 64
   if(id == "NHY") {sram = 32_KiB; mempak = true; rumble = true;}         //Hybrid Heaven (J)
@@ -420,6 +419,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NFO") {mempak = true; rumble = true;}                        //Forsaken 64
   if(id == "NF9") {mempak = true;}                                       //Fox Sports College Hoops '99
   if(id == "NG5") {mempak = true; rumble = true;}                        //Ganbare Goemon - Neo Momoyama Bakufu no Odori [Mystical Ninja Starring Goemon]
+  if(id == "N3H") {mempak = true; rumble = true;}                        //Ganbare! Nippon! Olympics 2000
   if(id == "NGX") {mempak = true; rumble = true;}                        //Gauntlet Legends
   if(id == "NGD") {mempak = true; rumble = true;}                        //Gauntlet Legends (J)
   if(id == "NX3") {mempak = true; rumble = true;}                        //Gex 3 - Deep Cover Gecko
