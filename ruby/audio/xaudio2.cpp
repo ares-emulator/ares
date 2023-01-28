@@ -8,7 +8,7 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
   ~AudioXAudio2() { destruct(); }
 
   auto create() -> bool override {
-    super.setDevice(hasDevices().first());
+    if(hasDevices()) super.setDevice(hasDevices().first());
     super.setChannels(2);
     super.setFrequency(48000);
     super.setLatency(40);
@@ -41,6 +41,8 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
   auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
+    if(!ready()) return;
+
     self.sourceVoice->Stop(0);
     self.sourceVoice->FlushSourceBuffers();  //calls OnBufferEnd for all currently submitted buffers
 
@@ -94,7 +96,7 @@ private:
   vector<Device> devices;
 
   auto construct() -> void {
-    XAudio2Create(&self.xa2Interface, 0 , XAUDIO2_DEFAULT_PROCESSOR);
+    if(FAILED(XAudio2Create(&self.xa2Interface, 0 , XAUDIO2_DEFAULT_PROCESSOR))) return;
 
     u32 deviceCount = 0;
     self.xa2Interface->GetDeviceCount(&deviceCount);

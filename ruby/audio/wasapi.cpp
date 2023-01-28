@@ -20,7 +20,7 @@ struct AudioWASAPI : AudioDriver {
 
   auto create() -> bool override {
     super.setExclusive(false);
-    super.setDevice(hasDevices().first());
+    if(hasDevices()) super.setDevice(hasDevices().first());
     super.setBlocking(false);
     super.setChannels(2);
     super.setFrequency(48000);
@@ -59,6 +59,8 @@ struct AudioWASAPI : AudioDriver {
   auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
+    if(!ready()) return;
+
     self.queue.read = 0;
     self.queue.write = 0;
     self.queue.count = 0;
