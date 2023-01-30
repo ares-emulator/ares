@@ -1,7 +1,7 @@
 template<typename T>
 struct RCP {  //A device which is part of RCP
-  const u32 DefaultReadCycles = 0;
-  const u32 DefaultWriteCycles = 0;
+  const u32 DefaultReadCycles = 20;
+  const u32 DefaultWriteCycles = 0;  //not implemented until we implement the CPU write queue
 
   template<u32 Size>
   auto read(u32 address, u32& cycles) -> u64 {
