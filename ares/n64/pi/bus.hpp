@@ -2,9 +2,10 @@ inline auto PI::readWord(u32 address, u32& cycles) -> u32 {
   if(address <= 0x046f'ffff) return ioRead(address);
 
   if (unlikely(io.ioBusy)) {
-    writeForceFinish(); //technically, we should wait until Queue::PI_BUS_Write
+    cycles += writeForceFinish();
     return io.busLatch;
   }
+  cycles += 250;
   return busRead<Word>(address);
 }
 
@@ -106,7 +107,7 @@ inline auto PI::writeFinished() -> void {
   io.ioBusy = 0;
 }
 
-inline auto PI::writeForceFinish() -> void {
+inline auto PI::writeForceFinish() -> u32 {
   io.ioBusy = 0;
-  queue.remove(Queue::PI_BUS_Write);
+  return queue.remove(Queue::PI_BUS_Write);
 }
