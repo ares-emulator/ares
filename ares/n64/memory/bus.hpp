@@ -18,7 +18,7 @@ inline auto Bus::read(u32 address) -> u64 {
   if(address <= 0x048f'ffff) return si.read<Size>(address);
   if(address <= 0x04ff'ffff) return unmapped;
   if(address <= 0x1fbf'ffff) return pi.read<Size>(address);
-  if(address <= 0x1fcf'ffff) return pif.read<Size>(address);
+  if(address <= 0x1fcf'ffff) return si.read<Size>(address);
   if(address <= 0x7fff'ffff) return pi.read<Size>(address);
   return unmapped;
 }
@@ -46,7 +46,7 @@ inline auto Bus::write(u32 address, u64 data) -> void {
   if(address <= 0x048f'ffff) return si.write<Size>(address, data);
   if(address <= 0x04ff'ffff) return;
   if(address <= 0x1fbf'ffff) return pi.write<Size>(address, data);
-  if(address <= 0x1fcf'ffff) return pif.write<Size>(address, data);
+  if(address <= 0x1fcf'ffff) return si.write<Size>(address, data);
   if(address <= 0x7fff'ffff) return pi.write<Size>(address, data);
   return;
 }
