@@ -38,10 +38,12 @@ struct Cartridge {
     u32  source = 0;
     u32  offset = 0;
   } flash;
-  struct ISViewer : Memory::IO<ISViewer> {
+  struct ISViewer : Memory::PI<ISViewer> {
     Memory::Writable ram;  //unserialized
 
     //isviewer.cpp
+    auto readHalf(u32 address) -> u16;
+    auto writeHalf(u32 address, u16 data) -> void;
     auto readWord(u32 address) -> u32;
     auto writeWord(u32 address, u32 data) -> void;
   } isviewer;

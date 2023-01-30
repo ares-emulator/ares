@@ -1,6 +1,6 @@
 //Disk Drive
 
-struct DD : Memory::IO<DD> {
+struct DD : Memory::PI<DD> {
   Node::Object obj;
   Node::Port port;
   Node::Peripheral node;
@@ -65,6 +65,8 @@ struct DD : Memory::IO<DD> {
   auto rtcTickSecond() -> void;
 
   //io.cpp
+  auto readHalf(u32 address) -> u16;
+  auto writeHalf(u32 address, u16 data) -> void;
   auto readWord(u32 address) -> u32;
   auto writeWord(u32 address, u32 data) -> void;
 

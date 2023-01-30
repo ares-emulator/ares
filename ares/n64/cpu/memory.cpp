@@ -108,6 +108,20 @@ auto CPU::devirtualize(u64 vaddr) -> maybe<u64> {
   unreachable;
 }
 
+template<u32 Size>
+inline auto CPU::busWrite(u32 address, u64 data) -> void {
+  u32 cycles = 0;
+  bus.write<Size>(address, data, cycles);
+  step(cycles);
+}
+
+template<u32 Size>
+inline auto CPU::busRead(u32 address) -> u64 {
+  u32 cycles = 0; u64 data;
+  data = bus.read<Size>(address, cycles);
+  return step(cycles), data;
+}
+
 auto CPU::fetch(u64 vaddr) -> u32 {
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
@@ -119,7 +133,7 @@ auto CPU::fetch(u64 vaddr) -> u32 {
     if(auto match = tlb.load(vaddr)) {
       if(match.cache) return icache.fetch(match.address & context.physMask, cpu);
       step(1);
-      return bus.read<Word>(match.address & context.physMask);
+      return busRead<Word>(match.address & context.physMask);
     }
     step(1);
     addressException(vaddr);
@@ -130,10 +144,10 @@ auto CPU::fetch(u64 vaddr) -> u32 {
     return icache.fetch(vaddr & 0xffff'ffff, cpu);
   case Context::Segment::Direct:
     step(1);
-    return bus.read<Word>(vaddr & 0x1fff'ffff);
+    return busRead<Word>(vaddr & 0x1fff'ffff);
   case Context::Segment::Direct32:
     step(1);
-    return bus.read<Word>(vaddr & 0xffff'ffff);
+    return busRead<Word>(vaddr & 0xffff'ffff);
   }
 
   unreachable;
@@ -166,7 +180,7 @@ auto CPU::read(u64 vaddr) -> maybe<u64> {
     if(auto match = tlb.load(vaddr)) {
       if(match.cache) return dcache.read<Size>(match.address & context.physMask);
       step(1);
-      return bus.read<Size>(match.address & context.physMask);
+      return busRead<Size>(match.address & context.physMask);
     }
     step(1);
     addressException(vaddr);
@@ -177,10 +191,10 @@ auto CPU::read(u64 vaddr) -> maybe<u64> {
     return dcache.read<Size>(vaddr & 0xffff'ffff);
   case Context::Segment::Direct:
     step(1);
-    return bus.read<Size>(vaddr & 0x1fff'ffff);
+    return busRead<Size>(vaddr & 0x1fff'ffff);
   case Context::Segment::Direct32:
     step(1);
-    return bus.read<Size>(vaddr & 0xffff'ffff);
+    return busRead<Size>(vaddr & 0xffff'ffff);
   }
 
   unreachable;
@@ -213,7 +227,7 @@ auto CPU::write(u64 vaddr, u64 data) -> bool {
     if(auto match = tlb.store(vaddr)) {
       if(match.cache) return dcache.write<Size>(match.address & context.physMask, data), true;
       step(1);
-      return bus.write<Size>(match.address & context.physMask, data), true;
+      return busWrite<Size>(match.address & context.physMask, data), true;
     }
     step(1);
     addressException(vaddr);
@@ -224,10 +238,10 @@ auto CPU::write(u64 vaddr, u64 data) -> bool {
     return dcache.write<Size>(vaddr & 0xffff'ffff, data), true;
   case Context::Segment::Direct:
     step(1);
-    return bus.write<Size>(vaddr & 0x1fff'ffff, data), true;
+    return busWrite<Size>(vaddr & 0x1fff'ffff, data), true;
   case Context::Segment::Direct32:
     step(1);
-    return bus.write<Size>(vaddr & 0xffff'ffff, data), true;
+    return busWrite<Size>(vaddr & 0xffff'ffff, data), true;
   }
 
   unreachable;

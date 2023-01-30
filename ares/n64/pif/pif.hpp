@@ -1,6 +1,6 @@
 //PIF-NUS
 
-struct PIF : Memory::IO<PIF> {
+struct PIF : Memory::SI<PIF> {
   Node::Object node;
   Memory::Readable rom;
   Memory::Writable ram;

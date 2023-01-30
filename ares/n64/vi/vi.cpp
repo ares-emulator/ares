@@ -147,7 +147,7 @@ auto VI::refresh() -> void {
         auto line = screen->pixels(1).data() + (dy - vscan_start) * hscan_len;
         u32 x0 = vi.io.xsubpixel + vi.io.xscale * (dx0 - vi.io.hstart);
         for(i32 dx = dx0; dx < dx1; dx++) {
-          u16 data = bus.read<Half>(address + (x0 >> 10) * 2);
+          u16 data = rdram.ram.read<Half>(address + (x0 >> 10) * 2);
           line[dx - hscan_start] = 1 << 24 | data >> 1;
           x0 += vi.io.xscale;
         }
@@ -165,7 +165,7 @@ auto VI::refresh() -> void {
         auto line = screen->pixels(1).data() + (dy - vscan_start) * hscan_len;
         u32 x0 = vi.io.xsubpixel + vi.io.xscale * (dx0 - vi.io.hstart);
         for(i32 dx = dx0; dx < dx1; dx++) {
-          u32 data = bus.read<Word>(address + (x0 >> 10) * 4);
+          u32 data = rdram.ram.read<Word>(address + (x0 >> 10) * 4);
           line[dx - hscan_start] = data >> 8;
           x0 += vi.io.xscale;
         }

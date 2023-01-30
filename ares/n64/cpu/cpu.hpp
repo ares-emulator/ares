@@ -147,26 +147,26 @@ struct CPU : Thread {
         cpu.step(48);
         valid = 1;
         tag   = address & ~0x0000'0fff;
-        words[0] = bus.read<Word>(tag | index | 0x00);
-        words[1] = bus.read<Word>(tag | index | 0x04);
-        words[2] = bus.read<Word>(tag | index | 0x08);
-        words[3] = bus.read<Word>(tag | index | 0x0c);
-        words[4] = bus.read<Word>(tag | index | 0x10);
-        words[5] = bus.read<Word>(tag | index | 0x14);
-        words[6] = bus.read<Word>(tag | index | 0x18);
-        words[7] = bus.read<Word>(tag | index | 0x1c);
+        words[0] = cpu.busRead<Word>(tag | index | 0x00);
+        words[1] = cpu.busRead<Word>(tag | index | 0x04);
+        words[2] = cpu.busRead<Word>(tag | index | 0x08);
+        words[3] = cpu.busRead<Word>(tag | index | 0x0c);
+        words[4] = cpu.busRead<Word>(tag | index | 0x10);
+        words[5] = cpu.busRead<Word>(tag | index | 0x14);
+        words[6] = cpu.busRead<Word>(tag | index | 0x18);
+        words[7] = cpu.busRead<Word>(tag | index | 0x1c);
       }
 
       auto writeBack(CPU& cpu) -> void {
         cpu.step(48);
-        bus.write<Word>(tag | index | 0x00, words[0]);
-        bus.write<Word>(tag | index | 0x04, words[1]);
-        bus.write<Word>(tag | index | 0x08, words[2]);
-        bus.write<Word>(tag | index | 0x0c, words[3]);
-        bus.write<Word>(tag | index | 0x10, words[4]);
-        bus.write<Word>(tag | index | 0x14, words[5]);
-        bus.write<Word>(tag | index | 0x18, words[6]);
-        bus.write<Word>(tag | index | 0x1c, words[7]);
+        cpu.busWrite<Word>(tag | index | 0x00, words[0]);
+        cpu.busWrite<Word>(tag | index | 0x04, words[1]);
+        cpu.busWrite<Word>(tag | index | 0x08, words[2]);
+        cpu.busWrite<Word>(tag | index | 0x0c, words[3]);
+        cpu.busWrite<Word>(tag | index | 0x10, words[4]);
+        cpu.busWrite<Word>(tag | index | 0x14, words[5]);
+        cpu.busWrite<Word>(tag | index | 0x18, words[6]);
+        cpu.busWrite<Word>(tag | index | 0x1c, words[7]);
       }
 
       auto read(u32 address) const -> u32 { return words[address >> 2 & 7]; }
@@ -260,6 +260,8 @@ struct CPU : Thread {
   auto segment(u64 vaddr) -> Context::Segment;
   auto devirtualize(u64 vaddr) -> maybe<u64>;
   auto fetch(u64 vaddr) -> u32;
+  template<u32 Size> auto busWrite(u32 address, u64 data) -> void;
+  template<u32 Size> auto busRead(u32 address) -> u64;
   template<u32 Size> auto read(u64 vaddr) -> maybe<u64>;
   template<u32 Size> auto write(u64 vaddr, u64 data) -> bool;
   auto addressException(u64 vaddr) -> void;
