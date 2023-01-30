@@ -1,10 +1,9 @@
-auto Cartridge::ISViewer::readWord(u32 address) -> u32 {
+auto Cartridge::ISViewer::readHalf(u32 address) -> u16 {
   address = (address & 0xffff);
-  u32 data = ram.read<Word>(address);
-  return data;
+  return ram.read<Half>(address);
 }
 
-auto Cartridge::ISViewer::writeWord(u32 address, u32 data) -> void {
+auto Cartridge::ISViewer::writeHalf(u32 address, u16 data) -> void {
   address = (address & 0xffff);
 
   if(address == 0x14) {
@@ -17,12 +16,24 @@ auto Cartridge::ISViewer::writeWord(u32 address, u32 data) -> void {
     // In order to satisfy both libraries, we assume it behaves as libdragon
     // expects, and by forcing the write to never hit ram, libultra remains
     // functional.
-    for(auto address : range(u16(data))) {
+    for(auto address : range(data)) {
       char c = ram.read<Byte>(0x20 + address);
       fputc(c, stdout);
     }
     return;
   }
 
-  ram.write<Word>(address, data);
+  ram.write<Half>(address, data);
 }
+
+auto Cartridge::ISViewer::readWord(u32 address) -> u32 {
+  address = (address & 0xffff);
+  return ram.read<Word>(address);
+}
+
+auto Cartridge::ISViewer::writeWord(u32 address, u32 data) -> void {
+  address = (address & 0xffff);
+  ram.write<Half>(address+0, data >> 16);
+  ram.write<Word>(address+2, data & 0xffff);
+}
+

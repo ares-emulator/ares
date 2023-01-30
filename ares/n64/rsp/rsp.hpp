@@ -1,6 +1,6 @@
 //Reality Signal Processor
 
-struct RSP : Thread, Memory::IO<RSP> {
+struct RSP : Thread, Memory::RCP<RSP> {
   Node::Object node;
   Memory::Writable dmem;
   Memory::Writable imem;
@@ -47,8 +47,8 @@ struct RSP : Thread, Memory::IO<RSP> {
   auto dmaTransferStep() -> void;
 
   //io.cpp
-  auto readWord(u32 address) -> u32;
-  auto writeWord(u32 address, u32 data) -> void;
+  auto readWord(u32 address, u32& cycles) -> u32;
+  auto writeWord(u32 address, u32 data, u32& cycles) -> void;
   auto ioRead(u32 address) -> u32;
   auto ioWrite(u32 address, u32 data) -> void;
 
@@ -75,13 +75,13 @@ struct RSP : Thread, Memory::IO<RSP> {
     } busy, full;
   } dma;
 
-  struct Status : Memory::IO<Status> {
+  struct Status : Memory::RCP<Status> {
     RSP& self;
     Status(RSP& self) : self(self) {}
 
     //io.cpp
-    auto readWord(u32 address) -> u32;
-    auto writeWord(u32 address, u32 data) -> void;
+    auto readWord(u32 address, u32& cycles) -> u32;
+    auto writeWord(u32 address, u32 data, u32& cycles) -> void;
 
     n1 semaphore;
     n1 halted = 1;
