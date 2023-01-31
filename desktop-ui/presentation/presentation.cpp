@@ -268,7 +268,7 @@ auto Presentation::resizeWindow() -> void {
 
   u32 statusHeight = showStatusBarSetting.checked() ? StatusHeight : 0;
   setSize({viewportWidth, viewportHeight + statusHeight});
-  setMinimumSize({16, 16 + statusHeight});
+  setMinimumSize({160, 144 + statusHeight});
 }
 
 auto Presentation::loadEmulators() -> void {
