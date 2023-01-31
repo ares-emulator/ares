@@ -59,14 +59,15 @@ struct AudioWASAPI : AudioDriver {
   auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
-    if(!ready()) return;
-
     self.queue.read = 0;
     self.queue.write = 0;
     self.queue.count = 0;
-    self.audioClient->Stop();
-    self.audioClient->Reset();
-    self.audioClient->Start();
+
+    if(self.audioClient) {
+      self.audioClient->Stop();
+      self.audioClient->Reset();
+      self.audioClient->Start();
+    }
   }
 
   auto output(const f64 samples[]) -> void override {
