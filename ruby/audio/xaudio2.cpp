@@ -41,16 +41,16 @@ struct AudioXAudio2 : AudioDriver, public IXAudio2VoiceCallback {
   auto setLatency(u32 latency) -> bool override { return initialize(); }
 
   auto clear() -> void override {
-    if(!ready()) return;
-
-    self.sourceVoice->Stop(0);
-    self.sourceVoice->FlushSourceBuffers();  //calls OnBufferEnd for all currently submitted buffers
+    if(self.sourceVoice) {
+      self.sourceVoice->Stop(0);
+      self.sourceVoice->FlushSourceBuffers();  //calls OnBufferEnd for all currently submitted buffers
+    }
 
     self.index = 0;
     self.queue = 0;
     for(u32 n : range(Buffers)) self.buffers[n].fill();
 
-    self.sourceVoice->Start(0);
+    if(self.sourceVoice) self.sourceVoice->Start(0);
   }
 
   auto level() -> f64 override {
