@@ -3,10 +3,15 @@ auto Cartridge::ISViewer::readHalf(u32 address) -> u16 {
   return ram.read<Half>(address);
 }
 
+auto Cartridge::ISViewer::readWord(u32 address) -> u32 {
+  address = (address & 0xffff);
+  return ram.read<Word>(address);
+}
+
 auto Cartridge::ISViewer::writeHalf(u32 address, u16 data) -> void {
   address = (address & 0xffff);
 
-  if(address == 0x14) {
+  if(address == 0x16) {
     // HACK: allow printf output to work for both libultra and libdragon
     // Libultra expects a real IS-Viewer device and treats this address as a
     // pointer to the end of the buffer, reading the current value, writing N
@@ -26,14 +31,9 @@ auto Cartridge::ISViewer::writeHalf(u32 address, u16 data) -> void {
   ram.write<Half>(address, data);
 }
 
-auto Cartridge::ISViewer::readWord(u32 address) -> u32 {
-  address = (address & 0xffff);
-  return ram.read<Word>(address);
-}
-
 auto Cartridge::ISViewer::writeWord(u32 address, u32 data) -> void {
   address = (address & 0xffff);
-  ram.write<Half>(address+0, data >> 16);
-  ram.write<Word>(address+2, data & 0xffff);
+  writeHalf(address+0, data >> 16);
+  writeHalf(address+2, data & 0xffff);
 }
 
