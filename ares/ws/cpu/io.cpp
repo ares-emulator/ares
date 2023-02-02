@@ -117,8 +117,8 @@ auto CPU::writeIO(n16 address, n8 data) -> void {
     break;
 
   case 0x00b6:  //INT_ACK
-    //acknowledge only edge-sensitive interrupts
-    io.interruptStatus &= ~(data & 0b11110010);
+    //do not acknowledge level-sensitive interrupts *unless* they are disabled
+    io.interruptStatus &= ~(data & (0b11110010 | ~io.interruptEnable));
     break;
 
   case 0x00b7:  //NMI

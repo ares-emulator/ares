@@ -2,7 +2,6 @@ auto CPU::poll() -> void {
   if(!state.poll) return;
 
   for(auto id : reverse(range(8))) {
-    if(!io.interruptEnable.bit(id)) continue;
     if(!io.interruptStatus.bit(id)) continue;
 
     if(interrupt((io.interruptBase & ~7) | id)) {
