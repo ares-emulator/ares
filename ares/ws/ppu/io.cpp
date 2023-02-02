@@ -294,8 +294,6 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
     break;
 
   case 0x00a2:  //TMR_CTRL
-    if(!htimer.enable && data.bit(0)) htimer.counter = htimer.frequency;
-    if(!vtimer.enable && data.bit(1)) vtimer.counter = vtimer.frequency;
     htimer.enable = data.bit(0);
     htimer.repeat = data.bit(1);
     vtimer.enable = data.bit(2);
