@@ -198,13 +198,13 @@ auto Gamepad::read() -> n32 {
   if(length <= 85.0) {
     auto lengthAbsoluteX = abs(ax);
     auto lengthAbsoluteY = abs(ay);
-    if(lengthAbsoluteX < 7.0) {
+    if(lengthAbsoluteX <= 7.0) {
       lengthAbsoluteX = 0.0;
     } else {
       lengthAbsoluteX = (lengthAbsoluteX - 7.0) * 85.0 / (85.0 - 7.0) / lengthAbsoluteX;
     }
     ax *= lengthAbsoluteX;
-    if(lengthAbsoluteY < 7.0) {
+    if(lengthAbsoluteY <= 7.0) {
       lengthAbsoluteY = 0.0;
     } else {
       lengthAbsoluteY = (lengthAbsoluteY - 7.0) * 85.0 / (85.0 - 7.0) / lengthAbsoluteY;
