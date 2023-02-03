@@ -152,21 +152,21 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NHF") {eeprom = 512;}                                        //64 Hanafuda: Tenshi no Yakusoku
   if(id == "NOS") {eeprom = 512; mempak = true; rumble = true;}          //64 Oozumou
   if(id == "NTC") {eeprom = 512; rumble = true;}                         //64 Trump Collection
-  if(id == "NER") {eeprom = 512; rumble = true;}                         //AeroFighters Assault
+  if(id == "NER") {eeprom = 512; rumble = true;}                         //Aero Fighters Assault [Sonic Wings Assault (J)]
   if(id == "NAG") {eeprom = 512; mempak = true;}                         //AeroGauge
   if(id == "NAB") {eeprom = 512; mempak = true; rumble = true;}          //Air Boarder 64
   if(id == "NS3") {eeprom = 512; mempak = true;}                         //AI Shougi 3
   if(id == "NTN") {eeprom = 512;}                                        //All Star Tennis '99
   if(id == "NBN") {eeprom = 512; mempak = true;}                         //Bakuretsu Muteki Bangaioh
-  if(id == "NBK") {eeprom = 512; rumble = true;}                         //Banjo-Kazooie
-  if(id == "NFH") {eeprom = 512; rumble = true;}                         //Bass Hunter 64
+  if(id == "NBK") {eeprom = 512; rumble = true;}                         //Banjo-Kazooie [Banjo to Kazooie no Daiboken (J)]
+  if(id == "NFH") {eeprom = 512; rumble = true;}                         //In-Fisherman Bass Hunter 64 
   if(id == "NMU") {eeprom = 512; mempak = true; rumble = true;}          //Big Mountain 2000
   if(id == "NBC") {eeprom = 512; mempak = true;}                         //Blast Corps
   if(id == "NBH") {eeprom = 512; rumble = true;}                         //Body Harvest
   if(id == "NHA") {eeprom = 512; mempak = true;}                         //Bomberman 64: Arcade Edition (J)
-  if(id == "NBM") {eeprom = 512; mempak = true;}                         //Bomberman 64
-  if(id == "NBV") {eeprom = 512; mempak = true; rumble = true;}          //Bomberman 64: The Second Attack!
-  if(id == "NBD") {eeprom = 512; rumble = true;}                         //Bomberman Hero
+  if(id == "NBM") {eeprom = 512; mempak = true;}                         //Bomberman 64 [Baku Bomberman (J)]
+  if(id == "NBV") {eeprom = 512; mempak = true; rumble = true;}          //Bomberman 64: The Second Attack! [Baku Bomberman 2 (J)]
+  if(id == "NBD") {eeprom = 512; rumble = true;}                         //Bomberman Hero [Mirian Ojo o Sukue! (J)]
   if(id == "NCT") {eeprom = 512; rumble = true;}                         //Chameleon Twist
   if(id == "NCH") {eeprom = 512; rumble = true;}                         //Chopper Attack
   if(id == "NCG") {eeprom = 512; mempak = true; rumble = true;}          //Choro Q 64 II - Hacha Mecha Grand Prix Race (J)
@@ -182,13 +182,13 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NJM") {eeprom = 512;}                                        //Earthworm Jim 3D
   if(id == "NFW") {eeprom = 512; rumble = true;}                         //F-1 World Grand Prix
   if(id == "NF2") {eeprom = 512; rumble = true;}                         //F-1 World Grand Prix II
-  if(id == "NKA") {eeprom = 512; mempak = true; rumble = true;}          //Fighters Destiny
+  if(id == "NKA") {eeprom = 512; mempak = true; rumble = true;}          //Fighters Destiny [Fighting Cup (J)]
   if(id == "NFG") {eeprom = 512; mempak = true; rumble = true;}          //Fighter Destiny 2
   if(id == "NGL") {eeprom = 512; mempak = true; rumble = true;}          //Getter Love!!
   if(id == "NGV") {eeprom = 512;}                                        //Glover
   if(id == "NGE") {eeprom = 512; rumble = true;}                         //GoldenEye 007
   if(id == "NHP") {eeprom = 512;}                                        //Heiwa Pachinko World 64
-  if(id == "NPG") {eeprom = 512; rumble = true;}                         //Hey You, Pikachu!
+  if(id == "NPG") {eeprom = 512; rumble = true;}                         //Hey You, Pikachu! [Pikachu Genki Dechu (J)]
   if(id == "NIJ") {eeprom = 512; rumble = true;}                         //Indiana Jones and the Infernal Machine
   if(id == "NIC") {eeprom = 512; rumble = true;}                         //Indy Racing 2000
   if(id == "NFY") {eeprom = 512; mempak = true; rumble = true;}          //Kakutou Denshou: F-Cup Maniax
@@ -199,7 +199,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "CLB") {eeprom = 512; rumble = true;}                         //Mario Party (NTSC)
   if(id == "NLB") {eeprom = 512; rumble = true;}                         //Mario Party (PAL)
   if(id == "NMW") {eeprom = 512; rumble = true;}                         //Mario Party 2
-  if(id == "NML") {eeprom = 512; rumble = true;}                         //Mickey's Speedway USA
+  if(id == "NML") {eeprom = 512; rumble = true;}                         //Mickey's Speedway USA [Mickey no Racing Challenge USA (J)]
   if(id == "NTM") {eeprom = 512;}                                        //Mischief Makers [Yuke Yuke!! Trouble Makers (J)]
   if(id == "NMI") {eeprom = 512; rumble = true;}                         //Mission: Impossible
   if(id == "NMG") {eeprom = 512; mempak = true; rumble = true;}          //Monaco Grand Prix [Racing Simulation 2 (G)]
@@ -221,12 +221,11 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NFP") {eeprom = 512; rumble = true;}                         //Star Fox 64 (U)
   if(id == "NS6") {eeprom = 512; rumble = true;}                         //Star Soldier: Vanishing Earth
   if(id == "NNA") {eeprom = 512; rumble = true;}                         //Star Wars Episode I: Battle for Naboo
-  if(id == "NRS") {eeprom = 512; rumble = true;}                         //Star Wars: Rogue Squadron
-  if(id == "NSW") {eeprom = 512;}                                        //Star Wars: Shadows of the Empire
+  if(id == "NRS") {eeprom = 512; rumble = true;}                         //Star Wars: Rogue Squadron [Shutsugeki! Rogue Chuutai (J)]
+  if(id == "NSW") {eeprom = 512;}                                        //Star Wars: Shadows of the Empire [Teikoku no Kage (J)]
   if(id == "NSC") {eeprom = 512;}                                        //Starshot: Space Circus Fever
   if(id == "NSA") {eeprom = 512; rumble = true;}                         //Sonic Wings Assault (J)
   if(id == "NB6") {eeprom = 512; mempak = true;}                         //Super B-Daman: Battle Phoenix 64
-  if(id == "NSM") {eeprom = 512;}                                        //Super Mario 64
   if(id == "NSS") {eeprom = 512; rumble = true;}                         //Super Robot Spirits
   if(id == "NTX") {eeprom = 512; rumble = true;}                         //Taz Express
   if(id == "NT6") {eeprom = 512;}                                        //Tetris 64
@@ -234,28 +233,20 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NTJ") {eeprom = 512; rumble = true;}                         //Tom & Jerry in Fists of Fury
   if(id == "NRC") {eeprom = 512; rumble = true;}                         //Top Gear Overdrive
   if(id == "NTR") {eeprom = 512; mempak = true; rumble = true;}          //Top Gear Rally (J + E)
-  if(id == "NTB") {eeprom = 512; rumble = true;}                         //Transformers: Beast Wars Metals 64
+  if(id == "NTB") {eeprom = 512; rumble = true;}                         //Transformers: Beast Wars Metals 64 (J)
   if(id == "NGU") {eeprom = 512; rumble = true;}                         //Tsumi to Batsu: Hoshi no Keishousha (Sin and Punishment)
   if(id == "NIR") {eeprom = 512; rumble = true;}                         //Utchan Nanchan no Hono no Challenger: Denryuu Ira Ira Bou
   if(id == "NVL") {eeprom = 512; rumble = true;}                         //V-Rally Edition '99
   if(id == "NVY") {eeprom = 512; rumble = true;}                         //V-Rally Edition '99 (J)
-  if(id == "NWR") {eeprom = 512; mempak = true;}                         //Wave Race 64: Kawasaki Jet Ski
   if(id == "NWC") {eeprom = 512; rumble = true;}                         //Wild Choppers
   if(id == "NAD") {eeprom = 512;}                                        //Worms Armageddon (U)
   if(id == "NWU") {eeprom = 512;}                                        //Worms Armageddon (E)
   if(id == "NYK") {eeprom = 512; rumble = true;}                         //Yakouchuu II: Satsujin Kouro
   if(id == "NMZ") {eeprom = 512;}                                        //Zool - Majou Tsukai Densetsu (J)
 
-  //Special case for Japanese version of Wetrix and Dark Rift
-  if(id == "NDK" && region_code == 'J') {eeprom = 512;}                  //Dark Rift aka Space Dynamites
-  if(id == "NWT") { 
-    if(region_code == 'J') {eeprom = 512;}                               //Wetrix (J)
-    else {mempak = true;}                                                //Wetrix (U + E)
-  }                  
-
   //2KB EEPROM
-  if(id == "NB7") {eeprom = 2_KiB; rumble = true;}                       //Banjo-Tooie
-  if(id == "NGT") {eeprom = 2_KiB; mempak = true; rumble = true;}        //City-Tour GP: Zen-Nihon GT Senshuken
+  if(id == "NB7") {eeprom = 2_KiB; rumble = true;}                       //Banjo-Tooie [Banjo to Kazooie no Daiboken 2 (J)]
+  if(id == "NGT") {eeprom = 2_KiB; mempak = true; rumble = true;}        //City Tour GrandPrix - Zen Nihon GT Senshuken
   if(id == "NFU") {eeprom = 2_KiB; rumble = true;}                       //Conker's Bad Fur Day
   if(id == "NCW") {eeprom = 2_KiB; rumble = true;}                       //Cruis'n World
   if(id == "NCZ") {eeprom = 2_KiB; rumble = true;}                       //Custom Robo V2
@@ -266,7 +257,6 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NMX") {eeprom = 2_KiB; mempak = true; rumble = true;}        //Excitebike 64
   if(id == "NGC") {eeprom = 2_KiB; mempak = true; rumble = true;}        //GT 64: Championship Edition
   if(id == "NIM") {eeprom = 2_KiB;}                                      //Ide Yosuke no Mahjong Juku
-  if(id == "NK4") {eeprom = 2_KiB; rumble = true;}                       //Kirby 64: The Crystal Shards
   if(id == "NNB") {eeprom = 2_KiB; mempak = true; rumble = true;}        //Kobe Bryant in NBA Courtside
   if(id == "NMV") {eeprom = 2_KiB; rumble = true;}                       //Mario Party 3
   if(id == "NM8") {eeprom = 2_KiB; rumble = true;}                       //Mario Tennis
@@ -279,19 +269,10 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NEP") {eeprom = 2_KiB; rumble = true;}                       //Star Wars Episode I: Racer
   if(id == "NYS") {eeprom = 2_KiB; rumble = true;}                       //Yoshi's Story
 
-  //Special cases for Japanese versions of Castlevania
-  if(id == "ND3") {
-    if(region_code == 'J') {eeprom = 2_KiB; rumble = true;}              //Akumajou Dracula Mokushiroku (J)
-    else {mempak = true;}                                                //Castlevania
-  }
-  if(id == "ND4") {
-    if(region_code == 'J') {eeprom = 2_KiB; rumble = true;}              //Akumajou Dracula Mokushiroku Gaiden: Legend of Cornell (J)
-    else {mempak = true;}                                                //Castlevania - Legacy of Darkness
-  }
-
   //32KB SRAM
   if(id == "NTE") {sram = 32_KiB; rumble = true;}                        //1080 Snowboarding
   if(id == "NVB") {sram = 32_KiB; rumble = true;}                        //Bass Rush - ECOGEAR PowerWorm Championship (J)
+  if(id == "NB5") {sram = 32_KiB; rumble = true;}                        //Biohazard 2 (J)
   if(id == "CFZ") {sram = 32_KiB; rumble = true;}                        //F-Zero X (J)
   if(id == "NFZ") {sram = 32_KiB; rumble = true;}                        //F-Zero X (U + E)
   if(id == "NSI") {sram = 32_KiB; mempak = true;}                        //Fushigi no Dungeon: Fuurai no Shiren 2
@@ -317,7 +298,6 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NOB") {sram = 32_KiB;}                                       //Ogre Battle 64: Person of Lordly Caliber
   if(id == "CPS") {sram = 32_KiB;}                                       //Pocket Monsters Stadium (J)
   if(id == "NPM") {sram = 32_KiB; mempak = true;}                        //Premier Manager 64
-  if(id == "NB5") {sram = 32_KiB; rumble = true;}                        //Resident Evil 2 (Japan) aka Biohazard 2
   if(id == "NRE") {sram = 32_KiB; rumble = true;}                        //Resident Evil 2
   if(id == "NAL") {sram = 32_KiB; rumble = true;}                        //Super Smash Bros. [Nintendo All-Star! Dairantou Smash Brothers (J)]
   if(id == "NT3") {sram = 32_KiB; mempak = true;}                        //Shin Nihon Pro Wrestling - Toukon Road 2 - The Next Generation (J)
@@ -328,13 +308,6 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NW2") {sram = 32_KiB; rumble = true;}                        //WCW-nWo Revenge
   if(id == "NWX") {sram = 32_KiB; mempak = true; rumble = true;}         //WWF WrestleMania 2000
 
-  //Special case for first Japanese revisions of Kirby 64, overrides earlier entry
-  if(id == "NK4" && region_code == 'J' && revision < 2) {
-    eeprom = 0;
-    sram = 32_KiB;
-    rumble = true;
-  }
-
   //96KB SRAM
   if(id == "CDZ") {sram = 96_KiB; rumble = true;}                        //Dezaemon 3D
 
@@ -342,7 +315,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NCC") {flash = 128_KiB; rumble = true;}                      //Command & Conquer
   if(id == "NDA") {flash = 128_KiB; mempak = true;}                      //Derby Stallion 64
   if(id == "NAF") {flash = 128_KiB; mempak = true;}                      //Doubutsu no Mori
-  if(id == "NJF") {flash = 128_KiB; rumble = true;}                      //Jet Force Gemini
+  if(id == "NJF") {flash = 128_KiB; rumble = true;}                      //Jet Force Gemini [Star Twins (J)]
   if(id == "NKJ") {flash = 128_KiB; rumble = true;}                      //Ken Griffey Jr.'s Slugfest
   if(id == "NZS") {flash = 128_KiB; rumble = true;}                      //Legend of Zelda: Majora's Mask [Zelda no Densetsu - Mujura no Kamen (J)]
   if(id == "NM6") {flash = 128_KiB; rumble = true;}                      //Mega Man 64
@@ -353,14 +326,13 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NPO") {flash = 128_KiB;}                                     //Pokemon Stadium
   if(id == "CP2") {flash = 128_KiB;}                                     //Pocket Monsters Stadium 2 (J)
   if(id == "NP3") {flash = 128_KiB;}                                     //Pokemon Stadium 2 [Pocket Monsters Stadium - Kin Gin (J)]
-  if(id == "NRH") {flash = 128_KiB; rumble = true;}                      //Rockman Dash (J)
+  if(id == "NRH") {flash = 128_KiB; rumble = true;}                      //Rockman Dash - Hagane no Boukenshin (J)
   if(id == "NSQ") {flash = 128_KiB; rumble = true;}                      //StarCraft 64
   if(id == "NT9") {flash = 128_KiB;}                                     //Tigger's Honey Hunt
   if(id == "NW4") {flash = 128_KiB; mempak = true; rumble = true;}       //WWF No Mercy
-  //unlicensed
-  if(id == "NDP") {flash = 128_KiB;}                                     //Dinosaur Planet
+  if(id == "NDP") {flash = 128_KiB;}                                     //Dinosaur Planet (Unlicensed)
 
-  //Mempak
+  //Memory Pak
   if(id == "NO7") {mempak = true; rumble = true;}                        //The World Is Not Enough
   if(id == "NAY") {mempak = true;}                                       //Aidyn Chronicles - The First Mage
   if(id == "NBS") {mempak = true; rumble = true;}                        //All-Star Baseball '99
@@ -390,7 +362,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NBU") {mempak = true;}                                       //Bust-A-Move 2 - Arcade Edition
   if(id == "NCL") {mempak = true; rumble = true;}                        //California Speed
   if(id == "NCD") {mempak = true; rumble = true;}                        //Carmageddon 64
-  if(id == "NTS") {mempak = true;}                                       //Centre Court Tennis
+  if(id == "NTS") {mempak = true;}                                       //Centre Court Tennis [Let's Smash (J)]
   if(id == "NV2") {mempak = true; rumble = true;}                        //Chameleon Twist 2
   if(id == "NPK") {mempak = true;}                                       //Chou Kuukan Night Pro Yakyuu King (J)
   if(id == "NT4") {mempak = true; rumble = true;}                        //CyberTiger
@@ -410,16 +382,15 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NG2") {mempak = true; rumble = true;}                        //Extreme-G XG2
   if(id == "NHG") {mempak = true;}                                       //F-1 Pole Position 64
   if(id == "NFR") {mempak = true; rumble = true;}                        //F-1 Racing Championship
-  if(id == "N8I") {mempak = true;}                                       //FIFA - Road to World Cup 98
+  if(id == "N8I") {mempak = true;}                                       //FIFA - Road to World Cup 98 [World Cup e no Michi (J)]
   if(id == "N9F") {mempak = true;}                                       //FIFA 99
-  if(id == "N7I") {mempak = true;}                                       //FIFA Soccer 64
+  if(id == "N7I") {mempak = true;}                                       //FIFA Soccer 64 [FIFA 64 (EU)]
   if(id == "NFS") {mempak = true;}                                       //Famista 64
   if(id == "NFF") {mempak = true; rumble = true;}                        //Fighting Force 64
   if(id == "NFD") {mempak = true; rumble = true;}                        //Flying Dragon
   if(id == "NFO") {mempak = true; rumble = true;}                        //Forsaken 64
   if(id == "NF9") {mempak = true;}                                       //Fox Sports College Hoops '99
   if(id == "NG5") {mempak = true; rumble = true;}                        //Ganbare Goemon - Neo Momoyama Bakufu no Odori [Mystical Ninja Starring Goemon]
-  if(id == "N3H") {mempak = true; rumble = true;}                        //Ganbare! Nippon! Olympics 2000
   if(id == "NGX") {mempak = true; rumble = true;}                        //Gauntlet Legends
   if(id == "NGD") {mempak = true; rumble = true;}                        //Gauntlet Legends (J)
   if(id == "NX3") {mempak = true; rumble = true;}                        //Gex 3 - Deep Cover Gecko
@@ -435,10 +406,10 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NHG") {mempak = true;}                                       //Human Grand Prix - New Generation 
   if(id == "NHV") {mempak = true; rumble = true;}                        //Hybrid Heaven (U + E)
   if(id == "NHT") {mempak = true; rumble = true;}                        //Hydro Thunder
-  if(id == "NWB") {mempak = true; rumble = true;}                        //Iggy's Reckin' Balls
-  if(id == "NWS") {mempak = true;}                                       //International Superstar Soccer '98
-  if(id == "NIS") {mempak = true; rumble = true;}                        //International Superstar Soccer 2000
-  if(id == "NJP") {mempak = true;}                                       //International Superstar Soccer 64
+  if(id == "NWB") {mempak = true; rumble = true;}                        //Iggy's Reckin' Balls [Iggy-kun no Bura Bura Poyon (J)]
+  if(id == "NWS") {mempak = true;}                                       //International Superstar Soccer '98 [Jikkyo World Soccer - World Cup France '98 (J)]
+  if(id == "NIS") {mempak = true; rumble = true;}                        //International Superstar Soccer 2000 
+  if(id == "NJP") {mempak = true;}                                       //International Superstar Soccer 64 [Jikkyo J-League Perfect Striker (J)]
   if(id == "NDS") {mempak = true;}                                       //J.League Dynamite Soccer 64
   if(id == "NJE") {mempak = true;}                                       //J.League Eleven Beat 1997
   if(id == "NLJ") {mempak = true;}                                       //J.League Live 64
@@ -465,7 +436,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NM4") {mempak = true; rumble = true;}                        //Mortal Kombat 4
   if(id == "NMY") {mempak = true; rumble = true;}                        //Mortal Kombat Mythologies - Sub-Zero
   if(id == "NP9") {mempak = true; rumble = true;}                        //Ms. Pac-Man - Maze Madness
-  if(id == "NH5") {mempak = true;}                                       //Nagano Winter Olympics '98 [Hyper Olympics in Nagano 64 (J)]
+  if(id == "NH5") {mempak = true;}                                       //Nagano Winter Olympics '98 [Hyper Olympics in Nagano (J)]
   if(id == "NNM") {mempak = true;}                                       //Namco Museum 64
   if(id == "N9C") {mempak = true; rumble = true;}                        //Nascar '99
   if(id == "NN2") {mempak = true; rumble = true;}                        //Nascar 2000
@@ -566,27 +537,69 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NTI") {mempak = true; rumble = true;}                        //WWF: Attitude
   if(id == "NWG") {mempak = true;}                                       //Wayne Gretzky's 3D Hockey
   if(id == "NW8") {mempak = true;}                                       //Wayne Gretzky's 3D Hockey '98
-  if(id == "NWD") {mempak = true; rumble = true;}                        //Winback
+  if(id == "NWD") {mempak = true; rumble = true;}                        //Winback - Covert Operations
   if(id == "NWP") {mempak = true; rumble = true;}                        //Wipeout 64
   if(id == "NJ2") {mempak = true;}                                       //Wonder Project J2 - Koruro no Mori no Jozet (J)
   if(id == "N8W") {mempak = true;}                                       //World Cup '98
   if(id == "NWO") {mempak = true; rumble = true;}                        //World Driver Championship
   if(id == "NXF") {mempak = true; rumble = true;}                        //Xena Warrior Princess - The Talisman of Fate
 
-  //Special case for Shindou editions of Super Mario 64 & Wave Race 64
-  if(id == "NSM" && region_code == 'J' && revision == 3) {rumble = true;} //Super Mario 64: Shindou Edition (Rev 3)
-  if(id == "NWR" && region_code == 'J' && revision == 2) {rumble = true;} //Wave Race 64: Kawasaki Jet Ski Shindou Edition (Rev 2)
-
   //Rumble
-  if(id == "NJQ") {rumble = true;}                                       //Batman - Return of the Joker
+  if(id == "NJQ") {rumble = true;}                                       //Batman Beyond - Return of the Joker [Batman of the Future - Return of the Joker (EU)]
   if(id == "NCB") {rumble = true;}                                       //Charlie Blast's Territory
   if(id == "NDF") {rumble = true;}                                       //Dance Dance Revolution - Disney Dancing Museum
   if(id == "NKE") {rumble = true;}                                       //Knife Edge - Nose Gunner
   if(id == "NMT") {rumble = true;}                                       //Magical Tetris Challenge
   if(id == "NM3") {rumble = true;}                                       //Monster Truck Madness 64
-  if(id == "NRG") {rumble = true;}                                       //Rugrats - Scavenger Hunt [Treasure Hunt(E)]
-  if(id == "NOH") {rumble = true;}                                       //Transformers Beast Wars: Transmetals
+  if(id == "NRG") {rumble = true;}                                       //Rugrats - Scavenger Hunt [Treasure Hunt (E)]
+  if(id == "NOH") {rumble = true;}                                       //Transformers Beast Wars - Transmetals
   if(id == "NWF") {rumble = true;}                                       //Wheel of Fortune
+
+  //Special case for save type in International Track & Field
+  if(id == "N3H") { 
+    if(region_code == 'J') {sram = 32_KiB;}                              //Ganbare! Nippon! Olympics 2000
+    else {mempak = true;}                                                //International Track & Field 2000|Summer Games
+    rumble = true;
+  } 
+
+  //Special cases for Japanese versions of Castlevania
+  if(id == "ND3") {
+    if(region_code == 'J') {eeprom = 2_KiB; rumble = true;}              //Akumajou Dracula Mokushiroku (J)
+    else {mempak = true;}                                                //Castlevania
+  }
+  if(id == "ND4") {
+    if(region_code == 'J') {eeprom = 2_KiB; rumble = true;}              //Akumajou Dracula Mokushiroku Gaiden: Legend of Cornell (J)
+    else {mempak = true;}                                                //Castlevania - Legacy of Darkness
+  }
+
+  //Special case for Super Mario 64 Shindou Edition   
+  if(id == "NSM") {
+    if(region_code == 'J' && revision == 3) {rumble = true;}
+    eeprom = 512;                                                        
+  }                                                    
+
+  //Special case for Wave Race 64 Shindou Edition
+  if(id == "NWR") {
+    if(region_code == 'J' && revision == 2) {rumble = true;}
+    eeprom = 512; 
+    mempak = true;
+  }
+
+  //Special case for save type in Kirby 64: The Crystal Shards [Hoshi no Kirby 64 (J)]
+  if(id == "NK4") {                       
+    if(region_code == 'J' && revision < 2) {sram = 32_KiB;}
+    else {eeprom = 2_KiB;}
+    rumble = true;
+  }                                              
+
+  //Special case for save type in Dark Rift [Space Dynamites (J)]
+  if(id == "NDK" && region_code == 'J') {eeprom = 512;}
+  
+  //Special case for save type in Wetrix
+  if(id == "NWT") { 
+    if(region_code == 'J') {eeprom = 512;}
+    else {mempak = true;}
+  }
 
   //Homebrew (libdragon / Everdrive special header flag)
   if(id[1] == 'E' && id[2] == 'D') {
