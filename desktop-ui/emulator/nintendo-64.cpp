@@ -115,13 +115,13 @@ auto Nintendo64::load() -> bool {
       auto peripheral = port->allocate("Gamepad");
       port->connect();
       if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-        if(id == 0 && game->pak->attribute("mempak").boolean()) {
+        if(id == 0 && game->pak->attribute("cpak").boolean()) {
           gamepad = mia::Pak::create("Nintendo 64");
           gamepad->pak->append("save.pak", 32_KiB);
           gamepad->load("save.pak", ".pak", game->location);
           port->allocate("Controller Pak");
           port->connect();
-        } else if(game->pak->attribute("rumble").boolean()) {
+        } else if(game->pak->attribute("rpak").boolean()) {
           port->allocate("Rumble Pak");
           port->connect();
         }
