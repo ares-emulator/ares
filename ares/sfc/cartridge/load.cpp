@@ -52,8 +52,7 @@ auto Cartridge::loadCartridge() -> void {
 
   if(auto fp = pak->read("msu1.data.rom")) loadMSU1();
 
-  debugger.memory.rom->setSize(rom.size());
-  debugger.memory.ram->setSize(ram.size());
+  debugger.load(node);
 }
 
 //

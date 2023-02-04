@@ -11,7 +11,6 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
   node = parent->append<Node::Peripheral>(string{system.name(), " Cartridge"});
-  debugger.load(node);
   return node;
 }
 
