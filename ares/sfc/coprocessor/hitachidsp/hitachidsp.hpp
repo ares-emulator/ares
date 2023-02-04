@@ -8,6 +8,11 @@ struct HitachiDSP : HG51B, Thread {
     auto load(Node::Object) -> void;
     auto instruction() -> void;
 
+    struct Memory {
+      Node::Debugger::Memory rom;
+      Node::Debugger::Memory ram;
+    } memory;
+
     struct Tracer {
       Node::Debugger::Tracer::Instruction instruction;  //todo: HG51B needs to notify HitachiDSP when instructiosn are executed
     } tracer;

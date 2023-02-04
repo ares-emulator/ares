@@ -9,6 +9,12 @@ struct SuperFX : GSU, Thread {
     auto load(Node::Object) -> void;
     auto instruction() -> void;
 
+    struct Memory {
+      Node::Debugger::Memory rom;
+      Node::Debugger::Memory ram;
+      Node::Debugger::Memory bram;
+    } memory;
+
     struct Tracer {
       Node::Debugger::Tracer::Instruction instruction;
     } tracer;

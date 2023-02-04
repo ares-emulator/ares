@@ -9,6 +9,12 @@ struct SA1 : WDC65816, Thread {
     auto instruction() -> void;
     auto interrupt(string_view) -> void;
 
+    struct Memory {
+      Node::Debugger::Memory rom;
+      Node::Debugger::Memory bwram;
+      Node::Debugger::Memory iram;
+    } memory;
+
     struct Tracer {
       Node::Debugger::Tracer::Instruction instruction;
       Node::Debugger::Tracer::Notification interrupt;
