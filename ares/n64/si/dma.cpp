@@ -6,7 +6,7 @@ auto SI::dmaRead() -> void {
 }
 
 auto SI::dmaWrite() -> void {
-  pif.dmaWrite(io.readAddress, io.dramAddress);
+  pif.dmaWrite(io.writeAddress, io.dramAddress);
   io.dmaBusy = 0;
   io.interrupt = 1;
   mi.raise(MI::IRQ::SI);
