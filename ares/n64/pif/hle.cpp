@@ -32,6 +32,7 @@ auto PIF::descramble(n4 *buf, int size) -> void {
 
 auto PIF::step(u32 clocks) -> void {
   Thread::clock += clocks;
+  if(intram.bootTimeout > 0) intram.bootTimeout -= clocks;
 }
 
 auto PIF::ramReadCommand() -> u8 {
@@ -401,7 +402,7 @@ auto PIF::mainHLE() -> void {
       }
     }
     state = WaitTerminateBoot;
-    intram.clockBoot = Thread::clock;
+    intram.bootTimeout = 0xfb00 * 5000;
     return;
   }
 
@@ -412,7 +413,7 @@ auto PIF::mainHLE() -> void {
     return;
   }
 
-  if(state == WaitTerminateBoot && Thread::clock > intram.clockBoot + 0xfb00 * 1000) {
+  if(state == WaitTerminateBoot && intram.bootTimeout <= 0) {
     debug(unusual, "[PIF::main] boot timeout");
     state = Error;
     return;
