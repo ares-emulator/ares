@@ -62,7 +62,6 @@ struct PPU : Thread, IO {
   auto unload() -> void;
 
   auto main() -> void;
-  auto scanline() -> void;
   auto frame() -> void;
   auto step(u32 clocks) -> void;
   auto power() -> void;
