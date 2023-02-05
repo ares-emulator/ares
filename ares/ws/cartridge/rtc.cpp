@@ -149,9 +149,29 @@ auto Cartridge::RTC::write(n8 data) -> void {
 }
 
 auto Cartridge::RTC::power() -> void {
+  Thread::create(3'072'000, {&Cartridge::RTC::main, this});
+  
   command = 0;
   index = 0;
   alarm = 0;
   alarmHour = 0;
   alarmMinute = 0;
 }
+
+auto Cartridge::RTC::reset() -> void {
+  Thread::destroy();
+
+  ram.reset();
+}
+
+auto Cartridge::RTC::main() -> void {
+  tickSecond();
+  checkAlarm();
+  step(3'072'000);
+}
+
+auto Cartridge::RTC::step(u32 clocks) -> void {
+  Thread::step(clocks);
+  synchronize(cpu);
+}
+

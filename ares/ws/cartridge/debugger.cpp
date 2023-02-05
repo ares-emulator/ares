@@ -10,7 +10,7 @@ auto Cartridge::Debugger::load(Node::Object parent) -> void {
     });
   }
 
-  if(self.ram) {
+  if(self.has.sram) {
     memory.ram = parent->append<Node::Debugger::Memory>("Cartridge RAM");
     memory.ram->setSize(self.ram.size());
     memory.ram->setRead([&](u32 address) -> u8 {
@@ -21,7 +21,7 @@ auto Cartridge::Debugger::load(Node::Object parent) -> void {
     });
   }
 
-  if(self.eeprom) {
+  if(self.has.eeprom) {
     memory.eeprom = parent->append<Node::Debugger::Memory>("Cartridge EEPROM");
     memory.eeprom->setSize(self.eeprom.size);
     memory.eeprom->setRead([&](u32 address) -> u8 {
@@ -39,12 +39,12 @@ auto Cartridge::Debugger::load(Node::Object parent) -> void {
 auto Cartridge::Debugger::unload(Node::Object parent) -> void {
   parent->remove(properties.ports);
   parent->remove(memory.rom);
-  parent->remove(memory.ram);
-  parent->remove(memory.eeprom);
+  if(self.has.sram) parent->remove(memory.ram);
+  if(self.has.eeprom) parent->remove(memory.eeprom);
   properties.ports.reset();
   memory.rom.reset();
-  memory.ram.reset();
-  memory.eeprom.reset();
+  if(self.has.sram) memory.ram.reset();
+  if(self.has.eeprom) memory.eeprom.reset();
 }
 
 auto Cartridge::Debugger::ports() -> string {
@@ -56,6 +56,17 @@ auto Cartridge::Debugger::ports() -> string {
   output.append("SRAM Bank: ", hex(self.io.sramBank, 4L), "\n");
 
   // TODO: RTC, GPO
+
+  output.append("SRAM Bank Mode: ", self.io.flashEnable ? "Flash" : "SRAM", "\n");
+  if(self.has.flash) {
+    output.append("Flash Mode: ");
+    u32 iAdded = 0;
+    if(self.flash.idmode) output.append((iAdded++ > 0) ? ", " : "", "ID");
+    if(self.flash.programmode) output.append((iAdded++ > 0) ? ", " : "", "Program");
+    if(self.flash.fastmode) output.append((iAdded++ > 0) ? ", " : "", "Fast");
+    if(self.flash.erasemode) output.append((iAdded++ > 0) ? ", " : "", "Erase");
+    output.append("\n");
+  }
 
   return output;
 }

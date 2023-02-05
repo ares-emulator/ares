@@ -1,15 +1,15 @@
 auto Cartridge::serialize(serializer& s) -> void {
-  Thread::serialize(s);
+  if(has.sram) {
+    s(ram);
+  }
 
-  s(ram);
-  s(eeprom);
-  s(rtc.ram);
+  if(has.eeprom) {
+    s(eeprom);
+  }
 
-  s(rtc.command);
-  s(rtc.index);
-  s(rtc.alarm);
-  s(rtc.alarmHour);
-  s(rtc.alarmMinute);
+  if(has.rtc) {
+    rtc.serialize(s);
+  }
 
   s(io.romBank0);
   s(io.romBank1);
@@ -17,4 +17,25 @@ auto Cartridge::serialize(serializer& s) -> void {
   s(io.sramBank);
   s(io.gpoEnable);
   s(io.gpoData);
+  s(io.flashEnable);
+
+  if(has.flash) {
+    s(rom);
+    s(flash.unlock);
+    s(flash.idmode);
+    s(flash.programmode);
+    s(flash.fastmode);
+    s(flash.erasemode);
+  }
+}
+
+auto Cartridge::RTC::serialize(serializer& s) -> void {
+  Thread::serialize(s);
+  s(ram);
+
+  s(command);
+  s(index);
+  s(alarm);
+  s(alarmHour);
+  s(alarmMinute);
 }

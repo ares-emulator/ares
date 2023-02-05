@@ -1,10 +1,11 @@
-struct Cartridge : Thread, IO {
+struct Cartridge : IO {
   Node::Peripheral node;
   VFS::Pak pak;
-  Memory::Readable<n8> rom;
+  Memory::Writable<n8> rom;
   Memory::Writable<n8> ram;
   EEPROM eeprom;
   struct RTC;
+  struct FLASH;
 
   struct Debugger {
     Cartridge& self;
@@ -25,6 +26,13 @@ struct Cartridge : Thread, IO {
     } memory;
   } debugger{*this};
 
+  struct Has {
+    n1 sram;
+    n1 eeprom;
+    n1 rtc;
+    n1 flash;
+  } has;
+
   auto title() const { return information.title; }
   auto orientation() const { return information.orientation; }
 
@@ -35,9 +43,6 @@ struct Cartridge : Thread, IO {
 
   auto save() -> void;
   auto power() -> void;
-
-  auto main() -> void;
-  auto step(u32 clocks) -> void;
 
   //memory.cpp
   auto readROM(n20 address) -> n8;
@@ -58,8 +63,7 @@ struct Cartridge : Thread, IO {
     string orientation = "Horizontal";
   } information;
 
-  struct RTC {
-    Cartridge& self;
+  struct RTC : Thread {
     Memory::Writable<n8> ram;
 
     //rtc.cpp
@@ -72,6 +76,12 @@ struct Cartridge : Thread, IO {
     auto read() -> n8;
     auto write(n8 data) -> void;
     auto power() -> void;
+    auto reset() -> void;
+    auto main() -> void;
+    auto step(u32 clocks) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer& s) -> void;
 
     n8 command;
     n4 index;
@@ -87,7 +97,22 @@ struct Cartridge : Thread, IO {
     auto hour()    -> n8& { return ram[4]; }
     auto minute()  -> n8& { return ram[5]; }
     auto second()  -> n8& { return ram[6]; }
-  } rtc{*this};
+  } rtc;
+
+  struct FLASH {
+    Cartridge& self;
+
+    //flash.cpp
+    auto read(n19 address, bool words) -> n16;
+    auto write(n19 address, n8 byte) -> void;
+    auto power() -> void;
+
+    n2 unlock;
+    bool idmode;
+    bool programmode;
+    bool fastmode;
+    bool erasemode;
+  } flash{*this};
 
   struct IO {
     n16 romBank2 = 0xffff;
@@ -96,6 +121,7 @@ struct Cartridge : Thread, IO {
     n16 romBank1 = 0xffff;
     n8 gpoEnable;
     n8 gpoData;
+    n1 flashEnable;
   } io;
 };
 

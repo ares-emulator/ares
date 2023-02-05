@@ -71,6 +71,10 @@ auto Cartridge::readIO(n16 address) -> n8 {
     data = io.gpoData;
     break;
 
+  case 0x00ce:  //MEMORY_CTRL
+    data.bit(0) = io.flashEnable;
+    break;
+    
   }
 
   return data;
@@ -89,7 +93,7 @@ auto Cartridge::writeIO(n16 address, n8 data) -> void {
     io.sramBank.bit(0,7) = data.bit(0,7);
     break;
 
-  case 0x00d1:  //BANK_RO01_HI
+  case 0x00d1:  //BANK_SRAM_HI
     io.sramBank.bit(8,15) = data.bit(0,7);
     break;
 
@@ -98,7 +102,7 @@ auto Cartridge::writeIO(n16 address, n8 data) -> void {
     io.romBank0.bit(0,7) = data.bit(0,7);
     break;
 
-  case 0x00d3:  //BANK_RO01_HI
+  case 0x00d3:  //BANK_ROM0_HI
     io.romBank0.bit(8,15) = data.bit(0,7);
     break;
 
@@ -145,6 +149,10 @@ auto Cartridge::writeIO(n16 address, n8 data) -> void {
 
   case 0x00cd:  //GPO_DATA
     io.gpoData = data;
+    break;
+
+  case 0x00ce:  //MEMORY_CTRL
+    io.flashEnable = data.bit(0);
     break;
 
   }
