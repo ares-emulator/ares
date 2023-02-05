@@ -3,6 +3,7 @@ ares.components += sm5k
 ares.objects += ares-n64-memory
 ares.objects += ares-n64-system
 ares.objects += ares-n64-cartridge
+ares.objects += ares-n64-cic
 ares.objects += ares-n64-controller
 ares.objects += ares-n64-dd
 ares.objects += ares-n64-mi
@@ -20,6 +21,7 @@ ares.objects += ares-n64-rdp
 $(object.path)/ares-n64-memory.o:     $(ares.path)/n64/memory/memory.cpp
 $(object.path)/ares-n64-system.o:     $(ares.path)/n64/system/system.cpp
 $(object.path)/ares-n64-cartridge.o:  $(ares.path)/n64/cartridge/cartridge.cpp
+$(object.path)/ares-n64-cic.o:        $(ares.path)/n64/cic/cic.cpp
 $(object.path)/ares-n64-controller.o: $(ares.path)/n64/controller/controller.cpp
 $(object.path)/ares-n64-dd.o:         $(ares.path)/n64/dd/dd.cpp
 $(object.path)/ares-n64-sp.o:         $(ares.path)/n64/sp/sp.cpp

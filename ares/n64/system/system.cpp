@@ -50,7 +50,6 @@ auto System::game() -> string {
 auto System::run() -> void {
   while(!vi.refreshed) cpu.main();
   vi.refreshed = false;
-  pif.run();
 }
 
 auto System::load(Node::System& root, string name) -> bool {
@@ -160,6 +159,7 @@ auto System::power(bool reset) -> void {
   ai.power(reset);
   pi.power(reset);
   pif.power(reset);
+  cic.power(reset);
   ri.power(reset);
   si.power(reset);
   cpu.power(reset);
