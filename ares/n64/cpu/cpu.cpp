@@ -82,6 +82,11 @@ auto CPU::instruction() -> void {
       return exception.interrupt();
     }
   }
+  if (scc.nmiPending) {
+    debugger.nmi();
+    step(1);
+    return exception.nmi();
+  }
 
   if constexpr(Accuracy::CPU::Recompiler) {
     auto address = devirtualize(ipu.pc)(0);

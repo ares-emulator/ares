@@ -51,3 +51,12 @@ auto CPU::Exception::arithmeticOverflow()      -> void { trigger(12); }
 auto CPU::Exception::trap()                    -> void { trigger(13); }
 auto CPU::Exception::floatingPoint()           -> void { trigger(15); }
 auto CPU::Exception::watchAddress()            -> void { trigger(23); }
+
+auto CPU::Exception::nmi() -> void {
+  self.scc.status.vectorLocation = 1;
+  self.scc.status.tlbShutdown = 0;
+  self.scc.status.softReset = 0;
+  self.scc.status.errorLevel = 1;
+  self.scc.epcError = self.ipu.pc;
+  self.ipu.pc = 0xffff'ffff'bfc0'0000;
+}
