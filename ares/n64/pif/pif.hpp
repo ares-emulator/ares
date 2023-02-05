@@ -24,7 +24,7 @@ struct PIF : Thread, Memory::SI<PIF> {
     n8 osInfo[3];
     n8 cpuChecksum[6];
     n8 cicChecksum[6];
-    s64 clockBoot;
+    s32 bootTimeout;
     n8 joyAddress[5];
     struct {
       n1 skip;
