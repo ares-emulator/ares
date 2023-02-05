@@ -7,6 +7,7 @@
 #include <ares/ares.hpp>
 #include <nall/float-env.hpp>
 #include <nall/hashset.hpp>
+#include <nall/queue.hpp>
 #include <nall/recompiler/generic/generic.hpp>
 #include <component/processor/sm5k/sm5k.hpp>
 
@@ -74,6 +75,7 @@ namespace ares::Nintendo64 {
   #include <n64/memory/memory.hpp>
   #include <n64/system/system.hpp>
   #include <n64/cartridge/cartridge.hpp>
+  #include <n64/cic/cic.hpp>
   #include <n64/controller/controller.hpp>
   #include <n64/dd/dd.hpp>
   #include <n64/mi/mi.hpp>
