@@ -354,6 +354,14 @@ auto PIF::mainHLE() -> void {
       state = Error;
       return;
     }
+    if constexpr(Accuracy::PIF::RegionLock) {
+      if(hello.bit(4) != (u32)system.region()) {
+        const char *region[2] = { "NTSC", "PAL" };
+        debug(unusual, "[PIF::main] CIC region mismatch: console is ", region[(u32)system.region()], " but cartridge is ", region[(int)hello.bit(4)]);
+        state = Error;
+        return;
+      }
+    }
 
     n4 buf[6];
     for (auto i: range(6)) buf[i] = cic.read();

@@ -22,4 +22,9 @@ struct Accuracy {
   struct RDRAM {
     static constexpr bool Broadcasting = 0;
   };
+
+  struct PIF {
+    // Emulate a region-locked console
+    static constexpr bool RegionLock = false;
+  };
 };
