@@ -10,6 +10,7 @@ struct CPU : Thread {
     auto instruction() -> void;
     auto exception(u8 code) -> void;
     auto interrupt(u8 mask) -> void;
+    auto nmi() -> void;
     auto tlbWrite(u32 index) -> void;
     auto tlbModification(u64 address) -> void;
     auto tlbLoad(u64 address, u64 physical) -> void;
@@ -298,6 +299,7 @@ struct CPU : Thread {
     auto trap() -> void;
     auto floatingPoint() -> void;
     auto watchAddress() -> void;
+    auto nmi() -> void;
   } exception{*this};
 
   enum Interrupt : u32 {
@@ -596,6 +598,7 @@ struct CPU : Thread {
 
     //other
     n64 latch;
+    n1 nmiPending;
   } scc;
 
   //interpreter-scc.cpp
