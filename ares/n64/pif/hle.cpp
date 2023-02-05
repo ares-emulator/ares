@@ -342,6 +342,11 @@ auto PIF::challenge() -> void {
 auto PIF::mainHLE() -> void {
   step(1024);
 
+  if(likely(state == Run)) {
+    //cicCompare()
+    return;
+  }
+
   if(state == Init) {
     n4 hello = cic.read();
     if (hello.bit(0,1) != 1) {
@@ -422,9 +427,5 @@ auto PIF::mainHLE() -> void {
   if(state == Error) {
     cpu.scc.nmiPending = !cpu.scc.nmiPending;
     return;
-  }
-
-  if(state == Run) {
-    //cicCompare()
   }
 }
