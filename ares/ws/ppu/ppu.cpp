@@ -183,7 +183,13 @@ auto PPU::unload() -> void {
   node.reset();
 }
 
+//vtotal+1 = scanlines per frame
+//vtotal<143 inhibits vblank and repeats the screen image until vcounter=144
+//todo: unknown how votal<143 interferes with vcompare interrupts
 auto PPU::main() -> void {
+  if(io.vcounter == io.vcompare) cpu.raise(CPU::Interrupt::LineCompare);
+  if(htimer.step()) cpu.raise(CPU::Interrupt::HblankTimer);
+
   if(io.vcounter < 144) {
     n8 y = io.vcounter % (io.vtotal + 1);
     screen1.scanline(y);
@@ -199,25 +205,16 @@ auto PPU::main() -> void {
     }
     step((accurate ? 0 : 224) + 32);
   } else if (io.vcounter == 144) {
+    cpu.raise(CPU::Interrupt::Vblank);
+    if(vtimer.step()) cpu.raise(CPU::Interrupt::VblankTimer);
+
     sprite.oamSyncScanline();
   } else {
     step(256);
   }
-  scanline();
-  if(htimer.step()) cpu.raise(CPU::Interrupt::HblankTimer);
-}
 
-//vtotal+1 = scanlines per frame
-//vtotal<143 inhibits vblank and repeats the screen image until vcounter=144
-//todo: unknown how votal<143 interferes with vcompare interrupts
-auto PPU::scanline() -> void {
   io.vcounter++;
   if(io.vcounter >= max(144, io.vtotal + 1)) return frame();
-  if(io.vcounter == io.vcompare) cpu.raise(CPU::Interrupt::LineCompare);
-  if(io.vcounter == 144) {
-    cpu.raise(CPU::Interrupt::Vblank);
-    if(vtimer.step()) cpu.raise(CPU::Interrupt::VblankTimer);
-  }
 }
 
 auto PPU::frame() -> void {
