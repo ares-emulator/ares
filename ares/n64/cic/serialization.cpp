@@ -6,4 +6,5 @@ auto CIC::serialize(serializer& s) -> void {
   s(type);
   s(region);
   s(state);
+  s(challengeAlgo);
 }

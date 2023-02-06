@@ -2,12 +2,14 @@
 struct CIC {
   enum State : u32 { BootRegion, BootSeed, BootChecksum, Run, Challenge, Dead };
   enum Region : u32 { NTSC, PAL };
+  enum ChallengeAlgo : bool { DummyChallenge, RealChallenge };
 
   nall::queue<n4> fifo;
   n8 seed;
   n48 checksum; //ipl2 checksum
   n1 type;
   n1 region;
+  n1 challengeAlgo;
   u32 state;
 
   //cic.cpp
