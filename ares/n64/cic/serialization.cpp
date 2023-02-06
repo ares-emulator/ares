@@ -1,6 +1,6 @@
 
 auto CIC::serialize(serializer& s) -> void {
-  s(fifo);
+  s(fifo.bits);
   s(seed);
   s(checksum);
   s(type);

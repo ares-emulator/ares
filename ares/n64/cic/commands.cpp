@@ -40,17 +40,18 @@ auto CIC::challenge(n4 mem[30]) -> void {
 
 auto CIC::cmdChallenge() -> void {
   if(state == Run) {
-    fifo.write(0xa);
-    fifo.write(0xa);
+    fifo.writeNibble(0xa);
+    fifo.writeNibble(0xa);
     state = Challenge;
   }
-  if(state == Challenge && fifo.size() == 30) {
+  if(state == Challenge && fifo.size() == 30*4) {
     n4 data[30];
-    for (auto i : range(30)) data[i] = fifo.read();
+    for (auto i : range(30)) data[i] = fifo.readNibble();
     challenge(data);
     fifo.write(0); // write 0 bit
-    for (auto i : range(30)) fifo.write(data[i]);
+    for (auto i : range(30)) fifo.writeNibble(data[i]);
     state = Run;
+    printf("CIC challenge complete %d\n", fifo.size());
   }
 }
 

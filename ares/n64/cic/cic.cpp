@@ -3,6 +3,7 @@
 namespace ares::Nintendo64 {
 
 CIC cic;
+#include "io.cpp"
 #include "commands.cpp"
 #include "serialization.cpp"
 
@@ -24,7 +25,7 @@ auto CIC::power(bool reset) -> void {
   if(model == "CIC-NUS-5167") region = NTSC, seed = 0xdd, checksum = 0x083c6c77e0b1ull, type = 1;
   if(model == "CIC-NUS-DDUS") region = NTSC, seed = 0xde, type = 1;
   state = BootRegion;
-  fifo.resize(32);
+  fifo.bits.resize(32*4);
 }
 
 auto CIC::scramble(n4 *buf, int size) -> void {
@@ -33,12 +34,10 @@ auto CIC::scramble(n4 *buf, int size) -> void {
 
 auto CIC::poll() -> void {
   if(state == BootRegion) {
-    n4 val;
-    val.bit(0) = 1;
-    val.bit(1) = 0;
-    val.bit(2) = region == PAL;
-    val.bit(3) = type;
-    fifo.write(val);
+    fifo.write(type);
+    fifo.write(region == PAL);
+    fifo.write(0);
+    fifo.write(1);
     state = BootSeed;
     return;
   }
@@ -52,7 +51,7 @@ auto CIC::poll() -> void {
     buf[4] = seed.bit(4,7);
     buf[5] = seed.bit(0,3);
     for (auto i : range(2)) scramble(buf, 6);
-    for (auto i : range(6)) fifo.write(buf[i]);
+    for (auto i : range(6)) fifo.writeNibble(buf[i]);
     state = BootChecksum;
     return;
   }
@@ -65,31 +64,29 @@ auto CIC::poll() -> void {
     buf[3] = 0x1;  //true random
     for (auto i : range(12)) buf[i+4] = checksum.bit(44-i*4,47-i*4);
     for (auto i : range(4))  scramble(buf, 16);
-    for (auto i : range(16)) fifo.write(buf[i]);
+    for (auto i : range(16)) fifo.writeNibble(buf[i]);
     state = Run;
     return;
   }
-}
 
-auto CIC::write(n4 data) -> void {
-  if(state == Run) {
-    if(data == 0b00) return cmdCompare();
-    if(data == 0b01) return cmdDie();
-    if(data == 0b10) return cmdChallenge();
-    if(data == 0b11) return cmdReset();
+  if(state == Run && fifo.size() >= 2) {
+    n2 cmd;
+    cmd.bit(1) = fifo.read();
+    cmd.bit(0) = fifo.read();
+    if(cmd == 0b00) return cmdCompare();
+    if(cmd == 0b01) return cmdDie();
+    if(cmd == 0b10) return cmdChallenge();
+    if(cmd == 0b11) return cmdReset();
+    return;
   }
+
   if(state == Challenge) {
-    fifo.write(data);
     return cmdChallenge();
   }
-  if(state == Dead) return;
-
-  debug(unusual, "[CIC::write] unexpected write: 0x", hex(data, 2L), " state:", state);
-}
-
-auto CIC::read() -> n4 {
-  if(fifo.empty()) cic.poll();
-  return fifo.read();
+  
+  if(state == Dead) {
+    return;
+  }
 }
 
 }
