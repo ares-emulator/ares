@@ -295,19 +295,19 @@ auto PIF::estimateTiming() -> u32 {
 }
 
 auto PIF::challenge() -> void {
-  cic.write(0b10); //challenge command
-  cic.read(); //ignore timeout value returned by CIC (we simulate instant response)
-  cic.read(); //timeout high nibble
+  cic.writeBit(1); cic.writeBit(0); //challenge command
+  cic.readNibble(); //ignore timeout value returned by CIC (we simulate instant response)
+  cic.readNibble(); //timeout high nibble
   for(u32 address : range(15)) {
     auto data = ram.read<Byte>(0x30 + address);
-    cic.write(data >> 4 & 0xf);
-    cic.write(data >> 0 & 0xf);
+    cic.writeNibble(data >> 4 & 0xf);
+    cic.writeNibble(data >> 0 & 0xf);
   }
-  cic.read(); //ignore start bit
+  cic.readBit(); //ignore start bit
   for(u32 address : range(15)) {
     u8 data = 0;
-    data |= cic.read() << 4;
-    data |= cic.read() << 0;
+    data |= cic.readNibble() << 4;
+    data |= cic.readNibble() << 0;
     ram.write<Byte>(0x30 + address, data);
   }
 }
@@ -321,7 +321,7 @@ auto PIF::mainHLE() -> void {
   }
 
   if(state == Init) {
-    n4 hello = cic.read();
+    n4 hello = cic.readNibble();
     if (hello.bit(0,1) != 1) {
       debug(unusual, "[PIF::main] invalid CIC hello message ", hex(hello, 4L));
       state = Error;
@@ -340,7 +340,7 @@ auto PIF::mainHLE() -> void {
     osinfo.bit(3) = hello.bit(3);   //64dd
 
     n4 buf[6];
-    for (auto i: range(6)) buf[i] = cic.read();
+    for (auto i: range(6)) buf[i] = cic.readNibble();
     for (auto i: range(2)) descramble(buf, 6);
 
     intram.osInfo[0].bit(4,7) = buf[0];
@@ -374,7 +374,7 @@ auto PIF::mainHLE() -> void {
   if(state == WaitCheckChecksum && (ramReadCommand() & 0x40)) {
     if (true) { // only on cold boot
       n4 buf[16];
-      for (auto i: range(16)) buf[i] = cic.read();
+      for (auto i: range(16)) buf[i] = cic.readNibble();
       for (auto i: range(4))  descramble(buf, 16);
       for (auto i: range(6)) {
         intram.cicChecksum[i].bit(4,7) = buf[i*2+4];
