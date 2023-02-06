@@ -6,7 +6,6 @@ struct CIC {
   nall::queue<n4> fifo;
   n8 seed;
   n48 checksum; //ipl2 checksum
-  n1 version;
   n1 type;
   n1 region;
   u32 state;
