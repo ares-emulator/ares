@@ -44,8 +44,8 @@ auto CIC::poll() -> void {
 
   if(state == BootSeed) {
     n4 buf[6];
-    buf[0] = 0xA;  //true random
-    buf[1] = 0x5;  //true random
+    buf[0] = 0xB;
+    buf[1] = 0x5;
     buf[2] = seed.bit(4,7);
     buf[3] = seed.bit(0,3);
     buf[4] = seed.bit(4,7);
