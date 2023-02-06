@@ -294,47 +294,20 @@ auto PIF::estimateTiming() -> u32 {
   return cycles;
 }
 
-//CIC-NUS-6105 anti-piracy challenge/response
 auto PIF::challenge() -> void {
-  static n4 lut[32] = {
-    0x4, 0x7, 0xa, 0x7, 0xe, 0x5, 0xe, 0x1,
-    0xc, 0xf, 0x8, 0xf, 0x6, 0x3, 0x6, 0x9,
-    0x4, 0x1, 0xa, 0x7, 0xe, 0x5, 0xe, 0x1,
-    0xc, 0x9, 0x8, 0x5, 0x6, 0x3, 0xc, 0x9,
-  };
-
-  n4 challenge[30];
-  n4 response[30];
-
-  //15 bytes -> 30 nibbles
+  cic.write(0b10); //challenge command
+  cic.read(); //ignore timeout value returned by CIC (we simulate instant response)
+  cic.read(); //timeout high nibble
   for(u32 address : range(15)) {
     auto data = ram.read<Byte>(0x30 + address);
-    challenge[address << 1 | 0] = data >> 4;
-    challenge[address << 1 | 1] = data >> 0;
+    cic.write(data >> 4 & 0xf);
+    cic.write(data >> 0 & 0xf);
   }
-
-  n4 key = 0xb;
-  n1 sel = 0;
-  for(u32 address : range(30)) {
-    n4 data = key + 5 * challenge[address];
-    response[address] = data;
-    key = lut[sel << 4 | data];
-    n1 mod = data >> 3;
-    n3 mag = data >> 0;
-    if(mod) mag = ~mag;
-    if(mag % 3 != 1) mod = !mod;
-    if(sel) {
-      if(data == 0x1 || data == 0x9) mod = 1;
-      if(data == 0xb || data == 0xe) mod = 0;
-    }
-    sel = mod;
-  }
-
-  //30 nibbles -> 15 bytes
+  cic.read(); //ignore start bit
   for(u32 address : range(15)) {
-    n8 data = 0;
-    data |= response[address << 1 | 0] << 4;
-    data |= response[address << 1 | 1] << 0;
+    u8 data = 0;
+    data |= cic.read() << 4;
+    data |= cic.read() << 0;
     ram.write<Byte>(0x30 + address, data);
   }
 }
@@ -379,7 +352,7 @@ auto PIF::mainHLE() -> void {
 
     intram.osInfo[0].bit(0,3) = osinfo;
     ramWriteCommand(0x00);
-    memSwapSecrets();
+    memSwapSecrets();  //show osinfo+seeds in external memory
     state = WaitLockout;
     return;
   }
@@ -392,7 +365,7 @@ auto PIF::mainHLE() -> void {
   }
 
   if(state == WaitGetChecksum && (ramReadCommand() & 0x20)) {
-    memSwapSecrets();
+    memSwapSecrets();  //hide osinfo+seeds, copy+hide checksum to internal memory 
     ramWriteCommand(ramReadCommand() | 0x80);
     state = WaitCheckChecksum;
     return;
