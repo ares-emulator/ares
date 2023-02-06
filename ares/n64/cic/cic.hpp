@@ -1,6 +1,6 @@
 
 struct CIC {
-  enum State : u32 { BootRegion, BootSeed, BootChecksum, Run };
+  enum State : u32 { BootRegion, BootSeed, BootChecksum, Run, Challenge, Dead };
   enum Region : u32 { NTSC, PAL };
 
   nall::queue<n4> fifo;
@@ -13,9 +13,16 @@ struct CIC {
   //cic.cpp
   auto power(bool reset) -> void;
   auto read() -> n4;
-  auto write(n2 cmd) -> void;
+  auto write(n4 cmd) -> void;
   auto poll() -> void;
   auto scramble(n4 *buf, int size) -> void;
+  
+  //commands.cpp
+  auto cmdCompare() -> void;
+  auto cmdDie() -> void;
+  auto cmdChallenge() -> void;
+  auto cmdReset() -> void;
+  auto challenge(n4 data[30]) -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;

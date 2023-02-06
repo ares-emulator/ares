@@ -3,7 +3,8 @@
 namespace ares::Nintendo64 {
 
 CIC cic;
-
+#include "commands.cpp"
+#include "serialization.cpp"
 
 auto CIC::power(bool reset) -> void {
   string model = cartridge.node ? cartridge.cic() : dd.cic();
@@ -22,7 +23,7 @@ auto CIC::power(bool reset) -> void {
   if(model == "CIC-NUS-5167") region = NTSC, seed = 0xdd, checksum = 0x083c6c77e0b1ull, type = 1;
   if(model == "CIC-NUS-DDUS") region = NTSC, seed = 0xde, type = 1;
   state = BootRegion;
-  fifo.resize(16);
+  fifo.resize(32);
 }
 
 auto CIC::scramble(n4 *buf, int size) -> void {
@@ -67,6 +68,22 @@ auto CIC::poll() -> void {
     state = Run;
     return;
   }
+}
+
+auto CIC::write(n4 data) -> void {
+  if(state == Run) {
+    if(data == 0b00) return cmdCompare();
+    if(data == 0b01) return cmdDie();
+    if(data == 0b10) return cmdChallenge();
+    if(data == 0b11) return cmdReset();
+  }
+  if(state == Challenge) {
+    fifo.write(data);
+    return cmdChallenge();
+  }
+  if(state == Dead) return;
+
+  debug(unusual, "[CIC::write] unexpected write: 0x", hex(data, 2L), " state:", state);
 }
 
 auto CIC::read() -> n4 {
