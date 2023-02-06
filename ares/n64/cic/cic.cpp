@@ -29,7 +29,7 @@ auto CIC::power(bool reset) -> void {
 }
 
 auto CIC::scramble(n4 *buf, int size) -> void {
-  for(int i : range(size)) buf[i] += buf[i-1] + 1;
+  for(int i : range(1,size)) buf[i] += buf[i-1] + 1;
 }
 
 auto CIC::poll() -> void {
