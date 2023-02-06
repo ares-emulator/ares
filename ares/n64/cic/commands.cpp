@@ -3,28 +3,38 @@ auto CIC::cmdCompare() -> void {
 }
 
 auto CIC::challenge(n4 mem[30]) -> void {
-  static n4 lut[32] = {
-    0x4, 0x7, 0xa, 0x7, 0xe, 0x5, 0xe, 0x1,
-    0xc, 0xf, 0x8, 0xf, 0x6, 0x3, 0x6, 0x9,
-    0x4, 0x1, 0xa, 0x7, 0xe, 0x5, 0xe, 0x1,
-    0xc, 0x9, 0x8, 0x5, 0x6, 0x3, 0xc, 0x9,
-  };
+  if(challengeAlgo == DummyChallenge) {
+    for(u32 address : range(30))
+      mem[address] = ~mem[address];
+    return;
+  }
 
-  n4 key = 0xb;
-  n1 sel = 0;
-  for(u32 address : range(30)) {
-    n4 data = key + 5 * mem[address];
-    mem[address] = data;
-    key = lut[sel << 4 | data];
-    n1 mod = data >> 3;
-    n3 mag = data >> 0;
-    if(mod) mag = ~mag;
-    if(mag % 3 != 1) mod = !mod;
-    if(sel) {
-      if(data == 0x1 || data == 0x9) mod = 1;
-      if(data == 0xb || data == 0xe) mod = 0;
+  //CIC-NUS-6105 anti-piracy challenge
+  if(challengeAlgo == RealChallenge) {
+    static n4 lut[32] = {
+      0x4, 0x7, 0xa, 0x7, 0xe, 0x5, 0xe, 0x1,
+      0xc, 0xf, 0x8, 0xf, 0x6, 0x3, 0x6, 0x9,
+      0x4, 0x1, 0xa, 0x7, 0xe, 0x5, 0xe, 0x1,
+      0xc, 0x9, 0x8, 0x5, 0x6, 0x3, 0xc, 0x9,
+    };
+
+    n4 key = 0xb;
+    n1 sel = 0;
+    for(u32 address : range(30)) {
+      n4 data = key + 5 * mem[address];
+      mem[address] = data;
+      key = lut[sel << 4 | data];
+      n1 mod = data >> 3;
+      n3 mag = data >> 0;
+      if(mod) mag = ~mag;
+      if(mag % 3 != 1) mod = !mod;
+      if(sel) {
+        if(data == 0x1 || data == 0x9) mod = 1;
+        if(data == 0xb || data == 0xe) mod = 0;
+      }
+      sel = mod;
     }
-    sel = mod;
+    return;
   }
 }
 
