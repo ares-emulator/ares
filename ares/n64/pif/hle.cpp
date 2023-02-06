@@ -313,7 +313,7 @@ auto PIF::challenge() -> void {
 }
 
 auto PIF::mainHLE() -> void {
-  step(1024);
+  step(10240*8);
 
   if(likely(state == Run)) {
     //cicCompare()
