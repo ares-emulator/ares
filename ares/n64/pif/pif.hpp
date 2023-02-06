@@ -30,6 +30,8 @@ struct PIF : Thread, Memory::SI<PIF> {
       n1 skip;
       n1 reset;
     } joyStatus[5];
+
+    auto serialize(serializer& s) -> void;
   } intram;
 
   //pif.cpp
