@@ -4,12 +4,13 @@ namespace ares::Nintendo64 {
 
 CIC cic;
 
+
 auto CIC::power(bool reset) -> void {
   string model = cartridge.node ? cartridge.cic() : dd.cic();
-  if(model == "CIC-NUS-6101") region = NTSC, seed = 0x3f, checksum = 0x45cc73ee317aull, version = 1;
+  if(model == "CIC-NUS-6101") region = NTSC, seed = 0x3f, checksum = 0x45cc73ee317aull;
   if(model == "CIC-NUS-6102") region = NTSC, seed = 0x3f, checksum = 0xa536c0f1d859ull;
   if(model == "CIC-NUS-7101") region = PAL,  seed = 0x3f, checksum = 0xa536c0f1d859ull;
-  if(model == "CIC-NUS-7102") region = PAL,  seed = 0x3f, checksum = 0x44160ec5d9afull, version = 1;
+  if(model == "CIC-NUS-7102") region = PAL,  seed = 0x3f, checksum = 0x44160ec5d9afull;
   if(model == "CIC-NUS-6103") region = NTSC, seed = 0x78, checksum = 0x586fd4709867ull;
   if(model == "CIC-NUS-7103") region = PAL,  seed = 0x78, checksum = 0x586fd4709867ull;
   if(model == "CIC-NUS-6105") region = NTSC, seed = 0x91, checksum = 0x8618a45bc2d3ull;
@@ -18,6 +19,7 @@ auto CIC::power(bool reset) -> void {
   if(model == "CIC-NUS-7106") region = PAL,  seed = 0x85, checksum = 0x2bbad4e6eb74ull;
   if(model == "CIC-NUS-8303") region = NTSC, seed = 0xdd, type = 1;
   if(model == "CIC-NUS-8401") region = NTSC, seed = 0xdd, type = 1;
+  if(model == "CIC-NUS-5167") region = NTSC, seed = 0xdd, checksum = 0x083c6c77e0b1ull, type = 1;
   if(model == "CIC-NUS-DDUS") region = NTSC, seed = 0xde, type = 1;
   state = BootRegion;
   fifo.resize(16);

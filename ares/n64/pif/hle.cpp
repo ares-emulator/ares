@@ -355,13 +355,16 @@ auto PIF::mainHLE() -> void {
       return;
     }
     if constexpr(Accuracy::PIF::RegionLock) {
-      if(hello.bit(4) != (u32)system.region()) {
+      if(hello.bit(2) != (u32)system.region()) {
         const char *region[2] = { "NTSC", "PAL" };
         debug(unusual, "[PIF::main] CIC region mismatch: console is ", region[(u32)system.region()], " but cartridge is ", region[(int)hello.bit(4)]);
         state = Error;
         return;
       }
     }
+    n4 osinfo = 0;
+    osinfo.bit(2) = 1;              //"version" bit (unknown, always set)
+    osinfo.bit(3) = hello.bit(3);   //64dd
 
     n4 buf[6];
     for (auto i: range(6)) buf[i] = cic.read();
@@ -374,7 +377,7 @@ auto PIF::mainHLE() -> void {
     intram.osInfo[2].bit(4,7) = buf[4];
     intram.osInfo[2].bit(0,3) = buf[5];
 
-    intram.osInfo[0].bit(0,3) = hello;
+    intram.osInfo[0].bit(0,3) = osinfo;
     ramWriteCommand(0x00);
     memSwapSecrets();
     state = WaitLockout;
@@ -404,6 +407,7 @@ auto PIF::mainHLE() -> void {
         intram.cicChecksum[i].bit(4,7) = buf[i*2+4];
         intram.cicChecksum[i].bit(0,3) = buf[i*2+5];
       }
+      intram.osInfo[0].bit(1) = 1;  //warm boot (NMI) flag (ready in case a reset is made in the future)
     }
     for (auto i: range(6)) {
       u8 data = intram.cpuChecksum[i];
