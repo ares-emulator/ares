@@ -20,6 +20,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define NOMINMAX
 #include "rdp_renderer.hpp"
 #include "rdp_device.hpp"
 #include "logging.hpp"
@@ -27,6 +28,7 @@
 #include "luts.hpp"
 #include "timer.hpp"
 #include <limits>
+#include <stdlib.h>
 #ifdef PARALLEL_RDP_SHADER_DIR
 #include "global_managers.hpp"
 #include "os_filesystem.hpp"
@@ -156,9 +158,9 @@ bool Renderer::init_caps()
 
 	bool allow_small_types = true;
 	bool forces_small_types = false;
-	if (const char *small = getenv("PARALLEL_RDP_SMALL_TYPES"))
+	if (const char *small_type = getenv("PARALLEL_RDP_SMALL_TYPES"))
 	{
-		allow_small_types = strtol(small, nullptr, 0) > 0;
+		allow_small_types = strtol(small_type, nullptr, 0) > 0;
 		forces_small_types = true;
 		LOGI("Allow small types = %d.\n", int(allow_small_types));
 	}

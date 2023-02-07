@@ -1,7 +1,7 @@
 # For use in standalone implementations.
 
 PARALLEL_RDP_CFLAGS :=
-PARALLEL_RDP_CXXFLAGS := -DGRANITE_VULKAN_MT
+PARALLEL_RDP_CXXFLAGS :=
 
 PARALLEL_RDP_SOURCES_CXX := \
         $(wildcard $(PARALLEL_RDP_IMPLEMENTATION)/parallel-rdp/*.cpp) \

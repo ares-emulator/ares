@@ -55,7 +55,7 @@ bool Context::init_instance_and_device(const char **instance_ext, uint32_t insta
 
 	owned_instance = true;
 	owned_device = true;
-	if (!create_instance(instance_ext, instance_ext_count))
+	if (!create_instance(instance_ext, instance_ext_count, flags))
 	{
 		destroy();
 		LOGE("Failed to create Vulkan instance.\n");
@@ -176,7 +176,7 @@ bool Context::init_device_from_instance(VkInstance instance_, VkPhysicalDevice g
 	owned_instance = false;
 	owned_device = true;
 
-	if (!create_instance(nullptr, 0))
+	if (!create_instance(nullptr, 0, flags))
 		return false;
 
 	if (!create_device(gpu_, surface, required_device_extensions, num_required_device_extensions, required_features, flags))
@@ -302,7 +302,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkan_messenger_cb(
 }
 #endif
 
-bool Context::create_instance(const char **instance_ext, uint32_t instance_ext_count)
+bool Context::create_instance(const char **instance_ext, uint32_t instance_ext_count, ContextCreationFlags flags)
 {
 	uint32_t target_instance_version = user_application_info ? user_application_info->apiVersion : VK_API_VERSION_1_1;
 	if (volkGetInstanceVersion() < target_instance_version)
@@ -363,7 +363,15 @@ bool Context::create_instance(const char **instance_ext, uint32_t instance_ext_c
 		ext.supports_surface_capabilities2 = true;
 	}
 
-	if (has_surface_extension && has_extension(VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME))
+	if (ext.supports_surface_capabilities2 && has_extension(VK_EXT_SURFACE_MAINTENANCE_1_EXTENSION_NAME))
+	{
+		instance_exts.push_back(VK_EXT_SURFACE_MAINTENANCE_1_EXTENSION_NAME);
+		ext.supports_surface_maintenance1 = true;
+	}
+
+	if ((flags & CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT) != 0 &&
+	    has_surface_extension &&
+	    has_extension(VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME))
 	{
 		instance_exts.push_back(VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME);
 		ext.supports_swapchain_colorspace = true;
@@ -718,6 +726,17 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 		enabled_extensions.push_back(required_device_extensions[i]);
 		if (strcmp(required_device_extensions[i], VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
 			requires_swapchain = true;
+		else if (strcmp(required_device_extensions[i], VK_KHR_PRESENT_ID_EXTENSION_NAME) == 0 ||
+		         strcmp(required_device_extensions[i], VK_KHR_PRESENT_WAIT_EXTENSION_NAME) == 0 ||
+		         strcmp(required_device_extensions[i], VK_EXT_HDR_METADATA_EXTENSION_NAME) == 0 ||
+		         strcmp(required_device_extensions[i], VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME) == 0)
+		{
+			flags |= CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT;
+		}
+		else if (strcmp(required_device_extensions[i], VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME) == 0)
+		{
+			flags &= ~CONTEXT_CREATION_DISABLE_BINDLESS_BIT;
+		}
 	}
 
 #if defined(ANDROID) && defined(HAVE_SWAPPY)
@@ -852,7 +871,7 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 	}
 #endif
 
-	VkPhysicalDeviceFeatures2 features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+	pdf2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
 
 	ext.multiview_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES };
 	ext.sampler_ycbcr_conversion_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES };
@@ -867,6 +886,7 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 	ext.present_id_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR };
 	ext.present_wait_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR };
 	ext.performance_query_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PERFORMANCE_QUERY_FEATURES_KHR };
+	ext.swapchain_maintenance1_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT };
 
 	ext.subgroup_size_control_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES_EXT };
 	ext.host_query_reset_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES_EXT };
@@ -880,7 +900,7 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 
 	ext.compute_shader_derivative_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COMPUTE_SHADER_DERIVATIVES_FEATURES_NV };
 
-	void **ppNext = &features.pNext;
+	void **ppNext = &pdf2.pNext;
 
 	*ppNext = &ext.multiview_features;
 	ppNext = &ext.multiview_features.pNext;
@@ -1023,20 +1043,37 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 		enabled_extensions.push_back(VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME);
 	}
 
-	if (requires_swapchain)
+	if ((flags & CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT) != 0 && requires_swapchain)
 	{
-		if (has_extension(VK_KHR_PRESENT_ID_EXTENSION_NAME))
+		bool broken_present_wait = ext.driver_properties.driverID == VK_DRIVER_ID_NVIDIA_PROPRIETARY &&
+		                           VK_VERSION_MAJOR(gpu_props.driverVersion) == 525;
+
+		if (broken_present_wait)
 		{
-			enabled_extensions.push_back(VK_KHR_PRESENT_ID_EXTENSION_NAME);
-			*ppNext = &ext.present_id_features;
-			ppNext = &ext.present_id_features.pNext;
+			LOGW("Disabling present_wait due to broken driver.\n");
+		}
+		else
+		{
+			if (has_extension(VK_KHR_PRESENT_ID_EXTENSION_NAME))
+			{
+				enabled_extensions.push_back(VK_KHR_PRESENT_ID_EXTENSION_NAME);
+				*ppNext = &ext.present_id_features;
+				ppNext = &ext.present_id_features.pNext;
+			}
+
+			if (has_extension(VK_KHR_PRESENT_WAIT_EXTENSION_NAME))
+			{
+				enabled_extensions.push_back(VK_KHR_PRESENT_WAIT_EXTENSION_NAME);
+				*ppNext = &ext.present_wait_features;
+				ppNext = &ext.present_wait_features.pNext;
+			}
 		}
 
-		if (has_extension(VK_KHR_PRESENT_WAIT_EXTENSION_NAME))
+		if (ext.supports_surface_maintenance1 && has_extension(VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME))
 		{
-			enabled_extensions.push_back(VK_KHR_PRESENT_WAIT_EXTENSION_NAME);
-			*ppNext = &ext.present_wait_features;
-			ppNext = &ext.present_wait_features.pNext;
+			enabled_extensions.push_back(VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME);
+			*ppNext = &ext.swapchain_maintenance1_features;
+			ppNext = &ext.swapchain_maintenance1_features.pNext;
 		}
 
 		if (ext.supports_swapchain_colorspace && has_extension(VK_EXT_HDR_METADATA_EXTENSION_NAME))
@@ -1046,63 +1083,63 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 		}
 	}
 
-	vkGetPhysicalDeviceFeatures2(gpu, &features);
+	vkGetPhysicalDeviceFeatures2(gpu, &pdf2);
 
 	// Enable device features we might care about.
 	{
 		VkPhysicalDeviceFeatures enabled_features = *required_features;
-		if (features.features.textureCompressionETC2)
+		if (pdf2.features.textureCompressionETC2)
 			enabled_features.textureCompressionETC2 = VK_TRUE;
-		if (features.features.textureCompressionBC)
+		if (pdf2.features.textureCompressionBC)
 			enabled_features.textureCompressionBC = VK_TRUE;
-		if (features.features.textureCompressionASTC_LDR)
+		if (pdf2.features.textureCompressionASTC_LDR)
 			enabled_features.textureCompressionASTC_LDR = VK_TRUE;
-		if (features.features.fullDrawIndexUint32)
+		if (pdf2.features.fullDrawIndexUint32)
 			enabled_features.fullDrawIndexUint32 = VK_TRUE;
-		if (features.features.imageCubeArray)
+		if (pdf2.features.imageCubeArray)
 			enabled_features.imageCubeArray = VK_TRUE;
-		if (features.features.fillModeNonSolid)
+		if (pdf2.features.fillModeNonSolid)
 			enabled_features.fillModeNonSolid = VK_TRUE;
-		if (features.features.independentBlend)
+		if (pdf2.features.independentBlend)
 			enabled_features.independentBlend = VK_TRUE;
-		if (features.features.sampleRateShading)
+		if (pdf2.features.sampleRateShading)
 			enabled_features.sampleRateShading = VK_TRUE;
-		if (features.features.fragmentStoresAndAtomics)
+		if (pdf2.features.fragmentStoresAndAtomics)
 			enabled_features.fragmentStoresAndAtomics = VK_TRUE;
-		if (features.features.shaderStorageImageExtendedFormats)
+		if (pdf2.features.shaderStorageImageExtendedFormats)
 			enabled_features.shaderStorageImageExtendedFormats = VK_TRUE;
-		if (features.features.shaderStorageImageMultisample)
+		if (pdf2.features.shaderStorageImageMultisample)
 			enabled_features.shaderStorageImageMultisample = VK_TRUE;
-		if (features.features.largePoints)
+		if (pdf2.features.largePoints)
 			enabled_features.largePoints = VK_TRUE;
-		if (features.features.shaderInt16)
+		if (pdf2.features.shaderInt16)
 			enabled_features.shaderInt16 = VK_TRUE;
-		if (features.features.shaderInt64)
+		if (pdf2.features.shaderInt64)
 			enabled_features.shaderInt64 = VK_TRUE;
-		if (features.features.shaderStorageImageWriteWithoutFormat)
+		if (pdf2.features.shaderStorageImageWriteWithoutFormat)
 			enabled_features.shaderStorageImageWriteWithoutFormat = VK_TRUE;
-		if (features.features.shaderStorageImageReadWithoutFormat)
+		if (pdf2.features.shaderStorageImageReadWithoutFormat)
 			enabled_features.shaderStorageImageReadWithoutFormat = VK_TRUE;
 
-		if (features.features.shaderSampledImageArrayDynamicIndexing)
+		if (pdf2.features.shaderSampledImageArrayDynamicIndexing)
 			enabled_features.shaderSampledImageArrayDynamicIndexing = VK_TRUE;
-		if (features.features.shaderUniformBufferArrayDynamicIndexing)
+		if (pdf2.features.shaderUniformBufferArrayDynamicIndexing)
 			enabled_features.shaderUniformBufferArrayDynamicIndexing = VK_TRUE;
-		if (features.features.shaderStorageBufferArrayDynamicIndexing)
+		if (pdf2.features.shaderStorageBufferArrayDynamicIndexing)
 			enabled_features.shaderStorageBufferArrayDynamicIndexing = VK_TRUE;
-		if (features.features.shaderStorageImageArrayDynamicIndexing)
+		if (pdf2.features.shaderStorageImageArrayDynamicIndexing)
 			enabled_features.shaderStorageImageArrayDynamicIndexing = VK_TRUE;
-		if (features.features.shaderImageGatherExtended)
+		if (pdf2.features.shaderImageGatherExtended)
 			enabled_features.shaderImageGatherExtended = VK_TRUE;
 
-		if (features.features.samplerAnisotropy)
+		if (pdf2.features.samplerAnisotropy)
 			enabled_features.samplerAnisotropy = VK_TRUE;
 
-		features.features = enabled_features;
+		pdf2.features = enabled_features;
 		ext.enabled_features = enabled_features;
 	}
 
-	device_info.pNext = &features;
+	device_info.pNext = &pdf2;
 
 	if (ext.supports_external && has_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME))
 	{
@@ -1178,8 +1215,8 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface, const c
 
 #ifdef GRANITE_VULKAN_FOSSILIZE
 	feature_filter.init(user_application_info ? user_application_info->apiVersion : VK_API_VERSION_1_1,
-			enabled_extensions.data(), device_info.enabledExtensionCount,
-			&features, &props);
+	                    enabled_extensions.data(), device_info.enabledExtensionCount,
+	                    &pdf2, &props);
 	feature_filter.set_device_query_interface(this);
 #endif
 

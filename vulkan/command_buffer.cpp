@@ -20,6 +20,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define NOMINMAX
 #include "command_buffer.hpp"
 #include "device.hpp"
 #include "format.hpp"
@@ -64,6 +65,8 @@ CommandBuffer::CommandBuffer(Device *device_, VkCommandBuffer cmd_, VkPipelineCa
 	pipeline_state.subgroup_size_tag =
 			(features.subgroup_size_control_properties.minSubgroupSize << 0) |
 			(features.subgroup_size_control_properties.maxSubgroupSize << 8);
+
+	device->lock.read_only_cache.lock_read();
 }
 
 CommandBuffer::~CommandBuffer()
@@ -72,6 +75,7 @@ CommandBuffer::~CommandBuffer()
 	VK_ASSERT(ibo_block.mapped == nullptr);
 	VK_ASSERT(ubo_block.mapped == nullptr);
 	VK_ASSERT(staging_block.mapped == nullptr);
+	device->lock.read_only_cache.unlock_read();
 }
 
 void CommandBuffer::fill_buffer(const Buffer &dst, uint32_t value)

@@ -20,6 +20,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define NOMINMAX
 #include "video_interface.hpp"
 #include "rdp_renderer.hpp"
 #include "luts.hpp"
