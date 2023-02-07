@@ -117,10 +117,12 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
   if(input[0] == 0x02 && send >= 3 && recv >= 1) {
     //controller pak
     if(ram) {
-      u32 address = (input[1] << 8 | input[2] << 0) & ~31;
+      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
       if(pif.addressCRC(address) == (n5)input[2]) {
         for(u32 index : range(recv - 1)) {
-          output[index] = ram.read<Byte>(address++);
+          if(address <= 0x7FFF) output[index] = ram.read<Byte>(address);
+          else output[index] = 0;
+          address++;
         }
         output[recv - 1] = pif.dataCRC({&output[0], recv - 1});
         valid = 1;
@@ -129,10 +131,13 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
 
     //rumble pak
     if(motor) {
-      u32 address = (input[1] << 8 | input[2] << 0) & ~31;
+      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
       if(pif.addressCRC(address) == (n5)input[2]) {
         for(u32 index : range(recv - 1)) {
-          output[index] = 0x80;
+          if(address <= 0x7FFF) output[index] = 0;
+          else if(address <= 0x8FFF) output[index] = 0x80;
+          else output[index] = motor->enable() ? 0xFF : 0x00;
+          address++;
         }
         output[recv - 1] = pif.dataCRC({&output[0], recv - 1});
         valid = 1;
@@ -144,10 +149,11 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
   if(input[0] == 0x03 && send >= 3 && recv >= 1) {
     //controller pak
     if(ram) {
-      u32 address = (input[1] << 8 | input[2] << 0) & ~31;
+      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
       if(pif.addressCRC(address) == (n5)input[2]) {
         for(u32 index : range(send - 3)) {
-          ram.write<Byte>(address++, input[3 + index]);
+          if(address <= 0x7FFF) ram.write<Byte>(address, input[3 + index]);
+          address++;
         }
         output[0] = pif.dataCRC({&input[3], send - 3});
         valid = 1;
@@ -156,11 +162,11 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
 
     //rumble pak
     if(motor) {
-      u32 address = (input[1] << 8 | input[2] << 0) & ~31;
+      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
       if(pif.addressCRC(address) == (n5)input[2]) {
         output[0] = pif.dataCRC({&input[3], send - 3});
         valid = 1;
-        rumble(input[3] & 1);
+        if(address >= 0xC000) rumble(input[3] & 1);
       }
     }
   }
