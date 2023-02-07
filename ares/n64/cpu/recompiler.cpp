@@ -850,7 +850,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //NOR Rd,Rs,Rt
   case 0x27: {
     or64(reg(0), mem(Rs), mem(Rt));
-    not64(reg(0), reg(0));
+    xor64(reg(0), reg(0), imm(-1));
     mov64(mem(Rd), reg(0));
     return 0;
   }

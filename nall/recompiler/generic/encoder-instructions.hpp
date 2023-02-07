@@ -30,8 +30,6 @@
   OP1(mov64_s16, MOV_S16)
   OP1(mov64_u32, MOV_U32)
   OP1(mov64_s32, MOV_S32)
-  OP1(not32, NOT32)
-  OP1(not64, NOT)
 #undef OP1
 
   //2 operand instructions

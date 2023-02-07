@@ -490,7 +490,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   //NOR Rd,Rs,Rt
   case 0x27: {
     or32(reg(0), mem(Rs), mem(Rt));
-    not32(reg(0), reg(0));
+    xor32(reg(0), reg(0), imm(-1));
     mov32(mem(Rd), reg(0));
     return 0;
   }
