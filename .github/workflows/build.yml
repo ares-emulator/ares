@@ -69,7 +69,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         msystem: ${{ matrix.platform.msystem }}
-        install: make ${{ matrix.platform.install }}
+        install: make ${{ matrix.platform.install }} mingw-w64-${{ matrix.platform.msys-env }}-toolchain mingw-w64-${{ matrix.platform.msys-env }}-SDL2
     - name: Install Linux Dependencies
       if: runner.os == 'Linux'
       run: |
@@ -96,7 +96,7 @@ jobs:
     - name: Install macOS Dependencies
       if: runner.os == 'macOS'
       run: |
-        brew install make ninja
+        brew install make ninja sdl2
         echo "MAKE=gmake" >> $GITHUB_ENV
         pushd thirdparty/MoltenVK
         ./build-moltenvk.sh

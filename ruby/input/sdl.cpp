@@ -1,9 +1,19 @@
 #include <SDL2/SDL.h>
+
+#if defined(PLATFORM_WINDOWS)
+#include "shared/rawinput.cpp"
+#include "keyboard/rawinput.cpp"
+#include "mouse/rawinput.cpp"
+#elif defined(PLATFORM_MACOS)
+#include "keyboard/quartz.cpp"
+#include "joypad/iokit.cpp"
+#else
 #include <sys/ipc.h>
 #include <sys/shm.h>
-
 #include "keyboard/xlib.cpp"
 #include "mouse/xlib.cpp"
+#endif
+
 #include "joypad/sdl.cpp"
 
 struct InputSDL : InputDriver {
@@ -56,7 +66,17 @@ private:
   }
 
   bool isReady = false;
+
+#if defined(PLATFORM_WINDOWS)
+  InputKeyboardRawInput keyboard;
+  InputMouseRawInput mouse;
+#elif defined(PLATFORM_MACOS)
+  InputKeyboardQuartz keyboard;
+  InputJoypadIOKit joypad;
+#else
   InputKeyboardXlib keyboard;
   InputMouseXlib mouse;
+#endif
+
   InputJoypadSDL joypad;
 };
