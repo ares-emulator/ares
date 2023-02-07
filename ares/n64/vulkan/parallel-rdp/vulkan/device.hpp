@@ -49,11 +49,9 @@
 #include "texture_manager.hpp"
 #endif
 
-#ifdef GRANITE_VULKAN_MT
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
-#endif
 
 #ifdef GRANITE_VULKAN_FOSSILIZE
 #include "fossilize.hpp"
@@ -136,6 +134,7 @@ public:
 	explicit BatchComposer(bool split_binary_timeline_semaphores);
 	void add_wait_submissions(WaitSemaphores &sem);
 	void add_wait_semaphore(SemaphoreHolder &sem, VkPipelineStageFlags stage);
+	void add_wait_semaphore(VkSemaphore sem, VkPipelineStageFlags stage);
 	void add_signal_semaphore(VkSemaphore sem, uint64_t count);
 	void add_command_buffer(VkCommandBuffer cmd);
 
@@ -218,6 +217,13 @@ public:
 
 	// Only called by main thread, during setup phase.
 	void set_context(const Context &context);
+
+	// This is asynchronous in nature. See query_initialization_progress().
+	// Kicks off Fossilize and shader manager caching.
+	void begin_shader_caches();
+	// For debug or trivial applications, blocks until all shader cache work is done.
+	void wait_shader_caches();
+
 	void init_swapchain(const std::vector<VkImage> &swapchain_images, unsigned width, unsigned height, VkFormat format,
 	                    VkSurfaceTransformFlagBitsKHR transform, VkImageUsageFlags usage);
 	void set_swapchain_queue_family_support(uint32_t queue_family_support);
@@ -277,7 +283,6 @@ public:
 	                  Fence *fence = nullptr,
 	                  SemaphoreHolder *semaphore = nullptr);
 	void submit_discard(CommandBufferHandle &cmd);
-	void add_wait_semaphore(CommandBuffer::Type type, Semaphore semaphore, VkPipelineStageFlags stages, bool flush);
 	QueueIndices get_physical_queue_type(CommandBuffer::Type queue_type) const;
 	void register_time_interval(std::string tid, QueryPoolHandle start_ts, QueryPoolHandle end_ts,
 	                            std::string tag, std::string extra = {});
@@ -360,6 +365,8 @@ public:
 	//   For timelines, we need to know which handle type to use (OPAQUE or ID3D12Fence).
 	//   Binary external semaphore is always opaque with TEMPORARY semantics.
 
+	void add_wait_semaphore(CommandBuffer::Type type, Semaphore semaphore, VkPipelineStageFlags stages, bool flush);
+
 	// If transfer_ownership is set, Semaphore owns the VkSemaphore. Otherwise, application must
 	// free the semaphore when GPU usage of it is complete.
 	Semaphore request_semaphore(VkSemaphoreTypeKHR type, VkSemaphore handle = VK_NULL_HANDLE, bool transfer_ownership = false);
@@ -369,7 +376,10 @@ public:
 	// See request_timeline_semaphore_as_binary() for how to use timelines.
 	Semaphore request_semaphore_external(VkSemaphoreTypeKHR type,
 	                                     VkExternalSemaphoreHandleTypeFlagBits handle_type);
+
 	// The created semaphore does not hold ownership of the VkSemaphore object.
+	// This is used when we want to wait on or signal an external timeline semaphore at a specific timeline value.
+	// We must collapse the timeline to a "binary" semaphore before we can call submit_empty or add_wait_semaphore().
 	Semaphore request_timeline_semaphore_as_binary(const SemaphoreHolder &holder, uint64_t value);
 
 	// A proxy semaphore which lets us grab a semaphore handle before we signal it.
@@ -406,11 +416,30 @@ public:
 	const Sampler &get_stock_sampler(StockSampler sampler) const;
 
 #ifdef GRANITE_VULKAN_FILESYSTEM
+	// To obtain ShaderManager, ShaderModules must be observed to be complete
+	// in query_initialization_progress().
 	ShaderManager &get_shader_manager();
 	TextureManager &get_texture_manager();
-	void init_shader_manager_cache();
-	void flush_shader_manager_cache();
 #endif
+
+	// Useful for loading screens or otherwise figuring out
+	// when we can start rendering in a stable state.
+	enum class InitializationStage
+	{
+		CacheMaintenance,
+		// When this is done, shader modules and the shader manager have been populated.
+		// At this stage it is safe to use shaders in a configuration where we
+		// don't have SPIRV-Cross and/or shaderc to do on the fly compilation.
+		// For shipping configurations. We can still compile pipelines, but it may stutter.
+		ShaderModules,
+		// When this is done, pipelines should never stutter if Fossilize knows about the pipeline.
+		Pipelines
+	};
+
+	// 0 -> not started
+	// [1, 99] rough percentage of completion
+	// >= 100 done
+	unsigned query_initialization_progress(InitializationStage status) const;
 
 	// For some platforms, the device and queue might be shared, possibly across threads, so need some mechanism to
 	// lock the global device and queue.
@@ -436,16 +465,6 @@ public:
 	// A split version of VkEvent handling which lets us record a wait command before signal is recorded.
 	PipelineEvent begin_signal_event(VkPipelineStageFlags stages);
 
-	// Promotes any read-write cached state to read-only,
-	// which eliminates need to read/write lock.
-	// Can be called at any time as long as there is no
-	// racing access to:
-	// - Command buffer recording which uses pipelines (texture manager is fine).
-	// - request_shader()
-	// - request_program()
-	// Generally, this should be called before you call next_frame_context().
-	void promote_read_write_caches_to_read_only();
-
 	const Context::SystemHandles &get_system_handles() const
 	{
 		return system_handles;
@@ -467,14 +486,11 @@ private:
 	VkPhysicalDevice gpu = VK_NULL_HANDLE;
 	VkDevice device = VK_NULL_HANDLE;
 	const VolkDeviceTable *table = nullptr;
+	const Context *ctx = nullptr;
 	QueueInfo queue_info;
 	unsigned num_thread_indices = 1;
 
-#ifdef GRANITE_VULKAN_MT
 	std::atomic_uint64_t cookie;
-#else
-	uint64_t cookie = 0;
-#endif
 
 	uint64_t allocate_cookie();
 	void bake_program(Program &program);
@@ -505,7 +521,6 @@ private:
 	void init_stock_samplers();
 	void init_stock_sampler(StockSampler sampler, float max_aniso, float lod_bias);
 	void init_timeline_semaphores();
-	void init_bindless();
 	void deinit_timeline_semaphores();
 
 	uint64_t update_wrapped_device_timestamp(uint64_t ts);
@@ -544,11 +559,10 @@ private:
 
 	struct
 	{
-#ifdef GRANITE_VULKAN_MT
 		std::mutex memory_lock;
 		std::mutex lock;
 		std::condition_variable cond;
-#endif
+		Util::RWSpinLock read_only_cache;
 		unsigned counter = 0;
 	} lock;
 
@@ -594,6 +608,7 @@ private:
 		std::vector<VkSemaphore> recycled_semaphores;
 		std::vector<VkEvent> recycled_events;
 		std::vector<VkSemaphore> destroyed_semaphores;
+		std::vector<VkSemaphore> consumed_semaphores;
 		std::vector<ImageHandle> keep_alive_images;
 
 		struct DebugChannel
@@ -696,9 +711,6 @@ private:
 	VulkanCache<ImmutableSampler> immutable_samplers;
 	VulkanCache<ImmutableYcbcrConversion> immutable_ycbcr_conversions;
 
-	DescriptorSetAllocator *bindless_sampled_image_allocator_fp = nullptr;
-	DescriptorSetAllocator *bindless_sampled_image_allocator_integer = nullptr;
-
 	FramebufferAllocator framebuffer_allocator;
 	TransientAttachmentAllocator transient_allocator;
 	VkPipelineCache pipeline_cache = VK_NULL_HANDLE;
@@ -736,6 +748,7 @@ private:
 	void destroy_sampler(VkSampler sampler);
 	void destroy_framebuffer(VkFramebuffer framebuffer);
 	void destroy_semaphore(VkSemaphore semaphore);
+	void consume_semaphore(VkSemaphore semaphore);
 	void recycle_semaphore(VkSemaphore semaphore);
 	void destroy_event(VkEvent event);
 	void free_memory(const DeviceAllocation &alloc);
@@ -751,6 +764,7 @@ private:
 	void destroy_sampler_nolock(VkSampler sampler);
 	void destroy_framebuffer_nolock(VkFramebuffer framebuffer);
 	void destroy_semaphore_nolock(VkSemaphore semaphore);
+	void consume_semaphore_nolock(VkSemaphore semaphore);
 	void recycle_semaphore_nolock(VkSemaphore semaphore);
 	void destroy_event_nolock(VkEvent event);
 	void free_memory_nolock(const DeviceAllocation &alloc);
@@ -790,10 +804,11 @@ private:
 #ifdef GRANITE_VULKAN_FILESYSTEM
 	ShaderManager shader_manager;
 	TextureManager texture_manager;
+	void init_shader_manager_cache();
+	void flush_shader_manager_cache();
 #endif
 
 #ifdef GRANITE_VULKAN_FOSSILIZE
-	Fossilize::StateRecorder state_recorder;
 	bool enqueue_create_sampler(Fossilize::Hash hash, const VkSamplerCreateInfo *create_info, VkSampler *sampler) override;
 	bool enqueue_create_descriptor_set_layout(Fossilize::Hash hash, const VkDescriptorSetLayoutCreateInfo *create_info, VkDescriptorSetLayout *layout) override;
 	bool enqueue_create_pipeline_layout(Fossilize::Hash hash, const VkPipelineLayoutCreateInfo *create_info, VkPipelineLayout *layout) override;
@@ -803,9 +818,10 @@ private:
 	bool enqueue_create_compute_pipeline(Fossilize::Hash hash, const VkComputePipelineCreateInfo *create_info, VkPipeline *pipeline) override;
 	bool enqueue_create_graphics_pipeline(Fossilize::Hash hash, const VkGraphicsPipelineCreateInfo *create_info, VkPipeline *pipeline) override;
 	bool enqueue_create_raytracing_pipeline(Fossilize::Hash hash, const VkRayTracingPipelineCreateInfoKHR *create_info, VkPipeline *pipeline) override;
-	void notify_replayed_resources_for_type() override;
-	VkPipeline fossilize_create_graphics_pipeline(Fossilize::Hash hash, VkGraphicsPipelineCreateInfo &info);
-	VkPipeline fossilize_create_compute_pipeline(Fossilize::Hash hash, VkComputePipelineCreateInfo &info);
+	bool fossilize_replay_graphics_pipeline(Fossilize::Hash hash, VkGraphicsPipelineCreateInfo &info);
+	bool fossilize_replay_compute_pipeline(Fossilize::Hash hash, VkComputePipelineCreateInfo &info);
+
+	void replay_tag_simple(Fossilize::ResourceTag tag);
 
 	void register_graphics_pipeline(Fossilize::Hash hash, const VkGraphicsPipelineCreateInfo &info);
 	void register_compute_pipeline(Fossilize::Hash hash, const VkComputePipelineCreateInfo &info);
@@ -815,19 +831,21 @@ private:
 	void register_shader_module(VkShaderModule module, Fossilize::Hash hash, const VkShaderModuleCreateInfo &info);
 	//void register_sampler(VkSampler sampler, Fossilize::Hash hash, const VkSamplerCreateInfo &info);
 
-	struct
-	{
-		std::unordered_map<VkShaderModule, Shader *> shader_map;
-		std::unordered_map<VkRenderPass, RenderPass *> render_pass_map;
-		const Fossilize::FeatureFilter *feature_filter = nullptr;
-#ifdef GRANITE_VULKAN_MT
-		// Need to forward-declare the type, avoid the ref-counted wrapper.
-		Granite::TaskGroup *pipeline_group = nullptr;
-#endif
-	} replayer_state;
+	struct RecorderState;
+	std::unique_ptr<RecorderState> recorder_state;
 
-	void init_pipeline_state(const Fossilize::FeatureFilter &filter);
+	struct ReplayerState;
+	std::unique_ptr<ReplayerState> replayer_state;
+
+	void promote_write_cache_to_readonly() const;
+	void promote_readonly_db_from_assets() const;
+
+	void init_pipeline_state(const Fossilize::FeatureFilter &filter,
+	                         const VkPhysicalDeviceFeatures2 &pdf2,
+	                         const VkApplicationInfo &application_info);
 	void flush_pipeline_state();
+	void block_until_shader_module_ready();
+	void block_until_pipeline_ready();
 #endif
 
 	ImplementationWorkarounds workarounds;
@@ -838,6 +856,8 @@ private:
 
 	bool allocate_image_memory(DeviceAllocation *allocation, const ImageCreateInfo &info,
 	                           VkImage image, VkImageTiling tiling);
+
+	void promote_read_write_caches_to_read_only();
 };
 
 // A fairly complex helper used for async queue readbacks.

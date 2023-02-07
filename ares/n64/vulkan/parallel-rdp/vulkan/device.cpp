@@ -20,7 +20,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define NOMINMAX
 #include "device.hpp"
+#ifdef GRANITE_VULKAN_FOSSILIZE
+#include "device_fossilize.hpp"
+#endif
 #include "format.hpp"
 #include "timeline_trace_file.hpp"
 #include "type_to_string.hpp"
@@ -39,28 +43,19 @@
 #include "string_helpers.hpp"
 #endif
 
-#ifdef GRANITE_VULKAN_MT
 #include "thread_id.hpp"
 static unsigned get_thread_index()
 {
 	return Util::get_current_thread_index();
 }
-#define LOCK() std::lock_guard<std::mutex> holder__{lock.lock}
-#define LOCK_MEMORY() std::lock_guard<std::mutex> holder__{lock.memory_lock}
+#define LOCK() std::lock_guard<std::mutex> _holder_##__COUNTER__{lock.lock}
+#define LOCK_MEMORY() std::lock_guard<std::mutex> _holder_##__COUNTER__{lock.memory_lock}
+#define LOCK_CACHE() ::Util::RWSpinLockReadHolder _holder_##__COUNTER__{lock.read_only_cache}
 #define DRAIN_FRAME_LOCK() \
-	std::unique_lock<std::mutex> holder__{lock.lock}; \
-	lock.cond.wait(holder__, [&]() { \
+	std::unique_lock<std::mutex> _holder{lock.lock}; \
+	lock.cond.wait(_holder, [&]() { \
 		return lock.counter == 0; \
 	})
-#else
-#define LOCK() ((void)0)
-#define LOCK_MEMORY() ((void)0)
-#define DRAIN_FRAME_LOCK() VK_ASSERT(lock.counter == 0)
-static unsigned get_thread_index()
-{
-	return 0;
-}
-#endif
 
 using namespace Util;
 
@@ -96,9 +91,7 @@ Device::Device()
 	, texture_manager(this)
 #endif
 {
-#ifdef GRANITE_VULKAN_MT
 	cookie.store(0);
-#endif
 }
 
 Semaphore Device::request_semaphore(VkSemaphoreTypeKHR type, VkSemaphore vk_semaphore, bool transfer_ownership)
@@ -386,6 +379,7 @@ Shader *Device::request_shader(const uint32_t *data, size_t size,
                                const ImmutableSamplerBank *sampler_bank)
 {
 	auto hash = Shader::hash(data, size, sampler_bank);
+	LOCK_CACHE();
 	auto *ret = shaders.find(hash);
 	if (!ret)
 		ret = shaders.emplace_yield(hash, hash, this, data, size, layout, sampler_bank);
@@ -394,6 +388,7 @@ Shader *Device::request_shader(const uint32_t *data, size_t size,
 
 Shader *Device::request_shader_by_hash(Hash hash)
 {
+	LOCK_CACHE();
 	return shaders.find(hash);
 }
 
@@ -405,6 +400,7 @@ Program *Device::request_program(Vulkan::Shader *compute_shader)
 	Util::Hasher hasher;
 	hasher.u64(compute_shader->get_hash());
 
+	LOCK_CACHE();
 	auto hash = hasher.get();
 	auto *ret = programs.find(hash);
 	if (!ret)
@@ -433,6 +429,7 @@ Program *Device::request_program(Shader *vertex, Shader *fragment)
 	hasher.u64(fragment->get_hash());
 
 	auto hash = hasher.get();
+	LOCK_CACHE();
 	auto *ret = programs.find(hash);
 
 	if (!ret)
@@ -490,6 +487,7 @@ DescriptorSetAllocator *Device::request_descriptor_set_allocator(const Descripto
 	});
 	auto hash = h.get();
 
+	LOCK_CACHE();
 	auto *ret = descriptor_set_allocators.find(hash);
 	if (!ret)
 		ret = descriptor_set_allocators.emplace_yield(hash, hash, this, layout, stages_for_bindings, immutable_samplers_);
@@ -827,11 +825,10 @@ void Device::init_workarounds()
 
 void Device::set_context(const Context &context)
 {
+	ctx = &context;
 	table = &context.get_device_table();
 
-#ifdef GRANITE_VULKAN_MT
 	register_thread_index(0);
-#endif
 	instance = context.get_instance();
 	gpu = context.get_gpu();
 	device = context.get_device();
@@ -850,7 +847,6 @@ void Device::set_context(const Context &context)
 	init_pipeline_cache();
 
 	init_timeline_semaphores();
-	init_bindless();
 
 	init_frame_contexts(2); // By default, regular double buffer between CPU and GPU.
 
@@ -894,35 +890,38 @@ void Device::set_context(const Context &context)
 			queue_data[i].performance_query_pool.init_device(this, queue_info.family_indices[i]);
 	}
 
-#ifdef GRANITE_VULKAN_FILESYSTEM
-	init_shader_manager_cache();
-#endif
-
-#ifdef GRANITE_VULKAN_FOSSILIZE
-	init_pipeline_state(context.get_feature_filter());
-#endif
-
 	if (system_handles.timeline_trace_file)
 		init_calibrated_timestamps();
 }
 
-void Device::init_bindless()
+void Device::begin_shader_caches()
 {
-	if (!ext.supports_descriptor_indexing)
+	if (!ctx)
+	{
+		LOGE("No context. Forgot Device::set_context()?\n");
 		return;
+	}
 
-	DescriptorSetLayout layout;
-
-	layout.array_size[0] = DescriptorSetLayout::UNSIZED_ARRAY;
-	for (unsigned i = 1; i < VULKAN_NUM_BINDINGS; i++)
-		layout.array_size[i] = 1;
-
-	layout.separate_image_mask = 1;
-	uint32_t stages_for_sets[VULKAN_NUM_BINDINGS] = { VK_SHADER_STAGE_ALL };
-	bindless_sampled_image_allocator_integer = request_descriptor_set_allocator(layout, stages_for_sets, nullptr);
-	layout.fp_mask = 1;
-	bindless_sampled_image_allocator_fp = request_descriptor_set_allocator(layout, stages_for_sets, nullptr);
+#ifdef GRANITE_VULKAN_FOSSILIZE
+	init_pipeline_state(ctx->get_feature_filter(), ctx->get_physical_device_features(),
+	                    ctx->get_application_info());
+#elif defined(GRANITE_VULKAN_FILESYSTEM)
+	// Fossilize init will deal with init_shader_manager_cache()
+	init_shader_manager_cache();
+#endif
 }
+
+#ifndef GRANITE_VULKAN_FOSSILIZE
+unsigned Device::query_initialization_progress(InitializationStage) const
+{
+	// If we don't have Fossilize, everything is considered done up front.
+	return 100;
+}
+
+void Device::wait_shader_caches()
+{
+}
+#endif
 
 void Device::init_timeline_semaphores()
 {
@@ -1271,6 +1270,13 @@ void Device::submit_empty_inner(QueueIndices physical_type, InternalFence *fence
 	collect_wait_semaphores(data, wait_semaphores);
 	composer.add_wait_submissions(wait_semaphores);
 
+	for (auto consume : frame().consumed_semaphores)
+	{
+		composer.add_wait_semaphore(consume, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+		frame().recycled_semaphores.push_back(consume);
+	}
+	frame().consumed_semaphores.clear();
+
 	emit_queue_signals(composer, external_semaphore,
 	                   timeline_semaphore, timeline_value,
 	                   fence, semaphore_count, semaphores);
@@ -1590,6 +1596,19 @@ void Helper::BatchComposer::add_wait_semaphore(SemaphoreHolder &sem, VkPipelineS
 	wait_counts[submit_index].push_back(is_timeline ? sem.get_timeline_value() : 0);
 }
 
+void Helper::BatchComposer::add_wait_semaphore(VkSemaphore sem, VkPipelineStageFlags stage)
+{
+	if (!cmds[submit_index].empty() || !signals[submit_index].empty())
+		begin_batch();
+
+	if (split_binary_timeline_semaphores && has_timeline_semaphore_in_batch(submit_index))
+		begin_batch();
+
+	waits[submit_index].push_back(sem);
+	wait_stages[submit_index].push_back(stage);
+	wait_counts[submit_index].push_back(0);
+}
+
 void Device::emit_queue_signals(Helper::BatchComposer &composer,
                                 SemaphoreHolder *external_semaphore,
                                 VkSemaphore sem, uint64_t timeline, InternalFence *fence,
@@ -1758,6 +1777,13 @@ void Device::submit_queue(QueueIndices physical_type, InternalFence *fence,
 	if (fence)
 		fence->fence = cleared_fence;
 
+	for (auto consume : frame().consumed_semaphores)
+	{
+		composer.add_wait_semaphore(consume, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+		frame().recycled_semaphores.push_back(consume);
+	}
+	frame().consumed_semaphores.clear();
+
 	emit_queue_signals(composer, external_semaphore, timeline_semaphore, timeline_value,
 	                   fence, semaphore_count, semaphores);
 
@@ -1850,7 +1876,9 @@ void Device::end_frame_nolock()
 
 	for (auto &i : queue_flush_order)
 	{
-		if (queue_data[i].need_fence || !frame().submissions[i].empty())
+		if (queue_data[i].need_fence ||
+		    !frame().submissions[i].empty() ||
+		    !frame().consumed_semaphores.empty())
 		{
 			submit_queue(i, &fence);
 			if (fence.fence != VK_NULL_HANDLE)
@@ -1908,9 +1936,7 @@ CommandBufferHandle Device::request_profiled_command_buffer_for_thread(unsigned 
 
 CommandBufferHandle Device::request_command_buffer_nolock(unsigned thread_index, CommandBuffer::Type type, bool profiled)
 {
-#ifndef GRANITE_VULKAN_MT
 	VK_ASSERT(thread_index == 0);
-#endif
 	auto physical_type = get_physical_queue_type(type);
 	auto &pool = frame().cmd_pools[physical_type][thread_index];
 	auto cmd = pool.request_command_buffer();
@@ -2019,13 +2045,13 @@ bool Device::swapchain_touched() const
 
 Device::~Device()
 {
-	wait_idle();
-
-	managers.timestamps.log_simple();
-
 	wsi.acquire.reset();
 	wsi.release.reset();
 	wsi.swapchain.clear();
+
+	wait_idle();
+
+	managers.timestamps.log_simple();
 
 	if (pipeline_cache != VK_NULL_HANDLE)
 	{
@@ -2126,7 +2152,6 @@ void Device::init_swapchain(const std::vector<VkImage> &swapchain_images, unsign
 {
 	DRAIN_FRAME_LOCK();
 	wsi.swapchain.clear();
-	wait_idle_nolock();
 
 	auto info = ImageCreateInfo::render_target(width, height, format);
 	info.usage = usage;
@@ -2256,6 +2281,12 @@ void Device::destroy_semaphore(VkSemaphore semaphore)
 	destroy_semaphore_nolock(semaphore);
 }
 
+void Device::consume_semaphore(VkSemaphore semaphore)
+{
+	LOCK();
+	consume_semaphore_nolock(semaphore);
+}
+
 void Device::recycle_semaphore(VkSemaphore semaphore)
 {
 	LOCK();
@@ -2302,6 +2333,12 @@ void Device::destroy_semaphore_nolock(VkSemaphore semaphore)
 {
 	VK_ASSERT(!exists(frame().destroyed_semaphores, semaphore));
 	frame().destroyed_semaphores.push_back(semaphore);
+}
+
+void Device::consume_semaphore_nolock(VkSemaphore semaphore)
+{
+	VK_ASSERT(!exists(frame().consumed_semaphores, semaphore));
+	frame().consumed_semaphores.push_back(semaphore);
 }
 
 void Device::recycle_semaphore_nolock(VkSemaphore semaphore)
@@ -2415,15 +2452,10 @@ void Device::wait_idle_nolock()
 	framebuffer_allocator.clear();
 	transient_allocator.clear();
 
-#ifdef GRANITE_VULKAN_MT
 	for (auto &allocator : descriptor_set_allocators.get_read_only())
 		allocator.clear();
 	for (auto &allocator : descriptor_set_allocators.get_read_write())
 		allocator.clear();
-#else
-	for (auto &allocator : descriptor_set_allocators)
-		allocator.clear();
-#endif
 
 	for (auto &frame : per_frame)
 	{
@@ -2441,20 +2473,25 @@ void Device::wait_idle_nolock()
 
 void Device::promote_read_write_caches_to_read_only()
 {
-#ifdef GRANITE_VULKAN_MT
-	pipeline_layouts.move_to_read_only();
-	descriptor_set_allocators.move_to_read_only();
-	shaders.move_to_read_only();
-	programs.move_to_read_only();
-	for (auto &program : programs.get_read_only())
-		program.promote_read_write_to_read_only();
-	render_passes.move_to_read_only();
-	immutable_samplers.move_to_read_only();
-	immutable_ycbcr_conversions.move_to_read_only();
+	// Components which could potentially call into these must hold global reader locks.
+	// - A CommandBuffer holds a read lock for its lifetime.
+	// - Fossilize replay in the background also holds lock.
+	if (lock.read_only_cache.try_lock_write())
+	{
+		pipeline_layouts.move_to_read_only();
+		descriptor_set_allocators.move_to_read_only();
+		shaders.move_to_read_only();
+		programs.move_to_read_only();
+		for (auto &program : programs.get_read_only())
+			program.promote_read_write_to_read_only();
+		render_passes.move_to_read_only();
+		immutable_samplers.move_to_read_only();
+		immutable_ycbcr_conversions.move_to_read_only();
 #ifdef GRANITE_VULKAN_FILESYSTEM
-	shader_manager.promote_read_write_caches_to_read_only();
+		shader_manager.promote_read_write_caches_to_read_only();
 #endif
-#endif
+		lock.read_only_cache.unlock_write();
+	}
 }
 
 void Device::next_frame_context()
@@ -2474,20 +2511,17 @@ void Device::next_frame_context()
 	framebuffer_allocator.begin_frame();
 	transient_allocator.begin_frame();
 
-#ifdef GRANITE_VULKAN_MT
 	for (auto &allocator : descriptor_set_allocators.get_read_only())
 		allocator.begin_frame();
 	for (auto &allocator : descriptor_set_allocators.get_read_write())
 		allocator.begin_frame();
-#else
-	for (auto &allocator : descriptor_set_allocators)
-		allocator.begin_frame();
-#endif
 
 	VK_ASSERT(!per_frame.empty());
 	frame_context_index++;
 	if (frame_context_index >= per_frame.size())
 		frame_context_index = 0;
+
+	promote_read_write_caches_to_read_only();
 
 	frame().begin();
 	recalibrate_timestamps();
@@ -2678,9 +2712,7 @@ void Device::decrement_frame_counter_nolock()
 {
 	VK_ASSERT(lock.counter > 0);
 	lock.counter--;
-#ifdef GRANITE_VULKAN_MT
 	lock.cond.notify_all();
-#endif
 }
 
 void Device::PerFrame::trim_command_pools()
@@ -2794,12 +2826,11 @@ void Device::PerFrame::begin()
 		managers.semaphore.recycle(semaphore);
 	for (auto &event : recycled_events)
 		managers.event.recycle(event);
+	VK_ASSERT(consumed_semaphores.empty());
 
 	if (!allocations.empty())
 	{
-#ifdef GRANITE_VULKAN_MT
 		std::lock_guard<std::mutex> holder{device.lock.memory_lock};
-#endif
 		for (auto &alloc : allocations)
 			alloc.free_immediate(managers.memory);
 	}
@@ -3417,11 +3448,17 @@ InitialImageBuffer Device::create_image_staging_buffer(const TextureFormatLayout
 	buffer_info.domain = BufferDomain::Host;
 	buffer_info.size = layout.get_required_size();
 	buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	result.buffer = create_buffer(buffer_info, nullptr);
+	{
+		GRANITE_SCOPED_TIMELINE_EVENT_FILE(system_handles.timeline_trace_file, "allocate-image-staging-buffer");
+		result.buffer = create_buffer(buffer_info, nullptr);
+	}
 	set_name(*result.buffer, "image-upload-staging-buffer");
 
 	auto *mapped = static_cast<uint8_t *>(map_host_buffer(*result.buffer, MEMORY_ACCESS_WRITE_BIT));
-	memcpy(mapped, layout.data(), layout.get_required_size());
+	{
+		GRANITE_SCOPED_TIMELINE_EVENT_FILE(system_handles.timeline_trace_file, "copy-image-staging-buffer");
+		memcpy(mapped, layout.data(), layout.get_required_size());
+	}
 	unmap_host_buffer(*result.buffer, MEMORY_ACCESS_WRITE_BIT);
 
 	layout.build_buffer_image_copies(result.blits);
@@ -3462,7 +3499,10 @@ InitialImageBuffer Device::create_image_staging_buffer(const ImageCreateInfo &in
 	buffer_info.domain = BufferDomain::Host;
 	buffer_info.size = layout.get_required_size();
 	buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	result.buffer = create_buffer(buffer_info, nullptr);
+	{
+		GRANITE_SCOPED_TIMELINE_EVENT_FILE(system_handles.timeline_trace_file, "allocate-image-staging-buffer");
+		result.buffer = create_buffer(buffer_info, nullptr);
+	}
 	set_name(*result.buffer, "image-upload-staging-buffer");
 
 	// And now, do the actual copy.
@@ -3471,6 +3511,7 @@ InitialImageBuffer Device::create_image_staging_buffer(const ImageCreateInfo &in
 
 	layout.set_buffer(mapped, layout.get_required_size());
 
+	GRANITE_SCOPED_TIMELINE_EVENT_FILE(system_handles.timeline_trace_file, "copy-image-staging-buffer");
 	for (unsigned level = 0; level < copy_levels; level++)
 	{
 		const auto &mip_info = layout.get_mip_info(level);
@@ -4158,6 +4199,7 @@ const ImmutableSampler *Device::request_immutable_sampler(const SamplerCreateInf
 	else
 		h.u32(0);
 
+	LOCK_CACHE();
 	auto *sampler = immutable_samplers.find(h.get());
 	if (!sampler)
 		sampler = immutable_samplers.emplace_yield(h.get(), h.get(), this, sampler_info, ycbcr);
@@ -4180,6 +4222,7 @@ const ImmutableYcbcrConversion *Device::request_immutable_ycbcr_conversion(
 	h.u32(info.ycbcrModel);
 	h.u32(info.ycbcrRange);
 
+	LOCK_CACHE();
 	auto *sampler = immutable_ycbcr_conversions.find(h.get());
 	if (!sampler)
 		sampler = immutable_ycbcr_conversions.emplace_yield(h.get(), h.get(), this, info);
@@ -4201,21 +4244,28 @@ BindlessDescriptorPoolHandle Device::create_bindless_descriptor_pool(BindlessRes
 	if (!ext.supports_descriptor_indexing)
 		return BindlessDescriptorPoolHandle{nullptr};
 
-	DescriptorSetAllocator *allocator = nullptr;
+	DescriptorSetLayout layout;
+	const uint32_t stages_for_sets[VULKAN_NUM_BINDINGS] = { VK_SHADER_STAGE_ALL };
+	layout.array_size[0] = DescriptorSetLayout::UNSIZED_ARRAY;
+	for (unsigned i = 1; i < VULKAN_NUM_BINDINGS; i++)
+		layout.array_size[i] = 1;
 
 	switch (type)
 	{
 	case BindlessResourceType::ImageFP:
-		allocator = bindless_sampled_image_allocator_fp;
+		layout.separate_image_mask = 1;
+		layout.fp_mask = 1;
 		break;
 
 	case BindlessResourceType::ImageInt:
-		allocator = bindless_sampled_image_allocator_integer;
+		layout.separate_image_mask = 1;
 		break;
 
 	default:
-		break;
+		return BindlessDescriptorPoolHandle{nullptr};
 	}
+
+	auto *allocator = request_descriptor_set_allocator(layout, stages_for_sets, nullptr);
 
 	VkDescriptorPool pool = VK_NULL_HANDLE;
 	if (allocator)
@@ -4670,12 +4720,7 @@ VkFormat Device::get_default_depth_format() const
 uint64_t Device::allocate_cookie()
 {
 	// Reserve lower bits for "special purposes".
-#ifdef GRANITE_VULKAN_MT
 	return cookie.fetch_add(16, std::memory_order_relaxed) + 16;
-#else
-	cookie += 16;
-	return cookie;
-#endif
 }
 
 const RenderPass &Device::request_render_pass(const RenderPassInfo &info, bool compatible)
@@ -5048,6 +5093,15 @@ TextureManager &Device::get_texture_manager()
 
 ShaderManager &Device::get_shader_manager()
 {
+#ifdef GRANITE_VULKAN_FOSSILIZE
+	if (query_initialization_progress(InitializationStage::ShaderModules) < 100)
+	{
+		LOGW("Querying shader manager before completion of module initialization.\n"
+		     "Application should not hit this case.\n"
+		     "Blocking until completion ... Try using DeviceShaderModuleReadyEvent or PipelineReadyEvent instead.\n");
+		block_until_shader_module_ready();
+	}
+#endif
 	return shader_manager;
 }
 #endif

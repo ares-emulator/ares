@@ -26,9 +26,7 @@
 #include "vulkan_headers.hpp"
 #include "object_pool.hpp"
 #include "cookie.hpp"
-#ifdef GRANITE_VULKAN_MT
 #include <mutex>
-#endif
 
 namespace Vulkan
 {
@@ -69,16 +67,14 @@ private:
 		VK_ASSERT(value > 0);
 	}
 
-	VkFence get_fence() const;
+	const VkFence &get_fence() const;
 
 	Device *device;
 	VkFence fence;
 	VkSemaphore timeline_semaphore;
 	uint64_t timeline_value;
 	bool observed_wait = false;
-#ifdef GRANITE_VULKAN_MT
 	std::mutex lock;
-#endif
 };
 
 using Fence = Util::IntrusivePtr<FenceHolder>;

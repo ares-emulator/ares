@@ -33,10 +33,6 @@
 #include "worker_thread.hpp"
 #include "rdp_dump_write.hpp"
 
-#ifndef GRANITE_VULKAN_MT
-#error "Granite Vulkan backend must be built with multithreading support."
-#endif
-
 namespace RDP
 {
 struct RGBA
