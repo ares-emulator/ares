@@ -528,7 +528,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //NOT Rm,Rn
   case 0x67: {
-    not32(Rn, Rm);
+    xor32(Rn, Rm, imm(-1));
     return 0;
   }
 
