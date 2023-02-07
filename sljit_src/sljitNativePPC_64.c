@@ -198,11 +198,6 @@ static SLJIT_INLINE sljit_s32 emit_single_op(struct sljit_compiler *compiler, sl
 		}
 		return SLJIT_SUCCESS;
 
-	case SLJIT_NOT:
-		SLJIT_ASSERT(src1 == TMP_REG1);
-		UN_EXTS();
-		return push_inst(compiler, NOR | RC(flags) | S(src2) | A(dst) | B(src2));
-
 	case SLJIT_CLZ:
 		SLJIT_ASSERT(src1 == TMP_REG1);
 		return push_inst(compiler, ((flags & ALT_FORM1) ? CNTLZW : CNTLZD) | S(src2) | A(dst));
@@ -399,6 +394,11 @@ static SLJIT_INLINE sljit_s32 emit_single_op(struct sljit_compiler *compiler, sl
 			FAIL_IF(push_inst(compiler, XORI | S(src1) | A(dst) | IMM(imm)));
 			return push_inst(compiler, XORIS | S(dst) | A(dst) | IMM(imm >> 16));
 		}
+		if (flags & ALT_FORM4) {
+			SLJIT_ASSERT(src1 == TMP_REG1);
+			UN_EXTS();
+			return push_inst(compiler, NOR | RC(flags) | S(src2) | A(dst) | B(src2));
+		}
 		return push_inst(compiler, XOR | RC(flags) | S(src1) | A(dst) | B(src2));
 
 	case SLJIT_SHL:
@@ -561,6 +561,21 @@ static SLJIT_INLINE sljit_s32 emit_const(struct sljit_compiler *compiler, sljit_
 	FAIL_IF(push_inst(compiler, SLDI(32) | S(reg) | A(reg)));
 	FAIL_IF(push_inst(compiler, ORIS | S(reg) | A(reg) | IMM(init_value >> 16)));
 	return push_inst(compiler, ORI | S(reg) | A(reg) | IMM(init_value));
+}
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fcopy(struct sljit_compiler *compiler, sljit_s32 op,
+	sljit_s32 freg, sljit_s32 reg)
+{
+	CHECK_ERROR();
+	CHECK(check_sljit_emit_fcopy(compiler, op, freg, reg));
+
+	if (GET_OPCODE(op) == SLJIT_COPY_TO_F64) {
+		FAIL_IF(push_inst(compiler, ((op & SLJIT_32) ? STW : STD) | S(reg) | A(SLJIT_SP) | TMP_MEM_OFFSET));
+		return push_inst(compiler, ((op & SLJIT_32) ? LFS : LFD) | FS(freg) | A(SLJIT_SP) | TMP_MEM_OFFSET);
+	}
+
+	FAIL_IF(push_inst(compiler, ((op & SLJIT_32) ? STFS : STFD) | FS(freg) | A(SLJIT_SP) | TMP_MEM_OFFSET));
+	return push_inst(compiler, ((op & SLJIT_32) ? LWZ : LD) | S(reg) | A(SLJIT_SP) | TMP_MEM_OFFSET);
 }
 
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_jump_addr(sljit_uw addr, sljit_uw new_target, sljit_sw executable_offset)
