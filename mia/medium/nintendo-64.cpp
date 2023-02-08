@@ -142,6 +142,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(crc32 == 0x0c965795) cic = "CIC-NUS-8303"; // 64DD Retail IPL (Japanese)
   if(crc32 == 0x10c68b18) cic = "CIC-NUS-8401"; // 64DD Development IPL (Japanese)
   if(crc32 == 0x8feba21e) cic = "CIC-NUS-DDUS"; // 64DD Retail IPL (North American, unreleased)
+  if(crc32 == 0x78b6e35c) cic = "CIC-NUS-5167"; // 64DD Conversion cartridges
 
   //detect the save type based on the game ID
   u32 eeprom  = 0;      //512_B or 2_KiB
