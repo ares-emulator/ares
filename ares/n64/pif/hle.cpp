@@ -333,15 +333,21 @@ auto PIF::mainHLE() -> void {
       }
       intram.osInfo[0].bit(1) = 1;  //warm boot (NMI) flag (ready in case a reset is made in the future)
     }
+
     for (auto i: range(6)) {
       u8 data = intram.cpuChecksum[i];
-      intram.cpuChecksum[i] = 0;
       if (intram.cicChecksum[i] != data) {
-        debug(unusual, "[PIF::main] invalid checksum ", hex(intram.cicChecksum[i], 2L), " != ", hex(data, 2L));
+        debug(unusual, "[PIF::main] invalid IPL2 checksum: ", cic.model, ":",
+          hex(intram.cicChecksum[0], 2L), hex(intram.cicChecksum[1], 2L), hex(intram.cicChecksum[2], 2L),
+          hex(intram.cicChecksum[3], 2L), hex(intram.cicChecksum[4], 2L), hex(intram.cicChecksum[5], 2L),
+          " != cpu:", 
+          hex(intram.cpuChecksum[0], 2L), hex(intram.cpuChecksum[1], 2L), hex(intram.cpuChecksum[2], 2L),
+          hex(intram.cpuChecksum[3], 2L), hex(intram.cpuChecksum[4], 2L), hex(intram.cpuChecksum[5], 2L));
         state = Error;
         return;
       }
     }
+    for (auto i: range(6)) intram.cpuChecksum[i] = 0;
     state = WaitTerminateBoot;
     intram.bootTimeout = 0xfb00 * 5000;
     return;
@@ -355,7 +361,7 @@ auto PIF::mainHLE() -> void {
   }
 
   if(state == WaitTerminateBoot && intram.bootTimeout <= 0) {
-    debug(unusual, "[PIF::main] boot timeout");
+    debug(unusual, "[PIF::main] boot timeout: CPU has not sent the boot termination command within 5 seconds. Halting the CPU");
     state = Error;
     return;
   }
