@@ -248,8 +248,8 @@ auto DD::writeHalf(u32 address, u16 data_) -> void {
 
 auto DD::readWord(u32 address) -> u32 {
   n32 data;
-  data.bit(0,15)  = readHalf(address + 0);
-  data.bit(16,31) = readHalf(address + 2);
+  data.bit(16,31) = readHalf(address + 0);
+  data.bit( 0,15) = readHalf(address + 2);
   return (u32)data;
 }
 
