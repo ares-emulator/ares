@@ -8,7 +8,8 @@ CIC cic;
 #include "serialization.cpp"
 
 auto CIC::power(bool reset) -> void {
-  string model = cartridge.node ? cartridge.cic() : dd.cic();
+  model = cartridge.node ? cartridge.cic() : dd.cic();
+  type = Cartridge;
   challengeAlgo = DummyChallenge;
   if(model == "CIC-NUS-6101") region = NTSC, seed = 0x3f, checksum = 0x45cc73ee317aull;
   if(model == "CIC-NUS-6102") region = NTSC, seed = 0x3f, checksum = 0xa536c0f1d859ull;
@@ -20,10 +21,10 @@ auto CIC::power(bool reset) -> void {
   if(model == "CIC-NUS-7105") region = PAL,  seed = 0x91, checksum = 0x8618a45bc2d3ull, challengeAlgo = RealChallenge;
   if(model == "CIC-NUS-6106") region = NTSC, seed = 0x85, checksum = 0x2bbad4e6eb74ull;
   if(model == "CIC-NUS-7106") region = PAL,  seed = 0x85, checksum = 0x2bbad4e6eb74ull;
-  if(model == "CIC-NUS-8303") region = NTSC, seed = 0xdd, type = 1;
-  if(model == "CIC-NUS-8401") region = NTSC, seed = 0xdd, type = 1;
-  if(model == "CIC-NUS-5167") region = NTSC, seed = 0xdd, checksum = 0x083c6c77e0b1ull, type = 1;
-  if(model == "CIC-NUS-DDUS") region = NTSC, seed = 0xde, type = 1;
+  if(model == "CIC-NUS-8303") region = NTSC, seed = 0xdd, checksum = 0x32b294e2ab90ull, type = DD64;
+  if(model == "CIC-NUS-8401") region = NTSC, seed = 0xdd, type = DD64;
+  if(model == "CIC-NUS-5167") region = NTSC, seed = 0xdd, checksum = 0x083c6c77e0b1ull;
+  if(model == "CIC-NUS-DDUS") region = NTSC, seed = 0xde, type = DD64;
   state = BootRegion;
   fifo.bits.resize(32*4);
 }

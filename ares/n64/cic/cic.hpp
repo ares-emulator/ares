@@ -3,6 +3,7 @@ struct CIC {
   enum State : u32 { BootRegion, BootSeed, BootChecksum, Run, Challenge, Dead };
   enum Region : u32 { NTSC, PAL };
   enum ChallengeAlgo : bool { DummyChallenge, RealChallenge };
+  enum Type : u32 { Cartridge, DD64 };
 
   struct {
     nall::queue<n1> bits;
@@ -32,6 +33,7 @@ struct CIC {
   n1 region;
   n1 challengeAlgo;
   u32 state;
+  string model;
 
   //cic.cpp
   auto power(bool reset) -> void;
