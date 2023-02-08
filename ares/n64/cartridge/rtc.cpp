@@ -55,7 +55,7 @@ auto Cartridge::RTC::advance(int nsec) -> void {
 
   t += nsec;
 
-  localtime_r(&t, &tmm);
+  tmm = *localtime(&t);
   ram.write<Byte>(16, BCD::encode(tmm.tm_sec));
   ram.write<Byte>(17, BCD::encode(tmm.tm_min));
   ram.write<Byte>(18, BCD::encode(tmm.tm_hour) | 0x80);
