@@ -122,7 +122,7 @@ auto WonderSwan::analyze(vector<u8>& rom) -> string {
   if(hasRTC) {
     s += "    memory\n";
     s += "      type: RTC\n";
-    s += "      size: 0x10\n";
+    s += "      size: 0x12\n";
     s += "      content: Time\n";
   }
 

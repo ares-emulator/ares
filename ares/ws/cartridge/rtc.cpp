@@ -3,10 +3,19 @@
 auto Cartridge::RTC::load() -> void {
   n64 timestamp = 0;
   for(auto n : range(8)) timestamp.byte(n) = ram.read(8 + n);
-  if(!timestamp) return;  //new save file
+  if(!timestamp || !(timestamp + 1)) return;  //new save file
+
+  if(status() & 0x15) {
+    // These status bits are always 0; reset state on invalid status.
+    initRegs(false);
+    return;
+  }
 
   timestamp = time(0) - timestamp;
-  while(timestamp--) tickSecond();
+  // prevent insurmountable slowdown by limiting skips to 5 years
+  if(timestamp < 60*60*24*365*5) {
+    while(timestamp--) tickSecond();
+  }
 }
 
 //save time when game is unloaded
@@ -16,146 +25,245 @@ auto Cartridge::RTC::save() -> void {
 }
 
 auto Cartridge::RTC::tickSecond() -> void {
-  if(++second() < 60) return;
+  static auto bcdIncrement = [](n8& data) -> n8 {
+    if ((data & 0x0F) >= 0x09) {
+      data = (data & 0xF0) + 0x10;
+    } else {
+      data++;
+    }
+    return data;
+  };
+
+  if(bcdIncrement(second()) < 0x60) return;
   second() = 0;
 
-  if(++minute() < 60) return;
+  if(bcdIncrement(minute()) < 0x60) return;
   minute() = 0;
 
-  if(++hour() < 24) return;
-  hour() = 0;
+  if(status() & 0x40) {
+    // 24-hour clock
+    if((bcdIncrement(hour()) & 0x7F) < 0x24) return;
+    hour().bit(0,5) = 0;
+  } else {
+    // 12-hour clock
+    if((bcdIncrement(hour()) & 0x7F) < 0x12) return;
+    hour().bit(0,5) = 0;
+    hour().bit(7) ^= 1;
+  }
 
   weekday() += 1;
   weekday() %= 7;
 
-  u32 daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-  if(year() && (year() % 100) && !(year() % 4)) daysInMonth[1]++;
+  u32 bcdDaysInMonth[12] = {0x31, 0x28, 0x31, 0x30, 0x31, 0x30, 0x31, 0x31, 0x30, 0x31, 0x30, 0x31};
+  if(year() && !(year() & 3)) bcdDaysInMonth[1]++;
 
-  if(++day() < daysInMonth[month()]) return;
-  day() = 0;
+  if(bcdIncrement(day()) <= bcdDaysInMonth[month()]) return;
+  day() = 1;
 
-  if(++month() < 12) return;
-  month() = 0;
+  if(bcdIncrement(month()) <= 0x12) return;
+  month() = 1;
 
-  ++year();
+  bcdIncrement(year());
 }
 
 auto Cartridge::RTC::checkAlarm() -> void {
-  if(!alarm.bit(5)) return;
+  static auto decode = [](n8 data) -> n8 {
+    return (data >> 4) * 10 + (data & 0x0f);
+  };
 
-  cpu.irqLevel(CPU::Interrupt::Cartridge, hour() == alarmHour && minute() == alarmMinute);
+  // TODO: A lot of this is vaguely informed guesswork.
+  if(status() & 0x08) {
+    // Per-minute edge/steady
+    if(counter < 256) cpu.raise(CPU::Interrupt::Cartridge);
+    if(status() & 0x02 && second() == 30 && counter == 0) cpu.lower(CPU::Interrupt::Cartridge);
+  } else if(status() & 0x02) {
+    // Selected frequency steady
+    n16 duty = (counter << 1) ^ 0xFFFF;
+    n16 mask = (alarmHour() | (alarmMinute() << 8));
+    cpu.irqLevel(CPU::Interrupt::Cartridge, (duty & mask) != 0);
+  } else if(status() & 0x20) {
+    // Alarm
+    if(status() & 0x40) {
+      // 24-hour clock
+      cpu.irqLevel(CPU::Interrupt::Cartridge, (hour() & 0x3F) == (alarmHour() & 0x3F) && (minute() & 0x7F) == (alarmMinute() & 0x7F));
+    } else {
+      // 12-hour clock
+      cpu.irqLevel(CPU::Interrupt::Cartridge, (hour() & 0xBF) == (alarmHour() & 0xBF) && (minute() & 0x7F) == (alarmMinute() & 0x7F));
+    }
+  }
 }
 
-auto Cartridge::RTC::status() -> n8 {
-  n8 data;
-  data.bit(0,6) = 0;  //unknown
+auto Cartridge::RTC::controlRead() -> n8 {
+  n8 data = 0;
+  data.bit(0,3) = command;
+  data.bit(4)   = active;
   data.bit(7)   = 1;  //0 = busy; 1 = ready for command
   return data;
 }
 
-auto Cartridge::RTC::execute(n8 data) -> void {
-  command = data;
-
-  //RESET
-  if(command == 0x10) {
-    year() = 0;
-    month() = 0;
-    day() = 0;
-    weekday() = 0;
-    hour() = 0;
-    minute() = 0;
-    second() = 0;
+auto Cartridge::RTC::controlWrite(n5 data) -> void {
+  // TODO: This probably isn't right, but will do unless someone tries to
+  // cancel an RTC command mid-execution.
+  if(active) {
+    if(!data.bit(4) || command != data.bit(0,3)) {
+      debug(unimplemented, "[RTC] Port 0xCA write during command processing = ", data);
+    }
+    return;
   }
 
-  //ALARM_FLAG
-  if(command == 0x12) {
-    index = 0;
+  command = data.bit(0,3);
+  active = data.bit(4);
+
+  if(active) switch(command & 0x0E) {
+    case 0x00: { // RESET
+      initRegs(true);
+      active = 0;
+    } break;
+    case 0x02: { // ALARM_FLAG
+      index = 0;
+    } break;
+    case 0x04: { // DATETIME
+      index = 0;
+    } break;
+    case 0x06: { // TIME
+      index = 0;
+    } break;
+    case 0x08: { // ALARM
+      index = 0;
+    } break;
+    case 0x0A: { // no-op
+      index = 0;
+    } break;
+    default: {
+      active = 0;
+    } break;
   }
 
-  //SET_DATETIME
-  if(command == 0x14) {
-    index = 0;
+  if(active && command.bit(0)) fetch();
+}
+
+auto Cartridge::RTC::fetch() -> void {
+  n8 data = 0;
+
+  switch(command & 0x0E) {
+    case 0x02: { // STATUS
+      data = status();
+      status().bit(7) = 0;
+      index = 1;
+      active = 0;
+    } break;
+    case 0x04: { // DATETIME
+      switch(index) {
+      case 0: data = year(); break;
+      case 1: data = month(); break;
+      case 2: data = day(); break;
+      case 3: data = weekday(); break;
+      case 4: data = hour(); break;
+      case 5: data = minute(); break;
+      case 6: data = second(); break;
+      }
+      if(++index >= 7) active = 0;
+    } break;
+    case 0x06: { // TIME
+      switch(index) {
+      case 0: data = hour(); break;
+      case 1: data = minute(); break;
+      case 2: data = second(); break;
+      }
+      if(++index >= 3) active = 0;
+    } break;
+    case 0x08: { // ALARM
+      switch(index) {
+      case 0: data = alarmHour(); break;
+      case 1: data = alarmMinute(); break;
+      }
+      if(++index >= 2) active = 0;
+    } break;
+    case 0x0A: { // no-op
+      data = 0xFF;
+      if(++index >= 2) active = 0;
+    } break;
+    default: {
+      active = 0;
+    } break;
   }
 
-  //GET_DATETIME
-  if(command == 0x15) {
-    index = 0;
-  }
-
-  //SET_ALARM
-  if(command == 0x18) {
-    index = 0;
-  }
+  fetchedData = data;
 }
 
 auto Cartridge::RTC::read() -> n8 {
-  n8 data = 0;
-
-  static auto encode = [](n8 data) -> n8 {
-    return (data / 10 << 4) + data % 10;
-  };
-
-  //GET_DATETIME
-  if(command == 0x15) {
-    switch(index) {
-    case 0: data = encode(year()); break;
-    case 1: data = encode(month() + 1); break;
-    case 2: data = encode(day() + 1); break;
-    case 3: data = encode(weekday()); break;
-    case 4: data = encode(hour()); break;
-    case 5: data = encode(minute()); break;
-    case 6: data = encode(second()); break;
-    }
-    if(++index >= 7) command = 0;
-  }
+  n8 data = fetchedData;
+  if(active && command.bit(0)) fetch();
 
   return data;
 }
 
 auto Cartridge::RTC::write(n8 data) -> void {
-  static auto decode = [](n8 data) -> n8 {
-    return (data >> 4) * 10 + (data & 0x0f);
-  };
-
-  //ALARM_FLAG
-  if(command == 0x12) {
-    if(data.bit(6)) alarm = data;  //todo: is bit6 really required to be set?
-    command = 0;
-    checkAlarm();
-  }
-
-  //SET_DATETIME
-  if(command == 0x14) {
-    switch(index) {
-    case 0: year()    = decode(data); break;
-    case 1: month()   = decode(data) - 1; break;
-    case 2: day()     = decode(data) - 1; break;
-    case 3: weekday() = decode(data); break;
-    case 4: hour()    = decode(data); break;
-    case 5: minute()  = decode(data); break;
-    case 6: second()  = decode(data); break;
-    }
-    if(++index >= 7) command = 0;
-  }
-
-  //SET_ALARM
-  if(command == 0x18) {
-    switch(index) {
-    case 0: alarmHour   = decode(data.bit(0,6)); break;
-    case 1: alarmMinute = decode(data); break;
-    }
-    if(++index >= 2) command = 0;
+  if(active && !command.bit(0)) switch(command & 0x0E) {
+    case 0x02: { // STATUS
+      status().bit(6) = data.bit(6);
+      status().bit(5) = data.bit(5);
+      status().bit(3) = data.bit(3);
+      status().bit(1) = data.bit(1);
+      active = 0;
+    } break;
+    case 0x04: { // DATETIME
+      switch(index) {
+      case 0: year()            = data; break;
+      case 1: month()           = data; break;
+      case 2: day()             = data; break;
+      case 3: weekday()         = data; break;
+      case 4: hour()            = data; break;
+      case 5: minute()          = data; break;
+      case 6: second().bit(0,6) = data.bit(0,6); break;
+      }
+      if(++index >= 7) active = 0;
+    } break;
+    case 0x06: { // TIME
+      switch(index) {
+      case 0: hour()            = data; break;
+      case 1: minute()          = data; break;
+      case 2: second().bit(0,6) = data.bit(0,6); break;
+      }
+      if(++index >= 3) active = 0;
+    } break;
+    case 0x08: { // ALARM
+      switch(index) {
+      case 0: alarmHour()   = data; break;
+      case 1: alarmMinute() = data; break;
+      }
+      if(++index >= 2) active = 0;
+    } break;
+    case 0x0A: { // no-op
+      if(++index >= 2) active = 0;
+    } break;
+    default: {
+      active = 0;
+    } break;
   }
 }
 
+auto Cartridge::RTC::initRegs(bool reset) -> void {
+  year() = 0;
+  month() = 1;
+  day() = 1;
+  weekday() = 0;
+  hour() = 0;
+  minute() = 0;
+  second() = 0;
+  status() = reset ? 0x00 : 0x82;
+  alarmHour() = 0x00;
+  alarmMinute() = reset ? 0x00 : 0x80;
+}
+
 auto Cartridge::RTC::power() -> void {
-  Thread::create(3'072'000, {&Cartridge::RTC::main, this});
+  Thread::create(32'768, {&Cartridge::RTC::main, this});
   
   command = 0;
+  active = 0;
   index = 0;
-  alarm = 0;
-  alarmHour = 0;
-  alarmMinute = 0;
+  counter = 0;
+  fetchedData = 0xFF;
 }
 
 auto Cartridge::RTC::reset() -> void {
@@ -165,9 +273,9 @@ auto Cartridge::RTC::reset() -> void {
 }
 
 auto Cartridge::RTC::main() -> void {
-  tickSecond();
+  if(++counter == 0) tickSecond();
   checkAlarm();
-  step(3'072'000);
+  step(1);
 }
 
 auto Cartridge::RTC::step(u32 clocks) -> void {

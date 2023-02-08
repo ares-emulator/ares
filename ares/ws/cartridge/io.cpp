@@ -56,11 +56,12 @@ auto Cartridge::readIO(n16 address) -> n8 {
     break;
 
   case 0x00ca:  //RTC_STATUS
-    data = rtc.status();
+    data = rtc.controlRead();
     break;
 
   case 0x00cb:  //RTC_DATA
     data = rtc.read();
+    if (!has.rtc) data = 0xFF;
     break;
 
   case 0x00cc:  //GPO_EN
@@ -136,11 +137,11 @@ auto Cartridge::writeIO(n16 address, n8 data) -> void {
     break;
 
   case 0x00ca:  //RTC_CMD
-    if (rtc.ram) rtc.execute(data);
+    if (has.rtc) rtc.controlWrite(data.bit(0,4));
     break;
 
   case 0x00cb:  //RTC_DATA
-    if (rtc.ram) rtc.write(data);
+    if (has.rtc) rtc.write(data);
     break;
 
   case 0x00cc:  //GPO_EN
