@@ -59,6 +59,9 @@ auto Nintendo64::save(string location) -> bool {
   if(auto node = document["game/board/memory(type=Flash,content=Save)"]) {
     Medium::save(node, ".flash");
   }
+  if(auto node = document["game/board/memory(type=RTC,content=Save)"]) {
+    Medium::save(node, ".rtc");
+  }
 
   return true;
 }
@@ -318,7 +321,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   //128KB Flash
   if(id == "NCC") {flash = 128_KiB; rpak = true;}                        //Command & Conquer
   if(id == "NDA") {flash = 128_KiB; cpak = true;}                        //Derby Stallion 64
-  if(id == "NAF") {flash = 128_KiB; cpak = true;}                        //Doubutsu no Mori
+  if(id == "NAF") {flash = 128_KiB; cpak = true; rtc = true;}            //Doubutsu no Mori
   if(id == "NJF") {flash = 128_KiB; rpak = true;}                        //Jet Force Gemini [Star Twins (J)]
   if(id == "NKJ") {flash = 128_KiB; rpak = true;}                        //Ken Griffey Jr.'s Slugfest
   if(id == "NZS") {flash = 128_KiB; rpak = true;}                        //Legend of Zelda: Majora's Mask [Zelda no Densetsu - Mujura no Kamen (J)]
