@@ -64,6 +64,10 @@ struct Cartridge : IO {
   } information;
 
   struct RTC : Thread {
+    // bytes  0- 6: date/time data, BCD
+    // bytes  7- 7: status register
+    // bytes  8-15: last timestamp
+    // bytes 16-17: alarm register
     Memory::Writable<n8> ram;
 
     //rtc.cpp
@@ -71,9 +75,11 @@ struct Cartridge : IO {
     auto save() -> void;
     auto tickSecond() -> void;
     auto checkAlarm() -> void;
-    auto status() -> n8;
-    auto execute(n8 data) -> void;
+    auto controlRead() -> n8;
+    auto controlWrite(n5 data) -> void;
+    auto fetch() -> void;
     auto read() -> n8;
+    auto initRegs(bool reset) -> void;
     auto write(n8 data) -> void;
     auto power() -> void;
     auto reset() -> void;
@@ -83,20 +89,22 @@ struct Cartridge : IO {
     //serialization.cpp
     auto serialize(serializer& s) -> void;
 
-    n8 command;
+    n4 command;
+    n1 active;
     n4 index;
+    n8 fetchedData;
+    n15 counter;
 
-    n8 alarm;
-    n8 alarmHour;
-    n8 alarmMinute;
-
-    auto year()    -> n8& { return ram[0]; }
-    auto month()   -> n8& { return ram[1]; }
-    auto day()     -> n8& { return ram[2]; }
-    auto weekday() -> n8& { return ram[3]; }
-    auto hour()    -> n8& { return ram[4]; }
-    auto minute()  -> n8& { return ram[5]; }
-    auto second()  -> n8& { return ram[6]; }
+    auto year()        -> n8& { return ram[ 0]; }
+    auto month()       -> n8& { return ram[ 1]; }
+    auto day()         -> n8& { return ram[ 2]; }
+    auto weekday()     -> n8& { return ram[ 3]; }
+    auto hour()        -> n8& { return ram[ 4]; }
+    auto minute()      -> n8& { return ram[ 5]; }
+    auto second()      -> n8& { return ram[ 6]; }
+    auto status()      -> n8& { return ram[ 7]; }
+    auto alarmHour()   -> n8& { return ram[16]; }
+    auto alarmMinute() -> n8& { return ram[17]; }
   } rtc;
 
   struct FLASH {

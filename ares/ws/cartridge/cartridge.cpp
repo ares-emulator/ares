@@ -48,8 +48,9 @@ auto Cartridge::connect() -> void {
   }
 
   if(auto fp = pak->read("time.rtc")) {
-    rtc.ram.allocate(fp->size());
+    rtc.ram.allocate(18);
     rtc.ram.load(fp);
+    rtc.load();
     has.rtc = true;
   }
 
@@ -82,6 +83,7 @@ auto Cartridge::save() -> void {
   }
 
   if(auto fp = pak->write("time.rtc")) {
+    rtc.save();
     rtc.ram.save(fp);
   }
 }

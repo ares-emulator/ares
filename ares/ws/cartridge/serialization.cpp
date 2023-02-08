@@ -34,8 +34,8 @@ auto Cartridge::RTC::serialize(serializer& s) -> void {
   s(ram);
 
   s(command);
+  s(active);
   s(index);
-  s(alarm);
-  s(alarmHour);
-  s(alarmMinute);
+  s(fetchedData);
+  s(counter);
 }
