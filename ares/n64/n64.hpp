@@ -63,6 +63,7 @@ namespace ares::Nintendo64 {
       SI_DMA_Read,
       SI_DMA_Write,
       SI_BUS_Write,
+      RTC_Tick,
       DD_Clock_Tick,
       DD_MECHA_Response,
       DD_BM_Request,
@@ -70,6 +71,11 @@ namespace ares::Nintendo64 {
     };
   };
   extern Queue queue;
+
+  struct BCD {
+    static auto encode(u8 value) -> u8 { return value / 10 << 4 | value % 10; }
+    static auto decode(u8 value) -> u8 { return (value >> 4) * 10 + (value & 15); }
+  };
 
   #include <n64/accuracy.hpp>
   #include <n64/memory/memory.hpp>

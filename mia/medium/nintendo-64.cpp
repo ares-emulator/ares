@@ -40,6 +40,9 @@ auto Nintendo64::load(string location) -> bool {
   if(auto node = document["game/board/memory(type=Flash,content=Save)"]) {
     Medium::load(node, ".flash");
   }
+  if(auto node = document["game/board/memory(type=RTC,content=Save)"]) {
+    Medium::load(node, ".rtc");
+  }
 
   return true;
 }
@@ -145,6 +148,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   //supported peripherals
   bool cpak = false;                 //Controller Pak
   bool rpak = false;                 //Rumble Pak
+  bool rtc  = false;                 //RTC
   bool dd     = id.beginsWith("C");  //64DD
 
   //512B EEPROM
@@ -610,6 +614,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
     //if(config.bit(4,7) == 4) {sram = 96_KiB;}   //banked SRAM, not supported yet
     if(config.bit(4,7) == 5) {flash = 128_KiB;}
     if(config.bit(4,7) == 6) {sram = 128_KiB;}
+    if(config.bit(0) == 1)   {rtc = true;}
     rpak = true;
     cpak = true;
   }
@@ -651,6 +656,12 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   s += "    memory\n";
   s += "      type: Flash\n";
   s +={"      size: 0x", hex(flash), "\n"};
+  s += "      content: Save\n";
+  }
+  if(rtc) {
+  s += "    memory\n";
+  s += "      type: RTC\n";
+  s +={"      size: 0x", hex(32), "\n"};
   s += "      content: Save\n";
   }
   return s;
