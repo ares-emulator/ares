@@ -167,60 +167,11 @@ auto PIF::joyRun() -> void {
       valid = status.bit(0);
       over = status.bit(1);
     }
-    
-    if (channel >= 4) {
-      //status
-      if(input[0] == 0x00 || input[0] == 0xff) {
-        //cartridge EEPROM (4kbit)
-        if(cartridge.eeprom.size == 512) {
-          output[0] = 0x00;
-          output[1] = 0x80;
-          output[2] = 0x00;
-          valid = 1;
-        }
-
-        //cartridge EEPROM (16kbit)
-        if(cartridge.eeprom.size == 2048) {
-          output[0] = 0x00;
-          output[1] = 0xc0;
-          output[2] = 0x00;
-          valid = 1;
-        }
-      }
-
-      //read EEPROM
-      if(input[0] == 0x04 && send >= 2) {
-        u32 address = input[1] * 8;
-        for(u32 index : range(recv)) {
-          output[index] = cartridge.eeprom.read<Byte>(address++);
-        }
-        valid = 1;
-      }
-
-      //write EEPROM
-      if(input[0] == 0x05 && send >= 2 && recv >= 1) {
-        u32 address = input[1] * 8;
-        for(u32 index : range(send - 2)) {
-          cartridge.eeprom.write<Byte>(address++, input[2 + index]);
-        }
-        output[0] = 0x00;
-        valid = 1;
-      }
-
-      //RTC status
-      if(input[0] == 0x06) {
-        debug(unimplemented, "[SI::main] RTC status");
-      }
-
-      //RTC read
-      if(input[0] == 0x07) {
-        debug(unimplemented, "[SI::main] RTC read");
-      }
-
-      //RTC write
-      if(input[0] == 0x08) {
-        debug(unimplemented, "[SI::main] RTC write");
-      }
+    //cartrige joybus communication
+    if (channel == 4) {
+      n2 status = cartridge.joybusComm(send, recv, input, output);
+      valid = status.bit(0);
+      over = status.bit(1);
     }
 
     if(!valid) ram.write<Byte>(recvOffset, 0x80 | recv);
