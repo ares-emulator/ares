@@ -144,16 +144,16 @@ auto Disc::main() -> void {
       //sectors  0, 20, 40, 60 report absolute time
       //sectors 10, 30, 50, 70 report relative time
       //note: bad sector reads report immediately; but bad sectors are not emulated
-      u8 frameBCD = CD::BCD::encode(aframe);
+      u8 frameBCD = BCD::encode(aframe);
       if((frameBCD & 15) == 0) {
         bool relative = frameBCD & 16;
 
         fifo.response.write(status());
-        fifo.response.write(CD::BCD::encode(inTrack));
-        fifo.response.write(CD::BCD::encode(inIndex));
-        fifo.response.write(CD::BCD::encode((!relative ? aminute : rminute)));
-        fifo.response.write(CD::BCD::encode((!relative ? asecond : rsecond)) | relative << 7);
-        fifo.response.write(CD::BCD::encode((!relative ? aframe  : rframe )));
+        fifo.response.write(BCD::encode(inTrack));
+        fifo.response.write(BCD::encode(inIndex));
+        fifo.response.write(BCD::encode((!relative ? aminute : rminute)));
+        fifo.response.write(BCD::encode((!relative ? asecond : rsecond)) | relative << 7);
+        fifo.response.write(BCD::encode((!relative ? aframe  : rframe )));
         fifo.response.write(0xff);  //todo: peak lo
         fifo.response.write(0x7f | relative << 7);  //todo: peak hi + left/right channel
 

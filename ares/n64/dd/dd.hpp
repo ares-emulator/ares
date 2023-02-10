@@ -1,5 +1,7 @@
 //Disk Drive
 
+#include <nall/bcd.hpp>
+
 struct DD : Memory::PI<DD> {
   Node::Object obj;
   Node::Port port;
@@ -77,11 +79,6 @@ struct DD : Memory::PI<DD> {
     string title;
     string cic;
   } information;
-
-  struct BCD {
-    static auto encode(u8 value) -> u8 { return value / 10 << 4 | value % 10; }
-    static auto decode(u8 value) -> u8 { return (value >> 4) * 10 + (value & 15); }
-  };
 
 private:
   struct Interrupt {

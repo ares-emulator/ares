@@ -134,9 +134,9 @@ private:
               memory::assign(target + 0, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff);  //sync
               memory::assign(target + 6, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00);  //sync
               auto [minute, second, frame] = CD::MSF(lbaFileBase + index.lba + sector);
-              target[12] = CD::BCD::encode(minute);
-              target[13] = CD::BCD::encode(second);
-              target[14] = CD::BCD::encode(frame);
+              target[12] = BCD::encode(minute);
+              target[13] = BCD::encode(second);
+              target[14] = BCD::encode(frame);
               target[15] = 0x01;  //mode
               filedata.read({target + 16, length});
               CD::RSPC::encodeMode1({target, 2352});

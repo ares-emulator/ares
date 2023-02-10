@@ -67,10 +67,6 @@ auto Cartridge::RTC::tickSecond() -> void {
 }
 
 auto Cartridge::RTC::checkAlarm() -> void {
-  static auto decode = [](n8 data) -> n8 {
-    return (data >> 4) * 10 + (data & 0x0f);
-  };
-
   // TODO: A lot of this is vaguely informed guesswork.
   if(status() & 0x08) {
     // Per-minute edge/steady

@@ -226,14 +226,14 @@ auto PCD::SCSI::commandAudioSetStartPosition() -> void {
   }
 
   if(request.data[9].bit(6,7) == 1) {
-    auto m = CD::BCD::decode(request.data[2]);
-    auto s = CD::BCD::decode(request.data[3]);
-    auto f = CD::BCD::decode(request.data[4]);
+    auto m = BCD::decode(request.data[2]);
+    auto s = BCD::decode(request.data[3]);
+    auto f = BCD::decode(request.data[4]);
     lba = CD::MSF(m, s, f).toLBA();
   }
 
   if(request.data[9].bit(6,7) == 2) {
-    auto trackID = CD::BCD::decode(request.data[2]);
+    auto trackID = BCD::decode(request.data[2]);
     if(auto track = session->track(trackID)) {
       if(auto index = track->index(1)) {
         lba = index->lba;
@@ -276,14 +276,14 @@ auto PCD::SCSI::commandAudioSetStopPosition() -> void {
   }
 
   if(request.data[9].bit(6,7) == 1) {
-    auto m = CD::BCD::decode(request.data[2]);
-    auto s = CD::BCD::decode(request.data[3]);
-    auto f = CD::BCD::decode(request.data[4]);
+    auto m = BCD::decode(request.data[2]);
+    auto s = BCD::decode(request.data[3]);
+    auto f = BCD::decode(request.data[4]);
     lba = CD::MSF(m, s, f).toLBA();
   }
 
   if(request.data[9].bit(6,7) == 2) {
-    auto trackID = CD::BCD::decode(request.data[2]);
+    auto trackID = BCD::decode(request.data[2]);
     if(auto track = session->track(trackID)) {
       if(auto index = track->index(1)) {
         lba = index->lba;
@@ -365,24 +365,24 @@ auto PCD::SCSI::commandGetDirectoryInformation() -> void {
   response.reset();
 
   if(request.data[1].bit(0,1) == 0) {
-    response.write(CD::BCD::encode(session->firstTrack));
-    response.write(CD::BCD::encode(session->lastTrack));
+    response.write(BCD::encode(session->firstTrack));
+    response.write(BCD::encode(session->lastTrack));
     response.write(0x00);
     response.write(0x00);
   }
 
   if(request.data[1].bit(0,1) == 1) {
     auto [minute, second, frame] = CD::MSF(session->leadOut.lba);
-    response.write(CD::BCD::encode(minute));
-    response.write(CD::BCD::encode(second));
-    response.write(CD::BCD::encode(frame));
+    response.write(BCD::encode(minute));
+    response.write(BCD::encode(second));
+    response.write(BCD::encode(frame));
     response.write(0x00);
   }
 
   if(request.data[1].bit(0,1) == 2) {
     auto lba = session->leadOut.lba;
     auto mode = 0x01;
-    auto trackID = CD::BCD::decode(request.data[2]);
+    auto trackID = BCD::decode(request.data[2]);
     if(auto track = session->track(trackID)) {
       if(auto index = track->index(1)) {
         lba = index->lba;
@@ -390,16 +390,16 @@ auto PCD::SCSI::commandGetDirectoryInformation() -> void {
       }
     }
     auto [minute, second, frame] = CD::MSF::fromLBA(150 + lba);
-    response.write(CD::BCD::encode(minute));
-    response.write(CD::BCD::encode(second));
-    response.write(CD::BCD::encode(frame));
+    response.write(BCD::encode(minute));
+    response.write(BCD::encode(second));
+    response.write(BCD::encode(frame));
     response.write(mode);
   }
 
   if(request.data[1].bit(0,1) == 3) {
     auto lba = session->leadOut.lba;
     auto mode = 0x01;
-    auto trackID = CD::BCD::decode(request.data[2]);
+    auto trackID = BCD::decode(request.data[2]);
     if(auto track = session->track(trackID)) {
       if(auto index = track->index(1)) {
         lba = index->lba;

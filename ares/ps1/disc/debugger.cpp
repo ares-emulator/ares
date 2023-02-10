@@ -147,8 +147,8 @@ auto Disc::Debugger::read(s32 lba) -> void {
   if(!tracer.read->enabled()) return;
 
   auto [minute, second, frame] = CD::MSF::fromLBA(lba);
-  minute = CD::BCD::encode(minute);
-  second = CD::BCD::encode(second);
-  frame  = CD::BCD::encode(frame);
+  minute = BCD::encode(minute);
+  second = BCD::encode(second);
+  frame  = BCD::encode(frame);
   tracer.read->notify({hex(minute, 2L), ":", hex(second, 2L), ":", hex(frame, 2L)});
 }

@@ -12,21 +12,18 @@ struct TAMA : Interface {
   Memory::Writable<n8> ram;
   Memory::Writable<n8> rtc;
 
-  auto toBCD  (n8 data) -> n8 { return (data / 10) * 16 + (data % 10); }
-  auto fromBCD(n8 data) -> n8 { return (data / 16) * 10 + (data % 16); }
-
   auto load() -> void override {
     Interface::load(rom, "program.rom");
     Interface::load(ram, "save.ram");
     Interface::load(rtc, "time.rtc");
 
     if(rtc.size() == 15) {
-      io.rtc.year     = fromBCD(rtc[0]);
-      io.rtc.month    = fromBCD(rtc[1]);
-      io.rtc.day      = fromBCD(rtc[2]);
-      io.rtc.hour     = fromBCD(rtc[3]);
-      io.rtc.minute   = fromBCD(rtc[4]);
-      io.rtc.second   = fromBCD(rtc[5]);
+      io.rtc.year     = BCD::decode(rtc[0]);
+      io.rtc.month    = BCD::decode(rtc[1]);
+      io.rtc.day      = BCD::decode(rtc[2]);
+      io.rtc.hour     = BCD::decode(rtc[3]);
+      io.rtc.minute   = BCD::decode(rtc[4]);
+      io.rtc.second   = BCD::decode(rtc[5]);
       io.rtc.meridian = rtc[6].bit(0);
       io.rtc.leapYear = rtc[6].bit(1,2);
       io.rtc.hourMode = rtc[6].bit(3);
@@ -48,12 +45,12 @@ struct TAMA : Interface {
 
   auto save() -> void override {
     if(rtc.size() == 15) {
-      rtc[0] = toBCD(io.rtc.year);
-      rtc[1] = toBCD(io.rtc.month);
-      rtc[2] = toBCD(io.rtc.day);
-      rtc[3] = toBCD(io.rtc.hour);
-      rtc[4] = toBCD(io.rtc.minute);
-      rtc[5] = toBCD(io.rtc.second);
+      rtc[0] = BCD::encode(io.rtc.year);
+      rtc[1] = BCD::encode(io.rtc.month);
+      rtc[2] = BCD::encode(io.rtc.day);
+      rtc[3] = BCD::encode(io.rtc.hour);
+      rtc[4] = BCD::encode(io.rtc.minute);
+      rtc[5] = BCD::encode(io.rtc.second);
       rtc[6] = io.rtc.meridian << 0 | io.rtc.leapYear << 1 | io.rtc.hourMode << 3 | io.rtc.test << 4;
 
       n64 timestamp = chrono::timestamp();
@@ -159,48 +156,48 @@ struct TAMA : Interface {
         }
 
         if(io.mode == 2 && io.index == 0x04) {
-          io.rtc.minute = fromBCD(io.input);
+          io.rtc.minute = BCD::decode(io.input);
         }
 
         if(io.mode == 2 && io.index == 0x05) {
-          io.rtc.hour = fromBCD(io.input);
+          io.rtc.hour = BCD::decode(io.input);
           io.rtc.meridian = io.rtc.hour >= 12;
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0x7) {
-          n8 day = toBCD(io.rtc.day);
+          n8 day = BCD::encode(io.rtc.day);
           day.bit(0,3) = io.input.bit(4,7);
-          io.rtc.day = fromBCD(day);
+          io.rtc.day = BCD::decode(day);
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0x8) {
-          n8 day = toBCD(io.rtc.day);
+          n8 day = BCD::encode(io.rtc.day);
           day.bit(4,7) = io.input.bit(4,7);
-          io.rtc.day = fromBCD(day);
+          io.rtc.day = BCD::decode(day);
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0x9) {
-          n8 month = toBCD(io.rtc.month);
+          n8 month = BCD::encode(io.rtc.month);
           month.bit(0,3) = io.input.bit(4,7);
-          io.rtc.month = fromBCD(month);
+          io.rtc.month = BCD::decode(month);
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0xa) {
-          n8 month = toBCD(io.rtc.month);
+          n8 month = BCD::encode(io.rtc.month);
           month.bit(4,7) = io.input.bit(4,7);
-          io.rtc.month = fromBCD(month);
+          io.rtc.month = BCD::decode(month);
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0xb) {
-          n8 year = toBCD(io.rtc.year);
+          n8 year = BCD::encode(io.rtc.year);
           year.bit(0,3) = io.input.bit(4,7);
-          io.rtc.year = fromBCD(year);
+          io.rtc.year = BCD::decode(year);
         }
 
         if(io.mode == 4 && io.index == 0x00 && io.input.bit(0,3) == 0xc) {
-          n8 year = toBCD(io.rtc.year);
+          n8 year = BCD::encode(io.rtc.year);
           year.bit(4,7) = io.input.bit(4,7);
-          io.rtc.year = fromBCD(year);
+          io.rtc.year = BCD::decode(year);
         }
 
         if(io.mode == 4 && io.index == 0x02 && io.input.bit(0,3) == 0xa) {

@@ -106,9 +106,9 @@ auto Disc::commandGetStatus() -> void {
 auto Disc::commandSetLocation() -> void {
   ssr.reading = 0;
 
-  u8 minute = CD::BCD::decode(fifo.parameter.read(0));
-  u8 second = CD::BCD::decode(fifo.parameter.read(0));
-  u8 frame  = CD::BCD::decode(fifo.parameter.read(0));
+  u8 minute = BCD::decode(fifo.parameter.read(0));
+  u8 second = BCD::decode(fifo.parameter.read(0));
+  u8 frame  = BCD::decode(fifo.parameter.read(0));
 
   drive.lba.request = CD::MSF(minute, second, frame).toLBA();
 
@@ -376,12 +376,12 @@ auto Disc::commandGetLocationPlaying() -> void {
 
   fifo.response.write(lbaTrackID);
   fifo.response.write(lbaIndexID);
-  fifo.response.write(CD::BCD::encode(relativeMinute));
-  fifo.response.write(CD::BCD::encode(relativeSecond));
-  fifo.response.write(CD::BCD::encode(relativeFrame));
-  fifo.response.write(CD::BCD::encode(absoluteMinute));
-  fifo.response.write(CD::BCD::encode(absoluteSecond));
-  fifo.response.write(CD::BCD::encode(absoluteFrame));
+  fifo.response.write(BCD::encode(relativeMinute));
+  fifo.response.write(BCD::encode(relativeSecond));
+  fifo.response.write(BCD::encode(relativeFrame));
+  fifo.response.write(BCD::encode(absoluteMinute));
+  fifo.response.write(BCD::encode(absoluteSecond));
+  fifo.response.write(BCD::encode(absoluteFrame));
 
   irq.acknowledge.flag = 1;
   irq.poll();
@@ -419,8 +419,8 @@ auto Disc::commandSetSession() -> void {
 //0x13
 auto Disc::commandGetFirstAndLastTrackNumbers() -> void {
   fifo.response.write(status());
-  fifo.response.write(CD::BCD::encode(session.firstTrack));
-  fifo.response.write(CD::BCD::encode(session.lastTrack));
+  fifo.response.write(BCD::encode(session.firstTrack));
+  fifo.response.write(BCD::encode(session.lastTrack));
 
   irq.acknowledge.flag = 1;
   irq.poll();
@@ -441,8 +441,8 @@ auto Disc::commandGetTrackStart() -> void {
   auto [minute, second, frame] = CD::MSF::fromLBA(150 + lba);
 
   fifo.response.write(status());
-  fifo.response.write(CD::BCD::encode(minute));
-  fifo.response.write(CD::BCD::encode(second));
+  fifo.response.write(BCD::encode(minute));
+  fifo.response.write(BCD::encode(second));
 
   irq.acknowledge.flag = 1;
   irq.poll();
