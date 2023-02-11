@@ -71,7 +71,7 @@ auto Cartridge::RTC::checkAlarm() -> void {
   if(status() & 0x08) {
     // Per-minute edge/steady
     if(counter < 256) cpu.raise(CPU::Interrupt::Cartridge);
-    if(status() & 0x02 && second() == 30 && counter == 0) cpu.lower(CPU::Interrupt::Cartridge);
+    if(status() & 0x02 && second() == 0x30 && counter == 0) cpu.lower(CPU::Interrupt::Cartridge);
   } else if(status() & 0x02) {
     // Selected frequency steady
     n16 duty = (counter << 1) ^ 0xFFFF;
