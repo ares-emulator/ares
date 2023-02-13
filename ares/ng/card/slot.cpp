@@ -9,6 +9,7 @@ auto CardSlot::load(Node::Object parent) -> void {
   port->setType("Memory Card");
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
+  port->setDisconnect([&] { device.reset(); });
   port->setSupported({"Memory Card"});
 }
 
