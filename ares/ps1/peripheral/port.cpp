@@ -12,6 +12,7 @@ auto PeripheralPort::load(Node::Object parent) -> void {
   port->setType(type);
   port->setHotSwappable(true);
   port->setAllocate([&](auto name) { return allocate(name); });
+  port->setDisconnect([&] { device.reset(); });
   if(type == "Controller") {
     port->setSupported({"Digital Gamepad"});
   }
