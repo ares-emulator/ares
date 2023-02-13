@@ -349,7 +349,7 @@ auto PIF::mainHLE() -> void {
     }
     for (auto i: range(6)) intram.cpuChecksum[i] = 0;
     state = WaitTerminateBoot;
-    intram.bootTimeout = 0xfb00 * 5000;
+    intram.bootTimeout = 0xfb00 * 6500;
     return;
   }
 
