@@ -67,7 +67,7 @@ auto OPNB::main() -> void {
     cyclesUntilPcmA = 432;
   }
 
-  auto stepDuration = min(cyclesUntilFmSsg, cyclesUntilFmSsg);
+  auto stepDuration = min(cyclesUntilFmSsg, cyclesUntilPcmA);
   cyclesUntilPcmA -= stepDuration;
   cyclesUntilFmSsg -= stepDuration;
   step(stepDuration);
