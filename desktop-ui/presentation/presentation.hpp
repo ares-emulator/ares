@@ -13,13 +13,7 @@ struct Presentation : Window {
     Menu loadMenu{&menuBar};
     Menu systemMenu{&menuBar};
     Menu settingsMenu{&menuBar};
-      Menu videoScaleMenu{&settingsMenu};
-        MenuRadioItem videoScaleOne{&videoScaleMenu};
-        MenuRadioItem videoScaleTwo{&videoScaleMenu};
-        MenuRadioItem videoScaleThree{&videoScaleMenu};
-        MenuRadioItem videoScaleFour{&videoScaleMenu};
-        MenuRadioItem videoScaleFive{&videoScaleMenu};
-        Group videoScaleGroup{&videoScaleOne, &videoScaleTwo, &videoScaleThree, &videoScaleFour, &videoScaleFive};
+      Menu videoSizeMenu{&settingsMenu};
       Menu videoOutputMenu{&settingsMenu};
         MenuRadioItem videoOutputCenter{&videoOutputMenu};
         MenuRadioItem videoOutputScale{&videoOutputMenu};
@@ -28,6 +22,7 @@ struct Presentation : Window {
         MenuSeparator videoOutputSeparator{&videoOutputMenu};
         MenuCheckItem videoAspectCorrection{&videoOutputMenu};
         MenuCheckItem videoAdaptiveSizing{&videoOutputMenu};
+        MenuCheckItem videoAutoCentering{&videoOutputMenu};
       Menu videoShaderMenu{&settingsMenu};
       Menu bootOptionsMenu{&settingsMenu};
         MenuCheckItem fastBoot{&bootOptionsMenu};
@@ -37,7 +32,7 @@ struct Presentation : Window {
         MenuRadioItem preferNTSCJ{&bootOptionsMenu};
         MenuRadioItem preferPAL{&bootOptionsMenu};
         Group preferRegionGroup{&preferNTSCU, &preferNTSCJ, &preferPAL};
-      MenuSeparator groupSettingsSeparator{&settingsMenu};
+      MenuSeparator groupSettingsSeparatpr{&settingsMenu};
       MenuCheckItem muteAudioSetting{&settingsMenu};
       MenuCheckItem showStatusBarSetting{&settingsMenu};
       MenuSeparator audioSettingsSeparator{&settingsMenu};
