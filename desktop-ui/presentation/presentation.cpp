@@ -276,8 +276,6 @@ auto Presentation::resizeWindow() -> void {
 
     viewportWidth = videoWidth * multiplier;
     viewportHeight = videoHeight * multiplier;
-
-    print("Resize to ", viewportWidth, "x", viewportHeight, "\n");
   }
 
   u32 statusHeight = showStatusBarSetting.checked() ? StatusHeight : 0;
