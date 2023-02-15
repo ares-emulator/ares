@@ -5,10 +5,10 @@ static LRESULT CALLBACK VideoDirect3D9_WindowProcedure(HWND hwnd, UINT msg, WPAR
   return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-struct VideoDirect3D : VideoDriver {
-  VideoDirect3D& self = *this;
-  VideoDirect3D(Video& super) : VideoDriver(super) { construct(); }
-  ~VideoDirect3D() { destruct(); }
+struct VideoDirect3D9 : VideoDriver {
+  VideoDirect3D9& self = *this;
+  VideoDirect3D9(Video& super) : VideoDriver(super) { construct(); }
+  ~VideoDirect3D9() { destruct(); }
 
   auto create() -> bool override {
     return initialize();
