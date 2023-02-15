@@ -38,7 +38,7 @@ auto pBrowserWindow::open(BrowserWindow::State& state) -> string {
     if(state.title) [panel setTitle:[NSString stringWithUTF8String:state.title]];
     panel.canChooseDirectories = state.allowsFolders;
     panel.canChooseFiles = YES;
-    panel.allowedFileTypes = filters;
+    if([filters count] > 0) panel.allowedFileTypes = filters;
     panel.allowsOtherFileTypes = NO;
     panel.directory = [NSString stringWithUTF8String:state.path];
     if([panel runModal] == NSOKButton) {
@@ -68,7 +68,7 @@ auto pBrowserWindow::save(BrowserWindow::State& state) -> string {
     }
     NSSavePanel* panel = [NSSavePanel savePanel];
     if(state.title) [panel setTitle:[NSString stringWithUTF8String:state.title]];
-    panel.allowedFileTypes = filters;
+    if([filters count] > 0) panel.allowedFileTypes = filters;
     panel.directory = [NSString stringWithUTF8String:state.path];
     if([panel runModal] == NSOKButton) {
       const char* name = panel.URL.path.UTF8String;
