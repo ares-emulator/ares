@@ -270,10 +270,6 @@ auto Presentation::resizeWindow() -> void {
     if(settings.video.aspectCorrection) videoWidth = videoWidth * node->aspectX() / node->aspectY();
     if(node->rotation() == 90 || node->rotation() == 270) swap(videoWidth, videoHeight);
 
-    u32 multiplierX = round((f32)viewportWidth / (f32)videoWidth);
-    u32 multiplierY = round((f32)viewportHeight / (f32)videoHeight);
-    u32 multiplier = max(1, min(multiplierX, multiplierY));
-
     viewportWidth = videoWidth * multiplier;
     viewportHeight = videoHeight * multiplier;
   }
