@@ -15,39 +15,52 @@ Presentation::Presentation() {
 
   settingsMenu.setText("Settings");
   videoSizeMenu.setText("Size").setIcon(Icon::Emblem::Image);
-  //determine the largest multiplier that can be used by the largest monitor found
-  u32 monitorHeight = 1;
-  for(u32 monitor : range(Monitor::count())) {
-    monitorHeight = max(monitorHeight, Monitor::workspace(monitor).height());
-  }
+
   //generate size menu
-  u32 multipliers = max(1, monitorHeight / 240);
-  for(u32 multiplier : range(2, multipliers + 1)) {
-    MenuItem item{&videoSizeMenu};
-    item.setText({multiplier, "x (", 240 * multiplier, "p)"});
+  u32 multipliers = 5;
+  for(u32 multiplier : range(1, multipliers + 1)) {
+    MenuRadioItem item{&videoSizeMenu};
+    item.setText({multiplier, "x"});
     item.onActivate([=] {
       settings.video.multiplier = multiplier;
       resizeWindow();
     });
+
+    videoSizeGroup.append(item);
   }
+
+  for(auto& item : videoSizeGroup.objects<MenuRadioItem>()) {
+    if(item.text() == string{settings.video.multiplier, "x"}) item.setChecked();
+  }
+
   videoSizeMenu.append(MenuSeparator());
   MenuItem centerWindow{&videoSizeMenu};
   centerWindow.setText("Center Window").setIcon(Icon::Place::Settings).onActivate([&] {
     setAlignment(Alignment::Center);
   });
   videoOutputMenu.setText("Output").setIcon(Icon::Emblem::Image);
-  videoOutputCenter.setText("Center").onActivate([&] {
-    settings.video.output = "Center";
+  videoOutputPixelPerfect.setText("Pixel Perfect").onActivate([&] {
+    settings.video.output = "Perfect";
   });
-  videoOutputScale.setText("Scale").onActivate([&] {
+  videoOutputFixedScale.setText("Scale (Fixed)").onActivate([&] {
+    settings.video.output = "Fixed";
+  });
+  videoOutputIntegerScale.setText("Scale (Integer)").onActivate([&] {
+    settings.video.output = "Integer";
+  });
+  videoOutputScale.setText("Scale (Best Fit)").onActivate([&] {
     settings.video.output = "Scale";
   });
   videoOutputStretch.setText("Stretch").onActivate([&] {
     settings.video.output = "Stretch";
   });
-  if(settings.video.output == "Center") videoOutputCenter.setChecked();
-  if(settings.video.output == "Scale") videoOutputScale.setChecked();
-  if(settings.video.output == "Stretch") videoOutputStretch.setChecked();
+
+  if(settings.video.output == "Perfect" ) videoOutputPixelPerfect.setChecked();
+  if(settings.video.output == "Fixed"   ) videoOutputFixedScale.setChecked();
+  if(settings.video.output == "Integer" ) videoOutputIntegerScale.setChecked();
+  if(settings.video.output == "Scale"   ) videoOutputScale.setChecked();
+  if(settings.video.output == "Stretch" ) videoOutputStretch.setChecked();
+
   videoAspectCorrection.setText("Aspect Correction").setChecked(settings.video.aspectCorrection).onToggle([&] {
     settings.video.aspectCorrection = videoAspectCorrection.checked();
     if(settings.video.adaptiveSizing) resizeWindow();
@@ -243,9 +256,10 @@ Presentation::Presentation() {
 
 auto Presentation::resizeWindow() -> void {
   if(fullScreen()) setFullScreen(false);
-  if(maximized()) setMaximized(false);
+  if(maximized()) return;
+  if(settings.video.output == "Fixed") return;
 
-  u32 multiplier = max(2, settings.video.multiplier);
+  u32 multiplier = settings.video.multiplier;
   u32 viewportWidth = 320 * multiplier;
   u32 viewportHeight = 240 * multiplier;
 
@@ -266,13 +280,30 @@ auto Presentation::resizeWindow() -> void {
 
   u32 statusHeight = showStatusBarSetting.checked() ? StatusHeight : 0;
 
+  // Prevent the window frame from going out of bounds
+  u32 monitorHeight = 1;
+  u32 monitorWidth = 1;
+  for(u32 monitor : range(Monitor::count())) {
+    monitorHeight = max(monitorHeight, Monitor::workspace(monitor).height());
+  }
+  for(u32 monitor : range(Monitor::count())) {
+    monitorWidth = max(monitorWidth, Monitor::workspace(monitor).width());
+  }
+
+  if(viewportWidth > monitorWidth || viewportHeight > monitorHeight) {
+    // setMaximized causes odd window glitches and is not supported on macOS, avoid!
+    // 100px buffer to account for possible taskbars
+    setGeometry(Alignment::Center, {monitorWidth, monitorHeight - statusHeight - 100});
+    return;
+  }
+
   if(settings.video.autoCentering) {
     setGeometry(Alignment::Center, {viewportWidth, viewportHeight + statusHeight});
   } else {
     setSize({viewportWidth, viewportHeight + statusHeight});
   }
 
-  setMinimumSize({256, 240 + statusHeight});
+  setMinimumSize({160, 144 + statusHeight});
 }
 
 auto Presentation::loadEmulators() -> void {

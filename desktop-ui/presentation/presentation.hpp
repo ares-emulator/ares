@@ -14,11 +14,15 @@ struct Presentation : Window {
     Menu systemMenu{&menuBar};
     Menu settingsMenu{&menuBar};
       Menu videoSizeMenu{&settingsMenu};
+        Group videoSizeGroup;
       Menu videoOutputMenu{&settingsMenu};
-        MenuRadioItem videoOutputCenter{&videoOutputMenu};
+        MenuRadioItem videoOutputPixelPerfect{&videoOutputMenu};
+        MenuRadioItem videoOutputFixedScale{&videoOutputMenu};
+        MenuRadioItem videoOutputIntegerScale{&videoOutputMenu};
         MenuRadioItem videoOutputScale{&videoOutputMenu};
         MenuRadioItem videoOutputStretch{&videoOutputMenu};
-        Group videoOutputGroup{&videoOutputCenter, &videoOutputScale, &videoOutputStretch};
+        Group videoOutputGroup{&videoOutputPixelPerfect, &videoOutputFixedScale, &videoOutputIntegerScale,
+                               &videoOutputScale, &videoOutputStretch};
         MenuSeparator videoOutputSeparator{&videoOutputMenu};
         MenuCheckItem videoAspectCorrection{&videoOutputMenu};
         MenuCheckItem videoAdaptiveSizing{&videoOutputMenu};
