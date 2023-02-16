@@ -9,6 +9,8 @@ auto CPU::serialize(serializer& s) -> void {
   s(keypad.matrix);
   s(keypad.lastPolledMatrix);
   s(io.cartridgeEnable);
+  s(io.cartridgeRomWidth);
+  s(io.cartridgeRomWait);
   s(io.interruptBase);
   s(io.interruptEnable);
   s(io.interruptStatus);
