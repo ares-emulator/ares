@@ -349,7 +349,7 @@ auto PIF::mainHLE() -> void {
     }
     for (auto i: range(6)) intram.cpuChecksum[i] = 0;
     state = WaitTerminateBoot;
-    intram.bootTimeout = 0xfb00 * 6500;
+    intram.bootTimeout = 6 * 187500000;  //6 seconds
     return;
   }
 
@@ -367,7 +367,7 @@ auto PIF::mainHLE() -> void {
   }
 
   if(state == Error) {
-    cpu.scc.nmiPending = !cpu.scc.nmiPending;
+    cpu.scc.nmiPending = 1;
     return;
   }
 }
