@@ -44,6 +44,7 @@ auto MCD::CDD::clock() -> void {
     advance();
   } break;
 
+  case Status::Tracking: [[fallthrough]]; // TODO: implement tracking logic
   case Status::Seeking: {
     if(io.latency && --io.latency) break;
     io.status = io.seeking;
@@ -241,6 +242,41 @@ auto MCD::CDD::process() -> void {
   case Command::Play: {
     io.status = Status::Playing;
   } break;
+
+  // TrackSkip command directs movement of the laser/sled by a specified radial track count.
+  // Certain versions of the Mega-CD BIOS will issue this tracking command followed by a
+  // Seek command (buffered). Therefore, it is not critical to handle the operation explicitly.
+  // Actual seek algorithms (implemented in the MCU program) are currently unknown.
+  case Command::TrackSkip: {
+    // cmd[2..3] : Direction (flag)
+    //   non-zero == inward movement (i.e., backtracking); zero == outward movement
+    // cmd[4..7] : Magnitude (in hexadecimal -- not BCD)
+    //   number of radial tracks to traverse
+
+    //u8  direction = command[2] << 4 | command[3];
+    //s16 magnitude = command[4] << 12 | command[5] << 8 | command[6] << 4 | command[7];
+    //magnitude = direction ? -magnitude : magnitude;
+
+    // TODO: Implement this properly. For now, it is treated as a null seek operation.
+
+    counter    = 0;
+    io.status  = Status::Tracking;
+    io.seeking = Status::Paused;
+    io.latency = 0;
+    //io.sector  = lba;
+    io.sample  = 0;
+
+    status[1] = 0xf;
+    status[2] = 0x0; status[3] = 0x0;
+    status[4] = 0x0; status[5] = 0x0;
+    status[6] = 0x0; status[7] = 0x0;
+    status[8] = 0x0;
+  } break;
+
+  // TrackCue command directs movement of the laser/sled to find a target track index number.
+  // It is not known to be used by the CD BIOS, so it remains unsupported.
+  //case Command::TrackCue: {
+  //} break;
 
   default:
     io.status = Status::CommandError;
