@@ -49,11 +49,11 @@ auto APU::main() -> void {
 
     // TODO: are voice/noise modes handled on different cycles than tone modes?
     switch(state.apuClock++) {
-    case 0: if(channel1.io.enable) channel1.runOutput(); break;
-    case 1: if(channel2.io.enable) channel2.runOutput(); break;
-    case 2: if(channel3.io.enable) channel3.runOutput(); break;
-    case 3: if(channel4.io.enable) channel4.runOutput(); break;
-    case 4: if(channel5.io.enable) channel5.runOutput(); break; // TODO: which cycle is this?
+    case 0: if(channel1.io.enable)                      channel1.runOutput(); break;
+    case 1: if(channel2.io.enable || channel2.io.voice) channel2.runOutput(); break;
+    case 2: if(channel3.io.enable)                      channel3.runOutput(); break;
+    case 3: if(channel4.io.enable)                      channel4.runOutput(); break;
+    case 4: if(channel5.io.enable)                      channel5.runOutput(); break; // TODO: which cycle is this?
     case 5: dma.run(); break; // TODO: which cycle is this?
     case 6: dacRun(); break; // TODO: which cycle is this?
     }
@@ -77,18 +77,18 @@ auto APU::dacRun() -> void {
   }
 
   s32 left = 0;
-  if(channel1.io.enable) left += channel1.output.left;
-  if(channel2.io.enable) left += channel2.output.left;
-  if(channel3.io.enable) left += channel3.output.left;
-  if(channel4.io.enable) left += channel4.output.left;
-  if(channel5.io.enable) left += channel5.output.left * io.headphonesConnected;
+  if(channel1.io.enable)                      left += channel1.output.left;
+  if(channel2.io.enable || channel2.io.voice) left += channel2.output.left;
+  if(channel3.io.enable)                      left += channel3.output.left;
+  if(channel4.io.enable)                      left += channel4.output.left;
+  if(channel5.io.enable)                      left += channel5.output.left * io.headphonesConnected;
 
   s32 right = 0;
-  if(channel1.io.enable) right += channel1.output.right;
-  if(channel2.io.enable) right += channel2.output.right;
-  if(channel3.io.enable) right += channel3.output.right;
-  if(channel4.io.enable) right += channel4.output.right;
-  if(channel5.io.enable) right += channel5.output.right * io.headphonesConnected;
+  if(channel1.io.enable)                      right += channel1.output.right;
+  if(channel2.io.enable || channel2.io.voice) right += channel2.output.right;
+  if(channel3.io.enable)                      right += channel3.output.right;
+  if(channel4.io.enable)                      right += channel4.output.right;
+  if(channel5.io.enable)                      right += channel5.output.right * io.headphonesConnected;
 
   if(!io.headphonesConnected) {
     left = right = sclamp<16>((((left + right) >> io.speakerShift) & 0xFF) << 7);
