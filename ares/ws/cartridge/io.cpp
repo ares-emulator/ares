@@ -76,6 +76,20 @@ auto Cartridge::readIO(n16 address) -> n8 {
     data.bit(0) = io.flashEnable;
     break;
     
+  case 0x00d6:  //KARNAK_TIMER
+    data.bit(7) = karnak.timerEnable;
+    data.bit(6, 0) = karnak.timerPeriod;
+    break;
+
+  case 0x00d7:  //KARNAK
+    data = 0xFF;
+    break;
+
+  case 0x00d8:
+  case 0x00d9:
+    debug(unimplemented, "[KARNAK] ADPCM read ", hex(address, 2L));
+    break;
+
   }
 
   return data;
@@ -154,6 +168,16 @@ auto Cartridge::writeIO(n16 address, n8 data) -> void {
 
   case 0x00ce:  //MEMORY_CTRL
     io.flashEnable = data.bit(0);
+    break;
+
+  case 0x00d6:  //KARNAK_TIMER
+    karnak.timerEnable = data.bit(7);
+    karnak.timerPeriod = data.bit(6, 0);
+    break;
+
+  case 0x00d8:
+  case 0x00d9:
+    debug(unimplemented, "[KARNAK] ADPCM write ", hex(address, 2L), "=", hex(data, 2L));
     break;
 
   }

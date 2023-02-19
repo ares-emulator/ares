@@ -27,6 +27,10 @@ auto Cartridge::serialize(serializer& s) -> void {
     s(flash.fastmode);
     s(flash.erasemode);
   }
+
+  if(has.karnak) {
+    karnak.serialize(s);
+  }
 }
 
 auto Cartridge::RTC::serialize(serializer& s) -> void {
@@ -38,4 +42,12 @@ auto Cartridge::RTC::serialize(serializer& s) -> void {
   s(index);
   s(fetchedData);
   s(counter);
+}
+
+auto Cartridge::KARNAK::serialize(serializer& s) -> void {
+  Thread::serialize(s);
+
+  s(timerEnable);
+  s(timerPeriod);
+  s(timerCounter);
 }

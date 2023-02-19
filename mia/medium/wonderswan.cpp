@@ -4,6 +4,7 @@ struct WonderSwan : Cartridge {
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
+  virtual auto mapper(vector<u8>& rom) -> string;
 };
 
 auto WonderSwan::load(string location) -> bool {
@@ -23,6 +24,7 @@ auto WonderSwan::load(string location) -> bool {
   pak = new vfs::directory;
   pak->setAttribute("title", document["game/title"].string());
   pak->setAttribute("orientation", document["game/orientation"].string());
+  pak->setAttribute("board", document["game/board"].string());
   pak->append("manifest.bml", manifest);
   if(auto node = document["game/board/memory(type=Flash,content=Program)"]) {
     pak->append("program.flash", rom);
@@ -61,6 +63,10 @@ auto WonderSwan::save(string location) -> bool {
   }
 
   return true;
+}
+
+auto WonderSwan::mapper(vector<u8>& rom) -> string {
+  return rom[rom.size() - 3] >= 0x01 ? "2003" : "2001";
 }
 
 auto WonderSwan::analyze(vector<u8>& rom) -> string {
@@ -104,7 +110,7 @@ auto WonderSwan::analyze(vector<u8>& rom) -> string {
   s +={"  name:        ", Medium::name(location), "\n"};
   s +={"  title:       ", Medium::name(location), "\n"};
   s +={"  orientation: ", !orientation ? "horizontal" : "vertical", "\n"};
-  s += "  board\n";
+  s +={"  board:       ", mapper(rom), "\n"};
 
   s += "    memory\n";
   if(!isWonderWitch) s += "      type: ROM\n";
