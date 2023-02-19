@@ -1,4 +1,4 @@
-struct Cartridge : IO {
+struct Cartridge : IO, Thread {
   Node::Peripheral node;
   VFS::Pak pak;
   Memory::Writable<n8> rom;
@@ -31,6 +31,7 @@ struct Cartridge : IO {
     n1 eeprom;
     n1 rtc;
     n1 flash;
+    n1 karnak;
   } has;
 
   auto title() const { return information.title; }
@@ -43,6 +44,9 @@ struct Cartridge : IO {
 
   auto save() -> void;
   auto power() -> void;
+
+  auto main() -> void;
+  auto step(u32 clocks) -> void;
 
   //memory.cpp
   auto readROM(n20 address) -> n8;
@@ -106,6 +110,21 @@ struct Cartridge : IO {
     auto alarmHour()   -> n8& { return ram[16]; }
     auto alarmMinute() -> n8& { return ram[17]; }
   } rtc;
+
+  struct KARNAK : Thread {
+    //karnak.cpp
+    auto power() -> void;
+    auto reset() -> void;
+    auto main() -> void;
+    auto step(u32 clocks) -> void;
+
+    //serialization.cpp
+    auto serialize(serializer& s) -> void;
+
+    n1 timerEnable;
+    n7 timerPeriod;
+    n9 timerCounter;
+  } karnak;
 
   struct FLASH {
     Cartridge& self;

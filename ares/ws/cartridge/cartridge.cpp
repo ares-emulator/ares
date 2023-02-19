@@ -8,6 +8,7 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "memory.cpp"
 #include "rtc.cpp"
 #include "flash.cpp"
+#include "karnak.cpp"
 #include "io.cpp"
 #include "debugger.cpp"
 #include "serialization.cpp"
@@ -55,6 +56,8 @@ auto Cartridge::connect() -> void {
     has.rtc = true;
   }
 
+  has.karnak = pak->attribute("board") == "KARNAK";
+
   debugger.load(node);
   power();
 }
@@ -66,6 +69,7 @@ auto Cartridge::disconnect() -> void {
   rom.reset();
   ram.reset();
   rtc.reset();
+  karnak.reset();
 }
 
 auto Cartridge::save() -> void {
@@ -93,6 +97,7 @@ auto Cartridge::power() -> void {
   if(has.eeprom) eeprom.power();
   if(has.rtc) rtc.power();
   if(has.flash) flash.power();
+  if(has.karnak) karnak.power();
 
   bus.map(this, 0x00c0, 0x00ff);
 
