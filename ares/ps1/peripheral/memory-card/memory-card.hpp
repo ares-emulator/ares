@@ -13,6 +13,8 @@ struct MemoryCard : PeripheralDevice {
   auto read(u8 data) -> u8;
   auto write(u8 data) -> u8;
 
+  auto format() -> void;
+
   enum class State : u32 {
     Idle,
     Select,
