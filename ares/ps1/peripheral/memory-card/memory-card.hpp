@@ -4,6 +4,7 @@ struct MemoryCard : PeripheralDevice {
 
   MemoryCard(Node::Port);
   ~MemoryCard();
+  auto save() -> void override;
   auto reset() -> void override;
   auto acknowledge() -> bool override;
   auto bus(u8 data) -> u8 override;

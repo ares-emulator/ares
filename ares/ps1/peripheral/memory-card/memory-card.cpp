@@ -14,6 +14,9 @@ MemoryCard::MemoryCard(Node::Port parent) {
 }
 
 MemoryCard::~MemoryCard() {
+}
+
+auto MemoryCard::save() -> void {
   if(auto fp = pak->write("save.card")) {
     memory.save(fp);
   }

@@ -109,6 +109,8 @@ auto System::unload() -> void {
 
 auto System::save() -> void {
   if(!node) return;
+  memoryCardPort1.save();
+  memoryCardPort2.save();
 }
 
 auto System::power(bool reset) -> void {
