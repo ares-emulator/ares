@@ -110,7 +110,7 @@ inline auto CHD::load(const string& location) -> bool {
 
     // We currently only support RAW and audio tracks; log an error and exit if we see anything different
     auto typeStr = string{type};
-    if (!(typeStr.find("_RAW") || typeStr.find("AUDIO"))) {
+    if (!(typeStr.find("_RAW") || typeStr.find("AUDIO") || typeStr.find("MODE1"))) {
       print("CHD: Unsupported track type: ", type, "\n");
       return false;
     }
@@ -189,7 +189,7 @@ inline auto CHD::read(u32 sector) -> vector<u8> {
         auto chd_lba = (sector - index.lba) + index.chd_lba;
 
         vector<u8> output;
-        output.resize(2352);
+        output.resize(track.type == "MODE1" ? 2048 : 2352);
 
         int hunk = (chd_lba * chd_sector_size) / chd_hunk_size;
         int offset = (chd_lba * chd_sector_size) % chd_hunk_size;
@@ -213,7 +213,7 @@ inline auto CHD::read(u32 sector) -> vector<u8> {
             dst_ptr += sizeof(value);
           }
         } else {
-          std::copy(chd_hunk_buffer.data() + offset, chd_hunk_buffer.data() + offset + 2352, output.data());
+          std::copy(chd_hunk_buffer.data() + offset, chd_hunk_buffer.data() + offset + output.size(), output.data());
         }
 
         return output;

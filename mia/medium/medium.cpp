@@ -222,17 +222,22 @@ auto CompactDisc::readDataSectorCUE(string filename, u32 sectorID) -> vector<u8>
 }
 
 auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> vector<u8> {
-    Decode::CHD chd;
-    if(!chd.load(filename)) return {};
+  Decode::CHD chd;
+  if(!chd.load(filename)) return {};
 
-    // Account for 2 second pregap
-    sectorID += (75 * 2);
+  // Account for 2 second pregap
+  sectorID += (75 * 2);
 
-    // Read the full sector from CHD and extract the user data portion (2048 bytes)
-    auto fullSector = chd.read(sectorID);
-    vector<u8> output;
-    output.resize(2048);
-    memory::copy(output.data(), output.size(), fullSector.data() + 16, output.size());
+  // Read the sector from CHD and extract the user data portion (2048 bytes)
+  auto sector = chd.read(sectorID);
+  vector<u8> output;
+  output.resize(2048);
 
+  if (sector.size() == 2048) {
+    memory::copy(output.data(), output.size(), sector.data(), output.size());
     return output;
+  }
+
+  memory::copy(output.data(), output.size(), sector.data() + 16, output.size());
+  return output;
 }
