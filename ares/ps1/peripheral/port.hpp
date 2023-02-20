@@ -6,6 +6,7 @@ struct PeripheralPort {
   PeripheralPort(string name, string type);
   auto load(Node::Object) -> void;
   auto unload() -> void;
+  auto save() -> void;
   auto allocate(string name) -> Node::Peripheral;
 
   auto reset() -> void;

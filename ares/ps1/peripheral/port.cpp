@@ -26,6 +26,10 @@ auto PeripheralPort::unload() -> void {
   port.reset();
 }
 
+auto PeripheralPort::save() -> void {
+  if(device) device->save();
+}
+
 auto PeripheralPort::allocate(string name) -> Node::Peripheral {
   if(name == "Digital Gamepad") device = new DigitalGamepad(port);
   if(name == "Memory Card"    ) device = new MemoryCard(port);

@@ -2,6 +2,7 @@ struct PeripheralDevice {
   Node::Peripheral node;
 
   virtual ~PeripheralDevice() = default;
+  virtual auto save() -> void {}
   virtual auto reset() -> void {}
   virtual auto acknowledge() -> bool { return 0; }
   virtual auto active() -> bool { return 0; }
