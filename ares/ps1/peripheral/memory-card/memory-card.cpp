@@ -3,8 +3,12 @@ MemoryCard::MemoryCard(Node::Port parent) {
   node->setPak(pak = platform->pak(node));
 
   memory.allocate(128_KiB);
+  format();
+
   if(auto fp = pak->read("save.card")) {
-    memory.load(fp);
+    if(fp->attribute("loaded").boolean()) {
+      memory.load(fp);
+    }
   }
 
   flag.value = 0x00;
@@ -143,4 +147,38 @@ auto MemoryCard::write(u8 data) -> u8 {
   }
 
   return output;
+}
+
+auto MemoryCard::format() -> void {
+  constexpr auto frameSize = 0x80;
+
+  const auto fill = [&](u32 address, u32 value) {
+    for(u32 offset = 0; offset < frameSize; offset += 4) {
+      memory.writeWord(address + offset, value);
+    }
+  };
+
+  memory.fill(~0);
+
+  for(const auto frame : range(64)) {
+    const auto address = frame * frameSize;
+    if(frame == 0 || frame == 63) {
+      //header frame / test frame
+      fill(address, 0);
+      memory.writeHalf(address + 0x00, 0x434d);  //"MC"
+      memory.writeByte(address + 0x7f, 0x0e);    //checksum
+    } else if (frame >= 1 && frame <= 15) {
+      //directory frame
+      fill(address, 0);
+      memory.writeByte(address + 0x00, 0xa0);    //free
+      memory.writeHalf(address + 0x08, 0xffff);  //last block
+      memory.writeByte(address + 0x7f, 0xa0);    //checksum
+    } else if (frame >= 16 && frame <= 35) {
+      //broken sector list
+      fill(address, 0);
+      memory.writeWord(address + 0x00, 0xffffffff); //none
+      memory.writeHalf(address + 0x08, 0xffff);     //last block
+      memory.writeByte(address + 0x7f, 0x00);       //checksum
+    }
+  }
 }
