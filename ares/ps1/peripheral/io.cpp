@@ -15,14 +15,14 @@ auto Peripheral::transmit(u8 data) -> void {
     if(!memoryCardPort1.acknowledge()) {
       io.receiveSize = 1;
       io.receiveData = controllerPort1.bus(data);
-      io.acknowledgeInputLevel = controllerPort1.acknowledge();
+      io.acknowledgeAsserted = controllerPort1.acknowledge();
       if(controllerPort1.active()) return;
     }
 
     if(!controllerPort1.acknowledge()) {
       io.receiveSize = 1;
       io.receiveData = memoryCardPort1.bus(data);
-      io.acknowledgeInputLevel = memoryCardPort1.acknowledge();
+      io.acknowledgeAsserted = memoryCardPort1.acknowledge();
       if(memoryCardPort1.active()) return;
     }
   }
@@ -31,14 +31,14 @@ auto Peripheral::transmit(u8 data) -> void {
     if(!memoryCardPort2.acknowledge()) {
       io.receiveSize = 1;
       io.receiveData = controllerPort2.bus(data);
-      io.acknowledgeInputLevel = controllerPort2.acknowledge();
+      io.acknowledgeAsserted = controllerPort2.acknowledge();
       if(controllerPort2.active()) return;
     }
 
     if(!controllerPort2.acknowledge()) {
       io.receiveSize = 1;
       io.receiveData = memoryCardPort2.bus(data);
-      io.acknowledgeInputLevel = memoryCardPort2.acknowledge();
+      io.acknowledgeAsserted = memoryCardPort2.acknowledge();
       if(memoryCardPort2.active()) return;
     }
   }
@@ -69,7 +69,7 @@ auto Peripheral::readHalf(u32 address) -> u32 {
     data.bit(1) = io.receiveSize > 0;
     data.bit(2) = io.transmitFinished;
     data.bit(3) = io.parityError;
-    data.bit(7) = io.acknowledgeInputLevel;
+    data.bit(7) = io.acknowledgeAsserted;
     data.bit(9) = io.interruptRequest;
   }
 
@@ -128,7 +128,7 @@ auto Peripheral::readWord(u32 address) -> u32 {
     data.bit(1) = io.receiveSize > 0;
     data.bit(2) = io.transmitFinished;
     data.bit(3) = io.parityError;
-    data.bit(7) =!interrupt.level(Interrupt::Peripheral);
+    data.bit(7) = io.acknowledgeAsserted;
     data.bit(9) = io.interruptRequest;
   }
 
@@ -141,7 +141,7 @@ auto Peripheral::writeByte(u32 address, u32 value) -> void {
   //JOY_TX_DATA
   if(address == 0x1f80'1040) {
     transmit(data);
-    if(io.acknowledgeInputLevel) io.counter = 600;
+    if(io.acknowledgeAsserted) io.counter = 600;
   }
 }
 
@@ -151,7 +151,7 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
   //JOY_TX_DATA
   if(address == 0x1f80'1040) {
     transmit(data);
-    if(io.acknowledgeInputLevel) io.counter = 600;
+    if(io.acknowledgeAsserted) io.counter = 600;
   }
 
   //JOY_MODE

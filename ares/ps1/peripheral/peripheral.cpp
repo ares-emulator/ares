@@ -23,7 +23,7 @@ auto Peripheral::main() -> void {
     if(io.counter <= 0) {
       io.counter = 0;
       io.interruptRequest = 1;
-      io.acknowledgeInputLevel = 0;
+      io.acknowledgeAsserted = 0;
       if(io.acknowledgeInterruptEnable) {
         interrupt.raise(Interrupt::Peripheral);
       }
