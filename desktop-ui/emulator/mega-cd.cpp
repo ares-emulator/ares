@@ -74,8 +74,9 @@ auto MegaCD::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
-    if(game->pak->attribute("serial") == "GM T-162055-00") {
+    if(game->pak->attribute("serial").beginsWith("GM T-162055")) {
       // CORPSE KILLER (U) -- GM T-162055-00
+      // CORPSE KILLER (E) -- GM T-162055-50
       // Gamepad in controller port 2 breaks input polling, so leave it disconnected.
       // No supported lightgun devices are currently emulated (Sega Menacer, ALG GameGun).
     } else {
