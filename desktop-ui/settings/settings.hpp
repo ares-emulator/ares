@@ -22,7 +22,7 @@ struct Settings : Markup::Node {
     f64 luminance = 1.0;
     f64 saturation = 1.0;
     f64 gamma = 1.0;
-    bool colorBleed = true;
+    bool colorBleed = false;
     bool colorEmulation = true;
     bool interframeBlending = true;
     bool overscan = false;
