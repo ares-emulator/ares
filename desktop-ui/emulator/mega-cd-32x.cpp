@@ -66,8 +66,9 @@ auto MegaCD32X::load() -> bool {
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 2")) {
-    if(game->pak->attribute("serial") == "GM T-16201F-00") {
+    if(game->pak->attribute("serial").beginsWith("GM T-16201F")) {
       // CORPSE KILLER 32X (U) -- GM T-16201F-00
+      // CORPSE KILLER 32X (E) -- GM T-16201F-50
       // Gamepad in controller port 2 breaks input polling, so leave it disconnected.
       // No supported lightgun devices are currently emulated (Sega Menacer, ALG GameGun).
     } else {
