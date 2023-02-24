@@ -275,6 +275,7 @@ struct SH2 {
     auto emitInstruction(u16 opcode) -> bool;
     auto getSR(reg dst) -> void;
     auto setSR(reg src) -> void;
+    template<typename F> auto checkDelaySlot(F body) -> void;
 
     bump_allocator allocator;
     Pool* pools[1 << 24];
