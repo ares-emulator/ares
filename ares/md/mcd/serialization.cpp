@@ -54,9 +54,7 @@ auto MCD::CDC::serialize(serializer& s) -> void {
   s(address);
   s(stopwatch);
 
-  s(irq.decoder);
-  s(irq.transfer);
-  s(irq.command);
+  s(irq);
 
   s(command.fifo);
   s(command.read);
@@ -108,6 +106,14 @@ auto MCD::CDC::serialize(serializer& s) -> void {
   s(control.erasureCorrection);
   s(control.statusTrigger);
   s(control.statusControl);
+}
+
+auto MCD::CDC::IRQ::serialize(serializer& s) -> void {
+  MCD::IRQ::serialize(s);
+
+  s(decoder);
+  s(transfer);
+  s(command);
 }
 
 auto MCD::CDC::Transfer::serialize(serializer& s) -> void {
