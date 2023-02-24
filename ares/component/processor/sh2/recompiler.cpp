@@ -55,15 +55,17 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   beginFunction(2);
 
   bool hasBranched = 0;
+  inDelaySlot = 1;  //force runtime check on first instruction
   while(true) {
     u16 instruction = self.readWord(address);
-    bool branched = emitInstruction(instruction);
+    auto branch = emitInstruction(instruction);
+    inDelaySlot = branch == Branch::Slot;
     add64(CCR, CCR, imm(1));
   //add64(CCR, CCR, imm(2));  //underclocking hack
     call(&SH2::instructionEpilogue);
     address += 2;
     if(hasBranched || (address & 0xfe) == 0) break;  //block boundary
-    hasBranched = branched;
+    hasBranched = branch != Branch::Step;
     testJumpEpilog();
   }
   jumpEpilog();
@@ -84,7 +86,7 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
 #define writeB  &SH2::writeByte<>
 #define illegal &SH2::illegalInstruction
 
-auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
+auto SH2::Recompiler::emitInstruction(u16 opcode) -> u32 {
   #define n   (opcode >> 8 & 0x00f)
   #define m   (opcode >> 4 & 0x00f)
   #define i   (opcode >> 0 & 0x0ff)
@@ -629,7 +631,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       add32(PPC, PC, imm(4 + (i12)d12 * 2));
       mov32(PPM, imm(Branch::Slot));
     });
-    return 1;
+    return Branch::Slot;
   }
 
   //BSR disp
@@ -641,7 +643,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       mov32(PPC, reg(0));
       mov32(PPM, imm(Branch::Slot));
     });
-    return 1;
+    return Branch::Slot;
   }
 
   //MOV.L @(disp,PC),Rn
@@ -733,7 +735,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       mov32(PPM, imm(Branch::Take));
       setLabel(skip);
     });
-    return 1;
+    return Branch::Take;
   }
 
   //BF disp
@@ -744,7 +746,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       mov32(PPM, imm(Branch::Take));
       setLabel(skip);
     });
-    return 1;
+    return Branch::Take;
   }
 
   //BT/S disp
@@ -755,7 +757,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       mov32(PPM, imm(Branch::Slot));
       setLabel(skip);
     });
-    return 1;
+    return Branch::Slot;
   }
 
   //BF/S disp
@@ -766,7 +768,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       mov32(PPM, imm(Branch::Slot));
       setLabel(skip);
     });
-    return 1;
+    return Branch::Slot;
   }
 
   //MOV.B R0,@(disp,GBR)
@@ -810,7 +812,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       mov32(PPC, reg(0));
       mov32(PPM, imm(Branch::Take));
     });
-    return 1;
+    return Branch::Take;
   }
 
   //MOV.B @(disp,GBR),R0
@@ -950,7 +952,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       mov32(PPC, reg(0));
       mov32(PPM, imm(Branch::Slot));
     });
-    return 1;
+    return Branch::Slot;
   }
 
   //STS MACH,Rn
@@ -985,7 +987,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       mov32(PPC, reg(0));
       mov32(PPM, imm(Branch::Slot));
     });
-    return 1;
+    return Branch::Slot;
   }
 
   //MOVT Rn
@@ -1093,7 +1095,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       add32(PPC, Rm, imm(4));
       mov32(PPM, imm(Branch::Slot));
     });
-    return 1;
+    return Branch::Slot;
   }
 
   //LDC Rm,SR
@@ -1294,7 +1296,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       add32(PPC, Rm, imm(4));
       mov32(PPM, imm(Branch::Slot));
     });
-    return 1;
+    return Branch::Slot;
   }
 
   //LDC Rm,VBR
@@ -1329,7 +1331,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       add32(PPC, PR, imm(4));
       mov32(PPM, imm(Branch::Slot));
     });
-    return 1;
+    return Branch::Slot;
   }
 
   //SETT
@@ -1355,7 +1357,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
     setLabel(skip);
     mov32(ET, imm(0));
     setLabel(skip2);
-    return 1;
+    return Branch::Take;
   }
 
   //CLRMAC
@@ -1379,7 +1381,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
       call(readL);
       setSR(reg(0));
     });
-    return 1;
+    return Branch::Slot;
   }
 
   }
@@ -1389,7 +1391,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   //ILLEGAL
   case 0: {
     call(illegal);
-    return 1;
+    return Branch::Take;
   }
 
   }
@@ -1402,7 +1404,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
   #define br(id, name, ...) \
     case id: \
       call(&SH2::name, &self, ##__VA_ARGS__); \
-      return 1;
+      return Branch::Take;
   #include "decoder.hpp"
   #undef op
   #undef br
@@ -1437,6 +1439,7 @@ auto SH2::Recompiler::setSR(reg src) -> void {
 
 template<typename F>
 auto SH2::Recompiler::checkDelaySlot(F body) -> void {
+  if(!inDelaySlot) return body();
   auto skip = cmp32_jump(PPM, imm(Branch::Step), flag_ne);
   body();
   auto skip2 = jump();
