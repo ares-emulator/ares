@@ -147,6 +147,9 @@ struct MCD : M68000, Thread {
     n12 stopwatch;
 
     struct IRQ : MCD::IRQ {
+      //serialization.cpp
+      auto serialize(serializer&) -> void;
+
       MCD::IRQ decoder;   //DECEIN + DECI
       MCD::IRQ transfer;  //DTEIEN + DTEI
       MCD::IRQ command;   //CMDIEN + CMDI
