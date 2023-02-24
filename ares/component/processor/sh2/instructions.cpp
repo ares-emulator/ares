@@ -43,6 +43,7 @@ auto SH2::ANDM(u32 i) -> void {
 
 //BF disp
 auto SH2::BF(u32 d) -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   if(SR.T == 0) {
     branch(PC + 4 + (s8)d * 2);
   }
@@ -50,6 +51,7 @@ auto SH2::BF(u32 d) -> void {
 
 //BF/S disp
 auto SH2::BFS(u32 d) -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   if(SR.T == 0) {
     delaySlot(PC + 4 + (s8)d * 2);
   }
@@ -57,28 +59,33 @@ auto SH2::BFS(u32 d) -> void {
 
 //BRA disp
 auto SH2::BRA(u32 d) -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   delaySlot(PC + 4 + (i12)d * 2);
 }
 
 //BRAF disp
 auto SH2::BRAF(u32 m) -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   delaySlot(PC + 4 + R[m]);
 }
 
 //BSR disp
 auto SH2::BSR(u32 d) -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   PR = PC;
   delaySlot(PC + 4 + (i12)d * 2);
 }
 
 //BSRF Rm
 auto SH2::BSRF(u32 m) -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   PR = PC;
   delaySlot(PC + 4 + R[m]);
 }
 
 //BT disp
 auto SH2::BT(u32 d) -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   if(SR.T == 1) {
     branch(PC + 4 + (s8)d * 2);
   }
@@ -86,6 +93,7 @@ auto SH2::BT(u32 d) -> void {
 
 //BT/S disp
 auto SH2::BTS(u32 d) -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   if(SR.T == 1) {
     delaySlot(PC + 4 + (s8)d * 2);
   }
@@ -221,11 +229,13 @@ auto SH2::ILLEGAL() -> void {
 
 //JMP @Rm
 auto SH2::JMP(u32 m) -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   delaySlot(R[m] + 4);
 }
 
 //JSR @Rm
 auto SH2::JSR(u32 m) -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   PR = PC;
   delaySlot(R[m] + 4);
 }
@@ -605,6 +615,7 @@ auto SH2::ROTR(u32 n) -> void {
 
 //RTE
 auto SH2::RTE() -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   delaySlot(readLong(SP + 0) + 4);
   SR  = readLong(SP + 4);
   SP += 8;
@@ -612,6 +623,7 @@ auto SH2::RTE() -> void {
 
 //RTS
 auto SH2::RTS() -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   delaySlot(PR + 4);
 }
 
@@ -810,6 +822,7 @@ auto SH2::TAS(u32 n) -> void {
 
 //TRAPA #imm
 auto SH2::TRAPA(u32 i) -> void {
+  if(inDelaySlot()) return illegalSlotInstruction();
   push(SR);
   push(PC - 2);
   branch(readLong(VBR + i * 4) + 4);
