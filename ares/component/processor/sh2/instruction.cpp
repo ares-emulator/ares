@@ -4,13 +4,11 @@ auto SH2::jump(u32 pc) -> void {
 }
 
 auto SH2::branch(u32 pc) -> void {
-  if(inDelaySlot()) return illegalSlotInstruction();
   PPC = pc;
   PPM = Branch::Take;
 }
 
 auto SH2::delaySlot(u32 pc) -> void {
-  if(inDelaySlot()) return illegalSlotInstruction();
   PPC = pc;
   PPM = Branch::Slot;
 }
