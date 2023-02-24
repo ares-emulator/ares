@@ -625,18 +625,22 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //BRA disp
   case 0xa0 ... 0xaf: {
-    add32(PPC, PC, imm(4 + (i12)d12 * 2));
-    mov32(PPM, imm(Branch::Slot));
+    checkDelaySlot([=] {
+      add32(PPC, PC, imm(4 + (i12)d12 * 2));
+      mov32(PPM, imm(Branch::Slot));
+    });
     return 1;
   }
 
   //BSR disp
   case 0xb0 ... 0xbf: {
-    mov32(reg(0), PC);
-    mov32(PR, reg(0));
-    add32(reg(0), reg(0), imm(4 + (i12)d12 * 2));
-    mov32(PPC, reg(0));
-    mov32(PPM, imm(Branch::Slot));
+    checkDelaySlot([=] {
+      mov32(reg(0), PC);
+      mov32(PR, reg(0));
+      add32(reg(0), reg(0), imm(4 + (i12)d12 * 2));
+      mov32(PPC, reg(0));
+      mov32(PPM, imm(Branch::Slot));
+    });
     return 1;
   }
 
@@ -723,37 +727,45 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //BT disp
   case 0x89: {
-    auto skip = cmp32_jump(T, imm(0), flag_eq);
-    add32(PPC, PC, imm(4 + (s8)d8 * 2));
-    mov32(PPM, imm(Branch::Take));
-    setLabel(skip);
+    checkDelaySlot([=] {
+      auto skip = cmp32_jump(T, imm(0), flag_eq);
+      add32(PPC, PC, imm(4 + (s8)d8 * 2));
+      mov32(PPM, imm(Branch::Take));
+      setLabel(skip);
+    });
     return 1;
   }
 
   //BF disp
   case 0x8b: {
-    auto skip = cmp32_jump(T, imm(0), flag_ne);
-    add32(PPC, PC, imm(4 + (s8)d8 * 2));
-    mov32(PPM, imm(Branch::Take));
-    setLabel(skip);
+    checkDelaySlot([=] {
+      auto skip = cmp32_jump(T, imm(0), flag_ne);
+      add32(PPC, PC, imm(4 + (s8)d8 * 2));
+      mov32(PPM, imm(Branch::Take));
+      setLabel(skip);
+    });
     return 1;
   }
 
   //BT/S disp
   case 0x8d: {
-    auto skip = cmp32_jump(T, imm(0), flag_eq);
-    add32(PPC, PC, imm(4 + (s8)d8 * 2));
-    mov32(PPM, imm(Branch::Slot));
-    setLabel(skip);
+    checkDelaySlot([=] {
+      auto skip = cmp32_jump(T, imm(0), flag_eq);
+      add32(PPC, PC, imm(4 + (s8)d8 * 2));
+      mov32(PPM, imm(Branch::Slot));
+      setLabel(skip);
+    });
     return 1;
   }
 
   //BF/S disp
   case 0x8f: {
-    auto skip = cmp32_jump(T, imm(0), flag_ne);
-    add32(PPC, PC, imm(4 + (s8)d8 * 2));
-    mov32(PPM, imm(Branch::Slot));
-    setLabel(skip);
+    checkDelaySlot([=] {
+      auto skip = cmp32_jump(T, imm(0), flag_ne);
+      add32(PPC, PC, imm(4 + (s8)d8 * 2));
+      mov32(PPM, imm(Branch::Slot));
+      setLabel(skip);
+    });
     return 1;
   }
 
@@ -783,19 +795,21 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //TRAPA #imm
   case 0xc3: {
-    getSR(reg(2));
-    sub32(reg(1), R15, imm(4));
-    mov32(R15, reg(1));
-    call(writeL);
-    sub32(reg(2), PC, imm(2));
-    sub32(reg(1), R15, imm(4));
-    mov32(R15, reg(1));
-    call(writeL);
-    add32(reg(1), VBR, imm(i * 4));
-    call(readL);
-    add32(reg(0), reg(0), imm(4));
-    mov32(PPC, reg(0));
-    mov32(PPM, imm(Branch::Take));
+    checkDelaySlot([=] {
+      getSR(reg(2));
+      sub32(reg(1), R15, imm(4));
+      mov32(R15, reg(1));
+      call(writeL);
+      sub32(reg(2), PC, imm(2));
+      sub32(reg(1), R15, imm(4));
+      mov32(R15, reg(1));
+      call(writeL);
+      add32(reg(1), VBR, imm(i * 4));
+      call(readL);
+      add32(reg(0), reg(0), imm(4));
+      mov32(PPC, reg(0));
+      mov32(PPM, imm(Branch::Take));
+    });
     return 1;
   }
 
@@ -928,12 +942,14 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //BSRF Rm
   case 0x003: {
-    mov32(reg(0), PC);
-    mov32(PR, reg(0));
-    add32(reg(0), reg(0), Rm);
-    add32(reg(0), reg(0), imm(4));
-    mov32(PPC, reg(0));
-    mov32(PPM, imm(Branch::Slot));
+    checkDelaySlot([=] {
+      mov32(reg(0), PC);
+      mov32(PR, reg(0));
+      add32(reg(0), reg(0), Rm);
+      add32(reg(0), reg(0), imm(4));
+      mov32(PPC, reg(0));
+      mov32(PPM, imm(Branch::Slot));
+    });
     return 1;
   }
 
@@ -963,10 +979,12 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //BRAF Rm
   case 0x023: {
-    add32(reg(0), PC, Rm);
-    add32(reg(0), reg(0), imm(4));
-    mov32(PPC, reg(0));
-    mov32(PPM, imm(Branch::Slot));
+    checkDelaySlot([=] {
+      add32(reg(0), PC, Rm);
+      add32(reg(0), reg(0), imm(4));
+      mov32(PPC, reg(0));
+      mov32(PPM, imm(Branch::Slot));
+    });
     return 1;
   }
 
@@ -1070,9 +1088,11 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //JSR @Rm
   case 0x40b: {
-    mov32(PR, PC);
-    add32(PPC, Rm, imm(4));
-    mov32(PPM, imm(Branch::Slot));
+    checkDelaySlot([=] {
+      mov32(PR, PC);
+      add32(PPC, Rm, imm(4));
+      mov32(PPM, imm(Branch::Slot));
+    });
     return 1;
   }
 
@@ -1270,8 +1290,10 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //JMP @Rm
   case 0x42b: {
-    add32(PPC, Rm, imm(4));
-    mov32(PPM, imm(Branch::Slot));
+    checkDelaySlot([=] {
+      add32(PPC, Rm, imm(4));
+      mov32(PPM, imm(Branch::Slot));
+    });
     return 1;
   }
 
@@ -1303,8 +1325,10 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //RTS
   case 0x000b: {
-    add32(PPC, PR, imm(4));
-    mov32(PPM, imm(Branch::Slot));
+    checkDelaySlot([=] {
+      add32(PPC, PR, imm(4));
+      mov32(PPM, imm(Branch::Slot));
+    });
     return 1;
   }
 
@@ -1343,16 +1367,18 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> bool {
 
   //RTE
   case 0x002b: {
-    mov32(reg(1), R15);
-    add32(R15, reg(1), imm(4));
-    call(readL);
-    add32(reg(0), reg(0), imm(4));
-    mov32(PPC, reg(0));
-    mov32(PPM, imm(Branch::Slot));
-    mov32(reg(1), R15);
-    add32(R15, reg(1), imm(4));
-    call(readL);
-    setSR(reg(0));
+    checkDelaySlot([=] {
+      mov32(reg(1), R15);
+      add32(R15, reg(1), imm(4));
+      call(readL);
+      add32(reg(0), reg(0), imm(4));
+      mov32(PPC, reg(0));
+      mov32(PPM, imm(Branch::Slot));
+      mov32(reg(1), R15);
+      add32(R15, reg(1), imm(4));
+      call(readL);
+      setSR(reg(0));
+    });
     return 1;
   }
 
@@ -1407,6 +1433,16 @@ auto SH2::Recompiler::setSR(reg src) -> void {
   and32(Q, src, imm(1));
   lshr32(src, src, imm(1));
   and32(M, src, imm(1));
+}
+
+template<typename F>
+auto SH2::Recompiler::checkDelaySlot(F body) -> void {
+  auto skip = cmp32_jump(PPM, imm(Branch::Step), flag_ne);
+  body();
+  auto skip2 = jump();
+  setLabel(skip);
+  call(&SH2::illegalSlotInstruction);
+  setLabel(skip2);
 }
 
 #undef Reg
