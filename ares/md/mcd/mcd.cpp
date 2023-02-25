@@ -179,8 +179,10 @@ auto MCD::wait(u32 clocks) -> void {
 auto MCD::power(bool reset) -> void {
   M68000::power();
   Thread::create(12'500'000, {&MCD::main, this});
-  counter = {};
+  n32 vec4 = io.vectorLevel4;
   io = {};
+  io.vectorLevel4 = reset ? vec4 : n32(~0);
+  counter = {};
   led = {};
   irq = {};
   external = {};
@@ -193,11 +195,6 @@ auto MCD::power(bool reset) -> void {
 
   irq.reset.enable = 1;
   irq.reset.raise();
-
-  io.vectorLevel4.byte(3) = bios[0x70 >> 1].byte(1);
-  io.vectorLevel4.byte(2) = bios[0x70 >> 1].byte(0);
-  io.vectorLevel4.byte(1) = ~0;
-  io.vectorLevel4.byte(0) = ~0;
 }
 
 }
