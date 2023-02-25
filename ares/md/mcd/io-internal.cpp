@@ -197,13 +197,13 @@ auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address == 0xff8002) {
-    if(lower) {
-      if(io.wramSelect != data.bit(0)) io.wramSwitchRequest = 0;
-      io.wramSelect   = data.bit(0);
-      io.wramMode     = data.bit(2);
-      io.wramPriority = data.bit(3,4);
-      if(io.wramSelect) io.wramSwitch = 0;
-    }
+    // 8-bit register mapped into 16-bit gate array
+    // All writes go to the low byte
+    if(io.wramSelect != data.bit(0)) io.wramSwitchRequest = 0;
+    io.wramSelect   = data.bit(0);
+    io.wramMode     = data.bit(2);
+    io.wramPriority = data.bit(3,4);
+    if(io.wramSelect) io.wramSwitch = 0;
   }
 
   if(address == 0xff8004) {
@@ -235,9 +235,9 @@ auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address == 0xff800e) {
-    if(lower) {  //unconfirmed
-      communication.cfs = data.byte(0);
-    }
+    // 8-bit register mapped into 16-bit gate array
+    // All writes go to the low byte
+    communication.cfs = data.byte(0);
   }
 
   if(address >= 0xff8010 && address <= 0xff801f) {
@@ -251,9 +251,9 @@ auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address == 0xff8030) {
-    if(lower) {
-      timer.counter = timer.frequency = data.byte(0);
-    }
+    // 8-bit register mapped into 16-bit gate array
+    // All writes go to the low byte
+    timer.counter = timer.frequency = data.byte(0);
   }
 
   if(address == 0xff8032) {
@@ -298,10 +298,10 @@ auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address == 0xff804c) {
-    if(lower) {
-      gpu.font.color.background = data.bit(0,3);
-      gpu.font.color.foreground = data.bit(4,7);
-    }
+    // 8-bit register mapped into 16-bit gate array
+    // All writes go to the low byte
+    gpu.font.color.background = data.bit(0,3);
+    gpu.font.color.foreground = data.bit(4,7);
   }
 
   if(address == 0xff804e) {

@@ -22,7 +22,11 @@ auto MCD::readExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   if(address == 0xa12004) {
-    debug(unusual, "[MCD::readExternalIO] address=0xa12004");
+    data.bit( 0, 7) = Unmapped;
+    data.bit( 8,10) = cdc.transfer.destination;
+    data.bit(11,13) = Unmapped;
+    data.bit(14)    = cdc.transfer.ready;
+    data.bit(15)    = cdc.transfer.completed;
   }
 
   if(address == 0xa12006) {
@@ -111,9 +115,9 @@ auto MCD::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
   }
 
   if(address == 0xa1200e) {
-    if(upper) {  //unconfirmed
-      communication.cfm = data.byte(1);
-    }
+    // 8-bit register mapped into 16-bit gate array
+    // All writes go to the high byte (special case)
+    communication.cfm = data.byte(1);
   }
 
   if(address >= 0xa12010 && address <= 0xa1201f) {
