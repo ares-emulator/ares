@@ -47,7 +47,8 @@ auto MCD::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 auto MCD::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   address.bit(20,23) = 0;  //mirroring
 
-  if(address >= 0x000000 && address <= 0x07ffff) {
+  if(address >= 0x000000 && address <= 0x07ffff
+  && address >= (n24)io.pramProtect << 9) {
     if(upper) pram[address >> 1].byte(1) = data.byte(1);
     if(lower) pram[address >> 1].byte(0) = data.byte(0);
     return;
