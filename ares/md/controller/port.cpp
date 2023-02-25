@@ -31,10 +31,18 @@ auto ControllerPort::allocate(string name) -> Node::Peripheral {
 
 auto ControllerPort::power(bool reset) -> void {
   if(!reset) {
-    control = 0x00;
+    control        = 0x00;
+    dataLatch      = 0x7f;
+    serialControl  = 0x00;
+    serialTxBuffer = 0xff;
+    serialRxBuffer = 0x00;
   }
 }
 
 auto ControllerPort::serialize(serializer& s) -> void {
   s(control);
+  s(dataLatch);
+  s(serialControl);
+  s(serialTxBuffer);
+  s(serialRxBuffer);
 }

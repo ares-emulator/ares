@@ -36,6 +36,42 @@ auto CPU::readIO(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
     case 0xa1000c:
       data.byte(0) = extensionPort.readControl();
       break;
+
+    case 0xa1000e:
+      data.byte(0) = controllerPort1.readSerialTxData();
+      break;
+
+    case 0xa10010:
+      data.byte(0) = controllerPort1.readSerialRxData();
+      break;
+
+    case 0xa10012:
+      data.byte(0) = controllerPort1.readSerialControl();
+      break;
+
+    case 0xa10014:
+      data.byte(0) = controllerPort2.readSerialTxData();
+      break;
+
+    case 0xa10016:
+      data.byte(0) = controllerPort2.readSerialRxData();
+      break;
+
+    case 0xa10018:
+      data.byte(0) = controllerPort2.readSerialControl();
+      break;
+
+    case 0xa1001a:
+      data.byte(0) = extensionPort.readSerialTxData();
+      break;
+
+    case 0xa1001c:
+      data.byte(0) = extensionPort.readSerialRxData();
+      break;
+
+    case 0xa1001e:
+      data.byte(0) = extensionPort.readSerialControl();
+      break;
     }
 
     return data.byte(1)=data.byte(0), data;
@@ -77,6 +113,42 @@ auto CPU::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
     case 0xa1000c:
       extensionPort.writeControl(data);
+      break;
+
+    case 0xa1000e:
+      controllerPort1.writeSerialTxData(data);
+      break;
+
+    case 0xa10010:
+      controllerPort1.writeSerialRxData(data);
+      break;
+
+    case 0xa10012:
+      controllerPort1.writeSerialControl(data);
+      break;
+
+    case 0xa10014:
+      controllerPort2.writeSerialTxData(data);
+      break;
+
+    case 0xa10016:
+      controllerPort2.writeSerialRxData(data);
+      break;
+
+    case 0xa10018:
+      controllerPort2.writeSerialControl(data);
+      break;
+
+    case 0xa1001a:
+      extensionPort.writeSerialTxData(data);
+      break;
+
+    case 0xa1001c:
+      extensionPort.writeSerialRxData(data);
+      break;
+
+    case 0xa1001e:
+      extensionPort.writeSerialControl(data);
       break;
     }
 
