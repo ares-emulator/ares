@@ -9,13 +9,14 @@ auto MCD::readExternal(n1 upper, n1 lower, n22 address, n16 data) -> n16 {
   }
 
   if(address >= 0x020000 && address <= 0x03ffff) {
+    if(!io.request) return data;
     address = io.pramBank << 17 | (n17)address;
     return pram[address >> 1];
   }
 
   if(address >= 0x200000 && address <= 0x23ffff) {
     if(io.wramMode == 0) {
-    //if(io.wramSwitch == 1) return data;
+      if(io.wramSwitch == 1) return data;
       address = (n18)address >> 1;
     } else {
       if(address >= 0x220000) {
@@ -52,6 +53,7 @@ auto MCD::writeExternal(n1 upper, n1 lower, n22 address, n16 data) -> void {
   address.bit(18,20) = 0;  //mirrors
 
   if(address >= 0x020000 && address <= 0x03ffff) {
+    if(!io.request) return;
     address = io.pramBank << 17 | (n17)address;
     if(upper) pram[address >> 1].byte(1) = data.byte(1);
     if(lower) pram[address >> 1].byte(0) = data.byte(0);
@@ -60,7 +62,7 @@ auto MCD::writeExternal(n1 upper, n1 lower, n22 address, n16 data) -> void {
 
   if(address >= 0x200000 && address <= 0x23ffff) {
     if(io.wramMode == 0) {
-    //if(io.wramSwitch == 1) return;
+      if(io.wramSwitch == 1) return;
       address = (n18)address >> 1;
     } else {
       if(address >= 0x220000) {
