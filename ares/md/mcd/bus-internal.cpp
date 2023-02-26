@@ -7,7 +7,7 @@ auto MCD::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
 
   if(address >= 0x080000 && address <= 0x0bffff) {
     if(io.wramMode == 0) {
-    //if(io.wramSwitch == 0) return data;
+      if(io.wramSwitch == 0) return data;
       address = (n18)address >> 1;
       return wram[address];
     } else {
@@ -56,7 +56,11 @@ auto MCD::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address >= 0x080000 && address <= 0x0bffff) {
     if(io.wramMode == 0) {
-    //if(io.wramSwitch == 0) return;
+      while(io.wramSwitch == 0) { // wordram is unavailable, hold for !DTACK
+        wait(7); // arbitrary wait (~4 maincpu ticks)
+        Thread::synchronize(cpu);
+        if(io.halt) return;
+      }
       address = (n18)address >> 1;
       if(upper) wram[address].byte(1) = data.byte(1);
       if(lower) wram[address].byte(0) = data.byte(0);
