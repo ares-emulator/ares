@@ -18,14 +18,14 @@ jobs:
           windres: windres
           shell: 'msys2 {0}'
           msystem: clang64
-          msys-env: clang-x86_64
+          install: mingw-w64-clang-x86_64-clang
         - name: windows-arm64
           os: windows-latest
-          compiler: clang++ --target=aarch64-w64-windows-gnu --sysroot=/clangarm64 -resource-dir=/clangarm64/lib/clang/$resourcever
+          compiler: clang++ --target=aarch64-w64-windows-gnu --sysroot=/clangarm64 -resource-dir=/clangarm64/lib/clang/$(basename "$(clang++ -print-resource-dir)")
           windres: windres --target=aarch64-w64-windows-gnu
           shell: 'msys2 {0}'
           msystem: clang64
-          msys-env: clang-x86_64
+          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-aarch64-clang
         - name: windows-msvc-x64
           os: windows-latest
           compiler: clang++
@@ -57,14 +57,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         msystem: ${{ matrix.platform.msystem }}
-        update: true
-        install: make mingw-w64-${{ matrix.platform.msys-env }}-toolchain
-    - name: Install MSYS2 ARM64 Dependencies
-      if: matrix.platform.name == 'windows-arm64'
-      run: | # enable clang arm64 package source, refresh package database, and install clang package
-        echo "resourcever=$(basename "$(clang++ -print-resource-dir)")" >> $GITHUB_ENV
-        grep -qFx '[clangarm64]' /etc/pacman.conf || sed -i '/^# \[clangarm64\]/,/^$/ s|^# ||g' /etc/pacman.conf
-        pacman --noconfirm -Sy mingw-w64-clang-aarch64-clang
+        install: make ${{ matrix.platform.install }}
     - name: Install Linux Dependencies
       if: runner.os == 'Linux'
       run: |
