@@ -71,10 +71,23 @@ auto MCD::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address == 0xa12000) {
     if(lower) {
-      if(io.run && !data.bit(0)) power(true);
-      io.run     = data.bit(0);
-      io.request = data.bit(1);
-      io.halt    = !io.run || io.request;
+      // The Mega-CD has a documented method of performing a forced reset
+      // on the gate array in software via the following code sequence:
+      //   MOVE.W #$FF00, $A12002
+      //   MOVE.W #$03, $A12001
+      //   MOVE.W #$02, $A12001
+      //   MOVE.W #$00, $A12001
+      // Try to detect the modal changes caused by executing this sequence. (Is this too strict?)
+      if(io.request && !io.run && !data.bit(1,0)
+      && io.pramProtect == 0xff && io.pramBank == 0 && io.wramSwitchRequest) {
+        // TODO: reset subcpu-controlled gate array registers (needs confirmation)
+        // Notice: the subcpu bus is not released at this time.
+      } else {
+        if(io.run && !data.bit(0)) resetCpu();
+        io.run     = data.bit(0);
+        io.request = data.bit(1);
+        io.halt    = !io.run || io.request;
+      }
     }
     if(upper) {
       if(data.bit(8)) external.irq.raise();
