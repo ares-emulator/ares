@@ -192,7 +192,7 @@ ifeq ($(platform),windows)
   # target Windows 7
   flags += -D_WIN32_WINNT=0x0601
   ifeq ($(msvc),true)
-    flags += -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -DNOMINMAX
+    flags += -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS
   endif
   options += -mthreads -lws2_32 -lole32 -lshell32
   options += $(if $(findstring clang++,$(compiler)),-fuse-ld=lld)
