@@ -102,3 +102,33 @@ auto nall::main(Arguments arguments) -> void {
   Instances::settingsWindow.destruct();
   Instances::toolsWindow.destruct();
 }
+
+#if defined(PLATFORM_WINDOWS) && defined(ARCHITECTURE_AMD64) && !defined(BUILD_LOCAL)
+
+#include <nall/windows/windows.hpp>
+#include <intrin.h>
+
+//this code must run before C++ global initializers
+//it works with any valid combination of GCC, Clang, or MSVC and MingW or MSVCRT
+//ref: https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-initialization
+
+auto preCppInitializer() -> int {
+  int data[4] = {};
+  __cpuid(data, 1);
+  bool sse42 = data[2] & 1 << 20;
+  if(!sse42) FatalAppExitA(0, "This build of ares requires a CPU that supports SSE4.2.");
+  return 0;
+}
+
+extern "C" {
+#if defined(_MSC_VER)
+  #pragma comment(linker, "/include:preCppInitializerEntry")
+  #pragma section(".CRT$XCT", read)
+  __declspec(allocate(".CRT$XCT"))
+#else
+  __attribute__((section (".CRT$XCT"), used))
+#endif
+  decltype(&preCppInitializer) preCppInitializerEntry = preCppInitializer;
+}
+
+#endif
