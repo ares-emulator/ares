@@ -15,8 +15,8 @@ ifeq ($(arch),amd64)
   ifeq ($(local),true)
     flags += -march=native
   else
-    # For official builds, default to nehalem which supports up to SSE 4.2.
-    flags += -march=nehalem
+    # For official builds, default to x86-64-v2 (Intel Nehalem, AMD Bulldozer) which supports up to SSE 4.2.
+    flags += -march=x86-64-v2
   endif
 endif
 
