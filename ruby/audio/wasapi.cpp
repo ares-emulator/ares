@@ -62,6 +62,7 @@ struct AudioWASAPI : AudioDriver {
     self.queue.read = 0;
     self.queue.write = 0;
     self.queue.count = 0;
+    memory::fill<u8>(self.queue.samples, sizeof(self.queue.samples));
 
     if(self.audioClient) {
       self.audioClient->Stop();
@@ -71,9 +72,8 @@ struct AudioWASAPI : AudioDriver {
   }
 
   auto output(const f64 samples[]) -> void override {
-    for(u32 n : range(self.channels)) {
-      self.queue.samples[self.queue.write][n] = samples[n];
-    }
+    self.queue.samples[self.queue.write][0] = samples[0];
+    self.queue.samples[self.queue.write][1] = samples[1];
     self.queue.write++;
     self.queue.count++;
 
