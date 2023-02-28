@@ -140,6 +140,10 @@ else
   $(error unrecognized build type.)
 endif
 
+ifeq ($(local),true)
+  flags += -DBUILD_LOCAL
+endif
+
 # debugging information
 ifeq ($(symbols),true)
   flags += -g
