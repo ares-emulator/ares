@@ -89,6 +89,7 @@ auto CPU::segment(u64 vaddr) -> Context::Segment {
 }
 
 auto CPU::devirtualize(u64 vaddr) -> maybe<u64> {
+  if(vaddrAlignedError<Word>(vaddr, false)) return nothing;
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
     addressException(vaddr);
@@ -122,13 +123,14 @@ inline auto CPU::busRead(u32 address) -> u64 {
   return step(cycles), data;
 }
 
-auto CPU::fetch(u64 vaddr) -> u32 {
+auto CPU::fetch(u64 vaddr) -> maybe<u32> {
+  if(vaddrAlignedError<Word>(vaddr, false)) return nothing;
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
     step(1);
     addressException(vaddr);
     exception.addressLoad();
-    return 0;  //nop
+    return nothing;
   case Context::Segment::Mapped:
     if(auto match = tlb.load(vaddr)) {
       if(match.cache) return icache.fetch(match.address & context.physMask, cpu);
@@ -137,7 +139,7 @@ auto CPU::fetch(u64 vaddr) -> u32 {
     }
     step(1);
     addressException(vaddr);
-    return 0;  //nop
+    return nothing;
   case Context::Segment::Cached:
     return icache.fetch(vaddr & 0x1fff'ffff, cpu);
   case Context::Segment::Cached32:
@@ -155,21 +157,7 @@ auto CPU::fetch(u64 vaddr) -> u32 {
 
 template<u32 Size>
 auto CPU::read(u64 vaddr) -> maybe<u64> {
-  if constexpr(Accuracy::CPU::AddressErrors) {
-    if(unlikely(vaddr & Size - 1)) {
-      step(1);
-      addressException(vaddr);
-      exception.addressLoad();
-      return nothing;
-    }
-    if (context.bits == 32 && unlikely((s32)vaddr != vaddr)) {
-      step(1);
-      addressException(vaddr);
-      exception.addressLoad();
-      return nothing;      
-    }
-  }
-
+  if(vaddrAlignedError<Size>(vaddr, false)) return nothing;
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
     step(1);
@@ -202,21 +190,7 @@ auto CPU::read(u64 vaddr) -> maybe<u64> {
 
 template<u32 Size>
 auto CPU::write(u64 vaddr, u64 data) -> bool {
-  if constexpr(Accuracy::CPU::AddressErrors) {
-    if(unlikely(vaddr & Size - 1)) {
-      step(1);
-      addressException(vaddr);
-      exception.addressStore();
-      return false;
-    }
-    if (context.bits == 32 && unlikely((s32)vaddr != vaddr)) {
-      step(1);
-      addressException(vaddr);
-      exception.addressStore();
-      return false;
-    }
-  }
-
+  if(vaddrAlignedError<Size>(vaddr, true)) return false;
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
     step(1);
@@ -245,6 +219,27 @@ auto CPU::write(u64 vaddr, u64 data) -> bool {
   }
 
   unreachable;
+}
+
+template<u32 Size>
+auto CPU::vaddrAlignedError(u64 vaddr, bool write) -> bool {
+  if constexpr(Accuracy::CPU::AddressErrors) {
+    if(unlikely(vaddr & Size - 1)) {
+      step(1);
+      addressException(vaddr);
+      if(write) exception.addressStore();
+      else exception.addressLoad();
+      return true;
+    }
+    if (context.bits == 32 && unlikely((s32)vaddr != vaddr)) {
+      step(1);
+      addressException(vaddr);
+      if(write) exception.addressStore();
+      else exception.addressLoad();
+      return true;
+    }
+  }
+  return false;
 }
 
 auto CPU::addressException(u64 vaddr) -> void {

@@ -92,14 +92,17 @@ auto CPU::instruction() -> void {
   }
 
   if constexpr(Accuracy::CPU::Recompiler) {
-    auto address = devirtualize(ipu.pc)(0);
-    auto block = recompiler.block(address);
-    block->execute(*this);
+    if (auto address = devirtualize(ipu.pc)) {
+      auto block = recompiler.block(*address);
+      block->execute(*this);
+    }
   }
 
   if constexpr(Accuracy::CPU::Interpreter) {
     pipeline.address = ipu.pc;
-    pipeline.instruction = fetch(ipu.pc);
+    auto data = fetch(ipu.pc);
+    if (!data) return;
+    pipeline.instruction = *data;
     debugger.instruction();
     decoderEXECUTE();
     instructionEpilogue();
