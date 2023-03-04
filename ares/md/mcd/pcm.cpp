@@ -27,8 +27,9 @@ auto MCD::PCM::clock() -> void {
       channel.address = channel.loop << 11;
       data = ram[channel.loop];
       if(data == 0xff) continue;  //infinite loop; does not output any sound
+    } else {
+      channel.address += channel.step;
     }
-    channel.address += channel.step;
     if(data & 0x80) {
       data = +(data & 0x7f);
     } else {
