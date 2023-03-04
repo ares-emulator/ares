@@ -1,5 +1,5 @@
 auto MCD::Timer::clock() -> void {
-  if(frequency && !--counter) {
+  if(frequency && !counter--) {
     counter = frequency;
     irq.raise();
   }
