@@ -47,6 +47,7 @@ struct MCD : M68000, Thread {
   auto power(bool reset) -> void;
 
   auto resetCpu() -> void;
+  auto resetPeripheral(bool reset) -> void;
 
   //bus-internal.cpp
   auto read(n1 upper, n1 lower, n24 address, n16 data = 0) -> n16 override;

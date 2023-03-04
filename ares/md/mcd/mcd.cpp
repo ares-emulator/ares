@@ -188,16 +188,23 @@ auto MCD::power(bool reset) -> void {
   external = {};
   communication = {};
   cdc.power(reset);
-  cdd.power(reset);
   timer.power(reset);
   gpu.power(reset);
   pcm.power(reset);
+  resetPeripheral(reset);
 }
 
 auto MCD::resetCpu() -> void {
   M68000::power();
   irq.reset.enable = 1;
   irq.reset.raise();
+}
+
+// A peripheral reset is expected to take ~100ms according to the dev manual.
+// The subcpu continues executing normally during this process.
+// The exact operations that occur for this reset are not known.
+auto MCD::resetPeripheral(bool reset) -> void {
+  cdd.power(reset); // reset cd drive (bios requirement)
 }
 
 }
