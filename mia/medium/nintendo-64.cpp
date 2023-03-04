@@ -153,7 +153,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   bool cpak = false;                 //Controller Pak
   bool rpak = false;                 //Rumble Pak
   bool rtc  = false;                 //RTC
-  bool dd     = id.beginsWith("C");  //64DD
+  bool dd   = id.beginsWith("C");    //64DD
 
   //512B EEPROM
   if(id == "NTW") {eeprom = 512; cpak = true;}                           //64 de Hakken!! Tamagotchi
@@ -528,7 +528,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NGR") {cpak = true; rpak = true;}                            //Top Gear Rally (U)
   if(id == "NTH") {cpak = true; rpak = true;}                            //Toy Story 2 - Buzz Lightyear to the Rescue!
   if(id == "N3P") {cpak = true; rpak = true;}                            //Triple Play 2000
-  if(id == "NTU") {cpak = true;}                                         //Turok: Dinosaur Hunter [Turok: Jiku Sinshi (J)]
+  if(id == "NTU") {cpak = true;}                                         //Turok: Dinosaur Hunter [Turok: Jikuu Senshi (J)]
   if(id == "NRW") {cpak = true; rpak = true;}                            //Turok: Rage Wars
   if(id == "NT2") {cpak = true; rpak = true;}                            //Turok 2 - Seeds of Evil [Violence Killer - Turok New Generation (J)]
   if(id == "NTK") {cpak = true; rpak = true;}                            //Turok 3 - Shadow of Oblivion

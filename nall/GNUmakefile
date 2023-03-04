@@ -149,7 +149,9 @@ ifeq ($(symbols),true)
   flags += -g
   ifeq ($(platform),windows)
     ifeq ($(findstring clang++,$(compiler)),clang++)
-      flags   += -gcodeview
+      ifneq ($(symformat),gdb)
+        flags += -gcodeview
+      endif
       ifeq ($(msvc),true)
         options += -Wl,-debug
       else
