@@ -5,6 +5,7 @@ namespace Board {
 #include "banked.cpp"
 #include "svp.cpp"
 #include "j-cart.cpp"
+#include "realtec.cpp"
 #include "game-genie.cpp"
 #include "mega-32x.cpp"
 #include "debugger.cpp"

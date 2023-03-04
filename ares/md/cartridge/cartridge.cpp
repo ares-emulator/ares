@@ -27,6 +27,8 @@ auto Cartridge::connect() -> void {
     board = new Board::GameGenie(*this);
   } else if(pak->attribute("jcart").boolean()) {
     board = new Board::JCart(*this);
+  } else if(pak->attribute("board") == "REALTEC") {
+    board = new Board::Realtec(*this);
   } else {
     board = new Board::Standard(*this);
   }
