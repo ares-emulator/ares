@@ -58,7 +58,6 @@ auto MCD::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
     if(io.wramMode == 0) {
       while(io.wramSwitch == 0) { // wordram is unavailable, hold for !DTACK
         wait(7); // arbitrary wait (~4 maincpu ticks)
-        Thread::synchronize(cpu);
         if(io.halt) return;
       }
       address = (n18)address >> 1;

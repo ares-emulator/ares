@@ -43,8 +43,8 @@ auto APU::main() -> void {
 
 auto APU::step(u32 clocks) -> void {
   Thread::step(clocks);
-  state.busreqLatch = busownerCPU() ? 1 : 0;
   Thread::synchronize(cpu);
+  state.busreqLatch = busownerCPU() ? 1 : 0;
 }
 
 auto APU::setNMI(n1 line) -> void {

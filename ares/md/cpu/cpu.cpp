@@ -73,9 +73,9 @@ inline auto CPU::idle(u32 clocks) -> void {
 auto CPU::wait(u32 clocks) -> void {
   step(clocks);
   if (cyclesUntilSync <= 0) {
+    cyclesUntilSync = minCyclesBetweenSyncs;
     Thread::synchronize();
-    cyclesUntilSync += minCyclesBetweenSyncs;
-  }
+  }  
 }
 
 auto CPU::raise(Interrupt interrupt) -> void {
