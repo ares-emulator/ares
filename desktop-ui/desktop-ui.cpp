@@ -39,6 +39,11 @@ auto locate(const string& name) -> string {
 
 #include <nall/main.hpp>
 auto nall::main(Arguments arguments) -> void {
+#if defined(PLATFORM_WINDOWS)
+  bool createTerminal = arguments.take("--terminal");
+  terminal::redirectStdioToTerminal(createTerminal);
+#endif
+
   Application::setName("ares");
   Application::setScreenSaver(false);
 
@@ -74,6 +79,9 @@ auto nall::main(Arguments arguments) -> void {
     print("Usage: ares [OPTIONS]... game\n\n");
     print("Options:\n");
     print("  --help               Displays available options and exit\n");
+#if defined(PLATFORM_WINDOWS)
+    print("  --terminal           Create new terminal window\n");
+#endif
     print("  --fullscreen         Start in full screen mode\n");
     print("  --system name        Specifiy the system name\n");
     print("\n");

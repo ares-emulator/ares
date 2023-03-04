@@ -16,6 +16,7 @@
 #include <nall/platform.cpp>
 #include <nall/random.cpp>
 #include <nall/run.cpp>
+#include <nall/terminal.cpp>
 #include <nall/thread.cpp>
 //currently unused by ares
 //#include <nall/smtp.cpp>

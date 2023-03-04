@@ -4,6 +4,8 @@
 
 namespace nall::terminal {
 
+auto redirectStdioToTerminal(bool create) -> void;
+
 inline auto escapable() -> bool {
   #if defined(PLATFORM_WINDOWS)
   //todo: colors are supported by Windows 10+ and with alternate terminals (eg msys)
@@ -63,3 +65,7 @@ template<typename... P> inline auto gray(P&&... p) -> string {
 }
 
 }
+
+#if defined(NALL_HEADER_ONLY)
+  #include <nall/terminal.cpp>
+#endif
