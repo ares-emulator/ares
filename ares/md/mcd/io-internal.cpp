@@ -188,7 +188,7 @@ auto MCD::writeIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
 
   if(address == 0xff8000) {
     if(lower) {
-      if(data.bit(0) == 0);  //peripheral reset
+      if(data.bit(0) == 0) resetPeripheral(true); // todo: bit stays low for ~100ms
     }
     if(upper) {
       led.red   = data.bit(8);
