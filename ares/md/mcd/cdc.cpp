@@ -80,10 +80,7 @@ auto MCD::CDC::read() -> n8 {
   //DBCH: data byte counter high
   case 0x3: {
     data.bit(0,3) = transfer.length.bit(8,11);
-    data.bit(4)   =!irq.transfer.pending;
-    data.bit(5)   =!irq.transfer.pending;
-    data.bit(6)   =!irq.transfer.pending;
-    data.bit(7)   =!irq.transfer.pending;
+    data.bit(4,7) = 0;
   } break;
 
   //HEAD0: header or subheader data
