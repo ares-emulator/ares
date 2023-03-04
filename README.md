@@ -20,20 +20,47 @@ Only the latest nightly build is kept.
 Prerequisites
 -------------
 
-#### *nix building
+### *nix building
 
+###### Minimum required packages:
 ```
-g++ make pkg-config libgtk2.0-dev libcanberra-gtk-module libgl-dev libasound2-dev
+g++ make pkg-config libgtk2.0-dev libcanberra-gtk-module libgl-dev libasound2-dev libao-dev libopenal-dev
 ```
 
-By default, GTK2 is used, but support for GTK3 is available. You will need to install the additional package `libgtk-3-dev` as well
-as specifying the command line option `hiro=gtk3` at compile time.
+###### GTK2 & GTK3
+By default, GTK2 is used, but support for GTK3 is available. You will need to install the additional package `libgtk-3-dev` as well as specifying the command line option `hiro=gtk3` at compile time.
 
-#### Windows building
+###### SDL2 for input
+If you would like to use SDL for input, you will need to install the following the `libsdl2-dev` and `libsdl2-0.0` packages and perform a clean build of ares. You should then be able to select SDL for input in the Settings > Drivers menu.   
+
+##### Building with clang
+
+clang++ is now the preferred compiler for ares as it is known to produce a higher performing executable. If it is detected, the build will default to building with clang. It is recommended to install the `clang` package. If you would like to manually specify a compiler, you can use the following option: `compiler=[g++|clang++]`
+
+### Windows building
 
 To build on Windows, using MSYS2 is recommended which can be download [here](https://www.msys2.org/). Follow the instructions
-on this page to install and setup an appropriate MINGW64 environment. Running the command  `pacman -S --needed base-devel mingw-w64-x86_64-toolchain` from the MSYS2 MSYS terminal should setup everything you need to compile Ares. Note that in order 
-to compile, you will want to be in a MINGW64 terminal window after install and setup is complete. 
+on this page to install and setup an appropriate MINGW64 environment. Running the command:  
+```
+pacman -S --needed base-devel mingw-w64-x86_64-toolchain
+```  
+from the MSYS2 MSYS terminal should setup everything you need to compile ares. Note that in order to compile, you will want to be in a MINGW64 terminal window after install and setup is complete. 
+
+##### Building with clang
+
+clang is available through Visual Studio (or Build Tools for Visual Studio) through its installer and can be used to build ares. You will still need to supply GNU make in this instance. MSYS2 also offers a clang environment. You will want to make sure you select the clangw64 option during installation of MSYS2 which should provide and additional CLANG64 pre-configured environment. Install the clang toolchain package from the MSYS2 terminal:  
+```
+pacman -S mingw-w64-clang-x86_64-toolchain
+```  
+Once complete, open a CLANG64 terminal window and proceed with building ares. 
+
+###### Debug Symbols
+When building with clang, by default symbols will be generated using an MSVC compatible format for use with Windows debugging tools. In order to generate GDB compatible symbols, specify the following option:  
+`symformat=gdb`  
+
+###### Console Output  
+By default, the console is disabled on Windows builds. To enable it, specify the following option:  
+`console=true`
 
 Compilation
 -----------
@@ -47,11 +74,11 @@ git clone https://github.com/ares-emulator/ares.git
 From the root of the project directory run:
 
 ```
-make -j4 build=release
+make -j$((`nproc`-1)) build=release
 ```
 
 that builds with build type of type 'release'. 
-`-j4` indicates number of parallel build processes, and shouldn't be set higher than N-1 cores on your processor. Specifying this option can significantly decrease the time to build this project. There are multiple build types available (debug, etc.). Most additional options can be 
+The 'nproc-1' option will use N-1 total cores available on your system and indicates number of parallel build processes. Specifying this option can significantly decrease the time to build this project. There are multiple build types available (debug, etc.). Most additional options can be 
 found in nall's make file (nall/GNUmakefile).
 
 To start compilation from the beginning, run the following prior to compiling:
