@@ -8,6 +8,8 @@ struct MegaDrive : Cartridge {
   auto analyzePeripherals(vector<u8>& rom, string hash) -> void;
   auto analyzeCopyProtection(vector<u8>& rom, string hash) -> void;
 
+  string board;
+
   struct RAM {
     explicit operator bool() const { return mode && size != 0; }
 
@@ -50,6 +52,7 @@ auto MegaDrive::load(string location) -> bool {
   pak = new vfs::directory;
   pak->setAttribute("title",    document["game/title"].string());
   pak->setAttribute("region",   document["game/region"].string());
+  pak->setAttribute("board",    document["game/board"].string());
   pak->setAttribute("bootable", true);
   pak->setAttribute("megacd",   (bool)document["game/device"].string().split(", ").find("Mega CD"));
   pak->append("manifest.bml", manifest);
@@ -115,6 +118,7 @@ auto MegaDrive::save(string location) -> bool {
 auto MegaDrive::analyze(vector<u8>& rom) -> string {
   if(rom.size() < 0x800) return {};
 
+  board = {};
   ram = {};
   eeprom = {};
   peripherals = {};
@@ -208,6 +212,8 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
   s +={"  region: ", regions.merge(", "), "\n"};
   if(devices)
   s +={"  device: ", devices.merge(", "), "\n"};
+  if(board)
+  s +={"  board:  ", board, "\n"};
   s += "  board\n";
 
   if(domesticName == "Game Genie") {
@@ -754,6 +760,29 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     eeprom.rsda = 0;
     eeprom.wsda = 0;
     eeprom.wscl = 8;
+  }
+
+  //REALTEC
+  //======
+
+  //Earth Defense ~ Earth Defend, The (USA, Taiwan) (En) (Unl)
+  if(hash == "2552a6fd12772f650dd91b8a6686d1d423ccde640bb728611f3b6d8c74696e98") {
+    board = "REALTEC";
+  }
+
+  //Funny World & Balloon Boy (USA) (Unl)
+  if(hash == "8f36a8ea96bbb09f8d4a2d7efb77a3c3da9a69e14c8a714b40bcdb856da2ef97") {
+    board = "REALTEC";
+  }
+
+  //Mallet Legend's Whac-a-Critter ~ Mallet Legend (USA, Taiwan) (En) (Unl)
+  if(hash == "0e137267121d63408562dac226f692b70a5399e2e6d359b3e0e570ca011e16a0") {
+    board = "REALTEC";
+  }
+
+  //Tom Clown (Taiwan) (En) (Unl)
+  if(hash == "b04b9a1f4b17ec5251857cf0a689f442229eecadba96adc405b84343c36ad0db") {
+    board = "REALTEC";
   }
 }
 
