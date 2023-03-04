@@ -63,10 +63,6 @@ Once complete, open a CLANG64 terminal window and proceed with building ares.
 When building with clang, by default symbols will be generated using an MSVC compatible format (CodeView) for use with Windows debugging tools. In order to generate GDB compatible symbols (Dwarf), specify the following option:  
 `symformat=dwarf`  
 
-###### Console Output  
-By default, the console is disabled on Windows builds. To enable it, specify the following option:  
-`console=true`
-
 Compilation
 -----------
 
