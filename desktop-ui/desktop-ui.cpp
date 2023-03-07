@@ -83,7 +83,8 @@ auto nall::main(Arguments arguments) -> void {
     print("  --terminal           Create new terminal window\n");
 #endif
     print("  --fullscreen         Start in full screen mode\n");
-    print("  --system name        Specifiy the system name\n");
+    print("  --system name        Specify the system name\n");
+    print("  --shader name        Specify the name of the shader to use\n");
     print("\n");
     print("Available Systems:\n");
     print("  ");
