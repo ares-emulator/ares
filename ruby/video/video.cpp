@@ -204,10 +204,6 @@ auto Video::hasDrivers() -> vector<string> {
   "Direct3D 9.0",
   #endif
 
-  #if defined(VIDEO_DIRECT3D9)
-  "Direct3D 11.0",
-  #endif
-
   #if defined(VIDEO_GDI)
   "GDI",
   #endif
