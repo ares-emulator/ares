@@ -130,12 +130,12 @@ auto PPU::readIO(n16 address) -> n8 {
     data = io.vsync;
     break;
 
-  case 0x001c ... 0x001f:  //PALMONO_POOL
+  case range4(0x001c, 0x001f):  //PALMONO_POOL
     data.bit(0,3) = pram.pool[address.bit(0,1) << 1 | 0];
     data.bit(4,7) = pram.pool[address.bit(0,1) << 1 | 1];
     break;
 
-  case 0x0020 ... 0x003f:  //PALMONO
+  case range32(0x0020, 0x003f):  //PALMONO
     data.bit(0,3) = pram.palette[address.bit(1,4)].color[address.bit(0) << 1 | 0];
     data.bit(4,7) = pram.palette[address.bit(1,4)].color[address.bit(0) << 1 | 1];
     break;
@@ -147,19 +147,19 @@ auto PPU::readIO(n16 address) -> n8 {
     data.bit(3) = vtimer.repeat;
     break;
 
-  case 0x00a4 ... 0x00a5:  //HTMR_FREQ
+  case range2(0x00a4, 0x00a5):  //HTMR_FREQ
     data = htimer.frequency.byte(address - 0x00a4);
     break;
 
-  case 0x00a6 ... 0x00a7:  //VTMR_FREQ
+  case range2(0x00a6, 0x00a7):  //VTMR_FREQ
     data = vtimer.frequency.byte(address - 0x00a6);
     break;
 
-  case 0x00a8 ... 0x00a9:  //HTMR_CTR
+  case range2(0x00a8, 0x00a9):  //HTMR_CTR
     data = htimer.counter.byte(address - 0x00a8);
     break;
 
-  case 0x00aa ... 0x00ab:  //VTMR_CTR
+  case range2(0x00aa, 0x00ab):  //VTMR_CTR
     data = vtimer.counter.byte(address - 0x00aa);
     break;
 
@@ -283,12 +283,12 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
     io.vsync = data;
     break;
 
-  case 0x001c ... 0x001f:  //PALMONO_POOL
+  case range4(0x001c, 0x001f):  //PALMONO_POOL
     pram.pool[address.bit(0,1) << 1 | 0] = data.bit(0,3);
     pram.pool[address.bit(0,1) << 1 | 1] = data.bit(4,7);
     break;
 
-  case 0x0020 ... 0x003f:  //PALMONO
+  case range32(0x0020, 0x003f):  //PALMONO
     pram.palette[address.bit(1,4)].color[address.bit(0) << 1 | 0] = data.bit(0,2);
     pram.palette[address.bit(1,4)].color[address.bit(0) << 1 | 1] = data.bit(4,6);
     break;
@@ -300,12 +300,12 @@ auto PPU::writeIO(n16 address, n8 data) -> void {
     vtimer.repeat = data.bit(3);
     break;
 
-  case 0x00a4 ... 0x00a5:  //HTMR_FREQ
+  case range2(0x00a4, 0x00a5):  //HTMR_FREQ
     htimer.frequency.byte(address - 0x00a4) = data;
     htimer.counter  .byte(address - 0x00a4) = data;
     break;
 
-  case 0x00a6 ... 0x00a7:  //VTMR_FREQ
+  case range2(0x00a6, 0x00a7):  //VTMR_FREQ
     vtimer.frequency.byte(address - 0x00a6) = data;
     vtimer.counter  .byte(address - 0x00a6) = data;
     break;

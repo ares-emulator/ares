@@ -210,7 +210,7 @@ auto SSP1601::disassembleInstruction(u16 pc, u16 op, u16 imm) -> string {
   }
 
   //ldi ri,simm
-  case 0x0c ... 0x0f: {
+  case range4(0x0c, 0x0f): {
     o = "ldi";
     p = {"r", (op >> 8 & 7), ",0x", hex(op & 0xff, 2L)};
     break;

@@ -32,7 +32,7 @@ auto YM2610::write(n2 address, n8 data) -> void {
 
 auto YM2610::writeLower(n8 data) -> void {
   switch(registerAddress) {
-  case 0x000 ... 0x00f:
+  case range16(0x000, 0x00f):
               ssg.write(data);
               return;
   case 0x010:
@@ -47,7 +47,7 @@ auto YM2610::writeLower(n8 data) -> void {
   case 0x013: pcmB.startAddress.bit(16, 23) = data; return;
   case 0x014: pcmB.endAddress.bit  ( 8, 15) = data; return;
   case 0x015: pcmB.endAddress.bit  (16, 23) = data; return;
-  case 0x016 ... 0x018:
+  case range3(0x016, 0x018):
     debug(unimplemented, "[YM2610::ADPCMB] Write ", hex(registerAddress), " = ", data);
     return;
   case 0x019: pcmB.delta.bit       ( 0,  7) = data; return;
@@ -61,9 +61,12 @@ auto YM2610::writeLower(n8 data) -> void {
     pcmB.endedMask = data.bit(7);
     if(data.bit(7)) pcmB.ended = 0;
     return;
-  case 0x01d ... 0x1ff:
-    fm.writeData(data);
-    return;
+  default:
+    if(registerAddress >= 0x01d && registerAddress <= 0x1ff) {
+      fm.writeData(data);
+      return;
+    }
+    break;
   }
 
   debug(unimplemented, "[YM2610] Write ", hex(registerAddress), " = ", data);
@@ -82,15 +85,21 @@ auto YM2610::writeUpper(n8 data) -> void {
       pcmA.channels[n].keyOn();
     }
     return;
-  case 0x101:           pcmA.volume = data.bit(0, 5);                                           return;
-  case 0x108 ... 0x10d: pcmA.channels[registerAddress - 0x108].volume = data.bit(0,4);
-                        pcmA.channels[registerAddress - 0x108].left   = data.bit(7);
-                        pcmA.channels[registerAddress - 0x108].right  = data.bit(6);            return;
-  case 0x110 ... 0x115: pcmA.channels[registerAddress - 0x110].startAddress.bit( 8, 15) = data; return;
-  case 0x118 ... 0x11d: pcmA.channels[registerAddress - 0x118].startAddress.bit(16, 23) = data; return;
-  case 0x120 ... 0x125: pcmA.channels[registerAddress - 0x120].endAddress.bit  ( 8, 15) = data; return;
-  case 0x128 ... 0x12d: pcmA.channels[registerAddress - 0x128].endAddress.bit  (16, 23) = data; return;
-  case 0x130 ... 0x1ff: fm.writeAddress(registerAddress); fm.writeData(data);                   return;
+  case 0x101:                pcmA.volume = data.bit(0, 5);                                           return;
+  case range6(0x108, 0x10d): pcmA.channels[registerAddress - 0x108].volume = data.bit(0,4);
+                             pcmA.channels[registerAddress - 0x108].left   = data.bit(7);
+                             pcmA.channels[registerAddress - 0x108].right  = data.bit(6);            return;
+  case range6(0x110, 0x115): pcmA.channels[registerAddress - 0x110].startAddress.bit( 8, 15) = data; return;
+  case range6(0x118, 0x11d): pcmA.channels[registerAddress - 0x118].startAddress.bit(16, 23) = data; return;
+  case range6(0x120, 0x125): pcmA.channels[registerAddress - 0x120].endAddress.bit  ( 8, 15) = data; return;
+  case range6(0x128, 0x12d): pcmA.channels[registerAddress - 0x128].endAddress.bit  (16, 23) = data; return;
+  default:
+    if(registerAddress >= 0x130 && registerAddress <= 0x1ff) {
+      fm.writeAddress(registerAddress);
+      fm.writeData(data);
+      return;
+    }
+    break;
   }
 
   debug(unimplemented, "[YM2610] Write ", hex(registerAddress), " = ", data);

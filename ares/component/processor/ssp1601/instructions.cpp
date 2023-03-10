@@ -95,7 +95,7 @@ auto SSP1601::instruction() -> void {
   }
 
   //ldi ri,simm
-  case 0x0c ... 0x0f: {
+  case range4(0x0c, 0x0f): {
     R[n3(op >> 8)] = n8(op);
     break;
   }

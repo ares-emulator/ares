@@ -26,6 +26,7 @@ namespace nall {
     static constexpr bool Microsoft = 0;
   };
   #pragma clang diagnostic error   "-Wc++20-extensions"
+  #pragma clang diagnostic error   "-Wgnu-case-range"
   #pragma clang diagnostic error   "-Wgnu-statement-expression"
   #pragma clang diagnostic error   "-Wvla"
   #pragma clang diagnostic warning "-Wimplicit-fallthrough"

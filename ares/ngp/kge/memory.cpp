@@ -1,12 +1,10 @@
 auto KGE::read(n24 address) -> n8 {
   address = 0x8000 | (n14)address;
-  switch(address) {
-  case 0x8200 ... 0x83ff: return readColor(address);  //K2GE only
-  case 0x8800 ... 0x88ff: return readObject(address);
-  case 0x8c00 ... 0x8c3f: return readObjectColor(address);  //K2GE only
-  case 0x9000 ... 0x9fff: return readAttribute(address);
-  case 0xa000 ... 0xbfff: return readCharacter(address);
-  }
+  if(address >= 0x8200 && address <= 0x83ff) return readColor(address);  //K2GE only
+  if(address >= 0x8800 && address <= 0x88ff) return readObject(address);
+  if(address >= 0x8c00 && address <= 0x8c3f) return readObjectColor(address);  //K2GE only
+  if(address >= 0x9000 && address <= 0x9fff) return readAttribute(address);
+  if(address >= 0xa000 && address <= 0xbfff) return readCharacter(address);
 
   n8 data;
 
@@ -97,13 +95,11 @@ auto KGE::read(n24 address) -> n8 {
 
 auto KGE::write(n24 address, n8 data) -> void {
   address = 0x8000 | (n14)address;
-  switch(address) {
-  case 0x8200 ... 0x83ff: return writeColor(address, data);  //K2GE only
-  case 0x8800 ... 0x88ff: return writeObject(address, data);
-  case 0x8c00 ... 0x8cff: return writeObjectColor(address, data);  //K2GE only
-  case 0x9000 ... 0x9fff: return writeAttribute(address, data);
-  case 0xa000 ... 0xbfff: return writeCharacter(address, data);
-  }
+  if(address >= 0x8200 && address <= 0x83ff) return writeColor(address, data);  //K2GE only
+  if(address >= 0x8800 && address <= 0x88ff) return writeObject(address, data);
+  if(address >= 0x8c00 && address <= 0x8cff) return writeObjectColor(address, data);  //K2GE only
+  if(address >= 0x9000 && address <= 0x9fff) return writeAttribute(address, data);
+  if(address >= 0xa000 && address <= 0xbfff) return writeCharacter(address, data);
 
   switch(address) {
   case 0x8000:

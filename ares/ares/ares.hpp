@@ -8,6 +8,7 @@
 #include <nall/any.hpp>
 #include <nall/array.hpp>
 #include <nall/bump-allocator.hpp>
+#include <nall/case-range.hpp>
 #include <nall/chrono.hpp>
 #include <nall/directory.hpp>
 #include <nall/dl.hpp>

@@ -16,19 +16,19 @@ struct Sega : Interface {
   }
 
   auto read(n16 address, n8 data) -> n8 override {
-    switch(address) {
-    case 0x0000 ... 0x03ff:
+    if(address <= 0x03ff)
       return rom.read(address);
-    case 0x0400 ... 0x3fff:
+    if(address <= 0x3fff)
       return rom.read(romBankUpper << 17 | romBank0 << 14 | (n14)address);
-    case 0x4000 ... 0x7fff:
+    if(address <= 0x7fff)
       return rom.read(romBankUpper << 17 | romBank1 << 14 | (n14)address);
-    case 0x8000 ... 0xbfff:
+    if(address <= 0xbfff) {
       if(ram && ramEnableBank2) {
         return ram.read(ramBank2 << 14 | (n14)address);
       }
       return rom.read(romBankUpper << 17 | romBank2 << 14 | (n14)address);
-    case 0xc000 ... 0xffff:
+    }
+    if(address <= 0xffff) {
       if(ram && ramEnableBank3) {
         return ram.read((n14)address);
       }
@@ -64,23 +64,25 @@ struct Sega : Interface {
       break;
     }
 
-    switch(address) {
-    case 0x0000 ... 0x03ff:
+    if(address <= 0x03ff) {
       if(romWriteEnable) {
         return rom.write(address, data);
       }
       return;
-    case 0x0400 ... 0x3fff:
+    }
+    if(address <= 0x3fff) {
       if(romWriteEnable) {
         return rom.write(romBankUpper << 17 | romBank0 << 14 | (n14)address, data);
       }
       return;
-    case 0x4000 ... 0x7fff:
+    }
+    if(address <= 0x7fff) {
       if(romWriteEnable) {
         return rom.write(romBankUpper << 17 | romBank1 << 14 | (n14)address, data);
       }
       return;
-    case 0x8000 ... 0xbfff:
+    }
+    if(address <= 0xbfff) {
       if(ram && ramEnableBank2) {
         return ram.write(ramBank2 << 14 | (n14)address, data);
       }
@@ -88,7 +90,8 @@ struct Sega : Interface {
         return rom.write(romBankUpper << 17 | romBank2 << 14 | (n14)address, data);
       }
       return;
-    case 0xc000 ... 0xffff:
+    }
+    if(address <= 0xffff) {
       if(ram && ramEnableBank3) {
         return ram.write((n14)address, data);
       }

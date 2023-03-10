@@ -6,68 +6,68 @@
   #define d8  (opcode >> 0 & 0x0ff)
   #define d12 (opcode >> 0 & 0xfff)
   switch(opcode >> 8 & 0x00f0 | opcode & 0x000f) {
-  op(0x04, MOVBS0, m, n);               //MOV.B   Rm,@(R0,Rn)
-  op(0x05, MOVWS0, m, n);               //MOV.W   Rm,@(R0,Rn)
-  op(0x06, MOVLS0, m, n);               //MOV.L   Rm,@(R0,Rn)
-  op(0x07, MULL, m, n);                 //MUL.L   Rm,Rn
-  op(0x0c, MOVBL0, m, n);               //MOV.B   @(R0,Rm),Rn
-  op(0x0d, MOVWL0, m, n);               //MOV.W   @(R0,Rm),Rn
-  op(0x0e, MOVLL0, m, n);               //MOV.L   @(R0,Rm),Rn
-  op(0x0f, MACL_, m, n);                //MAC.L   @Rm+,@Rn+
-  op(0x10 ... 0x1f, MOVLS4, m, d4, n);  //MOV.L   Rm,@(disp,Rn)
-  op(0x20, MOVBS, m, n);                //MOV.B   Rm,@Rn
-  op(0x21, MOVWS, m, n);                //MOV.W   Rm,@Rn
-  op(0x22, MOVLS, m, n);                //MOV.L   Rm,@Rn
-  op(0x24, MOVBM, m, n);                //MOV.B   Rm,@-Rn
-  op(0x25, MOVWM, m, n);                //MOV.W   Rm,@-Rn
-  op(0x26, MOVLM, m, n);                //MOV.L   Rm,@-Rn
-  op(0x27, DIV0S, m, n);                //DIV0S   Rm,Rn
-  op(0x28, TST, m, n);                  //TST     Rm,Rn
-  op(0x29, AND, m, n);                  //AND     Rm,Rn
-  op(0x2a, XOR, m, n);                  //XOR     Rm,Rn
-  op(0x2b, OR, m, n);                   //OR      Rm,Rn
-  op(0x2c, CMPSTR, m, n);               //CMP/STR Rm,Rn
-  op(0x2d, XTRCT, m, n);                //XTRCT   Rm,Rn
-  op(0x2e, MULU, m, n);                 //MULU    Rm,Rn
-  op(0x2f, MULS, m, n);                 //MULS    Rm,Rn
-  op(0x30, CMPEQ, m, n);                //CMP/EQ  Rm,Rn
-  op(0x32, CMPHS, m, n);                //CMP/HS  Rm,Rn
-  op(0x33, CMPGE, m, n);                //CMP/GE  Rm,Rn
-  op(0x34, DIV1, m, n);                 //DIV1    Rm,Rn
-  op(0x35, DMULU, m, n);                //DMULU.L Rm,Rn
-  op(0x36, CMPHI, m, n);                //CMP/HI  Rm,Rn
-  op(0x37, CMPGT, m, n);                //CMP/GT  Rm,Rn
-  op(0x38, SUB, m, n);                  //SUB     Rm,Rn
-  op(0x3a, SUBC, m, n);                 //SUBC    Rm,Rn
-  op(0x3b, SUBV, m, n);                 //SUBV    Rm,Rn
-  op(0x3c, ADD, m, n);                  //ADD     Rm,Rn
-  op(0x3d, DMULS, m, n);                //DMULS.L Rm,Rn
-  op(0x3e, ADDC, m, n);                 //ADDC    Rm,Rn
-  op(0x3f, ADDV, m, n);                 //ADDV    Rm,Rn
-  op(0x4f, MACW, m, n);                 //MAC.W   @Rm+,@Rn+
-  op(0x50 ... 0x5f, MOVLL4, m, d4, n);  //MOV.L   @(disp,Rm),Rn
-  op(0x60, MOVBL, m, n);                //MOV.B   @Rm,Rn
-  op(0x61, MOVWL, m, n);                //MOV.W   @Rm,Rn
-  op(0x62, MOVLL, m, n);                //MOV.L   @Rm,Rn
-  op(0x63, MOV, m, n);                  //MOV     Rm,Rn
-  op(0x64, MOVBP, m, n);                //MOV.B   @Rm+,Rn
-  op(0x65, MOVWP, m, n);                //MOV.W   @Rm+,Rn
-  op(0x66, MOVLP, m, n);                //MOV.L   @Rm+,Rn
-  op(0x67, NOT, m, n);                  //NOT     Rm,Rn
-  op(0x68, SWAPB, m, n);                //SWAP.B  Rm,Rn
-  op(0x69, SWAPW, m, n);                //SWAP.W  Rm,Rn
-  op(0x6a, NEGC, m, n);                 //NEGC    Rm,Rn
-  op(0x6b, NEG, m, n);                  //NEG     Rm,Rn
-  op(0x6c, EXTUB, m, n);                //EXTU.B  Rm,Rn
-  op(0x6d, EXTUW, m, n);                //EXTU.W  Rm,Rn
-  op(0x6e, EXTSB, m, n);                //EXTS.B  Rm,Rn
-  op(0x6f, EXTSW, m, n);                //EXTS.W  Rm,Rn
-  op(0x70 ... 0x7f, ADDI, i, n);        //ADD     #imm,Rn
-  op(0x90 ... 0x9f, MOVWI, d8, n);      //MOV.W   @(disp,PC),Rn
-  br(0xa0 ... 0xaf, BRA, d12);          //BRA     disp
-  br(0xb0 ... 0xbf, BSR, d12);          //BSR     disp
-  op(0xd0 ... 0xdf, MOVLI, d8, n);      //MOV.L   @(disp.PC),Rn
-  op(0xe0 ... 0xef, MOVI, i, n);        //MOV     #imm,Rn
+  op(0x04, MOVBS0, m, n);                     //MOV.B   Rm,@(R0,Rn)
+  op(0x05, MOVWS0, m, n);                     //MOV.W   Rm,@(R0,Rn)
+  op(0x06, MOVLS0, m, n);                     //MOV.L   Rm,@(R0,Rn)
+  op(0x07, MULL, m, n);                       //MUL.L   Rm,Rn
+  op(0x0c, MOVBL0, m, n);                     //MOV.B   @(R0,Rm),Rn
+  op(0x0d, MOVWL0, m, n);                     //MOV.W   @(R0,Rm),Rn
+  op(0x0e, MOVLL0, m, n);                     //MOV.L   @(R0,Rm),Rn
+  op(0x0f, MACL_, m, n);                      //MAC.L   @Rm+,@Rn+
+  op(range16(0x10, 0x1f), MOVLS4, m, d4, n);  //MOV.L   Rm,@(disp,Rn)
+  op(0x20, MOVBS, m, n);                      //MOV.B   Rm,@Rn
+  op(0x21, MOVWS, m, n);                      //MOV.W   Rm,@Rn
+  op(0x22, MOVLS, m, n);                      //MOV.L   Rm,@Rn
+  op(0x24, MOVBM, m, n);                      //MOV.B   Rm,@-Rn
+  op(0x25, MOVWM, m, n);                      //MOV.W   Rm,@-Rn
+  op(0x26, MOVLM, m, n);                      //MOV.L   Rm,@-Rn
+  op(0x27, DIV0S, m, n);                      //DIV0S   Rm,Rn
+  op(0x28, TST, m, n);                        //TST     Rm,Rn
+  op(0x29, AND, m, n);                        //AND     Rm,Rn
+  op(0x2a, XOR, m, n);                        //XOR     Rm,Rn
+  op(0x2b, OR, m, n);                         //OR      Rm,Rn
+  op(0x2c, CMPSTR, m, n);                     //CMP/STR Rm,Rn
+  op(0x2d, XTRCT, m, n);                      //XTRCT   Rm,Rn
+  op(0x2e, MULU, m, n);                       //MULU    Rm,Rn
+  op(0x2f, MULS, m, n);                       //MULS    Rm,Rn
+  op(0x30, CMPEQ, m, n);                      //CMP/EQ  Rm,Rn
+  op(0x32, CMPHS, m, n);                      //CMP/HS  Rm,Rn
+  op(0x33, CMPGE, m, n);                      //CMP/GE  Rm,Rn
+  op(0x34, DIV1, m, n);                       //DIV1    Rm,Rn
+  op(0x35, DMULU, m, n);                      //DMULU.L Rm,Rn
+  op(0x36, CMPHI, m, n);                      //CMP/HI  Rm,Rn
+  op(0x37, CMPGT, m, n);                      //CMP/GT  Rm,Rn
+  op(0x38, SUB, m, n);                        //SUB     Rm,Rn
+  op(0x3a, SUBC, m, n);                       //SUBC    Rm,Rn
+  op(0x3b, SUBV, m, n);                       //SUBV    Rm,Rn
+  op(0x3c, ADD, m, n);                        //ADD     Rm,Rn
+  op(0x3d, DMULS, m, n);                      //DMULS.L Rm,Rn
+  op(0x3e, ADDC, m, n);                       //ADDC    Rm,Rn
+  op(0x3f, ADDV, m, n);                       //ADDV    Rm,Rn
+  op(0x4f, MACW, m, n);                       //MAC.W   @Rm+,@Rn+
+  op(range16(0x50, 0x5f), MOVLL4, m, d4, n);  //MOV.L   @(disp,Rm),Rn
+  op(0x60, MOVBL, m, n);                      //MOV.B   @Rm,Rn
+  op(0x61, MOVWL, m, n);                      //MOV.W   @Rm,Rn
+  op(0x62, MOVLL, m, n);                      //MOV.L   @Rm,Rn
+  op(0x63, MOV, m, n);                        //MOV     Rm,Rn
+  op(0x64, MOVBP, m, n);                      //MOV.B   @Rm+,Rn
+  op(0x65, MOVWP, m, n);                      //MOV.W   @Rm+,Rn
+  op(0x66, MOVLP, m, n);                      //MOV.L   @Rm+,Rn
+  op(0x67, NOT, m, n);                        //NOT     Rm,Rn
+  op(0x68, SWAPB, m, n);                      //SWAP.B  Rm,Rn
+  op(0x69, SWAPW, m, n);                      //SWAP.W  Rm,Rn
+  op(0x6a, NEGC, m, n);                       //NEGC    Rm,Rn
+  op(0x6b, NEG, m, n);                        //NEG     Rm,Rn
+  op(0x6c, EXTUB, m, n);                      //EXTU.B  Rm,Rn
+  op(0x6d, EXTUW, m, n);                      //EXTU.W  Rm,Rn
+  op(0x6e, EXTSB, m, n);                      //EXTS.B  Rm,Rn
+  op(0x6f, EXTSW, m, n);                      //EXTS.W  Rm,Rn
+  op(range16(0x70, 0x7f), ADDI, i, n);        //ADD     #imm,Rn
+  op(range16(0x90, 0x9f), MOVWI, d8, n);      //MOV.W   @(disp,PC),Rn
+  br(range16(0xa0, 0xaf), BRA, d12);          //BRA     disp
+  br(range16(0xb0, 0xbf), BSR, d12);          //BSR     disp
+  op(range16(0xd0, 0xdf), MOVLI, d8, n);      //MOV.L   @(disp.PC),Rn
+  op(range16(0xe0, 0xef), MOVI, i, n);        //MOV     #imm,Rn
   }
   #undef n
   #undef m

@@ -175,7 +175,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> u32 {
   }
 
   //MOV.L Rm,@(disp,Rn)
-  case 0x10 ... 0x1f: {
+  case range16(0x10, 0x1f): {
     add32(reg(1), Rn, imm(d4*4));
     mov32(reg(2), Rm);
     call(writeL);
@@ -454,7 +454,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> u32 {
   }
 
   //MOV.L @(disp,Rm),Rn
-  case 0x50 ... 0x5f: {
+  case range16(0x50, 0x5f): {
     add32(reg(1), Rm, imm(d4*4));
     call(readL);
     mov32(Rn, reg(0));
@@ -605,13 +605,13 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> u32 {
   }
 
   //ADD #imm,Rn
-  case 0x70 ... 0x7f: {
+  case range16(0x70, 0x7f): {
     add32(Rn, Rn, imm((s8)i));
     return 0;
   }
 
   //MOV.W @(disp,PC),Rn
-  case 0x90 ... 0x9f: {
+  case range16(0x90, 0x9f): {
     auto delay = cmp32_jump(PPM, imm(0), flag_ne);
     mov32(reg(0), PC);
     auto tail = jump();
@@ -626,7 +626,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> u32 {
   }
 
   //BRA disp
-  case 0xa0 ... 0xaf: {
+  case range16(0xa0, 0xaf): {
     checkDelaySlot([=] {
       add32(PPC, PC, imm(4 + (i12)d12 * 2));
       mov32(PPM, imm(Branch::Slot));
@@ -635,7 +635,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> u32 {
   }
 
   //BSR disp
-  case 0xb0 ... 0xbf: {
+  case range16(0xb0, 0xbf): {
     checkDelaySlot([=] {
       mov32(reg(0), PC);
       mov32(PR, reg(0));
@@ -647,7 +647,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> u32 {
   }
 
   //MOV.L @(disp,PC),Rn
-  case 0xd0 ... 0xdf: {
+  case range16(0xd0, 0xdf): {
     auto delay = cmp32_jump(PPM, imm(0), flag_ne);
     mov32(reg(0), PC);
     auto tail = jump();
@@ -662,7 +662,7 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> u32 {
   }
 
   //MOV #imm,Rn
-  case 0xe0 ... 0xef: {
+  case range16(0xe0, 0xef): {
     mov32(Rn, imm((s8)i));
     return 0;
   }

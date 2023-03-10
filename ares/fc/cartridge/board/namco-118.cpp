@@ -71,21 +71,17 @@ struct Namco118 : Interface {
   auto addressCHR(n32 address) const -> n32 {
     n32 chrAddress = 0;
     if(revision == Revision::N3446) {
-      switch(address) {
-      case 0x0000 ... 0x07ff: chrAddress = characterBank[2] << 11 | (n11)address; break;
-      case 0x0800 ... 0x0fff: chrAddress = characterBank[3] << 11 | (n11)address; break;
-      case 0x1000 ... 0x17ff: chrAddress = characterBank[4] << 11 | (n11)address; break;
-      case 0x1800 ... 0xffff: chrAddress = characterBank[5] << 11 | (n11)address; break;
-      }
+           if(address <= 0x07ff) chrAddress = characterBank[2] << 11 | (n11)address;
+      else if(address <= 0x0fff) chrAddress = characterBank[3] << 11 | (n11)address;
+      else if(address <= 0x17ff) chrAddress = characterBank[4] << 11 | (n11)address;
+      else if(address <= 0xffff) chrAddress = characterBank[5] << 11 | (n11)address;
     } else {
-      switch(address) {
-      case 0x0000 ... 0x07ff: chrAddress = characterBank[0] << 11 | (n11)address; break;
-      case 0x0800 ... 0x0fff: chrAddress = characterBank[1] << 11 | (n11)address; break;
-      case 0x1000 ... 0x13ff: chrAddress = characterBank[2] << 10 | (n10)address; break;
-      case 0x1400 ... 0x17ff: chrAddress = characterBank[3] << 10 | (n10)address; break;
-      case 0x1800 ... 0x1bff: chrAddress = characterBank[4] << 10 | (n10)address; break;
-      case 0x1c00 ... 0x1fff: chrAddress = characterBank[5] << 10 | (n10)address; break;
-      }
+           if(address <= 0x07ff) chrAddress = characterBank[0] << 11 | (n11)address;
+      else if(address <= 0x0fff) chrAddress = characterBank[1] << 11 | (n11)address;
+      else if(address <= 0x13ff) chrAddress = characterBank[2] << 10 | (n10)address;
+      else if(address <= 0x17ff) chrAddress = characterBank[3] << 10 | (n10)address;
+      else if(address <= 0x1bff) chrAddress = characterBank[4] << 10 | (n10)address;
+      else if(address <= 0x1fff) chrAddress = characterBank[5] << 10 | (n10)address;
       chrAddress |= (address & 0x1000) << 4;
     }
     return chrAddress;

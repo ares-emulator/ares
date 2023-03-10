@@ -13,14 +13,12 @@ struct Janggun : Interface {
   }
 
   auto read(n16 address, n8 data) -> n8 override {
-    switch(address) {
-    case 0x0000 ... 0x1fff: return rom.read(romBank[0] << 13 | (n13)address);
-    case 0x2000 ... 0x3fff: return rom.read(romBank[1] << 13 | (n13)address);
-    case 0x4000 ... 0x5fff: return rom.read(romBank[2] << 13 | (n13)address);
-    case 0x6000 ... 0x7fff: return rom.read(romBank[3] << 13 | (n13)address);
-    case 0x8000 ... 0x9fff: return rom.read(romBank[4] << 13 | (n13)address);
-    case 0xa000 ... 0xbfff: return rom.read(romBank[5] << 13 | (n13)address);
-    }
+    if(address <= 0x1fff) return rom.read(romBank[0] << 13 | (n13)address);
+    if(address <= 0x3fff) return rom.read(romBank[1] << 13 | (n13)address);
+    if(address <= 0x5fff) return rom.read(romBank[2] << 13 | (n13)address);
+    if(address <= 0x7fff) return rom.read(romBank[3] << 13 | (n13)address);
+    if(address <= 0x9fff) return rom.read(romBank[4] << 13 | (n13)address);
+    if(address <= 0xbfff) return rom.read(romBank[5] << 13 | (n13)address);
     return data;
   }
 
