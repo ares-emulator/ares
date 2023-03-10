@@ -43,7 +43,8 @@ protected:
 
   //copy part of string from source document into target string; decode markup while copying
   auto copy(string& target, const char* source, u32 length) -> void {
-    char buffer[length + 1];
+    string buffer;
+    buffer.resize(length);
 
     #if defined(NALL_XML_LITERAL)
     memory::copy(target.pointer(), source, length);
@@ -51,7 +52,7 @@ protected:
     return;
     #endif
 
-    char* output = buffer;
+    char* output = buffer.get();
     while(length) {
       if(*source == '&') {
         if(!memory::compare(source, "&lt;",   4)) { *output++ = '<';  source += 4; length -= 4; continue; }
@@ -81,8 +82,8 @@ protected:
 
       *output++ = *source++, length--;
     }
-    *output = 0;
-    target = (char*)buffer;
+    buffer.resize(output - buffer.get());
+    target = std::move(buffer);
   }
 
   auto parseExpression(const char*& p) -> bool {

@@ -27,6 +27,7 @@ namespace nall {
   };
   #pragma clang diagnostic error   "-Wc++20-extensions"
   #pragma clang diagnostic error   "-Wgnu-statement-expression"
+  #pragma clang diagnostic error   "-Wvla"
   #pragma clang diagnostic warning "-Wimplicit-fallthrough"
   #pragma clang diagnostic warning "-Wreturn-type"
   #pragma clang diagnostic ignored "-Wunused-result"
@@ -47,6 +48,7 @@ namespace nall {
     static constexpr bool Microsoft = 0;
   };
   #pragma GCC diagnostic error   "-Wc++20-extensions"
+  #pragma GCC diagnostic error   "-Wvla"
   #pragma GCC diagnostic warning "-Wimplicit-fallthrough"
   #pragma GCC diagnostic warning "-Wreturn-type"
   #pragma GCC diagnostic ignored "-Wunused-result"

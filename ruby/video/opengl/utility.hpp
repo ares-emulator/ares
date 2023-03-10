@@ -70,10 +70,11 @@ static auto glrCreateShader(GLuint program, GLuint type, const char* source) -> 
   if(result == GL_FALSE) {
     GLint length = 0;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-    char text[length + 1];
-    glGetShaderInfoLog(shader, length, &length, text);
-    text[length] = 0;
-    print("[ruby::OpenGL: shader compiler error]\n", (const char*)text, "\n\n");
+    string text;
+    text.resize(length);
+    glGetShaderInfoLog(shader, length, &length, text.get());
+    text.resize(length);
+    print("[ruby::OpenGL: shader compiler error]\n", text, "\n\n");
     return 0;
   }
   glAttachShader(program, shader);
@@ -87,10 +88,11 @@ static auto glrLinkProgram(GLuint program) -> void {
   if(result == GL_FALSE) {
     GLint length = 0;
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
-    char text[length + 1];
-    glGetProgramInfoLog(program, length, &length, text);
-    text[length] = 0;
-    print("[ruby::OpenGL: shader linker error]\n", (const char*)text, "\n\n");
+    string text;
+    text.resize(length);
+    glGetProgramInfoLog(program, length, &length, text.get());
+    text.resize(length);
+    print("[ruby::OpenGL: shader linker error]\n", text, "\n\n");
   }
   glValidateProgram(program);
   result = GL_FALSE;
@@ -98,9 +100,10 @@ static auto glrLinkProgram(GLuint program) -> void {
   if(result == GL_FALSE) {
     GLint length = 0;
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
-    char text[length + 1];
-    glGetProgramInfoLog(program, length, &length, text);
-    text[length] = 0;
-    print("[ruby::OpenGL: shader validation error]\n", (const char*)text, "\n\n");
+    string text;
+    text.resize(length);
+    glGetProgramInfoLog(program, length, &length, text.get());
+    text.resize(length);
+    print("[ruby::OpenGL: shader validation error]\n", text, "\n\n");
   }
 }

@@ -104,4 +104,5 @@ protected:
   Audio& self;
   unique_pointer<AudioDriver> instance;
   vector<nall::DSP::Resampler::Cubic> resamplers;
+  vector<f64> resampleBuffer;
 };
