@@ -5,7 +5,7 @@ ifeq ($(platform),windows)
 
   ifeq ($(hiro),windows)
     hiro.flags   = $(flags.cpp) -DHIRO_WINDOWS
-    hiro.options = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lole32 -lcomctl32 -lcomdlg32 -luxtheme -lmsimg32 -lshlwapi -ldwmapi
+    hiro.options = $(call lib,kernel32 user32 gdi32 advapi32 ole32 comctl32 comdlg32 uxtheme msimg32 shlwapi dwmapi)
   endif
 
   ifeq ($(hiro),gtk2)
@@ -81,7 +81,7 @@ ifneq ($(findstring windres,$(windres)),)
 else
   # rc
   hiro.resource.extension := .res
-  hiro.resource.command = /FO $2 $1
+  hiro.resource.command = /nologo /fo $2 $1
 endif
 
 hiro.objects := \
@@ -92,7 +92,7 @@ $(object.path)/hiro-$(hiro).o: $(hiro.path)/hiro.cpp
 	$(if $(filter qt%,$(hiro)),$(info Compiling $(hiro.path)/qt/qt.moc ...))
 	$(if $(filter qt%,$(hiro)),@$(moc) -i -o $(hiro.path)/qt/qt.moc $(hiro.path)/qt/qt.hpp)
 	$(info Compiling $(subst ../,,$<) ...)
-	@$(compiler) $(hiro.flags) $(flags) $(flags.deps) -c $< -o $@
+	@$(compiler) $(hiro.flags) $(flags) $(flags.deps) -c $< $(call obj,$@)
 
 $(object.path)/hiro-resource$(hiro.resource.extension): $(hiro.resource)
 	$(info Compiling $(subst ../,,$<) ...)

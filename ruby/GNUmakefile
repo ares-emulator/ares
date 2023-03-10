@@ -48,27 +48,27 @@ ruby.flags += $(if $(findstring input.sdl,$(ruby)),$(shell sdl2-config --cflags)
 ruby.options :=
 
 ruby.options += $(if $(findstring video.cgl,$(ruby)),-framework OpenGL)
-ruby.options += $(if $(findstring video.direct3d9,$(ruby)),-ld3d9)
+ruby.options += $(if $(findstring video.direct3d9,$(ruby)),$(call lib,d3d9))
 ruby.options += $(if $(findstring video.glx,$(ruby)),-lGL)
-ruby.options += $(if $(findstring video.wgl,$(ruby)),-lopengl32)
+ruby.options += $(if $(findstring video.wgl,$(ruby)),$(call lib,opengl32))
 ruby.options += $(if $(findstring video.xvideo,$(ruby)),-lXv)
 
 ruby.options += $(if $(findstring audio.alsa,$(ruby)),-lasound)
 ruby.options += $(if $(findstring audio.ao,$(ruby)),-lao)
-ruby.options += $(if $(findstring audio.directsound,$(ruby)),-ldsound -luuid)
+ruby.options += $(if $(findstring audio.directsound,$(ruby)),$(call lib,dsound uuid))
 ruby.options += $(if $(findstring audio.pulseaudio,$(ruby)),-lpulse)
 ruby.options += $(if $(findstring audio.pulseaudiosimple,$(ruby)),-lpulse-simple)
-ruby.options += $(if $(findstring audio.wasapi,$(ruby)),-lavrt -luuid)
-ruby.options += $(if $(findstring audio.waveout,$(ruby)),-lwinmm)
-ruby.options += $(if $(findstring audio.xaudio2,$(ruby)),-lole32)
+ruby.options += $(if $(findstring audio.wasapi,$(ruby)),$(call lib,avrt uuid))
+ruby.options += $(if $(findstring audio.waveout,$(ruby)),$(call lib,winmm))
+ruby.options += $(if $(findstring audio.xaudio2,$(ruby)),$(call lib,ole32))
 
 ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell sdl2-config --libs))
 ruby.options += $(if $(findstring input.udev,$(ruby)),-ludev)
 ruby.options += $(if $(findstring input.uhid,$(ruby)),-lusbhid)
-ruby.options += $(if $(findstring input.windows,$(ruby)),-ldinput8 -ldxguid)
+ruby.options += $(if $(findstring input.windows,$(ruby)),$(call lib,dinput8 dxguid))
 
 ifeq ($(platform),windows)
-  ruby.options += $(if $(findstring audio.openal,$(ruby)),-lopenal32)
+  ruby.options += $(if $(findstring audio.openal,$(ruby)),$(call lib,openal32))
 endif
 
 ifeq ($(platform),macos)
@@ -91,7 +91,7 @@ ruby.objects := $(object.path)/ruby.o
 
 $(object.path)/ruby.o: $(ruby.path)/ruby.cpp $(call rwildcard,$(ruby.path))
 	$(info Compiling $(subst ../,,$<) ...)
-	@$(compiler) $(ruby.flags) $(flags) $(flags.deps) -c $< -o $@
+	@$(compiler) $(ruby.flags) $(flags) $(flags.deps) -c $< $(call obj,$@)
 
 ruby.verbose:
 	$(info ruby Drivers:)

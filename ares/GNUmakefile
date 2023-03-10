@@ -1,5 +1,5 @@
 ifeq ($(platform),windows)
-  options += -luuid -lkernel32 -luser32 -lgdi32 -lcomctl32 -lcomdlg32 -lshell32
+  options += $(call lib,uuid kernel32 user32 gdi32 comctl32 comdlg32 shell32)
 else ifeq ($(platform),macos)
 else ifneq ($(filter $(platform),linux bsd),)
   options += -Wl,-export-dynamic
