@@ -2,11 +2,11 @@
 auto PIF::addressCRC(u16 address) const -> n5 {
   n5 crc = 0;
   for(u32 i : range(16)) {
-    n5 xor = crc & 0x10 ? 0x15 : 0x00;
+    n5 xor_ = crc & 0x10 ? 0x15 : 0x00;
     crc <<= 1;
     if(address & 0x8000) crc |= 1;
     address <<= 1;
-    crc ^= xor;
+    crc ^= xor_;
   }
   return crc;
 }
@@ -15,12 +15,12 @@ auto PIF::dataCRC(array_view<u8> data) const -> n8 {
   n8 crc = 0;
   for(u32 i : range(33)) {
     for(u32 j : reverse(range(8))) {
-      n8 xor = crc & 0x80 ? 0x85 : 0x00;
+      n8 xor_ = crc & 0x80 ? 0x85 : 0x00;
       crc <<= 1;
       if(i < 32) {
         if(data[i] & 1 << j) crc |= 1;
       }
-      crc ^= xor;
+      crc ^= xor_;
     }
   }
   return crc;
