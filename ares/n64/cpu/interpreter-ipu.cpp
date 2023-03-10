@@ -311,8 +311,13 @@ auto CPU::DIVU(cr64& rs, cr64& rt) -> void {
 
 auto CPU::DMULT(cr64& rs, cr64& rt) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-#if defined(COMPILER_MICROSOFT)
+#if defined(COMPILER_MICROSOFT) && (defined(ARCHITECTURE_AMD64) || defined(ARCHITECTURE_ARM64))
+  #if defined(ARCHITECTURE_AMD64)
   LO.s64 = _mul128(rs.s64, rt.s64, &HI.s64);
+  #else
+	LO.s64 = rs.s64 * rt.s64;
+	HI.s64 = __mulh(rs.s64, rt.s64);
+  #endif
 #else
   #if defined(__SIZEOF_INT128__)
   u128 result = s128(rs.s64) * s128(rt.s64);
@@ -329,8 +334,13 @@ auto CPU::DMULT(cr64& rs, cr64& rt) -> void {
 
 auto CPU::DMULTU(cr64& rs, cr64& rt) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-#if defined(COMPILER_MICROSOFT)
+#if defined(COMPILER_MICROSOFT) && (defined(ARCHITECTURE_AMD64) || defined(ARCHITECTURE_ARM64))
+  #if defined(ARCHITECTURE_AMD64)
   LO.u64 = _umul128(rs.u64, rt.u64, &HI.u64);
+  #else
+	LO.u64 = rs.u64 * rt.u64;
+	HI.u64 = __umulh(rs.u64, rt.u64);
+  #endif
 #else
   u128 result = u128(rs.u64) * u128(rt.u64);
   LO.u64 = result >>  0;

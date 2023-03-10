@@ -203,9 +203,11 @@ namespace nall {
     static constexpr bool ppc64 = 0;
     static constexpr bool ppc32 = 0;
   };
-#elif defined(__aarch64__)
+#elif defined(__aarch64__) || defined(_M_ARM64)
   #define ARCHITECTURE_ARM64
-  #define ARCHITECTURE_SUPPORTS_SSE4_1 1 // simulated via sse2neon.h
+  #if !defined(COMPILER_MICROSOFT)
+    #define ARCHITECTURE_SUPPORTS_SSE4_1 1 // simulated via sse2neon.h
+  #endif
   struct Architecture {
     static constexpr bool x86   = 0;
     static constexpr bool amd64 = 0;
@@ -254,7 +256,7 @@ namespace nall {
 
 /* Endian detection */
 
-#if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && __BYTE_ORDER == __LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__) || defined(__i386__) || defined(__amd64__) || defined(_M_IX86) || defined(_M_AMD64)
+#if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && __BYTE_ORDER == __LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__) || defined(__i386__) || defined(__amd64__) || defined(_M_IX86) || defined(_M_AMD64) || defined(_M_ARM64)
   #define ENDIAN_LITTLE
   struct Endian {
     static constexpr bool Little = 1;
