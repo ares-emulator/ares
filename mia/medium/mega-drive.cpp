@@ -7,8 +7,10 @@ struct MegaDrive : Cartridge {
   auto analyzeStorage(vector<u8>& rom, string hash) -> void;
   auto analyzePeripherals(vector<u8>& rom, string hash) -> void;
   auto analyzeCopyProtection(vector<u8>& rom, string hash) -> void;
+  auto analyzeRegion(vector<u8>& rom, string hash) -> void;
 
   string board;
+  vector<string> regions;
 
   struct RAM {
     explicit operator bool() const { return mode && size != 0; }
@@ -127,6 +129,7 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
   analyzeStorage(rom, hash);
   analyzePeripherals(rom, hash);
   analyzeCopyProtection(rom, hash);
+  analyzeRegion(rom, hash);
 
   vector<string> devices;
   string device = slice((const char*)&rom[0x190], 0, 16).trimRight(" ");
@@ -152,32 +155,6 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
     if(id == 'R');  //RS-232 modem
     if(id == 'T');  //tablet
     if(id == 'V');  //paddle
-  }
-
-  vector<string> regions;
-  string region = slice((const char*)&rom[0x01f0], 0, 16).trimRight(" ");
-  if(!regions) {
-    if(region == "JAPAN" ) regions.append("NTSC-J");
-    if(region == "EUROPE") regions.append("PAL");
-  }
-  if(!regions) {
-    if(region.find("J")
-    || region.find("K")) regions.append("NTSC-J");
-    if(region.find("U")) regions.append("NTSC-U");
-    if(region.find("E")) regions.append("PAL");
-  }
-  if(!regions && region.size() == 1) {
-    maybe<u8> bits;
-    u8 field = region[0];
-    if(field >= '0' && field <= '9') bits = field - '0';
-    if(field >= 'A' && field <= 'F') bits = field - 'A' + 10;
-    if(bits && *bits & 1) regions.append("NTSC-J");  //domestic 60hz
-    if(bits && *bits & 2);                           //domestic 50hz
-    if(bits && *bits & 4) regions.append("NTSC-U");  //overseas 60hz
-    if(bits && *bits & 8) regions.append("PAL");     //overseas 50hz
-  }
-  if(!regions) {
-    regions.append("NTSC-J", "NTSC-U", "PAL");
   }
 
   string domesticName;
@@ -264,6 +241,40 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
   }
 
   return s;
+}
+
+auto MegaDrive::analyzeRegion(vector<u8>& rom, string hash) -> void {
+  string region = slice((const char*)&rom[0x01f0], 0, 16).trimRight(" ");
+  
+  if(!regions) {
+    if(region == "JAPAN" ) regions.append("NTSC-J");
+    if(region == "EUROPE") regions.append("PAL");
+  }
+  if(!regions) {
+    if(region.find("J")
+    || region.find("K")) regions.append("NTSC-J");
+    if(region.find("U")) regions.append("NTSC-U");
+    if(region.find("E")) regions.append("PAL");
+  }
+  if(!regions && region.size() == 1) {
+    maybe<u8> bits;
+    u8 field = region[0];
+    if(field >= '0' && field <= '9') bits = field - '0';
+    if(field >= 'A' && field <= 'F') bits = field - 'A' + 10;
+    if(bits && *bits & 1) regions.append("NTSC-J");  //domestic 60hz
+    if(bits && *bits & 2);                           //domestic 50hz
+    if(bits && *bits & 4) regions.append("NTSC-U");  //overseas 60hz
+    if(bits && *bits & 8) regions.append("PAL");     //overseas 50hz
+  }
+  if(!regions) {
+    regions.append("NTSC-J", "NTSC-U", "PAL");
+  }
+
+  //Alisia Dragoon (Europe)
+  if(hash == "0930b77d0474e99c10690245cac12a6618b6c16420e3575379aba6e715ea797a") {
+    regions.reset();
+    regions.append("PAL");
+  }
 }
 
 auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
