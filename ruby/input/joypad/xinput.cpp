@@ -3,18 +3,18 @@
 //documented functionality
 #define oXInputGetState  "XInputGetState"
 #define oXInputSetState  "XInputSetState"
-typedef DWORD WINAPI (*pXInputGetState)(DWORD dwUserIndex, XINPUT_STATE* pState);
-typedef DWORD WINAPI (*pXInputSetState)(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration);
+typedef DWORD (WINAPI *pXInputGetState)(DWORD dwUserIndex, XINPUT_STATE* pState);
+typedef DWORD (WINAPI *pXInputSetState)(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration);
 
 //undocumented functionality
 #define oXInputGetStateEx             (LPCSTR)100
 #define oXInputWaitForGuideButton     (LPCSTR)101
 #define oXInputCancelGuideButtonWait  (LPCSTR)102
 #define oXInputPowerOffController     (LPCSTR)103
-typedef DWORD WINAPI (*pXInputGetStateEx)(DWORD dwUserIndex, XINPUT_STATE* pState);
-typedef DWORD WINAPI (*pXInputWaitForGuideButton)(DWORD dwUserIndex, DWORD dwFlag, void* pUnknown);
-typedef DWORD WINAPI (*pXInputCancelGuideButtonWait)(DWORD dwUserIndex);
-typedef DWORD WINAPI (*pXInputPowerOffController)(DWORD dwUserIndex);
+typedef DWORD (WINAPI *pXInputGetStateEx)(DWORD dwUserIndex, XINPUT_STATE* pState);
+typedef DWORD (WINAPI *pXInputWaitForGuideButton)(DWORD dwUserIndex, DWORD dwFlag, void* pUnknown);
+typedef DWORD (WINAPI *pXInputCancelGuideButtonWait)(DWORD dwUserIndex);
+typedef DWORD (WINAPI *pXInputPowerOffController)(DWORD dwUserIndex);
 
 #define XINPUT_GAMEPAD_GUIDE  0x0400
 
