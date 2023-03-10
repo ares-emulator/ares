@@ -18,8 +18,8 @@ struct SSP1601 {
   auto add(u32) -> void;
   auto sub(u32) -> void;
   auto cmp(u32) -> void;
-  auto and(u32) -> void;
-  auto or (u32) -> void;
+  auto and_(u32) -> void;
+  auto or_(u32) -> void;
   auto eor(u32) -> void;
   auto shr() -> void;
   auto shl() -> void;

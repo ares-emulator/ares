@@ -58,21 +58,21 @@ endif
 
 ifeq ($(ccache), true)
   compiler.c      = ccache $(compiler) -x c -std=c11
-  compiler.cpp    = ccache $(compiler) -x c++ -std=c++17 -fno-operator-names
+  compiler.cpp    = ccache $(compiler) -x c++ -std=c++17
   compiler.objc   = ccache $(compiler) -x objective-c -std=c11
-  compiler.objcpp = ccache $(compiler) -x objective-c++ -std=c++17 -fno-operator-names
+  compiler.objcpp = ccache $(compiler) -x objective-c++ -std=c++17
 else
   compiler.c      = $(compiler) -x c -std=c11
-  compiler.cpp    = $(compiler) -x c++ -std=c++17 -fno-operator-names
+  compiler.cpp    = $(compiler) -x c++ -std=c++17
   compiler.objc   = $(compiler) -x objective-c -std=c11
-  compiler.objcpp = $(compiler) -x objective-c++ -std=c++17 -fno-operator-names
+  compiler.objcpp = $(compiler) -x objective-c++ -std=c++17
 endif
 
 
 flags.c      = -x c -std=c11
-flags.cpp    = -x c++ -std=c++17 -fno-operator-names
+flags.cpp    = -x c++ -std=c++17
 flags.objc   = -x objective-c -std=c11
-flags.objcpp = -x objective-c++ -std=c++17 -fno-operator-names
+flags.objcpp = -x objective-c++ -std=c++17
 flags.deps   = -MMD -MP -MF $(@:.o=.d)
 
 # compiler detection

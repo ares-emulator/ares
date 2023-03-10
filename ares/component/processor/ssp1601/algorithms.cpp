@@ -45,13 +45,13 @@ auto SSP1601::cmp(u32 source) -> void {
   N = result >> 31;
 }
 
-auto SSP1601::and(u32 v) -> void {
+auto SSP1601::and_(u32 v) -> void {
   A &= v;
   Z = A == 0;
   N = A >> 31;
 }
 
-auto SSP1601::or(u32 v) -> void {
+auto SSP1601::or_(u32 v) -> void {
   A |= v;
   Z = A == 0;
   N = A >> 31;
