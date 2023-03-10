@@ -1,8 +1,9 @@
 auto APU::read(n16 address) -> n8 {
-  switch(address) {
-  case 0x0000 ... 0x0fff:
+  if(address <= 0x0fff) {
     while(cpu.MAR >= 0x7000 && cpu.MAR <= 0x7fff && !scheduler.synchronizing()) step(1);
     return ram.read(0x3000 | address);
+  }
+  switch(address) {
   case 0x8000:
     return port.data;
   default:
@@ -11,10 +12,11 @@ auto APU::read(n16 address) -> n8 {
 }
 
 auto APU::write(n16 address, n8 data) -> void {
-  switch(address) {
-  case 0x0000 ... 0x0fff:
+  if(address <= 0x0fff) {
     while(cpu.MAR >= 0x7000 && cpu.MAR <= 0x7fff && !scheduler.synchronizing()) step(1);
     return ram.write(0x3000 | address, data);
+  }
+  switch(address) {
   case 0x4000:
     return psg.writeRight(data);
   case 0x4001:

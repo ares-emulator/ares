@@ -187,41 +187,41 @@ auto TLCS900H::instruction() -> void {
   case 0x1f: {
     return undefined();
   }
-  case 0x20 ... 0x27: {  //LD R,n
+  case range8(0x20, 0x27): {  //LD R,n
     auto immediate = fetchImmediate<n8>();
     prefetch(4);
     return instructionLoad(toRegister3<n8>(data), immediate);
   }
-  case 0x28 ... 0x2f: {  //PUSH.W rr
+  case range8(0x28, 0x2f): {  //PUSH.W rr
     prefetch(4);
     return instructionPush(toRegister3<n16>(data));
   }
-  case 0x30 ... 0x37: {  //LD RR,nn
+  case range8(0x30, 0x37): {  //LD RR,nn
     auto immediate = fetchImmediate<n16>();
     prefetch(6);
     return instructionLoad(toRegister3<n16>(data), immediate);
   }
-  case 0x38 ... 0x3f: {  //PUSH.L XRR
+  case range8(0x38, 0x3f): {  //PUSH.L XRR
     prefetch(6);
     return instructionPush(toRegister3<n32>(data));
   }
-  case 0x40 ... 0x47: {  //LD XRR,nnnn
+  case range8(0x40, 0x47): {  //LD XRR,nnnn
     auto immediate = fetchImmediate<n32>();
     prefetch(10);
     return instructionLoad(toRegister3<n32>(data), immediate);
   }
-  case 0x48 ... 0x4f: {  //POP.W RR
+  case range8(0x48, 0x4f): {  //POP.W RR
     prefetch(6);
     return instructionPop(toRegister3<n16>(data));
   }
-  case 0x50 ... 0x57: {
+  case range8(0x50, 0x57): {
     return undefined();
   }
-  case 0x58 ... 0x5f: {  //POP.L XRR
+  case range8(0x58, 0x5f): {  //POP.L XRR
     prefetch(8);
     return instructionPop(toRegister3<n32>(data));
   }
-  case 0x60 ... 0x6f: {  //JR cc,PC+d
+  case range16(0x60, 0x6f): {  //JR cc,PC+d
     auto immediate = fetchImmediate<i8>();
     prefetch(4);
     if(!condition((n4)data)) return;
@@ -229,7 +229,7 @@ auto TLCS900H::instruction() -> void {
     instructionJumpRelative(immediate);
     return prefetch(2);
   }
-  case 0x70 ... 0x7f: {  //JRL cc,PC+dd
+  case range16(0x70, 0x7f): {  //JRL cc,PC+dd
     auto immediate = fetchImmediate<i16>();
     prefetch(4);
     if(!condition((n4)data)) return;
@@ -237,34 +237,34 @@ auto TLCS900H::instruction() -> void {
     instructionJumpRelative(immediate);
     return prefetch(2);
   }
-  case 0x80 ... 0x87: {  //src.B
+  case range8(0x80, 0x87): {  //src.B
     return instructionSourceMemory(toMemory<n8>(load(toRegister3<n32>(data))));
   }
-  case 0x88 ... 0x8f: {  //src.B
+  case range8(0x88, 0x8f): {  //src.B
     auto immediate = fetch<i8>();
     prefetch(2);
     return instructionSourceMemory(toMemory<n8>(load(toRegister3<n32>(data)) + immediate));
   }
-  case 0x90 ... 0x97: {  //src.W
+  case range8(0x90, 0x97): {  //src.W
     return instructionSourceMemory(toMemory<n16>(load(toRegister3<n32>(data))));
   }
-  case 0x98 ... 0x9f: {  //src.W
+  case range8(0x98, 0x9f): {  //src.W
     auto immediate = fetch<i8>();
     prefetch(2);
     return instructionSourceMemory(toMemory<n16>(load(toRegister3<n32>(data)) + immediate));
   }
-  case 0xa0 ... 0xa7: {  //src.L
+  case range8(0xa0, 0xa7): {  //src.L
     return instructionSourceMemory(toMemory<n32>(load(toRegister3<n32>(data))));
   }
-  case 0xa8 ... 0xaf: {  //src.L
+  case range8(0xa8, 0xaf): {  //src.L
     auto immediate = fetch<i8>();
     prefetch(2);
     return instructionSourceMemory(toMemory<n32>(load(toRegister3<n32>(data)) + immediate));
   }
-  case 0xb0 ... 0xb7: {  //dst
+  case range8(0xb0, 0xb7): {  //dst
     return instructionTargetMemory(load(toRegister3<n32>(data)));
   }
-  case 0xb8 ... 0xbf: {  //dst
+  case range8(0xb8, 0xbf): {  //dst
     auto immediate = fetch<i8>();
     prefetch(2);
     return instructionTargetMemory(load(toRegister3<n32>(data)) + immediate);
@@ -342,7 +342,7 @@ auto TLCS900H::instruction() -> void {
     prefetch(2);
     return instructionRegister(register);
   }
-  case 0xc8 ... 0xcf: {  //reg.B
+  case range8(0xc8, 0xcf): {  //reg.B
     return instructionRegister(toRegister3<n8>(data));
   }
   case 0xd0: {  //src.W
@@ -418,7 +418,7 @@ auto TLCS900H::instruction() -> void {
     prefetch(2);
     return instructionRegister(register);
   }
-  case 0xd8 ... 0xdf: {  //reg.W
+  case range8(0xd8, 0xdf): {  //reg.W
     return instructionRegister(toRegister3<n16>(data));
   }
   case 0xe0: {  //src.L
@@ -494,7 +494,7 @@ auto TLCS900H::instruction() -> void {
     prefetch(2);
     return instructionRegister(register);
   }
-  case 0xe8 ... 0xef: {  //reg.L
+  case range8(0xe8, 0xef): {  //reg.L
     return instructionRegister(toRegister3<n32>(data));
   }
   case 0xf0: {  //dst
@@ -542,10 +542,10 @@ auto TLCS900H::instruction() -> void {
       auto address = load(PC) + immediate;  //load PC before final byte fetch
       data = fetch();
       switch(data) {
-      case 0x20 ... 0x27:
+      case range8(0x20, 0x27):
         prefetch(14);
         return instructionLoad(toRegister3<n16>(data), toImmediate<n16>(address));
-      case 0x30 ... 0x37:
+      case range8(0x30, 0x37):
         prefetch(14);
         return instructionLoad(toRegister3<n32>(data), toImmediate<n32>(address));
       }
@@ -587,7 +587,7 @@ auto TLCS900H::instruction() -> void {
     prefetch(14);
     return instructionLoad(memory, immediate);
   }
-  case 0xf8 ... 0xff: {  //SWI n
+  case range8(0xf8, 0xff): {  //SWI n
     return instructionSoftwareInterrupt((n3)data);
   }
 
@@ -602,7 +602,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
 
   switch(data) {
 
-  case 0x00 ... 0x02: {
+  case range3(0x00, 0x02): {
     return undefined();
   }
   case 0x03: {  //LD r,#
@@ -744,7 +744,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
     }
     return undefined();
   }
-  case 0x17 ... 0x18: {
+  case range2(0x17, 0x18): {
     return undefined();
   }
   case 0x19: {  //MULA r
@@ -754,7 +754,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
     }
     return undefined();
   }
-  case 0x1a ... 0x1b: {
+  case range2(0x1a, 0x1b): {
     return undefined();
   }
   case 0x1c: {  //DJNZ r,d
@@ -765,7 +765,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
     }
     return undefined();
   }
-  case 0x1d ... 0x1f: {
+  case range3(0x1d, 0x1f): {
     return undefined();
   }
   case 0x20: {  //ANDCF #,r
@@ -808,7 +808,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
     }
     return undefined();
   }
-  case 0x25 ... 0x27: {
+  case range3(0x25, 0x27): {
     return undefined();
   }
   case 0x28: {  //ANDCF A,r
@@ -899,7 +899,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
     }
     return undefined();
   }
-  case 0x35 ... 0x37: {
+  case range3(0x35, 0x37): {
     return undefined();
   }
   case 0x38: {  //MINC1 #,r
@@ -956,7 +956,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
   case 0x3f: {
     return undefined();
   }
-  case 0x40 ... 0x47: {  //MUL R,r
+  case range8(0x40, 0x47): {  //MUL R,r
     if constexpr(!Long) {
       if constexpr(Byte) prefetch(22);
       if constexpr(Word) prefetch(28);
@@ -964,7 +964,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
     }
     return undefined();
   }
-  case 0x48 ... 0x4f: {  //MULS R,r
+  case range8(0x48, 0x4f): {  //MULS R,r
     if constexpr(!Long) {
       if constexpr(Byte) prefetch(18);
       if constexpr(Word) prefetch(24);
@@ -972,7 +972,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
     }
     return undefined();
   }
-  case 0x50 ... 0x57: {  //DIV R,r
+  case range8(0x50, 0x57): {  //DIV R,r
     if constexpr(!Long) {
       if constexpr(Byte) prefetch(30);
       if constexpr(Word) prefetch(46);
@@ -980,7 +980,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
     }
     return undefined();
   }
-  case 0x58 ... 0x5f: {  //DIVS R,r
+  case range8(0x58, 0x5f): {  //DIVS R,r
     if constexpr(!Long) {
       if constexpr(Byte) prefetch(36);
       if constexpr(Word) prefetch(52);
@@ -988,57 +988,57 @@ auto TLCS900H::instructionRegister(R register) -> void {
     }
     return undefined();
   }
-  case 0x60 ... 0x67: {  //INC #3,r
+  case range8(0x60, 0x67): {  //INC #3,r
     prefetch(4);
     return instructionIncrement(register, toImmediate<T>((n3)data));
   }
-  case 0x68 ... 0x6f: {  //DEC #3,r
+  case range8(0x68, 0x6f): {  //DEC #3,r
     prefetch(4);
     return instructionDecrement(register, toImmediate<T>((n3)data));
   }
-  case 0x70 ... 0x7f: {  //SCC cc,r
+  case range16(0x70, 0x7f): {  //SCC cc,r
     if constexpr(!Long) {
       prefetch(4);
       return instructionSetConditionCode((n4)data, register);
     }
     return undefined();
   }
-  case 0x80 ... 0x87: {  //ADD R,r
+  case range8(0x80, 0x87): {  //ADD R,r
     prefetch(4);
     return instructionAdd(toRegister3<T>(data), register);
   }
-  case 0x88 ... 0x8f: {  //LD R,r
+  case range8(0x88, 0x8f): {  //LD R,r
     prefetch(4);
     return instructionLoad(toRegister3<T>(data), register);
   }
-  case 0x90 ... 0x97: {  //ADC R,r
+  case range8(0x90, 0x97): {  //ADC R,r
     prefetch(4);
     return instructionAddCarry(toRegister3<T>(data), register);
   }
-  case 0x98 ... 0x9f: {  //LD r,R
+  case range8(0x98, 0x9f): {  //LD r,R
     prefetch(4);
     return instructionLoad(register, toRegister3<T>(data));
   }
-  case 0xa0 ... 0xa7: {  //SUB R,r
+  case range8(0xa0, 0xa7): {  //SUB R,r
     prefetch(4);
     return instructionSubtract(toRegister3<T>(data), register);
   }
-  case 0xa8 ... 0xaf: {  //LD r,#3
+  case range8(0xa8, 0xaf): {  //LD r,#3
     prefetch(4);
     return instructionLoad(register, toImmediate<T>((n3)data));
   }
-  case 0xb0 ... 0xb7: {  //SBC R,r
+  case range8(0xb0, 0xb7): {  //SBC R,r
     prefetch(4);
     return instructionSubtractBorrow(toRegister3<T>(data), register);
   }
-  case 0xb8 ... 0xbf: {  //EX R,r
+  case range8(0xb8, 0xbf): {  //EX R,r
     if constexpr(!Long) {
       prefetch(6);
       return instructionExchange(toRegister3<T>(data), register);
     }
     return undefined();
   }
-  case 0xc0 ... 0xc7: {  //AND R,r
+  case range8(0xc0, 0xc7): {  //AND R,r
     prefetch(4);
     return instructionAnd(toRegister3<T>(data), register);
   }
@@ -1098,18 +1098,18 @@ auto TLCS900H::instructionRegister(R register) -> void {
     if constexpr(Long) prefetch(12);
     return instructionCompare(register, immediate);
   }
-  case 0xd0 ... 0xd7: {  //XOR R,r
+  case range8(0xd0, 0xd7): {  //XOR R,r
     prefetch(4);
     return instructionXor(toRegister3<T>(data), register);
   }
-  case 0xd8 ... 0xdf: {  //CP r,#3
+  case range8(0xd8, 0xdf): {  //CP r,#3
     if constexpr(!Long) {
       prefetch(4);
       return instructionCompare(register, toImmediate<T>((n3)data));
     }
     return undefined();
   }
-  case 0xe0 ... 0xe7: {  //OR R,r
+  case range8(0xe0, 0xe7): {  //OR R,r
     prefetch(4);
     return instructionOr(toRegister3<T>(data), register);
   }
@@ -1153,7 +1153,7 @@ auto TLCS900H::instructionRegister(R register) -> void {
     prefetch(6);
     return instructionShiftRightLogical(register, immediate);
   }
-  case 0xf0 ... 0xf7: {  //CP R,r
+  case range8(0xf0, 0xf7): {  //CP R,r
     prefetch(4);
     return instructionCompare(toRegister3<T>(data), register);
   }
@@ -1201,7 +1201,7 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
 
   switch(data) {
 
-  case 0x00 ... 0x03: {
+  case range4(0x00, 0x03): {
     return undefined();
   }
   case 0x04: {  //PUSH (mem)
@@ -1228,7 +1228,7 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     }
     return undefined();
   }
-  case 0x08 ... 0x0f: {
+  case range8(0x08, 0x0f): {
     return undefined();
   }
   case 0x10: {  //LDI
@@ -1301,19 +1301,19 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     }
     return undefined();
   }
-  case 0x1a ... 0x1f: {
+  case range6(0x1a, 0x1f): {
     return undefined();
   }
-  case 0x20 ... 0x27: {  //LD R,(mem)
+  case range8(0x20, 0x27): {  //LD R,(mem)
     if constexpr(Byte) prefetch(6);
     if constexpr(Word) prefetch(6);
     if constexpr(Long) prefetch(8);
     return instructionLoad(toRegister3<T>(data), memory);
   }
-  case 0x28 ... 0x2f: {
+  case range8(0x28, 0x2f): {
     return undefined();
   }
-  case 0x30 ... 0x37: {  //EX (mem),R
+  case range8(0x30, 0x37): {  //EX (mem),R
     if constexpr(!Long) {
       prefetch(8);
       return instructionExchange(memory, toRegister3<T>(data));
@@ -1391,7 +1391,7 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     }
     return undefined();
   }
-  case 0x40 ... 0x47: {  //MUL R,(mem)
+  case range8(0x40, 0x47): {  //MUL R,(mem)
     if constexpr(!Long) {
       if constexpr(Byte) prefetch(24);
       if constexpr(Word) prefetch(30);
@@ -1399,7 +1399,7 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     }
     return undefined();
   }
-  case 0x48 ... 0x4f: {  //MULS R,(mem)
+  case range8(0x48, 0x4f): {  //MULS R,(mem)
     if constexpr(!Long) {
       if constexpr(Byte) prefetch(20);
       if constexpr(Word) prefetch(26);
@@ -1407,7 +1407,7 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     }
     return undefined();
   }
-  case 0x50 ... 0x57: {  //DIV R,(mem)
+  case range8(0x50, 0x57): {  //DIV R,(mem)
     if constexpr(!Long) {
       if constexpr(Byte) prefetch(30);
       if constexpr(Word) prefetch(46);
@@ -1415,7 +1415,7 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     }
     return undefined();
   }
-  case 0x58 ... 0x5f: {  //DIVS R,(mem)
+  case range8(0x58, 0x5f): {  //DIVS R,(mem)
     if constexpr(!Long) {
       if constexpr(Byte) prefetch(36);
       if constexpr(Word) prefetch(52);
@@ -1423,21 +1423,21 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     }
     return undefined();
   }
-  case 0x60 ... 0x67: {  //INC #3,(mem)
+  case range8(0x60, 0x67): {  //INC #3,(mem)
     if constexpr(!Long) {
       prefetch(8);
       return instructionIncrement(memory, toImmediate<T>((n3)data));
     }
     return undefined();
   }
-  case 0x68 ... 0x6f: {  //DEC #3,(mem)
+  case range8(0x68, 0x6f): {  //DEC #3,(mem)
     if constexpr(!Long) {
       prefetch(8);
       return instructionDecrement(memory, toImmediate<T>((n3)data));
     }
     return undefined();
   }
-  case 0x70 ... 0x77: {
+  case range8(0x70, 0x77): {
     return undefined();
   }
   case 0x78: {  //RLC (mem)
@@ -1496,97 +1496,97 @@ auto TLCS900H::instructionSourceMemory(M memory) -> void {
     }
     return undefined();
   }
-  case 0x80 ... 0x87: {  //ADD R,(mem)
+  case range8(0x80, 0x87): {  //ADD R,(mem)
     if constexpr(Byte) prefetch(6);
     if constexpr(Word) prefetch(6);
     if constexpr(Long) prefetch(8);
     return instructionAdd(toRegister3<T>(data), memory);
   }
-  case 0x88 ... 0x8f: {  //ADD (mem),R
+  case range8(0x88, 0x8f): {  //ADD (mem),R
     if constexpr(Byte) prefetch(8);
     if constexpr(Word) prefetch(8);
     if constexpr(Long) prefetch(12);
     return instructionAdd(memory, toRegister3<T>(data));
   }
-  case 0x90 ... 0x97: {  //ADC R,(mem)
+  case range8(0x90, 0x97): {  //ADC R,(mem)
     if constexpr(Byte) prefetch(6);
     if constexpr(Word) prefetch(6);
     if constexpr(Long) prefetch(8);
     return instructionAddCarry(toRegister3<T>(data), memory);
   }
-  case 0x98 ... 0x9f: {  //ADC (mem),R
+  case range8(0x98, 0x9f): {  //ADC (mem),R
     if constexpr(Byte) prefetch(8);
     if constexpr(Word) prefetch(8);
     if constexpr(Long) prefetch(12);
     return instructionAddCarry(memory, toRegister3<T>(data));
   }
-  case 0xa0 ... 0xa7: {  //SUB R,(mem)
+  case range8(0xa0, 0xa7): {  //SUB R,(mem)
     if constexpr(Byte) prefetch(6);
     if constexpr(Word) prefetch(6);
     if constexpr(Long) prefetch(8);
     return instructionSubtract(toRegister3<T>(data), memory);
   }
-  case 0xa8 ... 0xaf: {  //SUB (mem),R
+  case range8(0xa8, 0xaf): {  //SUB (mem),R
     if constexpr(Byte) prefetch(8);
     if constexpr(Word) prefetch(8);
     if constexpr(Long) prefetch(12);
     return instructionSubtract(memory, toRegister3<T>(data));
   }
-  case 0xb0 ... 0xb7: {  //SBC R,(mem)
+  case range8(0xb0, 0xb7): {  //SBC R,(mem)
     if constexpr(Byte) prefetch(6);
     if constexpr(Word) prefetch(6);
     if constexpr(Long) prefetch(8);
     return instructionSubtractBorrow(toRegister3<T>(data), memory);
   }
-  case 0xb8 ... 0xbf: {  //SBC (mem),R
+  case range8(0xb8, 0xbf): {  //SBC (mem),R
     if constexpr(Byte) prefetch(8);
     if constexpr(Word) prefetch(8);
     if constexpr(Long) prefetch(12);
     return instructionSubtractBorrow(memory, toRegister3<T>(data));
   }
-  case 0xc0 ... 0xc7: {  //AND R,(mem)
+  case range8(0xc0, 0xc7): {  //AND R,(mem)
     if constexpr(Byte) prefetch(6);
     if constexpr(Word) prefetch(6);
     if constexpr(Long) prefetch(8);
     return instructionAnd(toRegister3<T>(data), memory);
   }
-  case 0xc8 ... 0xcf: {  //AND (mem),R
+  case range8(0xc8, 0xcf): {  //AND (mem),R
     if constexpr(Byte) prefetch(8);
     if constexpr(Word) prefetch(8);
     if constexpr(Long) prefetch(12);
     return instructionAnd(memory, toRegister3<T>(data));
   }
-  case 0xd0 ... 0xd7: {  //XOR R,(mem)
+  case range8(0xd0, 0xd7): {  //XOR R,(mem)
     if constexpr(Byte) prefetch(6);
     if constexpr(Word) prefetch(6);
     if constexpr(Long) prefetch(8);
     return instructionXor(toRegister3<T>(data), memory);
   }
-  case 0xd8 ... 0xdf: {  //XOR (mem),R
+  case range8(0xd8, 0xdf): {  //XOR (mem),R
     if constexpr(Byte) prefetch(8);
     if constexpr(Word) prefetch(8);
     if constexpr(Long) prefetch(12);
     return instructionXor(memory, toRegister3<T>(data));
   }
-  case 0xe0 ... 0xe7: {  //OR R,(mem)
+  case range8(0xe0, 0xe7): {  //OR R,(mem)
     if constexpr(Byte) prefetch(6);
     if constexpr(Word) prefetch(6);
     if constexpr(Long) prefetch(8);
     return instructionOr(toRegister3<T>(data), memory);
   }
-  case 0xe8 ... 0xef: {  //OR (mem),R
+  case range8(0xe8, 0xef): {  //OR (mem),R
     if constexpr(Byte) prefetch(8);
     if constexpr(Word) prefetch(8);
     if constexpr(Long) prefetch(12);
     return instructionOr(memory, toRegister3<T>(data));
   }
-  case 0xf0 ... 0xf7: {  //CP R,(mem)
+  case range8(0xf0, 0xf7): {  //CP R,(mem)
     if constexpr(Byte) prefetch(6);
     if constexpr(Word) prefetch(6);
     if constexpr(Long) prefetch(8);
     return instructionCompare(toRegister3<T>(data), memory);
   }
-  case 0xf8 ... 0xff: {  //CP (mem),R
+  case range8(0xf8, 0xff): {  //CP (mem),R
     if constexpr(Byte) prefetch(6);
     if constexpr(Word) prefetch(6);
     if constexpr(Long) prefetch(8);
@@ -1628,7 +1628,7 @@ auto TLCS900H::instructionTargetMemory(n32 address) -> void {
     prefetch(10);
     return instructionPop(toMemory<n16>(address));
   }
-  case 0x07 ... 0x13: {
+  case range13(0x07, 0x13): {
     return undefined();
   }
   case 0x14: {  //LD.B (m),(nn)
@@ -1644,10 +1644,10 @@ auto TLCS900H::instructionTargetMemory(n32 address) -> void {
     prefetch(12);
     return instructionLoad(toMemory<n16>(address), source);
   }
-  case 0x17 ... 0x1f: {
+  case range9(0x17, 0x1f): {
     return undefined();
   }
-  case 0x20 ... 0x27: {  //LDA.W R,mem
+  case range8(0x20, 0x27): {  //LDA.W R,mem
     prefetch(8);
     return instructionLoad(toRegister3<n16>(data), toImmediate<n16>(address));
   }
@@ -1671,91 +1671,91 @@ auto TLCS900H::instructionTargetMemory(n32 address) -> void {
     prefetch(12);
     return instructionStoreCarry(toMemory<n8>(address), A);
   }
-  case 0x2d ... 0x2f: {
+  case range3(0x2d, 0x2f): {
     return undefined();
   }
-  case 0x30 ... 0x37: {  //LDA.L R,mem
+  case range8(0x30, 0x37): {  //LDA.L R,mem
     prefetch(8);
     return instructionLoad(toRegister3<n32>(data), toImmediate<n32>(address));
   }
-  case 0x38 ... 0x3f: {
+  case range8(0x38, 0x3f): {
     return undefined();
   }
-  case 0x40 ... 0x47: {  //LD.B (mem),R
+  case range8(0x40, 0x47): {  //LD.B (mem),R
     prefetch(6);
     return instructionLoad(toMemory<n8>(address), toRegister3<n8>(data));
   }
-  case 0x48 ... 0x4f: {
+  case range8(0x48, 0x4f): {
     return undefined();
   }
-  case 0x50 ... 0x57: {  //LD.W (mem),R
+  case range8(0x50, 0x57): {  //LD.W (mem),R
     prefetch(6);
     return instructionLoad(toMemory<n16>(address), toRegister3<n16>(data));
   }
-  case 0x58 ... 0x5f: {
+  case range8(0x58, 0x5f): {
     return undefined();
   }
-  case 0x60 ... 0x67: {  //LD.L (mem),R
+  case range8(0x60, 0x67): {  //LD.L (mem),R
     prefetch(8);
     return instructionLoad(toMemory<n32>(address), toRegister3<n32>(data));
   }
-  case 0x68 ... 0x7f: {
+  case range24(0x68, 0x7f): {
     return undefined();
   }
-  case 0x80 ... 0x87: {  //ANDCF #3,(mem)
+  case range8(0x80, 0x87): {  //ANDCF #3,(mem)
     prefetch(10);
     return instructionAndCarry(toMemory<n8>(address), toImmediate<n3>(data));
   }
-  case 0x88 ... 0x8f: {  //ORCF #3,(mem)
+  case range8(0x88, 0x8f): {  //ORCF #3,(mem)
     prefetch(10);
     return instructionOrCarry(toMemory<n8>(address), toImmediate<n3>(data));
   }
-  case 0x90 ... 0x97: {  //XORCF #3,(mem)
+  case range8(0x90, 0x97): {  //XORCF #3,(mem)
     prefetch(10);
     return instructionXorCarry(toMemory<n8>(address), toImmediate<n3>(data));
   }
-  case 0x98 ... 0x9f: {  //LDCF #3,(mem)
+  case range8(0x98, 0x9f): {  //LDCF #3,(mem)
     prefetch(10);
     return instructionLoadCarry(toMemory<n8>(address), toImmediate<n3>(data));
   }
-  case 0xa0 ... 0xa7: {  //STCF #3,(mem)
+  case range8(0xa0, 0xa7): {  //STCF #3,(mem)
     prefetch(10);
     return instructionStoreCarry(toMemory<n8>(address), toImmediate<n3>(data));
   }
-  case 0xa8 ... 0xaf: {  //TSET #3,(mem)
+  case range8(0xa8, 0xaf): {  //TSET #3,(mem)
     prefetch(10);
     return instructionTestSet(toMemory<n8>(address), toImmediate<n3>(data));
   }
-  case 0xb0 ... 0xb7: {  //RES #3,(mem)
+  case range8(0xb0, 0xb7): {  //RES #3,(mem)
     prefetch(10);
     return instructionReset(toMemory<n8>(address), toImmediate<n3>(data));
   }
-  case 0xb8 ... 0xbf: {  //SET #3,(mem)
+  case range8(0xb8, 0xbf): {  //SET #3,(mem)
     prefetch(10);
     return instructionSet(toMemory<n8>(address), toImmediate<n3>(data));
   }
-  case 0xc0 ... 0xc7: {  //CHG #3,(mem)
+  case range8(0xc0, 0xc7): {  //CHG #3,(mem)
     prefetch(10);
     return instructionChange(toMemory<n8>(address), toImmediate<n3>(data));
   }
-  case 0xc8 ... 0xcf: {  //BIT #3,(mem)
+  case range8(0xc8, 0xcf): {  //BIT #3,(mem)
     prefetch(10);
     return instructionBit(toMemory<n8>(address), toImmediate<n3>(data));
   }
-  case 0xd0 ... 0xdf: {  //JP cc,mem
+  case range16(0xd0, 0xdf): {  //JP cc,mem
     prefetch(8);
     if(!condition((n4)data)) return;
     prefetch(4);
     instructionJump(toImmediate<n32>(address));
     return prefetch(2);
   }
-  case 0xe0 ... 0xef: {  //CALL cc,mem
+  case range16(0xe0, 0xef): {  //CALL cc,mem
     if(!condition((n4)data)) return prefetch(8);
     prefetch(20);
     instructionCall(toImmediate<n32>(address));
     return prefetch(2);
   }
-  case 0xf0 ... 0xff: {  //RET cc
+  case range16(0xf0, 0xff): {  //RET cc
     if(!condition((n4)data)) return prefetch(8);
     prefetch(20);
     instructionReturn();

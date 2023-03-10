@@ -2,17 +2,17 @@ auto VDP::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   switch(address) {
 
   //data port
-  case 0xc00000 ... 0xc00003: {
+  case range4(0xc00000, 0xc00003): {
     return readDataPort();
   }
 
   //control port
-  case 0xc00004 ... 0xc00007: {
+  case range4(0xc00004, 0xc00007): {
     return readControlPort();
   }
 
   //counters
-  case 0xc00008 ... 0xc0000f: {
+  case range8(0xc00008, 0xc0000f): {
     if(io.counterLatch) return state.counterLatchValue;
     auto vcounter = state.vcounter;
     if(io.interlaceMode.bit(0)) {
@@ -23,22 +23,22 @@ auto VDP::read(n1 upper, n1 lower, n24 address, n16 data) -> n16 {
   }
 
   //PSG
-  case 0xc00010 ... 0xc00017: {
+  case range8(0xc00010, 0xc00017): {
     //reading from the PSG should deadlock the machine
     return data;
   }
 
   //test address port (write-only)
-  case 0xc00018 ... 0xc0001b: {
+  case range4(0xc00018, 0xc0001b): {
     return data;
   }
 
   //test data port
-  case 0xc0001c ... 0xc0001f: {
+  case range4(0xc0001c, 0xc0001f): {
     switch(test.address) {
 
     //unknown
-    case 0x8 ... 0xf: {
+    case range8(0x8, 0xf): {
       return data;
     }
 
@@ -55,34 +55,34 @@ auto VDP::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
   switch(address) {
 
   //data port
-  case 0xc00000 ... 0xc00003: {
+  case range4(0xc00000, 0xc00003): {
     return writeDataPort(data);
   }
 
   //control port
-  case 0xc00004 ... 0xc00007: {
+  case range4(0xc00004, 0xc00007): {
     return writeControlPort(data);
   }
 
   //counters (read-only)
-  case 0xc00008 ... 0xc0000f: {
+  case range8(0xc00008, 0xc0000f): {
     return;
   }
 
   //PSG
-  case 0xc00010 ... 0xc00017: {
+  case range8(0xc00010, 0xc00017): {
     if(!lower) return;  //byte writes to even PSG registers have no effect
     return psg.write(data);
   }
 
   //test address port
-  case 0xc00018 ... 0xc0001b: {
+  case range4(0xc00018, 0xc0001b): {
     test.address = data.bit(0,3);
     return;
   }
 
   //test data port
-  case 0xc0001c ... 0xc0001f: {
+  case range4(0xc0001c, 0xc0001f): {
     switch(test.address) {
 
     case 0x0: {
@@ -109,7 +109,7 @@ auto VDP::write(n1 upper, n1 lower, n24 address, n16 data) -> void {
     }
 
     //unknown
-    case 0x3 ... 0x7: {
+    case range5(0x3, 0x7): {
       return;
     }
 

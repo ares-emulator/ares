@@ -30,7 +30,7 @@ auto Bus::read(n20 address) -> n8 {
     if(address.bit(14,15) && !system.color()) return 0x90;
     return iram.read(address);
   case 0x1: return cartridge.readRAM(address);
-  case 0x2 ... 0xf:
+  case range14(0x2, 0xf):
     if(!cpu.io.cartridgeRomWidth) address &= ~(0x1);
     return cartridge.readROM(address);
   }
@@ -45,7 +45,7 @@ auto Bus::write(n20 address, n8 data) -> void {
     if(address.bit(14,15) && !system.color()) return;
     return iram.write(address, data);
   case 0x1: return cartridge.writeRAM(address, data);
-  case 0x2 ... 0xf:
+  case range14(0x2, 0xf):
     if(!cpu.io.cartridgeRomWidth) address &= ~(0x1);
     return cartridge.writeROM(address, data);
   }

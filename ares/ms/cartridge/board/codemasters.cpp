@@ -16,14 +16,13 @@ struct Codemasters : Interface {
   }
 
   auto read(n16 address, n8 data) -> n8 override {
-    switch(address) {
-    case 0x0000 ... 0x3fff:
+    if(address <= 0x3fff)
       return rom.read(romBank[0] << 14 | (n14)address);
-    case 0x4000 ... 0x7fff:
+    if(address <= 0x7fff)
       return rom.read(romBank[1] << 14 | (n14)address);
-    case 0x8000 ... 0x9fff:
+    if(address <= 0x9fff)
       return rom.read(romBank[2] << 14 | (n14)address);
-    case 0xa000 ... 0xbfff:
+    if(address <= 0xbfff) {
       if(ram && ramEnable) return ram.read((n13)address);
       return rom.read(romBank[2] << 14 | (n14)address);
     }
@@ -31,18 +30,20 @@ struct Codemasters : Interface {
   }
 
   auto write(n16 address, n8 data) -> void override {
-    switch(address) {
-    case 0x0000 ... 0x3fff:
+    if(address <= 0x3fff) {
       romBank[0] = data;
       return;
-    case 0x4000 ... 0x7fff:
+    }
+    if(address <= 0x7fff) {
       romBank[1] = data;
       ramEnable  = data.bit(7);
       return;
-    case 0x8000 ... 0x9fff:
+    }
+    if(address <= 0x9fff) {
       romBank[2] = data;
       return;
-    case 0xa000 ... 0xbfff:
+    }
+    if(address <= 0xbfff) {
       if(ram && ramEnable) return ram.write((n13)address, data);
       romBank[2] = data;
       return;

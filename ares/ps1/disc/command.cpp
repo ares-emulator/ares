@@ -58,10 +58,12 @@ auto Disc::command(u8 operation) -> void {
   case 0x1a: commandGetID(); break;
   case 0x1b: commandReadWithoutRetry(); break;
   case 0x1e: commandReadToc(); break;
-  case 0x20 ... 0x4f: commandInvalid(); break;
-  case 0x50 ... 0x57: commandInvalid(); break;  //secret unlock commands
-  case 0x58 ... 0xff: commandInvalid(); break;
-  default: commandUnimplemented(operation); break;
+  case range48(0x20, 0x4f): commandInvalid(); break;
+  case range8(0x50, 0x57): commandInvalid(); break;  //secret unlock commands
+  default:
+    if(operation >= 0x58 && operation <= 0xff) commandInvalid();
+    else commandUnimplemented(operation);
+    break;
   }
 
   fifo.parameter.flush();

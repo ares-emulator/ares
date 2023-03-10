@@ -216,7 +216,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x14 ... 0x1f: {
+  case range12(0x14, 0x1f): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -327,7 +327,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x2c ... 0x2d: {
+  case range2(0x2c, 0x2d): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -384,7 +384,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x34 ... 0x37: {
+  case range4(0x34, 0x37): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -426,7 +426,7 @@ auto CPU::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x3c ... 0x3f: {
+  case range4(0x3c, 0x3f): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -521,7 +521,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x0a ... 0x0b: {
+  case range2(0x0a, 0x0b): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -539,7 +539,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x0e ... 0x0f: {
+  case range2(0x0e, 0x0f): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -573,7 +573,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x14 ... 0x17: {
+  case range4(0x14, 0x17): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -611,7 +611,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
 
   //ILLEGAL
-  case 0x1c ... 0x1f: {
+  case range4(0x1c, 0x1f): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -689,7 +689,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x28 ... 0x29: {
+  case range2(0x28, 0x29): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -713,7 +713,7 @@ auto CPU::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x2c ... 0x3f: {
+  case range20(0x2c, 0x3f): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -781,7 +781,7 @@ auto CPU::Recompiler::emitSCC(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x01 ... 0x03: {
+  case range3(0x01, 0x03): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -795,7 +795,7 @@ auto CPU::Recompiler::emitSCC(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x05 ... 0x0f: {
+  case range11(0x05, 0x0f): {
     call(&CPU::INVALID);
     return 1;
   }
@@ -869,7 +869,7 @@ auto CPU::Recompiler::emitGTE(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x07 ... 0x0f: {
+  case range9(0x07, 0x0f): {
     call(&CPU::INVALID);
     return 1;
   }

@@ -3,12 +3,12 @@ auto APU::readIO(n16 address) -> n8 {
 
   switch(address) {
 
-  case 0x004a ... 0x004c:  //SDMA_SRC
+  case range3(0x004a, 0x004c):  //SDMA_SRC
     if(!system.color()) break;
     data = dma.state.source.byte(address - 0x004a);
     break;
 
-  case 0x004e ... 0x0050:  //SDMA_LEN
+  case range3(0x004e, 0x0050):  //SDMA_LEN
     if(!system.color()) break;
     data = dma.state.length.byte(address - 0x004e);
     break;
@@ -38,19 +38,19 @@ auto APU::readIO(n16 address) -> n8 {
     data.bit(6)   = channel5.io.rightEnable;
     break;
 
-  case 0x0080 ... 0x0081:  //SND_CH1_PITCH
+  case range2(0x0080, 0x0081):  //SND_CH1_PITCH
     data = channel1.io.pitch.byte(address - 0x0080);
     break;
 
-  case 0x0082 ... 0x0083:  //SND_CH2_PITCH
+  case range2(0x0082, 0x0083):  //SND_CH2_PITCH
     data = channel2.io.pitch.byte(address - 0x0082);
     break;
 
-  case 0x0084 ... 0x0085:  //SND_CH3_PITCH
+  case range2(0x0084, 0x0085):  //SND_CH3_PITCH
     data = channel3.io.pitch.byte(address - 0x0084);
     break;
 
-  case 0x0086 ... 0x0087:  //SND_CH4_PITCH
+  case range2(0x0086, 0x0087):  //SND_CH4_PITCH
     data = channel4.io.pitch.byte(address - 0x0086);
     break;
 
@@ -109,7 +109,7 @@ auto APU::readIO(n16 address) -> n8 {
     data.bit(7)   = io.headphonesConnected;
     break;
 
-  case 0x0092 ... 0x0093:  //SND_RANDOM
+  case range2(0x0092, 0x0093):  //SND_RANDOM
     data = channel4.state.noiseLFSR.byte(address - 0x0092);
     break;
 
@@ -139,12 +139,12 @@ auto APU::readIO(n16 address) -> n8 {
 auto APU::writeIO(n16 address, n8 data) -> void {
   switch(address) {
 
-  case 0x004a ... 0x004c:  //SDMA_SRC
+  case range3(0x004a, 0x004c):  //SDMA_SRC
     if(!system.color()) break;
     dma.io.source.byte(address - 0x004a) = data;
     break;
 
-  case 0x004e ... 0x0050:  //SDMA_LEN
+  case range3(0x004e, 0x0050):  //SDMA_LEN
     if(!system.color()) break;
     dma.io.length.byte(address - 0x004e) = data;
     break;
@@ -179,19 +179,19 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     channel5.io.rightEnable = data.bit(6);
     break;
 
-  case 0x0080 ... 0x0081:  //SND_CH1_PITCH
+  case range2(0x0080, 0x0081):  //SND_CH1_PITCH
     channel1.io.pitch.byte(address - 0x0080) = data;
     break;
 
-  case 0x0082 ... 0x0083:  //SND_CH2_PITCH
+  case range2(0x0082, 0x0083):  //SND_CH2_PITCH
     channel2.io.pitch.byte(address - 0x0082) = data;
     break;
 
-  case 0x0084 ... 0x0085:  //SND_CH3_PITCH
+  case range2(0x0084, 0x0085):  //SND_CH3_PITCH
     channel3.io.pitch.byte(address - 0x0084) = data;
     break;
 
-  case 0x0086 ... 0x0087:  //SND_CH4_PITCH
+  case range2(0x0086, 0x0087):  //SND_CH4_PITCH
     channel4.io.pitch.byte(address - 0x0086) = data;
     break;
 

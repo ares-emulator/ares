@@ -1,18 +1,17 @@
 auto APU::read(n16 address) -> n8 {
-  switch(address) {
-  case 0x0000 ... 0x7fff: return cartridge.readM(address);
-  case 0x8000 ... 0xbfff: return cartridge.readM(rom.bankA << 14 | n14(address));
-  case 0xc000 ... 0xdfff: return cartridge.readM(rom.bankB << 13 | n13(address));
-  case 0xe000 ... 0xefff: return cartridge.readM(rom.bankC << 12 | n12(address));
-  case 0xf000 ... 0xf7ff: return cartridge.readM(rom.bankD << 11 | n11(address));
-  case 0xf800 ... 0xffff: return ram[address & 0x7ff];
-  }
+  if(address <= 0x7fff) return cartridge.readM(address);
+  if(address <= 0xbfff) return cartridge.readM(rom.bankA << 14 | n14(address));
+  if(address <= 0xdfff) return cartridge.readM(rom.bankB << 13 | n13(address));
+  if(address <= 0xefff) return cartridge.readM(rom.bankC << 12 | n12(address));
+  if(address <= 0xf7ff) return cartridge.readM(rom.bankD << 11 | n11(address));
+  if(address <= 0xffff) return ram[address & 0x7ff];
   unreachable;
 }
 
 auto APU::write(n16 address, n8 data) -> void {
-  switch(address) {
-  case 0xf800 ... 0xffff: ram[address & 0x7ff] = data; return;
+  if(address >= 0xf800) {
+    ram[address & 0x7ff] = data;
+    return;
   }
 }
 
@@ -34,8 +33,8 @@ auto APU::in(n16 address) -> n8 {
 
 auto APU::out(n16 address, n8 data) -> void {
   switch(n8(address & 0x1f)) {
-  case 0x08 ... 0x0b: nmi.enable = 1; return;
-  case 0x18:          nmi.enable = 0; return;
+  case range4(0x08, 0x0b): nmi.enable = 1; return;
+  case 0x18:               nmi.enable = 0; return;
   }
 
   switch(address & 0xf) {

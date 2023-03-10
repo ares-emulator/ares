@@ -3,17 +3,17 @@ auto CPU::readIO(n16 address) -> n8 {
 
   switch(address) {
 
-  case 0x0040 ... 0x0042:  //DMA_SRC
+  case range3(0x0040, 0x0042):  //DMA_SRC
     if(!system.color()) break;
     data = dma.source.byte(address - 0x0040);
     break;
 
-  case 0x0044 ... 0x0045:  //DMA_DST
+  case range2(0x0044, 0x0045):  //DMA_DST
     if(!system.color()) break;
     data = dma.target.byte(address - 0x0044);
     break;
 
-  case 0x0046 ... 0x0047:  //DMA_LEN
+  case range2(0x0046, 0x0047):  //DMA_LEN
     if(!system.color()) break;
     data = dma.length.byte(address - 0x0046);
     break;
@@ -66,19 +66,19 @@ auto CPU::readIO(n16 address) -> n8 {
 auto CPU::writeIO(n16 address, n8 data) -> void {
   switch(address) {
 
-  case 0x0040 ... 0x0042:  //DMA_SRC
+  case range3(0x0040, 0x0042):  //DMA_SRC
     if(!system.color()) break;
     dma.source.byte(address - 0x0040) = data;
     dma.source &= ~1;
     break;
 
-  case 0x0044 ... 0x0045:  //DMA_DST
+  case range2(0x0044, 0x0045):  //DMA_DST
     if(!system.color()) break;
     dma.target.byte(address - 0x0044) = data;
     dma.target &= ~1;
     break;
 
-  case 0x0046 ... 0x0047:  //DMA_LEN
+  case range2(0x0046, 0x0047):  //DMA_LEN
     if(!system.color()) break;
     dma.length.byte(address - 0x0046) = data;
     dma.length &= ~1;

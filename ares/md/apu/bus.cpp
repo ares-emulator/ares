@@ -6,21 +6,17 @@
  */
 
 auto APU::read(n16 address) -> n8 {
-  switch(address) {
-  case 0x0000 ... 0x3fff: return ram.read(address);  //$2000-3fff mirrors $0000-1fff
-  case 0x4000 ... 0x5fff: return opn2.readStatus();
-  case 0x7f00 ... 0x7fff: return readExternal(0xc00000 | (n8)address);
-  case 0x8000 ... 0xffff: return readExternal(state.bank << 15 | (n15)address);
-  default:
-    debug(unusual, "[APU] read(0x", hex(address, 4L), ")");
-    return 0x00;
-  }
+  if(address >= 0x0000 && address <= 0x3fff) return ram.read(address);  //$2000-3fff mirrors $0000-1fff
+  if(address >= 0x4000 && address <= 0x5fff) return opn2.readStatus();
+  if(address >= 0x7f00 && address <= 0x7fff) return readExternal(0xc00000 | (n8)address);
+  if(address >= 0x8000 && address <= 0xffff) return readExternal(state.bank << 15 | (n15)address);
+  debug(unusual, "[APU] read(0x", hex(address, 4L), ")");
+  return 0x00;
 }
 
 auto APU::write(n16 address, n8 data) -> void {
-  switch(address) {
-  case 0x0000 ... 0x3fff: return ram.write(address, data);  //$2000-3fff mirrors $0000-1fff
-  case 0x4000 ... 0x5fff:
+  if(address >= 0x0000 && address <= 0x3fff) return ram.write(address, data);  //$2000-3fff mirrors $0000-1fff
+  if(address >= 0x4000 && address <= 0x5fff) {
     switch(0x4000 | address & 3) {
     case 0x4000: return opn2.writeAddress(0 << 8 | data);
     case 0x4001: return opn2.writeData(data);
@@ -28,13 +24,12 @@ auto APU::write(n16 address, n8 data) -> void {
     case 0x4003: return opn2.writeData(data);
     }
     unreachable;
-  case 0x6000 ... 0x60ff: return (void)(state.bank = data.bit(0) << 8 | state.bank >> 1);
-  case 0x7f00 ... 0x7fff: return writeExternal(0xc00000 | (n8)address, data);
-  case 0x8000 ... 0xffff: return writeExternal(state.bank << 15 | (n15)address, data);
-  default:
-    debug(unusual, "[APU] write(0x", hex(address, 4L), ")");
-    return;
   }
+  if(address >= 0x6000 && address <= 0x60ff) return (void)(state.bank = data.bit(0) << 8 | state.bank >> 1);
+  if(address >= 0x7f00 && address <= 0x7fff) return writeExternal(0xc00000 | (n8)address, data);
+  if(address >= 0x8000 && address <= 0xffff) return writeExternal(state.bank << 15 | (n15)address, data);
+  debug(unusual, "[APU] write(0x", hex(address, 4L), ")");
+  return;
 }
 
 auto APU::readExternal(n24 address) -> n8 {
@@ -44,19 +39,16 @@ auto APU::readExternal(n24 address) -> n8 {
   MegaDrive::bus.acquire(MegaDrive::Bus::APU);
 
   n8 data = 0xff;
-  switch(address) {
-  case 0x000000 ... 0x9fffff:
-  case 0xa10000 ... 0xa1ffff:
-  case 0xc00000 ... 0xc000ff:
+  if(address >= 0x000000 && address <= 0x9fffff
+  || address >= 0xa10000 && address <= 0xa1ffff
+  || address >= 0xc00000 && address <= 0xc000ff) {
     if(address & 1) {
       data = MegaDrive::bus.read(0, 1, address & ~1, 0x00).byte(0);
     } else {
       data = MegaDrive::bus.read(1, 0, address & ~1, 0x00).byte(1);
     }
-    break;
-  default:
+  } else {
     debug(unusual, "[APU] readExternal(0x", hex(address, 6L), ")");
-    break;
   }
 
   MegaDrive::bus.release(MegaDrive::Bus::APU);
@@ -69,20 +61,17 @@ auto APU::writeExternal(n24 address, n8 data) -> void {
   while(MegaDrive::bus.acquired() && !scheduler.synchronizing()) step(1);
   MegaDrive::bus.acquire(MegaDrive::Bus::APU);
 
-  switch(address) {
-  case 0x000000 ... 0x9fffff:
-  case 0xa10000 ... 0xa1ffff:
-  case 0xc00000 ... 0xc000ff:
-  case 0xe00000 ... 0xffffff:
+  if(address >= 0x000000 && address <= 0x9fffff
+  || address >= 0xa10000 && address <= 0xa1ffff
+  || address >= 0xc00000 && address <= 0xc000ff
+  || address >= 0xe00000 && address <= 0xffffff) {
     if(address & 1) {
       MegaDrive::bus.write(0, 1, address & ~1, data << 8 | data << 0);
     } else {
       MegaDrive::bus.write(1, 0, address & ~1, data << 8 | data << 0);
     }
-    break;
-  default:
+  } else {
     debug(unusual, "[APU] writeExternal(0x", hex(address, 6L), ")");
-    break;
   }
 
   MegaDrive::bus.release(MegaDrive::Bus::APU);

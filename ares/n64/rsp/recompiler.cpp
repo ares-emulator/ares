@@ -188,7 +188,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   }
 
   //ADDIU Rt,Rs,i16
-  case 0x08 ... 0x09: {
+  case range2(0x08, 0x09): {
     add32(mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
@@ -247,7 +247,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x13 ... 0x1f: {
+  case range13(0x13, 0x1f): {
     return 0;
   }
 
@@ -348,7 +348,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x2c ... 0x31: {
+  case range6(0x2c, 0x31): {
     return 0;
   }
 
@@ -358,7 +358,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x33 ... 0x39: {
+  case range7(0x33, 0x39): {
     return 0;
   }
 
@@ -368,7 +368,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x3b ... 0x3f: {
+  case range5(0x3b, 0x3f): {
     return 0;
   }
 
@@ -442,7 +442,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x0a ... 0x0c: {
+  case range3(0x0a, 0x0c): {
     return 0;
   }
 
@@ -453,18 +453,18 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x0e ... 0x1f: {
+  case range18(0x0e, 0x1f): {
     return 0;
   }
 
   //ADDU Rd,Rs,Rt
-  case 0x20 ... 0x21: {
+  case range2(0x20, 0x21): {
     add32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
 
   //SUBU Rd,Rs,Rt
-  case 0x22 ... 0x23: {
+  case range2(0x22, 0x23): {
     sub32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
@@ -496,7 +496,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x28 ... 0x29: {
+  case range2(0x28, 0x29): {
     return 0;
   }
 
@@ -515,7 +515,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x2c ... 0x3f: {
+  case range20(0x2c, 0x3f): {
     return 0;
   }
 
@@ -544,7 +544,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x02 ... 0x0f: {
+  case range14(0x02, 0x0f): {
     return 0;
   }
 
@@ -565,7 +565,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x12 ... 0x1f: {
+  case range14(0x12, 0x1f): {
     return 0;
   }
 
@@ -586,7 +586,7 @@ auto RSP::Recompiler::emitSCC(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x01 ... 0x03: {
+  case range3(0x01, 0x03): {
     return 0;
   }
 
@@ -599,7 +599,7 @@ auto RSP::Recompiler::emitSCC(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x05 ... 0x1f: {
+  case range27(0x05, 0x1f): {
     return 0;
   }
 
@@ -660,7 +660,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x07 ... 0x0f: {
+  case range9(0x07, 0x0f): {
     return 0;
   }
 
@@ -868,7 +868,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   }
 
   //Broken opcodes: VADDB, VSUBB, VACCB, VSUCB, VSAD, VSAC, VSUM
-  case 0x16 ... 0x1c: {
+  case range7(0x16, 0x1c): {
     lea(reg(1), Vd);
     lea(reg(2), Vs);
     lea(reg(3), Vt);
@@ -885,7 +885,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   }
 
   //Invalid opcodes
-  case 0x1e ... 0x1f: {
+  case range2(0x1e, 0x1f): {
     lea(reg(1), Vd);
     lea(reg(2), Vs);
     lea(reg(3), Vt);
@@ -1020,7 +1020,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x2e ... 0x2f: {
+  case range2(0x2e, 0x2f): {
     lea(reg(1), Vd);
     lea(reg(2), Vs);
     lea(reg(3), Vt);
@@ -1098,7 +1098,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   }
 
   //Broken opcodes: VEXTT, VEXTQ, VEXTN
-  case 0x38 ... 0x3a: {
+  case range3(0x38, 0x3a): {
     lea(reg(1), Vd);
     lea(reg(2), Vs);
     lea(reg(3), Vt);
@@ -1116,7 +1116,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
   }
 
   //Broken opcodes: VINST, VINSQ, VINSN
-  case 0x3c ... 0x3e: {
+  case range3(0x3c, 0x3e): {
     lea(reg(1), Vd);
     lea(reg(2), Vs);
     lea(reg(3), Vt);
@@ -1247,7 +1247,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x0c ... 0x1f: {
+  case range20(0x0c, 0x1f): {
     return 0;
   }
 
@@ -1372,7 +1372,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
   }
 
   //INVALID
-  case 0x0c ... 0x1f: {
+  case range20(0x0c, 0x1f): {
     return 0;
   }
 

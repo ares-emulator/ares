@@ -13,16 +13,13 @@ struct Korea : Interface {
   }
 
   auto read(n16 address, n8 data) -> n8 override {
-    switch(address) {
-    case 0x0000 ... 0x7fff: return rom.read(address);
-    case 0x8000 ... 0xbfff: return rom.read(romBank << 14 | (n14)address);
-    }
+    if(address <= 0x7fff) return rom.read(address);
+    if(address <= 0xbfff) return rom.read(romBank << 14 | (n14)address);
     return data;
   }
 
   auto write(n16 address, n8 data) -> void override {
-    switch(address) {
-    case 0xa000 ... 0xbfff:
+    if(address >= 0xa000 && address <= 0xbfff) {
       romBank = data;
       return;
     }

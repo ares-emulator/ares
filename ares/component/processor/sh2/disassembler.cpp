@@ -81,7 +81,7 @@ auto SH2::disassembleInstruction() -> string {
   case 0x0f:  //MAC.L @Rm+,@Rn+
     s = {"mac.l", postincrementIndirectRegister(m), postincrementIndirectRegister(n)};
     break;
-  case 0x10 ... 0x1f:  //MOV.L Rm,@(disp,Rn)
+  case range16(0x10, 0x1f):  //MOV.L Rm,@(disp,Rn)
     s = {"mov.l", registerValue(m), indirectRegisterDisplacement(n, d4, 4)};
     break;
   case 0x20:  //MOV.B Rm,@Rn
@@ -174,7 +174,7 @@ auto SH2::disassembleInstruction() -> string {
   case 0x4f:  //MAC.W @Rm+,@Rn+
     s = {"mac.w", postincrementIndirectRegister(m), postincrementIndirectRegister(n)};
     break;
-  case 0x50 ... 0x5f:  //MOV.L @(disp,Rm),Rn
+  case range16(0x50, 0x5f):  //MOV.L @(disp,Rm),Rn
     s = {"mov.l", indirectRegisterDisplacement(m, d4, 4), registerName(n)};
     break;
   case 0x60:  //MOV.B @Rm,Rn
@@ -225,22 +225,22 @@ auto SH2::disassembleInstruction() -> string {
   case 0x6f:  //EXTS.W Rm,Rn
     s = {"exts.w", registerValue(m), registerName(n)};
     break;
-  case 0x70 ... 0x7f:  //ADD #imm,Rn
+  case range16(0x70, 0x7f):  //ADD #imm,Rn
     s = {"add", immediate(i), registerValue(n)};
     break;
-  case 0x90 ... 0x9f:  //MOV.W @(disp,PC),Rn
+  case range16(0x90, 0x9f):  //MOV.W @(disp,PC),Rn
     s = {"mov.w", pcRelativeDisplacement(d8, 2), registerName(n)};
     break;
-  case 0xa0 ... 0xaf:  //BRA disp
+  case range16(0xa0, 0xaf):  //BRA disp
     s = {"bra", branch12(d12)};
     break;
-  case 0xb0 ... 0xbf:  //BSR disp
+  case range16(0xb0, 0xbf):  //BSR disp
     s = {"bsr", branch12(d12)};
     break;
-  case 0xd0 ... 0xdf:  //MOV.L @(disp,PC),Rn
+  case range16(0xd0, 0xdf):  //MOV.L @(disp,PC),Rn
     s = {"mov.l", pcRelativeDisplacement(d8, 4), registerName(n)};
     break;
-  case 0xe0 ... 0xef:  //MOV #imm,Rn
+  case range16(0xe0, 0xef):  //MOV #imm,Rn
     s = {"mov", immediate(i), registerName(n)};
     break;
   }

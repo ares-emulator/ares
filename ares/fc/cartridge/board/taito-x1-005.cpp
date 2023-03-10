@@ -51,7 +51,7 @@ struct TaitoX1005 : Interface {
     }
 
     switch(address) {
-    case 0x7ef0 ... 0x7ef1:
+    case range2(0x7ef0, 0x7ef1):
       characterBank[address & 1] = data >> 1;
       nametableBank[address & 1] = data.bit(7);
       break;
@@ -59,11 +59,11 @@ struct TaitoX1005 : Interface {
     case 0x7ef3: characterBank[3] = data; break;
     case 0x7ef4: characterBank[4] = data; break;
     case 0x7ef5: characterBank[5] = data; break;
-    case 0x7ef6 ... 0x7ef7: mirror = data.bit(0); break;
-    case 0x7ef8 ... 0x7ef9: ramEnable = data == 0xa3; break;
-    case 0x7efa ... 0x7efb: programBank[0] = data.bit(0,5); break;
-    case 0x7efc ... 0x7efd: programBank[1] = data.bit(0,5); break;
-    case 0x7efe ... 0x7eff: programBank[2] = data.bit(0,5); break;
+    case range2(0x7ef6, 0x7ef7): mirror = data.bit(0); break;
+    case range2(0x7ef8, 0x7ef9): ramEnable = data == 0xa3; break;
+    case range2(0x7efa, 0x7efb): programBank[0] = data.bit(0,5); break;
+    case range2(0x7efc, 0x7efd): programBank[1] = data.bit(0,5); break;
+    case range2(0x7efe, 0x7eff): programBank[2] = data.bit(0,5); break;
     }
   }
 

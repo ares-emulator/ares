@@ -96,7 +96,7 @@ auto MemoryCard::read(u8 data) -> u8 {
   case   7: return 0x5d;  //ACK upper
   case   8: checksum  = address >> 8; return address >> 8;
   case   9: checksum ^= address >> 0; return address >> 0;
-  case  10 ... 137:
+  case range128(10, 137):
     output = memory.readByte(address * 128 + (phase - 11));
     checksum ^= output;
     return output;
@@ -127,7 +127,7 @@ auto MemoryCard::write(u8 data) -> u8 {
       response = 0xff;
     }
     return 0;
-  case   6 ... 133:
+  case range128(6, 133):
     memory.writeByte(address * 128 + (phase - 7), input);
     checksum ^= input;
     return 0;
