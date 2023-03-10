@@ -124,7 +124,7 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
           else output[index] = 0;
           address++;
         }
-        output[recv - 1] = pif.dataCRC({&output[0], recv - 1});
+        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
         valid = 1;
       }
     }
@@ -139,7 +139,7 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
           else output[index] = motor->enable() ? 0xFF : 0x00;
           address++;
         }
-        output[recv - 1] = pif.dataCRC({&output[0], recv - 1});
+        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
         valid = 1;
       }
     }
@@ -155,7 +155,7 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
           if(address <= 0x7FFF) ram.write<Byte>(address, input[3 + index]);
           address++;
         }
-        output[0] = pif.dataCRC({&input[3], send - 3});
+        output[0] = pif.dataCRC({&input[3], send - 3u});
         valid = 1;
       }
     }
@@ -164,7 +164,7 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
     if(motor) {
       u16 address = (input[1] << 8 | input[2] << 0) & ~31;
       if(pif.addressCRC(address) == (n5)input[2]) {
-        output[0] = pif.dataCRC({&input[3], send - 3});
+        output[0] = pif.dataCRC({&input[3], send - 3u});
         valid = 1;
         if(address >= 0xC000) rumble(input[3] & 1);
       }

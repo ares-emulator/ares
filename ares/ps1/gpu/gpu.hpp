@@ -207,9 +207,9 @@ struct GPU : Thread, Memory::Interface {
 
     static auto fromRGB(s32 r, s32 g, s32 b) -> Color {
       return {
-        std::clamp(r, 0, 255),
-        std::clamp(g, 0, 255),
-        std::clamp(b, 0, 255)
+        u8(std::clamp(r, 0, 255)),
+        u8(std::clamp(g, 0, 255)),
+        u8(std::clamp(b, 0, 255))
       };
     }
 
