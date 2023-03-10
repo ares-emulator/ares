@@ -20,7 +20,7 @@ struct System {
 
   auto name() const -> string { return information.name; }
   auto region() const -> Region { return information.region; }
-  auto frequency() const -> u32 { return information.frequency; }
+  auto frequency() const -> f64 { return information.frequency; }
 
   //system.cpp
   auto game() -> string;
@@ -39,7 +39,7 @@ private:
   struct Information {
     string name = "Atari 2600";
     Region region = Region::NTSC;
-    u32 frequency = Constants::Colorburst::NTSC;
+    f64 frequency = Constants::Colorburst::NTSC;
   } information;
 
   //serialization.cpp
