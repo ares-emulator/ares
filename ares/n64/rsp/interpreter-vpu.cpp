@@ -11,6 +11,23 @@
 #define DIVOUT vpu.divout
 #define DIVDP  vpu.divdp
 
+static auto countLeadingZeros(u32 value) -> u32 {
+  assert(value);
+#if defined(COMPILER_MICROSOFT)
+  unsigned long index;
+  _BitScanReverse(&index, value);
+  return index ^ 31;
+#elif __has_builtin(__builtin_clz)
+  return __builtin_clz(value);
+#else
+  s32 index;
+  for(index = 31; index >= 0; --index) {
+    if(value >> index & 1) break;
+  }
+  return 31 - index;
+#endif
+}
+
 auto RSP::r128::operator()(u32 index) const -> r128 {
   if constexpr(Accuracy::RSP::SISD) {
     r128 v{*this};
@@ -1323,7 +1340,7 @@ auto RSP::VRCP(r128& vd, u8 de, cr128& vt) -> void {
   } else if(input == -32768) {
     result = 0xffff'0000;
   } else {
-    u32 shift = __builtin_clz(data);
+    u32 shift = countLeadingZeros(data);
     u32 index = (u64(data) << shift & 0x7fc0'0000) >> 22;
     result = reciprocals[index];
     result = (0x10000 | result) << 14;
@@ -1375,7 +1392,7 @@ auto RSP::VRSQ(r128& vd, u8 de, cr128& vt) -> void {
   } else if(input == -32768) {
     result = 0xffff'0000;
   } else {
-    u32 shift = __builtin_clz(data);
+    u32 shift = countLeadingZeros(data);
     u32 index = (u64(data) << shift & 0x7fc0'0000) >> 22;
     result = inverseSquareRoots[index & 0x1fe | shift & 1];
     result = (0x10000 | result) << 14;
