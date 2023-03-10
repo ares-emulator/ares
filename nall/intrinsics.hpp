@@ -39,7 +39,6 @@ namespace nall {
   #pragma clang diagnostic ignored "-Wswitch-bool"
   #pragma clang diagnostic ignored "-Wabsolute-value"
   #pragma clang diagnostic ignored "-Wtrigraphs"
-  #pragma clang diagnostic ignored "-Wnarrowing"
   #pragma clang diagnostic ignored "-Wattributes"
 #elif defined(__GNUC__)
   #define COMPILER_GCC
@@ -57,7 +56,6 @@ namespace nall {
   #pragma GCC diagnostic ignored "-Wpragmas"
   #pragma GCC diagnostic ignored "-Wswitch-bool"
   #pragma GCC diagnostic ignored "-Wtrigraphs"
-  #pragma GCC diagnostic ignored "-Wnarrowing"
   #pragma GCC diagnostic ignored "-Wattributes"
   #pragma GCC diagnostic ignored "-Wstringop-overflow"  //GCC 10.2 warning heuristic is buggy
 #elif defined(_MSC_VER)

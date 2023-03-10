@@ -450,7 +450,7 @@ auto CPU::AVSZ4() -> void {
 auto CPU::CC(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   setMacAndIr(matrixMultiply(color, ir, backgroundColor));
-  setMacAndIr(vectorMultiply({rgbc.r << 4, rgbc.g << 4, rgbc.b << 4}, ir));
+  setMacAndIr(vectorMultiply({s16(rgbc.r << 4), s16(rgbc.g << 4), s16(rgbc.b << 4)}, ir));
   pushColor();
   epilogue();
 }
@@ -484,7 +484,7 @@ auto CPU::CTC2(cu32& rt, u8 rd) -> void {
 auto CPU::DCPL(bool lm, u8 sf) -> void {
   prologue(lm, sf);
   v16 i = ir;
-  v16 col = {rgbc.r << 4, rgbc.g << 4, rgbc.b << 4};
+  v16 col = {s16(rgbc.r << 4), s16(rgbc.g << 4), s16(rgbc.b << 4)};
   setMacAndIr<1>((s64(farColor.r) << 12) - col.r * i.x);
   setMacAndIr<2>((s64(farColor.g) << 12) - col.g * i.y);
   setMacAndIr<3>((s64(farColor.b) << 12) - col.b * i.z);
@@ -508,15 +508,15 @@ auto CPU::DPC(const v16& col) -> void {
 
 auto CPU::DPCS(bool lm, u8 sf) -> void {
   prologue(lm, sf);
-  DPC({rgbc.r << 4, rgbc.g << 4, rgbc.b << 4});
+  DPC({s16(rgbc.r << 4), s16(rgbc.g << 4), s16(rgbc.b << 4)});
   epilogue();
 }
 
 auto CPU::DPCT(bool lm, u8 sf) -> void {
   prologue(lm, sf);
-  DPC({u8(rgb[0] >> 0) << 4, u8(rgb[0] >> 8) << 4, u8(rgb[0] >> 16) << 4});
-  DPC({u8(rgb[0] >> 0) << 4, u8(rgb[0] >> 8) << 4, u8(rgb[0] >> 16) << 4});
-  DPC({u8(rgb[0] >> 0) << 4, u8(rgb[0] >> 8) << 4, u8(rgb[0] >> 16) << 4});
+  DPC({s16(u8(rgb[0] >> 0) << 4), s16(u8(rgb[0] >> 8) << 4), s16(u8(rgb[0] >> 16) << 4)});
+  DPC({s16(u8(rgb[0] >> 0) << 4), s16(u8(rgb[0] >> 8) << 4), s16(u8(rgb[0] >> 16) << 4)});
+  DPC({s16(u8(rgb[0] >> 0) << 4), s16(u8(rgb[0] >> 8) << 4), s16(u8(rgb[0] >> 16) << 4)});
   epilogue();
 }
 
