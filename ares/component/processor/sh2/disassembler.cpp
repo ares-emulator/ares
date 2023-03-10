@@ -1,7 +1,7 @@
 template<typename... P>
 auto SH2::hint(P&&... p) const -> string {
   if(1) return {};
-  if(1) return {"\e[0m\e[37m", std::forward<P>(p)..., "\e[0m"};
+  if(1) return {terminal::csi, "0m", terminal::csi, "37m", std::forward<P>(p)..., terminal::csi, "0m"};
   return {std::forward<P>(p)...};
 }
 
