@@ -57,23 +57,16 @@ else
 endif
 
 ifeq ($(ccache), true)
-  compiler.c      = ccache $(compiler) -x c -std=c11
-  compiler.cpp    = ccache $(compiler) -x c++ -std=c++17
-  compiler.objc   = ccache $(compiler) -x objective-c -std=c11
-  compiler.objcpp = ccache $(compiler) -x objective-c++ -std=c++17
+  compiler.c      = ccache $(compiler) $(flags.c)
+  compiler.cpp    = ccache $(compiler) $(flags.cpp)
+  compiler.objc   = ccache $(compiler) $(flags.objc)
+  compiler.objcpp = ccache $(compiler) $(flags.objcpp)
 else
-  compiler.c      = $(compiler) -x c -std=c11
-  compiler.cpp    = $(compiler) -x c++ -std=c++17
-  compiler.objc   = $(compiler) -x objective-c -std=c11
-  compiler.objcpp = $(compiler) -x objective-c++ -std=c++17
+  compiler.c      = $(compiler) $(flags.c)
+  compiler.cpp    = $(compiler) $(flags.cpp)
+  compiler.objc   = $(compiler) $(flags.objc)
+  compiler.objcpp = $(compiler) $(flags.objcpp)
 endif
-
-
-flags.c      = -x c -std=c11
-flags.cpp    = -x c++ -std=c++17
-flags.objc   = -x objective-c -std=c11
-flags.objcpp = -x objective-c++ -std=c++17
-flags.deps   = -MMD -MP -MF $(@:.o=.d)
 
 # compiler detection
 ifeq ($(compiler),)
@@ -85,20 +78,39 @@ ifeq ($(compiler),)
   endif
 endif
 
-machine_str := $(shell $(compiler) -dumpmachine)
-ifneq ($(filter amd64-% x86_64-%,$(machine_str)),)
+ifneq ($(filter cl clang-cl,$(compiler)),)
+  cl := true
+  msvc := true
   machine := amd64
-else ifneq ($(filter arm64-% aarch64-%,$(machine_str)),)
-  machine := arm64
-else ifneq ($(filter powerpc64-% powerpc64le-%,$(machine_str)),)
-  machine := ppc64
+else
+  machine_str := $(shell $(compiler) -dumpmachine)
+  ifneq ($(filter amd64-% x86_64-%,$(machine_str)),)
+    machine := amd64
+  else ifneq ($(filter arm64-% aarch64-%,$(machine_str)),)
+    machine := arm64
+  else ifneq ($(filter powerpc64-% powerpc64le-%,$(machine_str)),)
+    machine := ppc64
+  endif
+
+  # detect clang with msvc target
+  ifeq ($(msvc),)
+    ifneq ($(filter %-msvc,$(machine_str)),)
+      msvc := true
+    endif
+  endif
 endif
 
-# detect clang with msvc target
-ifeq ($(msvc),)
-  ifneq ($(filter %-msvc,$(machine_str)),)
-    msvc := true
-  endif
+# global compiler flags
+ifeq ($(cl),true)
+  flags.c      = -nologo -W0 -Fd$(object.path)/ -TC -std:c11
+  flags.cpp    = -nologo -W0 -Fd$(object.path)/ -TP -std:c++17 -EHsc
+  options      = -nologo $(if $(findstring clang,$(compiler)),-fuse-ld=lld) -link
+else
+  flags.c      = -x c -std=c11
+  flags.cpp    = -x c++ -std=c++17
+  flags.objc   = -x objective-c -std=c11
+  flags.objcpp = -x objective-c++ -std=c++17
+  flags.deps   = -MMD -MP -MF $(@:.o=.d)
 endif
 
 # explicit architecture flags to allow for cross-compilation on macos
@@ -127,7 +139,12 @@ endif
 # build optimization levels
 ifeq ($(build),debug)
   symbols = true
-  flags += -Og -DBUILD_DEBUG
+  ifeq ($(cl),true)
+    flags += -Od
+  else
+    flags += -Og
+  endif
+  flags += -DBUILD_DEBUG
 else ifeq ($(build),stable)
   flags += -O1 -DBUILD_STABLE
 else ifeq ($(build),minified)
@@ -135,7 +152,12 @@ else ifeq ($(build),minified)
 else ifeq ($(build),release)
   flags += -O2 -DBUILD_RELEASE
 else ifeq ($(build),optimized)
-  flags += -O3 -fomit-frame-pointer -DBUILD_OPTIMIZED
+  ifeq ($(cl),true)
+    flags += -O2
+  else
+    flags += -O3 -fomit-frame-pointer
+  endif
+  flags += -DBUILD_OPTIMIZED
 else
   $(error unrecognized build type.)
 endif
@@ -146,18 +168,26 @@ endif
 
 # debugging information
 ifeq ($(symbols),true)
-  flags += -g
-  ifeq ($(platform),windows)
-    ifeq ($(findstring clang++,$(compiler)),clang++)
-      ifeq ($(symformat),dwarf)
-        flags += -gdwarf
-      else  
-        flags += -gcodeview
-      endif
-      ifeq ($(msvc),true)
-        options += -Wl,-debug
-      else
-        options += -Wl,-pdb=
+  ifeq ($(cl),true)
+    flags += -Zi -FS
+    options += -debug
+    ifneq ($(build),debug)
+      options += -opt:ref,icf
+    endif
+  else
+    flags += -g
+    ifeq ($(platform),windows)
+      ifeq ($(findstring clang++,$(compiler)),clang++)
+        ifeq ($(symformat),dwarf)
+          flags += -gdwarf
+        else  
+          flags += -gcodeview
+        endif
+        ifeq ($(msvc),true)
+          options += -Wl,-debug
+        else
+          options += -Wl,-pdb=
+        endif
       endif
     endif
   endif
@@ -165,11 +195,16 @@ endif
 
 # link-time optimization
 ifeq ($(lto),true)
-  ifneq ($(findstring clang++,$(compiler)),clang++)
-    flags   += -flto=auto -fno-fat-lto-objects
+  ifeq ($(cl),true)
+    flags   += $(if $(findstring clang,$(compiler)),-flto,-GL)
+    options += -ltcg:incremental -ltcgout:$(object.path)/$(name).iobj
   else
-    flags   += -flto
-    options += -flto=thin
+    ifneq ($(findstring clang++,$(compiler)),clang++)
+      flags   += -flto=auto -fno-fat-lto-objects
+    else
+      flags   += -flto
+      options += -flto=thin
+    endif
   endif
 endif
 
@@ -202,19 +237,19 @@ ifeq ($(platform),windows)
   ifeq ($(msvc),true)
     flags += -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS
   endif
-  options += -mthreads -lws2_32 -lole32 -lshell32
+  options += $(call lib,ws2_32 ole32 shell32)
   options += $(if $(findstring clang++,$(compiler)),-fuse-ld=lld)
-  options += -static
+  options += $(if $(findstring g++,$(compiler)),-mthreads -static)
   ifeq ($(console),true)
     flags += -DSUBSYTEM_CONSOLE
-    options += -mconsole
+    options += $(if $(findstring g++,$(compiler)),-mconsole)
   else
     flags += -DSUBSYTEM_WINDOWS
-    options += -mwindows
+    options += $(if $(findstring g++,$(compiler)),-mwindows)
   endif
   ifeq ($(windres),)
     ifeq ($(msvc),true)
-      windres := llvm-rc
+      windres := $(if $(findstring clang,$(compiler)),llvm-rc,rc)
     else
       windres := windres
     endif
@@ -282,11 +317,24 @@ $(output.path):
 compile = \
   $(strip \
     $(if $(filter %.c,$<), \
-      $(compiler.c)   $(flags.deps) $(flags) $1 -c $< -o $@ \
+      $(compiler.c)   $(flags.deps) $(flags) $1 -c $< $(call obj,$@) \
    ,$(if $(filter %.cpp,$<), \
-      $(compiler.cpp) $(flags.deps) $(flags) $1 -c $< -o $@ \
+      $(compiler.cpp) $(flags.deps) $(flags) $1 -c $< $(call obj,$@) \
     )) \
   )
+
+# function exe(name)
+# function obj(name)
+# function lib([names])
+ifeq ($(cl),true)
+  exe = -Fe$1
+  obj = -Fo$1
+  lib = $(foreach s,$1,$s.lib)
+else
+  exe = -o $1
+  obj = -o $1
+  lib = $(foreach s,$1,-l$s)
+endif
 
 # function rwildcard(directory, pattern)
 rwildcard = \

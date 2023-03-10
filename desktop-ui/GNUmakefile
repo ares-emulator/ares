@@ -12,11 +12,13 @@ nall.path := ../nall
 include $(nall.path)/GNUmakefile
 
 ifeq ($(arch),amd64)
-  ifeq ($(local),true)
-    flags += -march=native
-  else
-    # For official builds, default to x86-64-v2 (Intel Nehalem, AMD Bulldozer) which supports up to SSE 4.2.
-    flags += -march=x86-64-v2
+  ifeq ($(filter cl,$(compiler)),)
+    ifeq ($(local),true)
+      flags += -march=native
+    else
+      # For official builds, default to x86-64-v2 (Intel Nehalem, AMD Bulldozer) which supports up to SSE 4.2.
+      flags += -march=x86-64-v2
+    endif
   endif
 endif
 
@@ -72,7 +74,7 @@ $(all.objects): | $(object.path)
 
 all: $(all.objects) | $(output.path)
 	$(info Linking $(output.path)/$(name)$(extension) ...)
-	+@$(compiler) -o $(output.path)/$(name)$(extension) $(all.objects) $(all.options)
+	+@$(compiler) $(call exe,$(output.path)/$(name)$(extension)) $(all.objects) $(all.options)
 	$(call copy,../LICENSE,$(output.path)/LICENSE.txt)
 ifeq ($(platform),macos)
 # Apply workaround for buggy linker in Xcode < 11.4.1
