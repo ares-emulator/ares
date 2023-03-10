@@ -311,17 +311,31 @@ auto CPU::DIVU(cr64& rs, cr64& rt) -> void {
 
 auto CPU::DMULT(cr64& rs, cr64& rt) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-  u128 result = rs.s128() * rt.s128();
+#if defined(COMPILER_MICROSOFT)
+  LO.s64 = _mul128(rs.s64, rt.s64, &HI.s64);
+#else
+  #if defined(__SIZEOF_INT128__)
+  u128 result = s128(rs.s64) * s128(rt.s64);
+  #else
+  u128 result = u128(rs.u64) * u128(rt.u64);
+  if(rs.s64 < 0) result -= u128(rt.u64) << 64;
+  if(rt.s64 < 0) result -= u128(rs.u64) << 64;
+  #endif
   LO.u64 = result >>  0;
   HI.u64 = result >> 64;
+#endif
   step(8);
 }
 
 auto CPU::DMULTU(cr64& rs, cr64& rt) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
-  u128 result = rs.u128() * rt.u128();
+#if defined(COMPILER_MICROSOFT)
+  LO.u64 = _umul128(rs.u64, rt.u64, &HI.u64);
+#else
+  u128 result = u128(rs.u64) * u128(rt.u64);
   LO.u64 = result >>  0;
   HI.u64 = result >> 64;
+#endif
   step(8);
 }
 

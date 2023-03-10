@@ -174,7 +174,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
   //vpu.cpp: Vector Processing Unit
   union r128 {
-    struct { uint128_t u128; };
+    struct { u64 order_msb2(hi, lo); } u128;
 #if ARCHITECTURE_SUPPORTS_SSE4_1
     struct {   __m128i v128; };
 
@@ -203,6 +203,9 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
     //vu-registers.cpp
     auto operator()(u32 index) const -> r128;
+
+    //serialization.cpp
+    auto serialize(serializer&) -> void;
   };
   using cr128 = const r128;
 
@@ -217,8 +220,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
     bool divdp;
   } vpu;
 
-  static constexpr r128 zero{0};
-  static constexpr r128 invert{u128(0) - 1};
+  static constexpr r128 zero{0ull, 0ull};
+  static constexpr r128 invert{~0ull, ~0ull};
 
   auto accumulatorGet(u32 index) const -> u64;
   auto accumulatorSet(u32 index, u64 value) -> void;
