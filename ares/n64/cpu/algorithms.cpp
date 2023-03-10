@@ -14,8 +14,8 @@ auto CPU::roundNearest(f32 f) -> T {
 template <typename T>
 auto CPU::roundNearest(f64 f) -> T {
 #if defined(ARCHITECTURE_ARM64)
-  float64x1_t vf = {f};
-  return vrndn_f64(vf)[0];
+  float64x1_t vf = vdup_n_f64(f);
+  return vget_lane_f64(vrndn_f64(vf), 0);
 #elif defined(ARCHITECTURE_AMD64) && ARCHITECTURE_SUPPORTS_SSE4_1
   __m128d t = _mm_set_sd(f);
   t = _mm_round_sd(t, t, _MM_FROUND_TO_NEAREST_INT);

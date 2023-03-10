@@ -31,6 +31,8 @@
     #include "x86.c"
   #elif defined(_M_AMD64)
     #include "amd64.c"
+  #elif defined(_M_ARM64)
+    #include "aarch64.c"
   #else
     #include "fiber.c"
   #endif
