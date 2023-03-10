@@ -43,14 +43,13 @@ auto Cartridge::RTC::running() -> bool {
 }
 
 auto Cartridge::RTC::advance(int nsec) -> void {
-  struct tm tmm = {
-    .tm_sec = BCD::decode(ram.read<Byte>(16)),
-    .tm_min = BCD::decode(ram.read<Byte>(17)),
-    .tm_hour = BCD::decode(ram.read<Byte>(18) & 0x7f),
-    .tm_mday = BCD::decode(ram.read<Byte>(19)),
-    .tm_mon = BCD::decode(ram.read<Byte>(21)) - 1,
-    .tm_year = BCD::decode(ram.read<Byte>(22)) + 100 * BCD::decode(ram.read<Byte>(23)),
-  };
+  struct tm tmm = {};
+  tmm.tm_sec = BCD::decode(ram.read<Byte>(16));
+  tmm.tm_min = BCD::decode(ram.read<Byte>(17));
+  tmm.tm_hour = BCD::decode(ram.read<Byte>(18) & 0x7f);
+  tmm.tm_mday = BCD::decode(ram.read<Byte>(19));
+  tmm.tm_mon = BCD::decode(ram.read<Byte>(21)) - 1;
+  tmm.tm_year = BCD::decode(ram.read<Byte>(22)) + 100 * BCD::decode(ram.read<Byte>(23));
   time_t t = mktime(&tmm);
 
   t += nsec;

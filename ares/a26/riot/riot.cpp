@@ -41,8 +41,10 @@ auto RIOT::step(u32 clocks) -> void {
 auto RIOT::power(bool reset) -> void {
   Thread::create(system.frequency() / 3, {&RIOT::main, this});
   timer = {};
-  port[0] = {.data = 0xff};
-  port[1] = {.data = 0xff};
+  port[0] = {};
+  port[0].data = 0xff;
+  port[1] = {};
+  port[1].data = 0xff;
   leftDifficulty = 1;
   rightDifficulty = 1;
   tvType = 1;
