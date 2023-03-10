@@ -61,10 +61,11 @@ auto pLineEdit::windowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) ->
 
 auto pLineEdit::_text() -> string {
   u32 length = GetWindowTextLength(hwnd);
-  wchar_t text[length + 1];
-  GetWindowText(hwnd, text, length + 1);
+  vector<wchar_t> text;
+  text.reallocate(length + 1);
+  GetWindowText(hwnd, text.data(), length + 1);
   text[length] = 0;
-  return (const char*)utf8_t(text);
+  return (const char*)utf8_t(text.data());
 }
 
 }

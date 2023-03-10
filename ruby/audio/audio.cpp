@@ -85,6 +85,7 @@ auto Audio::setChannels(u32 channels) -> bool {
     resamplers.reset();
     resamplers.resize(channels);
     for(auto& resampler : resamplers) resampler.reset(instance->frequency);
+    resampleBuffer.resize(channels);
   }
   if(instance->channels == channels) return true;
   if(!instance->hasChannels(channels)) return false;
@@ -130,9 +131,8 @@ auto Audio::output(const f64 samples[]) -> void {
   }
 
   while(resamplers.first().pending()) {
-    f64 samples[instance->channels];
-    for(u32 n : range(instance->channels)) samples[n] = resamplers[n].read();
-    instance->output(samples);
+    for(u32 n : range(instance->channels)) resampleBuffer[n] = resamplers[n].read();
+    instance->output(resampleBuffer.data());
   }
 }
 
