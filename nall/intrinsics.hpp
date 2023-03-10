@@ -192,7 +192,7 @@ namespace nall {
   };
 #elif defined(__amd64__) || defined(_M_AMD64)
   #define ARCHITECTURE_AMD64
-  #if defined(__SSE4_1__)
+  #if defined(__SSE4_1__) || defined(COMPILER_MICROSOFT)
     #define ARCHITECTURE_SUPPORTS_SSE4_1 1
   #endif
   struct Architecture {
