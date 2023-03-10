@@ -84,8 +84,8 @@ auto VDP::Layer::patternFetch(u32 patternIndex) -> void {
         //emulate left windowing bug when fine hscroll != 0 (repeats next column)
         if(15 - index < (hscroll & 15)) shift += 64;
       }
-      n6 color = colors >> shift & 15;
-      n4 extra = extras >> shift & 15;
+      n6 color = n4(colors >> shift);
+      n4 extra = n4(extras >> shift);
       if(color) color |= extra.bit(0,1) << 4;
       pixels[pixelCount++] = {color, extra.bit(2)};
     }

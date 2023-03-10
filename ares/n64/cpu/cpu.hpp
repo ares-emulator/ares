@@ -322,8 +322,6 @@ struct CPU : Thread {
     struct {   int64_t s64; };
     struct {  uint64_t u64; };
     struct { float64_t f64; };
-    auto s128() const ->  int128_t { return  (int128_t)s64; }
-    auto u128() const -> uint128_t { return (uint128_t)u64; }
   };
   using cr64 = const r64;
 
