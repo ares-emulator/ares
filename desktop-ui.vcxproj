@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Stable|ARM64">
+      <Configuration>Stable</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Minified|ARM64">
+      <Configuration>Minified</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Optimized|ARM64">
+      <Configuration>Optimized</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Stable|x64">
+      <Configuration>Stable</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Minified|x64">
+      <Configuration>Minified</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Optimized|x64">
+      <Configuration>Optimized</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{9f337443-6b11-4905-b3a1-ca29602dffef}</ProjectGuid>
+    <RootNamespace>ares</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <UseMultiToolTask>true</UseMultiToolTask>
+    <EnforceProcessCountAcrossBuilds>true</EnforceProcessCountAcrossBuilds>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Stable'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Minified'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Optimized'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <GenerateManifest>false</GenerateManifest>
+    <TargetName>ares</TargetName>
+    <OutDir>$(ProjectName)\out\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectName)\obj\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>MIA_LIBRARY;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;SUBSYTEM_WINDOWS;SLJIT_HAVE_CONFIG_PRE=1;SLJIT_HAVE_CONFIG_POST=1;_7ZIP_ST;MAME_RDP;LSB_FIRST;PTR64;OSD_WINDOWS=1;VULKAN;VK_USE_PLATFORM_WIN32_KHR;PROFILE_PERFORMANCE;CORE_A26;CORE_FC;CORE_SFC;CORE_N64;CORE_SG;CORE_MS;CORE_MD;CORE_PS1;CORE_PCE;CORE_NG;CORE_MSX;CORE_CV;CORE_GB;CORE_GBA;CORE_WS;CORE_NGP;CORE_SPEC;HIRO_WINDOWS;VIDEO_DIRECT3D9;VIDEO_GDI;VIDEO_WGL;AUDIO_WASAPI;AUDIO_XAUDIO2;AUDIO_DIRECTSOUND;AUDIO_WAVEOUT;INPUT_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <AdditionalIncludeDirectories>.;ares;thirdparty;thirdparty\libchdr\include;thirdparty\libchdr\deps\lzma-19.00\include;thirdparty\libchdr\deps\zlib-1.2.11;thirdparty\mame\devices;thirdparty\mame\emu;thirdparty\mame\lib\util;thirdparty\mame\mame;thirdparty\mame\osd;ares\n64\vulkan\parallel-rdp\parallel-rdp;ares\n64\vulkan\parallel-rdp\volk;ares\n64\vulkan\parallel-rdp\vulkan;ares\n64\vulkan\parallel-rdp\vulkan-headers\include;ares\n64\vulkan\parallel-rdp\util;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>avrt.lib;comctl32.lib;d3d9.lib;dinput8.lib;dsound.lib;dwmapi.lib;msimg32.lib;opengl32.lib;shlwapi.lib;uxtheme.lib;winmm.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>BUILD_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Stable'">
+    <ClCompile>
+      <PreprocessorDefinitions>BUILD_STABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization>MinSpace</Optimization>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Minified'">
+    <ClCompile>
+      <PreprocessorDefinitions>BUILD_MINIFIED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <PreprocessorDefinitions>BUILD_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Optimized'">
+    <ClCompile>
+      <PreprocessorDefinitions>BUILD_OPTIMIZED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ares\a26\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\a26\controller\controller.cpp" />
+    <ClCompile Include="ares\a26\cpu\cpu.cpp" />
+    <ClCompile Include="ares\a26\riot\riot.cpp" />
+    <ClCompile Include="ares\a26\system\system.cpp" />
+    <ClCompile Include="ares\a26\tia\tia.cpp" />
+    <ClCompile Include="ares\ares\ares.cpp" />
+    <ClCompile Include="ares\ares\memory\fixed-allocator.cpp" />
+    <ClCompile Include="ares\component\audio\ay38910\ay38910.cpp" />
+    <ClCompile Include="ares\component\audio\msm5205\msm5205.cpp" />
+    <ClCompile Include="ares\component\audio\sn76489\sn76489.cpp" />
+    <ClCompile Include="ares\component\audio\t6w28\t6w28.cpp" />
+    <ClCompile Include="ares\component\audio\ym2149\ym2149.cpp" />
+    <ClCompile Include="ares\component\audio\ym2413\ym2413.cpp" />
+    <ClCompile Include="ares\component\audio\ym2610\ym2610.cpp" />
+    <ClCompile Include="ares\component\audio\ym2612\ym2612.cpp" />
+    <ClCompile Include="ares\component\eeprom\m24c\m24c.cpp" />
+    <ClCompile Include="ares\component\eeprom\m93lcx6\m93lcx6.cpp" />
+    <ClCompile Include="ares\component\processor\arm7tdmi\arm7tdmi.cpp" />
+    <ClCompile Include="ares\component\processor\gsu\gsu.cpp" />
+    <ClCompile Include="ares\component\processor\hg51b\hg51b.cpp" />
+    <ClCompile Include="ares\component\processor\huc6280\huc6280.cpp" />
+    <ClCompile Include="ares\component\processor\m68000\m68000.cpp" />
+    <ClCompile Include="ares\component\processor\m68hc05\m68hc05.cpp" />
+    <ClCompile Include="ares\component\processor\mos6502\mos6502.cpp" />
+    <ClCompile Include="ares\component\processor\sh2\sh2.cpp" />
+    <ClCompile Include="ares\component\processor\sm5k\sm5k.cpp" />
+    <ClCompile Include="ares\component\processor\sm83\sm83.cpp" />
+    <ClCompile Include="ares\component\processor\spc700\spc700.cpp" />
+    <ClCompile Include="ares\component\processor\ssp1601\ssp1601.cpp" />
+    <ClCompile Include="ares\component\processor\tlcs900h\tlcs900h.cpp" />
+    <ClCompile Include="ares\component\processor\upd96050\upd96050.cpp" />
+    <ClCompile Include="ares\component\processor\v30mz\v30mz.cpp" />
+    <ClCompile Include="ares\component\processor\wdc65816\wdc65816.cpp" />
+    <ClCompile Include="ares\component\processor\z80\z80.cpp" />
+    <ClCompile Include="ares\component\video\tms9918\tms9918.cpp" />
+    <ClCompile Include="ares\component\video\v9938\v9938.cpp" />
+    <ClCompile Include="ares\cv\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\cv\controller\controller.cpp" />
+    <ClCompile Include="ares\cv\cpu\cpu.cpp" />
+    <ClCompile Include="ares\cv\psg\psg.cpp" />
+    <ClCompile Include="ares\cv\system\system.cpp" />
+    <ClCompile Include="ares\cv\vdp\vdp.cpp" />
+    <ClCompile Include="ares\fc\apu\apu.cpp" />
+    <ClCompile Include="ares\fc\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\fc\controller\controller.cpp" />
+    <ClCompile Include="ares\fc\cpu\cpu.cpp" />
+    <ClCompile Include="ares\fc\expansion\expansion.cpp" />
+    <ClCompile Include="ares\fc\fds\fds.cpp" />
+    <ClCompile Include="ares\fc\ppu\ppu.cpp" />
+    <ClCompile Include="ares\fc\system\system.cpp" />
+    <ClCompile Include="ares\gb\apu\apu.cpp" />
+    <ClCompile Include="ares\gb\bus\bus.cpp" />
+    <ClCompile Include="ares\gb\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\gb\cpu\cpu.cpp" />
+    <ClCompile Include="ares\gb\ppu\ppu.cpp" />
+    <ClCompile Include="ares\gb\system\system.cpp" />
+    <ClCompile Include="ares\gba\apu\apu.cpp" />
+    <ClCompile Include="ares\gba\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\gba\cpu\cpu.cpp" />
+    <ClCompile Include="ares\gba\memory\memory.cpp" />
+    <ClCompile Include="ares\gba\player\player.cpp" />
+    <ClCompile Include="ares\gba\ppu\ppu.cpp" />
+    <ClCompile Include="ares\gba\system\system.cpp" />
+    <ClCompile Include="ares\md\apu\apu.cpp" />
+    <ClCompile Include="ares\md\bus\bus.cpp" />
+    <ClCompile Include="ares\md\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\md\controller\controller.cpp" />
+    <ClCompile Include="ares\md\cpu\cpu.cpp" />
+    <ClCompile Include="ares\md\m32x\m32x.cpp" />
+    <ClCompile Include="ares\md\mcd\mcd.cpp" />
+    <ClCompile Include="ares\md\opn2\opn2.cpp" />
+    <ClCompile Include="ares\md\system\system.cpp" />
+    <ClCompile Include="ares\md\vdp\vdp.cpp" />
+    <ClCompile Include="ares\ms\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\ms\controller\controller.cpp" />
+    <ClCompile Include="ares\ms\cpu\cpu.cpp" />
+    <ClCompile Include="ares\ms\expansion\expansion.cpp" />
+    <ClCompile Include="ares\ms\opll\opll.cpp" />
+    <ClCompile Include="ares\ms\psg\psg.cpp" />
+    <ClCompile Include="ares\ms\system\system.cpp" />
+    <ClCompile Include="ares\ms\vdp\vdp.cpp" />
+    <ClCompile Include="ares\msx\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\msx\controller\controller.cpp" />
+    <ClCompile Include="ares\msx\cpu\cpu.cpp" />
+    <ClCompile Include="ares\msx\keyboard\keyboard.cpp" />
+    <ClCompile Include="ares\msx\psg\psg.cpp" />
+    <ClCompile Include="ares\msx\system\system.cpp" />
+    <ClCompile Include="ares\msx\vdp\vdp.cpp" />
+    <ClCompile Include="ares\n64\ai\ai.cpp" />
+    <ClCompile Include="ares\n64\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\n64\cic\cic.cpp" />
+    <ClCompile Include="ares\n64\controller\controller.cpp" />
+    <ClCompile Include="ares\n64\cpu\cpu.cpp" />
+    <ClCompile Include="ares\n64\dd\dd.cpp" />
+    <ClCompile Include="ares\n64\memory\memory.cpp" />
+    <ClCompile Include="ares\n64\mi\mi.cpp" />
+    <ClCompile Include="ares\n64\pi\pi.cpp" />
+    <ClCompile Include="ares\n64\pif\pif.cpp" />
+    <ClCompile Include="ares\n64\rdp\rdp.cpp" />
+    <ClCompile Include="ares\n64\rdram\rdram.cpp" />
+    <ClCompile Include="ares\n64\ri\ri.cpp" />
+    <ClCompile Include="ares\n64\rsp\rsp.cpp" />
+    <ClCompile Include="ares\n64\si\si.cpp" />
+    <ClCompile Include="ares\n64\system\system.cpp" />
+    <ClCompile Include="ares\n64\vi\vi.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\parallel-rdp\command_ring.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\parallel-rdp\rdp_device.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\parallel-rdp\rdp_dump_write.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\parallel-rdp\rdp_renderer.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\parallel-rdp\video_interface.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\aligned_alloc.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\arena_allocator.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\logging.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\thread_id.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\thread_name.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\timeline_trace_file.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\timer.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\volk\volk.c" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\buffer_pool.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\buffer.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\command_buffer.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\command_pool.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\context.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\cookie.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\descriptor_set.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\device.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\event_manager.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\fence_manager.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\fence.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\image.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\memory_allocator.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\pipeline_event.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\query_pool.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\render_pass.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\sampler.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\semaphore_manager.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\semaphore.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\shader.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\texture_format.cpp" />
+    <ClCompile Include="ares\n64\vulkan\vulkan.cpp" />
+    <ClCompile Include="ares\ng\apu\apu.cpp" />
+    <ClCompile Include="ares\ng\card\card.cpp" />
+    <ClCompile Include="ares\ng\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\ng\controller\controller.cpp" />
+    <ClCompile Include="ares\ng\cpu\cpu.cpp" />
+    <ClCompile Include="ares\ng\lspc\lspc.cpp" />
+    <ClCompile Include="ares\ng\opnb\opnb.cpp" />
+    <ClCompile Include="ares\ng\system\system.cpp" />
+    <ClCompile Include="ares\ngp\apu\apu.cpp" />
+    <ClCompile Include="ares\ngp\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\ngp\cpu\cpu.cpp" />
+    <ClCompile Include="ares\ngp\kge\kge.cpp" />
+    <ClCompile Include="ares\ngp\psg\psg.cpp" />
+    <ClCompile Include="ares\ngp\system\system.cpp" />
+    <ClCompile Include="ares\pce\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\pce\controller\controller.cpp" />
+    <ClCompile Include="ares\pce\cpu\cpu.cpp" />
+    <ClCompile Include="ares\pce\pcd\pcd.cpp" />
+    <ClCompile Include="ares\pce\psg\psg.cpp" />
+    <ClCompile Include="ares\pce\system\system.cpp" />
+    <ClCompile Include="ares\pce\vdp-performance\vdp.cpp" />
+    <ClCompile Include="ares\pce\vdp\vdp.cpp" />
+    <ClCompile Include="ares\ps1\cpu\cpu.cpp" />
+    <ClCompile Include="ares\ps1\disc\disc.cpp" />
+    <ClCompile Include="ares\ps1\dma\dma.cpp" />
+    <ClCompile Include="ares\ps1\gpu\gpu.cpp" />
+    <ClCompile Include="ares\ps1\interrupt\interrupt.cpp" />
+    <ClCompile Include="ares\ps1\mdec\mdec.cpp" />
+    <ClCompile Include="ares\ps1\memory\memory.cpp" />
+    <ClCompile Include="ares\ps1\peripheral\peripheral.cpp" />
+    <ClCompile Include="ares\ps1\spu\spu.cpp" />
+    <ClCompile Include="ares\ps1\system\system.cpp" />
+    <ClCompile Include="ares\ps1\timer\timer.cpp" />
+    <ClCompile Include="ares\sfc\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\sfc\controller\controller.cpp" />
+    <ClCompile Include="ares\sfc\coprocessor\coprocessor.cpp" />
+    <ClCompile Include="ares\sfc\cpu\cpu.cpp" />
+    <ClCompile Include="ares\sfc\dsp\dsp.cpp" />
+    <ClCompile Include="ares\sfc\expansion\expansion.cpp" />
+    <ClCompile Include="ares\sfc\memory\memory.cpp" />
+    <ClCompile Include="ares\sfc\ppu-performance\ppu.cpp" />
+    <ClCompile Include="ares\sfc\ppu\ppu.cpp" />
+    <ClCompile Include="ares\sfc\slot\slot.cpp" />
+    <ClCompile Include="ares\sfc\smp\smp.cpp" />
+    <ClCompile Include="ares\sfc\system\system.cpp" />
+    <ClCompile Include="ares\sg\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\sg\controller\controller.cpp" />
+    <ClCompile Include="ares\sg\cpu\cpu.cpp" />
+    <ClCompile Include="ares\sg\psg\psg.cpp" />
+    <ClCompile Include="ares\sg\system\system.cpp" />
+    <ClCompile Include="ares\sg\vdp\vdp.cpp" />
+    <ClCompile Include="ares\spec\cpu\cpu.cpp" />
+    <ClCompile Include="ares\spec\expansion\expansion.cpp" />
+    <ClCompile Include="ares\spec\keyboard\keyboard.cpp" />
+    <ClCompile Include="ares\spec\psg\psg.cpp" />
+    <ClCompile Include="ares\spec\system\system.cpp" />
+    <ClCompile Include="ares\spec\tape\tape.cpp" />
+    <ClCompile Include="ares\spec\ula\ula.cpp" />
+    <ClCompile Include="ares\ws\apu\apu.cpp" />
+    <ClCompile Include="ares\ws\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\ws\cpu\cpu.cpp" />
+    <ClCompile Include="ares\ws\eeprom\eeprom.cpp" />
+    <ClCompile Include="ares\ws\memory\memory.cpp" />
+    <ClCompile Include="ares\ws\ppu\ppu.cpp" />
+    <ClCompile Include="ares\ws\serial\serial.cpp" />
+    <ClCompile Include="ares\ws\system\system.cpp" />
+    <ClCompile Include="hiro\hiro.cpp" />
+    <ClCompile Include="libco\libco.c" />
+    <ClCompile Include="mia\mia.cpp" />
+    <ClCompile Include="mia\resource\resource.cpp" />
+    <ClCompile Include="nall\nall.cpp" />
+    <ClCompile Include="ruby\ruby.cpp" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\Alloc.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\Bra86.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\BraIA64.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\CpuArch.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\Delta.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\LzFind.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\Lzma86Dec.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\LzmaDec.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\LzmaEnc.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\Sort.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\adler32.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\compress.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\crc32.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\deflate.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\infback.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\inffast.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\inflate.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\inftrees.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\trees.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\uncompr.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\zutil.c" />
+    <ClCompile Include="thirdparty\libchdr\src\libchdr_bitstream.c" />
+    <ClCompile Include="thirdparty\libchdr\src\libchdr_cdrom.c" />
+    <ClCompile Include="thirdparty\libchdr\src\libchdr_chd.c" />
+    <ClCompile Include="thirdparty\libchdr\src\libchdr_flac.c" />
+    <ClCompile Include="thirdparty\libchdr\src\libchdr_huffman.c" />
+    <ClCompile Include="thirdparty\mame\emu\emucore.cpp" />
+    <ClCompile Include="thirdparty\mame\emu\video\rgbutil.cpp" />
+    <ClCompile Include="thirdparty\mame\lib\util\delegate.cpp" />
+    <ClCompile Include="thirdparty\mame\lib\util\strformat.cpp" />
+    <ClCompile Include="thirdparty\mame\mame\video\n64.cpp" />
+    <ClCompile Include="thirdparty\mame\mame\video\pin64.cpp" />
+    <ClCompile Include="thirdparty\mame\mame\video\rdpblend.cpp" />
+    <ClCompile Include="thirdparty\mame\mame\video\rdptpipe.cpp" />
+    <ClCompile Include="thirdparty\mame\osd\osdcore.cpp" />
+    <ClCompile Include="thirdparty\mame\osd\osdsync.cpp" />
+    <ClCompile Include="thirdparty\sljit\sljit_src\sljitLir.c" />
+    <ClCompile Include="thirdparty\sljitAllocator.cpp" />
+    <ClCompile Include="desktop-ui\desktop-ui.cpp" />
+    <ClCompile Include="desktop-ui\emulator\emulator.cpp" />
+    <ClCompile Include="desktop-ui\input\input.cpp" />
+    <ClCompile Include="desktop-ui\presentation\presentation.cpp" />
+    <ClCompile Include="desktop-ui\program\program.cpp" />
+    <ClCompile Include="desktop-ui\resource\resource.cpp" />
+    <ClCompile Include="desktop-ui\settings\settings.cpp" />
+    <ClCompile Include="desktop-ui\tools\tools.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="desktop-ui\resource\ares.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
