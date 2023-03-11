@@ -62,10 +62,6 @@ namespace Math {
   #define __has_builtin(x) 0
 #endif
 
-#if defined(COMPILER_MICROSOFT)
-  #define va_copy(dest, src) ((dest) = (src))
-#endif
-
 #if defined(PLATFORM_WINDOWS)
   #define dllexport __declspec(dllexport)
   #define MSG_NOSIGNAL 0
@@ -120,6 +116,12 @@ namespace Math {
   #endif
   #define likely(expression) __builtin_expect(bool(expression), true)
   #define unlikely(expression) __builtin_expect(bool(expression), false)
+#elif defined(COMPILER_MICROSOFT)
+  #define bswap16(value) _byteswap_ushort(value)
+  #define bswap32(value) _byteswap_ulong(value)
+  #define bswap64(value) _byteswap_uint64(value)
+  #define likely(expression) expression
+  #define unlikely(expression) expression
 #else
   inline auto bswap16(u16 value) -> u16 {
     return value << 8 | value >> 8;
@@ -143,9 +145,12 @@ namespace nall {
   //notify the processor/operating system that this thread is currently awaiting an event (eg a spinloop)
   //calling this function aims to avoid consuming 100% CPU resources on the active thread during spinloops
   inline auto spinloop() -> void {
-    #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
-      #if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_AMD64)
+    #if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_AMD64)
+      #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
         __builtin_ia32_pause();
+        return;
+      #elif defined(COMPILER_MICROSOFT)
+        _mm_pause();
         return;
       #endif
     #endif
@@ -174,6 +179,8 @@ namespace nall {
 //P0627: [[unreachable]] -- impossible to simulate with identical syntax, must omit brackets ...
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
   #define unreachable __builtin_unreachable()
+#elif defined(COMPILER_MICROSOFT)
+  #define unreachable __assume(0)
 #else
   #define unreachable throw
 #endif
