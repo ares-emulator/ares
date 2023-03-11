@@ -1,3 +1,5 @@
+*.user
+.vs/
 obj/
 out/
 obj-amd64/
