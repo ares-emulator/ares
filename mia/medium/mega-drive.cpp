@@ -361,6 +361,16 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     ram.size = 32768;
   }
 
+  //Sonic & Knuckles + Sonic the Hedgehog 3 (USA, Japan, Europe)
+  if(hash == "fba0677fde9f76df93f3e98d6310d8af68b9847bde16e253d73cd4dd8134ed23" ||
+     hash == "fa52ac946dfd576538d00aa858b790b9d81a1217e25aa5193693a4e57f4f89d9" ||
+     hash == "9cc2316eddbc874840b4913f53618a826f12c0d5ed48149855b19422231e4496") {
+    ram.mode = "lower";
+    ram.size = 0x200;
+    ram.address = 0x200000;
+    ram.enable = false;
+  }
+
   //Super Hydlide (Japan)
   if(hash == "30749097096807abf67cd1f7b2392f5789f5149ee33661e6d13113396f06a121") {
     ram.mode = "lower";
