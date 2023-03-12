@@ -610,7 +610,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   }
 
   //Homebrew (libdragon / Everdrive special header flag)
-  if(id[1] == 'E' && id[2] == 'D') {
+  if(id(1) == 'E' && id(2) == 'D') {
     n8 config = data[0x3f];
     if(config.bit(4,7) == 1) {eeprom = 512;}
     if(config.bit(4,7) == 2) {eeprom = 2_KiB;}

@@ -252,7 +252,7 @@ auto CPU::DADDU(r64& rd, cr64& rs, cr64& rt) -> void {
 auto CPU::DDIV(cr64& rs, cr64& rt) -> void {
   if(!context.kernelMode() && context.bits == 32) return exception.reservedInstruction();
   if(rt.s64) {
-    #if defined(_MSC_VER)
+    #if defined(_MSC_VER) || !defined(__SIZEOF_INT128__)
     if(rs.s64 != (-1LL << 63) || rt.s64 != -1LL) {
       LO.u64 = rs.s64 / rt.s64;
       HI.u64 = rs.s64 % rt.s64;

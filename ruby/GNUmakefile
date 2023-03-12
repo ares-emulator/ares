@@ -1,7 +1,7 @@
 ifeq ($(ruby),)
   ifeq ($(platform),windows)
     ruby += video.direct3d9 video.gdi
-    ifeq ($(arch),amd64)
+    ifneq ($(filter $(arch),x86 amd64),)
       ruby += video.wgl
     endif
     ruby += audio.wasapi audio.xaudio2 audio.directsound audio.waveout #audio.asio

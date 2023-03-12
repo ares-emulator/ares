@@ -2,7 +2,7 @@ struct Accuracy {
   //enable all accuracy flags
   static constexpr bool Reference = 0;
 
-  static constexpr bool Interpreter = 0 | Reference;
+  static constexpr bool Interpreter = 0 | Reference | !recompiler::generic::supported;
   static constexpr bool Recompiler = !Interpreter;
 
   //exceptions when the CPU or DMA accesses unaligned memory addresses
