@@ -68,12 +68,29 @@ auto nall::main(Arguments arguments) -> void {
     program.startShader = shader;
   }
 
-  for(auto argument : arguments) {
-    if(file::exists(argument)) program.startGameLoad = argument;
-  }
-
   inputManager.create();
   Emulator::construct();
+  settings.load();
+
+  if(arguments.find("--setting")) {
+    string settingValue;
+    while(arguments.take("--setting", settingValue)) {
+      auto kv = settingValue.split("=", 1L);
+      if(kv.size() == 2) {
+        auto node = settings[kv[0]];
+        if(node) {
+          node.setValue(kv[1]);
+        } else {
+          print("Invalid setting: ", settingValue, "\n");
+          return;
+        }
+      } else {
+        print("Invalid setting: ", settingValue, "\n");
+        return;
+      }
+    }
+    settings.process(true);
+  }
 
   if(arguments.take("--help")) {
     print("Usage: ares [OPTIONS]... game\n\n");
@@ -85,6 +102,8 @@ auto nall::main(Arguments arguments) -> void {
     print("  --fullscreen         Start in full screen mode\n");
     print("  --system name        Specify the system name\n");
     print("  --shader name        Specify the name of the shader to use\n");
+    print("  --setting name=value Specify a value for a setting\n");
+    print("  --dump-all-settings  Show a list of all existing settings and exit\n");
     print("\n");
     print("Available Systems:\n");
     print("  ");
@@ -95,7 +114,22 @@ auto nall::main(Arguments arguments) -> void {
     return;
   }
 
-  settings.load();
+  if(arguments.take("--dump-all-settings")) {
+    function<void(const Markup::Node&, string)> dump;
+    dump = [&](const Markup::Node& node, string prefix) -> void {
+      for(const auto& setting : node) {
+        print(prefix, setting.name(), "\n");
+        dump(setting, string(prefix, setting.name(), "/"));
+      }
+    };
+    dump(settings, "");
+    return;
+  }
+
+  for(auto argument : arguments) {
+    if(file::exists(argument)) program.startGameLoad = argument;
+  }
+
   Instances::presentation.construct();
   Instances::settingsWindow.construct();
   Instances::toolsWindow.construct();
