@@ -265,7 +265,7 @@ auto MegaDrive::analyzeRegion(vector<u8>& rom, string hash) -> void {
   }
   if(!regions && region.size() == 1) {
     maybe<u8> bits;
-    u8 field = region[0];
+    u8 field = region(0);
     if(field >= '0' && field <= '9') bits = field - '0';
     if(field >= 'A' && field <= 'F') bits = field - 'A' + 10;
     if(bits && *bits & 1) regions.append("NTSC-J");  //domestic 60hz

@@ -82,4 +82,7 @@ using f64 = float64_t;
 #if defined(__SIZEOF_INT128__)
   using s128 =  int128_t;
   using u128 = uint128_t;
+#else
+  //arithmetic.hpp
+  namespace nall { struct u128; }
 #endif

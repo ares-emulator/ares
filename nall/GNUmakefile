@@ -84,10 +84,14 @@ ifneq ($(filter cl clang-cl,$(compiler)),)
   machine := amd64
 else
   machine_str := $(shell $(compiler) -dumpmachine)
-  ifneq ($(filter amd64-% x86_64-%,$(machine_str)),)
+  ifneq ($(filter i686-%,$(machine_str)),)
+    machine := x86
+  else ifneq ($(filter amd64-% x86_64-%,$(machine_str)),)
     machine := amd64
   else ifneq ($(filter arm64-% aarch64-%,$(machine_str)),)
     machine := arm64
+  else ifneq ($(filter arm-% armv7-%,$(machine_str)),)
+    machine := arm32
   else ifneq ($(filter powerpc64-% powerpc64le-%,$(machine_str)),)
     machine := ppc64
   endif
