@@ -200,14 +200,24 @@ endif
 # link-time optimization
 ifeq ($(lto),true)
   ifeq ($(cl),true)
-    flags   += $(if $(findstring clang,$(compiler)),-flto,-GL)
-    options += -ltcg:incremental -ltcgout:$(object.path)/$(name).iobj
+    ifneq ($(findstring clang,$(compiler)),clang)
+      flags   += -GL
+      options += -ltcg:incremental -ltcgout:$(object.path)/$(name).iobj
+    else
+      flags   += -flto=thin
+      options += -lldltocache:$(object.path)/lto
+    endif
   else
     ifneq ($(findstring clang++,$(compiler)),clang++)
       flags   += -flto=auto -fno-fat-lto-objects
     else
-      flags   += -flto
+      flags   += -flto=thin
       options += -flto=thin
+      ifneq ($(platform),macos)
+        options += -Wl,--thinlto-cache-dir=$(object.path)/lto
+      else
+        options += -Wl,-cache_path_lto,$(object.path)/lto
+      endif
     endif
   endif
 endif
