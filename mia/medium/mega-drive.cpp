@@ -244,8 +244,15 @@ auto MegaDrive::analyze(vector<u8>& rom) -> string {
 }
 
 auto MegaDrive::analyzeRegion(vector<u8>& rom, string hash) -> void {
-  string region = slice((const char*)&rom[0x01f0], 0, 16).trimRight(" ");
-  
+  string serial = slice((const char*)&rom[0x0180], 0, 14);
+
+  int offset = 0;
+  if(serial == "GM MK-1563 -00" && rom.size() == 4_MiB) {
+    //For Sonic & Knuckles + Sonic the Hedgehog 3, use Sonic 3 header
+    offset = 0x200000;
+  }
+
+  string region = slice((const char*)&rom[0x01f0 + offset], 0, 16).trimRight(" ");
   if(!regions) {
     if(region == "JAPAN" ) regions.append("NTSC-J");
     if(region == "EUROPE") regions.append("PAL");
@@ -279,22 +286,28 @@ auto MegaDrive::analyzeRegion(vector<u8>& rom, string hash) -> void {
 
 auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
   string serial = slice((const char*)&rom[0x0180], 0, 14);
+  int offset = 0; 
+
+  //For Sonic & Knuckles + Sonic the Hedgehog 3, use Sonic 3 header for extra memory section
+  if(serial == "GM MK-1563 -00" && rom.size() == 4_MiB) {
+    offset += 0x200000;
+  }
 
   //SRAM
   //====
 
-  if(rom[0x01b0] == 'R' && rom[0x01b1] == 'A') {
+  if(rom[0x01b0 + offset] == 'R' && rom[0x01b1 + offset] == 'A') {
     u32 ramFrom = 0;
-    ramFrom |= rom[0x01b4] << 24;
-    ramFrom |= rom[0x01b5] << 16;
-    ramFrom |= rom[0x01b6] <<  8;
-    ramFrom |= rom[0x01b7] <<  0;
+    ramFrom |= rom[0x01b4 + offset] << 24;
+    ramFrom |= rom[0x01b5 + offset] << 16;
+    ramFrom |= rom[0x01b6 + offset] <<  8;
+    ramFrom |= rom[0x01b7 + offset] <<  0;
 
     u32 ramTo = 0;
-    ramTo |= rom[0x01b8] << 24;
-    ramTo |= rom[0x01b9] << 16;
-    ramTo |= rom[0x01ba] <<  8;
-    ramTo |= rom[0x01bb] <<  0;
+    ramTo |= rom[0x01b8 + offset] << 24;
+    ramTo |= rom[0x01b9 + offset] << 16;
+    ramTo |= rom[0x01ba + offset] <<  8;
+    ramTo |= rom[0x01bb + offset] <<  0;
 
     if(!(ramFrom & 1) && !(ramTo & 1)) ram.mode = "upper";
     if( (ramFrom & 1) &&  (ramTo & 1)) ram.mode = "lower";
@@ -359,16 +372,6 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
   if(hash == "26706ead54c450a98aac785e2d6dd66e36e0fe52c4980618b6fe7602b3a2623c") {
     ram.mode = "lower";
     ram.size = 32768;
-  }
-
-  //Sonic & Knuckles + Sonic the Hedgehog 3 (USA, Japan, Europe)
-  if(hash == "fba0677fde9f76df93f3e98d6310d8af68b9847bde16e253d73cd4dd8134ed23" ||
-     hash == "fa52ac946dfd576538d00aa858b790b9d81a1217e25aa5193693a4e57f4f89d9" ||
-     hash == "9cc2316eddbc874840b4913f53618a826f12c0d5ed48149855b19422231e4496") {
-    ram.mode = "lower";
-    ram.size = 0x200;
-    ram.address = 0x200000;
-    ram.enable = false;
   }
 
   //Super Hydlide (Japan)
