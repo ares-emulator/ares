@@ -11,7 +11,7 @@ flags += -I. -I.. -I../ares -I../thirdparty -DMIA_LIBRARY
 nall.path := ../nall
 include $(nall.path)/GNUmakefile
 
-ifeq ($(arch),amd64)
+ifneq ($(filter $(arch),x86 amd64),)
   ifeq ($(filter cl,$(compiler)),)
     ifeq ($(local),true)
       flags += -march=native

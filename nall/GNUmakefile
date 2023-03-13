@@ -213,10 +213,12 @@ ifeq ($(lto),true)
     else
       flags   += -flto=thin
       options += -flto=thin
-      ifneq ($(platform),macos)
-        options += -Wl,--thinlto-cache-dir=$(object.path)/lto
-      else
+      ifeq ($(platform),macos)
         options += -Wl,-cache_path_lto,$(object.path)/lto
+      else ifeq ($(msvc),true)
+        options += -Wl,-lldltocache:$(object.path)/lto
+      else
+        options += -Wl,--thinlto-cache-dir=$(object.path)/lto
       endif
     endif
   endif
