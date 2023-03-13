@@ -50,16 +50,6 @@ jobs:
           windres: rc
           shell: bash
           msvc-arch: x64_arm64
-        - name: windows-msbuild-x64
-          os: windows-latest
-          shell: cmd
-          msvc-arch: x64
-          msbuild-platform: x64
-        - name: windows-msbuild-arm64
-          os: windows-latest
-          shell: cmd
-          msvc-arch: x64_arm64
-          msbuild-platform: arm64
         - name: macos
           os: macos-latest
           compiler: clang++
@@ -117,11 +107,8 @@ jobs:
       with:
         arch: ${{ matrix.platform.msvc-arch }}
     - name: Make
-      if: runner.os != 'macOS' && matrix.platform.msbuild-platform == ''
+      if: runner.os != 'macOS'
       run: ${MAKE:-make} -j4 -C desktop-ui build=optimized local=false compiler="${{ matrix.platform.compiler }}" windres="${{ matrix.platform.windres }}"
-    - name: MSBuild
-      if: matrix.platform.msbuild-platform != ''
-      run: msbuild desktop-ui.vcxproj -t:rebuild -property:Configuration=Optimized,Platform=${{ matrix.platform.msbuild-platform }}
     - name: "macOS: Make universal app"
       if: runner.os == 'macOS'
       run: scripts/macos-make-universal.sh
