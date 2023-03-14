@@ -1,5 +1,7 @@
 auto VDP::step(u32 clocks) -> void {
   Thread::step(clocks);
+
+  if(Mega32X()) return;
   Thread::synchronize(cpu);
 }
 
@@ -64,11 +66,13 @@ auto VDP::hblank(bool line) -> void {
   } else {
     cartridge.hblank(1);
   }
+  if(Mega32X()) Thread::synchronize(cpu);
 }
 
 auto VDP::vblank(bool line) -> void {
   irq.vblank.transitioned |= state.vblank ^ line;
   state.vblank = line;
+  if(Mega32X()) Thread::synchronize(cpu);
 }
 
 auto VDP::vedge() -> void {
