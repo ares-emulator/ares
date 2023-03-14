@@ -24,6 +24,12 @@ auto operator+=(string& lhs, const string& rhs) -> string& {
   return lhs;
 }
 
+auto hexString(array_view<u8> view) -> string {
+  string s;
+  for(u8 n : view) s.append(hex(n, 2L), " ");
+  return s.stripRight();
+}
+
 #include "settings/settings.cpp"
 #include "system/system.cpp"
 #include "medium/medium.cpp"

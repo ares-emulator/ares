@@ -139,6 +139,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     manifest += "      type: ROM\n";
     manifest += "      size: 0x10\n";
     manifest += "      content: iNES\n";
+    manifest +={"      data: ", hexString({data.data(), 16}), "\n"};
     return manifest;
   }
 
@@ -154,13 +155,15 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   string region = "NTSC-J, NTSC-U, PAL"; //iNES 1.0 requires database to detect region
 
   bool iNes2 = (data[7] & 0xc) == 0x8;
-  if (iNes2) {
+  if(iNes2) {
     mapper |= ((data[8] & 0xf) << 8);
     submapper = data[8] >> 4;
     u32 timing = data[12] & 3;
 
     // TODO: add DENDY (pirate famiclone) timing
-    if (timing == 1) region = "PAL";
+    if(timing == 0) region = "NTSC-J, NTSC-U";
+    if(timing == 1) region = "PAL";
+    if(timing == 2) region = "NTSC-J, NTSC-U, PAL";
   }
 
   string s;
@@ -558,6 +561,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   s += "      type: ROM\n";
   s += "      size: 0x10\n";
   s += "      content: iNES\n";
+  s +={"      data: ", hexString({data.data(), 16}), "\n"};
 
   if(prgrom) {
     s += "    memory\n";
