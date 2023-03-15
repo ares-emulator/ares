@@ -182,8 +182,8 @@ ifeq ($(symbols),true)
     flags += -g
     ifeq ($(platform),windows)
       ifeq ($(findstring clang++,$(compiler)),clang++)
-        ifeq ($(symformat),dwarf)
-          flags += -gdwarf
+        ifeq ($(symformat),gdb)
+          flags += -ggdb
         else  
           flags += -gcodeview
         endif
