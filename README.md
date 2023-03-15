@@ -60,8 +60,8 @@ pacman -S mingw-w64-clang-x86_64-toolchain
 Once complete, open a CLANG64 terminal window and proceed with building ares. 
 
 ###### Debug Symbols
-When building with clang, by default symbols will be generated using an MSVC compatible format (CodeView) for use with Windows debugging tools. In order to generate GDB compatible symbols (Dwarf), specify the following option:  
-`symformat=dwarf`  
+When building with clang, by default symbols will be generated for debug builds using an MSVC compatible format (CodeView) for use with Windows debugging tools. In order to generate GDB compatible symbols, specify the following option:  
+`symformat=gdb`  
 
 Compilation
 -----------
