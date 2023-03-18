@@ -236,6 +236,9 @@ endif
 # clang settings
 ifeq ($(findstring clang++,$(compiler)),clang++)
   flags += -fno-strict-aliasing -fwrapv
+  ifneq ($(platform),macos)
+    options += -fuse-ld=lld
+  endif
   ifeq ($(arch),arm64)
     # work around bad interaction with alignas(n) when n >= 4096
     flags += -mno-global-merge
@@ -254,7 +257,6 @@ ifeq ($(platform),windows)
     flags += -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS
   endif
   options += $(call lib,ws2_32 ole32 shell32)
-  options += $(if $(findstring clang++,$(compiler)),-fuse-ld=lld)
   options += $(if $(findstring g++,$(compiler)),-mthreads -static)
   ifeq ($(console),true)
     flags += -DSUBSYTEM_CONSOLE
