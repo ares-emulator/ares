@@ -47,7 +47,6 @@ namespace nall {
     static constexpr bool GCC       = 1;
     static constexpr bool Microsoft = 0;
   };
-  #pragma GCC diagnostic error   "-Wc++20-extensions"
   #pragma GCC diagnostic error   "-Wvla"
   #pragma GCC diagnostic warning "-Wimplicit-fallthrough"
   #pragma GCC diagnostic warning "-Wreturn-type"
