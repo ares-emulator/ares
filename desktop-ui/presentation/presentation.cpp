@@ -134,16 +134,30 @@ Presentation::Presentation() {
   for(u32 slot : range(9)) {
     MenuItem item{&saveStateMenu};
     item.setText({"Slot ", 1 + slot}).onActivate([=] {
-      program.stateSave(1 + slot);
+      if(program.stateSave(1 + slot)) {
+        undoSaveStateMenu.setEnabled(true);
+      }
     });
   }
   loadStateMenu.setText("Load State").setIcon(Icon::Media::Rewind);
   for(u32 slot : range(9)) {
     MenuItem item{&loadStateMenu};
     item.setText({"Slot ", 1 + slot}).onActivate([=] {
-      program.stateLoad(1 + slot);
+      if(program.stateLoad(1 + slot)) {
+        undoLoadStateMenu.setEnabled(true);
+      }
     });
   }
+  undoSaveStateMenu.setText("Undo Last Save State").setIcon(Icon::Edit::Undo).setEnabled(false);
+  undoSaveStateMenu.onActivate([&] {
+    program.undoStateSave();
+    undoSaveStateMenu.setEnabled(false);
+  });
+  undoLoadStateMenu.setText("Undo Last Load State").setIcon(Icon::Edit::Undo).setEnabled(false);
+  undoLoadStateMenu.onActivate([&] {
+    program.undoStateLoad();
+    undoLoadStateMenu.setEnabled(false);
+  });
   captureScreenshot.setText("Capture Screenshot").setIcon(Icon::Emblem::Image).onActivate([&] {
     program.requestScreenshot = true;
   });
