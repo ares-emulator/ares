@@ -74,6 +74,7 @@ auto Program::unload() -> void {
   if(!emulator) return;
 
   settings.save();
+  clearUndoStates();
   showMessage({"Unloaded ", Location::prefix(emulator->game->location)});
   emulator->unload();
   screens.reset();

@@ -22,6 +22,9 @@ struct Program : ares::Platform {
   //states.cpp
   auto stateSave(u32 slot) -> bool;
   auto stateLoad(u32 slot) -> bool;
+  auto undoStateSave() -> bool;
+  auto undoStateLoad() -> bool;
+  auto clearUndoStates() -> void;
 
   //status.cpp
   auto updateMessage() -> void;
@@ -66,6 +69,7 @@ struct Program : ares::Platform {
 
   struct State {
     u32 slot = 1;
+    u32 undoSlot = 1;
   } state;
 
   //rewind.cpp

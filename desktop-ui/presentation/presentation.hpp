@@ -51,6 +51,8 @@ struct Presentation : Window {
     Menu toolsMenu{&menuBar};
       Menu saveStateMenu{&toolsMenu};
       Menu loadStateMenu{&toolsMenu};
+      MenuItem undoSaveStateMenu{&toolsMenu};
+      MenuItem undoLoadStateMenu{&toolsMenu};
       MenuItem captureScreenshot{&toolsMenu};
       MenuSeparator toolsMenuSeparatorA{&toolsMenu};
       MenuCheckItem pauseEmulation{&toolsMenu};
