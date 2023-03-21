@@ -131,3 +131,8 @@ High-level Components
 * __ruby__:       interface between a hiro application and platform-specific APIs for emulator video, audio, and input
 * __mia__:        internal ROM database and ROM/image loader
 * __libco__:      cooperative multithreading library
+
+Contributing
+------------
+
+Please join our discord to chat with other ares developers: https://discord.com/invite/gz2quhk2kv
