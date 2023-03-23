@@ -1,5 +1,9 @@
 /*
-  note this was designed for UNIX systems. Based on ideas expressed in a paper by Ralf Engelschall.
+  note this was designed for UNIX systems. Based on ideas expressed in a paper by Ralf Engelschall,
+  "Portable Multithreading
+  The Signal Stack Trick For User-Space Thread Creation"
+  https://www.cs.uml.edu/~bill/cs516/context_paper_rse-pmt.pdf
+
   for SJLJ on other systems, one would want to rewrite springboard() and co_create() and hack the jmb_buf stack pointer.
 */
 
