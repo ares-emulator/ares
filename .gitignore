@@ -1,3 +1,4 @@
+*.moc
 *.user
 .vs/
 obj/
