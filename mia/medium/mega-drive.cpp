@@ -326,6 +326,12 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
     ram.size = 8192;
   }
 
+  //FIFA Soccer 95 (Korea)
+  if(hash == "b6b1f9666adcccbefeb4bd67dbbbc666b96f4aee566bc459ce11b210f30950fe") {
+    ram.mode = "lower";
+    ram.size = 8192;
+  }
+
   //Hardball III (USA)
   if(hash == "bba8186e38d0d0938a439bda4fc2325c1b2c9760a643717fa4f372ebf9058fc2") {
     ram.mode = "lower";
@@ -348,6 +354,12 @@ auto MegaDrive::analyzeStorage(vector<u8>& rom, string hash) -> void {
   if(hash == "ac08551ecd4c037211fca98359efcfe7c0b048880e82a474d5c5fcd157e33592") {
     ram.mode = "lower";
     ram.size = 32768;
+  }
+
+  //NBA Live 95 (Korea)
+  if(hash == "e67d99837dc8861d6f538d36d893d80ebdfb338a5dfb4f5a7c46735d0b4f68aa") {
+    ram.mode = "lower";
+    ram.size = 8192;
   }
 
   //NBA Live '98 (USA)
