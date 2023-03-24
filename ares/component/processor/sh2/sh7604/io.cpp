@@ -177,6 +177,7 @@ auto SH2::internalReadByte(u32 address, n8 data) -> n8 {
 
   //CCR: cache control register
   case 0xffff'fe92:
+  case 0xffff'fe93:
     data.bit(0)   = cache.enable;
     data.bit(1)   = cache.disableCode;
     data.bit(2)   = cache.disableData;
@@ -719,6 +720,7 @@ auto SH2::internalWriteByte(u32 address, n8 data) -> void {
 
   //CCR: cache control register
   case 0xffff'fe92:
+  case 0xffff'fe93:
     cache.enable      = data.bit(0);
     cache.disableCode = data.bit(1);
     cache.disableData = data.bit(2);
