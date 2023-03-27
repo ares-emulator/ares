@@ -1,3 +1,10 @@
+auto VDP::Window::begin() -> void {
+  latch.hoffset = io.hoffset;
+  latch.hdirection = io.hdirection;
+  latch.voffset = io.voffset;
+  latch.vdirection = io.vdirection;
+}
+
 //called 17 (H32) or 21 (H40) times
 auto VDP::Window::attributesFetch(s32 attributesIndex) -> void {
   //todo: what should happen for the window on column -1?
@@ -10,7 +17,7 @@ auto VDP::Window::attributesFetch(s32 attributesIndex) -> void {
   s32 x = attributesIndex << 4;
   s32 y = vdp.vcounter();
   vdp.layerA.windowed[0] = vdp.layerA.windowed[1];
-  vdp.layerA.windowed[1] = x < hoffset ^ hdirection || y < voffset ^ vdirection;
+  vdp.layerA.windowed[1] = x < latch.hoffset ^ latch.hdirection || y < latch.voffset ^ latch.vdirection;
   if(!vdp.layerA.windowed[1]) return;
 
   vdp.layerA.attributes.address = vdp.h40() ? nametableAddress & ~0x400 : nametableAddress & ~0;
@@ -21,9 +28,7 @@ auto VDP::Window::attributesFetch(s32 attributesIndex) -> void {
 }
 
 auto VDP::Window::power(bool reset) -> void {
-  hoffset = 0;
-  hdirection = 0;
-  voffset = 0;
-  vdirection = 0;
+  latch = {};
+  io = {};
   nametableAddress = 0;
 }

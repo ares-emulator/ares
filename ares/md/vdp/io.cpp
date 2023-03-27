@@ -332,15 +332,15 @@ auto VDP::writeControlPort(n16 data) -> void {
 
   //window plane horizontal position
   case 0x11: {
-    window.hoffset    = data.bit(0,4) << 4;
-    window.hdirection = data.bit(7);
+    window.io.hoffset    = data.bit(0,4) << 4;
+    window.io.hdirection = data.bit(7);
     return;
   }
 
   //window plane vertical position
   case 0x12: {
-    window.voffset    = data.bit(0,4) << 3;
-    window.vdirection = data.bit(7);
+    window.io.voffset    = data.bit(0,4) << 3;
+    window.io.vdirection = data.bit(7);
     return;
   }
 

@@ -128,10 +128,14 @@ auto VDP::Attributes::serialize(serializer& s) -> void {
 }
 
 auto VDP::Window::serialize(serializer& s) -> void {
-  s(hoffset);
-  s(hdirection);
-  s(voffset);
-  s(vdirection);
+  s(latch.hoffset);
+  s(latch.hdirection);
+  s(latch.voffset);
+  s(latch.vdirection);
+  s(io.hoffset);
+  s(io.hdirection);
+  s(io.voffset);
+  s(io.vdirection);
   s(nametableAddress);
 }
 

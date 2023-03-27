@@ -142,6 +142,7 @@ auto VDP::mainH32() -> void {
 
   layerA.begin();
   layerB.begin();
+  window.begin();
 
   tick<false>(); layers.hscrollFetch();
   tick<false>(); sprite.patternFetch(26);
@@ -193,6 +194,7 @@ auto VDP::mainH40() -> void {
 
   layerA.begin();
   layerB.begin();
+  window.begin();
 
   tick<true>(); layers.hscrollFetch();
   tick<true>(); sprite.patternFetch(34);
