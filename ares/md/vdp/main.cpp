@@ -114,14 +114,16 @@ auto VDP::main() -> void {
 
 auto VDP::mainH32() -> void {
   auto pixels = dac.pixels = vdp.pixels();
-  auto scanline = vcounter();
   cycles = &cyclesH32[edclk()][0];
 
   sprite.begin();
   if(dac.pixels) blocks<false, true>();
   else blocks<false, false>();
 
-  m32x.vdp.scanline(pixels, scanline);
+  if(Mega32X()) {
+    Thread::synchronize(cpu);
+    m32x.vdp.scanline(pixels, vcounter());
+  }
 
   tick<false>(); slot();
   tick<false>(); slot();
@@ -170,7 +172,10 @@ auto VDP::mainH40() -> void {
   if(dac.pixels) blocks<true, true>();
   else blocks<true, false>();
 
-  m32x.vdp.scanline(pixels, vcounter());
+  if(Mega32X()) {
+    Thread::synchronize(cpu);
+    m32x.vdp.scanline(pixels, vcounter());
+  }
 
   tick<true>(); slot();
   tick<true>(); slot();
