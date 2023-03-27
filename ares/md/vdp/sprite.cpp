@@ -142,7 +142,7 @@ auto VDP::Sprite::patternFetch(u32) -> void {
     auto id = visibleLink;
     auto& object = cache[id];
     visibleLink = object.link;
-    if(!visibleLink) visibleStop = 1;
+    if(!visibleLink || visibleLink >= frameObjectLimit()) visibleStop = 1;
 
     auto objectY = object.y & (interlace ? 1023 : 511);
     auto height = 1 + object.height << 3 + interlace;
