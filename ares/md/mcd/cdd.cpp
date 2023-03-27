@@ -24,7 +24,8 @@ auto MCD::CDD::clock() -> void {
   switch(io.status) {
 
   case Status::Stopped: {
-    io.status = mcd.disc ? Status::ReadingTOC : Status::NoDisc;
+    if(!mcd.fd) io.status = Status::NoDisc;
+    else if(!io.tocRead) io.status = Status::ReadingTOC;
     io.sector = 0;
     io.sample = 0;
     io.track  = 0;
@@ -35,6 +36,7 @@ auto MCD::CDD::clock() -> void {
     if(!session.inLeadIn(io.sector)) {
       io.status = Status::Paused;
       if(auto track = session.inTrack(io.sector)) io.track = track();
+      io.tocRead = 1;
     }
   } break;
 
@@ -113,7 +115,7 @@ auto MCD::CDD::process() -> void {
   } break;
 
   case Command::Stop: {
-    io.status = Status::Stopped;
+    io.status = mcd.fd ? Status::Stopped : Status::NoDisc;
     status[1] = 0x0;
     status[2] = 0x0; status[3] = 0x0;
     status[4] = 0x0; status[5] = 0x0;
@@ -317,19 +319,21 @@ auto MCD::CDD::insert() -> void {
   }
   session.decode(subchannel, 96);
 
-  io.status = Status::ReadingTOC;
-  io.sector = session.leadIn.lba;
-  io.sample = 0;
-  io.track  = 0;
+  io.status  = Status::ReadingTOC;
+  io.sector  = session.leadIn.lba;
+  io.sample  = 0;
+  io.track   = 0;
+  io.tocRead = 0;
 }
 
 auto MCD::CDD::eject() -> void {
   session = {};
 
-  io.status = Status::NoDisc;
-  io.sector = 0;
-  io.sample = 0;
-  io.track  = 0;
+  io.status  = Status::NoDisc;
+  io.sector  = 0;
+  io.sample  = 0;
+  io.track   = 0;
+  io.tocRead = 0;
 }
 
 auto MCD::CDD::power(bool reset) -> void {

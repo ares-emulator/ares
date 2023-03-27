@@ -147,6 +147,7 @@ auto MCD::CDD::serialize(serializer& s) -> void {
   s(io.sector);
   s(io.sample);
   s(io.track);
+  s(io.tocRead);
 
   s(hostClockEnable);
   s(statusPending);

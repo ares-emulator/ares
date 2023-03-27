@@ -343,6 +343,7 @@ struct MCD : M68000, Thread {
       i32 sector;   //current frame#
       n16 sample;   //current audio sample# within current frame
       n7  track;    //current track#
+      n1  tocRead;
     } io;
 
     n1 hostClockEnable;
