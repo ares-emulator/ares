@@ -255,6 +255,7 @@ struct VDP : Thread {
 
   struct Window {
     //window.cpp
+    auto begin() -> void;
     auto attributesFetch(s32) -> void;
     auto test() const -> bool;
     auto power(bool reset) -> void;
@@ -262,10 +263,20 @@ struct VDP : Thread {
     //serialization.cpp
     auto serialize(serializer&) -> void;
 
-    n10 hoffset;
-    n1  hdirection;
-    n10 voffset;
-    n1  vdirection;
+    struct Latch {
+      n10 hoffset;
+      n1  hdirection;
+      n10 voffset;
+      n1  vdirection;
+    } latch;
+
+    struct IO {
+      n10 hoffset;
+      n1  hdirection;
+      n10 voffset;
+      n1  vdirection;
+    } io;
+
     n16 nametableAddress;
   } window;
 
