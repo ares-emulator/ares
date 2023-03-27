@@ -69,6 +69,10 @@ auto MCD::allocate(Node::Port parent) -> Node::Peripheral {
 }
 
 auto MCD::connect() -> void {
+  if(auto fp = system.pak->read("backup.ram")) {
+    bram.load(fp);
+  }
+
   if(!disc->setPak(pak = platform->pak(disc))) return;
 
   information = {};
@@ -78,10 +82,6 @@ auto MCD::connect() -> void {
   if(!fd) return disconnect();
 
   cdd.insert();
-
-  if(auto fp = system.pak->read("backup.ram")) {
-    bram.load(fp);
-  }
 }
 
 auto MCD::disconnect() -> void {
