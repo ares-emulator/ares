@@ -1,7 +1,5 @@
 auto VDP::step(u32 clocks) -> void {
   Thread::step(clocks);
-
-  if(Mega32X()) return;
   Thread::synchronize(cpu);
 }
 
@@ -66,13 +64,11 @@ auto VDP::hblank(bool line) -> void {
   } else {
     cartridge.hblank(1);
   }
-  if(Mega32X()) Thread::synchronize(cpu);
 }
 
 auto VDP::vblank(bool line) -> void {
   irq.vblank.transitioned |= state.vblank ^ line;
   state.vblank = line;
-  if(Mega32X()) Thread::synchronize(cpu);
 }
 
 auto VDP::vedge() -> void {
@@ -120,10 +116,7 @@ auto VDP::mainH32() -> void {
   if(dac.pixels) blocks<false, true>();
   else blocks<false, false>();
 
-  if(Mega32X()) {
-    Thread::synchronize(cpu);
-    m32x.vdp.scanline(pixels, vcounter());
-  }
+  if(Mega32X()) m32x.vdp.scanline(pixels, vcounter());
 
   tick<false>(); slot();
   tick<false>(); slot();
@@ -173,10 +166,7 @@ auto VDP::mainH40() -> void {
   if(dac.pixels) blocks<true, true>();
   else blocks<true, false>();
 
-  if(Mega32X()) {
-    Thread::synchronize(cpu);
-    m32x.vdp.scanline(pixels, vcounter());
-  }
+  if(Mega32X()) m32x.vdp.scanline(pixels, vcounter());
 
   tick<true>(); slot();
   tick<true>(); slot();
