@@ -1,3 +1,6 @@
+#define XXH_INLINE_ALL
+#include <xxhash.h>
+
 #include <ares/ares.hpp>
 #include "sh2.hpp"
 

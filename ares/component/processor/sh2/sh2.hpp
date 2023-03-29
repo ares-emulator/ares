@@ -267,8 +267,17 @@ struct SH2 {
       Block* blocks[1 << 7];
     };
 
+    struct BlockHashPair {
+      auto operator==(const BlockHashPair& source) const -> bool { return hashcode == source.hashcode; }
+      auto hash() const -> u32 { return hashcode; }
+
+      Block* block;
+      u64 hashcode;
+    };
+
     auto reset() -> void {
       generation = 0;
+      blocks.reset();
       for(u32 index : range(1 << 24)) pools[index] = nullptr;
     }
 
@@ -279,17 +288,22 @@ struct SH2 {
     auto invalidate(u32 address, u8 size) -> void;
     auto pool(u32 address) -> Pool*;
     auto block(u32 address) -> Block*;
+    auto measure(u32 address) -> u8;
+    auto hash(u32 address, u8 size) -> u64;
     auto emit(u32 address) -> Block*;
     auto emitInstruction(u16 opcode) -> u32;
     auto getSR(reg dst) -> void;
     auto setSR(reg src) -> void;
     template<typename F> auto checkDelaySlot(F body) -> void;
+    auto isTerminal(u16 instruction) -> bool;
 
     static auto mask(u8 address, u8 size) -> u64;
 
     bool inDelaySlot;
     u32 generation;
     bump_allocator allocator;
+    hashset<BlockHashPair> blocks;
+    u16 instructions[1 << 7];
     Pool* pools[1 << 24];
   } recompiler{*this};
 
