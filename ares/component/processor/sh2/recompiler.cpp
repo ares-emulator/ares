@@ -162,6 +162,8 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
 #define illegal &SH2::illegalInstruction
 
 auto SH2::Recompiler::emitInstruction(u16 opcode) -> u32 {
+  if constexpr(!Accuracy::CachedInterpreter) {
+
   #define n   (opcode >> 8 & 0x00f)
   #define m   (opcode >> 4 & 0x00f)
   #define i   (opcode >> 0 & 0x0ff)
@@ -1471,7 +1473,8 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> u32 {
 
   }
 
-#if 0
+  } else {  //Accuracy::CachedInterpreter
+
   #define op(id, name, ...) \
     case id: \
       call(&SH2::name, &self, ##__VA_ARGS__); \
@@ -1483,7 +1486,8 @@ auto SH2::Recompiler::emitInstruction(u16 opcode) -> u32 {
   #include "decoder.hpp"
   #undef op
   #undef br
-#endif
+
+  }
 
   return 0;
 }
