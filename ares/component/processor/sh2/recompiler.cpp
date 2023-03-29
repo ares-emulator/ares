@@ -68,10 +68,50 @@ auto SH2::Recompiler::pool(u32 address) -> Pool* {
 
 auto SH2::Recompiler::block(u32 address) -> Block* {
   if(auto block = pool(address)->blocks[address >> 1 & 0x7f]) return block;
+
+  auto size = measure(address);
+  auto hashcode = hash(address, size);
+
+  BlockHashPair pair;
+  pair.hashcode = hashcode;
+  if(auto result = blocks.find(pair)) {
+    memory::jitprotect(false);
+    pool(address)->blocks[address >> 1 & 0x7f] = result->block;
+    memory::jitprotect(true);
+    return result->block;
+  }
+
   auto block = emit(address);
+  assert(block->size == size);
   pool(address)->blocks[address >> 1 & 0x7f] = block;
   memory::jitprotect(true);
+
+  pair.block = block;
+  blocks.insert(pair);
+
   return block;
+}
+
+auto SH2::Recompiler::measure(u32 address) -> u8 {
+  u32 start = address;
+  u32 index = address >> 1 & 0x7f;
+  bool hasBranched = 0;
+  while(true) {
+    u16 instruction = self.readWord(address);
+    instructions[index++] = instruction;
+    bool branched = isTerminal(instruction);
+    address += 2;
+    if(hasBranched || (address & 0xfe) == 0) break;  //block boundary
+    hasBranched = branched;
+  }
+
+  return address - start;
+}
+
+auto SH2::Recompiler::hash(u32 address, u8 size) -> u64 {
+  u64 hash = XXH3_64bits(&instructions[address >> 1 & 0x7f], size);
+  hash ^= address;
+  return hash;
 }
 
 auto SH2::Recompiler::emit(u32 address) -> Block* {
@@ -87,10 +127,11 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   beginFunction(2);
 
   u32 start = address;
+  u32 index = address >> 1 & 0x7f;
   bool hasBranched = 0;
   inDelaySlot = 1;  //force runtime check on first instruction
   while(true) {
-    u16 instruction = self.readWord(address);
+    u16 instruction = instructions[index++];
     auto branch = emitInstruction(instruction);
     inDelaySlot = branch == Branch::Slot;
     add64(CCR, CCR, imm(1));
@@ -1480,6 +1521,19 @@ auto SH2::Recompiler::checkDelaySlot(F body) -> void {
   setLabel(skip);
   call(&SH2::illegalSlotInstruction);
   setLabel(skip2);
+}
+
+auto SH2::Recompiler::isTerminal(u16 opcode) -> bool {
+  #define op(id, name, ...) \
+    case id: \
+      return 0;
+  #define br(id, name, ...) \
+    case id: \
+      return 1;
+  #include "decoder.hpp"
+  #undef op
+  #undef br
+  return 0;
 }
 
 #undef Reg

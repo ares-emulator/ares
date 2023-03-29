@@ -94,7 +94,7 @@
   op(0xc0, MOVBSG, d8);     //MOV.B  R0,@(disp,GBR)
   op(0xc1, MOVWSG, d8);     //MOV.W  R0,@(disp,GBR)
   op(0xc2, MOVLSG, d8);     //MOV.L  R0,@(disp,GBR)
-  op(0xc3, TRAPA, i);       //TRAPA  #imm
+  br(0xc3, TRAPA, i);       //TRAPA  #imm
   op(0xc4, MOVBLG, d8);     //MOV.B  @(disp,GBR),R0
   op(0xc5, MOVWLG, d8);     //MOV.W  @(disp,GBR),R0
   op(0xc6, MOVLLG, d8);     //MOV.L  @(disp,GBR),R0
@@ -174,7 +174,7 @@
   br(0x000b, RTS);     //RTS
   op(0x0018, SETT);    //SETT
   op(0x0019, DIV0U);   //DIV0U
-  op(0x001b, SLEEP);   //SLEEP
+  br(0x001b, SLEEP);   //SLEEP
   op(0x0028, CLRMAC);  //CLRMAC
   br(0x002b, RTE);     //RTE
   }
