@@ -20,17 +20,49 @@
 #define ET      Reg(ET)
 #define ID      Reg(ID)
 
-auto SH2::Recompiler::invalidate(u32 address) -> void {
+auto SH2::Recompiler::mask(u8 address, u8 size) -> u64 {
+  //1 bit per 4 bytes
+  u6 s = address >> 2;
+  u6 e = address + size - 1 >> 2;
+  u64 smask = ~0ull << s;
+  u64 emask = ~0ull >> 63 - e;
+  assert(s <= e);
+  return smask & emask;
+}
+
+auto SH2::Recompiler::invalidate(u32 address, u8 size) -> void {
   auto pool = pools[address >> 8 & 0xffffff];
   if(!pool) return;
   memory::jitprotect(false);
-  pool->blocks[address >> 1 & 0x7f] = nullptr;
+  pool->dirty |= mask(address, size);
   memory::jitprotect(true);
 }
 
 auto SH2::Recompiler::pool(u32 address) -> Pool* {
   auto& pool = pools[address >> 8 & 0xffffff];
-  if(!pool) pool = (Pool*)allocator.acquire(sizeof(Pool));
+  if(!pool) {
+    pool = (Pool*)allocator.acquire(sizeof(Pool));
+    memory::jitprotect(false);
+    pool->generation = generation;
+    memory::jitprotect(true);
+  } else if(address >> 29 == Area::Cached && pool->generation != generation) {
+    memory::jitprotect(false);
+    for(auto& block : pool->blocks) block = nullptr;
+    pool->generation = generation;
+    pool->dirty = 0;
+    memory::jitprotect(true);
+  } else if(pool->dirty) {
+    memory::jitprotect(false);
+    u8 address = 0;
+    for(auto& block : pool->blocks) {
+      if(block && (pool->dirty & mask(address, block->size)) != 0) {
+        block = nullptr;
+      }
+      address += 2;
+    }
+    pool->dirty = 0;
+    memory::jitprotect(true);
+  }
   return pool;
 }
 
@@ -54,6 +86,7 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
   auto block = (Block*)allocator.acquire(sizeof(Block));
   beginFunction(2);
 
+  u32 start = address;
   bool hasBranched = 0;
   inDelaySlot = 1;  //force runtime check on first instruction
   while(true) {
@@ -72,6 +105,7 @@ auto SH2::Recompiler::emit(u32 address) -> Block* {
 
   memory::jitprotect(false);
   block->code = endFunction();
+  block->size = address - start;
 
   return block;
 }
