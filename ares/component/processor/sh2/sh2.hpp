@@ -258,17 +258,25 @@ struct SH2 {
       }
 
       u8* code;
+      u8 size;
     };
 
     struct Pool {
+      u32 generation;
+      u64 dirty;
       Block* blocks[1 << 7];
     };
 
     auto reset() -> void {
+      generation = 0;
       for(u32 index : range(1 << 24)) pools[index] = nullptr;
     }
 
-    auto invalidate(u32 address) -> void;
+    auto invalidateCached() -> void {
+      generation++;
+    }
+
+    auto invalidate(u32 address, u8 size) -> void;
     auto pool(u32 address) -> Pool*;
     auto block(u32 address) -> Block*;
     auto emit(u32 address) -> Block*;
@@ -277,7 +285,10 @@ struct SH2 {
     auto setSR(reg src) -> void;
     template<typename F> auto checkDelaySlot(F body) -> void;
 
+    static auto mask(u8 address, u8 size) -> u64;
+
     bool inDelaySlot;
+    u32 generation;
     bump_allocator allocator;
     Pool* pools[1 << 24];
   } recompiler{*this};
