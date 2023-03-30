@@ -422,6 +422,8 @@ else
 endif
 
 # objects
-nall.objects := $(object.path)/nall.o
+nall.objects := nall nall-main
+nall.objects := $(nall.objects:%=$(object.path)/%.o)
 
 $(object.path)/nall.o: $(nall.path)/nall.cpp
+$(object.path)/nall-main.o: $(nall.path)/main.cpp
