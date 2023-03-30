@@ -109,9 +109,7 @@ auto SH2::Recompiler::measure(u32 address) -> u8 {
 }
 
 auto SH2::Recompiler::hash(u32 address, u8 size) -> u64 {
-  u64 hash = XXH3_64bits(&instructions[address >> 1 & 0x7f], size);
-  hash ^= address;
-  return hash;
+  return XXH3_64bits(&instructions[address >> 1 & 0x7f], size ? size : 0x100);
 }
 
 auto SH2::Recompiler::emit(u32 address) -> Block* {
