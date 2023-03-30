@@ -11,7 +11,7 @@ GameBrowserWindow::GameBrowserWindow() {
   gameList.setHeadered();
 
   gameList.onActivate([&](auto cell) {
-    auto game = games[cell.offset()];
+    auto game = games[gameList.selected().offset()];
     if(program.load(emulator, game.path)) {
       setVisible(false);
     }
