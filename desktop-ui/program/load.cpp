@@ -18,8 +18,23 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
   unload();
 
   ::emulator = emulator;
-  if(!emulator->load(location)) {
+
+  // For arcade systems, show the game browser dialog as we're using MAME-compatible roms
+  if(emulator->arcade() && !location) {
+    gameBrowserWindow.show(emulator);
+
+    // Temporarily pretend that the load failed to prevent UI hang
+    // The browser dialog will call load() again when necessary
     ::emulator.reset();
+    return false;
+  }
+
+  return load(location);
+}
+
+auto Program::load(string location) -> bool {
+  if(!emulator->load(location)) {
+    emulator.reset();
     if(settings.video.adaptiveSizing) presentation.resizeWindow();
     presentation.showIcon(true);
     return false;
@@ -83,6 +98,7 @@ auto Program::unload() -> void {
   rewindReset();
   presentation.unloadEmulator();
   toolsWindow.setVisible(false);
+  gameBrowserWindow.setVisible(false);
   manifestViewer.unload();
   memoryEditor.unload();
   graphicsViewer.unload();

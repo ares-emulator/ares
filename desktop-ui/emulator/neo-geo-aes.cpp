@@ -3,11 +3,13 @@ struct NeoGeoAES : Emulator {
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto arcade() -> bool override { return true; }
 };
 
 NeoGeoAES::NeoGeoAES() {
   manufacturer = "SNK";
   name = "Neo Geo AES";
+  medium = "Neo Geo";
 
   firmware.append({"BIOS", "World"});
 

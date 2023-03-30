@@ -28,6 +28,7 @@ struct Emulator {
   virtual auto save() -> bool { return true; }
   virtual auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> = 0;
   virtual auto notify(const string& message) -> void {}
+  virtual auto arcade() -> bool { return false; }
 
   struct Firmware {
     string type;
@@ -38,6 +39,7 @@ struct Emulator {
 
   string manufacturer;
   string name;
+  string medium;
   ares::Node::System root;
   vector<Firmware> firmware;
   shared_pointer<mia::Pak> system;

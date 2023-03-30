@@ -54,14 +54,15 @@ $(object.path)/mia-resource.o: $(mia.path)/resource/resource.cpp
 
 desktop-ui.path = ../desktop-ui
 
-desktop-ui.objects += desktop-ui desktop-ui-resource desktop-ui-input desktop-ui-emulator desktop-ui-program
-desktop-ui.objects += desktop-ui-presentation desktop-ui-settings desktop-ui-tools
+desktop-ui.objects += desktop-ui desktop-ui-resource desktop-ui-input desktop-ui-game-browser desktop-ui-emulator
+desktop-ui.objects += desktop-ui-program desktop-ui-presentation desktop-ui-settings desktop-ui-tools
 desktop-ui.objects := $(desktop-ui.objects:%=$(object.path)/%.o)
 
 $(object.path)/desktop-ui.o: $(desktop-ui.path)/desktop-ui.cpp
 $(object.path)/desktop-ui-resource.o: $(desktop-ui.path)/resource/resource.cpp
 $(object.path)/desktop-ui-input.o: $(desktop-ui.path)/input/input.cpp
 $(object.path)/desktop-ui-emulator.o: $(desktop-ui.path)/emulator/emulator.cpp
+$(object.path)/desktop-ui-game-browser.o: $(desktop-ui.path)/game-browser/game-browser.cpp
 $(object.path)/desktop-ui-program.o: $(desktop-ui.path)/program/program.cpp
 $(object.path)/desktop-ui-presentation.o: $(desktop-ui.path)/presentation/presentation.cpp
 $(object.path)/desktop-ui-settings.o: $(desktop-ui.path)/settings/settings.cpp

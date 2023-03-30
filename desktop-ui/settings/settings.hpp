@@ -76,6 +76,7 @@ struct Settings : Markup::Node {
     string saves;
     string screenshots;
     string debugging;
+    string arcadeRoms;
     struct SuperFamicom {
       string gameBoy;
       string bsMemory;
@@ -260,6 +261,11 @@ struct PathSettings : VerticalLayout {
     LineEdit debuggingPath{&debuggingLayout, Size{~0, 0}};
     Button debuggingAssign{&debuggingLayout, Size{80, 0}};
     Button debuggingReset{&debuggingLayout, Size{80, 0}};
+  Label arcadeRomsLabel{this, Size{~0, 0}, 5};
+  HorizontalLayout arcadeRomsLayout{this, Size{~0, 0}};
+    LineEdit arcadeRomsPath{&arcadeRomsLayout, Size{~0, 0}};
+    Button arcadeRomsAssign{&arcadeRomsLayout, Size{80, 0}};
+    Button arcadeRomsReset{&arcadeRomsLayout, Size{80, 0}};
 };
 
 struct DriverSettings : VerticalLayout {

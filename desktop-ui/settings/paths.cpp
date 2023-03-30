@@ -80,6 +80,24 @@ auto PathSettings::construct() -> void {
     refresh();
   });
 
+  arcadeRomsLabel.setText("Arcade Roms").setFont(Font().setBold());
+  arcadeRomsLayout.setPadding(12_sx, 0);
+  arcadeRomsPath.setEditable(false);
+  arcadeRomsAssign.setText("Assign" ELLIPSIS).onActivate([&] {
+    BrowserDialog dialog;
+    dialog.setTitle("Select Arcade Rom Path");
+    dialog.setPath(Path::desktop());
+    dialog.setAlignment(settingsWindow);
+    if(auto location = program.selectFolder(dialog)) {
+      settings.paths.arcadeRoms = location;
+      refresh();
+    }
+  });
+  arcadeRomsReset.setText("Reset").onActivate([&] {
+    settings.paths.arcadeRoms = "";
+    refresh();
+  });
+
   refresh();
 }
 
@@ -116,5 +134,11 @@ auto PathSettings::refresh() -> void {
     debuggingPath.setText(pathname(settings.paths.debugging)).setForegroundColor();
   } else {
     debuggingPath.setText("(same as game path)").setForegroundColor(SystemColor::PlaceholderText);
+  }
+
+  if(settings.paths.arcadeRoms) {
+    arcadeRomsPath.setText(pathname(settings.paths.arcadeRoms)).setForegroundColor();
+  } else {
+    arcadeRomsPath.setText(pathname(string{mia::homeLocation(), "Arcade"})).setForegroundColor(SystemColor::PlaceholderText);
   }
 }

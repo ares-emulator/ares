@@ -133,6 +133,7 @@ auto nall::main(Arguments arguments) -> void {
   Instances::presentation.construct();
   Instances::settingsWindow.construct();
   Instances::toolsWindow.construct();
+  Instances::gameBrowserWindow.construct();
 
   program.create();
   presentation.loadEmulators();
@@ -144,6 +145,7 @@ auto nall::main(Arguments arguments) -> void {
   Instances::presentation.destruct();
   Instances::settingsWindow.destruct();
   Instances::toolsWindow.destruct();
+  Instances::gameBrowserWindow.destruct();
 }
 
 #if defined(PLATFORM_WINDOWS) && defined(ARCHITECTURE_AMD64) && !defined(BUILD_LOCAL)

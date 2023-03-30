@@ -102,6 +102,7 @@ auto Settings::process(bool load) -> void {
   bind(string,  "Paths/Saves", paths.saves);
   bind(string,  "Paths/Screenshots", paths.screenshots);
   bind(string,  "Paths/Debugging", paths.debugging);
+  bind(string,  "Paths/ArcadeRoms", paths.arcadeRoms);
   bind(string,  "Paths/SuperFamicom/GameBoy", paths.superFamicom.gameBoy);
   bind(string,  "Paths/SuperFamicom/BSMemory", paths.superFamicom.bsMemory);
   bind(string,  "Paths/SuperFamicom/SufamiTurbo", paths.superFamicom.sufamiTurbo);

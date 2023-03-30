@@ -77,19 +77,38 @@ auto Medium::create(string name) -> shared_pointer<Pak> {
   return {};
 }
 
-//search game database for manifest, if one exists
-auto Medium::manifestDatabase(string sha256) -> string {
+auto Medium::loadDatabase() -> void {
   //load the database on the first time it's needed for a given media type
   bool found = false;
   for(auto& database : Media::databases) {
     if(database.name == name()) found = true;
   }
+
   if(!found) {
     Database database;
     database.name = name();
     database.list = BML::unserialize(file::read(locate({"Database/", name(), ".bml"})));
     Media::databases.append(std::move(database));
   }
+}
+
+//Retrieve all entries in game database
+auto Medium::database() -> Database {
+  loadDatabase();
+
+  //search the database for a given sha256 game entry
+  for(auto& database : Media::databases) {
+    if (database.name == name()) {
+      return database;
+    }
+  }
+
+  return {};
+}
+
+//search game database for manifest, if one exists
+auto Medium::manifestDatabase(string sha256) -> string {
+  loadDatabase();
 
   //search the database for a given sha256 game entry
   for(auto& database : Media::databases) {
@@ -106,20 +125,9 @@ auto Medium::manifestDatabase(string sha256) -> string {
   return {};
 }
 
-
 //search game database for manifest, if one exists
 auto Medium::manifestDatabaseArcade(string rom) -> string {
-  //load the database on the first time it's needed for a given media type
-  bool found = false;
-  for(auto& database : Media::databases) {
-    if(database.name == name()) found = true;
-  }
-  if(!found) {
-    Database database;
-    database.name = name();
-    database.list = BML::unserialize(file::read(locate({"Database/", name(), ".bml"})));
-    Media::databases.append(std::move(database));
-  }
+  loadDatabase();
 
   //search the database for a given named game entry
   for(auto& database : Media::databases) {
