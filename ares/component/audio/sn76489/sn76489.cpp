@@ -20,17 +20,17 @@ auto SN76489::clock() -> array<n4[4]> {
 }
 
 auto SN76489::Tone::clock() -> void {
-  if(!counter--) {
+  if(!counter || !--counter) {
     counter = pitch;
     output ^= 1;
   }
 }
 
 auto SN76489::Noise::clock() -> void {
-  if(!counter--) {
+  if(!counter || !--counter) {
     counter = array<n10[4]>{0x10, 0x20, 0x40, pitch}[rate];
     if(flip ^= 1) {  //0->1 transition
-      output = !lfsr.bit(0);
+      output = lfsr.bit(0);
       lfsr = (lfsr.bit(0) ^ lfsr.bit(3) & enable) << 15 | lfsr >> 1;
     }
   }
