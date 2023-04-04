@@ -106,11 +106,11 @@ struct CPU : Thread {
   struct InstructionCache {
     CPU& self;
     struct Line;
-    auto line(u32 address) -> Line& { return lines[address >> 5 & 0x1ff]; }
+    auto line(u32 vaddr) -> Line& { return lines[vaddr >> 5 & 0x1ff]; }
 
     //used by the recompiler to simulate instruction cache fetch timing
-    auto step(u32 address) -> void {
-      auto& line = this->line(address);
+    auto step(u32 vaddr, u32 address) -> void {
+      auto& line = this->line(vaddr);
       if(!line.hit(address)) {
         self.step(48);
         line.valid = 1;
@@ -121,8 +121,8 @@ struct CPU : Thread {
     }
 
     //used by the interpreter to fully emulate the instruction cache
-    auto fetch(u32 address, CPU& cpu) -> u32 {
-      auto& line = this->line(address);
+    auto fetch(u32 vaddr, u32 address, CPU& cpu) -> u32 {
+      auto& line = this->line(vaddr);
       if(!line.hit(address)) {
         line.fill(address, cpu);
       } else {
@@ -182,9 +182,9 @@ struct CPU : Thread {
   //dcache.cpp
   struct DataCache {
     struct Line;
-    auto line(u32 address) -> Line&;
-    template<u32 Size> auto read(u32 address) -> u64;
-    template<u32 Size> auto write(u32 address, u64 data) -> void;
+    auto line(u32 vaddr) -> Line&;
+    template<u32 Size> auto read(u32 vaddr, u32 address) -> u64;
+    template<u32 Size> auto write(u32 vaddr, u32 address, u64 data) -> void;
     auto power(bool reset) -> void;
 
     //8KB

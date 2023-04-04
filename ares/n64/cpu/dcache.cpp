@@ -61,8 +61,8 @@ auto CPU::DataCache::Line::writeBack() -> void {
   cpu.busWrite<Word>(tag | index | 0xc, words[3]);
 }
 
-auto CPU::DataCache::line(u32 address) -> Line& {
-  return lines[address >> 4 & 0x1ff];
+auto CPU::DataCache::line(u32 vaddr) -> Line& {
+  return lines[vaddr >> 4 & 0x1ff];
 }
 
 template<u32 Size>
@@ -90,8 +90,8 @@ auto CPU::DataCache::Line::write(u32 address, u64 data) -> void {
 }
 
 template<u32 Size>
-auto CPU::DataCache::read(u32 address) -> u64 {
-  auto& line = this->line(address);
+auto CPU::DataCache::read(u32 vaddr, u32 address) -> u64 {
+  auto& line = this->line(vaddr);
   if(!line.hit(address)) {
     if(line.valid && line.dirty) line.writeBack();
     line.fill(address);
@@ -102,8 +102,8 @@ auto CPU::DataCache::read(u32 address) -> u64 {
 }
 
 template<u32 Size>
-auto CPU::DataCache::write(u32 address, u64 data) -> void {
-  auto& line = this->line(address);
+auto CPU::DataCache::write(u32 vaddr, u32 address, u64 data) -> void {
+  auto& line = this->line(vaddr);
   if(!line.hit(address)) {
     if(line.valid && line.dirty) line.writeBack();
     return line.fill<Size>(address, data);
