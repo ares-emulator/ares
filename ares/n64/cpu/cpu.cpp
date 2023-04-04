@@ -111,7 +111,8 @@ auto CPU::instruction() -> void {
 
 auto CPU::instructionEpilogue() -> s32 {
   if constexpr(Accuracy::CPU::Recompiler) {
-    icache.step(ipu.pc);  //simulates timings without performing actual icache loads
+    // FIXME: ipu.pc should be devirtualized here
+    icache.step(ipu.pc, ipu.pc);  //simulates timings without performing actual icache loads
   }
 
   ipu.r[0].u64 = 0;

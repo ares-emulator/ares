@@ -133,7 +133,7 @@ auto CPU::fetch(u64 vaddr) -> maybe<u32> {
     return nothing;
   case Context::Segment::Mapped:
     if(auto match = tlb.load(vaddr)) {
-      if(match.cache) return icache.fetch(match.address & context.physMask, cpu);
+      if(match.cache) return icache.fetch(vaddr, match.address & context.physMask, cpu);
       step(1);
       return busRead<Word>(match.address & context.physMask);
     }
@@ -141,9 +141,9 @@ auto CPU::fetch(u64 vaddr) -> maybe<u32> {
     addressException(vaddr);
     return nothing;
   case Context::Segment::Cached:
-    return icache.fetch(vaddr & 0x1fff'ffff, cpu);
+    return icache.fetch(vaddr, vaddr & 0x1fff'ffff, cpu);
   case Context::Segment::Cached32:
-    return icache.fetch(vaddr & 0xffff'ffff, cpu);
+    return icache.fetch(vaddr, vaddr & 0xffff'ffff, cpu);
   case Context::Segment::Direct:
     step(1);
     return busRead<Word>(vaddr & 0x1fff'ffff);
@@ -166,7 +166,7 @@ auto CPU::read(u64 vaddr) -> maybe<u64> {
     return nothing;
   case Context::Segment::Mapped:
     if(auto match = tlb.load(vaddr)) {
-      if(match.cache) return dcache.read<Size>(match.address & context.physMask);
+      if(match.cache) return dcache.read<Size>(vaddr, match.address & context.physMask);
       step(1);
       return busRead<Size>(match.address & context.physMask);
     }
@@ -174,9 +174,9 @@ auto CPU::read(u64 vaddr) -> maybe<u64> {
     addressException(vaddr);
     return nothing;
   case Context::Segment::Cached:
-    return dcache.read<Size>(vaddr & 0x1fff'ffff);
+    return dcache.read<Size>(vaddr, vaddr & 0x1fff'ffff);
   case Context::Segment::Cached32:
-    return dcache.read<Size>(vaddr & 0xffff'ffff);
+    return dcache.read<Size>(vaddr, vaddr & 0xffff'ffff);
   case Context::Segment::Direct:
     step(1);
     return busRead<Size>(vaddr & 0x1fff'ffff);
@@ -199,7 +199,7 @@ auto CPU::write(u64 vaddr, u64 data) -> bool {
     return false;
   case Context::Segment::Mapped:
     if(auto match = tlb.store(vaddr)) {
-      if(match.cache) return dcache.write<Size>(match.address & context.physMask, data), true;
+      if(match.cache) return dcache.write<Size>(vaddr, match.address & context.physMask, data), true;
       step(1);
       return busWrite<Size>(match.address & context.physMask, data), true;
     }
@@ -207,9 +207,9 @@ auto CPU::write(u64 vaddr, u64 data) -> bool {
     addressException(vaddr);
     return false;
   case Context::Segment::Cached:
-    return dcache.write<Size>(vaddr & 0x1fff'ffff, data), true;
+    return dcache.write<Size>(vaddr, vaddr & 0x1fff'ffff, data), true;
   case Context::Segment::Cached32:
-    return dcache.write<Size>(vaddr & 0xffff'ffff, data), true;
+    return dcache.write<Size>(vaddr, vaddr & 0xffff'ffff, data), true;
   case Context::Segment::Direct:
     step(1);
     return busWrite<Size>(vaddr & 0x1fff'ffff, data), true;
