@@ -114,6 +114,7 @@ protected:
       n16 outputLevel = 0x1fff;
       i16 output = 0;
       i16 prior = 0;
+      i16 priorBuffer = 0;
 
       struct Pitch {
         n11 value = 0;

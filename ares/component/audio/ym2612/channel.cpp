@@ -156,6 +156,7 @@ auto YM2612::Channel::power() -> void {
     op.outputLevel = 0x1fff;
     op.output = 0;
     op.prior = 0;
+    op.priorBuffer = 0;
 
     op.pitch.value = 0;
     op.pitch.reload = 0;
