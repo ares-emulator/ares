@@ -50,6 +50,7 @@ auto YM2612::Channel::Operator::serialize(serializer& s) -> void {
   s(outputLevel);
   s(output);
   s(prior);
+  s(priorBuffer);
 
   s(pitch.value);
   s(pitch.reload);
