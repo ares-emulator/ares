@@ -108,8 +108,18 @@ auto YM2612::clock() -> array<i16[2]> {
     s32 voiceData = sclamp<14>(accumulator) & outMask;
     if(dac.enable && (&channel == &channels[5])) voiceData = (s32)dac.sample - 0x80 << 6;
 
-    if(channel.leftEnable ) left  += voiceData;
-    if(channel.rightEnable) right += voiceData;
+    // DAC output + voltage offset (crossover distortion)
+    if(voiceData < 0) {
+      left  += channel.leftEnable  * (voiceData + (1<<5)) - (4<<5);
+      right += channel.rightEnable * (voiceData + (1<<5)) - (4<<5);
+    } else {
+      left  += channel.leftEnable  * (voiceData + (0<<5)) + (4<<5);
+      right += channel.rightEnable * (voiceData + (0<<5)) + (4<<5);
+    }
+
+    // DAC output (ym3438 fix)
+    //if(channel.leftEnable ) left  += voiceData;
+    //if(channel.rightEnable) right += voiceData;
   }
 
   timerA.run();
