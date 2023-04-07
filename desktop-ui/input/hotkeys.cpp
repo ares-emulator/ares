@@ -111,6 +111,11 @@ auto InputManager::createHotkeys() -> void {
     program.pause(!program.paused);
   }));
 
+  hotkeys.append(InputHotkey("Reset System").onPress([&] {
+    if(!emulator) return;
+    emulator->root->power(true);
+  }));
+
   hotkeys.append(InputHotkey("Reload Current Game").onPress([&] {
     if(!emulator) return;
     program.load(emulator, emulator->game->location);
