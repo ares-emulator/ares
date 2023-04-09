@@ -11,7 +11,7 @@ auto PCD::read(n8 bank, n13 address, n8 data) -> n8 {
     return wram.read(bank - 0x80 << 13 | address);
   }
 
-  if(bank == 0xf7 && bramEnable()) {
+  if(bank == 0xf7 && bramEnable() && address < bram.size()) {
     return bram.read(address);
   }
 
@@ -27,7 +27,7 @@ auto PCD::write(n8 bank, n13 address, n8 data) -> void {
     return wram.write(bank - 0x80 << 13 | address, data);
   }
 
-  if(bank == 0xf7 && bramEnable()) {
+  if(bank == 0xf7 && bramEnable() && address < bram.size()) {
     return bram.write(address, data);
   }
 }
