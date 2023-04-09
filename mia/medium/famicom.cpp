@@ -256,9 +256,18 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
 
   case  21:
-    s += "  board:  KONAMI-VRC-4\n";
-    s += "    chip type=VRC4\n";
-    s += "      pinout a0=1 a1=2\n";
+    switch(submapper) {
+      case 0: case 1:
+        s += "  board:  KONAMI-VRC-4\n";
+        s += "    chip type=VRC4\n";
+        s += "      pinout a0=1 a1=2\n";
+        break;
+      case 2:
+        s += "  board:  KONAMI-VRC-4\n";
+        s += "    chip type=VRC4\n";
+        s += "      pinout a0=6 a1=7\n";
+        break;
+    }
     prgram = 8192;
     break;
 
@@ -269,9 +278,23 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
 
   case  23:
-    s += "  board:  KONAMI-VRC-2\n";
-    s += "    chip type=VRC2\n";
-    s += "      pinout a0=0 a1=1\n";
+    switch(submapper) {
+      case 0: case 1:
+        s += "  board:  KONAMI-VRC-4\n";
+        s += "    chip type=VRC2\n";
+        s += "      pinout a0=0 a1=1\n";
+        break;
+      case 2:
+        s += "  board:  KONAMI-VRC-4\n";
+        s += "    chip type=VRC2\n";
+        s += "      pinout a0=2 a1=3\n";
+        break;
+      case 3:
+        s += "  board:  KONAMI-VRC-2\n";
+        s += "    chip type=VRC2\n";
+        s += "      pinout a0=0 a1=1\n";
+        break;
+    }
     prgram = 8192;
     break;
 
@@ -282,9 +305,24 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
 
   case  25:
-    s += "  board:  KONAMI-VRC-4\n";
-    s += "    chip type=VRC4\n";
-    s += "      pinout a0=1 a1=0\n";
+    switch(submapper) {
+      case 0: case 1:
+        s += "  board:  KONAMI-VRC-4\n";
+        s += "    chip type=VRC4\n";
+        s += "      pinout a0=1 a1=0\n";
+        break;
+      case 2:
+        s += "  board:  KONAMI-VRC-4\n";
+        s += "    chip type=VRC4\n";
+        s += "      pinout a0=3 a1=2\n";
+        break;
+      case 3:
+        s += "  board:  KONAMI-VRC-2\n";
+        s += "    chip type=VRC2\n";
+        s += "      pinout a0=1 a1=0\n";
+        break;
+    }
+
     prgram = 8192;
     break;
 

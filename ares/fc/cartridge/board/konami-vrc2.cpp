@@ -70,7 +70,7 @@ struct KonamiVRC2 : Interface {
       programBank[0] = data.bit(0,4);
       break;
     case 0x9000: case 0x9001: case 0x9002: case 0x9003:
-      mirror = data.bit(0,1);
+      mirror = data.bit(0);
       break;
     case 0xa000: case 0xa001: case 0xa002: case 0xa003:
       programBank[1] = data.bit(0,4);
@@ -98,8 +98,6 @@ struct KonamiVRC2 : Interface {
     switch(mirror) {
     case 0: return address >> 0 & 0x0400 | address & 0x03ff;  //vertical mirroring
     case 1: return address >> 1 & 0x0400 | address & 0x03ff;  //horizontal mirroring
-    case 2: return 0x0000 | address & 0x03ff;                 //one-screen mirroring (first)
-    case 3: return 0x0400 | address & 0x03ff;                 //one-screen mirroring (second)
     }
     unreachable;
   }
@@ -136,7 +134,7 @@ struct KonamiVRC2 : Interface {
 
   n5 programBank[2];
   n8 characterBank[8];
-  n2 mirror;
+  n1 mirror;
   n1 latch;
 
 //unserialized:
