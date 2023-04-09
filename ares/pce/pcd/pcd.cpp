@@ -97,6 +97,7 @@ auto PCD::connect() -> void {
   // Only do this if the HUBM string is not present, to prevent overwriting
   // existing bram
   if (bram[0] != 'H' && bram[1] != 'U' && bram[2] != 'B' && bram[3] != 'M') {
+    bram.fill(0);
     bram[0] = 'H';
     bram[1] = 'U';
     bram[2] = 'B';
