@@ -16,28 +16,26 @@ auto M32X::SH7604::unload() -> void {
 auto M32X::SH7604::main() -> void {
   if(!m32x.io.adapterReset) return step(cyclesUntilSync);
 
-  if(!SH2::inDelaySlot() && !regs.ID) {
+  if(!regs.ID) {
+    #define raise(type, level, vector, ...) \
+      if(SH2::inDelaySlot()) cyclesUntilSync = 0; \
+      else { \
+        debugger.interrupt(type); \
+        __VA_ARGS__; \
+        return regs.ET = 1, interrupt(level, vector); \
+      }
     if(irq.vres.active && irq.vres.enable) {
-      debugger.interrupt("VRES");
-      irq.vres.active = 0;
-      return regs.ET = 1, interrupt(14, 71);
+      raise("VRES", 14, 71, irq.vres.active = 0);
+    } else if(irq.vint.active && irq.vint.enable && regs.SR.I < 12) {
+      raise("VINT", 12, 70);
+    } else if(irq.hint.active && irq.hint.enable && regs.SR.I < 10) {
+      raise("HINT", 10, 69);
+    } else if(irq.cmd.active && irq.cmd.enable && regs.SR.I < 8) {
+      raise("CMD", 8, 68);
+    } else if(irq.pwm.active && irq.pwm.enable && regs.SR.I < 6) {
+      raise("PWM", 6, 67);
     }
-    if(irq.vint.active && irq.vint.enable && regs.SR.I < 12) {
-      debugger.interrupt("VINT");
-      return regs.ET = 1, interrupt(12, 70);
-    }
-    if(irq.hint.active && irq.hint.enable && regs.SR.I < 10) {
-      debugger.interrupt("HINT");
-      return regs.ET = 1, interrupt(10, 69);
-    }
-    if(irq.cmd.active && irq.cmd.enable && regs.SR.I < 8) {
-      debugger.interrupt("CMD");
-      return regs.ET = 1, interrupt(8, 68);
-    }
-    if(irq.pwm.active && irq.pwm.enable && regs.SR.I < 6) {
-      debugger.interrupt("PWM");
-      return regs.ET = 1, interrupt(6, 67);
-    }
+    #undef raise
   }
 
   debugger.instruction();
