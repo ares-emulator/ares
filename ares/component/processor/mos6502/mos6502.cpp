@@ -32,11 +32,17 @@ namespace ares {
 #undef N
 #undef L
 
-auto MOS6502::power() -> void {
+auto MOS6502::power(bool reset) -> void {
+ if(reset) {
+   S-=3;
+   P.i = 1;
+   return;
+ }
+
   A   = 0x00;
   X   = 0x00;
   Y   = 0x00;
-  S   = 0xff;
+  S   = 0xfd;
   P   = 0x04;
   MDR = 0x00;
 }
