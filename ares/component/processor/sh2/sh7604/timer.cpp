@@ -27,7 +27,7 @@ auto SH2::FRT::run() -> void {
   }
 }
 auto SH2::WDT::run() -> void {
-  static constexpr u32 frequencies[8] = {2, 64, 128, 256, 512, 1024, 2096, 8192};
+  static constexpr u32 frequencies[8] = {2, 64, 128, 256, 512, 1024, 4096, 8192};
 
   if(!wtcsr.tme) return;
   if(wtcsr.wtit) return; // Watchdog mode currently unsupported
