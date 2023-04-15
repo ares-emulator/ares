@@ -1,6 +1,7 @@
 namespace Board {
 
 #include "ave-nina-001.cpp"
+#include "ave-nina-06.cpp"
 #include "bandai-74161.cpp"
 #include "bandai-fcg.cpp"
 #include "bandai-karaoke.cpp"
@@ -54,6 +55,7 @@ namespace Board {
 auto Interface::create(string board) -> Interface* {
   Interface* p = nullptr;
   if(!p) p = AveNina001::create(board);
+  if(!p) p = AveNina06::create(board);
   if(!p) p = Bandai74161::create(board);
   if(!p) p = BandaiFCG::create(board);
   if(!p) p = BandaiKaraoke::create(board);
