@@ -421,6 +421,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "  board:  JALECO-JF-16\n";
     break;
 
+  case  79:
+    s += "  board:  AVE-NINA-06\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
   case  80:
     s += "  board:  TAITO-X1-005\n";
     s += "    chip type=X1-005\n";
