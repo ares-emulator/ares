@@ -154,8 +154,8 @@ auto M68000::instructionANDI_TO_SR() -> void {
     writeSR(readSR() & data);
     idle(8);
     read<Word>(r.pc);
+    prefetch();
   }
-  prefetch();
 }
 
 template<u32 Size> auto M68000::instructionASL(n4 count, DataRegister with) -> void {
@@ -575,8 +575,8 @@ auto M68000::instructionEORI_TO_SR() -> void {
     writeSR(readSR() ^ data);
     idle(8);
     read<Word>(r.pc);
+    prefetch();
   }
-  prefetch();
 }
 
 auto M68000::instructionEXG(DataRegister x, DataRegister y) -> void {
@@ -831,22 +831,22 @@ auto M68000::instructionMOVE_TO_SR(EffectiveAddress from) -> void {
     idle(8);
     auto data = read<Word>(from);
     writeSR(data);
+    prefetch();
   }
-  prefetch();
 }
 
 auto M68000::instructionMOVE_FROM_USP(AddressRegister to) -> void {
   if(supervisor()) {
     write<Long>(to, r.sp);
+    prefetch();
   }
-  prefetch();
 }
 
 auto M68000::instructionMOVE_TO_USP(AddressRegister from) -> void {
   if(supervisor()) {
     r.sp = read<Long>(from);
+    prefetch();
   }
-  prefetch();
 }
 
 auto M68000::instructionMULS(EffectiveAddress from, DataRegister with) -> void {
@@ -1000,8 +1000,8 @@ auto M68000::instructionORI_TO_SR() -> void {
     writeSR(readSR() | data);
     idle(8);
     read<Word>(r.pc);
+    prefetch();
   }
-  prefetch();
 }
 
 auto M68000::instructionPEA(EffectiveAddress from) -> void {
@@ -1021,8 +1021,8 @@ auto M68000::instructionRESET() -> void {
     r.reset = 1;
     idle(128);
     r.reset = 0;
+    prefetch();
   }
-  prefetch();
 }
 
 template<u32 Size> auto M68000::instructionROL(n4 count, DataRegister with) -> void {
@@ -1115,8 +1115,8 @@ auto M68000::instructionRTE() -> void {
     r.pc = pop<Long>();
     writeSR(sr);
     prefetch();
+    prefetch();
   }
-  prefetch();
 }
 
 auto M68000::instructionRTR() -> void {
@@ -1183,8 +1183,8 @@ auto M68000::instructionSTOP() -> void {
     auto sr = extension<Word>();
     writeSR(sr);
     r.stop = true;
+    prefetch();
   }
-  prefetch();
 }
 
 template<u32 Size> auto M68000::instructionSUB(EffectiveAddress from, DataRegister with) -> void {
