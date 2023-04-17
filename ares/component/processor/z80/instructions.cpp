@@ -128,6 +128,8 @@ auto Z80::instructionCPDR() -> void { Q = 1;
   wait(5);
   PC -= 2;
   WZ = PC + 1;
+  XF = PC.bit(11);
+  YF = PC.bit(13);
 }
 
 auto Z80::instructionCPI() -> void { Q = 1;
@@ -150,6 +152,8 @@ auto Z80::instructionCPIR() -> void { Q = 1;
   wait(5);
   PC -= 2;
   WZ = PC + 1;
+  XF = PC.bit(11);
+  YF = PC.bit(13);
 }
 
 auto Z80::instructionCPL() -> void { Q = 1;
@@ -286,6 +290,20 @@ auto Z80::instructionINDR() -> void { Q = 1;
   if(!B) return;
   wait(5);
   PC -= 2;
+  XF = PC.bit(11);
+  YF = PC.bit(13);
+
+  if(CF && NF) {
+    PF = PF == parity(B-1 & 7);
+    HF = (B & 0xf) == 0;
+  }
+  if(CF && !NF) {
+    PF = PF == parity(B+1 & 7);
+    HF = (B & 0xf) == 0xf;
+  }
+  if(!CF) {
+    PF = PF == parity(B+0 & 7);
+  }
 }
 
 auto Z80::instructionINI() -> void { Q = 1;
@@ -309,6 +327,20 @@ auto Z80::instructionINIR() -> void { Q = 1;
   if(!B) return;
   wait(5);
   PC -= 2;
+  XF = PC.bit(11);
+  YF = PC.bit(13);
+
+  if(CF && NF) {
+    PF = PF == parity(B-1 & 7);
+    HF = (B & 0xf) == 0;
+  }
+  if(CF && !NF) {
+    PF = PF == parity(B+1 & 7);
+    HF = (B & 0xf) == 0xf;
+  }
+  if(!CF) {
+    PF = PF == parity(B+0 & 7);
+  }
 }
 
 auto Z80::instructionJP_c_nn(bool c) -> void { Q = 0;
@@ -435,6 +467,8 @@ auto Z80::instructionLDDR() -> void { Q = 1;
   wait(5);
   PC -= 2;
   WZ = PC + 1;
+  XF = PC.bit(11);
+  YF = PC.bit(13);
 }
 
 auto Z80::instructionLDI() -> void { Q = 1;
@@ -454,6 +488,8 @@ auto Z80::instructionLDIR() -> void { Q = 1;
   wait(5);
   PC -= 2;
   WZ = PC + 1;
+  XF = PC.bit(11);
+  YF = PC.bit(13);
 }
 
 auto Z80::instructionNEG() -> void { Q = 1;
@@ -480,6 +516,20 @@ auto Z80::instructionOTDR() -> void { Q = 1;
   if(!B) return;
   wait(5);
   PC -= 2;
+  XF = PC.bit(11);
+  YF = PC.bit(13);
+
+  if(CF && NF) {
+    PF = PF == parity(B-1 & 7);
+    HF = (B & 0xf) == 0;
+  }
+  if(CF && !NF) {
+    PF = PF == parity(B+1 & 7);
+    HF = (B & 0xf) == 0xf;
+  }
+  if(!CF) {
+    PF = PF == parity(B+0 & 7);
+  }
 }
 
 auto Z80::instructionOTIR() -> void { Q = 1;
@@ -487,6 +537,20 @@ auto Z80::instructionOTIR() -> void { Q = 1;
   if(!B) return;
   wait(5);
   PC -= 2;
+  XF = PC.bit(11);
+  YF = PC.bit(13);
+
+  if(CF && NF) {
+    PF = PF == parity(B-1 & 7);
+    HF = (B & 0xf) == 0;
+  }
+  if(CF && !NF) {
+    PF = PF == parity(B+1 & 7);
+    HF = (B & 0xf) == 0xf;
+  }
+  if(!CF) {
+    PF = PF == parity(B+0 & 7);
+  }
 }
 
 auto Z80::instructionOUT_ic_r(n8& x) -> void { Q = 0;
@@ -497,6 +561,7 @@ auto Z80::instructionOUT_ic_r(n8& x) -> void { Q = 0;
 auto Z80::instructionOUT_ic() -> void { Q = 0;
   if(mosfet == MOSFET::NMOS) out(BC, 0x00);
   if(mosfet == MOSFET::CMOS) out(BC, 0xff);
+  WZ = BC + 1;
 }
 
 auto Z80::instructionOUT_in_a() -> void { Q = 0;
@@ -548,13 +613,13 @@ auto Z80::instructionPUSH_rr(n16& x) -> void { Q = 0;
   push(x);
 }
 
-auto Z80::instructionRES_o_irr_r(n3 bit, n16& addr, n8& x) -> void { Q = 1;
+auto Z80::instructionRES_o_irr_r(n3 bit, n16& addr, n8& x) -> void { Q = 0;
   auto data = read(addr);
   wait(1);
   write(addr, x = RES(bit, data));
 }
 
-auto Z80::instructionRES_o_r(n3 bit, n8& x) -> void { Q = 1;
+auto Z80::instructionRES_o_r(n3 bit, n8& x) -> void { Q = 0;
   x = RES(bit, x);
 }
 
@@ -737,13 +802,13 @@ auto Z80::instructionSCF() -> void {
   Q = 1;
 }
 
-auto Z80::instructionSET_o_irr_r(n3 bit, n16& addr, n8& x) -> void { Q = 1;
+auto Z80::instructionSET_o_irr_r(n3 bit, n16& addr, n8& x) -> void { Q = 0;
   auto data = read(addr);
   wait(1);
   write(addr, x = SET(bit, data));
 }
 
-auto Z80::instructionSET_o_r(n3 bit, n8& x) -> void { Q = 1;
+auto Z80::instructionSET_o_r(n3 bit, n8& x) -> void { Q = 0;
   x = SET(bit, x);
 }
 
