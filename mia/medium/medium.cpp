@@ -233,19 +233,26 @@ auto CompactDisc::readDataSectorCHD(string filename, u32 sectorID) -> vector<u8>
   Decode::CHD chd;
   if(!chd.load(filename)) return {};
 
-  // Account for 2 second pregap
-  sectorID += (75 * 2);
+  // Find the first data track within the chd
+  for (auto& track : chd.tracks) {
+    if(track.type == "AUDIO") continue;
+    for(auto& index : track.indices) {
+      if (index.number != 1) continue;
 
-  // Read the sector from CHD and extract the user data portion (2048 bytes)
-  auto sector = chd.read(sectorID);
-  vector<u8> output;
-  output.resize(2048);
+      // Read the sector from CHD and extract the user data portion (2048 bytes)
+      auto sector = chd.read(index.lba + sectorID);
+      vector<u8> output;
+      output.resize(2048);
 
-  if (sector.size() == 2048) {
-    memory::copy(output.data(), output.size(), sector.data(), output.size());
-    return output;
+      if (sector.size() == 2048) {
+        memory::copy(output.data(), output.size(), sector.data(), output.size());
+        return output;
+      }
+
+      memory::copy(output.data(), output.size(), sector.data() + 16, output.size());
+      return output;
+    }
   }
 
-  memory::copy(output.data(), output.size(), sector.data() + 16, output.size());
-  return output;
+  return {};
 }
