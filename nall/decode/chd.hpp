@@ -115,11 +115,10 @@ inline auto CHD::load(const string& location) -> bool {
       return false;
     }
 
-    // Ensure two second pregap is present
     const bool pregap_in_file = (pregap_frames > 0 && pgtype[0] == 'V');
-    if (pregap_frames <= 0 && typeStr != "AUDIO") {
-      pregap_frames = 2 * 75;
-    }
+
+    // First track should have 2 second pregap as standard
+    if(track_no == 1 && !pregap_in_file) pregap_frames = 2 * 75;
 
     // Add the new track
     Track track;
@@ -128,7 +127,7 @@ inline auto CHD::load(const string& location) -> bool {
     track.pregap = pregap_frames;
     track.postgap = postgap_frames;
 
-    // Pregap
+    // index0 = Pregap
     if (pregap_frames > 0) {
       Index index;
       index.number = 0;
