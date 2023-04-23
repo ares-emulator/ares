@@ -189,12 +189,13 @@ auto CPU::read(u64 vaddr) -> maybe<u64> {
 }
 
 template<u32 Size>
-auto CPU::write(u64 vaddr, u64 data) -> bool {
-  if(vaddrAlignedError<Size>(vaddr, true)) return false;
+auto CPU::write(u64 vaddr0, u64 data, bool alignedError) -> bool {
+  if(alignedError && vaddrAlignedError<Size>(vaddr0, true)) return false;
+  u64 vaddr = vaddr0 & ~((u64)Size - 1);
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
     step(1);
-    addressException(vaddr);
+    addressException(vaddr0);
     exception.addressStore();
     return false;
   case Context::Segment::Mapped:
@@ -204,7 +205,7 @@ auto CPU::write(u64 vaddr, u64 data) -> bool {
       return busWrite<Size>(match.address & context.physMask, data), true;
     }
     step(1);
-    addressException(vaddr);
+    addressException(vaddr0);
     return false;
   case Context::Segment::Cached:
     return dcache.write<Size>(vaddr, vaddr & 0x1fff'ffff, data), true;
