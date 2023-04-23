@@ -1061,17 +1061,17 @@ auto CPU::SWL(cr64& rt, cr64& rs, s16 imm) -> void {
   if(context.bigEndian())
   switch(vaddr & 3) {
   case 0:
-    if(!write<Word>(vaddr & ~3 | 0, data >>  0)) return;
+    if(!write<Word>(vaddr + 0, data >>  0)) return;
     break;
   case 1:
-    if(!write<Byte>(vaddr & ~3 | 1, data >> 24)) return;
-    if(!write<Half>(vaddr & ~3 | 2, data >>  8)) return;
+    if(!write<Byte>(vaddr + 0, data >> 24)) return;
+    if(!write<Half>(vaddr + 1, data >>  8)) return;
     break;
   case 2:
-    if(!write<Half>(vaddr & ~3 | 2, data >> 16)) return;
+    if(!write<Half>(vaddr + 0, data >> 16)) return;
     break;
   case 3:
-    if(!write<Byte>(vaddr & ~3 | 3, data >> 24)) return;
+    if(!write<Byte>(vaddr + 0, data >> 24)) return;
     break;
   }
 }
@@ -1100,17 +1100,17 @@ auto CPU::SWR(cr64& rt, cr64& rs, s16 imm) -> void {
   if(context.bigEndian())
   switch(vaddr & 3) {
   case 0:
-    if(!write<Byte>(vaddr & ~3 | 0, data >>  0)) return;
+    if(!write<Byte>(vaddr + 0, data >>  0, false)) return;
     break;
   case 1:
-    if(!write<Half>(vaddr & ~3 | 0, data >>  0)) return;
+    if(!write<Half>(vaddr + 0, data >>  0, false)) return;
     break;
   case 2:
-    if(!write<Half>(vaddr & ~3 | 0, data >>  8)) return;
-    if(!write<Byte>(vaddr & ~3 | 2, data >>  0)) return;
+    if(!write<Byte>(vaddr + 0, data >>  0, false)) return;
+    if(!write<Half>(vaddr - 2, data >>  8, false)) return;
     break;
   case 3:
-    if(!write<Word>(vaddr & ~3 | 0, data >>  0)) return;
+    if(!write<Word>(vaddr + 0, data >>  0, false)) return;
     break;
   }
 }
