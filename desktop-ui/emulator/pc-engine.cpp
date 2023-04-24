@@ -3,15 +3,53 @@ struct PCEngine : Emulator {
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto allocatePorts() -> void;
+  auto connectPorts() -> void;
 };
 
 PCEngine::PCEngine() {
   manufacturer = "NEC";
   name = "PC Engine";
 
+  allocatePorts();
+}
+
+auto PCEngine::allocatePorts() -> void {
+  ports.reset();
+
+  InputPort port{string{"Controller Port"}};
+
+  { InputDevice device{"Gamepad"};
+    device.digital("Up",     virtualPorts[0].pad.up);
+    device.digital("Down",   virtualPorts[0].pad.down);
+    device.digital("Left",   virtualPorts[0].pad.left);
+    device.digital("Right",  virtualPorts[0].pad.right);
+    device.digital("II",     virtualPorts[0].pad.south);
+    device.digital("I",      virtualPorts[0].pad.east);
+    device.digital("Select", virtualPorts[0].pad.select);
+    device.digital("Run",    virtualPorts[0].pad.start);
+    port.append(device); }
+
+  { InputDevice device{"Avenue Pad 6"};
+    device.digital("Up",    virtualPorts[0].pad.up);
+    device.digital("Down",  virtualPorts[0].pad.down);
+    device.digital("Left",  virtualPorts[0].pad.left);
+    device.digital("Right", virtualPorts[0].pad.right);
+    device.digital("III",   virtualPorts[0].pad.west);
+    device.digital("II",    virtualPorts[0].pad.south);
+    device.digital("I",     virtualPorts[0].pad.east);
+    device.digital("IV",    virtualPorts[0].pad.l_bumper);
+    device.digital("V",     virtualPorts[0].pad.north);
+    device.digital("VI",    virtualPorts[0].pad.r_bumper);
+    device.digital("Select",virtualPorts[0].pad.select);
+    device.digital("Run",   virtualPorts[0].pad.start);
+    port.append(device); }
+
+    ports.append(port);
+
   for(auto id : range(5)) {
-   InputPort port{string{"Controller Port ", 1 + id}};
-   
+    InputPort port{string{"Controller Port ", 1 + id}};
+
   { InputDevice device{"Gamepad"};
     device.digital("Up",     virtualPorts[id].pad.up);
     device.digital("Down",   virtualPorts[id].pad.down);
@@ -23,7 +61,7 @@ PCEngine::PCEngine() {
     device.digital("Run",    virtualPorts[id].pad.start);
     port.append(device); }
 
-    { InputDevice device{"Avenue Pad 6"};
+  { InputDevice device{"Avenue Pad 6"};
     device.digital("Up",    virtualPorts[id].pad.up);
     device.digital("Down",  virtualPorts[id].pad.down);
     device.digital("Left",  virtualPorts[id].pad.left);
@@ -40,9 +78,13 @@ PCEngine::PCEngine() {
 
     ports.append(port);
   }
+}
 
-  portBlacklist = {"Controller Port"};
-  inputBlacklist = {"Multitap"};
+auto PCEngine::connectPorts() -> void {
+  if(auto port = root->find<ares::Node::Port>("Controller Port")) {
+    port->allocate("Gamepad");
+    port->connect();
+  }
 }
 
 auto PCEngine::load() -> bool {
@@ -63,17 +105,7 @@ auto PCEngine::load() -> bool {
     port->connect();
   }
 
-  if(auto port = root->find<ares::Node::Port>("Controller Port")) {
-    port->allocate("Multitap");
-    port->connect();
-  }
-
-  for(auto id : range(5)) {
-    if(auto port = root->scan<ares::Node::Port>(string{"Controller Port ", 1 + id})) {
-      port->allocate("Gamepad");
-      port->connect();
-    }
-  }
+  connectPorts();
 
   return true;
 }

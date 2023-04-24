@@ -8,6 +8,7 @@ struct Presentation : Window {
   auto unloadEmulator(bool reloading = false) -> void;
   auto showIcon(bool visible) -> void;
   auto loadShaders() -> void;
+  auto refreshSystemMenu() -> void;
 
   MenuBar menuBar{this};
     Menu loadMenu{&menuBar};

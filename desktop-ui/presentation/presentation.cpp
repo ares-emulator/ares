@@ -420,6 +420,18 @@ auto Presentation::loadEmulator() -> void {
   systemMenu.setText(emulator->name);
   systemMenu.setVisible();
 
+  refreshSystemMenu();
+
+  toolsMenu.setVisible(true);
+  pauseEmulation.setChecked(false);
+
+  setFocused();
+  viewport.setFocused();
+}
+
+auto Presentation::refreshSystemMenu() -> void {
+  systemMenu.reset();
+
   //allow each emulator core to create any specialized menus necessary:
   //for instance, floppy disk and CD-ROM swapping support.
   emulator->load(systemMenu);
@@ -446,6 +458,7 @@ auto Presentation::loadEmulator() -> void {
       peripheralItem.onActivate([=] {
         auto port = peripheralItem.attribute<ares::Node::Port>("port");
         port->disconnect();
+        refreshSystemMenu();
       });
       peripheralGroup.append(peripheralItem);
     }
@@ -461,6 +474,7 @@ auto Presentation::loadEmulator() -> void {
         port->disconnect();
         port->allocate(peripheralItem.text());
         port->connect();
+        refreshSystemMenu();
       });
       peripheralGroup.append(peripheralItem);
     }
@@ -472,6 +486,7 @@ auto Presentation::loadEmulator() -> void {
       }
     }
   }
+
   if(portsFound > 0) systemMenu.append(MenuSeparator());
 
   MenuItem reset{&systemMenu};
@@ -483,16 +498,10 @@ auto Presentation::loadEmulator() -> void {
 
   MenuItem unload{&systemMenu};
   unload.setText("Unload").setIcon(Icon::Media::Eject).onActivate([&] {
-    program.unload();
-    if(settings.video.adaptiveSizing) presentation.resizeWindow();
+  program.unload();
+  if(settings.video.adaptiveSizing) presentation.resizeWindow();
     presentation.showIcon(true);
   });
-
-  toolsMenu.setVisible(true);
-  pauseEmulation.setChecked(false);
-
-  setFocused();
-  viewport.setFocused();
 }
 
 auto Presentation::unloadEmulator(bool reloading) -> void {

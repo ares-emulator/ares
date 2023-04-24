@@ -1,4 +1,4 @@
-struct SuperGrafxCD : Emulator {
+struct SuperGrafxCD : PCEngine {
   SuperGrafxCD();
   auto load() -> bool override;
   auto save() -> bool override;
@@ -14,40 +14,7 @@ SuperGrafxCD::SuperGrafxCD() {
 
   firmware.append({"BIOS", "Japan"});  //NTSC-J
 
-  for(auto id : range(5)) {
-   InputPort port{string{"Controller Port ", 1 + id}};
-
-  { InputDevice device{"Gamepad"};
-    device.digital("Up",     virtualPorts[id].pad.up);
-    device.digital("Down",   virtualPorts[id].pad.down);
-    device.digital("Left",   virtualPorts[id].pad.left);
-    device.digital("Right",  virtualPorts[id].pad.right);
-    device.digital("II",     virtualPorts[id].pad.south);
-    device.digital("I",      virtualPorts[id].pad.east);
-    device.digital("Select", virtualPorts[id].pad.select);
-    device.digital("Run",    virtualPorts[id].pad.start);
-    port.append(device); }
-
-    { InputDevice device{"Avenue Pad 6"};
-    device.digital("Up",    virtualPorts[id].pad.up);
-    device.digital("Down",  virtualPorts[id].pad.down);
-    device.digital("Left",  virtualPorts[id].pad.left);
-    device.digital("Right", virtualPorts[id].pad.right);
-    device.digital("III",   virtualPorts[id].pad.west);
-    device.digital("II",    virtualPorts[id].pad.south);
-    device.digital("I",     virtualPorts[id].pad.east);
-    device.digital("IV",    virtualPorts[id].pad.l_bumper);
-    device.digital("V",     virtualPorts[id].pad.north);
-    device.digital("VI",    virtualPorts[id].pad.r_bumper);
-    device.digital("Select",virtualPorts[id].pad.select);
-    device.digital("Run",   virtualPorts[id].pad.start);
-    port.append(device); }
-
-    ports.append(port);
-  }
-
-  portBlacklist = {"Controller Port"};
-  inputBlacklist = {"Multitap"};
+  allocatePorts();
 }
 
 auto SuperGrafxCD::load() -> bool {
@@ -74,17 +41,7 @@ auto SuperGrafxCD::load() -> bool {
     port->connect();
   }
 
-  if(auto port = root->find<ares::Node::Port>("Controller Port")) {
-    port->allocate("Multitap");
-    port->connect();
-  }
-
-  for(auto id : range(5)) {
-    if(auto port = root->scan<ares::Node::Port>(string{"Controller Port ", 1 + id})) {
-      port->allocate("Gamepad");
-      port->connect();
-    }
-  }
+  connectPorts();
 
   return true;
 }
