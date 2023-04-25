@@ -1,5 +1,5 @@
 database
-  revision: 2022-10-09
+  revision: 2023-04-24
 
 game
   sha256: 4f6fa63277b7a114a24e8d67175ff3f7b993fa5db569d8b689ec20ccf1b0c0d3
@@ -33812,6 +33812,40 @@ game
       content: Character
 
 game
+  sha256: 4c00009eb345474229372fc34ebe2abb4996eef7486ce8977e69edfc88816935
+  name:   Super Mario Bros. + Tetris + Nintendo World Cup (Europe)
+  title:  Super Mario Bros. + Tetris + Nintendo World Cup (Europe)
+  region: PAL
+  board:  PAL-ZZ
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
+  sha256: 18fc0f452d796e522d776c1a848ca7ca8b1c25b44d553b6fd15becd2ea65076e
+  name:   Super Mario Bros. + Tetris + Nintendo World Cup (Europe) (Rev 1)
+  title:  Super Mario Bros. + Tetris + Nintendo World Cup (Europe) (Rev 1)
+  region: PAL
+  board:  PAL-ZZ
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
+      content: Character
+
+game
   sha256: bbaed03936b187f165f197973561b924307f802912578631c03fd28f3a45f245
   name:   Super Mario Bros. 2 (Europe)
   title:  Super Mario Bros. 2 (Europe)
@@ -34159,6 +34193,23 @@ game
     memory
       type: ROM
       size: 0x20000
+      content: Character
+
+game
+  sha256: 8951dccb6640b48c857f321ef01c06110c5b8870f5d901dcc538ab1b8db7e2a1
+  name:   Super Spike V'Ball + Nintendo World Cup (USA)
+  title:  Super Spike V'Ball + Nintendo World Cup (USA)
+  region: NTSC-U
+  board:  NES-QJ
+    chip
+      type: MMC3B
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+    memory
+      type: ROM
+      size: 0x40000
       content: Character
 
 game

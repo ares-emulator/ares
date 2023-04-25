@@ -354,6 +354,16 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     }
     break;
 
+  case  37:
+    s += "  board:  PAL-ZZ\n";
+    s += "    chip type=MMC3B\n";
+    break;
+
+  case  47:
+    s += "  board:  NES-QJ\n";
+    s += "    chip type=MMC3B\n";
+    break;
+
   case  48:
     s += "  board:  TAITO-TC0690\n";
     s += "    chip type=TC0690\n";
