@@ -15,6 +15,8 @@ struct HVC_TxROM : Interface {  //MMC3
     if(id == "HVC-TR1ROM") return new HVC_TxROM(Revision::TR1ROM);
     if(id == "HVC-TSROM" ) return new HVC_TxROM(Revision::TSROM);
     if(id == "HVC-TVROM" ) return new HVC_TxROM(Revision::TVROM);
+    if(id == "NES-QJ"    ) return new HVC_TxROM(Revision::NESQJ);
+    if(id == "PAL-ZZ"    ) return new HVC_TxROM(Revision::PALZZ);
     return nullptr;
   }
 
@@ -39,6 +41,8 @@ struct HVC_TxROM : Interface {  //MMC3
     TR1ROM,
     TSROM,
     TVROM,
+    NESQJ,
+    PALZZ,
   } revision;
 
   HVC_TxROM(Revision revision) : revision(revision) {}
@@ -90,7 +94,15 @@ struct HVC_TxROM : Interface {  //MMC3
     case 2: bank = (programMode == 1 ? programBank[0] : (n6)0x3e); break;
     case 3: bank = 0x3f; break;
     }
+
     address = bank << 13 | (n13)address;
+    if(revision == Revision::NESQJ) {
+      address = outerBank.bit(0) << 17 | (n17)address;
+    }
+    if(revision == Revision::PALZZ) {
+      n1 a16 = (address.bit(16) & outerBank.bit(2)) | (outerBank.bit(1) & outerBank.bit(0));
+      address = outerBank.bit(2) << 17 | a16 << 16 | (n16)address;
+    }
     return programROM.read(address);
   }
 
@@ -99,7 +111,10 @@ struct HVC_TxROM : Interface {  //MMC3
     if(address < 0x6000) return;
 
     if(address < 0x8000) {
-      if(!ramEnable || !ramWritable || !programRAM) return;
+      if(!ramEnable || !ramWritable) return;
+      if(revision == Revision::NESQJ) outerBank = data.bit(0);
+      if(revision == Revision::PALZZ) outerBank = data.bit(0,2);
+      if(!programRAM) return;
       return programRAM.write((n13)address, data);
     }
 
@@ -194,6 +209,14 @@ struct HVC_TxROM : Interface {  //MMC3
       if(address < 0x10000) return characterROM.read(address);
       return characterRAM.read(address);
     }
+    if(revision == Revision::NESQJ) {
+      address = outerBank.bit(0) << 17 | (n17)addressCHR(address);
+      return characterROM.read(address);
+    }
+    if(revision == Revision::PALZZ) {
+      address = outerBank.bit(2) << 17 | (n17)addressCHR(address);
+      return characterROM.read(address);
+    }
     if(characterRAM) return characterRAM.read(addressCHR(address));
     return characterROM.read(addressCHR(address));
   }
@@ -216,6 +239,7 @@ struct HVC_TxROM : Interface {  //MMC3
   }
 
   auto power() -> void override {
+    outerBank = 0;
     ramEnable = 1;
     ramWritable = 1;
   }
@@ -228,6 +252,7 @@ struct HVC_TxROM : Interface {  //MMC3
     s(bankSelect);
     s(programBank);
     s(characterBank);
+    s(outerBank);
     s(mirror);
     s(ramEnable);
     s(ramWritable);
@@ -245,6 +270,7 @@ struct HVC_TxROM : Interface {  //MMC3
   n3  bankSelect;
   n6  programBank[2];
   n8  characterBank[6];
+  n3  outerBank;
   n1  mirror;
   n1  ramEnable;
   n1  ramWritable;
