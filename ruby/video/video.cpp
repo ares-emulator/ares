@@ -426,6 +426,8 @@ auto Video::monitor(string name) -> Monitor {
   for(auto& monitor : monitors) {
     if(monitor.primary) return monitor;
   }
+  //if only one monitor is found, but it is not primary, use that
+  if(monitors.size() == 1) return monitors.left();
   //Video::monitors() should never let this occur
   Monitor monitor;
   monitor.name = "Primary";
