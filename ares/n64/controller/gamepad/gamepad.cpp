@@ -195,44 +195,53 @@ auto Gamepad::read() -> n32 {
   platform->input(z);
   platform->input(start);
 
-  //scale {-32768 ... +32767} to {-85 ... +85}
-  auto ax = x->value() * 85.0 / 32767.0;
-  auto ay = y->value() * 85.0 / 32767.0;
+  auto cardinalMaxN64   = 85.0;
+  auto diagonalMaxN64   = 69.0;
+  auto innerDeadzone    =  7.0; // default should remain 7 (~8.2% of 85) as the deadzone is axial in nature and fights cardinalMaxN64
+  auto startCardinalMax = (diagonalMaxN64 + innerDeadzone + sqrt(pow(diagonalMaxN64 , 2) + 2 * diagonalMaxN64 * innerDeadzone * (1 - sqrt(2)) + pow(innerDeadzone , 2)))/sqrt(2); //from linear scaling equation, substitute startCardinalMax*sqrt(2)/2 for lengthAbsoluteX and set diagonalMaxN64 as the result then solve for startCardinalMax
 
-  //create inner axial dead-zone in range {-7 ... +7} and scale from it up to outer circular dead-zone of radius 85
+  //scale {-32768 ... +32767} to {-startCardinalMax ... +startCardinalMax}
+  auto ax = x->value() * startCardinalMax / 32767.0;
+  auto ay = y->value() * startCardinalMax / 32767.0;
+
+  //create inner axial dead-zone in range {-innerDeadzone ... +innerDeadzone} and scale from it up to outer circular dead-zone of radius startCardinalMax
   auto length = sqrt(ax * ax + ay * ay);
-  if(length <= 85.0) {
+  if(length <= startCardinalMax) {
     auto lengthAbsoluteX = abs(ax);
     auto lengthAbsoluteY = abs(ay);
-    if(lengthAbsoluteX <= 7.0) {
+    if(lengthAbsoluteX <= innerDeadzone) {
       lengthAbsoluteX = 0.0;
     } else {
-      lengthAbsoluteX = (lengthAbsoluteX - 7.0) * 85.0 / (85.0 - 7.0) / lengthAbsoluteX;
+      lengthAbsoluteX = (lengthAbsoluteX - innerDeadzone) * startCardinalMax / (startCardinalMax - innerDeadzone) / lengthAbsoluteX;
     }
     ax *= lengthAbsoluteX;
-    if(lengthAbsoluteY <= 7.0) {
+    if(lengthAbsoluteY <= innerDeadzone) {
       lengthAbsoluteY = 0.0;
     } else {
-      lengthAbsoluteY = (lengthAbsoluteY - 7.0) * 85.0 / (85.0 - 7.0) / lengthAbsoluteY;
+      lengthAbsoluteY = (lengthAbsoluteY - innerDeadzone) * startCardinalMax / (startCardinalMax - innerDeadzone) / lengthAbsoluteY;
     }
     ay *= lengthAbsoluteY;
   } else {
-    length = 85.0 / length;
+    length = startCardinalMax / length;
     ax *= length;
     ay *= length;
   }
 
-  //bound diagonals to an octagonal range {-69 ... +69}
+  //bound diagonals to an octagonal range {-diagonalMaxN64 ... +diagonalMaxN64}
   if(ax != 0.0 && ay != 0.0) {
     auto slope = ay / ax;
-    auto edgex = copysign(85.0 / (abs(slope) + 16.0 / 69.0), ax);
-    auto edgey = copysign(min(abs(edgex * slope), 85.0 / (1.0 / abs(slope) + 16.0 / 69.0)), ay);
+    auto edgex = copysign(cardinalMaxN64 / (abs(slope) + (cardinalMaxN64 - diagonalMaxN64) / diagonalMaxN64), ax);
+    auto edgey = copysign(min(abs(edgex * slope), cardinalMaxN64 / (1.0 / abs(slope) + (cardinalMaxN64 - diagonalMaxN64) / diagonalMaxN64)), ay);
     edgex = edgey / slope;
 
-    auto scale = sqrt(edgex * edgex + edgey * edgey) / 85.0;
+    auto scale = sqrt(edgex * edgex + edgey * edgey) / startCardinalMax;
     ax *= scale;
     ay *= scale;
   }
+
+  //keep cardinal input within positive and negative bounds of cardinalMaxN64
+  if(abs(ax) > cardinalMaxN64) ax = copysign(cardinalMaxN64, ax);
+  if(abs(ay) > cardinalMaxN64) ay = copysign(cardinalMaxN64, ay);
 
   n32 data;
   data.byte(0) = s8(-ay);
