@@ -46,3 +46,6 @@ $(object.path)/zlib_zutil.o: $(libchdr.path)/deps/zlib-1.2.11/zutil.c
 flags += -I$(libchdr.path)/include
 flags += -I$(libchdr.path)/deps/lzma-19.00/include -D_7ZIP_ST
 flags += -I$(libchdr.path)/deps/zlib-1.2.11
+
+# instruct glibc to declare fseeko/ftello
+flags += -D_LARGEFILE_SOURCE
