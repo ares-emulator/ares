@@ -1,3 +1,10 @@
+auto PPU::readVRAM_BG(u32 mode, n32 address) -> n32 {
+  if(Background::IO::mode < 3 && address >= 0x10000) return 0;
+  else if(address >= 0x14000) return 0;
+
+  return readVRAM(mode, address);
+}
+
 auto PPU::readVRAM(u32 mode, n32 address) -> n32 {
   address &= (address & 0x10000) ? 0x17fff : 0x0ffff;
 

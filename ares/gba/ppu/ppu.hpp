@@ -36,6 +36,7 @@ struct PPU : Thread, IO {
 
   //memory.cpp
   auto readVRAM(u32 mode, n32 address) -> n32;
+  auto readVRAM_BG(u32 mode, n32 address) -> n32;
   auto writeVRAM(u32 mode, n32 address, n32 word) -> void;
 
   auto readPRAM(u32 mode, n32 address) -> n32;

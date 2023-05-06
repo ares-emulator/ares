@@ -76,14 +76,14 @@ auto PPU::Background::linear(u32 x, u32 y) -> void {
 
   if(io.colorMode == 0) {
     u32 offset = (io.characterBase << 14) + (latch.character << 5) + (py << 2) + (px >> 1);
-    if(n4 color = ppu.readVRAM(Byte, offset) >> (px & 1 ? 4 : 0)) {
+    if(n4 color = ppu.readVRAM_BG(Byte, offset) >> (px & 1 ? 4 : 0)) {
       output.enable = true;
       output.priority = io.priority;
       output.color = ppu.pram[latch.palette << 4 | color];
     }
   } else {
     u32 offset = (io.characterBase << 14) + (latch.character << 6) + (py << 3) + (px);
-    if(n8 color = ppu.readVRAM(Byte, offset)) {
+    if(n8 color = ppu.readVRAM_BG(Byte, offset)) {
       output.enable = true;
       output.priority = io.priority;
       output.color = ppu.pram[color];
@@ -116,8 +116,8 @@ auto PPU::Background::affine(u32 x, u32 y) -> void {
   n3 py = cy;
 
   if(tx < screenSize && ty < screenSize) {
-    n8 character = ppu.vram[(io.screenBase << 11) + ty * screenSize + tx];
-    if(n8 color = ppu.vram[(io.characterBase << 14) + (character << 6) + (py << 3) + px]) {
+    n8 character = ppu.readVRAM(Byte, (io.screenBase << 11) + ty * screenSize + tx);
+    if(n8 color = ppu.readVRAM_BG(Byte, (io.characterBase << 14) + (character << 6) + (py << 3) + px)) {
       output.enable = true;
       output.priority = io.priority;
       output.color = ppu.pram[color];
@@ -155,7 +155,7 @@ auto PPU::Background::bitmap(u32 x, u32 y) -> void {
 
   if(px < width && py < height) {
     u32 offset = py * width + px;
-    n15 color = ppu.readVRAM(mode, baseAddress + (offset << depth));
+    n15 color = ppu.readVRAM_BG(mode, baseAddress + (offset << depth));
 
     if(depth || color) {  //8bpp color 0 is transparent; 15bpp color is always opaque
       if(depth == 0) color = ppu.pram[color];
