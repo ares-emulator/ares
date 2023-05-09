@@ -115,6 +115,8 @@ auto CPU::lower(u32 interruptID) -> void {
 }
 
 auto CPU::stoppable() -> bool {
+  status.div = 0;
+
   if(status.speedSwitch) {
     status.speedSwitch = 0;
     status.speedDouble ^= 1;
@@ -122,6 +124,7 @@ auto CPU::stoppable() -> bool {
     if(status.speedDouble == 1) setFrequency(8 * 1024 * 1024);
     return false;
   }
+
   return true;
 }
 
