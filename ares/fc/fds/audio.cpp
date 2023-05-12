@@ -134,7 +134,7 @@ auto FDSAudio::read(n16 address, n8 data) -> n8 {
 }
 
 auto FDSAudio::write(n16 address, n8 data) -> void {
-  if(!enable && address != 0x4025) return;
+  if(!enable && address != 0x4023) return;
 
   if(address >= 0x4040 && address <= 0x407f && waveform.writable) {
     waveform.data[(n6)address] = data.bit(0,5);
@@ -143,7 +143,7 @@ auto FDSAudio::write(n16 address, n8 data) -> void {
 
   switch(address) {
 
-  case 0x4025:
+  case 0x4023:
     enable = data.bit(1);
     return;
 
