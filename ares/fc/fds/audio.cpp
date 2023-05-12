@@ -175,10 +175,12 @@ auto FDSAudio::write(n16 address, n8 data) -> void {
     modulator.envelope = !data.bit(7);
     if(!modulator.envelope) modulator.gain = modulator.speed;
     modulator.reloadPeriod();
+    modulator.updateOutput(carrier.frequency);
     return;
 
   case 0x4085:
     modulator.updateCounter(data.bit(0,6));
+    modulator.updateOutput(carrier.frequency);
     return;
 
   case 0x4086:
