@@ -24,11 +24,15 @@ auto Pak::read(string location) -> vector<u8> {
 
 auto Pak::read(string location, vector<string> match) -> vector<u8> {
   vector<u8> memory;
-  vector<u8> patch;
+  vector<u8> ips_patch;
+  vector<u8> bps_patch;
 
   if(file::exists(location)) {
-    //support BPS patches next to the file
-    patch = file::read({Location::notsuffix(location), ".bps"});
+    //support IPS or BPS patches next to the file
+    bps_patch = file::read({Location::notsuffix(location), ".bps"});
+    if (!bps_patch) {
+      ips_patch = file::read({Location::notsuffix(location), ".ips"});
+    }
 
     if(location.iendsWith(".zip")) {
       Decode::ZIP archive;
@@ -46,7 +50,10 @@ auto Pak::read(string location, vector<string> match) -> vector<u8> {
           //support BPS patches inside the ZIP archive
           for(auto& file : archive.file) {
             if(file.name.imatch("*.bps")) {
-              patch = archive.extract(file);
+              bps_patch = archive.extract(file);
+              break;
+            } else if (file.name.imatch("*.ips")) {
+              ips_patch = archive.extract(file);
               break;
             }
           }
@@ -62,9 +69,13 @@ auto Pak::read(string location, vector<string> match) -> vector<u8> {
     }
   }
 
-  //attempt to apply BPS patch if one was found
-  if(patch) {
-    if(auto output = Beat::Single::apply(memory, patch)) {
+  //attempt to apply IPS or BPS patch if one was found, favoring BPS
+  if(bps_patch) {
+    if(auto output = Beat::Single::apply(memory, bps_patch)) {
+      memory = std::move(*output);
+    }
+  } else if (ips_patch) {
+    if (auto output = IPS::apply(memory, ips_patch)) {
       memory = std::move(*output);
     }
   }
