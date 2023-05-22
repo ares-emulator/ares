@@ -81,11 +81,10 @@ static SLJIT_INLINE int get_map_jit_flag()
 
 static SLJIT_INLINE void apple_update_wx_flags(sljit_s32 enable_exec)
 {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 110000
-	pthread_jit_write_protect_np(enable_exec);
-#else
-#error "Must target Big Sur or newer"
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
+	if (__builtin_available(macos 11, *))
 #endif /* BigSur */
+	pthread_jit_write_protect_np(enable_exec);
 }
 #endif /* SLJIT_CONFIG_X86 */
 #else /* !TARGET_OS_OSX */
