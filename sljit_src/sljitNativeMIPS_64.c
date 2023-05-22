@@ -128,6 +128,26 @@ static SLJIT_INLINE sljit_s32 emit_const(struct sljit_compiler *compiler, sljit_
 	return push_inst(compiler, ORI | S(dst) | T(dst) | IMM(init_value), DR(dst));
 }
 
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fset64(struct sljit_compiler *compiler,
+	sljit_s32 freg, sljit_f64 value)
+{
+	union {
+		sljit_sw imm;
+		sljit_f64 value;
+	} u;
+
+	CHECK_ERROR();
+	CHECK(check_sljit_emit_fset64(compiler, freg, value));
+
+	u.value = value;
+
+	if (u.imm == 0)
+		return push_inst(compiler, DMTC1 | TA(0) | FS(freg), MOVABLE_INS);
+
+	FAIL_IF(load_immediate(compiler, DR(TMP_REG1), u.imm));
+	return push_inst(compiler, DMTC1 | T(TMP_REG1) | FS(freg), MOVABLE_INS);
+}
+
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fcopy(struct sljit_compiler *compiler, sljit_s32 op,
 	sljit_s32 freg, sljit_s32 reg)
 {

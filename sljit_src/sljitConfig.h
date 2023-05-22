@@ -45,7 +45,7 @@ extern "C" {
 /* Architecture selection. */
 /* #define SLJIT_CONFIG_X86_32 1 */
 /* #define SLJIT_CONFIG_X86_64 1 */
-/* #define SLJIT_CONFIG_ARM_V5 1 */
+/* #define SLJIT_CONFIG_ARM_V6 1 */
 /* #define SLJIT_CONFIG_ARM_V7 1 */
 /* #define SLJIT_CONFIG_ARM_THUMB2 1 */
 /* #define SLJIT_CONFIG_ARM_64 1 */

@@ -1,5 +1,13 @@
 This file is the short summary of the API changes:
 
+16.02.2022 - Non-backward compatible
+    The sljit_emit_cmov operation is replaced
+    by sljit_emit_select.
+
+11.02.2022 - Non-backward compatible
+    All floating point comparisons are supported,
+    sljit_cmp_info return value is changed.
+
 02.02.2022 - Backward compatible
     All SLJIT_SET_* constants are
     even numbers.
