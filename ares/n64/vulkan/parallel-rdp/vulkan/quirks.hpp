@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2023 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -44,9 +44,9 @@ struct ImplementationQuirks
 struct ImplementationWorkarounds
 {
 	bool emulate_event_as_pipeline_barrier = false;
-	bool optimize_all_graphics_barrier = false;
 	bool split_binary_timeline_semaphores = false;
 	bool broken_pipeline_cache_control = false;
 	bool force_host_cached = false;
+	bool force_sync1_access = false;
 };
 }

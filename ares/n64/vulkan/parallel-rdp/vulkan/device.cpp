@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2023 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -39,7 +39,7 @@
 #include <windows.h>
 #endif
 
-#ifdef GRANITE_VULKAN_FILESYSTEM
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
 #include "string_helpers.hpp"
 #endif
 
@@ -75,20 +75,12 @@ static const QueueIndices queue_flush_order[] = {
 	QUEUE_INDEX_COMPUTE
 };
 
-#ifdef GRANITE_VULKAN_BETA
-static constexpr VkImageUsageFlags vk_video_image_usage_flags =
-		VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR | VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR | VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR |
-		VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR | VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR | VK_IMAGE_USAGE_VIDEO_ENCODE_DST_BIT_KHR;
-#else
-static constexpr VkImageUsageFlags vk_video_image_usage_flags = 0;
-#endif
-
 Device::Device()
     : framebuffer_allocator(this)
     , transient_allocator(this)
-#ifdef GRANITE_VULKAN_FILESYSTEM
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
 	, shader_manager(this)
-	, texture_manager(this)
+	, resource_manager(this)
 #endif
 {
 	cookie.store(0);
@@ -229,7 +221,7 @@ Semaphore Device::request_proxy_semaphore()
 	return ptr;
 }
 
-void Device::add_wait_semaphore(CommandBuffer::Type type, Semaphore semaphore, VkPipelineStageFlags stages, bool flush)
+void Device::add_wait_semaphore(CommandBuffer::Type type, Semaphore semaphore, VkPipelineStageFlags2 stages, bool flush)
 {
 	VK_ASSERT(!semaphore->is_proxy_timeline());
 
@@ -237,8 +229,8 @@ void Device::add_wait_semaphore(CommandBuffer::Type type, Semaphore semaphore, V
 	add_wait_semaphore_nolock(get_physical_queue_type(type), std::move(semaphore), stages, flush);
 }
 
-void Device::add_wait_semaphore_nolock(QueueIndices physical_type, Semaphore semaphore, VkPipelineStageFlags stages,
-                                       bool flush)
+void Device::add_wait_semaphore_nolock(QueueIndices physical_type, Semaphore semaphore,
+                                       VkPipelineStageFlags2 stages, bool flush)
 {
 	VK_ASSERT(stages != 0);
 	if (flush)
@@ -330,8 +322,8 @@ void Device::unmap_linear_host_image_and_sync(const LinearHostImage &image, Memo
 		// Kinda icky fallback, shouldn't really be used on discrete cards.
 		auto cmd = request_command_buffer(CommandBuffer::Type::AsyncTransfer);
 		cmd->image_barrier(image.get_image(), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		                   VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0,
-		                   VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT);
+		                   VK_PIPELINE_STAGE_NONE, 0,
+		                   VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_TRANSFER_WRITE_BIT);
 		cmd->copy_buffer_to_image(image.get_image(), image.get_host_visible_buffer(),
 		                          0, {},
 		                          { image.get_image().get_width(), image.get_image().get_height(), 1 },
@@ -339,8 +331,8 @@ void Device::unmap_linear_host_image_and_sync(const LinearHostImage &image, Memo
 
 		// Don't care about dstAccessMask, semaphore takes care of everything.
 		cmd->image_barrier(image.get_image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-		                   VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
-		                   VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0);
+		                   VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+		                   VK_PIPELINE_STAGE_NONE, 0);
 
 		Semaphore sem;
 		submit(cmd, nullptr, 1, &sem);
@@ -374,15 +366,13 @@ void Device::unmap_host_buffer(const Buffer &buffer, MemoryAccessFlags access, V
 	managers.memory.unmap_memory(buffer.get_allocation(), access, offset, length);
 }
 
-Shader *Device::request_shader(const uint32_t *data, size_t size,
-                               const ResourceLayout *layout,
-                               const ImmutableSamplerBank *sampler_bank)
+Shader *Device::request_shader(const uint32_t *data, size_t size, const ResourceLayout *layout)
 {
-	auto hash = Shader::hash(data, size, sampler_bank);
+	auto hash = Shader::hash(data, size);
 	LOCK_CACHE();
 	auto *ret = shaders.find(hash);
 	if (!ret)
-		ret = shaders.emplace_yield(hash, hash, this, data, size, layout, sampler_bank);
+		ret = shaders.emplace_yield(hash, hash, this, data, size, layout);
 	return ret;
 }
 
@@ -392,34 +382,33 @@ Shader *Device::request_shader_by_hash(Hash hash)
 	return shaders.find(hash);
 }
 
-Program *Device::request_program(Vulkan::Shader *compute_shader)
+Program *Device::request_program(Vulkan::Shader *compute_shader, const ImmutableSamplerBank *sampler_bank)
 {
 	if (!compute_shader)
 		return nullptr;
 
 	Util::Hasher hasher;
 	hasher.u64(compute_shader->get_hash());
+	ImmutableSamplerBank::hash(hasher, sampler_bank);
 
 	LOCK_CACHE();
 	auto hash = hasher.get();
 	auto *ret = programs.find(hash);
 	if (!ret)
-		ret = programs.emplace_yield(hash, this, compute_shader);
+		ret = programs.emplace_yield(hash, this, compute_shader, sampler_bank);
 	return ret;
 }
 
-Program *Device::request_program(const uint32_t *compute_data, size_t compute_size,
-                                 const ResourceLayout *layout,
-                                 const ImmutableSamplerBank *sampler_bank)
+Program *Device::request_program(const uint32_t *compute_data, size_t compute_size, const ResourceLayout *layout)
 {
 	if (!compute_size)
 		return nullptr;
 
-	auto *compute_shader = request_shader(compute_data, compute_size, layout, sampler_bank);
+	auto *compute_shader = request_shader(compute_data, compute_size, layout);
 	return request_program(compute_shader);
 }
 
-Program *Device::request_program(Shader *vertex, Shader *fragment)
+Program *Device::request_program(Shader *vertex, Shader *fragment, const ImmutableSamplerBank *sampler_bank)
 {
 	if (!vertex || !fragment)
 		return nullptr;
@@ -427,18 +416,20 @@ Program *Device::request_program(Shader *vertex, Shader *fragment)
 	Util::Hasher hasher;
 	hasher.u64(vertex->get_hash());
 	hasher.u64(fragment->get_hash());
+	ImmutableSamplerBank::hash(hasher, sampler_bank);
 
 	auto hash = hasher.get();
 	LOCK_CACHE();
 	auto *ret = programs.find(hash);
 
 	if (!ret)
-		ret = programs.emplace_yield(hash, this, vertex, fragment);
+		ret = programs.emplace_yield(hash, this, vertex, fragment, sampler_bank);
 	return ret;
 }
 
-Program *Device::request_program(const uint32_t *vertex_data, size_t vertex_size, const uint32_t *fragment_data,
-                                 size_t fragment_size, const ResourceLayout *vertex_layout,
+Program *Device::request_program(const uint32_t *vertex_data, size_t vertex_size,
+                                 const uint32_t *fragment_data, size_t fragment_size,
+                                 const ResourceLayout *vertex_layout,
                                  const ResourceLayout *fragment_layout)
 {
 	if (!vertex_size || !fragment_size)
@@ -494,7 +485,7 @@ DescriptorSetAllocator *Device::request_descriptor_set_allocator(const Descripto
 	return ret;
 }
 
-void Device::bake_program(Program &program)
+void Device::bake_program(Program &program, const ImmutableSamplerBank *sampler_bank)
 {
 	CombinedResourceLayout layout;
 	if (program.get_shader(ShaderStage::Vertex))
@@ -514,7 +505,6 @@ void Device::bake_program(Program &program)
 		uint32_t stage_mask = 1u << i;
 
 		auto &shader_layout = shader->get_layout();
-		auto &immutable_bank = shader->get_immutable_sampler_bank();
 
 		for (unsigned set = 0; set < VULKAN_NUM_DESCRIPTOR_SETS; set++)
 		{
@@ -528,22 +518,6 @@ void Device::bake_program(Program &program)
 			layout.sets[set].sampler_mask |= shader_layout.sets[set].sampler_mask;
 			layout.sets[set].separate_image_mask |= shader_layout.sets[set].separate_image_mask;
 			layout.sets[set].fp_mask |= shader_layout.sets[set].fp_mask;
-
-			auto immutable_mask = shader_layout.sets[set].immutable_sampler_mask;
-			layout.sets[set].immutable_sampler_mask |= immutable_mask;
-
-			for_each_bit(immutable_mask, [&](uint32_t binding) {
-				if (ext_immutable_samplers.samplers[set][binding] &&
-				    immutable_bank.samplers[set][binding] != ext_immutable_samplers.samplers[set][binding])
-				{
-					LOGE("Immutable sampler mismatch detected!\n");
-				}
-				else
-				{
-					VK_ASSERT(immutable_bank.samplers[set][binding]);
-					ext_immutable_samplers.samplers[set][binding] = immutable_bank.samplers[set][binding];
-				}
-			});
 
 			uint32_t active_binds =
 					shader_layout.sets[set].sampled_image_mask |
@@ -583,6 +557,21 @@ void Device::bake_program(Program &program)
 		layout.spec_constant_mask[i] = shader_layout.spec_constant_mask;
 		layout.combined_spec_constant_mask |= shader_layout.spec_constant_mask;
 		layout.bindless_descriptor_set_mask |= shader_layout.bindless_set_mask;
+	}
+
+	if (sampler_bank)
+	{
+		for (unsigned set = 0; set < VULKAN_NUM_DESCRIPTOR_SETS; set++)
+		{
+			for_each_bit(layout.sets[set].sampler_mask | layout.sets[set].sampled_image_mask, [&](uint32_t binding)
+			{
+				if (sampler_bank->samplers[set][binding])
+				{
+					ext_immutable_samplers.samplers[set][binding] = sampler_bank->samplers[set][binding];
+					layout.sets[set].immutable_sampler_mask |= 1u << binding;
+				}
+			});
+		}
 	}
 
 	for (unsigned set = 0; set < VULKAN_NUM_DESCRIPTOR_SETS; set++)
@@ -675,7 +664,7 @@ bool Device::init_pipeline_cache(const uint8_t *data, size_t size)
 
 void Device::init_pipeline_cache()
 {
-#ifdef GRANITE_VULKAN_FILESYSTEM
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
 	if (!system_handles.filesystem)
 		return;
 	auto file = system_handles.filesystem->open_readonly_mapping("cache://pipeline_cache.bin");
@@ -740,7 +729,7 @@ bool Device::get_pipeline_cache_data(uint8_t *data, size_t size)
 
 void Device::flush_pipeline_cache()
 {
-#ifdef GRANITE_VULKAN_FILESYSTEM
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
 	if (!system_handles.filesystem)
 		return;
 
@@ -781,11 +770,9 @@ void Device::init_workarounds()
 	if (gpu_props.vendorID == VENDOR_ID_ARM)
 	{
 		LOGW("Workaround applied: Emulating events as pipeline barriers.\n");
-		LOGW("Workaround applied: Optimize ALL_GRAPHICS_BIT barriers.\n");
 
 		// Both are performance related workarounds.
 		workarounds.emulate_event_as_pipeline_barrier = true;
-		workarounds.optimize_all_graphics_barrier = true;
 
 		if (ext.timeline_semaphore_features.timelineSemaphore)
 		{
@@ -797,6 +784,21 @@ void Device::init_workarounds()
 	{
 		LOGW("Disabling pipeline cache control.\n");
 		workarounds.broken_pipeline_cache_control = true;
+	}
+	else if (((ext.driver_properties.driverID == VK_DRIVER_ID_MESA_RADV ||
+	           ext.driver_properties.driverID == VK_DRIVER_ID_INTEL_OPEN_SOURCE_MESA ||
+	           ext.driver_properties.driverID == VK_DRIVER_ID_MESA_TURNIP) &&
+	          gpu_props.driverVersion < VK_MAKE_VERSION(23, 1, 0)) ||
+	         ext.driver_properties.driverID == VK_DRIVER_ID_AMD_PROPRIETARY ||
+	         ext.driver_properties.driverID == VK_DRIVER_ID_AMD_OPEN_SOURCE)
+	{
+		LOGW("Enabling workaround for sync2 access mask bugs.\n");
+		// https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/21271
+		// Found bug around 23.0. Should be fixed by 23.1.
+		// Also observed on AMD windows. Probably fails on open source too given it shares PAL ...
+		workarounds.force_sync1_access = true;
+		// Avoids having to add workaround path to events as well, just fallback to plain barriers.
+		workarounds.emulate_event_as_pipeline_barrier = true;
 	}
 #endif
 
@@ -892,6 +894,10 @@ void Device::set_context(const Context &context)
 
 	if (system_handles.timeline_trace_file)
 		init_calibrated_timestamps();
+
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
+	resource_manager.init();
+#endif
 }
 
 void Device::begin_shader_caches()
@@ -905,7 +911,7 @@ void Device::begin_shader_caches()
 #ifdef GRANITE_VULKAN_FOSSILIZE
 	init_pipeline_state(ctx->get_feature_filter(), ctx->get_physical_device_features(),
 	                    ctx->get_application_info());
-#elif defined(GRANITE_VULKAN_FILESYSTEM)
+#elif defined(GRANITE_VULKAN_SYSTEM_HANDLES)
 	// Fossilize init will deal with init_shader_manager_cache()
 	init_shader_manager_cache();
 #endif
@@ -1227,6 +1233,13 @@ void Device::submit_nolock(CommandBufferHandle cmd, Fence *fence, unsigned semap
 	decrement_frame_counter_nolock();
 }
 
+void Device::submit_external(CommandBuffer::Type type)
+{
+	LOCK();
+	auto &data = queue_data[get_physical_queue_type(type)];
+	data.need_fence = true;
+}
+
 void Device::submit_empty(CommandBuffer::Type type, Fence *fence, SemaphoreHolder *semaphore)
 {
 	VK_ASSERT(!semaphore || !semaphore->is_proxy_timeline());
@@ -1240,7 +1253,7 @@ void Device::submit_empty_nolock(QueueIndices physical_type, Fence *fence,
 	if (physical_type != QUEUE_INDEX_TRANSFER)
 		flush_frame(QUEUE_INDEX_TRANSFER);
 
-	InternalFence signalled_fence;
+	InternalFence signalled_fence = {};
 
 	submit_queue(physical_type, fence ? &signalled_fence : nullptr, semaphore,
 	             0, nullptr, profiling_iteration);
@@ -1272,7 +1285,7 @@ void Device::submit_empty_inner(QueueIndices physical_type, InternalFence *fence
 
 	for (auto consume : frame().consumed_semaphores)
 	{
-		composer.add_wait_semaphore(consume, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+		composer.add_wait_semaphore(consume, VK_PIPELINE_STAGE_NONE);
 		frame().recycled_semaphores.push_back(consume);
 	}
 	frame().consumed_semaphores.clear();
@@ -1293,7 +1306,7 @@ void Device::submit_empty_inner(QueueIndices physical_type, InternalFence *fence
 	register_time_interval_nolock("CPU", std::move(start_ts), std::move(end_ts), "submit", "");
 
 	if (result != VK_SUCCESS)
-		LOGE("vkQueueSubmit failed (code: %d).\n", int(result));
+		LOGE("vkQueueSubmit2KHR failed (code: %d).\n", int(result));
 	if (result == VK_ERROR_DEVICE_LOST)
 		report_checkpoints();
 
@@ -1307,101 +1320,30 @@ Fence Device::request_legacy_fence()
 	return Fence(handle_pool.fences.allocate(this, fence));
 }
 
-void Device::submit_staging(CommandBufferHandle &cmd, VkBufferUsageFlags usage, bool flush)
+void Device::submit_staging(CommandBufferHandle &cmd, bool flush)
 {
-	auto access = buffer_usage_to_possible_access(usage);
-	auto stages = buffer_usage_to_possible_stages(usage);
-	VkQueue src_queue = queue_info.queues[get_physical_queue_type(cmd->get_command_buffer_type())];
-
-	if (src_queue == queue_info.queues[QUEUE_INDEX_GRAPHICS] && src_queue == queue_info.queues[QUEUE_INDEX_COMPUTE])
-	{
-		// For single-queue systems, just use a pipeline barrier.
-		cmd->barrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT, stages, access);
-		submit_nolock(cmd, nullptr, 0, nullptr);
-	}
-	else
-	{
-		auto compute_stages = stages &
-		                      (VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
-		                       VK_PIPELINE_STAGE_TRANSFER_BIT |
-		                       VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT);
-
-		auto compute_access = access &
-		                      (VK_ACCESS_SHADER_READ_BIT |
-		                       VK_ACCESS_SHADER_WRITE_BIT |
-		                       VK_ACCESS_TRANSFER_READ_BIT |
-		                       VK_ACCESS_UNIFORM_READ_BIT |
-		                       VK_ACCESS_TRANSFER_WRITE_BIT |
-		                       VK_ACCESS_INDIRECT_COMMAND_READ_BIT);
-
-		auto graphics_stages = stages;
-
-		if (src_queue == queue_info.queues[QUEUE_INDEX_GRAPHICS])
-		{
-			cmd->barrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
-			             graphics_stages, access);
-
-			if (compute_stages != 0)
-			{
-				Semaphore sem;
-				submit_nolock(cmd, nullptr, 1, &sem);
-				add_wait_semaphore_nolock(QUEUE_INDEX_COMPUTE, sem, compute_stages, flush);
-			}
-			else
-				submit_nolock(cmd, nullptr, 0, nullptr);
-		}
-		else if (src_queue == queue_info.queues[QUEUE_INDEX_COMPUTE])
-		{
-			cmd->barrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
-			             compute_stages, compute_access);
-
-			if (graphics_stages != 0)
-			{
-				Semaphore sem;
-				submit_nolock(cmd, nullptr, 1, &sem);
-				add_wait_semaphore_nolock(QUEUE_INDEX_GRAPHICS, sem, graphics_stages, flush);
-			}
-			else
-				submit_nolock(cmd, nullptr, 0, nullptr);
-		}
-		else
-		{
-			if (graphics_stages != 0 && compute_stages != 0)
-			{
-				Semaphore semaphores[2];
-				submit_nolock(cmd, nullptr, 2, semaphores);
-				add_wait_semaphore_nolock(QUEUE_INDEX_GRAPHICS, semaphores[0], graphics_stages, flush);
-				add_wait_semaphore_nolock(QUEUE_INDEX_COMPUTE, semaphores[1], compute_stages, flush);
-			}
-			else if (graphics_stages != 0)
-			{
-				Semaphore sem;
-				submit_nolock(cmd, nullptr, 1, &sem);
-				add_wait_semaphore_nolock(QUEUE_INDEX_GRAPHICS, sem, graphics_stages, flush);
-			}
-			else if (compute_stages != 0)
-			{
-				Semaphore sem;
-				submit_nolock(cmd, nullptr, 1, &sem);
-				add_wait_semaphore_nolock(QUEUE_INDEX_COMPUTE, sem, compute_stages, flush);
-			}
-			else
-				submit_nolock(cmd, nullptr, 0, nullptr);
-		}
-	}
+	Semaphore semaphores[2];
+	submit_nolock(cmd, nullptr, 2, semaphores);
+	semaphores[0]->set_internal_sync_object();
+	semaphores[1]->set_internal_sync_object();
+	add_wait_semaphore_nolock(QUEUE_INDEX_GRAPHICS, semaphores[0], VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, flush);
+	add_wait_semaphore_nolock(QUEUE_INDEX_COMPUTE, semaphores[1], VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, flush);
 }
 
 void Device::collect_wait_semaphores(QueueData &data, Helper::WaitSemaphores &sem)
 {
+	VkSemaphoreSubmitInfo info = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+
 	for (size_t i = 0, n = data.wait_semaphores.size(); i < n; i++)
 	{
 		auto &semaphore = data.wait_semaphores[i];
 		auto vk_semaphore = semaphore->consume();
 		if (semaphore->get_semaphore_type() == VK_SEMAPHORE_TYPE_TIMELINE_KHR)
 		{
-			sem.timeline_waits.push_back(vk_semaphore);
-			sem.timeline_wait_stages.push_back(data.wait_stages[i]);
-			sem.timeline_wait_counts.push_back(semaphore->get_timeline_value());
+			info.semaphore = vk_semaphore;
+			info.stageMask = data.wait_stages[i];
+			info.value = semaphore->get_timeline_value();
+			sem.timeline_waits.push_back(info);
 		}
 		else
 		{
@@ -1410,8 +1352,10 @@ void Device::collect_wait_semaphores(QueueData &data, Helper::WaitSemaphores &se
 			else
 				frame().recycled_semaphores.push_back(vk_semaphore);
 
-			sem.binary_waits.push_back(vk_semaphore);
-			sem.binary_wait_stages.push_back(data.wait_stages[i]);
+			info.semaphore = vk_semaphore;
+			info.stageMask = data.wait_stages[i];
+			info.value = 0;
+			sem.binary_waits.push_back(info);
 		}
 	}
 
@@ -1419,30 +1363,30 @@ void Device::collect_wait_semaphores(QueueData &data, Helper::WaitSemaphores &se
 	data.wait_semaphores.clear();
 }
 
-static bool has_timeline_semaphore(const SmallVector<uint64_t> &counts)
+static bool has_timeline_semaphore(const SmallVector<VkSemaphoreSubmitInfo> &sems)
 {
-	return std::find_if(counts.begin(), counts.end(), [](uint64_t count) {
-		return count != 0;
-	}) != counts.end();
+	return std::find_if(sems.begin(), sems.end(), [](const VkSemaphoreSubmitInfo &info) {
+		return info.value != 0;
+	}) != sems.end();
 }
 
-static bool has_binary_semaphore(const SmallVector<uint64_t> &counts)
+static bool has_binary_semaphore(const SmallVector<VkSemaphoreSubmitInfo> &sems)
 {
-	return std::find_if(counts.begin(), counts.end(), [](uint64_t count) {
-		return count == 0;
-	}) != counts.end();
+	return std::find_if(sems.begin(), sems.end(), [](const VkSemaphoreSubmitInfo &info) {
+		return info.value != 0;
+	}) != sems.end();
 }
 
 bool Helper::BatchComposer::has_timeline_semaphore_in_batch(unsigned index) const
 {
-	return has_timeline_semaphore(wait_counts[index]) ||
-	       has_timeline_semaphore(signal_counts[index]);
+	return has_timeline_semaphore(waits[index]) ||
+	       has_timeline_semaphore(signals[index]);
 }
 
 bool Helper::BatchComposer::has_binary_semaphore_in_batch(unsigned index) const
 {
-	return has_binary_semaphore(wait_counts[index]) ||
-	       has_binary_semaphore(signal_counts[index]);
+	return has_binary_semaphore(waits[index]) ||
+	       has_binary_semaphore(signals[index]);
 }
 
 Helper::BatchComposer::BatchComposer(bool split_binary_timeline_semaphores_)
@@ -1463,18 +1407,14 @@ void Helper::BatchComposer::begin_batch()
 
 void Helper::BatchComposer::add_wait_submissions(WaitSemaphores &sem)
 {
+	auto &w = waits[submit_index];
+
 	if (!sem.binary_waits.empty())
 	{
 		// Split binary semaphore waits from timeline semaphore waits to work around driver bugs if needed.
 		if (split_binary_timeline_semaphores && has_timeline_semaphore_in_batch(submit_index))
 			begin_batch();
-
-		for (size_t i = 0, n = sem.binary_waits.size(); i < n; i++)
-		{
-			waits[submit_index].push_back(sem.binary_waits[i]);
-			wait_stages[submit_index].push_back(sem.binary_wait_stages[i]);
-			wait_counts[submit_index].push_back(0);
-		}
+		w.insert(w.end(), sem.binary_waits.begin(), sem.binary_waits.end());
 	}
 
 	if (!sem.timeline_waits.empty())
@@ -1482,70 +1422,39 @@ void Helper::BatchComposer::add_wait_submissions(WaitSemaphores &sem)
 		// Split binary semaphore waits from timeline semaphore waits to work around driver bugs if needed.
 		if (split_binary_timeline_semaphores && has_binary_semaphore_in_batch(submit_index))
 			begin_batch();
-
-		for (size_t i = 0, n = sem.timeline_waits.size(); i < n; i++)
-		{
-			waits[submit_index].push_back(sem.timeline_waits[i]);
-			wait_stages[submit_index].push_back(sem.timeline_wait_stages[i]);
-			wait_counts[submit_index].push_back(sem.timeline_wait_counts[i]);
-		}
+		w.insert(w.end(), sem.timeline_waits.begin(), sem.timeline_waits.end());
 	}
 }
 
-SmallVector<VkSubmitInfo, Helper::BatchComposer::MaxSubmissions> &
+SmallVector<VkSubmitInfo2, Helper::BatchComposer::MaxSubmissions> &
 Helper::BatchComposer::bake(int profiling_iteration)
 {
 	for (size_t i = 0, n = submits.size(); i < n; i++)
 	{
 		auto &submit = submits[i];
-		auto &timeline_submit = timeline_infos[i];
 
-		submit = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-
-		if (has_timeline_semaphore_in_batch(i))
-		{
-			timeline_submit = { VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO_KHR };
-			submit.pNext = &timeline_submit;
-
-			if (split_binary_timeline_semaphores && has_binary_semaphore_in_batch(i))
-				LOGE("Using timeline semaphore info, but have binary semaphores as well.\n");
-
-			timeline_submit.waitSemaphoreValueCount = wait_counts[i].size();
-			timeline_submit.pWaitSemaphoreValues = wait_counts[i].data();
-			if (wait_counts[i].size() != waits[i].size())
-				LOGE("Mismatch in wait counts and number of waits!\n");
-
-			timeline_submit.signalSemaphoreValueCount = signal_counts[i].size();
-			timeline_submit.pSignalSemaphoreValues = signal_counts[i].data();
-			if (signal_counts[i].size() != signals[i].size())
-				LOGE("Mismatch in signal counts and number of signals!\n");
-		}
+		submit = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submit.commandBufferInfoCount = uint32_t(cmds[i].size());
+		submit.pCommandBufferInfos = cmds[i].data();
+		submit.signalSemaphoreInfoCount = uint32_t(signals[i].size());
+		submit.pSignalSemaphoreInfos = signals[i].data();
+		submit.waitSemaphoreInfoCount = uint32_t(waits[i].size());
+		submit.pWaitSemaphoreInfos = waits[i].data();
 
 		if (profiling_iteration >= 0)
 		{
 			profiling_infos[i] = { VK_STRUCTURE_TYPE_PERFORMANCE_QUERY_SUBMIT_INFO_KHR };
 			profiling_infos[i].counterPassIndex = uint32_t(profiling_iteration);
-
 			profiling_infos[i].pNext = submit.pNext;
 			submit.pNext = &profiling_infos[i];
 		}
-
-		submit.commandBufferCount = cmds[i].size();
-		submit.pCommandBuffers = cmds[i].data();
-
-		submit.waitSemaphoreCount = waits[i].size();
-		submit.pWaitSemaphores = waits[i].data();
-		submit.pWaitDstStageMask = wait_stages[i].data();
-
-		submit.signalSemaphoreCount = signals[i].size();
-		submit.pSignalSemaphores = signals[i].data();
 	}
 
 	// Compact the submission array to avoid empty submissions.
 	size_t submit_count = 0;
 	for (size_t i = 0, n = submits.size(); i < n; i++)
 	{
-		if (submits[i].waitSemaphoreCount || submits[i].signalSemaphoreCount || submits[i].commandBufferCount)
+		if (submits[i].waitSemaphoreInfoCount || submits[i].signalSemaphoreInfoCount || submits[i].commandBufferInfoCount)
 		{
 			if (i != submit_count)
 				submits[submit_count] = submits[i];
@@ -1561,10 +1470,13 @@ void Helper::BatchComposer::add_command_buffer(VkCommandBuffer cmd)
 {
 	if (!signals[submit_index].empty())
 		begin_batch();
-	cmds[submit_index].push_back(cmd);
+
+	VkCommandBufferSubmitInfo info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+	info.commandBuffer = cmd;
+	cmds[submit_index].push_back(info);
 }
 
-void Helper::BatchComposer::add_signal_semaphore(VkSemaphore sem, uint64_t timeline)
+void Helper::BatchComposer::add_signal_semaphore(VkSemaphore sem, VkPipelineStageFlags2 stages, uint64_t timeline)
 {
 	if (split_binary_timeline_semaphores)
 	{
@@ -1573,11 +1485,14 @@ void Helper::BatchComposer::add_signal_semaphore(VkSemaphore sem, uint64_t timel
 			begin_batch();
 	}
 
-	signals[submit_index].push_back(sem);
-	signal_counts[submit_index].push_back(timeline);
+	VkSemaphoreSubmitInfo info = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+	info.semaphore = sem;
+	info.stageMask = stages;
+	info.value = timeline;
+	signals[submit_index].push_back(info);
 }
 
-void Helper::BatchComposer::add_wait_semaphore(SemaphoreHolder &sem, VkPipelineStageFlags stage)
+void Helper::BatchComposer::add_wait_semaphore(SemaphoreHolder &sem, VkPipelineStageFlags2 stage)
 {
 	if (!cmds[submit_index].empty() || !signals[submit_index].empty())
 		begin_batch();
@@ -1591,12 +1506,14 @@ void Helper::BatchComposer::add_wait_semaphore(SemaphoreHolder &sem, VkPipelineS
 			begin_batch();
 	}
 
-	waits[submit_index].push_back(sem.get_semaphore());
-	wait_stages[submit_index].push_back(stage);
-	wait_counts[submit_index].push_back(is_timeline ? sem.get_timeline_value() : 0);
+	VkSemaphoreSubmitInfo info = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+	info.semaphore = sem.get_semaphore();
+	info.stageMask = stage;
+	info.value = is_timeline ? sem.get_timeline_value() : 0;
+	waits[submit_index].push_back(info);
 }
 
-void Helper::BatchComposer::add_wait_semaphore(VkSemaphore sem, VkPipelineStageFlags stage)
+void Helper::BatchComposer::add_wait_semaphore(VkSemaphore sem, VkPipelineStageFlags2 stage)
 {
 	if (!cmds[submit_index].empty() || !signals[submit_index].empty())
 		begin_batch();
@@ -1604,9 +1521,11 @@ void Helper::BatchComposer::add_wait_semaphore(VkSemaphore sem, VkPipelineStageF
 	if (split_binary_timeline_semaphores && has_timeline_semaphore_in_batch(submit_index))
 		begin_batch();
 
-	waits[submit_index].push_back(sem);
-	wait_stages[submit_index].push_back(stage);
-	wait_counts[submit_index].push_back(0);
+	VkSemaphoreSubmitInfo info = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+	info.semaphore = sem;
+	info.stageMask = stage;
+	info.value = 0;
+	waits[submit_index].push_back(info);
 }
 
 void Device::emit_queue_signals(Helper::BatchComposer &composer,
@@ -1621,6 +1540,7 @@ void Device::emit_queue_signals(Helper::BatchComposer &composer,
 		VK_ASSERT(external_semaphore->get_semaphore());
 		external_semaphore->signal_external();
 		composer.add_signal_semaphore(external_semaphore->get_semaphore(),
+		                              VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 		                              external_semaphore->get_semaphore_type() == VK_SEMAPHORE_TYPE_TIMELINE_KHR ?
 		                              external_semaphore->get_timeline_value() : 0);
 
@@ -1632,7 +1552,7 @@ void Device::emit_queue_signals(Helper::BatchComposer &composer,
 	if (ext.timeline_semaphore_features.timelineSemaphore)
 	{
 		// Signal once and distribute the timeline value to all.
-		composer.add_signal_semaphore(sem, timeline);
+		composer.add_signal_semaphore(sem, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, timeline);
 
 		if (fence)
 		{
@@ -1659,10 +1579,81 @@ void Device::emit_queue_signals(Helper::BatchComposer &composer,
 		for (unsigned i = 0; i < semaphore_count; i++)
 		{
 			VkSemaphore cleared_semaphore = managers.semaphore.request_cleared_semaphore();
-			composer.add_signal_semaphore(cleared_semaphore, 0);
+			composer.add_signal_semaphore(cleared_semaphore, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0);
 			VK_ASSERT(!semaphores[i]);
 			semaphores[i] = Semaphore(handle_pool.semaphores.allocate(this, cleared_semaphore, true, true));
 		}
+	}
+}
+
+VkResult Device::queue_submit(VkQueue queue, uint32_t count, const VkSubmitInfo2 *submits, VkFence fence)
+{
+	if (ext.sync2_features.synchronization2)
+	{
+		return table->vkQueueSubmit2KHR(queue, count, submits, fence);
+	}
+	else
+	{
+		for (uint32_t submit_index = 0; submit_index < count; submit_index++)
+		{
+			VkTimelineSemaphoreSubmitInfoKHR timeline = { VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO_KHR };
+			const auto &submit = submits[submit_index];
+			VkSubmitInfo sub = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+			bool need_timeline = false;
+
+			Util::SmallVector<VkPipelineStageFlags> wait_stages;
+			Util::SmallVector<uint64_t> signal_values;
+			Util::SmallVector<uint64_t> wait_values;
+			Util::SmallVector<VkSemaphore> signals;
+			Util::SmallVector<VkCommandBuffer> cmd;
+			Util::SmallVector<VkSemaphore> waits;
+
+			for (uint32_t i = 0; i < submit.commandBufferInfoCount; i++)
+				cmd.push_back(submit.pCommandBufferInfos[i].commandBuffer);
+
+			for (uint32_t i = 0; i < submit.waitSemaphoreInfoCount; i++)
+			{
+				waits.push_back(submit.pWaitSemaphoreInfos[i].semaphore);
+				wait_stages.push_back(convert_vk_dst_stage2(submit.pWaitSemaphoreInfos[i].stageMask));
+				wait_values.push_back(submit.pWaitSemaphoreInfos[i].value);
+				if (wait_values.back() != 0)
+					need_timeline = true;
+			}
+
+			for (uint32_t i = 0; i < submit.signalSemaphoreInfoCount; i++)
+			{
+				signals.push_back(submit.pSignalSemaphoreInfos[i].semaphore);
+				signal_values.push_back(submit.pSignalSemaphoreInfos[i].value);
+				if (signal_values.back() != 0)
+					need_timeline = true;
+			}
+
+			sub.commandBufferCount = uint32_t(cmd.size());
+			sub.pCommandBuffers = cmd.data();
+			sub.signalSemaphoreCount = uint32_t(signals.size());
+			sub.pSignalSemaphores = signals.data();
+			sub.waitSemaphoreCount = uint32_t(waits.size());
+			sub.pWaitSemaphores = waits.data();
+			sub.pWaitDstStageMask = wait_stages.data();
+
+			sub.pNext = submit.pNext;
+			if (need_timeline)
+			{
+				timeline.pNext = sub.pNext;
+				sub.pNext = &timeline;
+
+				timeline.signalSemaphoreValueCount = uint32_t(signal_values.size());
+				timeline.pSignalSemaphoreValues = signal_values.data();
+				timeline.waitSemaphoreValueCount = uint32_t(wait_values.size());
+				timeline.pWaitSemaphoreValues = wait_values.data();
+			}
+
+			auto result = table->vkQueueSubmit(queue, 1, &sub, submit_index + 1 == count ? fence : VK_NULL_HANDLE);
+			if (result != VK_SUCCESS)
+				return result;
+		}
+
+		return VK_SUCCESS;
 	}
 }
 
@@ -1678,13 +1669,13 @@ VkResult Device::submit_batches(Helper::BatchComposer &composer, VkQueue queue, 
 		for (auto &submit : submits)
 		{
 			bool last_submit = &submit == &submits.back();
-			result = table->vkQueueSubmit(queue, 1, &submit, last_submit ? fence : VK_NULL_HANDLE);
+			result = queue_submit(queue, 1, &submit, last_submit ? fence : VK_NULL_HANDLE);
 			if (result != VK_SUCCESS)
 				break;
 		}
 	}
 	else
-		result = table->vkQueueSubmit(queue, submits.size(), submits.data(), fence);
+		result = queue_submit(queue, uint32_t(submits.size()), submits.data(), fence);
 
 	if (ImplementationQuirks::get().queue_wait_on_submission)
 		table->vkQueueWaitIdle(queue);
@@ -1707,7 +1698,7 @@ void Device::submit_queue(QueueIndices physical_type, InternalFence *fence,
 
 	if (submissions.empty())
 	{
-		if (fence || semaphore_count)
+		if (fence || semaphore_count || external_semaphore)
 			submit_empty_inner(physical_type, fence, external_semaphore, semaphore_count, semaphores);
 		return;
 	}
@@ -1730,7 +1721,7 @@ void Device::submit_queue(QueueIndices physical_type, InternalFence *fence,
 	for (size_t i = 0, submissions_size = submissions.size(); i < submissions_size; i++)
 	{
 		auto &cmd = submissions[i];
-		VkPipelineStageFlags wsi_stages = cmd->swapchain_touched_in_stages();
+		VkPipelineStageFlags2 wsi_stages = cmd->swapchain_touched_in_stages();
 
 		if (wsi_stages != 0 && !wsi.consumed)
 		{
@@ -1757,7 +1748,7 @@ void Device::submit_queue(QueueIndices physical_type, InternalFence *fence,
 			VkSemaphore release = managers.semaphore.request_cleared_semaphore();
 			wsi.release = Semaphore(handle_pool.semaphores.allocate(this, release, true, true));
 			wsi.release->set_internal_sync_object();
-			composer.add_signal_semaphore(release, 0);
+			composer.add_signal_semaphore(release, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0);
 			wsi.present_queue = queue;
 			wsi.consumed = true;
 		}
@@ -1779,7 +1770,7 @@ void Device::submit_queue(QueueIndices physical_type, InternalFence *fence,
 
 	for (auto consume : frame().consumed_semaphores)
 	{
-		composer.add_wait_semaphore(consume, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+		composer.add_wait_semaphore(consume, VK_PIPELINE_STAGE_NONE);
 		frame().recycled_semaphores.push_back(consume);
 	}
 	frame().consumed_semaphores.clear();
@@ -1793,7 +1784,7 @@ void Device::submit_queue(QueueIndices physical_type, InternalFence *fence,
 	register_time_interval_nolock("CPU", std::move(start_ts), std::move(end_ts), "submit", "");
 
 	if (result != VK_SUCCESS)
-		LOGE("vkQueueSubmit failed (code: %d).\n", int(result));
+		LOGE("vkQueueSubmit2KHR failed (code: %d).\n", int(result));
 	if (result == VK_ERROR_DEVICE_LOST)
 		report_checkpoints();
 	submissions.clear();
@@ -1817,31 +1808,25 @@ void Device::sync_buffer_blocks()
 	if (dma.vbo.empty() && dma.ibo.empty() && dma.ubo.empty())
 		return;
 
-	VkBufferUsageFlags usage = 0;
-
 	auto cmd = request_command_buffer_nolock(get_thread_index(), CommandBuffer::Type::AsyncTransfer, false);
-
 	cmd->begin_region("buffer-block-sync");
 
 	for (auto &block : dma.vbo)
 	{
 		VK_ASSERT(block.offset != 0);
 		cmd->copy_buffer(*block.gpu, 0, *block.cpu, 0, block.offset);
-		usage |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 	}
 
 	for (auto &block : dma.ibo)
 	{
 		VK_ASSERT(block.offset != 0);
 		cmd->copy_buffer(*block.gpu, 0, *block.cpu, 0, block.offset);
-		usage |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 	}
 
 	for (auto &block : dma.ubo)
 	{
 		VK_ASSERT(block.offset != 0);
 		cmd->copy_buffer(*block.gpu, 0, *block.cpu, 0, block.offset);
-		usage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 	}
 
 	dma.vbo.clear();
@@ -1852,7 +1837,7 @@ void Device::sync_buffer_blocks()
 
 	// Do not flush graphics or compute in this context.
 	// We must be able to inject semaphores into all currently enqueued graphics / compute.
-	submit_staging(cmd, usage, false);
+	submit_staging(cmd, false);
 }
 
 void Device::end_frame_context()
@@ -1863,23 +1848,14 @@ void Device::end_frame_context()
 
 void Device::end_frame_nolock()
 {
-	// Kept handles alive until end-of-frame, free now if appropriate.
-	for (auto &image : frame().keep_alive_images)
-	{
-		image->set_internal_sync_object();
-		image->get_view().set_internal_sync_object();
-	}
-	frame().keep_alive_images.clear();
-
 	// Make sure we have a fence which covers all submissions in the frame.
-	InternalFence fence;
-
 	for (auto &i : queue_flush_order)
 	{
 		if (queue_data[i].need_fence ||
 		    !frame().submissions[i].empty() ||
 		    !frame().consumed_semaphores.empty())
 		{
+			InternalFence fence = {};
 			submit_queue(i, &fence);
 			if (fence.fence != VK_NULL_HANDLE)
 			{
@@ -1936,7 +1912,6 @@ CommandBufferHandle Device::request_profiled_command_buffer_for_thread(unsigned 
 
 CommandBufferHandle Device::request_command_buffer_nolock(unsigned thread_index, CommandBuffer::Type type, bool profiled)
 {
-	VK_ASSERT(thread_index == 0);
 	auto physical_type = get_physical_queue_type(type);
 	auto &pool = frame().cmd_pools[physical_type][thread_index];
 	auto cmd = pool.request_command_buffer();
@@ -2059,7 +2034,7 @@ Device::~Device()
 		table->vkDestroyPipelineCache(device, pipeline_cache, nullptr);
 	}
 
-#ifdef GRANITE_VULKAN_FILESYSTEM
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
 	flush_shader_manager_cache();
 #endif
 
@@ -2147,6 +2122,15 @@ void Device::set_swapchain_queue_family_support(uint32_t queue_family_support)
 	wsi.queue_family_support_mask = queue_family_support;
 }
 
+ImageHandle Device::wrap_image(const ImageCreateInfo &info, VkImage image)
+{
+	auto img = ImageHandle(handle_pool.images.allocate(
+			this, image, VK_NULL_HANDLE,
+			DeviceAllocation{}, info, VK_IMAGE_VIEW_TYPE_MAX_ENUM));
+	img->disown_image();
+	return img;
+}
+
 void Device::init_swapchain(const std::vector<VkImage> &swapchain_images, unsigned width, unsigned height, VkFormat format,
                             VkSurfaceTransformFlagBitsKHR transform, VkImageUsageFlags usage)
 {
@@ -2204,12 +2188,6 @@ Device::PerFrame::PerFrame(Device *device_, unsigned frame_index_)
 		for (unsigned j = 0; j < count; j++)
 			cmd_pools[i].emplace_back(device_, device_->queue_info.family_indices[i]);
 	}
-}
-
-void Device::keep_handle_alive(ImageHandle handle)
-{
-	LOCK();
-	frame().keep_alive_images.push_back(std::move(handle));
 }
 
 void Device::free_memory_nolock(const DeviceAllocation &alloc)
@@ -2487,7 +2465,7 @@ void Device::promote_read_write_caches_to_read_only()
 		render_passes.move_to_read_only();
 		immutable_samplers.move_to_read_only();
 		immutable_ycbcr_conversions.move_to_read_only();
-#ifdef GRANITE_VULKAN_FILESYSTEM
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
 		shader_manager.promote_read_write_caches_to_read_only();
 #endif
 		lock.read_only_cache.unlock_write();
@@ -2528,13 +2506,13 @@ void Device::next_frame_context()
 	frame_context_begin_ts = write_calibrated_timestamp_nolock();
 }
 
-QueryPoolHandle Device::write_timestamp(VkCommandBuffer cmd, VkPipelineStageFlagBits stage)
+QueryPoolHandle Device::write_timestamp(VkCommandBuffer cmd, VkPipelineStageFlags2 stage)
 {
 	LOCK();
 	return write_timestamp_nolock(cmd, stage);
 }
 
-QueryPoolHandle Device::write_timestamp_nolock(VkCommandBuffer cmd, VkPipelineStageFlagBits stage)
+QueryPoolHandle Device::write_timestamp_nolock(VkCommandBuffer cmd, VkPipelineStageFlags2 stage)
 {
 	return frame().query_pool.write_timestamp(cmd, stage);
 }
@@ -3170,7 +3148,9 @@ public:
 		                    VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT |
 		                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT |
 		                    VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT |
-		                    vk_video_image_usage_flags;
+		                    VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR |
+		                    VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR |
+		                    VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR;
 
 		if (format_is_srgb(create_info.format))
 			usage_info.usage &= ~VK_IMAGE_USAGE_STORAGE_BIT;
@@ -3211,13 +3191,16 @@ public:
 	}
 
 	bool create_default_views(const ImageCreateInfo &create_info, const VkImageViewCreateInfo *view_info,
+	                          const ImmutableYcbcrConversion *ycbcr_conversion,
 	                          bool create_unorm_srgb_views = false, const VkFormat *view_formats = nullptr)
 	{
 		VkDevice vkdevice = device->get_device();
 
 		if ((create_info.usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
 		                          VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT |
-		                          vk_video_image_usage_flags)) == 0)
+		                          VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR |
+		                          VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR |
+		                          VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR)) == 0)
 		{
 			LOGE("Cannot create image view unless certain usage flags are present.\n");
 			return false;
@@ -3246,7 +3229,7 @@ public:
 			default_view_info = *view_info;
 
 		view_info = &default_view_info;
-		if (!setup_conversion_info(default_view_info, conversion_info, create_info.ycbcr_conversion))
+		if (!setup_conversion_info(default_view_info, conversion_info, ycbcr_conversion))
 			return false;
 
 		if (!setup_view_usage_info(default_view_info, create_info.usage, view_usage_info))
@@ -3397,7 +3380,8 @@ ImageViewHandle Device::create_image_view(const ImageViewCreateInfo &create_info
 	view_info.image = create_info.image->get_image();
 	view_info.format = format;
 	view_info.components = create_info.swizzle;
-	view_info.subresourceRange.aspectMask = format_to_aspect_mask(format);
+	view_info.subresourceRange.aspectMask =
+			create_info.aspect ? create_info.aspect : format_to_aspect_mask(format);
 	view_info.subresourceRange.baseMipLevel = create_info.base_level;
 	view_info.subresourceRange.baseArrayLayer = create_info.base_layer;
 	view_info.subresourceRange.levelCount = create_info.levels;
@@ -3423,8 +3407,11 @@ ImageViewHandle Device::create_image_view(const ImageViewCreateInfo &create_info
 	view_info.subresourceRange.levelCount = num_levels;
 	view_info.subresourceRange.layerCount = num_layers;
 
-	if (!holder.create_default_views(image_create_info, &view_info))
+	if (!holder.create_default_views(image_create_info, &view_info,
+	                                 create_info.ycbcr_conversion))
+	{
 		return ImageViewHandle(nullptr);
+	}
 
 	ImageViewCreateInfo tmp = create_info;
 	tmp.format = format;
@@ -3742,11 +3729,12 @@ bool Device::allocate_image_memory(DeviceAllocation *allocation, const ImageCrea
 
 static void add_unique_family(uint32_t *sharing_indices, uint32_t &count, uint32_t family)
 {
+	if (family == VK_QUEUE_FAMILY_IGNORED)
+		return;
+
 	for (uint32_t i = 0; i < count; i++)
-	{
 		if (sharing_indices[i] == family)
 			return;
-	}
 	sharing_indices[count++] = family;
 }
 
@@ -3809,48 +3797,59 @@ ImageHandle Device::create_image_from_staging_buffer(const ImageCreateInfo &crea
 		}
 	}
 
-	if ((create_info.usage & VK_IMAGE_USAGE_STORAGE_BIT) ||
-	    (create_info.misc & IMAGE_MISC_MUTABLE_SRGB_BIT))
-	{
+	if ((create_info.misc & IMAGE_MISC_MUTABLE_SRGB_BIT) != 0)
 		info.flags |= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
-	}
 
-	// Only do this conditionally.
-	// On AMD, using CONCURRENT with async compute disables compression.
 	uint32_t sharing_indices[QUEUE_INDEX_COUNT];
 
 	uint32_t queue_flags = create_info.misc & (IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT |
 	                                           IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT |
 	                                           IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT |
-	                                           IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT);
-	bool concurrent_queue = queue_flags != 0;
+	                                           IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT |
+	                                           IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_DECODE_BIT);
+	bool concurrent_queue = queue_flags != 0 ||
+	                        staging_buffer != nullptr ||
+	                        create_info.initial_layout != VK_IMAGE_LAYOUT_UNDEFINED;
+
 	if (concurrent_queue)
 	{
 		info.sharingMode = VK_SHARING_MODE_CONCURRENT;
 
-		if (queue_flags & (IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT | IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT))
+		// If we didn't specify queue usage,
+		// just enable every queue since we need to use transfer queue for initial upload.
+		if (staging_buffer && queue_flags == 0)
 		{
-			add_unique_family(sharing_indices, info.queueFamilyIndexCount,
-			                  queue_info.family_indices[QUEUE_INDEX_GRAPHICS]);
+			// We never imply video here.
+			constexpr ImageMiscFlags implicit_queues_all =
+					IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT |
+					IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT |
+					IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT |
+					IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT;
+
+			queue_flags |= implicit_queues_all;
+		}
+		else if (staging_buffer)
+		{
+			// Make sure that these queues are included.
+			queue_flags |= IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT;
+			if (create_info.misc & IMAGE_MISC_GENERATE_MIPS_BIT)
+				queue_flags |= IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT;
 		}
 
-		if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT)
+		struct
 		{
-			add_unique_family(sharing_indices, info.queueFamilyIndexCount,
-			                  queue_info.family_indices[QUEUE_INDEX_COMPUTE]);
-		}
+			uint32_t flags;
+			QueueIndices index;
+		} static const mappings[] = {
+			{ IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT | IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT, QUEUE_INDEX_GRAPHICS },
+			{ IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT, QUEUE_INDEX_COMPUTE },
+			{ IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT, QUEUE_INDEX_TRANSFER },
+			{ IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_DECODE_BIT, QUEUE_INDEX_VIDEO_DECODE },
+		};
 
-		if (staging_buffer || (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT) != 0)
-		{
-			add_unique_family(sharing_indices, info.queueFamilyIndexCount,
-			                  queue_info.family_indices[QUEUE_INDEX_TRANSFER]);
-		}
-
-		if (staging_buffer)
-		{
-			add_unique_family(sharing_indices, info.queueFamilyIndexCount,
-			                  queue_info.family_indices[QUEUE_INDEX_GRAPHICS]);
-		}
+		for (auto &m : mappings)
+			if ((queue_flags & m.flags) != 0)
+				add_unique_family(sharing_indices, info.queueFamilyIndexCount, queue_info.family_indices[m.index]);
 
 		if (info.queueFamilyIndexCount > 1)
 			info.pQueueFamilyIndices = sharing_indices;
@@ -3861,6 +3860,9 @@ ImageHandle Device::create_image_from_staging_buffer(const ImageCreateInfo &crea
 			info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		}
 	}
+
+	if (queue_flags == 0)
+		queue_flags |= IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT;
 
 	VkFormatFeatureFlags check_extra_features = 0;
 	if ((create_info.misc & IMAGE_MISC_VERIFY_FORMAT_FEATURE_SAMPLED_LINEAR_FILTER_BIT) != 0)
@@ -3978,14 +3980,19 @@ ImageHandle Device::create_image_from_staging_buffer(const ImageCreateInfo &crea
 
 	bool has_view = (info.usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
 	                               VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT |
-	                               vk_video_image_usage_flags)) != 0 &&
+	                               VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR |
+	                               VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR |
+	                               VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR)) != 0 &&
 	                (create_info.misc & IMAGE_MISC_NO_DEFAULT_VIEWS_BIT) == 0;
 
 	VkImageViewType view_type = VK_IMAGE_VIEW_TYPE_MAX_ENUM;
 	if (has_view)
 	{
-		if (!holder.create_default_views(tmpinfo, nullptr, create_unorm_srgb_views, view_formats))
+		if (!holder.create_default_views(tmpinfo, nullptr, create_info.ycbcr_conversion,
+		                                 create_unorm_srgb_views, view_formats))
+		{
 			return ImageHandle(nullptr);
+		}
 		view_type = holder.get_default_view_type();
 	}
 
@@ -4000,18 +4007,7 @@ ImageHandle Device::create_image_from_staging_buffer(const ImageCreateInfo &crea
 			handle->get_view().set_unorm_view(holder.unorm_view);
 			handle->get_view().set_srgb_view(holder.srgb_view);
 		}
-
-		// Set possible dstStage and dstAccess.
-		handle->set_stage_flags(image_usage_to_possible_stages(info.usage));
-		handle->set_access_flags(image_usage_to_possible_access(info.usage));
 	}
-
-	bool share_compute = (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT) != 0 &&
-	                     queue_info.queues[QUEUE_INDEX_GRAPHICS] != queue_info.queues[QUEUE_INDEX_COMPUTE];
-
-	bool share_async_graphics =
-		get_physical_queue_type(CommandBuffer::Type::AsyncGraphics) == QUEUE_INDEX_COMPUTE &&
-		(queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT) != 0;
 
 	CommandBufferHandle transition_cmd;
 
@@ -4022,151 +4018,147 @@ ImageHandle Device::create_image_from_staging_buffer(const ImageCreateInfo &crea
 		VK_ASSERT(create_info.initial_layout != VK_IMAGE_LAYOUT_UNDEFINED);
 		bool generate_mips = (create_info.misc & IMAGE_MISC_GENERATE_MIPS_BIT) != 0;
 
-		// If queue_info.graphics != queue_info.transfer, we will use a semaphore, so no srcAccess mask is necessary.
-		VkAccessFlags final_transition_src_access = 0;
-		if (generate_mips)
-			final_transition_src_access = VK_ACCESS_TRANSFER_READ_BIT; // Validation complains otherwise.
-		else if (queue_info.queues[QUEUE_INDEX_GRAPHICS] == queue_info.queues[QUEUE_INDEX_TRANSFER])
-			final_transition_src_access = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-		VkAccessFlags prepare_src_access = queue_info.queues[QUEUE_INDEX_GRAPHICS] == queue_info.queues[QUEUE_INDEX_TRANSFER] ?
-		                                   VK_ACCESS_TRANSFER_WRITE_BIT : 0;
-		bool need_mipmap_barrier = true;
-		bool need_initial_barrier = true;
-
 		// Now we've used the TRANSFER queue to copy data over to the GPU.
 		// For mipmapping, we're now moving over to graphics,
 		// the transfer queue is designed for CPU <-> GPU and that's it.
-
 		// For concurrent queue mode, we just need to inject a semaphore.
-		// For non-concurrent queue mode, we will have to inject ownership transfer barrier if the queue families do not match.
 
-		auto graphics_cmd = request_command_buffer(CommandBuffer::Type::Generic);
-		CommandBufferHandle transfer_cmd;
-
-		// Don't split the upload into multiple command buffers unless we have to.
-		if (queue_info.queues[QUEUE_INDEX_TRANSFER] != queue_info.queues[QUEUE_INDEX_GRAPHICS])
-			transfer_cmd = request_command_buffer(CommandBuffer::Type::AsyncTransfer);
-		else
-			transfer_cmd = graphics_cmd;
+		auto transfer_cmd = request_command_buffer(CommandBuffer::Type::AsyncTransfer);
 
 		transfer_cmd->image_barrier(*handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		                            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, VK_PIPELINE_STAGE_TRANSFER_BIT,
+		                            VK_PIPELINE_STAGE_NONE, 0, VK_PIPELINE_STAGE_2_COPY_BIT,
 		                            VK_ACCESS_TRANSFER_WRITE_BIT);
 
 		transfer_cmd->begin_region("copy-image-to-gpu");
-		transfer_cmd->copy_buffer_to_image(*handle, *staging_buffer->buffer, staging_buffer->blits.size(), staging_buffer->blits.data());
+		transfer_cmd->copy_buffer_to_image(*handle, *staging_buffer->buffer,
+		                                   staging_buffer->blits.size(), staging_buffer->blits.data());
 		transfer_cmd->end_region();
-
-		if (queue_info.queues[QUEUE_INDEX_TRANSFER] != queue_info.queues[QUEUE_INDEX_GRAPHICS])
-		{
-			VkPipelineStageFlags dst_stages =
-					generate_mips ? VkPipelineStageFlags(VK_PIPELINE_STAGE_TRANSFER_BIT) : handle->get_stage_flags();
-
-			// We can't just use semaphores, we will also need a release + acquire barrier to marshal ownership from
-			// transfer queue over to graphics ...
-			if (!concurrent_queue && queue_info.family_indices[QUEUE_INDEX_TRANSFER] != queue_info.family_indices[QUEUE_INDEX_GRAPHICS])
-			{
-				need_mipmap_barrier = false;
-
-				VkImageMemoryBarrier release = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
-				release.image = handle->get_image();
-				release.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-				release.dstAccessMask = 0;
-				release.srcQueueFamilyIndex = queue_info.family_indices[QUEUE_INDEX_TRANSFER];
-				release.dstQueueFamilyIndex = queue_info.family_indices[QUEUE_INDEX_GRAPHICS];
-				release.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-
-				if (generate_mips)
-				{
-					release.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-					release.subresourceRange.levelCount = 1;
-				}
-				else
-				{
-					release.newLayout = create_info.initial_layout;
-					release.subresourceRange.levelCount = info.mipLevels;
-					need_initial_barrier = false;
-				}
-
-				release.subresourceRange.aspectMask = format_to_aspect_mask(info.format);
-				release.subresourceRange.layerCount = info.arrayLayers;
-
-				VkImageMemoryBarrier acquire = release;
-				acquire.srcAccessMask = 0;
-
-				if (generate_mips)
-					acquire.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-				else
-					acquire.dstAccessMask = handle->get_access_flags() & image_layout_to_possible_access(create_info.initial_layout);
-
-				transfer_cmd->barrier(VK_PIPELINE_STAGE_TRANSFER_BIT,
-				                      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-				                      0, nullptr, 0, nullptr, 1, &release);
-
-				graphics_cmd->barrier(dst_stages,
-				                      dst_stages,
-				                      0, nullptr, 0, nullptr, 1, &acquire);
-			}
-
-			Semaphore sem;
-			submit(transfer_cmd, nullptr, 1, &sem);
-			add_wait_semaphore(CommandBuffer::Type::Generic, sem, dst_stages, true);
-		}
 
 		if (generate_mips)
 		{
+			auto graphics_cmd = request_command_buffer(CommandBuffer::Type::Generic);
+			Semaphore sem;
+
+			submit(transfer_cmd, nullptr, 1, &sem);
+			add_wait_semaphore(CommandBuffer::Type::Generic, sem, VK_PIPELINE_STAGE_2_BLIT_BIT, true);
+
 			graphics_cmd->begin_region("mipgen");
 			graphics_cmd->barrier_prepare_generate_mipmap(*handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			                                              VK_PIPELINE_STAGE_TRANSFER_BIT,
-			                                              prepare_src_access, need_mipmap_barrier);
+			                                              VK_PIPELINE_STAGE_2_BLIT_BIT,
+			                                              0, true);
 			graphics_cmd->generate_mipmap(*handle);
 			graphics_cmd->end_region();
-		}
 
-		if (need_initial_barrier)
-		{
 			graphics_cmd->image_barrier(
-					*handle, generate_mips ? VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL : VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					*handle, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 					create_info.initial_layout,
-					VK_PIPELINE_STAGE_TRANSFER_BIT, final_transition_src_access,
-					handle->get_stage_flags(),
-					handle->get_access_flags() & image_layout_to_possible_access(create_info.initial_layout));
-		}
+					VK_PIPELINE_STAGE_2_BLIT_BIT, 0,
+					VK_PIPELINE_STAGE_NONE, 0);
 
-		transition_cmd = std::move(graphics_cmd);
+			transition_cmd = std::move(graphics_cmd);
+		}
+		else
+		{
+			transfer_cmd->image_barrier(
+					*handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					create_info.initial_layout,
+					VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+					VK_PIPELINE_STAGE_NONE, 0);
+
+			transition_cmd = std::move(transfer_cmd);
+		}
 	}
 	else if (create_info.initial_layout != VK_IMAGE_LAYOUT_UNDEFINED)
 	{
 		VK_ASSERT(create_info.domain != ImageDomain::Transient);
-		auto cmd = request_command_buffer(CommandBuffer::Type::Generic);
+
+		// Need to perform the barrier in some command buffer, pick an appropriate one based on supported queues.
+		// Pick the most lenient queue first in case we need to transition to a weird layout.
+		CommandBuffer::Type type = CommandBuffer::Type::Count;
+		if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT)
+			type = CommandBuffer::Type::Generic;
+		else if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT)
+			type = CommandBuffer::Type::AsyncGraphics;
+		else if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT)
+			type = CommandBuffer::Type::AsyncCompute;
+		else if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT)
+			type = CommandBuffer::Type::AsyncTransfer;
+		else if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_DECODE_BIT)
+			type = CommandBuffer::Type::VideoDecode;
+		VK_ASSERT(type != CommandBuffer::Type::Count);
+
+		auto cmd = request_command_buffer(type);
 		cmd->image_barrier(*handle, info.initialLayout, create_info.initial_layout,
-		                   VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, handle->get_stage_flags(),
-		                   handle->get_access_flags() &
-		                   image_layout_to_possible_access(create_info.initial_layout));
+		                   VK_PIPELINE_STAGE_NONE, 0,
+		                   VK_PIPELINE_STAGE_NONE, 0);
 		transition_cmd = std::move(cmd);
 	}
 
-	// For concurrent queue, make sure that compute can see the final image as well.
-	// Also add semaphore if the compute queue can be used for async graphics as well.
+	// For concurrent queue, make sure that compute, transfer or video decode can see the final image as well.
 	if (transition_cmd)
 	{
-		if (share_compute || share_async_graphics)
+		constexpr auto max_queues = Util::ecast(CommandBuffer::Type::Count);
+		VkPipelineStageFlags2 stages[max_queues];
+		CommandBuffer::Type types[max_queues];
+		Semaphore sem[max_queues];
+		uint32_t sem_count = 0;
+
+		if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT)
 		{
-			Semaphore sem;
-			submit(transition_cmd, nullptr, 1, &sem);
-			VkPipelineStageFlags dst_stages = handle->get_stage_flags();
-			if (queue_info.family_indices[QUEUE_INDEX_GRAPHICS] != queue_info.family_indices[QUEUE_INDEX_COMPUTE])
-				dst_stages &= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
-			add_wait_semaphore(CommandBuffer::Type::AsyncCompute, sem, dst_stages, true);
+			// Avoid redundant submissions to same queue.
+			if (get_physical_queue_type(CommandBuffer::Type::AsyncGraphics) == QUEUE_INDEX_GRAPHICS)
+			{
+				queue_flags &= ~IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT;
+				queue_flags |= IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT;
+			}
+			else
+				queue_flags &= ~IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT;
 		}
-		else
+
+		if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT)
 		{
-			LOCK();
-			submit_nolock(transition_cmd, nullptr, 0, nullptr);
-			if (concurrent_queue)
-				flush_frame(QUEUE_INDEX_GRAPHICS);
+			types[sem_count] = CommandBuffer::Type::Generic;
+			stages[sem_count] = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+			sem_count++;
 		}
+
+		if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT)
+		{
+			types[sem_count] = CommandBuffer::Type::AsyncGraphics;
+			stages[sem_count] = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+			sem_count++;
+		}
+
+		if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT)
+		{
+			types[sem_count] = CommandBuffer::Type::AsyncCompute;
+			stages[sem_count] = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+			if (stages[sem_count] != 0)
+				sem_count++;
+		}
+
+		// Do not synchronize transfer/video queues here unless we explicitly asked for it.
+		if (create_info.misc & IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT)
+		{
+			types[sem_count] = CommandBuffer::Type::AsyncTransfer;
+			stages[sem_count] = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+			if (stages[sem_count] != 0)
+				sem_count++;
+		}
+
+		if (create_info.misc & IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_DECODE_BIT)
+		{
+			types[sem_count] = CommandBuffer::Type::VideoDecode;
+			stages[sem_count] = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+			if (stages[sem_count] != 0)
+				sem_count++;
+		}
+
+		VK_ASSERT(sem_count);
+
+		submit(transition_cmd, nullptr, sem_count, sem);
+		for (uint32_t i = 0; i < sem_count; i++)
+			add_wait_semaphore(types[i], sem[i], stages[i], true);
 	}
 
 	return handle;
@@ -4203,6 +4195,7 @@ const ImmutableSampler *Device::request_immutable_sampler(const SamplerCreateInf
 	auto *sampler = immutable_samplers.find(h.get());
 	if (!sampler)
 		sampler = immutable_samplers.emplace_yield(h.get(), h.get(), this, sampler_info, ycbcr);
+
 	return sampler;
 }
 
@@ -4285,8 +4278,7 @@ BindlessDescriptorPoolHandle Device::create_bindless_descriptor_pool(BindlessRes
 void Device::fill_buffer_sharing_indices(VkBufferCreateInfo &info, uint32_t *sharing_indices)
 {
 	for (auto &i : queue_info.family_indices)
-		if (i != VK_QUEUE_FAMILY_IGNORED)
-			add_unique_family(sharing_indices, info.queueFamilyIndexCount, i);
+		add_unique_family(sharing_indices, info.queueFamilyIndexCount, i);
 
 	if (info.queueFamilyIndexCount > 1)
 	{
@@ -4577,7 +4569,7 @@ BufferHandle Device::create_buffer(const BufferCreateInfo &create_info, const vo
 
 	if (create_info.domain == BufferDomain::Device && (initial || zero_initialize) && !memory_type_is_host_visible(memory_type))
 	{
-		CommandBufferHandle cmd;
+		auto cmd = request_command_buffer(CommandBuffer::Type::AsyncTransfer);
 		if (initial)
 		{
 			auto staging_info = create_info;
@@ -4585,21 +4577,19 @@ BufferHandle Device::create_buffer(const BufferCreateInfo &create_info, const vo
 			auto staging_buffer = create_buffer(staging_info, initial);
 			set_name(*staging_buffer, "buffer-upload-staging-buffer");
 
-			cmd = request_command_buffer(CommandBuffer::Type::AsyncTransfer);
 			cmd->begin_region("copy-buffer-staging");
 			cmd->copy_buffer(*handle, *staging_buffer);
 			cmd->end_region();
 		}
 		else
 		{
-			cmd = request_command_buffer(CommandBuffer::Type::AsyncCompute);
 			cmd->begin_region("fill-buffer-staging");
 			cmd->fill_buffer(*handle, 0);
 			cmd->end_region();
 		}
 
 		LOCK();
-		submit_staging(cmd, info.usage, true);
+		submit_staging(cmd, true);
 	}
 	else if (initial || zero_initialize)
 	{
@@ -4797,6 +4787,9 @@ const RenderPass &Device::request_render_pass(const RenderPassInfo &info, bool c
 	// Lazy flag can change external subpass dependencies, which is not compatible.
 	h.u32(lazy);
 
+	// Marked for v2 render passes.
+	h.u32(2);
+
 	auto hash = h.get();
 
 	auto *ret = render_passes.find(hash);
@@ -4884,49 +4877,53 @@ RenderPassInfo Device::get_swapchain_render_pass(SwapchainRenderPass style)
 	return info;
 }
 
+void Device::external_queue_lock()
+{
+	lock.lock.lock();
+	if (queue_lock_callback)
+		queue_lock_callback();
+}
+
+void Device::external_queue_unlock()
+{
+	lock.lock.unlock();
+	if (queue_unlock_callback)
+		queue_unlock_callback();
+}
+
 void Device::set_queue_lock(std::function<void()> lock_callback, std::function<void()> unlock_callback)
 {
 	queue_lock_callback = std::move(lock_callback);
 	queue_unlock_callback = std::move(unlock_callback);
 }
 
-void Device::set_name(const Buffer &buffer, const char *name)
+void Device::set_name(uint64_t object, VkObjectType type, const char *name)
 {
 	if (ext.supports_debug_utils)
 	{
 		VkDebugUtilsObjectNameInfoEXT info = { VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-		info.objectType = VK_OBJECT_TYPE_BUFFER;
-		info.objectHandle = (uint64_t)buffer.get_buffer();
+		info.objectType = type;
+		info.objectHandle = object;
 		info.pObjectName = name;
+		// Be defensive against broken loaders (Android have been weird here in the past).
 		if (vkSetDebugUtilsObjectNameEXT)
 			vkSetDebugUtilsObjectNameEXT(device, &info);
 	}
+}
+
+void Device::set_name(const Buffer &buffer, const char *name)
+{
+	set_name((uint64_t)buffer.get_buffer(), VK_OBJECT_TYPE_BUFFER, name);
 }
 
 void Device::set_name(const Image &image, const char *name)
 {
-	if (ext.supports_debug_utils)
-	{
-		VkDebugUtilsObjectNameInfoEXT info = { VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-		info.objectType = VK_OBJECT_TYPE_IMAGE;
-		info.objectHandle = (uint64_t)image.get_image();
-		info.pObjectName = name;
-		if (vkSetDebugUtilsObjectNameEXT)
-			vkSetDebugUtilsObjectNameEXT(device, &info);
-	}
+	set_name((uint64_t)image.get_image(), VK_OBJECT_TYPE_IMAGE, name);
 }
 
 void Device::set_name(const CommandBuffer &cmd, const char *name)
 {
-	if (ext.supports_debug_utils)
-	{
-		VkDebugUtilsObjectNameInfoEXT info = { VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
-		info.objectType = VK_OBJECT_TYPE_COMMAND_BUFFER;
-		info.objectHandle = (uint64_t)cmd.get_command_buffer();
-		info.pObjectName = name;
-		if (vkSetDebugUtilsObjectNameEXT)
-			vkSetDebugUtilsObjectNameEXT(device, &info);
-	}
+	set_name((uint64_t)cmd.get_command_buffer(), VK_OBJECT_TYPE_COMMAND_BUFFER, name);
 }
 
 void Device::report_checkpoints()
@@ -5078,17 +5075,15 @@ int64_t Device::convert_timestamp_to_absolute_nsec(const QueryPoolResult &handle
 	return ts;
 }
 
-PipelineEvent Device::begin_signal_event(VkPipelineStageFlags stages)
+PipelineEvent Device::begin_signal_event()
 {
-	auto event = request_pipeline_event();
-	event->set_stages(stages);
-	return event;
+	return request_pipeline_event();
 }
 
-#ifdef GRANITE_VULKAN_FILESYSTEM
-TextureManager &Device::get_texture_manager()
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
+ResourceManager &Device::get_resource_manager()
 {
-	return texture_manager;
+	return resource_manager;
 }
 
 ShaderManager &Device::get_shader_manager()
@@ -5106,7 +5101,7 @@ ShaderManager &Device::get_shader_manager()
 }
 #endif
 
-#ifdef GRANITE_VULKAN_FILESYSTEM
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
 void Device::init_shader_manager_cache()
 {
 	if (!shader_manager.load_shader_cache("assets://shader_cache.json"))
@@ -5200,10 +5195,11 @@ CommandBufferHandle request_command_buffer_with_ownership_transfer(
 	                            (Vulkan::IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT |
 	                             Vulkan::IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT |
 	                             Vulkan::IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT |
-	                             Vulkan::IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT)) != 0;
+	                             Vulkan::IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT |
+	                             Vulkan::IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_DECODE_BIT)) != 0;
 	bool need_ownership_transfer = old_family != new_family && !image_is_concurrent;
 
-	VkImageMemoryBarrier ownership = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+	VkImageMemoryBarrier2 ownership = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 	ownership.image = image.get_image();
 	ownership.srcAccessMask = 0;
 	ownership.dstAccessMask = 0;
@@ -5212,6 +5208,8 @@ CommandBufferHandle request_command_buffer_with_ownership_transfer(
 	ownership.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
 	ownership.oldLayout = info.old_image_layout;
 	ownership.newLayout = info.new_image_layout;
+	ownership.srcStageMask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+	ownership.dstStageMask = VK_PIPELINE_STAGE_NONE;
 
 	if (need_ownership_transfer)
 	{
@@ -5219,12 +5217,10 @@ CommandBufferHandle request_command_buffer_with_ownership_transfer(
 		ownership.dstQueueFamilyIndex = new_family;
 
 		if (semaphore)
-			device.add_wait_semaphore(info.old_queue, semaphore, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, true);
+			device.add_wait_semaphore(info.old_queue, semaphore, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, true);
 		auto release_cmd = device.request_command_buffer(info.old_queue);
 
-		release_cmd->image_barriers(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-		                            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-		                            1, &ownership);
+		release_cmd->image_barriers(1, &ownership);
 
 		Semaphore sem;
 		device.submit(release_cmd, nullptr, 1, &sem);
@@ -5247,7 +5243,9 @@ CommandBufferHandle request_command_buffer_with_ownership_transfer(
 	if (need_dst_barrier)
 	{
 		ownership.dstAccessMask = info.dst_access;
-		acquire_cmd->image_barriers(info.dst_pipeline_stage, info.dst_pipeline_stage, 1, &ownership);
+		ownership.srcStageMask = info.dst_pipeline_stage;
+		ownership.dstStageMask = info.dst_pipeline_stage;
+		acquire_cmd->image_barriers(1, &ownership);
 	}
 
 	return acquire_cmd;

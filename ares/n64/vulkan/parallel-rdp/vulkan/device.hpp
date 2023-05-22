@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2023 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -44,9 +44,9 @@
 #include <unordered_map>
 #include <stdio.h>
 
-#ifdef GRANITE_VULKAN_FILESYSTEM
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
 #include "shader_manager.hpp"
-#include "texture_manager.hpp"
+#include "resource_manager.hpp"
 #endif
 
 #include <atomic>
@@ -119,11 +119,8 @@ namespace Helper
 {
 struct WaitSemaphores
 {
-	Util::SmallVector<VkSemaphore> binary_waits;
-	Util::SmallVector<VkPipelineStageFlags> binary_wait_stages;
-	Util::SmallVector<VkSemaphore> timeline_waits;
-	Util::SmallVector<VkPipelineStageFlags> timeline_wait_stages;
-	Util::SmallVector<uint64_t> timeline_wait_counts;
+	Util::SmallVector<VkSemaphoreSubmitInfo> binary_waits;
+	Util::SmallVector<VkSemaphoreSubmitInfo> timeline_waits;
 };
 
 class BatchComposer
@@ -133,25 +130,21 @@ public:
 
 	explicit BatchComposer(bool split_binary_timeline_semaphores);
 	void add_wait_submissions(WaitSemaphores &sem);
-	void add_wait_semaphore(SemaphoreHolder &sem, VkPipelineStageFlags stage);
-	void add_wait_semaphore(VkSemaphore sem, VkPipelineStageFlags stage);
-	void add_signal_semaphore(VkSemaphore sem, uint64_t count);
+	void add_wait_semaphore(SemaphoreHolder &sem, VkPipelineStageFlags2 stage);
+	void add_wait_semaphore(VkSemaphore sem, VkPipelineStageFlags2 stage);
+	void add_signal_semaphore(VkSemaphore sem, VkPipelineStageFlags2 stage, uint64_t count);
 	void add_command_buffer(VkCommandBuffer cmd);
 
 	void begin_batch();
-	Util::SmallVector<VkSubmitInfo, MaxSubmissions> &bake(int profiling_iteration = -1);
+	Util::SmallVector<VkSubmitInfo2, MaxSubmissions> &bake(int profiling_iteration = -1);
 
 private:
-	Util::SmallVector<VkSubmitInfo, MaxSubmissions> submits;
-	VkTimelineSemaphoreSubmitInfoKHR timeline_infos[Helper::BatchComposer::MaxSubmissions];
+	Util::SmallVector<VkSubmitInfo2, MaxSubmissions> submits;
 	VkPerformanceQuerySubmitInfoKHR profiling_infos[Helper::BatchComposer::MaxSubmissions];
 
-	Util::SmallVector<VkSemaphore> waits[MaxSubmissions];
-	Util::SmallVector<uint64_t> wait_counts[MaxSubmissions];
-	Util::SmallVector<VkFlags> wait_stages[MaxSubmissions];
-	Util::SmallVector<VkSemaphore> signals[MaxSubmissions];
-	Util::SmallVector<uint64_t> signal_counts[MaxSubmissions];
-	Util::SmallVector<VkCommandBuffer> cmds[MaxSubmissions];
+	Util::SmallVector<VkSemaphoreSubmitInfo> waits[MaxSubmissions];
+	Util::SmallVector<VkSemaphoreSubmitInfo> signals[MaxSubmissions];
+	Util::SmallVector<VkCommandBufferSubmitInfo> cmds[MaxSubmissions];
 
 	unsigned submit_index = 0;
 	bool split_binary_timeline_semaphores = false;
@@ -181,6 +174,7 @@ public:
 	friend class Sampler;
 	friend struct SamplerDeleter;
 	friend class ImmutableSampler;
+	friend class ImmutableYcbcrConversion;
 	friend class Buffer;
 	friend struct BufferDeleter;
 	friend class BufferView;
@@ -268,6 +262,8 @@ public:
 	void set_name(const Buffer &buffer, const char *name);
 	void set_name(const Image &image, const char *name);
 	void set_name(const CommandBuffer &cmd, const char *name);
+	// Generic version.
+	void set_name(uint64_t object, VkObjectType type, const char *name);
 
 	// Submission interface, may be called from any thread at any time.
 	void flush_frame();
@@ -279,28 +275,29 @@ public:
 
 	void submit(CommandBufferHandle &cmd, Fence *fence = nullptr,
 	            unsigned semaphore_count = 0, Semaphore *semaphore = nullptr);
+
 	void submit_empty(CommandBuffer::Type type,
 	                  Fence *fence = nullptr,
 	                  SemaphoreHolder *semaphore = nullptr);
+	// Mark that there have been work submitted in this frame context outside our control
+	// that accesses resources Vulkan::Device owns.
+	void submit_external(CommandBuffer::Type type);
 	void submit_discard(CommandBufferHandle &cmd);
 	QueueIndices get_physical_queue_type(CommandBuffer::Type queue_type) const;
 	void register_time_interval(std::string tid, QueryPoolHandle start_ts, QueryPoolHandle end_ts,
 	                            std::string tag, std::string extra = {});
 
 	// Request shaders and programs. These objects are owned by the Device.
-	Shader *request_shader(const uint32_t *code, size_t size,
-	                       const ResourceLayout *layout = nullptr,
-	                       const ImmutableSamplerBank *sampler_bank = nullptr);
+	Shader *request_shader(const uint32_t *code, size_t size, const ResourceLayout *layout = nullptr);
 	Shader *request_shader_by_hash(Util::Hash hash);
-	Program *request_program(const uint32_t *vertex_data, size_t vertex_size, const uint32_t *fragment_data,
-	                         size_t fragment_size,
+	Program *request_program(const uint32_t *vertex_data, size_t vertex_size,
+	                         const uint32_t *fragment_data, size_t fragment_size,
 	                         const ResourceLayout *vertex_layout = nullptr,
 	                         const ResourceLayout *fragment_layout = nullptr);
 	Program *request_program(const uint32_t *compute_data, size_t compute_size,
-	                         const ResourceLayout *layout = nullptr,
-	                         const ImmutableSamplerBank *sampler_bank = nullptr);
-	Program *request_program(Shader *vertex, Shader *fragment);
-	Program *request_program(Shader *compute);
+	                         const ResourceLayout *layout = nullptr);
+	Program *request_program(Shader *vertex, Shader *fragment, const ImmutableSamplerBank *sampler_bank = nullptr);
+	Program *request_program(Shader *compute, const ImmutableSamplerBank *sampler_bank = nullptr);
 
 	const ImmutableYcbcrConversion *request_immutable_ycbcr_conversion(const VkSamplerYcbcrConversionCreateInfo &info);
 	const ImmutableSampler *request_immutable_sampler(const SamplerCreateInfo &info, const ImmutableYcbcrConversion *ycbcr);
@@ -320,6 +317,9 @@ public:
 	ImageHandle create_image(const ImageCreateInfo &info, const ImageInitialData *initial = nullptr);
 	ImageHandle create_image_from_staging_buffer(const ImageCreateInfo &info, const InitialImageBuffer *buffer);
 	LinearHostImageHandle create_linear_host_image(const LinearHostImageCreateInfo &info);
+	// Does not create any default image views. Only wraps the VkImage
+	// as a non-owned handle for purposes of API interop.
+	ImageHandle wrap_image(const ImageCreateInfo &info, VkImage img);
 	DeviceAllocationOwnerHandle take_device_allocation_ownership(Image &image);
 	DeviceAllocationOwnerHandle allocate_memory(const MemoryAllocateInfo &info);
 
@@ -365,7 +365,7 @@ public:
 	//   For timelines, we need to know which handle type to use (OPAQUE or ID3D12Fence).
 	//   Binary external semaphore is always opaque with TEMPORARY semantics.
 
-	void add_wait_semaphore(CommandBuffer::Type type, Semaphore semaphore, VkPipelineStageFlags stages, bool flush);
+	void add_wait_semaphore(CommandBuffer::Type type, Semaphore semaphore, VkPipelineStageFlags2 stages, bool flush);
 
 	// If transfer_ownership is set, Semaphore owns the VkSemaphore. Otherwise, application must
 	// free the semaphore when GPU usage of it is complete.
@@ -391,22 +391,27 @@ public:
 	// For compat with existing code that uses this entry point.
 	inline Semaphore request_legacy_semaphore() { return request_semaphore(VK_SEMAPHORE_TYPE_BINARY_KHR); }
 
-	VkDevice get_device() const
+	inline VkDevice get_device() const
 	{
 		return device;
 	}
 
-	VkPhysicalDevice get_physical_device() const
+	inline VkPhysicalDevice get_physical_device() const
 	{
 		return gpu;
 	}
 
-	const VkPhysicalDeviceMemoryProperties &get_memory_properties() const
+	inline VkInstance get_instance() const
+	{
+		return instance;
+	}
+
+	inline const VkPhysicalDeviceMemoryProperties &get_memory_properties() const
 	{
 		return mem_props;
 	}
 
-	const VkPhysicalDeviceProperties &get_gpu_properties() const
+	inline const VkPhysicalDeviceProperties &get_gpu_properties() const
 	{
 		return gpu_props;
 	}
@@ -415,11 +420,11 @@ public:
 
 	const Sampler &get_stock_sampler(StockSampler sampler) const;
 
-#ifdef GRANITE_VULKAN_FILESYSTEM
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
 	// To obtain ShaderManager, ShaderModules must be observed to be complete
 	// in query_initialization_progress().
 	ShaderManager &get_shader_manager();
-	TextureManager &get_texture_manager();
+	ResourceManager &get_resource_manager();
 #endif
 
 	// Useful for loading screens or otherwise figuring out
@@ -446,6 +451,10 @@ public:
 	void set_queue_lock(std::function<void ()> lock_callback,
 	                    std::function<void ()> unlock_callback);
 
+	// Alternative form, when we have to provide lock callbacks to external APIs.
+	void external_queue_lock();
+	void external_queue_unlock();
+
 	const ImplementationWorkarounds &get_workarounds() const
 	{
 		return workarounds;
@@ -463,7 +472,7 @@ public:
 	QueryPoolHandle write_calibrated_timestamp();
 
 	// A split version of VkEvent handling which lets us record a wait command before signal is recorded.
-	PipelineEvent begin_signal_event(VkPipelineStageFlags stages);
+	PipelineEvent begin_signal_event();
 
 	const Context::SystemHandles &get_system_handles() const
 	{
@@ -493,14 +502,14 @@ private:
 	std::atomic_uint64_t cookie;
 
 	uint64_t allocate_cookie();
-	void bake_program(Program &program);
+	void bake_program(Program &program, const ImmutableSamplerBank *sampler_bank);
 
 	void request_vertex_block(BufferBlock &block, VkDeviceSize size);
 	void request_index_block(BufferBlock &block, VkDeviceSize size);
 	void request_uniform_block(BufferBlock &block, VkDeviceSize size);
 	void request_staging_block(BufferBlock &block, VkDeviceSize size);
 
-	QueryPoolHandle write_timestamp(VkCommandBuffer cmd, VkPipelineStageFlagBits stage);
+	QueryPoolHandle write_timestamp(VkCommandBuffer cmd, VkPipelineStageFlags2 stage);
 
 	void set_acquire_semaphore(unsigned index, Semaphore acquire);
 	Semaphore consume_release_semaphore();
@@ -527,7 +536,7 @@ private:
 	int64_t convert_timestamp_to_absolute_nsec(const QueryPoolResult &handle);
 	Context::SystemHandles system_handles;
 
-	QueryPoolHandle write_timestamp_nolock(VkCommandBuffer cmd, VkPipelineStageFlagBits stage);
+	QueryPoolHandle write_timestamp_nolock(VkCommandBuffer cmd, VkPipelineStageFlags2 stage);
 	QueryPoolHandle write_calibrated_timestamp_nolock();
 	void register_time_interval_nolock(std::string tid, QueryPoolHandle start_ts, QueryPoolHandle end_ts, std::string tag, std::string extra);
 
@@ -609,7 +618,6 @@ private:
 		std::vector<VkEvent> recycled_events;
 		std::vector<VkSemaphore> destroyed_semaphores;
 		std::vector<VkSemaphore> consumed_semaphores;
-		std::vector<ImageHandle> keep_alive_images;
 
 		struct DebugChannel
 		{
@@ -650,7 +658,7 @@ private:
 	struct QueueData
 	{
 		Util::SmallVector<Semaphore> wait_semaphores;
-		Util::SmallVector<VkPipelineStageFlags> wait_stages;
+		Util::SmallVector<VkPipelineStageFlags2> wait_stages;
 		bool need_fence = false;
 
 		VkSemaphore timeline_semaphore = VK_NULL_HANDLE;
@@ -720,7 +728,7 @@ private:
 
 	PerformanceQueryPool &get_performance_query_pool(QueueIndices physical_type);
 	void clear_wait_semaphores();
-	void submit_staging(CommandBufferHandle &cmd, VkBufferUsageFlags usage, bool flush);
+	void submit_staging(CommandBufferHandle &cmd, bool flush);
 	PipelineEvent request_pipeline_event();
 
 	std::function<void ()> queue_lock_callback;
@@ -739,6 +747,7 @@ private:
 	                        unsigned semaphore_count, Semaphore *semaphores);
 	VkResult submit_batches(Helper::BatchComposer &composer, VkQueue queue, VkFence fence,
 	                        int profiling_iteration = -1);
+	VkResult queue_submit(VkQueue queue, uint32_t count, const VkSubmitInfo2 *submits, VkFence fence);
 
 	void destroy_buffer(VkBuffer buffer);
 	void destroy_image(VkImage image);
@@ -753,7 +762,6 @@ private:
 	void destroy_event(VkEvent event);
 	void free_memory(const DeviceAllocation &alloc);
 	void reset_fence(VkFence fence, bool observed_wait);
-	void keep_handle_alive(ImageHandle handle);
 	void destroy_descriptor_pool(VkDescriptorPool desc_pool);
 
 	void destroy_buffer_nolock(VkBuffer buffer);
@@ -778,8 +786,8 @@ private:
 	                   unsigned semaphore_count, Semaphore *semaphore);
 	void submit_empty_nolock(QueueIndices physical_type, Fence *fence,
 	                         SemaphoreHolder *semaphore, int profiling_iteration);
-	void add_wait_semaphore_nolock(QueueIndices type, Semaphore semaphore, VkPipelineStageFlags stages,
-	                               bool flush);
+	void add_wait_semaphore_nolock(QueueIndices type, Semaphore semaphore,
+	                               VkPipelineStageFlags2 stages, bool flush);
 
 	void request_vertex_block_nolock(BufferBlock &block, VkDeviceSize size);
 	void request_index_block_nolock(BufferBlock &block, VkDeviceSize size);
@@ -801,9 +809,9 @@ private:
 
 	Fence request_legacy_fence();
 
-#ifdef GRANITE_VULKAN_FILESYSTEM
+#ifdef GRANITE_VULKAN_SYSTEM_HANDLES
 	ShaderManager shader_manager;
-	TextureManager texture_manager;
+	ResourceManager resource_manager;
 	void init_shader_manager_cache();
 	void flush_shader_manager_cache();
 #endif
@@ -825,11 +833,12 @@ private:
 
 	void register_graphics_pipeline(Fossilize::Hash hash, const VkGraphicsPipelineCreateInfo &info);
 	void register_compute_pipeline(Fossilize::Hash hash, const VkComputePipelineCreateInfo &info);
-	void register_render_pass(VkRenderPass render_pass, Fossilize::Hash hash, const VkRenderPassCreateInfo &info);
+	void register_render_pass(VkRenderPass render_pass, Fossilize::Hash hash, const VkRenderPassCreateInfo2KHR &info);
 	void register_descriptor_set_layout(VkDescriptorSetLayout layout, Fossilize::Hash hash, const VkDescriptorSetLayoutCreateInfo &info);
 	void register_pipeline_layout(VkPipelineLayout layout, Fossilize::Hash hash, const VkPipelineLayoutCreateInfo &info);
 	void register_shader_module(VkShaderModule module, Fossilize::Hash hash, const VkShaderModuleCreateInfo &info);
-	//void register_sampler(VkSampler sampler, Fossilize::Hash hash, const VkSamplerCreateInfo &info);
+	void register_sampler(VkSampler sampler, Fossilize::Hash hash, const VkSamplerCreateInfo &info);
+	void register_sampler_ycbcr_conversion(VkSamplerYcbcrConversion ycbcr, const VkSamplerYcbcrConversionCreateInfo &info);
 
 	struct RecorderState;
 	std::unique_ptr<RecorderState> recorder_state;
@@ -868,8 +877,8 @@ struct OwnershipTransferInfo
 	CommandBuffer::Type new_queue;
 	VkImageLayout old_image_layout;
 	VkImageLayout new_image_layout;
-	VkPipelineStageFlags dst_pipeline_stage;
-	VkAccessFlags dst_access;
+	VkPipelineStageFlags2 dst_pipeline_stage;
+	VkAccessFlags2 dst_access;
 };
 
 // For an image which was last accessed in old_queue, requests a command buffer

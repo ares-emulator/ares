@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2023 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -51,7 +51,7 @@ static inline const char *layout_to_string(VkImageLayout layout)
 	}
 }
 
-static inline std::string access_flags_to_string(VkAccessFlags flags)
+static inline std::string access_flags_to_string(VkAccessFlags2 flags)
 {
 	std::string result;
 
@@ -84,7 +84,7 @@ static inline std::string access_flags_to_string(VkAccessFlags flags)
 	return result;
 }
 
-static inline std::string stage_flags_to_string(VkPipelineStageFlags flags)
+static inline std::string stage_flags_to_string(VkPipelineStageFlags2 flags)
 {
 	std::string result;
 

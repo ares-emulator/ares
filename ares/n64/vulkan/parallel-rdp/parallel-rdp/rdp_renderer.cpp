@@ -586,7 +586,7 @@ bool Renderer::init_internal_upscaling_factor(const RendererOptions &options)
 	{
 		auto cmd = device->request_command_buffer();
 		cmd->fill_buffer(*upscaling_multisampled_hidden_rdram, 0x03030303);
-		cmd->barrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+		cmd->barrier(VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
 		             VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 		             VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT);
 		device->submit(cmd);
@@ -1615,8 +1615,8 @@ void Renderer::RenderBuffersUpdater::upload(Vulkan::Device &device, const Render
 
 	if (did_upload)
 	{
-		cmd.barrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
-		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT);
+		cmd.barrier(VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_READ_BIT);
 	}
 }
 
@@ -2237,16 +2237,16 @@ void Renderer::submit_render_pass(Vulkan::CommandBuffer &cmd)
 	if (need_tmem_upload)
 		update_tmem_instances(cmd);
 
-	cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_WRITE_BIT,
+	cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
 	            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | (!caps.ubershader ? VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT : 0),
-	            VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT |
+	            VK_ACCESS_2_SHADER_STORAGE_READ_BIT | VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT |
 	            (!caps.ubershader ? VK_ACCESS_INDIRECT_COMMAND_READ_BIT : 0));
 
 	if (need_render_pass && !caps.ubershader)
 	{
 		submit_rasterization(cmd, need_tmem_upload ? *tmem_instances : *tmem, false);
-		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_WRITE_BIT,
-		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT);
+		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
+		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_READ_BIT);
 	}
 
 	if (need_render_pass)
@@ -2257,9 +2257,9 @@ void Renderer::submit_render_pass(Vulkan::CommandBuffer &cmd)
 
 	if (render_pass_is_upscaled())
 	{
-		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_WRITE_BIT,
+		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
 		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-		            VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT);
+		            VK_ACCESS_2_SHADER_STORAGE_READ_BIT | VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT);
 
 		// TODO: Could probably do this reference update in the render pass itself,
 		// just write output to two buffers ... This is more composable for now.
@@ -2295,19 +2295,19 @@ void Renderer::submit_render_pass_upscaled(Vulkan::CommandBuffer &cmd)
 			update_tmem_instances(cmd);
 	}
 
-	cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_WRITE_BIT,
+	cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
 	            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
 	            (!caps.ubershader ? VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT : 0),
-	            VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT |
+	            VK_ACCESS_2_SHADER_STORAGE_READ_BIT | VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT |
 	            (!caps.ubershader ? VK_ACCESS_INDIRECT_COMMAND_READ_BIT : 0));
 
 	if (!caps.ubershader)
 	{
 		submit_rasterization(cmd, need_tmem_upload ? *tmem_instances : *tmem, true);
 		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-		            VK_ACCESS_SHADER_WRITE_BIT,
+		            VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
 		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-		            VK_ACCESS_SHADER_READ_BIT);
+		            VK_ACCESS_2_SHADER_STORAGE_READ_BIT);
 	}
 
 	submit_depth_blend(cmd, need_tmem_upload ? *tmem_instances : *tmem, true, caps.super_sample_readback);
@@ -2317,9 +2317,9 @@ void Renderer::submit_render_pass_upscaled(Vulkan::CommandBuffer &cmd)
 	if (caps.super_sample_readback)
 	{
 		cmd.begin_region("ssaa-resolve");
-		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_WRITE_BIT,
+		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
 		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-		            VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT);
+		            VK_ACCESS_2_SHADER_STORAGE_READ_BIT | VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT);
 
 		submit_update_upscaled_domain(cmd, ResolveStage::SSAAResolve);
 		cmd.end_region();
@@ -2336,9 +2336,9 @@ void Renderer::submit_render_pass_upscaled(Vulkan::CommandBuffer &cmd)
 void Renderer::submit_render_pass_end(Vulkan::CommandBuffer &cmd)
 {
 	base_primitive_index += uint32_t(stream.triangle_setup.size());
-	cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_WRITE_BIT,
+	cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
 	            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-	            VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT);
+	            VK_ACCESS_2_SHADER_STORAGE_READ_BIT | VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT);
 }
 
 void Renderer::maintain_queues()
@@ -2421,7 +2421,7 @@ void Renderer::submit_to_queue()
 	bool need_memory_flush = pending_host_visible_render_passes && !pending_upscaled_passes;
 	stream.cmd->barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
 	                    need_memory_flush ? VK_ACCESS_MEMORY_WRITE_BIT : 0,
-	                    (need_host_barrier ? VK_PIPELINE_STAGE_HOST_BIT : VK_PIPELINE_STAGE_TRANSFER_BIT),
+	                    (need_host_barrier ? VK_PIPELINE_STAGE_2_HOST_BIT : VK_PIPELINE_STAGE_2_COPY_BIT),
 	                    (need_host_barrier ? VK_ACCESS_HOST_READ_BIT : VK_ACCESS_TRANSFER_READ_BIT));
 
 	Vulkan::Fence fence;
@@ -2659,14 +2659,14 @@ void Renderer::resolve_coherency_gpu_to_host(CoherencyOperation &op, Vulkan::Com
 //#define COHERENCY_READBACK_TIMESTAMPS
 #ifdef COHERENCY_READBACK_TIMESTAMPS
 			Vulkan::QueryPoolHandle start_ts, end_ts;
-			start_ts = cmd.write_timestamp(VK_PIPELINE_STAGE_TRANSFER_BIT);
+			start_ts = cmd.write_timestamp(VK_PIPELINE_STAGE_2_COPY_BIT);
 #endif
 			cmd.copy_buffer(*incoherent.staging_readback, *rdram, copies.data(), copies.size());
 #ifdef COHERENCY_READBACK_TIMESTAMPS
-			end_ts = cmd.write_timestamp(VK_PIPELINE_STAGE_TRANSFER_BIT);
+			end_ts = cmd.write_timestamp(VK_PIPELINE_STAGE_2_COPY_BIT);
 			device->register_time_interval(std::move(start_ts), std::move(end_ts), "coherency-readback");
 #endif
-			cmd.barrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+			cmd.barrier(VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
 			            VK_PIPELINE_STAGE_HOST_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
 			            VK_ACCESS_HOST_READ_BIT);
 		}
@@ -2864,15 +2864,15 @@ void Renderer::resolve_coherency_host_to_gpu(Vulkan::CommandBuffer &cmd)
 
 	if (!to_clear_write_mask.empty() || !masked_page_copies.empty())
 	{
-		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_WRITE_BIT,
-		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT);
+		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
+		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_READ_BIT);
 	}
 
 	// If we cannot map the device memory, copy. We're latency sensitive, so don't use DMA queue.
 	if (!buffer_copies.empty())
 	{
 		cmd.barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
-		            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT);
+		            VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_TRANSFER_WRITE_BIT);
 
 //#define COHERENCY_COPY_TIMESTAMPS
 #ifdef COHERENCY_COPY_TIMESTAMPS
@@ -2881,12 +2881,12 @@ void Renderer::resolve_coherency_host_to_gpu(Vulkan::CommandBuffer &cmd)
 #endif
 		cmd.copy_buffer(*rdram, *incoherent.staging_rdram, buffer_copies.data(), buffer_copies.size());
 #ifdef COHERENCY_COPY_TIMESTAMPS
-		end_ts = cmd->write_timestamp(VK_PIPELINE_STAGE_TRANSFER_BIT);
+		end_ts = cmd->write_timestamp(VK_PIPELINE_STAGE_2_COPY_BIT);
 		device->register_time_interval(std::move(start_ts), std::move(end_ts), "coherent-copy");
 #endif
 
-		cmd.barrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
-		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT);
+		cmd.barrier(VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+		            VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_READ_BIT);
 	}
 
 	if (caps.timestamp)
@@ -3016,8 +3016,9 @@ void Renderer::ensure_command_buffer()
 		device->set_name(*indirect_dispatch_buffer, "indirect-dispatch-buffer");
 
 		clear_indirect_buffer(*stream.cmd);
-		stream.cmd->barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_WRITE_BIT,
-		                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT);
+		stream.cmd->barrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT,
+		                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+							VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT | VK_ACCESS_2_SHADER_STORAGE_READ_BIT);
 	}
 }
 

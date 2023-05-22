@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2023 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -111,6 +111,9 @@ double WSI::get_smooth_frame_time() const
 bool WSI::init_from_existing_context(ContextHandle existing_context)
 {
 	VK_ASSERT(platform);
+	if (platform && device)
+		platform->event_device_destroyed();
+	device.reset();
 	context = std::move(existing_context);
 	table = &context->get_device_table();
 	return true;
@@ -155,6 +158,7 @@ void WSI::set_platform(WSIPlatform *platform_)
 bool WSI::init_device()
 {
 	VK_ASSERT(context);
+	VK_ASSERT(!device);
 	device = Util::make_handle<Device>();
 	device->set_context(*context);
 	platform->event_device_created(device.get());
@@ -189,6 +193,7 @@ bool WSI::init_surface_swapchain()
 	VkBool32 supported = VK_FALSE;
 	uint32_t queue_present_support = 0;
 
+	// TODO: Ideally we need to create surface earlier and negotiate physical device based on that support.
 	for (auto &index : context->get_queue_info().family_indices)
 	{
 		if (index != VK_QUEUE_FAMILY_IGNORED)
@@ -240,17 +245,40 @@ bool WSI::init_context_from_platform(unsigned num_thread_indices, const Context:
 	auto device_ext = platform->get_device_extensions();
 	auto new_context = Util::make_handle<Context>();
 
+#ifdef HAVE_FFMPEG_VULKAN
+	constexpr ContextCreationFlags video_context_flags =
+			CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT |
+			CONTEXT_CREATION_ENABLE_VIDEO_H264_BIT |
+			CONTEXT_CREATION_ENABLE_VIDEO_H265_BIT;
+#else
+	constexpr ContextCreationFlags video_context_flags = 0;
+#endif
+
 	new_context->set_application_info(platform->get_application_info());
 	new_context->set_num_thread_indices(num_thread_indices);
 	new_context->set_system_handles(system_handles);
-	if (!new_context->init_instance_and_device(
-		instance_ext.data(), instance_ext.size(),
-		device_ext.data(), device_ext.size(),
-		CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT))
+
+	if (!new_context->init_instance(
+			instance_ext.data(), instance_ext.size(),
+			CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT | video_context_flags))
+	{
+		LOGE("Failed to create Vulkan instance.\n");
+		return false;
+	}
+
+	VkSurfaceKHR tmp_surface = platform->create_surface(new_context->get_instance(), VK_NULL_HANDLE);
+
+	if (!new_context->init_device(
+			VK_NULL_HANDLE, tmp_surface,
+			device_ext.data(), device_ext.size(),
+			CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT | video_context_flags))
 	{
 		LOGE("Failed to create Vulkan device.\n");
 		return false;
 	}
+
+	if (tmp_surface)
+		platform->destroy_surface(new_context->get_instance(), tmp_surface);
 
 	return init_from_existing_context(std::move(new_context));
 }
@@ -467,7 +495,7 @@ bool WSI::begin_frame()
 	VkResult result;
 	do
 	{
-		auto acquire = device->request_legacy_semaphore();
+		auto acquire = device->request_semaphore(VK_SEMAPHORE_TYPE_BINARY);
 
 #ifdef VULKAN_WSI_TIMING_DEBUG
 		auto acquire_start = Util::get_current_time_nsecs();
@@ -619,11 +647,13 @@ bool WSI::end_frame()
 
 		auto present_ts = device->write_calibrated_timestamp();
 
+		device->external_queue_lock();
 #if defined(ANDROID) && defined(HAVE_SWAPPY)
 		VkResult overall = SwappyVk_queuePresent(device->get_current_present_queue(), &info);
 #else
 		VkResult overall = table->vkQueuePresentKHR(device->get_current_present_queue(), &info);
 #endif
+		device->external_queue_unlock();
 
 		device->register_time_interval("WSI", std::move(present_ts), device->write_calibrated_timestamp(), "present");
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2023 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -50,16 +50,6 @@ public:
 		return event;
 	}
 
-	VkPipelineStageFlags get_stages() const
-	{
-		return stages;
-	}
-
-	void set_stages(VkPipelineStageFlags stages_)
-	{
-		stages = stages_;
-	}
-
 private:
 	friend class Util::ObjectPool<EventHolder>;
 	EventHolder(Device *device_, VkEvent event_)
@@ -70,7 +60,6 @@ private:
 
 	Device *device;
 	VkEvent event;
-	VkPipelineStageFlags stages = 0;
 };
 
 using PipelineEvent = Util::IntrusivePtr<EventHolder>;
