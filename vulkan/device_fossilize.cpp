@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2023 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -48,13 +48,36 @@ Device::ReplayerState::~ReplayerState()
 {
 }
 
-#if 0
 void Device::register_sampler(VkSampler sampler, Fossilize::Hash hash, const VkSamplerCreateInfo &info)
 {
-	if (!state_recorder.record_sampler(sampler, info, hash))
+	if (!recorder_state)
+		return;
+
+	if (!recorder_state->recorder_ready.load(std::memory_order_acquire))
+	{
+		LOGW("Attempting to register sampler before recorder is ready.\n");
+		return;
+	}
+
+	if (!recorder_state->recorder.record_sampler(sampler, info, hash))
 		LOGW("Failed to register sampler.\n");
 }
-#endif
+
+void Device::register_sampler_ycbcr_conversion(
+		VkSamplerYcbcrConversion ycbcr, const VkSamplerYcbcrConversionCreateInfo &info)
+{
+	if (!recorder_state)
+		return;
+
+	if (!recorder_state->recorder_ready.load(std::memory_order_acquire))
+	{
+		LOGW("Attempting to register sampler YCbCr conversion before recorder is ready.\n");
+		return;
+	}
+
+	if (!recorder_state->recorder.record_ycbcr_conversion(ycbcr, info))
+		LOGW("Failed to register YCbCr conversion.\n");
+}
 
 void Device::register_descriptor_set_layout(VkDescriptorSetLayout layout, Fossilize::Hash hash, const VkDescriptorSetLayoutCreateInfo &info)
 {
@@ -67,7 +90,7 @@ void Device::register_descriptor_set_layout(VkDescriptorSetLayout layout, Fossil
 		return;
 	}
 
-	if (recorder_state && !recorder_state->recorder.record_descriptor_set_layout(layout, info, hash))
+	if (!recorder_state->recorder.record_descriptor_set_layout(layout, info, hash))
 		LOGW("Failed to register descriptor set layout.\n");
 }
 
@@ -82,7 +105,7 @@ void Device::register_pipeline_layout(VkPipelineLayout layout, Fossilize::Hash h
 		return;
 	}
 
-	if (recorder_state && !recorder_state->recorder.record_pipeline_layout(layout, info, hash))
+	if (!recorder_state->recorder.record_pipeline_layout(layout, info, hash))
 		LOGW("Failed to register pipeline layout.\n");
 }
 
@@ -131,7 +154,7 @@ void Device::register_graphics_pipeline(Fossilize::Hash hash, const VkGraphicsPi
 		LOGW("Failed to register graphics pipeline.\n");
 }
 
-void Device::register_render_pass(VkRenderPass render_pass, Fossilize::Hash hash, const VkRenderPassCreateInfo &info)
+void Device::register_render_pass(VkRenderPass render_pass, Fossilize::Hash hash, const VkRenderPassCreateInfo2KHR &info)
 {
 	if (!recorder_state)
 		return;
@@ -142,7 +165,7 @@ void Device::register_render_pass(VkRenderPass render_pass, Fossilize::Hash hash
 		return;
 	}
 
-	if (!recorder_state->recorder.record_render_pass(render_pass, info, hash))
+	if (!recorder_state->recorder.record_render_pass2(render_pass, info, hash))
 		LOGW("Failed to register render pass.\n");
 }
 
@@ -189,7 +212,8 @@ bool Device::fossilize_replay_graphics_pipeline(Fossilize::Hash hash, VkGraphics
 		return false;
 	}
 
-	auto *ret = request_program(vert_shader, frag_shader);
+	auto *ret = request_program(vert_shader, frag_shader,
+	                            reinterpret_cast<const ImmutableSamplerBank *>(info.layout));
 
 	// The layout is dummy, resolve it here.
 	info.layout = ret->get_pipeline_layout()->get_layout();
@@ -260,7 +284,7 @@ bool Device::fossilize_replay_compute_pipeline(Fossilize::Hash hash, VkComputePi
 		return false;
 	}
 
-	auto *ret = request_program(shader);
+	auto *ret = request_program(shader, reinterpret_cast<const ImmutableSamplerBank *>(info.layout));
 
 	// The layout is dummy, resolve it here.
 	info.layout = ret->get_pipeline_layout()->get_layout();
@@ -344,11 +368,16 @@ bool Device::enqueue_create_compute_pipeline(Fossilize::Hash hash,
 	return true;
 }
 
-bool Device::enqueue_create_render_pass(Fossilize::Hash hash,
-                                        const VkRenderPassCreateInfo *create_info,
-                                        VkRenderPass *render_pass)
+bool Device::enqueue_create_render_pass(Fossilize::Hash,
+                                        const VkRenderPassCreateInfo *,
+                                        VkRenderPass *)
 {
-	if (!replayer_state->feature_filter->render_pass_is_supported(create_info))
+	return false;
+}
+
+bool Device::enqueue_create_render_pass2(Fossilize::Hash hash, const VkRenderPassCreateInfo2 *create_info, VkRenderPass *render_pass)
+{
+	if (!replayer_state->feature_filter->render_pass2_is_supported(create_info))
 	{
 		render_pass = VK_NULL_HANDLE;
 		return true;
@@ -359,22 +388,34 @@ bool Device::enqueue_create_render_pass(Fossilize::Hash hash,
 	return true;
 }
 
-bool Device::enqueue_create_render_pass2(Fossilize::Hash, const VkRenderPassCreateInfo2 *, VkRenderPass *)
-{
-	return false;
-}
-
 bool Device::enqueue_create_raytracing_pipeline(
 		Fossilize::Hash, const VkRayTracingPipelineCreateInfoKHR *, VkPipeline *)
 {
 	return false;
 }
 
-bool Device::enqueue_create_sampler(Fossilize::Hash, const VkSamplerCreateInfo *, VkSampler *)
+bool Device::enqueue_create_sampler(Fossilize::Hash hash, const VkSamplerCreateInfo *info, VkSampler *vk_sampler)
 {
-	//*sampler = get_stock_sampler(static_cast<StockSampler>(hash & 0xffffu)).get_sampler();
-	//return true;
-	return false;
+	if (!replayer_state->feature_filter->sampler_is_supported(info))
+	{
+		*vk_sampler = VK_NULL_HANDLE;
+		return false;
+	}
+
+	const ImmutableYcbcrConversion *ycbcr = nullptr;
+
+	if (info->pNext)
+	{
+		// YCbCr conversion create infos are replayed inline in Fossilize.
+		const auto *ycbcr_info = static_cast<const VkSamplerYcbcrConversionCreateInfo *>(info->pNext);
+		if (ycbcr_info && ycbcr_info->sType == VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_CREATE_INFO)
+			ycbcr = request_immutable_ycbcr_conversion(*ycbcr_info);
+	}
+
+	auto sampler_info = Sampler::fill_sampler_info(*info);
+	auto *samp = immutable_samplers.emplace_yield(hash, hash, this, sampler_info, ycbcr);
+	*vk_sampler = reinterpret_cast<VkSampler>(samp);
+	return true;
 }
 
 bool Device::enqueue_create_descriptor_set_layout(Fossilize::Hash, const VkDescriptorSetLayoutCreateInfo *info, VkDescriptorSetLayout *layout)
@@ -385,8 +426,13 @@ bool Device::enqueue_create_descriptor_set_layout(Fossilize::Hash, const VkDescr
 		return true;
 	}
 
-	// We will create this naturally when building pipelines, can just emit dummy handles.
-	*layout = (VkDescriptorSetLayout) uint64_t(-1);
+	auto &alloc = replayer_state->base_replayer.get_allocator();
+	auto *sampler_bank = alloc.allocate_n_cleared<const ImmutableSampler *>(VULKAN_NUM_BINDINGS);
+	for (uint32_t i = 0; i < info->bindingCount; i++)
+		if (info->pBindings[i].pImmutableSamplers && info->pBindings[i].pImmutableSamplers[0] != VK_NULL_HANDLE)
+			sampler_bank[i] = reinterpret_cast<const ImmutableSampler *>(info->pBindings[i].pImmutableSamplers[0]);
+
+	*layout = reinterpret_cast<VkDescriptorSetLayout>(sampler_bank);
 	return true;
 }
 
@@ -398,8 +444,16 @@ bool Device::enqueue_create_pipeline_layout(Fossilize::Hash, const VkPipelineLay
 		return true;
 	}
 
-	// We will create this naturally when building pipelines, can just emit dummy handles.
-	*layout = (VkPipelineLayout) uint64_t(-1);
+	auto &alloc = replayer_state->base_replayer.get_allocator();
+	auto *sampler_bank = alloc.allocate_cleared<ImmutableSamplerBank>();
+	for (uint32_t i = 0; i < info->setLayoutCount; i++)
+	{
+		memcpy(sampler_bank->samplers[i],
+		       reinterpret_cast<const ImmutableSampler *const *>(info->pSetLayouts[i]),
+		       sizeof(sampler_bank->samplers[i]));
+	}
+
+	*layout = reinterpret_cast<VkPipelineLayout>(sampler_bank);
 	return true;
 }
 
@@ -653,6 +707,7 @@ void Device::init_pipeline_state(const Fossilize::FeatureFilter &filter,
 
 		if (replayer_state->db)
 		{
+			replay_tag_simple(Fossilize::RESOURCE_SAMPLER);
 			replay_tag_simple(Fossilize::RESOURCE_DESCRIPTOR_SET_LAYOUT);
 			replay_tag_simple(Fossilize::RESOURCE_PIPELINE_LAYOUT);
 			replay_tag_simple(Fossilize::RESOURCE_RENDER_PASS);
@@ -686,7 +741,7 @@ void Device::init_pipeline_state(const Fossilize::FeatureFilter &filter,
 	});
 	prepare_task->set_desc("foz-prepare");
 
-	group->add_dependency(*prepare_task, *cache_maintenance_task);
+	group->add_dependency(*prepare_task, *recorder_kick_task);
 
 	auto parse_modules_task = group->create_task();
 	parse_modules_task->set_desc("foz-parse-modules");
@@ -717,7 +772,10 @@ void Device::init_pipeline_state(const Fossilize::FeatureFilter &filter,
 					continue;
 
 				if (!module_replayer.parse(*this, &db, buffer.data(), size))
+				{
+					replayer_state->progress.modules.fetch_add(1, std::memory_order_release);
 					LOGW("Failed to parse module.\n");
+				}
 			}
 		});
 	}
@@ -743,7 +801,10 @@ void Device::init_pipeline_state(const Fossilize::FeatureFilter &filter,
 				continue;
 
 			if (!replayer.parse(*this, &db, buffer.data(), size))
+			{
+				replayer_state->progress.pipelines.fetch_add(1, std::memory_order_release);
 				LOGW("Failed to parse graphics pipeline.\n");
+			}
 		}
 	});
 	parse_graphics_task->set_desc("foz-parse-graphics");
@@ -769,7 +830,10 @@ void Device::init_pipeline_state(const Fossilize::FeatureFilter &filter,
 				continue;
 
 			if (!replayer.parse(*this, &db, buffer.data(), size))
+			{
+				replayer_state->progress.pipelines.fetch_add(1, std::memory_order_release);
 				LOGW("Failed to parse compute pipeline.\n");
+			}
 		}
 	});
 	parse_compute_task->set_desc("foz-parse-compute");
@@ -830,7 +894,6 @@ void Device::init_pipeline_state(const Fossilize::FeatureFilter &filter,
 	replayer_state->complete->set_desc("foz-replay-complete");
 	group->add_dependency(*replayer_state->complete, *compile_graphics_task);
 	group->add_dependency(*replayer_state->complete, *compile_compute_task);
-	group->add_dependency(*replayer_state->complete, *recorder_kick_task);
 	replayer_state->complete->flush();
 
 	replayer_state->module_ready = std::move(parse_modules_task);

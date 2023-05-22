@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2023 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -29,44 +29,6 @@
 namespace Vulkan
 {
 class Device;
-
-static inline VkPipelineStageFlags buffer_usage_to_possible_stages(VkBufferUsageFlags usage)
-{
-	VkPipelineStageFlags flags = 0;
-	if (usage & (VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT))
-		flags |= VK_PIPELINE_STAGE_TRANSFER_BIT;
-	if (usage & (VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT))
-		flags |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
-	if (usage & VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT)
-		flags |= VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;
-	if (usage & (VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT |
-	             VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT))
-		flags |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
-		         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	if (usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
-		flags |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-
-	return flags;
-}
-
-static inline VkAccessFlags buffer_usage_to_possible_access(VkBufferUsageFlags usage)
-{
-	VkAccessFlags flags = 0;
-	if (usage & (VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT))
-		flags |= VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
-	if (usage & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
-		flags |= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
-	if (usage & VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
-		flags |= VK_ACCESS_INDEX_READ_BIT;
-	if (usage & VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT)
-		flags |= VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
-	if (usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
-		flags |= VK_ACCESS_UNIFORM_READ_BIT;
-	if (usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
-		flags |= VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
-
-	return flags;
-}
 
 enum class BufferDomain
 {

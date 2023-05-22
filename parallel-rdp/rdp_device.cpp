@@ -1150,7 +1150,7 @@ void CommandProcessor::scanout_async_buffer(VIScanoutBuffer &buffer, const Scano
 
 	auto cmd = device.request_command_buffer();
 	cmd->copy_image_to_buffer(*buffer.buffer, *handle, 0, {}, { buffer.width, buffer.height, 1 }, 0, 0, { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 });
-	cmd->barrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+	cmd->barrier(VK_PIPELINE_STAGE_2_COPY_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
 	             VK_PIPELINE_STAGE_HOST_BIT, VK_ACCESS_HOST_READ_BIT);
 
 	buffer.fence.reset();

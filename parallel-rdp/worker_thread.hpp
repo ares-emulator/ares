@@ -27,6 +27,7 @@
 #include <thread>
 #include <condition_variable>
 #include <utility>
+#include "thread_id.hpp"
 
 #ifdef PARALLEL_RDP_SHADER_DIR
 #include "global_managers.hpp"
@@ -97,6 +98,10 @@ private:
 		Granite::Global::set_thread_context(*handles);
 		handles.reset();
 #endif
+
+		// Avoid benign errors in logging.
+		// This thread never actually needs the thread ID.
+		Util::register_thread_index(0);
 
 		for (;;)
 		{

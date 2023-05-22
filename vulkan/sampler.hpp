@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2022 Hans-Kristian Arntzen
+/* Copyright (c) 2017-2023 Hans-Kristian Arntzen
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -87,6 +87,7 @@ public:
 	}
 
 	static VkSamplerCreateInfo fill_vk_sampler_info(const SamplerCreateInfo &sampler_info);
+	static SamplerCreateInfo fill_sampler_info(const VkSamplerCreateInfo &sampler_info);
 
 private:
 	friend class Util::ObjectPool<Sampler>;
