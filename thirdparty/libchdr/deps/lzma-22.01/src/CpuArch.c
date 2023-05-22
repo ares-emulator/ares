@@ -415,6 +415,16 @@ BoolInt CPU_IsSupported_AES (void) { return APPLE_CRYPTO_SUPPORT_VAL; }
 
 #else // __APPLE__
 
+#if defined(__SWITCH__) || defined(__vita__)
+
+BoolInt CPU_IsSupported_CRC32(void) { return 0; }
+BoolInt CPU_IsSupported_NEON(void) { return 1; }
+BoolInt CPU_IsSupported_SHA1(void) { return 0; }
+BoolInt CPU_IsSupported_SHA2(void) { return 0; }
+BoolInt CPU_IsSupported_AES (void) { return 0; }
+
+#else
+
 #include <sys/auxv.h>
 
 #define USE_HWCAP
@@ -450,6 +460,7 @@ MY_HWCAP_CHECK_FUNC (SHA1)
 MY_HWCAP_CHECK_FUNC (SHA2)
 MY_HWCAP_CHECK_FUNC (AES)
 
+#endif
 #endif // __APPLE__
 #endif // _WIN32
 
