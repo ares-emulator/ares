@@ -44,7 +44,7 @@ extern const unsigned char ST010[53248];
 extern const unsigned char ST011[53248];
 extern const unsigned char ST018[163840];
 extern const unsigned char S21FX[122];
-extern const unsigned char Boards[33212];
+extern const unsigned char Boards[32230];
 }
 namespace WonderSwan {
 extern const unsigned char Boot[4096];
