@@ -177,7 +177,7 @@ auto TIA::power(bool reset) -> void {
   ball = {};
   collision = {};
   for(auto n : range(writeQueue.maxItems)) writeQueue.items[n] = {};
-  audio = {};
+  audio[0] = {}; audio[1] = {};
   for(u32 level : range(15)) {
     volume[level] = pow(2, level * -2.0 / 6.0);
   }
