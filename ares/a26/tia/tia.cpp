@@ -15,10 +15,10 @@ auto TIA::load(Node::Object parent) -> void {
 
   screen = node->append<Node::Video::Screen>("Screen", 160, vlines());
   screen->colors(1 << 7, {&TIA::color, this});
-  screen->setSize(160, vlines());
+  screen->setSize(160, displayHeight());
   screen->setScale(1.0, 1.0);
   screen->setAspect(12.0, 7.0);
-  screen->setViewport(0, 0, 160, vlines());
+  screen->setViewport(0, 0, 160, displayHeight());
 
   stream = node->append<Node::Audio::Stream>("Audio");
   stream->setChannels(1);
@@ -48,6 +48,12 @@ auto TIA::scanline() -> void {
     writeQueue.step();
     runAudio();
     step();
+  }
+
+  // Prevent an infinite emulator hang when games miss vblank
+  if(io.vcounter > vlines()) {
+    scheduler.exit(Event::Frame);
+    io.vcounter = 0;
   }
 }
 
@@ -144,6 +150,14 @@ auto TIA::runBall(n8 x) -> n1 {
 }
 
 auto TIA::frame() -> void {
+  auto height = io.vcounter;
+
+  if(height <= 0) {
+     debug(unusual, "invalid screen height");
+     height = vlines();
+  }
+
+  screen->setViewport(0, 0, 160, height);
   screen->frame();
   scheduler.exit(Event::Frame);
 }
