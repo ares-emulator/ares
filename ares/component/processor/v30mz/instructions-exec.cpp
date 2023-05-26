@@ -29,7 +29,7 @@ auto V30MZ::instructionJumpIf(bool condition) -> void {
   wait(1);
   auto offset = (i8)fetch<Byte>();
   if(condition) {
-    wait(3);
+    wait(2);
     PC += offset;
     flush();
   }
@@ -51,7 +51,7 @@ auto V30MZ::instructionJumpFar() -> void {
 }
 
 auto V30MZ::instructionCallNear() -> void {
-  wait(4);
+  wait(2);
   auto offset = (i16)fetch<Word>();
   push(PC);
   PC += offset;
@@ -59,7 +59,7 @@ auto V30MZ::instructionCallNear() -> void {
 }
 
 auto V30MZ::instructionCallFar() -> void {
-  wait(9);
+  wait(6);
   auto pc = fetch<Word>();
   auto ps = fetch<Word>();
   push(PS);
@@ -70,13 +70,13 @@ auto V30MZ::instructionCallFar() -> void {
 }
 
 auto V30MZ::instructionReturn() -> void {
-  wait(5);
+  wait(4);
   PC = pop();
   flush();
 }
 
 auto V30MZ::instructionReturnImm() -> void {
-  wait(5);
+  wait(4);
   auto offset = fetch<Word>();
   PC = pop();
   SP += offset;
@@ -84,14 +84,14 @@ auto V30MZ::instructionReturnImm() -> void {
 }
 
 auto V30MZ::instructionReturnFar() -> void {
-  wait(7);
+  wait(5);
   PC = pop();
   PS = pop();
   flush();
 }
 
 auto V30MZ::instructionReturnFarImm() -> void {
-  wait(8);
+  wait(6);
   auto offset = fetch<Word>();
   PC = pop();
   PS = pop();
@@ -100,7 +100,7 @@ auto V30MZ::instructionReturnFarImm() -> void {
 }
 
 auto V30MZ::instructionReturnInt() -> void {
-  wait(7);
+  wait(6);
   PC = pop();
   PS = pop();
   PSW = pop();
@@ -146,7 +146,7 @@ auto V30MZ::instructionEnter() -> void {
 }
 
 auto V30MZ::instructionLeave() -> void {
-  wait(1);
+  wait(2);
   SP = BP;
   BP = pop();
 }

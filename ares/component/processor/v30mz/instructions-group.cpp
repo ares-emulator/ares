@@ -62,13 +62,13 @@ template<u32 size> auto V30MZ::instructionGroup4MemImm() -> void {
     setMemory<size>(DEC<size>(getMemory<size>()));
     break;
   case 2:  //CALL
-    wait(5);
+    wait(3);
     push(PC);
     PC = getMemory<Word>();
     flush();
     break;
   case 3:  //CALLF
-    wait(11);
+    wait(7);
     push(PS);
     push(PC);
     PC = getMemory<Word>(0);

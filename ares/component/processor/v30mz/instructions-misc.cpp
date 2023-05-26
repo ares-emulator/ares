@@ -25,7 +25,7 @@ auto V30MZ::instructionWait() -> void {
 }
 
 auto V30MZ::instructionHalt() -> void {
-  wait(8);
+  wait(9);
   state.halt = 1;
 }
 
@@ -53,12 +53,12 @@ template<u32 size> auto V30MZ::instructionOut() -> void {
 }
 
 template<u32 size> auto V30MZ::instructionInDW() -> void {
-  wait(4);
+  wait(5);
   setAccumulator<size>(in<size>(DW));
 }
 
 template<u32 size> auto V30MZ::instructionOutDW() -> void {
-  wait(4);
+  wait(5);
   out<size>(DW, getAccumulator<size>());
 }
 
