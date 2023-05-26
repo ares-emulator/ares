@@ -16,7 +16,6 @@ auto V30MZ::flush() -> void {
   PF.flush();
   PFP = PC;
   PFW = 0;
-  if(PFP & 1) step(1);
 }
 
 auto V30MZ::prefetch() -> void {
@@ -32,12 +31,14 @@ auto V30MZ::prefetch() -> void {
 
 template<> auto V30MZ::fetch<Byte>() -> u16 {
   PC++;
-  while(PF.empty()) prefetch();
+  while(PF.size() < 2) prefetch();
   return PF.read(0);
 }
 
 template<> auto V30MZ::fetch<Word>() -> u16 {
-  u8 lo = fetch<Byte>();
-  u8 hi = fetch<Byte>();
+  PC += 2;
+  while(PF.size() < 2) prefetch();
+  u8 lo = PF.read(0);
+  u8 hi = PF.read(0);
   return lo << 0 | hi << 8;
 }
