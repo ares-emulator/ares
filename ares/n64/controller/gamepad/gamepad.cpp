@@ -243,6 +243,10 @@ auto Gamepad::read() -> n32 {
   if(abs(ax) > cardinalMax) ax = copysign(cardinalMax, ax);
   if(abs(ay) > cardinalMax) ay = copysign(cardinalMax, ay);
   
+  //add epsilon to counteract floating point precision error
+  ax = copysign(abs(ax) + 1e-09, ax);
+  ay = copysign(abs(ay) + 1e-09, ay);
+  
   n32 data;
   data.byte(0) = s8(-ay);
   data.byte(1) = s8(+ax);
