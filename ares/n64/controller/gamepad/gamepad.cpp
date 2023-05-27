@@ -195,54 +195,54 @@ auto Gamepad::read() -> n32 {
   platform->input(z);
   platform->input(start);
 
-  auto cardinalMaxN64   = 85.0;
-  auto diagonalMaxN64   = 69.0;
-  auto innerDeadzone    =  7.0; // default should remain 7 (~8.2% of 85) as the deadzone is axial in nature and fights cardinalMaxN64
-  auto startCardinalMax = (diagonalMaxN64 + innerDeadzone + sqrt(pow(diagonalMaxN64 , 2) + 2 * diagonalMaxN64 * innerDeadzone * (1 - sqrt(2)) + pow(innerDeadzone , 2)))/sqrt(2); //from linear scaling equation, substitute startCardinalMax*sqrt(2)/2 for lengthAbsoluteX and set diagonalMaxN64 as the result then solve for startCardinalMax
+  auto cardinalMax   = 85.0;
+  auto diagonalMax   = 69.0;
+  auto innerDeadzone =  7.0; // default should remain 7 (~8.2% of 85) as the deadzone is axial in nature and fights cardinalMax
+  auto outerDeadzoneRadiusMax = 2.0 / sqrt(2.0) * (diagonalMax / cardinalMax * (cardinalMax - innerDeadzone) + innerDeadzone); //from linear scaling equation, substitute outerDeadzoneRadiusMax*sqrt(2)/2 for lengthAbsoluteX and set diagonalMax as the result then solve for outerDeadzoneRadiusMax
 
-  //scale {-32768 ... +32767} to {-startCardinalMax ... +startCardinalMax}
-  auto ax = x->value() * startCardinalMax / 32767.0;
-  auto ay = y->value() * startCardinalMax / 32767.0;
-
-  //create inner axial dead-zone in range {-innerDeadzone ... +innerDeadzone} and scale from it up to outer circular dead-zone of radius startCardinalMax
+  //scale {-32768 ... +32767} to {-outerDeadzoneRadiusMax ... +outerDeadzoneRadiusMax}
+  auto ax = x->value() * outerDeadzoneRadiusMax / 32767.0;
+  auto ay = y->value() * outerDeadzoneRadiusMax / 32767.0;
+  
+  //create inner axial dead-zone in range {-innerDeadzone ... +innerDeadzone} and scale from it up to outer circular dead-zone of radius outerDeadzoneRadiusMax
   auto length = sqrt(ax * ax + ay * ay);
-  if(length <= startCardinalMax) {
+  if(length <= outerDeadzoneRadiusMax) {
     auto lengthAbsoluteX = abs(ax);
     auto lengthAbsoluteY = abs(ay);
     if(lengthAbsoluteX <= innerDeadzone) {
       lengthAbsoluteX = 0.0;
     } else {
-      lengthAbsoluteX = (lengthAbsoluteX - innerDeadzone) * startCardinalMax / (startCardinalMax - innerDeadzone) / lengthAbsoluteX;
+      lengthAbsoluteX = (lengthAbsoluteX - innerDeadzone) * cardinalMax / (cardinalMax - innerDeadzone) / lengthAbsoluteX;
     }
     ax *= lengthAbsoluteX;
     if(lengthAbsoluteY <= innerDeadzone) {
       lengthAbsoluteY = 0.0;
     } else {
-      lengthAbsoluteY = (lengthAbsoluteY - innerDeadzone) * startCardinalMax / (startCardinalMax - innerDeadzone) / lengthAbsoluteY;
+      lengthAbsoluteY = (lengthAbsoluteY - innerDeadzone) * cardinalMax / (cardinalMax - innerDeadzone) / lengthAbsoluteY;
     }
     ay *= lengthAbsoluteY;
   } else {
-    length = startCardinalMax / length;
+    length = outerDeadzoneRadiusMax / length;
     ax *= length;
     ay *= length;
   }
-
-  //bound diagonals to an octagonal range {-diagonalMaxN64 ... +diagonalMaxN64}
+  
+  //bound diagonals to an octagonal range {-diagonalMax ... +diagonalMax}
   if(ax != 0.0 && ay != 0.0) {
     auto slope = ay / ax;
-    auto edgex = copysign(cardinalMaxN64 / (abs(slope) + (cardinalMaxN64 - diagonalMaxN64) / diagonalMaxN64), ax);
-    auto edgey = copysign(min(abs(edgex * slope), cardinalMaxN64 / (1.0 / abs(slope) + (cardinalMaxN64 - diagonalMaxN64) / diagonalMaxN64)), ay);
+    auto edgex = copysign(cardinalMax / (abs(slope) + (cardinalMax - diagonalMax) / diagonalMax), ax);
+    auto edgey = copysign(min(abs(edgex * slope), cardinalMax / (1.0 / abs(slope) + (cardinalMax - diagonalMax) / diagonalMax)), ay);
     edgex = edgey / slope;
 
-    auto scale = sqrt(edgex * edgex + edgey * edgey) / startCardinalMax;
+    auto scale = sqrt(edgex * edgex + edgey * edgey) / outerDeadzoneRadiusMax;
     ax *= scale;
     ay *= scale;
   }
 
-  //keep cardinal input within positive and negative bounds of cardinalMaxN64
-  if(abs(ax) > cardinalMaxN64) ax = copysign(cardinalMaxN64, ax);
-  if(abs(ay) > cardinalMaxN64) ay = copysign(cardinalMaxN64, ay);
-
+  //keep cardinal input within positive and negative bounds of cardinalMax
+  if(abs(ax) > cardinalMax) ax = copysign(cardinalMax, ax);
+  if(abs(ay) > cardinalMax) ay = copysign(cardinalMax, ay);
+  
   n32 data;
   data.byte(0) = s8(-ay);
   data.byte(1) = s8(+ax);
@@ -262,7 +262,7 @@ auto Gamepad::read() -> n32 {
   data.bit(29) = z->value();
   data.bit(30) = b->value();
   data.bit(31) = a->value();
-
+  
   //when L+R+Start are pressed: the X/Y axes are zeroed, RST is set, and Start is cleared
   if(l->value() && r->value() && start->value()) {
     data.byte(0) = 0;  //Y-Axis
