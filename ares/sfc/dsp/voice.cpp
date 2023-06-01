@@ -3,8 +3,8 @@ inline auto DSP::voiceOutput(Voice& v, n1 channel) -> void {
   s32 amp = latch.output * v.volume[channel] >> 7;
 
   //add to output total
-  master.output[channel] += amp;
-  master.output[channel] = sclamp<16>(master.output[channel]);
+  mainvol.output[channel] += amp;
+  mainvol.output[channel] = sclamp<16>(mainvol.output[channel]);
 
   //optionally add to echo total
   if(v._echo) {
@@ -87,7 +87,7 @@ auto DSP::voice3c(Voice& v) -> void {
   v.envx = v.envelope >> 4;
 
   //immediate silence due to end of sample or soft reset
-  if(master.reset || brr._header.bit(0,1) == 1) {
+  if(mainvol.reset || brr._header.bit(0,1) == 1) {
     v.envelopeMode = Envelope::Release;
     v.envelope = 0;
   }

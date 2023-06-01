@@ -7,10 +7,10 @@ auto DSP::serialize(serializer& s) -> void {
   s(clock.counter);
   s(clock.sample);
 
-  s(master.reset);
-  s(master.mute);
-  s(master.volume);
-  s(master.output);
+  s(mainvol.reset);
+  s(mainvol.mute);
+  s(mainvol.volume);
+  s(mainvol.output);
 
   s(echo.feedback);
   s(echo.volume);

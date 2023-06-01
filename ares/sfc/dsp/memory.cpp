@@ -7,10 +7,10 @@ auto DSP::write(n7 address, n8 data) -> void {
 
   switch(address) {
   case 0x0c:  //MVOLL
-    master.volume[0] = data;
+    mainvol.volume[0] = data;
     break;
   case 0x1c:  //MVOLR
-    master.volume[1] = data;
+    mainvol.volume[1] = data;
     break;
   case 0x2c:  //EVOLL
     echo.volume[0] = data;
@@ -28,8 +28,8 @@ auto DSP::write(n7 address, n8 data) -> void {
   case 0x6c:  //FLG
     noise.frequency = data.bit(0,4);
     echo.readonly   = data.bit(5);
-    master.mute     = data.bit(6);
-    master.reset    = data.bit(7);
+    mainvol.mute     = data.bit(6);
+    mainvol.reset    = data.bit(7);
     break;
   case 0x7c:  //ENDX
     for(u32 n : range(8)) voice[n]._end = 0;
