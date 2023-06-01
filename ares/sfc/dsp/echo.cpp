@@ -4,9 +4,9 @@ auto DSP::calculateFIR(n1 channel, s32 index) -> s32 {
 }
 
 auto DSP::echoOutput(n1 channel) const -> i16 {
-  i16 masterOutput = master.output[channel] * master.volume[channel] >> 7;
+  i16 mainvolOutput = mainvol.output[channel] * mainvol.volume[channel] >> 7;
     i16 echoOutput =    echo.input[channel] *   echo.volume[channel] >> 7;
-  return sclamp<16>(masterOutput + echoOutput);
+  return sclamp<16>(mainvolOutput + echoOutput);
 }
 
 auto DSP::echoRead(n1 channel) -> void {
@@ -77,7 +77,7 @@ auto DSP::echo25() -> void {
 auto DSP::echo26() -> void {
   //left output volumes
   //(save sample for next clock so we can output both together)
-  master.output[0] = echoOutput(0);
+  mainvol.output[0] = echoOutput(0);
 
   //echo feedback
   s32 l = echo.output[0] + i16(echo.input[0] * echo.feedback >> 7);
@@ -88,14 +88,14 @@ auto DSP::echo26() -> void {
 }
 
 auto DSP::echo27() -> void {
-  s32 outl = master.output[0];
+  s32 outl = mainvol.output[0];
   s32 outr = echoOutput(1);
-  master.output[0] = 0;
-  master.output[1] = 0;
+  mainvol.output[0] = 0;
+  mainvol.output[1] = 0;
 
   //todo: global muting isn't this simple
   //(turns DAC on and off or something, causing small ~37-sample pulse when first muted)
-  if(master.mute) {
+  if(mainvol.mute) {
     outl = 0;
     outr = 0;
   }

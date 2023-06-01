@@ -16,7 +16,7 @@ struct DSP : Thread {
   n8 apuram[64_KiB];
   n8 registers[128];
 
-  auto mute() const -> bool { return master.mute; }
+  auto mute() const -> bool { return mainvol.mute; }
 
   //dsp.cpp
   auto load(Node::Object) -> void;
@@ -45,12 +45,12 @@ private:
     n1  sample = 1;
   } clock;
 
-  struct Master {
+  struct MainVol {
     n1  reset = 1;
     n1  mute = 1;
     i8  volume[2];
     i17 output[2];
-  } master;
+  } mainvol;
 
   struct Echo {
     i8  feedback;

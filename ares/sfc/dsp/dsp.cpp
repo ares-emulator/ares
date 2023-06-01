@@ -201,7 +201,7 @@ auto DSP::power(bool reset) -> void {
     random.array({registers, sizeof(registers)});
   }
 
-  master = {};
+  mainvol = {};
   echo = {};
   noise = {};
   brr = {};
