@@ -125,8 +125,10 @@ else ifneq ($(filter $(platform),linux bsd),)
 	mkdir -p $(prefix)/share/applications/
 	mkdir -p $(prefix)/share/icons/hicolor/256x256/apps/
 	mkdir -p $(prefix)/share/$(name)/Shaders/
+	mkdir -p $(prefix)/share/$(name)/Database/
 	cp $(output.path)/$(name) $(prefix)/bin/$(name)
 	cp -R $(ares.path)/Shaders/* $(prefix)/share/$(name)/Shaders/
+	cp -R $(mia.path)/Database/* $(prefix)/share/$(name)/Database/
 	cp resource/$(name).desktop $(prefix)/share/applications/$(name).desktop
 	cp resource/$(name).png $(prefix)/share/icons/hicolor/256x256/apps/$(name).png
 endif

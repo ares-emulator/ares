@@ -6,17 +6,35 @@ function<string ()> homeLocation = [] { return string{Path::user(), "Emulation/S
 function<string ()> saveLocation = [] { return string{}; };
 vector<string> media;
 
-auto locate(string name) -> string {
+auto locate(const string& name) -> string {
+  // First, check the application directory
+  // This allows ares to function in 'portable' mode
   string location = {Path::program(), name};
   if(inode::exists(location)) return location;
 
-  #if defined(PLATFORM_MACOS)
-    location = {Path::program(), "../Resources/", name};
-    if(inode::exists(location)) return location;
-  #endif
-  
-  directory::create({Path::userData(), "mia/"});
-  return {Path::userData(), "mia/", name};
+  // On macOS, also check the AppBundle Resource path
+#if defined(PLATFORM_MACOS)
+  location = {Path::program(), "../Resources/", name};
+  if(inode::exists(location)) return location;
+#endif
+
+  // Check the userData directory, this is the default
+  // on non-windows platforms for any resouces that did not
+  // ship with the executable.
+  // On Windows, this allows settings from to be carried over
+  // from previous versions (pre-portable)
+  location = {Path::userData(), "ares/", name};
+  if(inode::exists(location)) return location;
+
+  // On non-windows platforms, after exhausting other options,
+  // default to userData, on Windows, default to program dir
+  // this ensures Portable mode is the default on Windows platforms.
+#if !defined(PLATFORM_WINDOWS)
+  directory::create({Path::userData(), "ares/"});
+  return {Path::userData(), "ares/", name};
+#else
+  return {Path::program(), name};
+#endif
 }
 
 auto operator+=(string& lhs, const string& rhs) -> string& {
