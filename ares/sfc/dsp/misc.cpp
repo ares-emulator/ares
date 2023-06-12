@@ -24,6 +24,6 @@ auto DSP::misc30() -> void {
   //noise
   if(counterPoll(noise.frequency)) {
     s32 feedback = noise.lfsr << 13 ^ noise.lfsr << 14;
-    noise.lfsr = feedback & 0x4000 ^ noise.lfsr >> 1;
+    noise.lfsr = feedback & 0x4000 | noise.lfsr >> 1;
   }
 }
