@@ -65,18 +65,7 @@ auto VideoSettings::construct() -> void {
   renderSettingsLabel.setText("N64 Render Settings").setFont(Font().setBold());
 
   renderQualityLayout.setPadding(12_sx, 0);
-    enableVulkanOption.setText("Enable GPU acceleration").setChecked(settings.video.enableVulkan).onToggle([&] {
-    settings.video.enableVulkan = enableVulkanOption.checked();
-    if(emulator) emulator->setBoolean("Enable GPU acceleration", settings.video.enableVulkan);
 
-    renderSupersamplingOption.setEnabled(settings.video.enableVulkan && settings.video.quality != "SD");
-    renderQualitySD.setEnabled(settings.video.enableVulkan);
-    renderQualityHD.setEnabled(settings.video.enableVulkan);
-    renderQualityUHD.setEnabled(settings.video.enableVulkan);
-    disableVideoInterfaceProcessingOption.setEnabled(settings.video.enableVulkan);
-  });
-  enableVulkanLayout.setAlignment(1).setPadding(12_sx, 0);
-  enableVulkanHint.setText("Enables Vulkan/Metal Hardware rendering").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   disableVideoInterfaceProcessingOption.setText("Disable Video Interface Processing").setChecked(settings.video.disableVideoInterfaceProcessing).onToggle([&] {
     settings.video.disableVideoInterfaceProcessing = disableVideoInterfaceProcessingOption.checked();
     if(emulator) emulator->setBoolean("Disable Video Interface Processing", settings.video.disableVideoInterfaceProcessing);
@@ -109,7 +98,6 @@ auto VideoSettings::construct() -> void {
   #if !defined(VULKAN)
   //hide Vulkan-specific options if Vulkan is not available
   renderSettingsLabel.setCollapsible(true).setVisible(false);
-  enableVulkanLayout.setCollapsible(true).setVisible(false);
   renderQualityLayout.setCollapsible(true).setVisible(false);
   renderSupersamplingLayout.setCollapsible(true).setVisible(false);
   renderSettingsHint.setCollapsible(true).setVisible(false);

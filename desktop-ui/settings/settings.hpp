@@ -30,7 +30,6 @@ struct Settings : Markup::Node {
 
     string quality = "SD";
     bool supersampling = false;
-    bool enableVulkan = true;
     bool disableVideoInterfaceProcessing = false;
   } video;
 
@@ -123,9 +122,6 @@ struct VideoSettings : VerticalLayout {
       Label pixelAccuracyHint{&pixelAccuracyLayout, Size{~0, 0}};
   //
   Label renderSettingsLabel{this, Size{~0, 0}, 5};
-  HorizontalLayout enableVulkanLayout{this, Size{~0, 0}};
-    CheckLabel enableVulkanOption{&enableVulkanLayout, Size{0, 0}, 5};
-    Label enableVulkanHint{&enableVulkanLayout, Size{~0, 0}};  
   HorizontalLayout disableVideoInterfaceProcessingLayout{this, Size{~0, 0}, 5};
     CheckLabel disableVideoInterfaceProcessingOption{&disableVideoInterfaceProcessingLayout, Size{0, 0}, 5};
     Label disableVideoInterfaceProcessingHint{&disableVideoInterfaceProcessingLayout, Size{0, 0}};
