@@ -109,6 +109,24 @@ auto CPU::devirtualize(u64 vaddr) -> maybe<u64> {
   unreachable;
 }
 
+// Fast(er) version of devirtualize for icache lookups
+// avoids handling unmapped regions/exceptions as these should have already
+// been handled by instruction fetch
+auto CPU::devirtualizeFast(u64 vaddr) -> u64 {
+  switch(segment(vaddr)) {
+  case Context::Segment::Mapped:
+    if(auto match = tlb.load(vaddr)) return match.address & context.physMask;
+    break;
+  case Context::Segment::Cached:
+  case Context::Segment::Direct:
+    return vaddr & 0x1fff'ffff;
+  case Context::Segment::Cached32:
+  case Context::Segment::Direct32:
+    return vaddr & 0xffff'ffff;
+  }
+  return 0;
+}
+
 template<u32 Size>
 inline auto CPU::busWrite(u32 address, u64 data) -> void {
   u32 cycles = 0;
