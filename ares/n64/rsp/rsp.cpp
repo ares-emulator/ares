@@ -29,8 +29,10 @@ auto RSP::unload() -> void {
 }
 
 auto RSP::main() -> void {
-  if(status.halted) return step(128);
-  instruction();
+  while(Thread::clock < 0) {
+    if(status.halted) return step(128);
+    instruction();
+  }
 }
 
 auto RSP::step(u32 clocks) -> void {

@@ -25,10 +25,12 @@ auto AI::unload() -> void {
 }
 
 auto AI::main() -> void {
-  f64 left = 0, right = 0;
-  sample(left, right);
-  stream->frame(left, right);
-  step(dac.period);
+  while(Thread::clock < 0) {
+    f64 left = 0, right = 0;
+    sample(left, right);
+    stream->frame(left, right);
+    step(dac.period);
+  }
 }
 
 auto AI::sample(f64& left, f64& right) -> void {

@@ -30,8 +30,12 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  instruction();
-  synchronize();
+  while(!vi.refreshed) {
+    instruction();
+    synchronize();
+  }
+
+  vi.refreshed = false;
 }
 
 auto CPU::step(u32 clocks) -> void {
@@ -47,11 +51,11 @@ auto CPU::synchronize() -> void {
   rsp.clock -= clocks;
   rdp.clock -= clocks;
   pif.clock -= clocks;
-  while( vi.clock < 0)  vi.main();
-  while( ai.clock < 0)  ai.main();
-  while(rsp.clock < 0) rsp.main();
-  while(rdp.clock < 0) rdp.main();
-  while(pif.clock < 0) pif.main();
+  vi.main();
+  ai.main();
+  rsp.main();
+  rdp.main();
+  pif.main();
 
   queue.step(clocks, [](u32 event) {
     switch(event) {

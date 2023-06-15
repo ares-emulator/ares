@@ -61,26 +61,28 @@ auto VI::unload() -> void {
 }
 
 auto VI::main() -> void {
-  //field is not compared
-  if(io.vcounter << 1 == io.coincidence) {
-    mi.raise(MI::IRQ::VI);
-  }
-
-  if(++io.vcounter >= (Region::NTSC() ? 262 : 312) + io.field) {
-    io.vcounter = 0;
-    io.field = io.field + 1 & io.serrate;
-    #if defined(VULKAN)
-    if (vulkan.enable) {
-      gpuOutputValid = vulkan.scanoutAsync(io.field);
-      vulkan.frame();
+  while(Thread::clock < 0) {
+    //field is not compared
+    if(io.vcounter << 1 == io.coincidence) {
+      mi.raise(MI::IRQ::VI);
     }
-    #endif
-    refreshed = true;
-    screen->frame();
-  }
 
-  if(Region::NTSC()) step(system.frequency() / 60 / 262);
-  if(Region::PAL ()) step(system.frequency() / 50 / 312);
+    if(++io.vcounter >= (Region::NTSC() ? 262 : 312) + io.field) {
+      io.vcounter = 0;
+      io.field = io.field + 1 & io.serrate;
+      #if defined(VULKAN)
+      if (vulkan.enable) {
+        gpuOutputValid = vulkan.scanoutAsync(io.field);
+        vulkan.frame();
+      }
+      #endif
+      refreshed = true;
+      screen->frame();
+    }
+
+    if(Region::NTSC()) step(system.frequency() / 60 / 262);
+    if(Region::PAL ()) step(system.frequency() / 50 / 312);
+  }
 }
 
 auto VI::step(u32 clocks) -> void {

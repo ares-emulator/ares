@@ -52,7 +52,9 @@ auto RDP::crash(const char *reason) -> void {
 }
 
 auto RDP::main() -> void {
-  step(system.frequency());
+  while(Thread::clock < 0) {
+    step(system.frequency());
+  }
 }
 
 auto RDP::step(u32 clocks) -> void {
