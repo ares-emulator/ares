@@ -96,33 +96,47 @@ auto CPU::devirtualize(u64 vaddr) -> maybe<u64> {
     exception.addressLoad();
     return nothing;
   case Context::Segment::Mapped:
-    if(auto match = tlb.load(vaddr)) return match.address & context.physMask;
+    if(auto match = tlb.load(vaddr)) return devirtualizeCache.pbase = match.address & context.physMask;
     addressException(vaddr);
     return nothing;
   case Context::Segment::Cached:
   case Context::Segment::Direct:
-    return vaddr & 0x1fff'ffff;
+    return devirtualizeCache.pbase = vaddr & 0x1fff'ffff;
   case Context::Segment::Cached32:
   case Context::Segment::Direct32:
-    return vaddr & 0xffff'ffff;
+    return devirtualizeCache.pbase = vaddr & 0xffff'ffff;
   }
   unreachable;
 }
 
 // Fast(er) version of devirtualize for icache lookups
 // avoids handling unmapped regions/exceptions as these should have already
-// been handled by instruction fetch
+// been handled by instruction fetch, also ignores tlb match failure
 auto CPU::devirtualizeFast(u64 vaddr) -> u64 {
+  // Assume address space is mapped into pages that are 4kb in size
+  // If we have a cached physical address for this page, use it
+  // This cache is purged on any writes to the TLB so should never become stale
+  auto vbase = vaddr >> 12;
+  if(devirtualizeCache.vbase == vbase && devirtualizeCache.pbase) {
+    auto offset = vaddr & 0xfff;
+    return devirtualizeCache.pbase + offset;
+  }
+
+  // Cache the physical address of this page for the next call
+  devirtualizeCache.vbase = vaddr >> 12;
+  devirtualizeCache.pbase = 0;
+
   switch(segment(vaddr)) {
-  case Context::Segment::Mapped:
-    if(auto match = tlb.load(vaddr)) return match.address & context.physMask;
-    break;
+  case Context::Segment::Mapped: {
+    auto match = tlb.loadFast(vaddr);
+    return devirtualizeCache.pbase = match.address & context.physMask;
+  }
   case Context::Segment::Cached:
   case Context::Segment::Direct:
-    return vaddr & 0x1fff'ffff;
+    return devirtualizeCache.pbase =  vaddr & 0x1fff'ffff;
   case Context::Segment::Cached32:
   case Context::Segment::Direct32:
-    return vaddr & 0xffff'ffff;
+    return devirtualizeCache.pbase =  vaddr & 0xffff'ffff;
   }
   return 0;
 }
@@ -218,6 +232,7 @@ auto CPU::write(u64 vaddr0, u64 data, bool alignedError) -> bool {
     return false;
   case Context::Segment::Mapped:
     if(auto match = tlb.store(vaddr)) {
+      devirtualizeCache = {};
       if(match.cache) return dcache.write<Size>(vaddr, match.address & context.physMask, data), true;
       step(1);
       return busWrite<Size>(match.address & context.physMask, data), true;

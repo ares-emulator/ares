@@ -21,6 +21,23 @@ auto CPU::TLB::load(u64 vaddr) -> Match {
   return {false};
 }
 
+// Fast(er) version of load for recompiler icache lookups
+// avoids exceptions/debug checks/validity checks
+auto CPU::TLB::loadFast(u64 vaddr) -> Match {
+  for(auto& entry : this->entry) {
+    if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
+    if((vaddr & entry.addressMaskHi) != entry.virtualAddress) continue;
+    if(vaddr >> 62 != entry.region) continue;
+    bool lo = vaddr & entry.addressSelect;
+
+    physicalAddress = entry.physicalAddress[lo] + (vaddr & entry.addressMaskLo);
+    self.debugger.tlbLoad(vaddr, physicalAddress);
+    return {true, entry.cacheAlgorithm[lo] != 2, physicalAddress};
+  }
+
+  return {false};
+}
+
 auto CPU::TLB::store(u64 vaddr) -> Match {
   for(auto& entry : this->entry) {
     if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;

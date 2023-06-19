@@ -224,6 +224,7 @@ struct CPU : Thread {
 
     //tlb.cpp
     auto load(u64 vaddr) -> Match;
+    auto loadFast(u64 vaddr) -> Match;
     auto store(u64 vaddr) -> Match;
 
     struct Entry {
@@ -261,6 +262,7 @@ struct CPU : Thread {
   auto segment(u64 vaddr) -> Context::Segment;
   auto devirtualize(u64 vaddr) -> maybe<u64>;
   auto devirtualizeFast(u64 vaddr) -> u64;
+
   auto fetch(u64 vaddr) -> maybe<u32>;
   template<u32 Size> auto busWrite(u32 address, u64 data) -> void;
   template<u32 Size> auto busRead(u32 address) -> u64;
@@ -907,6 +909,11 @@ struct CPU : Thread {
     u32 address;
     u32 instruction;
   } disassembler{*this};
+
+  struct DevirtualizeCache {
+    uint64_t vbase;
+    uint64_t pbase;
+  } devirtualizeCache;
 };
 
 extern CPU cpu;
