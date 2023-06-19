@@ -96,15 +96,15 @@ auto CPU::devirtualize(u64 vaddr) -> maybe<u64> {
     exception.addressLoad();
     return nothing;
   case Context::Segment::Mapped:
-    if(auto match = tlb.load(vaddr)) return devirtualizeCache.pbase = match.address & context.physMask;
+    if(auto match = tlb.load(vaddr)) return match.address & context.physMask;
     addressException(vaddr);
     return nothing;
   case Context::Segment::Cached:
   case Context::Segment::Direct:
-    return devirtualizeCache.pbase = vaddr & 0x1fff'ffff;
+    return vaddr & 0x1fff'ffff;
   case Context::Segment::Cached32:
   case Context::Segment::Direct32:
-    return devirtualizeCache.pbase = vaddr & 0xffff'ffff;
+    return vaddr & 0xffff'ffff;
   }
   unreachable;
 }
