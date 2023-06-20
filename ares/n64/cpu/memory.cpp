@@ -119,7 +119,7 @@ auto CPU::devirtualizeFast(u64 vaddr) -> u64 {
   auto vbase = vaddr >> 12;
   if(devirtualizeCache.vbase == vbase && devirtualizeCache.pbase) {
     auto offset = vaddr & 0xfff;
-    return devirtualizeCache.pbase + offset;
+    return (devirtualizeCache.pbase & ~0xfff) + offset;
   }
 
   // Cache the physical address of this page for the next call
