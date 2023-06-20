@@ -232,7 +232,6 @@ auto CPU::write(u64 vaddr0, u64 data, bool alignedError) -> bool {
     return false;
   case Context::Segment::Mapped:
     if(auto match = tlb.store(vaddr)) {
-      devirtualizeCache = {};
       if(match.cache) return dcache.write<Size>(vaddr, match.address & context.physMask, data), true;
       step(1);
       return busWrite<Size>(match.address & context.physMask, data), true;
