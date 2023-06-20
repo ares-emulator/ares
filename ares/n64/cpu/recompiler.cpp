@@ -12,6 +12,12 @@ auto CPU::Recompiler::block(u32 address) -> Block* {
   return block;
 }
 
+auto CPU::Recompiler::fastFetchBlock(u32 address) -> Block* {
+  auto& pool = pools[address >> 8 & 0x1fffff];
+  if(pool) return pool->blocks[address >> 2 & 0x3f];
+  return nullptr;
+}
+
 auto CPU::Recompiler::emit(u32 address) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");

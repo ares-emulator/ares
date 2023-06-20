@@ -865,6 +865,7 @@ struct CPU : Thread {
 
     auto pool(u32 address) -> Pool*;
     auto block(u32 address) -> Block*;
+    auto fastFetchBlock(u32 address) -> Block*;
 
     auto emit(u32 address) -> Block*;
     auto emitEXECUTE(u32 instruction) -> bool;
