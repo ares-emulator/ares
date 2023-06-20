@@ -124,7 +124,6 @@ auto CPU::devirtualizeFast(u64 vaddr) -> u64 {
 
   // Cache the physical address of this page for the next call
   devirtualizeCache.vbase = vaddr >> 12;
-  devirtualizeCache.pbase = 0;
 
   switch(segment(vaddr)) {
   case Context::Segment::Mapped: {
@@ -138,7 +137,7 @@ auto CPU::devirtualizeFast(u64 vaddr) -> u64 {
   case Context::Segment::Direct32:
     return devirtualizeCache.pbase =  vaddr & 0xffff'ffff;
   }
-  return 0;
+  return devirtualizeCache.pbase = 0;
 }
 
 template<u32 Size>
