@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #define ConcatenateType(Size) u##Size
 #define DeclareType(Size) ConcatenateType(Size)
 
