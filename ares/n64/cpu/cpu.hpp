@@ -222,11 +222,6 @@ struct CPU : Thread {
       u32  address;
     };
 
-    //tlb.cpp
-    auto load(u64 vaddr) -> Match;
-    auto loadFast(u64 vaddr) -> Match;
-    auto store(u64 vaddr) -> Match;
-
     struct Entry {
       //scc-tlb.cpp
       auto synchronize() -> void;
@@ -240,12 +235,48 @@ struct CPU : Thread {
       n40 virtualAddress;
       n8  addressSpaceID;
       n2  region;
-    //internal:
+      //internal:
       n1  globals;
       n40 addressMaskHi;
       n40 addressMaskLo;
       n40 addressSelect;
     } entry[TLB::Entries];
+
+    //tlb.cpp
+    auto load(u64 vaddr) -> Match;
+    auto load(u64 vaddr, const Entry& entry) -> Match;
+    auto loadFast(u64 vaddr) -> Match;
+    auto store(u64 vaddr) -> Match;
+    auto store(u64 vaddr, const Entry& entry) -> Match;
+
+    struct TlbCache { ;
+      static constexpr int entries = 4;
+
+      struct CachedTlbEntry {
+        const Entry *entry;
+        int frequency;
+      } entry[entries];
+
+      void insert(const Entry& entry) {
+        this->entry[refresh()].entry = &entry;
+      }
+
+      int refresh() {
+        CachedTlbEntry* leastUsed = &entry[0];
+        int index = 0;
+
+        for(auto n = 0; n < entries; n++) {
+          if(entry[n].frequency < leastUsed->frequency) {
+            index = n;
+            leastUsed = &entry[n];
+          }
+        }
+
+        leastUsed->entry = nullptr;
+        leastUsed->frequency = 0;
+        return index;
+      }
+    } tlbCache;
 
     u32 physicalAddress;
   } tlb{*this};
