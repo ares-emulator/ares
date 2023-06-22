@@ -1,8 +1,5 @@
 
 auto CPU::TLB::load(u64 vaddr, const Entry& entry) -> Match {
-  if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) return {false};
-  if((vaddr & entry.addressMaskHi) != entry.virtualAddress) return {false};
-  if(vaddr >> 62 != entry.region) return {false};
   bool lo = vaddr & entry.addressSelect;
   if(!entry.valid[lo]) {
     self.addressException(vaddr);
@@ -17,7 +14,10 @@ auto CPU::TLB::load(u64 vaddr, const Entry& entry) -> Match {
 
 auto CPU::TLB::load(u64 vaddr) -> Match {
   for(auto& entry : this->tlbCache.entry) {
-    if (!entry.entry) continue;
+    if(!entry.entry) continue;
+    if(!entry.entry->globals && entry.entry->addressSpaceID != self.scc.tlb.addressSpaceID) continue;
+    if((vaddr & entry.entry->addressMaskHi) != entry.entry->virtualAddress) continue;
+    if(vaddr >> 62 != entry.entry->region) continue;
     if(auto match = load(vaddr, *entry.entry)) {
       entry.frequency++;
       return match;
@@ -25,6 +25,9 @@ auto CPU::TLB::load(u64 vaddr) -> Match {
   }
 
   for(auto& entry : this->entry) {
+    if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
+    if((vaddr & entry.addressMaskHi) != entry.virtualAddress) continue;
+    if(vaddr >> 62 != entry.region) continue;
     if(auto match = load(vaddr, entry)) {
       this->tlbCache.insert(entry);
       return match;
@@ -54,9 +57,6 @@ auto CPU::TLB::loadFast(u64 vaddr) -> Match {
 }
 
 auto CPU::TLB::store(u64 vaddr, const Entry& entry) -> Match {
-  if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) return {false};
-  if((vaddr & entry.addressMaskHi) != entry.virtualAddress) return {false};
-  if(vaddr >> 62 != entry.region) return {false};;
   bool lo = vaddr & entry.addressSelect;
   if(!entry.valid[lo]) {
     self.addressException(vaddr);
@@ -77,7 +77,11 @@ auto CPU::TLB::store(u64 vaddr, const Entry& entry) -> Match {
 
 auto CPU::TLB::store(u64 vaddr) -> Match {
   for(auto& entry : this->tlbCache.entry) {
-    if (!entry.entry) continue;
+    if(!entry.entry) continue;
+    if(!entry.entry->globals && entry.entry->addressSpaceID != self.scc.tlb.addressSpaceID) continue;
+    if((vaddr & entry.entry->addressMaskHi) != entry.entry->virtualAddress) continue;
+    if(vaddr >> 62 != entry.entry->region) continue;
+
     if(auto match = store(vaddr, *entry.entry)) {
       entry.frequency++;
       return match;
@@ -85,6 +89,10 @@ auto CPU::TLB::store(u64 vaddr) -> Match {
   }
 
   for(auto& entry : this->entry) {
+    if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) continue;
+    if((vaddr & entry.addressMaskHi) != entry.virtualAddress) continue;
+    if(vaddr >> 62 != entry.region) continue;
+
     if(auto match = store(vaddr, entry)) {
       this->tlbCache.insert(entry);
       return match;
