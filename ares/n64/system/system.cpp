@@ -66,9 +66,11 @@ auto System::load(Node::System& root, string name) -> bool {
 
   if(name.find("NTSC")) {
     information.region = Region::NTSC;
+    information.videoFrequency = 48'681'812;
   }
   if(name.find("PAL")) {
     information.region = Region::PAL;
+    information.videoFrequency = 49'656'530;
   }
 
   node = Node::System::create(information.name);
