@@ -47,5 +47,31 @@ flags += -I$(libchdr.path)/include
 flags += -I$(libchdr.path)/deps/lzma-19.00/include -D_7ZIP_ST
 flags += -I$(libchdr.path)/deps/zlib-1.2.13
 
-# instruct glibc to declare fseeko/ftello
-flags += -D_LARGEFILE_SOURCE
+tzxfile.objects := TZXAudioGenerator TZXBlock TZXBlockArchiveInfo TZXBlockCustomInfo
+tzxfile.objects += TZXBlockGroupEnd TZXBlockGroupStart TZXBlockHardwareType TZXBlockLoopEnd
+tzxfile.objects += TZXBlockLoopStart TZXBlockMessage TZXBlockPause TZXBlockPulseSequence
+tzxfile.objects += TZXBlockPureData TZXBlockPureTone TZXBlockStandardSpeedData
+tzxfile.objects += TZXBlockStopTheTape48K TZXBlockTextDescription TZXBlockTurboSpeedData TZXFile
+tzxfile.objects := $(tzxfile.objects:%=$(object.path)/%.o)
+
+$(object.path)/TZXAudioGenerator.o: $(tzxfile.path)/TZXAudioGenerator.cpp
+$(object.path)/TZXBlock.o: $(tzxfile.path)/TZXBlock.cpp
+$(object.path)/TZXBlockArchiveInfo.o: $(tzxfile.path)/TZXBlockArchiveInfo.cpp
+$(object.path)/TZXBlockCustomInfo.o: $(tzxfile.path)/TZXBlockCustomInfo.cpp
+$(object.path)/TZXBlockGroupEnd.o: $(tzxfile.path)/TZXBlockGroupEnd.cpp
+$(object.path)/TZXBlockGroupStart.o: $(tzxfile.path)/TZXBlockGroupStart.cpp
+$(object.path)/TZXBlockHardwareType.o: $(tzxfile.path)/TZXBlockHardwareType.cpp
+$(object.path)/TZXBlockLoopEnd.o: $(tzxfile.path)/TZXBlockLoopEnd.cpp
+$(object.path)/TZXBlockLoopStart.o: $(tzxfile.path)/TZXBlockLoopStart.cpp
+$(object.path)/TZXBlockMessage.o: $(tzxfile.path)/TZXBlockMessage.cpp
+$(object.path)/TZXBlockPause.o: $(tzxfile.path)/TZXBlockPause.cpp
+$(object.path)/TZXBlockPulseSequence.o: $(tzxfile.path)/TZXBlockPulseSequence.cpp
+$(object.path)/TZXBlockPureData.o: $(tzxfile.path)/TZXBlockPureData.cpp
+$(object.path)/TZXBlockPureTone.o: $(tzxfile.path)/TZXBlockPureTone.cpp
+$(object.path)/TZXBlockStandardSpeedData.o: $(tzxfile.path)/TZXBlockStandardSpeedData.cpp
+$(object.path)/TZXBlockStopTheTape48K.o: $(tzxfile.path)/TZXBlockStopTheTape48K.cpp
+$(object.path)/TZXBlockTextDescription.o: $(tzxfile.path)/TZXBlockTextDescription.cpp
+$(object.path)/TZXBlockTurboSpeedData.o: $(tzxfile.path)/TZXBlockTurboSpeedData.cpp
+$(object.path)/TZXFile.o: $(tzxfile.path)/TZXFile.cpp
+
+flags += -I$(tzxfile.path)

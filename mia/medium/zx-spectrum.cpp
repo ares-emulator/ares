@@ -1,7 +1,9 @@
 struct ZXSpectrum : Medium {
   auto name() -> string override { return "ZX Spectrum"; }
-  auto extensions() -> vector<string> override { return {"wav" }; }
+  auto extensions() -> vector<string> override { return {"wav", "tzx", "tap" }; }
   auto load(string location) -> bool override;
+  auto loadWav(string location) -> bool;
+  auto loadTzx(string location) -> bool;
   auto save(string location) -> bool override;
   auto analyze(string location) -> string;
 };
@@ -9,6 +11,44 @@ struct ZXSpectrum : Medium {
 auto ZXSpectrum::load(string location) -> bool {
   if(!inode::exists(location)) return false;
 
+  if(location.iendsWith(".tap") || location.iendsWith(".tzx")) return loadTzx(location);
+  if(location.iendsWith(".wav")) return loadWav(location);
+  return false;
+}
+
+auto ZXSpectrum::loadTzx(string location) -> bool {
+  this->location = location;
+  this->manifest = analyze(location);
+  auto document = BML::unserialize(manifest);
+  if (!document) return false;
+
+  vector<u8> input = file::read(location);
+  TZXFile tzx;
+  if(tzx.DecodeFile(input.data(), input.size()) == FileTypeUndetermined) return false;
+  tzx.GenerateAudioData();
+
+  pak = new vfs::directory;
+  pak->setAttribute("title",     document["game/title"].string());
+  pak->setAttribute("range",     (1 << 8) - 1);
+  pak->setAttribute("frequency", 44100);
+  pak->setAttribute("length",    tzx.GetAudioBufferLengthInSamples());
+  pak->append("manifest.bml",    manifest);
+
+  vector<u8> output;
+  auto decodedData = tzx.GetAudioBufferPtr();
+  for(int i = 0; i < tzx.GetAudioBufferLength();) {
+    u64 sample = (u64)((i32)decodedData[i++] + 128);
+
+    for (int byte = 0; byte < sizeof(u64); byte++) {
+      output.append((sample & (0xff << (byte * 8))) >> (byte * 8));
+    }
+  }
+  pak->append("program.tape", output);
+
+  return true;
+}
+
+auto ZXSpectrum::loadWav(string location) -> bool {
   this->location = location;
   this->manifest = analyze(location);
   auto document = BML::unserialize(manifest);

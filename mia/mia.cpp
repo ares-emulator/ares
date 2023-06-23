@@ -1,5 +1,7 @@
 #include "mia.hpp"
 
+#include <TZXFile.h>
+
 namespace mia {
 
 function<string ()> homeLocation = [] { return string{Path::user(), "Emulation/Systems/"}; };
