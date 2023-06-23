@@ -1,12 +1,18 @@
 struct MSX : Cartridge {
   auto name() -> string override { return "MSX"; }
-  auto extensions() -> vector<string> override { return {"msx"}; }
+  auto extensions() -> vector<string> override { return {"msx", "wav"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom) -> string;
+  auto loadTape(string location) -> bool;
+  auto analyzeTape(string location) -> string;
 };
 
 auto MSX::load(string location) -> bool {
+  if(location.iendsWith(".wav")) {
+    return loadTape(location);
+  }
+
   vector<u8> rom;
   if(directory::exists(location)) {
     append(rom, {location, "program.rom"});
@@ -40,6 +46,10 @@ auto MSX::save(string location) -> bool {
 }
 
 auto MSX::analyze(vector<u8>& rom) -> string {
+  if(location.iendsWith(".wav")) {
+    return analyzeTape(location);
+  }
+
   string hash   = Hash::SHA256(rom).digest();
   string board = "Linear";
   bool vauspaddle = false;
@@ -124,6 +134,66 @@ auto MSX::analyze(vector<u8>& rom) -> string {
   s += "      type: ROM\n";
   s +={"      size: 0x", hex(rom.size()), "\n"};
   s += "      content: Program\n";
+
+  return s;
+}
+
+
+auto MSX::loadTape(string location) -> bool {
+  if(!inode::exists(location)) return false;
+
+  this->location = location;
+  this->manifest = analyzeTape(location);
+  auto document = BML::unserialize(manifest);
+  if(!document) return false;
+
+  pak = new vfs::directory;
+  pak->setAttribute("title",      document["game/title"].string());
+  pak->setAttribute("region",     document["game/region"].string());
+  pak->setAttribute("range",      document["game/range"].natural());
+  pak->setAttribute("frequency",  document["game/frequency"].natural());
+  pak->setAttribute("length",     document["game/length"].natural());
+  pak->setAttribute("tape", true);
+  pak->append("manifest.bml", manifest);
+  if(directory::exists(location)) {
+    pak->append("program.tape", vfs::disk::open({location, "program.tape"}, vfs::read));
+  }
+  if(file::exists(location)) {
+    if(location.iendsWith(".wav")) {
+        Decode::WAV wav;
+        if (wav.open(location)) {
+          vector <u8> data;
+          for (int i = 0; i < wav.size(); i++) {
+            u64 sample = wav.read();
+
+            for (int byte = 0; byte < sizeof(u64); byte++) {
+              data.append((sample & (0xff << (byte * 8))) >> (byte * 8));
+            }
+          }
+        pak->append("program.tape", data);
+      }
+    }
+  }
+
+  return true;
+}
+
+auto MSX::analyzeTape(string location) -> string {
+  string s;
+  s += "game\n";
+  s +={"  name:   ", Medium::name(location), "\n"};
+  s +={"  title:  ", Medium::name(location), "\n"};
+  s += "  region: NTSC\n";  //database required to detect region
+
+  if(location.iendsWith(".wav")) {
+    Decode::WAV wav;
+    if (wav.open(location)) {
+      s +={"  range:     ", ((1 << wav.bitrate) - 1), "\n"};
+      s +={"  frequency: ", wav.frequency, "\n"};
+      s +={"  length:    ", wav.size(), "\n"};
+      wav.close();
+    }
+  }
 
   return s;
 }

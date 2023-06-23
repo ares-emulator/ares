@@ -1,6 +1,7 @@
 struct MSX : Emulator {
   MSX();
   auto load() -> bool override;
+  auto load(Menu) -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto input(ares::Node::Input::Input) -> void override;
@@ -39,6 +40,7 @@ MSX::MSX() {
 auto MSX::load() -> bool {
   game = mia::Medium::create("MSX");
   if(!game->load(Emulator::load(game, configuration.game))) return false;
+  bool isTape = game->pak->attribute("tape").boolean();
 
   system = mia::System::create("MSX");
   if(!system->load(firmware[0].location)) return errorFirmware(firmware[0]), false;
@@ -48,7 +50,12 @@ auto MSX::load() -> bool {
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
-    port->connect();
+    if(!isTape) port->connect();
+  }
+
+  if(auto port = root->find<ares::Node::Port>("Tape Deck/Tray")) {
+    port->allocate();
+    if(isTape) port->connect();
   }
 
   auto device = "Gamepad";
@@ -72,6 +79,18 @@ auto MSX::load() -> bool {
   return true;
 }
 
+auto MSX::load(Menu menu) -> void {
+  if(auto playing = root->find<ares::Node::Setting::Boolean>("Tape Deck/Playing")) {
+    MenuCheckItem playingItem{&menu};
+    playingItem.setText("Play Tape").setChecked(playing->value()).onToggle([=] {
+      if(auto playing = root->find<ares::Node::Setting::Boolean>("Tape Deck/Playing")) {
+        playing->setValue(playingItem.checked());
+      }
+    });
+  }
+}
+
+
 auto MSX::save() -> bool {
   root->save();
   system->save(system->location);
@@ -82,6 +101,7 @@ auto MSX::save() -> bool {
 auto MSX::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == "MSX") return system->pak;
   if(node->name() == "MSX Cartridge") return game->pak;
+  if(node->name() == "MSX Tape") return game->pak;
   return {};
 }
 

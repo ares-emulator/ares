@@ -48,7 +48,7 @@ auto Cartridge::disconnect() -> void {
 
 auto Cartridge::save() -> void {
   if(!node) return;
-  board->save();
+  if(board) board->save();
 }
 
 auto Cartridge::main() -> void {

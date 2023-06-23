@@ -48,7 +48,11 @@ auto PSG::readIO(n1 port) -> n8 {
   // port 0 refers to PSG register 14, which receives inputs from
   // either joystick depending on the state of Bit 6 in PSG register
   // 15.
-  if (port == 0) return controllerMux.read();
+  if (port == 0) {
+    n8 data = controllerMux.read();
+    data.bit(7) = tapeDeck.read();
+    return data;
+  }
 
   // port 1 refers to PSG register 15, normally used for output.
   // If read from, return the last value written.

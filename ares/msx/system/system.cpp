@@ -22,19 +22,24 @@ System system;
 #include "serialization.cpp"
 
 auto System::game() -> string {
-  if(cartridge.node && expansion.node) {
-    return {cartridge.title(), " + ", expansion.title()};
-  }
+  string game = {};
 
   if(cartridge.node) {
-    return cartridge.title();
+    game.append(cartridge.title());
+  }
+
+  if(tapeDeck.tray.tape) {
+    if(game) game.append(" + ");
+    game.append(tapeDeck.tray.tape.title());
   }
 
   if(expansion.node) {
-    return expansion.title();
+    if(game) game.append(" + ");
+    game.append(expansion.title());
   }
 
-  return "(no cartridge connected)";
+  if(!game) game = "(no cartridge connected)";
+  return game;
 }
 
 auto System::run() -> void {
@@ -82,12 +87,13 @@ auto System::load(Node::System& root, string name) -> bool {
   expansionSlot.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
+  tapeDeck.load(node);
   return true;
 }
 
 auto System::save() -> void {
   if(!node) return;
-  cartridge.save();
+  if(cartridge.node) cartridge.save();
   expansion.save();
 }
 
@@ -101,6 +107,7 @@ auto System::unload() -> void {
   expansionSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
+  tapeDeck.unload();
   pak.reset();
   node.reset();
   rom.bios.reset();
@@ -125,6 +132,7 @@ auto System::power(bool reset) -> void {
   keyboard.power();
   cartridge.power();
   expansion.power();
+  tapeDeck.power();
   cpu.power();
   vdp.power();
   psg.power();
