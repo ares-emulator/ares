@@ -52,7 +52,7 @@ auto DSP::write(n7 address, n8 data) -> void {
     brr.bank = data;
     break;
   case 0x6d:  //ESA
-    echo.bank = data;
+    echo.page = data;
     break;
   case 0x7d:  //EDL
     echo.delay = data.bit(0,3);

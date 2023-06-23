@@ -17,12 +17,12 @@ auto DSP::serialize(serializer& s) -> void {
   s(echo.fir);
   s(echo.history[0]);
   s(echo.history[1]);
-  s(echo.bank);
+  s(echo.page);
   s(echo.delay);
   s(echo.readonly);
   s(echo.input);
   s(echo.output);
-  s(echo._bank);
+  s(echo._page);
   s(echo._readonly);
   s(echo._address);
   s(echo._offset);
