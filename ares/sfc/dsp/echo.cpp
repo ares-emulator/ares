@@ -31,7 +31,7 @@ auto DSP::echo22() -> void {
   //history
   echo._historyOffset++;
 
-  echo._address = (echo._bank << 8) + echo._offset;
+  echo._address = (echo._page << 8) + echo._offset;
   echoRead(0);
 
   //FIR
@@ -109,7 +109,7 @@ auto DSP::echo28() -> void {
 }
 
 auto DSP::echo29() -> void {
-  echo._bank = echo.bank;
+  echo._page = echo.page;
 
   if(!echo._offset) echo._length = echo.delay << 11;
 

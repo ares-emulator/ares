@@ -57,13 +57,13 @@ private:
     i8  volume[2];
     i8  fir[8];
     i16 history[2][8];
-    n8  bank;
+    n8  page;
     n4  delay;
     n1  readonly = 1;
     i17 input[2];
     i17 output[2];
 
-    n8  _bank;
+    n8  _page;
     n1  _readonly;
     n16 _address;
     n16 _offset;  //offset from ESA into echo buffer
