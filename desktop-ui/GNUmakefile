@@ -27,7 +27,7 @@ include $(libco.path)/GNUmakefile
 thirdparty.path := ../thirdparty
 sljit.path := $(thirdparty.path)/sljit/sljit_src
 libchdr.path := $(thirdparty.path)/libchdr
-tzxfile.path := $(thirdparty.path)/tzxfile
+tzxfile.path := $(thirdparty.path)/TZXFile
 include $(thirdparty.path)/GNUmakefile
 
 ruby.path := ../ruby
