@@ -56,7 +56,7 @@ void TZXAudioGenerator::GeneratePulse(int lengthInTStates, bool toggleAmp)
 {
 	// Calculate the length of the pulse in terms of samples
 	// Note this method is not completely accurate so may need some finessing for very high speed turbo loaders to work accurately...
-    double cycle = 44100.0 / 3500000.0;
+    double cycle = (double)TZX_AUDIO_DATARATE / (double)TZX_TSTATES_PER_SECOND;
 	int samples = ((unsigned int)(0.5 + (cycle*(double)lengthInTStates)));
 	for (int i = 0; i < samples; i++)
 	{
@@ -135,7 +135,7 @@ bool TZXAudioGenerator::SaveAsUncompressedWav(const char *szFilename)
 	short channels = 1;
 	if (fwrite(&channels, 2, 1, hFile) != 1) { fclose(hFile); return false; }
 
-	int sampleRate = 44100;
+	int sampleRate = TZX_AUDIO_DATARATE;
 	if (fwrite(&sampleRate, 4, 1, hFile) != 1) { fclose(hFile); return false; }
 	if (fwrite(&sampleRate, 4, 1, hFile) != 1) { fclose(hFile); return false; }
 

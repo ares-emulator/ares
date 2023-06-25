@@ -69,8 +69,8 @@
 #define TZX_SECOND_SYNC_PULSE_LENGTH		735
 #define TZX_ZERO_BIT_LENGTH					885 // Spec says 855 but two different sources for other projects both use 885, suspect typo in spec.
 #define TZX_ONE_BIT_LENGTH					1710
-#define TZX_PILOT_PULSES_HEADER				8063 // Spec says 8063 but other apps have 8064
-#define TZX_PILOT_PULSES_DATA				3219 // Spec says 3223 but other apps have 3220
+#define TZX_PILOT_PULSES_HEADER				8064 // Spec says 8063 but other apps have 8064
+#define TZX_PILOT_PULSES_DATA				3220 // Spec says 3223 but other apps have 3220
 
 typedef enum {
     FileTypeUndetermined,
