@@ -331,7 +331,8 @@ auto Video::hasMonitors() -> vector<Monitor> {
       auto screenDictionary = [screen deviceDescription];
       auto screenID = [screenDictionary objectForKey:@"NSScreenNumber"];
       auto displayID = [screenID unsignedIntValue];
-      auto displayPort = CGDisplayIOServicePort(displayID);
+      CFUUIDRef displayUUID = CGDisplayCreateUUIDFromDisplayID(displayID);
+      io_service_t displayPort = CGDisplayGetDisplayIDFromUUID(displayUUID);
       auto dictionary = IODisplayCreateInfoDictionary(displayPort, 0);
       CFRetain(dictionary);
       if(auto names = (CFDictionaryRef)CFDictionaryGetValue(dictionary, CFSTR(kDisplayProductName))) {
