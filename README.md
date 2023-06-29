@@ -24,14 +24,14 @@ Prerequisites
 
 ###### Minimum required packages:
 ```
-g++ make pkg-config libgtk2.0-dev libcanberra-gtk-module libgl-dev libasound2-dev
+g++ make pkg-config libgtk-3-dev libcanberra-gtk-module libgl-dev libasound2-dev
 ```  
 ###### Additional Audio Drivers
 ares supports additional audio drivers besides the ALSA drivers included above. Installing these additional packages will allow them to be selected in Settings > Drivers:  
 `libao-dev libopenal-dev'
 
 ###### GTK2 & GTK3
-By default, GTK2 is used, but support for GTK3 is available. You will need to install the additional package `libgtk-3-dev` as well as specifying the command line option `hiro=gtk3` at compile time.
+By default, GTK3 is used, but support for GTK2 is available. You will need to install the additional package `libgtk2.0-dev` as well as specifying the command line option `hiro=gtk2` at compile time.
 
 ###### SDL2 for input
 If you would like to use SDL for input, you will need to install the following the `libsdl2-dev` and `libsdl2-0.0` packages and perform a clean build of ares. You should then be able to select SDL for input in the Settings > Drivers menu.   
@@ -60,8 +60,7 @@ pacman -S mingw-w64-clang-x86_64-toolchain
 Once complete, open a CLANG64 terminal window and proceed with building ares. 
 
 ###### Debug Symbols
-When building with clang, by default symbols will be generated for debug builds using an MSVC compatible format (CodeView) for use with Windows debugging tools. In order to generate GDB compatible symbols, specify the following option:  
-`symformat=gdb`  
+When building with clang, by default symbols will be generated for debug builds using an MSVC compatible format (CodeView) for use with Windows debugging tools. In order to generate GDB compatible symbols, specify the following option: `symformat=gdb`  
 
 Compilation
 -----------
@@ -112,6 +111,8 @@ Usage: ./ares [options] game
   --fullscreen           Start in full screen mode
   --system system        Specify the system name
   --shader shader        Specify GLSL shader name to load (requires OpenGL driver)
+  --setting name=value   Specify a value for a setting
+  --dump-all-settings    Show a list of all existing settings and exit
 ```
 
 The --system option is useful when the system type cannot be auto-detected.
