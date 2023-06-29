@@ -8,6 +8,7 @@
 #include <shlobj.h>
 #include <shellapi.h>
 #include <dwmapi.h>
+#include <wrl/client.h> // for ComPtr
 #include <nall/windows/registry.hpp>
 #include <nall/windows/utf8.hpp>
 

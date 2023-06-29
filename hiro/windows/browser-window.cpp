@@ -62,32 +62,47 @@ static auto BrowserWindow_fileDialog(bool save, BrowserWindow::State& state) -> 
 }
 
 auto pBrowserWindow::directory(BrowserWindow::State& state) -> string {
-  wchar_t wname[PATH_MAX + 1] = L"";
+  using namespace Microsoft::WRL; // For ComPtr
 
-  BROWSEINFO bi;
-  bi.hwndOwner = state.parent ? state.parent->self()->hwnd : 0;
-  bi.pidlRoot = NULL;
-  bi.pszDisplayName = wname;
-  bi.lpszTitle = L"\nChoose a directory:";
-  bi.ulFlags = BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS;
-  bi.lpfn = BrowserWindowCallbackProc;
-  bi.lParam = (LPARAM)&state;
-  bi.iImage = 0;
-  bool result = false;
-  LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-  if(pidl) {
-    if(SHGetPathFromIDList(pidl, wname)) {
-      result = true;
-      IMalloc *imalloc = 0;
-      if(SUCCEEDED(SHGetMalloc(&imalloc))) {
-        imalloc->Free(pidl);
-        imalloc->Release();
-      }
-    }
+  ComPtr<IFileDialog> pfd;
+  HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd));
+
+  if (FAILED(hr)) {
+    return "";
   }
-  if(result == false) return "";
-  string name = (const char*)utf8_t(wname);
-  if(!name) return "";
+
+  DWORD dwOptions;
+  hr = pfd->GetOptions(&dwOptions);
+  if (FAILED(hr)) {
+    return "";
+  }
+
+  hr = pfd->SetOptions(dwOptions | FOS_PICKFOLDERS);
+  if (FAILED(hr)) {
+    return "";
+  }
+
+  hr = pfd->Show(NULL);
+  if (FAILED(hr)) {
+    return "";
+  }
+
+  ComPtr<IShellItem> psi;
+  hr = pfd->GetResult(&psi);
+  if (FAILED(hr)) {
+    return "";
+  }
+
+  PWSTR pszPath;
+  hr = psi->GetDisplayName(SIGDN_FILESYSPATH, &pszPath);
+  if (FAILED(hr)) {
+    return "";
+  }
+
+  string name = (const char*)utf8_t(pszPath);
+  CoTaskMemFree(pszPath);
+
+  if (!name) return "";
   name.transform("\\", "/");
   if(name.endsWith("/") == false) name.append("/");
   return name;
