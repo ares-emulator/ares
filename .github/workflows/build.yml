@@ -74,7 +74,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update -y -qq
-        sudo apt-get install libsdl2-dev libgtk2.0-dev libao-dev libopenal-dev   
+        sudo apt-get install libsdl2-dev libgtk-3-dev libao-dev libopenal-dev
     - name: "macOS: Import Certificate"
       if: runner.os == 'macOS' && github.event_name != 'pull_request'
       uses: devbotsxyz/import-signing-certificate@2ac4f44d28045073d23153256efbb4c4b2d8aa22    # Don't use rolling branch for security reasons
