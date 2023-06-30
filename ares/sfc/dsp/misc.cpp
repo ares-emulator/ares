@@ -4,7 +4,7 @@ auto DSP::misc27() -> void {
 
 auto DSP::misc28() -> void {
   for(auto& v : voice) v._noise = v.noise, v._echo  = v.echo;
-  brr._bank = brr.bank;
+  brr._page = brr.page;
 }
 
 auto DSP::misc29() -> void {
