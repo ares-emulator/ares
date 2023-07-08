@@ -81,7 +81,10 @@ auto Famicom::save(string location) -> bool {
 }
 
 auto Famicom::analyze(vector<u8>& data) -> string {
-  if(data.size() < 256) return {};
+  if(data.size() < 256) {
+    printf("[mia] Failed to load rom as it was below minimum expected size of 256 (0x100) bytes. Rom size: %llu", data.size());
+    return {};
+  }
 
   string digest = Hash::SHA256(data).digest();
   string manifest = Medium::manifestDatabase(digest);

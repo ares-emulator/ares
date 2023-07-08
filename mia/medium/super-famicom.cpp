@@ -183,7 +183,11 @@ auto SuperFamicom::analyze(vector<u8>& rom) -> string {
     rom.resize(rom.size() - 512);
   }
 
-  if(rom.size() < 0x8000) return {};  //ignore images too small to be valid
+  //ignore images too small to be valid
+  if(rom.size() < 0x8000) {
+    printf("[mia] Failed to load rom as it was below minimum expected size of 32768 (0x8000) bytes. Rom size: %llu", rom.size());
+    return {};
+  }  
   data = rom;
 
   u32 LoROM   = scoreHeader(  0x7fb0);

@@ -45,7 +45,10 @@ auto SufamiTurbo::save(string location) -> bool {
 }
 
 auto SufamiTurbo::analyze(vector<u8>& rom) -> string {
-  if(rom.size() < 0x20000) return {};
+  if(rom.size() < 0x20000) {
+    printf("[mia] Failed to load rom as it was below minimum expected size of 131072 (0x20000) bytes. Rom size: %llu", rom.size());
+    return {};
+  }
 
   u32 romSize = rom[0x36] * 128_KiB;
   u32 ramSize = rom[0x37] *   2_KiB;
