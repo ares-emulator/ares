@@ -70,7 +70,10 @@ auto WonderSwan::mapper(vector<u8>& rom) -> string {
 }
 
 auto WonderSwan::analyze(vector<u8>& rom) -> string {
-  if(rom.size() < 0x10000) return {};
+  if(rom.size() < 0x10000) {
+    printf("[mia] Failed to load rom as it was below minimum expected size of 65536 (0x10000) bytes. Rom size: %llu", rom.size());
+    return {};
+  }
 
   auto hash = Hash::SHA256(rom).digest();
 

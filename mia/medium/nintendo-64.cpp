@@ -68,7 +68,7 @@ auto Nintendo64::save(string location) -> bool {
 
 auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(data.size() < 0x1000) {
-    //too small
+    printf("[mia] Failed to load rom as it was below minimum expected size of 4096 (0x1000) bytes. Rom size: %llu", data.size());
     return {};
   } else if((data[0] == 0x80 && data[1] == 0x37 && data[2] == 0x12 && data[3] == 0x40)
          || (data[0] == 0x80 && data[1] == 0x27 && data[2] == 0x07 && data[3] == 0x40)) {   //64DD IPL

@@ -65,7 +65,10 @@ auto GameBoy::save(string location) -> bool {
 }
 
 auto GameBoy::analyze(vector<u8>& rom) -> string {
-  if(rom.size() < 0x4000) return {};
+  if(rom.size() < 0x4000) {
+    printf("[mia] Failed to load rom as it was below minimum expected size of 16384 (0x4000) bytes. Rom size: %llu", rom.size());
+    return {};
+  }
 
   auto hash = Hash::SHA256(rom).digest();
 

@@ -85,7 +85,10 @@ auto Mega32X::save(string location) -> bool {
 }
 
 auto Mega32X::analyze(vector<u8>& rom) -> string {
-  if(rom.size() < 0x800) return {};
+  if(rom.size() < 0x800) {
+    printf("[mia] Failed to load rom as it was below minimum expected size of 2048 (0x800) bytes. Rom size: %llu", rom.size());
+    return {};
+  }
 
   ram = {};
   eeprom = {};
@@ -154,6 +157,13 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
   while(internationalName.find("  ")) internationalName.replace("  ", " ");
   internationalName.strip();
 
+  string serialNumber;
+  serialNumber.resize(14);
+  memory::copy(serialNumber.get(), &rom[0x180], serialNumber.size());
+  for(auto& c : serialNumber) if(c < 0x20 || c > 0x7e) c = ' ';
+  while(serialNumber.find("  ")) serialNumber.replace("  ", " ");
+  serialNumber.strip();
+
   string s;
   s += "game\n";
   s +={"  sha256: ", hash, "\n"};
@@ -161,6 +171,7 @@ auto Mega32X::analyze(vector<u8>& rom) -> string {
   s +={"  title:  ", Pak::name(location), "\n"};
   s +={"  label:  ", domesticName, "\n"};
   s +={"  label:  ", internationalName, "\n"};
+  s +={"  serial: ", serialNumber, "\n"};
   s +={"  region: ", regions.merge(", "), "\n"};
   if(devices)
   s +={"  device: ", devices.merge(", "), "\n"};
