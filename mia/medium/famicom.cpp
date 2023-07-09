@@ -82,7 +82,7 @@ auto Famicom::save(string location) -> bool {
 
 auto Famicom::analyze(vector<u8>& data) -> string {
   if(data.size() < 256) {
-    printf("[mia] Failed to load rom as it was below minimum expected size of 256 (0x100) bytes. Rom size: %llu", data.size());
+    print("[mia] Loading rom failed. Minimum expected rom size is 256 (0x100) bytes. Rom size: ", data.size(), " (0x", hex(data.size()), ") bytes.\n");
     return {};
   }
 
