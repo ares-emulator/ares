@@ -5,13 +5,21 @@ auto V9938::DAC::setup(n8 voffset) -> void {
 }
 
 auto V9938::DAC::run(n8 hoffset, n8 voffset) -> void {
-  n4 color = self.io.colorBackground;
+  n4 color[2];
+  color[0] = self.io.colorBackground;
+  color[1] = self.io.colorBackground;
+
   if(io.enable) {
-    if(self.background.output.color) color = self.background.output.color;
-    if(self.sprite.output.color) color = self.sprite.output.color;
+    if(self.background.output.color[0]) color[0] = self.background.output.color[0];
+    if(self.background.output.color[1]) color[1] = self.background.output.color[1];
+
+    if(self.sprite.output.color) {
+      color[0] = self.sprite.output.color;
+      color[1] = self.sprite.output.color;
+    }
   }
-  *output++ = self.pram[color];
-  *output++ = self.pram[color];
+  *output++ = self.pram[color[0]];
+  *output++ = self.pram[color[1]];
 }
 
 auto V9938::DAC::power() -> void {

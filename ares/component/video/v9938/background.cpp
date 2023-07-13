@@ -1,9 +1,10 @@
 auto V9938::Background::setup(n8 y) -> void {
-  latch.vscroll = io.vscroll;
+
 }
 
 auto V9938::Background::run(n8 x, n8 y) -> void {
   output = {};
+
   switch(self.videoMode()) {
   case 0b00000: return graphic1(x, y);
   case 0b00001: return text1(x, y);
@@ -19,7 +20,26 @@ auto V9938::Background::run(n8 x, n8 y) -> void {
 }
 
 auto V9938::Background::text1(n8 hoffset, n8 voffset) -> void {
-  debug(unimplemented, "[V9938::Background::text1]");
+  // Offset by 6px and blank the last 10px to centre the display
+  i32 x = hoffset - 6;
+  if (x < 0) return;
+  if (hoffset > 246) return;
+
+  n14 nameAddress = (voffset.bit(3,7) * 40) + (x / 6);
+  nameAddress.bit(10,13) = io.nameTableAddress;
+
+  n8 pattern = self.vram.read(nameAddress);
+
+  n14 patternAddress;
+  patternAddress.bit( 0, 2) = voffset.bit(0,2);
+  patternAddress.bit( 3,10) = pattern;
+  patternAddress.bit(11,13) = io.patternTableAddress.bit(11,13);
+
+  n3 index = 7 - (x % 6);
+  if(self.vram.read(patternAddress).bit(index)) {
+    output.color[0] = self.io.colorForeground;
+    output.color[1] = self.io.colorForeground;
+  }
 }
 
 auto V9938::Background::text2(n8 hoffset, n8 voffset) -> void {
@@ -44,7 +64,8 @@ auto V9938::Background::graphic1(n8 hoffset, n8 voffset) -> void {
 
   n8 color = self.vram.read(colorAddress);
   if(self.vram.read(patternGenerator).bit(~hoffset & 7)) color >>= 4;
-  output.color = color.bit(0,3);
+  output.color[0] = color.bit(0,3);
+  output.color[1] = color.bit(0,3);
 }
 
 auto V9938::Background::graphic2(n8 hoffset, n8 voffset) -> void {
@@ -67,7 +88,8 @@ auto V9938::Background::graphic2(n8 hoffset, n8 voffset) -> void {
   n8 colorMask = io.colorTableAddress.bit(6,12) << 1 | 1;
   n8 color = self.vram.read(colorAddress);
   if(self.vram.read(patternGenerator).bit(~hoffset & 7)) color >>= 4;
-  output.color = color.bit(0,3);
+  output.color[0] = color.bit(0,3);
+  output.color[1] = color.bit(0,3);
 }
 
 auto V9938::Background::graphic3(n8 hoffset, n8 voffset) -> void {
@@ -82,11 +104,19 @@ auto V9938::Background::graphic4(n8 hoffset, n8 voffset) -> void {
   address += hoffset >> 1;
   auto data = self.vram.read(address);
   auto shift = !hoffset.bit(0) ? 4 : 0;
-  output.color = n4(data >> shift);
+  output.color[0] = n4(data >> shift);
+  output.color[1] = n4(data >> shift);
 }
 
 auto V9938::Background::graphic5(n8 hoffset, n8 voffset) -> void {
-  debug(unimplemented, "[V9938::Background::graphic5]");
+  n17 address = io.nameTableAddress & 0x18000;
+  address += voffset << 7;
+  address += hoffset >> 1;
+  auto data = self.vram.read(address);
+  auto shift = !hoffset.bit(0) ? 4 : 0;
+
+  output.color[0] = n2(data >> (shift + 2));
+  output.color[1] = n2(data >> (shift + 0));
 }
 
 auto V9938::Background::graphic6(n8 hoffset, n8 voffset) -> void {

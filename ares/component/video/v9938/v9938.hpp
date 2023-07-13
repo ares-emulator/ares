@@ -97,17 +97,15 @@ protected:
       n17 colorTableAddress;
       i4 hadjust;  //todo
       i4 vadjust;  //todo
-      n8 vscroll;  //todo
     } io;
 
     struct Latch {
       i4 hadjust;
       i4 vadjust;
-      n8 vscroll;
     } latch;
 
     struct Output {
-      n4 color;
+      n4 color[2];
     } output;
   } background{*this};
 
@@ -259,6 +257,8 @@ protected:
     n1  ramSelect;  //0 = video RAM, 1 = expansion RAM
     n3  ramBank;
     n8  ramLatch;
+
+    n8 vscroll;
   } io;
 
   struct Latch {
@@ -266,6 +266,7 @@ protected:
     n1 interlace;
     n1 overscan;
     n1 field;
+    n8 vscroll;
   } latch;
 };
 

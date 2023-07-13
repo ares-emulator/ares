@@ -219,7 +219,7 @@ auto V9938::register(n6 register, n8 data) -> void {
     return;
 
   case 0x17:
-    background.io.vscroll = data;
+    io.vscroll = data;
     return;
 
   case 0x20: op.sx.bit(0,7) = data.bit(0,7); return;

@@ -21,14 +21,15 @@ auto V9938::unload() -> void {
 auto V9938::main() -> void {
   if(io.vcounter < vlines()) {
     n9 y = io.vcounter;
+    latch.vscroll = io.vscroll;
     background.setup(y);
-    sprite.setup(y);
+    sprite.setup(y + latch.vscroll);
     dac.setup(y);
 
     while(io.hcounter < 256) {
       n9 x = io.hcounter;
-      background.run(x, y);
-      sprite.run(x, y);
+      background.run(x, y + latch.vscroll);
+      sprite.run(x, y + latch.vscroll);
       dac.run(x, y);
       tick(1);
     }
@@ -56,7 +57,7 @@ auto V9938::main() -> void {
     frame();
   }
 
-  if(io.vcounter == hirq.coincidence) {
+  if(io.vcounter + latch.vscroll == hirq.coincidence) {
     hirq.pending |= hirq.enable;
     poll();
   }
