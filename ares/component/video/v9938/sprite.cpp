@@ -143,8 +143,9 @@ auto V9938::Sprite::sprite2(n8 hoffset, n8 voffset) -> void {
     address += (o.pattern << 3) + (x >> 3 << 4) + (y & vlimit);
 
     if(self.vram.read(address).bit(~x & 7)) {
-      if(color) { io.collision = 1; break; }
-      color = o.color;
+      if(color && !o.priority) { io.collision = 1; break; }
+      if(o.priority) color |= o.color;
+      else color = o.color;
     }
   }
 
