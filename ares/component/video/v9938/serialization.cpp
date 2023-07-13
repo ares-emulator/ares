@@ -59,10 +59,12 @@ auto V9938::serialize(serializer& s) -> void {
   s(io.ramSelect);
   s(io.ramBank);
   s(io.ramLatch);
+  s(io.vscroll);
   s(latch.timing);
   s(latch.interlace);
   s(latch.overscan);
   s(latch.field);
+  s(latch.vscroll);
 }
 
 auto V9938::Background::serialize(serializer& s) -> void {
@@ -71,10 +73,8 @@ auto V9938::Background::serialize(serializer& s) -> void {
   s(io.colorTableAddress);
   s(io.hadjust);
   s(io.vadjust);
-  s(io.vscroll);
   s(latch.hadjust);
   s(latch.vadjust);
-  s(latch.vscroll);
   s(output.color);
 }
 
