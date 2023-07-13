@@ -13,9 +13,6 @@ namespace name=Resource
     binary name=Vector file="../Firmware/Mega 32X/vector.rom"
     binary name=SH2BootM file="../Firmware/Mega 32X/sh2.boot.mrom"
     binary name=SH2BootS file="../Firmware/Mega 32X/sh2.boot.srom"
-  namespace name=MSX2
-    binary name=BIOS file="../Firmware/MSX2/bios.rom"
-    binary name=Sub file="../Firmware/MSX2/sub.rom"
   namespace name=Nintendo64
     binary name=CIC6101 file="../Firmware/Nintendo 64/cic.6101.rom"
     binary name=CIC6102 file="../Firmware/Nintendo 64/cic.6102.rom"

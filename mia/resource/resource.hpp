@@ -17,10 +17,6 @@ extern const unsigned char Vector[256];
 extern const unsigned char SH2BootM[2048];
 extern const unsigned char SH2BootS[1024];
 }
-namespace MSX2 {
-extern const unsigned char BIOS[32768];
-extern const unsigned char Sub[16384];
-}
 namespace Nintendo64 {
 extern const unsigned char CIC6101[1024];
 extern const unsigned char CIC6102[1024];
@@ -44,7 +40,7 @@ extern const unsigned char ST010[53248];
 extern const unsigned char ST011[53248];
 extern const unsigned char ST018[163840];
 extern const unsigned char S21FX[122];
-extern const unsigned char Boards[32230];
+extern const unsigned char Boards[33212];
 }
 namespace WonderSwan {
 extern const unsigned char Boot[4096];

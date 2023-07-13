@@ -10,6 +10,11 @@ MSX2::MSX2() {
   manufacturer = "Microsoft";
   name = "MSX2";
 
+  // TODO: Support other region bios versions
+  firmware = {};
+  firmware.append({"MAIN", "Japan"});
+  firmware.append({"SUB", "Japan"});
+
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};
 
@@ -29,16 +34,24 @@ MSX2::MSX2() {
 auto MSX2::load() -> bool {
   game = mia::Medium::create("MSX2");
   if(!game->load(Emulator::load(game, configuration.game))) return false;
+  bool isTape = game->pak->attribute("tape").boolean();
 
   system = mia::System::create("MSX2");
-  if(!system->load()) return false;
+  if(!system->loadMultiple({firmware[0].location, firmware[1].location})) {
+    return errorFirmware(firmware[0]), false;
+  }
 
   auto region = Emulator::region();
   if(!ares::MSX::load(root, {"[Microsoft] MSX2 (", region, ")"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
     port->allocate();
-    port->connect();
+    if(!isTape) port->connect();
+  }
+
+  if(auto port = root->find<ares::Node::Port>("Tape Deck/Tray")) {
+    port->allocate();
+    if(isTape) port->connect();
   }
 
   if(auto port = root->find<ares::Node::Port>("Controller Port 1")) {
@@ -69,6 +82,7 @@ auto MSX2::save() -> bool {
 auto MSX2::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
   if(node->name() == "MSX2") return system->pak;
   if(node->name() == "MSX2 Cartridge") return game->pak;
+  if(node->name() == "MSX Tape") return game->pak;
   return {};
 }
 

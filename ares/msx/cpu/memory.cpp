@@ -73,6 +73,9 @@ auto CPU::in(n16 address) -> n8 {
   case 0xa2: return psg.read();
   case 0xa8: return readPrimarySlot();
   case 0xa9: return keyboard.read();
+  case 0xb5:
+    if(Model::MSX2()) return rtc.read();
+    return 0xff;
   case 0xfc: case 0xfd: case 0xfe: case 0xff:
     if(Model::MSX()) return 0xff;
     //note: reading these ports is said to be unreliable;
@@ -80,6 +83,7 @@ auto CPU::in(n16 address) -> n8 {
     return slot[(n2)address].memory;
   }
 
+  debug(unimplemented, "[CPU::in] port: ", hex(address, 2L));
   return 0xff;
 }
 
@@ -93,11 +97,19 @@ auto CPU::out(n16 address, n8 data) -> void {
   case 0xa1: return psg.write(data);
   case 0xa8: return writePrimarySlot(data);
   case 0xaa: return keyboard.write(data.bit(0,3));
+  case 0xb4:
+    if(Model::MSX2()) return rtc.select(data);
+    return;
+  case 0xb5:
+    if(Model::MSX2()) return rtc.write(data);
+    return;
   case 0xfc: case 0xfd: case 0xfe: case 0xff:
     if(Model::MSX()) return;
     slot[(n2)address].memory = data;
     return;
   }
+
+  debug(unimplemented, "[CPU::out] port: ", hex(address, 2L), " = ", hex(data, 2L));
 }
 
 //

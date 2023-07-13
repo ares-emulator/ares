@@ -88,12 +88,14 @@ auto System::load(Node::System& root, string name) -> bool {
   controllerPort1.load(node);
   controllerPort2.load(node);
   tapeDeck.load(node);
+  if(model() == Model::MSX2) rtc.load(node);
   return true;
 }
 
 auto System::save() -> void {
   if(!node) return;
   if(cartridge.node) cartridge.save();
+  if(model() == Model::MSX2) rtc.save();
   expansion.save();
 }
 
@@ -108,6 +110,7 @@ auto System::unload() -> void {
   controllerPort1.unload();
   controllerPort2.unload();
   tapeDeck.unload();
+  if(model() == Model::MSX2) rtc.unload();
   pak.reset();
   node.reset();
   rom.bios.reset();
@@ -136,6 +139,7 @@ auto System::power(bool reset) -> void {
   cpu.power();
   vdp.power();
   psg.power();
+  if(model() == Model::MSX2) rtc.power();
   scheduler.power(cpu);
 }
 
