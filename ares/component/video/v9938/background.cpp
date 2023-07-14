@@ -26,7 +26,7 @@ auto V9938::Background::text1(n8 hoffset, n8 voffset) -> void {
   if (hoffset > 246) return;
 
   n14 nameAddress = (voffset.bit(3,7) * 40) + (x / 6);
-  nameAddress.bit(10,13) = io.nameTableAddress;
+  nameAddress.bit(10,16) = io.nameTableAddress.bit(10,16);
 
   n8 pattern = self.vram.read(nameAddress);
 
@@ -50,7 +50,7 @@ auto V9938::Background::graphic1(n8 hoffset, n8 voffset) -> void {
   n14 patternLayout;
   patternLayout.bit( 0, 4) = hoffset.bit(3,7);
   patternLayout.bit( 5, 9) = voffset.bit(3,7);
-  patternLayout.bit(10,13) = io.nameTableAddress.bit(10,13);
+  patternLayout.bit(10,16) = io.nameTableAddress.bit(10,16);
   n8 pattern = self.vram.read(patternLayout);
 
   n14 patternGenerator;
@@ -72,7 +72,7 @@ auto V9938::Background::graphic2(n8 hoffset, n8 voffset) -> void {
   n14 patternLayout;
   patternLayout.bit( 0, 4) = hoffset.bit(3,7);
   patternLayout.bit( 5, 9) = voffset.bit(3,7);
-  patternLayout.bit(10,13) = io.nameTableAddress.bit(10,13);
+  patternLayout.bit(10,16) = io.nameTableAddress.bit(10,16);
   n8 pattern = self.vram.read(patternLayout);
 
   n14 patternGenerator;
