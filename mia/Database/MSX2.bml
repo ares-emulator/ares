@@ -1,0 +1,57 @@
+database
+  revision: 2023-07-14
+
+game
+  sha256: 42a0470e9ff22881039e4fdfdbed3b3348c07fb3a7a21591cca49a93d85d977e
+  name:   Aleste (Japan)
+  title:  Aleste (Japan)
+  region: NTSC
+  board: ASC16
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+
+game
+  sha256: 17d836e10c413f285649d4c3374ec508513f0a8b3b2b7bfd6a25889441299593
+  name:   Alges no Yoku (Japan)
+  title:  Alges no Yoku (Japan)
+  region: NTSC
+  board: ASC8
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
+
+game
+  sha256: e128f69bb8f51fad98e403bf8294210aea9953b7ac3610009a36c763482118b2
+  name:   American Soccer (Japan)
+  title:  American Soccer (Japan)
+  region: NTSC
+  board: ASC8
+    memory
+      type: ROM
+      size: 0x10000
+      content: Program
+
+game
+  sha256: 15962fd815c3fd8d28cbb664c8f99d10825979fb5b9bd975b7aac785d35532eb
+  title: Bubble Bobble (Japan)
+  name: Bubble Bobble (Japan)
+  region: NTSC
+  board: ASC8
+    memory
+      type: ROM
+      size: 0x20000
+      content: Program
+
+game
+  sha256: 10bc91ad54ecc837e3323fd208bf62398bc06247b91866b2672ab628ebba2da3
+  name:   Fantasy Zone II - The Tears of Opa-Opa (Japan)
+  title:  Fantasy Zone II - The Tears of Opa-Opa (Japan)
+  region: NTSC
+  board: ASC16
+    memory
+      type: ROM
+      size: 0x40000
+      content: Program
