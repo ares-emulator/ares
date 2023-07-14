@@ -75,6 +75,7 @@ auto Nintendo64DD::load() -> bool {
   ares::Nintendo64::option("Enable GPU acceleration", false);
 #endif
   ares::Nintendo64::option("Disable Video Interface Processing", settings.video.disableVideoInterfaceProcessing);
+  ares::Nintendo64::option("Weave Deinterlacing", settings.video.weaveDeinterlacing);
 
   if(!ares::Nintendo64::load(root, {"[Nintendo] Nintendo 64DD (", region, ")"})) return false;
 

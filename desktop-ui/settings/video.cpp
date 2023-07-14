@@ -72,6 +72,14 @@ auto VideoSettings::construct() -> void {
   });
   disableVideoInterfaceProcessingLayout.setAlignment(1).setPadding(12_sx, 0);
   disableVideoInterfaceProcessingHint.setText("Disables Video Interface post processing to render image from VRAM directly").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
+  weaveDeinterlacingOption.setText("Weave Deinterlacing").setChecked(settings.video.weaveDeinterlacing).onToggle([&] {
+    settings.video.weaveDeinterlacing = weaveDeinterlacingOption.checked();
+    if(emulator) emulator->setBoolean("(Experimental) Double the perceived horizontal resolution, disabled when supersampling is used", settings.video.weaveDeinterlacing);
+  });
+  weaveDeinterlacingLayout.setAlignment(1).setPadding(12_sx, 0);
+  weaveDeinterlacingHint.setText("(Experimental) Double the perceived horizontal resolution, disabled when supersampling is used").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
   renderQualitySD.setText("SD Quality").onActivate([&] {
     settings.video.quality = "SD";
     renderSupersamplingOption.setChecked(false).setEnabled(false);
@@ -102,5 +110,6 @@ auto VideoSettings::construct() -> void {
   renderSupersamplingLayout.setCollapsible(true).setVisible(false);
   renderSettingsHint.setCollapsible(true).setVisible(false);
   disableVideoInterfaceProcessingLayout.setCollapsible(true).setVisible(false);
+  weaveDeinterlacingLayout.setCollapsible(true).setVisible(false);
   #endif
 }
