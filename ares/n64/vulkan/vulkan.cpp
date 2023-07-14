@@ -159,6 +159,15 @@ auto Vulkan::scanoutAsync(bool field) -> bool {
   if(disableVideoInterfaceProcessing) {
     options.vi = {false, false, false, false, false, false};
   }
+  if(!supersampleScanout){
+    options.blend_previous_frame = weaveDeinterlacing;
+    options.upscale_deinterlacing = !weaveDeinterlacing;
+  }
+  else {
+    options.blend_previous_frame = false;
+    options.upscale_deinterlacing = true;
+  }
+
 
   if(implementation->scanout.fence) {
     implementation->scanout.fence->wait();

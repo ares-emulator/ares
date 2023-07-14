@@ -70,6 +70,7 @@ auto Settings::process(bool load) -> void {
   bind(string,  "Video/Quality", video.quality);
   bind(boolean, "Video/Supersampling", video.supersampling);
   bind(boolean, "Video/DisableVideoInterfaceProcessing", video.disableVideoInterfaceProcessing);
+  bind(boolean, "Video/WeaveDeinterlacing", video.weaveDeinterlacing);
 
   bind(string,  "Audio/Driver", audio.driver);
   bind(string,  "Audio/Device", audio.device);
