@@ -76,6 +76,11 @@ auto VideoSettings::construct() -> void {
   weaveDeinterlacingOption.setText("Weave Deinterlacing").setChecked(settings.video.weaveDeinterlacing).onToggle([&] {
     settings.video.weaveDeinterlacing = weaveDeinterlacingOption.checked();
     if(emulator) emulator->setBoolean("(Experimental) Double the perceived horizontal resolution, disabled when supersampling is used", settings.video.weaveDeinterlacing);
+    if(weaveDeinterlacingOption.checked() == true) {
+      renderSupersamplingOption.setChecked(false).setEnabled(false);
+    } else {
+      if(settings.video.quality != "SD") renderSupersamplingOption.setEnabled(true);
+    }
   });
   weaveDeinterlacingLayout.setAlignment(1).setPadding(12_sx, 0);
   weaveDeinterlacingHint.setText("(Experimental) Double the perceived horizontal resolution, disabled when supersampling is used").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);

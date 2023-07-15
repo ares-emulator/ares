@@ -31,7 +31,7 @@ struct Settings : Markup::Node {
     string quality = "SD";
     bool supersampling = false;
     bool disableVideoInterfaceProcessing = false;
-    bool weaveDeinterlacing = false;
+    bool weaveDeinterlacing = true;
   } video;
 
   struct Audio {
