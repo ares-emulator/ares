@@ -78,6 +78,7 @@ auto VideoSettings::construct() -> void {
     if(emulator) emulator->setBoolean("(Experimental) Double the perceived horizontal resolution, disabled when supersampling is used", settings.video.weaveDeinterlacing);
     if(weaveDeinterlacingOption.checked() == true) {
       renderSupersamplingOption.setChecked(false).setEnabled(false);
+      settings.video.supersampling = false;
     } else {
       if(settings.video.quality != "SD") renderSupersamplingOption.setEnabled(true);
     }
