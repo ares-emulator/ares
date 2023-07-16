@@ -84,25 +84,33 @@ auto VideoSettings::construct() -> void {
     }
   });
   weaveDeinterlacingLayout.setAlignment(1).setPadding(12_sx, 0);
-  weaveDeinterlacingHint.setText("(Experimental) Double the perceived horizontal resolution, disabled when supersampling is used").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  weaveDeinterlacingHint.setText("Doubles the perceived horizontal resolution, incompatible with supersampling").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
   renderQualitySD.setText("SD Quality").onActivate([&] {
     settings.video.quality = "SD";
     renderSupersamplingOption.setChecked(false).setEnabled(false);
+    settings.video.supersampling = false;
+    weaveDeinterlacingOption.setEnabled(true);
   });
   renderQualityHD.setText("HD Quality").onActivate([&] {
     settings.video.quality = "HD";
-    renderSupersamplingOption.setChecked(settings.video.supersampling).setEnabled(true);
+    if(weaveDeinterlacingOption.checked() == false) renderSupersamplingOption.setChecked(settings.video.supersampling).setEnabled(true);
   });
   renderQualityUHD.setText("UHD Quality").onActivate([&] {
     settings.video.quality = "UHD";
-    renderSupersamplingOption.setChecked(settings.video.supersampling).setEnabled(true);
+    if(weaveDeinterlacingOption.checked() == false) renderSupersamplingOption.setChecked(settings.video.supersampling).setEnabled(true);
   });
   if(settings.video.quality == "SD") renderQualitySD.setChecked();
   if(settings.video.quality == "HD") renderQualityHD.setChecked();
   if(settings.video.quality == "UHD") renderQualityUHD.setChecked();
   renderSupersamplingOption.setText("Supersampling").setChecked(settings.video.supersampling && settings.video.quality != "SD").setEnabled(settings.video.quality != "SD").onToggle([&] {
     settings.video.supersampling = renderSupersamplingOption.checked();
+    if(renderSupersamplingOption.checked() == true) {
+      weaveDeinterlacingOption.setEnabled(false).setChecked(false);
+      settings.video.weaveDeinterlacing = false;
+    } else {
+      weaveDeinterlacingOption.setEnabled(true);
+    }
   });
   renderSupersamplingLayout.setAlignment(1).setPadding(12_sx, 0);
   renderSupersamplingHint.setText("Scales HD and UHD resolutions back down to SD").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
