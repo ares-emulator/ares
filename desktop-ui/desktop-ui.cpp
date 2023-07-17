@@ -68,6 +68,10 @@ auto nall::main(Arguments arguments) -> void {
     program.startShader = shader;
   }
 
+  if(arguments.take("--no-file-prompt")) {
+    program.noFilePrompt = true;
+  }
+
   inputManager.create();
   Emulator::construct();
   settings.load();
@@ -93,7 +97,7 @@ auto nall::main(Arguments arguments) -> void {
   }
 
   if(arguments.take("--help")) {
-    print("Usage: ares [OPTIONS]... game\n\n");
+    print("Usage: ares [OPTIONS]... game(s)\n\n");
     print("Options:\n");
     print("  --help               Displays available options and exit\n");
 #if defined(PLATFORM_WINDOWS)
@@ -104,6 +108,7 @@ auto nall::main(Arguments arguments) -> void {
     print("  --shader name        Specify the name of the shader to use\n");
     print("  --setting name=value Specify a value for a setting\n");
     print("  --dump-all-settings  Show a list of all existing settings and exit\n");
+    print("  --no-file-prompt     Do not prompt to load (optional) additional roms (eg: 64DD)\n");
     print("\n");
     print("Available Systems:\n");
     print("  ");
@@ -126,8 +131,9 @@ auto nall::main(Arguments arguments) -> void {
     return;
   }
 
+  program.startGameLoad.reset();
   for(auto argument : arguments) {
-    if(file::exists(argument)) program.startGameLoad = argument;
+    if(file::exists(argument)) program.startGameLoad.append(argument);
   }
 
   Instances::presentation.construct();

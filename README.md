@@ -105,7 +105,7 @@ Command-line options
 When started from the command-line, ares accepts a few options.
 
 ```
-Usage: ./ares [options] game
+Usage: ./ares [options] game(s)
 
   --help                 Displays available options and exit
   --fullscreen           Start in full screen mode
@@ -113,6 +113,7 @@ Usage: ./ares [options] game
   --shader shader        Specify GLSL shader name to load (requires OpenGL driver)
   --setting name=value   Specify a value for a setting
   --dump-all-settings    Show a list of all existing settings and exit
+  --no-file-prompt       Do not prompt to load (optional) additional roms (eg: 64DD)
 ```
 
 The --system option is useful when the system type cannot be auto-detected.
@@ -121,6 +122,17 @@ The --system option is useful when the system type cannot be auto-detected.
 Example:
 `ares --system MSX examples.rom --fullscreen`
 
+Specifying multiple games allows for multi-cart support.  For example, to load
+the Super GameBoy BIOS and a game in one command (to avoid a file prompt), you 
+can do:
+
+`ares "Super GameBoy.sfc" "Super Mario Land.gb"`
+
+The --no-file-prompt option is useful if you wish to launch a game from CLI
+without being prompted to load additional roms. For example, some Nintendo 64 
+games optionally support 64DD expansion disks, so this option can be used to
+suppress the "64DD Disk" file dialog, and assume any secondary content is 
+disconnected.
 
 High-level Components
 ---------------------

@@ -72,7 +72,9 @@ auto Emulator::load(shared_pointer<mia::Pak> pak, string& path) -> string {
   string location;
   if(locationQueue) {
     location = locationQueue.takeFirst();  //pull from the game queue if an entry is available
-  } else {
+  } else if(program.startGameLoad) {
+    location = program.startGameLoad.takeFirst(); //pull from the command line if an entry is available
+  } else if(!program.noFilePrompt) {
     BrowserDialog dialog;
     dialog.setTitle({"Load ", pak->name(), " Game"});
     dialog.setPath(path ? path : Path::desktop());
