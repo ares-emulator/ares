@@ -46,18 +46,23 @@ auto RSP::instruction() -> void {
   }
 
   if constexpr(Accuracy::RSP::Interpreter) {
+    pipeline.begin();
     pipeline.address = ipu.pc;
     pipeline.instruction = imem.read<Word>(pipeline.address);
     debugger.instruction();
     decoderEXECUTE();
-    instructionEpilogue();
-    step(3);
+    pipeline.end();
+    instructionEpilogue(0);
   }
+
+  //this handles all stepping for the interpreter
+  //with the recompiler, it only steps for taken branch stalls
+  step(pipeline.clocks);
 }
 
-auto RSP::instructionEpilogue() -> s32 {
+auto RSP::instructionEpilogue(u32 clocks) -> s32 {
   if constexpr(Accuracy::RSP::Recompiler) {
-    step(3);
+    step(clocks);
   }
 
   ipu.r[0].u32 = 0;
@@ -65,7 +70,7 @@ auto RSP::instructionEpilogue() -> s32 {
   switch(branch.state) {
   case Branch::Step: ipu.pc += 4; return status.halted;
   case Branch::Take: ipu.pc += 4; branch.delaySlot(); return status.halted;
-  case Branch::DelaySlot: ipu.pc = branch.pc; branch.reset(); return 1;
+  case Branch::DelaySlot: ipu.pc = branch.pc; branch.reset(); pipeline.stall(); return 1;
   }
 
   unreachable;

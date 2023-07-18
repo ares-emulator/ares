@@ -5,6 +5,10 @@ auto RSP::serialize(serializer& s) -> void {
 
   s(pipeline.address);
   s(pipeline.instruction);
+  s(pipeline.previous.load);
+  s(pipeline.previous.lockReg);
+  s(pipeline.previous2.load);
+  s(pipeline.previous2.lockReg);
 
   s(dma.pending);
   s(dma.current);

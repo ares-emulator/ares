@@ -38,6 +38,7 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
 
   auto size = measure(address);
   auto hashcode = hash(address, size);
+  hashcode ^= self.pipeline.hash();
 
   BlockHashPair pair;
   pair.hashcode = hashcode;
@@ -66,14 +67,19 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
     reset();
   }
 
+  pipeline = self.pipeline;
+
   auto block = (Block*)allocator.acquire(sizeof(Block));
   beginFunction(3);
 
   u12 start = address;
   bool hasBranched = 0;
   while(true) {
+    pipeline.begin();
     u32 instruction = self.imem.read<Word>(address);
     bool branched = emitEXECUTE(instruction);
+    pipeline.end();
+    mov32(reg(1), imm(pipeline.clocks));
     call(&RSP::instructionEpilogue);
     address += 4;
     if(hasBranched || address == start) break;
@@ -82,9 +88,13 @@ auto RSP::Recompiler::emit(u12 address) -> Block* {
   }
   jumpEpilog();
 
+  //reset clocks to zero every time block is executed
+  pipeline.clocks = 0;
+
   memory::jitprotect(false);
   block->code = endFunction();
   block->size = address - start;
+  block->pipeline = pipeline;
 
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;
@@ -155,6 +165,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //BEQ Rs,Rt,i16
   case 0x04: {
+    pipeline.regRead(Rsn).regRead(Rtn);
     lea(reg(1), Rs);
     lea(reg(2), Rt);
     mov32(reg(3), imm(i16));
@@ -164,6 +175,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //BNE Rs,Rt,i16
   case 0x05: {
+    pipeline.regRead(Rsn).regRead(Rtn);
     lea(reg(1), Rs);
     lea(reg(2), Rt);
     mov32(reg(3), imm(i16));
@@ -173,6 +185,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //BLEZ Rs,i16
   case 0x06: {
+    pipeline.regRead(Rsn);
     lea(reg(1), Rs);
     mov32(reg(2), imm(i16));
     call(&RSP::BLEZ);
@@ -181,6 +194,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //BGTZ Rs,i16
   case 0x07: {
+    pipeline.regRead(Rsn);
     lea(reg(1), Rs);
     mov32(reg(2), imm(i16));
     call(&RSP::BGTZ);
@@ -189,12 +203,14 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //ADDIU Rt,Rs,i16
   case range2(0x08, 0x09): {
+    pipeline.regRead(Rsn);
     add32(mem(Rt), mem(Rs), imm(i16));
     return 0;
   }
 
   //SLTI Rt,Rs,i16
   case 0x0a: {
+    pipeline.regRead(Rsn);
     cmp32(mem(Rs), imm(i16), set_slt);
     mov32_f(mem(Rt), flag_slt);
     return 0;
@@ -202,6 +218,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //SLTIU Rt,Rs,i16
   case 0x0b: {
+    pipeline.regRead(Rsn);
     cmp32(mem(Rs), imm(i16), set_ult);
     mov32_f(mem(Rt), flag_ult);
     return 0;
@@ -209,18 +226,21 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //ANDI Rt,Rs,n16
   case 0x0c: {
+    pipeline.regRead(Rsn);
     and32(mem(Rt), mem(Rs), imm(n16));
     return 0;
   }
 
   //ORI Rt,Rs,n16
   case 0x0d: {
+    pipeline.regRead(Rsn);
     or32(mem(Rt), mem(Rs), imm(n16));
     return 0;
   }
 
   //XORI Rt,Rs,n16
   case 0x0e: {
+    pipeline.regRead(Rsn);
     xor32(mem(Rt), mem(Rs), imm(n16));
     return 0;
   }
@@ -253,6 +273,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //LB Rt,Rs,i16
   case 0x20: {
+    pipeline.regRead(Rsn).regWrite(Rtn).load();
     lea(reg(1), Rt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i16));
@@ -262,6 +283,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //LH Rt,Rs,i16
   case 0x21: {
+    pipeline.regRead(Rsn).regWrite(Rtn).load();
     lea(reg(1), Rt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i16));
@@ -276,6 +298,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //LW Rt,Rs,i16
   case 0x23: {
+    pipeline.regRead(Rsn).regWrite(Rtn).load();
     lea(reg(1), Rt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i16));
@@ -285,6 +308,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //LBU Rt,Rs,i16
   case 0x24: {
+    pipeline.regRead(Rsn).regWrite(Rtn).load();
     lea(reg(1), Rt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i16));
@@ -294,6 +318,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //LHU Rt,Rs,i16
   case 0x25: {
+    pipeline.regRead(Rsn).regWrite(Rtn).load();
     lea(reg(1), Rt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i16));
@@ -308,6 +333,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //LWU Rt,Rs,i16
   case 0x27: {
+    pipeline.regRead(Rsn).regWrite(Rtn).load();
     lea(reg(1), Rt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i16));
@@ -317,6 +343,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //SB Rt,Rs,i16
   case 0x28: {
+    pipeline.regRead(Rsn).regRead(Rtn).store();
     lea(reg(1), Rt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i16));
@@ -326,6 +353,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //SH Rt,Rs,i16
   case 0x29: {
+    pipeline.regRead(Rsn).regRead(Rtn).store();
     lea(reg(1), Rt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i16));
@@ -340,6 +368,7 @@ auto RSP::Recompiler::emitEXECUTE(u32 instruction) -> bool {
 
   //SW Rt,Rs,i16
   case 0x2b: {
+    pipeline.regRead(Rsn).regRead(Rtn).store();
     lea(reg(1), Rt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i16));
@@ -382,6 +411,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SLL Rd,Rt,Sa
   case 0x00: {
+    pipeline.regRead(Rtn);
     shl32(mem(Rd), mem(Rt), imm(Sa));
     return 0;
   }
@@ -393,18 +423,21 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SRL Rd,Rt,Sa
   case 0x02: {
+    pipeline.regRead(Rtn);
     lshr32(mem(Rd), mem(Rt), imm(Sa));
     return 0;
   }
 
   //SRA Rd,Rt,Sa
   case 0x03: {
+    pipeline.regRead(Rtn);
     ashr32(mem(Rd), mem(Rt), imm(Sa));
     return 0;
   }
 
   //SLLV Rd,Rt,Rs
   case 0x04: {
+    pipeline.regRead(Rsn).regRead(Rtn);
     mshl32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
@@ -416,18 +449,21 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SRLV Rd,Rt,Rs
   case 0x06: {
+    pipeline.regRead(Rsn).regRead(Rtn);
     mlshr32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
 
   //SRAV Rd,Rt,Rs
   case 0x07: {
+    pipeline.regRead(Rsn).regRead(Rtn);
     mashr32(mem(Rd), mem(Rt), mem(Rs));
     return 0;
   }
 
   //JR Rs
   case 0x08: {
+    pipeline.regRead(Rsn);
     lea(reg(1), Rs);
     call(&RSP::JR);
     return 1;
@@ -435,6 +471,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //JALR Rd,Rs
   case 0x09: {
+    pipeline.regRead(Rsn);
     lea(reg(1), Rd);
     lea(reg(2), Rs);
     call(&RSP::JALR);
@@ -459,36 +496,42 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //ADDU Rd,Rs,Rt
   case range2(0x20, 0x21): {
+    pipeline.regRead(Rsn).regRead(Rtn);
     add32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
 
   //SUBU Rd,Rs,Rt
   case range2(0x22, 0x23): {
+    pipeline.regRead(Rsn).regRead(Rtn);
     sub32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
 
   //AND Rd,Rs,Rt
   case 0x24: {
+    pipeline.regRead(Rsn).regRead(Rtn);
     and32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
 
   //OR Rd,Rs,Rt
   case 0x25: {
+    pipeline.regRead(Rsn).regRead(Rtn);
     or32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
 
   //XOR Rd,Rs,Rt
   case 0x26: {
+    pipeline.regRead(Rsn).regRead(Rtn);
     xor32(mem(Rd), mem(Rs), mem(Rt));
     return 0;
   }
 
   //NOR Rd,Rs,Rt
   case 0x27: {
+    pipeline.regRead(Rsn).regRead(Rtn);
     or32(reg(0), mem(Rs), mem(Rt));
     xor32(reg(0), reg(0), imm(-1));
     mov32(mem(Rd), reg(0));
@@ -502,6 +545,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SLT Rd,Rs,Rt
   case 0x2a: {
+    pipeline.regRead(Rsn).regRead(Rtn);
     cmp32(mem(Rs), mem(Rt), set_slt);
     mov32_f(mem(Rd), flag_slt);
     return 0;
@@ -509,6 +553,7 @@ auto RSP::Recompiler::emitSPECIAL(u32 instruction) -> bool {
 
   //SLTU Rd,Rs,Rt
   case 0x2b: {
+    pipeline.regRead(Rsn).regRead(Rtn);
     cmp32(mem(Rs), mem(Rt), set_ult);
     mov32_f(mem(Rd), flag_ult);
     return 0;
@@ -529,6 +574,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BLTZ Rs,i16
   case 0x00: {
+    pipeline.regRead(Rsn);
     lea(reg(1), Rs);
     mov32(reg(2), imm(i16));
     call(&RSP::BLTZ);
@@ -537,6 +583,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BGEZ Rs,i16
   case 0x01: {
+    pipeline.regRead(Rsn);
     lea(reg(1), Rs);
     mov32(reg(2), imm(i16));
     call(&RSP::BGEZ);
@@ -550,6 +597,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BLTZAL Rs,i16
   case 0x10: {
+    pipeline.regRead(Rsn);
     lea(reg(1), Rs);
     mov32(reg(2), imm(i16));
     call(&RSP::BLTZAL);
@@ -558,6 +606,7 @@ auto RSP::Recompiler::emitREGIMM(u32 instruction) -> bool {
 
   //BGEZAL Rs,i16
   case 0x11: {
+    pipeline.regRead(Rsn);
     lea(reg(1), Rs);
     mov32(reg(2), imm(i16));
     call(&RSP::BGEZAL);
@@ -579,6 +628,7 @@ auto RSP::Recompiler::emitSCC(u32 instruction) -> bool {
 
   //MFC0 Rt,Rd
   case 0x00: {
+    pipeline.regWrite(Rtn).load().store();
     lea(reg(1), Rt);
     mov32(reg(2), imm(Rdn));
     call(&RSP::MFC0);
@@ -592,6 +642,7 @@ auto RSP::Recompiler::emitSCC(u32 instruction) -> bool {
 
   //MTC0 Rt,Rd
   case 0x04: {
+    pipeline.regRead(Rtn).load().store();
     lea(reg(1), Rt);
     mov32(reg(2), imm(Rdn));
     call(&RSP::MTC0);
@@ -614,6 +665,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
 
   //MFC2 Rt,Vs(e)
   case 0x00: {
+    pipeline.regWrite(Rtn).load().store();
     lea(reg(1), Rt);
     lea(reg(2), Vs);
     callvu(&RSP::MFC2);
@@ -627,6 +679,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
 
   //CFC2 Rt,Rd
   case 0x02: {
+    pipeline.regWrite(Rtn).load().store();
     lea(reg(1), Rt);
     mov32(reg(2), imm(Rdn));
     call(&RSP::CFC2);
@@ -640,6 +693,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
 
   //MTC2 Rt,Vs(e)
   case 0x04: {
+    pipeline.regRead(Rtn).load().store();
     lea(reg(1), Rt);
     lea(reg(2), Vs);
     callvu(&RSP::MTC2);
@@ -653,6 +707,7 @@ auto RSP::Recompiler::emitVU(u32 instruction) -> bool {
 
   //CTC2 Rt,Rd
   case 0x06: {
+    pipeline.regRead(Rtn).load().store();
     lea(reg(1), Rt);
     mov32(reg(2), imm(Rdn));
     call(&RSP::CTC2);
@@ -1144,6 +1199,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LBV Vt(e),Rs,i7
   case 0x00: {
+    pipeline.regRead(Rsn).load();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1153,6 +1209,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LSV Vt(e),Rs,i7
   case 0x01: {
+    pipeline.regRead(Rsn).load();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1162,6 +1219,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LLV Vt(e),Rs,i7
   case 0x02: {
+    pipeline.regRead(Rsn).load();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1171,6 +1229,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LDV Vt(e),Rs,i7
   case 0x03: {
+    pipeline.regRead(Rsn).load();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1180,6 +1239,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LQV Vt(e),Rs,i7
   case 0x04: {
+    pipeline.regRead(Rsn).load();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1189,6 +1249,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LRV Vt(e),Rs,i7
   case 0x05: {
+    pipeline.regRead(Rsn).load();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1198,6 +1259,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LPV Vt(e),Rs,i7
   case 0x06: {
+    pipeline.regRead(Rsn).load();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1207,6 +1269,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LUV Vt(e),Rs,i7
   case 0x07: {
+    pipeline.regRead(Rsn).load();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1216,6 +1279,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LHV Vt(e),Rs,i7
   case 0x08: {
+    pipeline.regRead(Rsn).load();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1225,6 +1289,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LFV Vt(e),Rs,i7
   case 0x09: {
+    pipeline.regRead(Rsn).load();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1239,6 +1304,7 @@ auto RSP::Recompiler::emitLWC2(u32 instruction) -> bool {
 
   //LTV Vt(e),Rs,i7
   case 0x0b: {
+    pipeline.regRead(Rsn).load();
     mov32(reg(1), imm(Vtn));
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1265,6 +1331,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SBV Vt(e),Rs,i7
   case 0x00: {
+    pipeline.regRead(Rsn).store();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1274,6 +1341,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SSV Vt(e),Rs,i7
   case 0x01: {
+    pipeline.regRead(Rsn).store();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1283,6 +1351,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SLV Vt(e),Rs,i7
   case 0x02: {
+    pipeline.regRead(Rsn).store();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1292,6 +1361,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SDV Vt(e),Rs,i7
   case 0x03: {
+    pipeline.regRead(Rsn).store();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1301,6 +1371,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SQV Vt(e),Rs,i7
   case 0x04: {
+    pipeline.regRead(Rsn).store();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1310,6 +1381,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SRV Vt(e),Rs,i7
   case 0x05: {
+    pipeline.regRead(Rsn).store();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1319,6 +1391,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SPV Vt(e),Rs,i7
   case 0x06: {
+    pipeline.regRead(Rsn).store();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1328,6 +1401,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SUV Vt(e),Rs,i7
   case 0x07: {
+    pipeline.regRead(Rsn).store();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1337,6 +1411,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SHV Vt(e),Rs,i7
   case 0x08: {
+    pipeline.regRead(Rsn).store();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1346,6 +1421,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SFV Vt(e),Rs,i7
   case 0x09: {
+    pipeline.regRead(Rsn).store();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1355,6 +1431,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //SWV Vt(e),Rs,i7
   case 0x0a: {
+    pipeline.regRead(Rsn).store();
     lea(reg(1), Vt);
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
@@ -1364,6 +1441,7 @@ auto RSP::Recompiler::emitSWC2(u32 instruction) -> bool {
 
   //STV Vt(e),Rs,i7
   case 0x0b: {
+    pipeline.regRead(Rsn).store();
     mov32(reg(1), imm(Vtn));
     lea(reg(2), Rs);
     mov32(reg(3), imm(i7));
