@@ -22,6 +22,7 @@ struct PI : Memory::RCP<PI> {
   auto dmaRead() -> void;
   auto dmaWrite() -> void;
   auto dmaFinished() -> void;
+  auto dmaDuration(bool read) -> u32;
 
   //io.cpp
   auto ioRead(u32 address) -> u32;
@@ -55,8 +56,8 @@ struct PI : Memory::RCP<PI> {
   struct BSD {
     n8 latency;
     n8 pulseWidth;
-    n8 pageSize;
-    n8 releaseDuration;
+    n4 pageSize;
+    n2 releaseDuration;
   } bsd1, bsd2;
 };
 
