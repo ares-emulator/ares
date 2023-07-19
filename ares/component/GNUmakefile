@@ -12,6 +12,8 @@ ares.objects += $(if $(findstring ym2612,$(ares.components)),ares-audio-ym2612)
 ares.objects += $(if $(findstring m24c,$(ares.components)),ares-eeprom-m24c)
 ares.objects += $(if $(findstring m93lcx6,$(ares.components)),ares-eeprom-m93lcx6)
 
+ares.objects += $(if $(findstring i8255,$(ares.components)),ares-io-i8255)
+
 ares.objects += $(if $(findstring arm7tdmi,$(ares.components)),ares-processor-arm7tdmi)
 ares.objects += $(if $(findstring gsu,$(ares.components)),ares-processor-gsu)
 ares.objects += $(if $(findstring hg51b,$(ares.components)),ares-processor-hg51b)
@@ -46,6 +48,8 @@ $(object.path)/ares-audio-ym2612.o:       $(ares.path)/component/audio/ym2612/ym
 
 $(object.path)/ares-eeprom-m24c.o:        $(ares.path)/component/eeprom/m24c/m24c.cpp
 $(object.path)/ares-eeprom-m93lcx6.o:     $(ares.path)/component/eeprom/m93lcx6/m93lcx6.cpp
+
+$(object.path)/ares-io-i8255.o:    		  $(ares.path)/component/io/i8255/i8255.cpp
 
 $(object.path)/ares-processor-arm7tdmi.o: $(ares.path)/component/processor/arm7tdmi/arm7tdmi.cpp
 $(object.path)/ares-processor-gsu.o:      $(ares.path)/component/processor/gsu/gsu.cpp

@@ -1,16 +1,31 @@
 struct System {
   Node::System node;
 
-  struct Controls {
+  struct ArcadeControls {
     Node::Object node;
-    Node::Input::Button pause;
+    Node::Input::Button p1up;
+    Node::Input::Button p1down;
+    Node::Input::Button p1left;
+    Node::Input::Button p1right;
+    Node::Input::Button p1b1;
+    Node::Input::Button p1b2;
+    Node::Input::Button p1start;
+    Node::Input::Button coin;
+    Node::Input::Button service;
+    Node::Input::Button p2up;
+    Node::Input::Button p2down;
+    Node::Input::Button p2left;
+    Node::Input::Button p2right;
+    Node::Input::Button p2b1;
+    Node::Input::Button p2b2;
+    Node::Input::Button p2start;
 
-    //controls.cpp
+    //arcade-controls.cpp
     auto load(Node::Object) -> void;
     auto poll() -> void;
-  } controls;
+  } arcadeControls;
 
-  enum class Model : u32 { SG1000, SC3000 };
+  enum class Model : u32 { SG1000, SG1000A, SC3000 };
   enum class Region : u32 { NTSC, PAL };
 
   auto name() const -> string { return information.name; }
@@ -47,6 +62,7 @@ extern System system;
 
 auto Model::SG1000() -> bool { return system.model() == System::Model::SG1000; }
 auto Model::SC3000() -> bool { return system.model() == System::Model::SC3000; }
+auto Model::SG1000A() -> bool { return system.model() == System::Model::SG1000A; }
 
 auto Region::NTSC() -> bool { return system.region() == System::Region::NTSC; }
 auto Region::PAL() -> bool { return system.region() == System::Region::PAL; }
