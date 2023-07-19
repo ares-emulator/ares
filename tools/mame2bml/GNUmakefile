@@ -1,5 +1,6 @@
 name := mame2bml
 build := stable
+console := true
 flags += -I../../ -DNALL_HEADER_ONLY
 
 nall.path := ../../nall

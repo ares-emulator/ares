@@ -12,12 +12,21 @@ private:
 };
 
 auto Mame2BML::main(Arguments arguments) -> void {
-  if(arguments.size() != 2) return print("usage: mame2bml softwarelist.xml output.bml\n");
+  if(arguments.size() < 2) {
+    return print("usage: mame2bml softwarelist.xml output.bml - convert a mame software list xml to bml\n"
+                 "       mame2bml machinelist.xml output.bml driver - convert a mame machine list xml to bml\n");
+  }
 
   string markupName = arguments.take();
   string outputName = arguments.take();
+  string driverName = {};
   if(!markupName.endsWith(".xml")) return print("error: arguments in incorrect order\n");
   if(!outputName.endsWith(".bml")) return print("error: arguments in incorrect order\n");
+
+  if(arguments.size()) {
+    driverName = arguments.take();
+    if(!driverName.iendsWith(".cpp")) return print("error: driver does not appear to be a mame src filename (eg: sega/segae.cpp)\n");
+  }
 
   string markup = string::read(markupName);
   if(!markup) return print("error: unable to read software list\n");
@@ -31,6 +40,42 @@ auto Mame2BML::main(Arguments arguments) -> void {
   auto document = XML::unserialize(markup);
 
   for(auto header : document) {
+    // machine list xml (from mame.exe -listxml)
+    if(header.name() == "mame") {
+      for(auto machine : header) {
+        if(machine.name() != "machine") continue;
+        if(machine["sourcefile"].string() != driverName) continue;
+
+        print("found game: ", machine["name"].string(), " (", machine["description"].string(), ")\n");
+
+        output.print("game\n");
+        output.print("  name:  ", machine["name"].string(), "\n");
+        output.print("  title: ", machine["description"].string(), "\n");
+
+        string region = "";
+        for(auto rom : machine) {
+          if(rom.name() == "rom") {
+            if(rom["region"].string() != region) {
+              region = rom["region"].string().replace(":", "");
+              output.print("  ", region, "\n");
+            }
+
+            if(rom.name() != "rom") continue;
+            output.print("    rom\n");
+            if(rom["name"])
+              output.print("      name:   ", rom["name"].string(), "\n");
+            if(rom["value"])
+              output.print("      value:  ", rom["value"].natural(), "\n");
+              output.print("      offset: ", rom["offset"].natural(), "\n");
+              output.print("      size:   ", rom["size"].natural(), "\n");
+              output.print("      crc:    ", rom["crc"].string(), "\n");
+              output.print("      sha1:   ", rom["sha1"].string(), "\n");
+          }
+        }
+      }
+    }
+
+    // software list xml (from mame/hash/*.xml)
     if(header.name() == "softwarelist") {
       for(auto software : header) {
         if(software.name() != "software") continue;
