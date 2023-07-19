@@ -2,16 +2,14 @@
 // See https://github.com/mamedev/mame/tree/master/src/devices/bus/neogeo
 // and the MAME section in LICENCE in the ares license text.
 
-struct NeoGeo : Cartridge {
+struct NeoGeo : Mame {
   auto name() -> string override { return "Neo Geo"; }
   auto extensions() -> vector<string> override { return {"ng"}; }
   auto read(string location, string match) -> vector<u8>;
   auto load(string location) -> bool override;
   auto board() -> string;
-  auto loadRoms(string location, string sectionName) -> vector<u8>;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> string;
-  auto endianSwap(vector<u8>& memory, u32 address = 0, int size = -1) -> void;
   auto decrypt(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> void;
   auto decryptCmc42(vector<u8>& c , vector<u8>& s, u8 key) -> void;
   auto decryptCmc50(vector<u8>& c , vector<u8>& s, vector<u8>& m, u8 key) -> void;
@@ -38,85 +36,21 @@ struct NeoGeo : Cartridge {
   } cmc;
 };
 
-// TODO: Once we support more arcade systems, split this into a generic MAME medium
-// Since we only have one arcade system at present, it's fine to keep it here.
-auto NeoGeo::loadRoms(string location, string sectionName) -> vector<u8> {
-  vector<u8> output;
-
-  Decode::ZIP archive;
-  if(!archive.open(location)) {
-    return output;
-  }
-
-  string filename = {};
-  vector<u8> input = {};
-  u32 readOffset = 0;
-  string loadType = {};
-
-  for(auto section : info[{"game/", sectionName}]) {
-    if(section.name() == "rom") {
-      if(section["type"] && section["type"].string() != "continue") loadType = section["type"].string();
-
-      if(section["name"]) {
-        filename = section["name"].string().strip();
-        if(filename) {
-          input = {};
-          for(auto &file: archive.file) {
-            if(!file.name.iequals(filename)) continue;
-            input = archive.extract(file);
-            readOffset = 0;
-          }
-          if (!input || input.size() == 0) return output;
-        }
-      }
-
-      auto writeOffset = section["offset"].natural();
-      auto size = section["size"].natural();
-
-      auto startIndex = 0;
-      auto increment = 1;
-      if(loadType == "load16_byte") {
-        increment = 2;
-        size *= 2;
-        if(writeOffset & 1) {
-          startIndex = 1;
-          writeOffset--;
-        }
-      }
-
-      if(output.size() < writeOffset + size) output.resize(writeOffset + size);
-
-      for(auto index = startIndex; index < size; index += increment) {
-        if(loadType == "fill") {
-          output[index + writeOffset] = section["value"].natural();
-          continue;
-        }
-
-        output[index + writeOffset] = input[readOffset++];
-      }
-
-      if(loadType == "load16_word_swap") endianSwap(output, section["offset"].natural(), size);
-    }
-  }
-
-  return output;
-}
-
 auto NeoGeo::read(string location, string match) -> vector<u8> {
   // we expect mame style .zip rom images
   if(!location.iendsWith(".zip")) {}
 
   if(info) {
-    if(match == "program.rom")   return loadRoms(location, "maincpu");
-    if(match == "character.rom") return loadRoms(location, "sprites");
-    if(match == "static.rom")    return loadRoms(location, "fixed");
-    if(match == "voice-a.rom")   return loadRoms(location, "ymsndadpcma");
-    if(match == "voice-b.rom")   return loadRoms(location, "ymsndadpcmb");
+    if(match == "program.rom")   return loadRoms(location, info, "maincpu");
+    if(match == "character.rom") return loadRoms(location, info, "sprites");
+    if(match == "static.rom")    return loadRoms(location, info, "fixed");
+    if(match == "voice-a.rom")   return loadRoms(location, info, "ymsndadpcma");
+    if(match == "voice-b.rom")   return loadRoms(location, info, "ymsndadpcmb");
     if(match == "music.rom") {
       // music rom can be plaintext (audiocpu) or encrypted (audiocrypt)
       // we must load both types
-      auto music = loadRoms(location, "audiocpu");
-      if(music.size() == 0) return loadRoms(location, "audiocrypt");
+      auto music = loadRoms(location, info, "audiocpu");
+      if(music.size() == 0) return loadRoms(location, info, "audiocrypt");
       return music;
     }
   }
@@ -211,13 +145,6 @@ auto NeoGeo::analyze(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s,
   manifest +={"    memory type=ROM size=0x", hex(vA.size(), 8L), " content=VoiceA\n"};
   manifest +={"    memory type=ROM size=0x", hex(vB.size(), 8L), " content=VoiceB\n"};
   return manifest;
-}
-
-auto NeoGeo::endianSwap(vector<u8>& memory, u32 address, int size) -> void {
-  if(size < 0) size = memory.size();
-  for(u32 index = 0; index < size; index += 2) {
-    swap(memory[address + index + 0], memory[address + index + 1]);
-  }
 }
 
 auto NeoGeo::decrypt(vector<u8>& p, vector<u8>& m, vector<u8>& c, vector<u8>& s, vector<u8>& vA, vector<u8>& vB) -> void {

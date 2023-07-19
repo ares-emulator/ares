@@ -1,5 +1,6 @@
 namespace Media {
   vector<Database> databases;
+  #include "mame.cpp"
   #include "atari-2600.cpp"
   #include "colecovision.cpp"
   #include "famicom.cpp"
