@@ -66,7 +66,7 @@ auto Mame2BML::main(Arguments arguments) -> void {
               output.print("      name:   ", rom["name"].string(), "\n");
             if(rom["value"])
               output.print("      value:  ", rom["value"].natural(), "\n");
-              output.print("      offset: ", rom["offset"].natural(), "\n");
+              output.print("      offset: ", "0x", rom["offset"].string(), "\n");
               output.print("      size:   ", rom["size"].natural(), "\n");
               output.print("      crc:    ", rom["crc"].string(), "\n");
               output.print("      sha1:   ", rom["sha1"].string(), "\n");
