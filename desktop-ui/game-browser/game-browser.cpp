@@ -23,6 +23,12 @@ auto GameBrowserWindow::show(shared_pointer<Emulator> emulator) -> void {
   games.reset();
 
   auto tmp = (shared_pointer<mia::Medium>)mia::Medium::create(emulator->medium);
+  if(!tmp) {
+    string text = {"Failed to load Medium: ", emulator->medium};
+    MessageDialog().setTitle("Error").setText(text).setAlignment(presentation).error();
+    return;
+  }
+
   auto db = tmp->database();
   for(auto node : db.list) {
     auto path = settings.paths.arcadeRoms;
