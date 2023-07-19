@@ -20,46 +20,46 @@ auto Mame::loadRoms(string location, Markup::Node& info, string sectionName) -> 
   for(auto section : info[{"game/", sectionName}]) {
     if(section.name() == "rom") {
       if(section["type"] && section["type"].string() != "continue") loadType = section["type"].string();
-        if(section["name"]) {
-          filename = section["name"].string().strip();
-          if(filename) {
-            input = {};
-            for(auto &file: archive.file) {
-              if(!file.name.iequals(filename)) continue;
-              input = archive.extract(file);
-              readOffset = 0;
-            }
-            if (!input || input.size() == 0) return output;
+      if(section["name"]) {
+        filename = section["name"].string().strip();
+        if(filename) {
+          input = {};
+          for(auto &file: archive.file) {
+            if(!file.name.iequals(filename)) continue;
+            input = archive.extract(file);
+            readOffset = 0;
           }
+          if (!input || input.size() == 0) return output;
         }
-
-        auto writeOffset = section["offset"].natural();
-        auto size = section["size"].natural();
-
-        auto startIndex = 0;
-        auto increment = 1;
-        if(loadType == "load16_byte") {
-          increment = 2;
-          size *= 2;
-          if(writeOffset & 1) {
-            startIndex = 1;
-            writeOffset--;
-          }
-        }
-
-        if(output.size() < writeOffset + size) output.resize(writeOffset + size);
-
-        for(auto index = startIndex; index < size; index += increment) {
-          if(loadType == "fill") {
-            output[index + writeOffset] = section["value"].natural();
-            continue;
-          }
-
-          output[index + writeOffset] = input[readOffset++];
-        }
-
-        if(loadType == "load16_word_swap") endianSwap(output, section["offset"].natural(), size);
       }
+
+      auto writeOffset = section["offset"].natural();
+      auto size = section["size"].natural();
+
+      auto startIndex = 0;
+      auto increment = 1;
+      if(loadType == "load16_byte") {
+        increment = 2;
+        size *= 2;
+        if(writeOffset & 1) {
+          startIndex = 1;
+          writeOffset--;
+        }
+      }
+
+      if(output.size() < writeOffset + size) output.resize(writeOffset + size);
+
+      for(auto index = startIndex; index < size; index += increment) {
+        if(loadType == "fill") {
+          output[index + writeOffset] = section["value"].natural();
+          continue;
+        }
+
+        output[index + writeOffset] = input[readOffset++];
+      }
+
+      if(loadType == "load16_word_swap") endianSwap(output, section["offset"].natural(), size);
+    }
   }
   return output;
 }
