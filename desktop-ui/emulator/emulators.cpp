@@ -13,6 +13,13 @@ namespace ares::Atari2600 {
   #include "colecovision.cpp"
 #endif
 
+#ifdef CORE_MYVISION
+  namespace ares::MyVision {
+    auto load(Node::System& node, string name) -> bool;
+  }
+  #include "myvision.cpp"
+#endif
+
 #ifdef CORE_FC
   namespace ares::Famicom {
     auto load(Node::System& node, string name) -> bool;
@@ -159,6 +166,10 @@ auto Emulator::construct() -> void {
 
   #ifdef CORE_CV
   emulators.append(new ColecoVision);
+  #endif
+
+  #ifdef CORE_MYVISION
+  emulators.append(new MyVision);
   #endif
 
   #ifdef CORE_MSX

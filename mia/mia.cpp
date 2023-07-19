@@ -74,6 +74,7 @@ auto construct() -> void {
   media.append("Atari 2600");
   media.append("BS Memory");
   media.append("ColecoVision");
+  media.append("MyVision");
   media.append("Famicom");
   media.append("Famicom Disk System");
   media.append("Game Boy");
