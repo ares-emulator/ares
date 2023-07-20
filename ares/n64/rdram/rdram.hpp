@@ -2,7 +2,20 @@
 
 struct RDRAM : Memory::RCP<RDRAM> {
   Node::Object node;
-  Memory::Writable ram;
+
+  struct Writable : public Memory::Writable {
+    template<u32 Size>
+    auto read(u32 address) -> u64 {
+      if (address >= size) return 0;
+      return Memory::Writable::read<Size>(address);
+    }
+
+    template<u32 Size>
+    auto write(u32 address, u64 value) -> void {
+      if (address >= size) return;
+      Memory::Writable::write<Size>(address, value);
+    }
+  } ram;
 
   struct Debugger {
     //debugger.cpp
