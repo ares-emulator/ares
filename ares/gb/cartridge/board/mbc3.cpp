@@ -202,7 +202,7 @@ struct MBC3 : Interface {
     } rom;
     struct RAM {
       n1 enable;
-      n8 bank;
+      n4 bank;
     } ram;
     struct RTC {
       n6 second;
