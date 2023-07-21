@@ -63,21 +63,21 @@ struct MBC3 : Interface {
   }
 
   auto tickSecond() -> void {
-    if(++io.rtc.second >= 60) {
+    if(++io.rtc.second == 60) {
       io.rtc.second = 0;
       tickMinute();
     }
   }
 
   auto tickMinute() -> void {
-    if(++io.rtc.minute >= 60) {
+    if(++io.rtc.minute == 60) {
       io.rtc.minute = 0;
       tickHour();
     }
   }
 
   auto tickHour() -> void {
-    if(++io.rtc.hour >= 24) {
+    if(++io.rtc.hour == 24) {
       io.rtc.hour = 0;
       tickDay();
     }
@@ -140,7 +140,7 @@ struct MBC3 : Interface {
         io.rtc.latchMinute = io.rtc.minute;
         io.rtc.latchHour = io.rtc.hour;
         io.rtc.latchDay = io.rtc.day;
-        io.rtc.latchHalt = io.rtc.latch;
+        io.rtc.latchHalt = io.rtc.halt;
         io.rtc.latchDayCarry = io.rtc.dayCarry;
       }
       io.rtc.latch = data;
@@ -154,13 +154,10 @@ struct MBC3 : Interface {
         if(!ram) return;
         ram.write(io.ram.bank << 13 | (n13)address, data);
       } else if(io.ram.bank == 0x08) {
-        if(data >= 60) data = 0;  //unverified
         io.rtc.second = data;
       } else if(io.ram.bank == 0x09) {
-        if(data >= 60) data = 0;  //unverified
         io.rtc.minute = data;
       } else if(io.ram.bank == 0x0a) {
-        if(data >= 24) data = 0;  //unverified
         io.rtc.hour = data;
       } else if(io.ram.bank == 0x0b) {
         io.rtc.day.bit(0,7) = data.bit(0,7);
@@ -208,17 +205,17 @@ struct MBC3 : Interface {
       n8 bank;
     } ram;
     struct RTC {
-      n8 second;
-      n8 minute;
-      n8 hour;
+      n6 second;
+      n6 minute;
+      n5 hour;
       n9 day;
       n1 halt;
       n1 dayCarry;
 
       n1 latch;
-      n8 latchSecond;
-      n8 latchMinute;
-      n8 latchHour;
+      n6 latchSecond;
+      n6 latchMinute;
+      n5 latchHour;
       n9 latchDay;
       n1 latchHalt;
       n1 latchDayCarry;
