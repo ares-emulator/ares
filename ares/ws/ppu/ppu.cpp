@@ -187,7 +187,10 @@ auto PPU::unload() -> void {
 //vtotal<143 inhibits vblank and repeats the screen image until vcounter=144
 //todo: unknown how votal<143 interferes with vcompare interrupts
 auto PPU::main() -> void {
-  if(io.vcounter == io.vcompare) cpu.raise(CPU::Interrupt::LineCompare);
+  n8 nextVcounter = io.vcounter + 1;
+  if(nextVcounter >= max(144, io.vtotal + 1)) nextVcounter = 0;
+
+  if(nextVcounter == io.vcompare) cpu.raise(CPU::Interrupt::LineCompare);
   if(htimer.step()) cpu.raise(CPU::Interrupt::HblankTimer);
 
   if(io.vcounter < 144) {
@@ -213,12 +216,11 @@ auto PPU::main() -> void {
     step(256);
   }
 
-  io.vcounter++;
-  if(io.vcounter >= max(144, io.vtotal + 1)) return frame();
+  io.vcounter = nextVcounter;
+  if(io.vcounter == 0) return frame();
 }
 
 auto PPU::frame() -> void {
-  io.vcounter = 0;
   io.field = !io.field;
   screen->setViewport(0, 0, screen->width(), screen->height());
   screen->frame();
