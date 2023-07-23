@@ -5,10 +5,12 @@ auto RSP::serialize(serializer& s) -> void {
 
   s(pipeline.address);
   s(pipeline.instruction);
-  s(pipeline.previous.load);
-  s(pipeline.previous.lockReg);
-  s(pipeline.previous2.load);
-  s(pipeline.previous2.lockReg);
+  s(pipeline.singleIssue);
+  for(auto& p : pipeline.previous) {
+    s(p.load);
+    s(p.rWrite);
+    s(p.vWrite);
+  }
 
   s(dma.pending);
   s(dma.current);
