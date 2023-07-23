@@ -225,8 +225,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NSN") {eeprom = 512; cpak = true; rpak = true;}              //Snow Speeder (J)
   if(id == "NK2") {eeprom = 512; rpak = true;}                           //Snowboard Kids 2 [Chou Snobow Kids (J)]
   if(id == "NSV") {eeprom = 512; rpak = true;}                           //Space Station Silicon Valley
-  if(id == "NFX") {eeprom = 512; rpak = true;}                           //Lylat Wars (E)
-  if(id == "NFP") {eeprom = 512; rpak = true;}                           //Star Fox 64 (U)
+  if(id == "NFX") {eeprom = 512; rpak = true;}                           //Star Fox 64 [Lylat Wars (E)]
   if(id == "NS6") {eeprom = 512; rpak = true;}                           //Star Soldier: Vanishing Earth
   if(id == "NNA") {eeprom = 512; rpak = true;}                           //Star Wars Episode I: Battle for Naboo
   if(id == "NRS") {eeprom = 512; rpak = true;}                           //Star Wars: Rogue Squadron [Shutsugeki! Rogue Chuutai (J)]
@@ -358,7 +357,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NBQ") {cpak = true; rpak = true;}                            //Battletanx - Global Assault
   if(id == "NZO") {cpak = true; rpak = true;}                            //Battlezone - Rise of the Black Dogs
   if(id == "NNS") {cpak = true; rpak = true;}                            //Beetle Adventure Racing
-  if(id == "NBB") {cpak = true; rpak = true;}                            //Beetle Adventure Racing (J)
+  if(id == "NB8") {cpak = true; rpak = true;}                            //Beetle Adventure Racing (J)
   if(id == "NBF") {cpak = true; rpak = true;}                            //Bio F.R.E.A.K.S.
   if(id == "NBP") {cpak = true; rpak = true;}                            //Blues Brothers 2000
   if(id == "NYW") {cpak = true;}                                         //Bokujou Monogatari 2
@@ -420,7 +419,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NJP") {cpak = true;}                                         //International Superstar Soccer 64 [Jikkyo J-League Perfect Striker (J)]
   if(id == "NDS") {cpak = true;}                                         //J.League Dynamite Soccer 64
   if(id == "NJE") {cpak = true;}                                         //J.League Eleven Beat 1997
-  if(id == "NLJ") {cpak = true;}                                         //J.League Live 64
+  if(id == "NJL") {cpak = true;}                                         //J.League Live 64
   if(id == "NMA") {cpak = true;}                                         //Jangou Simulation Mahjong Do 64
   if(id == "NCO") {cpak = true; rpak = true;}                            //Jeremy McGrath Supercross 2000
   if(id == "NGS") {cpak = true;}                                         //Jikkyou G1 Stable
@@ -482,7 +481,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NKM") {cpak = true;}                                         //Pro Mahjong Kiwame 64 (J)
   if(id == "NNR") {cpak = true;}                                         //Pro Mahjong Tsuwamono 64 - Jansou Battle ni Chousen (J)
   if(id == "NPB") {cpak = true; rpak = true;}                            //Puzzle Bobble 64 (J)
-  if(id == "NKQ") {cpak = true; rpak = true;}                            //Quake 64
+  if(id == "NQK") {cpak = true; rpak = true;}                            //Quake 64
   if(id == "NQ2") {cpak = true; rpak = true;}                            //Quake 2
   if(id == "NKR") {cpak = true;}                                         //Rakuga Kids (E)
   if(id == "NRP") {cpak = true; rpak = true;}                            //Rampage - World Tour
