@@ -124,29 +124,18 @@ auto APU::readIO(n16 address) -> n8 {
     data = state.unknown95;
     break;
   
-  case 0x0096:
-    data = state.seqOutputRight.bit(0,7);
+  case range2(0x0096, 0x0097):  //SND_OUT_R
+    data = io.output.right.byte(address - 0x0096);
     break;
 
-  case 0x0097:
-    data.bit(0,1) = state.seqOutputRight.bit(8,9);
+  case range2(0x0098, 0x0099):  //SND_OUT_L
+    data = io.output.left.byte(address - 0x0098);
     break;
-  
-  case 0x0098:
-    data = state.seqOutputLeft.bit(0,7);
-    break;
-    
-  case 0x0099:
-    data.bit(0,1) = state.seqOutputLeft.bit(8,9);
-    break;
-  
-  case 0x009a:
-    data = state.seqOutputSum.bit(0,7);
-    break;
-    
-  case 0x009b:
-    data.bit(0,2) = state.seqOutputSum.bit(8,10);
-    break;
+
+  case range2(0x009a, 0x009b): { //SND_OUT_M
+    n11 outputM = io.output.left + io.output.right;
+    data = outputM.byte(address - 0x009a);
+  } break;
 
   case 0x009e:  //SND_VOLUME
     if(!SoC::ASWAN()) {
