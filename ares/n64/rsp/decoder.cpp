@@ -8,6 +8,10 @@
 #define VS    (instruction >> 11 & 31)
 #define VT    (instruction >> 16 & 31)
 
+#define VCO   0
+#define VCC   1
+#define VCE   2
+
 #define RUse(n)  info.r.use |= 1 << n
 #define RDef(n)  info.r.def |= 1 << n
 #define RDefB(n) (void)0  //bypassable
@@ -15,6 +19,9 @@
 #define VDef(n)  info.v.def |= 1 << n
 #define VGUse(n) info.v.use |= 0xff << (n & ~7)
 #define VGDef(n) info.v.def |= 0xff << (n & ~7)
+#define VCUse(n) info.vc.use |= 1 << (n & 3)
+#define VCDef(n) info.vc.def |= 1 << (n & 3)
+#define VCRef(n) VCUse(n), VCDef(n)
 #define Load     info.flags |= OpInfo::Load
 #define Store    info.flags |= OpInfo::Store
 #define Branch   info.flags |= OpInfo::Branch
@@ -224,11 +231,11 @@ auto RSP::decoderVU(u32 instruction) const -> OpInfo {
   switch(instruction >> 21 & 0x1f) {
   op(0x00, MFC2, RDef(RT), VUse(VS), Load, Store);
   op(0x01, INVALID);  //DMFC2
-  op(0x02, CFC2, RDef(RT), Load, Store);
+  op(0x02, CFC2, RDef(RT), VCUse(RD), Load, Store);
   op(0x03, INVALID);
   op(0x04, MTC2, RUse(RT), VDef(VS), Load, Store);
   op(0x05, INVALID);  //DMTC2
-  op(0x06, CTC2, RUse(RT), Load, Store);
+  op(0x06, CTC2, RUse(RT), VCDef(RD), Load, Store);
   op(0x07, INVALID);
   op(0x08, INVALID);  //BC2
   op(0x09, INVALID);
@@ -257,12 +264,12 @@ auto RSP::decoderVU(u32 instruction) const -> OpInfo {
   op(0x0d, VMADM, VDef(VD), VUse(VS), VUse(VT), Vector);
   op(0x0e, VMADN, VDef(VD), VUse(VS), VUse(VT), Vector);
   op(0x0f, VMADH, VDef(VD), VUse(VS), VUse(VT), Vector);
-  op(0x10, VADD, VDef(VD), VUse(VS), VUse(VT), Vector);
-  op(0x11, VSUB, VDef(VD), VUse(VS), VUse(VT), Vector);
+  op(0x10, VADD, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), Vector);
+  op(0x11, VSUB, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), Vector);
   op(0x12, VZERO, Vector);  //VSUT
-  op(0x13, VABS, VDef(VD), VUse(VS), VUse(VT), Vector);
-  op(0x14, VADDC, VDef(VD), VUse(VS), VUse(VT), Vector);
-  op(0x15, VSUBC, VDef(VD), VUse(VS), VUse(VT), Vector);
+  op(0x13, VABS, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), Vector);
+  op(0x14, VADDC, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), Vector);
+  op(0x15, VSUBC, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), Vector);
   op(0x16, VZERO, Vector);  //VADDB
   op(0x17, VZERO, Vector);  //VSUBB
   op(0x18, VZERO, Vector);  //VACCB
@@ -273,14 +280,14 @@ auto RSP::decoderVU(u32 instruction) const -> OpInfo {
   op(0x1d, VSAR, VDef(VD), Vector);
   op(0x1e, VZERO, Vector);
   op(0x1f, VZERO, Vector);
-  op(0x20, VLT, VDef(VD), VUse(VS), VUse(VT), Vector);
-  op(0x21, VEQ, VDef(VD), VUse(VS), VUse(VT), Vector);
-  op(0x22, VNE, VDef(VD), VUse(VS), VUse(VT), Vector);
-  op(0x23, VGE, VDef(VD), VUse(VS), VUse(VT), Vector);
-  op(0x24, VCL, VDef(VD), VUse(VS), VUse(VT), Vector);
-  op(0x25, VCH, VDef(VD), VUse(VS), VUse(VT), Vector);
-  op(0x26, VCR, VDef(VD), VUse(VS), VUse(VT), Vector);
-  op(0x27, VMRG, VDef(VD), VUse(VS), VUse(VT), Vector);
+  op(0x20, VLT, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), VCRef(VCC), Vector);
+  op(0x21, VEQ, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), VCRef(VCC), Vector);
+  op(0x22, VNE, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), VCRef(VCC), Vector);
+  op(0x23, VGE, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), VCRef(VCC), Vector);
+  op(0x24, VCL, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), VCRef(VCC), VCRef(VCE), Vector);
+  op(0x25, VCH, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), VCRef(VCC), VCRef(VCE), Vector);
+  op(0x26, VCR, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), VCRef(VCC), VCRef(VCE), Vector);
+  op(0x27, VMRG, VDef(VD), VUse(VS), VUse(VT), VCRef(VCO), VCRef(VCC), Vector);
   op(0x28, VAND, VDef(VD), VUse(VS), VUse(VT), Vector);
   op(0x29, VNAND, VDef(VD), VUse(VS), VUse(VT), Vector);
   op(0x2a, VOR, VDef(VD), VUse(VS), VUse(VT), Vector);
@@ -352,10 +359,17 @@ auto RSP::decoderSWC2(u32 instruction) const -> OpInfo {
 #undef VDef
 #undef VGUse
 #undef VGDef
+#undef VCUse
+#undef VCDef
+#undef VCRef
 #undef Load
 #undef Store
 #undef Branch
 #undef Vector
+
+#undef VCO
+#undef VCC
+#undef VCE
 
 #undef RD
 #undef RT

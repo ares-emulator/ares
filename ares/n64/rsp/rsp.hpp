@@ -48,7 +48,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
     u32 flags;
     struct {
       u32 use, def;
-    } r, v;
+    } r, v, vc;
 
     auto load() const -> bool { return flags & Load; }
     auto store() const -> bool { return flags & Store; }
@@ -57,7 +57,9 @@ struct RSP : Thread, Memory::RCP<RSP> {
   };
 
   static auto canDualIssue(const OpInfo& op0, const OpInfo& op1) -> bool {
-    return op0.vector() != op1.vector() && !(op0.v.def & (op1.v.use | op1.v.def));
+    return op0.vector() != op1.vector()
+      && !(op0.v.def & (op1.v.use | op1.v.def))
+      && !(op0.vc.def & (op1.vc.use | op1.vc.def));
   }
 
   struct Pipeline {
