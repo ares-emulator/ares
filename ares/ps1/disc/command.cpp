@@ -106,8 +106,6 @@ auto Disc::commandGetStatus() -> void {
 
 //0x02
 auto Disc::commandSetLocation() -> void {
-  ssr.reading = 0;
-
   u8 minute = BCD::decode(fifo.parameter.read(0));
   u8 second = BCD::decode(fifo.parameter.read(0));
   u8 frame  = BCD::decode(fifo.parameter.read(0));
