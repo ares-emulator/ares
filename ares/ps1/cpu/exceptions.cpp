@@ -12,7 +12,7 @@ auto CPU::Exception::trigger(u32 code) -> void {
   self.scc.status.frame[0] = {};
 
   self.scc.cause.exceptionCode = code;
-  self.scc.cause.coprocessorError = self.pipeline.instruction >> 26;
+  self.scc.cause.coprocessorError = self.pipeline.instruction >> 28;
   self.scc.cause.branchDelay = self.delay.branch[0].slot;
   self.scc.cause.branchTaken = self.delay.branch[0].take;
 
@@ -24,6 +24,13 @@ auto CPU::Exception::trigger(u32 code) -> void {
     } else {
       self.scc.targetAddress = self.ipu.pd;
     }
+  }
+
+  //hardware bug: if an interrupt is triggered when a GTE instruction is next,
+  //the GTE instruction is erroneously executed
+  if(self.scc.cause.exceptionCode == 0) {
+    self.pipeline.instruction = self.peek(self.ipu.pc);
+    if(self.pipeline.instruction >> 25 == 37) self.decoderEXECUTE();
   }
 
   //exceptions and interrupts discard the execution of delay slots

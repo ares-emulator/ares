@@ -44,6 +44,21 @@ inline auto CPU::fetch(u32 address) -> u32 {
   unreachable;
 }
 
+//peek at the next instruction, does not consume cycles
+inline auto CPU::peek(u32 address) -> u32 {
+  address &= 0x1fff'ffff;
+
+  if(likely(address <= 0x007f'ffff)) {
+    return ram.read<Word>(address);
+  }
+
+  if(likely(address >= 0x1fc0'0000)) {
+    return bios.read<Word>(address);
+  }
+
+  return 0;
+}
+
 //read data from the bus
 template<u32 Size>
 inline auto CPU::read(u32 address) -> u32 {
