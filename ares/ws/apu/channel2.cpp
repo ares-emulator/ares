@@ -1,4 +1,4 @@
-auto APU::Channel2::run() -> void {
+auto APU::Channel2::tick() -> void {
   if (!io.voice) {
     if(--state.period == io.pitch) {
       state.period = 0;
@@ -7,20 +7,19 @@ auto APU::Channel2::run() -> void {
   }
 }
 
-auto APU::Channel2::runOutput() -> void {
+auto APU::Channel2::output() -> void {
   if(io.voice) {
     n8 volume = io.volumeLeft << 4 | io.volumeRight << 0;
-    output.left  = io.voiceEnableLeftFull  ? volume : (n8)(io.voiceEnableLeftHalf  ? (volume >> 1) : 0);
-    output.right = io.voiceEnableRightFull ? volume : (n8)(io.voiceEnableRightHalf ? (volume >> 1) : 0);
+    apu.io.output.left  += io.voiceEnableLeftFull  ? volume : (n8)(io.voiceEnableLeftHalf  ? (volume >> 1) : 0);
+    apu.io.output.right += io.voiceEnableRightFull ? volume : (n8)(io.voiceEnableRightHalf ? (volume >> 1) : 0);
   } else {
     auto sample = apu.sample(2, state.sampleOffset);
-    output.left  = sample * io.volumeLeft;
-    output.right = sample * io.volumeRight;
+    apu.io.output.left  += sample * io.volumeLeft;
+    apu.io.output.right += sample * io.volumeRight;
   }
 }
 
 auto APU::Channel2::power() -> void {
   io = {};
   state = {};
-  output = {};
 }

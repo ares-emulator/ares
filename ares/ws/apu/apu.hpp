@@ -12,7 +12,7 @@ struct APU : Thread, IO {
 
   auto main() -> void;
   auto sample(u32 channel, n5 index) -> n4;
-  auto dacRun() -> void;
+  auto output() -> void;
   auto step(u32 clocks) -> void;
   auto power() -> void;
 
@@ -64,8 +64,8 @@ struct APU : Thread, IO {
 
   struct Channel1 {
     //channel1.cpp
-    auto run() -> void;
-    auto runOutput() -> void;
+    auto tick() -> void;
+    auto output() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -82,17 +82,12 @@ struct APU : Thread, IO {
       n11 period;
       n5  sampleOffset;
     } state;
-
-    struct Output {
-      n8 left;
-      n8 right;
-    } output;
   } channel1;
 
   struct Channel2 {
     //channel2.cpp
-    auto run() -> void;
-    auto runOutput() -> void;
+    auto tick() -> void;
+    auto output() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -114,18 +109,13 @@ struct APU : Thread, IO {
       n11 period;
       n5  sampleOffset;
     } state;
-
-    struct Output {
-      n8 left;
-      n8 right;
-    } output;
   } channel2;
 
   struct Channel3 {
     //channel3.cpp
     auto sweep() -> void;
-    auto run() -> void;
-    auto runOutput() -> void;
+    auto tick() -> void;
+    auto output() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -146,18 +136,13 @@ struct APU : Thread, IO {
       n5  sampleOffset;
       i32 sweepCounter;
     } state;
-
-    struct Output {
-      n8 left;
-      n8 right;
-    } output;
   } channel3;
 
   struct Channel4 {
     //channel4.cpp
     auto noiseSample() -> n4;
-    auto run() -> void;
-    auto runOutput() -> void;
+    auto tick() -> void;
+    auto output() -> void;
     auto power() -> void;
 
     //serialization.cpp
@@ -180,11 +165,6 @@ struct APU : Thread, IO {
       n1  noiseOutput;
       n15 noiseLFSR;
     } state;
-
-    struct Output {
-      n8 left;
-      n8 right;
-    } output;
   } channel4;
 
   struct Channel5 {
@@ -223,6 +203,12 @@ struct APU : Thread, IO {
     n1 headphonesEnable;
     n1 headphonesConnected;
     n2 masterVolume;
+    
+    // This output covers Channels 1-4 (excluding Hyper Voice)
+    struct Output {
+      n10 left;
+      n10 right;
+    } output;
   } io;
 
   struct State {

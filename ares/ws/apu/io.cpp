@@ -125,6 +125,19 @@ auto APU::readIO(n16 address) -> n8 {
     data = channel5.state.data;
     break;
 
+  case range2(0x0096, 0x0097):  //SND_OUT_R
+    data = io.output.right.byte(address - 0x0086);
+    break;
+
+  case range2(0x0098, 0x0099):  //SND_OUT_L
+    data = io.output.right.byte(address - 0x0086);
+    break;
+
+  case range2(0x009a, 0x009b): { //SND_OUT_M
+    n11 outputM = io.output.left + io.output.right;
+    data = outputM.byte(address - 0x0086);
+  } break;
+
   case 0x009e:  //SND_VOLUME
     if(!SoC::ASWAN()) {
       data.bit(0,1) = io.masterVolume;
