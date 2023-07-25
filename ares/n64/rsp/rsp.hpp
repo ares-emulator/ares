@@ -39,13 +39,15 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
   struct OpInfo {
     enum : u32 {
-      Load   = 1 << 0,
-      Store  = 1 << 1,
-      Branch = 1 << 2,
-      Vector = 1 << 3,
+      Load      = 1 << 0,
+      Store     = 1 << 1,
+      Branch    = 1 << 2,
+      Vector    = 1 << 3,
+      VNopGroup = 1 << 4,  //dual issue conflicts with VNOP
     };
 
     u32 flags;
+    u32 vfake;  //only affects dual issue logic
     struct {
       u32 use, def;
     } r, v, vc;
@@ -57,9 +59,12 @@ struct RSP : Thread, Memory::RCP<RSP> {
   };
 
   static auto canDualIssue(const OpInfo& op0, const OpInfo& op1) -> bool {
-    return op0.vector() != op1.vector()
-      && !(op0.v.def & (op1.v.use | op1.v.def))
-      && !(op0.vc.def & (op1.vc.use | op1.vc.def));
+    return op0.vector() != op1.vector()             //must be one SU and one VU
+      && !(op0.v.def & (op1.v.use | op1.v.def))     //second op cannot read/write vector registers written by the first
+      && !(op0.vc.def & (op1.vc.use | op1.vc.def))  //the same logic applies to vector control registers
+      //certain instructions conflict due to "fake" uses from misinterpreted fields
+      //such false conflicts only occur with VNOP if the preceding instruction is MTC2 or LTV
+      && !(((op0.flags | ~op1.flags) & OpInfo::VNopGroup) && (op0.v.def & op1.vfake));
   }
 
   struct Pipeline {

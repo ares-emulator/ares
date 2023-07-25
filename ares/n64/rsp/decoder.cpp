@@ -12,20 +12,22 @@
 #define VCC   1
 #define VCE   2
 
-#define RUse(n)  info.r.use |= 1 << n
-#define RDef(n)  info.r.def |= 1 << n
-#define RDefB(n) (void)0  //bypassable
-#define VUse(n)  info.v.use |= 1 << n
-#define VDef(n)  info.v.def |= 1 << n
-#define VGUse(n) info.v.use |= 0xff << (n & ~7)
-#define VGDef(n) info.v.def |= 0xff << (n & ~7)
-#define VCUse(n) info.vc.use |= 1 << (n & 3)
-#define VCDef(n) info.vc.def |= 1 << (n & 3)
-#define VCRef(n) VCUse(n), VCDef(n)
-#define Load     info.flags |= OpInfo::Load
-#define Store    info.flags |= OpInfo::Store
-#define Branch   info.flags |= OpInfo::Branch
-#define Vector   info.flags |= OpInfo::Vector
+#define RUse(n)   info.r.use |= 1 << n
+#define RDef(n)   info.r.def |= 1 << n
+#define RDefB(n)  (void)0  //bypassable
+#define VUse(n)   info.v.use |= 1 << n
+#define VDef(n)   info.v.def |= 1 << n
+#define VGUse(n)  info.v.use |= 0xff << (n & ~7)
+#define VGDef(n)  info.v.def |= 0xff << (n & ~7)
+#define VCUse(n)  info.vc.use |= 1 << (n & 3)
+#define VCDef(n)  info.vc.def |= 1 << (n & 3)
+#define VCRef(n)  VCUse(n), VCDef(n)
+#define VFRef(n)  info.vfake |= 1 << n
+#define Load      info.flags |= OpInfo::Load
+#define Store     info.flags |= OpInfo::Store
+#define Branch    info.flags |= OpInfo::Branch
+#define Vector    info.flags |= OpInfo::Vector
+#define VNopGroup info.flags |= OpInfo::VNopGroup
 
 auto RSP::decoderEXECUTE(u32 instruction) const -> OpInfo {
   switch(instruction >> 26) {
@@ -233,7 +235,7 @@ auto RSP::decoderVU(u32 instruction) const -> OpInfo {
   op(0x01, INVALID);  //DMFC2
   op(0x02, CFC2, RDef(RT), VCUse(RD), Load, Store);
   op(0x03, INVALID);
-  op(0x04, MTC2, RUse(RT), VDef(VS), Load, Store);
+  op(0x04, MTC2, RUse(RT), VDef(VS), Load, Store, VNopGroup);
   op(0x05, INVALID);  //DMTC2
   op(0x06, CTC2, RUse(RT), VCDef(RD), Load, Store);
   op(0x07, INVALID);
@@ -296,14 +298,14 @@ auto RSP::decoderVU(u32 instruction) const -> OpInfo {
   op(0x2d, VNXOR, VDef(VD), VUse(VS), VUse(VT), Vector);
   op(0x2e, VZERO, Vector);
   op(0x2f, VZERO, Vector);
-  op(0x30, VRCP, VDef(VD), VUse(VT), Vector);
-  op(0x31, VRCPL, VDef(VD), VUse(VT), Vector);
-  op(0x32, VRCPH, VDef(VD), VUse(VT), Vector);
-  op(0x33, VMOV, VDef(VD), VUse(VT), Vector);
-  op(0x34, VRSQ, VDef(VD), VUse(VT), Vector);
-  op(0x35, VRSQL, VDef(VD), VUse(VT), Vector);
-  op(0x36, VRSQH, VDef(VD), VUse(VT), Vector);
-  op(0x37, VNOP, Vector);
+  op(0x30, VRCP, VDef(VD), VFRef(VS), VUse(VT), Vector);
+  op(0x31, VRCPL, VDef(VD), VFRef(VS), VUse(VT), Vector);
+  op(0x32, VRCPH, VDef(VD), VFRef(VS), VUse(VT), Vector);
+  op(0x33, VMOV, VDef(VD), VFRef(VS), VUse(VT), Vector);
+  op(0x34, VRSQ, VDef(VD), VFRef(VS), VUse(VT), Vector);
+  op(0x35, VRSQL, VDef(VD), VFRef(VS), VUse(VT), Vector);
+  op(0x36, VRSQH, VDef(VD), VFRef(VS), VUse(VT), Vector);
+  op(0x37, VNOP, VFRef(VD), Vector, VNopGroup);
   op(0x38, VZERO, Vector);  //VEXTT
   op(0x39, VZERO, Vector);  //VEXTQ
   op(0x3a, VZERO, Vector);  //VEXTN
@@ -329,7 +331,7 @@ auto RSP::decoderLWC2(u32 instruction) const -> OpInfo {
   op(0x08, LHV, VDef(VT), RUse(RS), Load);
   op(0x09, LFV, VDef(VT), RUse(RS), Load);
 //op(0x0a, LWV, VDef(VT), RUse(RS), Load);  //not present on N64 RSP
-  op(0x0b, LTV, VGDef(VT), RUse(RS), Load);
+  op(0x0b, LTV, VGDef(VT), RUse(RS), Load, VNopGroup);
   }
   return {};
 }
@@ -362,10 +364,12 @@ auto RSP::decoderSWC2(u32 instruction) const -> OpInfo {
 #undef VCUse
 #undef VCDef
 #undef VCRef
+#undef VFRef
 #undef Load
 #undef Store
 #undef Branch
 #undef Vector
+#undef VNopGroup
 
 #undef VCO
 #undef VCC
