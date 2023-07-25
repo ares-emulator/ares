@@ -98,10 +98,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
     auto end() -> void {
       readGPR(current.rRead);
-      writeGPR(current.rWrite);
       readVR(current.vRead);
-      writeVR(current.vWrite);
-      if(current.load) load();
       if(current.store) store();
       singleIssue = current.branch;
 
@@ -121,7 +118,7 @@ struct RSP : Thread, Memory::RCP<RSP> {
 
     auto issue(const OpInfo& op) -> void {
       current.rRead |= op.r.use;
-      current.rWrite |= op.r.def;
+      current.rWrite |= op.r.def & ~1;  //zero register can't be written
       current.vRead |= op.v.use;
       current.vWrite |= op.v.def;
       current.load |= op.load();
@@ -148,18 +145,6 @@ struct RSP : Thread, Memory::RCP<RSP> {
         stall();
       }
       return *this;
-    }
-
-    auto writeGPR(u32 mask) -> void {
-      current.rWrite |= mask & ~1;  //zero register can't be written
-    }
-
-    auto writeVR(u32 mask) -> void {
-      current.vWrite |= mask;
-    }
-
-    auto load() -> void {
-      current.load = 1;
     }
 
     auto store() -> void {
