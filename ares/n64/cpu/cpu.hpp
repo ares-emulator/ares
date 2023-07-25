@@ -115,7 +115,7 @@ struct CPU : Thread {
         line.valid = 1;
         line.tag   = address & ~0x0000'0fff;
       } else {
-        self.step(2 * 2);
+        self.step(1 * 2);
       }
     }
 
@@ -125,7 +125,7 @@ struct CPU : Thread {
       if(!line.hit(address)) {
         line.fill(address, cpu);
       } else {
-        cpu.step(2 * 2);
+        cpu.step(1 * 2);
       }
       return line.read(address);
     }
