@@ -61,18 +61,29 @@ using namespace Util;
 
 namespace Vulkan
 {
-static const char *queue_name_table[] = {
-	"Graphics",
-	"Compute",
-	"Transfer",
-	"Video decode"
-};
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+static constexpr VkImageUsageFlags image_usage_video_flags =
+		VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR |
+		VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR |
+		VK_IMAGE_USAGE_VIDEO_ENCODE_DST_BIT_KHR |
+		VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR |
+		VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR |
+		VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR;
+#else
+static constexpr VkImageUsageFlags image_usage_video_flags =
+		VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR |
+		VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR |
+		VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR;
+#endif
 
 static const QueueIndices queue_flush_order[] = {
 	QUEUE_INDEX_TRANSFER,
 	QUEUE_INDEX_VIDEO_DECODE,
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+	QUEUE_INDEX_VIDEO_ENCODE,
+#endif
 	QUEUE_INDEX_GRAPHICS,
-	QUEUE_INDEX_COMPUTE
+	QUEUE_INDEX_COMPUTE,
 };
 
 Device::Device()
@@ -232,7 +243,6 @@ void Device::add_wait_semaphore(CommandBuffer::Type type, Semaphore semaphore, V
 void Device::add_wait_semaphore_nolock(QueueIndices physical_type, Semaphore semaphore,
                                        VkPipelineStageFlags2 stages, bool flush)
 {
-	VK_ASSERT(stages != 0);
 	if (flush)
 		flush_frame(physical_type);
 	auto &data = queue_data[physical_type];
@@ -427,6 +437,38 @@ Program *Device::request_program(Shader *vertex, Shader *fragment, const Immutab
 	return ret;
 }
 
+Program *Device::request_program(Shader *task, Shader *mesh, Shader *fragment, const ImmutableSamplerBank *sampler_bank)
+{
+	if (!mesh || !fragment)
+		return nullptr;
+
+	if (!get_device_features().mesh_shader_features.meshShader)
+	{
+		LOGE("meshShader not supported.\n");
+		return nullptr;
+	}
+
+	if (task && !get_device_features().mesh_shader_features.taskShader)
+	{
+		LOGE("taskShader not supported.\n");
+		return nullptr;
+	}
+
+	Util::Hasher hasher;
+	hasher.u64(task ? task->get_hash() : 0);
+	hasher.u64(mesh->get_hash());
+	hasher.u64(fragment->get_hash());
+	ImmutableSamplerBank::hash(hasher, sampler_bank);
+
+	auto hash = hasher.get();
+	LOCK_CACHE();
+	auto *ret = programs.find(hash);
+
+	if (!ret)
+		ret = programs.emplace_yield(hash, this, task, mesh, fragment, sampler_bank);
+	return ret;
+}
+
 Program *Device::request_program(const uint32_t *vertex_data, size_t vertex_size,
                                  const uint32_t *fragment_data, size_t fragment_size,
                                  const ResourceLayout *vertex_layout,
@@ -440,8 +482,26 @@ Program *Device::request_program(const uint32_t *vertex_data, size_t vertex_size
 	return request_program(vertex, fragment);
 }
 
-PipelineLayout *Device::request_pipeline_layout(const CombinedResourceLayout &layout,
-                                                const ImmutableSamplerBank *sampler_bank)
+Program *Device::request_program(const uint32_t *task_data, size_t task_size,
+                                 const uint32_t *mesh_data, size_t mesh_size,
+                                 const uint32_t *fragment_data, size_t fragment_size,
+                                 const ResourceLayout *task_layout,
+                                 const ResourceLayout *mesh_layout,
+                                 const ResourceLayout *fragment_layout)
+{
+	if (!mesh_size || !fragment_size)
+		return nullptr;
+
+	Shader *task = nullptr;
+	if (task_size)
+		task = request_shader(task_data, task_size, task_layout);
+	auto *mesh = request_shader(mesh_data, mesh_size, mesh_layout);
+	auto *fragment = request_shader(fragment_data, fragment_size, fragment_layout);
+	return request_program(task, mesh, fragment);
+}
+
+const PipelineLayout *Device::request_pipeline_layout(const CombinedResourceLayout &layout,
+                                                      const ImmutableSamplerBank *sampler_bank)
 {
 	Hasher h;
 	h.data(reinterpret_cast<const uint32_t *>(layout.sets), sizeof(layout.sets));
@@ -485,16 +545,44 @@ DescriptorSetAllocator *Device::request_descriptor_set_allocator(const Descripto
 	return ret;
 }
 
-void Device::bake_program(Program &program, const ImmutableSamplerBank *sampler_bank)
+const IndirectLayout *Device::request_indirect_layout(
+		const Vulkan::IndirectLayoutToken *tokens, uint32_t num_tokens, uint32_t stride)
 {
-	CombinedResourceLayout layout;
-	if (program.get_shader(ShaderStage::Vertex))
-		layout.attribute_mask = program.get_shader(ShaderStage::Vertex)->get_layout().input_mask;
-	if (program.get_shader(ShaderStage::Fragment))
-		layout.render_target_mask = program.get_shader(ShaderStage::Fragment)->get_layout().output_mask;
+	Hasher h;
+	for (uint32_t i = 0; i < num_tokens; i++)
+		h.u32(Util::ecast(tokens[i].type));
 
-	ImmutableSamplerBank ext_immutable_samplers = {};
-	layout.descriptor_set_mask = 0;
+	for (uint32_t i = 0; i < num_tokens; i++)
+	{
+		h.u32(tokens[i].offset);
+		if (tokens[i].type == IndirectLayoutToken::Type::PushConstant)
+		{
+			h.u64(tokens[i].data.push.layout->get_hash());
+			h.u32(tokens[i].data.push.offset);
+			h.u32(tokens[i].data.push.range);
+		}
+		else if (tokens[i].type == IndirectLayoutToken::Type::VBO)
+		{
+			h.u32(tokens[i].data.vbo.binding);
+		}
+	}
+
+	h.u32(stride);
+	auto hash = h.get();
+
+	LOCK_CACHE();
+	auto *ret = indirect_layouts.find(hash);
+	if (!ret)
+		ret = indirect_layouts.emplace_yield(hash, this, tokens, num_tokens, stride);
+	return ret;
+}
+
+void Device::merge_combined_resource_layout(CombinedResourceLayout &layout, const Program &program)
+{
+	if (program.get_shader(ShaderStage::Vertex))
+		layout.attribute_mask |= program.get_shader(ShaderStage::Vertex)->get_layout().input_mask;
+	if (program.get_shader(ShaderStage::Fragment))
+		layout.render_target_mask |= program.get_shader(ShaderStage::Fragment)->get_layout().output_mask;
 
 	for (unsigned i = 0; i < static_cast<unsigned>(ShaderStage::Count); i++)
 	{
@@ -559,6 +647,58 @@ void Device::bake_program(Program &program, const ImmutableSamplerBank *sampler_
 		layout.bindless_descriptor_set_mask |= shader_layout.bindless_set_mask;
 	}
 
+	for (unsigned set = 0; set < VULKAN_NUM_DESCRIPTOR_SETS; set++)
+	{
+		if (layout.stages_for_sets[set] == 0)
+			continue;
+
+		layout.descriptor_set_mask |= 1u << set;
+
+		for (unsigned binding = 0; binding < VULKAN_NUM_BINDINGS; binding++)
+		{
+			auto &array_size = layout.sets[set].array_size[binding];
+			if (array_size == DescriptorSetLayout::UNSIZED_ARRAY)
+			{
+				for (unsigned i = 1; i < VULKAN_NUM_BINDINGS; i++)
+				{
+					if (layout.stages_for_bindings[set][i] != 0)
+						LOGE("Using bindless for set = %u, but binding = %u has a descriptor attached to it.\n", set, i);
+				}
+
+				// Allows us to have one unified descriptor set layout for bindless.
+				layout.stages_for_bindings[set][binding] = VK_SHADER_STAGE_ALL;
+			}
+			else if (array_size == 0)
+			{
+				array_size = 1;
+			}
+			else
+			{
+				for (unsigned i = 1; i < array_size; i++)
+				{
+					if (layout.stages_for_bindings[set][binding + i] != 0)
+					{
+						LOGE("Detected binding aliasing for (%u, %u). Binding array with %u elements starting at (%u, %u) overlaps.\n",
+							 set, binding + i, array_size, set, binding);
+					}
+				}
+			}
+		}
+	}
+
+	Hasher h;
+	h.u32(layout.push_constant_range.stageFlags);
+	h.u32(layout.push_constant_range.size);
+	layout.push_constant_layout_hash = h.get();
+}
+
+void Device::bake_program(Program &program, const ImmutableSamplerBank *sampler_bank)
+{
+	CombinedResourceLayout layout;
+	ImmutableSamplerBank ext_immutable_samplers = {};
+
+	merge_combined_resource_layout(layout, program);
+
 	if (sampler_bank)
 	{
 		for (unsigned set = 0; set < VULKAN_NUM_DESCRIPTOR_SETS; set++)
@@ -574,49 +714,6 @@ void Device::bake_program(Program &program, const ImmutableSamplerBank *sampler_
 		}
 	}
 
-	for (unsigned set = 0; set < VULKAN_NUM_DESCRIPTOR_SETS; set++)
-	{
-		if (layout.stages_for_sets[set] != 0)
-		{
-			layout.descriptor_set_mask |= 1u << set;
-
-			for (unsigned binding = 0; binding < VULKAN_NUM_BINDINGS; binding++)
-			{
-				auto &array_size = layout.sets[set].array_size[binding];
-				if (array_size == DescriptorSetLayout::UNSIZED_ARRAY)
-				{
-					for (unsigned i = 1; i < VULKAN_NUM_BINDINGS; i++)
-					{
-						if (layout.stages_for_bindings[set][i] != 0)
-							LOGE("Using bindless for set = %u, but binding = %u has a descriptor attached to it.\n", set, i);
-					}
-
-					// Allows us to have one unified descriptor set layout for bindless.
-					layout.stages_for_bindings[set][binding] = VK_SHADER_STAGE_ALL;
-				}
-				else if (array_size == 0)
-				{
-					array_size = 1;
-				}
-				else
-				{
-					for (unsigned i = 1; i < array_size; i++)
-					{
-						if (layout.stages_for_bindings[set][binding + i] != 0)
-						{
-							LOGE("Detected binding aliasing for (%u, %u). Binding array with %u elements starting at (%u, %u) overlaps.\n",
-							     set, binding + i, array_size, set, binding);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	Hasher h;
-	h.u32(layout.push_constant_range.stageFlags);
-	h.u32(layout.push_constant_range.size);
-	layout.push_constant_layout_hash = h.get();
 	program.set_pipeline_layout(request_pipeline_layout(layout, &ext_immutable_samplers));
 }
 
@@ -1303,12 +1400,10 @@ void Device::submit_empty_inner(QueueIndices physical_type, InternalFence *fence
 	auto start_ts = write_calibrated_timestamp_nolock();
 	auto result = submit_batches(composer, queue, cleared_fence);
 	auto end_ts = write_calibrated_timestamp_nolock();
-	register_time_interval_nolock("CPU", std::move(start_ts), std::move(end_ts), "submit", "");
+	register_time_interval_nolock("CPU", std::move(start_ts), std::move(end_ts), "submit");
 
 	if (result != VK_SUCCESS)
 		LOGE("vkQueueSubmit2KHR failed (code: %d).\n", int(result));
-	if (result == VK_ERROR_DEVICE_LOST)
-		report_checkpoints();
 
 	if (!ext.timeline_semaphore_features.timelineSemaphore)
 		data.need_fence = true;
@@ -1653,6 +1748,13 @@ VkResult Device::queue_submit(VkQueue queue, uint32_t count, const VkSubmitInfo2
 				return result;
 		}
 
+		if (count == 0 && fence)
+		{
+			auto result = table->vkQueueSubmit(queue, 0, nullptr, fence);
+			if (result != VK_SUCCESS)
+				return result;
+		}
+
 		return VK_SUCCESS;
 	}
 }
@@ -1750,6 +1852,7 @@ void Device::submit_queue(QueueIndices physical_type, InternalFence *fence,
 			wsi.release->set_internal_sync_object();
 			composer.add_signal_semaphore(release, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0);
 			wsi.present_queue = queue;
+			wsi.present_queue_type = cmd->get_command_buffer_type();
 			wsi.consumed = true;
 		}
 		else
@@ -1781,12 +1884,10 @@ void Device::submit_queue(QueueIndices physical_type, InternalFence *fence,
 	auto start_ts = write_calibrated_timestamp_nolock();
 	auto result = submit_batches(composer, queue, cleared_fence, profiling_iteration);
 	auto end_ts = write_calibrated_timestamp_nolock();
-	register_time_interval_nolock("CPU", std::move(start_ts), std::move(end_ts), "submit", "");
+	register_time_interval_nolock("CPU", std::move(start_ts), std::move(end_ts), "submit");
 
 	if (result != VK_SUCCESS)
 		LOGE("vkQueueSubmit2KHR failed (code: %d).\n", int(result));
-	if (result == VK_ERROR_DEVICE_LOST)
-		report_checkpoints();
 	submissions.clear();
 
 	if (!ext.timeline_semaphore_features.timelineSemaphore)
@@ -2008,6 +2109,12 @@ VkQueue Device::get_current_present_queue() const
 	return wsi.present_queue;
 }
 
+CommandBuffer::Type Device::get_current_present_queue_type() const
+{
+	VK_ASSERT(wsi.present_queue);
+	return wsi.present_queue_type;
+}
+
 const Sampler &Device::get_stock_sampler(StockSampler sampler) const
 {
 	return samplers[static_cast<unsigned>(sampler)]->get_sampler();
@@ -2205,12 +2312,6 @@ static inline bool exists(const T &container, const U &value)
 
 #endif
 
-void Device::destroy_pipeline(VkPipeline pipeline)
-{
-	LOCK();
-	destroy_pipeline_nolock(pipeline);
-}
-
 void Device::reset_fence(VkFence fence, bool observed_wait)
 {
 	LOCK();
@@ -2287,12 +2388,6 @@ void Device::destroy_image_view(VkImageView view)
 {
 	LOCK();
 	destroy_image_view_nolock(view);
-}
-
-void Device::destroy_pipeline_nolock(VkPipeline pipeline)
-{
-	VK_ASSERT(!exists(frame().destroyed_pipelines, pipeline));
-	frame().destroyed_pipelines.push_back(pipeline);
 }
 
 void Device::destroy_image_view_nolock(VkImageView view)
@@ -2406,8 +2501,6 @@ void Device::wait_idle_nolock()
 		auto result = table->vkDeviceWaitIdle(device);
 		if (result != VK_SUCCESS)
 			LOGE("vkDeviceWaitIdle failed with code: %d\n", result);
-		if (result == VK_ERROR_DEVICE_LOST)
-			report_checkpoints();
 		if (queue_unlock_callback)
 			queue_unlock_callback();
 	}
@@ -2479,7 +2572,7 @@ void Device::next_frame_context()
 	if (frame_context_begin_ts)
 	{
 		auto frame_context_end_ts = write_calibrated_timestamp_nolock();
-		register_time_interval_nolock("CPU", std::move(frame_context_begin_ts), std::move(frame_context_end_ts), "command submissions", "");
+		register_time_interval_nolock("CPU", std::move(frame_context_begin_ts), std::move(frame_context_end_ts), "command submissions");
 		frame_context_begin_ts = {};
 	}
 
@@ -2661,14 +2754,15 @@ void Device::recalibrate_timestamps()
 		resample_calibrated_timestamps();
 }
 
-void Device::register_time_interval(std::string tid, QueryPoolHandle start_ts, QueryPoolHandle end_ts, std::string tag, std::string extra)
+void Device::register_time_interval(std::string tid, QueryPoolHandle start_ts, QueryPoolHandle end_ts,
+                                    const std::string &tag)
 {
 	LOCK();
-	register_time_interval_nolock(std::move(tid), std::move(start_ts), std::move(end_ts), std::move(tag), std::move(extra));
+	register_time_interval_nolock(std::move(tid), std::move(start_ts), std::move(end_ts), tag);
 }
 
 void Device::register_time_interval_nolock(std::string tid, QueryPoolHandle start_ts, QueryPoolHandle end_ts,
-                                           std::string tag, std::string extra)
+                                           const std::string &tag)
 {
 	if (start_ts && end_ts)
 	{
@@ -2677,7 +2771,7 @@ void Device::register_time_interval_nolock(std::string tid, QueryPoolHandle star
 		if (start_ts->is_signalled() && end_ts->is_signalled())
 			VK_ASSERT(end_ts->get_timestamp_ticks() >= start_ts->get_timestamp_ticks());
 #endif
-		frame().timestamp_intervals.push_back({ std::move(tid), std::move(start_ts), std::move(end_ts), timestamp_tag, std::move(extra) });
+		frame().timestamp_intervals.push_back({ std::move(tid), std::move(start_ts), std::move(end_ts), timestamp_tag });
 	}
 }
 
@@ -2786,8 +2880,6 @@ void Device::PerFrame::begin()
 		table.vkDestroyFramebuffer(vkdevice, framebuffer, nullptr);
 	for (auto &sampler : destroyed_samplers)
 		table.vkDestroySampler(vkdevice, sampler, nullptr);
-	for (auto &pipeline : destroyed_pipelines)
-		table.vkDestroyPipeline(vkdevice, pipeline, nullptr);
 	for (auto &view : destroyed_image_views)
 		table.vkDestroyImageView(vkdevice, view, nullptr);
 	for (auto &view : destroyed_buffer_views)
@@ -2815,7 +2907,6 @@ void Device::PerFrame::begin()
 
 	destroyed_framebuffers.clear();
 	destroyed_samplers.clear();
-	destroyed_pipelines.clear();
 	destroyed_image_views.clear();
 	destroyed_buffer_views.clear();
 	destroyed_images.clear();
@@ -2827,7 +2918,7 @@ void Device::PerFrame::begin()
 	allocations.clear();
 
 	if (!in_destructor)
-		device.register_time_interval_nolock("CPU", std::move(wait_fence_ts), device.write_calibrated_timestamp_nolock(), "fence + recycle", "");
+		device.register_time_interval_nolock("CPU", std::move(wait_fence_ts), device.write_calibrated_timestamp_nolock(), "fence + recycle");
 
 	int64_t min_timestamp_us = std::numeric_limits<int64_t>::max();
 	int64_t max_timestamp_us = 0;
@@ -3148,9 +3239,7 @@ public:
 		                    VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT |
 		                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT |
 		                    VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT |
-		                    VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR |
-		                    VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR |
-		                    VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR;
+		                    image_usage_video_flags;
 
 		if (format_is_srgb(create_info.format))
 			usage_info.usage &= ~VK_IMAGE_USAGE_STORAGE_BIT;
@@ -3198,9 +3287,7 @@ public:
 
 		if ((create_info.usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
 		                          VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT |
-		                          VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR |
-		                          VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR |
-		                          VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR)) == 0)
+		                          image_usage_video_flags)) == 0)
 		{
 			LOGE("Cannot create image view unless certain usage flags are present.\n");
 			return false;
@@ -3789,7 +3876,12 @@ ImageHandle Device::create_image_from_staging_buffer(const ImageCreateInfo &crea
 		if (format_info.viewFormatCount != 0)
 		{
 			create_unorm_srgb_views = true;
-			if (ext.supports_image_format_list)
+
+			const auto *input_format_list = static_cast<const VkBaseInStructure *>(info.pNext);
+			while (input_format_list && input_format_list->sType != VK_STRUCTURE_TYPE_IMAGE_FORMAT_LIST_CREATE_INFO_KHR)
+				input_format_list = static_cast<const VkBaseInStructure *>(input_format_list->pNext);
+
+			if (ext.supports_image_format_list && !input_format_list)
 			{
 				format_info.pNext = info.pNext;
 				info.pNext = &format_info;
@@ -3806,7 +3898,7 @@ ImageHandle Device::create_image_from_staging_buffer(const ImageCreateInfo &crea
 	                                           IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT |
 	                                           IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT |
 	                                           IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT |
-	                                           IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_DECODE_BIT);
+	                                           IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_DUPLEX);
 	bool concurrent_queue = queue_flags != 0 ||
 	                        staging_buffer != nullptr ||
 	                        create_info.initial_layout != VK_IMAGE_LAYOUT_UNDEFINED;
@@ -3845,6 +3937,9 @@ ImageHandle Device::create_image_from_staging_buffer(const ImageCreateInfo &crea
 			{ IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT, QUEUE_INDEX_COMPUTE },
 			{ IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_TRANSFER_BIT, QUEUE_INDEX_TRANSFER },
 			{ IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_DECODE_BIT, QUEUE_INDEX_VIDEO_DECODE },
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+			{ IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_ENCODE_BIT, QUEUE_INDEX_VIDEO_ENCODE },
+#endif
 		};
 
 		for (auto &m : mappings)
@@ -3980,9 +4075,7 @@ ImageHandle Device::create_image_from_staging_buffer(const ImageCreateInfo &crea
 
 	bool has_view = (info.usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
 	                               VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT |
-	                               VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR |
-	                               VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR |
-	                               VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR)) != 0 &&
+	                               image_usage_video_flags)) != 0 &&
 	                (create_info.misc & IMAGE_MISC_NO_DEFAULT_VIEWS_BIT) == 0;
 
 	VkImageViewType view_type = VK_IMAGE_VIEW_TYPE_MAX_ENUM;
@@ -4085,6 +4178,10 @@ ImageHandle Device::create_image_from_staging_buffer(const ImageCreateInfo &crea
 			type = CommandBuffer::Type::AsyncTransfer;
 		else if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_DECODE_BIT)
 			type = CommandBuffer::Type::VideoDecode;
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+		else if (queue_flags & IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_ENCODE_BIT)
+			type = CommandBuffer::Type::VideoEncode;
+#endif
 		VK_ASSERT(type != CommandBuffer::Type::Count);
 
 		auto cmd = request_command_buffer(type);
@@ -4153,6 +4250,16 @@ ImageHandle Device::create_image_from_staging_buffer(const ImageCreateInfo &crea
 			if (stages[sem_count] != 0)
 				sem_count++;
 		}
+
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+		if (create_info.misc & IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_ENCODE_BIT)
+		{
+			types[sem_count] = CommandBuffer::Type::VideoEncode;
+			stages[sem_count] = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+			if (stages[sem_count] != 0)
+				sem_count++;
+		}
+#endif
 
 		VK_ASSERT(sem_count);
 
@@ -4325,6 +4432,8 @@ BufferHandle Device::create_imported_host_buffer(const BufferCreateInfo &create_
 	VkBufferCreateInfo info = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	info.size = create_info.size;
 	info.usage = create_info.usage;
+	if (get_device_features().buffer_device_address_features.bufferDeviceAddress)
+		info.usage |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR;
 	info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	info.pNext = &external_info;
 
@@ -4378,6 +4487,13 @@ BufferHandle Device::create_imported_host_buffer(const BufferCreateInfo &create_
 	                            ~(ext.host_memory_properties.minImportedHostPointerAlignment - 1);
 	alloc_info.memoryTypeIndex = memory_type;
 
+	VkMemoryAllocateFlagsInfo flags_info = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO };
+	if (get_device_features().buffer_device_address_features.bufferDeviceAddress)
+	{
+		alloc_info.pNext = &flags_info;
+		flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
+	}
+
 	VkImportMemoryHostPointerInfoEXT import = { VK_STRUCTURE_TYPE_IMPORT_MEMORY_HOST_POINTER_INFO_EXT };
 	import.handleType = type;
 	import.pHostPointer = host_buffer;
@@ -4411,7 +4527,15 @@ BufferHandle Device::create_imported_host_buffer(const BufferCreateInfo &create_
 		return BufferHandle{};
 	}
 
-	BufferHandle handle(handle_pool.buffers.allocate(this, buffer, allocation, create_info));
+	VkDeviceAddress bda = 0;
+	if (get_device_features().buffer_device_address_features.bufferDeviceAddress)
+	{
+		VkBufferDeviceAddressInfoKHR bda_info = { VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO_KHR };
+		bda_info.buffer = buffer;
+		bda = table->vkGetBufferDeviceAddressKHR(device, &bda_info);
+	}
+
+	BufferHandle handle(handle_pool.buffers.allocate(this, buffer, allocation, create_info, bda));
 	return handle;
 }
 
@@ -4437,6 +4561,8 @@ BufferHandle Device::create_buffer(const BufferCreateInfo &create_info, const vo
 	VkBufferCreateInfo info = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	info.size = create_info.size;
 	info.usage = create_info.usage | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	if (get_device_features().buffer_device_address_features.bufferDeviceAddress)
+		info.usage |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR;
 	info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	uint32_t sharing_indices[QUEUE_INDEX_COUNT];
@@ -4489,6 +4615,16 @@ BufferHandle Device::create_buffer(const BufferCreateInfo &create_info, const vo
 	VkBufferMemoryRequirementsInfo2 req_info = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2 };
 	req_info.buffer = buffer;
 	table->vkGetBufferMemoryRequirements2(device, &req_info, &reqs);
+
+	if (create_info.allocation_requirements.size)
+	{
+		reqs.memoryRequirements.memoryTypeBits &=
+				create_info.allocation_requirements.memoryTypeBits;
+		reqs.memoryRequirements.size =
+				std::max<VkDeviceSize>(reqs.memoryRequirements.size, create_info.allocation_requirements.size);
+		reqs.memoryRequirements.alignment =
+				std::max<VkDeviceSize>(reqs.memoryRequirements.alignment, create_info.allocation_requirements.alignment);
+	}
 
 	uint32_t memory_type = find_memory_type(create_info.domain, reqs.memoryRequirements.memoryTypeBits);
 	if (memory_type == UINT32_MAX)
@@ -4565,7 +4701,16 @@ BufferHandle Device::create_buffer(const BufferCreateInfo &create_info, const vo
 
 	auto tmpinfo = create_info;
 	tmpinfo.usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-	BufferHandle handle(handle_pool.buffers.allocate(this, buffer, allocation, tmpinfo));
+
+	VkDeviceAddress bda = 0;
+	if (get_device_features().buffer_device_address_features.bufferDeviceAddress)
+	{
+		VkBufferDeviceAddressInfoKHR bda_info = { VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO_KHR };
+		bda_info.buffer = buffer;
+		bda = table->vkGetBufferDeviceAddressKHR(device, &bda_info);
+	}
+
+	BufferHandle handle(handle_pool.buffers.allocate(this, buffer, allocation, tmpinfo, bda));
 
 	if (create_info.domain == BufferDomain::Device && (initial || zero_initialize) && !memory_type_is_host_visible(memory_type))
 	{
@@ -4926,32 +5071,6 @@ void Device::set_name(const CommandBuffer &cmd, const char *name)
 	set_name((uint64_t)cmd.get_command_buffer(), VK_OBJECT_TYPE_COMMAND_BUFFER, name);
 }
 
-void Device::report_checkpoints()
-{
-	if (!ext.supports_nv_device_diagnostic_checkpoints)
-		return;
-
-	for (int i = 0; i < QUEUE_INDEX_COUNT; i++)
-	{
-		if (queue_info.queues[i] == VK_NULL_HANDLE)
-			continue;
-
-		uint32_t count;
-		table->vkGetQueueCheckpointDataNV(queue_info.queues[i], &count, nullptr);
-		std::vector<VkCheckpointDataNV> checkpoint_data(count);
-		for (auto &data : checkpoint_data)
-			data.sType = VK_STRUCTURE_TYPE_CHECKPOINT_DATA_NV;
-		table->vkGetQueueCheckpointDataNV(queue_info.queues[i], &count, checkpoint_data.data());
-
-		if (!checkpoint_data.empty())
-		{
-			LOGI("Checkpoints for %s queue:\n", queue_name_table[i]);
-			for (auto &d : checkpoint_data)
-				LOGI("Stage %u:\n%s\n", d.stage, static_cast<const char *>(d.pCheckpointMarker));
-		}
-	}
-}
-
 void Device::query_available_performance_counters(CommandBuffer::Type type, uint32_t *count,
                                                   const VkPerformanceCounterKHR **counters,
                                                   const VkPerformanceCounterDescriptionKHR **desc)
@@ -5136,10 +5255,17 @@ void Device::end_renderdoc_capture()
 #endif
 
 bool Device::supports_subgroup_size_log2(bool subgroup_full_group, uint8_t subgroup_minimum_size_log2,
-                                         uint8_t subgroup_maximum_size_log2) const
+                                         uint8_t subgroup_maximum_size_log2, VkShaderStageFlagBits stage) const
 {
 	if (ImplementationQuirks::get().force_no_subgroup_size_control)
 		return false;
+
+	if (stage != VK_SHADER_STAGE_COMPUTE_BIT &&
+	    stage != VK_SHADER_STAGE_MESH_BIT_EXT &&
+	    stage != VK_SHADER_STAGE_TASK_BIT_EXT)
+	{
+		return false;
+	}
 
 	if (!ext.subgroup_size_control_features.subgroupSizeControl)
 		return false;
@@ -5164,7 +5290,7 @@ bool Device::supports_subgroup_size_log2(bool subgroup_full_group, uint8_t subgr
 	}
 
 	// We need requiredSubgroupSizeStages support here.
-	return (ext.subgroup_size_control_properties.requiredSubgroupSizeStages & VK_SHADER_STAGE_COMPUTE_BIT) != 0;
+	return (ext.subgroup_size_control_properties.requiredSubgroupSizeStages & stage) != 0;
 }
 
 const QueueInfo &Device::get_queue_info() const
@@ -5196,7 +5322,7 @@ CommandBufferHandle request_command_buffer_with_ownership_transfer(
 	                             Vulkan::IMAGE_MISC_CONCURRENT_QUEUE_GRAPHICS_BIT |
 	                             Vulkan::IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_COMPUTE_BIT |
 	                             Vulkan::IMAGE_MISC_CONCURRENT_QUEUE_ASYNC_GRAPHICS_BIT |
-	                             Vulkan::IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_DECODE_BIT)) != 0;
+	                             Vulkan::IMAGE_MISC_CONCURRENT_QUEUE_VIDEO_DUPLEX)) != 0;
 	bool need_ownership_transfer = old_family != new_family && !image_is_concurrent;
 
 	VkImageMemoryBarrier2 ownership = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
