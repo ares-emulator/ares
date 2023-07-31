@@ -565,7 +565,7 @@ void main()
             bool yuv = info.tmem_fmt == TEXTURE_FMT_YUV;
             if (info.tmem_size == 3 || yuv)
                 update_tmem_32(info, tmem16_index & 0x3ff, upper_tmem, yuv);
-            else if (info.tmem_fmt != TEXTURE_FMT_YUV)
+            else
                 update_tmem_16(info, tmem16_index);
         }
 

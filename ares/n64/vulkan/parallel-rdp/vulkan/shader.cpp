@@ -583,6 +583,16 @@ Program::Program(Device *device_, Shader *vertex, Shader *fragment, const Immuta
 	device->bake_program(*this, sampler_bank);
 }
 
+Program::Program(Device *device_, Shader *task, Shader *mesh, Shader *fragment, const ImmutableSamplerBank *sampler_bank)
+	: device(device_)
+{
+	if (task)
+		set_shader(ShaderStage::Task, task);
+	set_shader(ShaderStage::Mesh, mesh);
+	set_shader(ShaderStage::Fragment, fragment);
+	device->bake_program(*this, sampler_bank);
+}
+
 Program::Program(Device *device_, Shader *compute_shader, const ImmutableSamplerBank *sampler_bank)
     : device(device_)
 {
@@ -603,10 +613,7 @@ Pipeline Program::add_pipeline(Hash hash, const Pipeline &pipeline)
 
 void Program::destroy_pipeline(const Pipeline &pipeline)
 {
-	if (internal_sync)
-		device->destroy_pipeline_nolock(pipeline.pipeline);
-	else
-		device->destroy_pipeline(pipeline.pipeline);
+	device->get_device_table().vkDestroyPipeline(device->get_device(), pipeline.pipeline, nullptr);
 }
 
 void Program::promote_read_write_to_read_only()

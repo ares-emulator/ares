@@ -503,7 +503,7 @@ i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, boo
 	st.y = clamp_and_shift_coord((tile.flags & TILE_INFO_CLAMP_T_BIT) != 0, st.y, int(tile.tlo), int(tile.thi), int(tile.shift_t));
 
 	ivec2 frac;
-	if (sample_quad)
+	if (sample_quad || tlut)
 		frac = st & 31;
 	else
 		frac = ivec2(0);
@@ -524,6 +524,7 @@ i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, boo
 	i16x4 t_base, t10, t01, t11;
 	bool mid_texel = all(bvec4(mid_texel_state, bilerp, equal(frac, ivec2(0x10))));
 
+	bool upper_lut = sum_frac >= 0x20;
 	if (mid_texel)
 	{
 		// Ensure we sample all 4 texels.
@@ -536,6 +537,15 @@ i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, boo
 
 	if (tlut)
 	{
+		if (!sample_quad)
+		{
+			// Weird mode where we sample a bilinear footprint with the 4 banks of TLUT instead.
+			// Force the footprint to be sampled, but adjust the input coordinates instead.
+			base_st = ivec2(s0, t0);
+			s1 = s0;
+			t1 = t0;
+		}
+
 		switch (int(tile.fmt))
 		{
 		case TEXTURE_FORMAT_RGBA:
@@ -546,13 +556,13 @@ i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, boo
 			// For TLUT, entries in the LUT are duplicated and we must make sure that we sample 3 different banks
 			// when we look up the TLUT entry. In normal situations, this is irrelevant, but we're trying to be accurate here.
 			bool upper = sum_frac >= 0x20;
-			uint addr_xor = upper ? 2 : 1;
+			uint addr_xor = upper_lut ? 2 : 1;
 
 			switch (int(tile.size))
 			{
 			case 0:
 				t_base = sample_texel_ci4_tlut(tile, tmem_instance, base_st, tile.palette, upper ? 3 : 0, addr_xor, tlut_type);
-				if (sample_quad)
+				if (bilerp)
 				{
 					t10 = sample_texel_ci4_tlut(tile, tmem_instance, ivec2(s1, t0), tile.palette, 1, addr_xor,
 					                            tlut_type);
@@ -568,7 +578,7 @@ i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, boo
 
 			case 1:
 				t_base = sample_texel_ci8_tlut(tile, tmem_instance, base_st, upper ? 3 : 0, addr_xor, tlut_type);
-				if (sample_quad)
+				if (bilerp)
 				{
 					t10 = sample_texel_ci8_tlut(tile, tmem_instance, ivec2(s1, t0), 1, addr_xor, tlut_type);
 					t01 = sample_texel_ci8_tlut(tile, tmem_instance, ivec2(s0, t1), 2, addr_xor, tlut_type);
@@ -579,7 +589,7 @@ i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, boo
 
 			default:
 				t_base = sample_texel_ci32_tlut(tile, tmem_instance, base_st, upper ? 3 : 0, addr_xor, tlut_type);
-				if (sample_quad)
+				if (bilerp)
 				{
 					t10 = sample_texel_ci32_tlut(tile, tmem_instance, ivec2(s1, t0), 1, addr_xor, tlut_type);
 					t01 = sample_texel_ci32_tlut(tile, tmem_instance, ivec2(s0, t1), 2, addr_xor, tlut_type);
@@ -890,7 +900,7 @@ i16x4 sample_texture(TileInfo tile, uint tmem_instance, ivec2 st, bool tlut, boo
 	{
 		accum = (t_base + t01 + t10 + t11 + I16_C(2)) >> I16_C(2);
 	}
-	else if (bilerp && sample_quad)
+	else if (bilerp && (sample_quad || tlut))
 	{
 		i16x2 flip_frac = i16x2(sum_frac >= 32 ? (32 - frac.yx) : frac);
 		accum = (t10 - t_base) * flip_frac.x;

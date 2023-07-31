@@ -1651,7 +1651,7 @@ void Renderer::update_tmem_instances(Vulkan::CommandBuffer &cmd)
 	{
 		end_ts = cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 		device->register_time_interval("RDP GPU", std::move(start_ts), std::move(end_ts),
-		                               "tmem-update", std::to_string(stream.tmem_upload_infos.size()));
+		                               "tmem-update");
 	}
 	cmd.end_region();
 }
@@ -2269,10 +2269,7 @@ void Renderer::submit_render_pass(Vulkan::CommandBuffer &cmd)
 	if (caps.timestamp >= 1)
 	{
 		render_pass_end = cmd.write_timestamp(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-		std::string tag;
-		tag = "(" + std::to_string(fb.width) + " x " + std::to_string(fb.deduced_height) + ")";
-		tag += " (" + std::to_string(stream.triangle_setup.size()) + " triangles)";
-		device->register_time_interval("RDP GPU", std::move(render_pass_start), std::move(render_pass_end), "render-pass", std::move(tag));
+		device->register_time_interval("RDP GPU", std::move(render_pass_start), std::move(render_pass_end), "render-pass");
 	}
 }
 
@@ -3567,7 +3564,7 @@ void Renderer::PipelineExecutor::perform_work(const Vulkan::DeferredPipelineComp
 	Vulkan::CommandBuffer::build_compute_pipeline(device, compile, Vulkan::CommandBuffer::CompileMode::AsyncThread);
 	auto end_ts = device->write_calibrated_timestamp();
 	device->register_time_interval("RDP Pipeline", std::move(start_ts), std::move(end_ts),
-	                               "pipeline-compilation", std::to_string(compile.hash));
+	                               "pipeline-compilation");
 }
 
 bool Renderer::PipelineExecutor::is_sentinel(const Vulkan::DeferredPipelineCompile &compile) const

@@ -38,6 +38,7 @@
 #include "context.hpp"
 #include "query_pool.hpp"
 #include "buffer_pool.hpp"
+#include "indirect_layout.hpp"
 #include <memory>
 #include <vector>
 #include <functional>
@@ -285,19 +286,28 @@ public:
 	void submit_discard(CommandBufferHandle &cmd);
 	QueueIndices get_physical_queue_type(CommandBuffer::Type queue_type) const;
 	void register_time_interval(std::string tid, QueryPoolHandle start_ts, QueryPoolHandle end_ts,
-	                            std::string tag, std::string extra = {});
+	                            const std::string &tag);
 
 	// Request shaders and programs. These objects are owned by the Device.
 	Shader *request_shader(const uint32_t *code, size_t size, const ResourceLayout *layout = nullptr);
 	Shader *request_shader_by_hash(Util::Hash hash);
+	Program *request_program(const uint32_t *task_data, size_t task_size,
+	                         const uint32_t *mesh_data, size_t mesh_size,
+	                         const uint32_t *fragment_data, size_t fragment_size,
+	                         const ResourceLayout *task_layout = nullptr,
+	                         const ResourceLayout *mesh_layout = nullptr,
+	                         const ResourceLayout *fragment_layout = nullptr);
 	Program *request_program(const uint32_t *vertex_data, size_t vertex_size,
 	                         const uint32_t *fragment_data, size_t fragment_size,
 	                         const ResourceLayout *vertex_layout = nullptr,
 	                         const ResourceLayout *fragment_layout = nullptr);
 	Program *request_program(const uint32_t *compute_data, size_t compute_size,
 	                         const ResourceLayout *layout = nullptr);
+	Program *request_program(Shader *task, Shader *mesh, Shader *fragment, const ImmutableSamplerBank *sampler_bank = nullptr);
 	Program *request_program(Shader *vertex, Shader *fragment, const ImmutableSamplerBank *sampler_bank = nullptr);
 	Program *request_program(Shader *compute, const ImmutableSamplerBank *sampler_bank = nullptr);
+	const IndirectLayout *request_indirect_layout(const IndirectLayoutToken *tokens,
+	                                              uint32_t num_tokens, uint32_t stride);
 
 	const ImmutableYcbcrConversion *request_immutable_ycbcr_conversion(const VkSamplerYcbcrConversionCreateInfo &info);
 	const ImmutableSampler *request_immutable_sampler(const SamplerCreateInfo &info, const ImmutableYcbcrConversion *ycbcr);
@@ -483,7 +493,8 @@ public:
 
 	bool supports_subgroup_size_log2(bool subgroup_full_group,
 	                                 uint8_t subgroup_minimum_size_log2,
-	                                 uint8_t subgroup_maximum_size_log2) const;
+	                                 uint8_t subgroup_maximum_size_log2,
+	                                 VkShaderStageFlagBits stage = VK_SHADER_STAGE_COMPUTE_BIT) const;
 
 	const QueueInfo &get_queue_info() const;
 
@@ -503,6 +514,7 @@ private:
 
 	uint64_t allocate_cookie();
 	void bake_program(Program &program, const ImmutableSamplerBank *sampler_bank);
+	void merge_combined_resource_layout(CombinedResourceLayout &layout, const Program &program);
 
 	void request_vertex_block(BufferBlock &block, VkDeviceSize size);
 	void request_index_block(BufferBlock &block, VkDeviceSize size);
@@ -514,9 +526,10 @@ private:
 	void set_acquire_semaphore(unsigned index, Semaphore acquire);
 	Semaphore consume_release_semaphore();
 	VkQueue get_current_present_queue() const;
+	CommandBuffer::Type get_current_present_queue_type() const;
 
-	PipelineLayout *request_pipeline_layout(const CombinedResourceLayout &layout,
-	                                        const ImmutableSamplerBank *immutable_samplers);
+	const PipelineLayout *request_pipeline_layout(const CombinedResourceLayout &layout,
+	                                              const ImmutableSamplerBank *immutable_samplers);
 	DescriptorSetAllocator *request_descriptor_set_allocator(const DescriptorSetLayout &layout,
 	                                                         const uint32_t *stages_for_sets,
 	                                                         const ImmutableSampler * const *immutable_samplers);
@@ -538,7 +551,8 @@ private:
 
 	QueryPoolHandle write_timestamp_nolock(VkCommandBuffer cmd, VkPipelineStageFlags2 stage);
 	QueryPoolHandle write_calibrated_timestamp_nolock();
-	void register_time_interval_nolock(std::string tid, QueryPoolHandle start_ts, QueryPoolHandle end_ts, std::string tag, std::string extra);
+	void register_time_interval_nolock(std::string tid, QueryPoolHandle start_ts, QueryPoolHandle end_ts,
+	                                   const std::string &tag);
 
 	// Make sure this is deleted last.
 	HandlePool handle_pool;
@@ -607,7 +621,6 @@ private:
 		std::vector<DeviceAllocation> allocations;
 		std::vector<VkFramebuffer> destroyed_framebuffers;
 		std::vector<VkSampler> destroyed_samplers;
-		std::vector<VkPipeline> destroyed_pipelines;
 		std::vector<VkImageView> destroyed_image_views;
 		std::vector<VkBufferView> destroyed_buffer_views;
 		std::vector<VkImage> destroyed_images;
@@ -633,7 +646,6 @@ private:
 			QueryPoolHandle start_ts;
 			QueryPoolHandle end_ts;
 			TimestampInterval *timestamp_tag;
-			std::string extra;
 		};
 		std::vector<TimestampIntervalHandles> timestamp_intervals;
 
@@ -649,6 +661,7 @@ private:
 		Semaphore release;
 		std::vector<ImageHandle> swapchain;
 		VkQueue present_queue = VK_NULL_HANDLE;
+		Vulkan::CommandBuffer::Type present_queue_type = {};
 		uint32_t queue_family_support_mask = 0;
 		unsigned index = 0;
 		bool consumed = false;
@@ -718,6 +731,7 @@ private:
 	VulkanCache<Program> programs;
 	VulkanCache<ImmutableSampler> immutable_samplers;
 	VulkanCache<ImmutableYcbcrConversion> immutable_ycbcr_conversions;
+	VulkanCache<IndirectLayout> indirect_layouts;
 
 	FramebufferAllocator framebuffer_allocator;
 	TransientAttachmentAllocator transient_allocator;
@@ -753,7 +767,6 @@ private:
 	void destroy_image(VkImage image);
 	void destroy_image_view(VkImageView view);
 	void destroy_buffer_view(VkBufferView view);
-	void destroy_pipeline(VkPipeline pipeline);
 	void destroy_sampler(VkSampler sampler);
 	void destroy_framebuffer(VkFramebuffer framebuffer);
 	void destroy_semaphore(VkSemaphore semaphore);
@@ -768,7 +781,6 @@ private:
 	void destroy_image_nolock(VkImage image);
 	void destroy_image_view_nolock(VkImageView view);
 	void destroy_buffer_view_nolock(VkBufferView view);
-	void destroy_pipeline_nolock(VkPipeline pipeline);
 	void destroy_sampler_nolock(VkSampler sampler);
 	void destroy_framebuffer_nolock(VkFramebuffer framebuffer);
 	void destroy_semaphore_nolock(VkSemaphore semaphore);
@@ -859,7 +871,6 @@ private:
 
 	ImplementationWorkarounds workarounds;
 	void init_workarounds();
-	void report_checkpoints();
 
 	void fill_buffer_sharing_indices(VkBufferCreateInfo &create_info, uint32_t *sharing_indices);
 

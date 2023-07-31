@@ -47,6 +47,8 @@ enum class ShaderStage
 	Geometry = 3,
 	Fragment = 4,
 	Compute = 5,
+	Task = 6,
+	Mesh = 7,
 	Count
 };
 
@@ -178,10 +180,11 @@ struct Pipeline
 	uint32_t dynamic_mask;
 };
 
-class Program : public HashedObject<Program>, public InternalSyncEnabled
+class Program : public HashedObject<Program>
 {
 public:
 	Program(Device *device, Shader *vertex, Shader *fragment, const ImmutableSamplerBank *sampler_bank);
+	Program(Device *device, Shader *task, Shader *mesh, Shader *fragment, const ImmutableSamplerBank *sampler_bank);
 	Program(Device *device, Shader *compute, const ImmutableSamplerBank *sampler_bank);
 	~Program();
 
@@ -190,12 +193,12 @@ public:
 		return shaders[Util::ecast(stage)];
 	}
 
-	void set_pipeline_layout(PipelineLayout *new_layout)
+	void set_pipeline_layout(const PipelineLayout *new_layout)
 	{
 		layout = new_layout;
 	}
 
-	PipelineLayout *get_pipeline_layout() const
+	const PipelineLayout *get_pipeline_layout() const
 	{
 		return layout;
 	}
@@ -209,7 +212,7 @@ private:
 	void set_shader(ShaderStage stage, Shader *handle);
 	Device *device;
 	Shader *shaders[Util::ecast(ShaderStage::Count)] = {};
-	PipelineLayout *layout = nullptr;
+	const PipelineLayout *layout = nullptr;
 	VulkanCache<Util::IntrusivePODWrapper<Pipeline>> pipelines;
 	void destroy_pipeline(const Pipeline &pipeline);
 };
