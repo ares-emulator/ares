@@ -50,7 +50,6 @@ struct DeviceFeatures
 {
 	bool supports_debug_utils = false;
 	bool supports_mirror_clamp_to_edge = false;
-	bool supports_nv_device_diagnostic_checkpoints = false;
 	bool supports_external_memory_host = false;
 	bool supports_surface_capabilities2 = false;
 	bool supports_full_screen_exclusive = false;
@@ -67,6 +66,11 @@ struct DeviceFeatures
 	bool supports_video_decode_queue = false;
 	bool supports_video_decode_h264 = false;
 	bool supports_video_decode_h265 = false;
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+	bool supports_video_encode_queue = false;
+	bool supports_video_encode_h264 = false;
+	bool supports_video_encode_h265 = false;
+#endif
 	bool supports_pipeline_creation_cache_control = false;
 	bool supports_format_feature_flags2 = false;
 	bool supports_external = false;
@@ -76,6 +80,7 @@ struct DeviceFeatures
 	bool supports_hdr_metadata = false;
 	bool supports_swapchain_colorspace = false;
 	bool supports_surface_maintenance1 = false;
+	bool supports_spirv_1_4 = false;
 
 	// Vulkan 1.1 core
 	VkPhysicalDeviceFeatures enabled_features = {};
@@ -96,7 +101,9 @@ struct DeviceFeatures
 	VkPhysicalDevice16BitStorageFeaturesKHR storage_16bit_features = {};
 	VkPhysicalDeviceFloat16Int8FeaturesKHR float16_int8_features = {};
 	VkPhysicalDeviceFloatControlsPropertiesKHR float_control_properties = {};
+	VkPhysicalDeviceBufferDeviceAddressFeaturesKHR buffer_device_address_features = {};
 	VkPhysicalDeviceIDProperties id_properties = {};
+	VkPhysicalDeviceShaderSubgroupExtendedTypesFeaturesKHR shader_subgroup_extended_types_features = {};
 
 	// EXT
 	VkPhysicalDeviceExternalMemoryHostPropertiesEXT host_memory_properties = {};
@@ -114,9 +121,14 @@ struct DeviceFeatures
 	VkPhysicalDeviceTextureCompressionASTCHDRFeaturesEXT astc_hdr_features = {};
 	VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT pipeline_creation_cache_control_features = {};
 	VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT swapchain_maintenance1_features = {};
+	VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT pageable_device_local_memory_features = {};
+	VkPhysicalDeviceMeshShaderFeaturesEXT mesh_shader_features = {};
+	VkPhysicalDeviceMeshShaderPropertiesEXT mesh_shader_properties = {};
 
 	// Vendor
 	VkPhysicalDeviceComputeShaderDerivativesFeaturesNV compute_shader_derivative_features = {};
+	VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV device_generated_commands_features = {};
+	VkPhysicalDeviceDeviceGeneratedCommandsPropertiesNV device_generated_commands_properties = {};
 
 	// References Vulkan::Context.
 	const VkPhysicalDeviceFeatures2 *pdf2 = nullptr;
@@ -137,9 +149,11 @@ enum VendorID
 
 enum ContextCreationFlagBits
 {
-	CONTEXT_CREATION_DISABLE_BINDLESS_BIT = 1 << 0,
-	CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT = 1 << 1,
-	CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT = 1 << 2,
+	CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT = 1 << 0,
+	CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT = 1 << 1,
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+	CONTEXT_CREATION_ENABLE_VIDEO_ENCODE_BIT = 1 << 2,
+#endif
 	CONTEXT_CREATION_ENABLE_VIDEO_H264_BIT = 1 << 3,
 	CONTEXT_CREATION_ENABLE_VIDEO_H265_BIT = 1 << 4
 };
@@ -195,6 +209,14 @@ public:
 	void set_instance_factory(InstanceFactory *factory);
 	void set_device_factory(DeviceFactory *factory);
 
+	// Only takes effect if profiles are enabled in build. (GRANITE_VULKAN_PROFILES)
+	// If profile is non-null, forces a specific profile.
+	// If not supported, initialization fails.
+	// If not set, ignore profiles.
+	// If strict is false, the profile should be seen as a baseline and Granite will augment features on top.
+	// If true, the profile is a strict limit for device functionality. For validation purposes.
+	void set_required_profile(const char *profile, bool strict);
+
 	// Call before initializing instances. app_info may be freed after returning.
 	// API_VERSION must be at least 1.1.
 	// By default, a Vulkan 1.1 instance is created.
@@ -225,7 +247,7 @@ public:
 	                               const VkPhysicalDeviceFeatures *required_features,
 	                               ContextCreationFlags flags = 0);
 
-	Context() = default;
+	Context();
 	Context(const Context &) = delete;
 	void operator=(const Context &) = delete;
 	static bool init_loader(PFN_vkGetInstanceProcAddr addr);
@@ -357,6 +379,9 @@ private:
 	std::vector<const char *> enabled_device_extensions;
 	std::vector<const char *> enabled_instance_extensions;
 
+	std::string required_profile;
+	bool required_profile_strict = false;
+
 #ifdef VULKAN_DEBUG
 	VkDebugUtilsMessengerEXT debug_messenger = VK_NULL_HANDLE;
 	bool force_no_validation = false;
@@ -366,13 +391,17 @@ private:
 	void destroy();
 	void check_descriptor_indexing_features();
 
-	static bool physical_device_supports_surface(VkPhysicalDevice gpu, VkSurfaceKHR surface);
+	bool physical_device_supports_surface_and_profile(VkPhysicalDevice candidate_gpu, VkSurfaceKHR surface) const;
 
 #ifdef GRANITE_VULKAN_FOSSILIZE
 	Fossilize::FeatureFilter feature_filter;
 	bool format_is_supported(VkFormat format, VkFormatFeatureFlags features) override;
 	bool descriptor_set_layout_is_supported(const VkDescriptorSetLayoutCreateInfo *set_layout) override;
 #endif
+
+	bool init_profile();
+	VkResult create_instance_from_profile(const VkInstanceCreateInfo &info, VkInstance *pInstance);
+	VkResult create_device_from_profile(const VkDeviceCreateInfo &info, VkDevice *pDevice);
 };
 
 using ContextHandle = Util::IntrusivePtr<Context>;

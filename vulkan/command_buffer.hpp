@@ -37,6 +37,7 @@
 namespace Vulkan
 {
 class DebugChannelInterface;
+class IndirectLayout;
 
 static inline VkPipelineStageFlags convert_vk_stage2(VkPipelineStageFlags2 stages)
 {
@@ -133,50 +134,55 @@ using CommandBufferDirtyFlags = uint32_t;
 #define BLEND_OP_BITS 3
 #define CULL_MODE_BITS 2
 #define FRONT_FACE_BITS 1
+#define TOPOLOGY_BITS 4
 union PipelineState {
 	struct
 	{
-		// Depth state.
-		unsigned depth_write : 1;
-		unsigned depth_test : 1;
-		unsigned blend_enable : 1;
+		// Word 0, tightly packed.
+		uint32_t depth_write : 1;
+		uint32_t depth_test : 1;
+		uint32_t blend_enable : 1;
+		uint32_t cull_mode : CULL_MODE_BITS;
+		uint32_t front_face : FRONT_FACE_BITS;
+		uint32_t depth_compare : COMPARE_OP_BITS;
+		uint32_t depth_bias_enable : 1;
+		uint32_t stencil_test : 1;
+		uint32_t stencil_front_fail : STENCIL_OP_BITS;
+		uint32_t stencil_front_pass : STENCIL_OP_BITS;
+		uint32_t stencil_front_depth_fail : STENCIL_OP_BITS;
+		uint32_t stencil_front_compare_op : COMPARE_OP_BITS;
+		uint32_t stencil_back_fail : STENCIL_OP_BITS;
+		uint32_t stencil_back_pass : STENCIL_OP_BITS;
+		uint32_t stencil_back_depth_fail : STENCIL_OP_BITS;
 
-		unsigned cull_mode : CULL_MODE_BITS;
-		unsigned front_face : FRONT_FACE_BITS;
-		unsigned depth_bias_enable : 1;
+		// Word 1, tightly packed.
+		uint32_t stencil_back_compare_op : COMPARE_OP_BITS;
+		uint32_t alpha_to_coverage : 1;
+		uint32_t alpha_to_one : 1;
+		uint32_t sample_shading : 1;
+		uint32_t src_color_blend : BLEND_FACTOR_BITS;
+		uint32_t dst_color_blend : BLEND_FACTOR_BITS;
+		uint32_t color_blend_op : BLEND_OP_BITS;
+		uint32_t src_alpha_blend : BLEND_FACTOR_BITS;
+		uint32_t dst_alpha_blend : BLEND_FACTOR_BITS;
+		uint32_t alpha_blend_op : BLEND_OP_BITS;
 
-		unsigned depth_compare : COMPARE_OP_BITS;
+		// Word 2, tightly packed.
+		uint32_t primitive_restart : 1;
+		uint32_t topology : TOPOLOGY_BITS;
+		uint32_t wireframe : 1;
+		uint32_t subgroup_control_size : 1;
+		uint32_t subgroup_full_group : 1;
+		uint32_t subgroup_minimum_size_log2 : 3;
+		uint32_t subgroup_maximum_size_log2 : 3;
+		uint32_t subgroup_control_size_task : 1;
+		uint32_t subgroup_full_group_task : 1;
+		uint32_t subgroup_minimum_size_log2_task : 3;
+		uint32_t subgroup_maximum_size_log2_task : 3;
+		uint32_t conservative_raster : 1;
+		uint32_t padding : 9;
 
-		unsigned stencil_test : 1;
-		unsigned stencil_front_fail : STENCIL_OP_BITS;
-		unsigned stencil_front_pass : STENCIL_OP_BITS;
-		unsigned stencil_front_depth_fail : STENCIL_OP_BITS;
-		unsigned stencil_front_compare_op : COMPARE_OP_BITS;
-		unsigned stencil_back_fail : STENCIL_OP_BITS;
-		unsigned stencil_back_pass : STENCIL_OP_BITS;
-		unsigned stencil_back_depth_fail : STENCIL_OP_BITS;
-		unsigned stencil_back_compare_op : COMPARE_OP_BITS;
-
-		unsigned alpha_to_coverage : 1;
-		unsigned alpha_to_one : 1;
-		unsigned sample_shading : 1;
-
-		unsigned src_color_blend : BLEND_FACTOR_BITS;
-		unsigned dst_color_blend : BLEND_FACTOR_BITS;
-		unsigned color_blend_op : BLEND_OP_BITS;
-		unsigned src_alpha_blend : BLEND_FACTOR_BITS;
-		unsigned dst_alpha_blend : BLEND_FACTOR_BITS;
-		unsigned alpha_blend_op : BLEND_OP_BITS;
-		unsigned primitive_restart : 1;
-		unsigned topology : 4;
-
-		unsigned wireframe : 1;
-		unsigned subgroup_control_size : 1;
-		unsigned subgroup_full_group : 1;
-		unsigned subgroup_minimum_size_log2 : 3;
-		unsigned subgroup_maximum_size_log2 : 3;
-		unsigned conservative_raster : 1;
-
+		// Word 3
 		uint32_t write_mask;
 	} state;
 	uint32_t words[4];
@@ -251,6 +257,9 @@ struct CommandBufferSavedState
 struct DeferredPipelineCompile
 {
 	Program *program;
+	const PipelineLayout *layout;
+	std::vector<Program *> program_group;
+
 	const RenderPass *compatible_render_pass;
 	PipelineState static_state;
 	PotentialState potential_static_state;
@@ -281,6 +290,9 @@ public:
 		AsyncCompute = QUEUE_INDEX_COMPUTE,
 		AsyncTransfer = QUEUE_INDEX_TRANSFER,
 		VideoDecode = QUEUE_INDEX_VIDEO_DECODE,
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+		VideoEncode = QUEUE_INDEX_VIDEO_ENCODE,
+#endif
 		AsyncGraphics = QUEUE_INDEX_COUNT, // Aliases with either Generic or AsyncCompute queue
 		Count
 	};
@@ -381,6 +393,16 @@ public:
 	                   VkPipelineStageFlags2 src_stage, VkAccessFlags2 src_access,
 	                   VkPipelineStageFlags2 dst_stage, VkAccessFlags2 dst_access);
 
+	void image_barrier_acquire(const Image &image,
+	                           VkImageLayout old_layout, VkImageLayout new_layout,
+	                           VkPipelineStageFlags2 src_stage, uint32_t src_queue_family,
+	                           VkPipelineStageFlags2 dst_stage, VkAccessFlags2 dst_access);
+
+	void image_barrier_release(const Image &image,
+	                           VkImageLayout old_layout, VkImageLayout new_layout,
+	                           VkPipelineStageFlags2 src_stage, VkAccessFlags2 src_access,
+	                           uint32_t dst_queue_family);
+
 	void buffer_barriers(uint32_t buffer_barriers, const VkBufferMemoryBarrier2 *buffers);
 	void image_barriers(uint32_t image_barriers, const VkImageMemoryBarrier2 *images);
 
@@ -423,11 +445,16 @@ public:
 	                                                                          const RenderPassInfo &rp, unsigned thread_index, unsigned subpass);
 
 	void set_program(Program *program);
+	void set_program_group(Program * const *programs, unsigned num_programs, const PipelineLayout *layout);
 
 #ifdef GRANITE_VULKAN_SYSTEM_HANDLES
 	// Convenience functions for one-off shader binds.
-	void set_program(const std::string &vertex, const std::string &fragment, const std::vector<std::pair<std::string, int>> &defines = {});
-	void set_program(const std::string &compute, const std::vector<std::pair<std::string, int>> &defines = {});
+	void set_program(const std::string &task, const std::string &mesh, const std::string &fragment,
+	                 const std::vector<std::pair<std::string, int>> &defines = {});
+	void set_program(const std::string &vertex, const std::string &fragment,
+	                 const std::vector<std::pair<std::string, int>> &defines = {});
+	void set_program(const std::string &compute,
+	                 const std::vector<std::pair<std::string, int>> &defines = {});
 #endif
 
 	void set_buffer_view(unsigned set, unsigned binding, const BufferView &view);
@@ -483,16 +510,24 @@ public:
 	          uint32_t first_instance = 0);
 	void draw_indexed(uint32_t index_count, uint32_t instance_count = 1, uint32_t first_index = 0,
 	                  int32_t vertex_offset = 0, uint32_t first_instance = 0);
+	void draw_mesh_tasks(uint32_t tasks_x, uint32_t tasks_y, uint32_t tasks_z);
 
 	void dispatch(uint32_t groups_x, uint32_t groups_y, uint32_t groups_z);
 
-	void draw_indirect(const Buffer &buffer, uint32_t offset, uint32_t draw_count, uint32_t stride);
-	void draw_indexed_indirect(const Buffer &buffer, uint32_t offset, uint32_t draw_count, uint32_t stride);
-	void draw_multi_indirect(const Buffer &buffer, uint32_t offset, uint32_t draw_count, uint32_t stride,
-	                         const Buffer &count, uint32_t count_offset);
-	void draw_indexed_multi_indirect(const Buffer &buffer, uint32_t offset, uint32_t draw_count, uint32_t stride,
-	                                 const Buffer &count, uint32_t count_offset);
-	void dispatch_indirect(const Buffer &buffer, uint32_t offset);
+	void draw_indirect(const Buffer &buffer, VkDeviceSize offset, uint32_t draw_count, uint32_t stride);
+	void draw_indexed_indirect(const Buffer &buffer, VkDeviceSize offset, uint32_t draw_count, uint32_t stride);
+	void draw_multi_indirect(const Buffer &buffer, VkDeviceSize offset, uint32_t draw_count, uint32_t stride,
+	                         const Buffer &count, VkDeviceSize count_offset);
+	void draw_indexed_multi_indirect(const Buffer &buffer, VkDeviceSize offset, uint32_t draw_count, uint32_t stride,
+	                                 const Buffer &count, VkDeviceSize count_offset);
+	void dispatch_indirect(const Buffer &buffer, VkDeviceSize offset);
+	void draw_mesh_tasks_indirect(const Buffer &buffer, VkDeviceSize offset, uint32_t draw_count, uint32_t stride);
+	void draw_mesh_tasks_multi_indirect(const Buffer &buffer, VkDeviceSize offset, uint32_t draw_count, uint32_t stride,
+										const Buffer &count, VkDeviceSize count_offset);
+	void execute_indirect_commands(const IndirectLayout *indirect_layout,
+	                               uint32_t sequences,
+	                               const Buffer &indirect, VkDeviceSize offset,
+	                               const Buffer *count, size_t count_offset);
 
 	void set_opaque_state();
 	void set_quad_state();
@@ -667,20 +702,51 @@ public:
 		set_specialization_constant(index, uint32_t(value));
 	}
 
-	inline void enable_subgroup_size_control(bool subgroup_control_size)
+	inline void enable_subgroup_size_control(bool subgroup_control_size,
+	                                         VkShaderStageFlagBits stage = VK_SHADER_STAGE_COMPUTE_BIT)
 	{
-		SET_STATIC_STATE(subgroup_control_size);
+		VK_ASSERT(stage == VK_SHADER_STAGE_TASK_BIT_EXT ||
+		          stage == VK_SHADER_STAGE_MESH_BIT_EXT ||
+		          stage == VK_SHADER_STAGE_COMPUTE_BIT);
+
+		if (stage != VK_SHADER_STAGE_TASK_BIT_EXT)
+		{
+			SET_STATIC_STATE(subgroup_control_size);
+		}
+		else
+		{
+			auto subgroup_control_size_task = subgroup_control_size;
+			SET_STATIC_STATE(subgroup_control_size_task);
+		}
 	}
 
 	inline void set_subgroup_size_log2(bool subgroup_full_group,
 	                                   uint8_t subgroup_minimum_size_log2,
-	                                   uint8_t subgroup_maximum_size_log2)
+	                                   uint8_t subgroup_maximum_size_log2,
+	                                   VkShaderStageFlagBits stage = VK_SHADER_STAGE_COMPUTE_BIT)
 	{
+		VK_ASSERT(stage == VK_SHADER_STAGE_TASK_BIT_EXT ||
+		          stage == VK_SHADER_STAGE_MESH_BIT_EXT ||
+		          stage == VK_SHADER_STAGE_COMPUTE_BIT);
+
 		VK_ASSERT(subgroup_minimum_size_log2 < 8);
 		VK_ASSERT(subgroup_maximum_size_log2 < 8);
-		SET_STATIC_STATE(subgroup_full_group);
-		SET_STATIC_STATE(subgroup_minimum_size_log2);
-		SET_STATIC_STATE(subgroup_maximum_size_log2);
+
+		if (stage != VK_SHADER_STAGE_TASK_BIT_EXT)
+		{
+			SET_STATIC_STATE(subgroup_full_group);
+			SET_STATIC_STATE(subgroup_minimum_size_log2);
+			SET_STATIC_STATE(subgroup_maximum_size_log2);
+		}
+		else
+		{
+			auto subgroup_full_group_task = subgroup_full_group;
+			auto subgroup_minimum_size_log2_task = subgroup_minimum_size_log2;
+			auto subgroup_maximum_size_log2_task = subgroup_maximum_size_log2;
+			SET_STATIC_STATE(subgroup_full_group_task);
+			SET_STATIC_STATE(subgroup_minimum_size_log2_task);
+			SET_STATIC_STATE(subgroup_maximum_size_log2_task);
+		}
 	}
 
 	inline void set_conservative_rasterization(bool conservative_raster)
@@ -731,8 +797,6 @@ public:
 	}
 
 	QueryPoolHandle write_timestamp(VkPipelineStageFlags2 stage);
-	void add_checkpoint(const char *tag);
-	void set_backtrace_checkpoint();
 
 	// Used when recording command buffers in a thread, and submitting them in a different thread.
 	// Need to make sure that no further commands on the VkCommandBuffer happen.
@@ -751,11 +815,15 @@ public:
 	{
 		Sync,
 		FailOnCompileRequired,
-		AsyncThread
+		AsyncThread,
+		IndirectBindable
 	};
 	static Pipeline build_graphics_pipeline(Device *device, const DeferredPipelineCompile &compile, CompileMode mode);
 	static Pipeline build_compute_pipeline(Device *device, const DeferredPipelineCompile &compile, CompileMode mode);
 	bool flush_pipeline_state_without_blocking();
+
+	VkPipeline get_current_compute_pipeline();
+	VkPipeline get_current_graphics_pipeline();
 
 private:
 	friend class Util::ObjectPool<CommandBuffer>;
@@ -778,7 +846,6 @@ private:
 
 	Pipeline current_pipeline = {};
 	VkPipelineLayout current_pipeline_layout = VK_NULL_HANDLE;
-	PipelineLayout *current_layout = nullptr;
 	VkSubpassContents current_contents = VK_SUBPASS_CONTENTS_INLINE;
 	unsigned thread_index = 0;
 
@@ -794,6 +861,7 @@ private:
 	bool is_compute = true;
 	bool is_secondary = false;
 	bool is_ended = false;
+	bool framebuffer_is_multiview = false;
 
 	void set_dirty(CommandBufferDirtyFlags flags)
 	{
@@ -814,8 +882,8 @@ private:
 	              "Hashable pipeline state is not large enough!");
 #endif
 
-	bool flush_render_state(bool synchronous);
-	bool flush_compute_state(bool synchronous);
+	VkPipeline flush_render_state(bool synchronous);
+	VkPipeline flush_compute_state(bool synchronous);
 	void clear_render_state();
 
 	bool flush_graphics_pipeline(bool synchronous);
@@ -848,9 +916,16 @@ private:
 
 	void bind_pipeline(VkPipelineBindPoint bind_point, VkPipeline pipeline, uint32_t active_dynamic_state);
 
-	static void update_hash_graphics_pipeline(DeferredPipelineCompile &compile, uint32_t &active_vbos);
+	static void update_hash_graphics_pipeline(DeferredPipelineCompile &compile, CompileMode mode, uint32_t *active_vbos);
 	static void update_hash_compute_pipeline(DeferredPipelineCompile &compile);
 	void set_surface_transform_specialization_constants();
+
+	void set_program_layout(const PipelineLayout *layout);
+
+	static bool setup_subgroup_size_control(Device &device, VkPipelineShaderStageCreateInfo &stage_info,
+	                                        VkPipelineShaderStageRequiredSubgroupSizeCreateInfoEXT &required_info,
+	                                        VkShaderStageFlagBits stage,
+	                                        bool full_group, unsigned min_size_log2, unsigned max_size_log2);
 };
 
 #ifdef GRANITE_VULKAN_SYSTEM_HANDLES

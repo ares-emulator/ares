@@ -2,9 +2,9 @@
 // File: vk_icd.h
 //
 /*
- * Copyright (c) 2015-2016, 2022 The Khronos Group Inc.
- * Copyright (c) 2015-2016, 2022 Valve Corporation
- * Copyright (c) 2015-2016, 2022 LunarG, Inc.
+ * Copyright (c) 2015-2023 LunarG, Inc.
+ * Copyright (c) 2015-2023 The Khronos Group Inc.
+ * Copyright (c) 2015-2023 Valve Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,7 @@
  * limitations under the License.
  *
  */
-
-#ifndef VKICD_H
-#define VKICD_H
+#pragma once
 
 #include "vulkan.h"
 #include <stdbool.h>
@@ -80,7 +78,7 @@ extern "C" {
 #endif
     VKAPI_ATTR VkResult VKAPI_CALL vk_icdNegotiateLoaderICDInterfaceVersion(uint32_t* pVersion);
     VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_icdGetInstanceProcAddr(VkInstance instance, const char* pName);
-    VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_icdGetPhysicalDeviceProcAddr(VkInstance isntance, const char* pName);
+    VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_icdGetPhysicalDeviceProcAddr(VkInstance instance, const char* pName);
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     VKAPI_ATTR VkResult VKAPI_CALL vk_icdEnumerateAdapterPhysicalDevices(VkInstance instance, LUID adapterLUID,
         uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices);
@@ -258,5 +256,3 @@ typedef struct {
   VkIcdSurfaceBase base;
 } VkIcdSurfaceImagePipe;
 #endif // VK_USE_PLATFORM_FUCHSIA
-
-#endif  // VKICD_H

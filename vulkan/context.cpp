@@ -40,8 +40,53 @@
 
 //#undef VULKAN_DEBUG
 
+#ifdef GRANITE_VULKAN_PROFILES
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
+
+// We need to make sure profiles implementation sees volk symbols, not loader.
+#include "vulkan/vulkan_profiles.cpp"
+// Ideally there would be a vpQueryProfile which returns a const pointer to static VpProfileProperties,
+// so we wouldn't have to do this.
+struct ProfileHolder
+{
+	explicit ProfileHolder(const std::string &name)
+	{
+		if (name.empty())
+			return;
+
+		uint32_t count;
+		vpGetProfiles(&count, nullptr);
+		props.resize(count);
+		vpGetProfiles(&count, props.data());
+
+		for (auto &prop : props)
+			if (name == prop.profileName)
+				profile = &prop;
+	}
+	Util::SmallVector<VpProfileProperties> props;
+	const VpProfileProperties *profile = nullptr;
+};
+
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+#endif
+
+#define NV_DRIVER_VERSION_MAJOR(v) (uint32_t(v) >> 22)
+
 namespace Vulkan
 {
+static constexpr ContextCreationFlags video_context_flags =
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+		CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT | CONTEXT_CREATION_ENABLE_VIDEO_ENCODE_BIT;
+#else
+		CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT;
+#endif
+
 void Context::set_instance_factory(InstanceFactory *factory)
 {
 	instance_factory = factory;
@@ -262,6 +307,10 @@ void Context::destroy()
 		vkDestroyInstance(instance, nullptr);
 }
 
+Context::Context()
+{
+}
+
 Context::~Context()
 {
 	destroy();
@@ -349,12 +398,138 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkan_messenger_cb(
 }
 #endif
 
+void Context::set_required_profile(const char *profile, bool strict)
+{
+	if (profile)
+		required_profile = profile;
+	else
+		required_profile.clear();
+	required_profile_strict = strict;
+}
+
+bool Context::init_profile()
+{
+#ifdef GRANITE_VULKAN_PROFILES
+	if (required_profile.empty())
+	{
+		if (const char *env = getenv("GRANITE_VULKAN_PROFILE"))
+		{
+			required_profile = env;
+			LOGI("Overriding profile: %s\n", env);
+		}
+
+		if (const char *strict_env = getenv("GRANITE_VULKAN_PROFILE_STRICT"))
+		{
+			required_profile_strict = strtoul(strict_env, nullptr, 0) != 0;
+			LOGI("Overriding profile strictness: %u\n", required_profile_strict);
+		}
+	}
+
+	if (required_profile.empty())
+		return true;
+
+	ProfileHolder profile{required_profile};
+
+	if (!profile.profile)
+	{
+		LOGW("No profile matches %s.\n", required_profile.c_str());
+		return false;
+	}
+
+	VkBool32 supported = VK_FALSE;
+	if (vpGetInstanceProfileSupport(nullptr, profile.profile, &supported) != VK_SUCCESS || !supported)
+	{
+		LOGE("Profile %s is not supported.\n", required_profile.c_str());
+		return false;
+	}
+#endif
+
+	return true;
+}
+
+VkResult Context::create_instance_from_profile(const VkInstanceCreateInfo &info, VkInstance *pInstance)
+{
+#ifdef GRANITE_VULKAN_PROFILES
+	ProfileHolder holder{required_profile};
+	if (!holder.profile)
+		return VK_ERROR_INITIALIZATION_FAILED;
+
+	if (instance_factory)
+	{
+		// Can override vkGetInstanceProcAddr (macro define) and override vkCreateInstance
+		// to a TLS magic trampoline if we really have to.
+		LOGE("Instance factory currently not supported with profiles.\n");
+		return VK_ERROR_INITIALIZATION_FAILED;
+	}
+
+	VpInstanceCreateInfo vp_info = {};
+	vp_info.pCreateInfo = &info;
+	vp_info.pProfile = holder.profile;
+	// Any extra extensions we add for instances are essential, like WSI stuff.
+	vp_info.flags = VP_INSTANCE_CREATE_MERGE_EXTENSIONS_BIT;
+
+	VkResult result;
+	if ((result = vpCreateInstance(&vp_info, nullptr, pInstance)) != VK_SUCCESS)
+		LOGE("Failed to create instance from profile.\n");
+
+	return result;
+#else
+	(void)info;
+	(void)pInstance;
+	return VK_ERROR_INITIALIZATION_FAILED;
+#endif
+}
+
+VkResult Context::create_device_from_profile(const VkDeviceCreateInfo &info, VkDevice *pDevice)
+{
+#ifdef GRANITE_VULKAN_PROFILES
+	ProfileHolder holder{required_profile};
+	if (!holder.profile)
+		return VK_ERROR_INITIALIZATION_FAILED;
+
+	if (device_factory)
+	{
+		// Need TLS hackery like instance.
+		LOGE("Device factory currently not supported with profiles.\n");
+		return VK_ERROR_INITIALIZATION_FAILED;
+	}
+
+	auto tmp_info = info;
+
+	VpDeviceCreateInfo vp_info = {};
+	vp_info.pProfile = holder.profile;
+	vp_info.pCreateInfo = &tmp_info;
+	vp_info.flags |= VP_DEVICE_CREATE_DISABLE_ROBUST_ACCESS;
+
+	if (required_profile_strict)
+	{
+		tmp_info.enabledExtensionCount = 0;
+		tmp_info.ppEnabledExtensionNames = nullptr;
+		tmp_info.pNext = nullptr;
+		tmp_info.pEnabledFeatures = nullptr;
+	}
+	else
+	{
+		vp_info.flags = VP_DEVICE_CREATE_MERGE_EXTENSIONS_BIT | VP_DEVICE_CREATE_OVERRIDE_FEATURES_BIT;
+	}
+
+	VkResult result;
+	if ((result = vpCreateDevice(gpu, &vp_info, nullptr, pDevice)) != VK_SUCCESS)
+		LOGE("Failed to create device from profile.\n");
+	return result;
+#else
+	(void)info;
+	(void)pDevice;
+	return VK_ERROR_INITIALIZATION_FAILED;
+#endif
+}
+
 bool Context::create_instance(const char * const *instance_ext, uint32_t instance_ext_count, ContextCreationFlags flags)
 {
 	uint32_t target_instance_version = user_application_info.get_application_info().apiVersion;
 
 	// Target an instance version of at least 1.3 for FFmpeg decode.
-	if (flags & CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT)
+	if ((flags & video_context_flags) != 0)
 		if (target_instance_version < VK_API_VERSION_1_3)
 			target_instance_version = VK_API_VERSION_1_3;
 
@@ -489,6 +664,18 @@ bool Context::create_instance(const char * const *instance_ext, uint32_t instanc
 	for (auto *ext_name : instance_exts)
 		LOGI("Enabling instance extension: %s.\n", ext_name);
 
+#ifdef GRANITE_VULKAN_PROFILES
+	if (!init_profile())
+	{
+		LOGE("Profile is not supported.\n");
+		return false;
+	}
+
+	if (instance == VK_NULL_HANDLE && !required_profile.empty())
+		if (create_instance_from_profile(info, &instance) != VK_SUCCESS)
+			return false;
+#endif
+
 	// instance != VK_NULL_HANDLE here is deprecated and somewhat broken.
 	// For libretro Vulkan context negotiation v1.
 	if (instance == VK_NULL_HANDLE)
@@ -559,15 +746,31 @@ QueueInfo::QueueInfo()
 		index = VK_QUEUE_FAMILY_IGNORED;
 }
 
-bool Context::physical_device_supports_surface(VkPhysicalDevice gpu, VkSurfaceKHR surface)
+bool Context::physical_device_supports_surface_and_profile(VkPhysicalDevice candidate_gpu, VkSurfaceKHR surface) const
 {
+#ifdef GRANITE_VULKAN_PROFILES
+	if (!required_profile.empty())
+	{
+		ProfileHolder holder{required_profile};
+		if (!holder.profile)
+			return false;
+
+		VkBool32 supported = VK_FALSE;
+		if (vpGetPhysicalDeviceProfileSupport(instance, candidate_gpu, holder.profile, &supported) != VK_SUCCESS ||
+		    !supported)
+		{
+			return false;
+		}
+	}
+#endif
+
 	if (surface == VK_NULL_HANDLE)
 		return true;
 
 	uint32_t family_count = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(gpu, &family_count, nullptr);
+	vkGetPhysicalDeviceQueueFamilyProperties(candidate_gpu, &family_count, nullptr);
 	Util::SmallVector<VkQueueFamilyProperties> props(family_count);
-	vkGetPhysicalDeviceQueueFamilyProperties(gpu, &family_count, props.data());
+	vkGetPhysicalDeviceQueueFamilyProperties(candidate_gpu, &family_count, props.data());
 
 	for (uint32_t i = 0; i < family_count; i++)
 	{
@@ -575,7 +778,7 @@ bool Context::physical_device_supports_surface(VkPhysicalDevice gpu, VkSurfaceKH
 		if ((props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)
 		{
 			VkBool32 supported = VK_FALSE;
-			if (vkGetPhysicalDeviceSurfaceSupportKHR(gpu, i, surface, &supported) == VK_SUCCESS && supported)
+			if (vkGetPhysicalDeviceSurfaceSupportKHR(candidate_gpu, i, surface, &supported) == VK_SUCCESS && supported)
 				return true;
 		}
 	}
@@ -627,7 +830,7 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 
 		if (gpu != VK_NULL_HANDLE)
 		{
-			if (!physical_device_supports_surface(gpu, surface))
+			if (!physical_device_supports_surface_and_profile(gpu, surface))
 			{
 				LOGE("Selected physical device which does not support surface.\n");
 				gpu = VK_NULL_HANDLE;
@@ -641,7 +844,7 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 			for (size_t i = gpus.size(); i; i--)
 			{
 				unsigned score = device_score(gpus[i - 1]);
-				if (score >= max_score && physical_device_supports_surface(gpus[i - 1], surface))
+				if (score >= max_score && physical_device_supports_surface_and_profile(gpus[i - 1], surface))
 				{
 					max_score = score;
 					gpu = gpus[i - 1];
@@ -655,17 +858,34 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 			return false;
 		}
 	}
-	else if (!physical_device_supports_surface(gpu, surface))
+	else if (!physical_device_supports_surface_and_profile(gpu, surface))
 	{
 		LOGE("Selected physical device does not support surface.\n");
 		return false;
 	}
 
-	uint32_t ext_count = 0;
-	vkEnumerateDeviceExtensionProperties(gpu, nullptr, &ext_count, nullptr);
-	std::vector<VkExtensionProperties> queried_extensions(ext_count);
-	if (ext_count)
-		vkEnumerateDeviceExtensionProperties(gpu, nullptr, &ext_count, queried_extensions.data());
+	std::vector<VkExtensionProperties> queried_extensions;
+
+#ifdef GRANITE_VULKAN_PROFILES
+	// Only allow extensions that profile declares.
+	ProfileHolder profile{required_profile};
+	if (profile.profile && required_profile_strict)
+	{
+		uint32_t ext_count = 0;
+		vpGetProfileDeviceExtensionProperties(profile.profile, &ext_count, nullptr);
+		queried_extensions.resize(ext_count);
+		if (ext_count)
+			vpGetProfileDeviceExtensionProperties(profile.profile, &ext_count, queried_extensions.data());
+	}
+	else
+#endif
+	{
+		uint32_t ext_count = 0;
+		vkEnumerateDeviceExtensionProperties(gpu, nullptr, &ext_count, nullptr);
+		queried_extensions.resize(ext_count);
+		if (ext_count)
+			vkEnumerateDeviceExtensionProperties(gpu, nullptr, &ext_count, queried_extensions.data());
+	}
 
 	const auto has_extension = [&](const char *name) -> bool {
 		auto itr = find_if(begin(queried_extensions), end(queried_extensions), [name](const VkExtensionProperties &e) -> bool {
@@ -691,9 +911,7 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	LOGI("Using Vulkan GPU: %s\n", gpu_props.deviceName);
 
 	// FFmpeg integration requires Vulkan 1.3 core for physical device.
-	const uint32_t minimum_api_version =
-			(flags & CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT) ?
-			VK_API_VERSION_1_3 : VK_API_VERSION_1_1;
+	const uint32_t minimum_api_version = (flags & video_context_flags) ? VK_API_VERSION_1_3 : VK_API_VERSION_1_1;
 
 	if (gpu_props.apiVersion < minimum_api_version)
 	{
@@ -709,11 +927,8 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	Util::SmallVector<VkQueueFamilyProperties2> queue_props(queue_family_count);
 	Util::SmallVector<VkQueueFamilyVideoPropertiesKHR> video_queue_props2(queue_family_count);
 
-	if ((flags & CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT) != 0 &&
-	    has_extension(VK_KHR_VIDEO_QUEUE_EXTENSION_NAME))
-	{
+	if ((flags & video_context_flags) != 0 && has_extension(VK_KHR_VIDEO_QUEUE_EXTENSION_NAME))
 		ext.supports_video_queue = true;
-	}
 
 	for (uint32_t i = 0; i < queue_family_count; i++)
 	{
@@ -810,12 +1025,29 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 
 	if (ext.supports_video_queue)
 	{
-		if (!find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_VIDEO_DECODE], queue_indices[QUEUE_INDEX_VIDEO_DECODE],
-		                       VK_QUEUE_VIDEO_DECODE_BIT_KHR, 0, 0.5f))
+		if ((flags & CONTEXT_CREATION_ENABLE_VIDEO_DECODE_BIT) != 0)
 		{
-			queue_info.family_indices[QUEUE_INDEX_VIDEO_DECODE] = VK_QUEUE_FAMILY_IGNORED;
-			queue_indices[QUEUE_INDEX_VIDEO_DECODE] = UINT32_MAX;
+			if (!find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_VIDEO_DECODE],
+			                       queue_indices[QUEUE_INDEX_VIDEO_DECODE],
+			                       VK_QUEUE_VIDEO_DECODE_BIT_KHR, 0, 0.5f))
+			{
+				queue_info.family_indices[QUEUE_INDEX_VIDEO_DECODE] = VK_QUEUE_FAMILY_IGNORED;
+				queue_indices[QUEUE_INDEX_VIDEO_DECODE] = UINT32_MAX;
+			}
 		}
+
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+		if ((flags & CONTEXT_CREATION_ENABLE_VIDEO_ENCODE_BIT) != 0)
+		{
+			if (!find_vacant_queue(queue_info.family_indices[QUEUE_INDEX_VIDEO_ENCODE],
+			                       queue_indices[QUEUE_INDEX_VIDEO_ENCODE],
+			                       VK_QUEUE_VIDEO_ENCODE_BIT_KHR, 0, 0.5f))
+			{
+				queue_info.family_indices[QUEUE_INDEX_VIDEO_ENCODE] = VK_QUEUE_FAMILY_IGNORED;
+				queue_indices[QUEUE_INDEX_VIDEO_ENCODE] = UINT32_MAX;
+			}
+		}
+#endif
 	}
 
 	VkDeviceCreateInfo device_info = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
@@ -849,10 +1081,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 		         strcmp(required_device_extensions[i], VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME) == 0)
 		{
 			flags |= CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT;
-		}
-		else if (strcmp(required_device_extensions[i], VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME) == 0)
-		{
-			flags &= ~CONTEXT_CREATION_DISABLE_BINDLESS_BIT;
 		}
 	}
 
@@ -896,14 +1124,6 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	{
 		ext.supports_full_screen_exclusive = true;
 		enabled_extensions.push_back(VK_EXT_FULL_SCREEN_EXCLUSIVE_EXTENSION_NAME);
-	}
-#endif
-
-#ifdef VULKAN_DEBUG
-	if (has_extension(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME))
-	{
-		ext.supports_nv_device_diagnostic_checkpoints = true;
-		enabled_extensions.push_back(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME);
 	}
 #endif
 
@@ -1009,6 +1229,41 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 				}
 			}
 		}
+
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+		if ((flags & CONTEXT_CREATION_ENABLE_VIDEO_ENCODE_BIT) != 0 &&
+		    has_extension(VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME))
+		{
+			enabled_extensions.push_back(VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME);
+			ext.supports_video_encode_queue = true;
+
+			if ((flags & CONTEXT_CREATION_ENABLE_VIDEO_H264_BIT) != 0 &&
+			    has_extension(VK_EXT_VIDEO_ENCODE_H264_EXTENSION_NAME))
+			{
+				enabled_extensions.push_back(VK_EXT_VIDEO_ENCODE_H264_EXTENSION_NAME);
+
+				if (queue_info.family_indices[QUEUE_INDEX_VIDEO_ENCODE] != VK_QUEUE_FAMILY_IGNORED)
+				{
+					ext.supports_video_encode_h264 =
+							(video_queue_props2[queue_info.family_indices[QUEUE_INDEX_VIDEO_ENCODE]].videoCodecOperations &
+							 VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_EXT) != 0;
+				}
+			}
+
+			if ((flags & CONTEXT_CREATION_ENABLE_VIDEO_H265_BIT) != 0 &&
+			    has_extension(VK_EXT_VIDEO_ENCODE_H265_EXTENSION_NAME))
+			{
+				enabled_extensions.push_back(VK_EXT_VIDEO_ENCODE_H265_EXTENSION_NAME);
+
+				if (queue_info.family_indices[QUEUE_INDEX_VIDEO_ENCODE] != VK_QUEUE_FAMILY_IGNORED)
+				{
+					ext.supports_video_encode_h265 =
+							(video_queue_props2[queue_info.family_indices[QUEUE_INDEX_VIDEO_ENCODE]].videoCodecOperations &
+							 VK_VIDEO_CODEC_OPERATION_ENCODE_H265_BIT_EXT) != 0;
+				}
+			}
+		}
+#endif
 	}
 
 	pdf2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
@@ -1037,8 +1292,13 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	ext.astc_decode_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ASTC_DECODE_FEATURES_EXT };
 	ext.astc_hdr_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES_EXT };
 	ext.pipeline_creation_cache_control_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT };
+	ext.pageable_device_local_memory_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT };
+	ext.mesh_shader_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT };
+	ext.shader_subgroup_extended_types_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES };
 
 	ext.compute_shader_derivative_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COMPUTE_SHADER_DERIVATIVES_FEATURES_NV };
+	ext.device_generated_commands_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_FEATURES_NV };
+	ext.buffer_device_address_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_KHR };
 
 	void **ppNext = &pdf2.pNext;
 
@@ -1119,7 +1379,7 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 		ppNext = &ext.timeline_semaphore_features.pNext;
 	}
 
-	if ((flags & CONTEXT_CREATION_DISABLE_BINDLESS_BIT) == 0 && has_extension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME))
+	if (has_extension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME))
 	{
 		enabled_extensions.push_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
 		*ppNext = &ext.descriptor_indexing_features;
@@ -1177,16 +1437,57 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 		ppNext = &ext.pipeline_creation_cache_control_features.pNext;
 	}
 
+	if (has_extension(VK_EXT_PAGEABLE_DEVICE_LOCAL_MEMORY_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_EXT_PAGEABLE_DEVICE_LOCAL_MEMORY_EXTENSION_NAME);
+		*ppNext = &ext.pageable_device_local_memory_features;
+		ppNext = &ext.pageable_device_local_memory_features.pNext;
+	}
+
 	if (has_extension(VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME))
 	{
 		ext.supports_format_feature_flags2 = true;
 		enabled_extensions.push_back(VK_KHR_FORMAT_FEATURE_FLAGS_2_EXTENSION_NAME);
 	}
 
+	if (has_extension(VK_NV_DEVICE_GENERATED_COMMANDS_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_NV_DEVICE_GENERATED_COMMANDS_EXTENSION_NAME);
+		*ppNext = &ext.device_generated_commands_features;
+		ppNext = &ext.device_generated_commands_features.pNext;
+	}
+
+	if (has_extension(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
+		*ppNext = &ext.buffer_device_address_features;
+		ppNext = &ext.buffer_device_address_features.pNext;
+	}
+
+	if (has_extension(VK_EXT_MESH_SHADER_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_EXT_MESH_SHADER_EXTENSION_NAME);
+		*ppNext = &ext.mesh_shader_features;
+		ppNext = &ext.mesh_shader_features.pNext;
+	}
+
+	if (has_extension(VK_KHR_SPIRV_1_4_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_KHR_SPIRV_1_4_EXTENSION_NAME);
+		ext.supports_spirv_1_4 = true;
+	}
+
+	if (has_extension(VK_KHR_SHADER_SUBGROUP_EXTENDED_TYPES_EXTENSION_NAME))
+	{
+		enabled_extensions.push_back(VK_KHR_SHADER_SUBGROUP_EXTENDED_TYPES_EXTENSION_NAME);
+		*ppNext = &ext.shader_subgroup_extended_types_features;
+		ppNext = &ext.shader_subgroup_extended_types_features.pNext;
+	}
+
 	if ((flags & CONTEXT_CREATION_ENABLE_ADVANCED_WSI_BIT) != 0 && requires_swapchain)
 	{
 		bool broken_present_wait = ext.driver_properties.driverID == VK_DRIVER_ID_NVIDIA_PROPRIETARY &&
-		                           VK_VERSION_MAJOR(gpu_props.driverVersion) == 525;
+		                           NV_DRIVER_VERSION_MAJOR(gpu_props.driverVersion) < 535;
 
 		if (broken_present_wait)
 		{
@@ -1223,7 +1524,20 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 		}
 	}
 
-	vkGetPhysicalDeviceFeatures2(gpu, &pdf2);
+#ifdef GRANITE_VULKAN_PROFILES
+	// Override any features in the profile in strict mode.
+	if (profile.profile && required_profile_strict)
+	{
+		vpGetProfileFeatures(profile.profile, &pdf2);
+	}
+	else
+#endif
+	{
+		vkGetPhysicalDeviceFeatures2(gpu, &pdf2);
+	}
+
+	ext.buffer_device_address_features.bufferDeviceAddressCaptureReplay = VK_FALSE;
+	ext.buffer_device_address_features.bufferDeviceAddressMultiDevice = VK_FALSE;
 
 	// Enable device features we might care about.
 	{
@@ -1281,7 +1595,7 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 
 	device_info.pNext = &pdf2;
 
-	if (ext.supports_external && has_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME))
+	if (has_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME))
 	{
 		ext.supports_external_memory_host = true;
 		enabled_extensions.push_back(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
@@ -1298,6 +1612,8 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	ext.conservative_rasterization_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT };
 	ext.float_control_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES_KHR };
 	ext.id_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES };
+	ext.device_generated_commands_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_PROPERTIES_NV };
+	ext.mesh_shader_properties = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_EXT };
 
 	ppNext = &props.pNext;
 
@@ -1324,6 +1640,12 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 		ppNext = &ext.descriptor_indexing_properties.pNext;
 	}
 
+	if (has_extension(VK_NV_DEVICE_GENERATED_COMMANDS_EXTENSION_NAME))
+	{
+		*ppNext = &ext.device_generated_commands_properties;
+		ppNext = &ext.device_generated_commands_properties.pNext;
+	}
+
 	if (ext.supports_conservative_rasterization)
 	{
 		*ppNext = &ext.conservative_rasterization_properties;
@@ -1342,7 +1664,19 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 		ppNext = &ext.id_properties.pNext;
 	}
 
+	if (has_extension(VK_EXT_MESH_SHADER_EXTENSION_NAME))
+	{
+		*ppNext = &ext.mesh_shader_properties;
+		ppNext = &ext.mesh_shader_properties.pNext;
+	}
+
 	vkGetPhysicalDeviceProperties2(gpu, &props);
+
+#ifdef GRANITE_VULKAN_PROFILES
+	// Override any properties in the profile in strict mode.
+	if (profile.profile && required_profile_strict)
+		vpGetProfileProperties(profile.profile, &props);
+#endif
 
 	device_info.enabledExtensionCount = enabled_extensions.size();
 	device_info.ppEnabledExtensionNames = enabled_extensions.empty() ? nullptr : enabled_extensions.data();
@@ -1350,14 +1684,24 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	for (auto *enabled_extension : enabled_extensions)
 		LOGI("Enabling device extension: %s.\n", enabled_extension);
 
-	if (device_factory)
+#ifdef GRANITE_VULKAN_PROFILES
+	if (!required_profile.empty())
 	{
-		device = device_factory->create_device(gpu, &device_info);
-		if (device == VK_NULL_HANDLE)
+		if (create_device_from_profile(device_info, &device) != VK_SUCCESS)
 			return false;
 	}
-	else if (vkCreateDevice(gpu, &device_info, nullptr, &device) != VK_SUCCESS)
-		return false;
+	else
+#endif
+	{
+		if (device_factory)
+		{
+			device = device_factory->create_device(gpu, &device_info);
+			if (device == VK_NULL_HANDLE)
+				return false;
+		}
+		else if (vkCreateDevice(gpu, &device_info, nullptr, &device) != VK_SUCCESS)
+			return false;
+	}
 
 	enabled_device_extensions = std::move(enabled_extensions);
 	ext.device_extensions = enabled_device_extensions.data();
@@ -1394,7 +1738,13 @@ bool Context::create_device(VkPhysicalDevice gpu_, VkSurfaceKHR surface,
 	}
 
 #ifdef VULKAN_DEBUG
-	static const char *family_names[QUEUE_INDEX_COUNT] = { "Graphics", "Compute", "Transfer", "Video decode" };
+
+	static const char *family_names[QUEUE_INDEX_COUNT] = { "Graphics", "Compute", "Transfer", "Video decode",
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+	                                                       "Video encode",
+#endif
+	};
+
 	for (int i = 0; i < QUEUE_INDEX_COUNT; i++)
 		if (queue_info.family_indices[i] != VK_QUEUE_FAMILY_IGNORED)
 			LOGI("%s queue: family %u, index %u.\n", family_names[i], queue_info.family_indices[i], queue_indices[i]);
