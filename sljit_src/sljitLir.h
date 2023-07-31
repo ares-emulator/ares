@@ -72,6 +72,7 @@
 #include "sljitConfigPre.h"
 #endif /* SLJIT_HAVE_CONFIG_PRE */
 
+#include "sljitConfigCPU.h"
 #include "sljitConfig.h"
 
 /* The following header file defines useful macros for fine tuning
@@ -231,6 +232,10 @@ extern "C" {
 #define SLJIT_FR3	4
 #define SLJIT_FR4	5
 #define SLJIT_FR5	6
+#define SLJIT_FR6	7
+#define SLJIT_FR7	8
+#define SLJIT_FR8	9
+#define SLJIT_FR9	10
 /* All FR registers provided by the architecture can be accessed by SLJIT_FR(i)
    The i parameter must be >= 0 and < SLJIT_NUMBER_OF_FLOAT_REGISTERS. */
 #define SLJIT_FR(i)	(1 + (i))
@@ -242,6 +247,10 @@ extern "C" {
 #define SLJIT_FS3	(SLJIT_NUMBER_OF_FLOAT_REGISTERS - 3)
 #define SLJIT_FS4	(SLJIT_NUMBER_OF_FLOAT_REGISTERS - 4)
 #define SLJIT_FS5	(SLJIT_NUMBER_OF_FLOAT_REGISTERS - 5)
+#define SLJIT_FS6	(SLJIT_NUMBER_OF_FLOAT_REGISTERS - 6)
+#define SLJIT_FS7	(SLJIT_NUMBER_OF_FLOAT_REGISTERS - 7)
+#define SLJIT_FS8	(SLJIT_NUMBER_OF_FLOAT_REGISTERS - 8)
+#define SLJIT_FS9	(SLJIT_NUMBER_OF_FLOAT_REGISTERS - 9)
 /* All S registers provided by the architecture can be accessed by SLJIT_FS(i)
    The i parameter must be >= 0 and < SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS. */
 #define SLJIT_FS(i)	(SLJIT_NUMBER_OF_FLOAT_REGISTERS - (i))
@@ -517,6 +526,11 @@ struct sljit_compiler {
 	sljit_s32 mode;
 #endif
 
+#if (defined SLJIT_CONFIG_LOONGARCH && SLJIT_CONFIG_LOONGARCH)
+	sljit_s32 cache_arg;
+	sljit_sw cache_argw;
+#endif
+
 #if (defined SLJIT_VERBOSE && SLJIT_VERBOSE)
 	FILE* verbose;
 #endif
@@ -653,6 +667,13 @@ static SLJIT_INLINE sljit_uw sljit_get_generated_code_size(struct sljit_compiler
 #define SLJIT_HAS_COPY_F32		9
 /* [Emulated] Copy from/to f64 operation is available (see sljit_emit_fcopy). */
 #define SLJIT_HAS_COPY_F64		10
+/* [Not emulated] Some SIMD operations are supported by the compiler. */
+#define SLJIT_HAS_SIMD			11
+/* [Not emulated] SIMD registers are mapped to a pair of double precision
+   floating point registers. E.g. passing either SLJIT_FR0 or SLJIT_FR1 to
+   a simd operation represents the same 128 bit register, and both SLJIT_FR0
+   and SLJIT_FR1 are overwritten. */
+#define SLJIT_SIMD_REGS_ARE_PAIRS	12
 
 #if (defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86)
 /* [Not emulated] SSE2 support is available on x86. */
@@ -840,6 +861,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_return_to(struct sljit_compiler *c
    riscv:  [reg+imm], -2048 <= imm <= 2047
            Write-back is not supported
    s390x:  [reg+imm], -2^19 <= imm < 2^19
+           [reg+reg] is supported
+           Write-back is not supported
+   loongarch:  [reg+imm], -2048 <= imm <= 2047
            [reg+reg] is supported
            Write-back is not supported
 */
@@ -1363,6 +1387,26 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop2(struct sljit_compiler *compil
 	sljit_s32 src1, sljit_sw src1w,
 	sljit_s32 src2, sljit_sw src2w);
 
+/* Starting index of opcodes for sljit_emit_fop2r. */
+#define SLJIT_FOP2R_BASE		168
+
+/* Flags: - (may destroy flags) */
+#define SLJIT_COPYSIGN_F64		(SLJIT_FOP2R_BASE + 0)
+#define SLJIT_COPYSIGN_F32		(SLJIT_COPYSIGN_F64 | SLJIT_32)
+
+/* Similar to sljit_emit_fop2, except the destination is always a register. */
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop2r(struct sljit_compiler *compiler, sljit_s32 op,
+	sljit_s32 dst_freg,
+	sljit_s32 src1, sljit_sw src1w,
+	sljit_s32 src2, sljit_sw src2w);
+
+/* Sets a floating point register to an immediate value. */
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fset32(struct sljit_compiler *compiler,
+	sljit_s32 freg, sljit_f32 value);
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fset64(struct sljit_compiler *compiler,
+	sljit_s32 freg, sljit_f64 value);
+
 /* The following opcodes are used by sljit_emit_fcopy(). */
 
 /* 64 bit: copy a 64 bit value from an integer register into a
@@ -1391,13 +1435,6 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop2(struct sljit_compiler *compil
    register without any modifications. The register should be processed
    with 32 bit operations later. */
 #define SLJIT_COPY32_FROM_F32		(SLJIT_COPY_FROM_F64 | SLJIT_32)
-
-/* Sets a floating point register to an immediate value. */
-
-SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fset32(struct sljit_compiler *compiler,
-	sljit_s32 freg, sljit_f32 value);
-SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fset64(struct sljit_compiler *compiler,
-	sljit_s32 freg, sljit_f64 value);
 
 /* Special data copy which involves floating point registers.
 
@@ -1675,9 +1712,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fselect(struct sljit_compiler *com
 /* Load or stora data from an unaligned (byte aligned) address. */
 #define SLJIT_MEM_UNALIGNED	0x000400
 /* Load or stora data from a 16 bit aligned address. */
-#define SLJIT_MEM_UNALIGNED_16	0x000800
+#define SLJIT_MEM_ALIGNED_16	0x000800
 /* Load or stora data from a 32 bit aligned address. */
-#define SLJIT_MEM_UNALIGNED_32	0x001000
+#define SLJIT_MEM_ALIGNED_32	0x001000
 
 /* The following flags are used by sljit_emit_mem_update(),
    and sljit_emit_fmem_update(). */
@@ -1695,8 +1732,8 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fselect(struct sljit_compiler *com
 
 /* The sljit_emit_mem emits instructions for various memory operations:
 
-   When SLJIT_MEM_UNALIGNED / SLJIT_MEM_UNALIGNED_16 /
-        SLJIT_MEM_UNALIGNED_32 is set in type argument:
+   When SLJIT_MEM_UNALIGNED / SLJIT_MEM_ALIGNED_16 /
+        SLJIT_MEM_ALIGNED_32 is set in type argument:
      Emit instructions for unaligned memory loads or stores. When
      SLJIT_UNALIGNED is not defined, the only way to access unaligned
      memory data is using sljit_emit_mem. Otherwise all operations (e.g.
@@ -1711,8 +1748,8 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fselect(struct sljit_compiler *com
      location specified by the mem/memw arguments, and the end address
      of this operation is the starting address of the data transfer
      between the second register and memory. The type argument must
-     be SLJIT_MOV. The SLJIT_MEM_UNALIGNED* options are allowed for
-     this operation.
+     be SLJIT_MOV. The SLJIT_MEM_UNALIGNED / SLJIT_MEM_ALIGNED_*
+     options are allowed for this operation.
 
    type must be between SLJIT_MOV and SLJIT_MOV_P and can be
      combined (or'ed) with SLJIT_MEM_* flags
@@ -1773,6 +1810,66 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fmem(struct sljit_compiler *compil
    Flags: - (does not modify flags) */
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fmem_update(struct sljit_compiler *compiler, sljit_s32 type,
+	sljit_s32 freg,
+	sljit_s32 mem, sljit_sw memw);
+
+/* The following flags are used by sljit_emit_simd_mem(). */
+
+/* Memory load operation. This is the default. */
+#define SLJIT_SIMD_MEM_LOAD		0x000000
+/* Memory store operation */
+#define SLJIT_SIMD_MEM_STORE		0x000001
+/* Move floating point data between the register and memory */
+#define SLJIT_SIMD_MEM_FLOAT		0x000002
+/* Tests whether the operation is available */
+#define SLJIT_SIMD_MEM_TEST		0x000004
+/* Move data to/from a 64 bit (8 byte) long SIMD register */
+#define SLJIT_SIMD_MEM_REG_64		(3 << 12)
+/* Move data to/from a 128 bit (16 byte) long SIMD register */
+#define SLJIT_SIMD_MEM_REG_128		(4 << 12)
+/* Move data to/from a 256 bit (32 byte) long SIMD register */
+#define SLJIT_SIMD_MEM_REG_256		(5 << 12)
+/* Move data to/from a 512 bit (64 byte) long SIMD register */
+#define SLJIT_SIMD_MEM_REG_512		(6 << 12)
+/* Element size is 8 bit long (this is the default), usually cannot be combined with SLJIT_SIMD_MEM_FLOAT */
+#define SLJIT_SIMD_MEM_ELEM_8		(0 << 18)
+/* Element size is 16 bit long, usually cannot be combined with SLJIT_SIMD_MEM_FLOAT */
+#define SLJIT_SIMD_MEM_ELEM_16		(1 << 18)
+/* Element size is 32 bit long */
+#define SLJIT_SIMD_MEM_ELEM_32		(2 << 18)
+/* Element size is 64 bit long */
+#define SLJIT_SIMD_MEM_ELEM_64		(3 << 18)
+/* Element size is 128 bit long */
+#define SLJIT_SIMD_MEM_ELEM_128		(4 << 18)
+/* Memory address is unaligned (this is the default) */
+#define SLJIT_SIMD_MEM_UNALIGNED	(0 << 24)
+/* Memory address is 16 bit aligned */
+#define SLJIT_SIMD_MEM_ALIGNED_16	(1 << 24)
+/* Memory address is 32 bit aligned */
+#define SLJIT_SIMD_MEM_ALIGNED_32	(2 << 24)
+/* Memory address is 64 bit aligned */
+#define SLJIT_SIMD_MEM_ALIGNED_64	(3 << 24)
+/* Memory address is 128 bit aligned */
+#define SLJIT_SIMD_MEM_ALIGNED_128	(4 << 24)
+
+/* Moves data between a simd register and memory.
+
+   If the operation is not supported it returns with
+   SLJIT_ERR_UNSUPPORTED. If SLJIT_SIMD_MEM_TEST is
+   passed, it does not emit any instructions.
+
+   type must be a combination of SLJIT_SIMD_MEM_* flags
+   freg is the source or destination simd register
+     of the operation
+   mem must be a memory operand
+
+   Note:
+       The alignment and element size must be
+       less or equal than simd register size.
+
+   Flags: - (does not modify flags) */
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_mem(struct sljit_compiler *compiler, sljit_s32 type,
 	sljit_s32 freg,
 	sljit_s32 mem, sljit_sw memw);
 
@@ -1871,20 +1968,27 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_const(sljit_uw addr, sljit_sw new_consta
 /* --------------------------------------------------------------------- */
 
 /* The following function is a helper function for sljit_emit_op_custom.
-   It returns with the real machine register index ( >=0 ) of any SLJIT_R,
-   SLJIT_S and SLJIT_SP registers.
+   It returns with the real machine register index ( >=0 ) of any
+   integer registers.
+
+   reg must be an SLJIT_R(i), SLJIT_S(i), or SLJIT_SP register
 
    Note: it returns with -1 for virtual registers (only on x86-32). */
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_register_index(sljit_s32 reg);
 
 /* The following function is a helper function for sljit_emit_op_custom.
-   It returns with the real machine register ( >= 0 ) index of any SLJIT_FR,
-   and SLJIT_FS register.
+   It returns with the real machine register ( >= 0 ) index of any floating
+   point register, or it returns with -1 if the register is not available.
 
-   Note: the index is always an even number on ARM-32, MIPS. */
+   type must be 0 for getting floating point register indicies,
+        or must be SLJIT_SIMD_MEM_REG_* for SIMD register indicies
+   reg must be an SLJIT_FR(i) or SLJIT_FS(i) register
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_float_register_index(sljit_s32 reg);
+   Note: the index represents the double precision
+         register index on ARM-32 and MIPS-32. */
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_float_register_index(sljit_s32 type, sljit_s32 reg);
 
 /* Any instruction can be inserted into the instruction stream by
    sljit_emit_op_custom. It has a similar purpose as inline assembly.

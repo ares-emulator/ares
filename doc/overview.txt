@@ -9,7 +9,7 @@ with SLJIT. Further details can be found in sljitLir.h.
 SLJIT is a platform independent assembler which
   - provides access to common CPU features
   - can be easily ported to wide-spread CPU
-    architectures (e.g. x86, ARM, POWER, MIPS, SPARC, s390x)
+    architectures (e.g. x86, ARM, POWER, MIPS, s390x, LoongArch)
 
 The key challenge of this project is finding a common
 subset of CPU features which
@@ -127,7 +127,7 @@ following rules were introduced:
   - Status flags cannot be controlled directly
     (there are no set/clear/invert operations)
 
-The last two rules allows efficent mapping of status flags.
+The last two rules allows efficient mapping of status flags.
 For example the arithmetic and multiply overflow flag is
 mapped to the same overflow flag bit on x86. This is allowed,
 since no instruction can set both of these flags. When
