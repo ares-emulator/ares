@@ -232,12 +232,14 @@ Vulkan::Implementation::Implementation(u8* data, u32 size) {
   if(!processor->device_is_supported()) {
     delete processor;
     processor = nullptr;
+    return;
   }
+
   processor->set_validation_interface(&validator);
 }
 
 Vulkan::Implementation::~Implementation() {
-  delete processor;
+  if(processor) delete processor;
 }
 
 }
