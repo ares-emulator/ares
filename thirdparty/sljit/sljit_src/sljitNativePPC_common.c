@@ -2061,9 +2061,13 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_register_index(sljit_s32 reg)
 	return reg_map[reg];
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_float_register_index(sljit_s32 reg)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_float_register_index(sljit_s32 type, sljit_s32 reg)
 {
-	CHECK_REG_INDEX(check_sljit_get_float_register_index(reg));
+	CHECK_REG_INDEX(check_sljit_get_float_register_index(type, reg));
+
+	if (type != 0)
+		return -1;
+
 	return freg_map[reg];
 }
 
@@ -2244,18 +2248,30 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop2(struct sljit_compiler *compil
 	case SLJIT_ADD_F64:
 		FAIL_IF(push_inst(compiler, SELECT_FOP(op, FADDS, FADD) | FD(dst_r) | FA(src1) | FB(src2)));
 		break;
-
 	case SLJIT_SUB_F64:
 		FAIL_IF(push_inst(compiler, SELECT_FOP(op, FSUBS, FSUB) | FD(dst_r) | FA(src1) | FB(src2)));
 		break;
-
 	case SLJIT_MUL_F64:
 		FAIL_IF(push_inst(compiler, SELECT_FOP(op, FMULS, FMUL) | FD(dst_r) | FA(src1) | FC(src2) /* FMUL use FC as src2 */));
 		break;
-
 	case SLJIT_DIV_F64:
 		FAIL_IF(push_inst(compiler, SELECT_FOP(op, FDIVS, FDIV) | FD(dst_r) | FA(src1) | FB(src2)));
 		break;
+	case SLJIT_COPYSIGN_F64:
+		FAIL_IF(push_inst(compiler, ((op & SLJIT_32) ? STFS : STFD) | FS(src2) | A(SLJIT_SP) | TMP_MEM_OFFSET));
+#if (defined SLJIT_CONFIG_PPC_32 && SLJIT_CONFIG_PPC_32)
+		FAIL_IF(push_inst(compiler, LWZ | S(TMP_REG1) | A(SLJIT_SP) | ((op & SLJIT_32) ? TMP_MEM_OFFSET : TMP_MEM_OFFSET_HI)));
+#else /* !SLJIT_CONFIG_PPC_32 */
+		FAIL_IF(push_inst(compiler, ((op & SLJIT_32) ? LWZ : LD) | S(TMP_REG1) | A(SLJIT_SP) | TMP_MEM_OFFSET));
+#endif /* SLJIT_CONFIG_PPC_32 */
+		FAIL_IF(push_inst(compiler, FABS | FD(dst_r) | FB(src1)));
+#if (defined SLJIT_CONFIG_PPC_32 && SLJIT_CONFIG_PPC_32)
+		FAIL_IF(push_inst(compiler, CMPI | CRD(0) | A(TMP_REG1) | 0));
+#else /* !SLJIT_CONFIG_PPC_32 */
+		FAIL_IF(push_inst(compiler, CMPI | CRD(0 | ((op & SLJIT_32) ? 0 : 1)) | A(TMP_REG1) | 0));
+#endif /* SLJIT_CONFIG_PPC_32 */
+		FAIL_IF(push_inst(compiler, BCx | (4 << 21) | (0 << 16) | 8));
+		return push_inst(compiler, FNEG | FD(dst_r) | FB(dst_r));
 	}
 
 	if (dst & SLJIT_MEM)

@@ -2655,9 +2655,13 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_register_index(sljit_s32 reg)
 	return reg_map[reg];
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_float_register_index(sljit_s32 reg)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_float_register_index(sljit_s32 type, sljit_s32 reg)
 {
-	CHECK_REG_INDEX(check_sljit_get_float_register_index(reg));
+	CHECK_REG_INDEX(check_sljit_get_float_register_index(type, reg));
+
+	if (type != 0)
+		return -1;
+
 	return FR(reg);
 }
 
@@ -3019,18 +3023,23 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop2(struct sljit_compiler *compil
 	case SLJIT_ADD_F64:
 		FAIL_IF(push_inst(compiler, ADD_S | FMT(op) | FT(src2) | FS(src1) | FD(dst_r), MOVABLE_INS));
 		break;
-
 	case SLJIT_SUB_F64:
 		FAIL_IF(push_inst(compiler, SUB_S | FMT(op) | FT(src2) | FS(src1) | FD(dst_r), MOVABLE_INS));
 		break;
-
 	case SLJIT_MUL_F64:
 		FAIL_IF(push_inst(compiler, MUL_S | FMT(op) | FT(src2) | FS(src1) | FD(dst_r), MOVABLE_INS));
 		break;
-
 	case SLJIT_DIV_F64:
 		FAIL_IF(push_inst(compiler, DIV_S | FMT(op) | FT(src2) | FS(src1) | FD(dst_r), MOVABLE_INS));
 		break;
+	case SLJIT_COPYSIGN_F64:
+		FAIL_IF(push_inst(compiler, SELECT_OP(DMFC1, MFC1) | T(TMP_REG1) | FS(src1), DR(TMP_REG1)));
+		FAIL_IF(push_inst(compiler, SELECT_OP(DMFC1, MFC1) | T(TMP_REG2) | FS(src2), DR(TMP_REG2)));
+		FAIL_IF(push_inst(compiler, XOR | S(TMP_REG2) | T(TMP_REG1) | D(TMP_REG2), DR(TMP_REG2)));
+		FAIL_IF(push_inst(compiler, SELECT_OP(DSRL32, SRL) | T(TMP_REG2) | D(TMP_REG2) | SH_IMM(31), DR(TMP_REG2)));
+		FAIL_IF(push_inst(compiler, SELECT_OP(DSLL32, SLL) | T(TMP_REG2) | D(TMP_REG2) | SH_IMM(31), DR(TMP_REG2)));
+		FAIL_IF(push_inst(compiler, XOR | S(TMP_REG1) | T(TMP_REG2) | D(TMP_REG1), DR(TMP_REG1)));
+		return push_inst(compiler, SELECT_OP(DMTC1, MTC1) | T(TMP_REG1) | FS(dst_r), MOVABLE_INS);
 	}
 
 	if (dst_r == TMP_FREG2)
@@ -3765,9 +3774,9 @@ static sljit_s32 update_mem_addr(struct sljit_compiler *compiler, sljit_s32 *mem
 #endif /* SLJIT_LITTLE_ENDIAN */
 
 #if (defined SLJIT_CONFIG_MIPS_32 && SLJIT_CONFIG_MIPS_32)
-#define MEM_CHECK_UNALIGNED(type) ((type) & (SLJIT_MEM_UNALIGNED | SLJIT_MEM_UNALIGNED_16))
+#define MEM_CHECK_UNALIGNED(type) ((type) & (SLJIT_MEM_UNALIGNED | SLJIT_MEM_ALIGNED_16))
 #else /* !SLJIT_CONFIG_MIPS_32 */
-#define MEM_CHECK_UNALIGNED(type) ((type) & (SLJIT_MEM_UNALIGNED | SLJIT_MEM_UNALIGNED_16 | SLJIT_MEM_UNALIGNED_32))
+#define MEM_CHECK_UNALIGNED(type) ((type) & (SLJIT_MEM_UNALIGNED | SLJIT_MEM_ALIGNED_16 | SLJIT_MEM_ALIGNED_32))
 #endif /* SLJIT_CONFIG_MIPS_32 */
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_mem(struct sljit_compiler *compiler, sljit_s32 type,
@@ -3865,7 +3874,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_mem(struct sljit_compiler *compile
 	case SLJIT_MOV:
 	case SLJIT_MOV_P:
 #if (defined SLJIT_CONFIG_MIPS_32 && SLJIT_CONFIG_MIPS_32)
-		if (type & SLJIT_MEM_UNALIGNED_32) {
+		if (type & SLJIT_MEM_ALIGNED_32) {
 			flags = WORD_DATA;
 			if (!(type & SLJIT_MEM_STORE))
 				flags |= LOAD_DATA;

@@ -13,7 +13,7 @@ Using sljit:
   Copy the content of sljit_src directory into your project source directory.
   Add sljitLir.c source file to your build environment. All other files are
   included by sljitLir.c (if required). Define the machine by SLJIT_CONFIG_*
-  selector. See sljitConfig.h for all possible values. For C++ compilers,
+  selector. See sljitConfigCPU.h for all possible values. For C++ compilers,
   rename sljitLir.c to sljitLir.cpp.
 
 More info:
@@ -35,6 +35,7 @@ Special thanks:
   Marc Mutz
   Martin Storsjö
   Michael McConville
+  Mingtao Zhou (LoongArch support)
   Walter Lee
   Wen Xichang
   YunQiang Su
