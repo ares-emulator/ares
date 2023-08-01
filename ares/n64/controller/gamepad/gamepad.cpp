@@ -234,9 +234,12 @@ auto Gamepad::read() -> n32 {
     auto edgey = copysign(min(abs(edgex * slope), cardinalMax / (1.0 / abs(slope) + (cardinalMax - diagonalMax) / diagonalMax)), ay);
     edgex = edgey / slope;
 
-    auto scale = sqrt(edgex * edgex + edgey * edgey) / outerDeadzoneRadiusMax;
-    ax *= scale;
-    ay *= scale;
+    length = sqrt(ax * ax + ay * ay);
+    auto distanceToEdge = sqrt(edgex * edgex + edgey * edgey);
+    if(length > distanceToEdge) {
+      ax = edgex;
+      ay = edgey;
+    }
   }
 
   //keep cardinal input within positive and negative bounds of cardinalMax
