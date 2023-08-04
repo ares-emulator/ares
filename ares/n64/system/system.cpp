@@ -50,6 +50,7 @@ auto System::game() -> string {
 
 auto System::run() -> void {
   cpu.main();
+  debugServer.update(); // @TODO: check if enabled
 }
 
 auto System::load(Node::System& root, string name) -> bool {
@@ -105,12 +106,20 @@ auto System::load(Node::System& root, string name) -> bool {
   #if defined(VULKAN)
   vulkan.load(node);
   #endif
+
+  // @TODO: check if enabled
+  debugServer.start(9123); // @TODO: pull port from config/args
+
   return true;
 }
 
 auto System::unload() -> void {
   if(!node) return;
   save();
+
+  // @TODO: check if enabled
+  debugServer.stop();
+  
   if(vi.screen) vi.screen->quit(); //stop video thread
   #if defined(VULKAN)
   vulkan.unload();
