@@ -85,10 +85,6 @@ auto VI::main() -> void {
   }
 }
 
-auto VI::step(u32 clocks) -> void {
-  Thread::clock += clocks;
-}
-
 auto VI::refresh() -> void {
   #if defined(VULKAN)
   if(vulkan.enable && gpuOutputValid) {
