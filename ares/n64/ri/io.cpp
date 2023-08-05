@@ -30,7 +30,7 @@ auto RI::readWord(u32 address, Thread& thread) -> u32 {
       //after a cold boot on real hardware with no expansion pak and using the
       //CIC-NUS-6102 IPL3, upon reaching the test ROM's entry point the count
       //register was measured to be ~0x1184000.
-      cpu.step(17'641'000);
+      cpu.step(17'641'000 * 2);
     }
   }
 
