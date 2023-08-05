@@ -12,5 +12,5 @@ class DebugServer {
     auto stop() -> bool;
 
   private:
-    auto processCommand(const ::nall::string &command) -> ::nall::string;
+    bool isOpen = false;
 };

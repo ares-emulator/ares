@@ -1,6 +1,7 @@
 *.moc
 *.user
 .vs/
+.vscode/
 obj/
 out/
 obj-amd64/
