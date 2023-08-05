@@ -31,10 +31,10 @@ namespace {
 
     for(u32 i=0; i<unitCount; ++i) {
       switch(unitSize) {
-        case N64::Byte: res.append(hex(N64::bus.read<N64::Byte>(address, fakeCycles))); break;
-        case N64::Half: res.append(hex(N64::bus.read<N64::Half>(address, fakeCycles))); break;
-        case N64::Word: res.append(hex(N64::bus.read<N64::Word>(address, fakeCycles))); break;
-        case N64::Dual: res.append(hex(N64::bus.read<N64::Dual>(address, fakeCycles))); break;
+        case N64::Byte: res.append(hex(static_cast< u8>(N64::bus.read<N64::Byte>(address, fakeCycles)))); break;
+        case N64::Half: res.append(hex(static_cast<u16>(N64::bus.read<N64::Half>(address, fakeCycles)))); break;
+        case N64::Word: res.append(hex(static_cast<u32>(N64::bus.read<N64::Word>(address, fakeCycles)))); break;
+        case N64::Dual: res.append(hex(static_cast<u64>(N64::bus.read<N64::Dual>(address, fakeCycles)))); break;
       }
       res.append(" ");
       address += unitSize;
