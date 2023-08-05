@@ -5,7 +5,7 @@ struct RCP {  //A device which is part of RCP
 
   template<u32 Size>
   auto read(u32 address, Thread& thread) -> u64 {
-    thread.step(DefaultReadCycles);
+    thread.step(DefaultReadCycles * 2);
     if constexpr(Size == Byte) {
       auto data = ((T*)this)->readWord(address, thread);
       switch(address & 3) {
@@ -34,7 +34,7 @@ struct RCP {  //A device which is part of RCP
 
   template<u32 Size>
   auto write(u32 address, u64 data, Thread& thread) -> void {
-    thread.step(DefaultWriteCycles);
+    thread.step(DefaultWriteCycles * 2);
     if constexpr(Size == Byte) {
       switch(address & 3) {
       case 0: return ((T*)this)->writeWord(address, data << 24, thread);

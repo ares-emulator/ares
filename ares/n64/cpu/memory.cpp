@@ -154,17 +154,17 @@ auto CPU::fetch(u64 vaddr) -> maybe<u32> {
   if(vaddrAlignedError<Word>(vaddr, false)) return nothing;
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
-    step(1);
+    step(1 * 2);
     addressException(vaddr);
     exception.addressLoad();
     return nothing;
   case Context::Segment::Mapped:
     if(auto match = tlb.load(vaddr)) {
       if(match.cache) return icache.fetch(vaddr, match.address & context.physMask, cpu);
-      step(1);
+      step(1 * 2);
       return busRead<Word>(match.address & context.physMask);
     }
-    step(1);
+    step(1 * 2);
     addressException(vaddr);
     return nothing;
   case Context::Segment::Cached:
@@ -172,10 +172,10 @@ auto CPU::fetch(u64 vaddr) -> maybe<u32> {
   case Context::Segment::Cached32:
     return icache.fetch(vaddr, vaddr & 0xffff'ffff, cpu);
   case Context::Segment::Direct:
-    step(1);
+    step(1 * 2);
     return busRead<Word>(vaddr & 0x1fff'ffff);
   case Context::Segment::Direct32:
-    step(1);
+    step(1 * 2);
     return busRead<Word>(vaddr & 0xffff'ffff);
   }
 
@@ -187,17 +187,17 @@ auto CPU::read(u64 vaddr) -> maybe<u64> {
   if(vaddrAlignedError<Size>(vaddr, false)) return nothing;
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
-    step(1);
+    step(1 * 2);
     addressException(vaddr);
     exception.addressLoad();
     return nothing;
   case Context::Segment::Mapped:
     if(auto match = tlb.load(vaddr)) {
       if(match.cache) return dcache.read<Size>(vaddr, match.address & context.physMask);
-      step(1);
+      step(1 * 2);
       return busRead<Size>(match.address & context.physMask);
     }
-    step(1);
+    step(1 * 2);
     addressException(vaddr);
     return nothing;
   case Context::Segment::Cached:
@@ -205,10 +205,10 @@ auto CPU::read(u64 vaddr) -> maybe<u64> {
   case Context::Segment::Cached32:
     return dcache.read<Size>(vaddr, vaddr & 0xffff'ffff);
   case Context::Segment::Direct:
-    step(1);
+    step(1 * 2);
     return busRead<Size>(vaddr & 0x1fff'ffff);
   case Context::Segment::Direct32:
-    step(1);
+    step(1 * 2);
     return busRead<Size>(vaddr & 0xffff'ffff);
   }
 
@@ -221,17 +221,17 @@ auto CPU::write(u64 vaddr0, u64 data, bool alignedError) -> bool {
   u64 vaddr = vaddr0 & ~((u64)Size - 1);
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
-    step(1);
+    step(1 * 2);
     addressException(vaddr0);
     exception.addressStore();
     return false;
   case Context::Segment::Mapped:
     if(auto match = tlb.store(vaddr)) {
       if(match.cache) return dcache.write<Size>(vaddr, match.address & context.physMask, data), true;
-      step(1);
+      step(1 * 2);
       return busWrite<Size>(match.address & context.physMask, data), true;
     }
-    step(1);
+    step(1 * 2);
     addressException(vaddr0);
     return false;
   case Context::Segment::Cached:
@@ -239,10 +239,10 @@ auto CPU::write(u64 vaddr0, u64 data, bool alignedError) -> bool {
   case Context::Segment::Cached32:
     return dcache.write<Size>(vaddr, vaddr & 0xffff'ffff, data), true;
   case Context::Segment::Direct:
-    step(1);
+    step(1 * 2);
     return busWrite<Size>(vaddr & 0x1fff'ffff, data), true;
   case Context::Segment::Direct32:
-    step(1);
+    step(1 * 2);
     return busWrite<Size>(vaddr & 0xffff'ffff, data), true;
   }
 
@@ -253,14 +253,14 @@ template<u32 Size>
 auto CPU::vaddrAlignedError(u64 vaddr, bool write) -> bool {
   if constexpr(Accuracy::CPU::AddressErrors) {
     if(unlikely(vaddr & Size - 1)) {
-      step(1);
+      step(1 * 2);
       addressException(vaddr);
       if(write) exception.addressStore();
       else exception.addressLoad();
       return true;
     }
     if (context.bits == 32 && unlikely((s32)vaddr != vaddr)) {
-      step(1);
+      step(1 * 2);
       addressException(vaddr);
       if(write) exception.addressStore();
       else exception.addressLoad();

@@ -3,7 +3,7 @@ auto CPU::DataCache::Line::hit(u32 address) const -> bool {
 }
 
 template<u32 Size> auto CPU::DataCache::Line::fill(u32 address, u64 data) -> void {
-  cpu.step(40);
+  cpu.step(40 * 2);
   valid = 1;
   dirty = 1;
   tag   = address & ~0x0000'0fff;
@@ -31,7 +31,7 @@ template<u32 Size> auto CPU::DataCache::Line::fill(u32 address, u64 data) -> voi
 }
 
 auto CPU::DataCache::Line::fill(u32 address) -> void {
-  cpu.step(40);
+  cpu.step(40 * 2);
   valid = 1;
   dirty = 0;
   tag   = address & ~0x0000'0fff;
@@ -53,7 +53,7 @@ auto CPU::DataCache::Line::fill(u32 address) -> void {
 }
 
 auto CPU::DataCache::Line::writeBack() -> void {
-  cpu.step(40);
+  cpu.step(40 * 2);
   dirty = 0;
   cpu.busWrite<Word>(tag | index | 0x0, words[0]);
   cpu.busWrite<Word>(tag | index | 0x4, words[1]);
@@ -96,7 +96,7 @@ auto CPU::DataCache::read(u32 vaddr, u32 address) -> u64 {
     if(line.valid && line.dirty) line.writeBack();
     line.fill(address);
   } else {
-    cpu.step(1);
+    cpu.step(1 * 2);
   }
   return line.read<Size>(address);
 }
@@ -108,7 +108,7 @@ auto CPU::DataCache::write(u32 vaddr, u32 address, u64 data) -> void {
     if(line.valid && line.dirty) line.writeBack();
     return line.fill<Size>(address, data);
   } else {
-    cpu.step(1);
+    cpu.step(1 * 2);
   }
   line.write<Size>(address, data);
 }

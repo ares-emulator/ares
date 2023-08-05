@@ -2,10 +2,10 @@ inline auto PI::readWord(u32 address, Thread& thread) -> u32 {
   if(address <= 0x046f'ffff) return ioRead(address);
 
   if (unlikely(io.ioBusy)) {
-    thread.step(writeForceFinish());
+    thread.step(writeForceFinish() * 2);
     return io.busLatch;
   }
-  thread.step(250);
+  thread.step(250 * 2);
   return busRead<Word>(address);
 }
 
