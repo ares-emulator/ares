@@ -34,7 +34,7 @@ auto RDP::readWord(u32 address, Thread& thread) -> u32 {
 
   if(address == 4) {
     //DPC_CLOCK
-    data.bit(0,23) = command.clock;
+    data.bit(0,23) = command.clock - (Thread::clock - thread.clock) / 3;
   }
 
   if(address == 5) {
@@ -91,7 +91,7 @@ auto RDP::writeWord(u32 address, u32 data_, Thread& thread) -> void {
     if(data.bit(6) && !command.crashed) command.tmemBusy = 0;
     if(data.bit(7) && !command.crashed) command.pipeBusy = 0;
     if(data.bit(8) && !command.crashed) command.bufferBusy = 0;
-    if(data.bit(9)) command.clock = 0;
+    if(data.bit(9)) command.clock = (Thread::clock - thread.clock) / 3;
   }
 
   if(address == 4) {
