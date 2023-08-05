@@ -142,16 +142,12 @@ auto CPU::devirtualizeFast(u64 vaddr) -> u64 {
 
 template<u32 Size>
 inline auto CPU::busWrite(u32 address, u64 data) -> void {
-  u32 cycles = 0;
-  bus.write<Size>(address, data, cycles);
-  step(cycles);
+  bus.write<Size>(address, data, *this);
 }
 
 template<u32 Size>
 inline auto CPU::busRead(u32 address) -> u64 {
-  u32 cycles = 0; u64 data;
-  data = bus.read<Size>(address, cycles);
-  return step(cycles), data;
+  return bus.read<Size>(address, *this);
 }
 
 auto CPU::fetch(u64 vaddr) -> maybe<u32> {

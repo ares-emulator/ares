@@ -32,10 +32,6 @@ auto RDP::main() -> void {
   }
 }
 
-auto RDP::step(u32 clocks) -> void {
-  Thread::clock += clocks;
-}
-
 auto RDP::power(bool reset) -> void {
   Thread::reset();
   command = {};

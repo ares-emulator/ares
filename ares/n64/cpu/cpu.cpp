@@ -38,10 +38,6 @@ auto CPU::main() -> void {
   vi.refreshed = false;
 }
 
-auto CPU::step(u32 clocks) -> void {
-  Thread::clock += clocks;
-}
-
 auto CPU::synchronize() -> void {
   auto clocks = Thread::clock * 2;
   Thread::clock = 0;
