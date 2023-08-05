@@ -26,10 +26,15 @@ auto locate(const string& name) -> string {
   location = {Path::userData(), "ares/", name};
   if(inode::exists(location)) return location;
 
-  // On non-windows platforms, after exhausting other options,
-  // default to userData, on Windows, default to program dir
+  // On non-windows platforms, this time check the shared
+  // data directory, on Windows, default to program dir,
   // this ensures Portable mode is the default on Windows platforms.
   #if !defined(PLATFORM_WINDOWS)
+    string shared_location = {Path::sharedData(), "ares/", name};
+    if(inode::exists(shared_location)) return shared_location;
+
+    // On non-windows platforms, after exhausting other options,
+    // default to userData.
     directory::create({Path::userData(), "ares/"});
     return {Path::userData(), "ares/", name};
   #else 
