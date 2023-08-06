@@ -1,14 +1,10 @@
 #include <n64/n64.hpp>
-
-#define NALL_HEADER_ONLY
-#include <nall/http/server.hpp>
-#undef NALL_HEADER_ONLY
+#include <n64/system/debug-server.hpp>
 
 // @TODO: why does nall need this?
 #include <cstdlib>
 #include <utility>
 
-namespace HTTP = ::nall::HTTP;
 namespace N64 = ares::Nintendo64;
 
 using string = ::nall::string;
@@ -17,114 +13,167 @@ using string_view = ::nall::string_view;
 namespace {
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
 
-  HTTP::Server server{};
-
-  auto commandRead(string &res, const vector<string> &args) -> bool {
-    if(args.size() < 4) {
-      return false;
-    }
-
-    u32 fakeCycles = 0;
-    u32 unitCount = static_cast<u32>(args[1].hex());
-    u32 unitSize = static_cast<u32>(args[2].hex());
-    u32 address = static_cast<u32>(args[3].hex());
-
-    for(u32 i=0; i<unitCount; ++i) {
-      switch(unitSize) {
-        case N64::Byte: res.append(hex(static_cast< u8>(N64::bus.read<N64::Byte>(address, fakeCycles)))); break;
-        case N64::Half: res.append(hex(static_cast<u16>(N64::bus.read<N64::Half>(address, fakeCycles)))); break;
-        case N64::Word: res.append(hex(static_cast<u32>(N64::bus.read<N64::Word>(address, fakeCycles)))); break;
-        case N64::Dual: res.append(hex(static_cast<u64>(N64::bus.read<N64::Dual>(address, fakeCycles)))); break;
-      }
-      res.append(" ");
-      address += unitSize;
-    }
-    return true;
-  }
-
-  auto commandWrite(string &res, const vector<string> &args) -> bool {
-    if(args.size() < 3) {
-      return false;
-    }
-
-    u32 fakeCycles = 0;
-    u32 unitCount = static_cast<u32>(args[1].hex());
-    u32 unitSize = static_cast<u32>(args[2].hex());
-    u32 address = static_cast<u32>(args[3].hex());
-
-    if(args.size() < (4+unitCount)) {
-      return false;
-    }
-
-    for(u32 i=0; i<unitCount; ++i) {
-      u64 value = (args[4+i].hex());
-      switch(unitSize) {
-        case N64::Byte: N64::bus.write<N64::Byte>(address, value, fakeCycles); break;
-        case N64::Half: N64::bus.write<N64::Half>(address, value, fakeCycles); break;
-        case N64::Word: N64::bus.write<N64::Word>(address, value, fakeCycles); break;
-        case N64::Dual: N64::bus.write<N64::Dual>(address, value, fakeCycles); break;
-      }
-      address += unitSize;
-    }
-
-    res.append("OK");
-    return true;
-  }
-
-  auto processCommands(const string &payload) -> string 
-  {
+  auto commandRead(u32 address, u32 unitCount, u32 unitSize = 1) -> string {
     string res{""};
-    for(auto &command : payload.split("\n")) 
-    {
-      auto cmdParts = command.split(" ");
-      auto cmdName = cmdParts[0];
-      bool success = false;
-
-      if(0);
-      else if(cmdName ==  "read")success = commandRead(res, cmdParts);
-      else if(cmdName == "write")success = commandWrite(res, cmdParts);
-
-      res.append(success ? "\n" : "ERR\n");
+    u32 fakeCycles = 0;
+    for(u32 i=0; i<unitCount; ++i) {
+      switch(unitSize) {
+        case N64::Byte: res.append(hex(static_cast< u8>(N64::bus.read<N64::Byte>(address, fakeCycles)), unitSize*2, '0')); break;
+        case N64::Half: res.append(hex(static_cast<u16>(N64::bus.read<N64::Half>(address, fakeCycles)), unitSize*2, '0')); break;
+        case N64::Word: res.append(hex(static_cast<u32>(N64::bus.read<N64::Word>(address, fakeCycles)), unitSize*2, '0')); break;
+        case N64::Dual: res.append(hex(static_cast<u64>(N64::bus.read<N64::Dual>(address, fakeCycles)), unitSize*2, '0')); break;
+      }
+      res.append("");
+      address += unitSize;
     }
     return res;
   }
-}
 
-namespace ares::Nintendo64 {
-
-auto DebugServer::start(u32 port) -> bool {
-  printf("Starting Debug-server on port: %d\n", port);
-  if(!server.open(port)) {
-    printf("Failed to open server!\n");
-    return false;
+  auto commandWrite(u32 address, u32 unitSize, u64 value) -> void {
+    u32 fakeCycles = 0;
+    switch(unitSize) {
+      case N64::Byte: N64::bus.write<N64::Byte>(address, value, fakeCycles); break;
+      case N64::Half: N64::bus.write<N64::Half>(address, value, fakeCycles); break;
+      case N64::Word: N64::bus.write<N64::Word>(address, value, fakeCycles); break;
+      case N64::Dual: N64::bus.write<N64::Dual>(address, value, fakeCycles); break;
+    }
   }
 
-  server.main([this](HTTP::Request& req)  {
-    //printf("Data[%d]: %s\n\n", req._body.size(), req._body.data());
-    HTTP::Response res{req};
-    res.setResponseType(200); // OK
-    res.setAllowCORS(true); // @TODO: add security checks (e.g.: random token)
-    res._body = processCommands(req._body);
+  bool insideCommand{false};
+  string cmdBuffer{""};
+
+  auto calcGdbChecksum(const string &payload) {
+    u8 checksum = 0;
+    for(char c : payload) {
+      checksum += c;
+    }
+    return hex(checksum, 2, '0');
+  }
+
+  auto encodeGdb(const string &payload, bool success = true) {
+    string res{"$"};
+    res.append(payload);
+    res.append("#");
+    res.append(calcGdbChecksum(payload));
     return res;
-  });
+  }
 
-  isOpen = true;
-  return true;
-}
+  auto processCommand(const string& cmd) -> string 
+  {
+    auto cmdParts = cmd.split(":");
+    auto cmdName = cmdParts[0];
+    char cmdPrefix = cmdName.size() > 0 ? cmdName[0] : ' ';
 
-auto DebugServer::update() -> void {
-  if(!isOpen)return;
+    switch(cmdPrefix)
+    {
+      case 'q':
+        // handshake-commands
+        if(cmdName == "qSupported")return "PacketSize=4000";
+        if(cmdName == "qTStatus")return "";
+        if(cmdName == "qAttached")return "0";
+        if(cmdName == "qfThreadInfo")return "m0";
+        if(cmdName == "qC")return "QC0";
+        if(cmdName == "qOffsets")return "Text=0;Data=0;Bss=0;";
+        printf("Command: %s\n", cmdBuffer.data());
+        break;
 
-  for(u32 i=0; i<MAX_REQUESTS_PER_UPDATE; ++i) {
-    if(server.scan() == "idle")return;
+      case 'v':
+        if(cmdName == "vMustReplyEmpty") { // handshake-command
+          return "";
+        }
+        printf("Command: %s\n", cmdBuffer.data());
+        break;
+
+      case '?': // why did we halt? (if we halted)
+        return "T00";
+      break;
+
+      case 'g': // dump registers
+        // @TODO
+        return "000000000000000000000000000000000000000000000000";
+      break;
+
+      case 'p': // read specific register
+        return "00\0";
+      break;
+
+      case 'm': // read memory
+        {
+          auto sepIdxMaybe = cmdName.find(",");
+          u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
+
+          u64 address = cmdName.slice(1, sepIdx-1).hex();
+          u64 count = cmdName.slice(sepIdx+1, cmdName.size()-sepIdx).hex();
+          return commandRead(address, count);
+        }
+      break;
+
+      case 'M': // write memory (e.g.: M801ef90a,4:01000000)
+        {
+          auto sepIdxMaybe = cmdName.find(",");
+          u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
+
+          u64 address = cmdName.slice(1, sepIdx-1).hex();
+          u64 unitSize = cmdName.slice(sepIdx+1, 1).hex();
+          u64 value = cmdParts.size() > 1 ? cmdParts[1].hex() : 0;
+
+          commandWrite(address, unitSize, value);
+          return "";
+        }
+
+      break;
+
+      case 'H': return "OK";
+    }
+
+    printf("Command: %s\n", cmdBuffer.data());
+    return "";
+  }
+
+  auto processCommands() -> string 
+  {
+    auto commands = cmdBuffer.split(";");
+    string res{};
+    for(u32 i=0; i<commands.size(); ++i) {
+      auto part = processCommand(commands[i]);
+
+      if(part.size()) {
+        res.append(processCommand(commands[i]));
+        if(i != (commands.size()-1)) {
+          res.append(";");
+        }
+      }
+    }
+    return encodeGdb(res);
   }
 }
 
-auto DebugServer::stop() -> bool {
-  printf("Stopping Debug-server\n");
-  if(isOpen)server.close();
-  isOpen = false;
-  return true;
-}
 
-} // end namespace
+  auto DebugServer::onText(string_view text) -> void {
+    for(u32 i=0; i<text.size(); ++i) 
+    {
+      char c = text[i];
+      switch(c) 
+      {
+        case '$':
+          insideCommand = true;
+          break;
+
+        case '#': // end of message + 2-char checksum after that
+          insideCommand = false;
+          i+=2;
+          sendText("+");
+          sendText(processCommands());
+          cmdBuffer = "";
+          break;
+
+        case '+': break; // "OK" response, i don't care
+
+        default:
+          if(insideCommand) {
+            cmdBuffer.append(c);
+          }
+      }
+    }  
+  }
+

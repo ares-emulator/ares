@@ -1,7 +1,6 @@
 struct System {
   Node::System node;
   VFS::Pak pak;
-  DebugServer debugServer;
 
   enum class Region : u32 { NTSC, PAL };
 

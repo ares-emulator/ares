@@ -1,5 +1,11 @@
 #include <n64/n64.hpp>
 
+#include <n64/system/debug-server.hpp>
+
+namespace {
+  DebugServer debugServer;
+}
+
 namespace ares::Nintendo64 {
 
 auto enumerate() -> vector<string> {
@@ -108,7 +114,7 @@ auto System::load(Node::System& root, string name) -> bool {
   #endif
 
   // @TODO: check if enabled
-  debugServer.start(9123); // @TODO: pull port from config/args
+  debugServer.open(9124); // @TODO: pull port from config/args
 
   return true;
 }
@@ -118,7 +124,7 @@ auto System::unload() -> void {
   save();
 
   // @TODO: check if enabled
-  debugServer.stop();
+  debugServer.close();
   
   if(vi.screen) vi.screen->quit(); //stop video thread
   #if defined(VULKAN)

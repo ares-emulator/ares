@@ -107,6 +107,9 @@ auto Settings::process(bool load) -> void {
   bind(string,  "Paths/SuperFamicom/BSMemory", paths.superFamicom.bsMemory);
   bind(string,  "Paths/SuperFamicom/SufamiTurbo", paths.superFamicom.sufamiTurbo);
 
+  bind(natural, "Debug/Port", debug.port);
+  bind(natural, "Debug/Token", debug.token);
+
   for(u32 index : range(9)) {
     string name = {"Recent/Game-", 1 + index};
     bind(string, name, recent.game[index]);

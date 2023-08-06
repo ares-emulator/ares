@@ -87,6 +87,11 @@ struct Settings : Markup::Node {
   struct Recent {
     string game[9];
   } recent;
+
+  struct Debug {
+    u32 port = 9123; // port for host
+    string token = "avGP7rmBUBq3QytQ"; // optional security-token to verify incoming connections
+  } debug;
 };
 
 struct VideoSettings : VerticalLayout {
