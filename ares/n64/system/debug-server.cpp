@@ -14,14 +14,14 @@ namespace {
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
 
   auto commandRead(u32 address, u32 unitCount, u32 unitSize = 1) -> string {
+    ares::Nintendo64::Thread fakeThread{};
     string res{""};
-    u32 fakeCycles = 0;
     for(u32 i=0; i<unitCount; ++i) {
       switch(unitSize) {
-        case N64::Byte: res.append(hex(static_cast< u8>(N64::bus.read<N64::Byte>(address, fakeCycles)), unitSize*2, '0')); break;
-        case N64::Half: res.append(hex(static_cast<u16>(N64::bus.read<N64::Half>(address, fakeCycles)), unitSize*2, '0')); break;
-        case N64::Word: res.append(hex(static_cast<u32>(N64::bus.read<N64::Word>(address, fakeCycles)), unitSize*2, '0')); break;
-        case N64::Dual: res.append(hex(static_cast<u64>(N64::bus.read<N64::Dual>(address, fakeCycles)), unitSize*2, '0')); break;
+        case N64::Byte: res.append(hex(static_cast< u8>(N64::bus.read<N64::Byte>(address, fakeThread)), unitSize*2, '0')); break;
+        case N64::Half: res.append(hex(static_cast<u16>(N64::bus.read<N64::Half>(address, fakeThread)), unitSize*2, '0')); break;
+        case N64::Word: res.append(hex(static_cast<u32>(N64::bus.read<N64::Word>(address, fakeThread)), unitSize*2, '0')); break;
+        case N64::Dual: res.append(hex(static_cast<u64>(N64::bus.read<N64::Dual>(address, fakeThread)), unitSize*2, '0')); break;
       }
       res.append("");
       address += unitSize;
@@ -30,12 +30,12 @@ namespace {
   }
 
   auto commandWrite(u32 address, u32 unitSize, u64 value) -> void {
-    u32 fakeCycles = 0;
+    ares::Nintendo64::Thread fakeThread{};
     switch(unitSize) {
-      case N64::Byte: N64::bus.write<N64::Byte>(address, value, fakeCycles); break;
-      case N64::Half: N64::bus.write<N64::Half>(address, value, fakeCycles); break;
-      case N64::Word: N64::bus.write<N64::Word>(address, value, fakeCycles); break;
-      case N64::Dual: N64::bus.write<N64::Dual>(address, value, fakeCycles); break;
+      case N64::Byte: N64::bus.write<N64::Byte>(address, value, fakeThread); break;
+      case N64::Half: N64::bus.write<N64::Half>(address, value, fakeThread); break;
+      case N64::Word: N64::bus.write<N64::Word>(address, value, fakeThread); break;
+      case N64::Dual: N64::bus.write<N64::Dual>(address, value, fakeThread); break;
     }
   }
 
