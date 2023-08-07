@@ -134,6 +134,13 @@ NALL_HEADER_INLINE auto Socket::open(u16 port) -> bool {
 
         std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MILLIS));
       }
+
+      // Kick client if we need to (must be done send)
+      if(client.handle >= 0 && wantKickClient) {
+        ::close(client.handle);
+        client.handle = -1;
+        wantKickClient = false;
+      }
     }
     
     // Stop
@@ -177,6 +184,10 @@ NALL_HEADER_INLINE auto Socket::update() -> void {
   if(data.size() > 0) {
     onData(data);
   }
+}
+
+NALL_HEADER_INLINE auto Socket::disconnectClient() -> void {
+  wantKickClient = true;
 }
 
 NALL_HEADER_INLINE auto Socket::sendData(const u8* data, u32 size) -> void {

@@ -51,7 +51,7 @@ namespace {
   }
 
   auto encodeGdb(const string &payload, bool success = true) {
-    string res{"$"};
+    string res{"+$"};
     res.append(payload);
     res.append("#");
     res.append(calcGdbChecksum(payload));
@@ -63,6 +63,8 @@ namespace {
     auto cmdParts = cmd.split(":");
     auto cmdName = cmdParts[0];
     char cmdPrefix = cmdName.size() > 0 ? cmdName[0] : ' ';
+
+    //printf("Command: %s\n", cmdBuffer.data());
 
     switch(cmdPrefix)
     {
@@ -162,7 +164,6 @@ namespace {
         case '#': // end of message + 2-char checksum after that
           insideCommand = false;
           i+=2;
-          sendText("+");
           sendText(processCommands());
           cmdBuffer = "";
           break;

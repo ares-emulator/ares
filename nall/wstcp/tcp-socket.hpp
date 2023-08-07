@@ -21,6 +21,8 @@ struct Socket {
   auto close() -> void;
   auto update() -> void;
 
+  auto disconnectClient() -> void;
+
   auto sendData(const u8* data, u32 size) -> void;
   virtual auto onData(const vector<u8> &data) -> void = 0;
 
@@ -29,6 +31,7 @@ struct Socket {
   private:
     std::atomic<bool> stopServer{false}; // set to true to let the server-thread know to stop.
     std::atomic<bool> serverRunning{false}; // signals the current state of the server-thread
+    std::atomic<bool> wantKickClient{false}; // set to true to let server know to disconnect the current client (if conn.)
 
     vector<u8> receiveBuffer{};
     std::mutex receiveBufferMutex{};
