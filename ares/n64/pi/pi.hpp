@@ -29,8 +29,8 @@ struct PI : Memory::RCP<PI> {
   auto ioWrite(u32 address, u32 data) -> void;
 
   //bus.hpp
-  auto readWord(u32 address, u32& cycles) -> u32;
-  auto writeWord(u32 address, u32 data, u32& cycles) -> void;
+  auto readWord(u32 address, Thread& thread) -> u32;
+  auto writeWord(u32 address, u32 data, Thread& thread) -> void;
   auto writeFinished() -> void;
   auto writeForceFinish() -> u32;
   template <u32 Size>

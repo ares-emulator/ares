@@ -43,6 +43,10 @@ namespace ares::Nintendo64 {
       clock = 0;
     }
 
+    auto step(u32 clocks) -> void {
+      clock += clocks;
+    }
+
     auto serialize(serializer& s) -> void {
       s(clock);
     }

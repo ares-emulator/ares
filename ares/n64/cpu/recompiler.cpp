@@ -30,14 +30,15 @@ auto CPU::Recompiler::emit(u32 address) -> Block* {
   auto block = (Block*)allocator.acquire(sizeof(Block));
   beginFunction(3);
 
-  u32 memCycles;
+  Thread thread;
   bool hasBranched = 0;
   while(true) {
-    u32 instruction = bus.read<Word>(address, memCycles);
+    u32 instruction = bus.read<Word>(address, thread);
     bool branched = emitEXECUTE(instruction);
-    if(unlikely(instruction == 0x1000'ffff)) {
+    if(unlikely(instruction == 0x1000'ffff  //beq 0,0,<pc>
+             || instruction == (2 << 26 | address >> 2 & 0x3ff'ffff))) {  //j <pc>
       //accelerate idle loops
-      mov32(reg(1), imm(64));
+      mov32(reg(1), imm(64 * 2));
       call(&CPU::step);
     }
     call(&CPU::instructionEpilogue);

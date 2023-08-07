@@ -36,10 +36,6 @@ auto RSP::main() -> void {
   }
 }
 
-auto RSP::step(u32 clocks) -> void {
-  Thread::clock += clocks;
-}
-
 auto RSP::instruction() -> void {
   if constexpr(Accuracy::RSP::Recompiler) {
     auto block = recompiler.block(ipu.pc);

@@ -33,7 +33,6 @@ struct CPU : Thread {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(u32 clocks) -> void;
   auto synchronize() -> void;
 
   auto instruction() -> void;
@@ -112,11 +111,11 @@ struct CPU : Thread {
     auto step(u32 vaddr, u32 address) -> void {
       auto& line = this->line(vaddr);
       if(!line.hit(address)) {
-        self.step(48);
+        self.step(48 * 2);
         line.valid = 1;
         line.tag   = address & ~0x0000'0fff;
       } else {
-        self.step(2);
+        self.step(1 * 2);
       }
     }
 
@@ -126,7 +125,7 @@ struct CPU : Thread {
       if(!line.hit(address)) {
         line.fill(address, cpu);
       } else {
-        cpu.step(2);
+        cpu.step(1 * 2);
       }
       return line.read(address);
     }
@@ -145,7 +144,7 @@ struct CPU : Thread {
     struct Line {
       auto hit(u32 address) const -> bool { return valid && tag == (address & ~0x0000'0fff); }
       auto fill(u32 address, CPU& cpu) -> void {
-        cpu.step(48);
+        cpu.step(48 * 2);
         valid = 1;
         tag   = address & ~0x0000'0fff;
         words[0] = cpu.busRead<Word>(tag | index | 0x00);
@@ -159,7 +158,7 @@ struct CPU : Thread {
       }
 
       auto writeBack(CPU& cpu) -> void {
-        cpu.step(48);
+        cpu.step(48 * 2);
         cpu.busWrite<Word>(tag | index | 0x00, words[0]);
         cpu.busWrite<Word>(tag | index | 0x04, words[1]);
         cpu.busWrite<Word>(tag | index | 0x08, words[2]);

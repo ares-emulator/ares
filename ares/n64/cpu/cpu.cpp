@@ -38,12 +38,8 @@ auto CPU::main() -> void {
   vi.refreshed = false;
 }
 
-auto CPU::step(u32 clocks) -> void {
-  Thread::clock += clocks;
-}
-
 auto CPU::synchronize() -> void {
-  auto clocks = Thread::clock * 2;
+  auto clocks = Thread::clock;
   Thread::clock = 0;
 
    vi.clock -= clocks;
@@ -85,13 +81,13 @@ auto CPU::instruction() -> void {
   if(auto interrupts = scc.cause.interruptPending & scc.status.interruptMask) {
     if(scc.status.interruptEnable && !scc.status.exceptionLevel && !scc.status.errorLevel) {
       debugger.interrupt(scc.cause.interruptPending);
-      step(1);
+      step(1 * 2);
       return exception.interrupt();
     }
   }
   if (scc.nmiPending) {
     debugger.nmi();
-    step(1);
+    step(1 * 2);
     return exception.nmi();
   }
 

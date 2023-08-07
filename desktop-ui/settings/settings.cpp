@@ -158,6 +158,7 @@ auto Settings::process(bool load) -> void {
 
 SettingsWindow::SettingsWindow() {
   onClose([&] {
+    settings.save();
     setVisible(false);
     //cancel any pending input assignment requests, if any
     inputSettings.setVisible(false);

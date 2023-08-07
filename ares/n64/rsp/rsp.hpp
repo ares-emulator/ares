@@ -30,7 +30,6 @@ struct RSP : Thread, Memory::RCP<RSP> {
   auto unload() -> void;
 
   auto main() -> void;
-  auto step(u32 clocks) -> void;
 
   auto instruction() -> void;
   auto instructionEpilogue(u32 clocks) -> s32;
@@ -164,8 +163,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
   auto dmaTransferStep() -> void;
 
   //io.cpp
-  auto readWord(u32 address, u32& cycles) -> u32;
-  auto writeWord(u32 address, u32 data, u32& cycles) -> void;
+  auto readWord(u32 address, Thread& thread) -> u32;
+  auto writeWord(u32 address, u32 data, Thread& thread) -> void;
   auto ioRead(u32 address) -> u32;
   auto ioWrite(u32 address, u32 data) -> void;
 
@@ -197,8 +196,8 @@ struct RSP : Thread, Memory::RCP<RSP> {
     Status(RSP& self) : self(self) {}
 
     //io.cpp
-    auto readWord(u32 address, u32& cycles) -> u32;
-    auto writeWord(u32 address, u32 data, u32& cycles) -> void;
+    auto readWord(u32 address, Thread& thread) -> u32;
+    auto writeWord(u32 address, u32 data, Thread& thread) -> void;
 
     n1 semaphore;
     n1 halted = 1;

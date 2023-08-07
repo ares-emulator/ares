@@ -62,11 +62,6 @@ auto VI::unload() -> void {
 
 auto VI::main() -> void {
   while(Thread::clock < 0) {
-    //field is not compared
-    if(io.vcounter << 1 == io.coincidence) {
-      mi.raise(MI::IRQ::VI);
-    }
-
     if(++io.vcounter >= (Region::NTSC() ? 262 : 312) + io.field) {
       io.vcounter = 0;
       io.field = io.field + 1 & io.serrate;
@@ -80,13 +75,14 @@ auto VI::main() -> void {
       screen->frame();
     }
 
+    //field is not compared
+    if(io.vcounter << 1 == io.coincidence) {
+      mi.raise(MI::IRQ::VI);
+    }
+
     if(Region::NTSC()) step(system.frequency() / 60 / 262);
     if(Region::PAL ()) step(system.frequency() / 50 / 312);
   }
-}
-
-auto VI::step(u32 clocks) -> void {
-  Thread::clock += clocks;
 }
 
 auto VI::refresh() -> void {
