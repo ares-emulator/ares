@@ -35,7 +35,7 @@ namespace {
     auto cmdName = cmdParts[0];
     char cmdPrefix = cmdName.size() > 0 ? cmdName[0] : ' ';
 
-    printf("Command: %s\n", cmdBuffer.data());
+    //printf("Command: %s\n", cmdBuffer.data());
 
     switch(cmdPrefix)
     {

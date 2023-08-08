@@ -75,6 +75,8 @@ auto Program::main() -> void {
     emulator->root->unserialize(state);
   }
 
+  ares::DebugServer::server.update();
+
   if(settings.general.autoSaveMemory) {
     static u64 previousTime = chrono::timestamp();
     u64 currentTime = chrono::timestamp();
