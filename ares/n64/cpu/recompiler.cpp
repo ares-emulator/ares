@@ -42,6 +42,7 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address) -> Block* {
       call(&CPU::step);
     }
     call(&CPU::instructionEpilogue);
+    vaddr += 4;
     address += 4;
     if(hasBranched || (address & 0xfc) == 0) break;  //block boundary
     hasBranched = branched;
