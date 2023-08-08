@@ -104,7 +104,7 @@ auto CPU::instruction() -> void {
     }
 
     if (auto address = devirtualize(ipu.pc)) {
-      auto block = recompiler.block(*address);
+      auto block = recompiler.block(ipu.pc, *address);
       block->execute(*this);
     }
   }
