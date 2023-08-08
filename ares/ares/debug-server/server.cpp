@@ -1,45 +1,15 @@
 #include <ares/debug-server/server.hpp>
+#include <ares/debug-server/server-interface.hpp>
 
 // @TODO: why does nall need this?
 #include <cstdlib>
 #include <utility>
-
-//namespace N64 = ares::Nintendo64;
 
 using string = ::nall::string;
 using string_view = ::nall::string_view;
 
 namespace {
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
-
-  auto commandRead(u32 address, u32 unitCount, u32 unitSize = 1) -> string {
-    /*ares::Nintendo64::Thread fakeThread{};
-    string res{""};
-    for(u32 i=0; i<unitCount; ++i) {
-      switch(unitSize) {
-        case N64::Byte: res.append(hex(static_cast< u8>(N64::bus.read<N64::Byte>(address, fakeThread)), unitSize*2, '0')); break;
-        case N64::Half: res.append(hex(static_cast<u16>(N64::bus.read<N64::Half>(address, fakeThread)), unitSize*2, '0')); break;
-        case N64::Word: res.append(hex(static_cast<u32>(N64::bus.read<N64::Word>(address, fakeThread)), unitSize*2, '0')); break;
-        case N64::Dual: res.append(hex(static_cast<u64>(N64::bus.read<N64::Dual>(address, fakeThread)), unitSize*2, '0')); break;
-      }
-      res.append("");
-      address += unitSize;
-    }
-    return res;
-    */
-   return "";
-  }
-
-  auto commandWrite(u32 address, u32 unitSize, u64 value) -> void {
-    /*ares::Nintendo64::Thread fakeThread{};
-    switch(unitSize) {
-      case N64::Byte: N64::bus.write<N64::Byte>(address, value, fakeThread); break;
-      case N64::Half: N64::bus.write<N64::Half>(address, value, fakeThread); break;
-      case N64::Word: N64::bus.write<N64::Word>(address, value, fakeThread); break;
-      case N64::Dual: N64::bus.write<N64::Dual>(address, value, fakeThread); break;
-    }*/
-  }
-
   bool insideCommand{false};
   string cmdBuffer{""};
 
@@ -102,17 +72,25 @@ namespace {
 
       case 'm': // read memory
         {
+          if(!ares::DebugInterface::commandRead) {
+            return "";
+          }
+
           auto sepIdxMaybe = cmdName.find(",");
           u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
 
           u64 address = cmdName.slice(1, sepIdx-1).hex();
           u64 count = cmdName.slice(sepIdx+1, cmdName.size()-sepIdx).hex();
-          return commandRead(address, count);
+          return ares::DebugInterface::commandRead(address, count, 1);
         }
       break;
 
       case 'M': // write memory (e.g.: M801ef90a,4:01000000)
         {
+          if(!ares::DebugInterface::commandWrite) {
+            return "";
+          }
+
           auto sepIdxMaybe = cmdName.find(",");
           u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
 
@@ -120,7 +98,7 @@ namespace {
           u64 unitSize = cmdName.slice(sepIdx+1, 1).hex();
           u64 value = cmdParts.size() > 1 ? cmdParts[1].hex() : 0;
 
-          commandWrite(address, unitSize, value);
+          ares::DebugInterface::commandWrite(address, unitSize, value);
           return "";
         }
 
@@ -151,8 +129,14 @@ namespace {
   }
 }
 
-namespace ares::DebugServer {
+namespace ares::DebugInterface {
+  // server-interface.hpp
+  function<string(u32 address, u32 unitCount, u32 unitSize)> commandRead{nullptr};
+  function<void(u32 address, u32 unitSize, u64 value)> commandWrite{nullptr};
+}
 
+namespace ares::DebugServer {
+  // server.hpp
   Server server{};
 
   auto Server::onText(string_view text) -> void {
@@ -180,6 +164,10 @@ namespace ares::DebugServer {
           }
       }
     }  
+  }
+
+  auto Server::reset() -> void {
+    ares::DebugInterface::reset();
   }
 
 };

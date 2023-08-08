@@ -108,7 +108,39 @@ auto System::load(Node::System& root, string name) -> bool {
   vulkan.load(node);
   #endif
 
+  initDebugHooks();
+
   return true;
+}
+
+auto System::initDebugHooks() -> void {
+  
+  DebugInterface::commandRead = [](u32 address, u32 unitCount, u32 unitSize) {
+    Thread fakeThread{};
+    string res{""};
+    for(u32 i=0; i<unitCount; ++i) {
+      switch(unitSize) {
+        case Byte: res.append(hex(static_cast< u8>(bus.read<Byte>(address, fakeThread)), unitSize*2, '0')); break;
+        case Half: res.append(hex(static_cast<u16>(bus.read<Half>(address, fakeThread)), unitSize*2, '0')); break;
+        case Word: res.append(hex(static_cast<u32>(bus.read<Word>(address, fakeThread)), unitSize*2, '0')); break;
+        case Dual: res.append(hex(static_cast<u64>(bus.read<Dual>(address, fakeThread)), unitSize*2, '0')); break;
+      }
+      res.append("");
+      address += unitSize;
+    }
+    return res;
+  };
+
+   DebugInterface::commandWrite = [](u32 address, u32 unitSize, u64 value) {
+    Thread fakeThread{};
+    switch(unitSize) {
+      case Byte: bus.write<Byte>(address, value, fakeThread); break;
+      case Half: bus.write<Half>(address, value, fakeThread); break;
+      case Word: bus.write<Word>(address, value, fakeThread); break;
+      case Dual: bus.write<Dual>(address, value, fakeThread); break;
+    }
+  };
+
 }
 
 auto System::unload() -> void {

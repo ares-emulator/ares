@@ -94,6 +94,7 @@ auto Program::unload() -> void {
   if(!emulator) return;
 
   ares::DebugServer::server.close();
+  ares::DebugServer::server.reset();
 
   settings.save();
   clearUndoStates();

@@ -11,6 +11,7 @@ namespace ares::DebugServer {
 class Server : public nall::TCPText::Server {
   public:
     auto onText(string_view text) -> void override;
+    auto reset() -> void;
 };
 
 extern Server server;
