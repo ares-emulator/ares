@@ -27,9 +27,10 @@ namespace {
 
 namespace nall::TCP {
 
-NALL_HEADER_INLINE auto Socket::open(u16 port) -> bool {
+NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
   stopServer = false;
 
+  printf("Opening TCP-server on localhost:%d\n", port);
   auto conf = settings;
   auto t = std::thread([this, port, conf]() {
     serverRunning = true;
@@ -119,7 +120,7 @@ NALL_HEADER_INLINE auto Socket::open(u16 port) -> bool {
         // send data
         if(localSendBuffer.size() > 0) {
           if(send(client.handle, localSendBuffer.data(), localSendBuffer.size(), 0) < 0) {
-            printf("error sending data! (%s)\n", strerror(errno));
+            printf("Error sending data! (%s)\n", strerror(errno));
           }
         }
 
@@ -144,7 +145,7 @@ NALL_HEADER_INLINE auto Socket::open(u16 port) -> bool {
     }
     
     // Stop
-    printf("Stopping server...\n");
+    printf("Stopping TCP-server...\n");
     if(handle.fd) {
       ::close(handle.fd);
       handle.fd = -1;

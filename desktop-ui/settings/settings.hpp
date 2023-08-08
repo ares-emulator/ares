@@ -88,10 +88,11 @@ struct Settings : Markup::Node {
     string game[9];
   } recent;
 
-  struct Debug {
+  struct DebugServer {
     u32 port = 9123; // port for host
     string token = "avGP7rmBUBq3QytQ"; // optional security-token to verify incoming connections
-  } debug;
+    bool enabled = false; // if enabled, server starts with ares
+  } debugServer;
 };
 
 struct VideoSettings : VerticalLayout {
@@ -331,6 +332,30 @@ struct DriverSettings : VerticalLayout {
     Group inputDefocusGroup{&inputDefocusPause, &inputDefocusBlock, &inputDefocusAllow};
 };
 
+struct DebugSettings : VerticalLayout {
+  auto construct() -> void;
+  auto infoRefresh() -> void;
+  auto serverRefresh() -> void;
+
+  Label debugLabel{this, Size{~0, 0}, 5};
+
+  HorizontalLayout portLayout{this, Size{~0, 0}};
+    Label portLabel{&portLayout, Size{48, 20}};
+    LineEdit port{&portLayout, Size{~0, 0}};
+    Label portHint{&portLayout, Size{~0, 0}};
+
+  HorizontalLayout tokenLayout{this, Size{~0, 0}};
+    Label tokenLabel{&tokenLayout, Size{48, 20}};
+    LineEdit token{&tokenLayout, Size{~0, 0}};
+    Label tokenHint{&tokenLayout, Size{~0, 0}};
+
+  HorizontalLayout enabledLayout{this, Size{~0, 0}};
+    Label enabledLabel{&enabledLayout, Size{48, 20}};
+    CheckLabel enabled{&enabledLayout, Size{~0, 0}};
+
+  Label connectInfo{this, Size{~0, 30}, 5};
+};
+
 struct HomePanel : VerticalLayout {
   auto construct() -> void;
 
@@ -353,6 +378,7 @@ struct SettingsWindow : Window {
       FirmwareSettings firmwareSettings;
       PathSettings pathSettings;
       DriverSettings driverSettings;
+      DebugSettings debugSettings;
       HomePanel homePanel;
 };
 
@@ -367,3 +393,4 @@ extern OptionSettings& optionSettings;
 extern FirmwareSettings& firmwareSettings;
 extern PathSettings& pathSettings;
 extern DriverSettings& driverSettings;
+extern DebugSettings& debugSettings;

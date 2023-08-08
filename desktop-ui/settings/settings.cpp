@@ -7,6 +7,7 @@
 #include "firmware.cpp"
 #include "paths.cpp"
 #include "drivers.cpp"
+#include "debug.cpp"
 #include "home.cpp"
 
 Settings settings;
@@ -19,6 +20,7 @@ HotkeySettings& hotkeySettings = settingsWindow.hotkeySettings;
 OptionSettings& optionSettings = settingsWindow.optionSettings;
 FirmwareSettings& firmwareSettings = settingsWindow.firmwareSettings;
 PathSettings& pathSettings = settingsWindow.pathSettings;
+DebugSettings& debugSettings = settingsWindow.debugSettings;
 DriverSettings& driverSettings = settingsWindow.driverSettings;
 
 auto Settings::load() -> void {
@@ -107,8 +109,9 @@ auto Settings::process(bool load) -> void {
   bind(string,  "Paths/SuperFamicom/BSMemory", paths.superFamicom.bsMemory);
   bind(string,  "Paths/SuperFamicom/SufamiTurbo", paths.superFamicom.sufamiTurbo);
 
-  bind(natural, "Debug/Port", debug.port);
-  bind(natural, "Debug/Token", debug.token);
+  bind(natural, "DebugServer/Port", debugServer.port);
+  bind(string,  "DebugServer/Token", debugServer.token);
+  bind(boolean, "DebugServer/Enabled", debugServer.enabled);
 
   for(u32 index : range(9)) {
     string name = {"Recent/Game-", 1 + index};
@@ -175,6 +178,7 @@ SettingsWindow::SettingsWindow() {
   panelList.append(ListViewItem().setText("Firmware").setIcon(Icon::Emblem::Binary));
   panelList.append(ListViewItem().setText("Paths").setIcon(Icon::Emblem::Folder));
   panelList.append(ListViewItem().setText("Drivers").setIcon(Icon::Place::Settings));
+  panelList.append(ListViewItem().setText("Debug").setIcon(Icon::Device::Network));
   panelList->setUsesSidebarStyle();
   panelList.onChange([&] { eventChange(); });
 
@@ -186,6 +190,7 @@ SettingsWindow::SettingsWindow() {
   panelContainer.append(firmwareSettings, Size{~0, ~0});
   panelContainer.append(pathSettings, Size{~0, ~0});
   panelContainer.append(driverSettings, Size{~0, ~0});
+  panelContainer.append(debugSettings, Size{~0, ~0});
   panelContainer.append(homePanel, Size{~0, ~0});
 
   videoSettings.construct();
@@ -196,6 +201,7 @@ SettingsWindow::SettingsWindow() {
   firmwareSettings.construct();
   pathSettings.construct();
   driverSettings.construct();
+  debugSettings.construct();
   homePanel.construct();
 
   setDismissable();
@@ -227,6 +233,7 @@ auto SettingsWindow::eventChange() -> void {
   firmwareSettings.setVisible(false);
   pathSettings.setVisible(false);
   driverSettings.setVisible(false);
+  debugSettings.setVisible(false);
   homePanel.setVisible(false);
 
   bool found = false;
@@ -239,6 +246,7 @@ auto SettingsWindow::eventChange() -> void {
     if(item.text() == "Firmware" ) found = true, firmwareSettings.setVisible();
     if(item.text() == "Paths"    ) found = true, pathSettings.setVisible();
     if(item.text() == "Drivers"  ) found = true, driverSettings.setVisible();
+    if(item.text() == "Debug"    ) found = true, debugSettings.setVisible();
   }
   if(!found) homePanel.setVisible();
 

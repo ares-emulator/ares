@@ -74,9 +74,11 @@ auto Program::load(string location) -> bool {
     pause(false);
   }
 
-  ares::DebugServer::server.open(9124); // @TODO: pull port from config/args
-
   showMessage({"Loaded ", Location::prefix(location)});
+
+  if(settings.debugServer.enabled) {
+    ares::DebugServer::server.open(settings.debugServer.port);
+  }
 
   //update recent games list
   for(s32 index = 7; index >= 0; index--) {

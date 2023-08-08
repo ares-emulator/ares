@@ -17,7 +17,7 @@ struct Socket {
     s32 timeoutSend     =    15 * 1000;  //server
   } settings;
 
-  auto open(u16 port) -> bool;
+  auto open(u32 port) -> bool;
   auto close() -> void;
   auto update() -> void;
 
