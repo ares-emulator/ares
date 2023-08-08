@@ -9,6 +9,11 @@ auto Program::pause(bool state) -> void {
   }
 }
 
+auto Program::mute() -> void {
+  settings.audio.mute = !settings.audio.mute;
+  presentation.muteAudioSetting.setChecked(settings.audio.mute);
+}
+
 auto Program::paletteUpdate() -> void {
   if(!emulator) return;
   for(auto& screen : emulator->root->find<ares::Node::Video::Screen>()) {
