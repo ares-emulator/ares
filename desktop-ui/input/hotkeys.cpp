@@ -124,6 +124,21 @@ auto InputManager::createHotkeys() -> void {
   hotkeys.append(InputHotkey("Quit Emulator").onPress([&] {
     program.quit();
   }));
+
+  hotkeys.append(InputHotkey("Mute Audio").onPress([&] {
+    if(!emulator) return;
+    program.mute();
+  }));
+
+  hotkeys.append(InputHotkey("Increase Audio").onPress([&] {
+    if(!emulator) return;
+    if(settings.audio.volume <= (f64)(1.9)) settings.audio.volume += (f64)(0.1);
+  }));
+
+  hotkeys.append(InputHotkey("Decrease Audio").onPress([&] {
+    if(!emulator) return;
+    if(settings.audio.volume >= (f64)(0.1)) settings.audio.volume -= (f64)(0.1);
+  }));
 }
 
 auto InputManager::pollHotkeys() -> void {
