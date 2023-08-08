@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nall/wstcp/tcp-socket.hpp>
+#include <nall/tcptext/tcp-socket.hpp>
 
 /**
  * Provides text-based WebSocket or raw TCP server on top of the Socket.
@@ -21,5 +21,5 @@ struct Server : public TCP::Socket {
 }
 
 #if defined(NALL_HEADER_ONLY)
-  #include <nall/wstcp/tcptext-server.cpp>
+  #include <nall/tcptext/tcptext-server.cpp>
 #endif

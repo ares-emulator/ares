@@ -1,10 +1,6 @@
 #include <n64/n64.hpp>
 
-#include <n64/system/debug-server.hpp>
-
-namespace {
-  DebugServer debugServer;
-}
+#include <ares/debug-server/server-interface.hpp>
 
 namespace ares::Nintendo64 {
 
@@ -56,7 +52,6 @@ auto System::game() -> string {
 
 auto System::run() -> void {
   cpu.main();
-  debugServer.update(); // @TODO: check if enabled
 }
 
 auto System::load(Node::System& root, string name) -> bool {
@@ -113,18 +108,12 @@ auto System::load(Node::System& root, string name) -> bool {
   vulkan.load(node);
   #endif
 
-  // @TODO: check if enabled
-  debugServer.open(9124); // @TODO: pull port from config/args
-
   return true;
 }
 
 auto System::unload() -> void {
   if(!node) return;
   save();
-
-  // @TODO: check if enabled
-  debugServer.close();
   
   if(vi.screen) vi.screen->quit(); //stop video thread
   #if defined(VULKAN)

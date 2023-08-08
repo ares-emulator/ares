@@ -1,11 +1,10 @@
-#include <n64/n64.hpp>
-#include <n64/system/debug-server.hpp>
+#include <ares/debug-server/server.hpp>
 
 // @TODO: why does nall need this?
 #include <cstdlib>
 #include <utility>
 
-namespace N64 = ares::Nintendo64;
+//namespace N64 = ares::Nintendo64;
 
 using string = ::nall::string;
 using string_view = ::nall::string_view;
@@ -14,7 +13,7 @@ namespace {
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
 
   auto commandRead(u32 address, u32 unitCount, u32 unitSize = 1) -> string {
-    ares::Nintendo64::Thread fakeThread{};
+    /*ares::Nintendo64::Thread fakeThread{};
     string res{""};
     for(u32 i=0; i<unitCount; ++i) {
       switch(unitSize) {
@@ -27,16 +26,18 @@ namespace {
       address += unitSize;
     }
     return res;
+    */
+   return "";
   }
 
   auto commandWrite(u32 address, u32 unitSize, u64 value) -> void {
-    ares::Nintendo64::Thread fakeThread{};
+    /*ares::Nintendo64::Thread fakeThread{};
     switch(unitSize) {
       case N64::Byte: N64::bus.write<N64::Byte>(address, value, fakeThread); break;
       case N64::Half: N64::bus.write<N64::Half>(address, value, fakeThread); break;
       case N64::Word: N64::bus.write<N64::Word>(address, value, fakeThread); break;
       case N64::Dual: N64::bus.write<N64::Dual>(address, value, fakeThread); break;
-    }
+    }*/
   }
 
   bool insideCommand{false};
@@ -64,7 +65,7 @@ namespace {
     auto cmdName = cmdParts[0];
     char cmdPrefix = cmdName.size() > 0 ? cmdName[0] : ' ';
 
-    //printf("Command: %s\n", cmdBuffer.data());
+    printf("Command: %s\n", cmdBuffer.data());
 
     switch(cmdPrefix)
     {
@@ -150,8 +151,11 @@ namespace {
   }
 }
 
+namespace ares::DebugServer {
 
-  auto DebugServer::onText(string_view text) -> void {
+  Server server{};
+
+  auto Server::onText(string_view text) -> void {
     for(u32 i=0; i<text.size(); ++i) 
     {
       char c = text[i];
@@ -178,3 +182,4 @@ namespace {
     }  
   }
 
+};

@@ -73,6 +73,9 @@ auto Program::load(string location) -> bool {
   } else {
     pause(false);
   }
+
+  ares::DebugServer::server.open(9124); // @TODO: pull port from config/args
+
   showMessage({"Loaded ", Location::prefix(location)});
 
   //update recent games list
@@ -87,6 +90,8 @@ auto Program::load(string location) -> bool {
 
 auto Program::unload() -> void {
   if(!emulator) return;
+
+  ares::DebugServer::server.close();
 
   settings.save();
   clearUndoStates();

@@ -60,6 +60,8 @@ auto Program::main() -> void {
 
   rewindRun();
 
+  ares::DebugServer::server.update();
+
   program.requestFrameAdvance = false;
   if(!runAhead || fastForwarding || rewinding) {
     emulator->root->run();

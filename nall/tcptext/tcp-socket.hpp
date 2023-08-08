@@ -43,5 +43,5 @@ struct Socket {
 }
 
 #if defined(NALL_HEADER_ONLY)
-  #include <nall/wstcp/tcp-socket.cpp>
+  #include <nall/tcptext/tcp-socket.cpp>
 #endif

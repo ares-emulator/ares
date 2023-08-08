@@ -1,11 +1,18 @@
 #pragma once
-#include <nall/wstcp/tcptext-server.hpp>
+
+#include <nall/tcptext/tcptext-server.hpp>
+
+namespace ares::DebugServer {
 
 /**
  * GDB based debugging server.
  * This allows for remote debugging over TCP.
  */
-class DebugServer : public nall::TCPText::Server {
+class Server : public nall::TCPText::Server {
   public:
     auto onText(string_view text) -> void override;
 };
+
+extern Server server;
+
+}

@@ -1,4 +1,4 @@
-#include <nall/wstcp/tcptext-server.hpp>
+#include <nall/tcptext/tcptext-server.hpp>
 
 namespace {
   nall::string buffer{};
