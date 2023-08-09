@@ -45,7 +45,7 @@ struct InputSDL : InputDriver {
   }
 
   auto rumble(u64 id, bool enable) -> bool override {
-    return false;
+    return joypad.rumble(id, enable);
   }
 
 private:

@@ -55,6 +55,17 @@ struct InputJoypadSDL {
     }
   }
 
+  auto rumble(u64 id, bool enable) -> bool {
+    for(auto& jp : joypads) {
+      if(jp.hid->id() != id) continue;
+
+      SDL_JoystickRumble(jp.handle, enable ? 65535 : 0, enable ? 65535 : 0, 0);
+      return true;
+    }
+
+    return false;
+  }
+
   auto initialize() -> bool {
     terminate();
     SDL_Init(SDL_INIT_EVENTS);
@@ -94,7 +105,7 @@ private:
       for(u32 n : range(axes)) jp.hid->axes().append(n);
       for(u32 n : range(hats)) jp.hid->hats().append(n);
       for(u32 n : range(buttons)) jp.hid->buttons().append(n);
-      jp.hid->setRumble(false);
+      jp.hid->setRumble(true);
 
       joypads.append(jp);
     }
