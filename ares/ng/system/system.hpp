@@ -6,6 +6,11 @@ struct System {
   Memory::Writable<n16> wram;
   Memory::Writable<n16> sram;  //MVS only
 
+  //CD Only
+  Memory::Writable<n16> spriteRam; // 4MiB
+  Memory::Writable<n8> pcmRam;    // 1MiB
+  Memory::Writable<n8> fixRam;    // 128KiB
+
   struct Debugger {
     //debugger.cpp
     auto load(Node::Object) -> void;
@@ -19,7 +24,7 @@ struct System {
     } memory;
   } debugger;
 
-  enum class Model : u32 { NeoGeoAES, NeoGeoMVS };
+  enum class Model : u32 { NeoGeoAES, NeoGeoMVS, NeoGeoCD };
 
   auto name() const -> string { return information.name; }
   auto model() const -> Model { return information.model; }
@@ -33,6 +38,11 @@ struct System {
   auto save() -> void;
   auto power(bool reset = false) -> void;
 
+  auto readC(n32 address) -> n8;
+  auto readS(n32 address) -> n8;
+  auto readVA(n32 address) -> n8;
+  auto readVB(n32 address) -> n8;
+
   //serialization.cpp
   auto serialize(bool synchronize) -> serializer;
   auto unserialize(serializer&) -> bool;
@@ -44,6 +54,9 @@ struct System {
     n1 ledLatch1;
     n1 ledLatch2;
     n8 ledData;
+    n3 uploadZone;
+    n2 spriteUploadBank;
+    n1 pcmUploadBank;
   } io;
 
 private:
@@ -60,3 +73,4 @@ extern System system;
 
 auto Model::NeoGeoAES() -> bool { return system.model() == System::Model::NeoGeoAES; }
 auto Model::NeoGeoMVS() -> bool { return system.model() == System::Model::NeoGeoMVS; }
+auto Model::NeoGeoCD() -> bool { return system.model() == System::Model::NeoGeoCD; }

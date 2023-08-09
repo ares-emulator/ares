@@ -30,6 +30,7 @@ struct APU : Z80, Z80::Bus, Thread {
   auto main() -> void;
   auto step(u32 clocks) -> void override;
   auto power(bool reset) -> void;
+  auto restart() -> void;
 
   //memory.cpp
   auto read(n16 address) -> n8 override;

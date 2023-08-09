@@ -79,6 +79,7 @@ target_sources(
     emulator/myvision.cpp
     emulator/neo-geo-aes.cpp
     emulator/neo-geo-mvs.cpp
+    emulator/neo-geo-cd.cpp
     emulator/neo-geo-pocket-color.cpp
     emulator/neo-geo-pocket.cpp
     emulator/nintendo-64.cpp

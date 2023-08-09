@@ -86,6 +86,7 @@ namespace ares::Atari2600 {
   }
   #include "neo-geo-aes.cpp"
   #include "neo-geo-mvs.cpp"
+  #include "neo-geo-cd.cpp"
 #endif
 
 #ifdef CORE_NGP
@@ -237,6 +238,7 @@ auto Emulator::construct() -> void {
   #ifdef CORE_NG
   emulators.append(new NeoGeoAES);
   emulators.append(new NeoGeoMVS);
+  emulators.append(new NeoGeoCD);
   #endif
 
   #ifdef CORE_NGP

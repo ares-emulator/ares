@@ -11,7 +11,7 @@ auto System::Debugger::load(Node::Object parent) -> void {
 //memory.srom = parent->append<Node::Debugger::Memory>("System Static ROM");
 
   memory.wram = parent->append<Node::Debugger::Memory>("System Work RAM");
-  memory.wram->setSize(64_KiB);
+  memory.wram->setSize(NeoGeo::Model::NeoGeoCD() ? 2_MiB : 64_KiB);
   memory.wram->setRead([&](u32 address) -> u8 {
     return system.wram[address >> 1].byte(!(address & 1));
   });

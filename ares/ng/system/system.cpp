@@ -6,6 +6,7 @@ auto enumerate() -> vector<string> {
   return {
     "[SNK] Neo Geo AES",
     "[SNK] Neo Geo MVS",
+    "[SNK] Neo Geo CD",
   };
 }
 
@@ -23,6 +24,8 @@ auto System::game() -> string {
   if(cartridge.node) {
     return cartridge.title();
   }
+
+  // TODO: disc.node
 
   return "(no cartridge connected)";
 }
@@ -43,6 +46,10 @@ auto System::load(Node::System& root, string name) -> bool {
     information.name = "Neo Geo MVS";
     information.model = Model::NeoGeoMVS;
   }
+  if(name.find("Neo Geo CD")) {
+    information.name = "Neo Geo CD";
+    information.model = Model::NeoGeoCD;
+  }
 
   node = Node::System::create(information.name);
   node->setGame({&System::game, this});
@@ -55,7 +62,15 @@ auto System::load(Node::System& root, string name) -> bool {
   root = node;
   if(!node->setPak(pak = platform->pak(node))) return false;
 
-  wram.allocate(64_KiB >> 1);
+  if(NeoGeo::Model::NeoGeoCD()) {
+    wram.allocate(2_MiB >> 1);
+    spriteRam.allocate(4_MiB >> 1);
+    pcmRam.allocate(1_MiB);
+    fixRam.allocate(128_KiB);
+  } else {
+    wram.allocate(64_KiB >> 1);
+  }
+
   if(NeoGeo::Model::NeoGeoMVS()) {
     sram.allocate(64_KiB >> 1);
   }
@@ -65,10 +80,10 @@ auto System::load(Node::System& root, string name) -> bool {
   apu.load(node);
   lspc.load(node);
   opnb.load(node);
-  cartridgeSlot.load(node);
+  if(!NeoGeo::Model::NeoGeoCD()) cartridgeSlot.load(node);
   controllerPort1.load(node);
   controllerPort2.load(node);
-  cardSlot.load(node);
+  if(!NeoGeo::Model::NeoGeoCD()) cardSlot.load(node);
   debugger.load(node);
   return true;
 }
@@ -81,19 +96,22 @@ auto System::unload() -> void {
   apu.unload();
   lspc.unload();
   opnb.unload();
-  cartridgeSlot.unload();
+  if(!NeoGeo::Model::NeoGeoCD()) cartridgeSlot.unload();
   controllerPort1.unload();
   controllerPort2.unload();
-  cardSlot.unload();
+  if(!NeoGeo::Model::NeoGeoCD()) cardSlot.unload();
   wram.reset();
   sram.reset();
+  spriteRam.reset();
+  pcmRam.reset();
+  fixRam.reset();
   pak.reset();
   node.reset();
 }
 
 auto System::save() -> void {
   if(!node) return;
-  cartridge.save();
+  if(!NeoGeo::Model::NeoGeoCD()) cartridge.save();
   cardSlot.save();
 }
 
@@ -116,8 +134,8 @@ auto System::power(bool reset) -> void {
     }
   }
 
-  if(cartridge.node) cartridge.power();
-  cardSlot.power(reset);
+  if(!NeoGeo::Model::NeoGeoCD()) if(cartridge.node) cartridge.power();
+  if(!NeoGeo::Model::NeoGeoCD()) cardSlot.power(reset);
   cpu.power(reset);
   apu.power(reset);
   lspc.power(reset);
@@ -125,6 +143,26 @@ auto System::power(bool reset) -> void {
   scheduler.power(cpu);
 
   io = {};
+}
+
+auto System::readC(n32 address) -> n8 {
+  if(NeoGeo::Model::NeoGeoCD()) return spriteRam.read(address >> 1).byte(address & 1);
+  return cartridge.readC(address);
+}
+
+auto System::readS(n32 address) -> n8 {
+  if(NeoGeo::Model::NeoGeoCD()) return fixRam.read(address);
+  return cartridge.readS(address);
+}
+
+auto System::readVA(n32 address) -> n8 {
+  if(NeoGeo::Model::NeoGeoCD()) return pcmRam.read(address);
+  return cartridge.readVA(address);
+}
+
+auto System::readVB(n32 address) -> n8 {
+  if(NeoGeo::Model::NeoGeoCD()) return 0xff;
+  return cartridge.readVB(address);
 }
 
 };

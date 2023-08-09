@@ -74,11 +74,11 @@ auto OPNB::write(n2 address, n8 data) -> void {
 }
 
 auto OPNB::readPCMA(u32 address) -> u8 {
-  return cartridge.readVA(address);
+  return system.readVA(address);
 }
 
 auto OPNB::readPCMB(u32 address) -> u8 {
-  return cartridge.readVB(address);
+  return system.readVB(address);
 }
 
 }

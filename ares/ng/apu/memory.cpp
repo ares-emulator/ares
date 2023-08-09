@@ -1,4 +1,5 @@
 auto APU::read(n16 address) -> n8 {
+  if(Model::NeoGeoCD()) return ram[address];
   if(address <= 0x7fff) return cartridge.readM(address);
   if(address <= 0xbfff) return cartridge.readM(rom.bankA << 14 | n14(address));
   if(address <= 0xdfff) return cartridge.readM(rom.bankB << 13 | n13(address));
@@ -9,6 +10,11 @@ auto APU::read(n16 address) -> n8 {
 }
 
 auto APU::write(n16 address, n8 data) -> void {
+  if(Model::NeoGeoCD()) {
+    ram[address] = data;
+    return;
+  }
+
   if(address >= 0xf800) {
     ram[address & 0x7ff] = data;
     return;

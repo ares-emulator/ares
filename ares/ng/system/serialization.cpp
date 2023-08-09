@@ -49,10 +49,16 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(opnb);
   s(wram);
   s(sram);
+  s(spriteRam);
+  s(pcmRam);
+  s(fixRam);
   s(io.sramLock);
   s(io.slotSelect);
   s(io.ledMarquee);
   s(io.ledLatch1);
   s(io.ledLatch2);
   s(io.ledData);
+  s(io.uploadZone);
+  s(io.spriteUploadBank);
+  s(io.pcmUploadBank);
 }

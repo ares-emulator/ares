@@ -18,6 +18,7 @@ namespace Media {
   #include "msx.cpp"
   #include "msx2.cpp"
   #include "neo-geo.cpp"
+  #include "neo-geo-cd.cpp"
   #include "neo-geo-pocket.cpp"
   #include "neo-geo-pocket-color.cpp"
   #include "nintendo-64.cpp"
@@ -61,6 +62,7 @@ auto Medium::create(string name) -> shared_pointer<Pak> {
   if(name == "MSX") return new Media::MSX;
   if(name == "MSX2") return new Media::MSX2;
   if(name == "Neo Geo") return new Media::NeoGeo;
+  if(name == "Neo Geo CD") return new Media::NeoGeoCD;
   if(name == "Neo Geo Pocket") return new Media::NeoGeoPocket;
   if(name == "Neo Geo Pocket Color") return new Media::NeoGeoPocketColor;
   if(name == "Nintendo 64") return new Media::Nintendo64;

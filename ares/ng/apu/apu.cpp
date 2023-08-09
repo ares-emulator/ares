@@ -9,7 +9,7 @@ APU apu;
 
 auto APU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("APU");
-  ram.allocate(2_KiB);
+  ram.allocate(Model::NeoGeoCD() ? 64_KiB : 2_KiB);
   debugger.load(node);
 }
 
@@ -44,6 +44,15 @@ auto APU::power(bool reset) -> void {
   Z80::bus = this;
   Z80::power();
   Thread::create(4'000'000, {&APU::main, this});
+  communication = {};
+  nmi = {};
+  irq = {};
+  rom = {};
+}
+
+auto APU::restart() -> void {
+  Z80::reset();
+  Thread::restart({&APU::main, this});
   communication = {};
   nmi = {};
   irq = {};
