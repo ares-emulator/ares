@@ -122,7 +122,7 @@ struct InputJoypadUdev {
         memory::fill(&play, sizeof(input_event));
         play.type = EV_FF;
         play.code = jp.effectID;
-        play.value = enable;
+        play.value = weak > 0 || strong > 0;
         (void)write(jp.fd, &play, sizeof(input_event));
       }
 
