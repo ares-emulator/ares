@@ -161,7 +161,7 @@ struct InputJoypadIOKit {
     }
   }
 
-  auto rumble(u64 id, bool enable) -> bool {
+  auto rumble(u64 id, u16 weak, u16 strong) -> bool {
     //todo
     return false;
   }

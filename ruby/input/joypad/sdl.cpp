@@ -55,11 +55,11 @@ struct InputJoypadSDL {
     }
   }
 
-  auto rumble(u64 id, bool enable) -> bool {
+  auto rumble(u64 id, u16 weak, u16 strong) -> bool {
     for(auto& jp : joypads) {
       if(jp.hid->id() != id) continue;
 
-      SDL_JoystickRumble(jp.handle, enable ? 65535 : 0, enable ? 65535 : 0, 0);
+      SDL_JoystickRumble(jp.handle, weak, strong, 0);
       return true;
     }
 

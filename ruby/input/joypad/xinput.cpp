@@ -87,14 +87,14 @@ struct InputJoypadXInput {
     }
   }
 
-  auto rumble(u64 id, bool enable) -> bool {
+  auto rumble(u64 id, u16 weak, u16 strong) -> bool {
     for(auto& jp : joypads) {
       if(jp.hid->id() != id) continue;
 
       XINPUT_VIBRATION vibration;
       memset(&vibration, 0, sizeof(XINPUT_VIBRATION));
-      vibration.wLeftMotorSpeed  = enable ? 65535 : 0;  //low-frequency motor  (0 = off, 65535 = max)
-      vibration.wRightMotorSpeed = enable ? 65535 : 0;  //high-frequency motor (0 = off, 65535 = max)
+      vibration.wLeftMotorSpeed  = weak;  //low-frequency motor  (0 = off, 65535 = max)
+      vibration.wRightMotorSpeed = strong;  //high-frequency motor (0 = off, 65535 = max)
       XInputSetState(jp.id, &vibration);
       return true;
     }

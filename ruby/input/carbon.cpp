@@ -22,7 +22,7 @@ struct InputCarbon : InputDriver {
     return devices;
   }
 
-  auto rumble(u64 id, bool enable) -> bool override {
+  auto rumble(u64 id, u16 weak, u16 strong) -> bool override {
     return false;
   }
 

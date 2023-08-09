@@ -418,7 +418,7 @@ auto InputRumble::value() -> s16 {
 auto InputRumble::rumble(bool enable) -> void {
   for(auto& binding : bindings) {
     if(!binding.device) continue;
-    ruby::input.rumble(binding.deviceID, enable);
+    ruby::input.rumble(binding.deviceID, enable ? 65535 : 0, enable ? 65535 : 0);
   }
 }
 

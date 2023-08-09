@@ -53,8 +53,8 @@ auto Input::poll() -> vector<shared_pointer<nall::HID::Device>> {
   return instance->poll();
 }
 
-auto Input::rumble(u64 id, bool enable) -> bool {
-  return instance->rumble(id, enable);
+auto Input::rumble(u64 id, u16 weak, u16 strong) -> bool {
+  return instance->rumble(id, weak, strong);
 }
 
 //
