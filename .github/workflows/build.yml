@@ -18,14 +18,14 @@ jobs:
           windres: windres
           shell: 'msys2 {0}'
           msystem: clang64
-          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-SDL2
+          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-pkgconf mingw-w64-clang-x86_64-SDL2
         - name: windows-arm64
           os: windows-latest
           compiler: clang++ --target=aarch64-w64-windows-gnu --sysroot=/clangarm64 -resource-dir=/clangarm64/lib/clang/$(basename "$(clang++ -print-resource-dir)")
           windres: windres --target=aarch64-w64-windows-gnu
           shell: 'msys2 {0}'
           msystem: clang64
-          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-aarch64-clang mingw-w64-clang-aarch64-SDL2
+          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-aarch64-clang mingw-w64-clang-aarch64-pkgconf mingw-w64-clang-aarch64-SDL2
         - name: windows-msvc-x64
           os: windows-latest
           compiler: clang++
