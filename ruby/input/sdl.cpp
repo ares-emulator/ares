@@ -51,6 +51,22 @@ struct InputSDL : InputDriver {
 private:
   auto initialize() -> bool {
     terminate();
+
+#if defined(PLATFORM_WINDOWS)
+    //TODO: this won't work if Input is recreated post-initialization; nor will it work with multiple Input instances
+    if(!rawinput.initialized) {
+      rawinput.initialized = true;
+      rawinput.mutex = CreateMutex(nullptr, false, nullptr);
+      CreateThread(nullptr, 0, RawInputThreadProc, 0, 0, nullptr);
+
+      do {
+        Sleep(1);
+        WaitForSingleObject(rawinput.mutex, INFINITE);
+        ReleaseMutex(rawinput.mutex);
+      } while(!rawinput.ready);
+    }
+#endif
+
     if(!self.context) return false;
     if(!keyboard.initialize()) return false;
     if(!mouse.initialize(self.context)) return false;
