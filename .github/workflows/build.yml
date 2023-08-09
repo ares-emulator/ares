@@ -25,6 +25,7 @@ jobs:
           windres: windres --target=aarch64-w64-windows-gnu
           shell: 'msys2 {0}'
           msystem: clang64
+          msys-env: clang-aarch64
           install: mingw-w64-clang-x86_64-clang mingw-w64-clang-aarch64-clang
         - name: windows-msvc-x64
           os: windows-latest
