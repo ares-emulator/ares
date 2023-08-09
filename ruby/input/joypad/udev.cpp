@@ -101,7 +101,7 @@ struct InputJoypadUdev {
       if(jp.hid->id() != id) continue;
       if(!jp.hid->rumble()) continue;
 
-      if(!enable) {
+      if(weak == 0 && strong == 0) {
         if(jp.effectID == -1) return true;  //already stopped?
 
         ioctl(jp.fd, EVIOCRMFF, jp.effectID);
