@@ -415,10 +415,10 @@ auto InputRumble::value() -> s16 {
   return 0;
 }
 
-auto InputRumble::rumble(bool enable) -> void {
+auto InputRumble::rumble(u16 weak, u16 strong) -> void {
   for(auto& binding : bindings) {
     if(!binding.device) continue;
-    ruby::input.rumble(binding.deviceID, enable ? 65535 : 0, enable ? 65535 : 0);
+    ruby::input.rumble(binding.deviceID, weak, strong);
   }
 }
 

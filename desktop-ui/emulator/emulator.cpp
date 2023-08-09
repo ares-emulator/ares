@@ -206,7 +206,7 @@ auto Emulator::input(ares::Node::Input::Input input) -> void {
         }
         if(auto rumble = input->cast<ares::Node::Input::Rumble>()) {
           if(auto target = dynamic_cast<InputRumble*>(inputNode.mapping)) {
-            return target->rumble(rumble->enable());
+            return target->rumble(rumble->weakValue(), rumble->strongValue());
           }
         }
       }
