@@ -561,7 +561,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NMT") {rpak = true;}                                         //Magical Tetris Challenge
   if(id == "NM3") {rpak = true;}                                         //Monster Truck Madness 64
   if(id == "NRG") {rpak = true;}                                         //Rugrats - Scavenger Hunt [Treasure Hunt (E)]
-  if(id == "NOH") {rpak = true; tpak=true}                                //Transformers Beast Wars - Transmetals
+  if(id == "NOH") {rpak = true; tpak=true;}                              //Transformers Beast Wars - Transmetals
   if(id == "NWF") {rpak = true;}                                         //Wheel of Fortune
 
   //Special case for save type in International Track & Field
