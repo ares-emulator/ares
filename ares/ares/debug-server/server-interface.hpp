@@ -8,11 +8,18 @@
  * All commands are optional.
  */
 namespace ares::DebugInterface {
-  extern function<string(u32 address, u32 unitCount, u32 unitSize)> commandRead;
-  extern function<void(u32 address, u32 unitSize, u64 value)> commandWrite;
+  // Memory
+  extern function<string(u32 address, u32 unitCount, u32 unitSize)> cmdRead;
+  extern function<void(u32 address, u32 unitSize, u64 value)> cmdWrite;
+
+  // Registers
+  extern function<string()> cmdRegReadGeneral;
+  extern function<string(u32 regIdx)> cmdRegRead;
 
   inline auto reset() -> void {
-    commandRead = nullptr;
-    commandWrite = nullptr;
+    cmdRead = nullptr;
+    cmdWrite = nullptr;
+    cmdRegReadGeneral = nullptr;
+    cmdRegRead = nullptr;
   }
 }

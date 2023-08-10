@@ -115,7 +115,7 @@ auto System::load(Node::System& root, string name) -> bool {
 
 auto System::initDebugHooks() -> void {
   
-  DebugInterface::commandRead = [](u32 address, u32 unitCount, u32 unitSize) {
+  DebugInterface::cmdRead = [](u32 address, u32 unitCount, u32 unitSize) {
     Thread fakeThread{};
     string res{""};
     for(u32 i=0; i<unitCount; ++i) {
@@ -131,7 +131,7 @@ auto System::initDebugHooks() -> void {
     return res;
   };
 
-   DebugInterface::commandWrite = [](u32 address, u32 unitSize, u64 value) {
+  DebugInterface::cmdWrite = [](u32 address, u32 unitSize, u64 value) {
     Thread fakeThread{};
     switch(unitSize) {
       case Byte: bus.write<Byte>(address, value, fakeThread); break;
@@ -139,6 +139,33 @@ auto System::initDebugHooks() -> void {
       case Word: bus.write<Word>(address, value, fakeThread); break;
       case Dual: bus.write<Dual>(address, value, fakeThread); break;
     }
+  };
+
+  DebugInterface::cmdRegRead = [](u32 regIdx) {
+    if(regIdx > cpu.ipu.RA) {
+      return string{"0000000000000000"};
+    }
+    return hex(cpu.ipu.r[regIdx].u64, 16, '0');
+  };
+
+  DebugInterface::cmdRegReadGeneral = []() {
+    string res{};
+    for(auto reg : cpu.ipu.r) {
+      res.append(hex(reg.u64, 16, '0'));
+    }
+
+    res.append(hex(cpu.getControlRegister(12), 16, '0')); // COP0 status
+    res.append(hex(cpu.ipu.lo.u64, 16, '0'));
+    res.append(hex(cpu.ipu.hi.u64, 16, '0'));
+    res.append(hex(cpu.getControlRegister(8), 16, '0')); // COP0 badvaddr
+    res.append(hex(cpu.getControlRegister(13), 16, '0')); // COP0 cause
+    res.append(hex(cpu.ipu.pc, 16, '0'));
+
+    for(auto reg : cpu.fpu.r) {
+      res.append(hex(reg.u64, 16, '0'));
+    }
+    res.append(hex(cpu.getControlRegisterFPU(31), 16, '0')); // FPU control
+    return res;
   };
 
 }
