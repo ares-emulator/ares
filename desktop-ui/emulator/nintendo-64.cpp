@@ -120,6 +120,7 @@ auto Nintendo64::load() -> bool {
     if(auto port = root->find<ares::Node::Port>({"Controller Port ", 1 + id})) {
       auto peripheral = port->allocate("Gamepad");
       port->connect();
+      bool transferPakConnected = false;
       if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
         if(id == 0 && game->pak->attribute("tpak").boolean()) {
           #if defined(CORE_GB)
@@ -132,20 +133,26 @@ auto Nintendo64::load() -> bool {
             if(gb->load(Emulator::load(gb, tmpPath))) {
               slot->allocate();
               slot->connect();
+              transferPakConnected = true;
             } else {
+              port->disconnect();
               gb.reset();
             }
           }
           #endif
-        } else if(id == 0 && game->pak->attribute("cpak").boolean()) {
-          gamepad = mia::Pak::create("Nintendo 64");
-          gamepad->pak->append("save.pak", 32_KiB);
-          gamepad->load("save.pak", ".pak", game->location);
-          port->allocate("Controller Pak");
-          port->connect();
-        } else if(game->pak->attribute("rpak").boolean()) {
-          port->allocate("Rumble Pak");
-          port->connect();
+        }
+
+        if(!transferPakConnected) {
+          if(id == 0 && game->pak->attribute("cpak").boolean()) {
+            gamepad = mia::Pak::create("Nintendo 64");
+            gamepad->pak->append("save.pak", 32_KiB);
+            gamepad->load("save.pak", ".pak", game->location);
+            port->allocate("Controller Pak");
+            port->connect();
+          } else if(game->pak->attribute("rpak").boolean()) {
+            port->allocate("Rumble Pak");
+            port->connect();
+          }
         }
       }
     }
