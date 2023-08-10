@@ -23,6 +23,11 @@ using v128 = __m128i;
   #include <n64/vulkan/vulkan.hpp>
 #endif
 
+// Include the GB core, we can use its cartridge emulation for Transfer Pak
+#if defined(CORE_GB)
+#include <gb/gb.hpp>
+#endif
+
 namespace ares::Nintendo64 {
   auto enumerate() -> vector<string>;
   auto load(Node::System& node, string name) -> bool;

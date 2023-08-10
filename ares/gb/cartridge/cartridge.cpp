@@ -9,6 +9,8 @@ Cartridge& cartridge = cartridgeSlot.cartridge;
 #include "serialization.cpp"
 
 auto Cartridge::allocate(Node::Port parent) -> Node::Peripheral {
+  auto system = (Node::System)parent->parent();
+  transferPak = system->name() == "Transfer Pak";
   return node = parent->append<Node::Peripheral>(string{parent->family(), " Cartridge"});
 }
 
@@ -54,9 +56,11 @@ auto Cartridge::save() -> void {
 }
 
 auto Cartridge::power() -> void {
-  Thread::create(4 * 1024 * 1024, {&Cartridge::main, this});
+  if(!transferPak) {
+    Thread::create(4 * 1024 * 1024, {&Cartridge::main, this});
+    bootromEnable = true;
+  }
 
-  bootromEnable = true;
   if(!board) board = new Board::None{*this};
   board->power();
 }
@@ -66,6 +70,7 @@ auto Cartridge::main() -> void {
 }
 
 auto Cartridge::step(u32 clocks) -> void {
+  if(transferPak) return;
   Thread::step(clocks);
   synchronize(cpu);
 }

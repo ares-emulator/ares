@@ -6,6 +6,7 @@ struct Nintendo64 : Emulator {
 
   shared_pointer<mia::Pak> gamepad;
   shared_pointer<mia::Pak> disk;
+  shared_pointer<mia::Pak> gb;
   u32 regionID = 0;
 };
 
@@ -120,7 +121,23 @@ auto Nintendo64::load() -> bool {
       auto peripheral = port->allocate("Gamepad");
       port->connect();
       if(auto port = peripheral->find<ares::Node::Port>("Pak")) {
-        if(id == 0 && game->pak->attribute("cpak").boolean()) {
+        if(id == 0 && game->pak->attribute("tpak").boolean()) {
+          #if defined(CORE_GB)
+          auto transferPak = port->allocate("Transfer Pak");
+          port->connect();
+
+          if(auto slot = transferPak->find<ares::Node::Port>("Cartridge Slot")) {
+            gb = mia::Medium::create("Game Boy");
+            string tmpPath;
+            if(gb->load(Emulator::load(gb, tmpPath))) {
+              slot->allocate();
+              slot->connect();
+            } else {
+              gb.reset();
+            }
+          }
+          #endif
+        } else if(id == 0 && game->pak->attribute("cpak").boolean()) {
           gamepad = mia::Pak::create("Nintendo 64");
           gamepad->pak->append("save.pak", 32_KiB);
           gamepad->load("save.pak", ".pak", game->location);
@@ -143,6 +160,7 @@ auto Nintendo64::save() -> bool {
   game->save(game->location);
   if(disk) disk->save(disk->location);
   if(gamepad) gamepad->save("save.pak", ".pak", game->location);
+  if(gb) gb->save(gb->location);
   return true;
 }
 
@@ -150,6 +168,8 @@ auto Nintendo64::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> 
   if(node->name() == "Nintendo 64") return system->pak;
   if(node->name() == "Nintendo 64 Cartridge") return game->pak;
   if(node->name() == "Nintendo 64DD Disk" && disk) return disk->pak;
+  if(node->name() == "Game Boy Cartridge") return gb->pak;
+  if(node->name() == "Game Boy Color Cartridge") return gb->pak;
   if(node->name() == "Gamepad") return gamepad->pak;
   return {};
 }

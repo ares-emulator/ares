@@ -31,6 +31,7 @@ struct Cartridge : Thread {
 
   //todo: this shouldn't be handled by the Cartridge class
   bool bootromEnable = true;
+  bool transferPak = false; // Set when connected to an N64 via transfer pak
 
   unique_pointer<Board::Interface> board;
 };

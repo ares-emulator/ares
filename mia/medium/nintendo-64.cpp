@@ -26,6 +26,7 @@ auto Nintendo64::load(string location) -> bool {
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("cpak",   (bool)document["game/controllerpak"]);
   pak->setAttribute("rpak",   (bool)document["game/rumblepak"]);
+  pak->setAttribute("tpak",   (bool)document["game/transferpak"]);
   pak->setAttribute("cic",    document["game/board/cic"].string());
   pak->setAttribute("dd",     (bool)document["game/dd"]);
   pak->append("manifest.bml", manifest);
@@ -152,6 +153,7 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   //supported peripherals
   bool cpak = false;                 //Controller Pak
   bool rpak = false;                 //Rumble Pak
+  bool tpak = false;                 //Transfer Pak
   bool rtc  = false;                 //RTC
   bool dd   = id.beginsWith("C");    //64DD
 
@@ -330,9 +332,9 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NMQ") {flash = 128_KiB; rpak = true;}                        //Paper Mario
   if(id == "NPN") {flash = 128_KiB;}                                     //Pokemon Puzzle League
   if(id == "NPF") {flash = 128_KiB;}                                     //Pokemon Snap [Pocket Monsters Snap (J)]
-  if(id == "NPO") {flash = 128_KiB;}                                     //Pokemon Stadium
-  if(id == "CP2") {flash = 128_KiB;}                                     //Pocket Monsters Stadium 2 (J)
-  if(id == "NP3") {flash = 128_KiB;}                                     //Pokemon Stadium 2 [Pocket Monsters Stadium - Kin Gin (J)]
+  if(id == "NPO") {flash = 128_KiB; tpak = true;}                        //Pokemon Stadium
+  if(id == "CP2") {flash = 128_KiB; tpak = true;}                        //Pocket Monsters Stadium 2 (J)
+  if(id == "NP3") {flash = 128_KiB; tpak = true;}                        //Pokemon Stadium 2 [Pocket Monsters Stadium - Kin Gin (J)]
   if(id == "NRH") {flash = 128_KiB; rpak = true;}                        //Rockman Dash - Hagane no Boukenshin (J)
   if(id == "NSQ") {flash = 128_KiB; rpak = true;}                        //StarCraft 64
   if(id == "NT9") {flash = 128_KiB;}                                     //Tigger's Honey Hunt
@@ -632,6 +634,8 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   s += "  controllerpak\n";
   if(rpak)
   s += "  rumblepak\n";
+  if(tpak)
+  s += "  transferpak\n";
   if(dd)
   s += "  dd\n";
   if(revision < 4) {
