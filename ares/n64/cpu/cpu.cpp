@@ -1,4 +1,5 @@
 #include <n64/n64.hpp>
+#include <ares/debug-server/server.hpp>
 
 namespace ares::Nintendo64 {
 
@@ -30,7 +31,7 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  while(!vi.refreshed) {
+  while(!vi.refreshed && !GDB::server.isHalted(ipu.pc & 0xFFFFFFFF)) {
     instruction();
     synchronize();
   }
