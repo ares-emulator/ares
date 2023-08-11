@@ -7,7 +7,7 @@ ifeq ($(ruby),)
     ruby += audio.wasapi audio.xaudio2 audio.directsound audio.waveout #audio.asio
     ruby += input.windows
 
-  ifeq ($(shell echo ^^),^)
+  ifeq ($(call which,pkg-config),)
     # TODO: Check presence of libSDL
   else
     # If we're in a posix shell, use pkg-config/pkg-check
@@ -51,10 +51,10 @@ else
 endif
 
 ruby.flags += $(foreach c,$(subst .,_,$(call strupper,$(ruby))),-D$c)
-ifeq ($(shell echo ^^),^)
+ifeq ($(call which,pkg-config),)
   # TODO: add SDL2 cflags
 else
-  ruby.flags += $(if $(findstring input.sdl,$(ruby)),$(shell sdl2-config --cflags))
+  ruby.flags += $(if $(findstring input.sdl,$(ruby)),$(shell pkg-config sdl2 --cflags))
 endif
 
 ruby.options :=
@@ -75,13 +75,13 @@ ruby.options += $(if $(findstring audio.waveout,$(ruby)),$(call lib,winmm))
 ruby.options += $(if $(findstring audio.xaudio2,$(ruby)),$(call lib,ole32))
 
 ifeq ($(platform),windows)
-  ifeq ($(shell echo ^^),^)
+  ifeq ($(call which,pkg-config),)
     # TODO: add SDL2 ldflags
   else
-    ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell sdl2-config --static-libs))
+    ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell pkg-config sdl2 --libs --static))
   endif
 else
-  ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell sdl2-config --libs))
+  ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell pkg-config sdl2 --libs))
 endif
 
 ruby.options += $(if $(findstring input.udev,$(ruby)),-ludev)
