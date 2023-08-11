@@ -243,10 +243,10 @@ struct CPU : Thread {
 
     //tlb.cpp
     auto load(u64 vaddr) -> Match;
-    auto load(u64 vaddr, const Entry& entry) -> Match;
+    auto load(u64 vaddr, const Entry& entry) -> maybe<Match>;
     auto loadFast(u64 vaddr) -> Match;
     auto store(u64 vaddr) -> Match;
-    auto store(u64 vaddr, const Entry& entry) -> Match;
+    auto store(u64 vaddr, const Entry& entry) -> maybe<Match>;
 
     struct TlbCache { ;
       static constexpr int entries = 4;

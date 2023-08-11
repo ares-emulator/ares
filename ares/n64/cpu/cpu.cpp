@@ -123,7 +123,7 @@ auto CPU::instruction() -> void {
 auto CPU::instructionEpilogue() -> s32 {
   if constexpr(Accuracy::CPU::Recompiler) {
     //simulates timings without performing actual icache loads
-	icache.step(ipu.pc, devirtualizeFast(ipu.pc));
+    icache.step(ipu.pc, devirtualizeFast(ipu.pc));
   }
 
   ipu.r[0].u64 = 0;
