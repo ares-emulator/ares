@@ -77,7 +77,7 @@ auto Program::load(string location) -> bool {
   showMessage({"Loaded ", Location::prefix(location)});
 
   if(settings.debugServer.enabled) {
-    ares::DebugServer::server.open(settings.debugServer.port);
+    ares::GDB::server.open(settings.debugServer.port);
   }
 
   //update recent games list
@@ -93,8 +93,8 @@ auto Program::load(string location) -> bool {
 auto Program::unload() -> void {
   if(!emulator) return;
 
-  ares::DebugServer::server.close();
-  ares::DebugServer::server.reset();
+  ares::GDB::server.close();
+  ares::GDB::server.reset();
 
   settings.save();
   clearUndoStates();

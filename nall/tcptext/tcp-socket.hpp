@@ -6,27 +6,29 @@
  */
 namespace nall::TCP {
 
-struct Socket {
-  struct Settings {
-    s32 connectionLimit =     1 * 1024;  //server
-    s32 headSizeLimit   =    16 * 1024;  //client, server
-    s32 bodySizeLimit   = 65536 * 1024;  //client, server
-    s32 chunkSize       =    32 * 1024;  //client, server
-    s32 threadStackSize =   128 * 1024;  //server
-    s32 timeoutReceive  =           10;  //server
-    s32 timeoutSend     =    15 * 1000;  //server
-  } settings;
+class Socket {
+  public:
+    struct Settings {
+      s32 connectionLimit =     1 * 1024;  //server
+      s32 headSizeLimit   =    16 * 1024;  //client, server
+      s32 bodySizeLimit   = 65536 * 1024;  //client, server
+      s32 chunkSize       =    32 * 1024;  //client, server
+      s32 threadStackSize =   128 * 1024;  //server
+      s32 timeoutReceive  =           10;  //server
+      s32 timeoutSend     =    15 * 1000;  //server
+    } settings;
 
-  auto open(u32 port) -> bool;
-  auto close() -> void;
-  auto update() -> void;
+    auto open(u32 port) -> bool;
+    auto close() -> void;
+    auto update() -> void;
 
-  auto disconnectClient() -> void;
+    auto disconnectClient() -> void;
 
-  auto sendData(const u8* data, u32 size) -> void;
-  virtual auto onData(const vector<u8> &data) -> void = 0;
+    ~Socket() { close(); }
 
-  ~Socket() { close(); }
+  protected:
+    auto sendData(const u8* data, u32 size) -> void;
+    virtual auto onData(const vector<u8> &data) -> void = 0;
 
   private:
     std::atomic<bool> stopServer{false}; // set to true to let the server-thread know to stop.

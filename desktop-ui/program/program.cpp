@@ -60,7 +60,7 @@ auto Program::main() -> void {
 
   rewindRun();
 
-  ares::DebugServer::server.update();
+  ares::GDB::server.update();
 
   program.requestFrameAdvance = false;
   if(!runAhead || fastForwarding || rewinding) {
@@ -75,7 +75,7 @@ auto Program::main() -> void {
     emulator->root->unserialize(state);
   }
 
-  ares::DebugServer::server.update();
+  ares::GDB::server.update();
 
   if(settings.general.autoSaveMemory) {
     static u64 previousTime = chrono::timestamp();

@@ -57,9 +57,9 @@ auto DebugSettings::infoRefresh() -> void {
 }
 
 auto DebugSettings::serverRefresh() -> void {
-  ares::DebugServer::server.close();
+  ares::GDB::server.close();
 
   if(settings.debugServer.enabled) {
-    ares::DebugServer::server.open(settings.debugServer.port);
+    ares::GDB::server.open(settings.debugServer.port);
   }
 }

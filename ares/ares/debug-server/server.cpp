@@ -1,5 +1,4 @@
 #include <ares/debug-server/server.hpp>
-#include <ares/debug-server/server-interface.hpp>
 
 // @TODO: why does nall need this?
 #include <cstdlib>
@@ -9,7 +8,7 @@ using string = ::nall::string;
 using string_view = ::nall::string_view;
 
 
-namespace ares::DebugServer {
+namespace ares::GDB {
   Server server{};
 }
 
@@ -33,8 +32,11 @@ namespace {
     res.append(calcGdbChecksum(payload));
     return res;
   }
+}
 
-  auto processCommand(const string& cmd) -> string 
+namespace ares::GDB {
+
+  auto Server::processCommand(const string& cmd) -> string 
   {
     u32 threadId = 1; // dummy data
 
@@ -47,10 +49,8 @@ namespace {
     switch(cmdPrefix)
     {
       case 'q':
-        // This tell the client what we can and can't do:
-        // NOT Supported: software-breakpoints (use instructions for that)
-        // Supported: hardware-breakpoints, XML-Register info (important for arch-detection)
-        if(cmdName == "qSupported")return "fork-events-;swbreak-;hwbreak+;xmlRegisters=mips"; // @TODO check if xmlRegisters even does anything (let cores se this)
+        // This tell the client what we can and can't do
+        if(cmdName == "qSupported")return "fork-events-;swbreak-;hwbreak+";
 
         // handshake-command, most return dummy values to get convince gdb to connect
         if(cmdName == "qTStatus")return "";
@@ -80,17 +80,17 @@ namespace {
       break;
 
       case 'g': // dump all general registers
-        if(ares::DebugInterface::cmdRegReadGeneral) {
-          return ares::DebugInterface::cmdRegReadGeneral();
+        if(hooks.cmdRegReadGeneral) {
+          return hooks.cmdRegReadGeneral();
         } else {
           return "0000000000000000000000000000000000000000";
         }
       break;
 
       case 'p': // read specific register
-        if(ares::DebugInterface::cmdRegRead) {
+        if(hooks.cmdRegRead) {
           u32 regIdx = cmdName.slice(1).integer();
-          return ares::DebugInterface::cmdRegRead(regIdx);
+          return hooks.cmdRegRead(regIdx);
         } else {
           return "00000000";
         }
@@ -98,7 +98,7 @@ namespace {
 
       case 'm': // read memory (e.g.: "m80005A00,4")
         {
-          if(!ares::DebugInterface::cmdRead) {
+          if(!hooks.cmdRead) {
             return "";
           }
 
@@ -107,13 +107,13 @@ namespace {
 
           u64 address = cmdName.slice(1, sepIdx-1).hex();
           u64 count = cmdName.slice(sepIdx+1, cmdName.size()-sepIdx).hex();
-          return ares::DebugInterface::cmdRead(address, count, 1);
+          return hooks.cmdRead(address, count, 1);
         }
       break;
 
       case 'M': // write memory (e.g.: "M801ef90a,4:01000000")
         {
-          if(!ares::DebugInterface::cmdWrite) {
+          if(!hooks.cmdWrite) {
             return "";
           }
 
@@ -124,7 +124,7 @@ namespace {
           u64 unitSize = cmdName.slice(sepIdx+1, 1).hex();
           u64 value = cmdParts.size() > 1 ? cmdParts[1].hex() : 0;
 
-          ares::DebugInterface::cmdWrite(address, unitSize, value);
+          hooks.cmdWrite(address, unitSize, value);
           return "";
         }
 
@@ -138,20 +138,9 @@ namespace {
       break;
     }
 
-    printf("Command: %s\n", cmdBuffer.data());
+    printf("Unknown-Command: %s\n", cmdBuffer.data());
     return "";
   }
-}
-
-namespace ares::DebugInterface {
-  // server-interface.hpp
-  function<string(u32 address, u32 unitCount, u32 unitSize)> cmdRead;
-  function<void(u32 address, u32 unitSize, u64 value)> cmdWrite;
-  function<string()> cmdRegReadGeneral;
-  function<string(u32 regIdx)> cmdRegRead;
-}
-
-namespace ares::DebugServer {
 
   auto Server::onText(string_view text) -> void {
     for(u32 i=0; i<text.size(); ++i) 
@@ -190,9 +179,11 @@ namespace ares::DebugServer {
     }  
   }
 
-
   auto Server::reset() -> void {
-    ares::DebugInterface::reset();
+    hooks.cmdRead = nullptr;
+    hooks.cmdWrite = nullptr;
+    hooks.cmdRegReadGeneral = nullptr;
+    hooks.cmdRegRead = nullptr;
   }
 
 };

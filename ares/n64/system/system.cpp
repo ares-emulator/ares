@@ -1,6 +1,6 @@
 #include <n64/n64.hpp>
 
-#include <ares/debug-server/server-interface.hpp>
+#include <ares/debug-server/server.hpp>
 
 namespace ares::Nintendo64 {
 
@@ -115,7 +115,7 @@ auto System::load(Node::System& root, string name) -> bool {
 
 auto System::initDebugHooks() -> void {
   
-  DebugInterface::cmdRead = [](u32 address, u32 unitCount, u32 unitSize) {
+  GDB::server.hooks.cmdRead = [](u32 address, u32 unitCount, u32 unitSize) {
     Thread fakeThread{};
     string res{""};
     for(u32 i=0; i<unitCount; ++i) {
@@ -131,7 +131,7 @@ auto System::initDebugHooks() -> void {
     return res;
   };
 
-  DebugInterface::cmdWrite = [](u32 address, u32 unitSize, u64 value) {
+  GDB::server.hooks.cmdWrite = [](u32 address, u32 unitSize, u64 value) {
     Thread fakeThread{};
     switch(unitSize) {
       case Byte: bus.write<Byte>(address, value, fakeThread); break;
@@ -141,14 +141,14 @@ auto System::initDebugHooks() -> void {
     }
   };
 
-  DebugInterface::cmdRegRead = [](u32 regIdx) {
+  GDB::server.hooks.cmdRegRead = [](u32 regIdx) {
     if(regIdx > cpu.ipu.RA) {
       return string{"0000000000000000"};
     }
     return hex(cpu.ipu.r[regIdx].u64, 16, '0');
   };
 
-  DebugInterface::cmdRegReadGeneral = []() {
+  GDB::server.hooks.cmdRegReadGeneral = []() {
     string res{};
     for(auto reg : cpu.ipu.r) {
       res.append(hex(reg.u64, 16, '0'));

@@ -8,14 +8,16 @@
  */
 namespace nall::TCPText {
 
-struct Server : public TCP::Socket {
-  bool hadHandshake{false};
-  bool isHTTP{false};
+class Server : public TCP::Socket {
+  public: 
+    bool hadHandshake{false};
+    bool isHTTP{false};
 
-  auto onData(const vector<u8> &data) -> void override;
+  protected:
+    auto onData(const vector<u8> &data) -> void override;
 
-  auto sendText(const string &text) -> void;
-  virtual auto onText(string_view text) -> void = 0;
+    auto sendText(const string &text) -> void;
+    virtual auto onText(string_view text) -> void = 0;
 };
 
 }
