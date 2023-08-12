@@ -33,6 +33,10 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
 }
 
 auto Program::load(string location) -> bool {
+  if(settings.debugServer.enabled) {
+    ares::GDB::server.reset();
+  }
+
   if(!emulator->load(location)) {
     emulator.reset();
     if(settings.video.adaptiveSizing) presentation.resizeWindow();

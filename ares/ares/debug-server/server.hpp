@@ -24,17 +24,21 @@ class Server : public nall::TCPText::Server {
 
     struct {
       // Memory
-      function<string(u32 address, u32 unitCount, u32 unitSize)> cmdRead{nullptr};
-      function<void(u32 address, u32 unitSize, u64 value)> cmdWrite{nullptr};
+      function<string(u32 address, u32 unitCount, u32 unitSize)> cmdRead{};
+      function<void(u32 address, u32 unitSize, u64 value)> cmdWrite{};
 
       // Registers
-      function<string()> cmdRegReadGeneral{nullptr};
-      function<string(u32 regIdx)> cmdRegRead{nullptr};
+      function<string()> cmdRegReadGeneral{};
+      function<string(u32 regIdx)> cmdRegRead{};
+
+      // Emulator
+      function<void(u64 address)> cmdEmuCacheInvalidate{};
 
     } hooks{};
 
     // Breakpoints
     auto isHalted(u64 pc) -> bool;
+    auto hasBreakpoints() const { return breakpoints.size() > 0; }
 
   protected:
     auto onText(string_view text) -> void override;
@@ -43,14 +47,23 @@ class Server : public nall::TCPText::Server {
   private:
     bool insideCommand{false};
     string cmdBuffer{""};
-    bool waitForSignal{false}; // used to only send a signal to the client once
+    bool haltSignalSent{false}; // marks if a signal as been sent for new halts (force-halt and breakpoints)
     bool forceHalt{false}; // forces a halt despite no breakpoints being hit
-    bool fakeSignal{true}; // flags, forces initial signal (otherwise GDB hangs)
+    bool nonStopMode{false};
 
+    s32 currentThreadC{-1}; // selected thread for the next 'c' command
+
+    // client-state:
     vector<u64> breakpoints{}; // prefer vector for data-locality
+    vector<u32> threadIds{1};
+
     auto processCommand(const string& cmd, bool &shouldReply) -> string;
-    auto sendSignal(u8 code) -> void;
     auto resetClientData() -> void;
+
+    auto sendSignal(u8 code) -> void;
+
+    auto haltProgram() -> void;
+    auto resumeProgram() -> void;
 };
 
 extern Server server;

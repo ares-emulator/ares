@@ -168,6 +168,11 @@ auto System::initDebugHooks() -> void {
     return res;
   };
 
+  if constexpr(Accuracy::CPU::Recompiler) {
+    GDB::server.hooks.cmdEmuCacheInvalidate = [](u64 address) {
+      cpu.recompiler.invalidate(address);
+    };
+  }
 }
 
 auto System::unload() -> void {

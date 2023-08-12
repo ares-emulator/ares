@@ -105,7 +105,7 @@ auto CPU::instruction() -> void {
     }
 
     if (auto address = devirtualize(ipu.pc)) {
-      auto block = recompiler.block(ipu.pc, *address);
+      auto block = recompiler.block(ipu.pc, *address, GDB::server.hasBreakpoints());
       block->execute(*this);
     }
   }
