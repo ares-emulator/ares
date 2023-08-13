@@ -114,8 +114,15 @@ auto System::load(Node::System& root, string name) -> bool {
 }
 
 auto System::initDebugHooks() -> void {
-  
-  GDB::server.hooks.cmdRead = [](u32 address, u32 unitCount, u32 unitSize) {
+
+  // See: https://sourceware.org/gdb/onlinedocs/gdb/Target-Description-Format.html#Target-Description-Format
+  GDB::server.hooks.targetXML = []() -> string {
+    return "<target version=\"1.0\">"
+      "<architecture>mips:4300</architecture>"
+    "</target>";
+  };
+
+  GDB::server.hooks.read = [](u32 address, u32 unitCount, u32 unitSize) {
     Thread fakeThread{};
     string res{""};
     for(u32 i=0; i<unitCount; ++i) {
@@ -131,7 +138,7 @@ auto System::initDebugHooks() -> void {
     return res;
   };
 
-  GDB::server.hooks.cmdWrite = [](u32 address, u32 unitSize, u64 value) {
+  GDB::server.hooks.write = [](u32 address, u32 unitSize, u64 value) {
     Thread fakeThread{};
     switch(unitSize) {
       case Byte: bus.write<Byte>(address, value, fakeThread); break;
@@ -141,14 +148,14 @@ auto System::initDebugHooks() -> void {
     }
   };
 
-  GDB::server.hooks.cmdRegRead = [](u32 regIdx) {
+  GDB::server.hooks.regRead = [](u32 regIdx) {
     if(regIdx > cpu.ipu.RA) {
       return string{"0000000000000000"};
     }
     return hex(cpu.ipu.r[regIdx].u64, 16, '0');
   };
 
-  GDB::server.hooks.cmdRegReadGeneral = []() {
+  GDB::server.hooks.regReadGeneral = []() {
     string res{};
     for(auto reg : cpu.ipu.r) {
       res.append(hex(reg.u64, 16, '0'));
@@ -169,7 +176,7 @@ auto System::initDebugHooks() -> void {
   };
 
   if constexpr(Accuracy::CPU::Recompiler) {
-    GDB::server.hooks.cmdEmuCacheInvalidate = [](u64 address) {
+    GDB::server.hooks.emuCacheInvalidate = [](u64 address) {
       cpu.recompiler.invalidate(address);
     };
   }

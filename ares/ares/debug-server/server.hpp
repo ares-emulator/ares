@@ -24,15 +24,17 @@ class Server : public nall::TCPText::Server {
 
     struct {
       // Memory
-      function<string(u32 address, u32 unitCount, u32 unitSize)> cmdRead{};
-      function<void(u32 address, u32 unitSize, u64 value)> cmdWrite{};
+      function<string(u32 address, u32 unitCount, u32 unitSize)> read{};
+      function<void(u32 address, u32 unitSize, u64 value)> write{};
 
       // Registers
-      function<string()> cmdRegReadGeneral{};
-      function<string(u32 regIdx)> cmdRegRead{};
+      function<string()> regReadGeneral{};
+      function<string(u32 regIdx)> regRead{};
 
       // Emulator
-      function<void(u64 address)> cmdEmuCacheInvalidate{};
+      function<void(u64 address)> emuCacheInvalidate{};
+      function<string()> targetXML{};
+
 
     } hooks{};
 

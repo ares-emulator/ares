@@ -83,8 +83,8 @@ namespace ares::GDB {
         return "OK";
 
       case 'g': // dump all general registers
-        if(hooks.cmdRegReadGeneral) {
-          return hooks.cmdRegReadGeneral();
+        if(hooks.regReadGeneral) {
+          return hooks.regReadGeneral();
         } else {
           return "0000000000000000000000000000000000000000";
         }
@@ -98,7 +98,7 @@ namespace ares::GDB {
 
       case 'm': // read memory (e.g.: "m80005A00,4")
         {
-          if(!hooks.cmdRead) {
+          if(!hooks.read) {
             return "";
           }
 
@@ -107,13 +107,13 @@ namespace ares::GDB {
 
           u64 address = cmdName.slice(1, sepIdx-1).hex();
           u64 count = cmdName.slice(sepIdx+1, cmdName.size()-sepIdx).hex();
-          return hooks.cmdRead(address, count, 1);
+          return hooks.read(address, count, 1);
         }
       break;
 
       case 'M': // write memory (e.g.: "M801ef90a,4:01000000")
         {
-          if(!hooks.cmdWrite) {
+          if(!hooks.write) {
             return "";
           }
 
@@ -124,16 +124,16 @@ namespace ares::GDB {
           u64 unitSize = cmdName.slice(sepIdx+1, 1).hex();
           u64 value = cmdParts.size() > 1 ? cmdParts[1].hex() : 0;
 
-          hooks.cmdWrite(address, unitSize, value);
+          hooks.write(address, unitSize, value);
           return "";
         }
 
       break;
 
       case 'p': // read specific register (e.g.: "p15")
-        if(hooks.cmdRegRead) {
+        if(hooks.regRead) {
           u32 regIdx = cmdName.slice(1).integer();
-          return hooks.cmdRegRead(regIdx);
+          return hooks.regRead(regIdx);
         } else {
           return "00000000";
         }
@@ -142,25 +142,42 @@ namespace ares::GDB {
       case 'q':
         // This tells the client what we can and can't do
         if(cmdName == "qSupported"){ return {
-          "PacketSize=", MAX_PACKET_SIZE, ";fork-events-;swbreak+;hwbreak+", 
-          NON_STOP_MODE ? ";QNonStop+" : ""
+          "PacketSize=", MAX_PACKET_SIZE, 
+          ";fork-events-;swbreak+;hwbreak+", 
+          NON_STOP_MODE ? ";QNonStop+" : "",
+          hooks.targetXML ? ";xmlRegisters+;qXfer:features:read+" : "" // (see: https://marc.info/?l=gdb&m=149901965961257&w=2)
         };}
 
         // handshake-command, most return dummy values to convince gdb to connect
-        if(cmdName == "qTStatus")return forceHalt ? "Trunning" : "";
+        if(cmdName == "qTStatus")return forceHalt ? "T1" : "";
         if(cmdName == "qAttached")return "1"; // we are always attached, since a game is running
         if(cmdName == "qOffsets")return "Text=0;Data=0;Bss=0;";
 
         if(cmdName == "qSymbol")return "OK"; // client offers us symbol-names -> we don't care
 
+        // client asks us about existing breakpoints (may happen after a re-connect) -> ignore since we clear them on connect
+        if(cmdName == "qTfP")return "";
+        if(cmdName == "qTsP")return "";
+
+        // extended target features (gdb extension), most return XML data
+        if(cmdName == "qXfer" && cmdParts.size() > 4) 
+        {
+          if(cmdParts[1] == "features" && cmdParts[2] == "read") {
+            // informs the client about arch/registers (https://sourceware.org/gdb/onlinedocs/gdb/Target-Description-Format.html#Target-Description-Format)
+            if(cmdParts[3] == "target.xml") {
+              return hooks.targetXML ? string{"l", hooks.targetXML()} : string{""};
+            }
+          }
+        }
+
         /* // This is correct according to the docs, but makes GDB and CLion hang (@TODO: check why)
         if(cmdName == "qfThreadInfo")return {"m", joinIntVec(threadIds, ",")};
         if(cmdName == "qsThreadInfo")return {"l"};
-        if(cmdName == "qThreadExtraInfo,1")return "Runnable"; // ("Runnable", "Blocked", "Mutex") // @TODO: parse this properly, uses "," instead of ":" for params
+        if(cmdName == "qThreadExtraInfo,1")return "Runnable"; // ("Runnable", "Blocked on Mutex") // @TODO: parse this properly, uses "," instead of ":" for params
         if(cmdName == "qC")return {"QC", mainThreadId};
         */
 
-        // These responses are technically wrong, but they make gdb and CLion work.
+        // Wrong responses, but they make gdb and CLion work.
         if(cmdName == "qsThreadInfo")return {"m1"};
         if(cmdName == "qfThreadInfo")return "l";
         if(cmdName == "qC")return {"QC1"};
@@ -216,8 +233,8 @@ namespace ares::GDB {
           breakpoints.removeByValue(address);
         }
 
-        if(hooks.cmdEmuCacheInvalidate) { // for re-compiler, otherwise breaks might be skipped
-          hooks.cmdEmuCacheInvalidate(address);
+        if(hooks.emuCacheInvalidate) { // for re-compiler, otherwise breaks might be skipped
+          hooks.emuCacheInvalidate(address);
         }
         return "OK";
       }
@@ -245,6 +262,7 @@ namespace ares::GDB {
             printf("GDB ending session, disconnecting client\n");
             sendText("+");
             disconnectClient();
+            resumeProgram();
           } else {
             bool shouldReply = true;
             auto cmdRes = processCommand(cmdBuffer, shouldReply);
@@ -293,11 +311,12 @@ namespace ares::GDB {
   }
 
   auto Server::reset() -> void {
-    hooks.cmdRead.reset();
-    hooks.cmdWrite.reset();
-    hooks.cmdRegReadGeneral.reset();
-    hooks.cmdRegRead.reset();
-    hooks.cmdEmuCacheInvalidate.reset();
+    hooks.read.reset();
+    hooks.write.reset();
+    hooks.regReadGeneral.reset();
+    hooks.regRead.reset();
+    hooks.emuCacheInvalidate.reset();
+    hooks.targetXML.reset();
 
     resetClientData();
   }
