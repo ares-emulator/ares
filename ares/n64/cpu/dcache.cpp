@@ -101,6 +101,15 @@ auto CPU::DataCache::read(u32 vaddr, u32 address) -> u64 {
   return line.read<Size>(address);
 }
 
+auto CPU::DataCache::readDebug(u32 vaddr, u32 address) -> u8 {
+  auto& line = this->line(vaddr);
+  if(!line.hit(address)) {
+    Thread dummyThread{};
+    return bus.read<Byte>(address, dummyThread);
+  }
+  return line.read<Byte>(address);
+}
+
 template<u32 Size>
 auto CPU::DataCache::write(u32 vaddr, u32 address, u64 data) -> void {
   auto& line = this->line(vaddr);

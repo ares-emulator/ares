@@ -24,7 +24,7 @@ class Server : public nall::TCPText::Server {
 
     struct {
       // Memory
-      function<string(u32 address, u32 unitCount, u32 unitSize)> read{};
+      function<string(u32 address, u32 unitCount)> read{};
       function<void(u32 address, u32 unitSize, u64 value)> write{};
 
       // Registers

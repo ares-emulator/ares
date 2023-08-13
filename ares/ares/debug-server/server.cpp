@@ -107,7 +107,7 @@ namespace ares::GDB {
 
           u64 address = cmdName.slice(1, sepIdx-1).hex();
           u64 count = cmdName.slice(sepIdx+1, cmdName.size()-sepIdx).hex();
-          return hooks.read(address, count, 1);
+          return hooks.read(address, count);
         }
       break;
 

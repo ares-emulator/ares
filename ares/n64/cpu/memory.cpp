@@ -215,6 +215,30 @@ auto CPU::read(u64 vaddr) -> maybe<u64> {
   unreachable;
 }
 
+auto CPU::readDebug(u64 vaddr) -> u8 {
+  Thread dummyThread{};
+
+  switch(segment(vaddr)) {
+    case Context::Segment::Unused: return 0;
+    case Context::Segment::Mapped:
+      if(auto match = tlb.load(vaddr, true)) {
+        if(match.cache) return dcache.readDebug(vaddr, match.address & context.physMask);
+        return bus.read<Byte>(match.address & context.physMask, dummyThread);
+      }
+      return 0;
+    case Context::Segment::Cached:
+      return dcache.readDebug(vaddr, vaddr & 0x1fff'ffff);
+    case Context::Segment::Cached32:
+      return dcache.readDebug(vaddr, vaddr & 0xffff'ffff);
+    case Context::Segment::Direct:
+      return bus.read<Byte>(vaddr & 0x1fff'ffff, dummyThread);
+    case Context::Segment::Direct32:
+      return bus.read<Byte>(vaddr & 0xffff'ffff, dummyThread);
+  }
+
+  return 0;
+}
+
 template<u32 Size>
 auto CPU::write(u64 vaddr0, u64 data, bool alignedError) -> bool {
   if(alignedError && vaddrAlignedError<Size>(vaddr0, true)) return false;
