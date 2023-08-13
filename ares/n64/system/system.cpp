@@ -118,7 +118,7 @@ auto System::initDebugHooks() -> void {
   // See: https://sourceware.org/gdb/onlinedocs/gdb/Target-Description-Format.html#Target-Description-Format
   GDB::server.hooks.targetXML = []() -> string {
     return "<target version=\"1.0\">"
-      "<architecture>mips:4300</architecture>"
+      "<architecture>mips:4000</architecture>"
     "</target>";
   };
 
