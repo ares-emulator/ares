@@ -13,6 +13,7 @@ ifeq ($(ruby),)
     # If we're in a posix shell, use pkg-config/pkg-check
     pkg_check = $(if $(shell pkg-config $1 && echo 1),$2)
     ruby += $(call pkg_check,sdl2,input.sdl)
+    ruby += $(call pkg_check,sdl2,audio.sdl)
   endif
   else ifeq ($(platform),macos)
     ruby += video.cgl
@@ -30,6 +31,7 @@ ifeq ($(ruby),)
     ruby += input.xlib
     ruby += $(call pkg_check,libudev,input.udev)
     ruby += $(call pkg_check,sdl2,input.sdl)
+    ruby += $(call pkg_check,sdl2,audio.sdl)
   else ifeq ($(platform),bsd)
     pkg_check = $(if $(shell pkg-config $1 && echo 1),$2)
     ruby += video.glx video.glx2 video.xshm
@@ -41,6 +43,7 @@ ifeq ($(ruby),)
     ruby += $(call pkg_check,ao,audio.ao)
     ruby += input.uhid input.xlib
     ruby += $(call pkg_check,sdl2,input.sdl)
+    ruby += $(call pkg_check,sdl2,audio.sdl)
   endif
 endif
 
@@ -55,6 +58,7 @@ ifeq ($(call which,pkg-config),)
   # TODO: add SDL2 cflags
 else
   ruby.flags += $(if $(findstring input.sdl,$(ruby)),$(shell pkg-config sdl2 --cflags))
+  ruby.flags += $(if $(findstring audio.sdl,$(ruby)),$(shell pkg-config sdl2 --cflags))
 endif
 
 ruby.options :=
@@ -79,9 +83,11 @@ ifeq ($(platform),windows)
     # TODO: add SDL2 ldflags
   else
     ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell pkg-config sdl2 --libs --static))
+    ruby.options += $(if $(findstring audio.sdl,$(ruby)),$(shell pkg-config sdl2 --libs --static))
   endif
 else
   ruby.options += $(if $(findstring input.sdl,$(ruby)),$(shell pkg-config sdl2 --libs))
+  ruby.options += $(if $(findstring audio.sdl,$(ruby)),$(shell pkg-config sdl2 --libs))
 endif
 
 ruby.options += $(if $(findstring input.udev,$(ruby)),-ludev)
