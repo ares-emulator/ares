@@ -11,6 +11,14 @@ auto Peripheral::receive() -> u8 {
 auto Peripheral::transmit(u8 data) -> void {
   if(!io.joyOutput) return;
 
+  if(io.ackCounter > 0) {
+    debug(unusual, "Peripheral::transmit: ackCounter > 0");
+    //HACK: Recover by deasserting /ack and /irq; we need to figure out why this happens
+    //TODO: Why is transmit happening too early? Does real hardware do this?
+    io.acknowledgeAsserted = 0;
+    io.interruptRequest = 0;
+  }
+
   //Calculate the number of cycles required to transfer a byte at the current baud rate
   //This is added to the /ACK delay to determine the total duration until /ACK is asserted
   u8 factors[4] = {1, 1, 16, 64};
