@@ -18,9 +18,16 @@ auto Peripheral::unload() -> void {
 }
 
 auto Peripheral::main() -> void {
-  if(io.counter > 0) {
-    if(--io.counter == 0) {
-      if(!io.acknowledgeAsserted) {
+  if(io.transferCounter > 0) {
+    if(--io.transferCounter == 0) {
+      //transfer complete, set receive size to 1 byte
+      io.receiveSize = 1;
+    }
+  }
+
+  if(io.transferCounter == 0 && io.ackCounter > 0) {
+    if(--io.ackCounter == 0) {
+      if (!io.acknowledgeAsserted) {
         //Assert /ACK and fire the IRQ
         io.interruptRequest = 1;
         io.acknowledgeAsserted = 1;
@@ -28,9 +35,9 @@ auto Peripheral::main() -> void {
           interrupt.raise(Interrupt::Peripheral);
         }
 
-        io.counter = 96; // ACK duration is approx 96 cycles (2.84us)
+        io.ackCounter = 96; // ACK duration is approx 96 cycles (2.84us)
       } else {
-        //Deassert /ACK
+        //De-assert /ACK
         io.acknowledgeAsserted = 0;
       }
     }

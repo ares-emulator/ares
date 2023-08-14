@@ -77,7 +77,8 @@ struct Peripheral : Thread, Memory::Interface {
     n16 baudrateReloadValue;
 
     //internal
-    i32 counter;
+    i32 transferCounter;
+    i32 ackCounter;
   } io;
 };
 

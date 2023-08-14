@@ -13,36 +13,30 @@ auto Peripheral::transmit(u8 data) -> void {
 
   //Calculate the number of cycles required to transfer a byte at the current baud rate
   //This is added to the /ACK delay to determine the total duration until /ACK is asserted
-  //NOTE: transfer time is only emulated for memory cards for now, not controllers
-  //enabling it for controllers causes games to drop input; needs further investigation
   u8 factors[4] = {1, 1, 16, 64};
-  auto transferCycles = ((io.baudrateReloadValue * factors[io.baudrateReloadFactor])) * 8;
+  io.transferCounter = ((io.baudrateReloadValue * factors[io.baudrateReloadFactor])) * 8;
 
   if(io.slotNumber == 0) {
     if(!memoryCardPort1.active()) {
-      io.receiveSize = 1;
       io.receiveData = controllerPort1.bus(data);
-      if(controllerPort1.acknowledge()) io.counter = /*transferCycles*/ + 338; // approx 9.98us
+      if(controllerPort1.acknowledge()) io.ackCounter = 338; // approx 9.98us
     }
 
     if(!controllerPort1.active()) {
-      io.receiveSize = 1;
       io.receiveData = memoryCardPort1.bus(data);
-      if(memoryCardPort1.acknowledge()) io.counter = transferCycles + 170; // approx 5us
+      if(memoryCardPort1.acknowledge()) io.ackCounter = 170; // approx 5us
     }
   }
 
   if(io.slotNumber == 1) {
     if(!memoryCardPort2.active()) {
-      io.receiveSize = 1;
       io.receiveData = controllerPort2.bus(data);
-      if(controllerPort2.acknowledge()) io.counter = /*transferCycles*/ + 338; // approx 9.98us
+      if(controllerPort2.acknowledge()) io.ackCounter = 338; // approx 9.98us
     }
 
     if(!controllerPort2.active()) {
-      io.receiveSize = 1;
       io.receiveData = memoryCardPort2.bus(data);
-      if(memoryCardPort2.acknowledge()) io.counter = transferCycles + 170; // approx 5us
+      if(memoryCardPort2.acknowledge()) io.ackCounter = 170; // approx 5us
     }
   }
 }
