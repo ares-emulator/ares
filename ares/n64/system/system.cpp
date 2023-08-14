@@ -122,15 +122,21 @@ auto System::initDebugHooks() -> void {
     "</target>";
   };
 
-  GDB::server.hooks.read = [](u32 address, u32 unitCount) -> string {
-    Thread fakeThread{};
-    string res{""};
+  GDB::server.hooks.read = [](u64 address, u32 unitCount) -> string {
+    //auto now = nall::chrono::microsecond();
+    address |= 0xFFFFFFFF'00000000ull; // @TODO: check why?
 
-    u64 vaddr = address | 0xFFFFFFFF'00000000ull; // @TODO: check why?
-    for(u32 i=0; i<unitCount; ++i) { 
-      res.append(hex(cpu.readDebug(vaddr), 2, '0'));
-      ++vaddr;
+    string res{};
+    res.resize(unitCount * 2);
+    char* resPtr = res.begin();
+
+    for(u32 i : range(unitCount)) {
+      auto val = cpu.readDebug(address++);
+      hexByte(resPtr, val);
+      resPtr += 2;
     }
+
+    //printf("Time: %f\n", (f64)(nall::chrono::microsecond() - now) / 1000.0);
     return res;
   };
 

@@ -11,28 +11,12 @@ namespace {
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
   constexpr u32 MAX_PACKET_SIZE = 4096;
   constexpr u32 DEF_BREAKPOINT_SIZE = 64;
-  constexpr bool NON_STOP_MODE = false;
+  constexpr bool NON_STOP_MODE = false; // @TODO: broken, only useful for multi-thread debugging
 
-  auto gdbCalcChecksum(const string &payload) -> string {
+  auto gdbCalcChecksum(const string &payload) -> u8 {
     u8 checksum = 0;
     for(char c : payload)checksum += c;
-    return hex(checksum, 2, '0');
-  }
-
-  auto gdbWrapPayload(const string &payload, bool success = true) -> string {
-    return {"+$", payload, '#', gdbCalcChecksum(payload)};
-  }
-
-  auto gdbWrapEventPayload(const string &payload, bool success = true) -> string {
-    return {"%", payload, '#', gdbCalcChecksum(payload)};
-  }
-
-  auto joinIntVec(const vector<u32> &data, const string &delimiter) -> string{
-    string res{};
-    for(u32 i=0; i<data.size(); ++i) {
-      res.append(integer(data[i]), (i<data.size()-1) ? delimiter : "");
-    }
-    return res;
+    return checksum;
   }
 }
 
@@ -40,10 +24,6 @@ namespace ares::GDB {
   Server server{};
 
   auto Server::isHalted(u64 pc) -> bool {
-    if(pc >= 0x80100680 && pc <= 0x80100780) {
-      //printf("PC: %08X\n", (u32)pc);
-    }
-
     bool needHalts = forceHalt || breakpoints.contains(pc);
 
     if(needHalts) {
@@ -52,7 +32,6 @@ namespace ares::GDB {
       if(!haltSignalSent) {
         haltSignalSent = true;
         sendSignal(Signal::TRAP);
-        printf("HALT! (signal)\n");
       }
     }
     return needHalts;
@@ -65,7 +44,7 @@ namespace ares::GDB {
     char cmdPrefix = cmdName.size() > 0 ? cmdName[0] : ' ';
     u32 mainThreadId = threadIds.size() > 0 ? threadIds[0] : 1;
 
-    printf("CMD: %s\n", cmdBuffer.data());
+    printf("GDB <: %s\n", cmdBuffer.data());
 
     switch(cmdPrefix)
     {
@@ -267,7 +246,7 @@ namespace ares::GDB {
             bool shouldReply = true;
             auto cmdRes = processCommand(cmdBuffer, shouldReply);
             if(shouldReply) {
-              sendText(gdbWrapPayload(cmdRes));
+              sendPayload(cmdRes);
             } else {
               sendText("+"); // acknowledge always needed
             }
@@ -291,8 +270,11 @@ namespace ares::GDB {
   }
 
   auto Server::sendSignal(u8 code) -> void {
-    //sendText(gdbWrapEventPayload({"Stop:S", hex(code, 2)})); // "Non-Stop-Mode" events, doesn't work yet
-    sendText(gdbWrapPayload({"S", hex(code, 2)}));
+    sendPayload({"S", hex(code, 2)});
+  }
+
+  auto Server::sendPayload(const string& payload) -> void {
+    sendText({"+$", payload, '#', hex(gdbCalcChecksum(payload), 2, '0')});
   }
 
   auto Server::haltProgram() -> void {

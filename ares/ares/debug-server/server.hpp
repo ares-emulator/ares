@@ -24,8 +24,8 @@ class Server : public nall::TCPText::Server {
 
     struct {
       // Memory
-      function<string(u32 address, u32 unitCount)> read{};
-      function<void(u32 address, u32 unitSize, u64 value)> write{};
+      function<string(u64 address, u32 unitCount)> read{};
+      function<void(u64 address, u32 unitSize, u64 value)> write{};
 
       // Registers
       function<string()> regReadGeneral{};
@@ -62,6 +62,7 @@ class Server : public nall::TCPText::Server {
     auto processCommand(const string& cmd, bool &shouldReply) -> string;
     auto resetClientData() -> void;
 
+    auto sendPayload(const string& payload) -> void;
     auto sendSignal(u8 code) -> void;
 
     auto haltProgram() -> void;

@@ -10,7 +10,8 @@ struct sockaddr_in;
 struct sockaddr_in6;
 
 namespace {
-  constexpr u32 SLEEP_MILLIS = 2;
+  constexpr u32 SLEEP_MILLIS = 2; // ms to sleep after each send/receive cycle, limits CPU usage
+  constexpr u32 CYCLES_BEFORE_SLEEP = 10; // how often to do a send/receive check before a sleep
 
   struct Handle {
     s32 fd{-1};
@@ -92,6 +93,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
     packet.resize(conf.chunkSize);
     Client client{};
 
+    u32 cycles = CYCLES_BEFORE_SLEEP;
     while(!stopServer) 
     {
       // scan for new connections
@@ -133,7 +135,10 @@ NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
           memcpy(receiveBuffer.data() + oldSize, packet.data(), length);
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MILLIS));
+        if(cycles-- == 0) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MILLIS));
+          cycles = CYCLES_BEFORE_SLEEP;
+        }
       }
 
       // Kick client if we need to (must be done send)

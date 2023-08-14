@@ -236,7 +236,7 @@ auto CPU::readDebug(u64 vaddr) -> u8 {
       return bus.read<Byte>(vaddr & 0xffff'ffff, dummyThread);
   }
 
-  return 0;
+  unreachable;
 }
 
 template<u32 Size>
