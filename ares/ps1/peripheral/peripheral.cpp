@@ -7,6 +7,7 @@ Peripheral peripheral;
 #include "serialization.cpp"
 #include "port.cpp"
 #include "digital-gamepad/digital-gamepad.cpp"
+#include "dualshock/dualshock.cpp"
 #include "memory-card/memory-card.cpp"
 
 auto Peripheral::load(Node::Object parent) -> void {

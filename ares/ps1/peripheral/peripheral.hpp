@@ -84,5 +84,6 @@ struct Peripheral : Thread, Memory::Interface {
 
 #include "port.hpp"
 #include "digital-gamepad/digital-gamepad.hpp"
+#include "dualshock/dualshock.hpp"
 #include "memory-card/memory-card.hpp"
 extern Peripheral peripheral;
