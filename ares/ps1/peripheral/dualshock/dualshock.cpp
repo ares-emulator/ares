@@ -140,6 +140,8 @@ auto DualShock::readPad() -> vector<u8> {
   n8 output;
 
   platform->input(select);
+  platform->input(l3);
+  platform->input(r3);
   platform->input(start);
   platform->input(up);
   platform->input(right);
@@ -147,8 +149,8 @@ auto DualShock::readPad() -> vector<u8> {
   platform->input(left);
 
   output.bit(0) = !select->value();
-  output.bit(1) = 1;
-  output.bit(2) = 1;
+  output.bit(1) = analogMode || configMode ? !l3->value() : 1;
+  output.bit(2) = analogMode || configMode ? !r3->value() : 1;
   output.bit(3) = !start->value();
   output.bit(4) = !(up->value() & !down->value());
   output.bit(5) = !(right->value() & !left->value());
