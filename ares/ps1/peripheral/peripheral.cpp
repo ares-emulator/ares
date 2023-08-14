@@ -19,18 +19,24 @@ auto Peripheral::unload() -> void {
 
 auto Peripheral::main() -> void {
   if(io.counter > 0) {
-    io.counter -= 8;
-    if(io.counter <= 0) {
-      io.counter = 0;
-      io.interruptRequest = 1;
-      io.acknowledgeAsserted = 0;
-      if(io.acknowledgeInterruptEnable) {
-        interrupt.raise(Interrupt::Peripheral);
+    if(--io.counter == 0) {
+      if(!io.acknowledgeAsserted) {
+        //Assert /ACK and fire the IRQ
+        io.interruptRequest = 1;
+        io.acknowledgeAsserted = 1;
+        if(io.acknowledgeInterruptEnable) {
+          interrupt.raise(Interrupt::Peripheral);
+        }
+
+        io.counter = 96; // ACK duration is approx 96 cycles (2.84us)
+      } else {
+        //Deassert /ACK
+        io.acknowledgeAsserted = 0;
       }
     }
   }
 
-  step(8);
+  step(1);
 }
 
 auto Peripheral::step(u32 clocks) -> void {
