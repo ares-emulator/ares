@@ -477,6 +477,7 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
     voice[v].decay.rate         = data.bit( 4, 7);
     voice[v].attack.rate        = data.bit( 8,14);
     voice[v].attack.exponential = data.bit(15);
+    voice[v].updateEnvelope();
   }
 
   //ADSR
@@ -487,6 +488,7 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
     voice[v].sustain.unknown     = data.bit(13);
     voice[v].sustain.decrease    = data.bit(14);
     voice[v].sustain.exponential = data.bit(15);
+    voice[v].updateEnvelope();
   }
 
   //current ADSR volume
