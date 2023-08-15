@@ -16,7 +16,10 @@ auto Disc::CDDA::clockSample() -> void {
   s16 left  = 0;
   s16 right = 0;
 
-  if(self.ssr.reading && self.ssr.playingCDDA) {
+  auto track = drive->session->track(drive->sector.track);
+  auto isData = track ? track->isData() : true;
+
+  if(self.ssr.reading && self.ssr.playingCDDA && !isData) {
     left  |= drive->sector.data[drive->sector.offset++] << 0;
     left  |= drive->sector.data[drive->sector.offset++] << 8;
     right |= drive->sector.data[drive->sector.offset++] << 0;

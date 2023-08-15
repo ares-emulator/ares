@@ -113,6 +113,7 @@ struct Disc : Thread, Memory::Interface {
     struct Sector {
       u8  data[2448];
       u16 offset;
+      u8 track;
     } sector;
 
     struct Mode {
