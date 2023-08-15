@@ -98,7 +98,11 @@ auto Disc::commandInvalid() -> void {
 //0x01
 auto Disc::commandGetStatus() -> void {
   fifo.response.write(status());
-  ssr.shellOpen = 0;
+
+  //when no disc is inserted, act like the drive door is open
+  //not entirely accurate, but allows for disc-swapping to work
+  //TODO: Expose Open/Close to the GUI?
+  ssr.shellOpen = noDisc();
 
   irq.acknowledge.flag = 1;
   irq.poll();

@@ -79,6 +79,20 @@ auto Disc::disconnect() -> void {
   cd.reset();
   pak.reset();
   information = {};
+
+  //immediately fire shell-open interrupt, cancelling any in-flight commands
+  event = {};
+  ssr = {};
+  ssr.shellOpen = 1;
+  fifo.response.flush();
+  fifo.response.write(status());
+  fifo.response.write(0x08);
+  irq.ready.flag = 0;
+  irq.complete.flag = 0;
+  irq.acknowledge.flag = 0;
+  irq.end.flag = 0;
+  irq.error.flag = 1;
+  irq.poll();
 }
 
 auto Disc::main() -> void {
