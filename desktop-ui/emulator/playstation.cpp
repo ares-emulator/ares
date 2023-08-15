@@ -67,6 +67,7 @@ PlayStation::PlayStation() {
     device.analog("L-Stick Y", virtualPorts[id].pad.lstick_up,   virtualPorts[id].pad.lstick_down);
     device.analog("R-Stick X", virtualPorts[id].pad.rstick_left, virtualPorts[id].pad.rstick_right);
     device.analog("R-Stick Y", virtualPorts[id].pad.rstick_up,   virtualPorts[id].pad.rstick_down);
+    device.rumble("Rumble",    virtualPorts[0].pad.rumble);
     port.append(device); }
 
     ports.append(port);

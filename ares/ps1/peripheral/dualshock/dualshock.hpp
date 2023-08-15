@@ -20,6 +20,7 @@ struct DualShock : PeripheralDevice {
   Node::Input::Button select;
   Node::Input::Button start;
   Node::Input::Button mode;
+  Node::Input::Rumble rumble;
 
   DualShock(Node::Port);
   auto reset() -> void override;
@@ -42,13 +43,15 @@ struct DualShock : PeripheralDevice {
     AnalogDataRightStickLower,
   } state = State::Idle;
 
-  n1 analogMode = true;
+  n1 analogMode;
+  n1 newRumbleMode;
   n1 configMode;
   n8 command;
   i8 commandStep;
   n8 rumbleConfig[6];
 
   vector<u8> outputData;
+  vector<n8> inputData;
 
   bool _active;
 };

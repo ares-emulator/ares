@@ -26,6 +26,11 @@ DualShock::DualShock(Node::Port parent) {
   select   = node->append<Node::Input::Button>("Select");
   start    = node->append<Node::Input::Button>("Start");
   mode     = node->append<Node::Input::Button>("Mode");
+  rumble   = node->append<Node::Input::Rumble>("Rumble");
+
+  analogMode = 1;
+  newRumbleMode = 0;
+  configMode = 0;
 }
 
 auto DualShock::reset() -> void {
@@ -46,9 +51,27 @@ auto DualShock::bus(u8 data) -> u8 {
   n8 input  = data;
   n8 output = 0xff;
 
+  //old rumble mode
+  if(!newRumbleMode && command == 0x42) {
+    switch(commandStep) {
+      case 1: inputData.reset(); inputData.append(input); break;
+      case 2: rumble->setEnable(inputData[0].bit(6, 7) == 1 && input.bit(0) == 1); break;
+    }
+    platform->input(rumble);
+  }
+
+  //new rumble mode
+  if(newRumbleMode && command == 0x42 && commandStep > 0) {
+    auto index = commandStep - 1;
+    if(rumbleConfig[index] == 0x00) rumble->setWeak(input.bit(0) ? 0xffff : 0); // small motor
+    if(rumbleConfig[index] == 0x01) rumble->setStrong(input * 65535 / 255);     // large motor
+    platform->input(rumble);
+  }
+
   //config Mode Enable/Disable
   if(command == 0x43 && commandStep == 1) {
     configMode = input;
+    newRumbleMode = 1;
   }
 
   //set led state
@@ -109,23 +132,34 @@ auto DualShock::bus(u8 data) -> u8 {
     else output = analogMode ? 0x73 : 0x41;
     outputData.append(0x5a);
 
+    //Global commands: these work during any operation mode
     switch(input) {
       case 0x42: outputData.append(readPad()); break;
       case 0x43: {
         if(configMode) outputData.append({0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
         else outputData.append(readPad());
         break;
-      }
-      case 0x44: outputData.append({0x00, 0x00, 0x00, 0x00, 0x00, 0x00}); break;
-      case 0x45: outputData.append({0x01, 0x02, analogMode, 0x02, 0x01, 0x00}); break;
-      case 0x46: outputData.append({0x00, 0x00}); break; // Partial response, will be completed on step 1
-      case 0x47: outputData.append({0x00, 0x00, 0x02, 0x00, 0x01, 0x00}); break;
-      case 0x4c: outputData.append({0x00, 0x00, 0x00}); break; // Partial response, will be completed on step 1
-      case 0x4d: for(auto n : range(6)) outputData.append(rumbleConfig[n]); break;
       default:
+        if(configMode) {
+          switch(input) {
+            case 0x44: outputData.append({0x00, 0x00, 0x00, 0x00, 0x00, 0x00}); break;
+            case 0x45: outputData.append({0x01, 0x02, analogMode, 0x02, 0x01, 0x00}); break;
+            case 0x46: outputData.append({0x00, 0x00}); break; // Partial response, will be completed on step 1
+            case 0x47: outputData.append({0x00, 0x00, 0x02, 0x00, 0x01, 0x00}); break;
+            case 0x4c: outputData.append({0x00, 0x00, 0x00}); break; // Partial response, will be completed on step 1
+            case 0x4d: for(auto n : range(6)) outputData.append(rumbleConfig[n]); break;
+            default:
+              outputData.reset();
+              output = invalid(input);
+              break;
+          }
+          break;
+        }
+
         outputData.reset();
         output = invalid(input);
         break;
+      }
     }
     break;
   }
