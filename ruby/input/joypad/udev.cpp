@@ -96,7 +96,7 @@ struct InputJoypadUdev {
     }
   }
 
-  auto rumble(u64 id, u16 weak, u16 strong) -> bool {
+  auto rumble(u64 id, u16 strong, u16 weak) -> bool {
     for(auto& jp : joypads) {
       if(jp.hid->id() != id) continue;
       if(!jp.hid->rumble()) continue;

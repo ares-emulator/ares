@@ -36,7 +36,7 @@ struct InputUHID : InputDriver {
     return devices;
   }
 
-  auto rumble(u64 id, u16 weak, u16 strong) -> bool override {
+  auto rumble(u64 id, u16 strong, u16 weak) -> bool override {
     return false;
   }
 

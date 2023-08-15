@@ -37,9 +37,9 @@ struct InputWindows : InputDriver {
     return devices;
   }
 
-  auto rumble(u64 id, u16 weak, u16 strong) -> bool override {
-    if(joypadXInput.rumble(id, weak, strong)) return true;
-    if(joypadDirectInput.rumble(id, weak, strong)) return true;
+  auto rumble(u64 id, u16 strong, u16 weak) -> bool override {
+    if(joypadXInput.rumble(id, strong, weak)) return true;
+    if(joypadDirectInput.rumble(id, strong, weak)) return true;
     return false;
   }
 
