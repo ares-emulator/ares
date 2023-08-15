@@ -23,14 +23,14 @@ auto Disc::CDXA::clockSector() -> void {
 
   n8  codingInfo    = drive->sector.data[19];
   n1  stereo        = codingInfo.bit(0);
-  n16 sampleRate    = codingInfo.bit(2) ? 18900 : 37800;
+  n1  halfSampleRate= codingInfo.bit(2);
   n32 bitsPerSample = codingInfo.bit(4) ? 8 : 4;
   n1  emphasis      = codingInfo.bit(6);
 
-  if(stereo == 0 && bitsPerSample == 4) decodeADPCM<0, 0>();
-  if(stereo == 0 && bitsPerSample == 8) decodeADPCM<0, 1>();
-  if(stereo == 1 && bitsPerSample == 4) decodeADPCM<1, 0>();
-  if(stereo == 1 && bitsPerSample == 8) decodeADPCM<1, 1>();
+  if(stereo == 0 && bitsPerSample == 4) decodeADPCM<0, 0>(halfSampleRate);
+  if(stereo == 0 && bitsPerSample == 8) decodeADPCM<0, 1>(halfSampleRate);
+  if(stereo == 1 && bitsPerSample == 4) decodeADPCM<1, 0>(halfSampleRate);
+  if(stereo == 1 && bitsPerSample == 8) decodeADPCM<1, 1>(halfSampleRate);
 
   monaural = !stereo;
 }
@@ -59,7 +59,7 @@ auto Disc::CDXA::clockSample() -> void {
 }
 
 template<bool isStereo, bool is8bit>
-auto Disc::CDXA::decodeADPCM() -> void {
+auto Disc::CDXA::decodeADPCM(n1 halfSampleRate) -> void {
   const u32 Blocks = 18;
   const u32 BlockSize = 128;
   const u32 WordsPerBlock = 28;
@@ -70,6 +70,7 @@ auto Disc::CDXA::decodeADPCM() -> void {
     decodeBlock<isStereo, is8bit>(output, 24 + block * BlockSize);
     for(auto sample : output) {
       if(!samples.full()) samples.write(sample);
+      if(halfSampleRate && !samples.full()) samples.write(sample);
     }
   }
 }
