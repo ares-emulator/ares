@@ -40,7 +40,10 @@ class Server : public nall::TCPText::Server {
 
     // Breakpoints
     auto isHalted(u64 pc) -> bool;
+    auto isHalted() const { return forceHalt; }
     auto hasBreakpoints() const { return breakpoints.size() > 0; }
+
+    auto updateLoop() -> void;
 
   protected:
     auto onText(string_view text) -> void override;
@@ -53,11 +56,12 @@ class Server : public nall::TCPText::Server {
     bool forceHalt{false}; // forces a halt despite no breakpoints being hit
     bool nonStopMode{false};
 
+    u32 messageCount{0}; // message count per update loop
+
     s32 currentThreadC{-1}; // selected thread for the next 'c' command
 
     // client-state:
     vector<u64> breakpoints{}; // prefer vector for data-locality
-    vector<u32> threadIds{1};
 
     auto processCommand(const string& cmd, bool &shouldReply) -> string;
     auto resetClientData() -> void;

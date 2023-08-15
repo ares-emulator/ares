@@ -50,17 +50,27 @@ auto Program::main() -> void {
   updateMessage();
   inputManager.poll();
   inputManager.pollHotkeys();
+
   bool defocused = driverSettings.inputDefocusPause.checked() && !ruby::video.fullScreen() && !presentation.focused();
   if(emulator && defocused) message.text = "Paused";
+
+  if(emulator && ares::GDB::server.isHalted()) {
+    ruby::audio.clear();
+    message.text = "Halted [GDB]";
+    ares::GDB::server.updateLoop(); // sleeps internally
+    return;
+  }
+
   if(!emulator || (paused && !program.requestFrameAdvance) || defocused) {
     ruby::audio.clear();
+    ares::GDB::server.updateLoop();
     usleep(20 * 1000);
     return;
   }
 
   rewindRun();
 
-  ares::GDB::server.update();
+  ares::GDB::server.updateLoop();
 
   program.requestFrameAdvance = false;
   if(!runAhead || fastForwarding || rewinding) {
@@ -75,7 +85,7 @@ auto Program::main() -> void {
     emulator->root->unserialize(state);
   }
 
-  ares::GDB::server.update();
+  ares::GDB::server.updateLoop();
 
   if(settings.general.autoSaveMemory) {
     static u64 previousTime = chrono::timestamp();

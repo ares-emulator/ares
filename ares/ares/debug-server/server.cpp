@@ -12,6 +12,7 @@ namespace {
   constexpr u32 MAX_PACKET_SIZE = 4096;
   constexpr u32 DEF_BREAKPOINT_SIZE = 64;
   constexpr bool NON_STOP_MODE = false; // @TODO: broken, only useful for multi-thread debugging
+  constexpr bool GDB_LOG_MESSAGES = false;
 
   auto gdbCalcChecksum(const string &payload) -> u8 {
     u8 checksum = 0;
@@ -42,9 +43,10 @@ namespace ares::GDB {
     auto cmdParts = cmd.split(":");
     auto cmdName = cmdParts[0];
     char cmdPrefix = cmdName.size() > 0 ? cmdName[0] : ' ';
-    u32 mainThreadId = threadIds.size() > 0 ? threadIds[0] : 1;
 
-    printf("GDB <: %s\n", cmdBuffer.data());
+    if constexpr(GDB_LOG_MESSAGES) {
+      printf("GDB <: %s\n", cmdBuffer.data());
+    }
 
     switch(cmdPrefix)
     {
@@ -224,9 +226,13 @@ namespace ares::GDB {
   }
 
   auto Server::onText(string_view text) -> void {
-    for(u32 i=0; i<text.size(); ++i) 
+
+    if(cmdBuffer.size() == 0) {
+      cmdBuffer.reserve(text.size());
+    }
+
+    for(char c : text) 
     {
-      char c = text[i];
       switch(c) 
       {
         case '$':
@@ -235,7 +241,6 @@ namespace ares::GDB {
 
         case '#': // end of message + 2-char checksum after that
           insideCommand = false;
-          i+=2; // skip checksum (we are using TCP after all)
 
           if(cmdBuffer == "D") {
             printf("GDB ending session, disconnecting client\n");
@@ -243,6 +248,7 @@ namespace ares::GDB {
             disconnectClient();
             resumeProgram();
           } else {
+            ++messageCount;
             bool shouldReply = true;
             auto cmdRes = processCommand(cmdBuffer, shouldReply);
             if(shouldReply) {
@@ -258,6 +264,9 @@ namespace ares::GDB {
         case '+': break; // "OK" response -> ignore
 
         case '\x03': // CTRL+C (same as "vCtrlC" packet) -> force halt
+          if constexpr(GDB_LOG_MESSAGES) {
+            printf("GDB <: CTRL+C [0x03]");
+          }
           haltProgram();
           break;
 
@@ -269,12 +278,47 @@ namespace ares::GDB {
     }  
   }
 
+  auto Server::updateLoop() -> void {
+
+    // @TODO: refactor
+    constexpr u32 LOOP_COUNT = 100;
+    constexpr u32 LOOP_COUNT_HALT = 100;
+
+    if(isHalted()) 
+    {
+      for(u32 frame=0; frame<10; ++frame) {
+        for(u32 i=0; i<LOOP_COUNT_HALT; ++i) {
+          messageCount = 0;
+          update();
+          if(!isHalted())return;
+          if(messageCount > 0) {
+            i = LOOP_COUNT_HALT;
+          }
+        }
+        usleep(10);
+      }
+      return;
+    }
+
+    for(u32 i=0; i<LOOP_COUNT; ++i) {
+      messageCount = 0;
+      update();
+      if(messageCount > 0) {
+        i = LOOP_COUNT;
+      }
+    }
+  }
+
   auto Server::sendSignal(u8 code) -> void {
     sendPayload({"S", hex(code, 2)});
   }
 
   auto Server::sendPayload(const string& payload) -> void {
-    sendText({"+$", payload, '#', hex(gdbCalcChecksum(payload), 2, '0')});
+    string msg{"+$", payload, '#', hex(gdbCalcChecksum(payload), 2, '0')};
+    if constexpr(GDB_LOG_MESSAGES) {
+      printf("GDB >: %.*s\n", msg.size() > 100 ? 100 : msg.size(), msg.data());
+    }
+    sendText(msg);
   }
 
   auto Server::haltProgram() -> void {
@@ -306,9 +350,6 @@ namespace ares::GDB {
   auto Server::resetClientData() -> void {
     breakpoints.reset();
     breakpoints.reserve(DEF_BREAKPOINT_SIZE);
-
-    threadIds.reset();
-    threadIds.append(1);
 
     insideCommand = false;
     cmdBuffer = "";
