@@ -119,7 +119,8 @@ auto CPU::instructionEpilogue() -> s32 {
 
 auto CPU::instructionHook() -> void {
   //fast-boot or executable side-loading
-  if(ipu.pd == 0x8003'0000) {
+  if(ipu.pd == 0x8003'0000 && !exeLoaded) {
+    exeLoaded = 1;
     if(!disc.cd || disc.audioCD()) {
       //todo: is it possible to fast boot into the BIOS menu here?
     } else if(disc.executable()) {
@@ -152,6 +153,7 @@ auto CPU::power(bool reset) -> void {
   pipeline = {};
   delay = {};
   icache.power(reset);
+  exeLoaded = 0;
   exception.triggered = 0;
   breakpoint.lastPC = 0;
   for(auto& r : ipu.r) r = 0;

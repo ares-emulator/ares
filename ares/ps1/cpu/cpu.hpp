@@ -49,6 +49,8 @@ struct CPU : Thread {
 
   auto power(bool reset) -> void;
 
+  n1 exeLoaded = 0;
+
   struct Pipeline {
     u32 address = 0;
     u32 instruction = 0;
