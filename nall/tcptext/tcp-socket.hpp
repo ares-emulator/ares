@@ -26,14 +26,12 @@ class Socket {
     std::atomic<bool> stopServer{false}; // set to true to let the server-thread know to stop.
     std::atomic<bool> serverRunning{false}; // signals the current state of the server-thread
     std::atomic<bool> wantKickClient{false}; // set to true to let server know to disconnect the current client (if conn.)
-/*
-    // @TODO: check why std::vector works, and nall's not
+
     vector<u8> receiveBuffer{};
     std::mutex receiveBufferMutex{};
 
     vector<u8> sendBuffer{};
     std::mutex sendBufferMutex{};
-    */
 };
 
 }

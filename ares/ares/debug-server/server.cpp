@@ -8,11 +8,12 @@ using string = ::nall::string;
 using string_view = ::nall::string_view;
 
 namespace {
+  constexpr bool GDB_LOG_MESSAGES = false;
+
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
   constexpr u32 MAX_PACKET_SIZE = 4096;
   constexpr u32 DEF_BREAKPOINT_SIZE = 64;
   constexpr bool NON_STOP_MODE = false; // @TODO: broken, only useful for multi-thread debugging
-  constexpr bool GDB_LOG_MESSAGES = false;
 
   auto gdbCalcChecksum(const string &payload) -> u8 {
     u8 checksum = 0;
@@ -295,7 +296,7 @@ namespace ares::GDB {
             i = LOOP_COUNT_HALT;
           }
         }
-        usleep(10);
+        usleep(1);
       }
       return;
     }

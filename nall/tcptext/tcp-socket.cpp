@@ -1,7 +1,6 @@
 #include <nall/tcptext/tcp-socket.hpp>
 #include <memory>
 #include <thread>
-#include <vector>
 
 #if defined(PLATFORM_WINDOWS)
   #include <ws2tcpip.h>
@@ -13,27 +12,43 @@ struct sockaddr_in;
 struct sockaddr_in6;
 
 namespace {
-  constexpr u32 TCP_BUFFER_SIZE = 1024 * 32;
-  constexpr u32 SLEEP_MILLIS = 1; // ms to sleep after each send/receive cycle, limits CPU usage
-  constexpr u32 CYCLES_BEFORE_SLEEP = 10; // how often to do a send/receive check before a sleep
+  constexpr bool TCP_LOG_MESSAGES = false;
+
+  constexpr u32 TCP_BUFFER_SIZE = 1024 * 16;
+  constexpr u32 CLIENT_SLEEP_MS = 10; // ms to sleep while checking for new clients
+  constexpr u32 CYCLES_BEFORE_SLEEP = 100; // how often to do a send/receive check before a sleep
 
   std::atomic<s32> fdServer{-1};
   std::atomic<s32> fdClient{-1};
-
-      std::vector<u8> receiveBuffer{};
-    std::mutex receiveBufferMutex{};
-
-    std::vector<u8> sendBuffer{};
-    std::mutex sendBufferMutex{};
 }
 
 namespace nall::TCP {
+
+/**
+ * Opens a TCP server with callbacks to send and receive data.
+ * 
+ * This spawns 3 new threads:
+ * threadServer:  listens for new connections, kicks connections
+ * threadSend:    sends data to the client
+ * threadReceive: receives data from the client
+ * 
+ * Each contains it's own loop including sleeps to not use too much CPU.
+ * The exception is threadReceive which relies on the blocking recv() call (kernel wakes it up again).
+ * 
+ * Incoming and outgoing data is synchronized using mutexes,
+ * and put into buffers that are shared with the main thread.
+ * Meaning, the thread that calls 'update()' with also be the one that gets 'onData()' calls.
+ * No additional synchronization is needed.
+ * 
+ * NOTE: if you work on the loop/sleeps, make sure to test CPU usage and package-latency.
+ */
 
 NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
   stopServer = false;
 
   printf("Opening TCP-server on localhost:%d\n", port);
-  auto tServer = std::thread([this, port]() {
+
+  auto threadServer = std::thread([this, port]() {
     serverRunning = true;
 
     fdServer = socket(AF_INET6, SOCK_STREAM, 0);  
@@ -59,6 +74,13 @@ NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
       #if defined(TCP_NODELAY)
         setsockopt(fdServer, IPPROTO_TCP, TCP_NODELAY, &valueOn, sizeof(s32));
       #endif
+
+      #if defined(SO_RCVTIMEO)
+        struct timeval rcvtimeo;
+        rcvtimeo.tv_sec  = 1;
+        rcvtimeo.tv_usec = 0;
+        setsockopt(fdServer, SOL_SOCKET, SO_RCVTIMEO, &rcvtimeo, sizeof(rcvtimeo));
+      #endif
     }
 
     sockaddr_in6 serverAddrV6{};
@@ -71,101 +93,110 @@ NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
       stopServer = true;
     }
 
-    u8 packet[TCP_BUFFER_SIZE]{0};
-
-    u32 cycles = CYCLES_BEFORE_SLEEP;
     while(!stopServer) 
     {
       // scan for new connections
       if(fdClient < 0) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         sockaddr_in addressClient{0};
         socklen_t socketSize = sizeof(addressClient);
         fdClient = accept(fdServer, (sockaddr *)&addressClient, &socketSize);
         if(fdClient >= 0) {
           printf("Client connected!\n");
-
-          if(fcntl(fdClient, F_SETFL, fcntl(fdClient, F_GETFL) | O_NONBLOCK) < 0) {
-            printf("Could not set client to non-blocking mode!\n");   
-          }
         }
       }
       
-      // handle receiving & sending data
-      if(fdClient >= 0) {
-        // copy send-data to minimize lock time
-        std::vector<u8> localSendBuffer{};
-        {
-          std::lock_guard{sendBufferMutex};
-          if(sendBuffer.size() > 0) {
-            localSendBuffer = sendBuffer;
-            sendBuffer.resize(0);
-          }
-        }
-
-        // send data
-        if(localSendBuffer.size() > 0) {
-          auto bytesWritten = send(fdClient, localSendBuffer.data(), localSendBuffer.size(), 0);
-          if(bytesWritten < localSendBuffer.size()) {
-            printf("Error sending data! (%s)\n", strerror(errno));
-          }
-          //printf("%.4f | TCP >: [%d]: %.*s\n", (f64)chrono::millisecond() / 1000.0, localSendBuffer.size(), localSendBuffer.size() > 100 ? 100 : localSendBuffer.size(), (char*)localSendBuffer.data());
-        }
-
-        // receive data from connected clients
-        s32 length = recv(fdClient, packet, TCP_BUFFER_SIZE, MSG_NOSIGNAL);
-        if(length > 0) {
-          std::lock_guard guard{receiveBufferMutex};
-          auto oldSize = receiveBuffer.size();
-          receiveBuffer.resize(oldSize + length);
-          memcpy(receiveBuffer.data() + oldSize, packet, length);
-          //printf("%.4f | TCP <: [%d]: %.*s ([%d]: %.*s)\n", (f64)chrono::millisecond() / 1000.0, length, length, (char*)receiveBuffer.data(), length, length, (char*)packet);
-        }
-
-        if(cycles-- == 0) {
-          usleep(10);
-          cycles = CYCLES_BEFORE_SLEEP;
-        }
-      }
-
-      // Kick client if we need to (must be done send)
+      // Kick client if we need to
       if(fdClient >= 0 && wantKickClient) {
         ::close(fdClient);
         fdClient = -1;
         wantKickClient = false;
       }
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
     }
     
-    // Stop
     printf("Stopping TCP-server...\n");
     if(fdServer) {
       ::close(fdServer);
       fdServer = -1;
     }
 
+    printf("TCP-server stopped\n");
     serverRunning = false;
   });
 
-  // @TODO:
-  auto tSend = std::thread([this]() {
+  auto threadSend = std::thread([this]() 
+  {
+    vector<u8> localSendBuffer{};
+    u32 cycles = 0;
+
     while(!stopServer) 
     {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      if(fdClient < 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
+        continue;
+      }
+
+      { // copy send-data to minimize lock time
+        std::lock_guard guard{sendBufferMutex};
+        if(sendBuffer.size() > 0) {
+          localSendBuffer = sendBuffer;
+          sendBuffer.resize(0);
+        }
+      }
+
+      // send data
+      if(localSendBuffer.size() > 0) {
+        auto bytesWritten = send(fdClient, localSendBuffer.data(), localSendBuffer.size(), 0);
+        if(bytesWritten < localSendBuffer.size()) {
+          printf("Error sending data! (%s)\n", strerror(errno));
+        }
+
+        if constexpr(TCP_LOG_MESSAGES) {
+          printf("%.4f | TCP >: [%d]: %.*s\n", (f64)chrono::millisecond() / 1000.0, localSendBuffer.size(), localSendBuffer.size() > 100 ? 100 : localSendBuffer.size(), (char*)localSendBuffer.data());
+        }
+
+        localSendBuffer.resize(0);
+        cycles = 0; // sending once has a good chance of sending more -> reset sleep timer
+      }
+
+      if(cycles++ >= CYCLES_BEFORE_SLEEP) {
+        usleep(1);
+        cycles = 0;
+      } 
     }
   });
 
-  // @TODO:
-  auto tReceive = std::thread([this]() {
+  auto threadReceive = std::thread([this]() 
+  {
+    u8 packet[TCP_BUFFER_SIZE]{0};
+
     while(!stopServer) 
     {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      if(fdClient < 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
+        continue;
+      }
+
+      // receive data from connected clients
+      s32 length = recv(fdClient, packet, TCP_BUFFER_SIZE, MSG_NOSIGNAL);
+      if(length > 0) {
+        std::lock_guard guard{receiveBufferMutex};
+        auto oldSize = receiveBuffer.size();
+        receiveBuffer.resize(oldSize + length);
+        memcpy(receiveBuffer.data() + oldSize, packet, length);
+
+        if constexpr(TCP_LOG_MESSAGES) {
+          printf("%.4f | TCP <: [%d]: %.*s ([%d]: %.*s)\n", (f64)chrono::millisecond() / 1000.0, length, length, (char*)receiveBuffer.data(), length, length, (char*)packet);
+        }
+      }
     }
   });
 
-  tServer.detach();
-  tSend.detach();
-  tReceive.detach();
+  threadServer.detach();
+  threadSend.detach();
+  threadReceive.detach();
 
   return true;
 }
@@ -174,19 +205,17 @@ NALL_HEADER_INLINE auto Socket::close() -> void {
   stopServer = true;
 
   while(serverRunning) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MILLIS));
+    usleep(1000); // wait for other threads to stop
   }
 }
 
 NALL_HEADER_INLINE auto Socket::update() -> void {
   vector<u8> data{};
   
-  {
+  { // local copy, minimize lock time
     std::lock_guard guard{receiveBufferMutex};
     if(receiveBuffer.size() > 0) {
-      data.resize(receiveBuffer.size());
-      memcpy(data.data(), receiveBuffer.data(), receiveBuffer.size());
-      //data = receiveBuffer;
+      data = receiveBuffer;
       receiveBuffer.resize(0);
     }
   }
@@ -201,7 +230,7 @@ NALL_HEADER_INLINE auto Socket::disconnectClient() -> void {
 }
 
 NALL_HEADER_INLINE auto Socket::sendData(const u8* data, u32 size) -> void {
-  std::lock_guard{sendBufferMutex};
+  std::lock_guard guard{sendBufferMutex};
   u32 oldSize = sendBuffer.size();
   sendBuffer.resize(oldSize + size);
   memcpy(sendBuffer.data() + oldSize, data, size);
