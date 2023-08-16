@@ -186,7 +186,7 @@ auto Disc::step(u32 clocks) -> void {
 
 auto Disc::power(bool reset) -> void {
   Thread::reset();
-  Memory::Interface::setWaitStates(7, 13, 25);
+  Memory::Interface::setWaitStates(8, 25, 60);
 
   drive.lba.current = 0;
   drive.lba.request = 0;

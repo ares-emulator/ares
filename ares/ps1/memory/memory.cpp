@@ -4,9 +4,9 @@ namespace ares::PlayStation {
 
 Bus bus;
 MemoryControl memory;
-MemoryExpansion expansion1{ 6, 13, 25};
-MemoryExpansion expansion2{10, 25, 55};
-MemoryExpansion expansion3{ 6,  5,  9};
+MemoryExpansion expansion1{ 8, 16, 31};
+MemoryExpansion expansion2{11, 35, 84};
+MemoryExpansion expansion3{ 7,  7, 11};
 Memory::Readable bios;
 Memory::Unmapped unmapped;
 #include "io.cpp"
@@ -22,7 +22,6 @@ auto MemoryControl::unload() -> void {
 
 auto MemoryControl::power(bool reset) -> void {
   //timings are for $1f80:106x
-  //timings for $fffe:xxxx are hardcoded as (0, 1, 1) in cpu/core/memory.cpp
   Memory::Interface::setWaitStates(2, 2, 2);
 
   memory.ram = {};

@@ -18,7 +18,7 @@ auto MDEC::unload() -> void {
 
 auto MDEC::power(bool reset) -> void {
   Thread::reset();
-  Memory::Interface::setWaitStates(3, 3, 2);
+  Memory::Interface::setWaitStates(4, 4, 4);
 
   fifo.input.flush();
   fifo.output.flush();

@@ -20,7 +20,7 @@ CPU cpu;
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("CPU");
   ram.allocate(2_MiB);
-  ram.setWaitStates(4, 4, 4);
+  ram.setWaitStates(6, 6, 6);
   scratchpad.allocate(1_KiB);
   scratchpad.setWaitStates(0, 0, 0);
   gte.constructTable();
@@ -35,6 +35,11 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
+  if(waitCycles > 0) {
+    step(waitCycles);
+    waitCycles = 0;
+  }
+
   instruction();
   synchronize();
 }

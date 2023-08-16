@@ -10,11 +10,11 @@ auto Timer::readWord(u32 address) -> u32 {
   n32 data;
   u32 c = address >> 4 & 3;
 
-  if((address & 0xffff'ffcf) == 0x1f80'1100 && c <= 2) {
+  if((address & 0x1fff'ffcf) == 0x1f80'1100 && c <= 2) {
     data.bit(0,15) = timers[c].counter;
   }
 
-  if((address & 0xffff'ffcf) == 0x1f80'1104 && c <= 2) {
+  if((address & 0x1fff'ffcf) == 0x1f80'1104 && c <= 2) {
     data.bit( 0)    = timers[c].synchronize;
     data.bit( 1, 2) = timers[c].mode;
     data.bit( 3)    = timers[c].resetMode;
@@ -32,7 +32,7 @@ auto Timer::readWord(u32 address) -> u32 {
     timers[c].reachedSaturate = 0;
   }
 
-  if((address & 0xffff'ffcf) == 0x1f80'1108 && c <= 2) {
+  if((address & 0x1fff'ffcf) == 0x1f80'1108 && c <= 2) {
     data.bit(0,15) = timers[c].target;
   }
 
@@ -51,11 +51,12 @@ auto Timer::writeWord(u32 address, u32 value) -> void {
   n32 data = value;
   u32 c = address >> 4 & 3;
 
-  if((address & 0xffff'ffcf) == 0x1f80'1100 && c <= 2) {
-    timers[c].reset();
+  if((address & 0x1fff'ffcf) == 0x1f80'1100 && c <= 2) {
+    timers[c].counter = data.bit(0,15);
+    timers[c].wait = WAIT_CYCLES;
   }
 
-  if((address & 0xffff'ffcf) == 0x1f80'1104 && c <= 2) {
+  if((address & 0x1fff'ffcf) == 0x1f80'1104 && c <= 2) {
     timers[c].synchronize   = data.bit( 0);
     timers[c].mode          = data.bit( 1, 2);
     timers[c].resetMode     = data.bit( 3);
@@ -74,9 +75,10 @@ auto Timer::writeWord(u32 address, u32 value) -> void {
 
     timers[c].counter      = 0;
     timers[c].irqTriggered = 0;
+    timers[c].wait = WAIT_CYCLES;
   }
 
-  if((address & 0xffff'ffcf) == 0x1f80'1108 && c <= 2) {
+  if((address & 0x1fff'ffcf) == 0x1f80'1108 && c <= 2) {
     timers[c].target = data.bit(0,15);
   }
 }

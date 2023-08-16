@@ -2,6 +2,8 @@
 
 namespace ares::PlayStation {
 
+constexpr u8 WAIT_CYCLES = 2;
+
 Timer timer;
 #include "io.cpp"
 #include "serialization.cpp"
@@ -20,16 +22,16 @@ auto Timer::step(u32 clocks) -> void {
 
   {
     if(timers[0].clock == 0) {
-      timers[0].step(clocks);
+      timers[0].step(clocks - timers[0].wait);
     }
 
     if(timers[1].clock == 0) {
-      timers[1].step(clocks);
+      timers[1].step(clocks - timers[1].wait);
     }
 
     if(timers[2].divider == 0) {
       if(timers[2].synchronize == 0 || timers[2].mode == 1 || timers[2].mode == 2) {
-        timers[2].step(clocks);
+        timers[2].step(clocks - timers[2].wait);
       }
     }
   }
@@ -48,6 +50,10 @@ auto Timer::step(u32 clocks) -> void {
         timers[2].step();
       }
     }
+  }
+
+  for(auto& timer : timers) {
+    if(timer.wait > 0) timer.wait = max(0, (i32)timer.wait - (i32)clocks);
   }
 }
 
@@ -102,7 +108,7 @@ auto Timer::power(bool reset) -> void {
 }
 
 auto Timer::Source::step(u32 clocks) -> void {
-  if(synchronize && paused) return;
+  if((synchronize && paused) || wait) return;
 
   while(clocks--) {
     counter++;
@@ -110,12 +116,16 @@ auto Timer::Source::step(u32 clocks) -> void {
     //counter value can be read in the range of 0..target (inclusive)
     if(u16(counter - 1) == target) {
       reachedTarget = 1;
-      if(resetMode == 1) counter = 0;
+      if(resetMode == 1) {
+        wait = WAIT_CYCLES;
+        counter = 0;
+      }
       if(irqOnTarget) irq();
     }
 
-    if(counter == 0xffff) {
+    if(u16(counter - 1) == 0xffff) {
       reachedSaturate = 1;
+      wait = 1;
       if(resetMode == 0) counter = 0;
       if(irqOnSaturate) irq();
     }
@@ -136,6 +146,7 @@ auto Timer::Source::irq() -> void {
 
 auto Timer::Source::reset() -> void {
   counter = 0;
+  wait = 0;
 
   switch(id) {
   case 0: paused = mode == 3; break;

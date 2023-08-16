@@ -5,6 +5,7 @@ auto CPU::serialize(serializer& s) -> void {
   s(scratchpad);
 
   s(exeLoaded);
+  s(waitCycles);
 
   s(pipeline.address);
   s(pipeline.instruction);
