@@ -25,6 +25,9 @@ auto CPU::Debugger::load(Node::Object parent) -> void {
   tracer.interrupt = parent->append<Node::Debugger::Tracer::Notification>("Interrupt", "CPU");
   tracer.message = parent->append<Node::Debugger::Tracer::Notification>("Message", "CPU");
   tracer.function = parent->append<Node::Debugger::Tracer::Notification>("Function", "CPU");
+
+  //enable stdout (CPU::Message) channel by default
+  tracer.message->setEnabled(true);
 }
 
 auto CPU::Debugger::instruction() -> void {

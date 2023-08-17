@@ -29,10 +29,11 @@ auto Program::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
 auto Program::event(ares::Event event) -> void {
 }
 
-auto Program::log(string_view channel, string_view message) -> void {
-  //TODO: Allow registered loggers to be notified of log messages
+auto Program::log(ares::Node::Debugger::Tracer::Tracer node, string_view message) -> void {
+  string channel = string{node->component(), " ", node->name()};
 
-  message = {channel, ":", message};
+  //TODO: Allow registered loggers to be notified of log messages
+  message = {channel, ":", message, "\n"};
 
   if(traceLogger.traceToTerminal.checked()) {
     print(message);

@@ -34,6 +34,7 @@ auto TraceLogger::reload() -> void {
     item.setAttribute<ares::Node::Debugger::Tracer::Tracer>("tracer", tracer);
     item.setCheckable();
     item.setText({tracer->component(), " ", tracer->name()});
+    item.setChecked(tracer->enabled());
   }
 }
 
