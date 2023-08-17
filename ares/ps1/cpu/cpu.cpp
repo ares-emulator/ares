@@ -45,11 +45,11 @@ auto CPU::main() -> void {
 }
 
 auto CPU::step(u32 clocks) -> void {
+  timer.step(clocks);
   Thread::clock += clocks;
 }
 
 auto CPU::synchronize() -> void {
-  timer.step(Thread::clock);
   gpu.clock -= Thread::clock;
   dma.clock -= Thread::clock;
   disc.clock -= Thread::clock;
