@@ -141,7 +141,7 @@ auto GPU::step(u32 clocks) -> void {
 
 auto GPU::power(bool reset) -> void {
   Thread::reset();
-  Memory::Interface::setWaitStates(2, 2, 3);
+  Memory::Interface::setWaitStates(4, 4, 4);
   screen->power();
   refreshed = false;
 

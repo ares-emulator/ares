@@ -1,9 +1,19 @@
 #include <SDL2/SDL.h>
+
+#if defined(PLATFORM_WINDOWS)
+#include "shared/rawinput.cpp"
+#include "keyboard/rawinput.cpp"
+#include "mouse/rawinput.cpp"
+#elif defined(PLATFORM_MACOS)
+#include "keyboard/quartz.cpp"
+#include "joypad/iokit.cpp"
+#else
 #include <sys/ipc.h>
 #include <sys/shm.h>
-
 #include "keyboard/xlib.cpp"
 #include "mouse/xlib.cpp"
+#endif
+
 #include "joypad/sdl.cpp"
 
 struct InputSDL : InputDriver {
@@ -34,13 +44,29 @@ struct InputSDL : InputDriver {
     return devices;
   }
 
-  auto rumble(u64 id, bool enable) -> bool override {
-    return false;
+  auto rumble(u64 id, u16 strong, u16 weak) -> bool override {
+    return joypad.rumble(id, strong, weak);
   }
 
 private:
   auto initialize() -> bool {
     terminate();
+
+#if defined(PLATFORM_WINDOWS)
+    //TODO: this won't work if Input is recreated post-initialization; nor will it work with multiple Input instances
+    if(!rawinput.initialized) {
+      rawinput.initialized = true;
+      rawinput.mutex = CreateMutex(nullptr, false, nullptr);
+      CreateThread(nullptr, 0, RawInputThreadProc, 0, 0, nullptr);
+
+      do {
+        Sleep(1);
+        WaitForSingleObject(rawinput.mutex, INFINITE);
+        ReleaseMutex(rawinput.mutex);
+      } while(!rawinput.ready);
+    }
+#endif
+
     if(!self.context) return false;
     if(!keyboard.initialize()) return false;
     if(!mouse.initialize(self.context)) return false;
@@ -56,7 +82,17 @@ private:
   }
 
   bool isReady = false;
+
+#if defined(PLATFORM_WINDOWS)
+  InputKeyboardRawInput keyboard;
+  InputMouseRawInput mouse;
+#elif defined(PLATFORM_MACOS)
+  InputKeyboardQuartz keyboard;
+  InputJoypadIOKit joypad;
+#else
   InputKeyboardXlib keyboard;
   InputMouseXlib mouse;
+#endif
+
   InputJoypadSDL joypad;
 };

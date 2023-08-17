@@ -119,7 +119,7 @@ auto System::power(bool reset) -> void {
   if constexpr(Accuracy::CPU::Recompiler) {
     ares::Memory::FixedAllocator::get().release();
   }
-  bios.setWaitStates(6, 12, 24);
+  bios.setWaitStates(8, 16, 31);
   memory.power(reset);
   cpu.power(reset);
   gpu.power(reset);

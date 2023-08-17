@@ -72,11 +72,12 @@ struct InputJoypadDirectInput {
     }
   }
 
-  auto rumble(u64 id, bool enable) -> bool {
+  auto rumble(u64 id, u16 strong, u16 weak) -> bool {
     for(auto& jp : joypads) {
       if(jp.hid->id() != id) continue;
       if(jp.effect == nullptr) continue;
 
+      auto enable = weak > 0 || strong > 0;
       if(enable) jp.effect->Start(1, 0);
       else jp.effect->Stop();
       return true;

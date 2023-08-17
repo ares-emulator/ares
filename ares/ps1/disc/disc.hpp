@@ -113,6 +113,7 @@ struct Disc : Thread, Memory::Interface {
     struct Sector {
       u8  data[2448];
       u16 offset;
+      u8 track;
     } sector;
 
     struct Mode {
@@ -175,7 +176,7 @@ struct Disc : Thread, Memory::Interface {
 
     auto clockSector() -> void;
     auto clockSample() -> void;
-    template<bool isStereo, bool is8bit> auto decodeADPCM() -> void;
+    template<bool isStereo, bool is8bit> auto decodeADPCM(n1 halfSampleRate) -> void;
     template<bool isStereo, bool is8bit> auto decodeBlock(s16* output, u16 address) -> void;
 
     struct Filter {

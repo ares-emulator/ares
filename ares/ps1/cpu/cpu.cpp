@@ -20,7 +20,7 @@ CPU cpu;
 auto CPU::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("CPU");
   ram.allocate(2_MiB);
-  ram.setWaitStates(4, 4, 4);
+  ram.setWaitStates(6, 6, 6);
   scratchpad.allocate(1_KiB);
   scratchpad.setWaitStates(0, 0, 0);
   gte.constructTable();
@@ -35,16 +35,21 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
+  if(waitCycles > 0) {
+    step(waitCycles);
+    waitCycles = 0;
+  }
+
   instruction();
   synchronize();
 }
 
 auto CPU::step(u32 clocks) -> void {
+  timer.step(clocks);
   Thread::clock += clocks;
 }
 
 auto CPU::synchronize() -> void {
-  timer.step(Thread::clock);
   gpu.clock -= Thread::clock;
   dma.clock -= Thread::clock;
   disc.clock -= Thread::clock;
@@ -119,7 +124,8 @@ auto CPU::instructionEpilogue() -> s32 {
 
 auto CPU::instructionHook() -> void {
   //fast-boot or executable side-loading
-  if(ipu.pd == 0x8003'0000) {
+  if(ipu.pd == 0x8003'0000 && !exeLoaded) {
+    exeLoaded = 1;
     if(!disc.cd || disc.audioCD()) {
       //todo: is it possible to fast boot into the BIOS menu here?
     } else if(disc.executable()) {
@@ -152,6 +158,7 @@ auto CPU::power(bool reset) -> void {
   pipeline = {};
   delay = {};
   icache.power(reset);
+  exeLoaded = 0;
   exception.triggered = 0;
   breakpoint.lastPC = 0;
   for(auto& r : ipu.r) r = 0;
@@ -258,7 +265,9 @@ auto CPU::power(bool reset) -> void {
 
   if constexpr(Accuracy::CPU::Recompiler) {
     auto buffer = ares::Memory::FixedAllocator::get().tryAcquire(64_MiB);
+    memory::jitprotect(false);
     recompiler.allocator.resize(64_MiB, bump_allocator::executable | bump_allocator::zero_fill, buffer);
+    memory::jitprotect(true);
     recompiler.reset();
   }
 }

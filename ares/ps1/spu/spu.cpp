@@ -101,7 +101,7 @@ auto SPU::step(u32 clocks) -> void {
 
 auto SPU::power(bool reset) -> void {
   Thread::reset();
-  Memory::Interface::setWaitStates(17, 17, 18);
+  Memory::Interface::setWaitStates(18, 18, 45);
   ram.fill();
 
   master = {};

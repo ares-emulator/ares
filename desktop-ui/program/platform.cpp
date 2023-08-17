@@ -29,11 +29,16 @@ auto Program::pak(ares::Node::Object node) -> shared_pointer<vfs::directory> {
 auto Program::event(ares::Event event) -> void {
 }
 
-auto Program::log(string_view message) -> void {
-  if(traceLogger.traceToTerminal.checked()) {
+auto Program::log(ares::Node::Debugger::Tracer::Tracer node, string_view message) -> void {
+  string channel = string{node->component(), " ", node->name()};
+
+  if(node->prefix()) { message = string{channel, ": ", message}; }
+  if(node->autoLineBreak()) message = string{message, "\n"};
+
+  if(node->terminal()) {
     print(message);
   }
-  if(traceLogger.traceToFile.checked()) {
+  if(node->file()) {
     if(!traceLogger.fp) {
       auto datetime = chrono::local::datetime().replace("-", "").replace(":", "").replace(" ", "-");
       auto location = emulator->locate({Location::notsuffix(emulator->game->location), "-", datetime, ".log"}, ".log", settings.paths.debugging);

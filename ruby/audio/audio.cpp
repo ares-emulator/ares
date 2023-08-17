@@ -42,6 +42,10 @@
   #include <ruby/audio/xaudio2.cpp>
 #endif
 
+#if defined(AUDIO_SDL)
+#include <ruby/audio/sdl.cpp>
+#endif
+
 namespace ruby {
 
 auto Audio::setExclusive(bool exclusive) -> bool {
@@ -186,6 +190,10 @@ auto Audio::create(string driver) -> bool {
   if(driver == "XAudio 2.1") self.instance = new AudioXAudio2(*this);
   #endif
 
+#if defined(AUDIO_SDL)
+  if(driver == "SDL") self.instance = new AudioSDL(*this);
+#endif
+
   if(!self.instance) self.instance = new AudioDriver(*this);
 
   return self.instance->create();
@@ -205,6 +213,10 @@ auto Audio::hasDrivers() -> vector<string> {
   #if defined(AUDIO_XAUDIO2)
   "XAudio 2.1",
   #endif
+
+#if defined(AUDIO_SDL)
+  "SDL",
+#endif
 
   #if defined(AUDIO_DIRECTSOUND)
   "DirectSound 7.0",
@@ -248,6 +260,8 @@ auto Audio::optimalDriver() -> string {
   return "ASIO";
   #elif defined(AUDIO_XAUDIO2)
   return "XAudio 2.1";
+  #elif defined(AUDIO_SDL)
+  return "SDL";
   #elif defined(AUDIO_DIRECTSOUND)
   return "DirectSound 7.0";
   #elif defined(AUDIO_WAVEOUT)
@@ -278,6 +292,8 @@ auto Audio::safestDriver() -> string {
   return "WASAPI";
   #elif defined(AUDIO_XAUDIO2)
   return "XAudio 2.1";
+  #elif defined(AUDIO_SDL)
+  return "SDL";
   #elif defined(AUDIO_ALSA)
   return "ALSA";
   #elif defined(AUDIO_OSS)

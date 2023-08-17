@@ -8,7 +8,7 @@ struct Program : ares::Platform {
   auto detach(ares::Node::Object) -> void override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
   auto event(ares::Event) -> void override;
-  auto log(string_view message) -> void override;
+  auto log(ares::Node::Debugger::Tracer::Tracer tracer, string_view message) -> void override;
   auto status(string_view message) -> void override;
   auto video(ares::Node::Video::Screen, const u32* data, u32 pitch, u32 width, u32 height) -> void override;
   auto audio(ares::Node::Audio::Stream) -> void override;

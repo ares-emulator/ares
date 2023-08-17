@@ -33,4 +33,17 @@ struct Gamepad : Controller {
   auto read() -> n32 override;
   auto formatControllerPak() -> void;
   auto serialize(serializer&) -> void override;
+
+  struct TransferPak {
+    auto load(Node::Object parent) -> void;
+    auto unload() -> void;
+    auto save() -> void;
+    auto read(u16 address) -> u8;
+    auto write(u16 address, u8 data) -> void;
+
+    n1 pakEnable;
+    n1 cartEnable;
+    n2 resetState;
+    n2 addressBank;
+  } transferPak;
 };

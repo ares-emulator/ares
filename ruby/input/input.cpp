@@ -53,8 +53,8 @@ auto Input::poll() -> vector<shared_pointer<nall::HID::Device>> {
   return instance->poll();
 }
 
-auto Input::rumble(u64 id, bool enable) -> bool {
-  return instance->rumble(id, enable);
+auto Input::rumble(u64 id, u16 strong, u16 weak) -> bool {
+  return instance->rumble(id, strong, weak);
 }
 
 //
@@ -141,7 +141,9 @@ auto Input::hasDrivers() -> vector<string> {
 }
 
 auto Input::optimalDriver() -> string {
-  #if defined(INPUT_WINDOWS)
+  #if defined(INPUT_SDL)
+  return "SDL";
+  #elif defined(INPUT_WINDOWS)
   return "Windows";
   #elif defined(INPUT_QUARTZ)
   return "Quartz";
@@ -151,8 +153,6 @@ auto Input::optimalDriver() -> string {
   return "udev";
   #elif defined(INPUT_UHID)
   return "uhid";
-  #elif defined(INPUT_SDL)
-  return "SDL";
   #elif defined(INPUT_XLIB)
   return "Xlib";
   #else

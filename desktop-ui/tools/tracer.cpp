@@ -3,37 +3,45 @@ auto TraceLogger::construct() -> void {
   setVisible(false);
 
   tracerLabel.setText("Trace Logger").setFont(Font().setBold());
-  tracerList.onToggle([&](auto item) { eventToggle(item); });
-  selectAllButton.setText("Select All").onActivate([&] {
-    for(auto item : tracerList.items()) {
-      if(item.checked()) continue;
-      item.setChecked(true);
-      eventToggle(item);
-    }
-  });
-  unselectAllButton.setText("Unselect All").onActivate([&] {
-    for(auto item : tracerList.items()) {
-      if(!item.checked()) continue;
-      item.setChecked(false);
-      eventToggle(item);
-    }
-  });
-  traceToTerminal.setText("Trace To Terminal");
-  traceToFile.setText("Trace To File");
-  traceMask.setText("Mask").onToggle([&] {
-    for(auto instruction : ares::Node::enumerate<ares::Node::Debugger::Tracer::Instruction>(emulator->root)) {
-      instruction->setMask(traceMask.checked());
+  tracerList.onToggle([&](auto cell) {
+    if(auto item = tracerList.selected()) {
+      if(auto tracer = item.attribute<ares::Node::Debugger::Tracer::Tracer>("tracer")) {
+        if(cell.offset() == 1) tracer->setPrefix(cell.checked());
+        if(cell.offset() == 2) tracer->setTerminal(cell.checked());
+        if(cell.offset() == 3) tracer->setFile(cell.checked());
+        if(cell.offset() == 4) {
+          if(auto instruction = tracer->cast<ares::Node::Debugger::Tracer::Instruction>()) {
+            instruction->setMask(cell.checked());
+          }
+        }
+      }
     }
   });
 }
 
 auto TraceLogger::reload() -> void {
   tracerList.reset();
+  tracerList.setHeadered();
+
+  tracerList.append(TableViewColumn().setText("Name").setExpandable());
+  tracerList.append(TableViewColumn().setText("Show Prefix").setAlignment(1.0));
+  tracerList.append(TableViewColumn().setText("Log to Terminal").setAlignment(1.0));
+  tracerList.append(TableViewColumn().setText("Log to File").setAlignment(1.0));
+  tracerList.append(TableViewColumn().setText("Mask").setAlignment(1.0));
+
+
   for(auto tracer : ares::Node::enumerate<ares::Node::Debugger::Tracer::Tracer>(emulator->root)) {
-    ListViewItem item{&tracerList};
+    TableViewItem item{&tracerList};
     item.setAttribute<ares::Node::Debugger::Tracer::Tracer>("tracer", tracer);
-    item.setCheckable();
-    item.setText({tracer->component(), " ", tracer->name()});
+    item.append(TableViewCell().setText({tracer->component(), " ", tracer->name()}));
+    item.append(TableViewCell().setCheckable().setChecked(tracer->prefix()));
+    item.append(TableViewCell().setCheckable().setChecked(tracer->terminal()));
+    item.append(TableViewCell().setCheckable().setChecked(tracer->file()));
+    if(auto instruction = tracer->cast<ares::Node::Debugger::Tracer::Instruction>()) {
+      item.append(TableViewCell().setCheckable().setChecked(instruction->mask()));
+    } else {
+      item.append(TableViewCell());
+    }
   }
 }
 
@@ -42,8 +50,3 @@ auto TraceLogger::unload() -> void {
   if(fp) fp.close();
 }
 
-auto TraceLogger::eventToggle(ListViewItem item) -> void {
-  if(auto tracer = item.attribute<ares::Node::Debugger::Tracer::Tracer>("tracer")) {
-    tracer->setEnabled(item.checked());
-  }
-}

@@ -96,12 +96,12 @@ struct InputJoypadUdev {
     }
   }
 
-  auto rumble(u64 id, bool enable) -> bool {
+  auto rumble(u64 id, u16 strong, u16 weak) -> bool {
     for(auto& jp : joypads) {
       if(jp.hid->id() != id) continue;
       if(!jp.hid->rumble()) continue;
 
-      if(!enable) {
+      if(weak == 0 && strong == 0) {
         if(jp.effectID == -1) return true;  //already stopped?
 
         ioctl(jp.fd, EVIOCRMFF, jp.effectID);
@@ -113,8 +113,8 @@ struct InputJoypadUdev {
         memory::fill(&effect, sizeof(ff_effect));
         effect.type = FF_RUMBLE;
         effect.id = -1;
-        effect.u.rumble.strong_magnitude = 65535;
-        effect.u.rumble.weak_magnitude   = 65535;
+        effect.u.rumble.strong_magnitude = strong;
+        effect.u.rumble.weak_magnitude   = weak;
         ioctl(jp.fd, EVIOCSFF, &effect);
         jp.effectID = effect.id;
 
@@ -122,7 +122,7 @@ struct InputJoypadUdev {
         memory::fill(&play, sizeof(input_event));
         play.type = EV_FF;
         play.code = jp.effectID;
-        play.value = enable;
+        play.value = weak > 0 || strong > 0;
         (void)write(jp.fd, &play, sizeof(input_event));
       }
 

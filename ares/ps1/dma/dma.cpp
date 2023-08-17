@@ -31,7 +31,7 @@ auto DMA::step(u32 clocks) -> void {
 }
 
 auto DMA::power(bool reset) -> void {
-  Memory::Interface::setWaitStates(3, 3, 2);
+  Memory::Interface::setWaitStates(4, 4, 4);
 
   irq.force = 0;
   irq.enable = 0;

@@ -70,8 +70,6 @@ auto Program::load(string location) -> bool {
   state = {};  //reset hotkey state slot to 1
   if(settings.boot.debugger) {
     pause(true);
-    traceLogger.traceToTerminal.setChecked(true);
-    traceLogger.traceToFile.setChecked(false);
     toolsWindow.show("Tracer");
     presentation.setFocused();
   } else {

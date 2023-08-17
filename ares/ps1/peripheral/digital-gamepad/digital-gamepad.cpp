@@ -111,5 +111,6 @@ auto DigitalGamepad::bus(u8 data) -> u8 {
 auto DigitalGamepad::invalid(u8 data) -> u8 {
   debug(unusual, "[DigitalGamepad] Invalid command byte ", hex(data));
   state = State::Idle;
+  _active = false;
   return 0xff;
 }

@@ -20,5 +20,6 @@ auto Timer::serialize(serializer& s) -> void {
     s(t.unknown);
     s(t.paused);
     s(t.irqTriggered);
+    s(t.wait);
   }
 }

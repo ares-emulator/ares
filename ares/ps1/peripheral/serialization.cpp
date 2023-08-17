@@ -31,5 +31,6 @@ auto Peripheral::serialize(serializer& s) -> void {
   s(io.slotNumber);
   s(io.unknownCtrl_14_15);
   s(io.baudrateReloadValue);
-  s(io.counter);
+  s(io.transferCounter);
+  s(io.ackCounter);
 }

@@ -62,7 +62,7 @@ struct InputRumble : InputMapping {
   using InputMapping::bind;
   auto bind(u32 binding, shared_pointer<HID::Device>, u32 groupID, u32 inputID, s16 oldValue, s16 newValue) -> bool override;
   auto value() -> s16 override;
-  auto rumble(bool enable) -> void;
+  auto rumble(u16 strong, u16 weak) -> void;
 };
 
 struct InputHotkey : InputDigital {

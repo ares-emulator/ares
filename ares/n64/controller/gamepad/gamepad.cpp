@@ -1,3 +1,5 @@
+#include "transfer-pak.cpp"
+
 Gamepad::Gamepad(Node::Port parent) {
   node = parent->append<Node::Peripheral>("Gamepad");
 
@@ -8,7 +10,7 @@ Gamepad::Gamepad(Node::Port parent) {
   port->setAllocate([&](auto name) { return allocate(name); });
   port->setConnect([&] { return connect(); });
   port->setDisconnect([&] { return disconnect(); });
-  port->setSupported({"Controller Pak", "Rumble Pak"});
+  port->setSupported({"Controller Pak", "Rumble Pak", "Transfer Pak"});
 
   x           = node->append<Node::Input::Axis>  ("X-Axis");
   y           = node->append<Node::Input::Axis>  ("Y-Axis");
@@ -37,11 +39,15 @@ auto Gamepad::save() -> void {
   if(slot->name() == "Controller Pak") {
     ram.save(pak->write("save.pak"));
   }
+  if(slot->name() == "Transfer Pak") {
+    transferPak.save();
+  }
 }
 
 auto Gamepad::allocate(string name) -> Node::Peripheral {
   if(name == "Controller Pak") return slot = port->append<Node::Peripheral>("Controller Pak");
   if(name == "Rumble Pak"    ) return slot = port->append<Node::Peripheral>("Rumble Pak");
+  if(name == "Transfer Pak"  ) return slot = port->append<Node::Peripheral>("Transfer Pak");
   return {};
 }
 
@@ -60,6 +66,9 @@ auto Gamepad::connect() -> void {
   if(slot->name() == "Rumble Pak") {
     motor = node->append<Node::Input::Rumble>("Rumble");
   }
+  if(slot->name() == "Transfer Pak") {
+    transferPak.load(slot);
+  }
 }
 
 auto Gamepad::disconnect() -> void {
@@ -72,6 +81,9 @@ auto Gamepad::disconnect() -> void {
     rumble(false);
     node->remove(motor);
     motor.reset();
+  }
+  if(slot->name() == "Transfer Pak") {
+    transferPak.unload();
   }
   port->remove(slot);
   slot.reset();
@@ -92,7 +104,7 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
     output[0] = 0x05;  //0x05 = gamepad; 0x02 = mouse
     output[1] = 0x00;
     output[2] = 0x02;  //0x02 = nothing present in controller slot
-    if(ram || motor) {
+    if(ram || motor || (slot && slot->name() == "Transfer Pak")) {
       output[2] = 0x01;  //0x01 = pak present
     }
     valid = 1;
@@ -143,6 +155,16 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
         valid = 1;
       }
     }
+
+    //transfer pak
+    if(slot && slot->name() == "Transfer Pak") {
+      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
+      if(pif.addressCRC(address) == (n5)input[2]) {
+        for(u32 index : range(recv - 1)) output[index] = transferPak.read(address++);
+        output[recv - 1] = pif.dataCRC({&output[0], recv - 1u});
+        valid = 1;
+      }
+    }
   }
 
   //write pak
@@ -167,6 +189,18 @@ auto Gamepad::comm(n8 send, n8 recv, n8 input[], n8 output[]) -> n2 {
         output[0] = pif.dataCRC({&input[3], send - 3u});
         valid = 1;
         if(address >= 0xC000) rumble(input[3] & 1);
+      }
+    }
+
+    //transfer pak
+    if(slot && slot->name() == "Transfer Pak") {
+      u16 address = (input[1] << 8 | input[2] << 0) & ~31;
+      if(pif.addressCRC(address) == (n5)input[2]) {
+        for(u32 index : range(send - 3)) {
+          transferPak.write(address++, input[3 + index]);
+        }
+        output[0] = pif.dataCRC({&input[3], send - 3u});
+        valid = 1;
       }
     }
   }

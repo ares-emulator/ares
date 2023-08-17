@@ -41,6 +41,7 @@ struct CPU : Thread {
 
   auto main() -> void;
   auto step(u32 clocks) -> void;
+  auto addWaitCyles(u32 clocks) -> void { waitCycles += clocks; }
   auto synchronize() -> void;
 
   auto instruction() -> void;
@@ -48,6 +49,9 @@ struct CPU : Thread {
   auto instructionHook() -> void;
 
   auto power(bool reset) -> void;
+
+  n1 exeLoaded = 0;
+  u32 waitCycles = 0;
 
   struct Pipeline {
     u32 address = 0;

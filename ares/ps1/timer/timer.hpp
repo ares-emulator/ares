@@ -55,6 +55,7 @@ struct Timer : Memory::Interface {
   //internal:
     n1  paused;
     n1  irqTriggered;
+    n8  wait;
   } timers[3] = {{*this, 0}, {*this, 1}, {*this, 2}};
 };
 

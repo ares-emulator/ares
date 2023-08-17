@@ -11,35 +11,40 @@ auto Peripheral::receive() -> u8 {
 auto Peripheral::transmit(u8 data) -> void {
   if(!io.joyOutput) return;
 
+  if(io.ackCounter > 0) {
+    debug(unusual, "Peripheral::transmit: ackCounter > 0");
+    //HACK: Recover by deasserting /ack and /irq; we need to figure out why this happens
+    //TODO: Why is transmit happening too early? Does real hardware do this?
+    io.acknowledgeAsserted = 0;
+    io.interruptRequest = 0;
+  }
+
+  //Calculate the number of cycles required to transfer a byte at the current baud rate
+  //This is added to the /ACK delay to determine the total duration until /ACK is asserted
+  u8 factors[4] = {1, 1, 16, 64};
+  io.transferCounter = ((io.baudrateReloadValue * factors[io.baudrateReloadFactor])) * 8;
+
   if(io.slotNumber == 0) {
-    if(!memoryCardPort1.acknowledge()) {
-      io.receiveSize = 1;
+    if(!memoryCardPort1.active()) {
       io.receiveData = controllerPort1.bus(data);
-      io.acknowledgeAsserted = controllerPort1.acknowledge();
-      if(controllerPort1.active()) return;
+      if(controllerPort1.acknowledge()) io.ackCounter = 338; // approx 9.98us
     }
 
-    if(!controllerPort1.acknowledge()) {
-      io.receiveSize = 1;
+    if(!controllerPort1.active()) {
       io.receiveData = memoryCardPort1.bus(data);
-      io.acknowledgeAsserted = memoryCardPort1.acknowledge();
-      if(memoryCardPort1.active()) return;
+      if(memoryCardPort1.acknowledge()) io.ackCounter = 170; // approx 5us
     }
   }
 
   if(io.slotNumber == 1) {
-    if(!memoryCardPort2.acknowledge()) {
-      io.receiveSize = 1;
+    if(!memoryCardPort2.active()) {
       io.receiveData = controllerPort2.bus(data);
-      io.acknowledgeAsserted = controllerPort2.acknowledge();
-      if(controllerPort2.active()) return;
+      if(controllerPort2.acknowledge()) io.ackCounter = 338; // approx 9.98us
     }
 
-    if(!controllerPort2.acknowledge()) {
-      io.receiveSize = 1;
+    if(!controllerPort2.active()) {
       io.receiveData = memoryCardPort2.bus(data);
-      io.acknowledgeAsserted = memoryCardPort2.acknowledge();
-      if(memoryCardPort2.active()) return;
+      if(memoryCardPort2.acknowledge()) io.ackCounter = 170; // approx 5us
     }
   }
 }
@@ -141,7 +146,6 @@ auto Peripheral::writeByte(u32 address, u32 value) -> void {
   //JOY_TX_DATA
   if(address == 0x1f80'1040) {
     transmit(data);
-    if(io.acknowledgeAsserted) io.counter = 600;
   }
 }
 
@@ -151,7 +155,6 @@ auto Peripheral::writeHalf(u32 address, u32 value) -> void {
   //JOY_TX_DATA
   if(address == 0x1f80'1040) {
     transmit(data);
-    if(io.acknowledgeAsserted) io.counter = 600;
   }
 
   //JOY_MODE

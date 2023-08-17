@@ -1,11 +1,13 @@
 struct PlayStation : Emulator {
   PlayStation();
   auto load() -> bool override;
+  auto load(Menu) -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
   shared_pointer<mia::Pak> memoryCard;
   u32 regionID = 0;
+  Timer discTrayTimer;
 };
 
 PlayStation::PlayStation() {
@@ -34,6 +36,38 @@ PlayStation::PlayStation() {
     device.digital("R2",       virtualPorts[id].pad.r_trigger);
     device.digital("Select",   virtualPorts[id].pad.select);
     device.digital("Start",    virtualPorts[id].pad.start);
+    port.append(device); }
+
+  { InputDevice device{"DualShock"};
+    device.analog ("L-Up",     virtualPorts[id].pad.lstick_up);
+    device.analog ("L-Down",   virtualPorts[id].pad.lstick_down);
+    device.analog ("L-Left",   virtualPorts[id].pad.lstick_left);
+    device.analog ("L-Right",  virtualPorts[id].pad.lstick_right);
+    device.analog ("R-Up",     virtualPorts[id].pad.rstick_up);
+    device.analog ("R-Down",   virtualPorts[id].pad.rstick_down);
+    device.analog ("R-Left",   virtualPorts[id].pad.rstick_left);
+    device.analog ("R-Right",  virtualPorts[id].pad.rstick_right);
+    device.digital("Up",       virtualPorts[id].pad.up);
+    device.digital("Down",     virtualPorts[id].pad.down);
+    device.digital("Left",     virtualPorts[id].pad.left);
+    device.digital("Right",    virtualPorts[id].pad.right);
+    device.digital("Cross",    virtualPorts[id].pad.south);
+    device.digital("Circle",   virtualPorts[id].pad.east);
+    device.digital("Square",   virtualPorts[id].pad.west);
+    device.digital("Triangle", virtualPorts[id].pad.north);
+    device.digital("L1",       virtualPorts[id].pad.l_bumper);
+    device.digital("L2",       virtualPorts[id].pad.l_trigger);
+    device.digital("L3",       virtualPorts[id].pad.lstick_click);
+    device.digital("R1",       virtualPorts[id].pad.r_bumper);
+    device.digital("R2",       virtualPorts[id].pad.r_trigger);
+    device.digital("R3",       virtualPorts[id].pad.rstick_click);
+    device.digital("Select",   virtualPorts[id].pad.select);
+    device.digital("Start",    virtualPorts[id].pad.start);
+    device.analog("L-Stick X", virtualPorts[id].pad.lstick_left, virtualPorts[id].pad.lstick_right);
+    device.analog("L-Stick Y", virtualPorts[id].pad.lstick_up,   virtualPorts[id].pad.lstick_down);
+    device.analog("R-Stick X", virtualPorts[id].pad.rstick_left, virtualPorts[id].pad.rstick_right);
+    device.analog("R-Stick Y", virtualPorts[id].pad.rstick_up,   virtualPorts[id].pad.rstick_down);
+    device.rumble("Rumble",    virtualPorts[0].pad.rumble);
     port.append(device); }
 
     ports.append(port);
@@ -83,6 +117,28 @@ auto PlayStation::load() -> bool {
   }
 
   return true;
+}
+
+auto PlayStation::load(Menu menu) -> void {
+  MenuItem changeDisc{&menu};
+  changeDisc.setIcon(Icon::Device::Optical);
+  changeDisc.setText("Change Disc").onActivate([&] {
+    save();
+    auto tray = root->find<ares::Node::Port>("PlayStation/Disc Tray");
+    tray->disconnect();
+
+    if(!game->load(Emulator::load(game, configuration.game))) {
+      return;
+    }
+
+    //give the emulator core a few seconds to notice an empty drive state before reconnecting
+    discTrayTimer.onActivate([&] {
+      discTrayTimer.setEnabled(false);
+      auto tray = root->find<ares::Node::Port>("PlayStation/Disc Tray");
+      tray->allocate();
+      tray->connect();
+    }).setInterval(3000).setEnabled();
+  });
 }
 
 auto PlayStation::save() -> bool {

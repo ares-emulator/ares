@@ -11,6 +11,12 @@ auto Disc::Drive::clockSector() -> void {
       self.debugger.read(lba.current);
       self.fd->seek(2448 * (abs(session->leadIn.lba) + lba.current++));
       self.fd->read({sector.data, 2448});
+
+      if(auto trackID = session->inTrack(lba.current)) {
+        sector.track = *trackID;
+      } else {
+        sector.track = 0;
+      }
     }
     sector.offset = 0;
 

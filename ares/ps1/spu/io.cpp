@@ -37,29 +37,29 @@ auto SPU::readHalf(u32 address) -> u32 {
   u8 v = address >> 4 & 31;
 
   //volume left
-  if((address & 0xffff'fe0f) == 0x1f80'1c00 && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c00 && v < 24) {
     data.bit( 0,14) = voice[v].volume[0].level;
     data.bit(15)    = voice[v].volume[0].sweep;
   }
 
   //volume right
-  if((address & 0xffff'fe0f) == 0x1f80'1c02 && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c02 && v < 24) {
     data.bit( 0,14) = voice[v].volume[1].level;
     data.bit(15)    = voice[v].volume[1].sweep;
   }
 
   //ADPCM sample rate
-  if((address & 0xffff'fe0f) == 0x1f80'1c04 && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c04 && v < 24) {
     data.bit(0,15) = voice[v].adpcm.sampleRate;
   }
 
   //ADPCM start address
-  if((address & 0xffff'fe0f) == 0x1f80'1c06 && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c06 && v < 24) {
     data.bit(0,15) = voice[v].adpcm.startAddress >> 3;
   }
 
   //ADSR
-  if((address & 0xffff'fe0f) == 0x1f80'1c08 && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c08 && v < 24) {
     data.bit( 0, 3) = voice[v].sustain.level;
     data.bit( 4, 7) = voice[v].decay.rate;
     data.bit( 8,14) = voice[v].attack.rate;
@@ -67,7 +67,7 @@ auto SPU::readHalf(u32 address) -> u32 {
   }
 
   //ADSR
-  if((address & 0xffff'fe0f) == 0x1f80'1c0a && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c0a && v < 24) {
     data.bit( 0, 4) = voice[v].release.rate;
     data.bit( 5)    = voice[v].release.exponential;
     data.bit( 6,12) = voice[v].sustain.rate;
@@ -77,12 +77,12 @@ auto SPU::readHalf(u32 address) -> u32 {
   }
 
   //current ADSR volume
-  if((address & 0xffff'fe0f) == 0x1f80'1c0c && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c0c && v < 24) {
     data.bit(0,15) = voice[v].adsr.volume;
   }
 
   //ADPCM repeat address
-  if((address & 0xffff'fe0f) == 0x1f80'1c0e && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c0e && v < 24) {
     data.bit(0,15) = voice[v].adpcm.repeatAddress >> 3;
   }
 
@@ -406,12 +406,12 @@ auto SPU::readHalf(u32 address) -> u32 {
   v = address >> 2 & 31;
 
   //current volume left
-  if((address & 0xffff'ff83) == 0x1f80'1e00) {
+  if((address & 0x1fff'ff83) == 0x1f80'1e00) {
     data.bit(0,15) = voice[v].current.volume[0];
   }
 
   //current volume right
-  if((address & 0xffff'ff83) == 0x1f80'1e02) {
+  if((address & 0x1fff'ff83) == 0x1f80'1e02) {
     data.bit(0,15) = voice[v].current.volume[1];
   }
 
@@ -434,7 +434,7 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
   u8 v = address >> 4 & 31;
 
   //volume left
-  if((address & 0xffff'fe0f) == 0x1f80'1c00 && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c00 && v < 24) {
     //normal
     voice[v].volume[0].level       = data.bit( 0,14);
     //sweep
@@ -448,7 +448,7 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
   }
 
   //volume right
-  if((address & 0xffff'fe0f) == 0x1f80'1c02 && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c02 && v < 24) {
     //normal
     voice[v].volume[1].level       = data.bit( 0,14);
     //sweep
@@ -462,40 +462,42 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
   }
 
   //ADPCM sample rate
-  if((address & 0xffff'fe0f) == 0x1f80'1c04 && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c04 && v < 24) {
     voice[v].adpcm.sampleRate = data.bit(0,15);
   }
 
   //ADPCM start address
-  if((address & 0xffff'fe0f) == 0x1f80'1c06 && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c06 && v < 24) {
     voice[v].adpcm.startAddress = data.bit(0,15) << 3;
   }
 
   //ADSR
-  if((address & 0xffff'fe0f) == 0x1f80'1c08 && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c08 && v < 24) {
     voice[v].sustain.level      = data.bit( 0, 3);
     voice[v].decay.rate         = data.bit( 4, 7);
     voice[v].attack.rate        = data.bit( 8,14);
     voice[v].attack.exponential = data.bit(15);
+    voice[v].updateEnvelope();
   }
 
   //ADSR
-  if((address & 0xffff'fe0f) == 0x1f80'1c0a && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c0a && v < 24) {
     voice[v].release.rate        = data.bit( 0, 4);
     voice[v].release.exponential = data.bit( 5);
     voice[v].sustain.rate        = data.bit( 6,12);
     voice[v].sustain.unknown     = data.bit(13);
     voice[v].sustain.decrease    = data.bit(14);
     voice[v].sustain.exponential = data.bit(15);
+    voice[v].updateEnvelope();
   }
 
   //current ADSR volume
-  if((address & 0xffff'fe0f) == 0x1f80'1c0c && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c0c && v < 24) {
     voice[v].adsr.volume = data.bit(0,15);
   }
 
   //ADPCM repeat address
-  if((address & 0xffff'fe0f) == 0x1f80'1c0e && v < 24) {
+  if((address & 0x1fff'fe0f) == 0x1f80'1c0e && v < 24) {
     voice[v].adpcm.repeatAddress = data.bit(0,15) << 3;
     voice[v].adpcm.ignoreLoopAddress = 1;
   }
@@ -843,12 +845,12 @@ auto SPU::writeHalf(u32 address, u32 value) -> void {
   v = address >> 2 & 31;
 
   //current volume left
-  if((address & 0xffff'ff83) == 0x1f80'1e00 && v < 24) {
+  if((address & 0x1fff'ff83) == 0x1f80'1e00 && v < 24) {
     voice[v].current.volume[0] = data.bit(0,15);
   }
 
   //current volume right
-  if((address & 0xffff'ff83) == 0x1f80'1e02 && v < 24) {
+  if((address & 0x1fff'ff83) == 0x1f80'1e02 && v < 24) {
     voice[v].current.volume[1] = data.bit(0,15);
   }
 }
