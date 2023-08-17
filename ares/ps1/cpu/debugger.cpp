@@ -26,7 +26,7 @@ auto CPU::Debugger::load(Node::Object parent) -> void {
   tracer.message = parent->append<Node::Debugger::Tracer::Notification>("Message", "CPU");
   tracer.function = parent->append<Node::Debugger::Tracer::Notification>("Function", "CPU");
 
-  //enable stdout (CPU::Message) channel by default
+  tracer.message->setAutoLineBreak(false);
   tracer.message->setTerminal(true);
 }
 
@@ -93,16 +93,7 @@ auto CPU::Debugger::interrupt(u8 mask) -> void {
 
 auto CPU::Debugger::messageChar(char c) -> void {
   if(!tracer.message->enabled()) return;
-
-  static string message;
-  if(c == '\n') {
-    if(message) {
-      tracer.message->notify(message);
-      message = {};
-    }
-  } else if(message.size() < 512) {
-    message.append(c);
-  }
+  tracer.message->notify(c);
 }
 
 auto CPU::Debugger::messageText(u32 address) -> void {

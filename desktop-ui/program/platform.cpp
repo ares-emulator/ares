@@ -33,7 +33,7 @@ auto Program::log(ares::Node::Debugger::Tracer::Tracer node, string_view message
   string channel = string{node->component(), " ", node->name()};
 
   if(node->prefix()) { message = string{channel, ": ", message}; }
-  message = string{message, "\n"};
+  if(node->autoLineBreak()) message = string{message, "\n"};
 
   if(node->terminal()) {
     print(message);

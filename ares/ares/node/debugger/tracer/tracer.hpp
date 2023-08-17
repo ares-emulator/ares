@@ -10,11 +10,13 @@ struct Tracer : Debugger {
   auto prefix() const -> bool { return _prefix; }
   auto terminal() const -> bool { return _terminal; }
   auto file() const -> bool { return _file; }
+  auto autoLineBreak() const -> bool { return _autoLineBreak; }
 
   auto setComponent(string component) -> void { _component = component; }
   auto setPrefix(bool prefix) -> void { _prefix = prefix; }
   auto setTerminal(bool terminal) -> void { _terminal = terminal; }
   auto setFile(bool file) -> void { _file = file; }
+  auto setAutoLineBreak(bool autoLineBreak) -> void { _autoLineBreak = autoLineBreak; }
 
   auto serialize(string& output, string depth) -> void override {
     Debugger::serialize(output, depth);
@@ -37,4 +39,5 @@ protected:
   bool _prefix = false;
   bool _terminal = false;
   bool _file = false;
+  bool _autoLineBreak = true;
 };
