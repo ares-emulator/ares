@@ -25,7 +25,7 @@ namespace {
 namespace ares::GDB {
   Server server{};
 
-  auto Server::isHalted(u64 pc) -> bool {
+  auto Server::updatePC(u64 pc) -> bool {
     bool needHalts = forceHalt || breakpoints.contains(pc);
 
     if(needHalts) {
@@ -36,7 +36,7 @@ namespace ares::GDB {
         sendSignal(Signal::TRAP);
       }
     }
-    return needHalts;
+    return !needHalts;
   }
 
   auto Server::processCommand(const string& cmd, bool &shouldReply) -> string

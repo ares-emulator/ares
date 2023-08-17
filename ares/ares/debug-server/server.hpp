@@ -39,8 +39,8 @@ class Server : public nall::TCPText::Server {
     } hooks{};
 
     // Breakpoints
-    auto isHalted(u64 pc) -> bool;
-    auto isHalted() const { return forceHalt; }
+    auto updatePC(u64 pc) -> bool;
+    auto isHalted() const { return forceHalt && haltSignalSent; }
     auto hasBreakpoints() const { return breakpoints.size() > 0; }
 
     auto updateLoop() -> void;
