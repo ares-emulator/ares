@@ -84,18 +84,12 @@ struct TraceLogger : VerticalLayout {
   auto construct() -> void;
   auto reload() -> void;
   auto unload() -> void;
-  auto eventToggle(ListViewItem) -> void;
 
   file_buffer fp;
 
   Label tracerLabel{this, Size{~0, 0}, 5};
-  ListView tracerList{this, Size{~0, ~0}};
+  TableView tracerList{this, Size{~0, ~0}};
   HorizontalLayout controlLayout{this, Size{~0, 0}};
-    Button selectAllButton{&controlLayout, Size{96, 0}};
-    Button unselectAllButton{&controlLayout, Size{96, 0}};
-    CheckLabel traceToTerminal{&controlLayout, Size{0, 0}};
-    CheckLabel traceToFile{&controlLayout, Size{0, 0}};
-    CheckLabel traceMask{&controlLayout, Size{0, 0}};
 };
 
 struct ToolsWindow : Window {

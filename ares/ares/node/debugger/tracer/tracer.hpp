@@ -6,24 +6,35 @@ struct Tracer : Debugger {
   }
 
   auto component() const -> string { return _component; }
-  auto enabled() const -> bool { return _enabled; }
+  auto enabled() const -> bool { return file() || terminal(); }
+  auto prefix() const -> bool { return _prefix; }
+  auto terminal() const -> bool { return _terminal; }
+  auto file() const -> bool { return _file; }
 
   auto setComponent(string component) -> void { _component = component; }
-  auto setEnabled(bool enabled) -> void { _enabled = enabled; }
+  auto setPrefix(bool prefix) -> void { _prefix = prefix; }
+  auto setTerminal(bool terminal) -> void { _terminal = terminal; }
+  auto setFile(bool file) -> void { _file = file; }
 
   auto serialize(string& output, string depth) -> void override {
     Debugger::serialize(output, depth);
     output.append(depth, "  component: ", _component, "\n");
-    output.append(depth, "  enabled: ", _enabled, "\n");
+    output.append(depth, "  prefix: ", _prefix, "\n");
+    output.append(depth, "  terminal: ", _terminal, "\n");
+    output.append(depth, "  file: ", _file, "\n");
   }
 
   auto unserialize(Markup::Node node) -> void override {
     Debugger::unserialize(node);
     _component = node["component"].string();
-    _enabled = node["enabled"].boolean();
+    _prefix = node["prefix"].boolean();
+    _terminal = node["terminal"].boolean();
+    _file = node["file"].boolean();
   }
 
 protected:
   string _component;
-  bool _enabled = false;
+  bool _prefix = false;
+  bool _terminal = false;
+  bool _file = false;
 };

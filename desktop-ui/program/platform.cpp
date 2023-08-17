@@ -32,13 +32,13 @@ auto Program::event(ares::Event event) -> void {
 auto Program::log(ares::Node::Debugger::Tracer::Tracer node, string_view message) -> void {
   string channel = string{node->component(), " ", node->name()};
 
-  //TODO: Allow registered loggers to be notified of log messages
-  message = {channel, ":", message, "\n"};
+  if(node->prefix()) { message = string{channel, ": ", message}; }
+  message = string{message, "\n"};
 
-  if(traceLogger.traceToTerminal.checked()) {
+  if(node->terminal()) {
     print(message);
   }
-  if(traceLogger.traceToFile.checked()) {
+  if(node->file()) {
     if(!traceLogger.fp) {
       auto datetime = chrono::local::datetime().replace("-", "").replace(":", "").replace(" ", "-");
       auto location = emulator->locate({Location::notsuffix(emulator->game->location), "-", datetime, ".log"}, ".log", settings.paths.debugging);
