@@ -33,9 +33,9 @@ auto TIA::write(n8 address, n8 data) -> void {
   case 0x0a: ctrlpf(data);                                                     return; // CTRLPF
   case 0x0b: writeQueue.add(address, data, 1);                                 return; // REFP0
   case 0x0c: writeQueue.add(address, data, 1);                                 return; // REFP1
-  case 0x0d: writeQueue.add(address, data, 6);                                 return; // PF0
-  case 0x0e: writeQueue.add(address, data, 6);                                 return; // PF1
-  case 0x0f: writeQueue.add(address, data, 6);                                 return; // PF2
+  case 0x0d: writeQueue.add(address, data, 2);                                 return; // PF0
+  case 0x0e: writeQueue.add(address, data, 2);                                 return; // PF1
+  case 0x0f: writeQueue.add(address, data, 2);                                 return; // PF2
   case 0x10: resp(0);                                                          return; // RESP0
   case 0x11: resp(1);                                                          return; // RESP1
   case 0x12: resm(0);                                                          return; // RESM0
@@ -47,8 +47,8 @@ auto TIA::write(n8 address, n8 data) -> void {
   case 0x18: audio[1].frequency = data;                                        return; // AUDF1
   case 0x19: audio[0].volume = data;                                           return; // AUDV0
   case 0x1a: audio[1].volume = data;                                           return; // AUDV1
-  case 0x1b: writeQueue.add(address, data, 3);                                 return; // GRP0
-  case 0x1c: writeQueue.add(address, data, 3);                                 return; // GRP1
+  case 0x1b: writeQueue.add(address, data, 1);                                 return; // GRP0
+  case 0x1c: writeQueue.add(address, data, 1);                                 return; // GRP1
   case 0x1d: writeQueue.add(address, data, 1);                                 return; // ENAM0
   case 0x1e: writeQueue.add(address, data, 1);                                 return; // ENAM1
   case 0x1f: writeQueue.add(address, data, 1);                                 return; // ENAB1
