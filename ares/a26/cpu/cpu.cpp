@@ -24,6 +24,7 @@ auto CPU::main() -> void {
 }
 
 auto CPU::step(u32 clocks) -> void {
+  if(io.rdyLine == 1) io.scanlineCycles += clocks;
   Thread::step(clocks);
   Thread::synchronize();
 }

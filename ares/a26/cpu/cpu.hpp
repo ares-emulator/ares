@@ -42,6 +42,7 @@ struct CPU : MOS6502, Thread {
 //protected:
   struct IO {
     n1  rdyLine = 1;
+    n32 scanlineCycles = 0;
   } io;
 };
 

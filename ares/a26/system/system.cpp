@@ -99,7 +99,7 @@ auto System::power(bool reset) -> void {
   riot.power(reset);
   cpu.power(reset);
   tia.power(reset);
-  scheduler.power(tia); // let's make TIA the master here
+  scheduler.power(cpu);
 }
 
 }

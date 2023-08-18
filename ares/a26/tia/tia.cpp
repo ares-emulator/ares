@@ -35,19 +35,21 @@ auto TIA::unload() -> void {
 }
 
 auto TIA::main() -> void {
-    scanline();
-    io.vcounter++;
-    io.hmoveTriggered = 255;
+  scanline();
+  io.vcounter++;
+  io.hmoveTriggered = 255;
 }
 
 auto TIA::scanline() -> void {
-  cpu.rdyLine(1);
+  cpu.io.scanlineCycles = 0;
+
   for(io.hcounter = 0; io.hcounter < 228; io.hcounter++) {
+    writeQueue.step();
     auto x = io.hcounter - 68;
     if(x >= 0 && io.vcounter < vlines()) pixel(x);
-    writeQueue.step();
     runAudio();
     step();
+    if(io.hcounter == 0) cpu.io.rdyLine = 1;
   }
 
   // Prevent an infinite emulator hang when games miss vblank
@@ -98,10 +100,13 @@ auto TIA::pixel(n8 x) -> void {
 }
 
 auto TIA::runPlayfield(n8 x) -> n1 {
-  auto pos = x >> 2;
+  if((x % 4) == 0) {
+    auto pos = x >> 2;
+    playfield.pixel = (!playfield.mirror || pos < 20) ? playfield.graphics.bit(pos % 20)
+                                                      : playfield.graphics.bit(19 - (pos % 20));
+  }
 
-  if(!playfield.mirror || pos < 20) return playfield.graphics.bit(pos % 20);
-  return playfield.graphics.bit(19 - (pos % 20));
+  return playfield.pixel;
 }
 
 auto TIA::runPlayer(n8 x, n1 index) -> n1 {
