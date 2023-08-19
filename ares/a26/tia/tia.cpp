@@ -141,10 +141,45 @@ auto TIA::runPlayer(n8 x, n1 index) -> n1 {
 
 auto TIA::runMissile(n8 x, n1 index) -> n1 {
   auto& missile = this->missile[index];
-  if (!missile.enable || missile.reset) return 0;
+  auto& player = this->player[index];
+  auto position = missile.position;
+
+  if(missile.reset) {
+    auto offset = 3;
+    if(player.size == 5) offset = 6;
+    if(player.size == 7) offset = 10;
+    missile.position = player.position + offset;
+    return 0;
+  }
+
+  if (!missile.enable) return 0;
 
   const int missileSizes[4] = {1, 2, 4, 8};
-  return x >= missile.position && x < missile.position + missileSizes[missile.size];
+
+  // Handle player stretch capability
+  auto width = missileSizes[missile.size];
+  if(player.size == 5) width *= 2;
+  if(player.size == 7) width *= 4;
+
+  // Handle repeat capability
+  auto repeat = 1;
+  if(player.size == 1 || player.size == 2 || player.size == 4) repeat = 2;
+  if(player.size == 3 || player.size == 6)                     repeat = 3;
+
+  auto spacing = 8;
+  if(player.size == 2 || player.size == 6) spacing = 24;
+  if(player.size == 4                    ) spacing = 56;
+
+  for(int i = 0; i < repeat; i++) {
+    if (x >= position && x < position + width) {
+      auto bit = player.reflect ? (x - position) / (width / 8) : 7 - ((x - position) / (width / 8));
+      return 1;
+    }
+
+    position = (position + (spacing + width)) % 160;
+  }
+
+  return 0;
 }
 
 auto TIA::runBall(n8 x) -> n1 {

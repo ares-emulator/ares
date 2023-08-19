@@ -133,12 +133,6 @@ auto TIA::resm(n1 index) -> void {
 
 auto TIA::resmp(n1 index, n8 data) -> void {
   missile[index].reset = data.bit(1);
-  if(missile[index].reset) {
-    auto offset = 3;
-    if(player[index].size == 5) offset = 6;
-    if(player[index].size == 7) offset = 10;
-    missile[index].position = player[index].position + offset;
-  }
 }
 
 auto TIA::resbl() -> void {
