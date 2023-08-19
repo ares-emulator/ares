@@ -8,7 +8,7 @@ using string = ::nall::string;
 using string_view = ::nall::string_view;
 
 namespace {
-  constexpr bool GDB_LOG_MESSAGES = false;
+  constexpr bool GDB_LOG_MESSAGES = true;
 
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
   constexpr u32 MAX_PACKET_SIZE = 4096;
@@ -25,7 +25,24 @@ namespace {
 namespace ares::GDB {
   Server server{};
 
+  auto Server::reportSignal(Signal sig, u64 originPC) -> bool {
+    if(!hasActiveClient || !handshakeDone)return true; // no client -> no error
+    if(forceHalt)return false; // Signals can only happen while the game is running, ignore others
+
+    printf("GDB: report signal @ 0x%08X\n", (u32)originPC);
+    inException = true;
+    exceptionPC = originPC;
+
+    forceHalt = true;
+    haltSignalSent = true;
+    sendSignal(sig);
+
+    return true;
+  }
+
   auto Server::updatePC(u64 pc) -> bool {
+    if(!hasActiveClient)return true;
+
     bool needHalts = forceHalt || breakpoints.contains(pc);
 
     if(needHalts) {
@@ -60,6 +77,8 @@ namespace ares::GDB {
 
       case 'c': // continue
         // normal stop-mode is only allowed to respond once a signal was raised, non-stop must return OK immediately
+        handshakeDone = true; // good indicator that GDB is done, also enables exception sending
+        inException = false;
         shouldReply = NON_STOP_MODE;
         resumeProgram();
         return "OK";
@@ -133,7 +152,7 @@ namespace ares::GDB {
         // handshake-command, most return dummy values to convince gdb to connect
         if(cmdName == "qTStatus")return forceHalt ? "T1" : "";
         if(cmdName == "qAttached")return "1"; // we are always attached, since a game is running
-        if(cmdName == "qOffsets")return "Text=0;Data=0;Bss=0;";
+        if(cmdName == "qOffsets")return "Text=0;Data=0;Bss=0";
 
         if(cmdName == "qSymbol")return "OK"; // client offers us symbol-names -> we don't care
 
@@ -280,6 +299,7 @@ namespace ares::GDB {
   }
 
   auto Server::updateLoop() -> void {
+    //if(!hasActiveClient)return;
 
     // @TODO: refactor
     constexpr u32 LOOP_COUNT = 100;
@@ -310,8 +330,8 @@ namespace ares::GDB {
     }
   }
 
-  auto Server::sendSignal(u8 code) -> void {
-    sendPayload({"S", hex(code, 2)});
+  auto Server::sendSignal(Signal code) -> void {
+    sendPayload({"S", hex(static_cast<u8>(code), 2)});
   }
 
   auto Server::sendPayload(const string& payload) -> void {
@@ -334,7 +354,8 @@ namespace ares::GDB {
 
   auto Server::onConnect() -> void {
     resetClientData();
-    haltProgram(); // new connections must immediately halt
+    hasActiveClient = true;
+    //haltProgram(); // @TODO: check if NOT halting always works
   }
 
   auto Server::reset() -> void {
@@ -358,6 +379,8 @@ namespace ares::GDB {
     forceHalt = false;
 
     currentThreadC = -1;
+    hasActiveClient = false;
+    handshakeDone = false;
   }
 
 };

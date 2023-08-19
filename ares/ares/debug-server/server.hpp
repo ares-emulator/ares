@@ -4,14 +4,15 @@
 
 namespace ares::GDB {
 
-namespace Signal {
-  constexpr u8 HUP  = 1;
-  constexpr u8 INT  = 2;
-  constexpr u8 QUIT = 3;
-  constexpr u8 ILL  = 4;
-  constexpr u8 TRAP = 5;
-  constexpr u8 ABRT = 6;
-}
+enum class Signal : u8 {
+  HANGUP  = 1,
+  INT     = 2,
+  QUIT    = 3,
+  ILLEGAL = 4,
+  TRAP    = 5,
+  ABORT   = 6,
+  SEGV    = 11,
+};
 
 /**
  * GDB based debugging server.
@@ -38,6 +39,9 @@ class Server : public nall::TCPText::Server {
 
     } hooks{};
 
+    // Exception
+    auto reportSignal(Signal sig, u64 originPC) -> bool;
+
     // Breakpoints
     auto updatePC(u64 pc) -> bool;
     auto isHalted() const { return forceHalt && haltSignalSent; }
@@ -55,10 +59,14 @@ class Server : public nall::TCPText::Server {
     bool haltSignalSent{false}; // marks if a signal as been sent for new halts (force-halt and breakpoints)
     bool forceHalt{false}; // forces a halt despite no breakpoints being hit
     bool nonStopMode{false};
+    bool handshakeDone{false};
 
+    bool hasActiveClient{false};
     u32 messageCount{0}; // message count per update loop
-
     s32 currentThreadC{-1}; // selected thread for the next 'c' command
+
+    bool inException{false};
+    u64 exceptionPC{0};
 
     // client-state:
     vector<u64> breakpoints{}; // prefer vector for data-locality
@@ -67,7 +75,7 @@ class Server : public nall::TCPText::Server {
     auto resetClientData() -> void;
 
     auto sendPayload(const string& payload) -> void;
-    auto sendSignal(u8 code) -> void;
+    auto sendSignal(Signal sig) -> void;
 
     auto haltProgram() -> void;
     auto resumeProgram() -> void;

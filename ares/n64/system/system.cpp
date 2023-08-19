@@ -170,7 +170,12 @@ auto System::initDebugHooks() -> void {
     res.append(hex(cpu.ipu.hi.u64, 16, '0'));
     res.append(hex(cpu.getControlRegister(8), 16, '0')); // COP0 badvaddr
     res.append(hex(cpu.getControlRegister(13), 16, '0')); // COP0 cause
-    res.append(hex(cpu.ipu.pc, 16, '0'));
+
+    if(cpu.scc.status.exceptionLevel) {
+      res.append(hex(cpu.scc.epc, 16, '0'));
+    } else {
+      res.append(hex(cpu.ipu.pc, 16, '0'));
+    }
 
     for(auto reg : cpu.fpu.r) {
       res.append(hex(reg.u64, 16, '0'));

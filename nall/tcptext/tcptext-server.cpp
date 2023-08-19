@@ -36,6 +36,8 @@ namespace nall::TCPText {
 
       // @TODO: check for token
       printf("Is HTTP: %d\n", isHTTP);
+
+      onConnect();
     }
 
     onText(dataStr);
