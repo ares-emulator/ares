@@ -152,14 +152,11 @@ auto TIA::runMissile(n8 x, n1 index) -> n1 {
     return 0;
   }
 
-  if (!missile.enable) return 0;
+  if(!missile.enable) return 0;
 
   const int missileSizes[4] = {1, 2, 4, 8};
 
-  // Handle player stretch capability
   auto width = missileSizes[missile.size];
-  if(player.size == 5) width *= 2;
-  if(player.size == 7) width *= 4;
 
   // Handle repeat capability
   auto repeat = 1;
@@ -172,7 +169,6 @@ auto TIA::runMissile(n8 x, n1 index) -> n1 {
 
   for(int i = 0; i < repeat; i++) {
     if (x >= position && x < position + width) {
-      auto bit = player.reflect ? (x - position) / (width / 8) : 7 - ((x - position) / (width / 8));
       return 1;
     }
 

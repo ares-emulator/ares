@@ -105,9 +105,9 @@ auto TIA::cxclr() -> void {
 }
 
 auto TIA::hmove() -> void {
-  for(auto& p : player)  p.position = (p.position - p.offset + 160) % 160;
-  for(auto& m : missile) m.position = (m.position - m.offset + 160) % 160;
-  ball.position = (ball.position - ball.offset + 160) % 160;
+  for(auto& p : player)  p.position = (p.position - p.offset) % 160;
+  for(auto& m : missile) m.position = (m.position - m.offset) % 160;
+  ball.position = (ball.position - ball.offset) % 160;
   io.hmoveTriggered = io.vcounter;
 }
 
@@ -124,11 +124,11 @@ auto TIA::grp(n1 index, n8 data) -> void {
 }
 
 auto TIA::resp(n1 index) -> void {
-  player[index].position = (io.hcounter < 68 ? 3 : io.hcounter - 68 + 8) % 160;
+  player[index].position = (io.hcounter - 68 + 5) % 160;
 }
 
 auto TIA::resm(n1 index) -> void {
-  missile[index].position = (io.hcounter < 68 ? 2 : io.hcounter - 68 + 7) % 160;
+  missile[index].position = (io.hcounter - 68 + 4) % 160;
 }
 
 auto TIA::resmp(n1 index, n8 data) -> void {
@@ -136,5 +136,5 @@ auto TIA::resmp(n1 index, n8 data) -> void {
 }
 
 auto TIA::resbl() -> void {
-  ball.position = (io.hcounter < 68 ? 2 : io.hcounter - 68 + 7);
+  ball.position = (io.hcounter - 68 + 4) % 160;
 }
