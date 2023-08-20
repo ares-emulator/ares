@@ -105,9 +105,9 @@ auto TIA::cxclr() -> void {
 }
 
 auto TIA::hmove() -> void {
-  for(auto& p : player)  p.position = (p.position - p.offset) % 160;
-  for(auto& m : missile) m.position = (m.position - m.offset) % 160;
-  ball.position = (ball.position - ball.offset) % 160;
+  for(auto& p : player)  p.position = (p.position - p.offset + 160) % 160;
+  for(auto& m : missile) m.position = (m.position - m.offset + 160) % 160;
+  ball.position = (ball.position - ball.offset + 160) % 160;
   io.hmoveTriggered = io.vcounter;
 }
 
