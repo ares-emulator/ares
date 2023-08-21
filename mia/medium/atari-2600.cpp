@@ -83,6 +83,7 @@ auto Atari2600::analyze(vector<u8>& rom, string location) -> string {
   // but we can make some educated guesses based on filename
   string region = "NTSC";
   if(location.ifind("(Europe)")) region = "PAL";
+  if(location.ifind("(PAL)")) region = "PAL";
 
   string s;
   s += "game\n";
