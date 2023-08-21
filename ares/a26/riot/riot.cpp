@@ -19,18 +19,11 @@ auto RIOT::unload() -> void {
 }
 
 auto RIOT::main() -> void {
-  decrementTimer();
-  step(1);
-}
-
-auto RIOT::decrementTimer() -> void {
-  if(--timer.interval == 0) {
-    if(--timer.counter == 0xff) {
-      timer.reload = 1;
-    }
-
-    timer.interval = timer.reload;
+  if(--timer.counter == 0xff) {
+    timer.interval = 1;
   }
+
+  step(timer.interval);
 }
 
 auto RIOT::step(u32 clocks) -> void {
