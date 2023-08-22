@@ -230,13 +230,7 @@ auto MOS6502::algorithmSBC(n8 i) -> n8 {
 }
 
 auto MOS6502::algorithmSLO(n8 i) -> n8 {
-  C = i.bit(7);
-  i <<= 1;
-  Z = i == 0;
-  N = i.bit(7);
-
-  A |= i;
-  Z = A == 0;
-  N = A.bit(7);
-  return i;
+  auto value = algorithmASL(i);
+  A = algorithmORA(value);
+  return value;
 }
