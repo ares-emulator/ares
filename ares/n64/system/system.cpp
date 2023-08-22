@@ -154,6 +154,9 @@ auto System::initDebugHooks() -> void {
 
   GDB::server.hooks.regRead = [](u32 regIdx) {
     if(regIdx > cpu.ipu.RA) {
+      if(regIdx == 0x25) {
+        return hex(cpu.ipu.pc, 16, '0');
+      }
       return string{"0000000000000000"};
     }
     return hex(cpu.ipu.r[regIdx].u64, 16, '0');
