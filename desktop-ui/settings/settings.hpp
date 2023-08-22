@@ -208,6 +208,14 @@ struct HotkeySettings : VerticalLayout {
   Timer timer;
 };
 
+struct EmulatorSettings : VerticalLayout {
+  auto construct() -> void;
+  auto eventToggle(TableViewCell cell) -> void;
+
+  Label emulatorLabel{this, Size{~0, 0}, 5};
+  TableView emulatorList{this, Size{~0, ~0}};
+};
+
 struct OptionSettings : VerticalLayout {
   auto construct() -> void;
   HorizontalLayout rewindLayout{this, Size{~0, 0}, 5};
@@ -344,6 +352,7 @@ struct SettingsWindow : Window {
       AudioSettings audioSettings;
       InputSettings inputSettings;
       HotkeySettings hotkeySettings;
+      EmulatorSettings emulatorSettings;
       OptionSettings optionSettings;
       FirmwareSettings firmwareSettings;
       PathSettings pathSettings;
@@ -358,6 +367,7 @@ extern VideoSettings& videoSettings;
 extern AudioSettings& audioSettings;
 extern InputSettings& inputSettings;
 extern HotkeySettings& hotkeySettings;
+extern EmulatorSettings& emulatorSettings;
 extern OptionSettings& optionSettings;
 extern FirmwareSettings& firmwareSettings;
 extern PathSettings& pathSettings;
