@@ -73,6 +73,7 @@ struct Settings : Markup::Node {
 
   struct Paths {
     string home;
+    string firmware;
     string saves;
     string screenshots;
     string debugging;
@@ -236,13 +237,18 @@ struct FirmwareSettings : VerticalLayout {
   auto eventChange() -> void;
   auto eventAssign() -> void;
   auto eventClear() -> void;
+  auto eventScan() -> void;
+  auto findFirmware(string sha256) -> string;
 
   Label firmwareLabel{this, Size{~0, 0}, 5};
   TableView firmwareList{this, Size{~0, ~0}};
   HorizontalLayout controlLayout{this, Size{~0, 0}};
+    Button scanButton{&controlLayout, Size{80, 0}};
     Canvas spacer{&controlLayout, Size{~0, 0}};
     Button assignButton{&controlLayout, Size{80, 0}};
     Button clearButton{&controlLayout, Size{80, 0}};
+
+  map<string, string> fileHashes;
 };
 
 struct PathSettings : VerticalLayout {
@@ -254,6 +260,11 @@ struct PathSettings : VerticalLayout {
     LineEdit homePath{&homeLayout, Size{~0, 0}};
     Button homeAssign{&homeLayout, Size{80, 0}};
     Button homeReset{&homeLayout, Size{80, 0}};
+  Label firmwareLabel{this, Size{~0, 0}, 5};
+    HorizontalLayout firmwareLayout{this, Size{~0, 0}};
+    LineEdit firmwarePath{&firmwareLayout, Size{~0, 0}};
+    Button firmwareAssign{&firmwareLayout, Size{80, 0}};
+    Button firmwareReset{&firmwareLayout, Size{80, 0}};
   Label savesLabel{this, Size{~0, 0}, 5};
   HorizontalLayout savesLayout{this, Size{~0, 0}};
     LineEdit savesPath{&savesLayout, Size{~0, 0}};

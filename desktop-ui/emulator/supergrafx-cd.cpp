@@ -12,7 +12,7 @@ SuperGrafxCD::SuperGrafxCD() {
   manufacturer = "NEC";
   name = "SuperGrafx CD";
 
-  firmware.append({"BIOS", "Japan"});  //NTSC-J
+  firmware.append({"BIOS", "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});  //NTSC-J
 
   allocatePorts();
 }

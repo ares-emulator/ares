@@ -26,6 +26,24 @@ auto PathSettings::construct() -> void {
     refresh();
   });
 
+  firmwareLabel.setText("Firmware").setFont(Font().setBold());
+  firmwareLayout.setPadding(12_sx, 0);
+  firmwarePath.setEditable(false);
+  firmwareAssign.setText("Assign" ELLIPSIS).onActivate([&] {
+    BrowserDialog dialog;
+    dialog.setTitle("Select Firmware Path");
+    dialog.setPath(Path::desktop());
+    dialog.setAlignment(settingsWindow);
+    if(auto location = program.selectFolder(dialog)) {
+      settings.paths.firmware = location;
+      refresh();
+    }
+  });
+  firmwareReset.setText("Reset").onActivate([&] {
+    settings.paths.firmware = "";
+    refresh();
+  });
+
   savesLabel.setText("Saves").setFont(Font().setBold());
   savesLayout.setPadding(12_sx, 0);
   savesPath.setEditable(false);
@@ -108,6 +126,10 @@ auto PathSettings::refresh() -> void {
       name.trimLeft(Path::user(), 1L);
       name.prepend("~/");
     }
+    if(name.beginsWith(Path::program())) {
+      name.trimLeft(Path::program(), 1L);
+      name.prepend("./");
+    }
     if(name != "/") name.trimRight("/", 1L);
     return name;
   };
@@ -116,6 +138,12 @@ auto PathSettings::refresh() -> void {
     homePath.setText(pathname(settings.paths.home)).setForegroundColor();
   } else {
     homePath.setText(pathname(mia::homeLocation())).setForegroundColor(SystemColor::PlaceholderText);
+  }
+
+  if(settings.paths.firmware) {
+    firmwarePath.setText(pathname(settings.paths.firmware)).setForegroundColor();
+  } else {
+    firmwarePath.setText(pathname(locate("Firmware/"))).setForegroundColor(SystemColor::PlaceholderText);
   }
 
   if(settings.paths.saves) {

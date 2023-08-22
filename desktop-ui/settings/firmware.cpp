@@ -9,6 +9,7 @@ auto FirmwareSettings::construct() -> void {
   firmwareList.onActivate([&](auto) { eventAssign(); });
   assignButton.setText("Assign").onActivate([&] { eventAssign(); });
   clearButton.setText("Clear").onActivate([&] { eventClear(); });
+  scanButton.setText("Scan").onActivate([&] { eventScan(); });
 
   refresh();
 }
@@ -98,4 +99,36 @@ auto FirmwareSettings::eventClear() -> void {
     }
   }
   refresh();
+}
+
+auto FirmwareSettings::eventScan() -> void {
+  for(auto& emulator : emulators) {
+    for(auto &firmware: emulator->firmware) {
+      if(!file::exists(firmware.location)) firmware.location = findFirmware(firmware.sha256);
+    }
+  }
+
+  refresh();
+}
+
+auto FirmwareSettings::findFirmware(string hash) -> string {
+  auto firmwarePath = settings.paths.firmware ?: locate("firmware/");
+  if(!directory::exists(firmwarePath)) return {};
+
+  for(auto& filename : directory::files(firmwarePath)) {
+    auto location = string{firmwarePath, filename};
+
+    if(auto result = fileHashes.find(location)) {
+      if(!file::exists(location)) continue;  //file was removed from disk (or moved)
+      if(*result == hash) return location;
+    }
+
+    if(file::size(location) >= 10_MiB) continue; //avoid stalling by hashing overly large files
+    auto digest = Hash::SHA256(file::read(location)).digest();
+    fileHashes.insert(location, digest);
+    if(digest != hash) continue;
+    return location;
+  }
+
+  return {};
 }

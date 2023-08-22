@@ -12,8 +12,8 @@ MSX2::MSX2() {
 
   // TODO: Support other region bios versions
   firmware = {};
-  firmware.append({"MAIN", "Japan"});
-  firmware.append({"SUB", "Japan"});
+  firmware.append({"MAIN", "Japan", "0c672d86ead61a97f49a583b88b7c1905da120645cd44f0c9f2baf4f4631e0b1"});
+  firmware.append({"SUB", "Japan", "6c6f421a10c428d960b7ecc990f99af1c638147f747bddca7b0bf0e2ab738300"});
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};

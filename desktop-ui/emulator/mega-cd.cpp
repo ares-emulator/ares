@@ -13,9 +13,9 @@ MegaCD::MegaCD() {
   manufacturer = "Sega";
   name = "Mega CD";
 
-  firmware.append({"BIOS", "US"});      //NTSC-U
-  firmware.append({"BIOS", "Japan"});   //NTSC-J
-  firmware.append({"BIOS", "Europe"});  //PAL
+  firmware.append({"BIOS", "US", "fb477cdbf94c84424c2feca4fe40656d85393fe7b7b401911b45ad2eb991258c"});      //NTSC-U
+  firmware.append({"BIOS", "Japan", "7133fc2dd2fe5b7d0acd53a5f10f3d00b5d31270239ad20d74ef32393e24af88"});   //NTSC-J
+  firmware.append({"BIOS", "Europe", "fe608a2a07676a23ab5fd5eee2f53c9e2526d69a28aa16ccd85c0ec42e6933cb"});  //PAL
 
   for(auto id : range(2)) {
     InputPort port{string{"Controller Port ", 1 + id}};

@@ -9,7 +9,7 @@ GameGear::GameGear() {
   manufacturer = "Sega";
   name = "Game Gear";
 
-  firmware.append({"BIOS", "World"});
+  firmware.append({"BIOS", "World", "8c8a21335038285cfa03dc076100c1f0bfadf3e4ff70796f11f3dfaaab60eee2"});
 
   { InputPort port{"Game Gear"};
 
