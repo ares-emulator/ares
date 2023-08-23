@@ -112,7 +112,7 @@ auto FirmwareSettings::eventScan() -> void {
 }
 
 auto FirmwareSettings::findFirmware(string hash) -> string {
-  auto firmwarePath = settings.paths.firmware ?: locate("firmware/");
+  auto firmwarePath = settings.paths.firmware ? settings.paths.firmware : locate("firmware/");
   if(!directory::exists(firmwarePath)) return {};
 
   for(auto& filename : directory::files(firmwarePath)) {
