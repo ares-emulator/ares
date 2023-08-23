@@ -38,7 +38,7 @@ If you would like to use SDL for input, you will need to install the following t
 
 ##### Building with clang
 
-clang++ is now the preferred compiler for ares. If it is detected, the build will default to building with clang. It is necessary to install both the `clang` and `lld` packages. If you would like to manually specify a compiler, you can use the following option: `compiler=[g++|clang++]`  
+clang++ is now the preferred compiler for ares. If clang is detected on Windows/macOS/BSD, it will be selected by default. On Linux and other platforms, g++ remains the default if present. To build with clang, it is necessary to install both the `clang` and `lld` packages. If you would like to manually specify a compiler, you can use the following option: `compiler=[g++|clang++]`  
   
 --------------
 

@@ -70,11 +70,18 @@ endif
 
 # compiler detection
 ifeq ($(compiler),)
-  # prefer clang
-  ifneq ($(call which,clang++),)
-    compiler := clang++
+  ifneq ($(filter windows macos bsd,$(platform)),)
+    compilers := clang++ g++
   else
-    compiler := g++
+    compilers := g++ clang++
+  endif
+
+  ifneq ($(call which,$(word 1, $(compilers))),)
+    compiler := $(word 1, $(compilers))
+  else ifneq ($(call which,$(word 2, $(compilers))),)
+    compiler := $(word 2, $(compilers))
+  else
+    $(error unknown compiler, please specify manually.)
   endif
 endif
 
@@ -316,6 +323,8 @@ endif
 default: all;
 
 nall.verbose:
+	$(info Compiler:)
+	$(info $([space]) $(compiler))
 	$(info Compiler Flags:)
 	$(foreach n,$(sort $(call unique,$(flags))),$(if $(filter-out -I%,$n),$(info $([space]) $n)))
 	$(info Linker Options:)
