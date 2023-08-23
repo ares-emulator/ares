@@ -90,7 +90,7 @@ make clean
 #### Building specific cores  
 If you would like to build a subset of cores, you can specify the `cores="core1 core2"` option. Currently available cores:  
 ```
-a26 fc sfc n64 sg ms md ps1 pce ng msx cv gb gba ws ngp spec
+fc sfc n64 sg ms md ps1 pce ng msx cv myvision gb gba ws ngp spec
 ```  
 
 Build Output
