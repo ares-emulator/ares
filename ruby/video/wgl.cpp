@@ -1,4 +1,5 @@
 #include "opengl/opengl.hpp"
+#include <dwmapi.h>
 
 #define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
@@ -40,9 +41,6 @@ struct VideoWGL : VideoDriver, OpenGL {
   }
 
   auto setBlocking(bool blocking) -> bool override {
-    acquireContext();
-    if(wglSwapInterval) wglSwapInterval(blocking);
-    releaseContext();
     return true;
   }
 
@@ -107,6 +105,7 @@ struct VideoWGL : VideoDriver, OpenGL {
     OpenGL::output();
 
     SwapBuffers(_display);
+    if(self.blocking) DwmFlush(); // DwmFlush waits for VSYNC at compositor level, bypassing OpenGL driver bugs
     if(self.flush) glFinish();
     releaseContext();
   }
@@ -189,7 +188,7 @@ private:
       }
     }
 
-    if(wglSwapInterval) wglSwapInterval(self.blocking);
+    if(wglSwapInterval) wglSwapInterval(0);
     _ready = OpenGL::initialize(self.shader);
     releaseContext();
     return _ready;
