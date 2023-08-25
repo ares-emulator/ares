@@ -73,25 +73,13 @@ Presentation::Presentation() {
   });
   videoShaderMenu.setText("Shader").setIcon(Icon::Emblem::Image);
   loadShaders();
-  bootOptionsMenu.setText("Boot Options").setIcon(Icon::Place::Settings);
+
   fastBoot.setText("Fast Boot").setChecked(settings.boot.fast).onToggle([&] {
     settings.boot.fast = fastBoot.checked();
   });
   launchDebugger.setText("Launch Debugger").setChecked(settings.boot.debugger).onToggle([&] {
     settings.boot.debugger = launchDebugger.checked();
   });
-  preferNTSCU.setText("Prefer US").onActivate([&] {
-    settings.boot.prefer = "NTSC-U";
-  });
-  preferNTSCJ.setText("Prefer Japan").onActivate([&] {
-    settings.boot.prefer = "NTSC-J";
-  });
-  preferPAL.setText("Prefer Europe").onActivate([&] {
-    settings.boot.prefer = "PAL";
-  });
-  if(settings.boot.prefer == "NTSC-U") preferNTSCU.setChecked();
-  if(settings.boot.prefer == "NTSC-J") preferNTSCJ.setChecked();
-  if(settings.boot.prefer == "PAL") preferPAL.setChecked();
   muteAudioSetting.setText("Mute Audio").setChecked(settings.audio.mute).onToggle([&] {
     settings.audio.mute = muteAudioSetting.checked();
   });
@@ -418,9 +406,25 @@ auto Presentation::loadEmulators() -> void {
     });
   }
 
-  #if !defined(PLATFORM_MACOS)
   loadMenu.append(MenuSeparator());
-    
+
+  preferNTSCU.setText("NTSC-U").onActivate([&] {
+  settings.boot.prefer = "NTSC-U";
+  });
+  preferNTSCJ.setText("NTSC-J").onActivate([&] {
+    settings.boot.prefer = "NTSC-J";
+  });
+  preferPAL.setText("PAL").onActivate([&] {
+    settings.boot.prefer = "PAL";
+  });
+  if(settings.boot.prefer == "NTSC-U") preferNTSCU.setChecked();
+  if(settings.boot.prefer == "NTSC-J") preferNTSCJ.setChecked();
+  if(settings.boot.prefer == "PAL") preferPAL.setChecked();
+
+  loadMenu.append(MenuSeparator());
+
+  #if !defined(PLATFORM_MACOS)
+
   { MenuItem quit{&loadMenu};
     quit.setIcon(Icon::Action::Quit);
     quit.setText("Quit");
