@@ -79,6 +79,7 @@ struct TIA : Thread {
 
   struct {
     n20 graphics;
+    n1 pixel;
     n1 mirror;
     n1 scoreMode;
     n1 priority;

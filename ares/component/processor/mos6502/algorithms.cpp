@@ -123,6 +123,12 @@ auto MOS6502::algorithmDEC(n8 i) -> n8 {
   return i;
 }
 
+auto MOS6502::algorithmDCP(n8 i) -> n8 {
+  auto value = algorithmDEC(i);
+  A = algorithmCMP(value);
+  return value;
+}
+
 auto MOS6502::algorithmEOR(n8 i) -> n8 {
   n8 o = A ^ i;
   Z = o == 0;
@@ -137,6 +143,12 @@ auto MOS6502::algorithmINC(n8 i) -> n8 {
   return i;
 }
 
+auto MOS6502::algorithmISC(n8 i) -> n8 {
+  auto value = algorithmINC(i);
+  A = algorithmSBC(value);
+  return value;
+}
+
 auto MOS6502::algorithmLD(n8 i) -> n8 {
   Z = i == 0;
   N = i.bit(7);
@@ -149,6 +161,12 @@ auto MOS6502::algorithmLSR(n8 i) -> n8 {
   Z = i == 0;
   N = i.bit(7);
   return i;
+}
+
+auto MOS6502::algorithmSRE(n8 i) -> n8 {
+  auto value = algorithmLSR(i);
+  A = algorithmEOR(value);
+  return value;
 }
 
 auto MOS6502::algorithmORA(n8 i) -> n8 {
@@ -167,6 +185,12 @@ auto MOS6502::algorithmROL(n8 i) -> n8 {
   return i;
 }
 
+auto MOS6502::algorithmRLA(n8 i) -> n8 {
+  auto value = algorithmROL(i);
+  A = algorithmAND(value);
+  return value;
+}
+
 auto MOS6502::algorithmROR(n8 i) -> n8 {
   bool c = C;
   C = i.bit(0);
@@ -174,6 +198,12 @@ auto MOS6502::algorithmROR(n8 i) -> n8 {
   Z = i == 0;
   N = i.bit(7);
   return i;
+}
+
+auto MOS6502::algorithmRRA(n8 i) -> n8 {
+  auto value = algorithmROR(i);
+  A = algorithmADC(value);
+  return value;
 }
 
 auto MOS6502::algorithmSBC(n8 i) -> n8 {
@@ -200,13 +230,7 @@ auto MOS6502::algorithmSBC(n8 i) -> n8 {
 }
 
 auto MOS6502::algorithmSLO(n8 i) -> n8 {
-  C = i.bit(7);
-  i <<= 1;
-  Z = i == 0;
-  N = i.bit(7);
-
-  A |= i;
-  Z = A == 0;
-  N = A.bit(7);
-  return i;
+  auto value = algorithmASL(i);
+  A = algorithmORA(value);
+  return value;
 }

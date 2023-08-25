@@ -12,8 +12,8 @@ PCEngineCD::PCEngineCD() {
   manufacturer = "NEC";
   name = "PC Engine CD";
 
-  firmware.append({"BIOS", "US"});     //NTSC-U
-  firmware.append({"BIOS", "Japan"});  //NTSC-J
+  firmware.append({"BIOS", "US", "cadac2725711b3c442bcf237b02f5a5210c96f17625c35fa58f009e0ed39e4db"});     //NTSC-U
+  firmware.append({"BIOS", "Japan", "e11527b3b96ce112a037138988ca72fd117a6b0779c2480d9e03eaebece3d9ce"});  //NTSC-J
 
   allocatePorts();
 }

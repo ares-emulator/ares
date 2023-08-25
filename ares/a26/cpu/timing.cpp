@@ -1,6 +1,8 @@
 auto CPU::read(n16 address) -> n8 {
+  step(1);
+
   if(io.rdyLine == 0) {
-    while (io.rdyLine == 0) {
+    while(io.rdyLine == 0) {
       step(1);
     }
 
@@ -8,7 +10,6 @@ auto CPU::read(n16 address) -> n8 {
     return MDR;
   }
 
-  step(1);
   MDR = readBus(address);
   return MDR;
 }

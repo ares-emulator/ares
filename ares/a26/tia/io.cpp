@@ -33,9 +33,9 @@ auto TIA::write(n8 address, n8 data) -> void {
   case 0x0a: ctrlpf(data);                                                     return; // CTRLPF
   case 0x0b: writeQueue.add(address, data, 1);                                 return; // REFP0
   case 0x0c: writeQueue.add(address, data, 1);                                 return; // REFP1
-  case 0x0d: writeQueue.add(address, data, 6);                                 return; // PF0
-  case 0x0e: writeQueue.add(address, data, 6);                                 return; // PF1
-  case 0x0f: writeQueue.add(address, data, 6);                                 return; // PF2
+  case 0x0d: writeQueue.add(address, data, 2);                                 return; // PF0
+  case 0x0e: writeQueue.add(address, data, 2);                                 return; // PF1
+  case 0x0f: writeQueue.add(address, data, 2);                                 return; // PF2
   case 0x10: resp(0);                                                          return; // RESP0
   case 0x11: resp(1);                                                          return; // RESP1
   case 0x12: resm(0);                                                          return; // RESM0
@@ -47,8 +47,8 @@ auto TIA::write(n8 address, n8 data) -> void {
   case 0x18: audio[1].frequency = data;                                        return; // AUDF1
   case 0x19: audio[0].volume = data;                                           return; // AUDV0
   case 0x1a: audio[1].volume = data;                                           return; // AUDV1
-  case 0x1b: writeQueue.add(address, data, 3);                                 return; // GRP0
-  case 0x1c: writeQueue.add(address, data, 3);                                 return; // GRP1
+  case 0x1b: writeQueue.add(address, data, 1);                                 return; // GRP0
+  case 0x1c: writeQueue.add(address, data, 1);                                 return; // GRP1
   case 0x1d: writeQueue.add(address, data, 1);                                 return; // ENAM0
   case 0x1e: writeQueue.add(address, data, 1);                                 return; // ENAM1
   case 0x1f: writeQueue.add(address, data, 1);                                 return; // ENAB1
@@ -124,23 +124,17 @@ auto TIA::grp(n1 index, n8 data) -> void {
 }
 
 auto TIA::resp(n1 index) -> void {
-  player[index].position = (io.hcounter < 68 ? 3 : io.hcounter - 68 + 8) % 160;
+  player[index].position = (io.hcounter - 68 + 5) % 160;
 }
 
 auto TIA::resm(n1 index) -> void {
-  missile[index].position = (io.hcounter < 68 ? 2 : io.hcounter - 68 + 7) % 160;
+  missile[index].position = (io.hcounter - 68 + 4) % 160;
 }
 
 auto TIA::resmp(n1 index, n8 data) -> void {
   missile[index].reset = data.bit(1);
-  if(missile[index].reset) {
-    auto offset = 3;
-    if(player[index].size == 5) offset = 6;
-    if(player[index].size == 7) offset = 10;
-    missile[index].position = player[index].position + offset;
-  }
 }
 
 auto TIA::resbl() -> void {
-  ball.position = (io.hcounter < 68 ? 2 : io.hcounter - 68 + 7);
+  ball.position = (io.hcounter - 68 + 4) % 160;
 }

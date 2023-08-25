@@ -42,13 +42,18 @@ struct MOS6502 {
   auto algorithmCPX(n8) -> n8;
   auto algorithmCPY(n8) -> n8;
   auto algorithmDEC(n8) -> n8;
+  auto algorithmDCP(n8) -> n8;
   auto algorithmEOR(n8) -> n8;
   auto algorithmINC(n8) -> n8;
+  auto algorithmISC(n8) -> n8;
   auto algorithmLD (n8) -> n8;
   auto algorithmLSR(n8) -> n8;
+  auto algorithmSRE(n8) -> n8;
   auto algorithmORA(n8) -> n8;
   auto algorithmROL(n8) -> n8;
+  auto algorithmRLA(n8) -> n8;
   auto algorithmROR(n8) -> n8;
+  auto algorithmRRA(n8) -> n8;
   auto algorithmSBC(n8) -> n8;
   auto algorithmSLO(n8) -> n8;
 

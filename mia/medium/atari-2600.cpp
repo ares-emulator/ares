@@ -1,6 +1,6 @@
 struct Atari2600 : Cartridge {
   auto name() -> string override { return "Atari 2600"; }
-  auto extensions() -> vector<string> override { return {"a26"}; }
+  auto extensions() -> vector<string> override { return {"a26", "bin"}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom, string location) -> string;
@@ -83,6 +83,7 @@ auto Atari2600::analyze(vector<u8>& rom, string location) -> string {
   // but we can make some educated guesses based on filename
   string region = "NTSC";
   if(location.ifind("(Europe)")) region = "PAL";
+  if(location.ifind("(PAL)")) region = "PAL";
 
   string s;
   s += "game\n";

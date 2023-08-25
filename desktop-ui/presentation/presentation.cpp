@@ -116,6 +116,9 @@ Presentation::Presentation() {
   hotkeySettingsAction.setText("Hotkeys" ELLIPSIS).setIcon(Icon::Device::Keyboard).onActivate([&] {
     settingsWindow.show("Hotkeys");
   });
+  emulatorSettingsAction.setText("Emulators" ELLIPSIS).setIcon(Icon::Place::Server).onActivate([&] {
+    settingsWindow.show("Emulators");
+  });
   optionSettingsAction.setText("Options" ELLIPSIS).setIcon(Icon::Action::Settings).onActivate([&] {
     settingsWindow.show("Options");
   });
@@ -381,10 +384,15 @@ auto Presentation::loadEmulators() -> void {
   loadMenu.append(MenuSeparator());
 
   //build emulator load list
+  u32 enabled = 0;
   for(auto& emulator : emulators) {
+    if(!emulator->configuration.visible) continue;
+    enabled++;
+
     MenuItem item;
     item.setIcon(Icon::Place::Server);
     item.setText({emulator->name, ELLIPSIS});
+    item.setVisible(emulator->configuration.visible);
     item.onActivate([=] {
       program.load(emulator);
     });
@@ -404,6 +412,15 @@ auto Presentation::loadEmulators() -> void {
       loadMenu.append(menu);
     }
     menu.append(item);
+  }
+  if(enabled == 0) {
+    //if the user disables every system, give an indication for how to re-add systems to the load menu
+    MenuItem item{&loadMenu};
+    item.setIcon(Icon::Action::Add);
+    item.setText("Add Systems" ELLIPSIS);
+    item.onActivate([&] {
+      settingsWindow.show("Emulators");
+    });
   }
 
   #if !defined(PLATFORM_MACOS)
