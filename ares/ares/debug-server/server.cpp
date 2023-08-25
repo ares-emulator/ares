@@ -8,7 +8,7 @@ using string = ::nall::string;
 using string_view = ::nall::string_view;
 
 namespace {
-  constexpr bool GDB_LOG_MESSAGES = true;
+  constexpr bool GDB_LOG_MESSAGES = false;
 
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
   constexpr u32 MAX_PACKET_SIZE = 4096;
@@ -29,7 +29,6 @@ namespace ares::GDB {
     if(!hasActiveClient || !handshakeDone)return true; // no client -> no error
     if(forceHalt)return false; // Signals can only happen while the game is running, ignore others
 
-    printf("GDB: report signal @ 0x%08X\n", (u32)originPC);
     inException = true;
     exceptionPC = originPC;
 
@@ -76,6 +75,7 @@ namespace ares::GDB {
         return "T05"; // needs to be faked, otherwise the GDB-client hangs up and eats 100% CPU
 
       case 'c': // continue
+      case 'C': // continue (with signal, signal itself can be ignored)
         // normal stop-mode is only allowed to respond once a signal was raised, non-stop must return OK immediately
         handshakeDone = true; // good indicator that GDB is done, also enables exception sending
         inException = false;

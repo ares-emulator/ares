@@ -41,6 +41,9 @@ class Server : public nall::TCPText::Server {
 
     // Exception
     auto reportSignal(Signal sig, u64 originPC) -> bool;
+    auto getPcOverride() -> maybe<u64> {
+      return inException ? maybe<u64>{exceptionPC} : nothing;
+    };
 
     // Breakpoints
     auto updatePC(u64 pc) -> bool;

@@ -47,7 +47,7 @@ auto DebugSettings::construct() -> void {
 
 auto DebugSettings::infoRefresh() -> void {
   if(settings.debugServer.enabled) {
-    string url{"127.0.0.1:", integer(settings.debugServer.port)};
+    string url{"localhost:", integer(settings.debugServer.port)};
     connectInfo.setText({"To connect, start gdb-multiarch and run: \"target remote ", url, "\""});
     presentation.statusDebug.setText({"GDB active [", url, "]"});
   } else {
