@@ -151,36 +151,38 @@ auto System::initDebugHooks() -> void {
   };
 
   GDB::server.hooks.regRead = [](u32 regIdx) {
-    if(regIdx > cpu.ipu.RA) {
-      if(regIdx == 0x25) {
+    if(regIdx < 32) {
+      return hex(cpu.ipu.r[regIdx].u64, 16, '0');
+    }
+
+    switch (regIdx)
+    {
+      case 32: return hex(cpu.getControlRegister(12), 16, '0'); // COP0 status
+      case 33: return hex(cpu.ipu.lo.u64, 16, '0');
+      case 34: return hex(cpu.ipu.hi.u64, 16, '0');
+      case 35: return hex(cpu.getControlRegister(8), 16, '0'); // COP0 badvaddr
+      case 36: return hex(cpu.getControlRegister(13), 16, '0'); // COP0 cause
+      case 37: { // PC
         auto pcOverride = GDB::server.getPcOverride();
         return hex(pcOverride ? pcOverride.get() : cpu.ipu.pc, 16, '0');
       }
-      return string{"0000000000000000"};
+
+      // case 38-69: -> FPU
+      case 70: return hex(cpu.getControlRegisterFPU(31), 16, '0'); // FPU control
     }
 
-    return hex(cpu.ipu.r[regIdx].u64, 16, '0');
+    if(regIdx < (38 + 32)) {
+      return hex(cpu.fpu.r[regIdx-38].u64, 16, '0');
+    }
+
+    return string{"0000000000000000"};
   };
 
   GDB::server.hooks.regReadGeneral = []() {
     string res{};
-    for(auto reg : cpu.ipu.r) {
-      res.append(hex(reg.u64, 16, '0'));
+    for(auto i : range(71)) {
+      res.append(GDB::server.hooks.regRead(i));
     }
-
-    res.append(hex(cpu.getControlRegister(12), 16, '0')); // COP0 status
-    res.append(hex(cpu.ipu.lo.u64, 16, '0'));
-    res.append(hex(cpu.ipu.hi.u64, 16, '0'));
-    res.append(hex(cpu.getControlRegister(8), 16, '0')); // COP0 badvaddr
-    res.append(hex(cpu.getControlRegister(13), 16, '0')); // COP0 cause
-
-    auto pcOverride = GDB::server.getPcOverride();
-    res.append(hex(pcOverride ? pcOverride.get() : cpu.ipu.pc, 16, '0'));
-
-    for(auto reg : cpu.fpu.r) {
-      res.append(hex(reg.u64, 16, '0'));
-    }
-    res.append(hex(cpu.getControlRegisterFPU(31), 16, '0')); // FPU control
     return res;
   };
 
