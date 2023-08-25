@@ -138,15 +138,13 @@ auto System::initDebugHooks() -> void {
     return res;
   };
 
-  GDB::server.hooks.write = [](u32 address, u32 unitSize, u64 value) {
-    Thread fakeThread{};  
-
-    // @TODO: write cached! (like in read)
+  GDB::server.hooks.write = [](u64 address, u32 unitSize, u64 value) {
+    address |= 0xFFFFFFFF'00000000ull; // @TODO: check why?
     switch(unitSize) {
-      case Byte: bus.write<Byte>(address, value, fakeThread); break;
-      case Half: bus.write<Half>(address, value, fakeThread); break;
-      case Word: bus.write<Word>(address, value, fakeThread); break;
-      case Dual: bus.write<Dual>(address, value, fakeThread); break;
+      case Byte: cpu.write<Byte>(address, value, false); break;
+      case Half: cpu.write<Half>(address, value, false); break;
+      case Word: cpu.write<Word>(address, value, false); break;
+      case Dual: cpu.write<Dual>(address, value, false); break;
     }
   };
 
