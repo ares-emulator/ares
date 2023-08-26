@@ -52,7 +52,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
     serverRunning = true;
 
     fdServer = socket(AF_INET6, SOCK_STREAM, 0);  
-    if(!fdServer) {
+    if(fdServer < 0) {
       serverRunning = false;
       return;
     }
@@ -88,7 +88,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
     serverAddrV6.sin6_addr = in6addr_loopback;
     serverAddrV6.sin6_port = htons(port);
 
-    if(bind(fdServer, (sockaddr*)&serverAddrV6, sizeof(serverAddrV6)) < 0 || listen(fdServer, 1) < 0) {
+    if(::bind(fdServer, (sockaddr*)&serverAddrV6, sizeof(serverAddrV6)) < 0 || listen(fdServer, 1) < 0) {
       printf("error binding socket on port %d! (%s)\n", port, strerror(errno));
       stopServer = true;
     }
@@ -117,7 +117,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
     }
     
     printf("Stopping TCP-server...\n");
-    if(fdServer) {
+    if(fdServer >= 0) {
       ::close(fdServer);
       fdServer = -1;
     }
