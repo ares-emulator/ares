@@ -3,7 +3,7 @@
 #include <nall/tcptext/tcp-socket.hpp>
 
 /**
- * Provides text-based WebSocket or raw TCP server on top of the Socket.
+ * Provides text-based TCP server on top of the Socket.
  * This handles incoming messages and can send data back to the client.
  */
 namespace nall::TCPText {

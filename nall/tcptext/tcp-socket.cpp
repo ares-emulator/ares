@@ -46,7 +46,7 @@ namespace nall::TCP {
 NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
   stopServer = false;
 
-  printf("Opening TCP-server on localhost:%d\n", port);
+  printf("Opening TCP-server on [::1]:%d\n", port);
 
   auto threadServer = std::thread([this, port]() {
     serverRunning = true;

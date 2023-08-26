@@ -28,8 +28,8 @@ namespace nall::TCPText {
     if(!hadHandshake) {
       hadHandshake = true;
 
-      // This is a securtiy check and a feature at the same time.
-      // Any website can request loalhost via JS, while it can't see the result, 
+      // This is a security check and a feature at the same time.
+      // Any website can request localhost via JS, while it can't see the result, 
       // GDB will receive the data and commands could be injected (true for all GDB-servers).
       // Allow connections knowing the secret key, and block all others.
       isHTTP = dataStr[0] != '+'; // assume anything non-GDB is http
