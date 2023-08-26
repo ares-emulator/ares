@@ -97,10 +97,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
     {
       // scan for new connections
       if(fdClient < 0) {
-
-        sockaddr_in addressClient{0};
-        socklen_t socketSize = sizeof(addressClient);
-        fdClient = accept(fdServer, (sockaddr *)&addressClient, &socketSize);
+        fdClient = accept(fdServer, nullptr, nullptr);
         if(fdClient >= 0) {
           printf("Client connected!\n");
         }
@@ -154,7 +151,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
         }
 
         if constexpr(TCP_LOG_MESSAGES) {
-          printf("%.4f | TCP >: [%d]: %.*s\n", (f64)chrono::millisecond() / 1000.0, localSendBuffer.size(), localSendBuffer.size() > 100 ? 100 : localSendBuffer.size(), (char*)localSendBuffer.data());
+          printf("%.4f | TCP >: [%ld]: %.*s\n", (f64)chrono::millisecond() / 1000.0, localSendBuffer.size(), localSendBuffer.size() > 100 ? 100 : (int)localSendBuffer.size(), (char*)localSendBuffer.data());
         }
 
         localSendBuffer.resize(0);
