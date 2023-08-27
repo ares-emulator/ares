@@ -183,7 +183,7 @@ auto System::initDebugHooks() -> void {
       cpu.ipu.r[regIdx].u64 = regValue;
       return true;
     }
-
+ 
     switch (regIdx)
     {
       case 32: return true; // COP0 status (ignore write)
