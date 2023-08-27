@@ -30,7 +30,9 @@ class Server : public nall::TCPText::Server {
 
       // Registers
       function<string()> regReadGeneral{};
+      function<void(const string &regData)> regWriteGeneral{};
       function<string(u32 regIdx)> regRead{};
+      function<bool(u32 regIdx, u64 regValue)> regWrite{};
 
       // Emulator
       function<void(u64 address)> emuCacheInvalidate{};
@@ -48,7 +50,7 @@ class Server : public nall::TCPText::Server {
     // Breakpoints
     auto updatePC(u64 pc) -> bool;
     auto isHalted() const { return forceHalt && haltSignalSent; }
-    auto hasBreakpoints() const { return breakpoints.size() > 0; }
+    auto hasBreakpoints() const { return breakpoints.size() > 0 || singleStepActive; }
 
     auto updateLoop() -> void;
 
@@ -59,10 +61,14 @@ class Server : public nall::TCPText::Server {
   private:
     bool insideCommand{false};
     string cmdBuffer{""};
+
     bool haltSignalSent{false}; // marks if a signal as been sent for new halts (force-halt and breakpoints)
     bool forceHalt{false}; // forces a halt despite no breakpoints being hit
-    bool nonStopMode{false};
-    bool handshakeDone{false};
+    bool singleStepActive{false};
+
+    bool nonStopMode{false}; // (NOTE: Not working for now), gets set if gdb wants to switch over to async-messaging
+    bool handshakeDone{false}; // set to true after a few handshake commands, used to prevent exception-reporting until client is ready
+    bool requestDisconnect{false}; // set to true if the client decides it wants to disconnect
 
     bool hasActiveClient{false};
     u32 messageCount{0}; // message count per update loop

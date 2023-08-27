@@ -52,6 +52,12 @@ namespace ares::GDB {
         sendSignal(Signal::TRAP);
       }
     }
+
+    if(singleStepActive) {
+      singleStepActive = false;
+      forceHalt = true;
+    }
+
     return !needHalts;
   }
 
@@ -78,10 +84,14 @@ namespace ares::GDB {
       case 'C': // continue (with signal, signal itself can be ignored)
         // normal stop-mode is only allowed to respond once a signal was raised, non-stop must return OK immediately
         handshakeDone = true; // good indicator that GDB is done, also enables exception sending
-        inException = false;
         shouldReply = NON_STOP_MODE;
         resumeProgram();
         return "OK";
+
+      case 'D': // client wants to detach (Note: VScode doesn't seem to use this, uses vKill instead)
+        requestDisconnect = true;
+        return "OK";
+      break;
 
       case 'g': // dump all general registers
         if(hooks.regReadGeneral) {
@@ -91,11 +101,24 @@ namespace ares::GDB {
         }
       break;
 
+      case 'G': // set all general registers
+        if(hooks.regWriteGeneral) {
+          hooks.regWriteGeneral(cmd.slice(1));
+          return "OK";
+        }
+      break;
+
       case 'H': // set which thread a 'c' command that may follow belongs to (can be ignored in stop-mode)
         if(cmdName == "Hc0")currentThreadC = 0;
         if(cmdName == "Hc-1")currentThreadC = -1;
         return "OK";
-      case 'k': return ""; // "kill" -> see "vKill", can be ignored
+
+      case 'k':  // old version of vKill
+        if(handshakeDone) { // sometimes this gets send during handshake (to reset the program?) -> ignore
+          requestDisconnect = true;
+        }
+        return "OK";
+      break;
 
       case 'm': // read memory (e.g.: "m80005A00,4")
         {
@@ -140,11 +163,24 @@ namespace ares::GDB {
         }
       break;
 
+      case 'P': // write specific register (e.g.: "P15=FFFFFFFF80001234")
+        if(hooks.regWrite) {
+          auto sepIdxMaybe = cmdName.find("=");
+          u32 sepIdx = sepIdxMaybe ? sepIdxMaybe.get() : 1;
+          
+          u32 regIdx = static_cast<u32>(cmdName.slice(1, sepIdx-1).hex());
+          u64 regValue = cmdName.slice(sepIdx+1).hex();
+
+          return hooks.regWrite(regIdx, regValue) ? "OK" : "E00";
+        }
+      break;
+
       case 'q':
         // This tells the client what we can and can't do
         if(cmdName == "qSupported"){ return {
           "PacketSize=", MAX_PACKET_SIZE, 
-          ";fork-events-;swbreak+;hwbreak+", 
+          ";fork-events-;swbreak+;hwbreak-", 
+          ";vContSupported-", // prevent vCont commands (reduces potential GDB variations: some prefer using it, others don't)
           NON_STOP_MODE ? ";QNonStop+" : "",
           hooks.targetXML ? ";xmlRegisters+;qXfer:features:read+" : "" // (see: https://marc.info/?l=gdb&m=149901965961257&w=2)
         };}
@@ -171,18 +207,12 @@ namespace ares::GDB {
           }
         }
 
-        /* // This is correct according to the docs, but makes GDB and CLion hang (@TODO: check why)
-        if(cmdName == "qfThreadInfo")return {"m", joinIntVec(threadIds, ",")};
+         // Thread-related queries
+        if(cmdName == "qfThreadInfo")return {"m1"};
         if(cmdName == "qsThreadInfo")return {"l"};
-        if(cmdName == "qThreadExtraInfo,1")return "Runnable"; // ("Runnable", "Blocked on Mutex") // @TODO: parse this properly, uses "," instead of ":" for params
-        if(cmdName == "qC")return {"QC", mainThreadId};
-        */
-
-        // Wrong responses, but they make gdb and CLion work.
-        if(cmdName == "qsThreadInfo")return {"m1"};
-        if(cmdName == "qfThreadInfo")return "l";
+        if(cmdName == "qThreadExtraInfo,1")return ""; // ignoring this command fixes support for CLion (and VSCode?), otherwise gdb hangs
         if(cmdName == "qC")return {"QC1"};
-
+        // there will also be a "qP0000001f0000000000000001" command depending on the IDE, this is ignored to prevent GDB from hanging up
         break;
 
       case 'Q':
@@ -199,21 +229,40 @@ namespace ares::GDB {
         }
         break;
 
+      case 's': {
+        if(cmdName.size() > 1) {
+          u64 address = cmdName.slice(1).integer();
+          printf("stepping at address unsupported, ignore (%016lX)\n", address);
+        }
+
+        shouldReply = false;
+        singleStepActive = true;
+        resumeProgram();
+        return "";
+      } break;
+
       case 'v': {
         // normalize (e.g. "vAttach;1" -> "vAttach")
         auto sepIdxMaybe = cmdName.find(";");
         auto vName = sepIdxMaybe ? cmdName.slice(0, sepIdxMaybe.get()) : cmdName;
 
         if(vName == "vMustReplyEmpty")return ""; // handshake-command / keep-alive (must return the same as an unknown command would)
-        if(vName == "vKill")return ""; // kills process, this may fire before gbd attaches to the current process -> ignore
         if(vName == "vAttach")return NON_STOP_MODE ? "OK" : "S05"; // attaches to the process, we must return a fake trap-exception to make gdb happy
-        if(vName == "vCont?")return "vCont;c;t"; // tells client what continue-commands we support (continue;stop)
-        //if(vName == "vStopped")return forceHalt ? "S05" : "";
+        if(vName == "vCont?")return ""; // even though "vContSupported-" is set, gdb may still ask for it -> ignore to force e.g. `s` instead of `vCont;s:1;c`
         if(vName == "vStopped")return "";
         if(vName == "vCtrlC") {
           haltProgram();
           return "OK";
         }
+
+        if(vName == "vKill") {
+          if(handshakeDone) { // sometimes this gets send during handshake (to reset the program?) -> ignore
+            requestDisconnect = true;
+          }
+          return "OK";
+        }
+
+        if(vName == "vCont") return "E00"; // if GDB completely ignores both "vCont is unsupported" responses, throw an error here
 
       } break;
 
@@ -259,27 +308,20 @@ namespace ares::GDB {
           insideCommand = true;
           break;
 
-        case '#': // end of message + 2-char checksum after that
+        case '#': { // end of message + 2-char checksum after that
           insideCommand = false;
 
-          if(cmdBuffer == "D") {
-            printf("GDB ending session, disconnecting client\n");
-            sendText("+");
-            disconnectClient();
-            resumeProgram();
+          ++messageCount;
+          bool shouldReply = true;
+          auto cmdRes = processCommand(cmdBuffer, shouldReply);
+          if(shouldReply) {
+            sendPayload(cmdRes);
           } else {
-            ++messageCount;
-            bool shouldReply = true;
-            auto cmdRes = processCommand(cmdBuffer, shouldReply);
-            if(shouldReply) {
-              sendPayload(cmdRes);
-            } else {
-              sendText("+"); // acknowledge always needed
-            }
+            sendText("+"); // acknowledge always needed
           }
 
           cmdBuffer = "";
-          break;
+        } break;
 
         case '+': break; // "OK" response -> ignore
 
@@ -300,6 +342,14 @@ namespace ares::GDB {
 
   auto Server::updateLoop() -> void {
     //if(!hasActiveClient)return;
+    if(requestDisconnect) {
+      requestDisconnect = false;
+      printf("GDB ending session, disconnecting client\n");
+      sendText("+");
+      disconnectClient();
+      resumeProgram();
+      return;
+    }
 
     // @TODO: refactor
     constexpr u32 LOOP_COUNT = 100;
@@ -348,6 +398,7 @@ namespace ares::GDB {
   }
 
   auto Server::resumeProgram() -> void {
+    inException = false;
     forceHalt = false;
     haltSignalSent = false;
   }
@@ -362,7 +413,9 @@ namespace ares::GDB {
     hooks.read.reset();
     hooks.write.reset();
     hooks.regReadGeneral.reset();
+    hooks.regWriteGeneral.reset();
     hooks.regRead.reset();
+    hooks.regWrite.reset();
     hooks.emuCacheInvalidate.reset();
     hooks.targetXML.reset();
 
@@ -377,10 +430,12 @@ namespace ares::GDB {
     cmdBuffer = "";
     haltSignalSent = false;
     forceHalt = false;
+    singleStepActive = false;
 
     currentThreadC = -1;
     hasActiveClient = false;
     handshakeDone = false;
+    requestDisconnect = false;
   }
 
 };

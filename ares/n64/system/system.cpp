@@ -176,12 +176,54 @@ auto System::initDebugHooks() -> void {
     return string{"0000000000000000"};
   };
 
+  GDB::server.hooks.regWrite = [](u32 regIdx, u64 regValue) -> bool {
+    if(regIdx == 0)return true;
+
+    if(regIdx < 32) {
+      cpu.ipu.r[regIdx].u64 = regValue;
+      return true;
+    }
+
+    switch (regIdx)
+    {
+      case 32: return true; // COP0 status (ignore write)
+      case 33: cpu.ipu.lo.u64 = regValue; return true;
+      case 34: cpu.ipu.hi.u64 = regValue; return true;
+      case 35: return true; // COP0 badvaddr (ignore write)
+      case 36: return true; // COP0 cause (ignore write)
+      case 37: { // PC
+        if(!GDB::server.getPcOverride()) {
+          cpu.ipu.pc = regValue;
+        }
+        return true;
+      }
+
+      // case 38-69: -> FPU
+      case 70: return true; // FPU control (ignore)
+    }
+
+    if(regIdx < (38 + 32)) {
+      cpu.fpu.r[regIdx-38].u64 = regValue;
+      return true;
+    }
+
+    return false;
+  };
+
   GDB::server.hooks.regReadGeneral = []() {
     string res{};
     for(auto i : range(71)) {
       res.append(GDB::server.hooks.regRead(i));
     }
     return res;
+  };
+
+  GDB::server.hooks.regWriteGeneral = [](const string &regData) {
+    u32 regIdx{0};
+    for(auto i=0; i<regData.size(); i+=16) {
+      GDB::server.hooks.regWrite(regIdx, regData.slice(i, 16).hex());
+      ++regIdx;
+    }
   };
 
   if constexpr(Accuracy::CPU::Recompiler) {
