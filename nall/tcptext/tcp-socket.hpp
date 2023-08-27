@@ -8,7 +8,7 @@ namespace nall::TCP {
 
 class Socket {
   public:
-    auto open(u32 port) -> bool;
+    auto open(u32 port, bool useIPv4) -> bool;
     auto close() -> void;
 
     auto disconnectClient() -> void;

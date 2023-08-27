@@ -93,6 +93,7 @@ struct Settings : Markup::Node {
     u32 port = 9123; // port for host
     string token = "avGP7rmBUBq3QytQ"; // optional security-token to verify incoming connections
     bool enabled = false; // if enabled, server starts with ares
+    bool useIPv4 = false; // forces IPv4 over IPv6
   } debugServer;
 };
 
@@ -367,6 +368,10 @@ struct DebugSettings : VerticalLayout {
     Label tokenLabel{&tokenLayout, Size{48, 20}};
     LineEdit token{&tokenLayout, Size{~0, 0}};
     Label tokenHint{&tokenLayout, Size{~0, 0}};
+
+  HorizontalLayout ipv4Layout{this, Size{~0, 0}};
+    Label ipv4Label{&ipv4Layout, Size{48, 20}};
+    CheckLabel ipv4{&ipv4Layout, Size{~0, 0}};
 
   HorizontalLayout enabledLayout{this, Size{~0, 0}};
     Label enabledLabel{&enabledLayout, Size{48, 20}};

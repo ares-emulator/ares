@@ -114,6 +114,7 @@ auto Settings::process(bool load) -> void {
   bind(natural, "DebugServer/Port", debugServer.port);
   bind(string,  "DebugServer/Token", debugServer.token);
   bind(boolean, "DebugServer/Enabled", debugServer.enabled);
+  bind(boolean, "DebugServer/UseIPv4", debugServer.useIPv4);
 
   for(u32 index : range(9)) {
     string name = {"Recent/Game-", 1 + index};

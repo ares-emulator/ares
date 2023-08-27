@@ -31,6 +31,17 @@ auto DebugSettings::construct() -> void {
     });
     tokenHint.setText("Token for HTTP connections").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
+  ipv4Layout.setAlignment(1);
+    ipv4Label.setText("Use IPv4");
+
+    ipv4.setEnabled(true);
+    ipv4.setChecked(settings.debugServer.useIPv4);
+    ipv4.onToggle([&](){
+      settings.debugServer.useIPv4 = ipv4.checked();
+      serverRefresh();
+      infoRefresh();
+    });
+
   enabledLayout.setAlignment(1);
     enabledLabel.setText("Enabled");
 
@@ -47,7 +58,10 @@ auto DebugSettings::construct() -> void {
 
 auto DebugSettings::infoRefresh() -> void {
   if(settings.debugServer.enabled) {
-    string url{"[::1]:", integer(settings.debugServer.port)};
+    string url{
+      settings.debugServer.useIPv4 ? "127.0.0.1:" : "[::1]:", 
+      integer(settings.debugServer.port)
+    };
     connectInfo.setText({"To connect, start gdb-multiarch and run: \"target remote ", url, "\""});
     presentation.statusDebug.setText({"GDB active at ", url});
   } else {
@@ -60,6 +74,6 @@ auto DebugSettings::serverRefresh() -> void {
   ares::GDB::server.close();
 
   if(settings.debugServer.enabled) {
-    ares::GDB::server.open(settings.debugServer.port);
+    ares::GDB::server.open(settings.debugServer.port, settings.debugServer.useIPv4);
   }
 }

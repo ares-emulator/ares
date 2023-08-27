@@ -43,15 +43,15 @@ namespace nall::TCP {
  * NOTE: if you work on the loop/sleeps, make sure to test CPU usage and package-latency.
  */
 
-NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
+NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
   stopServer = false;
 
   printf("Opening TCP-server on [::1]:%d\n", port);
 
-  auto threadServer = std::thread([this, port]() {
+  auto threadServer = std::thread([this, port, useIPv4]() {
     serverRunning = true;
 
-    fdServer = socket(AF_INET6, SOCK_STREAM, 0);  
+    fdServer = socket(useIPv4 ? AF_INET : AF_INET6, SOCK_STREAM, 0);  
     if(fdServer < 0) {
       serverRunning = false;
       return;
@@ -83,15 +83,27 @@ NALL_HEADER_INLINE auto Socket::open(u32 port) -> bool {
       #endif
     }
 
-    sockaddr_in6 serverAddrV6{};
-    serverAddrV6.sin6_family = AF_INET6;
-    serverAddrV6.sin6_addr = in6addr_loopback;
-    serverAddrV6.sin6_port = htons(port);
+    s32 bindRes;
+    if(useIPv4) {
+      sockaddr_in serverAddrV4{};
+      serverAddrV4.sin_family = AF_INET;
+      serverAddrV4.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+      serverAddrV4.sin_port = htons(port);
 
-    if(::bind(fdServer, (sockaddr*)&serverAddrV6, sizeof(serverAddrV6)) < 0 || listen(fdServer, 1) < 0) {
-      printf("error binding socket on port %d! (%s)\n", port, strerror(errno));
-      stopServer = true;
+      bindRes = ::bind(fdServer, (sockaddr*)&serverAddrV4, sizeof(serverAddrV4)) < 0;
+    } else {
+      sockaddr_in6 serverAddrV6{};
+      serverAddrV6.sin6_family = AF_INET6;
+      serverAddrV6.sin6_addr = in6addr_loopback;
+      serverAddrV6.sin6_port = htons(port);
+
+      bindRes = ::bind(fdServer, (sockaddr*)&serverAddrV6, sizeof(serverAddrV6)) < 0;
     }
+
+    if(bindRes < 0 || listen(fdServer, 1) < 0) {
+        printf("error binding socket on port %d! (%s)\n", port, strerror(errno));
+        stopServer = true;
+      }
 
     while(!stopServer) 
     {

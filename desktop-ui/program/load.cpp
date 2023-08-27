@@ -79,7 +79,7 @@ auto Program::load(string location) -> bool {
   showMessage({"Loaded ", Location::prefix(location)});
 
   if(settings.debugServer.enabled) {
-    ares::GDB::server.open(settings.debugServer.port);
+    ares::GDB::server.open(settings.debugServer.port, settings.debugServer.useIPv4);
   }
 
   //update recent games list
