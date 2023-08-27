@@ -87,7 +87,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
     if(useIPv4) {
       sockaddr_in serverAddrV4{};
       serverAddrV4.sin_family = AF_INET;
-      serverAddrV4.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+      serverAddrV4.sin_addr.s_addr = htonl(INADDR_ANY);
       serverAddrV4.sin_port = htons(port);
 
       bindRes = ::bind(fdServer, (sockaddr*)&serverAddrV4, sizeof(serverAddrV4)) < 0;
