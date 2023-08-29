@@ -224,19 +224,6 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
 
   //Korean No-Bank Mapper
   //=====
-  //Bubble Bobble (Korea, YM Soft)##
-  if(hash == "1ec2649067ac12a952fc12b86d1e4474c31aefaa7c2c2252c246cc7cdb3ceb05") {
-    board  = "Korea_NB";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-  
-  //C_So! (Korea)
-  if(hash == "60716197f2643a5c87e38d26f32f370e328e740aaaea879b521986c31f8cdded") {
-    board  = "Korea_NB";
-    region = "NTSC-J";
-    ram    = 0;
-  }
 
   //FA Tetris (Korea)
   if(hash == "46d86dd5782b248430cd84e9ba5b4fc68abec6472213bb898b2dbb213b4debcf") {
@@ -244,8 +231,23 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     region = "NTSC-J";
     ram    = 0;
   }
+  
+  //Sky Jaguar
+  if(hash == "6b154d9fde7c8c6f1cf45adc50bf4727197746bb30c25f2f3f65874cc85cdf3e") {
+    board  = "Korea_NB";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  
+  //Sky Jaguar [Clover]
+  if(hash == "05462f928c1b39716dea4b230e2ed36b923e9fff47b81fa47c7afdce7cb57e49") {
+    board  = "Korea_NB";
+    region = "NTSC-J";
+    ram    = 0;
+  }
 
-  //Flashpoint (Korea)##
+  //Flashpoint (Korea)
+  // TODO: NOT WORKING!
   if(hash == "c6d945e79a22cc6da9ed6937d6a93a6df64835f1a577454e1c90b03e7d245186") {
     board  = "Korea_NB";
     region = "NTSC-J";
@@ -306,67 +308,64 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     region = "NTSC-J";
     ram    = 0;
   }
+  
+  //Zemina / Nemesis
+  //===
+  //Nemesis (Korea)##
+  if(hash == "c5b5126b0fdcacc70f350c3673f8d081b8d59d2db251ef917bf3ca8dd3d63430") {
+    board  = "Zemina_Nemesis";
+    region = "NTSC-J";
+    ram    = 0;
+  }
 
   //Zemina
   //===
-
-  //Cyborg Z (Korea)
-  if(hash == "685530e434c9d78da8441475f795591210873622622b7f3168348ce08abc7f8e") {
-    board  = "MSX";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-
-  //F-1 Spirit: The Way to Formula-1 (Korea)
-  if(hash == "42dbc2ccf30a8d8e6d1d64fd0abb98d2f29b06da2113cedb9ed15af57fd9cfe0") {
-    board  = "MSX";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-
-  //Knightmare II: The Maze of Galious (Korea)
-  if(hash == "a906127be07469e6083ef6eb9657f5ece6ffe65b3cf793a0423959fc446e2799") {
-    board  = "MSX";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-
-  //Nemesis 2 (Korea)
+  //Super Boy 3
+  
+  //Nemesis 2 (Korea)##
   if(hash == "52d0772347e1bd73eea1a31f19400a4e24b43fb148b265ace9018ce2b677b3e4") {
-    board  = "MSX";
+    board  = "Zemina";
     region = "NTSC-J";
     ram    = 0;
   }
-
-  //Penguin Adventure (Korea)
+  
+  //Penguin Adventure (Korea)##
   if(hash == "17958bcf247f6d18b616c519cc1466f7250901ada61831890ca58767fbfbb4b8") {
-    board  = "MSX";
+    board  = "Zemina";
     region = "NTSC-J";
     ram    = 0;
   }
 
   //Street Master (Korea)
   if(hash == "cad9e768d6c7a1f781f2bf6c13ceab9142135d36fadab8db4b77edc9ae926be7") {
-    board  = "MSX";
+    board  = "Zemina";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+
+  //Cyborg Z (Korea) ##
+  if(hash == "685530e434c9d78da8441475f795591210873622622b7f3168348ce08abc7f8e") {
+    board  = "Zemina";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+
+  //Knightmare II: The Maze of Galious (Korea)
+  if(hash == "a906127be07469e6083ef6eb9657f5ece6ffe65b3cf793a0423959fc446e2799") {
+    board  = "Zemina";
     region = "NTSC-J";
     ram    = 0;
   }
 
   //Wonsiin (Korea)
   if(hash == "ee22d7b7fcd59e81ee6fda7b82356883d9c3d8ea3c99e6591487d1f28d569073") {
-    board  = "MSX";
+    board  = "Zemina";
     region = "NTSC-J";
     ram    = 0;
   }
-
-
-
-  //Nemesis
-  //===
-  
-  //Nemesis (Korea)
-  if(hash == "c5b5126b0fdcacc70f350c3673f8d081b8d59d2db251ef917bf3ca8dd3d63430") {
-    board  = "Nemesis";
+  //F-1 Spirit: The Way to Formula-1 (Korea)
+  if(hash == "42dbc2ccf30a8d8e6d1d64fd0abb98d2f29b06da2113cedb9ed15af57fd9cfe0") {
+    board  = "Zemina";
     region = "NTSC-J";
     ram    = 0;
   }
@@ -391,6 +390,65 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     ram    = 0;
   }
   
+  
+  //Korean 188 in 1
+  // TODO: Game 6 and 13 do not work, posibly others also fail.
+  //=======
+  
+  //Not public dump
+  // 128 Hap (KR)
+
+  //Game Mo-eumjip 188 Hap (Korea) (v0)##
+  if(hash == "f6fa88b8f0396e1bda26e00fd8427effc26aaabed6f811aef68efec32b4c4df3") {
+    board  = "K188in1";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  //Game Mo-eumjip 188 Hap (Korea) (v1)##
+  if(hash == "e77553e86a0359c45e5b8250666ea402b0ae0d989b7fce0c28b42954cb5e106a") {
+    board  = "K188in1";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  
+  //Seo Jin Multi-cart
+  //=======
+
+  //Super Game 11-in-1 (Korea)##
+  if(hash == "08bc15836676cb0f4cc4d0deadcc23a51903bc384cc4b3050c8fae34518e1b78") {
+    board  = "Janggun";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  
+  //Unknown Mappers
+  //=======
+
+  //Super Multi Game - Super 125 in 1 (Korea)##
+  if(hash == "1f9cd857c8e8922826b4781872b656f6ff677d04f2bb4efdb11db8860fdba255") {
+    board  = "Janggun";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  //Super Game 52 Hap (Korea)##
+  if(hash == "af2822e40a46e32cb7ceaa5e54708b23554bd01f673c06a217c42dd5a8745535") {
+    board  = "Janggun";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  //Super Game 45 (Korea)## [same mapper as "Super Game 52 Hap (Korea)"?]
+  if(hash == "26463c23acf6ebf6277cc1b1448bf284c8244943fb8f5f24608a64b1f20c7d55") {
+    board  = "Janggun";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  //Bubble Bobble (Korea, YM Soft)
+  // TODO: NOT WORKING!XX
+  if(hash == "1ec2649067ac12a952fc12b86d1e4474c31aefaa7c2c2252c246cc7cdb3ceb05") {
+    board  = "Korea_NB";
+    region = "NTSC-J";
+    ram    = 0;
+  }
   
 
   string s;
