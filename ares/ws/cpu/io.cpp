@@ -38,7 +38,7 @@ auto CPU::readIO(n16 address) -> n8 {
 
   case 0x00b0:  //INT_BASE
     data  = io.interruptBase;
-    data |= SoC::ASWAN() ? 3 : 0;
+    data |= bit::first(io.interruptStatus);
     break;
 
   case 0x00b2:  //INT_ENABLE
@@ -104,7 +104,7 @@ auto CPU::writeIO(n16 address, n8 data) -> void {
     break;
 
   case 0x00b0:  //INT_BASE
-    io.interruptBase = SoC::ASWAN() ? data & ~7 : data & ~1;
+    io.interruptBase = data & ~7;
     break;
 
   case 0x00b2:  //INT_ENABLE
