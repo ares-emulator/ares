@@ -254,7 +254,7 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     ram    = 0;
   }
 
-  //Xyzolog (Korea)##
+  //Xyzolog (Korea)
   if(hash == "dfb4cf3d3e793f09c683965b5fbc1c1f4d8b580326fc08ecab093275e0aeb537") {
     board  = "Korea_NB";
     region = "NTSC-J";
@@ -398,19 +398,20 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   //Not public dump
   // 128 Hap (KR)
 
-  //Game Mo-eumjip 188 Hap (Korea) (v0)##
+  //Game Mo-eumjip 188 Hap (Korea) (v0)
   if(hash == "f6fa88b8f0396e1bda26e00fd8427effc26aaabed6f811aef68efec32b4c4df3") {
     board  = "K188in1";
     region = "NTSC-J";
     ram    = 0;
   }
-  //Game Mo-eumjip 188 Hap (Korea) (v1)##
+  //Game Mo-eumjip 188 Hap (Korea) (v1)
   if(hash == "e77553e86a0359c45e5b8250666ea402b0ae0d989b7fce0c28b42954cb5e106a") {
     board  = "K188in1";
     region = "NTSC-J";
     ram    = 0;
   }
   
+
   string s;
   s += "game\n";
   s +={"  sha256: ", hash, "\n"};
