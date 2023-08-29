@@ -121,63 +121,63 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   //Hicom
   //===========
 
-  //The Best Game Collection - Hang On + Pit Pot + Spy vs Spy (Korea)##
+  //The Best Game Collection - Hang On + Pit Pot + Spy vs Spy (Korea)
   if(hash == "11ef490394ad30bfa795295f0195177f7ac92153521a97dc3d9a817912cd185c") {
     board  = "Hicom";
     region = "PAL";
     ram    = 0;
   }
 
-  //The Best Game Collection - Great Baseball + Great Soccer + Super Tennis (Korea)##
+  //The Best Game Collection - Great Baseball + Great Soccer + Super Tennis (Korea)
   if(hash == "dcd0195f5e9eef77c5ffd23413b54206daa8eacaf9adb41618c16b43c9bf3eb3") {
     board  = "Hicom";
     region = "PAL";
     ram    = 0;
   }
 
-  //The Best Game Collection - Teddy Boy Blues + Pit-Pot + Astro Flash (Korea)##
+  //The Best Game Collection - Teddy Boy Blues + Pit-Pot + Astro Flash (Korea)
   if(hash == "5e8dba358c6e5ced67d6fd6d3c8e3124ac6bcde73ae5b1b89fe31d5733451fb0") {
     board  = "Hicom";
     region = "PAL";
     ram    = 0;
   }
 
-  //The Best Game Collection - Teddy Boy Blues + Great Soccer + Comical Machine Gun Joe (Korea)##
+  //The Best Game Collection - Teddy Boy Blues + Great Soccer + Comical Machine Gun Joe (Korea)
   if(hash == "bee055caea0282a505afd08452000aca3a46ee7a2a7ed1f7cfa09b43580a8431") {
     board  = "Hicom";
     region = "PAL";
     ram    = 0;
   }
 
-  //The Best Game Collection - Ghost House + Teddy Boy Blues + Seishun Scandal (Korea)##
+  //The Best Game Collection - Ghost House + Teddy Boy Blues + Seishun Scandal (Korea)
   if(hash == "395cf05e2eabc7d47f57e501239f60d35933f450b2205895d25f380ae4b23a7c") {
     board  = "Hicom";
     region = "PAL";
     ram    = 0;
   }
 
-  //The Best Game Collection - Satellite-7 + Great Baseball + Seishun Scandal (Korea)##
+  //The Best Game Collection - Satellite-7 + Great Baseball + Seishun Scandal (Korea)
   if(hash == "6f09849fa4f5904cc9554c15b4522da49160cf99f81895c1df80d3b4bfc0f033") {
     board  = "Hicom";
     region = "PAL";
     ram    = 0;
   }
 
-  //The Best Game Collection (Korea, 8 in 1 Ver. A)##
+  //The Best Game Collection (Korea, 8 in 1 Ver. A)
   if(hash == "572dfcc5ade1251c38b729ee86d78e37fde29d948d19f2292aeff32685db9129") {
     board  = "Hicom";
     region = "PAL";
     ram    = 0;
   }
 
-  //The Best Game Collection (Korea, 8 in 1 Ver. B)##
+  //The Best Game Collection (Korea, 8 in 1 Ver. B)
   if(hash == "6b829e41da9b7a0f2f0b0fcdbd644e311178ee7958e69ea6a1590dd4794a2834") {
     board  = "Hicom";
     region = "PAL";
     ram    = 0;
   }
 
-  //The Best Game Collection (Korea, 8 in 1 Ver. C)##
+  //The Best Game Collection (Korea, 8 in 1 Ver. C)
   if(hash == "addf8f41dfb2698cb4e5d01bdff29bfda898d099e651c08d7536eb9e2bb14f5e") {
     board  = "Hicom";
     region = "PAL";
@@ -381,54 +381,6 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     ram    = 0;
   }
   
-  //Korean 188 in 1
-  //=======
-
-  //Game Mo-eumjip 188 Hap (Korea) (v0)##
-  if(hash == "f6fa88b8f0396e1bda26e00fd8427effc26aaabed6f811aef68efec32b4c4df3") {
-    board  = "Janggun";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-  //Game Mo-eumjip 188 Hap (Korea) (v1)##
-  if(hash == "e77553e86a0359c45e5b8250666ea402b0ae0d989b7fce0c28b42954cb5e106a") {
-    board  = "Janggun";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-  
-  //Seo Jin Multi-cart
-  //=======
-
-  //Super Game 11-in-1 (Korea)##
-  if(hash == "08bc15836676cb0f4cc4d0deadcc23a51903bc384cc4b3050c8fae34518e1b78") {
-    board  = "Janggun";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-  
-  //Unknown Mappers
-  //=======
-
-  //Super Multi Game - Super 125 in 1 (Korea)##
-  if(hash == "1f9cd857c8e8922826b4781872b656f6ff677d04f2bb4efdb11db8860fdba255") {
-    board  = "Janggun";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-  //Super Game 52 Hap (Korea)##
-  if(hash == "af2822e40a46e32cb7ceaa5e54708b23554bd01f673c06a217c42dd5a8745535") {
-    board  = "Janggun";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-  //Super Game 45 (Korea)## [same mapper as "Super Game 52 Hap (Korea)"?]
-  if(hash == "26463c23acf6ebf6277cc1b1448bf284c8244943fb8f5f24608a64b1f20c7d55") {
-    board  = "Janggun";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-
   string s;
   s += "game\n";
   s +={"  sha256: ", hash, "\n"};
