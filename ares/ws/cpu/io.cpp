@@ -38,7 +38,7 @@ auto CPU::readIO(n16 address) -> n8 {
 
   case 0x00b0:  //INT_BASE
     data  = io.interruptBase;
-    data |= bit::first(io.interruptStatus);
+    data |= bit::last(io.interruptStatus);
     break;
 
   case 0x00b2:  //INT_ENABLE
