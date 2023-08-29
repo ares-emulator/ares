@@ -5,6 +5,8 @@ namespace Board {
 #include "korea.cpp"
 #include "msx.cpp"
 #include "janggun.cpp"
+#include "pak4.cpp"
+#include "hicom.cpp"
 
 auto Interface::load(Memory::Readable<n8>& memory, string name) -> bool {
   if(auto fp = pak->read(name)) {
