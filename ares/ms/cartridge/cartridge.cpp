@@ -30,6 +30,7 @@ auto Cartridge::connect() -> void {
   
   // WIP
   if(information.board == "Korea_NB") board = new Board::Korea{*this}; // TODO: Some of these games work but should not have bank switching.
+  if(information.board == "Hap2000") board = new Board::Hap2000{*this}; // 2 Hap in 1 - David-2 ~ Moai-ui bomul (KR)
   
   
   if(!board) board = new Board::Interface{*this};
