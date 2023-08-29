@@ -381,6 +381,18 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     ram    = 0;
   }
   
+  //Hap2000
+  //=======
+
+  //2 Hap in 1 - David-2 ~ Moai-ui bomul (KR)
+  if(hash == "cf6aa5727748f7042ff7942972a27bed015e1e30976606adaad6f8ef0ec214b6") {
+    board  = "Hap2000";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  
+  
+
   string s;
   s += "game\n";
   s +={"  sha256: ", hash, "\n"};
