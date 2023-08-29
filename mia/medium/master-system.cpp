@@ -311,7 +311,7 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   
   //Zemina / Nemesis
   //===
-  //Nemesis (Korea)##
+  //Nemesis (Korea)
   if(hash == "c5b5126b0fdcacc70f350c3673f8d081b8d59d2db251ef917bf3ca8dd3d63430") {
     board  = "Zemina_Nemesis";
     region = "NTSC-J";
@@ -322,14 +322,14 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
   //===
   //Super Boy 3
   
-  //Nemesis 2 (Korea)##
+  //Nemesis 2 (Korea)
   if(hash == "52d0772347e1bd73eea1a31f19400a4e24b43fb148b265ace9018ce2b677b3e4") {
     board  = "Zemina";
     region = "NTSC-J";
     ram    = 0;
   }
   
-  //Penguin Adventure (Korea)##
+  //Penguin Adventure (Korea)
   if(hash == "17958bcf247f6d18b616c519cc1466f7250901ada61831890ca58767fbfbb4b8") {
     board  = "Zemina";
     region = "NTSC-J";
@@ -343,7 +343,7 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     ram    = 0;
   }
 
-  //Cyborg Z (Korea) ##
+  //Cyborg Z (Korea) 
   if(hash == "685530e434c9d78da8441475f795591210873622622b7f3168348ce08abc7f8e") {
     board  = "Zemina";
     region = "NTSC-J";
@@ -411,46 +411,6 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     ram    = 0;
   }
   
-  //Seo Jin Multi-cart
-  //=======
-
-  //Super Game 11-in-1 (Korea)##
-  if(hash == "08bc15836676cb0f4cc4d0deadcc23a51903bc384cc4b3050c8fae34518e1b78") {
-    board  = "Janggun";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-  
-  //Unknown Mappers
-  //=======
-
-  //Super Multi Game - Super 125 in 1 (Korea)##
-  if(hash == "1f9cd857c8e8922826b4781872b656f6ff677d04f2bb4efdb11db8860fdba255") {
-    board  = "Janggun";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-  //Super Game 52 Hap (Korea)##
-  if(hash == "af2822e40a46e32cb7ceaa5e54708b23554bd01f673c06a217c42dd5a8745535") {
-    board  = "Janggun";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-  //Super Game 45 (Korea)## [same mapper as "Super Game 52 Hap (Korea)"?]
-  if(hash == "26463c23acf6ebf6277cc1b1448bf284c8244943fb8f5f24608a64b1f20c7d55") {
-    board  = "Janggun";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-  //Bubble Bobble (Korea, YM Soft)
-  // TODO: NOT WORKING!XX
-  if(hash == "1ec2649067ac12a952fc12b86d1e4474c31aefaa7c2c2252c246cc7cdb3ceb05") {
-    board  = "Korea_NB";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-  
-
   string s;
   s += "game\n";
   s +={"  sha256: ", hash, "\n"};
