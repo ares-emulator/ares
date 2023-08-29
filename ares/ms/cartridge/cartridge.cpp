@@ -23,8 +23,15 @@ auto Cartridge::connect() -> void {
   if(information.board == "Codemasters") board = new Board::Codemasters{*this};
   if(information.board == "Korea") board = new Board::Korea{*this};
   if(information.board == "MSX") board = new Board::MSX{*this, 0};
-  if(information.board == "MSX#A") board = new Board::MSX{*this, 1};
+  if(information.board == "Nemesis") board = new Board::MSX{*this, 1}; // Nemesis (Korea)
   if(information.board == "Janggun") board = new Board::Janggun{*this};
+  if(information.board == "Hicom") board = new Board::Hicom{*this};
+  if(information.board == "pak4") board = new Board::Pak4{*this}; // 4 PAK All Action (Australia)
+  
+  // WIP
+  if(information.board == "Korea_NB") board = new Board::Korea{*this}; // TODO: Some of these games work but should not have bank switching.
+  
+  
   if(!board) board = new Board::Interface{*this};
   board->pak = pak;
   board->load();
