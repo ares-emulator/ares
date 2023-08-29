@@ -1,4 +1,4 @@
-struct TaiwanB : Interface {
+struct NoMapper : Interface {
   using Interface::Interface;
   Memory::Readable<n8> rom;
   Memory::Writable<n8> ram;

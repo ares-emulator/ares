@@ -1,4 +1,4 @@
-struct TaiwanA : Interface {
+struct Ram_Adapter_8kB : Interface {
   using Interface::Interface;
   Memory::Readable<n8> rom;
   Memory::Writable<n8> ram;

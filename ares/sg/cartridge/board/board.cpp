@@ -1,8 +1,9 @@
 namespace Board {
 
 #include "linear.cpp"
-#include "taiwan-a.cpp"
-#include "taiwan-b.cpp"
+#include "ram_adapter.cpp"
+#include "no_mapper.cpp"
+#include "tvoekaki.cpp"
 
 auto Interface::load(Memory::Readable<n8>& memory, string name) -> bool {
   if(auto fp = pak->read(name)) {
