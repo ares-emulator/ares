@@ -116,8 +116,6 @@ private:
   struct IO {
     //$0060  DISP_MODE
     n1 unknown0;
-    n1 unknown1;
-    n1 unknown3;
     n3 mode;
   } io;
 
