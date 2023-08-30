@@ -396,6 +396,7 @@ auto Presentation::loadEmulators() -> void {
     }
     menu.append(item);
   }
+
   if(enabled == 0) {
     //if the user disables every system, give an indication for how to re-add systems to the load menu
     MenuItem item{&loadMenu};
@@ -408,18 +409,20 @@ auto Presentation::loadEmulators() -> void {
 
   loadMenu.append(MenuSeparator());
 
+  Group preferRegionGroup;
+  MenuRadioItem preferNTSCU{&loadMenu};
   preferNTSCU.setText("NTSC-U").onActivate([&] {
-  settings.boot.prefer = "NTSC-U";
+    settings.boot.prefer = "NTSC-U";
   });
+
+  MenuRadioItem preferNTSCJ{&loadMenu};
   preferNTSCJ.setText("NTSC-J").onActivate([&] {
     settings.boot.prefer = "NTSC-J";
   });
+  MenuRadioItem preferPAL{&loadMenu};
   preferPAL.setText("PAL").onActivate([&] {
     settings.boot.prefer = "PAL";
   });
-  if(settings.boot.prefer == "NTSC-U") preferNTSCU.setChecked();
-  if(settings.boot.prefer == "NTSC-J") preferNTSCJ.setChecked();
-  if(settings.boot.prefer == "PAL") preferPAL.setChecked();
 
   loadMenu.append(MenuSeparator());
 
