@@ -42,8 +42,8 @@ auto CPU::width(n20 address) -> u32 {
 auto CPU::speed(n20 address) -> n32 {
   switch(address >> 16) {
     case 0: return 1; // internal RAM
-    case 1: return system.color() ? 1 : 3; // SRAM
-    default: return io.cartridgeRomWait ? 3 : 1; // cartridge ROM
+    case 1: return (cpu.io.cartridgeSramWait || SoC::ASWAN()) ? 2 : 1; // SRAM
+    default: return io.cartridgeRomWait ? 2 : 1; // cartridge ROM
   }
 }
 
