@@ -66,6 +66,7 @@ struct CPU : V30MZ, Thread, IO {
     CPU& self;
 
     //dma.cpp
+    auto valid(n20 address) -> bool;
     auto transfer() -> void;
 
     n20 source;
