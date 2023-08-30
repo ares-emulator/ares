@@ -40,7 +40,7 @@ template<> auto V30MZ::write<Word>(u16 segment, u16 address, u16 data) -> void {
 }
 
 template<> auto V30MZ::in<Byte>(u16 address) -> u16 {
-  step(1);
+  step(ioSpeed(address));
   u16 data = 0;
   data |= in(address++) << 0;
   return data;
@@ -48,22 +48,22 @@ template<> auto V30MZ::in<Byte>(u16 address) -> u16 {
 
 template<> auto V30MZ::in<Word>(u16 address) -> u16 {
   u16 data = 0;
-  step(1);
+  step(ioSpeed(address));
   data |= in(address++) << 0;
-  if(!(address & 1)) step(1);
+  if(ioWidth(address) == Byte || !(address & 1)) step(ioSpeed(address));
   data |= in(address++) << 8;
   return data;
 }
 
 template<> auto V30MZ::out<Byte>(u16 address, u16 data) -> void {
-  step(1);
+  step(ioSpeed(address));
   out(address++, data >> 0);
 }
 
 template<> auto V30MZ::out<Word>(u16 address, u16 data) -> void {
-  step(1);
+  step(ioSpeed(address));
   out(address++, data >> 0);
-  if(!(address & 1)) step(1);
+  if(ioWidth(address) == Byte || !(address & 1)) step(ioSpeed(address));
   out(address++, data >> 8);
 }
 

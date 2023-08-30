@@ -55,6 +55,18 @@ auto CPU::write(n20 address, n8 data) -> void {
   return bus.write(address, data);
 }
 
+auto CPU::ioWidth(n16 port) -> u32 {
+  if(port >= 0xC0 && port <= 0xFF)
+    return Byte;
+  return Word;
+}
+
+auto CPU::ioSpeed(n16 port) -> n32 {
+  if(port >= 0xC0 && port <= 0xFF)
+    return (cpu.io.cartridgeIoWait || SoC::ASWAN()) ? 2 : 1;
+  return 1;
+}
+
 auto CPU::in(n16 port) -> n8 {
   return bus.readIO(port & 0x01ff);
 }

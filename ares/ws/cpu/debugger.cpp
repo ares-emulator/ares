@@ -73,6 +73,10 @@ auto CPU::Debugger::ports() -> string {
     output.append("Cartridge SRAM bus: 8-bit, ",
       self.io.cartridgeSramWait ? "2 cycles" : "1 cycle",
       "\n");
+
+    output.append("Cartridge I/O bus: 8-bit, ",
+      self.io.cartridgeIoWait ? "2 cycles" : "1 cycle",
+      "\n");
   }
 
   return output;

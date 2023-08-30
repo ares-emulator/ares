@@ -44,6 +44,8 @@ struct CPU : V30MZ, Thread, IO {
   auto write(n20 address, n8 data) -> void override;
   auto in(n16 port) -> n8 override;
   auto out(n16 port, n8 data) -> void override;
+  auto ioWidth(n16 port) -> u32 override;
+  auto ioSpeed(n16 port) -> n32 override;
 
   auto power() -> void;
 
@@ -88,8 +90,9 @@ struct CPU : V30MZ, Thread, IO {
   struct IO {
     n1 cartridgeEnable;
     n1 cartridgeRomWidth; // 0 = 8-bit; 1 = 16-bit
-    n1 cartridgeRomWait; // 0 = 3 cycles; 1 = 1 cycle
-    n1 cartridgeSramWait;
+    n1 cartridgeRomWait; // 0 = +0 cycles; 1 = +1 cycle
+    n1 cartridgeSramWait; // 0 = +0 cycles; 1 = +1 cycle
+    n1 cartridgeIoWait; // 0 = +0 cycles; 1 = +1 cycle
     n8 interruptBase;
     n8 interruptEnable;
     n8 interruptStatus;
