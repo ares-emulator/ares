@@ -29,17 +29,17 @@ struct CHD {
   };
 
   auto load(const string& location) -> bool;
-  auto read(u32 sector) -> vector<u8>;
+  auto read(u32 sector) const -> vector<u8>;
   auto sectorCount() const -> u32;
 
   vector<Track> tracks;
 private:
   file_buffer fp;
   chd_file* chd = nullptr;
-  const int chd_sector_size = 2352 + 96;
+  static constexpr int chd_sector_size = 2352 + 96;
   size_t chd_hunk_size;
-  vector<u8> chd_hunk_buffer;
-  int chd_current_hunk = -1;
+  mutable vector<u8> chd_hunk_buffer;
+  mutable int chd_current_hunk = -1;
 };
 
 inline CHD::~CHD() {
@@ -180,7 +180,7 @@ inline auto CHD::load(const string& location) -> bool {
   return true;
 }
 
-inline auto CHD::read(u32 sector) -> vector<u8> {
+inline auto CHD::read(u32 sector) const -> vector<u8> {
   // Convert LBA in CD-ROM to LBA in CHD
   for(auto& track : tracks) {
     for(auto& index : track.indices) {

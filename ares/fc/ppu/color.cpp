@@ -1,5 +1,5 @@
 auto PPU::color(n32 n) -> n64 {
-  f64 saturation = 2.0;
+  f64 saturation = 1.5;
   f64 hue = 0.0;
   f64 contrast = 1.0;
   f64 brightness = 1.0;
