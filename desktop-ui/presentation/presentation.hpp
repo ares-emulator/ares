@@ -12,10 +12,6 @@ struct Presentation : Window {
 
   MenuBar menuBar{this};
     Menu loadMenu{&menuBar};
-        MenuRadioItem preferNTSCU{&loadMenu};
-        MenuRadioItem preferNTSCJ{&loadMenu};
-        MenuRadioItem preferPAL{&loadMenu};
-        Group preferRegionGroup{&preferNTSCU, &preferNTSCJ, &preferPAL};
     Menu systemMenu{&menuBar};
     Menu settingsMenu{&menuBar};
       Menu videoSizeMenu{&settingsMenu};
