@@ -68,11 +68,11 @@ auto CPU::ioSpeed(n16 port) -> n32 {
 }
 
 auto CPU::in(n16 port) -> n8 {
-  return bus.readIO(port & 0x01ff);
+  return bus.readIO(port);
 }
 
 auto CPU::out(n16 port, n8 data) -> void {
-  return bus.writeIO(port & 0x01ff, data);
+  return bus.writeIO(port, data);
 }
 
 auto CPU::power() -> void {
