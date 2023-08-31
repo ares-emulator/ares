@@ -8,7 +8,7 @@ using string = ::nall::string;
 using string_view = ::nall::string_view;
 
 namespace {
-  constexpr bool GDB_LOG_MESSAGES = true;
+  constexpr bool GDB_LOG_MESSAGES = false;
 
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
   constexpr u32 MAX_PACKET_SIZE = 4096;
@@ -232,7 +232,7 @@ namespace ares::GDB {
       case 's': {
         if(cmdName.size() > 1) {
           u64 address = cmdName.slice(1).integer();
-          printf("stepping at address unsupported, ignore (%016lX)\n", address);
+          printf("stepping at address unsupported, ignore (%016llX)\n", address);
         }
 
         shouldReply = false;
@@ -380,6 +380,13 @@ namespace ares::GDB {
     }
   }
 
+  auto Server::getStatusText(u32 port, bool useIPv4) -> string {
+    auto url = getURL(port, useIPv4);
+    if(hasClient())return {"GDB connected at ", url};
+    if(isStarted())return {"GDB listening at ", url};
+    return {"GDB stopped (", url, ")"};
+  }
+
   auto Server::sendSignal(Signal code) -> void {
     sendPayload({"S", hex(static_cast<u8>(code), 2)});
   }
@@ -406,7 +413,12 @@ namespace ares::GDB {
   auto Server::onConnect() -> void {
     resetClientData();
     hasActiveClient = true;
-    //haltProgram(); // @TODO: check if NOT halting always works
+  }
+
+  auto Server::onDisonnect() -> void {
+    printf("GDB: TCP disconnected\n");
+    resumeProgram();
+    resetClientData();
   }
 
   auto Server::reset() -> void {

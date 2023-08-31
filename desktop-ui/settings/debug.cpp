@@ -58,12 +58,10 @@ auto DebugSettings::construct() -> void {
 
 auto DebugSettings::infoRefresh() -> void {
   if(settings.debugServer.enabled) {
-    string url{
-      settings.debugServer.useIPv4 ? "127.0.0.1:" : "[::1]:", 
-      integer(settings.debugServer.port)
-    };
-    connectInfo.setText({"To connect, start gdb-multiarch and run: \"target remote ", url, "\""});
-    presentation.statusDebug.setText({"GDB active at ", url});
+    connectInfo.setText({"For more information on how debug with ares: [@TODO: link]"});
+    presentation.statusDebug.setText(
+      ares::GDB::server.getStatusText(settings.debugServer.port, settings.debugServer.useIPv4)
+    );
   } else {
     connectInfo.setText("");
     presentation.statusDebug.setText("");

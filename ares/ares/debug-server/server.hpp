@@ -53,10 +53,12 @@ class Server : public nall::TCPText::Server {
     auto hasBreakpoints() const { return breakpoints.size() > 0 || singleStepActive; }
 
     auto updateLoop() -> void;
+    auto getStatusText(u32 port, bool useIPv4) -> string;
 
   protected:
     auto onText(string_view text) -> void override;
     auto onConnect() -> void override;
+    auto onDisonnect() -> void override;
 
   private:
     bool insideCommand{false};

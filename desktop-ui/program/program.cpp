@@ -54,6 +54,12 @@ auto Program::main() -> void {
   bool defocused = driverSettings.inputDefocusPause.checked() && !ruby::video.fullScreen() && !presentation.focused();
   if(emulator && defocused) message.text = "Paused";
 
+  if(settings.debugServer.enabled) {
+    presentation.statusDebug.setText(
+      ares::GDB::server.getStatusText(settings.debugServer.port, settings.debugServer.useIPv4)
+    );
+  }
+
   if(emulator && ares::GDB::server.isHalted()) {
     ruby::audio.clear();
     message.text = "Halted [GDB]";
