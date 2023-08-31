@@ -20,8 +20,7 @@ struct TVOekaki : Interface {
 	  
     switch (address) {
     case 0x8000: // Pen Pressure, Pen Position Ready
-        print("Pen Pressure, Pen Position Ready\n");
-      return (n8)1;
+      return pendown;
     case 0xA000:
         print("PTEST\n");
       return (n8)0;
@@ -52,10 +51,22 @@ struct TVOekaki : Interface {
   }
 
   auto power() -> void override {
-
+    pendown = 1;
+    penx = 1;
+    peny = 1;
   }
 
   auto serialize(serializer& s) -> void override {
     s(ram);
+    s(pendown);
+    s(penx);
+    s(peny);
   }
+  n8 pendown;
+  n8 penx;
+  n8 peny;
 };
+
+
+
+
