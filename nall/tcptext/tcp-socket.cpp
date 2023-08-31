@@ -26,7 +26,7 @@ namespace {
     if(socket < 0)return false;
     #if defined(O_NONBLOCK) // Linux
       auto oldFlags = fcntl(socket, F_GETFL, 0);
-      auto newFlags = isBlocking ? (oldFlags ^ O_NONBLOCK) : (flags | O_NONBLOCK));
+      auto newFlags = isBlocking ? (oldFlags ^ O_NONBLOCK) : (oldFlags | O_NONBLOCK);
       printf("TCP: set socket (linux) to blocking=%d\n", isBlocking ? 1 : 0);
       return fcntl(socket, F_SETFL, newFlags) == 0;
     #elif defined(FIONBIO) // Windows
