@@ -122,6 +122,10 @@ auto System::initDebugHooks() -> void {
     "</target>";
   };
 
+  GDB::server.hooks.normalizeAddress = [](u64 address) -> u64 {
+    return address & 0x0000'0000'0FFF'FFFF;
+  };
+
   GDB::server.hooks.read = [](u64 address, u32 unitCount) -> string {
     address |= 0xFFFFFFFF'00000000ull; // @TODO: check why?
 
@@ -207,6 +211,7 @@ auto System::initDebugHooks() -> void {
       return true;
     }
 
+    if(regIdx == 71)return true; // ignore, GDB wants this register even though it doesn't exist
     return false;
   };
 

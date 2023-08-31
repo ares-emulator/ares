@@ -20,6 +20,15 @@ namespace {
     for(char c : payload)checksum += c;
     return checksum;
   }
+
+  template<typename T>
+  inline auto addOrRemoveEntry(vector<T> &data, T value, bool shouldAdd) {
+    if(shouldAdd) {
+      data.append(value);
+    } else {
+      data.removeByValue(value);
+    }
+  }
 }
 
 namespace ares::GDB {
@@ -37,6 +46,35 @@ namespace ares::GDB {
     sendSignal(sig);
 
     return true;
+  }
+
+  auto Server::reportMemRead(u64 address, u32 size) -> void {
+    if(!watchpointRead)return;
+    
+    u64 addressEnd = address + size - 1;
+    for(const auto& wp : watchpointRead) {
+      if(wp.hasOverlap(address, addressEnd)) {
+        printf("READ @ %016lX (s: %d)\n", address, size);   
+        forceHalt = true;
+        haltSignalSent = true;
+        sendSignal(Signal::TRAP, {"rwatch:", hex(address), ";"});
+      }
+    }
+  }
+
+  auto Server::reportMemWrite(u64 address, u32 size) -> void {
+    if(!watchpointWrite)return;
+
+    u64 addressEnd = address + size - 1;
+    for(const auto& wp : watchpointWrite) {
+      if(wp.hasOverlap(address, addressEnd)) {
+        printf("WRITE @ %016lX - %016lX vs %016lX - %016lX \n", address, addressEnd, wp.addressStart, wp.addressEnd);
+        forceHalt = true;
+        haltSignalSent = true;
+        sendSignal(Signal::TRAP, {"watch:", hex(address | 0x8000'0000), ";"});
+        return;
+      }
+    }
   }
 
   auto Server::updatePC(u64 pc) -> bool {
@@ -275,12 +313,37 @@ namespace ares::GDB {
         u32 sepIdx = sepIdxMaybe ? (sepIdxMaybe.get()+3) : 0;
 
         u64 address = cmdName.slice(3, sepIdx-1).hex();
-        u32 kind = cmdName.slice(sepIdx+1, 1).integer();
-        
-        if(isInsert) {
-          breakpoints.append(address);
-        } else {
-          breakpoints.removeByValue(address);
+        u64 addressEnd = address + cmdName.slice(sepIdx+1).hex() - 1;
+
+        switch(cmdName[1]) {
+          case '0': // (hardware/software breakpoints are the same for us)
+          case '1': addOrRemoveEntry(breakpoints,     address, isInsert); break;
+          
+          case '2':  // watchpoint (write)
+            if(hooks.normalizeAddress) {
+              address = hooks.normalizeAddress(address);
+              addressEnd = hooks.normalizeAddress(addressEnd);
+            }
+            addOrRemoveEntry(watchpointWrite, {address, addressEnd}, isInsert); 
+            break;
+
+          case '3': // watchpoint (read)
+            if(hooks.normalizeAddress) {
+              address = hooks.normalizeAddress(address);
+              addressEnd = hooks.normalizeAddress(addressEnd);
+            }
+            addOrRemoveEntry(watchpointRead,  {address, addressEnd}, isInsert); 
+            break;
+
+          case '4': // watchpoint (access)
+            if(hooks.normalizeAddress) {
+              address = hooks.normalizeAddress(address);
+              addressEnd = hooks.normalizeAddress(addressEnd);
+            }
+            addOrRemoveEntry(watchpointRead,  {address, addressEnd}, isInsert); 
+            addOrRemoveEntry(watchpointWrite, {address, addressEnd}, isInsert); 
+            break;
+          default: return "E00";
         }
 
         if(hooks.emuCacheInvalidate) { // for re-compiler, otherwise breaks might be skipped
@@ -392,6 +455,10 @@ namespace ares::GDB {
     sendPayload({"S", hex(static_cast<u8>(code), 2)});
   }
 
+  auto Server::sendSignal(Signal code, const string& reason) -> void {
+    sendPayload({"T", hex(static_cast<u8>(code), 2), reason});
+  }
+
   auto Server::sendPayload(const string& payload) -> void {
     string msg{"+$", payload, '#', hex(gdbCalcChecksum(payload), 2, '0')};
     if constexpr(GDB_LOG_MESSAGES) {
@@ -425,6 +492,7 @@ namespace ares::GDB {
   auto Server::reset() -> void {
     hooks.read.reset();
     hooks.write.reset();
+    hooks.normalizeAddress.reset();
     hooks.regReadGeneral.reset();
     hooks.regWriteGeneral.reset();
     hooks.regRead.reset();
@@ -438,6 +506,12 @@ namespace ares::GDB {
   auto Server::resetClientData() -> void {
     breakpoints.reset();
     breakpoints.reserve(DEF_BREAKPOINT_SIZE);
+
+    watchpointRead.reset();
+    watchpointRead.reserve(DEF_BREAKPOINT_SIZE);
+
+    watchpointWrite.reset();
+    watchpointWrite.reserve(DEF_BREAKPOINT_SIZE);
 
     insideCommand = false;
     cmdBuffer = "";

@@ -27,6 +27,7 @@ class Server : public nall::TCPText::Server {
       // Memory
       function<string(u64 address, u32 unitCount)> read{};
       function<void(u64 address, u32 unitSize, u64 value)> write{};
+      function<u64(u64 address)> normalizeAddress{};
 
       // Registers
       function<string()> regReadGeneral{};
@@ -47,10 +48,14 @@ class Server : public nall::TCPText::Server {
       return inException ? maybe<u64>{exceptionPC} : nothing;
     };
 
-    // Breakpoints
+    // Breakpoints / Watchpoints
     auto updatePC(u64 pc) -> bool;
     auto isHalted() const { return forceHalt && haltSignalSent; }
-    auto hasBreakpoints() const { return breakpoints.size() > 0 || singleStepActive; }
+    auto hasBreakpoints() const { 
+      return breakpoints || singleStepActive || watchpointRead || watchpointWrite;
+    }
+    auto reportMemRead(u64 address, u32 size) -> void;
+    auto reportMemWrite(u64 address, u32 size) -> void;
 
     auto updateLoop() -> void;
     auto getStatusText(u32 port, bool useIPv4) -> string;
@@ -61,6 +66,18 @@ class Server : public nall::TCPText::Server {
     auto onDisonnect() -> void override;
 
   private:
+    struct Watchpoint {
+      u64 addressStart{0};
+      u64 addressEnd{0}; // including end!
+      auto operator==(const Watchpoint& w) const {
+        return addressStart == w.addressStart && addressEnd == w.addressEnd;
+      }
+
+      auto hasOverlap(u64 start, u64 end) const {
+        return (end >= addressStart) && (start <= addressEnd);
+      }
+    };
+
     bool insideCommand{false};
     string cmdBuffer{""};
 
@@ -81,12 +98,15 @@ class Server : public nall::TCPText::Server {
 
     // client-state:
     vector<u64> breakpoints{}; // prefer vector for data-locality
+    vector<Watchpoint> watchpointRead{};
+    vector<Watchpoint> watchpointWrite{};
 
     auto processCommand(const string& cmd, bool &shouldReply) -> string;
     auto resetClientData() -> void;
 
     auto sendPayload(const string& payload) -> void;
-    auto sendSignal(Signal sig) -> void;
+    auto sendSignal(Signal code) -> void;
+    auto sendSignal(Signal code, const string& reason) -> void;
 
     auto haltProgram() -> void;
     auto resumeProgram() -> void;

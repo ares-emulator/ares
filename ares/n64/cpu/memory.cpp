@@ -142,6 +142,7 @@ auto CPU::devirtualizeFast(u64 vaddr) -> u64 {
 
 template<u32 Size>
 inline auto CPU::busWrite(u32 address, u64 data) -> void {
+  GDB::server.reportMemWrite(address, Size);
   bus.write<Size>(address, data, *this);
 }
 
