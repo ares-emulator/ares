@@ -62,7 +62,6 @@ auto Program::main() -> void {
 
   if(emulator && ares::GDB::server.isHalted()) {
     ruby::audio.clear();
-    message.text = "Halted [GDB]";
     ares::GDB::server.updateLoop(); // sleeps internally
     return;
   }

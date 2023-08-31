@@ -382,9 +382,10 @@ namespace ares::GDB {
 
   auto Server::getStatusText(u32 port, bool useIPv4) -> string {
     auto url = getURL(port, useIPv4);
-    if(hasClient())return {"GDB connected at ", url};
-    if(isStarted())return {"GDB listening at ", url};
-    return {"GDB stopped (", url, ")"};
+    string prefix = isHalted() ? "⬛" : "▶";
+    if(hasClient())return {prefix, " GDB connected ", url};
+    if(isStarted())return {prefix, " GDB listening ", url};
+    return {"GDB pending (", url, ")"};
   }
 
   auto Server::sendSignal(Signal code) -> void {
