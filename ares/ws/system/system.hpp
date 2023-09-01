@@ -80,12 +80,6 @@ struct System : IO {
   auto memory() const -> u32 { return io.mode.bit(2) == 0 ? 16_KiB : 64_KiB; }
   auto color() const -> bool { return io.mode.bit(2) != 0; }
 
-  //mode:
-  //0xx => 2bpp, mono, planar tiledata (WSC enhancements locked)
-  //10x => 2bpp, color, planar tiledata (WSC enhancements unlocked)
-  //110 => 4bpp, color, planar tiledata
-  //111 => 4bpp, color, packed tiledata
-
   //system.cpp
   auto game() -> string;
   auto run() -> void;
@@ -114,8 +108,10 @@ struct System : IO {
 
 private:
   struct IO {
-    //$0060  DISP_MODE
-    n1 unknown0;
+    //0xx => 2bpp, mono, planar tiledata (WSC enhancements locked)
+    //10x => 2bpp, color, planar tiledata (WSC enhancements unlocked)
+    //110 => 4bpp, color, planar tiledata
+    //111 => 4bpp, color, packed tiledata
     n3 mode;
   } io;
 

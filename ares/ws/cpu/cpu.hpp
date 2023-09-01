@@ -92,6 +92,7 @@ struct CPU : V30MZ, Thread, IO {
     n1 cartridgeEnable;
     n1 cartridgeRomWidth; // 0 = 8-bit; 1 = 16-bit
     n1 cartridgeRomWait; // 0 = +0 cycles; 1 = +1 cycle
+    n1 cartridgeClock;
     n1 cartridgeSramWait; // 0 = +0 cycles; 1 = +1 cycle
     n1 cartridgeIoWait; // 0 = +0 cycles; 1 = +1 cycle
     n8 interruptBase;
