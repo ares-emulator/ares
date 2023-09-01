@@ -22,7 +22,7 @@ auto APU::DMA::serialize(serializer& s) -> void {
   s(io.source);
   s(io.length);
   s(io.rate);
-  s(io.unknown);
+  s(io.hold);
   s(io.loop);
   s(io.target);
   s(io.direction);
