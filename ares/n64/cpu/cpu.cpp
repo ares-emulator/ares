@@ -31,7 +31,7 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  while(!vi.refreshed && GDB::server.updatePC(ipu.pc & 0xFFFFFFFF)) {
+  while(!vi.refreshed && GDB::server.reportPC(ipu.pc & 0xFFFFFFFF)) {
     instruction();
     synchronize();
   }

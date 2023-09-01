@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nall/tcptext/tcptext-server.hpp>
+#include <ares/ares/debug-server/watchpoint.hpp>
 
 namespace ares::GDB {
 
@@ -44,16 +45,19 @@ class Server : public nall::TCPText::Server {
 
     // Exception
     auto reportSignal(Signal sig, u64 originPC) -> bool;
-    auto getPcOverride() const { return pcOverride; };
+
+    // PC / Memory State Updates
+    auto reportPC(u64 pc) -> bool;
+    auto reportMemRead(u64 address, u32 size) -> void;
+    auto reportMemWrite(u64 address, u32 size) -> void;
 
     // Breakpoints / Watchpoints
-    auto updatePC(u64 pc) -> bool;
     auto isHalted() const { return forceHalt && haltSignalSent; }
     auto hasBreakpoints() const { 
       return breakpoints || singleStepActive || watchpointRead || watchpointWrite;
     }
-    auto reportMemRead(u64 address, u32 size) -> void;
-    auto reportMemWrite(u64 address, u32 size) -> void;
+    
+    auto getPcOverride() const { return pcOverride; };
 
     auto updateLoop() -> void;
     auto getStatusText(u32 port, bool useIPv4) -> string;
@@ -64,20 +68,6 @@ class Server : public nall::TCPText::Server {
     auto onDisonnect() -> void override;
 
   private:
-    struct Watchpoint {
-      u64 addressStart{0};
-      u64 addressEnd{0}; // including end!
-      u64 addressStartOrg{0}; // un-normalized address, GDB needs this
-
-      auto operator==(const Watchpoint& w) const {
-        return addressStart == w.addressStart && addressEnd == w.addressEnd;
-      }
-
-      auto hasOverlap(u64 start, u64 end) const {
-        return (end >= addressStart) && (start <= addressEnd);
-      }
-    };
-
     bool insideCommand{false};
     string cmdBuffer{""};
 
@@ -93,6 +83,7 @@ class Server : public nall::TCPText::Server {
     u32 messageCount{0}; // message count per update loop
     s32 currentThreadC{-1}; // selected thread for the next 'c' command
 
+    u64 currentPC{0};
     maybe<u64> pcOverride{0}; // temporary override to handle edge-cases for exceptions/watchpoints
 
     // client-state:
@@ -103,7 +94,7 @@ class Server : public nall::TCPText::Server {
     auto processCommand(const string& cmd, bool &shouldReply) -> string;
     auto resetClientData() -> void;
 
-    auto reportWatchpoint(const Watchpoint &wp, u64 address, bool isWrite) -> void;
+    auto reportWatchpoint(const Watchpoint &wp, u64 address) -> void;
 
     auto sendPayload(const string& payload) -> void;
     auto sendSignal(Signal code) -> void;

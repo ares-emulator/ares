@@ -47,15 +47,12 @@ namespace ares::GDB {
     return true;
   }
 
-  auto Server::reportWatchpoint(const Watchpoint &wp, u64 address, bool isWrite) -> void {
+  auto Server::reportWatchpoint(const Watchpoint &wp, u64 address) -> void {
     auto orgAddress = wp.addressStartOrg + (address - wp.addressStart);
     forceHalt = true;
     haltSignalSent = true;
-
-    sendSignal(Signal::TRAP, {
-      (isWrite ? "watch:" : "rwatch:"), 
-      hex(orgAddress), ";"
-    });
+    // pcOverride = currentPC; // @TODO: check why this wont stop GDB in all cases
+    sendSignal(Signal::TRAP, {wp.getTypePrefix(), hex(orgAddress), ";"});
   }
 
   auto Server::reportMemRead(u64 address, u32 size) -> void {
@@ -64,7 +61,7 @@ namespace ares::GDB {
     u64 addressEnd = address + size - 1;
     for(const auto& wp : watchpointRead) {
       if(wp.hasOverlap(address, addressEnd)) {
-        return reportWatchpoint(wp, address, false);
+        return reportWatchpoint(wp, address);
       }
     }
   }
@@ -75,14 +72,15 @@ namespace ares::GDB {
     u64 addressEnd = address + size - 1;
     for(const auto& wp : watchpointWrite) {
       if(wp.hasOverlap(address, addressEnd)) {
-        return reportWatchpoint(wp, address, true);
+        return reportWatchpoint(wp, address);
       }
     }
   }
 
-  auto Server::updatePC(u64 pc) -> bool {
+  auto Server::reportPC(u64 pc) -> bool {
     if(!hasActiveClient)return true;
 
+    currentPC = pc;
     bool needHalts = forceHalt || breakpoints.contains(pc);
 
     if(needHalts) {
@@ -329,11 +327,19 @@ namespace ares::GDB {
           case '0': // (hardware/software breakpoints are the same for us)
           case '1': addOrRemoveEntry(breakpoints, address, isInsert); break;
           
-          case '2': addOrRemoveEntry(watchpointWrite, wp, isInsert); break;
-          case '3': addOrRemoveEntry(watchpointRead, wp, isInsert); break;
+          case '2':
+            wp.type = WatchpointType::WRITE;
+            addOrRemoveEntry(watchpointWrite, wp, isInsert); 
+            break;
+
+          case '3': 
+            wp.type = WatchpointType::READ;
+            addOrRemoveEntry(watchpointRead, wp, isInsert); 
+            break;
 
           case '4': // watchpoint (access)
-            //addOrRemoveEntry(watchpointRead,  wp, isInsert); 
+            wp.type = WatchpointType::ACCESS;
+            addOrRemoveEntry(watchpointRead,  wp, isInsert); 
             addOrRemoveEntry(watchpointWrite, wp, isInsert); 
             break;
           default: return "E00";
