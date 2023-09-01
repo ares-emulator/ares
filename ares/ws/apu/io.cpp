@@ -5,12 +5,12 @@ auto APU::readIO(n16 address) -> n8 {
 
   case range3(0x004a, 0x004c):  //SDMA_SRC
     if(!system.color()) break;
-    data = dma.state.source.byte(address - 0x004a);
+    data = dma.io.source.byte(address - 0x004a);
     break;
 
   case range3(0x004e, 0x0050):  //SDMA_LEN
     if(!system.color()) break;
-    data = dma.state.length.byte(address - 0x004e);
+    data = dma.io.length.byte(address - 0x004e);
     break;
 
   case 0x0052:  //SDMA_CTRL
