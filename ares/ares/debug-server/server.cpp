@@ -38,8 +38,7 @@ namespace ares::GDB {
     if(!hasActiveClient || !handshakeDone)return true; // no client -> no error
     if(forceHalt)return false; // Signals can only happen while the game is running, ignore others
 
-    inException = true;
-    exceptionPC = originPC;
+    pcOverride = originPC;
 
     forceHalt = true;
     haltSignalSent = true;
@@ -463,7 +462,7 @@ namespace ares::GDB {
   }
 
   auto Server::resumeProgram() -> void {
-    inException = false;
+    pcOverride.reset();
     forceHalt = false;
     haltSignalSent = false;
   }
@@ -504,7 +503,7 @@ namespace ares::GDB {
     watchpointWrite.reset();
     watchpointWrite.reserve(DEF_BREAKPOINT_SIZE);
 
-    inException = false;
+    pcOverride.reset();
     insideCommand = false;
     cmdBuffer = "";
     haltSignalSent = false;

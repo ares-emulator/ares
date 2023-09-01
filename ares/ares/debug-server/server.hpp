@@ -44,9 +44,7 @@ class Server : public nall::TCPText::Server {
 
     // Exception
     auto reportSignal(Signal sig, u64 originPC) -> bool;
-    auto getPcOverride() -> maybe<u64> {
-      return inException ? maybe<u64>{exceptionPC} : nothing;
-    };
+    auto getPcOverride() const { return pcOverride; };
 
     // Breakpoints / Watchpoints
     auto updatePC(u64 pc) -> bool;
@@ -95,8 +93,7 @@ class Server : public nall::TCPText::Server {
     u32 messageCount{0}; // message count per update loop
     s32 currentThreadC{-1}; // selected thread for the next 'c' command
 
-    bool inException{false};
-    u64 exceptionPC{0};
+    maybe<u64> pcOverride{0}; // temporary override to handle edge-cases for exceptions/watchpoints
 
     // client-state:
     vector<u64> breakpoints{}; // prefer vector for data-locality
