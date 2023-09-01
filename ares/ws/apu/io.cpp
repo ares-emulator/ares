@@ -16,7 +16,7 @@ auto APU::readIO(n16 address) -> n8 {
   case 0x0052:  //SDMA_CTRL
     if(!system.color()) break;
     data.bit(0,1) = dma.io.rate;
-    data.bit(2)   = dma.io.unknown;
+    data.bit(2)   = dma.io.hold;
     data.bit(3)   = dma.io.loop;
     data.bit(4)   = dma.io.target;
     data.bit(6)   = dma.io.direction;
@@ -153,7 +153,7 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     if(!system.color()) break;
     bool trigger = !dma.io.enable && data.bit(7);
     dma.io.rate      = data.bit(0,1);
-    dma.io.unknown   = data.bit(2);
+    dma.io.hold      = data.bit(2);
     dma.io.loop      = data.bit(3);
     dma.io.target    = data.bit(4);
     dma.io.direction = data.bit(6);

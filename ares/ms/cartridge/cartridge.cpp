@@ -22,9 +22,19 @@ auto Cartridge::connect() -> void {
   if(information.board == "Sega") board = new Board::Sega{*this};
   if(information.board == "Codemasters") board = new Board::Codemasters{*this};
   if(information.board == "Korea") board = new Board::Korea{*this};
-  if(information.board == "MSX") board = new Board::MSX{*this, 0};
-  if(information.board == "MSX#A") board = new Board::MSX{*this, 1};
+  if(information.board == "Zemina") board = new Board::Zemina{*this, 0}; // Zemina made games
+  if(information.board == "Zemina_Nemesis") board = new Board::Zemina{*this, 1}; // Zemina's Nemesis port only
   if(information.board == "Janggun") board = new Board::Janggun{*this};
+  if(information.board == "Hicom") board = new Board::Hicom{*this};
+  if(information.board == "pak4") board = new Board::Pak4{*this}; // 4 PAK All Action (Australia)
+  if(information.board == "Hap2000") board = new Board::Hap2000{*this}; // 2 Hap in 1 - David-2 ~ Moai-ui bomul (KR)
+  if(information.board == "K188in1") board = new Board::K188in1{*this}; // Korean 188 in 1
+  
+  // WIP
+  
+  if(information.board == "Korea_NB") board = new Board::Korea{*this}; // TODO: Some of these games work but should not have bank switching.
+  
+  
   if(!board) board = new Board::Interface{*this};
   board->pak = pak;
   board->load();
