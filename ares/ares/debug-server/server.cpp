@@ -48,16 +48,24 @@ namespace ares::GDB {
     return true;
   }
 
+  auto Server::reportWatchpoint(const Watchpoint &wp, u64 address, bool isWrite) -> void {
+    auto orgAddress = wp.addressStartOrg + (address - wp.addressStart);
+    forceHalt = true;
+    haltSignalSent = true;
+
+    sendSignal(Signal::TRAP, {
+      (isWrite ? "watch:" : "rwatch:"), 
+      hex(orgAddress), ";"
+    });
+  }
+
   auto Server::reportMemRead(u64 address, u32 size) -> void {
     if(!watchpointRead)return;
     
     u64 addressEnd = address + size - 1;
     for(const auto& wp : watchpointRead) {
       if(wp.hasOverlap(address, addressEnd)) {
-        printf("READ @ %016lX (s: %d)\n", address, size);   
-        forceHalt = true;
-        haltSignalSent = true;
-        sendSignal(Signal::TRAP, {"rwatch:", hex(address), ";"});
+        return reportWatchpoint(wp, address, false);
       }
     }
   }
@@ -68,11 +76,7 @@ namespace ares::GDB {
     u64 addressEnd = address + size - 1;
     for(const auto& wp : watchpointWrite) {
       if(wp.hasOverlap(address, addressEnd)) {
-        printf("WRITE @ %016lX - %016lX vs %016lX - %016lX \n", address, addressEnd, wp.addressStart, wp.addressEnd);
-        forceHalt = true;
-        haltSignalSent = true;
-        sendSignal(Signal::TRAP, {"watch:", hex(address | 0x8000'0000), ";"});
-        return;
+        return reportWatchpoint(wp, address, true);
       }
     }
   }
@@ -313,35 +317,25 @@ namespace ares::GDB {
         u32 sepIdx = sepIdxMaybe ? (sepIdxMaybe.get()+3) : 0;
 
         u64 address = cmdName.slice(3, sepIdx-1).hex();
+        u64 addressStart = address;
         u64 addressEnd = address + cmdName.slice(sepIdx+1).hex() - 1;
+
+        if(hooks.normalizeAddress) {
+          addressStart = hooks.normalizeAddress(addressStart);
+          addressEnd = hooks.normalizeAddress(addressEnd);
+        }
+        Watchpoint wp{addressStart, addressEnd, address};
 
         switch(cmdName[1]) {
           case '0': // (hardware/software breakpoints are the same for us)
-          case '1': addOrRemoveEntry(breakpoints,     address, isInsert); break;
+          case '1': addOrRemoveEntry(breakpoints, address, isInsert); break;
           
-          case '2':  // watchpoint (write)
-            if(hooks.normalizeAddress) {
-              address = hooks.normalizeAddress(address);
-              addressEnd = hooks.normalizeAddress(addressEnd);
-            }
-            addOrRemoveEntry(watchpointWrite, {address, addressEnd}, isInsert); 
-            break;
-
-          case '3': // watchpoint (read)
-            if(hooks.normalizeAddress) {
-              address = hooks.normalizeAddress(address);
-              addressEnd = hooks.normalizeAddress(addressEnd);
-            }
-            addOrRemoveEntry(watchpointRead,  {address, addressEnd}, isInsert); 
-            break;
+          case '2': addOrRemoveEntry(watchpointWrite, wp, isInsert); break;
+          case '3': addOrRemoveEntry(watchpointRead, wp, isInsert); break;
 
           case '4': // watchpoint (access)
-            if(hooks.normalizeAddress) {
-              address = hooks.normalizeAddress(address);
-              addressEnd = hooks.normalizeAddress(addressEnd);
-            }
-            addOrRemoveEntry(watchpointRead,  {address, addressEnd}, isInsert); 
-            addOrRemoveEntry(watchpointWrite, {address, addressEnd}, isInsert); 
+            //addOrRemoveEntry(watchpointRead,  wp, isInsert); 
+            addOrRemoveEntry(watchpointWrite, wp, isInsert); 
             break;
           default: return "E00";
         }
@@ -390,7 +384,7 @@ namespace ares::GDB {
 
         case '\x03': // CTRL+C (same as "vCtrlC" packet) -> force halt
           if constexpr(GDB_LOG_MESSAGES) {
-            printf("GDB <: CTRL+C [0x03]");
+            printf("GDB <: CTRL+C [0x03]\n");
           }
           haltProgram();
           break;
@@ -404,7 +398,8 @@ namespace ares::GDB {
   }
 
   auto Server::updateLoop() -> void {
-    //if(!hasActiveClient)return;
+    if(!isStarted())return;
+
     if(requestDisconnect) {
       requestDisconnect = false;
       printf("GDB ending session, disconnecting client\n");
@@ -414,40 +409,35 @@ namespace ares::GDB {
       return;
     }
 
-    // @TODO: refactor
-    constexpr u32 LOOP_COUNT = 100;
-    constexpr u32 LOOP_COUNT_HALT = 100;
+    u32 loopFrames = isHalted() ? 20 : 1; // "frames" to check (loops with sleep in-between)
+    u32 loopCount = isHalted() ? 500 : 100; // loops inside a frame, the more the less latency, but CPU goes up
+    u32 maxLoopResets = 10000; // how many times can a new message reset the counter (prevents infinite loops with misbehaving clients)
+    bool wasHalted = isHalted();
 
-    if(isHalted()) 
-    {
-      for(u32 frame=0; frame<10; ++frame) {
-        for(u32 i=0; i<LOOP_COUNT_HALT; ++i) {
-          messageCount = 0;
-          update();
-          if(!isHalted())return;
-          if(messageCount > 0) {
-            i = LOOP_COUNT_HALT;
-          }
+    for(u32 frame=0; frame<loopFrames; ++frame) {
+      for(u32 i=0; i<loopCount; ++i) {
+        messageCount = 0;
+        update();
+
+        // if the last message resumed the program, abort (no more messages will be send until the next stop)
+        if(wasHalted && !isHalted())return;
+
+        if(messageCount > 0 && maxLoopResets > 0) {
+          i = loopCount; // reset loop here to keep a fast chain of messages going (reduces latency)
+          --maxLoopResets;
         }
-        usleep(1);
       }
-      return;
-    }
-
-    for(u32 i=0; i<LOOP_COUNT; ++i) {
-      messageCount = 0;
-      update();
-      if(messageCount > 0) {
-        i = LOOP_COUNT;
-      }
+      
+      if(wasHalted)usleep(1);
     }
   }
 
   auto Server::getStatusText(u32 port, bool useIPv4) -> string {
     auto url = getURL(port, useIPv4);
     string prefix = isHalted() ? "⬛" : "▶";
+
     if(hasClient())return {prefix, " GDB connected ", url};
-    if(isStarted())return {prefix, " GDB listening ", url};
+    if(isStarted())return {"GDB listening ", url};
     return {"GDB pending (", url, ")"};
   }
 
@@ -479,13 +469,14 @@ namespace ares::GDB {
   }
 
   auto Server::onConnect() -> void {
+    printf("GDB: TCP connect\n");
     resetClientData();
     hasActiveClient = true;
   }
 
   auto Server::onDisonnect() -> void {
     printf("GDB: TCP disconnected\n");
-    resumeProgram();
+    hadHandshake = false;
     resetClientData();
   }
 
@@ -513,6 +504,7 @@ namespace ares::GDB {
     watchpointWrite.reset();
     watchpointWrite.reserve(DEF_BREAKPOINT_SIZE);
 
+    inException = false;
     insideCommand = false;
     cmdBuffer = "";
     haltSignalSent = false;

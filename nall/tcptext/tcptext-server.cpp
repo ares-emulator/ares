@@ -14,9 +14,6 @@ namespace nall::TCPText {
           "Content-Length: "};
       res.append(text.size(), "\r\n\r\n", text);
       sendData((const u8*)res.data(), res.size());
-
-      //disconnectClient();
-      //hadHandshake = false;
     } else {
       sendData((const u8*)text.data(), text.size());
     }

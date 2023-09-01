@@ -113,7 +113,6 @@ auto CPU::DataCache::readDebug(u32 vaddr, u32 address) -> u8 {
 template<u32 Size>
 auto CPU::DataCache::write(u32 vaddr, u32 address, u64 data) -> void {
   auto& line = this->line(vaddr);
-  GDB::server.reportMemWrite(address, Size);
   if(!line.hit(address)) {
     if(line.valid && line.dirty) line.writeBack();
     return line.fill<Size>(address, data);

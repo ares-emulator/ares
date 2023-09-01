@@ -69,6 +69,8 @@ class Server : public nall::TCPText::Server {
     struct Watchpoint {
       u64 addressStart{0};
       u64 addressEnd{0}; // including end!
+      u64 addressStartOrg{0}; // un-normalized address, GDB needs this
+
       auto operator==(const Watchpoint& w) const {
         return addressStart == w.addressStart && addressEnd == w.addressEnd;
       }
@@ -103,6 +105,8 @@ class Server : public nall::TCPText::Server {
 
     auto processCommand(const string& cmd, bool &shouldReply) -> string;
     auto resetClientData() -> void;
+
+    auto reportWatchpoint(const Watchpoint &wp, u64 address, bool isWrite) -> void;
 
     auto sendPayload(const string& payload) -> void;
     auto sendSignal(Signal code) -> void;
