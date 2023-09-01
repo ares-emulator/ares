@@ -83,6 +83,7 @@ auto APU::Debugger::ports() -> string {
       self.dma.io.loop ? "repeat" : "one-shot", ", ",
       self.dma.io.target ? "Hyper Voice" : "Channel 2", ", ",
       self.dma.io.direction ? "reverse" : "forward",
+      self.dma.io.hold ? ", held" : "",
       "\n");
     output.append("Sound DMA Rate: ");
     if(self.dma.io.rate == 0) output.append("4000 Hz\n");

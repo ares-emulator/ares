@@ -7,9 +7,12 @@ auto APU::DMA::run() -> void {
   //24000hz runs always
   state.clock = 0;
 
-  n8 data = bus.read(state.source);
-  if(io.direction == 0) state.source++;
-  if(io.direction == 1) state.source--;
+  n8 data = 0x00;
+  if(!io.hold) {
+    data = bus.read(state.source);
+    if(io.direction == 0) state.source++;
+    if(io.direction == 1) state.source--;
+  }
 
   if(io.target == 0) {
     apu.channel2.io.volumeRight = data.bit(0,3);
@@ -18,6 +21,7 @@ auto APU::DMA::run() -> void {
     apu.channel5.state.data = data;
   }
 
+  if(io.hold) return;
   if(--state.length) return;
 
   if(io.loop) {
