@@ -142,11 +142,13 @@ auto APU::writeIO(n16 address, n8 data) -> void {
   case range3(0x004a, 0x004c):  //SDMA_SRC
     if(!system.color()) break;
     dma.io.source.byte(address - 0x004a) = data;
+    dma.state.source.byte(address - 0x004a) = data;
     break;
 
   case range3(0x004e, 0x0050):  //SDMA_LEN
     if(!system.color()) break;
     dma.io.length.byte(address - 0x004e) = data;
+    dma.state.length.byte(address - 0x004e) = data;
     break;
 
   case 0x0052: {  //SDMA_CTRL
@@ -158,10 +160,6 @@ auto APU::writeIO(n16 address, n8 data) -> void {
     dma.io.target    = data.bit(4);
     dma.io.direction = data.bit(6);
     dma.io.enable    = data.bit(7);
-    if(trigger) {
-      dma.state.source = dma.io.source;
-      dma.state.length = dma.io.length;
-    }
   } break;
 
   case 0x006a:  //SND_HYPER_CTRL
