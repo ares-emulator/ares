@@ -5,18 +5,18 @@ auto APU::readIO(n16 address) -> n8 {
 
   case range3(0x004a, 0x004c):  //SDMA_SRC
     if(!system.color()) break;
-    data = dma.state.source.byte(address - 0x004a);
+    data = dma.io.source.byte(address - 0x004a);
     break;
 
   case range3(0x004e, 0x0050):  //SDMA_LEN
     if(!system.color()) break;
-    data = dma.state.length.byte(address - 0x004e);
+    data = dma.io.length.byte(address - 0x004e);
     break;
 
   case 0x0052:  //SDMA_CTRL
     if(!system.color()) break;
     data.bit(0,1) = dma.io.rate;
-    data.bit(2)   = dma.io.unknown;
+    data.bit(2)   = dma.io.hold;
     data.bit(3)   = dma.io.loop;
     data.bit(4)   = dma.io.target;
     data.bit(6)   = dma.io.direction;
@@ -142,26 +142,24 @@ auto APU::writeIO(n16 address, n8 data) -> void {
   case range3(0x004a, 0x004c):  //SDMA_SRC
     if(!system.color()) break;
     dma.io.source.byte(address - 0x004a) = data;
+    dma.state.source.byte(address - 0x004a) = data;
     break;
 
   case range3(0x004e, 0x0050):  //SDMA_LEN
     if(!system.color()) break;
     dma.io.length.byte(address - 0x004e) = data;
+    dma.state.length.byte(address - 0x004e) = data;
     break;
 
   case 0x0052: {  //SDMA_CTRL
     if(!system.color()) break;
     bool trigger = !dma.io.enable && data.bit(7);
     dma.io.rate      = data.bit(0,1);
-    dma.io.unknown   = data.bit(2);
+    dma.io.hold      = data.bit(2);
     dma.io.loop      = data.bit(3);
     dma.io.target    = data.bit(4);
     dma.io.direction = data.bit(6);
     dma.io.enable    = data.bit(7);
-    if(trigger) {
-      dma.state.source = dma.io.source;
-      dma.state.length = dma.io.length;
-    }
   } break;
 
   case 0x006a:  //SND_HYPER_CTRL
