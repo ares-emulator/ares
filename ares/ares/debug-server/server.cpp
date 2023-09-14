@@ -271,7 +271,7 @@ namespace ares::GDB {
       case 's': {
         if(cmdName.size() > 1) {
           u64 address = cmdName.slice(1).integer();
-          printf("stepping at address unsupported, ignore (%016llX)\n", address);
+          printf("stepping at address unsupported, ignore (%016lX)\n", address);
         }
 
         shouldReply = false;
