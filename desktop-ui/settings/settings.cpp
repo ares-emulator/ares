@@ -112,7 +112,6 @@ auto Settings::process(bool load) -> void {
   bind(string,  "Paths/SuperFamicom/SufamiTurbo", paths.superFamicom.sufamiTurbo);
 
   bind(natural, "DebugServer/Port", debugServer.port);
-  bind(string,  "DebugServer/Token", debugServer.token);
   bind(boolean, "DebugServer/Enabled", debugServer.enabled);
   bind(boolean, "DebugServer/UseIPv4", debugServer.useIPv4);
 

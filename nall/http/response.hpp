@@ -27,9 +27,6 @@ struct Response : Message {
   auto responseType() const -> u32 { return _responseType; }
   auto setResponseType(u32 value) -> type& { _responseType = value; return *this; }
 
-  auto allowCORS() const -> bool { return _allowCORS; }
-  auto setAllowCORS(bool value) -> type& { _allowCORS = value; return *this; }
-
   auto hasData() const -> bool { return (bool)_data; }
   auto data() const -> const vector<u8>& { return _data; }
   auto setData(const vector<u8>& value) -> type&;
@@ -52,7 +49,6 @@ struct Response : Message {
 
   const Request* _request = nullptr;
   u32 _responseType = 0;
-  bool _allowCORS = false;
   vector<u8> _data;
   string _file;
   string _text;
@@ -85,13 +81,6 @@ inline auto Response::head(const function<bool (const u8*, u32)>& callback) cons
       output.append("Content-Type: ", findContentType(), "\r\n");
     }
   }
-
-  if(allowCORS()) {
-    if(!header["Access-Control-Allow-Origin"]) {
-      output.append("Access-Control-Allow-Origin: *", "\r\n");
-    }
-  }
-
   if(!header["Connection"]) {
     output.append("Connection: close\r\n");
   }

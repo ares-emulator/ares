@@ -11,7 +11,6 @@ namespace nall::TCPText {
 class Server : public TCP::Socket {
   public: 
     bool hadHandshake{false};
-    bool isHTTP{false};
 
   protected:
     auto onData(const vector<u8> &data) -> void override;

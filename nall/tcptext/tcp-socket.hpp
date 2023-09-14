@@ -1,8 +1,22 @@
 #pragma once
 
 /**
- * Provides a basic TCP connection/socket.
- * This only handles connecting clients, and receiving/sending data.
+ * Opens a TCP server with callbacks to send and receive data.
+ * 
+ * This spawns 3 new threads:
+ * threadServer:  listens for new connections, kicks connections
+ * threadSend:    sends data to the client
+ * threadReceive: receives data from the client
+ * 
+ * Each contains it's own loop including sleeps to not use too much CPU.
+ * The exception is threadReceive which relies on the blocking recv() call (kernel wakes it up again).
+ * 
+ * Incoming and outgoing data is synchronized using mutexes,
+ * and put into buffers that are shared with the main thread.
+ * Meaning, the thread that calls 'update()' with also be the one that gets 'onData()' calls.
+ * No additional synchronization is needed.
+ * 
+ * NOTE: if you work on the loop/sleeps, make sure to test CPU usage and package-latency.
  */
 namespace nall::TCP {
 

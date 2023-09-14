@@ -5,7 +5,6 @@
 
 #include <nall/http/request.hpp>
 #include <nall/http/response.hpp>
-#include <vector>
 
 namespace nall::HTTP {
 
@@ -47,8 +46,7 @@ inline auto Role::download(s32 fd, Message& message) -> bool {
   auto& head = message._head;
   auto& body = message._body;
   string chunk;
-  std::vector<u8> packet(settings.chunkSize);
-  u8 *p = nullptr;
+  u8 packet[settings.chunkSize], *p = nullptr;
 
   head.reset(), head.reserve(4095);
   body.reset(), body.reserve(4095);
@@ -71,9 +69,9 @@ inline auto Role::download(s32 fd, Message& message) -> bool {
     }
 
     if(length == 0) {
-      length = recv(fd, packet.data(), settings.chunkSize, MSG_NOSIGNAL);
+      length = recv(fd, packet, settings.chunkSize, MSG_NOSIGNAL);
       if(length <= 0) return false;
-      p = packet.data();
+      p = packet;
     }
 
     if(!headReceived) {

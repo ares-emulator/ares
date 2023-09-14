@@ -1,9 +1,5 @@
 #include <ares/debug-server/server.hpp>
 
-// @TODO: why does nall need this?
-#include <cstdlib>
-#include <utility>
-
 using string = ::nall::string;
 using string_view = ::nall::string_view;
 
@@ -13,7 +9,7 @@ namespace {
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
   constexpr u32 MAX_PACKET_SIZE = 4096;
   constexpr u32 DEF_BREAKPOINT_SIZE = 64;
-  constexpr bool NON_STOP_MODE = false; // @TODO: broken, only useful for multi-thread debugging
+  constexpr bool NON_STOP_MODE = false; // broken for now, mainly useful for multi-thread debugging, which we can't really support
 
   auto gdbCalcChecksum(const string &payload) -> u8 {
     u8 checksum = 0;
@@ -51,7 +47,6 @@ namespace ares::GDB {
     auto orgAddress = wp.addressStartOrg + (address - wp.addressStart);
     forceHalt = true;
     haltSignalSent = true;
-    // pcOverride = currentPC; // @TODO: check why this wont stop GDB in all cases
     sendSignal(Signal::TRAP, {wp.getTypePrefix(), hex(orgAddress), ";"});
   }
 
@@ -100,6 +95,9 @@ namespace ares::GDB {
     return !needHalts;
   }
 
+  /**
+   * NOTE: please read the comment in the header server.hpp file before making any changes here!
+   */
   auto Server::processCommand(const string& cmd, bool &shouldReply) -> string
   {
     auto cmdParts = cmd.split(":");
@@ -337,7 +335,7 @@ namespace ares::GDB {
             addOrRemoveEntry(watchpointRead, wp, isInsert); 
             break;
 
-          case '4': // watchpoint (access)
+          case '4':
             wp.type = WatchpointType::ACCESS;
             addOrRemoveEntry(watchpointRead,  wp, isInsert); 
             addOrRemoveEntry(watchpointWrite, wp, isInsert); 
@@ -414,8 +412,12 @@ namespace ares::GDB {
       return;
     }
 
+    // The following code manages the message processing which gets exchanged from the server thread.
+    // It was carefully build to balance latency, throughput and CPU usage to let the game still run at full speed
+    // while allowing for fast processing once the debugger is halted.
+
     u32 loopFrames = isHalted() ? 20 : 1; // "frames" to check (loops with sleep in-between)
-    u32 loopCount = isHalted() ? 500 : 100; // loops inside a frame, the more the less latency, but CPU goes up
+    u32 loopCount = isHalted() ? 500 : 100; // loops inside a frame, the more the less latency, but CPU usage goes up
     u32 maxLoopResets = 10000; // how many times can a new message reset the counter (prevents infinite loops with misbehaving clients)
     bool wasHalted = isHalted();
 

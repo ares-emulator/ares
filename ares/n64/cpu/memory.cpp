@@ -185,7 +185,7 @@ auto CPU::fetch(u64 vaddr) -> maybe<u32> {
 template<u32 Size>
 auto CPU::read(u64 vaddr) -> maybe<u64> {
   if(vaddrAlignedError<Size>(vaddr, false)) return nothing;
-  GDB::server.reportMemRead(vaddr & 0x1fff'ffff, Size); // gdb will always sed a 32-bit virtual address
+  GDB::server.reportMemRead(vaddr & 0x1fff'ffff, Size); // gdb will always set a 32-bit virtual address
   
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
@@ -246,7 +246,7 @@ auto CPU::write(u64 vaddr0, u64 data, bool alignedError) -> bool {
   if(alignedError && vaddrAlignedError<Size>(vaddr0, true)) return false;
   u64 vaddr = vaddr0 & ~((u64)Size - 1);
 
-  GDB::server.reportMemWrite(vaddr0 & 0x1fff'ffff, Size); // gdb will always sed a 32-bit virtual address
+  GDB::server.reportMemWrite(vaddr0 & 0x1fff'ffff, Size); // gdb will always set a 32-bit virtual address
 
   switch(segment(vaddr)) {
   case Context::Segment::Unused:

@@ -16,8 +16,29 @@ enum class Signal : u8 {
 };
 
 /**
- * GDB based debugging server.
- * This allows for remote debugging over TCP.
+ * This implements a GDB server to handle remote debugging via a GDB client.
+ * It is both independent of ares itself and any specific system.
+ * Functionality is added by providing system-specific callbacks, as well as using the API inside a system.
+ * (See the Readme.md file for more information.)
+ * 
+ * NOTE:
+ * Command handling and the overall logic was carefully crafted to support as many IDEs and GDB versions as possible.
+ * Things can break very easily (and the official documentation may lie), so be very sure of any changes made here.
+ * If changes are necessary, please verify that the following gdb-versions / IDEs still work properly:
+ * 
+ * GDB:
+ * - gdb-multiarch        (the plain vanilla version exists in most package managers, supports a lot of arches)
+ * - mips64-ultra-elf-gdb (special MIPS build of gdb-multiarch, i do NOT recommend it, behaves strangely)
+ * - mingw-w64-x86_64-gdb (vanilla build for Windows/MSYS)
+ * 
+ * IDEs/Tools:
+ * - GDB's CLI
+ * - VSCode
+ * - CLion (with bundled gdb-multiarch)
+ * 
+ * For testing, please also check both linux and windows (WSL2).
+ * With WSL2, windows-ares is started from within WSL, while the debugger runs in linux.
+ * This can be easily tested with VSCode and it's debugger.
  */
 class Server : public nall::TCPText::Server {
   public:
@@ -87,7 +108,7 @@ class Server : public nall::TCPText::Server {
     maybe<u64> pcOverride{0}; // temporary override to handle edge-cases for exceptions/watchpoints
 
     // client-state:
-    vector<u64> breakpoints{}; // prefer vector for data-locality
+    vector<u64> breakpoints{};
     vector<Watchpoint> watchpointRead{};
     vector<Watchpoint> watchpointWrite{};
 

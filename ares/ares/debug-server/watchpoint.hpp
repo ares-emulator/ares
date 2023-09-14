@@ -10,7 +10,7 @@ namespace ares::GDB {
 
   struct Watchpoint {
     u64 addressStart{0};
-    u64 addressEnd{0}; // including end!
+    u64 addressEnd{0};
     u64 addressStartOrg{0}; // un-normalized address, GDB needs this
     WatchpointType type{};
 

@@ -21,16 +21,6 @@ auto DebugSettings::construct() -> void {
 
     portHint.setText("Safe range: 1024 - 32767").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 
-  tokenLayout.setAlignment(1);
-    tokenLabel.setText("Token");
-
-    token.setText(settings.debugServer.token);
-    token.setEditable(true);
-    token.onChange([&](){
-      settings.debugServer.token = token.text();
-    });
-    tokenHint.setText("Token for HTTP connections").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
-
   ipv4Layout.setAlignment(1);
     ipv4Label.setText("Use IPv4");
 
@@ -58,7 +48,10 @@ auto DebugSettings::construct() -> void {
 
 auto DebugSettings::infoRefresh() -> void {
   if(settings.debugServer.enabled) {
-    connectInfo.setText({"For more information on how debug with ares: [@TODO: link]"});
+    connectInfo.setText(settings.debugServer.useIPv4 
+      ? "Note: IPv4 mode binds to any device, enabling anyone in your network to access this server"
+      : "Note: localhost only (for Windows/WSL: please use IPv4 instead)"
+    );
     presentation.statusDebug.setText(
       ares::GDB::server.getStatusText(settings.debugServer.port, settings.debugServer.useIPv4)
     );
