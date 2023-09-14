@@ -9,9 +9,9 @@ auto APU::DMA::run() -> void {
 
   n8 data = 0x00;
   if(!io.hold) {
-    data = bus.read(state.source);
-    if(io.direction == 0) state.source++;
-    if(io.direction == 1) state.source--;
+    data = bus.read(io.source);
+    if(io.direction == 0) io.source++;
+    if(io.direction == 1) io.source--;
   }
 
   if(io.target == 0) {
@@ -22,11 +22,11 @@ auto APU::DMA::run() -> void {
   }
 
   if(io.hold) return;
-  if(--state.length) return;
+  if(--io.length) return;
 
   if(io.loop) {
-    state.source = io.source;
-    state.length = io.length;
+    io.source = state.source;
+    io.length = state.length;
   } else {
     io.enable = 0;
   }
