@@ -2,12 +2,7 @@ auto CPU::Exception::trigger(u32 code, u32 coprocessor, bool tlbMiss) -> void {
   self.debugger.exception(code);
 
   if(code != 0) {
-    printf("Exception: %d\n", code);
-    GDB::Signal sig = GDB::Signal::TRAP;
-     switch(code) {
-      case  2: sig = GDB::Signal::SEGV; break;
-      case  3: sig = GDB::Signal::SEGV; break;
-    }
+    auto sig = (code == 2 || code == 3) ? GDB::Signal::SEGV : GDB::Signal::TRAP;
     GDB::server.reportSignal(sig, self.ipu.pc); 
   }
 

@@ -22,7 +22,7 @@ enum class Signal : u8 {
  * (See the Readme.md file for more information.)
  * 
  * NOTE:
- * Command handling and the overall logic was carefully crafted to support as many IDEs and GDB versions as possible.
+ * Command handling and the overall logic was carefully designed to support as many IDEs and GDB versions as possible.
  * Things can break very easily (and the official documentation may lie), so be very sure of any changes made here.
  * If changes are necessary, please verify that the following gdb-versions / IDEs still work properly:
  * 

@@ -123,11 +123,12 @@ auto System::initDebugHooks() -> void {
   };
 
   GDB::server.hooks.normalizeAddress = [](u64 address) -> u64 {
+    // only used to compare addresses for watch-points, potential false-positives get ignored by GDB
     return address & 0x0000'0000'0FFF'FFFF;
   };
 
   GDB::server.hooks.read = [](u64 address, u32 unitCount) -> string {
-    address |= 0xFFFFFFFF'00000000ull; // @TODO: check why?
+    address |= 0xFFFFFFFF'00000000ull;
 
     string res{};
     res.resize(unitCount * 2);
@@ -143,7 +144,7 @@ auto System::initDebugHooks() -> void {
   };
 
   GDB::server.hooks.write = [](u64 address, u32 unitSize, u64 value) {
-    address |= 0xFFFFFFFF'00000000ull; // @TODO: check why?
+    address |= 0xFFFFFFFF'00000000ull;
     switch(unitSize) {
       case Byte: cpu.write<Byte>(address, value, false); break;
       case Half: cpu.write<Half>(address, value, false); break;

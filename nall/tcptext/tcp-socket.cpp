@@ -206,7 +206,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
       }
 
       if(cycles++ >= CYCLES_BEFORE_SLEEP) {
-        usleep(1);
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
         cycles = 0;
       } 
     }
@@ -258,7 +258,7 @@ NALL_HEADER_INLINE auto Socket::close(bool notifyHandler) -> void {
 
   while(serverRunning) {
     printf("TCP: waiting for shutdown...\n");
-    usleep(1000 * 250); // wait for other threads to stop
+    std::this_thread::sleep_for(std::chrono::milliseconds(250)); // wait for other threads to stop
   }
 
   if(notifyHandler) {
