@@ -131,18 +131,20 @@ auto V30MZ::instructionEnter() -> void {
   auto offset = fetch<Word>();
   auto length = fetch<Byte>() & 0x1f;
   push(BP);
-  BP = SP;
-  SP -= offset;
+  u16 bp = SP;
 
   if(length) {
     wait(length > 1 ? 7 : 6);
     for(auto index = 1; index < length; index++) {
-      wait(4);
+      wait(2);
       auto data = read<Word>(segment(SS), BP - index * 2);
       push(data);
     }
-    push(BP);
+    push(bp);
   }
+
+  BP = bp;
+  SP -= offset;
 }
 
 auto V30MZ::instructionLeave() -> void {
