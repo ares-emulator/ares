@@ -55,7 +55,7 @@ The GDB-client may issue reads from any address at any point while halted.<br>
 If not handled properly, this can cause game crashes or different emulation behavior.<br>
 
 If your system emulates cache, make sure to also handle this here.<br>
-A read must be able to see the cache, but never cause flush.<br>
+A read must be able to see the cache, but never cause a flush.<br>
 
 Example response (reading 3 bytes): `A1B200`
 
