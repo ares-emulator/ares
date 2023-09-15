@@ -67,6 +67,72 @@ Contrary to read, this is not required to be neutral, and is allowed to cause ex
 If your system emulates cache, make sure to also handle this here.<br>
 The write should behave the same as if it was done via a CPU instruction, incl. flushing the cache if needed.<br>
 
+### Normalize Address - `hooks.normalizeAddress = (u64 address) -> u64`
+Normalizes an address into something that makes it comparable.<br>
+This is only used for memory-watchpoints, which needs to compare what GDB send to what ares has internally.<br>
+If your system has virtual addresses or masks, this should de-virtualize it.<br>
+
+It's OK to not set this function, or to simply return the input untouched.<br>
+In case that memory-watchpoint are not working, this is probably the place to fix it.<br>
+
+Example implementation:
+```cpp
+GDB::server.hooks.normalizeAddress = [](u64 address) {
+  return address & 0x0FFF'FFFF;
+};
+```
+
+### Register Read - `hooks.regRead = (u32 regIdx) -> string`
+Reads a single register at `regIdx` and returns it as a hex-string.<br>
+The size of the hex-string is dictated by the specific architecture.<br>
+
+Same as for memory-read, this must be implemented in a neutral way.<br>
+Any invalid register can be returned as zero.<br>
+
+Example reponse: `00000000000123AB`
+
+### Register Write - `hooks.regWrite = (u32 regIdx, u64 regValue) -> bool`
+
+Writes the value `regValue` to the register at `regIdx`.<br>
+This write is allowed to have side effects.<br>
+
+If the specific register is not writable or doesn't exist, `false` must be returned.<br>
+On success, `true` must be returned.<br>
+
+### Register Read (General) - `hooks.regReadGeneral = () -> string`
+Most common way for GDB to read registers, this fetches all registers at once.<br>
+The amount and order of registers is dictated by the specific architecture and GDB.<br>
+When implementing this, GDB will usually complain if the order/size is incorrect.<br>
+
+Same as for single reads, this must be implemented in a neutral way.<br>
+
+Other than that, this can be implemented by looping over `hooks.regRead` and returning a concatenated string.<br>
+Example response: `0000000000000000ffffffff8001000000000000000000420000000000000000000000000000000100000`...
+
+### Register Write (General) - `hooks.regWriteGeneral = (const string &regData) -> void`
+Writes all registers at once, this happens very rarely.<br>
+The format of `regData` is the same as the response of `hooks.regReadGeneral`.<br>
+Any register that is not writable or doesn't exist can be ignored.<br>
+
+### Emulator Cache - `hooks.emuCacheInvalidate = (u64 address) -> void`
+Should invalidate the emulator's cache at `address`.<br>
+This is only necessary if you have a re-compiler or some form of instruction cache.<br>
+
+### Target XML - `hooks.targetXML = () -> string`
+Provides an XML description of the target system.<br>
+The XML must not contain any newlines, and should be as short as possible.<br>
+If the client has access to an `.elf` file, this will be mostly ignored.
+
+Example implementation:
+```cpp
+GDB::server.hooks.targetXML = []() -> string {
+  return "<target version=\"1.0\">"
+    "<architecture>mips:4000</architecture>"
+  "</target>";
+};
+```
+
+Documentation: https://sourceware.org/gdb/onlinedocs/gdb/Target-Description-Format.html#Target-Description-Format
 <hr>
 
 ## API Usage
