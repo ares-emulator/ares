@@ -14,7 +14,7 @@ namespace nall::TCPText {
       // This is a security check for browsers.
       // Any website can request localhost via JS or HTML, while it can't see the result, 
       // GDB will receive the data and commands could be injected (true for all GDB-servers).
-      // Since all HTTP request start with headers, we can simply block anything that doesn't start like a GDB client.
+      // Since all HTTP requests start with headers, we can simply block anything that doesn't start like a GDB client.
       if(dataStr[0] != '+') {
         printf("Non-GDB client detected (message: %s), disconnect client\n", dataStr.data());
         disconnectClient();

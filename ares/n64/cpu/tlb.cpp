@@ -1,5 +1,5 @@
 
-auto CPU::TLB::load(u64 vaddr, const Entry& entry,  bool noExceptions) -> maybe<Match> {
+auto CPU::TLB::load(u64 vaddr, const Entry& entry, bool noExceptions) -> maybe<Match> {
   if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) return nothing;
   if((vaddr & entry.addressMaskHi) != entry.virtualAddress) return nothing;
   if(vaddr >> 62 != entry.region) return nothing;
