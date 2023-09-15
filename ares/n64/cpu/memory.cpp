@@ -140,6 +140,10 @@ auto CPU::devirtualizeFast(u64 vaddr) -> u64 {
   return devirtualizeCache.pbase = 0;
 }
 
+auto CPU::devirtualizeDebug(u64 vaddr) -> u64 {
+  return devirtualizeFast(vaddr); // this wrapper preserves the inlining of 'devirtualizeFast'
+}
+
 template<u32 Size>
 inline auto CPU::busWrite(u32 address, u64 data) -> void {
   bus.write<Size>(address, data, *this);
@@ -185,7 +189,7 @@ auto CPU::fetch(u64 vaddr) -> maybe<u32> {
 template<u32 Size>
 auto CPU::read(u64 vaddr) -> maybe<u64> {
   if(vaddrAlignedError<Size>(vaddr, false)) return nothing;
-  GDB::server.reportMemRead(vaddr & 0x1fff'ffff, Size); // gdb will always set a 32-bit virtual address
+  GDB::server.reportMemRead(vaddr, Size);
   
   switch(segment(vaddr)) {
   case Context::Segment::Unused:
@@ -246,7 +250,7 @@ auto CPU::write(u64 vaddr0, u64 data, bool alignedError) -> bool {
   if(alignedError && vaddrAlignedError<Size>(vaddr0, true)) return false;
   u64 vaddr = vaddr0 & ~((u64)Size - 1);
 
-  GDB::server.reportMemWrite(vaddr0 & 0x1fff'ffff, Size); // gdb will always set a 32-bit virtual address
+  GDB::server.reportMemWrite(vaddr0, Size);
 
   switch(segment(vaddr)) {
   case Context::Segment::Unused:

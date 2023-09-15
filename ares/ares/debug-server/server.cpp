@@ -53,6 +53,10 @@ namespace ares::GDB {
   auto Server::reportMemRead(u64 address, u32 size) -> void {
     if(!watchpointRead)return;
     
+    if(hooks.normalizeAddress) {
+      address = hooks.normalizeAddress(address);
+    }
+
     u64 addressEnd = address + size - 1;
     for(const auto& wp : watchpointRead) {
       if(wp.hasOverlap(address, addressEnd)) {
@@ -63,6 +67,10 @@ namespace ares::GDB {
 
   auto Server::reportMemWrite(u64 address, u32 size) -> void {
     if(!watchpointWrite)return;
+
+    if(hooks.normalizeAddress) {
+      address = hooks.normalizeAddress(address);
+    }
 
     u64 addressEnd = address + size - 1;
     for(const auto& wp : watchpointWrite) {

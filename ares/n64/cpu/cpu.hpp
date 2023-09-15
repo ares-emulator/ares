@@ -295,6 +295,7 @@ struct CPU : Thread {
   auto segment(u64 vaddr) -> Context::Segment;
   auto devirtualize(u64 vaddr) -> maybe<u64>;
   alwaysinline auto devirtualizeFast(u64 vaddr) -> u64;
+  auto devirtualizeDebug(u64 vaddr) -> u64;
 
   auto fetch(u64 vaddr) -> maybe<u32>;
   template<u32 Size> auto busWrite(u32 address, u64 data) -> void;

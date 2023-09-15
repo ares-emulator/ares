@@ -123,8 +123,7 @@ auto System::initDebugHooks() -> void {
   };
 
   GDB::server.hooks.normalizeAddress = [](u64 address) -> u64 {
-    // only used to compare addresses for watch-points, potential false-positives get ignored by GDB
-    return address & 0x0000'0000'0FFF'FFFF;
+    return cpu.devirtualizeDebug(address);
   };
 
   GDB::server.hooks.read = [](u64 address, u32 unitCount) -> string {
