@@ -47,7 +47,7 @@ class Server : public nall::TCPText::Server {
 
     struct {
       // Memory
-      function<string(u64 address, u32 unitCount)> read{};
+      function<string(u64 address, u32 byteCount)> read{};
       function<void(u64 address, u32 unitSize, u64 value)> write{};
       function<u64(u64 address)> normalizeAddress{};
 

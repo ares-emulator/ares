@@ -126,14 +126,14 @@ auto System::initDebugHooks() -> void {
     return cpu.devirtualizeDebug(address);
   };
 
-  GDB::server.hooks.read = [](u64 address, u32 unitCount) -> string {
+  GDB::server.hooks.read = [](u64 address, u32 byteCount) -> string {
     address |= 0xFFFFFFFF'00000000ull;
 
     string res{};
-    res.resize(unitCount * 2);
+    res.resize(byteCount * 2);
     char* resPtr = res.begin();
 
-    for(u32 i : range(unitCount)) {
+    for(u32 i : range(byteCount)) {
       auto val = cpu.readDebug(address++);
       hexByte(resPtr, val);
       resPtr += 2;
