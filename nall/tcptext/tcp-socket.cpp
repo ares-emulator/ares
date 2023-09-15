@@ -151,7 +151,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
         socketClose(fdClient);
         fdClient = -1;
         wantKickClient = false;
-        onDisonnect();
+        onDisconnect();
       }
 
       std::this_thread::sleep_for(std::chrono::milliseconds(CLIENT_SLEEP_MS));
@@ -262,7 +262,7 @@ NALL_HEADER_INLINE auto Socket::close(bool notifyHandler) -> void {
   }
 
   if(notifyHandler) {
-    onDisonnect(); // don't call this in destructor, it's virtual
+    onDisconnect(); // don't call this in destructor, it's virtual
   }
   printf("TCP: socket closed!\n");
 }

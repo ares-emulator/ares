@@ -86,7 +86,7 @@ class Server : public nall::TCPText::Server {
   protected:
     auto onText(string_view text) -> void override;
     auto onConnect() -> void override;
-    auto onDisonnect() -> void override;
+    auto onDisconnect() -> void override;
 
   private:
     bool insideCommand{false};

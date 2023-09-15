@@ -41,7 +41,7 @@ class Socket {
     virtual auto onData(const vector<u8> &data) -> void = 0;
 
     virtual auto onConnect() -> void = 0;
-    virtual auto onDisonnect() -> void = 0;
+    virtual auto onDisconnect() -> void = 0;
 
   private:
     std::atomic<bool> stopServer{false}; // set to true to let the server-thread know to stop.

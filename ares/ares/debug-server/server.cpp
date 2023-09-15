@@ -489,7 +489,7 @@ namespace ares::GDB {
     hasActiveClient = true;
   }
 
-  auto Server::onDisonnect() -> void {
+  auto Server::onDisconnect() -> void {
     printf("GDB: TCP disconnected\n");
     hadHandshake = false;
     resetClientData();
