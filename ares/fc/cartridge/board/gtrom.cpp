@@ -1,6 +1,6 @@
 struct GTROM : Interface {
   static auto create(string id) -> Interface* {
-    if(id == "GTROM" ) return new GTROM();
+    if(id == "GTROM") return new GTROM();
     return nullptr;
   }
 
