@@ -336,6 +336,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     prgram = 8192;
     break;
 
+  case  28:
+    s += "  board:  ACTION53\n";
+    break;
+
   case  30:
     s += "  board:  UNROM-512\n";
     s +={"    mirror mode=", mirror == 0 ? "horizontal" : (mirror == 1 ? "vertical" : (mirror == 2 ? "pcb" : "external")), "\n"};
