@@ -336,6 +336,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     prgram = 8192;
     break;
 
+  case  30:
+    s += "  board:  UNROM-512\n";
+    s +={"    mirror mode=", mirror == 0 ? "horizontal" : (mirror == 1 ? "vertical" : (mirror == 2 ? "pcb" : "external")), "\n"};
+    break;
+
   case  32:
     s += "  board:  IREM-G101\n";
     s += "    chip type=G101\n";
