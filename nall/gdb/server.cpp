@@ -1,4 +1,4 @@
-#include <ares/debug-server/server.hpp>
+#include <nall/gdb/server.hpp>
 
 using string = ::nall::string;
 using string_view = ::nall::string_view;
@@ -27,7 +27,7 @@ namespace {
   }
 }
 
-namespace ares::GDB {
+namespace nall::GDB {
   Server server{};
 
   auto Server::reportSignal(Signal sig, u64 originPC) -> bool {

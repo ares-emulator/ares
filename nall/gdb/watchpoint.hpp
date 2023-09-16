@@ -2,7 +2,7 @@
 
 #include <nall/tcptext/tcptext-server.hpp>
 
-namespace ares::GDB {
+namespace nall::GDB {
 
   enum class WatchpointType : u32 {
     WRITE, READ, ACCESS

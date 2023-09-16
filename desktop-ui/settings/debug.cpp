@@ -53,7 +53,7 @@ auto DebugSettings::infoRefresh() -> void {
       : "Note: localhost only (for Windows/WSL: please use IPv4 instead)"
     );
     presentation.statusDebug.setText(
-      ares::GDB::server.getStatusText(settings.debugServer.port, settings.debugServer.useIPv4)
+      nall::GDB::server.getStatusText(settings.debugServer.port, settings.debugServer.useIPv4)
     );
   } else {
     connectInfo.setText("");
@@ -62,9 +62,9 @@ auto DebugSettings::infoRefresh() -> void {
 }
 
 auto DebugSettings::serverRefresh() -> void {
-  ares::GDB::server.close();
+  nall::GDB::server.close();
 
   if(settings.debugServer.enabled) {
-    ares::GDB::server.open(settings.debugServer.port, settings.debugServer.useIPv4);
+    nall::GDB::server.open(settings.debugServer.port, settings.debugServer.useIPv4);
   }
 }

@@ -56,26 +56,26 @@ auto Program::main() -> void {
 
   if(settings.debugServer.enabled) {
     presentation.statusDebug.setText(
-      ares::GDB::server.getStatusText(settings.debugServer.port, settings.debugServer.useIPv4)
+      nall::GDB::server.getStatusText(settings.debugServer.port, settings.debugServer.useIPv4)
     );
   }
 
-  if(emulator && ares::GDB::server.isHalted()) {
+  if(emulator && nall::GDB::server.isHalted()) {
     ruby::audio.clear();
-    ares::GDB::server.updateLoop(); // sleeps internally
+    nall::GDB::server.updateLoop(); // sleeps internally
     return;
   }
 
   if(!emulator || (paused && !program.requestFrameAdvance) || defocused) {
     ruby::audio.clear();
-    ares::GDB::server.updateLoop();
+    nall::GDB::server.updateLoop();
     usleep(20 * 1000);
     return;
   }
 
   rewindRun();
 
-  ares::GDB::server.updateLoop();
+  nall::GDB::server.updateLoop();
 
   program.requestFrameAdvance = false;
   if(!runAhead || fastForwarding || rewinding) {
@@ -90,7 +90,7 @@ auto Program::main() -> void {
     emulator->root->unserialize(state);
   }
 
-  ares::GDB::server.updateLoop();
+  nall::GDB::server.updateLoop();
 
   if(settings.general.autoSaveMemory) {
     static u64 previousTime = chrono::timestamp();

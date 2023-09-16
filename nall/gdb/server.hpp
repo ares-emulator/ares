@@ -1,9 +1,9 @@
 #pragma once
 
 #include <nall/tcptext/tcptext-server.hpp>
-#include <ares/ares/debug-server/watchpoint.hpp>
+#include <nall/gdb/watchpoint.hpp>
 
-namespace ares::GDB {
+namespace nall::GDB {
 
 enum class Signal : u8 {
   HANGUP  = 1,

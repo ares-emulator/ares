@@ -34,7 +34,7 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
 
 auto Program::load(string location) -> bool {
   if(settings.debugServer.enabled) {
-    ares::GDB::server.reset();
+    nall::GDB::server.reset();
   }
 
   if(!emulator->load(location)) {
@@ -79,7 +79,7 @@ auto Program::load(string location) -> bool {
   showMessage({"Loaded ", Location::prefix(location)});
 
   if(settings.debugServer.enabled) {
-    ares::GDB::server.open(settings.debugServer.port, settings.debugServer.useIPv4);
+    nall::GDB::server.open(settings.debugServer.port, settings.debugServer.useIPv4);
   }
 
   //update recent games list
@@ -95,8 +95,8 @@ auto Program::load(string location) -> bool {
 auto Program::unload() -> void {
   if(!emulator) return;
 
-  ares::GDB::server.close();
-  ares::GDB::server.reset();
+  nall::GDB::server.close();
+  nall::GDB::server.reset();
 
   settings.save();
   clearUndoStates();

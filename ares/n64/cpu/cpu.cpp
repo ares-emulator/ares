@@ -1,5 +1,5 @@
 #include <n64/n64.hpp>
-#include <ares/debug-server/server.hpp>
+#include <nall/gdb/server.hpp>
 
 namespace ares::Nintendo64 {
 
