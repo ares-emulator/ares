@@ -21,6 +21,11 @@ inline auto CPU::writeBus(n16 address, n8 data) -> void {
   if(address <= 0x4017) return cpu.writeIO(address, data);
 }
 
+inline auto CPU::debugAddress(n16 address) -> n32 {
+  if(address <= 0x4017) return address;
+  return cartridge.debugAddress(address);
+}
+
 auto CPU::readIO(n16 address) -> n8 {
   n8 data = MDR;
 

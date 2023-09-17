@@ -36,6 +36,7 @@ struct CPU : MOS6502, Thread {
   auto readIO(n16 address) -> n8;
   auto writeIO(n16 address, n8 data) -> void;
 
+  auto debugAddress(n16 address) -> n32 override;
   auto readDebugger(n16 address) -> n8 override;
 
   auto serialize(serializer&) -> void;

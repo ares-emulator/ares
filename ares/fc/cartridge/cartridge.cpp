@@ -70,6 +70,10 @@ auto Cartridge::writeCHR(n32 address, n8 data) -> void {
   return board->writeCHR(address, data);
 }
 
+auto Cartridge::debugAddress(n32 address) -> n32 {
+  return board->debugAddress(address);
+}
+
 auto Cartridge::scanline(n32 y) -> void {
   return board->scanline(y);
 }

@@ -31,20 +31,27 @@ struct HVC_UxROM : Interface {
     Interface::save(characterRAM, "character.ram");
   }
 
+  inline auto bankPRG(n32 address) -> n8 {
+    switch(address >> 14 & 1) {
+    case 0: return (revision == Revision::UNROMA ? (n8)0x00 : programBank); break;
+    case 1: default: return (revision == Revision::UNROMA ? programBank : (n8)0xff); break;
+    }
+  }
+
   auto readPRG(n32 address, n8 data) -> n8 override {
     if(address < 0x8000) return data;
-    n8 bank;
-    switch(address >> 14 & 1) {
-    case 0: bank = (revision == Revision::UNROMA ? (n8)0x00 : programBank); break;
-    case 1: bank = (revision == Revision::UNROMA ? programBank : (n8)0xff); break;
-    }
-    return programROM.read(bank << 14 | (n14)address);
+    return programROM.read(bankPRG(address) << 14 | (n14)address);
   }
 
   auto writePRG(n32 address, n8 data) -> void override {
     if(address < 0x8000) return;
     programBank = data;
     if(revision == Revision::UN1ROM) programBank >>= 2;
+  }
+
+  auto debugAddress(n32 address) -> n32 override {
+    if(address < 0x8000) return address;
+    return (bankPRG(address) << 16 | (n16)address) & ((bit::round(programROM.size()) << 2) - 1);
   }
 
   auto readCHR(n32 address, n8 data) -> n8 override {

@@ -32,6 +32,11 @@ struct GTROM : Interface {
     }
   }
 
+  auto debugAddress(n32 address) -> n32 override {
+    if(address < 0x8000) return address;
+    return (programBank << 16 | (n16)address) & ((bit::round(programROM.size()) << 1) - 1);
+  }
+
   auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) return videoRAM.read(videoBank << 13 | (n13)address);
     if(characterRAM) return characterRAM.read(characterBank << 13 | (n13)address);

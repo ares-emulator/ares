@@ -15,6 +15,7 @@ struct Interface {
 
   virtual auto readPRG(n32 address, n8 data) -> n8 { return data; }
   virtual auto writePRG(n32 address, n8 data) -> void {}
+  virtual auto debugAddress(n32 address) -> n32 { return address; }
 
   virtual auto readCHR(n32 address, n8 data) -> n8 { return data; }
   virtual auto writeCHR(n32 address, n8 data) -> void {}
