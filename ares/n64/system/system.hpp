@@ -31,6 +31,8 @@ private:
     bool dd = false;
   } information;
 
+  auto initDebugHooks() -> void;
+
   //serialization.cpp
   auto serialize(serializer&, bool synchronize) -> void;
 };

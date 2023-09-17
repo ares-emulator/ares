@@ -1,10 +1,12 @@
 
-auto CPU::TLB::load(u64 vaddr, const Entry& entry) -> maybe<Match> {
+auto CPU::TLB::load(u64 vaddr, const Entry& entry, bool noExceptions) -> maybe<Match> {
   if(!entry.globals && entry.addressSpaceID != self.scc.tlb.addressSpaceID) return nothing;
   if((vaddr & entry.addressMaskHi) != entry.virtualAddress) return nothing;
   if(vaddr >> 62 != entry.region) return nothing;
   bool lo = vaddr & entry.addressSelect;
   if(!entry.valid[lo]) {
+    if(noExceptions)return Match{false};
+    
     self.addressException(vaddr);
     self.debugger.tlbLoadInvalid(vaddr);
     self.exception.tlbLoadInvalid();
@@ -15,21 +17,23 @@ auto CPU::TLB::load(u64 vaddr, const Entry& entry) -> maybe<Match> {
   return Match{true, entry.cacheAlgorithm[lo] != 2, physicalAddress};
 }
 
-auto CPU::TLB::load(u64 vaddr) -> Match {
+auto CPU::TLB::load(u64 vaddr, bool noExceptions) -> Match {
   for(auto& entry : this->tlbCache.entry) {
     if(!entry.entry) continue;
-    if(auto match = load(vaddr, *entry.entry)) {
+    if(auto match = load(vaddr, *entry.entry, noExceptions)) {
       entry.frequency++;
       return *match;
     }
   }
 
   for(auto& entry : this->entry) {
-    if(auto match = load(vaddr, entry)) {
+    if(auto match = load(vaddr, entry, noExceptions)) {
       this->tlbCache.insert(entry);
       return *match;
     }
   }
+
+  if(noExceptions)return {false};
 
   self.addressException(vaddr);
   self.debugger.tlbLoadMiss(vaddr);

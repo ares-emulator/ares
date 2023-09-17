@@ -4,9 +4,9 @@ auto CPU::Recompiler::pool(u32 address) -> Pool* {
   return pool;
 }
 
-auto CPU::Recompiler::block(u32 vaddr, u32 address) -> Block* {
+auto CPU::Recompiler::block(u32 vaddr, u32 address, bool singleInstruction) -> Block* {
   if(auto block = pool(address)->blocks[address >> 2 & 0x3f]) return block;
-  auto block = emit(vaddr, address);
+  auto block = emit(vaddr, address, singleInstruction);
   pool(address)->blocks[address >> 2 & 0x3f] = block;
   memory::jitprotect(true);
   return block;
@@ -18,7 +18,7 @@ auto CPU::Recompiler::fastFetchBlock(u32 address) -> Block* {
   return nullptr;
 }
 
-auto CPU::Recompiler::emit(u32 vaddr, u32 address) -> Block* {
+auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
     memory::jitprotect(false);
@@ -44,7 +44,7 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address) -> Block* {
     call(&CPU::instructionEpilogue);
     vaddr += 4;
     address += 4;
-    if(hasBranched || (address & 0xfc) == 0) break;  //block boundary
+    if(hasBranched || (address & 0xfc) == 0 || singleInstruction) break;  //block boundary
     hasBranched = branched;
     testJumpEpilog();
   }
