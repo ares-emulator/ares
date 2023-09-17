@@ -35,10 +35,12 @@ namespace Board {
 #include "hvc-sxrom.cpp"
 #include "hvc-txrom.cpp"
 #include "hvc-uxrom.cpp"
+#include "inl-nsf.cpp"
 #include "irem-g101.cpp"
 #include "irem-h3001.cpp"
 #include "irem-lrog017.cpp"
 #include "irem-tam-s1.cpp"
+#include "magicfloor.cpp"
 #include "mlt-action52.cpp"
 #include "namco-118.cpp"
 #include "namco-163.cpp"
@@ -79,6 +81,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = HVC_SxROM::create(board);
   if(!p) p = HVC_TxROM::create(board);
   if(!p) p = HVC_UxROM::create(board);
+  if(!p) p = INL_NSF::create(board);
   if(!p) p = IremG101::create(board);
   if(!p) p = IremH3001::create(board);
   if(!p) p = IremLROG017::create(board);
@@ -95,6 +98,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = KonamiVRC5::create(board);
   if(!p) p = KonamiVRC6::create(board);
   if(!p) p = KonamiVRC7::create(board);
+  if(!p) p = MagicFloor::create(board);
   if(!p) p = MltAction52::create(board);
   if(!p) p = Namco118::create(board);
   if(!p) p = Namco163::create(board);
