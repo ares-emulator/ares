@@ -7,7 +7,7 @@ namespace {
   constexpr bool GDB_LOG_MESSAGES = false;
 
   constexpr u32 MAX_REQUESTS_PER_UPDATE = 10;
-  constexpr u32 MAX_PACKET_SIZE = 4096;
+  constexpr u32 MAX_PACKET_SIZE = 0x4096;
   constexpr u32 DEF_BREAKPOINT_SIZE = 64;
   constexpr bool NON_STOP_MODE = false; // broken for now, mainly useful for multi-thread debugging, which we can't really support
 
@@ -194,7 +194,7 @@ namespace nall::GDB {
           u64 value = cmdParts.size() > 1 ? cmdParts[1].hex() : 0;
 
           hooks.write(address, unitSize, value);
-          return "";
+          return "OK";
         }
 
       break;
@@ -223,7 +223,7 @@ namespace nall::GDB {
       case 'q':
         // This tells the client what we can and can't do
         if(cmdName == "qSupported"){ return {
-          "PacketSize=", MAX_PACKET_SIZE, 
+          "PacketSize=", hex(MAX_PACKET_SIZE), 
           ";fork-events-;swbreak+;hwbreak-", 
           ";vContSupported-", // prevent vCont commands (reduces potential GDB variations: some prefer using it, others don't)
           NON_STOP_MODE ? ";QNonStop+" : "",
@@ -525,6 +525,7 @@ namespace nall::GDB {
     haltSignalSent = false;
     forceHalt = false;
     singleStepActive = false;
+    nonStopMode = false;
 
     currentThreadC = -1;
     hasActiveClient = false;

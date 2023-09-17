@@ -161,6 +161,7 @@ If no debugger is running, it will always return `true`.<br>
 
 You must only call this once per step, before the instruction at the given address gets executed.<br>
 This also means a return value of `false` should make it halt before the instruction too.<br>
+Once halted, it's safe to call this with the same PC each iteration.<br>
 
 If a re-compiler is used, you may not want to call this for every single instruction.<br>
 In that case take a look at `hasBreakpoints()` on how to optimize this.<br>
