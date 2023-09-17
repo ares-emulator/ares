@@ -48,7 +48,7 @@ struct APU : Thread, IO {
       n20 source;
       n20 length;
       n2  rate;
-      n1  unknown;
+      n1  hold;
       n1  loop;
       n1  target;
       n1  direction;

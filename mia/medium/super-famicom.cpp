@@ -84,7 +84,10 @@ auto SuperFamicom::load(string location) -> bool {
     pak->setAttribute("oscillator", node.natural());
   }
   auto region = document["game/region"].string();
-  if(region.endsWith("BRA")
+
+  if(region.endsWith("SGB")) {
+    region = "NTSC, PAL";
+  } else if(region.endsWith("BRA")
   || region.endsWith("CAN")
   || region.endsWith("HKG")
   || region.endsWith("JPN")
@@ -99,6 +102,7 @@ auto SuperFamicom::load(string location) -> bool {
   } else {
     region = "PAL";
   }
+
   pak->setAttribute("region", region);
   pak->append("manifest.bml", manifest);
 

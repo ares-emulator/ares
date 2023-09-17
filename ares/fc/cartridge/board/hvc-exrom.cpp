@@ -200,7 +200,7 @@ struct HVC_ExROM : Interface {  //MMC5
       address &= 0x7fff;
     } else if(programMode == 1) {
       if((address & 0xc000) == 0x8000) bank = programBank[1] & ~1;
-      if((address & 0xe000) == 0xc000) bank = programBank[3] & ~1;
+      if((address & 0xc000) == 0xc000) bank = programBank[3] & ~1;
       address &= 0x3fff;
     } else if(programMode == 2) {
       if((address & 0xe000) == 0x8000) bank = programBank[1] & ~1 | 0;

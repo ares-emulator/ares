@@ -28,13 +28,14 @@ auto Cartridge::connect() -> void {
   if(pak->attribute("orientation") == "horizontal") information.orientation = "Horizontal";
   if(pak->attribute("orientation") == "vertical"  ) information.orientation = "Vertical";
 
+  // WS cartridges are allocated from the top (end of ROM) down
   if(auto fp = pak->read("program.flash")) {
-    rom.allocate(fp->size());
-    rom.load(fp);
+    rom.allocate(bit::round(fp->size()));
+    fp->read({rom.data() + bit::round(fp->size()) - fp->size(), fp->size()});
     has.flash = true;
   } else if(auto fp = pak->read("program.rom")) {
-    rom.allocate(fp->size());
-    rom.load(fp);
+    rom.allocate(bit::round(fp->size()));
+    fp->read({rom.data() + bit::round(fp->size()) - fp->size(), fp->size()});
   }
   
   if(auto fp = pak->read("save.ram")) {

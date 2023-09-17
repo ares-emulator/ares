@@ -33,6 +33,10 @@ auto Program::load(shared_pointer<Emulator> emulator, string location) -> bool {
 }
 
 auto Program::load(string location) -> bool {
+  if(settings.debugServer.enabled) {
+    nall::GDB::server.reset();
+  }
+
   if(!emulator->load(location)) {
     emulator.reset();
     if(settings.video.adaptiveSizing) presentation.resizeWindow();
@@ -71,7 +75,12 @@ auto Program::load(string location) -> bool {
   } else {
     pause(false);
   }
+
   showMessage({"Loaded ", Location::prefix(location)});
+
+  if(settings.debugServer.enabled) {
+    nall::GDB::server.open(settings.debugServer.port, settings.debugServer.useIPv4);
+  }
 
   //update recent games list
   for(s32 index = 7; index >= 0; index--) {
@@ -85,6 +94,9 @@ auto Program::load(string location) -> bool {
 
 auto Program::unload() -> void {
   if(!emulator) return;
+
+  nall::GDB::server.close();
+  nall::GDB::server.reset();
 
   settings.save();
   clearUndoStates();

@@ -1,5 +1,7 @@
 #include <n64/n64.hpp>
 
+#include <nall/gdb/server.hpp>
+
 namespace ares::Nintendo64 {
 
 auto enumerate() -> vector<string> {
@@ -105,12 +107,141 @@ auto System::load(Node::System& root, string name) -> bool {
   #if defined(VULKAN)
   vulkan.load(node);
   #endif
+
+  initDebugHooks();
+
   return true;
+}
+
+auto System::initDebugHooks() -> void {
+
+  // See: https://sourceware.org/gdb/onlinedocs/gdb/Target-Description-Format.html#Target-Description-Format
+  GDB::server.hooks.targetXML = []() -> string {
+    return "<target version=\"1.0\">"
+      "<architecture>mips:4000</architecture>"
+    "</target>";
+  };
+
+  GDB::server.hooks.normalizeAddress = [](u64 address) -> u64 {
+    return cpu.devirtualizeDebug(address);
+  };
+
+  GDB::server.hooks.read = [](u64 address, u32 byteCount) -> string {
+    address |= 0xFFFFFFFF'00000000ull;
+
+    string res{};
+    res.resize(byteCount * 2);
+    char* resPtr = res.begin();
+
+    for(u32 i : range(byteCount)) {
+      auto val = cpu.readDebug(address++);
+      hexByte(resPtr, val);
+      resPtr += 2;
+    }
+
+    return res;
+  };
+
+  GDB::server.hooks.write = [](u64 address, u32 unitSize, u64 value) {
+    address |= 0xFFFFFFFF'00000000ull;
+    switch(unitSize) {
+      case Byte: cpu.write<Byte>(address, value, false); break;
+      case Half: cpu.write<Half>(address, value, false); break;
+      case Word: cpu.write<Word>(address, value, false); break;
+      case Dual: cpu.write<Dual>(address, value, false); break;
+    }
+  };
+
+  GDB::server.hooks.regRead = [](u32 regIdx) {
+    if(regIdx < 32) {
+      return hex(cpu.ipu.r[regIdx].u64, 16, '0');
+    }
+
+    switch (regIdx)
+    {
+      case 32: return hex(cpu.getControlRegister(12), 16, '0'); // COP0 status
+      case 33: return hex(cpu.ipu.lo.u64, 16, '0');
+      case 34: return hex(cpu.ipu.hi.u64, 16, '0');
+      case 35: return hex(cpu.getControlRegister(8), 16, '0'); // COP0 badvaddr
+      case 36: return hex(cpu.getControlRegister(13), 16, '0'); // COP0 cause
+      case 37: { // PC
+        auto pcOverride = GDB::server.getPcOverride();
+        return hex(pcOverride ? pcOverride.get() : cpu.ipu.pc, 16, '0');
+      }
+
+      // case 38-69: -> FPU
+      case 70: return hex(cpu.getControlRegisterFPU(31), 16, '0'); // FPU control
+    }
+
+    if(regIdx < (38 + 32)) {
+      return hex(cpu.fpu.r[regIdx-38].u64, 16, '0');
+    }
+
+    return string{"0000000000000000"};
+  };
+
+  GDB::server.hooks.regWrite = [](u32 regIdx, u64 regValue) -> bool {
+    if(regIdx == 0)return true;
+
+    if(regIdx < 32) {
+      cpu.ipu.r[regIdx].u64 = regValue;
+      return true;
+    }
+ 
+    switch (regIdx)
+    {
+      case 32: return true; // COP0 status (ignore write)
+      case 33: cpu.ipu.lo.u64 = regValue; return true;
+      case 34: cpu.ipu.hi.u64 = regValue; return true;
+      case 35: return true; // COP0 badvaddr (ignore write)
+      case 36: return true; // COP0 cause (ignore write)
+      case 37: { // PC
+        if(!GDB::server.getPcOverride()) {
+          cpu.ipu.pc = regValue;
+        }
+        return true;
+      }
+
+      // case 38-69: -> FPU
+      case 70: return true; // FPU control (ignore)
+    }
+
+    if(regIdx < (38 + 32)) {
+      cpu.fpu.r[regIdx-38].u64 = regValue;
+      return true;
+    }
+
+    if(regIdx == 71)return true; // ignore, GDB wants this register even though it doesn't exist
+    return false;
+  };
+
+  GDB::server.hooks.regReadGeneral = []() {
+    string res{};
+    for(auto i : range(71)) {
+      res.append(GDB::server.hooks.regRead(i));
+    }
+    return res;
+  };
+
+  GDB::server.hooks.regWriteGeneral = [](const string &regData) {
+    u32 regIdx{0};
+    for(auto i=0; i<regData.size(); i+=16) {
+      GDB::server.hooks.regWrite(regIdx, regData.slice(i, 16).hex());
+      ++regIdx;
+    }
+  };
+
+  if constexpr(Accuracy::CPU::Recompiler) {
+    GDB::server.hooks.emuCacheInvalidate = [](u64 address) {
+      cpu.recompiler.invalidate(address);
+    };
+  }
 }
 
 auto System::unload() -> void {
   if(!node) return;
   save();
+  
   if(vi.screen) vi.screen->quit(); //stop video thread
   #if defined(VULKAN)
   vulkan.unload();

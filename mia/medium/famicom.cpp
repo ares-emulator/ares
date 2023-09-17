@@ -34,6 +34,7 @@ auto Famicom::load(string location) -> bool {
   pak->setAttribute("chip/key", document["game/board/chip/key"].natural());
   pak->setAttribute("pinout/a0", document["game/board/chip/pinout/a0"].natural());
   pak->setAttribute("pinout/a1", document["game/board/chip/pinout/a1"].natural());
+  pak->setAttribute("pinout/va10", document["game/board/pinout/va10"].natural());
   pak->append("manifest.bml", manifest);
 
   array_view<u8> view{rom};
@@ -336,6 +337,20 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     prgram = 8192;
     break;
 
+  case  28:
+    s += "  board:  ACTION53\n";
+    break;
+
+  case  30:
+    s += "  board:  UNROM-512\n";
+    s +={"    mirror mode=", mirror == 0 ? "horizontal" : (mirror == 1 ? "vertical" : (mirror == 2 ? "pcb" : "external")), "\n"};
+    break;
+
+  case  31:
+    s += "  board:  INL-NSF\n";
+    s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
+    break;
+
   case  32:
     s += "  board:  IREM-G101\n";
     s += "    chip type=G101\n";
@@ -599,6 +614,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case 210:
     s += "  board:  NAMCO-340\n";
     s += "    chip type=340\n";
+    break;
+
+  case 218:
+    s += "  board:  MAGICFLOOR\n";
+    s +={"    pinout va10=", 10 + (mirror < 2 ? mirror ^ 1 : mirror), "\n"};
     break;
 
   case 228:

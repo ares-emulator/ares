@@ -1,8 +1,8 @@
-struct MSX : Interface {
+struct Zemina : Interface {
   using Interface::Interface;
   Memory::Readable<n8> rom;
 
-  MSX(Cartridge& cartridge, bool nemesis) : Interface(cartridge), nemesis(nemesis) {
+  Zemina(Cartridge& cartridge, bool nemesis) : Interface(cartridge), nemesis(nemesis) {
   }
 
   auto load() -> void override {

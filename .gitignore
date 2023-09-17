@@ -1,6 +1,9 @@
 *.moc
 *.user
 .vs/
+.vscode/
+.idea/
+cmake-*/
 obj/
 out/
 obj-amd64/

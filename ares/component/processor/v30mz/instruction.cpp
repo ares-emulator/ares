@@ -10,7 +10,7 @@ auto V30MZ::interrupt(u8 vector, InterruptSource source) -> bool {
   //if an IRQ fires during a rep string instruction;
   //flush prefix queue and seek back to first prefix.
   //this allows the transfer to resume after the IRQ.
-  if(!prefixes.empty()) {
+  if(repeat()) {
     PC -= prefixes.size();
     prefixes.flush();
   }

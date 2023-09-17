@@ -108,6 +108,82 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     region = "NTSC-J";
   }
 
+  //4pak
+  //===========
+
+  //4 PAK All Action (Australia)
+  if(hash == "fe2ef2e550b5ca4ecf81786cda858e0f3e537dd3cdf70316c8453320ea4e6957") {
+    board  = "pak4";
+    region = "PAL";
+    ram    = 0;
+  }
+
+  //Hicom
+  //===========
+
+  //The Best Game Collection - Hang On + Pit Pot + Spy vs Spy (Korea)
+  if(hash == "11ef490394ad30bfa795295f0195177f7ac92153521a97dc3d9a817912cd185c") {
+    board  = "Hicom";
+    region = "PAL";
+    ram    = 0;
+  }
+
+  //The Best Game Collection - Great Baseball + Great Soccer + Super Tennis (Korea)
+  if(hash == "dcd0195f5e9eef77c5ffd23413b54206daa8eacaf9adb41618c16b43c9bf3eb3") {
+    board  = "Hicom";
+    region = "PAL";
+    ram    = 0;
+  }
+
+  //The Best Game Collection - Teddy Boy Blues + Pit-Pot + Astro Flash (Korea)
+  if(hash == "5e8dba358c6e5ced67d6fd6d3c8e3124ac6bcde73ae5b1b89fe31d5733451fb0") {
+    board  = "Hicom";
+    region = "PAL";
+    ram    = 0;
+  }
+
+  //The Best Game Collection - Teddy Boy Blues + Great Soccer + Comical Machine Gun Joe (Korea)
+  if(hash == "bee055caea0282a505afd08452000aca3a46ee7a2a7ed1f7cfa09b43580a8431") {
+    board  = "Hicom";
+    region = "PAL";
+    ram    = 0;
+  }
+
+  //The Best Game Collection - Ghost House + Teddy Boy Blues + Seishun Scandal (Korea)
+  if(hash == "395cf05e2eabc7d47f57e501239f60d35933f450b2205895d25f380ae4b23a7c") {
+    board  = "Hicom";
+    region = "PAL";
+    ram    = 0;
+  }
+
+  //The Best Game Collection - Satellite-7 + Great Baseball + Seishun Scandal (Korea)
+  if(hash == "6f09849fa4f5904cc9554c15b4522da49160cf99f81895c1df80d3b4bfc0f033") {
+    board  = "Hicom";
+    region = "PAL";
+    ram    = 0;
+  }
+
+  //The Best Game Collection (Korea, 8 in 1 Ver. A)
+  if(hash == "572dfcc5ade1251c38b729ee86d78e37fde29d948d19f2292aeff32685db9129") {
+    board  = "Hicom";
+    region = "PAL";
+    ram    = 0;
+  }
+
+  //The Best Game Collection (Korea, 8 in 1 Ver. B)
+  if(hash == "6b829e41da9b7a0f2f0b0fcdbd644e311178ee7958e69ea6a1590dd4794a2834") {
+    board  = "Hicom";
+    region = "PAL";
+    ram    = 0;
+  }
+
+  //The Best Game Collection (Korea, 8 in 1 Ver. C)
+  if(hash == "addf8f41dfb2698cb4e5d01bdff29bfda898d099e651c08d7536eb9e2bb14f5e") {
+    board  = "Hicom";
+    region = "PAL";
+    ram    = 0;
+  }
+
   //Codemasters
   //===========
 
@@ -125,13 +201,20 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     ram    = 0;
   }
 
+  //The Excellent Dizzy Collection (Europe, USA, prototype)
+  if(hash == "f9cfcad94d7fa8a863d7b9fbeda5ed02e29787f3b56bc6114aea900c2bb44831") {
+    board  = "Codemasters";
+    region = "PAL";
+    ram    = 0;
+  }
+
   //Fantastic Dizzy (Europe)
   if(hash == "f0b9f293ec534f38e1028016e7e8bcb56a96591faa88d6e8ec5cab2bd5abfb3b") {
     board  = "Codemasters";
     region = "PAL";
     ram    = 0;
   }
-
+  
   //Micro Machines (Europe)
   if(hash == "cfbc86deccdcd31b64f886b1c344cc017e39c665928820bdfa16ae65d281057a") {
     board  = "Codemasters";
@@ -139,11 +222,58 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     ram    = 0;
   }
 
+  //Korean No-Bank Mapper
+  //=====
+
+  //FA Tetris (Korea)
+  if(hash == "46d86dd5782b248430cd84e9ba5b4fc68abec6472213bb898b2dbb213b4debcf") {
+    board  = "Korea_NB";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  
+  //Sky Jaguar
+  if(hash == "6b154d9fde7c8c6f1cf45adc50bf4727197746bb30c25f2f3f65874cc85cdf3e") {
+    board  = "Korea_NB";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  
+  //Sky Jaguar [Clover]
+  if(hash == "05462f928c1b39716dea4b230e2ed36b923e9fff47b81fa47c7afdce7cb57e49") {
+    board  = "Korea_NB";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+
+  //Flashpoint (Korea)
+  // TODO: NOT WORKING!
+  if(hash == "c6d945e79a22cc6da9ed6937d6a93a6df64835f1a577454e1c90b03e7d245186") {
+    board  = "Korea_NB";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+
+  //Xyzolog (Korea)
+  if(hash == "dfb4cf3d3e793f09c683965b5fbc1c1f4d8b580326fc08ecab093275e0aeb537") {
+    board  = "Korea_NB";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+
+
   //Korea
   //=====
 
-  //C_So! (Korea)
-  if(hash == "60716197f2643a5c87e38d26f32f370e328e740aaaea879b521986c31f8cdded") {
+  //Jang Pung II (Korea)
+  if(hash == "49df982e7da155d54f5d99aea338d0ada262b28ed6033ff1f88146b976d8b312") {
+    board  = "Korea";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+
+  //Jang Pung 3 (Korea)
+  if(hash == "ef489ab1a6215957309dff64e672b9a5b66de3826841e523f9d2fea412c6911d") {
     board  = "Korea";
     region = "NTSC-J";
     ram    = 0;
@@ -155,73 +285,91 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     region = "NTSC-J";
     ram    = 0;
   }
+  
+/* // MAME says it uses the Korea mapper but the whole game breaks with it? (Verify whats correct)
+  //Hong Kil Dong (Korea) 
+  if(hash == "b190090854b109ce69e1255dd189e8e985a3339bc083b102c4af73a2d20ca6d7") {
+    board  = "Korea";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+*/
 
-  //FA Tetris (Korea)
-  if(hash == "46d86dd5782b248430cd84e9ba5b4fc68abec6472213bb898b2dbb213b4debcf") {
+  //Sangokushi 3 (Korea)
+  if(hash == "db3773c81e9c3975f6ba7a6dd06df25b5d5210c69a6d1f13a0b7d5c92b4e0094") {
     board  = "Korea";
     region = "NTSC-J";
     ram    = 0;
   }
 
-  //MSX
+  //Super Boy II (Korea)
+  if(hash == "4dcec910ed8ff1f0d105457bedaf566e188d40b09efaaf35f28a56d4c5675555") {
+    board  = "Korea";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  
+  //Zemina / Nemesis
   //===
-
-  //Cyborg Z (Korea)
-  if(hash == "685530e434c9d78da8441475f795591210873622622b7f3168348ce08abc7f8e") {
-    board  = "MSX";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-
-  //F-1 Spirit: The Way to Formula-1 (Korea)
-  if(hash == "42dbc2ccf30a8d8e6d1d64fd0abb98d2f29b06da2113cedb9ed15af57fd9cfe0") {
-    board  = "MSX";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-
-  //Knightmare II: The Maze of Galious (Korea)
-  if(hash == "a906127be07469e6083ef6eb9657f5ece6ffe65b3cf793a0423959fc446e2799") {
-    board  = "MSX";
-    region = "NTSC-J";
-    ram    = 0;
-  }
-
   //Nemesis (Korea)
   if(hash == "c5b5126b0fdcacc70f350c3673f8d081b8d59d2db251ef917bf3ca8dd3d63430") {
-    board  = "MSX#A";
+    board  = "Zemina_Nemesis";
     region = "NTSC-J";
     ram    = 0;
   }
 
+  //Zemina
+  //===
+  //Super Boy 3
+  
   //Nemesis 2 (Korea)
   if(hash == "52d0772347e1bd73eea1a31f19400a4e24b43fb148b265ace9018ce2b677b3e4") {
-    board  = "MSX";
+    board  = "Zemina";
     region = "NTSC-J";
     ram    = 0;
   }
-
+  
   //Penguin Adventure (Korea)
   if(hash == "17958bcf247f6d18b616c519cc1466f7250901ada61831890ca58767fbfbb4b8") {
-    board  = "MSX";
+    board  = "Zemina";
     region = "NTSC-J";
     ram    = 0;
   }
 
   //Street Master (Korea)
   if(hash == "cad9e768d6c7a1f781f2bf6c13ceab9142135d36fadab8db4b77edc9ae926be7") {
-    board  = "MSX";
+    board  = "Zemina";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+
+  //Cyborg Z (Korea) 
+  if(hash == "685530e434c9d78da8441475f795591210873622622b7f3168348ce08abc7f8e") {
+    board  = "Zemina";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+
+  //Knightmare II: The Maze of Galious (Korea)
+  if(hash == "a906127be07469e6083ef6eb9657f5ece6ffe65b3cf793a0423959fc446e2799") {
+    board  = "Zemina";
     region = "NTSC-J";
     ram    = 0;
   }
 
   //Wonsiin (Korea)
   if(hash == "ee22d7b7fcd59e81ee6fda7b82356883d9c3d8ea3c99e6591487d1f28d569073") {
-    board  = "MSX";
+    board  = "Zemina";
     region = "NTSC-J";
     ram    = 0;
   }
-
+  //F-1 Spirit: The Way to Formula-1 (Korea)
+  if(hash == "42dbc2ccf30a8d8e6d1d64fd0abb98d2f29b06da2113cedb9ed15af57fd9cfe0") {
+    board  = "Zemina";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  
   //Janggun
   //=======
 
@@ -231,6 +379,38 @@ auto MasterSystem::analyze(vector<u8>& rom) -> string {
     region = "NTSC-J";
     ram    = 0;
   }
+  
+  //Hap2000
+  //=======
+
+  //2 Hap in 1 - David-2 ~ Moai-ui bomul (KR)
+  if(hash == "cf6aa5727748f7042ff7942972a27bed015e1e30976606adaad6f8ef0ec214b6") {
+    board  = "Hap2000";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  
+  
+  //Korean 188 in 1
+  // TODO: Game 6 and 13 do not work, posibly others also fail.
+  //=======
+  
+  //Not public dump
+  // 128 Hap (KR)
+
+  //Game Mo-eumjip 188 Hap (Korea) (v0)
+  if(hash == "f6fa88b8f0396e1bda26e00fd8427effc26aaabed6f811aef68efec32b4c4df3") {
+    board  = "K188in1";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  //Game Mo-eumjip 188 Hap (Korea) (v1)
+  if(hash == "e77553e86a0359c45e5b8250666ea402b0ae0d989b7fce0c28b42954cb5e106a") {
+    board  = "K188in1";
+    region = "NTSC-J";
+    ram    = 0;
+  }
+  
 
   string s;
   s += "game\n";
