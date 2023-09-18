@@ -1,5 +1,15 @@
 This file is the short summary of the API changes:
 
+05.9.2023 - Non-backward compatible
+    Turn SLJIT_IMM from a flag to a single value.
+
+10.8.2023 - Non-backward compatible
+    Rename SLJIT_INT_REGISTER to SLJIT_GP_REGISTER.
+
+01.08.2023 - Non-backward compatible
+    A type argument is added to sljit_get_register_index
+    and sljit_get_float_register_index is removed.
+
 19.07.2023 - Non-backward compatible
     SLJIT_MEM_UNALIGNED_16/32 options are renamed
     to SLJIT_MEM_ALIGNED_16/32 and a type argument
