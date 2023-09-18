@@ -703,10 +703,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "      volatile\n";
   }
 
-  if(prgnvram) {
+  if(eeprom) {
     s += "    memory\n";
     s += "      type: EEPROM\n";
-    s +={"      size: 0x", hex(prgnvram), "\n"};
+    s +={"      size: 0x", hex(eeprom), "\n"};
     s += "      content: Save\n";
   }
 
