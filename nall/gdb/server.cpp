@@ -112,7 +112,7 @@ namespace nall::GDB {
   {
     auto cmdParts = cmd.split(":");
     auto cmdName = cmdParts[0];
-    char cmdPrefix = cmdName.size() > 0 ? cmdName[0] : ' ';
+    char cmdPrefix = cmdName.size() > 0 ? cmdName(0) : ' ';
 
     if constexpr(GDB_LOG_MESSAGES) {
       printf("GDB <: %s\n", cmdBuffer.data());
@@ -317,7 +317,7 @@ namespace nall::GDB {
       case 'z': // remove breakpoint (e.g. "z0,801a0ef4,4")
       {
         bool isInsert = cmdPrefix == 'Z';
-        bool isHardware = cmdName[1] == '1'; // 0=software, 1=hardware
+        bool isHardware = cmdName(1) == '1'; // 0=software, 1=hardware
         auto sepIdxMaybe = cmdName.findFrom(3, ",");
         u32 sepIdx = sepIdxMaybe ? (sepIdxMaybe.get()+3) : 0;
 
@@ -331,7 +331,7 @@ namespace nall::GDB {
         }
         Watchpoint wp{addressStart, addressEnd, address};
 
-        switch(cmdName[1]) {
+        switch(cmdName(1)) {
           case '0': // (hardware/software breakpoints are the same for us)
           case '1': addOrRemoveEntry(breakpoints, address, isInsert); break;
           
