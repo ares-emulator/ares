@@ -1,6 +1,6 @@
 name := genius
 build := stable
-flags += -I../../ -DNALL_HEADER_ONLY
+flags += -I../../
 
 nall.path := ../../nall
 include $(nall.path)/GNUmakefile

@@ -9,6 +9,7 @@ include $(nall.path)/GNUmakefile
 
 thirdparty.path := ../thirdparty
 libchdr.path := $(thirdparty.path)/libchdr
+tzxfile.path := $(thirdparty.path)/TZXFile
 include $(thirdparty.path)/GNUmakefile
 
 hiro.path := ../hiro
@@ -25,8 +26,8 @@ $(object.path)/ares.o: $(ares.path)/ares/ares.cpp
 $(object.path)/mia.o: $(mia.path)/mia.cpp
 $(object.path)/resource.o: $(mia.path)/resource/resource.cpp
 
-all.objects := $(libchdr.objects) $(nall.objects) $(hiro.objects) $(objects)
-all.options := $(libchdr.options) $(nall.options) $(hiro.options) $(options)
+all.objects := $(libchdr.objects) $(tzxfile.objects) $(nall.objects) $(hiro.objects) $(objects)
+all.options := $(libchdr.options) $(tzxfile.options) $(nall.options) $(hiro.options) $(options)
 
 $(all.objects): | $(object.path)
 

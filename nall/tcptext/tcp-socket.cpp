@@ -1,4 +1,6 @@
 #include <nall/tcptext/tcp-socket.hpp>
+
+#include <inttypes.h>
 #include <memory>
 #include <thread>
 
@@ -198,7 +200,7 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
         }
 
         if constexpr(TCP_LOG_MESSAGES) {
-          printf("%.4f | TCP >: [%ld]: %.*s\n", (f64)chrono::millisecond() / 1000.0, localSendBuffer.size(), localSendBuffer.size() > 100 ? 100 : (int)localSendBuffer.size(), (char*)localSendBuffer.data());
+          printf("%.4f | TCP >: [%" PRIu64 "]: %.*s\n", (f64)chrono::millisecond() / 1000.0, localSendBuffer.size(), localSendBuffer.size() > 100 ? 100 : (int)localSendBuffer.size(), (char*)localSendBuffer.data());
         }
 
         localSendBuffer.resize(0);
