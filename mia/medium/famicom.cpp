@@ -135,6 +135,16 @@ auto Famicom::analyzeFDS(vector<u8>& data) -> string {
 }
 
 //iNES
+static u32 calculateNes2RomSize(u8 lsb, u8 msb, u32 multiplier) {
+  if(msb == 0xf) {
+    u32 e = lsb >> 2;
+    u32 m = (lsb & 3) * 2 + 1;
+    return (1 << e) * m;
+  } else {
+    return ((msb << 8) | lsb) * multiplier;
+  }
+}
+
 auto Famicom::analyzeINES(vector<u8>& data) -> string {
   string hash = Hash::SHA256({data.data() + 16, data.size() - 16}).digest();
   string manifest = Medium::manifestDatabase(hash);
@@ -152,9 +162,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   u32 prgrom = data[4] * 0x4000;
   u32 chrrom = data[5] * 0x2000;
   u32 prgram = 0u;
+  u32 prgnvram = 0u;
   u32 chrram = chrrom == 0u ? 8192u : 0u;
-  u32 eeprom = 0u;
+  u32 chrnvram = 0u;
   u32 submapper = 0u;
+  bool eepromMapper = false;
 
   string region = "NTSC-J, NTSC-U, PAL"; //iNES 1.0 requires database to detect region
 
@@ -163,17 +175,17 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     mapper |= ((data[8] & 0xf) << 8);
     submapper = data[8] >> 4;
 
-    prgrom |= (data[9] & 0xf) * 0x400000;
-    chrrom |= (data[9] >> 4) * 0x200000;
+    prgrom = calculateNes2RomSize(data[4], data[9] & 0xf, 0x4000);
+    chrrom = calculateNes2RomSize(data[5], data[9] >> 4,  0x2000);
 
     u8 prgramShift =   (data[10] & 0xf);
-    u8 eepromShift =   (data[10] >> 4);
+    u8 prgnvramShift = (data[10] >> 4);
     u8 chrramShift =   (data[11] & 0xf);
     u8 chrnvramShift = (data[11] >> 4);
-    prgram =  prgramShift == 0 ? 0 : 64 << prgramShift;
-    eeprom =  eepromShift == 0 ? 0 : 64 << eepromShift;
-    chrram = (chrramShift == 0 ? 0 : 64 << chrramShift)
-           + (chrnvramShift == 0 ? 0 : 64 << chrnvramShift);
+    prgram   = prgramShift   == 0 ? 0 : 64 << prgramShift;
+    prgnvram = prgnvramShift == 0 ? 0 : 64 << prgnvramShift;
+    chrram   = chrramShift   == 0 ? 0 : 64 << chrramShift;
+    chrnvram = chrnvramShift == 0 ? 0 : 64 << chrnvramShift;
 
     u32 timing = data[12] & 3;
 
@@ -261,7 +273,8 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  16:
     s += "  board:  BANDAI-LZ93D50\n";
     s += "    chip type=LZ93D50\n";
-    if(!iNes2) eeprom = 256;
+    if(!iNes2) prgnvram = 256;
+    eepromMapper = true;
     break;
 
   case  18:
@@ -583,15 +596,19 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
 
   case 157:
+    // TODO: Implement external EEPROM support.
+    // For now, we force values on this mapper.
     s += "  board:  BANDAI-LZ93D50\n";
     s += "    chip type=LZ93D50\n";
-    if(!iNes2) eeprom = 256;
+    prgnvram = 256;
+    eepromMapper = true;
     break;
 
   case 159:
     s += "  board:  BANDAI-LZ93D50\n";
     s += "    chip type=LZ93D50\n";
-    if(!iNes2) eeprom = 128;
+    if(!iNes2) prgnvram = 128;
+    eepromMapper = true;
     break;
 
   case 180:
@@ -641,6 +658,16 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
   }
 
+  u32 eeprom = 0u;
+  if(eepromMapper) {
+    eeprom = prgnvram;
+  } else {
+    prgram += prgnvram;
+  }
+  prgnvram = 0u;
+  chrram += chrnvram;
+  chrnvram = 0u;
+
   s += "    memory\n";
   s += "      type: ROM\n";
   s += "      size: 0x10\n";
@@ -676,10 +703,10 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "      volatile\n";
   }
 
-  if(eeprom) {
+  if(prgnvram) {
     s += "    memory\n";
     s += "      type: EEPROM\n";
-    s +={"      size: 0x", hex(eeprom), "\n"};
+    s +={"      size: 0x", hex(prgnvram), "\n"};
     s += "      content: Save\n";
   }
 
