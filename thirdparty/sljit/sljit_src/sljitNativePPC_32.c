@@ -332,7 +332,7 @@ static SLJIT_INLINE sljit_s32 sljit_emit_fop1_conv_f64_from_sw(struct sljit_comp
 	sljit_s32 dst_r = FAST_IS_REG(dst) ? dst : TMP_FREG1;
 	sljit_s32 invert_sign = 1;
 
-	if (src & SLJIT_IMM) {
+	if (src == SLJIT_IMM) {
 		FAIL_IF(load_immediate(compiler, TMP_REG1, srcw ^ (sljit_sw)0x80000000));
 		src = TMP_REG1;
 		invert_sign = 0;
@@ -373,7 +373,7 @@ static SLJIT_INLINE sljit_s32 sljit_emit_fop1_conv_f64_from_uw(struct sljit_comp
 {
 	sljit_s32 dst_r = FAST_IS_REG(dst) ? dst : TMP_FREG1;
 
-	if (src & SLJIT_IMM) {
+	if (src == SLJIT_IMM) {
 		FAIL_IF(load_immediate(compiler, TMP_REG1, srcw));
 		src = TMP_REG1;
 	} else if (!FAST_IS_REG(src)) {
