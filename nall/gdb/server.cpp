@@ -1,5 +1,7 @@
 #include <nall/gdb/server.hpp>
 
+#include <inttypes.h>
+
 using string = ::nall::string;
 using string_view = ::nall::string_view;
 
@@ -277,7 +279,7 @@ namespace nall::GDB {
       case 's': {
         if(cmdName.size() > 1) {
           u64 address = cmdName.slice(1).integer();
-          printf("stepping at address unsupported, ignore (%016lX)\n", address);
+          printf("stepping at address unsupported, ignore (%016" PRIX64 ")\n", address);
         }
 
         shouldReply = false;
