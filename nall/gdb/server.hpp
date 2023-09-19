@@ -96,6 +96,7 @@ class Server : public nall::TCPText::Server {
     bool forceHalt{false}; // forces a halt despite no breakpoints being hit
     bool singleStepActive{false};
 
+    bool noAckMode{false}; // gets set if lldb prefers no acknowledgements
     bool nonStopMode{false}; // (NOTE: Not working for now), gets set if gdb wants to switch over to async-messaging
     bool handshakeDone{false}; // set to true after a few handshake commands, used to prevent exception-reporting until client is ready
     bool requestDisconnect{false}; // set to true if the client decides it wants to disconnect

@@ -225,10 +225,11 @@ namespace nall::GDB {
       case 'q':
         // This tells the client what we can and can't do
         if(cmdName == "qSupported"){ return {
-          "PacketSize=", hex(MAX_PACKET_SIZE), 
+          "PacketSize=", hex(MAX_PACKET_SIZE),
           ";fork-events-;swbreak+;hwbreak-", 
           ";vContSupported-", // prevent vCont commands (reduces potential GDB variations: some prefer using it, others don't)
           NON_STOP_MODE ? ";QNonStop+" : "",
+          "QStartNoAckMode+",
           hooks.targetXML ? ";xmlRegisters+;qXfer:features:read+" : "" // (see: https://marc.info/?l=gdb&m=149901965961257&w=2)
         };}
 
@@ -254,7 +255,7 @@ namespace nall::GDB {
           }
         }
 
-         // Thread-related queries
+        // Thread-related queries
         if(cmdName == "qfThreadInfo")return {"m1"};
         if(cmdName == "qsThreadInfo")return {"l"};
         if(cmdName == "qThreadExtraInfo,1")return ""; // ignoring this command fixes support for CLion (and VSCode?), otherwise gdb hangs
@@ -273,6 +274,17 @@ namespace nall::GDB {
             resumeProgram();
           }
           return "OK";
+        }
+
+        if(cmdName == "QStartNoAckMode") {
+          if (noAckMode) {
+            return "OK";
+          }
+          // The final OK has to be sent in ack mode.
+          sendPayload("OK");
+          shouldReply = false;
+          noAckMode = true;
+          return "";
         }
         break;
 
@@ -386,8 +398,8 @@ namespace nall::GDB {
           auto cmdRes = processCommand(cmdBuffer, shouldReply);
           if(shouldReply) {
             sendPayload(cmdRes);
-          } else {
-            sendText("+"); // acknowledge always needed
+          } else if(!noAckMode) {
+            sendText("+");
           }
 
           cmdBuffer = "";
@@ -416,7 +428,9 @@ namespace nall::GDB {
     if(requestDisconnect) {
       requestDisconnect = false;
       printf("GDB ending session, disconnecting client\n");
-      sendText("+");
+      if(!noAckMode) {
+        sendText("+");
+      }
       disconnectClient();
       resumeProgram();
       return;
@@ -467,7 +481,7 @@ namespace nall::GDB {
   }
 
   auto Server::sendPayload(const string& payload) -> void {
-    string msg{"+$", payload, '#', hex(gdbCalcChecksum(payload), 2, '0')};
+    string msg{noAckMode ? "$" : "+$", payload, '#', hex(gdbCalcChecksum(payload), 2, '0')};
     if constexpr(GDB_LOG_MESSAGES) {
       printf("GDB >: %.*s\n", msg.size() > 100 ? 100 : msg.size(), msg.data());
     }
@@ -528,6 +542,7 @@ namespace nall::GDB {
     forceHalt = false;
     singleStepActive = false;
     nonStopMode = false;
+    noAckMode = false;
 
     currentThreadC = -1;
     hasActiveClient = false;
