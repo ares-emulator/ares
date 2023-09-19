@@ -29,6 +29,11 @@ struct HVC_BNROM : Interface {
     programBank = data;
   }
 
+  auto debugAddress(n32 address) -> n32 override {
+    if(address < 0x8000) return address;
+    return (programBank << 16 | (n16)address) & ((bit::round(programROM.size()) << 1) - 1);
+  }
+
   auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) {
       address = address >> !mirror & 0x0400 | (n10)address;

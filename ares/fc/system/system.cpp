@@ -1,4 +1,5 @@
 #include <fc/fc.hpp>
+#include <nall/gdb/server.hpp>
 
 namespace ares::Famicom {
 
@@ -19,6 +20,7 @@ Random random;
 Scheduler scheduler;
 System system;
 #include "controls.cpp"
+#include "gdb.cpp"
 #include "serialization.cpp"
 
 auto System::game() -> string {
@@ -79,6 +81,8 @@ auto System::load(Node::System& root, string name) -> bool {
   controllerPort1.load(node);
   controllerPort2.load(node);
   expansionPort.load(node);
+
+  initGdbDebugHooks();
   return true;
 }
 

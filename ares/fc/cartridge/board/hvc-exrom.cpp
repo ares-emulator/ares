@@ -192,7 +192,7 @@ struct HVC_ExROM : Interface {  //MMC5
     return ramBank << 13 | (n13)address;
   }
 
-  auto programRomAddress(n32 address) -> n32 {
+  auto programRomBank(n32 address) -> n8 {
     n8 bank;
 
     if(programMode == 0) {
@@ -216,7 +216,11 @@ struct HVC_ExROM : Interface {  //MMC5
       address &= 0x1fff;
     }
 
-    return bank << 13 | address;
+    return bank;
+  }
+
+  auto programRomAddress(n32 address) -> n32 {
+    return programRomBank(address) << 13 | address;
   }
 
   auto readPRG(n32 address, n8 data) -> n8 override {
@@ -567,6 +571,11 @@ struct HVC_ExROM : Interface {  //MMC5
       timerCounter.bit(8,15) = data.bit(0,7);
       break;
     }
+  }
+
+  auto debugAddress(n32 address) -> n32 override {
+    if(address < 0x8000) return address;
+    return programRomBank(address) << 16 | (n16)address;
   }
 
   auto readCIRAM(n32 address) -> n8 {

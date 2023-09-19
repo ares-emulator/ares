@@ -21,14 +21,16 @@ struct UNROM512 : Interface {
     Interface::save(characterRAM, "character.ram");
   }
 
+  inline auto bankPRG(n32 address) -> n5 {
+    switch(address >> 14 & 1) {
+    case 0: return programBank; break;
+    case 1: default: return (n5)0x1f; break;
+    }
+  }
+
   auto readPRG(n32 address, n8 data) -> n8 override {
     if(address < 0x8000) return data;
-    n5 bank;
-    switch(address >> 14 & 1) {
-    case 0: bank = programBank; break;
-    case 1: bank = (n5)0x1f; break;
-    }
-    return programROM.read(bank << 14 | (n14)address);
+    return programROM.read(bankPRG(address) << 14 | (n14)address);
   }
 
   auto writePRG(n32 address, n8 data) -> void override {
@@ -36,6 +38,11 @@ struct UNROM512 : Interface {
     programBank = data.bit(0, 4);
     characterBank = data.bit(5, 6);
     nametableBank = data.bit(7);
+  }
+
+  auto debugAddress(n32 address) -> n32 override {
+    if(address < 0x8000) return address;
+    return (bankPRG(address) << 16 | (n16)address) & ((bit::round(programROM.size()) << 2) - 1);
   }
 
   inline auto addressCIRAM(n32 address) -> n11 {

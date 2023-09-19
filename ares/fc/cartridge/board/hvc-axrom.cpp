@@ -41,6 +41,11 @@ struct HVC_AxROM : Interface {
     mirror = data.bit(4);
   }
 
+  auto debugAddress(n32 address) -> n32 override {
+    if(address < 0x8000) return address;
+    return (programBank << 16 | (n16)address) & ((bit::round(programROM.size()) << 1) - 1);
+  }
+
   auto readCHR(n32 address, n8 data) -> n8 override {
     if(address & 0x2000) return ppu.readCIRAM(mirror << 10 | (n10)address);
     if(characterROM) return characterROM.read(address);

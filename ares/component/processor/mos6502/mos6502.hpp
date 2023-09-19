@@ -11,6 +11,7 @@ struct MOS6502 {
   virtual auto write(n16 addr, n8 data) -> void = 0;
   virtual auto lastCycle() -> void = 0;
   virtual auto nmi(n16& vector) -> void = 0;
+  virtual auto debugAddress(n16 address) -> n32 { return address; }
   virtual auto readDebugger(n16 addr) -> n8 { return 0; }
 
   //mos6502.cpp

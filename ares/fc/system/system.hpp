@@ -28,6 +28,9 @@ struct System {
   auto unload() -> void;
   auto power(bool reset) -> void;
 
+  //gdb.cpp
+  auto initGdbDebugHooks() -> void;
+
   //serialization.cpp
   auto serialize(bool synchronize) -> serializer;
   auto unserialize(serializer&) -> bool;

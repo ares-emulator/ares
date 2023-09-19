@@ -66,6 +66,27 @@ struct Action53 : Interface {
     }
   }
 
+  auto debugAddress(n32 address) -> n32 override {
+    if(address < 0x8000) return address;
+
+    n32 result;
+    n8 programBankMask = (1 << programBankWidth) - 1;
+    if (programBankMode < 2) {
+      n8 outerBank = programOuterBank & ~programBankMask;
+      n8 innerBank = programBank & programBankMask;
+      result = (outerBank | innerBank) << 16;
+    } else {
+      n9 outerBank = (programOuterBank & ~programBankMask) << 1;
+      n9 innerBank = programBank & ((2 << programBankWidth) - 1);
+      n9 offset = (address >> 14) & 1;
+      if(offset == (programBankMode & 1))
+        result = programOuterBank << 16;
+      else
+        result = (outerBank | innerBank) << 16;
+    }
+    return (result | (n16)address) & ((bit::round(programROM.size()) << 1) - 1);
+  }
+
   inline auto addressCIRAM(n32 address) -> n11 {
     if(mirror) {
       return ((address >> nametableBank) & 0x0400) | (n10)address;

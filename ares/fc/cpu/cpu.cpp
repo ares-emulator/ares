@@ -1,4 +1,5 @@
 #include <fc/fc.hpp>
+#include <nall/gdb/server.hpp>
 
 namespace ares::Famicom {
 

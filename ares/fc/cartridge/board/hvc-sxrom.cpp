@@ -92,7 +92,7 @@ struct HVC_SxROM : Interface {  //MMC1
     if(writeDelay) writeDelay--;
   }
 
-  auto addressProgramROM(n32 address) -> n32 {
+  auto bankPRG(n32 address) -> n5 {
     bool region = address & 0x4000;
     n5 bank = programBank & ~1 | region;
     if(programSize == 1) {
@@ -102,7 +102,11 @@ struct HVC_SxROM : Interface {  //MMC1
     if(revision == Revision::SXROM) {
       bank.bit(4) = characterBank[0].bit(4);
     }
-    return bank << 14 | (n14)address;
+    return bank;
+  }
+
+  auto addressProgramROM(n32 address) -> n32 {
+    return bankPRG(address) << 14 | (n14)address;
   }
 
   auto addressProgramRAM(n32 address) -> n32 {
@@ -156,6 +160,11 @@ struct HVC_SxROM : Interface {  //MMC1
     }
 
     if(address & 0x8000) return writeIO(address, data);
+  }
+
+  auto debugAddress(n32 address) -> n32 override {
+    if(address < 0x8000) return address;
+    return (bankPRG(address) << 16 | (n16)address) & ((bit::round(programROM.size()) << 2) - 1);
   }
 
   auto writeIO(n32 address, n8 data) -> void {

@@ -1,4 +1,6 @@
 auto CPU::read(n16 address) -> n8 {
+  GDB::server.reportMemRead(address, 1);
+
   if(io.oamDMAPending) {
     io.oamDMAPending = 0;
     read(address);
@@ -16,6 +18,8 @@ auto CPU::read(n16 address) -> n8 {
 }
 
 auto CPU::write(n16 address, n8 data) -> void {
+  GDB::server.reportMemWrite(address, 1);
+
   writeBus(address, MDR = data);
   step(rate());
 }

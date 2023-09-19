@@ -79,6 +79,15 @@ struct HVC_TxROM : Interface {  //MMC3
     characterAddress = address;
   }
 
+  inline auto bankPRG(n32 address) -> n6 {
+    switch(address >> 13 & 3) {
+    case 0: return (programMode == 0 ? programBank[0] : (n6)0x3e); break;
+    case 1: return programBank[1]; break;
+    case 2: return (programMode == 1 ? programBank[0] : (n6)0x3e); break;
+    case 3: default: return 0x3f; break;
+    }
+  }
+
   auto readPRG(n32 address, n8 data) -> n8 override {
     if(address < 0x6000) return data;
 
@@ -87,14 +96,7 @@ struct HVC_TxROM : Interface {  //MMC3
       return programRAM.read((n13)address);
     }
 
-    n6 bank;
-    switch(address >> 13 & 3) {
-    case 0: bank = (programMode == 0 ? programBank[0] : (n6)0x3e); break;
-    case 1: bank = programBank[1]; break;
-    case 2: bank = (programMode == 1 ? programBank[0] : (n6)0x3e); break;
-    case 3: bank = 0x3f; break;
-    }
-
+    n6 bank = bankPRG(address);
     address = bank << 13 | (n13)address;
     if(revision == Revision::NESQJ) {
       address = outerBank.bit(0) << 17 | (n17)address;
@@ -157,6 +159,11 @@ struct HVC_TxROM : Interface {  //MMC3
       irqEnable = 1;
       break;
     }
+  }
+
+  auto debugAddress(n32 address) -> n32 override {
+    if(address < 0x8000) return address;
+    return (bankPRG(address) << 16 | (n16)address) & ((bit::round(programROM.size()) << 2) - 1);
   }
 
   auto addressCHR(n32 address) const -> n32 {
