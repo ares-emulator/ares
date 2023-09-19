@@ -135,6 +135,16 @@ auto Famicom::analyzeFDS(vector<u8>& data) -> string {
 }
 
 //iNES
+static u32 calculateNes2RomSize(u8 lsb, u8 msb, u32 multiplier) {
+  if(msb == 0xf) {
+    u32 e = lsb >> 2;
+    u32 m = (lsb & 3) * 2 + 1;
+    return (1 << e) * m;
+  } else {
+    return ((msb << 8) | lsb) * multiplier;
+  }
+}
+
 auto Famicom::analyzeINES(vector<u8>& data) -> string {
   string hash = Hash::SHA256({data.data() + 16, data.size() - 16}).digest();
   string manifest = Medium::manifestDatabase(hash);
@@ -152,9 +162,11 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   u32 prgrom = data[4] * 0x4000;
   u32 chrrom = data[5] * 0x2000;
   u32 prgram = 0u;
+  u32 prgnvram = 0u;
   u32 chrram = chrrom == 0u ? 8192u : 0u;
-  u32 eeprom = 0u;
+  u32 chrnvram = 0u;
   u32 submapper = 0u;
+  bool eepromMapper = false;
 
   string region = "NTSC-J, NTSC-U, PAL"; //iNES 1.0 requires database to detect region
 
@@ -162,6 +174,19 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   if(iNes2) {
     mapper |= ((data[8] & 0xf) << 8);
     submapper = data[8] >> 4;
+
+    prgrom = calculateNes2RomSize(data[4], data[9] & 0xf, 0x4000);
+    chrrom = calculateNes2RomSize(data[5], data[9] >> 4,  0x2000);
+
+    u8 prgramShift =   (data[10] & 0xf);
+    u8 prgnvramShift = (data[10] >> 4);
+    u8 chrramShift =   (data[11] & 0xf);
+    u8 chrnvramShift = (data[11] >> 4);
+    prgram   = prgramShift   == 0 ? 0 : 64 << prgramShift;
+    prgnvram = prgnvramShift == 0 ? 0 : 64 << prgnvramShift;
+    chrram   = chrramShift   == 0 ? 0 : 64 << chrramShift;
+    chrnvram = chrnvramShift == 0 ? 0 : 64 << chrnvramShift;
+
     u32 timing = data[12] & 3;
 
     // TODO: add DENDY (pirate famiclone) timing
@@ -190,7 +215,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case   1:
     s += "  board:  HVC-SXROM\n";
     s += "    chip type=MMC1B2\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case   2:
@@ -206,13 +231,16 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case   4:
     s += "  board:  HVC-TLROM\n";
     s += "    chip type=MMC3B\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case   5:
-    s += "  board:  HVC-EWROM\n";
+    if(!iNes2) prgram = 32768;
+    if      (prgram == 0)     s += "  board:  HVC-ELROM\n";
+    else if (prgram == 8192)  s += "  board:  HVC-EKROM\n";
+    else if (prgram == 16384) s += "  board:  HVC-ETROM\n";
+    else                      s += "  board:  HVC-EWROM\n";
     s += "    chip type=MMC5\n";
-    prgram = 32768;
     break;
 
   case   7:
@@ -222,13 +250,13 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case   9:
     s += "  board:  HVC-PNROM\n";
     s += "    chip type=MMC2\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  10:
     s += "  board:  HVC-FKROM\n";
     s += "    chip type=MMC4\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  11:
@@ -239,13 +267,14 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  13:
     s += "  board:  HVC-CPROM\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
-    chrram = 16384;
+    if(!iNes2) chrram = 16384;
     break;
 
   case  16:
     s += "  board:  BANDAI-LZ93D50\n";
     s += "    chip type=LZ93D50\n";
-    eeprom = 256;
+    if(!iNes2) prgnvram = 256;
+    eepromMapper = true;
     break;
 
   case  18:
@@ -256,7 +285,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  19:
     s += "  board:  NAMCO-163\n";
     s += "    chip type=163\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  21:
@@ -272,7 +301,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
         s += "      pinout a0=6 a1=7\n";
         break;
     }
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  22:
@@ -299,7 +328,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
         s += "      pinout a0=0 a1=1\n";
         break;
     }
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  24:
@@ -326,15 +355,14 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
         s += "      pinout a0=1 a1=0\n";
         break;
     }
-
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  26:
     s += "  board:  KONAMI-VRC-6\n";
     s += "    chip type=VRC6\n";
     s += "      pinout a0=1 a1=0\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  28:
@@ -354,7 +382,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  32:
     s += "  board:  IREM-G101\n";
     s += "    chip type=G101\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  33:
@@ -365,7 +393,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  34:
     if(submapper == 0 && chrrom != 0 || submapper == 1) {
       s += "  board:  AVE-NINA-001\n";
-      prgram = 8192;
+      if(!iNes2) prgram = 8192;
     } else {
       s += "  board:  HVC-BNROM\n";
       s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
@@ -403,13 +431,13 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case  68:
     s += "  board:  SUNSOFT-4\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  69:
     s += "  board:  SUNSOFT-5B\n";
     s += "    chip type=5B\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  70:
@@ -426,7 +454,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     s += "  board:  KONAMI-VRC-3\n";
     s += "    chip type=VRC3\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  75:
@@ -442,7 +470,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case  77:
     s += "  board:  IREM-LROG017\n";
-    chrram = 8192;
+    if(!iNes2) chrram = 8192;
     break;
 
   case  78:
@@ -457,20 +485,20 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  80:
     s += "  board:  TAITO-X1-005\n";
     s += "    chip type=X1-005\n";
-    prgram = 128;
+    if (!iNes2) prgram = 128;
     break;
 
   case  82:
     s += "  board:  TAITO-X1-017\n";
     s += "    chip type=X1-017\n";
-    prgram = 5120;
+    if (!iNes2) prgram = 5120;
     break;
 
   case  85:
     s += "  board:  KONAMI-VRC-7\n";
     s += "    chip type=VRC7\n";
     s += "      pinout a0=4\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case  86:
@@ -516,7 +544,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  96:
     s += "  board:  BANDAI-OEKA\n";
     s +={"    mirror mode=", !mirror ? "horizontal" : "vertical", "\n"};
-    chrram = 32768;
+    if(!iNes2) chrram = 32768;
     break;
 
   case  97:
@@ -526,19 +554,19 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case 111:
     s += "  board:  GTROM\n";
-    chrram = 16384;
+    if(!iNes2) chrram = 16384;
     break;
 
   case 118:
     s += "  board:  HVC-TKSROM\n";
     s += "    chip type=MMC3B\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case 119:
     s += "  board:  HVC-TQROM\n";
     s += "    chip type=MMC3B\n";
-    chrram = 8192;
+    if(!iNes2) chrram = 8192;
     break;
 
   case  140:
@@ -553,7 +581,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case 153:
     s += "  board:  BANDAI-LZ93D50\n";
     s += "    chip type=LZ93D50\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case 154:
@@ -564,19 +592,23 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case 155:
     s += "  board:  HVC-SXROM\n";
     s += "    chip type=MMC1A\n";
-    prgram = 8192;
+    if(!iNes2) prgram = 8192;
     break;
 
   case 157:
+    // TODO: Implement external EEPROM support.
+    // For now, we force values on this mapper.
     s += "  board:  BANDAI-LZ93D50\n";
     s += "    chip type=LZ93D50\n";
-    eeprom = 256;
+    prgnvram = 256;
+    eepromMapper = true;
     break;
 
   case 159:
     s += "  board:  BANDAI-LZ93D50\n";
     s += "    chip type=LZ93D50\n";
-    eeprom = 128;
+    if(!iNes2) prgnvram = 128;
+    eepromMapper = true;
     break;
 
   case 180:
@@ -608,7 +640,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case 207:
     s += "  board:  TAITO-X1-005A\n";
     s += "    chip type=X1-005\n";
-    prgram = 128;
+    if (!iNes2) prgram = 128;
     break;
 
   case 210:
@@ -626,12 +658,15 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
     break;
   }
 
-
-  // iNES 2.0 overrides auto-detected ram amounts
-  if(iNes2) {
-    u32 chrshift = data[11] & 0xf;
-    chrram = chrshift > 0 ? 64 << chrshift : 0;
+  u32 eeprom = 0u;
+  if(eepromMapper) {
+    eeprom = prgnvram;
+  } else {
+    prgram += prgnvram;
   }
+  prgnvram = 0u;
+  chrram += chrnvram;
+  chrnvram = 0u;
 
   s += "    memory\n";
   s += "      type: ROM\n";
