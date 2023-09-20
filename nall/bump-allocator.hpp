@@ -88,9 +88,9 @@ struct bump_allocator {
     _offset = nextOffset(size);  //alignment
   }
 
-  auto tryAcquire(u32 size) -> u8* {
+  auto tryAcquire(u32 size, bool reserve = true) -> u8* {
     if((nextOffset(size)) > _capacity) return nullptr;
-    return acquire(size);
+    return reserve ? acquire(size) : acquire();
   }
 
 private:
