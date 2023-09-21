@@ -1,4 +1,5 @@
 #include <n64/n64.hpp>
+#include <nall/gdb/server.hpp>
 
 namespace ares::Nintendo64 {
 
@@ -30,7 +31,7 @@ auto CPU::unload() -> void {
 }
 
 auto CPU::main() -> void {
-  while(!vi.refreshed) {
+  while(!vi.refreshed && GDB::server.reportPC(ipu.pc & 0xFFFFFFFF)) {
     instruction();
     synchronize();
   }
@@ -104,7 +105,7 @@ auto CPU::instruction() -> void {
     }
 
     if (auto address = devirtualize(ipu.pc)) {
-      auto block = recompiler.block(ipu.pc, *address);
+      auto block = recompiler.block(ipu.pc, *address, GDB::server.hasBreakpoints());
       block->execute(*this);
     }
   }

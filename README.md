@@ -47,7 +47,7 @@ clang++ is now the preferred compiler for ares. If clang is detected on Windows/
 To build on Windows, using MSYS2 is recommended which can be download [here](https://www.msys2.org/). Follow the instructions
 on this page to install and setup an appropriate MINGW64 environment. Running the command:  
 ```
-pacman -S --needed base-devel mingw-w64-x86_64-toolchain
+pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-SDL2
 ```  
 from the MSYS2 MSYS terminal should setup everything you need to compile ares. Note that in order to compile, you will want to be in a MINGW64 terminal window after install and setup is complete. 
 
@@ -55,7 +55,7 @@ from the MSYS2 MSYS terminal should setup everything you need to compile ares. N
 
 clang is available through Visual Studio (or Build Tools for Visual Studio) through its installer and can be used to build ares. You will still need to supply GNU make in this instance. MSYS2 also offers a clang environment. You will want to make sure you select the clangw64 option during installation of MSYS2 which should provide and additional CLANG64 pre-configured environment. Install the clang toolchain package from the MSYS2 terminal:  
 ```
-pacman -S mingw-w64-clang-x86_64-toolchain
+pacman -S mingw-w64-clang-x86_64-toolchain mingw-w64-clang-x86_64-SDL2
 ```  
 Once complete, open a CLANG64 terminal window and proceed with building ares. 
 

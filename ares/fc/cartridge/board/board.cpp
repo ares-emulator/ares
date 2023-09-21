@@ -1,5 +1,6 @@
 namespace Board {
 
+#include "action53.cpp"
 #include "ave-nina-001.cpp"
 #include "ave-nina-06.cpp"
 #include "bandai-74161.cpp"
@@ -34,10 +35,12 @@ namespace Board {
 #include "hvc-sxrom.cpp"
 #include "hvc-txrom.cpp"
 #include "hvc-uxrom.cpp"
+#include "inl-nsf.cpp"
 #include "irem-g101.cpp"
 #include "irem-h3001.cpp"
 #include "irem-lrog017.cpp"
 #include "irem-tam-s1.cpp"
+#include "magicfloor.cpp"
 #include "mlt-action52.cpp"
 #include "namco-118.cpp"
 #include "namco-163.cpp"
@@ -51,9 +54,11 @@ namespace Board {
 #include "taito-tc0690.cpp"
 #include "taito-x1-005.cpp"
 #include "taito-x1-017.cpp"
+#include "unrom-512.cpp"
 
 auto Interface::create(string board) -> Interface* {
   Interface* p = nullptr;
+  if(!p) p = Action53::create(board);
   if(!p) p = AveNina001::create(board);
   if(!p) p = AveNina06::create(board);
   if(!p) p = Bandai74161::create(board);
@@ -76,6 +81,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = HVC_SxROM::create(board);
   if(!p) p = HVC_TxROM::create(board);
   if(!p) p = HVC_UxROM::create(board);
+  if(!p) p = INL_NSF::create(board);
   if(!p) p = IremG101::create(board);
   if(!p) p = IremH3001::create(board);
   if(!p) p = IremLROG017::create(board);
@@ -92,6 +98,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = KonamiVRC5::create(board);
   if(!p) p = KonamiVRC6::create(board);
   if(!p) p = KonamiVRC7::create(board);
+  if(!p) p = MagicFloor::create(board);
   if(!p) p = MltAction52::create(board);
   if(!p) p = Namco118::create(board);
   if(!p) p = Namco163::create(board);
@@ -105,6 +112,7 @@ auto Interface::create(string board) -> Interface* {
   if(!p) p = TaitoTC0690::create(board);
   if(!p) p = TaitoX1005::create(board);
   if(!p) p = TaitoX1017::create(board);
+  if(!p) p = UNROM512::create(board);
   if(!p) p = new Interface;
   return p;
 }

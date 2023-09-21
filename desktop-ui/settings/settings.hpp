@@ -88,6 +88,12 @@ struct Settings : Markup::Node {
   struct Recent {
     string game[9];
   } recent;
+
+  struct DebugServer {
+    u32 port = 9123;
+    bool enabled = false; // if enabled, server starts with ares
+    bool useIPv4 = false; // forces IPv4 over IPv6
+  } debugServer;
 };
 
 struct VideoSettings : VerticalLayout {
@@ -345,6 +351,29 @@ struct DriverSettings : VerticalLayout {
     Group inputDefocusGroup{&inputDefocusPause, &inputDefocusBlock, &inputDefocusAllow};
 };
 
+struct DebugSettings : VerticalLayout {
+  auto construct() -> void;
+  auto infoRefresh() -> void;
+  auto serverRefresh() -> void;
+
+  Label debugLabel{this, Size{~0, 0}, 5};
+
+  HorizontalLayout portLayout{this, Size{~0, 0}};
+    Label portLabel{&portLayout, Size{48, 20}};
+    LineEdit port{&portLayout, Size{~0, 0}};
+    Label portHint{&portLayout, Size{~0, 0}};
+
+  HorizontalLayout ipv4Layout{this, Size{~0, 0}};
+    Label ipv4Label{&ipv4Layout, Size{48, 20}};
+    CheckLabel ipv4{&ipv4Layout, Size{~0, 0}};
+
+  HorizontalLayout enabledLayout{this, Size{~0, 0}};
+    Label enabledLabel{&enabledLayout, Size{48, 20}};
+    CheckLabel enabled{&enabledLayout, Size{~0, 0}};
+
+  Label connectInfo{this, Size{~0, 30}, 5};
+};
+
 struct HomePanel : VerticalLayout {
   auto construct() -> void;
 
@@ -368,6 +397,7 @@ struct SettingsWindow : Window {
       FirmwareSettings firmwareSettings;
       PathSettings pathSettings;
       DriverSettings driverSettings;
+      DebugSettings debugSettings;
       HomePanel homePanel;
 };
 
@@ -383,3 +413,4 @@ extern OptionSettings& optionSettings;
 extern FirmwareSettings& firmwareSettings;
 extern PathSettings& pathSettings;
 extern DriverSettings& driverSettings;
+extern DebugSettings& debugSettings;

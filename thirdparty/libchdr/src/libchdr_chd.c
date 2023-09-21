@@ -811,7 +811,7 @@ static chd_error huff_codec_decompress(void *codec, const uint8_t *src, uint32_t
 	if (err != HUFFERR_NONE)
 	{
 		free(bitbuf);
-		return err;
+		return CHDERR_DECOMPRESSION_ERROR;
 	}
 
 	// then decode the data

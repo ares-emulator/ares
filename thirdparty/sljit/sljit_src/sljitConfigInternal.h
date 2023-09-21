@@ -85,6 +85,8 @@ extern "C" {
    Other macros:
      SLJIT_FUNC : calling convention attribute for both calling JIT from C and C calling back from JIT
      SLJIT_W(number) : defining 64 bit constants on 64 bit architectures (platform independent helper)
+     SLJIT_F64_SECOND(reg) : provides the register index of the second 32 bit part of a 64 bit
+                             floating point register when SLJIT_HAS_F64_AS_F32_PAIR returns non-zero
 */
 
 /***********************************************************/
@@ -241,7 +243,9 @@ extern "C" {
 /* Not required to implement on archs with unified caches. */
 #define SLJIT_CACHE_FLUSH(from, to)
 
-#elif defined __APPLE__
+#elif defined __APPLE__ && \
+      defined __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ && \
+      __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
 
 /* Supported by all macs since Mac OS 10.5.
    However, it does not work on non-jailbroken iOS devices,
@@ -393,9 +397,10 @@ typedef double sljit_f64;
 /* Auto detecting mips revision. */
 #if (defined __mips_isa_rev) && (__mips_isa_rev >= 6)
 #define SLJIT_MIPS_REV 6
-#elif (defined __mips_isa_rev && __mips_isa_rev >= 1) \
-	|| (defined __clang__ && defined _MIPS_ARCH_OCTEON) \
-	|| (defined __clang__ && defined _MIPS_ARCH_P5600)
+#elif defined(__mips_isa_rev) && __mips_isa_rev >= 1
+#define SLJIT_MIPS_REV __mips_isa_rev
+#elif defined(__clang__) \
+	&& (defined(_MIPS_ARCH_OCTEON) || defined(_MIPS_ARCH_P5600))
 /* clang either forgets to define (clang-7) __mips_isa_rev at all
  * or sets it to zero (clang-8,-9) for -march=octeon (MIPS64 R2+)
  * and -march=p5600 (MIPS32 R5).
@@ -675,6 +680,19 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
 	|| (defined SLJIT_CONFIG_LOONGARCH && SLJIT_CONFIG_LOONGARCH)
 #define SLJIT_HAS_STATUS_FLAGS_STATE 1
 #endif
+
+/***************************************/
+/* Floating point register management. */
+/***************************************/
+
+#if (defined SLJIT_CONFIG_ARM_32 && SLJIT_CONFIG_ARM_32) \
+	|| (defined SLJIT_CONFIG_MIPS_32 && SLJIT_CONFIG_MIPS_32)
+#define SLJIT_F64_SECOND(reg) \
+	((reg) + SLJIT_FS0)
+#else /* !SLJIT_CONFIG_ARM_32 && !SLJIT_CONFIG_MIPS_32 */
+#define SLJIT_F64_SECOND(reg) \
+	(reg)
+#endif /* SLJIT_CONFIG_ARM_32 || SLJIT_CONFIG_MIPS_32 */
 
 /*************************************/
 /* Debug and verbose related macros. */

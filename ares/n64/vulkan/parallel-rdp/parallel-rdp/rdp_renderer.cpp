@@ -1300,6 +1300,7 @@ StaticRasterizationState Renderer::normalize_static_state(StaticRasterizationSta
 		              RASTERIZATION_USE_STATIC_TEXTURE_SIZE_FORMAT_BIT |
 		              RASTERIZATION_TEX_LOD_ENABLE_BIT |
 		              RASTERIZATION_DETAIL_LOD_ENABLE_BIT |
+		              RASTERIZATION_PERSPECTIVE_CORRECT_BIT |
 		              RASTERIZATION_ALPHA_TEST_BIT);
 
 		auto fmt = state.texture_fmt;

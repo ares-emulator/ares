@@ -667,13 +667,17 @@ static SLJIT_INLINE sljit_uw sljit_get_generated_code_size(struct sljit_compiler
 #define SLJIT_HAS_COPY_F32		9
 /* [Emulated] Copy from/to f64 operation is available (see sljit_emit_fcopy). */
 #define SLJIT_HAS_COPY_F64		10
+/* [Not emulated] The 64 bit floating point registers can be used as
+   two separate 32 bit floating point registers (e.g. ARM32). The
+   second 32 bit part can be accessed by SLJIT_F64_SECOND. */
+#define SLJIT_HAS_F64_AS_F32_PAIR	11
 /* [Not emulated] Some SIMD operations are supported by the compiler. */
-#define SLJIT_HAS_SIMD			11
+#define SLJIT_HAS_SIMD			12
 /* [Not emulated] SIMD registers are mapped to a pair of double precision
    floating point registers. E.g. passing either SLJIT_FR0 or SLJIT_FR1 to
    a simd operation represents the same 128 bit register, and both SLJIT_FR0
    and SLJIT_FR1 are overwritten. */
-#define SLJIT_SIMD_REGS_ARE_PAIRS	12
+#define SLJIT_SIMD_REGS_ARE_PAIRS	13
 
 #if (defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86)
 /* [Not emulated] SSE2 support is available on x86. */
@@ -873,17 +877,17 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_return_to(struct sljit_compiler *c
 #define SLJIT_MEM0()		(SLJIT_MEM)
 #define SLJIT_MEM1(r1)		(SLJIT_MEM | (r1))
 #define SLJIT_MEM2(r1, r2)	(SLJIT_MEM | (r1) | ((r2) << 8))
-#define SLJIT_IMM		0x40
+#define SLJIT_IMM		0x7f
 #define SLJIT_REG_PAIR(r1, r2)	((r1) | ((r2) << 8))
 
 /* Macros for checking operand types (only for valid arguments). */
 #define SLJIT_IS_REG(arg)	((arg) > 0 && (arg) < SLJIT_IMM)
 #define SLJIT_IS_MEM(arg)	((arg) & SLJIT_MEM)
 #define SLJIT_IS_MEM0(arg)	((arg) == SLJIT_MEM)
-#define SLJIT_IS_MEM1(arg)	((arg) > SLJIT_MEM && (arg) < (SLJIT_MEM + SLJIT_IMM))
+#define SLJIT_IS_MEM1(arg)	((arg) > SLJIT_MEM && (arg) < (SLJIT_MEM << 1))
 #define SLJIT_IS_MEM2(arg)	(((arg) & SLJIT_MEM) && (arg) >= (SLJIT_MEM << 1))
 #define SLJIT_IS_IMM(arg)	((arg) == SLJIT_IMM)
-#define SLJIT_IS_REG_PAIR(arg)	(((arg) >> 8) != 0)
+#define SLJIT_IS_REG_PAIR(arg)	(!((arg) & SLJIT_MEM) && (arg) >= (SLJIT_MEM << 1))
 
 /* Sets 32 bit operation mode on 64 bit CPUs. This option is ignored on
    32 bit CPUs. When this option is set for an arithmetic operation, only
@@ -1813,34 +1817,37 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fmem_update(struct sljit_compiler 
 	sljit_s32 freg,
 	sljit_s32 mem, sljit_sw memw);
 
-/* The following flags are used by sljit_emit_simd_mem(). */
+/* The following options are used by several simd operations. */
 
-/* Memory load operation. This is the default. */
-#define SLJIT_SIMD_MEM_LOAD		0x000000
-/* Memory store operation */
-#define SLJIT_SIMD_MEM_STORE		0x000001
-/* Move floating point data between the register and memory */
-#define SLJIT_SIMD_MEM_FLOAT		0x000002
+/* Load data into a simd register, this is the default */
+#define SLJIT_SIMD_LOAD			0x000000
+/* Store data from a simd register */
+#define SLJIT_SIMD_STORE		0x000001
+/* The simd register contains floating point values */
+#define SLJIT_SIMD_FLOAT		0x000400
 /* Tests whether the operation is available */
-#define SLJIT_SIMD_MEM_TEST		0x000004
+#define SLJIT_SIMD_TEST			0x000800
 /* Move data to/from a 64 bit (8 byte) long SIMD register */
-#define SLJIT_SIMD_MEM_REG_64		(3 << 12)
+#define SLJIT_SIMD_REG_64		(3 << 12)
 /* Move data to/from a 128 bit (16 byte) long SIMD register */
-#define SLJIT_SIMD_MEM_REG_128		(4 << 12)
+#define SLJIT_SIMD_REG_128		(4 << 12)
 /* Move data to/from a 256 bit (32 byte) long SIMD register */
-#define SLJIT_SIMD_MEM_REG_256		(5 << 12)
+#define SLJIT_SIMD_REG_256		(5 << 12)
 /* Move data to/from a 512 bit (64 byte) long SIMD register */
-#define SLJIT_SIMD_MEM_REG_512		(6 << 12)
-/* Element size is 8 bit long (this is the default), usually cannot be combined with SLJIT_SIMD_MEM_FLOAT */
-#define SLJIT_SIMD_MEM_ELEM_8		(0 << 18)
-/* Element size is 16 bit long, usually cannot be combined with SLJIT_SIMD_MEM_FLOAT */
-#define SLJIT_SIMD_MEM_ELEM_16		(1 << 18)
+#define SLJIT_SIMD_REG_512		(6 << 12)
+/* Element size is 8 bit long (this is the default), usually cannot be combined with SLJIT_SIMD_FLOAT */
+#define SLJIT_SIMD_ELEM_8		(0 << 18)
+/* Element size is 16 bit long, usually cannot be combined with SLJIT_SIMD_FLOAT */
+#define SLJIT_SIMD_ELEM_16		(1 << 18)
 /* Element size is 32 bit long */
-#define SLJIT_SIMD_MEM_ELEM_32		(2 << 18)
+#define SLJIT_SIMD_ELEM_32		(2 << 18)
 /* Element size is 64 bit long */
-#define SLJIT_SIMD_MEM_ELEM_64		(3 << 18)
+#define SLJIT_SIMD_ELEM_64		(3 << 18)
 /* Element size is 128 bit long */
-#define SLJIT_SIMD_MEM_ELEM_128		(4 << 18)
+#define SLJIT_SIMD_ELEM_128		(4 << 18)
+
+/* The following options are used by sljit_emit_simd_mov(). */
+
 /* Memory address is unaligned (this is the default) */
 #define SLJIT_SIMD_MEM_UNALIGNED	(0 << 24)
 /* Memory address is 16 bit aligned */
@@ -1851,17 +1858,22 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fmem_update(struct sljit_compiler 
 #define SLJIT_SIMD_MEM_ALIGNED_64	(3 << 24)
 /* Memory address is 128 bit aligned */
 #define SLJIT_SIMD_MEM_ALIGNED_128	(4 << 24)
+/* Memory address is 256 bit aligned */
+#define SLJIT_SIMD_MEM_ALIGNED_256	(5 << 24)
+/* Memory address is 512 bit aligned */
+#define SLJIT_SIMD_MEM_ALIGNED_512	(6 << 24)
 
 /* Moves data between a simd register and memory.
 
-   If the operation is not supported it returns with
-   SLJIT_ERR_UNSUPPORTED. If SLJIT_SIMD_MEM_TEST is
-   passed, it does not emit any instructions.
+   If the operation is not supported, it returns with
+   SLJIT_ERR_UNSUPPORTED. If SLJIT_SIMD_TEST is passed,
+   it does not emit any instructions.
 
-   type must be a combination of SLJIT_SIMD_MEM_* flags
+   type must be a combination of SLJIT_SIMD_* and
+     SLJIT_SIMD_MEM_* options
    freg is the source or destination simd register
      of the operation
-   mem must be a memory operand
+   srcdst must be a memory operand or a simd register
 
    Note:
        The alignment and element size must be
@@ -1869,9 +1881,139 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fmem_update(struct sljit_compiler 
 
    Flags: - (does not modify flags) */
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_mem(struct sljit_compiler *compiler, sljit_s32 type,
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_mov(struct sljit_compiler *compiler, sljit_s32 type,
 	sljit_s32 freg,
-	sljit_s32 mem, sljit_sw memw);
+	sljit_s32 srcdst, sljit_sw srcdstw);
+
+/* Replicates a scalar value to all lanes of a simd
+   register.
+
+   If the operation is not supported, it returns with
+   SLJIT_ERR_UNSUPPORTED. If SLJIT_SIMD_TEST is passed,
+   it does not emit any instructions.
+
+   type must be a combination of SLJIT_SIMD_* options
+     except SLJIT_SIMD_STORE.
+   freg is the destination simd register of the operation
+   src is the value which is replicated
+
+   Note:
+       The src == SLJIT_IMM and srcw == 0 can be used to
+       clear a register even when SLJIT_SIMD_FLOAT is set.
+
+   Flags: - (does not modify flags) */
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_replicate(struct sljit_compiler *compiler, sljit_s32 type,
+	sljit_s32 freg,
+	sljit_s32 src, sljit_sw srcw);
+
+/* The following options are used by sljit_emit_simd_lane_mov(). */
+
+/* Clear all bits of the simd register before loading the lane. */
+#define SLJIT_SIMD_LANE_ZERO		0x000002
+/* Sign extend the integer value stored from the lane. */
+#define SLJIT_SIMD_LANE_SIGNED		0x000004
+
+/* Moves data between a simd register lane and a register or
+   memory. If the srcdst argument is a register, it must be
+   a floating point register when SLJIT_SIMD_FLOAT is specified,
+   or a general purpose register otherwise.
+
+   If the operation is not supported, it returns with
+   SLJIT_ERR_UNSUPPORTED. If SLJIT_SIMD_TEST is passed,
+   it does not emit any instructions.
+
+   type must be a combination of SLJIT_SIMD_* options
+     Further options:
+       SLJIT_32 - when SLJIT_SIMD_FLOAT is not set
+       SLJIT_SIMD_LANE_SIGNED - when SLJIT_SIMD_STORE
+           is set and SLJIT_SIMD_FLOAT is not set
+       SLJIT_SIMD_LANE_ZERO - when SLJIT_SIMD_LOAD
+           is specified
+   freg is the source or destination simd register
+     of the operation
+   lane_index is the index of the lane
+   srcdst is the destination operand for loads, and
+     source operand for stores
+
+   Note:
+       The elem size must be lower than register size.
+
+   Flags: - (does not modify flags) */
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_lane_mov(struct sljit_compiler *compiler, sljit_s32 type,
+	sljit_s32 freg, sljit_s32 lane_index,
+	sljit_s32 srcdst, sljit_sw srcdstw);
+
+/* Replicates a scalar value from a lane to all lanes
+   of a simd register.
+
+   If the operation is not supported, it returns with
+   SLJIT_ERR_UNSUPPORTED. If SLJIT_SIMD_TEST is passed,
+   it does not emit any instructions.
+
+   type must be a combination of SLJIT_SIMD_* options
+     except SLJIT_SIMD_STORE.
+   freg is the destination simd register of the operation
+   src is the simd register which lane is replicated
+   src_lane_index is the lane index of the src register
+
+   Flags: - (does not modify flags) */
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_lane_replicate(struct sljit_compiler *compiler, sljit_s32 type,
+	sljit_s32 freg,
+	sljit_s32 src, sljit_s32 src_lane_index);
+
+/* The following options are used by sljit_emit_simd_load_extend(). */
+
+/* Sign extend the integer elements */
+#define SLJIT_SIMD_EXTEND_SIGNED	0x000002
+/* Extend data to 16 bit */
+#define SLJIT_SIMD_EXTEND_16		(1 << 24)
+/* Extend data to 32 bit */
+#define SLJIT_SIMD_EXTEND_32		(2 << 24)
+/* Extend data to 64 bit */
+#define SLJIT_SIMD_EXTEND_64		(3 << 24)
+
+/* Extend elements and stores them in a simd register.
+   The extension operation increases the size of the
+   elements (e.g. from 16 bit to 64 bit). For integer
+   values, the extension can be signed or unsigned.
+
+   If the operation is not supported, it returns with
+   SLJIT_ERR_UNSUPPORTED. If SLJIT_SIMD_TEST is passed,
+   it does not emit any instructions.
+
+   type must be a combination of SLJIT_SIMD_*, and
+     SLJIT_SIMD_EXTEND_* options except SLJIT_SIMD_STORE
+   freg is the destination simd register of the operation
+   src must be a memory operand or a simd register.
+     In the latter case, the source elements are stored
+     in the lower half of the register.
+
+   Flags: - (does not modify flags) */
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_extend(struct sljit_compiler *compiler, sljit_s32 type,
+	sljit_s32 freg,
+	sljit_s32 src, sljit_sw srcw);
+
+/* Extract the highest bit (usually the sign bit) from
+   each elements of a vector.
+
+   If the operation is not supported, it returns with
+   SLJIT_ERR_UNSUPPORTED. If SLJIT_SIMD_TEST is passed,
+   it does not emit any instructions.
+
+   type must be a combination of SLJIT_SIMD_* and SLJIT_32
+     options except SLJIT_SIMD_LOAD
+   freg is the source simd register of the operation
+   dst is the destination operand
+
+   Flags: - (does not modify flags) */
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_simd_sign(struct sljit_compiler *compiler, sljit_s32 type,
+	sljit_s32 freg,
+	sljit_s32 dst, sljit_sw dstw);
 
 /* The sljit_emit_atomic_load and sljit_emit_atomic_store operation pair
    can perform an atomic read-modify-write operation. First, an unsigned
@@ -1967,37 +2109,39 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_const(sljit_uw addr, sljit_sw new_consta
 /*  CPU specific functions                                               */
 /* --------------------------------------------------------------------- */
 
-/* The following function is a helper function for sljit_emit_op_custom.
-   It returns with the real machine register index ( >=0 ) of any
-   integer registers.
+/* Types for sljit_get_register_index */
 
-   reg must be an SLJIT_R(i), SLJIT_S(i), or SLJIT_SP register
-
-   Note: it returns with -1 for virtual registers (only on x86-32). */
-
-SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_register_index(sljit_s32 reg);
+/* General purpose (integer) registers. */
+#define SLJIT_GP_REGISTER 0
+/* Floating point registers. */
+#define SLJIT_FLOAT_REGISTER 1
 
 /* The following function is a helper function for sljit_emit_op_custom.
-   It returns with the real machine register ( >= 0 ) index of any floating
-   point register, or it returns with -1 if the register is not available.
+   It returns with the real machine register index ( >=0 ) of any registers.
 
-   type must be 0 for getting floating point register indicies,
-        or must be SLJIT_SIMD_MEM_REG_* for SIMD register indicies
-   reg must be an SLJIT_FR(i) or SLJIT_FS(i) register
+   When type is SLJIT_GP_REGISTER:
+      reg must be an SLJIT_R(i), SLJIT_S(i), or SLJIT_SP register
 
-   Note: the index represents the double precision
-         register index on ARM-32 and MIPS-32. */
+   When type is SLJIT_FLOAT_REGISTER:
+      reg must be an SLJIT_FR(i) or SLJIT_FS(i) register
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_float_register_index(sljit_s32 type, sljit_s32 reg);
+   When type is SLJIT_SIMD_REG_64 / 128 / 256 / 512 :
+      reg must be an SLJIT_FR(i) or SLJIT_FS(i) register
+
+   Note: it returns with -1 for unknown registers, such as virtual
+         registers on x86-32 or unsupported simd registers. */
+
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_register_index(sljit_s32 type, sljit_s32 reg);
 
 /* Any instruction can be inserted into the instruction stream by
    sljit_emit_op_custom. It has a similar purpose as inline assembly.
    The size parameter must match to the instruction size of the target
    architecture:
 
-         x86: 0 < size <= 15. The instruction argument can be byte aligned.
+         x86: 0 < size <= 15, the instruction argument can be byte aligned.
       Thumb2: if size == 2, the instruction argument must be 2 byte aligned.
               if size == 4, the instruction argument must be 4 byte aligned.
+       s390x: size can be 2, 4, or 6, the instruction argument can be byte aligned.
    Otherwise: size must be 4 and instruction argument must be 4 byte aligned. */
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op_custom(struct sljit_compiler *compiler,

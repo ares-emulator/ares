@@ -574,7 +574,7 @@ static SLJIT_INLINE sljit_s32 sljit_emit_fop1_conv_f64_from_sw(struct sljit_comp
 {
 	sljit_s32 dst_r = FAST_IS_REG(dst) ? dst : TMP_FREG1;
 
-	if (src & SLJIT_IMM) {
+	if (src == SLJIT_IMM) {
 		if (GET_OPCODE(op) == SLJIT_CONV_F64_FROM_S32)
 			srcw = (sljit_s32)srcw;
 
@@ -611,7 +611,7 @@ static SLJIT_INLINE sljit_s32 sljit_emit_fop1_conv_f64_from_uw(struct sljit_comp
 	sljit_s32 dst_r = FAST_IS_REG(dst) ? dst : TMP_FREG1;
 
 	if (GET_OPCODE(op) == SLJIT_CONV_F64_FROM_U32) {
-		if (src & SLJIT_IMM) {
+		if (src == SLJIT_IMM) {
 			FAIL_IF(load_immediate(compiler, TMP_REG1, (sljit_u32)srcw));
 			src = TMP_REG1;
 		} else {
@@ -626,7 +626,7 @@ static SLJIT_INLINE sljit_s32 sljit_emit_fop1_conv_f64_from_uw(struct sljit_comp
 		FAIL_IF(push_inst(compiler, LFD | FS(TMP_FREG1) | A(SLJIT_SP) | TMP_MEM_OFFSET));
 		FAIL_IF(push_inst(compiler, FCFID | FD(dst_r) | FB(TMP_FREG1)));
 	} else {
-		if (src & SLJIT_IMM) {
+		if (src == SLJIT_IMM) {
 			FAIL_IF(load_immediate(compiler, TMP_REG1, srcw));
 			src = TMP_REG1;
 		} else if (src & SLJIT_MEM) {

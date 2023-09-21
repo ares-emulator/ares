@@ -17,6 +17,8 @@
 #include <nall/run.cpp>
 #include <nall/terminal.cpp>
 #include <nall/thread.cpp>
+#include <nall/tcptext/tcp-socket.cpp>
+#include <nall/tcptext/tcptext-server.cpp>
 //currently unused by ares
 //#include <nall/smtp.cpp>
 //#include <nall/http/client.cpp>

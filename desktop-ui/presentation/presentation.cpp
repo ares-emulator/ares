@@ -131,6 +131,9 @@ Presentation::Presentation() {
   driverSettingsAction.setText("Drivers" ELLIPSIS).setIcon(Icon::Place::Settings).onActivate([&] {
     settingsWindow.show("Drivers");
   });
+  debugSettingsAction.setText("Debug" ELLIPSIS).setIcon(Icon::Device::Network).onActivate([&] {
+    settingsWindow.show("Debug");
+  });
 
   toolsMenu.setVisible(false).setText("Tools");
   saveStateMenu.setText("Save State").setIcon(Icon::Media::Record);
@@ -246,10 +249,12 @@ Presentation::Presentation() {
 
   spacerLeft .setBackgroundColor({32, 32, 32});
   statusLeft .setBackgroundColor({32, 32, 32}).setForegroundColor({255, 255, 255});
+  statusDebug.setBackgroundColor({32, 32, 32}).setForegroundColor({255, 255, 255});
   statusRight.setBackgroundColor({32, 32, 32}).setForegroundColor({255, 255, 255});
   spacerRight.setBackgroundColor({32, 32, 32});
 
   statusLeft .setAlignment(0.0).setFont(Font().setBold());
+  statusDebug.setAlignment(1.0).setFont(Font().setBold());
   statusRight.setAlignment(1.0).setFont(Font().setBold());
 
   onClose([&] {
