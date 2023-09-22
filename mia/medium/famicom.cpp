@@ -42,7 +42,11 @@ auto Famicom::load(string location) -> bool {
     pak->append("ines.rom", {view.data(), node["size"].natural()});
     view += node["size"].natural();
   }
-  if(auto node = document["game/board/memory(type=ROM,content=Program)"]) {
+  if(auto node = document["game/board/memory(type=Flash,content=Program)"]) {
+    pak->append("program.flash", {view.data(), node["size"].natural()});
+    Pak::load("program.flash", ".flash");
+    view += node["size"].natural();
+  } else if(auto node = document["game/board/memory(type=ROM,content=Program)"]) {
     pak->append("program.rom", {view.data(), node["size"].natural()});
     view += node["size"].natural();
   }
@@ -76,6 +80,9 @@ auto Famicom::save(string location) -> bool {
   }
   if(auto node = document["game/board/memory(type=EEPROM,content=Save)"]) {
     Medium::save(node, ".eeprom");
+  }
+  if(auto node = document["game/board/memory(type=Flash,content=Program)"]) {
+    Pak::save("program.flash", ".flash");
   }
 
   return true;
@@ -166,7 +173,9 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   u32 chrram = chrrom == 0u ? 8192u : 0u;
   u32 chrnvram = 0u;
   u32 submapper = 0u;
+  bool battery = (data[6] & 0x02) != 0;
   bool eepromMapper = false;
+  bool prgromFlash = false;
 
   string region = "NTSC-J, NTSC-U, PAL"; //iNES 1.0 requires database to detect region
 
@@ -372,6 +381,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   case  30:
     s += "  board:  UNROM-512\n";
     s +={"    mirror mode=", mirror == 0 ? "horizontal" : (mirror == 1 ? "vertical" : (mirror == 2 ? "pcb" : "external")), "\n"};
+    prgromFlash = battery;
     break;
 
   case  31:
@@ -554,6 +564,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   case 111:
     s += "  board:  GTROM\n";
+    prgromFlash = true;
     if(!iNes2) chrram = 16384;
     break;
 
@@ -676,7 +687,8 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
 
   if(prgrom) {
     s += "    memory\n";
-    s += "      type: ROM\n";
+    if(prgromFlash) s += "      type: Flash\n";
+    else                s += "      type: ROM\n";
     s +={"      size: 0x", hex(prgrom), "\n"};
     s += "      content: Program\n";
   }

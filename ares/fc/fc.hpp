@@ -7,6 +7,7 @@
 #include <component/audio/ym2149/ym2149.hpp>
 #include <component/audio/ym2413/ym2413.hpp>
 #include <component/eeprom/m24c/m24c.hpp>
+#include <component/flash/sst39sf0x0/sst39sf0x0.hpp>
 
 namespace ares::Famicom {
   #include <ares/inline.hpp>
