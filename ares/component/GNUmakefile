@@ -30,6 +30,8 @@ ares.objects += $(if $(findstring v30mz,$(ares.components)),ares-processor-v30mz
 ares.objects += $(if $(findstring wdc65816,$(ares.components)),ares-processor-wdc65816)
 ares.objects += $(if $(findstring z80,$(ares.components)),ares-processor-z80)
 
+ares.objects += $(if $(findstring sst39sf0x0,$(ares.components)),ares-flash-sst39sf0x0)
+
 ares.objects += $(if $(findstring tms9918,$(ares.components)),ares-video-tms9918)
 ares.objects += $(if $(findstring v9938,$(ares.components)),ares-video-v9938)
 
@@ -62,6 +64,8 @@ $(object.path)/ares-processor-upd96050.o: $(ares.path)/component/processor/upd96
 $(object.path)/ares-processor-v30mz.o:    $(ares.path)/component/processor/v30mz/v30mz.cpp
 $(object.path)/ares-processor-wdc65816.o: $(ares.path)/component/processor/wdc65816/wdc65816.cpp
 $(object.path)/ares-processor-z80.o:      $(ares.path)/component/processor/z80/z80.cpp
+
+$(object.path)/ares-flash-sst39sf0x0.o:   $(ares.path)/component/flash/sst39sf0x0/sst39sf0x0.cpp
 
 $(object.path)/ares-video-tms9918.o:      $(ares.path)/component/video/tms9918/tms9918.cpp
 $(object.path)/ares-video-v9938.o:        $(ares.path)/component/video/v9938/v9938.cpp
