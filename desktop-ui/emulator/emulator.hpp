@@ -17,6 +17,7 @@ struct Emulator {
   auto refresh() -> void;
   auto setBoolean(const string& name, bool value) -> bool;
   auto setOverscan(bool value) -> bool;
+  auto setColorBleed(bool value) -> bool;
   auto error(const string& text) -> void;
   auto errorFirmware(const Firmware&, string system = "") -> void;
   auto load(mia::Pak& node, string name) -> bool;

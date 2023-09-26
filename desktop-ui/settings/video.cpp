@@ -33,7 +33,7 @@ auto VideoSettings::construct() -> void {
   emulatorSettingsLabel.setText("Emulator Settings").setFont(Font().setBold());
   colorBleedOption.setText("Color Bleed").setChecked(settings.video.colorBleed).onToggle([&] {
     settings.video.colorBleed = colorBleedOption.checked();
-    if(emulator) emulator->setBoolean("Color Bleed", settings.video.colorBleed);
+    if(emulator) emulator->setColorBleed(settings.video.colorBleed);
   });
   colorBleedLayout.setAlignment(1).setPadding(12_sx, 0);
   colorBleedHint.setText("Blurs adjacent pixels for translucency effects").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
