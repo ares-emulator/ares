@@ -1,6 +1,11 @@
 auto CPU::Recompiler::pool(u32 address) -> Pool* {
   auto& pool = pools[address >> 8 & 0x1fffff];
-  if(!pool) pool = (Pool*)allocator.acquire(sizeof(Pool));
+  if(!pool) {
+    pool = (Pool*)allocator.acquire(sizeof(Pool));
+    memory::jitprotect(false);
+    *pool = {};
+    memory::jitprotect(true);
+  }
   return pool;
 }
 
@@ -15,9 +20,7 @@ auto CPU::Recompiler::block(u32 address) -> Block* {
 auto CPU::Recompiler::emit(u32 address) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
-    memory::jitprotect(false);
-    allocator.release(bump_allocator::zero_fill);
-    memory::jitprotect(true);
+    allocator.release();
     reset();
   }
 
