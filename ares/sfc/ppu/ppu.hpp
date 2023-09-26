@@ -49,7 +49,7 @@ struct PPU : PPUBase::Implementation, PPUcounter {
   Node::Setting::Natural versionPPU2;
   Node::Setting::Natural vramSize;
   Node::Setting::Boolean overscanEnable;
-  Node::Setting::Boolean colorEmulation;
+  Node::Setting::Boolean deepBlackBoost;
   Node::Setting::Boolean colorBleed;
 
   struct Debugger {

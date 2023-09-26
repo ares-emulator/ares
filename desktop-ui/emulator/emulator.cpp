@@ -60,6 +60,7 @@ auto Emulator::load(const string& location) -> bool {
   if(!load()) return false;
   setBoolean("Color Bleed", settings.video.colorBleed);
   setBoolean("Color Emulation", settings.video.colorEmulation);
+  setBoolean("Deep Black Boost", settings.video.deepBlackBoost);
   setBoolean("Interframe Blending", settings.video.interframeBlending);
   setOverscan(settings.video.overscan);
 

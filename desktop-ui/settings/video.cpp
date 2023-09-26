@@ -43,6 +43,12 @@ auto VideoSettings::construct() -> void {
   });
   colorEmulationLayout.setAlignment(1).setPadding(12_sx, 0);
   colorEmulationHint.setText("Matches colors to how they look on real hardware").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  deepBlackBoostOption.setText("Deep Black Boost").setChecked(settings.video.deepBlackBoost).onToggle([&] {
+    settings.video.deepBlackBoost = deepBlackBoostOption.checked();
+    if(emulator) emulator->setBoolean("Deep Black Boost", settings.video.deepBlackBoost);
+  });
+  deepBlackBoostLayout.setAlignment(1).setPadding(12_sx, 0);
+  deepBlackBoostHint.setText("Applies a gamma ramp to crush black levels (SNES/SFC)").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   interframeBlendingOption.setText("Interframe Blending").setChecked(settings.video.interframeBlending).onToggle([&] {
     settings.video.interframeBlending = interframeBlendingOption.checked();
     if(emulator) emulator->setBoolean("Interframe Blending", settings.video.interframeBlending);

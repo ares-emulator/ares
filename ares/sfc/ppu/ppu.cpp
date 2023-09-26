@@ -53,10 +53,10 @@ auto PPU::load(Node::Object parent) -> void {
   });
   overscanEnable->setDynamic(true);
 
-  colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
+  deepBlackBoost = screen->append<Node::Setting::Boolean>("Deep Black Boost", true, [&](auto value) {
     screen->resetPalette();
   });
-  colorEmulation->setDynamic(true);
+  deepBlackBoost->setDynamic(true);
 
   colorBleed = screen->append<Node::Setting::Boolean>("Color Bleed", true, [&](auto value) {
     screen->setColorBleed(value);
@@ -72,7 +72,7 @@ auto PPU::unload() -> void {
   versionPPU2.reset();
   vramSize.reset();
   overscanEnable.reset();
-  colorEmulation.reset();
+  deepBlackBoost.reset();
   colorBleed.reset();
   screen->quit();
   node->remove(screen);

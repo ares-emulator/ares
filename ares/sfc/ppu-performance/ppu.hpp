@@ -4,7 +4,7 @@ struct PPU : PPUBase::Implementation, PPUcounter {
   Node::Object node;
   Node::Setting::Natural vramSize;
   Node::Setting::Boolean overscanEnable;
-  Node::Setting::Boolean colorEmulation;
+  Node::Setting::Boolean deepBlackBoost;
   Node::Setting::Boolean colorBleed;
   Node::Setting::Natural screenWidth;
 

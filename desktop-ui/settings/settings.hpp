@@ -24,6 +24,7 @@ struct Settings : Markup::Node {
     f64 gamma = 1.0;
     bool colorBleed = false;
     bool colorEmulation = true;
+    bool deepBlackBoost = false;
     bool interframeBlending = true;
     bool overscan = false;
     bool pixelAccuracy = false;
@@ -119,6 +120,9 @@ struct VideoSettings : VerticalLayout {
     HorizontalLayout colorEmulationLayout{this, Size{~0, 0}, 5};
       CheckLabel colorEmulationOption{&colorEmulationLayout, Size{0, 0}, 5};
       Label colorEmulationHint{&colorEmulationLayout, Size{~0, 0}};
+    HorizontalLayout deepBlackBoostLayout{this, Size{~0, 0}, 5};
+      CheckLabel deepBlackBoostOption{&deepBlackBoostLayout, Size{0, 0}, 5};
+      Label deepBlackBoostHint{&deepBlackBoostLayout, Size{~0, 0}};
     HorizontalLayout interframeBlendingLayout{this, Size{~0, 0}, 5};
       CheckLabel interframeBlendingOption{&interframeBlendingLayout, Size{0, 0}, 5};
       Label interframeBlendingHint{&interframeBlendingLayout, Size{~0, 0}};
