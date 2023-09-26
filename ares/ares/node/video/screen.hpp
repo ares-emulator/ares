@@ -44,6 +44,7 @@ struct Screen : Video {
 
   auto setFillColor(u32 fillColor) -> void;
   auto setColorBleed(bool colorBleed) -> void;
+  auto setColorBleedWidth(u32 width) -> void;
   auto setInterframeBlending(bool interframeBlending) -> void;
   auto setRotation(u32 rotation) -> void;
 
@@ -78,6 +79,7 @@ protected:
   f64  _luminance = 1.0;
   u32  _fillColor = 0;
   bool _colorBleed = false;
+  bool _colorBleedWidth = 1;
   bool _interframeBlending = false;
   u32  _rotation = 0;  //counter-clockwise (90 = left, 270 = right)
 
