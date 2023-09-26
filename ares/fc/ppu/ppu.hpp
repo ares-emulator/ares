@@ -2,7 +2,6 @@ struct PPU : Thread {
   Node::Object node;
   Node::Video::Screen screen;
   Node::Setting::Boolean overscan;
-  Node::Setting::Boolean colorEmulation;
   Memory::Writable<n8> ciram;
   Memory::Writable<n8> cgram;
   Memory::Writable<n8> oam;

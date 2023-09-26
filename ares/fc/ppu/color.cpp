@@ -3,7 +3,7 @@ auto PPU::color(n32 n) -> n64 {
   f64 hue = 0.0;
   f64 contrast = 1.0;
   f64 brightness = 1.0;
-  f64 gamma = colorEmulation->value() ? 1.8 : 2.2;
+  f64 gamma = 2.2;
 
   i32 color = (n & 0x0f), level = color < 0xe ? int(n >> 4 & 3) : 1;
 
