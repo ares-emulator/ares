@@ -31,7 +31,6 @@ namespace nall::recompiler {
 
     auto endFunction() -> u8* {
       u8* code = (u8*)sljit_generate_code(compiler);
-      allocator.reserve(sljit_get_generated_code_size(compiler));
       resetCompiler();
       return code;
     }
