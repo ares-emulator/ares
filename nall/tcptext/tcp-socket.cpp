@@ -29,12 +29,10 @@ namespace {
     #if defined(O_NONBLOCK) // Linux
       auto oldFlags = fcntl(socket, F_GETFL, 0);
       auto newFlags = isBlocking ? (oldFlags ^ O_NONBLOCK) : (oldFlags | O_NONBLOCK);
-      printf("TCP: set socket (linux) to blocking=%d\n", isBlocking ? 1 : 0);
       return fcntl(socket, F_SETFL, newFlags) == 0;
     #elif defined(FIONBIO) // Windows
       u_long state = isBlocking ? 0 : 1;
-      printf("TCP: set socket (windows) to blocking=%d\n", isBlocking ? 1 : 0);
-      return ioctlsocket(socket, FIONBIO, &state) == NO_ERROR;      
+      return ioctlsocket(socket, FIONBIO, &state) == NO_ERROR;
     #endif
   }
 
@@ -93,24 +91,21 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
       #endif
 
       #if defined(TCP_NODELAY)
-        printf("TCP: setting TCP_NODELAY\n");
         setsockopt(fdServer, IPPROTO_TCP, TCP_NODELAY, &valueOn, sizeof(s32));
       #endif
 
       if(!socketSetBlockingMode(fdServer, true)) {
-        printf("TCP: failed to set to blocking mode!\n");
+        print("TCP: failed to set to blocking mode!\n");
       }
 
       #if defined(SO_RCVTIMEO)
         #if defined(PLATFORM_WINDOWS)
           DWORD rcvTimeMs = 1000 * RECEIVE_TIMEOUT_SEC;
-          printf("TCP: setting SO_RCVTIMEO to %ldms\n", rcvTimeMs);
           setsockopt(fdServer, SOL_SOCKET, SO_RCVTIMEO, &rcvTimeMs, sizeof(rcvTimeMs));
         #else
           struct timeval rcvtimeo;
           rcvtimeo.tv_sec  = RECEIVE_TIMEOUT_SEC;
           rcvtimeo.tv_usec = 0;
-          printf("TCP: setting SO_RCVTIMEO to %lds %ldms\n", rcvtimeo.tv_sec, rcvtimeo.tv_usec);
           setsockopt(fdServer, SOL_SOCKET, SO_RCVTIMEO, &rcvtimeo, sizeof(rcvtimeo));
         #endif
       #endif
@@ -143,9 +138,6 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
       // scan for new connections
       if(fdClient < 0) {
         fdClient = ::accept(fdServer, nullptr, nullptr);
-        if(fdClient >= 0) {
-          printf("TCP: Client connected!\n");
-        }
       }
       
       // Kick client if we need to
@@ -248,7 +240,6 @@ NALL_HEADER_INLINE auto Socket::open(u32 port, bool useIPv4) -> bool {
 }
 
 NALL_HEADER_INLINE auto Socket::close(bool notifyHandler) -> void {
-  printf("TCP: schedule socket-close\n");
   stopServer = true;
 
   // we have to forcefully shut it down here, since otherwise accept() would hang causing a UI crash
@@ -259,14 +250,12 @@ NALL_HEADER_INLINE auto Socket::close(bool notifyHandler) -> void {
   fdClient = -1;
 
   while(serverRunning) {
-    printf("TCP: waiting for shutdown...\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(250)); // wait for other threads to stop
   }
 
   if(notifyHandler) {
     onDisconnect(); // don't call this in destructor, it's virtual
   }
-  printf("TCP: socket closed!\n");
 }
 
 NALL_HEADER_INLINE auto Socket::update() -> void {
@@ -286,7 +275,6 @@ NALL_HEADER_INLINE auto Socket::update() -> void {
 }
 
 NALL_HEADER_INLINE auto Socket::disconnectClient() -> void {
-  printf("TCP: schedule client diconnect\n");
   wantKickClient = true;
 }
 

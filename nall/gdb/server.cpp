@@ -115,7 +115,7 @@ namespace nall::GDB {
     char cmdPrefix = cmdName.size() > 0 ? cmdName(0) : ' ';
 
     if constexpr(GDB_LOG_MESSAGES) {
-      printf("GDB <: %s\n", cmdBuffer.data());
+      print("GDB <: %s\n", cmdBuffer.data());
     }
 
     switch(cmdPrefix)
@@ -500,13 +500,11 @@ namespace nall::GDB {
   }
 
   auto Server::onConnect() -> void {
-    printf("GDB: TCP connect\n");
     resetClientData();
     hasActiveClient = true;
   }
 
   auto Server::onDisconnect() -> void {
-    printf("GDB: TCP disconnected\n");
     hadHandshake = false;
     resetClientData();
   }
