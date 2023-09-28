@@ -19,16 +19,15 @@ auto PPU::writeCGRAM(n5 address, n8 data) -> void {
 }
 
 auto PPU::readIO(n16 address) -> n8 {
-  n8 result = 0x00;
+  n8 result = io.mdr;
 
   switch(address.bit(0,2)) {
 
   //PPUSTATUS
   case 2:
-    result |= io.mdr.bit(0,4);
-    result |= io.spriteOverflow << 5;
-    result |= io.spriteZeroHit << 6;
-    result |= io.nmiFlag << 7;
+    result.bit(5) = io.spriteOverflow;
+    result.bit(6) = io.spriteZeroHit;
+    result.bit(7) = io.nmiFlag;
     io.v.latch = 0;
     io.nmiHold = 0;
     cpu.nmiLine(io.nmiFlag = 0);
@@ -41,7 +40,7 @@ auto PPU::readIO(n16 address) -> n8 {
 
   //PPUDATA
   case 7:
-    if(enable() && (io.ly < 240 || io.ly == vlines() - 1)) return 0x00;
+    if(enable() && (io.ly < 240 || io.ly == vlines() - 1)) break;
 
     address = (n14)io.v.address;
     if(address <= 0x1fff) {
@@ -51,15 +50,14 @@ auto PPU::readIO(n16 address) -> n8 {
       result = io.busData;
       io.busData = cartridge.readCHR(address);
     } else if(address <= 0x3fff) {
-      result = readCGRAM(address);
+      result.bit(0, 5) = readCGRAM(address);
       io.busData = cartridge.readCHR(address);
     }
     io.v.address += io.vramIncrement;
     break;
-
   }
 
-  return result;
+  return io.mdr = result;
 }
 
 auto PPU::writeIO(n16 address, n8 data) -> void {

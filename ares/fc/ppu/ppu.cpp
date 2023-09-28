@@ -73,6 +73,7 @@ auto PPU::scanline() -> void {
   if(++io.ly == vlines()) {
     io.ly = 0;
     frame();
+    io.mdr = 0; // io.mdr decays after approx 1 frame
   }
   cartridge.scanline(io.ly);
 }
