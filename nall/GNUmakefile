@@ -246,10 +246,6 @@ ifeq ($(findstring clang++,$(compiler)),clang++)
   ifneq ($(platform),macos)
     options += -fuse-ld=lld
   endif
-  ifeq ($(arch),arm64)
-    # work around bad interaction with alignas(n) when n >= 4096
-    flags += -mno-global-merge
-  endif
 # gcc settings
 else ifeq ($(findstring g++,$(compiler)),g++)
   flags += -fno-strict-aliasing -fwrapv -Wno-trigraphs

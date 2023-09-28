@@ -28,9 +28,6 @@ struct bump_allocator {
     reset();
 
     if(buffer) {
-      if(flags & executable) {
-        memory::protect(buffer, capacity, true);
-      }
       if(flags & zero_fill) {
         memset(buffer, 0x00, capacity);
       }
