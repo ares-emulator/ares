@@ -34,7 +34,7 @@ namespace nall::memory {
 
   auto map(u32 size, bool executable) -> void*;
   auto unmap(void* target, u32 size) -> void;
-  auto protect(void* target, u32 size, bool executable) -> void;
+  auto protect(void* target, u32 size, bool executable) -> bool;
   auto jitprotect(bool executable) -> void;
 }
 
@@ -194,12 +194,6 @@ template<u32 size, typename T> auto writem(void* target, T data) -> void {
   auto p = (u8*)target;
   for(s32 n = size - 1; n >= 0; n--) *p++ = data >> n * 8;
 }
-
-auto map(u32 size, bool executable) -> void*;
-
-auto unmap(void* target, u32 size) -> void;
-
-auto protect(void* target, u32 size, bool executable) -> void;
 
 inline auto jitprotect(bool executable) -> void {
   #if defined(PLATFORM_MACOS)
