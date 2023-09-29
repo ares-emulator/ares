@@ -61,9 +61,7 @@ auto RSP::Recompiler::block(u12 address) -> Block* {
 auto RSP::Recompiler::emit(u12 address) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("RSP allocator flush\n");
-    memory::jitprotect(false);
-    allocator.release(bump_allocator::zero_fill);
-    memory::jitprotect(true);
+    allocator.release();
     reset();
   }
 

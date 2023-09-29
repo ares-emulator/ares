@@ -142,9 +142,7 @@ auto RSP::power(bool reset) -> void {
 
   if constexpr(Accuracy::RSP::Recompiler) {
     auto buffer = ares::Memory::FixedAllocator::get().tryAcquire(64_MiB);
-    memory::jitprotect(false);
-    recompiler.allocator.resize(64_MiB, bump_allocator::executable | bump_allocator::zero_fill, buffer);
-    memory::jitprotect(true);
+    recompiler.allocator.resize(64_MiB, bump_allocator::executable, buffer);
     recompiler.reset();
   }
 
