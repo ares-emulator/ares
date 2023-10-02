@@ -101,6 +101,10 @@ else
     machine := arm32
   else ifneq ($(filter powerpc64-% powerpc64le-%,$(machine_str)),)
     machine := ppc64
+  else ifneq ($(filter riscv64-%,$(machine_str)),)
+    machine := rv64
+  else ifneq ($(filter riscv32-%,$(machine_str)),)
+    machine := rv32
   endif
 
   # detect clang with msvc target
