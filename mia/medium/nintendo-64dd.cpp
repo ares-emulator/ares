@@ -5,6 +5,7 @@ struct Nintendo64DD : FloppyDisk {
   auto save(string location) -> bool override;
   auto analyze(vector<u8>& rom, vector<u8> errorTable) -> string;
   auto transform(array_view<u8> input, vector<u8> errorTable) -> vector<u8>;
+  auto sizeCheck(array_view<u8> input) -> bool;
   auto repeatCheck(array_view<u8> input, u32 repeat, u32 size) -> bool;
   auto createErrorTable(array_view<u8> input) -> vector<u8>;
 };
@@ -21,6 +22,8 @@ auto Nintendo64DD::load(string location) -> bool {
   array_view<u8> view{input};
   auto errorTable = createErrorTable(view);
   if(!errorTable) return false;
+  auto sizeValid = sizeCheck(view);
+  if(!sizeValid) return false;
   this->location = location;
   this->manifest = analyze(input, errorTable);
   auto document = BML::unserialize(manifest);
@@ -93,6 +96,70 @@ auto Nintendo64DD::analyze(vector<u8>& rom, vector<u8> errorTable) -> string {
   s +={"  region: ", region, "\n"};
   s +={"  id:     ", id, "\n"};
   return s;
+}
+
+auto Nintendo64DD::sizeCheck(array_view<u8> input) -> bool {
+  //check disk image size
+  //ndd
+  if(input.size() == 0x3DEC800) return true;
+  //mame
+  if(input.size() == 0x435B0C0) return true;
+  //d64
+  if((input.size() >= 0x4F08) && (input.size() < 0x3D79140)) {
+    u32 size = 0x200;
+    u32 type = input[0x05];
+    u32 rom_start_lba = 24;
+    u32 rom_end_lba = (input[0xE0] << 8) + input[0xE1] + 24;
+    u32 ram_start_lba = (input[0xE2] << 8) + input[0xE3];
+    u32 ram_end_lba = (input[0xE4] << 8) + input[0xE5];
+    //either both are 0xFFFF or aren't
+    if((ram_start_lba == 0xFFFF) && (ram_end_lba != 0xFFFF)) return false;
+    if((ram_start_lba != 0xFFFF) && (ram_end_lba == 0xFFFF)) return false;
+    //add base lba
+    if((ram_start_lba != 0xFFFF) && (ram_end_lba != 0xFFFF)) {
+      ram_start_lba += 24;
+      ram_end_lba += 24;
+    }
+
+    u32 blockSizeTable[9] = {0x4D08, 0x47B8, 0x4510, 0x3FC0, 0x3A70, 0x3520, 0x2FD0, 0x2A80, 0x2530};
+    u16 vzoneLbaTable[7][16] = {
+      {0x0124, 0x0248, 0x035A, 0x047E, 0x05A2, 0x06B4, 0x07C6, 0x08D8, 0x09EA, 0x0AB6, 0x0B82, 0x0C94, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
+      {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x06A2, 0x07C6, 0x08D8, 0x09EA, 0x0AFC, 0x0BC8, 0x0C94, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
+      {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x08C6, 0x09EA, 0x0AFC, 0x0C0E, 0x0CDA, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
+      {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x08B4, 0x09C6, 0x0AEA, 0x0C0E, 0x0D20, 0x0DEC, 0x0EB8, 0x0FCA, 0x10DC},
+      {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x08B4, 0x09C6, 0x0AD8, 0x0BEA, 0x0D0E, 0x0E32, 0x0EFE, 0x0FCA, 0x10DC},
+      {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x086E, 0x0980, 0x0A92, 0x0BA4, 0x0CB6, 0x0DC8, 0x0EEC, 0x1010, 0x10DC},
+      {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x086E, 0x093A, 0x0A4C, 0x0B5E, 0x0C70, 0x0D82, 0x0E94, 0x0FB8, 0x10DC}
+    };
+    u8 vzone2pzoneTable[7][16] = {
+      {0x0, 0x1, 0x2, 0x9, 0x8, 0x3, 0x4, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC, 0xB, 0xA},
+      {0x0, 0x1, 0x2, 0x3, 0xA, 0x9, 0x8, 0x4, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC, 0xB},
+      {0x0, 0x1, 0x2, 0x3, 0x4, 0xB, 0xA, 0x9, 0x8, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC},
+      {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0xC, 0xB, 0xA, 0x9, 0x8, 0x6, 0x7, 0xF, 0xE, 0xD},
+      {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7, 0xF, 0xE},
+      {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0xF},
+      {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8}
+    };
+
+    //check all blocks
+    u32 vzone = 0;
+    for (u32 lba : range(0x10DC)) {
+      if (lba >= vzoneLbaTable[type][vzone]) vzone++;
+
+      //skip those that can't be copied
+      if (lba < rom_start_lba) continue;
+      if (lba > rom_end_lba && lba < ram_start_lba) continue;
+      if (lba > ram_end_lba) continue;
+
+      u32 pzoneCalc = vzone2pzoneTable[type][vzone];
+      u32 headCalc = (pzoneCalc > 7) ? 1 : 0;
+
+      size += blockSizeTable[headCalc ? pzoneCalc - 7 : pzoneCalc];
+    }
+
+    if(input.size() == size) return true;
+  }
+  return false;
 }
 
 auto Nintendo64DD::repeatCheck(array_view<u8> input, u32 repeat, u32 size) -> bool {
@@ -189,29 +256,32 @@ auto Nintendo64DD::createErrorTable(array_view<u8> input) -> vector<u8> {
       output[systemBlocks[n]] = 1;
       output[systemBlocks[n]+2] = 0;
     }
-    for(u32 n : range(0x100)) {
-      if(n == 0x005)  if(input[n] >= 0x07) return {};  //disk type
-                      else continue;
-      if(n == 0x006)  if(input[n] >= 0x02) return {};  //load size
-                      else continue;
-      if(n == 0x007)  continue;
-      if(n == 0x01C)  if(input[n] != 0x80) return {};  //load address
-                      else continue;
-      if(n == 0x01D)  continue;
-      if(n == 0x01E)  continue;
-      if(n == 0x01F)  continue;
-      if(n == 0x0E0)  if(input[n] > 0x10) return {}; //rom lba end
-                      else continue;
-      if(n == 0x0E1)  continue;
-      if(n == 0x0E2)  if(input[n] > 0x10 && input[n] < 0xFF) return {}; //ram lba start
-                      else continue;
-      if(n == 0x0E3)  continue;
-      if(n == 0x0E4)  if(input[n] > 0x10 && input[n] < 0xFF) return {}; //ram lba end
-                      else continue;
-      if(n == 0x0E5)  continue;
+    for(u32 n : range(0x200)) {
+      if(n == 0x005) continue;
+      if(n == 0x006) continue;
+      if(n == 0x007) continue;
+      if(n == 0x01C) continue;
+      if(n == 0x01D) continue;
+      if(n == 0x01E) continue;
+      if(n == 0x01F) continue;
+      if(n == 0x0E0) continue;
+      if(n == 0x0E1) continue;
+      if(n == 0x0E2) continue;
+      if(n == 0x0E3) continue;
+      if(n == 0x0E4) continue;
+      if(n == 0x0E5) continue;
+      if(n >= 0x100 && n < 0x120) continue;
+      if(n == 0x1E8) continue;
 
       if(input[n] != 0x00) return {};
     }
+    if(input[0x005] >= 0x07) return {};   //disk type
+    if(input[0x006] >= 0x02) return {};   //load size
+    if(input[0x01C] != 0x80) return {};   //load address
+    if(input[0x01D] >= 0x80) return {};
+    if(input[0x0E0] > 0x10) return {};    //rom lba end
+    if(input[0x0E2] > 0x10 && input[0x0E2] < 0xFF) return {}; //ram lba start
+    if(input[0x0E4] > 0x10 && input[0x0E4] < 0xFF) return {}; //ram lba end
   }
 
   //check disk id info
