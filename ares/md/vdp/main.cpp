@@ -101,6 +101,7 @@ auto VDP::main() -> void {
   if(h32()) mainH32();
   if(h40()) mainH40();
   if(vcounter() == 0) {
+    screen->setColorBleedWidth(latch.displayWidth ? 4 : 5);
     latch.interlace = io.interlaceMode == 3;
     latch.overscan  = io.overscan;
     frame();
@@ -109,7 +110,6 @@ auto VDP::main() -> void {
 }
 
 auto VDP::mainH32() -> void {
-  screen->setColorBleedWidth(5);
   auto pixels = dac.pixels = vdp.pixels();
   cycles = &cyclesH32[edclk()][0];
 
@@ -160,7 +160,6 @@ auto VDP::mainH32() -> void {
 }
 
 auto VDP::mainH40() -> void {
-  screen->setColorBleedWidth(4);
   auto pixels = dac.pixels = vdp.pixels();
   cycles = &cyclesH40[edclk()][0];
 
