@@ -54,7 +54,7 @@ auto PPU::renderPixel() -> void {
     if(palette == 0 || objectPriority == 0) palette = objectPalette;
   }
 
-  if(!enable()) palette = 0;
+  if(!enable()) palette = io.v.address & 0x3f00 ? io.v.address & 0x1f : 0;
   output[x] = io.emphasis << 6 | readCGRAM(palette);
 }
 
