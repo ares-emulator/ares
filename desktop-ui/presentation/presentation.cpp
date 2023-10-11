@@ -73,25 +73,13 @@ Presentation::Presentation() {
   });
   videoShaderMenu.setText("Shader").setIcon(Icon::Emblem::Image);
   loadShaders();
-  bootOptionsMenu.setText("Boot Options").setIcon(Icon::Place::Settings);
+
   fastBoot.setText("Fast Boot").setChecked(settings.boot.fast).onToggle([&] {
     settings.boot.fast = fastBoot.checked();
   });
   launchDebugger.setText("Launch Debugger").setChecked(settings.boot.debugger).onToggle([&] {
     settings.boot.debugger = launchDebugger.checked();
   });
-  preferNTSCU.setText("Prefer US").onActivate([&] {
-    settings.boot.prefer = "NTSC-U";
-  });
-  preferNTSCJ.setText("Prefer Japan").onActivate([&] {
-    settings.boot.prefer = "NTSC-J";
-  });
-  preferPAL.setText("Prefer Europe").onActivate([&] {
-    settings.boot.prefer = "PAL";
-  });
-  if(settings.boot.prefer == "NTSC-U") preferNTSCU.setChecked();
-  if(settings.boot.prefer == "NTSC-J") preferNTSCJ.setChecked();
-  if(settings.boot.prefer == "PAL") preferPAL.setChecked();
   muteAudioSetting.setText("Mute Audio").setChecked(settings.audio.mute).onToggle([&] {
     settings.audio.mute = muteAudioSetting.checked();
   });
@@ -413,6 +401,7 @@ auto Presentation::loadEmulators() -> void {
     }
     menu.append(item);
   }
+
   if(enabled == 0) {
     //if the user disables every system, give an indication for how to re-add systems to the load menu
     MenuItem item{&loadMenu};
@@ -423,9 +412,27 @@ auto Presentation::loadEmulators() -> void {
     });
   }
 
-  #if !defined(PLATFORM_MACOS)
   loadMenu.append(MenuSeparator());
-    
+
+  Group preferRegionGroup;
+  MenuRadioItem preferNTSCU{&loadMenu};
+  preferNTSCU.setText("NTSC-U").onActivate([&] {
+    settings.boot.prefer = "NTSC-U";
+  });
+
+  MenuRadioItem preferNTSCJ{&loadMenu};
+  preferNTSCJ.setText("NTSC-J").onActivate([&] {
+    settings.boot.prefer = "NTSC-J";
+  });
+  MenuRadioItem preferPAL{&loadMenu};
+  preferPAL.setText("PAL").onActivate([&] {
+    settings.boot.prefer = "PAL";
+  });
+
+  loadMenu.append(MenuSeparator());
+
+  #if !defined(PLATFORM_MACOS)
+
   { MenuItem quit{&loadMenu};
     quit.setIcon(Icon::Action::Quit);
     quit.setText("Quit");

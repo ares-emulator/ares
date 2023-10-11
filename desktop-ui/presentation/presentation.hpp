@@ -29,15 +29,8 @@ struct Presentation : Window {
         MenuCheckItem videoAdaptiveSizing{&videoOutputMenu};
         MenuCheckItem videoAutoCentering{&videoOutputMenu};
       Menu videoShaderMenu{&settingsMenu};
-      Menu bootOptionsMenu{&settingsMenu};
-        MenuCheckItem fastBoot{&bootOptionsMenu};
-        MenuCheckItem launchDebugger{&bootOptionsMenu};
-        MenuSeparator bootOptionsSeparator{&bootOptionsMenu};
-        MenuRadioItem preferNTSCU{&bootOptionsMenu};
-        MenuRadioItem preferNTSCJ{&bootOptionsMenu};
-        MenuRadioItem preferPAL{&bootOptionsMenu};
-        Group preferRegionGroup{&preferNTSCU, &preferNTSCJ, &preferPAL};
-      MenuSeparator groupSettingsSeparatpr{&settingsMenu};
+      MenuCheckItem fastBoot{&settingsMenu};
+      MenuCheckItem launchDebugger{&settingsMenu};
       MenuCheckItem muteAudioSetting{&settingsMenu};
       MenuCheckItem showStatusBarSetting{&settingsMenu};
       MenuSeparator audioSettingsSeparator{&settingsMenu};
