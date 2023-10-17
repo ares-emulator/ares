@@ -60,3 +60,16 @@ auto Gamepad::latch(n1 data) -> void {
     }
   }
 }
+
+auto Gamepad::serialize(serializer& s) -> void {
+  s(latched);
+  s(counter);
+
+  s(yHold);
+  s(upLatch);
+  s(downLatch);
+  s(xHold);
+  s(leftLatch);
+  s(rightLatch);
+}
+
