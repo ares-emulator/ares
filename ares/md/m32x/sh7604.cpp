@@ -73,6 +73,14 @@ auto M32X::SH7604::power(bool reset) -> void {
   irq.vres.enable = 1;
 }
 
+auto M32X::SH7604::restart() -> void {
+  minCyclesBetweenSyncs = 20;
+  SH2::power(true);
+  irq = {};
+  irq.vres.enable = 1;
+  Thread::restart({&M32X::SH7604::main, this});
+}
+
 auto M32X::SH7604::busReadByte(u32 address) -> u32 {
   if(address & 1) {
     return m32x.readInternal(0, 1, address & ~1).byte(0);

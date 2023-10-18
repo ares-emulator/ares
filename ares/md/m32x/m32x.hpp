@@ -39,6 +39,7 @@ struct M32X {
     auto main() -> void;
     auto step(u32 clocks) -> void override;
     auto power(bool reset) -> void;
+    auto restart() -> void;
 
     auto busReadByte(u32 address) -> u32 override;
     auto busReadWord(u32 address) -> u32 override;

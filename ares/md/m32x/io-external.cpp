@@ -158,8 +158,8 @@ auto M32X::writeExternalIO(n1 upper, n1 lower, n24 address, n16 data) -> void {
       io.adapterEnable = data.bit(0);
 
       if(data.bit(1) == 0) {
-        shm.power(true);
-        shs.power(true);
+        shm.restart();
+        shs.restart();
       }
 
       io.adapterReset = data.bit(1);
