@@ -1,4 +1,4 @@
-static const string SerializerVersion = "v131";
+static const string SerializerVersion = "v132";
 
 auto System::serialize(bool synchronize) -> serializer {
   if(synchronize) scheduler.enter(Scheduler::Mode::Synchronize);
@@ -43,6 +43,9 @@ auto System::serialize(serializer& s, bool synchronize) -> void {
   s(cpu);
   s(vdp);
   s(psg);
-  s(controllerPort1);
-  s(controllerPort2);
+  s(ppi);
+  if(information.model != Model::SG1000A) {
+    s(controllerPort1);
+    s(controllerPort2);
+  }
 }
