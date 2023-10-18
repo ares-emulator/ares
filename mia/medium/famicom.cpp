@@ -98,9 +98,8 @@ auto Famicom::analyze(vector<u8>& data) -> string {
   string manifest = Medium::manifestDatabase(digest);
   if(manifest) return manifest;
 
-  if(digest == "99c18490ed9002d9c6d999b9d8d15be5c051bdfa7cc7e73318053c9a994b0178"  //Nintendo Famicom Disk System (Japan)
-  || digest == "a0a9d57cbace21bf9c85c2b85e86656317f0768d7772acc90c7411ab1dbff2bf"  //Sharp Twin Famicom (Japan)
-  ) {
+  //Check for Famicom Disk System copyright string (identifies BIOS)
+  if(data.size() == 8_KiB && Hash::SHA256({data.data() + 0xd37, 224}).digest() == "0ff60f81f193b001ecccc6a280cddba4b99830755aa658c089d566046adfb034") {
     return analyzeFDS(data);
   }
 
