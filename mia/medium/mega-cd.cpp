@@ -18,6 +18,7 @@ auto MegaCD::load(string location) -> bool {
   pak->setAttribute("title",  document["game/title"].string());
   pak->setAttribute("serial", document["game/serial"].string());
   pak->setAttribute("region", document["game/region"].string());
+  pak->setAttribute("audio", (bool)document["game/audio"]);
   pak->append("manifest.bml", manifest);
   if(directory::exists(location)) {
     pak->append("cd.rom", vfs::disk::open({location, "cd.rom"}, vfs::read));
