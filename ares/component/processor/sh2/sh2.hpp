@@ -245,8 +245,8 @@ struct SH2 {
   };
   u32 exceptions = 0;  //delayed exception flags
 
-  s32 cyclesUntilSync = 0;
-  s32 minCyclesBetweenSyncs = 0;
+  s32 cyclesUntilRecompilerExit = 0;
+  s32 recompilerStepCycles = 0;
 
   struct Recompiler : recompiler::generic {
     SH2& self;

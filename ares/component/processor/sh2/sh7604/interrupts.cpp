@@ -1,5 +1,5 @@
 auto SH2::INTC::run() -> void {
-  if(self->inDelaySlot()) { self->cyclesUntilSync = 0; return; }
+  if(self->inDelaySlot()) { self->cyclesUntilRecompilerExit = 0; return; }
 
   if(self->frt.pendingOutputIRQ) {
     if(self->SR.I < iprb.frtip) {

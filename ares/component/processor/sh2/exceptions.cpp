@@ -1,6 +1,6 @@
 auto SH2::exceptionHandler() -> void {
   if(!exceptions) return;
-  if(inDelaySlot()) { cyclesUntilSync = 0; return; }
+  if(inDelaySlot()) { cyclesUntilRecompilerExit = 0; return; }
 
   if(exceptions & ResetCold) {
     exceptions &= ~ResetCold;

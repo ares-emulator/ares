@@ -48,7 +48,7 @@ auto SH2::power(bool reset) -> void {
   ET = 0;
   ID = 0;
   exceptions = !reset ? ResetCold : ResetWarm;
-  cyclesUntilSync = 0;
+  cyclesUntilRecompilerExit = 0;
 
   cache = {*this};
   intc = {*this};

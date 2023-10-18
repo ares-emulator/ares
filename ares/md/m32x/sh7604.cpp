@@ -14,11 +14,11 @@ auto M32X::SH7604::unload() -> void {
 }
 
 auto M32X::SH7604::main() -> void {
-  if(!m32x.io.adapterReset) return step(cyclesUntilSync);
+  if(!m32x.io.adapterReset) return step(1000);
 
   if(!regs.ID) {
     #define raise(type, level, vector, ...) \
-      if(SH2::inDelaySlot()) cyclesUntilSync = 0; \
+      if(SH2::inDelaySlot()) SH2::cyclesUntilRecompilerExit = 0; \
       else { \
         debugger.interrupt(type); \
         __VA_ARGS__; \
@@ -56,10 +56,11 @@ auto M32X::SH7604::step(u32 clocks) -> void {
   }
 
   Thread::step(clocks);
-  cyclesUntilSync -= clocks;
+  cyclesUntilSh2Sync -= clocks;
+  cyclesUntilFullSync -= clocks;
 
-  if(cyclesUntilSync <= 0) {
-    cyclesUntilSync = minCyclesBetweenSyncs;
+  if(cyclesUntilFullSync <= 0) {
+    cyclesUntilFullSync = minCyclesBetweenFullSyncs;
     if(m32x.shm.active()) Thread::synchronize(m32x.shs, cpu);
     if(m32x.shs.active()) Thread::synchronize(m32x.shm, cpu);
   }
@@ -67,18 +68,27 @@ auto M32X::SH7604::step(u32 clocks) -> void {
 
 auto M32X::SH7604::power(bool reset) -> void {
   Thread::create(23'000'000, {&M32X::SH7604::main, this});
-  minCyclesBetweenSyncs = 20;
+  SH2::recompilerStepCycles = 20;  // Minimum cycles for recompiler to run for each batch of instructions
+  minCyclesBetweenFullSyncs = 200; // Minimum cycles between full sync with the M68K/MD side
+  minCyclesBetweenSh2Syncs  = 10;  // Minimum Cycles between sync with the other SH2 (syncOtherSh2)
   SH2::power(reset);
   irq = {};
   irq.vres.enable = 1;
 }
 
 auto M32X::SH7604::restart() -> void {
-  minCyclesBetweenSyncs = 20;
   SH2::power(true);
   irq = {};
   irq.vres.enable = 1;
   Thread::restart({&M32X::SH7604::main, this});
+}
+
+auto M32X::SH7604::syncOtherSh2() -> void {
+  // avoid synchronizing if we recently have
+  if(cyclesUntilSh2Sync > 0) return;
+  if(m32x.shm.active()) Thread::synchronize(m32x.shs);
+  if(m32x.shs.active()) Thread::synchronize(m32x.shm);
+  cyclesUntilSh2Sync = minCyclesBetweenSh2Syncs;
 }
 
 auto M32X::SH7604::busReadByte(u32 address) -> u32 {
