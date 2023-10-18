@@ -21,8 +21,9 @@ auto Cartridge::connect() -> void {
 
 
   if(information.board == "Linear") board = new Board::Linear{*this};
-  if(information.board == "Taiwan-A") board = new Board::TaiwanA{*this};
-  if(information.board == "Taiwan-B") board = new Board::TaiwanB{*this};
+  if(information.board == "Ram Adapter 8kB") board = new Board::Ram_Adapter_8kB{*this};
+  if(information.board == "NoMapper") board = new Board::NoMapper{*this};
+  if(information.board == "TVOekaki") board = new Board::TVOekaki{*this};
 
   if(!board) board = new Board::Interface{*this};
   board->pak = pak;
