@@ -70,7 +70,7 @@ auto M32X::SH7604::power(bool reset) -> void {
   Thread::create(23'000'000, {&M32X::SH7604::main, this});
   SH2::recompilerStepCycles = 20;  // Minimum cycles for recompiler to run for each batch of instructions
   minCyclesBetweenFullSyncs = 200; // Minimum cycles between full sync with the M68K/MD side
-  minCyclesBetweenSh2Syncs  = 10;  // Minimum Cycles between sync with the other SH2 (syncOtherSh2)
+  minCyclesBetweenSh2Syncs  = 5;   // Minimum Cycles between sync with the other SH2 (syncOtherSh2)
   SH2::power(reset);
   irq = {};
   irq.vres.enable = 1;
