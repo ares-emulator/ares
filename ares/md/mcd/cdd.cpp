@@ -24,8 +24,7 @@ auto MCD::CDD::clock() -> void {
   switch(io.status) {
 
   case Status::Stopped: {
-    if(!mcd.fd) io.status = Status::NoDisc;
-    else if(!io.tocRead) io.status = Status::ReadingTOC;
+    io.status = mcd.fd ? Status::ReadingTOC : Status::NoDisc;
     io.sector = 0;
     io.sample = 0;
     io.track  = 0;
@@ -323,7 +322,6 @@ auto MCD::CDD::insert() -> void {
   io.sector  = session.leadIn.lba;
   io.sample  = 0;
   io.track   = 0;
-  io.tocRead = 0;
 }
 
 auto MCD::CDD::eject() -> void {
@@ -333,7 +331,6 @@ auto MCD::CDD::eject() -> void {
   io.sector  = 0;
   io.sample  = 0;
   io.track   = 0;
-  io.tocRead = 0;
 }
 
 auto MCD::CDD::power(bool reset) -> void {
