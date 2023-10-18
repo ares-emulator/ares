@@ -37,4 +37,9 @@ auto OPN2::power(bool reset) -> void {
   Thread::create(system.frequency() / 7.0, {&OPN2::main, this});
 }
 
+auto OPN2::restart() -> void {
+  YM2612::power();
+  Thread::restart({&OPN2::main, this});
+}
+
 }

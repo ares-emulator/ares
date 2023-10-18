@@ -12,6 +12,7 @@ struct OPN2 : YM2612, Thread {
   auto step(u32 clocks) -> void;
 
   auto power(bool reset) -> void;
+  auto restart() -> void;
 
   //serialization.cpp
   auto serialize(serializer&) -> void;
