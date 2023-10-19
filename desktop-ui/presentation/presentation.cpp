@@ -385,10 +385,22 @@ auto Presentation::loadEmulators() -> void {
 
   //build emulator load list
   u32 enabled = 0;
+
+  //first pass; make sure "Arcade" is start of list
   for(auto& emulator : emulators) {
     if(!emulator->configuration.visible) continue;
-    enabled++;
+    if(emulator->group() == "Arcade") {
+      Menu menu;
+      menu.setIcon(Icon::Emblem::Folder);
+      menu.setText(emulator->group());
+      loadMenu.append(menu);
+      break;
+    }
+  }
 
+  for(auto& emulator : emulators) {
+    if (!emulator->configuration.visible) continue;
+    enabled++;
     MenuItem item;
     item.setIcon(Icon::Place::Server);
     item.setText({emulator->name, ELLIPSIS});
@@ -400,7 +412,7 @@ auto Presentation::loadEmulators() -> void {
     Menu menu;
     for(auto& action : loadMenu.actions()) {
       if(auto group = action.cast<Menu>()) {
-        if(group.text() == emulator->manufacturer) {
+        if(group.text() == emulator->group()) {
           menu = group;
           break;
         }
@@ -408,7 +420,7 @@ auto Presentation::loadEmulators() -> void {
     }
     if(!menu) {
       menu.setIcon(Icon::Emblem::Folder);
-      menu.setText(emulator->manufacturer);
+      menu.setText(emulator->group());
       loadMenu.append(menu);
     }
     menu.append(item);
@@ -425,7 +437,7 @@ auto Presentation::loadEmulators() -> void {
 
   #if !defined(PLATFORM_MACOS)
   loadMenu.append(MenuSeparator());
-    
+
   { MenuItem quit{&loadMenu};
     quit.setIcon(Icon::Action::Quit);
     quit.setText("Quit");

@@ -30,6 +30,7 @@ struct Emulator {
   virtual auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> = 0;
   virtual auto notify(const string& message) -> void {}
   virtual auto arcade() -> bool { return false; }
+  virtual auto group() -> string { return manufacturer; }
 
   struct Firmware {
     string type;

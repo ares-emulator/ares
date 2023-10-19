@@ -3,12 +3,13 @@ struct SG1000A : Emulator {
   auto load() -> bool override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
+  auto group() -> string override { return "Arcade"; }
   auto arcade() -> bool override { return true; }
 };
 
 SG1000A::SG1000A() {
-  manufacturer = "Sega";
-  name = "SG-1000 Arcade System";
+  manufacturer = "SEGA";
+  name = "SG-1000 (Arcade)";
   medium = "SG-1000A";
 
   { InputPort port{string{"SG-1000A"}};
@@ -43,7 +44,6 @@ auto SG1000A::load() -> bool {
   system = mia::System::create("SG-1000A");
   if(!system->load()) return false;
 
-  auto region = Emulator::region();
   if(!ares::SG1000::load(root, {"[Sega] SG-1000A"})) return false;
 
   if(auto port = root->find<ares::Node::Port>("Cartridge Slot")) {
