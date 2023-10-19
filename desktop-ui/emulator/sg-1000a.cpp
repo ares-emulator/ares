@@ -9,7 +9,7 @@ struct SG1000A : Emulator {
 
 SG1000A::SG1000A() {
   manufacturer = "SEGA";
-  name = "SG-1000 (Arcade)";
+  name = "SG-1000 Arcade System";
   medium = "SG-1000A";
 
   { InputPort port{string{"SG-1000A"}};
