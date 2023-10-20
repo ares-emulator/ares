@@ -18,7 +18,7 @@ auto M32X::readInternal(n1 upper, n1 lower, n32 address, n16 data) -> n16 {
     return cartridge.child->read(upper, lower, address, data);
   }
 
-  if(address >= 0x0400'0000 && address <= 0x0403'ffff) {
+  if(address >= 0x0400'0000 && address <= 0x0405'ffff) {
     return vdp.bbram[address >> 1 & 0xffff];
   }
 
@@ -46,6 +46,14 @@ auto M32X::writeInternal(n1 upper, n1 lower, n32 address, n16 data) -> void {
     if (!vdp.framebufferAccess) return;
     if(upper && data.byte(1)) vdp.bbram[address >> 1 & 0xffff].byte(1) = data.byte(1);
     if(lower && data.byte(0)) vdp.bbram[address >> 1 & 0xffff].byte(0) = data.byte(0);
+    return;
+  }
+
+  if(address >= 0x0404'0000 && address <= 0x0405'ffff) {
+    if (!vdp.framebufferAccess) return;
+    if(!data && (!upper || !lower)) return;  //8-bit 0x00 writes do not go through
+    if(upper) vdp.bbram[address >> 1 & 0xffff].byte(1) = data.byte(1);
+    if(lower) vdp.bbram[address >> 1 & 0xffff].byte(0) = data.byte(0);
     return;
   }
 
