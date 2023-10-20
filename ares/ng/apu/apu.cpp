@@ -28,7 +28,6 @@ auto APU::main() -> void {
 
   if(irq.pending) {
     Z80::irq();
-    irq.pending = 0;
     debugger.interrupt("IRQ");
   }
 

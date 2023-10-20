@@ -1,8 +1,5 @@
 ares.components += m68000
 ares.components += z80
-ares.components += ym2610
-ares.components += ym2612
-ares.components += ym2149
 
 ares.objects += ares-ng-system
 ares.objects += ares-ng-cpu

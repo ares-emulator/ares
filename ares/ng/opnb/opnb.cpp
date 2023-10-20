@@ -10,24 +10,13 @@ auto OPNB::load(Node::Object parent) -> void {
 
   streamFM = node->append<Node::Audio::Stream>("FM");
   streamFM->setChannels(2);
-  streamFM->setFrequency(8'000'000 / 144.0);
+  streamFM->setFrequency(ym2610.sample_rate(8'000'000));
   streamFM->addHighPassFilter(  20.0, 1);
   streamFM->addLowPassFilter (2840.0, 1);
 
   streamSSG = node->append<Node::Audio::Stream>("SSG");
   streamSSG->setChannels(1);
-  streamSSG->setFrequency(8'000'000 / 144.0);
-
-  streamPCMA = node->append<Node::Audio::Stream>("ADPCM-A");
-  streamPCMA->setChannels(2);
-  streamPCMA->setFrequency(8'000'000 / 432.0);
-
-  streamPCMB = node->append<Node::Audio::Stream>("ADPCM-B");
-  streamPCMB->setChannels(2);
-  streamPCMB->setFrequency(8'000'000 / 144.0);
-
-  cyclesUntilFmSsg = 144;
-  cyclesUntilPcmA = 432;
+  streamSSG->setFrequency(ym2610.sample_rate(8'000'000));
 }
 
 auto OPNB::unload() -> void {
@@ -35,56 +24,53 @@ auto OPNB::unload() -> void {
   node->remove(streamSSG);
   streamFM.reset();
   streamSSG.reset();
-  streamPCMA.reset();
-  streamPCMB.reset();
   node.reset();
 }
 
 auto OPNB::main() -> void {
-  if(cyclesUntilFmSsg == 0) {
-    auto samples = fm.clock();
-    streamFM->frame(samples[0] / (32768.0), samples[1] / (32768.0));
+  ymfm::ym2610::output_data output;
+  ym2610.generate(&output);
 
-    auto channels = ssg.clock();
-    f64 output = 0.0;
-    output += volume[channels[0]];
-    output += volume[channels[1]];
-    output += volume[channels[2]];
-    streamSSG->frame(output / (3.0));
+  streamFM->frame(output.data[0] / 32768.0, output.data[1] / 32768.0);
+  streamSSG->frame(output.data[2] / 32768.0);
 
-    samples = pcmB.clock();
-    streamPCMB->frame(samples[0] / (32768.0), samples[1] / (32768.0));
-
-    cyclesUntilFmSsg = 144;
-
-    apu.irq.pending = fm.readStatus() != 0;
-  }
-
-  if (cyclesUntilPcmA == 0) {
-    auto samples = pcmA.clock();
-    streamPCMA->frame(samples[0] / (32768.0), samples[1] / (32768.0));
-
-    cyclesUntilPcmA = 432;
-  }
-
-  auto stepDuration = min(cyclesUntilFmSsg, cyclesUntilPcmA);
-  cyclesUntilPcmA -= stepDuration;
-  cyclesUntilFmSsg -= stepDuration;
-  step(stepDuration);
+  step(clocksPerSample);
 }
 
 auto OPNB::step(u32 clocks) -> void {
+  if(busyCyclesRemaining) {
+    busyCyclesRemaining -= clocks;
+    if(busyCyclesRemaining <= 0) {
+      busyCyclesRemaining = 0;
+    }
+  }
+
+  for(u32 timer : range(2)) {
+    if(timerCyclesRemaining[timer]) {
+      timerCyclesRemaining[timer] -= clocks;
+      if(timerCyclesRemaining[timer] <= 0) {
+        timerCyclesRemaining[timer] = 0;
+        interface.timerCallback(timer);
+      }
+    }
+  }
+
   Thread::step(clocks);
   Thread::synchronize();
 }
 
 auto OPNB::power(bool reset) -> void {
-  YM2610::power();
+  ym2610.reset();
+  clocksPerSample = 8'000'000.0 / ym2610.sample_rate(8'000'000);
   Thread::create(8'000'000, {&OPNB::main, this});
+}
 
-  for(u32 level : range(32)) {
-    volume[level] = 1.0 / pow(2, 1.0 / 2 * (31 - level));
-  }
+auto OPNB::read(n2 address) -> n8 {
+  return ym2610.read(address);
+}
+
+auto OPNB::write(n2 address, n8 data) -> void {
+  ym2610.write(address, data);
 }
 
 auto OPNB::readPCMA(u32 address) -> u8 {
