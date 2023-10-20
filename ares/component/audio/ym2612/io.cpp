@@ -73,6 +73,7 @@ auto YM2612::writeData(n8 data) -> void {
     channels[index][2].keyLine = data.bit(6);
     channels[index][3].keyLine = data.bit(7);
 
+    for(u32 n : range(4)) channels[index][n].updateKeyState();
     break;
   }
 

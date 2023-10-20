@@ -1,6 +1,6 @@
-auto YM2612::Channel::Operator::updateKeyState(bool state) -> void {
-  if(keyOn == state) return;  //no change
-  keyOn = state;
+auto YM2612::Channel::Operator::updateKeyState() -> void {
+  if(keyOn == keyLine) return;  //no change
+  keyOn = keyLine;
 
   if(keyOn) {
     //restart phase and envelope generators
@@ -27,7 +27,7 @@ auto YM2612::Channel::Operator::updateKeyState(bool state) -> void {
 }
 
 auto YM2612::Channel::Operator::runEnvelope() -> void {
-  updateKeyState(keyLine);
+  updateKeyState();
   if(ym2612.envelope.clock & (1 << envelope.divider) - 1) return;
 
   u32 value = ym2612.envelope.clock >> envelope.divider;
