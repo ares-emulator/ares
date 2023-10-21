@@ -34,7 +34,7 @@ auto VDP::PSG::main() -> void {
 
 auto VDP::PSG::step(u32 clocks) -> void {
   Thread::step(clocks);
-  Thread::synchronize(cpu);
+  Thread::synchronize(cpu, apu);
 }
 
 auto VDP::PSG::power(bool reset) -> void {

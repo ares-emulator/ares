@@ -60,10 +60,18 @@ auto CPU::main() -> void {
 }
 
 auto CPU::step(u32 clocks) -> void {
-  refresh.ram += clocks;
-  refresh.external += clocks;
-  Thread::step(clocks);
-  cyclesUntilSync -= clocks;
+  while(clocks--) {
+    refresh.ram += 1;
+    refresh.external += 1;
+    Thread::step(1);
+    cyclesUntilSync -= 1;
+    Thread::synchronize(apu, opn2, vdp.psg);
+  }
+
+  if(cyclesUntilSync <= 0) {
+    cyclesUntilSync = minCyclesBetweenSyncs;
+    Thread::synchronize();
+  }
 }
 
 inline auto CPU::idle(u32 clocks) -> void {
@@ -72,10 +80,6 @@ inline auto CPU::idle(u32 clocks) -> void {
 
 auto CPU::wait(u32 clocks) -> void {
   step(clocks);
-  if (cyclesUntilSync <= 0) {
-    cyclesUntilSync = minCyclesBetweenSyncs;
-    Thread::synchronize();
-  }  
 }
 
 auto CPU::raise(Interrupt interrupt) -> void {
