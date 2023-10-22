@@ -43,6 +43,7 @@ $(object.path)/ares-audio-sn76489.o:      $(ares.path)/component/audio/sn76489/s
 $(object.path)/ares-audio-t6w28.o:        $(ares.path)/component/audio/t6w28/t6w28.cpp
 $(object.path)/ares-audio-ym2149.o:       $(ares.path)/component/audio/ym2149/ym2149.cpp
 $(object.path)/ares-audio-ym2413.o:       $(ares.path)/component/audio/ym2413/ym2413.cpp
+$(object.path)/ares-audio-ym2612.o:       $(ares.path)/component/audio/ym2612/ym2612.cpp
 
 $(object.path)/ares-eeprom-m24c.o:        $(ares.path)/component/eeprom/m24c/m24c.cpp
 $(object.path)/ares-eeprom-m93lcx6.o:     $(ares.path)/component/eeprom/m93lcx6/m93lcx6.cpp
