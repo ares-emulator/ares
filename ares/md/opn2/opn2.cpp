@@ -29,7 +29,7 @@ auto OPN2::main() -> void {
 
 auto OPN2::step(u32 clocks) -> void {
   Thread::step(clocks);
-  Thread::synchronize(cpu, apu);
+  Thread::synchronize(cpu);
 }
 
 auto OPN2::power(bool reset) -> void {

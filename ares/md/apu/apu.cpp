@@ -43,7 +43,7 @@ auto APU::main() -> void {
 
 auto APU::step(u32 clocks) -> void {
   Thread::step(clocks);
-  Thread::synchronize(cpu, opn2, vdp.psg);
+  Thread::synchronize(cpu);
   state.busreqLatch = busownerCPU() ? 1 : 0;
 }
 
