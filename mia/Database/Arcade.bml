@@ -4,6 +4,7 @@ database
 game
   name:  chboxing
   title: Champion Boxing
+  board: sg1000a
   maincpu
     rom
       name:   cb6105.bin
@@ -26,6 +27,7 @@ game
 game
   name:  chwrestl
   title: Champion Pro Wrestling
+  board: sg1000a
   maincpu
     rom
       name:   5732
@@ -48,6 +50,7 @@ game
 game
   name:  dokidoki
   title: Doki Doki Penguin Land
+  board: sg1000a
   maincpu
     rom
       name:   epr-7356.ic1

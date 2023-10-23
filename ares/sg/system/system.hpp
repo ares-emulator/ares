@@ -10,7 +10,7 @@ struct System {
     Node::Input::Button p1b1;
     Node::Input::Button p1b2;
     Node::Input::Button p1start;
-    Node::Input::Button coin;
+    Node::Input::Button p1coin;
     Node::Input::Button service;
     Node::Input::Button p2up;
     Node::Input::Button p2down;
@@ -19,6 +19,7 @@ struct System {
     Node::Input::Button p2b1;
     Node::Input::Button p2b2;
     Node::Input::Button p2start;
+    Node::Input::Button p2coin;
 
     //arcade-controls.cpp
     auto load(Node::Object) -> void;

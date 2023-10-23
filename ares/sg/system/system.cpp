@@ -43,7 +43,7 @@ auto System::load(Node::System& root, string name) -> bool {
     information.model = Model::SG1000;
   }
   if(name.find("SG-1000A")) {
-    information.name = "SG-1000A";
+    information.name = "Arcade";
     information.model = Model::SG1000A;
   }
   if(name.find("SC-3000")) {

@@ -1,5 +1,5 @@
-struct SG1000A : Mame {
-  auto name() -> string override { return "SG-1000A"; }
+struct Arcade : Mame {
+  auto name() -> string override { return "Arcade"; }
   auto extensions() -> vector<string> override { return {}; }
   auto load(string location) -> bool override;
   auto save(string location) -> bool override;
@@ -8,7 +8,7 @@ struct SG1000A : Mame {
   Markup::Node info;
 };
 
-auto SG1000A::load(string location) -> bool {
+auto Arcade::load(string location) -> bool {
   info = BML::unserialize(manifestDatabaseArcade(Medium::name(location)));
   if(!info) return false;
 
@@ -30,19 +30,18 @@ auto SG1000A::load(string location) -> bool {
   return true;
 }
 
-auto SG1000A::save(string location) -> bool {
+auto Arcade::save(string location) -> bool {
   return true;
 }
 
-auto SG1000A::analyze(vector<u8>& rom) -> string {
+auto Arcade::analyze(vector<u8>& rom) -> string {
   string hash   = Hash::SHA256(rom).digest();
-  string board  = "ArcadeRom";
 
   string s;
   s += "game\n";
   s +={"  name:  ", Medium::name(location), "\n"};
   s +={"  title:  ", (info ? info["game/title"].string() : Medium::name(location)), "\n"};
-  s +={"  board:  ", board, "\n"};
+  s +={"  board:  ", (info ? info["game/board"].string() : "Arcade"), "\n"};
   s += "    memory\n";
   s += "      type: ROM\n";
   s +={"      size: 0x", hex(rom.size()), "\n"};

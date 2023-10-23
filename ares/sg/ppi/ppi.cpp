@@ -42,7 +42,7 @@ auto PPI::readPortB() -> n8 {
     output.bit(4) = !system.arcadeControls.p2b1->value();
     output.bit(5) = !system.arcadeControls.p2b2->value();
     output.bit(6) = !system.arcadeControls.service->value();
-    output.bit(7) = !system.arcadeControls.coin->value();
+    output.bit(7) = !(system.arcadeControls.p1coin->value() || system.arcadeControls.p2coin->value());
 
     return output;
   }

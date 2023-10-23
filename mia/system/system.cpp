@@ -1,4 +1,5 @@
 namespace Systems {
+  #include "arcade.cpp"
   #include "atari-2600.cpp"
   #include "colecovision.cpp"
   #include "myvision.cpp"
@@ -25,7 +26,6 @@ namespace Systems {
   #include "supergrafx.cpp"
   #include "playstation.cpp"
   #include "sg-1000.cpp"
-  #include "sg-1000a.cpp"
   #include "sc-3000.cpp"
   #include "super-famicom.cpp"
   #include "wonderswan.cpp"
@@ -36,6 +36,7 @@ namespace Systems {
 }
 
 auto System::create(string name) -> shared_pointer<Pak> {
+  if(name == "Arcade") return new Systems::Arcade;
   if(name == "Atari 2600") return new Systems::Atari2600;
   if(name == "ColecoVision") return new Systems::ColecoVision;
   if(name == "MyVision") return new Systems::MyVision;
@@ -62,7 +63,6 @@ auto System::create(string name) -> shared_pointer<Pak> {
   if(name == "SuperGrafx") return new Systems::SuperGrafx;
   if(name == "PlayStation") return new Systems::PlayStation;
   if(name == "SG-1000") return new Systems::SG1000;
-  if(name == "SG-1000A") return new Systems::SG1000A;
   if(name == "SC-3000") return new Systems::SC3000;
   if(name == "Super Famicom") return new Systems::SuperFamicom;
   if(name == "WonderSwan") return new Systems::WonderSwan;
