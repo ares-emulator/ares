@@ -33,8 +33,6 @@ auto APU::write(n16 address, n8 data) -> void {
 }
 
 auto APU::readExternal(n24 address) -> n8 {
-  //bus arbiter delay rough approximation (2-5 cycles)
-  step(4);
   while(MegaDrive::bus.acquired() && !scheduler.synchronizing()) step(1);
   MegaDrive::bus.acquire(MegaDrive::Bus::APU);
 
@@ -56,8 +54,6 @@ auto APU::readExternal(n24 address) -> n8 {
 }
 
 auto APU::writeExternal(n24 address, n8 data) -> void {
-  //bus arbiter delay rough approximation
-  step(4);
   while(MegaDrive::bus.acquired() && !scheduler.synchronizing()) step(1);
   MegaDrive::bus.acquire(MegaDrive::Bus::APU);
 
