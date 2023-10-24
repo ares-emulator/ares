@@ -66,7 +66,7 @@ auto M68000::exception(u32 exception, u32 vector, u32 priority) -> void {
   if(exception == Exception::Interrupt) {
     // IACK vector number acquisition (+4 cyc normal or +10 to +18 cyc autovectored)
     // & justify vector number (+4 cyc)
-    idle(16+4); // assuming autovector cycles (approximated for Megadrive)
+    idle(14+4); // assuming autovector cycles (approximated for Megadrive)
     r.i = priority;
   }
 
