@@ -74,8 +74,8 @@ struct CPU : M68000, Thread {
     static constexpr int ramLowBound       = 113;
     static constexpr int ramHighBound      = 132;
     static constexpr int ramLength         = 3;
-    static constexpr int externalLowBound  = 126;
-    static constexpr int externalHighBound = 132;
+    static constexpr int externalLowBound  = 121;
+    static constexpr int externalHighBound = 128;
     static constexpr int externalLength    = 2;
 
   } refresh;
