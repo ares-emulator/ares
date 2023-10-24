@@ -82,6 +82,7 @@ struct CPU : M68000, Thread {
 
   struct State {
     n32 interruptPending;
+    int stolenMcycles = 0;
   } state;
 
   int cyclesUntilSync = 0;

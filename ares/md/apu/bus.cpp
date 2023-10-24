@@ -33,7 +33,9 @@ auto APU::write(n16 address, n8 data) -> void {
 }
 
 auto APU::readExternal(n24 address) -> n8 {
+  step(3); // approximate Z80 delay
   while(MegaDrive::bus.acquired() && !scheduler.synchronizing()) step(1);
+  cpu.state.stolenMcycles += 68; // approximate 68K delay; 68 Mclk ~= 9.7 68k clk
   MegaDrive::bus.acquire(MegaDrive::Bus::APU);
 
   n8 data = 0xff;
@@ -54,7 +56,9 @@ auto APU::readExternal(n24 address) -> n8 {
 }
 
 auto APU::writeExternal(n24 address, n8 data) -> void {
+  step(3); // approximate Z80 delay
   while(MegaDrive::bus.acquired() && !scheduler.synchronizing()) step(1);
+  cpu.state.stolenMcycles += 68; // approximate 68K delay; 68 Mclk ~= 9.7 68k clk
   MegaDrive::bus.acquire(MegaDrive::Bus::APU);
 
   if(address >= 0x000000 && address <= 0x9fffff
