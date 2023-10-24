@@ -50,6 +50,11 @@ auto VDP::load(Node::Object parent) -> void {
   });
   overscan->setDynamic(true);
 
+  colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
+    screen->resetPalette();
+  });
+  colorEmulation->setDynamic(true);
+
   vce.debugger.load(vce, node);
   vdc0.debugger.load(vdc0, node); if(Model::SuperGrafx())
   vdc1.debugger.load(vdc1, node);
