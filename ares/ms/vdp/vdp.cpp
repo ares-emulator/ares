@@ -36,6 +36,11 @@ auto VDP::load(Node::Object parent) -> void {
       if(value == 1) screen->setSize(256, 240);
     });
     overscan->setDynamic(true);
+
+    colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
+      screen->resetPalette();
+    });
+    colorEmulation->setDynamic(true);
   }
 
   if(Display::LCD()) {

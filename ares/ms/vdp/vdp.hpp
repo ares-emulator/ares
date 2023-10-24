@@ -6,6 +6,7 @@ struct VDP : Thread {
   Node::Object node;
   Node::Video::Screen screen;
   Node::Setting::Boolean overscan;
+  Node::Setting::Boolean colorEmulation;
   Node::Setting::Natural revision;
   Node::Setting::Boolean interframeBlending;  //Game Gear only
   Memory::Writable<n8 > vram;  //16KB
