@@ -41,6 +41,7 @@ auto Arcade::load() -> bool {
   if(!system->load()) return false;
 
   //Determine from the game manifest which core to use for the given arcade rom
+#ifdef CORE_SG
   if(game->pak->attribute("board") == "sg1000a") {
     if(!ares::SG1000::load(root, {"[Sega] SG-1000A"})) return false;
     systemPakName = "SG-1000A";
@@ -50,11 +51,11 @@ auto Arcade::load() -> bool {
       port->allocate();
       port->connect();
     }
-  } else {
-    return false;
+    return true;
   }
+#endif
 
-  return true;
+  return false;
 }
 
 auto Arcade::save() -> bool {
