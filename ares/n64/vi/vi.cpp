@@ -39,15 +39,15 @@ auto VI::load(Node::Object parent) -> void {
   
   #if defined(VULKAN)
   if(vulkan.enable) {
-    screen->setSize(vulkan.outputUpscale * 640, vulkan.outputUpscale * 480);
+    screen->setSize(vulkan.outputUpscale * 320, vulkan.outputUpscale * 240);
     if(!vulkan.supersampleScanout) {
       screen->setScale(1.0 / vulkan.outputUpscale, 1.0 / vulkan.outputUpscale);
     }
   } else {
-    screen->setSize(640, 480);
+    screen->setSize(320, 240);
   }
   #else
-  screen->setSize(640, 480);
+  screen->setSize(320, 240);
   #endif
 
   debugger.load(node);
