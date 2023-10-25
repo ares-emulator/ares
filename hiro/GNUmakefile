@@ -7,7 +7,7 @@ ifeq ($(platform),windows)
 
   ifeq ($(hiro),windows)
     hiro.flags   = $(flags.cpp) -DHIRO_WINDOWS
-    hiro.options = $(call lib,kernel32 user32 gdi32 advapi32 ole32 comctl32 comdlg32 uxtheme msimg32 shlwapi dwmapi)
+    hiro.options = $(call lib,kernel32 user32 gdi32 advapi32 ole32 comctl32 comdlg32 uxtheme msimg32 dwmapi)
   endif
 
   ifeq ($(hiro),gtk2)
