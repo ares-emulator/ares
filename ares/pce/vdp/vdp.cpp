@@ -40,15 +40,9 @@ auto VDP::load(Node::Object parent) -> void {
 
   screen = node->append<Node::Video::Screen>("Screen", 1365, 263);
   screen->colors(1 << 10, {&VDP::color, this});
-  screen->setSize(1088, 239);
+  screen->setSize(1128, 263);
   screen->setScale(0.25, 1.0);
   screen->setAspect(8.0, 7.0);
-
-  overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
-    if(value == 0) screen->setSize(1024, 239);
-    if(value == 1) screen->setSize(1088, 239);
-  });
-  overscan->setDynamic(true);
 
   colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
     screen->resetPalette();
@@ -64,7 +58,6 @@ auto VDP::unload() -> void {
   vce.debugger = {};
   vdc0.debugger = {}; if(Model::SuperGrafx())
   vdc1.debugger = {};
-  overscan.reset();
   screen->quit();
   node->remove(screen);
   screen.reset();
@@ -108,8 +101,7 @@ auto VDP::main() -> void {
   io.hcounter = 0;
   if(++io.vcounter >= 262 + vce.io.extraLine) {
     io.vcounter = 0;
-    if(overscan->value() == 0) screen->setViewport(96, 21, 1024, 239);
-    if(overscan->value() == 1) screen->setViewport(96, 21, 1088, 239);
+    screen->setViewport(48, 16, screen->width(), 242);
     screen->frame();
     scheduler.exit(Event::Frame);
   }

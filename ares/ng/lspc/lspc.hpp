@@ -3,7 +3,6 @@
 struct LSPC : Thread {
   Node::Object node;
   Node::Video::Screen screen;
-  Node::Setting::Boolean overscan;
   Memory::Writable<n16> vram;
   Memory::Writable<n16> pram;
 

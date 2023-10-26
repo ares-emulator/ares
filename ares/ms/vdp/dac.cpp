@@ -1,6 +1,9 @@
-auto VDP::DAC::setup(n8 y) -> void {
-  self.screen->setFillColor(palette(16 | io.backdropColor));
-  output = self.screen->pixels().data() + ((240-self.vlines())/2 + y) * 256;
+auto VDP::DAC::setup(n9 y) -> void {
+  auto offset = Region::PAL() ? 48 : 27;
+  y = (y + offset) % vdp.screenHeight();
+  output = self.screen->pixels().data() + y * 284;
+
+  for (u32 x : range(284)) output[x] = palette(16 | io.backdropColor);
 }
 
 auto VDP::DAC::run(n8 x, n8 y) -> void {
@@ -15,7 +18,7 @@ auto VDP::DAC::run(n8 x, n8 y) -> void {
     }
   }
 
-  output[x] = color;
+  output[(x + 13) % 284] = color;
 }
 
 auto VDP::DAC::palette(n5 index) -> n12 {

@@ -11,12 +11,12 @@ auto VDP::load(Node::Object parent) -> void {
 
   node = parent->append<Node::Object>("VDP");
 
-  screen = node->append<Node::Video::Screen>("Screen", 256, 192);
+  screen = node->append<Node::Video::Screen>("Screen", 284, 243);
   screen->colors(1 << 4, {&VDP::color, this});
-  screen->setSize(256, 192);
+  screen->setSize(284, 243);
   screen->setScale(1.0, 1.0);
   screen->setAspect(8.0, 7.0);
-  screen->setViewport(0, 0, 256, 192);
+  screen->setViewport(0, 0, 284, 243);
 
   TMS9918::load(screen);
 }
@@ -39,6 +39,19 @@ auto VDP::irq(bool line) -> void {
 }
 
 auto VDP::frame() -> void {
+  if(screen->overscan()) {
+    screen->setSize(284, 243);
+    screen->setViewport(0, 0, 284, 243);
+  } else {
+    int x = 16;
+    int y = 16;
+    int width = 284 - 32;
+    int height = 243 - 32;
+
+    screen->setSize(width, height);
+    screen->setViewport(x, y, width, height);
+  }
+
   screen->frame();
   scheduler.exit(Event::Frame);
 }

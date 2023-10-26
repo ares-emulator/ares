@@ -25,7 +25,7 @@ auto VDP::load(Node::Object parent) -> void {
 
   screen = node->append<Node::Video::Screen>("Screen", 1365, 263);
   screen->colors(1 << 10, {&VDP::color, this});
-  screen->setSize(1024, 239);
+  screen->setSize(1128, 263);
   screen->setScale(0.25, 1.0);
   screen->setAspect(8.0, 7.0);
 
@@ -64,7 +64,7 @@ auto VDP::main() -> void {
   vdc1.hclock();
 
   if(io.vcounter >= 21 && io.vcounter < 239 + 21) {
-    auto line = screen->pixels().data() + 1365 * io.vcounter;
+    auto line = screen->pixels().data() + 1365 * io.vcounter + 48;
     auto clock = vce.clock();
 
     if(Model::SuperGrafx() == 0) {
@@ -101,7 +101,7 @@ auto VDP::main() -> void {
   io.hcounter = 0;
   if(++io.vcounter >= 262 + vce.io.extraLine) {
     io.vcounter = 0;
-    screen->setViewport(0, 21, 1024, 239);
+    screen->setViewport(0, 16, screen->width(), 242);
     screen->frame();
     scheduler.exit(Event::Frame);
   }

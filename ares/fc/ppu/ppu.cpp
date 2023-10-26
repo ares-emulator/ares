@@ -16,17 +16,11 @@ auto PPU::load(Node::Object parent) -> void {
 
   node = parent->append<Node::Object>("PPU");
 
-  screen = node->append<Node::Video::Screen>("Screen", 256, 240);
+  screen = node->append<Node::Video::Screen>("Screen", 282, displayHeight());
   screen->colors(1 << 9, {&PPU::color, this});
-  screen->setSize(256, 240);
+  screen->setSize(282, displayHeight());
   screen->setScale(1.0, 1.0);
-  screen->setAspect(8.0, 7.0);
-
-  overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
-    if(value == 0) screen->setSize(256, 224);
-    if(value == 1) screen->setSize(256, 240);
-  });
-  overscan->setDynamic(true);
+  Region::PAL() ? screen->setAspect(55.0, 43.0) :screen->setAspect(8.0, 7.0);
 
   debugger.load(node);
 }
@@ -35,7 +29,6 @@ auto PPU::unload() -> void {
   screen->quit();
   node->remove(screen);
   debugger.unload();
-  overscan.reset();
   screen.reset();
   node.reset();
   ciram.reset();
@@ -80,8 +73,22 @@ auto PPU::scanline() -> void {
 
 auto PPU::frame() -> void {
   io.field++;
-  if(overscan->value() == 0) screen->setViewport(0, 8, 256, 224);
-  if(overscan->value() == 1) screen->setViewport(0, 0, 256, 240);
+
+  if(screen->overscan()) {
+    screen->setSize(282, displayHeight());
+    screen->setViewport(0, 0, 282, displayHeight());
+  } else {
+    int x = 24;
+    int y = 8;
+    int width = 282 - 48;
+    int height = displayHeight() - 16;
+
+    if(Region::PAL()) height -= 48;
+
+    screen->setSize(width, height);
+    screen->setViewport(x, y, width, height);
+  }
+
   screen->frame();
   scheduler.exit(Event::Frame);
 }

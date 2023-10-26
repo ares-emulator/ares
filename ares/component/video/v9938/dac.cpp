@@ -1,7 +1,10 @@
-auto V9938::DAC::setup(n8 voffset) -> void {
-  n9 vcenter = voffset + (!self.overscan() ? 10 : 0);  //centers output within buffer
-  output = self.screen->pixels().data() + vcenter * 1024;
-  if(self.interlace() && self.field()) output += 512;
+auto V9938::DAC::setup(n9 voffset) -> void {
+  //TODO: Verify border in overscan mode
+  voffset = (voffset + (self.latch.overscan ? 13 : 27)) % 243;
+  output = self.screen->pixels().data() + voffset * 1136;
+  if(self.interlace() && self.field()) output += 568;
+  for(auto n: range(568)) output[n] = self.pram[self.io.colorBackground];
+  output += 26;
 }
 
 auto V9938::DAC::run(n8 hoffset, n8 voffset) -> void {

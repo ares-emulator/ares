@@ -13,12 +13,12 @@ TIA tia;
 auto TIA::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("TIA");
 
-  screen = node->append<Node::Video::Screen>("Screen", 160, vlines());
+  screen = node->append<Node::Video::Screen>("Screen", 180, displayHeight());
   screen->colors(1 << 7, {&TIA::color, this});
-  screen->setSize(160, displayHeight());
-  screen->setScale(1.0, 1.0);
-  screen->setAspect(12.0, 7.0);
-  screen->setViewport(0, 0, 160, displayHeight());
+  screen->setSize(180, displayHeight());
+  screen->setScale(2.0, 1.0);
+  Region::PAL() ? screen->setAspect(38.0, 45.0) : screen->setAspect(4.0, 5.0);
+  screen->setViewport(0, 0, 180, displayHeight());
 
   stream = node->append<Node::Audio::Stream>("Audio");
   stream->setChannels(1);
@@ -46,7 +46,8 @@ auto TIA::scanline() -> void {
   for(io.hcounter = 0; io.hcounter < 228; io.hcounter++) {
     writeQueue.step();
     auto x = io.hcounter - 68;
-    if(x >= 0 && io.vcounter < vlines()) pixel(x);
+    auto y = io.vcounter - voffset();
+    if(x >= 0 && y > 0 && y < vlines()) pixel(x);
     runAudio();
     step();
     if(io.hcounter == 0) cpu.io.rdyLine = 1;
@@ -60,7 +61,9 @@ auto TIA::scanline() -> void {
 }
 
 auto TIA::pixel(n8 x) -> void {
-  auto output = screen->pixels().data() + (io.vcounter * 160);
+  auto y = io.vcounter - voffset();
+  auto output = screen->pixels().data() + (y * 180) + 10;
+  if(y >= displayHeight()) return;
 
   // Output only black during vblank, or for the first 8px of a scanline where hmove was triggered
   if (io.vblank || (io.hmoveTriggered == io.vcounter && x < 8)) {
@@ -190,14 +193,6 @@ auto TIA::runBall(n8 x) -> n1 {
 }
 
 auto TIA::frame() -> void {
-  auto height = io.vcounter;
-
-  if(height <= 0) {
-     debug(unusual, "invalid screen height");
-     height = vlines();
-  }
-
-  screen->setViewport(0, 0, 160, height);
   screen->frame();
   scheduler.exit(Event::Frame);
 }

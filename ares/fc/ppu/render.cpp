@@ -7,15 +7,16 @@ auto PPU::loadCHR(n16 address) -> n8 {
 }
 
 auto PPU::renderPixel() -> void {
-  //todo: renderPixel() is called when Y=261 ... why?
   if(io.ly >= screen->canvasHeight()) return;
-  auto output = screen->pixels().data() + io.ly * 256;
 
   u32  x = io.lx - 1;
   u32  mask = 0x8000 >> (io.v.fineX + (x & 7));
   u32  palette = 0;
   u32  objectPalette = 0;
   bool objectPriority = 0;
+
+  //PAL systems blank the topmost scanline and the first and last 2px of active display
+  if(Region::PAL()) if(io.ly == 0 || x < 2 || x > 254) return;
 
   palette |= latch.tiledataLo & mask ? 1 : 0;
   palette |= latch.tiledataHi & mask ? 2 : 0;
@@ -55,7 +56,13 @@ auto PPU::renderPixel() -> void {
   }
 
   if(!enable()) palette = 0;
-  output[x] = io.emphasis << 6 | readCGRAM(palette);
+
+  if(Region::PAL()) {
+    output[(x + 18) % 282] = io.emphasis << 6 | readCGRAM(palette);
+    return;
+  }
+
+  output[(x + 15) % 282] = io.emphasis << 6 | readCGRAM(palette);
 }
 
 auto PPU::renderSprite() -> void {
@@ -80,6 +87,11 @@ auto PPU::renderSprite() -> void {
 }
 
 auto PPU::renderScanline() -> void {
+  if(io.ly < screen->canvasHeight()) {
+    output = screen->pixels().data() + io.ly * 282;
+    for(auto n : range(282)) output[n] = Region::PAL() ? 0x3f : (io.emphasis << 6 | readCGRAM(0));
+  }
+
   //Vblank
   if(io.ly >= 240 && io.ly <= vlines() - 2) return step(341), scanline();
 

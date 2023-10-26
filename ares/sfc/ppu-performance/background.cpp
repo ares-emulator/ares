@@ -12,7 +12,7 @@ auto PPU::Background::render() -> void {
   bool offsetPerTileMode = self.io.bgMode == 2 || self.io.bgMode == 4 || self.io.bgMode == 6;
   bool directColorMode = self.dac.io.directColor && id == ID::BG1 && (self.io.bgMode == 3 || self.io.bgMode == 4);
   u32 colorShift = 3 + io.mode;
-  s32 width = self.width() << hires;
+  s32 width = 256 << hires;
 
   u32 tileHeight = 3 + io.tileSize;
   u32 tileWidth = !hires ? tileHeight : 4;
@@ -43,8 +43,6 @@ auto PPU::Background::render() -> void {
 
   s32 x1 =   0;
   s32 x2 = 256;
-  if(self.width() == 352) x1 = -48, x2 = 304;
-  if(self.width() == 448) x1 = -96, x2 = 352;
   x1 <<= hires;
   x2 <<= hires;
 

@@ -3,9 +3,7 @@
 struct PPU : PPUBase::Implementation, PPUcounter {
   Node::Object node;
   Node::Setting::Natural vramSize;
-  Node::Setting::Boolean overscanEnable;
   Node::Setting::Boolean deepBlackBoost;
-  Node::Setting::Natural screenWidth;
 
   struct Debugger {
     PPU& self;
@@ -28,7 +26,7 @@ struct PPU : PPUBase::Implementation, PPUcounter {
     } graphics;
   } debugger{*this};
 
-  auto width() const -> u32 { return screenWidth->value(); }
+  auto height() const -> u32 { return Region::PAL() ? 288 : 242; }
   auto hires() const -> bool { return io.pseudoHires || io.bgMode == 5 || io.bgMode == 6; }
   auto interlace() const -> bool { return state.interlace; }
   auto overscan() const -> bool { return state.overscan; }

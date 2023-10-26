@@ -18,11 +18,11 @@ auto TMS9918::unload() -> void {
 }
 
 auto TMS9918::main() -> void {
+  dac.setup(io.vcounter);
   if(io.vcounter < 192) {
     n8 y = io.vcounter;
     background.setup(y);
     sprite.setup(y);
-    dac.setup(y);
     for(n8 x : range(256)) {
       background.run(x, y);
       sprite.run(x, y);

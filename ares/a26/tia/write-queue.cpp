@@ -23,7 +23,7 @@ auto TIA::WriteQueue::step() -> void {
 
 auto TIA::WriteQueue::QueueItem::commit() -> void {
   switch(address) {
-  case 0x01: tia.io.vblank = data.bit(1); if(tia.io.vblank == 0) { tia.io.vcounter = 0; } return; // VBLANK
+  case 0x01: tia.io.vblank = data.bit(1);                                                return; // VBLANK
   case 0x0b: tia.player[0].reflect = data.bit(3);                                        return; // REFP0
   case 0x0c: tia.player[1].reflect = data.bit(3);                                        return; // REFP1
   case 0x0d: tia.playfield.graphics.bit(0, 3) = data.bit(4, 7);                          return; // PF0

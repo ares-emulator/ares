@@ -19,12 +19,12 @@ auto V9938::unload() -> void {
 }
 
 auto V9938::main() -> void {
+  dac.setup(io.vcounter);
   if(io.vcounter < vlines()) {
     n9 y = io.vcounter;
     latch.vscroll = io.vscroll;
     background.setup(y);
     sprite.setup(y + latch.vscroll);
-    dac.setup(y);
 
     while(io.hcounter < 256) {
       n9 x = io.hcounter;

@@ -17,12 +17,6 @@ auto LSPC::load(Node::Object parent) -> void {
   screen->setScale(1.0, 1.0);
   screen->setAspect(1.0, 1.0);
 
-  overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
-    if(value == 0) screen->setSize(304, 224);
-    if(value == 1) screen->setSize(320, 256);
-  });
-  overscan->setDynamic(true);
-
   vram.allocate(68_KiB >> 1);
   pram.allocate(16_KiB >> 1);
 
@@ -52,7 +46,6 @@ auto LSPC::unload() -> void {
   debugger.unload(node);
   vram.reset();
   pram.reset();
-  overscan.reset();
   screen->quit();
   node->remove(screen);
   screen.reset();
@@ -101,8 +94,7 @@ auto LSPC::main() -> void {
 }
 
 auto LSPC::frame() -> void {
-  if(overscan->value() == 0) screen->setViewport(8, 16, 304, 224);
-  if(overscan->value() == 1) screen->setViewport(0, 0, 320, 256);
+  screen->setViewport(0, 0, 320, 256);
   screen->frame();
   scheduler.exit(Event::Frame);
 }

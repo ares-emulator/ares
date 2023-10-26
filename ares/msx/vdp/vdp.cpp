@@ -10,9 +10,9 @@ auto VDP::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VDP");
 
   if(Model::MSX()) {
-    screen = node->append<Node::Video::Screen>("Screen", 256, 192);
+    screen = node->append<Node::Video::Screen>("Screen", 284, 243);
     screen->colors(1 << 4, {&VDP::colorMSX, this});
-    screen->setSize(256, 192);
+    screen->setSize(284, 243);
     screen->setScale(1.0, 1.0);
     screen->setAspect(8.0, 7.0);
     TMS9918::vram.allocate(16_KiB, 0x00);
@@ -20,9 +20,9 @@ auto VDP::load(Node::Object parent) -> void {
   }
 
   if(Model::MSX2()) {
-    screen = node->append<Node::Video::Screen>("Screen", 512, 424);
+    screen = node->append<Node::Video::Screen>("Screen", 568, 486);
     screen->colors(1 << 9, {&VDP::colorMSX2, this});
-    screen->setSize(512, 424);
+    screen->setSize(568, 486);
     screen->setScale(0.5, 0.5);
     screen->setAspect(8.0, 7.0);
     V9938::vram.allocate(128_KiB, 0x00);
@@ -51,16 +51,33 @@ auto VDP::irq(bool line) -> void {
 }
 
 auto VDP::frame() -> void {
+  int screenScale = Model::MSX2() ? 2 : 1;
+
   if(Model::MSX2()) {
     if(V9938::interlace() == 0) screen->setProgressive(1);
     if(V9938::interlace() == 1) screen->setInterlace(V9938::field());
   }
-  screen->setViewport(0, 0, screen->width(), screen->height());
+
+  if(screen->overscan()) {
+    screen->setSize(284 * screenScale, 243 * screenScale);
+    screen->setViewport(0, 0, 284 * screenScale, 243 * screenScale);
+ } else {
+    int x = 16;
+    int y = 16;
+    int width = 284 - 32;
+    int height = 243 - 32;
+
+    screen->setSize(width * screenScale, height * screenScale);
+    screen->setViewport(x * screenScale, y * screenScale, width * screenScale, height * screenScale);
+  }
+
   screen->frame();
   scheduler.exit(Event::Frame);
 }
 
 auto VDP::power() -> void {
+  screen->power();
+
   if(Model::MSX()) {
     TMS9918::power();
     Thread::create(system.colorburst() * 2, [&] { TMS9918::main(); });
@@ -70,8 +87,6 @@ auto VDP::power() -> void {
     V9938::power();
     Thread::create(system.colorburst() * 2, [&] { V9938::main(); });
   }
-
-  screen->power();
 }
 
 /* Z80 I/O ports 0x98 - 0x9b */

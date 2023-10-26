@@ -14,10 +14,7 @@ auto TMS9918::Background::run(n8 hoffset, n8 voffset) -> void {
 }
 
 auto TMS9918::Background::text1(n8 hoffset, n8 voffset) -> void {
-  // Offset by 6px and blank the last 10px to centre the display
-  i32 x = hoffset - 6;
-  if (x < 0) return;
-  if (hoffset > 246) return;
+  i32 x = hoffset;
   
   n14 nameAddress = (voffset.bit(3,7) * 40) + (x / 6);
   nameAddress.bit(10,13) = io.nameTableAddress;

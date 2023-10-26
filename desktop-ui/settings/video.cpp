@@ -60,7 +60,7 @@ auto VideoSettings::construct() -> void {
     if(emulator) emulator->setOverscan(settings.video.overscan);
   });
   overscanLayout.setAlignment(1).setPadding(12_sx, 0);
-  overscanHint.setText("Shows extended PAL CRT lines, but these are usually blank in most games").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+  overscanHint.setText("Displays the full frame without cropping 'undesirable' borders").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
   pixelAccuracyOption.setText("Pixel Accuracy Mode").setChecked(settings.video.pixelAccuracy).onToggle([&] {
     settings.video.pixelAccuracy = pixelAccuracyOption.checked();
     if(emulator) emulator->setBoolean("Pixel Accuracy", settings.video.pixelAccuracy);

@@ -4,7 +4,8 @@ struct TIA : Thread {
   Node::Audio::Stream stream;
 
   auto vlines() const -> u32 { return Region::NTSC() ? 262 : 312; }
-  auto displayHeight() const -> u32 { return Region::NTSC() ? 192 : 228; }
+  auto displayHeight() const -> u32 { return Region::PAL() ? 243 : 228; }
+  auto voffset() const -> s32 { return Region::PAL() ? 40 : 20; }
 
   //tia.cpp
   auto load(Node::Object) -> void;

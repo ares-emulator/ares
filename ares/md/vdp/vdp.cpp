@@ -34,17 +34,11 @@ VDP vdp;
 auto VDP::load(Node::Object parent) -> void {
   node = parent->append<Node::Object>("VDP");
 
-  screen = node->append<Node::Video::Screen>("Screen", 1280, 480);
+  screen = node->append<Node::Video::Screen>("Screen", 1388, visibleHeight() * 2);
   screen->colors(1 << 16, {&VDP::color, this});
-  screen->setSize(1280, 480);
+  screen->setSize(1388, visibleHeight() * 2);
   screen->setScale(0.25, 0.5);
-  screen->setAspect(32, 35);
-
-  overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
-    if(value == 0) screen->setSize(1280, 448);
-    if(value == 1) screen->setSize(1280, 480);
-  });
-  overscan->setDynamic(true);
+  Region::PAL() ? screen->setAspect(111.0, 100.0) : screen->setAspect(32.0, 35.0);
 
   psg.load(node);
   debugger.load(node);
@@ -55,7 +49,6 @@ auto VDP::load(Node::Object parent) -> void {
 auto VDP::unload() -> void {
   debugger.unload();
   psg.unload();
-  overscan.reset();
   screen->quit();
   node->remove(screen);
   screen.reset();
@@ -63,37 +56,60 @@ auto VDP::unload() -> void {
 }
 
 auto VDP::pixels() -> u32* {
+  //TODO: vcounter values of top border may not be correct here
+
   u32* output = nullptr;
-  if(overscan->value() == 0 && latch.overscan == 0) {
-    if(vcounter() >= 224) return nullptr;
-    output = screen->pixels().data() + (vcounter() - 0) * 2 * 1280;
-  }
-  if(overscan->value() == 0 && latch.overscan == 1) {
-    if(vcounter() <=   7) return nullptr;
-    if(vcounter() >= 232) return nullptr;
-    output = screen->pixels().data() + (vcounter() - 8) * 2 * 1280;
-  }
-  if(overscan->value() == 1 && latch.overscan == 0) {
-    if(vcounter() >= 0x1f8) { // top border
-      output = screen->pixels().data() + (vcounter() - 0x1f8) * 2 * 1280;
-    } else if(vcounter() >= 232) {
-      return nullptr;
-    } else {
-      output = screen->pixels().data() + (vcounter() + 8) * 2 * 1280;
-    }
-  }
-  if(overscan->value() == 1 && latch.overscan == 1) {
-    if(vcounter() >= 240) return nullptr;
-    output = screen->pixels().data() + (vcounter() + 0) * 2 * 1280;
-  }
-  if(latch.interlace) output += field() * 1280;
-  return output;
+  if(Region::NTSC() && vcounter() >= 0x1ed) return nullptr;
+  if(Region::PAL()  && vcounter() >= 0x1f0) return nullptr;
+
+  //account for vcounter jumps during blanking periods
+  n9 y = vcounter();
+  if(Region::NTSC() && v28() && vcounter() >= 0x1e5) y -= 250;
+  if(Region::PAL()  && v28() && vcounter() >= 0x1ca) y -= 201;
+  if(v30() && Region::PAL()  && vcounter() >= 0x1d2) y -= 201;
+
+  auto offset = Region::PAL() ? 38 : 11;
+  if(latch.overscan) offset -= 8;
+
+  y = (y + offset) % visibleHeight();
+
+  output = screen->pixels().data() + y * 2 * 1388;
+  if(latch.interlace) output += field() * 1388;
+
+  //TODO: this should probably be handled in DAC
+  n32 bg = 1 << 11 | 1 << 9 | cram.color(io.backgroundColor);
+  for(auto n: range(1388)) output[n] = bg;
+
+  return output + 52;
 }
 
 auto VDP::frame() -> void {
   if(latch.interlace == 0) screen->setProgressive(1);
   if(latch.interlace == 1) screen->setInterlace(field());
-  screen->setViewport(0, 0, screen->width(), screen->height());
+
+  if(screen->overscan()) {
+    screen->setSize(1388, visibleHeight() * 2);
+    screen->setViewport(0, 0, screen->width(), screen->height());
+  } else {
+    int x = 14 * 4;
+    int y = 12 * 2;
+    int width = 1388 - (28 * 4);
+    int height = (visibleHeight() * 2) - (24 * 2);
+
+    if(Region::PAL()) {
+      y += 28 * 2;
+      height -= 48 * 2;
+
+      if(v30()) {
+        y -= 8 * 2;
+        height += 16 * 2;
+      }
+    }
+
+    screen->setSize(width, height);
+    screen->setViewport(x, y, width, height);
+  }
+
   screen->frame();
   scheduler.exit(Event::Frame);
 }

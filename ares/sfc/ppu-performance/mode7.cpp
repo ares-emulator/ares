@@ -28,8 +28,7 @@ auto PPU::Background::renderMode7() -> void {
 
   s32 x1 =   0;
   s32 x2 = 255;
-  if(self.width() == 352) x1 = -48, x2 = 303;
-  if(self.width() == 448) x1 = -96, x2 = 351;
+
 
   for(s32 X = x1; X <= x2; X++) {
     s32 x = !self.mode7.hflip ? X : x2 - X;

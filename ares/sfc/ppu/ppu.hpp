@@ -48,7 +48,6 @@ struct PPU : PPUBase::Implementation, PPUcounter {
   Node::Setting::Natural versionPPU1;
   Node::Setting::Natural versionPPU2;
   Node::Setting::Natural vramSize;
-  Node::Setting::Boolean overscanEnable;
   Node::Setting::Boolean deepBlackBoost;
 
   struct Debugger {
@@ -77,6 +76,7 @@ struct PPU : PPUBase::Implementation, PPUcounter {
     } properties;
   } debugger{*this};
 
+  auto height() const -> u32 { return Region::PAL() ? 288 : 242; }
   auto interlace() const -> bool { return state.interlace; }
   auto overscan() const -> bool { return state.overscan; }
   auto vdisp() const -> u32 { return state.vdisp; }

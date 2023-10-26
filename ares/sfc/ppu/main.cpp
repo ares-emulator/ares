@@ -21,8 +21,31 @@ auto PPU::main() -> void {
   if(vcounter() == 240) {
     if(state.interlace == 0) screen->setProgressive(1);
     if(state.interlace == 1) screen->setInterlace(field());
-    if(overscanEnable->value() == 0) screen->setViewport(0, 18, 512, 448);
-    if(overscanEnable->value() == 1) screen->setViewport(0,  0, 512, 480);
+
+    if(screen->overscan()) {
+      screen->setSize(564, height() * 2);
+      screen->setViewport(0, 0, 564, height() * 2);
+    } else {
+      int x = 24;
+      int y = 16;
+      int w = 564 - 48;
+      int h = height() - 20;
+
+      if(Region::PAL()) {
+        y += 25;
+        h -= 29;
+        w -= 6;
+
+        if(!io.overscan) {
+          y += 16;
+          h -= 16;
+        }
+      }
+
+      screen->setSize(w, h * 2);
+      screen->setViewport(x, y, w, h * 2);
+    }
+
     screen->frame();
     scheduler.exit(Event::Frame);
   }

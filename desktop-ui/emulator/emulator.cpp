@@ -155,10 +155,8 @@ auto Emulator::setBoolean(const string& name, bool value) -> bool {
 
 auto Emulator::setOverscan(bool value) -> bool {
   if(auto screen = root->scan<ares::Node::Video::Screen>("Screen")) {
-    if(auto overscan = screen->find<ares::Node::Setting::Boolean>("Overscan")) {
-      overscan->setValue(value);
-      return true;
-    }
+    screen->setOverscan(value);
+    return true;
   }
   return false;
 }

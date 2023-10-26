@@ -21,10 +21,8 @@ auto PPU::Object::render() -> void {
   for(u32 n : range(32)) items[n].valid = false;
   for(u32 n : range(34)) tiles[n].valid = false;
 
-  u32 width = self.width();
+  u32 width = 256;
   s32 x1 = 0, x2 = 255;
-  if(self.width() == 352) x1 = -48, x2 = 303;
-  if(self.width() == 448) x1 = -96, x2 = 351;
 
   for(u32 n : range(128)) {
     Item item{true, io.firstSprite + n & 127};

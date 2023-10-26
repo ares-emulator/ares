@@ -1,7 +1,6 @@
 struct PPU : Thread {
   Node::Object node;
   Node::Video::Screen screen;
-  Node::Setting::Boolean overscan;
   Memory::Writable<n8> ciram;
   Memory::Writable<n8> cgram;
   Memory::Writable<n8> oam;
@@ -20,6 +19,7 @@ struct PPU : Thread {
 
   auto rate() const -> u32 { return Region::PAL() ? 5 : 4; }
   auto vlines() const -> u32 { return Region::PAL() ? 312 : 262; }
+  auto displayHeight() const -> u32 { return Region::PAL() ? 288 : 242; }
 
   //ppu.cpp
   auto load(Node::Object) -> void;
@@ -133,6 +133,8 @@ struct PPU : Thread {
     OAM oam[8];   //primary
     OAM soam[8];  //secondary
   } latch;
+
+  u32* output;
 };
 
 extern PPU ppu;

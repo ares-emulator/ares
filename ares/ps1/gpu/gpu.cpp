@@ -41,12 +41,6 @@ auto GPU::load(Node::Object parent) -> void {
   });
   screen->setSize(640, 512);
 
-  overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
-    if(value == 0) screen->setSize(640, 480);
-    if(value == 1) screen->setSize(640, 512);
-  });
-  overscan->setDynamic(true);
-
   vram.allocate(1_MiB);
   for(u32 y : range(512)) {
     vram2D[y] = (u16*)&vram.data[y * 2048];
@@ -61,7 +55,6 @@ auto GPU::unload() -> void {
   renderer.kill();
   debugger = {};
   vram.reset();
-  overscan.reset();
   node->remove(screen);
   screen.reset();
   node.reset();

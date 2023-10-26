@@ -3,7 +3,6 @@
 struct GPU : Thread, Memory::Interface {
   Node::Object node;
   Node::Video::Screen screen;
-  Node::Setting::Boolean overscan;
   Memory::Writable vram;
 
   struct Debugger {

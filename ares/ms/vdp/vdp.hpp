@@ -5,7 +5,6 @@
 struct VDP : Thread {
   Node::Object node;
   Node::Video::Screen screen;
-  Node::Setting::Boolean overscan;
   Node::Setting::Boolean colorEmulation;
   Node::Setting::Natural revision;
   Node::Setting::Boolean interframeBlending;  //Game Gear only
@@ -40,6 +39,7 @@ struct VDP : Thread {
   auto step(u32 clocks) -> void;
 
   auto updateScreenSize() -> void;
+  auto screenHeight() const -> u32 { return Region::PAL() ? 288 : 243; }
 
   auto vlines() -> u32;
   auto vblank() -> bool;
@@ -137,7 +137,7 @@ struct VDP : Thread {
     VDP& self;
 
     //dac.cpp
-    auto setup(n8 voffset) -> void;
+    auto setup(n9 voffset) -> void;
     auto run(n8 hoffset, n8 voffset) -> void;
     auto palette(n5 index) -> n12;
     auto power() -> void;

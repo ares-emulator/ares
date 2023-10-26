@@ -18,7 +18,7 @@ auto VDP::load(Node::Object parent) -> void {
 
   node = parent->append<Node::Object>("VDP");
 
-  screen = node->append<Node::Video::Screen>("Screen", 256, 240);
+  screen = node->append<Node::Video::Screen>("Screen", 284, screenHeight());
 
   u32 defaultRevision = 2;
   if((Model::MarkIII() || Model::MasterSystemI()) && Region::NTSCJ()) defaultRevision = 1;
@@ -27,15 +27,9 @@ auto VDP::load(Node::Object parent) -> void {
 
   if(Display::CRT()) {
     screen->colors(1 << 6, {&VDP::colorMasterSystem, this});
-    screen->setSize(256, 240);
+    screen->setSize(284, screenHeight());
     screen->setScale(1.0, 1.0);
-    screen->setAspect(8.0, 7.0);
-
-    overscan = screen->append<Node::Setting::Boolean>("Overscan", true, [&](auto value) {
-      if(value == 0) screen->setSize(256, vlines());
-      if(value == 1) screen->setSize(256, 240);
-    });
-    overscan->setDynamic(true);
+    Region::PAL() ? screen->setAspect(19.0, 14.0) : screen->setAspect(8.0, 7.0);
 
     colorEmulation = screen->append<Node::Setting::Boolean>("Color Emulation", true, [&](auto value) {
       screen->resetPalette();
@@ -48,7 +42,7 @@ auto VDP::load(Node::Object parent) -> void {
     screen->setSize(160, 144);
     screen->setScale(1.0, 1.0);
     screen->setAspect(6.0, 5.0);
-    screen->setViewport(0, 0, 256, 240);
+    screen->setViewport(0, 0, 284, screenHeight());
 
     interframeBlending = screen->append<Node::Setting::Boolean>("Interframe Blending", true, [&](auto value) {
       screen->setInterframeBlending(value);
@@ -65,7 +59,6 @@ auto VDP::unload() -> void {
   revision.reset();
   screen->quit();
   node->remove(screen);
-  overscan.reset();
   screen.reset();
   node.reset();
   vram.reset();
@@ -89,11 +82,11 @@ auto VDP::main() -> void {
   }
 
   //684 clocks/scanline
+  dac.setup(io.vcounter);
   if(io.vcounter < vlines()) {
     u8 y = io.vcounter;
     background.setup(y);
     sprite.setup(y);
-    dac.setup(y);
     for(u8 x : range(256)) {
       background.run(x, y);
       sprite.run(x, y);
@@ -108,13 +101,28 @@ auto VDP::main() -> void {
 
   if(io.vcounter == 240) {
     if(Display::CRT()) {
-      if(overscan->value() == 0) screen->setViewport(0, (240-vlines())/2, 256, vlines());
-      if(overscan->value() == 1) screen->setViewport(0, 0, 256, 240);
+      if(screen->overscan()) {
+        screen->setSize(284, screenHeight());
+        screen->setViewport(0, 0, 284, screenHeight());
+      } else {
+        int x = 24;
+        int y = 24;
+        int width = 284 - 48;
+        int height = screenHeight() - 48;
+
+        if(Region::PAL()) {
+          y += 24;
+          height -= 48;
+        }
+
+        screen->setSize(width, height);
+        screen->setViewport(x, y, width, height);
+      }
     } else if (Mode::MasterSystem()) {
-      screen->setViewport(0, (240-vlines())/2, 256, vlines());
+      screen->setViewport(21, 27, 248, 200);
     }
     if(Mode::GameGear()) {
-      screen->setViewport(48, 48, 160, 144);
+      screen->setViewport(61, 51, 160, 144);
     }
     screen->frame();
     scheduler.exit(Event::Frame);
@@ -142,8 +150,7 @@ auto VDP::step(u32 clocks) -> void {
 
 auto VDP::updateScreenSize() -> void {
   if(Display::CRT()) {
-    if(overscan->value() == 0) screen->setSize(256, vlines());
-    if(overscan->value() == 1) screen->setSize(256, 240);
+    screen->setSize(284, screenHeight());
   }
   //if(Display::LCD()) {
   //  screen->setSize(160, 144);

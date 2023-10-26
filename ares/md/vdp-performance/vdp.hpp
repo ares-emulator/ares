@@ -2,7 +2,6 @@
 struct VDP : Thread {
   Node::Object node;
   Node::Video::Screen screen;
-  Node::Setting::Boolean overscan;
 
   struct Debugger {
     //debugger.cpp

@@ -76,6 +76,11 @@ auto Screen::setViewport(u32 x, u32 y, u32 width, u32 height) -> void {
   _viewportHeight = height;
 }
 
+auto Screen::setOverscan(bool overscan) -> void {
+  lock_guard<recursive_mutex> lock(_mutex);
+  _overscan = overscan;
+}
+
 auto Screen::setSize(u32 width, u32 height) -> void {
   lock_guard<recursive_mutex> lock(_mutex);
   _width  = width;

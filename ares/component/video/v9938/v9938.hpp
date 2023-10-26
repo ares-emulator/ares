@@ -154,7 +154,7 @@ protected:
     V9938& self;
 
     //dac.cpp
-    auto setup(n8 voffset) -> void;
+    auto setup(n9 voffset) -> void;
     auto run(n8 hoffset, n8 voffset) -> void;
     auto power() -> void;
 

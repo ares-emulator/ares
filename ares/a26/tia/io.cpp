@@ -72,8 +72,9 @@ auto TIA::write(n8 address, n8 data) -> void {
 
 
 auto TIA::vsync(n1 state) -> void {
-  if(io.vsync && !state) {
+  if(!io.vsync && state) {
     frame();
+    tia.io.vcounter = 0;
   }
 
   io.vsync = state;

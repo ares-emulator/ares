@@ -5,7 +5,6 @@
 struct VDP : Thread {
   Node::Object node;
   Node::Video::Screen screen;
-  Node::Setting::Boolean overscan;
 
   struct Debugger {
     VDP& self;
@@ -53,6 +52,7 @@ struct VDP : Thread {
   auto screenWidth() const -> u32 { return latch.displayWidth ? 320 : 256; }
   auto screenHeight() const -> u32 { return io.overscan ? 240 : 224; }
   auto frameHeight() const -> u32 { return Region::PAL() ? 312 : 262; }
+  auto visibleHeight() const -> u32 { return Region::PAL() ? 294 : 243; }
 
   //vdp.cpp
   auto load(Node::Object) -> void;

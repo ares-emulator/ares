@@ -16,6 +16,7 @@ struct Screen : Video {
   auto scaleY() const -> f64 { return _scaleY; }
   auto aspectX() const -> f64 { return _aspectX; }
   auto aspectY() const -> f64 { return _aspectY; }
+  auto overscan() const -> bool { return _overscan; }
   auto colors() const -> u32 { return _colors; }
   auto pixels(bool frame = 0) -> array_span<u32>;
 
@@ -37,6 +38,7 @@ struct Screen : Video {
   auto setSize(u32 width, u32 height) -> void;
   auto setScale(f64 scaleX, f64 scaleY) -> void;
   auto setAspect(f64 aspectX, f64 aspectY) -> void;
+  auto setOverscan(bool overscan) -> void;
 
   auto setSaturation(f64 saturation) -> void;
   auto setGamma(f64 gamma) -> void;
@@ -81,6 +83,7 @@ protected:
   bool _colorBleed = false;
   bool _colorBleedWidth = 1;
   bool _interframeBlending = false;
+  bool _overscan = true;
   u32  _rotation = 0;  //counter-clockwise (90 = left, 270 = right)
 
   function<n64 (n32)> _color;

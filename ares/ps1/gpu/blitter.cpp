@@ -11,12 +11,6 @@ auto GPU::Blitter::queue() -> void {
 
   width  = self.display.width;
   height = self.display.height;
-  if(self.overscan->value() == 0) {
-    if(height == 240) height = 224;
-    if(height == 256) height = 240;
-    if(height == 480) height = 448;
-    if(height == 512) height = 480;
-  }
 
   s32 offsetX1 = 0;
   if(self.display.width == 256) offsetX1 = 0x228;
@@ -42,12 +36,6 @@ auto GPU::Blitter::queue() -> void {
   if(ty >  511) ty =  511;
   if(tx + tw > 1023) tw = 1023 - tx;
   if(ty + th >  511) th =  511 - ty;
-
-  //overscan offset may send ty out of bounds, but the rendering below will skip drawing these lines
-  if(self.overscan->value() == 0) {
-    if(self.display.height == 240 || self.display.height == 256) ty -=  8;
-    if(self.display.height == 480 || self.display.height == 512) ty -= 16;
-  }
 
   if(tx != self.display.previous.x
   || ty != self.display.previous.y
