@@ -372,11 +372,12 @@ auto Nintendo64::analyze(vector<u8>& data) -> string {
   if(id == "NCL") {cpak = true; rpak = true;}                            //California Speed
   if(id == "NCD") {cpak = true; rpak = true;}                            //Carmageddon 64
   if(id == "NTS") {cpak = true;}                                         //Centre Court Tennis [Let's Smash (J)]
-  if(id == "NV2") {cpak = true; rpak = true;}                            //Chameleon Twist 2
+  if(id == "N2V") {cpak = true; rpak = true;}                            //Chameleon Twist 2 (U + E)
+  if(id == "NV2") {cpak = true; rpak = true;}                            //Chameleon Twist 2 (J)
   if(id == "NPK") {cpak = true;}                                         //Chou Kuukan Night Pro Yakyuu King (J)
   if(id == "NT4") {cpak = true; rpak = true;}                            //CyberTiger
   if(id == "NDW") {cpak = true; rpak = true;}                            //Daikatana, John Romero's
-  if(id == "NGA") {cpak = true; rpak = true;}                            //Deadly Arts [G.A.S.P!! Fighter's NEXTream (E-J)]
+  if(id == "NGA") {cpak = true; rpak = true;}                            //Deadly Arts [G.A.S.P!! Fighter's NEXTream (E + J)]
   if(id == "NDE") {cpak = true; rpak = true;}                            //Destruction Derby 64
   if(id == "NDQ") {cpak = true;}                                         //Disney's Donald Duck - Goin' Quackers [Quack Attack (E)]
   if(id == "NTA") {cpak = true; rpak = true;}                            //Disney's Tarzan
