@@ -30,8 +30,15 @@ struct Expansion {
 
   virtual auto read1() -> n1 { return 0; }
   virtual auto read2() -> n5 { return 0; }
-  virtual auto write(n3 data) -> void {}
+
+  // The Famicom/NES expansion port only exposes three bits for $4016 writes:
+  // OUT0, OUT1, and OUT2. However, the NES additionally exposes the CPU's
+  // data bus, allowing reading all eight bits written to $4016. This is
+  // required for emulating the EPSM.
+  virtual auto write(n8 data) -> void {}
+  virtual auto writeIO(n16 address, n8 data) -> void {}
 };
 
 #include "port.hpp"
+#include "epsm/epsm.hpp"
 #include "family-keyboard/family-keyboard.hpp"

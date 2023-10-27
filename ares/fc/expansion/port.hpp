@@ -9,7 +9,8 @@ struct ExpansionPort {
 
   auto read1() -> n1 { if(device) return device->read1(); return 0; }
   auto read2() -> n5 { if(device) return device->read2(); return 0; }
-  auto write(n3 data) -> void { if(device) return device->write(data); }
+  auto write(n8 data) -> void { if(device) return device->write(data); }
+  auto writeIO(n16 address, n8 data) -> void { if(device) return device->writeIO(address, data); }
 
   auto serialize(serializer&) -> void;
 

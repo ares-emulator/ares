@@ -15,6 +15,11 @@ inline auto CPU::readBus(n16 address) -> n8 {
 }
 
 inline auto CPU::writeBus(n16 address, n8 data) -> void {
+  // The EPSM can be mapped via $4016 writes, but also using a "passthrough"
+  // cartridge mapping at f.e. $401C-$401F. This kludge allows both types of
+  // writes to go through, which is required for most EPSM software around.
+  expansionPort.writeIO(address, data);
+
   cartridge.writePRG(address, data);
   if(address <= 0x1fff) return ram.write(address, data);
   if(address <= 0x3fff) return ppu.writeIO(address, data);
@@ -66,7 +71,7 @@ auto CPU::writeIO(n16 address, n8 data) -> void {
   case 0x4016: {
     controllerPort1.latch(data.bit(0));
     controllerPort2.latch(data.bit(0));
-    expansionPort.write(data.bit(0,2));
+    expansionPort.write(data);
     return;
   }
 
