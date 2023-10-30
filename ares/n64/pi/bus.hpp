@@ -97,8 +97,12 @@ inline auto PI::busWrite(u32 address, u32 data) -> void {
     return;
   }
   if(address <= 0x13ff'ffff) {
-    writeForceFinish(); //Debugging channel for homebrew, be gentle
-    return cartridge.isviewer.write<Size>(address, data);
+    if(system.homebrewMode) {
+      writeForceFinish(); //Debugging channel for homebrew, be gentle
+      return cartridge.isviewer.write<Size>(address, data);      
+    } else {
+      debug(unhandled, "[PI::busWrite] attempt to write to ISViewer: enable homebrew mode in settings to enable ISViewer emulation");
+    }
   }
   if(address <= 0x7fff'ffff) return;
 }
