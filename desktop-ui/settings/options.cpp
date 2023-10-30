@@ -21,4 +21,10 @@ auto OptionSettings::construct() -> void {
   });
   autoSaveMemoryLayout.setAlignment(1);
       autoSaveMemoryHint.setText("Helps safeguard game saves from being lost").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
+
+  homebrewMode.setText("Homebrew Development Mode").setChecked(settings.general.homebrewMode).onToggle([&] {
+    settings.general.homebrewMode = homebrewMode.checked();
+  });
+  homebrewModeLayout.setAlignment(1);
+      homebrewModeHint.setText("Activate core-specific features to help homebrew developers").setFont(Font().setSize(7.0)).setForegroundColor(SystemColor::Sublabel);
 }

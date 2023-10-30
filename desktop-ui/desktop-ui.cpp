@@ -81,7 +81,6 @@ auto nall::main(Arguments arguments) -> void {
   }
 
   inputManager.create();
-  Emulator::construct();
   settings.load();
 
   if(arguments.find("--setting")) {
@@ -103,6 +102,8 @@ auto nall::main(Arguments arguments) -> void {
     }
     settings.process(true);
   }
+
+  Emulator::construct();
 
   if(arguments.take("--help")) {
     print("Usage: ares [OPTIONS]... game(s)\n\n");
