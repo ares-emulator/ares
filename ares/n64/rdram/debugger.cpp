@@ -8,6 +8,22 @@ auto RDRAM::Debugger::load(Node::Object parent) -> void {
     return rdram.ram.write<Byte>(address, data);
   });
 
+  memory.dcache = parent->append<Node::Debugger::Memory>("DCache");
+  memory.dcache->setSize(4_MiB + 4_MiB);
+  memory.dcache->setRead([&](u32 address) -> u8 {
+    u32 vaddr = address | 0x8000'0000;
+    return cpu.dcache.readDebug(vaddr, address);
+  });
+  memory.dcache->setWrite([&](u32 address, u8 data) -> void {
+    u32 vaddr = address | 0x8000'0000;
+    auto& line = cpu.dcache.line(vaddr);
+    if(line.hit(address)) {
+      line.write<Byte>(address, data);
+    } else {
+      rdram.ram.write<Byte>(address, data);
+    }
+  });
+
   tracer.io = parent->append<Node::Debugger::Tracer::Notification>("I/O", "RDRAM");
 }
 

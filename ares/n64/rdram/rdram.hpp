@@ -24,6 +24,7 @@ struct RDRAM : Memory::RCP<RDRAM> {
 
     struct Memory {
       Node::Debugger::Memory ram;
+      Node::Debugger::Memory dcache;
     } memory;
 
     struct Tracer {
