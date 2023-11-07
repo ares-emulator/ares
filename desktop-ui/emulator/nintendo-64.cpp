@@ -99,6 +99,7 @@ auto Nintendo64::load() -> bool {
 #endif
   ares::Nintendo64::option("Disable Video Interface Processing", settings.video.disableVideoInterfaceProcessing);
   ares::Nintendo64::option("Weave Deinterlacing", settings.video.weaveDeinterlacing);
+  ares::Nintendo64::option("Homebrew Mode", settings.general.homebrewMode);
 
   if(!ares::Nintendo64::load(root, {"[Nintendo] ", name, " (", region, ")"})) return false;
 

@@ -1,6 +1,15 @@
 auto PI::dmaRead() -> void {
   io.readLength = (io.readLength | 1) + 1;
+
+  u32 lastCacheline = 0xffff'ffff;
   for(u32 address = 0; address < io.readLength; address += 2) {
+    if (system.homebrewMode && ((io.dramAddress + address) & ~15) != lastCacheline) {
+      lastCacheline = address & ~15;
+      auto& line = cpu.dcache.line(io.dramAddress + address);
+      if (line.hit(io.dramAddress) && line.dirty) {
+        debug(unusual, "PI DMA reading from cached memory ", hex((io.dramAddress + address) | 0x80000000), " (missing cache writeback?)");
+      }
+    }
     u16 data = rdram.ram.read<Half>(io.dramAddress + address);
     busWrite<Half>(io.pbusAddress + address, data);
   }
@@ -39,8 +48,18 @@ auto PI::dmaWrite() -> void {
     if constexpr(Accuracy::CPU::Recompiler) {
       cpu.recompiler.invalidateRange(io.dramAddress, cur_len);
     }
-    for (u32 i = 0; i < cur_len; i++)
+
+    u32 lastCacheline = 0xffff'ffff;
+    for (u32 i = 0; i < cur_len; i++) {
+      if (system.homebrewMode && (io.dramAddress & ~15) != lastCacheline) {
+        lastCacheline = io.dramAddress & ~15;
+        auto& line = cpu.dcache.line(io.dramAddress);
+        if (line.hit(io.dramAddress)) {
+          debug(unusual, "PI DMA writing to cached memory ", hex(io.dramAddress | 0x80000000), " (missing cache invalidation?)");
+        }
+      }
       rdram.ram.write<Byte>(io.dramAddress++, mem[i]);
+    }
     io.dramAddress = (io.dramAddress + 7) & ~7;
 
     first_block = false;

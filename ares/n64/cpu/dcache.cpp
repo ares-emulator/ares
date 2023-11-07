@@ -132,3 +132,6 @@ auto CPU::DataCache::power(bool reset) -> void {
     for(auto& word : line.words) word = 0;
   }
 }
+
+template
+auto CPU::DataCache::Line::write<Byte>(u32 address, u64 data) -> void;

@@ -65,6 +65,7 @@ struct Settings : Markup::Node {
     bool rewind = false;
     bool runAhead = false;
     bool autoSaveMemory = true;
+    bool homebrewMode = false;
   } general;
 
   struct Rewind {
@@ -238,6 +239,9 @@ struct OptionSettings : VerticalLayout {
   HorizontalLayout autoSaveMemoryLayout{this, Size{~0, 0}, 5};
     CheckLabel autoSaveMemory{&autoSaveMemoryLayout, Size{0, 0}, 5};
     Label autoSaveMemoryHint{&autoSaveMemoryLayout, Size{~0, 0}};
+  HorizontalLayout homebrewModeLayout{this, Size{~0, 0}, 5};
+    CheckLabel homebrewMode{&homebrewModeLayout, Size{0, 0}, 5};
+    Label homebrewModeHint{&homebrewModeLayout, Size{~0, 0}};
 };
 
 struct FirmwareSettings : VerticalLayout {
