@@ -97,6 +97,7 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         brew install make ninja sdl2
+        pip install --no-input setuptools
         echo "MAKE=gmake" >> $GITHUB_ENV
         pushd thirdparty/MoltenVK
         ./build-moltenvk.sh
