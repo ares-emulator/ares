@@ -516,5 +516,42 @@ auto Nintendo64DD::transform(array_view<u8> input, vector<u8> errorTable) -> vec
     }
   }
 
+  //add new timestamp to differenciate every disk file for swapping
+  {
+    //get current time
+    chrono::timeinfo timeinfo = chrono::local::timeinfo();
+
+    u8 rng = random();
+    u8 second = BCD::encode(min(59, timeinfo.second));
+    u8 minute = BCD::encode(timeinfo.minute);
+    u8 hour = BCD::encode(timeinfo.hour);
+    u8 day = BCD::encode(timeinfo.day);
+    u8 month = BCD::encode(1 + timeinfo.month);
+    u8 yearlo = BCD::encode(timeinfo.year % 100);
+    u8 yearhi = BCD::encode(timeinfo.year / 100);
+
+    u32 diskIdBlocks[2] = {14, 15};
+    for(u32 n : range(2)) {
+      u32 offsetCalc = diskIdBlocks[n] * blockSizeTable[0];
+      //change disk id to all sectors
+      for(u32 m : range(85)) {
+        //change manufacture line info (0x08 to 0x0F) (is normally a BCD number but officially "PTN64" was also used there)
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x0B] = rng;
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x0C] = 0x41;  //'A'
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x0D] = 0x52;  //'R'
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x0E] = 0x45;  //'E'
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x0F] = 0x53;  //'S'
+        //change disk manufacture time (0x10 to 0x17) to now
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x11] = yearhi;
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x12] = yearlo;
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x13] = month;
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x14] = day;
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x15] = hour;
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x16] = minute;
+        output[offsetCalc + (m * (blockSizeTable[0] / 85)) + 0x17] = second;
+      }
+    }
+  }
+
   return output;
 }
