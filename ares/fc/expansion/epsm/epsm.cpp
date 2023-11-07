@@ -18,6 +18,9 @@ EPSM::EPSM(Node::Port parent) : ymf288(interface) {
 }
 
 EPSM::~EPSM() {
+  node->remove(streamFM);
+  node->remove(streamSSG);
+  node.reset();
   Thread::destroy();
 }
 
