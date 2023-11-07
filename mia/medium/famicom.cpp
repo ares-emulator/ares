@@ -30,6 +30,7 @@ auto Famicom::load(string location) -> bool {
   pak->setAttribute("region", document["game/region"].string());
   pak->setAttribute("board", document["game/board"].string());
   pak->setAttribute("mirror", document["game/board/mirror/mode"].string());
+  pak->setAttribute("system", document["game/system"].string());
   pak->setAttribute("chip", document["game/board/chip/type"].string());
   pak->setAttribute("chip/key", document["game/board/chip/key"].natural());
   pak->setAttribute("pinout/a0", document["game/board/chip/pinout/a0"].natural());
@@ -172,6 +173,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   u32 chrram = chrrom == 0u ? 8192u : 0u;
   u32 chrnvram = 0u;
   u32 submapper = 0u;
+  string system = "Regular";
   bool battery = (data[6] & 0x02) != 0;
   bool eepromMapper = false;
   bool prgromFlash = false;
@@ -182,6 +184,16 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   if(iNes2) {
     mapper |= ((data[8] & 0xf) << 8);
     submapper = data[8] >> 4;
+    u32 consoleType = data[7] & 0x3;
+    if(consoleType == 3) {
+      consoleType = data[13]& 0xf;
+    }
+
+    string types[16] = {
+      "Regular", "Vs. System", "PlayChoice-10", "BCD", "EPSM", "VT01", "VT02", "VT03",
+      "VT09", "VT32", "VT360", "UMC UM6578", "Network System", "Reserved", "Reserved", "Reserved"
+    };
+    system = types[consoleType];
 
     prgrom = calculateNes2RomSize(data[4], data[9] & 0xf, 0x4000);
     chrrom = calculateNes2RomSize(data[5], data[9] >> 4,  0x2000);
@@ -209,6 +221,7 @@ auto Famicom::analyzeINES(vector<u8>& data) -> string {
   s +={"  name:   ", Medium::name(location), "\n"};
   s +={"  title:  ", Medium::name(location), "\n"};
   s +={"  region: ", region, "\n"};
+  s +={"  system: ", system, "\n"};
 
   switch(mapper) {
 
