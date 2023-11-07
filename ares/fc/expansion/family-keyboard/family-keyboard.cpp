@@ -214,8 +214,8 @@ auto FamilyKeyboard::read2() -> n5 {
   return data;
 }
 
-auto FamilyKeyboard::write(n3 data) -> void {
-  latch = data;
+auto FamilyKeyboard::write(n8 data) -> void {
+  latch = data.bit(0,2);
   if(column && !latch.bit(1)) row = (row + 1) % 10;
   column = latch.bit(1);
   if(latch.bit(0)) row = 0;

@@ -13,7 +13,7 @@ struct FamilyKeyboard : Expansion {
   FamilyKeyboard(Node::Port);
   auto read1() -> n1 override;
   auto read2() -> n5 override;
-  auto write(n3 data) -> void override;
+  auto write(n8 data) -> void override;
 
 private:
   n3 latch;
