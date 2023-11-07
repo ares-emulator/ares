@@ -4,17 +4,17 @@ EPSM::EPSM(Node::Port parent) : ymf288(interface) {
 
   streamFM = node->append<Node::Audio::Stream>("EPSM FM");
   streamFM->setChannels(2);
-  streamFM->setFrequency(ymf288.sample_rate((int) Constants::Colorburst::NTSC));
+  streamFM->setFrequency(ymf288.sample_rate(8_MHz));
   streamFM->addHighPassFilter(  20.0, 1);
   streamFM->addLowPassFilter(2840.0, 1);
 
   streamSSG = node->append<Node::Audio::Stream>("EPSM SSG");
   streamSSG->setChannels(1);
-  streamSSG->setFrequency(ymf288.sample_rate((int) Constants::Colorburst::NTSC));
+  streamSSG->setFrequency(ymf288.sample_rate(8_MHz));
 
   ymf288.reset();
-  clocksPerSample = Constants::Colorburst::NTSC / ymf288.sample_rate(Constants::Colorburst::NTSC);
-  Thread::create(Constants::Colorburst::NTSC, {&EPSM::main, this});
+  clocksPerSample = clocksPerSample = 8_MHz / ymf288.sample_rate(8_MHz);
+  Thread::create(8_MHz, {&EPSM::main, this});
 }
 
 EPSM::~EPSM() {
