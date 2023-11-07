@@ -187,7 +187,11 @@ auto DD::command(n16 command) -> void {
 auto DD::mechaResponse() -> void {
   if(state.seek) {
     state.seek = 0;
-    motorActive();
+    if (io.status.diskPresent) {
+      motorActive();
+    } else {
+      motorStop();
+    }
   }
   io.status.busyState = 0;
   raise(IRQ::MECHA);
