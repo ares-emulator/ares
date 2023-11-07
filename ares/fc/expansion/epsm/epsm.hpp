@@ -12,7 +12,7 @@ struct EPSM : Expansion, Thread {
   auto read2() -> n5 override;
   auto write(n8 data) -> void override;
 
-  auto writeIO(n16 address, n8 data) -> void;
+  auto writeIO(n16 address, n8 data) -> void override;
 
 private:
   class Interface : public ymfm::ymfm_interface {
