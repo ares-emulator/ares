@@ -1,11 +1,13 @@
 struct Nintendo64DD : Emulator {
   Nintendo64DD();
   auto load() -> bool override;
+  auto load(Menu) -> void override;
   auto save() -> bool override;
   auto pak(ares::Node::Object) -> shared_pointer<vfs::directory> override;
 
   shared_pointer<mia::Pak> gamepad;
   u32 regionID = 0;
+  Timer diskInsertTimer;
 };
 
 Nintendo64DD::Nintendo64DD() {
@@ -107,6 +109,28 @@ auto Nintendo64DD::load() -> bool {
 
 
   return true;
+}
+
+auto Nintendo64DD::load(Menu menu) -> void {
+  MenuItem changeDisk{&menu};
+  changeDisk.setIcon(Icon::Device::Optical);
+  changeDisk.setText("Change Disk").onActivate([&] {
+    save();
+    auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
+    drive->disconnect();
+
+    if(!game->load(Emulator::load(game, configuration.game))) {
+      return;
+    }
+
+    //give the emulator core a few seconds to notice an empty drive state before reconnecting
+    diskInsertTimer.onActivate([&] {
+      diskInsertTimer.setEnabled(false);
+      auto drive = root->find<ares::Node::Port>("Nintendo 64DD/Disk Drive");
+      drive->allocate();
+      drive->connect();
+    }).setInterval(3000).setEnabled();
+  });
 }
 
 auto Nintendo64DD::save() -> bool {

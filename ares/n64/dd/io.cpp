@@ -20,7 +20,7 @@ auto DD::readHalf(u32 address) -> u16 {
     data.bit(4) = io.status.spindleMotorStopped;
     data.bit(6) = io.status.resetState;
     data.bit(7) = io.status.busyState;
-    data.bit(8) = (bool)disk; //disk present
+    data.bit(8) = io.status.diskPresent;
     data.bit(9) = irq.mecha.line;
     data.bit(10) = irq.bm.line;
     data.bit(11) = io.bm.error;
@@ -57,7 +57,7 @@ auto DD::readHalf(u32 address) -> u16 {
     data.bit(0,7) = io.error.sector;
     data.bit(8) = io.error.selfStop;
     data.bit(9) = io.error.clockUnlock;
-    data.bit(10) = ~(bool)disk; //no disk
+    data.bit(10) = ~io.status.diskPresent; //no disk
     data.bit(11) = io.error.offTrack;
     data.bit(12) = io.error.overrun;
     data.bit(13) = io.error.spindle;

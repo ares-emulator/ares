@@ -31,6 +31,8 @@ auto DD::load(Node::Object parent) -> void {
     iplrom.load(fp);
   }
 
+  rtcLoad();
+
   debugger.load(parent->append<Node::Object>("Nintendo 64DD"));
 }
 
@@ -79,9 +81,9 @@ auto DD::connect() -> void {
   if(auto fp = pak->read("program.disk")) {
     disk.allocate(fp->size());
     disk.load(fp);
+    io.status.diskChanged = 1;
+    io.status.diskPresent = 1;
   }
-
-  rtcLoad();
 }
 
 auto DD::disconnect() -> void {
@@ -89,7 +91,35 @@ auto DD::disconnect() -> void {
 
   save();
   pak.reset();
+  disk.reset();
   information = {};
+
+  if(iplrom) {
+    string id;
+    id.append((char)iplrom.read<Byte>(0x3b));
+    id.append((char)iplrom.read<Byte>(0x3c));
+    id.append((char)iplrom.read<Byte>(0x3d));
+    id.append((char)iplrom.read<Byte>(0x3e));
+    if(id.match("NDDJ")) dd.information.cic = "CIC-NUS-8303";
+    if(id.match("NDDE")) dd.information.cic = "CIC-NUS-DDUS";
+    if(id.match("NDXJ")) dd.information.cic = "CIC-NUS-8401";
+  }
+
+  io.status.diskChanged = 0;
+  io.status.diskPresent = 0;
+
+  //Deal with cases when the disk is removed while in use
+  if(io.status.busyState) {
+    //MECHA
+    io.status.mechaError = 1;
+  }
+
+  if(io.bm.start) {
+    //BM
+    io.bm.start = 0;
+    io.bm.error = 1;
+  }
+  motorStop();
 }
 
 auto DD::save() -> void {
@@ -112,6 +142,7 @@ auto DD::power(bool reset) -> void {
   state = {};
 
   io.status.resetState = 1;
+  if(disk) io.status.diskPresent = 1;
   io.id = 3;
   if(dd.information.cic.match("CIC-NUS-8401")) io.id = 4;
   

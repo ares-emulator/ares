@@ -125,6 +125,7 @@ private:
       n1 writeProtect;
       n1 mechaError;
       n1 diskChanged;
+      n1 diskPresent;
     } status;
 
     n16 currentTrack;
